@@ -6167,18 +6167,16 @@ void handle_sysinfo() {
     TXBuffer += F("Vendor: ");
     TXBuffer += formatToHex(flashChipId & 0xFF);
 
-    #ifdef PUYASUPPORT
-    if (ESP.flashIsPuya()) {
-      TXBuffer += F(" (PUYA, supported)");
-    }
-    #else
-    if ((flashChipId & 0x000000ff) == 0x85)  // 0x146085 PUYA
+    if (flashChipVendorPuya())
     {
       TXBuffer += F(" (PUYA");
-      TXBuffer += F(HTML_SYMBOL_WARNING);
+      if (puyaSupport()) {
+        TXBuffer += F(", supported");
+      } else {
+        TXBuffer += F(HTML_SYMBOL_WARNING);
+      }
       TXBuffer += ')';
     }
-    #endif
     TXBuffer += F(" Device: ");
     uint32_t flashDevice = (flashChipId & 0xFF00) | ((flashChipId >> 16) & 0xFF);
     TXBuffer += formatToHex(flashDevice);
