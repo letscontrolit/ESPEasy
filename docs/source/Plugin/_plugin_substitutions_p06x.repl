@@ -44,7 +44,7 @@
 
 .. |P064_name| replace:: :cyan:`APDS9960`
 .. |P064_type| replace:: :cyan:`Gesture`
-.. |P064_typename| replace:: :cyan:`Gestrure -APDS9960`
+.. |P064_typename| replace:: :cyan:`Gestrure - APDS9960`
 .. |P064_status| replace:: :red:`DEVELOPMENT`
 .. |P064_github| replace:: P064_APDS9960.ino
 .. _P064_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P064_APDS9960.ino
