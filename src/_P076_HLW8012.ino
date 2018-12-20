@@ -55,6 +55,39 @@ unsigned int p076_hvoltage = 0;
 unsigned int p076_hpower = 0;
 unsigned int p076_hpowfact = 0;
 
+struct p076_DevicePinSettings {
+  int Id;
+  String Device_Name;
+  byte SEL_Pin;
+  byte CF_Pin;
+  byte CF1_Pin;
+  byte Current_Read;
+  byte CF_Trigger;
+  byte CF1_Trigger;
+
+};
+
+typedef struct p076_DevicePinSettings P076_DevicePinSettings;
+
+const int p076_PinSettingsCount = 10;
+P076_DevicePinSettings p076_PredefinedPinSettings[p076_PinSettingsCount] =
+{
+   //Device_Name,SEL_PIN, CF_PIN, CF1_PIN, Current_Read, CF_Trigger,  CF1_Trigger
+   //HLW8012
+   { 0, "Custom",           0,      0,     0,           LOW,        LOW,    LOW},
+   { 1, "Sonoff Pow",       5,     14,     3,          HIGH,     CHANGE, CHANGE},
+   { 2, "Huafan SS",       13,     14,    12,          HIGH,     CHANGE, CHANGE},
+   { 3, "KMC 70011",       12,      4,     5,          HIGH,     CHANGE, CHANGE},
+   { 4, "Aplic WDP303075", 12,      4,     5,           LOW,     CHANGE, CHANGE},
+   { 5, "SK03 Outdoor",    12,      4,     5,           LOW,     CHANGE, CHANGE},
+
+   //BL093
+   { 6, "BlitzWolf SHP",   12,      5,    14,           LOW,    FALLING, CHANGE},
+   { 7, "Teckin",          12,      4,     5,           LOW,    FALLING, CHANGE},
+   { 8, "Teckin US",       12,      5,    14,           LOW,    FALLING, CHANGE},
+   { 9, "Gosund SP1 v23",  12,      4,     5,           LOW,    FALLING, CHANGE}
+};
+
 boolean Plugin_076(byte function, struct EventStruct *event, String &string) {
   boolean success = false;
 
@@ -104,11 +137,41 @@ boolean Plugin_076(byte function, struct EventStruct *event, String &string) {
     byte cf_trigger  = Settings.TaskDevicePluginConfig[event->TaskIndex][5];
     byte cf1_trigger = Settings.TaskDevicePluginConfig[event->TaskIndex][6];
 
+    byte devicePinSettings =
+                          Settings.TaskDevicePluginConfig[event->TaskIndex][7];
+
+
+
+    String predefinedNames[p076_PinSettingsCount];
+    predefinedNames[0] = p076_PredefinedPinSettings[0].Device_Name;
+    predefinedNames[1] = p076_PredefinedPinSettings[1].Device_Name;
+    predefinedNames[2] = p076_PredefinedPinSettings[2].Device_Name;
+    predefinedNames[3] = p076_PredefinedPinSettings[3].Device_Name;
+    predefinedNames[4] = p076_PredefinedPinSettings[4].Device_Name;
+    predefinedNames[5] = p076_PredefinedPinSettings[5].Device_Name;
+    predefinedNames[6] = p076_PredefinedPinSettings[6].Device_Name;
+    predefinedNames[7] = p076_PredefinedPinSettings[7].Device_Name;
+    predefinedNames[8] = p076_PredefinedPinSettings[8].Device_Name;
+    predefinedNames[9] = p076_PredefinedPinSettings[9].Device_Name;
+
+    int predefinedId[p076_PinSettingsCount];
+    predefinedId[0] = p076_PredefinedPinSettings[0].Id;
+    predefinedId[1] = p076_PredefinedPinSettings[1].Id;
+    predefinedId[2] = p076_PredefinedPinSettings[2].Id;
+    predefinedId[3] = p076_PredefinedPinSettings[3].Id;
+    predefinedId[4] = p076_PredefinedPinSettings[4].Id;
+    predefinedId[5] = p076_PredefinedPinSettings[5].Id;
+    predefinedId[6] = p076_PredefinedPinSettings[6].Id;
+    predefinedId[7] = p076_PredefinedPinSettings[7].Id;
+    predefinedId[8] = p076_PredefinedPinSettings[8].Id;
+    predefinedId[9] = p076_PredefinedPinSettings[9].Id;
+
     String modeRaise[4];
     modeRaise[0] = F("LOW");
     modeRaise[1] = F("CHANGE");
     modeRaise[2] = F("RISING");
     modeRaise[3] = F("FALLING");
+
     int modeValues[4];
     modeValues[0] = LOW;
     modeValues[1] = CHANGE;
@@ -118,13 +181,21 @@ boolean Plugin_076(byte function, struct EventStruct *event, String &string) {
     String modeCurr[2];
     modeCurr[0] = F("LOW");
     modeCurr[1] = F("HIGH");
+
     int modeCurrValues[2];
     modeCurrValues[0] = LOW;
     modeCurrValues[1] = HIGH;
 
-    addFormNote(F("Sonoff POW: 1st(SEL)=GPIO-5, 2nd(CF1)=GPIO-13, 3rd(CF)=GPIO-14"));
+    #ifdef PLUGIN_SET_SONOFF_POW
+      addFormNote(F("Sonoff POW: 1st(SEL)=GPIO-5, 2nd(CF1)=GPIO-13, 3rd(CF)=GPIO-14"));
+    #endif
 
-    addFormSubHeader(F("Special settings"));
+    addFormSubHeader(F("Predefined Pin settings"));
+    addFormSelector(F("Device"),
+                    F("p076_predefined_settings"), p076_PinSettingsCount,
+                    predefinedNames, predefinedId, devicePinSettings );
+
+    addFormSubHeader(F("Custom Pin settings (choose Custom above)"));
     addFormSelector(F("Current(A) Reading"), F("p076_current_read"), 2,
                     modeCurr, modeCurrValues, currentRead );
     addFormSelector(F("CF Trigger"), F("p076_cf_trigger"), 4,
@@ -132,13 +203,15 @@ boolean Plugin_076(byte function, struct EventStruct *event, String &string) {
     addFormSelector(F("CF1 Trigger"), F("p076_cf1_trigger"), 4,
                     modeRaise, modeValues, cf1_trigger);
 
-    addFormNote(F("HLW8012: (SEL)=HIGH, 2nd(CF1)=CHANGE, (CF)=CHANGE"));
-    addFormNote(F("BL0937:  (SEL)=LOW,  2nd(CF1)=CHANGE, (CF)=FALLING"));
+    //addFormNote(F("HLW8012: (SEL)=HIGH, 2nd(CF1)=CHANGE, (CF)=CHANGE"));
+    //addFormNote(F("BL0937:  (SEL)=LOW,  2nd(CF1)=CHANGE, (CF)=FALLING"));
+
 
     addFormSubHeader(F("Calibration Values"));
     double hlwMultipliers[3];
     LoadCustomTaskSettings(event->TaskIndex, (byte *)&hlwMultipliers,
                            sizeof(hlwMultipliers));
+
     addFormTextBox(F("Current Multiplier"), F("p076_currmult"),
                    String(hlwMultipliers[0], 2), 25);
     addFormTextBox(F("Voltage Multiplier"), F("p076_voltmult"),
@@ -151,6 +224,8 @@ boolean Plugin_076(byte function, struct EventStruct *event, String &string) {
   }
 
   case PLUGIN_WEBFORM_SAVE: {
+
+    //Set Multipliers
     double hlwMultipliers[3];
     String tmpString, arg1;
     arg1 = F("p076_currmult");
@@ -165,25 +240,56 @@ boolean Plugin_076(byte function, struct EventStruct *event, String &string) {
     SaveCustomTaskSettings(event->TaskIndex, (byte *)&hlwMultipliers,
                            sizeof(hlwMultipliers));
 
-   Settings.TaskDevicePluginConfig[event->TaskIndex][4] = getFormItemInt(F("p076_current_read"));
-   Settings.TaskDevicePluginConfig[event->TaskIndex][5] = getFormItemInt(F("p076_cf_trigger"));
-   Settings.TaskDevicePluginConfig[event->TaskIndex][6] = getFormItemInt(F("p076_cf1_trigger"));
-
     if (PLUGIN_076_DEBUG) {
-      String log = F("HLW8012: Saved Calibration from Config Page");
-      addLog(LOG_LEVEL_INFO, log);
+     String log = F("HLW8012: Saved Calibration from Config Page");
+     addLog(LOG_LEVEL_INFO, log);
     }
 
     if (Plugin_076_hlw) {
-      Plugin_076_hlw->setCurrentMultiplier(hlwMultipliers[0]);
-      Plugin_076_hlw->setVoltageMultiplier(hlwMultipliers[1]);
-      Plugin_076_hlw->setPowerMultiplier(hlwMultipliers[2]);
+     Plugin_076_hlw->setCurrentMultiplier(hlwMultipliers[0]);
+     Plugin_076_hlw->setVoltageMultiplier(hlwMultipliers[1]);
+     Plugin_076_hlw->setPowerMultiplier(hlwMultipliers[2]);
     }
 
     if (PLUGIN_076_DEBUG) {
-      String log = F("HLW8012: Multipliers Reassigned");
+     String log = F("HLW8012: Multipliers Reassigned");
+     addLog(LOG_LEVEL_INFO, log);
+    }
+
+    //Set Pin settings
+    byte selectedDevice = getFormItemInt(F("p076_predefined_settings"));
+
+    Settings.TaskDevicePluginConfig[event->TaskIndex][7] = selectedDevice;
+
+    if (selectedDevice == 0){
+       Settings.TaskDevicePluginConfig[event->TaskIndex][4] = getFormItemInt(F("p076_current_read"));
+       Settings.TaskDevicePluginConfig[event->TaskIndex][5] = getFormItemInt(F("p076_cf_trigger"));
+       Settings.TaskDevicePluginConfig[event->TaskIndex][6] = getFormItemInt(F("p076_cf1_trigger"));
+    }
+    else {
+      if (selectedDevice < p076_PinSettingsCount){
+        Settings.TaskDevicePluginConfig[event->TaskIndex][4] = p076_PredefinedPinSettings[selectedDevice].Current_Read;
+        Settings.TaskDevicePluginConfig[event->TaskIndex][5] = p076_PredefinedPinSettings[selectedDevice].CF_Trigger;
+        Settings.TaskDevicePluginConfig[event->TaskIndex][6] = p076_PredefinedPinSettings[selectedDevice].CF1_Trigger;
+
+        //Not Working correct
+        //Settings.TaskDevicePin1[event->TaskIndex] = p076_PredefinedPinSettings[selectedDevice].SEL_Pin;
+        //Settings.TaskDevicePin2[event->TaskIndex] = p076_PredefinedPinSettings[selectedDevice].CF1_Pin;
+        //Settings.TaskDevicePin3[event->TaskIndex] = p076_PredefinedPinSettings[selectedDevice].CF_Pin;
+      }
+    }
+
+    if (PLUGIN_076_DEBUG) {
+      String log = F("HLW8012: PIN Settings ");
+      log +=  " current_read: ";
+      log +=  Settings.TaskDevicePluginConfig[event->TaskIndex][4];
+      log +=  " cf_trigger: ";
+      log +=  Settings.TaskDevicePluginConfig[event->TaskIndex][5];
+      log +=  " cf1_trigger: ";
+      log +=  Settings.TaskDevicePluginConfig[event->TaskIndex][6];
       addLog(LOG_LEVEL_INFO, log);
     }
+
     success = true;
     break;
   }
