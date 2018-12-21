@@ -1,7 +1,9 @@
 #ifdef ESP8266  // Needed for precompile issues.
 #include <ESPeasySoftwareSerial.h>
 
-ESPeasySoftwareSerial(int receivePin, int transmitPin, bool inverse_logic, unsigned int buffSize)
+bool ESPeasySoftwareSerial::_serial0_swap_active = false;
+
+ESPeasySoftwareSerial::ESPeasySoftwareSerial(int receivePin, int transmitPin, bool inverse_logic, unsigned int buffSize)
     : _swserial(nullptr), _receivePin(receivePin), _transmitPin(transmitPin)
 {
   _serialtype = ESPeasySerialType::getSerialType(receivePin, transmitPin);
@@ -12,35 +14,48 @@ ESPeasySoftwareSerial(int receivePin, int transmitPin, bool inverse_logic, unsig
   }
 }
 
- ~ESPeasySoftwareSerial() {
-   end();
-   if (_swserial != nullptr) {
-     delete _swserial;
-   }
- }
-
-  HardwareSerial* ESPeasySoftwareSerial::getHW() {
-    switch (_serialtype) {
-      case ESPeasySerialType::serialtype::serial0:
-      case ESPeasySerialType::serialtype::serial0_swap:
-        return &Serial;
-      case ESPeasySerialType::serialtype::serial1:
-        return &Serial1;
-      case ESPeasySerialType::serialtype::software:
-        break;
-    }
-    return nullptr;
+ESPeasySoftwareSerial::~ESPeasySoftwareSerial() {
+  end();
+  if (_swserial != nullptr) {
+    delete _swserial;
   }
+}
 
-  bool ESPeasySoftwareSerial::isValid() {
-    switch (_serialtype) {
-      case ESPeasySerialType::serialtype::serial0:      return !_serial0_swap_active;
-      case ESPeasySerialType::serialtype::serial0_swap: return _serial0_swap_active;
-      case ESPeasySerialType::serialtype::serial1:      return true; // Must also check RX pin?
-      case ESPeasySerialType::serialtype::software:     return _swserial != nullptr;
-    }
-    return false;
+HardwareSerial* ESPeasySoftwareSerial::getHW() {
+  switch (_serialtype) {
+    case ESPeasySerialType::serialtype::serial0:
+    case ESPeasySerialType::serialtype::serial0_swap:
+      return &Serial;
+    case ESPeasySerialType::serialtype::serial1:
+      return &Serial1;
+    case ESPeasySerialType::serialtype::software:
+      break;
   }
+  return nullptr;
+}
+
+const HardwareSerial* ESPeasySoftwareSerial::getHW() const {
+  switch (_serialtype) {
+    case ESPeasySerialType::serialtype::serial0:
+    case ESPeasySerialType::serialtype::serial0_swap:
+      return &Serial;
+    case ESPeasySerialType::serialtype::serial1:
+      return &Serial1;
+    case ESPeasySerialType::serialtype::software:
+      break;
+  }
+  return nullptr;
+}
+
+bool ESPeasySoftwareSerial::isValid() const {
+  switch (_serialtype) {
+    case ESPeasySerialType::serialtype::serial0:      return !_serial0_swap_active;
+    case ESPeasySerialType::serialtype::serial0_swap: return _serial0_swap_active;
+    case ESPeasySerialType::serialtype::serial1:      return true; // Must also check RX pin?
+    case ESPeasySerialType::serialtype::software:     return _swserial != nullptr;
+  }
+  return false;
+}
 
 void ESPeasySoftwareSerial::begin(unsigned long baud, SerialConfig config, SerialMode mode, uint8_t tx_pin) {
   _baud = baud;
@@ -69,7 +84,8 @@ void ESPeasySoftwareSerial::end() {
     return;
   }
   if (isSWserial()) {
-    return _swserial->end();
+    _swserial->end();
+    return;
   } else {
     if (_serialtype == ESPeasySerialType::serialtype::serial0_swap) {
       if (_serial0_swap_active) {
@@ -79,7 +95,7 @@ void ESPeasySoftwareSerial::end() {
         return;
       }
     }
-    return getHW()->end();
+    getHW()->end();
   }
 }
 
@@ -123,7 +139,7 @@ size_t ESPeasySoftwareSerial::write(const uint8_t *buffer, size_t size) {
   }
 }
 
-size_t ESPeasySoftwareSerial::write(const uint8_t *buffer, size_t size) {
+size_t ESPeasySoftwareSerial::write(const char *buffer) {
   if (!buffer) return 0;
   return write(buffer, strlen(buffer));
 }
@@ -147,7 +163,7 @@ size_t ESPeasySoftwareSerial::readBytes(char* buffer, size_t size)  {
     // Not implemented in SoftwareSerial
     size_t count = 0;
     for (size_t i = 0; i < size; ++i) {
-      int read = _swserial->read(buffer[i]);
+      int read = _swserial->read();
       if (read < 0) return count;
       buffer[i] = static_cast<char>(read & 0xFF);
       ++count;
@@ -178,68 +194,112 @@ void ESPeasySoftwareSerial::flush(void) {
     return;
   }
   if (isSWserial()) {
-    return _swserial->flush();
+    _swserial->flush();
   } else {
-    return getHW()->flush();
+    getHW()->flush();
   }
 }
 
- operator ESPeasySoftwareSerial::bool() const {
-   if (!isValid()) {
-     return false;
-   }
-   if (isSWserial()) {
-     // SoftwareSerial doesn't have const on this operator
-     return const_cast<SoftwareSerial*>(_swserial)->bool();
-   } else {
-     return getHW()->bool();
-   }
- }
 
-
- bool overflow() { return hasOverrun(); }
- bool hasOverrun(void) {
-   if (!isValid()) {
-     return false;
-   }
-   if (isSWserial()) {
-     return _swserial->overflow();
-   } else {
-     return getHW()->hasOverrun();
-   }
- }
+bool ESPeasySoftwareSerial::overflow() { return hasOverrun(); }
+bool ESPeasySoftwareSerial::hasOverrun(void) {
+  if (!isValid()) {
+    return false;
+  }
+  if (isSWserial()) {
+    return _swserial->overflow();
+  } else {
+    return getHW()->hasOverrun();
+  }
+}
 
 
 
- // *****************************
- // HardwareSerial specific
- // *****************************
+// *****************************
+// HardwareSerial specific
+// *****************************
 
- void ESPeasySoftwareSerial::swap() {
-   swap(1);
- }
+void ESPeasySoftwareSerial::swap() {
+  swap(1);
+}
 
- void ESPeasySoftwareSerial::swap(uint8_t tx_pin) {
-   if (isValid() && !isSWserial()) {
-     switch (_serialtype) {
-       case ESPeasySerialType::serialtype::serial0:
-       case ESPeasySerialType::serialtype::serial0_swap:
-          _serial0_swap_active = !_serial0_swap_active;
-          getHW()->swap(tx_pin);
-          break;
+void ESPeasySoftwareSerial::swap(uint8_t tx_pin) {
+  if (isValid() && !isSWserial()) {
+    switch (_serialtype) {
+      case ESPeasySerialType::serialtype::serial0:
+      case ESPeasySerialType::serialtype::serial0_swap:
+        // isValid() also checks for correct swap active state.
+        _serial0_swap_active = !_serial0_swap_active;
+        getHW()->swap(tx_pin);
+        if (_serialtype == ESPeasySerialType::serialtype::serial0) {
+          _serialtype = ESPeasySerialType::serialtype::serial0_swap;
+        } else {
+          _serialtype = ESPeasySerialType::serialtype::serial0;
+        }
+        break;
       default:
-          return;
-     }
-   }
- }
+        return;
+    }
+  }
+}
 
- int ESPeasySoftwareSerial::baudRate(void) {
+int ESPeasySoftwareSerial::baudRate(void) {
+  if (!isValid() || isSWserial()) {
+    return _baud;
+  }
+  return getHW()->baudRate();
+}
+
+void ESPeasySoftwareSerial::setDebugOutput(bool enable) {
+  if (!isValid() || isSWserial()) {
+    return;
+  }
+  getHW()->setDebugOutput(enable);
+}
+
+bool ESPeasySoftwareSerial::isTxEnabled(void) {
+  if (!isValid() || isSWserial()) {
+    return false;
+  }
+  return getHW()->isTxEnabled();
+}
+
+ bool ESPeasySoftwareSerial::isRxEnabled(void) {
    if (!isValid() || isSWserial()) {
-     return _baud;
+     return false;
    }
-   return getHW()->baudRate();
+   return getHW()->isRxEnabled();
  }
 
+#ifdef CORE_2_5_0
+bool ESPeasySoftwareSerial::hasRxError(void) {
+  if (!isValid() || isSWserial()) {
+    return false;
+  }
+  return getHW()->hasRxError();
+}
+#endif
+
+void ESPeasySoftwareSerial::startDetectBaudrate() {
+  if (!isValid() || isSWserial()) {
+    return;
+  }
+  getHW()->startDetectBaudrate();
+}
+
+unsigned long ESPeasySoftwareSerial::testBaudrate() {
+  if (!isValid() || isSWserial()) {
+    return 0;
+  }
+  return getHW()->testBaudrate();
+}
+
+unsigned long ESPeasySoftwareSerial::detectBaudrate(time_t timeoutMillis) {
+  if (!isValid() || isSWserial()) {
+    return 0;
+  }
+  return getHW()->detectBaudrate(timeoutMillis);
+}
 
 
 // *****************************
@@ -247,26 +307,26 @@ void ESPeasySoftwareSerial::flush(void) {
 // *****************************
 
 
- bool ESPeasySoftwareSerial::listen() {
-   if (isValid() && isSWserial()) {
-     return _swserial->listen();
-   }
-   return false;
- }
+bool ESPeasySoftwareSerial::listen() {
+  if (isValid() && isSWserial()) {
+    return _swserial->listen();
+  }
+  return false;
+}
 
- bool ESPeasySoftwareSerial::isListening() {
-   if (isValid() && isSWserial()) {
-     return _swserial->isListening();
-   }
-   return false;
- }
+bool ESPeasySoftwareSerial::isListening() {
+  if (isValid() && isSWserial()) {
+    return _swserial->isListening();
+  }
+  return false;
+}
 
- bool ESPeasySoftwareSerial::stopListening() {
-   if (isValid() && isSWserial()) {
-     return _swserial->stopListening();
-   }
-   return false;
- }
+bool ESPeasySoftwareSerial::stopListening() {
+  if (isValid() && isSWserial()) {
+    return _swserial->stopListening();
+  }
+  return false;
+}
 
 
 

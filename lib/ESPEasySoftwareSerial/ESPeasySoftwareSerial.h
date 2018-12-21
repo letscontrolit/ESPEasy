@@ -25,6 +25,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include <Arduino.h>
 #include <SoftwareSerial.h>
+#include <HardwareSerial.h>
 #include <inttypes.h>
 #include <Stream.h>
 
@@ -70,64 +71,85 @@ struct ESPeasySerialType {
 
 };
 
+
 class ESPeasySoftwareSerial : public Stream
 {
 public:
 
-   ESPeasySoftwareSerial(int receivePin, int transmitPin, bool inverse_logic = false, unsigned int buffSize = 64);
-   virtual ~ESPeasySoftwareSerial();
+  ESPeasySoftwareSerial(int receivePin, int transmitPin, bool inverse_logic = false, unsigned int buffSize = 64);
+  virtual ~ESPeasySoftwareSerial();
 
-   void begin(unsigned long baud, SerialConfig config=SERIAL_8N1, SerialMode mode=SERIAL_FULL, uint8_t tx_pin=1);
+  void begin(unsigned long baud, SerialConfig config=SERIAL_8N1, SerialMode mode=SERIAL_FULL, uint8_t tx_pin=1);
 
-   void end();
-   int peek(void);
-   size_t write(uint8_t byte) override;
-   int read(void) override;
-   int available(void) override;
-   void flush(void) override;
+  void end();
+  int peek(void);
+  size_t write(uint8_t byte) override;
+  int read(void) override;
+  int available(void) override;
+  void flush(void) override;
 
-   bool overflow();        // SoftwareSerial
-   bool hasOverrun(void);  // HardwareSerial
+  bool overflow();        // SoftwareSerial
+  bool hasOverrun(void);  // HardwareSerial
+
+/*
+  // FIXME TD-er: See https://www.artima.com/cppsource/safebool.html
+  operator bool() {
+    if (!isValid()) {
+      return false;
+    }
+    if (isSWserial()) {
+      return _swserial->bool();
+    } else {
+      return getHW()->bool();
+    }
+  }
+  */
+
+  // HardwareSerial specific:
+  void swap();
+  void swap(uint8_t tx_pin);
+  size_t write(const uint8_t *buffer, size_t size);
+  size_t write(const char *buffer);
+  size_t readBytes(char* buffer, size_t size) override;
+  size_t readBytes(uint8_t* buffer, size_t size) override;
+  int baudRate(void);
+  void setDebugOutput(bool);
+  bool isTxEnabled(void);
+  bool isRxEnabled(void);
+#ifdef CORE_2_5_0
+  bool hasRxError(void);
+#endif
+  void startDetectBaudrate();
+  unsigned long testBaudrate();
+  unsigned long detectBaudrate(time_t timeoutMillis);
 
 
-   // FIXME TD-er: See https://www.artima.com/cppsource/safebool.html
-   operator bool() const;
-
-   // HardwareSerial specific:
-   void swap();
-   void swap(uint8_t tx_pin);
-   size_t write(const uint8_t *buffer, size_t size);
-   size_t write(const char *buffer);
-   size_t readBytes(char* buffer, size_t size) override;
-   size_t readBytes(uint8_t* buffer, size_t size) override;
-   int baudRate(void);
-
-
-   // SoftwareSerial specific
+  // SoftwareSerial specific
   void setTransmitEnablePin(uint8_t transmitEnablePin);
   // AVR compatibility methods
-  bool listen() { enableRx(true); return true; }
-  bool isListening() { return m_rxEnabled; }
-  bool stopListening() { enableRx(false); return true; }
+  bool listen();
+  bool isListening();
+  bool stopListening();
 
-   using Print::write;
+  using Print::write;
 
-   bool serial0_swap_active() { return _serial0_swap_active; }
+  bool serial0_swap_active() const { return _serial0_swap_active; }
 
 private:
 
+  const HardwareSerial* getHW() const;
   HardwareSerial* getHW();
 
-  bool isValid();
+  bool isValid() const;
 
-  bool isSWserial() { return _serialtype == ESPeasySerialType::serialtype::software; }
+  bool isSWserial() const { return _serialtype == ESPeasySerialType::serialtype::software; }
 
   SoftwareSerial* _swserial = nullptr;
   ESPeasySerialType::serialtype _serialtype;
   int _receivePin; // Needed?
   int _transmitPin;// Needed?
   unsigned long _baud = 0;
-  static bool _serial0_swap_active = false;
+  static bool _serial0_swap_active;
 
 };
 
