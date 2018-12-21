@@ -135,11 +135,6 @@ Display
 
 Plugins: |Plugin_Display|
 
-Distance
---------
-
-Plugins: |Plugin_Distance|
-
 Dust
 ----
 
@@ -222,6 +217,13 @@ Output
 ------
 
 Plugins: |Plugin_Output|
+
+Position
+--------
+
+Plugins: |Plugin_Position|
+
+Hardware: |P013_usedby|
 
 Regulator
 ---------

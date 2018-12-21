@@ -338,7 +338,7 @@ boot/reboot/time/sleep etc. of the unit:
 
    .. code-block:: html
 
-	   on WiFi#APmodeEnabled do
+	   on WiFi#APmodeDisabled do
 	    Publish,%sysname%/status,AP disabled
 	   endon
 

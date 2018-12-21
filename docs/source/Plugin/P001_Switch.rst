@@ -140,6 +140,11 @@ Rules examples
      endif
     endon
 
+.. Commands available
+.. ~~~~~~~~~~~~~~~~~~
+
+.. .. include:: P013_commands.repl
+
 Where to buy
 ------------
 

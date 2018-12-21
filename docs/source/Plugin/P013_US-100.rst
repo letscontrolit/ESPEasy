@@ -1,18 +1,18 @@
 .. include:: ../Plugin/_plugin_substitutions_p01x.repl
-.. _P013_HC-SR04_page:
+.. _P013_US-100_page:
 
-HC-SR04
-=======
+US-100
+======
 
 |P013_typename|
 |P013_status|
 
-.. image:: P013_HC-SR04_1.jpg
+.. image:: P013_US-100_1.jpg
 
 Introduction
 ------------
 
-The HC-SR04 is a ultrasonic distance sensor. It's able to indicate distances between 2 cm up to about 300 cm
+The US-100 is a ultrasonic distance sensor. It's able to indicate distances between 2 cm up to about 300 cm
 at a resolution of about 0.3 cm.
 
 Specifications:
@@ -24,11 +24,11 @@ Specifications:
 Wiring
 ------
 
-The HC-SR04 must be run on 5V. Running it with 3.3V will show very weak results or nothing at all.
+The US-100 must be run on 5V. Running it with 3.3V will show very weak results or nothing at all.
 
 .. code-block:: html
 
-  ESP               HC-SR04
+  ESP               US-100
   GPIO (X)   <-->   Trigger
   GPIO (X)   <-->   Echo (voltage divider!)
 
@@ -41,13 +41,13 @@ The HC-SR04 must be run on 5V. Running it with 3.3V will show very weak results 
 Setup
 -----
 
-.. image:: P013_Setup_HC-SR04_1.png
+.. image:: P013_Setup_US-100_1.png
 
 Task settings
 ~~~~~~~~~~~~~
 
 * **Device**: Name of plugin
-* **Name**: Name of the task (example name **HCSR04**)
+* **Name**: Name of the task (example name **US100**)
 * **Enable**: Should the task be enabled or not
 
 Sensor
@@ -91,8 +91,8 @@ Rules examples
 
 .. code-block:: html
 
- on HCSR04#distance do
-  if [HCSR04#distance]<50 and [HCSR04#distance]>45
+ on US100#distance do
+  if [US100#distance]<50 and [US100#distance]>45
     GPIO,14,1 //light up LED to show that you're at the correct position
   else
     GPIO,14,0
@@ -111,9 +111,8 @@ Where to buy
   :header: "Store", "Link"
   :widths: 5, 40
 
-  "AliExpress","`Link 1 ($) <http://s.click.aliexpress.com/e/bGx6Myqk>`_"
-  "Banggood","`Link 2 ($) <https://www.banggood.com/Wholesale-Ultrasonic-Module-HC-SR04-Distance-Measuring-Ranging-Transducer-Sensor-p-40313.html?p=V3270422659778201806>`_"
-  "eBay","`Link 3 ($) <https://rover.ebay.com/rover/1/711-53200-19255-0/1?icep_id=114&ipn=icep&toolid=20004&campid=5338336929&mpre=https%3A%2F%2Fwww.ebay.com%2Fsch%2Fi.html%3F_from%3DR40%26_trksid%3Dm570.l1313%26_nkw%3DHC-SR04%26_sacat%3D0%26LH_TitleDesc%3D0%26_osacat%3D0%26_odkw%3Dlcd%2B2004>`_"
+  "AliExpress","`Link 1 ($) <http://s.click.aliexpress.com/e/cGKb9zcy>`_"
+  "eBay","`Link 2 ($) <https://rover.ebay.com/rover/1/711-53200-19255-0/1?icep_id=114&ipn=icep&toolid=20004&campid=5338336929&mpre=https%3A%2F%2Fwww.ebay.com%2Fsch%2Fi.html%3F_from%3DR40%26_trksid%3Dm570.l1313%26_nkw%3DUS-100%26_sacat%3D0%26LH_TitleDesc%3D0%26_osacat%3D0%26_odkw%3DRCW-0001>`_"
 
 |affiliate|
 

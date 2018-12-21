@@ -68,7 +68,6 @@ Sensor
 * **GPIO <--> Data**: Pulse input is generally set to **GPIO 14 (D5)**.
 * **Sensor model**: Pick your **sensor model**, either DHT11 or DHT22.
 
-.. note::
 
 Data acquisition
 ^^^^^^^^^^^^^^^^
@@ -99,6 +98,11 @@ Rules examples
        NeoPixelAll,0,255,0 //Green light
      EndIf
     EndOn
+
+.. Commands available
+.. ~~~~~~~~~~~~~~~~~~
+
+.. .. include:: P013_commands.repl
 
 Where to buy
 ------------
