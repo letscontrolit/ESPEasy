@@ -7,9 +7,9 @@
 #define CPLUGIN_ID_007         7
 #define CPLUGIN_NAME_007       "Emoncms"
 
-boolean CPlugin_007(byte function, struct EventStruct *event, String& string)
+bool CPlugin_007(byte function, struct EventStruct *event, String& string)
 {
-  boolean success = false;
+  bool success = false;
 
   switch (function)
   {

@@ -1,4 +1,22 @@
 -------------------------------------------------
+Changes in release mega-20181220 (since mega-20181218)
+-------------------------------------------------
+
+Release date: Thu Dec 20 04:00:08 CET 2018
+
+Grovkillen (2):
+      [docs] P005 DHT11 + DHT22 hardware added
+      [docs] fixed better value name in P003
+
+TD-er (5):
+      [PUYA] Support for PUYA now in core 2.5.0
+      [TimingStats] Add timing stats for controllers
+      [TimingStats] Add handle_schedule() to the timingstats.
+      [WiFi] Add WiFi#APmodeDisabled & WiFi#APmodeEnabled #2180
+      [WiFi] Documentation of new WiFi#APmodeEnabled / Disabled events
+
+
+-------------------------------------------------
 Changes in release mega-20181218 (since mega-20181217)
 -------------------------------------------------
 

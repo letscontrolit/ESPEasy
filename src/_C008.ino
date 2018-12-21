@@ -8,9 +8,9 @@
 #define CPLUGIN_NAME_008       "Generic HTTP"
 #include <ArduinoJson.h>
 
-boolean CPlugin_008(byte function, struct EventStruct *event, String& string)
+bool CPlugin_008(byte function, struct EventStruct *event, String& string)
 {
-  boolean success = false;
+  bool success = false;
 
   switch (function)
   {

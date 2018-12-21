@@ -7,9 +7,9 @@
 #define CPLUGIN_ID_003         3
 #define CPLUGIN_NAME_003       "Nodo Telnet"
 
-boolean CPlugin_003(byte function, struct EventStruct *event, String& string)
+bool CPlugin_003(byte function, struct EventStruct *event, String& string)
 {
-  boolean success = false;
+  bool success = false;
 
   switch (function)
   {
@@ -57,7 +57,7 @@ boolean CPlugin_003(byte function, struct EventStruct *event, String& string)
 }
 
 bool do_process_c003_delay_queue(int controller_number, const C003_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
-  boolean success = false;
+  bool success = false;
   char log[80];
   addLog(LOG_LEVEL_DEBUG, String(F("TELNT : connecting to ")) + ControllerSettings.getHostPortString());
   // Use WiFiClient class to create TCP connections
