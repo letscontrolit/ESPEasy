@@ -112,6 +112,7 @@ Rules examples
     Else
       Publish,%sysname%/WaterStream/status,Water is life!
     EndIf
+  EndOn
 
 
  .. Commands available
