@@ -23,6 +23,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #ifndef ESPeasySoftwareSerial_h
 #define ESPeasySoftwareSerial_h
 
+#include <Arduino.h>
+#include <SoftwareSerial.h>
 #include <inttypes.h>
 #include <Stream.h>
 
@@ -31,56 +33,103 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 // the constructor however has an optional rx buffer size.
 // Speed up to 115200 can be used.
 
+struct ESPeasySerialType {
+  enum serialtype {
+    serial0,
+    serial0_swap,
+    serial1,
+    software
+  };
+
+  static ESPeasySerialType::serialtype getSerialType(int receivePin, int transmitPin) {
+    if (receivePin == 3 && transmitPin == 1) {
+      return serialtype::serial0; // UART0
+    }
+    if (receivePin == 13 && transmitPin == 15) {
+      return serialtype::serial0_swap; // UART0 remapped using Serial.swap()
+    }
+    if (receivePin == -1 && transmitPin == 2) {
+      // Serial1 uses UART1, TX pin is GPIO2.
+      // UART1 can not be used to receive data because normally
+      // it's RX pin is occupied for flash chip connection.
+      return serialtype::serial1;
+    }
+    return serialtype::software;
+  }
+
+  static void getPinsFromSerialType(ESPeasySerialType::serialtype s_type, int& receivePin, int& transmitPin) {
+    switch (s_type) {
+      case serialtype::serial0:      receivePin = 3;  transmitPin = 1;  break;
+      case serialtype::serial0_swap: receivePin = 13; transmitPin = 15; break;
+      case serialtype::serial1:      receivePin = -1; transmitPin = 2;  break;
+      case serialtype::software:
+      default:
+        break;
+    }
+  }
+
+};
 
 class ESPeasySoftwareSerial : public Stream
 {
 public:
-   ESPeasySoftwareSerial(uint8_t receivePin, uint8_t transmitPin, bool inverse_logic = false, uint16_t buffSize = 64);
+
+   ESPeasySoftwareSerial(int receivePin, int transmitPin, bool inverse_logic = false, unsigned int buffSize = 64);
    virtual ~ESPeasySoftwareSerial();
 
-   void begin(long speed);
-   void setTransmitEnablePin(uint8_t transmitEnablePin);
+   void begin(unsigned long baud, SerialConfig config=SERIAL_8N1, SerialMode mode=SERIAL_FULL, uint8_t tx_pin=1);
 
-   int peek();
+   void end();
+   int peek(void);
+   size_t write(uint8_t byte) override;
+   int read(void) override;
+   int available(void) override;
+   void flush(void) override;
 
-   virtual size_t write(uint8_t byte);
-   virtual int read();
-   virtual int available();
-   virtual void flush();
-   operator bool() {return m_rxValid || m_txValid;}
+   bool overflow();        // SoftwareSerial
+   bool hasOverrun(void);  // HardwareSerial
 
-   // Disable or enable interrupts on the rx pin
-   void enableRx(bool on);
 
-   void rxRead();
+   // FIXME TD-er: See https://www.artima.com/cppsource/safebool.html
+   operator bool() const;
 
-   // AVR compatibility methods
-   bool listen() { enableRx(true); return true; }
-   void end() { stopListening(); }
-   bool isListening() { return m_rxEnabled; }
-   bool stopListening() { enableRx(false); return true; }
+   // HardwareSerial specific:
+   void swap();
+   void swap(uint8_t tx_pin);
+   size_t write(const uint8_t *buffer, size_t size);
+   size_t write(const char *buffer);
+   size_t readBytes(char* buffer, size_t size) override;
+   size_t readBytes(uint8_t* buffer, size_t size) override;
+   int baudRate(void);
+
+
+   // SoftwareSerial specific
+  void setTransmitEnablePin(uint8_t transmitEnablePin);
+  // AVR compatibility methods
+  bool listen() { enableRx(true); return true; }
+  bool isListening() { return m_rxEnabled; }
+  bool stopListening() { enableRx(false); return true; }
 
    using Print::write;
 
-private:
-   bool isValidGPIOpin(uint8_t pin);
-   uint8_t pinToIndex(uint8_t pin);
+   bool serial0_swap_active() { return _serial0_swap_active; }
 
-   // Member variables
-   uint8_t m_rxPin, m_txPin, m_txEnablePin;
-   bool m_rxValid, m_rxEnabled;
-   bool m_txValid, m_txEnableValid;
-   bool m_invert;
-   unsigned long m_bitTime;
-   uint16_t m_inPos, m_outPos;
-   uint16_t m_buffSize;
-   uint8_t *m_buffer;
+private:
+
+  HardwareSerial* getHW();
+
+  bool isValid();
+
+  bool isSWserial() { return _serialtype == ESPeasySerialType::serialtype::software; }
+
+  SoftwareSerial* _swserial = nullptr;
+  ESPeasySerialType::serialtype _serialtype;
+  int _receivePin; // Needed?
+  int _transmitPin;// Needed?
+  unsigned long _baud = 0;
+  static bool _serial0_swap_active = false;
 
 };
-
-// If only one tx or rx wanted then use this as parameter for the unused pin
-#define SW_SERIAL_UNUSED_PIN -1
-
 
 #endif
 #endif

@@ -1,246 +1,273 @@
-/*
-
-ESPeasySoftwareSerial.cpp - Implementation of the Arduino software serial for ESP8266.
-Copyright (c) 2015-2016 Peter Lerup. All rights reserved.
-
-This library is free software; you can redistribute it and/or
-modify it under the terms of the GNU Lesser General Public
-License as published by the Free Software Foundation; either
-version 2.1 of the License, or (at your option) any later version.
-
-This library is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-Lesser General Public License for more details.
-
-You should have received a copy of the GNU Lesser General Public
-License along with this library; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-
-*/
 #ifdef ESP8266  // Needed for precompile issues.
-#include <Arduino.h>
-
-// The Arduino standard GPIO routines are not enough,
-// must use some from the Espressif SDK as well
-extern "C" {
-#include "gpio.h"
-}
-
 #include <ESPeasySoftwareSerial.h>
 
-#define MAX_PIN 15
-#define USABLE_PINS 10
-#define NR_CONCURRENT_SOFT_SERIALS 3
-
-// As the Arduino attachInterrupt has no parameter, lists of objects
-// and callbacks corresponding to each possible GPIO pins have to be defined
-static ESPeasySoftwareSerial *ObjList[NR_CONCURRENT_SOFT_SERIALS];
-static uint8_t PinControllerMap[NR_CONCURRENT_SOFT_SERIALS]={}; // Zero all elements
-
-void ICACHE_RAM_ATTR sws_isr_0() { ObjList[0]->rxRead(); };
-void ICACHE_RAM_ATTR sws_isr_1() { ObjList[1]->rxRead(); };
-void ICACHE_RAM_ATTR sws_isr_2() { ObjList[2]->rxRead(); };
-/*void ICACHE_RAM_ATTR sws_isr_3() { ObjList[3]->rxRead(); };
-void ICACHE_RAM_ATTR sws_isr_4() { ObjList[4]->rxRead(); };
-void ICACHE_RAM_ATTR sws_isr_5() { ObjList[5]->rxRead(); };
-// Pin 6 to 11 can not be used
-void ICACHE_RAM_ATTR sws_isr_12() { ObjList[6]->rxRead(); };
-void ICACHE_RAM_ATTR sws_isr_13() { ObjList[7]->rxRead(); };
-void ICACHE_RAM_ATTR sws_isr_14() { ObjList[8]->rxRead(); };
-void ICACHE_RAM_ATTR sws_isr_15() { ObjList[9]->rxRead(); };
-*/
-
-static void (*ISRList[NR_CONCURRENT_SOFT_SERIALS])() = {
-      sws_isr_0,
-      sws_isr_1,
-      sws_isr_2 /*,
-      sws_isr_3,
-      sws_isr_4,
-      sws_isr_5,
-      // Pin 6 to 11 can not be used
-      sws_isr_12,
-      sws_isr_13,
-      sws_isr_14,
-      sws_isr_15
-      */
-};
-
-ESPeasySoftwareSerial::ESPeasySoftwareSerial(uint8_t receivePin, uint8_t transmitPin, bool inverse_logic, uint16_t buffSize) {
-   m_rxValid = m_txValid = m_txEnableValid = false;
-   m_buffer = NULL;
-   m_invert = inverse_logic;
-   m_rxEnabled = false;
-   if (isValidGPIOpin(receivePin)) {
-      m_rxPin = receivePin;
-      m_buffSize = buffSize;
-      m_buffer = (uint8_t*)malloc(m_buffSize);
-      if (m_buffer != NULL) {
-         m_rxValid = true;
-         m_inPos = m_outPos = 0;
-         pinMode(m_rxPin, INPUT);
-         const uint8_t index = pinToIndex(m_rxPin);
-         if (index == NR_CONCURRENT_SOFT_SERIALS) {
-           return; // Not possible to add software Serial.
-         }
-         ObjList[index] = this;
-         enableRx(true);
-      }
-   }
-   if (isValidGPIOpin(transmitPin)) {
-      m_txValid = true;
-      m_txPin = transmitPin;
-      pinMode(m_txPin, OUTPUT);
-      digitalWrite(m_txPin, !m_invert);
-   }
-   // Default speed
-   begin(9600);
+ESPeasySoftwareSerial(int receivePin, int transmitPin, bool inverse_logic, unsigned int buffSize)
+    : _swserial(nullptr), _receivePin(receivePin), _transmitPin(transmitPin)
+{
+  _serialtype = ESPeasySerialType::getSerialType(receivePin, transmitPin);
+  if (isSWserial()) {
+    _swserial = new SoftwareSerial(receivePin, transmitPin, inverse_logic, buffSize);
+  } else {
+    getHW()->pins(transmitPin, receivePin);
+  }
 }
 
-ESPeasySoftwareSerial::~ESPeasySoftwareSerial() {
-   enableRx(false);
-   if (m_rxValid) {
-     const uint8_t index = pinToIndex(m_rxPin);
-     if (index < NR_CONCURRENT_SOFT_SERIALS) {
-       PinControllerMap[index] = 0;
-       ObjList[index] = NULL;
-     }
+ ~ESPeasySoftwareSerial() {
+   end();
+   if (_swserial != nullptr) {
+     delete _swserial;
    }
-   if (m_buffer)
-      free(m_buffer);
-}
+ }
 
-bool ESPeasySoftwareSerial::isValidGPIOpin(uint8_t pin) {
-  if (pin >= 0 && pin <= 5) {
-    return true;
+  HardwareSerial* ESPeasySoftwareSerial::getHW() {
+    switch (_serialtype) {
+      case ESPeasySerialType::serialtype::serial0:
+      case ESPeasySerialType::serialtype::serial0_swap:
+        return &Serial;
+      case ESPeasySerialType::serialtype::serial1:
+        return &Serial1;
+      case ESPeasySerialType::serialtype::software:
+        break;
+    }
+    return nullptr;
   }
-  if (pin >= 12 && pin <= MAX_PIN) {
-    return true;
-  }
-  return false;
-}
 
-uint8_t ESPeasySoftwareSerial::pinToIndex(uint8_t pin) {
-  // Pin will be stored in the map, only "1" will be added,
-  // to allow simple initialize to 0 and still use GPIO-0.
-  const uint8_t stored_pin = pin + 1;
-  for (unsigned i = 0; i < NR_CONCURRENT_SOFT_SERIALS; ++i) {
-    if (PinControllerMap[i] == stored_pin) return i;
+  bool ESPeasySoftwareSerial::isValid() {
+    switch (_serialtype) {
+      case ESPeasySerialType::serialtype::serial0:      return !_serial0_swap_active;
+      case ESPeasySerialType::serialtype::serial0_swap: return _serial0_swap_active;
+      case ESPeasySerialType::serialtype::serial1:      return true; // Must also check RX pin?
+      case ESPeasySerialType::serialtype::software:     return _swserial != nullptr;
+    }
+    return false;
   }
-  // Not found, add as first free option.
-  for (unsigned i = 0; i < NR_CONCURRENT_SOFT_SERIALS; ++i) {
-    if (PinControllerMap[i] == 0) {
-      PinControllerMap[i] = stored_pin;
-      return i;
+
+void ESPeasySoftwareSerial::begin(unsigned long baud, SerialConfig config, SerialMode mode, uint8_t tx_pin) {
+  _baud = baud;
+  if (_serialtype == ESPeasySerialType::serialtype::serial0_swap) {
+    // Serial.swap() should only be called here and only once.
+    if (!_serial0_swap_active) {
+      Serial.begin(baud, config, mode, tx_pin);
+      Serial.swap();
+      _serial0_swap_active = true;
+      return;
     }
   }
-  // No more controllers available.
-  return NR_CONCURRENT_SOFT_SERIALS;
-}
-
-void ESPeasySoftwareSerial::begin(long speed) {
-   // Use getCycleCount() loop to get as exact timing as possible
-   m_bitTime = ESP.getCpuFreqMHz()*1000000/speed;
-   if (!m_rxEnabled)
-     enableRx(true);
-}
-
-void ESPeasySoftwareSerial::setTransmitEnablePin(uint8_t transmitEnablePin) {
-  if (isValidGPIOpin(transmitEnablePin)) {
-     m_txEnableValid = true;
-     m_txEnablePin = transmitEnablePin;
-     pinMode(m_txEnablePin, OUTPUT);
-     digitalWrite(m_txEnablePin, LOW);
+  if (!isValid()) {
+    _baud = 0;
+    return;
+  }
+  if (isSWserial()) {
+    _swserial->begin(baud);
   } else {
-     m_txEnableValid = false;
+    getHW()->begin(baud, config, mode, tx_pin);
   }
 }
 
-void ESPeasySoftwareSerial::enableRx(bool on) {
-   if (m_rxValid) {
-      if (on) {
-         attachInterrupt(m_rxPin, ISRList[pinToIndex(m_rxPin)], m_invert ? RISING : FALLING);
-      } else {
-         detachInterrupt(m_rxPin);
+void ESPeasySoftwareSerial::end() {
+  if (!isValid()) {
+    return;
+  }
+  if (isSWserial()) {
+    return _swserial->end();
+  } else {
+    if (_serialtype == ESPeasySerialType::serialtype::serial0_swap) {
+      if (_serial0_swap_active) {
+        Serial.end();
+        Serial.swap();
+        _serial0_swap_active = false;
+        return;
       }
-      m_rxEnabled = on;
+    }
+    return getHW()->end();
+  }
+}
+
+int ESPeasySoftwareSerial::peek(void) {
+  if (!isValid()) {
+    return -1;
+  }
+  if (isSWserial()) {
+    return _swserial->peek();
+  } else {
+    return getHW()->peek();
+  }
+}
+
+size_t ESPeasySoftwareSerial::write(uint8_t byte) {
+  if (!isValid()) {
+    return 0;
+  }
+  if (isSWserial()) {
+    return _swserial->write(byte);
+  } else {
+    return getHW()->write(byte);
+  }
+}
+
+size_t ESPeasySoftwareSerial::write(const uint8_t *buffer, size_t size) {
+  if (!isValid() || !buffer) {
+    return 0;
+  }
+  if (isSWserial()) {
+    // Not implemented in SoftwareSerial
+    size_t count = 0;
+    for (size_t i = 0; i < size; ++i) {
+      size_t written = _swserial->write(buffer[i]);
+      if (written == 0) return count;
+      count += written;
+    }
+    return count;
+  } else {
+    return getHW()->write(buffer, size);
+  }
+}
+
+size_t ESPeasySoftwareSerial::write(const uint8_t *buffer, size_t size) {
+  if (!buffer) return 0;
+  return write(buffer, strlen(buffer));
+}
+
+int ESPeasySoftwareSerial::read(void) {
+  if (!isValid()) {
+    return -1;
+  }
+  if (isSWserial()) {
+    return _swserial->read();
+  } else {
+    return getHW()->read();
+  }
+}
+
+size_t ESPeasySoftwareSerial::readBytes(char* buffer, size_t size)  {
+  if (!isValid() || !buffer) {
+    return 0;
+  }
+  if (isSWserial()) {
+    // Not implemented in SoftwareSerial
+    size_t count = 0;
+    for (size_t i = 0; i < size; ++i) {
+      int read = _swserial->read(buffer[i]);
+      if (read < 0) return count;
+      buffer[i] = static_cast<char>(read & 0xFF);
+      ++count;
+    }
+    return count;
+  } else {
+    return getHW()->readBytes(buffer, size);
+  }
+}
+
+size_t ESPeasySoftwareSerial::readBytes(uint8_t* buffer, size_t size)  {
+  return readBytes((char*)buffer, size);
+}
+
+int ESPeasySoftwareSerial::available(void) {
+  if (!isValid()) {
+    return 0;
+  }
+  if (isSWserial()) {
+    return _swserial->available();
+  } else {
+    return getHW()->available();
+  }
+}
+
+void ESPeasySoftwareSerial::flush(void) {
+  if (!isValid()) {
+    return;
+  }
+  if (isSWserial()) {
+    return _swserial->flush();
+  } else {
+    return getHW()->flush();
+  }
+}
+
+ operator ESPeasySoftwareSerial::bool() const {
+   if (!isValid()) {
+     return false;
    }
-}
-
-int ESPeasySoftwareSerial::read() {
-   if (!m_rxValid || (m_inPos == m_outPos)) return -1;
-   uint8_t ch = m_buffer[m_outPos];
-   m_outPos = (m_outPos+1) % m_buffSize;
-   return ch;
-}
-
-int ESPeasySoftwareSerial::available() {
-   if (!m_rxValid) return 0;
-   int avail = m_inPos - m_outPos;
-   if (avail < 0) avail += m_buffSize;
-   return avail;
-}
-
-#define WAIT { while (ESP.getCycleCount()-start < wait); wait += m_bitTime; }
-
-size_t ESPeasySoftwareSerial::write(uint8_t b) {
-   if (!m_txValid) return 0;
-
-   if (m_invert) b = ~b;
-   // Disable interrupts in order to get a clean transmit
-   cli();
-   if (m_txEnableValid) digitalWrite(m_txEnablePin, HIGH);
-   unsigned long wait = m_bitTime;
-   digitalWrite(m_txPin, HIGH);
-   unsigned long start = ESP.getCycleCount();
-    // Start bit;
-   digitalWrite(m_txPin, LOW);
-   WAIT;
-   for (int i = 0; i < 8; i++) {
-     digitalWrite(m_txPin, (b & 1) ? HIGH : LOW);
-     WAIT;
-     b >>= 1;
+   if (isSWserial()) {
+     // SoftwareSerial doesn't have const on this operator
+     return const_cast<SoftwareSerial*>(_swserial)->bool();
+   } else {
+     return getHW()->bool();
    }
-   // Stop bit
-   digitalWrite(m_txPin, HIGH);
-   WAIT;
-   if (m_txEnableValid) digitalWrite(m_txEnablePin, LOW);
-   sei();
-   return 1;
-}
+ }
 
-void ESPeasySoftwareSerial::flush() {
-   m_inPos = m_outPos = 0;
-}
 
-int ESPeasySoftwareSerial::peek() {
-   if (!m_rxValid || (m_inPos == m_outPos)) return -1;
-   return m_buffer[m_outPos];
-}
-
-void ICACHE_RAM_ATTR ESPeasySoftwareSerial::rxRead() {
-   // Advance the starting point for the samples but compensate for the
-   // initial delay which occurs before the interrupt is delivered
-   unsigned long wait = m_bitTime + m_bitTime/3 - 500;
-   unsigned long start = ESP.getCycleCount();
-   uint8_t rec = 0;
-   for (uint8_t i = 0; i < 8; i++) {
-     WAIT;
-     rec >>= 1;
-     if (digitalRead(m_rxPin))
-       rec |= 0x80;
+ bool overflow() { return hasOverrun(); }
+ bool hasOverrun(void) {
+   if (!isValid()) {
+     return false;
    }
-   if (m_invert) rec = ~rec;
-   // Stop bit
-   WAIT;
-   // Store the received value in the buffer unless we have an overflow
-   uint16_t next = (m_inPos+1) % m_buffSize;
-   if (next != m_inPos) {
-      m_buffer[m_inPos] = rec;
-      m_inPos = next;
+   if (isSWserial()) {
+     return _swserial->overflow();
+   } else {
+     return getHW()->hasOverrun();
    }
-   // Must clear this bit in the interrupt register,
-   // it gets set even when interrupts are disabled
-   GPIO_REG_WRITE(GPIO_STATUS_W1TC_ADDRESS, 1 << m_rxPin);
-}
-#endif
+ }
+
+
+
+ // *****************************
+ // HardwareSerial specific
+ // *****************************
+
+ void ESPeasySoftwareSerial::swap() {
+   swap(1);
+ }
+
+ void ESPeasySoftwareSerial::swap(uint8_t tx_pin) {
+   if (isValid() && !isSWserial()) {
+     switch (_serialtype) {
+       case ESPeasySerialType::serialtype::serial0:
+       case ESPeasySerialType::serialtype::serial0_swap:
+          _serial0_swap_active = !_serial0_swap_active;
+          getHW()->swap(tx_pin);
+          break;
+      default:
+          return;
+     }
+   }
+ }
+
+ int ESPeasySoftwareSerial::baudRate(void) {
+   if (!isValid() || isSWserial()) {
+     return _baud;
+   }
+   return getHW()->baudRate();
+ }
+
+
+
+// *****************************
+// SoftwareSerial specific
+// *****************************
+
+
+ bool ESPeasySoftwareSerial::listen() {
+   if (isValid() && isSWserial()) {
+     return _swserial->listen();
+   }
+   return false;
+ }
+
+ bool ESPeasySoftwareSerial::isListening() {
+   if (isValid() && isSWserial()) {
+     return _swserial->isListening();
+   }
+   return false;
+ }
+
+ bool ESPeasySoftwareSerial::stopListening() {
+   if (isValid() && isSWserial()) {
+     return _swserial->stopListening();
+   }
+   return false;
+ }
+
+
+
+#endif // ESP8266

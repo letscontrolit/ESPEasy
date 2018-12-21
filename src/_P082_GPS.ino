@@ -47,20 +47,30 @@ struct P082_data_struct {
     if (serial_rx < 0 || serial_tx < 0) return false;
     reset();
     gps = new TinyGPSPlus();
-    softserial = new ESPeasySoftwareSerial(serial_rx, serial_tx);
+//    softserial = new ESPeasySoftwareSerial(serial_rx, serial_tx);
+    Serial.begin(9600);
+    Serial.swap();
     return isInitialized();
   }
 
   bool isInitialized() const {
-    return gps != nullptr && softserial != nullptr;
+    return gps != nullptr; //&& softserial != nullptr;
   }
 
   bool loop() {
     if (!isInitialized()) return false;
     bool fullSentenceReceived = false;
-    while (softserial->available() > 0) {
-      if (gps->encode(softserial->read())) {
-        fullSentenceReceived = true;
+    if (softserial != nullptr) {
+      while (softserial->available() > 0) {
+        if (gps->encode(softserial->read())) {
+          fullSentenceReceived = true;
+        }
+      }
+    } else {
+      while (Serial.available() > 0) {
+        if (gps->encode(Serial.read())) {
+          fullSentenceReceived = true;
+        }
       }
     }
     return fullSentenceReceived;
@@ -204,23 +214,50 @@ boolean Plugin_082(byte function, struct EventStruct *event, String& string)
             P028_LONGITUDE = P082_data.gps->location.lng();
             P028_LATITUDE  = P082_data.gps->location.lat();
             success = true;
+            addLog(LOG_LEVEL_INFO, F("GPS: Position update."));
           }
           if (P082_data.gps->altitude.isUpdated()) {
             // ToDo make unit selectable
             P028_ALTITUDE = P082_data.gps->altitude.meters();
             success = true;
+            addLog(LOG_LEVEL_INFO, F("GPS: Altitude update."));
           }
           if (P082_data.gps->speed.isUpdated()) {
             // ToDo make unit selectable
             P028_SPEED = P082_data.gps->speed.mps();
+            addLog(LOG_LEVEL_INFO, F("GPS: Speed update."));
             success = true;
           }
         }
+        P082_logStats(event);
         break;
       }
   }
   return success;
 }
 
+void P082_logStats(struct EventStruct *event) {
+  if (!P082_data.isInitialized()) return;
+  if (!loglevelActiveFor(LOG_LEVEL_INFO)) return;
+
+  String log = F("GPS:");
+  log += F(" Fix: ");
+  log += String(P082_data.hasFix(P028_DEFAULT_FIX_TIMEOUT));
+  log += F(" Long: ");
+  log += P028_LONGITUDE;
+  log += F(" Lat: ");
+  log += P028_LATITUDE;
+  log += F(" Alt: ");
+  log += P028_ALTITUDE;
+  log += F(" Spd: ");
+  log += P028_SPEED;
+
+  log += F(" Chksum(pass/fail): ");
+  log += P082_data.gps->passedChecksum();
+  log += '/';
+  log += P082_data.gps->failedChecksum();
+
+  addLog(LOG_LEVEL_INFO, log);
+}
 
 #endif // USES_P082
