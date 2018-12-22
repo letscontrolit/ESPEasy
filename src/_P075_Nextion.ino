@@ -11,11 +11,6 @@
 // Added SendStatus() to post log message on browser to acknowledge HTTP write.
 // Added reserve() to minimize string memory allocations.
 //
-// Aug-03-2018 change log summary:
-// This updated Nextion Plugin introduces hardware (UART) serial as an alternative to SoftSerial.
-// Hardware serial offers more reliable communication with the Nextion display.
-// Created on the experimental Serial.swap() work of BertB.
-//
 
 #ifdef USES_P075
 #include <ESPeasySerial.h>
@@ -57,7 +52,7 @@
 
 
 // Global vars
-ESPeasySerial *SoftSerial = NULL;
+ESPeasySerial *P075_easySerial = NULL;
 int rxPin = -1;
 int txPin = -1;
 
@@ -150,7 +145,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
         }
       }
 
-      if (Settings.TaskDevicePluginConfig[event->TaskIndex][0] == false) { // SoftSerial mode.
+      if (Settings.TaskDevicePluginConfig[event->TaskIndex][0] == false) { // P075_easySerial mode.
         Settings.TaskDevicePluginConfig[event->TaskIndex][1] = B9600;      // Reset to 9600 baud.
       }
 
@@ -252,9 +247,9 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
         txPin = Settings.TaskDevicePin2[event->TaskIndex];
       }
 
-      if (SoftSerial != NULL) {
-        delete SoftSerial;
-        SoftSerial = NULL;
+      if (P075_easySerial != NULL) {
+        delete P075_easySerial;
+        P075_easySerial = NULL;
       }
 
       String log;
@@ -280,9 +275,6 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
             Settings.UseSerial = false;                 // Disable global Serial port.
             Settings.SerialLogLevel = 0;                // Disable logging on serial port.
             Settings.BaudRate = AdvHwBaud;              // Set BaudRate for Nextion.
-            Serial.flush();
-            Serial.begin(AdvHwBaud);
-            Serial.swap();
         }
         // Hardware serial is RX on 3 and TX on 1. USB serial for Nextion IDE (User MCU Input function).
         else if(AdvHwSerial && rxPin == 3 && txPin == 1) {
@@ -292,19 +284,17 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
             Settings.UseSerial = false;                 // Disable global Serial port.
             Settings.SerialLogLevel = 0;                // Disable logging on serial port.
             Settings.BaudRate = AdvHwBaud;              // Set BaudRate for Nextion.
-            Serial.flush();
-            Serial.begin(AdvHwBaud);
         }
         else {
             log = F("NEXTION075 : Using software serial");
             addLog(LOG_LEVEL_INFO, log);
             HwSerial = SOFTSERIAL;
-            if (SoftSerial == NULL) {
-                SoftSerial = new ESPeasySerial(rxPin, txPin, false, RXBUFFSZ);
-            }
-            SoftSerial->begin(9600);
-            SoftSerial->flush();
         }
+        if (P075_easySerial == NULL) {
+            P075_easySerial = new ESPeasySerial(rxPin, txPin, false, RXBUFFSZ);
+        }
+        P075_easySerial->begin(9600);
+        P075_easySerial->flush();
         Plugin_075_loadDisplayLines(event->TaskIndex);
     }
     else {
@@ -441,17 +431,16 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
 
 
     case PLUGIN_EXIT: {
-        if (SoftSerial) {
-            delete SoftSerial;
-            SoftSerial=NULL;
-        }
-
         if(HwSerial == UARTSERIAL) {
             HwSerial = SOFTSERIAL;
             Settings.UseSerial		= DEFAULT_USE_SERIAL;
             Settings.BaudRate		= DEFAULT_SERIAL_BAUD;
-            Serial.flush();
-            Serial.begin(DEFAULT_SERIAL_BAUD);          // Restart System Serial Port (Serial Log) with default baud.
+        }
+        if (P075_easySerial) {
+            P075_easySerial->flush();
+            P075_easySerial->begin(DEFAULT_SERIAL_BAUD);          // Restart System Serial Port (Serial Log) with default baud.
+            delete P075_easySerial;
+            P075_easySerial=NULL;
         }
         for (byte varNr = 0; varNr < P75_Nlines; varNr++) {
           P075_displayLines[varNr] = "";
@@ -482,44 +471,28 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
         break;
       }
 
-      if(HwSerial == UARTSERIAL) {
-        charCount = Serial.available();                 // Prime the Hardware Serial engine.
-        if(charCount >= RXBUFFWARN) {                   // ESP8266 has 128 byte circular Rx buffer.
-            String log;
-            log.reserve(70);                           // Prevent re-allocation
-            log = F("NEXTION075 : RxD UART Buffer capacity warning,");
-            log += String(charCount);
-            log += F(" bytes");
-            addLog(LOG_LEVEL_INFO, log);
-        }
-      }
-      else {
-        if(SoftSerial == NULL) break;                   // SoftSerial missing, exit.
-        charCount = SoftSerial->available();            // Prime the Soft Serial engine.
-        if(charCount >= RXBUFFWARN) {
-            String log;
-            log.reserve(70);                           // Prevent re-allocation
-            log = F("NEXTION075 : RxD SoftSerial Buffer capacity warning, ");
-            log += String(charCount);
-            log += F(" bytes");
-            addLog(LOG_LEVEL_INFO, log);
-        }
+      if(P075_easySerial == NULL) break;                   // P075_easySerial missing, exit.
+      charCount = P075_easySerial->available();            // Prime the Soft Serial engine.
+      if(charCount >= RXBUFFWARN) {
+          String log;
+          log.reserve(70);                           // Prevent re-allocation
+          log = F("NEXTION075 : RxD P075_easySerial Buffer capacity warning, ");
+          log += String(charCount);
+          log += F(" bytes");
+          addLog(LOG_LEVEL_INFO, log);
       }
 
       while (charCount) {                               // This is the serial engine. It processes the serial Rx stream.
-        if(HwSerial == UARTSERIAL) c = Serial.read();
-        else c = SoftSerial->read();
+        c = P075_easySerial->read();
 
         if (c == 0x65) {
           if (charCount < 6) delay((5/(AdvHwBaud/9600))+1); // Let's wait for a few more chars to arrive.
 
-          if (HwSerial == UARTSERIAL) charCount = Serial.available();
-          else charCount = SoftSerial->available();
+          charCount = P075_easySerial->available();
           if (charCount >= 6) {
             __buffer[0] = c;                            // Store in staging buffer.
             for (i = 1; i < 7; i++) {
-                if(HwSerial == UARTSERIAL) __buffer[i] = Serial.read();
-                else __buffer[i] = SoftSerial->read();
+                __buffer[i] = P075_easySerial->read();
             }
 
             __buffer[i] = 0x00;
@@ -549,24 +522,13 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
 
             if (charCount < 8) delay((9/(AdvHwBaud/9600))+1); // Let's wait for more chars to arrive.
             else delay((3/(AdvHwBaud/9600))+1);               // Short wait for tardy chars.
-            if (HwSerial == UARTSERIAL) charCount = Serial.available();
-            else charCount = SoftSerial->available();
+            charCount = P075_easySerial->available();
 
-            if(HwSerial == UARTSERIAL) {
-                i = 1;
-                while (Serial.available() > 0 && i<RXBUFFSZ) { // Copy global serial buffer to local buffer.
-                  __buffer[i] = Serial.read();
-                  if (__buffer[i]==0x0a || __buffer[i]==0x0d) break;
-                  i++;
-                }
-            }
-            else {
-                i = 1;
-                while (SoftSerial->available() > 0 && i<RXBUFFSZ) { // Copy global serial buffer to local buffer.
-                  __buffer[i] = SoftSerial->read();
-                  if (__buffer[i]==0x0a || __buffer[i]==0x0d) break;
-                  i++;
-                }
+            i = 1;
+            while (P075_easySerial->available() > 0 && i<RXBUFFSZ) { // Copy global serial buffer to local buffer.
+              __buffer[i] = P075_easySerial->read();
+              if (__buffer[i]==0x0a || __buffer[i]==0x0d) break;
+              i++;
             }
 
             __buffer[i] = 0x00;
@@ -628,8 +590,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
             }
           }
         }
-        if(HwSerial == UARTSERIAL) charCount = Serial.available();
-        else charCount = SoftSerial->available();
+        charCount = P075_easySerial->available();
       }
 
       success = true;
@@ -646,21 +607,16 @@ void sendCommand(const char *cmd, boolean SerialMode)
         String log = F("NEXTION075 : Missing TxD Pin Number, aborted sendCommand");
         addLog(LOG_LEVEL_INFO, log);
     }
-    else if(SerialMode == UARTSERIAL) {                 // Send command using Hardware UART serial.
-        Serial.print(cmd);
-        Serial.write(0xff);
-        Serial.write(0xff);
-        Serial.write(0xff);
-    }
-    else {                                              // Send command using bit-bang soft serial.
-        if(SoftSerial != NULL){
-            SoftSerial->print(cmd);
-            SoftSerial->write(0xff);
-            SoftSerial->write(0xff);
-            SoftSerial->write(0xff);
+    else
+    {
+        if(P075_easySerial != NULL){
+            P075_easySerial->print(cmd);
+            P075_easySerial->write(0xff);
+            P075_easySerial->write(0xff);
+            P075_easySerial->write(0xff);
         }
         else {
-            String log = F("NEXTION075 : SoftSerial error, aborted sendCommand");
+            String log = F("NEXTION075 : P075_easySerial error, aborted sendCommand");
             addLog(LOG_LEVEL_INFO, log);
         }
     }

@@ -37,8 +37,8 @@ struct P082_data_struct {
     if (gps != nullptr) {
       delete gps;
     }
-    if (easySerial != nullptr) {
-      delete easySerial;
+    if (P082_easySerial != nullptr) {
+      delete P082_easySerial;
     }
   }
 
@@ -47,22 +47,22 @@ struct P082_data_struct {
       return false;
     reset();
     gps = new TinyGPSPlus();
-    easySerial = new ESPeasySerial(serial_rx, serial_tx);
-    easySerial->begin(9600);
+    P082_easySerial = new ESPeasySerial(serial_rx, serial_tx);
+    P082_easySerial->begin(9600);
     return isInitialized();
   }
 
   bool isInitialized() const {
-    return gps != nullptr && easySerial != nullptr;
+    return gps != nullptr && P082_easySerial != nullptr;
   }
 
   bool loop() {
     if (!isInitialized())
       return false;
     bool fullSentenceReceived = false;
-    if (easySerial != nullptr) {
-      while (easySerial->available() > 0) {
-        if (gps->encode(easySerial->read())) {
+    if (P082_easySerial != nullptr) {
+      while (P082_easySerial->available() > 0) {
+        if (gps->encode(P082_easySerial->read())) {
           fullSentenceReceived = true;
         }
       }
@@ -84,7 +84,7 @@ struct P082_data_struct {
   }
 
   TinyGPSPlus *gps = nullptr;
-  ESPeasySerial *easySerial = nullptr;
+  ESPeasySerial *P082_easySerial = nullptr;
 
   double last_lat = 0.0;
   double last_lng = 0.0;
@@ -179,6 +179,7 @@ boolean Plugin_082(byte function, struct EventStruct *event, String &string) {
     case PLUGIN_TEN_PER_SECOND: {
       if (P082_data.loop()) {
         schedule_task_device_timer(event->TaskIndex, millis() + 10);
+        delay(0); // Processing a full sentence may take a while, run some background tasks.
       }
       success = true;
       break;

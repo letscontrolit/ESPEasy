@@ -45,7 +45,7 @@ boolean Plugin_049_ABC_Disable = false;
 boolean Plugin_049_ABC_MustApply = false;
 
 #include <ESPeasySerial.h>
-ESPeasySerial *Plugin_049_SoftSerial;
+ESPeasySerial *P049_easySerial;
 
 enum mhzCommands : byte { mhzCmdReadPPM,
                           mhzCmdCalibrateZero,
@@ -248,8 +248,8 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
           // No guarantee the correct state is active on the sensor after reboot.
           Plugin_049_ABC_MustApply = true;
         }
-        Plugin_049_SoftSerial = new ESPeasySerial(Settings.TaskDevicePin1[event->TaskIndex], Settings.TaskDevicePin2[event->TaskIndex]);
-        Plugin_049_SoftSerial->begin(9600);
+        P049_easySerial = new ESPeasySerial(Settings.TaskDevicePin1[event->TaskIndex], Settings.TaskDevicePin2[event->TaskIndex]);
+        P049_easySerial->begin(9600);
         addLog(LOG_LEVEL_INFO, F("MHZ19: Init OK "));
 
         //delay first read, because hardware needs to initialize on cold boot
@@ -345,8 +345,8 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
           long timer = millis() + PLUGIN_READ_TIMEOUT;
           int counter = 0;
           while (!timeOutReached(timer) && (counter < 9)) {
-            if (Plugin_049_SoftSerial->available() > 0) {
-              mhzResp[counter++] = Plugin_049_SoftSerial->read();
+            if (P049_easySerial->available() > 0) {
+              mhzResp[counter++] = P049_easySerial->read();
             } else {
               delay(10);
             }
@@ -374,7 +374,7 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
              // we're trying to shift it so that 0xFF is the next byte
              byte checksum_shift;
              for (byte i = 1; i < 8; i++) {
-                checksum_shift = Plugin_049_SoftSerial->peek();
+                checksum_shift = P049_easySerial->peek();
                 if (checksum_shift == 0xFF) {
                   String log = F("MHZ19: Shifted ");
                   log += i;
@@ -382,7 +382,7 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
                   addLog(LOG_LEVEL_ERROR, log);
                   break;
                 } else {
-                 checksum_shift = Plugin_049_SoftSerial->read();
+                 checksum_shift = P049_easySerial->read();
                 }
              }
              success = false;
@@ -512,6 +512,6 @@ size_t _P049_send_mhzCmd(byte CommandId)
   mhzResp[3] = mhzResp[4] = mhzResp[5] = 0x00;
   mhzResp[8] = _P049_calculateChecksum(mhzResp);
 
-  return Plugin_049_SoftSerial->write(mhzResp, sizeof(mhzResp));
+  return P049_easySerial->write(mhzResp, sizeof(mhzResp));
 }
 #endif // USES_P049

@@ -22,7 +22,7 @@
 #define PMSx003_SIG2 0X4d
 #define PMSx003_SIZE 32
 
-ESPeasySerial *easySerial = nullptr;
+ESPeasySerial *P053_easySerial = nullptr;
 boolean Plugin_053_init = false;
 boolean values_received = false;
 
@@ -33,10 +33,10 @@ void SerialRead16(uint16_t* value, uint16_t* checksum)
 {
   uint8_t data_high, data_low;
 
-  // If easySerial is initialized, we are using soft serial
-  if (easySerial == nullptr) return;
-  data_high = easySerial->read();
-  data_low = easySerial->read();
+  // If P053_easySerial is initialized, we are using soft serial
+  if (P053_easySerial == nullptr) return;
+  data_high = P053_easySerial->read();
+  data_low = P053_easySerial->read();
 
   *value = data_low;
   *value |= (data_high << 8);
@@ -60,22 +60,22 @@ void SerialRead16(uint16_t* value, uint16_t* checksum)
 }
 
 void SerialFlush() {
-  if (easySerial != nullptr) {
-    easySerial->flush();
+  if (P053_easySerial != nullptr) {
+    P053_easySerial->flush();
   }
 }
 
 boolean PacketAvailable(void)
 {
-  if (easySerial != nullptr) // Software serial
+  if (P053_easySerial != nullptr) // Software serial
   {
     // When there is enough data in the buffer, search through the buffer to
     // find header (buffer may be out of sync)
-    if (!easySerial->available()) return false;
-    while ((easySerial->peek() != PMSx003_SIG1) && easySerial->available()) {
-      easySerial->read(); // Read until the buffer starts with the first byte of a message, or buffer empty.
+    if (!P053_easySerial->available()) return false;
+    while ((P053_easySerial->peek() != PMSx003_SIG1) && P053_easySerial->available()) {
+      P053_easySerial->read(); // Read until the buffer starts with the first byte of a message, or buffer empty.
     }
-    if (easySerial->available() < PMSx003_SIZE) return false; // Not enough yet for a complete packet
+    if (P053_easySerial->available() < PMSx003_SIZE) return false; // Not enough yet for a complete packet
   }
   return true;
 }
@@ -211,10 +211,10 @@ boolean Plugin_053(byte function, struct EventStruct *event, String& string)
         log += resetPin;
         addLog(LOG_LEVEL_DEBUG, log);
 
-        if (easySerial != nullptr) {
+        if (P053_easySerial != nullptr) {
           // Regardless the set pins, the software serial must be deleted.
-          delete easySerial;
-          easySerial = nullptr;
+          delete P053_easySerial;
+          P053_easySerial = nullptr;
         }
 
         // Hardware serial is RX on 3 and TX on 1
@@ -228,9 +228,9 @@ boolean Plugin_053(byte function, struct EventStruct *event, String& string)
           log = F("PMSx003: using software serial");
           addLog(LOG_LEVEL_INFO, log);
         }
-        easySerial = new ESPeasySerial(rxPin, txPin, false, 96); // 96 Bytes buffer, enough for up to 3 packets.
-        easySerial->begin(9600);
-        easySerial->flush();
+        P053_easySerial = new ESPeasySerial(rxPin, txPin, false, 96); // 96 Bytes buffer, enough for up to 3 packets.
+        P053_easySerial->begin(9600);
+        P053_easySerial->flush();
 
         if (resetPin >= 0) // Reset if pin is configured
         {
@@ -251,10 +251,10 @@ boolean Plugin_053(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_EXIT:
       {
-          if (easySerial)
+          if (P053_easySerial)
           {
-            delete easySerial;
-            easySerial=nullptr;
+            delete P053_easySerial;
+            P053_easySerial=nullptr;
           }
           break;
       }
