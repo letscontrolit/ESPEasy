@@ -39,6 +39,9 @@ void processConnect() {
     setupStaticIPconfig();
     markGotIP();
   }
+  if (!WiFi.getAutoConnect()) { 
+    WiFi.setAutoConnect(true);
+  }
   logConnectionStatus();
 }
 
@@ -640,7 +643,7 @@ bool tryConnectWiFi() {
       if (lastBSSID[0] == 0)
         WiFi.begin(ssid, passphrase);
       else
-        WiFi.begin(ssid, passphrase, 0, &lastBSSID[0]);
+        WiFi.begin(ssid, passphrase, last_channel, &lastBSSID[0]);
       break;
     default:
       WiFi.begin(ssid, passphrase);
