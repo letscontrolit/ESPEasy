@@ -18,7 +18,7 @@
 //
 
 #ifdef USES_P075
-#include <ESPeasySoftwareSerial.h>
+#include <ESPeasySerial.h>
 
 // *****************************************************************************************************
 // Defines start here
@@ -42,7 +42,7 @@
 #define P75_Nchars 51             // Custom Config, Length of user entered Command Statments.
 
 // Nextion defines
-#define RXBUFFSZ  64            // Serial RxD buffer (Local staging buffer and ESPeasySoftwareSerial).
+#define RXBUFFSZ  64            // Serial RxD buffer (Local staging buffer and ESPeasySerial).
 #define RXBUFFWARN RXBUFFSZ-16  // Warning, Rx buffer close to being full.
 #define TOUCH_BASE 500          // Base offset for 0X65 Touch Event Send Component ID.
 
@@ -57,7 +57,7 @@
 
 
 // Global vars
-ESPeasySoftwareSerial *SoftSerial = NULL;
+ESPeasySerial *SoftSerial = NULL;
 int rxPin = -1;
 int txPin = -1;
 
@@ -300,7 +300,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
             addLog(LOG_LEVEL_INFO, log);
             HwSerial = SOFTSERIAL;
             if (SoftSerial == NULL) {
-                SoftSerial = new ESPeasySoftwareSerial(rxPin, txPin, false, RXBUFFSZ);
+                SoftSerial = new ESPeasySerial(rxPin, txPin, false, RXBUFFSZ);
             }
             SoftSerial->begin(9600);
             SoftSerial->flush();

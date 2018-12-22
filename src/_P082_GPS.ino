@@ -10,6 +10,7 @@
 //
 //
 
+#include <ESPeasySerial.h>
 #include <TinyGPS++.h>
 
 #define PLUGIN_082
@@ -46,7 +47,7 @@ struct P082_data_struct {
       return false;
     reset();
     gps = new TinyGPSPlus();
-    easySerial = new ESPeasySoftwareSerial(serial_rx, serial_tx);
+    easySerial = new ESPeasySerial(serial_rx, serial_tx);
     easySerial->begin(9600);
     return isInitialized();
   }
@@ -83,7 +84,7 @@ struct P082_data_struct {
   }
 
   TinyGPSPlus *gps = nullptr;
-  ESPeasySoftwareSerial *easySerial = nullptr;
+  ESPeasySerial *easySerial = nullptr;
 
   double last_lat = 0.0;
   double last_lng = 0.0;
@@ -175,7 +176,7 @@ boolean Plugin_082(byte function, struct EventStruct *event, String &string) {
       break;
     }
 
-    case PLUGIN_FIFTY_PER_SECOND: {
+    case PLUGIN_TEN_PER_SECOND: {
       if (P082_data.loop()) {
         schedule_task_device_timer(event->TaskIndex, millis() + 10);
       }

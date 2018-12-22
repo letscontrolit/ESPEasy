@@ -44,8 +44,8 @@ boolean Plugin_049_init = false;
 boolean Plugin_049_ABC_Disable = false;
 boolean Plugin_049_ABC_MustApply = false;
 
-#include <ESPeasySoftwareSerial.h>
-ESPeasySoftwareSerial *Plugin_049_SoftSerial;
+#include <ESPeasySerial.h>
+ESPeasySerial *Plugin_049_SoftSerial;
 
 enum mhzCommands : byte { mhzCmdReadPPM,
                           mhzCmdCalibrateZero,
@@ -248,7 +248,7 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
           // No guarantee the correct state is active on the sensor after reboot.
           Plugin_049_ABC_MustApply = true;
         }
-        Plugin_049_SoftSerial = new ESPeasySoftwareSerial(Settings.TaskDevicePin1[event->TaskIndex], Settings.TaskDevicePin2[event->TaskIndex]);
+        Plugin_049_SoftSerial = new ESPeasySerial(Settings.TaskDevicePin1[event->TaskIndex], Settings.TaskDevicePin2[event->TaskIndex]);
         Plugin_049_SoftSerial->begin(9600);
         addLog(LOG_LEVEL_INFO, F("MHZ19: Init OK "));
 

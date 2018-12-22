@@ -4423,7 +4423,7 @@ long stream_timing_statistics(bool clearStats) {
             html_TR_TD();
           }
           TXBuffer += F("P_");
-          TXBuffer += pluginId + 1;
+          TXBuffer += Device[pluginId].Number;
           TXBuffer += '_';
           TXBuffer += P_name;
           html_TD();
@@ -4443,7 +4443,7 @@ long stream_timing_statistics(bool clearStats) {
             html_TR_TD();
           }
           TXBuffer += F("C_");
-          TXBuffer += pluginId + 1;
+          TXBuffer += Protocol[pluginId].Number;
           TXBuffer += '_';
           TXBuffer += C_name;
           html_TD();

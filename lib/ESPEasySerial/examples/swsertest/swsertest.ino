@@ -1,7 +1,7 @@
 
-#include <ESPeasySoftwareSerial.h>
+#include <ESPeasySerial.h>
 
-ESPeasySoftwareSerial swSer(14, 12, false, 256);
+ESPeasySerial swSer(14, 12, false, 256);
 
 void setup() {
   Serial.begin(115200);

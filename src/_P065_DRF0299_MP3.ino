@@ -33,7 +33,7 @@
 #define PLUGIN_NAME_065       "Notify - DFPlayer-Mini MP3 [TESTING]"
 #define PLUGIN_VALUENAME1_065 ""
 
-#include <ESPeasySoftwareSerial.h>
+#include <ESPeasySerial.h>
 
 #ifndef CONFIG
 #define CONFIG(n) (Settings.TaskDevicePluginConfig[event->TaskIndex][n])
@@ -42,7 +42,7 @@
 #define PIN(n) (Settings.TaskDevicePin[n][event->TaskIndex])
 #endif
 
-ESPeasySoftwareSerial* Plugin_065_SoftSerial = NULL;
+ESPeasySerial* Plugin_065_SoftSerial = NULL;
 
 
 boolean Plugin_065(byte function, struct EventStruct *event, String& string)
@@ -106,7 +106,7 @@ boolean Plugin_065(byte function, struct EventStruct *event, String& string)
         #pragma GCC diagnostic pop
 
 
-        Plugin_065_SoftSerial = new ESPeasySoftwareSerial(-1, PIN(0));   // no RX, only TX
+        Plugin_065_SoftSerial = new ESPeasySerial(-1, PIN(0));   // no RX, only TX
 
         Plugin_065_SoftSerial->begin(9600);
 

@@ -34,11 +34,11 @@
 
 
 #include <SDM.h>    // Requires SDM library from Reaper7 - https://github.com/reaper7/SDM_Energy_Meter/
-#include <ESPeasySoftwareSerial.h>
+#include <ESPeasySerial.h>
 
 // These pointers may be used among multiple instances of the same plugin,
 // as long as the same serial settings are used.
-ESPeasySoftwareSerial* Plugin_078_SoftSerial = NULL;
+ESPeasySerial* Plugin_078_SoftSerial = NULL;
 SDM* Plugin_078_SDM = NULL;
 boolean Plugin_078_init = false;
 
@@ -162,7 +162,7 @@ boolean Plugin_078(byte function, struct EventStruct *event, String& string)
           delete Plugin_078_SoftSerial;
           Plugin_078_SoftSerial=NULL;
         }
-        Plugin_078_SoftSerial = new ESPeasySoftwareSerial(Settings.TaskDevicePin1[event->TaskIndex], Settings.TaskDevicePin2[event->TaskIndex]);
+        Plugin_078_SoftSerial = new ESPeasySerial(Settings.TaskDevicePin1[event->TaskIndex], Settings.TaskDevicePin2[event->TaskIndex]);
         unsigned int baudrate = p078_storageValueToBaudrate(P078_BAUDRATE);
         Plugin_078_SoftSerial->begin(baudrate);
 
