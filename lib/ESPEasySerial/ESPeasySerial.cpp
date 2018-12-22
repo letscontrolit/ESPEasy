@@ -74,12 +74,10 @@ void ESPeasySerial::end() {
 HardwareSerial* ESPeasySerial::getHW() {
   switch (_serialtype) {
     case ESPeasySerialType::serialtype::serial0:
-    case ESPeasySerialType::serialtype::serial0_swap:
-      return &Serial;
-    case ESPeasySerialType::serialtype::serial1:
-      return &Serial1;
-    case ESPeasySerialType::serialtype::software:
-      break;
+    case ESPeasySerialType::serialtype::serial0_swap: return &Serial;
+    case ESPeasySerialType::serialtype::serial1:      return &Serial1;
+    case ESPeasySerialType::serialtype::software:     break;
+    default: break;
   }
   return nullptr;
 }
@@ -87,12 +85,10 @@ HardwareSerial* ESPeasySerial::getHW() {
 const HardwareSerial* ESPeasySerial::getHW() const {
   switch (_serialtype) {
     case ESPeasySerialType::serialtype::serial0:
-    case ESPeasySerialType::serialtype::serial0_swap:
-      return &Serial;
-    case ESPeasySerialType::serialtype::serial1:
-      return &Serial1;
-    case ESPeasySerialType::serialtype::software:
-      break;
+    case ESPeasySerialType::serialtype::serial0_swap: return &Serial;
+    case ESPeasySerialType::serialtype::serial1:      return &Serial1;
+    case ESPeasySerialType::serialtype::software:     break;
+    default: break;
   }
   return nullptr;
 }
@@ -103,6 +99,7 @@ bool ESPeasySerial::isValid() const {
     case ESPeasySerialType::serialtype::serial0_swap: return _serial0_swap_active;
     case ESPeasySerialType::serialtype::serial1:      return true; // Must also check RX pin?
     case ESPeasySerialType::serialtype::software:     return _swserial != nullptr;
+    default: break;
   }
   return false;
 }
@@ -387,6 +384,8 @@ HardwareSerial* ESPeasySerial::getHW() {
     case ESPeasySerialType::serialtype::serial0: return &Serial;
     case ESPeasySerialType::serialtype::serial1: return &Serial1;
     case ESPeasySerialType::serialtype::serial2: return &Serial2;
+
+    default: break;
   }
   return nullptr;
 }
@@ -396,6 +395,7 @@ const HardwareSerial* ESPeasySerial::getHW() const {
     case ESPeasySerialType::serialtype::serial0: return &Serial;
     case ESPeasySerialType::serialtype::serial1: return &Serial1;
     case ESPeasySerialType::serialtype::serial2: return &Serial2;
+    default: break;
   }
   return nullptr;
 }
@@ -408,6 +408,7 @@ bool ESPeasySerial::isValid() const {
     case ESPeasySerialType::serialtype::serial1:
       return _transmitPin != -1 && _receivePin != -1;
       // FIXME TD-er: Must perform proper check for GPIO pins here.
+    default: break;
   }
   return false;
 }

@@ -11,5 +11,5 @@
         "url": "https://github.com/letscontrolit/espeasy"
     },
     "frameworks": "arduino",
-    "platforms": "espressif8266", "arduino-esp32"
+    "platforms": "espressif8266"
 }
