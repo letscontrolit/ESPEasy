@@ -700,15 +700,17 @@ bool connectClient(WiFiClient& client, IPAddress ip, uint16_t port)
   bool connected = (client.connect(ip, port) == 1);
   STOP_TIMER(CONNECT_CLIENT_STATS);
 #ifndef ESP32
+#ifndef ARDUINO_ESP8266_RELEASE_2_3_0
   if (connected)
     client.keepAlive(); // Use default keep alive values
+#endif
 #endif
   return connected;
 }
 
 bool resolveHostByName(const char* aHostname, IPAddress& aResult) {
   START_TIMER;
-#ifdef ESP32
+#if defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(ESP32)
   bool resolvedIP = WiFi.hostByName(aHostname, aResult) == 1;
 #else
   bool resolvedIP = WiFi.hostByName(aHostname, aResult, 100) == 1;

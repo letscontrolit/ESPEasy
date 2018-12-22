@@ -486,6 +486,75 @@ void addDisabled() {
   TXBuffer += F(" disabled");
 }
 
+#ifdef ARDUINO_ESP8266_RELEASE_2_3_0
+void WebServerInit()
+{
+  // Prepare webserver pages
+  WebServer.on("/", handle_root);
+  WebServer.on("/config", handle_config);
+  WebServer.on("/controllers", handle_controllers);
+  WebServer.on("/hardware", handle_hardware);
+  WebServer.on("/devices", handle_devices);
+#ifndef NOTIFIER_SET_NONE
+  WebServer.on("/notifications", handle_notifications);
+#endif
+  WebServer.on("/log", handle_log);
+  WebServer.on("/logjson", handle_log_JSON);
+  WebServer.on("/tools", handle_tools);
+  WebServer.on("/i2cscanner", handle_i2cscanner);
+  WebServer.on("/wifiscanner", handle_wifiscanner);
+  WebServer.on("/login", handle_login);
+  WebServer.on("/control", handle_control);
+  WebServer.on("/download", handle_download);
+  WebServer.on("/upload", HTTP_GET, handle_upload);
+  WebServer.on("/upload", HTTP_POST, handle_upload_post, handleFileUpload);
+  WebServer.onNotFound(handleNotFound);
+  WebServer.on("/filelist", handle_filelist);
+#ifdef FEATURE_SD
+  WebServer.on("/SDfilelist", handle_SDfilelist);
+#endif
+  WebServer.on("/advanced", handle_advanced);
+  WebServer.on("/setup", handle_setup);
+  WebServer.on("/json", handle_json);
+  WebServer.on("/timingstats_json", handle_timingstats_json);
+  WebServer.on("/timingstats", handle_timingstats);
+  WebServer.on("/rules", handle_rules_new);
+  WebServer.on("/rules/", Goto_Rules_Root);
+  WebServer.on("/rules/add", []()
+  {
+    handle_rules_edit(WebServer.uri(),true);
+  });
+  WebServer.on("/rules/backup", handle_rules_backup);
+  WebServer.on("/rules/delete", handle_rules_delete);
+  WebServer.on("/sysinfo", handle_sysinfo);
+  WebServer.on("/pinstates", handle_pinstates);
+  WebServer.on("/sysvars", handle_sysvars);
+  WebServer.on("/factoryreset", handle_factoryreset);
+  WebServer.on("/favicon.ico", handle_favicon);
+
+  #if defined(ESP8266)
+  {
+    uint32_t maxSketchSize;
+    bool use2step;
+    if (OTA_possible(maxSketchSize, use2step)) {
+      httpUpdater.setup(&WebServer);
+    }
+  }
+  #endif
+
+  #if defined(ESP8266)
+  if (Settings.UseSSDP)
+  {
+    WebServer.on("/ssdp.xml", HTTP_GET, []() {
+      WiFiClient client(WebServer.client());
+      SSDP_schema(client);
+    });
+    SSDP_begin();
+  }
+  #endif
+}
+
+#else
 void WebServerInit()
 {
   // Prepare webserver pages
@@ -552,6 +621,7 @@ void WebServerInit()
   }
   #endif
 }
+#endif // ARDUINO_ESP8266_RELEASE_2_3_0
 
 void setWebserverRunning(bool state) {
   if (webserver_state == state)
@@ -5226,7 +5296,7 @@ void handle_filelist() {
   {
     html_add_button_prefix();
     TXBuffer += F("/filelist?start=");
-    TXBuffer += max(0, startIdx - pageSize);
+    TXBuffer += std::max(0, startIdx - pageSize);
     TXBuffer += F("'>Previous</a>");
   }
   if (count >= endIdx and dir.next())
@@ -6174,8 +6244,10 @@ void handle_sysinfo() {
     TXBuffer += ESP.getCpuFreqMHz();
     TXBuffer += F(" MHz");
   #endif
+  #ifdef ARDUINO_BOARD
   addRowLabel(F("ESP Board Name"));
   TXBuffer += ARDUINO_BOARD;
+  #endif
 
   addTableSeparator(F("Storage"), 2, 3);
 

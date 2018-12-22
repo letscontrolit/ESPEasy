@@ -673,6 +673,14 @@ To create/register a plugin, you have to :
 #endif
 
 
+#ifdef ARDUINO_ESP8266_RELEASE_2_3_0
+  #ifdef USES_P081
+    #undef USES_P081   // Cron
+  #endif
+
+
+#endif
+
 
 /******************************************************************************\
  * Libraries dependencies *****************************************************

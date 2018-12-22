@@ -724,11 +724,11 @@ bool GetArgvBeginEnd(const char *string, const unsigned int argc, int& pos_begin
   \*********************************************************************************************/
 #if defined(ARDUINO_ESP8266_RELEASE_2_3_0)
 void dump (uint32_t addr) { //Seems already included in core 2.4 ...
-  serialPrint (addr, HEX);
+  serialPrint (String(addr, HEX));
   serialPrint(": ");
   for (uint32_t a = addr; a < addr + 16; a++)
   {
-    serialPrint ( pgm_read_byte(a), HEX);
+    serialPrint ( String(pgm_read_byte(a), HEX));
     serialPrint (" ");
   }
   serialPrintln("");

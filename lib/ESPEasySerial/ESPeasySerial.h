@@ -28,7 +28,13 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include <inttypes.h>
 #include <Stream.h>
 
-#ifdef ESP8266
+#if defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined (ESP32)
+  #ifndef DISABLE_SOFTWARE_SERIAL
+    #define DISABLE_SOFTWARE_SERIAL
+  #endif
+#endif
+
+#ifndef DISABLE_SOFTWARE_SERIAL
 #include <SoftwareSerial.h>
 #endif
 
@@ -114,7 +120,7 @@ public:
   int available(void) override;
   void flush(void) override;
 
-#ifdef ESP8266
+#if defined(ESP8266)
   bool overflow();        // SoftwareSerial ESP8266
   bool hasOverrun(void);  // HardwareSerial ESP8266
 #endif
@@ -137,7 +143,8 @@ public:
   size_t write(const uint8_t *buffer, size_t size);
   size_t write(const char *buffer);
   int baudRate(void);
-#ifdef ESP8266
+
+#if defined(ESP8266)
   void swap() { swap(1); }
   void swap(uint8_t tx_pin);
   size_t readBytes(char* buffer, size_t size) override;
@@ -174,10 +181,12 @@ private:
 
   bool isValid() const;
 
-#ifdef ESP8266
+#if !defined(DISABLE_SOFTWARE_SERIAL) && defined(ESP8266)
   bool isSWserial() const { return _serialtype == ESPeasySerialType::serialtype::software; }
 
   SoftwareSerial* _swserial = nullptr;
+#endif
+#ifdef ESP8266
   static bool _serial0_swap_active;
 #endif // ESP8266
 

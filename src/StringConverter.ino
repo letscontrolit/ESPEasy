@@ -39,7 +39,12 @@ boolean str2ip(const char *string, byte* IP)
 
 
 String formatIP(const IPAddress& ip) {
+#if defined(ARDUINO_ESP8266_RELEASE_2_3_0)
+  IPAddress tmp(ip);
+  return tmp.toString();
+#else
   return ip.toString();
+#endif
 }
 
 void formatMAC(const uint8_t* mac, char (&strMAC)[20]) {
