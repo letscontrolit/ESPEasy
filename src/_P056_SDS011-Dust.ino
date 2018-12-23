@@ -62,13 +62,15 @@ boolean Plugin_056(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_GET_DEVICEGPIONAMES:
       {
-        event->String1 = formatGpioName_RX(false);
-        event->String2 = formatGpioName_TX(true); // optional
+        serialHelper_getGpioNames(event, false, true); // TX optional
         break;
       }
 
     case PLUGIN_WEBFORM_LOAD:
       {
+        serialHelper_webformLoad(event);
+
+        // FIXME TD-er:  Whether TX pin is connected should be set somewhere
         if (Plugin_056_hasTxPin(event)) {
           addFormNumericBox(F("Sleep time"), F("p056_sleeptime"),
                             Settings.TaskDevicePluginConfig[event->TaskIndex][0],
@@ -80,6 +82,8 @@ boolean Plugin_056(byte function, struct EventStruct *event, String& string)
       }
       case PLUGIN_WEBFORM_SAVE:
         {
+          serialHelper_webformSave(event);
+
           if (Plugin_056_hasTxPin(event)) {
             // Communications to device should work.
             const int newsleeptime = getFormItemInt(F("p056_sleeptime"));

@@ -191,13 +191,24 @@ boolean Plugin_053(byte function, struct EventStruct *event, String& string)
         break;
       }
 
-      case PLUGIN_GET_DEVICEGPIONAMES:
-        {
-          event->String1 = formatGpioName_RX(false);
-          event->String2 = formatGpioName_TX(false);
-          event->String3 = formatGpioName_output(F("Reset"));
-          break;
-        }
+    case PLUGIN_GET_DEVICEGPIONAMES:
+      {
+        serialHelper_getGpioNames(event);
+        event->String3 = formatGpioName_output(F("Reset"));
+        break;
+      }
+
+    case PLUGIN_WEBFORM_LOAD: {
+      serialHelper_webformLoad(event);
+      success = true;
+      break;
+    }
+
+    case PLUGIN_WEBFORM_SAVE: {
+      serialHelper_webformSave(event);
+      success = true;
+      break;
+    }
 
     case PLUGIN_INIT:
       {

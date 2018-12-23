@@ -200,13 +200,13 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_GET_DEVICEGPIONAMES:
       {
-        event->String1 = formatGpioName_RX(false);
-        event->String2 = formatGpioName_TX(false);
+        serialHelper_getGpioNames(event);
         break;
       }
 
     case PLUGIN_WEBFORM_LOAD:
       {
+        serialHelper_webformLoad(event);
         byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
         String options[2] = { F("Normal"), F("ABC disabled") };
         int optionValues[2] = { ABC_enabled, ABC_disabled };
@@ -227,6 +227,7 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
+        serialHelper_webformSave(event);
         const int formValue = getFormItemInt(F("p049_abcdisable"));
         boolean new_ABC_disable = (formValue == ABC_disabled);
         if (Plugin_049_ABC_Disable != new_ABC_disable) {

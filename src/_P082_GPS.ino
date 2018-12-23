@@ -123,12 +123,13 @@ boolean Plugin_082(byte function, struct EventStruct *event, String &string) {
     }
 
     case PLUGIN_GET_DEVICEGPIONAMES: {
-      event->String1 = formatGpioName_RX(false);
-      event->String2 = formatGpioName_TX(false);
+      serialHelper_getGpioNames(event, false, true); // TX optional
       break;
     }
 
     case PLUGIN_WEBFORM_LOAD: {
+      serialHelper_webformLoad(event);
+
       // Settings to add:
       // Speed unit
       // Altitude unit
@@ -145,11 +146,15 @@ boolean Plugin_082(byte function, struct EventStruct *event, String &string) {
       // statistics (chars processed, failed checksum)
       //
       // Show some statistics on the load page.
+
+
       success = true;
       break;
     }
 
     case PLUGIN_WEBFORM_SAVE: {
+      serialHelper_webformSave(event);
+
       success = true;
       break;
     }

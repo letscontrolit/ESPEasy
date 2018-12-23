@@ -65,8 +65,7 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_GET_DEVICEGPIONAMES:
       {
-        event->String1 = formatGpioName_RX(false);
-        event->String2 = formatGpioName_TX(false);
+        serialHelper_getGpioNames(event);
         break;
       }
 
@@ -105,6 +104,7 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
+          serialHelper_webformLoad(event);
           byte choiceSensor = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
 
           String optionsSensor[7] = { F("Error Status"), F("Carbon Dioxide"), F("Temperature"), F("Humidity"), F("Relay Status"), F("Temperature Adjustment"), F("ABC period") };
@@ -124,6 +124,7 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
+        serialHelper_webformSave(event);
         Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("p052_sensor"));
         /*
         // ABC functionality disabled for now, due to a bug in the firmware.

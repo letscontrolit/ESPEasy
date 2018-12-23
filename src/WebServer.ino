@@ -2646,14 +2646,15 @@ void sortDeviceArray()
 
 void addFormPinSelect(const String& label, const String& id, int choice)
 {
-  addRowLabel(label);
+  addRowLabel(label, String("tr_")+id);
   addPinSelect(false, id, choice);
 }
 
 
 void addFormPinSelectI2C(const String& label, const String& id, int choice)
 {
-  addRowLabel(label);
+
+  addRowLabel(label, String("tr_")+id);
   addPinSelect(true, id, choice);
 }
 
@@ -2688,7 +2689,7 @@ String createGPIO_label(int gpio, int pinnr, bool input, bool output, bool warni
   return result;
 }
 
-void addPinSelect(boolean forI2C, String name,  int choice)
+void addPinSelect(boolean forI2C, String id,  int choice)
 {
   #ifdef ESP32
     #define NR_ITEMS_PIN_DROPDOWN  35 // 34 GPIO + 1
@@ -2712,7 +2713,7 @@ void addPinSelect(boolean forI2C, String name,  int choice)
     }
     ++gpio;
   }
-  renderHTMLForPinSelect(gpio_labels, gpio_numbers, forI2C, name, choice, NR_ITEMS_PIN_DROPDOWN);
+  renderHTMLForPinSelect(gpio_labels, gpio_numbers, forI2C, id, choice, NR_ITEMS_PIN_DROPDOWN);
   delete[] gpio_numbers;
   delete[] gpio_labels;
   #undef NR_ITEMS_PIN_DROPDOWN
@@ -2722,8 +2723,8 @@ void addPinSelect(boolean forI2C, String name,  int choice)
 //********************************************************************************
 // Helper function actually rendering dropdown list for addPinSelect()
 //********************************************************************************
-void renderHTMLForPinSelect(String options[], int optionValues[], boolean forI2C, const String& name,  int choice, int count) {
-  addSelector_Head(name, false);
+void renderHTMLForPinSelect(String options[], int optionValues[], boolean forI2C, const String& id,  int choice, int count) {
+  addSelector_Head(id, false);
   for (byte x = 0; x < count; x++)
   {
     boolean disabled = false;
@@ -2762,10 +2763,23 @@ void addFormSelector(const String& label, const String& id, int optionCount, con
   addFormSelector(label, id, optionCount, options, indices, NULL, selectedIndex, false);
 }
 
+void addFormSelector(const String& label, const String& id, int optionCount, const String options[], const int indices[], int selectedIndex, bool reloadonchange)
+{
+  addFormSelector(label, id, optionCount, options, indices, NULL, selectedIndex, reloadonchange);
+}
+
 void addFormSelector(const String& label, const String& id, int optionCount, const String options[], const int indices[], const String attr[], int selectedIndex, boolean reloadonchange)
 {
   addRowLabel(label);
   addSelector(id, optionCount, options, indices, attr, selectedIndex, reloadonchange);
+}
+
+void addFormSelector_script(const String& label, const String& id, int optionCount, const String options[], const int indices[], const String attr[], int selectedIndex, const String& onChangeCall)
+{
+  addRowLabel(label);
+  addSelector_Head(id, onChangeCall, false);
+  addSelector_options(optionCount, options, indices, attr, selectedIndex);
+  addSelector_Foot();
 }
 
 void addSelector(const String& id, int optionCount, const String options[], const int indices[], const String attr[], int selectedIndex, boolean reloadonchange) {
@@ -2774,10 +2788,15 @@ void addSelector(const String& id, int optionCount, const String options[], cons
 
 void addSelector(const String& id, int optionCount, const String options[], const int indices[], const String attr[], int selectedIndex, boolean reloadonchange, bool enabled)
 {
-  int index;
   // FIXME TD-er Change boolean to disabled
   addSelector_Head(id, reloadonchange, !enabled);
+  addSelector_options(optionCount, options, indices, attr, selectedIndex);
+  addSelector_Foot();
+}
 
+void addSelector_options(int optionCount, const String options[], const int indices[], const String attr[], int selectedIndex)
+{
+  int index;
   for (byte x = 0; x < optionCount; x++)
   {
     if (indices)
@@ -2797,7 +2816,6 @@ void addSelector(const String& id, int optionCount, const String options[], cons
     TXBuffer += options[x];
     TXBuffer += F("</option>");
   }
-  TXBuffer += F("</select>");
 }
 
 void addSelector_Head(const String& id, boolean reloadonchange) {
@@ -2806,16 +2824,31 @@ void addSelector_Head(const String& id, boolean reloadonchange) {
 
 void addSelector_Head(const String& id, boolean reloadonchange, bool disabled)
 {
+  if (reloadonchange) {
+    addSelector_Head(id, F("return dept_onchange(frmselect)"), disabled);
+  } else {
+    addSelector_Head(id, "", disabled);
+  }
+}
+
+void addSelector_Head(const String& id, const String& onChangeCall, bool disabled)
+{
   TXBuffer += F("<select class='wide' name='");
+  TXBuffer += id;
+  TXBuffer += F("' id='");
   TXBuffer += id;
   TXBuffer += '\'';
   if (disabled) {
     addDisabled();
   }
-  if (reloadonchange)
-    TXBuffer += F(" onchange='return dept_onchange(frmselect)'");
+  if (onChangeCall.length() > 0) {
+    TXBuffer += F(" onchange='");
+    TXBuffer += onChangeCall;
+    TXBuffer += '\'';
+  }
   TXBuffer += '>';
 }
+
 
 void addSelector_Item(const String& option, int index, boolean selected, boolean disabled, const String& attr)
 {
@@ -2849,10 +2882,20 @@ void addUnit(const String& unit)
   TXBuffer += "]";
 }
 
-
 void addRowLabel(const String& label)
 {
-  html_TR_TD();
+  addRowLabel(label, "");
+}
+
+void addRowLabel(const String& label, const String& id)
+{
+  if (id.length() > 0) {
+    TXBuffer += F("<TR id='");
+    TXBuffer += id;
+    TXBuffer += F("'><TD>");
+  } else {
+    html_TR_TD();
+  }
   TXBuffer += label;
   TXBuffer += ':';
   html_TD();
@@ -3476,10 +3519,17 @@ void html_add_form() {
   TXBuffer += F("<form name='frmselect' method='post'>");
 }
 
+
 void html_add_autosubmit_form() {
   TXBuffer += F("<script><!--\n"
            "function dept_onchange(frmselect) {frmselect.submit();}"
            "\n//--></script>");
+}
+
+void html_add_script(const String& script, bool defer) {
+  html_add_script(defer);
+  addHtml(script);
+  html_add_script_end();
 }
 
 void html_add_script(bool defer) {

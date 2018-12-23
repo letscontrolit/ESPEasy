@@ -117,8 +117,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
       rxPin = Settings.TaskDevicePin1[event->TaskIndex];
       txPin = Settings.TaskDevicePin2[event->TaskIndex];
 
-      event->String1 = formatGpioName_RX(false);
-      event->String2 = formatGpioName_TX(false);
+      serialHelper_getGpioNames(event);
 
       if(AdvHwSerial == true) {
         if ((rxPin == 3 && txPin == 1) || (rxPin == 13 && txPin == 15)) {
@@ -131,6 +130,9 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
 
 
     case PLUGIN_WEBFORM_LOAD: {
+      serialHelper_webformLoad(event);
+
+      // FIXME TD-er: These checks for serial pins still needed?
       rxPin = Settings.TaskDevicePin1[event->TaskIndex];
       txPin = Settings.TaskDevicePin2[event->TaskIndex];
 
@@ -203,6 +205,8 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
 
 
     case PLUGIN_WEBFORM_SAVE: {
+        serialHelper_webformSave(event);
+
         char deviceTemplate[P75_Nlines][P75_Nchars];
         String error;
         for (byte varNr = 0; varNr < P75_Nlines; varNr++)

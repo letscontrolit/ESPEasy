@@ -38,14 +38,48 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include <SoftwareSerial.h>
 #endif
 
+#ifdef ESP32
+  #define NR_ESPEASY_SERIAL_TYPES 3 // Serial 0, 1, 2
+#endif
+#if !defined(DISABLE_SOFTWARE_SERIAL) && defined(ESP8266)
+  #define NR_ESPEASY_SERIAL_TYPES 4 // Serial 0, 1, 0_swap, software
+#else
+  #define NR_ESPEASY_SERIAL_TYPES 3 // Serial 0, 1, 0_swap
+#endif
+
+
 struct ESPeasySerialType {
   enum serialtype {
+    software = 0,
     serial0,
     serial0_swap,
     serial1,
     serial2,
-    software
+
+    MAX_SERIAL_TYPE
   };
+
+
+  static bool getSerialTypePins(ESPeasySerialType::serialtype serType, int& rxPin, int& txPin) {
+    switch (serType) {
+      case ESPeasySerialType::serialtype::serial0:  rxPin = 3; txPin = 1; return true;
+#ifdef ESP32
+      case ESPeasySerialType::serialtype::serial1:  rxPin = 13; txPin = 15; return true;
+      case ESPeasySerialType::serialtype::serial2:  rxPin = 16; txPin = 17; return true;
+#endif
+#ifdef ESP8266
+      case ESPeasySerialType::serialtype::serial0_swap:  rxPin = 13; txPin = 15; return true;
+      case ESPeasySerialType::serialtype::serial1:       rxPin = -1; txPin = 2; return true;
+    #ifndef DISABLE_SOFTWARE_SERIAL
+      case ESPeasySerialType::serialtype::software:      rxPin = 14; txPin = 12; return true;
+    #endif // DISABLE_SOFTWARE_SERIAL
+#endif
+      default:
+        break;
+    }
+    return false;
+  }
+
 
 #ifdef ESP32
   static ESPeasySerialType::serialtype getSerialType(int receivePin, int transmitPin) {
@@ -59,6 +93,7 @@ struct ESPeasySerialType {
     // So must make sure to set them to other pins.
     return serialtype::serial1;
   }
+
 #endif // ESP32
 
 

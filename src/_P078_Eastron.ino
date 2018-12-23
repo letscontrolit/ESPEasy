@@ -92,14 +92,15 @@ boolean Plugin_078(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_GET_DEVICEGPIONAMES:
       {
-        event->String1 = formatGpioName_RX(false);
-        event->String2 = formatGpioName_TX(false);
+        serialHelper_getGpioNames(event);
         event->String3 = formatGpioName_output_optional("DE");
         break;
       }
 
     case PLUGIN_WEBFORM_LOAD:
       {
+        serialHelper_webformLoad(event);
+
         if (P078_DEV_ID == 0 || P078_DEV_ID > 247 || P078_BAUDRATE >= 6) {
           // Load some defaults
           P078_DEV_ID = P078_DEV_ID_DFLT;
@@ -142,6 +143,8 @@ boolean Plugin_078(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
+          serialHelper_webformSave(event);
+
           P078_DEV_ID = getFormItemInt(F("p078_dev_id"));
           P078_MODEL = getFormItemInt(F("p078_model"));
           P078_BAUDRATE = getFormItemInt(F("p078_baudrate"));
