@@ -59,6 +59,7 @@ void checkRuleSets() {
 void rulesProcessing(String &event) {
   if (!Settings.UseRules)
     return;
+  START_TIMER
   checkRAM(F("rulesProcessing"));
   unsigned long timer = millis();
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -99,6 +100,7 @@ void rulesProcessing(String &event) {
     log += F(" milliSeconds");
     addLog(LOG_LEVEL_DEBUG, log);
   }
+  STOP_TIMER(RULES_PROCESSING);
   backgroundtasks();
 }
 

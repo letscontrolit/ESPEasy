@@ -266,17 +266,18 @@
 #define PLUGIN_REQUEST                     26
 #define PLUGIN_TIME_CHANGE                 27
 
-#define CPLUGIN_PROTOCOL_ADD                1
-#define CPLUGIN_PROTOCOL_TEMPLATE           2
-#define CPLUGIN_PROTOCOL_SEND               3
-#define CPLUGIN_PROTOCOL_RECV               4
-#define CPLUGIN_GET_DEVICENAME              5
-#define CPLUGIN_WEBFORM_SAVE                6
-#define CPLUGIN_WEBFORM_LOAD                7
-#define CPLUGIN_GET_PROTOCOL_DISPLAY_NAME   8
-#define CPLUGIN_TASK_CHANGE_NOTIFICATION    9
-#define CPLUGIN_INIT                       10
-#define CPLUGIN_UDP_IN                     11
+// Make sure the CPLUGIN_* does not overlap PLUGIN_*
+#define CPLUGIN_PROTOCOL_ADD               41
+#define CPLUGIN_PROTOCOL_TEMPLATE          42
+#define CPLUGIN_PROTOCOL_SEND              43
+#define CPLUGIN_PROTOCOL_RECV              44
+#define CPLUGIN_GET_DEVICENAME             45
+#define CPLUGIN_WEBFORM_SAVE               46
+#define CPLUGIN_WEBFORM_LOAD               47
+#define CPLUGIN_GET_PROTOCOL_DISPLAY_NAME  48
+#define CPLUGIN_TASK_CHANGE_NOTIFICATION   49
+#define CPLUGIN_INIT                       50
+#define CPLUGIN_UDP_IN                     51
 
 #define CONTROLLER_HOSTNAME                 1
 #define CONTROLLER_IP                       2
@@ -1624,7 +1625,7 @@ boolean (*Plugin_ptr[PLUGIN_MAX])(byte, struct EventStruct*, String&);
 std::vector<byte> Plugin_id;
 std::vector<int> Task_id_to_Plugin_id;
 
-boolean (*CPlugin_ptr[CPLUGIN_MAX])(byte, struct EventStruct*, String&);
+bool (*CPlugin_ptr[CPLUGIN_MAX])(byte, struct EventStruct*, String&);
 byte CPlugin_id[CPLUGIN_MAX];
 
 boolean (*NPlugin_ptr[NPLUGIN_MAX])(byte, struct EventStruct*, String&);
@@ -1900,7 +1901,42 @@ bool mustLogFunction(int function) {
     return false;
 }
 
+String getCPluginCFunctionName(int function) {
+    switch(function) {
+        case CPLUGIN_PROTOCOL_ADD:              return F("CPLUGIN_PROTOCOL_ADD");
+        case CPLUGIN_PROTOCOL_TEMPLATE:         return F("CPLUGIN_PROTOCOL_TEMPLATE");
+        case CPLUGIN_PROTOCOL_SEND:             return F("CPLUGIN_PROTOCOL_SEND");
+        case CPLUGIN_PROTOCOL_RECV:             return F("CPLUGIN_PROTOCOL_RECV");
+        case CPLUGIN_GET_DEVICENAME:            return F("CPLUGIN_GET_DEVICENAME");
+        case CPLUGIN_WEBFORM_SAVE:              return F("CPLUGIN_WEBFORM_SAVE");
+        case CPLUGIN_WEBFORM_LOAD:              return F("CPLUGIN_WEBFORM_LOAD");
+        case CPLUGIN_GET_PROTOCOL_DISPLAY_NAME: return F("CPLUGIN_GET_PROTOCOL_DISPLAY_NAME");
+        case CPLUGIN_TASK_CHANGE_NOTIFICATION:  return F("CPLUGIN_TASK_CHANGE_NOTIFICATION");
+        case CPLUGIN_INIT:                      return F("CPLUGIN_INIT");
+        case CPLUGIN_UDP_IN:                    return F("CPLUGIN_UDP_IN");
+    }
+    return F("Unknown");
+}
+
+bool mustLogCFunction(int function) {
+    switch(function) {
+        case CPLUGIN_PROTOCOL_ADD:              return false;
+        case CPLUGIN_PROTOCOL_TEMPLATE:         return false;
+        case CPLUGIN_PROTOCOL_SEND:             return true;
+        case CPLUGIN_PROTOCOL_RECV:             return true;
+        case CPLUGIN_GET_DEVICENAME:            return false;
+        case CPLUGIN_WEBFORM_SAVE:              return false;
+        case CPLUGIN_WEBFORM_LOAD:              return false;
+        case CPLUGIN_GET_PROTOCOL_DISPLAY_NAME: return false;
+        case CPLUGIN_TASK_CHANGE_NOTIFICATION:  return false;
+        case CPLUGIN_INIT:                      return false;
+        case CPLUGIN_UDP_IN:                    return true;
+    }
+    return false;
+}
+
 std::map<int,TimingStats> pluginStats;
+std::map<int,TimingStats> controllerStats;
 std::map<int,TimingStats> miscStats;
 unsigned long timediff_calls = 0;
 unsigned long timediff_cpu_cycles_total = 0;
@@ -1939,12 +1975,18 @@ unsigned long timingstats_last_reset = 0;
 #define CONNECT_CLIENT_STATS 30
 #define LOAD_CUSTOM_TASK_STATS 31
 #define WIFI_ISCONNECTED_STATS 32
+#define LOAD_TASK_SETTINGS     33
+#define RULES_PROCESSING       34
+#define BACKGROUND_TASKS       35
+#define HANDLE_SCHEDULER_IDLE  36
+#define HANDLE_SCHEDULER_TASK  37
 
 
 
 
 #define START_TIMER const unsigned statisticsTimerStart(micros());
-#define STOP_TIMER_TASK(T,F)  if (mustLogFunction(F)) pluginStats[T*32 + F].add(usecPassedSince(statisticsTimerStart));
+#define STOP_TIMER_TASK(T,F)  if (mustLogFunction(F)) pluginStats[T*256 + F].add(usecPassedSince(statisticsTimerStart));
+#define STOP_TIMER_CONTROLLER(T,F)  if (mustLogCFunction(F)) controllerStats[T*256 + F].add(usecPassedSince(statisticsTimerStart));
 //#define STOP_TIMER_LOADFILE miscStats[LOADFILE_STATS].add(usecPassedSince(statisticsTimerStart));
 #define STOP_TIMER(L)       miscStats[L].add(usecPassedSince(statisticsTimerStart));
 
@@ -1971,6 +2013,11 @@ String getMiscStatsName(int stat) {
         case CONNECT_CLIENT_STATS:  return F("connectClient()");
         case LOAD_CUSTOM_TASK_STATS: return F("LoadCustomTaskSettings()");
         case WIFI_ISCONNECTED_STATS: return F("WiFi.isConnected()");
+        case LOAD_TASK_SETTINGS:     return F("LoadTaskSettings()");
+        case RULES_PROCESSING:       return F("rulesProcessing()");
+        case BACKGROUND_TASKS:       return F("backgroundtasks()");
+        case HANDLE_SCHEDULER_IDLE:  return F("handle_schedule() idle");
+        case HANDLE_SCHEDULER_TASK:  return F("handle_schedule() task");
         case C001_DELAY_QUEUE:
         case C002_DELAY_QUEUE:
         case C003_DELAY_QUEUE:

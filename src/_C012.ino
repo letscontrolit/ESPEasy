@@ -9,9 +9,9 @@
 #define CPLUGIN_ID_012         12
 #define CPLUGIN_NAME_012       "Blynk HTTP [TESTING]"
 
-boolean CPlugin_012(byte function, struct EventStruct *event, String& string)
+bool CPlugin_012(byte function, struct EventStruct *event, String& string)
 {
-  boolean success = false;
+  bool success = false;
 
   switch (function)
   {
@@ -103,7 +103,7 @@ boolean Blynk_get(const String& command, byte controllerIndex, float *data )
             ControllerSettings.getHost().c_str());
   addLog(LOG_LEVEL_DEBUG, request);
   client.print(request);
-  boolean success = !ControllerSettings.MustCheckReply;
+  bool success = !ControllerSettings.MustCheckReply;
   if (ControllerSettings.MustCheckReply || data) {
     unsigned long timer = millis() + 200;
     while (!client_available(client) && !timeOutReached(timer))

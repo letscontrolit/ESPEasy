@@ -82,7 +82,7 @@ Indicators (recommended settings)
   :header: "Indicator", "Value Name", "Interval", "Decimals", "Extra information"
   :widths: 8, 5, 5, 5, 40
 
-  "Count", "MomentaryConsumption", "10", "0", "Using the formula ``%value%*3600/10`` to convert the pulse count into Watts.
+  "Count", "W", "10", "0", "Using the formula ``%value%*3600/10`` to convert the pulse count into Watts.
             You might have to tweak the value to fit your application, our energy meter gives 1Wh per pulse and since
             our interval was set to 10 seconds we have to first multiply the value with ``3600`` (3600 seconds per hour) and
             also divide that value with ``10`` because we measure the Watt over a time period of 10 seconds (of that hour).
@@ -99,8 +99,8 @@ Rules examples
 
 .. code-block:: html
 
-   On PowerMeter#MomentaryConsumption Do
-    If [PowerMeter#MomentaryConsumption]>1500
+   On PowerMeter#W Do
+    If [PowerMeter#W]>1500
       NeoPixelAll,255,0,0 //using too much energy!
     Else
       NeoPixelAll,0,255,0 //good job, low energy consumption
