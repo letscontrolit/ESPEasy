@@ -554,6 +554,7 @@ To create/register a plugin, you have to :
     #define USES_P080   // iButton Sensor  DS1990A
     #define USES_P081   // Cron
     #define USES_P082   // GPS
+    #define USES_P083   // MQ-5 gas sensor
 #endif
 
 
