@@ -216,14 +216,14 @@ bool ESPeasySerial::hasOverrun(void) {
   if (!isValid()) {
     return false;
   }
-#ifndef ARDUINO_ESP8266_RELEASE_2_3_0
+#ifdef ARDUINO_ESP8266_RELEASE_2_4_1
+  return false;
+#else
   if (isSWserial()) {
     return _swserial->overflow();
   } else {
     return getHW()->hasOverrun();
   }
-#else
-  return false;
 #endif
 }
 
@@ -294,7 +294,7 @@ void ESPeasySerial::startDetectBaudrate() {
   if (!isValid() || isSWserial()) {
     return;
   }
-#ifndef ARDUINO_ESP8266_RELEASE_2_3_0
+#ifndef ARDUINO_ESP8266_RELEASE_2_4_1
   getHW()->startDetectBaudrate();
 #endif
 }
@@ -303,7 +303,7 @@ unsigned long ESPeasySerial::testBaudrate() {
   if (!isValid() || isSWserial()) {
     return 0;
   }
-#ifndef ARDUINO_ESP8266_RELEASE_2_3_0
+#ifndef ARDUINO_ESP8266_RELEASE_2_4_1
   return getHW()->testBaudrate();
 #else
   return 0;
@@ -314,7 +314,7 @@ unsigned long ESPeasySerial::detectBaudrate(time_t timeoutMillis) {
   if (!isValid() || isSWserial()) {
     return 0;
   }
-#ifndef ARDUINO_ESP8266_RELEASE_2_3_0
+#ifndef ARDUINO_ESP8266_RELEASE_2_4_1
   return getHW()->detectBaudrate(timeoutMillis);
 #else
   return 0;
