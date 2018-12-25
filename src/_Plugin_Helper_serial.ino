@@ -1,3 +1,5 @@
+#include <ESPeasySerial.h>
+
 static String serialHelper_getSerialTypeLabel(ESPeasySerialType::serialtype serType) {
   if (serType == ESPeasySerialType::serialtype::software) return F("SoftwareSerial");
   if (serType == ESPeasySerialType::serialtype::serial0_swap) return F("HW Serial0 swap");
