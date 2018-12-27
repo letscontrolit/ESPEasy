@@ -155,7 +155,7 @@ Environment
 
 Plugins: |Plugin_Environment|
 
-Hardware: |P004_usedby|, |P005_usedby|, |P006_usedby|, |P024_usedby|
+Hardware: |P004_usedby|, |P005_usedby|, |P006_usedby|, |P024_usedby|, |P030_usedby|
 
 Extra IO
 --------

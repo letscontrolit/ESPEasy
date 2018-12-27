@@ -32,7 +32,7 @@ Wiring
 
 .. note:: If you have change the I2C settings in the hardware setup you need to connect to those instead of GPIO 4 and 5.
 
-.. note:: Only use 3.3V BMP085/180 boards. The ESP pins are not 5 volt tolerant. Depending on the make of the BMP085/180 board,
+.. note:: Only use 3.3V BMP085/180 boards. The ESP pins are not 5V tolerant. Depending on the make of the BMP085/180 board,
           pull-up resistors on SDA and SDC may be absent. 4k7 types are fine. When more I2C devices are being used, only one set
           of pull-up resistors is required or even allowed. It may be necessary to add a ceramic 100nF capacitor across the power
           lines, close to the BMP085/180 board.
