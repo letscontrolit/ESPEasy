@@ -5,7 +5,7 @@
 .. |P030_github| replace:: P030_BMP280.ino
 .. _P030_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P030_BMP280.ino
 .. |P030_usedby| replace:: :ref:`P030_BMP280_page`
-.. |P030_shortinfo| replace:: Temperature and pressure for the BMP280 sensors.
+.. |P030_shortinfo| replace:: Temperature and pressure for the BMP280 sensors. Superseded by :ref:`P028_page`
 .. |P030_maintainer| replace:: `.`
 .. |P030_compileinfo| replace:: `.`
 

@@ -17,6 +17,9 @@ Specifications:
  * Temperature (-40C to +85C)
  * Barometric pressure (300-1100 hPa)
 
+.. warning:: The BMP280 is easily mistaken for its big brother the BM**E**280. The :ref:`P028_page` can also be used
+             to control the BMP280.
+
 Wiring
 ------
 
