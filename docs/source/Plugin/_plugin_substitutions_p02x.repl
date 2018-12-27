@@ -48,8 +48,8 @@
 .. |P024_status| replace:: :green:`NORMAL`
 .. |P024_github| replace:: P024_MLX90614.ino
 .. _P024_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P024_MLX90614.ino
-.. |P024_usedby| replace:: `.`
-.. |P024_shortinfo| replace:: `.`
+.. |P024_usedby| replace:: :ref:`P024_MLX90614_page`
+.. |P024_shortinfo| replace:: Non-contact temperature sensor.
 .. |P024_maintainer| replace:: `.`
 .. |P024_compileinfo| replace:: `.`
 
