@@ -83,6 +83,27 @@ struct P082_data_struct {
     last_lng = gps->location.lng();
   }
 
+  // Return the GPS time stamp, which is in UTC.
+  // @param age is the time in msec since the last update of the time + additional centiseconds given by the GPS.
+  bool getDateTime(struct tm& dateTime, unsigned int maxAge_msec, uint32_t& age) {
+    if (!isInitialized())
+      return false;
+    age = gps->time.age();
+    if (gps->time.age() > maxAge_msec)
+      return false;
+    if (gps->date.age() > P028_DEFAULT_FIX_TIMEOUT)
+      return false;
+    dateTime.tm_year = gps->date.year() - 1970;
+    dateTime.tm_mon  = gps->date.month();
+    dateTime.tm_mday = gps->date.day();
+
+    dateTime.tm_hour = gps->time.hour();
+    dateTime.tm_min  = gps->time.minute();
+    dateTime.tm_sec  = gps->time.second();
+    age += (gps->time.centisecond() * 10);
+    return true;
+  }
+
   TinyGPSPlus *gps = nullptr;
   ESPeasySerial *P082_easySerial = nullptr;
 
@@ -129,6 +150,13 @@ boolean Plugin_082(byte function, struct EventStruct *event, String &string) {
 
     case PLUGIN_WEBFORM_LOAD: {
       serialHelper_webformLoad(event);
+      if (P082_data.isInitialized()) {
+        String detectedString = F("Detected: ");
+        detectedString += String(P082_data.P082_easySerial->baudRate());
+        addUnit(detectedString);
+      }
+
+      P082_html_show_stats(event);
 
       // Settings to add:
       // Speed unit
@@ -221,6 +249,7 @@ boolean Plugin_082(byte function, struct EventStruct *event, String &string) {
             success = true;
           }
         }
+        P082_setSystemTime();
         P082_logStats(event);
       }
       break;
@@ -255,6 +284,48 @@ void P082_logStats(struct EventStruct *event) {
   log += P082_data.gps->failedChecksum();
 
   addLog(LOG_LEVEL_INFO, log);
+}
+
+void P082_html_show_stats(struct EventStruct *event) {
+  addRowLabel(F("Fix"));
+  addHtml(String(P082_data.hasFix(P028_DEFAULT_FIX_TIMEOUT)));
+
+  addRowLabel(F("Nr Satellites"));
+  addHtml(String(P082_data.gps->satellites.value()));
+
+  addRowLabel(F("HDOP"));
+  addHtml(String(P082_data.gps->hdop.value() / 100.0));
+
+  addRowLabel(F("UTC Time"));
+  struct tm dateTime;
+  uint32_t age;
+  if (P082_data.getDateTime(dateTime, P028_DEFAULT_FIX_TIMEOUT, age)) {
+    dateTime = addSeconds(dateTime, (age / 1000), false);
+  }
+  addHtml(getDateTimeString(dateTime));
+
+  addRowLabel(F("Checksum (pass/fail)"));
+  String chksumStats;
+  chksumStats = P082_data.gps->passedChecksum();
+  chksumStats += '/';
+  chksumStats += P082_data.gps->failedChecksum();
+  addHtml(chksumStats);
+}
+
+void P082_setSystemTime() {
+  // Set the externalTimesource 10 seconds earlier to make sure no call is made to NTP (if set)
+  if (nextSyncTime > (sysTime + 10)) {
+    return;
+  }
+
+  struct tm dateTime;
+  uint32_t age;
+  if (P082_data.getDateTime(dateTime, P028_DEFAULT_FIX_TIMEOUT, age)) {
+    // Use floating point precision to use the time since last update from GPS and the given offset in centisecond.
+    externalTimeSource = makeTime(dateTime);
+    externalTimeSource += static_cast<double>(age) / 1000.0;
+    initTime();
+  }
 }
 
 #endif // USES_P082

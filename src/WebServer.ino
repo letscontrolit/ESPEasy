@@ -958,12 +958,12 @@ void handle_root() {
     TXBuffer += BUILD_GIT;
 
     addRowLabel(F("Local Time"));
-    if (Settings.UseNTP)
+    if (systemTimePresent())
     {
       TXBuffer += getDateTimeString('-', ':', ' ');
     }
     else
-      TXBuffer += F("<font color='red'>NTP disabled</font>");
+      TXBuffer += F("<font color='red'>No system time source</font>");
 
     addRowLabel(F("Uptime"));
     {
@@ -4688,7 +4688,7 @@ void handle_advanced() {
     Settings.OldRulesEngine(isFormItemChecked(F("oldrulesengine")));
 
     addHtmlError(SaveSettings());
-    if (Settings.UseNTP)
+    if (systemTimePresent())
       initTime();
   }
 
@@ -4896,7 +4896,7 @@ void handle_download()
   str += F("_Build");
   str += BUILD;
   str += '_';
-  if (Settings.UseNTP)
+  if (systemTimePresent())
   {
     str += getDateTimeString('\0', '\0', '\0');
   }
@@ -6072,7 +6072,7 @@ void handle_sysinfo() {
   addRowLabel(F("Unit"));
   TXBuffer += Settings.Unit;
 
-  if (Settings.UseNTP)
+  if (systemTimePresent())
   {
      addRowLabel(F("Local Time"));
      TXBuffer += getDateTimeString('-', ':', ' ');

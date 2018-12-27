@@ -18,6 +18,7 @@ uint32_t syncInterval = 3600;  // time sync will be attempted after this many se
 double sysTime = 0.0; // Use high resolution double to get better sync between nodes when using NTP
 uint32_t prevMillis = 0;
 uint32_t nextSyncTime = 0;
+double externalTimeSource = -1.0; // Used to set time from a source other than NTP.
 struct tm tsRise, tsSet;
 struct tm sunRise;
 struct tm sunSet;
@@ -199,7 +200,6 @@ String getSunsetTimeString(char delimiter, int secOffset) {
   return getTimeString(getSunSet(secOffset), delimiter, false, false);
 }
 
-
 unsigned long now() {
   // calculate number of seconds passed since last call to now()
   bool timeSynced = false;
@@ -208,14 +208,18 @@ unsigned long now() {
 	prevMillis += msec_passed;
 	if (nextSyncTime <= sysTime) {
 		// nextSyncTime & sysTime are in seconds
-		double unixTime_d;
-		if (getNtpTime(unixTime_d)) {
-			prevMillis = millis();  // restart counting from now (thanks to Korman for this fix)
-			timeSynced = true;
-			sysTime = unixTime_d;
+		double unixTime_d = -1.0;
+    if (externalTimeSource > 0.0) {
+      unixTime_d = externalTimeSource;
+      externalTimeSource = -1.0;
+    }
+		if (unixTime_d > 0.0 || getNtpTime(unixTime_d)) {
+      prevMillis = millis();  // restart counting from now (thanks to Korman for this fix)
+      timeSynced = true;
+      sysTime = unixTime_d;
 
-			applyTimeZone(unixTime_d);
-			nextSyncTime = (uint32_t)unixTime_d + syncInterval;
+      applyTimeZone(unixTime_d);
+      nextSyncTime = (uint32_t)unixTime_d + syncInterval;
 		}
 	}
 	uint32_t localSystime = toLocal(sysTime);
@@ -292,6 +296,10 @@ void initTime()
 {
 	nextSyncTime = 0;
 	now();
+}
+
+bool systemTimePresent() {
+  return nextSyncTime > 0 || Settings.UseNTP;
 }
 
 void checkTime()

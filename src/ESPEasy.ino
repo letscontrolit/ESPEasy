@@ -306,7 +306,7 @@ void setup()
 
   sendSysInfoUDP(3);
 
-  if (Settings.UseNTP)
+  if (systemTimePresent())
     initTime();
 
 #if FEATURE_ADC_VCC
@@ -718,7 +718,7 @@ void runOncePerSecond()
   WifiCheck();
 
   // clock events
-  if (Settings.UseNTP)
+  if (systemTimePresent())
     checkTime();
 
 //  unsigned long start = micros();
