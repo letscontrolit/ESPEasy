@@ -91,13 +91,13 @@ Rules examples
 
 .. code-block:: html
 
- on RCW0001#distance do
-  if [RCW0001#distance]<50 and [RCW0001#distance]>45
-    GPIO,14,1 //light up LED to show that you're at the correct position
-  else
-    GPIO,14,0
-  endif
- endon
+   on RCW0001#distance do
+    if [RCW0001#distance]<50 and [RCW0001#distance]>45
+      GPIO,14,1 //light up LED to show that you're at the correct position
+    else
+      GPIO,14,0
+    endif
+   endon
 
 .. Commands available
 .. ~~~~~~~~~~~~~~~~~~

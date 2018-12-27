@@ -17,7 +17,7 @@ using a custom 1-wire protocol. That means that they are not compatible with
 the same 1-wire bus as standard 1-wire units.
 
 Specifications:
- * Temperature (-40 to +85C)
+ * Temperature (-40C to +85C)
  * Humidity (0-100 % rel. humidity)
 
 

@@ -91,13 +91,13 @@ Rules examples
 
 .. code-block:: html
 
- on US100#distance do
-  if [US100#distance]<50 and [US100#distance]>45
-    GPIO,14,1 //light up LED to show that you're at the correct position
-  else
-    GPIO,14,0
-  endif
- endon
+   on US100#distance do
+    if [US100#distance]<50 and [US100#distance]>45
+      GPIO,14,1 //light up LED to show that you're at the correct position
+    else
+      GPIO,14,0
+    endif
+   endon
 
 .. Commands available
 .. ~~~~~~~~~~~~~~~~~~
