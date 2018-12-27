@@ -12,11 +12,14 @@ BME280
 Introduction
 ------------
 
-
 Specifications:
  * Temperature (-40C to +85C)
  * Relative humidity (0-100 %RH)
  * Barometric pressure (300-1100 hPa)
+
+.. warning:: The BME280 is easily mistaken for its sibling the BM**P**280. Sometimes the PCB have both BME and BMP280
+             written on it, it's probably because the footprint is the same for BME and BMP = the same PCB board is used
+             by both.
 
 Wiring
 ------
