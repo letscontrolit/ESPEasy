@@ -102,7 +102,7 @@ Rules examples
 .. Commands available
 .. ~~~~~~~~~~~~~~~~~~
 
-.. .. include:: P013_commands.repl
+.. .. include:: P005_commands.repl
 
 Where to buy
 ------------

@@ -128,7 +128,7 @@ Rules examples
 .. Commands available
 .. ~~~~~~~~~~~~~~~~~~
 
-.. .. include:: P013_commands.repl
+.. .. include:: P001_commands.repl
 
 Where to buy
 ------------
