@@ -17,10 +17,8 @@ INTRODUCTION_TEXT
 Specifications:
  * SPECIFICATIONS
 
-
 Wiring
 ------
-
 
 .. code-block:: html
 
@@ -31,7 +29,6 @@ Wiring
   Power
   5.0V       <-->   VCC
   GND        <-->   GND
-
 
 Setup
 -----
@@ -78,11 +75,11 @@ Rules examples
 
 .. code-block:: html
 
- on TASK#VALUE do
-  if [TASK#VALUE]>999
-    //Example rule
-  endif
- endon
+   on TASK#VALUE do
+    if [TASK#VALUE]>999
+      //Example rule
+    endif
+   endon
 
 .. Commands available
 .. ~~~~~~~~~~~~~~~~~~
