@@ -3353,7 +3353,7 @@ Edwin Eefting (1):
 Gijs Noorlander (10):
       [Issue #831] Use DOUT flash mode (#834)
       [#804] Degree symbol for non-framed OLED display (#835)
-      Blynk controler (re-implementation of PR#92) (#837)
+      Blynk controller (re-implementation of PR#92) (#837)
       [issue #839] Add command support for setting contrast for OLED Framed (#841)
       [P001 Switch] Fix a mixup in previous fix for switch (#845)
       [v2.0] Fix compile errors on ESP32 (#848)

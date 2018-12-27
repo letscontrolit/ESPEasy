@@ -104,7 +104,7 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
         options5[0] = F("SSD1306");
         options5[1] = F("SH1106");
         int optionValues5[2] = { 1, 2 };
-        addFormSelector(F("Controler"), F("p036_controler"), 2, options5, optionValues5, choice5);
+        addFormSelector(F("Controller"), F("p036_controller"), 2, options5, optionValues5, choice5);
 
         byte choice0 = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
         /*
@@ -186,7 +186,7 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
         Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("p036_nlines"));
         Settings.TaskDevicePluginConfig[event->TaskIndex][3] = getFormItemInt(F("p036_scroll"));
         Settings.TaskDevicePluginConfig[event->TaskIndex][4] = getFormItemInt(F("p036_timer"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][5] = getFormItemInt(F("p036_controler"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][5] = getFormItemInt(F("p036_controller"));
         Settings.TaskDevicePluginConfig[event->TaskIndex][6] = getFormItemInt(F("p036_contrast"));
 
         String error;
