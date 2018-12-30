@@ -216,7 +216,7 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
         success = true;
         break;
       }
-
+/*
       case PLUGIN_UNCONDITIONAL_POLL:
         {
           // port monitoring, generates an event by rule command 'monitor,pcf,port#'
@@ -224,11 +224,12 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
             if (getPluginFromKey(it->first)==PLUGIN_ID_019 && (it->second.monitor || it->second.command || it->second.init)) {
               const uint16_t port = getPortFromKey(it->first);
               int8_t state = Plugin_019_Read(port);
-              if (it->second.state != state) {
+              if (it->second.state != state || it->second.forceMonitor) {
                 if (it->second.mode == PIN_MODE_OFFLINE) it->second.mode=PIN_MODE_UNDEFINED; //changed from offline to online
                 if (state == -1) it->second.mode=PIN_MODE_OFFLINE; //changed from online to offline
                 if (!it->second.task) it->second.state = state; //do not update state if task flag=1 otherwise it will not be picked up by 10xSEC function
                 if (it->second.monitor) {
+                  it->second.forceMonitor=0; //reset flag
                   String eventString = F("PCF#");
                   eventString += port;
                   eventString += '=';
@@ -238,6 +239,30 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
               }
             }
           }
+          break;
+        }
+*/
+      case PLUGIN_MONITOR:
+        {
+          // port monitoring, generates an event by rule command 'monitor,gpio,port#'
+          const uint32_t key = createKey(PLUGIN_ID_019,event->Par1);
+          const portStatusStruct currentStatus = globalMapPortStatus[key];
+
+        //  if (currentStatus.monitor || currentStatus.command || currentStatus.init) {
+            byte state = Plugin_019_Read(event->Par1);
+            if (currentStatus.state != state || currentStatus.forceMonitor) {
+              if (!currentStatus.task) globalMapPortStatus[key].state = state; //do not update state if task flag=1 otherwise it will not be picked up by 10xSEC function
+              if (currentStatus.monitor) {
+                globalMapPortStatus[key].forceMonitor=0; //reset flag
+                String eventString = F("PCF#");
+                eventString += event->Par1;
+                eventString += '=';
+                eventString += state;
+                rulesProcessing(eventString);
+              }
+            }
+          //}
+
           break;
         }
 
@@ -270,12 +295,15 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
           //QUESTION: MAYBE IT'S BETTER TO WAIT 2 CYCLES??
           if (round(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][3]) && state != currentStatus.state && Settings.TaskDevicePluginConfigLong[event->TaskIndex][3]==0)
           {
-            addLog(LOG_LEVEL_DEBUG,"PCF :SafeButton activated")
+            addLog(LOG_LEVEL_DEBUG,F("PCF :SafeButton 1st click."))
             Settings.TaskDevicePluginConfigLong[event->TaskIndex][3] = 1;
           }
           //CASE 2: not using SafeButton, or already waited 1 more 100ms cycle, so proceed.
-          else if (state != currentStatus.state)
+          else if (state != currentStatus.state || currentStatus.forceEvent)
           {
+            //Reset forceEvent
+            currentStatus.forceEvent = 0;
+
             // Reset SafeButton counter
             Settings.TaskDevicePluginConfigLong[event->TaskIndex][3] = 0;
 
@@ -399,8 +427,25 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
               UserVar[event->BaseVarIndex] = sendState ? 1 : 0;
             }
           } else {
-            // Reset SafeButton counter
-            Settings.TaskDevicePluginConfigLong[event->TaskIndex][3] = 0;
+            if (Settings.TaskDevicePluginConfigLong[event->TaskIndex][3]==1) { //Safe Button detected. Send EVENT value = 4
+              // Reset SafeButton counter
+              Settings.TaskDevicePluginConfigLong[event->TaskIndex][3] = 0;
+
+               //Create EVENT with value = 4 for SafeButton false positive detection
+              const int tempUserVar = round(UserVar[event->BaseVarIndex]);
+              UserVar[event->BaseVarIndex] = 4;
+              if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+                String log = F("PCF : SafeButton: false positive detected. GPIO= ");
+                log += Settings.TaskDevicePin1[event->TaskIndex];
+                log += F(" State=");
+                log += tempUserVar;
+                addLog(LOG_LEVEL_INFO, log);
+              }
+              sendData(event);
+
+              //reset Userdata so it displays the correct state value in the web page
+              UserVar[event->BaseVarIndex] = tempUserVar;
+            }
           }
         } else if (state != currentStatus.state && state == -1) {
           //set UserVar and switchState = -1 and send EVENT to notify user
@@ -483,6 +528,8 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
               tempStatus.mode=PIN_MODE_OFFLINE;
               tempStatus.state=-1;
               tempStatus.command=1; //set to 1 in order to display the status in the PinStatus page
+              tempStatus.forceEvent=1;
+              if (tempStatus.monitor) tempStatus.forceMonitor=1; //set to 1 in order to force an EVENT in case monitor is requested
               savePortStatus(key,tempStatus);
               log = String(F("PCF  : GPIO ")) + String(event->Par1) + String(F(" is offline (-1). Cannot set value."));
             } else if (event->Par2 == 2) { //INPUT
@@ -491,6 +538,8 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
               tempStatus.mode=PIN_MODE_INPUT;
               tempStatus.state = currentState;
               tempStatus.command=1; //set to 1 in order to display the status in the PinStatus page
+              tempStatus.forceEvent=1;
+              if (tempStatus.monitor) tempStatus.forceMonitor=1; //set to 1 in order to force an EVENT in case monitor is requested
               savePortStatus(key,tempStatus);
           	  Plugin_019_Write(event->Par1,1);
           	  log = String(F("PCF  : GPIO INPUT ")) + String(event->Par1) + String(F(" Set to 1"));
@@ -499,6 +548,8 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
               tempStatus.mode=PIN_MODE_OUTPUT;
               tempStatus.state=event->Par2;
               tempStatus.command=1; //set to 1 in order to display the status in the PinStatus page
+              tempStatus.forceEvent=1;
+              if (tempStatus.monitor) tempStatus.forceMonitor=1; //set to 1 in order to force an EVENT in case monitor is requested
               savePortStatus(key,tempStatus);
               Plugin_019_Write(event->Par1, event->Par2);
           	  log = String(F("PCF  : GPIO OUTPUT ")) + String(event->Par1) + String(F(" Set to ")) + String(event->Par2);
@@ -523,6 +574,8 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
               tempStatus.mode=PIN_MODE_OFFLINE;
               tempStatus.state=-1;
               tempStatus.command=1; //set to 1 in order to display the status in the PinStatus page
+              tempStatus.forceEvent=1;
+              if (tempStatus.monitor) tempStatus.forceMonitor=1; //set to 1 in order to force an EVENT in case monitor is requested
               savePortStatus(key,tempStatus);
               log = String(F("PCF  : GPIO ")) + String(event->Par1) + String(F(" is offline (-1). Cannot set value."));
               needToSave = true;
@@ -530,6 +583,8 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
               tempStatus.state = !currentState; //toggle current state value
               tempStatus.mode = PIN_MODE_OUTPUT;
               tempStatus.command=1; //set to 1 in order to display the status in the PinStatus page
+              tempStatus.forceEvent=1;
+              if (tempStatus.monitor) tempStatus.forceMonitor=1; //set to 1 in order to force an EVENT in case monitor is requested
               savePortStatus(key,tempStatus);
               Plugin_019_Write(event->Par1, tempStatus.state);
               log = String(F("PCF  : Toggle GPIO ")) + String(event->Par1) + String(F(" Set to ")) + String(tempStatus.state);
@@ -615,6 +670,9 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
             const uint32_t key = createKey(PLUGIN_ID_019,event->Par2); //WARNING: 'monitor' uses Par2 instead of Par1
 
             addMonitorToPort(key);
+            //giig1967g: Comment next line to receive an EVENT just after calling the monitor command
+            globalMapPortStatus[key].state = Plugin_019_Read(event->Par2); //set initial value to avoid an event just after calling the command
+
             log = String(F("PCF  : PORT ")) + String(event->Par2) + String(F(" added to monitor list."));
             addLog(LOG_LEVEL_INFO, log);
             SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, dummyString, 0);
@@ -624,11 +682,11 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
           {
             success = true;
             const uint32_t key = createKey(PLUGIN_ID_019,event->Par2); //WARNING: 'monitor' uses Par2 instead of Par1
+            SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, dummyString, 0);
 
             removeMonitorFromPort(key);
             log = String(F("PCF  : PORT ")) + String(event->Par2) + String(F(" removed from monitor list."));
             addLog(LOG_LEVEL_INFO, log);
-            SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, dummyString, 0);
           }
         }
         break;

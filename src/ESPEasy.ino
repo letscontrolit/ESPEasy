@@ -664,7 +664,8 @@ void run10TimesPerSecond() {
   }
   {
     START_TIMER;
-    PluginCall(PLUGIN_UNCONDITIONAL_POLL, 0, dummyString);
+//    PluginCall(PLUGIN_UNCONDITIONAL_POLL, 0, dummyString);
+    PluginCall(PLUGIN_MONITOR, 0, dummyString);
     STOP_TIMER(PLUGIN_CALL_10PSU);
   }
   if (Settings.UseRules && eventBuffer.length() > 0)

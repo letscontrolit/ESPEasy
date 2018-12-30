@@ -373,12 +373,12 @@ void setBitToUL(uint32_t& number, byte bitnr, bool value) {
 /*********************************************************************************************\
    report pin mode & state (info table) using json
   \*********************************************************************************************/
-String getPinStateJSON(boolean search, uint32_t key, const String& log, uint16_t noSearchValue)
+String getPinStateJSON(boolean search, uint32_t key, const String& log, int16_t noSearchValue)
 {
   checkRAM(F("getPinStateJSON"));
   printToWebJSON = true;
   byte mode = PIN_MODE_INPUT;
-  uint16_t value = noSearchValue;
+  int16_t value = noSearchValue;
   boolean found = false;
 
   if (search && existPortStatus(key))
