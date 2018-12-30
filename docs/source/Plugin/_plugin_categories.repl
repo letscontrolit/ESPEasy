@@ -2,7 +2,6 @@
 .. |Plugin_Color| replace:: :ref:`P050_page`, :ref:`P066_page`
 .. |Plugin_Communication| replace:: :ref:`P016_page`, :ref:`P020_page`
 .. |Plugin_Display| replace:: :ref:`P012_page`, :ref:`P023_page`, :ref:`P036_page`, :ref:`P057_page`, :ref:`P073_page`, :ref:`P075_page`
-.. |Plugin_Distance| replace:: :ref:`P013_page`
 .. |Plugin_Dust| replace:: :ref:`P018_page`, :ref:`P053_page`, :ref:`P056_page`
 .. |Plugin_Energy_AC| replace:: :ref:`P076_page`, :ref:`P077_page`, :ref:`P078_page`
 .. |Plugin_Energy_DC| replace:: :ref:`P027_page`
@@ -18,6 +17,7 @@
 .. |Plugin_Motor| replace:: :ref:`P048_page`, :ref:`P079_page`
 .. |Plugin_Notify| replace:: :ref:`P055_page`, :ref:`P065_page`
 .. |Plugin_Output| replace:: :ref:`P029_page`, :ref:`P038_page`, :ref:`P041_page`, :ref:`P042_page`, :ref:`P043_page`, :ref:`P070_page`
+.. |Plugin_Position| replace:: :ref:`P013_page`
 .. |Plugin_Regulator| replace:: :ref:`P021_page`
 .. |Plugin_RFID| replace:: :ref:`P008_page`, :ref:`P017_page`, :ref:`P040_page`
 .. |Plugin_Switch_input| replace:: :ref:`P001_page`, :ref:`P009_page`, :ref:`P019_page`, :ref:`P059_page`, :ref:`P080_page`

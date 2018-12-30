@@ -21,7 +21,7 @@ sensors on one cable (remember ESP Easy has 12 tasks max...). No calibration nec
 needs as the sensor gives digital data directly. Many forms available from bare chip to waterproof and tube sensors.
 
 Specifications:
- * Temperature (-55 to +125C)
+ * Temperature (-55C to +125C)
  * Voltage requirements: 3.3-5V
 
 .. note:: The DS18B20 runs well on 3.3V so no level shifter or special power supply is needed. But the official
@@ -115,6 +115,11 @@ Rules examples
        NeoPixelAll,0,255,0 //Body temperature is OK.
      EndIf
     EndOn
+
+.. Commands available
+.. ~~~~~~~~~~~~~~~~~~
+
+.. .. include:: P004_commands.repl
 
 Where to buy
 ------------

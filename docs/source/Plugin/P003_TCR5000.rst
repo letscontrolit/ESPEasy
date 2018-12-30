@@ -107,6 +107,11 @@ Rules examples
     EndIf
    EndOn
 
+.. Commands available
+.. ~~~~~~~~~~~~~~~~~~
+
+.. .. include:: P003_commands.repl
+
 Where to buy
 ------------
 

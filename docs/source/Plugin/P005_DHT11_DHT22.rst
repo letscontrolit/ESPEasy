@@ -17,7 +17,7 @@ using a custom 1-wire protocol. That means that they are not compatible with
 the same 1-wire bus as standard 1-wire units.
 
 Specifications:
- * Temperature (-40 to +85C)
+ * Temperature (-40C to +85C)
  * Humidity (0-100 % rel. humidity)
 
 
@@ -68,7 +68,6 @@ Sensor
 * **GPIO <--> Data**: Pulse input is generally set to **GPIO 14 (D5)**.
 * **Sensor model**: Pick your **sensor model**, either DHT11 or DHT22.
 
-.. note::
 
 Data acquisition
 ^^^^^^^^^^^^^^^^
@@ -99,6 +98,11 @@ Rules examples
        NeoPixelAll,0,255,0 //Green light
      EndIf
     EndOn
+
+.. Commands available
+.. ~~~~~~~~~~~~~~~~~~
+
+.. .. include:: P005_commands.repl
 
 Where to buy
 ------------

@@ -74,7 +74,7 @@ Sensor
 
 * **Switch button type**: Set the type of switch, "Normal switch", "Push button active low", or "Push button active high".
   * Normal switch: This is the general setting to use for a door (reed) switch.
-  
+
   * Push button active low: Not used by PIR switches (in general), if you still want to use it you can have a look at the
     :ref:`P001_Switch_page` page.
 
@@ -131,6 +131,10 @@ Rules examples
      endif
     endon
 
+.. Commands available
+.. ~~~~~~~~~~~~~~~~~~
+
+.. .. include:: P001_commands.repl
 
 Where to buy
 ------------

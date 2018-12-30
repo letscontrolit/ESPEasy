@@ -202,7 +202,7 @@ boot/reboot/time/sleep etc. of the unit:
 
    .. code-block:: html
 
-      on [DHT11Outside#Temperature]>20 do
+      on DHT11Outside#Temperature>20 do
        GPIO,2,1
       endon
 
@@ -214,9 +214,9 @@ boot/reboot/time/sleep etc. of the unit:
 
    .. code-block:: html
 
-	   on System#Wake do
-       GPIO,15,1
-	   endon
+      on System#Wake do
+        GPIO,15,1
+      endon
 
    "
    "
@@ -226,10 +226,10 @@ boot/reboot/time/sleep etc. of the unit:
 
    .. code-block:: html
 
-	   on System#Boot do
-      GPIO,2,1
-      timerSet,1,30
-	   endon
+      on System#Boot do
+        GPIO,2,1
+        timerSet,1,30
+      endon
 
    "
    "
@@ -338,7 +338,7 @@ boot/reboot/time/sleep etc. of the unit:
 
    .. code-block:: html
 
-	   on WiFi#APmodeEnabled do
+	   on WiFi#APmodeDisabled do
 	    Publish,%sysname%/status,AP disabled
 	   endon
 

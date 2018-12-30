@@ -73,8 +73,8 @@
 .. |P006_status| replace:: :green:`NORMAL`
 .. |P006_github| replace:: P006_BMP085.ino
 .. _P006_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P006_BMP085.ino
-.. |P006_usedby| replace:: `.`
-.. |P006_shortinfo| replace:: `.`
+.. |P006_usedby| replace:: :ref:`P006_BMP085_page`, :ref:`P006_BMP180_page`
+.. |P006_shortinfo| replace:: Temperature and pressure for the BMP085 and BMP180 sensors.
 .. |P006_maintainer| replace:: `.`
 .. |P006_compileinfo| replace:: `.`
 
