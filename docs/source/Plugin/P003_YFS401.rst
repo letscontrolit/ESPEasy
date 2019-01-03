@@ -112,7 +112,13 @@ Rules examples
     Else
       Publish,%sysname%/WaterStream/status,Water is life!
     EndIf
-   EndOn
+  EndOn
+
+
+ .. Commands available
+ .. ~~~~~~~~~~~~~~~~~~
+
+ .. .. include:: P003_commands.repl
 
 Where to buy
 ------------

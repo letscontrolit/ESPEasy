@@ -1,4 +1,53 @@
 -------------------------------------------------
+Changes in release mega-20181231 (since mega-20181220)
+-------------------------------------------------
+
+Release date: Mon Dec 31 04:00:12 CET 2018
+
+Grovkillen (13):
+      [docs] P013 added
+      [docs] P003 added "EndOn"
+      [docs] P013 syntax fixed
+      [docs] P024 added
+      [docs] where used added for P024
+      [docs] P006 added
+      [docs] added note to BMP085 and BMP180
+      [docs] commands updated
+      [docs] P028 added
+      [docs] added info about bme/bmp similarities
+      [travis] -lstdc++-nox removed from esp82xx_2_5_0
+      [docs] fixed rule syntax typo
+      [flasher] getting ready for info splash with announcements
+
+Plebs (7):
+      bugfix for sending event in case of gpio commands
+      bug fix for state = -1 in JSON
+      bug fix for gpio events for P009 and P019
+      fixed string error
+      optimizing PLUGIN_MONITOR call
+      fixed esp32 compile failure
+      optimized monitor call
+
+
+-------------------------------------------------
+Changes in release mega-20181220 (since mega-20181218)
+-------------------------------------------------
+
+Release date: Thu Dec 20 04:00:08 CET 2018
+
+Grovkillen (2):
+      [docs] P005 DHT11 + DHT22 hardware added
+      [docs] fixed better value name in P003
+
+TD-er (5):
+      [PUYA] Support for PUYA now in core 2.5.0
+      [TimingStats] Add timing stats for controllers
+      [TimingStats] Add handle_schedule() to the timingstats.
+      [WiFi] Add WiFi#APmodeDisabled & WiFi#APmodeEnabled #2180
+      [WiFi] Documentation of new WiFi#APmodeEnabled / Disabled events
+
+
+-------------------------------------------------
 Changes in release mega-20181218 (since mega-20181217)
 -------------------------------------------------
 

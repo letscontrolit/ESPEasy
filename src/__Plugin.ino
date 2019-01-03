@@ -2,7 +2,7 @@
 // Initialize all plugins that where defined earlier
 // and initialize the function call pointer into the plugin array
 //********************************************************************************
-
+#include <algorithm>
 static const char ADDPLUGIN_ERROR[] PROGMEM = "System: Error - To much Plugins";
 
 // Because of compiler-bug (multiline defines gives an error if file ending is CRLF) the define is striped to a single line
@@ -1093,6 +1093,17 @@ void updateTaskPluginCache() {
   }
 }
 
+int8_t getXFromPluginId(byte pluginID) {
+  std::vector<byte>::iterator it;
+  int8_t returnValue = -1;
+
+  it = find(Plugin_id.begin(), Plugin_id.end(), pluginID);
+  if (it != Plugin_id.end())
+    returnValue = std::distance(Plugin_id.begin(),it);
+
+  return returnValue;
+}
+
 
 /*********************************************************************************************\
 * Function call to all or specific plugins
@@ -1129,6 +1140,27 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
       }
       return true;
       break;
+
+      case PLUGIN_MONITOR:
+        for (auto it=globalMapPortStatus.begin(); it!=globalMapPortStatus.end(); ++it) {
+          //only call monitor function if there the need to
+          if (it->second.monitor || it->second.command || it->second.init) {
+            TempEvent.Par1 = getPortFromKey(it->first);;
+            //initialize the "x" variable to synch with the pluginNumber if second.x == -1
+            if (it->second.x == -1) it->second.x = getXFromPluginId((byte) getPluginFromKey(it->first));
+
+            if (it->second.x != -1)  {
+              const byte x = (byte) it->second.x;
+              if (Plugin_id[x] != 0){
+                START_TIMER;
+                Plugin_ptr[x](Function, &TempEvent, str);
+                STOP_TIMER_TASK(x,Function);
+              }
+            }
+          }
+        }
+        return true;
+        break;
 
     // Call to all plugins. Return at first match
     case PLUGIN_WRITE:

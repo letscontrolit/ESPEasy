@@ -91,7 +91,7 @@ Sensor
   ``CHANGE`` = count on signal being changed, low to high (0.8-V to 2.4+V) or high to low (2.4+V to 0.8-V)
 
   ``RISING`` = count if signal is rising, from low to not low (0.8-V to 0.8+V)
-  
+
   ``FALLING`` = count if signal is falling, from high to not high (2.4+V to 2.4-V)
 
 .. warning:: GPIO 16 (D0) is not compatible with pulse counters.
@@ -135,6 +135,10 @@ Rules examples
     EndIf
    EndOn
 
+.. Commands available
+.. ~~~~~~~~~~~~~~~~~~
+
+.. .. include:: P003_commands.repl
 
 Where to buy
 ------------

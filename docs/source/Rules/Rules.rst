@@ -202,7 +202,7 @@ boot/reboot/time/sleep etc. of the unit:
 
    .. code-block:: html
 
-      on [DHT11Outside#Temperature]>20 do
+      on DHT11Outside#Temperature>20 do
        GPIO,2,1
       endon
 
@@ -214,9 +214,9 @@ boot/reboot/time/sleep etc. of the unit:
 
    .. code-block:: html
 
-	   on System#Wake do
-       GPIO,15,1
-	   endon
+      on System#Wake do
+        GPIO,15,1
+      endon
 
    "
    "
@@ -226,10 +226,10 @@ boot/reboot/time/sleep etc. of the unit:
 
    .. code-block:: html
 
-	   on System#Boot do
-      GPIO,2,1
-      timerSet,1,30
-	   endon
+      on System#Boot do
+        GPIO,2,1
+        timerSet,1,30
+      endon
 
    "
    "
@@ -313,6 +313,33 @@ boot/reboot/time/sleep etc. of the unit:
 
 	   on WiFi#ChangedAccesspoint do
 	    Publish,%sysname%/status,AP changed
+	   endon
+
+   "
+   "
+   ``WiFi#APmodeEnabled``
+   Triggered when the ESP has set the AP mode (access point) active.
+   This may happen when no valid WiFi settings are found or the ESP cannot connect to the set AP, but it can also be enabled via some command.
+   N.B. Sending a publish command may not be very useful on this event, since this will mainly happen when there is no WiFi connection.
+   ","
+
+   .. code-block:: html
+
+	   on WiFi#APmodeEnabled do
+	    ... // Some command
+	   endon
+
+   "
+   "
+   ``WiFi#APmodeDisabled``
+   Triggered when the ESP has disabled the AP mode (access point).
+   This can happen some time (default 60 seconds) after a WiFi connection has been made. Or disabled using some command.
+   ","
+
+   .. code-block:: html
+
+	   on WiFi#APmodeDisabled do
+	    Publish,%sysname%/status,AP disabled
 	   endon
 
    "

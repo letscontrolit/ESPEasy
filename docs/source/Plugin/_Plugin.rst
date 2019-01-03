@@ -135,11 +135,6 @@ Display
 
 Plugins: |Plugin_Display|
 
-Distance
---------
-
-Plugins: |Plugin_Distance|
-
 Dust
 ----
 
@@ -160,7 +155,7 @@ Environment
 
 Plugins: |Plugin_Environment|
 
-Hardware: |P004_usedby|, |P005_usedby|
+Hardware: |P004_usedby|, |P005_usedby|, |P006_usedby|, |P024_usedby|, |P028_usedby|, |P030_usedby|
 
 Extra IO
 --------
@@ -222,6 +217,13 @@ Output
 ------
 
 Plugins: |Plugin_Output|
+
+Position
+--------
+
+Plugins: |Plugin_Position|
+
+Hardware: |P013_usedby|
 
 Regulator
 ---------

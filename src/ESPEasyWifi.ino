@@ -335,7 +335,8 @@ void setSTA(bool enable) {
 }
 
 void setAP(bool enable) {
-  switch(WiFi.getMode()) {
+  WiFiMode_t wifimode = WiFi.getMode();
+  switch(wifimode) {
     case WIFI_OFF:
       if (enable) setWifiMode(WIFI_AP);
       break;
@@ -351,13 +352,20 @@ void setAP(bool enable) {
     default:
       break;
   }
-  setAPinternal(enable);
+  if (WifiIsAP(wifimode) && !enable) {
+    String event = F("WiFi#APmodeDisabled");
+    rulesProcessing(event);
+  }
+  if (WifiIsAP(wifimode) != enable) {
+    // Mode has changed
+    setAPinternal(enable);
+  }
 }
 
 //Only internal scope
 void setAPinternal(bool enable)
 {
-    if (enable) {
+  if (enable) {
     timerAPoff = millis() + WIFI_AP_OFF_TIMER_DURATION;
     // create and store unique AP SSID/PW to prevent ESP from starting AP mode with default SSID and No password!
     // setup ssid for AP Mode when needed
@@ -369,6 +377,8 @@ void setAPinternal(bool enable)
     }
     if (WiFi.softAP(softAPSSID.c_str(),pwd.c_str())) {
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        String event = F("WiFi#APmodeEnabled");
+        rulesProcessing(event);
         String log(F("WIFI : AP Mode ssid will be "));
         log += softAPSSID;
         log += F(" with address ");

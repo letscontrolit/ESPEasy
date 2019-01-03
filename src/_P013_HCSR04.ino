@@ -5,7 +5,7 @@
 
 #define PLUGIN_013
 #define PLUGIN_ID_013        13
-#define PLUGIN_NAME_013       "Distance - HC-SR04, RCW-0001, etc."
+#define PLUGIN_NAME_013       "Position - HC-SR04, RCW-0001, etc."
 #define PLUGIN_VALUENAME1_013 "Distance"
 
 #include <Arduino.h>
