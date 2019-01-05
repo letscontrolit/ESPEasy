@@ -229,6 +229,27 @@ int8_t getTaskIndexByName(const String& TaskNameSearch)
 /*********************************************************************************************\
    Device GPIO name functions to share flash strings
   \*********************************************************************************************/
+String formatGpioDirection(gpio_direction direction) {
+  switch (direction) {
+    case gpio_input:         return F("&larr; ");
+    case gpio_output:        return F("&rarr; ");
+    case gpio_bidirectional: return F("&#8644; ");
+  }
+  return "";
+}
+
+String formatGpioLabel(int gpio, bool includeWarning) {
+  int pinnr = -1;
+  bool input, output, warning;
+  if (getGpioInfo(gpio, pinnr, input, output, warning)) {
+    if (!includeWarning) {
+      return createGPIO_label(gpio, pinnr, true, true, false);
+    }
+    return createGPIO_label(gpio, pinnr, input, output, warning);
+  }
+  return "-";
+}
+
 String formatGpioName(const String& label, gpio_direction direction, bool optional) {
   int reserveLength = 5 /* "GPIO " */ + 8 /* "&#8644; " */ + label.length();
   if (optional) {
@@ -237,11 +258,7 @@ String formatGpioName(const String& label, gpio_direction direction, bool option
   String result;
   result.reserve(reserveLength);
   result += F("GPIO ");
-  switch (direction) {
-    case gpio_input:         result += F("&larr; "); break;
-    case gpio_output:        result += F("&rarr; "); break;
-    case gpio_bidirectional: result += F("&#8644; "); break;
-  }
+  result += formatGpioDirection(direction);
   result += label;
   if (optional)
     result += F("(optional)");
@@ -724,11 +741,11 @@ bool GetArgvBeginEnd(const char *string, const unsigned int argc, int& pos_begin
   \*********************************************************************************************/
 #if defined(ARDUINO_ESP8266_RELEASE_2_3_0)
 void dump (uint32_t addr) { //Seems already included in core 2.4 ...
-  serialPrint (addr, HEX);
+  serialPrint (String(addr, HEX));
   serialPrint(": ");
   for (uint32_t a = addr; a < addr + 16; a++)
   {
-    serialPrint ( pgm_read_byte(a), HEX);
+    serialPrint ( String(pgm_read_byte(a), HEX));
     serialPrint (" ");
   }
   serialPrintln("");

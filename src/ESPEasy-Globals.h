@@ -440,6 +440,8 @@ bool canYield();
 bool getBitFromUL(uint32_t number, byte bitnr);
 void setBitToUL(uint32_t& number, byte bitnr, bool value);
 
+void serialHelper_getGpioNames(struct EventStruct *event, bool rxOptional=false, bool txOptional=false);
+
 enum SettingsType {
   BasicSettings_Type = 0,
   TaskSettings_Type,

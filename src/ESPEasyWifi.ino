@@ -39,6 +39,9 @@ void processConnect() {
     setupStaticIPconfig();
     markGotIP();
   }
+  if (!WiFi.getAutoConnect()) {
+    WiFi.setAutoConnect(true);
+  }
   logConnectionStatus();
 }
 
@@ -127,7 +130,7 @@ void processGotIP() {
   #endif
 
   // First try to get the time, since that may be used in logs
-  if (Settings.UseNTP) {
+  if (systemTimePresent()) {
     initTime();
   }
   mqtt_reconnect_count = 0;
@@ -246,11 +249,9 @@ void processScanDone() {
 
 void resetWiFi() {
   addLog(LOG_LEVEL_INFO, F("Reset WiFi."));
-//  setWifiMode(WIFI_OFF);
-//  setWifiMode(WIFI_STA);
   lastDisconnectMoment = millis();
-  processedDisconnect = false;
-  wifiStatus = ESPEASY_WIFI_DISCONNECTED;
+  WifiDisconnect();
+//  setWifiMode(WIFI_OFF);
 }
 
 void connectionCheckHandler()
@@ -640,7 +641,7 @@ bool tryConnectWiFi() {
       if (lastBSSID[0] == 0)
         WiFi.begin(ssid, passphrase);
       else
-        WiFi.begin(ssid, passphrase, 0, &lastBSSID[0]);
+        WiFi.begin(ssid, passphrase, last_channel, &lastBSSID[0]);
       break;
     default:
       WiFi.begin(ssid, passphrase);

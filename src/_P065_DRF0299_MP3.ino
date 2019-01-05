@@ -33,7 +33,7 @@
 #define PLUGIN_NAME_065       "Notify - DFPlayer-Mini MP3 [TESTING]"
 #define PLUGIN_VALUENAME1_065 ""
 
-#include <ESPeasySoftwareSerial.h>
+#include <ESPeasySerial.h>
 
 #ifndef CONFIG
 #define CONFIG(n) (Settings.TaskDevicePluginConfig[event->TaskIndex][n])
@@ -42,7 +42,7 @@
 #define PIN(n) (Settings.TaskDevicePin[n][event->TaskIndex])
 #endif
 
-ESPeasySoftwareSerial* Plugin_065_SoftSerial = NULL;
+ESPeasySerial* P065_easySerial = NULL;
 
 
 boolean Plugin_065(byte function, struct EventStruct *event, String& string)
@@ -101,14 +101,14 @@ boolean Plugin_065(byte function, struct EventStruct *event, String& string)
         #pragma GCC diagnostic push
         //note: we cant fix this, its a upstream bug.
         #pragma GCC diagnostic warning "-Wdelete-non-virtual-dtor"
-        if (Plugin_065_SoftSerial)
-          delete Plugin_065_SoftSerial;
+        if (P065_easySerial)
+          delete P065_easySerial;
         #pragma GCC diagnostic pop
 
 
-        Plugin_065_SoftSerial = new ESPeasySoftwareSerial(-1, PIN(0));   // no RX, only TX
+        P065_easySerial = new ESPeasySerial(-1, PIN(0));   // no RX, only TX
 
-        Plugin_065_SoftSerial->begin(9600);
+        P065_easySerial->begin(9600);
 
         Plugin_065_SetVol(CONFIG(0));   // set default volume
 
@@ -118,7 +118,7 @@ boolean Plugin_065(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WRITE:
       {
-        if (!Plugin_065_SoftSerial)
+        if (!P065_easySerial)
           break;
 
         String command = parseString(string, 1);
@@ -202,7 +202,7 @@ void Plugin_065_SetEQ(int8_t eq)
 
 void Plugin_065_SendCmd(byte cmd, int16_t data)
 {
-  if (!Plugin_065_SoftSerial)
+  if (!P065_easySerial)
     return;
 
   byte buffer[10] = { 0x7E, 0xFF, 0x06, 0, 0x00, 0, 0, 0, 0, 0xEF };
@@ -215,7 +215,7 @@ void Plugin_065_SendCmd(byte cmd, int16_t data)
   buffer[7] = checksum >> 8;   // high byte
   buffer[8] = checksum & 0xFF;   // low byte
 
-  Plugin_065_SoftSerial->write(buffer, 10);   //Send the byte array
+  P065_easySerial->write(buffer, 10);   //Send the byte array
 
   String log = F("MP3  : Send Cmd ");
   for (byte i=0; i<10; i++)

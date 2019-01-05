@@ -44,8 +44,8 @@ boolean Plugin_049_init = false;
 boolean Plugin_049_ABC_Disable = false;
 boolean Plugin_049_ABC_MustApply = false;
 
-#include <ESPeasySoftwareSerial.h>
-ESPeasySoftwareSerial *Plugin_049_SoftSerial;
+#include <ESPeasySerial.h>
+ESPeasySerial *P049_easySerial;
 
 enum mhzCommands : byte { mhzCmdReadPPM,
                           mhzCmdCalibrateZero,
@@ -200,13 +200,13 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_GET_DEVICEGPIONAMES:
       {
-        event->String1 = formatGpioName_RX(false);
-        event->String2 = formatGpioName_TX(false);
+        serialHelper_getGpioNames(event);
         break;
       }
 
     case PLUGIN_WEBFORM_LOAD:
       {
+        serialHelper_webformLoad(event);
         byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
         String options[2] = { F("Normal"), F("ABC disabled") };
         int optionValues[2] = { ABC_enabled, ABC_disabled };
@@ -227,6 +227,7 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
+        serialHelper_webformSave(event);
         const int formValue = getFormItemInt(F("p049_abcdisable"));
         boolean new_ABC_disable = (formValue == ABC_disabled);
         if (Plugin_049_ABC_Disable != new_ABC_disable) {
@@ -248,8 +249,8 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
           // No guarantee the correct state is active on the sensor after reboot.
           Plugin_049_ABC_MustApply = true;
         }
-        Plugin_049_SoftSerial = new ESPeasySoftwareSerial(Settings.TaskDevicePin1[event->TaskIndex], Settings.TaskDevicePin2[event->TaskIndex]);
-        Plugin_049_SoftSerial->begin(9600);
+        P049_easySerial = new ESPeasySerial(Settings.TaskDevicePin1[event->TaskIndex], Settings.TaskDevicePin2[event->TaskIndex]);
+        P049_easySerial->begin(9600);
         addLog(LOG_LEVEL_INFO, F("MHZ19: Init OK "));
 
         //delay first read, because hardware needs to initialize on cold boot
@@ -345,8 +346,8 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
           long timer = millis() + PLUGIN_READ_TIMEOUT;
           int counter = 0;
           while (!timeOutReached(timer) && (counter < 9)) {
-            if (Plugin_049_SoftSerial->available() > 0) {
-              mhzResp[counter++] = Plugin_049_SoftSerial->read();
+            if (P049_easySerial->available() > 0) {
+              mhzResp[counter++] = P049_easySerial->read();
             } else {
               delay(10);
             }
@@ -374,7 +375,7 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
              // we're trying to shift it so that 0xFF is the next byte
              byte checksum_shift;
              for (byte i = 1; i < 8; i++) {
-                checksum_shift = Plugin_049_SoftSerial->peek();
+                checksum_shift = P049_easySerial->peek();
                 if (checksum_shift == 0xFF) {
                   String log = F("MHZ19: Shifted ");
                   log += i;
@@ -382,7 +383,7 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
                   addLog(LOG_LEVEL_ERROR, log);
                   break;
                 } else {
-                 checksum_shift = Plugin_049_SoftSerial->read();
+                 checksum_shift = P049_easySerial->read();
                 }
              }
              success = false;
@@ -512,6 +513,6 @@ size_t _P049_send_mhzCmd(byte CommandId)
   mhzResp[3] = mhzResp[4] = mhzResp[5] = 0x00;
   mhzResp[8] = _P049_calculateChecksum(mhzResp);
 
-  return Plugin_049_SoftSerial->write(mhzResp, sizeof(mhzResp));
+  return P049_easySerial->write(mhzResp, sizeof(mhzResp));
 }
 #endif // USES_P049
