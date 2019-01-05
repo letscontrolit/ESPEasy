@@ -1,6 +1,6 @@
 #!/bin/bash
 
-PATCH=puya_v3.patch
+PATCH=puya_core2_4_x.patch
 
 for DIR in ~/.platformio/packages/framework-arduinoespressif8266*/; do
 
