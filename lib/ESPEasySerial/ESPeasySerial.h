@@ -130,6 +130,8 @@ public:
   // Serial1:         RX: -- TX: 2   (TX only)
   ESPeasySerial(int receivePin, int transmitPin, bool inverse_logic = false, unsigned int buffSize = 64);
   virtual ~ESPeasySerial();
+
+  // If baud rate is set to 0, it will perform an auto-detect on the baudrate
   void begin(unsigned long baud, SerialConfig config=SERIAL_8N1, SerialMode mode=SERIAL_FULL, uint8_t tx_pin=1);
 #endif
 
@@ -145,6 +147,8 @@ public:
   // @param  serialPort can be a helper to suggest the set serial port. (is needed to define Serial1)
   ESPeasySerial(int receivePin, int transmitPin, bool inverse_logic = false, int serialPort = -1);
   virtual ~ESPeasySerial();
+
+  // If baud rate is set to 0, it will perform an auto-detect on the baudrate
   void begin(unsigned long baud, uint32_t config=SERIAL_8N1, int8_t rxPin=-1, int8_t txPin=-1, bool invert=false, unsigned long timeout_ms = 20000UL);
 #endif
 
@@ -215,6 +219,10 @@ private:
   HardwareSerial* getHW();
 
   bool isValid() const;
+
+#ifdef ESP8266
+  bool doHWbegin(unsigned long baud, SerialConfig config, SerialMode mode, uint8_t tx_pin);
+#endif
 
 #if !defined(DISABLE_SOFTWARE_SERIAL) && defined(ESP8266)
   bool isSWserial() const { return _serialtype == ESPeasySerialType::serialtype::software; }

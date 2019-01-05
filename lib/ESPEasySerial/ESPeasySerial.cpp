@@ -1,10 +1,11 @@
 #include <ESPeasySerial.h>
 
+#define DETECT_BAUDATE_TIMEOUT     250
+
 
 // ****************************************
 // ESP8266 implementation wrapper
 // ****************************************
-
 #ifdef ESP8266
 bool ESPeasySerial::_serial0_swap_active = false;
 #endif
@@ -47,7 +48,7 @@ void ESPeasySerial::begin(unsigned long baud, SerialConfig config, SerialMode mo
   if (isSWserial()) {
     _swserial->begin(baud);
   } else {
-    getHW()->begin(baud, config, mode, tx_pin);
+    doHWbegin(baud, config, mode, tx_pin);
   }
 }
 
@@ -216,7 +217,7 @@ bool ESPeasySerial::hasOverrun(void) {
   if (!isValid()) {
     return false;
   }
-#ifdef ARDUINO_ESP8266_RELEASE_2_4_1
+#if defined(ARDUINO_ESP8266_RELEASE_2_4_0) || defined(ARDUINO_ESP8266_RELEASE_2_4_1)
   return false;
 #else
   if (isSWserial()) {
@@ -294,7 +295,9 @@ void ESPeasySerial::startDetectBaudrate() {
   if (!isValid() || isSWserial()) {
     return;
   }
-#ifndef ARDUINO_ESP8266_RELEASE_2_4_1
+#if defined(ARDUINO_ESP8266_RELEASE_2_4_0) || defined(ARDUINO_ESP8266_RELEASE_2_4_1)
+  return;
+#else
   getHW()->startDetectBaudrate();
 #endif
 }
@@ -303,10 +306,10 @@ unsigned long ESPeasySerial::testBaudrate() {
   if (!isValid() || isSWserial()) {
     return 0;
   }
-#ifndef ARDUINO_ESP8266_RELEASE_2_4_1
-  return getHW()->testBaudrate();
-#else
+#if defined(ARDUINO_ESP8266_RELEASE_2_4_0) || defined(ARDUINO_ESP8266_RELEASE_2_4_1)
   return 0;
+#else
+  return getHW()->testBaudrate();
 #endif
 }
 
@@ -314,10 +317,10 @@ unsigned long ESPeasySerial::detectBaudrate(time_t timeoutMillis) {
   if (!isValid() || isSWserial()) {
     return 0;
   }
-#ifndef ARDUINO_ESP8266_RELEASE_2_4_1
-  return getHW()->detectBaudrate(timeoutMillis);
-#else
+#if defined(ARDUINO_ESP8266_RELEASE_2_4_0) || defined(ARDUINO_ESP8266_RELEASE_2_4_1)
   return 0;
+#else
+  return getHW()->detectBaudrate(timeoutMillis);
 #endif
 }
 
@@ -356,6 +359,33 @@ bool ESPeasySerial::stopListening() {
 #endif // ESP8266
 
 
+#ifdef ESP8266
+  // ****************************************
+  // ESP8266 implementation wrapper
+  // Shared functions for HW serial
+  // ****************************************
+  bool ESPeasySerial::doHWbegin(unsigned long baud, SerialConfig config, SerialMode mode, uint8_t tx_pin) {
+    if (!isValid()) {
+      return false;
+    }
+    if (baud > 0) {
+      getHW()->begin(baud ? baud : 9600, config, mode, tx_pin);
+      return true;
+    }
+    startDetectBaudrate();
+    unsigned long detectedBaudRate = detectBaudrate(DETECT_BAUDATE_TIMEOUT);
+    if(detectedBaudRate > 0) {
+        delay(100); // Give some time...
+        getHW()->begin(detectedBaudRate, config, mode, tx_pin);
+        _baud = detectedBaudRate;
+        return true;
+    } else {
+      return false;
+    }
+  }
+#endif
+
+
 
 #if defined(DISABLE_SOFTWARE_SERIAL) && defined(ESP8266)
 // ****************************************
@@ -391,7 +421,7 @@ void ESPeasySerial::begin(unsigned long baud, SerialConfig config, SerialMode mo
     _baud = 0;
     return;
   }
-  getHW()->begin(baud, config, mode, tx_pin);
+  doHWbegin(baud, config, mode, tx_pin);
 }
 
 void ESPeasySerial::end() {
