@@ -21,12 +21,13 @@
 #define PLUGIN_VALUENAME3_082 "Altitude"
 #define PLUGIN_VALUENAME4_082 "Speed"
 
-#define P028_LONGITUDE         UserVar[event->BaseVarIndex + 0]
-#define P028_LATITUDE          UserVar[event->BaseVarIndex + 1]
-#define P028_ALTITUDE          UserVar[event->BaseVarIndex + 2]
-#define P028_SPEED             UserVar[event->BaseVarIndex + 3]
+#define P082_LONGITUDE         UserVar[event->BaseVarIndex + 0]
+#define P082_LATITUDE          UserVar[event->BaseVarIndex + 1]
+#define P082_ALTITUDE          UserVar[event->BaseVarIndex + 2]
+#define P082_SPEED             UserVar[event->BaseVarIndex + 3]
 
-#define P028_DEFAULT_FIX_TIMEOUT 2500
+#define P082_DEFAULT_FIX_TIMEOUT 2500
+#define P082_TIMESTAMP_AGE       1500
 
 struct P082_data_struct {
   P082_data_struct() {}
@@ -85,13 +86,22 @@ struct P082_data_struct {
 
   // Return the GPS time stamp, which is in UTC.
   // @param age is the time in msec since the last update of the time + additional centiseconds given by the GPS.
-  bool getDateTime(struct tm& dateTime, unsigned int maxAge_msec, uint32_t& age) {
+  bool getDateTime(struct tm& dateTime, uint32_t& age, bool& pps_sync) {
     if (!isInitialized())
       return false;
-    age = gps->time.age();
-    if (gps->time.age() > maxAge_msec)
+    if (pps_time != 0) {
+      age = timePassedSince(pps_time);
+      pps_time = 0;
+      pps_sync = true;
+      if (age > 1000 || gps->time.age() > age)
+        return false;
+    } else {
+      age = gps->time.age();
+      pps_sync = false;
+    }
+    if (age > P082_TIMESTAMP_AGE)
       return false;
-    if (gps->date.age() > P028_DEFAULT_FIX_TIMEOUT)
+    if (gps->date.age() > P082_TIMESTAMP_AGE)
       return false;
     dateTime.tm_year = gps->date.year() - 1970;
     dateTime.tm_mon  = gps->date.month();
@@ -100,7 +110,10 @@ struct P082_data_struct {
     dateTime.tm_hour = gps->time.hour();
     dateTime.tm_min  = gps->time.minute();
     dateTime.tm_sec  = gps->time.second();
-    age += (gps->time.centisecond() * 10);
+    // FIXME TD-er: Must the offset in centisecond be added when pps_sync active?
+    if (!pps_sync) {
+      age += (gps->time.centisecond() * 10);
+    }
     return true;
   }
 
@@ -109,6 +122,8 @@ struct P082_data_struct {
 
   double last_lat = 0.0;
   double last_lng = 0.0;
+
+  unsigned long pps_time = 0;
 } P082_data;
 
 boolean Plugin_082(byte function, struct EventStruct *event, String &string) {
@@ -117,7 +132,7 @@ boolean Plugin_082(byte function, struct EventStruct *event, String &string) {
   switch (function) {
     case PLUGIN_DEVICE_ADD: {
       Device[++deviceCount].Number = PLUGIN_ID_082;
-      Device[deviceCount].Type = DEVICE_TYPE_DUAL;
+      Device[deviceCount].Type = DEVICE_TYPE_TRIPLE;
       Device[deviceCount].VType = SENSOR_TYPE_QUAD;
       Device[deviceCount].Ports = 0;
       Device[deviceCount].PullUpOption = false;
@@ -145,16 +160,19 @@ boolean Plugin_082(byte function, struct EventStruct *event, String &string) {
 
     case PLUGIN_GET_DEVICEGPIONAMES: {
       serialHelper_getGpioNames(event, false, true); // TX optional
+      event->String3 = formatGpioName_input_optional(F("PPS"));
       break;
     }
 
     case PLUGIN_WEBFORM_LOAD: {
       serialHelper_webformLoad(event);
+  /*
       if (P082_data.isInitialized()) {
         String detectedString = F("Detected: ");
         detectedString += String(P082_data.P082_easySerial->baudRate());
         addUnit(detectedString);
       }
+  */
 
       P082_html_show_stats(event);
 
@@ -190,6 +208,7 @@ boolean Plugin_082(byte function, struct EventStruct *event, String &string) {
     case PLUGIN_INIT: {
       const int16_t serial_rx = Settings.TaskDevicePin1[event->TaskIndex];
       const int16_t serial_tx = Settings.TaskDevicePin2[event->TaskIndex];
+      const int16_t pps_pin   = Settings.TaskDevicePin3[event->TaskIndex];
       if (P082_data.init(serial_rx, serial_tx)) {
         success = true;
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -199,12 +218,20 @@ boolean Plugin_082(byte function, struct EventStruct *event, String &string) {
           log += serial_tx;
           addLog(LOG_LEVEL_INFO, log);
         }
+        if (pps_pin != -1) {
+//          pinMode(pps_pin, INPUT_PULLUP);
+          attachInterrupt(pps_pin, Plugin_082_interrupt, RISING);
+        }
       }
       break;
     }
 
     case PLUGIN_EXIT: {
       P082_data.reset();
+      const int16_t pps_pin   = Settings.TaskDevicePin3[event->TaskIndex];
+      if (pps_pin != -1) {
+        detachInterrupt(pps_pin);
+      }
       success = true;
       break;
     }
@@ -220,8 +247,8 @@ boolean Plugin_082(byte function, struct EventStruct *event, String &string) {
 
     case PLUGIN_READ: {
       if (P082_data.isInitialized()) {
-        static bool activeFix = P082_data.hasFix(P028_DEFAULT_FIX_TIMEOUT);
-        const bool curFixStatus = P082_data.hasFix(P028_DEFAULT_FIX_TIMEOUT);
+        static bool activeFix = P082_data.hasFix(P082_DEFAULT_FIX_TIMEOUT);
+        const bool curFixStatus = P082_data.hasFix(P082_DEFAULT_FIX_TIMEOUT);
         if (activeFix != curFixStatus) {
           // Fix status changed, send events.
           String event = curFixStatus ? F("GPS#GotFix") : F("GPS#LostFix");
@@ -229,22 +256,22 @@ boolean Plugin_082(byte function, struct EventStruct *event, String &string) {
           activeFix = curFixStatus;
         }
 
-        if (P082_data.hasFix(P028_DEFAULT_FIX_TIMEOUT)) {
+        if (P082_data.hasFix(P082_DEFAULT_FIX_TIMEOUT)) {
           if (P082_data.gps->location.isUpdated()) {
-            P028_LONGITUDE = P082_data.gps->location.lng();
-            P028_LATITUDE = P082_data.gps->location.lat();
+            P082_LONGITUDE = P082_data.gps->location.lng();
+            P082_LATITUDE = P082_data.gps->location.lat();
             success = true;
             addLog(LOG_LEVEL_INFO, F("GPS: Position update."));
           }
           if (P082_data.gps->altitude.isUpdated()) {
             // ToDo make unit selectable
-            P028_ALTITUDE = P082_data.gps->altitude.meters();
+            P082_ALTITUDE = P082_data.gps->altitude.meters();
             success = true;
             addLog(LOG_LEVEL_INFO, F("GPS: Altitude update."));
           }
           if (P082_data.gps->speed.isUpdated()) {
             // ToDo make unit selectable
-            P028_SPEED = P082_data.gps->speed.mps();
+            P082_SPEED = P082_data.gps->speed.mps();
             addLog(LOG_LEVEL_INFO, F("GPS: Speed update."));
             success = true;
           }
@@ -268,15 +295,15 @@ void P082_logStats(struct EventStruct *event) {
   log.reserve(96);
   log = F("GPS:");
   log += F(" Fix: ");
-  log += String(P082_data.hasFix(P028_DEFAULT_FIX_TIMEOUT));
+  log += String(P082_data.hasFix(P082_DEFAULT_FIX_TIMEOUT));
   log += F(" Long: ");
-  log += P028_LONGITUDE;
+  log += P082_LONGITUDE;
   log += F(" Lat: ");
-  log += P028_LATITUDE;
+  log += P082_LATITUDE;
   log += F(" Alt: ");
-  log += P028_ALTITUDE;
+  log += P082_ALTITUDE;
   log += F(" Spd: ");
-  log += P028_SPEED;
+  log += P082_SPEED;
 
   log += F(" Chksum(pass/fail): ");
   log += P082_data.gps->passedChecksum();
@@ -288,7 +315,7 @@ void P082_logStats(struct EventStruct *event) {
 
 void P082_html_show_stats(struct EventStruct *event) {
   addRowLabel(F("Fix"));
-  addHtml(String(P082_data.hasFix(P028_DEFAULT_FIX_TIMEOUT)));
+  addHtml(String(P082_data.hasFix(P082_DEFAULT_FIX_TIMEOUT)));
 
   addRowLabel(F("Nr Satellites"));
   addHtml(String(P082_data.gps->satellites.value()));
@@ -299,7 +326,8 @@ void P082_html_show_stats(struct EventStruct *event) {
   addRowLabel(F("UTC Time"));
   struct tm dateTime;
   uint32_t age;
-  if (P082_data.getDateTime(dateTime, P028_DEFAULT_FIX_TIMEOUT, age)) {
+  bool pps_sync;
+  if (P082_data.getDateTime(dateTime, age, pps_sync)) {
     dateTime = addSeconds(dateTime, (age / 1000), false);
   }
   addHtml(getDateTimeString(dateTime));
@@ -320,12 +348,20 @@ void P082_setSystemTime() {
 
   struct tm dateTime;
   uint32_t age;
-  if (P082_data.getDateTime(dateTime, P028_DEFAULT_FIX_TIMEOUT, age)) {
+  bool pps_sync;
+  if (P082_data.getDateTime(dateTime, age, pps_sync)) {
     // Use floating point precision to use the time since last update from GPS and the given offset in centisecond.
     externalTimeSource = makeTime(dateTime);
     externalTimeSource += static_cast<double>(age) / 1000.0;
     initTime();
   }
 }
+
+void Plugin_082_interrupt()
+/*********************************************************************/
+{
+  P082_data.pps_time = millis();
+}
+
 
 #endif // USES_P082

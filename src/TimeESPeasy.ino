@@ -216,7 +216,17 @@ unsigned long now() {
 		if (unixTime_d > 0.0 || getNtpTime(unixTime_d)) {
       prevMillis = millis();  // restart counting from now (thanks to Korman for this fix)
       timeSynced = true;
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        double time_offset = sysTime - unixTime_d;
+        String log = F("Time adjusted by ");
+        log += String(time_offset * 1000.0);
+        log += F(" msec. Wander: ");
+        log += String((time_offset * 1000.0) / syncInterval);
+        log += F(" msec/second");
+        addLog(LOG_LEVEL_INFO, log)
+      }
       sysTime = unixTime_d;
+
 
       applyTimeZone(unixTime_d);
       nextSyncTime = (uint32_t)unixTime_d + syncInterval;
