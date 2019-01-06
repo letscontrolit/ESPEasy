@@ -1,15 +1,15 @@
 //#######################################################################################################
-//#################################### Plugin 082: MQ5 sensors ###############################################
+//#################################### Plugin 083: MQ5 sensors ###############################################
 //#######################################################################################################
-#ifdef USES_P082
-#define PLUGIN_082
-#define PLUGIN_ID_082         82
-#define PLUGIN_NAME_082       "Analog input - MQ5 smoke sensor"
-#define PLUGIN_VALUENAME1_082 "Hydrogen"
-#define PLUGIN_VALUENAME2_082 "LPG"
-#define PLUGIN_VALUENAME3_082 "Methane"
-#define PLUGIN_VALUENAME4_082 "CO"
-#define PLUGIN_VALUENAME5_082 "Alcohol"
+#ifdef USES_P083
+#define PLUGIN_083
+#define PLUGIN_ID_083         83
+#define PLUGIN_NAME_083       "Analog input - MQ5 smoke sensor"
+#define PLUGIN_VALUENAME1_083 "Hydrogen"
+#define PLUGIN_VALUENAME2_083 "LPG"
+#define PLUGIN_VALUENAME3_083 "Methane"
+#define PLUGIN_VALUENAME4_083 "CO"
+#define PLUGIN_VALUENAME5_083 "Alcohol"
 
 /************************Hardware Related Macros************************************/
 #define         RL_VALUE                     (1)     //define the load resistance on the board, in kilo ohms
@@ -36,7 +36,7 @@
 
 float Ro = 10;                          //Ro is initialized to 10 kilo ohms
 
-boolean Plugin_082(byte function, struct EventStruct *event, String& string)
+boolean Plugin_083(byte function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -45,7 +45,7 @@ boolean Plugin_082(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_DEVICE_ADD:
       {
-        Device[++deviceCount].Number = PLUGIN_ID_082;
+        Device[++deviceCount].Number = PLUGIN_ID_083;
         Device[deviceCount].Type = DEVICE_TYPE_ANALOG;
         Device[deviceCount].VType = SENSOR_TYPE_TRIPLE;
         Device[deviceCount].Ports = 0;
@@ -61,17 +61,17 @@ boolean Plugin_082(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_GET_DEVICENAME:
       {
-        string = F(PLUGIN_NAME_082);
+        string = F(PLUGIN_NAME_083);
         break;
       }
 
     case PLUGIN_GET_DEVICEVALUENAMES:
       {
-        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_082));
-        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], PSTR(PLUGIN_VALUENAME2_082));
-        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[2], PSTR(PLUGIN_VALUENAME3_082));
-        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[3], PSTR(PLUGIN_VALUENAME4_082));
-        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[4], PSTR(PLUGIN_VALUENAME5_082));
+        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_083));
+        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], PSTR(PLUGIN_VALUENAME2_083));
+        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[2], PSTR(PLUGIN_VALUENAME3_083));
+        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[3], PSTR(PLUGIN_VALUENAME4_083));
+        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[4], PSTR(PLUGIN_VALUENAME5_083));
         break;
       }
 
@@ -212,4 +212,4 @@ int MQGetGasPercentage(float rs_ro_ratio, int gas_id)
   }
   return 0;
 }
-#endif // USES_P082
+#endif // USES_P083
