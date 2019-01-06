@@ -13,6 +13,7 @@ bool unprocessedWifiEvents() {
 void processConnect() {
   if (processedConnect) return;
   processedConnect = true;
+  delay(100); // FIXME TD-er: See https://github.com/letscontrolit/ESPEasy/issues/1987#issuecomment-451644424
   ++wifi_reconnects;
   if (wifiStatus < ESPEASY_WIFI_CONNECTED) return;
   const long connect_duration = timeDiff(last_wifi_connect_attempt_moment, lastConnectMoment);
@@ -48,6 +49,7 @@ void processConnect() {
 void processDisconnect() {
   if (processedDisconnect) return;
   processedDisconnect = true;
+  delay(100); // FIXME TD-er: See https://github.com/letscontrolit/ESPEasy/issues/1987#issuecomment-451644424
   if (Settings.UseRules) {
     String event = F("WiFi#Disconnected");
     rulesProcessing(event);
@@ -665,10 +667,13 @@ bool tryConnectWiFi() {
       }
       return false;
     }
+    case WL_CONNECTED: {
+      return true;
+    }
     default:
      break;
   }
-  return true; // Sent
+  return false;
 }
 
 //********************************************************************************
