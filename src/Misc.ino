@@ -167,19 +167,19 @@ void deepSleepStart(int dsdelay)
   String event = F("System#Sleep");
   rulesProcessing(event);
 
-
   RTC.deepSleepState = 1;
   saveToRTC();
-
-  if (dsdelay > 4294 || dsdelay < 0)
-    dsdelay = 4294;   //max sleep time ~1.2h
 
   addLog(LOG_LEVEL_INFO, F("SLEEP: Powering down to deepsleep..."));
   delay(100); // give the node time to send above log message before going to sleep
   #if defined(ESP8266)
     #if defined(CORE_2_5_0)
-      ESP.deepSleepInstant((uint32_t)dsdelay * 1000000, WAKE_RF_DEFAULT);
+      if (dsdelay > ESP.deepSleepMax() || dsdelay < 0)
+        dsdelay = ESP.deepSleepMax();   //max sleep time
+        ESP.deepSleepInstant((uint32_t)dsdelay * 1000000, WAKE_RF_DEFAULT);
     #else
+      if (dsdelay > 4294 || dsdelay < 0)
+        dsdelay = 4294;   //max sleep time ~1.2h
       ESP.deepSleep((uint32_t)dsdelay * 1000000, WAKE_RF_DEFAULT);
     #endif
   #endif

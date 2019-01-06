@@ -1271,8 +1271,12 @@ void handle_config() {
   addHelpButton(F("SleepMode"));
   addFormNote(F("0 = Sleep Disabled, else time awake from sleep"));
 
-  addFormNumericBox( F("Sleep time"), F("delay"), Settings.Delay, 0, 4294);   //limited by hardware to ~1.2h
-  addUnit(F("sec"));
+  #if defined(CORE_2_5_0)
+    addFormNumericBox( F("Sleep time"), F("delay"), Settings.Delay, 0, ESP.deepSleepMax());   //limited by hardware
+  #else
+    addFormNumericBox( F("Sleep time"), F("delay"), Settings.Delay, 0, 4294);   //limited by hardware to ~1.2h
+  #endif
+    addUnit(F("sec"));
 
   addFormCheckBox(F("Sleep on connection failure"), F("deepsleeponfail"), Settings.deepSleepOnFail);
 
