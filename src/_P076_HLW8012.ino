@@ -1,13 +1,13 @@
 #ifdef USES_P076
 //#######################################################################################################
-//#################### Plugin 076 HLW8012 AC Current and Voltage measurement
-// sensor #####################
+//#################### Plugin 076 HLW8012 AC Current and Voltage measurement sensor #####################
 //#######################################################################################################
 //
-// This plugin is interfacing with HLW8012 IC which is use with some commercial
-// devices:
+// This plugin is interfacing with HLW8012 and BL0937 IC which is use with some
+// commercial devices like:
 // -- Sonoff POW
 // -- ElectroDragon HLW8012 Breakout board
+// --- and more
 //
 // The Sonoff POW uses the following PINs: SEL=GPIO05(D1), CF1=GPIO13(D8),
 // CF=GPIO14(D5)
@@ -22,23 +22,12 @@ HLW8012 *Plugin_076_hlw = NULL;
 #define PLUGIN_076
 #define PLUGIN_ID_076 76
 #define PLUGIN_076_DEBUG true // activate extra log info in the debug
-#ifdef PLUGIN_SET_SONOFF_POW
-#define PLUGIN_NAME_076 "Energy (AC) - HLW8012 (POW r1) [TESTING]"
-#else
-#define PLUGIN_NAME_076 "Energy (AC) - HLW8012 [TESTING]"
-#endif
+#define PLUGIN_NAME_076 "Energy (AC) - HLW8012/BL0937  [TESTING]"
 #define PLUGIN_VALUENAME1_076 "Voltage (V)"
 #define PLUGIN_VALUENAME2_076 "Current (A)"
 #define PLUGIN_VALUENAME3_076 "Active Power (W)"
 #define PLUGIN_VALUENAME4_076 "Power Factor (%)"
 
-//----------------- HLW8012 Default parameters
-//--------------------------------------------------
-// Set SEL_PIN to HIGH to sample current
-// This is the case for Itead's Sonoff POW, where the SEL_PIN drives a
-// transistor that pulls down
-// the SEL pin in the HLW8012 when closed
-#define HLW_CURRENT_MODE HIGH
 #define HLW_DELAYREADING 500
 
 // These are the nominal values for the resistors in the circuit
@@ -46,7 +35,6 @@ HLW8012 *Plugin_076_hlw = NULL;
 #define HLW_VOLTAGE_RESISTOR_UP (5 * 470000) // Real: 2280k
 #define HLW_VOLTAGE_RESISTOR_DOWN (1000)     // Real 1.009k
 //-----------------------------------------------------------------------------------------------
-
 byte StoredTaskIndex;
 byte p076_read_stage = 0;
 unsigned long p076_timer = 0;
@@ -55,6 +43,52 @@ double p076_hcurrent = 0.0;
 unsigned int p076_hvoltage = 0;
 unsigned int p076_hpower = 0;
 unsigned int p076_hpowfact = 0;
+
+struct p076_PredefinedDevice {
+  int Id;
+  PGM_P Device_Name;
+  byte SEL_Pin;
+  byte CF_Pin;
+  byte CF1_Pin;
+  byte Current_Read;
+  byte CF_Trigger;
+  byte CF1_Trigger;
+
+};
+
+typedef struct p076_PredefinedDevice P076_PredefinedDevice;
+
+//When adding new device increase counter, too
+const int p076_PinSettingsCount = 10;
+const char string_Custom[]    PROGMEM = "Custom";
+const char string_Sonoff[]    PROGMEM = "Sonoff Pow";
+const char string_Huafan[]    PROGMEM = "Huafan SS";
+const char string_KMC[]       PROGMEM = "KMC 70011";
+const char string_Aplic[]     PROGMEM = "Aplic WDP303075";
+const char string_SK03[]      PROGMEM = "SK03 Outdoor";
+const char string_BlitzWolf[] PROGMEM = "BlitzWolf SHP";
+const char string_Teckin[]    PROGMEM = "Teckin";
+const char string_TeckinUS[]  PROGMEM = "Teckin US";
+const char string_Gosund[]    PROGMEM = "Gosund SP1 v23";
+static const P076_PredefinedDevice p076_PredefinedDevices[] PROGMEM =
+{
+   //Device_Name,SEL_PIN, CF_PIN, CF1_PIN, Current_Read, CF_Trigger, CF1_Trigger
+   //HLW8012 Devices
+   { 0, string_Custom,      0,      0,     0,       LOW,        LOW,    LOW},
+   { 1, string_Sonoff,      5,     14,     3,      HIGH,     CHANGE, CHANGE},
+   { 2, string_Huafan,     13,     14,    12,      HIGH,     CHANGE, CHANGE},
+   { 3, string_KMC,        12,      4,     5,      HIGH,     CHANGE, CHANGE},
+   { 4, string_Aplic,      12,      4,     5,       LOW,     CHANGE, CHANGE},
+   { 5, string_SK03,       12,      4,     5,       LOW,     CHANGE, CHANGE},
+
+   //BL093 Devices
+   { 6, string_BlitzWolf,  12,      5,    14,       LOW,    FALLING, CHANGE},
+   { 7, string_Teckin,     12,      4,     5,       LOW,    FALLING, CHANGE},
+   { 8, string_TeckinUS,   12,      5,    14,       LOW,    FALLING, CHANGE},
+   { 9, string_Gosund,     12,      4,     5,       LOW,    FALLING, CHANGE}
+};
+
+P076_PredefinedDevice p076_SelectedPredefinedDevice;
 
 boolean Plugin_076(byte function, struct EventStruct *event, String &string) {
   boolean success = false;
@@ -100,23 +134,81 @@ boolean Plugin_076(byte function, struct EventStruct *event, String &string) {
   }
 
   case PLUGIN_WEBFORM_LOAD: {
-    addFormNote(
-        F("Sonoff POW: 1st(SEL)=GPIO-5, 2nd(CF1)=GPIO-13, 3rd(CF)=GPIO-14"));
+
+    byte currentRead = Settings.TaskDevicePluginConfig[event->TaskIndex][4];
+    byte cf_trigger  = Settings.TaskDevicePluginConfig[event->TaskIndex][5];
+    byte cf1_trigger = Settings.TaskDevicePluginConfig[event->TaskIndex][6];
+
+    byte devicePinSettings = Settings.TaskDevicePluginConfig[event->TaskIndex][7];
+
+    String predefinedNames[p076_PinSettingsCount];
+    int predefinedId[p076_PinSettingsCount];
+
+
+
+    for (int i = 0; i < p076_PinSettingsCount; i++)
+    {
+      //Fetch a Predefined Pin Setting from PROGMEM
+      memcpy_P (&p076_SelectedPredefinedDevice, &p076_PredefinedDevices[i],
+         sizeof (P076_PredefinedDevice));
+
+
+      predefinedNames[i] = p076_SelectedPredefinedDevice.Device_Name;
+      predefinedId[i]    = p076_SelectedPredefinedDevice.Id;
+    }
+
+    String modeRaise[4];
+    modeRaise[0] = F("LOW");
+    modeRaise[1] = F("CHANGE");
+    modeRaise[2] = F("RISING");
+    modeRaise[3] = F("FALLING");
+
+    int modeValues[4];
+    modeValues[0] = LOW;
+    modeValues[1] = CHANGE;
+    modeValues[2] = RISING;
+    modeValues[3] = FALLING;
+
+    String modeCurr[2];
+    modeCurr[0] = F("LOW");
+    modeCurr[1] = F("HIGH");
+
+    int modeCurrValues[2];
+    modeCurrValues[0] = LOW;
+    modeCurrValues[1] = HIGH;
+
+    addFormSubHeader(F("Predefined Pin settings"));
+    addFormSelector(F("Device"),
+                    F("p076_preDefDevSel"), p076_PinSettingsCount,
+                    predefinedNames, predefinedId, devicePinSettings );
+
+    addFormSubHeader(F("Custom Pin settings (choose Custom above)"));
+    addFormSelector(F("Current (A) Reading"), F("p076_curr_read"), 2,
+                    modeCurr, modeCurrValues, currentRead );
+    addFormSelector(F("CF Interrupt Edge"), F("p076_cf_edge"), 4,
+                    modeRaise, modeValues, cf_trigger );
+    addFormSelector(F("CF1  Interrupt Edge"), F("p076_cf1_edge"), 4,
+                    modeRaise, modeValues, cf1_trigger);
+
     addFormSubHeader(F("Calibration Values"));
     double hlwMultipliers[3];
     LoadCustomTaskSettings(event->TaskIndex, (byte *)&hlwMultipliers,
                            sizeof(hlwMultipliers));
+
     addFormTextBox(F("Current Multiplier"), F("p076_currmult"),
                    String(hlwMultipliers[0], 2), 25);
     addFormTextBox(F("Voltage Multiplier"), F("p076_voltmult"),
                    String(hlwMultipliers[1], 2), 25);
     addFormTextBox(F("Power Multiplier"), F("p076_powmult"),
                    String(hlwMultipliers[2], 2), 25);
+
     success = true;
     break;
   }
 
   case PLUGIN_WEBFORM_SAVE: {
+
+    //Set Multipliers
     double hlwMultipliers[3];
     String tmpString, arg1;
     arg1 = F("p076_currmult");
@@ -130,19 +222,60 @@ boolean Plugin_076(byte function, struct EventStruct *event, String &string) {
     hlwMultipliers[2] = atof(tmpString.c_str());
     SaveCustomTaskSettings(event->TaskIndex, (byte *)&hlwMultipliers,
                            sizeof(hlwMultipliers));
+
     if (PLUGIN_076_DEBUG) {
-      String log = F("HLW8012: Saved Calibration from Config Page");
-      addLog(LOG_LEVEL_INFO, log);
+     String log = F("P076: Saved Calibration from Config Page");
+     addLog(LOG_LEVEL_INFO, log);
     }
+
     if (Plugin_076_hlw) {
-      Plugin_076_hlw->setCurrentMultiplier(hlwMultipliers[0]);
-      Plugin_076_hlw->setVoltageMultiplier(hlwMultipliers[1]);
-      Plugin_076_hlw->setPowerMultiplier(hlwMultipliers[2]);
+     Plugin_076_hlw->setCurrentMultiplier(hlwMultipliers[0]);
+     Plugin_076_hlw->setVoltageMultiplier(hlwMultipliers[1]);
+     Plugin_076_hlw->setPowerMultiplier(hlwMultipliers[2]);
     }
+
     if (PLUGIN_076_DEBUG) {
-      String log = F("HLW8012: Multipliers Reassigned");
+     String log = F("P076: Multipliers Reassigned");
+     addLog(LOG_LEVEL_INFO, log);
+    }
+
+    //Set Pin settings
+    byte selectedDevice = getFormItemInt(F("p076_preDefDevSel"));
+
+    Settings.TaskDevicePluginConfig[event->TaskIndex][7] = selectedDevice;
+
+    if (selectedDevice == 0){
+       Settings.TaskDevicePluginConfig[event->TaskIndex][4] = getFormItemInt(F("p076_curr_read"));
+       Settings.TaskDevicePluginConfig[event->TaskIndex][5] = getFormItemInt(F("p076_cf_edge"));
+       Settings.TaskDevicePluginConfig[event->TaskIndex][6] = getFormItemInt(F("p076_cf1_edge"));
+    }
+    else if (selectedDevice < p076_PinSettingsCount){
+      //Fetch Predefined Pin Setting from PROGMEM
+      memcpy_P (&p076_SelectedPredefinedDevice, &p076_PredefinedDevices[selectedDevice],
+         sizeof (P076_PredefinedDevice));
+
+      Settings.TaskDevicePluginConfig[event->TaskIndex][4] = p076_SelectedPredefinedDevice.Current_Read;
+      Settings.TaskDevicePluginConfig[event->TaskIndex][5] = p076_SelectedPredefinedDevice.CF_Trigger;
+      Settings.TaskDevicePluginConfig[event->TaskIndex][6] = p076_SelectedPredefinedDevice.CF1_Trigger;
+
+      //Working but confusing.
+      //Settings.TaskDevicePin1[event->TaskIndex] = p076_SelectedPredefinedDevice[0].SEL_Pin;
+      //Settings.TaskDevicePin2[event->TaskIndex] = p076_SelectedPredefinedDevice[0].CF1_Pin;
+      //Settings.TaskDevicePin3[event->TaskIndex] = p076_SelectedPredefinedDevice[0].CF_Pin;
+    }
+
+    if (PLUGIN_076_DEBUG) {
+      String log = F("P076: PIN Settings ");
+
+      log +=  " curr_read: ";
+      log +=  Settings.TaskDevicePluginConfig[event->TaskIndex][4];
+      log +=  " cf_edge: ";
+      log +=  Settings.TaskDevicePluginConfig[event->TaskIndex][5];
+      log +=  " cf1_edge: ";
+      log +=  Settings.TaskDevicePluginConfig[event->TaskIndex][6];
       addLog(LOG_LEVEL_INFO, log);
     }
+
     success = true;
     break;
   }
@@ -193,7 +326,7 @@ boolean Plugin_076(byte function, struct EventStruct *event, String &string) {
         // Measurement is complete.
         p076_read_stage = 0;
         if (PLUGIN_076_DEBUG) {
-          String log = F("HLW8012: Read values");
+          String log = F("P076: Read values");
           log += F(" - V=");
           log += p076_hvoltage;
           log += F(" - A=");
@@ -218,21 +351,28 @@ boolean Plugin_076(byte function, struct EventStruct *event, String &string) {
     if (!Plugin_076_hlw) {
       p076_read_stage = 0;
       Plugin_076_hlw = new HLW8012;
+
       // This initializes the HWL8012 library.
       const byte CF_PIN = Settings.TaskDevicePin3[event->TaskIndex];
       const byte CF1_PIN = Settings.TaskDevicePin2[event->TaskIndex];
       const byte SEL_PIN = Settings.TaskDevicePin1[event->TaskIndex];
 
-      Plugin_076_hlw->begin(CF_PIN, CF1_PIN, SEL_PIN, HLW_CURRENT_MODE,
+      byte currentRead = Settings.TaskDevicePluginConfig[event->TaskIndex][4];
+      byte cf_trigger  = Settings.TaskDevicePluginConfig[event->TaskIndex][5];
+      byte cf1_trigger = Settings.TaskDevicePluginConfig[event->TaskIndex][6];
+
+      Plugin_076_hlw->begin(CF_PIN, CF1_PIN, SEL_PIN, currentRead,
                             true); // set use_interrupts to true to use
                                    // interrupts to monitor pulse widths
-      if (PLUGIN_076_DEBUG)
-        addLog(LOG_LEVEL_INFO, F("HLW8012: Init object done"));
+      if (PLUGIN_076_DEBUG){
+        addLog(LOG_LEVEL_INFO, F("P076: Init object done"));
+      }
       Plugin_076_hlw->setResistors(HLW_CURRENT_RESISTOR,
                                    HLW_VOLTAGE_RESISTOR_UP,
                                    HLW_VOLTAGE_RESISTOR_DOWN);
-      if (PLUGIN_076_DEBUG)
-        addLog(LOG_LEVEL_INFO, F("HLW8012: Init Basic Resistor Values done"));
+      if (PLUGIN_076_DEBUG){
+        addLog(LOG_LEVEL_INFO, F("P076: Init Basic Resistor Values done"));
+      }
       // If multipliers are empty load default ones and save all of them as
       // "CustomTaskSettings"
       double hlwMultipliers[3];
@@ -247,19 +387,23 @@ boolean Plugin_076(byte function, struct EventStruct *event, String &string) {
       if (hlwMultipliers[2] == 0) {
         hlwMultipliers[2] = Plugin_076_hlw->getPowerMultiplier();
       }
-      if (PLUGIN_076_DEBUG)
-        addLog(LOG_LEVEL_INFO, F("HLW8012: Saved Calibration after INIT"));
+      if (PLUGIN_076_DEBUG){
+        addLog(LOG_LEVEL_INFO, F("P076: Saved Calibration after INIT"));
+      }
+
       Plugin_076_hlw->setCurrentMultiplier(hlwMultipliers[0]);
       Plugin_076_hlw->setVoltageMultiplier(hlwMultipliers[1]);
       Plugin_076_hlw->setPowerMultiplier(hlwMultipliers[2]);
-      if (PLUGIN_076_DEBUG)
-        addLog(LOG_LEVEL_INFO, F("HLW8012: Applied Calibration after INIT"));
+
+      if (PLUGIN_076_DEBUG){
+        addLog(LOG_LEVEL_INFO, F("P076: Applied Calibration after INIT"));
+      }
       StoredTaskIndex = event->TaskIndex; // store task index value in order to
                                           // use it in the PLUGIN_WRITE routine
 
       // Library expects an interrupt on both edges
-      attachInterrupt(CF1_PIN, p076_hlw8012_cf1_interrupt, CHANGE);
-      attachInterrupt(CF_PIN, p076_hlw8012_cf_interrupt, CHANGE);
+      attachInterrupt(CF1_PIN, p076_hlw8012_cf1_interrupt, cf1_trigger);
+      attachInterrupt(CF_PIN, p076_hlw8012_cf_interrupt, cf_trigger);
     }
     success = true;
     break;
@@ -269,14 +413,15 @@ boolean Plugin_076(byte function, struct EventStruct *event, String &string) {
     if (Plugin_076_hlw) {
       String tmpString = string;
       int argIndex = tmpString.indexOf(',');
-      if (argIndex)
+      if (argIndex){
         tmpString = tmpString.substring(0, argIndex);
-
+      }
       if (tmpString.equalsIgnoreCase(F("hlwreset"))) {
         Plugin_076_hlw->resetMultipliers();
         Plugin076_SaveMultipliers();
-        if (PLUGIN_076_DEBUG)
-          addLog(LOG_LEVEL_INFO, F("HLW8012: Reset Multipliers to DEFAULT"));
+        if (PLUGIN_076_DEBUG){
+          addLog(LOG_LEVEL_INFO, F("P076: Reset Multipliers to DEFAULT"));
+        }
         success = true;
       }
 
@@ -301,7 +446,7 @@ boolean Plugin_076(byte function, struct EventStruct *event, String &string) {
           }
         }
         if (PLUGIN_076_DEBUG) {
-          String log = F("HLW8012: Calibration to values");
+          String log = F("P076: Calibration to values");
           log += F(" - Expected-V=");
           log += CalibVolt;
           log += F(" - Expected-A=");
