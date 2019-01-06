@@ -673,6 +673,11 @@ To create/register a plugin, you have to :
   #ifdef USE_SERVO
     #undef USE_SERVO
   #endif
+
+  #ifdef USES_P083
+    // analogRead yields different values for ESP32
+    #undef USES_P083   // MQ-5 gas sensor
+  #endif
 #endif
 
 
