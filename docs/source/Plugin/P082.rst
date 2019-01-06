@@ -19,6 +19,7 @@ GitHub: |P082_github|_
 
 Maintainer: |P082_maintainer|
 
+Used library: |P082_library|_
 
 Supported hardware
 ------------------

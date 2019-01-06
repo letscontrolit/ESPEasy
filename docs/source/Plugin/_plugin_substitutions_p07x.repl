@@ -65,16 +65,18 @@
 .. |P075_maintainer| replace:: `.`
 .. |P075_compileinfo| replace:: `.`
 
-.. |P076_name| replace:: :cyan:`HLW8012`
+.. |P076_name| replace:: :cyan:`HLW8012/BL0937`
 .. |P076_type| replace:: :cyan:`Energy (AC)`
-.. |P076_typename| replace:: :cyan:`Energy (AC) - HLW8012`
+.. |P076_typename| replace:: :cyan:`Energy (AC) - HLW8012/BL0937`
 .. |P076_status| replace:: :yellow:`TESTING`
 .. |P076_github| replace:: P076_HLW8012.ino
 .. _P076_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P076_HLW8012.ino
-.. |P076_usedby| replace:: `.`
-.. |P076_shortinfo| replace:: `.`
-.. |P076_maintainer| replace:: `.`
+.. |P076_usedby| replace:: Sonoff POW (r1), Huafan SS, KMC 70011, Aplic WDP303075, SK03 Outdoor, BlitzWolf SHP, Teckin, Teckin US, Gosund SP1 v23
+.. |P076_shortinfo| replace:: Power measuring sensor used to measure (AC) voltage, current, power and power factor.
+.. |P076_maintainer| replace:: TD-er
 .. |P076_compileinfo| replace:: `.`
+.. |P076_library| replace:: xoseperez/hlw8012  v1.1.1
+.. _P076_library: https://github.com/xoseperez/hlw8012/tree/1.1.1
 
 .. |P077_name| replace:: :cyan:`CSE7766`
 .. |P077_type| replace:: :cyan:`Energy (AC)`

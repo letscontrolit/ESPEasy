@@ -44,7 +44,7 @@ unsigned int p076_hvoltage = 0;
 unsigned int p076_hpower = 0;
 unsigned int p076_hpowfact = 0;
 
-struct p076_PredefinedDevice {
+struct p076_PredefinedDevice_struct {
   int Id;
   PGM_P Device_Name;
   byte SEL_Pin;
@@ -56,12 +56,12 @@ struct p076_PredefinedDevice {
 
 };
 
-typedef struct p076_PredefinedDevice P076_PredefinedDevice;
+typedef struct p076_PredefinedDevice_struct P076_PredefinedDevice;
 
 //When adding new device increase counter, too
 const int p076_PinSettingsCount = 10;
 const char string_Custom[]    PROGMEM = "Custom";
-const char string_Sonoff[]    PROGMEM = "Sonoff Pow";
+const char string_Sonoff[]    PROGMEM = "Sonoff Pow (r1)";
 const char string_Huafan[]    PROGMEM = "Huafan SS";
 const char string_KMC[]       PROGMEM = "KMC 70011";
 const char string_Aplic[]     PROGMEM = "Aplic WDP303075";
@@ -88,7 +88,6 @@ static const P076_PredefinedDevice p076_PredefinedDevices[] PROGMEM =
    { 9, string_Gosund,     12,      4,     5,       LOW,    FALLING, CHANGE}
 };
 
-P076_PredefinedDevice p076_SelectedPredefinedDevice;
 
 boolean Plugin_076(byte function, struct EventStruct *event, String &string) {
   boolean success = false;
@@ -144,17 +143,10 @@ boolean Plugin_076(byte function, struct EventStruct *event, String &string) {
     String predefinedNames[p076_PinSettingsCount];
     int predefinedId[p076_PinSettingsCount];
 
-
-
     for (int i = 0; i < p076_PinSettingsCount; i++)
     {
-      //Fetch a Predefined Pin Setting from PROGMEM
-      memcpy_P (&p076_SelectedPredefinedDevice, &p076_PredefinedDevices[i],
-         sizeof (P076_PredefinedDevice));
-
-
-      predefinedNames[i] = p076_SelectedPredefinedDevice.Device_Name;
-      predefinedId[i]    = p076_SelectedPredefinedDevice.Id;
+      predefinedNames[i] = p076_PredefinedDevices[i].Device_Name;
+      predefinedId[i]    = p076_PredefinedDevices[i].Id;
     }
 
     String modeRaise[4];
@@ -250,16 +242,13 @@ boolean Plugin_076(byte function, struct EventStruct *event, String &string) {
     }
     else if (selectedDevice < p076_PinSettingsCount){
       //Fetch Predefined Pin Setting from PROGMEM
-      memcpy_P (&p076_SelectedPredefinedDevice, &p076_PredefinedDevices[selectedDevice],
-         sizeof (P076_PredefinedDevice));
+      Settings.TaskDevicePluginConfig[event->TaskIndex][4] = p076_PredefinedDevices[selectedDevice].Current_Read;
+      Settings.TaskDevicePluginConfig[event->TaskIndex][5] = p076_PredefinedDevices[selectedDevice].CF_Trigger;
+      Settings.TaskDevicePluginConfig[event->TaskIndex][6] = p076_PredefinedDevices[selectedDevice].CF1_Trigger;
 
-      Settings.TaskDevicePluginConfig[event->TaskIndex][4] = p076_SelectedPredefinedDevice.Current_Read;
-      Settings.TaskDevicePluginConfig[event->TaskIndex][5] = p076_SelectedPredefinedDevice.CF_Trigger;
-      Settings.TaskDevicePluginConfig[event->TaskIndex][6] = p076_SelectedPredefinedDevice.CF1_Trigger;
-
-      Settings.TaskDevicePin1[event->TaskIndex] = p076_SelectedPredefinedDevice.SEL_Pin;
-      Settings.TaskDevicePin2[event->TaskIndex] = p076_SelectedPredefinedDevice.CF1_Pin;
-      Settings.TaskDevicePin3[event->TaskIndex] = p076_SelectedPredefinedDevice.CF_Pin;
+      Settings.TaskDevicePin1[event->TaskIndex] = p076_PredefinedDevices[selectedDevice].SEL_Pin;
+      Settings.TaskDevicePin2[event->TaskIndex] = p076_PredefinedDevices[selectedDevice].CF1_Pin;
+      Settings.TaskDevicePin3[event->TaskIndex] = p076_PredefinedDevices[selectedDevice].CF_Pin;
     }
 
     if (PLUGIN_076_DEBUG) {
@@ -437,7 +426,7 @@ boolean Plugin_076(byte function, struct EventStruct *event, String &string) {
             CalibCurr = atof(tmpStr.substring(comma2 + 1, comma3).c_str());
             CalibAcPwr = tmpStr.substring(comma3 + 1).toInt();
           }
-        }
+        }        
         if (PLUGIN_076_DEBUG) {
           String log = F("P076: Calibration to values");
           log += F(" - Expected-V=");
@@ -448,18 +437,22 @@ boolean Plugin_076(byte function, struct EventStruct *event, String &string) {
           log += CalibAcPwr;
           addLog(LOG_LEVEL_INFO, log);
         }
+        bool changed = false;
         if (CalibVolt != 0) {
           Plugin_076_hlw->expectedVoltage(CalibVolt);
+          changed = true;
         }
-        if (CalibCurr != 0) {
+        if (CalibCurr > 0.0) {
           Plugin_076_hlw->expectedCurrent(CalibCurr);
+          changed = true;
         }
         if (CalibAcPwr != 0) {
           Plugin_076_hlw->expectedActivePower(CalibAcPwr);
+          changed = true;
         }
         // if at least one calibration value has been provided then save the new
         // multipliers //
-        if ((CalibVolt + CalibCurr + CalibAcPwr) != 0) {
+        if (changed) {
           Plugin076_SaveMultipliers();
         }
         success = true;
