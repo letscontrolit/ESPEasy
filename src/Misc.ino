@@ -177,7 +177,11 @@ void deepSleepStart(int dsdelay)
   addLog(LOG_LEVEL_INFO, F("SLEEP: Powering down to deepsleep..."));
   delay(100); // give the node time to send above log message before going to sleep
   #if defined(ESP8266)
-    ESP.deepSleepInstant((uint32_t)dsdelay * 1000000, WAKE_RF_DEFAULT);
+    #if defined(CORE_2_5_0)
+      ESP.deepSleepInstant((uint32_t)dsdelay * 1000000, WAKE_RF_DEFAULT);
+    #else
+      ESP.deepSleep((uint32_t)dsdelay * 1000000, WAKE_RF_DEFAULT);
+    #endif
   #endif
   #if defined(ESP32)
     esp_sleep_enable_timer_wakeup((uint32_t)dsdelay * 1000000);
