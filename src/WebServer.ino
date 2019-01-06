@@ -1057,25 +1057,7 @@ void handle_root() {
         if (it->second.build)
           TXBuffer += String(it->second.build);
         html_TD();
-        if (it->second.nodeType)
-          switch (it->second.nodeType)
-          {
-            case NODE_TYPE_ID_ESP_EASY_STD:
-              TXBuffer += F("ESP Easy");
-              break;
-            case NODE_TYPE_ID_ESP_EASYM_STD:
-              TXBuffer += F("ESP Easy Mega");
-              break;
-            case NODE_TYPE_ID_ESP_EASY32_STD:
-              TXBuffer += F("ESP Easy 32");
-              break;
-            case NODE_TYPE_ID_ARDUINO_EASY_STD:
-              TXBuffer += F("Arduino Easy");
-              break;
-            case NODE_TYPE_ID_NANO_EASY_STD:
-              TXBuffer += F("Nano Easy");
-              break;
-          }
+        TXBuffer += getNodeTypeDisplayString(it->second.nodeType);
         html_TD();
         html_add_wide_button_prefix();
         TXBuffer += F("http://");
@@ -4339,15 +4321,7 @@ void handle_json()
           }
 
           if (it->second.nodeType) {
-            String platform;
-            switch (it->second.nodeType)
-            {
-              case NODE_TYPE_ID_ESP_EASY_STD:     platform = F("ESP Easy");      break;
-              case NODE_TYPE_ID_ESP_EASYM_STD:    platform = F("ESP Easy Mega"); break;
-              case NODE_TYPE_ID_ESP_EASY32_STD:   platform = F("ESP Easy 32");   break;
-              case NODE_TYPE_ID_ARDUINO_EASY_STD: platform = F("Arduino Easy");  break;
-              case NODE_TYPE_ID_NANO_EASY_STD:    platform = F("Nano Easy");     break;
-            }
+            String platform = getNodeTypeDisplayString(it->second.nodeType);
             if (platform.length() > 0)
               stream_next_json_object_value(F("platform"), platform);
           }
@@ -6348,7 +6322,7 @@ void handle_sysinfo() {
       case FM_DIO:   TXBuffer += F("DIO");  break;
       case FM_DOUT:  TXBuffer += F("DOUT"); break;
       default:
-          TXBuffer += F("Unknown"); break;
+          TXBuffer += getUnknownString(); break;
     }
   #endif
 

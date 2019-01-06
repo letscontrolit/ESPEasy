@@ -599,22 +599,6 @@ void runPeriodicalMQTT() {
   }
 }
 
-String getMQTT_state() {
-  switch (MQTTclient.state()) {
-    case MQTT_CONNECTION_TIMEOUT     : return F("Connection timeout");
-    case MQTT_CONNECTION_LOST        : return F("Connection lost");
-    case MQTT_CONNECT_FAILED         : return F("Connect failed");
-    case MQTT_DISCONNECTED           : return F("Disconnected");
-    case MQTT_CONNECTED              : return F("Connected");
-    case MQTT_CONNECT_BAD_PROTOCOL   : return F("Connect bad protocol");
-    case MQTT_CONNECT_BAD_CLIENT_ID  : return F("Connect bad client_id");
-    case MQTT_CONNECT_UNAVAILABLE    : return F("Connect unavailable");
-    case MQTT_CONNECT_BAD_CREDENTIALS: return F("Connect bad credentials");
-    case MQTT_CONNECT_UNAUTHORIZED   : return F("Connect unauthorized");
-    default: return "";
-  }
-}
-
 void updateMQTTclient_connected() {
   if (MQTTclient_connected != MQTTclient.connected()) {
     MQTTclient_connected = !MQTTclient_connected;
