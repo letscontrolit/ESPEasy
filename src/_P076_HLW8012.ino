@@ -23,10 +23,10 @@ HLW8012 *Plugin_076_hlw = NULL;
 #define PLUGIN_ID_076 76
 #define PLUGIN_076_DEBUG true // activate extra log info in the debug
 #define PLUGIN_NAME_076 "Energy (AC) - HLW8012/BL0937  [TESTING]"
-#define PLUGIN_VALUENAME1_076 "Voltage (V)"
-#define PLUGIN_VALUENAME2_076 "Current (A)"
-#define PLUGIN_VALUENAME3_076 "Active Power (W)"
-#define PLUGIN_VALUENAME4_076 "Power Factor (%)"
+#define PLUGIN_VALUENAME1_076 "Voltage"
+#define PLUGIN_VALUENAME2_076 "Current"
+#define PLUGIN_VALUENAME3_076 "Power"
+#define PLUGIN_VALUENAME4_076 "PowerFactor"
 
 #define HLW_DELAYREADING 500
 
@@ -44,7 +44,7 @@ unsigned int p076_hvoltage = 0;
 unsigned int p076_hpower = 0;
 unsigned int p076_hpowfact = 0;
 
-struct p076_PredefinedDevice {
+struct p076_PredefinedDevice_struct {
   int Id;
   PGM_P Device_Name;
   byte SEL_Pin;
@@ -56,12 +56,12 @@ struct p076_PredefinedDevice {
 
 };
 
-typedef struct p076_PredefinedDevice P076_PredefinedDevice;
+typedef struct p076_PredefinedDevice_struct P076_PredefinedDevice;
 
 //When adding new device increase counter, too
 const int p076_PinSettingsCount = 10;
 const char string_Custom[]    PROGMEM = "Custom";
-const char string_Sonoff[]    PROGMEM = "Sonoff Pow";
+const char string_Sonoff[]    PROGMEM = "Sonoff Pow (r1)";
 const char string_Huafan[]    PROGMEM = "Huafan SS";
 const char string_KMC[]       PROGMEM = "KMC 70011";
 const char string_Aplic[]     PROGMEM = "Aplic WDP303075";
@@ -75,7 +75,7 @@ static const P076_PredefinedDevice p076_PredefinedDevices[] PROGMEM =
    //Device_Name,SEL_PIN, CF_PIN, CF1_PIN, Current_Read, CF_Trigger, CF1_Trigger
    //HLW8012 Devices
    { 0, string_Custom,      0,      0,     0,       LOW,        LOW,    LOW},
-   { 1, string_Sonoff,      5,     14,     3,      HIGH,     CHANGE, CHANGE},
+   { 1, string_Sonoff,      5,     14,    13,      HIGH,     CHANGE, CHANGE},
    { 2, string_Huafan,     13,     14,    12,      HIGH,     CHANGE, CHANGE},
    { 3, string_KMC,        12,      4,     5,      HIGH,     CHANGE, CHANGE},
    { 4, string_Aplic,      12,      4,     5,       LOW,     CHANGE, CHANGE},
@@ -88,7 +88,6 @@ static const P076_PredefinedDevice p076_PredefinedDevices[] PROGMEM =
    { 9, string_Gosund,     12,      4,     5,       LOW,    FALLING, CHANGE}
 };
 
-P076_PredefinedDevice p076_SelectedPredefinedDevice;
 
 boolean Plugin_076(byte function, struct EventStruct *event, String &string) {
   boolean success = false;
@@ -144,17 +143,10 @@ boolean Plugin_076(byte function, struct EventStruct *event, String &string) {
     String predefinedNames[p076_PinSettingsCount];
     int predefinedId[p076_PinSettingsCount];
 
-
-
     for (int i = 0; i < p076_PinSettingsCount; i++)
     {
-      //Fetch a Predefined Pin Setting from PROGMEM
-      memcpy_P (&p076_SelectedPredefinedDevice, &p076_PredefinedDevices[i],
-         sizeof (P076_PredefinedDevice));
-
-
-      predefinedNames[i] = p076_SelectedPredefinedDevice.Device_Name;
-      predefinedId[i]    = p076_SelectedPredefinedDevice.Id;
+      predefinedNames[i] = p076_PredefinedDevices[i].Device_Name;
+      predefinedId[i]    = p076_PredefinedDevices[i].Id;
     }
 
     String modeRaise[4];
@@ -191,16 +183,15 @@ boolean Plugin_076(byte function, struct EventStruct *event, String &string) {
                     modeRaise, modeValues, cf1_trigger);
 
     addFormSubHeader(F("Calibration Values"));
-    double hlwMultipliers[3];
-    LoadCustomTaskSettings(event->TaskIndex, (byte *)&hlwMultipliers,
-                           sizeof(hlwMultipliers));
+    double current, voltage, power;
+    Plugin076_LoadMultipliers(event->TaskIndex, current, voltage, power);
 
     addFormTextBox(F("Current Multiplier"), F("p076_currmult"),
-                   String(hlwMultipliers[0], 2), 25);
+                   String(current, 2), 25);
     addFormTextBox(F("Voltage Multiplier"), F("p076_voltmult"),
-                   String(hlwMultipliers[1], 2), 25);
+                   String(voltage, 2), 25);
     addFormTextBox(F("Power Multiplier"), F("p076_powmult"),
-                   String(hlwMultipliers[2], 2), 25);
+                   String(power, 2), 25);
 
     success = true;
     break;
@@ -251,17 +242,13 @@ boolean Plugin_076(byte function, struct EventStruct *event, String &string) {
     }
     else if (selectedDevice < p076_PinSettingsCount){
       //Fetch Predefined Pin Setting from PROGMEM
-      memcpy_P (&p076_SelectedPredefinedDevice, &p076_PredefinedDevices[selectedDevice],
-         sizeof (P076_PredefinedDevice));
+      Settings.TaskDevicePluginConfig[event->TaskIndex][4] = p076_PredefinedDevices[selectedDevice].Current_Read;
+      Settings.TaskDevicePluginConfig[event->TaskIndex][5] = p076_PredefinedDevices[selectedDevice].CF_Trigger;
+      Settings.TaskDevicePluginConfig[event->TaskIndex][6] = p076_PredefinedDevices[selectedDevice].CF1_Trigger;
 
-      Settings.TaskDevicePluginConfig[event->TaskIndex][4] = p076_SelectedPredefinedDevice.Current_Read;
-      Settings.TaskDevicePluginConfig[event->TaskIndex][5] = p076_SelectedPredefinedDevice.CF_Trigger;
-      Settings.TaskDevicePluginConfig[event->TaskIndex][6] = p076_SelectedPredefinedDevice.CF1_Trigger;
-
-      //Working but confusing.
-      //Settings.TaskDevicePin1[event->TaskIndex] = p076_SelectedPredefinedDevice[0].SEL_Pin;
-      //Settings.TaskDevicePin2[event->TaskIndex] = p076_SelectedPredefinedDevice[0].CF1_Pin;
-      //Settings.TaskDevicePin3[event->TaskIndex] = p076_SelectedPredefinedDevice[0].CF_Pin;
+      Settings.TaskDevicePin1[event->TaskIndex] = p076_PredefinedDevices[selectedDevice].SEL_Pin;
+      Settings.TaskDevicePin2[event->TaskIndex] = p076_PredefinedDevices[selectedDevice].CF1_Pin;
+      Settings.TaskDevicePin3[event->TaskIndex] = p076_PredefinedDevices[selectedDevice].CF_Pin;
     }
 
     if (PLUGIN_076_DEBUG) {
@@ -347,7 +334,14 @@ boolean Plugin_076(byte function, struct EventStruct *event, String &string) {
     }
     break;
 
+  case PLUGIN_EXIT: {
+    Plugin076_Reset(event->TaskIndex);
+    success = true;
+    break;
+  }
+
   case PLUGIN_INIT:
+    Plugin076_Reset(event->TaskIndex);
     if (!Plugin_076_hlw) {
       p076_read_stage = 0;
       Plugin_076_hlw = new HLW8012;
@@ -373,27 +367,19 @@ boolean Plugin_076(byte function, struct EventStruct *event, String &string) {
       if (PLUGIN_076_DEBUG){
         addLog(LOG_LEVEL_INFO, F("P076: Init Basic Resistor Values done"));
       }
-      // If multipliers are empty load default ones and save all of them as
-      // "CustomTaskSettings"
-      double hlwMultipliers[3];
-      LoadCustomTaskSettings(event->TaskIndex, (byte *)&hlwMultipliers,
-                             sizeof(hlwMultipliers));
-      if (hlwMultipliers[0] == 0) {
-        hlwMultipliers[0] = Plugin_076_hlw->getCurrentMultiplier();
-      }
-      if (hlwMultipliers[1] == 0) {
-        hlwMultipliers[1] = Plugin_076_hlw->getVoltageMultiplier();
-      }
-      if (hlwMultipliers[2] == 0) {
-        hlwMultipliers[2] = Plugin_076_hlw->getPowerMultiplier();
-      }
-      if (PLUGIN_076_DEBUG){
-        addLog(LOG_LEVEL_INFO, F("P076: Saved Calibration after INIT"));
-      }
 
-      Plugin_076_hlw->setCurrentMultiplier(hlwMultipliers[0]);
-      Plugin_076_hlw->setVoltageMultiplier(hlwMultipliers[1]);
-      Plugin_076_hlw->setPowerMultiplier(hlwMultipliers[2]);
+      double current, voltage, power;
+      if (Plugin076_LoadMultipliers(event->TaskIndex, current, voltage, power)) {
+        if (PLUGIN_076_DEBUG){
+          addLog(LOG_LEVEL_INFO, F("P076: Saved Calibration after INIT"));
+        }
+
+        Plugin_076_hlw->setCurrentMultiplier(current);
+        Plugin_076_hlw->setVoltageMultiplier(voltage);
+        Plugin_076_hlw->setPowerMultiplier(power);
+      } else {
+        Plugin076_ResetMultipliers();
+      }
 
       if (PLUGIN_076_DEBUG){
         addLog(LOG_LEVEL_INFO, F("P076: Applied Calibration after INIT"));
@@ -417,11 +403,7 @@ boolean Plugin_076(byte function, struct EventStruct *event, String &string) {
         tmpString = tmpString.substring(0, argIndex);
       }
       if (tmpString.equalsIgnoreCase(F("hlwreset"))) {
-        Plugin_076_hlw->resetMultipliers();
-        Plugin076_SaveMultipliers();
-        if (PLUGIN_076_DEBUG){
-          addLog(LOG_LEVEL_INFO, F("P076: Reset Multipliers to DEFAULT"));
-        }
+        Plugin076_ResetMultipliers();
         success = true;
       }
 
@@ -444,7 +426,7 @@ boolean Plugin_076(byte function, struct EventStruct *event, String &string) {
             CalibCurr = atof(tmpStr.substring(comma2 + 1, comma3).c_str());
             CalibAcPwr = tmpStr.substring(comma3 + 1).toInt();
           }
-        }
+        }        
         if (PLUGIN_076_DEBUG) {
           String log = F("P076: Calibration to values");
           log += F(" - Expected-V=");
@@ -455,18 +437,22 @@ boolean Plugin_076(byte function, struct EventStruct *event, String &string) {
           log += CalibAcPwr;
           addLog(LOG_LEVEL_INFO, log);
         }
+        bool changed = false;
         if (CalibVolt != 0) {
           Plugin_076_hlw->expectedVoltage(CalibVolt);
+          changed = true;
         }
-        if (CalibCurr != 0) {
+        if (CalibCurr > 0.0) {
           Plugin_076_hlw->expectedCurrent(CalibCurr);
+          changed = true;
         }
         if (CalibAcPwr != 0) {
           Plugin_076_hlw->expectedActivePower(CalibAcPwr);
+          changed = true;
         }
         // if at least one calibration value has been provided then save the new
         // multipliers //
-        if ((CalibVolt + CalibCurr + CalibAcPwr) != 0) {
+        if (changed) {
           Plugin076_SaveMultipliers();
         }
         success = true;
@@ -478,13 +464,63 @@ boolean Plugin_076(byte function, struct EventStruct *event, String &string) {
   return success;
 }
 
+void Plugin076_ResetMultipliers() {
+  if (Plugin_076_hlw) {
+    Plugin_076_hlw->resetMultipliers();
+    Plugin076_SaveMultipliers();
+    if (PLUGIN_076_DEBUG){
+      addLog(LOG_LEVEL_INFO, F("P076: Reset Multipliers to DEFAULT"));
+    }
+  }
+}
+
 void Plugin076_SaveMultipliers() {
   double hlwMultipliers[3];
-  hlwMultipliers[0] = Plugin_076_hlw->getCurrentMultiplier();
-  hlwMultipliers[1] = Plugin_076_hlw->getVoltageMultiplier();
-  hlwMultipliers[2] = Plugin_076_hlw->getPowerMultiplier();
+  Plugin076_ReadMultipliers(hlwMultipliers[0], hlwMultipliers[1], hlwMultipliers[2]);
   SaveCustomTaskSettings(StoredTaskIndex, (byte *)&hlwMultipliers,
                          sizeof(hlwMultipliers));
+}
+
+void Plugin076_ReadMultipliers(double& current, double& voltage, double& power) {
+  current = 0.0;
+  voltage = 0.0;
+  power   = 0.0;
+  if (Plugin_076_hlw) {
+    current = Plugin_076_hlw->getCurrentMultiplier();
+    voltage = Plugin_076_hlw->getVoltageMultiplier();
+    power   = Plugin_076_hlw->getPowerMultiplier();
+  }
+}
+
+
+bool Plugin076_LoadMultipliers(byte TaskIndex, double& current, double& voltage, double& power) {
+  // If multipliers are empty load default ones and save all of them as
+  // "CustomTaskSettings"
+  Plugin076_ReadMultipliers(current, voltage, power);
+  double hlwMultipliers[3];
+  LoadCustomTaskSettings(TaskIndex, (byte *)&hlwMultipliers,
+                         sizeof(hlwMultipliers));
+  if (hlwMultipliers[0] > 1.0) {
+    current = hlwMultipliers[0];
+  }
+  if (hlwMultipliers[1] > 1.0) {
+    voltage = hlwMultipliers[1];
+  }
+  if (hlwMultipliers[2] > 1.0) {
+    power = hlwMultipliers[2];
+  }
+  return (current > 1.0) && (voltage > 1.0) && (power > 1.0);
+}
+
+void Plugin076_Reset(byte TaskIndex) {
+  if (Plugin_076_hlw) {
+    delete Plugin_076_hlw;
+    Plugin_076_hlw = nullptr;
+  }
+  const byte CF_PIN = Settings.TaskDevicePin3[TaskIndex];
+  const byte CF1_PIN = Settings.TaskDevicePin2[TaskIndex];
+  detachInterrupt(CF_PIN);
+  detachInterrupt(CF1_PIN);
 }
 
 // When using interrupts we have to call the library entry point

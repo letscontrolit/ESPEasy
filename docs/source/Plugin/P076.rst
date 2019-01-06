@@ -19,16 +19,28 @@ GitHub: |P076_github|_
 
 Maintainer: |P076_maintainer|
 
+Used library: |P076_library|_
+
+Configuration
+-------------
+
+The easiest way to configure this plugin, is to select the right device from the ``Device`` list in the "Predefined Pin settings".
+After saving the settings, all parameters will be set.
+
+When enabling the device, it will load the default calibration values.
+
+If some specific setting is needed to support some device not in the list, this ``Device`` selection must be set to ``Custom``.
+
 
 Supported hardware
 ------------------
 
 |P076_usedby|
 
-.. Commands available
-.. ^^^^^^^^^^^^^^^^^^
+Commands available
+^^^^^^^^^^^^^^^^^^
 
-.. .. include:: P076_commands.repl
+.. include:: P076_commands.repl
 
 Change log
 ----------
@@ -37,13 +49,4 @@ Change log
   ...
 
   |added|
-  Major overhaul for 2.0 release.
-
-.. versionadded:: 1.0
-  ...
-
-  |added|
-  Initial release version.
-
-
-
+  2019-01-06 Added pre-defined config selector for several devices this sensor is used in.
