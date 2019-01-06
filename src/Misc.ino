@@ -130,7 +130,7 @@ bool readyForSleep()
   return timeOutReached(timerAwakeFromDeepSleep + 1000 * Settings.deepSleep);
 }
 
-void deepSleep(int delay)
+void deepSleep(int dsdelay)
 {
 
   checkRAM(F("deepSleep"));
@@ -158,10 +158,10 @@ void deepSleep(int delay)
     }
   }
   saveUserVarToRTC();
-  deepSleepStart(delay); // Call deepSleepStart function after these checks
+  deepSleepStart(dsdelay); // Call deepSleepStart function after these checks
 }
 
-void deepSleepStart(int delay)
+void deepSleepStart(int dsdelay)
 {
   // separate function that is called from above function or directly from rules, usign deepSleep as a one-shot
   String event = F("System#Sleep");
@@ -171,15 +171,16 @@ void deepSleepStart(int delay)
   RTC.deepSleepState = 1;
   saveToRTC();
 
-  if (delay > 4294 || delay < 0)
-    delay = 4294;   //max sleep time ~1.2h
+  if (dsdelay > 4294 || dsdelay < 0)
+    dsdelay = 4294;   //max sleep time ~1.2h
 
   addLog(LOG_LEVEL_INFO, F("SLEEP: Powering down to deepsleep..."));
+  delay(100); // give the node time to send above log message before going to sleep
   #if defined(ESP8266)
-    ESP.deepSleep((uint32_t)delay * 1000000, WAKE_RF_DEFAULT);
+    ESP.deepSleepInstant((uint32_t)dsdelay * 1000000, WAKE_RF_DEFAULT);
   #endif
   #if defined(ESP32)
-    esp_sleep_enable_timer_wakeup((uint32_t)delay * 1000000);
+    esp_sleep_enable_timer_wakeup((uint32_t)dsdelay * 1000000);
     esp_deep_sleep_start();
   #endif
 }
@@ -515,9 +516,9 @@ void statusLED(boolean traffic)
 /********************************************************************************************\
   delay in milliseconds with background processing
   \*********************************************************************************************/
-void delayBackground(unsigned long delay)
+void delayBackground(unsigned long dsdelay)
 {
-  unsigned long timer = millis() + delay;
+  unsigned long timer = millis() + dsdelay;
   while (!timeOutReached(timer))
     backgroundtasks();
 }
