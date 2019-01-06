@@ -198,6 +198,7 @@
 // and some may need less memory. (which is stack allocated)
 
 #define NODE_TYPE_ID_ESP_EASY_STD           1
+#define NODE_TYPE_ID_RPI_EASY_STD           5  // https://github.com/enesbcs/rpieasy
 #define NODE_TYPE_ID_ESP_EASYM_STD         17
 #define NODE_TYPE_ID_ESP_EASY32_STD        33
 #define NODE_TYPE_ID_ARDUINO_EASY_STD      65
@@ -425,6 +426,7 @@
 
 // Forward declaration
 struct ControllerSettingsStruct;
+String getUnknownString();
 void scheduleNextDelayQueue(unsigned long id, unsigned long nextTime);
 String LoadControllerSettings(int ControllerIndex, ControllerSettingsStruct& controller_settings);
 String get_formatted_Controller_number(int controller_index);
@@ -453,20 +455,8 @@ enum SettingsType {
   SettingsType_MAX
 
 };
+String getSettingsTypeString(SettingsType settingsType);
 bool getSettingsParameters(SettingsType settingsType, int index, int& offset, int& max_size);
-String getSettingsTypeString(SettingsType settingsType) {
-  switch (settingsType) {
-    case BasicSettings_Type:            return F("Settings");
-    case TaskSettings_Type:             return F("TaskSettings");
-    case CustomTaskSettings_Type:       return F("CustomTaskSettings");
-    case ControllerSettings_Type:       return F("ControllerSettings");
-    case CustomControllerSettings_Type: return F("CustomControllerSettings");
-    case NotificationSettings_Type:     return F("NotificationSettings");
-    default:
-      break;
-  }
-  return String();
-}
 bool showSettingsFileLayout = false;
 
 /*
@@ -1869,7 +1859,7 @@ String getPluginFunctionName(int function) {
         case PLUGIN_UNCONDITIONAL_POLL:    return F("UNCONDITIONAL_POLL");
         case PLUGIN_REQUEST:               return F("REQUEST");
     }
-    return F("Unknown");
+    return getUnknownString();
 }
 
 bool mustLogFunction(int function) {
@@ -1918,7 +1908,7 @@ String getCPluginCFunctionName(int function) {
         case CPLUGIN_INIT:                      return F("CPLUGIN_INIT");
         case CPLUGIN_UDP_IN:                    return F("CPLUGIN_UDP_IN");
     }
-    return F("Unknown");
+    return getUnknownString();
 }
 
 bool mustLogCFunction(int function) {
@@ -2042,7 +2032,7 @@ String getMiscStatsName(int stat) {
           return result;
         }
     }
-    return F("Unknown");
+    return getUnknownString();
 }
 
 
