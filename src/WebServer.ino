@@ -3770,7 +3770,7 @@ void handle_tools() {
       bool otaEnabled = OTA_possible(maxSketchSize, use2step);
       addFormSubHeader(F("Firmware"));
       html_TR_TD_height(30);
-      addWideButton(F("update"), F("Load"), "", otaEnabled);
+      addWideButton(F("update"), F("Update Firmware"), "", otaEnabled);
       addHelpButton(F("EasyOTA"));
       html_TD();
       TXBuffer += F("Load a new firmware");
