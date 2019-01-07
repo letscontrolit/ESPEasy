@@ -125,7 +125,9 @@ Where to buy
   :header: "Store", "Link"
   :widths: 5, 40
 
-  "AliExpress","`Link 1 ($) <http://>`_"
+  "AliExpress","`Link 1 ($) <http://s.click.aliexpress.com/e/cmauSCgs>`_"
+  "Banggood","`Link 2 ($) <https://www.banggood.com/custlink/G3vvYRCdgh>`_ `Link 3 ($) <https://www.banggood.com/custlink/mmvmdYpEBr>`_"
+  "eBay","`Link 3 ($) <https://rover.ebay.com/rover/1/711-53200-19255-0/1?icep_id=114&ipn=icep&toolid=20004&campid=5338336929&mpre=https%3A%2F%2Fwww.ebay.com%2Fsch%2Fi.html%3F_nkw%3Dneo%2520m8n>`_"
 
 |affiliate|
 
