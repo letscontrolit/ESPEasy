@@ -13,6 +13,7 @@ bool unprocessedWifiEvents() {
 void processConnect() {
   if (processedConnect) return;
   processedConnect = true;
+  delay(100); // FIXME TD-er: See https://github.com/letscontrolit/ESPEasy/issues/1987#issuecomment-451644424
   ++wifi_reconnects;
   if (wifiStatus < ESPEASY_WIFI_CONNECTED) return;
   const long connect_duration = timeDiff(last_wifi_connect_attempt_moment, lastConnectMoment);
@@ -39,12 +40,16 @@ void processConnect() {
     setupStaticIPconfig();
     markGotIP();
   }
+  if (!WiFi.getAutoConnect()) {
+    WiFi.setAutoConnect(true);
+  }
   logConnectionStatus();
 }
 
 void processDisconnect() {
   if (processedDisconnect) return;
   processedDisconnect = true;
+  delay(100); // FIXME TD-er: See https://github.com/letscontrolit/ESPEasy/issues/1987#issuecomment-451644424
   if (Settings.UseRules) {
     String event = F("WiFi#Disconnected");
     rulesProcessing(event);
@@ -127,7 +132,7 @@ void processGotIP() {
   #endif
 
   // First try to get the time, since that may be used in logs
-  if (Settings.UseNTP) {
+  if (systemTimePresent()) {
     initTime();
   }
   mqtt_reconnect_count = 0;
@@ -246,11 +251,9 @@ void processScanDone() {
 
 void resetWiFi() {
   addLog(LOG_LEVEL_INFO, F("Reset WiFi."));
-//  setWifiMode(WIFI_OFF);
-//  setWifiMode(WIFI_STA);
   lastDisconnectMoment = millis();
-  processedDisconnect = false;
-  wifiStatus = ESPEASY_WIFI_DISCONNECTED;
+  WifiDisconnect();
+//  setWifiMode(WIFI_OFF);
 }
 
 void connectionCheckHandler()
@@ -640,7 +643,7 @@ bool tryConnectWiFi() {
       if (lastBSSID[0] == 0)
         WiFi.begin(ssid, passphrase);
       else
-        WiFi.begin(ssid, passphrase, 0, &lastBSSID[0]);
+        WiFi.begin(ssid, passphrase, last_channel, &lastBSSID[0]);
       break;
     default:
       WiFi.begin(ssid, passphrase);
@@ -664,10 +667,13 @@ bool tryConnectWiFi() {
       }
       return false;
     }
+    case WL_CONNECTED: {
+      return true;
+    }
     default:
      break;
   }
-  return true; // Sent
+  return false;
 }
 
 //********************************************************************************
@@ -762,7 +768,7 @@ String SDKwifiStatusToString(uint8_t sdk_wifistatus) {
     case STATION_CONNECT_FAIL:   return F("STATION_CONNECT_FAIL");
     case STATION_GOT_IP:         return F("STATION_GOT_IP");
   }
-  return F("Unknown");
+  return getUnknownString();
 }
 #endif
 
@@ -907,7 +913,7 @@ String getLastDisconnectReason() {
     case WIFI_DISCONNECT_REASON_AUTH_FAIL:                  reason += F("Auth fail");                break;
     case WIFI_DISCONNECT_REASON_ASSOC_FAIL:                 reason += F("Assoc fail");               break;
     case WIFI_DISCONNECT_REASON_HANDSHAKE_TIMEOUT:          reason += F("Handshake timeout");        break;
-    default:  reason += F("Unknown"); 	  break;
+    default:  reason += getUnknownString(); 	  break;
   }
   return reason;
 }

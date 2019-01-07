@@ -2,7 +2,7 @@
 // Initialize all plugins that where defined earlier
 // and initialize the function call pointer into the plugin array
 //********************************************************************************
-
+#include <algorithm>
 static const char ADDPLUGIN_ERROR[] PROGMEM = "System: Error - To much Plugins";
 
 // Because of compiler-bug (multiline defines gives an error if file ending is CRLF) the define is striped to a single line
@@ -1093,6 +1093,17 @@ void updateTaskPluginCache() {
   }
 }
 
+int8_t getXFromPluginId(byte pluginID) {
+  std::vector<byte>::iterator it;
+  int8_t returnValue = -1;
+
+  it = find(Plugin_id.begin(), Plugin_id.end(), pluginID);
+  if (it != Plugin_id.end())
+    returnValue = std::distance(Plugin_id.begin(),it);
+
+  return returnValue;
+}
+
 
 /*********************************************************************************************\
 * Function call to all or specific plugins
@@ -1123,12 +1134,34 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
             }
           }
           START_TIMER;
-          Plugin_ptr[x](Function, event, str);
+          bool retval = Plugin_ptr[x](Function, event, str);
           STOP_TIMER_TASK(x,Function);
+          if (retval) delay(0);
         }
       }
       return true;
       break;
+
+      case PLUGIN_MONITOR:
+        for (auto it=globalMapPortStatus.begin(); it!=globalMapPortStatus.end(); ++it) {
+          //only call monitor function if there the need to
+          if (it->second.monitor || it->second.command || it->second.init) {
+            TempEvent.Par1 = getPortFromKey(it->first);;
+            //initialize the "x" variable to synch with the pluginNumber if second.x == -1
+            if (it->second.x == -1) it->second.x = getXFromPluginId((byte) getPluginFromKey(it->first));
+
+            if (it->second.x != -1)  {
+              const byte x = (byte) it->second.x;
+              if (Plugin_id[x] != 0){
+                START_TIMER;
+                Plugin_ptr[x](Function, &TempEvent, str);
+                STOP_TIMER_TASK(x,Function);
+              }
+            }
+          }
+        }
+        return true;
+        break;
 
     // Call to all plugins. Return at first match
     case PLUGIN_WRITE:
@@ -1150,16 +1183,23 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
                 START_TIMER;
                 bool retval = (Plugin_ptr[x](Function, &TempEvent, str));
                 STOP_TIMER_TASK(x,Function);
-                if (retval) return true;
+                if (retval) {
+                  delay(0);
+                  return true;
+                }
               }
             }
           }
         }
         // @FIXME TD-er: work-around as long as gpio command is still performed in P001_switch.
-        for (byte x = 0; x < PLUGIN_MAX; x++)
-          if (Plugin_id[x] != 0)
-            if (Plugin_ptr[x](Function, event, str))
+        for (byte x = 0; x < PLUGIN_MAX; x++) {
+          if (Plugin_id[x] != 0) {
+            if (Plugin_ptr[x](Function, event, str)) {
+              delay(0);
               return true;
+            }
+          }
+        }
       }
       break;
 
@@ -1183,6 +1223,7 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
               STOP_TIMER_TASK(x,Function);
               if (retval){
                 checkRAM(F("PluginCallUDP"),x);
+                delay(0);
                 return true;
               }
             }
@@ -1223,8 +1264,9 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
                   schedule_task_device_timer_at_init(TempEvent.TaskIndex);
                 }
                 START_TIMER;
-                Plugin_ptr[x](Function, &TempEvent, str);
+                bool retval = Plugin_ptr[x](Function, &TempEvent, str);
                 STOP_TIMER_TASK(x,Function);
+                if (retval) delay(0);
               }
             }
           }
@@ -1265,6 +1307,7 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
             ExtraTaskSettings.TaskIndex = event->TaskIndex;
           }
           STOP_TIMER_TASK(x,Function);
+          if (retval) delay(0);
           return retval;
         }
       }

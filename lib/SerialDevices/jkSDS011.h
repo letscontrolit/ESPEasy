@@ -29,7 +29,7 @@
 #include "Arduino.h"
 //#include "SensorSerial.h"
 #include "SensorSerialBuffer.h"
-#include "ESPeasySoftwareSerial.h"
+#include "ESPeasySerial.h"
 
 
 class CjkSDS011
@@ -64,7 +64,7 @@ private:
   void ParseCommandReply();
 
 //  SensorSerial _serial;
-  ESPeasySoftwareSerial *_serial;
+  ESPeasySerial *_serial;
   CSensorSerialBuffer _data;
   CSensorSerialBuffer _command;
   float _pm2_5;

@@ -14,7 +14,7 @@ SDM::SDM(HardwareSerial& serial, long baud, int dere_pin, int config, bool swapu
   this->_swapuart = swapuart;
 }
 #else
-SDM::SDM(ESPeasySoftwareSerial& serial, long baud, int dere_pin) : sdmSer(serial) {
+SDM::SDM(ESPeasySerial& serial, long baud, int dere_pin) : sdmSer(serial) {
   this->_baud = baud;
   this->_dere_pin = dere_pin;
 }

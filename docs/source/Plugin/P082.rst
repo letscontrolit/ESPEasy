@@ -1,0 +1,91 @@
+.. include:: ../Plugin/_plugin_substitutions_p08x.repl
+.. _P082_page:
+
+|P082_typename|
+==================================================
+
+|P082_shortinfo|
+
+Plugin details
+--------------
+
+Type: |P082_type|
+
+Name: |P082_name|
+
+Status: |P082_status|
+
+GitHub: |P082_github|_
+
+Maintainer: |P082_maintainer|
+
+Used library: |P082_library|_
+
+Supported hardware
+------------------
+
+|P082_usedby|
+
+.. Commands available
+.. ^^^^^^^^^^^^^^^^^^
+
+.. .. include:: P082_commands.repl
+
+Output values
+-------------
+
+* Longitude
+* Latitude
+* Altitude
+* Speed
+
+Events
+------
+
+The GPS plugin may send several events:
+
+* GPS#GotFix
+* GPS#LostFix
+
+
+Preferred Settings
+------------------
+
+A GPS receiver is rather 'chatty', so it is strongly advised to use hardware serial ports.
+
+The ESP8266 only has 2 HW serial ports, but only Serial0 uses a HW RX pin.
+The TX channel from the ESP to the GPS is not needed for this plugin.
+
+The used baudrate is 9600 bps.
+
+PPS pin
+-------
+
+Some GPS receivers have a PPS pin.
+This can be used to get a very accurate time reference.
+According to `Wikipedia <https://en.wikipedia.org/wiki/Pulse-per-second_signal>`_ this signal could be considered a "stratum-1 time source".
+
+The signal on the PPS pin is a high pulse of +/- 100 msec and the rising edge signals the start of a second.
+The time reported after this pulse describes the past rising edge of the PPS pulse.
+
+N.B. Currently the PPS feature is not thoroughly tested yet, so consider it experimental.
+
+
+Future plans
+------------
+
+The following new features may be added later:
+
+* Selectable baud rate
+* New event: GPS#Travelled  to signal when a preset distance was moved since previous event.
+* New event: GPS#Geofence   to signal when within set distance from a set target. (e.g. home)
+* Change of output units (km, miles, etc)
+* Use some threshold on used satellites and HDOP values.
+
+Change log
+----------
+
+.. versionchanged:: 2.0
+  ...
+
+  |added| 2019-01-05 with support for basic GPS features and setting system time.

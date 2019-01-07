@@ -198,6 +198,7 @@
 // and some may need less memory. (which is stack allocated)
 
 #define NODE_TYPE_ID_ESP_EASY_STD           1
+#define NODE_TYPE_ID_RPI_EASY_STD           5  // https://github.com/enesbcs/rpieasy
 #define NODE_TYPE_ID_ESP_EASYM_STD         17
 #define NODE_TYPE_ID_ESP_EASY32_STD        33
 #define NODE_TYPE_ID_ARDUINO_EASY_STD      65
@@ -265,6 +266,7 @@
 #define PLUGIN_UNCONDITIONAL_POLL          25
 #define PLUGIN_REQUEST                     26
 #define PLUGIN_TIME_CHANGE                 27
+#define PLUGIN_MONITOR                     28
 
 // Make sure the CPLUGIN_* does not overlap PLUGIN_*
 #define CPLUGIN_PROTOCOL_ADD               41
@@ -424,6 +426,7 @@
 
 // Forward declaration
 struct ControllerSettingsStruct;
+String getUnknownString();
 void scheduleNextDelayQueue(unsigned long id, unsigned long nextTime);
 String LoadControllerSettings(int ControllerIndex, ControllerSettingsStruct& controller_settings);
 String get_formatted_Controller_number(int controller_index);
@@ -439,6 +442,8 @@ bool canYield();
 bool getBitFromUL(uint32_t number, byte bitnr);
 void setBitToUL(uint32_t& number, byte bitnr, bool value);
 
+void serialHelper_getGpioNames(struct EventStruct *event, bool rxOptional=false, bool txOptional=false);
+
 enum SettingsType {
   BasicSettings_Type = 0,
   TaskSettings_Type,
@@ -450,20 +455,8 @@ enum SettingsType {
   SettingsType_MAX
 
 };
+String getSettingsTypeString(SettingsType settingsType);
 bool getSettingsParameters(SettingsType settingsType, int index, int& offset, int& max_size);
-String getSettingsTypeString(SettingsType settingsType) {
-  switch (settingsType) {
-    case BasicSettings_Type:            return F("Settings");
-    case TaskSettings_Type:             return F("TaskSettings");
-    case CustomTaskSettings_Type:       return F("CustomTaskSettings");
-    case ControllerSettings_Type:       return F("ControllerSettings");
-    case CustomControllerSettings_Type: return F("CustomControllerSettings");
-    case NotificationSettings_Type:     return F("NotificationSettings");
-    default:
-      break;
-  }
-  return String();
-}
 bool showSettingsFileLayout = false;
 
 /*
@@ -1866,7 +1859,7 @@ String getPluginFunctionName(int function) {
         case PLUGIN_UNCONDITIONAL_POLL:    return F("UNCONDITIONAL_POLL");
         case PLUGIN_REQUEST:               return F("REQUEST");
     }
-    return F("Unknown");
+    return getUnknownString();
 }
 
 bool mustLogFunction(int function) {
@@ -1915,7 +1908,7 @@ String getCPluginCFunctionName(int function) {
         case CPLUGIN_INIT:                      return F("CPLUGIN_INIT");
         case CPLUGIN_UDP_IN:                    return F("CPLUGIN_UDP_IN");
     }
-    return F("Unknown");
+    return getUnknownString();
 }
 
 bool mustLogCFunction(int function) {
@@ -2039,12 +2032,12 @@ String getMiscStatsName(int stat) {
           return result;
         }
     }
-    return F("Unknown");
+    return getUnknownString();
 }
 
 
 struct portStatusStruct {
-  portStatusStruct() : state(-1), output(-1), command(0), init(0), mode(0), task(0), monitor(0),  previousTask(-1) {}
+  portStatusStruct() : state(-1), output(-1), command(0), init(0), mode(0), task(0), monitor(0), forceMonitor(0), forceEvent(0), previousTask(-1), x(-1) {}
 
   int8_t state : 2; //-1,0,1
   int8_t output : 2; //-1,0,1
@@ -2052,10 +2045,14 @@ struct portStatusStruct {
   int8_t init : 2; //0,1
 
   uint8_t mode : 3; //6 current values (max. 8)
-  uint8_t task : 4; //0-15 (max. 16)
+  uint8_t task : 2; //0-3 (max. 4)
   uint8_t monitor : 1; //0,1
+  uint8_t forceMonitor : 1; //0,1
+  uint8_t forceEvent : 1; //0,1
 
   int8_t previousTask : 8;
+
+  int8_t x; //used to synchronize the Plugin_prt vector index (x) with the PLUGIN_ID
 };
 
 std::map<uint32_t, portStatusStruct> globalMapPortStatus;

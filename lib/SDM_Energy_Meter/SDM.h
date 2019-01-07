@@ -12,7 +12,7 @@
 #ifdef USE_HARDWARESERIAL
   #include <HardwareSerial.h>
 #else
-  #include <ESPeasySoftwareSerial.h>
+  #include <ESPeasySerial.h>
 //  #include <SoftwareSerial.h>
 #endif
 //------------------------------------------------------------------------------
@@ -159,7 +159,7 @@ class SDM {
 #ifdef USE_HARDWARESERIAL
     SDM(HardwareSerial& serial, long baud = SDM_UART_BAUD, int dere_pin = DERE_PIN, int config = SDM_UART_CONFIG, bool swapuart = SWAPHWSERIAL);
 #else
-    SDM(ESPeasySoftwareSerial& serial, long baud = SDM_UART_BAUD, int dere_pin = DERE_PIN);
+    SDM(ESPeasySerial& serial, long baud = SDM_UART_BAUD, int dere_pin = DERE_PIN);
 #endif
     virtual ~SDM();
 
@@ -174,7 +174,7 @@ class SDM {
 #ifdef USE_HARDWARESERIAL
     HardwareSerial& sdmSer;
 #else
-    ESPeasySoftwareSerial& sdmSer;
+    ESPeasySerial& sdmSer;
 #endif
 
 #ifdef USE_HARDWARESERIAL

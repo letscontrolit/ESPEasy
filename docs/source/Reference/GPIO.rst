@@ -64,7 +64,7 @@ The NodeMCU boards have almost all usable pins made available and some which nee
    * - 3 (RX)
      - :yellow:`High at boot`
      - :red:`is RX`
-     - :yellow:`Boot fail if pulled low`
+     - RX channel of serial0
    * - 1 (TX)
      - :red:`is TX`
      - :yellow:`debug output at boot`

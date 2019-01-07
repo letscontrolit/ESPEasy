@@ -1,4 +1,92 @@
 -------------------------------------------------
+Changes in release mega-20190107 (since mega-20190106)
+-------------------------------------------------
+
+Release date: Mon Jan  7 04:00:07 CET 2019
+
+CaptainRoot (5):
+      Update _P076_HLW8012.ino
+      add predefind pin settings for some energy meter sockets to HLW8012 / BL0937
+      Revert changes to platformio.ini
+      Update platformio.ini
+      movepredefind pin settings to PROGMEM
+
+TD-er (3):
+      Add new Nodetype RPIEasy #2206
+      [HLW8012] Fix some issues when selecting device
+      [HLW8012] Update documentation
+
+
+-------------------------------------------------
+Changes in release mega-20190106 (since mega-20181231)
+-------------------------------------------------
+
+Release date: Sun Jan  6 04:00:12 CET 2019
+
+TD-er (29):
+      [GPS] Add TinyGPSPlus library 1.0.2
+      [GPS] Improved precision
+      [GPS] support for fix quality and fix mode
+      [GPS] New plugin P082 GPS - initial commit
+      [GPS] Add TinyGPSPlus library 1.0.2
+      [GPS] Improved precision
+      [GPS] support for fix quality and fix mode
+      [GPS] New plugin P082 GPS - initial commit
+      [GPS] Make helper object to abstract hardware/software serial
+      [GPS] Extend helper object for abstracting HW/SW serial
+      [GPS] Serial wrapper support including ESP32
+      [GPS] typo in JSON file caused build issues
+      [core 2.3.0] build attempt (failing due to iRAM)
+      [Serial] Let plugins use new serial wrapper
+      [WiFi] Set to auto reconnect.
+      [Serial] Use uniform serial port selector for all serial plugins
+      [Stability] Add delay(0) to all successful calls to plugin functions
+      [build] Register ESPeasySerial as library in PlatformIO
+      [build] Added extra include of ESPeasySerial.h
+      [#2197] Correct spelling error in 'Controller'
+      [GPS] Allow GPS to update system time
+      [ESPEasy Serial] Fix build issues for core 2.4.0
+      [Puya] Backport core 2.5.0 Puya patch and make patched platform archives
+      [JavaScript] Simple JS to update view in web interface on change serial
+      [GPS] Add PPS pin as reference pilot for time sync
+      [GPS] Add documentation for P082_GPS.ino
+      [PUYA] Use newest core 2.5.0 backport patch on unpatched sources.
+      [GPS] Include the GPS docs in the Spinx tree.
+      [WiFi] Some basic fixes to improve wifi reconnect
+
+
+-------------------------------------------------
+Changes in release mega-20181231 (since mega-20181220)
+-------------------------------------------------
+
+Release date: Mon Dec 31 04:00:12 CET 2018
+
+Grovkillen (13):
+      [docs] P013 added
+      [docs] P003 added "EndOn"
+      [docs] P013 syntax fixed
+      [docs] P024 added
+      [docs] where used added for P024
+      [docs] P006 added
+      [docs] added note to BMP085 and BMP180
+      [docs] commands updated
+      [docs] P028 added
+      [docs] added info about bme/bmp similarities
+      [travis] -lstdc++-nox removed from esp82xx_2_5_0
+      [docs] fixed rule syntax typo
+      [flasher] getting ready for info splash with announcements
+
+Plebs (7):
+      bugfix for sending event in case of gpio commands
+      bug fix for state = -1 in JSON
+      bug fix for gpio events for P009 and P019
+      fixed string error
+      optimizing PLUGIN_MONITOR call
+      fixed esp32 compile failure
+      optimized monitor call
+
+
+-------------------------------------------------
 Changes in release mega-20181220 (since mega-20181218)
 -------------------------------------------------
 
@@ -3353,7 +3441,7 @@ Edwin Eefting (1):
 Gijs Noorlander (10):
       [Issue #831] Use DOUT flash mode (#834)
       [#804] Degree symbol for non-framed OLED display (#835)
-      Blynk controler (re-implementation of PR#92) (#837)
+      Blynk controller (re-implementation of PR#92) (#837)
       [issue #839] Add command support for setting contrast for OLED Framed (#841)
       [P001 Switch] Fix a mixup in previous fix for switch (#845)
       [v2.0] Fix compile errors on ESP32 (#848)

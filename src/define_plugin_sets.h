@@ -553,6 +553,7 @@ To create/register a plugin, you have to :
     #define USES_P079   // Wemos Motoshield
     #define USES_P080   // iButton Sensor  DS1990A
     #define USES_P081   // Cron
+    #define USES_P082   // GPS
 #endif
 
 
@@ -649,21 +650,24 @@ To create/register a plugin, you have to :
 #ifdef NOTIFIER_SET_EXPERIMENTAL
 #endif
 
+
+
 /******************************************************************************\
  * Remove incompatible plugins ************************************************
 \******************************************************************************/
 #ifdef PLUGIN_SET_TEST_ESP32
   #undef USES_P010   // BH1750          (doesn't work yet on ESP32)
-  #undef USES_P049   // MHZ19           (doesn't work yet on ESP32)
+//  #undef USES_P049   // MHZ19           (doesn't work yet on ESP32)
 
-  #undef USES_P052   // SenseAir        (doesn't work yet on ESP32)
-  #undef USES_P053   // PMSx003
+//  #undef USES_P052   // SenseAir        (doesn't work yet on ESP32)
+//  #undef USES_P053   // PMSx003
 
-  #undef USES_P056   // SDS011-Dust     (doesn't work yet on ESP32)
-  #undef USES_P065   // DRF0299
-  #undef USES_P071   // Kamstrup401
+//  #undef USES_P056   // SDS011-Dust     (doesn't work yet on ESP32)
+//  #undef USES_P065   // DRF0299
+//  #undef USES_P071   // Kamstrup401
   #undef USES_P075   // Nextion
-  #undef USES_P078   // Eastron Modbus Energy meters (doesn't work yet on ESP32)
+//  #undef USES_P078   // Eastron Modbus Energy meters (doesn't work yet on ESP32)
+//  #undef USES_P082   // GPS
 
   #ifdef USE_SERVO
     #undef USE_SERVO
@@ -671,10 +675,24 @@ To create/register a plugin, you have to :
 #endif
 
 
+#ifdef ARDUINO_ESP8266_RELEASE_2_3_0
+  #ifdef USES_P081
+    #undef USES_P081   // Cron
+  #endif
+
+
+#endif
+
 
 /******************************************************************************\
  * Libraries dependencies *****************************************************
 \******************************************************************************/
+#if defined(USES_P049) || defined(USES_P052) || defined(USES_P053) || defined(USES_P056) || defined(USES_P071) || defined(USES_P075) || defined(USES_P082)
+// At least one plugin uses serial.
+#else
+  // No plugin uses serial, so make sure software serial is not included.
+  #define DISABLE_SOFTWARE_SERIAL
+#endif
 
 /*
 #if defined(USES_P00x) || defined(USES_P00y)

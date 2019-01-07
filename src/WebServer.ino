@@ -486,6 +486,75 @@ void addDisabled() {
   TXBuffer += F(" disabled");
 }
 
+#ifdef ARDUINO_ESP8266_RELEASE_2_3_0
+void WebServerInit()
+{
+  // Prepare webserver pages
+  WebServer.on("/", handle_root);
+  WebServer.on("/config", handle_config);
+  WebServer.on("/controllers", handle_controllers);
+  WebServer.on("/hardware", handle_hardware);
+  WebServer.on("/devices", handle_devices);
+#ifndef NOTIFIER_SET_NONE
+  WebServer.on("/notifications", handle_notifications);
+#endif
+  WebServer.on("/log", handle_log);
+  WebServer.on("/logjson", handle_log_JSON);
+  WebServer.on("/tools", handle_tools);
+  WebServer.on("/i2cscanner", handle_i2cscanner);
+  WebServer.on("/wifiscanner", handle_wifiscanner);
+  WebServer.on("/login", handle_login);
+  WebServer.on("/control", handle_control);
+  WebServer.on("/download", handle_download);
+  WebServer.on("/upload", HTTP_GET, handle_upload);
+  WebServer.on("/upload", HTTP_POST, handle_upload_post, handleFileUpload);
+  WebServer.onNotFound(handleNotFound);
+  WebServer.on("/filelist", handle_filelist);
+#ifdef FEATURE_SD
+  WebServer.on("/SDfilelist", handle_SDfilelist);
+#endif
+  WebServer.on("/advanced", handle_advanced);
+  WebServer.on("/setup", handle_setup);
+  WebServer.on("/json", handle_json);
+  WebServer.on("/timingstats_json", handle_timingstats_json);
+  WebServer.on("/timingstats", handle_timingstats);
+  WebServer.on("/rules", handle_rules_new);
+  WebServer.on("/rules/", Goto_Rules_Root);
+  WebServer.on("/rules/add", []()
+  {
+    handle_rules_edit(WebServer.uri(),true);
+  });
+  WebServer.on("/rules/backup", handle_rules_backup);
+  WebServer.on("/rules/delete", handle_rules_delete);
+  WebServer.on("/sysinfo", handle_sysinfo);
+  WebServer.on("/pinstates", handle_pinstates);
+  WebServer.on("/sysvars", handle_sysvars);
+  WebServer.on("/factoryreset", handle_factoryreset);
+  WebServer.on("/favicon.ico", handle_favicon);
+
+  #if defined(ESP8266)
+  {
+    uint32_t maxSketchSize;
+    bool use2step;
+    if (OTA_possible(maxSketchSize, use2step)) {
+      httpUpdater.setup(&WebServer);
+    }
+  }
+  #endif
+
+  #if defined(ESP8266)
+  if (Settings.UseSSDP)
+  {
+    WebServer.on("/ssdp.xml", HTTP_GET, []() {
+      WiFiClient client(WebServer.client());
+      SSDP_schema(client);
+    });
+    SSDP_begin();
+  }
+  #endif
+}
+
+#else
 void WebServerInit()
 {
   // Prepare webserver pages
@@ -552,6 +621,7 @@ void WebServerInit()
   }
   #endif
 }
+#endif // ARDUINO_ESP8266_RELEASE_2_3_0
 
 void setWebserverRunning(bool state) {
   if (webserver_state == state)
@@ -888,12 +958,12 @@ void handle_root() {
     TXBuffer += BUILD_GIT;
 
     addRowLabel(F("Local Time"));
-    if (Settings.UseNTP)
+    if (systemTimePresent())
     {
       TXBuffer += getDateTimeString('-', ':', ' ');
     }
     else
-      TXBuffer += F("<font color='red'>NTP disabled</font>");
+      TXBuffer += F("<font color='red'>No system time source</font>");
 
     addRowLabel(F("Uptime"));
     {
@@ -987,25 +1057,7 @@ void handle_root() {
         if (it->second.build)
           TXBuffer += String(it->second.build);
         html_TD();
-        if (it->second.nodeType)
-          switch (it->second.nodeType)
-          {
-            case NODE_TYPE_ID_ESP_EASY_STD:
-              TXBuffer += F("ESP Easy");
-              break;
-            case NODE_TYPE_ID_ESP_EASYM_STD:
-              TXBuffer += F("ESP Easy Mega");
-              break;
-            case NODE_TYPE_ID_ESP_EASY32_STD:
-              TXBuffer += F("ESP Easy 32");
-              break;
-            case NODE_TYPE_ID_ARDUINO_EASY_STD:
-              TXBuffer += F("Arduino Easy");
-              break;
-            case NODE_TYPE_ID_NANO_EASY_STD:
-              TXBuffer += F("Nano Easy");
-              break;
-          }
+        TXBuffer += getNodeTypeDisplayString(it->second.nodeType);
         html_TD();
         html_add_wide_button_prefix();
         TXBuffer += F("http://");
@@ -2576,14 +2628,15 @@ void sortDeviceArray()
 
 void addFormPinSelect(const String& label, const String& id, int choice)
 {
-  addRowLabel(label);
+  addRowLabel(label, String("tr_")+id);
   addPinSelect(false, id, choice);
 }
 
 
 void addFormPinSelectI2C(const String& label, const String& id, int choice)
 {
-  addRowLabel(label);
+
+  addRowLabel(label, String("tr_")+id);
   addPinSelect(true, id, choice);
 }
 
@@ -2618,7 +2671,7 @@ String createGPIO_label(int gpio, int pinnr, bool input, bool output, bool warni
   return result;
 }
 
-void addPinSelect(boolean forI2C, String name,  int choice)
+void addPinSelect(boolean forI2C, String id,  int choice)
 {
   #ifdef ESP32
     #define NR_ITEMS_PIN_DROPDOWN  35 // 34 GPIO + 1
@@ -2642,7 +2695,7 @@ void addPinSelect(boolean forI2C, String name,  int choice)
     }
     ++gpio;
   }
-  renderHTMLForPinSelect(gpio_labels, gpio_numbers, forI2C, name, choice, NR_ITEMS_PIN_DROPDOWN);
+  renderHTMLForPinSelect(gpio_labels, gpio_numbers, forI2C, id, choice, NR_ITEMS_PIN_DROPDOWN);
   delete[] gpio_numbers;
   delete[] gpio_labels;
   #undef NR_ITEMS_PIN_DROPDOWN
@@ -2652,8 +2705,8 @@ void addPinSelect(boolean forI2C, String name,  int choice)
 //********************************************************************************
 // Helper function actually rendering dropdown list for addPinSelect()
 //********************************************************************************
-void renderHTMLForPinSelect(String options[], int optionValues[], boolean forI2C, const String& name,  int choice, int count) {
-  addSelector_Head(name, false);
+void renderHTMLForPinSelect(String options[], int optionValues[], boolean forI2C, const String& id,  int choice, int count) {
+  addSelector_Head(id, false);
   for (byte x = 0; x < count; x++)
   {
     boolean disabled = false;
@@ -2692,10 +2745,23 @@ void addFormSelector(const String& label, const String& id, int optionCount, con
   addFormSelector(label, id, optionCount, options, indices, NULL, selectedIndex, false);
 }
 
+void addFormSelector(const String& label, const String& id, int optionCount, const String options[], const int indices[], int selectedIndex, bool reloadonchange)
+{
+  addFormSelector(label, id, optionCount, options, indices, NULL, selectedIndex, reloadonchange);
+}
+
 void addFormSelector(const String& label, const String& id, int optionCount, const String options[], const int indices[], const String attr[], int selectedIndex, boolean reloadonchange)
 {
   addRowLabel(label);
   addSelector(id, optionCount, options, indices, attr, selectedIndex, reloadonchange);
+}
+
+void addFormSelector_script(const String& label, const String& id, int optionCount, const String options[], const int indices[], const String attr[], int selectedIndex, const String& onChangeCall)
+{
+  addRowLabel(label);
+  addSelector_Head(id, onChangeCall, false);
+  addSelector_options(optionCount, options, indices, attr, selectedIndex);
+  addSelector_Foot();
 }
 
 void addSelector(const String& id, int optionCount, const String options[], const int indices[], const String attr[], int selectedIndex, boolean reloadonchange) {
@@ -2704,10 +2770,15 @@ void addSelector(const String& id, int optionCount, const String options[], cons
 
 void addSelector(const String& id, int optionCount, const String options[], const int indices[], const String attr[], int selectedIndex, boolean reloadonchange, bool enabled)
 {
-  int index;
   // FIXME TD-er Change boolean to disabled
   addSelector_Head(id, reloadonchange, !enabled);
+  addSelector_options(optionCount, options, indices, attr, selectedIndex);
+  addSelector_Foot();
+}
 
+void addSelector_options(int optionCount, const String options[], const int indices[], const String attr[], int selectedIndex)
+{
+  int index;
   for (byte x = 0; x < optionCount; x++)
   {
     if (indices)
@@ -2727,7 +2798,6 @@ void addSelector(const String& id, int optionCount, const String options[], cons
     TXBuffer += options[x];
     TXBuffer += F("</option>");
   }
-  TXBuffer += F("</select>");
 }
 
 void addSelector_Head(const String& id, boolean reloadonchange) {
@@ -2736,16 +2806,31 @@ void addSelector_Head(const String& id, boolean reloadonchange) {
 
 void addSelector_Head(const String& id, boolean reloadonchange, bool disabled)
 {
+  if (reloadonchange) {
+    addSelector_Head(id, F("return dept_onchange(frmselect)"), disabled);
+  } else {
+    addSelector_Head(id, "", disabled);
+  }
+}
+
+void addSelector_Head(const String& id, const String& onChangeCall, bool disabled)
+{
   TXBuffer += F("<select class='wide' name='");
+  TXBuffer += id;
+  TXBuffer += F("' id='");
   TXBuffer += id;
   TXBuffer += '\'';
   if (disabled) {
     addDisabled();
   }
-  if (reloadonchange)
-    TXBuffer += F(" onchange='return dept_onchange(frmselect)'");
+  if (onChangeCall.length() > 0) {
+    TXBuffer += F(" onchange='");
+    TXBuffer += onChangeCall;
+    TXBuffer += '\'';
+  }
   TXBuffer += '>';
 }
+
 
 void addSelector_Item(const String& option, int index, boolean selected, boolean disabled, const String& attr)
 {
@@ -2779,10 +2864,20 @@ void addUnit(const String& unit)
   TXBuffer += "]";
 }
 
-
 void addRowLabel(const String& label)
 {
-  html_TR_TD();
+  addRowLabel(label, "");
+}
+
+void addRowLabel(const String& label, const String& id)
+{
+  if (id.length() > 0) {
+    TXBuffer += F("<TR id='");
+    TXBuffer += id;
+    TXBuffer += F("'><TD>");
+  } else {
+    html_TR_TD();
+  }
   TXBuffer += label;
   TXBuffer += ':';
   html_TD();
@@ -3406,10 +3501,17 @@ void html_add_form() {
   TXBuffer += F("<form name='frmselect' method='post'>");
 }
 
+
 void html_add_autosubmit_form() {
   TXBuffer += F("<script><!--\n"
            "function dept_onchange(frmselect) {frmselect.submit();}"
            "\n//--></script>");
+}
+
+void html_add_script(const String& script, bool defer) {
+  html_add_script(defer);
+  addHtml(script);
+  html_add_script_end();
 }
 
 void html_add_script(bool defer) {
@@ -3668,7 +3770,7 @@ void handle_tools() {
       bool otaEnabled = OTA_possible(maxSketchSize, use2step);
       addFormSubHeader(F("Firmware"));
       html_TR_TD_height(30);
-      addWideButton(F("update"), F("Load"), "", otaEnabled);
+      addWideButton(F("update"), F("Update Firmware"), "", otaEnabled);
       addHelpButton(F("EasyOTA"));
       html_TD();
       TXBuffer += F("Load a new firmware");
@@ -4219,15 +4321,7 @@ void handle_json()
           }
 
           if (it->second.nodeType) {
-            String platform;
-            switch (it->second.nodeType)
-            {
-              case NODE_TYPE_ID_ESP_EASY_STD:     platform = F("ESP Easy");      break;
-              case NODE_TYPE_ID_ESP_EASYM_STD:    platform = F("ESP Easy Mega"); break;
-              case NODE_TYPE_ID_ESP_EASY32_STD:   platform = F("ESP Easy 32");   break;
-              case NODE_TYPE_ID_ARDUINO_EASY_STD: platform = F("Arduino Easy");  break;
-              case NODE_TYPE_ID_NANO_EASY_STD:    platform = F("Nano Easy");     break;
-            }
+            String platform = getNodeTypeDisplayString(it->second.nodeType);
             if (platform.length() > 0)
               stream_next_json_object_value(F("platform"), platform);
           }
@@ -4423,7 +4517,7 @@ long stream_timing_statistics(bool clearStats) {
             html_TR_TD();
           }
           TXBuffer += F("P_");
-          TXBuffer += pluginId + 1;
+          TXBuffer += Device[pluginId].Number;
           TXBuffer += '_';
           TXBuffer += P_name;
           html_TD();
@@ -4443,7 +4537,7 @@ long stream_timing_statistics(bool clearStats) {
             html_TR_TD();
           }
           TXBuffer += F("C_");
-          TXBuffer += pluginId + 1;
+          TXBuffer += Protocol[pluginId].Number;
           TXBuffer += '_';
           TXBuffer += C_name;
           html_TD();
@@ -4568,7 +4662,7 @@ void handle_advanced() {
     Settings.OldRulesEngine(isFormItemChecked(F("oldrulesengine")));
 
     addHtmlError(SaveSettings());
-    if (Settings.UseNTP)
+    if (systemTimePresent())
       initTime();
   }
 
@@ -4776,7 +4870,7 @@ void handle_download()
   str += F("_Build");
   str += BUILD;
   str += '_';
-  if (Settings.UseNTP)
+  if (systemTimePresent())
   {
     str += getDateTimeString('\0', '\0', '\0');
   }
@@ -5226,7 +5320,7 @@ void handle_filelist() {
   {
     html_add_button_prefix();
     TXBuffer += F("/filelist?start=");
-    TXBuffer += max(0, startIdx - pageSize);
+    TXBuffer += std::max(0, startIdx - pageSize);
     TXBuffer += F("'>Previous</a>");
   }
   if (count >= endIdx and dir.next())
@@ -5952,7 +6046,7 @@ void handle_sysinfo() {
   addRowLabel(F("Unit"));
   TXBuffer += Settings.Unit;
 
-  if (Settings.UseNTP)
+  if (systemTimePresent())
   {
      addRowLabel(F("Local Time"));
      TXBuffer += getDateTimeString('-', ':', ' ');
@@ -6174,8 +6268,10 @@ void handle_sysinfo() {
     TXBuffer += ESP.getCpuFreqMHz();
     TXBuffer += F(" MHz");
   #endif
+  #ifdef ARDUINO_BOARD
   addRowLabel(F("ESP Board Name"));
   TXBuffer += ARDUINO_BOARD;
+  #endif
 
   addTableSeparator(F("Storage"), 2, 3);
 
@@ -6226,7 +6322,7 @@ void handle_sysinfo() {
       case FM_DIO:   TXBuffer += F("DIO");  break;
       case FM_DOUT:  TXBuffer += F("DOUT"); break;
       default:
-          TXBuffer += F("Unknown"); break;
+          TXBuffer += getUnknownString(); break;
     }
   #endif
 

@@ -177,7 +177,7 @@ bool Modbus::handle() {
       }
 
       LogString += "value: "; LogString += result;
-      //if ((Settings.UseNTP) && (hour() == 0)) errcnt = 0;
+      //if ((systemTimePresent()) && (hour() == 0)) errcnt = 0;
 
       TXRXstate = MODBUS_IDLE;
 

@@ -1,4 +1,6 @@
-#define WEBSERVER_RULES_DEBUG 1
+#ifndef WEBSERVER_RULES_DEBUG
+  #define WEBSERVER_RULES_DEBUG 1
+#endif
 
 //********************************************************************************
 // Web Interface rules page
@@ -122,15 +124,11 @@ void handle_rules_new() {
 
   if (startIdx > 0)
   {
-    #ifdef ESP32
-    #define max(a,b) a > b ? a : b
-    #endif
+    int showIdx = startIdx - rulesListPageSize;
+    if (showIdx < 0) showIdx = 0;
     addButton(TXBuffer
-      , String(F("/rules?start=")) + String(max(0, startIdx - rulesListPageSize))
+      , String(F("/rules?start=")) + String(showIdx)
       , F("Previous"));
-    #ifdef ESP32
-      #undef max
-    #endif
   }
   if (hasMore && count >= endIdx)
   {

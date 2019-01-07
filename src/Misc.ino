@@ -1,3 +1,223 @@
+/*********************************************************************************************\
+   ESPEasy specific strings
+\*********************************************************************************************/
+
+String getUnknownString() { return F("Unknown"); }
+
+String getNodeTypeDisplayString(byte nodeType) {
+  switch (nodeType)
+  {
+    case NODE_TYPE_ID_ESP_EASY_STD:     return F("ESP Easy");
+    case NODE_TYPE_ID_ESP_EASYM_STD:    return F("ESP Easy Mega");
+    case NODE_TYPE_ID_ESP_EASY32_STD:   return F("ESP Easy 32");
+    case NODE_TYPE_ID_RPI_EASY_STD:     return F("RPI Easy");
+    case NODE_TYPE_ID_ARDUINO_EASY_STD: return F("Arduino Easy");
+    case NODE_TYPE_ID_NANO_EASY_STD:    return F("Nano Easy");
+  }
+  return "";
+}
+
+String getSettingsTypeString(SettingsType settingsType) {
+  switch (settingsType) {
+    case BasicSettings_Type:            return F("Settings");
+    case TaskSettings_Type:             return F("TaskSettings");
+    case CustomTaskSettings_Type:       return F("CustomTaskSettings");
+    case ControllerSettings_Type:       return F("ControllerSettings");
+    case CustomControllerSettings_Type: return F("CustomControllerSettings");
+    case NotificationSettings_Type:     return F("NotificationSettings");
+    default:
+      break;
+  }
+  return "";
+}
+
+String getMQTT_state() {
+  switch (MQTTclient.state()) {
+    case MQTT_CONNECTION_TIMEOUT     : return F("Connection timeout");
+    case MQTT_CONNECTION_LOST        : return F("Connection lost");
+    case MQTT_CONNECT_FAILED         : return F("Connect failed");
+    case MQTT_DISCONNECTED           : return F("Disconnected");
+    case MQTT_CONNECTED              : return F("Connected");
+    case MQTT_CONNECT_BAD_PROTOCOL   : return F("Connect bad protocol");
+    case MQTT_CONNECT_BAD_CLIENT_ID  : return F("Connect bad client_id");
+    case MQTT_CONNECT_UNAVAILABLE    : return F("Connect unavailable");
+    case MQTT_CONNECT_BAD_CREDENTIALS: return F("Connect bad credentials");
+    case MQTT_CONNECT_UNAUTHORIZED   : return F("Connect unauthorized");
+    default: break;
+  }
+  return "";
+}
+
+/********************************************************************************************\
+  Get system information
+  \*********************************************************************************************/
+String getLastBootCauseString() {
+  switch (lastBootCause)
+  {
+    case BOOT_CAUSE_MANUAL_REBOOT: return F("Manual reboot");
+    case BOOT_CAUSE_DEEP_SLEEP: //nobody should ever see this, since it should sleep again right away.
+       return F("Deep sleep");
+    case BOOT_CAUSE_COLD_BOOT:
+       return F("Cold boot");
+    case BOOT_CAUSE_EXT_WD:
+       return F("External Watchdog");
+  }
+  return getUnknownString();
+}
+
+#ifdef ESP32
+// See https://github.com/espressif/esp-idf/blob/master/components/esp32/include/rom/rtc.h
+String getResetReasonString(byte icore) {
+  bool isDEEPSLEEP_RESET(false);
+  switch (rtc_get_reset_reason( (RESET_REASON) icore)) {
+    case NO_MEAN                : return F("NO_MEAN");
+    case POWERON_RESET          : return F("Vbat power on reset");
+    case SW_RESET               : return F("Software reset digital core");
+    case OWDT_RESET             : return F("Legacy watch dog reset digital core");
+    case DEEPSLEEP_RESET        : isDEEPSLEEP_RESET = true; break;
+    case SDIO_RESET             : return F("Reset by SLC module, reset digital core");
+    case TG0WDT_SYS_RESET       : return F("Timer Group0 Watch dog reset digital core");
+    case TG1WDT_SYS_RESET       : return F("Timer Group1 Watch dog reset digital core");
+    case RTCWDT_SYS_RESET       : return F("RTC Watch dog Reset digital core");
+    case INTRUSION_RESET        : return F("Instrusion tested to reset CPU");
+    case TGWDT_CPU_RESET        : return F("Time Group reset CPU");
+    case SW_CPU_RESET           : return F("Software reset CPU");
+    case RTCWDT_CPU_RESET       : return F("RTC Watch dog Reset CPU");
+    case EXT_CPU_RESET          : return F("for APP CPU, reseted by PRO CPU");
+    case RTCWDT_BROWN_OUT_RESET : return F("Reset when the vdd voltage is not stable");
+    case RTCWDT_RTC_RESET       : return F("RTC Watch dog reset digital core and rtc module");
+    default: break;
+  }
+  if (isDEEPSLEEP_RESET) {
+    String reason = F("Deep Sleep, Wakeup reason (");
+    reason += rtc_get_wakeup_cause();
+    reason += ')';
+    return reason;
+  }
+  return getUnknownString();
+}
+#endif
+
+String getResetReasonString() {
+  #ifdef ESP32
+  String reason = F("CPU0: ");
+  reason += getResetReasonString(0);
+  reason += F(" CPU1: ");
+  reason += getResetReasonString(1);
+  return reason;
+  #else
+  return ESP.getResetReason();
+  #endif
+}
+
+uint32_t getFlashRealSizeInBytes() {
+  #if defined(ESP32)
+    return ESP.getFlashChipSize();
+  #else
+    return ESP.getFlashChipRealSize(); //ESP.getFlashChipSize();
+  #endif
+}
+
+String getSystemBuildString() {
+  String result;
+  result += BUILD;
+  result += ' ';
+  result += F(BUILD_NOTES);
+  return result;
+}
+
+String getPluginDescriptionString() {
+  String result;
+  #ifdef PLUGIN_BUILD_NORMAL
+    result += F(" [Normal]");
+  #endif
+  #ifdef PLUGIN_BUILD_TESTING
+    result += F(" [Testing]");
+  #endif
+  #ifdef PLUGIN_BUILD_DEV
+    result += F(" [Development]");
+  #endif
+  #ifdef PLUGIN_DESCR
+  result += " [";
+  result += F(PLUGIN_DESCR);
+  result += ']';
+  #endif
+  return result;
+}
+
+String getSystemLibraryString() {
+  String result;
+  #if defined(ESP32)
+    result += F("ESP32 SDK ");
+    result += ESP.getSdkVersion();
+  #else
+    result += F("ESP82xx Core ");
+    result += ESP.getCoreVersion();
+    result += F(", NONOS SDK ");
+    result += system_get_sdk_version();
+    result += F(", LWIP: ");
+    result += getLWIPversion();
+  #endif
+  if (puyaSupport()) {
+    result += F(" PUYA support");
+  }
+  return result;
+}
+
+#ifndef ESP32
+String getLWIPversion() {
+  String result;
+  result += LWIP_VERSION_MAJOR;
+  result += '.';
+  result += LWIP_VERSION_MINOR;
+  result += '.';
+  result += LWIP_VERSION_REVISION;
+  if (LWIP_VERSION_IS_RC) {
+    result += F("-RC");
+    result += LWIP_VERSION_RC;
+  } else if (LWIP_VERSION_IS_DEVELOPMENT) {
+    result += F("-dev");
+  }
+  return result;
+}
+#endif
+
+bool puyaSupport() {
+  bool supported = false;
+#ifdef PUYA_SUPPORT
+  // New support starting core 2.5.0
+  if (PUYA_SUPPORT) supported = true;
+#endif
+#ifdef PUYASUPPORT
+  // Old patch
+  supported = true;
+#endif
+  return supported;
+}
+
+uint8_t getFlashChipVendorId() {
+#ifdef PUYA_SUPPORT
+  return ESP.getFlashChipVendorId();
+#else
+  #if defined(ESP8266)
+    uint32_t flashChipId = ESP.getFlashChipId();
+    return (flashChipId & 0x000000ff);
+  #else
+    return 0xFF; // Not an existing function for ESP32
+  #endif
+#endif
+}
+
+bool flashChipVendorPuya() {
+  uint8_t vendorId = getFlashChipVendorId();
+  return vendorId == 0x85;  // 0x146085 PUYA
+}
+
+
+/*********************************************************************************************\
+ Memory management
+\*********************************************************************************************/
+
 // clean up tcp connections that are in TIME_WAIT status, to conserve memory
 // In future versions of WiFiClient it should be possible to call abort(), but
 // this feature is not in all upstream versions yet.
@@ -229,6 +449,27 @@ int8_t getTaskIndexByName(const String& TaskNameSearch)
 /*********************************************************************************************\
    Device GPIO name functions to share flash strings
   \*********************************************************************************************/
+String formatGpioDirection(gpio_direction direction) {
+  switch (direction) {
+    case gpio_input:         return F("&larr; ");
+    case gpio_output:        return F("&rarr; ");
+    case gpio_bidirectional: return F("&#8644; ");
+  }
+  return "";
+}
+
+String formatGpioLabel(int gpio, bool includeWarning) {
+  int pinnr = -1;
+  bool input, output, warning;
+  if (getGpioInfo(gpio, pinnr, input, output, warning)) {
+    if (!includeWarning) {
+      return createGPIO_label(gpio, pinnr, true, true, false);
+    }
+    return createGPIO_label(gpio, pinnr, input, output, warning);
+  }
+  return "-";
+}
+
 String formatGpioName(const String& label, gpio_direction direction, bool optional) {
   int reserveLength = 5 /* "GPIO " */ + 8 /* "&#8644; " */ + label.length();
   if (optional) {
@@ -237,11 +478,7 @@ String formatGpioName(const String& label, gpio_direction direction, bool option
   String result;
   result.reserve(reserveLength);
   result += F("GPIO ");
-  switch (direction) {
-    case gpio_input:         result += F("&larr; "); break;
-    case gpio_output:        result += F("&rarr; "); break;
-    case gpio_bidirectional: result += F("&#8644; "); break;
-  }
+  result += formatGpioDirection(direction);
   result += label;
   if (optional)
     result += F("(optional)");
@@ -373,12 +610,12 @@ void setBitToUL(uint32_t& number, byte bitnr, bool value) {
 /*********************************************************************************************\
    report pin mode & state (info table) using json
   \*********************************************************************************************/
-String getPinStateJSON(boolean search, uint32_t key, const String& log, uint16_t noSearchValue)
+String getPinStateJSON(boolean search, uint32_t key, const String& log, int16_t noSearchValue)
 {
   checkRAM(F("getPinStateJSON"));
   printToWebJSON = true;
   byte mode = PIN_MODE_INPUT;
-  uint16_t value = noSearchValue;
+  int16_t value = noSearchValue;
   boolean found = false;
 
   if (search && existPortStatus(key))
@@ -724,11 +961,11 @@ bool GetArgvBeginEnd(const char *string, const unsigned int argc, int& pos_begin
   \*********************************************************************************************/
 #if defined(ARDUINO_ESP8266_RELEASE_2_3_0)
 void dump (uint32_t addr) { //Seems already included in core 2.4 ...
-  serialPrint (addr, HEX);
+  serialPrint (String(addr, HEX));
   serialPrint(": ");
   for (uint32_t a = addr; a < addr + 16; a++)
   {
-    serialPrint ( pgm_read_byte(a), HEX);
+    serialPrint ( String(pgm_read_byte(a), HEX));
     serialPrint (" ");
   }
   serialPrintln("");
@@ -1012,170 +1249,6 @@ unsigned long FreeMem(void)
   #endif
 }
 
-/********************************************************************************************\
-  Get system information
-  \*********************************************************************************************/
-String getLastBootCauseString() {
-  switch (lastBootCause)
-  {
-    case BOOT_CAUSE_MANUAL_REBOOT: return F("Manual reboot");
-    case BOOT_CAUSE_DEEP_SLEEP: //nobody should ever see this, since it should sleep again right away.
-       return F("Deep sleep");
-    case BOOT_CAUSE_COLD_BOOT:
-       return F("Cold boot");
-    case BOOT_CAUSE_EXT_WD:
-       return F("External Watchdog");
-  }
-  return F("Unknown");
-}
-
-#ifdef ESP32
-// See https://github.com/espressif/esp-idf/blob/master/components/esp32/include/rom/rtc.h
-String getResetReasonString(byte icore) {
-  bool isDEEPSLEEP_RESET(false);
-  switch (rtc_get_reset_reason( (RESET_REASON) icore)) {
-    case NO_MEAN                : return F("NO_MEAN");
-    case POWERON_RESET          : return F("Vbat power on reset");
-    case SW_RESET               : return F("Software reset digital core");
-    case OWDT_RESET             : return F("Legacy watch dog reset digital core");
-    case DEEPSLEEP_RESET        : isDEEPSLEEP_RESET = true; break;
-    case SDIO_RESET             : return F("Reset by SLC module, reset digital core");
-    case TG0WDT_SYS_RESET       : return F("Timer Group0 Watch dog reset digital core");
-    case TG1WDT_SYS_RESET       : return F("Timer Group1 Watch dog reset digital core");
-    case RTCWDT_SYS_RESET       : return F("RTC Watch dog Reset digital core");
-    case INTRUSION_RESET        : return F("Instrusion tested to reset CPU");
-    case TGWDT_CPU_RESET        : return F("Time Group reset CPU");
-    case SW_CPU_RESET           : return F("Software reset CPU");
-    case RTCWDT_CPU_RESET       : return F("RTC Watch dog Reset CPU");
-    case EXT_CPU_RESET          : return F("for APP CPU, reseted by PRO CPU");
-    case RTCWDT_BROWN_OUT_RESET : return F("Reset when the vdd voltage is not stable");
-    case RTCWDT_RTC_RESET       : return F("RTC Watch dog reset digital core and rtc module");
-    default: break;
-  }
-  if (isDEEPSLEEP_RESET) {
-    String reason = F("Deep Sleep, Wakeup reason (");
-    reason += rtc_get_wakeup_cause();
-    reason += ')';
-    return reason;
-  }
-  return F("Unknown");
-}
-#endif
-
-String getResetReasonString() {
-  #ifdef ESP32
-  String reason = F("CPU0: ");
-  reason += getResetReasonString(0);
-  reason += F(" CPU1: ");
-  reason += getResetReasonString(1);
-  return reason;
-  #else
-  return ESP.getResetReason();
-  #endif
-}
-
-uint32_t getFlashRealSizeInBytes() {
-  #if defined(ESP32)
-    return ESP.getFlashChipSize();
-  #else
-    return ESP.getFlashChipRealSize(); //ESP.getFlashChipSize();
-  #endif
-}
-
-String getSystemBuildString() {
-  String result;
-  result += BUILD;
-  result += ' ';
-  result += F(BUILD_NOTES);
-  return result;
-}
-
-String getPluginDescriptionString() {
-  String result;
-  #ifdef PLUGIN_BUILD_NORMAL
-    result += F(" [Normal]");
-  #endif
-  #ifdef PLUGIN_BUILD_TESTING
-    result += F(" [Testing]");
-  #endif
-  #ifdef PLUGIN_BUILD_DEV
-    result += F(" [Development]");
-  #endif
-  #ifdef PLUGIN_DESCR
-  result += " [";
-  result += F(PLUGIN_DESCR);
-  result += ']';
-  #endif
-  return result;
-}
-
-String getSystemLibraryString() {
-  String result;
-  #if defined(ESP32)
-    result += F("ESP32 SDK ");
-    result += ESP.getSdkVersion();
-  #else
-    result += F("ESP82xx Core ");
-    result += ESP.getCoreVersion();
-    result += F(", NONOS SDK ");
-    result += system_get_sdk_version();
-    result += F(", LWIP: ");
-    result += getLWIPversion();
-  #endif
-  if (puyaSupport()) {
-    result += F(" PUYA support");
-  }
-  return result;
-}
-
-#ifndef ESP32
-String getLWIPversion() {
-  String result;
-  result += LWIP_VERSION_MAJOR;
-  result += '.';
-  result += LWIP_VERSION_MINOR;
-  result += '.';
-  result += LWIP_VERSION_REVISION;
-  if (LWIP_VERSION_IS_RC) {
-    result += F("-RC");
-    result += LWIP_VERSION_RC;
-  } else if (LWIP_VERSION_IS_DEVELOPMENT) {
-    result += F("-dev");
-  }
-  return result;
-}
-#endif
-
-bool puyaSupport() {
-  bool supported = false;
-#ifdef PUYA_SUPPORT
-  // New support starting core 2.5.0
-  if (PUYA_SUPPORT) supported = true;
-#endif
-#ifdef PUYASUPPORT
-  // Old patch
-  supported = true;
-#endif
-  return supported;
-}
-
-uint8_t getFlashChipVendorId() {
-#ifdef PUYA_SUPPORT
-  return ESP.getFlashChipVendorId();
-#else
-  #if defined(ESP8266)
-    uint32_t flashChipId = ESP.getFlashChipId();
-    return (flashChipId & 0x000000ff);
-  #else
-    return 0xFF; // Not an existing function for ESP32
-  #endif
-#endif
-}
-
-bool flashChipVendorPuya() {
-  uint8_t vendorId = getFlashChipVendorId();
-  return vendorId == 0x85;  // 0x146085 PUYA
-}
 
 
 

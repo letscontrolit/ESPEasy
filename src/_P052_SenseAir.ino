@@ -25,8 +25,8 @@
 
 boolean Plugin_052_init = false;
 
-#include <ESPeasySoftwareSerial.h>
-ESPeasySoftwareSerial *Plugin_052_SoftSerial;
+#include <ESPeasySerial.h>
+ESPeasySerial *P052_easySerial;
 
 boolean Plugin_052(byte function, struct EventStruct *event, String& string)
 {
@@ -65,8 +65,7 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_GET_DEVICEGPIONAMES:
       {
-        event->String1 = formatGpioName_RX(false);
-        event->String2 = formatGpioName_TX(false);
+        serialHelper_getGpioNames(event);
         break;
       }
 
@@ -105,6 +104,7 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
+          serialHelper_webformLoad(event);
           byte choiceSensor = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
 
           String optionsSensor[7] = { F("Error Status"), F("Carbon Dioxide"), F("Temperature"), F("Humidity"), F("Relay Status"), F("Temperature Adjustment"), F("ABC period") };
@@ -124,6 +124,7 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
+        serialHelper_webformSave(event);
         Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("p052_sensor"));
         /*
         // ABC functionality disabled for now, due to a bug in the firmware.
@@ -138,7 +139,7 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string)
     case PLUGIN_INIT:
       {
         Plugin_052_init = true;
-        Plugin_052_SoftSerial = new ESPeasySoftwareSerial(Settings.TaskDevicePin1[event->TaskIndex],
+        P052_easySerial = new ESPeasySerial(Settings.TaskDevicePin1[event->TaskIndex],
                                                    Settings.TaskDevicePin2[event->TaskIndex]);
 
         /*
@@ -265,13 +266,13 @@ int Plugin_052_sendCommand(byte command[])
   byte data_buf[2] = {0xff};
   long value       = -1;
 
-  Plugin_052_SoftSerial->write(command, 8); //Send the byte array
+  P052_easySerial->write(command, 8); //Send the byte array
   delay(50);
 
   // Read answer from sensor
   int ByteCounter = 0;
-  while(Plugin_052_SoftSerial->available()) {
-    recv_buf[ByteCounter] = Plugin_052_SoftSerial->read();
+  while(P052_easySerial->available()) {
+    recv_buf[ByteCounter] = P052_easySerial->read();
     ByteCounter++;
   }
 

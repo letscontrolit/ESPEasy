@@ -137,22 +137,45 @@ void checkResetFactoryPin(){
 /********************************************************************************************\
   Hardware specific configurations
   \*********************************************************************************************/
-String getDeviceModelString(DeviceModel model) {
+
+String getDeviceModelBrandString(DeviceModel model) {
   switch (model) {
-    case DeviceModel_Sonoff_Basic:   return F("Sonoff Basic");
-    case DeviceModel_Sonoff_TH1x:    return F("Sonoff TH1x");
-    case DeviceModel_Sonoff_S2x:     return F("Sonoff S2x");
-    case DeviceModel_Sonoff_TouchT1: return F("Sonoff TouchT1");
-    case DeviceModel_Sonoff_TouchT2: return F("Sonoff TouchT2");
-    case DeviceModel_Sonoff_TouchT3: return F("Sonoff TouchT3");
-    case DeviceModel_Sonoff_4ch:     return F("Sonoff 4ch");
-    case DeviceModel_Sonoff_POW:     return F("Sonoff POW");
-    case DeviceModel_Sonoff_POWr2:   return F("Sonoff POW-r2");
-    case DeviceModel_Shelly1:        return F("Shelly1");
+    case DeviceModel_Sonoff_Basic:
+    case DeviceModel_Sonoff_TH1x:
+    case DeviceModel_Sonoff_S2x:
+    case DeviceModel_Sonoff_TouchT1:
+    case DeviceModel_Sonoff_TouchT2:
+    case DeviceModel_Sonoff_TouchT3:
+    case DeviceModel_Sonoff_4ch:
+    case DeviceModel_Sonoff_POW:
+    case DeviceModel_Sonoff_POWr2:   return F("Sonoff");
+    case DeviceModel_Shelly1:        return F("Shelly");
 
     //case DeviceModel_default:
-    default:        return F("default");
+    default:        return "";
   }
+}
+
+String getDeviceModelString(DeviceModel model) {
+  String result;
+  result.reserve(16);
+  result = getDeviceModelBrandString(model);
+  switch (model) {
+    case DeviceModel_Sonoff_Basic:   result += F(" Basic");   break;
+    case DeviceModel_Sonoff_TH1x:    result += F(" TH1x");    break;
+    case DeviceModel_Sonoff_S2x:     result += F(" S2x");     break;
+    case DeviceModel_Sonoff_TouchT1: result += F(" TouchT1"); break;
+    case DeviceModel_Sonoff_TouchT2: result += F(" TouchT2"); break;
+    case DeviceModel_Sonoff_TouchT3: result += F(" TouchT3"); break;
+    case DeviceModel_Sonoff_4ch:     result += F(" 4ch");     break;
+    case DeviceModel_Sonoff_POW:     result += F(" POW");     break;
+    case DeviceModel_Sonoff_POWr2:   result += F(" POW-r2");  break;
+    case DeviceModel_Shelly1:        result += '1';           break;
+
+    //case DeviceModel_default:
+    default:    result += F("default");
+  }
+  return result;
 }
 
 bool modelMatchingFlashSize(DeviceModel model) {
