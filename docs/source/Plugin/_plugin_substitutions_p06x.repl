@@ -8,6 +8,7 @@
 .. |P060_shortinfo| replace:: `.`
 .. |P060_maintainer| replace:: `.`
 .. |P060_compileinfo| replace:: `.`
+.. |P060_usedlibraries| replace:: `.`
 
 .. |P061_name| replace:: :cyan:`PCF8574/MCP23017`
 .. |P061_type| replace:: :cyan:`Keypad`
@@ -19,6 +20,7 @@
 .. |P061_shortinfo| replace:: `.`
 .. |P061_maintainer| replace:: `.`
 .. |P061_compileinfo| replace:: `.`
+.. |P061_usedlibraries| replace:: `.`
 
 .. |P062_name| replace:: :cyan:`MPR121 Touch`
 .. |P062_type| replace:: :cyan:`Keypad`
@@ -30,6 +32,7 @@
 .. |P062_shortinfo| replace:: `.`
 .. |P062_maintainer| replace:: `.`
 .. |P062_compileinfo| replace:: `.`
+.. |P062_usedlibraries| replace:: `.`
 
 .. |P063_name| replace:: :cyan:`TTP229 Touch`
 .. |P063_type| replace:: :cyan:`Keypad`
@@ -41,6 +44,7 @@
 .. |P063_shortinfo| replace:: `.`
 .. |P063_maintainer| replace:: `.`
 .. |P063_compileinfo| replace:: `.`
+.. |P063_usedlibraries| replace:: `.`
 
 .. |P064_name| replace:: :cyan:`APDS9960`
 .. |P064_type| replace:: :cyan:`Gesture`
@@ -52,6 +56,7 @@
 .. |P064_shortinfo| replace:: `.`
 .. |P064_maintainer| replace:: `.`
 .. |P064_compileinfo| replace:: `.`
+.. |P064_usedlibraries| replace:: `.`
 
 .. |P065_name| replace:: :cyan:`DFPlayer-Mini MP3`
 .. |P065_type| replace:: :cyan:`Notify`
@@ -63,6 +68,7 @@
 .. |P065_shortinfo| replace:: `.`
 .. |P065_maintainer| replace:: `.`
 .. |P065_compileinfo| replace:: `.`
+.. |P065_usedlibraries| replace:: `.`
 
 .. |P066_name| replace:: :cyan:`VEML6040`
 .. |P066_type| replace:: :cyan:`Color`
@@ -74,6 +80,7 @@
 .. |P066_shortinfo| replace:: `.`
 .. |P066_maintainer| replace:: `.`
 .. |P066_compileinfo| replace:: `.`
+.. |P066_usedlibraries| replace:: `.`
 
 .. |P067_name| replace:: :cyan:`HX711 Load Cell`
 .. |P067_type| replace:: :cyan:`Weight`
@@ -85,6 +92,7 @@
 .. |P067_shortinfo| replace:: `.`
 .. |P067_maintainer| replace:: `.`
 .. |P067_compileinfo| replace:: `.`
+.. |P067_usedlibraries| replace:: `.`
 
 .. |P068_name| replace:: :cyan:`SHT30/31/35`
 .. |P068_type| replace:: :cyan:`Environment`
@@ -96,6 +104,7 @@
 .. |P068_shortinfo| replace:: `.`
 .. |P068_maintainer| replace:: `.`
 .. |P068_compileinfo| replace:: `.`
+.. |P068_usedlibraries| replace:: `.`
 
 .. |P069_name| replace:: :cyan:`LM75A`
 .. |P069_type| replace:: :cyan:`Environment`
@@ -107,3 +116,4 @@
 .. |P069_shortinfo| replace:: `.`
 .. |P069_maintainer| replace:: `.`
 .. |P069_compileinfo| replace:: `.`
+.. |P069_usedlibraries| replace:: `.`

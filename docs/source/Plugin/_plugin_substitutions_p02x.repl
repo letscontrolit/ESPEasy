@@ -8,6 +8,7 @@
 .. |P020_shortinfo| replace:: `.`
 .. |P020_maintainer| replace:: `.`
 .. |P020_compileinfo| replace:: `.`
+.. |P020_usedlibraries| replace:: `.`
 
 .. |P021_name| replace:: :cyan:`Level Control`
 .. |P021_type| replace:: :cyan:`Regulator`
@@ -19,6 +20,7 @@
 .. |P021_shortinfo| replace:: `.`
 .. |P021_maintainer| replace:: `.`
 .. |P021_compileinfo| replace:: `.`
+.. |P021_usedlibraries| replace:: `.`
 
 .. |P022_name| replace:: :cyan:`PCA9685`
 .. |P022_type| replace:: :cyan:`Extra IO`
@@ -30,6 +32,7 @@
 .. |P022_shortinfo| replace:: `.`
 .. |P022_maintainer| replace:: `.`
 .. |P022_compileinfo| replace:: `.`
+.. |P022_usedlibraries| replace:: `.`
 
 .. |P023_name| replace:: :cyan:`OLED SSD1306`
 .. |P023_type| replace:: :cyan:`Display`
@@ -41,6 +44,7 @@
 .. |P023_shortinfo| replace:: `.`
 .. |P023_maintainer| replace:: `.`
 .. |P023_compileinfo| replace:: `.`
+.. |P023_usedlibraries| replace:: `.`
 
 .. |P024_name| replace:: :cyan:`MLX90614`
 .. |P024_type| replace:: :cyan:`Environment`
@@ -52,6 +56,7 @@
 .. |P024_shortinfo| replace:: Non-contact temperature sensor.
 .. |P024_maintainer| replace:: `.`
 .. |P024_compileinfo| replace:: `.`
+.. |P024_usedlibraries| replace:: `.`
 
 .. |P025_name| replace:: :cyan:`ADS1115`
 .. |P025_type| replace:: :cyan:`Analog input`
@@ -63,6 +68,7 @@
 .. |P025_shortinfo| replace:: `.`
 .. |P025_maintainer| replace:: `.`
 .. |P025_compileinfo| replace:: `.`
+.. |P025_usedlibraries| replace:: `.`
 
 .. |P026_name| replace:: :cyan:`System Info`
 .. |P026_type| replace:: :cyan:`Generic`
@@ -74,6 +80,7 @@
 .. |P026_shortinfo| replace:: `.`
 .. |P026_maintainer| replace:: `.`
 .. |P026_compileinfo| replace:: `.`
+.. |P026_usedlibraries| replace:: `.`
 
 .. |P027_name| replace:: :cyan:`INA219`
 .. |P027_type| replace:: :cyan:`Energy (DC)`
@@ -85,6 +92,7 @@
 .. |P027_shortinfo| replace:: `.`
 .. |P027_maintainer| replace:: `.`
 .. |P027_compileinfo| replace:: `.`
+.. |P027_usedlibraries| replace:: `.`
 
 .. |P028_name| replace:: :cyan:`BMx280`
 .. |P028_type| replace:: :cyan:`Environment`
@@ -96,6 +104,7 @@
 .. |P028_shortinfo| replace:: Temperature and pressure for the BM**E**280 and BM**P**280 sensors.
 .. |P028_maintainer| replace:: `.`
 .. |P028_compileinfo| replace:: `.`
+.. |P028_usedlibraries| replace:: `.`
 
 .. |P029_name| replace:: :cyan:`Domoticz MQTT Helper`
 .. |P029_type| replace:: :cyan:`Output`
@@ -107,3 +116,4 @@
 .. |P029_shortinfo| replace:: `.`
 .. |P029_maintainer| replace:: `.`
 .. |P029_compileinfo| replace:: `.`
+.. |P029_usedlibraries| replace:: `.`

@@ -8,6 +8,7 @@
 .. |P080_shortinfo| replace:: `.`
 .. |P080_maintainer| replace:: `.`
 .. |P080_compileinfo| replace:: `.`
+.. |P080_usedlibraries| replace:: `.`
 
 .. |P081_name| replace:: :cyan:`CRON`
 .. |P081_type| replace:: :cyan:`Generic`
@@ -19,6 +20,7 @@
 .. |P081_shortinfo| replace:: `.`
 .. |P081_maintainer| replace:: `.`
 .. |P081_compileinfo| replace:: `.`
+.. |P081_usedlibraries| replace:: `.`
 
 .. |P082_name| replace:: :cyan:`GPS`
 .. |P082_type| replace:: :cyan:`Position`
@@ -30,5 +32,7 @@
 .. |P082_shortinfo| replace:: `Determine position and sync system time using a GPS receiver communicating via serial`
 .. |P082_maintainer| replace:: `TD-er`
 .. |P082_compileinfo| replace:: `.`
-.. |P082_library| replace:: mikalhart/TinyGPSPlus  v1.0.2 (plus own patches)
-.. _P082_library: https://github.com/mikalhart/TinyGPSPlus/tree/v1.0.2
+.. |P082_shortinfo| replace:: `.`
+.. |P082_maintainer| replace:: `.`
+.. |P082_compileinfo| replace:: `.`
+.. |P082_usedlibraries| replace:: `mikalhart/TinyGPSPlus  v1.0.2 (plus own patches) <https://github.com/mikalhart/TinyGPSPlus/tree/v1.0.2>`_
