@@ -174,16 +174,14 @@ void deepSleepStart(int dsdelay)
   delay(100); // give the node time to send above log message before going to sleep
   #if defined(ESP8266)
     #if defined(CORE_2_5_0)
-      if ((uint64_t)dsdelay > (ESP.deepSleepMax()/1000000ULL) || dsdelay < 0) {
-        if ((ESP.deepSleepMax()/1000000ULL) > (uint64_t)INT_MAX)
-          dsdelay = INT_MAX;
-        else
-          dsdelay = (int)(ESP.deepSleepMax()/1000000ULL);
+      uint64_t deepSleep_usec = dsdelay * 1000000ULL;
+      if ((deepSleep_usec > ESP.deepSleepMax()) || dsdelay < 0) {
+        deepSleep_usec = ESP.deepSleepMax();
       }
-        ESP.deepSleepInstant((uint32_t)dsdelay * 1000000, WAKE_RF_DEFAULT);
+      ESP.deepSleepInstant(deepSleep_usec, WAKE_RF_DEFAULT);
     #else
       if (dsdelay > 4294 || dsdelay < 0)
-        dsdelay = 4294;   //max sleep time ~1.2h
+        dsdelay = 4294;   //max sleep time ~71 minutes
       ESP.deepSleep((uint32_t)dsdelay * 1000000, WAKE_RF_DEFAULT);
     #endif
   #endif
