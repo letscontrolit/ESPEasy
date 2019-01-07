@@ -224,7 +224,7 @@ Position
 
 Plugins: |Plugin_Position|
 
-Hardware: |P013_usedby|
+Hardware: |P013_usedby|, |P082_usedby|
 
 Regulator
 ---------

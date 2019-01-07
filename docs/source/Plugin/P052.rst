@@ -30,6 +30,11 @@ Commands available
 
 .. include:: P052_commands.repl
 
+.. Events
+.. ~~~~~~
+
+.. .. include:: P052_events.repl
+
 Change log
 ----------
 
@@ -44,3 +49,4 @@ Change log
 
   |added|
   Initial release version.
+

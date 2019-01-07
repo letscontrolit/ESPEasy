@@ -81,7 +81,7 @@
 .. |P076_shortinfo| replace:: Power measuring sensor used to measure (AC) voltage, current, power and power factor.
 .. |P076_maintainer| replace:: TD-er
 .. |P076_compileinfo| replace:: `.`
-.. |P076_usedlibraries| replace:: `xoseperez/hlw8012  v1.1.1 <https://github.com/xoseperez/hlw8012/tree/1.1.1>`_
+.. |P076_usedlibraries| replace:: https://github.com/xoseperez/hlw8012/tree/1.1.1
 
 .. |P077_name| replace:: :cyan:`CSE7766`
 .. |P077_type| replace:: :cyan:`Energy (AC)`

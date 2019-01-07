@@ -35,4 +35,4 @@
 .. |P082_shortinfo| replace:: `.`
 .. |P082_maintainer| replace:: `.`
 .. |P082_compileinfo| replace:: `.`
-.. |P082_usedlibraries| replace:: `mikalhart/TinyGPSPlus  v1.0.2 (plus own patches) <https://github.com/mikalhart/TinyGPSPlus/tree/v1.0.2>`_
+.. |P082_usedlibraries| replace:: https://github.com/mikalhart/TinyGPSPlus/tree/v1.0.2
