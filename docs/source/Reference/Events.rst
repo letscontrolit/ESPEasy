@@ -500,7 +500,7 @@ Besides the internal events there's also plugin specific events. These are liste
 .. .. include:: ../Plugin/P081_events.repl
 
 
-P081 :ref:`P082_page`
+P082 :ref:`P082_page`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. include:: ../Plugin/P082_events.repl
