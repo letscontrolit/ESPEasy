@@ -32,7 +32,4 @@
 .. |P082_shortinfo| replace:: `Determine position and sync system time using a GPS receiver communicating via serial`
 .. |P082_maintainer| replace:: `TD-er`
 .. |P082_compileinfo| replace:: `.`
-.. |P082_shortinfo| replace:: `.`
-.. |P082_maintainer| replace:: `.`
-.. |P082_compileinfo| replace:: `.`
 .. |P082_usedlibraries| replace:: https://github.com/mikalhart/TinyGPSPlus/tree/v1.0.2
