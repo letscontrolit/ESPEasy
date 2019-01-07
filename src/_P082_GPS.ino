@@ -124,7 +124,13 @@ struct P082_data_struct {
   double last_lng = 0.0;
 
   unsigned long pps_time = 0;
-} P082_data;
+};
+
+// Must use volatile declared variable (which will end up in iRAM)
+volatile unsigned long P082_pps_time = 0;
+void Plugin_082_interrupt() ICACHE_RAM_ATTR;
+
+P082_data_struct* P082_data = nullptr;
 
 boolean Plugin_082(byte function, struct EventStruct *event, String &string) {
   boolean success = false;
@@ -167,9 +173,9 @@ boolean Plugin_082(byte function, struct EventStruct *event, String &string) {
     case PLUGIN_WEBFORM_LOAD: {
       serialHelper_webformLoad(event);
   /*
-      if (P082_data.isInitialized()) {
+      if (P082_data && P082_data->isInitialized()) {
         String detectedString = F("Detected: ");
-        detectedString += String(P082_data.P082_easySerial->baudRate());
+        detectedString += String(P082_data->P082_easySerial->baudRate());
         addUnit(detectedString);
       }
   */
@@ -209,7 +215,8 @@ boolean Plugin_082(byte function, struct EventStruct *event, String &string) {
       const int16_t serial_rx = Settings.TaskDevicePin1[event->TaskIndex];
       const int16_t serial_tx = Settings.TaskDevicePin2[event->TaskIndex];
       const int16_t pps_pin   = Settings.TaskDevicePin3[event->TaskIndex];
-      if (P082_data.init(serial_rx, serial_tx)) {
+      if (!P082_data) P082_data = new P082_data_struct();
+      if (P082_data->init(serial_rx, serial_tx)) {
         success = true;
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           String log = F("GPS  : Init OK  ESP GPIO-pin RX:");
@@ -227,7 +234,11 @@ boolean Plugin_082(byte function, struct EventStruct *event, String &string) {
     }
 
     case PLUGIN_EXIT: {
-      P082_data.reset();
+      if (P082_data) {
+        P082_data->reset();
+        delete P082_data;
+        P082_data = nullptr;
+      }
       const int16_t pps_pin   = Settings.TaskDevicePin3[event->TaskIndex];
       if (pps_pin != -1) {
         detachInterrupt(pps_pin);
@@ -237,7 +248,7 @@ boolean Plugin_082(byte function, struct EventStruct *event, String &string) {
     }
 
     case PLUGIN_TEN_PER_SECOND: {
-      if (P082_data.loop()) {
+      if (P082_data && P082_data->loop()) {
         schedule_task_device_timer(event->TaskIndex, millis() + 10);
         delay(0); // Processing a full sentence may take a while, run some background tasks.
       }
@@ -246,9 +257,9 @@ boolean Plugin_082(byte function, struct EventStruct *event, String &string) {
     }
 
     case PLUGIN_READ: {
-      if (P082_data.isInitialized()) {
-        static bool activeFix = P082_data.hasFix(P082_DEFAULT_FIX_TIMEOUT);
-        const bool curFixStatus = P082_data.hasFix(P082_DEFAULT_FIX_TIMEOUT);
+      if (P082_data && P082_data->isInitialized()) {
+        static bool activeFix = P082_data->hasFix(P082_DEFAULT_FIX_TIMEOUT);
+        const bool curFixStatus = P082_data->hasFix(P082_DEFAULT_FIX_TIMEOUT);
         if (activeFix != curFixStatus) {
           // Fix status changed, send events.
           String event = curFixStatus ? F("GPS#GotFix") : F("GPS#LostFix");
@@ -256,22 +267,22 @@ boolean Plugin_082(byte function, struct EventStruct *event, String &string) {
           activeFix = curFixStatus;
         }
 
-        if (P082_data.hasFix(P082_DEFAULT_FIX_TIMEOUT)) {
-          if (P082_data.gps->location.isUpdated()) {
-            P082_LONGITUDE = P082_data.gps->location.lng();
-            P082_LATITUDE = P082_data.gps->location.lat();
+        if (P082_data->hasFix(P082_DEFAULT_FIX_TIMEOUT)) {
+          if (P082_data->gps->location.isUpdated()) {
+            P082_LONGITUDE = P082_data->gps->location.lng();
+            P082_LATITUDE = P082_data->gps->location.lat();
             success = true;
             addLog(LOG_LEVEL_INFO, F("GPS: Position update."));
           }
-          if (P082_data.gps->altitude.isUpdated()) {
+          if (P082_data->gps->altitude.isUpdated()) {
             // ToDo make unit selectable
-            P082_ALTITUDE = P082_data.gps->altitude.meters();
+            P082_ALTITUDE = P082_data->gps->altitude.meters();
             success = true;
             addLog(LOG_LEVEL_INFO, F("GPS: Altitude update."));
           }
-          if (P082_data.gps->speed.isUpdated()) {
+          if (P082_data->gps->speed.isUpdated()) {
             // ToDo make unit selectable
-            P082_SPEED = P082_data.gps->speed.mps();
+            P082_SPEED = P082_data->gps->speed.mps();
             addLog(LOG_LEVEL_INFO, F("GPS: Speed update."));
             success = true;
           }
@@ -286,16 +297,14 @@ boolean Plugin_082(byte function, struct EventStruct *event, String &string) {
 }
 
 void P082_logStats(struct EventStruct *event) {
-  if (!P082_data.isInitialized())
+  if (!loglevelActiveFor(LOG_LEVEL_INFO) || !P082_data || !P082_data->isInitialized()) {
     return;
-  if (!loglevelActiveFor(LOG_LEVEL_INFO))
-    return;
-
+  }
   String log;
   log.reserve(96);
   log = F("GPS:");
   log += F(" Fix: ");
-  log += String(P082_data.hasFix(P082_DEFAULT_FIX_TIMEOUT));
+  log += String(P082_data->hasFix(P082_DEFAULT_FIX_TIMEOUT));
   log += F(" Long: ");
   log += P082_LONGITUDE;
   log += F(" Lat: ");
@@ -306,41 +315,45 @@ void P082_logStats(struct EventStruct *event) {
   log += P082_SPEED;
 
   log += F(" Chksum(pass/fail): ");
-  log += P082_data.gps->passedChecksum();
+  log += P082_data->gps->passedChecksum();
   log += '/';
-  log += P082_data.gps->failedChecksum();
+  log += P082_data->gps->failedChecksum();
 
   addLog(LOG_LEVEL_INFO, log);
 }
 
 void P082_html_show_stats(struct EventStruct *event) {
+  if (!P082_data) {
+    return;
+  }
   addRowLabel(F("Fix"));
-  addHtml(String(P082_data.hasFix(P082_DEFAULT_FIX_TIMEOUT)));
+  addHtml(String(P082_data->hasFix(P082_DEFAULT_FIX_TIMEOUT)));
 
   addRowLabel(F("Nr Satellites"));
-  addHtml(String(P082_data.gps->satellites.value()));
+  addHtml(String(P082_data->gps->satellites.value()));
 
   addRowLabel(F("HDOP"));
-  addHtml(String(P082_data.gps->hdop.value() / 100.0));
+  addHtml(String(P082_data->gps->hdop.value() / 100.0));
 
   addRowLabel(F("UTC Time"));
   struct tm dateTime;
   uint32_t age;
   bool pps_sync;
-  if (P082_data.getDateTime(dateTime, age, pps_sync)) {
+  if (P082_data->getDateTime(dateTime, age, pps_sync)) {
     dateTime = addSeconds(dateTime, (age / 1000), false);
   }
   addHtml(getDateTimeString(dateTime));
 
   addRowLabel(F("Checksum (pass/fail)"));
   String chksumStats;
-  chksumStats = P082_data.gps->passedChecksum();
+  chksumStats = P082_data->gps->passedChecksum();
   chksumStats += '/';
-  chksumStats += P082_data.gps->failedChecksum();
+  chksumStats += P082_data->gps->failedChecksum();
   addHtml(chksumStats);
 }
 
 void P082_setSystemTime() {
+  if (!P082_data) return;
   // Set the externalTimesource 10 seconds earlier to make sure no call is made to NTP (if set)
   if (nextSyncTime > (sysTime + 10)) {
     return;
@@ -349,18 +362,20 @@ void P082_setSystemTime() {
   struct tm dateTime;
   uint32_t age;
   bool pps_sync;
-  if (P082_data.getDateTime(dateTime, age, pps_sync)) {
+  P082_data->pps_time = P082_pps_time;  // Must copy the interrupt gathered time first.
+  if (P082_data->getDateTime(dateTime, age, pps_sync)) {
     // Use floating point precision to use the time since last update from GPS and the given offset in centisecond.
     externalTimeSource = makeTime(dateTime);
     externalTimeSource += static_cast<double>(age) / 1000.0;
     initTime();
   }
+  P082_pps_time = 0;
 }
 
 void Plugin_082_interrupt()
 /*********************************************************************/
 {
-  P082_data.pps_time = millis();
+  P082_pps_time = millis();
 }
 
 
