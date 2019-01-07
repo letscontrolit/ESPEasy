@@ -1253,8 +1253,19 @@ void handle_config() {
   addHelpButton(F("SleepMode"));
   addFormNote(F("0 = Sleep Disabled, else time awake from sleep"));
 
-  addFormNumericBox( F("Sleep time"), F("delay"), Settings.Delay, 0, 4294);   //limited by hardware to ~1.2h
-  addUnit(F("sec"));
+  int dsmax = 4294; // About 71 minutes
+#if defined(CORE_2_5_0)
+  dsmax = INT_MAX;
+  if ((ESP.deepSleepMax()/1000000ULL) <= (uint64_t)INT_MAX)
+    dsmax = (int)(ESP.deepSleepMax()/1000000ULL);
+#endif
+  addFormNumericBox( F("Sleep time"), F("delay"), Settings.Delay, 0, dsmax);   //limited by hardware
+  {
+    String maxSleeptimeUnit = F("sec (max: ");
+    maxSleeptimeUnit += String(dsmax);
+    maxSleeptimeUnit += ')';
+    addUnit(maxSleeptimeUnit);
+  }
 
   addFormCheckBox(F("Sleep on connection failure"), F("deepsleeponfail"), Settings.deepSleepOnFail);
 
