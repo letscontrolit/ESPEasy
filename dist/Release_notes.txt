@@ -1,4 +1,23 @@
 -------------------------------------------------
+Changes in release mega-20190107 (since mega-20190106)
+-------------------------------------------------
+
+Release date: Mon Jan  7 04:00:07 CET 2019
+
+CaptainRoot (5):
+      Update _P076_HLW8012.ino
+      add predefind pin settings for some energy meter sockets to HLW8012 / BL0937
+      Revert changes to platformio.ini
+      Update platformio.ini
+      movepredefind pin settings to PROGMEM
+
+TD-er (3):
+      Add new Nodetype RPIEasy #2206
+      [HLW8012] Fix some issues when selecting device
+      [HLW8012] Update documentation
+
+
+-------------------------------------------------
 Changes in release mega-20190106 (since mega-20181231)
 -------------------------------------------------
 
