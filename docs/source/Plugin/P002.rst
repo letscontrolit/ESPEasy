@@ -34,7 +34,7 @@ Supported hardware
 .. Events
 .. ~~~~~~
 
-.. .. include:: P003_events.repl
+.. .. include:: P002_events.repl
 
 Change log
 ----------
@@ -50,4 +50,3 @@ Change log
 
   |added|
   Initial release version.
-
