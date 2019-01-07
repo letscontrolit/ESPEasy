@@ -1272,7 +1272,10 @@ void handle_config() {
   addFormNote(F("0 = Sleep Disabled, else time awake from sleep"));
 
   #if defined(CORE_2_5_0)
-    addFormNumericBox( F("Sleep time"), F("delay"), Settings.Delay, 0, ESP.deepSleepMax());   //limited by hardware
+    int dsmax = INT_MAX;
+    if ((ESP.deepSleepMax()/1000000ULL) <= (uint64_t)INT_MAX)
+      dsmax = (int)(ESP.deepSleepMax()/1000000ULL);
+    addFormNumericBox( F("Sleep time"), F("delay"), Settings.Delay, 0, dsmax);   //limited by hardware
   #else
     addFormNumericBox( F("Sleep time"), F("delay"), Settings.Delay, 0, 4294);   //limited by hardware to ~1.2h
   #endif
