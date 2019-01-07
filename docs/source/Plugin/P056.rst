@@ -19,6 +19,7 @@ GitHub: |P056_github|_
 
 Maintainer: |P056_maintainer|
 
+Used libraries: |P056_usedlibraries|
 
 Supported hardware
 ------------------
@@ -49,6 +50,7 @@ Change log
 
   |added|
   Initial release version.
+
 
 
 

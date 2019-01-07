@@ -19,6 +19,7 @@ GitHub: |P004_github|_
 
 Maintainer: |P004_maintainer|
 
+Used libraries: |P004_usedlibraries|
 
 Supported hardware
 ------------------
@@ -49,4 +50,5 @@ Change log
 
   |added|
   Initial release version.
+
 

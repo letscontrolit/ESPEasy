@@ -19,6 +19,7 @@ GitHub: |P048_github|_
 
 Maintainer: |P048_maintainer|
 
+Used libraries: |P048_usedlibraries|
 
 Supported hardware
 ------------------
@@ -49,6 +50,7 @@ Change log
 
   |added|
   Initial release version.
+
 
 
 

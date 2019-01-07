@@ -19,6 +19,7 @@ GitHub: |P052_github|_
 
 Maintainer: |P052_maintainer|
 
+Used libraries: |P052_usedlibraries|
 
 Supported hardware
 ------------------
@@ -49,4 +50,5 @@ Change log
 
   |added|
   Initial release version.
+
 

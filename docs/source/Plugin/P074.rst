@@ -19,6 +19,7 @@ GitHub: |P074_github|_
 
 Maintainer: |P074_maintainer|
 
+Used libraries: |P074_usedlibraries|
 
 Supported hardware
 ------------------
@@ -49,6 +50,7 @@ Change log
 
   |added|
   Initial release version.
+
 
 
 

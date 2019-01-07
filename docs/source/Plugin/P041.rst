@@ -19,6 +19,7 @@ GitHub: |P041_github|_
 
 Maintainer: |P041_maintainer|
 
+Used libraries: |P041_usedlibraries|
 
 Supported hardware
 ------------------
@@ -49,6 +50,7 @@ Change log
 
   |added|
   Initial release version.
+
 
 
 

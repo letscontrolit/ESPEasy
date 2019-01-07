@@ -19,6 +19,7 @@ GitHub: |P020_github|_
 
 Maintainer: |P020_maintainer|
 
+Used libraries: |P020_usedlibraries|
 
 Supported hardware
 ------------------
@@ -49,6 +50,7 @@ Change log
 
   |added|
   Initial release version.
+
 
 
 

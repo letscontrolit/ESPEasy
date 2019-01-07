@@ -19,6 +19,7 @@ GitHub: |P030_github|_
 
 Maintainer: |P030_maintainer|
 
+Used libraries: |P030_usedlibraries|
 
 Supported hardware
 ------------------
@@ -49,6 +50,7 @@ Change log
 
   |added|
   Initial release version.
+
 
 
 
