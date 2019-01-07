@@ -19,6 +19,7 @@ GitHub: |P019_github|_
 
 Maintainer: |P019_maintainer|
 
+Used libraries: |P019_usedlibraries|
 
 Supported hardware
 ------------------
@@ -29,6 +30,11 @@ Supported hardware
 .. ^^^^^^^^^^^^^^^^^^
 
 .. .. include:: P019_commands.repl
+
+.. Events
+.. ~~~~~~
+
+.. .. include:: P019_events.repl
 
 Change log
 ----------
@@ -44,6 +50,8 @@ Change log
 
   |added|
   Initial release version.
+
+
 
 
 

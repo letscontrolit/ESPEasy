@@ -9,6 +9,7 @@
 .. |P070_shortinfo| replace:: `.`
 .. |P070_maintainer| replace:: `.`
 .. |P070_compileinfo| replace:: This one is suppressed by default, you need to compile your own version if you want to use it.
+.. |P070_usedlibraries| replace:: `.`
 
 .. |P071_name| replace:: :cyan:`Kamstrup Multical 401`
 .. |P071_type| replace:: :cyan:`Communication`
@@ -20,6 +21,7 @@
 .. |P071_shortinfo| replace:: `.`
 .. |P071_maintainer| replace:: `.`
 .. |P071_compileinfo| replace:: `.`
+.. |P071_usedlibraries| replace:: `.`
 
 .. |P072_name| replace:: :cyan:`HDC1080 (I2C)`
 .. |P072_type| replace:: :cyan:`Environment`
@@ -31,6 +33,7 @@
 .. |P072_shortinfo| replace:: `.`
 .. |P072_maintainer| replace:: `.`
 .. |P072_compileinfo| replace:: `.`
+.. |P072_usedlibraries| replace:: `.`
 
 .. |P073_name| replace:: :cyan:`7-segment display`
 .. |P073_type| replace:: :cyan:`Display`
@@ -42,6 +45,7 @@
 .. |P073_shortinfo| replace:: `.`
 .. |P073_maintainer| replace:: `.`
 .. |P073_compileinfo| replace:: `.`
+.. |P073_usedlibraries| replace:: `.`
 
 .. |P074_name| replace:: :cyan:`TSL2591`
 .. |P074_type| replace:: :cyan:`Light/Lux`
@@ -53,6 +57,7 @@
 .. |P074_shortinfo| replace:: `.`
 .. |P074_maintainer| replace:: `.`
 .. |P074_compileinfo| replace:: `.`
+.. |P074_usedlibraries| replace:: `.`
 
 .. |P075_name| replace:: :cyan:`Nextion`
 .. |P075_type| replace:: :cyan:`Display`
@@ -64,6 +69,7 @@
 .. |P075_shortinfo| replace:: LCD Color Graphic Touch Screen. Plugin can update display and receive/send touch events.
 .. |P075_maintainer| replace:: `.`
 .. |P075_compileinfo| replace:: `.`
+.. |P075_usedlibraries| replace:: `.`
 
 .. |P076_name| replace:: :cyan:`HLW8012/BL0937`
 .. |P076_type| replace:: :cyan:`Energy (AC)`
@@ -75,8 +81,7 @@
 .. |P076_shortinfo| replace:: Power measuring sensor used to measure (AC) voltage, current, power and power factor.
 .. |P076_maintainer| replace:: TD-er
 .. |P076_compileinfo| replace:: `.`
-.. |P076_library| replace:: xoseperez/hlw8012  v1.1.1
-.. _P076_library: https://github.com/xoseperez/hlw8012/tree/1.1.1
+.. |P076_usedlibraries| replace:: https://github.com/xoseperez/hlw8012/tree/1.1.1
 
 .. |P077_name| replace:: :cyan:`CSE7766`
 .. |P077_type| replace:: :cyan:`Energy (AC)`
@@ -88,6 +93,7 @@
 .. |P077_shortinfo| replace:: This plugin is specifically made for Sonoff devices Sonoff S31 and Sonoff Pow R2.
 .. |P077_maintainer| replace:: `.`
 .. |P077_compileinfo| replace:: `.`
+.. |P077_usedlibraries| replace:: `.`
 
 .. |P078_name| replace:: :cyan:`Eastron SDM120C/220T/230/630`
 .. |P078_type| replace:: :cyan:`Energy (AC)`
@@ -99,6 +105,7 @@
 .. |P078_shortinfo| replace:: `.`
 .. |P078_maintainer| replace:: `.`
 .. |P078_compileinfo| replace:: `.`
+.. |P078_usedlibraries| replace:: `.`
 
 .. |P079_name| replace:: :cyan:`Wemos Motorshield`
 .. |P079_type| replace:: :cyan:`Motor`
@@ -110,3 +117,4 @@
 .. |P079_shortinfo| replace:: `.`
 .. |P079_maintainer| replace:: `.`
 .. |P079_compileinfo| replace:: `.`
+.. |P079_usedlibraries| replace:: `.`

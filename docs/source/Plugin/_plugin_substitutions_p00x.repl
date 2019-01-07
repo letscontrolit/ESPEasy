@@ -11,6 +11,7 @@
 .. |P000_shortinfo| replace:: The ESP module can control things with it's build-in GPIO output pins. We can turn these on or off or we can set these pins to a special pulse modulated value (PWM output). And it's also possible to send short pulses (single pulse) to one of these pins to control specific devices that are switched with a single short high or low signal.
 .. |P000_maintainer| replace:: Core
 .. |P000_compileinfo| replace:: Currently the GPIO commands are placed in the ``Switch Input - Switch plugin``, this will change!
+.. |P000_usedlibraries| replace:: `.`
 
 .. |P001_name| replace:: :cyan:`Switch`
 .. |P001_type| replace:: :cyan:`Switch Input`
@@ -22,6 +23,7 @@
 .. |P001_shortinfo| replace:: `.`
 .. |P001_maintainer| replace:: `.`
 .. |P001_compileinfo| replace:: `.`
+.. |P001_usedlibraries| replace:: `.`
 
 .. |P002_name| replace:: :cyan:`Internal`
 .. |P002_type| replace:: :cyan:`Analog Input`
@@ -33,6 +35,7 @@
 .. |P002_shortinfo| replace:: `.`
 .. |P002_maintainer| replace:: `.`
 .. |P002_compileinfo| replace:: `.`
+.. |P002_usedlibraries| replace:: `.`
 
 .. |P003_name| replace:: :cyan:`Pulse counter`
 .. |P003_type| replace:: :cyan:`Generic`
@@ -44,6 +47,7 @@
 .. |P003_shortinfo| replace:: Used to count GPIO pulses.
 .. |P003_maintainer| replace:: Core
 .. |P003_compileinfo| replace:: `.`
+.. |P003_usedlibraries| replace:: `.`
 
 .. |P004_name| replace:: :cyan:`DS18b20`
 .. |P004_type| replace:: :cyan:`Environment`
@@ -55,6 +59,7 @@
 .. |P004_shortinfo| replace:: Temperature sensor that is easy to use in multiples, easy to fit too.
 .. |P004_maintainer| replace:: Core
 .. |P004_compileinfo| replace:: `.`
+.. |P004_usedlibraries| replace:: `.`
 
 .. |P005_name| replace:: :cyan:`DHT11/12/22/SONOFF2301/7021`
 .. |P005_type| replace:: :cyan:`Environment`
@@ -66,6 +71,7 @@
 .. |P005_shortinfo| replace:: Plugin used to communicate with DHT11/12/22/SONOFF2301/7021
 .. |P005_maintainer| replace:: `.`
 .. |P005_compileinfo| replace:: `.`
+.. |P005_usedlibraries| replace:: `.`
 
 .. |P006_name| replace:: :cyan:`BMP085/180`
 .. |P006_type| replace:: :cyan:`Environment`
@@ -77,6 +83,7 @@
 .. |P006_shortinfo| replace:: Temperature and pressure for the BMP085 and BMP180 sensors.
 .. |P006_maintainer| replace:: `.`
 .. |P006_compileinfo| replace:: `.`
+.. |P006_usedlibraries| replace:: `.`
 
 .. |P007_name| replace:: :cyan:`PCF8591`
 .. |P007_type| replace:: :cyan:`Analog input`
@@ -88,6 +95,7 @@
 .. |P007_shortinfo| replace:: `.`
 .. |P007_maintainer| replace:: `.`
 .. |P007_compileinfo| replace:: `.`
+.. |P007_usedlibraries| replace:: `.`
 
 .. |P008_name| replace:: :cyan:`Wiegand`
 .. |P008_type| replace:: :cyan:`RFID`
@@ -99,6 +107,7 @@
 .. |P008_shortinfo| replace:: `.`
 .. |P008_maintainer| replace:: `.`
 .. |P008_compileinfo| replace:: `.`
+.. |P008_usedlibraries| replace:: `.`
 
 .. |P009_name| replace:: :cyan:`MCP23017`
 .. |P009_type| replace:: :cyan:`Switch Input`
@@ -110,3 +119,4 @@
 .. |P009_shortinfo| replace:: `.`
 .. |P009_maintainer| replace:: `.`
 .. |P009_compileinfo| replace:: `.`
+.. |P009_usedlibraries| replace:: `.`

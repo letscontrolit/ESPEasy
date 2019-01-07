@@ -19,6 +19,7 @@ GitHub: |P031_github|_
 
 Maintainer: |P031_maintainer|
 
+Used libraries: |P031_usedlibraries|
 
 Supported hardware
 ------------------
@@ -29,6 +30,11 @@ Supported hardware
 .. ^^^^^^^^^^^^^^^^^^
 
 .. .. include:: P031_commands.repl
+
+.. Events
+.. ~~~~~~
+
+.. .. include:: P031_events.repl
 
 Change log
 ----------
@@ -44,6 +50,8 @@ Change log
 
   |added|
   Initial release version.
+
+
 
 
 

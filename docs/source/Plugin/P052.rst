@@ -19,6 +19,7 @@ GitHub: |P052_github|_
 
 Maintainer: |P052_maintainer|
 
+Used libraries: |P052_usedlibraries|
 
 Supported hardware
 ------------------
@@ -29,6 +30,11 @@ Commands available
 ^^^^^^^^^^^^^^^^^^
 
 .. include:: P052_commands.repl
+
+.. Events
+.. ~~~~~~
+
+.. .. include:: P052_events.repl
 
 Change log
 ----------
@@ -44,3 +50,5 @@ Change log
 
   |added|
   Initial release version.
+
+

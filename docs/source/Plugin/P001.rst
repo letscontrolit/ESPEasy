@@ -31,6 +31,11 @@ Commands available
 .. include:: P001_commands_GPIO.repl
 .. include:: P001_commands_RTTTL.repl
 
+.. Events
+.. ~~~~~~
+
+.. .. include:: PXXX_events.repl
+
 Change log
 ----------
 

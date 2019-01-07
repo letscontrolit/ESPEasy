@@ -29,6 +29,7 @@ Welcome to ESP Easy's documentation!
 
    Participate/Documentation.rst
    Reference/Command.rst
+   Reference/Events.rst
    Reference/GPIO.rst
    Reference/SystemVariable.rst
    Reference/ChangeLog.rst

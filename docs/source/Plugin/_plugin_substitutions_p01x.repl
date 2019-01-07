@@ -8,6 +8,7 @@
 .. |P010_shortinfo| replace:: `.`
 .. |P010_maintainer| replace:: `.`
 .. |P010_compileinfo| replace:: `.`
+.. |P010_usedlibraries| replace:: `.`
 
 .. |P011_name| replace:: :cyan:`ProMini Extender`
 .. |P011_type| replace:: :cyan:`Extra IO`
@@ -19,6 +20,7 @@
 .. |P011_shortinfo| replace:: `.`
 .. |P011_maintainer| replace:: `.`
 .. |P011_compileinfo| replace:: `.`
+.. |P011_usedlibraries| replace:: `.`
 
 .. |P012_name| replace:: :cyan:`LCD2004`
 .. |P012_type| replace:: :cyan:`Display`
@@ -30,6 +32,7 @@
 .. |P012_shortinfo| replace:: `.`
 .. |P012_maintainer| replace:: `.`
 .. |P012_compileinfo| replace:: `.`
+.. |P012_usedlibraries| replace:: `.`
 
 .. |P013_name| replace:: :cyan:`HC-SR04/RCW-0001`
 .. |P013_type| replace:: :cyan:`Position`
@@ -41,6 +44,7 @@
 .. |P013_shortinfo| replace:: `.`
 .. |P013_maintainer| replace:: `.`
 .. |P013_compileinfo| replace:: `.`
+.. |P013_usedlibraries| replace:: `.`
 
 .. |P014_name| replace:: :cyan:`SI7021/HTU21D`
 .. |P014_type| replace:: :cyan:`Environment`
@@ -52,6 +56,7 @@
 .. |P014_shortinfo| replace:: `.`
 .. |P014_maintainer| replace:: `.`
 .. |P014_compileinfo| replace:: `.`
+.. |P014_usedlibraries| replace:: `.`
 
 .. |P015_name| replace:: :cyan:`TSL2561`
 .. |P015_type| replace:: :cyan:`Light/Lux`
@@ -63,6 +68,7 @@
 .. |P015_shortinfo| replace:: `.`
 .. |P015_maintainer| replace:: `.`
 .. |P015_compileinfo| replace:: `.`
+.. |P015_usedlibraries| replace:: `.`
 
 .. |P016_name| replace:: :cyan:`TSOP4838`
 .. |P016_type| replace:: :cyan:`Communication`
@@ -74,6 +80,7 @@
 .. |P016_shortinfo| replace:: `.`
 .. |P016_maintainer| replace:: `.`
 .. |P016_compileinfo| replace:: `.`
+.. |P016_usedlibraries| replace:: `.`
 
 .. |P017_name| replace:: :cyan:`PN532`
 .. |P017_type| replace:: :cyan:`RFID`
@@ -85,6 +92,7 @@
 .. |P017_shortinfo| replace:: `.`
 .. |P017_maintainer| replace:: `.`
 .. |P017_compileinfo| replace:: `.`
+.. |P017_usedlibraries| replace:: `.`
 
 .. |P018_name| replace:: :cyan:`Sharp GP2Y10`
 .. |P018_type| replace:: :cyan:`Dust`
@@ -96,6 +104,7 @@
 .. |P018_shortinfo| replace:: `.`
 .. |P018_maintainer| replace:: `.`
 .. |P018_compileinfo| replace:: `.`
+.. |P018_usedlibraries| replace:: `.`
 
 .. |P019_name| replace:: :cyan:`PCF8574`
 .. |P019_type| replace:: :cyan:`Switch input`
@@ -107,3 +116,4 @@
 .. |P019_shortinfo| replace:: `.`
 .. |P019_maintainer| replace:: `.`
 .. |P019_compileinfo| replace:: `.`
+.. |P019_usedlibraries| replace:: `.`

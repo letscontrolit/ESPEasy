@@ -19,6 +19,7 @@ GitHub: |P014_github|_
 
 Maintainer: |P014_maintainer|
 
+Used libraries: |P014_usedlibraries|
 
 Supported hardware
 ------------------
@@ -29,6 +30,11 @@ Supported hardware
 .. ^^^^^^^^^^^^^^^^^^
 
 .. .. include:: P014_commands.repl
+
+.. Events
+.. ~~~~~~
+
+.. .. include:: P014_events.repl
 
 Change log
 ----------
@@ -44,6 +50,8 @@ Change log
 
   |added|
   Initial release version.
+
+
 
 
 

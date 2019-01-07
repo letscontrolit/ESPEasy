@@ -19,6 +19,7 @@ GitHub: |P047_github|_
 
 Maintainer: |P047_maintainer|
 
+Used libraries: |P047_usedlibraries|
 
 Supported hardware
 ------------------
@@ -29,6 +30,11 @@ Supported hardware
 .. ^^^^^^^^^^^^^^^^^^
 
 .. .. include:: P047_commands.repl
+
+.. Events
+.. ~~~~~~
+
+.. .. include:: P047_events.repl
 
 Change log
 ----------
@@ -44,6 +50,8 @@ Change log
 
   |added|
   Initial release version.
+
+
 
 
 

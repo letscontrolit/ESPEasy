@@ -8,6 +8,7 @@
 .. |P050_shortinfo| replace:: `.`
 .. |P050_maintainer| replace:: `.`
 .. |P050_compileinfo| replace:: `.`
+.. |P050_usedlibraries| replace:: `.`
 
 .. |P051_name| replace:: :cyan:`AM2320`
 .. |P051_type| replace:: :cyan:`Environment`
@@ -19,6 +20,7 @@
 .. |P051_shortinfo| replace:: `.`
 .. |P051_maintainer| replace:: `.`
 .. |P051_compileinfo| replace:: `.`
+.. |P051_usedlibraries| replace:: `.`
 
 .. |P052_name| replace:: :cyan:`CO2 Senseair`
 .. |P052_type| replace:: :cyan:`Gases`
@@ -30,6 +32,7 @@
 .. |P052_shortinfo| replace:: The Senseair plugin can be used for multiple gas sensors from the company Senseair. The mostly used sensor is the S8 but other sensor units that work is tSense (K70), K30, K33, S8 (and soon LP8).
 .. |P052_maintainer| replace:: `.`
 .. |P052_compileinfo| replace:: `.`
+.. |P052_usedlibraries| replace:: `.`
 
 .. |P053_name| replace:: :cyan:`PMSx003`
 .. |P053_type| replace:: :cyan:`Dust`
@@ -41,6 +44,7 @@
 .. |P053_shortinfo| replace:: `.`
 .. |P053_maintainer| replace:: `.`
 .. |P053_compileinfo| replace:: `.`
+.. |P053_usedlibraries| replace:: `.`
 
 .. |P054_name| replace:: :cyan:`DMX512 TX`
 .. |P054_type| replace:: :cyan:`Communication`
@@ -52,6 +56,7 @@
 .. |P054_shortinfo| replace:: `.`
 .. |P054_maintainer| replace:: `.`
 .. |P054_compileinfo| replace:: `.`
+.. |P054_usedlibraries| replace:: `.`
 
 .. |P055_name| replace:: :cyan:`Chiming`
 .. |P055_type| replace:: :cyan:`Notify`
@@ -63,6 +68,7 @@
 .. |P055_shortinfo| replace:: `.`
 .. |P055_maintainer| replace:: `.`
 .. |P055_compileinfo| replace:: `.`
+.. |P055_usedlibraries| replace:: `.`
 
 .. |P056_name| replace:: :cyan:`SDS011/018/198`
 .. |P056_type| replace:: :cyan:`Dust`
@@ -74,6 +80,7 @@
 .. |P056_shortinfo| replace:: `.`
 .. |P056_maintainer| replace:: `.`
 .. |P056_compileinfo| replace:: `.`
+.. |P056_usedlibraries| replace:: `.`
 
 .. |P057_name| replace:: :cyan:`HT16K33`
 .. |P057_type| replace:: :cyan:`Display`
@@ -85,6 +92,7 @@
 .. |P057_shortinfo| replace:: `.`
 .. |P057_maintainer| replace:: `.`
 .. |P057_compileinfo| replace:: `.`
+.. |P057_usedlibraries| replace:: `.`
 
 .. |P058_name| replace:: :cyan:`HT16K33`
 .. |P058_type| replace:: :cyan:`Keypad`
@@ -96,6 +104,7 @@
 .. |P058_shortinfo| replace:: `.`
 .. |P058_maintainer| replace:: `.`
 .. |P058_compileinfo| replace:: `.`
+.. |P058_usedlibraries| replace:: `.`
 
 .. |P059_name| replace:: :cyan:`Rotary Encoder`
 .. |P059_type| replace:: :cyan:`Switch input`
@@ -107,3 +116,4 @@
 .. |P059_shortinfo| replace:: `.`
 .. |P059_maintainer| replace:: `.`
 .. |P059_compileinfo| replace:: `.`
+.. |P059_usedlibraries| replace:: `.`

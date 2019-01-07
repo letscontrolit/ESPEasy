@@ -19,6 +19,7 @@ GitHub: |P079_github|_
 
 Maintainer: |P079_maintainer|
 
+Used libraries: |P079_usedlibraries|
 
 Supported hardware
 ------------------
@@ -29,6 +30,11 @@ Supported hardware
 .. ^^^^^^^^^^^^^^^^^^
 
 .. .. include:: P079_commands.repl
+
+.. Events
+.. ~~~~~~
+
+.. .. include:: P079_events.repl
 
 Change log
 ----------
@@ -44,6 +50,8 @@ Change log
 
   |added|
   Initial release version.
+
+
 
 
 

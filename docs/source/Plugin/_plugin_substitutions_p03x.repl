@@ -8,6 +8,7 @@
 .. |P030_shortinfo| replace:: Temperature and pressure for the BMP280 sensors. Superseded by :ref:`P028_page`
 .. |P030_maintainer| replace:: `.`
 .. |P030_compileinfo| replace:: `.`
+.. |P030_usedlibraries| replace:: `.`
 
 .. |P031_name| replace:: :cyan:`SHT1X`
 .. |P031_type| replace:: :cyan:`Environment`
@@ -19,6 +20,7 @@
 .. |P031_shortinfo| replace:: `.`
 .. |P031_maintainer| replace:: `.`
 .. |P031_compileinfo| replace:: `.`
+.. |P031_usedlibraries| replace:: `.`
 
 .. |P032_name| replace:: :cyan:`MS5611 (GY-63)`
 .. |P032_type| replace:: :cyan:`Environment`
@@ -30,6 +32,7 @@
 .. |P032_shortinfo| replace:: `.`
 .. |P032_maintainer| replace:: `.`
 .. |P032_compileinfo| replace:: `.`
+.. |P032_usedlibraries| replace:: `.`
 
 .. |P033_name| replace:: :cyan:`Dummy Device`
 .. |P033_type| replace:: :cyan:`Generic`
@@ -41,6 +44,7 @@
 .. |P033_shortinfo| replace:: `.`
 .. |P033_maintainer| replace:: `.`
 .. |P033_compileinfo| replace:: `.`
+.. |P033_usedlibraries| replace:: `.`
 
 .. |P034_name| replace:: :cyan:`DHT12 (I2C)`
 .. |P034_type| replace:: :cyan:`Environment`
@@ -52,6 +56,7 @@
 .. |P034_shortinfo| replace:: `.`
 .. |P034_maintainer| replace:: `.`
 .. |P034_compileinfo| replace:: `.`
+.. |P034_usedlibraries| replace:: `.`
 
 .. |P035_name| replace:: :cyan:`IR Transmit`
 .. |P035_type| replace:: :cyan:`Communication`
@@ -63,6 +68,7 @@
 .. |P035_shortinfo| replace:: `.`
 .. |P035_maintainer| replace:: `.`
 .. |P035_compileinfo| replace:: `.`
+.. |P035_usedlibraries| replace:: `.`
 
 .. |P036_name| replace:: :cyan:`OLED SSD1306/SH1106 Framed`
 .. |P036_type| replace:: :cyan:`Display`
@@ -74,6 +80,7 @@
 .. |P036_shortinfo| replace:: `.`
 .. |P036_maintainer| replace:: `.`
 .. |P036_compileinfo| replace:: `.`
+.. |P036_usedlibraries| replace:: `.`
 
 .. |P037_name| replace:: :cyan:`MQTT Import`
 .. |P037_type| replace:: :cyan:`Generic`
@@ -85,6 +92,7 @@
 .. |P037_shortinfo| replace:: `.`
 .. |P037_maintainer| replace:: `.`
 .. |P037_compileinfo| replace:: `.`
+.. |P037_usedlibraries| replace:: `.`
 
 .. |P038_name| replace:: :cyan:`NeoPixel (Basic)`
 .. |P038_type| replace:: :cyan:`Output`
@@ -96,6 +104,7 @@
 .. |P038_shortinfo| replace:: `.`
 .. |P038_maintainer| replace:: `.`
 .. |P038_compileinfo| replace:: `.`
+.. |P038_usedlibraries| replace:: `.`
 
 .. |P039_name| replace:: :cyan:`Thermocouple`
 .. |P039_type| replace:: :cyan:`Environment`
@@ -107,3 +116,4 @@
 .. |P039_shortinfo| replace:: `.`
 .. |P039_maintainer| replace:: `.`
 .. |P039_compileinfo| replace:: `.`
+.. |P039_usedlibraries| replace:: `.`

@@ -8,6 +8,7 @@
 .. |P040_shortinfo| replace:: `.`
 .. |P040_maintainer| replace:: `.`
 .. |P040_compileinfo| replace:: `.`
+.. |P040_usedlibraries| replace:: `.`
 
 .. |P041_name| replace:: :cyan:`NeoPixel (Word Clock)`
 .. |P041_type| replace:: :cyan:`Output`
@@ -19,6 +20,7 @@
 .. |P041_shortinfo| replace:: `.`
 .. |P041_maintainer| replace:: `.`
 .. |P041_compileinfo| replace:: `.`
+.. |P041_usedlibraries| replace:: `.`
 
 .. |P042_name| replace:: :cyan:`NeoPixel (Candle)`
 .. |P042_type| replace:: :cyan:`Output`
@@ -30,6 +32,7 @@
 .. |P042_shortinfo| replace:: `.`
 .. |P042_maintainer| replace:: `.`
 .. |P042_compileinfo| replace:: `.`
+.. |P042_usedlibraries| replace:: `.`
 
 .. |P043_name| replace:: :cyan:`Clock`
 .. |P043_type| replace:: :cyan:`Output`
@@ -41,6 +44,7 @@
 .. |P043_shortinfo| replace:: `.`
 .. |P043_maintainer| replace:: `.`
 .. |P043_compileinfo| replace:: `.`
+.. |P043_usedlibraries| replace:: `.`
 
 .. |P044_name| replace:: :cyan:`P1 Wifi Gateway`
 .. |P044_type| replace:: :cyan:`Communication`
@@ -52,6 +56,7 @@
 .. |P044_shortinfo| replace:: `.`
 .. |P044_maintainer| replace:: `.`
 .. |P044_compileinfo| replace:: `.`
+.. |P044_usedlibraries| replace:: `.`
 
 .. |P045_name| replace:: :cyan:`MPU 6050`
 .. |P045_type| replace:: :cyan:`Gyro`
@@ -63,6 +68,7 @@
 .. |P045_shortinfo| replace:: `.`
 .. |P045_maintainer| replace:: `.`
 .. |P045_compileinfo| replace:: `.`
+.. |P045_usedlibraries| replace:: `.`
 
 .. |P046_name| replace:: :cyan:`Ventus W266`
 .. |P046_type| replace:: :cyan:`Hardware`
@@ -71,9 +77,10 @@
 .. |P046_github| replace:: P046_VentusW266.ino
 .. _P046_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P046_VentusW266.ino
 .. |P046_usedby| replace:: :ref:`P046_Ventus_W266_page`
-.. |P046_shortinfo| replace:: The weather station Ventus W266 is a indoor + outdoor unit which can detect many weather related values. 
+.. |P046_shortinfo| replace:: The weather station Ventus W266 is a indoor + outdoor unit which can detect many weather related values.
 .. |P046_maintainer| replace:: `.`
 .. |P046_compileinfo| replace:: This one is suppressed by default, you need to compile your own version if you want to use it.
+.. |P046_usedlibraries| replace:: `.`
 
 .. |P047_name| replace:: :cyan:`Soil moisture sensor`
 .. |P047_type| replace:: :cyan:`Environment`
@@ -85,6 +92,7 @@
 .. |P047_shortinfo| replace:: `.`
 .. |P047_maintainer| replace:: `.`
 .. |P047_compileinfo| replace:: `.`
+.. |P047_usedlibraries| replace:: `.`
 
 .. |P048_name| replace:: :cyan:`Adafruit Motorshield v2`
 .. |P048_type| replace:: :cyan:`Motor`
@@ -96,6 +104,7 @@
 .. |P048_shortinfo| replace:: `.`
 .. |P048_maintainer| replace:: `.`
 .. |P048_compileinfo| replace:: `.`
+.. |P048_usedlibraries| replace:: `.`
 
 .. |P049_name| replace:: :cyan:`CO2 MH-Z19`
 .. |P049_type| replace:: :cyan:`Gases`
@@ -107,3 +116,4 @@
 .. |P049_shortinfo| replace:: `.`
 .. |P049_maintainer| replace:: `.`
 .. |P049_compileinfo| replace:: `.`
+.. |P049_usedlibraries| replace:: `.`

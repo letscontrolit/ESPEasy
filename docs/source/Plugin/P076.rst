@@ -19,7 +19,7 @@ GitHub: |P076_github|_
 
 Maintainer: |P076_maintainer|
 
-Used library: |P076_library|_
+Used libraries: |P076_usedlibraries|
 
 Configuration
 -------------
@@ -41,6 +41,11 @@ Commands available
 ^^^^^^^^^^^^^^^^^^
 
 .. include:: P076_commands.repl
+
+.. Events
+.. ~~~~~~
+
+.. .. include:: P076_events.repl
 
 Change log
 ----------

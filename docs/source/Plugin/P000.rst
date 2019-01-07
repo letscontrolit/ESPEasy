@@ -19,6 +19,8 @@ GitHub: |P000_github|_
 
 Maintainer: |P000_maintainer|
 
+Used libraries: |P000_usedlibraries|
+
 
 Supported hardware
 ------------------
@@ -30,6 +32,11 @@ Commands available
 
 .. include:: P001_commands_GPIO.repl
 .. include:: P001_commands_RTTTL.repl
+
+.. Events
+.. ~~~~~~
+
+.. .. include:: P000_events.repl
 
 Change log
 ----------
