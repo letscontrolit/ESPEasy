@@ -426,7 +426,7 @@
 
 // Forward declaration
 struct ControllerSettingsStruct;
-String getUnknownString();
+static String getUnknownString();
 void scheduleNextDelayQueue(unsigned long id, unsigned long nextTime);
 String LoadControllerSettings(int ControllerIndex, ControllerSettingsStruct& controller_settings);
 String get_formatted_Controller_number(int controller_index);
