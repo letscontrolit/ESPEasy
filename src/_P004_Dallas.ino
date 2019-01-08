@@ -360,6 +360,8 @@ boolean Plugin_004_DS_setResolution(uint8_t ROM[8], byte res)
         return false;
     else
     {
+    	byte old_configuration = ScratchPad[4];
+
         switch (res)
         {
             case 12:
@@ -377,6 +379,9 @@ boolean Plugin_004_DS_setResolution(uint8_t ROM[8], byte res)
                 break;
         }
 
+        if (ScratchPad[4] == old_configuration)
+        	return true;
+
         Plugin_004_DS_reset();
         Plugin_004_DS_write(0x55); // Choose ROM
         for (byte i = 0; i < 8; i++)
@@ -387,6 +392,7 @@ boolean Plugin_004_DS_setResolution(uint8_t ROM[8], byte res)
         Plugin_004_DS_write(ScratchPad[3]); // low alarm temp
         Plugin_004_DS_write(ScratchPad[4]); // configuration register
 
+        Plugin_004_DS_reset();
         Plugin_004_DS_write(0x55); // Choose ROM
         for (byte i = 0; i < 8; i++)
             Plugin_004_DS_write(ROM[i]);
