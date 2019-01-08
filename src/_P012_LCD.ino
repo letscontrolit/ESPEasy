@@ -61,7 +61,7 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+        byte choice = PCONFIG(0);
         //String options[16];
         int optionValues[16];
         for (byte x = 0; x < 16; x++)
@@ -76,7 +76,7 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
         addFormSelectorI2C(F("p012_adr"), 16, optionValues, choice);
 
 
-        byte choice2 = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
+        byte choice2 = PCONFIG(1);
         String options2[2];
         options2[0] = F("2 x 16");
         options2[1] = F("4 x 20");
@@ -92,16 +92,16 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
         }
 
         addRowLabel(F("Display button"));
-        addPinSelect(false, F("taskdevicepin3"), Settings.TaskDevicePin3[event->TaskIndex]);
+        addPinSelect(false, F("taskdevicepin3"), CONFIG_PIN3);
 
-        addFormNumericBox(F("Display Timeout"), F("p012_timer"), Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
+        addFormNumericBox(F("Display Timeout"), F("p012_timer"), PCONFIG(2));
 
         String options3[3];
         options3[0] = F("Continue to next line (as in v1.4)");
         options3[1] = F("Truncate exceeding message");
         options3[2] = F("Clear then truncate exceeding message");
         int optionValues3[3] = { 0,1,2 };
-        addFormSelector(F("LCD command Mode"), F("p012_mode"), 3, options3, optionValues3, Settings.TaskDevicePluginConfig[event->TaskIndex][3]);
+        addFormSelector(F("LCD command Mode"), F("p012_mode"), 3, options3, optionValues3, PCONFIG(3));
 
         success = true;
         break;
@@ -109,10 +109,10 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("p012_adr"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("p012_size"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("p012_timer"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][3] = getFormItemInt(F("p012_mode"));
+        PCONFIG(0) = getFormItemInt(F("p012_adr"));
+        PCONFIG(1) = getFormItemInt(F("p012_size"));
+        PCONFIG(2) = getFormItemInt(F("p012_timer"));
+        PCONFIG(3) = getFormItemInt(F("p012_mode"));
 
         char deviceTemplate[P12_Nlines][P12_Nchars];
         String error;
@@ -134,42 +134,42 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
       {
-        if (Settings.TaskDevicePluginConfig[event->TaskIndex][1] == 2) {
+        if (PCONFIG(1) == 2) {
           Plugin_012_rows = 4;
           Plugin_012_cols = 20;
-        } else if (Settings.TaskDevicePluginConfig[event->TaskIndex][1] == 1) {
+        } else if (PCONFIG(1) == 1) {
           Plugin_012_rows = 2;
           Plugin_012_cols = 16;
         }
 
-        Plugin_012_mode = Settings.TaskDevicePluginConfig[event->TaskIndex][3];
+        Plugin_012_mode = PCONFIG(3);
 
         //TODO:LiquidCrystal_I2C class doesn't have destructor. So if LCD type (size) is changed better reboot for changes to take effect.
         // workaround is to fix the cols and rows at its maximum (20 and 4)
         if (!lcd)
-          lcd = new LiquidCrystal_I2C(Settings.TaskDevicePluginConfig[event->TaskIndex][0], 20, 4); //Plugin_012_cols, Plugin_012_rows);
+          lcd = new LiquidCrystal_I2C(PCONFIG(0), 20, 4); //Plugin_012_cols, Plugin_012_rows);
 
         // Setup LCD display
         lcd->init();                      // initialize the lcd
         lcd->backlight();
         lcd->print(F("ESP Easy"));
-        displayTimer = Settings.TaskDevicePluginConfig[event->TaskIndex][2];
-        if (Settings.TaskDevicePin3[event->TaskIndex] != -1)
-          pinMode(Settings.TaskDevicePin3[event->TaskIndex], INPUT_PULLUP);
+        displayTimer = PCONFIG(2);
+        if (CONFIG_PIN3 != -1)
+          pinMode(CONFIG_PIN3, INPUT_PULLUP);
         success = true;
         break;
       }
 
     case PLUGIN_TEN_PER_SECOND:
       {
-        if (Settings.TaskDevicePin3[event->TaskIndex] != -1)
+        if (CONFIG_PIN3 != -1)
         {
-          if (!digitalRead(Settings.TaskDevicePin3[event->TaskIndex]))
+          if (!digitalRead(CONFIG_PIN3))
           {
             if (lcd) {
               lcd->backlight();
             }
-            displayTimer = Settings.TaskDevicePluginConfig[event->TaskIndex][2];
+            displayTimer = PCONFIG(2);
           }
         }
         break;

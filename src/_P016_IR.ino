@@ -135,7 +135,7 @@ boolean Plugin_016(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
       {
-        int irPin = Settings.TaskDevicePin1[event->TaskIndex];
+        int irPin = CONFIG_PIN1;
         if (irReceiver == 0 && irPin != -1)
         {
           serialPrintln(F("IR Init"));

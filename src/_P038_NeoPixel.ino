@@ -65,11 +65,11 @@ boolean Plugin_038(byte function, struct EventStruct *event, String& string)
         const String options[] = { F("GRB"), F("GRBW") };
         int indices[] = { 1, 2 };
 
-      	addFormNumericBox(F("Led Count"), F("p038_leds"), Settings.TaskDevicePluginConfig[event->TaskIndex][0],1,999);
+      	addFormNumericBox(F("Led Count"), F("p038_leds"), PCONFIG(0),1,999);
 
         // FIXME TD-er: Why isn't this using the normal pin selection functions?
-      	addFormPinSelect(F("GPIO"), F("taskdevicepin1"), Settings.TaskDevicePin1[event->TaskIndex]);
-        addFormSelector(F("Strip Type"), F("p038_strip"), 2, options, indices, Settings.TaskDevicePluginConfig[event->TaskIndex][1] );
+      	addFormPinSelect(F("GPIO"), F("taskdevicepin1"), CONFIG_PIN1);
+        addFormSelector(F("Strip Type"), F("p038_strip"), 2, options, indices, PCONFIG(1) );
 
       	success = true;
         break;
@@ -77,9 +77,9 @@ boolean Plugin_038(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("p038_leds"));
-        MaxPixels = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
-        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("p038_strip"));
+        PCONFIG(0) = getFormItemInt(F("p038_leds"));
+        MaxPixels = PCONFIG(0);
+        PCONFIG(1) = getFormItemInt(F("p038_strip"));
         success = true;
         break;
       }
@@ -88,17 +88,17 @@ boolean Plugin_038(byte function, struct EventStruct *event, String& string)
       {
         if (!Plugin_038_pixels)
         {
-          byte striptype = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
+          byte striptype = PCONFIG(1);
           if (striptype == 1)
-            Plugin_038_pixels = new Adafruit_NeoPixel(Settings.TaskDevicePluginConfig[event->TaskIndex][0], Settings.TaskDevicePin1[event->TaskIndex], NEO_GRB + NEO_KHZ800);
+            Plugin_038_pixels = new Adafruit_NeoPixel(PCONFIG(0), CONFIG_PIN1, NEO_GRB + NEO_KHZ800);
           else if (striptype == 2)
-            Plugin_038_pixels = new Adafruit_NeoPixel(Settings.TaskDevicePluginConfig[event->TaskIndex][0], Settings.TaskDevicePin1[event->TaskIndex], NEO_GRBW + NEO_KHZ800);
+            Plugin_038_pixels = new Adafruit_NeoPixel(PCONFIG(0), CONFIG_PIN1, NEO_GRBW + NEO_KHZ800);
           else
-            Plugin_038_pixels = new Adafruit_NeoPixel(Settings.TaskDevicePluginConfig[event->TaskIndex][0], Settings.TaskDevicePin1[event->TaskIndex], NEO_GRB + NEO_KHZ800);
+            Plugin_038_pixels = new Adafruit_NeoPixel(PCONFIG(0), CONFIG_PIN1, NEO_GRB + NEO_KHZ800);
 
           Plugin_038_pixels->begin(); // This initializes the NeoPixel library.
         }
-        MaxPixels = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+        MaxPixels = PCONFIG(0);
         success = true;
         break;
       }

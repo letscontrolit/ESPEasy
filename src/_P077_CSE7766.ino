@@ -17,8 +17,6 @@
 #define PLUGIN_VALUENAME3_077 "Current"
 #define PLUGIN_VALUENAME4_077 "Pulses"
 
-boolean Plugin_077_init = false;
-
 #define CSE_NOT_CALIBRATED          0xAA
 #define CSE_PULSES_NOT_INITIALIZED  -1
 #define CSE_PREF                    1000
@@ -33,24 +31,28 @@ boolean Plugin_077_init = false;
    unsigned long energy_current_calibration = HLW_IREF_PULSE;
 */
 
-uint8_t cse_receive_flag = 0;
+struct P077_data_struct {
+//  uint8_t cse_receive_flag = 0;
 
-long voltage_cycle = 0;
-long current_cycle = 0;
-long power_cycle = 0;
-long power_cycle_first = 0;
-long cf_pulses = 0;
-long cf_pulses_last_time = CSE_PULSES_NOT_INITIALIZED;
-long cf_frequency = 0;
-uint8_t serial_in_buffer[32];
-uint8_t P077_checksum = 0;
-float energy_voltage = 0;         // 123.1 V
-float energy_current = 0;         // 123.123 A
-float energy_power = 0;           // 123.1 W
+  long voltage_cycle = 0;
+  long current_cycle = 0;
+  long power_cycle = 0;
+  long power_cycle_first = 0;
+  long cf_pulses = 0;
+  long cf_pulses_last_time = CSE_PULSES_NOT_INITIALIZED;
+  long cf_frequency = 0;
+  uint8_t serial_in_buffer[32];
+  uint8_t P077_checksum = 0;
+  float energy_voltage = 0;         // 123.1 V
+  float energy_current = 0;         // 123.123 A
+  float energy_power = 0;           // 123.1 W
 
-//stats
-long P077_t_max = 0, P077_t_all = 0, P077_t_pkt=0, P077_t_pkt_tmp = 0;
-uint16_t P077_count_bytes = 0, P077_count_max = 0, P077_count_pkt = 0;
+  //stats
+  long P077_t_max = 0, P077_t_all = 0, P077_t_pkt=0, P077_t_pkt_tmp = 0;
+  uint16_t P077_count_bytes = 0, P077_count_max = 0, P077_count_pkt = 0;
+};
+
+P077_data_struct* P077_data = nullptr;
 
 boolean Plugin_077(byte function, struct EventStruct *event, String& string)
 {
@@ -96,13 +98,13 @@ boolean Plugin_077(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        addFormNumericBox(F("U Ref"), F("p077_URef"), Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
+        addFormNumericBox(F("U Ref"), F("p077_URef"), PCONFIG(0));
         addUnit(F("uSec"));
 
-        addFormNumericBox(F("I Ref"), F("p077_IRef"), Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
+        addFormNumericBox(F("I Ref"), F("p077_IRef"), PCONFIG(1));
         addUnit(F("uSec"));
 
-        addFormNumericBox(F("P Ref"), F("p077_PRef"), Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
+        addFormNumericBox(F("P Ref"), F("p077_PRef"), PCONFIG(2));
         addUnit(F("uSec"));
         addFormNote(F("Use 0 to read values stored on chip / default values"));
 
@@ -112,19 +114,32 @@ boolean Plugin_077(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("p077_URef"));;
-        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("p077_IRef"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("p077_PRef"));
+        PCONFIG(0) = getFormItemInt(F("p077_URef"));;
+        PCONFIG(1) = getFormItemInt(F("p077_IRef"));
+        PCONFIG(2) = getFormItemInt(F("p077_PRef"));
         success = true;
         break;
       }
 
+
+    case PLUGIN_EXIT: {
+      if (P077_data) {
+        delete P077_data;
+        P077_data = nullptr;
+      }
+      success = true;
+      break;
+    }
+
     case PLUGIN_INIT:
       {
-        Plugin_077_init = true;
-        if (Settings.TaskDevicePluginConfig[event->TaskIndex][0] == 0) Settings.TaskDevicePluginConfig[event->TaskIndex][0] = HLW_UREF_PULSE;
-        if (Settings.TaskDevicePluginConfig[event->TaskIndex][1] == 0) Settings.TaskDevicePluginConfig[event->TaskIndex][1] = HLW_IREF_PULSE;
-        if (Settings.TaskDevicePluginConfig[event->TaskIndex][2] == 0) Settings.TaskDevicePluginConfig[event->TaskIndex][2] = HLW_PREF_PULSE;
+        if (P077_data) {
+          delete P077_data;
+        }
+        P077_data = new P077_data_struct();
+        if (PCONFIG(0) == 0) PCONFIG(0) = HLW_UREF_PULSE;
+        if (PCONFIG(1) == 0) PCONFIG(1) = HLW_IREF_PULSE;
+        if (PCONFIG(2) == 0) PCONFIG(2) = HLW_PREF_PULSE;
 
         Settings.UseSerial = true; // Enable Serial port
         disableSerialLog(); // disable logging on serial port (used for CSE7766 communication)
@@ -176,7 +191,7 @@ boolean Plugin_077(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_SERIAL_IN:
       {
-        if (Plugin_077_init) {
+        if (P077_data) {
           success = true;
           /* ONLINE CHECKSUMMING by Bartłomiej Zimoń */
           bool P077_found = false;
@@ -253,26 +268,26 @@ void CseReceived(struct EventStruct *event)
 
 
   // Get chip calibration data (coefficients) and use as initial defaults
-  if (HLW_UREF_PULSE == Settings.TaskDevicePluginConfig[event->TaskIndex][0]) {
+  if (HLW_UREF_PULSE == PCONFIG(0)) {
     long voltage_coefficient = 191200; // uSec
     if (CSE_NOT_CALIBRATED != header) {
       voltage_coefficient = serial_in_buffer[2] << 16 | serial_in_buffer[3] << 8 | serial_in_buffer[4];
     }
-    Settings.TaskDevicePluginConfig[event->TaskIndex][0] = voltage_coefficient / CSE_UREF;
+    PCONFIG(0) = voltage_coefficient / CSE_UREF;
   }
-  if (HLW_IREF_PULSE == Settings.TaskDevicePluginConfig[event->TaskIndex][1]) {
+  if (HLW_IREF_PULSE == PCONFIG(1)) {
     long current_coefficient = 16140; // uSec
     if (CSE_NOT_CALIBRATED != header) {
       current_coefficient = serial_in_buffer[8] << 16 | serial_in_buffer[9] << 8 | serial_in_buffer[10];
     }
-    Settings.TaskDevicePluginConfig[event->TaskIndex][1] = current_coefficient;
+    PCONFIG(1) = current_coefficient;
   }
-  if (HLW_PREF_PULSE == Settings.TaskDevicePluginConfig[event->TaskIndex][2]) {
+  if (HLW_PREF_PULSE == PCONFIG(2)) {
     long power_coefficient = 5364000; // uSec
     if (CSE_NOT_CALIBRATED != header) {
       power_coefficient = serial_in_buffer[14] << 16 | serial_in_buffer[15] << 8 | serial_in_buffer[16];
     }
-    Settings.TaskDevicePluginConfig[event->TaskIndex][2] = power_coefficient / CSE_PREF;
+    PCONFIG(2) = power_coefficient / CSE_PREF;
   }
 
 
@@ -303,7 +318,7 @@ void CseReceived(struct EventStruct *event)
   //  if (energy_power_on) {  // Powered on
 
   if (adjustement & 0x40) { // Voltage valid
-    energy_voltage = (float)(Settings.TaskDevicePluginConfig[event->TaskIndex][0] * CSE_UREF) / (float)voltage_cycle;
+    energy_voltage = (float)(PCONFIG(0) * CSE_UREF) / (float)voltage_cycle;
   }
   if (adjustement & 0x10) { // Power valid
     if ((header & 0xF2) == 0xF2) { // Power cycle exceeds range
@@ -312,7 +327,7 @@ void CseReceived(struct EventStruct *event)
       if (0 == power_cycle_first) power_cycle_first = power_cycle; // Skip first incomplete power_cycle
       if (power_cycle_first != power_cycle) {
         power_cycle_first = -1;
-        energy_power = (float)(Settings.TaskDevicePluginConfig[event->TaskIndex][2] * CSE_PREF) / (float)power_cycle;
+        energy_power = (float)(PCONFIG(2) * CSE_PREF) / (float)power_cycle;
       } else {
         energy_power = 0;
       }
@@ -325,7 +340,7 @@ void CseReceived(struct EventStruct *event)
     if (0 == energy_power) {
       energy_current = 0;
     } else {
-      energy_current = (float)Settings.TaskDevicePluginConfig[event->TaskIndex][1] / (float)current_cycle;
+      energy_current = (float)PCONFIG(1) / (float)current_cycle;
     }
   }
 

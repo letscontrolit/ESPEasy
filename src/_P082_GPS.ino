@@ -212,9 +212,9 @@ boolean Plugin_082(byte function, struct EventStruct *event, String &string) {
     }
 
     case PLUGIN_INIT: {
-      const int16_t serial_rx = Settings.TaskDevicePin1[event->TaskIndex];
-      const int16_t serial_tx = Settings.TaskDevicePin2[event->TaskIndex];
-      const int16_t pps_pin   = Settings.TaskDevicePin3[event->TaskIndex];
+      const int16_t serial_rx = CONFIG_PIN1;
+      const int16_t serial_tx = CONFIG_PIN2;
+      const int16_t pps_pin   = CONFIG_PIN3;
       if (!P082_data) P082_data = new P082_data_struct();
       if (P082_data->init(serial_rx, serial_tx)) {
         success = true;
@@ -239,7 +239,7 @@ boolean Plugin_082(byte function, struct EventStruct *event, String &string) {
         delete P082_data;
         P082_data = nullptr;
       }
-      const int16_t pps_pin   = Settings.TaskDevicePin3[event->TaskIndex];
+      const int16_t pps_pin   = CONFIG_PIN3;
       if (pps_pin != -1) {
         detachInterrupt(pps_pin);
       }

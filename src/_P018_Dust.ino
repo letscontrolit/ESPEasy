@@ -54,8 +54,8 @@ boolean Plugin_018(byte function, struct EventStruct *event, String& string)
     case PLUGIN_INIT:
       {
         Plugin_018_init = true;
-        pinMode(Settings.TaskDevicePin1[event->TaskIndex], OUTPUT);
-        Plugin_GP2Y10_LED_Pin = Settings.TaskDevicePin1[event->TaskIndex];
+        pinMode(CONFIG_PIN1, OUTPUT);
+        Plugin_GP2Y10_LED_Pin = CONFIG_PIN1;
         digitalWrite(Plugin_GP2Y10_LED_Pin, HIGH);
         success = true;
         break;
@@ -64,7 +64,7 @@ boolean Plugin_018(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
       {
-        Plugin_GP2Y10_LED_Pin = Settings.TaskDevicePin1[event->TaskIndex];
+        Plugin_GP2Y10_LED_Pin = CONFIG_PIN1;
         noInterrupts();
         byte x;
         int value;

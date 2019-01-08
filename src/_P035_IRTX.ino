@@ -53,7 +53,7 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
       {
-        int irPin = Settings.TaskDevicePin1[event->TaskIndex];
+        int irPin = CONFIG_PIN1;
         if (Plugin_035_irSender == 0 && irPin != -1)
         {
           addLog(LOG_LEVEL_INFO, F("INIT: IR TX"));

@@ -60,10 +60,6 @@
 
 // #include <*.h>   // no include needed
 
-#ifndef CONFIG
-#define CONFIG(n) (Settings.TaskDevicePluginConfig[event->TaskIndex][n])
-#endif
-
 
 boolean Plugin_061(byte function, struct EventStruct *event, String& string)
 {
@@ -102,15 +98,15 @@ boolean Plugin_061(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        byte addr = CONFIG(0);
+        byte addr = PCONFIG(0);
 
         int optionValues[16] = { 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x38, 0x39, 0x3A, 0x3B, 0x3C, 0x3D, 0x3E, 0x3F };
-        addFormSelectorI2C(F("i2c_addr"), (CONFIG(1) == 0) ? 8 : 16, optionValues, addr);
-        if (CONFIG(1) != 0)
+        addFormSelectorI2C(F("i2c_addr"), (PCONFIG(1) == 0) ? 8 : 16, optionValues, addr);
+        if (PCONFIG(1) != 0)
           addFormNote(F("PCF8574 uses address 0x20+; PCF8574<b>A</b> uses address 0x38+"));
 
         String options[3] = { F("MCP23017 (Matrix 9x8)"), F("PCF8574 (Matrix 5x4)"), F("PCF8574 (Direct 8)") };
-        addFormSelector(F("Chip (Mode)"), F("chip"), 3, options, NULL, CONFIG(1));
+        addFormSelector(F("Chip (Mode)"), F("chip"), 3, options, NULL, PCONFIG(1));
 
         success = true;
         break;
@@ -118,9 +114,9 @@ boolean Plugin_061(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        CONFIG(0) = getFormItemInt(F("i2c_addr"));
+        PCONFIG(0) = getFormItemInt(F("i2c_addr"));
 
-        CONFIG(1) = getFormItemInt(F("chip"));
+        PCONFIG(1) = getFormItemInt(F("chip"));
 
         success = true;
         break;
@@ -128,11 +124,11 @@ boolean Plugin_061(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
       {
-        switch (CONFIG(1))
+        switch (PCONFIG(1))
         {
-          case 0: MCP23017_KeyPadMatrixInit(CONFIG(0)); break;
-          case 1: PCF8574_KeyPadMatrixInit(CONFIG(0)); break;
-          case 2: PCF8574_KeyPadDirectInit(CONFIG(0)); break;
+          case 0: MCP23017_KeyPadMatrixInit(PCONFIG(0)); break;
+          case 1: PCF8574_KeyPadMatrixInit(PCONFIG(0)); break;
+          case 2: PCF8574_KeyPadDirectInit(PCONFIG(0)); break;
         }
 
         success = true;
@@ -145,11 +141,11 @@ boolean Plugin_061(byte function, struct EventStruct *event, String& string)
       	static byte sentScanCode = 0xFF;
         byte actScanCode = 0;
 
-        switch (CONFIG(1))
+        switch (PCONFIG(1))
         {
-          case 0: actScanCode = MCP23017_KeyPadMatrixScan(CONFIG(0)); break;
-          case 1: actScanCode = PCF8574_KeyPadMatrixScan(CONFIG(0)); break;
-          case 2: actScanCode = PCF8574_KeyPadDirectScan(CONFIG(0)); break;
+          case 0: actScanCode = MCP23017_KeyPadMatrixScan(PCONFIG(0)); break;
+          case 1: actScanCode = PCF8574_KeyPadMatrixScan(PCONFIG(0)); break;
+          case 2: actScanCode = PCF8574_KeyPadDirectScan(PCONFIG(0)); break;
         }
 
       	if (lastScanCode == actScanCode)   // debounced? - two times the same value?

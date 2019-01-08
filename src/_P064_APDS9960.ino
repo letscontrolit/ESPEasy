@@ -30,10 +30,6 @@
 
 #include <SparkFun_APDS9960.h>   //Lib is modified to work with ESP
 
-#ifndef CONFIG
-#define CONFIG(n) (Settings.TaskDevicePluginConfig[event->TaskIndex][n])
-#endif
-
 SparkFun_APDS9960* PLUGIN_064_pds = NULL;
 
 
@@ -81,7 +77,7 @@ boolean Plugin_064(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        byte addr = 0x39;   // CONFIG(0); chip has only 1 address
+        byte addr = 0x39;   // PCONFIG(0); chip has only 1 address
 
         int optionValues[1] = { 0x39 };
         addFormSelectorI2C(F("i2c_addr"), 1, optionValues, addr);  //Only for display I2C address
@@ -92,7 +88,7 @@ boolean Plugin_064(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        //CONFIG(0) = getFormItemInt(F("i2c_addr"));
+        //PCONFIG(0) = getFormItemInt(F("i2c_addr"));
 
         success = true;
         break;

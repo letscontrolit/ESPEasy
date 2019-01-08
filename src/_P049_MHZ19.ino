@@ -207,11 +207,11 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
       {
         serialHelper_webformLoad(event);
-        byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+        byte choice = PCONFIG(0);
         String options[2] = { F("Normal"), F("ABC disabled") };
         int optionValues[2] = { ABC_enabled, ABC_disabled };
         addFormSelector(F("Auto Base Calibration"), F("p049_abcdisable"), 2, options, optionValues, choice);
-        byte choiceFilter = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
+        byte choiceFilter = PCONFIG(1);
         String filteroptions[5] = { F("Skip Unstable"), F("Use Unstable"), F("Fast Response"), F("Medium Response"), F("Slow Response") };
         int filteroptionValues[5] = {
           PLUGIN_049_FILTER_OFF,
@@ -235,21 +235,21 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
           Plugin_049_ABC_MustApply = true;
           Plugin_049_ABC_Disable = new_ABC_disable;
         }
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = formValue;
+        PCONFIG(0) = formValue;
         const int filterValue = getFormItemInt(F("p049_filter"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = filterValue;
+        PCONFIG(1) = filterValue;
         success = true;
         break;
       }
 
     case PLUGIN_INIT:
       {
-        Plugin_049_ABC_Disable = Settings.TaskDevicePluginConfig[event->TaskIndex][0] == ABC_disabled;
+        Plugin_049_ABC_Disable = PCONFIG(0) == ABC_disabled;
         if (Plugin_049_ABC_Disable) {
           // No guarantee the correct state is active on the sensor after reboot.
           Plugin_049_ABC_MustApply = true;
         }
-        P049_easySerial = new ESPeasySerial(Settings.TaskDevicePin1[event->TaskIndex], Settings.TaskDevicePin2[event->TaskIndex]);
+        P049_easySerial = new ESPeasySerial(CONFIG_PIN1, CONFIG_PIN2);
         P049_easySerial->begin(9600);
         addLog(LOG_LEVEL_INFO, F("MHZ19: Init OK "));
 
@@ -426,7 +426,7 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
                 success = false;
               // Finally, stable readings are used for variables
               } else {
-                const int filterValue = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
+                const int filterValue = PCONFIG(1);
                 if (Plugin_049_Check_and_ApplyFilter(UserVar[event->BaseVarIndex], ppm, s, filterValue, log)) {
                   UserVar[event->BaseVarIndex] = (float)ppm;
                   UserVar[event->BaseVarIndex + 1] = (float)temp;

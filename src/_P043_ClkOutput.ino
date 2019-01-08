@@ -111,8 +111,8 @@ boolean Plugin_043(byte function, struct EventStruct *event, String& string)
             if (state != 0)
             {
               state--;
-              pinMode(Settings.TaskDevicePin1[event->TaskIndex], OUTPUT);
-              digitalWrite(Settings.TaskDevicePin1[event->TaskIndex], state);
+              pinMode(CONFIG_PIN1, OUTPUT);
+              digitalWrite(CONFIG_PIN1, state);
               UserVar[event->BaseVarIndex] = state;
               String log = F("TCLK : State ");
               log += state;

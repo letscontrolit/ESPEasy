@@ -25,10 +25,6 @@
 
 Adafruit_MPR121* Plugin_062_K = NULL;
 
-#ifndef CONFIG
-#define CONFIG(n) (Settings.TaskDevicePluginConfig[event->TaskIndex][n])
-#endif
-
 
 boolean Plugin_062(byte function, struct EventStruct *event, String& string)
 {
@@ -67,12 +63,12 @@ boolean Plugin_062(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        byte addr = CONFIG(0);
+        byte addr = PCONFIG(0);
 
         int optionValues[4] = { 0x5A, 0x5B, 0x5C, 0x5D };
         addFormSelectorI2C(F("i2c_addr"), 4, optionValues, addr);
 
-        addFormCheckBox(F("ScanCode"), F("scancode"), CONFIG(1));
+        addFormCheckBox(F("ScanCode"), F("scancode"), PCONFIG(1));
 
         success = true;
         break;
@@ -80,9 +76,9 @@ boolean Plugin_062(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        CONFIG(0) = getFormItemInt(F("i2c_addr"));
+        PCONFIG(0) = getFormItemInt(F("i2c_addr"));
 
-        CONFIG(1) = isFormItemChecked(F("scancode"));
+        PCONFIG(1) = isFormItemChecked(F("scancode"));
 
         success = true;
         break;
@@ -90,7 +86,7 @@ boolean Plugin_062(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
       {
-        byte addr = CONFIG(0);
+        byte addr = PCONFIG(0);
 
         if (!Plugin_062_K)
           Plugin_062_K = new Adafruit_MPR121;
@@ -109,7 +105,7 @@ boolean Plugin_062(byte function, struct EventStruct *event, String& string)
 
           uint16_t key = Plugin_062_K->touched();
 
-          if (key && CONFIG(1))
+          if (key && PCONFIG(1))
           {
             uint16_t colMask = 0x01;
             for (byte col = 1; col <= 12; col++)
@@ -130,7 +126,7 @@ boolean Plugin_062(byte function, struct EventStruct *event, String& string)
             event->sensorType = SENSOR_TYPE_SWITCH;
 
             String log = F("Tkey : ");
-            if (CONFIG(1))
+            if (PCONFIG(1))
               log = F("ScanCode=0x");
             else
               log = F("KeyMap=0x");
