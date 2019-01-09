@@ -5,7 +5,6 @@
 
 //#include <math.h>
 #include <map>
-#include <_Plugin_Helper.h>
 
 #define PLUGIN_028
 #define PLUGIN_ID_028        28
