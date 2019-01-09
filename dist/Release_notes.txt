@@ -1,4 +1,18 @@
 -------------------------------------------------
+Changes in release mega-20190109 (since mega-20190108)
+-------------------------------------------------
+
+Release date: Wed Jan  9 04:00:13 CET 2019
+
+Gijs Noorlander (1):
+      Compile issue Arduino IDE declare function static
+
+Grovkillen (2):
+      [dist] deleted the plugin sizes file (obsolete)
+      [flasher] big update!
+
+
+-------------------------------------------------
 Changes in release mega-20190108 (since mega-20190107)
 -------------------------------------------------
 
