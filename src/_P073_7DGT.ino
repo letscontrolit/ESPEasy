@@ -58,7 +58,7 @@ class p073_7dgt
     byte brightness;
     boolean timesep;
 };
-p073_7dgt *Plugin_073_7dgt = NULL;
+p073_7dgt *Plugin_073_7dgt = nullptr;
 //---------------------------------------------------
 
 uint8_t p073_showbuffer[8];
@@ -81,16 +81,42 @@ bool    p073_shift;
 //   - pos 14    - triple lines "/"
 //   - pos 15    - underscore "_"
 //   - pos 16-41 - Letters from A to Z
-const byte CharTableTM1637  [42] = {B00111111,B00000110,B01011011,B01001111,B01100110,B01101101,B01111101,B00000111,B01111111,B01101111,
+static const byte CharTableTM1637  [42] PROGMEM = {B00111111,B00000110,B01011011,B01001111,B01100110,B01101101,B01111101,B00000111,B01111111,B01101111,
                                     B00000000,B01000000,B01100011,B01001000,B01001001,B00001000,
                                     B01110111,B01111100,B00111001,B01011110,B01111001,B01110001,B00111101,B01110110,B00110000,B00011110,
                                     B01110101,B00111000,B00010101,B00110111,B00111111,B01110011,B01101011,B00110011,B01101101,B01111000,
                                     B00111110,B00111110,B00101010,B01110110,B01101110,B01011011};
-const byte CharTableMAX7219 [42] = {B01111110,B00110000,B01101101,B01111001,B00110011,B01011011,B01011111,B01110000,B01111111,B01111011,
+static const byte CharTableMAX7219 [42] PROGMEM = {B01111110,B00110000,B01101101,B01111001,B00110011,B01011011,B01011111,B01110000,B01111111,B01111011,
                                     B00000000,B00000001,B01100011,B00001001,B01001001,B00001000,
                                     B01110111,B00011111,B01001110,B00111101,B01001111,B01000111,B01011110,B00110111,B00000110,B00111100,
                                     B01010111,B00001110,B01010100,B01110110,B01111110,B01100111,B01101011,B01100110,B01011011,B00001111,
                                     B00111110,B00111110,B00101010,B00110111,B00111011,B01101101};
+
+uint8_t P073_mapCharToFontPosition(char character) {
+  uint8_t position = 10;
+  if (character >= '0' && character <= '9') {
+    position = character - '0';
+  }
+  else if (character >= 'A' && character <= 'Z')
+  {
+    position = character - 'A' + 16;
+  }
+  else if (character >= 'a' && character <= 'a')
+  {
+    position = character - 'a' + 16;
+  }
+  else {
+    switch(character) {
+      case ' ': position = 10; break;
+      case '-': position = 11; break;
+      case '^': position = 12; break; // degree
+      case '=': position = 13; break;
+      case '/': position = 14; break;
+      case '_': position = 15; break;
+    }
+  }
+  return position;
+}
 
 boolean Plugin_073(byte function, struct EventStruct *event, String& string)
 {
@@ -172,34 +198,46 @@ boolean Plugin_073(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_EXIT:
+      {
+        if (Plugin_073_7dgt) {
+          delete Plugin_073_7dgt;
+          Plugin_073_7dgt = nullptr;
+        }
+        success = true;
+        break;
+      }
+
     case PLUGIN_INIT:
       {
-        if (!Plugin_073_7dgt) {
-          Plugin_073_7dgt = new p073_7dgt;
-            Plugin_073_7dgt->pin1 = CONFIG_PIN1;
-            Plugin_073_7dgt->pin2 = CONFIG_PIN2;
-            Plugin_073_7dgt->pin3 = CONFIG_PIN3;
-            Plugin_073_7dgt->type = PCONFIG(0);
-            Plugin_073_7dgt->output = PCONFIG(1);
-            Plugin_073_7dgt->brightness = PCONFIG(2);
-          switch (PCONFIG(0))
-          {
-            case P073_TM1637_4DGTCOLON:
-            case P073_TM1637_4DGTDOTS:
-            case P073_TM1637_6DGT:
-              {
-                tm1637_InitDisplay(CONFIG_PIN1, CONFIG_PIN2);
-                int tm1637_bright = PCONFIG(2) / 2;
-                tm1637_SetPowerBrightness(CONFIG_PIN1, CONFIG_PIN2, tm1637_bright, true);
-                break;
-              }
-            case P073_MAX7219_8DGT:
-              {
-                max7219_InitDisplay(CONFIG_PIN1, CONFIG_PIN2, CONFIG_PIN3);
-                max7219_SetPowerBrightness(CONFIG_PIN1, CONFIG_PIN2, CONFIG_PIN3, PCONFIG(2), true);
-                break;
-              }
-          }
+        if (Plugin_073_7dgt) {
+          delete Plugin_073_7dgt;
+          Plugin_073_7dgt = nullptr;
+        }
+        Plugin_073_7dgt = new p073_7dgt;
+        Plugin_073_7dgt->pin1 = CONFIG_PIN1;
+        Plugin_073_7dgt->pin2 = CONFIG_PIN2;
+        Plugin_073_7dgt->pin3 = CONFIG_PIN3;
+        Plugin_073_7dgt->type = PCONFIG(0);
+        Plugin_073_7dgt->output = PCONFIG(1);
+        Plugin_073_7dgt->brightness = PCONFIG(2);
+        switch (PCONFIG(0))
+        {
+          case P073_TM1637_4DGTCOLON:
+          case P073_TM1637_4DGTDOTS:
+          case P073_TM1637_6DGT:
+            {
+              tm1637_InitDisplay(CONFIG_PIN1, CONFIG_PIN2);
+              int tm1637_bright = PCONFIG(2) / 2;
+              tm1637_SetPowerBrightness(CONFIG_PIN1, CONFIG_PIN2, tm1637_bright, true);
+              break;
+            }
+          case P073_MAX7219_8DGT:
+            {
+              max7219_InitDisplay(CONFIG_PIN1, CONFIG_PIN2, CONFIG_PIN3);
+              max7219_SetPowerBrightness(CONFIG_PIN1, CONFIG_PIN2, CONFIG_PIN3, PCONFIG(2), true);
+              break;
+            }
         }
         success = true;
         break;
@@ -207,269 +245,15 @@ boolean Plugin_073(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WRITE:
       {
-        if (!Plugin_073_7dgt)
-          break;
-
-        String tmpString  = string;
-        int argIndex = tmpString.indexOf(',');
-        if (argIndex)
-          tmpString = tmpString.substring(0, argIndex);
-
-        String tmpStr = string;
-        int comma1 = tmpStr.indexOf(',');
-
-//----------------------------------------------------------------------------------------------------------------------
-        if (tmpString.equalsIgnoreCase(F("7dn"))) {
-          if (Plugin_073_7dgt->output != P073_DISP_MANUAL)
-            break;
-          String log = F("7DGT : Show Number=");
-          log += event->Par1;
-          addLog(LOG_LEVEL_INFO, log);
-          switch (Plugin_073_7dgt->type)
-          {
-            case P073_TM1637_4DGTCOLON:
-            {
-              if (event->Par1 > -1000 && event->Par1 < 10000)
-                p073_FillBufferWithNumber(String(int(event->Par1)));
-              else
-                p073_FillBufferWithDash();
-              tm1637_ShowBuffer(Plugin_073_7dgt->pin1, Plugin_073_7dgt->pin2, TM1637_4DIGIT, 8);
-              break;
-            }
-            case P073_TM1637_4DGTDOTS:
-            {
-              if (event->Par1 > -1000 && event->Par1 < 10000)
-                p073_FillBufferWithNumber(tmpStr.substring(comma1+1).c_str());
-              else
-                p073_FillBufferWithDash();
-              tm1637_ShowBuffer(Plugin_073_7dgt->pin1, Plugin_073_7dgt->pin2, TM1637_4DIGIT, 8);
-              break;
-            }
-            case P073_TM1637_6DGT:
-            {
-              if (event->Par1 > -100000 && event->Par1 < 1000000)
-                p073_FillBufferWithNumber(tmpStr.substring(comma1+1).c_str());
-              else
-                p073_FillBufferWithDash();
-              tm1637_SwapDigitInBuffer(2);     // only needed for 6-digits displays
-              tm1637_ShowBuffer(Plugin_073_7dgt->pin1, Plugin_073_7dgt->pin2, TM1637_6DIGIT, 8);
-              break;
-            }
-            case P073_MAX7219_8DGT:
-            {
-              if (comma1 > 0) {
-                if (event->Par1 > -10000000 && event->Par1 < 100000000) {
-                  p073_FillBufferWithNumber(tmpStr.substring(comma1+1).c_str());
-                }
-                else
-                  p073_FillBufferWithDash();
-                max7219_ShowBuffer(Plugin_073_7dgt->pin1, Plugin_073_7dgt->pin2, Plugin_073_7dgt->pin3);
-              }
-              break;
-            }
-          }
-          success = true;
-//----------------------------------------------------------------------------------------------------------------------
-        } else if (tmpString.equalsIgnoreCase(F("7dt"))) {
-          if (Plugin_073_7dgt->output != P073_DISP_MANUAL)
-            break;
-          double p073_temptemp = 0;
-          bool p073_tempflagdot = false;
-          if (comma1 > 0)
-            p073_temptemp  = atof(tmpStr.substring(comma1+1).c_str());
-          String log = F("7DGT : Show Temperature=");
-          log += p073_temptemp;
-          addLog(LOG_LEVEL_INFO, log);
-          switch (Plugin_073_7dgt->type)
-          {
-            case P073_TM1637_4DGTCOLON:
-            case P073_TM1637_4DGTDOTS:
-            {
-              if (p073_temptemp > 999 || p073_temptemp < -99.9)
-                p073_FillBufferWithDash();
-              else {
-                if (p073_temptemp < 100 && p073_temptemp > -10) {
-                  p073_temptemp = int(p073_temptemp*10);
-                  p073_tempflagdot = true;
-                }
-                p073_FillBufferWithTemp(p073_temptemp);
-                if (p073_temptemp == 0 && p073_tempflagdot)
-                  p073_showbuffer[5] = 0;
-              }
-              tm1637_ShowTimeTemp4(Plugin_073_7dgt->pin1, Plugin_073_7dgt->pin2, p073_tempflagdot, 4);
-              break;
-            }
-            case P073_TM1637_6DGT:
-            {
-              if (p073_temptemp > 999 || p073_temptemp < -99.9)
-                p073_FillBufferWithDash();
-              else {
-                if (p073_temptemp < 100 && p073_temptemp > -10) {
-                  p073_temptemp = int(p073_temptemp*10);
-                  p073_tempflagdot = true;
-                }
-                p073_FillBufferWithTemp(p073_temptemp);
-                if (p073_temptemp == 0 && p073_tempflagdot)
-                  p073_showbuffer[5] = 0;
-              }
-              tm1637_ShowTemp6(Plugin_073_7dgt->pin1, Plugin_073_7dgt->pin2, p073_tempflagdot);
-              break;
-            }
-            case P073_MAX7219_8DGT:
-            {
-              p073_temptemp = int(p073_temptemp*10);
-              p073_FillBufferWithTemp(p073_temptemp);
-              if (p073_temptemp == 0)
-                p073_showbuffer[5] = 0;
-              max7219_ShowTemp(Plugin_073_7dgt->pin1, Plugin_073_7dgt->pin2, Plugin_073_7dgt->pin3);
-              break;
-            }
-          }
-          success = true;
-//----------------------------------------------------------------------------------------------------------------------
-        } else if (tmpString.equalsIgnoreCase(F("7dst"))) {
-          if (Plugin_073_7dgt->output != P073_DISP_MANUAL)
-            break;
-          String log = F("7DGT : Show Time=");
-          log += event->Par1; log += ":";
-          log += event->Par2; log += ":";
-          log += event->Par3;
-          addLog(LOG_LEVEL_INFO, log);
-          Plugin_073_7dgt->timesep = true;
-          p073_FillBufferWithTime(false, event->Par1, event->Par2, event->Par3, false);
-          switch (Plugin_073_7dgt->type)
-          {
-            case P073_TM1637_4DGTCOLON:
-            case P073_TM1637_4DGTDOTS:
-            {
-              tm1637_ShowTimeTemp4(Plugin_073_7dgt->pin1, Plugin_073_7dgt->pin2, Plugin_073_7dgt->timesep, 0);
-              break;
-            }
-            case P073_TM1637_6DGT:
-            {
-              tm1637_ShowTime6(Plugin_073_7dgt->pin1, Plugin_073_7dgt->pin2, Plugin_073_7dgt->timesep);
-              break;
-            }
-            case P073_MAX7219_8DGT:
-            {
-              max7219_ShowTime(Plugin_073_7dgt->pin1, Plugin_073_7dgt->pin2, Plugin_073_7dgt->pin3, Plugin_073_7dgt->timesep);
-              break;
-            }
-          };
-          success = true;
-//----------------------------------------------------------------------------------------------------------------------
-        } else if (tmpString.equalsIgnoreCase(F("7dsd"))) {
-          if (Plugin_073_7dgt->output != P073_DISP_MANUAL)
-            break;
-          String log = F("7DGT : Show Date=");
-          log += event->Par1; log += "-";
-          log += event->Par2; log += "-";
-          log += event->Par3;
-          addLog(LOG_LEVEL_INFO, log);
-          p073_FillBufferWithDate(false, event->Par1, event->Par2, event->Par3);
-          switch (Plugin_073_7dgt->type)
-          {
-            case P073_TM1637_4DGTCOLON:
-            case P073_TM1637_4DGTDOTS:
-            {
-              tm1637_ShowTimeTemp4(Plugin_073_7dgt->pin1, Plugin_073_7dgt->pin2, Plugin_073_7dgt->timesep, 0);
-              break;
-            }
-            case P073_TM1637_6DGT:
-            {
-              tm1637_ShowDate6(Plugin_073_7dgt->pin1, Plugin_073_7dgt->pin2, Plugin_073_7dgt->timesep);
-              break;
-            }
-            case P073_MAX7219_8DGT:
-            {
-              max7219_ShowDate(Plugin_073_7dgt->pin1, Plugin_073_7dgt->pin2, Plugin_073_7dgt->pin3);
-              break;
-            }
-          }
-          success = true;
-//----------------------------------------------------------------------------------------------------------------------
-        } else if (tmpString.equalsIgnoreCase(F("7dtext"))) {
-          if (Plugin_073_7dgt->output != P073_DISP_MANUAL)
-            break;
-          String tmpString = string;
-          int argIndex = tmpString.indexOf(',');
-          if (argIndex)
-            tmpString = tmpString.substring(argIndex+1);
-          else
-            tmpString = "";
-          String log = F("7DGT : Show Text=");
-          log += tmpString;
-          addLog(LOG_LEVEL_INFO, log);
-          p073_FillBufferWithString(tmpString);
-          switch (Plugin_073_7dgt->type)
-          {
-            case P073_TM1637_4DGTCOLON:
-            case P073_TM1637_4DGTDOTS:
-            {
-              tm1637_ShowBuffer(Plugin_073_7dgt->pin1, Plugin_073_7dgt->pin2, 0, 4);
-              break;
-            }
-            case P073_TM1637_6DGT:
-            {
-              tm1637_SwapDigitInBuffer(0);     // only needed for 6-digits displays
-              tm1637_ShowBuffer(Plugin_073_7dgt->pin1, Plugin_073_7dgt->pin2, 0, 6);
-              break;
-            }
-            case P073_MAX7219_8DGT:
-            {
-              p073_dotpos = -1;     // avoid to display the dot
-              max7219_ShowBuffer(Plugin_073_7dgt->pin1, Plugin_073_7dgt->pin2, Plugin_073_7dgt->pin3);
-              break;
-            }
-          }
-          success = true;
-//----------------------------------------------------------------------------------------------------------------------
-        } else {
-          bool p073_validcmd = false;
-          bool p073_displayon;
-          if (tmpString.equalsIgnoreCase(F("7don"))) {
-            String log = F("7DGT : Display ON");
-            addLog(LOG_LEVEL_INFO, log);
-            p073_displayon = true;
-            p073_validcmd = true;
-          }
-          else if (tmpString.equalsIgnoreCase(F("7doff"))) {
-            String log = F("7DGT : Display OFF");
-            addLog(LOG_LEVEL_INFO, log);
-            p073_displayon = false;
-            p073_validcmd = true;
-          }
-          else if (tmpString.equalsIgnoreCase(F("7db"))) {
-            if (event->Par1 >= 0 && event->Par1 < 16) {
-              String log = F("7DGT : Brightness=");
-              log += event->Par1;
-              addLog(LOG_LEVEL_INFO, log);
-              Plugin_073_7dgt->brightness = event->Par1;
-              p073_displayon = true;
-              p073_validcmd = true;
-            }
-          }
-          if (p073_validcmd) {
-            success = true;
-            switch (Plugin_073_7dgt->type)
-            {
-              case P073_TM1637_4DGTCOLON:
-              case P073_TM1637_4DGTDOTS:
-              case P073_TM1637_6DGT:
-              { int tm1637_bright = Plugin_073_7dgt->brightness / 2;
-                tm1637_SetPowerBrightness(Plugin_073_7dgt->pin1, Plugin_073_7dgt->pin2, tm1637_bright, p073_displayon);
-                break; }
-              case P073_MAX7219_8DGT:
-              { max7219_SetPowerBrightness(Plugin_073_7dgt->pin1, Plugin_073_7dgt->pin2, Plugin_073_7dgt->pin3, Plugin_073_7dgt->brightness, p073_displayon);
-                break; }
-            }
-          }
-        }
+        success = p073_plugin_write(event, string);
         break;
       }
 
     case PLUGIN_ONCE_A_SECOND:
       {
+        if (!Plugin_073_7dgt) {
+          break;
+        }
         if (Plugin_073_7dgt->output == P073_DISP_MANUAL)
           break;
 
@@ -516,6 +300,306 @@ boolean Plugin_073(byte function, struct EventStruct *event, String& string)
   return success;
 }
 
+
+bool p073_plugin_write(struct EventStruct *event, const String& string) {
+  if (!Plugin_073_7dgt)
+    return false;
+
+  String tmpString  = string;
+  int argIndex = tmpString.indexOf(',');
+  if (argIndex) {
+    tmpString = tmpString.substring(0, argIndex);
+  }
+  tmpString.toLowerCase();
+
+  if (tmpString.equals(F("7dn"))) {
+    return p073_plugin_write_7dn(event, string);
+  } else if (tmpString.equals(F("7dt"))) {
+    return p073_plugin_write_7dt(event, string);
+  } else if (tmpString.equals(F("7dst"))) {
+    return p073_plugin_write_7dst(event, string);
+  } else if (tmpString.equals(F("7dsd"))) {
+    return p073_plugin_write_7dsd(event, string);
+  } else if (tmpString.equals(F("7dtext"))) {
+    return p073_plugin_write_7dtext(event, string);
+  } else {
+    bool p073_validcmd = false;
+    bool p073_displayon;
+    if (tmpString.equals(F("7don"))) {
+      addLog(LOG_LEVEL_INFO, F("7DGT : Display ON"));
+      p073_displayon = true;
+      p073_validcmd = true;
+    }
+    else if (tmpString.equals(F("7doff"))) {
+      addLog(LOG_LEVEL_INFO, F("7DGT : Display OFF"));
+      p073_displayon = false;
+      p073_validcmd = true;
+    }
+    else if (tmpString.equals(F("7db"))) {
+      if (event->Par1 >= 0 && event->Par1 < 16) {
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          String log = F("7DGT : Brightness=");
+          log += event->Par1;
+          addLog(LOG_LEVEL_INFO, log);
+        }
+        Plugin_073_7dgt->brightness = event->Par1;
+        p073_displayon = true;
+        p073_validcmd = true;
+      }
+    }
+    if (p073_validcmd) {
+      switch (Plugin_073_7dgt->type)
+      {
+        case P073_TM1637_4DGTCOLON:
+        case P073_TM1637_4DGTDOTS:
+        case P073_TM1637_6DGT:
+        {
+          int tm1637_bright = Plugin_073_7dgt->brightness / 2;
+          tm1637_SetPowerBrightness(Plugin_073_7dgt->pin1, Plugin_073_7dgt->pin2, tm1637_bright, p073_displayon);
+          break;
+        }
+        case P073_MAX7219_8DGT:
+        {
+          max7219_SetPowerBrightness(Plugin_073_7dgt->pin1, Plugin_073_7dgt->pin2, Plugin_073_7dgt->pin3, Plugin_073_7dgt->brightness, p073_displayon);
+          break;
+        }
+      }
+    }
+    return p073_validcmd;
+  }
+  return false;
+}
+
+bool p073_plugin_write_7dn(struct EventStruct *event, const String& tmpStr) {
+  if (Plugin_073_7dgt->output != P073_DISP_MANUAL) {
+    return false;
+  }
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    String log = F("7DGT : Show Number=");
+    log += event->Par1;
+    addLog(LOG_LEVEL_INFO, log);
+  }
+
+  int comma1 = tmpStr.indexOf(',');
+  switch (Plugin_073_7dgt->type)
+  {
+    case P073_TM1637_4DGTCOLON:
+    {
+      if (event->Par1 > -1000 && event->Par1 < 10000)
+        p073_FillBufferWithNumber(String(int(event->Par1)));
+      else
+        p073_FillBufferWithDash();
+      tm1637_ShowBuffer(Plugin_073_7dgt->pin1, Plugin_073_7dgt->pin2, TM1637_4DIGIT, 8);
+      break;
+    }
+    case P073_TM1637_4DGTDOTS:
+    {
+      if (event->Par1 > -1000 && event->Par1 < 10000)
+        p073_FillBufferWithNumber(tmpStr.substring(comma1+1).c_str());
+      else
+        p073_FillBufferWithDash();
+      tm1637_ShowBuffer(Plugin_073_7dgt->pin1, Plugin_073_7dgt->pin2, TM1637_4DIGIT, 8);
+      break;
+    }
+    case P073_TM1637_6DGT:
+    {
+      if (event->Par1 > -100000 && event->Par1 < 1000000)
+        p073_FillBufferWithNumber(tmpStr.substring(comma1+1).c_str());
+      else
+        p073_FillBufferWithDash();
+      tm1637_SwapDigitInBuffer(2);     // only needed for 6-digits displays
+      tm1637_ShowBuffer(Plugin_073_7dgt->pin1, Plugin_073_7dgt->pin2, TM1637_6DIGIT, 8);
+      break;
+    }
+    case P073_MAX7219_8DGT:
+    {
+      if (comma1 > 0) {
+        if (event->Par1 > -10000000 && event->Par1 < 100000000) {
+          p073_FillBufferWithNumber(tmpStr.substring(comma1+1).c_str());
+        }
+        else
+          p073_FillBufferWithDash();
+        max7219_ShowBuffer(Plugin_073_7dgt->pin1, Plugin_073_7dgt->pin2, Plugin_073_7dgt->pin3);
+      }
+      break;
+    }
+  }
+  return true;
+}
+
+bool p073_plugin_write_7dt(struct EventStruct *event, const String& tmpStr) {
+  if (Plugin_073_7dgt->output != P073_DISP_MANUAL) {
+    return false;
+  }
+  double p073_temptemp = 0;
+  bool p073_tempflagdot = false;
+  int comma1 = tmpStr.indexOf(',');
+  if (comma1 > 0)
+    p073_temptemp  = atof(tmpStr.substring(comma1+1).c_str());
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    String log = F("7DGT : Show Temperature=");
+    log += p073_temptemp;
+    addLog(LOG_LEVEL_INFO, log);
+  }
+  switch (Plugin_073_7dgt->type)
+  {
+    case P073_TM1637_4DGTCOLON:
+    case P073_TM1637_4DGTDOTS:
+    {
+      if (p073_temptemp > 999 || p073_temptemp < -99.9)
+        p073_FillBufferWithDash();
+      else {
+        if (p073_temptemp < 100 && p073_temptemp > -10) {
+          p073_temptemp = int(p073_temptemp*10);
+          p073_tempflagdot = true;
+        }
+        p073_FillBufferWithTemp(p073_temptemp);
+        if (p073_temptemp == 0 && p073_tempflagdot)
+          p073_showbuffer[5] = 0;
+      }
+      tm1637_ShowTimeTemp4(Plugin_073_7dgt->pin1, Plugin_073_7dgt->pin2, p073_tempflagdot, 4);
+      break;
+    }
+    case P073_TM1637_6DGT:
+    {
+      if (p073_temptemp > 999 || p073_temptemp < -99.9)
+        p073_FillBufferWithDash();
+      else {
+        if (p073_temptemp < 100 && p073_temptemp > -10) {
+          p073_temptemp = int(p073_temptemp*10);
+          p073_tempflagdot = true;
+        }
+        p073_FillBufferWithTemp(p073_temptemp);
+        if (p073_temptemp == 0 && p073_tempflagdot)
+          p073_showbuffer[5] = 0;
+      }
+      tm1637_ShowTemp6(Plugin_073_7dgt->pin1, Plugin_073_7dgt->pin2, p073_tempflagdot);
+      break;
+    }
+    case P073_MAX7219_8DGT:
+    {
+      p073_temptemp = int(p073_temptemp*10);
+      p073_FillBufferWithTemp(p073_temptemp);
+      if (p073_temptemp == 0)
+        p073_showbuffer[5] = 0;
+      max7219_ShowTemp(Plugin_073_7dgt->pin1, Plugin_073_7dgt->pin2, Plugin_073_7dgt->pin3);
+      break;
+    }
+  }
+  return true;
+}
+
+bool p073_plugin_write_7dst(struct EventStruct *event, const String& string) {
+  if (Plugin_073_7dgt->output != P073_DISP_MANUAL) {
+    return false;
+  }
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    String log = F("7DGT : Show Time=");
+    log += event->Par1; log += ":";
+    log += event->Par2; log += ":";
+    log += event->Par3;
+    addLog(LOG_LEVEL_INFO, log);
+  }
+  Plugin_073_7dgt->timesep = true;
+  p073_FillBufferWithTime(false, event->Par1, event->Par2, event->Par3, false);
+  switch (Plugin_073_7dgt->type)
+  {
+    case P073_TM1637_4DGTCOLON:
+    case P073_TM1637_4DGTDOTS:
+    {
+      tm1637_ShowTimeTemp4(Plugin_073_7dgt->pin1, Plugin_073_7dgt->pin2, Plugin_073_7dgt->timesep, 0);
+      break;
+    }
+    case P073_TM1637_6DGT:
+    {
+      tm1637_ShowTime6(Plugin_073_7dgt->pin1, Plugin_073_7dgt->pin2, Plugin_073_7dgt->timesep);
+      break;
+    }
+    case P073_MAX7219_8DGT:
+    {
+      max7219_ShowTime(Plugin_073_7dgt->pin1, Plugin_073_7dgt->pin2, Plugin_073_7dgt->pin3, Plugin_073_7dgt->timesep);
+      break;
+    }
+  };
+  return true;
+}
+
+bool p073_plugin_write_7dsd(struct EventStruct *event, const String& string) {
+  if (Plugin_073_7dgt->output != P073_DISP_MANUAL) {
+    return false;
+  }
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    String log = F("7DGT : Show Date=");
+    log += event->Par1; log += "-";
+    log += event->Par2; log += "-";
+    log += event->Par3;
+    addLog(LOG_LEVEL_INFO, log);
+  }
+  p073_FillBufferWithDate(false, event->Par1, event->Par2, event->Par3);
+  switch (Plugin_073_7dgt->type)
+  {
+    case P073_TM1637_4DGTCOLON:
+    case P073_TM1637_4DGTDOTS:
+    {
+      tm1637_ShowTimeTemp4(Plugin_073_7dgt->pin1, Plugin_073_7dgt->pin2, Plugin_073_7dgt->timesep, 0);
+      break;
+    }
+    case P073_TM1637_6DGT:
+    {
+      tm1637_ShowDate6(Plugin_073_7dgt->pin1, Plugin_073_7dgt->pin2, Plugin_073_7dgt->timesep);
+      break;
+    }
+    case P073_MAX7219_8DGT:
+    {
+      max7219_ShowDate(Plugin_073_7dgt->pin1, Plugin_073_7dgt->pin2, Plugin_073_7dgt->pin3);
+      break;
+    }
+  }
+  return true;
+}
+
+bool p073_plugin_write_7dtext(struct EventStruct *event, const String& string) {
+  if (Plugin_073_7dgt->output != P073_DISP_MANUAL) {
+    return false;
+  }
+  String tmpString = string;
+  int argIndex = tmpString.indexOf(',');
+  if (argIndex)
+    tmpString = tmpString.substring(argIndex+1);
+  else
+    tmpString = "";
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    String log = F("7DGT : Show Text=");
+    log += tmpString;
+    addLog(LOG_LEVEL_INFO, log);
+  }
+  p073_FillBufferWithString(tmpString);
+  switch (Plugin_073_7dgt->type)
+  {
+    case P073_TM1637_4DGTCOLON:
+    case P073_TM1637_4DGTDOTS:
+    {
+      tm1637_ShowBuffer(Plugin_073_7dgt->pin1, Plugin_073_7dgt->pin2, 0, 4);
+      break;
+    }
+    case P073_TM1637_6DGT:
+    {
+      tm1637_SwapDigitInBuffer(0);     // only needed for 6-digits displays
+      tm1637_ShowBuffer(Plugin_073_7dgt->pin1, Plugin_073_7dgt->pin2, 0, 6);
+      break;
+    }
+    case P073_MAX7219_8DGT:
+    {
+      p073_dotpos = -1;     // avoid to display the dot
+      max7219_ShowBuffer(Plugin_073_7dgt->pin1, Plugin_073_7dgt->pin2, Plugin_073_7dgt->pin3);
+      break;
+    }
+  }
+  return true;
+}
+
+
+
 void p073_FillBufferWithTime(boolean sevendgt_now, byte sevendgt_hours, byte sevendgt_minutes, byte sevendgt_seconds, boolean flag12h)
 {
   memset(p073_showbuffer,0,sizeof(p073_showbuffer));
@@ -527,70 +611,54 @@ void p073_FillBufferWithTime(boolean sevendgt_now, byte sevendgt_hours, byte sev
   if (flag12h and sevendgt_hours > 12) sevendgt_hours -= 12;  // if flag 12h is TRUE and h>12 adjust subtracting 12
   if (flag12h and sevendgt_hours == 0) sevendgt_hours =  12;  // if flag 12h is TRUE and h=0  adjust to h=12
 
-  uint8_t p073_digit1, p073_digit2;
-  p073_digit1 = (uint8_t)(sevendgt_hours / 10);
-  p073_digit2 = sevendgt_hours - p073_digit1*10;
-  p073_showbuffer[0] = p073_digit1; p073_showbuffer[1] = p073_digit2;
-  p073_digit1 = (uint8_t)(sevendgt_minutes / 10);
-  p073_digit2 = sevendgt_minutes - p073_digit1*10;
-  p073_showbuffer[2] = p073_digit1; p073_showbuffer[3] = p073_digit2;
-  p073_digit1 = (uint8_t)(sevendgt_seconds / 10);
-  p073_digit2 = sevendgt_seconds - p073_digit1*10;
-  p073_showbuffer[4] = p073_digit1; p073_showbuffer[5] = p073_digit2;
+  p073_showbuffer[0] = static_cast<uint8_t>(sevendgt_hours / 10);
+  p073_showbuffer[1] = sevendgt_hours % 10;
+  p073_showbuffer[2] = static_cast<uint8_t>(sevendgt_minutes / 10);
+  p073_showbuffer[3] = sevendgt_minutes % 10;
+  p073_showbuffer[4] = static_cast<uint8_t>(sevendgt_seconds / 10);
+  p073_showbuffer[5] = sevendgt_seconds % 10;
 }
 
 void p073_FillBufferWithDate(boolean sevendgt_now, byte sevendgt_day, byte sevendgt_month, int sevendgt_year)
 {
   memset(p073_showbuffer,0,sizeof(p073_showbuffer));
   int  sevendgt_year0 = sevendgt_year;
-  byte sevendgt_year1 = 0;
-  byte sevendgt_year2 = 0;
   if (sevendgt_now) {
     sevendgt_day = day();
     sevendgt_month = month();
-    sevendgt_year1 = uint8_t(year()/100);
-    sevendgt_year2 = uint8_t(year()-(sevendgt_year1*100));
+    sevendgt_year0 = year();
   } else {
-    if (sevendgt_year0 < 100) { sevendgt_year0 += 2000; }
-    sevendgt_year1 = uint8_t(sevendgt_year0/100);
-    sevendgt_year2 = uint8_t(sevendgt_year0-(sevendgt_year1*100));
+    if (sevendgt_year0 < 100) {
+      sevendgt_year0 += 2000;
+    }
   }
-  uint8_t p073_digit1, p073_digit2;
-  p073_digit1 = (uint8_t)(sevendgt_day / 10);
-  p073_digit2 = sevendgt_day - p073_digit1*10;
-  p073_showbuffer[0] = p073_digit1; p073_showbuffer[1] = p073_digit2;
-  p073_digit1 = (uint8_t)(sevendgt_month / 10);
-  p073_digit2 = sevendgt_month - p073_digit1*10;
-  p073_showbuffer[2] = p073_digit1; p073_showbuffer[3] = p073_digit2;
-  p073_digit1 = (uint8_t)(sevendgt_year1 / 10);
-  p073_digit2 = sevendgt_year1 - p073_digit1*10;
-  p073_showbuffer[4] = p073_digit1; p073_showbuffer[5] = p073_digit2;
-  p073_digit1 = (uint8_t)(sevendgt_year2 / 10);
-  p073_digit2 = sevendgt_year2 - p073_digit1*10;
-  p073_showbuffer[6] = p073_digit1; p073_showbuffer[7] = p073_digit2;
+  byte sevendgt_year1 = static_cast<uint8_t>(sevendgt_year0 / 100);
+  byte sevendgt_year2 = static_cast<uint8_t>(sevendgt_year0 % 100);
+
+  p073_showbuffer[0] = static_cast<uint8_t>(sevendgt_day / 10);
+  p073_showbuffer[1] = sevendgt_day % 10;
+  p073_showbuffer[2] = static_cast<uint8_t>(sevendgt_month / 10);
+  p073_showbuffer[3] = sevendgt_month % 10;
+  p073_showbuffer[4] = static_cast<uint8_t>(sevendgt_year1 / 10);
+  p073_showbuffer[5] = sevendgt_year1 % 10;
+  p073_showbuffer[6] = static_cast<uint8_t>(sevendgt_year2 / 10);
+  p073_showbuffer[7] = sevendgt_year2 % 10;
 }
 
 void p073_FillBufferWithNumber(const String& number)
 {
   memset(p073_showbuffer,10,sizeof(p073_showbuffer));
   byte p073_numlenght = number.length();
-  byte p073_dispdigit = 10;
   byte p073_index = 7;
   p073_dotpos = -1;     // -1 means no dot to display
-  for (int i=p073_numlenght;i>0;i--) {
-    char p073_tmpchar = number.charAt(i-1);
-    p073_dispdigit = 10;           // default is space
-    if (p073_tmpchar > 47 && p073_tmpchar < 58)
-      p073_dispdigit = p073_tmpchar-48;
-    else if (p073_tmpchar == 32)  // space
-      p073_dispdigit = 10;
-    else if (p073_tmpchar == 45)  // minus
-      p073_dispdigit = 11;
-    if (p073_tmpchar == 46)  // dot
+  for (int i = p073_numlenght - 1; i >= 0 && p073_index >= 0; --i) {
+    char p073_tmpchar = number.charAt(i);
+    if (p073_tmpchar == '.') {  // dot
       p073_dotpos = p073_index;
-    else {
-      p073_showbuffer[p073_index] = p073_dispdigit;
-      p073_index--; }
+    } else {
+      p073_showbuffer[p073_index] = P073_mapCharToFontPosition(p073_tmpchar);
+      p073_index--;
+    }
   }
 }
 
@@ -600,16 +668,8 @@ void p073_FillBufferWithTemp(long temperature)
   char p073_digit[8];
   sprintf(p073_digit, "%7d", static_cast<int>(temperature));
   int p073_numlenght = strlen(p073_digit);
-  byte p073_dispdigit = 10;
   for (int i=0;i<p073_numlenght;i++) {
-    p073_dispdigit = 10;           // default is space
-    if (p073_digit[i] > 47 && p073_digit[i] < 58)
-      p073_dispdigit = p073_digit[i]-48;
-    else if (p073_digit[i] == 32)  // space
-      p073_dispdigit = 10;
-    else if (p073_digit[i] == 45)  // minus
-      p073_dispdigit = 11;
-    p073_showbuffer[i] = p073_dispdigit;
+    p073_showbuffer[i] = P073_mapCharToFontPosition(p073_digit[i]);
   }
   p073_showbuffer[7] = 12;  // degree "°"
 }
@@ -618,32 +678,11 @@ void p073_FillBufferWithString(const String& textToShow)
 {
   memset(p073_showbuffer,10,sizeof(p073_showbuffer));
   String tmpText;
-  byte p073_dispdigit = 10;
   int p073_txtlength = textToShow.length();
   if (p073_txtlength > 8) p073_txtlength = 8;
   tmpText = textToShow.substring(0, p073_txtlength);
   for (int i=0;i<p073_txtlength;i++) {
-    char p073_tmpchar = tmpText.charAt(i);
-    p073_dispdigit = 10;           // default is space
-    if (p073_tmpchar > 47 && p073_tmpchar < 58)
-      p073_dispdigit = p073_tmpchar-48;
-    else if (p073_tmpchar > 64 && p073_tmpchar < 91)
-      p073_dispdigit = p073_tmpchar-49;
-    else if (p073_tmpchar > 96 && p073_tmpchar < 123)
-      p073_dispdigit = p073_tmpchar-81;
-    else if (p073_tmpchar == 32)  // space
-      p073_dispdigit = 10;
-    else if (p073_tmpchar == 45)  // minus  "-"
-      p073_dispdigit = 11;
-    else if (p073_tmpchar == 94)  // degree "^"
-      p073_dispdigit = 12;
-    else if (p073_tmpchar == 61)  // equal  "="
-      p073_dispdigit = 13;
-    else if (p073_tmpchar == 47)  // three lines "/"
-      p073_dispdigit = 14;
-    else if (p073_tmpchar == 95)  // underscore "_"
-      p073_dispdigit = 15;
-    p073_showbuffer[i] = p073_dispdigit;
+    p073_showbuffer[i] = P073_mapCharToFontPosition(tmpText.charAt(i));
   }
 }
 
@@ -708,6 +747,20 @@ void tm1637_i2cAck (uint8_t clk_pin, uint8_t dio_pin)
   pinMode(dio_pin, OUTPUT);
 }
 
+void tm1637_i2cWrite_ack(uint8_t clk_pin, uint8_t dio_pin, uint8_t bytesToPrint[], byte length) {
+  tm1637_i2cStart(clk_pin, dio_pin);
+  for (byte i = 0; i < length; ++i) {
+    tm1637_i2cWrite_ack(clk_pin, dio_pin, bytesToPrint[i]);
+  }
+  tm1637_i2cStop(clk_pin, dio_pin);
+}
+
+void tm1637_i2cWrite_ack(uint8_t clk_pin, uint8_t dio_pin, uint8_t bytetoprint)
+{
+  tm1637_i2cWrite(clk_pin, dio_pin, bytetoprint);
+  tm1637_i2cAck(clk_pin, dio_pin);
+}
+
 void tm1637_i2cWrite (uint8_t clk_pin, uint8_t dio_pin, uint8_t bytetoprint)
 {
   if (PLUGIN_073_DEBUG) {
@@ -718,7 +771,11 @@ void tm1637_i2cWrite (uint8_t clk_pin, uint8_t dio_pin, uint8_t bytetoprint)
   for(i=0; i<8; i++)
   {
     CLK_LOW();
-    (bytetoprint & B00000001)? DIO_HIGH() : DIO_LOW();
+    if (bytetoprint & B00000001) {
+      DIO_HIGH();
+    } else {
+      DIO_LOW();
+    }
     delayMicroseconds(TM1637_CLOCKDELAY);
     bytetoprint = bytetoprint >> 1;
     CLK_HIGH();
@@ -728,15 +785,9 @@ void tm1637_i2cWrite (uint8_t clk_pin, uint8_t dio_pin, uint8_t bytetoprint)
 
 void tm1637_ClearDisplay (uint8_t clk_pin, uint8_t dio_pin)
 {
-  tm1637_i2cStart(clk_pin, dio_pin);
-  tm1637_i2cWrite(clk_pin, dio_pin, 0xC0);   tm1637_i2cAck(clk_pin, dio_pin);
-  tm1637_i2cWrite(clk_pin, dio_pin, 0);      tm1637_i2cAck(clk_pin, dio_pin);
-  tm1637_i2cWrite(clk_pin, dio_pin, 0);      tm1637_i2cAck(clk_pin, dio_pin);
-  tm1637_i2cWrite(clk_pin, dio_pin, 0);      tm1637_i2cAck(clk_pin, dio_pin);
-  tm1637_i2cWrite(clk_pin, dio_pin, 0);      tm1637_i2cAck(clk_pin, dio_pin);
-  tm1637_i2cWrite(clk_pin, dio_pin, 0);      tm1637_i2cAck(clk_pin, dio_pin);
-  tm1637_i2cWrite(clk_pin, dio_pin, 0);      tm1637_i2cAck(clk_pin, dio_pin);
-  tm1637_i2cStop(clk_pin, dio_pin);
+  uint8_t bytesToPrint[7] = {0};
+  bytesToPrint[0] = 0xC0;
+  tm1637_i2cWrite_ack(clk_pin, dio_pin, bytesToPrint, 7);
 }
 
 void tm1637_SetPowerBrightness (uint8_t clk_pin, uint8_t dio_pin, uint8_t brightlvl, bool poweron)
@@ -746,14 +797,15 @@ void tm1637_SetPowerBrightness (uint8_t clk_pin, uint8_t dio_pin, uint8_t bright
     addLog(LOG_LEVEL_INFO, log);
   }
   uint8_t brightvalue = (brightlvl & 0b111);
-  if (poweron)
+  if (poweron) {
     brightvalue = TM1637_POWER_ON  | brightvalue;
-  else
+  } else {
     brightvalue = TM1637_POWER_OFF | brightvalue;
-  tm1637_i2cStart(clk_pin, dio_pin);
-  tm1637_i2cWrite(clk_pin, dio_pin, brightvalue);
-  tm1637_i2cAck(clk_pin, dio_pin);
-  tm1637_i2cStop(clk_pin, dio_pin);
+  }
+
+  uint8_t bytesToPrint[1] = {0};
+  bytesToPrint[0] = brightvalue;
+  tm1637_i2cWrite_ack(clk_pin, dio_pin, bytesToPrint, 1);
 }
 
 void tm1637_InitDisplay(uint8_t clk_pin, uint8_t dio_pin)
@@ -764,81 +816,67 @@ void tm1637_InitDisplay(uint8_t clk_pin, uint8_t dio_pin)
   DIO_HIGH();
 //  pinMode(dio_pin, INPUT_PULLUP);
 //  pinMode(clk_pin, OUTPUT);
-  tm1637_i2cStart(clk_pin, dio_pin);
-  tm1637_i2cWrite(clk_pin, dio_pin, 0x40);
-  tm1637_i2cAck(clk_pin, dio_pin);
-  tm1637_i2cStop(clk_pin, dio_pin);
+  uint8_t bytesToPrint[1] = {0};
+  bytesToPrint[0] = 0x40;
+  tm1637_i2cWrite_ack(clk_pin, dio_pin, bytesToPrint, 1);
   tm1637_ClearDisplay(clk_pin, dio_pin);
+}
+
+uint8_t tm1637_separator(uint8_t value, bool sep) {
+  if (sep) {
+    value |= 0b10000000;
+  }
+  return value;
 }
 
 void tm1637_ShowTime6(uint8_t clk_pin, uint8_t dio_pin, bool sep)
 {
-  byte p073_datashowpos1;
-  tm1637_i2cStart(clk_pin, dio_pin);
-  tm1637_i2cWrite(clk_pin, dio_pin, 0xC0);                                  tm1637_i2cAck(clk_pin, dio_pin);
-  tm1637_i2cWrite(clk_pin, dio_pin, CharTableTM1637[p073_showbuffer[2]]);   tm1637_i2cAck(clk_pin, dio_pin);
-  // add bit for colon on second digit if required
-    p073_datashowpos1 = CharTableTM1637[p073_showbuffer[1]];
-    if (sep) p073_datashowpos1 |= 0b10000000;
-  tm1637_i2cWrite(clk_pin, dio_pin, p073_datashowpos1);                     tm1637_i2cAck(clk_pin, dio_pin);
-  tm1637_i2cWrite(clk_pin, dio_pin, CharTableTM1637[p073_showbuffer[0]]);   tm1637_i2cAck(clk_pin, dio_pin);
-  tm1637_i2cWrite(clk_pin, dio_pin, CharTableTM1637[p073_showbuffer[5]]);   tm1637_i2cAck(clk_pin, dio_pin);
-  tm1637_i2cWrite(clk_pin, dio_pin, CharTableTM1637[p073_showbuffer[4]]);   tm1637_i2cAck(clk_pin, dio_pin);
-  // add bit for colon on fourth digit if required
-    p073_datashowpos1 = CharTableTM1637[p073_showbuffer[3]];
-    if (sep) p073_datashowpos1 |= 0b10000000;
-  tm1637_i2cWrite(clk_pin, dio_pin, p073_datashowpos1);                     tm1637_i2cAck(clk_pin, dio_pin);
-  tm1637_i2cStop(clk_pin, dio_pin);
+  uint8_t bytesToPrint[7] = {0};
+  bytesToPrint[0] = 0xC0;
+  bytesToPrint[1] = CharTableTM1637[p073_showbuffer[2]];
+  bytesToPrint[2] = tm1637_separator(CharTableTM1637[p073_showbuffer[1]], sep);
+  bytesToPrint[3] = CharTableTM1637[p073_showbuffer[0]];
+  bytesToPrint[4] = CharTableTM1637[p073_showbuffer[5]];
+  bytesToPrint[5] = CharTableTM1637[p073_showbuffer[4]];
+  bytesToPrint[6] = tm1637_separator(CharTableTM1637[p073_showbuffer[3]], sep);
+  tm1637_i2cWrite_ack(clk_pin, dio_pin, bytesToPrint, 7);
 }
 
 void tm1637_ShowDate6(uint8_t clk_pin, uint8_t dio_pin, bool sep)
 {
-  byte p073_datashowpos1;
-  tm1637_i2cStart(clk_pin, dio_pin);
-  tm1637_i2cWrite(clk_pin, dio_pin, 0xC0);                                  tm1637_i2cAck(clk_pin, dio_pin);
-  tm1637_i2cWrite(clk_pin, dio_pin, CharTableTM1637[p073_showbuffer[2]]);   tm1637_i2cAck(clk_pin, dio_pin);
-  // add bit for colon on second digit if required
-    p073_datashowpos1 = CharTableTM1637[p073_showbuffer[1]];
-    if (sep) p073_datashowpos1 |= 0b10000000;
-  tm1637_i2cWrite(clk_pin, dio_pin, p073_datashowpos1);                     tm1637_i2cAck(clk_pin, dio_pin);
-  tm1637_i2cWrite(clk_pin, dio_pin, CharTableTM1637[p073_showbuffer[0]]);   tm1637_i2cAck(clk_pin, dio_pin);
-  tm1637_i2cWrite(clk_pin, dio_pin, CharTableTM1637[p073_showbuffer[7]]);   tm1637_i2cAck(clk_pin, dio_pin);
-  tm1637_i2cWrite(clk_pin, dio_pin, CharTableTM1637[p073_showbuffer[6]]);   tm1637_i2cAck(clk_pin, dio_pin);
-  // add bit for colon on fourth digit if required
-    p073_datashowpos1 = CharTableTM1637[p073_showbuffer[3]];
-    if (sep) p073_datashowpos1 |= 0b10000000;
-  tm1637_i2cWrite(clk_pin, dio_pin, p073_datashowpos1);                     tm1637_i2cAck(clk_pin, dio_pin);
-  tm1637_i2cStop(clk_pin, dio_pin);
+  uint8_t bytesToPrint[7] = {0};
+  bytesToPrint[0] = 0xC0;
+  bytesToPrint[1] = CharTableTM1637[p073_showbuffer[2]];
+  bytesToPrint[2] = tm1637_separator(CharTableTM1637[p073_showbuffer[1]], sep);
+  bytesToPrint[3] = CharTableTM1637[p073_showbuffer[0]];
+  bytesToPrint[4] = CharTableTM1637[p073_showbuffer[7]];
+  bytesToPrint[5] = CharTableTM1637[p073_showbuffer[6]];
+  bytesToPrint[6] = tm1637_separator(CharTableTM1637[p073_showbuffer[3]], sep);
+  tm1637_i2cWrite_ack(clk_pin, dio_pin, bytesToPrint, 7);
 }
 
 void tm1637_ShowTemp6(uint8_t clk_pin, uint8_t dio_pin, bool sep)
 {
-  tm1637_i2cStart(clk_pin, dio_pin);
-  tm1637_i2cWrite(clk_pin, dio_pin, 0xC0);                                  tm1637_i2cAck(clk_pin, dio_pin);
-  // add bit for colon on second digit if required
-    byte p073_datashowpos1 = CharTableTM1637[p073_showbuffer[5]];
-    if (sep) p073_datashowpos1 |= 0b10000000;
-  tm1637_i2cWrite(clk_pin, dio_pin, p073_datashowpos1);                     tm1637_i2cAck(clk_pin, dio_pin);
-  tm1637_i2cWrite(clk_pin, dio_pin, CharTableTM1637[p073_showbuffer[4]]);   tm1637_i2cAck(clk_pin, dio_pin);
-  tm1637_i2cWrite(clk_pin, dio_pin, CharTableTM1637[10]);                   tm1637_i2cAck(clk_pin, dio_pin);
-  tm1637_i2cWrite(clk_pin, dio_pin, CharTableTM1637[10]);                   tm1637_i2cAck(clk_pin, dio_pin);
-  tm1637_i2cWrite(clk_pin, dio_pin, CharTableTM1637[p073_showbuffer[7]]);   tm1637_i2cAck(clk_pin, dio_pin);
-  tm1637_i2cWrite(clk_pin, dio_pin, CharTableTM1637[p073_showbuffer[6]]);   tm1637_i2cAck(clk_pin, dio_pin);
-  tm1637_i2cStop(clk_pin, dio_pin);
+  uint8_t bytesToPrint[7] = {0};
+  bytesToPrint[0] = 0xC0;
+  bytesToPrint[1] = tm1637_separator(CharTableTM1637[p073_showbuffer[5]], sep);
+  bytesToPrint[2] = CharTableTM1637[p073_showbuffer[4]];
+  bytesToPrint[3] = CharTableTM1637[10];
+  bytesToPrint[4] = CharTableTM1637[10];
+  bytesToPrint[5] = CharTableTM1637[p073_showbuffer[7]];
+  bytesToPrint[6] = CharTableTM1637[p073_showbuffer[6]];
+  tm1637_i2cWrite_ack(clk_pin, dio_pin, bytesToPrint, 7);
 }
 
 void tm1637_ShowTimeTemp4(uint8_t clk_pin, uint8_t dio_pin, bool sep, byte bufoffset)
 {
-  tm1637_i2cStart(clk_pin, dio_pin);
-  tm1637_i2cWrite(clk_pin, dio_pin, 0xC0);                                            tm1637_i2cAck(clk_pin, dio_pin);
-  tm1637_i2cWrite(clk_pin, dio_pin, CharTableTM1637[p073_showbuffer[0+bufoffset]]);   tm1637_i2cAck(clk_pin, dio_pin);
-  // add bit for colon on second digit if required
-    byte p073_datashowpos1 = CharTableTM1637[p073_showbuffer[1+bufoffset]];
-    if (sep) p073_datashowpos1 |= 0b10000000;
-  tm1637_i2cWrite(clk_pin, dio_pin, p073_datashowpos1);                               tm1637_i2cAck(clk_pin, dio_pin);
-  tm1637_i2cWrite(clk_pin, dio_pin, CharTableTM1637[p073_showbuffer[2+bufoffset]]);   tm1637_i2cAck(clk_pin, dio_pin);
-  tm1637_i2cWrite(clk_pin, dio_pin, CharTableTM1637[p073_showbuffer[3+bufoffset]]);   tm1637_i2cAck(clk_pin, dio_pin);
-  tm1637_i2cStop(clk_pin, dio_pin);
+  uint8_t bytesToPrint[7] = {0};
+  bytesToPrint[0] = 0xC0;
+  bytesToPrint[1] = CharTableTM1637[p073_showbuffer[0+bufoffset]];
+  bytesToPrint[2] = tm1637_separator(CharTableTM1637[p073_showbuffer[1+bufoffset]], sep);
+  bytesToPrint[3] = CharTableTM1637[p073_showbuffer[2+bufoffset]];
+  bytesToPrint[4] = CharTableTM1637[p073_showbuffer[3+bufoffset]];
+  tm1637_i2cWrite_ack(clk_pin, dio_pin, bytesToPrint, 5);
 }
 
 void tm1637_SwapDigitInBuffer(byte startPos) {
@@ -856,15 +894,15 @@ void tm1637_SwapDigitInBuffer(byte startPos) {
 
 void tm1637_ShowBuffer(uint8_t clk_pin, uint8_t dio_pin, byte firstPos, byte lastPos)
 {
-  byte p073_datashowpos1;
-  tm1637_i2cStart(clk_pin, dio_pin);
-  tm1637_i2cWrite(clk_pin, dio_pin, 0xC0);                            tm1637_i2cAck(clk_pin, dio_pin);
-    for(int i=firstPos;i<lastPos;i++) {
-    p073_datashowpos1 = CharTableTM1637[p073_showbuffer[i]];
-    if (p073_dotpos == i) p073_datashowpos1 |= 0b10000000;
-    tm1637_i2cWrite(clk_pin, dio_pin, p073_datashowpos1);             tm1637_i2cAck(clk_pin, dio_pin);
+  uint8_t bytesToPrint[8] = {0};
+  bytesToPrint[0] = 0xC0;
+  byte length = 1;
+  for(int i=firstPos;i<lastPos;i++) {
+    byte p073_datashowpos1 = tm1637_separator(CharTableTM1637[p073_showbuffer[i]], p073_dotpos == i);
+    bytesToPrint[length] = p073_datashowpos1;
+    ++length;
   }
-  tm1637_i2cStop(clk_pin, dio_pin);
+  tm1637_i2cWrite_ack(clk_pin, dio_pin, bytesToPrint, length);
 }
 
 //====================================
@@ -897,10 +935,7 @@ void max7219_ClearDisplay (uint8_t din_pin, uint8_t clk_pin, uint8_t cs_pin)
 void max7219_SetPowerBrightness (uint8_t din_pin, uint8_t clk_pin, uint8_t cs_pin, uint8_t brightlvl, bool poweron)
 {
   max7219_spiTransfer(din_pin, clk_pin, cs_pin, OP_INTENSITY, brightlvl);
-  if (poweron)
-    max7219_spiTransfer(din_pin, clk_pin, cs_pin, OP_SHUTDOWN, 1);
-  else
-    max7219_spiTransfer(din_pin, clk_pin, cs_pin, OP_SHUTDOWN, 0);
+  max7219_spiTransfer(din_pin, clk_pin, cs_pin, OP_SHUTDOWN, poweron ? 1 : 0);
 }
 
 void max7219_SetDigit(uint8_t din_pin, uint8_t clk_pin, uint8_t cs_pin, int dgtpos, byte dgtvalue, boolean showdot)
@@ -933,14 +968,9 @@ void max7219_ShowTime(uint8_t din_pin, uint8_t clk_pin, uint8_t cs_pin, bool sep
   max7219_SetDigit(din_pin, clk_pin, cs_pin, 4, p073_showbuffer[2], false);
   max7219_SetDigit(din_pin, clk_pin, cs_pin, 6, p073_showbuffer[1], false);
   max7219_SetDigit(din_pin, clk_pin, cs_pin, 7, p073_showbuffer[0], false);
-  if (sep) {
-    max7219_SetDigit(din_pin, clk_pin, cs_pin, 2, 11, false);
-    max7219_SetDigit(din_pin, clk_pin, cs_pin, 5, 11, false);
-  }
-  else {
-    max7219_SetDigit(din_pin, clk_pin, cs_pin, 2, 10, false);
-    max7219_SetDigit(din_pin, clk_pin, cs_pin, 5, 10, false);
-  }
+  uint8_t sepChar = P073_mapCharToFontPosition(sep ? '-' : ' ');
+  max7219_SetDigit(din_pin, clk_pin, cs_pin, 2, sepChar, false);
+  max7219_SetDigit(din_pin, clk_pin, cs_pin, 5, sepChar, false);
 }
 
 void max7219_ShowTemp(uint8_t din_pin, uint8_t clk_pin, uint8_t cs_pin)
