@@ -55,24 +55,24 @@ boolean Plugin_025(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        byte port = Settings.TaskDevicePort[event->TaskIndex];
+        byte port = CONFIG_PORT;
         if (port > 0)   //map old port logic to new gain and mode settings
         {
-          Settings.TaskDevicePluginConfig[event->TaskIndex][1] = Settings.TaskDevicePluginConfig[event->TaskIndex][0] / 2;
-          Settings.TaskDevicePluginConfig[event->TaskIndex][0] = 0x48 + ((port-1)/4);
-          Settings.TaskDevicePluginConfig[event->TaskIndex][2] = ((port-1) & 3) | 4;
-          Settings.TaskDevicePort[event->TaskIndex] = 0;
+          PCONFIG(1) = PCONFIG(0) / 2;
+          PCONFIG(0) = 0x48 + ((port-1)/4);
+          PCONFIG(2) = ((port-1) & 3) | 4;
+          CONFIG_PORT = 0;
         }
 
         #define ADS1115_I2C_OPTION 4
-        byte addr = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+        byte addr = PCONFIG(0);
         int optionValues[ADS1115_I2C_OPTION] = { 0x48, 0x49, 0x4A, 0x4B };
         addFormSelectorI2C(F("p025_i2c"), ADS1115_I2C_OPTION, optionValues, addr);
 
         addFormSubHeader(F("Input"));
 
         #define ADS1115_PGA_OPTION 6
-        byte pga = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
+        byte pga = PCONFIG(1);
         String pgaOptions[ADS1115_PGA_OPTION] = {
           F("2/3x gain (FS=6.144V)"),
           F("1x gain (FS=4.096V)"),
@@ -84,7 +84,7 @@ boolean Plugin_025(byte function, struct EventStruct *event, String& string)
         addFormSelector(F("Gain"), F("p025_gain"), ADS1115_PGA_OPTION, pgaOptions, NULL, pga);
 
         #define ADS1115_MUX_OPTION 8
-        byte mux = Settings.TaskDevicePluginConfig[event->TaskIndex][2];
+        byte mux = PCONFIG(2);
         String muxOptions[ADS1115_MUX_OPTION] = {
           F("AIN0 - AIN1 (Differential)"),
           F("AIN0 - AIN3 (Differential)"),
@@ -99,15 +99,15 @@ boolean Plugin_025(byte function, struct EventStruct *event, String& string)
 
         addFormSubHeader(F("Two Point Calibration"));
 
-        addFormCheckBox(F("Calibration Enabled"), F("p025_cal"), Settings.TaskDevicePluginConfig[event->TaskIndex][3]);
+        addFormCheckBox(F("Calibration Enabled"), F("p025_cal"), PCONFIG(3));
 
-        addFormNumericBox(F("Point 1"), F("p025_adc1"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][0], -32768, 32767);
+        addFormNumericBox(F("Point 1"), F("p025_adc1"), PCONFIG_LONG(0), -32768, 32767);
         html_add_estimate_symbol();
-        addTextBox(F("p025_out1"), String(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0], 3), 10);
+        addTextBox(F("p025_out1"), String(PCONFIG_FLOAT(0), 3), 10);
 
-        addFormNumericBox(F("Point 2"), F("p025_adc2"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][1], -32768, 32767);
+        addFormNumericBox(F("Point 2"), F("p025_adc2"), PCONFIG_LONG(1), -32768, 32767);
         html_add_estimate_symbol();
-        addTextBox(F("p025_out2"), String(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1], 3), 10);
+        addTextBox(F("p025_out2"), String(PCONFIG_FLOAT(1), 3), 10);
 
         success = true;
         break;
@@ -115,19 +115,19 @@ boolean Plugin_025(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("p025_i2c"));
+        PCONFIG(0) = getFormItemInt(F("p025_i2c"));
 
-        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("p025_gain"));
+        PCONFIG(1) = getFormItemInt(F("p025_gain"));
 
-        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("p025_mode"));
+        PCONFIG(2) = getFormItemInt(F("p025_mode"));
 
-        Settings.TaskDevicePluginConfig[event->TaskIndex][3] = isFormItemChecked(F("p025_cal"));
+        PCONFIG(3) = isFormItemChecked(F("p025_cal"));
 
-        Settings.TaskDevicePluginConfigLong[event->TaskIndex][0] = getFormItemInt(F("p025_adc1"));
-        Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0] = getFormItemFloat(F("p025_out1"));
+        PCONFIG_LONG(0) = getFormItemInt(F("p025_adc1"));
+        PCONFIG_FLOAT(0) = getFormItemFloat(F("p025_out1"));
 
-        Settings.TaskDevicePluginConfigLong[event->TaskIndex][1] = getFormItemInt(F("p025_adc2"));
-        Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1] = getFormItemFloat(F("p025_out2"));
+        PCONFIG_LONG(1) = getFormItemInt(F("p025_adc2"));
+        PCONFIG_FLOAT(1) = getFormItemFloat(F("p025_out2"));
 
         Plugin_025_init = false; // Force device setup next time
         success = true;
@@ -144,11 +144,11 @@ boolean Plugin_025(byte function, struct EventStruct *event, String& string)
     case PLUGIN_READ:
       {
         //int value = 0;
-        //byte unit = (Settings.TaskDevicePort[event->TaskIndex] - 1) / 4;
-        //byte port = Settings.TaskDevicePort[event->TaskIndex] - (unit * 4);
+        //byte unit = (CONFIG_PORT - 1) / 4;
+        //byte port = CONFIG_PORT - (unit * 4);
         //uint8_t address = 0x48 + unit;
 
-        uint8_t address = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+        uint8_t address = PCONFIG(0);
 
         uint16_t config = (0x0003)    |  // Disable the comparator (default val)
                           (0x0000)    |  // Non-latching (default val)
@@ -157,10 +157,10 @@ boolean Plugin_025(byte function, struct EventStruct *event, String& string)
                           (0x0080)    |  // 128 samples per second (default)
                           (0x0100);      // Single-shot mode (default)
 
-        uint16_t pga = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
+        uint16_t pga = PCONFIG(1);
         config |= pga << 9;
 
-        uint16_t mux = Settings.TaskDevicePluginConfig[event->TaskIndex][2];
+        uint16_t mux = PCONFIG(2);
         config |= mux << 12;
 
         config |= (0x8000);   // Start a single conversion
@@ -178,12 +178,12 @@ boolean Plugin_025(byte function, struct EventStruct *event, String& string)
         UserVar[event->BaseVarIndex] = (float)value;
         log += value;
 
-        if (Settings.TaskDevicePluginConfig[event->TaskIndex][3])   //Calibration?
+        if (PCONFIG(3))   //Calibration?
         {
-          int adc1 = Settings.TaskDevicePluginConfigLong[event->TaskIndex][0];
-          int adc2 = Settings.TaskDevicePluginConfigLong[event->TaskIndex][1];
-          float out1 = Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0];
-          float out2 = Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1];
+          int adc1 = PCONFIG_LONG(0);
+          int adc2 = PCONFIG_LONG(1);
+          float out1 = PCONFIG_FLOAT(0);
+          float out2 = PCONFIG_FLOAT(1);
           if (adc1 != adc2)
           {
             float normalized = (float)(value - adc1) / (float)(adc2 - adc1);

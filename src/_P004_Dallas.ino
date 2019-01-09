@@ -62,7 +62,7 @@ boolean Plugin_004(byte function, struct EventStruct * event, String& string)
             uint8_t savedAddress[8];
             byte resolutionChoice = 0;
             // Scan the onewire bus and fill dropdown list with devicecount on this GPIO.
-            Plugin_004_DallasPin = Settings.TaskDevicePin1[event->TaskIndex];
+            Plugin_004_DallasPin = CONFIG_PIN1;
 
             if (Plugin_004_DallasPin != -1){
               // get currently saved address
@@ -110,7 +110,7 @@ boolean Plugin_004(byte function, struct EventStruct * event, String& string)
             uint8_t addr[8] = {0,0,0,0,0,0,0,0};
 
             // save the address for selected device and store into extra tasksettings
-            Plugin_004_DallasPin = Settings.TaskDevicePin1[event->TaskIndex];
+            Plugin_004_DallasPin = CONFIG_PIN1;
             if (Plugin_004_DallasPin != -1){
               Plugin_004_DS_scan(getFormItemInt(F("p004_dev")), addr);
               for (byte x = 0; x < 8; x++)
@@ -137,7 +137,7 @@ boolean Plugin_004(byte function, struct EventStruct * event, String& string)
 
         case PLUGIN_INIT:
         {
-            Plugin_004_DallasPin = Settings.TaskDevicePin1[event->TaskIndex];
+            Plugin_004_DallasPin = CONFIG_PIN1;
             if (Plugin_004_DallasPin != -1){
               uint8_t addr[8];
               Plugin_004_get_addr(addr, event->TaskIndex);
@@ -154,7 +154,7 @@ boolean Plugin_004(byte function, struct EventStruct * event, String& string)
                 uint8_t addr[8];
                 Plugin_004_get_addr(addr, event->TaskIndex);
 
-                Plugin_004_DallasPin = Settings.TaskDevicePin1[event->TaskIndex];
+                Plugin_004_DallasPin = CONFIG_PIN1;
                 float value = 0;
                 String log  = F("DS   : Temperature: ");
 

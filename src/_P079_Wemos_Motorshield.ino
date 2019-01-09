@@ -94,7 +94,7 @@ boolean Plugin_079(byte function, struct EventStruct *event, String& string)
 	}
 
 	case PLUGIN_WEBFORM_LOAD: {
-    String i2c_addres_string = formatToHex(Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
+    String i2c_addres_string = formatToHex(PCONFIG(0));
 		addFormTextBox(F("I2C Address (Hex)"), F("p079_adr"), i2c_addres_string, 4);
 
 		success = true;
@@ -103,14 +103,14 @@ boolean Plugin_079(byte function, struct EventStruct *event, String& string)
 
 	case PLUGIN_WEBFORM_SAVE: {
 		String i2c_address = WebServer.arg(F("p079_adr"));
-		Settings.TaskDevicePluginConfig[event->TaskIndex][0] = (int)strtol(i2c_address.c_str(), 0, 16);
+		PCONFIG(0) = (int)strtol(i2c_address.c_str(), 0, 16);
 
 		success = true;
 		break;
 	}
 
 	case PLUGIN_INIT: {
-		Plugin_079_MotorShield_address = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+		Plugin_079_MotorShield_address = PCONFIG(0);
 
 		success = true;
 		break;

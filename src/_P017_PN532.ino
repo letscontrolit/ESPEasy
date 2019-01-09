@@ -69,7 +69,7 @@ boolean Plugin_017(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
       {
         // FIXME TD-er: Why is this using pin3 and not pin1? And why isn't this using the normal pin selection functions?
-      	addFormPinSelect(F("Reset Pin"), F("taskdevicepin3"), Settings.TaskDevicePin3[event->TaskIndex]);
+      	addFormPinSelect(F("Reset Pin"), F("taskdevicepin3"), CONFIG_PIN3);
         success = true;
         break;
       }
@@ -83,7 +83,7 @@ boolean Plugin_017(byte function, struct EventStruct *event, String& string)
 
         for(byte x=0; x < 3; x++)
         {
-          if(Plugin_017_Init(Settings.TaskDevicePin3[event->TaskIndex]))
+          if(Plugin_017_Init(CONFIG_PIN3))
             break;
           delay(1000);
         }
@@ -102,7 +102,7 @@ boolean Plugin_017(byte function, struct EventStruct *event, String& string)
           if (digitalRead(4) == 0 || digitalRead(5) == 0)
           {
             addLog(LOG_LEVEL_ERROR, F("PN532: BUS error"));
-            Plugin_017_Init(Settings.TaskDevicePin3[event->TaskIndex]);
+            Plugin_017_Init(CONFIG_PIN3);
             // delay(1000);
           }
           counter = 0;
@@ -122,7 +122,7 @@ boolean Plugin_017(byte function, struct EventStruct *event, String& string)
 
           if (errorCount > 2) // if three consecutive I2C errors, reset PN532
           {
-            Plugin_017_Init(Settings.TaskDevicePin3[event->TaskIndex]);
+            Plugin_017_Init(CONFIG_PIN3);
           }
 
 

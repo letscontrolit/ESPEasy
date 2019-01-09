@@ -23,9 +23,6 @@
 #include <Adafruit_Sensor.h>
 #include "Adafruit_TSL2591.h"
 
-#ifndef CONFIG
-#define CONFIG(n) (Settings.TaskDevicePluginConfig[event->TaskIndex][n])
-#endif
 
 Adafruit_TSL2591 tsl;
 boolean TSL2591_initialized = false;
@@ -82,7 +79,7 @@ boolean Plugin_074(byte function, struct EventStruct *event, String& string)
         // tsl.setTiming(TSL2591_INTEGRATIONTIME_600MS);  // longest integration time (dim light)
 
         String optionsMode[6] = { F("100ms"), F("200ms"), F("300ms"), F("400ms"), F("500ms"), F("600ms") };
-        addFormSelector(F("Integration Time"), F("p074_itime"), 6, optionsMode, NULL, CONFIG(1));
+        addFormSelector(F("Integration Time"), F("p074_itime"), 6, optionsMode, NULL, PCONFIG(1));
 
 
 //        TSL2591_GAIN_LOW                  = 0x00,    // low gain (1x)
@@ -95,7 +92,7 @@ boolean Plugin_074(byte function, struct EventStruct *event, String& string)
           F("medium gain (25x)"),
           F("medium gain (428x)"),
           F("max gain (9876x)") };
-        addFormSelector(F("Value Mapping"), F("p074_gain"), 4, optionsGain, NULL, CONFIG(2));
+        addFormSelector(F("Value Mapping"), F("p074_gain"), 4, optionsGain, NULL, PCONFIG(2));
 
         success = true;
         break;
@@ -103,9 +100,9 @@ boolean Plugin_074(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        //CONFIG(0) = getFormItemInt(F("p074_i2c_addr"));
-        CONFIG(1) = getFormItemInt(F("p074_itime"));
-        CONFIG(2) = getFormItemInt(F("p074_gain"));
+        //PCONFIG(0) = getFormItemInt(F("p074_i2c_addr"));
+        PCONFIG(1) = getFormItemInt(F("p074_itime"));
+        PCONFIG(2) = getFormItemInt(F("p074_gain"));
 
         success = true;
         break;
@@ -123,7 +120,7 @@ boolean Plugin_074(byte function, struct EventStruct *event, String& string)
 
           // Changing the integration time gives you a longer time over which to sense light
           // longer timelines are slower, but are good in very low light situtations!
-          switch (CONFIG(1))
+          switch (PCONFIG(1))
           {
             default:
             case 0:
@@ -164,7 +161,7 @@ boolean Plugin_074(byte function, struct EventStruct *event, String& string)
 
 
   				// You can change the gain on the fly, to adapt to brighter/dimmer light situations
-  				switch (CONFIG(2))
+  				switch (PCONFIG(2))
   				{
   					default:
   					case 0:

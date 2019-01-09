@@ -56,7 +56,7 @@ TaskDevicePluginConfigLong settings:
 #define PLUGIN_001_LONGPRESS_BOTH 3
 
 boolean Plugin_001_read_switch_state(struct EventStruct *event) {
-  byte pinNumber = Settings.TaskDevicePin1[event->TaskIndex];
+  byte pinNumber = CONFIG_PIN1;
   const uint32_t key = createKey(PLUGIN_ID_001, pinNumber);
   if (existPortStatus(key)) {
     return Plugin_001_read_switch_state(pinNumber, globalMapPortStatus[key].mode);
@@ -144,7 +144,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
       {
         //@giig1967g: set current task value for taking actions after changes in the task gpio
-        const uint32_t key = createKey(PLUGIN_ID_001,Settings.TaskDevicePin1[event->TaskIndex]);
+        const uint32_t key = createKey(PLUGIN_ID_001,CONFIG_PIN1);
         if (existPortStatus(key)) {
           globalMapPortStatus[key].previousTask = event->TaskIndex;
         }
@@ -158,10 +158,10 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
 
         if (switchtype == PLUGIN_001_TYPE_DIMMER)
         {
-          addFormNumericBox(F("Dim value"), F("p001_dimvalue"), Settings.TaskDevicePluginConfig[event->TaskIndex][1], 0, 255);
+          addFormNumericBox(F("Dim value"), F("p001_dimvalue"), PCONFIG(1), 0, 255);
         }
 
-        byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][2];
+        byte choice = PCONFIG(2);
         String buttonOptions[3];
         buttonOptions[0] = F("Normal Switch");
         buttonOptions[1] = F("Push Button Active Low");
@@ -170,17 +170,17 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         addFormSelector(F("Switch Button Type"), F("p001_button"), 3, buttonOptions, buttonOptionValues, choice);
 
         addFormCheckBox(F("Send Boot state"),F("p001_boot"),
-        		Settings.TaskDevicePluginConfig[event->TaskIndex][3]);
+        		PCONFIG(3));
 
         addFormSubHeader(F("Advanced event management"));
 
-        addFormNumericBox(F("De-bounce (ms)"), F("p001_debounce"), round(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0]), 0, 250);
+        addFormNumericBox(F("De-bounce (ms)"), F("p001_debounce"), round(PCONFIG_FLOAT(0)), 0, 250);
 
         //set minimum value for doubleclick MIN max speed
-        if (Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1] < PLUGIN_001_DOUBLECLICK_MIN_INTERVAL)
-          Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1] = PLUGIN_001_DOUBLECLICK_MIN_INTERVAL;
+        if (PCONFIG_FLOAT(1) < PLUGIN_001_DOUBLECLICK_MIN_INTERVAL)
+          PCONFIG_FLOAT(1) = PLUGIN_001_DOUBLECLICK_MIN_INTERVAL;
 
-        byte choiceDC = Settings.TaskDevicePluginConfig[event->TaskIndex][4];
+        byte choiceDC = PCONFIG(4);
         String buttonDC[4];
         buttonDC[0] = F("Disabled");
         buttonDC[1] = F("Active only on LOW (EVENT=3)");
@@ -190,13 +190,13 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
 
         addFormSelector(F("Doubleclick event"), F("p001_dc"), 4, buttonDC, buttonDCValues, choiceDC);
 
-        addFormNumericBox(F("Doubleclick max. interval (ms)"), F("p001_dcmaxinterval"), round(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1]), PLUGIN_001_DOUBLECLICK_MIN_INTERVAL, PLUGIN_001_DOUBLECLICK_MAX_INTERVAL);
+        addFormNumericBox(F("Doubleclick max. interval (ms)"), F("p001_dcmaxinterval"), round(PCONFIG_FLOAT(1)), PLUGIN_001_DOUBLECLICK_MIN_INTERVAL, PLUGIN_001_DOUBLECLICK_MAX_INTERVAL);
 
         //set minimum value for longpress MIN max speed
-        if (Settings.TaskDevicePluginConfigFloat[event->TaskIndex][2] < PLUGIN_001_LONGPRESS_MIN_INTERVAL)
-          Settings.TaskDevicePluginConfigFloat[event->TaskIndex][2] = PLUGIN_001_LONGPRESS_MIN_INTERVAL;
+        if (PCONFIG_FLOAT(2) < PLUGIN_001_LONGPRESS_MIN_INTERVAL)
+          PCONFIG_FLOAT(2) = PLUGIN_001_LONGPRESS_MIN_INTERVAL;
 
-        byte choiceLP = Settings.TaskDevicePluginConfig[event->TaskIndex][5];
+        byte choiceLP = PCONFIG(5);
         String buttonLP[4];
         buttonLP[0] = F("Disabled");
         buttonLP[1] = F("Active only on LOW (EVENT= 10 [NORMAL] or 11 [INVERSED])");
@@ -205,13 +205,13 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         int buttonLPValues[4] = {PLUGIN_001_LONGPRESS_DISABLED, PLUGIN_001_LONGPRESS_LOW, PLUGIN_001_LONGPRESS_HIGH,PLUGIN_001_LONGPRESS_BOTH};
         addFormSelector(F("Longpress event"), F("p001_lp"), 4, buttonLP, buttonLPValues, choiceLP);
 
-        addFormNumericBox(F("Longpress min. interval (ms)"), F("p001_lpmininterval"), round(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][2]), PLUGIN_001_LONGPRESS_MIN_INTERVAL, PLUGIN_001_LONGPRESS_MAX_INTERVAL);
+        addFormNumericBox(F("Longpress min. interval (ms)"), F("p001_lpmininterval"), round(PCONFIG_FLOAT(2)), PLUGIN_001_LONGPRESS_MIN_INTERVAL, PLUGIN_001_LONGPRESS_MAX_INTERVAL);
 
-        addFormCheckBox(F("Use Safe Button (slower)"), F("p001_sb"), round(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][3]));
+        addFormCheckBox(F("Use Safe Button (slower)"), F("p001_sb"), round(PCONFIG_FLOAT(3)));
 
         //TO-DO: add Extra-Long Press event
-        //addFormCheckBox(F("Extra-Longpress event (20 & 21)"), F("p001_elp"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][1]);
-        //addFormNumericBox(F("Extra-Longpress min. interval (ms)"), F("p001_elpmininterval"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][2], 500, 2000);
+        //addFormCheckBox(F("Extra-Longpress event (20 & 21)"), F("p001_elp"), PCONFIG_LONG(1));
+        //addFormNumericBox(F("Extra-Longpress min. interval (ms)"), F("p001_elpmininterval"), PCONFIG_LONG(2), 500, 2000);
 
         success = true;
         break;
@@ -219,29 +219,29 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("p001_type"));
-        if (Settings.TaskDevicePluginConfig[event->TaskIndex][0] == PLUGIN_001_TYPE_DIMMER)
+        PCONFIG(0) = getFormItemInt(F("p001_type"));
+        if (PCONFIG(0) == PLUGIN_001_TYPE_DIMMER)
         {
-          Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("p001_dimvalue"));
+          PCONFIG(1) = getFormItemInt(F("p001_dimvalue"));
         }
 
-        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("p001_button"));
+        PCONFIG(2) = getFormItemInt(F("p001_button"));
 
-        Settings.TaskDevicePluginConfig[event->TaskIndex][3] = isFormItemChecked(F("p001_boot"));
+        PCONFIG(3) = isFormItemChecked(F("p001_boot"));
 
-        Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0] = getFormItemInt(F("p001_debounce"));
+        PCONFIG_FLOAT(0) = getFormItemInt(F("p001_debounce"));
 
-        Settings.TaskDevicePluginConfig[event->TaskIndex][4] = getFormItemInt(F("p001_dc"));
-        Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1] = getFormItemInt(F("p001_dcmaxinterval"));
+        PCONFIG(4) = getFormItemInt(F("p001_dc"));
+        PCONFIG_FLOAT(1) = getFormItemInt(F("p001_dcmaxinterval"));
 
-        Settings.TaskDevicePluginConfig[event->TaskIndex][5] = getFormItemInt(F("p001_lp"));
-        Settings.TaskDevicePluginConfigFloat[event->TaskIndex][2] = getFormItemInt(F("p001_lpmininterval"));
+        PCONFIG(5) = getFormItemInt(F("p001_lp"));
+        PCONFIG_FLOAT(2) = getFormItemInt(F("p001_lpmininterval"));
 
-        Settings.TaskDevicePluginConfigFloat[event->TaskIndex][3] = isFormItemChecked(F("p001_sb"));
+        PCONFIG_FLOAT(3) = isFormItemChecked(F("p001_sb"));
 
         //TO-DO: add Extra-Long Press event
-        //Settings.TaskDevicePluginConfigLong[event->TaskIndex][1] = isFormItemChecked(F("p001_elp"));
-        //Settings.TaskDevicePluginConfigLong[event->TaskIndex][2] = getFormItemInt(F("p001_elpmininterval"));
+        //PCONFIG_LONG(1) = isFormItemChecked(F("p001_elp"));
+        //PCONFIG_LONG(2) = getFormItemInt(F("p001_elpmininterval"));
 
         //check if a task has been edited and remove 'task' bit from the previous pin
         for (std::map<uint32_t,portStatusStruct>::iterator it=globalMapPortStatus.begin(); it!=globalMapPortStatus.end(); ++it) {
@@ -258,10 +258,10 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
     case PLUGIN_INIT:
       {
         //apply INIT only if PORT is in range. Do not start INIT if port not set in the device page.
-        if (Settings.TaskDevicePin1[event->TaskIndex] >= 0 && Settings.TaskDevicePin1[event->TaskIndex] <= PIN_D_MAX)
+        if (CONFIG_PIN1 >= 0 && CONFIG_PIN1 <= PIN_D_MAX)
         {
           portStatusStruct newStatus;
-          const uint32_t key = createKey(PLUGIN_ID_001,Settings.TaskDevicePin1[event->TaskIndex]);
+          const uint32_t key = createKey(PLUGIN_ID_001,CONFIG_PIN1);
           //Read current status or create empty if it does not exist
           newStatus = globalMapPortStatus[key];
 
@@ -270,18 +270,18 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
           newStatus.output = newStatus.state;
           (newStatus.task<3) ? newStatus.task++ : newStatus.task = 3; // add this GPIO/port as a task
 
-          //setPinState(PLUGIN_ID_001, Settings.TaskDevicePin1[event->TaskIndex], PIN_MODE_INPUT, switchstate[event->TaskIndex]);
+          //setPinState(PLUGIN_ID_001, CONFIG_PIN1, PIN_MODE_INPUT, switchstate[event->TaskIndex]);
           //  if it is in the device list we assume it's an input pin
           if (Settings.TaskDevicePin1PullUp[event->TaskIndex]) {
-            pinMode(Settings.TaskDevicePin1[event->TaskIndex], INPUT_PULLUP);
+            pinMode(CONFIG_PIN1, INPUT_PULLUP);
             newStatus.mode = PIN_MODE_INPUT_PULLUP;
           } else {
-            pinMode(Settings.TaskDevicePin1[event->TaskIndex], INPUT);
+            pinMode(CONFIG_PIN1, INPUT);
             newStatus.mode = PIN_MODE_INPUT;
           }
           // if boot state must be send, inverse default state
           // this is done to force the trigger in PLUGIN_TEN_PER_SECOND
-          if (Settings.TaskDevicePluginConfig[event->TaskIndex][3])
+          if (PCONFIG(3))
           {
             newStatus.state = !newStatus.state;
             newStatus.output = !newStatus.output;
@@ -295,24 +295,24 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
           }
 
           // counters = 0
-          Settings.TaskDevicePluginConfig[event->TaskIndex][7]=0;     //doubleclick counter
-          Settings.TaskDevicePluginConfigLong[event->TaskIndex][3]=0; //safebutton counter
+          PCONFIG(7)=0;     //doubleclick counter
+          PCONFIG_LONG(3)=0; //safebutton counter
 
           //used to track if LP has fired
-          Settings.TaskDevicePluginConfig[event->TaskIndex][6]=false;
+          PCONFIG(6)=false;
 
           //store millis for debounce, doubleclick and long press
-          Settings.TaskDevicePluginConfigLong[event->TaskIndex][0]=millis(); //debounce timer
-          Settings.TaskDevicePluginConfigLong[event->TaskIndex][1]=millis(); //doubleclick timer
-          Settings.TaskDevicePluginConfigLong[event->TaskIndex][2]=millis(); //longpress timer
+          PCONFIG_LONG(0)=millis(); //debounce timer
+          PCONFIG_LONG(1)=millis(); //doubleclick timer
+          PCONFIG_LONG(2)=millis(); //longpress timer
 
           //set minimum value for doubleclick MIN interval speed
-          if (Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1] < PLUGIN_001_DOUBLECLICK_MIN_INTERVAL)
-            Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1] = PLUGIN_001_DOUBLECLICK_MIN_INTERVAL;
+          if (PCONFIG_FLOAT(1) < PLUGIN_001_DOUBLECLICK_MIN_INTERVAL)
+            PCONFIG_FLOAT(1) = PLUGIN_001_DOUBLECLICK_MIN_INTERVAL;
 
           //set minimum value for longpress MIN interval speed
-          if (Settings.TaskDevicePluginConfigFloat[event->TaskIndex][2] < PLUGIN_001_LONGPRESS_MIN_INTERVAL)
-            Settings.TaskDevicePluginConfigFloat[event->TaskIndex][2] = PLUGIN_001_LONGPRESS_MIN_INTERVAL;
+          if (PCONFIG_FLOAT(2) < PLUGIN_001_LONGPRESS_MIN_INTERVAL)
+            PCONFIG_FLOAT(2) = PLUGIN_001_LONGPRESS_MIN_INTERVAL;
 
           savePortStatus(key,newStatus);
         }
@@ -394,8 +394,8 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         /**************************************************************************\
         20181009 - @giig1967g: new doubleclick logic is:
         if there is a 'state' change, check debounce period.
-        Then if doubleclick interval exceeded, reset Settings.TaskDevicePluginConfig[event->TaskIndex][7] to 0
-        Settings.TaskDevicePluginConfig[event->TaskIndex][7] contains the current status for doubleclick:
+        Then if doubleclick interval exceeded, reset PCONFIG(7) to 0
+        PCONFIG(7) contains the current status for doubleclick:
         0: start counting
         1: 1st click
         2: 2nd click
@@ -411,19 +411,19 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         //long timerstats = millis();
 
         //Bug fixed: avoid 10xSEC in case of a non-fully configured device (no GPIO defined yet)
-        if (Settings.TaskDevicePin1[event->TaskIndex]>=0 && Settings.TaskDevicePin1[event->TaskIndex]<=PIN_D_MAX) {
+        if (CONFIG_PIN1>=0 && CONFIG_PIN1<=PIN_D_MAX) {
 
           portStatusStruct currentStatus;
-          const uint32_t key = createKey(PLUGIN_ID_001,Settings.TaskDevicePin1[event->TaskIndex]);
+          const uint32_t key = createKey(PLUGIN_ID_001,CONFIG_PIN1);
           //WARNING operator [],creates an entry in map if key doesn't exist:
           currentStatus = globalMapPortStatus[key];
 
           //CASE 1: using SafeButton, so wait 1 more 100ms cycle to acknowledge the status change
           //QUESTION: MAYBE IT'S BETTER TO WAIT 2 CYCLES??
-          if (round(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][3]) && state != currentStatus.state && Settings.TaskDevicePluginConfigLong[event->TaskIndex][3]==0)
+          if (round(PCONFIG_FLOAT(3)) && state != currentStatus.state && PCONFIG_LONG(3)==0)
           {
             addLog(LOG_LEVEL_DEBUG,F("SW  :SafeButton 1st click"));
-            Settings.TaskDevicePluginConfigLong[event->TaskIndex][3] = 1;
+            PCONFIG_LONG(3) = 1;
           }
           //CASE 2: not using SafeButton, or already waited 1 more 100ms cycle, so proceed.
           else if (state != currentStatus.state || currentStatus.forceEvent)
@@ -432,38 +432,38 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
             currentStatus.forceEvent = 0;
 
             // Reset SafeButton counter
-            Settings.TaskDevicePluginConfigLong[event->TaskIndex][3] = 0;
+            PCONFIG_LONG(3) = 0;
 
             //reset timer for long press
-            Settings.TaskDevicePluginConfigLong[event->TaskIndex][2]=millis();
-            Settings.TaskDevicePluginConfig[event->TaskIndex][6] = false;
+            PCONFIG_LONG(2)=millis();
+            PCONFIG(6) = false;
 
-            const unsigned long debounceTime = timePassedSince(Settings.TaskDevicePluginConfigLong[event->TaskIndex][0]);
-            if (debounceTime >= (unsigned long)lround(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0])) //de-bounce check
+            const unsigned long debounceTime = timePassedSince(PCONFIG_LONG(0));
+            if (debounceTime >= (unsigned long)lround(PCONFIG_FLOAT(0))) //de-bounce check
             {
-              const unsigned long deltaDC = timePassedSince(Settings.TaskDevicePluginConfigLong[event->TaskIndex][1]);
-              if ((deltaDC >= (unsigned long)lround(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1])) ||
-                   Settings.TaskDevicePluginConfig[event->TaskIndex][7]==3)
+              const unsigned long deltaDC = timePassedSince(PCONFIG_LONG(1));
+              if ((deltaDC >= (unsigned long)lround(PCONFIG_FLOAT(1))) ||
+                   PCONFIG(7)==3)
               {
                 //reset timer for doubleclick
-                Settings.TaskDevicePluginConfig[event->TaskIndex][7]=0;
-                Settings.TaskDevicePluginConfigLong[event->TaskIndex][1]=millis();
+                PCONFIG(7)=0;
+                PCONFIG_LONG(1)=millis();
               }
 
   //just to simplify the reading of the code
-  #define COUNTER Settings.TaskDevicePluginConfig[event->TaskIndex][7]
-  #define DC Settings.TaskDevicePluginConfig[event->TaskIndex][4]
+  #define COUNTER PCONFIG(7)
+  #define DC PCONFIG(4)
 
                 //check settings for doubleclick according to the settings
                 if ( COUNTER!=0 || ( COUNTER==0 && (DC==3 || (DC==1 && state==0) || (DC==2 && state==1))) )
-                  Settings.TaskDevicePluginConfig[event->TaskIndex][7]++;
+                  PCONFIG(7)++;
   #undef DC
   #undef COUNTER
 
               currentStatus.state = state;
               const boolean currentOutputState = currentStatus.output;
               boolean new_outputState = currentOutputState;
-              switch(Settings.TaskDevicePluginConfig[event->TaskIndex][2])
+              switch(PCONFIG(2))
               {
                 case PLUGIN_001_BUTTON_TYPE_NORMAL_SWITCH:
                     new_outputState = state;
@@ -488,7 +488,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
                 if (Settings.TaskDevicePin1Inversed[event->TaskIndex])
                   sendState = !sendState;
 
-                if (Settings.TaskDevicePluginConfig[event->TaskIndex][7]==3 && Settings.TaskDevicePluginConfig[event->TaskIndex][4]>0)
+                if (PCONFIG(7)==3 && PCONFIG(4)>0)
                 {
                   output_value = 3; //double click
                 } else {
@@ -497,7 +497,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
                 event->sensorType = SENSOR_TYPE_SWITCH;
                 if (P001_getSwitchType(event) == PLUGIN_001_TYPE_DIMMER) {
                   if (sendState) {
-                    output_value = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
+                    output_value = PCONFIG(1);
                     // Only set type to being dimmer when setting a value else it is "switched off".
                     event->sensorType = SENSOR_TYPE_DIMMER;
                   }
@@ -505,7 +505,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
                 UserVar[event->BaseVarIndex] = output_value;
                 if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                   String log = F("SW  : GPIO=");
-                  log += Settings.TaskDevicePin1[event->TaskIndex];
+                  log += CONFIG_PIN1;
                   log += F(" State=");
                   log += state ? '1' : '0';
                   log += output_value==3 ? F(" Doubleclick=") : F(" Output value=");
@@ -517,14 +517,14 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
                 //reset Userdata so it displays the correct state value in the web page
                 UserVar[event->BaseVarIndex] = sendState ? 1 : 0;
               }
-              Settings.TaskDevicePluginConfigLong[event->TaskIndex][0] = millis();
+              PCONFIG_LONG(0) = millis();
             }
             savePortStatus(key,currentStatus);
           }
 
   //just to simplify the reading of the code
-  #define LP Settings.TaskDevicePluginConfig[event->TaskIndex][5]
-  #define FIRED Settings.TaskDevicePluginConfig[event->TaskIndex][6]
+  #define LP PCONFIG(5)
+  #define FIRED PCONFIG(6)
 
           //CASE 3: status unchanged. Checking longpress:
           //Check if LP is enabled and if LP has not fired yet
@@ -547,17 +547,17 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
             on Button#Switch=11 do //will fire if longpress when state = 1
             \**************************************************************************/
             // Reset SafeButton counter
-            Settings.TaskDevicePluginConfigLong[event->TaskIndex][3] = 0;
+            PCONFIG_LONG(3) = 0;
 
-            const unsigned long deltaLP = timePassedSince(Settings.TaskDevicePluginConfigLong[event->TaskIndex][2]);
-            if (deltaLP >= (unsigned long)lround(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][2]))
+            const unsigned long deltaLP = timePassedSince(PCONFIG_LONG(2));
+            if (deltaLP >= (unsigned long)lround(PCONFIG_FLOAT(2)))
             {
               byte output_value;
               byte needToSendEvent = false;
 
-              Settings.TaskDevicePluginConfig[event->TaskIndex][6] = true;
+              PCONFIG(6) = true;
 
-              switch(Settings.TaskDevicePluginConfig[event->TaskIndex][2])
+              switch(PCONFIG(2))
               {
                 case PLUGIN_001_BUTTON_TYPE_NORMAL_SWITCH:
                     needToSendEvent = true;
@@ -582,7 +582,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
                 UserVar[event->BaseVarIndex] = output_value;
                 if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                   String log = F("SW  : LongPress: GPIO= ");
-                  log += Settings.TaskDevicePin1[event->TaskIndex];
+                  log += CONFIG_PIN1;
                   log += F(" State=");
                   log += state ? '1' : '0';
                   log += F(" Output value=");
@@ -597,16 +597,16 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
               savePortStatus(key,currentStatus);
             }
           } else {
-            if (Settings.TaskDevicePluginConfigLong[event->TaskIndex][3]==1) { //Safe Button detected. Send EVENT value = 4
+            if (PCONFIG_LONG(3)==1) { //Safe Button detected. Send EVENT value = 4
               // Reset SafeButton counter
-              Settings.TaskDevicePluginConfigLong[event->TaskIndex][3] = 0;
+              PCONFIG_LONG(3) = 0;
 
                //Create EVENT with value = 4 for SafeButton false positive detection
               const int tempUserVar = round(UserVar[event->BaseVarIndex]);
               UserVar[event->BaseVarIndex] = 4;
               if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                 String log = F("SW  : SafeButton: false positive detected. GPIO= ");
-                log += Settings.TaskDevicePin1[event->TaskIndex];
+                log += CONFIG_PIN1;
                 log += F(" State=");
                 log += tempUserVar;
                 addLog(LOG_LEVEL_INFO, log);
@@ -624,7 +624,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_EXIT:
     {
-      removeTaskFromPort(createKey(PLUGIN_ID_001,Settings.TaskDevicePin1[event->TaskIndex]));
+      removeTaskFromPort(createKey(PLUGIN_ID_001,CONFIG_PIN1));
       break;
     }
 
@@ -1029,7 +1029,7 @@ void analogWriteESP32(int pin, int value)
 
 // TD-er: Needed to fix a mistake in earlier fixes.
 byte P001_getSwitchType(struct EventStruct *event) {
-  byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+  byte choice = PCONFIG(0);
   switch (choice) {
     case 2: // Old implementation for Dimmer
     case PLUGIN_001_TYPE_DIMMER:

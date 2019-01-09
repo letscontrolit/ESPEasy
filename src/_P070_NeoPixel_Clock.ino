@@ -13,10 +13,6 @@
 //	Clock,<Enabled 1/0>,<Hand brightness 0-255>,<Mark brightness 0-255>
 
 
-#ifndef CONFIG
-#define CONFIG(n) (Settings.TaskDevicePluginConfig[event->TaskIndex][n])
-#endif
-
 #include <Adafruit_NeoPixel.h>
 
 #define NUMBER_LEDS      60			//number of LED in the strip
@@ -82,15 +78,15 @@ boolean Plugin_070(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
       {
         addFormSubHeader(F("Clock configuration"));
-        addFormNumericBox(F("12 o'clock LED position"), F("offset"), CONFIG(3), 0, 59);
+        addFormNumericBox(F("12 o'clock LED position"), F("offset"), PCONFIG(3), 0, 59);
         addFormNote(F("Position of the 12 o'clock LED in the strip"));
-        addFormCheckBox(F("Thick 12 o'clock mark"), F("thick_12_mark"), CONFIG(4));
+        addFormCheckBox(F("Thick 12 o'clock mark"), F("thick_12_mark"), PCONFIG(4));
         addFormNote(F("Check to have 3 LEDs marking the 12 o'clock position"));
-        addFormCheckBox(F("Clock display enabled"), F("enabled"), CONFIG(0));
+        addFormCheckBox(F("Clock display enabled"), F("enabled"), PCONFIG(0));
         addFormNote(F("LED activation"));
-        addFormNumericBox(F("LED brightness"), F("brightness"), CONFIG(1), 0, 255);
+        addFormNumericBox(F("LED brightness"), F("brightness"), PCONFIG(1), 0, 255);
         addFormNote(F("Brightness level of the H/M/S hands (0-255)"));
-        addFormNumericBox(F("Hour mark brightness"), F("marks"), CONFIG(2), 0, 255);
+        addFormNumericBox(F("Hour mark brightness"), F("marks"), PCONFIG(2), 0, 255);
         addFormNote(F("Brightness level of the hour marks (0-255)"));
 
         success = true;
@@ -99,17 +95,17 @@ boolean Plugin_070(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        CONFIG(0) = isFormItemChecked(F("enabled"));
-        CONFIG(1) = getFormItemInt(F("brightness"));
-        CONFIG(2) = getFormItemInt(F("marks"));
-        CONFIG(3) = getFormItemInt(F("offset"));
-        CONFIG(4) = isFormItemChecked(F("thick_12_mark"));
+        PCONFIG(0) = isFormItemChecked(F("enabled"));
+        PCONFIG(1) = getFormItemInt(F("brightness"));
+        PCONFIG(2) = getFormItemInt(F("marks"));
+        PCONFIG(3) = getFormItemInt(F("offset"));
+        PCONFIG(4) = isFormItemChecked(F("thick_12_mark"));
 
-        Plugin_070_enabled = CONFIG(0);
-        Plugin_070_brightness = CONFIG(1);
-        Plugin_070_marks = CONFIG(2);
-        Plugin_070_offset = CONFIG(3);
-        thick_12_mark = CONFIG(4);
+        Plugin_070_enabled = PCONFIG(0);
+        Plugin_070_brightness = PCONFIG(1);
+        Plugin_070_marks = PCONFIG(2);
+        Plugin_070_offset = PCONFIG(3);
+        thick_12_mark = PCONFIG(4);
 
         calculateMarks();
 
@@ -121,14 +117,14 @@ boolean Plugin_070(byte function, struct EventStruct *event, String& string)
       {
         if (!Plugin_070_pixels)
         {
-          Plugin_070_pixels = new Adafruit_NeoPixel(NUMBER_LEDS, Settings.TaskDevicePin1[event->TaskIndex], NEO_GRB + NEO_KHZ800);
+          Plugin_070_pixels = new Adafruit_NeoPixel(NUMBER_LEDS, CONFIG_PIN1, NEO_GRB + NEO_KHZ800);
           Plugin_070_pixels->begin(); // This initializes the NeoPixel library.
         }
-        Plugin_070_enabled = CONFIG(0);
-        Plugin_070_brightness = CONFIG(1);
-        Plugin_070_marks = CONFIG(2);
-        Plugin_070_offset = CONFIG(3);
-        thick_12_mark = CONFIG(4);
+        Plugin_070_enabled = PCONFIG(0);
+        Plugin_070_brightness = PCONFIG(1);
+        Plugin_070_marks = PCONFIG(2);
+        Plugin_070_offset = PCONFIG(3);
+        thick_12_mark = PCONFIG(4);
 
         calculateMarks();
 
@@ -157,21 +153,21 @@ boolean Plugin_070(byte function, struct EventStruct *event, String& string)
           if (validIntFromString(param1, val_Mode)) {
             if (val_Mode > -1 && val_Mode < 2) {
               Plugin_070_enabled = val_Mode;
-              CONFIG(0) = Plugin_070_enabled;
+              PCONFIG(0) = Plugin_070_enabled;
             }
           }
           int val_Bright;
           if (validIntFromString(param2, val_Bright)) {
             if (val_Bright > -1 && val_Bright < 256) {
               Plugin_070_brightness = val_Bright;
-              CONFIG(1) = Plugin_070_brightness;
+              PCONFIG(1) = Plugin_070_brightness;
             }
           }
           int val_Marks;
           if (validIntFromString(param3, val_Marks)) {
             if (val_Marks > -1 && val_Marks < 256) {
               Plugin_070_marks = val_Marks;
-              CONFIG(2) = Plugin_070_marks;
+              PCONFIG(2) = Plugin_070_marks;
             }
           }
 /*        //Command debuging routine

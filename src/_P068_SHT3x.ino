@@ -83,10 +83,6 @@ void SHT3X::get()
 	}
 }
 
-#ifndef CONFIG
-#define CONFIG(n) (Settings.TaskDevicePluginConfig[event->TaskIndex][n])
-#endif
-
 SHT3X*  Plugin_068_SHT3x[TASKS_MAX] = { NULL, };
 
 
@@ -132,7 +128,7 @@ boolean Plugin_068(byte function, struct EventStruct *event, String& string)
 		case PLUGIN_WEBFORM_LOAD:
 		{
 			int optionValues[2] = { 0x44, 0x45 };
-			addFormSelectorI2C(F("i2c_addr"), 2, optionValues, CONFIG(0));
+			addFormSelectorI2C(F("i2c_addr"), 2, optionValues, PCONFIG(0));
 
 			success = true;
 			break;
@@ -140,7 +136,7 @@ boolean Plugin_068(byte function, struct EventStruct *event, String& string)
 
 		case PLUGIN_WEBFORM_SAVE:
 		{
-			CONFIG(0) = getFormItemInt(F("i2c_addr"));
+			PCONFIG(0) = getFormItemInt(F("i2c_addr"));
 
 			success = true;
 			break;
@@ -150,7 +146,7 @@ boolean Plugin_068(byte function, struct EventStruct *event, String& string)
 		{
 			if (Plugin_068_SHT3x[event->TaskIndex])
 				delete Plugin_068_SHT3x[event->TaskIndex];
-			Plugin_068_SHT3x[event->TaskIndex] = new SHT3X(CONFIG(0));
+			Plugin_068_SHT3x[event->TaskIndex] = new SHT3X(PCONFIG(0));
 
 			success = true;
 			break;

@@ -335,7 +335,7 @@ boolean Plugin_015(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        byte choice1 = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+        byte choice1 = PCONFIG(0);
 				/*
         String options1[3];
         options1[0] = F("0x39 - (default)");
@@ -350,7 +350,7 @@ boolean Plugin_015(byte function, struct EventStruct *event, String& string)
 
         #define TSL2561_INTEGRATION_OPTION 3
 
-        byte choice2 = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
+        byte choice2 = PCONFIG(1);
         String options2[TSL2561_INTEGRATION_OPTION];
         int optionValues2[TSL2561_INTEGRATION_OPTION];
         optionValues2[0] = 0x00;
@@ -362,10 +362,10 @@ boolean Plugin_015(byte function, struct EventStruct *event, String& string)
 				addFormSelector(F("Integration time"), F("p015_integration"), TSL2561_INTEGRATION_OPTION, options2, optionValues2, choice2);
 
         addFormCheckBox(F("Send sensor to sleep:"), F("p015_sleep"),
-        		Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
+        		PCONFIG(2));
 
         addFormCheckBox(F("Enable 16x Gain:"), F("p015_gain"),
-        		Settings.TaskDevicePluginConfig[event->TaskIndex][3]);
+        		PCONFIG(3));
 
         success = true;
         break;
@@ -373,13 +373,13 @@ boolean Plugin_015(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("p015_tsl2561_i2c"));
+        PCONFIG(0) = getFormItemInt(F("p015_tsl2561_i2c"));
 
-        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("p015_integration"));
+        PCONFIG(1) = getFormItemInt(F("p015_integration"));
 
-        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = isFormItemChecked(F("p015_sleep"));
+        PCONFIG(2) = isFormItemChecked(F("p015_sleep"));
 
-        Settings.TaskDevicePluginConfig[event->TaskIndex][3] = isFormItemChecked(F("p015_gain"));
+        PCONFIG(3) = isFormItemChecked(F("p015_gain"));
 
         success = true;
         break;
@@ -387,7 +387,7 @@ boolean Plugin_015(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
       {
-      	plugin_015_i2caddr = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+      	plugin_015_i2caddr = PCONFIG(0);
 
         boolean gain;     // Gain setting, 0 = X1, 1 = X16;
         unsigned int ms;  // Integration ("shutter") time in milliseconds
@@ -396,12 +396,12 @@ boolean Plugin_015(byte function, struct EventStruct *event, String& string)
 
          // If gain = false (0), device is set to low gain (1X)
          // If gain = high (1), device is set to high gain (16X)
-         gain = Settings.TaskDevicePluginConfig[event->TaskIndex][3];
+         gain = PCONFIG(3);
 
          // If time = 0, integration will be 13.7ms
          // If time = 1, integration will be 101ms
          // If time = 2, integration will be 402ms
-         unsigned char time = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
+         unsigned char time = PCONFIG(1);
          plugin_015_setTiming(gain,time,ms);
          plugin_015_setPowerUp();
          delayBackground(ms);
@@ -448,7 +448,7 @@ boolean Plugin_015(byte function, struct EventStruct *event, String& string)
         	 addLog(LOG_LEVEL_ERROR, F("TSL2561: i2c error"));
 
          }
-         if (Settings.TaskDevicePluginConfig[event->TaskIndex][2]) {
+         if (PCONFIG(2)) {
         	 addLog(LOG_LEVEL_DEBUG_MORE, F("TSL2561: sleeping..."));
         	 plugin_015_setPowerDown();
          }
