@@ -24,17 +24,6 @@
 
 std::map<unsigned int, std::shared_ptr<QEIx4> > P_059_sensordefs;
 
-#ifndef CONFIG
-#define CONFIG(n) (Settings.TaskDevicePluginConfig[event->TaskIndex][n])
-#endif
-#ifndef CONFIG_L
-#define CONFIG_L(n) (Settings.TaskDevicePluginConfigLong[event->TaskIndex][n])
-#endif
-#ifndef PIN
-#define PIN(n) (Settings.TaskDevicePin[n][event->TaskIndex])
-#endif
-
-
 boolean Plugin_059(byte function, struct EventStruct *event, String& string)
 {
   boolean success = false;
@@ -81,15 +70,15 @@ boolean Plugin_059(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
       {
         // default values
-        if (CONFIG_L(0) == 0 && CONFIG_L(1) == 0)
-          CONFIG_L(1) = 100;
+        if (PCONFIG_LONG(0) == 0 && PCONFIG_LONG(1) == 0)
+          PCONFIG_LONG(1) = 100;
 
         String options[3] = { F("1 pulse per cycle"), F("2 pulses per cycle"), F("4 pulses per cycle") };
         int optionValues[3] = { 1, 2, 4 };
-        addFormSelector(F("Mode"), F("qei_mode"), 3, options, optionValues, CONFIG(0));
+        addFormSelector(F("Mode"), F("qei_mode"), 3, options, optionValues, PCONFIG(0));
 
-        addFormNumericBox(F("Limit min."), F("qei_limitmin"), CONFIG_L(0));
-        addFormNumericBox(F("Limit max."), F("qei_limitmax"), CONFIG_L(1));
+        addFormNumericBox(F("Limit min."), F("qei_limitmin"), PCONFIG_LONG(0));
+        addFormNumericBox(F("Limit max."), F("qei_limitmax"), PCONFIG_LONG(1));
 
         success = true;
         break;
@@ -97,10 +86,10 @@ boolean Plugin_059(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        CONFIG(0) = getFormItemInt(F("qei_mode"));
+        PCONFIG(0) = getFormItemInt(F("qei_mode"));
 
-        CONFIG_L(0) = getFormItemInt(F("qei_limitmin"));
-        CONFIG_L(1) = getFormItemInt(F("qei_limitmax"));
+        PCONFIG_LONG(0) = getFormItemInt(F("qei_limitmin"));
+        PCONFIG_LONG(1) = getFormItemInt(F("qei_limitmax"));
 
         success = true;
         break;
@@ -114,8 +103,8 @@ boolean Plugin_059(byte function, struct EventStruct *event, String& string)
         P_059_sensordefs.erase(event->TaskIndex);
         P_059_sensordefs[event->TaskIndex] = std::shared_ptr<QEIx4>(new QEIx4);
 
-        P_059_sensordefs[event->TaskIndex]->begin(PIN(0),PIN(1),PIN(2),CONFIG(0));
-        P_059_sensordefs[event->TaskIndex]->setLimit(CONFIG_L(0), CONFIG_L(1));
+        P_059_sensordefs[event->TaskIndex]->begin(CONFIG_PIN1,CONFIG_PIN2,CONFIG_PIN3,PCONFIG(0));
+        P_059_sensordefs[event->TaskIndex]->setLimit(PCONFIG_LONG(0), PCONFIG_LONG(1));
         P_059_sensordefs[event->TaskIndex]->setIndexTrigger(true);
 
         ExtraTaskSettings.TaskDeviceValueDecimals[event->BaseVarIndex] = 0;

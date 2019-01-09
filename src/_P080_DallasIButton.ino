@@ -61,7 +61,7 @@ boolean Plugin_080(byte function, struct EventStruct * event, String& string)
         {
             uint8_t savedAddress[8];
             // Scan the onewire bus and fill dropdown list with devicecount on this GPIO.
-            Plugin_080_DallasPin = Settings.TaskDevicePin1[event->TaskIndex];
+            Plugin_080_DallasPin = CONFIG_PIN1;
 
             if (Plugin_080_DallasPin != -1){
               // get currently saved address
@@ -104,7 +104,7 @@ boolean Plugin_080(byte function, struct EventStruct * event, String& string)
             uint8_t addr[8] = {0,0,0,0,0,0,0,0};
 
             // save the address for selected device and store into extra tasksettings
-            Plugin_080_DallasPin = Settings.TaskDevicePin1[event->TaskIndex];
+            Plugin_080_DallasPin = CONFIG_PIN1;
             // byte devCount =
             if (Plugin_080_DallasPin != -1){
               Plugin_080_DS_scan(getFormItemInt(F("p080_dev")), addr);
@@ -130,7 +130,7 @@ boolean Plugin_080(byte function, struct EventStruct * event, String& string)
         }
         case PLUGIN_INIT:
         {
-            Plugin_080_DallasPin = Settings.TaskDevicePin1[event->TaskIndex];
+            Plugin_080_DallasPin = CONFIG_PIN1;
             if (Plugin_080_DallasPin != -1){
               uint8_t addr[8];
               Plugin_080_get_addr(addr, event->TaskIndex);
@@ -147,7 +147,7 @@ boolean Plugin_080(byte function, struct EventStruct * event, String& string)
                 uint8_t addr[8];
                 Plugin_080_get_addr(addr, event->TaskIndex);
 
-                Plugin_080_DallasPin = Settings.TaskDevicePin1[event->TaskIndex];
+                Plugin_080_DallasPin = CONFIG_PIN1;
                 String log  = F("DS   : iButton: ");
 
                 if (Plugin_080_DS_readiButton(addr))

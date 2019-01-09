@@ -212,9 +212,9 @@ boolean Plugin_053(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
       {
-        int rxPin = Settings.TaskDevicePin1[event->TaskIndex];
-        int txPin = Settings.TaskDevicePin2[event->TaskIndex];
-        int resetPin = Settings.TaskDevicePin3[event->TaskIndex];
+        int rxPin = CONFIG_PIN1;
+        int txPin = CONFIG_PIN2;
+        int resetPin = CONFIG_PIN3;
 
         String log = F("PMSx003 : config ");
         log += rxPin;

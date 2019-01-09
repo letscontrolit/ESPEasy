@@ -113,9 +113,9 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_GET_DEVICEGPIONAMES: {
 
-      AdvHwSerial = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
-      rxPin = Settings.TaskDevicePin1[event->TaskIndex];
-      txPin = Settings.TaskDevicePin2[event->TaskIndex];
+      AdvHwSerial = PCONFIG(0);
+      rxPin = CONFIG_PIN1;
+      txPin = CONFIG_PIN2;
 
       serialHelper_getGpioNames(event);
 
@@ -133,22 +133,22 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
       serialHelper_webformLoad(event);
 
       // FIXME TD-er: These checks for serial pins still needed?
-      rxPin = Settings.TaskDevicePin1[event->TaskIndex];
-      txPin = Settings.TaskDevicePin2[event->TaskIndex];
+      rxPin = CONFIG_PIN1;
+      txPin = CONFIG_PIN2;
 
       if (!((rxPin == 3 && txPin == 1) || (rxPin == 13 && txPin == 15))) { // Hardware Serial Compatible?
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = false;      // Not HW serial compatible, Reset Check Box.
+        PCONFIG(0) = false;      // Not HW serial compatible, Reset Check Box.
       }
 
       if (rxPin == 3 && txPin == 1) {                                      // UART USB Port?
-        if(Settings.TaskDevicePluginConfig[event->TaskIndex][0]==false &&  // Hardware serial currently disabled.
+        if(PCONFIG(0)==false &&  // Hardware serial currently disabled.
          Settings.TaskDeviceEnabled[event->TaskIndex] == true) {           // Plugin is enabled.
-            Settings.TaskDevicePluginConfig[event->TaskIndex][0]=true;     // USB port access uses HW serial, Force set Check Box.
+            PCONFIG(0)=true;     // USB port access uses HW serial, Force set Check Box.
         }
       }
 
-      if (Settings.TaskDevicePluginConfig[event->TaskIndex][0] == false) { // P075_easySerial mode.
-        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = B9600;      // Reset to 9600 baud.
+      if (PCONFIG(0) == false) { // P075_easySerial mode.
+        PCONFIG(1) = B9600;      // Reset to 9600 baud.
       }
 
       if(rxPin <0 || txPin <0) {                                            // Missing serial I/O pins!
@@ -158,9 +158,9 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
 
       addFormSeparator(2);
       addFormSubHeader(F("Enhanced Serial Communication"));
-      addFormCheckBox(F("Use Hardware Serial"), F("AdvHwSerial"), Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
+      addFormCheckBox(F("Use Hardware Serial"), F("AdvHwSerial"), PCONFIG(0));
 
-      byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
+      byte choice = PCONFIG(1);
       String options[4];
       options[0] = F("9600");
       options[1] = F("38400");
@@ -197,7 +197,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
 
       addFormSeparator(2);
       addFormSubHeader(F("Interval Options"));
-      addFormCheckBox(F("Resend <b>Values</b> (below) at Interval"), F("IncludeValues"), Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
+      addFormCheckBox(F("Resend <b>Values</b> (below) at Interval"), F("IncludeValues"), PCONFIG(2));
 
       success = true;
       break;
@@ -223,9 +223,9 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
         if(getTaskDeviceName(event->TaskIndex) == "") {         // Check to see if user entered device name.
             strcpy(ExtraTaskSettings.TaskDeviceName,PLUGIN_DEFAULT_NAME); // Name missing, populate default name.
         }
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = isFormItemChecked(F("AdvHwSerial"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("p075_baud"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = isFormItemChecked(F("IncludeValues"));
+        PCONFIG(0) = isFormItemChecked(F("AdvHwSerial"));
+        PCONFIG(1) = getFormItemInt(F("p075_baud"));
+        PCONFIG(2) = isFormItemChecked(F("IncludeValues"));
         SaveCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
 
         Plugin_075_loadDisplayLines(event->TaskIndex);
@@ -236,19 +236,19 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT: {
 
-      AdvHwSerial   = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
-      BaudCode      = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
-      IncludeValues = Settings.TaskDevicePluginConfig[event->TaskIndex][2];
+      AdvHwSerial   = PCONFIG(0);
+      BaudCode      = PCONFIG(1);
+      IncludeValues = PCONFIG(2);
 
       if(BaudCode > B115200) BaudCode = B9600;
       const uint32_t BaudArray[4] = {9600UL, 38400UL, 57600UL, 115200UL};
       AdvHwBaud = BaudArray[BaudCode];
 
-      if (Settings.TaskDevicePin1[event->TaskIndex] != -1) {
-        rxPin = Settings.TaskDevicePin1[event->TaskIndex];
+      if (CONFIG_PIN1 != -1) {
+        rxPin = CONFIG_PIN1;
       }
-      if (Settings.TaskDevicePin2[event->TaskIndex] != -1) {
-        txPin = Settings.TaskDevicePin2[event->TaskIndex];
+      if (CONFIG_PIN2 != -1) {
+        txPin = CONFIG_PIN2;
       }
 
       if (P075_easySerial != NULL) {

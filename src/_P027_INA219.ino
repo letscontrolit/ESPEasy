@@ -77,7 +77,7 @@ ina219_data _ina219_data[4];
 int Plugin_27_i2c_addresses[4] = { INA219_ADDRESS, INA219_ADDRESS2, INA219_ADDRESS3, INA219_ADDRESS4 };
 
 uint8_t Plugin_027_i2c_addr(struct EventStruct *event) {
-   return (uint8_t)Settings.TaskDevicePluginConfig[event->TaskIndex][1];
+   return (uint8_t)PCONFIG(1);
 }
 
 uint8_t Plugin_027_device_index(const uint8_t i2caddr) {
@@ -129,7 +129,7 @@ boolean Plugin_027(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        byte choiceMode = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+        byte choiceMode = PCONFIG(0);
         String optionsMode[3];
         optionsMode[0] = F("32V, 2A");
         optionsMode[1] = F("32V, 1A");
@@ -142,7 +142,7 @@ boolean Plugin_027(byte function, struct EventStruct *event, String& string)
 
         addFormSelectorI2C(F("p027_i2c"), 4, Plugin_27_i2c_addresses, Plugin_027_i2c_addr(event));
 
-        byte choiceMeasureType = Settings.TaskDevicePluginConfig[event->TaskIndex][2];
+        byte choiceMeasureType = PCONFIG(2);
         String options[4] = { F("Voltage"), F("Current"), F("Power"), F("Voltage/Current/Power") };
         addFormSelector(F("Measurement Type"), F("p027_measuretype"), 4, options, NULL, choiceMeasureType );
 
@@ -152,9 +152,9 @@ boolean Plugin_027(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("p027_range"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("p027_i2c"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("p027_measuretype"));
+        PCONFIG(0) = getFormItemInt(F("p027_range"));
+        PCONFIG(1) = getFormItemInt(F("p027_i2c"));
+        PCONFIG(2) = getFormItemInt(F("p027_measuretype"));
         success = true;
         break;
       }
@@ -167,7 +167,7 @@ boolean Plugin_027(byte function, struct EventStruct *event, String& string)
         String log = F("INA219 0x");
         log += String(i2caddr,HEX);
         log += F(" setting Range to: ");
-        switch (Settings.TaskDevicePluginConfig[event->TaskIndex][0])
+        switch (PCONFIG(0))
         {
       		case 0:
       		{
@@ -214,7 +214,7 @@ boolean Plugin_027(byte function, struct EventStruct *event, String& string)
 
       	// for backward compability we allow the user to select if only one measurement should be returned
       	// or all 3 measurement at once
-        switch (Settings.TaskDevicePluginConfig[event->TaskIndex][2])
+        switch (PCONFIG(2))
         {
           case 0:
           {
