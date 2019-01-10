@@ -1,4 +1,17 @@
 -------------------------------------------------
+Changes in release mega-20190110 (since mega-20190109)
+-------------------------------------------------
+
+Release date: Thu Jan 10 04:00:10 CET 2019
+
+TD-er (4):
+      [GPS] Reduce memory usage when plugin not active.
+      [Plugins] Replace long settings names with clear macros
+      [CSE7766] Reduce memory when plugin not active
+      [Plugins] Remove redundant includes
+
+
+-------------------------------------------------
 Changes in release mega-20190109 (since mega-20190108)
 -------------------------------------------------
 
