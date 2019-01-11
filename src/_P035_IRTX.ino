@@ -298,17 +298,18 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
             if (IrType.equals(F("fujitsu_ac")))         parseStringAndSendAirCon(FUJITSU_AC, ircodestr);
             if (IrType.equals(F("kelvinator")))         parseStringAndSendAirCon(KELVINATOR, ircodestr);
             if (IrType.equals(F("daikin")))             parseStringAndSendAirCon(DAIKIN, ircodestr);
+            if (IrType.equals(F("daikin2")))            parseStringAndSendAirCon(DAIKIN2, ircodestr);
             if (IrType.equals(F("gree")))               parseStringAndSendAirCon(GREE, ircodestr);
             if (IrType.equals(F("argo")))               parseStringAndSendAirCon(ARGO, ircodestr);
             if (IrType.equals(F("trotec")))             parseStringAndSendAirCon(TROTEC, ircodestr);
             if (IrType.equals(F("toshiba_ac")))         parseStringAndSendAirCon(TOSHIBA_AC, ircodestr);
             if (IrType.equals(F("haier_ac")))           parseStringAndSendAirCon(HAIER_AC, ircodestr);
+            if (IrType.equals(F("haier_ac_yrw02")))     parseStringAndSendAirCon(HAIER_AC_YRW02, ircodestr);
             if (IrType.equals(F("hitachi_ac")))         parseStringAndSendAirCon(HITACHI_AC, ircodestr);
             if (IrType.equals(F("hitachi_ac1")))        parseStringAndSendAirCon(HITACHI_AC1, ircodestr);
             if (IrType.equals(F("hitachi_ac2")))        parseStringAndSendAirCon(HITACHI_AC2, ircodestr);
             if (IrType.equals(F("electra_ac")))         parseStringAndSendAirCon(ELECTRA_AC, ircodestr);
             if (IrType.equals(F("panasonic_ac")))       parseStringAndSendAirCon(PANASONIC_AC, ircodestr);
-            if (IrType.equals(F("haier_ac_yrw02")))     parseStringAndSendAirCon(HAIER_AC_YRW02, ircodestr);
             if (IrType.equals(F("samsung_ac")))         parseStringAndSendAirCon(SAMSUNG_AC, ircodestr);
             if (IrType.equals(F("whirlpool_ac")))       parseStringAndSendAirCon(WHIRLPOOL_AC, ircodestr);
             if (IrType.equals(F("mwm")))                parseStringAndSendAirCon(MWM, ircodestr);
@@ -367,6 +368,9 @@ bool  parseStringAndSendAirCon(const uint16_t irType, const String& str) {
       break;
     case DAIKIN:
       stateSize = kDaikinStateLength;
+      break;
+    case DAIKIN2:
+      stateSize = kDaikin2StateLength;
       break;
     case ELECTRA_AC:
       stateSize = kElectraAcStateLength;
@@ -497,7 +501,12 @@ bool  parseStringAndSendAirCon(const uint16_t irType, const String& str) {
       Plugin_035_irSender->sendDaikin(reinterpret_cast<uint8_t *>(state));
       break;
 #endif
-#if MITSUBISHI_AC
+#if SEND_DAIKIN2
+    case DAIKIN2:
+      Plugin_035_irSender->sendDaikin2(reinterpret_cast<uint8_t *>(state));
+      break;
+#endif
+#if SEND_MITSUBISHI_AC
     case MITSUBISHI_AC:
       Plugin_035_irSender->sendMitsubishiAC(reinterpret_cast<uint8_t *>(state));
       break;

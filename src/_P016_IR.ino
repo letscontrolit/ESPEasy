@@ -10,20 +10,20 @@
 
 #include <IRrecv.h>
 #include <IRutils.h>
-
-
 // The following are only needed for extended decoding of A/C Messages
+#include <ir_Coolix.h>
 #include <ir_Daikin.h>
 #include <ir_Fujitsu.h>
 #include <ir_Gree.h>
 #include <ir_Haier.h>
+#include <ir_Hitachi.h>
 #include <ir_Kelvinator.h>
 #include <ir_Midea.h>
 #include <ir_Mitsubishi.h>
 #include <ir_Panasonic.h>
 #include <ir_Samsung.h>
 #include <ir_Toshiba.h>
-#include <ir_Coolix.h>
+#include <ir_Whirlpool.h>
 
 #define PLUGIN_016
 #define PLUGIN_ID_016         16
@@ -177,7 +177,7 @@ boolean Plugin_016(byte function, struct EventStruct *event, String& string)
           UserVar[event->BaseVarIndex + 1] = ((IRcode >> 16) & 0xFFFF);
           String description = "IR: ";
           if (results.overflow)
-            description += F("WARNING: IR code is too big for buffer. This result shouldn't be trusted until this is resolved. Edit & increase CAPTURE_BUFFER_SIZE.\n");
+            description += F("WARNING: IR code is too big for buffer.");
           // Display the basic output of what we found.
           description += resultToHumanReadableBasic(&results);
           addLog(LOG_LEVEL_INFO, description);
@@ -270,6 +270,20 @@ boolean Plugin_016(byte function, struct EventStruct *event, String& string)
     ac.setRaw(results.state);
     description = ac.toString();
   }
+#if DECODE_HITACHI_AC
+  if (results.decode_type == HITACHI_AC) {
+    IRHitachiAc ac(0);
+    ac.setRaw(results.state);
+    description = ac.toString();
+  }
+#endif  // DECODE_HITACHI_AC
+#if DECODE_WHIRLPOOL_AC
+  if (results.decode_type == WHIRLPOOL_AC) {
+    IRWhirlpoolAc ac(0);
+    ac.setRaw(results.state);
+    description = ac.toString();
+  }
+#endif  // DECODE_WHIRLPOOL_AC
 #endif  // DECODE_PANASONIC_AC
   // If we got a human-readable description of the message, display it.
           if (description != "") addLog(LOG_LEVEL_INFO, description);
