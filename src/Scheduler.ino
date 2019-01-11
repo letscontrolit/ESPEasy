@@ -4,6 +4,7 @@
 #define CONST_INTERVAL_TIMER 1
 #define PLUGIN_TASK_TIMER    2
 #define TASK_DEVICE_TIMER    3
+#define GPIO_TIMER           4
 
 #include <list>
 struct EventStructCommandWrapper {
@@ -40,6 +41,7 @@ unsigned long getMixedId(unsigned long timerType, unsigned long id) {
  * Handle scheduled timers.
 \*********************************************************************************************/
 void handle_schedule() {
+  START_TIMER
   unsigned long timer;
   unsigned long mixed_id = 0;
   if (timePassedSince(last_system_event_run) < 500) {
@@ -53,6 +55,7 @@ void handle_schedule() {
     backgroundtasks();
     process_system_event_queue();
     last_system_event_run = millis();
+    STOP_TIMER(HANDLE_SCHEDULER_IDLE);
     return;
   }
   const unsigned long timerType = (mixed_id >> TIMER_ID_SHIFT);
@@ -71,7 +74,11 @@ void handle_schedule() {
     case TASK_DEVICE_TIMER:
       process_task_device_timer(id, timer);
       break;
+    case GPIO_TIMER:
+      process_gpio_timer(id);
+      break;
   }
+  STOP_TIMER(HANDLE_SCHEDULER_TASK);
 }
 
 /*********************************************************************************************\
@@ -232,7 +239,7 @@ void splitPluginTaskTimerId(const unsigned long mixed_id, byte& plugin, int& Par
 }
 */
 
-void setPluginTaskTimer(unsigned long timer, byte plugin, short taskIndex, int Par1, int Par2, int Par3, int Par4, int Par5)
+void setPluginTaskTimer(unsigned long msecFromNow, byte plugin, short taskIndex, int Par1, int Par2, int Par3, int Par4, int Par5)
 {
   // plugin number and par1 form a unique key that can be used to restart a timer
   const unsigned long systemTimerId = createPluginTaskTimerId(plugin, Par1);
@@ -244,7 +251,7 @@ void setPluginTaskTimer(unsigned long timer, byte plugin, short taskIndex, int P
   timer_data.Par4 = Par4;
   timer_data.Par5 = Par5;
   systemTimers[systemTimerId] = timer_data;
-  setTimer(PLUGIN_TASK_TIMER, systemTimerId, timer);
+  setTimer(PLUGIN_TASK_TIMER, systemTimerId, msecFromNow);
 }
 
 void process_plugin_task_timer(unsigned long id) {
@@ -273,8 +280,33 @@ void process_plugin_task_timer(unsigned long id) {
   if (y >= 0) {
     String dummy;
     Plugin_ptr[y](PLUGIN_TIMER_IN, &TempEvent, dummy);
-  }  
+  }
   STOP_TIMER(PROC_SYS_TIMER);
+}
+
+
+/*********************************************************************************************\
+ * GPIO Timer
+ * Special timer to handle timed GPIO actions
+\*********************************************************************************************/
+unsigned long createGPIOTimerId(byte pinNumber, int Par1) {
+  const unsigned long mask = (1 << TIMER_ID_SHIFT) -1;
+  const unsigned long mixed = (Par1 << 8) + pinNumber;
+  return (mixed & mask);
+}
+
+void setGPIOTimer(unsigned long msecFromNow, int Par1, int Par2, int Par3, int Par4, int Par5)
+{
+  // Par1 & Par2 form a unique key
+  const unsigned long systemTimerId = createGPIOTimerId(Par1, Par2);
+  setTimer(GPIO_TIMER, systemTimerId, msecFromNow);
+}
+
+void process_gpio_timer(unsigned long id) {
+  // FIXME TD-er: Allow for all GPIO commands to be scheduled.
+  byte pinNumber = id & 0xFF;
+  byte pinStateValue = (id >> 8);
+  digitalWrite(pinNumber, pinStateValue);
 }
 
 
@@ -423,7 +455,7 @@ void process_system_event_queue() {
       Plugin_ptr[Index](Function, &EventQueue.front().event, tmpString);
       break;
     case ControllerPluginEnum:
-      CPlugin_ptr[Index](Function, &EventQueue.front().event, tmpString);
+      CPluginCall(Index, Function, &EventQueue.front().event, tmpString);
       break;
     case NotificationPluginEnum:
       NPlugin_ptr[Index](Function, &EventQueue.front().event, tmpString);

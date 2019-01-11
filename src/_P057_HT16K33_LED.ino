@@ -48,15 +48,15 @@
 // This plugin also allows a "clock" mode. In clock mode the display will show
 // the current system time. The "7-Seg. Clock" needs to be configured for this
 // mode to work. Each segment number (0..5) needs to be set based on your
-// display. 
+// display.
 //
 // For my _Adafruit 0.56" 4-Digit 7-Segment FeatherWing Display_ these
 // settings are as follows:
-//    Xx:xx = 0, xX:xx = 1, 
+//    Xx:xx = 0, xX:xx = 1,
 //    xx:Xx = 3, xx:xX = 4
 //    Seg. for Colon is 2 with a value of 2
 //
-// Any other data written to the display will show and be replaced at the next 
+// Any other data written to the display will show and be replaced at the next
 // clock cycle, e.g. when the plugin received 'PLUGIN_CLOCK_IN'.
 //
 // NOTE: The system time is set via NTP as part of the Core ESPEasy firmware.
@@ -70,10 +70,6 @@
 #include <HT16K33.h>
 
 CHT16K33* Plugin_057_M = NULL;
-
-#ifndef CONFIG
-#define CONFIG(n) (Settings.TaskDevicePluginConfig[event->TaskIndex][n])
-#endif
 
 
 boolean Plugin_057(byte function, struct EventStruct *event, String& string)
@@ -107,7 +103,7 @@ boolean Plugin_057(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        byte addr = CONFIG(0);
+        byte addr = PCONFIG(0);
 
         int optionValues[8] = { 0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x76, 0x77 };
         addFormSelectorI2C(F("i2c_addr"), 8, optionValues, addr);
@@ -115,18 +111,18 @@ boolean Plugin_057(byte function, struct EventStruct *event, String& string)
 
         addFormSubHeader(F("7-Seg. Clock"));
 
-        int16_t choice = CONFIG(1);
+        int16_t choice = PCONFIG(1);
         String options[3] = {F("none"), F("7-Seg. HH:MM (24 hour)"), F("7-Seg. HH:MM (12 hour)")};
         addFormSelector(F("Clock Type"), F("clocktype"), 3, options, NULL, choice);
 
-        addFormNumericBox(F("Seg. for <b>X</b>x:xx"), F("clocksegh10"), CONFIG(2), 0, 7);
-        addFormNumericBox(F("Seg. for x<b>X</b>:xx"), F("clocksegh1"), CONFIG(3), 0, 7);
-        addFormNumericBox(F("Seg. for xx:<b>X</b>x"), F("clocksegm10"), CONFIG(4), 0, 7);
-        addFormNumericBox(F("Seg. for xx:x<b>X</b>"), F("clocksegm1"), CONFIG(5), 0, 7);
+        addFormNumericBox(F("Seg. for <b>X</b>x:xx"), F("clocksegh10"), PCONFIG(2), 0, 7);
+        addFormNumericBox(F("Seg. for x<b>X</b>:xx"), F("clocksegh1"), PCONFIG(3), 0, 7);
+        addFormNumericBox(F("Seg. for xx:<b>X</b>x"), F("clocksegm10"), PCONFIG(4), 0, 7);
+        addFormNumericBox(F("Seg. for xx:x<b>X</b>"), F("clocksegm1"), PCONFIG(5), 0, 7);
 
-        addFormNumericBox(F("Seg. for Colon"), F("clocksegcol"), CONFIG(6), -1, 7);
+        addFormNumericBox(F("Seg. for Colon"), F("clocksegcol"), PCONFIG(6), -1, 7);
         addHtml(F(" Value "));
-        addNumericBox(F("clocksegcolval"), CONFIG(7), 0, 255);
+        addNumericBox(F("clocksegcolval"), PCONFIG(7), 0, 255);
 
         success = true;
         break;
@@ -134,16 +130,16 @@ boolean Plugin_057(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        CONFIG(0) = getFormItemInt(F("i2c_addr"));
+        PCONFIG(0) = getFormItemInt(F("i2c_addr"));
 
-        CONFIG(1) = getFormItemInt(F("clocktype"));
+        PCONFIG(1) = getFormItemInt(F("clocktype"));
 
-        CONFIG(2) = getFormItemInt(F("clocksegh10"));
-        CONFIG(3) = getFormItemInt(F("clocksegh1"));
-        CONFIG(4) = getFormItemInt(F("clocksegm10"));
-        CONFIG(5) = getFormItemInt(F("clocksegm1"));
-        CONFIG(6) = getFormItemInt(F("clocksegcol"));
-        CONFIG(7) = getFormItemInt(F("clocksegcolval"));
+        PCONFIG(2) = getFormItemInt(F("clocksegh10"));
+        PCONFIG(3) = getFormItemInt(F("clocksegh1"));
+        PCONFIG(4) = getFormItemInt(F("clocksegm10"));
+        PCONFIG(5) = getFormItemInt(F("clocksegm1"));
+        PCONFIG(6) = getFormItemInt(F("clocksegcol"));
+        PCONFIG(7) = getFormItemInt(F("clocksegcolval"));
 
         success = true;
         break;
@@ -151,7 +147,7 @@ boolean Plugin_057(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
       {
-        byte addr = CONFIG(0);
+        byte addr = PCONFIG(0);
 
         if (!Plugin_057_M)
           Plugin_057_M = new CHT16K33;
@@ -301,24 +297,24 @@ boolean Plugin_057(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_CLOCK_IN:
       {
-        if (!Plugin_057_M || CONFIG(1) == 0)
+        if (!Plugin_057_M || PCONFIG(1) == 0)
           break;
 
         byte hours = hour();
         byte minutes = minute();
 
         // Plugin_057_M->ClearRowBuffer();
-        Plugin_057_M->SetDigit(CONFIG(5), minutes % 10);
-        Plugin_057_M->SetDigit(CONFIG(4), minutes / 10);
+        Plugin_057_M->SetDigit(PCONFIG(5), minutes % 10);
+        Plugin_057_M->SetDigit(PCONFIG(4), minutes / 10);
 
-        if (CONFIG(1) == 1) {         // 24-hour clock
+        if (PCONFIG(1) == 1) {         // 24-hour clock
           // 24-hour clock shows leading zero
-          Plugin_057_M->SetDigit(CONFIG(2), hours / 10);
-          Plugin_057_M->SetDigit(CONFIG(3), hours % 10);
-        } else if (CONFIG(1) == 2) {  // 12-hour clock
+          Plugin_057_M->SetDigit(PCONFIG(2), hours / 10);
+          Plugin_057_M->SetDigit(PCONFIG(3), hours % 10);
+        } else if (PCONFIG(1) == 2) {  // 12-hour clock
           if (hours < 12) {
             // to set AM marker, get buffer and add decimal to it.
-            Plugin_057_M->SetRow(CONFIG(5), (Plugin_057_M->GetRow(CONFIG(5)) | 0x80));
+            Plugin_057_M->SetRow(PCONFIG(5), (Plugin_057_M->GetRow(PCONFIG(5)) | 0x80));
           }
 
           hours = hours % 12;
@@ -326,18 +322,18 @@ boolean Plugin_057(byte function, struct EventStruct *event, String& string)
             hours = 12;
           }
 
-          Plugin_057_M->SetDigit(CONFIG(3), hours % 10);
+          Plugin_057_M->SetDigit(PCONFIG(3), hours % 10);
 
           if (hours < 10) {
             // 12-hour clock will show empty segment when hours < 10
-            Plugin_057_M->SetRow(CONFIG(2), 0);
+            Plugin_057_M->SetRow(PCONFIG(2), 0);
           } else {
-            Plugin_057_M->SetDigit(CONFIG(2), hours / 10);
+            Plugin_057_M->SetDigit(PCONFIG(2), hours / 10);
           }
         }
 
-        //if (CONFIG(6) >= 0)
-        //  Plugin_057_M->SetRow(CONFIG(6), CONFIG(7));
+        //if (PCONFIG(6) >= 0)
+        //  Plugin_057_M->SetRow(PCONFIG(6), PCONFIG(7));
         Plugin_057_M->TransmitRowBuffer();
 
         success = true;
@@ -347,17 +343,17 @@ boolean Plugin_057(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_TEN_PER_SECOND:
       {
-        if (!Plugin_057_M || CONFIG(1) == 0)   //clock enabled?
+        if (!Plugin_057_M || PCONFIG(1) == 0)   //clock enabled?
           break;
 
-        if (CONFIG(6) >= 0)   //colon used?
+        if (PCONFIG(6) >= 0)   //colon used?
         {
           uint8_t act = ((uint16_t)millis() >> 9) & 1;   //blink with about 2 Hz
           static uint8_t last = 0;
           if (act != last)
           {
             last = act;
-            Plugin_057_M->SetRow(CONFIG(6), (act) ? CONFIG(7) : 0);
+            Plugin_057_M->SetRow(PCONFIG(6), (act) ? PCONFIG(7) : 0);
             Plugin_057_M->TransmitRowBuffer();
           }
         }

@@ -1,4 +1,6 @@
 
+#include <Arduino.h>
+
 #ifdef CONTINUOUS_INTEGRATION
 #pragma GCC diagnostic error "-Wall"
 #else
@@ -125,7 +127,7 @@ void setup()
   #endif
 
   Serial.begin(115200);
-  // Serial.print("\n\n\nBOOOTTT\n\n\n");
+  // serialPrint("\n\n\nBOOOTTT\n\n\n");
 
   initLog();
 
@@ -142,7 +144,7 @@ void setup()
 
   if (SpiffsSectors() < 32)
   {
-    Serial.println(F("\nNo (or too small) SPIFFS area..\nSystem Halted\nPlease reflash with 128k SPIFFS minimum!"));
+    serialPrintln(F("\nNo (or too small) SPIFFS area..\nSystem Halted\nPlease reflash with 128k SPIFFS minimum!"));
     while (true)
       delay(1);
   }
@@ -196,6 +198,7 @@ void setup()
   fileSystemCheck();
   progMemMD5check();
   LoadSettings();
+  Settings.UseRTOSMultitasking = false; // For now, disable it, we experience heap corruption.
   if (RTC.bootFailedCount > 10 && RTC.bootCounter > 10) {
     byte toDisable = RTC.bootFailedCount - 10;
     toDisable = disablePlugin(toDisable);
@@ -215,11 +218,11 @@ void setup()
   if (Settings.Version != VERSION || Settings.PID != ESP_PROJECT_PID)
   {
     // Direct Serial is allowed here, since this is only an emergency task.
-    Serial.print(F("\nPID:"));
-    Serial.println(Settings.PID);
-    Serial.print(F("Version:"));
-    Serial.println(Settings.Version);
-    Serial.println(F("INIT : Incorrect PID or version!"));
+    serialPrint(F("\nPID:"));
+    serialPrintln(String(Settings.PID));
+    serialPrint(F("Version:"));
+    serialPrintln(String(Settings.Version));
+    serialPrintln(F("INIT : Incorrect PID or version!"));
     delay(1000);
     ResetFactory();
   }
@@ -303,7 +306,7 @@ void setup()
 
   sendSysInfoUDP(3);
 
-  if (Settings.UseNTP)
+  if (systemTimePresent())
     initTime();
 
 #if FEATURE_ADC_VCC
@@ -403,7 +406,7 @@ int firstEnabledMQTTController() {
 bool getControllerProtocolDisplayName(byte ProtocolIndex, byte parameterIdx, String& protoDisplayName) {
   EventStruct tmpEvent;
   tmpEvent.idx=parameterIdx;
-  return CPlugin_ptr[ProtocolIndex](CPLUGIN_GET_PROTOCOL_DISPLAY_NAME, &tmpEvent, protoDisplayName);
+  return CPluginCall(ProtocolIndex, CPLUGIN_GET_PROTOCOL_DISPLAY_NAME, &tmpEvent, protoDisplayName);
 }
 
 void updateLoopStats() {
@@ -596,22 +599,6 @@ void runPeriodicalMQTT() {
   }
 }
 
-String getMQTT_state() {
-  switch (MQTTclient.state()) {
-    case MQTT_CONNECTION_TIMEOUT     : return F("Connection timeout");
-    case MQTT_CONNECTION_LOST        : return F("Connection lost");
-    case MQTT_CONNECT_FAILED         : return F("Connect failed");
-    case MQTT_DISCONNECTED           : return F("Disconnected");
-    case MQTT_CONNECTED              : return F("Connected");
-    case MQTT_CONNECT_BAD_PROTOCOL   : return F("Connect bad protocol");
-    case MQTT_CONNECT_BAD_CLIENT_ID  : return F("Connect bad client_id");
-    case MQTT_CONNECT_UNAVAILABLE    : return F("Connect unavailable");
-    case MQTT_CONNECT_BAD_CREDENTIALS: return F("Connect bad credentials");
-    case MQTT_CONNECT_UNAUTHORIZED   : return F("Connect unauthorized");
-    default: return "";
-  }
-}
-
 void updateMQTTclient_connected() {
   if (MQTTclient_connected != MQTTclient.connected()) {
     MQTTclient_connected = !MQTTclient_connected;
@@ -661,7 +648,8 @@ void run10TimesPerSecond() {
   }
   {
     START_TIMER;
-    PluginCall(PLUGIN_UNCONDITIONAL_POLL, 0, dummyString);
+//    PluginCall(PLUGIN_UNCONDITIONAL_POLL, 0, dummyString);
+    PluginCall(PLUGIN_MONITOR, 0, dummyString);
     STOP_TIMER(PLUGIN_CALL_10PSU);
   }
   if (Settings.UseRules && eventBuffer.length() > 0)
@@ -706,12 +694,7 @@ void runOncePerSecond()
         }
       case CMD_REBOOT:
         {
-          #if defined(ESP8266)
-            ESP.reset();
-          #endif
-          #if defined(ESP32)
-            ESP.restart();
-          #endif
+          reboot();
           break;
         }
     }
@@ -720,7 +703,7 @@ void runOncePerSecond()
   WifiCheck();
 
   // clock events
-  if (Settings.UseNTP)
+  if (systemTimePresent())
     checkTime();
 
 //  unsigned long start = micros();
@@ -750,15 +733,15 @@ void runOncePerSecond()
 /*
   if (Settings.SerialLogLevel == LOG_LEVEL_DEBUG_DEV)
   {
-    Serial.print(F("Plugin calls: 50 ps:"));
-    Serial.print(elapsed50ps);
-    Serial.print(F(" uS, 10 ps:"));
-    Serial.print(elapsed10ps);
-    Serial.print(F(" uS, 10 psU:"));
-    Serial.print(elapsed10psU);
-    Serial.print(F(" uS, 1 ps:"));
-    Serial.print(elapsed);
-    Serial.println(F(" uS"));
+    serialPrint(F("Plugin calls: 50 ps:"));
+    serialPrint(elapsed50ps);
+    serialPrint(F(" uS, 10 ps:"));
+    serialPrint(elapsed10ps);
+    serialPrint(F(" uS, 10 psU:"));
+    serialPrint(elapsed10psU);
+    serialPrint(F(" uS, 1 ps:"));
+    serialPrint(elapsed);
+    serialPrintln(F(" uS"));
     elapsed50ps=0;
     elapsed10ps=0;
     elapsed10psU=0;
@@ -838,7 +821,7 @@ void SensorSendTask(byte TaskIndex)
   {
     byte varIndex = TaskIndex * VARS_PER_TASK;
 
-    boolean success = false;
+    bool success = false;
     byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[TaskIndex]);
     LoadTaskSettings(TaskIndex);
 
@@ -905,12 +888,13 @@ void backgroundtasks()
   {
     return;
   }
+  START_TIMER
   runningBackgroundTasks=true;
 
   #if defined(ESP8266)
     tcpCleanup();
   #endif
-  process_serialLogBuffer();
+  process_serialWriteBuffer();
   if(!UseRTOSMultitasking){
     if (Settings.UseSerial)
       if (Serial.available())
@@ -942,4 +926,5 @@ void backgroundtasks()
   statusLED(false);
 
   runningBackgroundTasks=false;
+  STOP_TIMER(BACKGROUND_TASKS);
 }

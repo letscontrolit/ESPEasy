@@ -62,16 +62,18 @@ boolean Plugin_056(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_GET_DEVICEGPIONAMES:
       {
-        event->String1 = formatGpioName_RX(false);
-        event->String2 = formatGpioName_TX(true); // optional
+        serialHelper_getGpioNames(event, false, true); // TX optional
         break;
       }
 
     case PLUGIN_WEBFORM_LOAD:
       {
+        serialHelper_webformLoad(event);
+
+        // FIXME TD-er:  Whether TX pin is connected should be set somewhere
         if (Plugin_056_hasTxPin(event)) {
           addFormNumericBox(F("Sleep time"), F("p056_sleeptime"),
-                            Settings.TaskDevicePluginConfig[event->TaskIndex][0],
+                            PCONFIG(0),
                             0, 30);
           addUnit(F("Minutes"));
           addFormNote(F("0 = continous, 1..30 = Work 30 seconds and sleep n*60-30 seconds"));
@@ -80,11 +82,13 @@ boolean Plugin_056(byte function, struct EventStruct *event, String& string)
       }
       case PLUGIN_WEBFORM_SAVE:
         {
+          serialHelper_webformSave(event);
+
           if (Plugin_056_hasTxPin(event)) {
             // Communications to device should work.
             const int newsleeptime = getFormItemInt(F("p056_sleeptime"));
-            if (Settings.TaskDevicePluginConfig[event->TaskIndex][0] != newsleeptime) {
-              Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("p056_sleeptime"));
+            if (PCONFIG(0) != newsleeptime) {
+              PCONFIG(0) = getFormItemInt(F("p056_sleeptime"));
               Plugin_056_setWorkingPeriod(newsleeptime);
             }
           }
@@ -96,8 +100,8 @@ boolean Plugin_056(byte function, struct EventStruct *event, String& string)
       {
         if (Plugin_056_SDS)
           delete Plugin_056_SDS;
-        const int16_t serial_rx = Settings.TaskDevicePin1[event->TaskIndex];
-        const int16_t serial_tx = Settings.TaskDevicePin2[event->TaskIndex];
+        const int16_t serial_rx = CONFIG_PIN1;
+        const int16_t serial_tx = CONFIG_PIN2;
         Plugin_056_SDS = new CjkSDS011(serial_rx, serial_tx);
         String log = F("SDS  : Init OK  ESP GPIO-pin RX:");
         log += serial_rx;
@@ -169,7 +173,7 @@ boolean Plugin_056(byte function, struct EventStruct *event, String& string)
 }
 
 boolean Plugin_056_hasTxPin(struct EventStruct *event) {
-  const int16_t serial_tx = Settings.TaskDevicePin2[event->TaskIndex];
+  const int16_t serial_tx = CONFIG_PIN2;
   return serial_tx >= 0;
 }
 

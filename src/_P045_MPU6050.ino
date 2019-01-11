@@ -113,7 +113,7 @@ boolean Plugin_045(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
       {
         // Setup webform for address selection
-        byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+        byte choice = PCONFIG(0);
         /*
         String options[10];
         options[0] = F("0x68 - default settings (ADDR Low)");
@@ -125,7 +125,7 @@ boolean Plugin_045(byte function, struct EventStruct *event, String& string)
         addFormSelectorI2C(F("p045_address"), 2, optionValues, choice);
         addFormNote(F("ADDR Low=0x68, High=0x69"));
 
-        choice = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
+        choice = PCONFIG(1);
         String options[10];
         options[0] = F("Movement detection");
         options[1] = F("Range acceleration X");
@@ -146,9 +146,9 @@ boolean Plugin_045(byte function, struct EventStruct *event, String& string)
           addHtml(F("axis. The axis will trigger when the range for that axis exceeds the threshold<br>"));
           addHtml(F("value. A value of 0 disables movement detection for that axis."));
 
-        	addFormNumericBox(F("Detection threshold X"), F("p045_threshold_x"), Settings.TaskDevicePluginConfig[event->TaskIndex][2], 0, 65535);
-        	addFormNumericBox(F("Detection threshold Y"), F("p045_threshold_y"), Settings.TaskDevicePluginConfig[event->TaskIndex][3], 0, 65535);
-        	addFormNumericBox(F("Detection threshold Z"), F("p045_threshold_z"), Settings.TaskDevicePluginConfig[event->TaskIndex][4], 0, 65535);
+        	addFormNumericBox(F("Detection threshold X"), F("p045_threshold_x"), PCONFIG(2), 0, 65535);
+        	addFormNumericBox(F("Detection threshold Y"), F("p045_threshold_y"), PCONFIG(3), 0, 65535);
+        	addFormNumericBox(F("Detection threshold Z"), F("p045_threshold_z"), PCONFIG(4), 0, 65535);
 
           addHtml(F("<TR><TD><TD>Each 30 seconds a counter for the detection window is increased plus all axis<br>"));
           addHtml(F("are checked and if they *all* exceeded the threshold values, a counter is increased.<br>"));
@@ -157,8 +157,8 @@ boolean Plugin_045(byte function, struct EventStruct *event, String& string)
           addHtml(F("If in the next window the [min. detection count] value is not met, movement has stopped."));
           addHtml(F("The [detection window] cannot be smaller than the [min. detection count]."));
 
-        	addFormNumericBox(F("Min. detection count"), F("p045_threshold_counter"), Settings.TaskDevicePluginConfig[event->TaskIndex][5], 0, 999999);
-        	addFormNumericBox(F("Detection window"), F("p045_threshold_window"), Settings.TaskDevicePluginConfig[event->TaskIndex][6], 0, 999999);
+        	addFormNumericBox(F("Min. detection count"), F("p045_threshold_counter"), PCONFIG(5), 0, 999999);
+        	addFormNumericBox(F("Detection window"), F("p045_threshold_window"), PCONFIG(6), 0, 999999);
 
         }
         success = true;
@@ -168,15 +168,15 @@ boolean Plugin_045(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE:
       {
         // Save the vars
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("p045_address"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("p045_function"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("p045_threshold_x"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][3] = getFormItemInt(F("p045_threshold_y"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][4] = getFormItemInt(F("p045_threshold_z"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][5] = getFormItemInt(F("p045_threshold_counter"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][6] = getFormItemInt(F("p045_threshold_window"));
-        if (Settings.TaskDevicePluginConfig[event->TaskIndex][6] < Settings.TaskDevicePluginConfig[event->TaskIndex][5]) {
-          Settings.TaskDevicePluginConfig[event->TaskIndex][6] = Settings.TaskDevicePluginConfig[event->TaskIndex][5];
+        PCONFIG(0) = getFormItemInt(F("p045_address"));
+        PCONFIG(1) = getFormItemInt(F("p045_function"));
+        PCONFIG(2) = getFormItemInt(F("p045_threshold_x"));
+        PCONFIG(3) = getFormItemInt(F("p045_threshold_y"));
+        PCONFIG(4) = getFormItemInt(F("p045_threshold_z"));
+        PCONFIG(5) = getFormItemInt(F("p045_threshold_counter"));
+        PCONFIG(6) = getFormItemInt(F("p045_threshold_window"));
+        if (PCONFIG(6) < PCONFIG(5)) {
+          PCONFIG(6) = PCONFIG(5);
         }
         success = true;
         break;
@@ -186,10 +186,10 @@ boolean Plugin_045(byte function, struct EventStruct *event, String& string)
       {
         // Initialize the MPU6050. This *can* be done multiple times per instance and device address.
         // We could make sure that this is only done once per device address, but why bother?
-        uint8_t devAddr = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+        uint8_t devAddr = PCONFIG(0);
         if ((devAddr < 0x68) || (devAddr > 0x69)) { //  Just in case the address is not initialized, set it anyway.
           devAddr = 0x68;
-          Settings.TaskDevicePluginConfig[event->TaskIndex][0] = devAddr;
+          PCONFIG(0) = devAddr;
         }
         // Initialize the MPU6050, for details look at the MPU6050 library: MPU6050::Initialize
         _P045_writeBits(devAddr, MPU6050_RA_PWR_MGMT_1, MPU6050_PWR1_CLKSEL_BIT, MPU6050_PWR1_CLKSEL_LENGTH, MPU6050_CLOCK_PLL_XGYRO);
@@ -202,17 +202,17 @@ boolean Plugin_045(byte function, struct EventStruct *event, String& string)
         _P045_getMotion6(devAddr, &ax, &ay, &az, &gx, &gy, &gz);
 
         // Reset vars
-        Settings.TaskDevicePluginConfig[event->TaskIndex][7] = 0;       // Last known value of "switch" is off
+        PCONFIG(7) = 0;       // Last known value of "switch" is off
         UserVar[event->BaseVarIndex] = 0;                               // Switch is off
-        Settings.TaskDevicePluginConfigLong[event->TaskIndex][0] = 0;   // Minimal detection counter is zero
-        Settings.TaskDevicePluginConfigLong[event->TaskIndex][1] = 0;   // Detection window counter is zero
+        PCONFIG_LONG(0) = 0;   // Minimal detection counter is zero
+        PCONFIG_LONG(1) = 0;   // Detection window counter is zero
         success = true;
         break;
       }
 
     case PLUGIN_ONCE_A_SECOND:
       {
-        uint8_t devAddr = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+        uint8_t devAddr = PCONFIG(0);
         byte dev = devAddr & 1;
 
         // Read the sensorvalues, we run this bit every 1/10th of a second
@@ -256,9 +256,9 @@ boolean Plugin_045(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
       {
-        int devAddr = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+        int devAddr = PCONFIG(0);
         byte dev = devAddr & 1;
-        int _P045_Function = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
+        int _P045_Function = PCONFIG(1);
         switch (_P045_Function)
         {
           // Function 0 is for movement detection
@@ -270,36 +270,36 @@ boolean Plugin_045(byte function, struct EventStruct *event, String& string)
             for (byte i=0; i<3; i++)
             {
               // for each axis:
-              if (Settings.TaskDevicePluginConfig[event->TaskIndex][i + 2] != 0) {  // not disabled, check threshold
-                if (_P045_axis[i][2][dev] < Settings.TaskDevicePluginConfig[event->TaskIndex][i + 2]) { thresexceed = false; }
+              if (PCONFIG(i + 2) != 0) {  // not disabled, check threshold
+                if (_P045_axis[i][2][dev] < PCONFIG(i + 2)) { thresexceed = false; }
               } else { count++; } // If disabled count + 1
             }
             if (count == 3) { thresexceed = false; }  // If we counted to three, all three axis are disabled.
 
             // If all enabled thresholds are exceeded the increase the counter
-            if (thresexceed) { Settings.TaskDevicePluginConfigLong[event->TaskIndex][0]++; }
+            if (thresexceed) { PCONFIG_LONG(0)++; }
             // And increase the window counter
-            Settings.TaskDevicePluginConfigLong[event->TaskIndex][1]++;
+            PCONFIG_LONG(1)++;
 
-            if (Settings.TaskDevicePluginConfigLong[event->TaskIndex][1] >= Settings.TaskDevicePluginConfig[event->TaskIndex][6]) {
+            if (PCONFIG_LONG(1) >= PCONFIG(6)) {
               // Detection window has passed.
-              Settings.TaskDevicePluginConfigLong[event->TaskIndex][1] = 0; // reset window counter
+              PCONFIG_LONG(1) = 0; // reset window counter
 
               // Did we count more times exceeded then the minimum detection value?
-              if (Settings.TaskDevicePluginConfigLong[event->TaskIndex][0] >= Settings.TaskDevicePluginConfig[event->TaskIndex][5]) {
+              if (PCONFIG_LONG(0) >= PCONFIG(5)) {
                 UserVar[event->BaseVarIndex] = 1; // x times threshold exceeded within window.
               } else {
                 UserVar[event->BaseVarIndex] = 0; // reset because x times threshold within window not met.
               }
 
               // Check if UserVar changed so we do not overload homecontroller with the same readings
-              if (Settings.TaskDevicePluginConfig[event->TaskIndex][7] != UserVar[event->BaseVarIndex]) {
-                Settings.TaskDevicePluginConfig[event->TaskIndex][7] = UserVar[event->BaseVarIndex];
+              if (PCONFIG(7) != UserVar[event->BaseVarIndex]) {
+                PCONFIG(7) = UserVar[event->BaseVarIndex];
                 success = true;
               } else {
                 success = false;
               }
-              Settings.TaskDevicePluginConfigLong[event->TaskIndex][0] = 0; // reset threshold exceeded counter
+              PCONFIG_LONG(0) = 0; // reset threshold exceeded counter
             }
             // The default sensorType of the device is a single sensor value. But for detection movement we want it to be
             // a switch so we change the sensortype here. Looks like a legal thing to do because _P001_Switch does it as well.

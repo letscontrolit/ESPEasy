@@ -10,7 +10,7 @@
 // that counts particles and transmits measurement data over the serial connection.
 
 
-#include <ESPeasySoftwareSerial.h>
+#include <ESPeasySerial.h>
 
 #define PLUGIN_053
 #define PLUGIN_ID_053 53
@@ -22,7 +22,7 @@
 #define PMSx003_SIG2 0X4d
 #define PMSx003_SIZE 32
 
-ESPeasySoftwareSerial *swSerial = NULL;
+ESPeasySerial *P053_easySerial = nullptr;
 boolean Plugin_053_init = false;
 boolean values_received = false;
 
@@ -33,22 +33,15 @@ void SerialRead16(uint16_t* value, uint16_t* checksum)
 {
   uint8_t data_high, data_low;
 
-  // If swSerial is initialized, we are using soft serial
-  if (swSerial != NULL)
-  {
-    data_high = swSerial->read();
-    data_low = swSerial->read();
-  }
-  else
-  {
-    data_high = Serial.read();
-    data_low = Serial.read();
-  }
+  // If P053_easySerial is initialized, we are using soft serial
+  if (P053_easySerial == nullptr) return;
+  data_high = P053_easySerial->read();
+  data_low = P053_easySerial->read();
 
   *value = data_low;
   *value |= (data_high << 8);
 
-  if (checksum != NULL)
+  if (checksum != nullptr)
   {
     *checksum += data_high;
     *checksum += data_low;
@@ -67,34 +60,22 @@ void SerialRead16(uint16_t* value, uint16_t* checksum)
 }
 
 void SerialFlush() {
-  if (swSerial != NULL) {
-    swSerial->flush();
-  } else {
-    Serial.flush();
+  if (P053_easySerial != nullptr) {
+    P053_easySerial->flush();
   }
 }
 
 boolean PacketAvailable(void)
 {
-  if (swSerial != NULL) // Software serial
+  if (P053_easySerial != nullptr) // Software serial
   {
     // When there is enough data in the buffer, search through the buffer to
     // find header (buffer may be out of sync)
-    if (!swSerial->available()) return false;
-    while ((swSerial->peek() != PMSx003_SIG1) && swSerial->available()) {
-      swSerial->read(); // Read until the buffer starts with the first byte of a message, or buffer empty.
+    if (!P053_easySerial->available()) return false;
+    while ((P053_easySerial->peek() != PMSx003_SIG1) && P053_easySerial->available()) {
+      P053_easySerial->read(); // Read until the buffer starts with the first byte of a message, or buffer empty.
     }
-    if (swSerial->available() < PMSx003_SIZE) return false; // Not enough yet for a complete packet
-  }
-  else // Hardware serial
-  {
-    // When there is enough data in the buffer, search through the buffer to
-    // find header (buffer may be out of sync)
-    if (!Serial.available()) return false;
-    while ((Serial.peek() != PMSx003_SIG1) && Serial.available()) {
-      Serial.read(); // Read until the buffer starts with the first byte of a message, or buffer empty.
-    }
-    if (Serial.available() < PMSx003_SIZE) return false; // Not enough yet for a complete packet
+    if (P053_easySerial->available() < PMSx003_SIZE) return false; // Not enough yet for a complete packet
   }
   return true;
 }
@@ -102,7 +83,7 @@ boolean PacketAvailable(void)
 boolean Plugin_053_process_data(struct EventStruct *event) {
   uint16_t checksum = 0, checksum2 = 0;
   uint16_t framelength = 0;
-  uint16 packet_header = 0;
+  uint16_t packet_header = 0;
   SerialRead16(&packet_header, &checksum); // read PMSx003_SIG1 + PMSx003_SIG2
   if (packet_header != ((PMSx003_SIG1 << 8) | PMSx003_SIG2)) {
     // Not the start of the packet, stop reading.
@@ -157,7 +138,7 @@ boolean Plugin_053_process_data(struct EventStruct *event) {
   }
 
   // Compare checksums
-  SerialRead16(&checksum2, NULL);
+  SerialRead16(&checksum2, nullptr);
   SerialFlush(); // Make sure no data is lost due to full buffer.
   if (checksum == checksum2)
   {
@@ -210,19 +191,30 @@ boolean Plugin_053(byte function, struct EventStruct *event, String& string)
         break;
       }
 
-      case PLUGIN_GET_DEVICEGPIONAMES:
-        {
-          event->String1 = formatGpioName_RX(false);
-          event->String2 = formatGpioName_TX(false);
-          event->String3 = formatGpioName_output(F("Reset"));
-          break;
-        }
+    case PLUGIN_GET_DEVICEGPIONAMES:
+      {
+        serialHelper_getGpioNames(event);
+        event->String3 = formatGpioName_output(F("Reset"));
+        break;
+      }
+
+    case PLUGIN_WEBFORM_LOAD: {
+      serialHelper_webformLoad(event);
+      success = true;
+      break;
+    }
+
+    case PLUGIN_WEBFORM_SAVE: {
+      serialHelper_webformSave(event);
+      success = true;
+      break;
+    }
 
     case PLUGIN_INIT:
       {
-        int rxPin = Settings.TaskDevicePin1[event->TaskIndex];
-        int txPin = Settings.TaskDevicePin2[event->TaskIndex];
-        int resetPin = Settings.TaskDevicePin3[event->TaskIndex];
+        int rxPin = CONFIG_PIN1;
+        int txPin = CONFIG_PIN2;
+        int resetPin = CONFIG_PIN3;
 
         String log = F("PMSx003 : config ");
         log += rxPin;
@@ -230,10 +222,10 @@ boolean Plugin_053(byte function, struct EventStruct *event, String& string)
         log += resetPin;
         addLog(LOG_LEVEL_DEBUG, log);
 
-        if (swSerial != NULL) {
+        if (P053_easySerial != nullptr) {
           // Regardless the set pins, the software serial must be deleted.
-          delete swSerial;
-          swSerial = NULL;
+          delete P053_easySerial;
+          P053_easySerial = nullptr;
         }
 
         // Hardware serial is RX on 3 and TX on 1
@@ -241,17 +233,15 @@ boolean Plugin_053(byte function, struct EventStruct *event, String& string)
         {
           log = F("PMSx003 : using hardware serial");
           addLog(LOG_LEVEL_INFO, log);
-          Serial.begin(9600);
-          Serial.flush();
         }
         else
         {
           log = F("PMSx003: using software serial");
           addLog(LOG_LEVEL_INFO, log);
-          swSerial = new ESPeasySoftwareSerial(rxPin, txPin, false, 96); // 96 Bytes buffer, enough for up to 3 packets.
-          swSerial->begin(9600);
-          swSerial->flush();
         }
+        P053_easySerial = new ESPeasySerial(rxPin, txPin, false, 96); // 96 Bytes buffer, enough for up to 3 packets.
+        P053_easySerial->begin(9600);
+        P053_easySerial->flush();
 
         if (resetPin >= 0) // Reset if pin is configured
         {
@@ -272,10 +262,10 @@ boolean Plugin_053(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_EXIT:
       {
-          if (swSerial)
+          if (P053_easySerial)
           {
-            delete swSerial;
-            swSerial=NULL;
+            delete P053_easySerial;
+            P053_easySerial=nullptr;
           }
           break;
       }

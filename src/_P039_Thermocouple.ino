@@ -90,10 +90,10 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
       {
         // Get CS Pin
         // If no Pin is in Config we use 15 as default -> Hardware Chip Select on ESP8266
-        if (Settings.TaskDevicePin1[event->TaskIndex] != 0)
+        if (CONFIG_PIN1 != 0)
         {
           // Konvert the GPIO Pin to a Dogotal Puin Number first ...
-          Plugin_039_SPI_CS_Pin = Settings.TaskDevicePin1[event->TaskIndex];
+          Plugin_039_SPI_CS_Pin = CONFIG_PIN1;
         }
 
         // set the slaveSelectPin as an output:
@@ -113,7 +113,7 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
         addFormNote(F("<b>1st GPIO</b> = CS (Usable GPIOs : 0, 2, 4, 5, 15)"));
         //addHtml(F("<TR><TD>Info GPIO:<TD><b>1st GPIO</b> = CS (Usable GPIOs : 0, 2, 4, 5, 15)"));
 
-        byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+        byte choice = PCONFIG(0);
         String options[2];
         options[0] = F("MAX 6675");
         options[1] = F("MAX 31855");
@@ -127,7 +127,7 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("p039_maxtype"));
+        PCONFIG(0) = getFormItemInt(F("p039_maxtype"));
         success = true;
         break;
       }
@@ -136,11 +136,11 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
       {
         // Get the MAX Type (6675 / 31855)
         // TBD ... Auswertung je nach Chip !!!
-        byte MaxType = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+        byte MaxType = PCONFIG(0);
 
         // Get CS Pin
         // Konvert the GPIO Pin to a Dogotal Puin Number first ...
-        Plugin_039_SPI_CS_Pin = Settings.TaskDevicePin1[event->TaskIndex];
+        Plugin_039_SPI_CS_Pin = CONFIG_PIN1;
 
         switch (MaxType) {
           case 1:       // MAX6675

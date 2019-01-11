@@ -18,7 +18,6 @@
 from recommonmark.parser import CommonMarkParser
 import sphinx_bootstrap_theme
 
-
 # -- Project information -----------------------------------------------------
 
 project = u'ESP Easy'
@@ -28,7 +27,7 @@ author = u'Grovkillen, TD-er & Friends'
 # The short X.Y version
 version = u''
 # The full version, including alpha/beta/rc tags
-release = u'2.1b1'
+release = u'2.1-beta1'
 
 
 # -- General configuration ---------------------------------------------------
@@ -126,7 +125,7 @@ html_theme_options = {
     # Note the "1" or "True" value above as the third argument to indicate
     # an arbitrary url.
     'navbar_links': [
-        ("Rules", "rules"),
+        ("Rules", "Rules/Rules"),
         ("Forum", "https://www.letscontrolit.com/forum/viewforum.php?f=1", True),
     ],
 
@@ -141,7 +140,7 @@ html_theme_options = {
 
     # Global TOC depth for "site" navbar tab. (Default: 1)
     # Switching to -1 shows all levels.
-    'globaltoc_depth': 2,
+    'globaltoc_depth': 3,
 
     # Include hidden TOCs in Site navbar?
     #
@@ -150,7 +149,7 @@ html_theme_options = {
     # will break.
     #
     # Values: "true" (default) or "false"
-    'globaltoc_includehidden': "true",
+    'globaltoc_includehidden': "false",
 
     # HTML navbar class (Default: "navbar") to attach to <div> element.
     # For black navbar, do "navbar navbar-inverse"
@@ -288,3 +287,25 @@ todo_include_todos = True
 # This def is used to add ESP Easy related formatation (color etc).
 def setup(app):
     app.add_stylesheet('css/custom.css')
+
+# To replace chunks of text globally +
+# ESP Easy colors (set in cutom.css)
+rst_prolog = """
+.. role:: blue
+.. role:: red
+.. role:: green
+.. role:: yellow
+.. role:: orange
+.. role:: cyan
+.. role:: purple
+
+.. |affiliate| replace:: :yellow:`$` = affiliate links which will give us some money to keep this project running, thank you for using those.
+
+.. |added| replace:: :green:`added`
+.. |improved| replace:: :orange:`improved`
+.. |removed| replace:: :red:`removed`
+.. |fixed| replace:: :purple:`fixed`
+
+.. |unit_url| replace:: http://<esp easy ip or host name>/
+
+"""

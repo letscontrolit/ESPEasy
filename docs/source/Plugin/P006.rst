@@ -1,0 +1,57 @@
+.. include:: ../Plugin/_plugin_substitutions_p00x.repl
+.. _P006_page:
+
+|P006_typename|
+==================================================
+
+|P006_shortinfo|
+
+Plugin details
+--------------
+
+Type: |P006_type|
+
+Name: |P006_name|
+
+Status: |P006_status|
+
+GitHub: |P006_github|_
+
+Maintainer: |P006_maintainer|
+
+Used libraries: |P006_usedlibraries|
+
+Supported hardware
+------------------
+
+|P006_usedby|
+
+.. Commands available
+.. ^^^^^^^^^^^^^^^^^^
+
+.. .. include:: P006_commands.repl
+
+.. Events
+.. ~~~~~~
+
+.. .. include:: P006_events.repl
+
+Change log
+----------
+
+.. versionchanged:: 2.0
+  ...
+
+  |added|
+  Major overhaul for 2.0 release.
+
+.. versionadded:: 1.0
+  ...
+
+  |added|
+  Initial release version.
+
+
+
+
+

@@ -160,7 +160,7 @@ boolean NPlugin_001_send(const NotificationSettingsStruct& notificationsettings,
 	return myStatus;
 }
 
-boolean NPlugin_001_Auth(WiFiClient& client, String user, String pass)
+boolean NPlugin_001_Auth(WiFiClient& client, const String& user, const String& pass)
 {
 	if (user.length() == 0 || pass.length() == 0) {
 		// No user/password given.
@@ -177,7 +177,7 @@ boolean NPlugin_001_Auth(WiFiClient& client, String user, String pass)
 	return true;
 }
 
-boolean NPlugin_001_MTA(WiFiClient& client, String aStr, const String &aWaitForPattern)
+boolean NPlugin_001_MTA(WiFiClient& client, const String& aStr, const String &aWaitForPattern)
 {
 	addLog(LOG_LEVEL_DEBUG, aStr);
 

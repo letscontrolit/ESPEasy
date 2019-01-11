@@ -32,7 +32,7 @@ script:
   # - bash ./preflight.sh # make sure input files are OK before wasting time with prereqs
   # - cppcheck --enable=warning src/*.ino -q --force -I src --include=src/ESPEasy.ino --error-exitcode=1
   # - ./memanalyzer.py ~/.platformio/packages/toolchain-xtensa/bin/xtensa-lx106-elf-objdump
-  - PLATFORMIO_BUILD_FLAGS="-D CONTINUOUS_INTEGRATION" platformio run
+  - PLATFORMIO_BUILD_FLAGS="-D CONTINUOUS_INTEGRATION" platformio run --target clean
   - PLATFORMIO_BUILD_FLAGS="-D CONTINUOUS_INTEGRATION" platformio run
 
 before_deploy:

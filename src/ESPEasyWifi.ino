@@ -13,6 +13,7 @@ bool unprocessedWifiEvents() {
 void processConnect() {
   if (processedConnect) return;
   processedConnect = true;
+  delay(100); // FIXME TD-er: See https://github.com/letscontrolit/ESPEasy/issues/1987#issuecomment-451644424
   ++wifi_reconnects;
   if (wifiStatus < ESPEASY_WIFI_CONNECTED) return;
   const long connect_duration = timeDiff(last_wifi_connect_attempt_moment, lastConnectMoment);
@@ -39,12 +40,16 @@ void processConnect() {
     setupStaticIPconfig();
     markGotIP();
   }
+  if (!WiFi.getAutoConnect()) {
+    WiFi.setAutoConnect(true);
+  }
   logConnectionStatus();
 }
 
 void processDisconnect() {
   if (processedDisconnect) return;
   processedDisconnect = true;
+  delay(100); // FIXME TD-er: See https://github.com/letscontrolit/ESPEasy/issues/1987#issuecomment-451644424
   if (Settings.UseRules) {
     String event = F("WiFi#Disconnected");
     rulesProcessing(event);
@@ -127,7 +132,7 @@ void processGotIP() {
   #endif
 
   // First try to get the time, since that may be used in logs
-  if (Settings.UseNTP) {
+  if (systemTimePresent()) {
     initTime();
   }
   mqtt_reconnect_count = 0;
@@ -246,11 +251,9 @@ void processScanDone() {
 
 void resetWiFi() {
   addLog(LOG_LEVEL_INFO, F("Reset WiFi."));
-//  setWifiMode(WIFI_OFF);
-//  setWifiMode(WIFI_STA);
   lastDisconnectMoment = millis();
-  processedDisconnect = false;
-  wifiStatus = ESPEASY_WIFI_DISCONNECTED;
+  WifiDisconnect();
+//  setWifiMode(WIFI_OFF);
 }
 
 void connectionCheckHandler()
@@ -335,7 +338,8 @@ void setSTA(bool enable) {
 }
 
 void setAP(bool enable) {
-  switch(WiFi.getMode()) {
+  WiFiMode_t wifimode = WiFi.getMode();
+  switch(wifimode) {
     case WIFI_OFF:
       if (enable) setWifiMode(WIFI_AP);
       break;
@@ -351,13 +355,20 @@ void setAP(bool enable) {
     default:
       break;
   }
-  setAPinternal(enable);
+  if (WifiIsAP(wifimode) && !enable) {
+    String event = F("WiFi#APmodeDisabled");
+    rulesProcessing(event);
+  }
+  if (WifiIsAP(wifimode) != enable) {
+    // Mode has changed
+    setAPinternal(enable);
+  }
 }
 
 //Only internal scope
 void setAPinternal(bool enable)
 {
-    if (enable) {
+  if (enable) {
     timerAPoff = millis() + WIFI_AP_OFF_TIMER_DURATION;
     // create and store unique AP SSID/PW to prevent ESP from starting AP mode with default SSID and No password!
     // setup ssid for AP Mode when needed
@@ -369,6 +380,8 @@ void setAPinternal(bool enable)
     }
     if (WiFi.softAP(softAPSSID.c_str(),pwd.c_str())) {
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        String event = F("WiFi#APmodeEnabled");
+        rulesProcessing(event);
         String log(F("WIFI : AP Mode ssid will be "));
         log += softAPSSID;
         log += F(" with address ");
@@ -459,9 +472,13 @@ bool useStaticIP() {
 }
 
 bool WiFiConnected() {
+  START_TIMER;
   // For ESP82xx, do not rely on WiFi.status() with event based wifi.
   if (wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED) {
-    if (WiFi.isConnected()) return true;
+    if (WiFi.isConnected()) {
+      STOP_TIMER(WIFI_ISCONNECTED_STATS);
+      return true;
+    }
     // else wifiStatus is no longer in sync.
     resetWiFi();
   }
@@ -626,7 +643,7 @@ bool tryConnectWiFi() {
       if (lastBSSID[0] == 0)
         WiFi.begin(ssid, passphrase);
       else
-        WiFi.begin(ssid, passphrase, 0, &lastBSSID[0]);
+        WiFi.begin(ssid, passphrase, last_channel, &lastBSSID[0]);
       break;
     default:
       WiFi.begin(ssid, passphrase);
@@ -650,10 +667,13 @@ bool tryConnectWiFi() {
       }
       return false;
     }
+    case WL_CONNECTED: {
+      return true;
+    }
     default:
      break;
   }
-  return true; // Sent
+  return false;
 }
 
 //********************************************************************************
@@ -679,26 +699,26 @@ void WifiDisconnect()
 void WifiScan()
 {
   // Direct Serial is allowed here, since this function will only be called from serial input.
-  Serial.println(F("WIFI : SSID Scan start"));
+  serialPrintln(F("WIFI : SSID Scan start"));
   int n = WiFi.scanNetworks(false, true);
   if (n == 0)
-    Serial.println(F("WIFI : No networks found"));
+    serialPrintln(F("WIFI : No networks found"));
   else
   {
-    Serial.print(F("WIFI : "));
-    Serial.print(n);
-    Serial.println(F(" networks found"));
+    serialPrint(F("WIFI : "));
+    serialPrint(String(n));
+    serialPrintln(F(" networks found"));
     for (int i = 0; i < n; ++i)
     {
       // Print SSID and RSSI for each network found
-      Serial.print(F("WIFI : "));
-      Serial.print(i + 1);
-      Serial.print(": ");
-      Serial.println(formatScanResult(i, " "));
+      serialPrint(F("WIFI : "));
+      serialPrint(String(i + 1));
+      serialPrint(": ");
+      serialPrintln(formatScanResult(i, " "));
       delay(10);
     }
   }
-  Serial.println("");
+  serialPrintln("");
 }
 
 String formatScanResult(int i, const String& separator) {
@@ -748,7 +768,7 @@ String SDKwifiStatusToString(uint8_t sdk_wifistatus) {
     case STATION_CONNECT_FAIL:   return F("STATION_CONNECT_FAIL");
     case STATION_GOT_IP:         return F("STATION_GOT_IP");
   }
-  return F("Unknown");
+  return getUnknownString();
 }
 #endif
 
@@ -893,7 +913,7 @@ String getLastDisconnectReason() {
     case WIFI_DISCONNECT_REASON_AUTH_FAIL:                  reason += F("Auth fail");                break;
     case WIFI_DISCONNECT_REASON_ASSOC_FAIL:                 reason += F("Assoc fail");               break;
     case WIFI_DISCONNECT_REASON_HANDSHAKE_TIMEOUT:          reason += F("Handshake timeout");        break;
-    default:  reason += F("Unknown"); 	  break;
+    default:  reason += getUnknownString(); 	  break;
   }
   return reason;
 }

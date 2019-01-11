@@ -11,7 +11,7 @@
 //Device pin 2 = TX
 
 
-#include <ESPeasySoftwareSerial.h>
+#include <ESPeasySerial.h>
 #define PLUGIN_071
 #define PLUGIN_ID_071 71
 #define PLUGIN_NAME_071 "Communication - Kamstrup Multical 401 [TESTING]"
@@ -59,8 +59,7 @@ boolean Plugin_071(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_GET_DEVICEGPIONAMES:
       {
-        event->String1 = formatGpioName_RX(false);
-        event->String2 = formatGpioName_TX(false);
+        serialHelper_getGpioNames(event);
         break;
       }
 
@@ -74,16 +73,24 @@ boolean Plugin_071(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
+        serialHelper_webformLoad(event);
         success = true;
         break;
       }
 
+    case PLUGIN_WEBFORM_SAVE: {
+      serialHelper_webformSave(event);
+
+      success = true;
+      break;
+    }
+
     case PLUGIN_READ:
       {
-        PIN_KAMSER_RX = Settings.TaskDevicePin1[event->TaskIndex];
-        PIN_KAMSER_TX = Settings.TaskDevicePin2[event->TaskIndex];
+        PIN_KAMSER_RX = CONFIG_PIN1;
+        PIN_KAMSER_TX = CONFIG_PIN2;
 
-        ESPeasySoftwareSerial kamSer(PIN_KAMSER_RX, PIN_KAMSER_TX, false);  // Initialize serial
+        ESPeasySerial kamSer(PIN_KAMSER_RX, PIN_KAMSER_TX, false);  // Initialize serial
 
         pinMode(PIN_KAMSER_RX,INPUT);
         pinMode(PIN_KAMSER_TX,OUTPUT);
@@ -122,7 +129,7 @@ boolean Plugin_071(byte function, struct EventStruct *event, String& string)
           {
             // receive byte
             r = kamSer.read();
-            //Serial.println(r);
+            //serialPrintln(r);
             if (parity_check(r))
             {
                parityerrors += 1;
@@ -141,8 +148,8 @@ boolean Plugin_071(byte function, struct EventStruct *event, String& string)
           {
             if ( parityerrors == 0 )
             {
-//              Serial.print("OK: " );
-//              Serial.println(message);
+//              serialPrint("OK: " );
+//              serialPrintln(message);
               message[i] = 0;
 
               tmpstr = strtok(message, " ");
@@ -229,7 +236,7 @@ boolean Plugin_071(byte function, struct EventStruct *event, String& string)
             {
               message[i] = 0;
               String log = F("ERR(PARITY):" );
-              Serial.print("par");
+              serialPrint("par");
               log += message;
               addLog(LOG_LEVEL_INFO, log);
               //UserVar[event->BaseVarIndex] = NAN;

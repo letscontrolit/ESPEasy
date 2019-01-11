@@ -2,7 +2,6 @@
   SPIFFS error handling
   Look here for error # reference: https://github.com/pellepl/spiffs/blob/master/src/spiffs.h
   \*********************************************************************************************/
-#define SPIFFS_CHECK(result, fname) if (!(result)) { return(FileError(__LINE__, fname)); }
 String FileError(int line, const char * fname)
 {
    String err = F("FS   : Error while reading/writing ");
@@ -60,7 +59,7 @@ String appendLineToFile(const String& fname, const String& line) {
 String BuildFixes()
 {
   checkRAM(F("BuildFixes"));
-  Serial.println(F("\nBuild changed!"));
+  serialPrintln(F("\nBuild changed!"));
 
   if (Settings.Build < 145)
   {
@@ -80,19 +79,24 @@ String BuildFixes()
 
   if (Settings.Build < 20101)
   {
-    Serial.println(F("Fix reset Pin"));
+    serialPrintln(F("Fix reset Pin"));
     Settings.Pin_Reset = -1;
   }
   if (Settings.Build < 20102) {
     // Settings were 'mangled' by using older version
     // Have to patch settings to make sure no bogus data is being used.
-    Serial.println(F("Fix settings with uninitalized data or corrupted by switching between versions"));
+    serialPrintln(F("Fix settings with uninitalized data or corrupted by switching between versions"));
     Settings.UseRTOSMultitasking = false;
     Settings.Pin_Reset = -1;
     Settings.SyslogFacility = DEFAULT_SYSLOG_FACILITY;
     Settings.MQTTUseUnitNameAsClientId = DEFAULT_MQTT_USE_UNITNAME_AS_CLIENTID;
     Settings.StructSize = sizeof(Settings);
   }
+  if (Settings.Build < 20103) {
+    Settings.ResetFactoryDefaultPreference = 0;
+    Settings.OldRulesEngine(DEFAULT_RULES_OLDENGINE);
+  }
+
 
   Settings.Build = BUILD;
   return(SaveSettings());
@@ -131,7 +135,7 @@ void fileSystemCheck()
   else
   {
     String log = F("FS   : Mount failed");
-    Serial.println(log);
+    serialPrintln(log);
     addLog(LOG_LEVEL_ERROR, log);
     ResetFactory();
   }
@@ -184,7 +188,20 @@ String SaveSettings(void)
       wifiSetupConnect = true;
     }
   }
+  afterloadSettings();
   return (err);
+}
+
+void afterloadSettings() {
+  ExtraTaskSettings.clear(); // make sure these will not contain old settings.
+  ResetFactoryDefaultPreference_struct pref(Settings.ResetFactoryDefaultPreference);
+  DeviceModel model = pref.getDeviceModel();
+  // TODO TD-er: Try to get the information from more locations to make it more persistent
+  // Maybe EEPROM location?
+
+  if (modelMatchingFlashSize(model)) {
+    ResetFactoryDefaultPreference = Settings.ResetFactoryDefaultPreference;
+  }
 }
 
 /********************************************************************************************\
@@ -234,7 +251,7 @@ String LoadSettings()
     addLog(LOG_LEVEL_ERROR, F("CRC  : SecuritySettings CRC   ...FAIL"));
   }
   setUseStaticIP(useStaticIP());
-  ExtraTaskSettings.clear(); // make sure these will not contain old settings.
+  afterloadSettings();
   return(err);
 }
 
@@ -402,6 +419,7 @@ String LoadTaskSettings(byte TaskIndex)
   checkRAM(F("LoadTaskSettings"));
   if (ExtraTaskSettings.TaskIndex == TaskIndex)
     return(String()); //already loaded
+  START_TIMER
   ExtraTaskSettings.clear();
   String result = "";
   result = LoadFromFile(TaskSettings_Type, TaskIndex, (char*)FILE_CONFIG, (byte*)&ExtraTaskSettings, sizeof(struct ExtraTaskSettingsStruct));
@@ -416,6 +434,7 @@ String LoadTaskSettings(byte TaskIndex)
     //the plugin call should populate ExtraTaskSettings with its default values.
     PluginCall(PLUGIN_GET_DEVICEVALUENAMES, &TempEvent, dummyString);
   }
+  STOP_TIMER(LOAD_TASK_SETTINGS);
 
   return result;
 }

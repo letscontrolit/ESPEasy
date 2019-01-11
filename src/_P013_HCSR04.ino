@@ -5,7 +5,7 @@
 
 #define PLUGIN_013
 #define PLUGIN_ID_013        13
-#define PLUGIN_NAME_013       "Distance - HC-SR04, RCW-0001, etc."
+#define PLUGIN_NAME_013       "Position - HC-SR04, RCW-0001, etc."
 #define PLUGIN_VALUENAME1_013 "Distance"
 
 #include <Arduino.h>
@@ -73,17 +73,17 @@ boolean Plugin_013(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        int16_t operatingMode = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
-        int16_t threshold = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
-        int16_t max_distance = Settings.TaskDevicePluginConfig[event->TaskIndex][2];
-        int16_t measuringUnit = Settings.TaskDevicePluginConfig[event->TaskIndex][3];
-        int16_t filterType = Settings.TaskDevicePluginConfig[event->TaskIndex][4];
-        int16_t filterSize = Settings.TaskDevicePluginConfig[event->TaskIndex][5];
+        int16_t operatingMode = PCONFIG(0);
+        int16_t threshold = PCONFIG(1);
+        int16_t max_distance = PCONFIG(2);
+        int16_t measuringUnit = PCONFIG(3);
+        int16_t filterType = PCONFIG(4);
+        int16_t filterSize = PCONFIG(5);
 
         // default filtersize = 5
         if (filterSize == 0) {
           filterSize = 5;
-          Settings.TaskDevicePluginConfig[event->TaskIndex][5] = filterSize;
+          PCONFIG(5) = filterSize;
         }
 
 
@@ -125,18 +125,18 @@ boolean Plugin_013(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        int16_t operatingMode = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
-        int16_t filterType = Settings.TaskDevicePluginConfig[event->TaskIndex][4];
+        int16_t operatingMode = PCONFIG(0);
+        int16_t filterType = PCONFIG(4);
 
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("p013_mode"));
+        PCONFIG(0) = getFormItemInt(F("p013_mode"));
         if (operatingMode == OPMODE_STATE)
-          Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("p013_threshold"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("p013_max_distance"));
+          PCONFIG(1) = getFormItemInt(F("p013_threshold"));
+        PCONFIG(2) = getFormItemInt(F("p013_max_distance"));
 
-        Settings.TaskDevicePluginConfig[event->TaskIndex][3] = getFormItemInt(F("p013_Unit"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][4] = getFormItemInt(F("p013_FilterType"));
+        PCONFIG(3) = getFormItemInt(F("p013_Unit"));
+        PCONFIG(4) = getFormItemInt(F("p013_FilterType"));
         if (filterType != FILTER_NONE)
-          Settings.TaskDevicePluginConfig[event->TaskIndex][5] = getFormItemInt(F("p013_FilterSize"));
+          PCONFIG(5) = getFormItemInt(F("p013_FilterSize"));
 
         success = true;
         break;
@@ -144,13 +144,13 @@ boolean Plugin_013(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
       {
-        int16_t max_distance = Settings.TaskDevicePluginConfig[event->TaskIndex][2];
-        int16_t measuringUnit = Settings.TaskDevicePluginConfig[event->TaskIndex][3];
-        int16_t filterType = Settings.TaskDevicePluginConfig[event->TaskIndex][4];
-        int16_t filterSize = Settings.TaskDevicePluginConfig[event->TaskIndex][5];
+        int16_t max_distance = PCONFIG(2);
+        int16_t measuringUnit = PCONFIG(3);
+        int16_t filterType = PCONFIG(4);
+        int16_t filterSize = PCONFIG(5);
 
-        int8_t Plugin_013_TRIG_Pin = Settings.TaskDevicePin1[event->TaskIndex];
-        int8_t Plugin_013_IRQ_Pin = Settings.TaskDevicePin2[event->TaskIndex];
+        int8_t Plugin_013_TRIG_Pin = CONFIG_PIN1;
+        int8_t Plugin_013_IRQ_Pin = CONFIG_PIN2;
         int16_t max_distance_cm = (measuringUnit == UNIT_CM) ? max_distance : (float)max_distance * 2.54f;
 
         // create sensor instance and add to std::map
@@ -208,8 +208,8 @@ boolean Plugin_013(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ: // If we select value mode, read and send the value based on global timer
       {
-        int16_t operatingMode = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
-        int16_t measuringUnit = Settings.TaskDevicePluginConfig[event->TaskIndex][3];
+        int16_t operatingMode = PCONFIG(0);
+        int16_t measuringUnit = PCONFIG(3);
 
         if (operatingMode == OPMODE_VALUE)
         {
@@ -234,8 +234,8 @@ boolean Plugin_013(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_TEN_PER_SECOND: // If we select state mode, do more frequent checks and send only state changes
       {
-        int16_t operatingMode = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
-        int16_t threshold = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
+        int16_t operatingMode = PCONFIG(0);
+        int16_t threshold = PCONFIG(1);
 
         if (operatingMode == OPMODE_STATE)
         {

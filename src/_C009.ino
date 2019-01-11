@@ -31,9 +31,9 @@
 #define CPLUGIN_NAME_009       "FHEM HTTP"
 #include <ArduinoJson.h>
 
-boolean CPlugin_009(byte function, struct EventStruct *event, String& string)
+bool CPlugin_009(byte function, struct EventStruct *event, String& string)
 {
-  boolean success = false;
+  bool success = false;
 
   switch (function)
   {

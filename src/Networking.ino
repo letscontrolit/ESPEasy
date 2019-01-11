@@ -125,13 +125,11 @@ void checkUDP()
                   }
                 }
 
-                char macaddress[20];
-                formatMAC(mac, macaddress);
-                char ipaddress[20];
-                formatIP(ip, ipaddress);
                 if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
+                  char macaddress[20];
+                  formatMAC(mac, macaddress);
                   char log[80];
-                  sprintf_P(log, PSTR("UDP  : %s,%s,%u"), macaddress, ipaddress, unit);
+                  sprintf_P(log, PSTR("UDP  : %s,%s,%u"), macaddress, formatIP(ip).c_str(), unit);
                   addLog(LOG_LEVEL_DEBUG_MORE, log);
                 }
                 break;
@@ -407,6 +405,19 @@ bool SSDP_begin() {
     return false;
   }
 
+#ifdef CORE_2_5_0
+  // Core 2.5.0 changed the signature of some UdpContext function.
+  if (!_server->listen(IP_ADDR_ANY, SSDP_PORT)) {
+    return false;
+  }
+
+  _server->setMulticastInterface(&ifaddr);
+  _server->setMulticastTTL(SSDP_MULTICAST_TTL);
+  _server->onRx(&SSDP_update);
+  if (!_server->connect(&multicast_addr, SSDP_PORT)) {
+    return false;
+  }
+#else
   if (!_server->listen(*IP_ADDR_ANY, SSDP_PORT)) {
     return false;
   }
@@ -417,6 +428,7 @@ bool SSDP_begin() {
   if (!_server->connect(multicast_addr, SSDP_PORT)) {
     return false;
   }
+#endif
 
   SSDP_update();
 
@@ -428,17 +440,9 @@ bool SSDP_begin() {
   Send SSDP messages (notify & responses)
   \*********************************************************************************************/
 void SSDP_send(byte method) {
-  char buffer[1460];
   uint32_t ip = WiFi.localIP();
 
-  uint32_t chipId = ESP.getChipId();
-
-  char uuid[64];
-  sprintf_P(uuid, PSTR("38323636-4558-4dda-9188-cda0e6%02x%02x%02x"),
-            (uint16_t) ((chipId >> 16) & 0xff),
-            (uint16_t) ((chipId >>  8) & 0xff),
-            (uint16_t)   chipId        & 0xff  );
-
+  // FIXME TD-er: Why create String objects of these flashstrings?
   String _ssdp_response_template = F(
                                      "HTTP/1.1 200 OK\r\n"
                                      "EXT:\r\n"
@@ -457,17 +461,27 @@ void SSDP_send(byte method) {
                                    "USN: uuid:%s\r\n" // _uuid
                                    "LOCATION: http://%u.%u.%u.%u:80/ssdp.xml\r\n" // WiFi.localIP(),
                                    "\r\n");
+  {
+    char uuid[64];
+    uint32_t chipId = ESP.getChipId();
+    sprintf_P(uuid, PSTR("38323636-4558-4dda-9188-cda0e6%02x%02x%02x"),
+              (uint16_t) ((chipId >> 16) & 0xff),
+              (uint16_t) ((chipId >>  8) & 0xff),
+              (uint16_t)   chipId        & 0xff  );
 
-  int len = snprintf(buffer, sizeof(buffer),
-                     _ssdp_packet_template.c_str(),
-                     (method == 0) ? _ssdp_response_template.c_str() : _ssdp_notify_template.c_str(),
-                     SSDP_INTERVAL,
-                     Settings.Build,
-                     uuid,
-                     IPADDR2STR(&ip)
-                    );
+    char *buffer = new char[1460]();
+    int len = snprintf(buffer, 1460,
+                       _ssdp_packet_template.c_str(),
+                       (method == 0) ? _ssdp_response_template.c_str() : _ssdp_notify_template.c_str(),
+                       SSDP_INTERVAL,
+                       Settings.Build,
+                       uuid,
+                       IPADDR2STR(&ip)
+                      );
 
-  _server->append(buffer, len);
+    _server->append(buffer, len);
+    delete[] buffer;
+  }
 
   ip_addr_t remoteAddr;
   uint16_t remotePort;
@@ -685,7 +699,8 @@ bool connectClient(WiFiClient& client, IPAddress ip, uint16_t port)
   START_TIMER;
   bool connected = (client.connect(ip, port) == 1);
   STOP_TIMER(CONNECT_CLIENT_STATS);
-#ifndef ESP32
+#if defined(ESP32) || defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(ARDUINO_ESP8266_RELEASE_2_4_0)
+#else
   if (connected)
     client.keepAlive(); // Use default keep alive values
 #endif
@@ -694,7 +709,7 @@ bool connectClient(WiFiClient& client, IPAddress ip, uint16_t port)
 
 bool resolveHostByName(const char* aHostname, IPAddress& aResult) {
   START_TIMER;
-#ifdef ESP32
+#if defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(ESP32)
   bool resolvedIP = WiFi.hostByName(aHostname, aResult) == 1;
 #else
   bool resolvedIP = WiFi.hostByName(aHostname, aResult, 100) == 1;

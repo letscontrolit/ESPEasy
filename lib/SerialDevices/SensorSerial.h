@@ -27,9 +27,11 @@
 #define _SENSORSERIAL_H_
 
 #include "Arduino.h"
-#include <ESPeasySoftwareSerial.h>
+#include <ESPeasySerial.h>
 
-class SensorSerial : public ESPeasySoftwareSerial
+// FIXME TD-er  This object has now become obsolete.
+
+class SensorSerial : public ESPeasySerial
 {
 public:
   SensorSerial(int receivePin, int transmitPin = -1, bool inverse_logic = false, unsigned int buffSize = 64);
@@ -46,8 +48,6 @@ public:
 
   virtual void flush();
 
-protected:
-  boolean _hw;
 };
 
 #endif

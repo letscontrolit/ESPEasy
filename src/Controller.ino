@@ -47,12 +47,12 @@ void sendData(struct EventStruct *event)
     {
       event->ProtocolIndex = getProtocolIndex(Settings.Protocol[event->ControllerIndex]);
       if (validUserVar(event)) {
-        CPlugin_ptr[event->ProtocolIndex](CPLUGIN_PROTOCOL_SEND, event, dummyString);
+        CPluginCall(event->ProtocolIndex, CPLUGIN_PROTOCOL_SEND, event, dummyString);
       } else {
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
           String log = F("Invalid value detected for controller ");
           String controllerName;
-          CPlugin_ptr[event->ProtocolIndex](CPLUGIN_GET_DEVICENAME, event, controllerName);
+          CPluginCall(event->ProtocolIndex, CPLUGIN_GET_DEVICENAME, event, controllerName);
           log += controllerName;
           addLog(LOG_LEVEL_DEBUG, log);
         }
@@ -80,24 +80,26 @@ boolean validUserVar(struct EventStruct *event) {
 \*********************************************************************************************/
 // handle MQTT messages
 void callback(char* c_topic, byte* b_payload, unsigned int length) {
-  // char log[256];
-  char c_payload[384];
-
   statusLED(true);
   int enabledMqttController = firstEnabledMQTTController();
   if (enabledMqttController < 0) {
     addLog(LOG_LEVEL_ERROR, F("MQTT : No enabled MQTT controller"));
     return;
   }
-  if ((length + 1) > sizeof(c_payload))
+  if (length > 384)
   {
     addLog(LOG_LEVEL_ERROR, F("MQTT : Ignored too big message"));
     return;
   }
 
-  //convert payload to string, and 0 terminate
-  strncpy(c_payload,(char*)b_payload,length);
-  c_payload[length] = 0;
+  struct EventStruct TempEvent;
+  // TD-er: This one cannot set the TaskIndex, but that may seem to work out.... hopefully.
+  TempEvent.String1 = c_topic;
+  TempEvent.String2.reserve(length);
+  for (unsigned int i = 0; i < length; ++i) {
+    char c = static_cast<char>(*(b_payload + i));
+    TempEvent.String2 += c;
+  }
 
 /*
   if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
@@ -107,20 +109,11 @@ void callback(char* c_topic, byte* b_payload, unsigned int length) {
     addLog(LOG_LEVEL_DEBUG_MORE, log);
 
     log=F("MQTT : Payload: ");
-    log+=c_payload;
+    log+=TempEvent.String2;
     addLog(LOG_LEVEL_DEBUG_MORE, log);
   }
   */
 
-  // sprintf_P(log, PSTR("%s%s"), "MQTT : Topic: ", c_topic);
-  // addLog(LOG_LEVEL_DEBUG, log);
-  // sprintf_P(log, PSTR("%s%s"), "MQTT : Payload: ", c_payload);
-  // addLog(LOG_LEVEL_DEBUG, log);
-
-  struct EventStruct TempEvent;
-  // TD-er: This one cannot set the TaskIndex, but that may seem to work out.... hopefully.
-  TempEvent.String1 = c_topic;
-  TempEvent.String2 = c_payload;
   byte ProtocolIndex = getProtocolIndex(Settings.Protocol[enabledMqttController]);
   schedule_controller_event_timer(ProtocolIndex, CPLUGIN_PROTOCOL_RECV, &TempEvent);
 }
@@ -163,12 +156,12 @@ bool MQTTConnect(int controller_idx)
     clientid = F("ESPClient_");
     clientid += WiFi.macAddress();
   }
-  // Work-around for 'lost connections' to the MQTT broker.
-  // If the broker thinks the connection is still alive, a reconnect from the
-  // client will be refused.
-  // To overcome this issue, append the number of reconnects to the client ID to
-  // make it different from the previous one.
-  if (wifi_reconnects >= 1) {
+  if (wifi_reconnects >= 1 && Settings.uniqueMQTTclientIdReconnect()) {
+    // Work-around for 'lost connections' to the MQTT broker.
+    // If the broker thinks the connection is still alive, a reconnect from the
+    // client will be refused.
+    // To overcome this issue, append the number of reconnects to the client ID to
+    // make it different from the previous one.
     clientid += '_';
     clientid += wifi_reconnects;
   }
@@ -264,8 +257,18 @@ bool MQTTCheck(int controller_idx)
 /*********************************************************************************************\
  * Send status info to request source
 \*********************************************************************************************/
+void SendStatusOnlyIfNeeded(int eventSource, bool param1, uint32_t key, const String& param2, int16_t param3) {
+  switch (eventSource) {
+    case VALUE_SOURCE_HTTP:
+    case VALUE_SOURCE_SERIAL:
+    case VALUE_SOURCE_MQTT:
+    case VALUE_SOURCE_WEB_FRONTEND:
+      SendStatus(eventSource, getPinStateJSON(param1, key, param2, param3));
+  	break;
+  }
+}
 
-void SendStatus(byte source, String status)
+void SendStatus(byte source, const String& status)
 {
   switch(source)
   {
@@ -278,7 +281,7 @@ void SendStatus(byte source, String status)
       MQTTStatus(status);
       break;
     case VALUE_SOURCE_SERIAL:
-      Serial.println(status);
+      serialPrintln(status);
       break;
   }
 }
@@ -317,7 +320,7 @@ void processMQTTdelayQueue() {
 /*********************************************************************************************\
  * Send status info back to channel where request came from
 \*********************************************************************************************/
-void MQTTStatus(String& status)
+void MQTTStatus(const String& status)
 {
   MakeControllerSettings(ControllerSettings);
   int enabledMqttController = firstEnabledMQTTController();

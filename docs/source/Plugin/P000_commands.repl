@@ -1,0 +1,258 @@
+.. include:: ../Plugin/_plugin_substitutions_p00x.repl
+
+.. csv-table::
+    :header: "Command", "Class", "Purpose / Syntax"
+    :widths: 8, 5, 30
+
+    "Debug","
+    :red:`Internal`","
+    Change Serial port debug level
+
+    ``Debug,<1-4>``"
+    "
+    IP","
+    :red:`Internal`","
+    Change IP address
+
+    ``IP,<IP address>``"
+    "
+    LogEntry","
+    :red:`Internal`","
+    Add string to log
+
+    ``LogEntry,<string>``"
+    "
+    Name","
+    :red:`Internal`","
+    Set the name of the unit
+
+    ``Name,<new name>``"
+    "
+    Password","
+    :red:`Internal`","
+    Set the password of the unit
+
+    ``Password,<new password>``"
+    "
+    Reboot","
+    :red:`Internal`","
+    Reboot the ESP
+
+    ``Reboot``"
+    "
+    Reset","
+    :red:`Internal`","
+    Reset config to factory default. Caution, all settings will be lost!
+
+    ``Reset``"
+    "
+    Reset Flash Write Counter","
+    :red:`Internal`","
+    Reset flash write to zero.
+
+    ``ResetFlashWriteCounter``"
+    "
+    Rules","
+    :red:`Internal`","
+    Rules enabled (1) or rules disabled (0)
+
+    ``Rules,<1/0>``"
+    "
+    Save","
+    :red:`Internal`","
+    Save config to persistent flash memory
+
+    ``Save``"
+    "
+    Settings","
+    :red:`Internal`","
+    Show settings on serial terminal
+
+    ``Settings``"
+    "
+    TaskClear","
+    :red:`Internal`","
+    Delete the given task/device
+
+    ``TaskClear,<task/device nr>``"
+    "
+    TaskClearAll","
+    :red:`Internal`","
+    Delete ALL task/device
+
+    ``TaskClearAll``"
+    "
+    TaskRun","
+    :red:`Internal`","
+    Run/excecute the given task/device, use to manually force an update/read of the task.
+
+    ``TaskRun,<task/device nr>``"
+    "
+    Unit","
+    :red:`Internal`","
+    Set the unit number
+
+    ``Unit,<unit number>``"
+    "
+    WifiAPKey","
+    :red:`Internal`","
+    Change AP WPA key
+
+    ``WifiAPKey,<WPA key>``"
+    "
+    WifiAPMode","
+    :red:`Internal`","
+    Force the unit into AP mode.
+
+    ``WifiAPMode``"
+    "
+    WifiConnect","
+    :red:`Internal`","
+    Connect to configured wireless network
+
+    ``WifiConnect``"
+    "
+    WifiDisconnect","
+    :red:`Internal`","
+    Disconnect from wireless network
+
+    ``WifiDisconnect``"
+    "
+    WifiKey","
+    :red:`Internal`","
+    Change WPA key for primary WiFi
+
+    ``WifiKey,<Wifi WPA key>``"
+    "
+    WifiKey2","
+    :red:`Internal`","
+    Change WPA key for secondary WiFi
+
+    ``WifiKey2,<Wifi WPA key>``"
+    "
+    WifiScan","
+    :red:`Internal`","
+    Scan Wireless networks
+
+    ``WifiScan``"
+    "
+    WifiSSID","
+    :red:`Internal`","
+    Change SSID to connect as primary WiFi
+
+    ``WifiSSID,<SSID>``"
+    "
+    WifiSSID2","
+    :red:`Internal`","
+    Change SSID to connect as secondry WiFi
+
+    ``WifiSSID2,<SSID>``"
+    "
+    Delay","
+    :green:`Rules`","
+    Delay rule processing
+
+    ``Delay,<delay in milliSeconds>``"
+    "
+    Publish","
+    :green:`Rules`","
+    Send command using MQTT broker service
+
+    ``Publish,<topic>,<value>``"
+    "
+    SendTo","
+    :green:`Rules`","
+    Send command to other ESP (using UDP)
+
+    ``SendTo,<unit nr>,<command>``"
+    "
+    SendToHTTP","
+    :green:`Rules`","
+    Send command to other network device using HTTP
+
+    ``SendToHTTP,<IP address>,<Portnumber>,<command>``
+
+    ``SendToHTTP,<domain>,<Portnumber>,</url>``"
+    "
+    SendToUDP","
+    :green:`Rules`","
+    Send command to other network device using UDP (non-ESP Easy units)
+
+    ``SendToUDP,<IP address>,<Portnumber>,<command>``"
+    "
+    TaskValueSet","
+    :green:`Rules`","
+    Set values on a **Dummy Task** (device)
+
+    ``TaskValueSet,<task/device nr>,<value nr>,<value/formula>``"
+    "
+    TimerSet","
+    :green:`Rules`","
+    Start a timed event
+
+    ``TimerSet,<timernr>,<timeInSeconds>``
+
+    ``TimerSet,<timernr>,0`` disables the timer"
+    "
+    Event","
+    :blue:`Special`","
+    Create an event, it's possible to send a float value along as well.
+
+    See event syntax below..."
+
+
+Event command
+~~~~~~~~~~~~~
+
+The event command is a special command used to trigger an event. This event can then be acted upon from the rules.
+You can send 0..4 event values along with the event.
+
+
+.. csv-table::
+    :header: "Event / Info"
+    :widths: 1
+
+    "
+    ``Event,SingleEvent``
+
+    The event (triggered by any of the launch ways) will make the unit publish a message.
+
+    **Rules example**
+
+    .. code-block:: html
+
+        on SingleEvent do
+          Publish,%sysname%/Info,A single event has been triggered!
+        endon
+    "
+    "
+    ``Event,SingleValue=123``
+
+    The event value ``123`` is intercepted and published.
+
+    **Rules example**
+
+    .. code-block:: html
+
+      on SingleValue do
+        Publish,%sysname%/Info,An event has been sent (%eventvalue%)!
+      endon
+    "
+    "
+    ``Event,Multi=1,2,3,99``
+
+    The event value ``99`` (4) is intercepted and the rule ``TaskValueSet...`` is
+    triggered, value of task 12 value 1 is then ``1 + 2`` = ``3`` or ``1 - 2`` = ``-1``.
+
+    **Rules example**
+
+    .. code-block:: html
+
+      on Multi do
+        if %eventvalue4%=99
+          TaskValueSet,12,1,[%eventvalue1%+%eventvalue2%]
+        else
+          TaskValueSet,12,1,[%eventvalue3%-%eventvalue2%]
+        endif
+      endon
+    "

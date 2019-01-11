@@ -76,17 +76,17 @@ boolean Plugin_047(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
       {
       	addFormTextBox(F("I2C Address (Hex)"), F("p047_i2cSoilMoisture_i2cAddress"), 
-            formatToHex_decimal(Settings.TaskDevicePluginConfig[event->TaskIndex][0]), 4);
+            formatToHex_decimal(PCONFIG(0)), 4);
 
-        addFormCheckBox(F("Send sensor to sleep"), F("p047_sleep"), Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
+        addFormCheckBox(F("Send sensor to sleep"), F("p047_sleep"), PCONFIG(1));
 
-        addFormCheckBox(F("Check sensor version") ,F("p047_version"), Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
+        addFormCheckBox(F("Check sensor version") ,F("p047_version"), PCONFIG(2));
 
         addFormSeparator(2);
 
         addFormCheckBox(F("Change Sensor address"),F("p047_changeAddr"), false);
       	addFormTextBox(F("Change I2C Addr. to (Hex)"), F("p047_i2cSoilMoisture_changeAddr"), 
-            formatToHex_decimal(Settings.TaskDevicePluginConfig[event->TaskIndex][0]), 4);
+            formatToHex_decimal(PCONFIG(0)), 4);
 
         addFormSeparator(2);
 
@@ -97,25 +97,25 @@ boolean Plugin_047(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE:
       {
         String plugin1 = WebServer.arg(F("p047_i2cSoilMoisture_i2cAddress"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = (int) strtol(plugin1.c_str(), 0, 16);
+        PCONFIG(0) = (int) strtol(plugin1.c_str(), 0, 16);
 
-        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = isFormItemChecked(F("p047_sleep"));
+        PCONFIG(1) = isFormItemChecked(F("p047_sleep"));
 
-        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = isFormItemChecked(F("p047_version"));
+        PCONFIG(2) = isFormItemChecked(F("p047_version"));
 
         String plugin4 = WebServer.arg(F("p047_i2cSoilMoisture_changeAddr"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][3] = (int) strtol(plugin4.c_str(), 0, 16);
+        PCONFIG(3) = (int) strtol(plugin4.c_str(), 0, 16);
 
-        Settings.TaskDevicePluginConfig[event->TaskIndex][4] = isFormItemChecked(F("p047_changeAddr"));
+        PCONFIG(4) = isFormItemChecked(F("p047_changeAddr"));
         success = true;
         break;
       }
 
     case PLUGIN_READ:
       {
-        _i2caddrP47 = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+        _i2caddrP47 = PCONFIG(0);
 
-        if (Settings.TaskDevicePluginConfig[event->TaskIndex][1]) {
+        if (PCONFIG(1)) {
           // wake sensor
         	Plugin_047_getVersion();
           delayBackground(20);
@@ -123,7 +123,7 @@ boolean Plugin_047(byte function, struct EventStruct *event, String& string)
         }
 
         uint8_t sensorVersion = 0;
-        if (Settings.TaskDevicePluginConfig[event->TaskIndex][2]) {
+        if (PCONFIG(2)) {
           // get sensor version to check if sensor is present
           sensorVersion = Plugin_047_getVersion();
           if (sensorVersion==0x22 || sensorVersion==0x23) {
@@ -137,13 +137,13 @@ boolean Plugin_047(byte function, struct EventStruct *event, String& string)
         }
 
         // check if we want to change the sensor address
-        if (Settings.TaskDevicePluginConfig[event->TaskIndex][4]) {
+        if (PCONFIG(4)) {
         	addLog(LOG_LEVEL_INFO, String(F("SoilMoisture: Change Address: 0x")) + String(_i2caddrP47,HEX) + String(F("->0x")) +
-        			String(Settings.TaskDevicePluginConfig[event->TaskIndex][3],HEX));
-        	if (Plugin_047_setAddress(Settings.TaskDevicePluginConfig[event->TaskIndex][3])) {
-        	  Settings.TaskDevicePluginConfig[event->TaskIndex][0] = Settings.TaskDevicePluginConfig[event->TaskIndex][3];
+        			String(PCONFIG(3),HEX));
+        	if (Plugin_047_setAddress(PCONFIG(3))) {
+        	  PCONFIG(0) = PCONFIG(3);
         	}
-        	Settings.TaskDevicePluginConfig[event->TaskIndex][4] = false;
+        	PCONFIG(4) = false;
         }
 
         // start light measurement
@@ -169,7 +169,7 @@ boolean Plugin_047(byte function, struct EventStruct *event, String& string)
 
         	String log = F("SoilMoisture: Address: 0x");
         	log += String(_i2caddrP47,HEX);
-        	if (Settings.TaskDevicePluginConfig[event->TaskIndex][2]) {
+        	if (PCONFIG(2)) {
         		log += F(" Version: 0x");
         		log += String(sensorVersion,HEX);
         	}
@@ -184,7 +184,7 @@ boolean Plugin_047(byte function, struct EventStruct *event, String& string)
         	log += light;
         	addLog(LOG_LEVEL_INFO, log);
 
-        	if (Settings.TaskDevicePluginConfig[event->TaskIndex][1]) {
+        	if (PCONFIG(1)) {
         		// send sensor to sleep
         		I2C_write8(_i2caddrP47, SOILMOISTURESENSOR_SLEEP);
         		addLog(LOG_LEVEL_DEBUG, F("SoilMoisture->sleep"));

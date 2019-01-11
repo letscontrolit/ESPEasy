@@ -1,0 +1,122 @@
+
+
+.. |P000_name| replace:: :cyan:`Internal`
+.. |P000_type| replace:: :cyan:`GPIO handling`
+.. |P000_typename| replace:: :cyan:`Internal GPIO handling`
+.. |P000_status| replace:: :green:`NORMAL`
+.. |P000_github| replace:: P001_Switch.ino
+.. _P000_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P001_Switch.ino
+.. |P000_usedby_GPIO| replace:: :ref:`P000_Relay_page`, :ref:`P000_Servo_motor_page`
+.. |P000_usedby_RTTTL| replace:: :ref:`P000_Buzzer_page`, :ref:`P000_Piezo_element_page`, :ref:`P000_Speaker_page`
+.. |P000_shortinfo| replace:: The ESP module can control things with it's build-in GPIO output pins. We can turn these on or off or we can set these pins to a special pulse modulated value (PWM output). And it's also possible to send short pulses (single pulse) to one of these pins to control specific devices that are switched with a single short high or low signal.
+.. |P000_maintainer| replace:: Core
+.. |P000_compileinfo| replace:: Currently the GPIO commands are placed in the ``Switch Input - Switch plugin``, this will change!
+.. |P000_usedlibraries| replace:: `.`
+
+.. |P001_name| replace:: :cyan:`Switch`
+.. |P001_type| replace:: :cyan:`Switch Input`
+.. |P001_typename| replace:: :cyan:`Switch Input - Switch`
+.. |P001_status| replace:: :green:`NORMAL`
+.. |P001_github| replace:: P001_Switch.ino
+.. _P001_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P001_Switch.ino
+.. |P001_usedby| replace:: :ref:`P001_Switch_page`, :ref:`P001_Door_switch_page`, :ref:`P001_PIR_sensor_page`
+.. |P001_shortinfo| replace:: `.`
+.. |P001_maintainer| replace:: `.`
+.. |P001_compileinfo| replace:: `.`
+.. |P001_usedlibraries| replace:: `.`
+
+.. |P002_name| replace:: :cyan:`Internal`
+.. |P002_type| replace:: :cyan:`Analog Input`
+.. |P002_typename| replace:: :cyan:`Analog Input - Internal`
+.. |P002_status| replace:: :green:`NORMAL`
+.. |P002_github| replace:: P002_ADC.ino
+.. _P002_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P002_ADC.ino
+.. |P002_usedby| replace:: `.`
+.. |P002_shortinfo| replace:: `.`
+.. |P002_maintainer| replace:: `.`
+.. |P002_compileinfo| replace:: `.`
+.. |P002_usedlibraries| replace:: `.`
+
+.. |P003_name| replace:: :cyan:`Pulse counter`
+.. |P003_type| replace:: :cyan:`Generic`
+.. |P003_typename| replace:: :cyan:`Generic - Pulse counter`
+.. |P003_status| replace:: :green:`NORMAL`
+.. |P003_github| replace:: P003_Pulse.ino
+.. _P003_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P003_Pulse.ino
+.. |P003_usedby| replace:: :ref:`P003_LJ12A3_page`, :ref:`P003_TCR5000_page`, :ref:`P003_YFS401_page`
+.. |P003_shortinfo| replace:: Used to count GPIO pulses.
+.. |P003_maintainer| replace:: Core
+.. |P003_compileinfo| replace:: `.`
+.. |P003_usedlibraries| replace:: `.`
+
+.. |P004_name| replace:: :cyan:`DS18b20`
+.. |P004_type| replace:: :cyan:`Environment`
+.. |P004_typename| replace:: :cyan:`Environment - DS18b20`
+.. |P004_status| replace:: :green:`NORMAL`
+.. |P004_github| replace:: P004_Dallas.ino
+.. _P004_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P004_Dallas.ino
+.. |P004_usedby| replace:: :ref:`P004_DS18b20_page`
+.. |P004_shortinfo| replace:: Temperature sensor that is easy to use in multiples, easy to fit too.
+.. |P004_maintainer| replace:: Core
+.. |P004_compileinfo| replace:: `.`
+.. |P004_usedlibraries| replace:: `.`
+
+.. |P005_name| replace:: :cyan:`DHT11/12/22/SONOFF2301/7021`
+.. |P005_type| replace:: :cyan:`Environment`
+.. |P005_typename| replace:: :cyan:`Environment - DHT11/12/22  SONOFF2301/7021`
+.. |P005_status| replace:: :green:`NORMAL`
+.. |P005_github| replace:: P005_DHT.ino
+.. _P005_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P005_DHT.ino
+.. |P005_usedby| replace:: :ref:`P005_DHT11_DHT22_page`
+.. |P005_shortinfo| replace:: Plugin used to communicate with DHT11/12/22/SONOFF2301/7021
+.. |P005_maintainer| replace:: `.`
+.. |P005_compileinfo| replace:: `.`
+.. |P005_usedlibraries| replace:: `.`
+
+.. |P006_name| replace:: :cyan:`BMP085/180`
+.. |P006_type| replace:: :cyan:`Environment`
+.. |P006_typename| replace:: :cyan:`Environment - BMP085/180`
+.. |P006_status| replace:: :green:`NORMAL`
+.. |P006_github| replace:: P006_BMP085.ino
+.. _P006_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P006_BMP085.ino
+.. |P006_usedby| replace:: :ref:`P006_BMP085_page`, :ref:`P006_BMP180_page`
+.. |P006_shortinfo| replace:: Temperature and pressure for the BMP085 and BMP180 sensors.
+.. |P006_maintainer| replace:: `.`
+.. |P006_compileinfo| replace:: `.`
+.. |P006_usedlibraries| replace:: `.`
+
+.. |P007_name| replace:: :cyan:`PCF8591`
+.. |P007_type| replace:: :cyan:`Analog input`
+.. |P007_typename| replace:: :cyan:`Analog input - PCF8591`
+.. |P007_status| replace:: :green:`NORMAL`
+.. |P007_github| replace:: P007_PCF8591.ino
+.. _P007_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P007_PCF8591.ino
+.. |P007_usedby| replace:: `.`
+.. |P007_shortinfo| replace:: `.`
+.. |P007_maintainer| replace:: `.`
+.. |P007_compileinfo| replace:: `.`
+.. |P007_usedlibraries| replace:: `.`
+
+.. |P008_name| replace:: :cyan:`Wiegand`
+.. |P008_type| replace:: :cyan:`RFID`
+.. |P008_typename| replace:: :cyan:`RFID - Wiegand`
+.. |P008_status| replace:: :green:`NORMAL`
+.. |P008_github| replace:: P008_RFID.ino
+.. _P008_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P008_RFID.ino
+.. |P008_usedby| replace:: `.`
+.. |P008_shortinfo| replace:: `.`
+.. |P008_maintainer| replace:: `.`
+.. |P008_compileinfo| replace:: `.`
+.. |P008_usedlibraries| replace:: `.`
+
+.. |P009_name| replace:: :cyan:`MCP23017`
+.. |P009_type| replace:: :cyan:`Switch Input`
+.. |P009_typename| replace:: :cyan:`Switch Input - MCP23017`
+.. |P009_status| replace:: :green:`NORMAL`
+.. |P009_github| replace:: P009_MCP.ino
+.. _P009_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P009_MCP.ino
+.. |P009_usedby| replace:: `.`
+.. |P009_shortinfo| replace:: `.`
+.. |P009_maintainer| replace:: `.`
+.. |P009_compileinfo| replace:: `.`
+.. |P009_usedlibraries| replace:: `.`

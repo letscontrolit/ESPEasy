@@ -4,6 +4,15 @@ VERSION=$(git describe)
 TMP_DIST=`mktemp -d`
 CURPATH=`pwd`
 
+while getopts d: option
+do
+case "${option}"
+in
+d) VERSION=${OPTARG};;
+esac
+done
+
+
 if [ ! -d ${TMP_DIST} ]; then
   # Could not create temp dir, so exit
   exit 1
@@ -23,35 +32,60 @@ fi
 
 
 for ENV in \
-  normal_ESP8266_1024 \
-  normal_ESP8266_4096 \
-  normal_ESP8285_1024 \
-  normal_IR_ESP8266_4096 \
-  normal_core_241_ESP8266_1024 \
-  normal_core_241_ESP8266_4096 \
-  test_ESP8266_1024\
-  test_ESP8266_4096\
-  test_ESP8266_4096_VCC\
-  test_ESP8266_1024_VCC\
-  test_ESP8285_1024\
-  dev_ESP8266_1024\
   dev_ESP8266_4096\
-  dev_ESP8285_1024\
-  hard_SONOFF_POW\
-  hard_SONOFF_POW_R2_4M\
+  esp-wrover-kit_test_1M8_partition\
+  esp32dev\
+  esp32test_1M8_partition\
+  hard_SONOFF_POW_4M\
+  hard_core_250_beta_SONOFF_POW_4M\
+  hard_core_250_beta_Shelly_1_2M256\
   minimal_ESP8266_1024_OTA\
   minimal_ESP8285_1024_OTA\
-  esp32dev\
-  esp32test_1M8_partition;\
+  normal_ESP8266_1024\
+  normal_ESP8266_1024_VCC\
+  normal_ESP8266_4096\
+  normal_ESP8285_1024\
+  normal_IR_ESP8266_4096\
+  normal_WROOM02_2048\
+  normal_core_241_ESP8266_1024\
+  normal_core_241_ESP8266_4096\
+  normal_core_250_beta_ESP8266_1024\
+  normal_core_250_beta_ESP8266_4096\
+  normal_core_250_beta_IR_ESP8266_4096\
+  normal_core_250_beta_WROOM02_2M256\
+  test_ESP8266_4096\
+  test_ESP8266_4096_VCC\
+  test_core_250_beta_ESP8266_4096\
+  test_core_250_beta_ESP8266_4096_VCC;\
 do
-  echo
-  echo "### Deploying environment $ENV for version $VERSION"
-  BIN=.pioenvs/${ENV}/ESP_Easy_${VERSION}_${ENV}.bin
-  cp .pioenvs/${ENV}/firmware.bin $BIN
-  python2 crc2.py $BIN
-  mv $BIN "${TMP_DIST}/bin/ESP_Easy_${VERSION}_${ENV}.bin"
-done
+  MAX_FILESIZE=1044464
+  if [[ ${ENV} == *"1024"* ]]; then
+    # max 602 kiB
+    MAX_FILESIZE=892912
+  fi
+  if [[ ${ENV} == *"1024_OTA"* ]]; then
+    # max 602 kiB
+    MAX_FILESIZE=616448
+  fi
+  if [[ ${ENV} == *"esp32"* ]]; then
+    MAX_FILESIZE=1310720
+  fi
+  if [[ ${ENV} == *"1M8_partition"* ]]; then
+    MAX_FILESIZE=1900544
+  fi
 
+  FILESIZE=$(stat -c%s .pioenvs/${ENV}/firmware.bin )
+  if (( FILESIZE < MAX_FILESIZE )); then
+    echo
+    echo "### Deploying environment $ENV for version $VERSION"
+    BIN=.pioenvs/${ENV}/ESP_Easy_${VERSION}_${ENV}.bin
+    cp .pioenvs/${ENV}/firmware.bin $BIN
+    python2 crc2.py $BIN
+    mv $BIN "${TMP_DIST}/bin/ESP_Easy_${VERSION}_${ENV}.bin"
+  else
+    echo "Build too large for $ENV $FILESIZE > $MAX_FILESIZE "
+  fi
+done
 
 #create a source structure that is the same as the original ESPEasy project (and works with the howto on the wiki)
 #rm -rf dist/Source 2>/dev/null

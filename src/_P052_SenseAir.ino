@@ -25,8 +25,8 @@
 
 boolean Plugin_052_init = false;
 
-#include <ESPeasySoftwareSerial.h>
-ESPeasySoftwareSerial *Plugin_052_SoftSerial;
+#include <ESPeasySerial.h>
+ESPeasySerial *P052_easySerial;
 
 boolean Plugin_052(byte function, struct EventStruct *event, String& string)
 {
@@ -65,8 +65,7 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_GET_DEVICEGPIONAMES:
       {
-        event->String1 = formatGpioName_RX(false);
-        event->String2 = formatGpioName_TX(false);
+        serialHelper_getGpioNames(event);
         break;
       }
 
@@ -105,7 +104,8 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-          byte choiceSensor = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+          serialHelper_webformLoad(event);
+          byte choiceSensor = PCONFIG(0);
 
           String optionsSensor[7] = { F("Error Status"), F("Carbon Dioxide"), F("Temperature"), F("Humidity"), F("Relay Status"), F("Temperature Adjustment"), F("ABC period") };
           addFormSelector(F("Sensor"), F("p052_sensor"), 7, optionsSensor, NULL, choiceSensor);
@@ -113,7 +113,7 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string)
           /*
           // ABC functionality disabled for now, due to a bug in the firmware.
           // See https://github.com/letscontrolit/ESPEasy/issues/759
-          byte choiceABCperiod = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
+          byte choiceABCperiod = PCONFIG(1);
           String optionsABCperiod[9] = { F("disable"), F("1 h"), F("12 h"), F("1 day"), F("2 days"), F("4 days"), F("7 days"), F("14 days"), F("30 days") };
           addFormSelector(F("ABC period"), F("p052_ABC_period"), 9, optionsABCperiod, NULL, choiceABCperiod);
           */
@@ -124,11 +124,12 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("p052_sensor"));
+        serialHelper_webformSave(event);
+        PCONFIG(0) = getFormItemInt(F("p052_sensor"));
         /*
         // ABC functionality disabled for now, due to a bug in the firmware.
         // See https://github.com/letscontrolit/ESPEasy/issues/759
-        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("p052_ABC_period"));
+        PCONFIG(1) = getFormItemInt(F("p052_ABC_period"));
         */
 
         success = true;
@@ -138,14 +139,14 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string)
     case PLUGIN_INIT:
       {
         Plugin_052_init = true;
-        Plugin_052_SoftSerial = new ESPeasySoftwareSerial(Settings.TaskDevicePin1[event->TaskIndex],
-                                                   Settings.TaskDevicePin2[event->TaskIndex]);
+        P052_easySerial = new ESPeasySerial(CONFIG_PIN1,
+                                                   CONFIG_PIN2);
 
         /*
         // ABC functionality disabled for now, due to a bug in the firmware.
         // See https://github.com/letscontrolit/ESPEasy/issues/759
         const int periodInHours[9] = {0, 1, 12, (24*1), (24*2), (24*4), (24*7), (24*14), (24*30) };
-        byte choiceABCperiod = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
+        byte choiceABCperiod = PCONFIG(1);
 
         Plugin_052_setABCperiod(periodInHours[choiceABCperiod]);
         */
@@ -161,7 +162,7 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string)
         {
 
           String log = F("Senseair: ");
-          switch(Settings.TaskDevicePluginConfig[event->TaskIndex][0])
+          switch(PCONFIG(0))
           {
               case 0:
               {
@@ -265,13 +266,13 @@ int Plugin_052_sendCommand(byte command[])
   byte data_buf[2] = {0xff};
   long value       = -1;
 
-  Plugin_052_SoftSerial->write(command, 8); //Send the byte array
+  P052_easySerial->write(command, 8); //Send the byte array
   delay(50);
 
   // Read answer from sensor
   int ByteCounter = 0;
-  while(Plugin_052_SoftSerial->available()) {
-    recv_buf[ByteCounter] = Plugin_052_SoftSerial->read();
+  while(P052_easySerial->available()) {
+    recv_buf[ByteCounter] = P052_easySerial->read();
     ByteCounter++;
   }
 

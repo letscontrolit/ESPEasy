@@ -25,19 +25,18 @@
 \*********************************************************************************************/
 String doExecuteCommand(const char * cmd, struct EventStruct *event, const char* line)
 {
-	// Simple macro to match command to function call.
-  #define COMMAND_CASE(S, C) if (strcmp_P(cmd_lc, PSTR(S)) == 0) return (C(event, line));
-
-	String tmpcmd;
-	tmpcmd = cmd;
-	tmpcmd.toLowerCase();
+  String cmd_lc;
+	cmd_lc = cmd;
+	cmd_lc.toLowerCase();
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
   	String log = F("Command: ");
-  	log += tmpcmd;
+  	log += cmd_lc;
   	addLog(LOG_LEVEL_INFO, log);
+    addLog(LOG_LEVEL_DEBUG, line); // for debug purposes add the whole line.
   }
-	char cmd_lc[INPUT_COMMAND_SIZE];
-	tmpcmd.toCharArray(cmd_lc, tmpcmd.length() + 1);
+  // Simple macro to match command to function call.
+  #define COMMAND_CASE(S, C) if (strcmp_P(cmd_lc.c_str(), PSTR(S)) == 0) { return (C(event, line)); }
+
   switch (cmd_lc[0]) {
     case 'a': {
 	  COMMAND_CASE("accessinfo"             , Command_AccessInfo_Ls);              // Network Command
@@ -80,10 +79,14 @@ String doExecuteCommand(const char * cmd, struct EventStruct *event, const char*
 	  COMMAND_CASE("ip"                     , Command_IP);                         // Network Command
       break;
     }
+    case 'j': {
+    COMMAND_CASE("jsonportstatus"         , Command_JSONPortStatus);             // Diagnostic.h
+    }
     case 'l': {
     COMMAND_CASE("let"                    , Command_Rules_Let);                  // Rules.h
 	  COMMAND_CASE("load"                   , Command_Settings_Load);              // Settings.h
 	  COMMAND_CASE("logentry"               , Command_logentry);                   // Diagnostic.h
+    COMMAND_CASE("logportstatus"          , Command_logPortStatus);              // Diagnostic.h
 	  COMMAND_CASE("lowmem"                 , Command_Lowmem);                     // Diagnostic.h
       break;
     }
@@ -104,7 +107,7 @@ String doExecuteCommand(const char * cmd, struct EventStruct *event, const char*
     }
     case 'p': {
 	  COMMAND_CASE("password"               , Command_Settings_Password);          // Settings.h
-	  COMMAND_CASE("publish"                , Command_MQTT_Publish);               // MQTT.h
+    COMMAND_CASE("publish"                , Command_MQTT_Publish);               // MQTT.h
       break;
     }
     case 'r': {
@@ -195,7 +198,7 @@ String return_not_connected()
 
 String return_result(struct EventStruct *event, const String& result)
 {
-	Serial.println(result);
+	serialPrintln(result);
 	if (event->Source == VALUE_SOURCE_SERIAL) {
 		return return_command_success();
 	}
@@ -213,31 +216,34 @@ String return_see_serial(struct EventStruct *event)
 void ExecuteCommand(byte source, const char *Line)
 {
 	checkRAM(F("ExecuteCommand"));
-	char TmpStr1[INPUT_COMMAND_SIZE];
-	TmpStr1[0] = 0;
-	char cmd[INPUT_COMMAND_SIZE];
-	cmd[0] = 0;
+  String cmd;
+  if (!GetArgv(Line, cmd, 1)) {
+    return;
+  }
 	struct EventStruct TempEvent;
 	// FIXME TD-er: Not sure what happens now, but TaskIndex cannot be set here
 	// since commands can originate from anywhere.
 	TempEvent.Source = source;
-	GetArgv(Line, cmd, 1);
-  if (GetArgv(Line, TmpStr1, 2)) TempEvent.Par1 = CalculateParam(TmpStr1);
-	if (GetArgv(Line, TmpStr1, 3)) TempEvent.Par2 = CalculateParam(TmpStr1);
-	if (GetArgv(Line, TmpStr1, 4)) TempEvent.Par3 = CalculateParam(TmpStr1);
-	if (GetArgv(Line, TmpStr1, 5)) TempEvent.Par4 = CalculateParam(TmpStr1);
-	if (GetArgv(Line, TmpStr1, 6)) TempEvent.Par5 = CalculateParam(TmpStr1);
+  {
+    // Use extra scope to delete the TmpStr1 before executing command.
+    String TmpStr1;
+    if (GetArgv(Line, TmpStr1, 2)) TempEvent.Par1 = CalculateParam(TmpStr1.c_str());
+  	if (GetArgv(Line, TmpStr1, 3)) TempEvent.Par2 = CalculateParam(TmpStr1.c_str());
+  	if (GetArgv(Line, TmpStr1, 4)) TempEvent.Par3 = CalculateParam(TmpStr1.c_str());
+  	if (GetArgv(Line, TmpStr1, 5)) TempEvent.Par4 = CalculateParam(TmpStr1.c_str());
+  	if (GetArgv(Line, TmpStr1, 6)) TempEvent.Par5 = CalculateParam(TmpStr1.c_str());
+  }
 
-  if (source == VALUE_SOURCE_WEB_FRONTEND) {
-    // Must run immediately, to see result in web frontend
-    String status = doExecuteCommand((char*)&cmd[0], &TempEvent, Line);
-    delay(0);
-    SendStatus(source, status);
-    delay(0);
+  String status = doExecuteCommand(cmd.c_str(), &TempEvent, Line);
+  delay(0);
+  SendStatus(source, status);
+  delay(0);
+/*
   } else {
     // Schedule to run async
-    schedule_command_timer((char*)&cmd[0], &TempEvent, Line);
+    schedule_command_timer(cmd.c_str(), &TempEvent, Line);
   }
+*/
 }
 
 #ifdef FEATURE_SD
@@ -250,16 +256,16 @@ void printDirectory(File dir, int numTabs)
 			break;
 		}
 		for (uint8_t i = 0; i < numTabs; i++) {
-			Serial.print('\t');
+			serialPrint('\t');
 		}
-		Serial.print(entry.name());
+		serialPrint(entry.name());
 		if (entry.isDirectory()) {
-			Serial.println("/");
+			serialPrintln("/");
 			printDirectory(entry, numTabs + 1);
 		} else {
 			// files have sizes, directories do not
-			Serial.print("\t\t");
-			Serial.println(entry.size(), DEC);
+			serialPrint("\t\t");
+			serialPrintln(entry.size(), DEC);
 		}
 		entry.close();
 	}
