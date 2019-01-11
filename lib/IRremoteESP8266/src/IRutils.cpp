@@ -117,6 +117,9 @@ std::string typeToString(const decode_type_t protocol, const bool isRepeat) {
     case DAIKIN:
       result = "DAIKIN";
       break;
+    case DAIKIN2:
+      result = "DAIKIN2";
+      break;
     case DENON:
       result = "DENON";
       break;
@@ -267,6 +270,7 @@ std::string typeToString(const decode_type_t protocol, const bool isRepeat) {
 bool hasACState(const decode_type_t protocol) {
   switch (protocol) {
     case DAIKIN:
+    case DAIKIN2:
     case ELECTRA_AC:
     case FUJITSU_AC:
     case GREE:
@@ -344,7 +348,7 @@ std::string resultToSourceCode(const decode_results *results) {
   output += "  // " + typeToString(results->decode_type, results->repeat);
   // Only display the value if the decode type doesn't have an A/C state.
   if (!hasACState(results->decode_type))
-    output += ' ' + uint64ToString(results->value, 16);
+    output += " " + uint64ToString(results->value, 16);
   output += "\n";
 
   // Now dump "known" codes
@@ -395,7 +399,7 @@ std::string resultToTimingInfo(const decode_results *results) {
 
   for (uint16_t i = 1; i < results->rawlen; i++) {
     if (i % 2 == 0)
-      output += '-';  // even
+      output += "-";  // even
     else
       output += "   +";  // odd
     value = uint64ToString(results->rawbuf[i] * kRawTick);
@@ -456,6 +460,13 @@ uint8_t sumBytes(uint8_t *start, const uint16_t length, const uint8_t init) {
   uint8_t checksum = init;
   uint8_t *ptr;
   for (ptr = start; ptr - start < length; ptr++) checksum += *ptr;
+  return checksum;
+}
+
+uint8_t xorBytes(uint8_t *start, const uint16_t length, const uint8_t init) {
+  uint8_t checksum = init;
+  uint8_t *ptr;
+  for (ptr = start; ptr - start < length; ptr++) checksum ^= *ptr;
   return checksum;
 }
 
