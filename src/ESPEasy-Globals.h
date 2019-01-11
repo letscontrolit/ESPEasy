@@ -1,8 +1,6 @@
 #ifndef ESPEASY_GLOBALS_H_
 #define ESPEASY_GLOBALS_H_
 
-#include "_Plugin_Helper.h"
-
 #ifndef CORE_2_5_0
   #define STR_HELPER(x) #x
   #define STR(x) STR_HELPER(x)

@@ -29,7 +29,7 @@
 #define P082_DEFAULT_FIX_TIMEOUT 2500
 #define P082_TIMESTAMP_AGE       1500
 
-struct P082_data_struct {
+struct P082_data_struct : public PluginTaskData_base {
   P082_data_struct() {}
 
   ~P082_data_struct() { reset(); }
@@ -130,8 +130,6 @@ struct P082_data_struct {
 volatile unsigned long P082_pps_time = 0;
 void Plugin_082_interrupt() ICACHE_RAM_ATTR;
 
-P082_data_struct* P082_data = nullptr;
-
 boolean Plugin_082(byte function, struct EventStruct *event, String &string) {
   boolean success = false;
 
@@ -173,7 +171,8 @@ boolean Plugin_082(byte function, struct EventStruct *event, String &string) {
     case PLUGIN_WEBFORM_LOAD: {
       serialHelper_webformLoad(event);
   /*
-      if (P082_data && P082_data->isInitialized()) {
+      P082_data_struct* P082_data = nullptr;
+      if (getPluginTaskData(event->TaskIndex, P082_data) && P082_data->isInitialized()) {
         String detectedString = F("Detected: ");
         detectedString += String(P082_data->P082_easySerial->baudRate());
         addUnit(detectedString);
@@ -215,7 +214,11 @@ boolean Plugin_082(byte function, struct EventStruct *event, String &string) {
       const int16_t serial_rx = CONFIG_PIN1;
       const int16_t serial_tx = CONFIG_PIN2;
       const int16_t pps_pin   = CONFIG_PIN3;
-      if (!P082_data) P082_data = new P082_data_struct();
+      initPluginTaskData(event->TaskIndex, new P082_data_struct());
+      P082_data_struct* P082_data = static_cast<P082_data_struct*>(getPluginTaskData(event->TaskIndex));
+			if (!P082_data) {
+			  return success;
+			}
       if (P082_data->init(serial_rx, serial_tx)) {
         success = true;
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -234,11 +237,7 @@ boolean Plugin_082(byte function, struct EventStruct *event, String &string) {
     }
 
     case PLUGIN_EXIT: {
-      if (P082_data) {
-        P082_data->reset();
-        delete P082_data;
-        P082_data = nullptr;
-      }
+      clearPluginTaskData(event->TaskIndex);
       const int16_t pps_pin   = CONFIG_PIN3;
       if (pps_pin != -1) {
         detachInterrupt(pps_pin);
@@ -248,6 +247,7 @@ boolean Plugin_082(byte function, struct EventStruct *event, String &string) {
     }
 
     case PLUGIN_TEN_PER_SECOND: {
+      P082_data_struct* P082_data = static_cast<P082_data_struct*>(getPluginTaskData(event->TaskIndex));
       if (P082_data && P082_data->loop()) {
         schedule_task_device_timer(event->TaskIndex, millis() + 10);
         delay(0); // Processing a full sentence may take a while, run some background tasks.
@@ -257,6 +257,7 @@ boolean Plugin_082(byte function, struct EventStruct *event, String &string) {
     }
 
     case PLUGIN_READ: {
+      P082_data_struct* P082_data = static_cast<P082_data_struct*>(getPluginTaskData(event->TaskIndex));
       if (P082_data && P082_data->isInitialized()) {
         static bool activeFix = P082_data->hasFix(P082_DEFAULT_FIX_TIMEOUT);
         const bool curFixStatus = P082_data->hasFix(P082_DEFAULT_FIX_TIMEOUT);
@@ -287,7 +288,7 @@ boolean Plugin_082(byte function, struct EventStruct *event, String &string) {
             success = true;
           }
         }
-        P082_setSystemTime();
+        P082_setSystemTime(event);
         P082_logStats(event);
       }
       break;
@@ -297,11 +298,12 @@ boolean Plugin_082(byte function, struct EventStruct *event, String &string) {
 }
 
 void P082_logStats(struct EventStruct *event) {
-  if (!loglevelActiveFor(LOG_LEVEL_INFO) || !P082_data || !P082_data->isInitialized()) {
+  P082_data_struct* P082_data = static_cast<P082_data_struct*>(getPluginTaskData(event->TaskIndex));
+  if (!P082_data || !loglevelActiveFor(LOG_LEVEL_INFO) || !P082_data->isInitialized()) {
     return;
   }
   String log;
-  log.reserve(96);
+  log.reserve(128);
   log = F("GPS:");
   log += F(" Fix: ");
   log += String(P082_data->hasFix(P082_DEFAULT_FIX_TIMEOUT));
@@ -313,17 +315,20 @@ void P082_logStats(struct EventStruct *event) {
   log += P082_ALTITUDE;
   log += F(" Spd: ");
   log += P082_SPEED;
-
+  log += F(" #sat: ");
+  log += P082_data->gps->satellites.value();
+  log += F(" HDOP: ");
+  log += P082_data->gps->hdop.value() / 100.0;
   log += F(" Chksum(pass/fail): ");
   log += P082_data->gps->passedChecksum();
   log += '/';
   log += P082_data->gps->failedChecksum();
-
   addLog(LOG_LEVEL_INFO, log);
 }
 
 void P082_html_show_stats(struct EventStruct *event) {
-  if (!P082_data) {
+  P082_data_struct* P082_data = static_cast<P082_data_struct*>(getPluginTaskData(event->TaskIndex));
+  if (!P082_data || !P082_data->isInitialized()) {
     return;
   }
   addRowLabel(F("Fix"));
@@ -352,8 +357,9 @@ void P082_html_show_stats(struct EventStruct *event) {
   addHtml(chksumStats);
 }
 
-void P082_setSystemTime() {
-  if (!P082_data) return;
+void P082_setSystemTime(struct EventStruct *event) {
+  P082_data_struct* P082_data = static_cast<P082_data_struct*>(getPluginTaskData(event->TaskIndex));
+  if (!P082_data || !P082_data->isInitialized()) return;
   // Set the externalTimesource 10 seconds earlier to make sure no call is made to NTP (if set)
   if (nextSyncTime > (sysTime + 10)) {
     return;
@@ -373,7 +379,6 @@ void P082_setSystemTime() {
 }
 
 void Plugin_082_interrupt()
-/*********************************************************************/
 {
   P082_pps_time = millis();
 }
