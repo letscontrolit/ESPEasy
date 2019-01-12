@@ -51,8 +51,7 @@
 #define UARTSERIAL 1
 
 
-struct P075_data_struct {
-
+struct P075_data_struct : public PluginTaskData_base {
 
   P075_data_struct(int rx, int tx) : rxPin(rx), txPin(tx) {
     easySerial = new ESPeasySerial(rx, tx, false, RXBUFFSZ);
@@ -83,8 +82,6 @@ struct P075_data_struct {
 
   String displayLines[P75_Nlines];
 };
-
-P075_data_struct* P075_data = nullptr;
 
 
 // *****************************************************************************************************
@@ -191,6 +188,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
 
       addFormSubHeader("");                          // Blank line, vertical space.
       addFormHeader(F("Nextion Command Statements (Optional)"));
+      P075_data_struct* P075_data = static_cast<P075_data_struct*>(getPluginTaskData(event->TaskIndex));
       if (P075_data) {
         P075_data->loadDisplayLines(event->TaskIndex);
         for (byte varNr = 0; varNr < P75_Nlines; varNr++) {
@@ -238,6 +236,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
         PCONFIG(1) = getFormItemInt(F("p075_baud"));
         PCONFIG(2) = isFormItemChecked(F("IncludeValues"));
         SaveCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
+        P075_data_struct* P075_data = static_cast<P075_data_struct*>(getPluginTaskData(event->TaskIndex));
         if (P075_data) {
           P075_data->loadDisplayLines(event->TaskIndex);
         }
@@ -255,11 +254,6 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
       if(BaudCode > B115200) BaudCode = B9600;
       const uint32_t BaudArray[4] = {9600UL, 38400UL, 57600UL, 115200UL};
       AdvHwBaud = BaudArray[BaudCode];
-
-      if (P075_data != nullptr) {
-        delete P075_data;
-        P075_data = nullptr;
-      }
 
       int rxPin = CONFIG_PIN1;
       int txPin = CONFIG_PIN2;
@@ -298,10 +292,11 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
             addLog(LOG_LEVEL_INFO, log);
             HwSerial = SOFTSERIAL;
         }
-        if (P075_data == nullptr) {
-          P075_data = new P075_data_struct(rxPin, txPin);
+        initPluginTaskData(event->TaskIndex, new P075_data_struct(rxPin, txPin));
+        P075_data_struct* P075_data = static_cast<P075_data_struct*>(getPluginTaskData(event->TaskIndex));
+        if (P075_data) {
+          P075_data->loadDisplayLines(event->TaskIndex);
         }
-        P075_data->loadDisplayLines(event->TaskIndex);
       }
       success = true;
       break;
@@ -309,6 +304,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
 
 
     case PLUGIN_READ: {
+      P075_data_struct* P075_data = static_cast<P075_data_struct*>(getPluginTaskData(event->TaskIndex));
       if (P075_data) {
         int RssiIndex;
         String newString;
@@ -355,7 +351,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
               newString = parseTemplate(tmpString, 0);
             }
 
-            sendCommand(newString.c_str(), HwSerial);
+            sendCommand(event->TaskIndex, newString.c_str(), HwSerial);
             #ifdef DEBUG_LOG
               String log;
               log.reserve(P75_Nchars+50);                 // Prevent re-allocation
@@ -420,7 +416,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
         if (tmpString.equalsIgnoreCase(getTaskDeviceName(event->TaskIndex)) == true) { // If device names match we have a command to write.
             argIndex = string.indexOf(',');
             tmpString = string.substring(argIndex + 1);
-            sendCommand(tmpString.c_str(), HwSerial);
+            sendCommand(event->TaskIndex, tmpString.c_str(), HwSerial);
 
             String log;
             log.reserve(110);                           // Prevent re-allocation
@@ -442,10 +438,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
             Settings.UseSerial		= DEFAULT_USE_SERIAL;
             Settings.BaudRate		= DEFAULT_SERIAL_BAUD;
         }
-        if (P075_data) {
-            delete P075_data;
-            P075_data = nullptr;
-        }
+        clearPluginTaskData(event->TaskIndex);
         break;
     }
 
@@ -457,6 +450,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
 
 
     case PLUGIN_TEN_PER_SECOND: {
+      P075_data_struct* P075_data = static_cast<P075_data_struct*>(getPluginTaskData(event->TaskIndex));
       if (!P075_data) {
         break;
       }
@@ -605,8 +599,9 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
 }
 
 
-void sendCommand(const char *cmd, boolean SerialMode)
+void sendCommand(byte taskIndex, const char *cmd, boolean SerialMode)
 {
+  P075_data_struct* P075_data = static_cast<P075_data_struct*>(getPluginTaskData(taskIndex));
   if (!P075_data) return;
   if (P075_data->txPin < 0) {
       String log = F("NEXTION075 : Missing TxD Pin Number, aborted sendCommand");
@@ -625,7 +620,6 @@ void sendCommand(const char *cmd, boolean SerialMode)
           addLog(LOG_LEVEL_INFO, log);
       }
   }
-  return;
 }
 
 #endif // USES_P075
