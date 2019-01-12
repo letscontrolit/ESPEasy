@@ -17,7 +17,7 @@
 
 #define NUMBER_LEDS      60			//number of LED in the strip
 
-struct P070_data_struct {
+struct P070_data_struct : public PluginTaskData_base {
 
   P070_data_struct() {}
 
@@ -228,11 +228,7 @@ boolean Plugin_070(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_EXIT:
       {
-        if (P070_data) {
-          P070_data->reset();
-          delete P070_data;
-          P070_data = nullptr;
-        }
+        clearPluginTaskData(event->TaskIndex);
         success = true;
         break;
       }
@@ -240,10 +236,10 @@ boolean Plugin_070(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
       {
+        initPluginTaskData(event->TaskIndex, new P070_data_struct());
+        P070_data_struct* P070_data = static_cast<P070_data_struct*>(getPluginTaskData(event->TaskIndex));
         if (!P070_data) {
-          P070_data = new P070_data_struct;
-        } else {
-          P070_data->reset();
+          return success;
         }
         P070_data->init(event);
         P070_data->calculateMarks();
