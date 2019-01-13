@@ -84,6 +84,8 @@
 
 // Define globals before plugin sets to allow a personal override of the selected plugins
 #include "ESPEasy-Globals.h"
+// Must be included after all the defines, since it is using TASKS_MAX
+#include "_Plugin_Helper.h"
 #include "define_plugin_sets.h"
 // Plugin helper needs the defined controller sets, thus include after 'define_plugin_sets.h'
 #include "_CPlugin_Helper.h"
@@ -117,6 +119,7 @@ void setup()
   lowestFreeStack = getFreeStackWatermark();
   lowestRAM = FreeMem();
 
+  resetPluginTaskData();
   Plugin_id.resize(PLUGIN_MAX);
   Task_id_to_Plugin_id.resize(TASKS_MAX);
 
