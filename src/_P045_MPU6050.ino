@@ -310,7 +310,7 @@ boolean Plugin_045(byte function, struct EventStruct *event, String &string) {
       initPluginTaskData(event->TaskIndex, new P045_data_struct(PCONFIG(0)));
       P045_data_struct *P045_data =
           static_cast<P045_data_struct *>(getPluginTaskData(event->TaskIndex));
-      if (!P045_data) {
+      if (nullptr == P045_data) {
         return success;
       }
       PCONFIG(0) = P045_data->_devAddr;
@@ -327,7 +327,7 @@ boolean Plugin_045(byte function, struct EventStruct *event, String &string) {
     case PLUGIN_ONCE_A_SECOND: {
       P045_data_struct *P045_data =
           static_cast<P045_data_struct *>(getPluginTaskData(event->TaskIndex));
-      if (!P045_data) {
+      if (nullptr == P045_data) {
         break;
       }
 
@@ -357,7 +357,7 @@ boolean Plugin_045(byte function, struct EventStruct *event, String &string) {
     case PLUGIN_READ: {
       P045_data_struct *P045_data =
           static_cast<P045_data_struct *>(getPluginTaskData(event->TaskIndex));
-      if (!P045_data) {
+      if (nullptr == P045_data) {
         break;
       }
 

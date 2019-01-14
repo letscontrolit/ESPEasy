@@ -137,8 +137,6 @@ struct P070_data_struct : public PluginTaskData_base {
 };
 
 
-P070_data_struct* P070_data = nullptr;
-
 #define PLUGIN_070
 #define PLUGIN_ID_070         70
 #define PLUGIN_NAME_070       "Output - NeoPixel Ring Clock [TESTING]"
@@ -213,7 +211,8 @@ boolean Plugin_070(byte function, struct EventStruct *event, String& string)
         PCONFIG(2) = getFormItemInt(F("marks"));
         PCONFIG(3) = getFormItemInt(F("offset"));
         PCONFIG(4) = isFormItemChecked(F("thick_12_mark"));
-        if (P070_data) {
+        P070_data_struct* P070_data = static_cast<P070_data_struct*>(getPluginTaskData(event->TaskIndex));
+        if (nullptr != P070_data) {
           P070_data->display_enabled = PCONFIG(0);
           P070_data->brightness = PCONFIG(1);
           P070_data->brightness_hour_marks = PCONFIG(2);
@@ -238,7 +237,7 @@ boolean Plugin_070(byte function, struct EventStruct *event, String& string)
       {
         initPluginTaskData(event->TaskIndex, new P070_data_struct());
         P070_data_struct* P070_data = static_cast<P070_data_struct*>(getPluginTaskData(event->TaskIndex));
-        if (!P070_data) {
+        if (nullptr == P070_data) {
           return success;
         }
         P070_data->init(event);
@@ -264,7 +263,8 @@ boolean Plugin_070(byte function, struct EventStruct *event, String& string)
         String param2 = parseString(lowerString, 3);
         String param3 = parseString(lowerString, 4);
 
-        if (P070_data && command == F("clock")) {
+        P070_data_struct* P070_data = static_cast<P070_data_struct*>(getPluginTaskData(event->TaskIndex));
+        if (nullptr != P070_data && command == F("clock")) {
           int val_Mode;
           if (validIntFromString(param1, val_Mode)) {
             if (val_Mode > -1 && val_Mode < 2) {
@@ -306,7 +306,8 @@ boolean Plugin_070(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
       {
-        if (P070_data) {
+        P070_data_struct* P070_data = static_cast<P070_data_struct*>(getPluginTaskData(event->TaskIndex));
+        if (nullptr != P070_data) {
           UserVar[event->BaseVarIndex] = display_enabled;
           UserVar[event->BaseVarIndex + 1] = brightness;
           UserVar[event->BaseVarIndex + 2] = brightness_hour_marks;
