@@ -241,7 +241,7 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
             }
 
             Plugin_035_irSender->sendRaw(buf, idx, IrHz);
-            delete buf;
+            delete[] buf;
             buf = nullptr;
             //String line = "";
             //for (int i = 0; i < idx; i++)
