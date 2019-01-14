@@ -123,8 +123,8 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
             printWebString += IrBLen;
             printWebString += F("<BR>");
 
-            uint16_t buf[200];
-            uint16_t idx = 0;
+            uint16_t buf[250];  //The Raw Timings that we can buffer.
+            uint16_t idx = 0;	//If this goes above the buf.size then the esp will throw a 28 EXCCAUSE
             if (IrType.equals(F("raw"))) {
                 unsigned int c0 = 0; //count consecutives 0s
                 unsigned int c1 = 0; //count consecutives 1s
