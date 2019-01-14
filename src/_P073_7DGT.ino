@@ -267,7 +267,7 @@ boolean Plugin_073(byte function, struct EventStruct *event, String &string) {
       PCONFIG(2) = getFormItemInt(F("plugin_073_brightness"));
       P073_data_struct *P073_data =
           static_cast<P073_data_struct *>(getPluginTaskData(event->TaskIndex));
-      if (P073_data) {
+      if (nullptr != P073_data) {
         P073_data->pin1 = CONFIG_PIN1;
         P073_data->pin2 = CONFIG_PIN2;
         P073_data->pin3 = CONFIG_PIN3;
@@ -310,7 +310,7 @@ boolean Plugin_073(byte function, struct EventStruct *event, String &string) {
       initPluginTaskData(event->TaskIndex, new P073_data_struct());
       P073_data_struct *P073_data =
           static_cast<P073_data_struct *>(getPluginTaskData(event->TaskIndex));
-      if (!P073_data) {
+      if (nullptr == P073_data) {
         return success;
       }
       P073_data->pin1 = CONFIG_PIN1;
@@ -347,7 +347,7 @@ boolean Plugin_073(byte function, struct EventStruct *event, String &string) {
     case PLUGIN_ONCE_A_SECOND: {
       P073_data_struct *P073_data =
           static_cast<P073_data_struct *>(getPluginTaskData(event->TaskIndex));
-      if (!P073_data) {
+      if (nullptr == P073_data) {
         break;
       }
       if (P073_data->output == P073_DISP_MANUAL)
@@ -399,7 +399,7 @@ boolean Plugin_073(byte function, struct EventStruct *event, String &string) {
 bool p073_plugin_write(struct EventStruct *event, const String &string) {
   P073_data_struct *P073_data =
       static_cast<P073_data_struct *>(getPluginTaskData(event->TaskIndex));
-  if (!P073_data) {
+  if (nullptr == P073_data) {
     return false;
   }
 
@@ -469,7 +469,7 @@ bool p073_plugin_write(struct EventStruct *event, const String &string) {
 bool p073_plugin_write_7dn(struct EventStruct *event, const String &tmpStr) {
   P073_data_struct *P073_data =
       static_cast<P073_data_struct *>(getPluginTaskData(event->TaskIndex));
-  if (!P073_data) {
+  if (nullptr == P073_data) {
     return false;
   }
 
@@ -527,7 +527,7 @@ bool p073_plugin_write_7dn(struct EventStruct *event, const String &tmpStr) {
 bool p073_plugin_write_7dt(struct EventStruct *event, const String &tmpStr) {
   P073_data_struct *P073_data =
       static_cast<P073_data_struct *>(getPluginTaskData(event->TaskIndex));
-  if (!P073_data) {
+  if (nullptr == P073_data) {
     return false;
   }
   if (P073_data->output != P073_DISP_MANUAL) {
@@ -590,7 +590,7 @@ bool p073_plugin_write_7dt(struct EventStruct *event, const String &tmpStr) {
 bool p073_plugin_write_7dst(struct EventStruct *event, const String &string) {
   P073_data_struct *P073_data =
       static_cast<P073_data_struct *>(getPluginTaskData(event->TaskIndex));
-  if (!P073_data) {
+  if (nullptr == P073_data) {
     return false;
   }
 
@@ -630,7 +630,7 @@ bool p073_plugin_write_7dst(struct EventStruct *event, const String &string) {
 bool p073_plugin_write_7dsd(struct EventStruct *event, const String &string) {
   P073_data_struct *P073_data =
       static_cast<P073_data_struct *>(getPluginTaskData(event->TaskIndex));
-  if (!P073_data) {
+  if (nullptr == P073_data) {
     return false;
   }
 
@@ -668,7 +668,7 @@ bool p073_plugin_write_7dsd(struct EventStruct *event, const String &string) {
 bool p073_plugin_write_7dtext(struct EventStruct *event, const String &string) {
   P073_data_struct *P073_data =
       static_cast<P073_data_struct *>(getPluginTaskData(event->TaskIndex));
-  if (!P073_data) {
+  if (nullptr == P073_data) {
     return false;
   }
 
@@ -847,7 +847,7 @@ uint8_t tm1637_separator(uint8_t value, bool sep) {
 void tm1637_ShowTime6(struct EventStruct *event) {
   P073_data_struct *P073_data =
       static_cast<P073_data_struct *>(getPluginTaskData(event->TaskIndex));
-  if (!P073_data) {
+  if (nullptr == P073_data) {
     return;
   }
 
@@ -870,7 +870,7 @@ void tm1637_ShowTime6(struct EventStruct *event) {
 void tm1637_ShowDate6(struct EventStruct *event) {
   P073_data_struct *P073_data =
       static_cast<P073_data_struct *>(getPluginTaskData(event->TaskIndex));
-  if (!P073_data) {
+  if (nullptr == P073_data) {
     return;
   }
   uint8_t clk_pin = P073_data->pin1;
@@ -893,7 +893,7 @@ void tm1637_ShowDate6(struct EventStruct *event) {
 void tm1637_ShowTemp6(struct EventStruct *event, bool sep) {
   P073_data_struct *P073_data =
       static_cast<P073_data_struct *>(getPluginTaskData(event->TaskIndex));
-  if (!P073_data) {
+  if (nullptr == P073_data) {
     return;
   }
   uint8_t clk_pin = P073_data->pin1;
@@ -914,7 +914,7 @@ void tm1637_ShowTemp6(struct EventStruct *event, bool sep) {
 void tm1637_ShowTimeTemp4(struct EventStruct *event, bool sep, byte bufoffset) {
   P073_data_struct *P073_data =
       static_cast<P073_data_struct *>(getPluginTaskData(event->TaskIndex));
-  if (!P073_data) {
+  if (nullptr == P073_data) {
     return;
   }
   uint8_t clk_pin = P073_data->pin1;
@@ -933,7 +933,7 @@ void tm1637_ShowTimeTemp4(struct EventStruct *event, bool sep, byte bufoffset) {
 void tm1637_SwapDigitInBuffer(struct EventStruct *event, byte startPos) {
   P073_data_struct *P073_data =
       static_cast<P073_data_struct *>(getPluginTaskData(event->TaskIndex));
-  if (!P073_data) {
+  if (nullptr == P073_data) {
     return;
   }
   uint8_t p073_temp;
@@ -966,7 +966,7 @@ void tm1637_SwapDigitInBuffer(struct EventStruct *event, byte startPos) {
 void tm1637_ShowBuffer(struct EventStruct *event, byte firstPos, byte lastPos) {
   P073_data_struct *P073_data =
       static_cast<P073_data_struct *>(getPluginTaskData(event->TaskIndex));
-  if (!P073_data) {
+  if (nullptr == P073_data) {
     return;
   }
   uint8_t clk_pin = P073_data->pin1;
@@ -999,7 +999,7 @@ void max7219_spiTransfer(struct EventStruct *event, uint8_t din_pin,
                          volatile byte data) {
   P073_data_struct *P073_data =
       static_cast<P073_data_struct *>(getPluginTaskData(event->TaskIndex));
-  if (!P073_data) {
+  if (nullptr == P073_data) {
     return;
   }
 
@@ -1056,7 +1056,7 @@ void max7219_ShowTime(struct EventStruct *event, uint8_t din_pin,
                       uint8_t clk_pin, uint8_t cs_pin, bool sep) {
   P073_data_struct *P073_data =
       static_cast<P073_data_struct *>(getPluginTaskData(event->TaskIndex));
-  if (!P073_data) {
+  if (nullptr == P073_data) {
     return;
   }
 
@@ -1075,7 +1075,7 @@ void max7219_ShowTemp(struct EventStruct *event, uint8_t din_pin,
                       uint8_t clk_pin, uint8_t cs_pin) {
   P073_data_struct *P073_data =
       static_cast<P073_data_struct *>(getPluginTaskData(event->TaskIndex));
-  if (!P073_data) {
+  if (nullptr == P073_data) {
     return;
   }
 
@@ -1090,7 +1090,7 @@ void max7219_ShowDate(struct EventStruct *event, uint8_t din_pin,
                       uint8_t clk_pin, uint8_t cs_pin) {
   P073_data_struct *P073_data =
       static_cast<P073_data_struct *>(getPluginTaskData(event->TaskIndex));
-  if (!P073_data) {
+  if (nullptr == P073_data) {
     return;
   }
 
@@ -1104,7 +1104,7 @@ void max7219_ShowBuffer(struct EventStruct *event, uint8_t din_pin,
                         uint8_t clk_pin, uint8_t cs_pin) {
   P073_data_struct *P073_data =
       static_cast<P073_data_struct *>(getPluginTaskData(event->TaskIndex));
-  if (!P073_data) {
+  if (nullptr == P073_data) {
     return;
   }
 
