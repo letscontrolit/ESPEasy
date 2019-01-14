@@ -123,8 +123,14 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
             printWebString += IrBLen;
             printWebString += F("<BR>");
 
-            uint16_t buf[250];  //The Raw Timings that we can buffer.
-            uint16_t idx = 0;	//If this goes above the buf.size then the esp will throw a 28 EXCCAUSE
+            uint16_t idx = 0;  //If this goes above the buf.size then the esp will throw a 28 EXCCAUSE
+            uint16_t *buf;
+            buf =  new uint16_t[250]; //The Raw Timings that we can buffer.
+            if (buf == nullptr) { // error assigning memory.
+            success = false;
+            return success;
+            }
+            
             if (IrType.equals(F("raw"))) {
                 unsigned int c0 = 0; //count consecutives 0s
                 unsigned int c1 = 0; //count consecutives 1s
@@ -235,6 +241,8 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
             }
 
             Plugin_035_irSender->sendRaw(buf, idx, IrHz);
+            delete buf;
+            buf = nullptr;
             //String line = "";
             //for (int i = 0; i < idx; i++)
             //    line += uint64ToString(buf[i], 10) + ",";
