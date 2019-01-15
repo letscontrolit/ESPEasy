@@ -117,8 +117,8 @@ struct P044_data_struct : public PluginTaskData_base {
       case '.':
       case '!':
       case ' ':
-      case 92:
-      case 13:
+      case '\\':  // Single backslash, but escaped in C++
+      case '\r':
       case '\n':
       case '(':
       case ')':
@@ -267,19 +267,12 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
+        LoadTaskSettings(event->TaskIndex);
       	addFormNumericBox(F("TCP Port"), F("p044_port"), ExtraTaskSettings.TaskDevicePluginConfigLong[0]);
       	addFormNumericBox(F("Baud Rate"), F("p044_baud"), ExtraTaskSettings.TaskDevicePluginConfigLong[1]);
-      	addFormNumericBox(F("Data bits"), F("p044_data"), ExtraTaskSettings.TaskDevicePluginConfigLong[2]);
 
-        byte choice = ExtraTaskSettings.TaskDevicePluginConfigLong[3];
-        String options[3];
-        options[0] = F("No parity");
-        options[1] = F("Even");
-        options[2] = F("Odd");
-        int optionValues[3] = { 0, 2, 3 };
-        addFormSelector(F("Parity"), F("p044_parity"), 3, options, optionValues, choice);
-
-      	addFormNumericBox(F("Stop bits"), F("p044_stop"), ExtraTaskSettings.TaskDevicePluginConfigLong[4]);
+        byte serialConfChoice = serialHelper_convertOldSerialConfig(PCONFIG(1));
+        serialHelper_serialconfig_webformLoad(event, serialConfChoice);
 
         // FIXME TD-er: Why isn't this using the normal pin selection functions?
       	addFormPinSelect(F("Reset target after boot"), F("taskdevicepin1"), CONFIG_PIN1);
@@ -292,12 +285,11 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
+        LoadTaskSettings(event->TaskIndex);
         ExtraTaskSettings.TaskDevicePluginConfigLong[0] = getFormItemInt(F("p044_port"));
         ExtraTaskSettings.TaskDevicePluginConfigLong[1] = getFormItemInt(F("p044_baud"));
-        ExtraTaskSettings.TaskDevicePluginConfigLong[2] = getFormItemInt(F("p044_data"));
-        ExtraTaskSettings.TaskDevicePluginConfigLong[3] = getFormItemInt(F("p044_parity"));
-        ExtraTaskSettings.TaskDevicePluginConfigLong[4] = getFormItemInt(F("p044_stop"));
         PCONFIG(0) = getFormItemInt(F("p044_rxwait"));
+        PCONFIG(1) = serialHelper_serialconfig_webformSave();
 
         success = true;
         break;
@@ -315,22 +307,17 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
             break;
           }
 
-        #if defined(ESP8266)
-          byte serialconfig = 0x10;
-        #endif
-        #if defined(ESP32)
-          uint32_t serialconfig = 0x8000010;
-        #endif
-        serialconfig += ExtraTaskSettings.TaskDevicePluginConfigLong[3];
-        serialconfig += (ExtraTaskSettings.TaskDevicePluginConfigLong[2] - 5) << 2;
-        if (ExtraTaskSettings.TaskDevicePluginConfigLong[4] == 2)
-          serialconfig += 0x20;
-        #if defined(ESP8266)
-          Serial.begin(ExtraTaskSettings.TaskDevicePluginConfigLong[1], (SerialConfig)serialconfig);
-        #endif
-        #if defined(ESP32)
-          Serial.begin(ExtraTaskSettings.TaskDevicePluginConfigLong[1], serialconfig);
-        #endif
+    #if defined(ESP8266)
+         byte serialconfig = 0;
+    #elif defined(ESP32)
+         uint32_t serialconfig = 0x8000000;
+    #endif
+        serialconfig |= serialHelper_convertOldSerialConfig(PCONFIG(1));
+    #if defined(ESP8266)
+        Serial.begin(ExtraTaskSettings.TaskDevicePluginConfigLong[1], (SerialConfig)serialconfig);
+    #elif defined(ESP32)
+        Serial.begin(ExtraTaskSettings.TaskDevicePluginConfigLong[1], serialconfig);
+    #endif
 
         initPluginTaskData(event->TaskIndex, new P044_data_struct(ExtraTaskSettings.TaskDevicePluginConfigLong[0]));
         P044_data_struct *P044_data =

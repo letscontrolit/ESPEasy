@@ -37,9 +37,11 @@ struct P082_data_struct : public PluginTaskData_base {
   void reset() {
     if (gps != nullptr) {
       delete gps;
+      gps = nullptr;
     }
     if (P082_easySerial != nullptr) {
       delete P082_easySerial;
+      P082_easySerial = nullptr;
     }
   }
 
