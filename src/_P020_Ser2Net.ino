@@ -52,27 +52,16 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
+        LoadTaskSettings(event->TaskIndex);
       	addFormNumericBox(F("TCP Port"), F("p020_port"), ExtraTaskSettings.TaskDevicePluginConfigLong[0]);
       	addFormNumericBox(F("Baud Rate"), F("p020_baud"), ExtraTaskSettings.TaskDevicePluginConfigLong[1]);
-      	addFormNumericBox(F("Data bits"), F("p020_data"), ExtraTaskSettings.TaskDevicePluginConfigLong[2]);
 
-        byte choice = ExtraTaskSettings.TaskDevicePluginConfigLong[3];
-        String options[3];
-        options[0] = F("No parity");
-        options[1] = F("Even");
-        options[2] = F("Odd");
-        int optionValues[3];
-        optionValues[0] = 0;
-        optionValues[1] = 2;
-        optionValues[2] = 3;
-        addFormSelector(F("Parity"), F("p020_parity"), 3, options, optionValues, choice);
-
-      	addFormNumericBox(F("Stop bits"), F("p020_stop"), ExtraTaskSettings.TaskDevicePluginConfigLong[4]);
+        byte serialConfChoice = serialHelper_convertOldSerialConfig(PCONFIG(2));
+        serialHelper_serialconfig_webformLoad(event, serialConfChoice);
 
       	addFormPinSelect(F("Reset target after boot"), F("taskdevicepin1"), CONFIG_PIN1);
 
       	addFormNumericBox(F("RX Receive Timeout (mSec)"), F("p020_rxwait"), PCONFIG(0));
-
 
         byte choice2 = PCONFIG(1);
         String options2[3];
@@ -87,13 +76,12 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
+        LoadTaskSettings(event->TaskIndex);
         ExtraTaskSettings.TaskDevicePluginConfigLong[0] = getFormItemInt(F("p020_port"));
         ExtraTaskSettings.TaskDevicePluginConfigLong[1] = getFormItemInt(F("p020_baud"));
-        ExtraTaskSettings.TaskDevicePluginConfigLong[2] = getFormItemInt(F("p020_data"));
-        ExtraTaskSettings.TaskDevicePluginConfigLong[3] = getFormItemInt(F("p020_parity"));
-        ExtraTaskSettings.TaskDevicePluginConfigLong[4] = getFormItemInt(F("p020_stop"));
         PCONFIG(0) = getFormItemInt(F("p020_rxwait"));
         PCONFIG(1) = getFormItemInt(F("p020_events"));
+        PCONFIG(2) = serialHelper_serialconfig_webformSave();
         success = true;
         break;
       }
@@ -103,22 +91,17 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
         LoadTaskSettings(event->TaskIndex);
         if ((ExtraTaskSettings.TaskDevicePluginConfigLong[0] != 0) && (ExtraTaskSettings.TaskDevicePluginConfigLong[1] != 0))
         {
-          #if defined(ESP8266)
-            byte serialconfig = 0x10;
-          #endif
-          #if defined(ESP32)
-            uint32_t serialconfig = 0x8000010;
-          #endif
-          serialconfig += ExtraTaskSettings.TaskDevicePluginConfigLong[3];
-          serialconfig += (ExtraTaskSettings.TaskDevicePluginConfigLong[2] - 5) << 2;
-          if (ExtraTaskSettings.TaskDevicePluginConfigLong[4] == 2)
-            serialconfig += 0x20;
-          #if defined(ESP8266)
-            Serial.begin(ExtraTaskSettings.TaskDevicePluginConfigLong[1], (SerialConfig)serialconfig);
-          #endif
-          #if defined(ESP32)
-            Serial.begin(ExtraTaskSettings.TaskDevicePluginConfigLong[1], serialconfig);
-          #endif
+      #if defined(ESP8266)
+           byte serialconfig = 0;
+      #elif defined(ESP32)
+           uint32_t serialconfig = 0x8000000;
+      #endif
+          serialconfig |= serialHelper_convertOldSerialConfig(PCONFIG(2));
+      #if defined(ESP8266)
+          Serial.begin(ExtraTaskSettings.TaskDevicePluginConfigLong[1], (SerialConfig)serialconfig);
+      #elif defined(ESP32)
+          Serial.begin(ExtraTaskSettings.TaskDevicePluginConfigLong[1], serialconfig);
+      #endif
           ser2netServer = new WiFiServer(ExtraTaskSettings.TaskDevicePluginConfigLong[0]);
           ser2netServer->begin();
 
