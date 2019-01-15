@@ -182,7 +182,7 @@ boolean Plugin_068(byte function, struct EventStruct *event, String& string)
 		case PLUGIN_READ:
 		{
 			SHT3X* sht3x = static_cast<SHT3X*>(getPluginTaskData(event->TaskIndex));
-			if (!sht3x) {
+			if (nullptr == sht3x) {
 			  return success;
 			}
 

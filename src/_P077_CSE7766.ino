@@ -243,7 +243,6 @@ boolean Plugin_077(byte function, struct EventStruct *event, String &string) {
 
   case PLUGIN_INIT: {
     initPluginTaskData(event->TaskIndex, new P077_data_struct());
-    P077_data_struct* P077_data = static_cast<P077_data_struct*>(getPluginTaskData(event->TaskIndex));
     if (PCONFIG(0) == 0) PCONFIG(0) = HLW_UREF_PULSE;
     if (PCONFIG(1) == 0) PCONFIG(1) = HLW_IREF_PULSE;
     if (PCONFIG(2) == 0) PCONFIG(2) = HLW_PREF_PULSE;
@@ -299,7 +298,7 @@ boolean Plugin_077(byte function, struct EventStruct *event, String &string) {
 
   case PLUGIN_SERIAL_IN: {
     P077_data_struct* P077_data = static_cast<P077_data_struct*>(getPluginTaskData(event->TaskIndex));
-    if (P077_data) {
+    if (nullptr != P077_data) {
       success = true;
       /* ONLINE CHECKSUMMING by Bartłomiej Zimoń */
       if (P077_data->processSerialData()) {
@@ -377,7 +376,7 @@ boolean Plugin_077(byte function, struct EventStruct *event, String &string) {
 
 bool CseReceived(struct EventStruct *event) {
   P077_data_struct* P077_data = static_cast<P077_data_struct*>(getPluginTaskData(event->TaskIndex));
-  if (!P077_data) {
+  if (nullptr == P077_data) {
     return false;
   }
   if (!P077_data->processCseReceived(event)) {

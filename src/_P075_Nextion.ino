@@ -189,7 +189,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
       addFormSubHeader("");                          // Blank line, vertical space.
       addFormHeader(F("Nextion Command Statements (Optional)"));
       P075_data_struct* P075_data = static_cast<P075_data_struct*>(getPluginTaskData(event->TaskIndex));
-      if (P075_data) {
+      if (nullptr != P075_data) {
         P075_data->loadDisplayLines(event->TaskIndex);
         for (byte varNr = 0; varNr < P75_Nlines; varNr++) {
           addFormTextBox(String(F("Line ")) + (varNr + 1), String(F("p075_template")) + (varNr + 1), P075_data->displayLines[varNr], P75_Nchars-1);
@@ -237,7 +237,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
         PCONFIG(2) = isFormItemChecked(F("IncludeValues"));
         SaveCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
         P075_data_struct* P075_data = static_cast<P075_data_struct*>(getPluginTaskData(event->TaskIndex));
-        if (P075_data) {
+        if (nullptr != P075_data) {
           P075_data->loadDisplayLines(event->TaskIndex);
         }
         success = true;
@@ -294,7 +294,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
         }
         initPluginTaskData(event->TaskIndex, new P075_data_struct(rxPin, txPin));
         P075_data_struct* P075_data = static_cast<P075_data_struct*>(getPluginTaskData(event->TaskIndex));
-        if (P075_data) {
+        if (nullptr != P075_data) {
           P075_data->loadDisplayLines(event->TaskIndex);
         }
       }
@@ -305,7 +305,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ: {
       P075_data_struct* P075_data = static_cast<P075_data_struct*>(getPluginTaskData(event->TaskIndex));
-      if (P075_data) {
+      if (nullptr != P075_data) {
         int RssiIndex;
         String newString;
         String UcTmpString;
@@ -451,7 +451,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_TEN_PER_SECOND: {
       P075_data_struct* P075_data = static_cast<P075_data_struct*>(getPluginTaskData(event->TaskIndex));
-      if (!P075_data) {
+      if (nullptr == P075_data) {
         break;
       }
       uint16_t i;

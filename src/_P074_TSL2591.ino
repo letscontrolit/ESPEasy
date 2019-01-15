@@ -101,7 +101,7 @@ boolean Plugin_074(byte function, struct EventStruct *event, String &string) {
                          TSL2591_ADDR); // Only for display I2C address
       //        P074_data_struct* P074_data =
       //        static_cast<P074_data_struct*>(getPluginTaskData(event->TaskIndex));
-      //        if (P074_data) {
+      //        if (nullptr != P074_data) {
 
       //          P074_data->tsl.setTiming(TSL2591_INTEGRATIONTIME_100MS);  //
       //          shortest integration time (bright light)
@@ -145,7 +145,7 @@ boolean Plugin_074(byte function, struct EventStruct *event, String &string) {
       initPluginTaskData(event->TaskIndex, new P074_data_struct());
       P074_data_struct *P074_data =
           static_cast<P074_data_struct *>(getPluginTaskData(event->TaskIndex));
-      if (!P074_data) {
+      if (nullptr == P074_data) {
         return success;
       }
       if (P074_data->tsl.begin()) {
@@ -167,7 +167,7 @@ boolean Plugin_074(byte function, struct EventStruct *event, String &string) {
             case TSL2591_GAIN_HIGH: log += F("428x (High)");  break;
             case TSL2591_GAIN_MAX:  log += F("9876x (Max)");  break;
           }
-          addLog(LOG_LEVEL_INFO, log);          
+          addLog(LOG_LEVEL_INFO, log);
         }
       } else {
         clearPluginTaskData(event->TaskIndex);
@@ -182,7 +182,7 @@ boolean Plugin_074(byte function, struct EventStruct *event, String &string) {
     case PLUGIN_READ: {
       P074_data_struct *P074_data =
           static_cast<P074_data_struct *>(getPluginTaskData(event->TaskIndex));
-      if (P074_data) {
+      if (nullptr != P074_data) {
         // Simple data read example. Just read the infrared, fullspecrtrum diode
         // or 'visible' (difference between the two) channels.
         // This can take 100-600 milliseconds! Uncomment whichever of the
