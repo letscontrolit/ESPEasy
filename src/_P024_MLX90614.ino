@@ -71,7 +71,7 @@ boolean Plugin_024(byte function, struct EventStruct *event, String& string)
       {
         #define MLX90614_OPTION 2
 
-        byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+        byte choice = PCONFIG(0);
         String options[MLX90614_OPTION];
         int optionValues[MLX90614_OPTION];
         optionValues[0] = (0x07);
@@ -86,7 +86,7 @@ boolean Plugin_024(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("p024_option"));
+        PCONFIG(0) = getFormItemInt(F("p024_option"));
         Plugin_024_init = false; // Force device setup next time
         success = true;
         break;
@@ -109,9 +109,9 @@ boolean Plugin_024(byte function, struct EventStruct *event, String& string)
   //      noInterrupts();
         // int value;
         // value = 0;
-        byte unit = Settings.TaskDevicePort[event->TaskIndex];
+        byte unit = CONFIG_PORT;
         uint8_t address = 0x5A + unit;
-        UserVar[event->BaseVarIndex] = (float) readTemp024(address, Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
+        UserVar[event->BaseVarIndex] = (float) readTemp024(address, PCONFIG(0));
         String log = F("MLX90614  : Temperature: ");
         log += UserVar[event->BaseVarIndex];
 //        send(msgObjTemp024->set(UserVar[event->BaseVarIndex], 1)); // Mysensors

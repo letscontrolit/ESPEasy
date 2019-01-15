@@ -40,10 +40,10 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
   uint16_t range = PCA9685_MAX_PWM;
   if(event != NULL && event->TaskIndex >- 1)
   {
-    address = Settings.TaskDevicePort[event->TaskIndex];
-    mode2 = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
-    freq = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
-    range = Settings.TaskDevicePluginConfig[event->TaskIndex][2];
+    address = CONFIG_PORT;
+    mode2 = PCONFIG(0);
+    freq = PCONFIG(1);
+    range = PCONFIG(2);
   }
   if (freq == 0)
     freq = PCA9685_MAX_FREQUENCY;
@@ -120,16 +120,16 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        Settings.TaskDevicePort[event->TaskIndex] = getFormItemInt(F("i2c_addr"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("p022_mode2"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("p022_freq"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("p022_range"));
-        if (!IS_INIT(initializeState, (Settings.TaskDevicePort[event->TaskIndex] - PCA9685_ADDRESS)))
+        CONFIG_PORT = getFormItemInt(F("i2c_addr"));
+        PCONFIG(0) = getFormItemInt(F("p022_mode2"));
+        PCONFIG(1) = getFormItemInt(F("p022_freq"));
+        PCONFIG(2) = getFormItemInt(F("p022_range"));
+        if (!IS_INIT(initializeState, (CONFIG_PORT - PCA9685_ADDRESS)))
         {
-          if (Settings.TaskDevicePluginConfig[event->TaskIndex][0] != mode2)
-            Plugin_022_writeRegister(address, PCA9685_MODE2, Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
-          if (Settings.TaskDevicePluginConfig[event->TaskIndex][1] != freq)
-            Plugin_022_Frequency(address, Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
+          if (PCONFIG(0) != mode2)
+            Plugin_022_writeRegister(address, PCA9685_MODE2, PCONFIG(0));
+          if (PCONFIG(1) != freq)
+            Plugin_022_Frequency(address, PCONFIG(1));
         }
         success = true;
         break;

@@ -35,12 +35,6 @@
 
 #include <ESPeasySerial.h>
 
-#ifndef CONFIG
-#define CONFIG(n) (Settings.TaskDevicePluginConfig[event->TaskIndex][n])
-#endif
-#ifndef PIN
-#define PIN(n) (Settings.TaskDevicePin[n][event->TaskIndex])
-#endif
 
 ESPeasySerial* P065_easySerial = NULL;
 
@@ -82,7 +76,7 @@ boolean Plugin_065(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-          addFormNumericBox(F("Volume"), F("volume"), CONFIG(0), 1, 30);
+          addFormNumericBox(F("Volume"), F("volume"), PCONFIG(0), 1, 30);
 
           success = true;
           break;
@@ -90,7 +84,7 @@ boolean Plugin_065(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        CONFIG(0) = getFormItemInt(F("volume"));
+        PCONFIG(0) = getFormItemInt(F("volume"));
 
         success = true;
         break;
@@ -106,11 +100,11 @@ boolean Plugin_065(byte function, struct EventStruct *event, String& string)
         #pragma GCC diagnostic pop
 
 
-        P065_easySerial = new ESPeasySerial(-1, PIN(0));   // no RX, only TX
+        P065_easySerial = new ESPeasySerial(-1, CONFIG_PIN1);   // no RX, only TX
 
         P065_easySerial->begin(9600);
 
-        Plugin_065_SetVol(CONFIG(0));   // set default volume
+        Plugin_065_SetVol(PCONFIG(0));   // set default volume
 
         success = true;
         break;
@@ -154,7 +148,7 @@ boolean Plugin_065(byte function, struct EventStruct *event, String& string)
 
           int8_t vol = param.toInt();
           if (vol == 0) vol = 30;
-          CONFIG(0) = vol;
+          PCONFIG(0) = vol;
           Plugin_065_SetVol(vol);
           log += vol;
 

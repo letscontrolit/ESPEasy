@@ -46,7 +46,7 @@ boolean Plugin_011(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+        byte choice = PCONFIG(0);
         String options[2] = { F("Digital"), F("Analog") };
         addFormSelector(F("Port Type"), F("p011"), 2, options, NULL, choice);
 
@@ -56,14 +56,14 @@ boolean Plugin_011(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("p011"));
+        PCONFIG(0) = getFormItemInt(F("p011"));
         success = true;
         break;
       }
 
     case PLUGIN_READ:
       {
-        UserVar[event->BaseVarIndex] = Plugin_011_Read(Settings.TaskDevicePluginConfig[event->TaskIndex][0], Settings.TaskDevicePort[event->TaskIndex]);
+        UserVar[event->BaseVarIndex] = Plugin_011_Read(PCONFIG(0), CONFIG_PORT);
         String log = F("PME  : PortValue: ");
         log += UserVar[event->BaseVarIndex];
         addLog(LOG_LEVEL_INFO, log);

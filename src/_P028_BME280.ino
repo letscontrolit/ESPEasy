@@ -4,7 +4,6 @@
 //#######################################################################################################
 
 //#include <math.h>
-#include <Arduino.h>
 #include <map>
 
 #define PLUGIN_028
@@ -199,7 +198,7 @@ std::map<uint8_t, P028_sensordata> P028_sensors;
 int Plugin_28_i2c_addresses[2] = { 0x76, 0x77 };
 
 uint8_t Plugin_028_i2c_addr(struct EventStruct *event) {
-  uint8_t i2cAddress = (uint8_t)Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+  uint8_t i2cAddress = static_cast<uint8_t>(PCONFIG(0));
   if (i2cAddress != Plugin_28_i2c_addresses[0] && i2cAddress != Plugin_28_i2c_addresses[1]) {
     // Set to default address
     i2cAddress = Plugin_28_i2c_addresses[0];
@@ -258,10 +257,10 @@ boolean Plugin_028(byte function, struct EventStruct *event, String& string)
         }
         addFormNote(F("SDO Low=0x76, High=0x77"));
 
-        addFormNumericBox(F("Altitude"), F("p028_bme280_elev"), Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
+        addFormNumericBox(F("Altitude"), F("p028_bme280_elev"), PCONFIG(1));
         addUnit(F("m"));
 
-        addFormNumericBox(F("Temperature offset"), F("p028_bme280_tempoffset"), Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
+        addFormNumericBox(F("Temperature offset"), F("p028_bme280_tempoffset"), PCONFIG(2));
         addUnit(F("x 0.1C"));
         String offsetNote = F("Offset in units of 0.1 degree Celcius");
         if (sensor.hasHumidity()) {
@@ -277,16 +276,16 @@ boolean Plugin_028(byte function, struct EventStruct *event, String& string)
       {
         const uint8_t i2cAddress = getFormItemInt(F("p028_bme280_i2c"));
         Plugin_028_check(i2cAddress); // Check id device is present
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = i2cAddress;
-        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("p028_bme280_elev"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("p028_bme280_tempoffset"));
+        PCONFIG(0) = i2cAddress;
+        PCONFIG(1) = getFormItemInt(F("p028_bme280_elev"));
+        PCONFIG(2) = getFormItemInt(F("p028_bme280_tempoffset"));
         success = true;
         break;
       }
     case PLUGIN_ONCE_A_SECOND:
       {
         const uint8_t i2cAddress = Plugin_028_i2c_addr(event);
-        const float tempOffset = Settings.TaskDevicePluginConfig[event->TaskIndex][2] / 10.0;
+        const float tempOffset = PCONFIG(2) / 10.0;
         if (Plugin_028_update_measurements(i2cAddress, tempOffset, event->TaskIndex)) {
           // Update was succesfull, schedule a read.
           schedule_task_device_timer(event->TaskIndex, millis() + 10);
@@ -309,7 +308,7 @@ boolean Plugin_028(byte function, struct EventStruct *event, String& string)
         }
         UserVar[event->BaseVarIndex] = sensor.last_temp_val;
         UserVar[event->BaseVarIndex + 1] = sensor.last_hum_val;
-        const int elev = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
+        const int elev = PCONFIG(1);
         if (elev) {
            UserVar[event->BaseVarIndex + 2] = Plugin_028_pressureElevation(sensor.last_press_val, elev);
         } else {

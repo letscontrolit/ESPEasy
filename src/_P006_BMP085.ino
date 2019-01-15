@@ -50,14 +50,14 @@ boolean Plugin_006(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-      	addFormNumericBox(F("Altitude [m]"), F("_p006_bmp085_elev"), Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
+      	addFormNumericBox(F("Altitude [m]"), F("_p006_bmp085_elev"), PCONFIG(1));
         success = true;
         break;
       }
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("_p006_bmp085_elev"));
+        PCONFIG(1) = getFormItemInt(F("_p006_bmp085_elev"));
         success = true;
         break;
       }
@@ -73,7 +73,7 @@ boolean Plugin_006(byte function, struct EventStruct *event, String& string)
         if (Plugin_006_init)
         {
           UserVar[event->BaseVarIndex] = Plugin_006_bmp085_readTemperature();
-          int elev = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
+          int elev = PCONFIG(1);
           if (elev)
           {
              UserVar[event->BaseVarIndex + 1] = Plugin_006_pressureElevation((float)Plugin_006_bmp085_readPressure() / 100, elev);

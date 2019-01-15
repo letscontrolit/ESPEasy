@@ -70,12 +70,12 @@ boolean Plugin_032(byte function, struct EventStruct *event, String& string)
       }
     case PLUGIN_WEBFORM_LOAD:
       {
-        byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+        byte choice = PCONFIG(0);
         /*String options[2] = { F("0x77 - default I2C address"), F("0x76 - alternate I2C address") };*/
         int optionValues[2] = { 0x77, 0x76 };
         addFormSelectorI2C(F("p032_ms5611_i2c"), 2, optionValues, choice);
 
-        addFormNumericBox(F("Altitude [m]"), F("p032_ms5611_elev"), Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
+        addFormNumericBox(F("Altitude [m]"), F("p032_ms5611_elev"), PCONFIG(1));
 
         success = true;
         break;
@@ -83,8 +83,8 @@ boolean Plugin_032(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("p032_ms5611_i2c"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("p032_ms5611_elev"));
+        PCONFIG(0) = getFormItemInt(F("p032_ms5611_i2c"));
+        PCONFIG(1) = getFormItemInt(F("p032_ms5611_elev"));
         success = true;
         break;
       }
@@ -93,7 +93,7 @@ boolean Plugin_032(byte function, struct EventStruct *event, String& string)
       {
         if (!Plugin_032_init)
         {
-          Plugin_032_init = Plugin_032_begin(Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
+          Plugin_032_init = Plugin_032_begin(PCONFIG(0));
         }
 
         if (Plugin_032_init) {
@@ -101,7 +101,7 @@ boolean Plugin_032(byte function, struct EventStruct *event, String& string)
           Plugin_032_readout();
 
           UserVar[event->BaseVarIndex] = ms5611_temperature / 100;
-          int elev = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
+          int elev = PCONFIG(1);
           if (elev)
           {
              UserVar[event->BaseVarIndex + 1] = Plugin_032_pressureElevation(ms5611_pressure, elev);

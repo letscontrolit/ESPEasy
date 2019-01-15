@@ -81,9 +81,9 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
       	addFormNumericBox(F("Stop bits"), F("p044_stop"), ExtraTaskSettings.TaskDevicePluginConfigLong[4]);
 
         // FIXME TD-er: Why isn't this using the normal pin selection functions?
-      	addFormPinSelect(F("Reset target after boot"), F("taskdevicepin1"), Settings.TaskDevicePin1[event->TaskIndex]);
+      	addFormPinSelect(F("Reset target after boot"), F("taskdevicepin1"), CONFIG_PIN1);
 
-      	addFormNumericBox(F("RX Receive Timeout (mSec)"), F("p044_rxwait"), Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
+      	addFormNumericBox(F("RX Receive Timeout (mSec)"), F("p044_rxwait"), PCONFIG(0));
 
         success = true;
         break;
@@ -96,7 +96,7 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
         ExtraTaskSettings.TaskDevicePluginConfigLong[2] = getFormItemInt(F("p044_data"));
         ExtraTaskSettings.TaskDevicePluginConfigLong[3] = getFormItemInt(F("p044_parity"));
         ExtraTaskSettings.TaskDevicePluginConfigLong[4] = getFormItemInt(F("p044_stop"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("p044_rxwait"));
+        PCONFIG(0) = getFormItemInt(F("p044_rxwait"));
 
         success = true;
         break;
@@ -137,13 +137,13 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
           if (!Plugin_044_serial_buf)
             Plugin_044_serial_buf = (char *)malloc(P044_BUFFER_SIZE);
 
-          if (Settings.TaskDevicePin1[event->TaskIndex] != -1)
+          if (CONFIG_PIN1 != -1)
           {
-            pinMode(Settings.TaskDevicePin1[event->TaskIndex], OUTPUT);
-            digitalWrite(Settings.TaskDevicePin1[event->TaskIndex], LOW);
+            pinMode(CONFIG_PIN1, OUTPUT);
+            digitalWrite(CONFIG_PIN1, LOW);
             delay(500);
-            digitalWrite(Settings.TaskDevicePin1[event->TaskIndex], HIGH);
-            pinMode(Settings.TaskDevicePin1[event->TaskIndex], INPUT_PULLUP);
+            digitalWrite(CONFIG_PIN1, HIGH);
+            pinMode(CONFIG_PIN1, INPUT_PULLUP);
           }
 
           Plugin_044_init = true;
@@ -236,7 +236,7 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
         {
           if (P1GatewayClient.connected())
           {
-            int RXWait = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+            int RXWait = PCONFIG(0);
             if (RXWait == 0)
               RXWait = 1;
             int timeOut = RXWait;

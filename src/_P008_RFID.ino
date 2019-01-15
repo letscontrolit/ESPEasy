@@ -62,11 +62,11 @@ boolean Plugin_008(byte function, struct EventStruct *event, String& string)
     case PLUGIN_INIT:
       {
         Plugin_008_init = true;
-        Plugin_008_WiegandSize = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
-        pinMode(Settings.TaskDevicePin1[event->TaskIndex], INPUT_PULLUP);
-        pinMode(Settings.TaskDevicePin2[event->TaskIndex], INPUT_PULLUP);
-        attachInterrupt(Settings.TaskDevicePin1[event->TaskIndex], Plugin_008_interrupt1, FALLING);
-        attachInterrupt(Settings.TaskDevicePin2[event->TaskIndex], Plugin_008_interrupt2, FALLING);
+        Plugin_008_WiegandSize = PCONFIG(0);
+        pinMode(CONFIG_PIN1, INPUT_PULLUP);
+        pinMode(CONFIG_PIN2, INPUT_PULLUP);
+        attachInterrupt(CONFIG_PIN1, Plugin_008_interrupt1, FALLING);
+        attachInterrupt(CONFIG_PIN2, Plugin_008_interrupt2, FALLING);
         success = true;
         break;
       }
@@ -130,7 +130,7 @@ boolean Plugin_008(byte function, struct EventStruct *event, String& string)
       }
       case PLUGIN_WEBFORM_LOAD:
         {
-          byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+          byte choice = PCONFIG(0);
           String options[2];
           options[0] = F("26 Bits");
           options[1] = F("34 Bits");
@@ -145,7 +145,7 @@ boolean Plugin_008(byte function, struct EventStruct *event, String& string)
       case PLUGIN_WEBFORM_SAVE:
         {
           String plugin1 = WebServer.arg(F("p008_type"));
-          Settings.TaskDevicePluginConfig[event->TaskIndex][0] = plugin1.toInt();
+          PCONFIG(0) = plugin1.toInt();
           success = true;
           break;
         }
