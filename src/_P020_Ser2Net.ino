@@ -69,12 +69,12 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
 
       	addFormNumericBox(F("Stop bits"), F("p020_stop"), ExtraTaskSettings.TaskDevicePluginConfigLong[4]);
 
-      	addFormPinSelect(F("Reset target after boot"), F("taskdevicepin1"), Settings.TaskDevicePin1[event->TaskIndex]);
+      	addFormPinSelect(F("Reset target after boot"), F("taskdevicepin1"), CONFIG_PIN1);
 
-      	addFormNumericBox(F("RX Receive Timeout (mSec)"), F("p020_rxwait"), Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
+      	addFormNumericBox(F("RX Receive Timeout (mSec)"), F("p020_rxwait"), PCONFIG(0));
 
 
-        byte choice2 = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
+        byte choice2 = PCONFIG(1);
         String options2[3];
         options2[0] = F("None");
         options2[1] = F("Generic");
@@ -92,8 +92,8 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
         ExtraTaskSettings.TaskDevicePluginConfigLong[2] = getFormItemInt(F("p020_data"));
         ExtraTaskSettings.TaskDevicePluginConfigLong[3] = getFormItemInt(F("p020_parity"));
         ExtraTaskSettings.TaskDevicePluginConfigLong[4] = getFormItemInt(F("p020_stop"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("p020_rxwait"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("p020_events"));
+        PCONFIG(0) = getFormItemInt(F("p020_rxwait"));
+        PCONFIG(1) = getFormItemInt(F("p020_events"));
         success = true;
         break;
       }
@@ -122,18 +122,18 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
           ser2netServer = new WiFiServer(ExtraTaskSettings.TaskDevicePluginConfigLong[0]);
           ser2netServer->begin();
 
-          if (Settings.TaskDevicePin1[event->TaskIndex] != -1)
+          if (CONFIG_PIN1 != -1)
           {
-            pinMode(Settings.TaskDevicePin1[event->TaskIndex], OUTPUT);
-            digitalWrite(Settings.TaskDevicePin1[event->TaskIndex], LOW);
+            pinMode(CONFIG_PIN1, OUTPUT);
+            digitalWrite(CONFIG_PIN1, LOW);
             delay(500);
-            digitalWrite(Settings.TaskDevicePin1[event->TaskIndex], HIGH);
-            pinMode(Settings.TaskDevicePin1[event->TaskIndex], INPUT_PULLUP);
+            digitalWrite(CONFIG_PIN1, HIGH);
+            pinMode(CONFIG_PIN1, INPUT_PULLUP);
           }
 
           Plugin_020_init = true;
         }
-        Plugin_020_SerialProcessing = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
+        Plugin_020_SerialProcessing = PCONFIG(1);
         success = true;
         break;
       }
@@ -198,7 +198,7 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
         if (Plugin_020_init)
         {
         uint8_t serial_buf[P020_BUFFER_SIZE];
-        int RXWait = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+        int RXWait = PCONFIG(0);
         if (RXWait == 0)
           RXWait = 1;
         int timeOut = RXWait;

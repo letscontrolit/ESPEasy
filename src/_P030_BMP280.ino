@@ -101,13 +101,13 @@ boolean Plugin_030(byte function, struct EventStruct *event, String& string)
       }
     case PLUGIN_WEBFORM_LOAD:
       {
-        byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+        byte choice = PCONFIG(0);
         /*String options[2] = { F("0x76 - default settings (SDO Low)"), F("0x77 - alternate settings (SDO HIGH)") };*/
         int optionValues[2] = { 0x76, 0x77 };
         addFormSelectorI2C(F("p030_bmp280_i2c"), 2, optionValues, choice);
         addFormNote(F("SDO Low=0x76, High=0x77"));
 
-        addFormNumericBox(F("Altitude"), F("p030_bmp280_elev"), Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
+        addFormNumericBox(F("Altitude"), F("p030_bmp280_elev"), PCONFIG(1));
         addUnit(F("m"));
 
         success = true;
@@ -116,28 +116,28 @@ boolean Plugin_030(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("p030_bmp280_i2c"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("p030_bmp280_elev"));
+        PCONFIG(0) = getFormItemInt(F("p030_bmp280_i2c"));
+        PCONFIG(1) = getFormItemInt(F("p030_bmp280_elev"));
         success = true;
         break;
       }
 
     case PLUGIN_READ:
       {
-        uint8_t idx = Settings.TaskDevicePluginConfig[event->TaskIndex][0] & 0x1; //Addresses are 0x76 and 0x77 so we may use it this way
-        Plugin_030_init[idx] &= Plugin_030_check(Settings.TaskDevicePluginConfig[event->TaskIndex][0]); // Check id device is present
+        uint8_t idx = PCONFIG(0) & 0x1; //Addresses are 0x76 and 0x77 so we may use it this way
+        Plugin_030_init[idx] &= Plugin_030_check(PCONFIG(0)); // Check id device is present
         Plugin_030_init[idx] &=  (I2C_read8_reg(bmp280_i2caddr, BMP280_REGISTER_CONTROL) == BMP280_CONTROL_SETTING); // Check if the coefficients are still valid
 
         if (!Plugin_030_init[idx])
         {
-          Plugin_030_init[idx] = Plugin_030_begin(Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
+          Plugin_030_init[idx] = Plugin_030_begin(PCONFIG(0));
           delay(65); // Ultra high resolution for BMP280 is 43.2 ms, add some extra time
         }
 
         if (Plugin_030_init[idx])
         {
           UserVar[event->BaseVarIndex] = Plugin_030_readTemperature(idx);
-          int elev = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
+          int elev = PCONFIG(1);
           if (elev)
           {
              UserVar[event->BaseVarIndex + 1] = Plugin_030_pressureElevation((float)Plugin_030_readPressure(idx) / 100, elev);

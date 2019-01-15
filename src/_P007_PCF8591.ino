@@ -46,8 +46,8 @@ boolean Plugin_007(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
       {
-        byte unit = (Settings.TaskDevicePort[event->TaskIndex] - 1) / 4;
-        byte port = Settings.TaskDevicePort[event->TaskIndex] - (unit * 4);
+        byte unit = (CONFIG_PORT - 1) / 4;
+        byte port = CONFIG_PORT - (unit * 4);
         uint8_t address = 0x48 + unit;
 
         // get the current pin value

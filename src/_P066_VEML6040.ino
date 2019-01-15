@@ -24,10 +24,6 @@
 // #include <*.h>   // no include needed
 #include <math.h>   // no include needed
 
-#ifndef CONFIG
-#define CONFIG(n) (Settings.TaskDevicePluginConfig[event->TaskIndex][n])
-#endif
-
 
 boolean Plugin_066(byte function, struct EventStruct *event, String& string)
 {
@@ -73,7 +69,7 @@ boolean Plugin_066(byte function, struct EventStruct *event, String& string)
         addFormSelectorI2C(F("i2c_addr"), 1, optionValues, VEML6040_ADDR);   //Only for display I2C address
 
         String optionsMode[6] = { F("40ms (16496)"), F("80ms (8248)"), F("160ms (4124)"), F("320ms (2062)"), F("640ms (1031)"), F("1280ms (515)") };
-        addFormSelector(F("Integration Time (Max Lux)"), F("itime"), 6, optionsMode, NULL, CONFIG(1));
+        addFormSelector(F("Integration Time (Max Lux)"), F("itime"), 6, optionsMode, NULL, PCONFIG(1));
 
         String optionsVarMap[6] = {
           F("R, G, B, W"),
@@ -82,7 +78,7 @@ boolean Plugin_066(byte function, struct EventStruct *event, String& string)
           F("R, G, B, Color Temperature [K]"),
           F("R, G, B, Ambient Light [Lux]"),
           F("Color Temperature [K], Ambient Light [Lux], Y, W") };
-        addFormSelector(F("Value Mapping"), F("map"), 6, optionsVarMap, NULL, CONFIG(2));
+        addFormSelector(F("Value Mapping"), F("map"), 6, optionsVarMap, NULL, PCONFIG(2));
 
         success = true;
         break;
@@ -90,9 +86,9 @@ boolean Plugin_066(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        //CONFIG(0) = getFormItemInt(F("i2c_addr"));
-        CONFIG(1) = getFormItemInt(F("itime"));
-        CONFIG(2) = getFormItemInt(F("map"));
+        //PCONFIG(0) = getFormItemInt(F("i2c_addr"));
+        PCONFIG(1) = getFormItemInt(F("itime"));
+        PCONFIG(2) = getFormItemInt(F("map"));
 
         success = true;
         break;
@@ -100,7 +96,7 @@ boolean Plugin_066(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
       {
-        VEML6040_Init(CONFIG(1));
+        VEML6040_Init(PCONFIG(1));
 
         success = true;
         break;
@@ -115,7 +111,7 @@ boolean Plugin_066(byte function, struct EventStruct *event, String& string)
         B = VEML6040_GetValue(0x0A);
         W = VEML6040_GetValue(0x0B);
 
-        switch (CONFIG(2))
+        switch (PCONFIG(2))
         {
           default:
           case 0:
@@ -155,13 +151,13 @@ boolean Plugin_066(byte function, struct EventStruct *event, String& string)
             UserVar[event->BaseVarIndex + 0] = R;
             UserVar[event->BaseVarIndex + 1] = G;
             UserVar[event->BaseVarIndex + 2] = B;
-            UserVar[event->BaseVarIndex + 3] = Plugin_066_CalcAmbientLight(G, CONFIG(1));
+            UserVar[event->BaseVarIndex + 3] = Plugin_066_CalcAmbientLight(G, PCONFIG(1));
             break;
           }
           case 5:
           {
             UserVar[event->BaseVarIndex + 0] = Plugin_066_CalcCCT(R, G, B);
-            UserVar[event->BaseVarIndex + 1] = Plugin_066_CalcAmbientLight(G, CONFIG(1));
+            UserVar[event->BaseVarIndex + 1] = Plugin_066_CalcAmbientLight(G, PCONFIG(1));
             UserVar[event->BaseVarIndex + 2] = (R + G + B) / 3.0;   //0.299*R + 0.587*G + 0.114*B;
             UserVar[event->BaseVarIndex + 3] = W;
             break;

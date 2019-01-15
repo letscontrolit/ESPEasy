@@ -37,10 +37,6 @@
 
 CHT16K33* Plugin_058_K = NULL;
 
-#ifndef CONFIG
-#define CONFIG(n) (Settings.TaskDevicePluginConfig[event->TaskIndex][n])
-#endif
-
 
 boolean Plugin_058(byte function, struct EventStruct *event, String& string)
 {
@@ -79,7 +75,7 @@ boolean Plugin_058(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        byte addr = CONFIG(0);
+        byte addr = PCONFIG(0);
 
         int optionValues[8] = { 0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x76, 0x77 };
         addFormSelectorI2C(F("i2c_addr"), 8, optionValues, addr);
@@ -90,7 +86,7 @@ boolean Plugin_058(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        CONFIG(0) = getFormItemInt(F("i2c_addr"));
+        PCONFIG(0) = getFormItemInt(F("i2c_addr"));
 
         success = true;
         break;
@@ -98,7 +94,7 @@ boolean Plugin_058(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
       {
-        byte addr = CONFIG(0);
+        byte addr = PCONFIG(0);
 
         if (!Plugin_058_K)
           Plugin_058_K = new CHT16K33;

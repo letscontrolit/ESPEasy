@@ -140,7 +140,7 @@ boolean Plugin_046(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+        byte choice = PCONFIG(0);
         byte nrchoices = 9;
         String options[nrchoices];
         options[0] = F("Main + Temp/Hygro");
@@ -158,13 +158,13 @@ boolean Plugin_046(byte function, struct EventStruct *event, String& string)
 
         if (choice==0) {
           addHtml(F("<TR><TD>1st GPIO (5-MOSI):<TD>"));
-          addPinSelect(false, "taskdevicepin1", Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
+          addPinSelect(false, "taskdevicepin1", PCONFIG(1));
           addHtml(F("<TR><TD>2nd GPIO (6-SCLK):<TD>"));
-          addPinSelect(false, "taskdevicepin2", Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
+          addPinSelect(false, "taskdevicepin2", PCONFIG(2));
           addHtml(F("<TR><TD>3rd GPIO (7-nSEL):<TD>"));
-          addPinSelect(false, "taskdevicepin3", Settings.TaskDevicePluginConfig[event->TaskIndex][3]);
+          addPinSelect(false, "taskdevicepin3", PCONFIG(3));
           addHtml(F("<TR><TD>4th GPIO (8-MISO):<TD>"));
-          addPinSelect(false, "taskdeviceport", Settings.TaskDevicePluginConfig[event->TaskIndex][4]);
+          addPinSelect(false, "taskdeviceport", PCONFIG(4));
         }
 
         switch (choice)
@@ -232,12 +232,12 @@ boolean Plugin_046(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("p046"));
-        if (Settings.TaskDevicePluginConfig[event->TaskIndex][0] == 0) {
-          Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("taskdevicepin1"));
-          Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("taskdevicepin2"));
-          Settings.TaskDevicePluginConfig[event->TaskIndex][3] = getFormItemInt(F("taskdevicepin3"));
-          Settings.TaskDevicePluginConfig[event->TaskIndex][4] = getFormItemInt(F("taskdeviceport"));
+        PCONFIG(0) = getFormItemInt(F("p046"));
+        if (PCONFIG(0) == 0) {
+          PCONFIG(1) = getFormItemInt(F("taskdevicepin1"));
+          PCONFIG(2) = getFormItemInt(F("taskdevicepin2"));
+          PCONFIG(3) = getFormItemInt(F("taskdevicepin3"));
+          PCONFIG(4) = getFormItemInt(F("taskdeviceport"));
         }
         success = true;
         break;
@@ -259,15 +259,15 @@ boolean Plugin_046(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
       {
-        byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+        byte choice = PCONFIG(0);
         switch (choice)
         {
           case (0):
           {
-            Plugin_046_MOSIpin = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
-            Plugin_046_SCLKpin = Settings.TaskDevicePluginConfig[event->TaskIndex][2];
-            Plugin_046_nSELpin = Settings.TaskDevicePluginConfig[event->TaskIndex][3];
-            Plugin_046_MISOpin = Settings.TaskDevicePluginConfig[event->TaskIndex][4];
+            Plugin_046_MOSIpin = PCONFIG(1);
+            Plugin_046_SCLKpin = PCONFIG(2);
+            Plugin_046_nSELpin = PCONFIG(3);
+            Plugin_046_MISOpin = PCONFIG(4);
             int8_t total = Plugin_046_MOSIpin + Plugin_046_SCLKpin + Plugin_046_nSELpin + Plugin_046_MISOpin;
             if (total > 6) {                                    // All pins configured?
               pinMode(Plugin_046_MOSIpin, INPUT);
@@ -290,7 +290,7 @@ boolean Plugin_046(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_TEN_PER_SECOND:
       {
-        if (Settings.TaskDevicePluginConfig[event->TaskIndex][0] == 0) {
+        if (PCONFIG(0) == 0) {
           if (Plugin_046_newData) {
             uint8_t crc = 0xff;                                             // init = 0xff
             char data; // CRC = MAXIM with modified init: poly 0x31, init 0xff, refin 1; refout 1, xorout 0x00
@@ -348,7 +348,7 @@ boolean Plugin_046(byte function, struct EventStruct *event, String& string)
         if (Plugin_046_databuffer[0] == Plugin_046_MagicByte) // buffer[0] should be the MagicByte if valid
         {
           UserVar[event->BaseVarIndex + 1] = 0;
-          byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][0];   // Which instance?
+          byte choice = PCONFIG(0);   // Which instance?
           switch (choice)
           {
             case (0):

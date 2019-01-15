@@ -3,6 +3,7 @@
 //#################################### Plugin 026: System Info ##########################################
 //#######################################################################################################
 
+
 #define PLUGIN_026
 #define PLUGIN_ID_026         26
 #define PLUGIN_NAME_026       "Generic - System Info"
@@ -53,7 +54,7 @@ boolean Plugin_026(byte function, struct EventStruct *event, String& string)
     case PLUGIN_GET_DEVICEVALUENAMES:
       {
         for (byte i = 0; i < 4; ++i) {
-          byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][i];
+          byte choice = PCONFIG(i);
           safe_strncpy(
             ExtraTaskSettings.TaskDeviceValueNames[i],
             Plugin_026_valuename(choice, false),
@@ -71,7 +72,7 @@ boolean Plugin_026(byte function, struct EventStruct *event, String& string)
         String label;
         String id;
         for (byte i = 0; i < 4; ++i) {
-          byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][i];
+          byte choice = PCONFIG(i);
           label = F("Indicator ");
           label += (i+1);
           id = "p026_";
@@ -89,7 +90,7 @@ boolean Plugin_026(byte function, struct EventStruct *event, String& string)
         for (byte i = 0; i < 4; ++i) {
           id = "p026_";
           id += (i+1);
-          Settings.TaskDevicePluginConfig[event->TaskIndex][i] = getFormItemInt(id);
+          PCONFIG(i) = getFormItemInt(id);
         }
         success = true;
         break;
@@ -99,14 +100,14 @@ boolean Plugin_026(byte function, struct EventStruct *event, String& string)
       {
         bool allDefault = true;
         for (byte i = 0; i < 4; ++i) {
-          if (Settings.TaskDevicePluginConfig[event->TaskIndex][i] != 0) {
+          if (PCONFIG(i) != 0) {
             allDefault = false;
           }
         }
         if (allDefault) {
           // Reset nr 2 .. 4 to "None"
           for (byte i = 1; i < 4; ++i) {
-            Settings.TaskDevicePluginConfig[event->TaskIndex][i] = 11; // "None"
+            PCONFIG(i) = 11; // "None"
           }
         }
         success = true;
@@ -115,10 +116,10 @@ boolean Plugin_026(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
       {
-        UserVar[event->BaseVarIndex] = P026_get_value(Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
-        UserVar[event->BaseVarIndex+1] = P026_get_value(Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
-        UserVar[event->BaseVarIndex+2] = P026_get_value(Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
-        UserVar[event->BaseVarIndex+3] = P026_get_value(Settings.TaskDevicePluginConfig[event->TaskIndex][3]);
+        UserVar[event->BaseVarIndex] = P026_get_value(PCONFIG(0));
+        UserVar[event->BaseVarIndex+1] = P026_get_value(PCONFIG(1));
+        UserVar[event->BaseVarIndex+2] = P026_get_value(PCONFIG(2));
+        UserVar[event->BaseVarIndex+3] = P026_get_value(PCONFIG(3));
         if (loglevelActiveFor(LOG_LEVEL_INFO)){
           String log = F("SYS  : ");
           log += UserVar[event->BaseVarIndex];

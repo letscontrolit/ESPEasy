@@ -57,21 +57,21 @@ boolean Plugin_041(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-      	addFormNumericBox(F("Red"), F("p041_red"), Settings.TaskDevicePluginConfig[event->TaskIndex][0], 0, 255);
-      	addFormNumericBox(F("Green"), F("p041_green"), Settings.TaskDevicePluginConfig[event->TaskIndex][1], 0, 255);
-      	addFormNumericBox(F("Blue"), F("p041_blue"), Settings.TaskDevicePluginConfig[event->TaskIndex][2], 0, 255);
+      	addFormNumericBox(F("Red"), F("p041_red"), PCONFIG(0), 0, 255);
+      	addFormNumericBox(F("Green"), F("p041_green"), PCONFIG(1), 0, 255);
+      	addFormNumericBox(F("Blue"), F("p041_blue"), PCONFIG(2), 0, 255);
         success = true;
         break;
       }
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("p041_red"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("p041_green"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("p041_blue"));
-        Plugin_041_red = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
-        Plugin_041_green = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
-        Plugin_041_blue = Settings.TaskDevicePluginConfig[event->TaskIndex][2];
+        PCONFIG(0) = getFormItemInt(F("p041_red"));
+        PCONFIG(1) = getFormItemInt(F("p041_green"));
+        PCONFIG(2) = getFormItemInt(F("p041_blue"));
+        Plugin_041_red = PCONFIG(0);
+        Plugin_041_green = PCONFIG(1);
+        Plugin_041_blue = PCONFIG(2);
         success = true;
         break;
       }
@@ -80,12 +80,12 @@ boolean Plugin_041(byte function, struct EventStruct *event, String& string)
       {
         if (!Plugin_041_pixels)
         {
-          Plugin_041_pixels = new Adafruit_NeoPixel(NUM_LEDS, Settings.TaskDevicePin1[event->TaskIndex], NEO_GRB + NEO_KHZ800);
+          Plugin_041_pixels = new Adafruit_NeoPixel(NUM_LEDS, CONFIG_PIN1, NEO_GRB + NEO_KHZ800);
           Plugin_041_pixels->begin(); // This initializes the NeoPixel library.
         }
-        Plugin_041_red = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
-        Plugin_041_green = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
-        Plugin_041_blue = Settings.TaskDevicePluginConfig[event->TaskIndex][2];
+        Plugin_041_red = PCONFIG(0);
+        Plugin_041_green = PCONFIG(1);
+        Plugin_041_blue = PCONFIG(2);
         success = true;
         break;
       }

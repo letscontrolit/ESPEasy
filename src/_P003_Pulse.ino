@@ -72,10 +72,10 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
       {
       	addFormNumericBox(F("Debounce Time (mSec)"), F("p003")
-      			, Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
+      			, PCONFIG(0));
 
-        byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
-        byte choice2 = Settings.TaskDevicePluginConfig[event->TaskIndex][2];
+        byte choice = PCONFIG(1);
+        byte choice2 = PCONFIG(2);
         String options[4] = { F("Delta"), F("Delta/Total/Time"), F("Total"), F("Delta/Total") };
         addFormSelector(F("Counter Type"), F("p003_countertype"), 4, options, NULL, choice );
 
@@ -101,9 +101,9 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("p003"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("p003_countertype"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("p003_raisetype"));
+        PCONFIG(0) = getFormItemInt(F("p003"));
+        PCONFIG(1) = getFormItemInt(F("p003_countertype"));
+        PCONFIG(2) = getFormItemInt(F("p003_raisetype"));
         success = true;
         break;
       }
@@ -130,10 +130,10 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
     case PLUGIN_INIT:
       {
         String log = F("INIT : Pulse ");
-        log += Settings.TaskDevicePin1[event->TaskIndex];
+        log += CONFIG_PIN1;
         addLog(LOG_LEVEL_INFO,log);
-        pinMode(Settings.TaskDevicePin1[event->TaskIndex], INPUT_PULLUP);
-        success = Plugin_003_pulseinit(Settings.TaskDevicePin1[event->TaskIndex], event->TaskIndex,Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
+        pinMode(CONFIG_PIN1, INPUT_PULLUP);
+        success = Plugin_003_pulseinit(CONFIG_PIN1, event->TaskIndex,PCONFIG(2));
         break;
       }
 
@@ -143,7 +143,7 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
         UserVar[event->BaseVarIndex+1] = Plugin_003_pulseTotalCounter[event->TaskIndex];
         UserVar[event->BaseVarIndex+2] = Plugin_003_pulseTime[event->TaskIndex];
 
-        switch (Settings.TaskDevicePluginConfig[event->TaskIndex][1])
+        switch (PCONFIG(1))
         {
           case 0:
           {

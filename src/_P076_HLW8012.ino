@@ -134,11 +134,11 @@ boolean Plugin_076(byte function, struct EventStruct *event, String &string) {
 
   case PLUGIN_WEBFORM_LOAD: {
 
-    byte currentRead = Settings.TaskDevicePluginConfig[event->TaskIndex][4];
-    byte cf_trigger  = Settings.TaskDevicePluginConfig[event->TaskIndex][5];
-    byte cf1_trigger = Settings.TaskDevicePluginConfig[event->TaskIndex][6];
+    byte currentRead = PCONFIG(4);
+    byte cf_trigger  = PCONFIG(5);
+    byte cf1_trigger = PCONFIG(6);
 
-    byte devicePinSettings = Settings.TaskDevicePluginConfig[event->TaskIndex][7];
+    byte devicePinSettings = PCONFIG(7);
 
     String predefinedNames[p076_PinSettingsCount];
     int predefinedId[p076_PinSettingsCount];
@@ -233,33 +233,33 @@ boolean Plugin_076(byte function, struct EventStruct *event, String &string) {
     //Set Pin settings
     byte selectedDevice = getFormItemInt(F("p076_preDefDevSel"));
 
-    Settings.TaskDevicePluginConfig[event->TaskIndex][7] = selectedDevice;
+    PCONFIG(7) = selectedDevice;
 
     if (selectedDevice == 0){
-       Settings.TaskDevicePluginConfig[event->TaskIndex][4] = getFormItemInt(F("p076_curr_read"));
-       Settings.TaskDevicePluginConfig[event->TaskIndex][5] = getFormItemInt(F("p076_cf_edge"));
-       Settings.TaskDevicePluginConfig[event->TaskIndex][6] = getFormItemInt(F("p076_cf1_edge"));
+       PCONFIG(4) = getFormItemInt(F("p076_curr_read"));
+       PCONFIG(5) = getFormItemInt(F("p076_cf_edge"));
+       PCONFIG(6) = getFormItemInt(F("p076_cf1_edge"));
     }
     else if (selectedDevice < p076_PinSettingsCount){
       //Fetch Predefined Pin Setting from PROGMEM
-      Settings.TaskDevicePluginConfig[event->TaskIndex][4] = p076_PredefinedDevices[selectedDevice].Current_Read;
-      Settings.TaskDevicePluginConfig[event->TaskIndex][5] = p076_PredefinedDevices[selectedDevice].CF_Trigger;
-      Settings.TaskDevicePluginConfig[event->TaskIndex][6] = p076_PredefinedDevices[selectedDevice].CF1_Trigger;
+      PCONFIG(4) = p076_PredefinedDevices[selectedDevice].Current_Read;
+      PCONFIG(5) = p076_PredefinedDevices[selectedDevice].CF_Trigger;
+      PCONFIG(6) = p076_PredefinedDevices[selectedDevice].CF1_Trigger;
 
-      Settings.TaskDevicePin1[event->TaskIndex] = p076_PredefinedDevices[selectedDevice].SEL_Pin;
-      Settings.TaskDevicePin2[event->TaskIndex] = p076_PredefinedDevices[selectedDevice].CF1_Pin;
-      Settings.TaskDevicePin3[event->TaskIndex] = p076_PredefinedDevices[selectedDevice].CF_Pin;
+      CONFIG_PIN1 = p076_PredefinedDevices[selectedDevice].SEL_Pin;
+      CONFIG_PIN2 = p076_PredefinedDevices[selectedDevice].CF1_Pin;
+      CONFIG_PIN3 = p076_PredefinedDevices[selectedDevice].CF_Pin;
     }
 
     if (PLUGIN_076_DEBUG) {
       String log = F("P076: PIN Settings ");
 
       log +=  " curr_read: ";
-      log +=  Settings.TaskDevicePluginConfig[event->TaskIndex][4];
+      log +=  PCONFIG(4);
       log +=  " cf_edge: ";
-      log +=  Settings.TaskDevicePluginConfig[event->TaskIndex][5];
+      log +=  PCONFIG(5);
       log +=  " cf1_edge: ";
-      log +=  Settings.TaskDevicePluginConfig[event->TaskIndex][6];
+      log +=  PCONFIG(6);
       addLog(LOG_LEVEL_INFO, log);
     }
 
@@ -347,13 +347,13 @@ boolean Plugin_076(byte function, struct EventStruct *event, String &string) {
       Plugin_076_hlw = new HLW8012;
 
       // This initializes the HWL8012 library.
-      const byte CF_PIN = Settings.TaskDevicePin3[event->TaskIndex];
-      const byte CF1_PIN = Settings.TaskDevicePin2[event->TaskIndex];
-      const byte SEL_PIN = Settings.TaskDevicePin1[event->TaskIndex];
+      const byte CF_PIN = CONFIG_PIN3;
+      const byte CF1_PIN = CONFIG_PIN2;
+      const byte SEL_PIN = CONFIG_PIN1;
 
-      byte currentRead = Settings.TaskDevicePluginConfig[event->TaskIndex][4];
-      byte cf_trigger  = Settings.TaskDevicePluginConfig[event->TaskIndex][5];
-      byte cf1_trigger = Settings.TaskDevicePluginConfig[event->TaskIndex][6];
+      byte currentRead = PCONFIG(4);
+      byte cf_trigger  = PCONFIG(5);
+      byte cf1_trigger = PCONFIG(6);
 
       Plugin_076_hlw->begin(CF_PIN, CF1_PIN, SEL_PIN, currentRead,
                             true); // set use_interrupts to true to use

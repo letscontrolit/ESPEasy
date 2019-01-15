@@ -87,8 +87,8 @@ boolean Plugin_071(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
       {
-        PIN_KAMSER_RX = Settings.TaskDevicePin1[event->TaskIndex];
-        PIN_KAMSER_TX = Settings.TaskDevicePin2[event->TaskIndex];
+        PIN_KAMSER_RX = CONFIG_PIN1;
+        PIN_KAMSER_TX = CONFIG_PIN2;
 
         ESPeasySerial kamSer(PIN_KAMSER_RX, PIN_KAMSER_TX, false);  // Initialize serial
 

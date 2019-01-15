@@ -126,44 +126,44 @@ boolean Plugin_073(byte function, struct EventStruct *event, String& string)
         addFormNote(F("TM1637:  1st=CLK-Pin, 2nd=DIO-Pin"));
         addFormNote(F("MAX7219: 1st=DIN-Pin, 2nd=CLK-Pin, 3rd=CS-Pin"));
         String displtype[5] = { F("TM1637 - 4 digit (colon)"), F("TM1637 - 4 digit (dots)"), F("TM1637 - 6 digit"), F("MAX7219 - 8 digit")};
-        addFormSelector(F("Display Type"), F("plugin_073_displtype"), 4, displtype, NULL, Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
+        addFormSelector(F("Display Type"), F("plugin_073_displtype"), 4, displtype, NULL, PCONFIG(0));
         String displout[6] = { F("Manual"), F("Clock 24h - Blink"), F("Clock 24h - No Blink"), F("Clock 12h - Blink"), F("Clock 12h - No Blink"), F("Date")  };
-        addFormSelector(F("Display Output"), F("plugin_073_displout"), 6, displout, NULL, Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
-        addFormNumericBox(F("Brightness"), F("plugin_073_brightness"), Settings.TaskDevicePluginConfig[event->TaskIndex][2], 0, 15);
+        addFormSelector(F("Display Output"), F("plugin_073_displout"), 6, displout, NULL, PCONFIG(1));
+        addFormNumericBox(F("Brightness"), F("plugin_073_brightness"), PCONFIG(2), 0, 15);
         success = true;
         break;
       }
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_073_displtype"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("plugin_073_displout"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("plugin_073_brightness"));
+        PCONFIG(0) = getFormItemInt(F("plugin_073_displtype"));
+        PCONFIG(1) = getFormItemInt(F("plugin_073_displout"));
+        PCONFIG(2) = getFormItemInt(F("plugin_073_brightness"));
         if (Plugin_073_7dgt) {
-          Plugin_073_7dgt->pin1 = Settings.TaskDevicePin1[event->TaskIndex];
-          Plugin_073_7dgt->pin2 = Settings.TaskDevicePin2[event->TaskIndex];
-          Plugin_073_7dgt->pin3 = Settings.TaskDevicePin3[event->TaskIndex];
-          Plugin_073_7dgt->type = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
-          Plugin_073_7dgt->output = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
-          Plugin_073_7dgt->brightness = Settings.TaskDevicePluginConfig[event->TaskIndex][2];
+          Plugin_073_7dgt->pin1 = CONFIG_PIN1;
+          Plugin_073_7dgt->pin2 = CONFIG_PIN2;
+          Plugin_073_7dgt->pin3 = CONFIG_PIN3;
+          Plugin_073_7dgt->type = PCONFIG(0);
+          Plugin_073_7dgt->output = PCONFIG(1);
+          Plugin_073_7dgt->brightness = PCONFIG(2);
           Plugin_073_7dgt->timesep = true;
-          switch (Settings.TaskDevicePluginConfig[event->TaskIndex][0])
+          switch (PCONFIG(0))
           {
             case P073_TM1637_4DGTCOLON:    // set brightness of TM1637
             case P073_TM1637_4DGTDOTS:
             case P073_TM1637_6DGT:
               {
-                int tm1637_bright = Settings.TaskDevicePluginConfig[event->TaskIndex][2] / 2;
-                tm1637_SetPowerBrightness(Settings.TaskDevicePin1[event->TaskIndex], Settings.TaskDevicePin2[event->TaskIndex], tm1637_bright, true);
-                if (Settings.TaskDevicePluginConfig[event->TaskIndex][1] == P073_DISP_MANUAL)
-                  tm1637_ClearDisplay(Settings.TaskDevicePin1[event->TaskIndex], Settings.TaskDevicePin2[event->TaskIndex]);
+                int tm1637_bright = PCONFIG(2) / 2;
+                tm1637_SetPowerBrightness(CONFIG_PIN1, CONFIG_PIN2, tm1637_bright, true);
+                if (PCONFIG(1) == P073_DISP_MANUAL)
+                  tm1637_ClearDisplay(CONFIG_PIN1, CONFIG_PIN2);
                 break;
               }
             case P073_MAX7219_8DGT:        // set brightness of MAX7219
               {
-                max7219_SetPowerBrightness(Settings.TaskDevicePin1[event->TaskIndex], Settings.TaskDevicePin2[event->TaskIndex], Settings.TaskDevicePin3[event->TaskIndex], Settings.TaskDevicePluginConfig[event->TaskIndex][2], true);
-                if (Settings.TaskDevicePluginConfig[event->TaskIndex][1] == P073_DISP_MANUAL)
-                  max7219_ClearDisplay(Settings.TaskDevicePin1[event->TaskIndex], Settings.TaskDevicePin2[event->TaskIndex], Settings.TaskDevicePin3[event->TaskIndex]);
+                max7219_SetPowerBrightness(CONFIG_PIN1, CONFIG_PIN2, CONFIG_PIN3, PCONFIG(2), true);
+                if (PCONFIG(1) == P073_DISP_MANUAL)
+                  max7219_ClearDisplay(CONFIG_PIN1, CONFIG_PIN2, CONFIG_PIN3);
                 break;
               }
           }
@@ -176,27 +176,27 @@ boolean Plugin_073(byte function, struct EventStruct *event, String& string)
       {
         if (!Plugin_073_7dgt) {
           Plugin_073_7dgt = new p073_7dgt;
-            Plugin_073_7dgt->pin1 = Settings.TaskDevicePin1[event->TaskIndex];
-            Plugin_073_7dgt->pin2 = Settings.TaskDevicePin2[event->TaskIndex];
-            Plugin_073_7dgt->pin3 = Settings.TaskDevicePin3[event->TaskIndex];
-            Plugin_073_7dgt->type = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
-            Plugin_073_7dgt->output = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
-            Plugin_073_7dgt->brightness = Settings.TaskDevicePluginConfig[event->TaskIndex][2];
-          switch (Settings.TaskDevicePluginConfig[event->TaskIndex][0])
+            Plugin_073_7dgt->pin1 = CONFIG_PIN1;
+            Plugin_073_7dgt->pin2 = CONFIG_PIN2;
+            Plugin_073_7dgt->pin3 = CONFIG_PIN3;
+            Plugin_073_7dgt->type = PCONFIG(0);
+            Plugin_073_7dgt->output = PCONFIG(1);
+            Plugin_073_7dgt->brightness = PCONFIG(2);
+          switch (PCONFIG(0))
           {
             case P073_TM1637_4DGTCOLON:
             case P073_TM1637_4DGTDOTS:
             case P073_TM1637_6DGT:
               {
-                tm1637_InitDisplay(Settings.TaskDevicePin1[event->TaskIndex], Settings.TaskDevicePin2[event->TaskIndex]);
-                int tm1637_bright = Settings.TaskDevicePluginConfig[event->TaskIndex][2] / 2;
-                tm1637_SetPowerBrightness(Settings.TaskDevicePin1[event->TaskIndex], Settings.TaskDevicePin2[event->TaskIndex], tm1637_bright, true);
+                tm1637_InitDisplay(CONFIG_PIN1, CONFIG_PIN2);
+                int tm1637_bright = PCONFIG(2) / 2;
+                tm1637_SetPowerBrightness(CONFIG_PIN1, CONFIG_PIN2, tm1637_bright, true);
                 break;
               }
             case P073_MAX7219_8DGT:
               {
-                max7219_InitDisplay(Settings.TaskDevicePin1[event->TaskIndex], Settings.TaskDevicePin2[event->TaskIndex], Settings.TaskDevicePin3[event->TaskIndex]);
-                max7219_SetPowerBrightness(Settings.TaskDevicePin1[event->TaskIndex], Settings.TaskDevicePin2[event->TaskIndex], Settings.TaskDevicePin3[event->TaskIndex], Settings.TaskDevicePluginConfig[event->TaskIndex][2], true);
+                max7219_InitDisplay(CONFIG_PIN1, CONFIG_PIN2, CONFIG_PIN3);
+                max7219_SetPowerBrightness(CONFIG_PIN1, CONFIG_PIN2, CONFIG_PIN3, PCONFIG(2), true);
                 break;
               }
           }
@@ -495,7 +495,7 @@ boolean Plugin_073(byte function, struct EventStruct *event, String& string)
           }
           case P073_TM1637_6DGT:
           {
-            if (Settings.TaskDevicePluginConfig[event->TaskIndex][1] == P073_DISP_DATE)
+            if (PCONFIG(1) == P073_DISP_DATE)
               tm1637_ShowDate6(Plugin_073_7dgt->pin1, Plugin_073_7dgt->pin2, Plugin_073_7dgt->timesep);
             else
               tm1637_ShowTime6(Plugin_073_7dgt->pin1, Plugin_073_7dgt->pin2, Plugin_073_7dgt->timesep);
@@ -503,7 +503,7 @@ boolean Plugin_073(byte function, struct EventStruct *event, String& string)
           }
           case P073_MAX7219_8DGT:
           {
-            if (Settings.TaskDevicePluginConfig[event->TaskIndex][1] == P073_DISP_DATE)
+            if (PCONFIG(1) == P073_DISP_DATE)
               max7219_ShowDate(Plugin_073_7dgt->pin1, Plugin_073_7dgt->pin2, Plugin_073_7dgt->pin3);
             else
               max7219_ShowTime(Plugin_073_7dgt->pin1, Plugin_073_7dgt->pin2, Plugin_073_7dgt->pin3, Plugin_073_7dgt->timesep);

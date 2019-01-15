@@ -1,6 +1,8 @@
 #ifndef ESPEASY_GLOBALS_H_
 #define ESPEASY_GLOBALS_H_
 
+#include "_Plugin_Helper.h"
+
 #ifndef CORE_2_5_0
   #define STR_HELPER(x) #x
   #define STR(x) STR_HELPER(x)
@@ -424,9 +426,10 @@
   #define CONFIG_FILE_SIZE               131072
 #endif
 
+
 // Forward declaration
 struct ControllerSettingsStruct;
-String getUnknownString();
+static String getUnknownString();
 void scheduleNextDelayQueue(unsigned long id, unsigned long nextTime);
 String LoadControllerSettings(int ControllerIndex, ControllerSettingsStruct& controller_settings);
 String get_formatted_Controller_number(int controller_index);
@@ -543,7 +546,7 @@ bool showSettingsFileLayout = false;
   #define FILE_NOTIFICATION "/notification.dat"
   #define FILE_RULES        "/rules1.txt"
   #include <WiFi.h>
-  #include  "esp32_ping.h"
+//  #include  "esp32_ping.h"
   #include <WebServer.h>
   #include "SPIFFS.h"
   #include <rom/rtc.h>

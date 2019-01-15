@@ -20,11 +20,11 @@ void serialHelper_getGpioNames(struct EventStruct *event, bool rxOptional, bool 
 }
 
 int8_t serialHelper_getRxPin(struct EventStruct *event) {
-  return Settings.TaskDevicePin1[event->TaskIndex];
+  return CONFIG_PIN1;
 }
 
 int8_t serialHelper_getTxPin(struct EventStruct *event) {
-  return Settings.TaskDevicePin2[event->TaskIndex];
+  return CONFIG_PIN2;
 }
 
 ESPeasySerialType::serialtype serialHelper_getSerialType(struct EventStruct *event) {
@@ -76,8 +76,8 @@ void serialHelper_webformSave(struct EventStruct *event) {
     int rxPin, txPin;
     ESPeasySerialType::serialtype serType = static_cast<ESPeasySerialType::serialtype>(serialPortSelected);
     if (ESPeasySerialType::getSerialTypePins(serType, rxPin, txPin)) {
-      Settings.TaskDevicePin1[event->TaskIndex] = rxPin;
-      Settings.TaskDevicePin2[event->TaskIndex] = txPin;
+      CONFIG_PIN1 = rxPin;
+      CONFIG_PIN2 = txPin;
     }
   }
 }
