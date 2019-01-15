@@ -103,6 +103,19 @@ int firstEnabledBlynkController() {
 
 //void checkRAM( const __FlashStringHelper* flashString);
 
+#ifdef CORE_2_5_0
+/*********************************************************************************************\
+ * Pre-init
+\*********************************************************************************************/
+void preinit() {
+  // Global WiFi constructors are not called yet
+  // (global class instances like WiFi, Serial... are not yet initialized)..
+  // No global object methods or C++ exceptions can be called in here!
+  //The below is a static class method, which is similar to a function, so it's ok.
+  ESP8266WiFiClass::preinitWiFiOff();
+}
+#endif
+
 /*********************************************************************************************\
  * SETUP
 \*********************************************************************************************/
