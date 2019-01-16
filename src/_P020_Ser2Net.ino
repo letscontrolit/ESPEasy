@@ -9,11 +9,25 @@
 #define PLUGIN_VALUENAME1_020 "Ser2Net"
 
 #define P020_BUFFER_SIZE 128
-boolean Plugin_020_init = false;
-byte Plugin_020_SerialProcessing = 0;
 
-WiFiServer *ser2netServer;
-WiFiClient ser2netClient;
+struct P020_data_struct : public PluginTaskData_base {
+
+  P020_data_struct(unsigned long port) {
+    ser2netServer = new WiFiServer(port);
+    ser2netServer->begin();
+  }
+
+  ~P020_data_struct() {
+    if (nullptr != ser2netServer) {
+      delete ser2netServer;
+      ser2netServer = nullptr;
+    }
+  }
+
+  WiFiServer *ser2netServer = nullptr;
+  WiFiClient ser2netClient;
+  byte SerialProcessing = 0;
+};
 
 boolean Plugin_020(byte function, struct EventStruct *event, String& string)
 {
@@ -88,9 +102,16 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
       {
+        initPluginTaskData(event->TaskIndex, new P020_data_struct(ExtraTaskSettings.TaskDevicePluginConfigLong[0]));
+        P020_data_struct *P020_data =
+            static_cast<P020_data_struct *>(getPluginTaskData(event->TaskIndex));
+        if (nullptr == P020_data) {
+          break;
+        }
         LoadTaskSettings(event->TaskIndex);
         if ((ExtraTaskSettings.TaskDevicePluginConfigLong[0] != 0) && (ExtraTaskSettings.TaskDevicePluginConfigLong[1] != 0))
         {
+
       #if defined(ESP8266)
            byte serialconfig = 0;
       #elif defined(ESP32)
@@ -102,8 +123,6 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
       #elif defined(ESP32)
           Serial.begin(ExtraTaskSettings.TaskDevicePluginConfigLong[1], serialconfig);
       #endif
-          ser2netServer = new WiFiServer(ExtraTaskSettings.TaskDevicePluginConfigLong[0]);
-          ser2netServer->begin();
 
           if (CONFIG_PIN1 != -1)
           {
@@ -113,73 +132,76 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
             digitalWrite(CONFIG_PIN1, HIGH);
             pinMode(CONFIG_PIN1, INPUT_PULLUP);
           }
-
-          Plugin_020_init = true;
         }
-        Plugin_020_SerialProcessing = PCONFIG(1);
+        P020_data->SerialProcessing = PCONFIG(1);
         success = true;
         break;
       }
 
     case PLUGIN_TEN_PER_SECOND:
       {
-        if (Plugin_020_init)
-        {
-          size_t bytes_read;
-          if (ser2netServer->hasClient())
-          {
-            if (ser2netClient) ser2netClient.stop();
-            ser2netClient = ser2netServer->available();
-            addLog(LOG_LEVEL_ERROR, F("Ser2N: Client connected!"));
-          }
-
-          if (ser2netClient.connected())
-          {
-            connectionState = 1;
-            uint8_t net_buf[P020_BUFFER_SIZE];
-            int count = ser2netClient.available();
-            if (count > 0)
-            {
-              if (count > P020_BUFFER_SIZE)
-                count = P020_BUFFER_SIZE;
-              bytes_read = ser2netClient.read(net_buf, count);
-              Serial.write(net_buf, bytes_read);
-              Serial.flush(); // Waits for the transmission of outgoing serial data to complete
-
-              if (count == P020_BUFFER_SIZE) // if we have a full buffer, drop the last position to stuff with string end marker
-              {
-                count--;
-                addLog(LOG_LEVEL_ERROR, F("Ser2N: network buffer full!"));
-              }
-              net_buf[count] = 0; // before logging as a char array, zero terminate the last position to be safe.
-              char log[P020_BUFFER_SIZE + 40];
-              sprintf_P(log, PSTR("Ser2N: N>: %s"), (char*)net_buf);
-              addLog(LOG_LEVEL_DEBUG, log);
-            }
-          }
-          else
-          {
-            if (connectionState == 1) // there was a client connected before...
-            {
-              connectionState = 0;
-              // workaround see: https://github.com/esp8266/Arduino/issues/4497#issuecomment-373023864
-              ser2netClient = WiFiClient();
-              addLog(LOG_LEVEL_ERROR, F("Ser2N: Client disconnected!"));
-            }
-
-            while (Serial.available())
-              Serial.read();
-          }
-
-          success = true;
+        P020_data_struct *P020_data =
+            static_cast<P020_data_struct *>(getPluginTaskData(event->TaskIndex));
+        if (nullptr == P020_data) {
+          break;
         }
+        size_t bytes_read;
+        if (P020_data->ser2netServer->hasClient())
+        {
+          if (P020_data->ser2netClient) P020_data->ser2netClient.stop();
+          P020_data->ser2netClient = P020_data->ser2netServer->available();
+          addLog(LOG_LEVEL_ERROR, F("Ser2N: Client connected!"));
+        }
+
+        if (P020_data->ser2netClient.connected())
+        {
+          connectionState = 1;
+          uint8_t net_buf[P020_BUFFER_SIZE];
+          int count = P020_data->ser2netClient.available();
+          if (count > 0)
+          {
+            if (count > P020_BUFFER_SIZE)
+              count = P020_BUFFER_SIZE;
+            bytes_read = P020_data->ser2netClient.read(net_buf, count);
+            Serial.write(net_buf, bytes_read);
+            Serial.flush(); // Waits for the transmission of outgoing serial data to complete
+
+            if (count == P020_BUFFER_SIZE) // if we have a full buffer, drop the last position to stuff with string end marker
+            {
+              count--;
+              addLog(LOG_LEVEL_ERROR, F("Ser2N: network buffer full!"));
+            }
+            net_buf[count] = 0; // before logging as a char array, zero terminate the last position to be safe.
+            char log[P020_BUFFER_SIZE + 40];
+            sprintf_P(log, PSTR("Ser2N: N>: %s"), (char*)net_buf);
+            addLog(LOG_LEVEL_DEBUG, log);
+          }
+        }
+        else
+        {
+          if (connectionState == 1) // there was a client connected before...
+          {
+            connectionState = 0;
+            // workaround see: https://github.com/esp8266/Arduino/issues/4497#issuecomment-373023864
+            P020_data->ser2netClient = WiFiClient();
+            addLog(LOG_LEVEL_ERROR, F("Ser2N: Client disconnected!"));
+          }
+
+          while (Serial.available())
+            Serial.read();
+        }
+
+        success = true;
         break;
       }
 
     case PLUGIN_SERIAL_IN:
       {
-        if (Plugin_020_init)
-        {
+        P020_data_struct *P020_data =
+            static_cast<P020_data_struct *>(getPluginTaskData(event->TaskIndex));
+        if (nullptr == P020_data) {
+          break;
+        }
         uint8_t serial_buf[P020_BUFFER_SIZE];
         int RXWait = PCONFIG(0);
         if (RXWait == 0)
@@ -205,10 +227,10 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
         if (bytes_read != P020_BUFFER_SIZE)
         {
           if (bytes_read > 0) {
-            if (Plugin_020_init && ser2netClient.connected())
+            if (P020_data->ser2netClient.connected())
             {
-              ser2netClient.write((const uint8_t*)serial_buf, bytes_read);
-              ser2netClient.flush();
+              P020_data->ser2netClient.write((const uint8_t*)serial_buf, bytes_read);
+              P020_data->ser2netClient.flush();
             }
           }
         }
@@ -234,7 +256,7 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
             message = message.substring(0, NewLinePos);
           String eventString = "";
 
-          switch (Plugin_020_SerialProcessing)
+          switch (P020_data->SerialProcessing)
           {
             case 0:
               {
@@ -269,7 +291,6 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
         } // if rules
         success = true;
         break;
-      }
       }
 
     case PLUGIN_WRITE:
