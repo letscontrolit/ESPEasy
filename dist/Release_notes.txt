@@ -1,4 +1,17 @@
 -------------------------------------------------
+Changes in release mega-20190116 (since mega-20190110)
+-------------------------------------------------
+
+Release date: Wed Jan 16 04:00:26 CET 2019
+
+Gijs Noorlander (1):
+      [WiFi] Disable wifi initialization at boot
+
+Grovkillen (1):
+      [flasher] fixed API deny error (JSON parse)
+
+
+-------------------------------------------------
 Changes in release mega-20190110 (since mega-20190109)
 -------------------------------------------------
 
