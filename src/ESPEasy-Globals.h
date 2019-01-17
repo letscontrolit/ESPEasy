@@ -675,6 +675,7 @@ struct SecurityStruct
     }
     memset(Password, 0, sizeof(Password));
   }
+
   char          WifiSSID[32];
   char          WifiKey[64];
   char          WifiSSID2[32];
@@ -963,12 +964,23 @@ SettingsStruct* SettingsStruct_ptr = new SettingsStruct;
 SettingsStruct& Settings = *SettingsStruct_ptr;
 */
 
+String ReportOffsetErrorInStruct(const String& structname) {
+  String error;
+  error.reserve(48);
+  error = F("Error: Incorrect offset in struct: ");
+  error += structname;
+  return error;
+}
+
 /*********************************************************************************************\
  *  Analyze SettingsStruct and report inconsistencies
  *  Not a member function to be able to use the F-macro
 \*********************************************************************************************/
 bool SettingsCheck(String& error) {
   error = "";
+  if (offsetof(SettingsStruct, ResetFactoryDefaultPreference) != 1224) {
+    error = ReportOffsetErrorInStruct(F("SettingsStruct"));
+  }
   if (!Settings.networkSettingsEmpty()) {
     if (Settings.IP[0] == 0 || Settings.Gateway[0] == 0 || Settings.Subnet[0] == 0 || Settings.DNS[0] == 0) {
       error += F("Error: Either fill all IP settings fields or leave all empty");
