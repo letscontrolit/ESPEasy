@@ -14,6 +14,8 @@
 #define PLUGIN_ID_004         4
 #define PLUGIN_NAME_004       "Environment - DS18b20"
 #define PLUGIN_VALUENAME1_004 "Temperature"
+#define SENSOR_SELECTOR_ITEMS_MAX 32  // Change it if you have more ds18b20 devices
+#define SENSORS_MAX 4 // count of sensors per plugin, must be no more than VARS_PER_TASK
 
 int8_t Plugin_004_DallasPin;
 
@@ -32,7 +34,7 @@ boolean Plugin_004(byte function, struct EventStruct * event, String& string)
             Device[deviceCount].PullUpOption       = false;
             Device[deviceCount].InverseLogicOption = false;
             Device[deviceCount].FormulaOption      = true;
-            Device[deviceCount].ValueCount         = 1;
+            Device[deviceCount].ValueCount         = SENSORS_MAX;
             Device[deviceCount].SendDataOption     = true;
             Device[deviceCount].TimerOption        = true;
             Device[deviceCount].GlobalSyncOption   = true;
@@ -47,7 +49,13 @@ boolean Plugin_004(byte function, struct EventStruct * event, String& string)
 
         case PLUGIN_GET_DEVICEVALUENAMES:
         {
-            strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_004));
+            for (byte j = 0; j < SENSORS_MAX; j++){
+                String valueName = F(PLUGIN_VALUENAME1_004);
+                valueName += " ";
+                valueName += j;
+                const char* tmp = valueName.c_str();
+                strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[j], tmp);
+            }
             break;
         }
 
@@ -59,47 +67,63 @@ boolean Plugin_004(byte function, struct EventStruct * event, String& string)
 
         case PLUGIN_WEBFORM_LOAD:
         {
-            uint8_t savedAddress[8];
+            uint8_t savedAddress[SENSORS_MAX][8] = {{ 0 }};
             byte resolutionChoice = 0;
             // Scan the onewire bus and fill dropdown list with devicecount on this GPIO.
-            Plugin_004_DallasPin = CONFIG_PIN1;
+            Plugin_004_DallasPin = Settings.TaskDevicePin1[event->TaskIndex];
 
             if (Plugin_004_DallasPin != -1){
-              // get currently saved address
-              for (byte i = 0; i < 8; i++)
-                  savedAddress[i] = ExtraTaskSettings.TaskDevicePluginConfigLong[i];
+                // get currently saved address
+                LoadCustomTaskSettings(event->TaskIndex, (byte*)&savedAddress, sizeof(savedAddress));
 
-              // find all suitable devices
-              addRowLabel(F("Device Address"));
-              addSelector_Head(F("p004_dev"), false);
-              addSelector_Item("", -1, false, false, "");
-              uint8_t tmpAddress[8];
-              byte count = 0;
-              Plugin_004_DS_reset();
-              Plugin_004_DS_reset_search();
-              while (Plugin_004_DS_search(tmpAddress))
-              {
-                  String option = "";
-                  for (byte j = 0; j < 8; j++)
-                  {
-                      option += String(tmpAddress[j], HEX);
-                      if (j < 7) option += '-';
-                  }
-                  bool selected = (memcmp(tmpAddress, savedAddress, 8) == 0) ? true : false;
-                  addSelector_Item(option, count, selected, false, "");
-                  count ++;
-              }
-              addSelector_Foot();
+                // find all suitable devices
+                uint8_t allSensorsList[SENSOR_SELECTOR_ITEMS_MAX][8] = {{ 0 }};
+                uint8_t zeroAddr[8] = { 0 };
+                uint8_t tmpAddress[8] = { 0 };
+                byte sensorsFound = 0;
+                Plugin_004_DS_reset();
+                Plugin_004_DS_reset_search();
+                while (Plugin_004_DS_search(tmpAddress)){
+                    memcpy(allSensorsList[sensorsFound],tmpAddress,8 );
+                    sensorsFound++;
+                    if (sensorsFound >= SENSOR_SELECTOR_ITEMS_MAX){
+                        break;
+                    }
+                }
 
-              // Device Resolution select
-              if (ExtraTaskSettings.TaskDevicePluginConfigLong[0] != 0)
-                  resolutionChoice = Plugin_004_DS_getResolution(savedAddress);
-              else
-                  resolutionChoice = 9;
-              String resultsOptions[4] = { F("9"), F("10"), F("11"), F("12") };
-              int resultsOptionValues[4] = { 9, 10, 11, 12 };
-              addFormSelector(F("Device Resolution"), F("p004_res"), 4, resultsOptions, resultsOptionValues, resolutionChoice);
-              addHtml(F(" Bit"));
+                // add device selectors
+                for (byte dev = 0; dev < SENSORS_MAX; dev++){
+                    String label = F("Device Address ");
+                    label += (dev+1);
+                    addRowLabel(label);
+                    String head = F("p004_dev_");
+                    head += dev;
+                    addSelector_Head(head, false);
+                    addSelector_Item("", -1, false, false, "");
+                    for (byte item = 0; item < sensorsFound; item++){
+                        String option = "";
+                        for (byte j = 0; j < 8; j++)
+                        {
+                            option += String(allSensorsList[item][j], HEX);
+                            if (j < 7) option += '-';
+                        }
+                        bool selected = (memcmp(allSensorsList[item], savedAddress[dev], 8) == 0) ? true : false;
+                        addSelector_Item(option, item, selected, false, "");
+                    }
+                    addSelector_Foot();
+
+                    // get resolutionChoice from first found device
+                    if (0 == resolutionChoice && memcmp(zeroAddr, savedAddress[dev], 8) != 0)
+                        resolutionChoice = Plugin_004_DS_getResolution(savedAddress[dev]);
+                }
+
+                // Device Resolution select is common for all devices and equals resolution of first found device
+                if (0 == resolutionChoice)
+                    resolutionChoice = 9;
+                String resultsOptions[4] = { F("9"), F("10"), F("11"), F("12") };
+                int resultsOptionValues[4] = { 9, 10, 11, 12 };
+                addFormSelector(F("Device Resolution"), F("p004_res"), 4, resultsOptions, resultsOptionValues, resolutionChoice);
+                addHtml(F(" Bit"));
             }
             success = true;
             break;
@@ -107,29 +131,43 @@ boolean Plugin_004(byte function, struct EventStruct * event, String& string)
 
         case PLUGIN_WEBFORM_SAVE:
         {
-            uint8_t addr[8] = {0,0,0,0,0,0,0,0};
+            uint8_t allAddr[SENSORS_MAX][8] = {{ 0 }};
 
             // save the address for selected device and store into extra tasksettings
-            Plugin_004_DallasPin = CONFIG_PIN1;
+            Plugin_004_DallasPin = Settings.TaskDevicePin1[event->TaskIndex];
             if (Plugin_004_DallasPin != -1){
-              Plugin_004_DS_scan(getFormItemInt(F("p004_dev")), addr);
-              for (byte x = 0; x < 8; x++)
-                  ExtraTaskSettings.TaskDevicePluginConfigLong[x] = addr[x];
-
-              Plugin_004_DS_setResolution(addr, getFormItemInt(F("p004_res")));
-              Plugin_004_DS_startConversion(addr);
+              for (byte dev = 0; dev < SENSORS_MAX; dev++){
+                  String devForm = F("p004_dev_");
+                  devForm += dev;
+                  Plugin_004_DS_scan(getFormItemInt(devForm), allAddr[dev]);
+                  Plugin_004_DS_setResolution(allAddr[dev], getFormItemInt(F("p004_res")));
+                  Plugin_004_DS_startConversion(allAddr[dev]);
+              }
             }
+            SaveCustomTaskSettings(event->TaskIndex, (byte*)&allAddr, sizeof(allAddr));
             success = true;
             break;
         }
 
         case PLUGIN_WEBFORM_SHOW_CONFIG:
         {
-            for (byte x = 0; x < 8; x++)
-            {
-                if (x != 0)
-                    string += '-';
-                string += String(ExtraTaskSettings.TaskDevicePluginConfigLong[x], HEX);
+            uint8_t savedAddress[SENSORS_MAX][8] = {{ 0 }};
+            uint8_t zeroAddr[8] = { 0 };
+            LoadCustomTaskSettings(event->TaskIndex, (byte*)&savedAddress, sizeof(savedAddress));
+            for (byte dev = 0; dev < SENSORS_MAX; dev++){
+                if (dev > 0){
+                    string += F("<BR>");
+                }
+
+                if (memcmp(zeroAddr, savedAddress[dev], 8) == 0 )
+                    continue;
+
+                for (byte x = 0; x < 8; x++)
+                {
+                    if (x != 0)
+                        string += '-';
+                        string += String(savedAddress[dev][x], HEX);
+                }
             }
             success = true;
             break;
@@ -137,11 +175,16 @@ boolean Plugin_004(byte function, struct EventStruct * event, String& string)
 
         case PLUGIN_INIT:
         {
-            Plugin_004_DallasPin = CONFIG_PIN1;
+            Plugin_004_DallasPin = Settings.TaskDevicePin1[event->TaskIndex];
             if (Plugin_004_DallasPin != -1){
-              uint8_t addr[8];
-              Plugin_004_get_addr(addr, event->TaskIndex);
-              Plugin_004_DS_startConversion(addr);
+              uint8_t savedAddress[SENSORS_MAX][8] = {{ 0 }};
+              uint8_t zeroAddr[8] = { 0 };
+              LoadCustomTaskSettings(event->TaskIndex, (byte*)&savedAddress, sizeof(savedAddress));
+              for (byte dev = 0; dev < SENSORS_MAX; dev++){
+                  if (memcmp(zeroAddr, savedAddress[dev], 8) == 0 )
+                    continue;
+                  Plugin_004_DS_startConversion(savedAddress[dev]);
+              }
               delay(800); //give it time to do intial conversion
             }
             success = true;
@@ -150,52 +193,78 @@ boolean Plugin_004(byte function, struct EventStruct * event, String& string)
 
         case PLUGIN_READ:
         {
-            if (ExtraTaskSettings.TaskDevicePluginConfigLong[0] != 0){
-                uint8_t addr[8];
-                Plugin_004_get_addr(addr, event->TaskIndex);
+            Plugin_004_DallasPin = Settings.TaskDevicePin1[event->TaskIndex];
+            if (Plugin_004_DallasPin != -1){
+                uint8_t savedAddress[SENSORS_MAX][8] = {{ 0 }};
+                uint8_t zeroAddr[8] = { 0 };
+                LoadCustomTaskSettings(event->TaskIndex, (byte*)&savedAddress, sizeof(savedAddress));
 
-                Plugin_004_DallasPin = CONFIG_PIN1;
-                float value = 0;
-                String log  = F("DS   : Temperature: ");
+                byte devicesToRead = 0;
+                for (byte dev = 0; dev < SENSORS_MAX; dev++){
+                    if (memcmp(zeroAddr, savedAddress[dev], 8) == 0 ){
+                        UserVar[event->BaseVarIndex + dev] = NAN;
+                        continue;
+                    }
 
-                if (Plugin_004_DS_readTemp(addr, &value))
-                {
-                    UserVar[event->BaseVarIndex] = value;
-                    log    += UserVar[event->BaseVarIndex];
-                    success = true;
+                    devicesToRead += 1;
+                    String log  = F("reading DS device #");
+                    float value = 0;
+                    log  += (dev +1);
+                    log += F(" (");
+                    for (byte x = 0; x < 8; x++)
+                    {
+                        if (x != 0)
+                            log += '-';
+                        log += String(savedAddress[dev][x], HEX);
+                    }
+                    log += F(" Temperature: ");
+
+                    if (Plugin_004_DS_readTemp(savedAddress[dev], &value))
+                    {
+                        UserVar[event->BaseVarIndex + dev] = value;
+                        log    += value;
+                        success = true;
+                    }
+                    else
+                    {
+                        UserVar[event->BaseVarIndex + dev] = NAN;
+                        log += F("Error!");
+                    }
+                    Plugin_004_DS_startConversion(savedAddress[dev]);
+                    addLog(LOG_LEVEL_INFO, log);
                 }
-                else
-                {
-                    UserVar[event->BaseVarIndex] = NAN;
-                    log += F("Error!");
-                }
-                Plugin_004_DS_startConversion(addr);
 
-                log += (" (");
-                for (byte x = 0; x < 8; x++)
-                {
-                    if (x != 0)
-                        log += '-';
-                    log += String(ExtraTaskSettings.TaskDevicePluginConfigLong[x], HEX);
+                switch (devicesToRead) {
+                    case 1: {
+                        event->sensorType = SENSOR_TYPE_SINGLE;
+                        break;
+                    }
+                    case 2: {
+                        event->sensorType = SENSOR_TYPE_DUAL;
+                        break;
+                    }
+                    case 3: {
+                        event->sensorType = SENSOR_TYPE_TRIPLE;
+                        break;
+                    }
+                    case 4: {
+                        event->sensorType = SENSOR_TYPE_QUAD;
+                        break;
+                    }
+                    // case 5: {
+                    //     event->sensorType = SENSOR_TYPE_PENTA;
+                    //     break;	
+                    // }
+                    default: {
+                        event->sensorType = SENSOR_TYPE_NONE;
+                    }
                 }
-
-                log += ')';
-                addLog(LOG_LEVEL_INFO, log);
             }
             break;
         }
     }
     return success;
 }
-
-void Plugin_004_get_addr(uint8_t addr[], byte TaskIndex)
-{
-  // Load ROM address from tasksettings
-  LoadTaskSettings(TaskIndex);
-  for (byte x = 0; x < 8; x++)
-      addr[x] = ExtraTaskSettings.TaskDevicePluginConfigLong[x];
-}
-
 
 /*********************************************************************************************\
    Dallas Scan bus
