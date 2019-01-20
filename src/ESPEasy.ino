@@ -502,7 +502,7 @@ void loop()
     WiFiConnectRelaxed();
     wifiSetupConnect = false;
   }
-  if (wifiStatus != ESPEASY_WIFI_SERVICES_INITIALIZED || unprocessedWifiEvents()) {
+  if ((wifiStatus != ESPEASY_WIFI_SERVICES_INITIALIZED) || unprocessedWifiEvents()) {
     // WiFi connection is not yet available, so introduce some extra delays to
     // help the background tasks managing wifi connections
     delay(1);
@@ -792,6 +792,8 @@ void runEach30Seconds()
     log += connectionFailures;
     log += F(" FreeMem ");
     log += FreeMem();
+    log += F(" WiFiStatus ");
+    log += wifiStatus;
     addLog(LOG_LEVEL_INFO, log);
   }
   sendSysInfoUDP(1);
