@@ -1134,7 +1134,7 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
             }
           }
           START_TIMER;
-          bool retval = Plugin_ptr[x](Function, event, str);
+          Plugin_ptr[x](Function, event, str);
           STOP_TIMER_TASK(x,Function);
           delay(0); // SMY: call delay(0) unconditionally
         }
@@ -1264,7 +1264,7 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
                   schedule_task_device_timer_at_init(TempEvent.TaskIndex);
                 }
                 START_TIMER;
-                bool retval = Plugin_ptr[x](Function, &TempEvent, str);
+                Plugin_ptr[x](Function, &TempEvent, str);
                 STOP_TIMER_TASK(x,Function);
                 delay(0); // SMY: call delay(0) unconditionally
               }
