@@ -1136,7 +1136,7 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
           START_TIMER;
           bool retval = Plugin_ptr[x](Function, event, str);
           STOP_TIMER_TASK(x,Function);
-          if (retval) delay(0);
+          delay(0); // SMY: call delay(0) unconditionally
         }
       }
       return true;
@@ -1183,8 +1183,8 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
                 START_TIMER;
                 bool retval = (Plugin_ptr[x](Function, &TempEvent, str));
                 STOP_TIMER_TASK(x,Function);
+                delay(0); // SMY: call delay(0) unconditionally
                 if (retval) {
-                  delay(0);
                   return true;
                 }
               }
@@ -1195,7 +1195,7 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
         for (byte x = 0; x < PLUGIN_MAX; x++) {
           if (Plugin_id[x] != 0) {
             if (Plugin_ptr[x](Function, event, str)) {
-              delay(0);
+              delay(0); // SMY: call delay(0) unconditionally
               return true;
             }
           }
@@ -1221,9 +1221,9 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
               START_TIMER;
               bool retval =  (Plugin_ptr[x](Function, &TempEvent, str));
               STOP_TIMER_TASK(x,Function);
+              delay(0); // SMY: call delay(0) unconditionally
               if (retval){
                 checkRAM(F("PluginCallUDP"),x);
-                delay(0);
                 return true;
               }
             }
@@ -1266,7 +1266,7 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
                 START_TIMER;
                 bool retval = Plugin_ptr[x](Function, &TempEvent, str);
                 STOP_TIMER_TASK(x,Function);
-                if (retval) delay(0);
+                delay(0); // SMY: call delay(0) unconditionally
               }
             }
           }
@@ -1310,7 +1310,7 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
             clearPluginTaskData(event->TaskIndex);
           }
           STOP_TIMER_TASK(x,Function);
-          if (retval) delay(0);
+          delay(0); // SMY: call delay(0) unconditionally
           return retval;
         }
       }
