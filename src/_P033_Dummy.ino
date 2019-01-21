@@ -5,12 +5,10 @@
 
 #define PLUGIN_033
 #define PLUGIN_ID_033         33
-#define PLUGIN_NAME_033       "Generic - Dummy Device + presistent"
+#define PLUGIN_NAME_033       "Generic - Dummy Device"
 #define PLUGIN_VALUENAME1_033 "Dummy"
-
 #define P33_Nlines 4
 #define P33_Nchars 8
-
 
 boolean Plugin_033(byte function, struct EventStruct *event, String& string)
 {
