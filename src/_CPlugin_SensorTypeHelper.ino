@@ -4,6 +4,9 @@
 
 byte getValueCountFromSensorType(byte sensorType)
 {
+  if (sensorType > 100)
+    return sensorType-100;
+
   switch (sensorType)
   {
     case SENSOR_TYPE_NONE:
@@ -25,6 +28,8 @@ byte getValueCountFromSensorType(byte sensorType)
       return 3;
     case SENSOR_TYPE_QUAD:
       return 4;
+    case SENSOR_TYPE_PENTA:
+      return 5;
   }
   addLog(LOG_LEVEL_ERROR, F("getValueCountFromSensorType: Unknown sensortype"));
   return 0;

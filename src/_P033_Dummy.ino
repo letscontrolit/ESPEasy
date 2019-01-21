@@ -5,8 +5,13 @@
 
 #define PLUGIN_033
 #define PLUGIN_ID_033         33
-#define PLUGIN_NAME_033       "Generic - Dummy Device"
+#define PLUGIN_NAME_033       "Generic - Dummy Device + presistent"
 #define PLUGIN_VALUENAME1_033 "Dummy"
+
+#define P33_Nlines 4
+#define P33_Nchars 8
+
+
 boolean Plugin_033(byte function, struct EventStruct *event, String& string)
 {
   boolean success = false;
@@ -18,7 +23,7 @@ boolean Plugin_033(byte function, struct EventStruct *event, String& string)
       {
         Device[++deviceCount].Number = PLUGIN_ID_033;
         Device[deviceCount].Type = DEVICE_TYPE_DUMMY;
-        Device[deviceCount].VType = SENSOR_TYPE_SINGLE;
+        Device[deviceCount].VType = SENSOR_TYPE_QUAD;
         Device[deviceCount].Ports = 0;
         Device[deviceCount].PullUpOption = false;
         Device[deviceCount].InverseLogicOption = false;
@@ -73,6 +78,12 @@ boolean Plugin_033(byte function, struct EventStruct *event, String& string)
 
         addFormSelector(F("Simulate Data Type"), F("p033_sensortype"), 11, options, optionValues, choice );
 
+        char deviceTemplate[P33_Nlines][P33_Nchars];
+        LoadCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
+        for (byte varNr = 0; varNr < P33_Nlines; varNr++)
+        {
+          addFormTextBox(String(F("Persistent value ")) + (varNr + 1), String(F("p033_template")) + (varNr + 1), deviceTemplate[varNr], P33_Nchars);
+        }
         success = true;
         break;
       }
@@ -80,22 +91,91 @@ boolean Plugin_033(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE:
       {
         Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("p033_sensortype"));
+
+        char deviceTemplate[P33_Nlines][P33_Nchars];
+        String error;
+        for (byte varNr = 0; varNr < P33_Nlines; varNr++)
+        {
+          String argName = F("p033_template");
+          argName += varNr + 1;
+          if (!safe_strncpy(deviceTemplate[varNr], WebServer.arg(argName), P33_Nchars)) {
+            error += getCustomTaskSettingsError(varNr);
+          }
+        }
+        if (error.length() > 0) {
+          addHtmlError(error);
+        }
+        SaveCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
+
         success = true;
         break;
       }
 
-    case PLUGIN_READ:
+    case PLUGIN_INIT:
       {
-        event->sensorType = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
-        for (byte x=0; x<4;x++)
+        char deviceTemplate[P33_Nlines][P33_Nchars];
+        LoadCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
+        for (byte varNr = 0; varNr < P33_Nlines; varNr++)
         {
-          String log = F("Dummy: value ");
-          log += x+1;
-          log += F(": ");
-          log += UserVar[event->BaseVarIndex+x];
+          float temp;
+          temp=atof(deviceTemplate[varNr]);
+          UserVar[event->BaseVarIndex + varNr] = temp;
+        }
+
+        success = true;
+        break;
+      }
+
+    // case PLUGIN_READ:
+    //   {
+    //     event->sensorType = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+    //     for (byte x=0; x<4;x++)
+    //     {
+    //       String log = F("Dummy: value ");
+    //       log += x+1;
+    //       log += F(": ");
+    //       log += UserVar[event->BaseVarIndex+x];
+    //       addLog(LOG_LEVEL_INFO,log);
+    //     }
+    //     success = true;
+    //     break;
+    //   }
+
+   case PLUGIN_WRITE:
+      {
+        String arguments = String(string);
+        if (arguments.equalsIgnoreCase(F("SAVEVALUES")))
+        {
+          char deviceTemplate[P33_Nlines][P33_Nchars];
+          for (byte varNr = 0; varNr < P33_Nlines; varNr++)
+          {
+            float value=UserVar[event->BaseVarIndex + varNr];
+              String tmp = F("");
+            tmp += value;
+            safe_strncpy(deviceTemplate[varNr], tmp, P33_Nchars);
+          }
+          SaveCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
+
+          String log = F("persistent values saved for task ");
+          log += (event->TaskIndex + 1);
+
+          success = true;
+          // если после текущей таски есть еще таски с типом dummy
+          // то ставим success=false для перехода к их обработчикам
+          // если это последняя dummy-таска - возвращаем true
+          byte x = (event->TaskIndex +1);
+          while (x < TASKS_MAX){
+            if (Settings.TaskDeviceEnabled[x] && (Settings.TaskDeviceNumber[x] == PLUGIN_ID_033)) {
+              success = false;
+              break;
+            }
+            x++;
+          }
+          if (success){
+            log += F(". All tasks saved.");
+          }
           addLog(LOG_LEVEL_INFO,log);
         }
-        success = true;
         break;
       }
   }

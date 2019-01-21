@@ -431,11 +431,18 @@ String getPinModeString(byte mode) {
 #if defined(ESP32)
   #define PWMRANGE 1024
 #endif
-#define STATUS_PWM_NORMALVALUE (PWMRANGE>>2)
+// #define STATUS_PWM_NORMALVALUE (PWMRANGE>>2)
+#define STATUS_PWM_NORMALVALUE 0
+#define STATUS_PWM_LONGFADE (PWMRANGE>>10)
 #define STATUS_PWM_NORMALFADE (PWMRANGE>>8)
 #define STATUS_PWM_TRAFFICRISE (PWMRANGE>>1)
 
-void statusLED(boolean traffic)
+void statusLED(boolean traffic){
+  boolean longFade = false;
+  statusLED(traffic,longFade);
+}
+
+void statusLED(boolean traffic, boolean longFade)
 {
   static int gnStatusValueCurrent = -1;
   static long int gnLastUpdate = millis();
@@ -448,7 +455,10 @@ void statusLED(boolean traffic)
 
   int nStatusValue = gnStatusValueCurrent;
 
-  if (traffic)
+  if (longFade){
+    nStatusValue += PWMRANGE; //ramp up fast
+  }
+  else if (traffic)
   {
     nStatusValue += STATUS_PWM_TRAFFICRISE; //ramp up fast
   }
@@ -1435,6 +1445,13 @@ boolean loglevelActive(byte logLevel, byte logLevelSettings) {
 
 void addToLog(byte logLevel, const char *line)
 {
+  // мигаем светодиодом при ошибках в логе
+  if (logLevel == LOG_LEVEL_ERROR){
+    boolean traffic = true;
+    boolean longFade = true;
+    statusLED(traffic,longFade);
+  }
+
   if (loglevelActiveFor(LOG_TO_SERIAL, logLevel)) {
     addToSerialBuffer(String(millis()).c_str());
     addToSerialBuffer(" : ");

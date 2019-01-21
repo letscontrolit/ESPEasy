@@ -431,63 +431,63 @@ To create/register a plugin, you have to :
 
 // STABLE #####################################
 #ifdef PLUGIN_SET_STABLE
-    #define USE_SERVO
+    // #define USE_SERVO
 
     #define USES_P001   // Switch
-    #define USES_P002   // ADC
+    // #define USES_P002   // ADC
     #define USES_P003   // Pulse
     #define USES_P004   // Dallas
     #define USES_P005   // DHT
-    #define USES_P006   // BMP085
-    #define USES_P007   // PCF8591
-    #define USES_P008   // RFID
-    #define USES_P009   // MCP
+    // #define USES_P006   // BMP085
+    // #define USES_P007   // PCF8591
+    // #define USES_P008   // RFID
+    // #define USES_P009   // MCP
 
-    #define USES_P010   // BH1750
-    #define USES_P011   // PME
-    #define USES_P012   // LCD
-    #define USES_P013   // HCSR04
-    #define USES_P014   // SI7021
-    #define USES_P015   // TSL2561
+    // #define USES_P010   // BH1750
+    // #define USES_P011   // PME
+    // #define USES_P012   // LCD
+    // #define USES_P013   // HCSR04
+    // #define USES_P014   // SI7021
+    // #define USES_P015   // TSL2561
 //    #define USES_P016   // IR
-    #define USES_P017   // PN532
-    #define USES_P018   // Dust
-    #define USES_P019   // PCF8574
+    // #define USES_P017   // PN532
+    // #define USES_P018   // Dust
+    // #define USES_P019   // PCF8574
 
-    #define USES_P020   // Ser2Net
-    #define USES_P021   // Level
-    #define USES_P022   // PCA9685
+    // #define USES_P020   // Ser2Net
+    // #define USES_P021   // Level
+    // #define USES_P022   // PCA9685
     #define USES_P023   // OLED
-    #define USES_P024   // MLX90614
-    #define USES_P025   // ADS1115
+    // #define USES_P024   // MLX90614
+    // #define USES_P025   // ADS1115
     #define USES_P026   // SysInfo
-    #define USES_P027   // INA219
-    #define USES_P028   // BME280
+    // #define USES_P027   // INA219
+    // #define USES_P028   // BME280
     #define USES_P029   // Output
 
-    #define USES_P030   // BMP280
-    #define USES_P031   // SHT1X
-    #define USES_P032   // MS5611
+    // #define USES_P030   // BMP280
+    // #define USES_P031   // SHT1X
+    // #define USES_P032   // MS5611
     #define USES_P033   // Dummy
-    #define USES_P034   // DHT12
+    // #define USES_P034   // DHT12
 //    #define USES_P035   // IRTX
     #define USES_P036   // FrameOLED
     #define USES_P037   // MQTTImport
-    #define USES_P038   // NeoPixel
-    #define USES_P039   // ID12
+    // #define USES_P038   // NeoPixel
+    // #define USES_P039   // ID12
 
-    #define USES_P041   // NeoClock
-    #define USES_P042   // Candle
+    // #define USES_P041   // NeoClock
+    // #define USES_P042   // Candle
     #define USES_P043   // ClkOutput
-    #define USES_P044   // P1WifiGateway
+    // #define USES_P044   // P1WifiGateway
 
-    #define USES_P049   // MHZ19
+    // #define USES_P049   // MHZ19
 
-    #define USES_P052   // SenseAir
-    #define USES_P056   // SDS011-Dust
-    #define USES_P059   // Encoder
+    // #define USES_P052   // SenseAir
+    // #define USES_P056   // SDS011-Dust
+    // #define USES_P059   // Encoder
 
-    #define USES_P063   // TTP229_KeyPad
+    // #define USES_P063   // TTP229_KeyPad
 #endif
 
 
@@ -502,13 +502,15 @@ To create/register a plugin, you have to :
     #define USES_C008   // Generic HTTP
     #define USES_C009   // FHEM HTTP
     #define USES_C010   // Generic UDP
+    #define USES_C011   // HTTP advanced
+    #define USES_C012   // Blynk HTTP
     #define USES_C013   // ESPEasy P2P network
 #endif
 
 
 #ifdef NOTIFIER_SET_STABLE
     #define USES_N001   // Email
-    #define USES_N002   // Buzzer
+    // #define USES_N002   // Buzzer
 
     #ifdef NOTIFIER_SET_NONE
       #undef NOTIFIER_SET_NONE

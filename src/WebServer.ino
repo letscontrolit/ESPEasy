@@ -5866,8 +5866,23 @@ void handle_rules() {
   int optionValues[RULESETS_MAX];
   for (byte x = 0; x < RULESETS_MAX; x++)
   {
-    options[x] = F("Rules Set ");
-    options[x] += x + 1;
+    switch(x){
+      case 0:
+        options[x] = F("Правила для газового котла");
+        break;
+      case 1:
+        options[x] = F("Правила для электрокотла");
+        break;
+      case 2:
+        options[x] = F("Правила для освещения");
+        break;
+      case 3:
+        options[x] = F("Правила для UPS");
+        break;
+      default:
+        options[x] = F("Rules Set ");
+        options[x] += x + 1;
+    }    
     optionValues[x] = x + 1;
   }
 

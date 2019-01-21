@@ -21,11 +21,11 @@
 // --- Wifi AP Mode (when your Wifi Network is not reachable) ----------------------------------------
 #define DEFAULT_AP_IP       192,168,4,1         // Enter IP address (comma separated) for AP (config) mode
 #define DEFAULT_AP_SUBNET   255,255,255,0       // Enter IP address (comma separated) for AP (config) mode
-#define DEFAULT_AP_KEY      "configesp"         // Enter network WPA key for AP (config) mode
+#define DEFAULT_AP_KEY      "680368036803"         // Enter network WPA key for AP (config) mode
 
 // --- Wifi Client Mode -----------------------------------------------------------------------------
-#define DEFAULT_SSID        "ssid"              // Enter your Wifi network SSID
-#define DEFAULT_KEY         "wpakey"            // Enter your Wifi network WPA key
+#define DEFAULT_SSID        "A1ENK"              // Enter your Wifi network SSID
+#define DEFAULT_KEY         "680368036803"            // Enter your Wifi network WPA key
 
 #define DEFAULT_USE_STATIC_IP   false           // (true|false) enabled or disabled static IP
 #define DEFAULT_IP          "192.168.0.50"      // Enter your IP address
@@ -74,7 +74,7 @@
 //  #include <M5Stack.h>
 #endif
 
-#define DEFAULT_USE_RULES                       false   // (true|false) Enable Rules?
+#define DEFAULT_USE_RULES                       true   // (true|false) Enable Rules?
 #define DEFAULT_RULES_OLDENGINE                true
 
 #define DEFAULT_MQTT_RETAIN                     false   // (true|false) Retain MQTT messages?
@@ -322,7 +322,7 @@
 #endif
 
 #if defined(ESP8266)
-  #define TASKS_MAX                          12 // max 12!
+  #define TASKS_MAX                          24 // max 12!
   #define MAX_GPIO                           16
 #endif
 #if defined(ESP32)
@@ -332,7 +332,7 @@
 
 #define CONTROLLER_MAX                      3 // max 4!
 #define NOTIFICATION_MAX                    3 // max 4!
-#define VARS_PER_TASK                       4
+#define VARS_PER_TASK                       5
 #define PLUGIN_MAX                DEVICES_MAX
 #define PLUGIN_CONFIGVAR_MAX                8
 #define PLUGIN_CONFIGFLOATVAR_MAX           4
@@ -380,6 +380,7 @@
 #define SENSOR_TYPE_TRIPLE                  6
 #define SENSOR_TYPE_QUAD                    7
 #define SENSOR_TYPE_TEMP_EMPTY_BARO         8
+#define SENSOR_TYPE_PENTA                   9
 #define SENSOR_TYPE_SWITCH                 10
 #define SENSOR_TYPE_DIMMER                 11
 #define SENSOR_TYPE_LONG                   20
@@ -412,8 +413,10 @@
 
 #if defined(ESP8266)
   #define DAT_OFFSET_TASKS                 4096  // each task = 2k, (1024 basic + 1024 bytes custom), 12 max
-  #define DAT_OFFSET_CONTROLLER           28672  // each controller = 1k, 4 max
-  #define DAT_OFFSET_CUSTOM_CONTROLLER    32768  // each custom controller config = 1k, 4 max.
+  // #define DAT_OFFSET_CONTROLLER           28672  // each controller = 1k, 4 max
+  // #define DAT_OFFSET_CUSTOM_CONTROLLER    32768  // each custom controller config = 1k, 4 max.
+  #define DAT_OFFSET_CONTROLLER           53248  // each controller = 1k, 4 max
+  #define DAT_OFFSET_CUSTOM_CONTROLLER    57344  // each custom controller config = 1k, 4 max.
   #define CONFIG_FILE_SIZE                65536
 #endif
 #if defined(ESP32)
