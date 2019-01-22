@@ -29,6 +29,8 @@
 #define P082_DEFAULT_FIX_TIMEOUT 2500
 #define P082_TIMESTAMP_AGE       1500
 
+// #define P082_SEND_GPS_TO_LOG
+
 struct P082_data_struct : public PluginTaskData_base {
   P082_data_struct() {}
 
@@ -65,8 +67,16 @@ struct P082_data_struct : public PluginTaskData_base {
     bool fullSentenceReceived = false;
     if (P082_easySerial != nullptr) {
       while (P082_easySerial->available() > 0) {
-        if (gps->encode(P082_easySerial->read())) {
+        char c = P082_easySerial->read();
+#ifdef P082_SEND_GPS_TO_LOG
+        currentSentence += c;
+#endif
+        if (gps->encode(c)) {
           fullSentenceReceived = true;
+#ifdef P082_SEND_GPS_TO_LOG
+          lastSentence = currentSentence;
+          currentSentence = "";
+#endif
         }
       }
     }
@@ -127,6 +137,10 @@ struct P082_data_struct : public PluginTaskData_base {
   double last_lng = 0.0;
 
   unsigned long pps_time = 0;
+#ifdef P082_SEND_GPS_TO_LOG
+  String lastSentence;
+  String currentSentence;
+#endif
 };
 
 // Must use volatile declared variable (which will end up in iRAM)
@@ -254,6 +268,9 @@ boolean Plugin_082(byte function, struct EventStruct *event, String &string) {
     P082_data_struct *P082_data =
         static_cast<P082_data_struct *>(getPluginTaskData(event->TaskIndex));
     if (nullptr != P082_data && P082_data->loop()) {
+#ifdef P082_SEND_GPS_TO_LOG
+      addLog(LOG_LEVEL_INFO, P082_data->lastSentence);
+#endif
       schedule_task_device_timer(event->TaskIndex, millis() + 10);
       delay(0); // Processing a full sentence may take a while, run some
                 // background tasks.
@@ -326,6 +343,8 @@ void P082_logStats(struct EventStruct *event) {
   log += P082_SPEED;
   log += F(" #sat: ");
   log += P082_data->gps->satellites.value();
+  log += F(" #SNR: ");
+  log += P082_data->gps->satellitesStats.getBestSNR();
   log += F(" HDOP: ");
   log += P082_data->gps->hdop.value() / 100.0;
   log += F(" Chksum(pass/fail): ");
@@ -346,6 +365,27 @@ void P082_html_show_stats(struct EventStruct *event) {
 
   addRowLabel(F("Nr Satellites"));
   addHtml(String(P082_data->gps->satellites.value()));
+
+  addRowLabel(F("Best SNR"));
+  addHtml(String(P082_data->gps->satellitesStats.getBestSNR()));
+  addHtml(F(" dB"));
+
+  addRowLabel(F("Satellites in view"));
+  bool first = true;
+  for (byte i = 0; i < _GPS_MAX_ARRAY_LENGTH; ++i) {
+    uint8_t id = P082_data->gps->satellitesStats.id[i];
+    if (id > 0) {
+      if (first) {
+        first = false;
+      } else {
+        addHtml(", ");
+      }
+      addHtml(String(id));
+      addHtml(" (");
+      addHtml(String(P082_data->gps->satellitesStats.snr[i]));
+      addHtml("dB)");
+    }
+  }
 
   addRowLabel(F("HDOP"));
   addHtml(String(P082_data->gps->hdop.value() / 100.0));
