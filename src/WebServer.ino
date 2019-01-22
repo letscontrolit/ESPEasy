@@ -172,7 +172,9 @@ void sendContentBlocking(String& data) {
   checkRAM(F("sendContentBlocking"));
   uint32_t freeBeforeSend = ESP.getFreeHeap();
   const uint32_t length = data.length();
+#ifndef BUILD_NO_DEBUG
   addLog(LOG_LEVEL_DEBUG_DEV, String("sendcontent free: ") + freeBeforeSend + " chunk size:" + length);
+#endif
   freeBeforeSend = ESP.getFreeHeap();
   if (TXBuffer.beforeTXRam > freeBeforeSend)
     TXBuffer.beforeTXRam = freeBeforeSend;
@@ -2524,11 +2526,13 @@ void handle_devices() {
 
 
   checkRAM(F("handle_devices"));
+#ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_DEBUG_DEV)) {
     String log = F("DEBUG: String size:");
     log += String(TXBuffer.sentBytes);
     addLog(LOG_LEVEL_DEBUG_DEV, log);
   }
+#endif
   sendHeadandTail_stdtemplate(_TAIL);
   TXBuffer.endStream();
 }
@@ -4147,7 +4151,9 @@ void handle_control() {
   String command = parseString(webrequest, 1);
   addLog(LOG_LEVEL_INFO,String(F("HTTP: ")) + webrequest);
   webrequest=parseTemplate(webrequest,webrequest.length());
+#ifndef BUILD_NO_DEBUG
   addLog(LOG_LEVEL_DEBUG,String(F("HTTP after parseTemplate: ")) + webrequest);
+#endif
 
   bool handledCmd = false;
   if (command == F("event"))
@@ -5054,11 +5060,13 @@ bool loadFromFS(boolean spiffs, String path) {
   else if (path.endsWith(F(".txt")) ||
            path.endsWith(F(".dat"))) dataType = F("application/octet-stream");
   else if (path.endsWith(F(".esp"))) return handle_custom(path);
+#ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     String log = F("HTML : Request file ");
     log += path;
     addLog(LOG_LEVEL_DEBUG, log);
   }
+#endif
 
   path = path.substring(1);
   if (spiffs)

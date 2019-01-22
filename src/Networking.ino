@@ -82,7 +82,9 @@ void checkUDP()
         {
           packetBuffer[len] = 0;
           String request = &packetBuffer[0];
+#ifndef BUILD_NO_DEBUG
           addLog(LOG_LEVEL_DEBUG, request);
+#endif
           struct EventStruct TempEvent;
           parseCommandString(&TempEvent, request);
           TempEvent.Source = VALUE_SOURCE_SYSTEM;
@@ -125,6 +127,7 @@ void checkUDP()
                   }
                 }
 
+#ifndef BUILD_NO_DEBUG
                 if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
                   char macaddress[20];
                   formatMAC(mac, macaddress);
@@ -132,6 +135,7 @@ void checkUDP()
                   sprintf_P(log, PSTR("UDP  : %s,%s,%u"), macaddress, formatIP(ip).c_str(), unit);
                   addLog(LOG_LEVEL_DEBUG_MORE, log);
                 }
+#endif
                 break;
               }
 
@@ -202,11 +206,13 @@ void sendUDP(byte unit, byte* data, byte size)
     remoteNodeIP = it->second.ip;
   }
 
+#ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
     String log = F("UDP  : Send UDP message to ");
     log += unit;
     addLog(LOG_LEVEL_DEBUG_MORE, log);
   }
+#endif
 
   statusLED(true);
   portUDP.beginPacket(remoteNodeIP, Settings.UDPPort);
@@ -254,7 +260,9 @@ void sendSysInfoUDP(byte repeats)
   // 1 byte node type id
 
   // send my info to the world...
+#ifndef BUILD_NO_DEBUG
   addLog(LOG_LEVEL_DEBUG_MORE, F("UDP  : Send Sysinfo message"));
+#endif
   for (byte counter = 0; counter < repeats; counter++)
   {
     uint8_t mac[] = {0, 0, 0, 0, 0, 0};

@@ -32,7 +32,9 @@ String doExecuteCommand(const char * cmd, struct EventStruct *event, const char*
   	String log = F("Command: ");
   	log += cmd_lc;
   	addLog(LOG_LEVEL_INFO, log);
+#ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_DEBUG, line); // for debug purposes add the whole line.
+#endif
   }
   // Simple macro to match command to function call.
   #define COMMAND_CASE(S, C) if (strcmp_P(cmd_lc.c_str(), PSTR(S)) == 0) { return (C(event, line)); }
