@@ -6363,6 +6363,7 @@ void handle_sysinfo() {
   #endif
   }
 
+#ifndef BUILD_MINIMAL_OTA
   if (showSettingsFileLayout) {
     addTableSeparator(F("Settings Files"), 2, 3);
     html_TR_TD();
@@ -6381,6 +6382,7 @@ void handle_sysinfo() {
       getStorageTableSVG(settingsType);
     }
   }
+#endif
 
   #ifdef ESP32
    addTableSeparator(F("Partitions"), 2, 3,
@@ -6723,6 +6725,7 @@ void getESPeasyLogo(int width_pixels) {
 }
 */
 
+#ifndef BUILD_MINIMAL_OTA
 void getConfig_dat_file_layout() {
   const int shiftY = 2;
   float yOffset = shiftY;
@@ -6802,6 +6805,7 @@ void getStorageTableSVG(SettingsType settingsType) {
   }
   TXBuffer += F("</svg>\n");
 }
+#endif
 
 #ifdef ESP32
 

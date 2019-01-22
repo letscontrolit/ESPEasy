@@ -1,6 +1,9 @@
 #ifndef WEBSERVER_RULES_DEBUG
   #define WEBSERVER_RULES_DEBUG 1
 #endif
+#ifdef BUILD_MINIMAL_OTA
+  #undef WEBSERVER_RULES_DEBUG
+#endif
 
 //********************************************************************************
 // Web Interface rules page
