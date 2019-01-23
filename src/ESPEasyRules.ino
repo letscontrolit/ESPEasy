@@ -63,7 +63,9 @@ void rulesProcessing(String &event) {
     return;
   START_TIMER
   checkRAM(F("rulesProcessing"));
+#ifndef BUILD_NO_DEBUG
   unsigned long timer = millis();
+#endif
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("EVENT: ");
     log += event;
