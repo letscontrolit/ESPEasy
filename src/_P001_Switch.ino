@@ -422,7 +422,9 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
           //QUESTION: MAYBE IT'S BETTER TO WAIT 2 CYCLES??
           if (round(PCONFIG_FLOAT(3)) && state != currentStatus.state && PCONFIG_LONG(3)==0)
           {
+#ifndef BUILD_NO_DEBUG
             addLog(LOG_LEVEL_DEBUG,F("SW  :SafeButton 1st click"));
+#endif
             PCONFIG_LONG(3) = 1;
           }
           //CASE 2: not using SafeButton, or already waited 1 more 100ms cycle, so proceed.

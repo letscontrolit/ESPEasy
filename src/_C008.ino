@@ -69,7 +69,9 @@ bool CPlugin_008(byte function, struct EventStruct *event, String& string)
 
             element.txt[x].replace(F("%valname%"), URLEncode(ExtraTaskSettings.TaskDeviceValueNames[x]));
             element.txt[x].replace(F("%value%"), formattedValue);
+#ifndef BUILD_NO_DEBUG
             addLog(LOG_LEVEL_DEBUG_MORE, element.txt[x]);
+#endif
           }
         }
         success = C008_DelayHandler.addToQueue(element);
