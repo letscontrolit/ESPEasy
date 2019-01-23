@@ -582,7 +582,11 @@ void log_connecting_fail(const String& prefix, int controller_number, Controller
   if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
     String log = prefix;
     log += get_formatted_Controller_number(controller_number);
-    log += F(" connection failed");
+    log += F(" connection failed (");
+    log += connectionFailures;
+    log += F("/");
+    log += Settings.ConnectionFailuresThreshold;
+    log += F(")");
     addLog(LOG_LEVEL_ERROR, log);
   }
 }
