@@ -101,14 +101,15 @@ void checkUDP()
               {
                 if (len < 13)
                   break;
+                byte unit = packetBuffer[12];
+#ifndef BUILD_NO_DEBUG
                 byte mac[6];
                 byte ip[4];
-                byte unit = packetBuffer[12];
                 for (byte x = 0; x < 6; x++)
                   mac[x] = packetBuffer[x + 2];
                 for (byte x = 0; x < 4; x++)
                   ip[x] = packetBuffer[x + 8];
-
+#endif
                 Nodes[unit].age = 0; // Create a new element when not present
                 NodesMap::iterator it = Nodes.find(unit);
                 if (it != Nodes.end()) {
