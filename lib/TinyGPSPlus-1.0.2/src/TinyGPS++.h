@@ -39,7 +39,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define _GPS_KM_PER_METER 0.001
 #define _GPS_FEET_PER_METER 3.2808399
 #define _GPS_MAX_FIELD_SIZE 15
-#define _GPS_MAX_NR_ACTIVE_SATELLITES 12  // NMEA allows upto 12, some receivers report more using GSV strings
+#define _GPS_MAX_NR_ACTIVE_SATELLITES 16  // NMEA allows upto 12, some receivers report more using GSV strings
 //#define _GPS_MAX_NR_SYSTEMS  3   // GPS, GLONASS, GALILEO
 #define _GPS_MAX_NR_SYSTEMS  2   // GPS, GLONASS
 #define _GPS_MAX_ARRAY_LENGTH  (_GPS_MAX_NR_ACTIVE_SATELLITES * _GPS_MAX_NR_SYSTEMS)
@@ -96,10 +96,11 @@ public:
   bool isValid() const       { return valid; }
   bool isUpdated() const     { return updated; }
   uint32_t age() const       { return valid ? millis() - lastCommitTime : (uint32_t)ULONG_MAX; }
-  uint8_t nrSatsUsed() const { return satsUsed; }
+  uint8_t nrSatsTracked() const { return satsTracked; }
+  uint8_t nrSatsVisible() const { return satsVisible; }
   uint8_t getBestSNR() const { return bestSNR; }
 
-  TinyGPSSatellites() : valid(false), updated(false), pos(-1), bestSNR(0), satsUsed(0), snrDataPresent(false)
+  TinyGPSSatellites() : valid(false), updated(false), pos(-1), bestSNR(0), satsTracked(0), satsVisible(0), snrDataPresent(false)
   {}
 
   uint8_t id[_GPS_MAX_ARRAY_LENGTH] = {0};
@@ -118,9 +119,11 @@ private:
    */
    int8_t pos; // Use signed int, only increase pos to set satellite ID
    uint8_t bestSNR;
-   uint8_t satsUsed;
+   uint8_t satsTracked;
+   uint8_t satsVisible;
    bool snrDataPresent;
    uint32_t lastCommitTime;
+
    void commit();
    void setSatId(const char *term);
    void setSatSNR(const char *term);
