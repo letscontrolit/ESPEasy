@@ -580,6 +580,33 @@ bool wifiConnectTimeoutReached() {
   return timeOutReached(last_wifi_connect_attempt_moment + DEFAULT_WIFI_CONNECTION_TIMEOUT + randomOffset_in_sec);
 }
 
+void setConnectionSpeed() {
+  #ifdef ESP8266
+  if (Settings.ForceWiFi_bg_mode() || wifi_connect_attempt > 10) {
+    WiFi.setPhyMode(WIFI_PHY_MODE_11G);
+  } else {
+    WiFi.setPhyMode(WIFI_PHY_MODE_11N);
+  }
+  #endif
+
+  // Does not (yet) work, so commented out.
+  #ifdef ESP32
+  uint8_t protocol = WIFI_PROTOCOL_11B | WIFI_PROTOCOL_11G; // Default to BG
+  if (!Settings.ForceWiFi_bg_mode() || wifi_connect_attempt > 10) {
+    // Set to use BGN
+    protocol |= WIFI_PROTOCOL_11N;
+  }
+  if (WifiIsSTA(WiFi.getMode())) {
+    esp_wifi_set_protocol(WIFI_IF_STA, protocol);
+  }
+  if (WifiIsAP(WiFi.getMode())) {
+    esp_wifi_set_protocol(WIFI_IF_AP, protocol);
+  }
+  #endif
+
+
+}
+
 void setupStaticIPconfig() {
   setUseStaticIP(useStaticIP());
   if (!useStaticIP()) return;
@@ -637,6 +664,7 @@ bool tryConnectWiFi() {
     addLog(LOG_LEVEL_INFO, log);
   }
   setupStaticIPconfig();
+  setConnectionSpeed();
   last_wifi_connect_attempt_moment = millis();
   switch (wifi_connect_attempt) {
     case 0:

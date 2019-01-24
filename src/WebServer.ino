@@ -3359,6 +3359,10 @@ void html_B(const String& text) {
   wrap_html_tag("b", text);
 }
 
+void html_I(const String& text) {
+  wrap_html_tag("i", text);
+}
+
 void html_U(const String& text) {
   wrap_html_tag("u", text);
 }
@@ -4671,6 +4675,7 @@ void handle_advanced() {
     Settings.Latitude = getFormItemFloat(F("latitude"));
     Settings.Longitude = getFormItemFloat(F("longitude"));
     Settings.OldRulesEngine(isFormItemChecked(F("oldrulesengine")));
+    Settings.ForceWiFi_bg_mode(isFormItemChecked(F("forcewifi_bg")));
 
     addHtmlError(SaveSettings());
     if (systemTimePresent())
@@ -4750,6 +4755,13 @@ void handle_advanced() {
   addFormCheckBox_disabled(F("Use SSDP"), F("usessdp"), Settings.UseSSDP);
 
   addFormNumericBox(F("Connection Failure Threshold"), F("cft"), Settings.ConnectionFailuresThreshold, 0, 100);
+#ifdef ESP8266
+  addFormCheckBox(F("Force WiFi B/G"), F("forcewifi_bg"), Settings.ForceWiFi_bg_mode());
+#endif
+#ifdef ESP32
+  // Disabled for now, since it is not working properly.
+  addFormCheckBox_disabled(F("Force WiFi B/G"), F("forcewifi_bg"), Settings.ForceWiFi_bg_mode());
+#endif
 
   addFormNumericBox(F("I2C ClockStretchLimit"), F("wireclockstretchlimit"), Settings.WireClockStretchLimit);   //TODO define limits
   #if defined(FEATURE_ARDUINO_OTA)

@@ -37,6 +37,7 @@
 #define DEFAULT_IP_BLOCK_LEVEL 1                // 0: ALL_ALLOWED  1: LOCAL_SUBNET_ALLOWED  2: ONLY_IP_RANGE_ALLOWED
 
 #define DEFAULT_WIFI_CONNECTION_TIMEOUT  10000  // minimum timeout in ms for WiFi to be connected.
+#define DEFAULT_WIFI_FORCE_BG_MODE       false  // when set, only allow to connect in 802.11B or G mode (not N)
 
 // --- Default Controller ------------------------------------------------------------------------------
 #define DEFAULT_CONTROLLER   false              // true or false enabled or disabled, set 1st controller defaults
@@ -548,6 +549,7 @@ bool showSettingsFileLayout = false;
   #include <WebServer.h>
   #include "SPIFFS.h"
   #include <rom/rtc.h>
+  #include "esp_wifi.h" // Needed to call ESP-IDF functions like esp_wifi_....
   WebServer WebServer(80);
   #ifdef FEATURE_MDNS
     #include <ESPmDNS.h>
@@ -723,6 +725,11 @@ struct SettingsStruct
   bool OldRulesEngine() {  return !getBitFromUL(VariousBits1, 3); }
   void OldRulesEngine(bool value) {  setBitToUL(VariousBits1, 3, !value); }
 
+  bool ForceWiFi_bg_mode() {  return getBitFromUL(VariousBits1, 4); }
+  void ForceWiFi_bg_mode(bool value) {  setBitToUL(VariousBits1, 4, value); }
+
+
+
 
   void validate() {
     if (UDPPort > 65535) UDPPort = 0;
@@ -825,6 +832,7 @@ struct SettingsStruct
     MQTTUseUnitNameAsClientId = 0;
     VariousBits1 = 0;
     OldRulesEngine(DEFAULT_RULES_OLDENGINE);
+    ForceWiFi_bg_mode(DEFAULT_WIFI_FORCE_BG_MODE);
   }
 
   void clearAll() {
