@@ -64,6 +64,10 @@ void processDisconnect() {
     }
     addLog(LOG_LEVEL_INFO, log);
   }
+  if (Settings.WiFiRestart_connection_lost()) {
+    setWifiMode(WIFI_OFF);
+    delay(100);
+  }
   logConnectionStatus();
 }
 

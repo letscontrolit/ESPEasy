@@ -4719,6 +4719,7 @@ void handle_advanced() {
     Settings.Longitude = getFormItemFloat(F("longitude"));
     Settings.OldRulesEngine(isFormItemChecked(F("oldrulesengine")));
     Settings.ForceWiFi_bg_mode(isFormItemChecked(F("forcewifi_bg")));
+    Settings.WiFiRestart_connection_lost(isFormItemChecked(F("wifi_restart_conn_lost")));
 
     addHtmlError(SaveSettings());
     if (systemTimePresent())
@@ -4805,6 +4806,8 @@ void handle_advanced() {
   // Disabled for now, since it is not working properly.
   addFormCheckBox_disabled(F("Force WiFi B/G"), F("forcewifi_bg"), Settings.ForceWiFi_bg_mode());
 #endif
+
+  addFormCheckBox(F("Restart WiFi on lost conn."), F("wifi_restart_conn_lost"), Settings.WiFiRestart_connection_lost());
 
   addFormNumericBox(F("I2C ClockStretchLimit"), F("wireclockstretchlimit"), Settings.WireClockStretchLimit);   //TODO define limits
   #if defined(FEATURE_ARDUINO_OTA)
