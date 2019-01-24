@@ -584,10 +584,10 @@ bool wifiConnectTimeoutReached() {
 
 void setConnectionSpeed() {
   #ifdef ESP8266
-  if (Settings.ForceWiFi_bg_mode() || wifi_connect_attempt > 10) {
-    WiFi.setPhyMode(WIFI_PHY_MODE_11G);
-  } else {
+  if (!Settings.ForceWiFi_bg_mode() || wifi_connect_attempt > 10) {
     WiFi.setPhyMode(WIFI_PHY_MODE_11N);
+  } else {
+    WiFi.setPhyMode(WIFI_PHY_MODE_11G);
   }
   #endif
 
