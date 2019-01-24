@@ -497,7 +497,7 @@ bool  parseStringAndSendAirCon(const uint16_t irType, const String& str) {
       Plugin_035_irSender->sendDaikin(reinterpret_cast<uint8_t *>(state));
       break;
 #endif
-#if MITSUBISHI_AC
+#if SEND_MITSUBISHI_AC
     case MITSUBISHI_AC:
       Plugin_035_irSender->sendMitsubishiAC(reinterpret_cast<uint8_t *>(state));
       break;

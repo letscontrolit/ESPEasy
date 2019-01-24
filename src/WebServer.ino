@@ -2955,7 +2955,7 @@ void addSaveButton(const String &url, const String &label)
 
 void addSaveButton(class StreamingBuffer &buffer, const String &url, const String &label)
 {
-#ifdef PLUGIN_BUILD_MINIMAL_OTA
+#ifdef BUILD_MINIMAL_OTA
   addButtonWithSvg(buffer, url, label
      , ""
      , false);
@@ -2973,7 +2973,7 @@ void addDeleteButton(const String &url, const String &label)
 
 void addDeleteButton(class StreamingBuffer &buffer, const String &url, const String &label)
 {
-#ifdef PLUGIN_BUILD_MINIMAL_OTA
+#ifdef BUILD_MINIMAL_OTA
   addButtonWithSvg(buffer, url, label
      , ""
      , true);

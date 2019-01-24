@@ -103,8 +103,9 @@ void onDisconnect(const WiFiEventStationModeDisconnected& event){
   if (timeDiff(lastConnectMoment, last_wifi_connect_attempt_moment) > 0) {
     // There was an unsuccessful connection attempt
     lastConnectedDuration = timeDiff(last_wifi_connect_attempt_moment, lastDisconnectMoment);
-  } else
+  } else {
     lastConnectedDuration = timeDiff(lastConnectMoment, lastDisconnectMoment);
+  }
   lastDisconnectReason = event.reason;
   wifiStatus = ESPEASY_WIFI_DISCONNECTED;
   processedDisconnect = false;

@@ -1,4 +1,51 @@
 -------------------------------------------------
+Changes in release mega-20190121 (since mega-20190116)
+-------------------------------------------------
+
+Release date: Mon Jan 21 04:00:15 CET 2019
+
+Eduard Iten (1):
+      Add code to start periodic transmission if not enough data is received
+
+Gijs Noorlander (1):
+      [IRTX] mitsubishi_ac not working #2230
+
+jimmys01 (1):
+      [Condrollers] Solves the 0 Max Queue Depth and Max retries bug after an update
+
+stefan (3):
+      [WiFi] Some minor changes for WiFi stability
+      [Wifi] Remove unused variable
+      [Plugin Sets] Decouple PLUGIN_BUILD_MINIMAL_OTA
+
+
+-------------------------------------------------
+Changes in release mega-20190116 (since mega-20190110)
+-------------------------------------------------
+
+Release date: Wed Jan 16 04:00:26 CET 2019
+
+Gijs Noorlander (1):
+      [WiFi] Disable wifi initialization at boot
+
+Grovkillen (1):
+      [flasher] fixed API deny error (JSON parse)
+
+
+-------------------------------------------------
+Changes in release mega-20190110 (since mega-20190109)
+-------------------------------------------------
+
+Release date: Thu Jan 10 04:00:10 CET 2019
+
+TD-er (4):
+      [GPS] Reduce memory usage when plugin not active.
+      [Plugins] Replace long settings names with clear macros
+      [CSE7766] Reduce memory when plugin not active
+      [Plugins] Remove redundant includes
+
+
+-------------------------------------------------
 Changes in release mega-20190109 (since mega-20190108)
 -------------------------------------------------
 
