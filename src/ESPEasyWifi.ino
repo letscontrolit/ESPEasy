@@ -480,9 +480,11 @@ bool WiFiConnected() {
       return true;
     }
     // else wifiStatus is no longer in sync.
+    addLog(LOG_LEVEL_INFO, F("WIFI  : WiFiConnected() out of sync"));
     resetWiFi();
   }
   delay(1);
+  STOP_TIMER(WIFI_ISCONNECTED_STATS);  // SMY: also count this call when not connected
   return false;
 }
 
@@ -572,10 +574,10 @@ bool wifiConnectTimeoutReached() {
   // wait until it connects + add some device specific random offset to prevent
   // all nodes overloading the accesspoint when turning on at the same time.
   #if defined(ESP8266)
-  const unsigned int randomOffset_in_sec = wifi_connect_attempt == 1 ? 0 : 1000 * ((ESP.getChipId() & 0xF));
+  const unsigned int randomOffset_in_sec = (wifi_connect_attempt == 1) ? 0 : 1000 * ((ESP.getChipId() & 0xF));
   #endif
   #if defined(ESP32)
-  const unsigned int randomOffset_in_sec = wifi_connect_attempt == 1 ? 0 : 1000 * ((ESP.getEfuseMac() & 0xF));
+  const unsigned int randomOffset_in_sec = (wifi_connect_attempt == 1) ? 0 : 1000 * ((ESP.getEfuseMac() & 0xF));
   #endif
   return timeOutReached(last_wifi_connect_attempt_moment + DEFAULT_WIFI_CONNECTION_TIMEOUT + randomOffset_in_sec);
 }
@@ -642,8 +644,10 @@ bool tryConnectWiFi() {
       return(true);   //already connected, need to disconnect first
     }
   }
-  if (!wifiConnectTimeoutReached())
+  if (!wifiConnectTimeoutReached()) {
+    delay(0); // SMY: give some time to handle WiFi
     return true;    // timeout not reached yet, thus no need to retry again.
+  }
   if (!selectValidWiFiSettings()) {
     addLog(LOG_LEVEL_ERROR, F("WIFI : No valid WiFi settings!"));
     return false;
@@ -685,7 +689,7 @@ bool tryConnectWiFi() {
         log += ssid;
         addLog(LOG_LEVEL_INFO, log);
       }
-      return false;
+      break;
     }
     case WL_CONNECT_FAILED: {
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -693,7 +697,23 @@ bool tryConnectWiFi() {
         log += ssid;
         addLog(LOG_LEVEL_INFO, log);
       }
-      return false;
+      break;
+    }
+    case WL_DISCONNECTED: {
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        String log = F("WIFI : Not configured in Station Mode!!: ");
+        log += ssid;
+        addLog(LOG_LEVEL_INFO, log);
+      }
+      break;
+    }
+    case WL_IDLE_STATUS: {
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        String log = F("WIFI : Connection in IDLE state: ");
+        log += ssid;
+        addLog(LOG_LEVEL_INFO, log);
+      }
+      break;
     }
     case WL_CONNECTED: {
       return true;
@@ -862,12 +882,18 @@ void WifiCheck()
 
   processDisableAPmode();
   IPAddress ip = WiFi.localIP();
-  if (!useStaticIP()) {
-    if (ip[0] == 0 && ip[1] == 0 && ip[2] == 0 && ip[3] == 0) {
-      if (WiFiConnected()) {
+  if (WiFiConnected()) { // let's just check for wifi, no matter if we have an IP or not...
+    if (!useStaticIP()) {
+      if (ip[0] == 0 && ip[1] == 0 && ip[2] == 0 && ip[3] == 0) {
         // Some strange situation where the DHCP renew probably has failed and erased the config.
+        addLog(LOG_LEVEL_ERROR, F("WIFI : DHCP renew probably failed"));
         resetWiFi();
       }
+    }
+  } else {
+    if (wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED) { // SMY: WiFi seems to be disconnected and out of sync with internal state... strange... we should never get here!!
+      addLog(LOG_LEVEL_ERROR, F("WIFI : WiFiCheck out of sync"));
+      resetWiFi();
     }
   }
 

@@ -80,6 +80,8 @@ To create/register a plugin, you have to :
 
     #define CONTROLLER_SET_NONE
 
+    #define BUILD_MINIMAL_OTA
+
     #define USES_C001   // Domoticz HTTP
     #define USES_C002   // Domoticz MQTT
     #define USES_C005   // OpenHAB MQTT
