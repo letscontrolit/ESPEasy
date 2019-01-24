@@ -38,6 +38,7 @@
 
 #define DEFAULT_WIFI_CONNECTION_TIMEOUT  10000  // minimum timeout in ms for WiFi to be connected.
 #define DEFAULT_WIFI_FORCE_BG_MODE       false  // when set, only allow to connect in 802.11B or G mode (not N)
+#define DEFAULT_WIFI_RESTART_WIFI_CONN_LOST  false // Perform wifi off and on when connection was lost.
 
 // --- Default Controller ------------------------------------------------------------------------------
 #define DEFAULT_CONTROLLER   false              // true or false enabled or disabled, set 1st controller defaults
@@ -728,6 +729,8 @@ struct SettingsStruct
   bool ForceWiFi_bg_mode() {  return getBitFromUL(VariousBits1, 4); }
   void ForceWiFi_bg_mode(bool value) {  setBitToUL(VariousBits1, 4, value); }
 
+  bool WiFiRestart_connection_lost() {  return getBitFromUL(VariousBits1, 5); }
+  void WiFiRestart_connection_lost(bool value) {  setBitToUL(VariousBits1, 5, value); }
 
 
 
@@ -833,6 +836,7 @@ struct SettingsStruct
     VariousBits1 = 0;
     OldRulesEngine(DEFAULT_RULES_OLDENGINE);
     ForceWiFi_bg_mode(DEFAULT_WIFI_FORCE_BG_MODE);
+    WiFiRestart_connection_lost(DEFAULT_WIFI_RESTART_WIFI_CONN_LOST);
   }
 
   void clearAll() {
