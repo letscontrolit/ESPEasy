@@ -3313,21 +3313,58 @@ void addFormIPBox(const String& label, const String& id, const byte ip[4])
 // adds a Help Button with points to the the given Wiki Subpage
 void addHelpButton(const String& url)
 {
-  TXBuffer += F(" <a class='button help' href='");
-  if (!url.startsWith(F("http"))) {
-    TXBuffer += F("http://www.letscontrolit.com/wiki/index.php/");
-  }
-  TXBuffer += url;
-  TXBuffer += F("' target='_blank'>&#10068;</a>");
+  addHtmlLink(
+    F("button help"),
+    makeDocLink(url, false),
+    F("&#10068;"));
 }
 
 void addRTDPluginButton(int taskDeviceNumber) {
-  TXBuffer += F(" <a class='button help' href='");
-  TXBuffer += F("https://espeasy.readthedocs.io/en/latest/Plugin/P");
-  if (taskDeviceNumber < 100) TXBuffer += '0';
-  if (taskDeviceNumber < 10) TXBuffer += '0';
-  TXBuffer += String(taskDeviceNumber);
-  TXBuffer += F(".html' target='_blank'>&#8505;</a>");
+  String url;
+  url.reserve(16);
+  url = F("Plugin/P");
+  if (taskDeviceNumber < 100) url += '0';
+  if (taskDeviceNumber < 10) url += '0';
+  url += String(taskDeviceNumber);
+  url += F(".html");
+  addHtmlLink(
+    F("button help"),
+    makeDocLink(url, true),
+    F("&#8505;"));
+
+  switch (taskDeviceNumber) {
+    case 76:
+    case 77:
+      addHtmlLink(
+        F("button help"),
+        makeDocLink(F("Reference/Safety.html"), true),
+        F("&#9889;")); // High voltage sign
+      break;
+
+  }
+}
+
+String makeDocLink(const String& url, bool isRTD) {
+  String result;
+  if (!url.startsWith(F("http"))) {
+    if (isRTD) {
+      result += F("https://espeasy.readthedocs.io/en/latest/");
+    } else {
+      result += F("http://www.letscontrolit.com/wiki/index.php/");
+    }
+  }
+  result += url;
+  return result;
+}
+
+void addHtmlLink(const String& htmlclass, const String& url, const String& label) {
+  TXBuffer += F(" <a class='");
+  TXBuffer += htmlclass;
+  TXBuffer += F("' href='");
+  TXBuffer += url;
+  TXBuffer += F("' target='_blank'>");
+  TXBuffer += label;
+  TXBuffer += F("</a>");
 }
 
 void addEnabled(boolean enabled)
