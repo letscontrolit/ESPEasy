@@ -124,27 +124,35 @@ boolean Plugin_033(byte function, struct EventStruct *event, String& string)
         break;
       }
 
-    // case PLUGIN_READ:
-    //   {
-    //     event->sensorType = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
-    //     for (byte x=0; x<4;x++)
-    //     {
-    //       String log = F("Dummy: value ");
-    //       log += x+1;
-    //       log += F(": ");
-    //       log += UserVar[event->BaseVarIndex+x];
-    //       addLog(LOG_LEVEL_INFO,log);
-    //     }
-    //     success = true;
-    //     break;
-    //   }
-
-   case PLUGIN_WRITE:
+    case PLUGIN_READ:
       {
-        String arguments = String(string);
-        if (arguments.equalsIgnoreCase(F("SAVEVALUES")))
+        event->sensorType = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+        char deviceTemplate[P33_Nlines][P33_Nchars];
+        LoadCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
+        boolean valueChanged = false;
+
+        for (byte varNr = 0; varNr < P33_Nlines; varNr++)
         {
-          char deviceTemplate[P33_Nlines][P33_Nchars];
+          float ramValue = UserVar[event->BaseVarIndex + varNr];
+          String log = F("Dummy: value ");
+          log += varNr + 1;
+          log += F(": ");
+          log += ramValue;
+
+          float persistentValue;
+          persistentValue = atof(deviceTemplate[varNr]);
+
+          if (ramValue == persistentValue){
+            log += F(" (not changed)");
+          }
+          else{
+            log += F(" (changed)");
+            valueChanged = true;
+          }
+          addLog(LOG_LEVEL_INFO,log);
+        }
+
+        if (valueChanged){
           for (byte varNr = 0; varNr < P33_Nlines; varNr++)
           {
             float value=UserVar[event->BaseVarIndex + varNr];
@@ -157,25 +165,29 @@ boolean Plugin_033(byte function, struct EventStruct *event, String& string)
           String log = F("persistent values saved for task ");
           log += (event->TaskIndex + 1);
 
-          success = true;
-          // если после текущей таски есть еще таски с типом dummy
-          // то ставим success=false для перехода к их обработчикам
-          // если это последняя dummy-таска - возвращаем true
-          byte x = (event->TaskIndex +1);
-          while (x < TASKS_MAX){
-            if (Settings.TaskDeviceEnabled[x] && (Settings.TaskDeviceNumber[x] == PLUGIN_ID_033)) {
-              success = false;
-              break;
-            }
-            x++;
-          }
-          if (success){
-            log += F(". All tasks saved.");
-          }
-          addLog(LOG_LEVEL_INFO,log);
+          // success = true;
+          // // если после текущей таски есть еще таски с типом dummy
+          // // то ставим success=false для перехода к их обработчикам
+          // // если это последняя dummy-таска - возвращаем true
+          // byte x = (event->TaskIndex +1);
+          // while (x < TASKS_MAX){
+          //   if (Settings.TaskDeviceEnabled[x] && (Settings.TaskDeviceNumber[x] == PLUGIN_ID_033)) {
+          //     success = false;
+          //     break;
+          //   }
+          //   x++;
+          // }
+          // if (success){
+          //   log += F(". All tasks saved.");
+          // }
+          // addLog(LOG_LEVEL_INFO,log);
+
         }
+
+        success = true;
         break;
       }
+
   }
   return success;
 }
