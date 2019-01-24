@@ -410,14 +410,18 @@ double TinyGPSLocation::lng()
 
 void TinyGPSSatellites::commit()
 {
-  satsUsed = 0;
+  satsTracked = 0;
+  satsVisible = 0;
   bestSNR = 0;
   for (byte i = 0; i < _GPS_MAX_ARRAY_LENGTH; ++i) {
-    if ((id[i] != 0) && (snrDataPresent || (snr[i] != 0))) {
-      ++satsUsed;
-      if (snr[i] > bestSNR) {
-        bestSNR = snr[i];
+    if (id[i] != 0) {
+      if (snr[i] != 0) {
+        ++satsTracked;
+        if (snr[i] > bestSNR) {
+          bestSNR = snr[i];
+        }
       }
+      ++satsVisible;
     }
   }
   pos = -1;

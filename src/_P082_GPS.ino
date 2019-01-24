@@ -354,6 +354,56 @@ void P082_logStats(struct EventStruct *event) {
   addLog(LOG_LEVEL_INFO, log);
 }
 
+
+void P082_html_show_satStats(struct EventStruct *event, bool tracked, bool onlyGPS) {
+  P082_data_struct *P082_data =
+      static_cast<P082_data_struct *>(getPluginTaskData(event->TaskIndex));
+  if (nullptr == P082_data || !P082_data->isInitialized()) {
+    return;
+  }
+
+  bool first = true;
+  for (byte i = 0; i < _GPS_MAX_ARRAY_LENGTH; ++i) {
+    uint8_t id = P082_data->gps->satellitesStats.id[i];
+    uint8_t snr = P082_data->gps->satellitesStats.snr[i];
+    if (id > 0) {
+      if ((id <= 32) == onlyGPS && (snr > 0) == tracked) {
+        if (first) {
+          first = false;
+          String label;
+          label.reserve(32);
+          if (onlyGPS) {
+            label = "GPS";
+          } else {
+            label = F("Other");
+          }
+          label += F(" sat. ");
+          if (tracked) {
+            label += F("tracked - id(SNR)");
+          } else {
+            label += F("in view - id");
+          }
+          addRowLabel(label);
+        } else {
+          addHtml(", ");
+        }
+        addHtml(String(id));
+        if (tracked) {
+          addHtml(" (");
+          addHtml(String(snr));
+          addHtml(")");
+        }
+      }
+    }
+  }
+  if (!first) {
+    // Something was added, so add the unit here
+    if (tracked) {
+      html_I(F(" - SNR in dBHz"));
+    }
+  }
+}
+
 void P082_html_show_stats(struct EventStruct *event) {
   P082_data_struct *P082_data =
       static_cast<P082_data_struct *>(getPluginTaskData(event->TaskIndex));
@@ -363,29 +413,21 @@ void P082_html_show_stats(struct EventStruct *event) {
   addRowLabel(F("Fix"));
   addHtml(String(P082_data->hasFix(P082_DEFAULT_FIX_TIMEOUT)));
 
-  addRowLabel(F("Nr Satellites"));
-  addHtml(String(P082_data->gps->satellites.value()));
+  addRowLabel(F("Satellites tracked"));
+  addHtml(String(P082_data->gps->satellitesStats.nrSatsTracked()));
+
+  addRowLabel(F("Satellites visible"));
+  addHtml(String(P082_data->gps->satellitesStats.nrSatsVisible()));
 
   addRowLabel(F("Best SNR"));
   addHtml(String(P082_data->gps->satellitesStats.getBestSNR()));
-  addHtml(F(" dB"));
+  addHtml(F(" dBHz"));
 
-  addRowLabel(F("Satellites in view"));
-  bool first = true;
-  for (byte i = 0; i < _GPS_MAX_ARRAY_LENGTH; ++i) {
-    uint8_t id = P082_data->gps->satellitesStats.id[i];
-    if (id > 0) {
-      if (first) {
-        first = false;
-      } else {
-        addHtml(", ");
-      }
-      addHtml(String(id));
-      addHtml(" (");
-      addHtml(String(P082_data->gps->satellitesStats.snr[i]));
-      addHtml("dB)");
-    }
-  }
+  // Satellites tracked or in view.
+  P082_html_show_satStats(event, true, true);
+  P082_html_show_satStats(event, false, true);
+  P082_html_show_satStats(event, true, false);
+  P082_html_show_satStats(event, false, false);
 
   addRowLabel(F("HDOP"));
   addHtml(String(P082_data->gps->hdop.value() / 100.0));
