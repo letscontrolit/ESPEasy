@@ -27,7 +27,7 @@ boolean Plugin_033(byte function, struct EventStruct *event, String& string)
         Device[deviceCount].InverseLogicOption = false;
         Device[deviceCount].FormulaOption = false;
         Device[deviceCount].DecimalsOnly = true;
-        Device[deviceCount].ValueCount = 4;
+        Device[deviceCount].ValueCount = P33_Nlines;
         Device[deviceCount].SendDataOption = true;
         Device[deviceCount].TimerOption = true;
         Device[deviceCount].GlobalSyncOption = true;
@@ -75,6 +75,10 @@ boolean Plugin_033(byte function, struct EventStruct *event, String& string)
         optionValues[10] = SENSOR_TYPE_WIND;
 
         addFormSelector(F("Simulate Data Type"), F("p033_sensortype"), 11, options, optionValues, choice );
+        boolean keepValue = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
+
+        addRowLabel(F("Save on read or publish")); // Keep TaskValueSet on reboot
+        addCheckBox(F("p033_keepvalue"), keepValue);
 
         char deviceTemplate[P33_Nlines][P33_Nchars];
         LoadCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
@@ -89,6 +93,7 @@ boolean Plugin_033(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE:
       {
         Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("p033_sensortype"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = isFormItemChecked(F("p033_keepvalue"));
 
         char deviceTemplate[P33_Nlines][P33_Nchars];
         String error;
@@ -142,17 +147,15 @@ boolean Plugin_033(byte function, struct EventStruct *event, String& string)
           float persistentValue;
           persistentValue = atof(deviceTemplate[varNr]);
 
-          if (ramValue == persistentValue){
-            log += F(" (not changed)");
-          }
-          else{
+          if (ramValue != persistentValue){
             log += F(" (changed)");
             valueChanged = true;
           }
           addLog(LOG_LEVEL_INFO,log);
         }
 
-        if (valueChanged){
+        byte keepValue = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
+        if (valueChanged && keepValue){
           for (byte varNr = 0; varNr < P33_Nlines; varNr++)
           {
             float value=UserVar[event->BaseVarIndex + varNr];
@@ -164,23 +167,6 @@ boolean Plugin_033(byte function, struct EventStruct *event, String& string)
 
           String log = F("persistent values saved for task ");
           log += (event->TaskIndex + 1);
-
-          // success = true;
-          // // если после текущей таски есть еще таски с типом dummy
-          // // то ставим success=false для перехода к их обработчикам
-          // // если это последняя dummy-таска - возвращаем true
-          // byte x = (event->TaskIndex +1);
-          // while (x < TASKS_MAX){
-          //   if (Settings.TaskDeviceEnabled[x] && (Settings.TaskDeviceNumber[x] == PLUGIN_ID_033)) {
-          //     success = false;
-          //     break;
-          //   }
-          //   x++;
-          // }
-          // if (success){
-          //   log += F(". All tasks saved.");
-          // }
-          // addLog(LOG_LEVEL_INFO,log);
 
         }
 
