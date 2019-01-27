@@ -7,6 +7,9 @@
 #define PLUGIN_ID_033         33
 #define PLUGIN_NAME_033       "Generic - Dummy Device"
 #define PLUGIN_VALUENAME1_033 "Dummy"
+#define P33_Nlines 4
+#define P33_Nchars 8
+
 boolean Plugin_033(byte function, struct EventStruct *event, String& string)
 {
   boolean success = false;
@@ -18,13 +21,13 @@ boolean Plugin_033(byte function, struct EventStruct *event, String& string)
       {
         Device[++deviceCount].Number = PLUGIN_ID_033;
         Device[deviceCount].Type = DEVICE_TYPE_DUMMY;
-        Device[deviceCount].VType = SENSOR_TYPE_SINGLE;
+        Device[deviceCount].VType = SENSOR_TYPE_QUAD;
         Device[deviceCount].Ports = 0;
         Device[deviceCount].PullUpOption = false;
         Device[deviceCount].InverseLogicOption = false;
         Device[deviceCount].FormulaOption = false;
         Device[deviceCount].DecimalsOnly = true;
-        Device[deviceCount].ValueCount = 4;
+        Device[deviceCount].ValueCount = P33_Nlines;
         Device[deviceCount].SendDataOption = true;
         Device[deviceCount].TimerOption = true;
         Device[deviceCount].GlobalSyncOption = true;
@@ -72,7 +75,17 @@ boolean Plugin_033(byte function, struct EventStruct *event, String& string)
         optionValues[10] = SENSOR_TYPE_WIND;
 
         addFormSelector(F("Simulate Data Type"), F("p033_sensortype"), 11, options, optionValues, choice );
+        boolean keepValue = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
 
+        addRowLabel(F("Save on read or publish")); // Keep TaskValueSet on reboot
+        addCheckBox(F("p033_keepvalue"), keepValue);
+
+        char deviceTemplate[P33_Nlines][P33_Nchars];
+        LoadCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
+        for (byte varNr = 0; varNr < P33_Nlines; varNr++)
+        {
+          addFormTextBox(String(F("Persistent value ")) + (varNr + 1), String(F("p033_template")) + (varNr + 1), deviceTemplate[varNr], P33_Nchars);
+        }
         success = true;
         break;
       }
@@ -80,6 +93,38 @@ boolean Plugin_033(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE:
       {
         Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("p033_sensortype"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = isFormItemChecked(F("p033_keepvalue"));
+
+        char deviceTemplate[P33_Nlines][P33_Nchars];
+        String error;
+        for (byte varNr = 0; varNr < P33_Nlines; varNr++)
+        {
+          String argName = F("p033_template");
+          argName += varNr + 1;
+          if (!safe_strncpy(deviceTemplate[varNr], WebServer.arg(argName), P33_Nchars)) {
+            error += getCustomTaskSettingsError(varNr);
+          }
+        }
+        if (error.length() > 0) {
+          addHtmlError(error);
+        }
+        SaveCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
+
+        success = true;
+        break;
+      }
+
+    case PLUGIN_INIT:
+      {
+        char deviceTemplate[P33_Nlines][P33_Nchars];
+        LoadCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
+        for (byte varNr = 0; varNr < P33_Nlines; varNr++)
+        {
+          float temp;
+          temp=atof(deviceTemplate[varNr]);
+          UserVar[event->BaseVarIndex + varNr] = temp;
+        }
+
         success = true;
         break;
       }
@@ -87,17 +132,48 @@ boolean Plugin_033(byte function, struct EventStruct *event, String& string)
     case PLUGIN_READ:
       {
         event->sensorType = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
-        for (byte x=0; x<4;x++)
+        char deviceTemplate[P33_Nlines][P33_Nchars];
+        LoadCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
+        boolean valueChanged = false;
+
+        for (byte varNr = 0; varNr < P33_Nlines; varNr++)
         {
+          float ramValue = UserVar[event->BaseVarIndex + varNr];
           String log = F("Dummy: value ");
-          log += x+1;
+          log += varNr + 1;
           log += F(": ");
-          log += UserVar[event->BaseVarIndex+x];
+          log += ramValue;
+
+          float persistentValue;
+          persistentValue = atof(deviceTemplate[varNr]);
+
+          if (ramValue != persistentValue){
+            log += F(" (changed)");
+            valueChanged = true;
+          }
           addLog(LOG_LEVEL_INFO,log);
         }
+
+        byte keepValue = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
+        if (valueChanged && keepValue){
+          for (byte varNr = 0; varNr < P33_Nlines; varNr++)
+          {
+            float value=UserVar[event->BaseVarIndex + varNr];
+              String tmp = F("");
+            tmp += value;
+            safe_strncpy(deviceTemplate[varNr], tmp, P33_Nchars);
+          }
+          SaveCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
+
+          String log = F("persistent values saved for task ");
+          log += (event->TaskIndex + 1);
+
+        }
+
         success = true;
         break;
       }
+
   }
   return success;
 }
