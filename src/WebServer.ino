@@ -2822,9 +2822,9 @@ void addSelector_Head(const String& id, boolean reloadonchange) {
 void addSelector_Head(const String& id, boolean reloadonchange, bool disabled)
 {
   if (reloadonchange) {
-    addSelector_Head(id, F("return dept_onchange(frmselect)"), disabled);
+    addSelector_Head(id, (const String) F("return dept_onchange(frmselect)"), disabled);
   } else {
-    addSelector_Head(id, "", disabled);
+    addSelector_Head(id, (const String) "", disabled);
   }
 }
 
