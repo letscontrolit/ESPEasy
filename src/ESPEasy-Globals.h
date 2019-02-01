@@ -1023,7 +1023,7 @@ struct ControllerSettingsStruct
     if (MaxQueueDepth > CONTROLLER_DELAY_QUEUE_DEPTH_MAX) MaxQueueDepth = CONTROLLER_DELAY_QUEUE_DEPTH_DFLT;
     if (MaxRetry > CONTROLLER_DELAY_QUEUE_RETRY_MAX) MaxRetry = CONTROLLER_DELAY_QUEUE_RETRY_MAX;
     if (MaxQueueDepth == 0) MaxQueueDepth = CONTROLLER_DELAY_QUEUE_DEPTH_DFLT;
-    if (MaxRetry == 0) MaxRetry = CONTROLLER_DELAY_QUEUE_DELAY_DFLT;
+    if (MaxRetry == 0) MaxRetry = CONTROLLER_DELAY_QUEUE_RETRY_DFLT;
     if (ClientTimeout < 10 || ClientTimeout > CONTROLLER_CLIENTTIMEOUT_MAX) {
       ClientTimeout = CONTROLLER_CLIENTTIMEOUT_DFLT;
     }
