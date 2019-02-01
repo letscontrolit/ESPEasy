@@ -460,7 +460,9 @@ enum SettingsType {
 };
 String getSettingsTypeString(SettingsType settingsType);
 bool getSettingsParameters(SettingsType settingsType, int index, int& offset, int& max_size);
+#ifndef BUILD_MINIMAL_OTA
 bool showSettingsFileLayout = false;
+#endif
 
 /*
         To modify the stock configuration without changing this repo file :

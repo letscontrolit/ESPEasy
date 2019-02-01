@@ -452,6 +452,7 @@ void updateLoopStats_30sec(byte loglevel) {
 
   msecTimerHandler.updateIdleTimeStats();
 
+#ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(loglevel)) {
     String log = F("LoopStats: shortestLoop: ");
     log += shortestLoop;
@@ -467,6 +468,7 @@ void updateLoopStats_30sec(byte loglevel) {
     log += countFindPluginId;
     addLog(loglevel, log);
   }
+#endif
   countFindPluginId = 0;
   loop_usec_duration_total = 0;
   loopCounter_full = 1;
@@ -767,12 +769,14 @@ void runOncePerSecond()
 void logTimerStatistics() {
   byte loglevel = LOG_LEVEL_DEBUG;
   updateLoopStats_30sec(loglevel);
+#ifndef BUILD_NO_DEBUG
 //  logStatistics(loglevel, true);
   if (loglevelActiveFor(loglevel)) {
     String queueLog = F("Scheduler stats: (called/tasks/max_length/idle%) ");
     queueLog += msecTimerHandler.getQueueStats();
     addLog(loglevel, queueLog);
   }
+#endif
 }
 
 /*********************************************************************************************\
