@@ -16,13 +16,18 @@
  * - Either:
  *   o Set the MQTT_SERVER define below to the address of your MQTT server.
  *   or
- *   o Disable MQTT by commenting out the line "#define MQTT_ENABLE" down below.
+ *   o Disable MQTT (see '#define MQTT_ENABLE' below).
+ *
+ * - Site specific settings:
+ *   o Search for 'CHANGE_ME' for the things you probably need to change for
+ *     your particular situation.
  *
  * - Arduino IDE:
  *   o Install the following libraries via Library Manager
  *     - WiFiManager (https://github.com/tzapu/WiFiManager) (Version >= 0.14)
  *     - PubSubClient (https://pubsubclient.knolleary.net/)
  *   o You MUST change <PubSubClient.h> to have the following (or larger) value:
+ *     (with REPORT_RAW_UNKNOWNS 1024 or more is recommended)
  *     #define MQTT_MAX_PACKET_SIZE 512
  * - PlatformIO IDE:
  *     If you are using PlatformIO, this should already been done for you in
@@ -86,7 +91,7 @@
  *     # Install a MQTT client
  *     $ sudo apt install mosquitto-clients
  *     # Send a 32-bit NEC code of 0x1234abcd via MQTT.
- *     $ mosquitto_pub -h 10.20.0.253 -t ir_server/send -m '3,1234abcd,32'
+ *     $ mosquitto_pub -h 10.0.0.4 -t ir_server/send -m '3,1234abcd,32'
  *
  * This server will send (back) what ever IR message it just transmitted to
  * the MQTT topic 'ir_server/sent' to confirm it has been performed. This works
@@ -95,7 +100,7 @@
  * time.
  *   Unix command line usage example:
  *     # Listen to MQTT acknowledgements.
- *     $ mosquitto_sub -h 10.20.0.253 -t ir_server/sent
+ *     $ mosquitto_sub -h 10.0.0.4 -t ir_server/sent
  *
  * Incoming IR messages (from an IR remote control) will be transmitted to
  * the MQTT topic 'ir_server/received'. The MQTT message will be formatted
@@ -108,7 +113,7 @@
  *
  *   Unix command line usage example:
  *     # Listen via MQTT for IR messages captured by this server.
- *     $ mosquitto_sub -h 10.20.0.253 -t ir_server/received
+ *     $ mosquitto_sub -h 10.0.0.4 -t ir_server/received
  *
  * If DEBUG is turned on, there is additional information printed on the Serial
  * Port.
@@ -118,13 +123,45 @@
  * main page. No need to connect to the device again via USB. \o/
  * Your WiFi settings should be remembered between updates. \o/ \o/
  *
+ * ## Security
+ * <security-hat="on">
+ * There is NO authentication set on the HTTP/HTML interface by default (see
+ * `HTML_PASSWORD_ENABLE` to change that), and there is NO SSL/TLS (encryption)
+ * used by this example code.
+ *   i.e. All usernames & passwords are sent in clear text.
+ *        All communication to the MQTT server is in clear text.
+ *   e.g. This on/using the public Internet is a 'Really Bad Idea<tm>'!
+ * You should NOT have or use this code or device exposed on an untrusted and/or
+ * unprotected network.
+ * If you allow access to OTA firmware updates, then a 'Bad Guy<tm>' could
+ * potentially compromise your network. OTA updates are password protected by
+ * default. If you are sufficiently paranoid, you SHOULD disable uploading
+ * firmware via OTA. (see 'FIRMWARE_OTA')
+ * You SHOULD also (re)set/change all usernames & passwords. (See `CHANGE_ME`s)
+ * For extra bonus points: Use a separate untrusted SSID/vlan/network/ segment
+ * for your IoT stuff, including this device.
+ *             Caveat Emptor. You have now been suitably warned.
+ * </security-hat>
+ *
  * Copyright Notice:
  *   Code for this has been borrowed from lots of other OpenSource projects &
  *   resources. I'm *NOT* claiming complete Copyright ownership of all the code.
  *   Likewise, feel free to borrow from this as much as you want.
  */
-
-#define MQTT_ENABLE  // Comment this out if you don't want to use MQTT at all.
+// ---------------- Start of User Configuration Section ------------------------
+// Change to 'true'/'false' if you do/don't want these features or functions.
+#define USE_STATIC_IP false  // Change to 'true' if you don't want to use DHCP.
+#define REPORT_UNKNOWNS false  // Report inbound IR messages that we don't know.
+#define REPORT_RAW_UNKNOWNS false  // Report the whole buffer, recommended:
+                                   // MQTT_MAX_PACKET_SIZE of 1024 or more
+#define MQTT_ENABLE true  // Whether or not MQTT is used at all.
+// 'kHtmlUsername' & 'kHtmlPassword' are used by the following two items:
+#define FIRMWARE_OTA true  // Allow remote update of the firmware via http.
+                           // Less secure if enabled.
+                           // Note: Firmware OTA is also disabled until
+                           //       'kHtmlPassword' is changed from the default.
+#define HTML_PASSWORD_ENABLE false  // Protect access to the HTML interface.
+                                    // Note: OTA update is always passworded.
 
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
@@ -137,7 +174,7 @@
 #include <IRrecv.h>
 #include <IRsend.h>
 #include <IRutils.h>
-#ifdef MQTT_ENABLE
+#if MQTT_ENABLE
 // --------------------------------------------------------------------
 // * * * IMPORTANT * * *
 // You must change <PubSubClient.h> to have the following value.
@@ -150,34 +187,35 @@
 
 // Configuration parameters
 // GPIO the IR LED is connected to/controlled by. GPIO 4 = D2.
-#define IR_LED 4
+#define IR_LED 4  // <=- CHANGE_ME (optional)
 // define IR_LED 3  // For an ESP-01 we suggest you use RX/GPIO3/Pin 7.
 //
 // GPIO the IR RX module is connected to/controlled by. GPIO 14 = D5.
 // Comment this out to disable receiving/decoding IR messages entirely.
-#define IR_RX 14
+#define IR_RX 14  // <=- CHANGE_ME (optional)
+#define IR_RX_PULLUP false
 const uint16_t kHttpPort = 80;  // The TCP port the HTTP server is listening on.
 // Name of the device you want in mDNS.
 // NOTE: Changing this will change the MQTT path too unless you override it
 //       via MQTTprefix below.
-#define HOSTNAME "ir_server"
+#define HOSTNAME "ir_server"  // <=- CHANGE_ME (optional)
 
 // We obtain our network config via DHCP by default but allow an easy way to
 // use a static IP config.
-#define USE_STATIC_IP false  // Change to 'true' if you don't want to use DHCP.
 #if USE_STATIC_IP
 const IPAddress kIPAddress = IPAddress(10, 0, 1, 78);
 const IPAddress kGateway = IPAddress(10, 0, 1, 1);
 const IPAddress kSubnetMask = IPAddress(255, 255, 255, 0);
 #endif  // USE_STATIC_IP
 
-#ifdef MQTT_ENABLE
+#if MQTT_ENABLE
 // Address of your MQTT server.
-#define MQTT_SERVER "10.20.0.253"  // <=- CHANGE ME
+#define MQTT_SERVER "10.0.0.4"  // <=- CHANGE_ME
 const uint16_t kMqttPort = 1883;  // Default port used by MQTT servers.
-// Set if your MQTT server requires a Username & Password to connect.
-const char* mqtt_user = "";
-const char* mqtt_password = "";
+// Set if your MQTT server requires a Username & Password to connect
+// ... and it probably should if you want to be more secure.
+const char* kMqttUsername = "";  // <=- CHANGE_ME (optional)
+const char* kMqttPassword = "";  // <=- CHANGE_ME (optional)
 const uint32_t kMqttReconnectTime = 5000;  // Delay(ms) between reconnect tries.
 
 #define MQTTprefix HOSTNAME  // Change this if you want the MQTT topic to be
@@ -187,25 +225,27 @@ const uint32_t kMqttReconnectTime = 5000;  // Delay(ms) between reconnect tries.
 #define MQTTrecv MQTTprefix "/received"  // Topic we send received IRs to.
 #endif  // MQTT_ENABLE
 
-// HTML arguments we will parse for IR code information.
-#define argType "type"
-#define argData "code"
-#define argBits "bits"
-#define argRepeat "repeats"
+const char* kHtmlUsername = "admin";    // <=- CHANGE_ME (optional)
+const char* kHtmlPassword = "esp8266";  // <=- CHANGE_ME (required)
+// If you do not change 'kHtmlPassword', Firmware OTA updates will be blocked.
+
+// This is what the default password is. People should NEVER use this password.
+// Firmware uploads are blocked until the user changes kHtmlPassword to a
+// different value than this.
+const char* kDefaultPassword = "esp8266";  // Do NOT change this.
+
 // Let's use a larger than normal buffer so we can handle AirCon remote codes.
 const uint16_t kCaptureBufferSize = 1024;
 #if DECODE_AC
 // Some A/C units have gaps in their protocols of ~40ms. e.g. Kelvinator
 // A value this large may swallow repeats of some protocols
-const uint8_t kCaptureTimeout = 50;
+const uint8_t kCaptureTimeout = 50;  // Milliseconds
 #else  // DECODE_AC
 // Suits most messages, while not swallowing many repeats.
-const uint8_t kCaptureTimeout = 15;
+const uint8_t kCaptureTimeout = 15;  // Milliseconds
 #endif  // DECODE_AC
-// Ignore unknown messages with <10 pulses
-const uint16_t kMinUnknownSize = 20;
-
-#define _MY_VERSION_ "v0.7.0"
+// Ignore unknown messages with <10 pulses (see also REPORT_UNKNOWNS)
+const uint16_t kMinUnknownSize = 2 * 10;
 
 // Disable debug output if any of the IR pins are on the TX (D1) pin.
 #if (IR_LED != 1 && IR_RX != 1)
@@ -218,7 +258,16 @@ const uint16_t kMinUnknownSize = 20;
 // NOTE: Make sure you set your Serial Monitor to the same speed.
 #define BAUD_RATE 115200  // Serial port Baud rate.
 
+// ----------------- End of User Configuration Section -------------------------
+
 // Globals
+#define _MY_VERSION_ "v0.8.2"
+// HTML arguments we will parse for IR code information.
+#define argType "type"
+#define argData "code"
+#define argBits "bits"
+#define argRepeat "repeats"
+
 ESP8266WebServer server(kHttpPort);
 IRsend irsend = IRsend(IR_LED);
 #ifdef IR_RX
@@ -238,7 +287,7 @@ bool lastSendSucceeded = false;  // Store the success status of the last send.
 uint32_t lastSendTime = 0;
 int8_t offset;  // The calculated period offset for this chip and library.
 
-#ifdef MQTT_ENABLE
+#if MQTT_ENABLE
 String lastMqttCmd = "None";
 uint32_t lastMqttCmdTime = 0;
 uint32_t lastConnectedTime = 0;
@@ -261,7 +310,7 @@ String mqtt_clientid = MQTTprefix + String(ESP.getChipId(), HEX);
 
 // Debug messages get sent to the serial port.
 void debug(String str) {
-#ifdef DEBUG
+#if DEBUG
   uint32_t now = millis();
   Serial.printf("%07u.%03u: %s\n", now / 1000, now % 1000, str.c_str());
 #endif  // DEBUG
@@ -290,13 +339,13 @@ String timeSince(uint32_t const start) {
     result += String(days) + " day";
   if (days > 1)  result += "s";
   if (hours)
-    result += ' ' + String(hours) + " hour";
+    result += " " + String(hours) + " hour";
   if (hours > 1)  result += "s";
   if (minutes)
-    result += ' ' + String(minutes) + " minute";
+    result += " " + String(minutes) + " minute";
   if (minutes > 1)  result += "s";
   if (seconds)
-    result += ' ' + String(seconds) + " second";
+    result += " " + String(seconds) + " second";
   if (seconds > 1)  result += "s";
   result.trim();
   return result + " ago";
@@ -313,7 +362,13 @@ bool hasUnsafeHTMLChars(String input) {
 
 // Root web page with example usage etc.
 void handleRoot() {
-  server.send(200, "text/html",
+#if HTML_PASSWORD_ENABLE
+  if (!server.authenticate(kHtmlUsername, kHtmlPassword)) {
+    debug("Basic HTTP authentication failure for /.");
+    return server.requestAuthentication();
+  }
+#endif
+  String html =
     "<html><head><title>IR MQTT server</title></head>"
     "<body>"
     "<center><h1>ESP8266 IR MQTT Server</h1></center>"
@@ -330,13 +385,17 @@ void handleRoot() {
     "Last message sent: " + String(lastSendSucceeded ? "Ok" : "FAILED") +
     " <i>(" + timeSince(lastSendTime) + ")</i><br>"
 #ifdef IR_RX
-    "IR Recv GPIO: " + String(IR_RX) + "<br>"
+    "IR Recv GPIO: " + String(IR_RX) +
+#if IR_RX_PULLUP
+    " (pullup)"
+#endif  // IR_RX_PULLUP
+    "<br>"
     "Total IR Received: " + String(irRecvCounter) + "<br>"
     "Last IR Received: " + lastIrReceived +
     " <i>(" + timeSince(lastIrReceivedTime) + ")</i><br>"
 #endif  // IR_RX
     "</p>"
-#ifdef MQTT_ENABLE
+#if MQTT_ENABLE
     "<h4>MQTT Information</h4>"
     "<p>Server: " MQTT_SERVER ":" + String(kMqttPort) + " <i>(" +
     (mqtt_client.connected() ? "Connected " + timeSince(lastDisconnectedTime)
@@ -485,6 +544,7 @@ void handleRoot() {
       "<select name='type'>"
         "<option value='27'>Argo</option>"
         "<option value='16'>Daikin</option>"
+        "<option value='53'>Daikin2</option>"
         "<option value='48'>Electra</option>"
         "<option value='33'>Fujitsu</option>"
         "<option value='24'>Gree</option>"
@@ -507,21 +567,36 @@ void handleRoot() {
           " value='190B8050000000E0190B8070000010F0'>"
       " <input type='submit' value='Send A/C State'>"
     "</form>"
-    "<br><hr>"
-    "<h3>Update IR Server firmware</h3><p>"
-    "<b><mark>Warning:</mark></b><br> "
-    "<i>Updating your firmware may screw up your access to the device. "
-    "If you are going to use this, know what you are doing first "
-    "(and you probably do).</i><br>"
-    "<form method='POST' action='/update' enctype='multipart/form-data'>"
-      "Firmware to upload: <input type='file' name='update'>"
-      "<input type='submit' value='Update'>"
-    "</form>"
-    "</body></html>");
+    "<br>";
+#if FIRMWARE_OTA
+  html += "<hr><h3>Update IR Server firmware</h3><p>"
+          "<b><mark>Warning:</mark></b><br> ";
+  if (!strcmp(kHtmlPassword, kDefaultPassword))  // Deny if password unchanged
+    html += "<i>OTA firmware is disabled until you change the password. "
+            "(See 'kHtmlPassword' in the source code.)</i><br>";
+  else  // default password has been changed, so allow it.
+    html +=
+        "<i>Updating your firmware may screw up your access to the device. "
+        "If you are going to use this, know what you are doing first "
+        "(and you probably do).</i><br>"
+        "<form method='POST' action='/update' enctype='multipart/form-data'>"
+          "Firmware to upload: <input type='file' name='update'>"
+          "<input type='submit' value='Update'>"
+        "</form>";
+
+#endif  // FIRMWARE_OTA
+  html += "</body></html>";
+  server.send(200, "text/html", html);
 }
 
 // Reset web page
 void handleReset() {
+#if HTML_PASSWORD_ENABLE
+  if (!server.authenticate(kHtmlUsername, kHtmlPassword)) {
+    debug("Basic HTTP authentication failure for /reset.");
+    return server.requestAuthentication();
+  }
+#endif
   server.send(200, "text/html",
     "<html><head><title>Reset Config</title></head>"
     "<body>"
@@ -564,6 +639,9 @@ bool parseStringAndSendAirCon(const uint16_t irType, const String str) {
       break;
     case DAIKIN:
       stateSize = kDaikinStateLength;
+      break;
+    case DAIKIN2:
+      stateSize = kDaikin2StateLength;
       break;
     case ELECTRA_AC:
       stateSize = kElectraAcStateLength;
@@ -692,6 +770,11 @@ bool parseStringAndSendAirCon(const uint16_t irType, const String str) {
 #if SEND_DAIKIN
     case DAIKIN:
       irsend.sendDaikin(reinterpret_cast<uint8_t *>(state));
+      break;
+#endif
+#if SEND_DAIKIN2
+    case DAIKIN2:
+      irsend.sendDaikin2(reinterpret_cast<uint8_t *>(state));
       break;
 #endif
 #if MITSUBISHI_AC
@@ -969,6 +1052,12 @@ bool parseStringAndSendRaw(const String str) {
 
 // Parse the URL args to find the IR code.
 void handleIr() {
+#if HTML_PASSWORD_ENABLE
+  if (!server.authenticate(kHtmlUsername, kHtmlPassword)) {
+    debug("Basic HTTP authentication failure for /ir.");
+    return server.requestAuthentication();
+  }
+#endif
   uint64_t data = 0;
   String data_str = "";
   int ir_type = 3;  // Default to NEC codes.
@@ -1003,7 +1092,7 @@ void handleNotFound() {
   message += server.args();
   message += "\n";
   for (uint8_t i=0; i < server.args(); i++)
-    message += ' ' + server.argName(i) + ": " + server.arg(i) + "\n";
+    message += " " + server.argName(i) + ": " + server.arg(i) + "\n";
   server.send(404, "text/plain", message);
 }
 
@@ -1031,6 +1120,9 @@ void setup(void) {
   irsend.begin();
   offset = irsend.calibrate();
 #if IR_RX
+#if IR_RX_PULLUP
+  pinMode(IR_RX, INPUT_PULLUP);
+#endif  // IR_RX_PULLUP
 #if DECODE_HASH
   // Ignore messages with less than minimum on or off pulses.
   irrecv.setUnknownThreshold(kMinUnknownSize);
@@ -1038,14 +1130,14 @@ void setup(void) {
   irrecv.enableIRIn();  // Start the receiver
 #endif  // IR_RX
 
-  #ifdef DEBUG
+#if DEBUG
   // Use SERIAL_TX_ONLY so that the RX pin can be freed up for GPIO/IR use.
   Serial.begin(BAUD_RATE, SERIAL_8N1, SERIAL_TX_ONLY);
   while (!Serial)  // Wait for the serial connection to be establised.
     delay(50);
   Serial.println();
   debug("IRMQTTServer " _MY_VERSION_" has booted.");
-  #endif  // DEBUG
+#endif  // DEBUG
 
   setup_wifi();
 
@@ -1065,38 +1157,47 @@ void setup(void) {
   // Setup a reset page to cause WiFiManager information to be reset.
   server.on("/reset", handleReset);
 
+#if FIRMWARE_OTA
   // Setup the URL to allow Over-The-Air (OTA) firmware updates.
-  server.on("/update", HTTP_POST, [](){
-      server.sendHeader("Connection", "close");
-      server.send(200, "text/plain", (Update.hasError())?"FAIL":"OK");
-      ESP.restart();
-    }, [](){
-      HTTPUpload& upload = server.upload();
-      if (upload.status == UPLOAD_FILE_START) {
-        WiFiUDP::stopAll();
-        debug("Update: " + upload.filename);
-        uint32_t maxSketchSpace = (ESP.getFreeSketchSpace() - 0x1000) &
-            0xFFFFF000;
-        if (!Update.begin(maxSketchSpace)) {  // start with max available size
-#ifdef DEBUG
-          Update.printError(Serial);
+  if (strcmp(kHtmlPassword, kDefaultPassword)) {  // Allow if password changed.
+    server.on("/update", HTTP_POST, [](){
+        server.sendHeader("Connection", "close");
+        server.send(200, "text/plain", (Update.hasError())?"FAIL":"OK");
+        ESP.restart();
+      }, [](){
+        if (!server.authenticate(kHtmlUsername, kHtmlPassword)) {
+          debug("Basic HTTP authentication failure for /update.");
+          return server.requestAuthentication();
+        }
+        HTTPUpload& upload = server.upload();
+        if (upload.status == UPLOAD_FILE_START) {
+          WiFiUDP::stopAll();
+          debug("Update: " + upload.filename);
+          uint32_t maxSketchSpace = (ESP.getFreeSketchSpace() - 0x1000) &
+              0xFFFFF000;
+          if (!Update.begin(maxSketchSpace)) {  // start with max available size
+#if DEBUG
+            Update.printError(Serial);
 #endif  // DEBUG
-        }
-      } else if (upload.status == UPLOAD_FILE_WRITE) {
-        if (Update.write(upload.buf, upload.currentSize) !=
-            upload.currentSize) {
-#ifdef DEBUG
-          Update.printError(Serial);
+          }
+        } else if (upload.status == UPLOAD_FILE_WRITE) {
+          if (Update.write(upload.buf, upload.currentSize) !=
+              upload.currentSize) {
+#if DEBUG
+            Update.printError(Serial);
 #endif  // DEBUG
+          }
+        } else if (upload.status == UPLOAD_FILE_END) {
+          // true to set the size to the current progress
+          if (Update.end(true)) {
+            debug("Update Success: " + (String) upload.totalSize +
+                  "\nRebooting...");
+          }
         }
-      } else if (upload.status == UPLOAD_FILE_END) {
-        if (Update.end(true)) {  // true to set the size to the current progress
-          debug("Update Success: " + (String) upload.totalSize +
-                "\nRebooting...");
-        }
-      }
-      yield();
-    });
+        yield();
+      });
+    }
+#endif  // FIRMWARE_OTA
 
   // Set up an error page.
   server.onNotFound(handleNotFound);
@@ -1105,7 +1206,7 @@ void setup(void) {
   debug("HTTP server started");
 }
 
-#ifdef MQTT_ENABLE
+#if MQTT_ENABLE
 // MQTT subscribing to topic
 void subscribing(const String topic_name) {
   // subscription to topic for receiving data
@@ -1122,9 +1223,9 @@ bool reconnect() {
     // Attempt to connect
     debug("Attempting MQTT connection to " MQTT_SERVER ":" + String(kMqttPort) +
           "... ");
-    if (mqtt_user && mqtt_password)
-      connected = mqtt_client.connect(mqtt_clientid.c_str(), mqtt_user,
-                                      mqtt_password);
+    if (kMqttUsername && kMqttPassword)
+      connected = mqtt_client.connect(mqtt_clientid.c_str(), kMqttUsername,
+                                      kMqttPassword);
     else
       connected = mqtt_client.connect(mqtt_clientid.c_str());
     if (connected) {
@@ -1148,7 +1249,7 @@ bool reconnect() {
 void loop(void) {
   server.handleClient();  // Handle any web activity
 
-#ifdef MQTT_ENABLE
+#if MQTT_ENABLE
   uint32_t now = millis();
   // MQTT client connection management
   if (!mqtt_client.connected()) {
@@ -1185,10 +1286,30 @@ void loop(void) {
 #endif  // MQTT_ENABLE
 #ifdef IR_RX
   // Check if an IR code has been received via the IR RX module.
+#if REPORT_UNKNOWNS
   if (irrecv.decode(&capture)) {
+#else
+  if (irrecv.decode(&capture) && capture.decode_type != UNKNOWN) {
+#endif  // REPORT_UNKNOWNS
     lastIrReceivedTime = millis();
     lastIrReceived = String(capture.decode_type) + "," +
         resultToHexidecimal(&capture);
+#if REPORT_RAW_UNKNOWNS
+    if (capture.decode_type == UNKNOWN) {
+      lastIrReceived += ";";
+      for (uint16_t i = 1; i < capture.rawlen; i++) {
+        uint32_t usecs;
+        for (usecs = capture.rawbuf[i] * kRawTick; usecs > UINT16_MAX;
+             usecs -= UINT16_MAX) {
+          lastIrReceived += uint64ToString(UINT16_MAX);
+          lastIrReceived += ",0,";
+        }
+        lastIrReceived += uint64ToString(usecs, 10);
+        if (i < capture.rawlen - 1)
+          lastIrReceived += ",";
+      }
+    }
+#endif  // REPORT_RAW_UNKNOWNS
     // If it isn't an AC code, add the bits.
     if (!hasACState(capture.decode_type))
       lastIrReceived += "," + String(capture.bits);
@@ -1344,6 +1465,7 @@ bool sendIRCode(int const ir_type, uint64_t const code, char const * code_str,
       break;
 #endif
     case DAIKIN:  // 16
+    case DAIKIN2:  // 53
     case KELVINATOR:  // 18
     case MITSUBISHI_AC:  // 20
     case GREE:  // 24
@@ -1511,7 +1633,7 @@ bool sendIRCode(int const ir_type, uint64_t const code, char const * code_str,
     debug("Code: ");
     debug(code_str);
     // Confirm what we were asked to send was sent.
-#ifdef MQTT_ENABLE
+#if MQTT_ENABLE
     if (success) {
       if (ir_type == PRONTO && repeat > 0)
         mqtt_client.publish(MQTTack, (String(ir_type) + ",R" +
@@ -1526,7 +1648,7 @@ bool sendIRCode(int const ir_type, uint64_t const code, char const * code_str,
     debug("Code: 0x" + uint64ToString(code, 16));
     debug("Bits: " + String(bits));
     debug("Repeats: " + String(repeat));
-#ifdef MQTT_ENABLE
+#if MQTT_ENABLE
     if (success)
       mqtt_client.publish(MQTTack, (String(ir_type) + "," +
                                     uint64ToString(code, 16)
@@ -1537,7 +1659,7 @@ bool sendIRCode(int const ir_type, uint64_t const code, char const * code_str,
   return success;
 }
 
-#ifdef MQTT_ENABLE
+#if MQTT_ENABLE
 void receivingMQTT(String const topic_name, String const callback_str) {
   char* tok_ptr;
   uint64_t code = 0;

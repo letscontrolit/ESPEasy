@@ -1,5 +1,30 @@
 # Release Notes
 
+## _v2.5.4 (20190102)_
+
+**[Features]**
+- Experimental basic support for 39 Byte Daikin A/C (#583)
+- Handle send() repeats in A/C classes. Improve Coolix support. (#580)
+- Add optional RX pin pullup and dump raw messages in IRMQTTServer.ino (#589)
+
+**[Misc]**
+- Make auto_analyse_raw_data.py work with Python3 (#581)
+- Update CI/travis config due to esp8266 core 2.5.0 changes (#591)
+
+
+## _v2.5.3 (20181123)_
+
+**[Features]**
+- Add deep support for the Hitachi 28-Byte A/C Protocol (#563)
+- Deep decoding for Whirlpool A/C (#572)
+- Improve security options for IRMQTTServer example. (#575)
+- Require a changed firmware password before upload. (#576)
+
+**[Misc]**
+- Add missing '}' in output of Auto analyse. (#562)
+- Make A/C example code a bit more simple. (#571)
+
+
 ## _v2.5.2 (20181021)_
 
 **[Bug Fixes]**

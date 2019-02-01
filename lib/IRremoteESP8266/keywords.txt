@@ -27,6 +27,7 @@ IRFujitsuAC	KEYWORD1
 IRGreeAC	KEYWORD1
 IRHaierAC	KEYWORD1
 IRHaierACYRW02	KEYWORD1
+IRHitachiAc	KEYWORD1
 IRKelvinatorAC	KEYWORD1
 IRMideaAC	KEYWORD1
 IRMitsubishiAC	KEYWORD1
@@ -34,6 +35,7 @@ IRPanasonicAc	KEYWORD1
 IRSamsungAc	KEYWORD1
 IRToshibaAC	KEYWORD1
 IRTrotecESP	KEYWORD1
+IRWhirlpoolAc	KEYWORD1
 IRrecv	KEYWORD1
 IRsend	KEYWORD1
 IRtimer	KEYWORD1
@@ -46,6 +48,8 @@ match_result_t	KEYWORD1
 #######################################
 
 _delayMicroseconds	KEYWORD2
+_setMode	KEYWORD2
+_setTemp	KEYWORD2
 add	KEYWORD2
 addbit	KEYWORD2
 begin	KEYWORD2
@@ -72,6 +76,7 @@ decodeCOOLIX	KEYWORD2
 decodeCarrierAC	KEYWORD2
 decodeDISH	KEYWORD2
 decodeDaikin	KEYWORD2
+decodeDaikin2	KEYWORD2
 decodeDenon	KEYWORD2
 decodeElectraAC	KEYWORD2
 decodeFujitsuAC	KEYWORD2
@@ -117,6 +122,7 @@ enableIRIn	KEYWORD2
 enableIROut	KEYWORD2
 enableOffTimer	KEYWORD2
 enableOnTimer	KEYWORD2
+enableTimer	KEYWORD2
 encodeJVC	KEYWORD2
 encodeLG	KEYWORD2
 encodeMagiQuest	KEYWORD2
@@ -166,6 +172,7 @@ getOnTime	KEYWORD2
 getOnTimer	KEYWORD2
 getOnTimerEnabled	KEYWORD2
 getPower	KEYWORD2
+getPowerToggle	KEYWORD2
 getPowerful	KEYWORD2
 getQuiet	KEYWORD2
 getRClevel	KEYWORD2
@@ -177,12 +184,14 @@ getSpeed	KEYWORD2
 getStartClock	KEYWORD2
 getStateLength	KEYWORD2
 getStopClock	KEYWORD2
+getSuper	KEYWORD2
 getSwing	KEYWORD2
 getSwingHorizontal	KEYWORD2
 getSwingVertical	KEYWORD2
 getSwingVerticalAuto	KEYWORD2
 getSwingVerticalPosition	KEYWORD2
 getTemp	KEYWORD2
+getTempOffset	KEYWORD2
 getTempRaw	KEYWORD2
 getTime	KEYWORD2
 getTimer	KEYWORD2
@@ -195,6 +204,7 @@ hasACState	KEYWORD2
 invertBits	KEYWORD2
 isOffTimerEnabled	KEYWORD2
 isOnTimerEnabled	KEYWORD2
+isTimerEnabled	KEYWORD2
 ledOff	KEYWORD2
 ledOn	KEYWORD2
 mark	KEYWORD2
@@ -222,6 +232,7 @@ sendCOOLIX	KEYWORD2
 sendCarrierAC	KEYWORD2
 sendDISH	KEYWORD2
 sendDaikin	KEYWORD2
+sendDaikin2	KEYWORD2
 sendData	KEYWORD2
 sendDenon	KEYWORD2
 sendElectraAC	KEYWORD2
@@ -299,6 +310,7 @@ setNight	KEYWORD2
 setOffTimer	KEYWORD2
 setOnTimer	KEYWORD2
 setPower	KEYWORD2
+setPowerToggle	KEYWORD2
 setPowerful	KEYWORD2
 setQuiet	KEYWORD2
 setRaw	KEYWORD2
@@ -310,6 +322,7 @@ setSleep	KEYWORD2
 setSpeed	KEYWORD2
 setStartClock	KEYWORD2
 setStopClock	KEYWORD2
+setSuper	KEYWORD2
 setSwing	KEYWORD2
 setSwingHorizontal	KEYWORD2
 setSwingVertical	KEYWORD2
@@ -337,6 +350,7 @@ toggleRC6	KEYWORD2
 typeToString	KEYWORD2
 uint64ToString	KEYWORD2
 validChecksum	KEYWORD2
+xorBytes	KEYWORD2
 
 #######################################
 # Constants (LITERAL1)
@@ -375,6 +389,7 @@ CARRIER_AC_BITS	LITERAL1
 COOLIX	LITERAL1
 COOLIX_BITS	LITERAL1
 DAIKIN	LITERAL1
+DAIKIN2	LITERAL1
 DAIKIN_AUTO	LITERAL1
 DAIKIN_COMMAND_LENGTH	LITERAL1
 DAIKIN_COOL	LITERAL1
@@ -394,6 +409,7 @@ DECODE_ARGO	LITERAL1
 DECODE_CARRIER_AC	LITERAL1
 DECODE_COOLIX	LITERAL1
 DECODE_DAIKIN	LITERAL1
+DECODE_DAIKIN2	LITERAL1
 DECODE_DENON	LITERAL1
 DECODE_DISH	LITERAL1
 DECODE_ELECTRA_AC	LITERAL1
@@ -441,6 +457,8 @@ DENON	LITERAL1
 DENON_48_BITS	LITERAL1
 DENON_BITS	LITERAL1
 DENON_LEGACY_BITS	LITERAL1
+DG11J13A	LITERAL1
+DG11J191	LITERAL1
 DISH	LITERAL1
 DISH_BITS	LITERAL1
 ELECTRA_AC	LITERAL1
@@ -658,6 +676,7 @@ SEND_ARGO	LITERAL1
 SEND_CARRIER_AC	LITERAL1
 SEND_COOLIX	LITERAL1
 SEND_DAIKIN	LITERAL1
+SEND_DAIKIN2	LITERAL1
 SEND_DENON	LITERAL1
 SEND_DISH	LITERAL1
 SEND_ELECTRA_AC	LITERAL1
@@ -750,6 +769,7 @@ kArgoCoolAuto	LITERAL1
 kArgoCoolHum	LITERAL1
 kArgoCoolOff	LITERAL1
 kArgoCoolOn	LITERAL1
+kArgoDefaultRepeat	LITERAL1
 kArgoFan1	LITERAL1
 kArgoFan2	LITERAL1
 kArgoFan3	LITERAL1
@@ -786,10 +806,12 @@ kCoolixBitMarkTicks	LITERAL1
 kCoolixBits	LITERAL1
 kCoolixClean	LITERAL1
 kCoolixCool	LITERAL1
+kCoolixDefaultRepeat	LITERAL1
 kCoolixDefaultState	LITERAL1
 kCoolixDry	LITERAL1
 kCoolixFan	LITERAL1
 kCoolixFanAuto	LITERAL1
+kCoolixFanAuto0	LITERAL1
 kCoolixFanFixed	LITERAL1
 kCoolixFanMask	LITERAL1
 kCoolixFanMax	LITERAL1
@@ -827,6 +849,20 @@ kCoolixUnknown	LITERAL1
 kCoolixZeroSpace	LITERAL1
 kCoolixZeroSpaceTicks	LITERAL1
 kCoolixZoneFollowMask	LITERAL1
+kDaikin2BitMark	LITERAL1
+kDaikin2Bits	LITERAL1
+kDaikin2DefaultRepeat	LITERAL1
+kDaikin2Gap	LITERAL1
+kDaikin2HdrMark	LITERAL1
+kDaikin2HdrSpace	LITERAL1
+kDaikin2LeaderMark	LITERAL1
+kDaikin2LeaderSpace	LITERAL1
+kDaikin2OneSpace	LITERAL1
+kDaikin2Section1Length	LITERAL1
+kDaikin2Section2Length	LITERAL1
+kDaikin2Sections	LITERAL1
+kDaikin2StateLength	LITERAL1
+kDaikin2ZeroSpace	LITERAL1
 kDaikinAuto	LITERAL1
 kDaikinBitEcono	LITERAL1
 kDaikinBitEye	LITERAL1
@@ -851,6 +887,7 @@ kDaikinByteSilent	LITERAL1
 kDaikinCool	LITERAL1
 kDaikinCurBit	LITERAL1
 kDaikinCurIndex	LITERAL1
+kDaikinDefaultRepeat	LITERAL1
 kDaikinDry	LITERAL1
 kDaikinFan	LITERAL1
 kDaikinFanAuto	LITERAL1
@@ -969,6 +1006,7 @@ kGreeBits	LITERAL1
 kGreeBlockFooter	LITERAL1
 kGreeBlockFooterBits	LITERAL1
 kGreeCool	LITERAL1
+kGreeDefaultRepeat	LITERAL1
 kGreeDry	LITERAL1
 kGreeFan	LITERAL1
 kGreeFanMask	LITERAL1
@@ -1020,6 +1058,7 @@ kHaierAcCmdTimerCancel	LITERAL1
 kHaierAcCmdTimerSet	LITERAL1
 kHaierAcCool	LITERAL1
 kHaierAcDefTemp	LITERAL1
+kHaierAcDefaultRepeat	LITERAL1
 kHaierAcDry	LITERAL1
 kHaierAcFan	LITERAL1
 kHaierAcFanAuto	LITERAL1
@@ -1050,6 +1089,7 @@ kHaierAcYrw02ButtonTempDown	LITERAL1
 kHaierAcYrw02ButtonTempUp	LITERAL1
 kHaierAcYrw02ButtonTurbo	LITERAL1
 kHaierAcYrw02Cool	LITERAL1
+kHaierAcYrw02DefaultRepeat	LITERAL1
 kHaierAcYrw02Dry	LITERAL1
 kHaierAcYrw02Fan	LITERAL1
 kHaierAcYrw02FanAuto	LITERAL1
@@ -1077,11 +1117,23 @@ kHitachiAc1HdrSpace	LITERAL1
 kHitachiAc1StateLength	LITERAL1
 kHitachiAc2Bits	LITERAL1
 kHitachiAc2StateLength	LITERAL1
+kHitachiAcAuto	LITERAL1
+kHitachiAcAutoTemp	LITERAL1
 kHitachiAcBitMark	LITERAL1
 kHitachiAcBits	LITERAL1
+kHitachiAcCool	LITERAL1
+kHitachiAcDefaultRepeat	LITERAL1
+kHitachiAcDry	LITERAL1
+kHitachiAcFan	LITERAL1
+kHitachiAcFanAuto	LITERAL1
+kHitachiAcFanHigh	LITERAL1
+kHitachiAcFanLow	LITERAL1
 kHitachiAcHdrMark	LITERAL1
 kHitachiAcHdrSpace	LITERAL1
+kHitachiAcHeat	LITERAL1
+kHitachiAcMaxTemp	LITERAL1
 kHitachiAcMinGap	LITERAL1
+kHitachiAcMinTemp	LITERAL1
 kHitachiAcOneSpace	LITERAL1
 kHitachiAcStateLength	LITERAL1
 kHitachiAcZeroSpace	LITERAL1
@@ -1113,6 +1165,7 @@ kKelvinatorChecksumStart	LITERAL1
 kKelvinatorCmdFooter	LITERAL1
 kKelvinatorCmdFooterBits	LITERAL1
 kKelvinatorCool	LITERAL1
+kKelvinatorDefaultRepeat	LITERAL1
 kKelvinatorDry	LITERAL1
 kKelvinatorFan	LITERAL1
 kKelvinatorFanAuto	LITERAL1
@@ -1335,6 +1388,7 @@ kPanasonicAcAuto	LITERAL1
 kPanasonicAcBits	LITERAL1
 kPanasonicAcChecksumInit	LITERAL1
 kPanasonicAcCool	LITERAL1
+kPanasonicAcDefaultRepeat	LITERAL1
 kPanasonicAcDry	LITERAL1
 kPanasonicAcExcess	LITERAL1
 kPanasonicAcFan	LITERAL1
@@ -1459,6 +1513,7 @@ kSamsungAcBits	LITERAL1
 kSamsungAcCleanMask10	LITERAL1
 kSamsungAcCleanMask11	LITERAL1
 kSamsungAcCool	LITERAL1
+kSamsungAcDefaultRepeat	LITERAL1
 kSamsungAcDry	LITERAL1
 kSamsungAcExtendedBits	LITERAL1
 kSamsungAcExtendedStateLength	LITERAL1
@@ -1592,6 +1647,7 @@ kToshibaAcZeroSpace	LITERAL1
 kTrotecAuto	LITERAL1
 kTrotecCool	LITERAL1
 kTrotecDefTemp	LITERAL1
+kTrotecDefaultRepeat	LITERAL1
 kTrotecDry	LITERAL1
 kTrotecFan	LITERAL1
 kTrotecFanHigh	LITERAL1
@@ -1617,15 +1673,66 @@ kTrotecTimerOn	LITERAL1
 kTrotecZeroMark	LITERAL1
 kTrotecZeroSpace	LITERAL1
 kUnknownThreshold	LITERAL1
+kWhirlpoolAcAltTempMask	LITERAL1
+kWhirlpoolAcAltTempPos	LITERAL1
+kWhirlpoolAcAuto	LITERAL1
+kWhirlpoolAcAutoTemp	LITERAL1
 kWhirlpoolAcBitMark	LITERAL1
 kWhirlpoolAcBits	LITERAL1
+kWhirlpoolAcChecksumByte1	LITERAL1
+kWhirlpoolAcChecksumByte2	LITERAL1
+kWhirlpoolAcClockPos	LITERAL1
+kWhirlpoolAcCommand6thSense	LITERAL1
+kWhirlpoolAcCommandFanSpeed	LITERAL1
+kWhirlpoolAcCommandIFeel	LITERAL1
+kWhirlpoolAcCommandLight	LITERAL1
+kWhirlpoolAcCommandMode	LITERAL1
+kWhirlpoolAcCommandOffTimer	LITERAL1
+kWhirlpoolAcCommandOnTimer	LITERAL1
+kWhirlpoolAcCommandPos	LITERAL1
+kWhirlpoolAcCommandPower	LITERAL1
+kWhirlpoolAcCommandSleep	LITERAL1
+kWhirlpoolAcCommandSuper	LITERAL1
+kWhirlpoolAcCommandSwing	LITERAL1
+kWhirlpoolAcCommandTemp	LITERAL1
+kWhirlpoolAcCool	LITERAL1
+kWhirlpoolAcDefaultRepeat	LITERAL1
+kWhirlpoolAcDry	LITERAL1
+kWhirlpoolAcFan	LITERAL1
+kWhirlpoolAcFanAuto	LITERAL1
+kWhirlpoolAcFanHigh	LITERAL1
+kWhirlpoolAcFanLow	LITERAL1
+kWhirlpoolAcFanMask	LITERAL1
+kWhirlpoolAcFanMedium	LITERAL1
+kWhirlpoolAcFanPos	LITERAL1
 kWhirlpoolAcGap	LITERAL1
 kWhirlpoolAcHdrMark	LITERAL1
 kWhirlpoolAcHdrSpace	LITERAL1
+kWhirlpoolAcHeat	LITERAL1
+kWhirlpoolAcHourMask	LITERAL1
+kWhirlpoolAcLightMask	LITERAL1
+kWhirlpoolAcMaxTemp	LITERAL1
 kWhirlpoolAcMinGap	LITERAL1
+kWhirlpoolAcMinTemp	LITERAL1
+kWhirlpoolAcMinuteMask	LITERAL1
+kWhirlpoolAcModeMask	LITERAL1
+kWhirlpoolAcModePos	LITERAL1
+kWhirlpoolAcOffTimerPos	LITERAL1
+kWhirlpoolAcOnTimerPos	LITERAL1
 kWhirlpoolAcOneSpace	LITERAL1
+kWhirlpoolAcPowerToggleMask	LITERAL1
+kWhirlpoolAcPowerTogglePos	LITERAL1
 kWhirlpoolAcSections	LITERAL1
+kWhirlpoolAcSleepMask	LITERAL1
+kWhirlpoolAcSleepPos	LITERAL1
 kWhirlpoolAcStateLength	LITERAL1
+kWhirlpoolAcSuperMask	LITERAL1
+kWhirlpoolAcSuperPos	LITERAL1
+kWhirlpoolAcSwing1Mask	LITERAL1
+kWhirlpoolAcSwing2Mask	LITERAL1
+kWhirlpoolAcTempMask	LITERAL1
+kWhirlpoolAcTempPos	LITERAL1
+kWhirlpoolAcTimerEnableMask	LITERAL1
 kWhirlpoolAcZeroSpace	LITERAL1
 kWhynterBitMark	LITERAL1
 kWhynterBitMarkTicks	LITERAL1

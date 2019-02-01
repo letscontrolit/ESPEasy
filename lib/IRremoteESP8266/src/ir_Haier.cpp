@@ -86,9 +86,9 @@ IRHaierAC::IRHaierAC(uint16_t pin) : _irsend(pin) { stateReset(); }
 void IRHaierAC::begin() { _irsend.begin(); }
 
 #if SEND_HAIER_AC
-void IRHaierAC::send() {
+void IRHaierAC::send(const uint16_t repeat) {
   checksum();
-  _irsend.sendHaierAC(remote_state);
+  _irsend.sendHaierAC(remote_state, kHaierACStateLength, repeat);
 }
 #endif  // SEND_HAIER_AC
 
@@ -359,7 +359,7 @@ std::string IRHaierAC::toString() {
     default:
       result += "Unknown";
   }
-  result += ')';
+  result += ")";
   result += ", Mode: " + uint64ToString(getMode());
   switch (getMode()) {
     case kHaierAcAuto:
@@ -407,7 +407,7 @@ std::string IRHaierAC::toString() {
     default:
       result += "Unknown";
   }
-  result += ')';
+  result += ")";
   result += ", Sleep: ";
   if (getSleep())
     result += "On";
@@ -440,9 +440,9 @@ IRHaierACYRW02::IRHaierACYRW02(uint16_t pin) : _irsend(pin) { stateReset(); }
 void IRHaierACYRW02::begin() { _irsend.begin(); }
 
 #if SEND_HAIER_AC_YRW02
-void IRHaierACYRW02::send() {
+void IRHaierACYRW02::send(const uint16_t repeat) {
   checksum();
-  _irsend.sendHaierACYRW02(remote_state);
+  _irsend.sendHaierACYRW02(remote_state, kHaierACYRW02StateLength, repeat);
 }
 #endif  // SEND_HAIER_AC_YRW02
 
@@ -674,7 +674,7 @@ std::string IRHaierACYRW02::toString() {
     default:
       result += "Unknown";
   }
-  result += ')';
+  result += ")";
   result += ", Mode: " + uint64ToString(getMode());
   switch (getMode()) {
     case kHaierAcYrw02Auto:
@@ -727,7 +727,7 @@ std::string IRHaierACYRW02::toString() {
     default:
       result += "Unknown";
   }
-  result += ')';
+  result += ")";
   result += ", Swing: " + uint64ToString(getSwing()) + " (";
   switch (getSwing()) {
     case kHaierAcYrw02SwingOff:
@@ -751,7 +751,7 @@ std::string IRHaierACYRW02::toString() {
     default:
       result += "Unknown";
   }
-  result += ')';
+  result += ")";
   result += ", Sleep: ";
   if (getSleep())
     result += "On";
