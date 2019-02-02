@@ -168,7 +168,7 @@
 //#define PLUGIN_BUILD_DEV
 
 //add this if you want SD support (add 10k flash)
-//#define FEATURE_SD
+#define FEATURE_SD
 
 // ********************************************************************************
 //   DO NOT CHANGE ANYTHING BELOW THIS LINE
