@@ -1,4 +1,33 @@
 -------------------------------------------------
+Changes in release mega-20190202 (since mega-20190121)
+-------------------------------------------------
+
+Release date: Sat Feb  2 04:00:28 CET 2019
+
+Grovkillen (1):
+      [flasher] fixed empty folder issue
+
+Jonathan Westerholt (1):
+      fix reset bug for esp32 by casting explicitly, should fix #2242
+
+jimmys01 (6):
+      Bump up IrRemote Lib to 2.5.4
+      Add the newest IR protocols to EspEasy
+      [IRTX] Even more timming Buffer added
+      [IRTX] Allocate big buffers on the heap for RAW and RAW2 encodings
+      Update _P035_IRTX.ino
+      [Controllers] Fix small error in commit #2246
+
+stefan (6):
+      [1M minimal Size] Undefine graphical meminfodetail
+      [1M minimal Size] Exclude all debug logs from standard files
+      [1M minimal Size] Include BUILD_NO_DEBUG in plugin sets
+      [1M minimal Size] Remove unused variable..
+      [1M minimal Size] Remove another unused variable..
+      [1M minimal Size] Exclude debug from minimal Controllers/Plugins
+
+
+-------------------------------------------------
 Changes in release mega-20190121 (since mega-20190116)
 -------------------------------------------------
 
