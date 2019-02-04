@@ -41,6 +41,13 @@
 
 #include <ESPeasySerial.h>
 
+enum MHZ19Types {
+  MHZ19_notDetected,
+  MHZ19_A,
+  MHZ19_B
+};
+
+
 enum mhzCommands : byte { mhzCmdReadPPM,
                           mhzCmdCalibrateZero,
                           mhzCmdABCEnable,
@@ -242,11 +249,11 @@ struct P049_data_struct : public PluginTaskData_base {
     return result;
   }
 
-  String getDetectedDevice() {
+  MHZ19Types getDetectedDevice() {
     if (linesHandled > checksumFailed) {
-      return modelA_detected ? F("MH-Z19A") : F("MH-Z19B");
+      return modelA_detected ? MHZ19_A : MHZ19_B;
     }
-    return F("None");
+    return MHZ19_notDetected;
   }
 
 
@@ -592,7 +599,11 @@ void P049_html_show_stats(struct EventStruct *event) {
   chksumStats += P049_data->checksumFailed;
   addHtml(chksumStats);
   addRowLabel(F("Detected"));
-  addHtml(P049_data->getDetectedDevice());
+  switch (P049_data->getDetectedDevice()) {
+    case MHZ19_A: addHtml(F("MH-Z19A")); break;
+    case MHZ19_B: addHtml(F("MH-Z19B")); break;
+    default: addHtml("---"); break;
+  }
 }
 
 #endif // USES_P049
