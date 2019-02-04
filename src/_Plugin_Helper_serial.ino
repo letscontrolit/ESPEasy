@@ -131,7 +131,8 @@ void serialHelper_serialconfig_webformLoad(struct EventStruct *event, byte curre
     }
   }
   if (currentSelection == 0) {
-    currentSelection = SERIAL_8N1;
+    // Must truncate it to 1 byte, since ESP32 uses a 32-bit value. We add these high bits later for ESP32.
+    currentSelection = static_cast<byte>(SERIAL_8N1 & 0xFF); // Some default
   }
   addFormSelector(F("Serial Config"), F("serConf"), 24,
                      options, values, currentSelection);
@@ -142,7 +143,8 @@ byte serialHelper_serialconfig_webformSave() {
   if (serialHelper_isValid_serialconfig(serialConfSelected)) {
     return serialConfSelected;
   }
-  return SERIAL_8N1; // Some default
+  // Must truncate it to 1 byte, since ESP32 uses a 32-bit value. We add these high bits later for ESP32.
+  return static_cast<byte>(SERIAL_8N1 & 0xFF); // Some default
 }
 
 // Used by some plugins, which used several TaskDevicePluginConfigLong
@@ -159,5 +161,6 @@ byte serialHelper_convertOldSerialConfig(byte newLocationConfig) {
   if (serialHelper_isValid_serialconfig(serialconfig)) {
     return serialconfig;
   }
-  return SERIAL_8N1; // Some default
+  // Must truncate it to 1 byte, since ESP32 uses a 32-bit value. We add these high bits later for ESP32.
+  return static_cast<byte>(SERIAL_8N1 & 0xFF); // Some default
 }

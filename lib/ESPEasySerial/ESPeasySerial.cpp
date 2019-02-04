@@ -30,12 +30,12 @@ ESPeasySerial::~ESPeasySerial() {
   }
 }
 
-void ESPeasySerial::begin(unsigned long baud, SerialConfig config, SerialMode mode, uint8_t tx_pin) {
+void ESPeasySerial::begin(unsigned long baud, SerialConfig config, SerialMode mode) {
   _baud = baud;
   if (_serialtype == ESPeasySerialType::serialtype::serial0_swap) {
     // Serial.swap() should only be called here and only once.
     if (!_serial0_swap_active) {
-      Serial.begin(baud, config, mode, tx_pin);
+      Serial.begin(baud, config, mode, _transmitPin);
       Serial.swap();
       _serial0_swap_active = true;
       return;
@@ -48,7 +48,7 @@ void ESPeasySerial::begin(unsigned long baud, SerialConfig config, SerialMode mo
   if (isSWserial()) {
     _swserial->begin(baud);
   } else {
-    doHWbegin(baud, config, mode, tx_pin);
+    doHWbegin(baud, config, mode);
   }
 }
 
@@ -364,19 +364,19 @@ bool ESPeasySerial::stopListening() {
   // ESP8266 implementation wrapper
   // Shared functions for HW serial
   // ****************************************
-  bool ESPeasySerial::doHWbegin(unsigned long baud, SerialConfig config, SerialMode mode, uint8_t tx_pin) {
+  bool ESPeasySerial::doHWbegin(unsigned long baud, SerialConfig config, SerialMode mode) {
     if (!isValid()) {
       return false;
     }
     if (baud > 0) {
-      getHW()->begin(baud ? baud : 9600, config, mode, tx_pin);
+      getHW()->begin(baud ? baud : 9600, config, mode, _transmitPin);
       return true;
     }
     startDetectBaudrate();
     unsigned long detectedBaudRate = detectBaudrate(DETECT_BAUDATE_TIMEOUT);
     if(detectedBaudRate > 0) {
         delay(100); // Give some time...
-        getHW()->begin(detectedBaudRate, config, mode, tx_pin);
+        getHW()->begin(detectedBaudRate, config, mode, _transmitPin);
         _baud = detectedBaudRate;
         return true;
     } else {
@@ -406,12 +406,12 @@ ESPeasySerial::~ESPeasySerial() {
   end();
 }
 
-void ESPeasySerial::begin(unsigned long baud, SerialConfig config, SerialMode mode, uint8_t tx_pin) {
+void ESPeasySerial::begin(unsigned long baud, SerialConfig config, SerialMode mode) {
   _baud = baud;
   if (_serialtype == ESPeasySerialType::serialtype::serial0_swap) {
     // Serial.swap() should only be called here and only once.
     if (!_serial0_swap_active) {
-      Serial.begin(baud, config, mode, tx_pin);
+      Serial.begin(baud, config, mode, _transmitPin);
       Serial.swap();
       _serial0_swap_active = true;
       return;
@@ -421,7 +421,7 @@ void ESPeasySerial::begin(unsigned long baud, SerialConfig config, SerialMode mo
     _baud = 0;
     return;
   }
-  doHWbegin(baud, config, mode, tx_pin);
+  doHWbegin(baud, config, mode);
 }
 
 void ESPeasySerial::end() {
@@ -683,6 +683,9 @@ void ESPeasySerial::begin(unsigned long baud, uint32_t config
     _baud = 0;
     return;
   }
+  // Make sure the extra bit is set for the config. The config differs between ESP32 and ESP82xx
+  config = config | 0x8000000;
+  
   // Timeout added for 1.0.1
   // See: https://github.com/espressif/arduino-esp32/commit/233d31bed22211e8c85f82bcf2492977604bbc78
 //  getHW()->begin(baud, config, _receivePin, _transmitPin, invert, timeout_ms);
