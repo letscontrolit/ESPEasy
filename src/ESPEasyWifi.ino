@@ -257,7 +257,13 @@ void resetWiFi() {
   addLog(LOG_LEVEL_INFO, F("Reset WiFi."));
   lastDisconnectMoment = millis();
   WifiDisconnect();
-//  setWifiMode(WIFI_OFF);
+  //  setWifiMode(WIFI_OFF);
+
+#ifdef ESP8266
+  // See https://github.com/esp8266/Arduino/issues/5527#issuecomment-460537616
+  WiFi.~ESP8266WiFiClass();
+  WiFi = ESP8266WiFiClass();
+#endif
 }
 
 void connectionCheckHandler()
