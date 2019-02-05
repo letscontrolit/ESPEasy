@@ -111,7 +111,7 @@ boolean Plugin_052_init = false;
 String detected_device_description;
 
 unsigned int _plugin_052_last_measurement = 0;
-uint32_t _plugin_052_reads_processed = 0;
+uint32_t _plugin_052_reads_pass = 0;
 uint32_t _plugin_052_reads_crc_failed = 0;
 
 ESPeasySerial *P052_easySerial;
@@ -213,7 +213,7 @@ boolean Plugin_052(byte function, struct EventStruct *event, String &string) {
     }
     addRowLabel(F("Checksum (pass/fail)"));
     String chksumStats;
-    chksumStats = _plugin_052_reads_processed;
+    chksumStats = _plugin_052_reads_pass;
     chksumStats += '/';
     chksumStats += _plugin_052_reads_crc_failed;
     addHtml(chksumStats);
@@ -329,6 +329,7 @@ boolean Plugin_052(byte function, struct EventStruct *event, String &string) {
 String Plugin_052_getDevice_description(byte slaveAddress) {
   bool more_follows = true;
   byte next_object_id = 0;
+  byte conformity_level = 0;
   unsigned int object_value_int;
   String description;
   String obj_text;
@@ -338,33 +339,51 @@ String Plugin_052_getDevice_description(byte slaveAddress) {
     if (object_id == 6) {
       object_id = 0x82; // Skip to the serialnr/sensor type
     }
-    if (0 == Plugin_052_modbus_get_MEI(slaveAddress, object_id, obj_text,
+    int result = Plugin_052_modbus_get_MEI(slaveAddress, object_id, obj_text,
                                        object_value_int, next_object_id,
-                                       more_follows)) {
-      String label;
-      switch (object_id) {
-      case 0x01:
-        label = F("Pcode");
-        break;
-      case 0x02:
-        label = F("Rev");
-        break;
-      case 0x82:
-        label = F("S/N");
-        break;
-      case 0x83:
-        label = F("Type");
-        break;
-      default:
-        break;
+                                       more_follows, conformity_level);
+    String label;
+    switch (object_id) {
+    case 0x01:
+      if (result == 0) label = F("Pcode");
+      break;
+    case 0x02:
+      if (result == 0) label = F("Rev");
+      break;
+    case 0x82:
+    {
+      if (result != 0) {
+        uint32_t sensorId = Plugin_052_readSensorId();
+        obj_text = String(sensorId, HEX);
+        result = 0;
+
       }
+      if (result == 0) label = F("S/N");
+      break;
+    }
+    case 0x83:
+    {
+      if (result != 0) {
+        uint32_t sensorId = Plugin_052_readTypeId();
+        obj_text = String(sensorId, HEX);
+        result = 0;
+      }
+      if (result == 0) label = F("Type");
+      break;
+    }
+    default:
+      break;
+    }
+    if (result == 0) {
       if (label.length() > 0) {
         // description += Plugin_052_MEI_objectid_to_name(object_id);
         description += label;
         description += F(": ");
       }
-      description += obj_text;
-      description += F(" - ");
+      if (obj_text.length() > 0) {
+        description += obj_text;
+        description += F(" - ");
+      }
     }
   }
   return description;
@@ -408,6 +427,12 @@ void Plugin_052_build_modbus_MEI_frame(byte slaveAddress, byte device_id,
   _plugin_052_sendframe[0] = slaveAddress;
   _plugin_052_sendframe[1] = 0x2B;
   _plugin_052_sendframe[2] = 0x0E;
+
+  // The parameter "Read Device ID code" allows to define four access types :
+  // 01: request to get the basic device identification (stream access)
+  // 02: request to get the regular device identification (stream access)
+  // 03: request to get the extended device identification (stream access)
+  // 04: request to get one specific identification object (individual access)
   _plugin_052_sendframe[3] = device_id;
   _plugin_052_sendframe[4] = object_id;
   _plugin_052_sendframe_used = 5;
@@ -444,7 +469,8 @@ String Plugin_052_MEI_objectid_to_name(byte object_id) {
 
 String Plugin_052_parse_modbus_MEI_response(unsigned int &object_value_int,
                                             byte &next_object_id,
-                                            bool &more_follows) {
+                                            bool &more_follows,
+                                            byte &conformity_level) {
   String result;
   if (_plugin_052_recv_buf_used < 8) {
     // Too small.
@@ -454,9 +480,10 @@ String Plugin_052_parse_modbus_MEI_response(unsigned int &object_value_int,
     more_follows = false;
     return result;
   }
-  int pos = 3; // Data skipped: slave_address, FunctionCode, MEI type
-  const byte device_id         = _plugin_052_recv_buf[pos++];
-  const byte conformity_level  = _plugin_052_recv_buf[pos++];
+  int pos = 4; // Data skipped: slave_address, FunctionCode, MEI type, ReadDevId
+  // See http://www.modbus.org/docs/Modbus_Application_Protocol_V1_1b.pdf
+  // Page 45
+  conformity_level             = _plugin_052_recv_buf[pos++];
   more_follows                 = _plugin_052_recv_buf[pos++] != 0;
   next_object_id               = _plugin_052_recv_buf[pos++];
   const byte number_objects    = _plugin_052_recv_buf[pos++];
@@ -656,6 +683,7 @@ byte Plugin_052_processCommand() {
   int nrRetriesLeft = 2;
   byte return_value = 0;
   while (nrRetriesLeft > 0) {
+    return_value = 0;
     // Send the byte array
     P052_easySerial->write(_plugin_052_sendframe, _plugin_052_sendframe_used);
     delay(50);
@@ -675,10 +703,11 @@ byte Plugin_052_processCommand() {
     }
     // Check checksum
     crc = Plugin_052_ModRTU_CRC(_plugin_052_recv_buf, _plugin_052_recv_buf_used);
-    ++_plugin_052_reads_processed;
     if (crc != 0u) {
       ++_plugin_052_reads_crc_failed;
       return_value = Plugin_052_MODBUS_BADCRC;
+    } else {
+      ++_plugin_052_reads_pass;
     }
     switch (return_value) {
     case MODBUS_EXCEPTION_ACKNOWLEDGE:
@@ -693,6 +722,18 @@ byte Plugin_052_processCommand() {
     --nrRetriesLeft;
   }
   return return_value;
+}
+
+uint32_t Plugin_052_read_32b_InputRegister(short address) {
+  uint32_t result = 0;
+  int idHigh = Plugin_052_readInputRegister(address);
+  int idLow = Plugin_052_readInputRegister(address + 1);
+  if (idHigh >= 0 && idLow >= 0) {
+    result = idHigh;
+    result = result << 16;
+    result += idLow;
+  }
+  return result;
 }
 
 int Plugin_052_readInputRegister(short address) {
@@ -716,12 +757,15 @@ int Plugin_052_writeSingleRegister(short address, short value) {
 
 byte Plugin_052_modbus_get_MEI(byte slaveAddress, byte object_id,
                                String &result, unsigned int &object_value_int,
-                               byte &next_object_id, bool &more_follows) {
+                               byte &next_object_id, bool &more_follows,
+                               byte &conformity_level) {
+  // Force device_id to 4 = individual access (reading one ID object per call)
   Plugin_052_build_modbus_MEI_frame(slaveAddress, 4, object_id);
   const byte process_result = Plugin_052_processCommand();
   if (process_result == 0) {
     result = Plugin_052_parse_modbus_MEI_response(object_value_int,
-                                                  next_object_id, more_follows);
+                                                  next_object_id, more_follows,
+                                                  conformity_level);
   } else {
     more_follows = false;
   }
@@ -733,6 +777,7 @@ void Plugin_052_modbus_log_MEI(byte slaveAddress) {
   // Modbus command (0x2B / 0x0E) Read Device Identification
   // And add to log.
   bool more_follows = true;
+  byte conformity_level = 0;
   byte object_id = 0;
   byte next_object_id = 0;
   while (more_follows) {
@@ -740,7 +785,7 @@ void Plugin_052_modbus_log_MEI(byte slaveAddress) {
     unsigned int object_value_int;
     const byte process_result = Plugin_052_modbus_get_MEI(
         slaveAddress, object_id, result, object_value_int, next_object_id,
-        more_follows);
+        more_follows, conformity_level);
     if (process_result == 0) {
       if (result.length() > 0) {
         String log = Plugin_052_MEI_objectid_to_name(object_id);
@@ -758,6 +803,8 @@ void Plugin_052_modbus_log_MEI(byte slaveAddress) {
         break;
       }
     }
+    // If more parts are needed, collect them or iterate over the known list.
+    // For example with "individual access" a new request has to be sent for each single item
     if (more_follows) {
       object_id = next_object_id;
     } else if (object_id < 0x84) {
@@ -812,6 +859,14 @@ unsigned int Plugin_052_read_RAM_EEPROM(byte command, byte startAddress,
 
 int Plugin_052_readErrorStatus(void) {
   return Plugin_052_readInputRegister(0x00);
+}
+
+uint32_t Plugin_052_readTypeId() {
+  return Plugin_052_read_32b_InputRegister(25);
+}
+
+uint32_t Plugin_052_readSensorId() {
+  return Plugin_052_read_32b_InputRegister(29);
 }
 
 int Plugin_052_readCo2(void) { return Plugin_052_readInputRegister(0x03); }
@@ -888,7 +943,7 @@ bool Plugin_052_prepare_single_measurement_from_RAM() {
 
 float Plugin_052_readTemperature(void) {
   int temperatureX100 = Plugin_052_readInputRegister(0x04);
-  float temperature = (float)temperatureX100 / 100;
+  float temperature = (float)temperatureX100 / 100.0;
   return temperature;
 }
 
