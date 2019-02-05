@@ -229,7 +229,7 @@ float p078_readVal(byte query, byte node, unsigned int model) {
   float _tempvar = NAN;
   while (retry_count > 0 && !success) {
     Plugin_078_SDM->clearErrCode();
-    float _tempvar = Plugin_078_SDM->readVal(p078_getRegister(query, model), node);
+    _tempvar = Plugin_078_SDM->readVal(p078_getRegister(query, model), node);
     --retry_count;
     if (Plugin_078_SDM->getErrCode() == SDM_ERR_NO_ERROR) {
       success = true;
