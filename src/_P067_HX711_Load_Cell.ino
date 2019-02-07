@@ -471,7 +471,7 @@ boolean Plugin_067(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WRITE:
       {
         String command = parseString(string, 1);
-        if (command == F("tareChanA"))
+        if (command.equalsIgnoreCase(F("tarechana")))
         {
           String log = F("HX711: tare channel A");
 
@@ -483,7 +483,7 @@ boolean Plugin_067(byte function, struct EventStruct *event, String& string)
           success = true;
         }
 
-        if (command == F("tareChanB"))
+        if (command.equalsIgnoreCase(F("tarechanb")))
         {
           String log = F("HX711: tare channel B");
 
