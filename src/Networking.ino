@@ -358,7 +358,7 @@ void SSDP_schema(WiFiClient &client) {
   Global SSDP stuff
   \*********************************************************************************************/
 typedef enum {
-  NONE,
+  SSDP_NONE,
   SEARCH,
   NOTIFY
 } ssdp_method_t;
@@ -503,7 +503,7 @@ void SSDP_send(byte method) {
 void SSDP_update() {
 
   if (!_pending && _server->next()) {
-    ssdp_method_t method = NONE;
+    ssdp_method_t method = SSDP_NONE;
 
     _respondToAddr = _server->getRemoteAddress();
     _respondToPort = _server->getRemotePort();
@@ -530,7 +530,7 @@ void SSDP_update() {
             if (strcmp_P(buffer, PSTR("M-SEARCH")) == 0) method = SEARCH;
             else if (strcmp_P(buffer, PSTR("NOTIFY")) == 0) method = NOTIFY;
 
-            if (method == NONE) state = ABORT;
+            if (method == SSDP_NONE) state = ABORT;
             else state = URI;
             cursor = 0;
 
@@ -619,7 +619,7 @@ void SSDP_update() {
 
   if (_pending && timeOutReached(_process_time + _delay)) {
     _pending = false; _delay = 0;
-    SSDP_send(NONE);
+    SSDP_send(SSDP_NONE);
   } else if (_notify_time == 0 || timeOutReached(_notify_time + (SSDP_INTERVAL * 1000L))) {
     _notify_time = millis();
     SSDP_send(NOTIFY);

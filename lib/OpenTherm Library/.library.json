@@ -1,0 +1,49 @@
+{
+    "name": "OpenTherm Library", 
+    "version": "1.0.2", 
+    "keywords": [
+        "communication"
+    ], 
+    "description": "OpenTherm Library for HVAC system control communication using Arduino and ESP8266 hardware.", 
+    "frameworks": [
+        "arduino"
+    ], 
+    "platforms": [
+        "atmelavr", 
+        "atmelsam", 
+        "espressif32", 
+        "espressif8266", 
+        "intel_arc32", 
+        "microchippic32", 
+        "nordicnrf51", 
+        "nordicnrf52", 
+        "ststm32", 
+        "teensy", 
+        "timsp430"
+    ], 
+    "authors": [
+        {
+            "email": "ihor.melnyk@gmail.com", 
+            "url": null, 
+            "maintainer": true, 
+            "name": "Ihor Melnyk"
+        }
+    ], 
+    "repository": {
+        "type": "git", 
+        "url": "https://github.com/ihormelnyk/opentherm_library"
+    }, 
+    "homepage": null, 
+    "export": {
+        "include": null, 
+        "exclude": [
+            "extras", 
+            "docs", 
+            "tests", 
+            "test", 
+            "*.doxyfile", 
+            "*.pdf"
+        ]
+    }, 
+    "id": 5483
+}

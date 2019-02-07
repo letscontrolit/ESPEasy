@@ -488,6 +488,7 @@ To create/register a plugin, you have to :
     // #define USES_P059   // Encoder
 
     // #define USES_P063   // TTP229_KeyPad
+    #define USES_P082   // OpenTherm
 #endif
 
 
