@@ -943,6 +943,11 @@ void backgroundtasks()
 
   #endif
 
+  #ifdef FEATURE_MDNS
+  // Allow MDNS processing
+  MDNS.update();
+  #endif
+
   delay(0);
 
   statusLED(false);
