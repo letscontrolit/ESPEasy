@@ -48,7 +48,9 @@ void sendData(struct EventStruct *event)
       event->ProtocolIndex = getProtocolIndex(Settings.Protocol[event->ControllerIndex]);
       if (validUserVar(event)) {
         CPluginCall(event->ProtocolIndex, CPLUGIN_PROTOCOL_SEND, event, dummyString);
-      } else {
+      }
+#ifndef BUILD_NO_DEBUG
+        else {
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
           String log = F("Invalid value detected for controller ");
           String controllerName;
@@ -57,6 +59,7 @@ void sendData(struct EventStruct *event)
           addLog(LOG_LEVEL_DEBUG, log);
         }
       }
+#endif
     }
   }
 
@@ -306,12 +309,14 @@ void processMQTTdelayQueue() {
     MQTTDelayHandler.markProcessed(true);
   } else {
     MQTTDelayHandler.markProcessed(false);
+#ifndef BUILD_NO_DEBUG
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
       String log = F("MQTT : process MQTT queue not published, ");
       log += MQTTDelayHandler.sendQueue.size();
       log += F(" items left in queue");
       addLog(LOG_LEVEL_DEBUG, log);
     }
+#endif
   }
   scheduleNextMQTTdelayQueue();
   STOP_TIMER(MQTT_DELAY_QUEUE);

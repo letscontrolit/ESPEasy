@@ -373,6 +373,7 @@ int getFileSize(SettingsType settingsType) {
 }
 
 bool getAndLogSettingsParameters(bool read, SettingsType settingsType, int index, int& offset, int& max_size) {
+#ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_DEBUG_DEV)) {
     String log = read ? F("Read") : F("Write");
     log += F(" settings: ");
@@ -381,6 +382,7 @@ bool getAndLogSettingsParameters(bool read, SettingsType settingsType, int index
     log += index;
     addLog(LOG_LEVEL_DEBUG_DEV, log);
   }
+#endif
   return getSettingsParameters(settingsType, index, offset, max_size);
 }
 

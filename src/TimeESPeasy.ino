@@ -378,9 +378,10 @@ bool getNtpTime(double& unixTime_d)
 	const int NTP_PACKET_SIZE = 48; // NTP time is in the first 48 bytes of message
 	byte packetBuffer[NTP_PACKET_SIZE]; //buffer to hold incoming & outgoing packets
 
-	log += F(" queried");
+  log += F(" queried");
+#ifndef BUILD_NO_DEBUG
 	addLog(LOG_LEVEL_DEBUG_MORE, log);
-
+#endif
 	while (udp.parsePacket() > 0) ; // discard any previously received packets
 
   memset(packetBuffer, 0, NTP_PACKET_SIZE);
@@ -458,7 +459,9 @@ bool getNtpTime(double& unixTime_d)
 		}
 		delay(10);
 	}
+#ifndef BUILD_NO_DEBUG
 	addLog(LOG_LEVEL_DEBUG_MORE, F("NTP  : No reply"));
+#endif
 	udp.stop();
 	return false;
 }

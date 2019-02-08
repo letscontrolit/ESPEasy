@@ -45,11 +45,13 @@ void checkRuleSets() {
     else
       activeRuleSets[x] = false;
 
+#ifndef BUILD_NO_DEBUG
     if (Settings.SerialLogLevel == LOG_LEVEL_DEBUG_DEV) {
       serialPrint(fileName);
       serialPrint(" ");
       serialPrintln(String(activeRuleSets[x]));
     }
+#endif
   }
 }
 
@@ -61,7 +63,9 @@ void rulesProcessing(String &event) {
     return;
   START_TIMER
   checkRAM(F("rulesProcessing"));
+#ifndef BUILD_NO_DEBUG
   unsigned long timer = millis();
+#endif
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("EVENT: ");
     log += event;
@@ -86,12 +90,15 @@ void rulesProcessing(String &event) {
     // if exists processed the rule file
     if (SPIFFS.exists(fileName))
       rulesProcessingFile(fileName, event);
-    else
+#ifndef BUILD_NO_DEBUG
+      else
       addLog(LOG_LEVEL_DEBUG, String(F("EVENT: ")) + event +
                                   String(F(" is ingnored. File ")) + fileName +
                                   String(F(" not found.")));
+#endif
   }
 
+#ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     String log = F("EVENT: ");
     log += event;
@@ -100,6 +107,7 @@ void rulesProcessing(String &event) {
     log += F(" milliSeconds");
     addLog(LOG_LEVEL_DEBUG, log);
   }
+#endif
   STOP_TIMER(RULES_PROCESSING);
   backgroundtasks();
 }
@@ -111,11 +119,13 @@ String rulesProcessingFile(const String &fileName, String &event) {
   if (!Settings.UseRules)
     return "";
   checkRAM(F("rulesProcessingFile"));
+#ifndef BUILD_NO_DEBUG
   if (Settings.SerialLogLevel == LOG_LEVEL_DEBUG_DEV) {
     serialPrint(F("RuleDebug Processing:"));
     serialPrintln(fileName);
     serialPrintln(F("     flags CMI  parse output:"));
   }
+#endif
 
   static byte nestingLevel = 0;
   int data = 0;
@@ -277,6 +287,7 @@ void parseCompleteNonCommentLine(String &line, String &event, String &log,
     fakeIfBlock = 0;
   }
 
+#ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_DEBUG_DEV)) {
     String log = F("RuleDebug: ");
     log += codeBlock;
@@ -286,6 +297,7 @@ void parseCompleteNonCommentLine(String &line, String &event, String &log,
     log += line;
     addLog(LOG_LEVEL_DEBUG_DEV, log);
   }
+#endif
 
   if (match) // rule matched for one action or a block of actions
   {
@@ -314,6 +326,7 @@ void processMatchedRule(String &lcAction, String &action, String &event,
         else {
           String check = lcAction.substring(split + 7);
           condition[ifBlock - 1] = conditionMatchExtended(check);
+#ifndef BUILD_NO_DEBUG
           if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
             log = F("Lev.");
             log += String(ifBlock);
@@ -323,6 +336,7 @@ void processMatchedRule(String &lcAction, String &action, String &event,
             log += toString(condition[ifBlock - 1]);
             addLog(LOG_LEVEL_DEBUG, log);
           }
+#endif
         }
       }
     }
@@ -335,6 +349,7 @@ void processMatchedRule(String &lcAction, String &action, String &event,
           String check = lcAction.substring(split + 3);
           condition[ifBlock - 1] = conditionMatchExtended(check);
           ifBranche[ifBlock - 1] = true;
+#ifndef BUILD_NO_DEBUG
           if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
             log = F("Lev.");
             log += String(ifBlock);
@@ -344,6 +359,7 @@ void processMatchedRule(String &lcAction, String &action, String &event,
             log += toString(condition[ifBlock - 1]);
             addLog(LOG_LEVEL_DEBUG, log);
           }
+#endif
         } else
           fakeIfBlock++;
       } else {
@@ -365,6 +381,7 @@ void processMatchedRule(String &lcAction, String &action, String &event,
   {
     ifBranche[ifBlock - 1] = false;
     isCommand = false;
+#ifndef BUILD_NO_DEBUG
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
       log = F("Lev.");
       log += String(ifBlock);
@@ -372,6 +389,7 @@ void processMatchedRule(String &lcAction, String &action, String &event,
       log += toString(condition[ifBlock - 1] == ifBranche[ifBlock - 1]);
       addLog(LOG_LEVEL_DEBUG, log);
     }
+#endif
   }
 
   if (lcAction == F("endif")) // conditional block ends here

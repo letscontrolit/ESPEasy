@@ -460,7 +460,9 @@ enum SettingsType {
 };
 String getSettingsTypeString(SettingsType settingsType);
 bool getSettingsParameters(SettingsType settingsType, int index, int& offset, int& max_size);
+#ifndef BUILD_MINIMAL_OTA
 bool showSettingsFileLayout = false;
+#endif
 
 /*
         To modify the stock configuration without changing this repo file :
@@ -1021,7 +1023,7 @@ struct ControllerSettingsStruct
     if (MaxQueueDepth > CONTROLLER_DELAY_QUEUE_DEPTH_MAX) MaxQueueDepth = CONTROLLER_DELAY_QUEUE_DEPTH_DFLT;
     if (MaxRetry > CONTROLLER_DELAY_QUEUE_RETRY_MAX) MaxRetry = CONTROLLER_DELAY_QUEUE_RETRY_MAX;
     if (MaxQueueDepth == 0) MaxQueueDepth = CONTROLLER_DELAY_QUEUE_DEPTH_DFLT;
-    if (MaxRetry == 0) MaxRetry = CONTROLLER_DELAY_QUEUE_DELAY_DFLT;
+    if (MaxRetry == 0) MaxRetry = CONTROLLER_DELAY_QUEUE_RETRY_DFLT;
     if (ClientTimeout < 10 || ClientTimeout > CONTROLLER_CLIENTTIMEOUT_MAX) {
       ClientTimeout = CONTROLLER_CLIENTTIMEOUT_DFLT;
     }

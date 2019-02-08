@@ -1441,9 +1441,11 @@ void updateLogLevelCache() {
     Serial.setDebugOutput(false);
   } else {
     max_lvl = _max(max_lvl, Settings.SerialLogLevel);
+#ifndef BUILD_NO_DEBUG
     if (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE) {
       Serial.setDebugOutput(true);
     }
+#endif
   }
   max_lvl = _max(max_lvl, Settings.SyslogLevel);
   if (Logging.logActiveRead()) {
@@ -2003,6 +2005,7 @@ void transformValue(
           newString += ' ';
       }
       {
+#ifndef BUILD_NO_DEBUG
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
           String logFormatted = F("DEBUG: Formatted String='");
           logFormatted += newString;
@@ -2010,6 +2013,7 @@ void transformValue(
           logFormatted += '\'';
           addLog(LOG_LEVEL_DEBUG, logFormatted);
         }
+#endif
       }
     }
   }
@@ -2017,12 +2021,14 @@ void transformValue(
 
   newString += String(value);
   {
+#ifndef BUILD_NO_DEBUG
     if (loglevelActiveFor(LOG_LEVEL_DEBUG_DEV)) {
       String logParsed = F("DEBUG DEV: Parsed String='");
       logParsed += newString;
       logParsed += '\'';
       addLog(LOG_LEVEL_DEBUG_DEV, logParsed);
     }
+#endif
   }
   checkRAM(F("transformValue2"));
 }
@@ -2372,7 +2378,9 @@ int CalculateParam(const char *TmpStr) {
           log += round(param);
           addLog(LOG_LEVEL_ERROR, log);
         }
-      } else {
+      }
+#ifndef BUILD_NO_DEBUG
+        else {
       if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
         String log = F("CALCULATE PARAM: ");
         log += TmpStr;
@@ -2381,6 +2389,7 @@ int CalculateParam(const char *TmpStr) {
         addLog(LOG_LEVEL_DEBUG, log);
       }
     }
+#endif
     returnValue=round(param); //return integer only as it's valid only for device and task id
   }
   return returnValue;
@@ -2413,7 +2422,9 @@ void SendValueLogger(byte TaskIndex)
       logger += "\r\n";
     }
 
+#ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_DEBUG, logger);
+#endif
   }
 
 #ifdef FEATURE_SD
@@ -2487,6 +2498,7 @@ class RamTracker{
        if (writePtr >= TRACEENTRIES) writePtr=0;          // inc write pointer and wrap around too.
     };
    void getTraceBuffer(){                                // return giant strings, one line per trace. Add stremToWeb method to avoid large strings.
+#ifndef BUILD_NO_DEBUG
       if (loglevelActiveFor(LOG_LEVEL_DEBUG_DEV)) {
         String retval="Memtrace\n";
         for (int i = 0; i< TRACES; i++){
@@ -2499,6 +2511,7 @@ class RamTracker{
           retval="";
         }
       }
+#endif
     }
 }myRamTracker;                                              // instantiate class. (is global now)
 

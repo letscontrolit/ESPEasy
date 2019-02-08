@@ -52,7 +52,9 @@ String Command_MemInfo(struct EventStruct *event, const char* Line)
 
 String Command_MemInfo_detail(struct EventStruct *event, const char* Line)
 {
+#ifndef BUILD_MINIMAL_OTA
 	showSettingsFileLayout = true;
+#endif
 	Command_MemInfo(event, Line);
 	for (int st = 0; st < SettingsType_MAX; ++st) {
 		SettingsType settingsType = static_cast<SettingsType>(st);

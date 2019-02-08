@@ -175,11 +175,13 @@ void C013_sendUDP(byte unit, byte* data, byte size)
     if (it->second.ip[0] == 0)
       return;
   }
+#ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
     String log = F("C013 : Send UDP message to ");
     log += unit;
     addLog(LOG_LEVEL_DEBUG_MORE, log);
   }
+#endif
 
   statusLED(true);
 
@@ -197,6 +199,7 @@ void C013_sendUDP(byte unit, byte* data, byte size)
 
 void C013_Receive(struct EventStruct *event) {
   if (event->Par2 < 6) return;
+#ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
     if (event->Data[1] > 1 && event->Data[1] < 6)
     {
@@ -209,6 +212,7 @@ void C013_Receive(struct EventStruct *event) {
       addLog(LOG_LEVEL_DEBUG_MORE, log);
     }
   }
+#endif
 
   switch (event->Data[1]) {
     case 2: // sensor info pull request
@@ -221,7 +225,9 @@ void C013_Receive(struct EventStruct *event) {
       {
         struct C013_SensorInfoStruct infoReply;
         if (static_cast<size_t>(event->Par2) < sizeof(C013_SensorInfoStruct)) {
+#ifndef BUILD_NO_DEBUG
           addLog(LOG_LEVEL_DEBUG, F("C013_Receive: Received data smaller than C013_SensorInfoStruct, discarded"));
+#endif
         } else {
           memcpy((byte*)&infoReply, (byte*)event->Data, sizeof(C013_SensorInfoStruct));
 
@@ -255,7 +261,9 @@ void C013_Receive(struct EventStruct *event) {
       {
         struct C013_SensorDataStruct dataReply;
         if (static_cast<size_t>(event->Par2) < sizeof(C013_SensorDataStruct)) {
+#ifndef BUILD_NO_DEBUG
           addLog(LOG_LEVEL_DEBUG, F("C013_Receive: Received data smaller than C013_SensorDataStruct, discarded"));
+#endif
         } else {
           memcpy((byte*)&dataReply, (byte*)event->Data, sizeof(C013_SensorDataStruct));
 
