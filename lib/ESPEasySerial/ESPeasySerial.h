@@ -61,6 +61,8 @@ struct ESPeasySerialType {
 
 
   static bool getSerialTypePins(ESPeasySerialType::serialtype serType, int& rxPin, int& txPin) {
+    rxPin = -1;
+    txPin = -1;
     switch (serType) {
       case ESPeasySerialType::serialtype::serial0:  rxPin = 3; txPin = 1; return true;
 #ifdef ESP32
@@ -233,7 +235,7 @@ private:
   static bool _serial0_swap_active;
 #endif // ESP8266
 
-  ESPeasySerialType::serialtype _serialtype;
+  ESPeasySerialType::serialtype _serialtype = ESPeasySerialType::serialtype::MAX_SERIAL_TYPE;
   int _receivePin;
   int _transmitPin;
   unsigned long _baud = 0;
