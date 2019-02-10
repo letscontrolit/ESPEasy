@@ -68,7 +68,7 @@ void clearPluginTaskData(byte taskIndex) {
 
 void initPluginTaskData(byte taskIndex, PluginTaskData_base* data) {
   clearPluginTaskData(taskIndex);
-  if (taskIndex < TASKS_MAX) {
+  if (taskIndex < TASKS_MAX && Settings.TaskDeviceEnabled[taskIndex]) {
     Plugin_task_data[taskIndex] = data;
     Plugin_task_data[taskIndex]->_taskdata_plugin_id = Task_id_to_Plugin_id[taskIndex];
   }
@@ -79,7 +79,7 @@ PluginTaskData_base* getPluginTaskData(byte taskIndex) {
   if (taskIndex >= TASKS_MAX) {
     return nullptr;
   }
-  if (Plugin_task_data[taskIndex]->_taskdata_plugin_id == Task_id_to_Plugin_id[taskIndex]) {
+  if (Plugin_task_data[taskIndex] != nullptr && Plugin_task_data[taskIndex]->_taskdata_plugin_id == Task_id_to_Plugin_id[taskIndex]) {
     return Plugin_task_data[taskIndex];
   }
   return nullptr;

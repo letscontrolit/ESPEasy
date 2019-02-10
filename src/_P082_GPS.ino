@@ -32,7 +32,7 @@
 // #define P082_SEND_GPS_TO_LOG
 
 struct P082_data_struct : public PluginTaskData_base {
-  P082_data_struct() {}
+  P082_data_struct() : gps(nullptr), P082_easySerial(nullptr) {}
 
   ~P082_data_struct() { reset(); }
 
@@ -169,15 +169,15 @@ boolean Plugin_082(byte function, struct EventStruct *event, String &string) {
   case PLUGIN_GET_DEVICENAME: {
     string = F(PLUGIN_NAME_082);
     break;
-    }
+  }
 
-    case PLUGIN_GET_DEVICEVALUENAMES: {
-      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_082));
-      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], PSTR(PLUGIN_VALUENAME2_082));
-      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[2], PSTR(PLUGIN_VALUENAME3_082));
-      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[3], PSTR(PLUGIN_VALUENAME4_082));
-      break;
-    }
+  case PLUGIN_GET_DEVICEVALUENAMES: {
+    strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_082));
+    strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], PSTR(PLUGIN_VALUENAME2_082));
+    strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[2], PSTR(PLUGIN_VALUENAME3_082));
+    strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[3], PSTR(PLUGIN_VALUENAME4_082));
+    break;
+  }
 
   case PLUGIN_GET_DEVICEGPIONAMES: {
     serialHelper_getGpioNames(event, false, true); // TX optional
@@ -250,6 +250,8 @@ boolean Plugin_082(byte function, struct EventStruct *event, String &string) {
         //          pinMode(pps_pin, INPUT_PULLUP);
         attachInterrupt(pps_pin, Plugin_082_interrupt, RISING);
       }
+    } else {
+      clearPluginTaskData(event->TaskIndex);
     }
     break;
   }
