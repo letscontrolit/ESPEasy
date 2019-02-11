@@ -37,10 +37,13 @@ for ENV in \
   esp32dev\
   esp32test_1M8_partition\
   hard_SONOFF_POW_4M\
-  hard_core_250_beta_SONOFF_POW_4M\
-  hard_core_250_beta_Shelly_1_2M256\
+  hard_Ventus_W266\
+  hard_core_250_SONOFF_POW_4M\
+  hard_core_250_Shelly_1_2M256\
   minimal_ESP8266_1024_OTA\
   minimal_ESP8285_1024_OTA\
+  minimal_core_250_ESP8266_1024_OTA\
+  minimal_core_250_ESP8285_1024_OTA\
   normal_ESP8266_1024\
   normal_ESP8266_1024_VCC\
   normal_ESP8266_4096\
@@ -49,14 +52,16 @@ for ENV in \
   normal_WROOM02_2048\
   normal_core_241_ESP8266_1024\
   normal_core_241_ESP8266_4096\
-  normal_core_250_beta_ESP8266_1024\
-  normal_core_250_beta_ESP8266_4096\
-  normal_core_250_beta_IR_ESP8266_4096\
-  normal_core_250_beta_WROOM02_2M256\
-  test_ESP8266_4096\
+  normal_core_242_ESP8266_1024\
+  normal_core_250_ESP8266_1024\
+  normal_core_250_ESP8266_4096\
+  normal_core_250_IR_ESP8266_4096\
+  normal_core_250_WROOM02_2M256\
   test_ESP8266_4096_VCC\
-  test_core_250_beta_ESP8266_4096\
-  test_core_250_beta_ESP8266_4096_VCC;\
+  test_core_242_ESP8266_4096\
+  test_core_250_ESP8266_4096\
+  test_core_260_alpha_ESP8266_4096\
+  test_core_260_alpha_ESP8266_4096_VCC;\
 do
   MAX_FILESIZE=1044464
   if [[ ${ENV} == *"1024"* ]]; then
@@ -72,6 +77,10 @@ do
   fi
   if [[ ${ENV} == *"1M8_partition"* ]]; then
     MAX_FILESIZE=1900544
+  fi
+  if [[ ${ENV} == *"core_250"* ]]; then
+    # disable core 250 for now, since it is buggy (20180211)
+    MAX_FILESIZE=0
   fi
 
   FILESIZE=$(stat -c%s .pioenvs/${ENV}/firmware.bin )
