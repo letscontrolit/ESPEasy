@@ -47,6 +47,12 @@ void ESPeasySerial::begin(unsigned long baud, SerialConfig config, SerialMode mo
   }
   if (isSWserial()) {
     _swserial->begin(baud);
+    if (baud == 9600) {
+      // Use interrupts for TX when baudrate is 9600.
+      // See change in this commit:
+      // https://github.com/plerup/espsoftwareserial/commit/7077979af30f12454b8e3165df8f41c73c5a2d24
+      _swserial->enableIntTx(true);
+    }
   } else {
     doHWbegin(baud, config, mode);
   }
@@ -685,7 +691,7 @@ void ESPeasySerial::begin(unsigned long baud, uint32_t config
   }
   // Make sure the extra bit is set for the config. The config differs between ESP32 and ESP82xx
   config = config | 0x8000000;
-  
+
   // Timeout added for 1.0.1
   // See: https://github.com/espressif/arduino-esp32/commit/233d31bed22211e8c85f82bcf2492977604bbc78
 //  getHW()->begin(baud, config, _receivePin, _transmitPin, invert, timeout_ms);
