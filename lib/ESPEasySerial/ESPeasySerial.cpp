@@ -47,12 +47,16 @@ void ESPeasySerial::begin(unsigned long baud, SerialConfig config, SerialMode mo
   }
   if (isSWserial()) {
     _swserial->begin(baud);
+    #if defined(ARDUINO_ESP8266_RELEASE_2_4_1) || defined(ARDUINO_ESP8266_RELEASE_2_4_0) || defined(ARDUINO_ESP8266_RELEASE_2_3_0)
+      // SoftwareSerial 3.4.1 and older used interrupts with 9600 baud
+    #else
     if (baud == 9600) {
       // Use interrupts for TX when baudrate is 9600.
       // See change in this commit:
       // https://github.com/plerup/espsoftwareserial/commit/7077979af30f12454b8e3165df8f41c73c5a2d24
       _swserial->enableIntTx(true);
     }
+    #endif
   } else {
     doHWbegin(baud, config, mode);
   }
