@@ -35,7 +35,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #endif
 
 #ifndef DISABLE_SOFTWARE_SERIAL
-#include <SoftwareSerial.h>
+#include <ESPEasySoftwareSerial.h>
 #endif
 
 #ifdef ESP32
@@ -229,7 +229,7 @@ private:
 #if !defined(DISABLE_SOFTWARE_SERIAL) && defined(ESP8266)
   bool isSWserial() const { return _serialtype == ESPeasySerialType::serialtype::software; }
 
-  SoftwareSerial* _swserial = nullptr;
+  ESPeasySoftwareSerial* _swserial = nullptr;
 #endif
 #ifdef ESP8266
   static bool _serial0_swap_active;
