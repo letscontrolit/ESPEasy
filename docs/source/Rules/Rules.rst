@@ -412,13 +412,13 @@ Another filter could be to just use the previous value and **dilute** the new va
 
 Yet another filter could be to add the new value to a **summarized average**:
 
-  .. code-block:: html
+.. code-block:: html
 
-    On Temp#Value Do
-      Let,1,[Temp#Value]
-      TaskValueSet,12,1,([VAR#1]+3*[VAR#2])/4
-      Let,2,[Dummy#Value]
-    EndOn
+  On Temp#Value Do
+    Let,1,[Temp#Value]
+    TaskValueSet,12,1,([VAR#1]+3*[VAR#2])/4
+    Let,2,[Dummy#Value]
+  EndOn
 
 What you should use? That is a case by case question. Try them all and see which
 one suits your actual scenario the best.
