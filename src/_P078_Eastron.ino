@@ -137,6 +137,15 @@ boolean Plugin_078(byte function, struct EventStruct *event, String& string)
         addFormSelector(F("Variable 3"), F("p078_query3"), 10, options_query, NULL, P078_QUERY3);
         addFormSelector(F("Variable 4"), F("p078_query4"), 10, options_query, NULL, P078_QUERY4);
 
+        if (Plugin_078_SDM != nullptr) {
+          addRowLabel(F("Checksum (pass/fail)"));
+          String chksumStats;
+          chksumStats = Plugin_078_SDM->getSuccCount();
+          chksumStats += '/';
+          chksumStats += Plugin_078_SDM->getErrCount();
+          addHtml(chksumStats);
+        }
+
         success = true;
         break;
       }
@@ -214,7 +223,18 @@ boolean Plugin_078(byte function, struct EventStruct *event, String& string)
 
 float p078_readVal(byte query, byte node, unsigned int model) {
   if (Plugin_078_SDM == NULL) return 0.0;
-  const float _tempvar = Plugin_078_SDM->readVal(p078_getRegister(query, model), node);
+
+  byte retry_count = 3;
+  bool success = false;
+  float _tempvar = NAN;
+  while (retry_count > 0 && !success) {
+    Plugin_078_SDM->clearErrCode();
+    _tempvar = Plugin_078_SDM->readVal(p078_getRegister(query, model), node);
+    --retry_count;
+    if (Plugin_078_SDM->getErrCode() == SDM_ERR_NO_ERROR) {
+      success = true;
+    }
+  }
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("EASTRON: (");
     log += node;

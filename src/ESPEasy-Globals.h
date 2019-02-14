@@ -1,8 +1,6 @@
 #ifndef ESPEASY_GLOBALS_H_
 #define ESPEASY_GLOBALS_H_
 
-#include "_Plugin_Helper.h"
-
 #ifndef CORE_2_5_0
   #define STR_HELPER(x) #x
   #define STR(x) STR_HELPER(x)
@@ -39,6 +37,8 @@
 #define DEFAULT_IP_BLOCK_LEVEL 1                // 0: ALL_ALLOWED  1: LOCAL_SUBNET_ALLOWED  2: ONLY_IP_RANGE_ALLOWED
 
 #define DEFAULT_WIFI_CONNECTION_TIMEOUT  10000  // minimum timeout in ms for WiFi to be connected.
+#define DEFAULT_WIFI_FORCE_BG_MODE       false  // when set, only allow to connect in 802.11B or G mode (not N)
+#define DEFAULT_WIFI_RESTART_WIFI_CONN_LOST  false // Perform wifi off and on when connection was lost.
 
 // --- Default Controller ------------------------------------------------------------------------------
 #define DEFAULT_CONTROLLER   false              // true or false enabled or disabled, set 1st controller defaults
@@ -552,6 +552,7 @@ bool showSettingsFileLayout = false;
   #include <WebServer.h>
   #include "SPIFFS.h"
   #include <rom/rtc.h>
+  #include "esp_wifi.h" // Needed to call ESP-IDF functions like esp_wifi_....
   WebServer WebServer(80);
   #ifdef FEATURE_MDNS
     #include <ESPmDNS.h>
@@ -679,6 +680,7 @@ struct SecurityStruct
     }
     memset(Password, 0, sizeof(Password));
   }
+
   char          WifiSSID[32];
   char          WifiKey[64];
   char          WifiSSID2[32];
@@ -725,6 +727,13 @@ struct SettingsStruct
 
   bool OldRulesEngine() {  return !getBitFromUL(VariousBits1, 3); }
   void OldRulesEngine(bool value) {  setBitToUL(VariousBits1, 3, !value); }
+
+  bool ForceWiFi_bg_mode() {  return getBitFromUL(VariousBits1, 4); }
+  void ForceWiFi_bg_mode(bool value) {  setBitToUL(VariousBits1, 4, value); }
+
+  bool WiFiRestart_connection_lost() {  return getBitFromUL(VariousBits1, 5); }
+  void WiFiRestart_connection_lost(bool value) {  setBitToUL(VariousBits1, 5, value); }
+
 
 
   void validate() {
@@ -828,6 +837,8 @@ struct SettingsStruct
     MQTTUseUnitNameAsClientId = 0;
     VariousBits1 = 0;
     OldRulesEngine(DEFAULT_RULES_OLDENGINE);
+    ForceWiFi_bg_mode(DEFAULT_WIFI_FORCE_BG_MODE);
+    WiFiRestart_connection_lost(DEFAULT_WIFI_RESTART_WIFI_CONN_LOST);
   }
 
   void clearAll() {
@@ -967,12 +978,23 @@ SettingsStruct* SettingsStruct_ptr = new SettingsStruct;
 SettingsStruct& Settings = *SettingsStruct_ptr;
 */
 
+String ReportOffsetErrorInStruct(const String& structname) {
+  String error;
+  error.reserve(48);
+  error = F("Error: Incorrect offset in struct: ");
+  error += structname;
+  return error;
+}
+
 /*********************************************************************************************\
  *  Analyze SettingsStruct and report inconsistencies
  *  Not a member function to be able to use the F-macro
 \*********************************************************************************************/
 bool SettingsCheck(String& error) {
   error = "";
+  if (offsetof(SettingsStruct, ResetFactoryDefaultPreference) != 1224) {
+    error = ReportOffsetErrorInStruct(F("SettingsStruct"));
+  }
   if (!Settings.networkSettingsEmpty()) {
     if (Settings.IP[0] == 0 || Settings.Gateway[0] == 0 || Settings.Subnet[0] == 0 || Settings.DNS[0] == 0) {
       error += F("Error: Either fill all IP settings fields or leave all empty");

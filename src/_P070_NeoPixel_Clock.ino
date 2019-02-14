@@ -17,14 +17,125 @@
 
 #define NUMBER_LEDS      60			//number of LED in the strip
 
-boolean Plugin_070_enabled;		//used to enable/disable the display.
-byte Plugin_070_brightness;	//brightness of the clock "hands"
-byte Plugin_070_marks;			//brightness of the hour marks
-byte Plugin_070_offset;		//position of the 12 o'clock LED on the strip
-boolean thick_12_mark;
-byte marks[14];
+struct P070_data_struct : public PluginTaskData_base {
 
-Adafruit_NeoPixel * Plugin_070_pixels;
+  P070_data_struct() {}
+
+  ~P070_data_struct() { reset(); }
+
+  void reset() {
+    if (Plugin_070_pixels != nullptr) {
+      delete Plugin_070_pixels;
+      Plugin_070_pixels = nullptr;
+    }
+  }
+
+  void init(struct EventStruct *event) {
+    if (!Plugin_070_pixels)
+    {
+      Plugin_070_pixels = new Adafruit_NeoPixel(NUMBER_LEDS, CONFIG_PIN1, NEO_GRB + NEO_KHZ800);
+      Plugin_070_pixels->begin(); // This initializes the NeoPixel library.
+    }
+    set(event);
+  }
+
+  void set(struct EventStruct *event) {
+    display_enabled = PCONFIG(0);
+    brightness = PCONFIG(1);
+    brightness_hour_marks = PCONFIG(2);
+    offset_12h_mark = PCONFIG(3);
+    thick_12_mark = PCONFIG(4);
+  }
+
+
+
+  void Clock_update()
+  {
+    clearClock();			//turn off the LEDs
+    if (display_enabled > 0) {		//if the display is enabled, calculate the LEDs to turn on
+      int Hours = hour();
+      int Minutes = minute();
+      int Seconds = second();
+      timeToStrip(Hours, Minutes, Seconds);
+    }
+    Plugin_070_pixels->show(); // This sends the updated pixel color to the hardware.
+  }
+
+  void calculateMarks()
+  { //generate a list of the LEDs that have hour marks
+    for (int i = 0; i < 12; i++) {
+      marks[i] = 5 * i + (offset_12h_mark % 5);
+    }
+    if (thick_12_mark) {
+      if (offset_12h_mark == 0) {
+        marks[12] = 1;
+        marks[13] = 59;
+      }
+      else if (offset_12h_mark == 59) {
+        marks[12] = 0;
+        marks[13] = 58;
+      }
+      else {
+        marks[12] = offset_12h_mark + 1;
+        marks[13] = offset_12h_mark - 1;
+      }
+    }
+    else {
+      marks[12] = 255;
+      marks[13] = 255;
+    }
+  }
+
+  void clearClock() {
+    for (int i = 0; i < NUMBER_LEDS; i++) {
+      Plugin_070_pixels->setPixelColor(i, Plugin_070_pixels->Color(0, 0, 0));
+    }
+  }
+
+  void timeToStrip(int hours, int minutes, int seconds) {
+    if (hours > 11) hours = hours - 12;
+    hours = (hours * 5) + (minutes / 12) + offset_12h_mark; //make the hour hand move each 12 minutes and apply the offset
+    if (hours > 59) hours = hours - 60;
+    minutes = minutes + offset_12h_mark;	//apply offset to minutes
+    if (minutes > 59) minutes = minutes - 60;
+    seconds = seconds + offset_12h_mark;	//apply offset to seconds
+    if (seconds > 59) seconds = seconds - 60;
+    for (int i = 0 ; i < 14; i ++) {	//set the hour marks as white;
+      if ((marks[i] != hours) && (marks[i] != minutes) && (marks[i] != seconds) && (marks[i] != 255)) {	//do not draw a mark there is a clock hand in that position
+        Plugin_070_pixels->setPixelColor(marks[i], Plugin_070_pixels->Color(brightness_hour_marks, brightness_hour_marks, brightness_hour_marks));
+      }
+    }
+    uint32_t currentColor;
+    uint8_t r_val, g_val, b_val;
+    for (int i = 0; i < NUMBER_LEDS; i++) {	//draw the clock hands, adding the colors together
+      if (i == hours) {	//hours hand is RED
+        Plugin_070_pixels->setPixelColor(i, Plugin_070_pixels->Color(brightness, 0, 0));
+      }
+      if (i == minutes) { //minutes hand is GREEN
+        currentColor = Plugin_070_pixels->getPixelColor(i);
+        r_val = (uint8_t)(currentColor >> 16);
+        Plugin_070_pixels->setPixelColor(i, Plugin_070_pixels->Color(r_val, brightness, 0));
+      }
+      if (i == seconds) {	//seconds hand is BLUE
+        currentColor = Plugin_070_pixels->getPixelColor(i);
+        r_val = (uint8_t)(currentColor >> 16);
+        g_val = (uint8_t)(currentColor >>  8);
+        Plugin_070_pixels->setPixelColor(i, Plugin_070_pixels->Color(r_val, g_val, brightness));
+      }
+    }
+  }
+
+  boolean display_enabled;		// used to enable/disable the display.
+  byte brightness;	          // brightness of the clock "hands"
+  byte brightness_hour_marks;	// brightness of the hour marks
+  byte offset_12h_mark;		    // position of the 12 o'clock LED on the strip
+  boolean thick_12_mark;      // thicker marking of the 12h position
+  byte marks[14];             // Positions of the hour marks and dials
+
+  Adafruit_NeoPixel * Plugin_070_pixels = nullptr;
+
+};
+
 
 #define PLUGIN_070
 #define PLUGIN_ID_070         70
@@ -100,33 +211,37 @@ boolean Plugin_070(byte function, struct EventStruct *event, String& string)
         PCONFIG(2) = getFormItemInt(F("marks"));
         PCONFIG(3) = getFormItemInt(F("offset"));
         PCONFIG(4) = isFormItemChecked(F("thick_12_mark"));
-
-        Plugin_070_enabled = PCONFIG(0);
-        Plugin_070_brightness = PCONFIG(1);
-        Plugin_070_marks = PCONFIG(2);
-        Plugin_070_offset = PCONFIG(3);
-        thick_12_mark = PCONFIG(4);
-
-        calculateMarks();
+        P070_data_struct* P070_data = static_cast<P070_data_struct*>(getPluginTaskData(event->TaskIndex));
+        if (nullptr != P070_data) {
+          P070_data->display_enabled = PCONFIG(0);
+          P070_data->brightness = PCONFIG(1);
+          P070_data->brightness_hour_marks = PCONFIG(2);
+          P070_data->offset_12h_mark = PCONFIG(3);
+          P070_data->thick_12_mark = PCONFIG(4);
+          P070_data->calculateMarks();
+        }
 
         success = true;
         break;
       }
 
+    case PLUGIN_EXIT:
+      {
+        clearPluginTaskData(event->TaskIndex);
+        success = true;
+        break;
+      }
+
+
     case PLUGIN_INIT:
       {
-        if (!Plugin_070_pixels)
-        {
-          Plugin_070_pixels = new Adafruit_NeoPixel(NUMBER_LEDS, CONFIG_PIN1, NEO_GRB + NEO_KHZ800);
-          Plugin_070_pixels->begin(); // This initializes the NeoPixel library.
+        initPluginTaskData(event->TaskIndex, new P070_data_struct());
+        P070_data_struct* P070_data = static_cast<P070_data_struct*>(getPluginTaskData(event->TaskIndex));
+        if (nullptr == P070_data) {
+          return success;
         }
-        Plugin_070_enabled = PCONFIG(0);
-        Plugin_070_brightness = PCONFIG(1);
-        Plugin_070_marks = PCONFIG(2);
-        Plugin_070_offset = PCONFIG(3);
-        thick_12_mark = PCONFIG(4);
-
-        calculateMarks();
+        P070_data->init(event);
+        P070_data->calculateMarks();
 
         success = true;
         break;
@@ -148,26 +263,27 @@ boolean Plugin_070(byte function, struct EventStruct *event, String& string)
         String param2 = parseString(lowerString, 3);
         String param3 = parseString(lowerString, 4);
 
-        if (command == F("clock")) {
+        P070_data_struct* P070_data = static_cast<P070_data_struct*>(getPluginTaskData(event->TaskIndex));
+        if (nullptr != P070_data && command == F("clock")) {
           int val_Mode;
           if (validIntFromString(param1, val_Mode)) {
             if (val_Mode > -1 && val_Mode < 2) {
-              Plugin_070_enabled = val_Mode;
-              PCONFIG(0) = Plugin_070_enabled;
+              P070_data->display_enabled = val_Mode;
+              PCONFIG(0) = P070_data->display_enabled;
             }
           }
           int val_Bright;
           if (validIntFromString(param2, val_Bright)) {
             if (val_Bright > -1 && val_Bright < 256) {
-              Plugin_070_brightness = val_Bright;
-              PCONFIG(1) = Plugin_070_brightness;
+              P070_data->brightness = val_Bright;
+              PCONFIG(1) = P070_data->brightness;
             }
           }
           int val_Marks;
           if (validIntFromString(param3, val_Marks)) {
             if (val_Marks > -1 && val_Marks < 256) {
-              Plugin_070_marks = val_Marks;
-              PCONFIG(2) = Plugin_070_marks;
+              P070_data->brightness_hour_marks = val_Marks;
+              PCONFIG(2) = P070_data->brightness_hour_marks;
             }
           }
 /*        //Command debuging routine
@@ -190,92 +306,20 @@ boolean Plugin_070(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
       {
-        UserVar[event->BaseVarIndex] = Plugin_070_enabled;
-        UserVar[event->BaseVarIndex + 1] = Plugin_070_brightness;
-        UserVar[event->BaseVarIndex + 2] = Plugin_070_marks;
+        P070_data_struct* P070_data = static_cast<P070_data_struct*>(getPluginTaskData(event->TaskIndex));
+        if (nullptr != P070_data) {
+          UserVar[event->BaseVarIndex] = display_enabled;
+          UserVar[event->BaseVarIndex + 1] = brightness;
+          UserVar[event->BaseVarIndex + 2] = brightness_hour_marks;
 
-        success = true;
+          success = true;
+        }
       }
 
   }
   return success;
 }
 
-void Clock_update()
-{
-  clearClock();			//turn off the LEDs
-  if (Plugin_070_enabled > 0) {		//if the display is enabled, calculate the LEDs to turn on
-    int Hours = hour();
-    int Minutes = minute();
-    int Seconds = second();
-    timeToStrip(Hours, Minutes, Seconds);
-  }
-  Plugin_070_pixels->show(); // This sends the updated pixel color to the hardware.
-}
-
-void calculateMarks()
-{ //generate a list of the LEDs that have hour marks
-  for (int i = 0; i < 12; i++) {
-    marks[i] = 5 * i + (Plugin_070_offset % 5);
-  }
-  if (thick_12_mark) {
-    if (Plugin_070_offset == 0) {
-      marks[12] = 1;
-      marks[13] = 59;
-    }
-    else if (Plugin_070_offset == 59) {
-      marks[12] = 0;
-      marks[13] = 58;
-    }
-    else {
-      marks[12] = Plugin_070_offset + 1;
-      marks[13] = Plugin_070_offset - 1;
-    }
-  }
-  else {
-    marks[12] = 255;
-    marks[13] = 255;
-  }
-}
-
-void clearClock() {
-  for (int i = 0; i < NUMBER_LEDS; i++) {
-    Plugin_070_pixels->setPixelColor(i, Plugin_070_pixels->Color(0, 0, 0));
-  }
-}
-
-void timeToStrip(int hours, int minutes, int seconds) {
-  if (hours > 11) hours = hours - 12;
-  hours = (hours * 5) + (minutes / 12) + Plugin_070_offset; //make the hour hand move each 12 minutes and apply the offset
-  if (hours > 59) hours = hours - 60;
-  minutes = minutes + Plugin_070_offset;	//apply offset to minutes
-  if (minutes > 59) minutes = minutes - 60;
-  seconds = seconds + Plugin_070_offset;	//apply offset to seconds
-  if (seconds > 59) seconds = seconds - 60;
-  for (int i = 0 ; i < 14; i ++) {	//set the hour marks as white;
-    if ((marks[i] != hours) && (marks[i] != minutes) && (marks[i] != seconds) && (marks[i] != 255)) {	//do not draw a mark there is a clock hand in that position
-      Plugin_070_pixels->setPixelColor(marks[i], Plugin_070_pixels->Color(Plugin_070_marks, Plugin_070_marks, Plugin_070_marks));
-    }
-  }
-  uint32_t currentColor;
-  uint8_t r_val, g_val, b_val;
-  for (int i = 0; i < NUMBER_LEDS; i++) {	//draw the clock hands, adding the colors together
-    if (i == hours) {	//hours hand is RED
-      Plugin_070_pixels->setPixelColor(i, Plugin_070_pixels->Color(Plugin_070_brightness, 0, 0));
-    }
-    if (i == minutes) { //minutes hand is GREEN
-      currentColor = Plugin_070_pixels->getPixelColor(i);
-      r_val = (uint8_t)(currentColor >> 16);
-      Plugin_070_pixels->setPixelColor(i, Plugin_070_pixels->Color(r_val, Plugin_070_brightness, 0));
-    }
-    if (i == seconds) {	//seconds hand is BLUE
-      currentColor = Plugin_070_pixels->getPixelColor(i);
-      r_val = (uint8_t)(currentColor >> 16);
-      g_val = (uint8_t)(currentColor >>  8);
-      Plugin_070_pixels->setPixelColor(i, Plugin_070_pixels->Color(r_val, g_val, Plugin_070_brightness));
-    }
-  }
-}
 
 #endif // PLUGIN_BUILD_DISABLED
 #endif // USES_P070
