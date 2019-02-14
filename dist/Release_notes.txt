@@ -1,4 +1,24 @@
 -------------------------------------------------
+Changes in release mega-20190212 (since mega-20190202)
+-------------------------------------------------
+
+Release date: Tue Feb 12 04:00:31 CET 2019
+
+Grovkillen (3):
+      [flasher] fixed unzip to root, now (correctly) bin folder
+      [flasher] fixed HW port name bug
+      [flasher] old zip's didn't store in "\bin", downloader comply now
+
+chunter1 (1):
+      1-wire timings optimized for stability
+
+olliwr (3):
+      Update ESPEasy-Globals.h
+      Update Command.ino
+      Update ESPEasy-Globals.h
+
+
+-------------------------------------------------
 Changes in release mega-20190202 (since mega-20190121)
 -------------------------------------------------
 

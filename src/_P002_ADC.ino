@@ -11,6 +11,13 @@
 uint32_t Plugin_002_OversamplingValue = 0;
 uint16_t Plugin_002_OversamplingCount = 0;
 
+#ifdef ESP32
+  #define P002_MAX_ADC_VALUE    4095
+#endif
+#ifdef ESP8266
+  #define P002_MAX_ADC_VALUE    1023
+#endif
+
 
 boolean Plugin_002(byte function, struct EventStruct *event, String& string)
 {
@@ -59,11 +66,11 @@ boolean Plugin_002(byte function, struct EventStruct *event, String& string)
 
         addFormCheckBox(F("Calibration Enabled"), F("p002_cal"), PCONFIG(3));
 
-        addFormNumericBox(F("Point 1"), F("p002_adc1"), PCONFIG_LONG(0), 0, 1023);
+        addFormNumericBox(F("Point 1"), F("p002_adc1"), PCONFIG_LONG(0), 0, P002_MAX_ADC_VALUE);
         html_add_estimate_symbol();
         addTextBox(F("p002_out1"), String(PCONFIG_FLOAT(0), 3), 10);
 
-        addFormNumericBox(F("Point 2"), F("p002_adc2"), PCONFIG_LONG(1), 0, 1023);
+        addFormNumericBox(F("Point 2"), F("p002_adc2"), PCONFIG_LONG(1), 0, P002_MAX_ADC_VALUE);
         html_add_estimate_symbol();
         addTextBox(F("p002_out2"), String(PCONFIG_FLOAT(1), 3), 10);
 

@@ -92,21 +92,28 @@
 #define Plugin_046_RAW_BUFFER_SIZE  24                          // Payload is 23 bytes, added space for header
 #define Plugin_046_Payload          23
 
-int8_t Plugin_046_MOSIpin = -1;                                 // GPIO pins
-int8_t Plugin_046_SCLKpin = -1;
-int8_t Plugin_046_nSELpin = -1;
-int8_t Plugin_046_MISOpin = -1;
-                                                                // Vars used in data collection:
-byte Plugin_046_ISR_Buffer[Plugin_046_RAW_BUFFER_SIZE];         // Buffer used in ISR routine
-//Test data: volatile byte Plugin_046_databuffer[] = {0x7F, 0x98, 0x33, 0x1A, 0xB0, 0x00, 0x00, 0xB0, 0x00, 0x0E, 0x00, 0x00, 0x00, 0x00, 0x11, 0x00, 0x00, 0x00, 0x3F, 0x8A, 0x25, 0x00, 0x49, 0x00}; // Buffer used by other instances
-byte Plugin_046_databuffer[Plugin_046_RAW_BUFFER_SIZE];         // Buffer used by other instances
-boolean Plugin_046_ReceiveActive = false;                       // Active session in progress
-boolean Plugin_046_MasterSlave = false;                         // Which pin o read? false=MOSI, true=MISO
-boolean Plugin_046_newData = false;                             // "Valid" data ready, please process
-byte Plugin_046_bitpointer;                                     // Pointer for received bit
-byte Plugin_046_bytepointer;                                    // Pointer for ISR receive buffer
-byte Plugin_046_receivedData;                                   // Byte to store received bits
+struct P046_data_struct {
+  int8_t Plugin_046_MOSIpin = -1;                                 // GPIO pins
+  int8_t Plugin_046_SCLKpin = -1;
+  int8_t Plugin_046_nSELpin = -1;
+  int8_t Plugin_046_MISOpin = -1;
+                                                                  // Vars used in data collection:
+  byte Plugin_046_ISR_Buffer[Plugin_046_RAW_BUFFER_SIZE];         // Buffer used in ISR routine
+  //Test data: volatile byte Plugin_046_databuffer[] = {0x7F, 0x98, 0x33, 0x1A, 0xB0, 0x00, 0x00, 0xB0, 0x00, 0x0E, 0x00, 0x00, 0x00, 0x00, 0x11, 0x00, 0x00, 0x00, 0x3F, 0x8A, 0x25, 0x00, 0x49, 0x00}; // Buffer used by other instances
+  byte Plugin_046_databuffer[Plugin_046_RAW_BUFFER_SIZE];         // Buffer used by other instances
+  bool Plugin_046_ReceiveActive = false;                          // Active session in progress
+  bool Plugin_046_MasterSlave = false;                            // Which pin o read? false=MOSI, true=MISO
+  bool Plugin_046_newData = false;                                // "Valid" data ready, please process
+  byte Plugin_046_bitpointer;                                     // Pointer for received bit
+  byte Plugin_046_bytepointer;                                    // Pointer for ISR receive buffer
+  byte Plugin_046_receivedData;                                   // Byte to store received bits
 
+};
+
+P046_data_struct* P046_data = nullptr;
+
+// TODO TD-er:  Not sure what to do with these, since interrupt driven data + callback functions should be fast and small
+// Not sure if it is possible to share it with other instances.
                                                                 // Vars used for interpreting the data:
 volatile unsigned long Plugin_046_lastrainctr;                  // Keep track of wdcounter (1/2 min tick)
 volatile int Plugin_046_lastraincount;                          // Last rain count
@@ -115,6 +122,8 @@ volatile unsigned long Plugin_046_laststrikectr;                // Keep track of
 volatile unsigned int Plugin_046_laststrikecount;               // Last number of strikes
 volatile int Plugin_046_strikesph = 0;
 
+
+// TODO TD-er: These call-back functions are quite long and will take a lot of iRAM.
 void Plugin_046_ISR_nSEL() ICACHE_RAM_ATTR;                     // Interrupt routines
 void Plugin_046_ISR_SCLK() ICACHE_RAM_ATTR;
 
@@ -257,30 +266,43 @@ boolean Plugin_046(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_EXIT:
+      {
+        if (P046_data) {
+          delete P046_data;
+          P046_data = nullptr;
+        }
+        break;
+      }
+
     case PLUGIN_INIT:
       {
+        if (!P046_data) {
+          P046_data = new P046_data_struct();
+        }
+
         byte choice = PCONFIG(0);
         switch (choice)
         {
           case (0):
           {
-            Plugin_046_MOSIpin = PCONFIG(1);
-            Plugin_046_SCLKpin = PCONFIG(2);
-            Plugin_046_nSELpin = PCONFIG(3);
-            Plugin_046_MISOpin = PCONFIG(4);
-            int8_t total = Plugin_046_MOSIpin + Plugin_046_SCLKpin + Plugin_046_nSELpin + Plugin_046_MISOpin;
+            P046_data->Plugin_046_MOSIpin = PCONFIG(1);
+            P046_data->Plugin_046_SCLKpin = PCONFIG(2);
+            P046_data->Plugin_046_nSELpin = PCONFIG(3);
+            P046_data->Plugin_046_MISOpin = PCONFIG(4);
+            int8_t total = P046_data->Plugin_046_MOSIpin + P046_data->Plugin_046_SCLKpin + P046_data->Plugin_046_nSELpin + P046_data->Plugin_046_MISOpin;
             if (total > 6) {                                    // All pins configured?
-              pinMode(Plugin_046_MOSIpin, INPUT);
-              pinMode(Plugin_046_SCLKpin, INPUT);
-              pinMode(Plugin_046_nSELpin, INPUT);
-              pinMode(Plugin_046_MISOpin, INPUT);
-              Plugin_046_databuffer[0] = 0;                    // buffer is "empty"
+              pinMode(P046_data->Plugin_046_MOSIpin, INPUT);
+              pinMode(P046_data->Plugin_046_SCLKpin, INPUT);
+              pinMode(P046_data->Plugin_046_nSELpin, INPUT);
+              pinMode(P046_data->Plugin_046_MISOpin, INPUT);
+              P046_data->Plugin_046_databuffer[0] = 0;                    // buffer is "empty"
               Plugin_046_lastrainctr = 0;
               Plugin_046_lastraincount = -1;
               Plugin_046_laststrikectr = 0;
               Plugin_046_laststrikecount = -1;
-              attachInterrupt(Plugin_046_SCLKpin, Plugin_046_ISR_SCLK, RISING);
-              attachInterrupt(Plugin_046_nSELpin, Plugin_046_ISR_nSEL, CHANGE);
+              attachInterrupt(P046_data->Plugin_046_SCLKpin, Plugin_046_ISR_SCLK, RISING);
+              attachInterrupt(P046_data->Plugin_046_nSELpin, Plugin_046_ISR_nSEL, CHANGE);
             }
             break;
           }
@@ -290,15 +312,16 @@ boolean Plugin_046(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_TEN_PER_SECOND:
       {
+        if (!P046_data) break;
         if (PCONFIG(0) == 0) {
-          if (Plugin_046_newData) {
+          if (P046_data->Plugin_046_newData) {
             uint8_t crc = 0xff;                                             // init = 0xff
             char data; // CRC = MAXIM with modified init: poly 0x31, init 0xff, refin 1; refout 1, xorout 0x00
             // Copy received data to buffer and check CRC
-            Plugin_046_databuffer[0] = Plugin_046_ISR_Buffer[0];
-            for (int i = 1; i < Plugin_046_bytepointer; i++) {
-              data = Plugin_046_ISR_Buffer[i];
-              Plugin_046_databuffer[i] = data;
+            P046_data->Plugin_046_databuffer[0] = P046_data->Plugin_046_ISR_Buffer[0];
+            for (int i = 1; i < P046_data->Plugin_046_bytepointer; i++) {
+              data = P046_data->Plugin_046_ISR_Buffer[i];
+              P046_data->Plugin_046_databuffer[i] = data;
               for (int j = 0; j < 8; j++)                                       // crc routine from Jim Studt
               {                                                             // Onewire library
                 uint8_t mix = (crc ^ data) & 0x01;
@@ -307,8 +330,8 @@ boolean Plugin_046(byte function, struct EventStruct *event, String& string)
                   data >>= 1;
               }
             }
-            Plugin_046_MasterSlave = false;
-            Plugin_046_newData = false;
+            P046_data->Plugin_046_MasterSlave = false;
+            P046_data->Plugin_046_newData = false;
             if (PLUGIN_046_DEBUG) {
               String log = F("Ventus W266 Rcvd(");
               log += getTimeString(':');
@@ -317,10 +340,10 @@ boolean Plugin_046(byte function, struct EventStruct *event, String& string)
                 if ((i==2)||(i==3)||(i==4)||(i==9)||(i==10)||(i==14)||(i==17)||(i==18)||(i==20)) {
                   log += F(":");
                 }
-                char myHex = (Plugin_046_databuffer[i] >> 4) + 0x30;
+                char myHex = (P046_data->Plugin_046_databuffer[i] >> 4) + 0x30;
                 if (myHex > 0x39) { myHex += 7; }
                 log += myHex;
-                myHex = (Plugin_046_databuffer[i] & 0x0f) + 0x30;
+                myHex = (P046_data->Plugin_046_databuffer[i] & 0x0f) + 0x30;
                 if (myHex > 0x39) { myHex += 7; }
                 log += myHex;
               }
@@ -335,7 +358,7 @@ boolean Plugin_046(byte function, struct EventStruct *event, String& string)
             }
             if (crc != 00)
             {
-              Plugin_046_databuffer[0] = 0;                   // Not MagicByte, so not valid.
+              P046_data->Plugin_046_databuffer[0] = 0;                   // Not MagicByte, so not valid.
             }
           }
         }
@@ -345,7 +368,8 @@ boolean Plugin_046(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
       {
-        if (Plugin_046_databuffer[0] == Plugin_046_MagicByte) // buffer[0] should be the MagicByte if valid
+        if (!P046_data) break;
+        if (P046_data->Plugin_046_databuffer[0] == Plugin_046_MagicByte) // buffer[0] should be the MagicByte if valid
         {
           UserVar[event->BaseVarIndex + 1] = 0;
           byte choice = PCONFIG(0);   // Which instance?
@@ -353,10 +377,10 @@ boolean Plugin_046(byte function, struct EventStruct *event, String& string)
           {
             case (0):
             {
-              int myTemp = int((Plugin_046_databuffer[5] * 256) + Plugin_046_databuffer[4]);
+              int myTemp = int((P046_data->Plugin_046_databuffer[5] * 256) + P046_data->Plugin_046_databuffer[4]);
               if (myTemp > 0x8000) { myTemp |= 0xffff0000; }                    // int @ esp8266 = 32 bits!
               float temperature = float(myTemp) / 10.0; // Temperature
-              byte myHum = (Plugin_046_databuffer[2] >> 4) * 10 + (Plugin_046_databuffer[2] & 0x0f);
+              byte myHum = (P046_data->Plugin_046_databuffer[2] >> 4) * 10 + (P046_data->Plugin_046_databuffer[2] & 0x0f);
               float humidity = float(myHum);
               UserVar[event->BaseVarIndex] = temperature;
               UserVar[event->BaseVarIndex + 1] = humidity;
@@ -365,9 +389,9 @@ boolean Plugin_046(byte function, struct EventStruct *event, String& string)
             }
             case (1):
             {
-              float average = float((Plugin_046_databuffer[11] << 8) + Plugin_046_databuffer[10]) / 10;   // Wind speed average in m/s
-              float gust = float((Plugin_046_databuffer[13] << 8) + Plugin_046_databuffer[12]) / 10;      // Wind speed gust in m/s
-              float bearing = float(Plugin_046_databuffer[9] & 0x0f) * 22.5;                              // Wind bearing (0-359)
+              float average = float((P046_data->Plugin_046_databuffer[11] << 8) + P046_data->Plugin_046_databuffer[10]) / 10;   // Wind speed average in m/s
+              float gust = float((P046_data->Plugin_046_databuffer[13] << 8) + P046_data->Plugin_046_databuffer[12]) / 10;      // Wind speed gust in m/s
+              float bearing = float(P046_data->Plugin_046_databuffer[9] & 0x0f) * 22.5;                              // Wind bearing (0-359)
               UserVar[event->BaseVarIndex] = bearing;                                                     // degrees
               UserVar[event->BaseVarIndex + 1] = average;
               UserVar[event->BaseVarIndex + 2] = gust;
@@ -376,7 +400,7 @@ boolean Plugin_046(byte function, struct EventStruct *event, String& string)
             }
             case (2):
             {
-              float raincnt = float(((Plugin_046_databuffer[15]) * 256 + Plugin_046_databuffer[14]) / 4);
+              float raincnt = float(((P046_data->Plugin_046_databuffer[15]) * 256 + P046_data->Plugin_046_databuffer[14]) / 4);
               int rainnow = int(raincnt);
               if (wdcounter < Plugin_046_lastrainctr) { Plugin_046_lastrainctr = wdcounter; }
               if (Plugin_046_lastrainctr > (wdcounter + 10))                      // 5 min interval
@@ -396,14 +420,14 @@ boolean Plugin_046(byte function, struct EventStruct *event, String& string)
             }
             case (3):
             {
-              float uvindex = float((Plugin_046_databuffer[17]) / 10);
+              float uvindex = float((P046_data->Plugin_046_databuffer[17]) / 10);
               UserVar[event->BaseVarIndex] = uvindex;
               break;
             }
             case (4):
             {
               // int strikes = 0;
-              unsigned int strikesnow = int((Plugin_046_databuffer[21]) * 256 + Plugin_046_databuffer[20]);
+              unsigned int strikesnow = int((P046_data->Plugin_046_databuffer[21]) * 256 + P046_data->Plugin_046_databuffer[20]);
               if (wdcounter < Plugin_046_laststrikectr) { Plugin_046_laststrikectr = wdcounter; }
               if (Plugin_046_laststrikectr > (wdcounter + 10))                   // 5 min interval
               {
@@ -422,26 +446,26 @@ boolean Plugin_046(byte function, struct EventStruct *event, String& string)
             case (5):
             {
               float distance = float(-1);
-              if (Plugin_046_databuffer[18] != 0x3F )
+              if (P046_data->Plugin_046_databuffer[18] != 0x3F )
               {
-                distance = float(Plugin_046_databuffer[18]);
+                distance = float(P046_data->Plugin_046_databuffer[18]);
               }
               UserVar[event->BaseVarIndex] = distance;
               break;
             }
             case (6):
             {
-              UserVar[event->BaseVarIndex] = float(Plugin_046_databuffer[6]);
+              UserVar[event->BaseVarIndex] = float(P046_data->Plugin_046_databuffer[6]);
               break;
             }
             case (7):
             {
-              UserVar[event->BaseVarIndex] = float(Plugin_046_databuffer[16]);
+              UserVar[event->BaseVarIndex] = float(P046_data->Plugin_046_databuffer[16]);
               break;
             }
             case (8):
             {
-              UserVar[event->BaseVarIndex] = float(Plugin_046_databuffer[19]);
+              UserVar[event->BaseVarIndex] = float(P046_data->Plugin_046_databuffer[19]);
               break;
             }
           }   // switch
@@ -457,44 +481,47 @@ boolean Plugin_046(byte function, struct EventStruct *event, String& string)
 
 void Plugin_046_ISR_nSEL()                                      // Interrupt on nSEL change
   {
-    if (digitalRead(Plugin_046_nSELpin)) {
-      Plugin_046_ReceiveActive = false;                         // nSEL high? Receive done.
-      if (Plugin_046_MasterSlave) {                             // If MISO not active, no data received
-        if (Plugin_046_bytepointer == Plugin_046_Payload) {     // If not 23 then bad datapacket
-          Plugin_046_newData = true;                            // We have new data!
+    if (!P046_data) return;
+    if (digitalRead(P046_data->Plugin_046_nSELpin)) {
+      P046_data->Plugin_046_ReceiveActive = false;                         // nSEL high? Receive done.
+      if (P046_data->Plugin_046_MasterSlave) {                             // If MISO not active, no data received
+        if (P046_data->Plugin_046_bytepointer == Plugin_046_Payload) {     // If not 23 then bad datapacket
+          P046_data->Plugin_046_newData = true;                            // We have new data!
         }
       }
     } else {                                                    // nSEL low? Start receive
-      if (!Plugin_046_newData) {                                // Only accept new data if the old is processed
-        Plugin_046_bitpointer = 7;                              // reset pointer (MSB first)
-        Plugin_046_bytepointer = 0;                             // reset pointers & flags
-        Plugin_046_MasterSlave = false;
-        Plugin_046_ReceiveActive = true;                        // We are now receiving data
+      if (!P046_data->Plugin_046_newData) {                                // Only accept new data if the old is processed
+        P046_data->Plugin_046_bitpointer = 7;                              // reset pointer (MSB first)
+        P046_data->Plugin_046_bytepointer = 0;                             // reset pointers & flags
+        P046_data->Plugin_046_MasterSlave = false;
+        P046_data->Plugin_046_ReceiveActive = true;                        // We are now receiving data
       }
     }
   }
 
 void Plugin_046_ISR_SCLK()                                      // Interrupt on SCLK rising
   {
-    if (Plugin_046_ReceiveActive) {                             // Are we receiving or glitch?
-      if (Plugin_046_MasterSlave) {                             // Read MISO or MOSI?
-        bitWrite(Plugin_046_receivedData, Plugin_046_bitpointer, digitalRead(Plugin_046_MISOpin));
+    if (!P046_data) return;
+
+    if (P046_data->Plugin_046_ReceiveActive) {                             // Are we receiving or glitch?
+      if (P046_data->Plugin_046_MasterSlave) {                             // Read MISO or MOSI?
+        bitWrite(P046_data->Plugin_046_receivedData, P046_data->Plugin_046_bitpointer, digitalRead(P046_data->Plugin_046_MISOpin));
       } else {
-        bitWrite(Plugin_046_receivedData, Plugin_046_bitpointer, digitalRead(Plugin_046_MOSIpin));
+        bitWrite(P046_data->Plugin_046_receivedData, P046_data->Plugin_046_bitpointer, digitalRead(P046_data->Plugin_046_MOSIpin));
       }
-      if (Plugin_046_bitpointer == 0) {                         // 8 bits done?
-        Plugin_046_bitpointer = 7;
-        if (Plugin_046_receivedData==Plugin_046_MagicByte) {    // Switch data pins?
-          Plugin_046_MasterSlave = true;
+      if (P046_data->Plugin_046_bitpointer == 0) {                         // 8 bits done?
+        P046_data->Plugin_046_bitpointer = 7;
+        if (P046_data->Plugin_046_receivedData==Plugin_046_MagicByte) {    // Switch data pins?
+          P046_data->Plugin_046_MasterSlave = true;
         }
-        Plugin_046_ISR_Buffer[Plugin_046_bytepointer] = Plugin_046_receivedData;
-        Plugin_046_bytepointer++;                               // TReady for the next byte ...
-        if (Plugin_046_bytepointer > Plugin_046_RAW_BUFFER_SIZE) {
-          Plugin_046_ReceiveActive = false;                     // We don't want a bufferoverflow, so abort
-          Plugin_046_MasterSlave = false;
+        P046_data->Plugin_046_ISR_Buffer[P046_data->Plugin_046_bytepointer] = P046_data->Plugin_046_receivedData;
+        P046_data->Plugin_046_bytepointer++;                               // TReady for the next byte ...
+        if (P046_data->Plugin_046_bytepointer > Plugin_046_RAW_BUFFER_SIZE) {
+          P046_data->Plugin_046_ReceiveActive = false;                     // We don't want a bufferoverflow, so abort
+          P046_data->Plugin_046_MasterSlave = false;
         }
       } else {
-        Plugin_046_bitpointer--;                                // Not yet done with all bits ...
+        P046_data->Plugin_046_bitpointer--;                                // Not yet done with all bits ...
       }
     }
   }

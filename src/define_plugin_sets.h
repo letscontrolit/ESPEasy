@@ -551,7 +551,9 @@ To create/register a plugin, you have to :
     #define USES_P073   // 7DG
     #define USES_P074   // TSL2561
     #define USES_P075   // Nextion
-
+    #define USES_P076   // HWL8012   in POW r1
+    // Needs CSE7766 Energy sensor, via Serial RXD 4800 baud 8E1 (GPIO1), TXD (GPIO3)
+    #define USES_P077	  // CSE7766   in POW R2
     #define USES_P078   // Eastron Modbus Energy meters
     #define USES_P079   // Wemos Motoshield
     #define USES_P080   // iButton Sensor  DS1990A

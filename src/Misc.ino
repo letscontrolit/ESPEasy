@@ -1438,11 +1438,13 @@ void setLogLevelFor(byte destination, byte logLevel) {
 void updateLogLevelCache() {
   byte max_lvl = 0;
   if (log_to_serial_disabled) {
-    Serial.setDebugOutput(false);
+    if (Settings.UseSerial) {
+      Serial.setDebugOutput(false);
+    }
   } else {
     max_lvl = _max(max_lvl, Settings.SerialLogLevel);
 #ifndef BUILD_NO_DEBUG
-    if (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE) {
+    if (Settings.UseSerial && Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE) {
       Serial.setDebugOutput(true);
     }
 #endif
@@ -2784,6 +2786,7 @@ void ArduinoOTAInit()
       reboot();
   });
   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
+    if (Settings.UseSerial)
       Serial.printf("OTA  : Progress %u%%\r", (progress / (total / 100)));
   });
 
