@@ -128,7 +128,7 @@ void setup()
 #endif
   WiFi.persistent(false); // Do not use SDK storage of SSID/WPA parameters
   WiFi.setAutoReconnect(false);
-  setWifiMode(WIFI_OFF);
+  WiFi.mode(WIFI_OFF);
   lowestFreeStack = getFreeStackWatermark();
   lowestRAM = FreeMem();
 
@@ -941,6 +941,11 @@ void backgroundtasks()
     ArduinoOTA.handle();
   }
 
+  #endif
+
+  #ifdef FEATURE_MDNS
+  // Allow MDNS processing
+  MDNS.update();
   #endif
 
   delay(0);
