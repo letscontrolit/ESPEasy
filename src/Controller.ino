@@ -159,6 +159,7 @@ bool MQTTConnect(int controller_idx)
     clientid = F("ESPClient_");
     clientid += WiFi.macAddress();
   }
+  clientid.replace(' ', '_'); // Make sure no spaces are present in the client ID
   if (wifi_reconnects >= 1 && Settings.uniqueMQTTclientIdReconnect()) {
     // Work-around for 'lost connections' to the MQTT broker.
     // If the broker thinks the connection is still alive, a reconnect from the
