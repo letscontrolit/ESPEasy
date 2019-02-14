@@ -4027,8 +4027,6 @@ void handle_i2cscanner_json() {
   char *TempString = (char*)malloc(80);
   bool firstentry = true;
   byte error, address;
-  int nDevices;
-  nDevices = 0;
   for (address = 1; address <= 127; address++ )
   {
     if (firstentry) {
