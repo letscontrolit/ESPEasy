@@ -124,3 +124,11 @@ Supported hardware: |P000_usedby_GPIO|
   **To monitor a GPIO state.**
   By the use of the command you will receive events when the GPIO state of that pin is changed from 1 to 0 and from 0 to 1.
   "
+  "
+  ``GPIOtoggle,<GPIO>``
+
+  GPIO: 0 ... 16
+  ","
+  **To toggle a GPIO state.**
+  With this command you can change the given state of a pin from either 1 to 0 or from 0 to 1.
+  "
