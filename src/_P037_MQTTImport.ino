@@ -32,6 +32,8 @@ String getClientName() {
   //
   String tmpClientName = F("%sysname%-Import");
   String ClientName = parseTemplate(tmpClientName, 20);
+  ClientName.trim(); // Avoid spaced in the name.
+  ClientName.replace(' ', '_');
   if (reconnectCount != 0) ClientName += reconnectCount;
   return ClientName;
 }
