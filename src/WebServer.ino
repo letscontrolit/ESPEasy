@@ -504,7 +504,9 @@ void WebServerInit()
   WebServer.on("/logjson", handle_log_JSON);
   WebServer.on("/tools", handle_tools);
   WebServer.on("/i2cscanner", handle_i2cscanner);
+  WebServer.on("/i2cscanner_json", handle_i2cscanner_json);
   WebServer.on("/wifiscanner", handle_wifiscanner);
+  WebServer.on("/wifiscanner_json", handle_wifiscanner_json);
   WebServer.on("/login", handle_login);
   WebServer.on("/control", handle_control);
   WebServer.on("/download", handle_download);
@@ -512,6 +514,7 @@ void WebServerInit()
   WebServer.on("/upload", HTTP_POST, handle_upload_post, handleFileUpload);
   WebServer.onNotFound(handleNotFound);
   WebServer.on("/filelist", handle_filelist);
+  WebServer.on("/filelist_json", handle_filelist_json);
 #ifdef FEATURE_SD
   WebServer.on("/SDfilelist", handle_SDfilelist);
 #endif
@@ -530,6 +533,7 @@ void WebServerInit()
   WebServer.on("/rules/delete", handle_rules_delete);
   WebServer.on("/sysinfo", handle_sysinfo);
   WebServer.on("/pinstates", handle_pinstates);
+  WebServer.on("/pinstates_json", handle_pinstates_json);
   WebServer.on("/sysvars", handle_sysvars);
   WebServer.on("/factoryreset", handle_factoryreset);
   WebServer.on("/favicon.ico", handle_favicon);
@@ -3864,6 +3868,68 @@ void handle_tools() {
 //********************************************************************************
 // Web Interface pin state list
 //********************************************************************************
+void handle_pinstates_json() {
+  checkRAM(F("handle_pinstates"));
+  if (!isLoggedIn()) return;
+  navMenuIndex = MENU_INDEX_TOOLS;
+  TXBuffer.startJsonStream();
+
+  bool comma_between = false;
+  TXBuffer += F("[{");
+  for (std::map<uint32_t,portStatusStruct>::iterator it=globalMapPortStatus.begin(); it!=globalMapPortStatus.end(); ++it)
+  {
+    if( comma_between ) {
+      TXBuffer += ",{";
+    } else {
+      comma_between=true;
+    }
+
+    const uint16_t plugin = getPluginFromKey(it->first);
+    const uint16_t port = getPortFromKey(it->first);
+
+    stream_next_json_object_value(F("plugin"), String(plugin));
+    stream_next_json_object_value(F("port"), String(port));
+    stream_next_json_object_value(F("state"), String(it->second.state));
+    stream_next_json_object_value(F("task"), String(it->second.task));
+    stream_next_json_object_value(F("monitor"), String(it->second.monitor));
+    stream_next_json_object_value(F("command"), String(it->second.command));
+    stream_last_json_object_value(F("init"), String(it->second.init));
+  }
+
+  TXBuffer += F("]");
+
+
+/*
+  html_table_header(F("Plugin"), F("Official_plugin_list"), 0);
+  html_table_header("GPIO");
+  html_table_header("Mode");
+  html_table_header(F("Value/State"));
+  for (byte x = 0; x < PINSTATE_TABLE_MAX; x++)
+    if (pinStates[x].plugin != 0)
+    {
+      html_TR_TD(); TXBuffer += "P";
+      if (pinStates[x].plugin < 100)
+      {
+        TXBuffer += '0';
+      }
+      if (pinStates[x].plugin < 10)
+      {
+        TXBuffer += '0';
+      }
+      TXBuffer += pinStates[x].plugin;
+      html_TD();
+      TXBuffer += pinStates[x].index;
+      html_TD();
+      byte mode = pinStates[x].mode;
+      TXBuffer += getPinModeString(mode);
+      html_TD();
+      TXBuffer += pinStates[x].value;
+    }
+*/
+
+    TXBuffer.endStream();
+}
+
 void handle_pinstates() {
   checkRAM(F("handle_pinstates"));
   if (!isLoggedIn()) return;
@@ -3951,6 +4017,34 @@ void handle_pinstates() {
 //********************************************************************************
 // Web Interface I2C scanner
 //********************************************************************************
+void handle_i2cscanner_json() {
+  checkRAM(F("handle_i2cscanner"));
+  if (!isLoggedIn()) return;
+  navMenuIndex = MENU_INDEX_TOOLS;
+  TXBuffer.startJsonStream();
+  TXBuffer += "[{";
+
+  char *TempString = (char*)malloc(80);
+  bool firstentry = true;
+  byte error, address;
+  for (address = 1; address <= 127; address++ )
+  {
+    if (firstentry) {
+      firstentry = false;
+    } else {
+      TXBuffer += ",{";
+    }
+
+    Wire.beginTransmission(address);
+    error = Wire.endTransmission();
+    stream_next_json_object_value(F("addr"), String(formatToHex(address)));
+    stream_last_json_object_value(F("status"), String(error));
+  }
+  TXBuffer += "]";
+  TXBuffer.endStream();
+  free(TempString);
+}
+
 void handle_i2cscanner() {
   checkRAM(F("handle_i2cscanner"));
   if (!isLoggedIn()) return;
@@ -4094,6 +4188,46 @@ void handle_i2cscanner() {
 //********************************************************************************
 // Web Interface Wifi scanner
 //********************************************************************************
+void handle_wifiscanner_json() {
+  checkRAM(F("handle_wifiscanner"));
+  if (!isLoggedIn()) return;
+  navMenuIndex = MENU_INDEX_TOOLS;
+  TXBuffer.startJsonStream();
+  TXBuffer += "[{";
+  bool firstentry = true;
+  int n = WiFi.scanNetworks(false, true);
+  for (int i = 0; i < n; ++i)
+  {
+    if (firstentry) firstentry = false;
+    else TXBuffer += ",{";
+
+    stream_next_json_object_value(F("ssid"), WiFi.SSID(i));
+    stream_next_json_object_value(F("bssid"), WiFi.BSSIDstr(i));
+    stream_next_json_object_value(F("channel"), String(WiFi.channel(i)));
+    stream_next_json_object_value(F("rssi"), String(WiFi.RSSI(i)));
+    switch (WiFi.encryptionType(i)) {
+    #ifdef ESP32
+      case WIFI_AUTH_OPEN: stream_last_json_object_value(F("auth"), F("open")); break;
+      case WIFI_AUTH_WEP:  stream_last_json_object_value(F("auth"), F("WEP")); break;
+      case WIFI_AUTH_WPA_PSK: stream_last_json_object_value(F("auth"), F("WPA/PSK")); break;
+      case WIFI_AUTH_WPA2_PSK: stream_last_json_object_value(F("auth"), F("WPA2/PSK")); break;
+      case WIFI_AUTH_WPA_WPA2_PSK: stream_last_json_object_value(F("auth"), F("WPA/WPA2/PSK")); break;
+      case WIFI_AUTH_WPA2_ENTERPRISE: stream_last_json_object_value(F("auth"), F("WPA2 Enterprise")); break;
+    #else
+      case ENC_TYPE_WEP: stream_last_json_object_value(F("auth"), F("WEP")); break;
+      case ENC_TYPE_TKIP: stream_last_json_object_value(F("auth"), F("WPA/PSK")); break;
+      case ENC_TYPE_CCMP: stream_last_json_object_value(F("auth"), F("WPA2/PSK")); break;
+      case ENC_TYPE_NONE: stream_last_json_object_value(F("auth"), F("open")); break;
+      case ENC_TYPE_AUTO: stream_last_json_object_value(F("auth"), F("WPA/WPA2/PSK")); break;
+    #endif
+      default:
+        break;
+    }
+  }
+  TXBuffer += "]";
+  TXBuffer.endStream();
+}
+
 void handle_wifiscanner() {
   checkRAM(F("handle_wifiscanner"));
   if (!isLoggedIn()) return;
@@ -5309,6 +5443,101 @@ boolean handle_custom(String path) {
 //********************************************************************************
 // Web Interface file list
 //********************************************************************************
+void handle_filelist_json() {
+  checkRAM(F("handle_filelist"));
+  if (!clientIPallowed()) return;
+  navMenuIndex = MENU_INDEX_TOOLS;
+  TXBuffer.startJsonStream();
+
+  String fdelete = WebServer.arg(F("delete"));
+
+  if (fdelete.length() > 0)
+  {
+    SPIFFS.remove(fdelete);
+    #if defined(ESP32)
+    // flashCount();
+    #endif
+    #if defined(ESP8266)
+    checkRuleSets();
+    #endif
+  }
+
+  const int pageSize = 25;
+  int startIdx = 0;
+
+  String fstart = WebServer.arg(F("start"));
+  if (fstart.length() > 0)
+  {
+    startIdx = atoi(fstart.c_str());
+  }
+  int endIdx = startIdx + pageSize - 1;
+
+  TXBuffer += "[{";
+  bool firstentry = true;
+  #if defined(ESP32)
+    File root = SPIFFS.open("/");
+    File file = root.openNextFile();
+    int count = -1;
+    while (file and count < endIdx)
+    {
+      if(!file.isDirectory()){
+        ++count;
+
+        if (count >= startIdx)
+        {
+          if (firstentry) {
+            firstentry = false;
+          } else {
+            TXBuffer += ",{";
+          }
+          stream_next_json_object_value(F("fileName"), String(file.name()));
+          stream_next_json_object_value(F("index"), String(startIdx));
+          stream_last_json_object_value(F("size"), String(file.size()));
+        }
+      }
+      file = root.openNextFile();
+    }
+  #endif
+  #if defined(ESP8266)
+  fs::Dir dir = SPIFFS.openDir("");
+
+  int count = -1;
+  while (dir.next())
+  {
+    ++count;
+
+    if (count < startIdx)
+    {
+      continue;
+    }
+
+    if (firstentry) {
+      firstentry = false;
+    } else {
+      TXBuffer += ",{";
+    }
+
+    stream_next_json_object_value(F("fileName"), String(dir.fileName()));
+
+    fs::File f = dir.openFile("r");
+    if (f) {
+      stream_next_json_object_value(F("size"), String(f.size()));
+      f.close();
+    }
+
+    stream_last_json_object_value(F("index"), String(startIdx));
+
+    if (count >= endIdx)
+    {
+      break;
+    }
+  }
+
+  #endif
+  TXBuffer += "]";
+  TXBuffer.endStream();
+}
+
 void handle_filelist() {
   checkRAM(F("handle_filelist"));
   if (!clientIPallowed()) return;
