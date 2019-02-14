@@ -67,8 +67,8 @@ Sensor
 * **GPIO <-- TX**: Used to communicate with the GPS unit.
 * **GPIO --> RX**: Not used (optional), to push commands back into the GPS unit.
 * **GPIO --> PPS**: Experimental (optional), used to let the GPS unit update the time of the ESP.
-* **Dropdown**: ``SoftwareSerial`` lets you select any GPIO pin, ``HW Serial0`` is the preferred (most stable), ``HW Serial0 swapped`` is similar to Serial0, ``HW Serial1`` is only able
-to receive data from the GPS unit.
+* **Dropdown**: ``SoftwareSerial`` lets you select any GPIO pin, ``HW Serial0`` is the preferred (most stable),
+                ``HW Serial0 swapped`` is similar to Serial0, ``HW Serial1`` is only able to receive data from the GPS unit.
 
 .. warning:: It's highly recommended you use either the ``HW Serial1`` or ``HW Serial0`` for stable reading of the GPS unit. But also remember to disable the serial in the
              advanced settings page, if not the ESP will interfere with the GPS unit.
