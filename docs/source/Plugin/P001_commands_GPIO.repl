@@ -31,7 +31,7 @@ Supported hardware: |P000_usedby_GPIO|
   GPIO: 0 ... 16
 
   ","
-  **Toggle on/off.**. 
+  **Toggle on/off.**.
   Toggle the current (output) state of the given GPIO pin.
   This will only be executed on pins set to be in output mode.
   "
@@ -115,4 +115,20 @@ Supported hardware: |P000_usedby_GPIO|
 
   A position value of 9000 will stop the PWM signal.
   This can be useful to save energy on servos which do not need power to remain at the same position.
+  "
+  "
+  ``Monitor,<GPIO>``
+
+  GPIO: 0 ... 16
+  ","
+  **To monitor a GPIO state.**
+  By the use of the command you will receive events when the GPIO state of that pin is changed from 1 to 0 and from 0 to 1.
+  "
+  "
+  ``GPIOtoggle,<GPIO>``
+
+  GPIO: 0 ... 16
+  ","
+  **To toggle a GPIO state.**
+  With this command you can change the given state of a pin from either 1 to 0 or from 0 to 1.
   "
