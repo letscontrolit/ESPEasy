@@ -48,6 +48,7 @@ for ENV in \
   normal_ESP8266_1024_VCC\
   normal_ESP8266_4096\
   normal_ESP8285_1024\
+  normal_IR_ESP8266_1024\
   normal_IR_ESP8266_4096\
   normal_WROOM02_2048\
   normal_core_241_ESP8266_1024\
