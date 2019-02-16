@@ -512,6 +512,7 @@ void WebServerInit()
   WebServer.on("/download", handle_download);
   WebServer.on("/upload", HTTP_GET, handle_upload);
   WebServer.on("/upload", HTTP_POST, handle_upload_post, handleFileUpload);
+  WebServer.on("/upload_json", HTTP_POST, handle_upload_json, handleFileUpload);
   WebServer.onNotFound(handleNotFound);
   WebServer.on("/filelist", handle_filelist);
   WebServer.on("/filelist_json", handle_filelist_json);
@@ -5134,6 +5135,19 @@ void handle_upload_post() {
   TXBuffer.endStream();
   printWebString = "";
   printToWeb = false;
+}
+
+void handle_upload_json() {
+  checkRAM(F("handle_upload_post"));
+  uint8_t result = uploadResult;
+  if (!isLoggedIn()) result = 255;
+
+  TXBuffer.startJsonStream();
+  TXBuffer += "{";
+  stream_next_json_object_value(F("status"), String(result));
+  TXBuffer += "}";
+
+  TXBuffer.endStream();
 }
 
 
