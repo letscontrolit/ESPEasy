@@ -4,10 +4,11 @@
 #ifdef BUILD_MINIMAL_OTA
   #undef WEBSERVER_RULES_DEBUG
 #endif
-
+#define JSON_OUTPUT 1
 //********************************************************************************
 // Web Interface rules page
 //********************************************************************************
+#ifndef JSON_OUTPUT
 void handle_rules_new() {
   if (!isLoggedIn() || !Settings.UseRules) return;
   if (!clientIPallowed()) return;
@@ -501,3 +502,5 @@ bool EnumerateFileAndDirectory(String& rootPath
   #endif
   return hasMore;
 }
+
+#endif

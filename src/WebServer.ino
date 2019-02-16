@@ -1,6 +1,7 @@
 //********************************************************************************
 // Allowed IP range check
 //********************************************************************************
+#define JSON_OUTPUT            1
 #define ALL_ALLOWED            0
 #define LOCAL_SUBNET_ALLOWED   1
 #define ONLY_IP_RANGE_ALLOWED  2
@@ -246,6 +247,7 @@ void sendHeaderBlocking(bool json, const String& origin) {
   delay(0);
 }
 
+#ifndef JSON_OUTPUT
 void sendHeadandTail(const String& tmplName, boolean Tail = false, boolean rebooting = false) {
   String pageTemplate = "";
   String fileName = tmplName;
@@ -315,6 +317,7 @@ void sendHeadandTail(const String& tmplName, boolean Tail = false, boolean reboo
 void sendHeadandTail_stdtemplate(boolean Tail = false, boolean rebooting = false) {
   sendHeadandTail(F("TmplStd"), Tail, rebooting);
 }
+#endif
 
 boolean ipLessEqual(const IPAddress& ip, const IPAddress& high)
 {
@@ -458,6 +461,7 @@ bool isFormItem(const String& id)
 
 
 //if there is an error-string, add it to the html code with correct formatting
+#ifndef JSON_OUTPUT
 void addHtmlError(const String& error){
   if (error.length()>0)
   {
@@ -487,12 +491,14 @@ void addHtml(const String& html) {
 void addDisabled() {
   TXBuffer += F(" disabled");
 }
+#endif
 
 #ifdef ARDUINO_ESP8266_RELEASE_2_3_0
 void WebServerInit()
 {
   // Prepare webserver pages
   WebServer.on("/", handle_root);
+#ifndef JSON_OUTPUT
   WebServer.on("/config", handle_config);
   WebServer.on("/controllers", handle_controllers);
   WebServer.on("/hardware", handle_hardware);
@@ -501,28 +507,17 @@ void WebServerInit()
   WebServer.on("/notifications", handle_notifications);
 #endif
   WebServer.on("/log", handle_log);
-  WebServer.on("/logjson", handle_log_JSON);
   WebServer.on("/tools", handle_tools);
   WebServer.on("/i2cscanner", handle_i2cscanner);
-  WebServer.on("/i2cscanner_json", handle_i2cscanner_json);
-  WebServer.on("/wifiscanner", handle_wifiscanner);
-  WebServer.on("/wifiscanner_json", handle_wifiscanner_json);
-  WebServer.on("/login", handle_login);
-  WebServer.on("/control", handle_control);
-  WebServer.on("/download", handle_download);
+  WebServer.on("/wifiscanner", handle_wifiscanner)
   WebServer.on("/upload", HTTP_GET, handle_upload);
   WebServer.on("/upload", HTTP_POST, handle_upload_post, handleFileUpload);
-  WebServer.on("/upload_json", HTTP_POST, handle_upload_json, handleFileUpload);
-  WebServer.onNotFound(handleNotFound);
   WebServer.on("/filelist", handle_filelist);
-  WebServer.on("/filelist_json", handle_filelist_json);
-#ifdef FEATURE_SD
+  #ifdef FEATURE_SD
   WebServer.on("/SDfilelist", handle_SDfilelist);
-#endif
+  #endif
   WebServer.on("/advanced", handle_advanced);
   WebServer.on("/setup", handle_setup);
-  WebServer.on("/json", handle_json);
-  WebServer.on("/timingstats_json", handle_timingstats_json);
   WebServer.on("/timingstats", handle_timingstats);
   WebServer.on("/rules", handle_rules_new);
   WebServer.on("/rules/", Goto_Rules_Root);
@@ -534,8 +529,20 @@ void WebServerInit()
   WebServer.on("/rules/delete", handle_rules_delete);
   WebServer.on("/sysinfo", handle_sysinfo);
   WebServer.on("/pinstates", handle_pinstates);
-  WebServer.on("/pinstates_json", handle_pinstates_json);
   WebServer.on("/sysvars", handle_sysvars);
+#endif
+  WebServer.on("/download", handle_download);
+  WebServer.on("/logjson", handle_log_JSON);
+  WebServer.on("/i2cscanner_json", handle_i2cscanner_json);
+  WebServer.on("/wifiscanner_json", handle_wifiscanner_json);
+  WebServer.on("/login", handle_login);
+  WebServer.on("/control", handle_control);
+  WebServer.on("/upload_json", HTTP_POST, handle_upload_json, handleFileUpload);
+  WebServer.onNotFound(handleNotFound);
+  WebServer.on("/filelist_json", handle_filelist_json);
+  WebServer.on("/json", handle_json);
+  WebServer.on("/timingstats_json", handle_timingstats_json);
+  WebServer.on("/pinstates_json", handle_pinstates_json);
   WebServer.on("/factoryreset", handle_factoryreset);
   WebServer.on("/favicon.ico", handle_favicon);
 
@@ -647,7 +654,7 @@ void setWebserverRunning(bool state) {
   webserver_state = state;
 }
 
-
+#ifndef JSON_OUTPUT
 void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
 {
   tmpl.reserve(576);
@@ -896,7 +903,7 @@ void writeDefaultCSS(void)
 
   }
 }
-
+#endif
 
 //********************************************************************************
 // Add top menu
@@ -927,6 +934,9 @@ void handle_root() {
     WebServer.send(200, "text/html", F("<meta HTTP-EQUIV='REFRESH' content='0; url=/setup'>"));
     return;
   }
+  #ifdef JSON_OUTPUT
+
+  #else
   if (!isLoggedIn()) return;
   navMenuIndex = 0;
   TXBuffer.startStream();
@@ -1117,9 +1127,11 @@ void handle_root() {
     TXBuffer.endStream();
 
   }
+  #endif
 }
 
 
+#ifndef JSON_OUTPUT
 //********************************************************************************
 // Web Interface config page
 //********************************************************************************
@@ -3679,7 +3691,7 @@ void handle_log() {
   sendHeadandTail_stdtemplate(_TAIL);
   TXBuffer.endStream();
   }
-
+#endif
 //********************************************************************************
 // Web Interface JSON log page
 //********************************************************************************
@@ -3741,6 +3753,7 @@ void handle_log_JSON() {
   updateLogLevelCache();
 }
 
+#ifndef JSON_OUTPUT
 //********************************************************************************
 // Web Interface debug page
 //********************************************************************************
@@ -3864,7 +3877,7 @@ void handle_tools() {
   printWebString = "";
   printToWeb = false;
 }
-
+#endif
 
 //********************************************************************************
 // Web Interface pin state list
@@ -3872,7 +3885,6 @@ void handle_tools() {
 void handle_pinstates_json() {
   checkRAM(F("handle_pinstates"));
   if (!isLoggedIn()) return;
-  navMenuIndex = MENU_INDEX_TOOLS;
   TXBuffer.startJsonStream();
 
   bool comma_between = false;
@@ -3899,38 +3911,10 @@ void handle_pinstates_json() {
 
   TXBuffer += F("]");
 
-
-/*
-  html_table_header(F("Plugin"), F("Official_plugin_list"), 0);
-  html_table_header("GPIO");
-  html_table_header("Mode");
-  html_table_header(F("Value/State"));
-  for (byte x = 0; x < PINSTATE_TABLE_MAX; x++)
-    if (pinStates[x].plugin != 0)
-    {
-      html_TR_TD(); TXBuffer += "P";
-      if (pinStates[x].plugin < 100)
-      {
-        TXBuffer += '0';
-      }
-      if (pinStates[x].plugin < 10)
-      {
-        TXBuffer += '0';
-      }
-      TXBuffer += pinStates[x].plugin;
-      html_TD();
-      TXBuffer += pinStates[x].index;
-      html_TD();
-      byte mode = pinStates[x].mode;
-      TXBuffer += getPinModeString(mode);
-      html_TD();
-      TXBuffer += pinStates[x].value;
-    }
-*/
-
     TXBuffer.endStream();
 }
 
+#ifndef JSON_OUTPUT
 void handle_pinstates() {
   checkRAM(F("handle_pinstates"));
   if (!isLoggedIn()) return;
@@ -4013,7 +3997,7 @@ void handle_pinstates() {
     sendHeadandTail_stdtemplate(_TAIL);
     TXBuffer.endStream();
 }
-
+#endif
 
 //********************************************************************************
 // Web Interface I2C scanner
@@ -4021,7 +4005,6 @@ void handle_pinstates() {
 void handle_i2cscanner_json() {
   checkRAM(F("handle_i2cscanner"));
   if (!isLoggedIn()) return;
-  navMenuIndex = MENU_INDEX_TOOLS;
   TXBuffer.startJsonStream();
   TXBuffer += "[{";
 
@@ -4046,6 +4029,7 @@ void handle_i2cscanner_json() {
   free(TempString);
 }
 
+#ifndef JSON_OUTPUT
 void handle_i2cscanner() {
   checkRAM(F("handle_i2cscanner"));
   if (!isLoggedIn()) return;
@@ -4184,7 +4168,7 @@ void handle_i2cscanner() {
   TXBuffer.endStream();
   free(TempString);
 }
-
+#endif
 
 //********************************************************************************
 // Web Interface Wifi scanner
@@ -4192,7 +4176,6 @@ void handle_i2cscanner() {
 void handle_wifiscanner_json() {
   checkRAM(F("handle_wifiscanner"));
   if (!isLoggedIn()) return;
-  navMenuIndex = MENU_INDEX_TOOLS;
   TXBuffer.startJsonStream();
   TXBuffer += "[{";
   bool firstentry = true;
@@ -4229,6 +4212,7 @@ void handle_wifiscanner_json() {
   TXBuffer.endStream();
 }
 
+#ifndef JSON_OUTPUT
 void handle_wifiscanner() {
   checkRAM(F("handle_wifiscanner"));
   if (!isLoggedIn()) return;
@@ -4257,7 +4241,7 @@ void handle_wifiscanner() {
   sendHeadandTail_stdtemplate(_TAIL);
   TXBuffer.endStream();
 }
-
+#endif
 
 //********************************************************************************
 // Web Interface login page
@@ -4265,10 +4249,36 @@ void handle_wifiscanner() {
 void handle_login() {
   checkRAM(F("handle_login"));
   if (!clientIPallowed()) return;
+  String webrequest = WebServer.arg(F("password"));
+
+  #ifdef JSON_OUTPUT
+  TXBuffer.startJsonStream();
+
+  char command[80];
+  command[0] = 0;
+  webrequest.toCharArray(command, 80);
+  
+  if ((strcasecmp(command, SecuritySettings.Password) == 0) || (SecuritySettings.Password[0] == 0))
+  {
+    WebLoggedIn = true;
+    WebLoggedInTimer = 0;
+    TXBuffer += "{ \"status\": \"OK\" }";
+  }
+  else
+  {
+    TXBuffer += "{ \"status\": \"FAIL\" }";
+    if (Settings.UseRules)
+    {
+      String event = F("Login#Failed");
+      rulesProcessing(event);
+    }
+  }
+  TXBuffer.endStream();
+  #else
   TXBuffer.startStream();
   sendHeadandTail_stdtemplate(_HEAD);
 
-  String webrequest = WebServer.arg(F("password"));
+  
   TXBuffer += F("<form method='post'>");
   html_table_class_normal();
   TXBuffer += F("<TR><TD>Password<TD>");
@@ -4310,6 +4320,7 @@ void handle_login() {
   TXBuffer.endStream();
   printWebString = "";
   printToWeb = false;
+  #endif
 }
 
 
@@ -4760,6 +4771,7 @@ long stream_timing_statistics(bool clearStats) {
   return timeSinceLastReset;
 }
 
+#ifndef JSON_OUTPUT
 void handle_timingstats() {
   checkRAM(F("handle_timingstats"));
   navMenuIndex = MENU_INDEX_TOOLS;
@@ -5028,7 +5040,7 @@ void addLogFacilitySelect(const String& name, int choice)
   addSelector(name, 12, options, optionValues, NULL, choice, false);
 }
 
-
+#endif
 //********************************************************************************
 // Login state check
 //********************************************************************************
@@ -5058,7 +5070,9 @@ void handle_download()
 {
   checkRAM(F("handle_download"));
   if (!isLoggedIn()) return;
+  #ifndef JSON_OUTPUT
   navMenuIndex = MENU_INDEX_TOOLS;
+  #endif
 //  TXBuffer.startStream();
 //  sendHeadandTail_stdtemplate();
 
@@ -5085,11 +5099,12 @@ void handle_download()
   dataFile.close();
 }
 
-
+byte uploadResult = 0;
+#ifndef JSON_OUTPUT
 //********************************************************************************
 // Web Interface upload page
 //********************************************************************************
-byte uploadResult = 0;
+
 void handle_upload() {
   if (!isLoggedIn()) return;
   navMenuIndex = MENU_INDEX_TOOLS;
@@ -5102,7 +5117,6 @@ void handle_upload() {
   printWebString = "";
   printToWeb = false;
 }
-
 
 //********************************************************************************
 // Web Interface upload page
@@ -5136,6 +5150,7 @@ void handle_upload_post() {
   printWebString = "";
   printToWeb = false;
 }
+#endif
 
 void handle_upload_json() {
   checkRAM(F("handle_upload_post"));
@@ -5301,6 +5316,7 @@ bool loadFromFS(boolean spiffs, String path) {
   return true;
 }
 
+#ifndef JSON_OUTPUT
 //********************************************************************************
 // Web Interface custom page handler
 //********************************************************************************
@@ -5451,7 +5467,7 @@ boolean handle_custom(String path) {
   TXBuffer.endStream();
   return true;
 }
-
+#endif
 
 
 //********************************************************************************
@@ -5460,7 +5476,6 @@ boolean handle_custom(String path) {
 void handle_filelist_json() {
   checkRAM(F("handle_filelist"));
   if (!clientIPallowed()) return;
-  navMenuIndex = MENU_INDEX_TOOLS;
   TXBuffer.startJsonStream();
 
   String fdelete = WebServer.arg(F("delete"));
@@ -5552,6 +5567,7 @@ void handle_filelist_json() {
   TXBuffer.endStream();
 }
 
+#ifndef JSON_OUTPUT
 void handle_filelist() {
   checkRAM(F("handle_filelist"));
   if (!clientIPallowed()) return;
@@ -5879,7 +5895,7 @@ void handle_SDfilelist() {
   TXBuffer.endStream();
 }
 #endif
-
+#endif
 
 //********************************************************************************
 // Web Interface handle other requests
@@ -5921,6 +5937,9 @@ void handleNotFound() {
 void handle_setup() {
   checkRAM(F("handle_setup"));
   // Do not check client IP range allowed.
+  #ifdef JSON_OUTPUT
+
+  #else
   TXBuffer.startStream();
   sendHeadandTail(F("TmplAP"));
 
@@ -6063,6 +6082,7 @@ void handle_setup() {
   sendHeadandTail(F("TmplAP"),true);
   TXBuffer.endStream();
   delay(10);
+  #endif
 }
 
 //********************************************************************************
@@ -6090,6 +6110,11 @@ void addPreDefinedConfigSelector() {
 void handle_factoryreset() {
   checkRAM(F("handle_factoryreset"));
   if (!isLoggedIn()) return;
+
+  #ifdef JSON_OUTPUT
+  TXBuffer.startJsonStream();
+  TXBuffer+= "{";
+  #else
   navMenuIndex = MENU_INDEX_TOOLS;
   TXBuffer.startStream();
   sendHeadandTail_stdtemplate(_HEAD);
@@ -6097,6 +6122,8 @@ void handle_factoryreset() {
   html_table_class_normal();
   html_TR();
   addFormHeader(F("Factory Reset"));
+
+  #endif
 
   if (WebServer.hasArg("fdm")) {
     DeviceModel model = static_cast<DeviceModel>(getFormItemInt("fdm"));
@@ -6123,14 +6150,25 @@ void handle_factoryreset() {
   if (WebServer.hasArg(F("savepref"))) {
     // User choose a pre-defined config and wants to save it as the new default.
     applyFactoryDefaultPref();
+    #ifdef JSON_OUTPUT
+    stream_last_json_object_value(F("status"), String(SaveSettings()));
+    #else
     addHtmlError(SaveSettings());
+    #endif
   }
   if (WebServer.hasArg(F("performfactoryreset"))) {
       // User confirmed to really perform the reset.
       applyFactoryDefaultPref();
       // No need to call SaveSettings(); ResetFactory() will save the new settings.
+      #ifdef JSON_OUTPUT
+      stream_last_json_object_value(F("status"), F("OK"));
+      TXBuffer.endStream();
+      #endif
       ResetFactory();
   } else {
+    #ifdef JSON_OUTPUT
+    TXBuffer+= "\"status\":-1";
+    #else
     // Nothing chosen yet, show options.
     addTableSeparator(F("Settings to keep"), 2, 3);
 
@@ -6164,15 +6202,20 @@ void handle_factoryreset() {
     addTableSeparator(F("Immediate full reset"), 2, 3);
     addRowLabel(F("Erase settings files"));
     addSubmitButton(F("Factory Reset"), F("performfactoryreset"), F("red"));
+    #endif
   }
 
+  #ifdef JSON_OUTPUT
+  TXBuffer+= "}";
+  #else
   html_end_table();
   html_end_form();
   sendHeadandTail_stdtemplate(_TAIL);
+  #endif
   TXBuffer.endStream();
-
 }
 
+#ifndef JSON_OUTPUT
 //********************************************************************************
 // Web Interface rules page
 //********************************************************************************
@@ -6896,7 +6939,7 @@ void handle_sysvars() {
   sendHeadandTail_stdtemplate(true);
   TXBuffer.endStream();
 }
-
+#endif
 //********************************************************************************
 // URNEncode char string to string object
 //********************************************************************************
