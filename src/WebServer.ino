@@ -502,6 +502,7 @@ void WebServerInit()
 #endif
   WebServer.on("/log", handle_log);
   WebServer.on("/logjson", handle_log_JSON);
+  WebServer.on("/node_list_json", handle_nodes_list);
   WebServer.on("/tools", handle_tools);
   WebServer.on("/i2cscanner", handle_i2cscanner);
   WebServer.on("/i2cscanner_json", handle_i2cscanner_json);
@@ -576,16 +577,21 @@ void WebServerInit()
 #endif
   WebServer.on(F("/log"), handle_log);
   WebServer.on(F("/logjson"), handle_log_JSON);
+  WebServer.on(F("/node_list_json"), handle_nodes_list);
   WebServer.on(F("/tools"), handle_tools);
   WebServer.on(F("/i2cscanner"), handle_i2cscanner);
+  WebServer.on(F("/i2cscanner_json"), handle_i2cscanner_json);
   WebServer.on(F("/wifiscanner"), handle_wifiscanner);
+  WebServer.on(F("/wifiscanner_json"), handle_wifiscanner_json);
   WebServer.on(F("/login"), handle_login);
   WebServer.on(F("/control"), handle_control);
   WebServer.on(F("/download"), handle_download);
   WebServer.on(F("/upload"), HTTP_GET, handle_upload);
   WebServer.on(F("/upload"), HTTP_POST, handle_upload_post, handleFileUpload);
+  WebServer.on(F("/upload_json"), HTTP_POST, handle_upload_json, handleFileUpload);
   WebServer.onNotFound(handleNotFound);
   WebServer.on(F("/filelist"), handle_filelist);
+  WebServer.on(F("/filelist_json"), handle_filelist_json);
 #ifdef FEATURE_SD
   WebServer.on(F("/SDfilelist"), handle_SDfilelist);
 #endif
@@ -604,8 +610,10 @@ void WebServerInit()
   WebServer.on(F("/rules/delete"), handle_rules_delete);
   WebServer.on(F("/sysinfo"), handle_sysinfo);
   WebServer.on(F("/pinstates"), handle_pinstates);
+  WebServer.on(F("/pinstates_json"), handle_pinstates_json);
   WebServer.on(F("/sysvars"), handle_sysvars);
   WebServer.on(F("/factoryreset"), handle_factoryreset);
+  WebServer.on(F("/factoryreset_json"), handle_factoryreset_json);
   WebServer.on(F("/favicon.ico"), handle_favicon);
 
   #if defined(ESP8266)
@@ -916,6 +924,82 @@ void addFooter(const String& str)
   //not longer used - now part of template
 }
 
+
+int8_t level = 0;
+int8_t lastLevel = -1;
+
+void json_quote_name(const String& val) {
+  if (lastLevel == level) TXBuffer += ",";
+  if (val.length() > 0) {
+    TXBuffer += '\"';
+    TXBuffer += val;
+    TXBuffer += '\"';
+    TXBuffer += ':';
+  }
+}
+
+void json_quote_val(const String& val) {
+  TXBuffer += '\"';
+  TXBuffer += val;
+  TXBuffer += '\"';
+}
+
+void json_open(bool arr = false, const String& name = String()) {
+  json_quote_name(name);
+  TXBuffer += arr ? "[" : "{";
+  lastLevel = level;
+  level++;
+}
+
+void json_init() {
+  level = 0;
+  lastLevel = -1;
+}
+
+void json_close(bool arr = false) {
+  TXBuffer += arr ? "]" : "}";
+  level--;
+  lastLevel = level;
+}
+
+void json_number(const String& name, uint8_t value) {
+  json_quote_name(name);
+  TXBuffer += String(value);
+  lastLevel = level;
+}
+
+void json_prop(const String& name, const String& value) {
+  json_quote_name(name);
+  json_quote_val(value);
+  lastLevel = level;
+}
+
+void handle_nodes_list() {
+  if (!isLoggedIn()) return;
+  TXBuffer.startJsonStream();
+  json_init();
+  json_open(true);
+  for (NodesMap::iterator it = Nodes.begin(); it != Nodes.end(); ++it)
+    {
+      if (it->second.ip[0] != 0)
+      {
+        json_open();
+        bool isThisUnit = it->first == Settings.Unit;
+        if (isThisUnit)
+          json_number(F("thisunit"), 1);
+
+        json_number(F("first"), it->first);
+        json_prop(F("name"), isThisUnit ? Settings.Name : it->second.nodeName);
+        if (it->second.build) json_prop(F("build"), String(it->second.build));
+        json_prop(F("type"), getNodeTypeDisplayString(it->second.nodeType));
+        json_prop(F("ip"), it->second.ip.toString());
+        json_number(F("age"), it->second.age);
+        json_close();
+      }
+    }
+  json_close(true);
+  TXBuffer.endStream();
+}
 
 //********************************************************************************
 // Web Interface root page
