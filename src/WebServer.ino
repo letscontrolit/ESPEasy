@@ -537,6 +537,7 @@ void WebServerInit()
   WebServer.on("/pinstates_json", handle_pinstates_json);
   WebServer.on("/sysvars", handle_sysvars);
   WebServer.on("/factoryreset", handle_factoryreset);
+  WebServer.on("/factoryreset_json", handle_factoryreset_json);
   WebServer.on("/favicon.ico", handle_favicon);
 
   #if defined(ESP8266)
@@ -6086,6 +6087,53 @@ void addPreDefinedConfigSelector() {
   addSelector_Foot();
 }
 
+void handle_factoryreset_json() {
+  if (!isLoggedIn()) return;
+  TXBuffer.startJsonStream();
+  TXBuffer+="{";
+
+  if (WebServer.hasArg("fdm")) {
+    DeviceModel model = static_cast<DeviceModel>(getFormItemInt("fdm"));
+    if (modelMatchingFlashSize(model)) {
+      setFactoryDefault(model);
+    }
+  }
+  if (WebServer.hasArg("kun")) {
+    ResetFactoryDefaultPreference.keepUnitName(isFormItemChecked("kun"));
+  }
+  if (WebServer.hasArg("kw")) {
+    ResetFactoryDefaultPreference.keepWiFi(isFormItemChecked("kw"));
+  }
+  if (WebServer.hasArg("knet")) {
+    ResetFactoryDefaultPreference.keepNetwork(isFormItemChecked("knet"));
+  }
+  if (WebServer.hasArg("kntp")) {
+    ResetFactoryDefaultPreference.keepNTP(isFormItemChecked("kntp"));
+  }
+  if (WebServer.hasArg("klog")) {
+    ResetFactoryDefaultPreference.keepLogSettings(isFormItemChecked("klog"));
+  }
+
+  if (WebServer.hasArg(F("savepref"))) {
+    // User choose a pre-defined config and wants to save it as the new default.
+    applyFactoryDefaultPref();
+    addHtmlError(SaveSettings());
+    stream_last_json_object_value(F("status"), F("ok"));
+  }
+  if (WebServer.hasArg(F("performfactoryreset"))) {
+      // User confirmed to really perform the reset.
+      applyFactoryDefaultPref();
+      stream_last_json_object_value(F("status"), F("ok"));
+      TXBuffer+="}";
+      TXBuffer.endStream();
+      // No need to call SaveSettings(); ResetFactory() will save the new settings.
+      ResetFactory();
+  } else {
+    stream_last_json_object_value(F("status"), F("error"));
+  }
+  TXBuffer+="}";
+  TXBuffer.endStream();
+}
 //********************************************************************************
 // Web Interface Factory Reset
 //********************************************************************************
