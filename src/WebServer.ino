@@ -930,6 +930,11 @@ void handle_root() {
   }
   if (!isLoggedIn()) return;
   navMenuIndex = 0;
+
+  // if index.htm exists on SPIFFS serve that one
+  if (loadFromFS(true, F("index.htm"))) return;
+  if (loadFromFS(false, F("index.htm"))) return;
+
   TXBuffer.startStream();
   String sCommand = WebServer.arg(F("cmd"));
   boolean rebootCmd = strcasecmp_P(sCommand.c_str(), PSTR("reboot")) == 0;
