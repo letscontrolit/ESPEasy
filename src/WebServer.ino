@@ -932,10 +932,10 @@ void handle_root() {
   navMenuIndex = 0;
 
   // if index.htm exists on SPIFFS serve that one (first check if gziped version exists)
-  if (loadFromFS(true, F("index.htm.gz"))) return;
-  if (loadFromFS(false, F("index.htm.gz"))) return;
-  if (loadFromFS(true, F("index.htm"))) return;
-  if (loadFromFS(false, F("index.htm"))) return;
+  if (loadFromFS(true, F("/index.htm.gz"))) return;
+  if (loadFromFS(false, F("/index.htm.gz"))) return;
+  if (loadFromFS(true, F("/index.htm"))) return;
+  if (loadFromFS(false, F("/index.htm"))) return;
 
   TXBuffer.startStream();
   String sCommand = WebServer.arg(F("cmd"));
