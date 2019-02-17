@@ -951,6 +951,11 @@ void json_open(bool arr = false, const String& name = String()) {
   level++;
 }
 
+void json_init() {
+  level = 0;
+  lastLevel = -1;
+}
+
 void json_close(bool arr = false) {
   TXBuffer += arr ? "]" : "}";
   level--;
@@ -972,6 +977,7 @@ void json_prop(const String& name, const String& value) {
 void handle_nodes_list() {
   if (!isLoggedIn()) return;
   TXBuffer.startJsonStream();
+  json_init();
   json_open(true);
   for (NodesMap::iterator it = Nodes.begin(); it != Nodes.end(); ++it)
     {
