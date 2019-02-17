@@ -34,7 +34,6 @@ fi
 for ENV in \
   dev_ESP8266_4096\
   esp-wrover-kit_test_1M8_partition\
-  esp32dev\
   esp32test_1M8_partition\
   hard_SONOFF_POW_4M\
   hard_Ventus_W266\
