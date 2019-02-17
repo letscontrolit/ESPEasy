@@ -5253,12 +5253,12 @@ bool loadFromFS(boolean spiffs, String path) {
   if (path.endsWith("/")) path += F("index.htm");
 
   if (path.endsWith(F(".src"))) path = path.substring(0, path.lastIndexOf("."));
-  else if (path.endsWith(F(".htm"))) dataType = F("text/html");
-  else if (path.endsWith(F(".css"))) dataType = F("text/css");
-  else if (path.endsWith(F(".js"))) dataType = F("application/javascript");
-  else if (path.endsWith(F(".png"))) dataType = F("image/png");
-  else if (path.endsWith(F(".gif"))) dataType = F("image/gif");
-  else if (path.endsWith(F(".jpg"))) dataType = F("image/jpeg");
+  else if (path.endsWith(F(".htm")) || path.endsWith(F(".htm.gz"))) dataType = F("text/html");
+  else if (path.endsWith(F(".css")) || path.endsWith(F(".css.gz"))) dataType = F("text/css");
+  else if (path.endsWith(F(".js")) || path.endsWith(F(".js.gz"))) dataType = F("application/javascript");
+  else if (path.endsWith(F(".png")) || path.endsWith(F(".png.gz"))) dataType = F("image/png");
+  else if (path.endsWith(F(".gif")) || path.endsWith(F(".gif.gz"))) dataType = F("image/gif");
+  else if (path.endsWith(F(".jpg")) || path.endsWith(F(".jpg.gz"))) dataType = F("image/jpeg");
   else if (path.endsWith(F(".ico"))) dataType = F("image/x-icon");
   else if (path.endsWith(F(".txt")) ||
            path.endsWith(F(".dat"))) dataType = F("application/octet-stream");
@@ -5285,6 +5285,9 @@ bool loadFromFS(boolean spiffs, String path) {
 
     if (path.endsWith(F(".dat")))
       WebServer.sendHeader(F("Content-Disposition"), F("attachment;"));
+    if (path.ednsWith(F(".gz"))) {
+      WebServer.sendHeader(F("Content-Encoding"), F("gzip"));
+    }
     WebServer.streamFile(dataFile, dataType);
     dataFile.close();
   }
