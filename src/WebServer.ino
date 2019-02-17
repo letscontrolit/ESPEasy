@@ -502,7 +502,7 @@ void WebServerInit()
 #endif
   WebServer.on("/log", handle_log);
   WebServer.on("/logjson", handle_log_JSON);
-  WebServer.on("/node_list", handle_nodes_list);
+  WebServer.on("/node_list_json", handle_nodes_list);
   WebServer.on("/tools", handle_tools);
   WebServer.on("/i2cscanner", handle_i2cscanner);
   WebServer.on("/i2cscanner_json", handle_i2cscanner_json);
@@ -577,7 +577,7 @@ void WebServerInit()
 #endif
   WebServer.on(F("/log"), handle_log);
   WebServer.on(F("/logjson"), handle_log_JSON);
-  WebServer.on(F("/node_list"), handle_nodes_list);
+  WebServer.on(F("/node_list_json"), handle_nodes_list);
   WebServer.on(F("/tools"), handle_tools);
   WebServer.on(F("/i2cscanner"), handle_i2cscanner);
   WebServer.on(F("/i2cscanner_json"), handle_i2cscanner_json);
