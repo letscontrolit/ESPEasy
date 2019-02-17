@@ -534,6 +534,7 @@ void WebServerInit()
   WebServer.on("/rules/backup", handle_rules_backup);
   WebServer.on("/rules/delete", handle_rules_delete);
   WebServer.on("/sysinfo", handle_sysinfo);
+  WebServer.on("/sysinfo_json", handle_sysinfo_json);
   WebServer.on("/pinstates", handle_pinstates);
   WebServer.on("/pinstates_json", handle_pinstates_json);
   WebServer.on("/sysvars", handle_sysvars);
@@ -609,6 +610,7 @@ void WebServerInit()
   WebServer.on(F("/rules/backup"), handle_rules_backup);
   WebServer.on(F("/rules/delete"), handle_rules_delete);
   WebServer.on(F("/sysinfo"), handle_sysinfo);
+  WebServer.on(F("/sysinfo_json"), handle_sysinfo_json);
   WebServer.on(F("/pinstates"), handle_pinstates);
   WebServer.on(F("/pinstates_json"), handle_pinstates_json);
   WebServer.on(F("/sysvars"), handle_sysvars);
@@ -6474,6 +6476,188 @@ void handle_rules() {
 //********************************************************************************
 // Web Interface sysinfo page
 //********************************************************************************
+void handle_sysinfo_json() {
+  checkRAM(F("handle_sysinfo"));
+  if (!isLoggedIn()) return;
+  TXBuffer.startJsonStream();
+  json_init();
+  json_open();
+  json_number(F("unit"), Settings.Unit);
+  json_prop(F("time"), getDateTimeString('-', ':', ' '));
+
+  char strUpTime[40];
+  int minutes = wdcounter / 2;
+  int days = minutes / 1440;
+  minutes = minutes % 1440;
+  int hrs = minutes / 60;
+  minutes = minutes % 60;
+  sprintf_P(strUpTime, PSTR("%d days %d hours %d minutes"), days, hrs, minutes);
+  json_prop(F("uptime"), strUpTime);
+  json_open(false, F("load"));
+    json_number(F("cpu"), getCPUload());
+    json_number(F("loop"), getLoopCountPerSec());
+  json_close();
+
+  int freeMem = ESP.getFreeHeap();
+  json_open(false, F("mem"));
+    json_number(F("free"), freeMem);
+    json_number(F("low_ram"), lowestRAM);
+    json_prop(F("low_ram_fn"), lowestRAMfunction);
+    json_number(F("stack"), getCurrentFreeStack());
+    json_number(F("low_stack"), lowestFreeStack);
+    json_prop(F("low_stack_fn"), lowestFreeStackfunction);
+  json_close();
+  json_open(false, F("boot"));
+    json_prop(F("last_cause"), getLastBootCauseString());
+    json_number(F("counter"), RTC.bootCounter);
+    json_prop(F("reset_reason"), getResetReasonString());
+  json_close();
+  json_open(false, F("wifi"));
+
+  #if defined(ESP8266)
+    byte PHYmode = wifi_get_phy_mode();
+  #endif
+  #if defined(ESP32)
+    byte PHYmode = 3; // wifi_get_phy_mode();
+  #endif
+  switch (PHYmode)
+  {
+    case 1:
+        json_prop(F("type"), F("802.11B"));
+      break;
+    case 2:
+      json_prop(F("type"), F("802.11G"));
+      break;
+    case 3:
+      json_prop(F("type"), F("802.11N"));
+      break;
+  }
+    json_number(F("rssi"), WiFi.RSSI());
+    json_prop(F("dhcp"), useStaticIP() ? F("Static") : F("DHCP"));
+    json_prop(F("ip"), formatIP(WiFi.localIP()));
+    json_prop(F("subnet"), formatIP(WiFi.subnetMask()));
+    json_prop(F("gw"), formatIP(WiFi.gatewayIP()));
+    json_prop(F("dns1"), formatIP(WiFi.dnsIP(0)));
+    json_prop(F("dns2"), formatIP(WiFi.dnsIP(1)));
+    json_prop(F("allowed_range"), describeAllowedIPrange());
+   
+
+    uint8_t mac[] = {0, 0, 0, 0, 0, 0};
+    uint8_t* macread = WiFi.macAddress(mac);
+    char macaddress[20];
+    formatMAC(macread, macaddress);
+
+    json_prop(F("sta_mac"), macaddress);
+
+    addRowLabel(F("AP MAC"));
+    macread = WiFi.softAPmacAddress(mac);
+    formatMAC(macread, macaddress);
+    
+    json_prop(F("ap_mac"), macaddress);
+    json_prop(F("ssid"), WiFi.SSID());
+    json_prop(F("bssid"), WiFi.BSSIDstr());
+    json_number(F("channel"), WiFi.channel());
+    json_prop(F("connected"), format_msec_duration(timeDiff(lastConnectMoment, millis())));
+    json_prop(F("ldr"), getLastDisconnectReason());
+    json_number(F("reconnects"), wifi_reconnects);
+  json_close();
+
+  json_open(false, F("firmware"));
+    json_prop(F("build"), String(BUILD));
+    json_prop(F("notes"), F(BUILD_NOTES));
+    json_prop(F("libraries"), getSystemLibraryString());
+    json_prop(F("git_version"), BUILD_GIT);
+    json_prop(F("plugins"), getPluginDescriptionString());
+    json_prop(F("md5"), String(CRCValues.compileTimeMD5[0],HEX));
+    json_number(F("md5_check"), CRCValues.checkPassed());
+    json_prop(F("build_time"), String(CRCValues.compileTime));
+    json_prop(F("filename"), String(CRCValues.binaryFilename));
+  json_close();
+
+  json_open(false, F("esp"));
+    json_prop(F("chip_id"), String(ESP.getChipId(), HEX));
+    json_number(F("cpu"), ESP.getCpuFreqMHz());
+
+  #if defined(ESP8266)
+    json_prop(F("chip_id"), String(ESP.getChipId(), HEX));
+    json_number(F("cpu"), ESP.getCpuFreqMHz());
+  #endif
+  #if defined(ESP32)
+    
+
+    uint64_t chipid=ESP.getEfuseMac();   //The chip ID is essentially its MAC address(length: 6 bytes).
+    uint32_t ChipId1 = (uint16_t)(chipid>>32);
+    String espChipIdS(ChipId1, HEX);
+    espChipIdS.toUpperCase();
+
+    json_prop(F("chip_id"), espChipIdS, HEX));
+    json_prop(F("cpu"), ESP.getCpuFreqMHz());
+
+    String espChipIdS1(ChipId1, HEX);
+    espChipIdS1.toUpperCase();
+    json_prop(F("chip_id1"), espChipIdS1, HEX));
+
+  #endif
+  #ifdef ARDUINO_BOARD
+  json_prop(F("board"), ARDUINO_BOARD);
+  #endif
+  json_close();
+  json_open(false, F("storage"));
+
+  #if defined(ESP8266)
+    uint32_t flashChipId = ESP.getFlashChipId();
+    // Set to HEX may be something like 0x1640E0.
+    // Where manufacturer is 0xE0 and device is 0x4016.
+    json_number(F("chip_id"), flashChipId);
+
+    if (flashChipVendorPuya())
+    {
+      if (puyaSupport()) {
+        json_prop(F("vendor"), F("puya, supported"));
+      } else {
+        json_prop(F("vendor"), F("puya, error"));
+      }
+    }
+    uint32_t flashDevice = (flashChipId & 0xFF00) | ((flashChipId >> 16) & 0xFF);
+    json_number(F("device"), flashDevice);
+  #endif
+    json_number(F("real_size"), getFlashRealSizeInBytes() / 1024);
+    json_number(F("ide_size"), ESP.getFlashChipSize() / 1024);
+
+  // Please check what is supported for the ESP32
+  #if defined(ESP8266)
+    json_number(F("flash_speed"), ESP.getFlashChipSpeed() / 1000000);
+
+    FlashMode_t ideMode = ESP.getFlashChipMode();
+    switch (ideMode) {
+      case FM_QIO:   json_prop(F("mode"), F("QIO"));  break;
+      case FM_QOUT:  json_prop(F("mode"), F("QOUT")); break;
+      case FM_DIO:   json_prop(F("mode"), F("DIO"));  break;
+      case FM_DOUT:  json_prop(F("mode"), F("DOUT")); break;
+      default:
+          json_prop(F("mode"), getUnknownString()); break;
+    }
+  #endif
+
+    json_number(F("writes"), RTC.flashDayCounter);
+    json_number(F("flash_counter"), RTC.flashCounter);
+    json_number(F("sketch_size"), ESP.getSketchSize() / 1024);
+    json_number(F("sketch_free"), ESP.getFreeSketchSpace() / 1024);
+    
+  {
+  #if defined(ESP8266)
+    fs::FSInfo fs_info;
+    SPIFFS.info(fs_info);
+    json_number(F("spiffs_size"), fs_info.totalBytes / 1024);
+    json_number(F("spiffs_free"), (fs_info.totalBytes - fs_info.usedBytes) / 1024);
+  #endif
+  }
+  json_close();
+  json_close();
+
+  TXBuffer.endStream();
+}
+
 void handle_sysinfo() {
   checkRAM(F("handle_sysinfo"));
   if (!isLoggedIn()) return;
