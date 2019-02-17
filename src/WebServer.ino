@@ -925,8 +925,8 @@ void addFooter(const String& str)
 }
 
 
-uint8_t level = 0;
-uint8_t lastLevel = -1;
+int8_t level = 0;
+int8_t lastLevel = -1;
 
 void json_quote_name(const String& val) {
   if (lastLevel == level) TXBuffer += ",";
