@@ -5303,6 +5303,9 @@ bool loadFromFS(boolean spiffs, String path) {
       WebServer.sendHeader(F("Content-Disposition"), F("attachment;"));
     WebServer.streamFile(dataFile, dataType);
     dataFile.close();
+#else
+    // File from SD requested, but no SD support.
+    return false;
 #endif
   }
   statusLED(true);
