@@ -5034,20 +5034,22 @@ void addLogFacilitySelect(const String& name, int choice)
 //********************************************************************************
 boolean isLoggedIn()
 {
+  const char* www_username = "admin";
   if (!clientIPallowed()) return false;
-  if (SecuritySettings.Password[0] == 0)
-    WebLoggedIn = true;
-
-  if (!WebLoggedIn)
+  if (SecuritySettings.Password[0] == 0) return true;
+  if (!WebServer.authenticate(www_username, SecuritySettings.Password))
+      //Basic Auth Method with Custom realm and Failure Response
+      //return server.requestAuthentication(BASIC_AUTH, www_realm, authFailResponse);
+      //Digest Auth Method with realm="Login Required" and empty Failure Response
+      //return server.requestAuthentication(DIGEST_AUTH);
+      //Digest Auth Method with Custom realm and empty Failure Response
+      //return server.requestAuthentication(DIGEST_AUTH, www_realm);
+      //Digest Auth Method with Custom realm and Failure Response
   {
-    WebServer.sendContent(F("HTTP/1.1 302 \r\nLocation: /login\r\n"));
+    WebServer.requestAuthentication(DIGEST_AUTH);
+    return false;
   }
-  else
-  {
-    WebLoggedInTimer = 0;
-  }
-
-  return WebLoggedIn;
+  return true;
 }
 
 
