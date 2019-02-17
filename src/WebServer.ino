@@ -5285,9 +5285,7 @@ bool loadFromFS(boolean spiffs, String path) {
 
     if (path.endsWith(F(".dat")))
       WebServer.sendHeader(F("Content-Disposition"), F("attachment;"));
-    if (path.endsWith(F(".gz"))) {
-      WebServer.sendHeader(F("Content-Encoding"), F("gzip"));
-    }
+    
     WebServer.streamFile(dataFile, dataType);
     dataFile.close();
   }
