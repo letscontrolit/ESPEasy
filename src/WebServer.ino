@@ -5378,7 +5378,7 @@ bool loadFromFS(boolean spiffs, String path) {
 
     if (path.endsWith(F(".dat")))
       WebServer.sendHeader(F("Content-Disposition"), F("attachment;"));
-    
+
     WebServer.streamFile(dataFile, dataType);
     dataFile.close();
   }
@@ -6540,7 +6540,7 @@ void handle_sysinfo_json() {
     json_prop(F("dns1"), formatIP(WiFi.dnsIP(0)));
     json_prop(F("dns2"), formatIP(WiFi.dnsIP(1)));
     json_prop(F("allowed_range"), describeAllowedIPrange());
-   
+
 
     uint8_t mac[] = {0, 0, 0, 0, 0, 0};
     uint8_t* macread = WiFi.macAddress(mac);
@@ -6551,7 +6551,7 @@ void handle_sysinfo_json() {
 
     macread = WiFi.softAPmacAddress(mac);
     formatMAC(macread, macaddress);
-    
+
     json_prop(F("ap_mac"), macaddress);
     json_prop(F("ssid"), WiFi.SSID());
     json_prop(F("bssid"), WiFi.BSSIDstr());
@@ -6574,27 +6574,25 @@ void handle_sysinfo_json() {
   json_close();
 
   json_open(false, F("esp"));
-    json_prop(F("chip_id"), String(ESP.getChipId(), HEX));
-    json_number(F("cpu"), ESP.getCpuFreqMHz());
 
   #if defined(ESP8266)
     json_prop(F("chip_id"), String(ESP.getChipId(), HEX));
     json_number(F("cpu"), ESP.getCpuFreqMHz());
   #endif
   #if defined(ESP32)
-    
+
 
     uint64_t chipid=ESP.getEfuseMac();   //The chip ID is essentially its MAC address(length: 6 bytes).
     uint32_t ChipId1 = (uint16_t)(chipid>>32);
     String espChipIdS(ChipId1, HEX);
     espChipIdS.toUpperCase();
 
-    json_prop(F("chip_id"), espChipIdS, HEX));
-    json_prop(F("cpu"), ESP.getCpuFreqMHz());
+    json_prop(F("chip_id"), espChipIdS);
+    json_prop(F("cpu"), String(ESP.getCpuFreqMHz()));
 
     String espChipIdS1(ChipId1, HEX);
     espChipIdS1.toUpperCase();
-    json_prop(F("chip_id1"), espChipIdS1, HEX));
+    json_prop(F("chip_id1"), espChipIdS1);
 
   #endif
   #ifdef ARDUINO_BOARD
@@ -6642,7 +6640,7 @@ void handle_sysinfo_json() {
     json_number(F("flash_counter"), RTC.flashCounter);
     json_number(F("sketch_size"), ESP.getSketchSize() / 1024);
     json_number(F("sketch_free"), ESP.getFreeSketchSpace() / 1024);
-    
+
   {
   #if defined(ESP8266)
     fs::FSInfo fs_info;
