@@ -77,7 +77,10 @@ void serialHelper_webformLoad(struct EventStruct *event, bool allowSoftwareSeria
                      static_cast<int>(serialHelper_getSerialType(event)),
                      F("serialPortChanged(this)")); // Script to toggle GPIO visibility when changing selection.
   html_add_script(F("document.getElementById('serPort').onchange();"), false);
-  addFormNote(F("Do <b>NOT</b> combine HW Serial0 and log to serial on Tools->Advanced->Serial Port."));
+  if (Settings.UseSerial) {
+    addFormNote(F("Do <b>NOT</b> combine HW Serial0 and log to serial on Tools->Advanced->Serial Port."));
+  }
+  addFormNote(F("D8 (GPIO-15) requires a Buffer Circuit (PNP transistor) or ESP boot may fail."));
 }
 
 void serialHelper_webformSave(struct EventStruct *event) {
@@ -89,6 +92,13 @@ void serialHelper_webformSave(struct EventStruct *event) {
       CONFIG_PIN1 = rxPin;
       CONFIG_PIN2 = txPin;
     }
+  }
+}
+
+void serialHelper_plugin_init(struct EventStruct *event) {
+  ESPeasySerialType::serialtype serType = serialHelper_getSerialType(event);
+  if (serType == ESPeasySerialType::serialtype::serial0) {
+    Settings.UseSerial = false;                 // Disable global Serial port.
   }
 }
 

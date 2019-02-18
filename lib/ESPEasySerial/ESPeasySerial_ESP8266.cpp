@@ -4,6 +4,24 @@
 #define DETECT_BAUDATE_TIMEOUT     250
 
 
+String ESPeasySerial::getLogString() const {
+  String log;
+  log.reserve(48);
+  log = "ESPEasy serial: ";
+  if (isSWserial()) {
+    log += "SW";
+  } else {
+    log += "HW";
+  }
+  log += ": rx:";
+  log += String(_receivePin);
+  log += " tx:";
+  log += String(_transmitPin);
+  log += " baud:";
+  log += String(_baud);
+  return log;
+}
+
 // ****************************************
 // ESP8266 implementation wrapper
 // ****************************************
@@ -46,6 +64,7 @@ void ESPeasySerial::end() {
   if (!isValid()) {
     return;
   }
+  flush();
   if (isSWserial()) {
 #ifndef ARDUINO_ESP8266_RELEASE_2_3_0
     _swserial->end();
