@@ -964,9 +964,9 @@ void json_close(bool arr = false) {
   lastLevel = level;
 }
 
-void json_number(const String& name, uint8_t value) {
+void json_number(const String& name, const String& value) {
   json_quote_name(name);
-  TXBuffer += String(value);
+  json_quote_val(value);
   lastLevel = level;
 }
 
@@ -988,14 +988,14 @@ void handle_nodes_list() {
         json_open();
         bool isThisUnit = it->first == Settings.Unit;
         if (isThisUnit)
-          json_number(F("thisunit"), 1);
+          json_number(F("thisunit"),  String(1));
 
-        json_number(F("first"), it->first);
+        json_number(F("first"), String(it->first));
         json_prop(F("name"), isThisUnit ? Settings.Name : it->second.nodeName);
         if (it->second.build) json_prop(F("build"), String(it->second.build));
         json_prop(F("type"), getNodeTypeDisplayString(it->second.nodeType));
         json_prop(F("ip"), it->second.ip.toString());
-        json_number(F("age"), it->second.age);
+        json_number(F("age"), String(it->second.age));
         json_close();
       }
     }
@@ -6494,7 +6494,7 @@ void handle_sysinfo_json() {
   json_init();
   json_open();
   json_open(false, F("general"));
-    json_number(F("unit"), Settings.Unit);
+    json_number(F("unit"), String(Settings.Unit));
     json_prop(F("time"), getDateTimeString('-', ':', ' '));
 
   char strUpTime[40];
@@ -6505,22 +6505,22 @@ void handle_sysinfo_json() {
   minutes = minutes % 60;
   sprintf_P(strUpTime, PSTR("%d days %d hours %d minutes"), days, hrs, minutes);
     json_prop(F("uptime"), strUpTime);
-    json_number(F("cpu_load"), getCPUload());
-    json_number(F("loop_count"), getLoopCountPerSec());
+    json_number(F("cpu_load"), String(getCPUload()));
+    json_number(F("loop_count"), String(getLoopCountPerSec()));
   json_close();
 
   int freeMem = ESP.getFreeHeap();
   json_open(false, F("mem"));
-    json_number(F("free"), freeMem);
-    json_number(F("low_ram"), lowestRAM);
-    json_prop(F("low_ram_fn"), lowestRAMfunction);
-    json_number(F("stack"), getCurrentFreeStack());
-    json_number(F("low_stack"), lowestFreeStack);
+    json_number(F("free"), String(freeMem));
+    json_number(F("low_ram"),  String(lowestRAM));
+    json_prop(F("low_ram_fn"),  String(lowestRAMfunction));
+    json_number(F("stack"),  String(getCurrentFreeStack()));
+    json_number(F("low_stack"),  String(lowestFreeStack));
     json_prop(F("low_stack_fn"), lowestFreeStackfunction);
   json_close();
   json_open(false, F("boot"));
     json_prop(F("last_cause"), getLastBootCauseString());
-    json_number(F("counter"), RTC.bootCounter);
+    json_number(F("counter"),  String(RTC.bootCounter));
     json_prop(F("reset_reason"), getResetReasonString());
   json_close();
   json_open(false, F("wifi"));
@@ -6543,7 +6543,7 @@ void handle_sysinfo_json() {
       json_prop(F("type"), F("802.11N"));
       break;
   }
-    json_number(F("rssi"), WiFi.RSSI());
+    json_number(F("rssi"),  String(WiFi.RSSI()));
     json_prop(F("dhcp"), useStaticIP() ? F("Static") : F("DHCP"));
     json_prop(F("ip"), formatIP(WiFi.localIP()));
     json_prop(F("subnet"), formatIP(WiFi.subnetMask()));
@@ -6566,10 +6566,10 @@ void handle_sysinfo_json() {
     json_prop(F("ap_mac"), macaddress);
     json_prop(F("ssid"), WiFi.SSID());
     json_prop(F("bssid"), WiFi.BSSIDstr());
-    json_number(F("channel"), WiFi.channel());
+    json_number(F("channel"),  String(WiFi.channel()));
     json_prop(F("connected"), format_msec_duration(timeDiff(lastConnectMoment, millis())));
     json_prop(F("ldr"), getLastDisconnectReason());
-    json_number(F("reconnects"), wifi_reconnects);
+    json_number(F("reconnects"),  String(wifi_reconnects));
   json_close();
 
   json_open(false, F("firmware"));
@@ -6579,7 +6579,7 @@ void handle_sysinfo_json() {
     json_prop(F("git_version"), BUILD_GIT);
     json_prop(F("plugins"), getPluginDescriptionString());
     json_prop(F("md5"), String(CRCValues.compileTimeMD5[0],HEX));
-    json_number(F("md5_check"), CRCValues.checkPassed());
+    json_number(F("md5_check"),  String(CRCValues.checkPassed()));
     json_prop(F("build_time"), String(CRCValues.compileTime));
     json_prop(F("filename"), String(CRCValues.binaryFilename));
   json_close();
@@ -6588,7 +6588,7 @@ void handle_sysinfo_json() {
 
   #if defined(ESP8266)
     json_prop(F("chip_id"), String(ESP.getChipId(), HEX));
-    json_number(F("cpu"), ESP.getCpuFreqMHz());
+    json_number(F("cpu"),  String(ESP.getCpuFreqMHz()));
   #endif
   #if defined(ESP32)
 
@@ -6616,7 +6616,7 @@ void handle_sysinfo_json() {
     uint32_t flashChipId = ESP.getFlashChipId();
     // Set to HEX may be something like 0x1640E0.
     // Where manufacturer is 0xE0 and device is 0x4016.
-    json_number(F("chip_id"), flashChipId);
+    json_number(F("chip_id"),  String(flashChipId));
 
     if (flashChipVendorPuya())
     {
@@ -6627,14 +6627,14 @@ void handle_sysinfo_json() {
       }
     }
     uint32_t flashDevice = (flashChipId & 0xFF00) | ((flashChipId >> 16) & 0xFF);
-    json_number(F("device"), flashDevice);
+    json_number(F("device"),  String(flashDevice));
   #endif
-    json_number(F("real_size"), getFlashRealSizeInBytes() / 1024);
-    json_number(F("ide_size"), ESP.getFlashChipSize() / 1024);
+    json_number(F("real_size"),  String(getFlashRealSizeInBytes() / 1024));
+    json_number(F("ide_size"),  String(ESP.getFlashChipSize() / 1024));
 
   // Please check what is supported for the ESP32
   #if defined(ESP8266)
-    json_number(F("flash_speed"), ESP.getFlashChipSpeed() / 1000000);
+    json_number(F("flash_speed"),  String(ESP.getFlashChipSpeed() / 1000000));
 
     FlashMode_t ideMode = ESP.getFlashChipMode();
     switch (ideMode) {
@@ -6647,17 +6647,17 @@ void handle_sysinfo_json() {
     }
   #endif
 
-    json_number(F("writes"), RTC.flashDayCounter);
-    json_number(F("flash_counter"), RTC.flashCounter);
-    json_number(F("sketch_size"), ESP.getSketchSize() / 1024);
-    json_number(F("sketch_free"), ESP.getFreeSketchSpace() / 1024);
+    json_number(F("writes"),  String(RTC.flashDayCounter));
+    json_number(F("flash_counter"),  String(RTC.flashCounter));
+    json_number(F("sketch_size"),  String(ESP.getSketchSize() / 1024));
+    json_number(F("sketch_free"),  String(ESP.getFreeSketchSpace() / 1024));
 
   {
   #if defined(ESP8266)
     fs::FSInfo fs_info;
     SPIFFS.info(fs_info);
-    json_number(F("spiffs_size"), fs_info.totalBytes / 1024);
-    json_number(F("spiffs_free"), (fs_info.totalBytes - fs_info.usedBytes) / 1024);
+    json_number(F("spiffs_size"),  String(fs_info.totalBytes / 1024));
+    json_number(F("spiffs_free"),  String((fs_info.totalBytes - fs_info.usedBytes) / 1024));
   #endif
   }
   json_close();
