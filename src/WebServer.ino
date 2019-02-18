@@ -3922,7 +3922,8 @@ void handle_tools() {
     SPIFFS.info(fs_info);
     if ((fs_info.totalBytes - fs_info.usedBytes) / 1024 > 50) {
       TXBuffer += F("<TR><TD>");
-      TXBuffer += "<a class=\"button link wide\" onclick=\"fetch('https://raw.githubusercontent.com/ppisljar/espeasy_new_ui/master/build/index.htm.gz').then(r=>{var f=new FormData();f.append('file', new File([new Blob([r.arrayBuffer()])], 'index.htm.gz'));f.append('edit', 1);fetch('/upload_json',{method:'POST',data:f}).then(window.location.href='/';);});\">download new ui</a>";
+      TXBuffer += "<script>function downloadUI() { fetch('https://raw.githubusercontent.com/ppisljar/espeasy_new_ui/master/build/index.htm.gz').then(r=>r.arrayBuffer()).then(r => {var f=new FormData();f.append('file', new File([new Blob([new Uint8Array(r)])], 'index.htm.gz'));f.append('edit', 1);fetch('/upload',{method:'POST',body:f}).then(() => {window.location.href='/';});}); }</script>";
+      TXBuffer += "<a class=\"button link wide\" onclick=\"downloadUI()\">download new ui</a>";
       TXBuffer += F("</TD><TD>Download new UI</TD></TR>");
     }
   #endif
