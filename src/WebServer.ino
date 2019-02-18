@@ -966,7 +966,7 @@ void json_close(bool arr = false) {
 
 void json_number(const String& name, const String& value) {
   json_quote_name(name);
-  TXBuffer += value;
+  json_quote_val(value);
   lastLevel = level;
 }
 
