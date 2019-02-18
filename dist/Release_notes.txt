@@ -1,4 +1,30 @@
 -------------------------------------------------
+Changes in release mega-20190218 (since mega-20190216)
+-------------------------------------------------
+
+Release date: Mon Feb 18 04:00:07 CET 2019
+
+Peter Pisljar (1):
+      p2p node list json endpoint (#2323)
+
+TD-er (2):
+      [ESP32dev] Disable ESP32dev build due to space constraints
+      [bugfix] Load old webpage when no index.htm present and no SD support
+
+ppisljar (10):
+      adding upload json endpoint
+      digest auth
+      factory reset json endpoint
+      load index.htm if it exists
+      add support for serving gziped files
+      typo
+      fixing
+      adding support for index.htm.gz
+      fixing index.htm serving
+      adding sysinfo json endpoint
+
+
+-------------------------------------------------
 Changes in release mega-20190216 (since mega-20190215)
 -------------------------------------------------
 
