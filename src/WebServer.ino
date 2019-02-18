@@ -6482,8 +6482,9 @@ void handle_sysinfo_json() {
   TXBuffer.startJsonStream();
   json_init();
   json_open();
-  json_number(F("unit"), Settings.Unit);
-  json_prop(F("time"), getDateTimeString('-', ':', ' '));
+  json_open(false, F("general"));
+    json_number(F("unit"), Settings.Unit);
+    json_prop(F("time"), getDateTimeString('-', ':', ' '));
 
   char strUpTime[40];
   int minutes = wdcounter / 2;
@@ -6492,10 +6493,9 @@ void handle_sysinfo_json() {
   int hrs = minutes / 60;
   minutes = minutes % 60;
   sprintf_P(strUpTime, PSTR("%d days %d hours %d minutes"), days, hrs, minutes);
-  json_prop(F("uptime"), strUpTime);
-  json_open(false, F("load"));
-    json_number(F("cpu"), getCPUload());
-    json_number(F("loop"), getLoopCountPerSec());
+    json_prop(F("uptime"), strUpTime);
+    json_number(F("cpu_load"), getCPUload());
+    json_number(F("loop_count"), getLoopCountPerSec());
   json_close();
 
   int freeMem = ESP.getFreeHeap();
@@ -6549,7 +6549,6 @@ void handle_sysinfo_json() {
 
     json_prop(F("sta_mac"), macaddress);
 
-    addRowLabel(F("AP MAC"));
     macread = WiFi.softAPmacAddress(mac);
     formatMAC(macread, macaddress);
     
