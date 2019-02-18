@@ -3917,6 +3917,16 @@ void handle_tools() {
   addFormNote(F("(File MUST be renamed to \"config.dat\" before upload!)"));
   addWideButtonPlusDescription(F("download"), F("Save"), F("Saves a settings file"));
 
+  #if defined(ESP8266)
+    fs::FSInfo fs_info;
+    SPIFFS.info(fs_info);
+    if ((fs_info.totalBytes - fs_info.usedBytes) / 1024 > 50) {
+      TXBuffer += F("<TR><TD>");
+      TXBuffer += "<a class=\"button link wide\" onclick=\"fetch('https://raw.githubusercontent.com/ppisljar/espeasy_new_ui/master/build/index.htm.gz').then(r=>{var f=new FormData();f.append('file', new File([new Blob([r.arrayBuffer()])], 'index.htm.gz'));f.append('edit', 1);fetch('/upload_json',{method:'POST',data:f}).then(window.location.href='/';);});\">download new ui</a>";
+      TXBuffer += F("</TD><TD>Download new UI</TD></TR>");
+    }
+  #endif
+  
 #if defined(ESP8266)
   {
     {
