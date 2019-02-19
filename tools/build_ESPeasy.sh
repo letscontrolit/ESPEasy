@@ -10,8 +10,7 @@
 
 VENV=~/.venv/python2.7
 SRC=~/GitHub/letscontrolit/ESPEasy
-REPO=https://github.com/blackhu/ESPEasy.git
-#REPO=https://github.com/letscontrolit/ESPEasy.git
+REPO=https://github.com/letscontrolit/ESPEasy.git
 BRANCH=mega
 
 PULL_REQ=0
