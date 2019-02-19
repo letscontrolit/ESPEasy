@@ -1,4 +1,21 @@
 -------------------------------------------------
+Changes in release mega-20190219 (since mega-20190218)
+-------------------------------------------------
+
+Release date: Tue Feb 19 04:00:16 CET 2019
+
+TD-er (1):
+      [build] Fix ESP32 build issues for #2326
+
+ppisljar (5):
+      updating sysinfo json endpoint
+      adding new ui download button
+      fixing download ui button
+      fixing json numbers
+      always use string in json
+
+
+-------------------------------------------------
 Changes in release mega-20190218 (since mega-20190216)
 -------------------------------------------------
 
