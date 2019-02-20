@@ -8,11 +8,29 @@
 #define PLUGIN_082
 #define PLUGIN_ID_082         82
 #define PLUGIN_NAME_082       "Generic - OpenTherm boiler device"
-#define PLUGIN_VALUENAME1_082 "TSet" // программная установка температуры. Изменяется программно <= MaxTSet. Если в статусе отопление отключено - возвращаем 0.
-#define PLUGIN_VALUENAME2_082 "Tboiler" // температура подачи
-#define PLUGIN_VALUENAME3_082 "MaxTSet" //ограничение установки температуры (RO). Задается на экране котла.
-#define PLUGIN_VALUENAME4_082 "CHPressure" // давление в системе отопления, бар
-#define PLUGIN_VALUENAME5_082 "ASFflags" // fault flags - запрашиваем тоько если fault в статусе
+
+// (RW) заданная пользователем температура. Хоть 100500 градусов
+#define PLUGIN_VALUENAME1_082 "TSetUser"
+
+// (RO) выставленая котлом температура.
+// Например, котел Bosch GAS 6000 выставляет:
+//    0 если TSetUser < 40
+//    TSetUser если TSetUser <= MaxTSet
+//    MaxTSet если TSetUser > MaxTSet
+//    (для других котлов возможно другая логика)
+// Если в статусе отопление отключено - возвращаем 0.
+#define PLUGIN_VALUENAME2_082 "TSet"
+
+// (RO) ограничение максимальной температуры регулирования.
+// Задается на экране котла.
+// Если замкнуть контакты термостата - котел будет поддерживать это значение
+// Если в статусе отопление отключено - возвращаем 0.
+#define PLUGIN_VALUENAME3_082 "MaxTSet"
+
+// температура подачи (на выходе из контура отопления)
+#define PLUGIN_VALUENAME4_082 "Tboiler"
+
+// fault flags - запрашиваем тоько если fault в статусе
 // Значения ASFflags:
 // 0 - нет ошибки
 // -1 - timeout
@@ -20,19 +38,18 @@
 // -3 - ошибка инициализации протокола
 // 1 - ошибка. Код ошибки запросить не удалось
 // другое значение - код ошибки, возвращенный котлом на запрос ASFflags (ID 5)
+#define PLUGIN_VALUENAME5_082 "ASFflags"
 
 #define P82_Nlines 1 //количество форм для ввода данных пользователем (сейчас только TSet)
 #define P82_Nchars 3 //количество символов web-формы для ввода значения пользователем
 
 enum  Plugin_082_values{
+  vTSetUser,
   vTSet,
-  vTboiler,
   vMaxTSet,
-  vCHPressure,
+  vTboiler,
   vASFflags
 };
-
-// TSET (если < 40 - устанавливаем в 0 и отключаем отопление)
 
 OpenTherm ot(4,14);
 
@@ -93,7 +110,7 @@ boolean Plugin_082(byte function, struct EventStruct *event, String& string)
         LoadTaskSettings(event->TaskIndex);
         String argName = F("p082_template");
         int16_t webFormValue = ExtraTaskSettings.TaskDevicePluginConfig[0];
-        addFormTextBox(String(F(PLUGIN_VALUENAME1_082)), argName, String(webFormValue), P82_Nchars);
+        addFormTextBox(String(F("Default TSetUser")), argName, String(webFormValue), P82_Nchars);
         success = true;
         break;
       }
@@ -120,22 +137,8 @@ boolean Plugin_082(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
       {
-        // LoadTaskSettings(event->TaskIndex);
-        // if (Settings.TaskDevicePin1[event->TaskIndex] < 0 ) || (Settings.TaskDevicePin1[event->TaskIndex] < 0 ){
-        //   break;
-        // }
-        // int rx =4;
-        // int tx=14;
-        // OpenTherm otLocal(rx, tx);
-        // ot=otLocal;
-        // char deviceTemplate[P82_Nlines][P82_Nchars];
-        // LoadCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
-        // for (byte varNr = 0; varNr < P82_Nlines; varNr++)
-        // {
-        //   float temp;
-        //   temp=atof(deviceTemplate[varNr]);
-        //   UserVar[event->BaseVarIndex + varNr] = temp;
-        // }
+        LoadTaskSettings(event->TaskIndex);
+        UserVar[event->BaseVarIndex + Plugin_082_values::vTSetUser] = ExtraTaskSettings.TaskDevicePluginConfig[0];
         ot.begin(Plugin_082_handleInterrupt);
         success = true;
         break;
@@ -143,15 +146,13 @@ boolean Plugin_082(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
       {
-
-        LoadTaskSettings(event->TaskIndex);
-        int16_t userTemperature = ExtraTaskSettings.TaskDevicePluginConfig[0];
+        int16_t userTemperature = UserVar[event->BaseVarIndex + Plugin_082_values::vTSetUser];
 
         // обогрев включен если заданная пользователем температура != 0
         bool enableCentralHeating = userTemperature;
       	bool enableHotWater = true;
       	bool enableCooling = false;
-        String log = F("*** ");
+        String log = F("");
         float errorCode = 0;
 
         unsigned int request;
@@ -167,32 +168,25 @@ boolean Plugin_082(byte function, struct EventStruct *event, String& string)
             errorCode = (response == 0) ? 1 : response;
           }
 
-          // запрашиваем у котла давление в контуре отопления
-          request = ot.buildRequest(OpenThermRequestType::READ, OpenThermMessageID::CHPressure, 0);
-          UserVar[event->BaseVarIndex + Plugin_082_values::vCHPressure] = ot.getTemperature(ot.sendRequest(request));
-
           // запрашиваем у котла текущую температуру контура отопления
           request = ot.buildRequest(OpenThermRequestType::READ, OpenThermMessageID::Tboiler, 0);
           UserVar[event->BaseVarIndex + Plugin_082_values::vTboiler] = ot.getTemperature(ot.sendRequest(request));
 
-
-          // устанавливаем в котле заданную температуру. Смотрим что ответит
+          // устанавливаем в котле заданную пользователем температуру. Смотрим что ответит
           request = ot.buildRequest(OpenThermRequestType::WRITE, OpenThermMessageID::TSet, ot.temperatureToData(userTemperature));
           response = ot.sendRequest(request);
-          if (ot.isCentralHeatingEnabled(status))
-            UserVar[event->BaseVarIndex + Plugin_082_values::vTSet] = ot.getTemperature(response);
-          else
-            UserVar[event->BaseVarIndex + Plugin_082_values::vTSet] = 0;
-
           if (ot.isCentralHeatingEnabled(status)){
+            UserVar[event->BaseVarIndex + Plugin_082_values::vTSet] = ot.getTemperature(response);
             // запрашиваем у котла максимальную установку температуры
             request = ot.buildRequest(OpenThermRequestType::READ, OpenThermMessageID::MaxTSet, 0);
             UserVar[event->BaseVarIndex + Plugin_082_values::vMaxTSet] = ot.getTemperature(ot.sendRequest(request));
           }
-          else
+          else {
+            // Если отопление отключено
+            UserVar[event->BaseVarIndex + Plugin_082_values::vTSet] = 0;
             UserVar[event->BaseVarIndex + Plugin_082_values::vMaxTSet] = 0;
-
-
+          }
+          log += F("OT device polling ok");
       	}
         else {
           // ошибка обмена данными с котлом
@@ -211,57 +205,9 @@ boolean Plugin_082(byte function, struct EventStruct *event, String& string)
           UserVar[event->BaseVarIndex + Plugin_082_values::vTSet] = NAN;
           UserVar[event->BaseVarIndex + Plugin_082_values::vTboiler] = NAN;
           UserVar[event->BaseVarIndex + Plugin_082_values::vMaxTSet] = NAN;
-          UserVar[event->BaseVarIndex + Plugin_082_values::vCHPressure] = NAN;
         }
         UserVar[event->BaseVarIndex + Plugin_082_values::vASFflags] = errorCode;
         addLog(LOG_LEVEL_INFO,log);
-
-        // unsigned int data = ot.temperatureToData(50);
-        // unsigned long req=ot.buildRequest(OpenThermRequestType::READ, OpenThermMessageID::RelModLevel, 0);
-        // unsigned long res = ot.sendRequest(req);
-        // Serial.println("set status: "+ String(ot.getLastResponseStatus()));
-        // Serial.println("set result: " + String(res)+" "+String(res & 0x1)+" "+String(res & 0x2));
-        // Serial.println("set result: " + String(ot.getTemperature(res)));
-
-
-        // event->sensorType = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
-        // char deviceTemplate[P82_Nlines][P82_Nchars];
-        // LoadCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
-        // boolean valueChanged = false;
-        //
-        // for (byte varNr = 0; varNr < P82_Nlines; varNr++)
-        // {
-        //   float ramValue = UserVar[event->BaseVarIndex + varNr];
-        //   String log = F("Dummy: value ");
-        //   log += varNr + 1;
-        //   log += F(": ");
-        //   log += ramValue;
-        //
-        //   float persistentValue;
-        //   persistentValue = atof(deviceTemplate[varNr]);
-        //
-        //   if (ramValue != persistentValue){
-        //     log += F(" (changed)");
-        //     valueChanged = true;
-        //   }
-        //   addLog(LOG_LEVEL_INFO,log);
-        // }
-        //
-        // byte keepValue = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
-        // if (valueChanged && keepValue){
-        //   for (byte varNr = 0; varNr < P82_Nlines; varNr++)
-        //   {
-        //     float value=UserVar[event->BaseVarIndex + varNr];
-        //       String tmp = F("");
-        //     tmp += value;
-        //     safe_strncpy(deviceTemplate[varNr], tmp, P82_Nchars);
-        //   }
-        //   SaveCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
-        //
-        //   String log = F("persistent values saved for task ");
-        //   log += (event->TaskIndex + 1);
-        //
-        // }
 
         success = true;
         break;
