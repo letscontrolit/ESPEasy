@@ -51,10 +51,10 @@ enum  Plugin_082_values{
   vASFflags
 };
 
-OpenTherm ot(4,14);
+OpenTherm* ot=NULL;
 
 void Plugin_082_handleInterrupt() {
-	ot.handleInterrupt();
+  ot->handleInterrupt();
 }
 
 
@@ -139,13 +139,18 @@ boolean Plugin_082(byte function, struct EventStruct *event, String& string)
       {
         LoadTaskSettings(event->TaskIndex);
         UserVar[event->BaseVarIndex + Plugin_082_values::vTSetUser] = ExtraTaskSettings.TaskDevicePluginConfig[0];
-        ot.begin(Plugin_082_handleInterrupt);
+        OpenTherm otObj(4,14);
+        ot=&otObj;
+        ot->begin(Plugin_082_handleInterrupt);
         success = true;
         break;
       }
 
     case PLUGIN_READ:
       {
+        if (ot == NULL)
+          return false;
+
         int16_t userTemperature = UserVar[event->BaseVarIndex + Plugin_082_values::vTSetUser];
 
         // обогрев включен если заданная пользователем температура != 0
@@ -157,29 +162,29 @@ boolean Plugin_082(byte function, struct EventStruct *event, String& string)
 
         unsigned int request;
         unsigned int response;
-        unsigned long status = ot.setBoilerStatus(enableCentralHeating, enableHotWater, enableCooling);
-      	OpenThermResponseStatus responseStatus = ot.getLastResponseStatus();
+        unsigned long status = ot->setBoilerStatus(enableCentralHeating, enableHotWater, enableCooling);
+      	OpenThermResponseStatus responseStatus = ot->getLastResponseStatus();
       	if (responseStatus == OpenThermResponseStatus::SUCCESS) {
-          if (ot.isFault(status)){
+          if (ot->isFault(status)){
             // запрашиваем у котла расширенный статус ошибки
-            request = ot.buildRequest(OpenThermRequestType::READ, OpenThermMessageID::ASFflags, 0);
-            response = ot.sendRequest(request) & 0xFFFF;
+            request = ot->buildRequest(OpenThermRequestType::READ, OpenThermMessageID::ASFflags, 0);
+            response = ot->sendRequest(request) & 0xFFFF;
             // если не удалось получить расширенный статус - возвращаем код ошибки 1
             errorCode = (response == 0) ? 1 : response;
           }
 
           // запрашиваем у котла текущую температуру контура отопления
-          request = ot.buildRequest(OpenThermRequestType::READ, OpenThermMessageID::Tboiler, 0);
-          UserVar[event->BaseVarIndex + Plugin_082_values::vTboiler] = ot.getTemperature(ot.sendRequest(request));
+          request = ot->buildRequest(OpenThermRequestType::READ, OpenThermMessageID::Tboiler, 0);
+          UserVar[event->BaseVarIndex + Plugin_082_values::vTboiler] = ot->getTemperature(ot->sendRequest(request));
 
           // устанавливаем в котле заданную пользователем температуру. Смотрим что ответит
-          request = ot.buildRequest(OpenThermRequestType::WRITE, OpenThermMessageID::TSet, ot.temperatureToData(userTemperature));
-          response = ot.sendRequest(request);
-          if (ot.isCentralHeatingEnabled(status)){
-            UserVar[event->BaseVarIndex + Plugin_082_values::vTSet] = ot.getTemperature(response);
+          request = ot->buildRequest(OpenThermRequestType::WRITE, OpenThermMessageID::TSet, ot->temperatureToData(userTemperature));
+          response = ot->sendRequest(request);
+          if (ot->isCentralHeatingEnabled(status)){
+            UserVar[event->BaseVarIndex + Plugin_082_values::vTSet] = ot->getTemperature(response);
             // запрашиваем у котла максимальную установку температуры
-            request = ot.buildRequest(OpenThermRequestType::READ, OpenThermMessageID::MaxTSet, 0);
-            UserVar[event->BaseVarIndex + Plugin_082_values::vMaxTSet] = ot.getTemperature(ot.sendRequest(request));
+            request = ot->buildRequest(OpenThermRequestType::READ, OpenThermMessageID::MaxTSet, 0);
+            UserVar[event->BaseVarIndex + Plugin_082_values::vMaxTSet] = ot->getTemperature(ot->sendRequest(request));
           }
           else {
             // Если отопление отключено
