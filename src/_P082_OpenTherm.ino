@@ -1,8 +1,9 @@
 #ifdef USES_P082
 //#######################################################################################################
-//#################################### Plugin 082: Dummy ################################################
+//#################################### Plugin 082: OpenTherm Device######################################
 //#######################################################################################################
 
+// поддерживается только один плагин и один котел
 #include "OpenTherm.h"
 
 #define PLUGIN_082
@@ -139,9 +140,17 @@ boolean Plugin_082(byte function, struct EventStruct *event, String& string)
       {
         LoadTaskSettings(event->TaskIndex);
         UserVar[event->BaseVarIndex + Plugin_082_values::vTSetUser] = ExtraTaskSettings.TaskDevicePluginConfig[0];
-        OpenTherm otObj(4,14);
+        int rxPin = Settings.TaskDevicePin1[event->TaskIndex];
+        int txPin = Settings.TaskDevicePin2[event->TaskIndex];
+        // поддерживается только один плагин и один котел
+        static OpenTherm otObj(rxPin, txPin);
         ot=&otObj;
         ot->begin(Plugin_082_handleInterrupt);
+        String log = F("OT plugin initialized at pins ");
+        log += rxPin;
+        log +=F(", ");
+        log += txPin;
+        addLog(LOG_LEVEL_INFO,log);
         success = true;
         break;
       }
@@ -150,6 +159,8 @@ boolean Plugin_082(byte function, struct EventStruct *event, String& string)
       {
         if (ot == NULL)
           return false;
+        int rxPin = Settings.TaskDevicePin1[event->TaskIndex];
+        int txPin = Settings.TaskDevicePin2[event->TaskIndex];
 
         int16_t userTemperature = UserVar[event->BaseVarIndex + Plugin_082_values::vTSetUser];
 
@@ -212,6 +223,11 @@ boolean Plugin_082(byte function, struct EventStruct *event, String& string)
           UserVar[event->BaseVarIndex + Plugin_082_values::vMaxTSet] = NAN;
         }
         UserVar[event->BaseVarIndex + Plugin_082_values::vASFflags] = errorCode;
+        log += F(" (rx pin ");
+        log += rxPin;
+        log += F(", tx pin ");
+        log += txPin;
+        log += F(")");
         addLog(LOG_LEVEL_INFO,log);
 
         success = true;
