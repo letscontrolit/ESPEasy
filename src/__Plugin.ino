@@ -1306,6 +1306,9 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
           if (Function == PLUGIN_GET_DEVICEVALUENAMES) {
             ExtraTaskSettings.TaskIndex = event->TaskIndex;
           }
+          if (Function == PLUGIN_EXIT) {
+            clearPluginTaskData(event->TaskIndex);
+          }
           STOP_TIMER_TASK(x,Function);
           delay(0); // SMY: call delay(0) unconditionally
           return retval;

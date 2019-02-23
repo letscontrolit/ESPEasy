@@ -9,9 +9,9 @@
 
    .. code-block:: html
 
-      on DHT11Outside#Temperature>20 do
-       GPIO,2,1
-      endon
+        on DHT11Outside#Temperature>20 do
+         GPIO,2,1
+        endon
 
    "
    "
@@ -21,9 +21,9 @@
 
    .. code-block:: html
 
-      on System#Wake do
-        GPIO,15,1
-      endon
+        on System#Wake do
+          GPIO,15,1
+        endon
 
    "
    "
@@ -217,5 +217,29 @@
 	   on Clock#Time=All,%sunrise% do //will run at sunrise  (%sunset% is also available)
 	    GPIO,2,1
 	   endon
+
+   "
+   "
+   ``GPIO#N``
+   If the command 'Monitor' is used to monitor a given pin you will receive an event for that GPIO as soon as it's state changes. As seen in the example you can always use the square brackets together with the task/value name of ``Plugin#GPIO#Pinstate#N`` to get the state, but to trigger events you need to add the monitor command (preferably at boot).
+   ","
+
+   .. code-block:: html
+
+       on System#Boot do
+        Monitor GPIO,15
+       endon
+
+        on GPIO#15=0 do
+         if [Plugin#GPIO#Pinstate#13]=0
+          // do something
+         endif
+        endon
+
+        on GPIO#15=1 do
+         if [Plugin#GPIO#Pinstate#13]=1
+          // do something
+         endif
+        endon
 
    "

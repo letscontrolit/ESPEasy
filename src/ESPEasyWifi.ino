@@ -64,6 +64,10 @@ void processDisconnect() {
     }
     addLog(LOG_LEVEL_INFO, log);
   }
+  if (Settings.WiFiRestart_connection_lost()) {
+    setWifiMode(WIFI_OFF);
+    delay(100);
+  }
   logConnectionStatus();
 }
 
@@ -115,20 +119,20 @@ void processGotIP() {
   }
 
   #ifdef FEATURE_MDNS
-
-    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String log = F("WIFI : ");
-      if (MDNS.begin(WifiGetHostname().c_str(), WiFi.localIP())) {
-
-        log += F("mDNS started, with name: ");
-        log += WifiGetHostname();
-        log += F(".local");
-      }
-      else{
-        log += F("mDNS failed");
-      }
-      addLog(LOG_LEVEL_INFO, log);
+  addLog(LOG_LEVEL_INFO, F("WIFI : Starting mDNS..."));
+  bool mdns_started = MDNS.begin(WifiGetHostname().c_str());
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    String log = F("WIFI : ");
+    if (mdns_started) {
+      log += F("mDNS started, with name: ");
+      log += WifiGetHostname();
+      log += F(".local");
     }
+    else{
+      log += F("mDNS failed");
+    }
+    addLog(LOG_LEVEL_INFO, log);
+  }
   #endif
 
   // First try to get the time, since that may be used in logs
@@ -148,6 +152,11 @@ void processGotIP() {
 //  WiFi.scanDelete();
   wifiStatus = ESPEASY_WIFI_SERVICES_INITIALIZED;
   setWebserverRunning(true);
+  #ifdef FEATURE_MDNS
+  if (mdns_started) {
+    MDNS.addService("http", "tcp", 80);
+  }
+  #endif
   wifi_connect_attempt = 0;
   if (wifiSetup) {
     // Wifi setup was active, Apparently these settings work.
@@ -253,7 +262,13 @@ void resetWiFi() {
   addLog(LOG_LEVEL_INFO, F("Reset WiFi."));
   lastDisconnectMoment = millis();
   WifiDisconnect();
-//  setWifiMode(WIFI_OFF);
+  //  setWifiMode(WIFI_OFF);
+
+#ifdef ESP8266
+  // See https://github.com/esp8266/Arduino/issues/5527#issuecomment-460537616
+  WiFi.~ESP8266WiFiClass();
+  WiFi = ESP8266WiFiClass();
+#endif
 }
 
 void connectionCheckHandler()
@@ -582,6 +597,33 @@ bool wifiConnectTimeoutReached() {
   return timeOutReached(last_wifi_connect_attempt_moment + DEFAULT_WIFI_CONNECTION_TIMEOUT + randomOffset_in_sec);
 }
 
+void setConnectionSpeed() {
+  #ifdef ESP8266
+  if (!Settings.ForceWiFi_bg_mode() || wifi_connect_attempt > 10) {
+    WiFi.setPhyMode(WIFI_PHY_MODE_11N);
+  } else {
+    WiFi.setPhyMode(WIFI_PHY_MODE_11G);
+  }
+  #endif
+
+  // Does not (yet) work, so commented out.
+  #ifdef ESP32
+  uint8_t protocol = WIFI_PROTOCOL_11B | WIFI_PROTOCOL_11G; // Default to BG
+  if (!Settings.ForceWiFi_bg_mode() || wifi_connect_attempt > 10) {
+    // Set to use BGN
+    protocol |= WIFI_PROTOCOL_11N;
+  }
+  if (WifiIsSTA(WiFi.getMode())) {
+    esp_wifi_set_protocol(WIFI_IF_STA, protocol);
+  }
+  if (WifiIsAP(WiFi.getMode())) {
+    esp_wifi_set_protocol(WIFI_IF_AP, protocol);
+  }
+  #endif
+
+
+}
+
 void setupStaticIPconfig() {
   setUseStaticIP(useStaticIP());
   if (!useStaticIP()) return;
@@ -641,7 +683,7 @@ bool tryConnectWiFi() {
     addLog(LOG_LEVEL_INFO, log);
   }
   setupStaticIPconfig();
-//  WiFi.setPhyMode(WIFI_PHY_MODE_11G); // SMY: uncomment to force 802.11g for use with MikroTik AP's.
+  setConnectionSpeed();
   last_wifi_connect_attempt_moment = millis();
   switch (wifi_connect_attempt) {
     case 0:

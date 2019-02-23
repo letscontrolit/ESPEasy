@@ -16,6 +16,12 @@
 
     ``IP,<IP address>``"
     "
+    Let","
+    :red:`Internal`","
+    Set the value of n (1..16).
+
+    ``Let,<n>,<value>``"
+    "
     LogEntry","
     :red:`Internal`","
     Add string to log

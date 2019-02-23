@@ -84,6 +84,8 @@
 
 // Define globals before plugin sets to allow a personal override of the selected plugins
 #include "ESPEasy-Globals.h"
+// Must be included after all the defines, since it is using TASKS_MAX
+#include "_Plugin_Helper.h"
 #include "define_plugin_sets.h"
 // Plugin helper needs the defined controller sets, thus include after 'define_plugin_sets.h'
 #include "_CPlugin_Helper.h"
@@ -126,10 +128,11 @@ void setup()
 #endif
   WiFi.persistent(false); // Do not use SDK storage of SSID/WPA parameters
   WiFi.setAutoReconnect(false);
-  setWifiMode(WIFI_OFF);
+  WiFi.mode(WIFI_OFF);
   lowestFreeStack = getFreeStackWatermark();
   lowestRAM = FreeMem();
 
+  resetPluginTaskData();
   Plugin_id.resize(PLUGIN_MAX);
   Task_id_to_Plugin_id.resize(TASKS_MAX);
 
@@ -938,6 +941,11 @@ void backgroundtasks()
     ArduinoOTA.handle();
   }
 
+  #endif
+
+  #ifdef FEATURE_MDNS
+  // Allow MDNS processing
+  MDNS.update();
   #endif
 
   delay(0);

@@ -64,8 +64,8 @@
 .. |P015_status| replace:: :green:`NORMAL`
 .. |P015_github| replace:: P015_TSL2561.ino
 .. _P015_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P015_TSL2561.ino
-.. |P015_usedby| replace:: `.`
-.. |P015_shortinfo| replace:: `.`
+.. |P015_usedby| replace:: :ref:`P015_TSL2561_page`
+.. |P015_shortinfo| replace:: Light measuring unit (visible and IR light)
 .. |P015_maintainer| replace:: `.`
 .. |P015_compileinfo| replace:: `.`
 .. |P015_usedlibraries| replace:: `.`

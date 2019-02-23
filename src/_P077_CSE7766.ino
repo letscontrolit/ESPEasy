@@ -33,7 +33,7 @@
    unsigned long energy_current_calibration = HLW_IREF_PULSE;
 */
 
-struct P077_data_struct {
+struct P077_data_struct : public PluginTaskData_base {
 
   bool processCseReceived(struct EventStruct *event) {
     uint8_t header = serial_in_buffer[0];
@@ -172,7 +172,7 @@ struct P077_data_struct {
   uint8_t checksum = 0, adjustment = 0;
 };
 
-P077_data_struct *P077_data = nullptr;
+
 
 boolean Plugin_077(byte function, struct EventStruct *event, String &string) {
   boolean success = false;
@@ -236,19 +236,13 @@ boolean Plugin_077(byte function, struct EventStruct *event, String &string) {
   }
 
   case PLUGIN_EXIT: {
-    if (P077_data) {
-      delete P077_data;
-      P077_data = nullptr;
-    }
+    clearPluginTaskData(event->TaskIndex);
     success = true;
     break;
   }
 
   case PLUGIN_INIT: {
-    if (P077_data) {
-      delete P077_data;
-    }
-    P077_data = new P077_data_struct();
+    initPluginTaskData(event->TaskIndex, new P077_data_struct());
     if (PCONFIG(0) == 0) PCONFIG(0) = HLW_UREF_PULSE;
     if (PCONFIG(1) == 0) PCONFIG(1) = HLW_IREF_PULSE;
     if (PCONFIG(2) == 0) PCONFIG(2) = HLW_PREF_PULSE;
@@ -303,7 +297,8 @@ boolean Plugin_077(byte function, struct EventStruct *event, String &string) {
   }
 
   case PLUGIN_SERIAL_IN: {
-    if (P077_data) {
+    P077_data_struct* P077_data = static_cast<P077_data_struct*>(getPluginTaskData(event->TaskIndex));
+    if (nullptr != P077_data) {
       success = true;
       /* ONLINE CHECKSUMMING by Bartłomiej Zimoń */
       if (P077_data->processSerialData()) {
@@ -380,8 +375,10 @@ boolean Plugin_077(byte function, struct EventStruct *event, String &string) {
 }
 
 bool CseReceived(struct EventStruct *event) {
-  if (!P077_data)
+  P077_data_struct* P077_data = static_cast<P077_data_struct*>(getPluginTaskData(event->TaskIndex));
+  if (nullptr == P077_data) {
     return false;
+  }
   if (!P077_data->processCseReceived(event)) {
     addLog(LOG_LEVEL_DEBUG, F("CSE: Abnormal hardware"));
     return false;
