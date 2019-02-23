@@ -1,48 +1,47 @@
 #ifdef USES_P082
 //#######################################################################################################
-//#################################### Plugin 082: OpenTherm Device######################################
+//#################################### Plugin 082: OpenTherm Device #####################################
 //#######################################################################################################
 
-// поддерживается только один плагин и один котел
+// only one boiler device is supported now
 #include "OpenTherm.h"
 
 #define PLUGIN_082
 #define PLUGIN_ID_082         82
 #define PLUGIN_NAME_082       "Generic - OpenTherm boiler device"
 
-// (RW) заданная пользователем температура. Хоть 100500 градусов
+// (RW) any user specified temperature value. Even 100500 degrees :)
+// can be specified via GUI or calling TaskValueSet command
 #define PLUGIN_VALUENAME1_082 "TSetUser"
 
-// (RO) выставленая котлом температура.
-// Например, котел Bosch GAS 6000 выставляет:
-//    0 если TSetUser < 40
-//    TSetUser если TSetUser <= MaxTSet
-//    MaxTSet если TSetUser > MaxTSet
-//    (для других котлов возможно другая логика)
-// Если в статусе отопление отключено - возвращаем 0.
+// (RO) boiler accepted temperature.
+// Tested Bosch GAS 6000 boiler will accept:
+//    0 if TSetUser < 40
+//    TSetUser if TSetUser <= MaxTSet
+//    MaxTSet if TSetUser > MaxTSet
+//    (this logic is depend on boiler model)
+// Also will return 0 if heating (CH) is disabled
 #define PLUGIN_VALUENAME2_082 "TSet"
 
-// (RO) ограничение максимальной температуры регулирования.
-// Задается на экране котла.
-// Если замкнуть контакты термостата - котел будет поддерживать это значение
-// Если в статусе отопление отключено - возвращаем 0.
+// (RO) maximum boiler temperature we can set.
+// This value is specified via hardware control panel on boiler's front.
+// This value will be used by boiler in the case of short-circuiting OpenTherm wires.
+// Also will return 0 if heating (CH) is disabled
 #define PLUGIN_VALUENAME3_082 "MaxTSet"
 
-// температура подачи (на выходе из контура отопления)
+// boiler measured temperature of heating (CH) circuit
 #define PLUGIN_VALUENAME4_082 "Tboiler"
 
-// fault flags - запрашиваем тоько если fault в статусе
-// Значения ASFflags:
-// 0 - нет ошибки
-// -1 - timeout
-// -2 - неверный ответ от котла
-// -3 - ошибка инициализации протокола
-// 1 - ошибка. Код ошибки запросить не удалось
-// другое значение - код ошибки, возвращенный котлом на запрос ASFflags (ID 5)
+// fault flags:
+// 0 - no error
+// -1 - timeout comminicating with boiler device
+// -2 - wrong boiler reply
+// -3 - OpenTherm protocol initialization error
+// 1 - some error. Request of error code was unsuccessful
+// another value - boiler fault flags returned by OpenTherm ASFflags request (ID 5)
 #define PLUGIN_VALUENAME5_082 "ASFflags"
 
-#define P82_Nlines 1 //количество форм для ввода данных пользователем (сейчас только TSet)
-#define P82_Nchars 3 //количество символов web-формы для ввода значения пользователем
+#define P82_Nchars 3 // temperature input webform digits count
 
 enum  Plugin_082_values{
   vTSetUser,
@@ -111,7 +110,7 @@ boolean Plugin_082(byte function, struct EventStruct *event, String& string)
         LoadTaskSettings(event->TaskIndex);
         String argName = F("p082_template");
         int16_t webFormValue = ExtraTaskSettings.TaskDevicePluginConfig[0];
-        addFormTextBox(String(F("Default TSetUser")), argName, String(webFormValue), P82_Nchars);
+        addFormTextBox(String(F("TSetUser")), argName, String(webFormValue), P82_Nchars);
         success = true;
         break;
       }
@@ -142,7 +141,7 @@ boolean Plugin_082(byte function, struct EventStruct *event, String& string)
         UserVar[event->BaseVarIndex + Plugin_082_values::vTSetUser] = ExtraTaskSettings.TaskDevicePluginConfig[0];
         int rxPin = Settings.TaskDevicePin1[event->TaskIndex];
         int txPin = Settings.TaskDevicePin2[event->TaskIndex];
-        // поддерживается только один плагин и один котел
+        // only one boiler is supported!
         static OpenTherm otObj(rxPin, txPin);
         ot=&otObj;
         ot->begin(Plugin_082_handleInterrupt);
@@ -164,7 +163,7 @@ boolean Plugin_082(byte function, struct EventStruct *event, String& string)
 
         int16_t userTemperature = UserVar[event->BaseVarIndex + Plugin_082_values::vTSetUser];
 
-        // обогрев включен если заданная пользователем температура != 0
+        // enable heating if userTemperature != 0
         bool enableCentralHeating = userTemperature;
       	bool enableHotWater = true;
       	bool enableCooling = false;
@@ -177,35 +176,35 @@ boolean Plugin_082(byte function, struct EventStruct *event, String& string)
       	OpenThermResponseStatus responseStatus = ot->getLastResponseStatus();
       	if (responseStatus == OpenThermResponseStatus::SUCCESS) {
           if (ot->isFault(status)){
-            // запрашиваем у котла расширенный статус ошибки
+            // request boiler for fault flags
             request = ot->buildRequest(OpenThermRequestType::READ, OpenThermMessageID::ASFflags, 0);
             response = ot->sendRequest(request) & 0xFFFF;
-            // если не удалось получить расширенный статус - возвращаем код ошибки 1
+            // request boiler for fault flags was unsuccessful - returning error 1
             errorCode = (response == 0) ? 1 : response;
           }
 
-          // запрашиваем у котла текущую температуру контура отопления
+          // request boiler for current heating (CH) temperature
           request = ot->buildRequest(OpenThermRequestType::READ, OpenThermMessageID::Tboiler, 0);
           UserVar[event->BaseVarIndex + Plugin_082_values::vTboiler] = ot->getTemperature(ot->sendRequest(request));
 
-          // устанавливаем в котле заданную пользователем температуру. Смотрим что ответит
+          // set userTemperature for boiler. Analyzing reply.
           request = ot->buildRequest(OpenThermRequestType::WRITE, OpenThermMessageID::TSet, ot->temperatureToData(userTemperature));
           response = ot->sendRequest(request);
           if (ot->isCentralHeatingEnabled(status)){
             UserVar[event->BaseVarIndex + Plugin_082_values::vTSet] = ot->getTemperature(response);
-            // запрашиваем у котла максимальную установку температуры
+            // request boiler for MaxTSet
             request = ot->buildRequest(OpenThermRequestType::READ, OpenThermMessageID::MaxTSet, 0);
             UserVar[event->BaseVarIndex + Plugin_082_values::vMaxTSet] = ot->getTemperature(ot->sendRequest(request));
           }
           else {
-            // Если отопление отключено
+            // heating (CH) is disabled
             UserVar[event->BaseVarIndex + Plugin_082_values::vTSet] = 0;
             UserVar[event->BaseVarIndex + Plugin_082_values::vMaxTSet] = 0;
           }
           log += F("OT device polling ok");
       	}
         else {
-          // ошибка обмена данными с котлом
+          // some communication errors
         	if (responseStatus == OpenThermResponseStatus::NONE) {
         		log += F("OT Error: OpenTherm is not initialized");
             errorCode = -3;
@@ -229,6 +228,16 @@ boolean Plugin_082(byte function, struct EventStruct *event, String& string)
         log += txPin;
         log += F(")");
         addLog(LOG_LEVEL_INFO,log);
+
+        // check if userTemperature was changed or not
+        LoadTaskSettings(event->TaskIndex);
+        int16_t savedUserTemperature = ExtraTaskSettings.TaskDevicePluginConfig[0];
+
+        if (savedUserTemperature != userTemperature){
+          addLog(LOG_LEVEL_INFO,F("OT userTemperature has been changed. Commiting new value."));
+          ExtraTaskSettings.TaskDevicePluginConfig[0] = userTemperature;
+          SaveTaskSettings(event->TaskIndex);
+        }
 
         success = true;
         break;

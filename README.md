@@ -4,6 +4,13 @@
 
 For ways to *support* us, see [this announcement on the forum](https://www.letscontrolit.com/forum/viewtopic.php?f=14&t=5787), or have a look at the [Patreon](https://www.patreon.com/GrovkillenTDer), [Ko-Fi](https://ko-fi.com/grovkillentder) or [PayPal](https://www.paypal.me/espeasy) links above.
 
+# In this fork of ESPEASY (see "some-my" branch):
+* improved dummy plugin with keeping values permanently, even on device reboot
+* Added OpenTherm plugin connecting ESP8266 to OpenTherm boiler device.
+(now testing with OT hardware adapter http://ihormelnyk.com/opentherm_adapter and BOSCH Gas 6000 boiler)
+
+# Original ESPEasy description follows...
+
 # ESPEasy (development branch)
 
 
