@@ -123,6 +123,7 @@ struct P049_data_struct : public PluginTaskData_base {
     }
     linesHandled = 0;
     checksumFailed = 0;
+    ++sensorResets;
 
     // Default of the sensor is to run ABC
     ABC_Disable = false;
@@ -259,6 +260,7 @@ struct P049_data_struct : public PluginTaskData_base {
 
   uint32_t linesHandled = 0;
   uint32_t checksumFailed = 0;
+  uint32_t sensorResets = 0;
 
   ESPeasySerial *easySerial = nullptr;
   byte mhzResp[9];    // 9 byte response buffer
@@ -403,23 +405,8 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
       {
-        const int16_t serial_rx = CONFIG_PIN1;
-        const int16_t serial_tx = CONFIG_PIN2;
-
         initPluginTaskData(event->TaskIndex, new P049_data_struct());
-        P049_data_struct *P049_data =
-            static_cast<P049_data_struct *>(getPluginTaskData(event->TaskIndex));
-        if (nullptr == P049_data) {
-          return success;
-        }
-        if (P049_data->init(serial_rx, serial_tx, PCONFIG(0) == ABC_disabled)) {
-          success = true;
-          addLog(LOG_LEVEL_INFO, F("MHZ19: Init OK "));
-
-          //delay first read, because hardware needs to initialize on cold boot
-          //otherwise we get a weird value or read error
-          schedule_task_device_timer(event->TaskIndex, millis() + 15000);
-        }
+        success = P049_performInit(event);
         break;
       }
 
@@ -571,16 +558,36 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
 
         // log verbosely anything else that the sensor reports
         } else {
-
             String log = F("MHZ19: Unknown response:");
             log += P049_data->getBufferHexDump();
             addLog(LOG_LEVEL_INFO, log);
+            P049_performInit(event);
             success = false;
             break;
 
         }
         break;
       }
+  }
+  return success;
+}
+
+bool P049_performInit(struct EventStruct *event) {
+  bool success = false;
+  const int16_t serial_rx = CONFIG_PIN1;
+  const int16_t serial_tx = CONFIG_PIN2;
+  P049_data_struct *P049_data =
+      static_cast<P049_data_struct *>(getPluginTaskData(event->TaskIndex));
+  if (nullptr == P049_data) {
+    return success;
+  }
+  if (P049_data->init(serial_rx, serial_tx, PCONFIG(0) == ABC_disabled)) {
+    success = true;
+    addLog(LOG_LEVEL_INFO, F("MHZ19: Init OK "));
+
+    //delay first read, because hardware needs to initialize on cold boot
+    //otherwise we get a weird value or read error
+    schedule_task_device_timer(event->TaskIndex, millis() + 15000);
   }
   return success;
 }
@@ -592,11 +599,13 @@ void P049_html_show_stats(struct EventStruct *event) {
     return;
   }
 
-  addRowLabel(F("Checksum (pass/fail)"));
+  addRowLabel(F("Checksum (pass/fail/reset)"));
   String chksumStats;
   chksumStats = P049_data->linesHandled;
   chksumStats += '/';
   chksumStats += P049_data->checksumFailed;
+  chksumStats += '/';
+  chksumStats += P049_data->sensorResets;
   addHtml(chksumStats);
   addRowLabel(F("Detected"));
   switch (P049_data->getDetectedDevice()) {
