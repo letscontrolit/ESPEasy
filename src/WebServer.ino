@@ -492,59 +492,59 @@ void WebServerInit()
 {
   // Prepare webserver pages
   WebServer.on("/", handle_root);
-  WebServer.on("/advanced", handle_advanced);
-  WebServer.on("/config", handle_config);
-  WebServer.on("/control", handle_control);
-  WebServer.on("/controllers", handle_controllers);
-  WebServer.on("/devices", handle_devices);
-  WebServer.on("/download", handle_download);
-  WebServer.on("/factoryreset", handle_factoryreset);
-  WebServer.on("/favicon.ico", handle_favicon);
-  WebServer.on("/filelist", handle_filelist);
-  WebServer.on("/hardware", handle_hardware);
-  WebServer.on("/i2cscanner", handle_i2cscanner);
-  WebServer.on("/json", handle_json); // Also part of WEBSERVER_NEW_UI
-  WebServer.on("/log", handle_log);
-  WebServer.on("/login", handle_login);
-  WebServer.on("/logjson", handle_log_JSON); // Also part of WEBSERVER_NEW_UI
+  WebServer.on(F("/advanced"), handle_advanced);
+  WebServer.on(F("/config"), handle_config);
+  WebServer.on(F("/control"), handle_control);
+  WebServer.on(F("/controllers"), handle_controllers);
+  WebServer.on(F("/devices"), handle_devices);
+  WebServer.on(F("/download"), handle_download);
+  WebServer.on(F("/factoryreset"), handle_factoryreset);
+  WebServer.on(F("/favicon.ico"), handle_favicon);
+  WebServer.on(F("/filelist"), handle_filelist);
+  WebServer.on(F("/hardware"), handle_hardware);
+  WebServer.on(F("/i2cscanner"), handle_i2cscanner);
+  WebServer.on(F("/json"), handle_json); // Also part of WEBSERVER_NEW_UI
+  WebServer.on(F("/log"), handle_log);
+  WebServer.on(F("/login"), handle_login);
+  WebServer.on(F("/logjson"), handle_log_JSON); // Also part of WEBSERVER_NEW_UI
 #ifndef NOTIFIER_SET_NONE
-  WebServer.on("/notifications", handle_notifications);
+  WebServer.on(F("/notifications"), handle_notifications);
 #endif
-  WebServer.on("/pinstates", handle_pinstates);
-  WebServer.on("/rules", handle_rules_new);
-  WebServer.on("/rules/", Goto_Rules_Root);
-  WebServer.on("/rules/add", []()
+  WebServer.on(F("/pinstates"), handle_pinstates);
+  WebServer.on(F("/rules"), handle_rules_new);
+  WebServer.on(F("/rules/"), Goto_Rules_Root);
+  WebServer.on(F("/rules/add"), []()
   {
     handle_rules_edit(WebServer.uri(),true);
   });
-  WebServer.on("/rules/backup", handle_rules_backup);
-  WebServer.on("/rules/delete", handle_rules_delete);
+  WebServer.on(F("/rules/backup"), handle_rules_backup);
+  WebServer.on(F("/rules/delete"), handle_rules_delete);
 #ifdef FEATURE_SD
-  WebServer.on("/SDfilelist", handle_SDfilelist);
+  WebServer.on(F("/SDfilelist"), handle_SDfilelist);
 #endif
-  WebServer.on("/setup", handle_setup);
-  WebServer.on("/sysinfo", handle_sysinfo);
+  WebServer.on(F("/setup"), handle_setup);
+  WebServer.on(F("/sysinfo"), handle_sysinfo);
 #ifdef WEBSERVER_SYSVARS
-  WebServer.on("/sysvars", handle_sysvars);
+  WebServer.on(F("/sysvars"), handle_sysvars);
 #endif // WEBSERVER_SYSVARS
 #ifdef WEBSERVER_TIMINGSTATS
-  WebServer.on("/timingstats", handle_timingstats);
+  WebServer.on(F("/timingstats"), handle_timingstats);
 #endif // WEBSERVER_TIMINGSTATS
-  WebServer.on("/tools", handle_tools);
-  WebServer.on("/upload", HTTP_GET, handle_upload);
-  WebServer.on("/upload", HTTP_POST, handle_upload_post, handleFileUpload);
-  WebServer.on("/wifiscanner", handle_wifiscanner);
+  WebServer.on(F("/tools"), handle_tools);
+  WebServer.on(F("/upload"), HTTP_GET, handle_upload);
+  WebServer.on(F("/upload"), HTTP_POST, handle_upload_post, handleFileUpload);
+  WebServer.on(F("/wifiscanner"), handle_wifiscanner);
 
 #ifdef WEBSERVER_NEW_UI
-  WebServer.on("/factoryreset_json", handle_factoryreset_json);
-  WebServer.on("/filelist_json", handle_filelist_json);
-  WebServer.on("/i2cscanner_json", handle_i2cscanner_json);
-  WebServer.on("/node_list_json", handle_nodes_list_json);
-  WebServer.on("/pinstates_json", handle_pinstates_json);
-  WebServer.on("/sysinfo_json", handle_sysinfo_json);
-  WebServer.on("/timingstats_json", handle_timingstats_json);
-  WebServer.on("/upload_json", HTTP_POST, handle_upload_json, handleFileUpload);
-  WebServer.on("/wifiscanner_json", handle_wifiscanner_json);
+  WebServer.on(F("/factoryreset_json"), handle_factoryreset_json);
+  WebServer.on(F("/filelist_json"), handle_filelist_json);
+  WebServer.on(F("/i2cscanner_json"), handle_i2cscanner_json);
+  WebServer.on(F("/node_list_json"), handle_nodes_list_json);
+  WebServer.on(F("/pinstates_json"), handle_pinstates_json);
+  WebServer.on(F("/sysinfo_json"), handle_sysinfo_json);
+  WebServer.on(F("/timingstats_json"), handle_timingstats_json);
+  WebServer.on(F("/upload_json"), HTTP_POST, handle_upload_json, handleFileUpload);
+  WebServer.on(F("/wifiscanner_json"), handle_wifiscanner_json);
 #endif // WEBSERVER_NEW_UI
 
   WebServer.onNotFound(handleNotFound);
