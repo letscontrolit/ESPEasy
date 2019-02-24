@@ -259,5 +259,5 @@ This allows to:
 
 Since AES has a block size of 16 bytes (128 bit), the size of the data block is defined as a block of 16 bytes.
 This allows up-to 1 MB of messages. (2^16 * 2^4 = 2^20)
-An UDP datagram sent over IPv4 cannot exceed 65,507 bytes (65,535 − 8 byte UDP header − 20 byte IP header).
+An UDP datagram sent over IPv4 cannot exceed 65,507 bytes (65,535 - 8 byte UDP header - 20 byte IP header).
 In IPv6 jumbograms it is possible to have UDP packets of size greater than 65,535 bytes.
