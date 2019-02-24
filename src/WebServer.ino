@@ -491,6 +491,7 @@ void addDisabled() {
 void WebServerInit()
 {
   // Prepare webserver pages
+  WebServer.on("/", handle_root);
   WebServer.on("/advanced", handle_advanced);
   WebServer.on("/config", handle_config);
   WebServer.on("/control", handle_control);
