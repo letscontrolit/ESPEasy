@@ -212,6 +212,8 @@ public:
 #endif
   bool listen();
 
+  String getLogString() const;
+
 
   using Print::write;
 
