@@ -1163,6 +1163,7 @@ void handle_config() {
 
 
   String name = WebServer.arg(F("name"));
+  name.trim();
   //String password = WebServer.arg(F("password"));
   String iprangelow = WebServer.arg(F("iprangelow"));
   String iprangehigh = WebServer.arg(F("iprangehigh"));
