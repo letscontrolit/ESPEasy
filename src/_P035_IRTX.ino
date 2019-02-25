@@ -215,12 +215,18 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
                 for (unsigned int i = 0, total = IrRaw.length(), gotRep = 0, rep = 0; i < total;) {
                    char c = IrRaw[i++];
                    if (c == '*') {
-                       if (i+2 >= total || idx + (rep = from_32hex(IrRaw[i++])) * 2 > sizeof(buf))
-                           return addErrorTrue("Invalid RAW2 B32 encoding!");
+                       if (i+2 >= total || idx + (rep = from_32hex(IrRaw[i++])) * 2 > sizeof(buf)){
+                         delete[] buf;
+                         buf = nullptr;
+                         return addErrorTrue("Invalid RAW2 B32 encoding!");
+                       }
                        gotRep = 2;
                    } else {
-                       if ((c == '^' && i+1 >= total) || idx == sizeof(buf))
-                           return addErrorTrue("Invalid RAW2 B32 encoding!");
+                       if ((c == '^' && i+1 >= total) || idx == sizeof(buf)){
+                         delete[] buf;
+                         buf = nullptr;
+                         return addErrorTrue("Invalid RAW2 B32 encoding!");
+                       }
 
                        uint16_t irLen = (idx & 1)? IrBLen : IrPLen;
                        if (c == '^') {
