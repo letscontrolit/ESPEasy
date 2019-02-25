@@ -218,14 +218,14 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
                        if (i+2 >= total || idx + (rep = from_32hex(IrRaw[i++])) * 2 > sizeof(buf)){
                          delete[] buf;
                          buf = nullptr;
-                         return addErrorTrue(F("Invalid RAW2 B32 encoding!"));
+                         return addErrorTrue("Invalid RAW2 B32 encoding!");
                        }
                        gotRep = 2;
                    } else {
                        if ((c == '^' && i+1 >= total) || idx == sizeof(buf)){
                          delete[] buf;
                          buf = nullptr;
-                         return addErrorTrue(F("Invalid RAW2 B32 encoding!"));
+                         return addErrorTrue("Invalid RAW2 B32 encoding!");
                        }
 
                        uint16_t irLen = (idx & 1)? IrBLen : IrPLen;
