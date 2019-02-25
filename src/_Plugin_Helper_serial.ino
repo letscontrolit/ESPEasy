@@ -37,6 +37,9 @@ void serialHelper_webformLoad(struct EventStruct *event) {
   serialHelper_webformLoad(event, true);
 }
 
+// These helper functions were made to create a generic interface to setup serial port config.
+// See issue #2343 and Pull request https://github.com/letscontrolit/ESPEasy/pull/2352
+// For now P020 and P044 have been reverted to make them work again.
 void serialHelper_webformLoad(struct EventStruct *event, bool allowSoftwareSerial) {
   html_add_script(F("function serialPortChanged(elem){ var style = elem.value == 0 ? '' : 'none'; document.getElementById('tr_taskdevicepin1').style.display = style; document.getElementById('tr_taskdevicepin2').style.display = style; }"), false);
 
