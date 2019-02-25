@@ -1,4 +1,21 @@
 -------------------------------------------------
+Changes in release mega-20190225 (since mega-20190219)
+-------------------------------------------------
+
+Release date: Mon Feb 25 04:00:17 CET 2019
+
+TD-er (8):
+      [Nextion] Cleanup of plugin after moving to serial wrapper
+      [Minimal OTA] Remove JSON handles for new UI from minimal build
+      [Minimal OTA] Handling '/' was lost in last fix.
+      [HLW8012] Fix crash when saving settings (#2251)
+      [MH-Z19] Reset/re-init sensor when unknown response received
+      [Sphinx docs] Some small doc build fixes
+      [Build] Use PlatformIO Espressif8266@2.0.1 (core 2.5.0)
+      [Minimal OTA] F() macros were lost in last fix.
+
+
+-------------------------------------------------
 Changes in release mega-20190219 (since mega-20190218)
 -------------------------------------------------
 
