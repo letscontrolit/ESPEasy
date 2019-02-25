@@ -975,11 +975,14 @@ SettingsStruct* SettingsStruct_ptr = new SettingsStruct;
 SettingsStruct& Settings = *SettingsStruct_ptr;
 */
 
-String ReportOffsetErrorInStruct(const String& structname) {
+String ReportOffsetErrorInStruct(const String& structname, size_t offset) {
   String error;
-  error.reserve(48);
+  error.reserve(48 + structname.length());
   error = F("Error: Incorrect offset in struct: ");
   error += structname;
+  error += '(';
+  error += String(offset);
+  error += ')';
   return error;
 }
 
@@ -989,9 +992,12 @@ String ReportOffsetErrorInStruct(const String& structname) {
 \*********************************************************************************************/
 bool SettingsCheck(String& error) {
   error = "";
-  if (offsetof(SettingsStruct, ResetFactoryDefaultPreference) != 1224) {
-    error = ReportOffsetErrorInStruct(F("SettingsStruct"));
+#ifdef esp8266
+  size_t offset = offsetof(SettingsStruct, ResetFactoryDefaultPreference);
+  if (offset != 1224) {
+    error = ReportOffsetErrorInStruct(F("SettingsStruct"), offset);
   }
+#endif
   if (!Settings.networkSettingsEmpty()) {
     if (Settings.IP[0] == 0 || Settings.Gateway[0] == 0 || Settings.Subnet[0] == 0 || Settings.DNS[0] == 0) {
       error += F("Error: Either fill all IP settings fields or leave all empty");
