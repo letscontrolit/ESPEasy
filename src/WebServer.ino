@@ -1983,8 +1983,7 @@ void setTaskDevice_to_TaskIndex(byte taskdevicenumber, byte taskIndex) {
     PluginCall(PLUGIN_GET_DEVICEVALUENAMES, &TempEvent, dummy); //the plugin should populate ExtraTaskSettings with its default values.
   } else {
     // New task is empty task, thus save config now.
-    SaveTaskSettings(taskIndex);
-    SaveSettings();
+    taskClear(taskIndex, true); // clear settings, and save
   }
 }
 
@@ -2173,12 +2172,15 @@ void handle_devices() {
             }
         }
     }
-    addHtmlError(SaveTaskSettings(taskIndex));
-
-    addHtmlError(SaveSettings());
-
-    if (taskdevicenumber != 0 && Settings.TaskDeviceEnabled[taskIndex])
-      PluginCall(PLUGIN_INIT, &TempEvent, dummyString);
+    if (taskdevicenumber != 0) {
+      // Task index has a task device number, so it makes sense to save.
+      // N.B. When calling delete, the settings were already saved.
+      addHtmlError(SaveTaskSettings(taskIndex));
+      addHtmlError(SaveSettings());
+      if (Settings.TaskDeviceEnabled[taskIndex]) {
+        PluginCall(PLUGIN_INIT, &TempEvent, dummyString);
+      }
+    }
   }
 
   // show all tasks as table
