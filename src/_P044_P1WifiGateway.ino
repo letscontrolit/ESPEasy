@@ -192,6 +192,7 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
           {
             if (P1GatewayClient) P1GatewayClient.stop();
             P1GatewayClient = P1GatewayServer->available();
+            P1GatewayClient.setTimeout(CONTROLLER_CLIENTTIMEOUT_DFLT);
             addLog(LOG_LEVEL_ERROR, F("P1   : Client connected!"));
           }
 

@@ -564,6 +564,7 @@ void WebServerInit()
   {
     WebServer.on(F("/ssdp.xml"), HTTP_GET, []() {
       WiFiClient client(WebServer.client());
+      client.setTimeout(CONTROLLER_CLIENTTIMEOUT_DFLT);
       SSDP_schema(client);
     });
     SSDP_begin();
