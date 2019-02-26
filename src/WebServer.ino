@@ -6690,6 +6690,14 @@ void handle_sysinfo() {
   TXBuffer += F(" - ");
   TXBuffer += lowestFreeStackfunction;
   TXBuffer += ')';
+#ifdef CORE_2_5_0
+  addRowLabel(F("Heap Max Free Block"));
+  TXBuffer += ESP.getMaxFreeBlockSize();
+  addRowLabel(F("Heap Fragmentation"));
+  TXBuffer += ESP.getHeapFragmentation();
+  TXBuffer += '%';
+#endif
+
 
   addRowLabel(F("Boot"));
   TXBuffer += getLastBootCauseString();
