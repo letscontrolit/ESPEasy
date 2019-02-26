@@ -123,6 +123,19 @@ To create/register a plugin, you have to :
 #endif
 
 
+#ifndef BUILD_MINIMAL_OTA
+  #ifndef WEBSERVER_TIMINGSTATS
+    #define WEBSERVER_TIMINGSTATS
+  #endif
+  #ifndef WEBSERVER_SYSVARS
+    #define WEBSERVER_SYSVARS
+  #endif
+  #ifndef WEBSERVER_NEW_UI
+    #define WEBSERVER_NEW_UI
+  #endif
+#endif
+
+
 
 /******************************************************************************\
  * IR plugins *****************************************************************

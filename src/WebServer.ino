@@ -488,119 +488,29 @@ void addDisabled() {
   TXBuffer += F(" disabled");
 }
 
-#ifdef ARDUINO_ESP8266_RELEASE_2_3_0
 void WebServerInit()
 {
   // Prepare webserver pages
   WebServer.on("/", handle_root);
-  WebServer.on("/config", handle_config);
-  WebServer.on("/controllers", handle_controllers);
-  WebServer.on("/hardware", handle_hardware);
-  WebServer.on("/devices", handle_devices);
-#ifndef NOTIFIER_SET_NONE
-  WebServer.on("/notifications", handle_notifications);
-#endif
-  WebServer.on("/log", handle_log);
-  WebServer.on("/logjson", handle_log_JSON);
-  WebServer.on("/node_list_json", handle_nodes_list);
-  WebServer.on("/tools", handle_tools);
-  WebServer.on("/i2cscanner", handle_i2cscanner);
-  WebServer.on("/i2cscanner_json", handle_i2cscanner_json);
-  WebServer.on("/wifiscanner", handle_wifiscanner);
-  WebServer.on("/wifiscanner_json", handle_wifiscanner_json);
-  WebServer.on("/login", handle_login);
-  WebServer.on("/control", handle_control);
-  WebServer.on("/download", handle_download);
-  WebServer.on("/upload", HTTP_GET, handle_upload);
-  WebServer.on("/upload", HTTP_POST, handle_upload_post, handleFileUpload);
-  WebServer.on("/upload_json", HTTP_POST, handle_upload_json, handleFileUpload);
-  WebServer.onNotFound(handleNotFound);
-  WebServer.on("/filelist", handle_filelist);
-  WebServer.on("/filelist_json", handle_filelist_json);
-#ifdef FEATURE_SD
-  WebServer.on("/SDfilelist", handle_SDfilelist);
-#endif
-  WebServer.on("/advanced", handle_advanced);
-  WebServer.on("/setup", handle_setup);
-  WebServer.on("/json", handle_json);
-  WebServer.on("/timingstats_json", handle_timingstats_json);
-  WebServer.on("/timingstats", handle_timingstats);
-  WebServer.on("/rules", handle_rules_new);
-  WebServer.on("/rules/", Goto_Rules_Root);
-  WebServer.on("/rules/add", []()
-  {
-    handle_rules_edit(WebServer.uri(),true);
-  });
-  WebServer.on("/rules/backup", handle_rules_backup);
-  WebServer.on("/rules/delete", handle_rules_delete);
-  WebServer.on("/sysinfo", handle_sysinfo);
-  WebServer.on("/sysinfo_json", handle_sysinfo_json);
-  WebServer.on("/pinstates", handle_pinstates);
-  WebServer.on("/pinstates_json", handle_pinstates_json);
-  WebServer.on("/sysvars", handle_sysvars);
-  WebServer.on("/factoryreset", handle_factoryreset);
-  WebServer.on("/factoryreset_json", handle_factoryreset_json);
-  WebServer.on("/favicon.ico", handle_favicon);
-
-  #if defined(ESP8266)
-  {
-    uint32_t maxSketchSize;
-    bool use2step;
-    if (OTA_possible(maxSketchSize, use2step)) {
-      httpUpdater.setup(&WebServer);
-    }
-  }
-  #endif
-
-  #if defined(ESP8266)
-  if (Settings.UseSSDP)
-  {
-    WebServer.on("/ssdp.xml", HTTP_GET, []() {
-      WiFiClient client(WebServer.client());
-      SSDP_schema(client);
-    });
-    SSDP_begin();
-  }
-  #endif
-}
-
-#else
-void WebServerInit()
-{
-  // Prepare webserver pages
-  WebServer.on("/", handle_root);
+  WebServer.on(F("/advanced"), handle_advanced);
   WebServer.on(F("/config"), handle_config);
+  WebServer.on(F("/control"), handle_control);
   WebServer.on(F("/controllers"), handle_controllers);
-  WebServer.on(F("/hardware"), handle_hardware);
   WebServer.on(F("/devices"), handle_devices);
+  WebServer.on(F("/download"), handle_download);
+  WebServer.on(F("/factoryreset"), handle_factoryreset);
+  WebServer.on(F("/favicon.ico"), handle_favicon);
+  WebServer.on(F("/filelist"), handle_filelist);
+  WebServer.on(F("/hardware"), handle_hardware);
+  WebServer.on(F("/i2cscanner"), handle_i2cscanner);
+  WebServer.on(F("/json"), handle_json); // Also part of WEBSERVER_NEW_UI
+  WebServer.on(F("/log"), handle_log);
+  WebServer.on(F("/login"), handle_login);
+  WebServer.on(F("/logjson"), handle_log_JSON); // Also part of WEBSERVER_NEW_UI
 #ifndef NOTIFIER_SET_NONE
   WebServer.on(F("/notifications"), handle_notifications);
 #endif
-  WebServer.on(F("/log"), handle_log);
-  WebServer.on(F("/logjson"), handle_log_JSON);
-  WebServer.on(F("/node_list_json"), handle_nodes_list);
-  WebServer.on(F("/tools"), handle_tools);
-  WebServer.on(F("/i2cscanner"), handle_i2cscanner);
-  WebServer.on(F("/i2cscanner_json"), handle_i2cscanner_json);
-  WebServer.on(F("/wifiscanner"), handle_wifiscanner);
-  WebServer.on(F("/wifiscanner_json"), handle_wifiscanner_json);
-  WebServer.on(F("/login"), handle_login);
-  WebServer.on(F("/control"), handle_control);
-  WebServer.on(F("/download"), handle_download);
-  WebServer.on(F("/upload"), HTTP_GET, handle_upload);
-  WebServer.on(F("/upload"), HTTP_POST, handle_upload_post, handleFileUpload);
-  WebServer.on(F("/upload_json"), HTTP_POST, handle_upload_json, handleFileUpload);
-  WebServer.onNotFound(handleNotFound);
-  WebServer.on(F("/filelist"), handle_filelist);
-  WebServer.on(F("/filelist_json"), handle_filelist_json);
-#ifdef FEATURE_SD
-  WebServer.on(F("/SDfilelist"), handle_SDfilelist);
-#endif
-  WebServer.on(F("/advanced"), handle_advanced);
-  WebServer.on(F("/setup"), handle_setup);
-  WebServer.on(F("/json"), handle_json);
-  WebServer.on(F("/timingstats_json"), handle_timingstats_json);
-  WebServer.on(F("/timingstats"), handle_timingstats);
+  WebServer.on(F("/pinstates"), handle_pinstates);
   WebServer.on(F("/rules"), handle_rules_new);
   WebServer.on(F("/rules/"), Goto_Rules_Root);
   WebServer.on(F("/rules/add"), []()
@@ -609,14 +519,35 @@ void WebServerInit()
   });
   WebServer.on(F("/rules/backup"), handle_rules_backup);
   WebServer.on(F("/rules/delete"), handle_rules_delete);
+#ifdef FEATURE_SD
+  WebServer.on(F("/SDfilelist"), handle_SDfilelist);
+#endif
+  WebServer.on(F("/setup"), handle_setup);
   WebServer.on(F("/sysinfo"), handle_sysinfo);
-  WebServer.on(F("/sysinfo_json"), handle_sysinfo_json);
-  WebServer.on(F("/pinstates"), handle_pinstates);
-  WebServer.on(F("/pinstates_json"), handle_pinstates_json);
+#ifdef WEBSERVER_SYSVARS
   WebServer.on(F("/sysvars"), handle_sysvars);
-  WebServer.on(F("/factoryreset"), handle_factoryreset);
+#endif // WEBSERVER_SYSVARS
+#ifdef WEBSERVER_TIMINGSTATS
+  WebServer.on(F("/timingstats"), handle_timingstats);
+#endif // WEBSERVER_TIMINGSTATS
+  WebServer.on(F("/tools"), handle_tools);
+  WebServer.on(F("/upload"), HTTP_GET, handle_upload);
+  WebServer.on(F("/upload"), HTTP_POST, handle_upload_post, handleFileUpload);
+  WebServer.on(F("/wifiscanner"), handle_wifiscanner);
+
+#ifdef WEBSERVER_NEW_UI
   WebServer.on(F("/factoryreset_json"), handle_factoryreset_json);
-  WebServer.on(F("/favicon.ico"), handle_favicon);
+  WebServer.on(F("/filelist_json"), handle_filelist_json);
+  WebServer.on(F("/i2cscanner_json"), handle_i2cscanner_json);
+  WebServer.on(F("/node_list_json"), handle_nodes_list_json);
+  WebServer.on(F("/pinstates_json"), handle_pinstates_json);
+  WebServer.on(F("/sysinfo_json"), handle_sysinfo_json);
+  WebServer.on(F("/timingstats_json"), handle_timingstats_json);
+  WebServer.on(F("/upload_json"), HTTP_POST, handle_upload_json, handleFileUpload);
+  WebServer.on(F("/wifiscanner_json"), handle_wifiscanner_json);
+#endif // WEBSERVER_NEW_UI
+
+  WebServer.onNotFound(handleNotFound);
 
   #if defined(ESP8266)
   {
@@ -639,7 +570,6 @@ void WebServerInit()
   }
   #endif
 }
-#endif // ARDUINO_ESP8266_RELEASE_2_3_0
 
 void setWebserverRunning(bool state) {
   if (webserver_state == state)
@@ -976,7 +906,8 @@ void json_prop(const String& name, const String& value) {
   lastLevel = level;
 }
 
-void handle_nodes_list() {
+#ifdef WEBSERVER_NEW_UI
+void handle_nodes_list_json() {
   if (!isLoggedIn()) return;
   TXBuffer.startJsonStream();
   json_init();
@@ -1002,6 +933,7 @@ void handle_nodes_list() {
   json_close(true);
   TXBuffer.endStream();
 }
+#endif // WEBSERVER_NEW_UI
 
 //********************************************************************************
 // Web Interface root page
@@ -1231,6 +1163,7 @@ void handle_config() {
 
 
   String name = WebServer.arg(F("name"));
+  name.trim();
   //String password = WebServer.arg(F("password"));
   String iprangelow = WebServer.arg(F("iprangelow"));
   String iprangehigh = WebServer.arg(F("iprangehigh"));
@@ -2050,8 +1983,7 @@ void setTaskDevice_to_TaskIndex(byte taskdevicenumber, byte taskIndex) {
     PluginCall(PLUGIN_GET_DEVICEVALUENAMES, &TempEvent, dummy); //the plugin should populate ExtraTaskSettings with its default values.
   } else {
     // New task is empty task, thus save config now.
-    SaveTaskSettings(taskIndex);
-    SaveSettings();
+    taskClear(taskIndex, true); // clear settings, and save
   }
 }
 
@@ -2240,12 +2172,15 @@ void handle_devices() {
             }
         }
     }
-    addHtmlError(SaveTaskSettings(taskIndex));
-
-    addHtmlError(SaveSettings());
-
-    if (taskdevicenumber != 0 && Settings.TaskDeviceEnabled[taskIndex])
-      PluginCall(PLUGIN_INIT, &TempEvent, dummyString);
+    if (taskdevicenumber != 0) {
+      // Task index has a task device number, so it makes sense to save.
+      // N.B. When calling delete, the settings were already saved.
+      addHtmlError(SaveTaskSettings(taskIndex));
+      addHtmlError(SaveSettings());
+      if (Settings.TaskDeviceEnabled[taskIndex]) {
+        PluginCall(PLUGIN_INIT, &TempEvent, dummyString);
+      }
+    }
   }
 
   // show all tasks as table
@@ -3897,7 +3832,9 @@ void handle_tools() {
   addWideButtonPlusDescription(F("sysinfo"),      F("Info"),             F("Open system info page"));
   addWideButtonPlusDescription(F("advanced"),     F("Advanced"),         F("Open advanced settings"));
   addWideButtonPlusDescription(F("json"),         F("Show JSON"),        F("Open JSON output"));
+  #ifdef WEBSERVER_TIMINGSTATS
   addWideButtonPlusDescription(F("timingstats"),  F("Timing stats"),     F("Open timing statistics of system"));
+  #endif // WEBSERVER_TIMINGSTATS
   addWideButtonPlusDescription(F("pinstates"),    F("Pin state buffer"), F("Show Pin state buffer"));
   addWideButtonPlusDescription(F("sysvars"),      F("System Variables"), F("Show all system variables and conversions"));
 
@@ -3917,6 +3854,7 @@ void handle_tools() {
   addFormNote(F("(File MUST be renamed to \"config.dat\" before upload!)"));
   addWideButtonPlusDescription(F("download"), F("Save"), F("Saves a settings file"));
 
+#ifdef WEBSERVER_NEW_UI
   #if defined(ESP8266)
     fs::FSInfo fs_info;
     SPIFFS.info(fs_info);
@@ -3927,7 +3865,8 @@ void handle_tools() {
       TXBuffer += F("</TD><TD>Download new UI</TD></TR>");
     }
   #endif
-  
+#endif // WEBSERVER_NEW_UI
+
 #if defined(ESP8266)
   {
     {
@@ -3970,7 +3909,7 @@ void handle_tools() {
   printToWeb = false;
 }
 
-
+#ifdef WEBSERVER_NEW_UI
 //********************************************************************************
 // Web Interface pin state list
 //********************************************************************************
@@ -4035,6 +3974,7 @@ void handle_pinstates_json() {
 
     TXBuffer.endStream();
 }
+#endif // WEBSERVER_NEW_UI
 
 void handle_pinstates() {
   checkRAM(F("handle_pinstates"));
@@ -4119,7 +4059,7 @@ void handle_pinstates() {
     TXBuffer.endStream();
 }
 
-
+#ifdef WEBSERVER_NEW_UI
 //********************************************************************************
 // Web Interface I2C scanner
 //********************************************************************************
@@ -4150,6 +4090,7 @@ void handle_i2cscanner_json() {
   TXBuffer.endStream();
   free(TempString);
 }
+#endif // WEBSERVER_NEW_UI
 
 void handle_i2cscanner() {
   checkRAM(F("handle_i2cscanner"));
@@ -4290,7 +4231,7 @@ void handle_i2cscanner() {
   free(TempString);
 }
 
-
+#ifdef WEBSERVER_NEW_UI
 //********************************************************************************
 // Web Interface Wifi scanner
 //********************************************************************************
@@ -4333,6 +4274,7 @@ void handle_wifiscanner_json() {
   TXBuffer += "]";
   TXBuffer.endStream();
 }
+#endif // WEBSERVER_NEW_UI
 
 void handle_wifiscanner() {
   checkRAM(F("handle_wifiscanner"));
@@ -4762,7 +4704,7 @@ void stream_json_end_object_element(bool isLast) {
   TXBuffer += '\n';
 }
 
-
+#ifdef WEBSERVER_NEW_UI
 void handle_timingstats_json() {
   TXBuffer.startJsonStream();
   TXBuffer += '{';
@@ -4770,6 +4712,7 @@ void handle_timingstats_json() {
   TXBuffer += '}';
   TXBuffer.endStream();
 }
+#endif // WEBSERVER_NEW_UI
 
 //********************************************************************************
 // HTML table formatted timing statistics
@@ -4865,6 +4808,7 @@ long stream_timing_statistics(bool clearStats) {
   return timeSinceLastReset;
 }
 
+#ifdef WEBSERVER_TIMINGSTATS
 void handle_timingstats() {
   checkRAM(F("handle_timingstats"));
   navMenuIndex = MENU_INDEX_TOOLS;
@@ -4899,6 +4843,7 @@ void handle_timingstats() {
   sendHeadandTail_stdtemplate(_TAIL);
   TXBuffer.endStream();
 }
+#endif // WEBSERVER_TIMINGSTATS
 
 //********************************************************************************
 // Web Interface config page
@@ -5244,6 +5189,7 @@ void handle_upload_post() {
   printToWeb = false;
 }
 
+#ifdef WEBSERVER_NEW_UI
 void handle_upload_json() {
   checkRAM(F("handle_upload_post"));
   uint8_t result = uploadResult;
@@ -5256,7 +5202,7 @@ void handle_upload_json() {
 
   TXBuffer.endStream();
 }
-
+#endif // WEBSERVER_NEW_UI
 
 //********************************************************************************
 // Web Interface upload handler
@@ -5564,7 +5510,7 @@ boolean handle_custom(String path) {
 }
 
 
-
+#ifdef WEBSERVER_NEW_UI
 //********************************************************************************
 // Web Interface file list
 //********************************************************************************
@@ -5662,6 +5608,7 @@ void handle_filelist_json() {
   TXBuffer += "]";
   TXBuffer.endStream();
 }
+#endif // WEBSERVER_NEW_UI
 
 void handle_filelist() {
   checkRAM(F("handle_filelist"));
@@ -6195,6 +6142,7 @@ void addPreDefinedConfigSelector() {
   addSelector_Foot();
 }
 
+#ifdef WEBSERVER_NEW_UI
 void handle_factoryreset_json() {
   if (!isLoggedIn()) return;
   TXBuffer.startJsonStream();
@@ -6242,6 +6190,8 @@ void handle_factoryreset_json() {
   TXBuffer+="}";
   TXBuffer.endStream();
 }
+#endif // WEBSERVER_NEW_UI
+
 //********************************************************************************
 // Web Interface Factory Reset
 //********************************************************************************
@@ -6483,6 +6433,7 @@ void handle_rules() {
   checkRuleSets();
 }
 
+#ifdef WEBSERVER_NEW_UI
 
 //********************************************************************************
 // Web Interface sysinfo page
@@ -6665,6 +6616,7 @@ void handle_sysinfo_json() {
 
   TXBuffer.endStream();
 }
+#endif // WEBSERVER_NEW_UI
 
 void handle_sysinfo() {
   checkRAM(F("handle_sysinfo"));
@@ -6738,6 +6690,14 @@ void handle_sysinfo() {
   TXBuffer += F(" - ");
   TXBuffer += lowestFreeStackfunction;
   TXBuffer += ')';
+#ifdef CORE_2_5_0
+  addRowLabel(F("Heap Max Free Block"));
+  TXBuffer += ESP.getMaxFreeBlockSize();
+  addRowLabel(F("Heap Fragmentation"));
+  TXBuffer += ESP.getHeapFragmentation();
+  TXBuffer += '%';
+#endif
+
 
   addRowLabel(F("Boot"));
   TXBuffer += getLastBootCauseString();
@@ -7065,7 +7025,7 @@ void addSysVar_html(const String& input) {
   delay(0);
 }
 
-
+#ifdef WEBSERVER_SYSVARS
 //********************************************************************************
 // Web Interface sysvars showing all system vars and their value.
 //********************************************************************************
@@ -7233,6 +7193,7 @@ void handle_sysvars() {
   sendHeadandTail_stdtemplate(true);
   TXBuffer.endStream();
 }
+#endif // WEBSERVER_SYSVARS
 
 //********************************************************************************
 // URNEncode char string to string object

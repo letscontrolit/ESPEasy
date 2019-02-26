@@ -167,7 +167,7 @@ void checkUDP()
   \*********************************************************************************************/
 void SendUDPCommand(byte destUnit, char* data, byte dataLength)
 {
-  if (!WiFiConnected(100)) {
+  if (!WiFiConnected(10)) {
     return;
   }
   if (destUnit != 0)
@@ -191,7 +191,7 @@ void SendUDPCommand(byte destUnit, char* data, byte dataLength)
   \*********************************************************************************************/
 void sendUDP(byte unit, byte* data, byte size)
 {
-  if (!WiFiConnected(100)) {
+  if (!WiFiConnected(10)) {
     return;
   }
 
@@ -247,7 +247,7 @@ void refreshNodeList()
   \*********************************************************************************************/
 void sendSysInfoUDP(byte repeats)
 {
-  if (Settings.UDPPort == 0 || !WiFiConnected(100))
+  if (Settings.UDPPort == 0 || !WiFiConnected(10))
     return;
 
   // TODO: make a nice struct of it and clean up
@@ -310,7 +310,7 @@ void sendSysInfoUDP(byte repeats)
   Respond to HTTP XML requests for SSDP information
   \*********************************************************************************************/
 void SSDP_schema(WiFiClient &client) {
-  if (!WiFiConnected(100)) {
+  if (!WiFiConnected(10)) {
     return;
   }
 
@@ -706,6 +706,9 @@ bool connectClient(WiFiClient& client, const char* hostname, uint16_t port) {
 bool connectClient(WiFiClient& client, IPAddress ip, uint16_t port)
 {
   START_TIMER;
+  if (!WiFiConnected()) {
+    return false;
+  }
   bool connected = (client.connect(ip, port) == 1);
   STOP_TIMER(CONNECT_CLIENT_STATS);
 #if defined(ESP32) || defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(ARDUINO_ESP8266_RELEASE_2_4_0)
@@ -718,6 +721,9 @@ bool connectClient(WiFiClient& client, IPAddress ip, uint16_t port)
 
 bool resolveHostByName(const char* aHostname, IPAddress& aResult) {
   START_TIMER;
+  if (!WiFiConnected()) {
+    return false;
+  }
 #if defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(ESP32)
   bool resolvedIP = WiFi.hostByName(aHostname, aResult) == 1;
 #else
@@ -728,7 +734,6 @@ bool resolveHostByName(const char* aHostname, IPAddress& aResult) {
 }
 
 bool hostReachable(const String& hostname) {
-  if (!WiFiConnected()) return false;
   IPAddress remote_addr;
   if (resolveHostByName(hostname.c_str(), remote_addr)) {
     return hostReachable(remote_addr);
@@ -742,6 +747,9 @@ bool hostReachable(const String& hostname) {
 // Create a random port for the UDP connection.
 // Return true when successful.
 bool beginWiFiUDP_randomPort(WiFiUDP& udp) {
+  if (!WiFiConnected()) {
+    return false;
+  }
   unsigned int attempts = 3;
   while (attempts > 0) {
     --attempts;

@@ -31,7 +31,7 @@ TaskDevicePluginConfigLong settings:
 #define PLUGIN_009
 #define PLUGIN_ID_009         9
 #define PLUGIN_NAME_009       "Switch input - MCP23017"
-#define PLUGIN_VALUENAME1_009 "Switch"
+#define PLUGIN_VALUENAME1_009 "State"
 #define PLUGIN_009_DOUBLECLICK_MIN_INTERVAL 1000
 #define PLUGIN_009_DOUBLECLICK_MAX_INTERVAL 3000
 #define PLUGIN_009_LONGPRESS_MIN_INTERVAL 1000
@@ -284,7 +284,7 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
 
         Returned EVENT value is = 3 always for doubleclick
         In rules this can be checked:
-        on Button#Switch=3 do //will fire if doubleclick
+        on Button#State=3 do //will fire if doubleclick
         \**************************************************************************/
         portStatusStruct currentStatus;
         const uint32_t key = createKey(PLUGIN_ID_009,CONFIG_PORT);
@@ -395,8 +395,8 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
             So we can trigger longpress for high or low contact
 
             In rules this can be checked:
-            on Button#Switch=10 do //will fire if longpress when state = 0
-            on Button#Switch=11 do //will fire if longpress when state = 1
+            on Button#State=10 do //will fire if longpress when state = 0
+            on Button#State=11 do //will fire if longpress when state = 1
             \**************************************************************************/
             // Reset SafeButton counter
             PCONFIG_LONG(3) = 0;

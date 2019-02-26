@@ -33,3 +33,13 @@ Build on Linux/Mac::
 
    cd docs
    ./make html
+
+
+LaTeX (PDF) build on Linux
+==========================
+
+To build a PDF document of this documentation, you need to have LaTeX installed and some texlive packages.
+
+Via apt-get installed packages::
+
+  sudo apt-get install xzdec texlive-fonts-recommended texlive-latex-recommended texlive-latex-extra

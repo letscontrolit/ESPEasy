@@ -37,6 +37,9 @@ void serialHelper_webformLoad(struct EventStruct *event) {
   serialHelper_webformLoad(event, true);
 }
 
+// These helper functions were made to create a generic interface to setup serial port config.
+// See issue #2343 and Pull request https://github.com/letscontrolit/ESPEasy/pull/2352
+// For now P020 and P044 have been reverted to make them work again.
 void serialHelper_webformLoad(struct EventStruct *event, bool allowSoftwareSerial) {
   html_add_script(F("function serialPortChanged(elem){ var style = elem.value == 0 ? '' : 'none'; document.getElementById('tr_taskdevicepin1').style.display = style; document.getElementById('tr_taskdevicepin2').style.display = style; }"), false);
 
@@ -77,7 +80,10 @@ void serialHelper_webformLoad(struct EventStruct *event, bool allowSoftwareSeria
                      static_cast<int>(serialHelper_getSerialType(event)),
                      F("serialPortChanged(this)")); // Script to toggle GPIO visibility when changing selection.
   html_add_script(F("document.getElementById('serPort').onchange();"), false);
-  addFormNote(F("Do <b>NOT</b> combine HW Serial0 and log to serial on Tools->Advanced->Serial Port."));
+  if (Settings.UseSerial) {
+    addFormNote(F("Do <b>NOT</b> combine HW Serial0 and log to serial on Tools->Advanced->Serial Port."));
+  }
+  addFormNote(F("D8 (GPIO-15) requires a Buffer Circuit (PNP transistor) or ESP boot may fail."));
 }
 
 void serialHelper_webformSave(struct EventStruct *event) {
@@ -89,6 +95,13 @@ void serialHelper_webformSave(struct EventStruct *event) {
       CONFIG_PIN1 = rxPin;
       CONFIG_PIN2 = txPin;
     }
+  }
+}
+
+void serialHelper_plugin_init(struct EventStruct *event) {
+  ESPeasySerialType::serialtype serType = serialHelper_getSerialType(event);
+  if (serType == ESPeasySerialType::serialtype::serial0) {
+    Settings.UseSerial = false;                 // Disable global Serial port.
   }
 }
 

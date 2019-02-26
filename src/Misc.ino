@@ -1562,6 +1562,7 @@ void delayedReboot(int rebootDelay)
 void reboot() {
   // FIXME TD-er: Should network connections be actively closed or does this introduce new issues?
   flushAndDisconnectAllClients();
+  SPIFFS.end();
   #if defined(ESP32)
     ESP.restart();
   #else

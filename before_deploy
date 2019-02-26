@@ -30,38 +30,39 @@ if [ -d "docs/build" ]; then
   cp -r docs/build/* ${TMP_DIST}/docs/
 fi
 
-
 for ENV in \
-  dev_ESP8266_4096\
+  dev_ESP8266_4M\
   esp-wrover-kit_test_1M8_partition\
   esp32test_1M8_partition\
   hard_SONOFF_POW_4M\
   hard_Ventus_W266\
   hard_core_250_SONOFF_POW_4M\
   hard_core_250_Shelly_1_2M256\
-  minimal_ESP8266_1024_OTA\
-  minimal_ESP8285_1024_OTA\
-  minimal_core_250_ESP8266_1024_OTA\
-  minimal_core_250_ESP8285_1024_OTA\
-  normal_ESP8266_1024\
-  normal_ESP8266_1024_VCC\
-  normal_ESP8266_4096\
-  normal_ESP8285_1024\
-  normal_IR_ESP8266_1024\
-  normal_IR_ESP8266_4096\
-  normal_WROOM02_2048\
-  normal_core_241_ESP8266_1024\
-  normal_core_241_ESP8266_4096\
-  normal_core_242_ESP8266_1024\
-  normal_core_250_ESP8266_1024\
-  normal_core_250_ESP8266_4096\
-  normal_core_250_IR_ESP8266_4096\
+  minimal_ESP8266_1M_OTA\
+  minimal_ESP8285_1M_OTA\
+  minimal_core_250_ESP8266_1M_OTA\
+  minimal_core_250_ESP8285_1M_OTA\
+  normal_ESP8266_1M\
+  normal_ESP8266_1M_VCC\
+  normal_ESP8266_4M\
+  normal_ESP8285_1M\
+  normal_IR_ESP8266_1M\
+  normal_IR_ESP8266_4M\
+  normal_WROOM02_2M\
+  normal_core_241_ESP8266_1M\
+  normal_core_241_ESP8266_4M\
+  normal_core_242_ESP8266_1M\
+  normal_core_250_ESP8266_1M\
+  normal_core_250_ESP8266_4M\
+  normal_core_250_IR_ESP8266_4M\
   normal_core_250_WROOM02_2M256\
-  test_ESP8266_4096_VCC\
-  test_core_242_ESP8266_4096\
-  test_core_250_ESP8266_4096\
-  test_core_260_alpha_ESP8266_4096\
-  test_core_260_alpha_ESP8266_4096_VCC;\
+  normal_core_260_sdk2_alpha_ESP8266_4M\
+  test_ESP8266_4M_VCC\
+  test_core_242_ESP8266_4M\
+  test_core_250_ESP8266_4M\
+  test_core_260_alpha_ESP8266_4M_VCC\
+  test_core_260_sdk2_alpha_ESP8266_4M\
+  test_core_260_sdk3_alpha_ESP8266_4M;\
 do
   MAX_FILESIZE=1044464
   if [[ ${ENV} == *"1024"* ]]; then

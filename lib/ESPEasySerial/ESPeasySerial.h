@@ -212,6 +212,8 @@ public:
 #endif
   bool listen();
 
+  String getLogString() const;
+
 
   using Print::write;
 
@@ -230,6 +232,8 @@ private:
   bool isSWserial() const { return _serialtype == ESPeasySerialType::serialtype::software; }
 
   ESPeasySoftwareSerial* _swserial = nullptr;
+#else
+  bool isSWserial() const { return false; }
 #endif
 #ifdef ESP8266
   static bool _serial0_swap_active;

@@ -31,7 +31,7 @@ TaskDevicePluginConfigLong settings:
 #define PLUGIN_001
 #define PLUGIN_ID_001         1
 #define PLUGIN_NAME_001       "Switch input - Switch"
-#define PLUGIN_VALUENAME1_001 "Switch"
+#define PLUGIN_VALUENAME1_001 "State"
 #ifdef USE_SERVO
   Servo servo1;
   Servo servo2;
@@ -403,7 +403,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
 
         Returned EVENT value is = 3 always for doubleclick
         In rules this can be checked:
-        on Button#Switch=3 do //will fire if doubleclick
+        on Button#State=3 do //will fire if doubleclick
         \**************************************************************************/
 
         //long difftimer1 = 0;
@@ -545,8 +545,8 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
             So we can trigger longpress for high or low contact
 
             In rules this can be checked:
-            on Button#Switch=10 do //will fire if longpress when state = 0
-            on Button#Switch=11 do //will fire if longpress when state = 1
+            on Button#State=10 do //will fire if longpress when state = 0
+            on Button#State=11 do //will fire if longpress when state = 1
             \**************************************************************************/
             // Reset SafeButton counter
             PCONFIG_LONG(3) = 0;

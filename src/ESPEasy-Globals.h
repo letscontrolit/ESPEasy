@@ -975,11 +975,14 @@ SettingsStruct* SettingsStruct_ptr = new SettingsStruct;
 SettingsStruct& Settings = *SettingsStruct_ptr;
 */
 
-String ReportOffsetErrorInStruct(const String& structname) {
+String ReportOffsetErrorInStruct(const String& structname, size_t offset) {
   String error;
-  error.reserve(48);
+  error.reserve(48 + structname.length());
   error = F("Error: Incorrect offset in struct: ");
   error += structname;
+  error += '(';
+  error += String(offset);
+  error += ')';
   return error;
 }
 
@@ -989,9 +992,12 @@ String ReportOffsetErrorInStruct(const String& structname) {
 \*********************************************************************************************/
 bool SettingsCheck(String& error) {
   error = "";
-  if (offsetof(SettingsStruct, ResetFactoryDefaultPreference) != 1224) {
-    error = ReportOffsetErrorInStruct(F("SettingsStruct"));
+#ifdef esp8266
+  size_t offset = offsetof(SettingsStruct, ResetFactoryDefaultPreference);
+  if (offset != 1224) {
+    error = ReportOffsetErrorInStruct(F("SettingsStruct"), offset);
   }
+#endif
   if (!Settings.networkSettingsEmpty()) {
     if (Settings.IP[0] == 0 || Settings.Gateway[0] == 0 || Settings.Subnet[0] == 0 || Settings.DNS[0] == 0) {
       error += F("Error: Either fill all IP settings fields or leave all empty");
@@ -1961,44 +1967,45 @@ unsigned long timediff_calls = 0;
 unsigned long timediff_cpu_cycles_total = 0;
 unsigned long timingstats_last_reset = 0;
 
-#define LOADFILE_STATS        0
-#define SAVEFILE_STATS        1
-#define LOOP_STATS            2
-#define PLUGIN_CALL_50PS      3
-#define PLUGIN_CALL_10PS      4
-#define PLUGIN_CALL_10PSU     5
-#define PLUGIN_CALL_1PS       6
-#define SENSOR_SEND_TASK      7
-#define SEND_DATA_STATS       8
-#define COMPUTE_FORMULA_STATS 9
-#define PROC_SYS_TIMER       10
-#define SET_NEW_TIMER        11
-#define TIME_DIFF_COMPUTE    12
-#define MQTT_DELAY_QUEUE     13
-#define C001_DELAY_QUEUE     14
-#define C002_DELAY_QUEUE     15
-#define C003_DELAY_QUEUE     16
-#define C004_DELAY_QUEUE     17
-#define C005_DELAY_QUEUE     18
-#define C006_DELAY_QUEUE     19
-#define C007_DELAY_QUEUE     20
-#define C008_DELAY_QUEUE     21
-#define C009_DELAY_QUEUE     22
-#define C010_DELAY_QUEUE     23
-#define C011_DELAY_QUEUE     24
-#define C012_DELAY_QUEUE     25
-#define C013_DELAY_QUEUE     26
-#define TRY_CONNECT_HOST_TCP 27
-#define TRY_CONNECT_HOST_UDP 28
-#define HOST_BY_NAME_STATS   29
-#define CONNECT_CLIENT_STATS 30
-#define LOAD_CUSTOM_TASK_STATS 31
-#define WIFI_ISCONNECTED_STATS 32
-#define LOAD_TASK_SETTINGS     33
-#define RULES_PROCESSING       34
-#define BACKGROUND_TASKS       35
-#define HANDLE_SCHEDULER_IDLE  36
-#define HANDLE_SCHEDULER_TASK  37
+#define LOADFILE_STATS          0
+#define SAVEFILE_STATS          1
+#define LOOP_STATS              2
+#define PLUGIN_CALL_50PS        3
+#define PLUGIN_CALL_10PS        4
+#define PLUGIN_CALL_10PSU       5
+#define PLUGIN_CALL_1PS         6
+#define SENSOR_SEND_TASK        7
+#define SEND_DATA_STATS         8
+#define COMPUTE_FORMULA_STATS   9
+#define PROC_SYS_TIMER          10
+#define SET_NEW_TIMER           11
+#define TIME_DIFF_COMPUTE       12
+#define MQTT_DELAY_QUEUE        13
+#define C001_DELAY_QUEUE        14
+#define C002_DELAY_QUEUE        15
+#define C003_DELAY_QUEUE        16
+#define C004_DELAY_QUEUE        17
+#define C005_DELAY_QUEUE        18
+#define C006_DELAY_QUEUE        19
+#define C007_DELAY_QUEUE        20
+#define C008_DELAY_QUEUE        21
+#define C009_DELAY_QUEUE        22
+#define C010_DELAY_QUEUE        23
+#define C011_DELAY_QUEUE        24
+#define C012_DELAY_QUEUE        25
+#define C013_DELAY_QUEUE        26
+#define TRY_CONNECT_HOST_TCP    27
+#define TRY_CONNECT_HOST_UDP    28
+#define HOST_BY_NAME_STATS      29
+#define CONNECT_CLIENT_STATS    30
+#define LOAD_CUSTOM_TASK_STATS  31
+#define WIFI_ISCONNECTED_STATS  32
+#define WIFI_NOTCONNECTED_STATS 33
+#define LOAD_TASK_SETTINGS      34
+#define RULES_PROCESSING        35
+#define BACKGROUND_TASKS        36
+#define HANDLE_SCHEDULER_IDLE   37
+#define HANDLE_SCHEDULER_TASK   38
 
 
 
@@ -2032,6 +2039,7 @@ String getMiscStatsName(int stat) {
         case CONNECT_CLIENT_STATS:  return F("connectClient()");
         case LOAD_CUSTOM_TASK_STATS: return F("LoadCustomTaskSettings()");
         case WIFI_ISCONNECTED_STATS: return F("WiFi.isConnected()");
+        case WIFI_NOTCONNECTED_STATS: return F("WiFi.isConnected() (fail)");
         case LOAD_TASK_SETTINGS:     return F("LoadTaskSettings()");
         case RULES_PROCESSING:       return F("rulesProcessing()");
         case BACKGROUND_TASKS:       return F("backgroundtasks()");
