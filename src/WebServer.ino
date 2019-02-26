@@ -8,8 +8,6 @@
 #define _TAIL true
 #define CHUNKED_BUFFER_SIZE          400
 
-#include <ESP8266WiFi.h>
-
 void sendContentBlocking(String& data);
 void sendHeaderBlocking(bool json, const String& origin = "");
 
