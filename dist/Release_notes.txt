@@ -1,4 +1,27 @@
 -------------------------------------------------
+Changes in release mega-20190226 (since mega-20190225)
+-------------------------------------------------
+
+Release date: Tue Feb 26 04:00:13 CET 2019
+
+Bartłomiej Zimoń (2):
+      IRTX: fix memory leak in case of error
+      IRTX: move error string to flash
+
+Gijs Noorlander (1):
+      Undo F() macro due to build errors
+
+TD-er (7):
+      [Ser2Net] Revert of Ser2Net and P1WifiGateway (#1617 and #2343)
+      [SerialHelper] Added comment to help finding issue later
+      [P1WifiGateway] Fix memory leak
+      Trim trailing spaces in unit name  (#2329)
+      [ESP32] Setting won´t save #2354
+      [ESPeasySerial] Update to v1.0.8 Fix some compiler issue.
+      [Settings] Get rid of error when deleting plugin
+
+
+-------------------------------------------------
 Changes in release mega-20190225 (since mega-20190219)
 -------------------------------------------------
 
