@@ -8,6 +8,8 @@
 #define _TAIL true
 #define CHUNKED_BUFFER_SIZE          400
 
+#include <ESP8266WiFi.h>
+
 void sendContentBlocking(String& data);
 void sendHeaderBlocking(bool json, const String& origin = "");
 
@@ -6690,6 +6692,14 @@ void handle_sysinfo() {
   TXBuffer += F(" - ");
   TXBuffer += lowestFreeStackfunction;
   TXBuffer += ')';
+#ifdef CORE_2_5_0
+  addRowLabel(F("Heap Max Free Block"));
+  TXBuffer += ESP.getMaxFreeBlockSize();
+  addRowLabel(F("Heap Fragmentation"));
+  TXBuffer += ESP.getHeapFragmentation();
+  TXBuffer += '%';
+#endif
+
 
   addRowLabel(F("Boot"));
   TXBuffer += getLastBootCauseString();
