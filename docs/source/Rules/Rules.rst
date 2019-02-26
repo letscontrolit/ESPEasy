@@ -428,9 +428,9 @@ PIR and LDR
 
 .. code-block:: html
 
- On PIR#Switch do
+ On PIR#State do
    if [LDR#Light]<500
-     gpio,16,[PIR#Switch]
+     gpio,16,[PIR#State]
    endif
  endon
 
@@ -441,9 +441,9 @@ PIR and LDR
 
 .. code-block:: html
 
- on PIR#Switch=1 do
+ on PIR#State=1 do
    if [LDR#Light]<500
-     gpio,16,[PIR#Switch]
+     gpio,16,[PIR#State]
    endif
  endon
 
@@ -626,7 +626,7 @@ to make things happen during certain hours of the day:
 
 .. code-block:: html
 
-  On Pir#Switch=1 do
+  On Pir#State=1 do
    If %systime% < 07:00:00
     Gpio,16,0
    Endif

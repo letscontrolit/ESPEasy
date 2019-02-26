@@ -248,7 +248,7 @@ void addButtonRelayRule(byte buttonNumber, byte relay_gpio) {
     fileName += '/';
   #endif
   fileName += F("rules1.txt");
-  String rule = F("on ButtonBNR#switch do\n  if [RelayBNR#switch]=0\n    gpio,GNR,1\n  else\n    gpio,GNR,0\n  endif\nendon\n");
+  String rule = F("on ButtonBNR#state do\n  if [RelayBNR#state]=0\n    gpio,GNR,1\n  else\n    gpio,GNR,0\n  endif\nendon\n");
   rule.replace(F("BNR"), String(buttonNumber));
   rule.replace(F("GNR"), String(relay_gpio));
   String result = appendLineToFile(fileName, rule);
