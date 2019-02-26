@@ -911,41 +911,51 @@ void backgroundtasks()
     return;
   }
   START_TIMER
+  const bool wifiConnected = WiFiConnected();
   runningBackgroundTasks=true;
 
   #if defined(ESP8266)
+  if (wifiConnected) {
     tcpCleanup();
+  }
   #endif
   process_serialWriteBuffer();
   if(!UseRTOSMultitasking){
-    if (Settings.UseSerial)
-      if (Serial.available())
-        if (!PluginCall(PLUGIN_SERIAL_IN, 0, dummyString))
-          serial();
-    WebServer.handleClient();
-    checkUDP();
+    if (Settings.UseSerial && Serial.available()) {
+      if (!PluginCall(PLUGIN_SERIAL_IN, 0, dummyString)) {
+        serial();
+      }
+    }
+    if (wifiConnected) {
+      WebServer.handleClient();
+      checkUDP();
+    }
   }
 
   // process DNS, only used if the ESP has no valid WiFi config
-  if (dnsServerActive)
+  if (dnsServerActive && wifiConnected)
     dnsServer.processNextRequest();
 
   #ifdef FEATURE_ARDUINO_OTA
-  if(Settings.ArduinoOTAEnable)
+  if(Settings.ArduinoOTAEnable && wifiConnected)
     ArduinoOTA.handle();
 
   //once OTA is triggered, only handle that and dont do other stuff. (otherwise it fails)
   while (ArduinoOTAtriggered)
   {
     delay(0);
-    ArduinoOTA.handle();
+    if (WiFiConnected()) {
+      ArduinoOTA.handle();
+    }
   }
 
   #endif
 
   #ifdef FEATURE_MDNS
   // Allow MDNS processing
-  MDNS.update();
+  if (wifiConnected) {
+    MDNS.update();
+  }
   #endif
 
   delay(0);

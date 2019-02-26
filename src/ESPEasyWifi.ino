@@ -499,7 +499,7 @@ bool WiFiConnected() {
     resetWiFi();
   }
   delay(1);
-  STOP_TIMER(WIFI_ISCONNECTED_STATS);  // SMY: also count this call when not connected
+  STOP_TIMER(WIFI_NOTCONNECTED_STATS);
   return false;
 }
 
