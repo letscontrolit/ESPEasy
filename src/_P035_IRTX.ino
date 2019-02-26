@@ -20,6 +20,8 @@ IRsend *Plugin_035_irSender;
 
 #define from_32hex(c) ((((c) | ('A' ^ 'a')) - '0') % 39)
 
+#define P35_Ntimings 250 //Defines the ammount of timings that can be stored. Used in RAW and RAW2 encodings
+
 boolean Plugin_035(byte function, struct EventStruct *event, String& string)
 {
   boolean success = false;
@@ -125,7 +127,7 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
 
             uint16_t idx = 0;  //If this goes above the buf.size then the esp will throw a 28 EXCCAUSE
             uint16_t *buf;
-            buf =  new uint16_t[250]; //The Raw Timings that we can buffer.
+            buf =  new uint16_t[P35_Ntimings]; //The Raw Timings that we can buffer.
             if (buf == nullptr) { // error assigning memory.
             success = false;
             return success;
@@ -215,14 +217,14 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
                 for (unsigned int i = 0, total = IrRaw.length(), gotRep = 0, rep = 0; i < total;) {
                    char c = IrRaw[i++];
                    if (c == '*') {
-                       if (i+2 >= total || idx + (rep = from_32hex(IrRaw[i++])) * 2 > sizeof(buf[0])*250){
+                       if (i+2 >= total || idx + (rep = from_32hex(IrRaw[i++])) * 2 > sizeof(buf[0])*P35_Ntimings){
                          delete[] buf;
                          buf = nullptr;
                          return addErrorTrue();
                        }
                        gotRep = 2;
                    } else {
-                       if ((c == '^' && i+1 >= total) || idx == sizeof(buf[0])*250){
+                       if ((c == '^' && i+1 >= total) || idx >= sizeof(buf[0])*P35_Ntimings){
                          delete[] buf;
                          buf = nullptr;
                          return addErrorTrue();
