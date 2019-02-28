@@ -206,14 +206,16 @@ bool ESPeasySerial::isTxEnabled(void) {
    return getHW()->isRxEnabled();
  }
 
-#ifdef CORE_2_5_0
 bool ESPeasySerial::hasRxError(void) {
+#ifdef CORE_POST_2_5_0
   if (!isValid()) {
     return false;
   }
   return getHW()->hasRxError();
-}
+#else
+  return false;
 #endif
+}
 
 void ESPeasySerial::startDetectBaudrate() {
   if (!isValid()) {

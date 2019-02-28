@@ -218,7 +218,7 @@ bool ESPeasySerial::hasOverrun(void) {
   if (!isValid()) {
     return false;
   }
-#if defined(ARDUINO_ESP8266_RELEASE_2_4_0) || defined(ARDUINO_ESP8266_RELEASE_2_4_1)
+#ifdef CORE_PRE_2_4_2
   return false;
 #else
   if (isSWserial()) {
@@ -269,20 +269,22 @@ bool ESPeasySerial::isTxEnabled(void) {
    return getHW()->isRxEnabled();
  }
 
-#ifdef CORE_2_5_0
 bool ESPeasySerial::hasRxError(void) {
+#ifdef CORE_POST_2_5_0
   if (!isValid() || isSWserial()) {
     return false;
   }
   return getHW()->hasRxError();
-}
+#else
+  return false;
 #endif
+}
 
 void ESPeasySerial::startDetectBaudrate() {
   if (!isValid() || isSWserial()) {
     return;
   }
-#if defined(ARDUINO_ESP8266_RELEASE_2_4_0) || defined(ARDUINO_ESP8266_RELEASE_2_4_1)
+#ifdef CORE_PRE_2_4_2
   return;
 #else
   getHW()->startDetectBaudrate();
@@ -293,7 +295,7 @@ unsigned long ESPeasySerial::testBaudrate() {
   if (!isValid() || isSWserial()) {
     return 0;
   }
-#if defined(ARDUINO_ESP8266_RELEASE_2_4_0) || defined(ARDUINO_ESP8266_RELEASE_2_4_1)
+#ifdef CORE_PRE_2_4_2
   return 0;
 #else
   return getHW()->testBaudrate();
@@ -304,7 +306,7 @@ unsigned long ESPeasySerial::detectBaudrate(time_t timeoutMillis) {
   if (!isValid() || isSWserial()) {
     return 0;
   }
-#if defined(ARDUINO_ESP8266_RELEASE_2_4_0) || defined(ARDUINO_ESP8266_RELEASE_2_4_1)
+#ifdef CORE_PRE_2_4_2
   return 0;
 #else
   return getHW()->detectBaudrate(timeoutMillis);

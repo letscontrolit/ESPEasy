@@ -1289,7 +1289,7 @@ void handle_config() {
   addFormNote(F("0 = Sleep Disabled, else time awake from sleep"));
 
   int dsmax = 4294; // About 71 minutes
-#if defined(CORE_2_5_0)
+#if defined(CORE_POST_2_5_0)
   dsmax = INT_MAX;
   if ((ESP.deepSleepMax()/1000000ULL) <= (uint64_t)INT_MAX)
     dsmax = (int)(ESP.deepSleepMax()/1000000ULL);
@@ -5097,7 +5097,13 @@ boolean isLoggedIn()
       //return server.requestAuthentication(DIGEST_AUTH, www_realm);
       //Digest Auth Method with Custom realm and Failure Response
   {
-    WebServer.requestAuthentication(DIGEST_AUTH);
+#ifdef CORE_PRE_2_5_0
+    // See https://github.com/esp8266/Arduino/issues/4717
+    HTTPAuthMethod mode = BASIC_AUTH;
+#else
+    HTTPAuthMethod mode = DIGEST_AUTH;
+#endif
+    WebServer.requestAuthentication(mode, String(F("Login Required (default user: admin)")).c_str());
     return false;
   }
   return true;
@@ -6691,7 +6697,7 @@ void handle_sysinfo() {
   TXBuffer += F(" - ");
   TXBuffer += lowestFreeStackfunction;
   TXBuffer += ')';
-#ifdef CORE_2_5_0
+#ifdef CORE_POST_2_5_0
   addRowLabel(F("Heap Max Free Block"));
   TXBuffer += ESP.getMaxFreeBlockSize();
   addRowLabel(F("Heap Fragmentation"));

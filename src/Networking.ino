@@ -414,7 +414,7 @@ bool SSDP_begin() {
     return false;
   }
 
-#ifdef CORE_2_5_0
+#ifdef CORE_POST_2_5_0
   // Core 2.5.0 changed the signature of some UdpContext function.
   if (!_server->listen(IP_ADDR_ANY, SSDP_PORT)) {
     return false;
