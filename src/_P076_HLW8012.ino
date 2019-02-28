@@ -44,49 +44,60 @@ unsigned int p076_hvoltage = 0;
 unsigned int p076_hpower = 0;
 unsigned int p076_hpowfact = 0;
 
-struct p076_PredefinedDevice_struct {
-  int Id;
-  PGM_P Device_Name;
-  byte SEL_Pin;
-  byte CF_Pin;
-  byte CF1_Pin;
-  byte Current_Read;
-  byte CF_Trigger;
-  byte CF1_Trigger;
+#define P076_Custom       0
 
-};
+//HLW8012 Devices
+#define P076_Sonoff       1
+#define P076_Huafan       2
+#define P076_KMC          3
+#define P076_Aplic        4
+#define P076_SK03         5
 
-typedef struct p076_PredefinedDevice_struct P076_PredefinedDevice;
+//BL093 Devices
+#define P076_BlitzWolf    6
+#define P076_Teckin       7
+#define P076_TeckinUS     8
+#define P076_Gosund       9
 
-//When adding new device increase counter, too
-const int p076_PinSettingsCount = 10;
-const char string_Custom[]    PROGMEM = "Custom";
-const char string_Sonoff[]    PROGMEM = "Sonoff Pow (r1)";
-const char string_Huafan[]    PROGMEM = "Huafan SS";
-const char string_KMC[]       PROGMEM = "KMC 70011";
-const char string_Aplic[]     PROGMEM = "Aplic WDP303075";
-const char string_SK03[]      PROGMEM = "SK03 Outdoor";
-const char string_BlitzWolf[] PROGMEM = "BlitzWolf SHP";
-const char string_Teckin[]    PROGMEM = "Teckin";
-const char string_TeckinUS[]  PROGMEM = "Teckin US";
-const char string_Gosund[]    PROGMEM = "Gosund SP1 v23";
-static const P076_PredefinedDevice p076_PredefinedDevices[] PROGMEM =
-{
-   //Device_Name,SEL_PIN, CF_PIN, CF1_PIN, Current_Read, CF_Trigger, CF1_Trigger
-   //HLW8012 Devices
-   { 0, string_Custom,      0,      0,     0,       LOW,        LOW,    LOW},
-   { 1, string_Sonoff,      5,     14,    13,      HIGH,     CHANGE, CHANGE},
-   { 2, string_Huafan,     13,     14,    12,      HIGH,     CHANGE, CHANGE},
-   { 3, string_KMC,        12,      4,     5,      HIGH,     CHANGE, CHANGE},
-   { 4, string_Aplic,      12,      4,     5,       LOW,     CHANGE, CHANGE},
-   { 5, string_SK03,       12,      4,     5,       LOW,     CHANGE, CHANGE},
+// Keep values as they are stored and increase this when adding new ones.
+#define MAX_P076_DEVICE   10
 
-   //BL093 Devices
-   { 6, string_BlitzWolf,  12,      5,    14,       LOW,    FALLING, CHANGE},
-   { 7, string_Teckin,     12,      4,     5,       LOW,    FALLING, CHANGE},
-   { 8, string_TeckinUS,   12,      5,    14,       LOW,    FALLING, CHANGE},
-   { 9, string_Gosund,     12,      4,     5,       LOW,    FALLING, CHANGE}
-};
+bool p076_getDeviceString(int device, String& name) {
+  switch(device) {
+    case P076_Custom   : name = F("Custom");          break;
+    case P076_Sonoff   : name = F("Sonoff Pow (r1)"); break;
+    case P076_Huafan   : name = F("Huafan SS");       break;
+    case P076_KMC      : name = F("KMC 70011");       break;
+    case P076_Aplic    : name = F("Aplic WDP303075"); break;
+    case P076_SK03     : name = F("SK03 Outdoor");    break;
+    case P076_BlitzWolf: name = F("BlitzWolf SHP");   break;
+    case P076_Teckin   : name = F("Teckin");          break;
+    case P076_TeckinUS : name = F("Teckin US");       break;
+    case P076_Gosund   : name = F("Gosund SP1 v23");  break;
+    default:
+      return false;
+  }
+  return true;
+}
+
+bool p076_getDeviceParameters(int device, byte &SEL_Pin, byte &CF_Pin, byte &CF1_Pin, byte &Cur_read, byte &CF_Trigger, byte &CF1_Trigger) {
+  switch(device) {
+    case P076_Custom   : SEL_Pin =  0; CF_Pin =  0; CF1_Pin =  0; Cur_read =  LOW; CF_Trigger =     LOW; CF1_Trigger =    LOW; break;
+    case P076_Sonoff   : SEL_Pin =  5; CF_Pin = 14; CF1_Pin = 13; Cur_read = HIGH; CF_Trigger =  CHANGE; CF1_Trigger = CHANGE; break;
+    case P076_Huafan   : SEL_Pin = 13; CF_Pin = 14; CF1_Pin = 12; Cur_read = HIGH; CF_Trigger =  CHANGE; CF1_Trigger = CHANGE; break;
+    case P076_KMC      : SEL_Pin = 12; CF_Pin =  4; CF1_Pin =  5; Cur_read = HIGH; CF_Trigger =  CHANGE; CF1_Trigger = CHANGE; break;
+    case P076_Aplic    : SEL_Pin = 12; CF_Pin =  4; CF1_Pin =  5; Cur_read =  LOW; CF_Trigger =  CHANGE; CF1_Trigger = CHANGE; break;
+    case P076_SK03     : SEL_Pin = 12; CF_Pin =  4; CF1_Pin =  5; Cur_read =  LOW; CF_Trigger =  CHANGE; CF1_Trigger = CHANGE; break;
+    case P076_BlitzWolf: SEL_Pin = 12; CF_Pin =  5; CF1_Pin = 14; Cur_read =  LOW; CF_Trigger = FALLING; CF1_Trigger = CHANGE; break;
+    case P076_Teckin   : SEL_Pin = 12; CF_Pin =  4; CF1_Pin =  5; Cur_read =  LOW; CF_Trigger = FALLING; CF1_Trigger = CHANGE; break;
+    case P076_TeckinUS : SEL_Pin = 12; CF_Pin =  5; CF1_Pin = 14; Cur_read =  LOW; CF_Trigger = FALLING; CF1_Trigger = CHANGE; break;
+    case P076_Gosund   : SEL_Pin = 12; CF_Pin =  4; CF1_Pin =  5; Cur_read =  LOW; CF_Trigger = FALLING; CF1_Trigger = CHANGE; break;
+    default:
+      return false;
+  }
+  return true;
+}
+
 
 
 boolean Plugin_076(byte function, struct EventStruct *event, String &string) {
@@ -138,16 +149,19 @@ boolean Plugin_076(byte function, struct EventStruct *event, String &string) {
     addFormSubHeader(F("Predefined Pin settings"));
     {
       // Place this in a scope, to keep memory usage low.
-      String predefinedNames[p076_PinSettingsCount];
-      int predefinedId[p076_PinSettingsCount];
+      String predefinedNames[MAX_P076_DEVICE];
+      int predefinedId[MAX_P076_DEVICE];
 
-      for (int i = 0; i < p076_PinSettingsCount; i++)
+      int index = 0;
+      for (int i = 0; i < MAX_P076_DEVICE; i++)
       {
-        predefinedNames[i] = p076_PredefinedDevices[i].Device_Name;
-        predefinedId[i]    = p076_PredefinedDevices[i].Id;
+        if (p076_getDeviceString(i, predefinedNames[index])) {
+          predefinedId[index] = i;
+          ++index;
+        }
       }
       addFormSelector(F("Device"),
-                      F("p076_preDefDevSel"), p076_PinSettingsCount,
+                      F("p076_preDefDevSel"), index,
                       predefinedNames, predefinedId, devicePinSettings );
       addFormNote(F("Enable device and select device type first"));
     }
@@ -211,27 +225,22 @@ boolean Plugin_076(byte function, struct EventStruct *event, String &string) {
     byte selectedDevice = getFormItemInt(F("p076_preDefDevSel"));
 
     PCONFIG(7) = selectedDevice;
+    {
+      byte SEL_Pin, CF_Pin, CF1_Pin, Cur_read, CF_Trigger, CF1_Trigger;
+      if (selectedDevice != 0 && p076_getDeviceParameters(selectedDevice, SEL_Pin, CF_Pin, CF1_Pin, Cur_read, CF_Trigger, CF1_Trigger)) {
+        PCONFIG(4) = Cur_read;
+        PCONFIG(5) = CF_Trigger;
+        PCONFIG(6) = CF1_Trigger;
 
-    if (selectedDevice == 0){
-       PCONFIG(4) = getFormItemInt(F("p076_curr_read"));
-       PCONFIG(5) = getFormItemInt(F("p076_cf_edge"));
-       PCONFIG(6) = getFormItemInt(F("p076_cf1_edge"));
+        CONFIG_PIN1 = SEL_Pin;
+        CONFIG_PIN2 = CF1_Pin;
+        CONFIG_PIN3 = CF_Pin;
+      } else {
+        PCONFIG(4) = getFormItemInt(F("p076_curr_read"));
+        PCONFIG(5) = getFormItemInt(F("p076_cf_edge"));
+        PCONFIG(6) = getFormItemInt(F("p076_cf1_edge"));
+      }
     }
-    else if (selectedDevice < p076_PinSettingsCount){
-      //Fetch Predefined Pin Setting from PROGMEM
-      P076_PredefinedDevice p076_SelectedPredefinedDevice;
-      memcpy_P (&p076_SelectedPredefinedDevice, &p076_PredefinedDevices[selectedDevice], sizeof (P076_PredefinedDevice));
-      // TD-er: Must perform memcpy here or else the node will crash when adressing other members.
-
-      PCONFIG(4) = p076_SelectedPredefinedDevice.Current_Read;
-      PCONFIG(5) = p076_SelectedPredefinedDevice.CF_Trigger;
-      PCONFIG(6) = p076_SelectedPredefinedDevice.CF1_Trigger;
-
-      CONFIG_PIN1 = p076_SelectedPredefinedDevice.SEL_Pin;
-      CONFIG_PIN2 = p076_SelectedPredefinedDevice.CF1_Pin;
-      CONFIG_PIN3 = p076_SelectedPredefinedDevice.CF_Pin;
-    }
-
 
     //Set Multipliers
     double hlwMultipliers[3];

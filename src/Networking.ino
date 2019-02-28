@@ -727,7 +727,7 @@ bool resolveHostByName(const char* aHostname, IPAddress& aResult) {
 #if defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(ESP32)
   bool resolvedIP = WiFi.hostByName(aHostname, aResult) == 1;
 #else
-  bool resolvedIP = WiFi.hostByName(aHostname, aResult, 100) == 1;
+  bool resolvedIP = WiFi.hostByName(aHostname, aResult, CONTROLLER_CLIENTTIMEOUT_DFLT) == 1;
 #endif
   STOP_TIMER(HOST_BY_NAME_STATS);
   return resolvedIP;
