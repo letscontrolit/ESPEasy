@@ -93,10 +93,12 @@ struct timer_id_couple {
 struct msecTimerHandlerStruct {
 
   msecTimerHandlerStruct() : get_called(0), get_called_ret_id(0), max_queue_length(0),
-      last_exec_time_usec(0), total_idle_time_usec(0), is_idle(false), idle_time_pct(0.0)
+      last_exec_time_usec(0), total_idle_time_usec(0),  idle_time_pct(0.0), is_idle(false), eco_mode(true)
   {
     last_log_start_time = millis();
   }
+
+  void setEcoMode(bool enabled) { eco_mode = enabled; }
 
   void registerAt(unsigned long id, unsigned long timer) {
     timer_id_couple item(id, timer);
@@ -109,7 +111,9 @@ struct msecTimerHandlerStruct {
     ++get_called;
     if (_timer_ids.empty()) {
       recordIdle();
-      delay(MAX_SCHEDULER_WAIT_TIME); // Nothing to do, try save some power.
+      if (eco_mode) {
+        delay(MAX_SCHEDULER_WAIT_TIME); // Nothing to do, try save some power.
+      }
       return 0;
     }
     timer_id_couple item = _timer_ids.front();
@@ -117,14 +121,16 @@ struct msecTimerHandlerStruct {
     if (passed < 0) {
       // No timeOutReached
       recordIdle();
-      long waitTime = (-1 * passed) - 1; // will be non negative
-      if (waitTime > MAX_SCHEDULER_WAIT_TIME) {
-        waitTime = MAX_SCHEDULER_WAIT_TIME;
-      } else if (waitTime < 0) {
-        // Should not happen, but just to be sure we will not wait forever.
-        waitTime = 0;
+      if (eco_mode) {
+        long waitTime = (-1 * passed) - 1; // will be non negative
+        if (waitTime > MAX_SCHEDULER_WAIT_TIME) {
+          waitTime = MAX_SCHEDULER_WAIT_TIME;
+        } else if (waitTime < 0) {
+          // Should not happen, but just to be sure we will not wait forever.
+          waitTime = 0;
+        }
+        delay(waitTime);
       }
-      delay(waitTime);
       return 0;
     }
     recordRunning();
@@ -206,8 +212,9 @@ private:
   unsigned long last_exec_time_usec;
   unsigned long total_idle_time_usec;
   unsigned long last_log_start_time;
-  bool is_idle;
   float idle_time_pct;
+  bool is_idle;
+  bool eco_mode;
 
   // The list of set timers
   std::list<timer_id_couple> _timer_ids;
