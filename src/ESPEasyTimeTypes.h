@@ -5,6 +5,8 @@
 #include <list>
 #include <time.h>
 
+#define MAX_SCHEDULER_WAIT_TIME 5  // Max delay used in the scheduler for passing idle time.
+
 // convenient constants for TimeChangeRules
 enum week_t {Last=0, First, Second, Third, Fourth};
 enum dow_t {Sun=1, Mon, Tue, Wed, Thu, Fri, Sat};
@@ -107,11 +109,22 @@ struct msecTimerHandlerStruct {
     ++get_called;
     if (_timer_ids.empty()) {
       recordIdle();
+      delay(MAX_SCHEDULER_WAIT_TIME); // Nothing to do, try save some power.
       return 0;
     }
     timer_id_couple item = _timer_ids.front();
-    if (!timeOutReached(item._timer)) {
+    const long passed = timePassedSince(item._timer);
+    if (passed < 0) {
+      // No timeOutReached
       recordIdle();
+      long waitTime = (-1 * passed) - 1; // will be non negative
+      if (waitTime > MAX_SCHEDULER_WAIT_TIME) {
+        waitTime = MAX_SCHEDULER_WAIT_TIME;
+      } else if (waitTime < 0) {
+        // Should not happen, but just to be sure we will not wait forever.
+        waitTime = 0;
+      }
+      delay(waitTime);
       return 0;
     }
     recordRunning();
