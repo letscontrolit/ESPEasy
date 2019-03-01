@@ -1,4 +1,20 @@
 -------------------------------------------------
+Changes in release mega-20190301 (since mega-20190227)
+-------------------------------------------------
+
+Release date: Fri Mar  1 04:00:23 CET 2019
+
+TD-er (3):
+      [HLW8012] Fix build difference between Linux/Windows (#2355)
+      [Digest_auth] on Safari browser (#2356)
+      [Digest_auth] Fix compiler issues ESP32
+
+jimmys01 (2):
+      [IRTX] Fix RAW2 bug introduced at 20190202
+      Fixed a check
+
+
+-------------------------------------------------
 Changes in release mega-20190227 (since mega-20190226)
 -------------------------------------------------
 
