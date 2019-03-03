@@ -14,7 +14,6 @@
   #endif
 #endif
 
-
 /****************************************************************************************************************************\
  * Arduino project "ESP Easy" © Copyright www.letscontrolit.com
  *
@@ -87,6 +86,10 @@
 #include "define_plugin_sets.h"
 // Plugin helper needs the defined controller sets, thus include after 'define_plugin_sets.h'
 #include "_CPlugin_Helper.h"
+
+#ifdef USES_C014
+  #include <BlynkSimpleEsp8266.h>
+#endif
 
 // Blynk_get prototype
 boolean Blynk_get(const String& command, byte controllerIndex,float *data = NULL );
@@ -482,6 +485,13 @@ void loop()
   */
 
   updateLoopStats();
+
+  #ifdef USES_C014
+    if (WiFiConnected()){
+      Blynk.run();
+    }
+  #endif
+
 
   if (wifiSetupConnect)
   {

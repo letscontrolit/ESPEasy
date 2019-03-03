@@ -186,6 +186,12 @@ public:
 \*********************************************************************************************/
 #define C012_queue_element queue_element_single_value_base
 
+/*********************************************************************************************\
+ * C014_queue_element for queueing requests for 012: Blynk
+ * Using queue_element_single_value_base
+\*********************************************************************************************/
+#define C014_queue_element queue_element_single_value_base
+
 
 
 /*********************************************************************************************\
@@ -382,6 +388,9 @@ ControllerDelayHandlerStruct<MQTT_queue_element> MQTTDelayHandler;
   DEFINE_Cxxx_DELAY_QUEUE_MACRO(013, 13)
 #endif
 */
+#ifdef USES_C014
+  DEFINE_Cxxx_DELAY_QUEUE_MACRO(014, 14)
+#endif
 // When extending this, also extend in Scheduler.ino:
 // void process_interval_timer(unsigned long id, unsigned long lasttimer)
 

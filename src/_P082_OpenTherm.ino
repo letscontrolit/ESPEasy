@@ -217,9 +217,9 @@ boolean Plugin_082(byte function, struct EventStruct *event, String& string)
         		log += F("OT Error: Response timeout");
             errorCode = -1;
         	}
-          UserVar[event->BaseVarIndex + Plugin_082_values::vTSet] = NAN;
-          UserVar[event->BaseVarIndex + Plugin_082_values::vTboiler] = NAN;
-          UserVar[event->BaseVarIndex + Plugin_082_values::vMaxTSet] = NAN;
+          UserVar[event->BaseVarIndex + Plugin_082_values::vTSet] = -1;
+          UserVar[event->BaseVarIndex + Plugin_082_values::vTboiler] = -1;
+          UserVar[event->BaseVarIndex + Plugin_082_values::vMaxTSet] = -1;
         }
         UserVar[event->BaseVarIndex + Plugin_082_values::vASFflags] = errorCode;
         log += F(" (rx pin ");

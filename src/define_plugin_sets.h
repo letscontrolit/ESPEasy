@@ -500,12 +500,13 @@ To create/register a plugin, you have to :
     #define USES_C005   // OpenHAB MQTT
     // #define USES_C006   // PiDome MQTT
     // #define USES_C007   // Emoncms
-    // #define USES_C008   // Generic HTTP
+    #define USES_C008   // Generic HTTP
     // #define USES_C009   // FHEM HTTP
     // #define USES_C010   // Generic UDP
-    // #define USES_C011   // HTTP advanced
-    #define USES_C012   // Blynk HTTP
+    #define USES_C011   // HTTP advanced
+    // #define USES_C012   // Blynk HTTP
     #define USES_C013   // ESPEasy P2P network
+    #define USES_C014   // Blynk
 #endif
 
 
