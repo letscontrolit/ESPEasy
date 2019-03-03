@@ -39,9 +39,9 @@
 #define DEFAULT_WIFI_CONNECTION_TIMEOUT  10000  // minimum timeout in ms for WiFi to be connected.
 #define DEFAULT_WIFI_FORCE_BG_MODE       false  // when set, only allow to connect in 802.11B or G mode (not N)
 #define DEFAULT_WIFI_RESTART_WIFI_CONN_LOST  false // Perform wifi off and on when connection was lost.
-#define DEFAULT_ECO_MODE                 true   // When set, make idle calls between executing tasks.
+#define DEFAULT_ECO_MODE                 false   // When set, make idle calls between executing tasks.
 #define DEFAULT_WIFI_NONE_SLEEP          false  // When set, the wifi will be set to no longer sleep (more power used and need reboot to reset mode)
-#define DEFAULT_GRATUITOUS_ARD           true   // When set, the node will send periodical gratuitous ARP packets to announce itself.
+#define DEFAULT_GRATUITOUS_ARD           false  // When set, the node will send periodical gratuitous ARP packets to announce itself.
 
 // --- Default Controller ------------------------------------------------------------------------------
 #define DEFAULT_CONTROLLER   false              // true or false enabled or disabled, set 1st controller defaults
@@ -228,8 +228,8 @@
 #define TIMER_C012_DELAY_QUEUE             17
 #define TIMER_C013_DELAY_QUEUE             18
 
-#define TIMING_STATS_THRESHOLD         100000
-#define TIMER_GRATUITOUS_ARP_MAX       60000L
+#define TIMING_STATS_THRESHOLD             100000
+#define TIMER_GRATUITOUS_ARP_MAX           5000
 
 // Minimum delay between messages for a controller to send in msec.
 #define CONTROLLER_DELAY_QUEUE_DELAY_MAX   3600000
@@ -736,9 +736,8 @@ struct SettingsStruct
   bool WiFiRestart_connection_lost() {  return getBitFromUL(VariousBits1, 5); }
   void WiFiRestart_connection_lost(bool value) {  setBitToUL(VariousBits1, 5, value); }
 
-  // Enable eco mode by default, so invert the values (default = 0)
-  bool EcoPowerMode() {  return !getBitFromUL(VariousBits1, 6); }
-  void EcoPowerMode(bool value) {  setBitToUL(VariousBits1, 6, !value); }
+  bool EcoPowerMode() {  return getBitFromUL(VariousBits1, 6); }
+  void EcoPowerMode(bool value) {  setBitToUL(VariousBits1, 6, value); }
 
   bool WifiNoneSleep() {  return getBitFromUL(VariousBits1, 7); }
   void WifiNoneSleep(bool value) {  setBitToUL(VariousBits1, 7, value); }
