@@ -80,7 +80,7 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
               // Blynk.virtualWrite(vPinNumber, formattedValue);
             }
             else{
-              vPinNumber = 0;
+              vPinNumber = -1;
               log += "error got vPin number for ";
               log += valueFullName;
               log += ", got not valid value: ";
@@ -102,7 +102,7 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
 // Process Queued Blynk request, with data set to NULL
 //********************************************************************************
 bool do_process_c014_delay_queue(int controller_number, const C014_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
-  while (element.txt[element.valuesSent] == "") {
+  while (element.txt[element.valuesSent] == "" || element.vPin[element.valuesSent] == -1) {
   //   // A non valid value, which we are not going to send.
   //   // Increase sent counter until a valid value is found.
     if (element.checkDone(true))
@@ -111,26 +111,20 @@ bool do_process_c014_delay_queue(int controller_number, const C014_queue_element
   if (wifiStatus != ESPEASY_WIFI_SERVICES_INITIALIZED) {
     return false;
   }
-  Blynk.virtualWrite(element.vPin[element.valuesSent], element.txt[element.valuesSent]);
-  return element.checkDone(true);
-  // return true;
+  return element.checkDone(Blynk_get_c014(element.txt[element.valuesSent], element.vPin[element.valuesSent]));
 }
-//
-// boolean Blynk_get(const String& command, byte controllerIndex, float *data )
-// {
-//
-//   return true;
-//
-//   // important - backgroundtasks - free mem
-//   unsigned long timer = millis() + Settings.MessageDelay;
-//   while (!timeOutReached(timer))
-//               backgroundtasks();
-//
-//   return true;
-// }
 
 
+boolean Blynk_get_c014(const String& value, int vPin )
+{
+  Blynk.virtualWrite(vPin, value);
+  // important - backgroundtasks - free mem
+  unsigned long timer = millis() + Settings.MessageDelay;
+  while (!timeOutReached(timer))
+              backgroundtasks();
 
+  return true;
+}
 
 // This is called for all virtual pins, that don't have BLYNK_WRITE handler
 BLYNK_WRITE_DEFAULT() {
