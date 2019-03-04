@@ -143,6 +143,7 @@ void processGotIP() {
   MQTTclient_should_reconnect = true;
   timermqtt_interval = 100;
   setIntervalTimer(TIMER_MQTT);
+  sendGratuitousARP_now();
   if (Settings.UseRules)
   {
     String event = F("WiFi#Connected");
@@ -530,6 +531,11 @@ bool prepareWiFi() {
   safe_strncpy(hostname, WifiGetHostname().c_str(), sizeof(hostname));
   #if defined(ESP8266)
     wifi_station_set_hostname(hostname);
+    if (Settings.WifiNoneSleep()) {
+      // Only set this mode during setup.
+      // Reset to default power mode requires a reboot since setting it to WIFI_LIGHT_SLEEP will cause a crash.
+      WiFi.setSleepMode(WIFI_NONE_SLEEP);
+    }
   #endif
   #if defined(ESP32)
     WiFi.setHostname(hostname);

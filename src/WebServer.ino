@@ -4906,6 +4906,9 @@ void handle_advanced() {
     Settings.OldRulesEngine(isFormItemChecked(F("oldrulesengine")));
     Settings.ForceWiFi_bg_mode(isFormItemChecked(F("forcewifi_bg")));
     Settings.WiFiRestart_connection_lost(isFormItemChecked(F("wifi_restart_conn_lost")));
+    Settings.EcoPowerMode(isFormItemChecked(F("eco_mode")));
+    Settings.WifiNoneSleep(isFormItemChecked(F("wifi_none_sleep")));
+    Settings.gratuitousARP(isFormItemChecked(F("gratuitous_arp")));
 
     addHtmlError(SaveSettings());
     if (systemTimePresent())
@@ -4994,6 +4997,13 @@ void handle_advanced() {
 #endif
 
   addFormCheckBox(F("Restart WiFi on lost conn."), F("wifi_restart_conn_lost"), Settings.WiFiRestart_connection_lost());
+#ifdef ESP8266
+  addFormCheckBox(F("Force WiFi no sleep"), F("wifi_none_sleep"), Settings.WifiNoneSleep());
+#endif
+  addFormNote(F("Change WiFi sleep settings requires reboot to activate"));
+  addFormCheckBox(F("Periodical send Gratuitous ARP"), F("gratuitous_arp"), Settings.gratuitousARP());
+  addFormCheckBox(F("CPU Eco mode"), F("eco_mode"), Settings.EcoPowerMode());
+  addFormNote(F("Node may miss receiving packets with Eco mode enabled"));
 
   addFormNumericBox(F("I2C ClockStretchLimit"), F("wireclockstretchlimit"), Settings.WireClockStretchLimit);   //TODO define limits
   #if defined(FEATURE_ARDUINO_OTA)
