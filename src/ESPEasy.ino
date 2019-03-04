@@ -487,7 +487,7 @@ void loop()
   updateLoopStats();
 
   #ifdef USES_C014
-    if (WiFiConnected()){
+    if (WiFiConnected() && Blynk.connected()){
       Blynk.run();
     }
   #endif

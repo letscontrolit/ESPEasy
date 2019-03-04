@@ -67,19 +67,20 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
             valueFullName += valueName;
             String vPinNumberStr = valueName.substring(1, 4);
             int vPinNumber=vPinNumberStr.toInt();
-            // element.idx = vPinNumber;
+            element.vPin[x] = vPinNumber;
             element.txt[x] = formattedValue;
             String log = F("BL: ");
             if (vPinNumber>0 && vPinNumber<256){
               log += "sending ";
               log += valueFullName;
               log += " value ";
-              log += element.txt[x];
+              log += formattedValue;
               log += " to blynk pin v";
               log += vPinNumber;
-              Blynk.virtualWrite(vPinNumber, formattedValue);
+              // Blynk.virtualWrite(vPinNumber, formattedValue);
             }
             else{
+              vPinNumber = 0;
               log += "error got vPin number for ";
               log += valueFullName;
               log += ", got not valid value: ";
@@ -88,9 +89,9 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
             addLog(LOG_LEVEL_INFO, log);
           }
         }
-        return true;
-        // success = C014_DelayHandler.addToQueue(element);
-        // scheduleNextDelayQueue(TIMER_C014_DELAY_QUEUE, C014_DelayHandler.getNextScheduleTime());
+        // return true;
+        success = C014_DelayHandler.addToQueue(element);
+        scheduleNextDelayQueue(TIMER_C014_DELAY_QUEUE, C014_DelayHandler.getNextScheduleTime());
         break;
       }
   }
@@ -101,17 +102,18 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
 // Process Queued Blynk request, with data set to NULL
 //********************************************************************************
 bool do_process_c014_delay_queue(int controller_number, const C014_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
-  // while (element.txt[element.valuesSent] == "") {
+  while (element.txt[element.valuesSent] == "") {
   //   // A non valid value, which we are not going to send.
   //   // Increase sent counter until a valid value is found.
-  //   if (element.checkDone(true))
-  //     return true;
-  // }
-  // if (wifiStatus != ESPEASY_WIFI_SERVICES_INITIALIZED) {
-  //   return false;
-  // }
-  // return element.checkDone(Blynk_get(element.txt[element.valuesSent], element.controller_idx));
-  return true;
+    if (element.checkDone(true))
+      return true;
+  }
+  if (wifiStatus != ESPEASY_WIFI_SERVICES_INITIALIZED) {
+    return false;
+  }
+  Blynk.virtualWrite(element.vPin[element.valuesSent], element.txt[element.valuesSent]);
+  return element.checkDone(true);
+  // return true;
 }
 //
 // boolean Blynk_get(const String& command, byte controllerIndex, float *data )
