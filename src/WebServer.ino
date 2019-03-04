@@ -5003,6 +5003,7 @@ void handle_advanced() {
   addFormNote(F("Change WiFi sleep settings requires reboot to activate"));
   addFormCheckBox(F("Periodical send Gratuitous ARP"), F("gratuitous_arp"), Settings.gratuitousARP());
   addFormCheckBox(F("CPU Eco mode"), F("eco_mode"), Settings.EcoPowerMode());
+  addFormNote(F("Node may miss receiving packets with Eco mode enabled"));
 
   addFormNumericBox(F("I2C ClockStretchLimit"), F("wireclockstretchlimit"), Settings.WireClockStretchLimit);   //TODO define limits
   #if defined(FEATURE_ARDUINO_OTA)
