@@ -460,7 +460,7 @@ To create/register a plugin, you have to :
     // #define USES_P023   // OLED
     // #define USES_P024   // MLX90614
     // #define USES_P025   // ADS1115
-    // #define USES_P026   // SysInfo
+    #define USES_P026   // SysInfo
     // #define USES_P027   // INA219
     // #define USES_P028   // BME280
     // #define USES_P029   // Output

@@ -25,7 +25,7 @@ boolean Plugin_033(byte function, struct EventStruct *event, String& string)
         Device[deviceCount].Ports = 0;
         Device[deviceCount].PullUpOption = false;
         Device[deviceCount].InverseLogicOption = false;
-        Device[deviceCount].FormulaOption = false;
+        Device[deviceCount].FormulaOption = true;
         Device[deviceCount].DecimalsOnly = true;
         Device[deviceCount].ValueCount = P33_Nlines;
         Device[deviceCount].SendDataOption = true;

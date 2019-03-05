@@ -51,7 +51,6 @@ boolean Plugin_004(byte function, struct EventStruct * event, String& string)
         {
             for (byte j = 0; j < SENSORS_MAX; j++){
                 String valueName = F(PLUGIN_VALUENAME1_004);
-                valueName += " ";
                 valueName += j;
                 const char* tmp = valueName.c_str();
                 strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[j], tmp);
@@ -262,7 +261,7 @@ boolean Plugin_004(byte function, struct EventStruct * event, String& string)
                     }
                     default: {
                         event->sensorType = SENSOR_TYPE_NONE;
-                        Device[deviceCount].ValueCount = 0;                        
+                        Device[deviceCount].ValueCount = 0;
                     }
                 }
             }
