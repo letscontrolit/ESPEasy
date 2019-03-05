@@ -1,4 +1,17 @@
 -------------------------------------------------
+Changes in release mega-20190305 (since mega-20190301)
+-------------------------------------------------
+
+Release date: Tue Mar  5 04:00:16 CET 2019
+
+TD-er (4):
+      [Energy] Call delay from scheduler during idle time
+      [Energy] Add Eco mode, wifi none sleep and gratuitous ARP
+      [Energy] Default Eco mode off.
+      [Energy] Document new Special and Experimental Settings
+
+
+-------------------------------------------------
 Changes in release mega-20190301 (since mega-20190227)
 -------------------------------------------------
 
