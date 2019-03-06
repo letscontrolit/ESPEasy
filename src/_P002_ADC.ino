@@ -8,8 +8,6 @@
 #define PLUGIN_NAME_002       "Analog input - internal"
 #define PLUGIN_VALUENAME1_002 "Analog"
 
-uint32_t Plugin_002_OversamplingValue = 0;
-uint16_t Plugin_002_OversamplingCount = 0;
 
 #ifdef ESP32
   #define P002_MAX_ADC_VALUE    4095
@@ -18,6 +16,10 @@ uint16_t Plugin_002_OversamplingCount = 0;
   #define P002_MAX_ADC_VALUE    1023
 #endif
 
+uint32_t Plugin_002_OversamplingValue = 0;
+uint16_t Plugin_002_OversamplingCount = 0;
+uint16_t Plugin_002_OversamplingMinVal = P002_MAX_ADC_VALUE;
+uint16_t Plugin_002_OversamplingMaxVal = 0;
 
 boolean Plugin_002(byte function, struct EventStruct *event, String& string)
 {
@@ -74,6 +76,16 @@ boolean Plugin_002(byte function, struct EventStruct *event, String& string)
         html_add_estimate_symbol();
         addTextBox(F("p002_out2"), String(PCONFIG_FLOAT(1), 3), 10);
 
+        {
+          int16_t raw_value = 0;
+          float value = P002_getOutputValue(event, raw_value);
+          String note = F("Current: ");
+          note += String(raw_value);
+          note += F(" = ");
+          note += String(value, 3);
+          addFormNote(note);
+        }
+
         success = true;
         break;
       }
@@ -98,13 +110,15 @@ boolean Plugin_002(byte function, struct EventStruct *event, String& string)
       {
         if (PCONFIG(0))   //Oversampling?
         {
-          #if defined(ESP8266)
-            Plugin_002_OversamplingValue += analogRead(A0);
-          #endif
-          #if defined(ESP32)
-            Plugin_002_OversamplingValue += analogRead(CONFIG_PIN1);
-          #endif
-          Plugin_002_OversamplingCount ++;
+          uint16_t currentValue = P002_performRead();
+          Plugin_002_OversamplingValue += currentValue;
+          ++Plugin_002_OversamplingCount;
+          if (currentValue > Plugin_002_OversamplingMaxVal) {
+            Plugin_002_OversamplingMaxVal = currentValue;
+          }
+          if (currentValue < Plugin_002_OversamplingMinVal) {
+            Plugin_002_OversamplingMinVal = currentValue;
+          }
         }
         success = true;
         break;
@@ -112,50 +126,72 @@ boolean Plugin_002(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
       {
-        String log = F("ADC  : Analog value: ");
-
-        if (Plugin_002_OversamplingCount > 0)
-        {
-          UserVar[event->BaseVarIndex] = (float)Plugin_002_OversamplingValue / Plugin_002_OversamplingCount;
-          Plugin_002_OversamplingValue = 0;
-          Plugin_002_OversamplingCount = 0;
-
+        int16_t raw_value = 0;
+        UserVar[event->BaseVarIndex] = P002_getOutputValue(event, raw_value);
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          String log = F("ADC  : Analog value: ");
+          log += String(raw_value);
+          log += F(" = ");
           log += String(UserVar[event->BaseVarIndex], 3);
-        }
-        else
-        {
-          #if defined(ESP8266)
-            int16_t value = analogRead(A0);
-          #endif
-          #if defined(ESP32)
-            int16_t value = analogRead(CONFIG_PIN1);
-          #endif
-          UserVar[event->BaseVarIndex] = (float)value;
-
-          log += value;
-        }
-
-        if (PCONFIG(3))   //Calibration?
-        {
-          int adc1 = PCONFIG_LONG(0);
-          int adc2 = PCONFIG_LONG(1);
-          float out1 = PCONFIG_FLOAT(0);
-          float out2 = PCONFIG_FLOAT(1);
-          if (adc1 != adc2)
-          {
-            float normalized = (float)(UserVar[event->BaseVarIndex] - adc1) / (float)(adc2 - adc1);
-            UserVar[event->BaseVarIndex] = normalized * (out2 - out1) + out1;
-
-            log += F(" = ");
-            log += String(UserVar[event->BaseVarIndex], 3);
+          if (PCONFIG(0)) {
+            log += F(" (");
+            log += Plugin_002_OversamplingCount;
+            log += F(" samples)");
           }
+          addLog(LOG_LEVEL_INFO,log);
         }
-
-        addLog(LOG_LEVEL_INFO,log);
+        // Now reset the oversampling variables.
+        Plugin_002_OversamplingValue = 0;
+        Plugin_002_OversamplingCount = 0;
+        Plugin_002_OversamplingMinVal = P002_MAX_ADC_VALUE;
+        Plugin_002_OversamplingMaxVal = 0;
         success = true;
         break;
       }
   }
   return success;
 }
+
+float P002_getOutputValue(struct EventStruct *event, int16_t &raw_value) {
+  float float_value = 0.0;
+  if (PCONFIG(0) && Plugin_002_OversamplingCount > 0) {
+    float sum = static_cast<float>(Plugin_002_OversamplingValue);
+    float count = static_cast<float>(Plugin_002_OversamplingCount);
+    if (Plugin_002_OversamplingCount >= 3) {
+      sum -= Plugin_002_OversamplingMaxVal;
+      sum -= Plugin_002_OversamplingMinVal;
+      count -= 2;
+    }
+    float_value = sum / count;
+    raw_value = static_cast<int16_t>(float_value);
+  } else {
+    raw_value = P002_performRead();
+    float_value = static_cast<float>(raw_value);
+  }
+  if (PCONFIG(3))   //Calibration?
+  {
+    int adc1 = PCONFIG_LONG(0);
+    int adc2 = PCONFIG_LONG(1);
+    float out1 = PCONFIG_FLOAT(0);
+    float out2 = PCONFIG_FLOAT(1);
+    if (adc1 != adc2)
+    {
+      const float normalized = static_cast<float>(float_value - adc1) / static_cast<float>(adc2 - adc1);
+      float_value = normalized * (out2 - out1) + out1;
+    }
+  }
+  return float_value;
+}
+
+uint16_t P002_performRead() {
+  uint16_t value = 0;
+  #if defined(ESP8266)
+    value = analogRead(A0);
+  #endif
+  #if defined(ESP32)
+    value = analogRead(CONFIG_PIN1);
+  #endif
+  return value;
+}
+
 #endif // USES_P002
