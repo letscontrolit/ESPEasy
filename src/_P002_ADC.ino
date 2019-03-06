@@ -110,7 +110,7 @@ boolean Plugin_002(byte function, struct EventStruct *event, String& string)
       {
         if (PCONFIG(0))   //Oversampling?
         {
-          uint16_t currentValue = P002_performRead();
+          uint16_t currentValue = P002_performRead(event);
           Plugin_002_OversamplingValue += currentValue;
           ++Plugin_002_OversamplingCount;
           if (currentValue > Plugin_002_OversamplingMaxVal) {
@@ -165,7 +165,7 @@ float P002_getOutputValue(struct EventStruct *event, int16_t &raw_value) {
     float_value = sum / count;
     raw_value = static_cast<int16_t>(float_value);
   } else {
-    raw_value = P002_performRead();
+    raw_value = P002_performRead(event);
     float_value = static_cast<float>(raw_value);
   }
   if (PCONFIG(3))   //Calibration?
@@ -183,7 +183,7 @@ float P002_getOutputValue(struct EventStruct *event, int16_t &raw_value) {
   return float_value;
 }
 
-uint16_t P002_performRead() {
+uint16_t P002_performRead(struct EventStruct *event) {
   uint16_t value = 0;
   #if defined(ESP8266)
     value = analogRead(A0);

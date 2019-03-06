@@ -498,6 +498,7 @@ void loop()
   if(MainLoopCall_ptr)
       MainLoopCall_ptr();
   */
+  dummyString = String(); // Fixme TD-er  Make sure this global variable doesn't keep memory allocated.
 
   updateLoopStats();
 
