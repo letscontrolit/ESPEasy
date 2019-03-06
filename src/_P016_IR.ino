@@ -3,6 +3,9 @@
 //#################################### Plugin 016: Input IR #############################################
 //#######################################################################################################
 
+// Uncomment the following define to enable the extended decoding of AC messages (20K bytes in flash)
+// Example of those messages: "Mesg Desc.: Power: On, Fan: 5 (AUTO), Mode: 3 (HEAT), Temp: 22C, Zone Follow: Off, Sensor Temp: Ignored"
+//#define P016_Extended_Decoding
 
 #ifdef ESP8266  // Needed for precompile issues.
 #include <IRremoteESP8266.h>
@@ -10,7 +13,8 @@
 
 #include <IRrecv.h>
 #include <IRutils.h>
-// The following are only needed for extended decoding of A/C Messages
+
+#ifdef P016_Extended_Decoding // The following are only needed for extended decoding of A/C Messages
 #include <ir_Coolix.h>
 #include <ir_Daikin.h>
 #include <ir_Fujitsu.h>
@@ -24,6 +28,7 @@
 #include <ir_Samsung.h>
 #include <ir_Toshiba.h>
 #include <ir_Whirlpool.h>
+#endif
 
 #define PLUGIN_016
 #define PLUGIN_ID_016         16
@@ -183,6 +188,7 @@ boolean Plugin_016(byte function, struct EventStruct *event, String& string)
           addLog(LOG_LEVEL_INFO, description);
           displayRawToReadableB32Hex();
 
+#ifdef P016_Extended_Decoding
           // Display any extra A/C info if we have it.
           // Display the human readable state of an A/C message if we can.
           description = "";
@@ -269,7 +275,7 @@ boolean Plugin_016(byte function, struct EventStruct *event, String& string)
     IRPanasonicAc ac(0);
     ac.setRaw(results.state);
     description = ac.toString();
-  }
+  } #endif  // DECODE_PANASONIC_AC
 #if DECODE_HITACHI_AC
   if (results.decode_type == HITACHI_AC) {
     IRHitachiAc ac(0);
@@ -284,7 +290,7 @@ boolean Plugin_016(byte function, struct EventStruct *event, String& string)
     description = ac.toString();
   }
 #endif  // DECODE_WHIRLPOOL_AC
-#endif  // DECODE_PANASONIC_AC
+#endif  // Extended Messages
   // If we got a human-readable description of the message, display it.
           if (description != "") addLog(LOG_LEVEL_INFO, description);
 
