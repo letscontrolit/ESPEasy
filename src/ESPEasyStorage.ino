@@ -572,7 +572,9 @@ String InitFile(const char* fname, int datasize)
 
     for (int x = 0; x < datasize ; x++)
     {
-      SPIFFS_CHECK(f.write(0), fname);
+      // See https://github.com/esp8266/Arduino/commit/b1da9eda467cc935307d553692fdde2e670db258#r32622483
+      uint8_t zero_value = 0;
+      SPIFFS_CHECK(f.write(&zero_value, 1), fname);
     }
     f.close();
   }
@@ -676,7 +678,9 @@ String ClearInFile(char* fname, int index, int datasize)
     SPIFFS_CHECK(f.seek(index, fs::SeekSet), fname);
     for (int x = 0; x < datasize ; x++)
     {
-      SPIFFS_CHECK(f.write(0), fname);
+      // See https://github.com/esp8266/Arduino/commit/b1da9eda467cc935307d553692fdde2e670db258#r32622483
+      uint8_t zero_value = 0;
+      SPIFFS_CHECK(f.write(&zero_value, 1), fname);
     }
     f.close();
   } else {
