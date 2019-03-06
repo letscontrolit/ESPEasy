@@ -275,7 +275,8 @@ boolean Plugin_016(byte function, struct EventStruct *event, String& string)
     IRPanasonicAc ac(0);
     ac.setRaw(results.state);
     description = ac.toString();
-  } #endif  // DECODE_PANASONIC_AC
+  } 
+#endif  // DECODE_PANASONIC_AC
 #if DECODE_HITACHI_AC
   if (results.decode_type == HITACHI_AC) {
     IRHitachiAc ac(0);
