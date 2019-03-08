@@ -54,7 +54,9 @@ enum  Plugin_082_values{
 OpenTherm* ot=NULL;
 
 void Plugin_082_handleInterrupt() {
+  // called at any inPin statte change
   ot->handleInterrupt();
+  backgroundtasks(); // not tested !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 }
 
 
