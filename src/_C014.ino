@@ -10,6 +10,7 @@
 #define CPLUGIN_NAME_014       "Blynk"
 
 #include <BlynkSimpleEsp8266.h>
+// #include <BlynkSimpleEsp8266_SSL.h>
 
 bool CPlugin_014(byte function, struct EventStruct *event, String& string)
 {
@@ -60,34 +61,36 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
         {
           bool isvalid;
           String formattedValue = formatUserVar(event, x, isvalid);
-          if (isvalid) {
-            String valueName = ExtraTaskSettings.TaskDeviceValueNames[x];
-            String valueFullName = ExtraTaskSettings.TaskDeviceName;
-            valueFullName += '.';
-            valueFullName += valueName;
-            String vPinNumberStr = valueName.substring(1, 4);
-            int vPinNumber=vPinNumberStr.toInt();
-            element.vPin[x] = vPinNumber;
-            element.txt[x] = formattedValue;
-            String log = F("BL: ");
-            if (vPinNumber>0 && vPinNumber<256){
-              log += "sending ";
-              log += valueFullName;
-              log += " value ";
-              log += formattedValue;
-              log += " to blynk pin v";
-              log += vPinNumber;
-              // Blynk.virtualWrite(vPinNumber, formattedValue);
-            }
-            else{
-              vPinNumber = -1;
-              log += "error got vPin number for ";
-              log += valueFullName;
-              log += ", got not valid value: ";
-              log += vPinNumberStr;
-            }
-            addLog(LOG_LEVEL_INFO, log);
+          if (!isvalid)
+            formattedValue = F("error");
+
+          String valueName = ExtraTaskSettings.TaskDeviceValueNames[x];
+          String valueFullName = ExtraTaskSettings.TaskDeviceName;
+          valueFullName += '.';
+          valueFullName += valueName;
+          String vPinNumberStr = valueName.substring(1, 4);
+          int vPinNumber=vPinNumberStr.toInt();
+          element.vPin[x] = vPinNumber;
+          element.txt[x] = formattedValue;
+          String log = F("BL: ");
+          if (vPinNumber>0 && vPinNumber<256){
+            log += "sending ";
+            log += valueFullName;
+            log += " value ";
+            log += formattedValue;
+            log += " to blynk pin v";
+            log += vPinNumber;
+            // Blynk.virtualWrite(vPinNumber, formattedValue);
           }
+          else{
+            vPinNumber = -1;
+            log += "error got vPin number for ";
+            log += valueFullName;
+            log += ", got not valid value: ";
+            log += vPinNumberStr;
+          }
+          addLog(LOG_LEVEL_INFO, log);
+
         }
         // return true;
         success = C014_DelayHandler.addToQueue(element);

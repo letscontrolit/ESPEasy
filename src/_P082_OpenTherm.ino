@@ -73,7 +73,7 @@ boolean Plugin_082(byte function, struct EventStruct *event, String& string)
         Device[deviceCount].Ports = 0;
         Device[deviceCount].PullUpOption = false;
         Device[deviceCount].InverseLogicOption = false;
-        Device[deviceCount].FormulaOption = false;
+        Device[deviceCount].FormulaOption = true;
         Device[deviceCount].DecimalsOnly = true;
         Device[deviceCount].ValueCount = 5;
         Device[deviceCount].SendDataOption = true;
@@ -105,40 +105,40 @@ boolean Plugin_082(byte function, struct EventStruct *event, String& string)
         break;
       }
 
-    case PLUGIN_WEBFORM_LOAD:
-      {
-        LoadTaskSettings(event->TaskIndex);
-        String argName = F("p082_template");
-        int16_t webFormValue = ExtraTaskSettings.TaskDevicePluginConfig[0];
-        addFormTextBox(String(F("TSetUser")), argName, String(webFormValue), P82_Nchars);
-        success = true;
-        break;
-      }
+    // case PLUGIN_WEBFORM_LOAD:
+    //   {
+    //     LoadTaskSettings(event->TaskIndex);
+    //     String argName = F("p082_template");
+    //     int16_t webFormValue = ExtraTaskSettings.TaskDevicePluginConfig[0];
+    //     addFormTextBox(String(F("TSetUser")), argName, String(webFormValue), P82_Nchars);
+    //     success = true;
+    //     break;
+    //   }
 
-    case PLUGIN_WEBFORM_SAVE:
-      {
-        String error;
-        String argName = F("p082_template");
-        char webFormValue[P82_Nchars];
-        if (!safe_strncpy(webFormValue, WebServer.arg(argName), P82_Nchars)) {
-          error = F("Settings save error");
-        }
-        if (error.length() > 0) {
-          addHtmlError(error);
-          success = false;
-        }
-        else {
-          ExtraTaskSettings.TaskDevicePluginConfig[0] = atoi(webFormValue);
-          SaveTaskSettings(event->TaskIndex);
-          success = true;
-        }
-        break;
-      }
+    // case PLUGIN_WEBFORM_SAVE:
+    //   {
+    //     String error;
+    //     String argName = F("p082_template");
+    //     char webFormValue[P82_Nchars];
+    //     if (!safe_strncpy(webFormValue, WebServer.arg(argName), P82_Nchars)) {
+    //       error = F("Settings save error");
+    //     }
+    //     if (error.length() > 0) {
+    //       addHtmlError(error);
+    //       success = false;
+    //     }
+    //     else {
+    //       ExtraTaskSettings.TaskDevicePluginConfig[0] = atoi(webFormValue);
+    //       SaveTaskSettings(event->TaskIndex);
+    //       success = true;
+    //     }
+    //     break;
+    //   }
 
     case PLUGIN_INIT:
       {
-        LoadTaskSettings(event->TaskIndex);
-        UserVar[event->BaseVarIndex + Plugin_082_values::vTSetUser] = ExtraTaskSettings.TaskDevicePluginConfig[0];
+        // LoadTaskSettings(event->TaskIndex);
+        // UserVar[event->BaseVarIndex + Plugin_082_values::vTSetUser] = ExtraTaskSettings.TaskDevicePluginConfig[0];
         int rxPin = Settings.TaskDevicePin1[event->TaskIndex];
         int txPin = Settings.TaskDevicePin2[event->TaskIndex];
         // only one boiler is supported!
@@ -217,9 +217,9 @@ boolean Plugin_082(byte function, struct EventStruct *event, String& string)
         		log += F("OT Error: Response timeout");
             errorCode = -1;
         	}
-          UserVar[event->BaseVarIndex + Plugin_082_values::vTSet] = -1;
-          UserVar[event->BaseVarIndex + Plugin_082_values::vTboiler] = -1;
-          UserVar[event->BaseVarIndex + Plugin_082_values::vMaxTSet] = -1;
+          UserVar[event->BaseVarIndex + Plugin_082_values::vTSet] = NAN;
+          UserVar[event->BaseVarIndex + Plugin_082_values::vTboiler] = NAN;
+          UserVar[event->BaseVarIndex + Plugin_082_values::vMaxTSet] = NAN;
         }
         UserVar[event->BaseVarIndex + Plugin_082_values::vASFflags] = errorCode;
         log += F(" (rx pin ");
@@ -230,14 +230,14 @@ boolean Plugin_082(byte function, struct EventStruct *event, String& string)
         addLog(LOG_LEVEL_INFO,log);
 
         // check if userTemperature was changed or not
-        LoadTaskSettings(event->TaskIndex);
-        int16_t savedUserTemperature = ExtraTaskSettings.TaskDevicePluginConfig[0];
-
-        if (savedUserTemperature != userTemperature){
-          addLog(LOG_LEVEL_INFO,F("OT userTemperature has been changed. Commiting new value."));
-          ExtraTaskSettings.TaskDevicePluginConfig[0] = userTemperature;
-          SaveTaskSettings(event->TaskIndex);
-        }
+        // LoadTaskSettings(event->TaskIndex);
+        // int16_t savedUserTemperature = ExtraTaskSettings.TaskDevicePluginConfig[0];
+        //
+        // if (savedUserTemperature != userTemperature){
+        //   addLog(LOG_LEVEL_INFO,F("OT userTemperature has been changed. Commiting new value."));
+        //   ExtraTaskSettings.TaskDevicePluginConfig[0] = userTemperature;
+        //   SaveTaskSettings(event->TaskIndex);
+        // }
 
         success = true;
         break;

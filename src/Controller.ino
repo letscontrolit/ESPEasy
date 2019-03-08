@@ -46,7 +46,8 @@ void sendData(struct EventStruct *event)
         Settings.Protocol[event->ControllerIndex])
     {
       event->ProtocolIndex = getProtocolIndex(Settings.Protocol[event->ControllerIndex]);
-      if (validUserVar(event)) {
+      // if (validUserVar(event)) {
+      if (true){
         CPluginCall(event->ProtocolIndex, CPLUGIN_PROTOCOL_SEND, event, dummyString);
       } else {
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {

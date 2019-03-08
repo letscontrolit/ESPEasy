@@ -876,6 +876,7 @@ void SensorSendTask(byte TaskIndex)
           String formula = ExtraTaskSettings.TaskDeviceFormula[varNr];
           formula.replace(F("%pvalue%"), String(preValue[varNr]));
           formula.replace(F("%value%"), String(UserVar[varIndex + varNr]));
+          formula = parseTemplate(formula, formula.length());
           float result = 0;
           byte error = Calculate(formula.c_str(), &result);
           if (error == 0)

@@ -113,14 +113,17 @@ bool CPlugin_005(byte function, struct EventStruct *event, String& string)
         {
           String tmppubname = pubname;
           tmppubname.replace(F("%valname%"), ExtraTaskSettings.TaskDeviceValueNames[x]);
-          value = formatUserVarNoCheck(event, x);
 
-          MQTTpublish(event->ControllerIndex, tmppubname.c_str(), value.c_str(), Settings.MQTTRetainFlag);
-          String log = F("MQTT : ");
-          log += tmppubname;
-          log += ' ';
-          log += value;
-          addLog(LOG_LEVEL_DEBUG, log);
+          bool isvalid;
+          value = formatUserVar(event, x, isvalid);
+          if (isvalid){
+            MQTTpublish(event->ControllerIndex, tmppubname.c_str(), value.c_str(), Settings.MQTTRetainFlag);
+            String log = F("MQTT : ");
+            log += tmppubname;
+            log += ' ';
+            log += value;
+            addLog(LOG_LEVEL_DEBUG, log);
+          }
         }
         break;
       }
