@@ -30,6 +30,8 @@ if [ -d "docs/build" ]; then
   cp -r docs/build/* ${TMP_DIST}/docs/
 fi
 
+mkdir -p ${TMP_DIST}/memstats
+
 for ENV in \
   dev_ESP8266_4M\
   esp-wrover-kit_test_1M8_partition\
@@ -94,6 +96,16 @@ do
     mv $BIN "${TMP_DIST}/bin/ESP_Easy_${VERSION}_${ENV}.bin"
   else
     echo "Build too large for $ENV $FILESIZE > $MAX_FILESIZE "
+  fi
+
+  ELFFILE=`echo ".pioenvs/${ENV}/firmware.elf"`
+  if [ -f $ELFFILE ]; then
+    SYMBOLS_STATS=`echo "${TMP_DIST}/memstats/${ENV}_symbols.txt"`
+    STRINGS_STATS=`echo "${TMP_DIST}/memstats/${ENV}_strings.txt"`
+    readelf -a ${ELFFILE} |grep 3ff |sort -n -k 3 > ${SYMBOLS_STATS}
+    objdump  -s -j .rodata ${ELFFILE} > ${STRINGS_STATS}
+    gzip ${SYMBOLS_STATS}
+    gzip ${STRINGS_STATS}
   fi
 done
 
