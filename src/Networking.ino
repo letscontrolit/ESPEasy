@@ -6,6 +6,9 @@
 #define IPADDR2STR(addr) (uint8_t)((uint32_t)addr &  0xFF), (uint8_t)(((uint32_t)addr >> 8) &  0xFF), (uint8_t)(((uint32_t)addr >> 16) &  0xFF), (uint8_t)(((uint32_t)addr >> 24) &  0xFF)
 //  #endif
 
+#include <lwip/netif.h>
+#include <lwip/etharp.h>
+
 /*********************************************************************************************\
    Syslog client
   \*********************************************************************************************/
@@ -227,9 +230,14 @@ void sendUDP(byte unit, byte* data, byte size)
   \*********************************************************************************************/
 void refreshNodeList()
 {
+  bool mustSendGratuitousARP = false;
   for (NodesMap::iterator it = Nodes.begin(); it != Nodes.end(); ) {
     bool mustRemove = true;
     if (it->second.ip[0] != 0) {
+      if (it->second.age > 8) {
+        // Increase frequency sending ARP requests for 2 minutes
+        mustSendGratuitousARP = true;
+      }
       if (it->second.age < 10) {
         it->second.age++;
         mustRemove = false;
@@ -239,6 +247,9 @@ void refreshNodeList()
     if (mustRemove) {
       it = Nodes.erase(it);
     }
+  }
+  if (mustSendGratuitousARP) {
+    sendGratuitousARP_now();
   }
 }
 
@@ -414,7 +425,7 @@ bool SSDP_begin() {
     return false;
   }
 
-#ifdef CORE_2_5_0
+#ifdef CORE_POST_2_5_0
   // Core 2.5.0 changed the signature of some UdpContext function.
   if (!_server->listen(IP_ADDR_ANY, SSDP_PORT)) {
     return false;
@@ -710,6 +721,9 @@ bool connectClient(WiFiClient& client, IPAddress ip, uint16_t port)
     return false;
   }
   bool connected = (client.connect(ip, port) == 1);
+  if (!connected) {
+    sendGratuitousARP_now();
+  }
   STOP_TIMER(CONNECT_CLIENT_STATS);
 #if defined(ESP32) || defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(ARDUINO_ESP8266_RELEASE_2_4_0)
 #else
@@ -727,8 +741,11 @@ bool resolveHostByName(const char* aHostname, IPAddress& aResult) {
 #if defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(ESP32)
   bool resolvedIP = WiFi.hostByName(aHostname, aResult) == 1;
 #else
-  bool resolvedIP = WiFi.hostByName(aHostname, aResult, 100) == 1;
+  bool resolvedIP = WiFi.hostByName(aHostname, aResult, CONTROLLER_CLIENTTIMEOUT_DFLT) == 1;
 #endif
+  if (!resolvedIP) {
+    sendGratuitousARP_now();
+  }
   STOP_TIMER(HOST_BY_NAME_STATS);
   return resolvedIP;
 }
@@ -758,4 +775,14 @@ bool beginWiFiUDP_randomPort(WiFiUDP& udp) {
       return true;
   }
   return false;
+}
+
+void sendGratuitousARP() {
+  START_TIMER;
+  netif *n = netif_list;
+  while (n) {
+    etharp_gratuitous(n);
+    n = n->next;
+  }
+  STOP_TIMER(GRAT_ARP_STATS);
 }

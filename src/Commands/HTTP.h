@@ -25,6 +25,7 @@ String Command_HTTP_SendToHTTP(struct EventStruct *event, const char* Line)
 		}
 #endif
 		WiFiClient client;
+		client.setTimeout(CONTROLLER_CLIENTTIMEOUT_DFLT);
 		const int port_int = port.toInt();
 		const bool connected = connectClient(client, host.c_str(), port_int);
 		if (connected) {

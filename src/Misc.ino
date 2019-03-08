@@ -263,7 +263,7 @@ uint32_t getFreeStackWatermark() {
 bool canYield() { return true; }
 
 #else
-#if defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(ARDUINO_ESP8266_RELEASE_2_4_0) || defined(ARDUINO_ESP8266_RELEASE_2_4_1)
+#ifdef CORE_PRE_2_4_2
 // All version before core 2.4.2
 extern "C" {
 #include <cont.h>
@@ -393,7 +393,7 @@ void deepSleepStart(int dsdelay)
   addLog(LOG_LEVEL_INFO, F("SLEEP: Powering down to deepsleep..."));
   delay(100); // give the node time to send above log message before going to sleep
   #if defined(ESP8266)
-    #if defined(CORE_2_5_0)
+    #if defined(CORE_POST_2_5_0)
       uint64_t deepSleep_usec = dsdelay * 1000000ULL;
       if ((deepSleep_usec > ESP.deepSleepMax()) || dsdelay < 0) {
         deepSleep_usec = ESP.deepSleepMax();

@@ -202,6 +202,7 @@ void afterloadSettings() {
   if (modelMatchingFlashSize(model)) {
     ResetFactoryDefaultPreference = Settings.ResetFactoryDefaultPreference;
   }
+  msecTimerHandler.setEcoMode(Settings.EcoPowerMode());
 }
 
 /********************************************************************************************\

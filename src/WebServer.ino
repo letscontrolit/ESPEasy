@@ -564,6 +564,7 @@ void WebServerInit()
   {
     WebServer.on(F("/ssdp.xml"), HTTP_GET, []() {
       WiFiClient client(WebServer.client());
+      client.setTimeout(CONTROLLER_CLIENTTIMEOUT_DFLT);
       SSDP_schema(client);
     });
     SSDP_begin();
@@ -1288,7 +1289,7 @@ void handle_config() {
   addFormNote(F("0 = Sleep Disabled, else time awake from sleep"));
 
   int dsmax = 4294; // About 71 minutes
-#if defined(CORE_2_5_0)
+#if defined(CORE_POST_2_5_0)
   dsmax = INT_MAX;
   if ((ESP.deepSleepMax()/1000000ULL) <= (uint64_t)INT_MAX)
     dsmax = (int)(ESP.deepSleepMax()/1000000ULL);
@@ -4905,6 +4906,9 @@ void handle_advanced() {
     Settings.OldRulesEngine(isFormItemChecked(F("oldrulesengine")));
     Settings.ForceWiFi_bg_mode(isFormItemChecked(F("forcewifi_bg")));
     Settings.WiFiRestart_connection_lost(isFormItemChecked(F("wifi_restart_conn_lost")));
+    Settings.EcoPowerMode(isFormItemChecked(F("eco_mode")));
+    Settings.WifiNoneSleep(isFormItemChecked(F("wifi_none_sleep")));
+    Settings.gratuitousARP(isFormItemChecked(F("gratuitous_arp")));
 
     addHtmlError(SaveSettings());
     if (systemTimePresent())
@@ -4993,6 +4997,13 @@ void handle_advanced() {
 #endif
 
   addFormCheckBox(F("Restart WiFi on lost conn."), F("wifi_restart_conn_lost"), Settings.WiFiRestart_connection_lost());
+#ifdef ESP8266
+  addFormCheckBox(F("Force WiFi no sleep"), F("wifi_none_sleep"), Settings.WifiNoneSleep());
+#endif
+  addFormNote(F("Change WiFi sleep settings requires reboot to activate"));
+  addFormCheckBox(F("Periodical send Gratuitous ARP"), F("gratuitous_arp"), Settings.gratuitousARP());
+  addFormCheckBox(F("CPU Eco mode"), F("eco_mode"), Settings.EcoPowerMode());
+  addFormNote(F("Node may miss receiving packets with Eco mode enabled"));
 
   addFormNumericBox(F("I2C ClockStretchLimit"), F("wireclockstretchlimit"), Settings.WireClockStretchLimit);   //TODO define limits
   #if defined(FEATURE_ARDUINO_OTA)
@@ -5096,7 +5107,13 @@ boolean isLoggedIn()
       //return server.requestAuthentication(DIGEST_AUTH, www_realm);
       //Digest Auth Method with Custom realm and Failure Response
   {
-    WebServer.requestAuthentication(DIGEST_AUTH);
+#ifdef CORE_PRE_2_5_0
+    // See https://github.com/esp8266/Arduino/issues/4717
+    HTTPAuthMethod mode = BASIC_AUTH;
+#else
+    HTTPAuthMethod mode = DIGEST_AUTH;
+#endif
+    WebServer.requestAuthentication(mode, String(F("Login Required (default user: admin)")).c_str());
     return false;
   }
   return true;
@@ -6690,7 +6707,7 @@ void handle_sysinfo() {
   TXBuffer += F(" - ");
   TXBuffer += lowestFreeStackfunction;
   TXBuffer += ')';
-#ifdef CORE_2_5_0
+#ifdef CORE_POST_2_5_0
   addRowLabel(F("Heap Max Free Block"));
   TXBuffer += ESP.getMaxFreeBlockSize();
   addRowLabel(F("Heap Fragmentation"));

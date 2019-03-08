@@ -105,7 +105,7 @@ int firstEnabledBlynkController() {
 
 //void checkRAM( const __FlashStringHelper* flashString);
 
-#ifdef CORE_2_5_0
+#ifdef CORE_POST_2_5_0
 /*********************************************************************************************\
  * Pre-init
 \*********************************************************************************************/
