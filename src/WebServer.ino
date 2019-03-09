@@ -123,7 +123,7 @@ private:
     buf = "";
     if (beforeTXRam < 3000) {
       lowMemorySkip = true;
-      WebServer.send(200, F("text/plain"), "Low memory. Cannot display webpage :-(");
+      WebServer.send(200, "text/plain", "Low memory. Cannot display webpage :-(");
        #if defined(ESP8266)
          tcpCleanup();
        #endif
