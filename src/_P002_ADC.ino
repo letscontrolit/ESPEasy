@@ -83,6 +83,16 @@ boolean Plugin_002(byte function, struct EventStruct *event, String& string)
           note += String(raw_value);
           note += F(" = ");
           note += String(value, 3);
+
+          if (PCONFIG(3)) {
+            note += F(" min: ");
+            note += P002_applyCalibration(event, 0.0);
+            note += F(" max: ");
+            note += P002_applyCalibration(event, P002_MAX_ADC_VALUE);
+            float stepsize = P002_applyCalibration(event, 1.0) - P002_applyCalibration(event, 0.0);
+            note += F(" step: ");
+            note += String(stepsize, 3);
+          }
           addFormNote(note);
         }
 
@@ -168,6 +178,10 @@ float P002_getOutputValue(struct EventStruct *event, int16_t &raw_value) {
     raw_value = P002_performRead(event);
     float_value = static_cast<float>(raw_value);
   }
+  return P002_applyCalibration(event, float_value);
+}
+
+float P002_applyCalibration(struct EventStruct *event, float float_value) {
   if (PCONFIG(3))   //Calibration?
   {
     int adc1 = PCONFIG_LONG(0);
