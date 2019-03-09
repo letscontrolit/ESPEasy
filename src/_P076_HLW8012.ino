@@ -270,11 +270,11 @@ boolean Plugin_076(byte function, struct EventStruct *event, String &string) {
     if (PLUGIN_076_DEBUG) {
       String log = F("P076: PIN Settings ");
 
-      log +=  " curr_read: ";
+      log +=  F(" curr_read: ");
       log +=  PCONFIG(4);
-      log +=  " cf_edge: ";
+      log +=  F(" cf_edge: ");
       log +=  PCONFIG(5);
-      log +=  " cf1_edge: ";
+      log +=  F(" cf1_edge: ");
       log +=  PCONFIG(6);
       addLog(LOG_LEVEL_INFO, log);
     }

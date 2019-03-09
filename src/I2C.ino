@@ -72,7 +72,20 @@ uint8_t I2C_read8_reg(uint8_t i2caddr, byte reg, bool * is_ok) {
 
   Wire.beginTransmission(i2caddr);
   Wire.write((uint8_t)reg);
-  Wire.endTransmission(END_TRANSMISSION_FLAG);
+
+  if (Wire.endTransmission(END_TRANSMISSION_FLAG) != 0) {
+    /*
+    0:success
+    1:data too long to fit in transmit buffer
+    2:received NACK on transmit of address
+    3:received NACK on transmit of data
+    4:other error
+    See https://www.arduino.cc/en/Reference/WireEndTransmission
+    */
+    if (is_ok != NULL) {
+      *is_ok = false;
+    }
+  }
   byte count = Wire.requestFrom(i2caddr, (byte)1);
   if (is_ok != NULL) {
     *is_ok = (count == 1);

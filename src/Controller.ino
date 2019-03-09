@@ -181,13 +181,13 @@ bool MQTTConnect(int controller_idx)
 
   String LWTMessageConnect = ControllerSettings.LWTMessageConnect;
   if(LWTMessageConnect.length() == 0){
-    LWTMessageConnect = DEFAULT_MQTT_LWT_CONNECT_MESSAGE;
+    LWTMessageConnect = F(DEFAULT_MQTT_LWT_CONNECT_MESSAGE);
   }
   parseSystemVariables(LWTMessageConnect, false);
 
   String LWTMessageDisconnect = ControllerSettings.LWTMessageDisconnect;
   if(LWTMessageDisconnect.length() == 0){
-    LWTMessageDisconnect = DEFAULT_MQTT_LWT_DISCONNECT_MESSAGE;
+    LWTMessageDisconnect = F(DEFAULT_MQTT_LWT_DISCONNECT_MESSAGE);
   }
   parseSystemVariables(LWTMessageDisconnect, false);
 

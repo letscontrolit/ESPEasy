@@ -123,7 +123,7 @@ private:
     buf = "";
     if (beforeTXRam < 3000) {
       lowMemorySkip = true;
-      WebServer.send(200, "text/plain", "Low memory. Cannot display webpage :-(");
+      WebServer.send(200, F("text/plain"), "Low memory. Cannot display webpage :-(");
        #if defined(ESP8266)
          tcpCleanup();
        #endif
@@ -383,7 +383,7 @@ boolean clientIPallowed()
   }
   String response = F("IP blocked: ");
   response += formatIP(client.remoteIP());
-  WebServer.send(403, "text/html", response);
+  WebServer.send(403, F("text/html"), response);
   if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
     response += F(" Allowed: ");
     response += formatIP(low);
@@ -944,7 +944,7 @@ void handle_root() {
   // if Wifi setup, launch setup wizard
   if (wifiSetup)
   {
-    WebServer.send(200, "text/html", F("<meta HTTP-EQUIV='REFRESH' content='0; url=/setup'>"));
+    WebServer.send(200, F("text/html"), F("<meta HTTP-EQUIV='REFRESH' content='0; url=/setup'>"));
     return;
   }
   if (!isLoggedIn()) return;
@@ -989,7 +989,7 @@ void handle_root() {
     TXBuffer += String(Settings.Unit);
 
     addRowLabel(F("GIT version"));
-    TXBuffer += BUILD_GIT;
+    TXBuffer += F(BUILD_GIT);
 
     addRowLabel(F("Local Time"));
     if (systemTimePresent())
@@ -2614,18 +2614,6 @@ void addDeviceSelect(const String& name,  int choice)
 }
 
 //********************************************************************************
-// Device Sort routine, switch array entries
-//********************************************************************************
-void switchArray(byte value)
-{
-  byte temp;
-  temp = sortedIndex[value - 1];
-  sortedIndex[value - 1] = sortedIndex[value];
-  sortedIndex[value] = temp;
-}
-
-
-//********************************************************************************
 // Device Sort routine, compare two array entries
 //********************************************************************************
 boolean arrayLessThan(const String& ptr_1, const String& ptr_2)
@@ -2669,7 +2657,9 @@ void sortDeviceArray()
         getPluginNameFromDeviceIndex(sortedIndex[innerLoop]),
         getPluginNameFromDeviceIndex(sortedIndex[innerLoop - 1])))
       {
-        switchArray(innerLoop);
+        byte temp = sortedIndex[innerLoop - 1];
+        sortedIndex[innerLoop - 1] = sortedIndex[innerLoop];
+        sortedIndex[innerLoop] = temp;
       }
       innerLoop--;
     }
@@ -4497,7 +4487,7 @@ void handle_json()
     if (showSystem) {
       TXBuffer += F("\"System\":{\n");
       stream_next_json_object_value(F("Build"), String(BUILD));
-      stream_next_json_object_value(F("Git Build"), String(BUILD_GIT));
+      stream_next_json_object_value(F("Git Build"), String(F(BUILD_GIT)));
       stream_next_json_object_value(F("System libraries"), getSystemLibraryString());
       stream_next_json_object_value(F("Plugins"), String(deviceCount + 1));
       stream_next_json_object_value(F("Plugin description"), getPluginDescriptionString());
@@ -5095,10 +5085,10 @@ void addLogFacilitySelect(const String& name, int choice)
 //********************************************************************************
 boolean isLoggedIn()
 {
-  const char* www_username = "admin";
+  String www_username = F(DEFAULT_ADMIN_USERNAME);
   if (!clientIPallowed()) return false;
   if (SecuritySettings.Password[0] == 0) return true;
-  if (!WebServer.authenticate(www_username, SecuritySettings.Password))
+  if (!WebServer.authenticate(www_username.c_str(), SecuritySettings.Password))
       //Basic Auth Method with Custom realm and Failure Response
       //return server.requestAuthentication(BASIC_AUTH, www_realm, authFailResponse);
       //Digest Auth Method with realm="Login Required" and empty Failure Response
@@ -5113,7 +5103,10 @@ boolean isLoggedIn()
 #else
     HTTPAuthMethod mode = DIGEST_AUTH;
 #endif
-    WebServer.requestAuthentication(mode, String(F("Login Required (default user: admin)")).c_str());
+    String message = F("Login Required (default user: ");
+    message += www_username;
+    message += ')';
+    WebServer.requestAuthentication(mode, message.c_str());
     return false;
   }
   return true;
@@ -6544,7 +6537,7 @@ void handle_sysinfo_json() {
     json_prop(F("build"), String(BUILD));
     json_prop(F("notes"), F(BUILD_NOTES));
     json_prop(F("libraries"), getSystemLibraryString());
-    json_prop(F("git_version"), BUILD_GIT);
+    json_prop(F("git_version"), F(BUILD_GIT));
     json_prop(F("plugins"), getPluginDescriptionString());
     json_prop(F("md5"), String(CRCValues.compileTimeMD5[0],HEX));
     json_number(F("md5_check"),  String(CRCValues.checkPassed()));
@@ -6820,7 +6813,7 @@ void handle_sysinfo() {
   TXBuffer += getSystemLibraryString();
 
   addRowLabel_copy(F("GIT version"));
-  TXBuffer += BUILD_GIT;
+  TXBuffer += F(BUILD_GIT);
 
   addRowLabel_copy(F("Plugins"));
   TXBuffer += deviceCount + 1;

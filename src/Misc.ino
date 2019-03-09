@@ -1095,8 +1095,8 @@ void ResetFactory()
   if (!ResetFactoryDefaultPreference.keepNetwork()) {
     Settings.clearNetworkSettings();
     // TD-er Reset access control
-    str2ip((char*)DEFAULT_IPRANGE_LOW, SecuritySettings.AllowedIPrangeLow);
-    str2ip((char*)DEFAULT_IPRANGE_HIGH, SecuritySettings.AllowedIPrangeHigh);
+    str2ip(F(DEFAULT_IPRANGE_LOW), SecuritySettings.AllowedIPrangeLow);
+    str2ip(F(DEFAULT_IPRANGE_HIGH), SecuritySettings.AllowedIPrangeHigh);
     SecuritySettings.IPblockLevel = DEFAULT_IP_BLOCK_LEVEL;
 
     #if DEFAULT_USE_STATIC_IP
