@@ -224,15 +224,15 @@ struct ControllerDelayHandlerStruct {
     if (freeHeap > 5000) return false; // Memory is not an issue.
 #ifndef BUILD_NO_DEBUG
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-      String log = F("Controller-");
+      String log = "Controller-";
       log += element.controller_idx +1;
-      log += F(" : Memory used: ");
+      log += " : Memory used: ";
       log += getQueueMemorySize();
-      log += F(" bytes ");
+      log += " bytes ";
       log += sendQueue.size();
-      log += F(" items ");
+      log += " items ";
       log += freeHeap;
-      log += F(" free");
+      log += " free";
       addLog(LOG_LEVEL_DEBUG, log);
     }
 #endif
@@ -258,7 +258,7 @@ struct ControllerDelayHandlerStruct {
 #ifndef BUILD_NO_DEBUG
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
       String log = get_formatted_Controller_number(element.controller_idx);
-      log += F(" : queue full");
+      log += " : queue full";
       addLog(LOG_LEVEL_DEBUG, log);
     }
 #endif
