@@ -106,7 +106,8 @@ void processGotIP() {
     addLog(LOG_LEVEL_INFO, log);
   }
 
-  // fix octet?
+  // Might not work in core 2.5.0
+  // See https://github.com/esp8266/Arduino/issues/5839
   if (Settings.IP_Octet != 0 && Settings.IP_Octet != 255)
   {
     ip[3] = Settings.IP_Octet;
