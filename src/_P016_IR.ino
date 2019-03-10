@@ -14,7 +14,7 @@
 #include <IRrecv.h>
 #include <IRutils.h>
 
-#ifdef P016_Extended_Decoding // The following are only needed for extended decoding of A/C Messages
+#ifdef P016_Extended_Decoding // The following are only needed for extended decoding of A/C Messages 
 #include <ir_Coolix.h>
 #include <ir_Daikin.h>
 #include <ir_Fujitsu.h>
