@@ -3340,12 +3340,26 @@ void addFormIPBox(const String& label, const String& id, const byte ip[4])
 }
 
 // adds a Help Button with points to the the given Wiki Subpage
-void addHelpButton(const String& url)
+// If url starts with "RTD", it will be considered as a Read-the-docs link
+void addHelpButton(const String& url) {
+  if (url.startsWith("RTD")) {
+    addRTDHelpButton(url.substring(3));
+  } else {
+    addHelpButton(url, false);
+  }
+}
+
+void addRTDHelpButton(const String& url)
+{
+  addHelpButton(url, true);
+}
+
+void addHelpButton(const String& url, bool isRTD)
 {
   addHtmlLink(
     F("button help"),
-    makeDocLink(url, false),
-    F("&#10068;"));
+    makeDocLink(url, isRTD),
+    isRTD ? F("&#8505;") : F("&#10068;"));
 }
 
 void addRTDPluginButton(int taskDeviceNumber) {
@@ -3356,10 +3370,7 @@ void addRTDPluginButton(int taskDeviceNumber) {
   if (taskDeviceNumber < 10) url += '0';
   url += String(taskDeviceNumber);
   url += F(".html");
-  addHtmlLink(
-    F("button help"),
-    makeDocLink(url, true),
-    F("&#8505;"));
+  addRTDHelpButton(url);
 
   switch (taskDeviceNumber) {
     case 76:
@@ -4503,7 +4514,12 @@ void handle_json()
           stream_next_json_object_value(F("Load"), String(getCPUload()));
           stream_next_json_object_value(F("Load LC"), String(getLoopCountPerSec()));
       }
+      stream_next_json_object_value(F("CPU Eco mode"), jsonBool(Settings.EcoPowerMode()));
 
+      #ifdef CORE_POST_2_5_0
+      stream_next_json_object_value(F("Heap Max Free Block"), String(ESP.getMaxFreeBlockSize()));
+      stream_next_json_object_value(F("Heap Fragmentation"), String(ESP.getHeapFragmentation()));
+      #endif
       stream_last_json_object_value(F("Free RAM"), String(ESP.getFreeHeap()));
       TXBuffer += ",\n";
     }
@@ -4526,6 +4542,13 @@ void handle_json()
       stream_next_json_object_value(F("Last Disconnect Reason"), String(lastDisconnectReason));
       stream_next_json_object_value(F("Last Disconnect Reason str"), getLastDisconnectReason());
       stream_next_json_object_value(F("Number reconnects"), String(wifi_reconnects));
+      stream_next_json_object_value(F("Force WiFi B/G"), jsonBool(Settings.ForceWiFi_bg_mode()));
+      stream_next_json_object_value(F("Restart wifi lost conn"), jsonBool(Settings.WiFiRestart_connection_lost()));
+#ifdef ESP8266
+      stream_next_json_object_value(F("Force WiFi no sleep"), jsonBool(Settings.WifiNoneSleep()));
+#endif
+      stream_next_json_object_value(F("Periodical send Gratuitous ARP"), jsonBool(Settings.gratuitousARP()));
+      stream_next_json_object_value(F("Connection Failure Threshold"), String(Settings.ConnectionFailuresThreshold));
       stream_last_json_object_value(F("RSSI"), String(WiFi.RSSI()));
       TXBuffer += ",\n";
     }
@@ -4908,7 +4931,7 @@ void handle_advanced() {
   TXBuffer += F("<form  method='post'>");
   html_table_class_normal();
 
-  addFormHeader(F("Advanced Settings"));
+  addFormHeader(F("Advanced Settings"), F("RTDTools/Tools.html#advanced"));
 
   addFormSubHeader(F("Rules Settings"));
 
@@ -4975,6 +4998,14 @@ void handle_advanced() {
   addFormNumericBox(F("WD I2C Address"), F("wdi2caddress"), Settings.WDI2CAddress, 0, 127);
   TXBuffer += F(" (decimal)");
 
+  addFormNumericBox(F("I2C ClockStretchLimit"), F("wireclockstretchlimit"), Settings.WireClockStretchLimit);   //TODO define limits
+  #if defined(FEATURE_ARDUINO_OTA)
+  addFormCheckBox(F("Enable Arduino OTA"), F("arduinootaenable"), Settings.ArduinoOTAEnable);
+  #endif
+  #if defined(ESP32)
+    addFormCheckBox_disabled(F("Enable RTOS Multitasking"), F("usertosmultitasking"), Settings.UseRTOSMultitasking);
+  #endif
+
   addFormCheckBox_disabled(F("Use SSDP"), F("usessdp"), Settings.UseSSDP);
 
   addFormNumericBox(F("Connection Failure Threshold"), F("cft"), Settings.ConnectionFailuresThreshold, 0, 100);
@@ -4994,15 +5025,6 @@ void handle_advanced() {
   addFormCheckBox(F("Periodical send Gratuitous ARP"), F("gratuitous_arp"), Settings.gratuitousARP());
   addFormCheckBox(F("CPU Eco mode"), F("eco_mode"), Settings.EcoPowerMode());
   addFormNote(F("Node may miss receiving packets with Eco mode enabled"));
-
-  addFormNumericBox(F("I2C ClockStretchLimit"), F("wireclockstretchlimit"), Settings.WireClockStretchLimit);   //TODO define limits
-  #if defined(FEATURE_ARDUINO_OTA)
-  addFormCheckBox(F("Enable Arduino OTA"), F("arduinootaenable"), Settings.ArduinoOTAEnable);
-  #endif
-  #if defined(ESP32)
-    addFormCheckBox_disabled(F("Enable RTOS Multitasking"), F("usertosmultitasking"), Settings.UseRTOSMultitasking);
-  #endif
-
   addFormSeparator(2);
 
   html_TR_TD();
@@ -6685,6 +6707,8 @@ void handle_sysinfo() {
      TXBuffer += getLoopCountPerSec();
      TXBuffer += ')';
   }
+  addRowLabel(F("CPU Eco mode"));
+  TXBuffer += jsonBool(Settings.EcoPowerMode());
 
   addRowLabel(F("Free Mem"));
   TXBuffer += freeMem;
@@ -6801,6 +6825,21 @@ void handle_sysinfo() {
 
   addRowLabel(F("Number reconnects"));
   TXBuffer += wifi_reconnects;
+
+  addTableSeparator(F("WiFi Settings"), 2, 3);
+  addRowLabel(F("Force WiFi B/G"));
+  TXBuffer += jsonBool(Settings.ForceWiFi_bg_mode());
+  addRowLabel(F("Restart wifi lost conn"));
+  TXBuffer += jsonBool(Settings.WiFiRestart_connection_lost());
+#ifdef ESP8266
+  addRowLabel(F("Force WiFi no sleep"));
+  TXBuffer += jsonBool(Settings.WifiNoneSleep());
+#endif
+  addRowLabel(F("Periodical send Gratuitous ARP"));
+  TXBuffer += jsonBool(Settings.gratuitousARP());
+
+  addRowLabel(F("Connection Failure Threshold"));
+  TXBuffer += String(Settings.ConnectionFailuresThreshold);
 
   addTableSeparator(F("Firmware"), 2, 3);
 
