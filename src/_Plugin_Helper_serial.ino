@@ -83,7 +83,9 @@ void serialHelper_webformLoad(struct EventStruct *event, bool allowSoftwareSeria
   if (Settings.UseSerial) {
     addFormNote(F("Do <b>NOT</b> combine HW Serial0 and log to serial on Tools->Advanced->Serial Port."));
   }
-  addFormNote(F("D8 (GPIO-15) requires a Buffer Circuit (PNP transistor) or ESP boot may fail."));
+  if (serialHelper_getRxPin(event) == 15 || serialHelper_getTxPin(event) == 15) {
+    addFormNote(F("GPIO-15 (D8) requires a Buffer Circuit (PNP transistor) or ESP boot may fail."));    
+  }
 }
 
 void serialHelper_webformSave(struct EventStruct *event) {

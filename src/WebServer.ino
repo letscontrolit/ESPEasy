@@ -383,7 +383,7 @@ boolean clientIPallowed()
   }
   String response = F("IP blocked: ");
   response += formatIP(client.remoteIP());
-  WebServer.send(403, "text/html", response);
+  WebServer.send(403, F("text/html"), response);
   if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
     response += F(" Allowed: ");
     response += formatIP(low);
@@ -944,7 +944,7 @@ void handle_root() {
   // if Wifi setup, launch setup wizard
   if (wifiSetup)
   {
-    WebServer.send(200, "text/html", F("<meta HTTP-EQUIV='REFRESH' content='0; url=/setup'>"));
+    WebServer.send(200, F("text/html"), F("<meta HTTP-EQUIV='REFRESH' content='0; url=/setup'>"));
     return;
   }
   if (!isLoggedIn()) return;
@@ -989,7 +989,7 @@ void handle_root() {
     TXBuffer += String(Settings.Unit);
 
     addRowLabel(F("GIT version"));
-    TXBuffer += BUILD_GIT;
+    TXBuffer += F(BUILD_GIT);
 
     addRowLabel(F("Local Time"));
     if (systemTimePresent())
@@ -2614,18 +2614,6 @@ void addDeviceSelect(const String& name,  int choice)
 }
 
 //********************************************************************************
-// Device Sort routine, switch array entries
-//********************************************************************************
-void switchArray(byte value)
-{
-  byte temp;
-  temp = sortedIndex[value - 1];
-  sortedIndex[value - 1] = sortedIndex[value];
-  sortedIndex[value] = temp;
-}
-
-
-//********************************************************************************
 // Device Sort routine, compare two array entries
 //********************************************************************************
 boolean arrayLessThan(const String& ptr_1, const String& ptr_2)
@@ -2669,7 +2657,9 @@ void sortDeviceArray()
         getPluginNameFromDeviceIndex(sortedIndex[innerLoop]),
         getPluginNameFromDeviceIndex(sortedIndex[innerLoop - 1])))
       {
-        switchArray(innerLoop);
+        byte temp = sortedIndex[innerLoop - 1];
+        sortedIndex[innerLoop - 1] = sortedIndex[innerLoop];
+        sortedIndex[innerLoop] = temp;
       }
       innerLoop--;
     }
@@ -3350,12 +3340,26 @@ void addFormIPBox(const String& label, const String& id, const byte ip[4])
 }
 
 // adds a Help Button with points to the the given Wiki Subpage
-void addHelpButton(const String& url)
+// If url starts with "RTD", it will be considered as a Read-the-docs link
+void addHelpButton(const String& url) {
+  if (url.startsWith("RTD")) {
+    addRTDHelpButton(url.substring(3));
+  } else {
+    addHelpButton(url, false);
+  }
+}
+
+void addRTDHelpButton(const String& url)
+{
+  addHelpButton(url, true);
+}
+
+void addHelpButton(const String& url, bool isRTD)
 {
   addHtmlLink(
     F("button help"),
-    makeDocLink(url, false),
-    F("&#10068;"));
+    makeDocLink(url, isRTD),
+    isRTD ? F("&#8505;") : F("&#10068;"));
 }
 
 void addRTDPluginButton(int taskDeviceNumber) {
@@ -3366,10 +3370,7 @@ void addRTDPluginButton(int taskDeviceNumber) {
   if (taskDeviceNumber < 10) url += '0';
   url += String(taskDeviceNumber);
   url += F(".html");
-  addHtmlLink(
-    F("button help"),
-    makeDocLink(url, true),
-    F("&#8505;"));
+  addRTDHelpButton(url);
 
   switch (taskDeviceNumber) {
     case 76:
@@ -3861,8 +3862,8 @@ void handle_tools() {
     SPIFFS.info(fs_info);
     if ((fs_info.totalBytes - fs_info.usedBytes) / 1024 > 50) {
       TXBuffer += F("<TR><TD>");
-      TXBuffer += "<script>function downloadUI() { fetch('https://raw.githubusercontent.com/ppisljar/espeasy_new_ui/master/build/index.htm.gz').then(r=>r.arrayBuffer()).then(r => {var f=new FormData();f.append('file', new File([new Blob([new Uint8Array(r)])], 'index.htm.gz'));f.append('edit', 1);fetch('/upload',{method:'POST',body:f}).then(() => {window.location.href='/';});}); }</script>";
-      TXBuffer += "<a class=\"button link wide\" onclick=\"downloadUI()\">download new ui</a>";
+      TXBuffer += F("<script>function downloadUI() { fetch('https://raw.githubusercontent.com/ppisljar/espeasy_new_ui/master/build/index.htm.gz').then(r=>r.arrayBuffer()).then(r => {var f=new FormData();f.append('file', new File([new Blob([new Uint8Array(r)])], 'index.htm.gz'));f.append('edit', 1);fetch('/upload',{method:'POST',body:f}).then(() => {window.location.href='/';});}); }</script>");
+      TXBuffer += F("<a class=\"button link wide\" onclick=\"downloadUI()\">download new ui</a>");
       TXBuffer += F("</TD><TD>Download new UI</TD></TR>");
     }
   #endif
@@ -4497,7 +4498,7 @@ void handle_json()
     if (showSystem) {
       TXBuffer += F("\"System\":{\n");
       stream_next_json_object_value(F("Build"), String(BUILD));
-      stream_next_json_object_value(F("Git Build"), String(BUILD_GIT));
+      stream_next_json_object_value(F("Git Build"), String(F(BUILD_GIT)));
       stream_next_json_object_value(F("System libraries"), getSystemLibraryString());
       stream_next_json_object_value(F("Plugins"), String(deviceCount + 1));
       stream_next_json_object_value(F("Plugin description"), getPluginDescriptionString());
@@ -4513,7 +4514,12 @@ void handle_json()
           stream_next_json_object_value(F("Load"), String(getCPUload()));
           stream_next_json_object_value(F("Load LC"), String(getLoopCountPerSec()));
       }
+      stream_next_json_object_value(F("CPU Eco mode"), jsonBool(Settings.EcoPowerMode()));
 
+      #ifdef CORE_POST_2_5_0
+      stream_next_json_object_value(F("Heap Max Free Block"), String(ESP.getMaxFreeBlockSize()));
+      stream_next_json_object_value(F("Heap Fragmentation"), String(ESP.getHeapFragmentation()));
+      #endif
       stream_last_json_object_value(F("Free RAM"), String(ESP.getFreeHeap()));
       TXBuffer += ",\n";
     }
@@ -4536,6 +4542,13 @@ void handle_json()
       stream_next_json_object_value(F("Last Disconnect Reason"), String(lastDisconnectReason));
       stream_next_json_object_value(F("Last Disconnect Reason str"), getLastDisconnectReason());
       stream_next_json_object_value(F("Number reconnects"), String(wifi_reconnects));
+      stream_next_json_object_value(F("Force WiFi B/G"), jsonBool(Settings.ForceWiFi_bg_mode()));
+      stream_next_json_object_value(F("Restart wifi lost conn"), jsonBool(Settings.WiFiRestart_connection_lost()));
+#ifdef ESP8266
+      stream_next_json_object_value(F("Force WiFi no sleep"), jsonBool(Settings.WifiNoneSleep()));
+#endif
+      stream_next_json_object_value(F("Periodical send Gratuitous ARP"), jsonBool(Settings.gratuitousARP()));
+      stream_next_json_object_value(F("Connection Failure Threshold"), String(Settings.ConnectionFailuresThreshold));
       stream_last_json_object_value(F("RSSI"), String(WiFi.RSSI()));
       TXBuffer += ",\n";
     }
@@ -4918,7 +4931,7 @@ void handle_advanced() {
   TXBuffer += F("<form  method='post'>");
   html_table_class_normal();
 
-  addFormHeader(F("Advanced Settings"));
+  addFormHeader(F("Advanced Settings"), F("RTDTools/Tools.html#advanced"));
 
   addFormSubHeader(F("Rules Settings"));
 
@@ -4985,6 +4998,14 @@ void handle_advanced() {
   addFormNumericBox(F("WD I2C Address"), F("wdi2caddress"), Settings.WDI2CAddress, 0, 127);
   TXBuffer += F(" (decimal)");
 
+  addFormNumericBox(F("I2C ClockStretchLimit"), F("wireclockstretchlimit"), Settings.WireClockStretchLimit);   //TODO define limits
+  #if defined(FEATURE_ARDUINO_OTA)
+  addFormCheckBox(F("Enable Arduino OTA"), F("arduinootaenable"), Settings.ArduinoOTAEnable);
+  #endif
+  #if defined(ESP32)
+    addFormCheckBox_disabled(F("Enable RTOS Multitasking"), F("usertosmultitasking"), Settings.UseRTOSMultitasking);
+  #endif
+
   addFormCheckBox_disabled(F("Use SSDP"), F("usessdp"), Settings.UseSSDP);
 
   addFormNumericBox(F("Connection Failure Threshold"), F("cft"), Settings.ConnectionFailuresThreshold, 0, 100);
@@ -5004,15 +5025,6 @@ void handle_advanced() {
   addFormCheckBox(F("Periodical send Gratuitous ARP"), F("gratuitous_arp"), Settings.gratuitousARP());
   addFormCheckBox(F("CPU Eco mode"), F("eco_mode"), Settings.EcoPowerMode());
   addFormNote(F("Node may miss receiving packets with Eco mode enabled"));
-
-  addFormNumericBox(F("I2C ClockStretchLimit"), F("wireclockstretchlimit"), Settings.WireClockStretchLimit);   //TODO define limits
-  #if defined(FEATURE_ARDUINO_OTA)
-  addFormCheckBox(F("Enable Arduino OTA"), F("arduinootaenable"), Settings.ArduinoOTAEnable);
-  #endif
-  #if defined(ESP32)
-    addFormCheckBox_disabled(F("Enable RTOS Multitasking"), F("usertosmultitasking"), Settings.UseRTOSMultitasking);
-  #endif
-
   addFormSeparator(2);
 
   html_TR_TD();
@@ -5095,10 +5107,10 @@ void addLogFacilitySelect(const String& name, int choice)
 //********************************************************************************
 boolean isLoggedIn()
 {
-  const char* www_username = "admin";
+  String www_username = F(DEFAULT_ADMIN_USERNAME);
   if (!clientIPallowed()) return false;
   if (SecuritySettings.Password[0] == 0) return true;
-  if (!WebServer.authenticate(www_username, SecuritySettings.Password))
+  if (!WebServer.authenticate(www_username.c_str(), SecuritySettings.Password))
       //Basic Auth Method with Custom realm and Failure Response
       //return server.requestAuthentication(BASIC_AUTH, www_realm, authFailResponse);
       //Digest Auth Method with realm="Login Required" and empty Failure Response
@@ -5113,7 +5125,10 @@ boolean isLoggedIn()
 #else
     HTTPAuthMethod mode = DIGEST_AUTH;
 #endif
-    WebServer.requestAuthentication(mode, String(F("Login Required (default user: admin)")).c_str());
+    String message = F("Login Required (default user: ");
+    message += www_username;
+    message += ')';
+    WebServer.requestAuthentication(mode, message.c_str());
     return false;
   }
   return true;
@@ -6544,7 +6559,7 @@ void handle_sysinfo_json() {
     json_prop(F("build"), String(BUILD));
     json_prop(F("notes"), F(BUILD_NOTES));
     json_prop(F("libraries"), getSystemLibraryString());
-    json_prop(F("git_version"), BUILD_GIT);
+    json_prop(F("git_version"), F(BUILD_GIT));
     json_prop(F("plugins"), getPluginDescriptionString());
     json_prop(F("md5"), String(CRCValues.compileTimeMD5[0],HEX));
     json_number(F("md5_check"),  String(CRCValues.checkPassed()));
@@ -6692,6 +6707,8 @@ void handle_sysinfo() {
      TXBuffer += getLoopCountPerSec();
      TXBuffer += ')';
   }
+  addRowLabel(F("CPU Eco mode"));
+  TXBuffer += jsonBool(Settings.EcoPowerMode());
 
   addRowLabel(F("Free Mem"));
   TXBuffer += freeMem;
@@ -6809,6 +6826,21 @@ void handle_sysinfo() {
   addRowLabel(F("Number reconnects"));
   TXBuffer += wifi_reconnects;
 
+  addTableSeparator(F("WiFi Settings"), 2, 3);
+  addRowLabel(F("Force WiFi B/G"));
+  TXBuffer += jsonBool(Settings.ForceWiFi_bg_mode());
+  addRowLabel(F("Restart wifi lost conn"));
+  TXBuffer += jsonBool(Settings.WiFiRestart_connection_lost());
+#ifdef ESP8266
+  addRowLabel(F("Force WiFi no sleep"));
+  TXBuffer += jsonBool(Settings.WifiNoneSleep());
+#endif
+  addRowLabel(F("Periodical send Gratuitous ARP"));
+  TXBuffer += jsonBool(Settings.gratuitousARP());
+
+  addRowLabel(F("Connection Failure Threshold"));
+  TXBuffer += String(Settings.ConnectionFailuresThreshold);
+
   addTableSeparator(F("Firmware"), 2, 3);
 
   addRowLabel_copy(F("Build"));
@@ -6820,7 +6852,7 @@ void handle_sysinfo() {
   TXBuffer += getSystemLibraryString();
 
   addRowLabel_copy(F("GIT version"));
-  TXBuffer += BUILD_GIT;
+  TXBuffer += F(BUILD_GIT);
 
   addRowLabel_copy(F("Plugins"));
   TXBuffer += deviceCount + 1;

@@ -359,7 +359,7 @@ void SSDP_schema(WiFiClient &client) {
   ssdp_schema += F("</serialNumber>"
                    "<modelName>ESP Easy</modelName>"
                    "<modelNumber>");
-  ssdp_schema += BUILD_GIT;
+  ssdp_schema += F(BUILD_GIT);
   ssdp_schema += F("</modelNumber>"
                    "<modelURL>http://www.letscontrolit.com</modelURL>"
                    "<manufacturer>http://www.letscontrolit.com</manufacturer>"

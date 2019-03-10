@@ -75,7 +75,7 @@ boolean Plugin_026(byte function, struct EventStruct *event, String& string)
           byte choice = PCONFIG(i);
           label = F("Indicator ");
           label += (i+1);
-          id = "p026_";
+          id = F("p026_");
           id += (i+1);
           addFormSelector(label, id, 12, options, NULL, choice);
         }
@@ -88,7 +88,7 @@ boolean Plugin_026(byte function, struct EventStruct *event, String& string)
       {
         String id;
         for (byte i = 0; i < 4; ++i) {
-          id = "p026_";
+          id = F("p026_");
           id += (i+1);
           PCONFIG(i) = getFormItemInt(id);
         }
