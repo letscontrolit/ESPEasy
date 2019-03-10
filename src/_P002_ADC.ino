@@ -77,23 +77,18 @@ boolean Plugin_002(byte function, struct EventStruct *event, String& string)
         addTextBox(F("p002_out2"), String(PCONFIG_FLOAT(1), 3), 10);
 
         {
+          // Output the statistics for the current settings.
           int16_t raw_value = 0;
           float value = P002_getOutputValue(event, raw_value);
-          String note = F("Current: ");
-          note += String(raw_value);
-          note += F(" = ");
-          note += String(value, 3);
+          P002_formatStatistics(F("Current"), raw_value, value);
 
           if (PCONFIG(3)) {
-            note += F(" min: ");
-            note += P002_applyCalibration(event, 0.0);
-            note += F(" max: ");
-            note += P002_applyCalibration(event, P002_MAX_ADC_VALUE);
+            P002_formatStatistics(F("Minimum"), 0, P002_applyCalibration(event, 0));
+            P002_formatStatistics(F("Maximum"), P002_MAX_ADC_VALUE, P002_applyCalibration(event, P002_MAX_ADC_VALUE));
+
             float stepsize = P002_applyCalibration(event, 1.0) - P002_applyCalibration(event, 0.0);
-            note += F(" step: ");
-            note += String(stepsize, 3);
+            P002_formatStatistics(F("Step size"), 1, stepsize);
           }
-          addFormNote(note);
         }
 
         success = true;
@@ -206,6 +201,13 @@ uint16_t P002_performRead(struct EventStruct *event) {
     value = analogRead(CONFIG_PIN1);
   #endif
   return value;
+}
+
+void P002_formatStatistics(const String& label, int16_t raw, float float_value) {
+  addRowLabel(label);
+  addHtml(String(raw));
+  html_add_estimate_symbol();
+  addHtml(String(float_value, 3));
 }
 
 #endif // USES_P002
