@@ -1,4 +1,35 @@
 -------------------------------------------------
+Changes in release mega-20190311 (since mega-20190305)
+-------------------------------------------------
+
+Release date: Mon Mar 11 04:00:15 CET 2019
+
+TD-er (14):
+      [ESP32] Disable Gratuitous ARP for ESP32 (#2374)
+      [ADC] Use simple filter for ADC plugin and show value on setup page
+      [Travis] Change needed due to change in core 2.6.0 File::write
+      [Travis] Changes needed due to update core 2.6.0 for File::write
+      [Build] Add build stats to track
+      [Memory] Add several F() macro markers and disable some debug logs
+      [Modbus] Split Modbus RTU from Senseair plugin
+      [Travis] Build error including F-macro in private class webserver
+      [ADC] Show calibration range + step size
+      [Travis] F-macro related build issues
+      [MPU6050] Reverted to old version before adding Plugin_task_data array
+      [Cleanup] Remove P030 BMP280 since it has become obsolete by BMx280
+      [Webserver] Add documentation link to Advanced settings page
+      [ADC] Increase readability of ADC calibration settings
+
+jimmys01 (6):
+      [IR RX] Disable Extended decoding of AC protocols by default
+      Fix endIf statement
+      Travis rebuild
+      [IR RX] Disable Extended decoding of AC protocols by default
+      Fix endIf statement
+      Travis rebuild
+
+
+-------------------------------------------------
 Changes in release mega-20190305 (since mega-20190301)
 -------------------------------------------------
 
