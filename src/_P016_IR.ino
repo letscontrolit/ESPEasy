@@ -14,7 +14,7 @@
 #include <IRrecv.h>
 #include <IRutils.h>
 
-#ifdef P016_Extended_Decoding // The following are only needed for extended decoding of A/C Messages 
+#ifdef P016_Extended_Decoding // The following are only needed for extended decoding of A/C Messages
 #include <ir_Coolix.h>
 #include <ir_Daikin.h>
 #include <ir_Fujitsu.h>
@@ -26,7 +26,10 @@
 #include <ir_Mitsubishi.h>
 #include <ir_Panasonic.h>
 #include <ir_Samsung.h>
+#include <ir_Tcl.h>
+#include <ir_Teco.h>
 #include <ir_Toshiba.h>
+#include <ir_Vestel.h>
 #include <ir_Whirlpool.h>
 #endif
 
@@ -199,6 +202,13 @@ boolean Plugin_016(byte function, struct EventStruct *event, String& string)
     description = ac.toString();
   }
 #endif  // DECODE_DAIKIN
+#if DECODE_DAIKIN2
+  if (results.decode_type == DAIKIN2) {
+    IRDaikin2 ac(0);
+    ac.setRaw(results.state);
+    description = ac.toString();
+  }
+#endif // DECODE_DAIKIN2
 #if DECODE_FUJITSU_AC
   if (results.decode_type == FUJITSU_AC) {
     IRFujitsuAC ac(0);
@@ -291,6 +301,27 @@ boolean Plugin_016(byte function, struct EventStruct *event, String& string)
     description = ac.toString();
   }
 #endif  // DECODE_WHIRLPOOL_AC
+#if DECODE_VESTEL_AC
+  if (results.decode_type == VESTEL_AC) {
+    IRVestelAc ac(0);
+    ac.setRaw(results.value);  // Like Coolix, use value instead of state.
+    description = ac.toString();
+  }
+#endif  // DECODE_VESTEL_AC
+#if DECODE_TECO
+  if (results.decode_type == TECO) {
+    IRTecoAc ac(0);
+    ac.setRaw(results.value);  // Like Coolix, use value instead of state.
+    description = ac.toString();
+  }
+#endif  // DECODE_TECO
+#if DECODE_TCL112AC
+  if (results.decode_type == TCL112AC) {
+    IRTcl112Ac ac(0);
+    ac.setRaw(results.state);
+    description = ac.toString();
+  }
+#endif // DECODE_TCL112AC
 #endif  // Extended Messages
   // If we got a human-readable description of the message, display it.
           if (description != "") addLog(LOG_LEVEL_INFO, description);
