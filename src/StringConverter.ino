@@ -154,6 +154,16 @@ String toString(bool value) {
 }
 
 /*********************************************************************************************\
+   Typical string replace functions.
+  \*********************************************************************************************/
+void removeExtraNewLine(String& line) {
+  if (line.endsWith("\r\n\r\n")) {
+    line.remove(line.length()-2);
+  }
+}
+
+
+/*********************************************************************************************\
    Format a value to the set number of decimals
   \*********************************************************************************************/
 String doFormatUserVar(byte TaskIndex, byte rel_index, bool mustCheck, bool& isvalid) {
