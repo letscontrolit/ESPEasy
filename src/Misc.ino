@@ -263,7 +263,7 @@ uint32_t getFreeStackWatermark() {
 bool canYield() { return true; }
 
 #else
-#if defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(ARDUINO_ESP8266_RELEASE_2_4_0) || defined(ARDUINO_ESP8266_RELEASE_2_4_1)
+#ifdef CORE_PRE_2_4_2
 // All version before core 2.4.2
 extern "C" {
 #include <cont.h>
@@ -393,7 +393,7 @@ void deepSleepStart(int dsdelay)
   addLog(LOG_LEVEL_INFO, F("SLEEP: Powering down to deepsleep..."));
   delay(100); // give the node time to send above log message before going to sleep
   #if defined(ESP8266)
-    #if defined(CORE_2_5_0)
+    #if defined(CORE_POST_2_5_0)
       uint64_t deepSleep_usec = dsdelay * 1000000ULL;
       if ((deepSleep_usec > ESP.deepSleepMax()) || dsdelay < 0) {
         deepSleep_usec = ESP.deepSleepMax();
@@ -1095,8 +1095,8 @@ void ResetFactory()
   if (!ResetFactoryDefaultPreference.keepNetwork()) {
     Settings.clearNetworkSettings();
     // TD-er Reset access control
-    str2ip((char*)DEFAULT_IPRANGE_LOW, SecuritySettings.AllowedIPrangeLow);
-    str2ip((char*)DEFAULT_IPRANGE_HIGH, SecuritySettings.AllowedIPrangeHigh);
+    str2ip(F(DEFAULT_IPRANGE_LOW), SecuritySettings.AllowedIPrangeLow);
+    str2ip(F(DEFAULT_IPRANGE_HIGH), SecuritySettings.AllowedIPrangeHigh);
     SecuritySettings.IPblockLevel = DEFAULT_IP_BLOCK_LEVEL;
 
     #if DEFAULT_USE_STATIC_IP
@@ -1438,12 +1438,16 @@ void setLogLevelFor(byte destination, byte logLevel) {
 void updateLogLevelCache() {
   byte max_lvl = 0;
   if (log_to_serial_disabled) {
-    Serial.setDebugOutput(false);
+    if (Settings.UseSerial) {
+      Serial.setDebugOutput(false);
+    }
   } else {
     max_lvl = _max(max_lvl, Settings.SerialLogLevel);
-    if (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE) {
+#ifndef BUILD_NO_DEBUG
+    if (Settings.UseSerial && Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE) {
       Serial.setDebugOutput(true);
     }
+#endif
   }
   max_lvl = _max(max_lvl, Settings.SyslogLevel);
   if (Logging.logActiveRead()) {
@@ -1558,6 +1562,7 @@ void delayedReboot(int rebootDelay)
 void reboot() {
   // FIXME TD-er: Should network connections be actively closed or does this introduce new issues?
   flushAndDisconnectAllClients();
+  SPIFFS.end();
   #if defined(ESP32)
     ESP.restart();
   #else
@@ -2003,6 +2008,7 @@ void transformValue(
           newString += ' ';
       }
       {
+#ifndef BUILD_NO_DEBUG
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
           String logFormatted = F("DEBUG: Formatted String='");
           logFormatted += newString;
@@ -2010,6 +2016,7 @@ void transformValue(
           logFormatted += '\'';
           addLog(LOG_LEVEL_DEBUG, logFormatted);
         }
+#endif
       }
     }
   }
@@ -2017,12 +2024,14 @@ void transformValue(
 
   newString += String(value);
   {
+#ifndef BUILD_NO_DEBUG
     if (loglevelActiveFor(LOG_LEVEL_DEBUG_DEV)) {
       String logParsed = F("DEBUG DEV: Parsed String='");
       logParsed += newString;
       logParsed += '\'';
       addLog(LOG_LEVEL_DEBUG_DEV, logParsed);
     }
+#endif
   }
   checkRAM(F("transformValue2"));
 }
@@ -2372,7 +2381,9 @@ int CalculateParam(const char *TmpStr) {
           log += round(param);
           addLog(LOG_LEVEL_ERROR, log);
         }
-      } else {
+      }
+#ifndef BUILD_NO_DEBUG
+        else {
       if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
         String log = F("CALCULATE PARAM: ");
         log += TmpStr;
@@ -2381,6 +2392,7 @@ int CalculateParam(const char *TmpStr) {
         addLog(LOG_LEVEL_DEBUG, log);
       }
     }
+#endif
     returnValue=round(param); //return integer only as it's valid only for device and task id
   }
   return returnValue;
@@ -2413,7 +2425,9 @@ void SendValueLogger(byte TaskIndex)
       logger += "\r\n";
     }
 
+#ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_DEBUG, logger);
+#endif
   }
 
 #ifdef FEATURE_SD
@@ -2487,6 +2501,7 @@ class RamTracker{
        if (writePtr >= TRACEENTRIES) writePtr=0;          // inc write pointer and wrap around too.
     };
    void getTraceBuffer(){                                // return giant strings, one line per trace. Add stremToWeb method to avoid large strings.
+#ifndef BUILD_NO_DEBUG
       if (loglevelActiveFor(LOG_LEVEL_DEBUG_DEV)) {
         String retval="Memtrace\n";
         for (int i = 0; i< TRACES; i++){
@@ -2499,6 +2514,7 @@ class RamTracker{
           retval="";
         }
       }
+#endif
     }
 }myRamTracker;                                              // instantiate class. (is global now)
 
@@ -2771,6 +2787,7 @@ void ArduinoOTAInit()
       reboot();
   });
   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
+    if (Settings.UseSerial)
       Serial.printf("OTA  : Progress %u%%\r", (progress / (total / 100)));
   });
 

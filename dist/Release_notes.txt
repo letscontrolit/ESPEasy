@@ -1,4 +1,357 @@
 -------------------------------------------------
+Changes in release mega-20190311 (since mega-20190305)
+-------------------------------------------------
+
+Release date: Mon Mar 11 04:00:15 CET 2019
+
+TD-er (14):
+      [ESP32] Disable Gratuitous ARP for ESP32 (#2374)
+      [ADC] Use simple filter for ADC plugin and show value on setup page
+      [Travis] Change needed due to change in core 2.6.0 File::write
+      [Travis] Changes needed due to update core 2.6.0 for File::write
+      [Build] Add build stats to track
+      [Memory] Add several F() macro markers and disable some debug logs
+      [Modbus] Split Modbus RTU from Senseair plugin
+      [Travis] Build error including F-macro in private class webserver
+      [ADC] Show calibration range + step size
+      [Travis] F-macro related build issues
+      [MPU6050] Reverted to old version before adding Plugin_task_data array
+      [Cleanup] Remove P030 BMP280 since it has become obsolete by BMx280
+      [Webserver] Add documentation link to Advanced settings page
+      [ADC] Increase readability of ADC calibration settings
+
+jimmys01 (6):
+      [IR RX] Disable Extended decoding of AC protocols by default
+      Fix endIf statement
+      Travis rebuild
+      [IR RX] Disable Extended decoding of AC protocols by default
+      Fix endIf statement
+      Travis rebuild
+
+
+-------------------------------------------------
+Changes in release mega-20190305 (since mega-20190301)
+-------------------------------------------------
+
+Release date: Tue Mar  5 04:00:16 CET 2019
+
+TD-er (4):
+      [Energy] Call delay from scheduler during idle time
+      [Energy] Add Eco mode, wifi none sleep and gratuitous ARP
+      [Energy] Default Eco mode off.
+      [Energy] Document new Special and Experimental Settings
+
+
+-------------------------------------------------
+Changes in release mega-20190301 (since mega-20190227)
+-------------------------------------------------
+
+Release date: Fri Mar  1 04:00:23 CET 2019
+
+TD-er (3):
+      [HLW8012] Fix build difference between Linux/Windows (#2355)
+      [Digest_auth] on Safari browser (#2356)
+      [Digest_auth] Fix compiler issues ESP32
+
+jimmys01 (2):
+      [IRTX] Fix RAW2 bug introduced at 20190202
+      Fixed a check
+
+
+-------------------------------------------------
+Changes in release mega-20190227 (since mega-20190226)
+-------------------------------------------------
+
+Release date: Wed Feb 27 04:00:18 CET 2019
+
+Gijs Noorlander (1):
+      Fix build error
+
+TD-er (6):
+      [Factory Reset] Make default switch/relay rules more intuitive
+      [Factory Reset] Change #switch in rules and plugin to #state
+      [Heap stats] Show heap statistics on core 2.5.0 and newer
+      [WiFi] Only perform network activity when connected
+      [Build] Add normal core 2.6.0 SDK2 build
+      [WiFiClient] Make sure all clients use at least some timeout
+
+
+-------------------------------------------------
+Changes in release mega-20190226 (since mega-20190225)
+-------------------------------------------------
+
+Release date: Tue Feb 26 04:00:13 CET 2019
+
+Bartłomiej Zimoń (2):
+      IRTX: fix memory leak in case of error
+      IRTX: move error string to flash
+
+Gijs Noorlander (1):
+      Undo F() macro due to build errors
+
+TD-er (7):
+      [Ser2Net] Revert of Ser2Net and P1WifiGateway (#1617 and #2343)
+      [SerialHelper] Added comment to help finding issue later
+      [P1WifiGateway] Fix memory leak
+      Trim trailing spaces in unit name  (#2329)
+      [ESP32] Setting won´t save #2354
+      [ESPeasySerial] Update to v1.0.8 Fix some compiler issue.
+      [Settings] Get rid of error when deleting plugin
+
+
+-------------------------------------------------
+Changes in release mega-20190225 (since mega-20190219)
+-------------------------------------------------
+
+Release date: Mon Feb 25 04:00:17 CET 2019
+
+TD-er (8):
+      [Nextion] Cleanup of plugin after moving to serial wrapper
+      [Minimal OTA] Remove JSON handles for new UI from minimal build
+      [Minimal OTA] Handling '/' was lost in last fix.
+      [HLW8012] Fix crash when saving settings (#2251)
+      [MH-Z19] Reset/re-init sensor when unknown response received
+      [Sphinx docs] Some small doc build fixes
+      [Build] Use PlatformIO Espressif8266@2.0.1 (core 2.5.0)
+      [Minimal OTA] F() macros were lost in last fix.
+
+
+-------------------------------------------------
+Changes in release mega-20190219 (since mega-20190218)
+-------------------------------------------------
+
+Release date: Tue Feb 19 04:00:16 CET 2019
+
+TD-er (1):
+      [build] Fix ESP32 build issues for #2326
+
+ppisljar (5):
+      updating sysinfo json endpoint
+      adding new ui download button
+      fixing download ui button
+      fixing json numbers
+      always use string in json
+
+
+-------------------------------------------------
+Changes in release mega-20190218 (since mega-20190216)
+-------------------------------------------------
+
+Release date: Mon Feb 18 04:00:07 CET 2019
+
+Peter Pisljar (1):
+      p2p node list json endpoint (#2323)
+
+TD-er (2):
+      [ESP32dev] Disable ESP32dev build due to space constraints
+      [bugfix] Load old webpage when no index.htm present and no SD support
+
+ppisljar (10):
+      adding upload json endpoint
+      digest auth
+      factory reset json endpoint
+      load index.htm if it exists
+      add support for serving gziped files
+      typo
+      fixing
+      adding support for index.htm.gz
+      fixing index.htm serving
+      adding sysinfo json endpoint
+
+
+-------------------------------------------------
+Changes in release mega-20190216 (since mega-20190215)
+-------------------------------------------------
+
+Release date: Sat Feb 16 04:00:15 CET 2019
+
+Gijs Noorlander (1):
+      [#2286] Missing build normal_IR_ESP8266_1024
+
+
+-------------------------------------------------
+Changes in release mega-20190215 (since mega-20190212)
+-------------------------------------------------
+
+Release date: Fri Feb 15 04:00:16 CET 2019
+
+Grovkillen (9):
+      [docs] ThingSpeak (must check acknowledge)
+      [docs] P015 TSL2561 added
+      [docs] Rules (Let used in filters)
+      [docs] Rules (fixed error in syntax)
+      [docs] P082 added screenshot
+      [docs] event+commands for GPIO#N + Monitor added
+      [docs] added GPIOtoggle command
+      [docs] fixed error in event list
+      [docs] upgraded to Sphinx 1.8.4
+
+TD-er (71):
+      [Nextion] Reduce memory usage when not active
+      [p073_7DGT] Reduce memory usage of 7-segment display plugin
+      [memory] Reduce memory usage of p070_NeoPixelClock when not enabled
+      [memory] Reduce memory of P082_GPS and P068_SHT3x when not enabled
+      [memory] P077_CSE7766 Use Plugin_task_data array
+      [memory] P075_Nextion Use Plugin_task_data array
+      [memory] P074_TSL2591 Use Plugin_task_data array
+      [memory] P073_7DGT Use Plugin_task_data array
+      [memory] P070_NeoPixel_Clock Use Plugin_task_data array
+      [memory] P046_VentusW266 Use member data struct
+      [memory] P045_MPU6050 Use Plugin_task_data array
+      [memory] Change pointer checks to compare with nullptr
+      [memory] P044_P1WiFiGateway Use Plugin_task_data array and String as buffer
+      [memory] Shared code to select Serial Config (8N1 etc)
+      [memory] P020_Ser2Net Use Plugin_task_data array
+      [ESP32] Change P002_ADC range to 4095 for ESP32
+      [Settings] Added check for offset on last member of struct
+      [TinyGPS++] Added GSA and GSV sentences to get satellite ID & SNR
+      [GPS] Use GSV and GSA sentences to view satellite ID and SNR
+      [PlatformIO] Allow building ESP32 espressif32@1.6.0
+      [PubSubClient] Increase MQTT_MAX_PACKET_SIZE from 384 to 1024
+      [GPS] Improve displayed satellite stats
+      [WiFi] Allow force to B/G to improve WiFi stability.
+      [WiFi] Correct fall-back when B/G only mode cannot connect
+      Moved testing plugins to test builds & added safety docs for power sensors
+      [WiFi] Add option to set wifi off and restart wifi when connection lost
+      [Nextion] Reduce memory usage when not active
+      [p073_7DGT] Reduce memory usage of 7-segment display plugin
+      [memory] Reduce memory usage of p070_NeoPixelClock when not enabled
+      [memory] Reduce memory of P082_GPS and P068_SHT3x when not enabled
+      [memory] P077_CSE7766 Use Plugin_task_data array
+      [memory] P075_Nextion Use Plugin_task_data array
+      [memory] P074_TSL2591 Use Plugin_task_data array
+      [memory] P073_7DGT Use Plugin_task_data array
+      [memory] P070_NeoPixel_Clock Use Plugin_task_data array
+      [memory] P046_VentusW266 Use member data struct
+      [memory] P045_MPU6050 Use Plugin_task_data array
+      [memory] Change pointer checks to compare with nullptr
+      [memory] P044_P1WiFiGateway Use Plugin_task_data array and String as buffer
+      [memory] Shared code to select Serial Config (8N1 etc)
+      [memory] P020_Ser2Net Use Plugin_task_data array
+      [ESP32] Change P002_ADC range to 4095 for ESP32
+      [Settings] Added check for offset on last member of struct
+      [TinyGPS++] Added GSA and GSV sentences to get satellite ID & SNR
+      [GPS] Use GSV and GSA sentences to view satellite ID and SNR
+      [PlatformIO] Allow building ESP32 espressif32@1.6.0
+      [PubSubClient] Increase MQTT_MAX_PACKET_SIZE from 384 to 1024
+      [GPS] Improve displayed satellite stats
+      [WiFi] Allow force to B/G to improve WiFi stability.
+      [WiFi] Correct fall-back when B/G only mode cannot connect
+      Moved testing plugins to test builds & added safety docs for power sensors
+      [WiFi] Add option to set wifi off and restart wifi when connection lost
+      [#2254] Reduce memory usage on MH-Z19 and improve reading stability
+      [#2254] Make it compile in all core libraries
+      [ESP8266] Do not use default for TX pin
+      [Core 2.5.0] Move tag to beta3
+      [SenseAir] Improvement on Modbus handling
+      [SenseAir] Some more improvements Modbus implementation
+      [WiFi] Destruct WiFi object when wifi needs to be reset
+      [Eastron] Add CRC pass/fail stats to plugin page and allow retries
+      [Eastron] Fix compile error
+      [#2292] HX711: tareChanA command is not case insensitive
+      [ESPeasySerial] return -1 as pins on unset serial type
+      [GPS] Fix some uninitialized issues
+      [PlatformIO] Core 2.5.0 is no longer beta
+      [SWserial] Set TX interrupts for 9600 baud
+      [Build] Rename build files and disable core 2.5.0 builds
+      [ESPeasySerial] Make it compile for core 2.4.1
+      [Serial wrapper] Fix serial issues (for ESP8266) when using HW serial
+      1MB build with P035 IR plugins #2286
+      MQTT Import : A bad clientId is build in case of a reconnect #2298
+
+Victor Antonovich (2):
+      [WIFI] Fix mDNS startup for log levels below LOG_LEVEL_INFO
+      [WIFI] Add MDNS.update() for LEAmDNS compatibility
+
+ppisljar (2):
+      json endpoints
+      removing unused var
+
+
+-------------------------------------------------
+Changes in release mega-20190212 (since mega-20190202)
+-------------------------------------------------
+
+Release date: Tue Feb 12 04:00:31 CET 2019
+
+Grovkillen (3):
+      [flasher] fixed unzip to root, now (correctly) bin folder
+      [flasher] fixed HW port name bug
+      [flasher] old zip's didn't store in "\bin", downloader comply now
+
+chunter1 (1):
+      1-wire timings optimized for stability
+
+olliwr (3):
+      Update ESPEasy-Globals.h
+      Update Command.ino
+      Update ESPEasy-Globals.h
+
+
+-------------------------------------------------
+Changes in release mega-20190202 (since mega-20190121)
+-------------------------------------------------
+
+Release date: Sat Feb  2 04:00:28 CET 2019
+
+Grovkillen (1):
+      [flasher] fixed empty folder issue
+
+Jonathan Westerholt (1):
+      fix reset bug for esp32 by casting explicitly, should fix #2242
+
+jimmys01 (6):
+      Bump up IrRemote Lib to 2.5.4
+      Add the newest IR protocols to EspEasy
+      [IRTX] Even more timming Buffer added
+      [IRTX] Allocate big buffers on the heap for RAW and RAW2 encodings
+      Update _P035_IRTX.ino
+      [Controllers] Fix small error in commit #2246
+
+stefan (6):
+      [1M minimal Size] Undefine graphical meminfodetail
+      [1M minimal Size] Exclude all debug logs from standard files
+      [1M minimal Size] Include BUILD_NO_DEBUG in plugin sets
+      [1M minimal Size] Remove unused variable..
+      [1M minimal Size] Remove another unused variable..
+      [1M minimal Size] Exclude debug from minimal Controllers/Plugins
+
+
+-------------------------------------------------
+Changes in release mega-20190121 (since mega-20190116)
+-------------------------------------------------
+
+Release date: Mon Jan 21 04:00:15 CET 2019
+
+Eduard Iten (1):
+      Add code to start periodic transmission if not enough data is received
+
+Gijs Noorlander (1):
+      [IRTX] mitsubishi_ac not working #2230
+
+jimmys01 (1):
+      [Condrollers] Solves the 0 Max Queue Depth and Max retries bug after an update
+
+stefan (3):
+      [WiFi] Some minor changes for WiFi stability
+      [Wifi] Remove unused variable
+      [Plugin Sets] Decouple PLUGIN_BUILD_MINIMAL_OTA
+
+
+-------------------------------------------------
+Changes in release mega-20190116 (since mega-20190110)
+-------------------------------------------------
+
+Release date: Wed Jan 16 04:00:26 CET 2019
+
+Gijs Noorlander (1):
+      [WiFi] Disable wifi initialization at boot
+
+Grovkillen (1):
+      [flasher] fixed API deny error (JSON parse)
+
+
+-------------------------------------------------
 Changes in release mega-20190110 (since mega-20190109)
 -------------------------------------------------
 

@@ -23,15 +23,43 @@ To create/register a plugin, you have to :
 
 
 /******************************************************************************\
- * BUILD Configs *******************************************************************
+ * Detect core versions *******************************************************
 \******************************************************************************/
 
-#ifdef FORCE_PRE_2_5_0
-  #ifdef CORE_2_5_0
-    #undef CORE_2_5_0
+#ifndef ESP32
+  #if defined(ARDUINO_ESP8266_RELEASE_2_4_0) || defined(ARDUINO_ESP8266_RELEASE_2_4_1)  || defined(ARDUINO_ESP8266_RELEASE_2_4_2)
+    #ifndef CORE_2_4_X
+      #define CORE_2_4_X
+    #endif
   #endif
-#endif
 
+  #if defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(ARDUINO_ESP8266_RELEASE_2_4_0) || defined(ARDUINO_ESP8266_RELEASE_2_4_1)
+    #ifndef CORE_PRE_2_4_2
+      #define CORE_PRE_2_4_2
+    #endif
+  #endif
+
+  #if defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(CORE_2_4_X)
+    #ifndef CORE_PRE_2_5_0
+      #define CORE_PRE_2_5_0
+    #endif
+  #else
+    #ifndef CORE_POST_2_5_0
+      #define CORE_POST_2_5_0
+    #endif
+  #endif
+
+
+  #ifdef FORCE_PRE_2_5_0
+    #ifdef CORE_POST_2_5_0
+      #undef CORE_POST_2_5_0
+    #endif
+  #endif
+#endif // ESP32
+
+/******************************************************************************\
+ * BUILD Configs **************************************************************
+\******************************************************************************/
 
 // IR library is large, so make a separate build including stable plugins and IR.
 #ifdef PLUGIN_BUILD_DEV_IR
@@ -80,6 +108,9 @@ To create/register a plugin, you have to :
 
     #define CONTROLLER_SET_NONE
 
+    #define BUILD_MINIMAL_OTA
+    #define BUILD_NO_DEBUG
+
     #define USES_C001   // Domoticz HTTP
     #define USES_C002   // Domoticz MQTT
     #define USES_C005   // OpenHAB MQTT
@@ -117,6 +148,19 @@ To create/register a plugin, you have to :
     #ifdef USE_SERVO
       #undef USE_SERVO
     #endif
+#endif
+
+
+#ifndef BUILD_MINIMAL_OTA
+  #ifndef WEBSERVER_TIMINGSTATS
+    #define WEBSERVER_TIMINGSTATS
+  #endif
+  #ifndef WEBSERVER_SYSVARS
+    #define WEBSERVER_SYSVARS
+  #endif
+  #ifndef WEBSERVER_NEW_UI
+    #define WEBSERVER_NEW_UI
+  #endif
 #endif
 
 
@@ -465,7 +509,7 @@ To create/register a plugin, you have to :
     #define USES_P028   // BME280
     #define USES_P029   // Output
 
-    #define USES_P030   // BMP280
+//    #define USES_P030   // BMP280   (Made obsolete, now BME280 can handle both)
     #define USES_P031   // SHT1X
     #define USES_P032   // MS5611
     #define USES_P033   // Dummy
@@ -548,7 +592,9 @@ To create/register a plugin, you have to :
     #define USES_P073   // 7DG
     #define USES_P074   // TSL2561
     #define USES_P075   // Nextion
-
+    #define USES_P076   // HWL8012   in POW r1
+    // Needs CSE7766 Energy sensor, via Serial RXD 4800 baud 8E1 (GPIO1), TXD (GPIO3)
+    #define USES_P077	  // CSE7766   in POW R2
     #define USES_P078   // Eastron Modbus Energy meters
     #define USES_P079   // Wemos Motoshield
     #define USES_P080   // iButton Sensor  DS1990A

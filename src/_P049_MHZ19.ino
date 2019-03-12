@@ -31,7 +31,7 @@
 #define PLUGIN_VALUENAME1_049 "PPM"
 #define PLUGIN_VALUENAME2_049 "Temperature" // Temperature in C
 #define PLUGIN_VALUENAME3_049 "U" // Undocumented, minimum measurement per time period?
-#define PLUGIN_READ_TIMEOUT   3000
+#define PLUGIN_READ_TIMEOUT   300
 
 #define PLUGIN_049_FILTER_OFF        1
 #define PLUGIN_049_FILTER_OFF_ALLSAMPLES 2
@@ -39,13 +39,14 @@
 #define PLUGIN_049_FILTER_MEDIUM     4
 #define PLUGIN_049_FILTER_SLOW       5
 
-boolean Plugin_049_init = false;
-// Default of the sensor is to run ABC
-boolean Plugin_049_ABC_Disable = false;
-boolean Plugin_049_ABC_MustApply = false;
-
 #include <ESPeasySerial.h>
-ESPeasySerial *P049_easySerial;
+
+enum MHZ19Types {
+  MHZ19_notDetected,
+  MHZ19_A,
+  MHZ19_B
+};
+
 
 enum mhzCommands : byte { mhzCmdReadPPM,
                           mhzCmdCalibrateZero,
@@ -103,13 +104,172 @@ const PROGMEM byte mhzCmdData[][3] = {
 #endif
   };
 
-byte mhzResp[9];    // 9 byte response buffer
-
 enum
 {
   ABC_enabled  = 0x01,
   ABC_disabled = 0x02
 };
+
+
+struct P049_data_struct : public PluginTaskData_base {
+  P049_data_struct() { reset(); }
+
+  ~P049_data_struct() { reset(); }
+
+  void reset() {
+    if (easySerial != nullptr) {
+      delete easySerial;
+      easySerial = nullptr;
+    }
+    linesHandled = 0;
+    checksumFailed = 0;
+    ++sensorResets;
+
+    // Default of the sensor is to run ABC
+    ABC_Disable = false;
+    ABC_MustApply = false;
+    modelA_detected = false;
+  }
+
+  bool init(const int16_t serial_rx, const int16_t serial_tx, bool setABCdisabled) {
+    if (serial_rx < 0 || serial_tx < 0)
+      return false;
+    reset();
+    easySerial = new ESPeasySerial(serial_rx, serial_tx);
+    easySerial->begin(9600);
+    ABC_Disable = setABCdisabled;
+    if (ABC_Disable) {
+      // No guarantee the correct state is active on the sensor after reboot.
+      ABC_MustApply = true;
+    }
+    return isInitialized();
+  }
+
+  bool isInitialized() const {
+    return easySerial != nullptr;
+  }
+
+  void setABCmode(int abcDisableSetting) {
+    boolean new_ABC_disable = (abcDisableSetting == ABC_disabled);
+    if (ABC_Disable != new_ABC_disable) {
+      // Setting changed in the webform.
+      ABC_MustApply = true;
+      ABC_Disable = new_ABC_disable;
+    }
+  }
+
+  byte calculateChecksum() const {
+    byte checksum = 0;
+    for (byte i = 1; i < 8; i++)
+      checksum += mhzResp[i];
+    checksum = 0xFF - checksum;
+    return (checksum+1);
+  }
+
+  size_t send_mhzCmd(byte CommandId)
+  {
+    if (!isInitialized()) return 0;
+    // The receive buffer "mhzResp" is re-used to send a command here:
+    mhzResp[0] = 0xFF; // Start byte, fixed
+    mhzResp[1] = 0x01; // Sensor number, 0x01 by default
+    memcpy_P(&mhzResp[2], mhzCmdData[CommandId], sizeof(mhzCmdData[0]));
+    mhzResp[6] = mhzResp[3]; mhzResp[7] = mhzResp[4];
+    mhzResp[3] = mhzResp[4] = mhzResp[5] = 0x00;
+    mhzResp[8] = calculateChecksum();
+
+    return easySerial->write(mhzResp, sizeof(mhzResp));
+  }
+
+  bool read_ppm(unsigned int &ppm, signed int &temp, unsigned int &s, float &u) {
+    if (!isInitialized()) return false;
+    //send read PPM command
+    byte nbBytesSent = send_mhzCmd(mhzCmdReadPPM);
+    if (nbBytesSent != 9) {
+      return false;
+    }
+    // get response
+    memset(mhzResp, 0, sizeof(mhzResp));
+
+    long timer = millis() + PLUGIN_READ_TIMEOUT;
+    int counter = 0;
+    while (!timeOutReached(timer) && (counter < 9)) {
+      if (easySerial->available() > 0) {
+        byte value = easySerial->read();
+        if ((counter == 0 && value == 0xFF) || counter > 0) {
+          mhzResp[counter++] = value;
+        }
+      } else {
+        delay(10);
+      }
+    }
+    if (counter < 9) {
+      // Timeout
+      return false;
+    }
+    ++linesHandled;
+    if ( !(mhzResp[8] == calculateChecksum()) ) {
+      ++checksumFailed;
+      return false;
+    }
+    if (mhzResp[0] == 0xFF && mhzResp[1] == 0x86) {
+      //calculate CO2 PPM
+      ppm = (static_cast<unsigned int>(mhzResp[2]) << 8) + mhzResp[3];
+
+      // set temperature (offset 40)
+      unsigned int mhzRespTemp = (unsigned int) mhzResp[4];
+      temp = mhzRespTemp - 40;
+
+      // set 's' (stability) value
+      s = mhzResp[5];
+      if (s != 0) {
+        modelA_detected = true;
+      }
+
+      // calculate 'u' value
+      u = (static_cast<unsigned int>(mhzResp[6]) << 8) + mhzResp[7];
+      return true;
+    }
+    return false;
+  }
+
+  bool receivedCommandAcknowledgement() {
+    if (mhzResp[0] == 0xFF && mhzResp[1] == 0x99)  {
+      byte checksum = calculateChecksum();
+      return mhzResp[8] == checksum;
+    }
+    return false;
+  }
+
+  String getBufferHexDump() {
+    String result;
+    result.reserve(27);
+    for (int i = 0; i < 9; ++i) {
+      result += ' ';
+      result += String(mhzResp[i], HEX);
+    }
+    return result;
+  }
+
+  MHZ19Types getDetectedDevice() {
+    if (linesHandled > checksumFailed) {
+      return modelA_detected ? MHZ19_A : MHZ19_B;
+    }
+    return MHZ19_notDetected;
+  }
+
+
+  uint32_t linesHandled = 0;
+  uint32_t checksumFailed = 0;
+  uint32_t sensorResets = 0;
+
+  ESPeasySerial *easySerial = nullptr;
+  byte mhzResp[9];    // 9 byte response buffer
+  // Default of the sensor is to run ABC
+  bool ABC_Disable = false;
+  bool ABC_MustApply = false;
+  bool modelA_detected = false;
+};
+
 
 boolean Plugin_049_Check_and_ApplyFilter(unsigned int prevVal, unsigned int &newVal, uint32_t s, const int filterValue, String& log) {
   if (s == 1) {
@@ -221,106 +381,102 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
           PLUGIN_049_FILTER_SLOW };
         addFormSelector(F("Filter"), F("p049_filter"), 5, filteroptions, filteroptionValues, choiceFilter);
 
+        P049_html_show_stats(event);
+
         success = true;
         break;
       }
 
     case PLUGIN_WEBFORM_SAVE:
       {
+        P049_data_struct *P049_data =
+            static_cast<P049_data_struct *>(getPluginTaskData(event->TaskIndex));
+        if (nullptr == P049_data) {
+          return success;
+        }
         serialHelper_webformSave(event);
         const int formValue = getFormItemInt(F("p049_abcdisable"));
-        boolean new_ABC_disable = (formValue == ABC_disabled);
-        if (Plugin_049_ABC_Disable != new_ABC_disable) {
-          // Setting changed in the webform.
-          Plugin_049_ABC_MustApply = true;
-          Plugin_049_ABC_Disable = new_ABC_disable;
-        }
+        P049_data->setABCmode(formValue);
         PCONFIG(0) = formValue;
-        const int filterValue = getFormItemInt(F("p049_filter"));
-        PCONFIG(1) = filterValue;
+        PCONFIG(1) = getFormItemInt(F("p049_filter"));
         success = true;
         break;
       }
 
     case PLUGIN_INIT:
       {
-        Plugin_049_ABC_Disable = PCONFIG(0) == ABC_disabled;
-        if (Plugin_049_ABC_Disable) {
-          // No guarantee the correct state is active on the sensor after reboot.
-          Plugin_049_ABC_MustApply = true;
-        }
-        P049_easySerial = new ESPeasySerial(CONFIG_PIN1, CONFIG_PIN2);
-        P049_easySerial->begin(9600);
-        addLog(LOG_LEVEL_INFO, F("MHZ19: Init OK "));
-
-        //delay first read, because hardware needs to initialize on cold boot
-        //otherwise we get a weird value or read error
-        schedule_task_device_timer(event->TaskIndex, millis() + 15000);
-
-        Plugin_049_init = true;
-        success = true;
+        initPluginTaskData(event->TaskIndex, new P049_data_struct());
+        success = P049_performInit(event);
         break;
       }
 
+    case PLUGIN_EXIT: {
+      clearPluginTaskData(event->TaskIndex);
+      success = true;
+      break;
+    }
+
     case PLUGIN_WRITE:
       {
+        P049_data_struct *P049_data =
+            static_cast<P049_data_struct *>(getPluginTaskData(event->TaskIndex));
+        if (nullptr == P049_data) {
+          return success;
+        }
+
         String command = parseString(string, 1);
 
         if (command == F("mhzcalibratezero"))
         {
-          _P049_send_mhzCmd(mhzCmdCalibrateZero);
+          P049_data->send_mhzCmd(mhzCmdCalibrateZero);
           addLog(LOG_LEVEL_INFO, F("MHZ19: Calibrated zero point!"));
           success = true;
         }
-
-        if (command == F("mhzreset"))
+        else if (command == F("mhzreset"))
         {
-          _P049_send_mhzCmd(mhzCmdReset);
+          P049_data->send_mhzCmd(mhzCmdReset);
           addLog(LOG_LEVEL_INFO, F("MHZ19: Sent sensor reset!"));
           success = true;
         }
-
-        if (command == F("mhzabcenable"))
+        else if (command == F("mhzabcenable"))
         {
-          _P049_send_mhzCmd(mhzCmdABCEnable);
+          P049_data->send_mhzCmd(mhzCmdABCEnable);
           addLog(LOG_LEVEL_INFO, F("MHZ19: Sent sensor ABC Enable!"));
           success = true;
         }
-
-        if (command == F("mhzabcdisable"))
+        else if (command == F("mhzabcdisable"))
         {
-          _P049_send_mhzCmd(mhzCmdABCDisable);
+          P049_data->send_mhzCmd(mhzCmdABCDisable);
           addLog(LOG_LEVEL_INFO, F("MHZ19: Sent sensor ABC Disable!"));
           success = true;
         }
 
 #ifdef ENABLE_DETECTION_RANGE_COMMANDS
-        if (command == F("mhzmeasurementrange1000"))
-        {
-          _P049_send_mhzCmd(mhzCmdMeasurementRange1000);
-          addLog(LOG_LEVEL_INFO, F("MHZ19: Sent measurement range 0-1000PPM!"));
-          success = true;
-        }
-
-        if (command == F("mhzmeasurementrange2000"))
-        {
-          _P049_send_mhzCmd(mhzCmdMeasurementRange2000);
-          addLog(LOG_LEVEL_INFO, F("MHZ19: Sent measurement range 0-2000PPM!"));
-          success = true;
-        }
-
-        if (command == F("mhzmeasurementrange3000"))
-        {
-          _P049_send_mhzCmd(mhzCmdMeasurementRange3000);
-          addLog(LOG_LEVEL_INFO, F("MHZ19: Sent measurement range 0-3000PPM!"));
-          success = true;
-        }
-
-        if (command == F("mhzmeasurementrange5000"))
-        {
-          _P049_send_mhzCmd(mhzCmdMeasurementRange5000);
-          addLog(LOG_LEVEL_INFO, F("MHZ19: Sent measurement range 0-5000PPM!"));
-          success = true;
+        else if (command.startsWith(F("mhzmeasurementrange"))) {
+          if (command == F("mhzmeasurementrange1000"))
+          {
+            P049_data->send_mhzCmd(mhzCmdMeasurementRange1000);
+            addLog(LOG_LEVEL_INFO, F("MHZ19: Sent measurement range 0-1000PPM!"));
+            success = true;
+          }
+          else if (command == F("mhzmeasurementrange2000"))
+          {
+            P049_data->send_mhzCmd(mhzCmdMeasurementRange2000);
+            addLog(LOG_LEVEL_INFO, F("MHZ19: Sent measurement range 0-2000PPM!"));
+            success = true;
+          }
+          else if (command == F("mhzmeasurementrange3000"))
+          {
+            P049_data->send_mhzCmd(mhzCmdMeasurementRange3000);
+            addLog(LOG_LEVEL_INFO, F("MHZ19: Sent measurement range 0-3000PPM!"));
+            success = true;
+          }
+          else if (command == F("mhzmeasurementrange5000"))
+          {
+            P049_data->send_mhzCmd(mhzCmdMeasurementRange5000);
+            addLog(LOG_LEVEL_INFO, F("MHZ19: Sent measurement range 0-5000PPM!"));
+            success = true;
+          }
         }
 #endif
         break;
@@ -329,163 +485,85 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
       {
+        P049_data_struct *P049_data =
+            static_cast<P049_data_struct *>(getPluginTaskData(event->TaskIndex));
+        if (nullptr == P049_data) {
+          return success;
+        }
+        unsigned int ppm = 0;
+        signed int temp = 0;
+        unsigned int s = 0;
+        float u = 0;
+        if (P049_data->read_ppm(ppm, temp, s, u)) {
+            String log = F("MHZ19: ");
 
-        if (Plugin_049_init)
-        {
-          //send read PPM command
-          byte nbBytesSent = _P049_send_mhzCmd(mhzCmdReadPPM);
-          if (nbBytesSent != 9) {
-            String log = F("MHZ19: Error, nb bytes sent != 9 : ");
-              log += nbBytesSent;
-              addLog(LOG_LEVEL_INFO, log);
-          }
-
-          // get response
-          memset(mhzResp, 0, sizeof(mhzResp));
-
-          long timer = millis() + PLUGIN_READ_TIMEOUT;
-          int counter = 0;
-          while (!timeOutReached(timer) && (counter < 9)) {
-            if (P049_easySerial->available() > 0) {
-              mhzResp[counter++] = P049_easySerial->read();
-            } else {
-              delay(10);
-            }
-          }
-          if (counter < 9){
-              addLog(LOG_LEVEL_INFO, F("MHZ19: Error, timeout while trying to read"));
-          }
-
-          unsigned int ppm = 0;
-          signed int temp = 0;
-          unsigned int s = 0;
-          float u = 0;
-          byte checksum = _P049_calculateChecksum(mhzResp);
-
-          if ( !(mhzResp[8] == checksum) ) {
-             String log = F("MHZ19: Read error: checksum = ");
-             log += String(checksum); log += " / "; log += String(mhzResp[8]);
-             log += " bytes read  => ";for (byte i = 0; i < 9; i++) {log += mhzResp[i];log += "/" ;}
-             addLog(LOG_LEVEL_ERROR, log);
-
-             // Sometimes there is a misalignment in the serial read
-             // and the starting byte 0xFF isn't the first read byte.
-             // This goes on forever.
-             // There must be a better way to handle this, but here
-             // we're trying to shift it so that 0xFF is the next byte
-             byte checksum_shift;
-             for (byte i = 1; i < 8; i++) {
-                checksum_shift = P049_easySerial->peek();
-                if (checksum_shift == 0xFF) {
-                  String log = F("MHZ19: Shifted ");
-                  log += i;
-                  log += F(" bytes to attempt to fix buffer alignment");
-                  addLog(LOG_LEVEL_ERROR, log);
-                  break;
-                } else {
-                 checksum_shift = P049_easySerial->read();
-                }
-             }
-             success = false;
-             break;
-
-          // Process responses to 0x86
-          } else if (mhzResp[0] == 0xFF && mhzResp[1] == 0x86 && mhzResp[8] == checksum)  {
-
-              //calculate CO2 PPM
-              unsigned int mhzRespHigh = (unsigned int) mhzResp[2];
-              unsigned int mhzRespLow = (unsigned int) mhzResp[3];
-              ppm = (256*mhzRespHigh) + mhzRespLow;
-
-              // set temperature (offset 40)
-              unsigned int mhzRespTemp = (unsigned int) mhzResp[4];
-              temp = mhzRespTemp - 40;
-
-              // set 's' (stability) value
-              unsigned int mhzRespS = (unsigned int) mhzResp[5];
-              s = mhzRespS;
-
-              // calculate 'u' value
-              unsigned int mhzRespUHigh = (unsigned int) mhzResp[6];
-              unsigned int mhzRespULow = (unsigned int) mhzResp[7];
-              u = (256*mhzRespUHigh) + mhzRespULow;
-
-              String log = F("MHZ19: ");
-
-              // During (and only ever at) sensor boot, 'u' is reported as 15000
-              // We log but don't process readings during that time
-              if (u == 15000) {
-
-                log += F("Bootup detected! ");
-                if (Plugin_049_ABC_Disable) {
-                  // After bootup of the sensor the ABC will be enabled.
-                  // Thus only actively disable after bootup.
-                  Plugin_049_ABC_MustApply = true;
-                  log += F("Will disable ABC when bootup complete. ");
-                }
-                success = false;
-              // Finally, stable readings are used for variables
-              } else {
-                const int filterValue = PCONFIG(1);
-                if (Plugin_049_Check_and_ApplyFilter(UserVar[event->BaseVarIndex], ppm, s, filterValue, log)) {
-                  UserVar[event->BaseVarIndex] = (float)ppm;
-                  UserVar[event->BaseVarIndex + 1] = (float)temp;
-                  UserVar[event->BaseVarIndex + 2] = (float)u;
-                  if (s==0 || s==64) {
-                    // Reading is stable.
-                    if (Plugin_049_ABC_MustApply) {
-                      // Send ABC enable/disable command based on the desired state.
-                      if (Plugin_049_ABC_Disable) {
-                        _P049_send_mhzCmd(mhzCmdABCDisable);
-                        addLog(LOG_LEVEL_INFO, F("MHZ19: Sent sensor ABC Disable!"));
-                      } else {
-                        _P049_send_mhzCmd(mhzCmdABCEnable);
-                        addLog(LOG_LEVEL_INFO, F("MHZ19: Sent sensor ABC Enable!"));
-                      }
-                      Plugin_049_ABC_MustApply = false;
-                    }
-                  }
-                  success = true;
-                } else {
-                  success = false;
-                }
+            // During (and only ever at) sensor boot, 'u' is reported as 15000
+            // We log but don't process readings during that time
+            if (u == 15000) {
+              log += F("Bootup detected! ");
+              if (P049_data->ABC_Disable) {
+                // After bootup of the sensor the ABC will be enabled.
+                // Thus only actively disable after bootup.
+                P049_data->ABC_MustApply = true;
+                log += F("Will disable ABC when bootup complete. ");
               }
+              success = false;
+            // Finally, stable readings are used for variables
+            } else {
+              const int filterValue = PCONFIG(1);
+              if (Plugin_049_Check_and_ApplyFilter(UserVar[event->BaseVarIndex], ppm, s, filterValue, log)) {
+                UserVar[event->BaseVarIndex] = (float)ppm;
+                UserVar[event->BaseVarIndex + 1] = (float)temp;
+                UserVar[event->BaseVarIndex + 2] = (float)u;
+                if (s==0 || s==64) {
+                  // Reading is stable.
+                  if (P049_data->ABC_MustApply) {
+                    // Send ABC enable/disable command based on the desired state.
+                    if (P049_data->ABC_Disable) {
+                      P049_data->send_mhzCmd(mhzCmdABCDisable);
+                      addLog(LOG_LEVEL_INFO, F("MHZ19: Sent sensor ABC Disable!"));
+                    } else {
+                      P049_data->send_mhzCmd(mhzCmdABCEnable);
+                      addLog(LOG_LEVEL_INFO, F("MHZ19: Sent sensor ABC Enable!"));
+                    }
+                    P049_data->ABC_MustApply = false;
+                  }
+                }
+                success = true;
+              } else {
+                success = false;
+              }
+            }
 
-              // Log values in all cases
-              log += F("PPM value: ");
-              log += ppm;
-              log += F(" Temp/S/U values: ");
-              log += temp;
-              log += '/';
-              log += s;
-              log += '/';
-              log += u;
-              addLog(LOG_LEVEL_INFO, log);
-              break;
+            // Log values in all cases
+            log += F("PPM value: ");
+            log += ppm;
+            log += F(" Temp/S/U values: ");
+            log += temp;
+            log += '/';
+            log += s;
+            log += '/';
+            log += u;
+            addLog(LOG_LEVEL_INFO, log);
+            break;
 
 //#ifdef ENABLE_DETECTION_RANGE_COMMANDS
-          // Sensor responds with 0x99 whenever we send it a measurement range adjustment
-          } else if (mhzResp[0] == 0xFF && mhzResp[1] == 0x99 && mhzResp[8] == checksum)  {
-
-            addLog(LOG_LEVEL_INFO, F("MHZ19: Received measurement range acknowledgment! "));
-            addLog(LOG_LEVEL_INFO, F("Expecting sensor reset..."));
-            success = false;
-            break;
+        // Sensor responds with 0x99 whenever we send it a measurement range adjustment
+      } else if (P049_data->receivedCommandAcknowledgement())  {
+          addLog(LOG_LEVEL_INFO, F("MHZ19: Received measurement range acknowledgment! "));
+          addLog(LOG_LEVEL_INFO, F("Expecting sensor reset..."));
+          success = false;
+          break;
 //#endif
 
-          // log verbosely anything else that the sensor reports
-          } else {
-
-              String log = F("MHZ19: Unknown response:");
-              for (int i = 0; i < 9; ++i) {
-                log += ' ';
-                log += String(mhzResp[i], HEX);
-              }
-              addLog(LOG_LEVEL_INFO, log);
-              success = false;
-              break;
-
-          }
+        // log verbosely anything else that the sensor reports
+        } else {
+            String log = F("MHZ19: Unknown response:");
+            log += P049_data->getBufferHexDump();
+            addLog(LOG_LEVEL_INFO, log);
+            P049_performInit(event);
+            success = false;
+            break;
 
         }
         break;
@@ -494,25 +572,47 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
   return success;
 }
 
-byte _P049_calculateChecksum(byte *array)
-{
-  byte checksum = 0;
-  for (byte i = 1; i < 8; i++)
-    checksum+=array[i];
-  checksum = 0xFF - checksum;
-  return (checksum+1);
+bool P049_performInit(struct EventStruct *event) {
+  bool success = false;
+  const int16_t serial_rx = CONFIG_PIN1;
+  const int16_t serial_tx = CONFIG_PIN2;
+  P049_data_struct *P049_data =
+      static_cast<P049_data_struct *>(getPluginTaskData(event->TaskIndex));
+  if (nullptr == P049_data) {
+    return success;
+  }
+  if (P049_data->init(serial_rx, serial_tx, PCONFIG(0) == ABC_disabled)) {
+    success = true;
+    addLog(LOG_LEVEL_INFO, F("MHZ19: Init OK "));
+
+    //delay first read, because hardware needs to initialize on cold boot
+    //otherwise we get a weird value or read error
+    schedule_task_device_timer(event->TaskIndex, millis() + 15000);
+  }
+  return success;
 }
 
-size_t _P049_send_mhzCmd(byte CommandId)
-{
-  // The receive buffer "mhzResp" is re-used to send a command here:
-  mhzResp[0] = 0xFF; // Start byte, fixed
-  mhzResp[1] = 0x01; // Sensor number, 0x01 by default
-  memcpy_P(&mhzResp[2], mhzCmdData[CommandId], sizeof(mhzCmdData[0]));
-  mhzResp[6] = mhzResp[3]; mhzResp[7] = mhzResp[4];
-  mhzResp[3] = mhzResp[4] = mhzResp[5] = 0x00;
-  mhzResp[8] = _P049_calculateChecksum(mhzResp);
+void P049_html_show_stats(struct EventStruct *event) {
+  P049_data_struct *P049_data =
+      static_cast<P049_data_struct *>(getPluginTaskData(event->TaskIndex));
+  if (nullptr == P049_data) {
+    return;
+  }
 
-  return P049_easySerial->write(mhzResp, sizeof(mhzResp));
+  addRowLabel(F("Checksum (pass/fail/reset)"));
+  String chksumStats;
+  chksumStats = P049_data->linesHandled;
+  chksumStats += '/';
+  chksumStats += P049_data->checksumFailed;
+  chksumStats += '/';
+  chksumStats += P049_data->sensorResets;
+  addHtml(chksumStats);
+  addRowLabel(F("Detected"));
+  switch (P049_data->getDetectedDevice()) {
+    case MHZ19_A: addHtml(F("MH-Z19A")); break;
+    case MHZ19_B: addHtml(F("MH-Z19B")); break;
+    default: addHtml("---"); break;
+  }
 }
+
 #endif // USES_P049

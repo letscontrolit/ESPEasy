@@ -256,6 +256,19 @@ the code more readable:
  [DeviceName#ValueName]<<value> //These work...
  [DeviceName#ValueName] < <value> //the same...
 
+Special task names
+------------------
+
+You must not use the task name ``VAR`` as this is used for the internal
+variables. The variables set with the ``Let`` command will be available in rules
+as ``VAR#N`` where ``N`` is 1..16.
+
+Clock, Rules and System etc. are not recommended either since they are used in
+event names.
+
+Please observe that task names are case insensitive meaning that VAR, var, and Var etc.
+are all treated the same.
+
 Some working examples
 =====================
 
@@ -342,14 +355,82 @@ You could then use the command "ToggleGPIO" with dynamic GPIO numbers and state.
 
  http://<espeasyip>/control?cmd=event,ToggleGPIO=12,1
 
+Internal variables
+------------------
+
+A really great feature to use is the 16 internal variables. You set them like this:
+
+.. code-block:: html
+
+ Let,<n>,<value>
+
+Where n can be 1 to 16 and the value an float. To use the values in strings you can
+either use the ``%v7%`` syntax or ``[VAR#7]``. BUT for formulas you need to use the square
+brackets in order for it to compute, i.e. ``[VAR#12]``.
+
+
+Averaging filters
+-----------------
+
+You may want to clear peaks in otherwise jumpy measurements and if you cannot
+remove the jumpiness with hardware you might want to add a filter in the software.
+
+A **10 value average**:
+
+.. code-block:: html
+
+  On Temp#Value Do
+   Let,10,[VAR#9]
+   Let,9,[VAR#8]
+   Let,8,[VAR#7]
+   Let,7,[VAR#6]
+   Let,6,[VAR#5]
+   Let,5,[VAR#4]
+   Let,4,[VAR#3]
+   Let,3,[VAR#2]
+   Let,2,[VAR#1]
+   Let,1,[Temp#Value]
+   TaskValueSet,12,1,([VAR#1]+[VAR#2]+[VAR#3]+[VAR#4]+[VAR#5]+[VAR#6]+[VAR#7]+[VAR#8]+[VAR#9]+[VAR#10])/10
+  EndOn
+
+In the above example we use the sensor value of ``Temp#Value`` to get the trigger event,
+we then add all the previous 9 values to the internal variables and the newly acquired
+value to the first variable. We then summarize them and divide them by 10 and store it
+as a dummy variable (example is on task 12, value 1) which we use to publish the sliding
+value instead of the sensor value.
+
+Another filter could be to just use the previous value and **dilute** the new value with that one:
+
+.. code-block:: html
+
+  On Temp#Value Do
+    Let,2,[VAR#1]
+    Let,1,[Temp#Value]
+    TaskValueSet,12,1,(3*[VAR#1]+[VAR#2])/4
+  EndOn
+
+
+Yet another filter could be to add the new value to a **summarized average**:
+
+.. code-block:: html
+
+  On Temp#Value Do
+    Let,1,[Temp#Value]
+    TaskValueSet,12,1,([VAR#1]+3*[VAR#2])/4
+    Let,2,[Dummy#Value]
+  EndOn
+
+What you should use? That is a case by case question. Try them all and see which
+one suits your actual scenario the best.
+
 PIR and LDR
 -----------
 
 .. code-block:: html
 
- On PIR#Switch do
+ On PIR#State do
    if [LDR#Light]<500
-     gpio,16,[PIR#Switch]
+     gpio,16,[PIR#State]
    endif
  endon
 
@@ -360,9 +441,9 @@ PIR and LDR
 
 .. code-block:: html
 
- on PIR#Switch=1 do
+ on PIR#State=1 do
    if [LDR#Light]<500
-     gpio,16,[PIR#Switch]
+     gpio,16,[PIR#State]
    endif
  endon
 
@@ -545,7 +626,7 @@ to make things happen during certain hours of the day:
 
 .. code-block:: html
 
-  On Pir#Switch=1 do
+  On Pir#State=1 do
    If %systime% < 07:00:00
     Gpio,16,0
    Endif

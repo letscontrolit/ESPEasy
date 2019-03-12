@@ -28,6 +28,7 @@ Welcome to ESP Easy's documentation!
    :caption: Appendix
 
    Participate/Documentation.rst
+   Reference/Safety.rst
    Reference/Command.rst
    Reference/Events.rst
    Reference/GPIO.rst

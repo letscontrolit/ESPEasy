@@ -1,6 +1,9 @@
 #ifndef WEBSERVER_RULES_DEBUG
   #define WEBSERVER_RULES_DEBUG 1
 #endif
+#ifdef BUILD_MINIMAL_OTA
+  #undef WEBSERVER_RULES_DEBUG
+#endif
 
 //********************************************************************************
 // Web Interface rules page
@@ -53,7 +56,7 @@ void handle_rules_new() {
   int count = -1;
   HandlerFileInfo renderDetail = [/*&buffer,*/&count,endIdx](fileInfo fi){
     #ifdef WEBSERVER_RULES_DEBUG
-    Serial.print("Start generation of: ");
+    Serial.print(F("Start generation of: "));
     Serial.println(fi.Name);
     #endif
     if (fi.isDirectory)
@@ -106,7 +109,7 @@ void handle_rules_new() {
     }
     TXBuffer += F("</TD></TR>");
     #ifdef WEBSERVER_RULES_DEBUG
-    Serial.print("End generation of: ");
+    Serial.print(F("End generation of: "));
     Serial.println(fi.Name);
     #endif
 
@@ -149,7 +152,7 @@ void handle_rules_backup() {
     return;
   }
   #ifdef WEBSERVER_RULES_DEBUG
-  Serial.println("handle rules backup");
+  Serial.println(F("handle rules backup"));
   #endif
   if (!isLoggedIn() || !Settings.UseRules) return;
   if (!clientIPallowed()) return;
@@ -248,7 +251,7 @@ bool handle_rules_edit(String originalUri, bool isAddNew) {
 
   #ifdef WEBSERVER_RULES_DEBUG
   Serial.println(originalUri);
-  Serial.println("handle_rules_edit");
+  Serial.println(F("handle_rules_edit"));
   #endif
 
   if(isAddNew || (originalUri.startsWith(F("/rules/"))
@@ -285,7 +288,7 @@ bool handle_rules_edit(String originalUri, bool isAddNew) {
         eventName = FileNameToEvent(fileName);
       }
       #ifdef WEBSERVER_RULES_DEBUG
-      Serial.print("File name: ");
+      Serial.print(F("File name: "));
       Serial.println(fileName);
       #endif
       bool isEdit = SPIFFS.exists(fileName);
@@ -341,15 +344,15 @@ bool handle_rules_edit(String originalUri, bool isAddNew) {
 
       bool isReadOnly = !isOverwrite && ((isEdit && !isAddNew && !isNew) || (isAddNew && isNew));
       #ifdef WEBSERVER_RULES_DEBUG
-      Serial.print("Is Overwrite: ");
+      Serial.print(F("Is Overwrite: "));
       Serial.println(isOverwrite);
-      Serial.print("Is edit: ");
+      Serial.print(F("Is edit: "));
       Serial.println(isEdit);
-      Serial.print("Is addnew: ");
+      Serial.print(F("Is addnew: "));
       Serial.println(isAddNew);
-      Serial.print("Is New: ");
+      Serial.print(F("Is New: "));
       Serial.println(isNew);
-      Serial.print("Is Read Only: ");
+      Serial.print(F("Is Read Only: "));
       Serial.println(isReadOnly);
       #endif
 
@@ -418,7 +421,7 @@ bool handle_rules_edit(String originalUri, bool isAddNew) {
 bool Rule_Download(const String& path)
 {
   #ifdef WEBSERVER_RULES_DEBUG
-  Serial.print("Rule_Download path: ");
+  Serial.print(F("Rule_Download path: "));
   Serial.println(path);
   #endif
   fs::File dataFile = SPIFFS.open(path, "r");
@@ -454,7 +457,7 @@ bool EnumerateFileAndDirectory(String& rootPath
   bool next = true;
   #ifdef ESP8266
   fs::Dir dir = SPIFFS.openDir(rootPath);
-  Serial.print("Enumerate files of ");
+  Serial.print(F("Enumerate files of "));
   Serial.println(rootPath);
   while (next && dir.next()) {
     //Skip files

@@ -17,12 +17,15 @@ String Command_HTTP_SendToHTTP(struct EventStruct *event, const char* Line)
 		}
 		if (!isInt(port)) return return_command_failed();
 		String path = parseStringToEndKeepCase(strLine, 4);
+#ifndef BUILD_NO_DEBUG
 		if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
 			String log = F("SendToHTTP: Path: ");
 			log += path;
 			addLog(LOG_LEVEL_DEBUG, log);
 		}
+#endif
 		WiFiClient client;
+		client.setTimeout(CONTROLLER_CLIENTTIMEOUT_DFLT);
 		const int port_int = port.toInt();
 		const bool connected = connectClient(client, host.c_str(), port_int);
 		if (connected) {
@@ -32,7 +35,9 @@ String Command_HTTP_SendToHTTP(struct EventStruct *event, const char* Line)
 				hostportString += port_int;
 			}
 			String request = do_create_http_request(hostportString, F("GET"), path);
+#ifndef BUILD_NO_DEBUG
 			addLog(LOG_LEVEL_DEBUG, request);
+#endif
 			send_via_http(F("Command_HTTP_SendToHTTP"), client, request, false);
 		}
 	}

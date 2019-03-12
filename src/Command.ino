@@ -32,7 +32,9 @@ String doExecuteCommand(const char * cmd, struct EventStruct *event, const char*
   	String log = F("Command: ");
   	log += cmd_lc;
   	addLog(LOG_LEVEL_INFO, log);
+#ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_DEBUG, line); // for debug purposes add the whole line.
+#endif
   }
   // Simple macro to match command to function call.
   #define COMMAND_CASE(S, C) if (strcmp_P(cmd_lc.c_str(), PSTR(S)) == 0) { return (C(event, line)); }
@@ -120,7 +122,7 @@ String doExecuteCommand(const char * cmd, struct EventStruct *event, const char*
     }
     case 's': {
 	  COMMAND_CASE("save"                   , Command_Settings_Save);              // Settings.h
-	#if FEATURE_SD
+	#ifdef FEATURE_SD
 	  COMMAND_CASE("sdcard"                 , Command_SD_LS);                      // SDCARDS.h
 	  COMMAND_CASE("sdremove"               , Command_SD_Remove);                  // SDCARDS.h
 	#endif
@@ -256,7 +258,7 @@ void printDirectory(File dir, int numTabs)
 			break;
 		}
 		for (uint8_t i = 0; i < numTabs; i++) {
-			serialPrint('\t');
+			serialPrint("\t");
 		}
 		serialPrint(entry.name());
 		if (entry.isDirectory()) {
@@ -265,7 +267,7 @@ void printDirectory(File dir, int numTabs)
 		} else {
 			// files have sizes, directories do not
 			serialPrint("\t\t");
-			serialPrintln(entry.size(), DEC);
+			serialPrintln(String(entry.size(), DEC));
 		}
 		entry.close();
 	}

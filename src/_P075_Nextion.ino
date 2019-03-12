@@ -42,29 +42,60 @@
 #define TOUCH_BASE 500          // Base offset for 0X65 Touch Event Send Component ID.
 
 // Serial defines
-#define B9600    0
-#define B38400   1
-#define B57600   2
-#define B115200  3
-#define DEFAULT_BAUD B9600
-#define SOFTSERIAL 0
-#define UARTSERIAL 1
+#define P075_B9600    0
+#define P075_B38400   1
+#define P075_B57600   2
+#define P075_B115200  3
+
+#define P075_BaudRate         PCONFIG(1)
+#define P075_IncludeValues    PCONFIG(2)   // Web GUI checkbox flag; false = don't send idx & value data at interval.
 
 
-// Global vars
-ESPeasySerial *P075_easySerial = NULL;
-int rxPin = -1;
-int txPin = -1;
+struct P075_data_struct : public PluginTaskData_base {
 
-String P075_displayLines[P75_Nlines];
-
-void Plugin_075_loadDisplayLines(byte taskIndex) {
-  char P075_deviceTemplate[P75_Nlines][P75_Nchars];
-  LoadCustomTaskSettings(taskIndex, (byte*)&P075_deviceTemplate, sizeof(P075_deviceTemplate));
-  for (byte varNr = 0; varNr < P75_Nlines; varNr++) {
-    P075_displayLines[varNr] = P075_deviceTemplate[varNr];
+  P075_data_struct(int rx, int tx, uint32_t baud) : rxPin(rx), txPin(tx), baudrate(baud) {
+    if (baudrate < 9600 || baudrate > 115200) {
+      baudrate = 9600;
+    }
+    easySerial = new ESPeasySerial(rx, tx, false, RXBUFFSZ);
+    if (easySerial != nullptr) {
+      easySerial->begin(baudrate);
+      easySerial->flush();
+    }
   }
-}
+
+  ~P075_data_struct() {
+    if (easySerial != nullptr) {
+      easySerial->flush();
+      delete easySerial;
+      easySerial = nullptr;
+    }
+  }
+
+  void loadDisplayLines(byte taskIndex) {
+    char deviceTemplate[P75_Nlines][P75_Nchars];
+    LoadCustomTaskSettings(taskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
+    for (byte varNr = 0; varNr < P75_Nlines; varNr++) {
+      displayLines[varNr] = deviceTemplate[varNr];
+    }
+  }
+
+  String getLogString() const {
+    String result;
+    if (easySerial != nullptr) {
+      result = easySerial->getLogString();
+    }
+    return result;
+  }
+
+  ESPeasySerial *easySerial = nullptr;
+  int rxPin = -1;
+  int txPin = -1;
+  uint32_t baudrate = 9600UL;
+
+  String displayLines[P75_Nlines];
+};
+
 
 // *****************************************************************************************************
 // PlugIn starts here
@@ -73,11 +104,7 @@ void Plugin_075_loadDisplayLines(byte taskIndex) {
 boolean Plugin_075(byte function, struct EventStruct *event, String& string)
 {
   boolean success = false;
-  static uint8_t BaudCode = 0;                          // Web GUI baud rate drop down. 9600 if 0, See array for other rates.
-  static boolean HwSerial = SOFTSERIAL;                 // Serial mode, hardware uart or softserial.
-  static boolean AdvHwSerial = false;                   // Web GUI checkbox flag; false = softserial mode, true = hardware UART serial.
-  static boolean IncludeValues = false;                 // Web GUI checkbox flag; false = don't send idx & value data at interval.
-  uint32_t AdvHwBaud = 9600UL;
+//  static boolean AdvHwSerial = false;                   // Web GUI checkbox flag; false = softserial mode, true = hardware UART serial.
 
   switch (function) {
 
@@ -112,19 +139,8 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
 
 
     case PLUGIN_GET_DEVICEGPIONAMES: {
-
-      AdvHwSerial = PCONFIG(0);
-      rxPin = CONFIG_PIN1;
-      txPin = CONFIG_PIN2;
-
+//      AdvHwSerial = PCONFIG(0);
       serialHelper_getGpioNames(event);
-
-      if(AdvHwSerial == true) {
-        if ((rxPin == 3 && txPin == 1) || (rxPin == 13 && txPin == 15)) {
-          event->String1 = formatGpioName_RX_HW(false);
-          event->String2 = formatGpioName_TX_HW(false);
-        }
-      }
       break;
     }
 
@@ -132,46 +148,19 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD: {
       serialHelper_webformLoad(event);
 
-      // FIXME TD-er: These checks for serial pins still needed?
-      rxPin = CONFIG_PIN1;
-      txPin = CONFIG_PIN2;
-
-      if (!((rxPin == 3 && txPin == 1) || (rxPin == 13 && txPin == 15))) { // Hardware Serial Compatible?
-        PCONFIG(0) = false;      // Not HW serial compatible, Reset Check Box.
-      }
-
-      if (rxPin == 3 && txPin == 1) {                                      // UART USB Port?
-        if(PCONFIG(0)==false &&  // Hardware serial currently disabled.
-         Settings.TaskDeviceEnabled[event->TaskIndex] == true) {           // Plugin is enabled.
-            PCONFIG(0)=true;     // USB port access uses HW serial, Force set Check Box.
-        }
-      }
-
-      if (PCONFIG(0) == false) { // P075_easySerial mode.
-        PCONFIG(1) = B9600;      // Reset to 9600 baud.
-      }
-
-      if(rxPin <0 || txPin <0) {                                            // Missing serial I/O pins!
-        addFormNote(F("Please configure the RX and TX sensor pins before enabling this plugin."));
-        addFormSubHeader(""); // Blank line, vertical space.
-      }
-
+/*
       addFormSeparator(2);
       addFormSubHeader(F("Enhanced Serial Communication"));
       addFormCheckBox(F("Use Hardware Serial"), F("AdvHwSerial"), PCONFIG(0));
+*/
 
-      byte choice = PCONFIG(1);
       String options[4];
       options[0] = F("9600");
       options[1] = F("38400");
       options[2] = F("57600");
       options[3] = F("115200");
 
-      addFormSelector(F("Baud Rate"), F("p075_baud"), 4, options, NULL, choice);
-      addFormNote(F("Un-check box for Soft Serial communication (low performance mode, 9600 Baud)."));
-      addFormNote(F("Hardware Serial is available when the GPIO pins are RX=D7 and TX=D8."));
-      addFormNote(F("D8 (GPIO-15) requires a Buffer Circuit (PNP transistor) or ESP boot may fail."));
-      addFormNote(F("Do <b>NOT</b> enable the Serial Log file on Tools->Advanced->Serial Port."));
+      addFormSelector(F("Baud Rate"), F("p075_baud"), 4, options, nullptr, P075_BaudRate);
 
 //    ** DEVELOPER DEBUG MESSAGE AREA **
 //    int datax = (int)(Settings.TaskDeviceEnabled[event->TaskIndex]); // Debug value.
@@ -181,13 +170,15 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
 
       addFormSubHeader("");                          // Blank line, vertical space.
       addFormHeader(F("Nextion Command Statements (Optional)"));
-
-      Plugin_075_loadDisplayLines(event->TaskIndex);
-      for (byte varNr = 0; varNr < P75_Nlines; varNr++) {
-        addFormTextBox(String(F("Line ")) + (varNr + 1), String(F("p075_template")) + (varNr + 1), P075_displayLines[varNr], P75_Nchars-1);
+      P075_data_struct* P075_data = static_cast<P075_data_struct*>(getPluginTaskData(event->TaskIndex));
+      if (nullptr != P075_data) {
+        P075_data->loadDisplayLines(event->TaskIndex);
+        for (byte varNr = 0; varNr < P75_Nlines; varNr++) {
+          addFormTextBox(String(F("Line ")) + (varNr + 1), String(F("p075_template")) + (varNr + 1), P075_data->displayLines[varNr], P75_Nchars-1);
+        }
       }
       if( Settings.TaskDeviceTimer[event->TaskIndex]==0) { // Is interval timer disabled?
-        if(IncludeValues) {
+        if(P075_IncludeValues) {
             addFormNote(F("Interval Timer OFF, Nextion Lines (above) and Values (below) <b>NOT</b> scheduled for updates"));
         }
         else {
@@ -197,7 +188,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
 
       addFormSeparator(2);
       addFormSubHeader(F("Interval Options"));
-      addFormCheckBox(F("Resend <b>Values</b> (below) at Interval"), F("IncludeValues"), PCONFIG(2));
+      addFormCheckBox(F("Resend <b>Values</b> (below) at Interval"), F("IncludeValues"), P075_IncludeValues);
 
       success = true;
       break;
@@ -223,107 +214,55 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
         if(getTaskDeviceName(event->TaskIndex) == "") {         // Check to see if user entered device name.
             strcpy(ExtraTaskSettings.TaskDeviceName,PLUGIN_DEFAULT_NAME); // Name missing, populate default name.
         }
-        PCONFIG(0) = isFormItemChecked(F("AdvHwSerial"));
-        PCONFIG(1) = getFormItemInt(F("p075_baud"));
-        PCONFIG(2) = isFormItemChecked(F("IncludeValues"));
+//        PCONFIG(0) = isFormItemChecked(F("AdvHwSerial"));
+        P075_BaudRate = getFormItemInt(F("p075_baud"));
+        P075_IncludeValues = isFormItemChecked(F("IncludeValues"));
         SaveCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
-
-        Plugin_075_loadDisplayLines(event->TaskIndex);
+        P075_data_struct* P075_data = static_cast<P075_data_struct*>(getPluginTaskData(event->TaskIndex));
+        if (nullptr != P075_data) {
+          P075_data->loadDisplayLines(event->TaskIndex);
+        }
         success = true;
         break;
     }
 
 
     case PLUGIN_INIT: {
+//      AdvHwSerial   = PCONFIG(0);
+      uint8_t BaudCode = P075_BaudRate;
 
-      AdvHwSerial   = PCONFIG(0);
-      BaudCode      = PCONFIG(1);
-      IncludeValues = PCONFIG(2);
-
-      if(BaudCode > B115200) BaudCode = B9600;
+      if(BaudCode > P075_B115200) BaudCode = P075_B9600;
       const uint32_t BaudArray[4] = {9600UL, 38400UL, 57600UL, 115200UL};
-      AdvHwBaud = BaudArray[BaudCode];
-
-      if (CONFIG_PIN1 != -1) {
-        rxPin = CONFIG_PIN1;
+      initPluginTaskData(event->TaskIndex, new P075_data_struct(CONFIG_PIN1, CONFIG_PIN2, BaudArray[BaudCode]));
+      P075_data_struct* P075_data = static_cast<P075_data_struct*>(getPluginTaskData(event->TaskIndex));
+      if (nullptr != P075_data) {
+        P075_data->loadDisplayLines(event->TaskIndex);
+        addLog(LOG_LEVEL_INFO, P075_data->getLogString());
+        serialHelper_plugin_init(event);
+        success = true;
       }
-      if (CONFIG_PIN2 != -1) {
-        txPin = CONFIG_PIN2;
-      }
-
-      if (P075_easySerial != NULL) {
-        delete P075_easySerial;
-        P075_easySerial = NULL;
-      }
-
-      String log;
-      log.reserve(80);                                 // Prevent re-allocation
-      log = F("NEXTION075 : serial pin config RX:");
-      log += rxPin;
-      log += F(", TX:");
-      log += txPin;
-      if(Settings.TaskDeviceEnabled[event->TaskIndex]==true) {
-        log += F(", Plugin Enabled");                   // Plugin is enabled.
-      }
-      else {
-        log += F(", Plugin Disabled");
-      }
-      addLog(LOG_LEVEL_INFO, log);
-
-      if(Settings.TaskDeviceEnabled[event->TaskIndex] == true) { // Plugin is enabled.
-      // Hardware serial is RX on 13 and TX on 15 (swapped hw serial)
-        if (AdvHwSerial &&  rxPin == 13 && txPin == 15) {
-            log = F("NEXTION075 : Using swap hardware serial");
-            addLog(LOG_LEVEL_INFO, log);
-            HwSerial = UARTSERIAL;
-            Settings.UseSerial = false;                 // Disable global Serial port.
-            Settings.SerialLogLevel = 0;                // Disable logging on serial port.
-            Settings.BaudRate = AdvHwBaud;              // Set BaudRate for Nextion.
-        }
-        // Hardware serial is RX on 3 and TX on 1. USB serial for Nextion IDE (User MCU Input function).
-        else if(AdvHwSerial && rxPin == 3 && txPin == 1) {
-            log = F("NEXTION075 : Using USB hardware serial");
-            addLog(LOG_LEVEL_INFO, log);
-            HwSerial = UARTSERIAL;
-            Settings.UseSerial = false;                 // Disable global Serial port.
-            Settings.SerialLogLevel = 0;                // Disable logging on serial port.
-            Settings.BaudRate = AdvHwBaud;              // Set BaudRate for Nextion.
-        }
-        else {
-            log = F("NEXTION075 : Using software serial");
-            addLog(LOG_LEVEL_INFO, log);
-            HwSerial = SOFTSERIAL;
-        }
-        if (P075_easySerial == NULL) {
-            P075_easySerial = new ESPeasySerial(rxPin, txPin, false, RXBUFFSZ);
-        }
-        P075_easySerial->begin(9600);
-        P075_easySerial->flush();
-        Plugin_075_loadDisplayLines(event->TaskIndex);
-    }
-    else {
-    }
-      success = true;
       break;
     }
 
 
     case PLUGIN_READ: {
+      P075_data_struct* P075_data = static_cast<P075_data_struct*>(getPluginTaskData(event->TaskIndex));
+      if (nullptr != P075_data) {
         int RssiIndex;
         String newString;
         String UcTmpString;
 
         // Get optional LINE command statements. Special RSSIBAR bargraph keyword is supported.
         for (byte x = 0; x < P75_Nlines; x++) {
-          if (P075_displayLines[x].length()) {
-            String tmpString = P075_displayLines[x];
-            UcTmpString = P075_displayLines[x];
+          if (P075_data->displayLines[x].length()) {
+            String tmpString = P075_data->displayLines[x];
+            UcTmpString = P075_data->displayLines[x];
             UcTmpString.toUpperCase();
             RssiIndex = UcTmpString.indexOf(F("RSSIBAR"));  // RSSI bargraph Keyword found, wifi value in dBm.
             if(RssiIndex >= 0) {
               int barVal;
               newString.reserve(P75_Nchars+10);               // Prevent re-allocation
-              newString = P075_displayLines[x].substring(0, RssiIndex);
+              newString = P075_data->displayLines[x].substring(0, RssiIndex);
               int nbars = WiFi.RSSI();
               if (nbars < -100 || nbars >= 0)
                  barVal=0;
@@ -354,7 +293,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
               newString = parseTemplate(tmpString, 0);
             }
 
-            sendCommand(newString.c_str(), HwSerial);
+            P075_sendCommand(event->TaskIndex, newString.c_str());
             #ifdef DEBUG_LOG
               String log;
               log.reserve(P75_Nchars+50);                 // Prevent re-allocation
@@ -368,7 +307,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
         }
 
         // At Interval timer, send idx & value data only if user enabled "values" interval mode.
-        if(IncludeValues) {
+        if(P075_IncludeValues) {
             #ifdef DEBUG_LOG
              String log;
              log.reserve(120);                          // Prevent re-allocation
@@ -390,7 +329,8 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
             success = false;
         }
 
-        break;
+      }
+      break;
     }
 
 // Nextion commands received from events (including http) get processed here. PLUGIN_WRITE
@@ -418,7 +358,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
         if (tmpString.equalsIgnoreCase(getTaskDeviceName(event->TaskIndex)) == true) { // If device names match we have a command to write.
             argIndex = string.indexOf(',');
             tmpString = string.substring(argIndex + 1);
-            sendCommand(tmpString.c_str(), HwSerial);
+            P075_sendCommand(event->TaskIndex, tmpString.c_str());
 
             String log;
             log.reserve(110);                           // Prevent re-allocation
@@ -435,20 +375,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
 
 
     case PLUGIN_EXIT: {
-        if(HwSerial == UARTSERIAL) {
-            HwSerial = SOFTSERIAL;
-            Settings.UseSerial		= DEFAULT_USE_SERIAL;
-            Settings.BaudRate		= DEFAULT_SERIAL_BAUD;
-        }
-        if (P075_easySerial) {
-            P075_easySerial->flush();
-            P075_easySerial->begin(DEFAULT_SERIAL_BAUD);          // Restart System Serial Port (Serial Log) with default baud.
-            delete P075_easySerial;
-            P075_easySerial=NULL;
-        }
-        for (byte varNr = 0; varNr < P75_Nlines; varNr++) {
-          P075_displayLines[varNr] = "";
-        }
+        clearPluginTaskData(event->TaskIndex);
         break;
     }
 
@@ -460,6 +387,10 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
 
 
     case PLUGIN_TEN_PER_SECOND: {
+      P075_data_struct* P075_data = static_cast<P075_data_struct*>(getPluginTaskData(event->TaskIndex));
+      if (nullptr == P075_data) {
+        break;
+      }
       uint16_t i;
       uint8_t c;
       uint8_t charCount;
@@ -469,34 +400,38 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
       String Nswitch;
       char __buffer[RXBUFFSZ+1];                        // Staging buffer.
 
-      if(rxPin < 0) {
+      if(P075_data->rxPin < 0) {
         String log = F("NEXTION075 : Missing RxD Pin, aborted serial receive");
         addLog(LOG_LEVEL_INFO, log);
         break;
       }
 
-      if(P075_easySerial == NULL) break;                   // P075_easySerial missing, exit.
-      charCount = P075_easySerial->available();            // Prime the Soft Serial engine.
+      if(P075_data->easySerial == nullptr) break;                   // P075_data->easySerial missing, exit.
+      charCount = P075_data->easySerial->available();            // Prime the Soft Serial engine.
       if(charCount >= RXBUFFWARN) {
           String log;
           log.reserve(70);                           // Prevent re-allocation
-          log = F("NEXTION075 : RxD P075_easySerial Buffer capacity warning, ");
+          log = F("NEXTION075 : RxD P075_data->easySerial Buffer capacity warning, ");
           log += String(charCount);
           log += F(" bytes");
           addLog(LOG_LEVEL_INFO, log);
       }
+      uint32_t baudrate_delay_unit = P075_data->baudrate / 9600;
+      if (baudrate_delay_unit == 0) {
+        baudrate_delay_unit = 1;
+      }
 
       while (charCount) {                               // This is the serial engine. It processes the serial Rx stream.
-        c = P075_easySerial->read();
+        c = P075_data->easySerial->read();
 
         if (c == 0x65) {
-          if (charCount < 6) delay((5/(AdvHwBaud/9600))+1); // Let's wait for a few more chars to arrive.
+          if (charCount < 6) delay((5/(baudrate_delay_unit))+1); // Let's wait for a few more chars to arrive.
 
-          charCount = P075_easySerial->available();
+          charCount = P075_data->easySerial->available();
           if (charCount >= 6) {
             __buffer[0] = c;                            // Store in staging buffer.
             for (i = 1; i < 7; i++) {
-                __buffer[i] = P075_easySerial->read();
+                __buffer[i] = P075_data->easySerial->read();
             }
 
             __buffer[i] = 0x00;
@@ -524,13 +459,13 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
           if (c == '|') {
             __buffer[0] = c;                                  // Store in staging buffer.
 
-            if (charCount < 8) delay((9/(AdvHwBaud/9600))+1); // Let's wait for more chars to arrive.
-            else delay((3/(AdvHwBaud/9600))+1);               // Short wait for tardy chars.
-            charCount = P075_easySerial->available();
+            if (charCount < 8) delay((9/(baudrate_delay_unit))+1); // Let's wait for more chars to arrive.
+            else delay((3/(baudrate_delay_unit))+1);               // Short wait for tardy chars.
+            charCount = P075_data->easySerial->available();
 
             i = 1;
-            while (P075_easySerial->available() > 0 && i<RXBUFFSZ) { // Copy global serial buffer to local buffer.
-              __buffer[i] = P075_easySerial->read();
+            while (P075_data->easySerial->available() > 0 && i<RXBUFFSZ) { // Copy global serial buffer to local buffer.
+              __buffer[i] = P075_data->easySerial->read();
               if (__buffer[i]==0x0a || __buffer[i]==0x0d) break;
               i++;
             }
@@ -594,7 +529,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
             }
           }
         }
-        charCount = P075_easySerial->available();
+        charCount = P075_data->easySerial->available();
       }
 
       success = true;
@@ -605,26 +540,27 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
 }
 
 
-void sendCommand(const char *cmd, boolean SerialMode)
+void P075_sendCommand(byte taskIndex, const char *cmd)
 {
-    if(txPin < 0) {
-        String log = F("NEXTION075 : Missing TxD Pin Number, aborted sendCommand");
-        addLog(LOG_LEVEL_INFO, log);
-    }
-    else
-    {
-        if(P075_easySerial != NULL){
-            P075_easySerial->print(cmd);
-            P075_easySerial->write(0xff);
-            P075_easySerial->write(0xff);
-            P075_easySerial->write(0xff);
-        }
-        else {
-            String log = F("NEXTION075 : P075_easySerial error, aborted sendCommand");
-            addLog(LOG_LEVEL_INFO, log);
-        }
-    }
-    return;
+  P075_data_struct* P075_data = static_cast<P075_data_struct*>(getPluginTaskData(taskIndex));
+  if (!P075_data) return;
+  if (P075_data->txPin < 0) {
+      String log = F("NEXTION075 : Missing TxD Pin Number, aborted sendCommand");
+      addLog(LOG_LEVEL_INFO, log);
+  }
+  else
+  {
+      if (P075_data->easySerial != nullptr){
+          P075_data->easySerial->print(cmd);
+          P075_data->easySerial->write(0xff);
+          P075_data->easySerial->write(0xff);
+          P075_data->easySerial->write(0xff);
+      }
+      else {
+          String log = F("NEXTION075 : P075_data->easySerial error, aborted sendCommand");
+          addLog(LOG_LEVEL_INFO, log);
+      }
+  }
 }
 
 #endif // USES_P075
