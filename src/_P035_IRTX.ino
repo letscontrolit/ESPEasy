@@ -604,7 +604,7 @@ bool  parseStringAndSendAirCon(const uint16_t irType, const String& str) {
 #endif
 #if SEND_TCL112AC
     case TCL112AC:
-      irsend->sendTcl112Ac(reinterpret_cast<uint8_t *>(state));
+      Plugin_035_irSender->sendTcl112Ac(reinterpret_cast<uint8_t *>(state));
       break;
 #endif
     default:
