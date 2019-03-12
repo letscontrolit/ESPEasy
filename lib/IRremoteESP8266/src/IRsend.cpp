@@ -1,6 +1,6 @@
 // Copyright 2009 Ken Shirriff
 // Copyright 2015 Mark Szabo
-// Copyright 2017,2019 David Conran
+// Copyright 2017 David Conran
 
 #include "IRsend.h"
 #ifndef UNIT_TEST
@@ -488,113 +488,17 @@ void IRsend::sendRaw(uint16_t buf[], uint16_t len, uint16_t hz) {
 }
 #endif  // SEND_RAW
 
-// Send a simple (up to 64 bits) IR message of a given type.
-// An unknown/unsupported type will do nothing.
-// Args:
-//   type:  Protocol number/type of the message you want to send.
-//   data:  The data you want to send (up to 64 bits).
-//   nbits: How many bits long the message is to be.
-// Returns:
-//   bool: True if it is a type we can attemp to send, false if not.
-bool IRsend::send(decode_type_t type, uint64_t data, uint16_t nbits) {
+#ifndef UNIT_TEST
+void IRsend::send(uint16_t type, uint64_t data, uint16_t nbits) {
   switch (type) {
-#if SEND_AIWA_RC_T501
-    case AIWA_RC_T501:
-      sendAiwaRCT501(data, nbits);
-      break;
-#endif
-#if SEND_CARRIER_AC
-    case CARRIER_AC:
-      sendCarrierAC(data, nbits);
-      break;
-#endif
-#if SEND_COOLIX
-    case COOLIX:
-      sendCOOLIX(data, nbits);
-      break;
-#endif
-#if SEND_DENON
-    case DENON:
-      sendDenon(data, nbits);
-      break;
-#endif
-#if SEND_DISH
-    case DISH:
-      sendDISH(data, nbits);
-      break;
-#endif
-#if SEND_GICABLE
-    case GICABLE:
-      sendGICable(data, nbits);
-      break;
-#endif
-#if SEND_GREE
-    case GREE:
-      sendGree(data, nbits);
-      break;
-#endif
-#if SEND_JVC
-    case JVC:
-      sendJVC(data, nbits);
-      break;
-#endif
-#if SEND_LASERTAG
-    case LASERTAG:
-      sendLasertag(data, nbits);
-      break;
-#endif
-#if SEND_LG
-    case LG:
-      sendLG(data, nbits);
-      break;
-    case LG2:
-      sendLG2(data, nbits);
-      break;
-#endif
-#if SEND_LUTRON
-    case LUTRON:
-      sendLutron(data, nbits);
-      break;
-#endif
-#if SEND_MAGIQUEST
-    case MAGIQUEST:
-      sendMagiQuest(data, nbits);
-      break;
-#endif
-#if SEND_MIDEA
-    case MIDEA:
-      sendMidea(data, nbits);
-      break;
-#endif
-#if SEND_MITSUBISHI
-    case MITSUBISHI:
-      sendMitsubishi(data, nbits);
-      break;
-#endif
-#if SEND_MITSUBISHI2
-    case MITSUBISHI2:
-      sendMitsubishi2(data, nbits);
-      break;
-#endif
-#if SEND_NIKAI
-    case NIKAI:
-      sendNikai(data, nbits);
-      break;
-#endif
 #if SEND_NEC
     case NEC:
-    case NEC_LIKE:
       sendNEC(data, nbits);
       break;
 #endif
-#if SEND_PANASONIC
-    case PANASONIC:
-      sendPanasonic64(data, nbits);
-      break;
-#endif
-#if SEND_PIONEER
-    case PIONEER:
-      sendPioneer(data, nbits);
+#if SEND_SONY
+    case SONY:
+      sendSony(data, nbits);
       break;
 #endif
 #if SEND_RC5
@@ -607,9 +511,14 @@ bool IRsend::send(decode_type_t type, uint64_t data, uint16_t nbits) {
       sendRC6(data, nbits);
       break;
 #endif
-#if SEND_RCMM
-    case RCMM:
-      sendRCMM(data, nbits);
+#if SEND_DISH
+    case DISH:
+      sendDISH(data, nbits);
+      break;
+#endif
+#if SEND_JVC
+    case JVC:
+      sendJVC(data, nbits);
       break;
 #endif
 #if SEND_SAMSUNG
@@ -617,39 +526,14 @@ bool IRsend::send(decode_type_t type, uint64_t data, uint16_t nbits) {
       sendSAMSUNG(data, nbits);
       break;
 #endif
-#if SEND_SAMSUNG36
-    case SAMSUNG36:
-      sendSamsung36(data, nbits);
+#if SEND_LG
+    case LG:
+      sendLG(data, nbits);
       break;
 #endif
-#if SEND_SANYO
-    case SANYO_LC7461:
-      sendSanyoLC7461(data, nbits);
-      break;
-#endif
-#if SEND_SHARP
-    case SHARP:
-      sendSharpRaw(data, nbits);
-      break;
-#endif
-#if SEND_SHERWOOD
-    case SHERWOOD:
-      sendSherwood(data, nbits);
-      break;
-#endif
-#if SEND_SONY
-    case SONY:
-      sendSony(data, nbits);
-      break;
-#endif
-#if SEND_TECO
-    case TECO:
-      sendTeco(data, nbits);
-      break;
-#endif
-#if SEND_VESTEL_AC
-    case VESTEL_AC:
-      sendVestelAc(data, nbits);
+#if SEND_LG
+    case LG2:
+      sendLG2(data, nbits);
       break;
 #endif
 #if SEND_WHYNTER
@@ -657,8 +541,61 @@ bool IRsend::send(decode_type_t type, uint64_t data, uint16_t nbits) {
       sendWhynter(data, nbits);
       break;
 #endif
-    default:
-      return false;
+#if SEND_COOLIX
+    case COOLIX:
+      sendCOOLIX(data, nbits);
+      break;
+#endif
+#if SEND_DENON
+    case DENON:
+      sendDenon(data, nbits);
+      break;
+#endif
+#if SEND_SHERWOOD
+    case SHERWOOD:
+      sendSherwood(data, nbits);
+      break;
+#endif
+#if SEND_RCMM
+    case RCMM:
+      sendRCMM(data, nbits);
+      break;
+#endif
+#if SEND_MITSUBISHI
+    case MITSUBISHI:
+      sendMitsubishi(data, nbits);
+      break;
+#endif
+#if SEND_MITSUBISHI2
+    case MITSUBISHI2:
+      sendMitsubishi2(data, nbits);
+      break;
+#endif
+#if SEND_SHARP
+    case SHARP:
+      sendSharpRaw(data, nbits);
+      break;
+#endif
+#if SEND_AIWA_RC_T501
+    case AIWA_RC_T501:
+      sendAiwaRCT501(data, nbits);
+      break;
+#endif
+#if SEND_MIDEA
+    case MIDEA:
+      sendMidea(data, nbits);
+      break;
+#endif
+#if SEND_GICABLE
+    case GICABLE:
+      sendGICable(data, nbits);
+      break;
+#endif
+#if SEND_PIONEER
+    case PIONEER:
+      sendPioneer(data, nbits);
+      break;
+#endif
   }
-  return true;
 }
+#endif

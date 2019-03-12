@@ -34,8 +34,6 @@
  * Fujitsu A/C code added by jonnygraham
  * Trotec AC code by stufisher
  * Carrier & Haier AC code by crankyoldgit
- * Vestel AC code by Erdem U. Altınyurt
- * Teco AC code by Fabien Valthier (hcoohb)
  *
  *  GPL license, all text above must be included in any redistribution
  ****************************************************/
@@ -50,7 +48,7 @@
 #endif
 
 // Library Version
-#define _IRREMOTEESP8266_VERSION_ "2.5.5"
+#define _IRREMOTEESP8266_VERSION_ "2.5.4"
 // Supported IR protocols
 // Each protocol you include costs memory and, during decode, costs time
 // Disable (set to false) all the protocols you do not need/want!
@@ -86,9 +84,6 @@
 
 #define DECODE_SAMSUNG         true
 #define SEND_SAMSUNG           true
-
-#define DECODE_SAMSUNG36       true
-#define SEND_SAMSUNG36         true
 
 #define DECODE_SAMSUNG_AC      true
 #define SEND_SAMSUNG_AC        true
@@ -207,22 +202,12 @@
 #define DECODE_DAIKIN2         true
 #define SEND_DAIKIN2           true
 
-#define DECODE_VESTEL_AC       true
-#define SEND_VESTEL_AC         true
-
-#define DECODE_TECO            true
-#define SEND_TECO              true
-
-#define DECODE_TCL112AC       true
-#define SEND_TCL112AC         true
-
 #if (DECODE_ARGO || DECODE_DAIKIN || DECODE_FUJITSU_AC || DECODE_GREE || \
      DECODE_KELVINATOR || DECODE_MITSUBISHI_AC || DECODE_TOSHIBA_AC || \
      DECODE_TROTEC || DECODE_HAIER_AC || DECODE_HITACHI_AC || \
      DECODE_HITACHI_AC1 || DECODE_HITACHI_AC2 || DECODE_HAIER_AC_YRW02 || \
      DECODE_WHIRLPOOL_AC || DECODE_SAMSUNG_AC || DECODE_ELECTRA_AC || \
-     DECODE_PANASONIC_AC || DECODE_MWM || DECODE_DAIKIN2 || \
-     DECODE_VESTEL_AC || DECODE_TCL112AC)
+     DECODE_PANASONIC_AC || DECODE_MWM || DECODE_DAIKIN2)
 #define DECODE_AC true  // We need some common infrastructure for decoding A/Cs.
 #else
 #define DECODE_AC false   // We don't need that infrastructure.
@@ -291,14 +276,10 @@ enum decode_type_t {
   LUTRON,
   ELECTRA_AC,
   PANASONIC_AC,
-  PIONEER,  // (50)
+  PIONEER,  // 50
   LG2,
   MWM,
   DAIKIN2,
-  VESTEL_AC,
-  TECO,  // (55)
-  SAMSUNG36,
-  TCL112AC,
 };
 
 // Message lengths & required repeat values
@@ -387,7 +368,6 @@ const uint16_t kRC6Mode0Bits = 20;  // Excludes the 'start' bit.
 const uint16_t kRC6_36Bits = 36;  // Excludes the 'start' bit.
 const uint16_t kRCMMBits = 24;
 const uint16_t kSamsungBits = 32;
-const uint16_t kSamsung36Bits = 36;
 const uint16_t kSamsungAcStateLength = 14;
 const uint16_t kSamsungAcBits = kSamsungAcStateLength * 8;
 const uint16_t kSamsungAcExtendedStateLength = 21;
@@ -408,11 +388,6 @@ const uint16_t kSony15Bits = 15;
 const uint16_t kSony20Bits = 20;
 const uint16_t kSonyMinBits = 12;
 const uint16_t kSonyMinRepeat = 2;
-const uint16_t kTcl112AcStateLength = 14;
-const uint16_t kTcl112AcBits = kTcl112AcStateLength * 8;
-const uint16_t kTcl112AcDefaultRepeat = kNoRepeat;
-const uint16_t kTecoBits = 35;
-const uint16_t kTecoDefaultRepeat = kNoRepeat;
 const uint16_t kToshibaACStateLength = 9;
 const uint16_t kToshibaACBits = kToshibaACStateLength * 8;
 const uint16_t kToshibaACMinRepeat = kSingleRepeat;
@@ -422,8 +397,6 @@ const uint16_t kWhirlpoolAcStateLength = 21;
 const uint16_t kWhirlpoolAcBits = kWhirlpoolAcStateLength * 8;
 const uint16_t kWhirlpoolAcDefaultRepeat = kNoRepeat;
 const uint16_t kWhynterBits = 32;
-const uint8_t kVestelAcBits = 56;
-
 
 // Legacy defines. (Deprecated)
 #define AIWA_RC_T501_BITS             kAiwaRcT501Bits

@@ -231,9 +231,6 @@ std::string typeToString(const decode_type_t protocol, const bool isRepeat) {
     case SAMSUNG:
       result = "SAMSUNG";
       break;
-    case SAMSUNG36:
-      result = "SAMSUNG36";
-      break;
     case SAMSUNG_AC:
       result = "SAMSUNG_AC";
       break;
@@ -252,20 +249,11 @@ std::string typeToString(const decode_type_t protocol, const bool isRepeat) {
     case SONY:
       result = "SONY";
       break;
-    case TCL112AC:
-      result = "TCL112AC";
-      break;
-    case TECO:
-      result = "TECO";
-      break;
     case TOSHIBA_AC:
       result = "TOSHIBA_AC";
       break;
     case TROTEC:
       result = "TROTEC";
-      break;
-    case VESTEL_AC:
-      result = "VESTEL_AC";
       break;
     case WHIRLPOOL_AC:
       result = "WHIRLPOOL_AC";
@@ -296,7 +284,6 @@ bool hasACState(const decode_type_t protocol) {
     case MWM:
     case PANASONIC_AC:
     case SAMSUNG_AC:
-    case TCL112AC:
     case TOSHIBA_AC:
     case WHIRLPOOL_AC:
       return true;
@@ -481,49 +468,6 @@ uint8_t xorBytes(uint8_t *start, const uint16_t length, const uint8_t init) {
   uint8_t *ptr;
   for (ptr = start; ptr - start < length; ptr++) checksum ^= *ptr;
   return checksum;
-}
-
-// Count the number of bits of a certain type.
-// Args:
-//   start: Ptr to the start of data to count bits in.
-//   length: How many bytes to count.
-//   ones: Count the binary 1 bits. False for counting the 0 bits.
-//   init: Start the counting from this value.
-// Returns:
-//   Nr. of bits found.
-uint16_t countBits(const uint8_t *start, const uint16_t length, const bool ones,
-                   const uint16_t init) {
-  uint16_t count = init;
-  for (uint16_t offset = 0; offset < length; offset++)
-    for (uint8_t currentbyte = *(start + offset);
-         currentbyte;
-         currentbyte >>= 1)
-      if (currentbyte & 1) count++;
-  if (ones || length == 0)
-    return count;
-  else
-    return (length * 8) - count;
-}
-
-// Count the number of bits of a certain type.
-// Args:
-//   data: The value you want bits counted for, starting from the LSB.
-//   length: How many bits to count.
-//   ones: Count the binary 1 bits. False for counting the 0 bits.
-//   init: Start the counting from this value.
-// Returns:
-//   Nr. of bits found.
-uint16_t countBits(const uint64_t data, const uint8_t length, const bool ones,
-                   const uint16_t init) {
-  uint16_t count = init;
-  uint8_t bitsSoFar = length;
-  for (uint64_t remainder = data; remainder && bitsSoFar;
-       remainder >>= 1, bitsSoFar--)
-      if (remainder & 1) count++;
-  if (ones || length == 0)
-    return count;
-  else
-    return length - count;
 }
 
 uint64_t invertBits(const uint64_t data, const uint16_t nbits) {

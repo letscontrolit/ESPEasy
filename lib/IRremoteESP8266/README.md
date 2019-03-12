@@ -1,15 +1,14 @@
 # IRremote ESP8266 Library
 
 [![Build Status](https://travis-ci.org/markszabo/IRremoteESP8266.svg?branch=master)](https://travis-ci.org/markszabo/IRremoteESP8266)
-[![arduino-library-badge](https://www.ardu-badge.com/badge/IRremoteESP8266.svg?)](https://www.ardu-badge.com/IRremoteESP8266)
 [![Average time to resolve an issue](http://isitmaintained.com/badge/resolution/markszabo/IRremoteESP8266.svg)](http://isitmaintained.com/project/markszabo/IRremoteESP8266 "Average time to resolve an issue")
 [![Percentage of issues still open](http://isitmaintained.com/badge/open/markszabo/IRremoteESP8266.svg)](http://isitmaintained.com/project/markszabo/IRremoteESP8266 "Percentage of issues still open")
 [![GitLicense](https://gitlicense.com/badge/markszabo/IRremoteESP8266)](https://gitlicense.com/license/markszabo/IRremoteESP8266)
 
 This library enables you to **send _and_ receive** infra-red signals on an [ESP8266 using the Arduino framework](https://github.com/esp8266/Arduino) using common 940nm IR LEDs and common IR receiver modules. e.g. TSOP{17,22,24,36,38,44,48}* etc.
 
-## v2.5.5 Now Available
-Version 2.5.5 of the library is now [available](https://github.com/markszabo/IRremoteESP8266/releases/latest). You can view the [Release Notes](ReleaseNotes.md) for all the significant changes.
+## v2.5.4 Now Available
+Version 2.5.4 of the library is now [available](https://github.com/markszabo/IRremoteESP8266/releases/latest). You can view the [Release Notes](ReleaseNotes.md) for all the significant changes.
 
 #### Upgrading from pre-v2.0
 Usage of the library has been slightly changed in v2.0. You will need to change your usage to work with v2.0 and beyond. You can read more about the changes required on our [Upgrade to v2.0](https://github.com/markszabo/IRremoteESP8266/wiki/Upgrading-to-v2.0) page.

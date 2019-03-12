@@ -501,11 +501,7 @@ bool WiFiConnected() {
     resetWiFi();
   }
   delay(1);
-<<<<<<< HEAD
   STOP_TIMER(WIFI_NOTCONNECTED_STATS);
-=======
-  STOP_TIMER(WIFI_ISCONNECTED_STATS);  // SMY: also count this call when not connected
->>>>>>> 0354aa72c2a72872938d28c1dc9dc2e8514fb6e4
   return false;
 }
 
@@ -694,11 +690,7 @@ bool tryConnectWiFi() {
     addLog(LOG_LEVEL_INFO, log);
   }
   setupStaticIPconfig();
-<<<<<<< HEAD
   setConnectionSpeed();
-=======
-//  WiFi.setPhyMode(WIFI_PHY_MODE_11G); // SMY: uncomment to force 802.11g for use with MikroTik AP's.
->>>>>>> 0354aa72c2a72872938d28c1dc9dc2e8514fb6e4
   last_wifi_connect_attempt_moment = millis();
   switch (wifi_connect_attempt) {
     case 0:

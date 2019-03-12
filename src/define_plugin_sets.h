@@ -109,10 +109,7 @@ To create/register a plugin, you have to :
     #define CONTROLLER_SET_NONE
 
     #define BUILD_MINIMAL_OTA
-<<<<<<< HEAD
     #define BUILD_NO_DEBUG
-=======
->>>>>>> 0354aa72c2a72872938d28c1dc9dc2e8514fb6e4
 
     #define USES_C001   // Domoticz HTTP
     #define USES_C002   // Domoticz MQTT

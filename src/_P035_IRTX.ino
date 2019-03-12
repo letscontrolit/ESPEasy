@@ -277,47 +277,45 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
             //if (GetArgv(string.c_str(), TmpStr1, 6)) IrSecondCode = strtoul(TmpStr1, NULL, 16);
 
             //Comented out need char[] for input Needs fixing
-            if (IrType.equals(F("aiwa_rc_t501")))       Plugin_035_irSender->sendAiwaRCT501(IrCode);
-            if (IrType.equals(F("carrier_ac")))         Plugin_035_irSender->sendCarrierAC(IrCode);			
-            if (IrType.equals(F("coolix")))             Plugin_035_irSender->sendCOOLIX(IrCode);
-            if (IrType.equals(F("denon")))              Plugin_035_irSender->sendDenon(IrCode);
-            if (IrType.equals(F("dish")))               Plugin_035_irSender->sendDISH(IrCode);
-            if (IrType.equals(F("gicable")))            Plugin_035_irSender->sendGICable(IrCode);		
-            if (IrType.equals(F("jvc")))                Plugin_035_irSender->sendJVC(IrCode);			
-            if (IrType.equals(F("lasertag")))           Plugin_035_irSender->sendLasertag(IrCode);			
+            if (IrType.equals(F("nec")))                Plugin_035_irSender->sendNEC(IrCode);
+            if (IrType.equals(F("sony")))               Plugin_035_irSender->sendSony(IrCode);
+            if (IrType.equals(F("sherwood")))           Plugin_035_irSender->sendSherwood(IrCode);
+            if (IrType.equals(F("samsung")))            Plugin_035_irSender->sendSAMSUNG(IrCode);
             if (IrType.equals(F("lg")))                 Plugin_035_irSender->sendLG(IrCode);
-            if (IrType.equals(F("lg2")))                Plugin_035_irSender->sendLG2(IrCode);			
-            if (IrType.equals(F("lutron")))             Plugin_035_irSender->sendLutron(IrCode);			
-            if (IrType.equals(F("magiquest")))          Plugin_035_irSender->sendMagiQuest(IrCode);
-            if (IrType.equals(F("midea")))              Plugin_035_irSender->sendMidea(IrCode);
+            if (IrType.equals(F("lg2")))                Plugin_035_irSender->sendLG2(IrCode);
+            if (IrType.equals(F("sharpraw")))           Plugin_035_irSender->sendSharpRaw(IrBits);
+            if (IrType.equals(F("jvc")))                Plugin_035_irSender->sendJVC(IrCode);
+            if (IrType.equals(F("denon")))              Plugin_035_irSender->sendDenon(IrCode);
+            if (IrType.equals(F("sanyolc7461")))        Plugin_035_irSender->sendSanyoLC7461(IrCode);
+            if (IrType.equals(F("dish")))               Plugin_035_irSender->sendDISH(IrCode);
+            if (IrType.equals(F("panasonic64")))        Plugin_035_irSender->sendPanasonic64(IrCode);
+            if (IrType.equals(F("panasonic")))          Plugin_035_irSender->sendPanasonic64(IrCode);
+            if (IrType.equals(F("rc5")))                Plugin_035_irSender->sendRC5(IrCode);
+            if (IrType.equals(F("rc5x")))               Plugin_035_irSender->sendRC5(IrCode);
+            if (IrType.equals(F("rc6")))                Plugin_035_irSender->sendRC6(IrCode);
+            if (IrType.equals(F("rcmm")))               Plugin_035_irSender->sendRCMM(IrCode);
+            if (IrType.equals(F("coolix")))             Plugin_035_irSender->sendCOOLIX(IrCode);
+            if (IrType.equals(F("whynter")))            Plugin_035_irSender->sendWhynter(IrCode);
             if (IrType.equals(F("mitsubishi")))         Plugin_035_irSender->sendMitsubishi(IrCode);
             if (IrType.equals(F("mitsubishi2")))        Plugin_035_irSender->sendMitsubishi2(IrCode);
-            if (IrType.equals(F("nikai")))              Plugin_035_irSender->sendNikai(IrCode);
-            if (IrType.equals(F("nec")))                Plugin_035_irSender->sendNEC(IrCode);			
-            if (IrType.equals(F("panasonic")))          Plugin_035_irSender->sendPanasonic64(IrCode);
-            if (IrType.equals(F("pioneer")))            Plugin_035_irSender->sendPioneer(IrCode);
-            if (IrType.equals(F("rc5")))                Plugin_035_irSender->sendRC5(IrCode);
-            if (IrType.equals(F("rc6")))                Plugin_035_irSender->sendRC6(IrCode);			
-            if (IrType.equals(F("rcmm")))               Plugin_035_irSender->sendRCMM(IrCode);				
-            if (IrType.equals(F("samsung")))            Plugin_035_irSender->sendSAMSUNG(IrCode);
-			if (IrType.equals(F("samsung36")))          Plugin_035_irSender->sendSamsung36(IrCode);			
-            if (IrType.equals(F("sanyo_lc7461")))       Plugin_035_irSender->sendSanyoLC7461(IrCode);		
-			if (IrType.equals(F("sharp")))              Plugin_035_irSender->sendSharpRaw(IrBits);
-            if (IrType.equals(F("sherwood")))           Plugin_035_irSender->sendSherwood(IrCode);						
-            if (IrType.equals(F("sony")))               Plugin_035_irSender->sendSony(IrCode);						
-            if (IrType.equals(F("teco")))               Plugin_035_irSender->sendTeco(IrCode);									
-			if (IrType.equals(F("vestel_ac")))          Plugin_035_irSender->sendVestelAc(IrCode);
-            if (IrType.equals(F("whynter")))            Plugin_035_irSender->sendWhynter(IrCode);		
-			
-
             if (IrType.equals(F("gc")))                 parseStringAndSendGC(ircodestr);              //Needs testing
+            if (IrType.equals(F("aiwa_rc_t501")))       Plugin_035_irSender->sendAiwaRCT501(IrCode);
             if (IrType.equals(F("pronto")))             parseStringAndSendPronto(ircodestr, 0);       //Needs testing
+            if (IrType.equals(F("nikai")))              Plugin_035_irSender->sendNikai(IrCode);
+            if (IrType.equals(F("midea")))              Plugin_035_irSender->sendMidea(IrCode);
+            if (IrType.equals(F("magiquest")))          Plugin_035_irSender->sendMagiQuest(IrCode);
+            if (IrType.equals(F("lasertag")))           Plugin_035_irSender->sendLasertag(IrCode);
+            if (IrType.equals(F("carrier_ac")))         Plugin_035_irSender->sendCarrierAC(IrCode);
+            if (IrType.equals(F("gicable")))            Plugin_035_irSender->sendGICable(IrCode);
+            if (IrType.equals(F("pioneer")))            Plugin_035_irSender->sendPioneer(IrCode);
+            if (IrType.equals(F("lutron")))             Plugin_035_irSender->sendLutron(IrCode);
+
             if (IrType.equals(F("mitsubishi_ac")))      parseStringAndSendAirCon(MITSUBISHI_AC, ircodestr);
             if (IrType.equals(F("fujitsu_ac")))         parseStringAndSendAirCon(FUJITSU_AC, ircodestr);
             if (IrType.equals(F("kelvinator")))         parseStringAndSendAirCon(KELVINATOR, ircodestr);
             if (IrType.equals(F("daikin")))             parseStringAndSendAirCon(DAIKIN, ircodestr);
             if (IrType.equals(F("daikin2")))            parseStringAndSendAirCon(DAIKIN2, ircodestr);
-            if (IrType.equals(F("gree")))               parseStringAndSendAirCon(GREE, ircodestr);	
+            if (IrType.equals(F("gree")))               parseStringAndSendAirCon(GREE, ircodestr);
             if (IrType.equals(F("argo")))               parseStringAndSendAirCon(ARGO, ircodestr);
             if (IrType.equals(F("trotec")))             parseStringAndSendAirCon(TROTEC, ircodestr);
             if (IrType.equals(F("toshiba_ac")))         parseStringAndSendAirCon(TOSHIBA_AC, ircodestr);
@@ -331,8 +329,6 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
             if (IrType.equals(F("samsung_ac")))         parseStringAndSendAirCon(SAMSUNG_AC, ircodestr);
             if (IrType.equals(F("whirlpool_ac")))       parseStringAndSendAirCon(WHIRLPOOL_AC, ircodestr);
             if (IrType.equals(F("mwm")))                parseStringAndSendAirCon(MWM, ircodestr);
-            if (IrType.equals(F("tcl112ac")))           parseStringAndSendAirCon(TCL112AC, ircodestr);
-
            // NEC (non-strict)?
           }
 
@@ -471,9 +467,6 @@ bool  parseStringAndSendAirCon(const uint16_t irType, const String& str) {
       // Cap the maximum size.
       stateSize = std::min(stateSize, kStateSizeMax);
       break;
-	 case TCL112AC:
-      stateSize = kTcl112AcStateLength;
-      break;
     default:  // Not a protocol we expected. Abort.
    //   debug("Unexpected AirCon protocol detected. Ignoring.");
       return false;
@@ -602,11 +595,6 @@ bool  parseStringAndSendAirCon(const uint16_t irType, const String& str) {
 #if SEND_MWM
     case MWM:
       Plugin_035_irSender->sendMWM(reinterpret_cast<uint8_t *>(state), stateSize);
-      break;
-#endif
-#if SEND_TCL112AC
-    case TCL112AC:
-      irsend->sendTcl112Ac(reinterpret_cast<uint8_t *>(state));
       break;
 #endif
     default:
