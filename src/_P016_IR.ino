@@ -146,7 +146,7 @@ boolean Plugin_016(byte function, struct EventStruct *event, String& string)
         int irPin = CONFIG_PIN1;
         if (irReceiver == 0 && irPin != -1)
         {
-          serialPrintln(F("IR Init"));
+          serialPrintln(F("IR RX Init"));
           irReceiver = new IRrecv(irPin, kCaptureBufferSize, P016_TIMEOUT, true);
           irReceiver->setUnknownThreshold(kMinUnknownSize); // Ignore messages with less than minimum on or off pulses.
           irReceiver->enableIRIn(); // Start the receiver
@@ -189,7 +189,7 @@ boolean Plugin_016(byte function, struct EventStruct *event, String& string)
           // Display the basic output of what we found.
           description += resultToHumanReadableBasic(&results);
           addLog(LOG_LEVEL_INFO, description);
-          displayRawToReadableB32Hex();
+          displayRawToReadableB32Hex(); // Calculate and display in the logs the RAW2 encoding
 
 #ifdef P016_Extended_Decoding
           // Display any extra A/C info if we have it.
@@ -322,10 +322,10 @@ boolean Plugin_016(byte function, struct EventStruct *event, String& string)
     description = ac.toString();
   }
 #endif // DECODE_TCL112AC
-#endif  // Extended Messages
+
   // If we got a human-readable description of the message, display it.
           if (description != "") addLog(LOG_LEVEL_INFO, description);
-
+#endif  // Extended Messages
           // Output RAW timing info of the result.
           //log += resultToTimingInfo(&results);  //not showing up nicely in the web log... Maybe send them to serial?
           // Output the results as source code
@@ -402,7 +402,7 @@ void displayRawToReadableB32Hex() {
             }
         }
         if (bstDiv == 0xFFFFU) {
-            addLog(LOG_LEVEL_INFO, F("IR2:No proper divisor found. Try again..."));
+            addLog(LOG_LEVEL_INFO, F("IR2: No proper divisor found. Try again..."));
             return;
         }
         div[p] = bstDiv;

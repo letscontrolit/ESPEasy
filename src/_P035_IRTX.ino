@@ -104,31 +104,17 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
             unsigned int IrPLen=0;
             unsigned int IrBLen=0;
 
-            if (GetArgv(string.c_str(), TmpStr1, 3)) IrRaw  = TmpStr1;
-            if (GetArgv(string.c_str(), TmpStr1, 4)) IrHz   = str2int(TmpStr1.c_str());
-            if (GetArgv(string.c_str(), TmpStr1, 5)) IrPLen = str2int(TmpStr1.c_str());
-            if (GetArgv(string.c_str(), TmpStr1, 6)) IrBLen = str2int(TmpStr1.c_str());
+            if (GetArgv(string.c_str(), TmpStr1, 3)) IrRaw  = TmpStr1;                    //Get the "Base32" encoded/compressed Ir signal
+            if (GetArgv(string.c_str(), TmpStr1, 4)) IrHz   = str2int(TmpStr1.c_str());   //Get the base freguency of the signal (allways 38)
+            if (GetArgv(string.c_str(), TmpStr1, 5)) IrPLen = str2int(TmpStr1.c_str());   //Get the Pulse Length in ms
+            if (GetArgv(string.c_str(), TmpStr1, 6)) IrBLen = str2int(TmpStr1.c_str());   //Get the Blank Pulse Length in ms
 
-            printWebString += F("<a href='https://en.wikipedia.org/wiki/Base32#base32hex'>Base32Hex</a> RAW Code: ");
-            printWebString += IrRaw;
-            printWebString += F("<BR>");
+            printWebString += IrType_orig + String(F(": Base32Hex RAW Code: ")) + IrRaw + String(F("<BR>kHz: "))+ IrHz + String(F("<BR>Pulse Len: ")) + IrPLen + String(F("<BR>Blank Len: ")) + IrBLen + String(F("<BR>"));
 
-            printWebString += F("kHz: ");
-            printWebString += IrHz;
-            printWebString += F("<BR>");
-
-            printWebString += F("Pulse Len: ");
-            printWebString += IrPLen;
-            printWebString += F("<BR>");
-
-            printWebString += F("Blank Len: ");
-            printWebString += IrBLen;
-            printWebString += F("<BR>");
-
-            uint16_t idx = 0;  //If this goes above the buf.size then the esp will throw a 28 EXCCAUSE
+            uint16_t idx = 0;                   //If this goes above the buf.size then the esp will throw a 28 EXCCAUSE
             uint16_t *buf;
             buf =  new uint16_t[P35_Ntimings]; //The Raw Timings that we can buffer.
-            if (buf == nullptr) { // error assigning memory.
+            if (buf == nullptr) {              // error assigning memory.
             success = false;
             return success;
             }
@@ -137,7 +123,7 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
                 unsigned int c0 = 0; //count consecutives 0s
                 unsigned int c1 = 0; //count consecutives 1s
 
-                printWebString += F("Interpreted RAW Code: ");
+                //printWebString += F("Interpreted RAW Code: ");  //print the number of 1s and 0s just for debugging/info purposes
                 //Loop throught every char in RAW string
                 for(unsigned int i = 0; i < IrRaw.length(); i++)
                 {
@@ -159,8 +145,8 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
                         //by defined blank length ms)
                         buf[idx++] = c0 * IrBLen;
                         //print the number of 0s just for debuging/info purpouses
-                        for (uint t = 0; t < c0; t++)
-                          printWebString += '0';
+                        //for (uint t = 0; t < c0; t++)
+                          //printWebString += '0';
                       }
                       //So, as we receive a "1", and processed the counted 0s
                       //sending them as a ms timing into the buffer, we clear
@@ -180,8 +166,8 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
                           //multiplied by defined pulse length ms)
                           buf[idx++] = c1 * IrPLen;
                           //print the number of 1s just for debugging/info purposes
-                          for (uint t = 0; t < c1; t++)
-                            printWebString += '1';
+//                          for (uint t = 0; t < c1; t++)
+//                            printWebString += '1';
                         }
                         //So, as we receive a "0", and processed the counted 1s
                         //sending them as a ms timing into the buffer, we clear
@@ -199,19 +185,19 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
                 //processing
 
                 //If we have pendings 0s
-                if (c0 > 0) {
-                  buf[idx++] = c0 * IrBLen;
-                  for (uint t = 0; t < c0; t++)
-                    printWebString += '0';
-                }
-                //If we have pendings 1s
-                if (c1 > 0) {
-                  buf[idx++] = c1 * IrPLen;
-                  for (uint t = 0; t < c1; t++)
-                    printWebString += '1';
-                }
-
-                printWebString += F("<BR>");
+//                if (c0 > 0) {
+//                  buf[idx++] = c0 * IrBLen;
+//                  for (uint t = 0; t < c0; t++)
+//                    printWebString += '0';
+//                }
+//                //If we have pendings 1s
+//                if (c1 > 0) {
+//                  buf[idx++] = c1 * IrPLen;
+//                  for (uint t = 0; t < c1; t++)
+//                    printWebString += '1';
+//                }
+//
+//                printWebString += F("<BR>");
 
             } else {        // RAW2
                 for (unsigned int i = 0, total = IrRaw.length(), gotRep = 0, rep = 0; i < total;) {
@@ -246,7 +232,7 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
                        }
                    }
                 }
-            }
+            } //End RAW2
 
             Plugin_035_irSender->sendRaw(buf, idx, IrHz);
             delete[] buf;
@@ -272,8 +258,9 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
             if (GetArgv(string.c_str(), ircodestr, 3)) {
               IrCode = strtoull(ircodestr.c_str(), NULL, 16);
             }
+            // This code left over from the legasy Ir library. Ir bits are pretty much a set value and repeats as far as I can tell are handled from the library.
             //if (GetArgv(string.c_str(), TmpStr1, 4)) IrBits = str2int(TmpStr1); //not needed any more... leave it for reverce compatibility or remove it and break existing instalations?
-            //if (GetArgv(string.c_str(), TmpStr1, 5)) IrRepeat = str2int(TmpStr1); // Ir repeat is usfull in some circonstances, have to see how to add it and have it be revese compatible as well.
+            //if (GetArgv(string.c_str(), TmpStr1, 5)) IrRepeat = str2int(TmpStr1); // Ir repeat is usfull in some circonstances, have to see how to add it and have it be reverse compatible as well.
             //if (GetArgv(string.c_str(), TmpStr1, 6)) IrSecondCode = strtoul(TmpStr1, NULL, 16);
 
             //Comented out need char[] for input Needs fixing
@@ -300,16 +287,15 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
             if (IrType.equals(F("rc6")))                Plugin_035_irSender->sendRC6(IrCode);			
             if (IrType.equals(F("rcmm")))               Plugin_035_irSender->sendRCMM(IrCode);				
             if (IrType.equals(F("samsung")))            Plugin_035_irSender->sendSAMSUNG(IrCode);
-			if (IrType.equals(F("samsung36")))          Plugin_035_irSender->sendSamsung36(IrCode);			
+			      if (IrType.equals(F("samsung36")))          Plugin_035_irSender->sendSamsung36(IrCode);			
             if (IrType.equals(F("sanyo_lc7461")))       Plugin_035_irSender->sendSanyoLC7461(IrCode);		
-			if (IrType.equals(F("sharp")))              Plugin_035_irSender->sendSharpRaw(IrBits);
+			      if (IrType.equals(F("sharp")))              Plugin_035_irSender->sendSharpRaw(IrBits);
             if (IrType.equals(F("sherwood")))           Plugin_035_irSender->sendSherwood(IrCode);						
             if (IrType.equals(F("sony")))               Plugin_035_irSender->sendSony(IrCode);						
             if (IrType.equals(F("teco")))               Plugin_035_irSender->sendTeco(IrCode);									
-			if (IrType.equals(F("vestel_ac")))          Plugin_035_irSender->sendVestelAc(IrCode);
+			      if (IrType.equals(F("vestel_ac")))          Plugin_035_irSender->sendVestelAc(IrCode);
             if (IrType.equals(F("whynter")))            Plugin_035_irSender->sendWhynter(IrCode);		
 			
-
             if (IrType.equals(F("gc")))                 parseStringAndSendGC(ircodestr);              //Needs testing
             if (IrType.equals(F("pronto")))             parseStringAndSendPronto(ircodestr, 0);       //Needs testing
             if (IrType.equals(F("mitsubishi_ac")))      parseStringAndSendAirCon(MITSUBISHI_AC, ircodestr);
@@ -334,12 +320,10 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
             if (IrType.equals(F("tcl112ac")))           parseStringAndSendAirCon(TCL112AC, ircodestr);
           }
 
-          addLog(LOG_LEVEL_INFO, (String("IRTX :IR Code Sent: ") + IrType).c_str());
+          addLog(LOG_LEVEL_INFO, String(F("IRTX: IR Code Sent: ")) + IrType_orig);
           if (printToWeb)
           {
-            printWebString += F("IR Code Sent ");
-            printWebString += IrType_orig;
-            printWebString += F("<BR>");
+            printWebString += String(F("IRTX: IR Code Sent: "))+ IrType_orig + String(F("<BR>"));
           }
 
           #ifdef PLUGIN_016
@@ -353,12 +337,13 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
 }
 
 boolean addErrorTrue() {
-    addLog(LOG_LEVEL_ERROR, F("RAW2: Invalid encoding!"));
+    addLog(LOG_LEVEL_ERROR, String(F("RAW2: Invalid encoding!")));
     return true;
 }
 
 // A lot of the following code has been taken directly (with permission) from the IRMQTTServer.ino example code
 // of the IRremoteESP8266 library. (https://github.com/markszabo/IRremoteESP8266)
+
 // Parse an Air Conditioner A/C Hex String/code and send it.
 // Args:
 //   irType: Nr. of the protocol we need to send.
