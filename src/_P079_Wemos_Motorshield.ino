@@ -9,10 +9,9 @@
 // based on this library: https://github.com/wemos/WEMOS_Motor_Shield_Arduino_Library
 // Plugin part written by Susanne Jaeckel + TungstenE2
 
-// N.B. this shield does only accept data transmissions in sets of 4 bytes.
-// This means a simple I2C scan may mess up the module (and all other I2C communications)
-// until a full reset of the node.
-// See: https://github.com/wemos/Motor_Shield_Firmware/issues/1#issuecomment-394475451
+//Note: see wiki for setup. motor_shield.bin needs to be flashed first!!!
+// see wiki: https://www.letscontrolit.com/wiki/index.php?title=WemosMotorshield
+
 
 #define PLUGIN_079
 #define PLUGIN_ID_079         79
