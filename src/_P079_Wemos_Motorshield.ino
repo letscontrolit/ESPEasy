@@ -16,7 +16,7 @@
 
 #define PLUGIN_079
 #define PLUGIN_ID_079         79
-#define PLUGIN_NAME_079       "Motor - Wemos Motorshield [TESTING]"
+#define PLUGIN_NAME_079       "Motor - Wemos Motorshield"
 #define PLUGIN_VALUENAME1_079 "Wemos Motorshield"
 
 // copied from <WEMOS_Motor.h>
@@ -96,6 +96,7 @@ boolean Plugin_079(byte function, struct EventStruct *event, String& string)
 	case PLUGIN_WEBFORM_LOAD: {
     String i2c_addres_string = formatToHex(PCONFIG(0));
 		addFormTextBox(F("I2C Address (Hex)"), F("p079_adr"), i2c_addres_string, 4);
+    addFormNote(F("Make sure to update the Wemos Motorshield firmware, see <a href='https://www.letscontrolit.com/wiki/index.php?title=WemosMotorshield'>wiki</a>"));
 
 		success = true;
 		break;
