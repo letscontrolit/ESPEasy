@@ -9,7 +9,7 @@
 #include <IRsend.h>
 #include <IRutils.h>
 
-IRsend *Plugin_035_irSender;
+IRsend *Plugin_035_irSender=nullptr;
 
 
 #define PLUGIN_035
@@ -337,7 +337,7 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
 }
 
 boolean addErrorTrue() {
-    addLog(LOG_LEVEL_ERROR, String(F("RAW2: Invalid encoding!")));
+    addLog(LOG_LEVEL_ERROR, F("RAW2: Invalid encoding!"));
     return true;
 }
 

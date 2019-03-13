@@ -190,7 +190,7 @@ boolean Plugin_016(byte function, struct EventStruct *event, String& string)
           if (results.decode_type != UNKNOWN) { 
                 addLog(LOG_LEVEL_INFO, String(F("IRESEND,")) + typeToString(results.decode_type, results.repeat) + ',' + resultToHexidecimal(&results)); //Show the appropriate command to the user, so he can replay the message via P035
           } else {
-               addLog(LOG_LEVEL_INFO, F("IR: Unknow IR Signal, try RAW2 encoding instead"));
+               addLog(LOG_LEVEL_INFO, F("IR: Unknown IR Signal, try RAW2 encoding instead"));
                //addLog(LOG_LEVEL_INFO,  resultToHumanReadableBasic(&results)); //UNKNOWN results do not produse a HEX that can be replayed, so not usefull.
             }
 
