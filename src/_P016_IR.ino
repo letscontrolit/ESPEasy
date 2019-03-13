@@ -183,18 +183,23 @@ boolean Plugin_016(byte function, struct EventStruct *event, String& string)
           irReceiver->resume();
           UserVar[event->BaseVarIndex] = (IRcode & 0xFFFF);
           UserVar[event->BaseVarIndex + 1] = ((IRcode >> 16) & 0xFFFF);
-          String description = "IR: ";
           if (results.overflow)
-            description += F("WARNING: IR code is too big for buffer.");
+            addLog(LOG_LEVEL_INFO,  F("IR: WARNING, IR code is too big for buffer."));
+          
           // Display the basic output of what we found.
-          description += resultToHumanReadableBasic(&results);
-          addLog(LOG_LEVEL_INFO, description);
+          if (results.decode_type != UNKNOWN) { 
+                addLog(LOG_LEVEL_INFO, String(F("IRESEND,")) + typeToString(results.decode_type, results.repeat) + ',' + resultToHexidecimal(&results)); //Show the appropriate command to the user, so he can replay the message via P035
+          } else {
+               addLog(LOG_LEVEL_INFO, F("IR: Unknow IR Signal, try RAW2 encoding instead"));
+               //addLog(LOG_LEVEL_INFO,  resultToHumanReadableBasic(&results)); //UNKNOWN results do not produse a HEX that can be replayed, so not usefull.
+            }
+
           displayRawToReadableB32Hex(); // Calculate and display in the logs the RAW2 encoding
 
 #ifdef P016_Extended_Decoding
           // Display any extra A/C info if we have it.
           // Display the human readable state of an A/C message if we can.
-          description = "";
+          String description = "";
 #if DECODE_DAIKIN
   if (results.decode_type == DAIKIN) {
     IRDaikinESP ac(0);
@@ -451,7 +456,7 @@ void displayRawToReadableB32Hex() {
         iOut = storeB32Hex(out, iOut, tmOut[d++]);
 
     out[iOut] = 0;
-    line = "IRSEND,RAW2," + String(out) + ",38," + uint64ToString(div[0], 10) +','+ uint64ToString(div[1], 10);
+    line = String(F("IRSEND,RAW2,")) + String(out) + ",38," + uint64ToString(div[0], 10) +','+ uint64ToString(div[1], 10);
     addLog(LOG_LEVEL_INFO, line);
 }
 
