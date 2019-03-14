@@ -977,7 +977,7 @@ void handle_root() {
       ExecuteCommand(VALUE_SOURCE_HTTP, sCommand.c_str());
     }
 
-    IPAddress ip = WiFi.localIP();
+    // IPAddress ip = WiFi.localIP();
     // IPAddress gw = WiFi.gatewayIP();
 
     TXBuffer += printWebString;
@@ -985,21 +985,17 @@ void handle_root() {
     html_table_class_normal();
     addFormHeader(F("System Info"));
 
-    addRowLabel(F("Unit"));
-    TXBuffer += String(Settings.Unit);
-
-    addRowLabel(F("GIT version"));
-    TXBuffer += F(BUILD_GIT);
-
-    addRowLabel(F("Local Time"));
+    addRowLabelValue(LabelType::UNIT_NR);
+    addRowLabelValue(LabelType::GIT_BUILD);
+    addRowLabel(getLabel(LabelType::LOCAL_TIME));
     if (systemTimePresent())
     {
-      TXBuffer += getDateTimeString('-', ':', ' ');
+      TXBuffer += getValue(LabelType::LOCAL_TIME);
     }
     else
       TXBuffer += F("<font color='red'>No system time source</font>");
 
-    addRowLabel(F("Uptime"));
+    addRowLabel(getLabel(LabelType::UPTIME));
     {
         int minutes = wdcounter / 2;
         int days = minutes / 1440;
@@ -1010,7 +1006,7 @@ void handle_root() {
         sprintf_P(strUpTime, PSTR("%d days %d hours %d minutes"), days, hrs, minutes);
         TXBuffer += strUpTime;
     }
-    addRowLabel(F("Load"));
+    addRowLabel(getLabel(LabelType::LOAD_PCT));
     if (wdcounter > 0)
     {
       TXBuffer += String(getCPUload());
@@ -1034,10 +1030,8 @@ void handle_root() {
     TXBuffer += String(lowestFreeStackfunction);
     TXBuffer += ')';
 
-    addRowLabel(F("IP"));
-    TXBuffer += formatIP(ip);
-
-    addRowLabel(F("Wifi RSSI"));
+    addRowLabelValue(LabelType::IP_ADDRESS);
+    addRowLabel(getLabel(LabelType::WIFI_RSSI));
     if (WiFiConnected())
     {
       TXBuffer += String(WiFi.RSSI());
@@ -1066,7 +1060,7 @@ void handle_root() {
     html_TR();
     html_table_header(F("Node List"));
     html_table_header("Name");
-    html_table_header(F("Build"));
+    html_table_header(getLabel(LabelType::BUILD_DESC));
     html_table_header("Type");
     html_table_header("IP", 160); // Should fit "255.255.255.255"
     html_table_header("Age");
@@ -1249,7 +1243,7 @@ void handle_config() {
 
   addFormSubHeader(F("Wifi Settings"));
 
-  addFormTextBox( F("SSID"), F("ssid"), SecuritySettings.WifiSSID, 31);
+  addFormTextBox( getLabel(LabelType::SSID), F("ssid"), SecuritySettings.WifiSSID, 31);
   addFormPasswordBox(F("WPA Key"), F("key"), SecuritySettings.WifiKey, 63);
   addFormTextBox( F("Fallback SSID"), F("ssid2"), SecuritySettings.WifiSSID2, 31);
   addFormPasswordBox( F("Fallback WPA Key"), F("key2"), SecuritySettings.WifiKey2, 63);
@@ -2933,6 +2927,16 @@ void addRowLabel_copy(const String& label) {
   html_copyText_TD();
 }
 
+void addRowLabelValue(LabelType::Enum label) {
+  addRowLabel(getLabel(label));
+  TXBuffer += getValue(label);
+}
+
+void addRowLabelValue_copy(LabelType::Enum label) {
+  addRowLabel_copy(getLabel(label));
+  TXBuffer += getValue(label);
+}
+
 void addButton(const String &url, const String &label) {
   addButton(url, label, "");
 }
@@ -3178,6 +3182,13 @@ void addFormCheckBox(const String& label, const String& id, boolean checked, boo
   addCheckBox(id, checked, disabled);
 }
 
+void addFormCheckBox(LabelType::Enum label, boolean checked, bool disabled) {
+  addFormCheckBox(getLabel(label), getInternalLabel(label), checked, disabled);
+}
+
+void addFormCheckBox_disabled(LabelType::Enum label, boolean checked) {
+  addFormCheckBox(label, checked, true);
+}
 
 //********************************************************************************
 // Add a numeric box
@@ -3862,9 +3873,9 @@ void handle_tools() {
     SPIFFS.info(fs_info);
     if ((fs_info.totalBytes - fs_info.usedBytes) / 1024 > 50) {
       TXBuffer += F("<TR><TD>");
-      TXBuffer += F("<script>function downloadUI() { fetch('https://raw.githubusercontent.com/ppisljar/espeasy_new_ui/master/build/index.htm.gz').then(r=>r.arrayBuffer()).then(r => {var f=new FormData();f.append('file', new File([new Blob([new Uint8Array(r)])], 'index.htm.gz'));f.append('edit', 1);fetch('/upload',{method:'POST',body:f}).then(() => {window.location.href='/';});}); }</script>");
-      TXBuffer += F("<a class=\"button link wide\" onclick=\"downloadUI()\">download new ui</a>");
-      TXBuffer += F("</TD><TD>Download new UI</TD></TR>");
+      TXBuffer += F("<script>function downloadUI() { fetch('https://raw.githubusercontent.com/letscontrolit/espeasy_ui/master/build/index.htm.gz').then(r=>r.arrayBuffer()).then(r => {var f=new FormData();f.append('file', new File([new Blob([new Uint8Array(r)])], 'index.htm.gz'));f.append('edit', 1);fetch('/upload',{method:'POST',body:f}).then(() => {window.location.href='/';});}); }</script>");
+      TXBuffer += F("<a class=\"button link wide\" onclick=\"downloadUI()\">Download new UI</a>");
+      TXBuffer += F("</TD><TD>Download new UI(alpha)</TD></TR>");
     }
   #endif
 #endif // WEBSERVER_NEW_UI
@@ -4250,27 +4261,31 @@ void handle_wifiscanner_json() {
     if (firstentry) firstentry = false;
     else TXBuffer += ",{";
 
-    stream_next_json_object_value(F("ssid"), WiFi.SSID(i));
-    stream_next_json_object_value(F("bssid"), WiFi.BSSIDstr(i));
-    stream_next_json_object_value(F("channel"), String(WiFi.channel(i)));
-    stream_next_json_object_value(F("rssi"), String(WiFi.RSSI(i)));
+    stream_next_json_object_value(getLabel(LabelType::SSID), WiFi.SSID(i));
+    stream_next_json_object_value(getLabel(LabelType::BSSID), WiFi.BSSIDstr(i));
+    stream_next_json_object_value(getLabel(LabelType::CHANNEL), String(WiFi.channel(i)));
+    stream_next_json_object_value(getLabel(LabelType::WIFI_RSSI), String(WiFi.RSSI(i)));
+    String authType;
     switch (WiFi.encryptionType(i)) {
     #ifdef ESP32
-      case WIFI_AUTH_OPEN: stream_last_json_object_value(F("auth"), F("open")); break;
-      case WIFI_AUTH_WEP:  stream_last_json_object_value(F("auth"), F("WEP")); break;
-      case WIFI_AUTH_WPA_PSK: stream_last_json_object_value(F("auth"), F("WPA/PSK")); break;
-      case WIFI_AUTH_WPA2_PSK: stream_last_json_object_value(F("auth"), F("WPA2/PSK")); break;
-      case WIFI_AUTH_WPA_WPA2_PSK: stream_last_json_object_value(F("auth"), F("WPA/WPA2/PSK")); break;
-      case WIFI_AUTH_WPA2_ENTERPRISE: stream_last_json_object_value(F("auth"), F("WPA2 Enterprise")); break;
+      case WIFI_AUTH_OPEN: authType = F("open"); break;
+      case WIFI_AUTH_WEP:  authType = F("WEP"); break;
+      case WIFI_AUTH_WPA_PSK: authType = F("WPA/PSK"); break;
+      case WIFI_AUTH_WPA2_PSK: authType = F("WPA2/PSK"); break;
+      case WIFI_AUTH_WPA_WPA2_PSK: authType = F("WPA/WPA2/PSK"); break;
+      case WIFI_AUTH_WPA2_ENTERPRISE: authType = F("WPA2 Enterprise"); break;
     #else
-      case ENC_TYPE_WEP: stream_last_json_object_value(F("auth"), F("WEP")); break;
-      case ENC_TYPE_TKIP: stream_last_json_object_value(F("auth"), F("WPA/PSK")); break;
-      case ENC_TYPE_CCMP: stream_last_json_object_value(F("auth"), F("WPA2/PSK")); break;
-      case ENC_TYPE_NONE: stream_last_json_object_value(F("auth"), F("open")); break;
-      case ENC_TYPE_AUTO: stream_last_json_object_value(F("auth"), F("WPA/WPA2/PSK")); break;
+      case ENC_TYPE_WEP:  authType = F("WEP"); break;
+      case ENC_TYPE_TKIP: authType = F("WPA/PSK"); break;
+      case ENC_TYPE_CCMP: authType = F("WPA2/PSK"); break;
+      case ENC_TYPE_NONE: authType = F("open"); break;
+      case ENC_TYPE_AUTO: authType = F("WPA/WPA2/PSK"); break;
     #endif
       default:
         break;
+    }
+    if (authType.length() > 0) {
+      stream_last_json_object_value(F("auth"), authType);
     }
   }
   TXBuffer += "]";
@@ -4286,8 +4301,8 @@ void handle_wifiscanner() {
   sendHeadandTail_stdtemplate(_HEAD);
   html_table_class_multirow();
   html_TR();
-  html_table_header("SSID");
-  html_table_header(F("BSSID"));
+  html_table_header(getLabel(LabelType::SSID));
+  html_table_header(getLabel(LabelType::BSSID));
   html_table_header("info");
 
   int n = WiFi.scanNetworks(false, true);
@@ -4466,6 +4481,14 @@ void stream_last_json_object_value(const String& object, const String& value) {
   TXBuffer += "\n}";
 }
 
+void stream_next_json_object_value(LabelType::Enum label) {
+  stream_next_json_object_value(getLabel(label), getValue(label));
+}
+
+void stream_last_json_object_value(LabelType::Enum label) {
+  stream_last_json_object_value(getLabel(label), getValue(label));
+}
+
 
 //********************************************************************************
 // Web Interface JSON page (no password!)
@@ -4497,59 +4520,59 @@ void handle_json()
     TXBuffer += '{';
     if (showSystem) {
       TXBuffer += F("\"System\":{\n");
-      stream_next_json_object_value(F("Build"), String(BUILD));
-      stream_next_json_object_value(F("Git Build"), String(F(BUILD_GIT)));
-      stream_next_json_object_value(F("System libraries"), getSystemLibraryString());
-      stream_next_json_object_value(F("Plugins"), String(deviceCount + 1));
-      stream_next_json_object_value(F("Plugin description"), getPluginDescriptionString());
-      stream_next_json_object_value(F("Local time"), getDateTimeString('-',':',' '));
-      stream_next_json_object_value(F("Unit"), String(Settings.Unit));
-      stream_next_json_object_value(F("Name"), String(Settings.Name));
-      stream_next_json_object_value(F("Uptime"), String(wdcounter / 2));
-      stream_next_json_object_value(F("Last boot cause"), getLastBootCauseString());
-      stream_next_json_object_value(F("Reset Reason"), getResetReasonString());
+      stream_next_json_object_value(LabelType::BUILD_DESC);
+      stream_next_json_object_value(LabelType::GIT_BUILD);
+      stream_next_json_object_value(LabelType::SYSTEM_LIBRARIES);
+      stream_next_json_object_value(LabelType::PLUGINS);
+      stream_next_json_object_value(LabelType::PLUGIN_DESCRIPTION);
+      stream_next_json_object_value(LabelType::LOCAL_TIME);
+      stream_next_json_object_value(LabelType::UNIT_NR);
+      stream_next_json_object_value(LabelType::UNIT_NAME);
+      stream_next_json_object_value(LabelType::UPTIME);
+      stream_next_json_object_value(LabelType::BOOT_TYPE);
+      stream_next_json_object_value(LabelType::RESET_REASON);
 
       if (wdcounter > 0)
       {
-          stream_next_json_object_value(F("Load"), String(getCPUload()));
-          stream_next_json_object_value(F("Load LC"), String(getLoopCountPerSec()));
+          stream_next_json_object_value(LabelType::LOAD_PCT);
+          stream_next_json_object_value(LabelType::LOOP_COUNT);
       }
-      stream_next_json_object_value(F("CPU Eco mode"), jsonBool(Settings.EcoPowerMode()));
+      stream_next_json_object_value(LabelType::CPU_ECO_MODE);
 
       #ifdef CORE_POST_2_5_0
-      stream_next_json_object_value(F("Heap Max Free Block"), String(ESP.getMaxFreeBlockSize()));
-      stream_next_json_object_value(F("Heap Fragmentation"), String(ESP.getHeapFragmentation()));
+      stream_next_json_object_value(LabelType::HEAP_MAX_FREE_BLOCK);
+      stream_next_json_object_value(LabelType::HEAP_FRAGMENTATION);
       #endif
-      stream_last_json_object_value(F("Free RAM"), String(ESP.getFreeHeap()));
+      stream_last_json_object_value(LabelType::FREE_MEM);
       TXBuffer += ",\n";
     }
     if (showWifi) {
       TXBuffer += F("\"WiFi\":{\n");
       #if defined(ESP8266)
-        stream_next_json_object_value(F("Hostname"), WiFi.hostname());
+        stream_next_json_object_value(LabelType::HOST_NAME);
       #endif
-      stream_next_json_object_value(F("IP config"), useStaticIP() ? F("Static") : F("DHCP"));
-      stream_next_json_object_value(F("IP"), WiFi.localIP().toString());
-      stream_next_json_object_value(F("Subnet Mask"), WiFi.subnetMask().toString());
-      stream_next_json_object_value(F("Gateway IP"), WiFi.gatewayIP().toString());
-      stream_next_json_object_value(F("MAC address"), WiFi.macAddress());
-      stream_next_json_object_value(F("DNS 1"), WiFi.dnsIP(0).toString());
-      stream_next_json_object_value(F("DNS 2"), WiFi.dnsIP(1).toString());
-      stream_next_json_object_value(F("SSID"), WiFi.SSID());
-      stream_next_json_object_value(F("BSSID"), WiFi.BSSIDstr());
-      stream_next_json_object_value(F("Channel"), String(WiFi.channel()));
-      stream_next_json_object_value(F("Connected msec"), String(timeDiff(lastConnectMoment, millis())));
-      stream_next_json_object_value(F("Last Disconnect Reason"), String(lastDisconnectReason));
-      stream_next_json_object_value(F("Last Disconnect Reason str"), getLastDisconnectReason());
-      stream_next_json_object_value(F("Number reconnects"), String(wifi_reconnects));
-      stream_next_json_object_value(F("Force WiFi B/G"), jsonBool(Settings.ForceWiFi_bg_mode()));
-      stream_next_json_object_value(F("Restart wifi lost conn"), jsonBool(Settings.WiFiRestart_connection_lost()));
+      stream_next_json_object_value(LabelType::IP_CONFIG);
+      stream_next_json_object_value(LabelType::IP_ADDRESS);
+      stream_next_json_object_value(LabelType::IP_SUBNET);
+      stream_next_json_object_value(LabelType::GATEWAY);
+      stream_next_json_object_value(LabelType::STA_MAC);
+      stream_next_json_object_value(LabelType::DNS_1);
+      stream_next_json_object_value(LabelType::DNS_1);
+      stream_next_json_object_value(LabelType::SSID);
+      stream_next_json_object_value(LabelType::BSSID);
+      stream_next_json_object_value(LabelType::CHANNEL);
+      stream_next_json_object_value(LabelType::CONNECTED_MSEC);
+      stream_next_json_object_value(LabelType::LAST_DISCONNECT_REASON);
+      stream_next_json_object_value(LabelType::LAST_DISC_REASON_STR);
+      stream_next_json_object_value(LabelType::NUMBER_RECONNECTS);
+      stream_next_json_object_value(LabelType::FORCE_WIFI_BG);
+      stream_next_json_object_value(LabelType::RESTART_WIFI_LOST_CONN);
 #ifdef ESP8266
-      stream_next_json_object_value(F("Force WiFi no sleep"), jsonBool(Settings.WifiNoneSleep()));
+      stream_next_json_object_value(LabelType::FORCE_WIFI_NOSLEEP);
 #endif
-      stream_next_json_object_value(F("Periodical send Gratuitous ARP"), jsonBool(Settings.gratuitousARP()));
-      stream_next_json_object_value(F("Connection Failure Threshold"), String(Settings.ConnectionFailuresThreshold));
-      stream_last_json_object_value(F("RSSI"), String(WiFi.RSSI()));
+      stream_next_json_object_value(LabelType::PERIODICAL_GRAT_ARP);
+      stream_next_json_object_value(LabelType::CONNECTION_FAIL_THRESH);
+      stream_last_json_object_value(LabelType::WIFI_RSSI);
       TXBuffer += ",\n";
     }
     if(showNodes) {
@@ -4847,8 +4870,7 @@ void handle_timingstats() {
   addRowLabel(F("Start Period"));
   struct tm startPeriod = addSeconds(tm, -1.0 * timespan, false);
   TXBuffer += getDateTimeString(startPeriod, '-', ':', ' ', false);
-  addRowLabel(F("Local Time"));
-  TXBuffer += getDateTimeString('-', ':', ' ');
+  addRowLabelValue(LabelType::LOCAL_TIME);
   addRowLabel(F("Time span"));
   TXBuffer += String(timespan);
   TXBuffer += " sec";
@@ -4896,10 +4918,12 @@ void handle_advanced() {
 
     Settings.SyslogFacility = getFormItemInt(F("syslogfacility"));
     Settings.UseSerial = isFormItemChecked(F("useserial"));
-    setLogLevelFor(LOG_TO_SYSLOG, getFormItemInt(F("sysloglevel")));
-    setLogLevelFor(LOG_TO_SERIAL, getFormItemInt(F("serialloglevel")));
-    setLogLevelFor(LOG_TO_WEBLOG, getFormItemInt(F("webloglevel")));
-    setLogLevelFor(LOG_TO_SDCARD, getFormItemInt(F("sdloglevel")));
+    setLogLevelFor(LOG_TO_SYSLOG, getFormItemInt(getInternalLabel(LabelType::SYSLOG_LOG_LEVEL)));
+    setLogLevelFor(LOG_TO_SERIAL, getFormItemInt(getInternalLabel(LabelType::SERIAL_LOG_LEVEL)));
+    setLogLevelFor(LOG_TO_WEBLOG, getFormItemInt(getInternalLabel(LabelType::WEB_LOG_LEVEL)));
+#ifdef FEATURE_SD
+    setLogLevelFor(LOG_TO_SDCARD, getFormItemInt(getInternalLabel(LabelType::SD_LOG_LEVEL)));
+#endif
     Settings.UseValueLogger = isFormItemChecked(F("valuelogger"));
     Settings.BaudRate = getFormItemInt(F("baudrate"));
     Settings.UseNTP = isFormItemChecked(F("usentp"));
@@ -4917,11 +4941,11 @@ void handle_advanced() {
     Settings.Latitude = getFormItemFloat(F("latitude"));
     Settings.Longitude = getFormItemFloat(F("longitude"));
     Settings.OldRulesEngine(isFormItemChecked(F("oldrulesengine")));
-    Settings.ForceWiFi_bg_mode(isFormItemChecked(F("forcewifi_bg")));
-    Settings.WiFiRestart_connection_lost(isFormItemChecked(F("wifi_restart_conn_lost")));
-    Settings.EcoPowerMode(isFormItemChecked(F("eco_mode")));
-    Settings.WifiNoneSleep(isFormItemChecked(F("wifi_none_sleep")));
-    Settings.gratuitousARP(isFormItemChecked(F("gratuitous_arp")));
+    Settings.ForceWiFi_bg_mode(isFormItemChecked(getInternalLabel(LabelType::FORCE_WIFI_BG)));
+    Settings.WiFiRestart_connection_lost(isFormItemChecked(getInternalLabel(LabelType::RESTART_WIFI_LOST_CONN)));
+    Settings.EcoPowerMode(isFormItemChecked(getInternalLabel(LabelType::CPU_ECO_MODE)));
+    Settings.WifiNoneSleep(isFormItemChecked(getInternalLabel(LabelType::FORCE_WIFI_NOSLEEP)));
+    Settings.gratuitousARP(isFormItemChecked(getInternalLabel(LabelType::PERIODICAL_GRAT_ARP)));
 
     addHtmlError(SaveSettings());
     if (systemTimePresent())
@@ -4967,13 +4991,13 @@ void handle_advanced() {
   addFormSubHeader(F("Log Settings"));
 
   addFormIPBox(F("Syslog IP"), F("syslogip"), Settings.Syslog_IP);
-  addFormLogLevelSelect(F("Syslog Level"),      F("sysloglevel"),    Settings.SyslogLevel);
+  addFormLogLevelSelect(getLabel(LabelType::SYSLOG_LOG_LEVEL),  getInternalLabel(LabelType::SYSLOG_LOG_LEVEL), Settings.SyslogLevel);
   addFormLogFacilitySelect(F("Syslog Facility"),F("syslogfacility"), Settings.SyslogFacility);
-  addFormLogLevelSelect(F("Serial log Level"),  F("serialloglevel"), Settings.SerialLogLevel);
-  addFormLogLevelSelect(F("Web log Level"),     F("webloglevel"),    Settings.WebLogLevel);
+  addFormLogLevelSelect(getLabel(LabelType::SERIAL_LOG_LEVEL),  getInternalLabel(LabelType::SERIAL_LOG_LEVEL), Settings.SerialLogLevel);
+  addFormLogLevelSelect(getLabel(LabelType::WEB_LOG_LEVEL),     getInternalLabel(LabelType::WEB_LOG_LEVEL),    Settings.WebLogLevel);
 
 #ifdef FEATURE_SD
-  addFormLogLevelSelect(F("SD Card log Level"), F("sdloglevel"),     Settings.SDLogLevel);
+  addFormLogLevelSelect(getLabel(LabelType::SD_LOG_LEVEL), getInternalLabel(LabelType::SD_LOG_LEVEL),     Settings.SDLogLevel);
 
   addFormCheckBox(F("SD Card Value Logger"), F("valuelogger"), Settings.UseValueLogger);
 #endif
@@ -5008,22 +5032,22 @@ void handle_advanced() {
 
   addFormCheckBox_disabled(F("Use SSDP"), F("usessdp"), Settings.UseSSDP);
 
-  addFormNumericBox(F("Connection Failure Threshold"), F("cft"), Settings.ConnectionFailuresThreshold, 0, 100);
+  addFormNumericBox(getLabel(LabelType::CONNECTION_FAIL_THRESH), F("cft"), Settings.ConnectionFailuresThreshold, 0, 100);
 #ifdef ESP8266
-  addFormCheckBox(F("Force WiFi B/G"), F("forcewifi_bg"), Settings.ForceWiFi_bg_mode());
+  addFormCheckBox(LabelType::FORCE_WIFI_BG, Settings.ForceWiFi_bg_mode());
 #endif
 #ifdef ESP32
   // Disabled for now, since it is not working properly.
-  addFormCheckBox_disabled(F("Force WiFi B/G"), F("forcewifi_bg"), Settings.ForceWiFi_bg_mode());
+  addFormCheckBox_disabled(LabelType::FORCE_WIFI_BG, Settings.ForceWiFi_bg_mode());
 #endif
 
-  addFormCheckBox(F("Restart WiFi on lost conn."), F("wifi_restart_conn_lost"), Settings.WiFiRestart_connection_lost());
+  addFormCheckBox(LabelType::RESTART_WIFI_LOST_CONN, Settings.WiFiRestart_connection_lost());
 #ifdef ESP8266
-  addFormCheckBox(F("Force WiFi no sleep"), F("wifi_none_sleep"), Settings.WifiNoneSleep());
+  addFormCheckBox(LabelType::FORCE_WIFI_NOSLEEP, Settings.WifiNoneSleep());
 #endif
   addFormNote(F("Change WiFi sleep settings requires reboot to activate"));
-  addFormCheckBox(F("Periodical send Gratuitous ARP"), F("gratuitous_arp"), Settings.gratuitousARP());
-  addFormCheckBox(F("CPU Eco mode"), F("eco_mode"), Settings.EcoPowerMode());
+  addFormCheckBox(LabelType::PERIODICAL_GRAT_ARP, Settings.gratuitousARP());
+  addFormCheckBox(LabelType::CPU_ECO_MODE, Settings.EcoPowerMode());
   addFormNote(F("Node may miss receiving packets with Eco mode enabled"));
   addFormSeparator(2);
 
@@ -6527,7 +6551,7 @@ void handle_sysinfo_json() {
       break;
   }
     json_number(F("rssi"),  String(WiFi.RSSI()));
-    json_prop(F("dhcp"), useStaticIP() ? F("Static") : F("DHCP"));
+    json_prop(F("dhcp"), useStaticIP() ? getLabel(LabelType::IP_CONFIG_STATIC) : getLabel(LabelType::IP_CONFIG_DYNAMIC));
     json_prop(F("ip"), formatIP(WiFi.localIP()));
     json_prop(F("subnet"), formatIP(WiFi.subnetMask()));
     json_prop(F("gw"), formatIP(WiFi.gatewayIP()));
@@ -6678,16 +6702,14 @@ void handle_sysinfo() {
   TXBuffer += DATA_GITHUB_CLIPBOARD_JS;
   html_add_script_end();
 
-  addRowLabel(F("Unit"));
-  TXBuffer += Settings.Unit;
+  addRowLabelValue(LabelType::UNIT_NR);
 
   if (systemTimePresent())
   {
-     addRowLabel(F("Local Time"));
-     TXBuffer += getDateTimeString('-', ':', ' ');
+     addRowLabelValue(LabelType::LOCAL_TIME);
   }
 
-  addRowLabel(F("Uptime"));
+  addRowLabel(getLabel(LabelType::UPTIME));
   {
     char strUpTime[40];
     int minutes = wdcounter / 2;
@@ -6699,7 +6721,7 @@ void handle_sysinfo() {
     TXBuffer += strUpTime;
   }
 
-  addRowLabel(F("Load"));
+  addRowLabel(getLabel(LabelType::LOAD_PCT));
   if (wdcounter > 0)
   {
      TXBuffer += getCPUload();
@@ -6707,8 +6729,7 @@ void handle_sysinfo() {
      TXBuffer += getLoopCountPerSec();
      TXBuffer += ')';
   }
-  addRowLabel(F("CPU Eco mode"));
-  TXBuffer += jsonBool(Settings.EcoPowerMode());
+  addRowLabelValue(LabelType::CPU_ECO_MODE);
 
   addRowLabel(F("Free Mem"));
   TXBuffer += freeMem;
@@ -6725,10 +6746,8 @@ void handle_sysinfo() {
   TXBuffer += lowestFreeStackfunction;
   TXBuffer += ')';
 #ifdef CORE_POST_2_5_0
-  addRowLabel(F("Heap Max Free Block"));
-  TXBuffer += ESP.getMaxFreeBlockSize();
-  addRowLabel(F("Heap Fragmentation"));
-  TXBuffer += ESP.getHeapFragmentation();
+  addRowLabelValue(LabelType::HEAP_MAX_FREE_BLOCK);
+  addRowLabelValue(LabelType::HEAP_FRAGMENTATION);
   TXBuffer += '%';
 #endif
 
@@ -6738,8 +6757,7 @@ void handle_sysinfo() {
   TXBuffer += " (";
   TXBuffer += RTC.bootCounter;
   TXBuffer += ')';
-  addRowLabel(F("Reset Reason"));
-  TXBuffer += getResetReasonString();
+  addRowLabelValue(LabelType::RESET_REASON);
 
   addTableSeparator(F("Network"), 2, 3, F("Wifi"));
 
@@ -6768,32 +6786,13 @@ void handle_sysinfo() {
      TXBuffer += WiFi.RSSI();
      TXBuffer += F(" dB)");
   }
-  addRowLabel(F("IP config"));
-  TXBuffer += useStaticIP() ? F("Static") : F("DHCP");
-
-  addRowLabel(F("IP / subnet"));
-  TXBuffer += formatIP(WiFi.localIP());
-  TXBuffer += F(" / ");
-  TXBuffer += formatIP(WiFi.subnetMask());
-
-  addRowLabel(F("GW"));
-  TXBuffer += formatIP(WiFi.gatewayIP());
-
-  {
-    addRowLabel(F("Client IP"));
-    WiFiClient client(WebServer.client());
-    TXBuffer += formatIP(client.remoteIP());
-  }
-
-  addRowLabel(F("DNS"));
-  TXBuffer += formatIP(WiFi.dnsIP(0));
-  TXBuffer += F(" / ");
-  TXBuffer += formatIP(WiFi.dnsIP(1));
-
-  addRowLabel(F("Allowed IP Range"));
-  TXBuffer += describeAllowedIPrange();
-
-  addRowLabel(F("STA MAC"));
+  addRowLabelValue(LabelType::IP_CONFIG);
+  addRowLabelValue(LabelType::IP_ADDRESS_SUBNET);
+  addRowLabelValue(LabelType::GATEWAY);
+  addRowLabelValue(LabelType::CLIENT_IP);
+  addRowLabelValue(LabelType::DNS);
+  addRowLabelValue(LabelType::ALLOWED_IP_RANGE);
+  addRowLabel(getLabel(LabelType::STA_MAC));
 
   {
     uint8_t mac[] = {0, 0, 0, 0, 0, 0};
@@ -6802,60 +6801,42 @@ void handle_sysinfo() {
     formatMAC(macread, macaddress);
     TXBuffer += macaddress;
 
-    addRowLabel(F("AP MAC"));
+    addRowLabel(getLabel(LabelType::AP_MAC));
     macread = WiFi.softAPmacAddress(mac);
     formatMAC(macread, macaddress);
     TXBuffer += macaddress;
   }
 
-  addRowLabel(F("SSID"));
+  addRowLabel(getLabel(LabelType::SSID));
   TXBuffer += WiFi.SSID();
   TXBuffer += " (";
   TXBuffer += WiFi.BSSIDstr();
   TXBuffer += ')';
 
-  addRowLabel(F("Channel"));
-  TXBuffer += WiFi.channel();
-
-  addRowLabel(F("Connected"));
-  TXBuffer += format_msec_duration(timeDiff(lastConnectMoment, millis()));
-
-  addRowLabel(F("Last Disconnect Reason"));
-  TXBuffer += getLastDisconnectReason();
-
-  addRowLabel(F("Number reconnects"));
-  TXBuffer += wifi_reconnects;
+  addRowLabelValue(LabelType::CHANNEL);
+  addRowLabelValue(LabelType::CONNECTED);
+  addRowLabel(getLabel(LabelType::LAST_DISCONNECT_REASON));
+  TXBuffer += getValue(LabelType::LAST_DISC_REASON_STR);
+  addRowLabelValue(LabelType::NUMBER_RECONNECTS);
 
   addTableSeparator(F("WiFi Settings"), 2, 3);
-  addRowLabel(F("Force WiFi B/G"));
-  TXBuffer += jsonBool(Settings.ForceWiFi_bg_mode());
-  addRowLabel(F("Restart wifi lost conn"));
-  TXBuffer += jsonBool(Settings.WiFiRestart_connection_lost());
+  addRowLabelValue(LabelType::FORCE_WIFI_BG);
+  addRowLabelValue(LabelType::RESTART_WIFI_LOST_CONN);
 #ifdef ESP8266
-  addRowLabel(F("Force WiFi no sleep"));
-  TXBuffer += jsonBool(Settings.WifiNoneSleep());
+  addRowLabelValue(LabelType::FORCE_WIFI_NOSLEEP);
 #endif
-  addRowLabel(F("Periodical send Gratuitous ARP"));
-  TXBuffer += jsonBool(Settings.gratuitousARP());
-
-  addRowLabel(F("Connection Failure Threshold"));
-  TXBuffer += String(Settings.ConnectionFailuresThreshold);
+  addRowLabelValue(LabelType::PERIODICAL_GRAT_ARP);
+  addRowLabelValue(LabelType::CONNECTION_FAIL_THRESH);
 
   addTableSeparator(F("Firmware"), 2, 3);
 
-  addRowLabel_copy(F("Build"));
-  TXBuffer += BUILD;
+  addRowLabelValue_copy(LabelType::BUILD_DESC);
   TXBuffer += ' ';
   TXBuffer += F(BUILD_NOTES);
 
-  addRowLabel_copy(F("Libraries"));
-  TXBuffer += getSystemLibraryString();
-
-  addRowLabel_copy(F("GIT version"));
-  TXBuffer += F(BUILD_GIT);
-
-  addRowLabel_copy(F("Plugins"));
-  TXBuffer += deviceCount + 1;
+  addRowLabelValue_copy(LabelType::SYSTEM_LIBRARIES);
+  addRowLabelValue_copy(LabelType::GIT_BUILD);
+  addRowLabelValue_copy(LabelType::PLUGINS);
   TXBuffer += getPluginDescriptionString();
 
   bool filenameDummy = String(CRCValues.binaryFilename).startsWith(F("ThisIsTheDummy"));
@@ -6868,12 +6849,12 @@ void handle_sysinfo() {
        TXBuffer += F("<font color = 'red'>fail !</font>");
     else  TXBuffer += F("passed.");
   }
-  addRowLabel_copy(F("Build time"));
+  addRowLabel_copy(getLabel(LabelType::BUILD_TIME));
   TXBuffer += String(CRCValues.compileDate);
   TXBuffer += ' ';
   TXBuffer += String(CRCValues.compileTime);
 
-  addRowLabel_copy(F("Binary filename"));
+  addRowLabel_copy(getLabel(LabelType::BINARY_FILENAME));
   if (filenameDummy) {
     TXBuffer += F("<b>Self built!</b>");
   } else {
@@ -6883,22 +6864,18 @@ void handle_sysinfo() {
   addTableSeparator(F("System Status"), 2, 3);
   {
     // Actual Loglevel
-    addRowLabel(F("Syslog Log Level"));
-    TXBuffer += getLogLevelDisplayString(Settings.SyslogLevel);
-    addRowLabel(F("Serial Log Level"));
-    TXBuffer += getLogLevelDisplayString(getSerialLogLevel());
-    addRowLabel(F("Web Log Level"));
-    TXBuffer += getLogLevelDisplayString(getWebLogLevel());
+    addRowLabelValue(LabelType::SYSLOG_LOG_LEVEL);
+    addRowLabelValue(LabelType::SERIAL_LOG_LEVEL);
+    addRowLabelValue(LabelType::WEB_LOG_LEVEL);
     #ifdef FEATURE_SD
-    addRowLabel(F("SD Log Level"));
-    TXBuffer += getLogLevelDisplayString(Settings.SDLogLevel);
+    addRowLabelValue(LabelType::SD_LOG_LEVEL);
     #endif
   }
 
 
   addTableSeparator(F("ESP board"), 2, 3);
 
-  addRowLabel(F("ESP Chip ID"));
+  addRowLabel(getLabel(LabelType::ESP_CHIP_ID));
   #if defined(ESP8266)
     TXBuffer += ESP.getChipId();
     TXBuffer += F(" (0x");
@@ -6907,7 +6884,7 @@ void handle_sysinfo() {
     TXBuffer += espChipId;
     TXBuffer += ')';
 
-    addRowLabel(F("ESP Chip Freq"));
+    addRowLabel(getLabel(LabelType::ESP_CHIP_FREQ));
     TXBuffer += ESP.getCpuFreqMHz();
     TXBuffer += F(" MHz");
   #endif
@@ -6924,18 +6901,18 @@ void handle_sysinfo() {
     TXBuffer += espChipIdS1;
     TXBuffer += ')';
 
-    addRowLabel(F("ESP Chip Freq"));
+    addRowLabel(getLabel(LabelType::ESP_CHIP_FREQ));
     TXBuffer += ESP.getCpuFreqMHz();
     TXBuffer += F(" MHz");
   #endif
   #ifdef ARDUINO_BOARD
-  addRowLabel(F("ESP Board Name"));
+  addRowLabel(getLabel(LabelType::ESP_BOARD_NAME));
   TXBuffer += ARDUINO_BOARD;
   #endif
 
   addTableSeparator(F("Storage"), 2, 3);
 
-  addRowLabel(F("Flash Chip ID"));
+  addRowLabel(getLabel(LabelType::FLASH_CHIP_ID));
   #if defined(ESP8266)
     uint32_t flashChipId = ESP.getFlashChipId();
     // Set to HEX may be something like 0x1640E0.
@@ -6960,22 +6937,22 @@ void handle_sysinfo() {
   uint32_t realSize = getFlashRealSizeInBytes();
   uint32_t ideSize = ESP.getFlashChipSize();
 
-  addRowLabel(F("Flash Chip Real Size"));
+  addRowLabel(getLabel(LabelType::FLASH_CHIP_REAL_SIZE));
   TXBuffer += realSize / 1024;
   TXBuffer += F(" kB");
 
-  addRowLabel(F("Flash IDE Size"));
+  addRowLabel(getLabel(LabelType::FLASH_IDE_SIZE));
   TXBuffer += ideSize / 1024;
   TXBuffer += F(" kB");
 
   // Please check what is supported for the ESP32
   #if defined(ESP8266)
-    addRowLabel(F("Flash IDE speed"));
+    addRowLabel(getLabel(LabelType::FLASH_IDE_SPEED));
     TXBuffer += ESP.getFlashChipSpeed() / 1000000;
     TXBuffer += F(" MHz");
 
     FlashMode_t ideMode = ESP.getFlashChipMode();
-    addRowLabel(F("Flash IDE mode"));
+    addRowLabel(getLabel(LabelType::FLASH_IDE_MODE));
     switch (ideMode) {
       case FM_QIO:   TXBuffer += F("QIO");  break;
       case FM_QOUT:  TXBuffer += F("QOUT"); break;
@@ -6986,13 +6963,13 @@ void handle_sysinfo() {
     }
   #endif
 
-   addRowLabel(F("Flash Writes"));
+   addRowLabel(getLabel(LabelType::FLASH_WRITE_COUNT));
    TXBuffer += RTC.flashDayCounter;
    TXBuffer += F(" daily / ");
    TXBuffer += RTC.flashCounter;
    TXBuffer += F(" boot");
 
-   addRowLabel(F("Sketch Size"));
+   addRowLabel(getLabel(LabelType::SKETCH_SIZE));
   #if defined(ESP8266)
    TXBuffer += ESP.getSketchSize() / 1024;
    TXBuffer += F(" kB (");
@@ -7000,7 +6977,7 @@ void handle_sysinfo() {
    TXBuffer += F(" kB free)");
   #endif
 
-  addRowLabel(F("SPIFFS Size"));
+  addRowLabel(getLabel(LabelType::SPIFFS_SIZE));
   {
   #if defined(ESP8266)
     fs::FSInfo fs_info;

@@ -307,6 +307,15 @@ bool safe_strncpy(char* dest, const char* source, size_t max_size) {
   return result;
 }
 
+// Convert a string to lower case and replace spaces with underscores.
+String to_internal_string(const String& input) {
+  String result = input;
+  result.trim();
+  result.toLowerCase();
+  result.replace(' ', '_');
+  return result;
+}
+
 /*********************************************************************************************\
    Parse a string and get the xth command or parameter in lower case
   \*********************************************************************************************/
