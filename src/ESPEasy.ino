@@ -88,6 +88,8 @@
 #include "_CPlugin_Helper.h"
 
 #ifdef USES_C014
+  #define BLYNK_TIMEOUT_MS 2000UL
+  #define BLYNK_HEARTBEAT      30
   #include <BlynkSimpleEsp8266.h>
 #endif
 
@@ -487,9 +489,9 @@ void loop()
   updateLoopStats();
 
   #ifdef USES_C014
-    if (WiFiConnected() && Blynk.connected()){
-      Blynk.run();
-    }
+    if (WiFiConnected())
+      if (Blynk.connected())
+        Blynk.run();
   #endif
 
 

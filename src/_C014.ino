@@ -9,8 +9,11 @@
 #define CPLUGIN_ID_014         14
 #define CPLUGIN_NAME_014       "Blynk"
 
+#define BLYNK_TIMEOUT_MS 2000UL
+#define BLYNK_HEARTBEAT      30
 #include <BlynkSimpleEsp8266.h>
 // #include <BlynkSimpleEsp8266_SSL.h>
+
 
 bool CPlugin_014(byte function, struct EventStruct *event, String& string)
 {
@@ -38,11 +41,12 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
      case CPLUGIN_PROTOCOL_SEND:
       {
 
-        if (!Blynk.connected()){
-          String auth=SecuritySettings.ControllerPassword[event->ControllerIndex];
-          Blynk.config(auth.c_str());
-          Blynk.connect();
-        }
+        if (WiFiConnected())
+          if (!Blynk.connected()){
+            String auth=SecuritySettings.ControllerPassword[event->ControllerIndex];
+            Blynk.config(auth.c_str());
+            Blynk.connect();
+          }
 
         if (!Blynk.connected()){
           return true;
