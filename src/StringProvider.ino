@@ -100,7 +100,12 @@ String getValue(LabelType::Enum label) {
   {
     case LabelType::UNIT_NR:                return String(Settings.Unit);
     case LabelType::UNIT_NAME:              return String(Settings.Name);
-    case LabelType::HOST_NAME:              return WiFi.hostname();
+    case LabelType::HOST_NAME:
+    #ifdef ESP32
+      return WiFi.getHostname();
+    #else
+      return WiFi.hostname();
+    #endif
 
     case LabelType::LOCAL_TIME:             return getDateTimeString('-',':',' ');
     case LabelType::UPTIME:                 return String(wdcounter / 2);
