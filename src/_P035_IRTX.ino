@@ -185,19 +185,19 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
                 //processing
 
                 //If we have pendings 0s
-//                if (c0 > 0) {
-//                  buf[idx++] = c0 * IrBLen;
-//                  for (uint t = 0; t < c0; t++)
-//                    printWebString += '0';
-//                }
-//                //If we have pendings 1s
-//                if (c1 > 0) {
-//                  buf[idx++] = c1 * IrPLen;
-//                  for (uint t = 0; t < c1; t++)
-//                    printWebString += '1';
-//                }
-//
-//                printWebString += F("<BR>");
+                if (c0 > 0) {
+                  buf[idx++] = c0 * IrBLen;
+                  //for (uint t = 0; t < c0; t++)
+                    //printWebString += '0';
+                }
+                //If we have pendings 1s
+                if (c1 > 0) {
+                  buf[idx++] = c1 * IrPLen;
+                  //for (uint t = 0; t < c1; t++)
+                    //printWebString += '1';
+                }
+
+                //printWebString += F("<BR>");
 
             } else {        // RAW2
                 for (unsigned int i = 0, total = IrRaw.length(), gotRep = 0, rep = 0; i < total;) {
