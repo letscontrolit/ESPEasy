@@ -25,6 +25,7 @@ There is also a number of special builds:
 - minimal_ESP82xx_1M_OTA => Minimum number of plugins and a limited set of controllers included to be able to perform a 2-step OTA on 1 MB flash nodes.
 - normal_core_241 => "Normal" using core 2.4.1, since 2.4.2 has issues with PWM
 - xxx_core_260_sdk2_alpha -> core 2.6.0 alpha version (under development) using SDK 2.2.1
+- xxx_core_260_sdk222_alpha -> core 2.6.0 alpha version (under development) using SDK 2.2.2
 - xxx_core_260_sdk3_alpha -> core 2.6.0 alpha version (under development) using SDK 3.0.0-dev (under development too)
 
 
