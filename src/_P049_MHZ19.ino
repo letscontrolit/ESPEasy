@@ -234,7 +234,7 @@ struct P049_data_struct : public PluginTaskData_base {
 
   bool receivedCommandAcknowledgement(bool& expectReset) {
     expectReset = false;
-    if (mhzResp[0] == 0xFF && mhzResp[1] == 0x99)  {
+    if (mhzResp[0] == 0xFF)  {
       switch (mhzResp[1]) {
         case 0x86: // Read CO2 concentration
         case 0x79: // ON/OFF Auto Calibration
