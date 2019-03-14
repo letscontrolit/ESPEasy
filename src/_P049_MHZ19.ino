@@ -112,7 +112,10 @@ enum
 
 
 struct P049_data_struct : public PluginTaskData_base {
-  P049_data_struct() { reset(); }
+  P049_data_struct() {
+    reset();
+    sensorResets = 0;
+  }
 
   ~P049_data_struct() { reset(); }
 
@@ -123,6 +126,7 @@ struct P049_data_struct : public PluginTaskData_base {
     }
     linesHandled = 0;
     checksumFailed = 0;
+    nrUnknownResponses = 0;
     ++sensorResets;
 
     // Default of the sensor is to run ABC
@@ -142,6 +146,8 @@ struct P049_data_struct : public PluginTaskData_base {
       // No guarantee the correct state is active on the sensor after reboot.
       ABC_MustApply = true;
     }
+    lastInitTimestamp = millis();
+    initTimePassed = false;
     return isInitialized();
   }
 
@@ -176,6 +182,11 @@ struct P049_data_struct : public PluginTaskData_base {
     mhzResp[6] = mhzResp[3]; mhzResp[7] = mhzResp[4];
     mhzResp[3] = mhzResp[4] = mhzResp[5] = 0x00;
     mhzResp[8] = calculateChecksum();
+
+    if (!initTimePassed) {
+      // Allow for 3 minutes of init time.
+      initTimePassed = timePassedSince(lastInitTimestamp) > 180000;
+    }
 
     return easySerial->write(mhzResp, sizeof(mhzResp));
   }
@@ -245,11 +256,13 @@ struct P049_data_struct : public PluginTaskData_base {
           expectReset = true;
           break;
         default:
+          ++nrUnknownResponses;
           return false;
       }
       byte checksum = calculateChecksum();
       return mhzResp[8] == checksum;
     }
+    ++nrUnknownResponses;
     return false;
   }
 
@@ -274,6 +287,8 @@ struct P049_data_struct : public PluginTaskData_base {
   uint32_t linesHandled = 0;
   uint32_t checksumFailed = 0;
   uint32_t sensorResets = 0;
+  uint32_t nrUnknownResponses = 0;
+  unsigned long lastInitTimestamp = 0;
 
   ESPeasySerial *easySerial = nullptr;
   byte mhzResp[9];    // 9 byte response buffer
@@ -281,6 +296,7 @@ struct P049_data_struct : public PluginTaskData_base {
   bool ABC_Disable = false;
   bool ABC_MustApply = false;
   bool modelA_detected = false;
+  bool initTimePassed = false;
 };
 
 
@@ -563,7 +579,7 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
 
 //#ifdef ENABLE_DETECTION_RANGE_COMMANDS
         // Sensor responds with 0x99 whenever we send it a measurement range adjustment
-      } else if (P049_data->receivedCommandAcknowledgement(expectReset))  {
+        } else if (P049_data->receivedCommandAcknowledgement(expectReset))  {
           addLog(LOG_LEVEL_INFO, F("MHZ19: Received command acknowledgment! "));
           if (expectReset) {
             addLog(LOG_LEVEL_INFO, F("Expecting sensor reset..."));
@@ -574,13 +590,17 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
 
         // log verbosely anything else that the sensor reports
         } else {
+          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
             String log = F("MHZ19: Unknown response:");
             log += P049_data->getBufferHexDump();
             addLog(LOG_LEVEL_INFO, log);
+          }
+          // Check for stable reads and allow unstable reads the first 3 minutes after reset.
+          if (P049_data->nrUnknownResponses > 10 && P049_data->initTimePassed) {
             P049_performInit(event);
-            success = false;
-            break;
-
+          }
+          success = false;
+          break;
         }
         break;
       }
