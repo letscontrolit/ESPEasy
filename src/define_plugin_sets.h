@@ -100,6 +100,14 @@ To create/register a plugin, you have to :
     #define  PLUGIN_SET_STABLE
     #define  CONTROLLER_SET_STABLE
     #define  NOTIFIER_SET_STABLE
+
+    #ifndef BUILD_NO_DEBUG
+      #define BUILD_NO_DEBUG
+    #endif
+    #ifdef WEBSERVER_RULES_DEBUG
+      #undef WEBSERVER_RULES_DEBUG
+    #endif
+    #define WEBSERVER_RULES_DEBUG 0
 #endif
 
 #ifdef PLUGIN_BUILD_MINIMAL_OTA
