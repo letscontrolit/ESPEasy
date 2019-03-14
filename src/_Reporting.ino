@@ -39,14 +39,17 @@ void ReportStatus()
   String body;
   root.printTo(body);
 
-  String payload = F("POST /report.php HTTP/1.1\r\n");
+  String payload = F("POST /report.php HTTP/1.1");
+  addNewLine(payload);
   payload += F("Host: ");
   payload += host;
-  payload += "\r\n";
-  payload += F("Connection: close\r\n");
+  addNewLine(payload);
+  payload += F("Connection: close");
+  addNewLine(payload);
   payload += F("Content-Length: ");
   payload += String(body.length());
-  payload += "\r\n\r\n";
+  addNewLine(payload);
+  addNewLine(payload); // Add CRLF twice between header and body.
   payload += body;
 
   serialPrintln(payload);

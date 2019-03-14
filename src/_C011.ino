@@ -163,10 +163,9 @@ boolean Create_schedule_HTTP_C011(struct EventStruct *event)
     controller_number, event->ControllerIndex, ControllerSettings,
     String(customConfig.HttpMethod), customConfig.HttpUri);
 
-
+  // Remove extra newline, see https://github.com/letscontrolit/ESPEasy/issues/1970
+  removeExtraNewLine(payload);
   if (strlen(customConfig.HttpHeader) > 0) {
-    // Remove extra newline, see https://github.com/letscontrolit/ESPEasy/issues/1970
-    removeExtraNewLine(payload);
     payload += customConfig.HttpHeader;
     removeExtraNewLine(payload);
   }
@@ -176,13 +175,13 @@ boolean Create_schedule_HTTP_C011(struct EventStruct *event)
   {
     String body = String(customConfig.HttpBody);
     ReplaceTokenByValue(body, event);
-    payload += "\r\n";
     payload += F("Content-Length: ");
     payload += String(body.length());
-    payload += "\r\n\r\n";
+    addNewLine(payload);
+    addNewLine(payload); // Need 2 CRLF between header and body.
     payload += body;
   }
-  payload += "\r\n";
+  addNewLine(payload);
 
   bool success = C011_DelayHandler.addToQueue(C011_queue_element(event->ControllerIndex, payload));
   scheduleNextDelayQueue(TIMER_C011_DELAY_QUEUE, C011_DelayHandler.getNextScheduleTime());

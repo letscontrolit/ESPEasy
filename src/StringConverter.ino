@@ -157,9 +157,13 @@ String toString(bool value) {
    Typical string replace functions.
   \*********************************************************************************************/
 void removeExtraNewLine(String& line) {
-  if (line.endsWith("\r\n\r\n")) {
+  while (line.endsWith("\r\n\r\n")) {
     line.remove(line.length()-2);
   }
+}
+
+void addNewLine(String& line) {
+  line += "\r\n";
 }
 
 
