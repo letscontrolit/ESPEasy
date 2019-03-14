@@ -110,10 +110,10 @@
 .. |P079_name| replace:: :cyan:`Wemos Motorshield`
 .. |P079_type| replace:: :cyan:`Motor`
 .. |P079_typename| replace:: :cyan:`Motor - Wemos Motorshield`
-.. |P079_status| replace:: :yellow:`TESTING`
+.. |P079_status| replace:: :green:`NORMAL`
 .. |P079_github| replace:: P079_Wemos_Motorshield.ino
 .. _P079_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P079_Wemos_Motorshield.ino
-.. |P079_usedby| replace:: `.`
+.. |P079_usedby| replace:: :ref:`P079_WemosMotorshield_page`
 .. |P079_shortinfo| replace:: `.`
 .. |P079_maintainer| replace:: `.`
 .. |P079_compileinfo| replace:: `.`
