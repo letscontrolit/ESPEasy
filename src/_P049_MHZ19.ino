@@ -232,8 +232,21 @@ struct P049_data_struct : public PluginTaskData_base {
     return false;
   }
 
-  bool receivedCommandAcknowledgement() {
+  bool receivedCommandAcknowledgement(bool& expectReset) {
+    expectReset = false;
     if (mhzResp[0] == 0xFF && mhzResp[1] == 0x99)  {
+      switch (mhzResp[1]) {
+        case 0x86: // Read CO2 concentration
+        case 0x79: // ON/OFF Auto Calibration
+          break;
+        case 0x87: // Calibrate Zero Point (ZERO)
+        case 0x88: // Calibrate Span Point (SPAN)
+        case 0x99: // Detection range setting
+          expectReset = true;
+          break;
+        default:
+          return false;
+      }
       byte checksum = calculateChecksum();
       return mhzResp[8] == checksum;
     }
@@ -490,6 +503,7 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
         if (nullptr == P049_data) {
           return success;
         }
+        bool expectReset = false;
         unsigned int ppm = 0;
         signed int temp = 0;
         unsigned int s = 0;
@@ -549,9 +563,11 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
 
 //#ifdef ENABLE_DETECTION_RANGE_COMMANDS
         // Sensor responds with 0x99 whenever we send it a measurement range adjustment
-      } else if (P049_data->receivedCommandAcknowledgement())  {
-          addLog(LOG_LEVEL_INFO, F("MHZ19: Received measurement range acknowledgment! "));
-          addLog(LOG_LEVEL_INFO, F("Expecting sensor reset..."));
+      } else if (P049_data->receivedCommandAcknowledgement(expectReset))  {
+          addLog(LOG_LEVEL_INFO, F("MHZ19: Received command acknowledgment! "));
+          if (expectReset) {
+            addLog(LOG_LEVEL_INFO, F("Expecting sensor reset..."));
+          }
           success = false;
           break;
 //#endif
