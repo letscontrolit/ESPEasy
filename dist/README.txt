@@ -22,8 +22,11 @@ Build type can be:  (differ in included plugins)
 There is also a number of special builds:
 - normal_IR => "Normal" + IR receiver/transmitter plugins and library
 - hard_xxxxx => Special builds for some off-the-shelf hardware.
+- minimal_ESP82xx_1M_OTA => Minimum number of plugins and a limited set of controllers included to be able to perform a 2-step OTA on 1 MB flash nodes.
 - normal_core_241 => "Normal" using core 2.4.1, since 2.4.2 has issues with PWM
-- minimal_ESP82xx_1024_OTA => Minimum number of plugins and a limited set of controllers included to be able to perform a 2-step OTA on 1 MB flash nodes.
+- xxx_core_260_sdk2_alpha -> core 2.6.0 alpha version (under development) using SDK 2.2.1
+- xxx_core_260_sdk3_alpha -> core 2.6.0 alpha version (under development) using SDK 3.0.0-dev (under development too)
+
 
 Chip can be:
 - ESP8266      => Most likely option
@@ -31,13 +34,19 @@ Chip can be:
 - ESP32        => Experimental support at this moment
 
 MemorySize can be:
-- 1024  => 1 MB flash modules (e.g. almost all Sonoff modules)
-- 2048  => 2 MB flash modules (e.g. Shelly1/WROOM02)
-- 4096  => 4 MB flash modules (e.g. NodeMCU/ESP32)
+- 1M  => 1 MB flash modules (e.g. almost all Sonoff modules)
+- 2M  => 2 MB flash modules (e.g. Shelly1/WROOM02)
+- 4M  => 4 MB flash modules (e.g. NodeMCU/ESP32)
 
-ESP32 now has 2 builds:
+Special memory partitioning:
+- 2M256  => 2 MB flash modules (e.g. Shelly1/WROOM02) with 256k SPIFFS (only core 2.5.0 or newer)
+- 1M8_partition => For ESP32 with 4MB flash, sketch size is set to 1.8 MByte (default: 1.4 MByte)
+
+
+ESP32 now has 3 builds:
 - esp32dev   Using the default partition layout (1.4 MB for the sketch)
 - esp32test_1M8_partition   Larger sketch partition (1.8MB) smaller SPIFFS (316 kB)
+- esp-wrover-kit_test_1M8_partition  A build for ESP32 including build flags for the official WRover test kit.
 
 Please note that changing between those versions will destroy the settings!
 The SPIFFS partition will be lost and that contains all settings.

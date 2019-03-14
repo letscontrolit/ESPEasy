@@ -35,7 +35,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #endif
 
 #ifndef DISABLE_SOFTWARE_SERIAL
-#include <SoftwareSerial.h>
+#include <ESPEasySoftwareSerial.h>
 #endif
 
 #ifdef ESP32
@@ -47,6 +47,29 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
   #define NR_ESPEASY_SERIAL_TYPES 3 // Serial 0, 1, 0_swap
 #endif
 
+#ifndef ESP32
+  #if defined(ARDUINO_ESP8266_RELEASE_2_4_0) || defined(ARDUINO_ESP8266_RELEASE_2_4_1)  || defined(ARDUINO_ESP8266_RELEASE_2_4_2)
+    #ifndef CORE_2_4_X
+      #define CORE_2_4_X
+    #endif
+  #endif
+
+  #if defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(ARDUINO_ESP8266_RELEASE_2_4_0) || defined(ARDUINO_ESP8266_RELEASE_2_4_1)
+    #ifndef CORE_PRE_2_4_2
+      #define CORE_PRE_2_4_2
+    #endif
+  #endif
+
+  #if defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(CORE_2_4_X)
+    #ifndef CORE_PRE_2_5_0
+      #define CORE_PRE_2_5_0
+    #endif
+  #else
+    #ifndef CORE_POST_2_5_0
+      #define CORE_POST_2_5_0
+    #endif
+  #endif
+#endif // ESP32
 
 struct ESPeasySerialType {
   enum serialtype {
@@ -61,6 +84,8 @@ struct ESPeasySerialType {
 
 
   static bool getSerialTypePins(ESPeasySerialType::serialtype serType, int& rxPin, int& txPin) {
+    rxPin = -1;
+    txPin = -1;
     switch (serType) {
       case ESPeasySerialType::serialtype::serial0:  rxPin = 3; txPin = 1; return true;
 #ifdef ESP32
@@ -132,7 +157,7 @@ public:
   virtual ~ESPeasySerial();
 
   // If baud rate is set to 0, it will perform an auto-detect on the baudrate
-  void begin(unsigned long baud, SerialConfig config=SERIAL_8N1, SerialMode mode=SERIAL_FULL, uint8_t tx_pin=1);
+  void begin(unsigned long baud, SerialConfig config=SERIAL_8N1, SerialMode mode=SERIAL_FULL);
 #endif
 
 
@@ -184,7 +209,7 @@ public:
   int baudRate(void);
 
 #if defined(ESP8266)
-  void swap() { swap(1); }
+  void swap() { swap(_transmitPin); }
   void swap(uint8_t tx_pin);
   size_t readBytes(char* buffer, size_t size) override;
   size_t readBytes(uint8_t* buffer, size_t size) override;
@@ -192,9 +217,7 @@ public:
   void setDebugOutput(bool);
   bool isTxEnabled(void);
   bool isRxEnabled(void);
-#ifdef CORE_2_5_0
   bool hasRxError(void);
-#endif // CORE_2_5_0
 
   void startDetectBaudrate();
   unsigned long testBaudrate();
@@ -210,6 +233,8 @@ public:
 #endif
   bool listen();
 
+  String getLogString() const;
+
 
   using Print::write;
 
@@ -221,19 +246,21 @@ private:
   bool isValid() const;
 
 #ifdef ESP8266
-  bool doHWbegin(unsigned long baud, SerialConfig config, SerialMode mode, uint8_t tx_pin);
+  bool doHWbegin(unsigned long baud, SerialConfig config, SerialMode mode);
 #endif
 
 #if !defined(DISABLE_SOFTWARE_SERIAL) && defined(ESP8266)
   bool isSWserial() const { return _serialtype == ESPeasySerialType::serialtype::software; }
 
-  SoftwareSerial* _swserial = nullptr;
+  ESPeasySoftwareSerial* _swserial = nullptr;
+#else
+  bool isSWserial() const { return false; }
 #endif
 #ifdef ESP8266
   static bool _serial0_swap_active;
 #endif // ESP8266
 
-  ESPeasySerialType::serialtype _serialtype;
+  ESPeasySerialType::serialtype _serialtype = ESPeasySerialType::serialtype::MAX_SERIAL_TYPE;
   int _receivePin;
   int _transmitPin;
   unsigned long _baud = 0;

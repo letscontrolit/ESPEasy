@@ -159,6 +159,7 @@ bool MQTTConnect(int controller_idx)
     clientid = F("ESPClient_");
     clientid += WiFi.macAddress();
   }
+  clientid.replace(' ', '_'); // Make sure no spaces are present in the client ID
   if (wifi_reconnects >= 1 && Settings.uniqueMQTTclientIdReconnect()) {
     // Work-around for 'lost connections' to the MQTT broker.
     // If the broker thinks the connection is still alive, a reconnect from the
@@ -180,13 +181,13 @@ bool MQTTConnect(int controller_idx)
 
   String LWTMessageConnect = ControllerSettings.LWTMessageConnect;
   if(LWTMessageConnect.length() == 0){
-    LWTMessageConnect = DEFAULT_MQTT_LWT_CONNECT_MESSAGE;
+    LWTMessageConnect = F(DEFAULT_MQTT_LWT_CONNECT_MESSAGE);
   }
   parseSystemVariables(LWTMessageConnect, false);
 
   String LWTMessageDisconnect = ControllerSettings.LWTMessageDisconnect;
   if(LWTMessageDisconnect.length() == 0){
-    LWTMessageDisconnect = DEFAULT_MQTT_LWT_DISCONNECT_MESSAGE;
+    LWTMessageDisconnect = F(DEFAULT_MQTT_LWT_DISCONNECT_MESSAGE);
   }
   parseSystemVariables(LWTMessageDisconnect, false);
 

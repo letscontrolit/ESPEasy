@@ -204,6 +204,8 @@ Light/Lux
 
 Plugins: |Plugin_Light_Lux|
 
+Hardware: |P015_usedby|
+
 Motor
 -----
 

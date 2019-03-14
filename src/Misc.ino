@@ -263,7 +263,7 @@ uint32_t getFreeStackWatermark() {
 bool canYield() { return true; }
 
 #else
-#if defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(ARDUINO_ESP8266_RELEASE_2_4_0) || defined(ARDUINO_ESP8266_RELEASE_2_4_1)
+#ifdef CORE_PRE_2_4_2
 // All version before core 2.4.2
 extern "C" {
 #include <cont.h>
@@ -393,7 +393,7 @@ void deepSleepStart(int dsdelay)
   addLog(LOG_LEVEL_INFO, F("SLEEP: Powering down to deepsleep..."));
   delay(100); // give the node time to send above log message before going to sleep
   #if defined(ESP8266)
-    #if defined(CORE_2_5_0)
+    #if defined(CORE_POST_2_5_0)
       uint64_t deepSleep_usec = dsdelay * 1000000ULL;
       if ((deepSleep_usec > ESP.deepSleepMax()) || dsdelay < 0) {
         deepSleep_usec = ESP.deepSleepMax();
@@ -1095,8 +1095,8 @@ void ResetFactory()
   if (!ResetFactoryDefaultPreference.keepNetwork()) {
     Settings.clearNetworkSettings();
     // TD-er Reset access control
-    str2ip((char*)DEFAULT_IPRANGE_LOW, SecuritySettings.AllowedIPrangeLow);
-    str2ip((char*)DEFAULT_IPRANGE_HIGH, SecuritySettings.AllowedIPrangeHigh);
+    str2ip(F(DEFAULT_IPRANGE_LOW), SecuritySettings.AllowedIPrangeLow);
+    str2ip(F(DEFAULT_IPRANGE_HIGH), SecuritySettings.AllowedIPrangeHigh);
     SecuritySettings.IPblockLevel = DEFAULT_IP_BLOCK_LEVEL;
 
     #if DEFAULT_USE_STATIC_IP
@@ -1438,11 +1438,13 @@ void setLogLevelFor(byte destination, byte logLevel) {
 void updateLogLevelCache() {
   byte max_lvl = 0;
   if (log_to_serial_disabled) {
-    Serial.setDebugOutput(false);
+    if (Settings.UseSerial) {
+      Serial.setDebugOutput(false);
+    }
   } else {
     max_lvl = _max(max_lvl, Settings.SerialLogLevel);
 #ifndef BUILD_NO_DEBUG
-    if (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE) {
+    if (Settings.UseSerial && Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE) {
       Serial.setDebugOutput(true);
     }
 #endif
@@ -1560,6 +1562,7 @@ void delayedReboot(int rebootDelay)
 void reboot() {
   // FIXME TD-er: Should network connections be actively closed or does this introduce new issues?
   flushAndDisconnectAllClients();
+  SPIFFS.end();
   #if defined(ESP32)
     ESP.restart();
   #else
@@ -2784,6 +2787,7 @@ void ArduinoOTAInit()
       reboot();
   });
   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
+    if (Settings.UseSerial)
       Serial.printf("OTA  : Progress %u%%\r", (progress / (total / 100)));
   });
 

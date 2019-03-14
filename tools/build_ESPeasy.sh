@@ -6,7 +6,7 @@
 # Needed packages:
 # sudo apt-get update
 # sudo apt-get upgrade
-# sudo apt install python-minimal virtualenv build-essential zip
+# sudo apt install python-minimal virtualenv build-essential zip binutils
 
 VENV=~/.venv/python2.7
 SRC=~/GitHub/letscontrolit/ESPEasy

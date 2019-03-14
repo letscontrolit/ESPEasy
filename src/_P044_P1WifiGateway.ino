@@ -25,7 +25,7 @@
 
 boolean Plugin_044_init = false;
 boolean serialdebug = false;
-char* Plugin_044_serial_buf;
+char* Plugin_044_serial_buf = nullptr;
 unsigned int bytes_read = 0;
 boolean CRCcheck = false;
 unsigned int currCRC = 0;
@@ -33,6 +33,11 @@ int checkI = 0;
 
 WiFiServer *P1GatewayServer = nullptr;
 WiFiClient P1GatewayClient;
+
+// Fixme TD-er: Reverted to old implementation for now.
+// This one has been reverted in https://github.com/letscontrolit/ESPEasy/pull/2352
+// Since both plugins (P020 and P044) are almost identical in handling serial data.
+// However that version of P044 had a number of other fixes which may be very useful anyway.
 
 boolean Plugin_044(byte function, struct EventStruct *event, String& string)
 {
@@ -81,9 +86,9 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
       	addFormNumericBox(F("Stop bits"), F("p044_stop"), ExtraTaskSettings.TaskDevicePluginConfigLong[4]);
 
         // FIXME TD-er: Why isn't this using the normal pin selection functions?
-      	addFormPinSelect(F("Reset target after boot"), F("taskdevicepin1"), CONFIG_PIN1);
+      	addFormPinSelect(F("Reset target after boot"), F("taskdevicepin1"), Settings.TaskDevicePin1[event->TaskIndex]);
 
-      	addFormNumericBox(F("RX Receive Timeout (mSec)"), F("p044_rxwait"), PCONFIG(0));
+      	addFormNumericBox(F("RX Receive Timeout (mSec)"), F("p044_rxwait"), Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
 
         success = true;
         break;
@@ -96,7 +101,7 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
         ExtraTaskSettings.TaskDevicePluginConfigLong[2] = getFormItemInt(F("p044_data"));
         ExtraTaskSettings.TaskDevicePluginConfigLong[3] = getFormItemInt(F("p044_parity"));
         ExtraTaskSettings.TaskDevicePluginConfigLong[4] = getFormItemInt(F("p044_stop"));
-        PCONFIG(0) = getFormItemInt(F("p044_rxwait"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("p044_rxwait"));
 
         success = true;
         break;
@@ -135,15 +140,15 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
           P1GatewayServer->begin();
 
           if (!Plugin_044_serial_buf)
-            Plugin_044_serial_buf = (char *)malloc(P044_BUFFER_SIZE);
+            Plugin_044_serial_buf = new char[P044_BUFFER_SIZE];
 
-          if (CONFIG_PIN1 != -1)
+          if (Settings.TaskDevicePin1[event->TaskIndex] != -1)
           {
-            pinMode(CONFIG_PIN1, OUTPUT);
-            digitalWrite(CONFIG_PIN1, LOW);
+            pinMode(Settings.TaskDevicePin1[event->TaskIndex], OUTPUT);
+            digitalWrite(Settings.TaskDevicePin1[event->TaskIndex], LOW);
             delay(500);
-            digitalWrite(CONFIG_PIN1, HIGH);
-            pinMode(CONFIG_PIN1, INPUT_PULLUP);
+            digitalWrite(Settings.TaskDevicePin1[event->TaskIndex], HIGH);
+            pinMode(Settings.TaskDevicePin1[event->TaskIndex], INPUT_PULLUP);
           }
 
           Plugin_044_init = true;
@@ -172,6 +177,9 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
           delete P1GatewayServer;
           P1GatewayServer = NULL;
         }
+        if (Plugin_044_serial_buf) {
+          delete[] Plugin_044_serial_buf;
+        }
         success = true;
         break;
       }
@@ -184,6 +192,7 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
           {
             if (P1GatewayClient) P1GatewayClient.stop();
             P1GatewayClient = P1GatewayServer->available();
+            P1GatewayClient.setTimeout(CONTROLLER_CLIENTTIMEOUT_DFLT);
             addLog(LOG_LEVEL_ERROR, F("P1   : Client connected!"));
           }
 
@@ -236,7 +245,7 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
         {
           if (P1GatewayClient.connected())
           {
-            int RXWait = PCONFIG(0);
+            int RXWait = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
             if (RXWait == 0)
               RXWait = 1;
             int timeOut = RXWait;

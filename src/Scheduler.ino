@@ -111,12 +111,13 @@ void setIntervalTimer(unsigned long id, unsigned long lasttimer) {
   // Set the initial timers for the regular runs
   unsigned long interval = 0;
   switch (id) {
-    case TIMER_20MSEC:     interval = 20; break;
-    case TIMER_100MSEC:    interval = 100; break;
-    case TIMER_1SEC:       interval = 1000; break;
-    case TIMER_30SEC:      interval = 30000; break;
-    case TIMER_MQTT:       interval = timermqtt_interval; break;
-    case TIMER_STATISTICS: interval = 30000; break;
+    case TIMER_20MSEC:         interval = 20; break;
+    case TIMER_100MSEC:        interval = 100; break;
+    case TIMER_1SEC:           interval = 1000; break;
+    case TIMER_30SEC:          interval = 30000; break;
+    case TIMER_MQTT:           interval = timermqtt_interval; break;
+    case TIMER_STATISTICS:     interval = 30000; break;
+    case TIMER_GRATUITOUS_ARP: interval = timer_gratuitous_arp_interval; break;
     // Fall-through for all DelayQueue, which are just the fall-back timers.
     // The timers for all delay queues will be set according to their own settings as long as there is something to process.
     case TIMER_MQTT_DELAY_QUEUE:
@@ -137,33 +138,39 @@ void setIntervalTimer(unsigned long id, unsigned long lasttimer) {
   setNewTimerAt(getMixedId(CONST_INTERVAL_TIMER, id), timer);
 }
 
+void sendGratuitousARP_now() {
+  sendGratuitousARP();
+  if (Settings.gratuitousARP()) {
+    timer_gratuitous_arp_interval = 100;
+    setIntervalTimer(TIMER_GRATUITOUS_ARP);
+  }
+}
+
 void process_interval_timer(unsigned long id, unsigned long lasttimer) {
   // Set the interval timer now, it may be altered by the commands below.
   // This is the default next-run-time.
   setIntervalTimer(id, lasttimer);
   switch (id) {
-    case TIMER_20MSEC:
-      run50TimesPerSecond();
-      break;
+    case TIMER_20MSEC:         run50TimesPerSecond(); break;
     case TIMER_100MSEC:
       if(!UseRTOSMultitasking)
         run10TimesPerSecond();
       break;
-    case TIMER_1SEC:
-      runOncePerSecond();
+    case TIMER_1SEC:             runOncePerSecond();      break;
+    case TIMER_30SEC:            runEach30Seconds();      break;
+    case TIMER_MQTT:             runPeriodicalMQTT();     break;
+    case TIMER_STATISTICS:       logTimerStatistics();    break;
+    case TIMER_GRATUITOUS_ARP:
+      // Slowly increase the interval timer.
+      timer_gratuitous_arp_interval = 2 * timer_gratuitous_arp_interval;
+      if (timer_gratuitous_arp_interval > TIMER_GRATUITOUS_ARP_MAX) {
+        timer_gratuitous_arp_interval = TIMER_GRATUITOUS_ARP_MAX;
+      }
+      if (Settings.gratuitousARP()) {
+        sendGratuitousARP();
+      }
       break;
-    case TIMER_30SEC:
-      runEach30Seconds();
-      break;
-    case TIMER_MQTT:
-      runPeriodicalMQTT();
-      break;
-    case TIMER_STATISTICS:
-      logTimerStatistics();
-      break;
-    case TIMER_MQTT_DELAY_QUEUE:
-      processMQTTdelayQueue();
-      break;
+    case TIMER_MQTT_DELAY_QUEUE: processMQTTdelayQueue(); break;
   #ifdef USES_C001
     case TIMER_C001_DELAY_QUEUE:
       process_c001_delay_queue();

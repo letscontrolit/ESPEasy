@@ -39,6 +39,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define _GPS_KM_PER_METER 0.001
 #define _GPS_FEET_PER_METER 3.2808399
 #define _GPS_MAX_FIELD_SIZE 15
+#define _GPS_MAX_NR_ACTIVE_SATELLITES 16  // NMEA allows upto 12, some receivers report more using GSV strings
+//#define _GPS_MAX_NR_SYSTEMS  3   // GPS, GLONASS, GALILEO
+#define _GPS_MAX_NR_SYSTEMS  2   // GPS, GLONASS
+#define _GPS_MAX_ARRAY_LENGTH  (_GPS_MAX_NR_ACTIVE_SATELLITES * _GPS_MAX_NR_SYSTEMS)
 
 struct RawDegrees
 {
@@ -83,6 +87,50 @@ private:
    void setLongitude(const char *term);
    FixQuality fixQuality, newFixQuality;
    FixMode fixMode, newFixMode;
+};
+
+struct TinyGPSSatellites
+{
+  friend class TinyGPSPlus;
+public:
+  bool isValid() const       { return valid; }
+  bool isUpdated() const     { return updated; }
+  uint32_t age() const       { return valid ? millis() - lastCommitTime : (uint32_t)ULONG_MAX; }
+  uint8_t nrSatsTracked() const { return satsTracked; }
+  uint8_t nrSatsVisible() const { return satsVisible; }
+  uint8_t getBestSNR() const { return bestSNR; }
+
+  TinyGPSSatellites() : valid(false), updated(false), pos(-1), bestSNR(0), satsTracked(0), satsVisible(0), snrDataPresent(false)
+  {}
+
+  uint8_t id[_GPS_MAX_ARRAY_LENGTH] = {0};
+  uint8_t snr[_GPS_MAX_ARRAY_LENGTH] = {0};
+
+private:
+   bool valid, updated;
+   /*
+   Satellite IDs:
+    - 01 ~ 32 are for GPS
+    - 33 ~ 64 are for SBAS (PRN minus 87)
+    - 65 ~ 96 are for GLONASS (64 plus slot numbers)
+    - 193 ~ 197 are for QZSS
+    - 01 ~ 37 are for Beidou (BD PRN).
+   GPS and Beidou satellites are differentiated by the GP and BD prefix.
+   */
+   int8_t pos; // Use signed int, only increase pos to set satellite ID
+   uint8_t bestSNR;
+   uint8_t satsTracked;
+   uint8_t satsVisible;
+   bool snrDataPresent;
+   uint32_t lastCommitTime;
+
+   void commit();
+   void setSatId(const char *term);
+   void setSatSNR(const char *term);
+
+   // GSV messages form a sequence, so the initial position in the array must
+   // be set before inserting values.
+   void setMessageSeqNr(const char *term, uint8_t sentenceSystem);
 };
 
 struct TinyGPSDate
@@ -242,6 +290,7 @@ public:
   TinyGPSAltitude altitude;
   TinyGPSInteger satellites;
   TinyGPSHDOP hdop;
+  TinyGPSSatellites satellitesStats;
 
   static const char *libraryVersion() { return _GPS_VERSION; }
 
@@ -258,13 +307,30 @@ public:
   uint32_t passedChecksum()   const { return passedChecksumCount; }
 
 private:
-  enum {GPS_SENTENCE_GPGGA, GPS_SENTENCE_GPRMC, GPS_SENTENCE_OTHER};
+  enum {
+    GPS_SENTENCE_GPGGA,  // GGA - Global Positioning System Fix Data
+    GPS_SENTENCE_GPRMC,  // RMC - Recommended Minimum Navigation Information
+
+    GPS_SENTENCE_GPGSA,  // GSA - GPS DOP and active satellites
+    GPS_SENTENCE_GPGSV,  // GSV - Satellites in view
+
+    GPS_SENTENCE_OTHER};
+
+  enum {
+    GPS_SYSTEM_GPS = 0, // GP: GPS, SBAS, QZSS  & GN: Any combination of GNSS
+    GPS_SYSTEM_GLONASS,
+    GPS_SYSTEM_GALILEO,
+    GPS_SYSTEM_BEIDOU
+  };
+
+  void parseSentenceType(const char *term);
 
   // parsing state variables
   uint8_t parity;
   bool isChecksumTerm;
   char term[_GPS_MAX_FIELD_SIZE];
   uint8_t curSentenceType;
+  uint8_t curSentenceSystem;
   uint8_t curTermNumber;
   uint8_t curTermOffset;
   bool sentenceHasFix;

@@ -53,6 +53,11 @@ Setup
 
 .. image:: P082_Setup_Neo-6M_1.png
 
+A screenshot of a later relase of the plugin. The use of hardware serial communication
+makes the transfer between the GPS and ESP a LOT more stable:
+
+.. image:: P082_Setup_1.png
+
 Task settings
 ~~~~~~~~~~~~~
 

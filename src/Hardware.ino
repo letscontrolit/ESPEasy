@@ -219,6 +219,7 @@ void addSwitchPlugin(byte taskIndex, byte gpio, const String& name, bool activeL
   Settings.TaskDevicePin1PullUp[taskIndex] = true;
   if (activeLow)
     Settings.TaskDevicePluginConfig[taskIndex][2] = 1; // PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_LOW;
+  Settings.TaskDevicePluginConfig[taskIndex][3] = 1; // "Send Boot state" checked.
 }
 
 void addPredefinedPlugins(const GpioFactorySettingsStruct& gpio_settings) {
@@ -247,7 +248,7 @@ void addButtonRelayRule(byte buttonNumber, byte relay_gpio) {
     fileName += '/';
   #endif
   fileName += F("rules1.txt");
-  String rule = F("on ButtonBNR#switch do\n  if [ButtonBNR#switch]=1\n    gpio,GNR,1\n  else\n    gpio,GNR,0\n  endif\nendon\n");
+  String rule = F("on ButtonBNR#state do\n  if [RelayBNR#state]=0\n    gpio,GNR,1\n  else\n    gpio,GNR,0\n  endif\nendon\n");
   rule.replace(F("BNR"), String(buttonNumber));
   rule.replace(F("GNR"), String(relay_gpio));
   String result = appendLineToFile(fileName, rule);

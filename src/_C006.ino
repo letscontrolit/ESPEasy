@@ -86,7 +86,7 @@ bool CPlugin_006(byte function, struct EventStruct *event, String& string)
 
     case CPLUGIN_PROTOCOL_SEND:
       {
-        if (!WiFiConnected(100)) {
+        if (!WiFiConnected(10)) {
           success = false;
           break;
         }

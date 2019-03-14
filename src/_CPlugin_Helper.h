@@ -342,7 +342,7 @@ ControllerDelayHandlerStruct<MQTT_queue_element> MQTTDelayHandler;
                   MakeControllerSettings(ControllerSettings); \
                   LoadControllerSettings(element->controller_idx, ControllerSettings); \
                   C##NNN##_DelayHandler.configureControllerSettings(ControllerSettings); \
-                  if (!WiFiConnected(100)) { \
+                  if (!WiFiConnected(10)) { \
                     scheduleNextDelayQueue(TIMER_C##NNN##_DELAY_QUEUE, C##NNN##_DelayHandler.getNextScheduleTime()); \
                     return; \
                   } \

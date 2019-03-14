@@ -45,6 +45,9 @@ Change log
   |added|
   Major overhaul for 2.0 release.
 
+  |improved|
+  2019/02/26 Changed default name of value from "Switch" to "State".
+
 .. versionadded:: 1.0
   ...
 
