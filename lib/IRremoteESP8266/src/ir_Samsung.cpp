@@ -1,5 +1,5 @@
 // Copyright 2009 Ken Shirriff
-// Copyright 2017 David Conran
+// Copyright 2017, 2018, 2019 David Conran
 
 #include "ir_Samsung.h"
 #include <algorithm>
@@ -168,6 +168,127 @@ bool IRrecv::decodeSAMSUNG(decode_results *results, uint16_t nbits,
 }
 #endif
 
+#if SEND_SAMSUNG36
+// Send a Samsung 36-bit formatted message.
+//
+// Args:
+//   data:   The message to be sent.
+//   nbits:  The bit size of the message being sent. typically kSamsung36Bits.
+//   repeat: The number of times the message is to be repeated.
+//
+// Status: Alpha / Experimental.
+//
+// Note:
+//   Protocol is used by Samsung Bluray Remote: ak59-00167a
+//
+// Ref:
+//   https://github.com/markszabo/IRremoteESP8266/issues/621
+void IRsend::sendSamsung36(const uint64_t data, const uint16_t nbits,
+                           const uint16_t repeat) {
+  if (nbits < 16) return;  // To small to send.
+  for (uint16_t r = 0; r <= repeat; r++) {
+    // Block #1 (16 bits)
+    sendGeneric(kSamsungHdrMark, kSamsungHdrSpace,
+                kSamsungBitMark, kSamsungOneSpace,
+                kSamsungBitMark, kSamsungZeroSpace,
+                kSamsungBitMark, kSamsungHdrSpace,
+                data >> (nbits - 16), 16, 38, true, 0, kDutyDefault);
+    // Block #2 (The rest, typically 20 bits)
+    sendGeneric(0, 0,  // No header
+                kSamsungBitMark, kSamsungOneSpace,
+                kSamsungBitMark, kSamsungZeroSpace,
+                kSamsungBitMark, kSamsungMinGap,  // Gap is just a guess.
+                // Mask off the rest of the bits.
+                data & ((1ULL << (nbits - 16)) - 1),
+                nbits - 16, 38, true, 0, kDutyDefault);
+  }
+}
+#endif  // SEND_SAMSUNG36
+
+#if DECODE_SAMSUNG36
+// Decode the supplied Samsung36 message.
+//
+// Args:
+//   results: Ptr to the data to decode and where to store the decode result.
+//   nbits:   Nr. of bits to expect in the data portion.
+//            Typically kSamsung36Bits.
+//   strict:  Flag to indicate if we strictly adhere to the specification.
+// Returns:
+//   boolean: True if it can decode it, false if it can't.
+//
+// Status: Alpha / Experimental
+//
+// Note:
+//   Protocol is used by Samsung Bluray Remote: ak59-00167a
+//
+// Ref:
+//   https://github.com/markszabo/IRremoteESP8266/issues/621
+bool IRrecv::decodeSamsung36(decode_results *results, const uint16_t nbits,
+                             const bool strict) {
+  if (results->rawlen < 2 * nbits + kHeader + kFooter * 2 - 1)
+    return false;  // Can't possibly be a valid Samsung message.
+  // We need to be looking for > 16 bits to make sense.
+  if (nbits <= 16) return false;
+  if (strict && nbits != kSamsung36Bits)
+    return false;  // We expect nbits to be 36 bits of message.
+
+  uint64_t data = 0;
+  uint16_t offset = kStartOffset;
+
+  // Header
+  if (!matchMark(results->rawbuf[offset], kSamsungHdrMark)) return false;
+  // Calculate how long the common tick time is based on the header mark.
+  uint32_t m_tick = results->rawbuf[offset++] * kRawTick / kSamsungHdrMarkTicks;
+  if (!matchSpace(results->rawbuf[offset], kSamsungHdrSpace)) return false;
+  // Calculate how long the common tick time is based on the header space.
+  uint32_t s_tick =
+      results->rawbuf[offset++] * kRawTick / kSamsungHdrSpaceTicks;
+  // Data (Block #1)
+  match_result_t data_result =
+      matchData(&(results->rawbuf[offset]), 16,
+                kSamsungBitMarkTicks * m_tick, kSamsungOneSpaceTicks * s_tick,
+                kSamsungBitMarkTicks * m_tick, kSamsungZeroSpaceTicks * s_tick);
+  if (data_result.success == false) return false;
+  data = data_result.data;
+  offset += data_result.used;
+  uint16_t bitsSoFar = data_result.used / 2;
+  // Footer (Block #1)
+  if (!matchMark(results->rawbuf[offset++], kSamsungBitMarkTicks * m_tick))
+    return false;
+  if (!matchSpace(results->rawbuf[offset++], kSamsungHdrSpaceTicks * s_tick))
+    return false;
+  // Data (Block #2)
+  data_result = matchData(&(results->rawbuf[offset]),
+                          nbits - 16,
+                          kSamsungBitMarkTicks * m_tick,
+                          kSamsungOneSpaceTicks * s_tick,
+                          kSamsungBitMarkTicks * m_tick,
+                          kSamsungZeroSpaceTicks * s_tick);
+  if (data_result.success == false) return false;
+  data <<= (nbits - 16);
+  data += data_result.data;
+  offset += data_result.used;
+  bitsSoFar += data_result.used / 2;
+  // Footer (Block #2)
+  if (!matchMark(results->rawbuf[offset++], kSamsungBitMarkTicks * m_tick))
+    return false;
+  if (offset < results->rawlen &&
+      !matchAtLeast(results->rawbuf[offset], kSamsungMinGapTicks * s_tick))
+    return false;
+
+  // Compliance
+  if (nbits != bitsSoFar) return false;
+
+  // Success
+  results->bits = bitsSoFar;
+  results->value = data;
+  results->decode_type = SAMSUNG36;
+  results->command = data & ((1ULL << (nbits - 16)) - 1);
+  results->address = data >> (nbits - 16);
+  return true;
+}
+#endif  // DECODE_SAMSUNG36
+
 #if SEND_SAMSUNG_AC
 // Send a Samsung A/C message.
 //
@@ -226,34 +347,40 @@ void IRSamsungAc::begin() { _irsend.begin(); }
 uint8_t IRSamsungAc::calcChecksum(const uint8_t state[],
                                   const uint16_t length) {
   uint8_t sum = 0;
-  uint8_t currentbyte;
   // Safety check so we don't go outside the array.
-  if (length <= 5) return 255;
+  if (length < 7) return 255;
   // Shamelessly inspired by:
   //   https://github.com/adafruit/Raw-IR-decoder-for-Arduino/pull/3/files
   // Count most of the '1' bits after the checksum location.
-  for (uint8_t i = length - 5; i < length - 1; i++) {
-    currentbyte = state[i];
-    if (i == length - 5) currentbyte = state[length - 5] & 0b11111110;
-    for (; currentbyte; currentbyte >>= 1)
-      if (currentbyte & 1) sum++;
-  }
+  sum += countBits(state[length - 7], 8);
+  sum -= countBits(state[length - 6] & 0xF, 8);
+  sum += countBits(state[length - 5] & 0b11111110, 8);
+  sum += countBits(state + length - 4, 3);
   return (28 - sum) & 0xF;
 }
 
 bool IRSamsungAc::validChecksum(const uint8_t state[], const uint16_t length) {
-  if (length <= 5) return true;  // No checksum to compare with. Assume okay.
-  return (state[length - 6] >> 4) == calcChecksum(state, length);
+  if (length < kSamsungAcStateLength)
+    return true;  // No checksum to compare with. Assume okay.
+  uint8_t offset = 0;
+  if (length >= kSamsungAcExtendedStateLength) offset = 7;
+  return ((state[length - 6] >> 4) == calcChecksum(state, length) &&
+          (state[length - (13 + offset)] >> 4) == calcChecksum(state, length -
+                                                               (7 + offset)));
 }
 
 // Update the checksum for the internal state.
 void IRSamsungAc::checksum(uint16_t length) {
-  if (length < 9) return;
+  if (length < 13) return;
   remote_state[length - 6] &= 0x0F;
   remote_state[length - 6] |= (calcChecksum(remote_state, length) << 4);
+  remote_state[length - 13] &= 0x0F;
+  remote_state[length - 13] |= (calcChecksum(remote_state, length - 7) << 4);
 }
 
 #if SEND_SAMSUNG_AC
+// Use for most function/mode/settings changes to the unit.
+// i.e. When the device is already running.
 void IRSamsungAc::send(const uint16_t repeat, const bool calcchecksum) {
   if (calcchecksum) checksum();
   _irsend.sendSamsungAC(remote_state, kSamsungAcStateLength, repeat);
@@ -261,16 +388,22 @@ void IRSamsungAc::send(const uint16_t repeat, const bool calcchecksum) {
 #endif  // SEND_SAMSUNG_AC
 
 #if SEND_SAMSUNG_AC
+// Use this for when you need to power on/off the device.
+// Samsung A/C requires an extended length message when you want to
+// change the power operating mode of the A/C unit.
 void IRSamsungAc::sendExtended(const uint16_t repeat, const bool calcchecksum) {
   if (calcchecksum) checksum();
   uint8_t extended_state[kSamsungAcExtendedStateLength] = {
-      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0xD2, 0x0F, 0x00,
-      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+      0x01, 0xD2, 0x0F, 0x00, 0x00, 0x00, 0x00,
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
   // Copy/convert the internal state to an extended state.
   for (uint16_t i = 0; i < kSamsungACSectionLength; i++)
     extended_state[i] = remote_state[i];
   for (uint16_t i = kSamsungACSectionLength; i < kSamsungAcStateLength; i++)
     extended_state[i + kSamsungACSectionLength] = remote_state[i];
+  // extended_state[8] seems special. This is a guess on how to calculate it.
+  extended_state[8] = (extended_state[1] & 0x9F) | 0x40;
   // Send it.
   _irsend.sendSamsungAC(extended_state, kSamsungAcExtendedStateLength, repeat);
 }
@@ -571,7 +704,6 @@ bool IRrecv::decodeSamsungAC(decode_results *results, uint16_t nbits,
   // Is the signature correct?
   DPRINTLN("DEBUG: Checking signature.");
   if (results->state[0] != 0x02 || results->state[2] != 0x0F) return false;
-  if (results->state[1] != 0x92 && results->state[1] != 0xB2) return false;
   if (strict) {
     // Is the checksum valid?
     if (!IRSamsungAc::validChecksum(results->state, nbits / 8)) {
