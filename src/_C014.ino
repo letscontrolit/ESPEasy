@@ -15,6 +15,11 @@
 // #include <BlynkSimpleEsp8266_SSL.h>
 
 
+void CPlugin_014_handleInterrupt() {
+  backgroundtasks();
+}
+
+
 bool CPlugin_014(byte function, struct EventStruct *event, String& string)
 {
   bool success = false;
@@ -44,7 +49,59 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
         if (WiFiConnected())
           if (!Blynk.connected()){
             String auth=SecuritySettings.ControllerPassword[event->ControllerIndex];
-            Blynk.config(auth.c_str());
+
+            MakeControllerSettings(ControllerSettings);
+            LoadControllerSettings(event->ControllerIndex, ControllerSettings);
+            boolean connectDefault = false;
+            String log = F("BL: ");
+
+            static unsigned long blLastConnectAttempt = millis() - 60000;
+            if (timePassedSince(blLastConnectAttempt)<60000){
+              log += "skip connect to blynk server too often. Wait a little...";
+              addLog(LOG_LEVEL_INFO, log);
+              return true;
+            }
+            blLastConnectAttempt=millis();
+
+            if (ControllerSettings.UseDNS){
+              String hostName = ControllerSettings.getHost();
+              if (hostName.length() !=0){
+                log += "Connecting to custom blynk server ";
+                log += ControllerSettings.getHostPortString();
+                Blynk.config(auth.c_str(),
+                             CPlugin_014_handleInterrupt,
+                             hostName.c_str(),
+                             ControllerSettings.Port
+                           );
+              }
+              else{
+                log += "Custom blynk server name not specified. ";
+                connectDefault = true;
+              }
+            }
+            else{
+              IPAddress ip = ControllerSettings.getIP();
+              if ((ip[0] + ip[1] + ip[2] + ip[3])>0){
+                log += "Connecting to custom blynk server ";
+                log += ControllerSettings.getHostPortString();
+                Blynk.config(auth.c_str(),
+                             CPlugin_014_handleInterrupt,
+                             ip,
+                             ControllerSettings.Port
+                           );
+              }
+              else{
+                log += "Custom blynk server ip not specified. ";
+                connectDefault = true;
+              }
+            }
+
+            if (connectDefault){
+              log += "Connecting go default server";
+              Blynk.config(auth.c_str(),CPlugin_014_handleInterrupt);
+            }
+
+            addLog(LOG_LEVEL_INFO, log);
             Blynk.connect();
           }
 
@@ -108,6 +165,10 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
 //********************************************************************************
 // Process Queued Blynk request, with data set to NULL
 //********************************************************************************
+
+  // if (!try_connect_host(controller_number, client, ControllerSettings))
+  //   return false;
+
 bool do_process_c014_delay_queue(int controller_number, const C014_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
   while (element.txt[element.valuesSent] == "" || element.vPin[element.valuesSent] == -1) {
   //   // A non valid value, which we are not going to send.

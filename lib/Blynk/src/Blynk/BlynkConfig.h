@@ -29,12 +29,12 @@
 
 // Heartbeat period in seconds.
 #ifndef BLYNK_HEARTBEAT
-#define BLYNK_HEARTBEAT      10
+#define BLYNK_HEARTBEAT      30
 #endif
 
 // Network timeout in milliseconds.
 #ifndef BLYNK_TIMEOUT_MS
-#define BLYNK_TIMEOUT_MS     3000UL
+#define BLYNK_TIMEOUT_MS     2000UL
 #endif
 
 // Limit the amount of outgoing commands per second.
@@ -68,7 +68,7 @@
 //#define BLYNK_USE_128_VPINS
 
 // Uncomment to disable fancy logo
-//#define BLYNK_NO_FANCY_LOGO
+#define BLYNK_NO_FANCY_LOGO
 
 // Uncomment to enable 3D fancy logo
 //#define BLYNK_FANCY_LOGO_3D

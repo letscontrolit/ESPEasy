@@ -14,13 +14,13 @@
 #include <Blynk/BlynkConfig.h>
 #include <Blynk/BlynkDebug.h>
 #include <Blynk/BlynkParam.h>
-#include <Blynk/BlynkTimer.h>
+// #include <Blynk/BlynkTimer.h>
 #include <Blynk/BlynkHandlers.h>
 #include <Blynk/BlynkProtocolDefs.h>
 
-#if defined(BLYNK_EXPERIMENTAL)
-    #include <Blynk/BlynkEveryN.h>
-#endif
+// #if defined(BLYNK_EXPERIMENTAL)
+//     #include <Blynk/BlynkEveryN.h>
+// #endif
 
 /**
  * Represents high-level functions of Blynk

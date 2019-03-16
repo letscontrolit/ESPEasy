@@ -56,6 +56,9 @@ public:
                (BlynkMillis() - started < timeout))
         {
             run();
+            if (this->handleInterruptCallback != NULL) 
+                this->handleInterruptCallback();        
+
         }
         return state == CONNECTED;
     }
@@ -104,12 +107,10 @@ private:
     uint16_t getNextMsgId();
 
 protected:
-    void begin(const char* auth) {
+    void begin(const char* auth,void(*handleInterruptCb)(void)) {
+        this->handleInterruptCallback = handleInterruptCb;
         this->authkey = auth;
         lastHeartbeat = lastActivityIn = lastActivityOut = (BlynkMillis() - 5000UL);
-#if !defined(BLYNK_NO_DEFAULT_BANNER)
-        printBanner();
-#endif
     }
 
     bool processInput(void);
@@ -118,6 +119,7 @@ protected:
 
 private:
     const char* authkey;
+    void(*handleInterruptCallback)(void) = NULL;
     char*       redir_serv;
     millis_time_t lastActivityIn;
     millis_time_t lastActivityOut;
@@ -161,6 +163,8 @@ bool BlynkProtocol<Transp>::run(bool avail)
                 BlynkOnDisconnected();
                 return false;
             }
+            if (this->handleInterruptCallback != NULL) 
+                this->handleInterruptCallback();        
             avail = false;
             //BLYNK_LOG2(BLYNK_F("Proc time: "), micros() - t);
         }
@@ -444,6 +448,8 @@ void BlynkProtocol<Transp>::sendCmd(uint8_t cmd, uint16_t id, const void* data, 
 #endif
             while (wait_time >= 0) {
                 run();
+                if (this->handleInterruptCallback != NULL) 
+                    this->handleInterruptCallback();        
                 wait_time = allowed_time - BlynkMillis();
             }
         } else if (nesting == 0) {
