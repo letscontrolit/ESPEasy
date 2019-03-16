@@ -14,7 +14,7 @@
 #include <BlynkSimpleEsp8266.h>
 // #include <BlynkSimpleEsp8266_SSL.h>
 
-
+// called inside blynk connection process to keep espeasy stability
 void CPlugin_014_handleInterrupt() {
   backgroundtasks();
 }
@@ -43,80 +43,23 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case CPLUGIN_INIT:
+      {
+       // when connected to another server and user has changed settings
+       if (Blynk.connected()){
+          addLog(LOG_LEVEL_INFO, F("BL: disconnect from server"));
+          Blynk.disconnect();
+       }
+       break;
+      }
+
      case CPLUGIN_PROTOCOL_SEND:
       {
-
-        if (WiFiConnected())
-          if (!Blynk.connected()){
-            String auth=SecuritySettings.ControllerPassword[event->ControllerIndex];
-
-            MakeControllerSettings(ControllerSettings);
-            LoadControllerSettings(event->ControllerIndex, ControllerSettings);
-            boolean connectDefault = false;
-            String log = F("BL: ");
-
-            static unsigned long blLastConnectAttempt = millis() - 60000;
-            if (timePassedSince(blLastConnectAttempt)<60000){
-              log += "skip connect to blynk server too often. Wait a little...";
-              addLog(LOG_LEVEL_INFO, log);
-              return true;
-            }
-            blLastConnectAttempt=millis();
-
-            if (ControllerSettings.UseDNS){
-              String hostName = ControllerSettings.getHost();
-              if (hostName.length() !=0){
-                log += "Connecting to custom blynk server ";
-                log += ControllerSettings.getHostPortString();
-                Blynk.config(auth.c_str(),
-                             CPlugin_014_handleInterrupt,
-                             hostName.c_str(),
-                             ControllerSettings.Port
-                           );
-              }
-              else{
-                log += "Custom blynk server name not specified. ";
-                connectDefault = true;
-              }
-            }
-            else{
-              IPAddress ip = ControllerSettings.getIP();
-              if ((ip[0] + ip[1] + ip[2] + ip[3])>0){
-                log += "Connecting to custom blynk server ";
-                log += ControllerSettings.getHostPortString();
-                Blynk.config(auth.c_str(),
-                             CPlugin_014_handleInterrupt,
-                             ip,
-                             ControllerSettings.Port
-                           );
-              }
-              else{
-                log += "Custom blynk server ip not specified. ";
-                connectDefault = true;
-              }
-            }
-
-            if (connectDefault){
-              log += "Connecting go default server";
-              Blynk.config(auth.c_str(),CPlugin_014_handleInterrupt);
-            }
-
-            addLog(LOG_LEVEL_INFO, log);
-            Blynk.connect();
-          }
-
-        if (!Blynk.connected()){
-          return true;
-        }
-
         // Collect the values at the same run, to make sure all are from the same sample
         byte valueCount = getValueCountFromSensorType(event->sensorType);
         C014_queue_element element(event, valueCount);
         if (ExtraTaskSettings.TaskIndex != event->TaskIndex)
           PluginCall(PLUGIN_GET_DEVICEVALUENAMES, event, dummyString);
-
-        MakeControllerSettings(ControllerSettings);
-        LoadControllerSettings(event->ControllerIndex, ControllerSettings);
 
         for (byte x = 0; x < valueCount; x++)
         {
@@ -133,15 +76,15 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
           int vPinNumber=vPinNumberStr.toInt();
           element.vPin[x] = vPinNumber;
           element.txt[x] = formattedValue;
-          String log = F("BL: ");
+          String log = F("BL ");
+          log += Blynk.connected()? F("(online): ") : F("(offline): ");
           if (vPinNumber>0 && vPinNumber<256){
-            log += "sending ";
+            log += "send ";
             log += valueFullName;
-            log += " value ";
+            log += " = ";
             log += formattedValue;
             log += " to blynk pin v";
             log += vPinNumber;
-            // Blynk.virtualWrite(vPinNumber, formattedValue);
           }
           else{
             vPinNumber = -1;
@@ -153,7 +96,6 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
           addLog(LOG_LEVEL_INFO, log);
 
         }
-        // return true;
         success = C014_DelayHandler.addToQueue(element);
         scheduleNextDelayQueue(TIMER_C014_DELAY_QUEUE, C014_DelayHandler.getNextScheduleTime());
         break;
@@ -165,32 +107,110 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
 //********************************************************************************
 // Process Queued Blynk request, with data set to NULL
 //********************************************************************************
+// controller_plugin_number = 014 because of C014
+bool do_process_c014_delay_queue(int controller_plugin_number, const C014_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
 
-  // if (!try_connect_host(controller_number, client, ControllerSettings))
-  //   return false;
-
-bool do_process_c014_delay_queue(int controller_number, const C014_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
-  while (element.txt[element.valuesSent] == "" || element.vPin[element.valuesSent] == -1) {
-  //   // A non valid value, which we are not going to send.
-  //   // Increase sent counter until a valid value is found.
-    if (element.checkDone(true))
-      return true;
-  }
   if (wifiStatus != ESPEASY_WIFI_SERVICES_INITIALIZED) {
     return false;
   }
-  return element.checkDone(Blynk_get_c014(element.txt[element.valuesSent], element.vPin[element.valuesSent]));
+
+  if (!Blynk_keep_connection_c014(element.controller_idx, ControllerSettings))
+    return false;
+
+  while (element.txt[element.valuesSent] == "" || element.vPin[element.valuesSent] == -1) {
+  //   A non valid value, which we are not going to send.
+  //   answer ok and skip real sending
+    if (element.checkDone(true))
+      return true;
+  }
+
+  return element.checkDone(Blynk_send_c014(element.txt[element.valuesSent], element.vPin[element.valuesSent]));
 }
 
 
-boolean Blynk_get_c014(const String& value, int vPin )
+boolean Blynk_keep_connection_c014(int controllerIndex, ControllerSettingsStruct& ControllerSettings){
+  if (!WiFiConnected())
+    return false;
+
+  if (!Blynk.connected()){
+    String auth=SecuritySettings.ControllerPassword[controllerIndex];
+
+    boolean connectDefault = false;
+    String log = F("BL: ");
+
+    static unsigned long blLastConnectAttempt = millis() - 60000;
+    static String oldHost=ControllerSettings.getHost();
+
+    if (ControllerSettings.getHost() != oldHost){
+      log += "server has been changed, connect immideately";
+      addLog(LOG_LEVEL_INFO, log);
+      log = F("BL: ");
+      oldHost=ControllerSettings.getHost();
+      blLastConnectAttempt = millis() - 60000;
+    }
+    else{
+      if (timePassedSince(blLastConnectAttempt)<60000){
+        // log += "skip connect to blynk server too often. Wait a little...";
+        // addLog(LOG_LEVEL_INFO, log);
+        return false;
+      }
+      blLastConnectAttempt=millis();
+    }
+
+
+    if (ControllerSettings.UseDNS){
+      String hostName = ControllerSettings.getHost();
+      if (hostName.length() !=0){
+        log += "Connecting to custom blynk server ";
+        log += ControllerSettings.getHostPortString();
+        Blynk.config(auth.c_str(),
+                     CPlugin_014_handleInterrupt,
+                     hostName.c_str(),
+                     ControllerSettings.Port
+                   );
+      }
+      else{
+        log += "Custom blynk server name not specified. ";
+        connectDefault = true;
+      }
+    }
+    else{
+      IPAddress ip = ControllerSettings.getIP();
+      if ((ip[0] + ip[1] + ip[2] + ip[3])>0){
+        log += "Connecting to custom blynk server ";
+        log += ControllerSettings.getHostPortString();
+        Blynk.config(auth.c_str(),
+                     CPlugin_014_handleInterrupt,
+                     ip,
+                     ControllerSettings.Port
+                   );
+      }
+      else{
+        log += "Custom blynk server ip not specified. ";
+        connectDefault = true;
+      }
+    }
+
+    if (connectDefault){
+      log += "Connecting go default server";
+      Blynk.config(auth.c_str(),CPlugin_014_handleInterrupt);
+    }
+
+    addLog(LOG_LEVEL_INFO, log);
+    Blynk.connect();
+  }
+
+  return Blynk.connected();
+}
+
+
+boolean Blynk_send_c014(const String& value, int vPin )
 {
   Blynk.virtualWrite(vPin, value);
   // important - backgroundtasks - free mem
   unsigned long timer = millis() + Settings.MessageDelay;
   while (!timeOutReached(timer))
               backgroundtasks();
-
   return true;
 }
 
@@ -214,21 +234,24 @@ BLYNK_CONNECTED() {
 // Your code here when hardware connects to Blynk Cloud or private server.
 // It’s common to call sync functions inside of this function.
 // Requests all stored on the server latest values for all widgets.
-// Blynk.syncAll();
-addLog(LOG_LEVEL_INFO, F("BL: connected handler"));
+  String eventCommand=F("blynk_connected");
+  rulesProcessing(eventCommand);
+  // addLog(LOG_LEVEL_INFO, F("BL: connected handler"));
 }
 
 
 // This is called when Smartphone App is opened
 BLYNK_APP_CONNECTED() {
-  addLog(LOG_LEVEL_INFO, F("BL: app connected handler"));
+  String eventCommand=F("blynk_app_connected");
+  rulesProcessing(eventCommand);
+  // addLog(LOG_LEVEL_INFO, F("BL: app connected handler"));
 }
 
 // This is called when Smartphone App is closed
 BLYNK_APP_DISCONNECTED() {
-  addLog(LOG_LEVEL_INFO, F("BL: app disconnected handler"));
+  String eventCommand=F("blynk_app_disconnected");
+  rulesProcessing(eventCommand);
+  // addLog(LOG_LEVEL_INFO, F("BL: app disconnected handler"));
 }
-
-
 
 #endif
