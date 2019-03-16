@@ -42,18 +42,16 @@ String flashGuard()
 
 
 String appendLineToFile(const String& fname, const String& line) {
+  return appendToFile(fname, reinterpret_cast<const uint8_t* >(line.c_str()), line.length());
+}
+
+String appendToFile(const String& fname, const uint8_t* data, unsigned int size) {
   fs::File f = SPIFFS.open(fname, "a+");
   SPIFFS_CHECK(f, fname.c_str());
-  const size_t lineLength = line.length();
-  for (size_t i = 0; i < lineLength; ++i) {
-    // See https://github.com/esp8266/Arduino/commit/b1da9eda467cc935307d553692fdde2e670db258#r32622483
-    uint8_t value = static_cast<uint8_t>(line[i]);
-    SPIFFS_CHECK(f.write(&value, 1), fname.c_str());
-  }
+  SPIFFS_CHECK(f.write(data, size), fname.c_str());
   f.close();
   return "";
 }
-
 
 /********************************************************************************************\
   Fix stuff to clear out differences between releases
@@ -804,6 +802,18 @@ int SpiffsSectors()
   #if defined(ESP32)
     return 32;
   #endif
+}
+
+bool SpiffsFull() {
+  fs::FSInfo fs_info;
+  SPIFFS.info(fs_info);
+  int freeSpace = fs_info.totalBytes - fs_info.usedBytes;
+  if (freeSpace < static_cast<int>(2 * fs_info.blockSize)) {
+    // Not enough free space left.
+    // There needs to be minimum of 2 free blocks.
+    return true;
+  }
+  return false;
 }
 
 /********************************************************************************************\

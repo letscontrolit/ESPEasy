@@ -6986,6 +6986,22 @@ void handle_sysinfo() {
     TXBuffer += F(" kB (");
     TXBuffer += (fs_info.totalBytes - fs_info.usedBytes) / 1024;
     TXBuffer += F(" kB free)");
+
+    addRowLabel(F("Page size"));
+    TXBuffer += String(fs_info.pageSize);
+
+    addRowLabel(F("Block size"));
+    TXBuffer += String(fs_info.blockSize);
+
+    addRowLabel(F("Number of blocks"));
+    TXBuffer += String(fs_info.totalBytes / fs_info.blockSize);
+
+    addRowLabel(F("Maximum open files"));
+    TXBuffer += String(fs_info.maxOpenFiles);
+
+    addRowLabel(F("Maximum path length"));
+    TXBuffer += String(fs_info.maxPathLength);
+
   #endif
   }
 
