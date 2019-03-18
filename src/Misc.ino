@@ -1572,109 +1572,6 @@ void reboot() {
 
 
 /********************************************************************************************\
-  Save RTC struct to RTC memory
-  \*********************************************************************************************/
-boolean saveToRTC()
-{
-  #if defined(ESP32)
-    return false;
-  #else
-    if (!system_rtc_mem_write(RTC_BASE_STRUCT, (byte*)&RTC, sizeof(RTC)) || !readFromRTC())
-    {
-      addLog(LOG_LEVEL_ERROR, F("RTC  : Error while writing to RTC"));
-      return(false);
-    }
-    else
-    {
-      return(true);
-    }
-  #endif
-}
-
-
-/********************************************************************************************\
-  Initialize RTC memory
-  \*********************************************************************************************/
-void initRTC()
-{
-  memset(&RTC, 0, sizeof(RTC));
-  RTC.ID1 = 0xAA;
-  RTC.ID2 = 0x55;
-  saveToRTC();
-
-  memset(&UserVar, 0, sizeof(UserVar));
-  saveUserVarToRTC();
-}
-
-/********************************************************************************************\
-  Read RTC struct from RTC memory
-  \*********************************************************************************************/
-boolean readFromRTC()
-{
-  #if defined(ESP32)
-    return false;
-  #else
-    if (!system_rtc_mem_read(RTC_BASE_STRUCT, (byte*)&RTC, sizeof(RTC)))
-      return(false);
-    return (RTC.ID1 == 0xAA && RTC.ID2 == 0x55);
-  #endif
-}
-
-
-/********************************************************************************************\
-  Save values to RTC memory
-\*********************************************************************************************/
-boolean saveUserVarToRTC()
-{
-  #if defined(ESP32)
-    return false;
-  #else
-    //addLog(LOG_LEVEL_DEBUG, F("RTCMEM: saveUserVarToRTC"));
-    byte* buffer = (byte*)&UserVar;
-    size_t size = sizeof(UserVar);
-    uint32_t sum = getChecksum(buffer, size);
-    boolean ret = system_rtc_mem_write(RTC_BASE_USERVAR, buffer, size);
-    ret &= system_rtc_mem_write(RTC_BASE_USERVAR+(size>>2), (byte*)&sum, 4);
-    return ret;
-  #endif
-}
-
-
-/********************************************************************************************\
-  Read RTC struct from RTC memory
-\*********************************************************************************************/
-boolean readUserVarFromRTC()
-{
-  #if defined(ESP32)
-    return false;
-  #else
-    //addLog(LOG_LEVEL_DEBUG, F("RTCMEM: readUserVarFromRTC"));
-    byte* buffer = (byte*)&UserVar;
-    size_t size = sizeof(UserVar);
-    boolean ret = system_rtc_mem_read(RTC_BASE_USERVAR, buffer, size);
-    uint32_t sumRAM = getChecksum(buffer, size);
-    uint32_t sumRTC = 0;
-    ret &= system_rtc_mem_read(RTC_BASE_USERVAR+(size>>2), (byte*)&sumRTC, 4);
-    if (!ret || sumRTC != sumRAM)
-    {
-      addLog(LOG_LEVEL_ERROR, F("RTC  : Checksum error on reading RTC user var"));
-      memset(buffer, 0, size);
-    }
-    return ret;
-  #endif
-}
-
-
-uint32_t getChecksum(byte* buffer, size_t size)
-{
-  uint32_t sum = 0x82662342;   //some magic to avoid valid checksum on new, uninitialized ESP
-  for (size_t i=0; i<size; i++)
-    sum += buffer[i];
-  return sum;
-}
-
-
-/********************************************************************************************\
   Parse string template
   \*********************************************************************************************/
 String parseTemplate(String &tmpString, byte lineSize)
@@ -2836,6 +2733,25 @@ int calc_CRC16(const char *ptr, int count)
     }
     return crc;
 }
+
+uint32_t calc_CRC32(const uint8_t *data, size_t length) {
+  uint32_t crc = 0xffffffff;
+  while (length--) {
+    uint8_t c = *data++;
+    for (uint32_t i = 0x80; i > 0; i >>= 1) {
+      bool bit = crc & 0x80000000;
+      if (c & i) {
+        bit = !bit;
+      }
+      crc <<= 1;
+      if (bit) {
+        crc ^= 0x04c11db7;
+      }
+    }
+  }
+  return crc;
+}
+
 
 // Compute the dew point temperature, given temperature and humidity (temp in Celcius)
 // Formula: http://www.ajdesigner.com/phphumidity/dewpoint_equation_dewpoint_temperature.php
