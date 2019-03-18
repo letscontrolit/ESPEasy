@@ -610,6 +610,7 @@ void flushAndDisconnectAllClients() {
       MQTTclient.disconnect();
       updateMQTTclient_connected();
     }
+    saveToRTC();
     delay(100); // Flush anything in the network buffers.
   }
 }

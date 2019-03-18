@@ -6,16 +6,15 @@ struct ControllerCache_struct {
 
   // Write a single sample set to the buffer
   bool write(uint8_t* data, unsigned int size) {
-    if ((_buffer_size + size) > _buffer.size()) {
+    if (readFileNr == 0)
+      readFileNr = _RTC_cache_handler.getFreeSpace();
+
+    if (_RTC_cache_handler.getFreeSpace() < size) {
       if (!flush()) {
         return false;
       }
     }
-    for (int i = 0; i < size; ++i) {
-      _buffer[_buffer_size] = data[i];
-      ++_buffer_size;
-    }
-    return true;
+    return _RTC_cache_handler.write(data, size);
   }
 
   // Read a single sample set, either from file or buffer.
@@ -29,37 +28,48 @@ struct ControllerCache_struct {
     if (SpiffsFull()) {
       return false;
     }
-    if (fw && fw.size() > 32500) {
-      fw.close();
-    }
-    if (!fw) {
-      // Create a new file to write
-      ++writeFileNr;
-      String fname = "cache_";
-      fname += String(writeFileNr);
-      fname += ".bin";
-      fw = SPIFFS.open(fname.c_str(), "a+");
-      if (!fw) {
-        return false;
+    // Write timings make quite a jump above 24k file size.
+    bool fileFound = false;
+    while (!fileFound) {
+      if (fw && fw.size() > 24000) {
+        fw.close();
       }
+      if (!fw) {
+        // Create a new file to write
+        ++writeFileNr;
+        String fname = "cache_";
+        fname += String(writeFileNr);
+        fname += ".bin";
+        fw = SPIFFS.open(fname.c_str(), "a+");
+        if (!fw) {
+          addLog(LOG_LEVEL_ERROR, F("RTC  : error opening file"));
+          return false;
+        }
+      }
+      fileFound = fw && fw.size() < 24000;
+      delay(0);
     }
 
-    if (fw && (_buffer_size > 0)) {
-      if (fw.write(&_buffer[0], _buffer_size) < 0) {
-        return false;
+    if (fw) {
+      unsigned int size;
+      uint8_t* data = _RTC_cache_handler.getBuffer(size);
+      if (size > 0) {
+        if (fw.write(data, size) < 0) {
+          addLog(LOG_LEVEL_ERROR, F("RTC  : error writing file"));
+          return false;
+        }
+        addLog(LOG_LEVEL_INFO, F("RTC  : Write RTC cache data to file"));
+        addLog(LOG_LEVEL_INFO, String(readFileNr));
+        delay(0);
+        fw.flush();
+        _RTC_cache_handler.flush();
       }
-      _buffer_size = 0;
-      delay(0);
-      fw.flush();
     }
     return true;
   }
 
   // Determine what files are present.
   void init() {
-    _buffer.resize(256);
-    _buffer_size = 0;
-
 
   }
 
@@ -71,9 +81,7 @@ struct ControllerCache_struct {
   int readPos = 0;
 
 private:
-
-  std::vector<uint8_t> _buffer;
-  uint32_t _buffer_size = 0;
+  RTC_cache_handler_struct _RTC_cache_handler;
   File fw;
 
 };

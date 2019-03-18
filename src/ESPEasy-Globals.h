@@ -1635,6 +1635,9 @@ struct pinStatesStruct
 // this offsets are in blocks, bytes = blocks * 4
 #define RTC_BASE_STRUCT 64
 #define RTC_BASE_USERVAR 74
+#define RTC_BASE_CACHE 124
+
+#define RTC_CACHE_DATA_SIZE 240
 
 /*********************************************************************************************\
  * RTCStruct
@@ -1665,6 +1668,22 @@ String printWebString = "";
 boolean printToWebJSON = false;
 
 float UserVar[VARS_PER_TASK * TASKS_MAX];
+
+/********************************************************************************************\
+  RTC_cache_struct
+\*********************************************************************************************/
+struct RTC_cache_struct
+{
+  uint32_t checksumData = 0;
+  uint16_t readFileNr = 0;       // File number used to read from.
+  uint16_t writeFileNr = 0;      // File number to write to.
+  uint16_t readPos = 0;          // Read position in file based cache
+  uint16_t writePos = 0;         // Write position in the RTC memory
+  uint32_t checksumMetadata = 0;
+};
+
+struct RTC_cache_handler_struct;
+
 
 /*********************************************************************************************\
  * rulesTimerStruct
