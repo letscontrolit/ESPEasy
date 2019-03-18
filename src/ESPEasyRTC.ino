@@ -146,9 +146,7 @@ struct RTC_cache_handler_struct
       memset(&RTC_cache, 0, sizeof(RTC_cache));
       flush();
     } else {
-      String log = F("RTC  : Read from cache: ");
-      log += RTC_cache.writePos;
-      addLog(LOG_LEVEL_INFO, log);
+      rtc_debug_log(F("Read from RTC cache"), RTC_cache.writePos);
     }
   }
 
@@ -159,18 +157,21 @@ struct RTC_cache_handler_struct
     return RTC_CACHE_DATA_SIZE - RTC_cache.writePos;
   }
 
+
   // Write a single sample set to the buffer
   bool write(uint8_t* data, unsigned int size) {
-    addLog(LOG_LEVEL_INFO, F("RTC  : write RTC cache data"));
+    rtc_debug_log(F("write RTC cache data"), size);
     if (getFreeSpace() < size) {
-      return false;
+      if (!flush()) {
+        return false;
+      }
     }
     // First store it in the buffer
     for (unsigned int i = 0; i < size; ++i) {
       RTC_cache_data[RTC_cache.writePos] = data[i];
       ++RTC_cache.writePos;
     }
-/*
+
     // Now store the updated part of the buffer to the RTC memory.
     // Pad some extra bytes around it to allow sample sizes not multiple of 4 bytes.
     int startOffset = RTC_cache.writePos - size;
@@ -187,24 +188,52 @@ struct RTC_cache_handler_struct
       // Can this happen?
       nrBytes = RTC_CACHE_DATA_SIZE - startOffset;
     }
-    if (nrBytes > 0) { // Check needed?
-      const size_t address = RTC_BASE_CACHE + ((sizeof(RTC_cache) + startOffset) / 4);
-      system_rtc_mem_write(address, (byte*)&RTC_cache_data[startOffset], nrBytes);
-    }
-  */
-    return saveRTCcache();
-  }
-
-  uint8_t* getBuffer(unsigned int& size) {
-    size = RTC_cache.writePos;
-    return &RTC_cache_data[0];
+    return saveRTCcache(startOffset, nrBytes);
   }
 
   // Mark all content as being processed and empty buffer.
-  void flush() {
-    addLog(LOG_LEVEL_INFO, F("RTC  : flush RTC cache"));
-    initRTCcache_data(true);
-    saveRTCcache();
+  bool flush() {
+    if (prepareFileForWrite()) {
+      if (RTC_cache.writePos > 0) {
+        if (fw.write(&RTC_cache_data[0], RTC_cache.writePos) < 0) {
+          addLog(LOG_LEVEL_ERROR, F("RTC  : error writing file"));
+          return false;
+        }
+        delay(0);
+        fw.flush();
+
+        addLog(LOG_LEVEL_INFO, F("RTC  : flush RTC cache"));
+        initRTCcache_data();
+        clearRTCcacheData();
+        saveRTCcache();
+        return true;
+      }
+    }
+    return false;
+  }
+
+  // Return usable filename for reading.
+  // Will be empty if there is no file to process.
+  String getReadCacheFileName(int& readPos) {
+    initRTCcache_data();
+    for (int i=0; i < 2; ++i) {
+      String fname = createCacheFilename(RTC_cache.readFileNr);
+      if (SPIFFS.exists(fname)) {
+        if (i != 0) {
+          // First attempt failed, so stored read position is not valid
+          RTC_cache.readPos = 0;
+        }
+        readPos = RTC_cache.readPos;
+        return fname;
+      }
+      if (i == 0) {
+        updateRTC_filenameCounters();
+      }
+    }
+    // No file found
+    RTC_cache.readPos = 0;
+    readPos = RTC_cache.readPos;
+    return "";
   }
 
 private:
@@ -226,7 +255,7 @@ private:
     #if defined(ESP32)
       return false;
     #else
-      initRTCcache_data(true);
+      initRTCcache_data();
       if (!system_rtc_mem_read(RTC_BASE_CACHE + (sizeof(RTC_cache) / 4), (byte*)&RTC_cache_data[0], RTC_CACHE_DATA_SIZE))
         return(false);
 
@@ -238,7 +267,11 @@ private:
     #endif
   }
 
-  bool saveRTCcache()
+  bool saveRTCcache() {
+    return saveRTCcache(0, RTC_CACHE_DATA_SIZE);
+  }
+
+  bool saveRTCcache(unsigned int startOffset, size_t nrBytes)
   {
     #if defined(ESP32)
       return false;
@@ -251,18 +284,21 @@ private:
         return(false);
       }
       delay(0);
-      if (!system_rtc_mem_write(RTC_BASE_CACHE + (sizeof(RTC_cache) / 4), (byte*)&RTC_cache_data[0], RTC_CACHE_DATA_SIZE))
-      {
-        addLog(LOG_LEVEL_ERROR, F("RTC  : Error while writing cache data to RTC"));
-        return(false);
+      if (nrBytes > 0) { // Check needed?
+        const size_t address = RTC_BASE_CACHE + ((sizeof(RTC_cache) + startOffset) / 4);
+        if (!system_rtc_mem_write(address, (byte*)&RTC_cache_data[startOffset], nrBytes))
+        {
+          addLog(LOG_LEVEL_ERROR, F("RTC  : Error while writing cache data to RTC"));
+          return(false);
+        }
+        rtc_debug_log(F("Write cache data to RTC"), nrBytes);
       }
-      addLog(LOG_LEVEL_INFO, F("RTC  : Write RTC cache"));
       return(true);
     #endif
   }
 
   uint32_t getDataChecksum() {
-    initRTCcache_data(false);
+    initRTCcache_data();
     size_t dataLength = RTC_cache.writePos;
     if (dataLength > RTC_CACHE_DATA_SIZE) {
       // Is this allowed to happen?
@@ -272,22 +308,87 @@ private:
     return calc_CRC32((byte*)&RTC_cache_data[0], RTC_CACHE_DATA_SIZE);
   }
 
-  void initRTCcache_data(bool clear) {
+  void initRTCcache_data() {
     if (RTC_cache_data.size() != RTC_CACHE_DATA_SIZE) {
       RTC_cache_data.resize(RTC_CACHE_DATA_SIZE);
     }
-    if (clear) {
-      for (size_t i = 0; i < RTC_CACHE_DATA_SIZE; ++i) {
-        RTC_cache_data[i] = 0;
-      }
-      RTC_cache.writePos = 0;
+    if (RTC_cache.writeFileNr == 0) {
+      // RTC value not reliable
+      updateRTC_filenameCounters();
     }
   }
 
+  void clearRTCcacheData() {
+    for (size_t i = 0; i < RTC_CACHE_DATA_SIZE; ++i) {
+      RTC_cache_data[i] = 0;
+    }
+    RTC_cache.writePos = 0;
+  }
 
+  void updateRTC_filenameCounters() {
+    size_t filesizeHighest;
+    if (getCacheFileCounters(RTC_cache.readFileNr, RTC_cache.writeFileNr, filesizeHighest)) {
+      if (filesizeHighest >= CACHE_FILE_MAX_SIZE) {
+        // Start new file
+        ++RTC_cache.writeFileNr;
+      }
+    } else {
+      // Do not use 0, since that will be the cleared content of the struct, indicating invalid RTC data.
+      RTC_cache.writeFileNr = 1;
+    }
+  }
 
-private:
+  bool prepareFileForWrite() {
+    if (SpiffsFull()) {
+      return false;
+    }
+    bool fileFound = false;
+    unsigned int retries = 3;
+    while (retries > 0) {
+      --retries;
+      if (fw && fw.size() >= CACHE_FILE_MAX_SIZE) {
+        fw.close();
+      }
+      if (!fw) {
+        // Open file to write
+        initRTCcache_data();
+        updateRTC_filenameCounters();
+        String fname = createCacheFilename(RTC_cache.writeFileNr);
+        fw = SPIFFS.open(fname.c_str(), "a+");
+        if (!fw) {
+          addLog(LOG_LEVEL_ERROR, F("RTC  : error opening file"));
+          return false;
+        }
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          String log = F("Write to ");
+          log += fname;
+          log += F(" size");
+          rtc_debug_log(log, fw.size());
+        }
+      }
+      delay(0);
+      if (fw && fw.size() < CACHE_FILE_MAX_SIZE) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  void rtc_debug_log(const String& description, size_t nrBytes) {
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      String log;
+      log.reserve(18 + description.length());
+      log = F("RTC  : ");
+      log += description;
+      log += ' ';
+      log += nrBytes;
+      log += F(" bytes");
+      addLog(LOG_LEVEL_INFO, log);
+    }
+  }
 
   RTC_cache_struct RTC_cache;
   std::vector<uint8_t> RTC_cache_data;
+  File fw;
+
 };

@@ -1638,6 +1638,7 @@ struct pinStatesStruct
 #define RTC_BASE_CACHE 124
 
 #define RTC_CACHE_DATA_SIZE 240
+#define CACHE_FILE_MAX_SIZE 24000
 
 /*********************************************************************************************\
  * RTCStruct

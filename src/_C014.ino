@@ -79,9 +79,6 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
 //********************************************************************************
 bool do_process_c014_delay_queue(int controller_number, const C014_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
   C014_cache.write((uint8_t*)&element, sizeof(element));
-  String log = F("C014_cache written ");
-  log += sizeof(element);
-  addLog(LOG_LEVEL_INFO, log);
   return true;
 /*
   WiFiClient client;

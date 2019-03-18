@@ -846,6 +846,61 @@ bool SpiffsFull() {
 }
 
 /********************************************************************************************\
+  Handling cached data
+  \*********************************************************************************************/
+
+String createCacheFilename(unsigned int count) {
+  String fname = "cache_";
+  fname += String(count);
+  fname += ".bin";
+  return fname;
+}
+
+int getCacheFileCountFromFilename(const String& fname) {
+  int startpos = fname.indexOf('_');
+  if (startpos < 0) return -1;
+  int endpos = fname.indexOf(F(".bin"));
+  if (endpos < 0) return -1;
+  String digits = fname.substring(startpos + 1, endpos);
+  int result;
+  if (validIntFromString(fname.substring(startpos + 1, endpos), result)) {
+    return result;
+  }
+  return -1;
+}
+
+// Look into the filesystem to see if there are any cache files present on the filesystem
+// Return true if any found.
+bool getCacheFileCounters(uint16_t& lowest, uint16_t& highest, size_t& filesizeHighest) {
+  lowest = 65535;
+  highest = 0;
+  filesizeHighest = 0;
+  Dir dir = SPIFFS.openDir("cache");
+  while (dir.next()) {
+    String filename = dir.fileName();
+    addLog(LOG_LEVEL_INFO, filename);
+    int count = getCacheFileCountFromFilename(filename);
+    if (count >= 0) {
+      if (lowest > count) {
+        lowest = count;
+      }
+      if (highest < count) {
+        highest = count;
+        filesizeHighest = dir.fileSize();
+      }
+    }
+  }
+  if (lowest <= highest) {
+    return true;
+  }
+  lowest = 0;
+  highest = 0;
+  return false;
+}
+
+
+
+/********************************************************************************************\
   Get partition table information
   \*********************************************************************************************/
 #ifdef ESP32
