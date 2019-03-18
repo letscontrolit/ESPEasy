@@ -9,6 +9,7 @@
 #define CPLUGIN_ID_014         14
 #define CPLUGIN_NAME_014       "Blynk"
 
+#define _BLYNK_USE_DEFAULT_FREE_RAM
 #define BLYNK_TIMEOUT_MS 2000UL
 #define BLYNK_HEARTBEAT      30
 #include <BlynkSimpleEsp8266.h>
