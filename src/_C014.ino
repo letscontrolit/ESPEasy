@@ -100,9 +100,9 @@ bool do_process_c014_delay_queue(int controller_number, const C014_queue_element
 */
 }
 
-String c014_startCSVdump() {
+bool c014_startCSVdump() {
   ControllerCache.resetpeek();
-  return F("date;time;UNIX timestamp;contr. idx;sensortype;taskindex;device name;value count;val1;val2;val3;val4\r\n");
+  return ControllerCache.isInitialized();
 }
 
 bool c014_getCSVline(

@@ -5176,8 +5176,7 @@ void handle_dumpcache() {
     WebServer.sendHeader(F("Content-Disposition"), str);
 //    WebServer.streamFile(dataFile, F("application/octet-stream"));
 */
-    TXBuffer.startStream();
-    TXBuffer += c014_startCSVdump();
+    c014_startCSVdump();
     unsigned long  timestamp;
     byte  controller_idx;
     byte  TaskIndex;
@@ -5188,12 +5187,25 @@ void handle_dumpcache() {
     float  val3;
     float  val4;
 
+    TXBuffer.startStream();
+    TXBuffer += F("UNIX timestamp;contr. idx;sensortype;taskindex;value count");
+    for (int i = 0; i < TASKS_MAX; ++i) {
+      LoadTaskSettings(i);
+      for (int j = 0; j < VARS_PER_TASK; ++j) {
+        TXBuffer += ';';
+        TXBuffer += ExtraTaskSettings.TaskDeviceName;
+        TXBuffer += '#';
+        TXBuffer += ExtraTaskSettings.TaskDeviceValueNames[j];
+      }
+    }
+    TXBuffer += F("<BR>");
+    float csv_values[VARS_PER_TASK * TASKS_MAX];
+    for (int i = 0; i < VARS_PER_TASK * TASKS_MAX; ++i) {
+      csv_values[i] = 0.0;
+    }
+
     while (c014_getCSVline(timestamp, controller_idx, TaskIndex, sensorType,
                            valueCount, val1, val2, val3, val4)) {
-      struct tm tmp;
-      breakTime(timestamp, tmp);
-      TXBuffer += getDateTimeString(tmp, '-', ':', ';', false);
-      TXBuffer += ';';
       TXBuffer += timestamp;
       TXBuffer += ';';
       TXBuffer += controller_idx;
@@ -5202,19 +5214,21 @@ void handle_dumpcache() {
       TXBuffer += ';';
       TXBuffer += TaskIndex;
       TXBuffer += ';';
-      TXBuffer += getTaskDeviceName(TaskIndex);
-      TXBuffer += ';';
       TXBuffer += valueCount;
-      TXBuffer += ';';
-      TXBuffer += String(val1, 6);
-      TXBuffer += ';';
-      TXBuffer += String(val2, 6);
-      TXBuffer += ';';
-      TXBuffer += String(val3, 6);
-      TXBuffer += ';';
-      TXBuffer += String(val4, 6);
-      TXBuffer += '\r';
-      TXBuffer += '\n';
+      int valindex = TaskIndex * VARS_PER_TASK;
+      csv_values[valindex++] = val1;
+      csv_values[valindex++] = val2;
+      csv_values[valindex++] = val3;
+      csv_values[valindex++] = val4;
+      for (int i = 0; i < VARS_PER_TASK * TASKS_MAX; ++i) {
+        TXBuffer += ';';
+        if (csv_values[i] == 0.0) {
+          TXBuffer += '0';
+        } else {
+          TXBuffer += String(csv_values[i], 6);
+        }
+      }
+      TXBuffer += F("<BR>");
       delay(0);
     }
     TXBuffer.endStream();
