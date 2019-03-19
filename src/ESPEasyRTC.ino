@@ -157,6 +157,39 @@ struct RTC_cache_handler_struct
     return RTC_CACHE_DATA_SIZE - RTC_cache.writePos;
   }
 
+  void resetpeek() {
+    if (fp) {
+      fp.close();
+    }
+    peekfilenr = 0;
+    peekreadpos = 0;
+  }
+
+  bool peek(uint8_t* data, unsigned int size) {
+    int retries = 2;
+    while (retries > 0) {
+      --retries;
+      if (!fp) {
+        int tmppos;
+        String fname;
+        if (peekfilenr == 0) {
+          fname = getReadCacheFileName(tmppos);
+          peekfilenr = getCacheFileCountFromFilename(fname);
+        } else {
+          ++peekfilenr;
+          fname = createCacheFilename(peekfilenr);
+        }
+        if (fname.length() == 0) return false;
+        fp = SPIFFS.open(fname.c_str(), "r");
+      }
+      if (!fp) return false;
+      if (fp.read(data, size)) {
+        return true;
+      }
+      fp.close();
+    }
+    return true;
+  }
 
   // Write a single sample set to the buffer
   bool write(uint8_t* data, unsigned int size) {
@@ -342,7 +375,6 @@ private:
     if (SpiffsFull()) {
       return false;
     }
-    bool fileFound = false;
     unsigned int retries = 3;
     while (retries > 0) {
       --retries;
@@ -390,5 +422,9 @@ private:
   RTC_cache_struct RTC_cache;
   std::vector<uint8_t> RTC_cache_data;
   File fw;
+  File fr;
+  File fp;
+  size_t peekfilenr = 0;
+  size_t peekreadpos = 0;
 
 };

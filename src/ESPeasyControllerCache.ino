@@ -33,15 +33,32 @@ struct ControllerCache_struct {
     return _RTC_cache_handler->flush();
   }
 
-  // Determine what files are present.
   void init() {
     if (_RTC_cache_handler == nullptr) {
       _RTC_cache_handler = new RTC_cache_handler_struct;
     }
   }
 
+  bool isInitialized() {
+    return _RTC_cache_handler != nullptr;
+  }
+
   // Clear all caches
   void clearCache() {}
+
+  void resetpeek() {
+    if (_RTC_cache_handler != nullptr) {
+      _RTC_cache_handler->resetpeek();
+    }
+  }
+
+  // Read data without marking it as being read.
+  bool peek(uint8_t* data, unsigned int size) {
+    if (_RTC_cache_handler == nullptr) {
+      return false;
+    }
+    return _RTC_cache_handler->peek(data, size);
+  }
 
   int readFileNr = 0;
   int readPos = 0;

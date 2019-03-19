@@ -498,6 +498,7 @@ void WebServerInit()
   WebServer.on(F("/controllers"), handle_controllers);
   WebServer.on(F("/devices"), handle_devices);
   WebServer.on(F("/download"), handle_download);
+  WebServer.on(F("/dumpcache"), handle_dumpcache);
   WebServer.on(F("/factoryreset"), handle_factoryreset);
   WebServer.on(F("/favicon.ico"), handle_favicon);
   WebServer.on(F("/filelist"), handle_filelist);
@@ -5155,6 +5156,71 @@ boolean isLoggedIn()
   return true;
 }
 
+void handle_dumpcache() {
+  if (!isLoggedIn()) return;
+
+  #ifdef USES_C014
+/*
+    String str = F("attachment; filename=cache_");
+    str += Settings.Name;
+    str += "_U";
+    str += Settings.Unit;
+    str += F("_Build");
+    str += BUILD;
+    str += '_';
+    if (systemTimePresent())
+    {
+      str += getDateTimeString('\0', '\0', '\0');
+    }
+    str += F(".csv");
+    WebServer.sendHeader(F("Content-Disposition"), str);
+//    WebServer.streamFile(dataFile, F("application/octet-stream"));
+*/
+    TXBuffer.startStream();
+    TXBuffer += c014_startCSVdump();
+    unsigned long  timestamp;
+    byte  controller_idx;
+    byte  TaskIndex;
+    byte  sensorType;
+    byte  valueCount;
+    float  val1;
+    float  val2;
+    float  val3;
+    float  val4;
+
+    while (c014_getCSVline(timestamp, controller_idx, TaskIndex, sensorType,
+                           valueCount, val1, val2, val3, val4)) {
+      struct tm tmp;
+      breakTime(timestamp, tmp);
+      TXBuffer += getDateTimeString(tmp, '-', ':', ';', false);
+      TXBuffer += ';';
+      TXBuffer += timestamp;
+      TXBuffer += ';';
+      TXBuffer += controller_idx;
+      TXBuffer += ';';
+      TXBuffer += sensorType;
+      TXBuffer += ';';
+      TXBuffer += TaskIndex;
+      TXBuffer += ';';
+      TXBuffer += getTaskDeviceName(TaskIndex);
+      TXBuffer += ';';
+      TXBuffer += valueCount;
+      TXBuffer += ';';
+      TXBuffer += String(val1, 6);
+      TXBuffer += ';';
+      TXBuffer += String(val2, 6);
+      TXBuffer += ';';
+      TXBuffer += String(val3, 6);
+      TXBuffer += ';';
+      TXBuffer += String(val4, 6);
+      TXBuffer += '\r';
+      TXBuffer += '\n';
+      delay(0);
+    }
+    TXBuffer.endStream();
+
+  #endif
+}
 
 //********************************************************************************
 // Web Interface download page

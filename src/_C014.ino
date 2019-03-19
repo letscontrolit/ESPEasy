@@ -8,7 +8,8 @@
 #define CPLUGIN_NAME_014       "Cached HTTP"
 #include <ArduinoJson.h>
 
-ControllerCache_struct C014_cache;
+ControllerCache_struct ControllerCache;
+
 
 bool CPlugin_014(byte function, struct EventStruct *event, String& string)
 {
@@ -39,7 +40,7 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
         MakeControllerSettings(ControllerSettings);
         LoadControllerSettings(event->ControllerIndex, ControllerSettings);
         C014_DelayHandler.configureControllerSettings(ControllerSettings);
-        C014_cache.init();
+        ControllerCache.init();
         break;
       }
 
@@ -74,11 +75,13 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
   return success;
 }
 
+
+
 //********************************************************************************
 // Generic HTTP get request
 //********************************************************************************
 bool do_process_c014_delay_queue(int controller_number, const C014_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
-  C014_cache.write((uint8_t*)&element, sizeof(element));
+  ControllerCache.write((uint8_t*)&element, sizeof(element));
   return true;
 /*
   WiFiClient client;
@@ -95,6 +98,36 @@ bool do_process_c014_delay_queue(int controller_number, const C014_queue_element
 //  return element.checkDone(send_via_http(controller_number, client, request, ControllerSettings.MustCheckReply));
   return true;
 */
+}
+
+String c014_startCSVdump() {
+  ControllerCache.resetpeek();
+  return F("date;time;UNIX timestamp;contr. idx;sensortype;taskindex;device name;value count;val1;val2;val3;val4\r\n");
+}
+
+bool c014_getCSVline(
+  unsigned long& timestamp,
+  byte& controller_idx,
+  byte& TaskIndex,
+  byte& sensorType,
+  byte& valueCount,
+  float& val1,
+  float& val2,
+  float& val3,
+  float& val4)
+{
+  C014_queue_element element;
+  bool result = ControllerCache.peek((uint8_t*)&element, sizeof(element));
+  timestamp = element.timestamp;
+  controller_idx = element.controller_idx;
+  TaskIndex = element.TaskIndex;
+  sensorType = element.sensorType;
+  valueCount = element.valueCount;
+  val1 = element.values[0];
+  val2 = element.values[1];
+  val3 = element.values[2];
+  val4 = element.values[3];
+  return result;
 }
 
 #endif
