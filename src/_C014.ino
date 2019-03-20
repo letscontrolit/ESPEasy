@@ -21,6 +21,14 @@ void CPlugin_014_handleInterrupt() {
 }
 
 
+// called from main loop 
+void Blynk_Run_c014(){
+    if (WiFiConnected())
+      if (Blynk.connected())
+        Blynk.run();
+}
+
+
 bool CPlugin_014(byte function, struct EventStruct *event, String& string)
 {
   bool success = false;
@@ -202,6 +210,40 @@ boolean Blynk_keep_connection_c014(int controllerIndex, ControllerSettingsStruct
   }
 
   return Blynk.connected();
+}
+
+
+String Command_Blynk_Set_c014(struct EventStruct *event, const char* Line){
+
+  // todo add multicontroller support and chek it is connected and enavled
+  if (!Blynk.connected())
+      return F("Not connected to blynk server");
+
+  int vPin = event->Par1;
+
+  if ((vPin < 0)  || (vPin > 255)){
+    String err = F("Not correct blynk vPin number ");
+    err += vPin;
+    return err;
+  }
+      
+  String data = parseString(Line, 3);
+
+  if (data.length() == 0){
+    String err = F("Skip sending empty data to blynk vPin ");
+    err += vPin;
+    return err;
+  }
+
+  String log = F("BL: sending to vPin ");
+  log += vPin;
+  log += (": ");
+  log += data;
+  addLog(LOG_LEVEL_INFO, log);
+
+  Blynk.virtualWrite(vPin, data); 
+
+  return return_command_success();
 }
 
 

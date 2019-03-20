@@ -87,13 +87,6 @@
 // Plugin helper needs the defined controller sets, thus include after 'define_plugin_sets.h'
 #include "_CPlugin_Helper.h"
 
-#ifdef USES_C014
-  #define _BLYNK_USE_DEFAULT_FREE_RAM
-  #define BLYNK_TIMEOUT_MS 2000UL
-  #define BLYNK_HEARTBEAT      30
-  #include <BlynkSimpleEsp8266.h>
-#endif
-
 // Blynk_get prototype
 boolean Blynk_get(const String& command, byte controllerIndex,float *data = NULL );
 
@@ -490,11 +483,8 @@ void loop()
   updateLoopStats();
 
   #ifdef USES_C014
-    if (WiFiConnected())
-      if (Blynk.connected())
-        Blynk.run();
+    Blynk_Run_c014();
   #endif
-
 
   if (wifiSetupConnect)
   {
