@@ -227,7 +227,7 @@ String Command_Blynk_Set_c014(struct EventStruct *event, const char* Line){
     return err;
   }
       
-  String data = parseString(Line, 3);
+  String data = parseString(Line, 3, true, false);
 
   if (data.length() == 0){
     String err = F("Skip sending empty data to blynk vPin ");
@@ -235,9 +235,9 @@ String Command_Blynk_Set_c014(struct EventStruct *event, const char* Line){
     return err;
   }
 
-  String log = F("BL: sending to vPin ");
+  String log = F("BL (online): send blynk pin v");
   log += vPin;
-  log += (": ");
+  log += (" = ");
   log += data;
   addLog(LOG_LEVEL_INFO, log);
 
