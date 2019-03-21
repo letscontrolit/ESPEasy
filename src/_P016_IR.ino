@@ -409,8 +409,8 @@ void displayRawToReadableB32Hex() {
         }
         div[p] = bstDiv;
 
-        line = String(p? "Blank: " : "Pulse: ") + " divisor=" + uint64ToString(bstDiv, 10)
-            +"  avgErr=" + uint64ToString(bstAvg, 10) + " avgMul="+ uint64ToString((uint16_t)bstMul, 10)
+        line = String(p? String(F("Blank: ")) : String(F("Pulse: "))) + String(F(" divisor=")) + uint64ToString(bstDiv, 10)
+            +String(F("  avgErr=")) + uint64ToString(bstAvg, 10) + String(F(" avgMul="))+ uint64ToString((uint16_t)bstMul, 10)
             +'.'+ ((char)((bstMul - (uint16_t)bstMul) * 10 )+ '0');
         addLog(LOG_LEVEL_DEBUG, line);
     }
@@ -453,7 +453,7 @@ void displayRawToReadableB32Hex() {
         iOut = storeB32Hex(out, iOut, tmOut[d++]);
 
     out[iOut] = 0;
-    line = String(F("IRSEND,RAW2,")) + String(out) + ",38," + uint64ToString(div[0], 10) +','+ uint64ToString(div[1], 10);
+    line = String(F("IRSEND,RAW2,")) + String(out) + String(F(",38,")) + uint64ToString(div[0], 10) +','+ uint64ToString(div[1], 10);
     addLog(LOG_LEVEL_INFO, line);
 }
 
