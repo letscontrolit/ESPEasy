@@ -1,4 +1,48 @@
 -------------------------------------------------
+Changes in release mega-20190315 (since mega-20190311)
+-------------------------------------------------
+
+Release date: Fri Mar 15 04:00:21 CET 2019
+
+Gijs Noorlander (2):
+      [P083_SGP30] New plugin should be in [TESTING]
+      [P049 MHZ19] Fix check for unexpected response
+
+TD-er (12):
+      [C11] Fix HTTP header in 'Generic HTTP Advanced' controller
+      [Webserver] Reduce flash strings in build via String Provider class
+      remove the [TESTING] tag for plugin P079 (#2390)
+      [Travis] Build issue with ESP32 getHostname() vs hostname()
+      [#2390] Added Wemos Motor Shield firmware binary to ESPeasy repo
+      [Docs] Added P079 WemosMotorshield documentation to RTD
+      [C011] Fix newlines in header (#1970)
+      [MH-Z19 CO2] Fix handling unexpected response from sensor (#2394)
+      [SDK2.2.2] Add test build for SDK2.2.2
+      [MH-Z19] Do not reset sensor for wrong values within 3 min after init
+      [debug log] Do not remove debug logs from all builds
+      [Travis] Fix build error on ESP32 with debug error enabled
+
+TungstenE2 (1):
+      Update _P079_Wemos_Motorshield.ino
+
+jimmys01 (9):
+      [IR TX RX] Update IR Library
+      [IR TX RX] Add the new protocols to the TX RX plugins
+      Small Fix
+      [IR] Latest Ir lib commit
+      [IR TX RX] Add comments, Removed debug log prints, some refactoring to compact the code.
+      [IR RX] Make the log output more readable
+      [IR TX RX] Small fixes
+      [IR TX RAW] Uncomment code that was commented by mistake
+      [IR TX] Set Coolix to default to 1 repeat
+
+nichu (3):
+      add Sensor SGP30 in _P83_SGP30.ino and Upload Lib Adafruit_SGP30-1.0.0.13
+      add sgp30 to define list
+      Reduction tools/build_ESPeasy.sh
+
+
+-------------------------------------------------
 Changes in release mega-20190311 (since mega-20190305)
 -------------------------------------------------
 

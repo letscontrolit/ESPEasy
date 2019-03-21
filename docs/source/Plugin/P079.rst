@@ -26,10 +26,10 @@ Supported hardware
 
 |P079_usedby|
 
-.. Commands available
-.. ^^^^^^^^^^^^^^^^^^
+Commands available
+^^^^^^^^^^^^^^^^^^
 
-.. .. include:: P079_commands.repl
+.. include:: P079_commands.repl
 
 .. Events
 .. ~~~~~~
@@ -45,13 +45,11 @@ Change log
   |added|
   Major overhaul for 2.0 release.
 
+  |improved|
+  2019/03/14 Moved from Testing to Normal and added links to firmware update.
+
 .. versionadded:: 1.0
   ...
 
   |added|
   Initial release version.
-
-
-
-
-

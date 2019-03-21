@@ -710,7 +710,8 @@ bool send_via_http(const String& logIdentifier, WiFiClient& client, const String
       if (line.startsWith(F("HTTP/1.1 2")))
       {
         success = true;
-#ifndef BUILD_NO_DEBUG
+        // Leave this debug info in the build, regardless of the
+        // BUILD_NO_DEBUG flags.
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
           String log = F("HTTP : ");
           log += logIdentifier;
@@ -718,7 +719,6 @@ bool send_via_http(const String& logIdentifier, WiFiClient& client, const String
           log += line;
           addLog(LOG_LEVEL_DEBUG, log);
         }
-#endif
       } else if (line.startsWith(F("HTTP/1.1 4"))) {
         if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
           String log = F("HTTP : ");
