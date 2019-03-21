@@ -61,14 +61,14 @@ const uint16_t kCaptureBufferSize = 1024;
 // So, choosing the best kTimeout value for your use particular case is
 // quite nuanced. Good luck and happy hunting.
 // NOTE: Don't exceed kMaxTimeoutMs. Typically 130ms.
-#if DECODE_AC
+//#if DECODE_AC
 // Some A/C units have gaps in their protocols of ~40ms. e.g. Kelvinator
 // A value this large may swallow repeats of some protocols
-const uint8_t P016_TIMEOUT = 50;
-#else   // DECODE_AC
+const uint8_t P016_TIMEOUT = 90;
+//#else   // DECODE_AC
 // Suits most messages, while not swallowing many repeats.
-const uint8_t P016_TIMEOUT = 15;
-#endif  // DECODE_AC
+//const uint8_t P016_TIMEOUT = 15;
+//#endif  // DECODE_AC
 // Alternatives:
 // const uint8_t kTimeout = 90;
 // Suits messages with big gaps like XMP-1 & some aircon units, but can
@@ -179,10 +179,6 @@ boolean Plugin_016(byte function, struct EventStruct *event, String& string)
       {
         if (irReceiver->decode(&results))
         {
-          unsigned long IRcode = results.value;
-          irReceiver->resume();
-          UserVar[event->BaseVarIndex] = (IRcode & 0xFFFF);
-          UserVar[event->BaseVarIndex + 1] = ((IRcode >> 16) & 0xFFFF);
           if (results.overflow)
             addLog(LOG_LEVEL_INFO,  F("IR: WARNING, IR code is too big for buffer."));
           
@@ -190,7 +186,8 @@ boolean Plugin_016(byte function, struct EventStruct *event, String& string)
           if (results.decode_type != UNKNOWN) { 
                 addLog(LOG_LEVEL_INFO, String(F("IRESEND,")) + typeToString(results.decode_type, results.repeat) + ',' + resultToHexidecimal(&results)); //Show the appropriate command to the user, so he can replay the message via P035
           } else {
-               addLog(LOG_LEVEL_INFO, F("IR: Unknown IR Signal, try RAW2 encoding instead"));
+               addLog(LOG_LEVEL_INFO, F("IR: Unknown IR Signal, try RAW2 encoding instead"));        
+               //addLog(LOG_LEVEL_INFO, resultToSourceCode(&results));  // Output the results as RAW source code //not showing up nicely in the web log... Maybe send them to serial?
                //addLog(LOG_LEVEL_INFO,  resultToHumanReadableBasic(&results)); //UNKNOWN results do not produse a HEX that can be replayed, so not usefull.
             }
 
@@ -331,10 +328,10 @@ boolean Plugin_016(byte function, struct EventStruct *event, String& string)
   // If we got a human-readable description of the message, display it.
           if (description != "") addLog(LOG_LEVEL_INFO, description);
 #endif  // Extended Messages
-          // Output RAW timing info of the result.
-          //log += resultToTimingInfo(&results);  //not showing up nicely in the web log... Maybe send them to serial?
-          // Output the results as source code
-          //  log += resultToSourceCode(&results); //not showing up nicely in the web log... Maybe send them to serial?
+          
+          unsigned long IRcode = results.value;
+          UserVar[event->BaseVarIndex] = (IRcode & 0xFFFF);
+          UserVar[event->BaseVarIndex + 1] = ((IRcode >> 16) & 0xFFFF);
           sendData(event);
         }
         success = true;
