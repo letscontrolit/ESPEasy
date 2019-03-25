@@ -6,6 +6,23 @@
   #define STR(x) STR_HELPER(x)
 #endif
 
+#include <cstddef>
+
+// ********************************************************************************
+// Check struct sizes at compile time
+// Usage:
+//   struct foo
+//   {
+//     char bla[16];
+//   };
+//
+//   check_size<foo, 8>();
+// ********************************************************************************
+template <typename ToCheck, std::size_t ExpectedSize, std::size_t RealSize = sizeof(ToCheck)>
+void check_size() {
+  static_assert(ExpectedSize == RealSize, "Size is off!");
+}
+
 // ********************************************************************************
 //   User specific configuration
 // ********************************************************************************
@@ -702,6 +719,8 @@ struct SecurityStruct
 } SecuritySettings;
 
 
+
+
 /*********************************************************************************************\
  * Custom Variables for usage in rules and http.
  * Syntax: %vX%
@@ -992,37 +1011,6 @@ SettingsStruct* SettingsStruct_ptr = new SettingsStruct;
 SettingsStruct& Settings = *SettingsStruct_ptr;
 */
 
-String ReportOffsetErrorInStruct(const String& structname, size_t offset) {
-  String error;
-  error.reserve(48 + structname.length());
-  error = F("Error: Incorrect offset in struct: ");
-  error += structname;
-  error += '(';
-  error += String(offset);
-  error += ')';
-  return error;
-}
-
-/*********************************************************************************************\
- *  Analyze SettingsStruct and report inconsistencies
- *  Not a member function to be able to use the F-macro
-\*********************************************************************************************/
-bool SettingsCheck(String& error) {
-  error = "";
-#ifdef esp8266
-  size_t offset = offsetof(SettingsStruct, ResetFactoryDefaultPreference);
-  if (offset != 1224) {
-    error = ReportOffsetErrorInStruct(F("SettingsStruct"), offset);
-  }
-#endif
-  if (!Settings.networkSettingsEmpty()) {
-    if (Settings.IP[0] == 0 || Settings.Gateway[0] == 0 || Settings.Subnet[0] == 0 || Settings.DNS[0] == 0) {
-      error += F("Error: Either fill all IP settings fields or leave all empty");
-    }
-  }
-
-  return error.length() == 0;
-}
 
 /*********************************************************************************************\
  * ControllerSettingsStruct definition
@@ -1455,12 +1443,12 @@ struct LogStruct {
       }
     }
 
+    String Message[LOG_STRUCT_MESSAGE_LINES];
+    unsigned long timeStamp[LOG_STRUCT_MESSAGE_LINES];
     int write_idx;
     int read_idx;
-    unsigned long timeStamp[LOG_STRUCT_MESSAGE_LINES];
     unsigned long lastReadTimeStamp;
     byte log_level[LOG_STRUCT_MESSAGE_LINES];
-    String Message[LOG_STRUCT_MESSAGE_LINES];
 
 } Logging;
 
