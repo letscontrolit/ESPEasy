@@ -37,7 +37,7 @@
 // 128  Cache (C014) metadata  4 blocks
 // 132  Cache (C014) data  6 blocks per sample => max 10 samples
 
-
+// #define RTC_STRUCT_DEBUG
 
 
 /********************************************************************************************\
@@ -50,7 +50,9 @@ boolean saveToRTC()
   #else
     if (!system_rtc_mem_write(RTC_BASE_STRUCT, (byte*)&RTC, sizeof(RTC)) || !readFromRTC())
     {
+      #ifdef RTC_STRUCT_DEBUG
       addLog(LOG_LEVEL_ERROR, F("RTC  : Error while writing to RTC"));
+      #endif
       return(false);
     }
     else
@@ -126,7 +128,9 @@ boolean readUserVarFromRTC()
     ret &= system_rtc_mem_read(RTC_BASE_USERVAR+(size>>2), (byte*)&sumRTC, 4);
     if (!ret || sumRTC != sumRAM)
     {
+      #ifdef RTC_STRUCT_DEBUG
       addLog(LOG_LEVEL_ERROR, F("RTC  : Checksum error on reading RTC user var"));
+      #endif
       memset(buffer, 0, size);
     }
     return ret;
@@ -142,11 +146,15 @@ struct RTC_cache_handler_struct
   RTC_cache_handler_struct() {
     bool success = loadMetaData() && loadData();
     if (!success) {
+      #ifdef RTC_STRUCT_DEBUG
       addLog(LOG_LEVEL_INFO, F("RTC  : Error reading cache data"));
+      #endif
       memset(&RTC_cache, 0, sizeof(RTC_cache));
       flush();
     } else {
+      #ifdef RTC_STRUCT_DEBUG
       rtc_debug_log(F("Read from RTC cache"), RTC_cache.writePos);
+      #endif
     }
   }
 
@@ -193,7 +201,9 @@ struct RTC_cache_handler_struct
 
   // Write a single sample set to the buffer
   bool write(uint8_t* data, unsigned int size) {
+    #ifdef RTC_STRUCT_DEBUG
     rtc_debug_log(F("write RTC cache data"), size);
+    #endif
     if (getFreeSpace() < size) {
       if (!flush()) {
         return false;
@@ -229,13 +239,16 @@ struct RTC_cache_handler_struct
     if (prepareFileForWrite()) {
       if (RTC_cache.writePos > 0) {
         if (fw.write(&RTC_cache_data[0], RTC_cache.writePos) < 0) {
+          #ifdef RTC_STRUCT_DEBUG
           addLog(LOG_LEVEL_ERROR, F("RTC  : error writing file"));
+          #endif
           return false;
         }
         delay(0);
         fw.flush();
-
+        #ifdef RTC_STRUCT_DEBUG
         addLog(LOG_LEVEL_INFO, F("RTC  : flush RTC cache"));
+        #endif
         initRTCcache_data();
         clearRTCcacheData();
         saveRTCcache();
@@ -293,7 +306,9 @@ private:
         return(false);
 
       if (RTC_cache.checksumData != getDataChecksum()) {
+        #ifdef RTC_STRUCT_DEBUG
         addLog(LOG_LEVEL_ERROR, F("RTC  : Checksum error reading RTC cache data"));
+        #endif
         return(false);
       }
       return (RTC_cache.checksumData == getDataChecksum());
@@ -313,7 +328,9 @@ private:
       RTC_cache.checksumMetadata = calc_CRC32((byte*)&RTC_cache, sizeof(RTC_cache) - sizeof(uint32_t));
       if (!system_rtc_mem_write(RTC_BASE_CACHE, (byte*)&RTC_cache, sizeof(RTC_cache)) || !loadMetaData())
       {
+        #ifdef RTC_STRUCT_DEBUG
         addLog(LOG_LEVEL_ERROR, F("RTC  : Error while writing cache metadata to RTC"));
+        #endif
         return(false);
       }
       delay(0);
@@ -321,10 +338,14 @@ private:
         const size_t address = RTC_BASE_CACHE + ((sizeof(RTC_cache) + startOffset) / 4);
         if (!system_rtc_mem_write(address, (byte*)&RTC_cache_data[startOffset], nrBytes))
         {
+          #ifdef RTC_STRUCT_DEBUG
           addLog(LOG_LEVEL_ERROR, F("RTC  : Error while writing cache data to RTC"));
+          #endif
           return(false);
         }
+        #ifdef RTC_STRUCT_DEBUG
         rtc_debug_log(F("Write cache data to RTC"), nrBytes);
+        #endif
       }
       return(true);
     #endif
@@ -388,15 +409,19 @@ private:
         String fname = createCacheFilename(RTC_cache.writeFileNr);
         fw = SPIFFS.open(fname.c_str(), "a+");
         if (!fw) {
-          addLog(LOG_LEVEL_ERROR, F("RTC  : error opening file"));
+          #ifdef RTC_STRUCT_DEBUG
+          addLog(LOG_LEVEL_ERROR, String(F("RTC  : error opening file")));
+          #endif
           return false;
         }
+        #ifdef RTC_STRUCT_DEBUG
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           String log = F("Write to ");
           log += fname;
           log += F(" size");
           rtc_debug_log(log, fw.size());
         }
+        #endif
       }
       delay(0);
       if (fw && fw.size() < CACHE_FILE_MAX_SIZE) {
@@ -406,6 +431,7 @@ private:
     return false;
   }
 
+#ifdef RTC_STRUCT_DEBUG
   void rtc_debug_log(const String& description, size_t nrBytes) {
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log;
@@ -418,6 +444,7 @@ private:
       addLog(LOG_LEVEL_INFO, log);
     }
   }
+#endif
 
   RTC_cache_struct RTC_cache;
   std::vector<uint8_t> RTC_cache_data;
