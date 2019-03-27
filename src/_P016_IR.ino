@@ -3,6 +3,9 @@
 //#################################### Plugin 016: Input IR #############################################
 //#######################################################################################################
 
+// Uncomment the following define to enable the extended decoding of AC messages (20K bytes in flash)
+// Example of those messages: "Mesg Desc.: Power: On, Fan: 5 (AUTO), Mode: 3 (HEAT), Temp: 22C, Zone Follow: Off, Sensor Temp: Ignored"
+//#define P016_Extended_Decoding
 
 #ifdef ESP8266  // Needed for precompile issues.
 #include <IRremoteESP8266.h>
@@ -10,7 +13,8 @@
 
 #include <IRrecv.h>
 #include <IRutils.h>
-// The following are only needed for extended decoding of A/C Messages
+
+#ifdef P016_Extended_Decoding // The following are only needed for extended decoding of A/C Messages
 #include <ir_Coolix.h>
 #include <ir_Daikin.h>
 #include <ir_Fujitsu.h>
@@ -22,8 +26,12 @@
 #include <ir_Mitsubishi.h>
 #include <ir_Panasonic.h>
 #include <ir_Samsung.h>
+#include <ir_Tcl.h>
+#include <ir_Teco.h>
 #include <ir_Toshiba.h>
+#include <ir_Vestel.h>
 #include <ir_Whirlpool.h>
+#endif
 
 #define PLUGIN_016
 #define PLUGIN_ID_016         16
@@ -138,7 +146,7 @@ boolean Plugin_016(byte function, struct EventStruct *event, String& string)
         int irPin = CONFIG_PIN1;
         if (irReceiver == 0 && irPin != -1)
         {
-          serialPrintln(F("IR Init"));
+          serialPrintln(F("IR RX Init"));
           irReceiver = new IRrecv(irPin, kCaptureBufferSize, P016_TIMEOUT, true);
           irReceiver->setUnknownThreshold(kMinUnknownSize); // Ignore messages with less than minimum on or off pulses.
           irReceiver->enableIRIn(); // Start the receiver
@@ -175,17 +183,23 @@ boolean Plugin_016(byte function, struct EventStruct *event, String& string)
           irReceiver->resume();
           UserVar[event->BaseVarIndex] = (IRcode & 0xFFFF);
           UserVar[event->BaseVarIndex + 1] = ((IRcode >> 16) & 0xFFFF);
-          String description = "IR: ";
           if (results.overflow)
-            description += F("WARNING: IR code is too big for buffer.");
+            addLog(LOG_LEVEL_INFO,  F("IR: WARNING, IR code is too big for buffer."));
+          
           // Display the basic output of what we found.
-          description += resultToHumanReadableBasic(&results);
-          addLog(LOG_LEVEL_INFO, description);
-          displayRawToReadableB32Hex();
+          if (results.decode_type != UNKNOWN) { 
+                addLog(LOG_LEVEL_INFO, String(F("IRESEND,")) + typeToString(results.decode_type, results.repeat) + ',' + resultToHexidecimal(&results)); //Show the appropriate command to the user, so he can replay the message via P035
+          } else {
+               addLog(LOG_LEVEL_INFO, F("IR: Unknown IR Signal, try RAW2 encoding instead"));
+               //addLog(LOG_LEVEL_INFO,  resultToHumanReadableBasic(&results)); //UNKNOWN results do not produse a HEX that can be replayed, so not usefull.
+            }
 
+          displayRawToReadableB32Hex(); // Calculate and display in the logs the RAW2 encoding
+
+#ifdef P016_Extended_Decoding
           // Display any extra A/C info if we have it.
           // Display the human readable state of an A/C message if we can.
-          description = "";
+          String description = "";
 #if DECODE_DAIKIN
   if (results.decode_type == DAIKIN) {
     IRDaikinESP ac(0);
@@ -193,6 +207,13 @@ boolean Plugin_016(byte function, struct EventStruct *event, String& string)
     description = ac.toString();
   }
 #endif  // DECODE_DAIKIN
+#if DECODE_DAIKIN2
+  if (results.decode_type == DAIKIN2) {
+    IRDaikin2 ac(0);
+    ac.setRaw(results.state);
+    description = ac.toString();
+  }
+#endif // DECODE_DAIKIN2
 #if DECODE_FUJITSU_AC
   if (results.decode_type == FUJITSU_AC) {
     IRFujitsuAC ac(0);
@@ -269,7 +290,8 @@ boolean Plugin_016(byte function, struct EventStruct *event, String& string)
     IRPanasonicAc ac(0);
     ac.setRaw(results.state);
     description = ac.toString();
-  }
+  } 
+#endif  // DECODE_PANASONIC_AC
 #if DECODE_HITACHI_AC
   if (results.decode_type == HITACHI_AC) {
     IRHitachiAc ac(0);
@@ -284,10 +306,31 @@ boolean Plugin_016(byte function, struct EventStruct *event, String& string)
     description = ac.toString();
   }
 #endif  // DECODE_WHIRLPOOL_AC
-#endif  // DECODE_PANASONIC_AC
+#if DECODE_VESTEL_AC
+  if (results.decode_type == VESTEL_AC) {
+    IRVestelAc ac(0);
+    ac.setRaw(results.value);  // Like Coolix, use value instead of state.
+    description = ac.toString();
+  }
+#endif  // DECODE_VESTEL_AC
+#if DECODE_TECO
+  if (results.decode_type == TECO) {
+    IRTecoAc ac(0);
+    ac.setRaw(results.value);  // Like Coolix, use value instead of state.
+    description = ac.toString();
+  }
+#endif  // DECODE_TECO
+#if DECODE_TCL112AC
+  if (results.decode_type == TCL112AC) {
+    IRTcl112Ac ac(0);
+    ac.setRaw(results.state);
+    description = ac.toString();
+  }
+#endif // DECODE_TCL112AC
+
   // If we got a human-readable description of the message, display it.
           if (description != "") addLog(LOG_LEVEL_INFO, description);
-
+#endif  // Extended Messages
           // Output RAW timing info of the result.
           //log += resultToTimingInfo(&results);  //not showing up nicely in the web log... Maybe send them to serial?
           // Output the results as source code
@@ -364,7 +407,7 @@ void displayRawToReadableB32Hex() {
             }
         }
         if (bstDiv == 0xFFFFU) {
-            addLog(LOG_LEVEL_INFO, F("IR2:No proper divisor found. Try again..."));
+            addLog(LOG_LEVEL_INFO, F("IR2: No proper divisor found. Try again..."));
             return;
         }
         div[p] = bstDiv;
@@ -413,7 +456,7 @@ void displayRawToReadableB32Hex() {
         iOut = storeB32Hex(out, iOut, tmOut[d++]);
 
     out[iOut] = 0;
-    line = "IRSEND,RAW2," + String(out) + ",38," + uint64ToString(div[0], 10) +','+ uint64ToString(div[1], 10);
+    line = String(F("IRSEND,RAW2,")) + String(out) + ",38," + uint64ToString(div[0], 10) +','+ uint64ToString(div[1], 10);
     addLog(LOG_LEVEL_INFO, line);
 }
 

@@ -35,6 +35,7 @@
 #define DEFAULT_IPRANGE_LOW  "0.0.0.0"          // Allowed IP range to access webserver
 #define DEFAULT_IPRANGE_HIGH "255.255.255.255"  // Allowed IP range to access webserver
 #define DEFAULT_IP_BLOCK_LEVEL 1                // 0: ALL_ALLOWED  1: LOCAL_SUBNET_ALLOWED  2: ONLY_IP_RANGE_ALLOWED
+#define DEFAULT_ADMIN_USERNAME  "admin"
 
 #define DEFAULT_WIFI_CONNECTION_TIMEOUT  10000  // minimum timeout in ms for WiFi to be connected.
 #define DEFAULT_WIFI_FORCE_BG_MODE       false  // when set, only allow to connect in 802.11B or G mode (not N)

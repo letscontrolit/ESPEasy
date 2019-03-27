@@ -359,7 +359,7 @@ void SSDP_schema(WiFiClient &client) {
   ssdp_schema += F("</serialNumber>"
                    "<modelName>ESP Easy</modelName>"
                    "<modelNumber>");
-  ssdp_schema += BUILD_GIT;
+  ssdp_schema += F(BUILD_GIT);
   ssdp_schema += F("</modelNumber>"
                    "<modelURL>http://www.letscontrolit.com</modelURL>"
                    "<manufacturer>http://www.letscontrolit.com</manufacturer>"
@@ -778,6 +778,8 @@ bool beginWiFiUDP_randomPort(WiFiUDP& udp) {
 }
 
 void sendGratuitousARP() {
+#ifndef ESP32
+  // See https://github.com/letscontrolit/ESPEasy/issues/2374
   START_TIMER;
   netif *n = netif_list;
   while (n) {
@@ -785,4 +787,5 @@ void sendGratuitousARP() {
     n = n->next;
   }
   STOP_TIMER(GRAT_ARP_STATS);
+#endif
 }

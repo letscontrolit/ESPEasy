@@ -106,7 +106,8 @@ void processGotIP() {
     addLog(LOG_LEVEL_INFO, log);
   }
 
-  // fix octet?
+  // Might not work in core 2.5.0
+  // See https://github.com/esp8266/Arduino/issues/5839
   if (Settings.IP_Octet != 0 && Settings.IP_Octet != 255)
   {
     ip[3] = Settings.IP_Octet;
@@ -869,9 +870,9 @@ String ESPeasyWifiStatusToString() {
 }
 
 void logConnectionStatus() {
-  const uint8_t arduino_corelib_wifistatus = WiFi.status();
   String log;
   #ifndef ESP32
+  const uint8_t arduino_corelib_wifistatus = WiFi.status();
   const uint8_t sdk_wifistatus = wifi_station_get_connect_status();
   if ((arduino_corelib_wifistatus == WL_CONNECTED) != (sdk_wifistatus == STATION_GOT_IP)) {
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
@@ -886,7 +887,7 @@ void logConnectionStatus() {
 #ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
     String log = F("WIFI  : Arduino wifi status: ");
-    log += ArduinoWifiStatusToString(arduino_corelib_wifistatus);
+    log += ArduinoWifiStatusToString(WiFi.status());
     log += F(" ESPeasy internal wifi status: ");
     log += ESPeasyWifiStatusToString();
     addLog(LOG_LEVEL_DEBUG_MORE, log);

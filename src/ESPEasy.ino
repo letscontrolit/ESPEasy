@@ -168,10 +168,13 @@ void setup()
   emergencyReset();
 
   String log = F("\n\n\rINIT : Booting version: ");
-  log += BUILD_GIT;
+  log += F(BUILD_GIT);
   log += " (";
   log += getSystemLibraryString();
   log += ')';
+  addLog(LOG_LEVEL_INFO, log);
+  log = F("INIT : Free RAM:");
+  log += FreeMem();
   addLog(LOG_LEVEL_INFO, log);
 
 
@@ -498,6 +501,7 @@ void loop()
   if(MainLoopCall_ptr)
       MainLoopCall_ptr();
   */
+  dummyString = String(); // Fixme TD-er  Make sure this global variable doesn't keep memory allocated.
 
   updateLoopStats();
 

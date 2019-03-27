@@ -46,7 +46,9 @@ String appendLineToFile(const String& fname, const String& line) {
   SPIFFS_CHECK(f, fname.c_str());
   const size_t lineLength = line.length();
   for (size_t i = 0; i < lineLength; ++i) {
-    SPIFFS_CHECK(f.write(line[i]), fname.c_str());
+    // See https://github.com/esp8266/Arduino/commit/b1da9eda467cc935307d553692fdde2e670db258#r32622483
+    uint8_t value = static_cast<uint8_t>(line[i]);
+    SPIFFS_CHECK(f.write(&value, 1), fname.c_str());
   }
   f.close();
   return "";
@@ -71,7 +73,9 @@ String BuildFixes()
     {
       for (int x = 0; x < 4096; x++)
       {
-        SPIFFS_CHECK(f.write(0), fname.c_str());
+        // See https://github.com/esp8266/Arduino/commit/b1da9eda467cc935307d553692fdde2e670db258#r32622483
+        uint8_t zero_value = 0;
+        SPIFFS_CHECK(f.write(&zero_value, 1), fname.c_str());
       }
       f.close();
     }
@@ -572,7 +576,9 @@ String InitFile(const char* fname, int datasize)
 
     for (int x = 0; x < datasize ; x++)
     {
-      SPIFFS_CHECK(f.write(0), fname);
+      // See https://github.com/esp8266/Arduino/commit/b1da9eda467cc935307d553692fdde2e670db258#r32622483
+      uint8_t zero_value = 0;
+      SPIFFS_CHECK(f.write(&zero_value, 1), fname);
     }
     f.close();
   }
@@ -619,7 +625,9 @@ String SaveToFile(char* fname, int index, byte* memAddress, int datasize)
     byte *pointerToByteToSave = memAddress;
     for (int x = 0; x < datasize ; x++)
     {
-      SPIFFS_CHECK(f.write(*pointerToByteToSave), fname);
+      // See https://github.com/esp8266/Arduino/commit/b1da9eda467cc935307d553692fdde2e670db258#r32622483
+      uint8_t byteToSave = *pointerToByteToSave;
+      SPIFFS_CHECK(f.write(&byteToSave, 1), fname);
       pointerToByteToSave++;
       if (x % 256 == 0) {
         // one page written, do some background tasks
@@ -676,7 +684,9 @@ String ClearInFile(char* fname, int index, int datasize)
     SPIFFS_CHECK(f.seek(index, fs::SeekSet), fname);
     for (int x = 0; x < datasize ; x++)
     {
-      SPIFFS_CHECK(f.write(0), fname);
+      // See https://github.com/esp8266/Arduino/commit/b1da9eda467cc935307d553692fdde2e670db258#r32622483
+      uint8_t zero_value = 0;
+      SPIFFS_CHECK(f.write(&zero_value, 1), fname);
     }
     f.close();
   } else {

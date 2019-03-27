@@ -9,7 +9,7 @@
 #include <IRsend.h>
 #include <IRutils.h>
 
-IRsend *Plugin_035_irSender;
+IRsend *Plugin_035_irSender=nullptr;
 
 
 #define PLUGIN_035
@@ -104,31 +104,17 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
             unsigned int IrPLen=0;
             unsigned int IrBLen=0;
 
-            if (GetArgv(string.c_str(), TmpStr1, 3)) IrRaw  = TmpStr1;
-            if (GetArgv(string.c_str(), TmpStr1, 4)) IrHz   = str2int(TmpStr1.c_str());
-            if (GetArgv(string.c_str(), TmpStr1, 5)) IrPLen = str2int(TmpStr1.c_str());
-            if (GetArgv(string.c_str(), TmpStr1, 6)) IrBLen = str2int(TmpStr1.c_str());
+            if (GetArgv(string.c_str(), TmpStr1, 3)) IrRaw  = TmpStr1;                    //Get the "Base32" encoded/compressed Ir signal
+            if (GetArgv(string.c_str(), TmpStr1, 4)) IrHz   = str2int(TmpStr1.c_str());   //Get the base freguency of the signal (allways 38)
+            if (GetArgv(string.c_str(), TmpStr1, 5)) IrPLen = str2int(TmpStr1.c_str());   //Get the Pulse Length in ms
+            if (GetArgv(string.c_str(), TmpStr1, 6)) IrBLen = str2int(TmpStr1.c_str());   //Get the Blank Pulse Length in ms
 
-            printWebString += F("<a href='https://en.wikipedia.org/wiki/Base32#base32hex'>Base32Hex</a> RAW Code: ");
-            printWebString += IrRaw;
-            printWebString += F("<BR>");
+            printWebString += IrType_orig + String(F(": Base32Hex RAW Code: ")) + IrRaw + String(F("<BR>kHz: "))+ IrHz + String(F("<BR>Pulse Len: ")) + IrPLen + String(F("<BR>Blank Len: ")) + IrBLen + String(F("<BR>"));
 
-            printWebString += F("kHz: ");
-            printWebString += IrHz;
-            printWebString += F("<BR>");
-
-            printWebString += F("Pulse Len: ");
-            printWebString += IrPLen;
-            printWebString += F("<BR>");
-
-            printWebString += F("Blank Len: ");
-            printWebString += IrBLen;
-            printWebString += F("<BR>");
-
-            uint16_t idx = 0;  //If this goes above the buf.size then the esp will throw a 28 EXCCAUSE
+            uint16_t idx = 0;                   //If this goes above the buf.size then the esp will throw a 28 EXCCAUSE
             uint16_t *buf;
             buf =  new uint16_t[P35_Ntimings]; //The Raw Timings that we can buffer.
-            if (buf == nullptr) { // error assigning memory.
+            if (buf == nullptr) {              // error assigning memory.
             success = false;
             return success;
             }
@@ -137,7 +123,7 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
                 unsigned int c0 = 0; //count consecutives 0s
                 unsigned int c1 = 0; //count consecutives 1s
 
-                printWebString += F("Interpreted RAW Code: ");
+                //printWebString += F("Interpreted RAW Code: ");  //print the number of 1s and 0s just for debugging/info purposes
                 //Loop throught every char in RAW string
                 for(unsigned int i = 0; i < IrRaw.length(); i++)
                 {
@@ -159,8 +145,8 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
                         //by defined blank length ms)
                         buf[idx++] = c0 * IrBLen;
                         //print the number of 0s just for debuging/info purpouses
-                        for (uint t = 0; t < c0; t++)
-                          printWebString += '0';
+                        //for (uint t = 0; t < c0; t++)
+                          //printWebString += '0';
                       }
                       //So, as we receive a "1", and processed the counted 0s
                       //sending them as a ms timing into the buffer, we clear
@@ -180,8 +166,8 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
                           //multiplied by defined pulse length ms)
                           buf[idx++] = c1 * IrPLen;
                           //print the number of 1s just for debugging/info purposes
-                          for (uint t = 0; t < c1; t++)
-                            printWebString += '1';
+//                          for (uint t = 0; t < c1; t++)
+//                            printWebString += '1';
                         }
                         //So, as we receive a "0", and processed the counted 1s
                         //sending them as a ms timing into the buffer, we clear
@@ -201,17 +187,17 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
                 //If we have pendings 0s
                 if (c0 > 0) {
                   buf[idx++] = c0 * IrBLen;
-                  for (uint t = 0; t < c0; t++)
-                    printWebString += '0';
+                  //for (uint t = 0; t < c0; t++)
+                    //printWebString += '0';
                 }
                 //If we have pendings 1s
                 if (c1 > 0) {
                   buf[idx++] = c1 * IrPLen;
-                  for (uint t = 0; t < c1; t++)
-                    printWebString += '1';
+                  //for (uint t = 0; t < c1; t++)
+                    //printWebString += '1';
                 }
 
-                printWebString += F("<BR>");
+                //printWebString += F("<BR>");
 
             } else {        // RAW2
                 for (unsigned int i = 0, total = IrRaw.length(), gotRep = 0, rep = 0; i < total;) {
@@ -246,7 +232,7 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
                        }
                    }
                 }
-            }
+            } //End RAW2
 
             Plugin_035_irSender->sendRaw(buf, idx, IrHz);
             delete[] buf;
@@ -272,50 +258,52 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
             if (GetArgv(string.c_str(), ircodestr, 3)) {
               IrCode = strtoull(ircodestr.c_str(), NULL, 16);
             }
+            // This code left over from the legasy Ir library. Ir bits are pretty much a set value and repeats as far as I can tell are handled from the library.
             //if (GetArgv(string.c_str(), TmpStr1, 4)) IrBits = str2int(TmpStr1); //not needed any more... leave it for reverce compatibility or remove it and break existing instalations?
-            //if (GetArgv(string.c_str(), TmpStr1, 5)) IrRepeat = str2int(TmpStr1); // Ir repeat is usfull in some circonstances, have to see how to add it and have it be revese compatible as well.
+            //if (GetArgv(string.c_str(), TmpStr1, 5)) IrRepeat = str2int(TmpStr1); // Ir repeat is usfull in some circonstances, have to see how to add it and have it be reverse compatible as well.
             //if (GetArgv(string.c_str(), TmpStr1, 6)) IrSecondCode = strtoul(TmpStr1, NULL, 16);
 
             //Comented out need char[] for input Needs fixing
-            if (IrType.equals(F("nec")))                Plugin_035_irSender->sendNEC(IrCode);
-            if (IrType.equals(F("sony")))               Plugin_035_irSender->sendSony(IrCode);
-            if (IrType.equals(F("sherwood")))           Plugin_035_irSender->sendSherwood(IrCode);
-            if (IrType.equals(F("samsung")))            Plugin_035_irSender->sendSAMSUNG(IrCode);
-            if (IrType.equals(F("lg")))                 Plugin_035_irSender->sendLG(IrCode);
-            if (IrType.equals(F("lg2")))                Plugin_035_irSender->sendLG2(IrCode);
-            if (IrType.equals(F("sharpraw")))           Plugin_035_irSender->sendSharpRaw(IrBits);
-            if (IrType.equals(F("jvc")))                Plugin_035_irSender->sendJVC(IrCode);
-            if (IrType.equals(F("denon")))              Plugin_035_irSender->sendDenon(IrCode);
-            if (IrType.equals(F("sanyolc7461")))        Plugin_035_irSender->sendSanyoLC7461(IrCode);
-            if (IrType.equals(F("dish")))               Plugin_035_irSender->sendDISH(IrCode);
-            if (IrType.equals(F("panasonic64")))        Plugin_035_irSender->sendPanasonic64(IrCode);
-            if (IrType.equals(F("panasonic")))          Plugin_035_irSender->sendPanasonic64(IrCode);
-            if (IrType.equals(F("rc5")))                Plugin_035_irSender->sendRC5(IrCode);
-            if (IrType.equals(F("rc5x")))               Plugin_035_irSender->sendRC5(IrCode);
-            if (IrType.equals(F("rc6")))                Plugin_035_irSender->sendRC6(IrCode);
-            if (IrType.equals(F("rcmm")))               Plugin_035_irSender->sendRCMM(IrCode);
+            if (IrType.equals(F("aiwa_rc_t501")))       Plugin_035_irSender->sendAiwaRCT501(IrCode);
+            if (IrType.equals(F("carrier_ac")))         Plugin_035_irSender->sendCarrierAC(IrCode);			
             if (IrType.equals(F("coolix")))             Plugin_035_irSender->sendCOOLIX(IrCode);
-            if (IrType.equals(F("whynter")))            Plugin_035_irSender->sendWhynter(IrCode);
+            if (IrType.equals(F("denon")))              Plugin_035_irSender->sendDenon(IrCode);
+            if (IrType.equals(F("dish")))               Plugin_035_irSender->sendDISH(IrCode);
+            if (IrType.equals(F("gicable")))            Plugin_035_irSender->sendGICable(IrCode);		
+            if (IrType.equals(F("jvc")))                Plugin_035_irSender->sendJVC(IrCode);			
+            if (IrType.equals(F("lasertag")))           Plugin_035_irSender->sendLasertag(IrCode);			
+            if (IrType.equals(F("lg")))                 Plugin_035_irSender->sendLG(IrCode);
+            if (IrType.equals(F("lg2")))                Plugin_035_irSender->sendLG2(IrCode);			
+            if (IrType.equals(F("lutron")))             Plugin_035_irSender->sendLutron(IrCode);			
+            if (IrType.equals(F("magiquest")))          Plugin_035_irSender->sendMagiQuest(IrCode);
+            if (IrType.equals(F("midea")))              Plugin_035_irSender->sendMidea(IrCode);
             if (IrType.equals(F("mitsubishi")))         Plugin_035_irSender->sendMitsubishi(IrCode);
             if (IrType.equals(F("mitsubishi2")))        Plugin_035_irSender->sendMitsubishi2(IrCode);
-            if (IrType.equals(F("gc")))                 parseStringAndSendGC(ircodestr);              //Needs testing
-            if (IrType.equals(F("aiwa_rc_t501")))       Plugin_035_irSender->sendAiwaRCT501(IrCode);
-            if (IrType.equals(F("pronto")))             parseStringAndSendPronto(ircodestr, 0);       //Needs testing
             if (IrType.equals(F("nikai")))              Plugin_035_irSender->sendNikai(IrCode);
-            if (IrType.equals(F("midea")))              Plugin_035_irSender->sendMidea(IrCode);
-            if (IrType.equals(F("magiquest")))          Plugin_035_irSender->sendMagiQuest(IrCode);
-            if (IrType.equals(F("lasertag")))           Plugin_035_irSender->sendLasertag(IrCode);
-            if (IrType.equals(F("carrier_ac")))         Plugin_035_irSender->sendCarrierAC(IrCode);
-            if (IrType.equals(F("gicable")))            Plugin_035_irSender->sendGICable(IrCode);
+            if (IrType.equals(F("nec")))                Plugin_035_irSender->sendNEC(IrCode);			
+            if (IrType.equals(F("panasonic")))          Plugin_035_irSender->sendPanasonic64(IrCode);
             if (IrType.equals(F("pioneer")))            Plugin_035_irSender->sendPioneer(IrCode);
-            if (IrType.equals(F("lutron")))             Plugin_035_irSender->sendLutron(IrCode);
-
+            if (IrType.equals(F("rc5")))                Plugin_035_irSender->sendRC5(IrCode);
+            if (IrType.equals(F("rc6")))                Plugin_035_irSender->sendRC6(IrCode);			
+            if (IrType.equals(F("rcmm")))               Plugin_035_irSender->sendRCMM(IrCode);				
+            if (IrType.equals(F("samsung")))            Plugin_035_irSender->sendSAMSUNG(IrCode);
+			      if (IrType.equals(F("samsung36")))          Plugin_035_irSender->sendSamsung36(IrCode);			
+            if (IrType.equals(F("sanyo_lc7461")))       Plugin_035_irSender->sendSanyoLC7461(IrCode);		
+			      if (IrType.equals(F("sharp")))              Plugin_035_irSender->sendSharpRaw(IrBits);
+            if (IrType.equals(F("sherwood")))           Plugin_035_irSender->sendSherwood(IrCode);						
+            if (IrType.equals(F("sony")))               Plugin_035_irSender->sendSony(IrCode);						
+            if (IrType.equals(F("teco")))               Plugin_035_irSender->sendTeco(IrCode);									
+			      if (IrType.equals(F("vestel_ac")))          Plugin_035_irSender->sendVestelAc(IrCode);
+            if (IrType.equals(F("whynter")))            Plugin_035_irSender->sendWhynter(IrCode);		
+			
+            if (IrType.equals(F("gc")))                 parseStringAndSendGC(ircodestr);              //Needs testing
+            if (IrType.equals(F("pronto")))             parseStringAndSendPronto(ircodestr, 0);       //Needs testing
             if (IrType.equals(F("mitsubishi_ac")))      parseStringAndSendAirCon(MITSUBISHI_AC, ircodestr);
             if (IrType.equals(F("fujitsu_ac")))         parseStringAndSendAirCon(FUJITSU_AC, ircodestr);
             if (IrType.equals(F("kelvinator")))         parseStringAndSendAirCon(KELVINATOR, ircodestr);
             if (IrType.equals(F("daikin")))             parseStringAndSendAirCon(DAIKIN, ircodestr);
             if (IrType.equals(F("daikin2")))            parseStringAndSendAirCon(DAIKIN2, ircodestr);
-            if (IrType.equals(F("gree")))               parseStringAndSendAirCon(GREE, ircodestr);
+            if (IrType.equals(F("gree")))               parseStringAndSendAirCon(GREE, ircodestr);	
             if (IrType.equals(F("argo")))               parseStringAndSendAirCon(ARGO, ircodestr);
             if (IrType.equals(F("trotec")))             parseStringAndSendAirCon(TROTEC, ircodestr);
             if (IrType.equals(F("toshiba_ac")))         parseStringAndSendAirCon(TOSHIBA_AC, ircodestr);
@@ -329,15 +317,13 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
             if (IrType.equals(F("samsung_ac")))         parseStringAndSendAirCon(SAMSUNG_AC, ircodestr);
             if (IrType.equals(F("whirlpool_ac")))       parseStringAndSendAirCon(WHIRLPOOL_AC, ircodestr);
             if (IrType.equals(F("mwm")))                parseStringAndSendAirCon(MWM, ircodestr);
-           // NEC (non-strict)?
+            if (IrType.equals(F("tcl112ac")))           parseStringAndSendAirCon(TCL112AC, ircodestr);
           }
 
-          addLog(LOG_LEVEL_INFO, (String("IRTX :IR Code Sent: ") + IrType).c_str());
+          addLog(LOG_LEVEL_INFO, String(F("IRTX: IR Code Sent: ")) + IrType_orig);
           if (printToWeb)
           {
-            printWebString += F("IR Code Sent ");
-            printWebString += IrType_orig;
-            printWebString += F("<BR>");
+            printWebString += String(F("IRTX: IR Code Sent: "))+ IrType_orig + String(F("<BR>"));
           }
 
           #ifdef PLUGIN_016
@@ -357,6 +343,7 @@ boolean addErrorTrue() {
 
 // A lot of the following code has been taken directly (with permission) from the IRMQTTServer.ino example code
 // of the IRremoteESP8266 library. (https://github.com/markszabo/IRremoteESP8266)
+
 // Parse an Air Conditioner A/C Hex String/code and send it.
 // Args:
 //   irType: Nr. of the protocol we need to send.
@@ -466,6 +453,9 @@ bool  parseStringAndSendAirCon(const uint16_t irType, const String& str) {
       stateSize = std::max(stateSize, (uint16_t) 3);
       // Cap the maximum size.
       stateSize = std::min(stateSize, kStateSizeMax);
+      break;
+	 case TCL112AC:
+      stateSize = kTcl112AcStateLength;
       break;
     default:  // Not a protocol we expected. Abort.
    //   debug("Unexpected AirCon protocol detected. Ignoring.");
@@ -595,6 +585,11 @@ bool  parseStringAndSendAirCon(const uint16_t irType, const String& str) {
 #if SEND_MWM
     case MWM:
       Plugin_035_irSender->sendMWM(reinterpret_cast<uint8_t *>(state), stateSize);
+      break;
+#endif
+#if SEND_TCL112AC
+    case TCL112AC:
+      Plugin_035_irSender->sendTcl112Ac(reinterpret_cast<uint8_t *>(state));
       break;
 #endif
     default:

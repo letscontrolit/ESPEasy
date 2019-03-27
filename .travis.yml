@@ -18,7 +18,7 @@ addons:
   apt:
     packages:
     - cppcheck
-
+    - binutils
 
 
 install:

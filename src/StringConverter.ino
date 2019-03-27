@@ -154,6 +154,20 @@ String toString(bool value) {
 }
 
 /*********************************************************************************************\
+   Typical string replace functions.
+  \*********************************************************************************************/
+void removeExtraNewLine(String& line) {
+  while (line.endsWith("\r\n\r\n")) {
+    line.remove(line.length()-2);
+  }
+}
+
+void addNewLine(String& line) {
+  line += "\r\n";
+}
+
+
+/*********************************************************************************************\
    Format a value to the set number of decimals
   \*********************************************************************************************/
 String doFormatUserVar(byte TaskIndex, byte rel_index, bool mustCheck, bool& isvalid) {
@@ -304,6 +318,15 @@ bool safe_strncpy(char* dest, const char* source, size_t max_size) {
   }
   strncpy(dest, source, str_length);
   dest[max_size - 1] = 0;
+  return result;
+}
+
+// Convert a string to lower case and replace spaces with underscores.
+String to_internal_string(const String& input) {
+  String result = input;
+  result.trim();
+  result.toLowerCase();
+  result.replace(' ', '_');
   return result;
 }
 
