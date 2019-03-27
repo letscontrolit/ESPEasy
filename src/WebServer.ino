@@ -499,6 +499,8 @@ void WebServerInit()
   WebServer.on(F("/devices"), handle_devices);
   WebServer.on(F("/download"), handle_download);
   WebServer.on(F("/dumpcache"), handle_dumpcache);
+  WebServer.on(F("/cache_json"), handle_cache_json);
+  WebServer.on(F("/cache_csv"), handle_cache_csv);
   WebServer.on(F("/factoryreset"), handle_factoryreset);
   WebServer.on(F("/favicon.ico"), handle_favicon);
   WebServer.on(F("/filelist"), handle_filelist);
@@ -4450,10 +4452,7 @@ void handle_control() {
    Streaming versions directly to TXBuffer
   \*********************************************************************************************/
 
-void stream_to_json_object_value(const String& object, const String& value) {
-  TXBuffer += '\"';
-  TXBuffer += object;
-  TXBuffer += "\":";
+void stream_to_json_value(const String& value) {
   if (value.length() == 0 || !isFloat(value)) {
     TXBuffer += '\"';
     TXBuffer += value;
@@ -4461,6 +4460,13 @@ void stream_to_json_object_value(const String& object, const String& value) {
   } else {
     TXBuffer += value;
   }
+}
+
+void stream_to_json_object_value(const String& object, const String& value) {
+  TXBuffer += '\"';
+  TXBuffer += object;
+  TXBuffer += "\":";
+  stream_to_json_value(value);
 }
 
 String jsonBool(bool value) {
@@ -5235,6 +5241,55 @@ void handle_dumpcache() {
 
   #endif
 }
+
+void handle_cache_json() {
+  if (!isLoggedIn()) return;
+
+  #ifdef USES_C014
+  TXBuffer.startJsonStream();
+  TXBuffer += F("{\"columns\": [");
+
+//     TXBuffer += F("UNIX timestamp;contr. idx;sensortype;taskindex;value count");
+  stream_to_json_value(F("UNIX timestamp"));
+  TXBuffer += ',';
+  stream_to_json_value(F("task index"));
+  for (int i = 0; i < TASKS_MAX; ++i) {
+    LoadTaskSettings(i);
+    for (int j = 0; j < VARS_PER_TASK; ++j) {
+      String label = ExtraTaskSettings.TaskDeviceName;
+      label += '#';
+      label += ExtraTaskSettings.TaskDeviceValueNames[j];
+      TXBuffer += ',';
+      stream_to_json_value(label);
+    }
+  }
+  TXBuffer += F("],\n");
+  c014_startCSVdump();
+  TXBuffer += F("\"files\": [");
+  bool islast = false;
+  int filenr = 0;
+  while (!islast) {
+    String currentFile = c014_getCacheFileName(islast);
+    if (currentFile.length() > 0) {
+      if (filenr != 0) {
+        TXBuffer += ',';
+      }
+      stream_to_json_value(currentFile);
+      ++filenr;
+    }
+  }
+  TXBuffer += F("],\n");
+  stream_last_json_object_value(F("nrfiles"), String(filenr));
+  TXBuffer += F("\n");
+  TXBuffer.endStream();
+  #endif
+}
+
+void handle_cache_csv() {
+  if (!isLoggedIn()) return;
+
+}
+
 
 //********************************************************************************
 // Web Interface download page

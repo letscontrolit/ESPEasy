@@ -105,6 +105,11 @@ bool c014_startCSVdump() {
   return ControllerCache.isInitialized();
 }
 
+String c014_getCacheFileName(bool& islast) {
+  return ControllerCache.getPeakCacheFileName(islast);
+}
+
+
 bool c014_getCSVline(
   unsigned long& timestamp,
   byte& controller_idx,

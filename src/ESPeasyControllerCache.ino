@@ -60,6 +60,13 @@ struct ControllerCache_struct {
     return _RTC_cache_handler->peek(data, size);
   }
 
+  String getPeakCacheFileName(bool& islast) {
+    if (_RTC_cache_handler == nullptr) {
+      return "";
+    }
+    return _RTC_cache_handler->getPeakCacheFileName(islast);
+  }
+
   int readFileNr = 0;
   int readPos = 0;
 

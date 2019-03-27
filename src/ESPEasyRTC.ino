@@ -282,6 +282,23 @@ struct RTC_cache_handler_struct
     return "";
   }
 
+  String getPeakCacheFileName(bool& islast) {
+    int tmppos;
+    String fname;
+    if (peekfilenr == 0) {
+      fname = getReadCacheFileName(tmppos);
+      peekfilenr = getCacheFileCountFromFilename(fname);
+    } else {
+      ++peekfilenr;
+      fname = createCacheFilename(peekfilenr);
+    }
+    islast = peekfilenr > RTC_cache.writeFileNr;
+    if (SPIFFS.exists(fname)) {
+      return fname;
+    }
+    return "";
+  }
+
 private:
 
   bool loadMetaData()
