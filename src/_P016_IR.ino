@@ -184,12 +184,13 @@ boolean Plugin_016(byte function, struct EventStruct *event, String& string)
           
           // Display the basic output of what we found.
           if (results.decode_type != UNKNOWN) { 
-                addLog(LOG_LEVEL_INFO, String(F("IRESEND,")) + typeToString(results.decode_type, results.repeat) + ',' + resultToHexidecimal(&results)); //Show the appropriate command to the user, so he can replay the message via P035
+                addLog(LOG_LEVEL_INFO, String(F("IRSEND,")) + typeToString(results.decode_type, results.repeat) + ',' + resultToHexidecimal(&results)); //Show the appropriate command to the user, so he can replay the message via P035
           } 
           //Check if a solution for RAW2 is found and if not give the user the option to access the timings info.
           if (results.decode_type == UNKNOWN && !displayRawToReadableB32Hex()){
            addLog(LOG_LEVEL_INFO, F("IR: No replay solutions found! Press button again or try RAW encoding (timmings are in the serial output)"));   
-           serialPrint(String(F("IR: RAW TIMINGS: ")) + resultToSourceCode(&results)); //addLog(LOG_LEVEL_DEBUG,(String(F("IR: RAW TIMINGS: ")) + resultToSourceCode(&results))); // Output the results as RAW source code //not showing up nicely in the web log
+           serialPrint(String(F("IR: RAW TIMINGS: ")) + resultToSourceCode(&results)); 
+           //addLog(LOG_LEVEL_DEBUG,(String(F("IR: RAW TIMINGS: ")) + resultToSourceCode(&results))); // Output the results as RAW source code //not showing up nicely in the web log
           }
 
 #ifdef P016_Extended_Decoding
