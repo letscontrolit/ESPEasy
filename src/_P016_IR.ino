@@ -185,13 +185,12 @@ boolean Plugin_016(byte function, struct EventStruct *event, String& string)
           // Display the basic output of what we found.
           if (results.decode_type != UNKNOWN) { 
                 addLog(LOG_LEVEL_INFO, String(F("IRESEND,")) + typeToString(results.decode_type, results.repeat) + ',' + resultToHexidecimal(&results)); //Show the appropriate command to the user, so he can replay the message via P035
-          } else {
-               addLog(LOG_LEVEL_INFO, F("IR: Unknown IR Signal, try RAW2 encoding instead"));        
-               //addLog(LOG_LEVEL_INFO, resultToSourceCode(&results));  // Output the results as RAW source code //not showing up nicely in the web log... Maybe send them to serial?
-               //addLog(LOG_LEVEL_INFO,  resultToHumanReadableBasic(&results)); //UNKNOWN results do not produse a HEX that can be replayed, so not usefull.
-            }
-
-          displayRawToReadableB32Hex(); // Calculate and display in the logs the RAW2 encoding
+          } 
+          //Check if a solution for RAW2 is found and if not give the user the option to access the timings info.
+          if (results.decode_type == UNKNOWN && !displayRawToReadableB32Hex()){
+           addLog(LOG_LEVEL_INFO, F("IR: No replay solutions found! Press button again or try RAW encoding (timmings are in the serial output)"));   
+           serialPrint(String(F("IR: RAW TIMINGS: ")) + resultToSourceCode(&results)); //addLog(LOG_LEVEL_DEBUG,(String(F("IR: RAW TIMINGS: ")) + resultToSourceCode(&results))); // Output the results as RAW source code //not showing up nicely in the web log
+          }
 
 #ifdef P016_Extended_Decoding
           // Display any extra A/C info if we have it.
@@ -342,12 +341,12 @@ boolean Plugin_016(byte function, struct EventStruct *event, String& string)
 }
 
 
-#define PCT_TOLERANCE       7u
-#define pct_tolerance(v)    ((v) / (100u / PCT_TOLERANCE))
+#define PCT_TOLERANCE       8u //Percent tolerance
+#define pct_tolerance(v)    ((v) / (100u / PCT_TOLERANCE)) //Tolerance % is calculated as the delta between any original timing, and the result after encoding and decoding
 //#define MIN_TOLERANCE       10u
 //#define get_tolerance(v)    (pct_tolerance(v) > MIN_TOLERANCE? pct_tolerance(v) : MIN_TOLERANCE)
 #define get_tolerance(v)    (pct_tolerance(v))
-#define MIN_VIABLE_DIV      40u
+#define MIN_VIABLE_DIV      40u  // Minimum viable timing denominator 
 #define to_32hex(c)         ((c) < 10 ? (c) + '0' : (c) + 'A' - 10)
 
 // This function attempts to convert the raw IR timings buffer to a short string that can be sent over as
@@ -359,14 +358,14 @@ boolean Plugin_016(byte function, struct EventStruct *event, String& string)
 //
 // Author: Gilad Raz (jazzgil)  23sep2018
 
-void displayRawToReadableB32Hex() {
+boolean displayRawToReadableB32Hex() {
     String line;
     uint16_t div[2];
 
     // print the values: either pulses or blanks
     for (uint16_t i = 1; i < results.rawlen; i++)
         line += uint64ToString(results.rawbuf[i] * RAWTICK, 10) + ",";
-    addLog(LOG_LEVEL_DEBUG, line);
+    addLog(LOG_LEVEL_DEBUG, line); //Display the RAW timings
 
     // Find a common denominator divisor for odd indexes (pulses) and then even indexes (blanks).
     for (uint16_t p = 0; p < 2; p++) {
@@ -404,8 +403,8 @@ void displayRawToReadableB32Hex() {
             }
         }
         if (bstDiv == 0xFFFFU) {
-            addLog(LOG_LEVEL_INFO, F("IR2: No proper divisor found. Try again..."));
-            return;
+            //addLog(LOG_LEVEL_INFO, F("IR2: No proper divisor found. Try again..."));
+            return false;
         }
         div[p] = bstDiv;
 
@@ -437,8 +436,8 @@ void displayRawToReadableB32Hex() {
             s += 2;
         }
         if (iOut + 5 > sizeof(out) || tmOut[d] >= 32*32 || tmOut[d+1] >= 32*32 || vals >= 64) {
-            addLog(LOG_LEVEL_INFO, F("IR2: Raw code too long. Try again..."));
-            return;
+            //addLog(LOG_LEVEL_INFO, F("IR2: Raw code too long. Try again..."));
+                return false;
         }
 
         if (vals > 4 || (vals == 4 && (tmOut[d] >= 32 || tmOut[d+1] >= 32))) {
@@ -455,6 +454,7 @@ void displayRawToReadableB32Hex() {
     out[iOut] = 0;
     line = String(F("IRSEND,RAW2,")) + String(out) + String(F(",38,")) + uint64ToString(div[0], 10) +','+ uint64ToString(div[1], 10);
     addLog(LOG_LEVEL_INFO, line);
+    return true;
 }
 
 unsigned int storeB32Hex(char out[], unsigned int iOut, unsigned int val) {
