@@ -113,6 +113,7 @@ String doExecuteCommand(const char * cmd, struct EventStruct *event, const char*
       break;
     }
     case 'r': {
+	  COMMAND_CASE("readuservarfromrtc"     , Command_readUserVarFromRTC);         // RTC.h
 	  COMMAND_CASE("reboot"                 , Command_System_Reboot);              // System.h
 	  COMMAND_CASE("reset"                  , Command_Settings_Reset);             // Settings.h
 	  COMMAND_CASE("resetflashwritecounter" , Command_RTC_resetFlashWriteCounter); // RTC.h
@@ -122,6 +123,7 @@ String doExecuteCommand(const char * cmd, struct EventStruct *event, const char*
     }
     case 's': {
 	  COMMAND_CASE("save"                   , Command_Settings_Save);              // Settings.h
+	  COMMAND_CASE("saveuservartortc"       , Command_saveUserVarToRTC);           // RTC.h
 	#ifdef FEATURE_SD
 	  COMMAND_CASE("sdcard"                 , Command_SD_LS);                      // SDCARDS.h
 	  COMMAND_CASE("sdremove"               , Command_SD_Remove);                  // SDCARDS.h
