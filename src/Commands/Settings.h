@@ -4,11 +4,10 @@
 
 String Command_Settings_Build(struct EventStruct *event, const char* Line)
 {
-	char TmpStr1[INPUT_COMMAND_SIZE];
-	if (GetArgv(Line, TmpStr1, 2)) {
+	if (HasArgv(Line, 2)) {
 		Settings.Build = event->Par1;
-	}else  {
-		Serial.println();
+	} else {
+		serialPrintln();
 		String result = F("Build:");
 		result += Settings.Build;
     return return_result(event, result);
@@ -18,11 +17,10 @@ String Command_Settings_Build(struct EventStruct *event, const char* Line)
 
 String Command_Settings_Unit(struct EventStruct *event, const char* Line)
 {
-	char TmpStr1[INPUT_COMMAND_SIZE];
-	if (GetArgv(Line, TmpStr1, 2)) {
+	if (HasArgv(Line, 2)) {
 		Settings.Unit = event->Par1;
 	}else  {
-		Serial.println();
+		serialPrintln();
 		String result = F("Unit:");
 		result += Settings.Unit;
     return return_result(event, result);
@@ -63,33 +61,25 @@ String Command_Settings_Load(struct EventStruct *event, const char* Line)
 
 String Command_Settings_Print(struct EventStruct *event, const char* Line)
 {
-	char str[20];
-	Serial.println();
+	serialPrintln();
 
-	Serial.println(F("System Info"));
-	IPAddress ip = WiFi.localIP();
-	sprintf_P(str, PSTR("%u.%u.%u.%u"), ip[0], ip[1], ip[2], ip[3]);
-	Serial.print(F("  IP Address    : ")); Serial.println(str);
-	Serial.print(F("  Build         : ")); Serial.println((int)BUILD);
-	Serial.print(F("  Name          : ")); Serial.println(Settings.Name);
-	Serial.print(F("  Unit          : ")); Serial.println((int)Settings.Unit);
-	Serial.print(F("  WifiSSID      : ")); Serial.println(SecuritySettings.WifiSSID);
-	Serial.print(F("  WifiKey       : ")); Serial.println(SecuritySettings.WifiKey);
-	Serial.print(F("  WifiSSID2     : ")); Serial.println(SecuritySettings.WifiSSID2);
-	Serial.print(F("  WifiKey2      : ")); Serial.println(SecuritySettings.WifiKey2);
-	Serial.print(F("  Free mem      : ")); Serial.println(FreeMem());
+	serialPrintln(F("System Info"));
+	serialPrint(F("  IP Address    : ")); serialPrintln(WiFi.localIP().toString());
+	serialPrint(F("  Build         : ")); serialPrintln(String((int)BUILD));
+	serialPrint(F("  Name          : ")); serialPrintln(Settings.Name);
+	serialPrint(F("  Unit          : ")); serialPrintln(String((int)Settings.Unit));
+	serialPrint(F("  WifiSSID      : ")); serialPrintln(SecuritySettings.WifiSSID);
+	serialPrint(F("  WifiKey       : ")); serialPrintln(SecuritySettings.WifiKey);
+	serialPrint(F("  WifiSSID2     : ")); serialPrintln(SecuritySettings.WifiSSID2);
+	serialPrint(F("  WifiKey2      : ")); serialPrintln(SecuritySettings.WifiKey2);
+	serialPrint(F("  Free mem      : ")); serialPrintln(String(FreeMem()));
 	return return_see_serial(event);
 }
 
 String Command_Settings_Reset(struct EventStruct *event, const char* Line)
 {
 	ResetFactory();
-  #if defined(ESP8266)
-	ESP.reset();
-  #endif
-  #if defined(ESP32)
-	ESP.restart();
-  #endif
+	reboot();
 	return return_command_success();
 }
 

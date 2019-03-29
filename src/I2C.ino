@@ -11,6 +11,12 @@ bool I2C_read_words(uint8_t i2caddr, I2Cdata_words& data) {
   return size == i2cdev.readWords(i2caddr, data.getRegister(), size, data.get());
 }
 
+// See https://github.com/platformio/platform-espressif32/issues/126
+#ifdef ESP32
+  #define END_TRANSMISSION_FLAG true
+#else
+  #define END_TRANSMISSION_FLAG false
+#endif
 
 //**************************************************************************/
 // Wake up I2C device
@@ -66,7 +72,20 @@ uint8_t I2C_read8_reg(uint8_t i2caddr, byte reg, bool * is_ok) {
 
   Wire.beginTransmission(i2caddr);
   Wire.write((uint8_t)reg);
-  Wire.endTransmission(false);
+
+  if (Wire.endTransmission(END_TRANSMISSION_FLAG) != 0) {
+    /*
+    0:success
+    1:data too long to fit in transmit buffer
+    2:received NACK on transmit of address
+    3:received NACK on transmit of data
+    4:other error
+    See https://www.arduino.cc/en/Reference/WireEndTransmission
+    */
+    if (is_ok != NULL) {
+      *is_ok = false;
+    }
+  }
   byte count = Wire.requestFrom(i2caddr, (byte)1);
   if (is_ok != NULL) {
     *is_ok = (count == 1);
@@ -84,7 +103,7 @@ uint16_t I2C_read16_reg(uint8_t i2caddr, byte reg) {
 
   Wire.beginTransmission(i2caddr);
   Wire.write((uint8_t)reg);
-  Wire.endTransmission(false);
+  Wire.endTransmission(END_TRANSMISSION_FLAG);
   Wire.requestFrom(i2caddr, (byte)2);
   value = (Wire.read() << 8) | Wire.read();
 
@@ -99,7 +118,7 @@ int32_t I2C_read24_reg(uint8_t i2caddr, byte reg) {
 
   Wire.beginTransmission(i2caddr);
   Wire.write((uint8_t)reg);
-  Wire.endTransmission(false);
+  Wire.endTransmission(END_TRANSMISSION_FLAG);
   Wire.requestFrom(i2caddr, (byte)3);
   value = (((int32_t)Wire.read()) << 16) | (Wire.read() << 8) | Wire.read();
 
@@ -114,8 +133,8 @@ int32_t I2C_read32_reg(uint8_t i2caddr, byte reg) {
 
   Wire.beginTransmission(i2caddr);
   Wire.write((uint8_t)reg);
-  Wire.endTransmission(false);
-  Wire.requestFrom(i2caddr, (byte)3);
+  Wire.endTransmission(END_TRANSMISSION_FLAG);
+  Wire.requestFrom(i2caddr, (byte)4);
   value = (((int32_t)Wire.read()) <<24) | (((uint32_t)Wire.read()) << 16) | (Wire.read() << 8) | Wire.read();
 
   return value;
@@ -139,3 +158,5 @@ int16_t I2C_readS16_reg(uint8_t i2caddr, byte reg) {
 int16_t I2C_readS16_LE_reg(uint8_t i2caddr, byte reg) {
   return (int16_t)I2C_read16_LE_reg(i2caddr, reg);
 }
+
+#undef END_TRANSMISSION_FLAG

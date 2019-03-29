@@ -68,7 +68,8 @@ boolean Plugin_017(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-      	addFormPinSelect(F("Reset Pin"), F("taskdevicepin3"), Settings.TaskDevicePin3[event->TaskIndex]);
+        // FIXME TD-er: Why is this using pin3 and not pin1? And why isn't this using the normal pin selection functions?
+      	addFormPinSelect(F("Reset Pin"), F("taskdevicepin3"), CONFIG_PIN3);
         success = true;
         break;
       }
@@ -82,7 +83,7 @@ boolean Plugin_017(byte function, struct EventStruct *event, String& string)
 
         for(byte x=0; x < 3; x++)
         {
-          if(Plugin_017_Init(Settings.TaskDevicePin3[event->TaskIndex]))
+          if(Plugin_017_Init(CONFIG_PIN3))
             break;
           delay(1000);
         }
@@ -101,7 +102,7 @@ boolean Plugin_017(byte function, struct EventStruct *event, String& string)
           if (digitalRead(4) == 0 || digitalRead(5) == 0)
           {
             addLog(LOG_LEVEL_ERROR, F("PN532: BUS error"));
-            Plugin_017_Init(Settings.TaskDevicePin3[event->TaskIndex]);
+            Plugin_017_Init(CONFIG_PIN3);
             // delay(1000);
           }
           counter = 0;
@@ -121,7 +122,7 @@ boolean Plugin_017(byte function, struct EventStruct *event, String& string)
 
           if (errorCount > 2) // if three consecutive I2C errors, reset PN532
           {
-            Plugin_017_Init(Settings.TaskDevicePin3[event->TaskIndex]);
+            Plugin_017_Init(CONFIG_PIN3);
           }
 
 
@@ -136,7 +137,7 @@ boolean Plugin_017(byte function, struct EventStruct *event, String& string)
             String log = F("PN532: Tag: ");
             log += key;
             tempcounter++;
-            log += " ";
+            log += ' ';
             log += tempcounter;
             addLog(LOG_LEVEL_INFO, log);
             sendData(event);
@@ -177,7 +178,7 @@ boolean Plugin_017_Init(int8_t resetPin)
     log += String((versiondata >> 24) & 0xFF, HEX);
     log += F(" FW: ");
     log += String((versiondata >> 16) & 0xFF, HEX);
-    log += F(".");
+    log += '.';
     log += String((versiondata >> 8) & 0xFF, HEX);
     addLog(LOG_LEVEL_INFO, log);
   }

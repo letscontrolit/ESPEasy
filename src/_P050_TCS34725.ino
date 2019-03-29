@@ -63,7 +63,7 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        byte choiceMode = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+        byte choiceMode = PCONFIG(0);
         String optionsMode[6];
         optionsMode[0] = F("TCS34725_INTEGRATIONTIME_2_4MS");
         optionsMode[1] = F("TCS34725_INTEGRATIONTIME_24MS");
@@ -78,9 +78,9 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
         optionValuesMode[3] = TCS34725_INTEGRATIONTIME_101MS;
         optionValuesMode[4] = TCS34725_INTEGRATIONTIME_154MS;
         optionValuesMode[5] = TCS34725_INTEGRATIONTIME_700MS;
-        addFormSelector(F("Integration Time"), F("plugin_050_integrationTime"), 6, optionsMode, optionValuesMode, choiceMode);
+        addFormSelector(F("Integration Time"), F("p050_integrationTime"), 6, optionsMode, optionValuesMode, choiceMode);
 
-        byte choiceMode2 = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
+        byte choiceMode2 = PCONFIG(1);
         String optionsMode2[4];
         optionsMode2[0] = F("TCS34725_GAIN_1X");
         optionsMode2[1] = F("TCS34725_GAIN_4X");
@@ -91,7 +91,7 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
         optionValuesMode2[1] = TCS34725_GAIN_4X;
         optionValuesMode2[2] = TCS34725_GAIN_16X;
         optionValuesMode2[3] = TCS34725_GAIN_60X;
-        addFormSelector(F("Gain"), F("plugin_050_gain"), 4, optionsMode2, optionValuesMode2, choiceMode2);
+        addFormSelector(F("Gain"), F("p050_gain"), 4, optionsMode2, optionValuesMode2, choiceMode2);
 
         success = true;
         break;
@@ -99,10 +99,10 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        String plugin1 = WebServer.arg(F("plugin_050_integrationTime"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = plugin1.toInt();
-        String plugin2 = WebServer.arg(F("plugin_050_gain"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = plugin2.toInt();
+        String plugin1 = WebServer.arg(F("p050_integrationTime"));
+        PCONFIG(0) = plugin1.toInt();
+        String plugin2 = WebServer.arg(F("p050_gain"));
+        PCONFIG(1) = plugin2.toInt();
 
         success = true;
         break;
@@ -111,27 +111,27 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
     case PLUGIN_READ:
       {
       	tcs34725IntegrationTime_t integrationTime;
-        if (Settings.TaskDevicePluginConfig[event->TaskIndex][0]==TCS34725_INTEGRATIONTIME_2_4MS)
+        if (PCONFIG(0)==TCS34725_INTEGRATIONTIME_2_4MS)
         	integrationTime = TCS34725_INTEGRATIONTIME_2_4MS;
-        if (Settings.TaskDevicePluginConfig[event->TaskIndex][0]==TCS34725_INTEGRATIONTIME_24MS)
+        if (PCONFIG(0)==TCS34725_INTEGRATIONTIME_24MS)
         	integrationTime = TCS34725_INTEGRATIONTIME_24MS;
-        if (Settings.TaskDevicePluginConfig[event->TaskIndex][0]==TCS34725_INTEGRATIONTIME_50MS)
+        if (PCONFIG(0)==TCS34725_INTEGRATIONTIME_50MS)
         	integrationTime = TCS34725_INTEGRATIONTIME_50MS;
-        if (Settings.TaskDevicePluginConfig[event->TaskIndex][0]==TCS34725_INTEGRATIONTIME_101MS)
+        if (PCONFIG(0)==TCS34725_INTEGRATIONTIME_101MS)
         	integrationTime = TCS34725_INTEGRATIONTIME_101MS;
-        if (Settings.TaskDevicePluginConfig[event->TaskIndex][0]==TCS34725_INTEGRATIONTIME_154MS)
+        if (PCONFIG(0)==TCS34725_INTEGRATIONTIME_154MS)
         	integrationTime = TCS34725_INTEGRATIONTIME_154MS;
-        if (Settings.TaskDevicePluginConfig[event->TaskIndex][0]==TCS34725_INTEGRATIONTIME_700MS)
+        if (PCONFIG(0)==TCS34725_INTEGRATIONTIME_700MS)
         	integrationTime = TCS34725_INTEGRATIONTIME_700MS;
 
         tcs34725Gain_t gain;
-        if (Settings.TaskDevicePluginConfig[event->TaskIndex][1]==TCS34725_GAIN_1X)
+        if (PCONFIG(1)==TCS34725_GAIN_1X)
         	gain = TCS34725_GAIN_1X;
-        if (Settings.TaskDevicePluginConfig[event->TaskIndex][1]==TCS34725_GAIN_4X)
+        if (PCONFIG(1)==TCS34725_GAIN_4X)
         	gain = TCS34725_GAIN_4X;
-        if (Settings.TaskDevicePluginConfig[event->TaskIndex][1]==TCS34725_GAIN_16X)
+        if (PCONFIG(1)==TCS34725_GAIN_16X)
         	gain = TCS34725_GAIN_16X;
-        if (Settings.TaskDevicePluginConfig[event->TaskIndex][1]==TCS34725_GAIN_60X)
+        if (PCONFIG(1)==TCS34725_GAIN_60X)
         	gain = TCS34725_GAIN_60X;
 
       	/* Initialise with specific int time and gain values */

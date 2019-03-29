@@ -4,10 +4,8 @@
 
 String Command_Notifications_Notify(struct EventStruct *event, const char* Line)
 {
-	char TmpStr1[INPUT_COMMAND_SIZE];
 	String message = "";
-	if (GetArgv(Line, TmpStr1, 3))
-		message = TmpStr1;
+	GetArgv(Line, message, 3);
 
 	if (event->Par1 > 0) {
 		int index = event->Par1 - 1;

@@ -14,7 +14,7 @@ SDM::SDM(HardwareSerial& serial, long baud, int dere_pin, int config, bool swapu
   this->_swapuart = swapuart;
 }
 #else
-SDM::SDM(ESPeasySoftwareSerial& serial, long baud, int dere_pin) : sdmSer(serial) {
+SDM::SDM(ESPeasySerial& serial, long baud, int dere_pin) : sdmSer(serial) {
   this->_baud = baud;
   this->_dere_pin = dere_pin;
 }
@@ -90,7 +90,7 @@ float SDM::readVal(uint16_t reg, uint8_t node) {
 
   if (readErr == SDM_ERR_NO_ERROR) {                                            //if no timeout...
 
-    if(sdmSer.available() == FRAMESIZE) {
+    if(sdmSer.available() >= FRAMESIZE) {
 
       for(int n=0; n<FRAMESIZE; n++) {
         sdmarr[n] = sdmSer.read();
@@ -120,6 +120,12 @@ float SDM::readVal(uint16_t reg, uint8_t node) {
   if (readErr != SDM_ERR_NO_ERROR) {                                            //if error then copy temp error value to global val and increment global error counter
     readingerrcode = readErr;
     readingerrcount++;
+  } else {
+    ++readingsuccesscount;
+  }
+
+  while (sdmSer.available() > 0)  {                                             //read redundant serial bytes, if any
+    sdmSer.read();
   }
 
 #ifndef USE_HARDWARESERIAL
@@ -143,12 +149,23 @@ uint16_t SDM::getErrCount(bool _clear) {
   return (_tmp);
 }
 
+uint16_t SDM::getSuccCount(bool _clear) {
+  uint16_t _tmp = readingsuccesscount;
+  if (_clear == true)
+    clearSuccCount();
+  return (_tmp);
+}
+
 void SDM::clearErrCode() {
   readingerrcode = SDM_ERR_NO_ERROR;
 }
 
 void SDM::clearErrCount() {
   readingerrcount = 0;
+}
+
+void SDM::clearSuccCount() {
+  readingsuccesscount = 0;
 }
 
 uint16_t SDM::calculateCRC(uint8_t *array, uint8_t num) {

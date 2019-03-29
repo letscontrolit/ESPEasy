@@ -45,7 +45,7 @@ boolean Plugin_033(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+        byte choice = PCONFIG(0);
         String options[11];
         options[0] = F("SENSOR_TYPE_SINGLE");
         options[1] = F("SENSOR_TYPE_TEMP_HUM");
@@ -71,7 +71,7 @@ boolean Plugin_033(byte function, struct EventStruct *event, String& string)
         optionValues[9] = SENSOR_TYPE_LONG;
         optionValues[10] = SENSOR_TYPE_WIND;
 
-        addFormSelector(F("Simulate Data Type"), F("plugin_033_sensortype"), 11, options, optionValues, choice );
+        addFormSelector(F("Simulate Data Type"), F("p033_sensortype"), 11, options, optionValues, choice );
 
         success = true;
         break;
@@ -79,14 +79,14 @@ boolean Plugin_033(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_033_sensortype"));
+        PCONFIG(0) = getFormItemInt(F("p033_sensortype"));
         success = true;
         break;
       }
 
     case PLUGIN_READ:
       {
-        event->sensorType = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+        event->sensorType = PCONFIG(0);
         for (byte x=0; x<4;x++)
         {
           String log = F("Dummy: value ");

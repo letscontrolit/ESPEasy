@@ -22,18 +22,7 @@
 
 #include <QEIx4.h>
 
-QEIx4* Plugin_059_QE = NULL;
-
-#ifndef CONFIG
-#define CONFIG(n) (Settings.TaskDevicePluginConfig[event->TaskIndex][n])
-#endif
-#ifndef CONFIG_L
-#define CONFIG_L(n) (Settings.TaskDevicePluginConfigLong[event->TaskIndex][n])
-#endif
-#ifndef PIN
-#define PIN(n) (Settings.TaskDevicePin[n][event->TaskIndex])
-#endif
-
+std::map<unsigned int, std::shared_ptr<QEIx4> > P_059_sensordefs;
 
 boolean Plugin_059(byte function, struct EventStruct *event, String& string)
 {
@@ -72,24 +61,24 @@ boolean Plugin_059(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_GET_DEVICEGPIONAMES:
       {
-        event->String1 = F("GPIO &larr; A");
-        event->String2 = F("GPIO &larr; B");
-        event->String3 = F("GPIO &#8672; I (optional)");
+        event->String1 = formatGpioName_input(F("A (CLK)"));
+        event->String2 = formatGpioName_input(F("B (DT)"));
+        event->String3 = formatGpioName_input_optional(F("I (Z)"));
         break;
       }
 
     case PLUGIN_WEBFORM_LOAD:
       {
         // default values
-        if (CONFIG_L(0) == 0 && CONFIG_L(1) == 0)
-          CONFIG_L(1) = 100;
+        if (PCONFIG_LONG(0) == 0 && PCONFIG_LONG(1) == 0)
+          PCONFIG_LONG(1) = 100;
 
         String options[3] = { F("1 pulse per cycle"), F("2 pulses per cycle"), F("4 pulses per cycle") };
         int optionValues[3] = { 1, 2, 4 };
-        addFormSelector(F("Mode"), F("qei_mode"), 3, options, optionValues, CONFIG(0));
+        addFormSelector(F("Mode"), F("qei_mode"), 3, options, optionValues, PCONFIG(0));
 
-        addFormNumericBox(F("Limit min."), F("qei_limitmin"), CONFIG_L(0));
-        addFormNumericBox(F("Limit max."), F("qei_limitmax"), CONFIG_L(1));
+        addFormNumericBox(F("Limit min."), F("qei_limitmin"), PCONFIG_LONG(0));
+        addFormNumericBox(F("Limit max."), F("qei_limitmax"), PCONFIG_LONG(1));
 
         success = true;
         break;
@@ -97,10 +86,10 @@ boolean Plugin_059(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        CONFIG(0) = getFormItemInt(F("qei_mode"));
+        PCONFIG(0) = getFormItemInt(F("qei_mode"));
 
-        CONFIG_L(0) = getFormItemInt(F("qei_limitmin"));
-        CONFIG_L(1) = getFormItemInt(F("qei_limitmax"));
+        PCONFIG_LONG(0) = getFormItemInt(F("qei_limitmin"));
+        PCONFIG_LONG(1) = getFormItemInt(F("qei_limitmax"));
 
         success = true;
         break;
@@ -108,12 +97,15 @@ boolean Plugin_059(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
       {
-        if (!Plugin_059_QE)
-          Plugin_059_QE = new QEIx4;
+        portStatusStruct newStatus;
 
-        Plugin_059_QE->begin(PIN(0),PIN(1),PIN(2),CONFIG(0));
-        Plugin_059_QE->setLimit(CONFIG_L(0), CONFIG_L(1));
-        Plugin_059_QE->setIndexTrigger(true);
+        // create sensor instance and add to std::map
+        P_059_sensordefs.erase(event->TaskIndex);
+        P_059_sensordefs[event->TaskIndex] = std::shared_ptr<QEIx4>(new QEIx4);
+
+        P_059_sensordefs[event->TaskIndex]->begin(CONFIG_PIN1,CONFIG_PIN2,CONFIG_PIN3,PCONFIG(0));
+        P_059_sensordefs[event->TaskIndex]->setLimit(PCONFIG_LONG(0), PCONFIG_LONG(1));
+        P_059_sensordefs[event->TaskIndex]->setIndexTrigger(true);
 
         ExtraTaskSettings.TaskDeviceValueDecimals[event->BaseVarIndex] = 0;
 
@@ -124,10 +116,17 @@ boolean Plugin_059(byte function, struct EventStruct *event, String& string)
           if (pin >= 0)
           {
             //pinMode(pin, (Settings.TaskDevicePin1PullUp[event->TaskIndex]) ? INPUT_PULLUP : INPUT);
-            setPinState(PLUGIN_ID_059, pin, PIN_MODE_INPUT, 0);
+            const uint32_t key = createKey(PLUGIN_ID_059,pin);
+            // WARNING: operator [] creates an entry in the map if key does not exist
+            newStatus = globalMapPortStatus[key];
+            newStatus.task++; // add this GPIO/port as a task
+            newStatus.mode = PIN_MODE_INPUT;
+            newStatus.state = 0;
+            savePortStatus(key,newStatus);
+            //setPinState(PLUGIN_ID_059, pin, PIN_MODE_INPUT, 0);
           }
           log += pin;
-          log += F(" ");
+          log += ' ';
         }
         addLog(LOG_LEVEL_INFO, log);
 
@@ -135,13 +134,19 @@ boolean Plugin_059(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_EXIT:
+      {
+        P_059_sensordefs.erase(event->TaskIndex);
+        break;
+      }
+
     case PLUGIN_TEN_PER_SECOND:
       {
-        if (Plugin_059_QE)
+        if (P_059_sensordefs.count(event->TaskIndex) != 0)
         {
-          if (Plugin_059_QE->hasChanged())
+          if (P_059_sensordefs[event->TaskIndex]->hasChanged())
           {
-            long c = Plugin_059_QE->read();
+            long c = P_059_sensordefs[event->TaskIndex]->read();
             UserVar[event->BaseVarIndex] = (float)c;
             event->sensorType = SENSOR_TYPE_SWITCH;
 
@@ -159,9 +164,9 @@ boolean Plugin_059(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
       {
-        if (Plugin_059_QE)
+        if (P_059_sensordefs.count(event->TaskIndex) != 0)
         {
-          UserVar[event->BaseVarIndex] = (float)Plugin_059_QE->read();
+          UserVar[event->BaseVarIndex] = (float)P_059_sensordefs[event->TaskIndex]->read();
         }
         success = true;
         break;
@@ -169,7 +174,7 @@ boolean Plugin_059(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WRITE:
       {
-        if (Plugin_059_QE)
+        if (P_059_sensordefs.count(event->TaskIndex) != 0)
         {
             String log = "";
             String command = parseString(string, 1);
@@ -179,7 +184,7 @@ boolean Plugin_059(byte function, struct EventStruct *event, String& string)
               {
                 log = String(F("QEI  : ")) + string;
                 addLog(LOG_LEVEL_INFO, log);
-                Plugin_059_QE->write(event->Par1);
+                P_059_sensordefs[event->TaskIndex]->write(event->Par1);
               }
               success = true; // Command is handled.
             }

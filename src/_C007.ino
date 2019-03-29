@@ -7,9 +7,9 @@
 #define CPLUGIN_ID_007         7
 #define CPLUGIN_NAME_007       "Emoncms"
 
-boolean CPlugin_007(byte function, struct EventStruct *event, String& string)
+bool CPlugin_007(byte function, struct EventStruct *event, String& string)
 {
-  boolean success = false;
+  bool success = false;
 
   switch (function)
   {
@@ -32,8 +32,8 @@ boolean CPlugin_007(byte function, struct EventStruct *event, String& string)
 
     case CPLUGIN_INIT:
       {
-        ControllerSettingsStruct ControllerSettings;
-        LoadControllerSettings(event->ControllerIndex, (byte*)&ControllerSettings, sizeof(ControllerSettings));
+        MakeControllerSettings(ControllerSettings);
+        LoadControllerSettings(event->ControllerIndex, ControllerSettings);
         C007_DelayHandler.configureControllerSettings(ControllerSettings);
         break;
       }
@@ -75,9 +75,10 @@ bool do_process_c007_delay_queue(int controller_number, const C007_queue_element
   url += SecuritySettings.ControllerPassword[element.controller_idx]; // "0UDNN17RW6XAS2E5" // api key
 
   if (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE)
-    Serial.println(url);
+    serialPrintln(url);
 
   return send_via_http(controller_number, client,
-    create_http_get_request(controller_number, ControllerSettings, url));
+    create_http_get_request(controller_number, ControllerSettings, url),
+    ControllerSettings.MustCheckReply);
 }
 #endif

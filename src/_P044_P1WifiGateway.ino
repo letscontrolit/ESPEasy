@@ -25,7 +25,7 @@
 
 boolean Plugin_044_init = false;
 boolean serialdebug = false;
-char* Plugin_044_serial_buf;
+char* Plugin_044_serial_buf = nullptr;
 unsigned int bytes_read = 0;
 boolean CRCcheck = false;
 unsigned int currCRC = 0;
@@ -33,6 +33,11 @@ int checkI = 0;
 
 WiFiServer *P1GatewayServer = nullptr;
 WiFiClient P1GatewayClient;
+
+// Fixme TD-er: Reverted to old implementation for now.
+// This one has been reverted in https://github.com/letscontrolit/ESPEasy/pull/2352
+// Since both plugins (P020 and P044) are almost identical in handling serial data.
+// However that version of P044 had a number of other fixes which may be very useful anyway.
 
 boolean Plugin_044(byte function, struct EventStruct *event, String& string)
 {
@@ -66,9 +71,9 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-      	addFormNumericBox(F("TCP Port"), F("plugin_044_port"), ExtraTaskSettings.TaskDevicePluginConfigLong[0]);
-      	addFormNumericBox(F("Baud Rate"), F("plugin_044_baud"), ExtraTaskSettings.TaskDevicePluginConfigLong[1]);
-      	addFormNumericBox(F("Data bits"), F("plugin_044_data"), ExtraTaskSettings.TaskDevicePluginConfigLong[2]);
+      	addFormNumericBox(F("TCP Port"), F("p044_port"), ExtraTaskSettings.TaskDevicePluginConfigLong[0]);
+      	addFormNumericBox(F("Baud Rate"), F("p044_baud"), ExtraTaskSettings.TaskDevicePluginConfigLong[1]);
+      	addFormNumericBox(F("Data bits"), F("p044_data"), ExtraTaskSettings.TaskDevicePluginConfigLong[2]);
 
         byte choice = ExtraTaskSettings.TaskDevicePluginConfigLong[3];
         String options[3];
@@ -76,13 +81,14 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
         options[1] = F("Even");
         options[2] = F("Odd");
         int optionValues[3] = { 0, 2, 3 };
-        addFormSelector(F("Parity"), F("plugin_044_parity"), 3, options, optionValues, choice);
+        addFormSelector(F("Parity"), F("p044_parity"), 3, options, optionValues, choice);
 
-      	addFormNumericBox(F("Stop bits"), F("plugin_044_stop"), ExtraTaskSettings.TaskDevicePluginConfigLong[4]);
+      	addFormNumericBox(F("Stop bits"), F("p044_stop"), ExtraTaskSettings.TaskDevicePluginConfigLong[4]);
 
+        // FIXME TD-er: Why isn't this using the normal pin selection functions?
       	addFormPinSelect(F("Reset target after boot"), F("taskdevicepin1"), Settings.TaskDevicePin1[event->TaskIndex]);
 
-      	addFormNumericBox(F("RX Receive Timeout (mSec)"), F("plugin_044_rxwait"), Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
+      	addFormNumericBox(F("RX Receive Timeout (mSec)"), F("p044_rxwait"), Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
 
         success = true;
         break;
@@ -90,12 +96,12 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        ExtraTaskSettings.TaskDevicePluginConfigLong[0] = getFormItemInt(F("plugin_044_port"));
-        ExtraTaskSettings.TaskDevicePluginConfigLong[1] = getFormItemInt(F("plugin_044_baud"));
-        ExtraTaskSettings.TaskDevicePluginConfigLong[2] = getFormItemInt(F("plugin_044_data"));
-        ExtraTaskSettings.TaskDevicePluginConfigLong[3] = getFormItemInt(F("plugin_044_parity"));
-        ExtraTaskSettings.TaskDevicePluginConfigLong[4] = getFormItemInt(F("plugin_044_stop"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_044_rxwait"));
+        ExtraTaskSettings.TaskDevicePluginConfigLong[0] = getFormItemInt(F("p044_port"));
+        ExtraTaskSettings.TaskDevicePluginConfigLong[1] = getFormItemInt(F("p044_baud"));
+        ExtraTaskSettings.TaskDevicePluginConfigLong[2] = getFormItemInt(F("p044_data"));
+        ExtraTaskSettings.TaskDevicePluginConfigLong[3] = getFormItemInt(F("p044_parity"));
+        ExtraTaskSettings.TaskDevicePluginConfigLong[4] = getFormItemInt(F("p044_stop"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("p044_rxwait"));
 
         success = true;
         break;
@@ -134,7 +140,7 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
           P1GatewayServer->begin();
 
           if (!Plugin_044_serial_buf)
-            Plugin_044_serial_buf = (char *)malloc(P044_BUFFER_SIZE);
+            Plugin_044_serial_buf = new char[P044_BUFFER_SIZE];
 
           if (Settings.TaskDevicePin1[event->TaskIndex] != -1)
           {
@@ -171,6 +177,9 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
           delete P1GatewayServer;
           P1GatewayServer = NULL;
         }
+        if (Plugin_044_serial_buf) {
+          delete[] Plugin_044_serial_buf;
+        }
         success = true;
         break;
       }
@@ -183,6 +192,7 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
           {
             if (P1GatewayClient) P1GatewayClient.stop();
             P1GatewayClient = P1GatewayServer->available();
+            P1GatewayClient.setTimeout(CONTROLLER_CLIENTTIMEOUT_DFLT);
             addLog(LOG_LEVEL_ERROR, F("P1   : Client connected!"));
           }
 
@@ -358,9 +368,9 @@ bool validP1char(char ch) {
   } else {
     addLog(LOG_LEVEL_DEBUG, F("P1   : Error: invalid char read from P1"));
     if (serialdebug) {
-      Serial.print(F("faulty char>"));
-      Serial.print(ch);
-      Serial.println(F("<"));
+      serialPrint(F("faulty char>"));
+      serialPrint(String(ch));
+      serialPrintln("<");
     }
     return false;
   }
@@ -413,12 +423,12 @@ bool checkDatagram(int len) {
   if (!CRCcheck) return true;
 
   if (serialdebug) {
-    Serial.print(F("input length: "));
-    Serial.println(len);
-    Serial.print("Start char \\ : ");
-    Serial.println(startChar);
-    Serial.print(F("End char ! : "));
-    Serial.println(endChar);
+    serialPrint(F("input length: "));
+    serialPrintln(String(len));
+    serialPrint("Start char \\ : ");
+    serialPrintln(String(startChar));
+    serialPrint(F("End char ! : "));
+    serialPrintln(String(endChar));
   }
 
   if (endChar >= 0)
@@ -430,7 +440,7 @@ bool checkDatagram(int len) {
     messageCRC[4] = 0;
     if (serialdebug) {
       for (int cnt = 0; cnt < len; cnt++)
-        Serial.print(Plugin_044_serial_buf[cnt]);
+        serialPrint(String(Plugin_044_serial_buf[cnt]));
     }
 
     validCRCFound = (strtoul(messageCRC, NULL, 16) == currCRC);

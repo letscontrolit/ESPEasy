@@ -1,0 +1,251 @@
+.. include:: ../Plugin/_plugin_substitutions.repl
+.. include:: _plugin_categories.repl
+
+#######
+Plugins
+#######
+
+Similar to a smartphones "apps" the ESP Easy plugins extends the functionality of
+the core operating system. You can use as many plugins as you available tasks.
+
+List of official plugins
+========================
+
+There's three different released versions of ESP Easy:
+
+:green:`NORMAL` is the stable release, you can consider these plugins reliable and you can use these in production.
+
+:yellow:`TESTING` is the release with new plugins that have not yet been fully tested and proven stable.
+
+:red:`DEVELOPMENT` is used for plugins that are still being developed and are not considered stable at all.
+
+.. csv-table::
+   :header: "Plugin name", "Plugin status", "Plugin number"
+   :widths: 10, 8, 5
+
+   ":ref:`P000_page`","|P000_status|","P000 (core)"
+   ":ref:`P001_page`","|P001_status|","P001"
+   ":ref:`P002_page`","|P002_status|","P002"
+   ":ref:`P003_page`","|P003_status|","P003"
+   ":ref:`P004_page`","|P004_status|","P004"
+   ":ref:`P005_page`","|P005_status|","P005"
+   ":ref:`P006_page`","|P006_status|","P006"
+   ":ref:`P007_page`","|P007_status|","P007"
+   ":ref:`P008_page`","|P008_status|","P008"
+   ":ref:`P009_page`","|P009_status|","P009"
+   ":ref:`P010_page`","|P010_status|","P010"
+   ":ref:`P011_page`","|P011_status|","P011"
+   ":ref:`P012_page`","|P012_status|","P012"
+   ":ref:`P013_page`","|P013_status|","P013"
+   ":ref:`P014_page`","|P014_status|","P014"
+   ":ref:`P015_page`","|P015_status|","P015"
+   ":ref:`P016_page`","|P016_status|","P016"
+   ":ref:`P017_page`","|P017_status|","P017"
+   ":ref:`P018_page`","|P018_status|","P018"
+   ":ref:`P019_page`","|P019_status|","P019"
+   ":ref:`P020_page`","|P020_status|","P020"
+   ":ref:`P021_page`","|P021_status|","P021"
+   ":ref:`P022_page`","|P022_status|","P022"
+   ":ref:`P023_page`","|P023_status|","P023"
+   ":ref:`P024_page`","|P024_status|","P024"
+   ":ref:`P025_page`","|P025_status|","P025"
+   ":ref:`P026_page`","|P026_status|","P026"
+   ":ref:`P027_page`","|P027_status|","P027"
+   ":ref:`P028_page`","|P028_status|","P028"
+   ":ref:`P029_page`","|P029_status|","P029"
+   ":ref:`P030_page`","|P030_status|","P030"
+   ":ref:`P031_page`","|P031_status|","P031"
+   ":ref:`P032_page`","|P032_status|","P032"
+   ":ref:`P033_page`","|P033_status|","P033"
+   ":ref:`P034_page`","|P034_status|","P034"
+   ":ref:`P035_page`","|P035_status|","P035"
+   ":ref:`P036_page`","|P036_status|","P036"
+   ":ref:`P037_page`","|P037_status|","P037"
+   ":ref:`P038_page`","|P038_status|","P038"
+   ":ref:`P039_page`","|P039_status|","P039"
+   ":ref:`P040_page`","|P040_status|","P040"
+   ":ref:`P041_page`","|P041_status|","P041"
+   ":ref:`P042_page`","|P042_status|","P042"
+   ":ref:`P043_page`","|P043_status|","P043"
+   ":ref:`P044_page`","|P044_status|","P044"
+   ":ref:`P045_page`","|P045_status|","P045"
+   ":ref:`P046_page`","|P046_status|","P046"
+   ":ref:`P047_page`","|P047_status|","P047"
+   ":ref:`P048_page`","|P048_status|","P048"
+   ":ref:`P049_page`","|P049_status|","P049"
+   ":ref:`P050_page`","|P050_status|","P050"
+   ":ref:`P051_page`","|P051_status|","P051"
+   ":ref:`P052_page`","|P052_status|","P052"
+   ":ref:`P053_page`","|P053_status|","P053"
+   ":ref:`P054_page`","|P054_status|","P054"
+   ":ref:`P055_page`","|P055_status|","P055"
+   ":ref:`P056_page`","|P056_status|","P056"
+   ":ref:`P057_page`","|P057_status|","P057"
+   ":ref:`P058_page`","|P058_status|","P058"
+   ":ref:`P059_page`","|P059_status|","P059"
+   ":ref:`P060_page`","|P060_status|","P060"
+   ":ref:`P061_page`","|P061_status|","P061"
+   ":ref:`P062_page`","|P062_status|","P062"
+   ":ref:`P063_page`","|P063_status|","P063"
+   ":ref:`P064_page`","|P064_status|","P064"
+   ":ref:`P065_page`","|P065_status|","P065"
+   ":ref:`P066_page`","|P066_status|","P066"
+   ":ref:`P067_page`","|P067_status|","P067"
+   ":ref:`P068_page`","|P068_status|","P068"
+   ":ref:`P069_page`","|P069_status|","P069"
+   ":ref:`P070_page`","|P070_status|","P070"
+   ":ref:`P071_page`","|P071_status|","P071"
+   ":ref:`P072_page`","|P072_status|","P072"
+   ":ref:`P073_page`","|P073_status|","P073"
+   ":ref:`P074_page`","|P074_status|","P074"
+   ":ref:`P075_page`","|P075_status|","P075"
+   ":ref:`P076_page`","|P076_status|","P076"
+   ":ref:`P077_page`","|P077_status|","P077"
+   ":ref:`P078_page`","|P078_status|","P078"
+   ":ref:`P079_page`","|P079_status|","P079"
+   ":ref:`P080_page`","|P080_status|","P080"
+   ":ref:`P081_page`","|P081_status|","P081"
+   ":ref:`P082_page`","|P082_status|","P082"
+
+
+
+Internal GPIO handling
+----------------------
+
+Plugins: :ref:`P000_page`
+
+Hardware: |P000_usedby_GPIO|, |P000_usedby_RTTTL|
+
+Analog input
+------------
+
+Plugins: |Plugin_Analog_input|
+
+Color
+-----
+
+Plugins: |Plugin_Color|
+
+Communication
+-------------
+
+Plugins: |Plugin_Communication|
+
+Display
+-------
+
+Plugins: |Plugin_Display|
+
+Dust
+----
+
+Plugins: |Plugin_Dust|
+
+Energy (AC)
+-----------
+
+Plugins: |Plugin_Energy_AC|
+
+Energy (DC)
+-----------
+
+Plugins: |Plugin_Energy_DC|
+
+Environment
+-----------
+
+Plugins: |Plugin_Environment|
+
+Hardware: |P004_usedby|, |P005_usedby|, |P006_usedby|, |P024_usedby|, |P028_usedby|, |P030_usedby|
+
+Extra IO
+--------
+
+Plugins: |Plugin_Extra_IO|
+
+Gases
+-----
+
+Plugins: |Plugin_Gases|
+
+Hardware: |P052_usedby|
+
+Generic
+-------
+
+Plugins: |Plugin_Generic|
+
+Hardware: |P003_usedby|
+
+Gesture
+-------
+
+Plugins: |Plugin_Gesture|
+
+Gyro
+----
+
+Plugins: |Plugin_Gyro|
+
+Hardware
+--------
+
+Plugins: |Plugin_Hardware|
+
+Hardware: |P046_usedby|
+
+Keypad
+------
+
+Plugins: |Plugin_Keypad|
+
+Light/Lux
+---------
+
+Plugins: |Plugin_Light_Lux|
+
+Hardware: |P015_usedby|
+
+Motor
+-----
+
+Plugins: |Plugin_Motor|
+
+Notify
+------
+
+Plugins: |Plugin_Notify|
+
+Output
+------
+
+Plugins: |Plugin_Output|
+
+Position
+--------
+
+Plugins: |Plugin_Position|
+
+Hardware: |P013_usedby|, |P082_usedby|
+
+Regulator
+---------
+
+Plugins: |Plugin_Regulator|
+
+RFID
+----
+
+Plugins: |Plugin_RFID|
+
+Switch input
+------------
+
+Plugins: |Plugin_Switch_input|
+
+Hardware: |P001_usedby|
+
+Weight
+------
+
+Plugins: |Plugin_Weight|

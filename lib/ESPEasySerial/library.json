@@ -1,0 +1,15 @@
+{
+    "name": "ESPeasySerial",
+    "version": "1.0.10",
+    "keywords": [
+      "serial", "io", "softwareserial", "hardwareserial"
+    ],
+    "description": "Wrapper for SoftwareSerial and HardwareSerial for ESP8266 and ESP32",
+    "repository":
+    {
+        "type": "git",
+        "url": "https://github.com/TD-er/ESPEasySerial/"
+    },
+    "frameworks": "arduino",
+    "platforms": "espressif8266"
+}

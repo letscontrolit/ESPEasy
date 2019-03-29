@@ -9,9 +9,9 @@
 
 #include <ArduinoJson.h>
 
-boolean CPlugin_002(byte function, struct EventStruct *event, String& string)
+bool CPlugin_002(byte function, struct EventStruct *event, String& string)
 {
-  boolean success = false;
+  bool success = false;
 
   switch (function)
   {
@@ -35,8 +35,8 @@ boolean CPlugin_002(byte function, struct EventStruct *event, String& string)
 
     case CPLUGIN_INIT:
       {
-        ControllerSettingsStruct ControllerSettings;
-        LoadControllerSettings(event->ControllerIndex, (byte*)&ControllerSettings, sizeof(ControllerSettings));
+        MakeControllerSettings(ControllerSettings);
+        LoadControllerSettings(event->ControllerIndex, ControllerSettings);
         MQTTDelayHandler.configureControllerSettings(ControllerSettings);
         break;
       }
@@ -102,6 +102,7 @@ boolean CPlugin_002(byte function, struct EventStruct *event, String& string)
                       {
                         case 0:
                           pwmValue = 0;
+                          UserVar[baseVar] = pwmValue;
                           break;
                         case 1:
                           pwmValue = UserVar[baseVar];
@@ -145,8 +146,8 @@ boolean CPlugin_002(byte function, struct EventStruct *event, String& string)
       {
         if (event->idx != 0)
         {
-          ControllerSettingsStruct ControllerSettings;
-          LoadControllerSettings(event->ControllerIndex, (byte*)&ControllerSettings, sizeof(ControllerSettings));
+          MakeControllerSettings(ControllerSettings);
+          LoadControllerSettings(event->ControllerIndex, ControllerSettings);
 /*
           if (!ControllerSettings.checkHostReachable(true)) {
             success = false;
@@ -197,9 +198,11 @@ boolean CPlugin_002(byte function, struct EventStruct *event, String& string)
 
           String json;
           root.printTo(json);
+#ifndef BUILD_NO_DEBUG
           String log = F("MQTT : ");
           log += json;
           addLog(LOG_LEVEL_DEBUG, log);
+#endif
 
           String pubname = ControllerSettings.Publish;
           parseControllerVariables(pubname, event, false);

@@ -1,0 +1,110 @@
+.blue {
+  background-color: #3492E2;
+  color: #000000;
+  padding: 4px 7px;
+  border-radius: 3px;
+}
+.red {
+  background-color: #EF483D;
+  color: #000000;
+  padding: 4px 7px;
+  border-radius: 3px;
+}
+.green {
+  background-color: #00AE41;
+  color: #000000;
+  padding: 4px 7px;
+  border-radius: 3px;
+}
+.yellow {
+  background-color: #FFD100;
+  color: #000000;
+  padding: 4px 7px;
+  border-radius: 3px;
+}
+.orange {
+  background-color: #FF8F12;
+  color: #000000;
+  padding: 4px 7px;
+  border-radius: 3px;
+}
+.cyan {
+  background-color: #72DCDC;
+  color: #000000;
+  padding: 4px 7px;
+  border-radius: 3px;
+}
+.purple {
+  background-color: #FF00FF;
+  color: #000000;
+  padding: 4px 7px;
+  border-radius: 3px;
+}
+.reference.external {
+  border-style: solid;
+  border-color: #3492E2;
+  color: #3492E2;
+  padding: 1px 7px;
+  margin-top: 8px;
+  margin-bottom: 8px;
+  border-radius: 3px;
+  box-shadow: 1px 1px 1px grey;
+}
+.reference.external:hover {
+  background-color: #3492E2;
+  color: #FFFFFF;
+}
+.menuselection {
+  font-weight: bold;
+}
+img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 20px;
+    background-color: white;
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+    margin-bottom: 15px;
+}
+.navbar-brand img {
+    margin-bottom: 5px;
+}
+h2 {
+  background-color: #3492E2;
+  color: #FFFFFF;
+  font-size: 20px;
+  padding: 4px 7px;
+}
+h3 {
+  background-color: none;
+  color: #3492E2;
+  font-size: 15px;
+  padding: 4px 7px;
+  border-bottom-style: solid;
+  border-bottom-color: #3492E2;
+}
+h4 {
+  background-color: none;
+  color: #000000;
+  font-size: 15px;
+  padding: 4px 7px;
+  border-bottom-style: solid;
+  border-bottom-color: #000000;
+}
+.headerlink {
+  color: #FFFFFF;
+}
+td, th {
+    border-bottom: : 1px solid #ddd;
+    padding: 8px;
+}
+tr:nth-child(even){background-color: #F2F2F2;}
+tr:hover {background-color: #ddd;}
+th {
+    padding-top: 12px;
+    padding-bottom: 12px;
+    text-align: left;
+    color: black;
+}
+body {
+  font-size: 12.5px;
+}

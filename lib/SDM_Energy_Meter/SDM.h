@@ -12,7 +12,7 @@
 #ifdef USE_HARDWARESERIAL
   #include <HardwareSerial.h>
 #else
-  #include <ESPeasySoftwareSerial.h>
+  #include <ESPeasySerial.h>
 //  #include <SoftwareSerial.h>
 #endif
 //------------------------------------------------------------------------------
@@ -136,6 +136,14 @@
 #define SDM630_EXPORT_REACTIVE_ENERGY       0x004E                              //VARh
 #define SDM630_TOTAL_SYSTEM_POWER_DEMAND    0x0054                              //W
 #define SDM630_MAXIMUM_TOTAL_SYSTEM_POWER   0x0056                              //W
+#define SDM630_PHASE_1_LN_VOLTS_THD         0x00EA                              //%
+#define SDM630_PHASE_2_LN_VOLTS_THD         0x00EC                              //%
+#define SDM630_PHASE_3_LN_VOLTS_THD         0x00EE                              //%
+#define SDM630_AVERAGE_VOLTS_THD            0x00F8                              //%
+#define SDM630_PHASE_1_CURRENT_THD          0x00F0                              //%
+#define SDM630_PHASE_2_CURRENT_THD          0x00F2                              //%
+#define SDM630_PHASE_3_CURRENT_THD          0x00F4                              //%
+#define SDM630_AVERAGE_CURRENT_THD          0x00FA                              //%
 
 #define SDM_B_05                            0x00                                //BYTE 5
 #define SDM_B_06                            0x02                                //BYTE 6
@@ -151,22 +159,24 @@ class SDM {
 #ifdef USE_HARDWARESERIAL
     SDM(HardwareSerial& serial, long baud = SDM_UART_BAUD, int dere_pin = DERE_PIN, int config = SDM_UART_CONFIG, bool swapuart = SWAPHWSERIAL);
 #else
-    SDM(ESPeasySoftwareSerial& serial, long baud = SDM_UART_BAUD, int dere_pin = DERE_PIN);
+    SDM(ESPeasySerial& serial, long baud = SDM_UART_BAUD, int dere_pin = DERE_PIN);
 #endif
     virtual ~SDM();
 
     void begin(void);
     float readVal(uint16_t reg, uint8_t node = SDM_B_01);                       //read value from register = reg and from deviceId = node
-    uint16_t getErrCode(bool _clear = false);                                   //return last errorcode (optional clear this value, default flase)
-    uint16_t getErrCount(bool _clear = false);                                  //return total errors count (optional clear this value, default flase)
+    uint16_t getErrCode(bool _clear = false);                                   //return last errorcode (optional clear this value, default false)
+    uint16_t getErrCount(bool _clear = false);                                  //return total errors count (optional clear this value, default false)
+    uint16_t getSuccCount(bool _clear = false);                                 //return total success count (optional clear this value, default false)
     void clearErrCode();                                                        //clear last errorcode
     void clearErrCount();                                                       //clear total errors count
+    void clearSuccCount();                                                      //clear total success count
 
   private:
 #ifdef USE_HARDWARESERIAL
     HardwareSerial& sdmSer;
 #else
-    ESPeasySoftwareSerial& sdmSer;
+    ESPeasySerial& sdmSer;
 #endif
 
 #ifdef USE_HARDWARESERIAL
@@ -177,6 +187,7 @@ class SDM {
     int _dere_pin = DERE_PIN;
     uint16_t readingerrcode = SDM_ERR_NO_ERROR;                                 //4 = timeout; 3 = not enough bytes; 2 = number of bytes OK but bytes b0,b1 or b2 wrong, 1 = crc error
     uint16_t readingerrcount = 0;                                               //total errors couter
+    uint32_t readingsuccesscount = 0;
     uint16_t calculateCRC(uint8_t *array, uint8_t num);
 };
 #endif //SDM_h

@@ -17,7 +17,7 @@ boolean Plugin_029(byte function, struct EventStruct *event, String& string)
     case PLUGIN_DEVICE_ADD:
       {
         Device[++deviceCount].Number = PLUGIN_ID_029;
-        Device[deviceCount].Type = DEVICE_TYPE_SINGLE;
+        Device[deviceCount].Type = DEVICE_TYPE_SINGLE; // FIXME TD-er: Does this need a pin? Seems not to be used
         Device[deviceCount].VType = SENSOR_TYPE_SWITCH;
         Device[deviceCount].Ports = 0;
         Device[deviceCount].PullUpOption = false;

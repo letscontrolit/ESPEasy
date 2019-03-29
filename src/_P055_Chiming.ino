@@ -121,29 +121,29 @@ boolean Plugin_055(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_GET_DEVICEGPIONAMES:
       {
-        event->String1 = F("GPIO &rarr; Driver#1");
-        event->String2 = F("GPIO &rarr; Driver#2");
-        event->String3 = F("GPIO &rarr; Driver#4");
+        event->String1 = formatGpioName_output(F("Driver#1"));
+        event->String2 = formatGpioName_output(F("Driver#2"));
+        event->String3 = formatGpioName_output(F("Driver#4"));
         break;
       }
 
     case PLUGIN_WEBFORM_LOAD:
       {
         //default values
-        if (Settings.TaskDevicePluginConfig[event->TaskIndex][0] <= 0)   //Plugin_055_millisChimeTime
-          Settings.TaskDevicePluginConfig[event->TaskIndex][0] = 60;
-        if (Settings.TaskDevicePluginConfig[event->TaskIndex][1] <= 0)   //Plugin_055_millisPauseTime
-          Settings.TaskDevicePluginConfig[event->TaskIndex][1] = 400;
+        if (PCONFIG(0) <= 0)   //Plugin_055_millisChimeTime
+          PCONFIG(0) = 60;
+        if (PCONFIG(1) <= 0)   //Plugin_055_millisPauseTime
+          PCONFIG(1) = 400;
 
-        addFormPinSelect(F("GPIO &rarr; Driver#8"), F("TDP4"), (int)(Settings.TaskDevicePin[3][event->TaskIndex]));
-
+        // FIXME TD-er: Should we add support for 4 pin definitions?
+        addFormPinSelect(formatGpioName_output(F("Driver#8")), F("TDP4"), (int)(Settings.TaskDevicePin[3][event->TaskIndex]));
 
         addFormSubHeader(F("Timing"));
 
-        addFormNumericBox(F("Chiming/Strike Time (ct)"), F("chimetime"), Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
+        addFormNumericBox(F("Chiming/Strike Time (ct)"), F("chimetime"), PCONFIG(0));
         addUnit(F("ms"));
 
-        addFormNumericBox(F("Normal Pause Time (t)"), F("pausetime"), Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
+        addFormNumericBox(F("Normal Pause Time (t)"), F("pausetime"), PCONFIG(1));
         addUnit(F("ms"));
 
         addFormNote(F("'1=1'&rArr;3t, '1-1' or '11'&rArr;1t, '1.1'&rArr;&#8531;t, '1|1'&rArr;&frac12;ct"));
@@ -151,11 +151,11 @@ boolean Plugin_055(byte function, struct EventStruct *event, String& string)
 
         addFormSubHeader(F("Chiming Clock"));
 
-        addFormCheckBox(F("Hourly Chiming Clock Strike"), F("chimeclock"), Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
+        addFormCheckBox(F("Hourly Chiming Clock Strike"), F("chimeclock"), PCONFIG(2));
         //addHtml(F("<TR><TD><TD>"));
         addButton(F("'control?cmd=chimeplay,hours'"), F("Test 1&hellip;12"));
 
-        if (Settings.TaskDevicePluginConfig[event->TaskIndex][2] && !Settings.UseNTP)
+        if (PCONFIG(2) && !Settings.UseNTP)
           addFormNote(F("Enable and configure NTP!"));
 
         success = true;
@@ -166,9 +166,9 @@ boolean Plugin_055(byte function, struct EventStruct *event, String& string)
       {
         Settings.TaskDevicePin[3][event->TaskIndex] = (int8_t)getFormItemInt(F("TDP4"));
 
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("chimetime"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("pausetime"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = isFormItemChecked(F("chimeclock"));
+        PCONFIG(0) = getFormItemInt(F("chimetime"));
+        PCONFIG(1) = getFormItemInt(F("pausetime"));
+        PCONFIG(2) = isFormItemChecked(F("chimeclock"));
 
         success = true;
         break;
@@ -180,9 +180,9 @@ boolean Plugin_055(byte function, struct EventStruct *event, String& string)
           Plugin_055_Data = new CPlugin_055_Data();
 
         Plugin_055_Data->lowActive = Settings.TaskDevicePin1Inversed[event->TaskIndex];
-        Plugin_055_Data->millisChimeTime = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
-        Plugin_055_Data->millisPauseTime = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
-        Plugin_055_Data->chimeClock = Settings.TaskDevicePluginConfig[event->TaskIndex][2];
+        Plugin_055_Data->millisChimeTime = PCONFIG(0);
+        Plugin_055_Data->millisPauseTime = PCONFIG(1);
+        Plugin_055_Data->chimeClock = PCONFIG(2);
 
         String log = F("Chime: GPIO: ");
         for (byte i=0; i<4; i++)
@@ -195,7 +195,7 @@ boolean Plugin_055(byte function, struct EventStruct *event, String& string)
             digitalWrite(pin, Plugin_055_Data->lowActive);
           }
           log += pin;
-          log += F(" ");
+          log += ' ';
         }
         if (Plugin_055_Data->lowActive)
           log += F("!");
@@ -236,7 +236,7 @@ boolean Plugin_055(byte function, struct EventStruct *event, String& string)
           String param = parseStringToEndKeepCase(string, 3);
           if (name.length() > 0 && param.length() > 0) {
             Plugin_055_WriteChime(name, param);
-            Plugin_055_AddStringFIFO(F("1"));
+            Plugin_055_AddStringFIFO("1");
           }
           success = true;
         }
@@ -312,7 +312,7 @@ boolean Plugin_055(byte function, struct EventStruct *event, String& string)
 
             String log = F("Chime: Process '");
             log += c;
-            log += "'";
+            log += '\'';
             addLog(LOG_LEVEL_DEBUG, log);
 
             switch (c)
@@ -459,7 +459,7 @@ void Plugin_055_WriteChime(const String& name, const String& tokens)
 
   String log = F("Chime: write ");
   log += fileName;
-  log += F(" ");
+  log += ' ';
 
   fs::File f = SPIFFS.open(fileName, "w");
   if (f)
@@ -481,7 +481,7 @@ byte Plugin_055_ReadChime(const String& name, String& tokens)
 
   String log = F("Chime: read ");
   log += fileName;
-  log += F(" ");
+  log += ' ';
 
   tokens = "";
   fs::File f = SPIFFS.open(fileName, "r+");

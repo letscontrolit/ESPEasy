@@ -7,9 +7,9 @@
 #define CPLUGIN_ID_010         10
 #define CPLUGIN_NAME_010       "Generic UDP"
 
-boolean CPlugin_010(byte function, struct EventStruct *event, String& string)
+bool CPlugin_010(byte function, struct EventStruct *event, String& string)
 {
-  boolean success = false;
+  bool success = false;
 
   switch (function)
   {
@@ -42,11 +42,11 @@ boolean CPlugin_010(byte function, struct EventStruct *event, String& string)
       {
         byte valueCount = getValueCountFromSensorType(event->sensorType);
         C010_queue_element element(event, valueCount);
-        if (ExtraTaskSettings.TaskDeviceValueNames[0][0] == 0)
+        if (ExtraTaskSettings.TaskIndex != event->TaskIndex)
           PluginCall(PLUGIN_GET_DEVICEVALUENAMES, event, dummyString);
 
-        ControllerSettingsStruct ControllerSettings;
-        LoadControllerSettings(event->ControllerIndex, (byte*)&ControllerSettings, sizeof(ControllerSettings));
+        MakeControllerSettings(ControllerSettings);
+        LoadControllerSettings(event->ControllerIndex, ControllerSettings);
 
         for (byte x = 0; x < valueCount; x++)
         {
@@ -58,11 +58,7 @@ boolean CPlugin_010(byte function, struct EventStruct *event, String& string)
             parseControllerVariables(element.txt[x], event, false);
             element.txt[x].replace(F("%valname%"), ExtraTaskSettings.TaskDeviceValueNames[x]);
             element.txt[x].replace(F("%value%"), formattedValue);
-            if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
-              char log[80];
-              element.txt[x].toCharArray(log, 80);
-              addLog(LOG_LEVEL_DEBUG_MORE, log);
-            }
+            addLog(LOG_LEVEL_DEBUG_MORE, element.txt[x]);
           }
         }
         success = C010_DelayHandler.addToQueue(element);
@@ -85,13 +81,18 @@ bool do_process_c010_delay_queue(int controller_number, const C010_queue_element
     if (element.checkDone(true))
       return true;
   }
-
-  if (!try_connect_host(controller_number, portUDP, ControllerSettings))
+  WiFiUDP C010_portUDP;
+  if (!beginWiFiUDP_randomPort(C010_portUDP)) return false;
+  if (!try_connect_host(controller_number, C010_portUDP, ControllerSettings))
     return false;
 
-  portUDP.write(
+  C010_portUDP.write(
     (uint8_t*)element.txt[element.valuesSent].c_str(),
               element.txt[element.valuesSent].length());
-  return element.checkDone(portUDP.endPacket() != 0);
+  bool reply = C010_portUDP.endPacket();
+  C010_portUDP.stop();
+  if (ControllerSettings.MustCheckReply)
+    return element.checkDone(reply);
+  return element.checkDone(true);
 }
 #endif

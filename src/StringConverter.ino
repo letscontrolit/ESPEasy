@@ -2,7 +2,7 @@
   Convert a char string to integer
   \*********************************************************************************************/
 //FIXME: change original code so it uses String and String.toInt()
-unsigned long str2int(char *string)
+unsigned long str2int(const char *string)
 {
   unsigned long temp = atof(string);
   return temp;
@@ -37,17 +37,14 @@ boolean str2ip(const char *string, byte* IP)
   return false;
 }
 
-// Call this by first declaring a char array of size 20, like:
-//  char strIP[20];
-//  formatIP(ip, strIP);
-void formatIP(const IPAddress& ip, char (&strIP)[20]) {
-  sprintf_P(strIP, PSTR("%u.%u.%u.%u"), ip[0], ip[1], ip[2], ip[3]);
-}
 
 String formatIP(const IPAddress& ip) {
-  char strIP[20];
-  formatIP(ip, strIP);
-  return String(strIP);
+#if defined(ARDUINO_ESP8266_RELEASE_2_3_0)
+  IPAddress tmp(ip);
+  return tmp.toString();
+#else
+  return ip.toString();
+#endif
 }
 
 void formatMAC(const uint8_t* mac, char (&strMAC)[20]) {
@@ -109,7 +106,7 @@ String formatToHex_decimal(unsigned long value) {
 
 String formatToHex_decimal(unsigned long value, unsigned long factor) {
   String result = formatToHex(value);
-  result += F(" (");
+  result += " (";
   if (factor > 1) {
     result += formatHumanReadable(value, factor);
   } else {
@@ -131,7 +128,7 @@ String toString(float value, byte decimals)
 
 String toString(WiFiMode_t mode)
 {
-  String result = F("Undefinited");
+  String result = F("Undefined");
   switch (mode)
   {
     case WIFI_OFF:
@@ -157,6 +154,20 @@ String toString(bool value) {
 }
 
 /*********************************************************************************************\
+   Typical string replace functions.
+  \*********************************************************************************************/
+void removeExtraNewLine(String& line) {
+  while (line.endsWith("\r\n\r\n")) {
+    line.remove(line.length()-2);
+  }
+}
+
+void addNewLine(String& line) {
+  line += "\r\n";
+}
+
+
+/*********************************************************************************************\
    Format a value to the set number of decimals
   \*********************************************************************************************/
 String doFormatUserVar(byte TaskIndex, byte rel_index, bool mustCheck, bool& isvalid) {
@@ -165,11 +176,13 @@ String doFormatUserVar(byte TaskIndex, byte rel_index, bool mustCheck, bool& isv
   const byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[TaskIndex]);
   if (Device[DeviceIndex].ValueCount <= rel_index) {
     isvalid = false;
-    String log = F("No sensor value for TaskIndex: ");
-    log += TaskIndex;
-    log += F(" varnumber: ");
-    log += rel_index;
-    addLog(LOG_LEVEL_ERROR, log);
+    if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+      String log = F("No sensor value for TaskIndex: ");
+      log += TaskIndex;
+      log += F(" varnumber: ");
+      log += rel_index;
+      addLog(LOG_LEVEL_ERROR, log);
+    }
     return "";
   }
   if (Device[DeviceIndex].VType == SENSOR_TYPE_LONG) {
@@ -178,11 +191,15 @@ String doFormatUserVar(byte TaskIndex, byte rel_index, bool mustCheck, bool& isv
   float f(UserVar[BaseVarIndex + rel_index]);
   if (mustCheck && !isValidFloat(f)) {
     isvalid = false;
-    String log = F("Invalid float value for TaskIndex: ");
-    log += TaskIndex;
-    log += F(" varnumber: ");
-    log += rel_index;
-    addLog(LOG_LEVEL_DEBUG, log);
+#ifndef BUILD_NO_DEBUG
+    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+      String log = F("Invalid float value for TaskIndex: ");
+      log += TaskIndex;
+      log += F(" varnumber: ");
+      log += rel_index;
+      addLog(LOG_LEVEL_DEBUG, log);
+    }
+#endif
     f = 0;
   }
   return toString(f, ExtraTaskSettings.TaskDeviceValueDecimals[rel_index]);
@@ -210,13 +227,11 @@ String formatUserVar(struct EventStruct *event, byte rel_index, bool& isvalid)
 /*********************************************************************************************\
    Wrap a string with given pre- and postfix string.
   \*********************************************************************************************/
-String wrap_String(const String& string, const String& wrap) {
-  String result;
-  result.reserve(string.length() + 2* wrap.length());
-  result = wrap;
+
+void wrap_String(const String& string, const String& wrap, String& result) {
+  result += wrap;
   result += string;
   result += wrap;
-  return result;
 }
 
 /*********************************************************************************************\
@@ -225,19 +240,25 @@ String wrap_String(const String& string, const String& wrap) {
 String to_json_object_value(const String& object, const String& value) {
   String result;
   result.reserve(object.length() + value.length() + 6);
-  result = wrap_String(object, F("\""));
+  wrap_String(object, "\"", result);
   result += F(":");
-  if (value.length() == 0 || !isFloat(value)) {
-    if (value.indexOf('\n') == -1 && value.indexOf('"') == -1 && value.indexOf(F("Pragma")) == -1) {
-      result += wrap_String(value, F("\""));
-    } else {
+  if (value.length() == 0) {
+    // Empty string
+    result += F("\"\"");
+  } else if (!isFloat(value)) {
+    // Is not a numerical value, thus wrap with quotes
+    if (value.indexOf('\n') != -1 || value.indexOf('\r') != -1 || value.indexOf('"') != -1) {
+      // Must replace characters, so make a deepcopy
       String tmpValue(value);
       tmpValue.replace('\n', '^');
+      tmpValue.replace('\r', '^');
       tmpValue.replace('"', '\'');
-      tmpValue.replace(F("Pragma"), F("Bugje!"));
-      result += wrap_String(tmpValue, F("\""));
+      wrap_String(tmpValue, "\"", result);
+    } else {
+      wrap_String(value, "\"", result);
     }
   } else {
+    // It is a numerical
     result += value;
   }
   return result;
@@ -278,6 +299,35 @@ String stripQuotes(const String& text) {
     }
   }
   return text;
+}
+
+bool safe_strncpy(char* dest, const String& source, size_t max_size) {
+  return safe_strncpy(dest, source.c_str(), max_size);
+}
+
+bool safe_strncpy(char* dest, const char* source, size_t max_size) {
+  if (max_size < 1) return false;
+  if (dest == NULL) return false;
+  if (source == NULL) return false;
+  bool result = true;
+  memset(dest, 0, max_size);
+  size_t str_length = strlen(source);
+  if (str_length >= max_size) {
+    str_length = max_size;
+    result = false;
+  }
+  strncpy(dest, source, str_length);
+  dest[max_size - 1] = 0;
+  return result;
+}
+
+// Convert a string to lower case and replace spaces with underscores.
+String to_internal_string(const String& input) {
+  String result = input;
+  result.trim();
+  result.toLowerCase();
+  result.replace(' ', '_');
+  return result;
 }
 
 /*********************************************************************************************\
@@ -373,7 +423,31 @@ void htmlEscape(String & html)
   html.replace("'",  F("&#039;"));
   html.replace("<",  F("&lt;"));
   html.replace(">",  F("&gt;"));
+  html.replace("/", F("&#047;"));
 }
+
+void htmlStrongEscape(String & html)
+{
+  String escaped;
+  escaped.reserve(html.length());
+  for (unsigned i = 0; i < html.length(); ++i)
+  {
+    if ((html[i] >= 'a' && html[i] <= 'z') || (html[i] >= 'A' && html[i] <= 'Z') || (html[i] >= '0' && html[i] <= '9'))
+    {
+      escaped += html[i];
+    }
+    else
+    {
+      char s [4];
+      sprintf(s, "%03d", static_cast<int>(html[i]));
+      escaped += "&#";
+      escaped += s;
+      escaped += ";";
+    }
+  }
+  html = escaped;
+}
+
 
 /********************************************************************************************\
   replace other system variables like %sysname%, %systime%, %ip%
@@ -484,9 +558,9 @@ void parseSystemVariables(String& s, boolean useURLencode)
   #if FEATURE_ADC_VCC
     repl(F("%vcc%"), String(vcc), s, useURLencode);
   #endif
-  repl(F("%CR%"), F("\r"), s, useURLencode);
-  repl(F("%LF%"), F("\n"), s, useURLencode);
-  repl(F("%SP%"), F(" "), s, useURLencode); //space
+  repl(F("%CR%"), "\r", s, useURLencode);
+  repl(F("%LF%"), "\n", s, useURLencode);
+  repl(F("%SP%"), " ", s, useURLencode); //space
   repl(F("%R%"), F("\\r"), s, useURLencode);
   repl(F("%N%"), F("\\n"), s, useURLencode);
   SMART_REPL(F("%ip4%"),WiFi.localIP().toString().substring(WiFi.localIP().toString().lastIndexOf('.')+1)) //4th IP octet
@@ -508,6 +582,8 @@ void parseSystemVariables(String& s, boolean useURLencode)
     SMART_REPL(F("%systm_hm_am%"), getTimeString_ampm(':', false))
     SMART_REPL(F("%systime%"), getTimeString(':'))
     SMART_REPL(F("%systime_am%"), getTimeString_ampm(':'))
+    SMART_REPL(F("%sysbuild_date%"), String(CRCValues.compileDate))
+    SMART_REPL(F("%sysbuild_time%"), String(CRCValues.compileTime))
     repl(F("%sysname%"), Settings.Name, s, useURLencode);
 
     // valueString is being used by the macro.
@@ -540,17 +616,36 @@ void parseSystemVariables(String& s, boolean useURLencode)
   SMART_REPL(F("%unixtime%"), String(getUnixTime()))
   SMART_REPL_T(F("%sunset"), replSunSetTimeString)
   SMART_REPL_T(F("%sunrise"), replSunRiseTimeString)
+
+  if (s.indexOf(F("%is")) != -1) {
+    SMART_REPL(F("%ismqtt%"), String(MQTTclient_connected));
+    SMART_REPL(F("%iswifi%"), String(wifiStatus)); //0=disconnected, 1=connected, 2=got ip, 3=services initialized
+    SMART_REPL(F("%isntp%"), String(statusNTPInitialized));
+    #ifdef USES_P037
+    SMART_REPL(F("%ismqttimp%"), String(P037_MQTTImport_connected));
+    #endif // USES_P037
+  }
+  const int v_index = s.indexOf("%v");
+  if (v_index != -1 && isDigit(s[v_index+2])) {
+    for (byte i = 0; i < CUSTOM_VARS_MAX; ++i) {
+      SMART_REPL("%v"+toString(i+1,0)+'%', String(customFloatVar[i]))
+    }
+  }
 }
 
 String getReplacementString(const String& format, String& s) {
   int startpos = s.indexOf(format);
   int endpos = s.indexOf('%', startpos + 1);
   String R = s.substring(startpos, endpos + 1);
-  String log = F("ReplacementString SunTime: ");
-  log += R;
-  log += F(" offset: ");
-  log += getSecOffset(R);
-  addLog(LOG_LEVEL_DEBUG, log);
+#ifndef BUILD_NO_DEBUG
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+    String log = F("ReplacementString SunTime: ");
+    log += R;
+    log += F(" offset: ");
+    log += getSecOffset(R);
+    addLog(LOG_LEVEL_DEBUG, log);
+  }
+#endif
   return R;
 }
 

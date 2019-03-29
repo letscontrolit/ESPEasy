@@ -58,34 +58,34 @@ boolean Plugin_048(byte function, struct EventStruct *event, String& string) {
 
 		case PLUGIN_WEBFORM_LOAD: {
 
-    	addFormTextBox(F("I2C Address (Hex)"), F("plugin_048_adr"),
-		               formatToHex_decimal(Settings.TaskDevicePluginConfig[event->TaskIndex][0]), 4);
+    	addFormTextBox(F("I2C Address (Hex)"), F("p048_adr"),
+		               formatToHex_decimal(PCONFIG(0)), 4);
 
-    	addFormNumericBox(F("Stepper: steps per revolution"), F("plugin_048_MotorStepsPerRevolution")
-    			, Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
+    	addFormNumericBox(F("Stepper: steps per revolution"), F("p048_MotorStepsPerRevolution")
+    			, PCONFIG(1));
 
-    	addFormNumericBox(F("Stepper speed (rpm)"), F("plugin_048_StepperSpeed")
-    			, Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
+    	addFormNumericBox(F("Stepper speed (rpm)"), F("p048_StepperSpeed")
+    			, PCONFIG(2));
 
 			success = true;
 			break;
 		}
 
 		case PLUGIN_WEBFORM_SAVE: {
-			String plugin1 = WebServer.arg(F("plugin_048_adr"));
-			Settings.TaskDevicePluginConfig[event->TaskIndex][0] = (int) strtol(plugin1.c_str(), 0, 16);
+			String plugin1 = WebServer.arg(F("p048_adr"));
+			PCONFIG(0) = (int) strtol(plugin1.c_str(), 0, 16);
 
-			Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("plugin_048_MotorStepsPerRevolution"));
+			PCONFIG(1) = getFormItemInt(F("p048_MotorStepsPerRevolution"));
 
-			Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("plugin_048_StepperSpeed"));
+			PCONFIG(2) = getFormItemInt(F("p048_StepperSpeed"));
 			success = true;
 			break;
 		}
 
 		case PLUGIN_INIT: {
-			Plugin_048_MotorShield_address = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
-			Plugin_048_MotorStepsPerRevolution = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
-			Plugin_048_StepperSpeed = Settings.TaskDevicePluginConfig[event->TaskIndex][2];
+			Plugin_048_MotorShield_address = PCONFIG(0);
+			Plugin_048_MotorStepsPerRevolution = PCONFIG(1);
+			Plugin_048_StepperSpeed = PCONFIG(2);
 
 			success = true;
 			break;

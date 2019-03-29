@@ -1,4 +1,4 @@
-
+#include <time.h>
 /********************************************************************************************\
   Time zone
   \*********************************************************************************************/
@@ -95,7 +95,7 @@ void logTimeZoneInfo() {
     // Summer time
     log += F(" DST time start: ");
     if (m_dstLoc != 0) {
-      timeStruct tmp;
+      struct tm tmp;
       breakTime(m_dstLoc, tmp);
       log += getDateTimeString(tmp, '-', ':', ' ', false);
     }
@@ -106,7 +106,7 @@ void logTimeZoneInfo() {
   // Standard/Winter time.
   log += F("STD time start: ");
   if (m_stdLoc != 0) {
-    timeStruct tmp;
+   struct tm tmp;
     breakTime(m_stdLoc, tmp);
     log += getDateTimeString(tmp, '-', ':', ' ', false);
   }
@@ -116,7 +116,7 @@ void logTimeZoneInfo() {
   addLog(LOG_LEVEL_INFO, log);
 }
 
-uint32_t makeTime(const timeStruct &tm) {
+uint32_t makeTime(const struct tm &tm) {
   // assemble time elements into uint32_t
   // note year argument is offset from 1970 (see macros in time.h to convert to other formats)
   // previous version used full four digit year (or digits since 2000),i.e. 2009 was 2009 or 9
@@ -125,25 +125,25 @@ uint32_t makeTime(const timeStruct &tm) {
   uint32_t seconds;
 
   // seconds from 1970 till 1 jan 00:00:00 of the given year
-  seconds= tm.Year*(SECS_PER_DAY * 365);
-  for (i = 0; i < tm.Year; i++) {
+  seconds= tm.tm_year*(SECS_PER_DAY * 365);
+  for (i = 0; i < tm.tm_year; i++) {
     if (LEAP_YEAR(i)) {
       seconds +=  SECS_PER_DAY;   // add extra days for leap years
     }
   }
 
   // add days for this year, months start from 1
-  for (i = 1; i < tm.Month; i++) {
-    if ( (i == 2) && LEAP_YEAR(tm.Year)) {
+  for (i = 1; i < tm.tm_mon; i++) {
+    if ( (i == 2) && LEAP_YEAR(tm.tm_year)) {
       seconds += SECS_PER_DAY * 29;
     } else {
       seconds += SECS_PER_DAY * monthDays[i-1];  //monthDay array starts from 0
     }
   }
-  seconds+= (tm.Day-1) * SECS_PER_DAY;
-  seconds+= tm.Hour * SECS_PER_HOUR;
-  seconds+= tm.Minute * SECS_PER_MIN;
-  seconds+= tm.Second;
+  seconds+= (tm.tm_mday-1) * SECS_PER_DAY;
+  seconds+= tm.tm_hour * SECS_PER_HOUR;
+  seconds+= tm.tm_min * SECS_PER_MIN;
+  seconds+= tm.tm_sec;
   return (uint32_t)seconds;
 }
 
@@ -167,13 +167,13 @@ uint32_t calcTimeChangeForRule(const TimeChangeRule& r, int yr)
     }
 
     // calculate first day of the month, or for "Last" rules, first day of the next month
-    timeStruct tm;
-    tm.Hour = r.hour;
-    tm.Minute = 0;
-    tm.Second = 0;
-    tm.Day = 1;
-    tm.Month = m;
-    tm.Year = yr - 1970;
+    struct tm tm;
+    tm.tm_hour = r.hour;
+    tm.tm_min = 0;
+    tm.tm_sec = 0;
+    tm.tm_mday = 1;
+    tm.tm_mon = m;
+    tm.tm_year = yr - 1970;
     uint32_t t = makeTime(tm);
 
     // add offset from the first of the month to r.dow, and offset for the given week

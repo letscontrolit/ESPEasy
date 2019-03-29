@@ -4,7 +4,9 @@
 
 String Command_System_NoSleep(struct EventStruct *event, const char* Line)
 {
-	Settings.deepSleep = 0;
+	if (event->Par1 > 0)
+		Settings.deepSleep = event->Par1; // set deep Sleep awake time
+	else Settings.deepSleep = 0;
 	return return_command_success();
 }
 
@@ -20,12 +22,7 @@ String Command_System_Reboot(struct EventStruct *event, const char* Line)
 	pinMode(0, INPUT);
 	pinMode(2, INPUT);
 	pinMode(15, INPUT);
-#if defined(ESP8266)
-	ESP.reset();
-#endif
-#if defined(ESP32)
-	ESP.restart();
-#endif
+	reboot();
 	return return_command_success();
 }
 

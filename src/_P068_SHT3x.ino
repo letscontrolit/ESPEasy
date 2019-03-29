@@ -23,11 +23,14 @@
 # ifndef SHT3X_H
 # define SHT3X_H
 
-class SHT3X
+class SHT3X: public PluginTaskData_base
 {
 public:
 	SHT3X(uint8_t addr);
-	void get(void);
+
+	void readFromSensor(void);
+	bool CRC8(uint8_t MSB, uint8_t LSB, uint8_t CRC);
+
 	float tmp=0;
 	float hum=0;
 
@@ -46,21 +49,24 @@ SHT3X::SHT3X(uint8_t addr)
 	//Wire.begin();   called in ESPEasy framework
 
 	// Set to periodic mode
-	Wire.beginTransmission(_i2c_device_address);
-	Wire.write(0x20);   // periodic 0.5mps
-	Wire.write(0x32);   // repeatability high
-	Wire.endTransmission();
+	I2C_write8_reg(
+		_i2c_device_address,
+		0x20,   // periodic 0.5mps
+		0x32    // repeatability high
+	);
 }
 
-void SHT3X::get()
+void SHT3X::readFromSensor()
 {
 	uint16_t data[6];
 
-	Wire.beginTransmission(_i2c_device_address);
-	Wire.write(0xE0);   // fetch data command
-	Wire.write(0x00);
-	Wire.endTransmission();
+  I2C_write8_reg(
+		_i2c_device_address,
+		0xE0,   // fetch data command
+		0x00
+	);
 
+	// FIXME TD-er: Currently the I2Cdev::readBytes does not support writing 2 bytes before reading.
 	Wire.requestFrom(_i2c_device_address, (uint8_t)6);
 	if (Wire.available() == 6)
 	{
@@ -71,24 +77,50 @@ void SHT3X::get()
 		data[4] = Wire.read();
 		data[5] = Wire.read();
 
-		//TODO: check CRC
-
-		tmp = ((((data[0] << 8) | data[1]) * 175.0) / 65535.0) - 45.0;
-		hum = ((((data[3] << 8) | data[4]) * 100.0) / 65535.0);
+		//TODO: check CRC (data[2] and data[5])
+		if (CRC8(data[0], data[1], data[2]) &&
+		    CRC8(data[3], data[4], data[5]))
+		{
+			tmp = ((((data[0] << 8) | data[1]) * 175.0) / 65535.0) - 45.0;
+			hum = ((((data[3] << 8) | data[4]) * 100.0) / 65535.0);
+		}
 	}
 	else
 	{
 		tmp = NAN;
 		hum = NAN;
+
+		// Set to periodic mode
+		Wire.beginTransmission(_i2c_device_address);
+		Wire.write(0x20);   // periodic 0.5mps
+		Wire.write(0x32);   // repeatability high
+		Wire.endTransmission();
 	}
 }
 
-#ifndef CONFIG
-#define CONFIG(n) (Settings.TaskDevicePluginConfig[event->TaskIndex][n])
-#endif
 
-SHT3X*  Plugin_068_SHT3x[TASKS_MAX] = { NULL, };
-
+// FIXME TD-er: Try to make some collection of used CRC algorithms
+// See http://reveng.sourceforge.net/crc-catalogue/1-15.htm#crc.cat.crc-8-dvb-s2
+bool SHT3X::CRC8(uint8_t MSB, uint8_t LSB, uint8_t CRC)
+{
+	/*
+	*	Name           : CRC-8
+	* Polynomial     : 0x31 (x8 + x5 + x4 + 1)
+	* Initialization : 0xFF
+	* Reflect input  : False
+	* Reflect output : False
+	* Final          : XOR 0x00
+	*	Example        : CRC8( 0xBE, 0xEF, 0x92) should be true
+	*/
+	uint8_t crc = 0xFF;
+	for (uint8_t bytenr = 0; bytenr < 2; ++bytenr) {
+		crc ^= (bytenr == 0) ? MSB : LSB;
+		for (uint8_t i = 0; i < 8; ++i) {
+			crc = crc & 0x80 ? (crc << 1) ^ 0x31 : crc << 1;
+		}
+	}
+	return (crc == CRC);
+}
 
 //==============================================
 // PLUGIN
@@ -132,7 +164,7 @@ boolean Plugin_068(byte function, struct EventStruct *event, String& string)
 		case PLUGIN_WEBFORM_LOAD:
 		{
 			int optionValues[2] = { 0x44, 0x45 };
-			addFormSelectorI2C(F("i2c_addr"), 2, optionValues, CONFIG(0));
+			addFormSelectorI2C(F("i2c_addr"), 2, optionValues, PCONFIG(0));
 
 			success = true;
 			break;
@@ -140,7 +172,7 @@ boolean Plugin_068(byte function, struct EventStruct *event, String& string)
 
 		case PLUGIN_WEBFORM_SAVE:
 		{
-			CONFIG(0) = getFormItemInt(F("i2c_addr"));
+			PCONFIG(0) = getFormItemInt(F("i2c_addr"));
 
 			success = true;
 			break;
@@ -148,22 +180,21 @@ boolean Plugin_068(byte function, struct EventStruct *event, String& string)
 
 		case PLUGIN_INIT:
 		{
-			if (Plugin_068_SHT3x[event->TaskIndex])
-				delete Plugin_068_SHT3x[event->TaskIndex];
-			Plugin_068_SHT3x[event->TaskIndex] = new SHT3X(CONFIG(0));
-
+			initPluginTaskData(event->TaskIndex, new SHT3X(PCONFIG(0)));
 			success = true;
 			break;
 		}
 
 		case PLUGIN_READ:
 		{
-			if (!Plugin_068_SHT3x[event->TaskIndex])
-				return success;
+			SHT3X* sht3x = static_cast<SHT3X*>(getPluginTaskData(event->TaskIndex));
+			if (nullptr == sht3x) {
+			  return success;
+			}
 
-			Plugin_068_SHT3x[event->TaskIndex]->get();
-			UserVar[event->BaseVarIndex + 0] = Plugin_068_SHT3x[event->TaskIndex]->tmp;
-			UserVar[event->BaseVarIndex + 1] = Plugin_068_SHT3x[event->TaskIndex]->hum;
+			sht3x->readFromSensor();
+			UserVar[event->BaseVarIndex + 0] = sht3x->tmp;
+			UserVar[event->BaseVarIndex + 1] = sht3x->hum;
 			String log = F("SHT3x: Temperature: ");
 			log += UserVar[event->BaseVarIndex + 0];
 			addLog(LOG_LEVEL_INFO, log);

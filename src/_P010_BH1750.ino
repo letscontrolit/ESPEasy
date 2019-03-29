@@ -2,6 +2,7 @@
 //#######################################################################################################
 //#################################### Plugin-010: LuxRead   ############################################
 //#######################################################################################################
+
 #ifdef ESP8266  // Needed for precompile issues.
 #include "AS_BH1750.h"
 #endif
@@ -49,7 +50,7 @@ boolean Plugin_010(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+        byte choice = PCONFIG(0);
         /*
         String options[2];
         options[0] = F("0x23 - default settings (ADDR Low)");
@@ -58,10 +59,10 @@ boolean Plugin_010(byte function, struct EventStruct *event, String& string)
         int optionValues[2];
         optionValues[0] = BH1750_DEFAULT_I2CADDR;
         optionValues[1] = BH1750_SECOND_I2CADDR;
-        addFormSelectorI2C(F("plugin_010"), 2, optionValues, choice);
+        addFormSelectorI2C(F("p010"), 2, optionValues, choice);
         addFormNote(F("ADDR Low=0x23, High=0x5c"));
 
-        byte choiceMode = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
+        byte choiceMode = PCONFIG(1);
         String optionsMode[4];
         optionsMode[0] = F("RESOLUTION_LOW");
         optionsMode[1] = F("RESOLUTION_NORMAL");
@@ -72,9 +73,9 @@ boolean Plugin_010(byte function, struct EventStruct *event, String& string)
         optionValuesMode[1] = RESOLUTION_NORMAL;
         optionValuesMode[2] = RESOLUTION_HIGH;
         optionValuesMode[3] = RESOLUTION_AUTO_HIGH;
-        addFormSelector(F("Measurement mode"), F("plugin_010_mode"), 4, optionsMode, optionValuesMode, choiceMode);
+        addFormSelector(F("Measurement mode"), F("p010_mode"), 4, optionsMode, optionValuesMode, choiceMode);
 
-        addFormCheckBox(F("Send sensor to sleep"), F("plugin_010_sleep"), Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
+        addFormCheckBox(F("Send sensor to sleep"), F("p010_sleep"), PCONFIG(2));
 
         success = true;
         break;
@@ -82,32 +83,33 @@ boolean Plugin_010(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_010"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("plugin_010_mode"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = isFormItemChecked(F("plugin_010_sleep"));
+        PCONFIG(0) = getFormItemInt(F("p010"));
+        PCONFIG(1) = getFormItemInt(F("p010_mode"));
+        PCONFIG(2) = isFormItemChecked(F("p010_sleep"));
         success = true;
         break;
       }
 
   case PLUGIN_READ:
     {
-    	uint8_t address = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+    	uint8_t address = PCONFIG(0);
 
 
       AS_BH1750 sensor = AS_BH1750(address);
-      sensors_resolution_t mode;
+
       // replaced the 8 lines below to optimize code
-      mode = (sensors_resolution_t)Settings.TaskDevicePluginConfig[event->TaskIndex][1];
-      // if (Settings.TaskDevicePluginConfig[event->TaskIndex][1]==RESOLUTION_LOW)
+      sensors_resolution_t mode = static_cast<sensors_resolution_t>(PCONFIG(1));
+      // if (PCONFIG(1)==RESOLUTION_LOW)
       // 	mode = RESOLUTION_LOW;
-      // if (Settings.TaskDevicePluginConfig[event->TaskIndex][1]==RESOLUTION_NORMAL)
+      // if (PCONFIG(1)==RESOLUTION_NORMAL)
       // 	mode = RESOLUTION_NORMAL;
-      // if (Settings.TaskDevicePluginConfig[event->TaskIndex][1]==RESOLUTION_HIGH)
+      // if (PCONFIG(1)==RESOLUTION_HIGH)
       // 	mode = RESOLUTION_HIGH;
-      // if (Settings.TaskDevicePluginConfig[event->TaskIndex][1]==RESOLUTION_AUTO_HIGH)
+      // if (PCONFIG(1)==RESOLUTION_AUTO_HIGH)
       // 	mode = RESOLUTION_AUTO_HIGH;
 
-      sensor.begin(mode,Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
+      bool autoPowerDown = PCONFIG(2);
+      sensor.begin(mode, autoPowerDown);
 
       float lux = sensor.readLightLevel();
       if (lux != -1) {

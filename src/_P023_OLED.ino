@@ -15,6 +15,9 @@
 #define PLUGIN_VALUENAME1_023 "OLED"
 #define PLUGIN_023_MAX_DYSPALY 2
 
+#define P23_Nlines 8        // The number of different lines which can be displayed
+#define P23_Nchars 64
+
 struct Plugin_023_OLED_SettingStruct
 {
   Plugin_023_OLED_SettingStruct(): address(0)
@@ -74,36 +77,37 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+        byte choice = PCONFIG(0);
         /*String options[2] = { F("3C"), F("3D") };*/
         int optionValues[2] = { 0x3C, 0x3D };
-        addFormSelectorI2C(F("plugin_023_adr"), 2, optionValues, choice);
+        addFormSelectorI2C(F("p023_adr"), 2, optionValues, choice);
 
-        byte choice2 = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
+        byte choice2 = PCONFIG(1);
         String options2[2] = { F("Normal"), F("Rotated") };
         int optionValues2[2] = { 1, 2 };
-        addFormSelector(F("Rotation"), F("plugin_023_rotate"), 2, options2, optionValues2, choice2);
+        addFormSelector(F("Rotation"), F("p023_rotate"), 2, options2, optionValues2, choice2);
 
-        byte choice3 = Settings.TaskDevicePluginConfig[event->TaskIndex][3];
+        byte choice3 = PCONFIG(3);
         String options3[3] = { F("128x64"), F("128x32"), F("64x48") };
         int optionValues3[3] = { 1, 3, 2 };
-        addFormSelector(F("Display Size"), F("plugin_023_size"), 3, options3, optionValues3, choice3);
+        addFormSelector(F("Display Size"), F("p023_size"), 3, options3, optionValues3, choice3);
 
-        byte choice4 = Settings.TaskDevicePluginConfig[event->TaskIndex][4];
+        byte choice4 = PCONFIG(4);
         String options4[2] = { F("Normal"), F("Optimized") };
         int optionValues4[2] = { 1, 2 };
-        addFormSelector(F("Font Width"), F("plugin_023_font_width"), 2, options4, optionValues4, choice4);
+        addFormSelector(F("Font Width"), F("p023_font_width"), 2, options4, optionValues4, choice4);
 
-        char deviceTemplate[8][64];
+        char deviceTemplate[P23_Nlines][P23_Nchars];
         LoadCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
         for (byte varNr = 0; varNr < 8; varNr++)
         {
-          addFormTextBox(String(F("Line ")) + (varNr + 1), String(F("Plugin_023_template")) + (varNr + 1), deviceTemplate[varNr], 64);
+          addFormTextBox(String(F("Line ")) + (varNr + 1), String(F("p023_template")) + (varNr + 1), deviceTemplate[varNr], 64);
         }
 
-        addFormPinSelect(F("Display button"), F("taskdevicepin3"), Settings.TaskDevicePin3[event->TaskIndex]);
+        // FIXME TD-er: Why is this using pin3 and not pin1? And why isn't this using the normal pin selection functions?
+        addFormPinSelect(F("Display button"), F("taskdevicepin3"), CONFIG_PIN3);
 
-        addFormNumericBox(F("Display Timeout"), F("plugin_23_timer"), Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
+        addFormNumericBox(F("Display Timeout"), F("plugin_23_timer"), PCONFIG(2));
 
         success = true;
         break;
@@ -111,22 +115,25 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_023_adr"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("plugin_023_rotate"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("plugin_23_timer"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][3] = getFormItemInt(F("plugin_023_size"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][4] = getFormItemInt(F("plugin_023_font_width"));
+        PCONFIG(0) = getFormItemInt(F("p023_adr"));
+        PCONFIG(1) = getFormItemInt(F("p023_rotate"));
+        PCONFIG(2) = getFormItemInt(F("plugin_23_timer"));
+        PCONFIG(3) = getFormItemInt(F("p023_size"));
+        PCONFIG(4) = getFormItemInt(F("p023_font_width"));
 
-        char deviceTemplate[8][64];
-        for (byte varNr = 0; varNr < 8; varNr++)
+        char deviceTemplate[P23_Nlines][P23_Nchars];
+        String error;
+        for (byte varNr = 0; varNr < P23_Nlines; varNr++)
         {
-          String arg = F("Plugin_023_template");
-          arg += varNr + 1;
-          String tmpString = WebServer.arg(arg);
-          strncpy(deviceTemplate[varNr], tmpString.c_str(), sizeof(deviceTemplate[varNr])-1);
-          deviceTemplate[varNr][63]=0;
+          String argName = F("p023_template");
+          argName += varNr + 1;
+          if (!safe_strncpy(deviceTemplate[varNr], WebServer.arg(argName), P23_Nchars)) {
+            error += getCustomTaskSettingsError(varNr);
+          }
         }
-
+        if (error.length() > 0) {
+          addHtmlError(error);
+        }
         SaveCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
         success = true;
         break;
@@ -134,53 +141,53 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
       {
-        int index = Settings.TaskDevicePluginConfig[event->TaskIndex][0] == 0x3C
+        int index = PCONFIG(0) == 0x3C
          ? 0
          : 1;
-        OLED_Settings[index].address = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+        OLED_Settings[index].address = PCONFIG(0);
         OLED_Settings[index].type = 0;
-        if (Settings.TaskDevicePluginConfig[event->TaskIndex][3] == 3)
+        if (PCONFIG(3) == 3)
         {
           OLED_Settings[index].type = OLED_128x32;
         }
         OLED_Settings[index].font_width = Size_normal;
-        if (Settings.TaskDevicePluginConfig[event->TaskIndex][4] == 2)
+        if (PCONFIG(4) == 2)
         {
           OLED_Settings[index].font_width = Size_optimized;
         }
 
         Plugin_023_StartUp_OLED(OLED_Settings[index]);
         Plugin_023_clear_display(OLED_Settings[index]);
-        if (Settings.TaskDevicePluginConfig[event->TaskIndex][1] == 2)
+        if (PCONFIG(1) == 2)
         {
           OLED_Settings[index].type |= OLED_rotated;
           Plugin_023_sendcommand(OLED_Settings[index].address, 0xA0 | 0x1);      //SEGREMAP   //Rotate screen 180 deg
           Plugin_023_sendcommand(OLED_Settings[index].address, 0xC8);            //COMSCANDEC  Rotate screen 180 Deg
         }
-        if (Settings.TaskDevicePluginConfig[event->TaskIndex][3] == 2)
+        if (PCONFIG(3) == 2)
         {
           OLED_Settings[index].type |= OLED_64x48;
         }
 
         Plugin_023_sendStrXY(OLED_Settings[index], "ESP Easy ", 0, 0);
-        OLED_Settings[index].displayTimer = Settings.TaskDevicePluginConfig[event->TaskIndex][2];
-        if (Settings.TaskDevicePin3[event->TaskIndex] != -1)
-          pinMode(Settings.TaskDevicePin3[event->TaskIndex], INPUT_PULLUP);
+        OLED_Settings[index].displayTimer = PCONFIG(2);
+        if (CONFIG_PIN3 != -1)
+          pinMode(CONFIG_PIN3, INPUT_PULLUP);
         success = true;
         break;
       }
 
     case PLUGIN_TEN_PER_SECOND:
       {
-        if (Settings.TaskDevicePin3[event->TaskIndex] != -1)
+        if (CONFIG_PIN3 != -1)
         {
-          int index = Settings.TaskDevicePluginConfig[event->TaskIndex][0] == 0x3C
+          int index = PCONFIG(0) == 0x3C
                     ? 0
                     : 1;
-          if (!digitalRead(Settings.TaskDevicePin3[event->TaskIndex]))
+          if (!digitalRead(CONFIG_PIN3))
           {
             Plugin_023_displayOn(OLED_Settings[index]);
-            OLED_Settings[index].displayTimer = Settings.TaskDevicePluginConfig[event->TaskIndex][2];
+            OLED_Settings[index].displayTimer = PCONFIG(2);
           }
         }
         break;
@@ -188,7 +195,7 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_ONCE_A_SECOND:
       {
-        int index = Settings.TaskDevicePluginConfig[event->TaskIndex][0] == 0x3C
+        int index = PCONFIG(0) == 0x3C
           ? 0
           : 1;
 
@@ -203,9 +210,9 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
       {
-        char deviceTemplate[8][64];
+        char deviceTemplate[P23_Nlines][P23_Nchars];
         LoadCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
-        int index = Settings.TaskDevicePluginConfig[event->TaskIndex][0] == 0x3C
+        int index = PCONFIG(0) == 0x3C
           ? 0
           : 1;
 
@@ -224,17 +231,19 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WRITE:
       {
-        int index = Settings.TaskDevicePluginConfig[event->TaskIndex][0] == 0x3C
+        int index = PCONFIG(0) == 0x3C
           ? 0
           : 1;
         String arguments = String(string);
+
+        //Fixed bug #1864
         int dotPos = arguments.indexOf('.');
-        if(dotPos > -1)
+        if(dotPos > -1 && arguments.substring(dotPos,dotPos+4).equalsIgnoreCase(F("oled")))
         {
           LoadTaskSettings(event->TaskIndex);
           String name = arguments.substring(0,dotPos);
-          name.replace(F("["),F(""));
-          name.replace(F("]"),F(""));
+          name.replace("[","");
+          name.replace("]","");
           if(name.equalsIgnoreCase(getTaskDeviceName(event->TaskIndex)) == true)
           {
             arguments = arguments.substring(dotPos+1);
@@ -244,6 +253,7 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
              return false;
           }
         }
+
 
         int argIndex = arguments.indexOf(',');
         if (argIndex)

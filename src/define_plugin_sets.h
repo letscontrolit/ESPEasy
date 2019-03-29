@@ -21,9 +21,43 @@ To create/register a plugin, you have to :
 
 
 
+/******************************************************************************\
+ * Detect core versions *******************************************************
+\******************************************************************************/
+
+#ifndef ESP32
+  #if defined(ARDUINO_ESP8266_RELEASE_2_4_0) || defined(ARDUINO_ESP8266_RELEASE_2_4_1)  || defined(ARDUINO_ESP8266_RELEASE_2_4_2)
+    #ifndef CORE_2_4_X
+      #define CORE_2_4_X
+    #endif
+  #endif
+
+  #if defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(ARDUINO_ESP8266_RELEASE_2_4_0) || defined(ARDUINO_ESP8266_RELEASE_2_4_1)
+    #ifndef CORE_PRE_2_4_2
+      #define CORE_PRE_2_4_2
+    #endif
+  #endif
+
+  #if defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(CORE_2_4_X)
+    #ifndef CORE_PRE_2_5_0
+      #define CORE_PRE_2_5_0
+    #endif
+  #else
+    #ifndef CORE_POST_2_5_0
+      #define CORE_POST_2_5_0
+    #endif
+  #endif
+
+
+  #ifdef FORCE_PRE_2_5_0
+    #ifdef CORE_POST_2_5_0
+      #undef CORE_POST_2_5_0
+    #endif
+  #endif
+#endif // ESP32
 
 /******************************************************************************\
- * BUILD Configs *******************************************************************
+ * BUILD Configs **************************************************************
 \******************************************************************************/
 
 // IR library is large, so make a separate build including stable plugins and IR.
@@ -41,7 +75,6 @@ To create/register a plugin, you have to :
     #define PLUGIN_BUILD_NORMAL     // add stable
     #define PLUGIN_BUILD_IR
 #endif
-
 
 #ifdef PLUGIN_BUILD_DEV
     #define  PLUGIN_SET_EXPERIMENTAL
@@ -67,7 +100,82 @@ To create/register a plugin, you have to :
     #define  PLUGIN_SET_STABLE
     #define  CONTROLLER_SET_STABLE
     #define  NOTIFIER_SET_STABLE
+
+    #ifndef BUILD_NO_DEBUG
+      #define BUILD_NO_DEBUG
+    #endif
+    #ifdef WEBSERVER_RULES_DEBUG
+      #undef WEBSERVER_RULES_DEBUG
+    #endif
+    #define WEBSERVER_RULES_DEBUG 0
 #endif
+
+#ifdef PLUGIN_BUILD_MINIMAL_OTA
+    #define PLUGIN_DESCR  "Minimal 1M OTA"
+
+    #define CONTROLLER_SET_NONE
+
+    #define BUILD_MINIMAL_OTA
+    #ifndef BUILD_NO_DEBUG
+      #define BUILD_NO_DEBUG
+    #endif
+    #ifdef WEBSERVER_RULES_DEBUG
+      #undef WEBSERVER_RULES_DEBUG
+    #endif
+    #define WEBSERVER_RULES_DEBUG 0
+
+    #define USES_C001   // Domoticz HTTP
+    #define USES_C002   // Domoticz MQTT
+    #define USES_C005   // OpenHAB MQTT
+//    #define USES_C006   // PiDome MQTT
+    #define USES_C008   // Generic HTTP
+    #define USES_C009   // FHEM HTTP
+//    #define USES_C010   // Generic UDP
+    #define USES_C013   // ESPEasy P2P network
+
+//    #define NOTIFIER_SET_STABLE
+    #define NOTIFIER_SET_NONE
+
+    #define PLUGIN_SET_NONE
+
+    #ifndef USES_P001
+        #define USES_P001   // switch
+    #endif
+    #ifndef USES_P026
+      #define USES_P026   // SysInfo
+    #endif
+    #ifndef USES_P033
+      #define USES_P033   // Dummy
+    #endif
+    #ifndef USES_P037
+//        #define USES_P037   // MQTTImport
+    #endif
+
+    #ifndef USES_P004
+//        #define USES_P004   // Dallas
+    #endif
+    #ifndef USES_P005
+//        #define USES_P005   // DHT
+    #endif
+
+    #ifdef USE_SERVO
+      #undef USE_SERVO
+    #endif
+#endif
+
+
+#ifndef BUILD_MINIMAL_OTA
+  #ifndef WEBSERVER_TIMINGSTATS
+    #define WEBSERVER_TIMINGSTATS
+  #endif
+  #ifndef WEBSERVER_SYSVARS
+    #define WEBSERVER_SYSVARS
+  #endif
+  #ifndef WEBSERVER_NEW_UI
+    #define WEBSERVER_NEW_UI
+  #endif
+#endif
+
 
 
 /******************************************************************************\
@@ -78,6 +186,7 @@ To create/register a plugin, you have to :
 // #define DECODE_TOSHIBA_AC      true
 // #define SEND_TOSHIBA_AC        true
 #ifdef PLUGIN_BUILD_IR
+    #define PLUGIN_DESCR  "IR"
     #define USES_P016      // IR
     #define USES_P035      // IRTX
 #endif
@@ -89,71 +198,61 @@ To create/register a plugin, you have to :
 
 // Itead ----------------------------
 #ifdef PLUGIN_SET_SONOFF_BASIC
+    #define PLUGIN_DESCR  "Sonoff Basic"
+
     #define PLUGIN_SET_ONLY_SWITCH
 #endif
 
-#ifdef PLUGIN_SET_SONOFF_TH10
-    #define PLUGIN_SET_ONLY_SWITCH
-#endif
+#ifdef PLUGIN_SET_SONOFF_TH1x
+    #define PLUGIN_DESCR  "Sonoff TH10/TH16"
 
-#ifdef PLUGIN_SET_SONOFF_TH16
     #define PLUGIN_SET_ONLY_SWITCH
     #define PLUGIN_SET_ONLY_TEMP_HUM
 #endif
 
 #ifdef PLUGIN_SET_SONOFF_POW
-    // Undef first to prevent compiler warnings
-    #undef DEFAULT_PIN_I2C_SDA
-    #undef DEFAULT_PIN_I2C_SCL
-    #undef DEFAULT_PIN_STATUS_LED
+    #define PLUGIN_DESCR  "Sonoff POW R1/R2"
 
     #define PLUGIN_SET_ONLY_SWITCH
-    #define USES_P076
-    #define DEFAULT_PIN_I2C_SDA    4
-    #define DEFAULT_PIN_I2C_SCL    2  // GPIO5 conflicts with HLW8012 Sel output
-    #define DEFAULT_PIN_STATUS_LED 15 // GPIO15 Blue Led (0 = On, 1 = Off)
-#endif
-
-#ifdef PLUGIN_SET_SONOFF_POW_R2
-    // Undef first to prevent compiler warnings
-    #undef DEFAULT_PIN_STATUS_LED
-
-    #define PLUGIN_SET_ONLY_SWITCH
+    #define USES_P076   // HWL8012   in POW r1
     // Needs CSE7766 Energy sensor, via Serial RXD 4800 baud 8E1 (GPIO1), TXD (GPIO3)
-    #define USES_P077	// CSE7766
-    #define DEFAULT_PIN_STATUS_LED 13 // GPIO13 Blue Led (0 = On, 1 = Off)
+    #define USES_P077	  // CSE7766   in POW R2
+    #define USES_P081   // Cron
 #endif
 
-#ifdef PLUGIN_SET_SONOFF_S20
+#ifdef PLUGIN_SET_SONOFF_S2x
+    #define PLUGIN_DESCR  "Sonoff S20/22/26"
+
     #define PLUGIN_SET_ONLY_SWITCH
 #endif
 
 #ifdef PLUGIN_SET_SONOFF_4CH
+    #define PLUGIN_DESCR  "Sonoff 4CH"
     #define PLUGIN_SET_ONLY_SWITCH
 #endif
 
 #ifdef PLUGIN_SET_SONOFF_TOUCH
+    #define PLUGIN_DESCR  "Sonoff Touch"
     #define PLUGIN_SET_ONLY_SWITCH
 #endif
 
 // Shelly ----------------------------
 #ifdef PLUGIN_SET_SHELLY_1
+    #define PLUGIN_DESCR  "Shelly 1"
+
     #define PLUGIN_SET_ONLY_SWITCH
     #define CONTROLLER_SET_STABLE
     #define NOTIFIER_SET_STABLE
-
-    #undef DEFAULT_PIN_I2C_SDA
-    #undef DEFAULT_PIN_I2C_SCL
-    #define DEFAULT_PIN_I2C_SDA    6  // GPIO4 conflicts with relay control.
-    #define DEFAULT_PIN_I2C_SCL    7  // GPIO5 conflicts with SW input
 #endif
 
 // Easy ----------------------------
 #ifdef PLUGIN_SET_EASY_TEMP
+    #define PLUGIN_DESCR  "Temp Hum"
     #define PLUGIN_SET_ONLY_TEMP_HUM
 #endif
 
 #ifdef PLUGIN_SET_EASY_CARBON
+    #define PLUGIN_DESCR  "Carbon"
     #define PLUGIN_SET_NONE
     #define USES_P052   // SenseAir
 #endif
@@ -196,6 +295,8 @@ To create/register a plugin, you have to :
 
 // Generic ESP32 -----------------------------
 #ifdef PLUGIN_SET_GENERIC_ESP32
+    #define PLUGIN_DESCR  "Generic ESP32"
+
     #ifndef ESP32
         #define ESP32
     #endif
@@ -206,10 +307,26 @@ To create/register a plugin, you have to :
     #define USES_P036   // FrameOLED
     #define USES_P027   // INA219
     #define USES_P028   // BME280
-
-    // TODO : Add list of compatible plugins for ESP32 board.
 #endif
 
+#ifdef PLUGIN_SET_TEST_ESP32
+    #define PLUGIN_DESCR  "TEST ESP32"
+    #ifndef ESP32
+        #define ESP32
+    #endif
+    #ifdef ESP8266
+        #undef ESP8266
+    #endif
+//    #define PLUGIN_SET_ONLY_SWITCH
+
+    #define  PLUGIN_SET_TESTING
+    #define  CONTROLLER_SET_STABLE
+    #define  NOTIFIER_SET_STABLE
+    #define  PLUGIN_SET_STABLE     // add stable
+    // See also PLUGIN_SET_TEST_ESP32 section at end,
+    // where incompatible plugins will be disabled.
+    // TODO : Check compatibility of plugins for ESP32 board.
+#endif
 
 
 // Generic ------------------------------------
@@ -239,7 +356,7 @@ To create/register a plugin, you have to :
         #define USES_P001   // switch
     #endif
     #ifndef USES_P003
-        #define USES_P003   // pulse
+//        #define USES_P003   // pulse
     #endif
     #ifndef USES_P026
       #define USES_P026   // SysInfo
@@ -264,9 +381,6 @@ To create/register a plugin, you have to :
     #endif
     #ifndef USES_P028
         #define USES_P028   // BME280
-    #endif
-    #ifndef USES_P030
-        #define USES_P030   // BMP280
     #endif
 #endif
 
@@ -374,6 +488,8 @@ To create/register a plugin, you have to :
 
 // STABLE #####################################
 #ifdef PLUGIN_SET_STABLE
+    #define USE_SERVO
+
     #define USES_P001   // Switch
     #define USES_P002   // ADC
     #define USES_P003   // Pulse
@@ -406,7 +522,7 @@ To create/register a plugin, you have to :
     #define USES_P028   // BME280
     #define USES_P029   // Output
 
-    #define USES_P030   // BMP280
+//    #define USES_P030   // BMP280   (Made obsolete, now BME280 can handle both)
     #define USES_P031   // SHT1X
     #define USES_P032   // MS5611
     #define USES_P033   // Dummy
@@ -429,6 +545,7 @@ To create/register a plugin, you have to :
     #define USES_P059   // Encoder
 
     #define USES_P063   // TTP229_KeyPad
+    #define USES_P079   // Wemos Motoshield
 #endif
 
 
@@ -450,6 +567,10 @@ To create/register a plugin, you have to :
 #ifdef NOTIFIER_SET_STABLE
     #define USES_N001   // Email
     #define USES_N002   // Buzzer
+
+    #ifdef NOTIFIER_SET_NONE
+      #undef NOTIFIER_SET_NONE
+    #endif
 #endif
 
 
@@ -485,10 +606,14 @@ To create/register a plugin, you have to :
     #define USES_P073   // 7DG
     #define USES_P074   // TSL2561
     #define USES_P075   // Nextion
-
+    #define USES_P076   // HWL8012   in POW r1
+    // Needs CSE7766 Energy sensor, via Serial RXD 4800 baud 8E1 (GPIO1), TXD (GPIO3)
+    #define USES_P077	  // CSE7766   in POW R2
     #define USES_P078   // Eastron Modbus Energy meters
-    #define USES_P079   // Wemos Motoshield
     #define USES_P080   // iButton Sensor  DS1990A
+    #define USES_P081   // Cron
+    #define USES_P082   // GPS
+    #define USES_P083   // SGP30
 #endif
 
 
@@ -587,11 +712,47 @@ To create/register a plugin, you have to :
 
 
 
+/******************************************************************************\
+ * Remove incompatible plugins ************************************************
+\******************************************************************************/
+#ifdef PLUGIN_SET_TEST_ESP32
+  #undef USES_P010   // BH1750          (doesn't work yet on ESP32)
+//  #undef USES_P049   // MHZ19           (doesn't work yet on ESP32)
+
+//  #undef USES_P052   // SenseAir        (doesn't work yet on ESP32)
+//  #undef USES_P053   // PMSx003
+
+//  #undef USES_P056   // SDS011-Dust     (doesn't work yet on ESP32)
+//  #undef USES_P065   // DRF0299
+//  #undef USES_P071   // Kamstrup401
+  #undef USES_P075   // Nextion
+//  #undef USES_P078   // Eastron Modbus Energy meters (doesn't work yet on ESP32)
+//  #undef USES_P082   // GPS
+
+  #ifdef USE_SERVO
+    #undef USE_SERVO
+  #endif
+#endif
+
+
+#ifdef ARDUINO_ESP8266_RELEASE_2_3_0
+  #ifdef USES_P081
+    #undef USES_P081   // Cron
+  #endif
+
+
+#endif
 
 
 /******************************************************************************\
  * Libraries dependencies *****************************************************
 \******************************************************************************/
+#if defined(USES_P049) || defined(USES_P052) || defined(USES_P053) || defined(USES_P056) || defined(USES_P071) || defined(USES_P075) || defined(USES_P082)
+// At least one plugin uses serial.
+#else
+  // No plugin uses serial, so make sure software serial is not included.
+  #define DISABLE_SOFTWARE_SERIAL
+#endif
 
 /*
 #if defined(USES_P00x) || defined(USES_P00y)

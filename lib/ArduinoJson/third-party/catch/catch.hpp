@@ -4207,7 +4207,7 @@ namespace Tbc {
                     }
                     else {
                         spliceLine( indent, remainder, width-1 );
-                        lines.back() += "-";
+                        lines.back() += '-';
                     }
                     if( lines.size() == 1 )
                         indent = _attr.indent;

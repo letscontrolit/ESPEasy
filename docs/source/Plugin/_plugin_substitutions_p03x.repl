@@ -1,0 +1,119 @@
+.. |P030_name| replace:: :cyan:`BMP280`
+.. |P030_type| replace:: :cyan:`Environment`
+.. |P030_typename| replace:: :cyan:`Environment - BMP280`
+.. |P030_status| replace:: :green:`NORMAL`
+.. |P030_github| replace:: P030_BMP280.ino
+.. _P030_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P030_BMP280.ino
+.. |P030_usedby| replace:: :ref:`P030_BMP280_page`
+.. |P030_shortinfo| replace:: Temperature and pressure for the BMP280 sensors. Superseded by :ref:`P028_page`
+.. |P030_maintainer| replace:: `.`
+.. |P030_compileinfo| replace:: `.`
+.. |P030_usedlibraries| replace:: `.`
+
+.. |P031_name| replace:: :cyan:`SHT1X`
+.. |P031_type| replace:: :cyan:`Environment`
+.. |P031_typename| replace:: :cyan:`Environment - SHT1X`
+.. |P031_status| replace:: :green:`NORMAL`
+.. |P031_github| replace:: P031_SHT1X.ino
+.. _P031_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P031_SHT1X.ino
+.. |P031_usedby| replace:: `.`
+.. |P031_shortinfo| replace:: `.`
+.. |P031_maintainer| replace:: `.`
+.. |P031_compileinfo| replace:: `.`
+.. |P031_usedlibraries| replace:: `.`
+
+.. |P032_name| replace:: :cyan:`MS5611 (GY-63)`
+.. |P032_type| replace:: :cyan:`Environment`
+.. |P032_typename| replace:: :cyan:`Environment - MS5611 (GY-63)`
+.. |P032_status| replace:: :green:`NORMAL`
+.. |P032_github| replace:: P032_MS5611.ino
+.. _P032_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P032_MS5611.ino
+.. |P032_usedby| replace:: `.`
+.. |P032_shortinfo| replace:: `.`
+.. |P032_maintainer| replace:: `.`
+.. |P032_compileinfo| replace:: `.`
+.. |P032_usedlibraries| replace:: `.`
+
+.. |P033_name| replace:: :cyan:`Dummy Device`
+.. |P033_type| replace:: :cyan:`Generic`
+.. |P033_typename| replace:: :cyan:`Generic - Dummy Device`
+.. |P033_status| replace:: :green:`NORMAL`
+.. |P033_github| replace:: P033_Dummy.ino
+.. _P033_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P033_Dummy.ino
+.. |P033_usedby| replace:: `.`
+.. |P033_shortinfo| replace:: `.`
+.. |P033_maintainer| replace:: `.`
+.. |P033_compileinfo| replace:: `.`
+.. |P033_usedlibraries| replace:: `.`
+
+.. |P034_name| replace:: :cyan:`DHT12 (I2C)`
+.. |P034_type| replace:: :cyan:`Environment`
+.. |P034_typename| replace:: :cyan:`Environment - DHT12 (I2C)`
+.. |P034_status| replace:: :green:`NORMAL`
+.. |P034_github| replace:: P034_DHT12.ino
+.. _P034_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P034_DHT12.ino
+.. |P034_usedby| replace:: `.`
+.. |P034_shortinfo| replace:: `.`
+.. |P034_maintainer| replace:: `.`
+.. |P034_compileinfo| replace:: `.`
+.. |P034_usedlibraries| replace:: `.`
+
+.. |P035_name| replace:: :cyan:`IR Transmit`
+.. |P035_type| replace:: :cyan:`Communication`
+.. |P035_typename| replace:: :cyan:`Communication - IR Transmit`
+.. |P035_status| replace:: :green:`NORMAL`
+.. |P035_github| replace:: P035_IRTX.ino
+.. _P035_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P035_IRTX.ino
+.. |P035_usedby| replace:: `.`
+.. |P035_shortinfo| replace:: `.`
+.. |P035_maintainer| replace:: `.`
+.. |P035_compileinfo| replace:: `.`
+.. |P035_usedlibraries| replace:: `.`
+
+.. |P036_name| replace:: :cyan:`OLED SSD1306/SH1106 Framed`
+.. |P036_type| replace:: :cyan:`Display`
+.. |P036_typename| replace:: :cyan:`Display - OLED SSD1306/SH1106 Framed`
+.. |P036_status| replace:: :green:`NORMAL`
+.. |P036_github| replace:: P036_FrameOLED.ino
+.. _P036_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P036_FrameOLED.ino
+.. |P036_usedby| replace:: `.`
+.. |P036_shortinfo| replace:: `.`
+.. |P036_maintainer| replace:: `.`
+.. |P036_compileinfo| replace:: `.`
+.. |P036_usedlibraries| replace:: `.`
+
+.. |P037_name| replace:: :cyan:`MQTT Import`
+.. |P037_type| replace:: :cyan:`Generic`
+.. |P037_typename| replace:: :cyan:`Generic - MQTT Import`
+.. |P037_status| replace:: :green:`NORMAL`
+.. |P037_github| replace:: P037_MQTTImport.ino
+.. _P037_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P037_MQTTImport.ino
+.. |P037_usedby| replace:: `.`
+.. |P037_shortinfo| replace:: `.`
+.. |P037_maintainer| replace:: `.`
+.. |P037_compileinfo| replace:: `.`
+.. |P037_usedlibraries| replace:: `.`
+
+.. |P038_name| replace:: :cyan:`NeoPixel (Basic)`
+.. |P038_type| replace:: :cyan:`Output`
+.. |P038_typename| replace:: :cyan:`Output - NeoPixel (Basic)`
+.. |P038_status| replace:: :green:`NORMAL`
+.. |P038_github| replace:: P038_NeoPixel.ino
+.. _P038_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P038_NeoPixel.ino
+.. |P038_usedby| replace:: `.`
+.. |P038_shortinfo| replace:: `.`
+.. |P038_maintainer| replace:: `.`
+.. |P038_compileinfo| replace:: `.`
+.. |P038_usedlibraries| replace:: `.`
+
+.. |P039_name| replace:: :cyan:`Thermocouple`
+.. |P039_type| replace:: :cyan:`Environment`
+.. |P039_typename| replace:: :cyan:`Environment - Thermocouple`
+.. |P039_status| replace:: :green:`NORMAL`
+.. |P039_github| replace:: P039_Thermocouple.ino
+.. _P039_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P039_Thermocouple.ino
+.. |P039_usedby| replace:: `.`
+.. |P039_shortinfo| replace:: `.`
+.. |P039_maintainer| replace:: `.`
+.. |P039_compileinfo| replace:: `.`
+.. |P039_usedlibraries| replace:: `.`

@@ -40,7 +40,17 @@ static int8_t lastWiFiState = P36_WIFI_STATE_UNSET;
 
 OLEDDisplay *display=NULL;
 
-char P036_deviceTemplate[P36_Nlines][P36_Nchars];
+String P036_displayLines[P36_Nlines];
+
+void Plugin_036_loadDisplayLines(byte taskIndex) {
+  char P036_deviceTemplate[P36_Nlines][P36_Nchars];
+  LoadCustomTaskSettings(taskIndex, (byte*)&P036_deviceTemplate, sizeof(P036_deviceTemplate));
+  for (byte varNr = 0; varNr < P36_Nlines; varNr++) {
+    P036_displayLines[varNr] = P036_deviceTemplate[varNr];
+  }
+
+
+}
 
 boolean Plugin_036(byte function, struct EventStruct *event, String& string)
 {
@@ -89,14 +99,14 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
       {
         // Use number 5 to remain compatible with existing configurations,
         // but the item should be one of the first choices.
-        byte choice5 = Settings.TaskDevicePluginConfig[event->TaskIndex][5];
+        byte choice5 = PCONFIG(5);
         String options5[2];
         options5[0] = F("SSD1306");
         options5[1] = F("SH1106");
         int optionValues5[2] = { 1, 2 };
-        addFormSelector(F("Controler"), F("plugin_036_controler"), 2, options5, optionValues5, choice5);
+        addFormSelector(F("Controller"), F("p036_controller"), 2, options5, optionValues5, choice5);
 
-        byte choice0 = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+        byte choice0 = PCONFIG(0);
         /*
         String options0[2];
         options0[0] = F("3C");
@@ -105,25 +115,25 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
         int optionValues0[2];
         optionValues0[0] = 0x3C;
         optionValues0[1] = 0x3D;
-        addFormSelectorI2C(F("plugin_036_adr"), 2, optionValues0, choice0);
+        addFormSelectorI2C(F("p036_adr"), 2, optionValues0, choice0);
 
-        byte choice1 = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
+        byte choice1 = PCONFIG(1);
         String options1[2];
         options1[0] = F("Normal");
         options1[1] = F("Rotated");
         int optionValues1[2] = { 1, 2 };
-        addFormSelector(F("Rotation"), F("plugin_036_rotate"), 2, options1, optionValues1, choice1);
+        addFormSelector(F("Rotation"), F("p036_rotate"), 2, options1, optionValues1, choice1);
 
-        byte choice2 = Settings.TaskDevicePluginConfig[event->TaskIndex][2];
+        byte choice2 = PCONFIG(2);
         String options2[4];
-        options2[0] = F("1");
-        options2[1] = F("2");
-        options2[2] = F("3");
-        options2[3] = F("4");
-        int optionValues2[4] = { 1, 2, 3, 4 };
-        addFormSelector(F("Lines per Frame"), F("plugin_036_nlines"), 4, options2, optionValues2, choice2);
+        int optionValues2[4];
+        for (int i = 0; i < 4; ++i) {
+          options2[i] = String(i + 1);
+          optionValues2[i] = i + 1;
+        }
+        addFormSelector(F("Lines per Frame"), F("p036_nlines"), 4, options2, optionValues2, choice2);
 
-        byte choice3 = Settings.TaskDevicePluginConfig[event->TaskIndex][3];
+        byte choice3 = PCONFIG(3);
         String options3[5];
         options3[0] = F("Very Slow");
         options3[1] = F("Slow");
@@ -136,20 +146,19 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
         optionValues3[2] = 4;
         optionValues3[3] = 8;
         optionValues3[4] = 32;
-        addFormSelector(F("Scroll"), F("plugin_036_scroll"), 5, options3, optionValues3, choice3);
-
-        LoadCustomTaskSettings(event->TaskIndex, (byte*)&P036_deviceTemplate, sizeof(P036_deviceTemplate));
-
+        addFormSelector(F("Scroll"), F("p036_scroll"), 5, options3, optionValues3, choice3);
+        Plugin_036_loadDisplayLines(event->TaskIndex);
         for (byte varNr = 0; varNr < P36_Nlines; varNr++)
         {
-          addFormTextBox(String(F("Line ")) + (varNr + 1), String(F("Plugin_036_template")) + (varNr + 1), P036_deviceTemplate[varNr], P36_Nchars);
+          addFormTextBox(String(F("Line ")) + (varNr + 1), String(F("p036_template")) + (varNr + 1), P036_displayLines[varNr], P36_Nchars);
         }
 
-        addFormPinSelect(F("Display button"), F("taskdevicepin3"), Settings.TaskDevicePin3[event->TaskIndex]);
+        // FIXME TD-er: Why is this using pin3 and not pin1? And why isn't this using the normal pin selection functions?
+        addFormPinSelect(F("Display button"), F("taskdevicepin3"), CONFIG_PIN3);
 
-        addFormNumericBox(F("Display Timeout"), F("plugin_036_timer"), Settings.TaskDevicePluginConfig[event->TaskIndex][4]);
+        addFormNumericBox(F("Display Timeout"), F("p036_timer"), PCONFIG(4));
 
-        byte choice6 = Settings.TaskDevicePluginConfig[event->TaskIndex][6];
+        byte choice6 = PCONFIG(6);
         if (choice6 == 0) choice6 = P36_CONTRAST_HIGH;
         String options6[3];
         options6[0] = F("Low");
@@ -159,7 +168,7 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
         optionValues6[0] = P36_CONTRAST_LOW;
         optionValues6[1] = P36_CONTRAST_MED;
         optionValues6[2] = P36_CONTRAST_HIGH;
-        addFormSelector(F("Contrast"), F("plugin_036_contrast"), 3, options6, optionValues6, choice6);
+        addFormSelector(F("Contrast"), F("p036_contrast"), 3, options6, optionValues6, choice6);
 
         success = true;
         break;
@@ -172,25 +181,30 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
            millis() + (Settings.TaskDeviceTimer[event->TaskIndex] * 1000));
         frameCounter=0;
 
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_036_adr"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("plugin_036_rotate"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("plugin_036_nlines"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][3] = getFormItemInt(F("plugin_036_scroll"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][4] = getFormItemInt(F("plugin_036_timer"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][5] = getFormItemInt(F("plugin_036_controler"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][6] = getFormItemInt(F("plugin_036_contrast"));
+        PCONFIG(0) = getFormItemInt(F("p036_adr"));
+        PCONFIG(1) = getFormItemInt(F("p036_rotate"));
+        PCONFIG(2) = getFormItemInt(F("p036_nlines"));
+        PCONFIG(3) = getFormItemInt(F("p036_scroll"));
+        PCONFIG(4) = getFormItemInt(F("p036_timer"));
+        PCONFIG(5) = getFormItemInt(F("p036_controller"));
+        PCONFIG(6) = getFormItemInt(F("p036_contrast"));
 
-        String argName;
-
+        String error;
+        char P036_deviceTemplate[P36_Nlines][P36_Nchars];
         for (byte varNr = 0; varNr < P36_Nlines; varNr++)
         {
-          argName = F("Plugin_036_template");
+          String argName = F("p036_template");
           argName += varNr + 1;
-          strncpy(P036_deviceTemplate[varNr], WebServer.arg(argName).c_str(), sizeof(P036_deviceTemplate[varNr]));
+          if (!safe_strncpy(P036_deviceTemplate[varNr], WebServer.arg(argName), P36_Nchars)) {
+            error += getCustomTaskSettingsError(varNr);
+          }
         }
-
+        if (error.length() > 0) {
+          addHtmlError(error);
+        }
         SaveCustomTaskSettings(event->TaskIndex, (byte*)&P036_deviceTemplate, sizeof(P036_deviceTemplate));
-
+        // After saving, make sure the active lines are updated.
+        Plugin_036_loadDisplayLines(event->TaskIndex);
         success = true;
         break;
       }
@@ -199,7 +213,7 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
       {
         lastWiFiState = P36_WIFI_STATE_UNSET;
         // Load the custom settings from flash
-        LoadCustomTaskSettings(event->TaskIndex, (byte*)&P036_deviceTemplate, sizeof(P036_deviceTemplate));
+        Plugin_036_loadDisplayLines(event->TaskIndex);
 
         //      Init the display and turn it on
         if (display)
@@ -208,8 +222,8 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
           delete display;
         }
 
-        uint8_t OLED_address = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
-        if (Settings.TaskDevicePluginConfig[event->TaskIndex][5] == 1) {
+        uint8_t OLED_address = PCONFIG(0);
+        if (PCONFIG(5) == 1) {
           display = new SSD1306Wire(OLED_address, Settings.Pin_i2c_sda, Settings.Pin_i2c_scl);
         } else {
           display = new SH1106Wire(OLED_address, Settings.Pin_i2c_sda, Settings.Pin_i2c_scl);
@@ -217,14 +231,14 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
         display->init();		// call to local override of init function
         display->displayOn();
 
-        uint8_t OLED_contrast = Settings.TaskDevicePluginConfig[event->TaskIndex][6];
+        uint8_t OLED_contrast = PCONFIG(6);
         P36_setContrast(OLED_contrast);
 
         //      Set the initial value of OnOff to On
         UserVar[event->BaseVarIndex] = 1;
 
         //      flip screen if required
-        if (Settings.TaskDevicePluginConfig[event->TaskIndex][1] == 2)display->flipScreenVertically();
+        if (PCONFIG(1) == 2)display->flipScreenVertically();
 
         //      Display the device name, logo, time and wifi
         display_header();
@@ -232,11 +246,11 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
         display->display();
 
         //      Set up the display timer
-        displayTimer = Settings.TaskDevicePluginConfig[event->TaskIndex][4];
+        displayTimer = PCONFIG(4);
 
-        if (Settings.TaskDevicePin3[event->TaskIndex] != -1)
+        if (CONFIG_PIN3 != -1)
         {
-          pinMode(Settings.TaskDevicePin3[event->TaskIndex], INPUT_PULLUP);
+          pinMode(CONFIG_PIN3, INPUT_PULLUP);
         }
 
         //    Initialize frame counter
@@ -256,19 +270,22 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
             delete display;
             display=NULL;
           }
+          for (byte varNr = 0; varNr < P36_Nlines; varNr++) {
+            P036_displayLines[varNr] = "";
+          }
           break;
       }
 
     // Check frequently to see if we have a pin signal to switch on display
     case PLUGIN_TEN_PER_SECOND:
       {
-        if (Settings.TaskDevicePin3[event->TaskIndex] != -1)
+        if (CONFIG_PIN3 != -1)
         {
-          if (!digitalRead(Settings.TaskDevicePin3[event->TaskIndex]))
+          if (!digitalRead(CONFIG_PIN3))
           {
             display->displayOn();
             UserVar[event->BaseVarIndex] = 1;      //  Save the fact that the display is now ON
-            displayTimer = Settings.TaskDevicePluginConfig[event->TaskIndex][4];
+            displayTimer = PCONFIG(4);
           }
         }
         break;
@@ -309,7 +326,7 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
         // }
 
         //      Define Scroll area layout
-        linesPerFrame = Settings.TaskDevicePluginConfig[event->TaskIndex][2];
+        linesPerFrame = PCONFIG(2);
         NFrames = P36_Nlines / linesPerFrame;
 
         //      Now create the string for the outgoing and incoming frames
@@ -321,7 +338,7 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
         //      Construct the outgoing string
         for (byte i = 0; i < linesPerFrame; i++)
         {
-          tmpString = P036_deviceTemplate[(linesPerFrame * frameCounter) + i];
+          tmpString = P036_displayLines[(linesPerFrame * frameCounter) + i];
           oldString[i] = P36_parseTemplate(tmpString, 20);
           oldString[i].trim();
         }
@@ -347,7 +364,7 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
           //        Contruct incoming strings
           for (byte i = 0; i < linesPerFrame; i++)
           {
-            tmpString = P036_deviceTemplate[(linesPerFrame * frameCounter) + i];
+            tmpString = P036_displayLines[(linesPerFrame * frameCounter) + i];
             newString[i] = P36_parseTemplate(tmpString, 20);
             newString[i].trim();
             if (newString[i].length() > 0) foundText = true;
@@ -368,7 +385,7 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
 //        display_indicator(frameCounter, NFrames);
         display->display();
 
-        int scrollspeed = Settings.TaskDevicePluginConfig[event->TaskIndex][3];
+        int scrollspeed = PCONFIG(3);
         display_scroll(oldString, newString, linesPerFrame, scrollspeed);
 
         success = true;
@@ -451,12 +468,12 @@ String P36_parseTemplate(String &tmpString, byte lineSize) {
     log += tmpString;
     log += F("'  hex:");
     for (int i = 0; i < tmpString.length(); ++i) {
-      log += F(" ");
+      log += ' ';
       log += String(tmpString[i], HEX);
     }
     log += F(" out hex:");
     for (int i = 0; i < result.length(); ++i) {
-      log += F(" ");
+      log += ' ';
       log += String(result[i], HEX);
     }
     addLog(LOG_LEVEL_INFO, log);
@@ -469,7 +486,7 @@ String P36_parseTemplate(String &tmpString, byte lineSize) {
 
 void display_header() {
   static boolean showWiFiName = true;
-  if (showWiFiName && (wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED) ) {
+  if (showWiFiName && (WiFiConnected()) ) {
     String newString = WiFi.SSID();
     newString.trim();
     display_title(newString);
@@ -632,7 +649,7 @@ void display_scroll(String outString[], String inString[], int nlines, int scrol
 
 //Draw Signal Strength Bars, return true when there was an update.
 bool display_wifibars() {
-  const bool connected = wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED;
+  const bool connected = WiFiConnected();
   const int nbars_filled = (WiFi.RSSI() + 100) / 8;
   const int newState = connected ? nbars_filled : P36_WIFI_STATE_UNSET;
   if (newState == lastWiFiState)
@@ -654,7 +671,7 @@ bool display_wifibars() {
   display->setColor(BLACK);
   display->fillRect(x , y, size_x, size_y);
   display->setColor(WHITE);
-  if (wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED) {
+  if (WiFiConnected()) {
     for (byte ibar = 0; ibar < nbars; ibar++) {
       int16_t height = size_y * (ibar + 1) / nbars;
       int16_t xpos = x + ibar * width;

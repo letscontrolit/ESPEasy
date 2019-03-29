@@ -29,9 +29,9 @@ struct C011_ConfigStruct
   char          HttpBody[C011_HTTP_BODY_MAX_LEN] = {0};
 };
 
-boolean CPlugin_011(byte function, struct EventStruct *event, String& string)
+bool CPlugin_011(byte function, struct EventStruct *event, String& string)
 {
-  boolean success = false;
+  bool success = false;
 
   switch (function)
   {
@@ -67,7 +67,7 @@ boolean CPlugin_011(byte function, struct EventStruct *event, String& string)
           string += F("<option value='");
           string += methods[i] + "'";
           string += methods[i].equals(customConfig.HttpMethod) ? F(" selected='selected'") : F("");
-          string += F(">");
+          string += '>';
           string += methods[i];
           string += F("</option>");
         }
@@ -78,11 +78,11 @@ boolean CPlugin_011(byte function, struct EventStruct *event, String& string)
         string += F("' value='");
         string += customConfig.HttpUri;
 
-        string += F("'>");
+        string += "'>";
 
         string += F("<TR><TD>HTTP Header:<TD><textarea name='P011httpheader' rows='4' cols='50' maxlength='");
         string += C011_HTTP_HEADER_MAX_LEN-1;
-        string += F("'>");
+        string += "'>";
         escapeBuffer=customConfig.HttpHeader;
         htmlEscape(escapeBuffer);
         string += escapeBuffer;
@@ -90,7 +90,7 @@ boolean CPlugin_011(byte function, struct EventStruct *event, String& string)
 
         string += F("<TR><TD>HTTP Body:<TD><textarea name='P011httpbody' rows='8' cols='50' maxlength='");
         string += C011_HTTP_BODY_MAX_LEN-1;
-        string += F("'>");
+        string += "'>";
         escapeBuffer=customConfig.HttpBody;
         htmlEscape(escapeBuffer);
         string += escapeBuffer;
@@ -133,10 +133,8 @@ bool do_process_c011_delay_queue(int controller_number, const C011_queue_element
   if (!try_connect_host(controller_number, client, ControllerSettings))
     return false;
 
-  return send_via_http(controller_number, client, element.txt);
+  return send_via_http(controller_number, client, element.txt, ControllerSettings.MustCheckReply);
 }
-
-
 
 //********************************************************************************
 // Create request
@@ -144,11 +142,11 @@ bool do_process_c011_delay_queue(int controller_number, const C011_queue_element
 boolean Create_schedule_HTTP_C011(struct EventStruct *event)
 {
   int controller_number = CPLUGIN_ID_011;
-  if (!WiFiConnected(100)) {
+  if (!WiFiConnected(10)) {
     return false;
   }
-  ControllerSettingsStruct ControllerSettings;
-  LoadControllerSettings(event->ControllerIndex, (byte*)&ControllerSettings, sizeof(ControllerSettings));
+  MakeControllerSettings(ControllerSettings);
+  LoadControllerSettings(event->ControllerIndex, ControllerSettings);
 
   C011_ConfigStruct customConfig;
   LoadCustomControllerSettings(event->ControllerIndex,(byte*)&customConfig, sizeof(customConfig));
@@ -158,27 +156,32 @@ boolean Create_schedule_HTTP_C011(struct EventStruct *event)
   if (!try_connect_host(controller_number, client, ControllerSettings))
     return false;
 
-  if (ExtraTaskSettings.TaskDeviceValueNames[0][0] == 0)
+  if (ExtraTaskSettings.TaskIndex != event->TaskIndex)
     PluginCall(PLUGIN_GET_DEVICEVALUENAMES, event, dummyString);
 
   String payload = create_http_request_auth(
     controller_number, event->ControllerIndex, ControllerSettings,
     String(customConfig.HttpMethod), customConfig.HttpUri);
 
-  if (strlen(customConfig.HttpHeader) > 0)
+  // Remove extra newline, see https://github.com/letscontrolit/ESPEasy/issues/1970
+  removeExtraNewLine(payload);
+  if (strlen(customConfig.HttpHeader) > 0) {
     payload += customConfig.HttpHeader;
+    removeExtraNewLine(payload);
+  }
   ReplaceTokenByValue(payload, event);
 
   if (strlen(customConfig.HttpBody) > 0)
   {
     String body = String(customConfig.HttpBody);
     ReplaceTokenByValue(body, event);
-    payload += F("\r\nContent-Length: ");
+    payload += F("Content-Length: ");
     payload += String(body.length());
-    payload += F("\r\n\r\n");
+    addNewLine(payload);
+    addNewLine(payload); // Need 2 CRLF between header and body.
     payload += body;
   }
-  payload += F("\r\n");
+  addNewLine(payload);
 
   bool success = C011_DelayHandler.addToQueue(C011_queue_element(event->ControllerIndex, payload));
   scheduleNextDelayQueue(TIMER_C011_DELAY_QUEUE, C011_DelayHandler.getNextScheduleTime());
@@ -211,7 +214,7 @@ void DeleteNotNeededValues(String &s, byte numberOfValuesWanted)
   		{
         String p = s.substring(startIndex,endIndex+4);
         //remove the whole string including tokens
-				s.replace(p, F(""));
+				s.replace(p, "");
 
         //find next ones
         startIndex=s.indexOf(startToken);

@@ -7,9 +7,9 @@
 #define CPLUGIN_ID_004         4
 #define CPLUGIN_NAME_004       "ThingSpeak"
 
-boolean CPlugin_004(byte function, struct EventStruct *event, String& string)
+bool CPlugin_004(byte function, struct EventStruct *event, String& string)
 {
-  boolean success = false;
+  bool success = false;
 
   switch (function)
   {
@@ -32,8 +32,8 @@ boolean CPlugin_004(byte function, struct EventStruct *event, String& string)
 
     case CPLUGIN_INIT:
       {
-        ControllerSettingsStruct ControllerSettings;
-        LoadControllerSettings(event->ControllerIndex, (byte*)&ControllerSettings, sizeof(ControllerSettings));
+        MakeControllerSettings(ControllerSettings);
+        LoadControllerSettings(event->ControllerIndex, ControllerSettings);
         C004_DelayHandler.configureControllerSettings(ControllerSettings);
         break;
       }
@@ -94,6 +94,6 @@ bool do_process_c004_delay_queue(int controller_number, const C004_queue_element
     postDataStr.length());
   postStr += postDataStr;
 
-  return send_via_http(controller_number, client, postStr);
+  return send_via_http(controller_number, client, postStr, ControllerSettings.MustCheckReply);
 }
 #endif

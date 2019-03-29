@@ -51,12 +51,18 @@ boolean Plugin_004(byte function, struct EventStruct * event, String& string)
             break;
         }
 
+        case PLUGIN_GET_DEVICEGPIONAMES:
+          {
+            event->String1 = formatGpioName_bidirectional(F("1-Wire"));
+            break;
+          }
+
         case PLUGIN_WEBFORM_LOAD:
         {
             uint8_t savedAddress[8];
             byte resolutionChoice = 0;
             // Scan the onewire bus and fill dropdown list with devicecount on this GPIO.
-            Plugin_004_DallasPin = Settings.TaskDevicePin1[event->TaskIndex];
+            Plugin_004_DallasPin = CONFIG_PIN1;
 
             if (Plugin_004_DallasPin != -1){
               // get currently saved address
@@ -65,8 +71,8 @@ boolean Plugin_004(byte function, struct EventStruct * event, String& string)
 
               // find all suitable devices
               addRowLabel(F("Device Address"));
-              addSelector_Head(F("plugin_004_dev"), false);
-              addSelector_Item("", -1, false, false, F(""));
+              addSelector_Head(F("p004_dev"), false);
+              addSelector_Item("", -1, false, false, "");
               uint8_t tmpAddress[8];
               byte count = 0;
               Plugin_004_DS_reset();
@@ -77,10 +83,10 @@ boolean Plugin_004(byte function, struct EventStruct * event, String& string)
                   for (byte j = 0; j < 8; j++)
                   {
                       option += String(tmpAddress[j], HEX);
-                      if (j < 7) option += F("-");
+                      if (j < 7) option += '-';
                   }
                   bool selected = (memcmp(tmpAddress, savedAddress, 8) == 0) ? true : false;
-                  addSelector_Item(option, count, selected, false, F(""));
+                  addSelector_Item(option, count, selected, false, "");
                   count ++;
               }
               addSelector_Foot();
@@ -90,9 +96,9 @@ boolean Plugin_004(byte function, struct EventStruct * event, String& string)
                   resolutionChoice = Plugin_004_DS_getResolution(savedAddress);
               else
                   resolutionChoice = 9;
-              String resultsOptions[4] = { "9", "10", "11", "12" };
+              String resultsOptions[4] = { F("9"), F("10"), F("11"), F("12") };
               int resultsOptionValues[4] = { 9, 10, 11, 12 };
-              addFormSelector(F("Device Resolution"), F("plugin_004_res"), 4, resultsOptions, resultsOptionValues, resolutionChoice);
+              addFormSelector(F("Device Resolution"), F("p004_res"), 4, resultsOptions, resultsOptionValues, resolutionChoice);
               addHtml(F(" Bit"));
             }
             success = true;
@@ -104,15 +110,14 @@ boolean Plugin_004(byte function, struct EventStruct * event, String& string)
             uint8_t addr[8] = {0,0,0,0,0,0,0,0};
 
             // save the address for selected device and store into extra tasksettings
-            Plugin_004_DallasPin = Settings.TaskDevicePin1[event->TaskIndex];
-            // byte devCount =
+            Plugin_004_DallasPin = CONFIG_PIN1;
             if (Plugin_004_DallasPin != -1){
-              Plugin_004_DS_scan(getFormItemInt(F("plugin_004_dev")), addr);
+              Plugin_004_DS_scan(getFormItemInt(F("p004_dev")), addr);
               for (byte x = 0; x < 8; x++)
                   ExtraTaskSettings.TaskDevicePluginConfigLong[x] = addr[x];
 
-              Plugin_004_DS_setResolution(addr, getFormItemInt(F("plugin_004_res")));
-              Plugin_004_DS_startConvertion(addr);
+              Plugin_004_DS_setResolution(addr, getFormItemInt(F("p004_res")));
+              Plugin_004_DS_startConversion(addr);
             }
             success = true;
             break;
@@ -123,19 +128,20 @@ boolean Plugin_004(byte function, struct EventStruct * event, String& string)
             for (byte x = 0; x < 8; x++)
             {
                 if (x != 0)
-                    string += "-";
-                // string += String(ExtraTaskSettings.TaskDevicePluginConfigLong[x], HEX);
+                    string += '-';
+                string += String(ExtraTaskSettings.TaskDevicePluginConfigLong[x], HEX);
             }
             success = true;
             break;
         }
+
         case PLUGIN_INIT:
         {
-            Plugin_004_DallasPin = Settings.TaskDevicePin1[event->TaskIndex];
+            Plugin_004_DallasPin = CONFIG_PIN1;
             if (Plugin_004_DallasPin != -1){
               uint8_t addr[8];
               Plugin_004_get_addr(addr, event->TaskIndex);
-              Plugin_004_DS_startConvertion(addr);
+              Plugin_004_DS_startConversion(addr);
               delay(800); //give it time to do intial conversion
             }
             success = true;
@@ -148,7 +154,7 @@ boolean Plugin_004(byte function, struct EventStruct * event, String& string)
                 uint8_t addr[8];
                 Plugin_004_get_addr(addr, event->TaskIndex);
 
-                Plugin_004_DallasPin = Settings.TaskDevicePin1[event->TaskIndex];
+                Plugin_004_DallasPin = CONFIG_PIN1;
                 float value = 0;
                 String log  = F("DS   : Temperature: ");
 
@@ -163,13 +169,13 @@ boolean Plugin_004(byte function, struct EventStruct * event, String& string)
                     UserVar[event->BaseVarIndex] = NAN;
                     log += F("Error!");
                 }
-                Plugin_004_DS_startConvertion(addr);
+                Plugin_004_DS_startConversion(addr);
 
                 log += (" (");
                 for (byte x = 0; x < 8; x++)
                 {
                     if (x != 0)
-                        log += "-";
+                        log += '-';
                     log += String(ExtraTaskSettings.TaskDevicePluginConfigLong[x], HEX);
                 }
 
@@ -218,7 +224,7 @@ byte Plugin_004_DS_scan(byte getDeviceROM, uint8_t* ROM)
 *   11 bits resolution -> 375 ms
 *   12 bits resolution -> 750 ms
 \*********************************************************************************************/
-void Plugin_004_DS_startConvertion(uint8_t ROM[8])
+void Plugin_004_DS_startConversion(uint8_t ROM[8])
 {
     Plugin_004_DS_reset();
     Plugin_004_DS_write(0x55); // Choose ROM
@@ -245,7 +251,24 @@ boolean Plugin_004_DS_readTemp(uint8_t ROM[8], float * value)
     for (byte i = 0; i < 9; i++) // read 9 bytes
         ScratchPad[i] = Plugin_004_DS_read();
 
-    if (!Plugin_004_DS_crc8(ScratchPad))
+    bool crc_ok = Plugin_004_DS_crc8(ScratchPad);
+
+    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+        String log = F("DS: SP: ");
+
+        for (byte x = 0; x < 9; x++)
+        {
+            if (x != 0)
+                log += ',';
+            log += String(ScratchPad[x], HEX);
+        }
+
+        if (crc_ok)
+            log += F(",OK");
+        addLog(LOG_LEVEL_DEBUG, log);
+    }
+
+    if (!crc_ok)
     {
         *value = 0;
         return false;
@@ -337,6 +360,8 @@ boolean Plugin_004_DS_setResolution(uint8_t ROM[8], byte res)
         return false;
     else
     {
+    	byte old_configuration = ScratchPad[4];
+
         switch (res)
         {
             case 12:
@@ -354,6 +379,9 @@ boolean Plugin_004_DS_setResolution(uint8_t ROM[8], byte res)
                 break;
         }
 
+        if (ScratchPad[4] == old_configuration)
+        	return true;
+
         Plugin_004_DS_reset();
         Plugin_004_DS_write(0x55); // Choose ROM
         for (byte i = 0; i < 8; i++)
@@ -364,6 +392,7 @@ boolean Plugin_004_DS_setResolution(uint8_t ROM[8], byte res)
         Plugin_004_DS_write(ScratchPad[3]); // low alarm temp
         Plugin_004_DS_write(ScratchPad[4]); // configuration register
 
+        Plugin_004_DS_reset();
         Plugin_004_DS_write(0x55); // Choose ROM
         for (byte i = 0; i < 8; i++)
             Plugin_004_DS_write(ROM[i]);
@@ -382,7 +411,7 @@ boolean Plugin_004_DS_setResolution(uint8_t ROM[8], byte res)
 \*********************************************************************************************/
 uint8_t Plugin_004_DS_reset()
 {
-    uint8_t r;
+    uint8_t r = 0;
     uint8_t retries = 125;
     #if defined(ESP32)
       ESP32noInterrupts();
@@ -396,12 +425,16 @@ uint8_t Plugin_004_DS_reset()
     }
     while (!digitalRead(Plugin_004_DallasPin));
 
-    pinMode(Plugin_004_DallasPin, OUTPUT); digitalWrite(Plugin_004_DallasPin, LOW);
-    delayMicroseconds(492);               // Dallas spec. = Min. 480uSec. Arduino 500uSec.
+    digitalWrite(Plugin_004_DallasPin, LOW);
+    pinMode(Plugin_004_DallasPin, OUTPUT);
+    delayMicroseconds(500);
     pinMode(Plugin_004_DallasPin, INPUT); // Float
-    delayMicroseconds(40);
-    r = !digitalRead(Plugin_004_DallasPin);
-    delayMicroseconds(420);
+    for (uint8_t i = 0 ; i < 34; i++)      // 480us RX minimum
+    {
+      delayMicroseconds(15);
+      if (!digitalRead(Plugin_004_DallasPin))
+        r = 1;
+    }
     #if defined(ESP32)
       ESP32interrupts();
     #endif
@@ -589,16 +622,16 @@ uint8_t Plugin_004_DS_read_bit(void)
     #if defined(ESP32)
        ESP32noInterrupts();
     #endif
-    pinMode(Plugin_004_DallasPin, OUTPUT);
     digitalWrite(Plugin_004_DallasPin, LOW);
-    delayMicroseconds(3);
+    pinMode(Plugin_004_DallasPin, OUTPUT);
+    delayMicroseconds(2);
     pinMode(Plugin_004_DallasPin, INPUT); // let pin float, pull up will raise
-    delayMicroseconds(10);
+    delayMicroseconds(8);
     r = digitalRead(Plugin_004_DallasPin);
     #if defined(ESP32)
        ESP32interrupts();
     #endif
-    delayMicroseconds(53);
+    delayMicroseconds(60);
     return r;
 }
 
@@ -614,12 +647,12 @@ void Plugin_004_DS_write_bit(uint8_t v)
         #endif
         digitalWrite(Plugin_004_DallasPin, LOW);
         pinMode(Plugin_004_DallasPin, OUTPUT);
-        delayMicroseconds(10);
+        delayMicroseconds(2);
         digitalWrite(Plugin_004_DallasPin, HIGH);
         #if defined(ESP32)
           ESP32interrupts();
         #endif
-        delayMicroseconds(55);
+        delayMicroseconds(70);
     }
     else
     {
@@ -628,12 +661,12 @@ void Plugin_004_DS_write_bit(uint8_t v)
         #endif
         digitalWrite(Plugin_004_DallasPin, LOW);
         pinMode(Plugin_004_DallasPin, OUTPUT);
-        delayMicroseconds(65);
+        delayMicroseconds(90);
         digitalWrite(Plugin_004_DallasPin, HIGH);
         #if defined(ESP32)
            ESP32interrupts();
         #endif
-        delayMicroseconds(5);
+        delayMicroseconds(10);
     }
 }
 

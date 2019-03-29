@@ -3,23 +3,42 @@
 //#################################### Plugin 026: System Info ##########################################
 //#######################################################################################################
 
+
 #define PLUGIN_026
 #define PLUGIN_ID_026         26
 #define PLUGIN_NAME_026       "Generic - System Info"
-#define PLUGIN_VALUENAME1_026 ""
+
+String Plugin_026_valuename(byte value_nr, bool displayString) {
+  switch (value_nr) {
+    case 0:  return displayString ? F("Uptime") : F("uptime");
+    case 1:  return displayString ? F("Free RAM") : F("freeheap");
+    case 2:  return displayString ? F("Wifi RSSI") : F("rssi");
+    case 3:  return displayString ? F("Input VCC") : F("vcc");
+    case 4:  return displayString ? F("System load") : F("load");
+    case 5:  return displayString ? F("IP 1.Octet") : F("ip1");
+    case 6:  return displayString ? F("IP 2.Octet") : F("ip2");
+    case 7:  return displayString ? F("IP 3.Octet") : F("ip3");
+    case 8:  return displayString ? F("IP 4.Octet") : F("ip4");
+    case 9:  return displayString ? F("Web activity") : F("web");
+    case 10: return displayString ? F("Free Stack") : F("freestack");
+    case 11: return displayString ? F("None") : F("");
+    default:
+    break;
+  }
+  return "";
+}
 
 boolean Plugin_026(byte function, struct EventStruct *event, String& string)
 {
   boolean success = false;
-
   switch (function)
   {
 
     case PLUGIN_DEVICE_ADD:
       {
         Device[++deviceCount].Number = PLUGIN_ID_026;
-        Device[deviceCount].VType = SENSOR_TYPE_SINGLE;
-        Device[deviceCount].ValueCount = 1;
+        Device[deviceCount].VType = SENSOR_TYPE_QUAD;
+        Device[deviceCount].ValueCount = 4;
         Device[deviceCount].SendDataOption = true;
         Device[deviceCount].TimerOption = true;
         Device[deviceCount].FormulaOption = true;
@@ -34,25 +53,32 @@ boolean Plugin_026(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_GET_DEVICEVALUENAMES:
       {
-        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_026));
+        for (byte i = 0; i < 4; ++i) {
+          byte choice = PCONFIG(i);
+          safe_strncpy(
+            ExtraTaskSettings.TaskDeviceValueNames[i],
+            Plugin_026_valuename(choice, false),
+            sizeof(ExtraTaskSettings.TaskDeviceValueNames[i]));
+        }
         break;
       }
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
-        String options[10];
-        options[0] = F("Uptime");
-        options[1] = F("Free RAM");
-        options[2] = F("Wifi RSSI");
-        options[3] = F("Input VCC");
-        options[4] = F("System load");
-        options[5] = F("IP 1.Octet");
-        options[6] = F("IP 2.Octet");
-        options[7] = F("IP 3.Octet");
-        options[8] = F("IP 4.Octet");
-        options[9] = F("Web activity");
-        addFormSelector(F("Indicator"), F("plugin_026"), 10, options, NULL, choice);
+        String options[12];
+        for (byte i = 0; i < 12; ++i) {
+          options[i] = Plugin_026_valuename(i, true);
+        }
+        String label;
+        String id;
+        for (byte i = 0; i < 4; ++i) {
+          byte choice = PCONFIG(i);
+          label = F("Indicator ");
+          label += (i+1);
+          id = F("p026_");
+          id += (i+1);
+          addFormSelector(label, id, 12, options, NULL, choice);
+        }
 
         success = true;
         break;
@@ -60,15 +86,62 @@ boolean Plugin_026(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_026"));
+        String id;
+        for (byte i = 0; i < 4; ++i) {
+          id = F("p026_");
+          id += (i+1);
+          PCONFIG(i) = getFormItemInt(id);
+        }
+        success = true;
+        break;
+      }
+
+    case PLUGIN_INIT:
+      {
+        bool allDefault = true;
+        for (byte i = 0; i < 4; ++i) {
+          if (PCONFIG(i) != 0) {
+            allDefault = false;
+          }
+        }
+        if (allDefault) {
+          // Reset nr 2 .. 4 to "None"
+          for (byte i = 1; i < 4; ++i) {
+            PCONFIG(i) = 11; // "None"
+          }
+        }
         success = true;
         break;
       }
 
     case PLUGIN_READ:
       {
-        float value = 0;
-        switch(Settings.TaskDevicePluginConfig[event->TaskIndex][0])
+        UserVar[event->BaseVarIndex] = P026_get_value(PCONFIG(0));
+        UserVar[event->BaseVarIndex+1] = P026_get_value(PCONFIG(1));
+        UserVar[event->BaseVarIndex+2] = P026_get_value(PCONFIG(2));
+        UserVar[event->BaseVarIndex+3] = P026_get_value(PCONFIG(3));
+        if (loglevelActiveFor(LOG_LEVEL_INFO)){
+          String log = F("SYS  : ");
+          log += UserVar[event->BaseVarIndex];
+          log +=',';
+          log += UserVar[event->BaseVarIndex+1];
+          log +=',';
+          log += UserVar[event->BaseVarIndex+2];
+          log +=',';
+          log += UserVar[event->BaseVarIndex+3];
+          addLog(LOG_LEVEL_INFO,log);
+        }
+        success = true;
+        break;
+      }
+  }
+  return success;
+}
+
+float P026_get_value(int type)
+{
+  float value = 0;
+          switch(type)
         {
           case 0:
           {
@@ -124,15 +197,13 @@ boolean Plugin_026(byte function, struct EventStruct *event, String& string)
             value = (millis()-lastWeb)/1000; // respond in seconds
             break;
           }
+          case 10:
+          {
+            value = getCurrentFreeStack();
+            break;
+          }
         }
-        UserVar[event->BaseVarIndex] = value;
-        String log = F("SYS  : ");
-        log += value;
-        addLog(LOG_LEVEL_INFO,log);
-        success = true;
-        break;
-      }
-  }
-  return success;
+ return value;
 }
+
 #endif // USES_P026

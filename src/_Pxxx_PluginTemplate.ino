@@ -57,14 +57,16 @@ Hints for plugin development:
 
 /*
 PIN/port configuration is stored in the following:
-Settings.TaskDevicePin1[event->TaskIndex] - The first GPIO pin selected within the task
-Settings.TaskDevicePin2[event->TaskIndex] - The second GPIO pin selected within the task
-Settings.TaskDevicePin3[event->TaskIndex] - The third GPIO pin selected within the task
-Settings.TaskDevicePort[event->TaskIndex] - The port in case the device has multiple in/out pins
+CONFIG_PIN1 - The first GPIO pin selected within the task
+CONFIG_PIN2 - The second GPIO pin selected within the task
+CONFIG_PIN3 - The third GPIO pin selected within the task
+CONFIG_PORT - The port in case the device has multiple in/out pins
 
 Custom configuration is stored in the following:
-Settings.TaskDevicePluginConfig[event->TaskIndex][x]
+PCONFIG(x)
 x can be between 1 - 8 and can store values between -32767 - 32768 (16 bit)
+
+N.B. these are aliases for a longer less readable amount of code. See _Plugin_Helper.h
 
 */
 
@@ -119,7 +121,7 @@ boolean Plugin_xxx(byte function, struct EventStruct *event, String& string)
     {
       //this case defines what should be displayed on the web form, when this plugin is selected
       //The user's selection will be stored in
-      //Settings.TaskDevicePluginConfig[event->TaskIndex][x] (custom configuration)
+      //PCONFIG(x) (custom configuration)
 
       // Make sure not to append data to the string variable in this PLUGIN_WEBFORM_LOAD call.
       // This has changed, so now use the appropriate functions to write directly to the Streaming
@@ -135,10 +137,10 @@ boolean Plugin_xxx(byte function, struct EventStruct *event, String& string)
       For strings, always use the F() macro, which stores the string in flash, not in memory.
 
       //String dropdown[5] = { F("option1"), F("option2"), F("option3"), F("option4")};
-      //addFormSelector(string, F("drop-down menu"), F("plugin_xxx_displtype"), 4, dropdown, NULL, Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
+      //addFormSelector(string, F("drop-down menu"), F("plugin_xxx_displtype"), 4, dropdown, NULL, PCONFIG(0));
 
       //number selection (min-value - max-value)
-      addFormNumericBox(string, F("description"), F("plugin_xxx_description"), Settings.TaskDevicePluginConfig[event->TaskIndex][1], min-value, max-value);
+      addFormNumericBox(string, F("description"), F("plugin_xxx_description"), PCONFIG(1), min-value, max-value);
 
       //after the form has been loaded, set success and break
       success = true;
@@ -148,8 +150,8 @@ boolean Plugin_xxx(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE:
     {
       //this case defines the code to be executed when the form is submitted
-      //the plugin settings should be saved to Settings.TaskDevicePluginConfig[event->TaskIndex][x]
-      //ping configuration should be read from Settings.TaskDevicePin1[event->TaskIndex] and stored
+      //the plugin settings should be saved to PCONFIG(x)
+      //ping configuration should be read from CONFIG_PIN1 and stored
 
       //after the form has been saved successfuly, set success and break
       success = true;

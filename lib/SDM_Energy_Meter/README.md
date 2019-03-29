@@ -45,6 +45,10 @@ User can set the parameters in two ways:
 - by editing the [SDM_Config_User.h](https://github.com/reaper7/SDM_Energy_Meter/blob/master/SDM_Config_User.h) file
 - by passing values during initialization (section below)
 
+NOTE for Hardware Serial mode: <i>to force the Hardware Serial mode,</br>
+user must edit the corresponding entry in [SDM_Config_User.h](https://github.com/reaper7/SDM_Energy_Meter/blob/master/SDM_Config_User.h#L13) file.</br>
+adding #define USE_HARDWARESERIAL to the main ino file is not enough.</i>
+
 ---
 
 ### Initializing: ###
@@ -152,6 +156,9 @@ The most common problems are:
   https://github.com/reaper7/SDM_Energy_Meter/issues/17#issue-313606825</br>
   https://github.com/reaper7/SDM_Energy_Meter/issues/13#issuecomment-353413146</br>
   https://github.com/reaper7/SDM_Energy_Meter/issues/13#issuecomment-353417658</br>
+- compilation error for hardware serial mode</br>
+  https://github.com/reaper7/SDM_Energy_Meter/issues/23</br>
+  https://github.com/reaper7/SDM_Energy_Meter/issues/24</br>
 
 You can get last error code using function:
 ```cpp

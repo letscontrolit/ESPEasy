@@ -2,7 +2,7 @@
 // Initialize all plugins that where defined earlier
 // and initialize the function call pointer into the plugin array
 //********************************************************************************
-
+#include <algorithm>
 static const char ADDPLUGIN_ERROR[] PROGMEM = "System: Error - To much Plugins";
 
 // Because of compiler-bug (multiline defines gives an error if file ending is CRLF) the define is striped to a single line
@@ -1093,6 +1093,17 @@ void updateTaskPluginCache() {
   }
 }
 
+int8_t getXFromPluginId(byte pluginID) {
+  std::vector<byte>::iterator it;
+  int8_t returnValue = -1;
+
+  it = find(Plugin_id.begin(), Plugin_id.end(), pluginID);
+  if (it != Plugin_id.end())
+    returnValue = std::distance(Plugin_id.begin(),it);
+
+  return returnValue;
+}
+
 
 /*********************************************************************************************\
 * Function call to all or specific plugins
@@ -1125,10 +1136,32 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
           START_TIMER;
           Plugin_ptr[x](Function, event, str);
           STOP_TIMER_TASK(x,Function);
+          delay(0); // SMY: call delay(0) unconditionally
         }
       }
       return true;
       break;
+
+      case PLUGIN_MONITOR:
+        for (auto it=globalMapPortStatus.begin(); it!=globalMapPortStatus.end(); ++it) {
+          //only call monitor function if there the need to
+          if (it->second.monitor || it->second.command || it->second.init) {
+            TempEvent.Par1 = getPortFromKey(it->first);;
+            //initialize the "x" variable to synch with the pluginNumber if second.x == -1
+            if (it->second.x == -1) it->second.x = getXFromPluginId((byte) getPluginFromKey(it->first));
+
+            if (it->second.x != -1)  {
+              const byte x = (byte) it->second.x;
+              if (Plugin_id[x] != 0){
+                START_TIMER;
+                Plugin_ptr[x](Function, &TempEvent, str);
+                STOP_TIMER_TASK(x,Function);
+              }
+            }
+          }
+        }
+        return true;
+        break;
 
     // Call to all plugins. Return at first match
     case PLUGIN_WRITE:
@@ -1150,16 +1183,23 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
                 START_TIMER;
                 bool retval = (Plugin_ptr[x](Function, &TempEvent, str));
                 STOP_TIMER_TASK(x,Function);
-                if (retval) return true;
+                delay(0); // SMY: call delay(0) unconditionally
+                if (retval) {
+                  return true;
+                }
               }
             }
           }
         }
         // @FIXME TD-er: work-around as long as gpio command is still performed in P001_switch.
-        for (byte x = 0; x < PLUGIN_MAX; x++)
-          if (Plugin_id[x] != 0)
-            if (Plugin_ptr[x](Function, event, str))
+        for (byte x = 0; x < PLUGIN_MAX; x++) {
+          if (Plugin_id[x] != 0) {
+            if (Plugin_ptr[x](Function, event, str)) {
+              delay(0); // SMY: call delay(0) unconditionally
               return true;
+            }
+          }
+        }
       }
       break;
 
@@ -1181,6 +1221,7 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
               START_TIMER;
               bool retval =  (Plugin_ptr[x](Function, &TempEvent, str));
               STOP_TIMER_TASK(x,Function);
+              delay(0); // SMY: call delay(0) unconditionally
               if (retval){
                 checkRAM(F("PluginCallUDP"),x);
                 return true;
@@ -1199,6 +1240,7 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
     case PLUGIN_INIT_ALL:
     case PLUGIN_CLOCK_IN:
     case PLUGIN_EVENT_OUT:
+    case PLUGIN_TIME_CHANGE:
       {
         if (Function == PLUGIN_INIT_ALL)
           Function = PLUGIN_INIT;
@@ -1224,6 +1266,7 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
                 START_TIMER;
                 Plugin_ptr[x](Function, &TempEvent, str);
                 STOP_TIMER_TASK(x,Function);
+                delay(0); // SMY: call delay(0) unconditionally
               }
             }
           }
@@ -1252,11 +1295,10 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
             // Schedule the plugin to be read.
             schedule_task_device_timer_at_init(event->TaskIndex);
           }
-          if (Function != PLUGIN_GET_DEVICEVALUENAMES) {
+          if (ExtraTaskSettings.TaskIndex != event->TaskIndex) {
             // LoadTaskSettings may call PLUGIN_GET_DEVICEVALUENAMES.
             LoadTaskSettings(event->TaskIndex);
           }
-
           event->BaseVarIndex = event->TaskIndex * VARS_PER_TASK;
           checkRAM(F("PluginCall_init"),x);
           START_TIMER;
@@ -1264,7 +1306,11 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
           if (Function == PLUGIN_GET_DEVICEVALUENAMES) {
             ExtraTaskSettings.TaskIndex = event->TaskIndex;
           }
+          if (Function == PLUGIN_EXIT) {
+            clearPluginTaskData(event->TaskIndex);
+          }
           STOP_TIMER_TASK(x,Function);
+          delay(0); // SMY: call delay(0) unconditionally
           return retval;
         }
       }

@@ -5,34 +5,28 @@
 
 #define PLUGIN_013
 #define PLUGIN_ID_013        13
-#define PLUGIN_NAME_013       "Distance - HC-SR04, RCW-0001, etc."
+#define PLUGIN_NAME_013       "Position - HC-SR04, RCW-0001, etc."
 #define PLUGIN_VALUENAME1_013 "Distance"
 
 #include <Arduino.h>
 #include <map>
 #include <NewPingESP8266.h>
 
-struct P_013_sensordef {
-  P_013_sensordef() : sonar(NULL) {}
+// PlugIn specific defines
+// operatingMode
+#define OPMODE_VALUE        (0)
+#define OPMODE_STATE        (1)
 
-  P_013_sensordef(byte TRIG_Pin, byte IRQ_Pin, int16_t max_cm_distance) : sonar(NULL) {
-    sonar = new NewPingESP8266(TRIG_Pin, IRQ_Pin, max_cm_distance);
-  }
+// measuringUnit
+#define UNIT_CM             (0)
+#define UNIT_INCH           (1)
 
-  ~P_013_sensordef() {
-    if (sonar != NULL) {
-      delete sonar;
-      sonar = NULL;
-    }
-  }
+// filterType
+#define FILTER_NONE         (0)
+#define FILTER_MEDIAN       (1)
 
-  NewPingESP8266 *sonar;
-};
-
-std::map<unsigned int, P_013_sensordef> P_013_sensordefs;
-
-
-
+// map of sensors
+std::map<unsigned int, std::shared_ptr<NewPingESP8266> > P_013_sensordefs;
 
 boolean Plugin_013(byte function, struct EventStruct *event, String& string)
 {
@@ -54,6 +48,7 @@ boolean Plugin_013(byte function, struct EventStruct *event, String& string)
         Device[deviceCount].SendDataOption = true;
         Device[deviceCount].TimerOption = true;
         Device[deviceCount].GlobalSyncOption = true;
+
         break;
       }
 
@@ -69,22 +64,60 @@ boolean Plugin_013(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_GET_DEVICEGPIONAMES:
+      {
+        event->String1 = formatGpioName_output(F("Trigger"));
+        event->String2 = formatGpioName_input(F("Echo, 5V"));
+        break;
+      }
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
-        String options[2];
-        options[0] = F("Value");
-        options[1] = F("State");
-        int optionValues[2] = { 1, 2 };
-        addFormSelector(F("Mode"), F("plugin_013_mode"), 2, options, optionValues, choice);
+        int16_t operatingMode = PCONFIG(0);
+        int16_t threshold = PCONFIG(1);
+        int16_t max_distance = PCONFIG(2);
+        int16_t measuringUnit = PCONFIG(3);
+        int16_t filterType = PCONFIG(4);
+        int16_t filterSize = PCONFIG(5);
 
-        if (Settings.TaskDevicePluginConfig[event->TaskIndex][0] == 2)
-        {
-        	addFormNumericBox(F("Threshold"), F("plugin_013_threshold"), Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
+        // default filtersize = 5
+        if (filterSize == 0) {
+          filterSize = 5;
+          PCONFIG(5) = filterSize;
         }
-        addFormNumericBox(F("Max Distance"), F("plugin_013_max_distance"), Settings.TaskDevicePluginConfig[event->TaskIndex][2], 0, 500);
-        addUnit(F("cm"));
+
+
+        String strUnit = (measuringUnit == UNIT_CM) ? F("cm") : F("inch");
+
+        String optionsOpMode[2];
+        int optionValuesOpMode[2] = { 0, 1 };
+        optionsOpMode[0] = F("Value");
+        optionsOpMode[1] = F("State");
+        addFormSelector(F("Mode"), F("p013_mode"), 2, optionsOpMode, optionValuesOpMode, operatingMode);
+
+        if (operatingMode == OPMODE_STATE)
+        {
+        	addFormNumericBox(F("Threshold"), F("p013_threshold"), threshold);
+          addUnit(strUnit);
+        }
+        addFormNumericBox(F("Max Distance"), F("p013_max_distance"), max_distance, 0, 500);
+        addUnit(strUnit);
+
+        String optionsUnit[2];
+        int optionValuesUnit[2] = { 0, 1 };
+        optionsUnit[0] = F("Metric");
+        optionsUnit[1] = F("Imperial");
+        addFormSelector(F("Unit"), F("p013_Unit"), 2, optionsUnit, optionValuesUnit, measuringUnit);
+
+        String optionsFilter[2];
+        int optionValuesFilter[2] = { 0, 1 };
+        optionsFilter[0] = F("None");
+        optionsFilter[1] = F("Median");
+        addFormSelector(F("Filter"), F("p013_FilterType"), 2, optionsFilter, optionValuesFilter, filterType);
+
+        // enable filtersize option if filter is used,
+        if (filterType != FILTER_NONE)
+        	addFormNumericBox(F("Filter size"), F("p013_FilterSize"), filterSize, 2, 20);
 
         success = true;
         break;
@@ -92,33 +125,60 @@ boolean Plugin_013(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_013_mode"));
-        if (Settings.TaskDevicePluginConfig[event->TaskIndex][0] == 2)
-        {
-          Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("plugin_013_threshold"));
-        }
-        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("plugin_013_max_distance"));
+        int16_t operatingMode = PCONFIG(0);
+        int16_t filterType = PCONFIG(4);
+
+        PCONFIG(0) = getFormItemInt(F("p013_mode"));
+        if (operatingMode == OPMODE_STATE)
+          PCONFIG(1) = getFormItemInt(F("p013_threshold"));
+        PCONFIG(2) = getFormItemInt(F("p013_max_distance"));
+
+        PCONFIG(3) = getFormItemInt(F("p013_Unit"));
+        PCONFIG(4) = getFormItemInt(F("p013_FilterType"));
+        if (filterType != FILTER_NONE)
+          PCONFIG(5) = getFormItemInt(F("p013_FilterSize"));
+
         success = true;
         break;
       }
 
     case PLUGIN_INIT:
       {
-        byte Plugin_013_TRIG_Pin = Settings.TaskDevicePin1[event->TaskIndex];
-        byte Plugin_013_IRQ_Pin = Settings.TaskDevicePin2[event->TaskIndex];
-        int16_t max_cm_distance = Settings.TaskDevicePluginConfig[event->TaskIndex][2];
+        int16_t max_distance = PCONFIG(2);
+        int16_t measuringUnit = PCONFIG(3);
+        int16_t filterType = PCONFIG(4);
+        int16_t filterSize = PCONFIG(5);
+
+        int8_t Plugin_013_TRIG_Pin = CONFIG_PIN1;
+        int8_t Plugin_013_IRQ_Pin = CONFIG_PIN2;
+        int16_t max_distance_cm = (measuringUnit == UNIT_CM) ? max_distance : (float)max_distance * 2.54f;
+
+        // create sensor instance and add to std::map
+        P_013_sensordefs.erase(event->TaskIndex);
         P_013_sensordefs[event->TaskIndex] =
-          P_013_sensordef(Plugin_013_TRIG_Pin, Plugin_013_IRQ_Pin, max_cm_distance);
+          std::shared_ptr<NewPingESP8266> (new NewPingESP8266(Plugin_013_TRIG_Pin, Plugin_013_IRQ_Pin, max_distance_cm));
+
         String log = F("ULTRASONIC : TaskNr: ");
         log += event->TaskIndex +1;
         log += F(" TrigPin: ");
         log += Plugin_013_TRIG_Pin;
         log += F(" IRQ_Pin: ");
         log += Plugin_013_IRQ_Pin;
-        log += F(" max dist cm: ");
-        log += max_cm_distance;
+        log += F(" max dist ");
+        log += (measuringUnit == UNIT_CM) ? F("[cm]: ") : F("[inch]: ");
+        log += max_distance;
         log += F(" max echo: ");
-        log += P_013_sensordefs[event->TaskIndex].sonar->getMaxEchoTime();
+        log += P_013_sensordefs[event->TaskIndex]->getMaxEchoTime();
+        log += F(" Filter: ");
+        if (filterType == FILTER_NONE)
+          log += F("none");
+        else
+          if (filterType == FILTER_MEDIAN) {
+            log += F("Median size: ");
+            log += filterSize;
+          }
+          else
+            log += F("invalid!");
         log += F(" nr_tasks: ");
         log += P_013_sensordefs.size();
         addLog(LOG_LEVEL_INFO, log);
@@ -136,7 +196,6 @@ boolean Plugin_013(byte function, struct EventStruct *event, String& string)
         log += F(" usec, ");
         addLog(LOG_LEVEL_INFO, log);
 
-
         success = true;
         break;
       }
@@ -149,39 +208,48 @@ boolean Plugin_013(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ: // If we select value mode, read and send the value based on global timer
       {
-        if (Settings.TaskDevicePluginConfig[event->TaskIndex][0] == 1)
+        int16_t operatingMode = PCONFIG(0);
+        int16_t measuringUnit = PCONFIG(3);
+
+        if (operatingMode == OPMODE_VALUE)
         {
           float value = Plugin_013_read(event->TaskIndex);
           String log = F("ULTRASONIC : TaskNr: ");
           log += event->TaskIndex +1;
           log += F(" Distance: ");
-          if (value > 0)
+          UserVar[event->BaseVarIndex] = value;
+          log += UserVar[event->BaseVarIndex];
+          log += (measuringUnit == UNIT_CM) ? F(" cm ") : F(" inch ");
+          if (value == NO_ECHO)
           {
-            UserVar[event->BaseVarIndex] = value;
-            log += UserVar[event->BaseVarIndex];
-            success = true;
+             log += F(" Error: ");
+             log += Plugin_013_getErrorStatusString(event->TaskIndex);
           }
-          else
-            log += F("No reading!");
 
-        addLog(LOG_LEVEL_INFO,log);
+          addLog(LOG_LEVEL_INFO,log);
         }
+        success = true;
         break;
       }
 
     case PLUGIN_TEN_PER_SECOND: // If we select state mode, do more frequent checks and send only state changes
       {
-        if (Settings.TaskDevicePluginConfig[event->TaskIndex][0] == 2)
+        int16_t operatingMode = PCONFIG(0);
+        int16_t threshold = PCONFIG(1);
+
+        if (operatingMode == OPMODE_STATE)
         {
           byte state = 0;
           float value = Plugin_013_read(event->TaskIndex);
-          if (value > 0)
+          if (value != NO_ECHO)
           {
-            if (value < Settings.TaskDevicePluginConfig[event->TaskIndex][1])
+            if (value < threshold)
               state = 1;
             if (state != switchstate[event->TaskIndex])
             {
-              String log = F("ULTRASONIC : State ");
+              String log = F("ULTRASONIC : TaskNr: ");
+              log += event->TaskIndex +1;
+              log += F(" state: ");
               log += state;
               addLog(LOG_LEVEL_INFO,log);
               switchstate[event->TaskIndex] = state;
@@ -190,6 +258,14 @@ boolean Plugin_013(byte function, struct EventStruct *event, String& string)
               sendData(event);
             }
           }
+          else {
+            String log = F("ULTRASONIC : TaskNr: ");
+            log += event->TaskIndex +1;
+            log += F(" Error: ");
+            log += Plugin_013_getErrorStatusString(event->TaskIndex);
+            addLog(LOG_LEVEL_INFO,log);
+          }
+
         }
         success = true;
         break;
@@ -202,11 +278,82 @@ boolean Plugin_013(byte function, struct EventStruct *event, String& string)
 float Plugin_013_read(unsigned int taskIndex)
 /*********************************************************************/
 {
-  if (P_013_sensordefs.count(taskIndex) == 0) return 0;
-  if (P_013_sensordefs[taskIndex].sonar == NULL) return 0;
-  delay(1);
-  float distance = P_013_sensordefs[taskIndex].sonar->ping_cm();
-  delay(1);
-  return distance;
+  if (P_013_sensordefs.count(taskIndex) == 0)
+    return 0;
+
+  int16_t max_distance = Settings.TaskDevicePluginConfig[taskIndex][2];
+  int16_t measuringUnit = Settings.TaskDevicePluginConfig[taskIndex][3];
+  int16_t filterType = Settings.TaskDevicePluginConfig[taskIndex][4];
+  int16_t filterSize = Settings.TaskDevicePluginConfig[taskIndex][5];
+  int16_t max_distance_cm = (measuringUnit == UNIT_CM) ? max_distance : (float)max_distance * 2.54f;
+
+  unsigned int echoTime = 0;
+
+  switch  (filterType) {
+    case FILTER_NONE:
+      echoTime = (P_013_sensordefs[taskIndex])->ping();
+      break;
+    case FILTER_MEDIAN:
+      echoTime = (P_013_sensordefs[taskIndex])->ping_median(filterSize, max_distance_cm);
+      break;
+    default:
+      addLog(LOG_LEVEL_INFO, F("invalid Filter Type setting!"));
+  }
+
+  if (measuringUnit == UNIT_CM)
+    return NewPingESP8266::convert_cm_F(echoTime);
+  else
+    return NewPingESP8266::convert_in_F(echoTime);
+}
+
+/*********************************************************************/
+String Plugin_013_getErrorStatusString(unsigned int taskIndex)
+/*********************************************************************/
+{
+  if (P_013_sensordefs.count(taskIndex) == 0)
+    return String(F("invalid taskindex"));
+
+  switch ((P_013_sensordefs[taskIndex])->getErrorState()) {
+    case NewPingESP8266::STATUS_SENSOR_READY: {
+      return String(F("Sensor ready"));
+      break;
+    }
+
+    case NewPingESP8266::STATUS_MEASUREMENT_VALID: {
+      return String(F("no error, measurement valid"));
+      break;
+    }
+
+    case NewPingESP8266::STATUS_ECHO_TRIGGERED: {
+      return String(F("Echo triggered, waiting for Echo end"));
+      break;
+    }
+
+    case NewPingESP8266::STATUS_ECHO_STATE_ERROR: {
+      return String(F("Echo pulse error, Echopin not low on trigger"));
+      break;
+    }
+
+    case NewPingESP8266::STATUS_ECHO_START_TIMEOUT_50ms: {
+      return String(F("Echo timeout error, no echo start whithin 50 ms"));
+      break;
+    }
+
+    case NewPingESP8266::STATUS_ECHO_START_TIMEOUT_DISTANCE: {
+      return String(F("Echo timeout error, no echo start whithin time for max. distance"));
+      break;
+    }
+
+    case NewPingESP8266::STATUS_MAX_DISTANCE_EXCEEDED: {
+      return String(F("Echo too late, maximum distance exceeded"));
+      break;
+    }
+
+    default: {
+      return String(F("unknown error"));
+      break;
+    }
+
+  }
 }
 #endif // USES_P013

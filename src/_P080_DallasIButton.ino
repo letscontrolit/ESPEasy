@@ -51,11 +51,17 @@ boolean Plugin_080(byte function, struct EventStruct * event, String& string)
             break;
         }
 
+        case PLUGIN_GET_DEVICEGPIONAMES:
+          {
+            event->String1 = formatGpioName_bidirectional(F("1-Wire"));
+            break;
+          }
+
         case PLUGIN_WEBFORM_LOAD:
         {
             uint8_t savedAddress[8];
             // Scan the onewire bus and fill dropdown list with devicecount on this GPIO.
-            Plugin_080_DallasPin = Settings.TaskDevicePin1[event->TaskIndex];
+            Plugin_080_DallasPin = CONFIG_PIN1;
 
             if (Plugin_080_DallasPin != -1){
               // get currently saved address
@@ -64,8 +70,8 @@ boolean Plugin_080(byte function, struct EventStruct * event, String& string)
 
               // find all suitable devices
               addRowLabel(F("Device Address"));
-              addSelector_Head(F("plugin_080_dev"), false);
-              addSelector_Item("", -1, false, false, F(""));
+              addSelector_Head(F("p080_dev"), false);
+              addSelector_Item("", -1, false, false, "");
               uint8_t tmpAddress[8];
               byte count = 0;
               Plugin_080_DS_reset();
@@ -76,12 +82,12 @@ boolean Plugin_080(byte function, struct EventStruct * event, String& string)
                   for (byte j = 0; j < 8; j++)
                   {
                       option += String(tmpAddress[j], HEX);
-                      if (j < 7) option += F("-");
+                      if (j < 7) option += '-';
                   }
                   bool selected = (memcmp(tmpAddress, savedAddress, 8) == 0) ? true : false;
                   // check for DS1990A
                   if ( tmpAddress[0] == 0x01) {
-                      addSelector_Item(option, count, selected, false, F(""));
+                      addSelector_Item(option, count, selected, false, "");
                   }
 
 
@@ -98,10 +104,10 @@ boolean Plugin_080(byte function, struct EventStruct * event, String& string)
             uint8_t addr[8] = {0,0,0,0,0,0,0,0};
 
             // save the address for selected device and store into extra tasksettings
-            Plugin_080_DallasPin = Settings.TaskDevicePin1[event->TaskIndex];
+            Plugin_080_DallasPin = CONFIG_PIN1;
             // byte devCount =
             if (Plugin_080_DallasPin != -1){
-              Plugin_080_DS_scan(getFormItemInt(F("plugin_080_dev")), addr);
+              Plugin_080_DS_scan(getFormItemInt(F("p080_dev")), addr);
               for (byte x = 0; x < 8; x++)
                   ExtraTaskSettings.TaskDevicePluginConfigLong[x] = addr[x];
 
@@ -116,7 +122,7 @@ boolean Plugin_080(byte function, struct EventStruct * event, String& string)
             for (byte x = 0; x < 8; x++)
             {
                 if (x != 0)
-                    string += "-";
+                    string += '-';
                 // string += String(ExtraTaskSettings.TaskDevicePluginConfigLong[x], HEX);
             }
             success = true;
@@ -124,7 +130,7 @@ boolean Plugin_080(byte function, struct EventStruct * event, String& string)
         }
         case PLUGIN_INIT:
         {
-            Plugin_080_DallasPin = Settings.TaskDevicePin1[event->TaskIndex];
+            Plugin_080_DallasPin = CONFIG_PIN1;
             if (Plugin_080_DallasPin != -1){
               uint8_t addr[8];
               Plugin_080_get_addr(addr, event->TaskIndex);
@@ -141,7 +147,7 @@ boolean Plugin_080(byte function, struct EventStruct * event, String& string)
                 uint8_t addr[8];
                 Plugin_080_get_addr(addr, event->TaskIndex);
 
-                Plugin_080_DallasPin = Settings.TaskDevicePin1[event->TaskIndex];
+                Plugin_080_DallasPin = CONFIG_PIN1;
                 String log  = F("DS   : iButton: ");
 
                 if (Plugin_080_DS_readiButton(addr))
@@ -462,7 +468,7 @@ boolean Plugin_080_DS_readiButton(byte addr[8])
     for (byte j = 0; j < 8; j++)
     {
       log += String(addr[j], HEX);
-      if (j < 7) log += F("-");
+      if (j < 7) log += '-';
     }
     log += F(" found: ");
     Plugin_080_DS_reset_search();
@@ -471,9 +477,9 @@ boolean Plugin_080_DS_readiButton(byte addr[8])
        for (byte j = 0; j < 8; j++)
        {
          log += String(tmpaddr[j], HEX);
-         if (j < 7) log += F("-");
+         if (j < 7) log += '-';
        }
-       log += F(",");
+       log += ',';
        if (memcmp(addr,tmpaddr,8)==0)
        {
          log += F("Success. Button was found");

@@ -8,9 +8,18 @@
 #define PLUGIN_NAME_002       "Analog input - internal"
 #define PLUGIN_VALUENAME1_002 "Analog"
 
+
+#ifdef ESP32
+  #define P002_MAX_ADC_VALUE    4095
+#endif
+#ifdef ESP8266
+  #define P002_MAX_ADC_VALUE    1023
+#endif
+
 uint32_t Plugin_002_OversamplingValue = 0;
 uint16_t Plugin_002_OversamplingCount = 0;
-
+uint16_t Plugin_002_OversamplingMinVal = P002_MAX_ADC_VALUE;
+uint16_t Plugin_002_OversamplingMaxVal = 0;
 
 boolean Plugin_002(byte function, struct EventStruct *event, String& string)
 {
@@ -50,22 +59,37 @@ boolean Plugin_002(byte function, struct EventStruct *event, String& string)
       {
         #if defined(ESP32)
           addHtml(F("<TR><TD>Analog Pin:<TD>"));
-          addPinSelect(false, "taskdevicepin1", Settings.TaskDevicePin1[event->TaskIndex]);
+          addPinSelect(false, F("taskdevicepin1"), CONFIG_PIN1);
         #endif
 
-        addFormCheckBox(F("Oversampling"), F("plugin_002_oversampling"), Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
+        addFormCheckBox(F("Oversampling"), F("p002_oversampling"), PCONFIG(0));
 
         addFormSubHeader(F("Two Point Calibration"));
 
-        addFormCheckBox(F("Calibration Enabled"), F("plugin_002_cal"), Settings.TaskDevicePluginConfig[event->TaskIndex][3]);
+        addFormCheckBox(F("Calibration Enabled"), F("p002_cal"), PCONFIG(3));
 
-        addFormNumericBox(F("Point 1"), F("plugin_002_adc1"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][0], 0, 1023);
-        addHtml(F(" &#8793; "));
-        addTextBox(F("plugin_002_out1"), String(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0], 3), 10);
+        addFormNumericBox(F("Point 1"), F("p002_adc1"), PCONFIG_LONG(0), 0, P002_MAX_ADC_VALUE);
+        html_add_estimate_symbol();
+        addTextBox(F("p002_out1"), String(PCONFIG_FLOAT(0), 3), 10);
 
-        addFormNumericBox(F("Point 2"), F("plugin_002_adc2"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][1], 0, 1023);
-        addHtml(F(" &#8793; "));
-        addTextBox(F("plugin_002_out2"), String(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1], 3), 10);
+        addFormNumericBox(F("Point 2"), F("p002_adc2"), PCONFIG_LONG(1), 0, P002_MAX_ADC_VALUE);
+        html_add_estimate_symbol();
+        addTextBox(F("p002_out2"), String(PCONFIG_FLOAT(1), 3), 10);
+
+        {
+          // Output the statistics for the current settings.
+          int16_t raw_value = 0;
+          float value = P002_getOutputValue(event, raw_value);
+          P002_formatStatistics(F("Current"), raw_value, value);
+
+          if (PCONFIG(3)) {
+            P002_formatStatistics(F("Minimum"), 0, P002_applyCalibration(event, 0));
+            P002_formatStatistics(F("Maximum"), P002_MAX_ADC_VALUE, P002_applyCalibration(event, P002_MAX_ADC_VALUE));
+
+            float stepsize = P002_applyCalibration(event, 1.0) - P002_applyCalibration(event, 0.0);
+            P002_formatStatistics(F("Step size"), 1, stepsize);
+          }
+        }
 
         success = true;
         break;
@@ -73,15 +97,15 @@ boolean Plugin_002(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = isFormItemChecked(F("plugin_002_oversampling"));
+        PCONFIG(0) = isFormItemChecked(F("p002_oversampling"));
 
-        Settings.TaskDevicePluginConfig[event->TaskIndex][3] = isFormItemChecked(F("plugin_002_cal"));
+        PCONFIG(3) = isFormItemChecked(F("p002_cal"));
 
-        Settings.TaskDevicePluginConfigLong[event->TaskIndex][0] = getFormItemInt(F("plugin_002_adc1"));
-        Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0] = getFormItemFloat(F("plugin_002_out1"));
+        PCONFIG_LONG(0) = getFormItemInt(F("p002_adc1"));
+        PCONFIG_FLOAT(0) = getFormItemFloat(F("p002_out1"));
 
-        Settings.TaskDevicePluginConfigLong[event->TaskIndex][1] = getFormItemInt(F("plugin_002_adc2"));
-        Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1] = getFormItemFloat(F("plugin_002_out2"));
+        PCONFIG_LONG(1) = getFormItemInt(F("p002_adc2"));
+        PCONFIG_FLOAT(1) = getFormItemFloat(F("p002_out2"));
 
         success = true;
         break;
@@ -89,15 +113,17 @@ boolean Plugin_002(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_TEN_PER_SECOND:
       {
-        if (Settings.TaskDevicePluginConfig[event->TaskIndex][0])   //Oversampling?
+        if (PCONFIG(0))   //Oversampling?
         {
-          #if defined(ESP8266)
-            Plugin_002_OversamplingValue += analogRead(A0);
-          #endif
-          #if defined(ESP32)
-            Plugin_002_OversamplingValue += analogRead(Settings.TaskDevicePin1[event->TaskIndex]);
-          #endif
-          Plugin_002_OversamplingCount ++;
+          uint16_t currentValue = P002_performRead(event);
+          Plugin_002_OversamplingValue += currentValue;
+          ++Plugin_002_OversamplingCount;
+          if (currentValue > Plugin_002_OversamplingMaxVal) {
+            Plugin_002_OversamplingMaxVal = currentValue;
+          }
+          if (currentValue < Plugin_002_OversamplingMinVal) {
+            Plugin_002_OversamplingMinVal = currentValue;
+          }
         }
         success = true;
         break;
@@ -105,50 +131,83 @@ boolean Plugin_002(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
       {
-        String log = F("ADC  : Analog value: ");
-
-        if (Plugin_002_OversamplingCount > 0)
-        {
-          UserVar[event->BaseVarIndex] = (float)Plugin_002_OversamplingValue / Plugin_002_OversamplingCount;
-          Plugin_002_OversamplingValue = 0;
-          Plugin_002_OversamplingCount = 0;
-
+        int16_t raw_value = 0;
+        UserVar[event->BaseVarIndex] = P002_getOutputValue(event, raw_value);
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          String log = F("ADC  : Analog value: ");
+          log += String(raw_value);
+          log += F(" = ");
           log += String(UserVar[event->BaseVarIndex], 3);
-        }
-        else
-        {
-          #if defined(ESP8266)
-            int16_t value = analogRead(A0);
-          #endif
-          #if defined(ESP32)
-            int16_t value = analogRead(Settings.TaskDevicePin1[event->TaskIndex]);
-          #endif
-          UserVar[event->BaseVarIndex] = (float)value;
-
-          log += value;
-        }
-
-        if (Settings.TaskDevicePluginConfig[event->TaskIndex][3])   //Calibration?
-        {
-          int adc1 = Settings.TaskDevicePluginConfigLong[event->TaskIndex][0];
-          int adc2 = Settings.TaskDevicePluginConfigLong[event->TaskIndex][1];
-          float out1 = Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0];
-          float out2 = Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1];
-          if (adc1 != adc2)
-          {
-            float normalized = (float)(UserVar[event->BaseVarIndex] - adc1) / (float)(adc2 - adc1);
-            UserVar[event->BaseVarIndex] = normalized * (out2 - out1) + out1;
-
-            log += F(" = ");
-            log += String(UserVar[event->BaseVarIndex], 3);
+          if (PCONFIG(0)) {
+            log += F(" (");
+            log += Plugin_002_OversamplingCount;
+            log += F(" samples)");
           }
+          addLog(LOG_LEVEL_INFO,log);
         }
-
-        addLog(LOG_LEVEL_INFO,log);
+        // Now reset the oversampling variables.
+        Plugin_002_OversamplingValue = 0;
+        Plugin_002_OversamplingCount = 0;
+        Plugin_002_OversamplingMinVal = P002_MAX_ADC_VALUE;
+        Plugin_002_OversamplingMaxVal = 0;
         success = true;
         break;
       }
   }
   return success;
 }
+
+float P002_getOutputValue(struct EventStruct *event, int16_t &raw_value) {
+  float float_value = 0.0;
+  if (PCONFIG(0) && Plugin_002_OversamplingCount > 0) {
+    float sum = static_cast<float>(Plugin_002_OversamplingValue);
+    float count = static_cast<float>(Plugin_002_OversamplingCount);
+    if (Plugin_002_OversamplingCount >= 3) {
+      sum -= Plugin_002_OversamplingMaxVal;
+      sum -= Plugin_002_OversamplingMinVal;
+      count -= 2;
+    }
+    float_value = sum / count;
+    raw_value = static_cast<int16_t>(float_value);
+  } else {
+    raw_value = P002_performRead(event);
+    float_value = static_cast<float>(raw_value);
+  }
+  return P002_applyCalibration(event, float_value);
+}
+
+float P002_applyCalibration(struct EventStruct *event, float float_value) {
+  if (PCONFIG(3))   //Calibration?
+  {
+    int adc1 = PCONFIG_LONG(0);
+    int adc2 = PCONFIG_LONG(1);
+    float out1 = PCONFIG_FLOAT(0);
+    float out2 = PCONFIG_FLOAT(1);
+    if (adc1 != adc2)
+    {
+      const float normalized = static_cast<float>(float_value - adc1) / static_cast<float>(adc2 - adc1);
+      float_value = normalized * (out2 - out1) + out1;
+    }
+  }
+  return float_value;
+}
+
+uint16_t P002_performRead(struct EventStruct *event) {
+  uint16_t value = 0;
+  #if defined(ESP8266)
+    value = analogRead(A0);
+  #endif
+  #if defined(ESP32)
+    value = analogRead(CONFIG_PIN1);
+  #endif
+  return value;
+}
+
+void P002_formatStatistics(const String& label, int16_t raw, float float_value) {
+  addRowLabel(label);
+  addHtml(String(raw));
+  html_add_estimate_symbol();
+  addHtml(String(float_value, 3));
+}
+
 #endif // USES_P002

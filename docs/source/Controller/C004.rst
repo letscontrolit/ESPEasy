@@ -1,0 +1,39 @@
+.. include:: _controller_substitutions.repl
+
+.. _C004_page:
+
+|C004_typename|
+==================================================
+
+|C004_shortinfo|
+
+Controller details
+------------------
+
+Type: |C004_type|
+
+Name: |C004_name|
+
+Status: |C004_status|
+
+GitHub: |C004_github|_
+
+Maintainer: |C004_maintainer|
+
+Change log
+----------
+
+.. versionchanged:: 2.0
+  ...
+
+  |added|
+  Major overhaul for 2.0 release.
+
+.. versionadded:: 1.0
+  ...
+
+  |added|
+  Initial release version.
+
+Description
+-----------

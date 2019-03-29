@@ -18,24 +18,33 @@ String Command_Task_ClearAll(struct EventStruct *event, const char* Line)
 
 String Command_Task_ValueSet(struct EventStruct *event, const char* Line)
 {
-	char TmpStr1[INPUT_COMMAND_SIZE];
+	String TmpStr1;
 	if (GetArgv(Line, TmpStr1, 4)) {
 		float result = 0;
-		Calculate(TmpStr1, &result);
+		Calculate(TmpStr1.c_str(), &result);
 		UserVar[(VARS_PER_TASK * (event->Par1 - 1)) + event->Par2 - 1] = result;
 	}else  {
 		//TODO: Get Task description and var name
-		Serial.println(UserVar[(VARS_PER_TASK * (event->Par1 - 1)) + event->Par2 - 1]);
+		serialPrintln(String(UserVar[(VARS_PER_TASK * (event->Par1 - 1)) + event->Par2 - 1]));
+	}
+	return return_command_success();
+}
+
+String Command_Task_ValueToggle(struct EventStruct *event, const char* Line)
+{
+	const int result = round(UserVar[(VARS_PER_TASK * (event->Par1 - 1)) + event->Par2 - 1]);
+	if (result == 0 || result == 1) {
+	  UserVar[(VARS_PER_TASK * (event->Par1 - 1)) + event->Par2 - 1] = !result;
 	}
 	return return_command_success();
 }
 
 String Command_Task_ValueSetAndRun(struct EventStruct *event, const char* Line)
 {
-	char TmpStr1[INPUT_COMMAND_SIZE];
+	String TmpStr1;
 	if (GetArgv(Line, TmpStr1, 4)) {
 		float result = 0;
-		Calculate(TmpStr1, &result);
+		Calculate(TmpStr1.c_str(), &result);
 		UserVar[(VARS_PER_TASK * (event->Par1 - 1)) + event->Par2 - 1] = result;
 		SensorSendTask(event->Par1 - 1);
 	}

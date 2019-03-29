@@ -1,0 +1,245 @@
+.. csv-table::
+   :header: "Event", "Example"
+   :widths: 30, 20
+
+   "
+   ``<taskname>#<valuename>``
+   As described already, each task can produced one or more events, one for each measured value. You should not name your devices and value names so that the combination equals to any of the below listed system events!
+   ","
+
+   .. code-block:: html
+
+        on DHT11Outside#Temperature>20 do
+         GPIO,2,1
+        endon
+
+   "
+   "
+   ``System#Wake``
+   Triggered after power on.
+   ","
+
+   .. code-block:: html
+
+        on System#Wake do
+          GPIO,15,1
+        endon
+
+   "
+   "
+   ``System#Boot``
+   Triggered at boot time.
+   ","
+
+   .. code-block:: html
+
+      on System#Boot do
+        GPIO,2,1
+        timerSet,1,30
+      endon
+
+   "
+   "
+   ``System#Sleep``
+   Triggered just before the ESP goes to deep sleep.
+   ","
+
+   .. code-block:: html
+
+	   on System#Sleep do
+	    GPIO,2,0
+	   endon
+
+   "
+   "
+   ``MQTT#Connected``
+   Triggered when the ESP has connected to broker.
+   ","
+
+   .. code-block:: html
+
+	   on MQTT#Connected do
+	    Publish,%sysname%/status,First message!
+	   endon
+
+   "
+   "
+   ``MQTT#Disconnected``
+   Triggered when the ESP has disconnected from the broker.
+   ","
+
+   .. code-block:: html
+
+	   on MQTT#Disconnected do
+	    Reboot
+	   endon
+
+   "
+   "
+   ``MQTTimport#Connected``
+   Triggered when the ESP has connected to broker (the MQTT Import plugin uses a separate connection than the generic one).
+   ","
+
+   .. code-block:: html
+
+	   on MQTTimport#Connected do
+	    Publish,%sysname%/status,MQTT Import is now operational
+	   endon
+
+   "
+   "
+   ``MQTTimport#Disconnected``
+   Triggered when the ESP has disconnected from the broker (the MQTT Import plugin uses a separate connection than the generic one).
+   ","
+
+   .. code-block:: html
+
+	   on MQTTimport#Disconnected do
+	    Reboot
+	   endon
+
+   "
+   "
+   ``WiFi#Connected``
+   Triggered when the ESP has connected to Wi-Fi.
+   ","
+
+   .. code-block:: html
+
+	   on WiFi#Connected do
+	    SendToHTTP,url.com,80,/report.php?hash=123abc456&t=[temp2#out]
+	   endon
+
+   "
+   "
+   ``WiFi#ChangedAccesspoint``
+   Triggered when the ESP has changed to access point, will also trigger first time the unit connects to the Wi-Fi.
+   ","
+
+   .. code-block:: html
+
+	   on WiFi#ChangedAccesspoint do
+	    Publish,%sysname%/status,AP changed
+	   endon
+
+   "
+   "
+   ``WiFi#APmodeEnabled``
+   Triggered when the ESP has set the AP mode (access point) active.
+   This may happen when no valid WiFi settings are found or the ESP cannot connect to the set AP, but it can also be enabled via some command.
+   N.B. Sending a publish command may not be very useful on this event, since this will mainly happen when there is no WiFi connection.
+   ","
+
+   .. code-block:: html
+
+	   on WiFi#APmodeEnabled do
+	    ... // Some command
+	   endon
+
+   "
+   "
+   ``WiFi#APmodeDisabled``
+   Triggered when the ESP has disabled the AP mode (access point).
+   This can happen some time (default 60 seconds) after a WiFi connection has been made. Or disabled using some command.
+   ","
+
+   .. code-block:: html
+
+	   on WiFi#APmodeDisabled do
+	    Publish,%sysname%/status,AP disabled
+	   endon
+
+   "
+   "
+   ``Login#Failed``
+   Triggered when (someone) has tried to login to a ESP unit with admin password enabled, but have failed to enter correct password.
+   ","
+
+   .. code-block:: html
+
+	   on Login#Failed do
+	    Publish,%sysname%/warning,Intruder alert!
+	   endon
+
+   "
+   "
+   ``Time#Initialized``
+   Triggered the first time (after boot) NTP is updating the unit.
+   ","
+
+   .. code-block:: html
+
+	   on Time#Initialized do
+	    Publish,%sysname%/Time,%systime%
+	   endon
+
+   "
+   "
+   ``Time#Set``
+   Triggered when the time is set by an update from NTP.
+   ","
+
+   .. code-block:: html
+
+	   on Time#Set do
+	    Publish,%sysname%/Time,%systime%
+	    Publish,%sysname%/NTP,Updated time at: %systime%
+	   endon
+
+   "
+   "
+   ``Rules#Timer=``
+   As described already, triggered when a rules timer ends (setting a timer to 0 will disable the timer).
+   ","
+
+   .. code-block:: html
+
+	   on Rules#Timer=1 do
+	    GPIO,2,1
+	   endon
+
+   "
+   "
+   ``Clock#Time=``
+   Triggered every minute with day and time like: Mon,12:30 or Tue,14:45. You can define triggers on specific days or all days using 'All' for days indicator. You can also use wildcards in the time setting like All,**:00 to run every hour.
+   ","
+
+   .. code-block:: html
+
+	   on Clock#Time=All,12:00 do //will run once a day at noon
+	    GPIO,2,1
+	   endon
+
+	   on Clock#Time=All,**:30 do //will run half past every hour
+	    GPIO,2,1
+	   endon
+
+	   on Clock#Time=All,%sunrise% do //will run at sunrise  (%sunset% is also available)
+	    GPIO,2,1
+	   endon
+
+   "
+   "
+   ``GPIO#N``
+   If the command 'Monitor' is used to monitor a given pin you will receive an event for that GPIO as soon as it's state changes. As seen in the example you can always use the square brackets together with the task/value name of ``Plugin#GPIO#Pinstate#N`` to get the state, but to trigger events you need to add the monitor command (preferably at boot).
+   ","
+
+   .. code-block:: html
+
+       on System#Boot do
+        Monitor GPIO,15
+       endon
+
+        on GPIO#15=0 do
+         if [Plugin#GPIO#Pinstate#13]=0
+          // do something
+         endif
+        endon
+
+        on GPIO#15=1 do
+         if [Plugin#GPIO#Pinstate#13]=1
+          // do something
+         endif
+        endon
+
+   "

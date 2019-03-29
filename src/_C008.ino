@@ -8,9 +8,9 @@
 #define CPLUGIN_NAME_008       "Generic HTTP"
 #include <ArduinoJson.h>
 
-boolean CPlugin_008(byte function, struct EventStruct *event, String& string)
+bool CPlugin_008(byte function, struct EventStruct *event, String& string)
 {
-  boolean success = false;
+  bool success = false;
 
   switch (function)
   {
@@ -34,8 +34,8 @@ boolean CPlugin_008(byte function, struct EventStruct *event, String& string)
 
     case CPLUGIN_INIT:
       {
-        ControllerSettingsStruct ControllerSettings;
-        LoadControllerSettings(event->ControllerIndex, (byte*)&ControllerSettings, sizeof(ControllerSettings));
+        MakeControllerSettings(ControllerSettings);
+        LoadControllerSettings(event->ControllerIndex, ControllerSettings);
         C008_DelayHandler.configureControllerSettings(ControllerSettings);
         break;
       }
@@ -52,11 +52,11 @@ boolean CPlugin_008(byte function, struct EventStruct *event, String& string)
         // Collect the values at the same run, to make sure all are from the same sample
         byte valueCount = getValueCountFromSensorType(event->sensorType);
         C008_queue_element element(event, valueCount);
-        if (ExtraTaskSettings.TaskDeviceValueNames[0][0] == 0)
+        if (ExtraTaskSettings.TaskIndex != event->TaskIndex)
           PluginCall(PLUGIN_GET_DEVICEVALUENAMES, event, dummyString);
 
-        ControllerSettingsStruct ControllerSettings;
-        LoadControllerSettings(event->ControllerIndex, (byte*)&ControllerSettings, sizeof(ControllerSettings));
+        MakeControllerSettings(ControllerSettings);
+        LoadControllerSettings(event->ControllerIndex, ControllerSettings);
 
         for (byte x = 0; x < valueCount; x++)
         {
@@ -69,7 +69,9 @@ boolean CPlugin_008(byte function, struct EventStruct *event, String& string)
 
             element.txt[x].replace(F("%valname%"), URLEncode(ExtraTaskSettings.TaskDeviceValueNames[x]));
             element.txt[x].replace(F("%value%"), formattedValue);
+#ifndef BUILD_NO_DEBUG
             addLog(LOG_LEVEL_DEBUG_MORE, element.txt[x]);
+#endif
           }
         }
         success = C008_DelayHandler.addToQueue(element);
@@ -97,7 +99,7 @@ bool do_process_c008_delay_queue(int controller_number, const C008_queue_element
     return false;
 
   String request = create_http_request_auth(controller_number, element.controller_idx, ControllerSettings, F("GET"), element.txt[element.valuesSent]);
-  return element.checkDone(send_via_http(controller_number, client, request));
+  return element.checkDone(send_via_http(controller_number, client, request, ControllerSettings.MustCheckReply));
 }
 
 #endif

@@ -38,8 +38,8 @@ boolean NPlugin_001(byte function, struct EventStruct *event, String& string)
 	//
 	//     if (command == F("email"))
 	//     {
-	//       NotificationSettingsStruct NotificationSettings;
-	//       LoadNotificationSettings(event->NotificationIndex, (byte*)&NotificationSettings, sizeof(NotificationSettings));
+	//       MakeNotificationSettings(NotificationSettings);
+	//       LoadNotificationSettings(event->NotificationIndex, (byte*)&NotificationSettings, sizeof(NotificationSettingsStruct));
 	//       NPlugin_001_send(NotificationSettings.Domain, NotificationSettings.Receiver, NotificationSettings.Sender, NotificationSettings.Subject, NotificationSettings.Body, NotificationSettings.Server, NotificationSettings.Port);
 	//       success = true;
 	//     }
@@ -48,8 +48,8 @@ boolean NPlugin_001(byte function, struct EventStruct *event, String& string)
 
 	case NPLUGIN_NOTIFY:
 	{
-		NotificationSettingsStruct NotificationSettings;
-		LoadNotificationSettings(event->NotificationIndex, (byte*)&NotificationSettings, sizeof(NotificationSettings));
+		MakeNotificationSettings(NotificationSettings);
+		LoadNotificationSettings(event->NotificationIndex, (byte*)&NotificationSettings, sizeof(NotificationSettingsStruct));
 		String subject = NotificationSettings.Subject;
 		String body = "";
 		if (event->String1.length() > 0)
@@ -73,9 +73,10 @@ boolean NPlugin_001_send(const NotificationSettingsStruct& notificationsettings,
 
 	// Use WiFiClient class to create TCP connections
 	WiFiClient client;
+	client.setTimeout(CONTROLLER_CLIENTTIMEOUT_DFLT);
 	String aHost = notificationsettings.Server;
 	addLog(LOG_LEVEL_DEBUG, String(F("EMAIL: Connecting to ")) + aHost + notificationsettings.Port);
-	if (client.connect(aHost.c_str(), notificationsettings.Port) != 1) {
+	if (!connectClient(client, aHost.c_str(), notificationsettings.Port)) {
 		addLog(LOG_LEVEL_ERROR, String(F("EMAIL: Error connecting to ")) + aHost + notificationsettings.Port);
 		myStatus = false;
 	}else {
@@ -112,7 +113,7 @@ boolean NPlugin_001_send(const NotificationSettingsStruct& notificationsettings,
 		mailheader.replace(String(F("$ato")), notificationsettings.Receiver);
 		mailheader.replace(String(F("$subject")), aSub);
 		mailheader.replace(String(F("$espeasyversion")), String(BUILD));
-		aMesg.replace(F("\r"), F("<br/>")); // re-write line breaks for Content-type: text/html
+		aMesg.replace("\r", F("<br/>")); // re-write line breaks for Content-type: text/html
 
 		// Wait for Client to Start Sending
 		// The MTA Exchange
@@ -159,7 +160,7 @@ boolean NPlugin_001_send(const NotificationSettingsStruct& notificationsettings,
 	return myStatus;
 }
 
-boolean NPlugin_001_Auth(WiFiClient& client, String user, String pass)
+boolean NPlugin_001_Auth(WiFiClient& client, const String& user, const String& pass)
 {
 	if (user.length() == 0 || pass.length() == 0) {
 		// No user/password given.
@@ -176,7 +177,7 @@ boolean NPlugin_001_Auth(WiFiClient& client, String user, String pass)
 	return true;
 }
 
-boolean NPlugin_001_MTA(WiFiClient& client, String aStr, const String &aWaitForPattern)
+boolean NPlugin_001_MTA(WiFiClient& client, const String& aStr, const String &aWaitForPattern)
 {
 	addLog(LOG_LEVEL_DEBUG, aStr);
 
@@ -187,13 +188,13 @@ boolean NPlugin_001_MTA(WiFiClient& client, String aStr, const String &aWaitForP
 	backgroundtasks();
 	while (true) {
 		if (timeOutReached(timer)) {
-			String log = F("Plugin_001_MTA: timeout. ");
+			String log = F("NPlugin_001_MTA: timeout. ");
 			log += aStr;
 			addLog(LOG_LEVEL_ERROR, log);
 			return false;
 		}
 
-		yield();
+		delay(0);
 
 		// String line = client.readStringUntil('\n');
 		String line;

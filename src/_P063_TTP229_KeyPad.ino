@@ -31,13 +31,6 @@
 // #include <*.h>   no lib required
 
 
-#ifndef CONFIG
-#define CONFIG(n) (Settings.TaskDevicePluginConfig[event->TaskIndex][n])
-#endif
-#ifndef PIN
-#define PIN(n) (Settings.TaskDevicePin[n][event->TaskIndex])
-#endif
-
 uint16_t readTTP229(int16_t pinSCL, int16_t pinSDO)
 {
   uint16_t value = 0;
@@ -103,14 +96,14 @@ boolean Plugin_063(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_GET_DEVICEGPIONAMES:
       {
-        event->String1 = F("GPIO &rarr; SCL");
-        event->String2 = F("GPIO &#8644; SDO");
+        event->String1 = formatGpioName_output("SCL");
+        event->String2 = formatGpioName_bidirectional("SDO");
         break;
       }
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        addFormCheckBox(F("ScanCode"), F("scancode"), CONFIG(1));
+        addFormCheckBox(F("ScanCode"), F("scancode"), PCONFIG(1));
 
         success = true;
         break;
@@ -118,7 +111,7 @@ boolean Plugin_063(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        CONFIG(1) = isFormItemChecked(F("scancode"));
+        PCONFIG(1) = isFormItemChecked(F("scancode"));
 
         success = true;
         break;
@@ -126,12 +119,14 @@ boolean Plugin_063(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
       {
-        int16_t pinSCL = PIN(0);
-        int16_t pinSDO = PIN(1);
+        portStatusStruct newStatus;
+
+        int16_t pinSCL = CONFIG_PIN1;
+        int16_t pinSDO = CONFIG_PIN2;
 
         String log = F("Tkey : GPIO: ");
         log += pinSCL;
-        log += F(" ");
+        log += ' ';
         log += pinSDO;
         addLog(LOG_LEVEL_INFO, log);
 
@@ -139,10 +134,25 @@ boolean Plugin_063(byte function, struct EventStruct *event, String& string)
         {
           pinMode(pinSCL, OUTPUT);
           digitalWrite(pinSCL, LOW);
-          setPinState(PLUGIN_ID_063, pinSCL, PIN_MODE_OUTPUT, 0);
+          uint32_t key = createKey(PLUGIN_ID_063,pinSCL);
+          // WARNING: operator [] creates an entry in the map if key does not exist
+          newStatus = globalMapPortStatus[key];
+          newStatus.task++; // add this GPIO/port as a task
+          newStatus.mode = PIN_MODE_OUTPUT;
+          newStatus.state = 0;
+          savePortStatus(key,newStatus);
+          //setPinState(PLUGIN_ID_063, pinSCL, PIN_MODE_OUTPUT, 0);
+
           pinMode(pinSDO, OUTPUT);
           digitalWrite(pinSDO, LOW);
-          setPinState(PLUGIN_ID_063, pinSDO, PIN_MODE_INPUT, 0);
+          key = createKey(PLUGIN_ID_063,pinSDO);
+          // WARNING: operator [] creates an entry in the map if key does not exist
+          newStatus = globalMapPortStatus[key];
+          newStatus.task++; // add this GPIO/port as a task
+          newStatus.mode = PIN_MODE_INPUT;
+          newStatus.state = 0;
+          savePortStatus(key,newStatus);
+          //setPinState(PLUGIN_ID_063, pinSDO, PIN_MODE_INPUT, 0);
         }
 
         success = true;
@@ -152,14 +162,14 @@ boolean Plugin_063(byte function, struct EventStruct *event, String& string)
     case PLUGIN_TEN_PER_SECOND:
       {
         static uint16_t keyLast = 0;
-        int16_t pinSCL = PIN(0);
-        int16_t pinSDO = PIN(1);
+        int16_t pinSCL = CONFIG_PIN1;
+        int16_t pinSDO = CONFIG_PIN2;
 
         if (pinSCL >= 0 && pinSDO >= 0)
         {
           uint16_t key = readTTP229(pinSCL, pinSDO);
 
-          if (key && CONFIG(1))
+          if (key && PCONFIG(1))
           {
             uint16_t colMask = 0x01;
             for (byte col = 1; col <= 16; col++)
@@ -180,7 +190,7 @@ boolean Plugin_063(byte function, struct EventStruct *event, String& string)
             event->sensorType = SENSOR_TYPE_SWITCH;
 
             String log = F("Tkey : ");
-            if (CONFIG(1))
+            if (PCONFIG(1))
               log = F("ScanCode=0x");
             else
               log = F("KeyMap=0x");

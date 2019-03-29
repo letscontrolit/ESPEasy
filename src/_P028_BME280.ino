@@ -4,7 +4,6 @@
 //#######################################################################################################
 
 //#include <math.h>
-#include <Arduino.h>
 #include <map>
 
 #define PLUGIN_028
@@ -199,7 +198,7 @@ std::map<uint8_t, P028_sensordata> P028_sensors;
 int Plugin_28_i2c_addresses[2] = { 0x76, 0x77 };
 
 uint8_t Plugin_028_i2c_addr(struct EventStruct *event) {
-  uint8_t i2cAddress = (uint8_t)Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+  uint8_t i2cAddress = static_cast<uint8_t>(PCONFIG(0));
   if (i2cAddress != Plugin_28_i2c_addresses[0] && i2cAddress != Plugin_28_i2c_addresses[1]) {
     // Set to default address
     i2cAddress = Plugin_28_i2c_addresses[0];
@@ -250,7 +249,7 @@ boolean Plugin_028(byte function, struct EventStruct *event, String& string)
       {
         const uint8_t i2cAddress = Plugin_028_i2c_addr(event);
         P028_sensordata& sensor = P028_sensors[i2cAddress];
-        addFormSelectorI2C(F("plugin_028_bme280_i2c"), 2, Plugin_28_i2c_addresses, i2cAddress);
+        addFormSelectorI2C(F("p028_bme280_i2c"), 2, Plugin_28_i2c_addresses, i2cAddress);
         if (sensor.sensorID != Unknown_DEVICE) {
           String detectedString = F("Detected: ");
           detectedString += sensor.getFullDeviceName();
@@ -258,10 +257,10 @@ boolean Plugin_028(byte function, struct EventStruct *event, String& string)
         }
         addFormNote(F("SDO Low=0x76, High=0x77"));
 
-        addFormNumericBox(F("Altitude"), F("plugin_028_bme280_elev"), Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
+        addFormNumericBox(F("Altitude"), F("p028_bme280_elev"), PCONFIG(1));
         addUnit(F("m"));
 
-        addFormNumericBox(F("Temperature offset"), F("plugin_028_bme280_tempoffset"), Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
+        addFormNumericBox(F("Temperature offset"), F("p028_bme280_tempoffset"), PCONFIG(2));
         addUnit(F("x 0.1C"));
         String offsetNote = F("Offset in units of 0.1 degree Celcius");
         if (sensor.hasHumidity()) {
@@ -275,18 +274,18 @@ boolean Plugin_028(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        const uint8_t i2cAddress = getFormItemInt(F("plugin_028_bme280_i2c"));
+        const uint8_t i2cAddress = getFormItemInt(F("p028_bme280_i2c"));
         Plugin_028_check(i2cAddress); // Check id device is present
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = i2cAddress;
-        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("plugin_028_bme280_elev"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("plugin_028_bme280_tempoffset"));
+        PCONFIG(0) = i2cAddress;
+        PCONFIG(1) = getFormItemInt(F("p028_bme280_elev"));
+        PCONFIG(2) = getFormItemInt(F("p028_bme280_tempoffset"));
         success = true;
         break;
       }
     case PLUGIN_ONCE_A_SECOND:
       {
         const uint8_t i2cAddress = Plugin_028_i2c_addr(event);
-        const float tempOffset = Settings.TaskDevicePluginConfig[event->TaskIndex][2] / 10.0;
+        const float tempOffset = PCONFIG(2) / 10.0;
         if (Plugin_028_update_measurements(i2cAddress, tempOffset, event->TaskIndex)) {
           // Update was succesfull, schedule a read.
           schedule_task_device_timer(event->TaskIndex, millis() + 10);
@@ -309,7 +308,7 @@ boolean Plugin_028(byte function, struct EventStruct *event, String& string)
         }
         UserVar[event->BaseVarIndex] = sensor.last_temp_val;
         UserVar[event->BaseVarIndex + 1] = sensor.last_hum_val;
-        const int elev = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
+        const int elev = PCONFIG(1);
         if (elev) {
            UserVar[event->BaseVarIndex + 2] = Plugin_028_pressureElevation(sensor.last_press_val, elev);
         } else {
@@ -382,8 +381,10 @@ bool Plugin_028_update_measurements(const uint8_t i2cAddress, float tempOffset, 
     return false;
   }
 
-  if (!timeOutReached(sensor.last_measurement + 1000)) {
-    // Must wait one second to make sure the filtered values stabilize.
+  // It takes at least 1.587 sec for valit measurements to complete.
+  // The datasheet names this the "T63" moment.
+  // 1 second = 63% of the time needed to perform a measurement.
+  if (!timeOutReached(sensor.last_measurement + 1587)) {
     return false;
   }
   if (!Plugin_028_readUncompensatedData(i2cAddress)) {
@@ -510,7 +511,7 @@ bool Plugin_028_begin(uint8_t i2cAddress) {
   I2C_write8_reg(i2cAddress, BMx280_REGISTER_SOFTRESET, 0xB6);
   delay(2);  // Startup time is 2 ms (datasheet)
   Plugin_028_readCoefficients(i2cAddress);
-  delay(65); //May be needed here as well to fix first wrong measurement?
+//  delay(65); //May be needed here as well to fix first wrong measurement?
   return true;
 }
 
@@ -548,8 +549,8 @@ void Plugin_028_readCoefficients(uint8_t i2cAddress)
 bool Plugin_028_readUncompensatedData(uint8_t i2cAddress) {
   // wait until measurement has been completed, otherwise we would read
   // the values from the last measurement
-  while (I2C_read8_reg(i2cAddress, BMx280_REGISTER_STATUS) & 0x08)
-    delay(1);
+  if (I2C_read8_reg(i2cAddress, BMx280_REGISTER_STATUS) & 0x08)
+    return false;
 
   I2Cdata_bytes BME280_data(BME280_P_T_H_DATA_LEN, BME280_DATA_ADDR);
   bool allDataRead = I2C_read_bytes(i2cAddress, BME280_data);
@@ -641,13 +642,6 @@ float Plugin_028_readHumidity(uint8_t i2cAddress)
   if (!sensor.hasHumidity()) {
     // No support for humidity
     return 0.0;
-  }
-  // It takes at least 1.587 sec for valit measurements to complete.
-  // The datasheet names this the "T63" moment.
-  // 1 second = 63% of the time needed to perform a measurement.
-  unsigned long difTime = millis() - sensor.last_measurement;
-  if (difTime < 1587) {
-    delay(1587 - difTime);
   }
   int32_t adc_H = sensor.uncompensated.humidity;
 

@@ -1,47 +1,126 @@
 #!/bin/bash
 
 VERSION=$(git describe)
+TMP_DIST=`mktemp -d`
+CURPATH=`pwd`
+
+while getopts d: option
+do
+case "${option}"
+in
+d) VERSION=${OPTARG};;
+esac
+done
+
+
+if [ ! -d ${TMP_DIST} ]; then
+  # Could not create temp dir, so exit
+  exit 1
+fi
 
 #Naming convention:
 # ESP_Easy_[github version]_[plugin set]_[chip type]_[flash memory].bin
 
+mkdir -p ${TMP_DIST}
+cp -r dist/* ${TMP_DIST}/
+
+if [ -d "docs/build" ]; then
+  # Docs have been created
+  mkdir -p ${TMP_DIST}/docs
+  cp -r docs/build/* ${TMP_DIST}/docs/
+fi
+
+mkdir -p ${TMP_DIST}/memstats
 
 for ENV in \
-  normal_ESP8266_1024 \
-  normal_ESP8266_4096 \
-  normal_ESP8285_1024 \
-  normal_IR_ESP8266_4096 \
-  test_ESP8266_1024\
-  test_ESP8266_4096\
-  test_ESP8266_4096_VCC\
-  test_ESP8285_1024\
-  dev_ESP8266_1024\
-  dev_ESP8266_4096\
-  dev_ESP8285_1024\
-  dev_ESP8266PUYA_1024\
-  dev_ESP8266PUYA_1024_VCC\
-  hard_SONOFF_POW\
-  hard_Shelly_1\
-  esp32dev;\
+  dev_ESP8266_4M\
+  esp-wrover-kit_test_1M8_partition\
+  esp32test_1M8_partition\
+  hard_SONOFF_POW_4M\
+  hard_Ventus_W266\
+  hard_core_250_SONOFF_POW_4M\
+  hard_core_250_Shelly_1_2M256\
+  minimal_ESP8266_1M_OTA\
+  minimal_ESP8285_1M_OTA\
+  minimal_core_250_ESP8266_1M_OTA\
+  minimal_core_250_ESP8285_1M_OTA\
+  normal_ESP8266_1M\
+  normal_ESP8266_1M_VCC\
+  normal_ESP8266_4M\
+  normal_ESP8285_1M\
+  normal_IR_ESP8266_1M\
+  normal_IR_ESP8266_4M\
+  normal_WROOM02_2M\
+  normal_core_241_ESP8266_1M\
+  normal_core_241_ESP8266_4M\
+  normal_core_242_ESP8266_1M\
+  normal_core_250_ESP8266_1M\
+  normal_core_250_ESP8266_4M\
+  normal_core_250_IR_ESP8266_4M\
+  normal_core_250_WROOM02_2M256\
+  normal_core_260_sdk2_alpha_ESP8266_4M\
+  test_ESP8266_4M_VCC\
+  test_core_242_ESP8266_4M\
+  test_core_250_ESP8266_4M\
+  test_core_260_alpha_ESP8266_4M_VCC\
+  test_core_260_sdk2_alpha_ESP8266_4M\
+  test_core_260_sdk222_alpha_ESP8266_4M\
+  test_core_260_sdk3_alpha_ESP8266_4M;\
 do
-  echo
-  echo "### Deploying environment $ENV for version $VERSION"
-  BIN=.pioenvs/${ENV}/ESP_Easy_${VERSION}_${ENV}.bin
-  cp .pioenvs/${ENV}/firmware.bin $BIN
-  python2 crc2.py $BIN
-  mv $BIN "dist/ESP_Easy_${VERSION}_${ENV}.bin"
+  MAX_FILESIZE=1044464
+  if [[ ${ENV} == *"1024"* ]]; then
+    # max 602 kiB
+    MAX_FILESIZE=892912
+  fi
+  if [[ ${ENV} == *"1024_OTA"* ]]; then
+    # max 602 kiB
+    MAX_FILESIZE=616448
+  fi
+  if [[ ${ENV} == *"esp32"* ]]; then
+    MAX_FILESIZE=1310720
+  fi
+  if [[ ${ENV} == *"1M8_partition"* ]]; then
+    MAX_FILESIZE=1900544
+  fi
+  if [[ ${ENV} == *"core_250"* ]]; then
+    # disable core 250 for now, since it is buggy (20180211)
+    MAX_FILESIZE=0
+  fi
+
+  FILESIZE=$(stat -c%s .pioenvs/${ENV}/firmware.bin )
+  if (( FILESIZE < MAX_FILESIZE )); then
+    echo
+    echo "### Deploying environment $ENV for version $VERSION"
+    BIN=.pioenvs/${ENV}/ESP_Easy_${VERSION}_${ENV}.bin
+    cp .pioenvs/${ENV}/firmware.bin $BIN
+    python2 crc2.py $BIN
+    mv $BIN "${TMP_DIST}/bin/ESP_Easy_${VERSION}_${ENV}.bin"
+  else
+    echo "Build too large for $ENV $FILESIZE > $MAX_FILESIZE "
+  fi
+
+  ELFFILE=`echo ".pioenvs/${ENV}/firmware.elf"`
+  if [ -f $ELFFILE ]; then
+    SYMBOLS_STATS=`echo "${TMP_DIST}/memstats/symbols_${ENV}.txt"`
+    STRINGS_STATS=`echo "${TMP_DIST}/memstats/strings_${ENV}.txt"`
+    readelf -a ${ELFFILE} |grep 3ff |sort -n -k 3 > ${SYMBOLS_STATS}
+    objdump  -s -j .rodata ${ELFFILE} > ${STRINGS_STATS}
+  fi
 done
 
-
 #create a source structure that is the same as the original ESPEasy project (and works with the howto on the wiki)
-rm -rf dist/Source 2>/dev/null
-mkdir dist/Source
-cp -r lib dist/Source/
-cp -r src dist/Source/
-cp platformio.ini dist/Source/
+#rm -rf dist/Source 2>/dev/null
 
-cd dist
+mkdir -p ${TMP_DIST}/source
+cp -r lib ${TMP_DIST}/source/
+cp -r src ${TMP_DIST}/source/
+cp platformio.ini ${TMP_DIST}/source/
+
+cd ${TMP_DIST}
 
 echo
 echo "### Creating zip archive"
-zip ../ESPEasy_$VERSION.zip -r .
+zip ${CURPATH}/ESPEasy_$VERSION.zip -r .
+
+rm -Rf ${TMP_DIST}/* 2>/dev/null
+rmdir ${TMP_DIST}

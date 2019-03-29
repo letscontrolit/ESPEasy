@@ -3,17 +3,9 @@
 
 #include <stdint.h>
 #include <list>
+#include <time.h>
 
-struct  timeStruct {
-  timeStruct() : Second(0), Minute(0), Hour(0), Wday(0), Day(0), Month(0), Year(0) {}
-  uint8_t Second;
-  uint8_t Minute;
-  uint8_t Hour;
-  uint8_t Wday;   // day of week, sunday is day 1
-  uint8_t Day;
-  uint8_t Month;
-  uint8_t Year;   // offset from 1970;
-};
+#define MAX_SCHEDULER_WAIT_TIME 5  // Max delay used in the scheduler for passing idle time.
 
 // convenient constants for TimeChangeRules
 enum week_t {Last=0, First, Second, Third, Fourth};
@@ -70,9 +62,10 @@ long timePassedSince(unsigned long timestamp);
 boolean timeOutReached(unsigned long timer);
 long usecPassedSince(unsigned long timestamp);
 boolean usecTimeOutReached(unsigned long timer);
-void setPluginTaskTimer(unsigned long timer, byte plugin, short taskIndex, int Par1,
+void setPluginTaskTimer(unsigned long msecFromNow, byte plugin, short taskIndex, int Par1,
   int Par2 = 0, int Par3 = 0, int Par4 = 0, int Par5 = 0);
-
+void setGPIOTimer(unsigned long msecFromNow, int Par1,
+  int Par2 = 0, int Par3 = 0, int Par4 = 0, int Par5 = 0);
 
 
 
@@ -100,10 +93,12 @@ struct timer_id_couple {
 struct msecTimerHandlerStruct {
 
   msecTimerHandlerStruct() : get_called(0), get_called_ret_id(0), max_queue_length(0),
-      last_exec_time_usec(0), total_idle_time_usec(0), is_idle(false), idle_time_pct(0.0)
+      last_exec_time_usec(0), total_idle_time_usec(0),  idle_time_pct(0.0), is_idle(false), eco_mode(true)
   {
     last_log_start_time = millis();
   }
+
+  void setEcoMode(bool enabled) { eco_mode = enabled; }
 
   void registerAt(unsigned long id, unsigned long timer) {
     timer_id_couple item(id, timer);
@@ -116,11 +111,26 @@ struct msecTimerHandlerStruct {
     ++get_called;
     if (_timer_ids.empty()) {
       recordIdle();
+      if (eco_mode) {
+        delay(MAX_SCHEDULER_WAIT_TIME); // Nothing to do, try save some power.
+      }
       return 0;
     }
     timer_id_couple item = _timer_ids.front();
-    if (!timeOutReached(item._timer)) {
+    const long passed = timePassedSince(item._timer);
+    if (passed < 0) {
+      // No timeOutReached
       recordIdle();
+      if (eco_mode) {
+        long waitTime = (-1 * passed) - 1; // will be non negative
+        if (waitTime > MAX_SCHEDULER_WAIT_TIME) {
+          waitTime = MAX_SCHEDULER_WAIT_TIME;
+        } else if (waitTime < 0) {
+          // Should not happen, but just to be sure we will not wait forever.
+          waitTime = 0;
+        }
+        delay(waitTime);
+      }
       return 0;
     }
     recordRunning();
@@ -184,7 +194,7 @@ private:
     if (is_idle) return;
     last_exec_time_usec = micros();
     is_idle = true;
-    yield(); // Nothing to do, so call yield for backgroundtasks
+    delay(0); // Nothing to do, so leave time for backgroundtasks
   }
 
   void recordRunning() {
@@ -202,8 +212,9 @@ private:
   unsigned long last_exec_time_usec;
   unsigned long total_idle_time_usec;
   unsigned long last_log_start_time;
-  bool is_idle;
   float idle_time_pct;
+  bool is_idle;
+  bool eco_mode;
 
   // The list of set timers
   std::list<timer_id_couple> _timer_ids;
