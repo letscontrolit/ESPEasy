@@ -273,7 +273,10 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
           //setPinState(PLUGIN_ID_001, CONFIG_PIN1, PIN_MODE_INPUT, switchstate[event->TaskIndex]);
           //  if it is in the device list we assume it's an input pin
           if (Settings.TaskDevicePin1PullUp[event->TaskIndex]) {
-            pinMode(CONFIG_PIN1, INPUT_PULLUP);
+            if (CONFIG_PIN1 == 16)
+              pinMode(CONFIG_PIN1, INPUT_PULLDOWN_16);
+            else
+              pinMode(CONFIG_PIN1, INPUT_PULLUP);
             newStatus.mode = PIN_MODE_INPUT_PULLUP;
           } else {
             pinMode(CONFIG_PIN1, INPUT);
