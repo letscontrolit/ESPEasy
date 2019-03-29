@@ -2405,8 +2405,13 @@ void handle_devices() {
         if (Device[DeviceIndex].PullUpOption)
         {
           addFormCheckBox(F("Internal PullUp"), F("TDPPU"), Settings.TaskDevicePin1PullUp[taskIndex]);   //="taskdevicepin1pullup"
+          #if defined(ESP8266)
+          addFormNote(F("PullDown for GPIO-16 (D0)"));
+          /*
           if ((Settings.TaskDevicePin1[taskIndex] == 16) || (Settings.TaskDevicePin2[taskIndex] == 16) || (Settings.TaskDevicePin3[taskIndex] == 16))
             addFormNote(F("GPIO-16 (D0) does not support PullUp"));
+          */
+         #endif
         }
 
         if (Device[DeviceIndex].InverseLogicOption)
