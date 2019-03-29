@@ -62,8 +62,17 @@ boolean Plugin_031(byte function, struct EventStruct *event, String& string)
         Plugin_031_DATA_Pin = Settings.TaskDevicePin1[event->TaskIndex];
         Plugin_031_CLOCK_Pin = Settings.TaskDevicePin2[event->TaskIndex];
         if (Settings.TaskDevicePin1PullUp[event->TaskIndex]) {
-          input_mode = INPUT_PULLUP;
-          String log = F("SHT1X: Setting PullUp on pin ");
+          String log = F("SHT1X: Setting ");
+          if (Plugin_031_DATA_Pin == 16)
+          {
+            input_mode = INPUT_PULLDOWN_16;
+            log += F("PullDown on pin ");
+          }
+          else
+          {
+            input_mode = INPUT_PULLUP;
+            log += F("PullUp on pin ");
+          }
           log += String(Plugin_031_DATA_Pin);
           addLog(LOG_LEVEL_DEBUG, log);
         }

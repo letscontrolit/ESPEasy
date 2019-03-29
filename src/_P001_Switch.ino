@@ -117,7 +117,11 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
           }
 
         if (Settings.TaskDevicePin1PullUp[event->TaskIndex])
-          pinMode(Settings.TaskDevicePin1[event->TaskIndex], INPUT_PULLUP);
+            if (CONFIG_PIN1 == 16)
+              pinMode(CONFIG_PIN1, INPUT_PULLDOWN_16);
+            else
+              pinMode(CONFIG_PIN1, INPUT_PULLUP);
+            newStatus.mode = PIN_MODE_INPUT_PULLUP;
         else
           pinMode(Settings.TaskDevicePin1[event->TaskIndex], INPUT);
 
