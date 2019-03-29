@@ -277,8 +277,10 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
             if (CONFIG_PIN1 == 16)
               pinMode(CONFIG_PIN1, INPUT_PULLDOWN_16);
             else
-            #endif
               pinMode(CONFIG_PIN1, INPUT_PULLUP);
+            #else
+            pinMode(CONFIG_PIN1, INPUT_PULLUP);
+            #endif
             newStatus.mode = PIN_MODE_INPUT_PULLUP;
           } else {
             pinMode(CONFIG_PIN1, INPUT);
