@@ -5252,6 +5252,8 @@ void handle_cache_json() {
 //     TXBuffer += F("UNIX timestamp;contr. idx;sensortype;taskindex;value count");
   stream_to_json_value(F("UNIX timestamp"));
   TXBuffer += ',';
+  stream_to_json_value(F("UTC timestamp"));
+  TXBuffer += ',';
   stream_to_json_value(F("task index"));
   for (int i = 0; i < TASKS_MAX; ++i) {
     LoadTaskSettings(i);
