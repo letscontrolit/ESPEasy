@@ -64,8 +64,7 @@ for ENV in \
   test_core_250_ESP8266_4M\
   test_core_260_alpha_ESP8266_4M_VCC\
   test_core_260_sdk2_alpha_ESP8266_4M\
-  test_core_260_sdk222_alpha_ESP8266_4M\
-  test_core_260_sdk3_alpha_ESP8266_4M;\
+  test_core_260_sdk222_alpha_ESP8266_4M;\
 do
   MAX_FILESIZE=1044464
   if [[ ${ENV} == *"1024"* ]]; then
