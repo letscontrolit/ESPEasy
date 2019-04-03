@@ -7,6 +7,7 @@
 #endif
 
 #include <cstddef>
+#include "FS.h"
 
 // ********************************************************************************
 // Check struct sizes at compile time
@@ -20,8 +21,10 @@
 // ********************************************************************************
 template <typename ToCheck, std::size_t ExpectedSize, std::size_t RealSize = sizeof(ToCheck)>
 void check_size() {
-  static_assert(ExpectedSize == RealSize, "Size is off!");
+  static_assert(ExpectedSize == RealSize, "");
 }
+
+
 
 // ********************************************************************************
 //   User specific configuration
@@ -449,6 +452,8 @@ void check_size() {
   #define CONFIG_FILE_SIZE               131072
 #endif
 
+#define ZERO_FILL(S)  memset((S), 0, sizeof(S))
+#define ZERO_TERMINATE(S)  S[sizeof(S) - 1] = 0
 
 // Forward declaration
 struct ControllerSettingsStruct;
@@ -469,6 +474,8 @@ bool getBitFromUL(uint32_t number, byte bitnr);
 void setBitToUL(uint32_t& number, byte bitnr, bool value);
 
 void serialHelper_getGpioNames(struct EventStruct *event, bool rxOptional=false, bool txOptional=false);
+
+fs::File tryOpenFile(const String& fname, const String& mode);
 
 enum SettingsType {
   BasicSettings_Type = 0,
@@ -689,16 +696,29 @@ bool safe_strncpy(char* dest, const char* source, size_t max_size);
 struct SecurityStruct
 {
   SecurityStruct() {
-    memset(WifiSSID, 0, sizeof(WifiSSID));
-    memset(WifiKey, 0, sizeof(WifiKey));
-    memset(WifiSSID2, 0, sizeof(WifiSSID2));
-    memset(WifiKey2, 0, sizeof(WifiKey2));
-    memset(WifiAPKey, 0, sizeof(WifiAPKey));
+    ZERO_FILL(WifiSSID);
+    ZERO_FILL(WifiKey);
+    ZERO_FILL(WifiSSID2);
+    ZERO_FILL(WifiKey2);
+    ZERO_FILL(WifiAPKey);
     for (byte i = 0; i < CONTROLLER_MAX; ++i) {
-      memset(ControllerUser[i], 0, sizeof(ControllerUser[i]));
-      memset(ControllerPassword[i], 0, sizeof(ControllerPassword[i]));
+      ZERO_FILL(ControllerUser[i]);
+      ZERO_FILL(ControllerPassword[i]);
     }
-    memset(Password, 0, sizeof(Password));
+    ZERO_FILL(Password);
+  }
+
+  void validate() {
+    ZERO_TERMINATE(WifiSSID);
+    ZERO_TERMINATE(WifiKey);
+    ZERO_TERMINATE(WifiSSID2);
+    ZERO_TERMINATE(WifiKey2);
+    ZERO_TERMINATE(WifiAPKey);
+    for (byte i = 0; i < CONTROLLER_MAX; ++i) {
+      ZERO_TERMINATE(ControllerUser[i]);
+      ZERO_TERMINATE(ControllerPassword[i]);
+    }
+    ZERO_TERMINATE(Password);
   }
 
   char          WifiSSID[32];
@@ -772,6 +792,8 @@ struct SettingsStruct
     if (Latitude  < -90.0  || Latitude > 90.0) Latitude = 0.0;
     if (Longitude < -180.0 || Longitude > 180.0) Longitude = 0.0;
     if (VariousBits1 > (1 << 30)) VariousBits1 = 0;
+    ZERO_TERMINATE(Name);
+    ZERO_TERMINATE(NTPHost);
   }
 
   bool networkSettingsEmpty() {
@@ -789,7 +811,7 @@ struct SettingsStruct
 
   void clearTimeSettings() {
     UseNTP = false;
-    NTPHost[0] = 0;
+    ZERO_FILL(NTPHost);
     TimeZone = 0;
     DST = false;
     DST_Start = 0;
@@ -829,7 +851,7 @@ struct SettingsStruct
 
   void clearUnitNameSettings() {
     Unit = 0;
-    Name[0] = 0;
+    ZERO_FILL(Name);
     UDPPort = 0;
   }
 
@@ -1023,13 +1045,14 @@ struct ControllerSettingsStruct
     for (byte i = 0; i < 4; ++i) {
       IP[i] = 0;
     }
-    memset(HostName, 0, sizeof(HostName));
-    memset(Publish, 0, sizeof(Publish));
-    memset(Subscribe, 0, sizeof(Subscribe));
-    memset(MQTTLwtTopic, 0, sizeof(MQTTLwtTopic));
-    memset(LWTMessageConnect, 0, sizeof(LWTMessageConnect));
-    memset(LWTMessageDisconnect, 0, sizeof(LWTMessageDisconnect));
+    ZERO_FILL(HostName);
+    ZERO_FILL(Publish);
+    ZERO_FILL(Subscribe);
+    ZERO_FILL(MQTTLwtTopic);
+    ZERO_FILL(LWTMessageConnect);
+    ZERO_FILL(LWTMessageDisconnect);
   }
+
   boolean       UseDNS;
   byte          IP[4];
   unsigned int  Port;
@@ -1057,6 +1080,12 @@ struct ControllerSettingsStruct
     if (ClientTimeout < 10 || ClientTimeout > CONTROLLER_CLIENTTIMEOUT_MAX) {
       ClientTimeout = CONTROLLER_CLIENTTIMEOUT_DFLT;
     }
+    ZERO_TERMINATE(HostName);
+    ZERO_TERMINATE(Publish);
+    ZERO_TERMINATE(Subscribe);
+    ZERO_TERMINATE(MQTTLwtTopic);
+    ZERO_TERMINATE(LWTMessageConnect);
+    ZERO_TERMINATE(LWTMessageDisconnect);
   }
 
   IPAddress getIP() const {
@@ -1171,14 +1200,25 @@ typedef std::shared_ptr<ControllerSettingsStruct> ControllerSettingsStruct_ptr_t
 struct NotificationSettingsStruct
 {
   NotificationSettingsStruct() : Port(0), Pin1(0), Pin2(0) {
-    memset(Server,   0, sizeof(Server));
-    memset(Domain,   0, sizeof(Domain));
-    memset(Sender,   0, sizeof(Sender));
-    memset(Receiver, 0, sizeof(Receiver));
-    memset(Subject,  0, sizeof(Subject));
-    memset(Body,     0, sizeof(Body));
-    memset(User,     0, sizeof(User));
-    memset(Pass,     0, sizeof(Pass));
+    ZERO_FILL(Server);
+    ZERO_FILL(Domain);
+    ZERO_FILL(Sender);
+    ZERO_FILL(Receiver);
+    ZERO_FILL(Subject);
+    ZERO_FILL(Body);
+    ZERO_FILL(User);
+    ZERO_FILL(Pass);
+  }
+
+  void validate() {
+    ZERO_TERMINATE(Server);
+    ZERO_TERMINATE(Domain);
+    ZERO_TERMINATE(Sender);
+    ZERO_TERMINATE(Receiver);
+    ZERO_TERMINATE(Subject);
+    ZERO_TERMINATE(Body);
+    ZERO_TERMINATE(User);
+    ZERO_TERMINATE(Pass);
   }
 
   char          Server[65];
@@ -1216,19 +1256,23 @@ struct ExtraTaskSettingsStruct
 
   void clear() {
     TaskIndex = TASKS_MAX;
-    for (byte j = 0; j < (NAME_FORMULA_LENGTH_MAX + 1); ++j) {
-      TaskDeviceName[j] = 0;
-    }
+    ZERO_FILL(TaskDeviceName);
     for (byte i = 0; i < VARS_PER_TASK; ++i) {
-      for (byte j = 0; j < (NAME_FORMULA_LENGTH_MAX + 1); ++j) {
-        TaskDeviceFormula[i][j] = 0;
-        TaskDeviceValueNames[i][j] = 0;
-        TaskDeviceValueDecimals[i] = 2;
-      }
+      TaskDeviceValueDecimals[i] = 2;
+      ZERO_FILL(TaskDeviceFormula[i]);
+      ZERO_FILL(TaskDeviceValueNames[i]);
     }
     for (byte i = 0; i < PLUGIN_EXTRACONFIGVAR_MAX; ++i) {
       TaskDevicePluginConfigLong[i] = 0;
       TaskDevicePluginConfig[i] = 0;
+    }
+  }
+
+  void validate() {
+    ZERO_TERMINATE(TaskDeviceName);
+    for (byte i = 0; i < VARS_PER_TASK; ++i) {
+      ZERO_TERMINATE(TaskDeviceFormula[i]);
+      ZERO_TERMINATE(TaskDeviceValueNames[i]);
     }
   }
 
@@ -2008,11 +2052,12 @@ unsigned long timingstats_last_reset = 0;
 #define WIFI_ISCONNECTED_STATS  32
 #define WIFI_NOTCONNECTED_STATS 33
 #define LOAD_TASK_SETTINGS      34
-#define RULES_PROCESSING        35
-#define GRAT_ARP_STATS          36
-#define BACKGROUND_TASKS        37
-#define HANDLE_SCHEDULER_IDLE   38
-#define HANDLE_SCHEDULER_TASK   39
+#define TRY_OPEN_FILE           35
+#define RULES_PROCESSING        36
+#define GRAT_ARP_STATS          37
+#define BACKGROUND_TASKS        38
+#define HANDLE_SCHEDULER_IDLE   39
+#define HANDLE_SCHEDULER_TASK   40
 
 
 
@@ -2048,6 +2093,7 @@ String getMiscStatsName(int stat) {
         case WIFI_ISCONNECTED_STATS: return F("WiFi.isConnected()");
         case WIFI_NOTCONNECTED_STATS: return F("WiFi.isConnected() (fail)");
         case LOAD_TASK_SETTINGS:     return F("LoadTaskSettings()");
+        case TRY_OPEN_FILE:          return F("TryOpenFile()");
         case RULES_PROCESSING:       return F("rulesProcessing()");
         case GRAT_ARP_STATS:         return F("sendGratuitousARP()");
         case BACKGROUND_TASKS:       return F("backgroundtasks()");

@@ -314,7 +314,7 @@ bool handle_rules_edit(String originalUri, bool isAddNew) {
         // Passed all checks, write file
         else
         {
-          fs::File f = SPIFFS.open(fileName, "w");
+          fs::File f = tryOpenFile(fileName, "w");
           if (f)
           {
             addLog(LOG_LEVEL_INFO, String(F(" Write to file: ")) + fileName);
@@ -371,13 +371,14 @@ bool handle_rules_edit(String originalUri, bool isAddNew) {
       int size = 0;
       if(!isOverwrite)
       {
-        rules = String(F(""));
-        fs::File f = SPIFFS.open(fileName, "r+");
+        rules = "";
+        fs::File f = tryOpenFile(fileName, "r");
         if (f)
         {
           size = f.size();
           if (size < RULES_MAX_SIZE)
           {
+            rules.reserve(size);
             while (f.available())
             {
               rules += (char)f.read();
@@ -424,7 +425,7 @@ bool Rule_Download(const String& path)
   Serial.print(F("Rule_Download path: "));
   Serial.println(path);
   #endif
-  fs::File dataFile = SPIFFS.open(path, "r");
+  fs::File dataFile = tryOpenFile(path, "r");
   if (!dataFile)
   {
     addLog(LOG_LEVEL_ERROR, String(F("Invalid path: ")) + path);
@@ -477,7 +478,7 @@ bool EnumerateFileAndDirectory(String& rootPath
   hasMore = dir.next();
   #endif
   #ifdef ESP32
-  File root = SPIFFS.open(rootPath);
+  File root = tryOpenFile(rootPath);
   if (root)
   {
     File file = root.openNextFile();
