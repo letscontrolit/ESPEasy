@@ -9,17 +9,194 @@
 #define PLUGIN_VALUENAME1_031 "Temperature"
 #define PLUGIN_VALUENAME2_031 "Humidity"
 
-boolean Plugin_031_init = false;
-byte Plugin_031_DATA_Pin = 0;
-byte Plugin_031_CLOCK_Pin = 0;
-int input_mode;
+#define P031_IDLE            0
+#define P031_WAIT_TEMP       1
+#define P031_WAIT_HUM        2
+#define P031_MEAS_READY      3
+#define P031_COMMAND_NO_ACK  4
+#define P031_NO_DATA         5
 
-enum {
-  SHT1X_CMD_MEASURE_TEMP  = B00000011,
-  SHT1X_CMD_MEASURE_RH    = B00000101,
-  SHT1X_CMD_READ_STATUS   = B00000111,
-  SHT1X_CMD_SOFT_RESET    = B00011110
+class P031_data_struct: public PluginTaskData_base
+{
+public:
+  enum {
+    SHT1X_CMD_MEASURE_TEMP  = B00000011,
+    SHT1X_CMD_MEASURE_RH    = B00000101,
+    SHT1X_CMD_READ_STATUS   = B00000111,
+    SHT1X_CMD_SOFT_RESET    = B00011110
+  };
+
+	P031_data_struct() {}
+
+  byte init(byte data_pin, byte clock_pin, bool pullUp) {
+    _dataPin = data_pin;
+    _clockPin = clock_pin;
+    input_mode = pullUp ? INPUT_PULLUP : INPUT;
+    state = P031_IDLE;
+
+    pinMode(_dataPin, input_mode); /* Keep Hi-Z except when sending data */
+    pinMode(_clockPin, OUTPUT);
+    resetSensor();
+    return readStatus();
+  }
+
+  bool process() {
+    switch (state) {
+      case P031_IDLE: return false; // Nothing changed, nothing to do
+      case P031_WAIT_TEMP: {
+        if (digitalRead(_dataPin) == LOW) {
+          float tempRaw = readData(16);
+          // Temperature conversion coefficients from SHT1X datasheet for version 4
+          const float d1 = -39.7;  // 3.5V
+          const float d2 = 0.01;   // 14-bit
+          tempC = d1 + (tempRaw * d2);
+          state = P031_WAIT_HUM; // Wait for humidity
+          sendCommand(SHT1X_CMD_MEASURE_RH);
+        }
+        break;
+      }
+      case P031_WAIT_HUM:
+      {
+        if (digitalRead(_dataPin) == LOW) {
+          float raw = readData(16);
+
+          // Temperature conversion coefficients from SHT1X datasheet for version 4
+          const float c1 = -2.0468;
+          const float c2 = 0.0367;
+          const float c3 = -1.5955E-6;
+          const float t1 = 0.01;
+          const float t2 = 0.00008;
+
+          float rhLinear = c1 + c2 * raw + c3 * raw * raw;
+          rhTrue = (tempC - 25) * (t1 + t2 * raw) + rhLinear;
+      /*
+          String log = F("SHT1X : Read humidity (raw): ");
+          log += String(raw);
+          log += F(" (Linear): ");
+          log += String(rhLinear);
+          log += F(" (True): ");
+          log += String(rhTrue);
+          addLog(LOG_LEVEL_DEBUG, log);
+      */
+          state = P031_MEAS_READY; // Measurement ready
+          return true;
+        }
+        break;
+      }
+      case P031_MEAS_READY: return true;
+      default:
+        // It is already an error state, just return.
+        return false;
+    }
+    // Compute timeout
+    if (timePassedSince(sendCommandTime) > 320) {
+      state = P031_NO_DATA; // No data after 320 msec
+    }
+    return false;
+  }
+
+  void startMeasurement() {
+    state = P031_WAIT_TEMP; // Wait for temperature
+    sendCommand(SHT1X_CMD_MEASURE_TEMP);
+  }
+
+  bool measurementReady() {
+    return state == P031_MEAS_READY;
+  }
+
+  bool hasError() {
+    return state > P031_MEAS_READY;
+  }
+
+  void resetSensor()
+  {
+    state = P031_IDLE;
+    delay(11);
+    for (int i=0; i<9; i++) {
+      digitalWrite(_clockPin, HIGH);
+      digitalWrite(_clockPin, LOW);
+    }
+    sendCommand(SHT1X_CMD_SOFT_RESET);
+    delay(11);
+  }
+
+  byte readStatus()
+  {
+    sendCommand(SHT1X_CMD_READ_STATUS);
+    return readData(8);
+  }
+
+  void sendCommand(const byte cmd)
+  {
+    sendCommandTime = millis();
+    pinMode(_dataPin, OUTPUT);
+
+    // Transmission Start sequence
+    digitalWrite(_dataPin, HIGH);
+    digitalWrite(_clockPin, HIGH);
+    digitalWrite(_dataPin, LOW);
+    digitalWrite(_clockPin, LOW);
+    digitalWrite(_clockPin, HIGH);
+    digitalWrite(_dataPin, HIGH);
+    digitalWrite(_clockPin, LOW);
+
+    // Send the command (address must be 000b)
+    shiftOut(_dataPin, _clockPin, MSBFIRST, cmd);
+
+    // Wait for ACK
+    bool ackerror = false;
+    digitalWrite(_clockPin, HIGH);
+    pinMode(_dataPin, input_mode);
+    if (digitalRead(_dataPin) != LOW) ackerror = true;
+    digitalWrite(_clockPin, LOW);
+
+    if (cmd == SHT1X_CMD_MEASURE_TEMP || cmd == SHT1X_CMD_MEASURE_RH) {
+      delayMicroseconds(1); /* Give the sensor time to release the data line */
+      if (digitalRead(_dataPin) != HIGH) ackerror = true;
+    }
+    if (ackerror) {
+      state = P031_COMMAND_NO_ACK;
+    }
+  }
+
+  int readData(const int bits)
+  {
+    int val = 0;
+
+    if (bits == 16) {
+      // Read most significant byte
+      val = shiftIn(_dataPin, _clockPin, 8);
+      val <<= 8;
+
+      // Send ACK
+      pinMode(_dataPin, OUTPUT);
+      digitalWrite(_dataPin, LOW);
+      digitalWrite(_clockPin, HIGH);
+      digitalWrite(_clockPin, LOW);
+      pinMode(_dataPin, input_mode);
+    }
+
+    // Read least significant byte
+    val |= shiftIn(_dataPin, _clockPin, 8);
+
+    // Keep DATA pin high to skip CRC
+    digitalWrite(_clockPin, HIGH);
+    digitalWrite(_clockPin, LOW);
+
+    return val;
+  }
+
+  float tempC = 0.0;
+  float rhTrue = 0.0;
+  unsigned long sendCommandTime;
+
+  int input_mode;
+  byte _dataPin = 0;
+  byte _clockPin = 0;
+  byte state = P031_IDLE;
 };
+
+
 
 boolean Plugin_031(byte function, struct EventStruct *event, String& string)
 {
@@ -65,189 +242,72 @@ boolean Plugin_031(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
       {
-        Plugin_031_init = true;
-        Plugin_031_DATA_Pin = CONFIG_PIN1;
-        Plugin_031_CLOCK_Pin = CONFIG_PIN2;
-        if (Settings.TaskDevicePin1PullUp[event->TaskIndex]) {
-          input_mode = INPUT_PULLUP;
-          String log = F("SHT1X: Setting PullUp on pin ");
-          log += String(Plugin_031_DATA_Pin);
+        initPluginTaskData(event->TaskIndex, new P031_data_struct());
+        P031_data_struct *P031_data =
+            static_cast<P031_data_struct *>(getPluginTaskData(event->TaskIndex));
+        if (nullptr == P031_data) {
+          return success;
+        }
+        byte status = P031_data->init(CONFIG_PIN1, CONFIG_PIN2, Settings.TaskDevicePin1PullUp[event->TaskIndex]);
+        if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+          String log = F("SHT1X : Status byte: ");
+          log += String(status, HEX);
+          log += F(" - resolution: ");
+          log += (status & 1 ? F("low") : F("high"));
+          log += F(" reload from OTP: ");
+          log += ((status >> 1) & 1 ? F("yes") : F("no"));
+          log += F(", heater: ");
+          log += ((status >> 2) & 1 ? F("on") : F("off"));
           addLog(LOG_LEVEL_DEBUG, log);
         }
-        else {
-          input_mode = INPUT;
-        }
-        pinMode(Plugin_031_DATA_Pin, input_mode); /* Keep Hi-Z except when sending data */
-        pinMode(Plugin_031_CLOCK_Pin, OUTPUT);
-        Plugin_031_reset();
-        byte status = Plugin_031_readStatus();
-        String log = F("SHT1X : Status byte: ");
-        log += String(status, HEX);
-        log += F(" - resolution: ");
-        log += (status & 1 ? F("low") : F("high"));
-        log += F(" reload from OTP: ");
-        log += ((status >> 1) & 1 ? F("yes") : F("no"));
-        log += F(", heater: ");
-        log += ((status >> 2) & 1 ? F("on") : F("off"));
-        addLog(LOG_LEVEL_DEBUG, log);
         success = true;
         break;
       }
 
+    case PLUGIN_TEN_PER_SECOND:
+    {
+      P031_data_struct *P031_data =
+          static_cast<P031_data_struct *>(getPluginTaskData(event->TaskIndex));
+      if (nullptr != P031_data) {
+        if (P031_data->process()) {
+          // Measurement ready, schedule new read.
+          schedule_task_device_timer(event->TaskIndex, millis() + 10);
+        }
+      }
+      success = true;
+      break;
+    }
+
     case PLUGIN_READ:
       {
-        if (!Plugin_031_init) {
-          addLog(LOG_LEVEL_ERROR, F("SHT1X : not yet initialized!"));
-          break;
+        P031_data_struct *P031_data =
+            static_cast<P031_data_struct *>(getPluginTaskData(event->TaskIndex));
+        if (nullptr != P031_data) {
+          if (P031_data->measurementReady()) {
+            UserVar[event->BaseVarIndex] = P031_data->tempC;
+            UserVar[event->BaseVarIndex+1] = P031_data->rhTrue;
+            success = true;
+            P031_data->state = P031_IDLE;
+          } else if (P031_data->state == P031_IDLE) {
+            P031_data->startMeasurement();
+          } else if (P031_data->hasError()) {
+            // Log error
+            switch (P031_data->state) {
+              case P031_COMMAND_NO_ACK:
+                addLog(LOG_LEVEL_ERROR, F("SHT1X : Sensor did not ACK command"));
+                break;
+              case P031_NO_DATA:
+                addLog(LOG_LEVEL_ERROR, F("SHT1X : Data not ready"));
+                break;
+              default:
+                break;
+            }
+            P031_data->state = P031_IDLE;
+          }
         }
-        UserVar[event->BaseVarIndex] = Plugin_031_readTemperature();
-        UserVar[event->BaseVarIndex+1] = Plugin_031_readRelHumidity(UserVar[event->BaseVarIndex]);
-        success = true;
         break;
       }
   }
   return success;
-}
-
-float Plugin_031_readTemperature()
-{
-  float tempRaw, tempC;
-
-  Plugin_031_sendCommand(SHT1X_CMD_MEASURE_TEMP);
-  Plugin_031_awaitResult();
-  tempRaw = Plugin_031_readData(16);
-
-  // Temperature conversion coefficients from SHT1X datasheet for version 4
-  const float d1 = -39.7;  // 3.5V
-  const float d2 = 0.01;   // 14-bit
-
-  tempC = d1 + (tempRaw * d2);
-
-  String log = F("SHT1X : Read temperature (raw): ");
-  log += String(tempRaw);
-  log += F(" (Celcius): ");
-  log += String(tempC);
-  addLog(LOG_LEVEL_DEBUG, log);
-
-  return tempC;
-}
-
-float Plugin_031_readRelHumidity(float tempC)
-{
-  float raw, rhLinear, rhTrue;
-
-  Plugin_031_sendCommand(SHT1X_CMD_MEASURE_RH);
-  Plugin_031_awaitResult();
-  raw = Plugin_031_readData(16);
-
-  // Temperature conversion coefficients from SHT1X datasheet for version 4
-  const float c1 = -2.0468;
-  const float c2 = 0.0367;
-  const float c3 = -1.5955E-6;
-  const float t1 = 0.01;
-  const float t2 = 0.00008;
-
-  rhLinear = c1 + c2 * raw + c3 * raw * raw;
-  rhTrue = (tempC - 25) * (t1 + t2 * raw) + rhLinear;
-
-  String log = F("SHT1X : Read humidity (raw): ");
-  log += String(raw);
-  log += F(" (Linear): ");
-  log += String(rhLinear);
-  log += F(" (True): ");
-  log += String(rhTrue);
-  addLog(LOG_LEVEL_DEBUG, log);
-
-  return rhTrue;
-}
-
-
-void Plugin_031_reset()
-{
-  delay(11);
-  for (int i=0; i<9; i++) {
-    digitalWrite(Plugin_031_CLOCK_Pin, HIGH);
-    digitalWrite(Plugin_031_CLOCK_Pin, LOW);
-  }
-  Plugin_031_sendCommand(SHT1X_CMD_SOFT_RESET);
-  delay(11);
-}
-
-byte Plugin_031_readStatus()
-{
-  Plugin_031_sendCommand(SHT1X_CMD_READ_STATUS);
-  return Plugin_031_readData(8);
-}
-
-void Plugin_031_sendCommand(const byte cmd)
-{
-  pinMode(Plugin_031_DATA_Pin, OUTPUT);
-
-  // Transmission Start sequence
-  digitalWrite(Plugin_031_DATA_Pin, HIGH);
-  digitalWrite(Plugin_031_CLOCK_Pin, HIGH);
-  digitalWrite(Plugin_031_DATA_Pin, LOW);
-  digitalWrite(Plugin_031_CLOCK_Pin, LOW);
-  digitalWrite(Plugin_031_CLOCK_Pin, HIGH);
-  digitalWrite(Plugin_031_DATA_Pin, HIGH);
-  digitalWrite(Plugin_031_CLOCK_Pin, LOW);
-
-  // Send the command (address must be 000b)
-  shiftOut(Plugin_031_DATA_Pin, Plugin_031_CLOCK_Pin, MSBFIRST, cmd);
-
-  // Wait for ACK
-  bool ackerror = false;
-  digitalWrite(Plugin_031_CLOCK_Pin, HIGH);
-  pinMode(Plugin_031_DATA_Pin, input_mode);
-  if (digitalRead(Plugin_031_DATA_Pin) != LOW) ackerror = true;
-  digitalWrite(Plugin_031_CLOCK_Pin, LOW);
-
-  if (cmd == SHT1X_CMD_MEASURE_TEMP || cmd == SHT1X_CMD_MEASURE_RH) {
-    delayMicroseconds(1); /* Give the sensor time to release the data line */
-    if (digitalRead(Plugin_031_DATA_Pin) != HIGH) ackerror = true;
-  }
-
-  if (ackerror) {
-    addLog(LOG_LEVEL_ERROR, F("SHT1X : Sensor did not ACK command"));
-  }
-}
-
-void Plugin_031_awaitResult()
-{
-  // Maximum 320ms for 14 bit measurement
-  for (int i=0; i<16; i++) {
-    if (digitalRead(Plugin_031_DATA_Pin) == LOW) return;
-    delay(20);
-  }
-  if (digitalRead(Plugin_031_DATA_Pin) != LOW) {
-    addLog(LOG_LEVEL_ERROR, F("SHT1X : Data not ready"));
-  }
-}
-
-int Plugin_031_readData(const int bits)
-{
-  int val = 0;
-
-  if (bits == 16) {
-    // Read most significant byte
-    val = shiftIn(Plugin_031_DATA_Pin, Plugin_031_CLOCK_Pin, 8);
-    val <<= 8;
-
-    // Send ACK
-    pinMode(Plugin_031_DATA_Pin, OUTPUT);
-    digitalWrite(Plugin_031_DATA_Pin, LOW);
-    digitalWrite(Plugin_031_CLOCK_Pin, HIGH);
-    digitalWrite(Plugin_031_CLOCK_Pin, LOW);
-    pinMode(Plugin_031_DATA_Pin, input_mode);
-  }
-
-  // Read least significant byte
-  val |= shiftIn(Plugin_031_DATA_Pin, Plugin_031_CLOCK_Pin, 8);
-
-  // Keep DATA pin high to skip CRC
-  digitalWrite(Plugin_031_CLOCK_Pin, HIGH);
-  digitalWrite(Plugin_031_CLOCK_Pin, LOW);
-
-  return val;
 }
 #endif // USES_P031
