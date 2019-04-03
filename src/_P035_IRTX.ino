@@ -271,7 +271,8 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
             if (IrType.equals(F("dish")))               Plugin_035_irSender->sendDISH(IrCode);
             if (IrType.equals(F("gicable")))            Plugin_035_irSender->sendGICable(IrCode);		
             if (IrType.equals(F("jvc")))                Plugin_035_irSender->sendJVC(IrCode);			
-            if (IrType.equals(F("lasertag")))           Plugin_035_irSender->sendLasertag(IrCode);			
+            if (IrType.equals(F("lasertag")))           Plugin_035_irSender->sendLasertag(IrCode);	
+            if (IrType.equals(F("legopf")))             Plugin_035_irSender->sendLegoPf(IrCode);			
             if (IrType.equals(F("lg")))                 Plugin_035_irSender->sendLG(IrCode);
             if (IrType.equals(F("lg2")))                Plugin_035_irSender->sendLG2(IrCode);			
             if (IrType.equals(F("lutron")))             Plugin_035_irSender->sendLutron(IrCode);			
