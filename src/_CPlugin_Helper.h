@@ -186,6 +186,42 @@ public:
 \*********************************************************************************************/
 #define C012_queue_element queue_element_single_value_base
 
+/*********************************************************************************************\
+ * C014_queue_element for queueing requests for 014: Blynk
+ * Using queue_element_single_value_base
+\*********************************************************************************************/
+// #define C014_queue_element queue_element_single_value_base
+class C014_queue_element {
+public:
+  C014_queue_element() : controller_idx(0), TaskIndex(0), idx(0), valuesSent(0) {}
+  C014_queue_element(const struct EventStruct* event, byte value_count) :
+    controller_idx(event->ControllerIndex),
+    TaskIndex(event->TaskIndex),
+    idx(event->idx),
+    valuesSent(0),
+    valueCount(value_count) {}
+
+  bool checkDone(bool succesfull) const {
+    if (succesfull) ++valuesSent;
+    return (valuesSent >= valueCount || valuesSent >= VARS_PER_TASK);
+  }
+
+  size_t getSize() const {
+    size_t total = sizeof(this);
+    for (int i = 0; i < VARS_PER_TASK; ++i) {
+      total += txt[i].length();
+    }
+    return total;
+  }
+
+  String txt[VARS_PER_TASK];
+  int vPin[VARS_PER_TASK];
+  int controller_idx;
+  byte TaskIndex;
+  int idx;
+  mutable byte valuesSent;  // Value must be set by const function checkDone()
+  byte valueCount;
+};
 
 
 /*********************************************************************************************\
