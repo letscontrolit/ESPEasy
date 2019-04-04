@@ -98,6 +98,37 @@ boolean Plugin_033(byte function, struct EventStruct *event, String& string)
         success = true;
         break;
       }
+
+    case PLUGIN_WRITE:
+      {
+        String command = parseString(string, 1);
+        if (command == F("dummyvalueset"))
+        {
+          int deviceNr=parseString(string, 2).toInt(); // Index from 1-12;
+          if (deviceNr == event->TaskIndex+1) // make shure that this instance is the target
+          {
+            int valueNr=parseString(string, 3).toInt();
+            float value=0;
+            String valueStr=parseString(string, 4);
+            if (valueStr=="true") value=1;
+              else if(valueStr=="false") value=0;
+              else value=valueStr.toFloat();
+
+            String log = F("Dummy: Index ");
+            log += deviceNr;
+            log += F(" value ");
+            log += valueNr;
+            log += F(" set to ");
+            log += value;
+
+            UserVar[event->BaseVarIndex+valueNr-1]=value;
+
+            addLog(LOG_LEVEL_INFO,log);
+            success = true;
+          }
+        }
+        break;
+      }
   }
   return success;
 }

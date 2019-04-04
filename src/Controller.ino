@@ -245,10 +245,14 @@ bool MQTTCheck(int controller_idx)
     {
       if (MQTTclient_should_reconnect) {
         addLog(LOG_LEVEL_ERROR, F("MQTT : Intentional reconnect"));
+        // Homie 3 & 4dev Controller Plugin
+        // Connect first and call all installed controller to publish autodiscover data
+        // hope this is the right place ;)
+        if (MQTTConnect(controller_idx)) CPluginCall(CPLUGIN_CONNECTED, 0);
       } else {
         connectionFailures += 2;
       }
-      return MQTTConnect(controller_idx);
+      return (!MQTTclient.connected() || MQTTConnect(controller_idx)); // either connected above or now!?
     } else if (connectionFailures) {
       connectionFailures--;
     }
