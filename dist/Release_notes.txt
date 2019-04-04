@@ -1,4 +1,25 @@
 -------------------------------------------------
+Changes in release mega-20190404 (since mega-20190315)
+-------------------------------------------------
+
+Release date: Thu Apr  4 04:00:18 CEST 2019
+
+TD-er (4):
+      Plugin P040_ID12 not included (#1761)
+      [SHT1x] Support multiple instances
+      [SHT1x] Remove delays in reading sensor
+      [Build] Run compile time checks on struct sizes
+
+jimmys01 (6):
+      [IR TX RX] Update the IR LIB
+      [IR TX] Updates with the newest IR protocol support
+      [IR RX] Improve RX decoding stability
+      [IR RX] Add more F macros
+      [IR RX] Enhancements
+      [IR RX] Fixed typo
+
+
+-------------------------------------------------
 Changes in release mega-20190315 (since mega-20190311)
 -------------------------------------------------
 
