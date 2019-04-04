@@ -56,11 +56,14 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
         // Collect the values at the same run, to make sure all are from the same sample
         byte valueCount = getValueCountFromSensorType(event->sensorType);
         C014_queue_element element(event, valueCount, getUnixTime());
+        success = ControllerCache.write((uint8_t*)&element, sizeof(element));
 
+/*
         MakeControllerSettings(ControllerSettings);
         LoadControllerSettings(event->ControllerIndex, ControllerSettings);
         success = C014_DelayHandler.addToQueue(element);
         scheduleNextDelayQueue(TIMER_C014_DELAY_QUEUE, C014_DelayHandler.getNextScheduleTime());
+*/
         break;
       }
 
@@ -81,7 +84,7 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
 // Generic HTTP get request
 //********************************************************************************
 bool do_process_c014_delay_queue(int controller_number, const C014_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
-  ControllerCache.write((uint8_t*)&element, sizeof(element));
+
   return true;
 /*
   WiFiClient client;
