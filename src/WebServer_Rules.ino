@@ -478,7 +478,7 @@ bool EnumerateFileAndDirectory(String& rootPath
   hasMore = dir.next();
   #endif
   #ifdef ESP32
-  File root = tryOpenFile(rootPath);
+  File root = SPIFFS.open(rootPath);
   if (root)
   {
     File file = root.openNextFile();
