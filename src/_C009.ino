@@ -71,6 +71,14 @@ bool CPlugin_009(byte function, struct EventStruct *event, String& string)
         scheduleNextDelayQueue(TIMER_C009_DELAY_QUEUE, C009_DelayHandler.getNextScheduleTime());
         break;
       }
+
+    case CPLUGIN_FLUSH:
+      {
+        process_c009_delay_queue();
+        delay(0);
+        break;
+      }
+
   }
   return success;
 }
