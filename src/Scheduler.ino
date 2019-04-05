@@ -131,6 +131,7 @@ void setIntervalTimer(unsigned long id, unsigned long lasttimer) {
     case TIMER_C011_DELAY_QUEUE:
     case TIMER_C012_DELAY_QUEUE:
     case TIMER_C013_DELAY_QUEUE:
+    case TIMER_C014_DELAY_QUEUE:
       interval = 1000; break;
   }
   unsigned long timer = lasttimer;
@@ -223,6 +224,11 @@ void process_interval_timer(unsigned long id, unsigned long lasttimer) {
       break;
   #endif
 */
+  #ifdef USES_C014
+    case TIMER_C014_DELAY_QUEUE:
+      process_c014_delay_queue();
+      break;
+  #endif
 // When extending this, also extend in _CPlugin_Helper.h
 // Look for DEFINE_Cxxx_DELAY_QUEUE_MACRO
   }

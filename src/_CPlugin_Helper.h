@@ -187,6 +187,42 @@ public:
 #define C012_queue_element queue_element_single_value_base
 
 
+/*********************************************************************************************\
+ * C014_queue_element for queueing requests for C014: Cached HTTP.
+\*********************************************************************************************/
+class C014_queue_element {
+public:
+  C014_queue_element() : controller_idx(0), TaskIndex(0), sensorType(0) {}
+  C014_queue_element(const struct EventStruct* event, byte value_count, unsigned long unixTime) :
+    timestamp(unixTime),
+    controller_idx(event->ControllerIndex),
+    TaskIndex(event->TaskIndex),
+    sensorType(event->sensorType),
+    valueCount(value_count)
+  {
+    const byte BaseVarIndex = TaskIndex * VARS_PER_TASK;
+    for (byte i = 0; i < VARS_PER_TASK; ++i) {
+      if (i < value_count) {
+        values[i] = UserVar[BaseVarIndex + i];
+      } else {
+        values[i] = 0.0;
+      }
+    }
+  }
+
+  size_t getSize() const {
+    return sizeof(this);
+  }
+
+  float values[VARS_PER_TASK];
+  unsigned long timestamp;  // Unix timestamp
+  byte controller_idx;
+  byte TaskIndex;
+  byte sensorType;
+  byte valueCount;
+};
+
+
 
 /*********************************************************************************************\
  * ControllerDelayHandlerStruct
@@ -386,6 +422,9 @@ ControllerDelayHandlerStruct<MQTT_queue_element> MQTTDelayHandler;
   DEFINE_Cxxx_DELAY_QUEUE_MACRO(013, 13)
 #endif
 */
+#ifdef USES_C014
+  DEFINE_Cxxx_DELAY_QUEUE_MACRO(014, 14)
+#endif
 // When extending this, also extend in Scheduler.ino:
 // void process_interval_timer(unsigned long id, unsigned long lasttimer)
 

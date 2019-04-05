@@ -248,6 +248,7 @@ void check_size() {
 #define TIMER_C011_DELAY_QUEUE             16
 #define TIMER_C012_DELAY_QUEUE             17
 #define TIMER_C013_DELAY_QUEUE             18
+#define TIMER_C014_DELAY_QUEUE             19
 
 #define TIMING_STATS_THRESHOLD             100000
 #define TIMER_GRATUITOUS_ARP_MAX           5000
@@ -256,7 +257,7 @@ void check_size() {
 #define CONTROLLER_DELAY_QUEUE_DELAY_MAX   3600000
 #define CONTROLLER_DELAY_QUEUE_DELAY_DFLT  100
 // Queue length for controller messages not yet sent.
-#define CONTROLLER_DELAY_QUEUE_DEPTH_MAX   25
+#define CONTROLLER_DELAY_QUEUE_DEPTH_MAX   50
 #define CONTROLLER_DELAY_QUEUE_DEPTH_DFLT  10
 // Number of retries to send a message by a controller.
 // N.B. Retries without a connection to wifi do not count as retry.
@@ -2113,6 +2114,7 @@ String getMiscStatsName(int stat) {
         case C011_DELAY_QUEUE:
         case C012_DELAY_QUEUE:
         case C013_DELAY_QUEUE:
+        case C014_DELAY_QUEUE:
         {
           String result;
           result.reserve(16);
