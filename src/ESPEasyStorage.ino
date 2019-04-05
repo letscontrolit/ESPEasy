@@ -46,11 +46,27 @@ String appendLineToFile(const String& fname, const String& line) {
 }
 
 String appendToFile(const String& fname, const uint8_t* data, unsigned int size) {
-  fs::File f = SPIFFS.open(fname, "a+");
+  fs::File f = tryOpenFile(fname, "a+");
   SPIFFS_CHECK(f, fname.c_str());
   SPIFFS_CHECK(f.write(data, size), fname.c_str());
   f.close();
   return "";
+}
+
+bool fileExists(const String& fname) {
+  return SPIFFS.exists(fname);
+}
+
+
+fs::File tryOpenFile(const String& fname, const String& mode) {
+  START_TIMER;
+  fs::File f;
+  if (mode == "r" && !fileExists(fname)) {
+    return f;
+  }
+  f = SPIFFS.open(fname, mode.c_str());
+  STOP_TIMER(TRY_OPEN_FILE);
+  return f;
 }
 
 /********************************************************************************************\
@@ -64,7 +80,7 @@ String BuildFixes()
   if (Settings.Build < 145)
   {
     String fname=F(FILE_NOTIFICATION);
-    fs::File f = SPIFFS.open(fname, "w");
+    fs::File f = tryOpenFile(fname, "w");
     SPIFFS_CHECK(f, fname.c_str());
 
     if (f)
@@ -127,7 +143,7 @@ void fileSystemCheck()
       }
     #endif
 
-    fs::File f = SPIFFS.open(FILE_CONFIG, "r");
+    fs::File f = tryOpenFile(FILE_CONFIG, "r");
     if (!f)
     {
       ResetFactory();
@@ -176,6 +192,7 @@ String SaveSettings(void)
 
 //  }
 
+  SecuritySettings.validate();
   memcpy( SecuritySettings.ProgmemMd5, CRCValues.runTimeMD5, 16);
   md5.begin();
   md5.add((uint8_t *)&SecuritySettings, sizeof(SecuritySettings)-16);
@@ -255,6 +272,7 @@ String LoadSettings()
   }
   setUseStaticIP(useStaticIP());
   afterloadSettings();
+  SecuritySettings.validate();
   return(err);
 }
 
@@ -439,6 +457,7 @@ String LoadTaskSettings(byte TaskIndex)
     //the plugin call should populate ExtraTaskSettings with its default values.
     PluginCall(PLUGIN_GET_DEVICEVALUENAMES, &TempEvent, dummyString);
   }
+  ExtraTaskSettings.validate();
   STOP_TIMER(LOAD_TASK_SETTINGS);
 
   return result;
@@ -568,7 +587,7 @@ String InitFile(const char* fname, int datasize)
   checkRAM(F("InitFile"));
   FLASH_GUARD();
 
-  fs::File f = SPIFFS.open(fname, "w");
+  fs::File f = tryOpenFile(fname, "w");
   if (f) {
     SPIFFS_CHECK(f, fname);
 
@@ -616,7 +635,7 @@ String SaveToFile(char* fname, int index, byte* memAddress, int datasize)
   }
   delay(1);
   unsigned long timer = millis() + 50;
-  fs::File f = SPIFFS.open(fname, "r+");
+  fs::File f = tryOpenFile(fname, "r+");
   if (f) {
     SPIFFS_CHECK(f, fname);
     SPIFFS_CHECK(f.seek(index, fs::SeekSet), fname);
@@ -675,7 +694,7 @@ String ClearInFile(char* fname, int index, int datasize)
   checkRAM(F("ClearInFile"));
   FLASH_GUARD();
 
-  fs::File f = SPIFFS.open(fname, "r+");
+  fs::File f = tryOpenFile(fname, "r+");
   if (f) {
     SPIFFS_CHECK(f, fname);
 
@@ -716,7 +735,7 @@ String LoadFromFile(char* fname, int offset, byte* memAddress, int datasize)
   START_TIMER;
 
   checkRAM(F("LoadFromFile"));
-  fs::File f = SPIFFS.open(fname, "r+");
+  fs::File f = tryOpenFile(fname, "r");
   SPIFFS_CHECK(f, fname);
   SPIFFS_CHECK(f.seek(offset, fs::SeekSet), fname);
   SPIFFS_CHECK(f.read(memAddress,datasize), fname);

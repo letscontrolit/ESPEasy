@@ -250,7 +250,7 @@ void sendHeadandTail(const String& tmplName, boolean Tail = false, boolean reboo
   String pageTemplate = "";
   String fileName = tmplName;
   fileName += F(".htm");
-  fs::File f = SPIFFS.open(fileName, "r+");
+  fs::File f = tryOpenFile(fileName, "r");
 
   if (f) {
     pageTemplate.reserve(f.size());
@@ -822,7 +822,7 @@ void writeDefaultCSS(void)
   {
     String defaultCSS;
 
-    fs::File f = SPIFFS.open(F("esp.css"), "w");
+    fs::File f = tryOpenFile(F("esp.css"), "w");
     if (f)
     {
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -1712,6 +1712,7 @@ void handle_notifications() {
     for (byte x = 0; x < NOTIFICATION_MAX; x++)
     {
       LoadNotificationSettings(x, (byte*)&NotificationSettings, sizeof(NotificationSettingsStruct));
+      NotificationSettings.validate();
       html_TR_TD();
       html_add_button_prefix();
       TXBuffer += F("notifications?index=");
@@ -1770,6 +1771,7 @@ void handle_notifications() {
     {
       MakeNotificationSettings(NotificationSettings);
       LoadNotificationSettings(notificationindex, (byte*)&NotificationSettings, sizeof(NotificationSettingsStruct));
+      NotificationSettings.validate();
 
       byte NotificationProtocolIndex = getNotificationProtocolIndex(Settings.Notification[notificationindex]);
       if (NotificationProtocolIndex!=NPLUGIN_NOT_FOUND)
@@ -4083,7 +4085,6 @@ void handle_i2cscanner_json() {
   TXBuffer.startJsonStream();
   TXBuffer += "[{";
 
-  char *TempString = (char*)malloc(80);
   bool firstentry = true;
   byte error, address;
   for (address = 1; address <= 127; address++ )
@@ -4101,7 +4102,6 @@ void handle_i2cscanner_json() {
   }
   TXBuffer += "]";
   TXBuffer.endStream();
-  free(TempString);
 }
 #endif // WEBSERVER_NEW_UI
 
@@ -4111,8 +4111,6 @@ void handle_i2cscanner() {
   navMenuIndex = MENU_INDEX_TOOLS;
   TXBuffer.startStream();
   sendHeadandTail_stdtemplate(_HEAD);
-
-  char *TempString = (char*)malloc(80);
 
   html_table_class_multirow();
   html_table_header(F("I2C Addresses in use"));
@@ -4241,7 +4239,6 @@ void handle_i2cscanner() {
   html_end_table();
   sendHeadandTail_stdtemplate(_TAIL);
   TXBuffer.endStream();
-  free(TempString);
 }
 
 #ifdef WEBSERVER_NEW_UI
@@ -5171,7 +5168,7 @@ void handle_download()
 //  sendHeadandTail_stdtemplate();
 
 
-  fs::File dataFile = SPIFFS.open(F(FILE_CONFIG), "r");
+  fs::File dataFile = tryOpenFile(F(FILE_CONFIG), "r");
   if (!dataFile)
     return;
 
@@ -5316,7 +5313,7 @@ void handleFileUpload() {
       {
         // once we're safe, remove file and create empty one...
         SPIFFS.remove((char *)upload.filename.c_str());
-        uploadFile = SPIFFS.open(upload.filename.c_str(), "w");
+        uploadFile = tryOpenFile(upload.filename.c_str(), "w");
         // dont count manual uploads: flashCount();
       }
     }
@@ -5380,7 +5377,7 @@ bool loadFromFS(boolean spiffs, String path) {
   path = path.substring(1);
   if (spiffs)
   {
-    fs::File dataFile = SPIFFS.open(path.c_str(), "r");
+    fs::File dataFile = tryOpenFile(path.c_str(), "r");
     if (!dataFile)
       return false;
 
@@ -5424,7 +5421,7 @@ boolean handle_custom(String path) {
   path = path.substring(1);
 
   // create a dynamic custom page, parsing task values into [<taskname>#<taskvalue>] placeholders and parsing %xx% system variables
-  fs::File dataFile = SPIFFS.open(path.c_str(), "r");
+  fs::File dataFile = tryOpenFile(path.c_str(), "r");
   const bool dashboardPage = path.startsWith(F("dashboard"));
   if (!dataFile && !dashboardPage) {
     return false; // unknown file that does not exist...
@@ -6389,7 +6386,7 @@ void handle_rules() {
         // }
         // else
         // {
-          fs::File f = SPIFFS.open(fileName, "w");
+          fs::File f = tryOpenFile(fileName, "w");
           if (f)
           {
             log += F(" Write to file: ");
@@ -6407,7 +6404,7 @@ void handle_rules() {
       {
         log += F(" Create new file: ");
         log += fileName;
-        fs::File f = SPIFFS.open(fileName, "w");
+        fs::File f = tryOpenFile(fileName, "w");
         if (f) f.close();
       }
     }
@@ -6450,7 +6447,7 @@ void handle_rules() {
   // load form data from flash
 
   int size = 0;
-  fs::File f = SPIFFS.open(fileName, "r+");
+  fs::File f = tryOpenFile(fileName, "r");
   if (f)
   {
     size = f.size();
