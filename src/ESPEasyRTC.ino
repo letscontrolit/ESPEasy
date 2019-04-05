@@ -188,7 +188,7 @@ struct RTC_cache_handler_struct
           fname = createCacheFilename(peekfilenr);
         }
         if (fname.length() == 0) return false;
-        fp = SPIFFS.open(fname.c_str(), "r");
+        fp = tryOpenFile(fname.c_str(), "r");
       }
       if (!fp) return false;
       if (fp.read(data, size)) {
@@ -424,7 +424,7 @@ private:
         initRTCcache_data();
         updateRTC_filenameCounters();
         String fname = createCacheFilename(RTC_cache.writeFileNr);
-        fw = SPIFFS.open(fname.c_str(), "a+");
+        fw = tryOpenFile(fname.c_str(), "a+");
         if (!fw) {
           #ifdef RTC_STRUCT_DEBUG
           addLog(LOG_LEVEL_ERROR, String(F("RTC  : error opening file")));

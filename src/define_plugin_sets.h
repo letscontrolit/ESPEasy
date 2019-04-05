@@ -621,7 +621,6 @@ To create/register a plugin, you have to :
 #ifdef CONTROLLER_SET_TESTING
     #define USES_C011   // Generic HTTP Advanced
     #define USES_C012   // Blynk HTTP
-    #define USES_C016   // Cached HTTP
 #endif
 
 
@@ -706,6 +705,7 @@ To create/register a plugin, you have to :
 
 
 #ifdef CONTROLLER_SET_EXPERIMENTAL
+  #define USES_C016   // Cache controller
 #endif
 
 

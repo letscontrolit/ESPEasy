@@ -1,15 +1,35 @@
 #ifdef USES_C016
 //#######################################################################################################
-//########################### Controller Plugin 016: Cached HTTP ########################################
+//########################### Controller Plugin 016: Controller - Cache #################################
 //#######################################################################################################
+
+/*
+This is a cache layer to collect data while not connected to a network.
+The data will first be stored in RTC memory, which will survive a crash/reboot and even an OTA update.
+If this RTC buffer is full, it will be flushed to whatever is set here as storage.
+
+Typical sample sets contain:
+- UNIX timestamp
+- task index delivering the data
+- 4 float values
+
+These are the result of any plugin sending data to this controller.
+
+The controller can save the samples from RTC memory to several places on the flash:
+- Files on SPIFFS
+- Part reserved for OTA update (TODO)
+- Unused flash after the partitioned space (TODO)
+
+The controller can deliver the data to:
+<TODO>
+*/
 
 #define CPLUGIN_016
 #define CPLUGIN_ID_016         16
-#define CPLUGIN_NAME_016       "Cached HTTP"
-#include <ArduinoJson.h>
+#define CPLUGIN_NAME_016       "Cache Controller [Experimental]"
+//#include <ArduinoJson.h>
 
 ControllerCache_struct ControllerCache;
-
 
 bool CPlugin_016(byte function, struct EventStruct *event, String& string)
 {
@@ -22,10 +42,10 @@ bool CPlugin_016(byte function, struct EventStruct *event, String& string)
         Protocol[++protocolCount].Number = CPLUGIN_ID_016;
         Protocol[protocolCount].usesMQTT = false;
         Protocol[protocolCount].usesTemplate = true;
-        Protocol[protocolCount].usesAccount = true;
-        Protocol[protocolCount].usesPassword = true;
+        Protocol[protocolCount].usesAccount = false;
+        Protocol[protocolCount].usesPassword = false;
         Protocol[protocolCount].defaultPort = 80;
-        Protocol[protocolCount].usesID = true;
+        Protocol[protocolCount].usesID = false;
         break;
       }
 
@@ -41,6 +61,18 @@ bool CPlugin_016(byte function, struct EventStruct *event, String& string)
         LoadControllerSettings(event->ControllerIndex, ControllerSettings);
         C016_DelayHandler.configureControllerSettings(ControllerSettings);
         ControllerCache.init();
+        break;
+      }
+
+    case CPLUGIN_WEBFORM_LOAD:
+      {
+
+        break;
+      }
+
+    case CPLUGIN_WEBFORM_SAVE:
+      {
+
         break;
       }
 
@@ -81,27 +113,22 @@ bool CPlugin_016(byte function, struct EventStruct *event, String& string)
 
 
 //********************************************************************************
-// Generic HTTP get request
+// Process the data from the cache
 //********************************************************************************
 bool do_process_c016_delay_queue(int controller_number, const C016_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
-
   return true;
-/*
-  WiFiClient client;
-  if (!try_connect_host(controller_number, client, ControllerSettings)) {
-    // Try to dump to file.
-    // Return true if element was successful sent to file cache.
-  } else {
-    // 1) Process element
-    // 2) Read next cached element from file and place it in the queue.
-
-  }
-
-//  String request = create_http_request_auth(controller_number, element.controller_idx, ControllerSettings, F("GET"), element.txt[element.valuesSent]);
-//  return element.checkDone(send_via_http(controller_number, client, request, ControllerSettings.MustCheckReply));
-  return true;
-*/
+  // FIXME TD-er: Hand over data to wherever it needs to be.
+  // Ideas:
+  // - Upload bin files to some server (HTTP post?)
+  // - Provide a sample to any connected controller
+  // - Do nothing and let some extern host pull the data from the node.
+  // - JavaScript to process the data inside the browser.
+  // - Feed it to some plugin (e.g. a display to show a chart)
 }
+
+//********************************************************************************
+// Helper functions used in the webserver to access the cache data
+//********************************************************************************
 
 bool C016_startCSVdump() {
   ControllerCache.resetpeek();
