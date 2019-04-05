@@ -246,6 +246,7 @@ void check_size() {
 #define TIMER_C012_DELAY_QUEUE             17
 #define TIMER_C013_DELAY_QUEUE             18
 #define TIMER_C014_DELAY_QUEUE             19
+#define TIMER_C015_DELAY_QUEUE             20
 
 #define TIMING_STATS_THRESHOLD             100000
 #define TIMER_GRATUITOUS_ARP_MAX           5000
@@ -2002,19 +2003,20 @@ unsigned long timingstats_last_reset = 0;
 #define C012_DELAY_QUEUE        25
 #define C013_DELAY_QUEUE        26
 #define C014_DELAY_QUEUE        27
-#define TRY_CONNECT_HOST_TCP    28
-#define TRY_CONNECT_HOST_UDP    29
-#define HOST_BY_NAME_STATS      30
-#define CONNECT_CLIENT_STATS    31
-#define LOAD_CUSTOM_TASK_STATS  32
-#define WIFI_ISCONNECTED_STATS  33
-#define WIFI_NOTCONNECTED_STATS 34
-#define LOAD_TASK_SETTINGS      35
-#define RULES_PROCESSING        36
-#define GRAT_ARP_STATS          37
-#define BACKGROUND_TASKS        38
-#define HANDLE_SCHEDULER_IDLE   39
-#define HANDLE_SCHEDULER_TASK   40
+#define C015_DELAY_QUEUE        28
+#define TRY_CONNECT_HOST_TCP    29
+#define TRY_CONNECT_HOST_UDP    30
+#define HOST_BY_NAME_STATS      31
+#define CONNECT_CLIENT_STATS    32
+#define LOAD_CUSTOM_TASK_STATS  33
+#define WIFI_ISCONNECTED_STATS  34
+#define WIFI_NOTCONNECTED_STATS 35
+#define LOAD_TASK_SETTINGS      36
+#define RULES_PROCESSING        37
+#define GRAT_ARP_STATS          38
+#define BACKGROUND_TASKS        39
+#define HANDLE_SCHEDULER_IDLE   40
+#define HANDLE_SCHEDULER_TASK   41
 
 
 

@@ -1,6 +1,6 @@
-#ifdef USES_C014
+#ifdef USES_C015
 //#######################################################################################################
-//########################### Controller Plugin 014: Blynk  #############################################
+//########################### Controller Plugin 015: Blynk  #############################################
 //#######################################################################################################
 
 // This plugin provides blynk native protocol. This makes possible receive callbacks from user
@@ -14,16 +14,16 @@
 
 // #ifdef PLUGIN_BUILD_TESTING
 
-#define CPLUGIN_014
-#define CPLUGIN_ID_014         14
-#define CPLUGIN_NAME_014       "Blynk [TESTING]"
+#define CPLUGIN_015
+#define CPLUGIN_ID_015         15
+#define CPLUGIN_NAME_015       "Blynk [TESTING]"
 #define _BLYNK_USE_DEFAULT_FREE_RAM
 #define BLYNK_TIMEOUT_MS 2000UL
 #define BLYNK_HEARTBEAT      30
 #include <BlynkSimpleEsp8266.h>
 // #include <BlynkSimpleEsp8266_SSL.h>
 
-void CPlugin_014_handleInterrupt() {
+void CPlugin_015_handleInterrupt() {
   // This cplugin uses modified blynk library.
   // It includes support of calling this during time-wait operations
   // like blynk connection process to keep espeasy stability.
@@ -31,14 +31,14 @@ void CPlugin_014_handleInterrupt() {
 }
 
 
-void Blynk_Run_c014(){
+void Blynk_Run_c015(){
     // user callbacks processing. Called from run10TimesPerSecond.
     if (Blynk.connected())
       Blynk.run();
 }
 
 
-bool CPlugin_014(byte function, struct EventStruct *event, String& string)
+bool CPlugin_015(byte function, struct EventStruct *event, String& string)
 {
   bool success = false;
 
@@ -46,7 +46,7 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
   {
     case CPLUGIN_PROTOCOL_ADD:
       {
-        Protocol[++protocolCount].Number = CPLUGIN_ID_014;
+        Protocol[++protocolCount].Number = CPLUGIN_ID_015;
         Protocol[protocolCount].usesMQTT = false;
         Protocol[protocolCount].usesAccount = false;
         Protocol[protocolCount].usesPassword = true;
@@ -57,7 +57,7 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
 
     case CPLUGIN_GET_DEVICENAME:
       {
-        string = F(CPLUGIN_NAME_014);
+        string = F(CPLUGIN_NAME_015);
         break;
       }
 
@@ -77,7 +77,7 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
         if (isFormItemChecked(F("controllerenabled"))){
           for (byte i = 0; i < CONTROLLER_MAX; ++i) {
             byte ProtocolIndex = getProtocolIndex(Settings.Protocol[i]);
-            if (i != event->ControllerIndex && Protocol[ProtocolIndex].Number == 14 && Settings.ControllerEnabled[i]) {
+            if (i != event->ControllerIndex && Protocol[ProtocolIndex].Number == 15 && Settings.ControllerEnabled[i]) {
               success = false;
               // FIXME:  this will only show a warning message and not uncheck "enabled" in webform.
               // Webserver object is not checking result of "success" var :(
@@ -96,7 +96,7 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
 
         // Collect the values at the same run, to make sure all are from the same sample
         byte valueCount = getValueCountFromSensorType(event->sensorType);
-        C014_queue_element element(event, valueCount);
+        C015_queue_element element(event, valueCount);
         if (ExtraTaskSettings.TaskIndex != event->TaskIndex)
           PluginCall(PLUGIN_GET_DEVICEVALUENAMES, event, dummyString);
 
@@ -135,8 +135,8 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
           element.vPin[x] = vPinNumber;
           element.txt[x] = formattedValue;
         }
-        success = C014_DelayHandler.addToQueue(element);
-        scheduleNextDelayQueue(TIMER_C014_DELAY_QUEUE, C014_DelayHandler.getNextScheduleTime());
+        success = C015_DelayHandler.addToQueue(element);
+        scheduleNextDelayQueue(TIMER_C015_DELAY_QUEUE, C015_DelayHandler.getNextScheduleTime());
         break;
       }
   }
@@ -146,8 +146,8 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
 //********************************************************************************
 // Process Queued Blynk request, with data set to NULL
 //********************************************************************************
-// controller_plugin_number = 014 because of C014
-bool do_process_c014_delay_queue(int controller_plugin_number, const C014_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
+// controller_plugin_number = 015 because of C015
+bool do_process_c015_delay_queue(int controller_plugin_number, const C015_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
   if (!Settings.ControllerEnabled[element.controller_idx])
     // controller has been disabled. Answer true to flush queue.
     return true;
@@ -156,7 +156,7 @@ bool do_process_c014_delay_queue(int controller_plugin_number, const C014_queue_
     return false;
   }
 
-  if (!Blynk_keep_connection_c014(element.controller_idx, ControllerSettings))
+  if (!Blynk_keep_connection_c015(element.controller_idx, ControllerSettings))
     return false;
 
   while (element.vPin[element.valuesSent] == -1) {
@@ -166,11 +166,11 @@ bool do_process_c014_delay_queue(int controller_plugin_number, const C014_queue_
       return true;
   }
 
-  return element.checkDone(Blynk_send_c014(element.txt[element.valuesSent], element.vPin[element.valuesSent]));
+  return element.checkDone(Blynk_send_c015(element.txt[element.valuesSent], element.vPin[element.valuesSent]));
 }
 
 
-boolean Blynk_keep_connection_c014(int controllerIndex, ControllerSettingsStruct& ControllerSettings){
+boolean Blynk_keep_connection_c015(int controllerIndex, ControllerSettingsStruct& ControllerSettings){
   if (!WiFiConnected())
     return false;
 
@@ -205,7 +205,7 @@ boolean Blynk_keep_connection_c014(int controllerIndex, ControllerSettingsStruct
         log += F("Connecting to custom blynk server ");
         log += ControllerSettings.getHostPortString();
         Blynk.config(auth.c_str(),
-                     CPlugin_014_handleInterrupt,
+                     CPlugin_015_handleInterrupt,
                      hostName.c_str(),
                      ControllerSettings.Port
                    );
@@ -221,7 +221,7 @@ boolean Blynk_keep_connection_c014(int controllerIndex, ControllerSettingsStruct
         log += F("Connecting to custom blynk server ");
         log += ControllerSettings.getHostPortString();
         Blynk.config(auth.c_str(),
-                     CPlugin_014_handleInterrupt,
+                     CPlugin_015_handleInterrupt,
                      ip,
                      ControllerSettings.Port
                    );
@@ -234,7 +234,7 @@ boolean Blynk_keep_connection_c014(int controllerIndex, ControllerSettingsStruct
 
     if (connectDefault){
       log += F("Connecting go default server");
-      Blynk.config(auth.c_str(),CPlugin_014_handleInterrupt);
+      Blynk.config(auth.c_str(),CPlugin_015_handleInterrupt);
     }
 
     addLog(LOG_LEVEL_INFO, log);
@@ -245,7 +245,7 @@ boolean Blynk_keep_connection_c014(int controllerIndex, ControllerSettingsStruct
 }
 
 
-String Command_Blynk_Set_c014(struct EventStruct *event, const char* Line){
+String Command_Blynk_Set_c015(struct EventStruct *event, const char* Line){
 
   // todo add multicontroller support and chek it is connected and enabled
   if (!Blynk.connected())
@@ -278,7 +278,7 @@ String Command_Blynk_Set_c014(struct EventStruct *event, const char* Line){
 }
 
 
-boolean Blynk_send_c014(const String& value, int vPin )
+boolean Blynk_send_c015(const String& value, int vPin )
 {
   Blynk.virtualWrite(vPin, value);
   unsigned long timer = millis() + Settings.MessageDelay;

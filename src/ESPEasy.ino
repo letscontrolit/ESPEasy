@@ -680,9 +680,9 @@ void run10TimesPerSecond() {
     rulesProcessing(eventBuffer);
     eventBuffer = "";
   }
-  #ifdef USES_C014
+  #ifdef USES_C015
   if (WiFiConnected())
-      Blynk_Run_c014();
+      Blynk_Run_c015();
   #endif
   #ifndef USE_RTOS_MULTITASKING
     WebServer.handleClient();

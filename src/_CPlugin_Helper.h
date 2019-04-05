@@ -187,14 +187,14 @@ public:
 #define C012_queue_element queue_element_single_value_base
 
 /*********************************************************************************************\
- * C014_queue_element for queueing requests for 014: Blynk
+ * C015_queue_element for queueing requests for 015: Blynk
  * Using queue_element_single_value_base
 \*********************************************************************************************/
-// #define C014_queue_element queue_element_single_value_base
-class C014_queue_element {
+// #define C015_queue_element queue_element_single_value_base
+class C015_queue_element {
 public:
-  C014_queue_element() : controller_idx(0), TaskIndex(0), idx(0), valuesSent(0) {}
-  C014_queue_element(const struct EventStruct* event, byte value_count) :
+  C015_queue_element() : controller_idx(0), TaskIndex(0), idx(0), valuesSent(0) {}
+  C015_queue_element(const struct EventStruct* event, byte value_count) :
     controller_idx(event->ControllerIndex),
     TaskIndex(event->TaskIndex),
     idx(event->idx),
@@ -422,8 +422,8 @@ ControllerDelayHandlerStruct<MQTT_queue_element> MQTTDelayHandler;
   DEFINE_Cxxx_DELAY_QUEUE_MACRO(013, 13)
 #endif
 */
-#ifdef USES_C014
-  DEFINE_Cxxx_DELAY_QUEUE_MACRO(014, 14)
+#ifdef USES_C015
+  DEFINE_Cxxx_DELAY_QUEUE_MACRO(015, 15)
 #endif
 // When extending this, also extend in Scheduler.ino:
 // void process_interval_timer(unsigned long id, unsigned long lasttimer)

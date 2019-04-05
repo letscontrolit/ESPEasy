@@ -1,7 +1,7 @@
 
 #include "Commands/Common.h"
 #include "Commands/Blynk.h"
-#include "Commands/Blynk_c014.h"
+#include "Commands/Blynk_c015.h"
 #include "Commands/Diagnostic.h"
 #include "Commands/HTTP.h"
 #include "Commands/i2c.h"
@@ -50,7 +50,7 @@ String doExecuteCommand(const char * cmd, struct EventStruct *event, const char*
     #ifdef USES_C012
 	  COMMAND_CASE("blynkget"               , Command_Blynk_Get);
     #endif
-    #ifdef USES_C014
+    #ifdef USES_C015
 	  COMMAND_CASE("blynkset"               , Command_Blynk_Set);
     #endif
 	  COMMAND_CASE("build"                  , Command_Settings_Build);             // Settings.h
