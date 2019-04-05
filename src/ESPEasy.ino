@@ -577,6 +577,8 @@ void loop()
     runPeriodicalMQTT();
     flushAndDisconnectAllClients();
 
+    SPIFFS.end();
+
     deepSleep(Settings.Delay);
     //deepsleep will never return, its a special kind of reboot
   }
@@ -584,19 +586,32 @@ void loop()
 
 bool checkConnectionsEstablished() {
   if (wifiStatus != ESPEASY_WIFI_SERVICES_INITIALIZED) return false;
+/*
   if (firstEnabledMQTTController() >= 0) {
     // There should be a MQTT connection.
     return MQTTclient_connected;
   }
+*/
   return true;
 }
 
 void flushAndDisconnectAllClients() {
-  if (MQTTclient.connected()) {
-    MQTTclient.disconnect();
-    updateMQTTclient_connected();
+  if (anyControllerEnabled()) {
+    bool mqttControllerEnabled = firstEnabledMQTTController() >= 0;
+    unsigned long timer = millis() + 1000;
+    while (!timeOutReached(timer)) {
+      // call to all controllers (delay queue) to flush all data.
+      CPluginCall(CPLUGIN_FLUSH, 0);
+      if (mqttControllerEnabled && MQTTclient.connected()) {
+        MQTTclient.loop();
+      }
+    }
+    if (mqttControllerEnabled && MQTTclient.connected()) {
+      MQTTclient.disconnect();
+      updateMQTTclient_connected();
+    }
+    delay(100); // Flush anything in the network buffers.
   }
-  /// FIXME TD-er: add call to all controllers (delay queue) to flush all data.
 }
 
 void runPeriodicalMQTT() {

@@ -308,6 +308,7 @@ void check_size() {
 #define CPLUGIN_TASK_CHANGE_NOTIFICATION   49
 #define CPLUGIN_INIT                       50
 #define CPLUGIN_UDP_IN                     51
+#define CPLUGIN_FLUSH                      52
 
 #define CONTROLLER_HOSTNAME                 1
 #define CONTROLLER_IP                       2

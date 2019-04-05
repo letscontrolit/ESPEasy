@@ -823,6 +823,28 @@ int SpiffsSectors()
   #endif
 }
 
+bool SpiffsFull() {
+  #if defined(ESP8266)
+  fs::FSInfo fs_info;
+  SPIFFS.info(fs_info);
+  int freeSpace = fs_info.totalBytes - fs_info.usedBytes;
+  if (freeSpace < static_cast<int>(2 * fs_info.blockSize)) {
+    // Not enough free space left.
+    // There needs to be minimum of 2 free blocks.
+    return true;
+  }
+  #endif
+
+  #ifdef ESP32
+  // FIXME TD-er: Find block size, filesystem must have at least 2 blocks free.
+  if (SPIFFS.totalBytes() > (SPIFFS.usedBytes() + 16384)) {
+    return true;
+  }
+  #endif
+
+  return false;
+}
+
 /********************************************************************************************\
   Get partition table information
   \*********************************************************************************************/
