@@ -251,6 +251,10 @@ void check_size() {
 #define TIMER_C014_DELAY_QUEUE             19
 #define TIMER_C015_DELAY_QUEUE             20
 #define TIMER_C016_DELAY_QUEUE             21
+#define TIMER_C017_DELAY_QUEUE             22
+#define TIMER_C018_DELAY_QUEUE             23
+#define TIMER_C019_DELAY_QUEUE             24
+#define TIMER_C020_DELAY_QUEUE             25
 
 #define TIMING_STATS_THRESHOLD             100000
 #define TIMER_GRATUITOUS_ARP_MAX           5000
@@ -2068,20 +2072,27 @@ unsigned long timingstats_last_reset = 0;
 #define C011_DELAY_QUEUE        24
 #define C012_DELAY_QUEUE        25
 #define C013_DELAY_QUEUE        26
-#define TRY_CONNECT_HOST_TCP    27
-#define TRY_CONNECT_HOST_UDP    28
-#define HOST_BY_NAME_STATS      29
-#define CONNECT_CLIENT_STATS    30
-#define LOAD_CUSTOM_TASK_STATS  31
-#define WIFI_ISCONNECTED_STATS  32
-#define WIFI_NOTCONNECTED_STATS 33
-#define LOAD_TASK_SETTINGS      34
-#define TRY_OPEN_FILE           35
-#define RULES_PROCESSING        36
-#define GRAT_ARP_STATS          37
-#define BACKGROUND_TASKS        38
-#define HANDLE_SCHEDULER_IDLE   39
-#define HANDLE_SCHEDULER_TASK   40
+#define C014_DELAY_QUEUE        27
+#define C015_DELAY_QUEUE        28
+#define C016_DELAY_QUEUE        29
+#define C017_DELAY_QUEUE        30
+#define C018_DELAY_QUEUE        31
+#define C019_DELAY_QUEUE        32
+#define C020_DELAY_QUEUE        33
+#define TRY_CONNECT_HOST_TCP    34
+#define TRY_CONNECT_HOST_UDP    35
+#define HOST_BY_NAME_STATS      36
+#define CONNECT_CLIENT_STATS    37
+#define LOAD_CUSTOM_TASK_STATS  38
+#define WIFI_ISCONNECTED_STATS  39
+#define WIFI_NOTCONNECTED_STATS 40
+#define LOAD_TASK_SETTINGS      41
+#define TRY_OPEN_FILE           42
+#define RULES_PROCESSING        43
+#define GRAT_ARP_STATS          44
+#define BACKGROUND_TASKS        45
+#define HANDLE_SCHEDULER_IDLE   46
+#define HANDLE_SCHEDULER_TASK   47
 
 
 
@@ -2137,6 +2148,12 @@ String getMiscStatsName(int stat) {
         case C012_DELAY_QUEUE:
         case C013_DELAY_QUEUE:
         case C014_DELAY_QUEUE:
+        case C015_DELAY_QUEUE:
+        case C016_DELAY_QUEUE:
+        case C017_DELAY_QUEUE:
+        case C018_DELAY_QUEUE:
+        case C019_DELAY_QUEUE:
+        case C020_DELAY_QUEUE:
         {
           String result;
           result.reserve(16);

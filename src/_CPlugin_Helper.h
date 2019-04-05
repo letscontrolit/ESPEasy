@@ -437,6 +437,27 @@ ControllerDelayHandlerStruct<MQTT_queue_element> MQTTDelayHandler;
   DEFINE_Cxxx_DELAY_QUEUE_MACRO(016, 16)
 #endif
 
+/*
+#ifdef USES_C017
+  DEFINE_Cxxx_DELAY_QUEUE_MACRO(017, 17)
+#endif
+*/
+/*
+#ifdef USES_C018
+  DEFINE_Cxxx_DELAY_QUEUE_MACRO(018, 18)
+#endif
+*/
+/*
+#ifdef USES_C019
+  DEFINE_Cxxx_DELAY_QUEUE_MACRO(019, 19)
+#endif
+*/
+/*
+#ifdef USES_C020
+  DEFINE_Cxxx_DELAY_QUEUE_MACRO(020, 20)
+#endif
+*/
+
 
 // When extending this, also extend in Scheduler.ino:
 // void process_interval_timer(unsigned long id, unsigned long lasttimer)
