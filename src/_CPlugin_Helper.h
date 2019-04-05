@@ -188,12 +188,12 @@ public:
 
 
 /*********************************************************************************************\
- * C014_queue_element for queueing requests for C014: Cached HTTP.
+ * C016_queue_element for queueing requests for C016: Cached HTTP.
 \*********************************************************************************************/
-class C014_queue_element {
+class C016_queue_element {
 public:
-  C014_queue_element() : controller_idx(0), TaskIndex(0), sensorType(0) {}
-  C014_queue_element(const struct EventStruct* event, byte value_count, unsigned long unixTime) :
+  C016_queue_element() : controller_idx(0), TaskIndex(0), sensorType(0) {}
+  C016_queue_element(const struct EventStruct* event, byte value_count, unsigned long unixTime) :
     timestamp(unixTime),
     controller_idx(event->ControllerIndex),
     TaskIndex(event->TaskIndex),
@@ -422,9 +422,22 @@ ControllerDelayHandlerStruct<MQTT_queue_element> MQTTDelayHandler;
   DEFINE_Cxxx_DELAY_QUEUE_MACRO(013, 13)
 #endif
 */
+/*
 #ifdef USES_C014
   DEFINE_Cxxx_DELAY_QUEUE_MACRO(014, 14)
 #endif
+*/
+/*
+#ifdef USES_C015
+  DEFINE_Cxxx_DELAY_QUEUE_MACRO(015, 15)
+#endif
+*/
+
+#ifdef USES_C016
+  DEFINE_Cxxx_DELAY_QUEUE_MACRO(016, 16)
+#endif
+
+
 // When extending this, also extend in Scheduler.ino:
 // void process_interval_timer(unsigned long id, unsigned long lasttimer)
 

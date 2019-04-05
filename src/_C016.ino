@@ -1,17 +1,17 @@
-#ifdef USES_C014
+#ifdef USES_C016
 //#######################################################################################################
-//########################### Controller Plugin 014: Cached HTTP ########################################
+//########################### Controller Plugin 016: Cached HTTP ########################################
 //#######################################################################################################
 
-#define CPLUGIN_014
-#define CPLUGIN_ID_014         14
-#define CPLUGIN_NAME_014       "Cached HTTP"
+#define CPLUGIN_016
+#define CPLUGIN_ID_016         16
+#define CPLUGIN_NAME_016       "Cached HTTP"
 #include <ArduinoJson.h>
 
 ControllerCache_struct ControllerCache;
 
 
-bool CPlugin_014(byte function, struct EventStruct *event, String& string)
+bool CPlugin_016(byte function, struct EventStruct *event, String& string)
 {
   bool success = false;
 
@@ -19,7 +19,7 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
   {
     case CPLUGIN_PROTOCOL_ADD:
       {
-        Protocol[++protocolCount].Number = CPLUGIN_ID_014;
+        Protocol[++protocolCount].Number = CPLUGIN_ID_016;
         Protocol[protocolCount].usesMQTT = false;
         Protocol[protocolCount].usesTemplate = true;
         Protocol[protocolCount].usesAccount = true;
@@ -31,7 +31,7 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
 
     case CPLUGIN_GET_DEVICENAME:
       {
-        string = F(CPLUGIN_NAME_014);
+        string = F(CPLUGIN_NAME_016);
         break;
       }
 
@@ -39,7 +39,7 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
       {
         MakeControllerSettings(ControllerSettings);
         LoadControllerSettings(event->ControllerIndex, ControllerSettings);
-        C014_DelayHandler.configureControllerSettings(ControllerSettings);
+        C016_DelayHandler.configureControllerSettings(ControllerSettings);
         ControllerCache.init();
         break;
       }
@@ -55,21 +55,21 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
       {
         // Collect the values at the same run, to make sure all are from the same sample
         byte valueCount = getValueCountFromSensorType(event->sensorType);
-        C014_queue_element element(event, valueCount, getUnixTime());
+        C016_queue_element element(event, valueCount, getUnixTime());
         success = ControllerCache.write((uint8_t*)&element, sizeof(element));
 
 /*
         MakeControllerSettings(ControllerSettings);
         LoadControllerSettings(event->ControllerIndex, ControllerSettings);
-        success = C014_DelayHandler.addToQueue(element);
-        scheduleNextDelayQueue(TIMER_C014_DELAY_QUEUE, C014_DelayHandler.getNextScheduleTime());
+        success = C016_DelayHandler.addToQueue(element);
+        scheduleNextDelayQueue(TIMER_C016_DELAY_QUEUE, C016_DelayHandler.getNextScheduleTime());
 */
         break;
       }
 
     case CPLUGIN_FLUSH:
       {
-        process_c014_delay_queue();
+        process_c016_delay_queue();
         delay(0);
         break;
       }
@@ -83,7 +83,7 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
 //********************************************************************************
 // Generic HTTP get request
 //********************************************************************************
-bool do_process_c014_delay_queue(int controller_number, const C014_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
+bool do_process_c016_delay_queue(int controller_number, const C016_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
 
   return true;
 /*
@@ -103,17 +103,17 @@ bool do_process_c014_delay_queue(int controller_number, const C014_queue_element
 */
 }
 
-bool c014_startCSVdump() {
+bool C016_startCSVdump() {
   ControllerCache.resetpeek();
   return ControllerCache.isInitialized();
 }
 
-String c014_getCacheFileName(bool& islast) {
+String C016_getCacheFileName(bool& islast) {
   return ControllerCache.getPeakCacheFileName(islast);
 }
 
 
-bool c014_getCSVline(
+bool C016_getCSVline(
   unsigned long& timestamp,
   byte& controller_idx,
   byte& TaskIndex,
@@ -124,7 +124,7 @@ bool c014_getCSVline(
   float& val3,
   float& val4)
 {
-  C014_queue_element element;
+  C016_queue_element element;
   bool result = ControllerCache.peek((uint8_t*)&element, sizeof(element));
   timestamp = element.timestamp;
   controller_idx = element.controller_idx;

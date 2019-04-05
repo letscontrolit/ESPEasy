@@ -5165,7 +5165,7 @@ boolean isLoggedIn()
 void handle_dumpcache() {
   if (!isLoggedIn()) return;
 
-  #ifdef USES_C014
+  #ifdef USES_C016
 /*
     String str = F("attachment; filename=cache_");
     str += Settings.Name;
@@ -5182,7 +5182,7 @@ void handle_dumpcache() {
     WebServer.sendHeader(F("Content-Disposition"), str);
 //    WebServer.streamFile(dataFile, F("application/octet-stream"));
 */
-    c014_startCSVdump();
+    C016_startCSVdump();
     unsigned long  timestamp;
     byte  controller_idx;
     byte  TaskIndex;
@@ -5210,7 +5210,7 @@ void handle_dumpcache() {
       csv_values[i] = 0.0;
     }
 
-    while (c014_getCSVline(timestamp, controller_idx, TaskIndex, sensorType,
+    while (C016_getCSVline(timestamp, controller_idx, TaskIndex, sensorType,
                            valueCount, val1, val2, val3, val4)) {
       TXBuffer += timestamp;
       TXBuffer += ';';
@@ -5245,7 +5245,7 @@ void handle_dumpcache() {
 void handle_cache_json() {
   if (!isLoggedIn()) return;
 
-  #ifdef USES_C014
+  #ifdef USES_C016
   TXBuffer.startJsonStream();
   TXBuffer += F("{\"columns\": [");
 
@@ -5266,12 +5266,12 @@ void handle_cache_json() {
     }
   }
   TXBuffer += F("],\n");
-  c014_startCSVdump();
+  C016_startCSVdump();
   TXBuffer += F("\"files\": [");
   bool islast = false;
   int filenr = 0;
   while (!islast) {
-    String currentFile = c014_getCacheFileName(islast);
+    String currentFile = C016_getCacheFileName(islast);
     if (currentFile.length() > 0) {
       if (filenr != 0) {
         TXBuffer += ',';

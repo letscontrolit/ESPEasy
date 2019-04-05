@@ -249,6 +249,8 @@ void check_size() {
 #define TIMER_C012_DELAY_QUEUE             17
 #define TIMER_C013_DELAY_QUEUE             18
 #define TIMER_C014_DELAY_QUEUE             19
+#define TIMER_C015_DELAY_QUEUE             20
+#define TIMER_C016_DELAY_QUEUE             21
 
 #define TIMING_STATS_THRESHOLD             100000
 #define TIMER_GRATUITOUS_ARP_MAX           5000

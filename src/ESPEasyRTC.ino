@@ -34,8 +34,8 @@
 // 64   RTCStruct  max 40 bytes: ( 74 - 64 ) * 4
 // 74   UserVar
 // 122  UserVar checksum:  RTC_BASE_USERVAR + (sizeof(UserVar) / 4)
-// 128  Cache (C014) metadata  4 blocks
-// 132  Cache (C014) data  6 blocks per sample => max 10 samples
+// 128  Cache (C016) metadata  4 blocks
+// 132  Cache (C016) data  6 blocks per sample => max 10 samples
 
 // #define RTC_STRUCT_DEBUG
 
