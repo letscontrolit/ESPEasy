@@ -20,8 +20,13 @@
 #define _BLYNK_USE_DEFAULT_FREE_RAM
 #define BLYNK_TIMEOUT_MS 2000UL
 #define BLYNK_HEARTBEAT      30
+#define CPLUGIN_015_RECONNECT_INTERVAL 20000
+
 #include <BlynkSimpleEsp8266.h>
 // #include <BlynkSimpleEsp8266_SSL.h>
+
+
+static unsigned long _C015_LastConnectAttempt[CONTROLLER_MAX] = {0,0,0};
 
 void CPlugin_015_handleInterrupt() {
   // This cplugin uses modified blynk library.
@@ -85,6 +90,8 @@ bool CPlugin_015(byte function, struct EventStruct *event, String& string)
               break;
             }
           }
+          // force to connect without delay when webform saved
+          _C015_LastConnectAttempt[event->ControllerIndex] = 0;
         }
         break;
       }
@@ -179,25 +186,12 @@ boolean Blynk_keep_connection_c015(int controllerIndex, ControllerSettingsStruct
     boolean connectDefault = false;
     String log = F("BL: ");
 
-    static unsigned long blLastConnectAttempt[CONTROLLER_MAX];
-    blLastConnectAttempt[controllerIndex] = millis() - 60000;
-    static String oldHost = ControllerSettings.getHost();
-
-    if (ControllerSettings.getHost() != oldHost){
-      log += F("server has been changed, connect immideately");
-      addLog(LOG_LEVEL_INFO, log);
-      log = F("BL: ");
-      oldHost = ControllerSettings.getHost();
-      blLastConnectAttempt[controllerIndex] = millis() - 60000;
+    if (timePassedSince(_C015_LastConnectAttempt[controllerIndex]) < CPLUGIN_015_RECONNECT_INTERVAL){
+      // log += "skip connect to blynk server too often. Wait a little...";
+      // addLog(LOG_LEVEL_INFO, log);
+      return false;
     }
-    else{
-      if (timePassedSince(blLastConnectAttempt[controllerIndex]) < 60000){
-        // log += "skip connect to blynk server too often. Wait a little...";
-        // addLog(LOG_LEVEL_INFO, log);
-        return false;
-      }
-      blLastConnectAttempt[controllerIndex] = millis();
-    }
+    _C015_LastConnectAttempt[controllerIndex] = millis();
 
     if (ControllerSettings.UseDNS){
       String hostName = ControllerSettings.getHost();
@@ -231,13 +225,12 @@ boolean Blynk_keep_connection_c015(int controllerIndex, ControllerSettingsStruct
         connectDefault = true;
       }
     }
+    addLog(LOG_LEVEL_INFO, log);
 
     if (connectDefault){
-      log += F("Connecting go default server");
+      addLog(LOG_LEVEL_INFO, F("Connecting to default server"));
       Blynk.config(auth.c_str(),CPlugin_015_handleInterrupt);
     }
-
-    addLog(LOG_LEVEL_INFO, log);
     Blynk.connect();
   }
 
