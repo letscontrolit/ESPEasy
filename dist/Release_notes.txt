@@ -1,4 +1,17 @@
 -------------------------------------------------
+Changes in release mega-20190406 (since mega-20190404)
+-------------------------------------------------
+
+Release date: Sat Apr  6 04:00:18 CEST 2019
+
+TD-er (4):
+      [SPIFFS] optimizations file access & 0-terminate strings in settings
+      Flush stored data in the delay queue before sleep
+      [SPIFFS] Fix ESP32 build
+      [SPIFFS] Fix ESP32 build issues
+
+
+-------------------------------------------------
 Changes in release mega-20190404 (since mega-20190315)
 -------------------------------------------------
 
