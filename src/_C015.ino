@@ -20,10 +20,19 @@
 #define _BLYNK_USE_DEFAULT_FREE_RAM
 #define BLYNK_TIMEOUT_MS 2000UL
 #define BLYNK_HEARTBEAT      30
-#define CPLUGIN_015_RECONNECT_INTERVAL 20000
+#define CPLUGIN_015_RECONNECT_INTERVAL 60000
 
-#include <BlynkSimpleEsp8266.h>
-// #include <BlynkSimpleEsp8266_SSL.h>
+// Uncomment this to use ssl connection. This requires more device resources than unencrypted one.
+// Also it requires valid server thumbprint string to be entered in plugin settings.
+// #define CPLUGIN_015_SSL
+
+#ifdef CPLUGIN_015_SSL
+  #include <BlynkSimpleEsp8266_SSL.h>
+  // Current official blynk server thumbprint
+  #define CPLUGIN_015_DEFAULT_THUMBPRINT "FD C0 7D 8D 47 97 F7 E3 07 05 D3 4E E3 BB 8E 3D C0 EA BE 1C"
+#else
+ #include <BlynkSimpleEsp8266.h>
+#endif
 
 
 static unsigned long _C015_LastConnectAttempt[CONTROLLER_MAX] = {0,0,0};
@@ -193,6 +202,10 @@ boolean Blynk_keep_connection_c015(int controllerIndex, ControllerSettingsStruct
     }
     _C015_LastConnectAttempt[controllerIndex] = millis();
 
+    #ifdef CPLUGIN_015_SSL
+      const char* thumbprint = CPLUGIN_015_DEFAULT_THUMBPRINT;
+    #endif
+
     if (ControllerSettings.UseDNS){
       String hostName = ControllerSettings.getHost();
       if (hostName.length() != 0){
@@ -202,6 +215,9 @@ boolean Blynk_keep_connection_c015(int controllerIndex, ControllerSettingsStruct
                      CPlugin_015_handleInterrupt,
                      hostName.c_str(),
                      ControllerSettings.Port
+                     #ifdef CPLUGIN_015_SSL
+                        ,thumbprint
+                     #endif
                    );
       }
       else{
@@ -218,6 +234,9 @@ boolean Blynk_keep_connection_c015(int controllerIndex, ControllerSettingsStruct
                      CPlugin_015_handleInterrupt,
                      ip,
                      ControllerSettings.Port
+                     #ifdef CPLUGIN_015_SSL
+                        ,thumbprint
+                     #endif
                    );
       }
       else{
@@ -228,10 +247,26 @@ boolean Blynk_keep_connection_c015(int controllerIndex, ControllerSettingsStruct
     addLog(LOG_LEVEL_INFO, log);
 
     if (connectDefault){
-      addLog(LOG_LEVEL_INFO, F("Connecting to default server"));
-      Blynk.config(auth.c_str(),CPlugin_015_handleInterrupt);
+      addLog(LOG_LEVEL_INFO, F("BL: Connecting to default server"));
+      Blynk.config(auth.c_str(),
+                   CPlugin_015_handleInterrupt,
+                   BLYNK_DEFAULT_DOMAIN
+                   #ifdef CPLUGIN_015_SSL
+                      ,BLYNK_DEFAULT_PORT_SSL
+                      ,thumbprint
+                   #else
+                      ,BLYNK_DEFAULT_PORT
+                   #endif
+                  );
     }
-    Blynk.connect();
+
+    #ifdef CPLUGIN_015_SSL
+      if (!Blynk.connect()){
+        if (!_blynkWifiClient.verify(thumbprint, BLYNK_DEFAULT_DOMAIN)){
+          addLog(LOG_LEVEL_INFO, F("BL: SSL thumbprint check FAILED! Check thumbprint and device time"));
+        }
+      }
+    #endif
   }
 
   return Blynk.connected();
