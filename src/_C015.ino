@@ -266,6 +266,8 @@ boolean Blynk_keep_connection_c015(int controllerIndex, ControllerSettingsStruct
           addLog(LOG_LEVEL_INFO, F("BL: SSL thumbprint check FAILED! Check thumbprint and device time"));
         }
       }
+    #else
+      Blynk.connect();
     #endif
   }
 
