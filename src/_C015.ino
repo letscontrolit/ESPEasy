@@ -14,25 +14,26 @@
 
 // #ifdef PLUGIN_BUILD_TESTING
 
+// Uncomment this to use ssl connection. This requires more device resources than unencrypted one.
+// Also it requires valid server thumbprint string to be entered in plugin settings.
+// #define CPLUGIN_015_SSL
+
 #define CPLUGIN_015
 #define CPLUGIN_ID_015         15
-#define CPLUGIN_NAME_015       "Blynk [TESTING]"
 #define _BLYNK_USE_DEFAULT_FREE_RAM
 #define BLYNK_TIMEOUT_MS 2000UL
 #define BLYNK_HEARTBEAT      30
 #define CPLUGIN_015_RECONNECT_INTERVAL 60000
 
-// Uncomment this to use ssl connection. This requires more device resources than unencrypted one.
-// Also it requires valid server thumbprint string to be entered in plugin settings.
-// #define CPLUGIN_015_SSL
-
 #ifdef CPLUGIN_015_SSL
   #include <BlynkSimpleEsp8266_SSL.h>
+  #define CPLUGIN_NAME_015       "Blynk SSL [TESTING]"
   // Current official blynk server thumbprint
   #define CPLUGIN_015_DEFAULT_THUMBPRINT "FD C0 7D 8D 47 97 F7 E3 07 05 D3 4E E3 BB 8E 3D C0 EA BE 1C"
   #define C015_LOG_PREFIX "BL (ssl): "
 #else
  #include <BlynkSimpleEsp8266.h>
+ #define CPLUGIN_NAME_015       "Blynk [TESTING]"
  #define C015_LOG_PREFIX "BL: "
 #endif
 
@@ -87,6 +88,19 @@ bool CPlugin_015(byte function, struct EventStruct *event, String& string)
        break;
       }
 
+    #ifdef CPLUGIN_015_SSL
+      case CPLUGIN_WEBFORM_LOAD:
+        {
+          char thumbprint[60];
+          LoadCustomControllerSettings(event->ControllerIndex,(byte*)&thumbprint, sizeof(thumbprint));
+          if (strlen(thumbprint) != 59)
+              strcpy(thumbprint, CPLUGIN_015_DEFAULT_THUMBPRINT);
+          addFormTextBox(F("Server thumbprint string"), F("c015_thumbprint"), thumbprint, 60);
+          success = true;
+          break;
+        }
+    #endif
+
     case CPLUGIN_WEBFORM_SAVE:
       {
         success = true;
@@ -103,6 +117,15 @@ bool CPlugin_015(byte function, struct EventStruct *event, String& string)
           }
           // force to connect without delay when webform saved
           _C015_LastConnectAttempt[event->ControllerIndex] = 0;
+
+          #ifdef CPLUGIN_015_SSL
+            char thumbprint[60];
+            String error = F("Specify server thumbprint with exactly 59 symbols string like " CPLUGIN_015_DEFAULT_THUMBPRINT);
+            if (!safe_strncpy(thumbprint, WebServer.arg("c015_thumbprint"), 60) || strlen(thumbprint) != 59) {
+              addHtmlError(error);
+            }
+            SaveCustomControllerSettings(event->ControllerIndex,(byte*)&thumbprint, sizeof(thumbprint));
+          #endif
         }
         break;
       }
@@ -195,18 +218,26 @@ boolean Blynk_keep_connection_c015(int controllerIndex, ControllerSettingsStruct
   if (!Blynk.connected()){
     String auth = SecuritySettings.ControllerPassword[controllerIndex];
     boolean connectDefault = false;
-    String log = F(C015_LOG_PREFIX);
 
     if (timePassedSince(_C015_LastConnectAttempt[controllerIndex]) < CPLUGIN_015_RECONNECT_INTERVAL){
-      // log += "skip connect to blynk server too often. Wait a little...";
-      // addLog(LOG_LEVEL_INFO, log);
+      //"skip connect to blynk server too often. Wait a little...";
       return false;
     }
     _C015_LastConnectAttempt[controllerIndex] = millis();
 
     #ifdef CPLUGIN_015_SSL
-      const char* thumbprint = CPLUGIN_015_DEFAULT_THUMBPRINT;
+      char thumbprint[60];
+      LoadCustomControllerSettings(controllerIndex,(byte*)&thumbprint, sizeof(thumbprint));
+      if (strlen(thumbprint) != 59){
+          addLog(LOG_LEVEL_INFO, C015_LOG_PREFIX "Saved thumprint value is not correct:");
+          addLog(LOG_LEVEL_INFO, thumbprint);
+          strcpy(thumbprint, CPLUGIN_015_DEFAULT_THUMBPRINT);
+          addLog(LOG_LEVEL_INFO, C015_LOG_PREFIX "using default one:");
+          addLog(LOG_LEVEL_INFO, thumbprint);
+      }
     #endif
+
+    String log = F(C015_LOG_PREFIX);
 
     if (ControllerSettings.UseDNS){
       String hostName = ControllerSettings.getHost();
@@ -265,7 +296,8 @@ boolean Blynk_keep_connection_c015(int controllerIndex, ControllerSettingsStruct
     #ifdef CPLUGIN_015_SSL
       if (!Blynk.connect()){
         if (!_blynkWifiClient.verify(thumbprint, BLYNK_DEFAULT_DOMAIN)){
-          addLog(LOG_LEVEL_INFO, F(C015_LOG_PREFIX "thumbprint check FAILED! Check thumbprint and device time"));
+          addLog(LOG_LEVEL_INFO, F(C015_LOG_PREFIX "thumbprint check FAILED! Check thumbprint in device settings and server thumbprint"));
+          addLog(LOG_LEVEL_INFO, thumbprint);
         }
       }
     #else
