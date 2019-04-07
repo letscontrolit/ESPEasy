@@ -30,8 +30,10 @@
   #include <BlynkSimpleEsp8266_SSL.h>
   // Current official blynk server thumbprint
   #define CPLUGIN_015_DEFAULT_THUMBPRINT "FD C0 7D 8D 47 97 F7 E3 07 05 D3 4E E3 BB 8E 3D C0 EA BE 1C"
+  #define C015_LOG_PREFIX "BL (ssl): "
 #else
  #include <BlynkSimpleEsp8266.h>
+ #define C015_LOG_PREFIX "BL: "
 #endif
 
 
@@ -79,7 +81,7 @@ bool CPlugin_015(byte function, struct EventStruct *event, String& string)
       {
        // when connected to another server and user has changed settings
        if (Blynk.connected()){
-          addLog(LOG_LEVEL_INFO, F("BL: disconnect from server"));
+          addLog(LOG_LEVEL_INFO, F(C015_LOG_PREFIX "disconnect from server"));
           Blynk.disconnect();
        }
        break;
@@ -130,7 +132,7 @@ bool CPlugin_015(byte function, struct EventStruct *event, String& string)
           valueFullName += valueName;
           String vPinNumberStr = valueName.substring(1, 4);
           int vPinNumber = vPinNumberStr.toInt();
-          String log = F("BL ");
+          String log = F(C015_LOG_PREFIX);
           log += Blynk.connected()? F("(online): ") : F("(offline): ");
           if (vPinNumber > 0 && vPinNumber < 256){
             log += F("send ");
@@ -193,7 +195,7 @@ boolean Blynk_keep_connection_c015(int controllerIndex, ControllerSettingsStruct
   if (!Blynk.connected()){
     String auth = SecuritySettings.ControllerPassword[controllerIndex];
     boolean connectDefault = false;
-    String log = F("BL: ");
+    String log = F(C015_LOG_PREFIX);
 
     if (timePassedSince(_C015_LastConnectAttempt[controllerIndex]) < CPLUGIN_015_RECONNECT_INTERVAL){
       // log += "skip connect to blynk server too often. Wait a little...";
@@ -247,7 +249,7 @@ boolean Blynk_keep_connection_c015(int controllerIndex, ControllerSettingsStruct
     addLog(LOG_LEVEL_INFO, log);
 
     if (connectDefault){
-      addLog(LOG_LEVEL_INFO, F("BL: Connecting to default server"));
+      addLog(LOG_LEVEL_INFO, F(C015_LOG_PREFIX "Connecting to default server"));
       Blynk.config(auth.c_str(),
                    CPlugin_015_handleInterrupt,
                    BLYNK_DEFAULT_DOMAIN
@@ -263,7 +265,7 @@ boolean Blynk_keep_connection_c015(int controllerIndex, ControllerSettingsStruct
     #ifdef CPLUGIN_015_SSL
       if (!Blynk.connect()){
         if (!_blynkWifiClient.verify(thumbprint, BLYNK_DEFAULT_DOMAIN)){
-          addLog(LOG_LEVEL_INFO, F("BL: SSL thumbprint check FAILED! Check thumbprint and device time"));
+          addLog(LOG_LEVEL_INFO, F(C015_LOG_PREFIX "thumbprint check FAILED! Check thumbprint and device time"));
         }
       }
     #else
@@ -297,7 +299,7 @@ String Command_Blynk_Set_c015(struct EventStruct *event, const char* Line){
     return err;
   }
 
-  String log = F("BL (online): send blynk pin v");
+  String log = F(C015_LOG_PREFIX "(online): send blynk pin v");
   log += vPin;
   log += F(" = ");
   log += data;
@@ -321,7 +323,7 @@ boolean Blynk_send_c015(const String& value, int vPin )
 BLYNK_WRITE_DEFAULT() {
   byte vPin = request.pin;
   float pinValue = param.asFloat();
-  String log = F("BL: server set v");
+  String log = F(C015_LOG_PREFIX "server set v");
   log += vPin;
   log += F(" to ");
   log += pinValue;
@@ -339,21 +341,21 @@ BLYNK_CONNECTED() {
 // Requests all stored on the server latest values for all widgets.
   String eventCommand = F("blynk_connected");
   rulesProcessing(eventCommand);
-  // addLog(LOG_LEVEL_INFO, F("BL: connected handler"));
+  // addLog(LOG_LEVEL_INFO, F(C015_LOG_PREFIX "connected handler"));
 }
 
 // This is called when Smartphone App is opened
 BLYNK_APP_CONNECTED() {
   String eventCommand = F("blynk_app_connected");
   rulesProcessing(eventCommand);
-  // addLog(LOG_LEVEL_INFO, F("BL: app connected handler"));
+  // addLog(LOG_LEVEL_INFO, F(C015_LOG_PREFIX "app connected handler"));
 }
 
 // This is called when Smartphone App is closed
 BLYNK_APP_DISCONNECTED() {
   String eventCommand = F("blynk_app_disconnected");
   rulesProcessing(eventCommand);
-  // addLog(LOG_LEVEL_INFO, F("BL: app disconnected handler"));
+  // addLog(LOG_LEVEL_INFO, F(C015_LOG_PREFIX "app disconnected handler"));
 }
 
 #endif
