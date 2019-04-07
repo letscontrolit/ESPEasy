@@ -1303,6 +1303,9 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
           checkRAM(F("PluginCall_init"),x);
           START_TIMER;
           bool retval =  Plugin_ptr[x](Function, event, str);
+          if (retval && Function == PLUGIN_READ) {
+            saveUserVarToRTC();
+          }
           if (Function == PLUGIN_GET_DEVICEVALUENAMES) {
             ExtraTaskSettings.TaskIndex = event->TaskIndex;
           }
@@ -1315,7 +1318,6 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
         }
       }
       return false;
-      break;
     }
 
   }// case
