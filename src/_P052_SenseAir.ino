@@ -26,22 +26,28 @@
 
 #define P052_MEASUREMENT_INTERVAL 60000L
 
+#define P052_SENSOR_TYPE_INDEX  (VARS_PER_TASK + 1)
+
+
 // For layout and status flags in RAM/EEPROM, see document
 // "CO2-Engine-BLG_ELG configuration guide Rev 1_02.docx"
 
 // RAM layout
-#define P052_RAM_ADDR_ERROR_STATUS 0x1E      // U8 (error flags)
-#define P052_RAM_ADDR_METER_STATUS 0x1D      // U8 (status flags)
-#define P052_RAM_ADDR_ALARM_STATUS 0x1C      // U8 (alarm flags)
-#define P052_RAM_ADDR_CO2 0x08               // S16 BLG: x.xxx%  ELG: x ppm
+#define P052_RAM_ADDR_ERROR_STATUS      0x1E // U8 (error flags)
+#define P052_RAM_ADDR_METER_STATUS      0x1D // U8 (status flags)
+#define P052_RAM_ADDR_ALARM_STATUS      0x1C // U8 (alarm flags)
+#define P052_RAM_ADDR_CO2               0x08 // S16 BLG: x.xxx%  ELG: x ppm
+#define P052_RAM_ADDR_DET_TEMPERATURE   0x0A // S16 x.xx °C    (S8 sensor)
 #define P052_RAM_ADDR_SPACE_TEMPERATURE 0x12 // S16 x.xx °C
 #define P052_RAM_ADDR_RELATIVE_HUMIDITY 0x14 // S16 x.xx %
-#define P052_RAM_ADDR_MIXING_RATIO 0x16      // S16 x.xx g/kg
-#define P052_RAM_ADDR_HR1 0x40               // U16
-#define P052_RAM_ADDR_HR2 0x42               // U16
-#define P052_RAM_ADDR_ANIN4 0x69             // U16 x.xxx volt
-#define P052_RAM_ADDR_RTC 0x65 // U32 x seconds   (virtual real time clock)
-#define P052_RAM_ADDR_SCR 0x60 // U8 (special control register)
+#define P052_RAM_ADDR_MIXING_RATIO      0x16 // S16 x.xx g/kg
+#define P052_RAM_ADDR_HR1               0x40 // U16
+#define P052_RAM_ADDR_HR2               0x42 // U16
+#define P052_RAM_ADDR_ANIN4             0x69 // U16 x.xxx volt
+#define P052_RAM_ADDR_RTC               0x65 // U32 x seconds   (virtual real time clock)
+#define P052_RAM_ADDR_SCR               0x60 // U8 (special control register)
+
+#define P052_CMD_READ_RAM  0x44
 
 // EEPROM layout
 #define P052_EEPROM_ADDR_METERCONTROL 0x03    // U8
@@ -182,24 +188,6 @@ boolean Plugin_052(byte function, struct EventStruct *event, String &string) {
 
   case PLUGIN_WEBFORM_LOAD: {
     serialHelper_webformLoad(event);
-    byte choiceSensor = PCONFIG(0);
-
-    String optionsSensor[7] = {F("Error Status"), F("Carbon Dioxide"),
-                               F("Temperature"),  F("Humidity"),
-                               F("Relay Status"), F("Temperature Adjustment"),
-                               F("ABC period")};
-    addFormSelector(F("Sensor"), F("p052_sensor"), 7, optionsSensor, NULL,
-                    choiceSensor);
-
-    /*
-    // ABC functionality disabled for now, due to a bug in the firmware.
-    // See https://github.com/letscontrolit/ESPEasy/issues/759
-    byte choiceABCperiod = PCONFIG(1);
-    String optionsABCperiod[9] = { F("disable"), F("1 h"), F("12 h"), F("1
-    day"), F("2 days"), F("4 days"), F("7 days"), F("14 days"), F("30 days") };
-    addFormSelector(F("ABC period"), F("p052_ABC_period"), 9, optionsABCperiod,
-    NULL, choiceABCperiod);
-    */
 
     P052_data_struct *P052_data =
         static_cast<P052_data_struct *>(getPluginTaskData(event->TaskIndex));
@@ -217,17 +205,45 @@ boolean Plugin_052(byte function, struct EventStruct *event, String &string) {
       chksumStats += reads_crc_failed;
       addHtml(chksumStats);
     }
+
+    sensorTypeHelper_webformLoad_simple(event, P052_SENSOR_TYPE_INDEX);
+
+    /*
+    // ABC functionality disabled for now, due to a bug in the firmware.
+    // See https://github.com/letscontrolit/ESPEasy/issues/759
+    byte choiceABCperiod = PCONFIG(4);
+    String optionsABCperiod[9] = { F("disable"), F("1 h"), F("12 h"), F("1
+    day"), F("2 days"), F("4 days"), F("7 days"), F("14 days"), F("30 days") };
+    addFormSelector(F("ABC period"), F("p052_ABC_period"), 9, optionsABCperiod,
+    NULL, choiceABCperiod);
+    */
+
+    String optionsSensor[8] = {F("Empty"),        F("Carbon Dioxide"),
+                               F("Temperature"),  F("Humidity"),
+                               F("Relay Status"), F("Temperature Adjustment"),
+                               F("ABC period"),   F("Error Status")};
+
+    for (int i = 0; i < getValueCountFromSensorType(PCONFIG(P052_SENSOR_TYPE_INDEX)); ++i) {
+      String sensorText = F("Value ");
+      sensorText += String(i + 1);
+      addFormSelector(sensorText, PCONFIG_LABEL(i), 8, optionsSensor, NULL, PCONFIG(i));
+    }
+
     success = true;
     break;
   }
 
   case PLUGIN_WEBFORM_SAVE: {
     serialHelper_webformSave(event);
-    PCONFIG(0) = getFormItemInt(F("p052_sensor"));
+    for (int i = 0; i < getValueCountFromSensorType(PCONFIG(P052_SENSOR_TYPE_INDEX)); ++i) {
+      pconfig_webformSave(event, i);
+    }
+    sensorTypeHelper_saveSensorType(event, P052_SENSOR_TYPE_INDEX);
+
     /*
     // ABC functionality disabled for now, due to a bug in the firmware.
     // See https://github.com/letscontrolit/ESPEasy/issues/759
-    PCONFIG(1) = getFormItemInt(F("p052_ABC_period"));
+    PCONFIG(4) = getFormItemInt(F("p052_ABC_period"));
     */
 
     success = true;
@@ -253,6 +269,7 @@ boolean Plugin_052(byte function, struct EventStruct *event, String &string) {
 
       Plugin_052_setABCperiod(periodInHours[choiceABCperiod]);
       */
+      sensorTypeHelper_setSensorType(event, P052_SENSOR_TYPE_INDEX);
 
       success = true;
     } else {
@@ -271,62 +288,72 @@ boolean Plugin_052(byte function, struct EventStruct *event, String &string) {
     P052_data_struct *P052_data =
         static_cast<P052_data_struct *>(getPluginTaskData(event->TaskIndex));
     if (nullptr != P052_data && P052_data->isInitialized()) {
+      event->sensorType = PCONFIG(P052_SENSOR_TYPE_INDEX);
       String log = F("Senseair: ");
-      switch (PCONFIG(0)) {
-      case 0: {
-        int errorWord = P052_data->modbus.readInputRegister(0x00);
-        for (size_t i = 0; i < 9; i++) {
-          if (bitRead(errorWord, i)) {
-            UserVar[event->BaseVarIndex] = i;
+      for (int varnr = 0; varnr < getValueCountFromSensorType(PCONFIG(P052_SENSOR_TYPE_INDEX)); ++varnr) {
+        switch (PCONFIG(varnr)) {
+          case 1: {
+            int co2 = P052_data->modbus.readInputRegister(0x03);
+            UserVar[event->BaseVarIndex + varnr] = co2;
+            log += F("co2 = ");
+            log += co2;
+            break;
+          }
+          case 2: {
+            int temperatureX100 = P052_data->modbus.read_RAM_EEPROM(
+                P052_CMD_READ_RAM, P052_RAM_ADDR_DET_TEMPERATURE, 2);  // SenseAir S8, not for other modules.
+            float temperature = static_cast<float>(temperatureX100) / 100.0;
+            UserVar[event->BaseVarIndex + varnr] = (float)temperature;
+            log += F("temperature = ");
+            log += (float)temperature;
+            break;
+          }
+          case 3: {
+            int rhX100 = P052_data->modbus.readInputRegister(0x05);
+            float rh = static_cast<float>(rhX100) / 100.0;
+            UserVar[event->BaseVarIndex + varnr] = rh;
+            log += F("humidity = ");
+            log += rh;
+            break;
+          }
+          case 4: {
+            int status = P052_data->modbus.readInputRegister(0x1C);
+            int relayStatus = (status >> 8) & 0x1;
+            UserVar[event->BaseVarIndex + varnr] = relayStatus;
+            log += F("relay status = ");
+            log += relayStatus;
+            break;
+          }
+          case 5: {
+            int temperatureAdjustment = P052_data->modbus.readInputRegister(0x0A);
+            UserVar[event->BaseVarIndex + varnr] = temperatureAdjustment;
+            log += F("temperature adjustment = ");
+            log += temperatureAdjustment;
+            break;
+          }
+
+          case 7: {
+            int errorWord = P052_data->modbus.readInputRegister(0x00);
+            for (size_t i = 0; i < 9; i++) {
+              if (bitRead(errorWord, i)) {
+                UserVar[event->BaseVarIndex + varnr] = i;
+                log += F("error code = ");
+                log += i;
+                break;
+              }
+            }
+
+            UserVar[event->BaseVarIndex + varnr] = -1;
             log += F("error code = ");
-            log += i;
+            log += -1;
+            break;
+          }
+          case 0:
+          default: {
+            UserVar[event->BaseVarIndex + varnr] = 0;
             break;
           }
         }
-
-        UserVar[event->BaseVarIndex] = -1;
-        log += F("error code = ");
-        log += -1;
-        break;
-      }
-      case 1: {
-        int co2 = P052_data->modbus.readInputRegister(0x03);
-        UserVar[event->BaseVarIndex] = co2;
-        log += F("co2 = ");
-        log += co2;
-        break;
-      }
-      case 2: {
-        int temperatureX100 = P052_data->modbus.readInputRegister(0x04);
-        float temperature = static_cast<float>(temperatureX100) / 100.0;
-        UserVar[event->BaseVarIndex] = (float)temperature;
-        log += F("temperature = ");
-        log += (float)temperature;
-        break;
-      }
-      case 3: {
-        int rhX100 = P052_data->modbus.readInputRegister(0x05);
-        float rh = static_cast<float>(rhX100) / 100.0;
-        UserVar[event->BaseVarIndex] = rh;
-        log += F("humidity = ");
-        log += rh;
-        break;
-      }
-      case 4: {
-        int status = P052_data->modbus.readInputRegister(0x1C);
-        int relayStatus = (status >> 8) & 0x1;
-        UserVar[event->BaseVarIndex] = relayStatus;
-        log += F("relay status = ");
-        log += relayStatus;
-        break;
-      }
-      case 5: {
-        int temperatureAdjustment = P052_data->modbus.readInputRegister(0x0A);
-        UserVar[event->BaseVarIndex] = temperatureAdjustment;
-        log += F("temperature adjustment = ");
-        log += temperatureAdjustment;
-        break;
-      }
       }
       addLog(LOG_LEVEL_INFO, log);
 

@@ -8,6 +8,8 @@
 #define PLUGIN_ID_026         26
 #define PLUGIN_NAME_026       "Generic - System Info"
 
+#define P026_SENSOR_TYPE_INDEX  VARS_PER_TASK
+
 String Plugin_026_valuename(byte value_nr, bool displayString) {
   switch (value_nr) {
     case 0:  return displayString ? F("Uptime") : F("uptime");
@@ -37,8 +39,8 @@ boolean Plugin_026(byte function, struct EventStruct *event, String& string)
     case PLUGIN_DEVICE_ADD:
       {
         Device[++deviceCount].Number = PLUGIN_ID_026;
-        Device[deviceCount].VType = SENSOR_TYPE_QUAD;
-        Device[deviceCount].ValueCount = 4;
+        Device[deviceCount].VType = SENSOR_TYPE_SINGLE;
+        Device[deviceCount].ValueCount = 1;
         Device[deviceCount].SendDataOption = true;
         Device[deviceCount].TimerOption = true;
         Device[deviceCount].FormulaOption = true;
@@ -53,31 +55,33 @@ boolean Plugin_026(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_GET_DEVICEVALUENAMES:
       {
-        for (byte i = 0; i < 4; ++i) {
-          byte choice = PCONFIG(i);
-          safe_strncpy(
-            ExtraTaskSettings.TaskDeviceValueNames[i],
-            Plugin_026_valuename(choice, false),
-            sizeof(ExtraTaskSettings.TaskDeviceValueNames[i]));
+        for (byte i = 0; i < VARS_PER_TASK; ++i) {
+          if ( i < getValueCountFromSensorType(PCONFIG(P026_SENSOR_TYPE_INDEX))) {
+            byte choice = PCONFIG(i);
+            safe_strncpy(
+              ExtraTaskSettings.TaskDeviceValueNames[i],
+              Plugin_026_valuename(choice, false),
+              sizeof(ExtraTaskSettings.TaskDeviceValueNames[i]));
+          } else {
+            ZERO_FILL(ExtraTaskSettings.TaskDeviceValueNames[i]);
+          }
         }
         break;
       }
 
     case PLUGIN_WEBFORM_LOAD:
       {
+        sensorTypeHelper_webformLoad_simple(event, P026_SENSOR_TYPE_INDEX);
         String options[12];
         for (byte i = 0; i < 12; ++i) {
           options[i] = Plugin_026_valuename(i, true);
         }
         String label;
-        String id;
-        for (byte i = 0; i < 4; ++i) {
+        for (byte i = 0; i < getValueCountFromSensorType(PCONFIG(P026_SENSOR_TYPE_INDEX)); ++i) {
           byte choice = PCONFIG(i);
           label = F("Indicator ");
           label += (i+1);
-          id = F("p026_");
-          id += (i+1);
-          addFormSelector(label, id, 12, options, NULL, choice);
+          addFormSelector(label, PCONFIG_LABEL(i), 12, options, NULL, choice);
         }
 
         success = true;
@@ -86,12 +90,10 @@ boolean Plugin_026(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        String id;
-        for (byte i = 0; i < 4; ++i) {
-          id = F("p026_");
-          id += (i+1);
-          PCONFIG(i) = getFormItemInt(id);
+        for (int i = 0; i < getValueCountFromSensorType(PCONFIG(P026_SENSOR_TYPE_INDEX)); ++i) {
+          pconfig_webformSave(event, i);
         }
+        sensorTypeHelper_saveSensorType(event, P026_SENSOR_TYPE_INDEX);
         success = true;
         break;
       }
@@ -99,36 +101,35 @@ boolean Plugin_026(byte function, struct EventStruct *event, String& string)
     case PLUGIN_INIT:
       {
         bool allDefault = true;
-        for (byte i = 0; i < 4; ++i) {
+        for (byte i = 0; i < VARS_PER_TASK; ++i) {
           if (PCONFIG(i) != 0) {
             allDefault = false;
           }
         }
         if (allDefault) {
           // Reset nr 2 .. 4 to "None"
-          for (byte i = 1; i < 4; ++i) {
+          for (byte i = 1; i < VARS_PER_TASK; ++i) {
             PCONFIG(i) = 11; // "None"
           }
         }
+        sensorTypeHelper_setSensorType(event, P026_SENSOR_TYPE_INDEX);
         success = true;
         break;
       }
 
     case PLUGIN_READ:
       {
-        UserVar[event->BaseVarIndex] = P026_get_value(PCONFIG(0));
-        UserVar[event->BaseVarIndex+1] = P026_get_value(PCONFIG(1));
-        UserVar[event->BaseVarIndex+2] = P026_get_value(PCONFIG(2));
-        UserVar[event->BaseVarIndex+3] = P026_get_value(PCONFIG(3));
+        for (int i = 0; i < getValueCountFromSensorType(PCONFIG(P026_SENSOR_TYPE_INDEX)); ++i) {
+          UserVar[event->BaseVarIndex + i] = P026_get_value(PCONFIG(i));
+        }
         if (loglevelActiveFor(LOG_LEVEL_INFO)){
           String log = F("SYS  : ");
-          log += UserVar[event->BaseVarIndex];
-          log +=',';
-          log += UserVar[event->BaseVarIndex+1];
-          log +=',';
-          log += UserVar[event->BaseVarIndex+2];
-          log +=',';
-          log += UserVar[event->BaseVarIndex+3];
+          for (int i = 0; i < getValueCountFromSensorType(PCONFIG(P026_SENSOR_TYPE_INDEX)); ++i) {
+            if (i != 0) {
+              log +=',';
+            }
+            log += UserVar[event->BaseVarIndex + i];
+          }
           addLog(LOG_LEVEL_INFO,log);
         }
         success = true;

@@ -29,7 +29,14 @@
   #define CONFIG_PORT (Settings.TaskDevicePort[event->TaskIndex])
 #endif
 
-
+String PCONFIG_LABEL(int n) {
+  if (n < PLUGIN_CONFIGVAR_MAX) {
+    String result = "pconf_";
+    result += n;
+    return result;
+  }
+  return "error";
+}
 
 
 //==============================================

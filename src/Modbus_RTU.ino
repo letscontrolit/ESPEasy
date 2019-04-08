@@ -150,7 +150,6 @@ struct ModbusRTU_struct  {
     return description;
   }
 
-/*
   // Read from RAM or EEPROM
   void buildRead_RAM_EEPROM(byte slaveAddress, byte functionCode,
                                        short startAddress, byte number_bytes) {
@@ -161,7 +160,6 @@ struct ModbusRTU_struct  {
     _sendframe[4] = number_bytes;
     _sendframe_used = 5;
   }
-  */
 
   // Write to the Special Control Register (SCR)
   void buildWriteCommandRegister(byte slaveAddress, byte value) {
@@ -368,7 +366,7 @@ struct ModbusRTU_struct  {
     addLog(LOG_LEVEL_DEBUG_MORE, log);
   */
   }
-  
+
 /*
   String log_buffer(byte *buffer, int length) {
     String log;
@@ -557,7 +555,6 @@ struct ModbusRTU_struct  {
     return -1;
   }
 
-/*
   unsigned int read_RAM_EEPROM(byte command, byte startAddress,
                                           byte nrBytes) {
     buildRead_RAM_EEPROM(_modbus_address, command,
@@ -574,7 +571,6 @@ struct ModbusRTU_struct  {
     logModbusException(process_result);
     return -1;
   }
-*/
 
 
   // Compute the MODBUS RTU CRC
