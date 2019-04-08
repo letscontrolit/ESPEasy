@@ -5430,7 +5430,10 @@ boolean handle_custom(String path) {
   // path is a deepcopy, since it will be changed.
   checkRAM(F("handle_custom"));
   if (!clientIPallowed()) return false;
+  
+#if !defined(ESP32)
   path = path.substring(1);
+#endif
 
   // create a dynamic custom page, parsing task values into [<taskname>#<taskvalue>] placeholders and parsing %xx% system variables
   fs::File dataFile = SPIFFS.open(path.c_str(), "r");
