@@ -50,7 +50,7 @@
 #endif
 
 // Library Version
-#define _IRREMOTEESP8266_VERSION_ "2.5.5"
+#define _IRREMOTEESP8266_VERSION_ "2.5.6"
 // Supported IR protocols
 // Each protocol you include costs memory and, during decode, costs time
 // Disable (set to false) all the protocols you do not need/want!
@@ -213,8 +213,11 @@
 #define DECODE_TECO            true
 #define SEND_TECO              true
 
-#define DECODE_TCL112AC       true
-#define SEND_TCL112AC         true
+#define DECODE_TCL112AC        true
+#define SEND_TCL112AC          true
+
+#define DECODE_LEGOPF          true
+#define SEND_LEGOPF            true
 
 #if (DECODE_ARGO || DECODE_DAIKIN || DECODE_FUJITSU_AC || DECODE_GREE || \
      DECODE_KELVINATOR || DECODE_MITSUBISHI_AC || DECODE_TOSHIBA_AC || \
@@ -299,6 +302,7 @@ enum decode_type_t {
   TECO,  // (55)
   SAMSUNG36,
   TCL112AC,
+  LEGOPF,
 };
 
 // Message lengths & required repeat values
@@ -356,6 +360,8 @@ const uint16_t kKelvinatorBits = kKelvinatorStateLength * 8;
 const uint16_t kKelvinatorDefaultRepeat = kNoRepeat;
 const uint16_t kLasertagBits = 13;
 const uint16_t kLasertagMinRepeat = kNoRepeat;
+const uint16_t kLegoPfBits = 16;
+const uint16_t kLegoPfMinRepeat = kNoRepeat;
 const uint16_t kLgBits = 28;
 const uint16_t kLg32Bits = 32;
 const uint16_t kLutronBits = 35;
@@ -422,7 +428,7 @@ const uint16_t kWhirlpoolAcStateLength = 21;
 const uint16_t kWhirlpoolAcBits = kWhirlpoolAcStateLength * 8;
 const uint16_t kWhirlpoolAcDefaultRepeat = kNoRepeat;
 const uint16_t kWhynterBits = 32;
-const uint8_t kVestelAcBits = 56;
+const uint8_t  kVestelAcBits = 56;
 
 
 // Legacy defines. (Deprecated)

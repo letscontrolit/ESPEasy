@@ -531,8 +531,9 @@ To create/register a plugin, you have to :
     #define USES_P036   // FrameOLED
     #define USES_P037   // MQTTImport
     #define USES_P038   // NeoPixel
-    #define USES_P039   // ID12
+    #define USES_P039   // Environment - Thermocouple
 
+    #define USES_P040   // RFID - ID12LA/RDM6300
     #define USES_P041   // NeoClock
     #define USES_P042   // Candle
     #define USES_P043   // ClkOutput

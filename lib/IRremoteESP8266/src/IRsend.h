@@ -29,7 +29,7 @@ const uint8_t kDutyMax = 100;     // Percentage
 // Ref: https://www.arduino.cc/en/Reference/delayMicroseconds
 const uint16_t kMaxAccurateUsecDelay = 16383;
 //  Usecs to wait between messages we don't know the proper gap time.
-const uint32_t kDefaultMessageGap = 1000000;
+const uint32_t kDefaultMessageGap = 100000;
 
 // Classes
 class IRsend {
@@ -326,6 +326,10 @@ class IRsend {
 #if SEND_TECO
   void sendTeco(uint64_t data, uint16_t nbits = kTecoBits,
                 uint16_t repeat = kNoRepeat);
+#endif
+#if SEND_LEGOPF
+  void sendLegoPf(const uint64_t data, const uint16_t nbits = kLegoPfBits,
+                  const uint16_t repeat = kLegoPfMinRepeat);
 #endif
 
 

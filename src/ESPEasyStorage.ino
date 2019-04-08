@@ -42,18 +42,32 @@ String flashGuard()
 
 
 String appendLineToFile(const String& fname, const String& line) {
-  fs::File f = SPIFFS.open(fname, "a+");
+  return appendToFile(fname, reinterpret_cast<const uint8_t* >(line.c_str()), line.length());
+}
+
+String appendToFile(const String& fname, const uint8_t* data, unsigned int size) {
+  fs::File f = tryOpenFile(fname, "a+");
   SPIFFS_CHECK(f, fname.c_str());
-  const size_t lineLength = line.length();
-  for (size_t i = 0; i < lineLength; ++i) {
-    // See https://github.com/esp8266/Arduino/commit/b1da9eda467cc935307d553692fdde2e670db258#r32622483
-    uint8_t value = static_cast<uint8_t>(line[i]);
-    SPIFFS_CHECK(f.write(&value, 1), fname.c_str());
-  }
+  SPIFFS_CHECK(f.write(data, size), fname.c_str());
   f.close();
   return "";
 }
 
+bool fileExists(const String& fname) {
+  return SPIFFS.exists(fname);
+}
+
+
+fs::File tryOpenFile(const String& fname, const String& mode) {
+  START_TIMER;
+  fs::File f;
+  if (mode == "r" && !fileExists(fname)) {
+    return f;
+  }
+  f = SPIFFS.open(fname, mode.c_str());
+  STOP_TIMER(TRY_OPEN_FILE);
+  return f;
+}
 
 /********************************************************************************************\
   Fix stuff to clear out differences between releases
@@ -66,7 +80,7 @@ String BuildFixes()
   if (Settings.Build < 145)
   {
     String fname=F(FILE_NOTIFICATION);
-    fs::File f = SPIFFS.open(fname, "w");
+    fs::File f = tryOpenFile(fname, "w");
     SPIFFS_CHECK(f, fname.c_str());
 
     if (f)
@@ -129,7 +143,7 @@ void fileSystemCheck()
       }
     #endif
 
-    fs::File f = SPIFFS.open(FILE_CONFIG, "r");
+    fs::File f = tryOpenFile(FILE_CONFIG, "r");
     if (!f)
     {
       ResetFactory();
@@ -178,6 +192,7 @@ String SaveSettings(void)
 
 //  }
 
+  SecuritySettings.validate();
   memcpy( SecuritySettings.ProgmemMd5, CRCValues.runTimeMD5, 16);
   md5.begin();
   md5.add((uint8_t *)&SecuritySettings, sizeof(SecuritySettings)-16);
@@ -257,6 +272,7 @@ String LoadSettings()
   }
   setUseStaticIP(useStaticIP());
   afterloadSettings();
+  SecuritySettings.validate();
   return(err);
 }
 
@@ -441,6 +457,7 @@ String LoadTaskSettings(byte TaskIndex)
     //the plugin call should populate ExtraTaskSettings with its default values.
     PluginCall(PLUGIN_GET_DEVICEVALUENAMES, &TempEvent, dummyString);
   }
+  ExtraTaskSettings.validate();
   STOP_TIMER(LOAD_TASK_SETTINGS);
 
   return result;
@@ -570,7 +587,7 @@ String InitFile(const char* fname, int datasize)
   checkRAM(F("InitFile"));
   FLASH_GUARD();
 
-  fs::File f = SPIFFS.open(fname, "w");
+  fs::File f = tryOpenFile(fname, "w");
   if (f) {
     SPIFFS_CHECK(f, fname);
 
@@ -618,7 +635,7 @@ String SaveToFile(char* fname, int index, byte* memAddress, int datasize)
   }
   delay(1);
   unsigned long timer = millis() + 50;
-  fs::File f = SPIFFS.open(fname, "r+");
+  fs::File f = tryOpenFile(fname, "r+");
   if (f) {
     SPIFFS_CHECK(f, fname);
     SPIFFS_CHECK(f.seek(index, fs::SeekSet), fname);
@@ -677,7 +694,7 @@ String ClearInFile(char* fname, int index, int datasize)
   checkRAM(F("ClearInFile"));
   FLASH_GUARD();
 
-  fs::File f = SPIFFS.open(fname, "r+");
+  fs::File f = tryOpenFile(fname, "r+");
   if (f) {
     SPIFFS_CHECK(f, fname);
 
@@ -718,7 +735,7 @@ String LoadFromFile(char* fname, int offset, byte* memAddress, int datasize)
   START_TIMER;
 
   checkRAM(F("LoadFromFile"));
-  fs::File f = SPIFFS.open(fname, "r+");
+  fs::File f = tryOpenFile(fname, "r");
   SPIFFS_CHECK(f, fname);
   SPIFFS_CHECK(f.seek(offset, fs::SeekSet), fname);
   SPIFFS_CHECK(f.read(memAddress,datasize), fname);
@@ -804,6 +821,28 @@ int SpiffsSectors()
   #if defined(ESP32)
     return 32;
   #endif
+}
+
+bool SpiffsFull() {
+  #if defined(ESP8266)
+  fs::FSInfo fs_info;
+  SPIFFS.info(fs_info);
+  int freeSpace = fs_info.totalBytes - fs_info.usedBytes;
+  if (freeSpace < static_cast<int>(2 * fs_info.blockSize)) {
+    // Not enough free space left.
+    // There needs to be minimum of 2 free blocks.
+    return true;
+  }
+  #endif
+
+  #ifdef ESP32
+  // FIXME TD-er: Find block size, filesystem must have at least 2 blocks free.
+  if (SPIFFS.totalBytes() > (SPIFFS.usedBytes() + 16384)) {
+    return true;
+  }
+  #endif
+
+  return false;
 }
 
 /********************************************************************************************\
