@@ -143,3 +143,14 @@
 .. |C013_shortinfo| replace:: `.`
 .. |C013_maintainer| replace:: `.`
 .. |C013_compileinfo| replace:: `.`
+
+.. |C016_name| replace:: :cyan:`Cache`
+.. |C016_type| replace:: :cyan:`Controller`
+.. |C016_typename| replace:: :cyan:`Controller - Cache`
+.. |C016_status| replace:: :red:`DEVELOPMENT`
+.. |C016_github| replace:: C016.ino
+.. _C016_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_C016.ino
+.. |C016_usedby| replace:: `.`
+.. |C016_shortinfo| replace:: `Cache layer to collect data while offline`
+.. |C016_maintainer| replace:: `TD-er`
+.. |C016_compileinfo| replace:: `Not in nightly builds. Only pre-built for special builds.`

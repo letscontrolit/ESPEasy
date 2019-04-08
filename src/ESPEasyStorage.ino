@@ -823,27 +823,149 @@ int SpiffsSectors()
   #endif
 }
 
-bool SpiffsFull() {
-  #if defined(ESP8266)
+size_t SpiffsUsedBytes() {
+  size_t result = 1; // Do not output 0, this may be used in divisions.
+  #ifdef ESP32
+  result = SPIFFS.usedBytes();
+  #endif
+  #ifdef ESP8266
   fs::FSInfo fs_info;
   SPIFFS.info(fs_info);
-  int freeSpace = fs_info.totalBytes - fs_info.usedBytes;
-  if (freeSpace < static_cast<int>(2 * fs_info.blockSize)) {
+  result = fs_info.usedBytes;
+  #endif
+  return result;
+}
+
+size_t SpiffsTotalBytes() {
+  size_t result = 1; // Do not output 0, this may be used in divisions.
+  #ifdef ESP32
+  result = SPIFFS.totalBytes();
+  #endif
+  #ifdef ESP8266
+  fs::FSInfo fs_info;
+  SPIFFS.info(fs_info);
+  result = fs_info.totalBytes;
+  #endif
+  return result;
+}
+
+size_t SpiffsBlocksize() {
+  size_t result = 8192; // Some default viable for most 1 MB SPIFFS filesystems
+  #ifdef ESP32
+  result = 8192; // Just assume 8k, since we cannot query it
+  #endif
+  #ifdef ESP8266
+  fs::FSInfo fs_info;
+  SPIFFS.info(fs_info);
+  result = fs_info.blockSize;
+  #endif
+  return result;
+}
+
+size_t SpiffsPagesize() {
+  size_t result = 256; // Most common
+  #ifdef ESP32
+  result = 256; // Just assume 256, since we cannot query it
+  #endif
+  #ifdef ESP8266
+  fs::FSInfo fs_info;
+  SPIFFS.info(fs_info);
+  result = fs_info.pageSize;
+  #endif
+  return result;
+}
+
+bool SpiffsFull() {
+  int freeSpace = SpiffsTotalBytes() - SpiffsUsedBytes();
+  if (freeSpace < static_cast<int>(2 * SpiffsBlocksize())) {
     // Not enough free space left.
     // There needs to be minimum of 2 free blocks.
     return true;
   }
-  #endif
-
-  #ifdef ESP32
-  // FIXME TD-er: Find block size, filesystem must have at least 2 blocks free.
-  if (SPIFFS.totalBytes() > (SPIFFS.usedBytes() + 16384)) {
-    return true;
-  }
-  #endif
-
   return false;
 }
+
+/********************************************************************************************\
+  Handling cached data
+  \*********************************************************************************************/
+
+String createCacheFilename(unsigned int count) {
+  String fname;
+  fname.reserve(16);
+  #ifdef ESP32
+  fname = '/';
+  #endif
+  fname += "cache_";
+  fname += String(count);
+  fname += ".bin";
+  return fname;
+}
+
+// Match string with an integer between '_' and ".bin"
+int getCacheFileCountFromFilename(const String& fname) {
+  int startpos = fname.indexOf('_');
+  if (startpos < 0) return -1;
+  int endpos = fname.indexOf(F(".bin"));
+  if (endpos < 0) return -1;
+  String digits = fname.substring(startpos + 1, endpos);
+  int result;
+  if (validIntFromString(fname.substring(startpos + 1, endpos), result)) {
+    return result;
+  }
+  return -1;
+}
+
+// Look into the filesystem to see if there are any cache files present on the filesystem
+// Return true if any found.
+bool getCacheFileCounters(uint16_t& lowest, uint16_t& highest, size_t& filesizeHighest) {
+  lowest = 65535;
+  highest = 0;
+  filesizeHighest = 0;
+#ifdef ESP8266
+  Dir dir = SPIFFS.openDir("cache");
+  while (dir.next()) {
+    String filename = dir.fileName();
+    int count = getCacheFileCountFromFilename(filename);
+    if (count >= 0) {
+      if (lowest > count) {
+        lowest = count;
+      }
+      if (highest < count) {
+        highest = count;
+        filesizeHighest = dir.fileSize();
+      }
+    }
+  }
+#endif  // ESP8266
+#ifdef ESP32
+  File root = SPIFFS.open("/cache");
+  File file = root.openNextFile();
+  while (file)
+  {
+    if(!file.isDirectory()){
+      int count = getCacheFileCountFromFilename(file.name());
+      if (count >= 0) {
+        if (lowest > count) {
+          lowest = count;
+        }
+        if (highest < count) {
+          highest = count;
+          filesizeHighest = file.size();
+        }
+      }
+    }
+    file = root.openNextFile();
+  }
+#endif // ESP32
+  if (lowest <= highest) {
+    return true;
+  }
+  lowest = 0;
+  highest = 0;
+  return false;
+}
+
+
 
 /********************************************************************************************\
   Get partition table information
