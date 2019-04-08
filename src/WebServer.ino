@@ -5321,7 +5321,7 @@ void handleFileUpload() {
         filename += upload.filename;
         // once we're safe, remove file and create empty one...
         SPIFFS.remove((char *)filename.c_str());
-        uploadFile = SPIFFS.open(filename.c_str(), "w");
+        uploadFile = tryOpenFile(filename.c_str(), "w");
         // dont count manual uploads: flashCount();
       }
     }
