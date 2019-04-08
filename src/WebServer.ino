@@ -5314,9 +5314,14 @@ void handleFileUpload() {
       }
       if (valid)
       {
+        String filename;
+#if defined(ESP32)
+        filename += '/';
+#endif
+        filename += upload.filename;
         // once we're safe, remove file and create empty one...
-        SPIFFS.remove((char *)upload.filename.c_str());
-        uploadFile = SPIFFS.open(upload.filename.c_str(), "w");
+        SPIFFS.remove((char *)filename.c_str());
+        uploadFile = SPIFFS.open(filename.c_str(), "w");
         // dont count manual uploads: flashCount();
       }
     }
