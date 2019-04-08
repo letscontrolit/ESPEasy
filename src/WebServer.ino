@@ -5374,6 +5374,7 @@ bool loadFromFS(boolean spiffs, String path) {
   else if (path.endsWith(F(".txt")) ||
            path.endsWith(F(".dat"))) dataType = F("application/octet-stream");
   else if (path.endsWith(F(".esp"))) return handle_custom(path);
+
 #ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     String log = F("HTML : Request file ");
@@ -5382,7 +5383,10 @@ bool loadFromFS(boolean spiffs, String path) {
   }
 #endif
 
+#if !defined(ESP32)
   path = path.substring(1);
+#endif
+
   if (spiffs)
   {
     fs::File dataFile = SPIFFS.open(path.c_str(), "r");
