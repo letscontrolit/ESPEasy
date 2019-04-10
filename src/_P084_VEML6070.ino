@@ -6,7 +6,7 @@
 // ESPEasy Plugin to for UV with chip VEML6070
 // written by Remco van Essen (https://github.com/RemCom)
 // Based on VEML6070 plugin from Sonoff-Tasmota (https://github.com/arendst/Sonoff-Tasmota)
-
+// Datasheet: https://www.vishay.com/docs/84277/veml6070.pdf
 
 #define PLUGIN_084
 #define PLUGIN_ID_084         84
@@ -23,18 +23,11 @@
 #define VEML6070_POWER_COEFFCIENT   0.025           // based on calculations from Karel Vanicek and reorder by hand
 #define VEML6070_TABLE_COEFFCIENT   32.86270591     // calculated by hand with help from a friend of mine, a professor which works in aero space things
                                                     // (resistor, differences, power coefficients and official UV index calculations (LAT & LONG will be added later)
-#define D_UV_INDEX_1  "Low"      // = sun->fun
-#define D_UV_INDEX_2  "Mid"      // = sun->glases advised
-#define D_UV_INDEX_3  "High"     // = sun->glases a must
-#define D_UV_INDEX_4  "Danger"   // = sun->skin burns Level 1
-#define D_UV_INDEX_5  "BurnL1/2" // = sun->skin burns level 1..2
-#define D_UV_INDEX_6  "BurnL3"   // = sun->skin burns with level 3
-#define D_UV_INDEX_7  "OoR"      // = out of range or unknown
 
-#include <math.h>  
+#define VEML6070_base_value ( (VEML6070_RSET_DEFAULT / VEML6070_TABLE_COEFFCIENT) / VEML6070_UV_MAX_DEFAULT ) * (1)
+#define VEML6070_max_value  ( (VEML6070_RSET_DEFAULT / VEML6070_TABLE_COEFFCIENT) / VEML6070_UV_MAX_DEFAULT ) * (VEML6070_UV_MAX_INDEX)
 
-double     uv_risk_map[VEML6070_UV_MAX_INDEX] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
-char       str_uvrisk_text[10];
+#include <math.h>
 
 boolean Plugin_084(byte function, struct EventStruct *event, String& string)
 {
@@ -77,7 +70,7 @@ boolean Plugin_084(byte function, struct EventStruct *event, String& string)
       {
 
         String optionsMode[4] = { F("1/2T"), F("1T"), F("2T"), F("4T (Default)") };
-        addFormSelector(F("Refresh Time Determination"), F("itime"), 4, optionsMode, NULL, PCONFIG(1));
+        addFormSelector(F("Refresh Time Determination"), F("itime"), 4, optionsMode, NULL, PCONFIG(0));
 
         success = true;
         break;
@@ -85,8 +78,8 @@ boolean Plugin_084(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        //PCONFIG(0) = getFormItemInt(F("i2c_addr"));
-        PCONFIG(1) = getFormItemInt(F("itime"));
+
+        PCONFIG(0) = getFormItemInt(F("itime"));
 
         success = true;
         break;
@@ -94,15 +87,12 @@ boolean Plugin_084(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
       {
-        bool error = VEML6070_Init(PCONFIG(1));
-        if(error){
-          String log = F("VEML6070: Not available!");
-          addLog(LOG_LEVEL_INFO, log);
+        bool status = VEML6070_Init(PCONFIG(0));
+        if(!status){
+          addLog(LOG_LEVEL_INFO, F("VEML6070: Not available!"));
         }
-        
-        VEML6070_UvTableInit();
 
-        success = true;
+        success = status;
         break;
       }
 
@@ -110,14 +100,14 @@ boolean Plugin_084(byte function, struct EventStruct *event, String& string)
       {
         uint16_t uv_raw;
         double uv_risk, uv_power;
+        bool read_status;
 
-        uv_raw   = VEML6070_ReadUv();             // get UV raw values
+        uv_raw   = VEML6070_ReadUv(&read_status); // get UV raw values
         uv_risk  = VEML6070_UvRiskLevel(uv_raw);  // get UV risk level
         uv_power = VEML6070_UvPower(uv_risk);     // get UV power in W/m2
 
-        if (isnan(uv_raw) || uv_raw == (-1) || uv_raw == 65535) {
-          String log = F("VEML6070: no data read!");
-          addLog(LOG_LEVEL_INFO, log);
+        if (isnan(uv_raw) || uv_raw == 65535 || !read_status) {
+          addLog(LOG_LEVEL_INFO, F("VEML6070: no data read!"));
           UserVar[event->BaseVarIndex + 0] = NAN;
           UserVar[event->BaseVarIndex + 1] = NAN;
           UserVar[event->BaseVarIndex + 2] = NAN;
@@ -126,13 +116,15 @@ boolean Plugin_084(byte function, struct EventStruct *event, String& string)
           UserVar[event->BaseVarIndex + 0] = uv_raw;
           UserVar[event->BaseVarIndex + 1] = uv_risk;
           UserVar[event->BaseVarIndex + 2] = uv_power;
-          String log = F("VEML6070: UV: ");
-          log += UserVar[event->BaseVarIndex];
-          addLog(LOG_LEVEL_INFO, log);
+          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+            String log = F("VEML6070: UV: ");
+            log += UserVar[event->BaseVarIndex];
+            addLog(LOG_LEVEL_INFO, log);
+          }
+          
 		      success = true;
         }
 
-        success = true;
         break;
       }
 
@@ -140,91 +132,63 @@ boolean Plugin_084(byte function, struct EventStruct *event, String& string)
   return success;
 }
 
-
 //////////////
 // VEML6070 //
 //////////////
 
 //get UV raw values
-uint16_t VEML6070_ReadUv(void)
+uint16_t VEML6070_ReadUv(bool * status)
 {
   uint16_t uv_raw = 0;
-  // read high byte
-  if (Wire.requestFrom(VEML6070_ADDR_H, 1) != 1) {
-    return -1;
-  }
-  uv_raw   = Wire.read();
+  bool wire_status = false;
+
+  uv_raw   = I2C_read8(VEML6070_ADDR_H, &wire_status);
+  *status = wire_status;
   uv_raw <<= 8;
-  // read low byte
-  if (Wire.requestFrom(VEML6070_ADDR_L, 1) != 1) {
-    return -1;
-  }
-  uv_raw  |= Wire.read();
-  // high and low done
+  uv_raw  |= I2C_read8(VEML6070_ADDR_L, &wire_status);
+  *status &= wire_status;
+
   return uv_raw;
-
 }
-
 
 bool VEML6070_Init(byte it)
 {
-  byte error;
-  
-  Wire.begin();
-  Wire.beginTransmission(VEML6070_ADDR_L);
-  Wire.write((it << 2) | 0x02);
-  error = Wire.endTransmission();
-  delay(500);
+  boolean succes = I2C_write8(VEML6070_ADDR_L, ((it << 2) | 0x02));
 
-  return (error == 0);
+  return succes;
 }
+
+
+//Definition of risk numbers
+//  0.0 - 2.9  "Low"      = sun->fun
+//  3.0 - 5.9  "Mid"      = sun->glases advised
+//  6.0 - 7.9  "High"     = sun->glases a must
+//  8.0 - 10.9 "Danger"   = sun->skin burns Level 1
+// 11.0 - 12.9 "BurnL1/2" = sun->skin burns level 1..2
+// 13.0 - 25.0 "BurnL3"   = sun->skin burns with level 3
 
 double VEML6070_UvRiskLevel(uint16_t uv_level)
 {
   double risk = 0;
-  if (uv_level < uv_risk_map[VEML6070_UV_MAX_INDEX-1]) {
-    risk = (double)uv_level / uv_risk_map[0];
-    // generate uv-risk string
-    if ( (risk >= 0) && (risk <= 2.9) ) { snprintf_P(str_uvrisk_text, sizeof(str_uvrisk_text), D_UV_INDEX_1); }
-    else if ( (risk >= 3.0)  && (risk <= 5.9) )  { snprintf_P(str_uvrisk_text, sizeof(str_uvrisk_text), D_UV_INDEX_2); }
-    else if ( (risk >= 6.0)  && (risk <= 7.9) )  { snprintf_P(str_uvrisk_text, sizeof(str_uvrisk_text), D_UV_INDEX_3); }
-    else if ( (risk >= 8.0)  && (risk <= 10.9) ) { snprintf_P(str_uvrisk_text, sizeof(str_uvrisk_text), D_UV_INDEX_4); }
-    else if ( (risk >= 11.0) && (risk <= 12.9) ) { snprintf_P(str_uvrisk_text, sizeof(str_uvrisk_text), D_UV_INDEX_5); }
-    else if ( (risk >= 13.0) && (risk <= 25.0) ) { snprintf_P(str_uvrisk_text, sizeof(str_uvrisk_text), D_UV_INDEX_6); }
-    else { snprintf_P(str_uvrisk_text, sizeof(str_uvrisk_text), D_UV_INDEX_7); }
-    return risk;
+
+  if (uv_level < VEML6070_max_value) {
+    return (double)uv_level / VEML6070_base_value;
   } else {
     // out of range and much to high - it must be outerspace or sensor damaged
-    snprintf_P(str_uvrisk_text, sizeof(str_uvrisk_text), D_UV_INDEX_7);
-    String log = F("VEML6070 out of range: ");
-    log += risk;
-    addLog(LOG_LEVEL_DEBUG, log);
-    return ( risk = 99 );
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      String log = F("VEML6070 out of range: ");
+      log += risk;
+      addLog(LOG_LEVEL_INFO, log);
+    }
+
+    return 99;
   }
 }
 
 double VEML6070_UvPower(double uvrisk)
 {
   // based on calculations for effective irradiation from Karel Vanicek
-  double power = 0;
-  return ( power = VEML6070_POWER_COEFFCIENT * uvrisk );
-}
-
-void VEML6070_UvTableInit(void)
-{
-  // fill the uv-risk compare table once, based on the coefficient calculation
-  for (uint8_t i = 0; i < VEML6070_UV_MAX_INDEX; i++) {
-#ifdef USE_VEML6070_RSET
-    if ( (USE_VEML6070_RSET >= 220000) && (USE_VEML6070_RSET <= 1000000) ) {
-      uv_risk_map[i] = ( (USE_VEML6070_RSET / VEML6070_TABLE_COEFFCIENT) / VEML6070_UV_MAX_DEFAULT ) * (i+1);
-    } else {
-      uv_risk_map[i] = ( (VEML6070_RSET_DEFAULT / VEML6070_TABLE_COEFFCIENT) / VEML6070_UV_MAX_DEFAULT ) * (i+1);
-    }
-#else
-    uv_risk_map[i] = ( (VEML6070_RSET_DEFAULT / VEML6070_TABLE_COEFFCIENT) / VEML6070_UV_MAX_DEFAULT ) * (i+1);
-
-#endif
-  }
+  return VEML6070_POWER_COEFFCIENT * uvrisk;
 }
 
 #endif // USES_P084
