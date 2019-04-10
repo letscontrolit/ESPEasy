@@ -27,8 +27,6 @@
 #define VEML6070_base_value ( (VEML6070_RSET_DEFAULT / VEML6070_TABLE_COEFFCIENT) / VEML6070_UV_MAX_DEFAULT ) * (1)
 #define VEML6070_max_value  ( (VEML6070_RSET_DEFAULT / VEML6070_TABLE_COEFFCIENT) / VEML6070_UV_MAX_DEFAULT ) * (VEML6070_UV_MAX_INDEX)
 
-#include <math.h>
-
 boolean Plugin_084(byte function, struct EventStruct *event, String& string)
 {
   boolean success = false;
