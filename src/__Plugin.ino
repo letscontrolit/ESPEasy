@@ -1167,7 +1167,6 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
     case PLUGIN_WRITE:
     case PLUGIN_REQUEST:
       {
-        bool retval = false;
         for (byte y = 0; y < TASKS_MAX; y++)
         {
           if (Settings.TaskDeviceEnabled[y] && Settings.TaskDeviceNumber[y] != 0)
@@ -1182,15 +1181,11 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
                 TempEvent.sensorType = Device[DeviceIndex].VType;
                 checkRAM(F("PluginCall_s"),x);
                 START_TIMER;
-                retval = (Plugin_ptr[x](Function, &TempEvent, str));
+                bool retval = (Plugin_ptr[x](Function, &TempEvent, str));
                 STOP_TIMER_TASK(x,Function);
                 delay(0); // SMY: call delay(0) unconditionally
                 if (retval) {
-#ifdef USES_C014  // Homie 3 & 4dev Controller
-                  // check if ther is usefull information which should be sent to a controller too.
-                  // for TESTING! Not shure if here is the right place. Should perhaps be passed to all controllers in the future.
-                  CPlugin_014_Feedback(Function, &TempEvent, str);
-#endif
+                  CPluginCall(CPLUGIN_ACKNOWLEDGE, &TempEvent, str);
                   return true;
                 }
               }
@@ -1202,10 +1197,7 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
           if (Plugin_id[x] != 0) {
             if (Plugin_ptr[x](Function, event, str)) {
               delay(0); // SMY: call delay(0) unconditionally
-#ifdef USES_C014
-              // and here too?
-              CPlugin_014_Feedback(Function, &TempEvent, str);
-#endif
+              CPluginCall(CPLUGIN_ACKNOWLEDGE, event, str);
               return true;
             }
           }

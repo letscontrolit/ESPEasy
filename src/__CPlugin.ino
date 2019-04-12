@@ -18,14 +18,14 @@ static const char ADDCPLUGIN_ERROR[] PROGMEM = "System: Error - To much C-Plugin
 */
 #define ADDCPLUGIN(NNN) if (x < CPLUGIN_MAX) { CPlugin_id[x] = CPLUGIN_ID_##NNN; CPlugin_ptr[x++] = &CPlugin_##NNN; } else addLog(LOG_LEVEL_ERROR, FPSTR(ADDCPLUGIN_ERROR));
 
-void CPluginConnected(void)
+void CPluginGotConnected(void)
 {
-    CPluginCall(CPLUGIN_CONNECTED, 0);
+    CPluginCall(CPLUGIN_GOT_CONNECTED, 0);
 }
 
-void CPluginDisonnect(void)
+void CPluginGotInvalid(void)
 {
-    CPluginCall(CPLUGIN_DICONNECT, 0);
+    CPluginCall(CPLUGIN_GOT_INVALID, 0);
 }
 
 void CPluginInit(void)
@@ -152,7 +152,7 @@ bool CPluginCall(byte pluginNumber, byte Function, struct EventStruct *event, St
   return ret;
 }
 
-bool CPluginCall(byte Function, struct EventStruct *event)
+bool CPluginCall(byte Function, struct EventStruct *event, String& str)
 {
   int x;
   struct EventStruct TempEvent;
@@ -180,29 +180,13 @@ bool CPluginCall(byte Function, struct EventStruct *event)
       return true;
       break;
 
-    // calls to send autodetect information
-    case CPLUGIN_CONNECTED:
-      for (byte x=0; x < CONTROLLER_MAX; x++)
-        if (Settings.Protocol[x] != 0 && Settings.ControllerEnabled[x]) {
-          event->ProtocolIndex = getProtocolIndex(Settings.Protocol[x]);
-          CPluginCall(event->ProtocolIndex, Function, event, dummyString);
-        }
-      return true;
-      break;
-
-    // calls to send stats information
-    case CPLUGIN_SEND_STATS:
-      for (byte x=0; x < CONTROLLER_MAX; x++)
-        if (Settings.Protocol[x] != 0 && Settings.ControllerEnabled[x]) {
-          event->ProtocolIndex = getProtocolIndex(Settings.Protocol[x]);
-          CPluginCall(event->ProtocolIndex, Function, event, dummyString);
-        }
-      return true;
-      break;
 
     // calls to active plugins
     case CPLUGIN_INIT:
     case CPLUGIN_UDP_IN:
+    case CPLUGIN_FLUSH: // calls befor sleep to fush data
+    case CPLUGIN_INTERVAL: // calls to send stats information
+    case CPLUGIN_GOT_CONNECTED: // calls to send autodetect information
       for (byte x=0; x < CONTROLLER_MAX; x++)
         if (Settings.Protocol[x] != 0 && Settings.ControllerEnabled[x]) {
           event->ProtocolIndex = getProtocolIndex(Settings.Protocol[x]);
@@ -210,6 +194,16 @@ bool CPluginCall(byte Function, struct EventStruct *event)
         }
       return true;
       break;
+
+    case CPLUGIN_ACKNOWLEDGE: // calls to send acknolages back to controller
+    for (byte x=0; x < CONTROLLER_MAX; x++)
+      if (Settings.Protocol[x] != 0 && Settings.ControllerEnabled[x]) {
+        event->ProtocolIndex = getProtocolIndex(Settings.Protocol[x]);
+        CPluginCall(event->ProtocolIndex, Function, event, str);
+      }
+    return true;
+    break;
+
   }
 
   return false;
@@ -233,4 +227,8 @@ byte findFirstEnabledControllerWithId(byte cpluginid) {
     }
   }
   return CONTROLLER_MAX;
+}
+
+bool CPluginCall(byte Function, struct EventStruct *event) {
+  return CPluginCall(Function, event, dummyString);
 }

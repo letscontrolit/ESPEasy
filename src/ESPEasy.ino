@@ -812,7 +812,7 @@ void runEach30Seconds()
   refreshNodeList();
 
   // sending $stats to homie controller
-  CPluginCall(CPLUGIN_SEND_STATS, 0);
+  CPluginCall(CPLUGIN_INTERVAL, 0);
 
   #if defined(ESP8266)
   if (Settings.UseSSDP)

@@ -248,11 +248,11 @@ bool MQTTCheck(int controller_idx)
         // Homie 3 & 4dev Controller Plugin
         // Connect first and call all installed controller to publish autodiscover data
         // hope this is the right place ;)
-        if (MQTTConnect(controller_idx)) CPluginCall(CPLUGIN_CONNECTED, 0);
+        if (MQTTConnect(controller_idx)) CPluginCall(CPLUGIN_GOT_CONNECTED, 0);
       } else {
         connectionFailures += 2;
       }
-      return (!MQTTclient.connected() || MQTTConnect(controller_idx)); // either connected above or now!?
+      return MQTTConnect(controller_idx);
     } else if (connectionFailures) {
       connectionFailures--;
     }

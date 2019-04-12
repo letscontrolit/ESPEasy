@@ -104,27 +104,36 @@ boolean Plugin_033(byte function, struct EventStruct *event, String& string)
         String command = parseString(string, 1);
         if (command == F("dummyvalueset"))
         {
-          int deviceNr=parseString(string, 2).toInt(); // Index from 1-12;
-          if (deviceNr == event->TaskIndex+1) // make shure that this instance is the target
+          if (event->Par1 == event->TaskIndex+1) // make sure that this instance is the target
           {
-            int valueNr=parseString(string, 3).toInt();
-            float value=0;
-            String valueStr=parseString(string, 4);
-            if (valueStr=="true") value=1;
-              else if(valueStr=="false") value=0;
-              else value=valueStr.toFloat();
-
-            String log = F("Dummy: Index ");
-            log += deviceNr;
-            log += F(" value ");
-            log += valueNr;
-            log += F(" set to ");
-            log += value;
-
-            UserVar[event->BaseVarIndex+valueNr-1]=value;
-
-            addLog(LOG_LEVEL_INFO,log);
-            success = true;
+            float floatValue=0;
+            if (string2float(parseString(string, 4),floatValue))
+            {
+              if (loglevelActiveFor(LOG_LEVEL_INFO))
+              {
+                String log = F("Dummy: Index ");
+                log += event->Par1;
+                log += F(" value ");
+                log += event->Par2;
+                log += F(" set to ");
+                log += floatValue;
+                addLog(LOG_LEVEL_INFO,log);
+              }
+              UserVar[event->BaseVarIndex+event->Par2-1]=floatValue;
+              success = true;
+            } else { // float conversion failed!
+              if (loglevelActiveFor(LOG_LEVEL_ERROR))
+              {
+                String log = F("Dummy: Index ");
+                log += event->Par1;
+                log += F(" value ");
+                log += event->Par2;
+                log += F(" parameter3: ");
+                log += parseString(string, 4);
+                log += F(" not a float value!");
+                addLog(LOG_LEVEL_ERROR,log);
+              }
+            }
           }
         }
         break;
