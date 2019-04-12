@@ -1,4 +1,45 @@
 -------------------------------------------------
+Changes in release mega-20190409 (since mega-20190406)
+-------------------------------------------------
+
+Release date: Tue Apr  9 04:00:17 CEST 2019
+
+Gijs Noorlander (1):
+      [ESP32] Fix build/flash issue (#2403)
+
+TD-er (16):
+      [RTC] Move RTC related functions to a separate file
+      [C014] Cached HTTP controller
+      [C014 cache] Use RTC cache to store samples then move to file
+      [C014 cache] Write part is ready
+      [C014 cache] Dump to CSV
+      [C014 cache] Dump to CSV in all columns
+      [C014 cache] Compile issues using core 2.4.2
+      [C014 cache] Read JSON to fetch cache files.
+      [Cache controller] Add UTC timestamp to the CSV export columns
+      [C014] Fix logging to flash without network connection
+      [Cache controller] Rename C014 to C016
+      [Cache controller] Clean up code
+      [Cache controller] Documentation
+      [Controller Queue] Add code examples for future controllers up-to ID 20
+      [Cache controller] ESP32 compile issues SPIFFS related
+      [RTC user var] Store read values in RTC memory to survive crash
+
+
+-------------------------------------------------
+Changes in release mega-20190406 (since mega-20190404)
+-------------------------------------------------
+
+Release date: Sat Apr  6 04:00:18 CEST 2019
+
+TD-er (4):
+      [SPIFFS] optimizations file access & 0-terminate strings in settings
+      Flush stored data in the delay queue before sleep
+      [SPIFFS] Fix ESP32 build
+      [SPIFFS] Fix ESP32 build issues
+
+
+-------------------------------------------------
 Changes in release mega-20190404 (since mega-20190315)
 -------------------------------------------------
 

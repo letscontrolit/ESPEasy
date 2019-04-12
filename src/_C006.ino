@@ -113,6 +113,14 @@ bool CPlugin_006(byte function, struct EventStruct *event, String& string)
         }
         break;
       }
+
+    case CPLUGIN_FLUSH:
+      {
+        processMQTTdelayQueue();
+        delay(0);
+        break;
+      }
+
   }
   return success;
 }

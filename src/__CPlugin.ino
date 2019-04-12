@@ -184,9 +184,9 @@ bool CPluginCall(byte Function, struct EventStruct *event, String& str)
     // calls to active plugins
     case CPLUGIN_INIT:
     case CPLUGIN_UDP_IN:
-    case CPLUGIN_FLUSH: // calls befor sleep to fush data
     case CPLUGIN_INTERVAL: // calls to send stats information
     case CPLUGIN_GOT_CONNECTED: // calls to send autodetect information
+    case CPLUGIN_FLUSH:
       for (byte x=0; x < CONTROLLER_MAX; x++)
         if (Settings.Protocol[x] != 0 && Settings.ControllerEnabled[x]) {
           event->ProtocolIndex = getProtocolIndex(Settings.Protocol[x]);
