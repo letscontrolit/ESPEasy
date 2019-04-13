@@ -1,4 +1,16 @@
 -------------------------------------------------
+Changes in release mega-20190413 (since mega-20190409)
+-------------------------------------------------
+
+Release date: Sat Apr 13 04:00:21 CEST 2019
+
+jimmys01 (3):
+      [IR TX] Add back repeat functionality in a reverse compatible way
+      [IR RX] Small enchacments, again
+      Add F() Macros to the IR lib
+
+
+-------------------------------------------------
 Changes in release mega-20190409 (since mega-20190406)
 -------------------------------------------------
 
