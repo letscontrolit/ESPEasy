@@ -18,16 +18,6 @@ static const char ADDCPLUGIN_ERROR[] PROGMEM = "System: Error - To much C-Plugin
 */
 #define ADDCPLUGIN(NNN) if (x < CPLUGIN_MAX) { CPlugin_id[x] = CPLUGIN_ID_##NNN; CPlugin_ptr[x++] = &CPlugin_##NNN; } else addLog(LOG_LEVEL_ERROR, FPSTR(ADDCPLUGIN_ERROR));
 
-void CPluginGotConnected(void)
-{
-    CPluginCall(CPLUGIN_GOT_CONNECTED, 0);
-}
-
-void CPluginGotInvalid(void)
-{
-    CPluginCall(CPLUGIN_GOT_INVALID, 0);
-}
-
 void CPluginInit(void)
 {
   byte x;
@@ -187,6 +177,7 @@ bool CPluginCall(byte Function, struct EventStruct *event, String& str)
     case CPLUGIN_FLUSH: // calls befor sleep to fush data
     case CPLUGIN_INTERVAL: // calls to send stats information
     case CPLUGIN_GOT_CONNECTED: // calls to send autodetect information
+    case CPLUGIN_GOT_INVALID: // calls to mark unit as invalid
       for (byte x=0; x < CONTROLLER_MAX; x++)
         if (Settings.Protocol[x] != 0 && Settings.ControllerEnabled[x]) {
           event->ProtocolIndex = getProtocolIndex(Settings.Protocol[x]);
