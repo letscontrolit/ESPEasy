@@ -461,7 +461,7 @@ void Plugin_055_WriteChime(const String& name, const String& tokens)
   log += fileName;
   log += ' ';
 
-  fs::File f = SPIFFS.open(fileName, "w");
+  fs::File f = tryOpenFile(fileName, "w");
   if (f)
   {
     f.print(tokens);
@@ -484,9 +484,10 @@ byte Plugin_055_ReadChime(const String& name, String& tokens)
   log += ' ';
 
   tokens = "";
-  fs::File f = SPIFFS.open(fileName, "r+");
+  fs::File f = tryOpenFile(fileName, "r");
   if (f)
   {
+    tokens.reserve(f.size());
     char c;
     while (f.available())
     {
