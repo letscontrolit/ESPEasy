@@ -16,6 +16,9 @@
 #define P031_COMMAND_NO_ACK  4
 #define P031_NO_DATA         5
 
+// see https://github.com/letscontrolit/ESPEasy/issues/2444
+#define P031_DELAY_LONGER_CABLES  delayMicroseconds(10);
+
 class P031_data_struct: public PluginTaskData_base
 {
 public:
@@ -134,21 +137,27 @@ public:
     // Transmission Start sequence
     digitalWrite(_dataPin, HIGH);
     digitalWrite(_clockPin, HIGH);
+    P031_DELAY_LONGER_CABLES
     digitalWrite(_dataPin, LOW);
     digitalWrite(_clockPin, LOW);
+    P031_DELAY_LONGER_CABLES
     digitalWrite(_clockPin, HIGH);
+    P031_DELAY_LONGER_CABLES
     digitalWrite(_dataPin, HIGH);
     digitalWrite(_clockPin, LOW);
+    P031_DELAY_LONGER_CABLES
 
     // Send the command (address must be 000b)
-    shiftOut(_dataPin, _clockPin, MSBFIRST, cmd);
+    p031_shiftOut(_dataPin, _clockPin, MSBFIRST, cmd);
 
     // Wait for ACK
     bool ackerror = false;
     digitalWrite(_clockPin, HIGH);
+    P031_DELAY_LONGER_CABLES
     pinMode(_dataPin, input_mode);
     if (digitalRead(_dataPin) != LOW) ackerror = true;
     digitalWrite(_clockPin, LOW);
+    P031_DELAY_LONGER_CABLES
 
     if (cmd == SHT1X_CMD_MEASURE_TEMP || cmd == SHT1X_CMD_MEASURE_RH) {
       delayMicroseconds(1); /* Give the sensor time to release the data line */
@@ -165,23 +174,27 @@ public:
 
     if (bits == 16) {
       // Read most significant byte
-      val = shiftIn(_dataPin, _clockPin, 8);
+      val = p031_shiftIn(_dataPin, _clockPin, MSBFIRST);
       val <<= 8;
 
       // Send ACK
       pinMode(_dataPin, OUTPUT);
       digitalWrite(_dataPin, LOW);
       digitalWrite(_clockPin, HIGH);
+      P031_DELAY_LONGER_CABLES
       digitalWrite(_clockPin, LOW);
+      P031_DELAY_LONGER_CABLES
       pinMode(_dataPin, input_mode);
     }
 
     // Read least significant byte
-    val |= shiftIn(_dataPin, _clockPin, 8);
+    val |= p031_shiftIn(_dataPin, _clockPin, MSBFIRST);
 
     // Keep DATA pin high to skip CRC
     digitalWrite(_clockPin, HIGH);
+    P031_DELAY_LONGER_CABLES
     digitalWrite(_clockPin, LOW);
+    P031_DELAY_LONGER_CABLES
 
     return val;
   }
@@ -310,4 +323,39 @@ boolean Plugin_031(byte function, struct EventStruct *event, String& string)
   }
   return success;
 }
+
+uint8_t p031_shiftIn(uint8_t dataPin, uint8_t clockPin, uint8_t bitOrder) {
+	uint8_t value = 0;
+	uint8_t i;
+
+	for (i = 0; i < 8; ++i) {
+		digitalWrite(clockPin, HIGH);
+    P031_DELAY_LONGER_CABLES
+		if (bitOrder == LSBFIRST)
+			value |= digitalRead(dataPin) << i;
+		else
+			value |= digitalRead(dataPin) << (7 - i);
+		digitalWrite(clockPin, LOW);
+    P031_DELAY_LONGER_CABLES
+	}
+	return value;
+}
+
+void p031_shiftOut(uint8_t dataPin, uint8_t clockPin, uint8_t bitOrder, uint8_t val)
+{
+	uint8_t i;
+
+	for (i = 0; i < 8; i++)  {
+		if (bitOrder == LSBFIRST)
+			digitalWrite(dataPin, !!(val & (1 << i)));
+		else
+			digitalWrite(dataPin, !!(val & (1 << (7 - i))));
+
+		digitalWrite(clockPin, HIGH);
+    P031_DELAY_LONGER_CABLES
+		digitalWrite(clockPin, LOW);
+    P031_DELAY_LONGER_CABLES
+	}
+}
+
 #endif // USES_P031
