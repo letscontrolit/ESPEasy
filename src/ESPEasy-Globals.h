@@ -2088,11 +2088,13 @@ unsigned long timingstats_last_reset = 0;
 #define WIFI_NOTCONNECTED_STATS 40
 #define LOAD_TASK_SETTINGS      41
 #define TRY_OPEN_FILE           42
-#define RULES_PROCESSING        43
-#define GRAT_ARP_STATS          44
-#define BACKGROUND_TASKS        45
-#define HANDLE_SCHEDULER_IDLE   46
-#define HANDLE_SCHEDULER_TASK   47
+#define SPIFFS_GC_SUCCESS       43
+#define SPIFFS_GC_FAIL          44
+#define RULES_PROCESSING        45
+#define GRAT_ARP_STATS          46
+#define BACKGROUND_TASKS        47
+#define HANDLE_SCHEDULER_IDLE   48
+#define HANDLE_SCHEDULER_TASK   49
 
 
 
@@ -2129,6 +2131,8 @@ String getMiscStatsName(int stat) {
         case WIFI_NOTCONNECTED_STATS: return F("WiFi.isConnected() (fail)");
         case LOAD_TASK_SETTINGS:     return F("LoadTaskSettings()");
         case TRY_OPEN_FILE:          return F("TryOpenFile()");
+        case SPIFFS_GC_SUCCESS:      return F("SPIFFS GC success");
+        case SPIFFS_GC_FAIL:         return F("SPIFFS GC fail");
         case RULES_PROCESSING:       return F("rulesProcessing()");
         case GRAT_ARP_STATS:         return F("sendGratuitousARP()");
         case BACKGROUND_TASKS:       return F("backgroundtasks()");

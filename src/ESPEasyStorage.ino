@@ -73,7 +73,13 @@ bool tryDeleteFile(const String& fname) {
   if (fname.length() > 0)
   {
     bool res = SPIFFS.remove(fname);
-    GarbageCollection();
+
+    // A call to GarbageCollection() will at most erase a single block. (e.g. 8k block size)
+    // A deleted file may have covered more than a single block, so try to clear multiple blocks.
+    uint8_t retries = 3;
+    while (retries > 0 && GarbageCollection()) {
+      --retries;
+    }
     return res;
   }
   return false;
@@ -181,10 +187,13 @@ void fileSystemCheck()
 bool GarbageCollection() {
   #ifdef CORE_POST_2_6_0
     // Perform garbage collection
+    START_TIMER;
     if (SPIFFS.gc()) {
       addLog(LOG_LEVEL_INFO, F("FS   : Success garbage collection"));
+      STOP_TIMER(SPIFFS_GC_SUCCESS);
       return true;
     }
+    STOP_TIMER(SPIFFS_GC_FAIL);
     return false;
   #else
     // Not supported, so nothing was removed.
