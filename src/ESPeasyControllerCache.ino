@@ -46,6 +46,12 @@ struct ControllerCache_struct {
   // Clear all caches
   void clearCache() {}
 
+  void deleteOldestCacheBlock() {
+    if (_RTC_cache_handler != nullptr) {
+      _RTC_cache_handler->deleteOldestCacheBlock();
+    }
+  }
+
   void resetpeek() {
     if (_RTC_cache_handler != nullptr) {
       _RTC_cache_handler->resetpeek();
@@ -60,11 +66,11 @@ struct ControllerCache_struct {
     return _RTC_cache_handler->peek(data, size);
   }
 
-  String getPeakCacheFileName(bool& islast) {
+  String getPeekCacheFileName(bool& islast) {
     if (_RTC_cache_handler == nullptr) {
       return "";
     }
-    return _RTC_cache_handler->getPeakCacheFileName(islast);
+    return _RTC_cache_handler->getPeekCacheFileName(islast);
   }
 
   int readFileNr = 0;

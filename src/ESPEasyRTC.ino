@@ -37,7 +37,19 @@
 // 128  Cache (C016) metadata  4 blocks
 // 132  Cache (C016) data  6 blocks per sample => max 10 samples
 
-// #define RTC_STRUCT_DEBUG
+//#define RTC_STRUCT_DEBUG
+
+
+// Locations where to store the cached data
+// As a file on the SPIFFS filesystem
+#define CACHE_STORAGE_SPIFFS        0
+// Between the sketch and SPIFFS, including OTA area (will overwrite this area when performing OTA)
+#define CACHE_STORAGE_OTA_FREE      1
+// Only use the free space between sketch and SPIFFS, thus avoid OTA area
+#define CACHE_STORAGE_NO_OTA_FREE   2
+// Use space after SPIFFS. (e.g. on 16M flash partitioned as 4M, or 4M flash partitioned as 2M)
+#define CACHE_STORAGE_BEHIND_SPIFFS 3
+
 
 
 /********************************************************************************************\
@@ -238,10 +250,21 @@ struct RTC_cache_handler_struct
   bool flush() {
     if (prepareFileForWrite()) {
       if (RTC_cache.writePos > 0) {
-        if (fw.write(&RTC_cache_data[0], RTC_cache.writePos) < 0) {
+        size_t filesize = fw.size();
+        int bytesWriten = fw.write(&RTC_cache_data[0], RTC_cache.writePos);
+        if (bytesWriten < RTC_cache.writePos || fw.size() == filesize) {
           #ifdef RTC_STRUCT_DEBUG
-          addLog(LOG_LEVEL_ERROR, F("RTC  : error writing file"));
+          String log = F("RTC  : error writing file. Size before: ");
+          log += filesize;
+          log += F(" after: ");
+          log += fw.size();
+          log += F(" writen: ");
+          log += bytesWriten;
+          addLog(LOG_LEVEL_ERROR, log);
           #endif
+          fw.close();
+          GarbageCollection();
+          writeerror = true;
           return false;
         }
         delay(0);
@@ -282,7 +305,7 @@ struct RTC_cache_handler_struct
     return "";
   }
 
-  String getPeakCacheFileName(bool& islast) {
+  String getPeekCacheFileName(bool& islast) {
     int tmppos;
     String fname;
     if (peekfilenr == 0) {
@@ -297,6 +320,24 @@ struct RTC_cache_handler_struct
       return fname;
     }
     return "";
+  }
+
+  void deleteOldestCacheBlock() {
+    if (updateRTC_filenameCounters()) {
+      if (RTC_cache.readFileNr != RTC_cache.writeFileNr) {
+        // read and write file nr are not the same file, remove the read file nr.
+        String fname = createCacheFilename(RTC_cache.readFileNr);
+        if (tryDeleteFile(fname)) {
+          #ifdef RTC_STRUCT_DEBUG
+          String log = F("RTC  : Removed file from SPIFFS: ");
+          log += fname;
+          addLog(LOG_LEVEL_INFO, String(log));
+          #endif
+          updateRTC_filenameCounters();
+          writeerror = false;
+        }
+      }
+    }
   }
 
 private:
@@ -396,21 +437,30 @@ private:
     RTC_cache.writePos = 0;
   }
 
-  void updateRTC_filenameCounters() {
+  // Return true if any cache file found
+  bool updateRTC_filenameCounters() {
     size_t filesizeHighest;
     if (getCacheFileCounters(RTC_cache.readFileNr, RTC_cache.writeFileNr, filesizeHighest)) {
       if (filesizeHighest >= CACHE_FILE_MAX_SIZE) {
         // Start new file
         ++RTC_cache.writeFileNr;
       }
+      return true;
     } else {
       // Do not use 0, since that will be the cleared content of the struct, indicating invalid RTC data.
       RTC_cache.writeFileNr = 1;
     }
+    return false;
   }
 
   bool prepareFileForWrite() {
+//    if (storageLocation != CACHE_STORAGE_SPIFFS) {
+//      return false;
+//    }
     if (SpiffsFull()) {
+      #ifdef RTC_STRUCT_DEBUG
+      addLog(LOG_LEVEL_ERROR, String(F("RTC  : SPIFFS full")));
+      #endif
       return false;
     }
     unsigned int retries = 3;
@@ -418,33 +468,43 @@ private:
       --retries;
       if (fw && fw.size() >= CACHE_FILE_MAX_SIZE) {
         fw.close();
+        GarbageCollection();
       }
       if (!fw) {
         // Open file to write
         initRTCcache_data();
-        updateRTC_filenameCounters();
+        if (updateRTC_filenameCounters()) {
+          if (writeerror || SpiffsFreeSpace() < ((2 * CACHE_FILE_MAX_SIZE) + SpiffsBlocksize())) {
+            // Not enough room for another file, remove the oldest one.
+            deleteOldestCacheBlock();
+          }
+        }
+
         String fname = createCacheFilename(RTC_cache.writeFileNr);
         fw = tryOpenFile(fname.c_str(), "a+");
         if (!fw) {
           #ifdef RTC_STRUCT_DEBUG
           addLog(LOG_LEVEL_ERROR, String(F("RTC  : error opening file")));
           #endif
-          return false;
+        } else {
+          #ifdef RTC_STRUCT_DEBUG
+          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+            String log = F("Write to ");
+            log += fname;
+            log += F(" size");
+            rtc_debug_log(log, fw.size());
+          }
+          #endif
         }
-        #ifdef RTC_STRUCT_DEBUG
-        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-          String log = F("Write to ");
-          log += fname;
-          log += F(" size");
-          rtc_debug_log(log, fw.size());
-        }
-        #endif
       }
       delay(0);
       if (fw && fw.size() < CACHE_FILE_MAX_SIZE) {
         return true;
       }
     }
+    #ifdef RTC_STRUCT_DEBUG
+    addLog(LOG_LEVEL_ERROR, String(F("RTC  : prepareFileForWrite failed")));
+    #endif
     return false;
   }
 
@@ -470,5 +530,8 @@ private:
   File fp;
   size_t peekfilenr = 0;
   size_t peekreadpos = 0;
+
+  byte storageLocation = CACHE_STORAGE_SPIFFS;
+  bool writeerror = false;
 
 };
