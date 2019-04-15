@@ -3874,9 +3874,7 @@ void handle_tools() {
 
 #ifdef WEBSERVER_NEW_UI
   #if defined(ESP8266)
-    fs::FSInfo fs_info;
-    SPIFFS.info(fs_info);
-    if ((fs_info.totalBytes - fs_info.usedBytes) / 1024 > 50) {
+    if ((SpiffsFreeSpace() / 1024) > 50) {
       TXBuffer += F("<TR><TD>");
       TXBuffer += F("<script>function downloadUI() { fetch('https://raw.githubusercontent.com/letscontrolit/espeasy_ui/master/build/index.htm.gz').then(r=>r.arrayBuffer()).then(r => {var f=new FormData();f.append('file', new File([new Blob([new Uint8Array(r)])], 'index.htm.gz'));f.append('edit', 1);fetch('/upload',{method:'POST',body:f}).then(() => {window.location.href='/';});}); }</script>");
       TXBuffer += F("<a class=\"button link wide\" onclick=\"downloadUI()\">Download new UI</a>");
@@ -5449,7 +5447,7 @@ void handleFileUpload() {
       if (valid)
       {
         // once we're safe, remove file and create empty one...
-        SPIFFS.remove((char *)upload.filename.c_str());
+        tryDeleteFile(upload.filename);
         uploadFile = tryOpenFile(upload.filename.c_str(), "w");
         // dont count manual uploads: flashCount();
       }
@@ -5711,10 +5709,7 @@ void handle_filelist_json() {
   TXBuffer.startJsonStream();
 
   String fdelete = WebServer.arg(F("delete"));
-
-  if (fdelete.length() > 0)
-  {
-    SPIFFS.remove(fdelete);
+  if (tryDeleteFile(fdelete)) {
     #if defined(ESP32)
     // flashCount();
     #endif
@@ -5811,9 +5806,8 @@ void handle_filelist() {
 
   String fdelete = WebServer.arg(F("delete"));
 
-  if (fdelete.length() > 0)
+  if (tryDeleteFile(fdelete))
   {
-    SPIFFS.remove(fdelete);
     checkRuleSets();
   }
 
@@ -5898,12 +5892,7 @@ void handle_filelist() {
 #endif
 #if defined(ESP32)
   String fdelete = WebServer.arg(F("delete"));
-
-  if (fdelete.length() > 0)
-  {
-    SPIFFS.remove(fdelete);
-    // flashCount();
-  }
+  tryDeleteFile(fdelete);
 
   const int pageSize = 25;
   int startIdx = 0;
@@ -6793,14 +6782,8 @@ void handle_sysinfo_json() {
     json_number(F("sketch_size"),  String(ESP.getSketchSize() / 1024));
     json_number(F("sketch_free"),  String(ESP.getFreeSketchSpace() / 1024));
 
-  {
-  #if defined(ESP8266)
-    fs::FSInfo fs_info;
-    SPIFFS.info(fs_info);
-    json_number(F("spiffs_size"),  String(fs_info.totalBytes / 1024));
-    json_number(F("spiffs_free"),  String((fs_info.totalBytes - fs_info.usedBytes) / 1024));
-  #endif
-  }
+    json_number(F("spiffs_size"),  String(SpiffsTotalBytes() / 1024));
+    json_number(F("spiffs_free"),  String(SpiffsFreeSpace() / 1024));
   json_close();
   json_close();
 
@@ -7112,24 +7095,24 @@ void handle_sysinfo() {
   #endif
 
   addRowLabel(getLabel(LabelType::SPIFFS_SIZE));
+  TXBuffer += SpiffsTotalBytes() / 1024;
+  TXBuffer += F(" kB (");
+  TXBuffer += SpiffsFreeSpace() / 1024;
+  TXBuffer += F(" kB free)");
+
+  addRowLabel(F("Page size"));
+  TXBuffer += String(SpiffsPagesize());
+
+  addRowLabel(F("Block size"));
+  TXBuffer += String(SpiffsBlocksize());
+
+  addRowLabel(F("Number of blocks"));
+  TXBuffer += String(SpiffsTotalBytes() / SpiffsBlocksize());
+
   {
   #if defined(ESP8266)
     fs::FSInfo fs_info;
     SPIFFS.info(fs_info);
-    TXBuffer += fs_info.totalBytes / 1024;
-    TXBuffer += F(" kB (");
-    TXBuffer += (fs_info.totalBytes - fs_info.usedBytes) / 1024;
-    TXBuffer += F(" kB free)");
-
-    addRowLabel(F("Page size"));
-    TXBuffer += String(fs_info.pageSize);
-
-    addRowLabel(F("Block size"));
-    TXBuffer += String(fs_info.blockSize);
-
-    addRowLabel(F("Number of blocks"));
-    TXBuffer += String(fs_info.totalBytes / fs_info.blockSize);
-
     addRowLabel(F("Maximum open files"));
     TXBuffer += String(fs_info.maxOpenFiles);
 
