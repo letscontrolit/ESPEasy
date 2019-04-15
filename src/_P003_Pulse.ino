@@ -2,7 +2,6 @@
 //#######################################################################################################
 //#################################### Plugin 003: Pulse  ###############################################
 //#######################################################################################################
-
 #define PLUGIN_003
 #define PLUGIN_ID_003         3
 #define PLUGIN_NAME_003       "Generic - Pulse counter"
@@ -25,6 +24,11 @@ unsigned long Plugin_003_pulseCounter[TASKS_MAX];
 unsigned long Plugin_003_pulseTotalCounter[TASKS_MAX];
 unsigned long Plugin_003_pulseTime[TASKS_MAX];
 unsigned long Plugin_003_pulseTimePrevious[TASKS_MAX];
+unsigned long Plugin_003_lastChangetime[TASKS_MAX];
+boolean Plugin_003_edgeType_last[TASKS_MAX];
+byte Plugin_003_SelectedMode;
+byte Plugin_003_InputPin[TASKS_MAX];
+
 
 boolean Plugin_003(byte function, struct EventStruct *event, String& string)
 {
@@ -133,7 +137,10 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
         log += CONFIG_PIN1;
         addLog(LOG_LEVEL_INFO,log);
         pinMode(CONFIG_PIN1, INPUT_PULLUP);
-        success = Plugin_003_pulseinit(CONFIG_PIN1, event->TaskIndex,PCONFIG(2));
+        success = Plugin_003_pulseinit(CONFIG_PIN1, event->TaskIndex);
+		Plugin_003_SelectedMode = PCONFIG(2);
+		Plugin_003_InputPin[event->TaskIndex] = CONFIG_PIN1;
+
         break;
       }
 
@@ -187,14 +194,24 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
 \*********************************************************************************************/
 void Plugin_003_pulsecheck(byte Index)
 {
-  const unsigned long PulseTime=timePassedSince(Plugin_003_pulseTimePrevious[Index]);
-  if(PulseTime > (unsigned long)Settings.TaskDevicePluginConfig[Index][0]) // check with debounce time for this task
-    {
+  // Check if the conditions of the last edge are fulfilled to increase the counter
+  // 1. Condition: The edge has to be according to the selected mode (either "CHANGE" --> Rising + Falling edge accepted, otherwise the edge has to be falling or rising
+  // 2. Condition: The length of the recent pulse has to be longer than the set debounce time
+
+  const unsigned long PulseLength=timePassedSince(Plugin_003_lastChangetime[Index]);
+  if(((Plugin_003_SelectedMode == 3) || (Plugin_003_SelectedMode == 1 && Plugin_003_edgeType_last[Index] == 1) || (Plugin_003_SelectedMode == 2 && Plugin_003_edgeType_last[Index] == 0)) && (PulseLength > (unsigned long)Settings.TaskDevicePluginConfig[Index][0]))
+  {
+	  const unsigned long PulseTime=timePassedSince(Plugin_003_pulseTimePrevious[Index]);
       Plugin_003_pulseCounter[Index]++;
       Plugin_003_pulseTotalCounter[Index]++;
       Plugin_003_pulseTime[Index] = PulseTime;
       Plugin_003_pulseTimePrevious[Index]=millis();
-    }
+
+  }
+  // Safe recent values for the next edge detection
+  bool edgeType = digitalRead(Plugin_003_InputPin[Index]);
+  Plugin_003_edgeType_last[Index] = edgeType;
+  Plugin_003_lastChangetime[Index] = millis();
 }
 
 
@@ -238,22 +255,22 @@ void Plugin_003_pulse_interrupt8()
 /*********************************************************************************************\
  * Init Pulse Counters
 \*********************************************************************************************/
-bool Plugin_003_pulseinit(byte Par1, byte Index, byte Mode)
+bool Plugin_003_pulseinit(byte Par1, byte Index)
 {
 
   switch (Index)
   {
     case 0:
-      attachInterrupt(Par1, Plugin_003_pulse_interrupt1, Mode);
+      attachInterrupt(Par1, Plugin_003_pulse_interrupt1, CHANGE);
       break;
     case 1:
-      attachInterrupt(Par1, Plugin_003_pulse_interrupt2, Mode);
+      attachInterrupt(Par1, Plugin_003_pulse_interrupt2, CHANGE);
       break;
     case 2:
-      attachInterrupt(Par1, Plugin_003_pulse_interrupt3, Mode);
+      attachInterrupt(Par1, Plugin_003_pulse_interrupt3, CHANGE);
       break;
     case 3:
-      attachInterrupt(Par1, Plugin_003_pulse_interrupt4, Mode);
+      attachInterrupt(Par1, Plugin_003_pulse_interrupt4, CHANGE);
       break;
     // case 4:
     //   attachInterrupt(Par1, Plugin_003_pulse_interrupt5, Mode);
