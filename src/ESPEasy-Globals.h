@@ -317,6 +317,13 @@ void check_size() {
 #define CPLUGIN_UDP_IN                     51
 #define CPLUGIN_FLUSH                      52
 
+#define CPLUGIN_FLUSH                      52
+// new messages for autodiscover controller plugins (experimental) i.e. C014
+#define CPLUGIN_GOT_CONNECTED              53 // call after connected to mqtt server to publich device autodicover features
+#define CPLUGIN_GOT_INVALID                54 // should be called before major changes i.e. changing the device name to clean up data on the controller. !ToDo
+#define CPLUGIN_INTERVAL                   55 // call every interval loop
+#define CPLUGIN_ACKNOWLEDGE                56 // call for sending acknolages !ToDo done by direct function call in PluginCall() for now.
+
 #define CONTROLLER_HOSTNAME                 1
 #define CONTROLLER_IP                       2
 #define CONTROLLER_PORT                     3
