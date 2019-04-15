@@ -69,6 +69,22 @@ fs::File tryOpenFile(const String& fname, const String& mode) {
   return f;
 }
 
+bool tryDeleteFile(const String& fname) {
+  if (fname.length() > 0)
+  {
+    bool res = SPIFFS.remove(fname);
+
+    // A call to GarbageCollection() will at most erase a single block. (e.g. 8k block size)
+    // A deleted file may have covered more than a single block, so try to clear multiple blocks.
+    uint8_t retries = 3;
+    while (retries > 0 && GarbageCollection()) {
+      --retries;
+    }
+    return res;
+  }
+  return false;
+}
+
 /********************************************************************************************\
   Fix stuff to clear out differences between releases
   \*********************************************************************************************/
@@ -141,6 +157,11 @@ void fileSystemCheck()
         log=log+fs_info.totalBytes;
         addLog(LOG_LEVEL_INFO, log);
       }
+      // Run garbage collection before any file is open.
+      uint8_t retries = 3;
+      while (retries > 0 && GarbageCollection()) {
+        --retries;
+      }
     #endif
 
     fs::File f = tryOpenFile(FILE_CONFIG, "r");
@@ -157,6 +178,27 @@ void fileSystemCheck()
     addLog(LOG_LEVEL_ERROR, log);
     ResetFactory();
   }
+}
+
+
+/********************************************************************************************\
+  Garbage collection
+  \*********************************************************************************************/
+bool GarbageCollection() {
+  #ifdef CORE_POST_2_6_0
+    // Perform garbage collection
+    START_TIMER;
+    if (SPIFFS.gc()) {
+      addLog(LOG_LEVEL_INFO, F("FS   : Success garbage collection"));
+      STOP_TIMER(SPIFFS_GC_SUCCESS);
+      return true;
+    }
+    STOP_TIMER(SPIFFS_GC_FAIL);
+    return false;
+  #else
+    // Not supported, so nothing was removed.
+    return false;
+  #endif
 }
 
 /********************************************************************************************\
@@ -875,14 +917,18 @@ size_t SpiffsPagesize() {
   return result;
 }
 
-bool SpiffsFull() {
+size_t SpiffsFreeSpace() {
   int freeSpace = SpiffsTotalBytes() - SpiffsUsedBytes();
   if (freeSpace < static_cast<int>(2 * SpiffsBlocksize())) {
-    // Not enough free space left.
+    // Not enough free space left to store anything
     // There needs to be minimum of 2 free blocks.
-    return true;
+    return 0;
   }
-  return false;
+  return freeSpace - 2 * SpiffsBlocksize();
+}
+
+bool SpiffsFull() {
+  return SpiffsFreeSpace() == 0;
 }
 
 /********************************************************************************************\
