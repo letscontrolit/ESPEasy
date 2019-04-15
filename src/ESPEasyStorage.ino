@@ -152,7 +152,10 @@ void fileSystemCheck()
         addLog(LOG_LEVEL_INFO, log);
       }
       // Run garbage collection before any file is open.
-      GarbageCollection();
+      uint8_t retries = 3;
+      while (retries > 0 && GarbageCollection()) {
+        --retries;
+      }
     #endif
 
     fs::File f = tryOpenFile(FILE_CONFIG, "r");
@@ -184,8 +187,8 @@ bool GarbageCollection() {
     }
     return false;
   #else
-    // Not supported, so no error.
-    return true;
+    // Not supported, so nothing was removed.
+    return false;
   #endif
 }
 

@@ -263,8 +263,10 @@ struct RTC_cache_handler_struct
           addLog(LOG_LEVEL_ERROR, log);
           #endif
           fw.close();
-          GarbageCollection();
-          writeerror = true;
+          if (!GarbageCollection()) {
+            // Garbage collection was not able to remove anything
+            writeerror = true;
+          }
           return false;
         }
         delay(0);
