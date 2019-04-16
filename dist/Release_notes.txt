@@ -1,4 +1,27 @@
 -------------------------------------------------
+Changes in release mega-20190416 (since mega-20190413)
+-------------------------------------------------
+
+Release date: Tue Apr 16 04:00:12 CEST 2019
+
+Christian-Me (5):
+      For 1st pull request
+      Updates on pull request
+      Hook for CPLUGIN_GOT_INVALID implemented & minor chnages
+      Update platformio.ini
+      Revert "Update platformio.ini"
+
+Gijs Noorlander (1):
+      Fix P005_DHT enabling interrupts on error reading.
+
+TD-er (4):
+      [Cache Controller] Delete oldest files when no room left
+      [SPIFFS] Use standard functions for SPIFFS operations
+      [SPIFFS] Use result of GarbageCollectio()
+      [SPIFFS] Add garbage collection timing statistics
+
+
+-------------------------------------------------
 Changes in release mega-20190413 (since mega-20190409)
 -------------------------------------------------
 
