@@ -4,6 +4,7 @@
 //#######################################################################################################
 
 // Uncomment the following define to enable the extended decoding of AC messages (20K bytes in flash)
+// Also for using standardised common arguments for controlling all deeply supported A/C units (Plugin 035)
 // Example of those messages: "Mesg Desc.: Power: On, Fan: 5 (AUTO), Mode: 3 (HEAT), Temp: 22C, Zone Follow: Off, Sensor Temp: Ignored"
 //#define P016_Extended_Decoding
 
@@ -14,23 +15,13 @@
 #include <IRrecv.h>
 #include <IRutils.h>
 
-#ifdef P016_Extended_Decoding // The following are only needed for extended decoding of A/C Messages
-#include <ir_Coolix.h>
-#include <ir_Daikin.h>
-#include <ir_Fujitsu.h>
-#include <ir_Gree.h>
-#include <ir_Haier.h>
-#include <ir_Hitachi.h>
-#include <ir_Kelvinator.h>
-#include <ir_Midea.h>
-#include <ir_Mitsubishi.h>
-#include <ir_Panasonic.h>
-#include <ir_Samsung.h>
-#include <ir_Tcl.h>
-#include <ir_Teco.h>
-#include <ir_Toshiba.h>
-#include <ir_Vestel.h>
-#include <ir_Whirlpool.h>
+#ifdef P035_Standardized_AC_Commands //They use the same library, so enable it for both plugins if already enabled in the other.
+#define P016_Extended_Decoding
+#endif
+
+#ifdef P016_Extended_Decoding // The following are needed for extended decoding of A/C Messages and or using standardised common arguments for controlling all deeply supported A/C units
+#include <IRac.h>
+#define P035_Standardized_AC_Commands
 #endif
 
 #define PLUGIN_016
@@ -146,7 +137,7 @@ boolean Plugin_016(byte function, struct EventStruct *event, String& string)
         int irPin = CONFIG_PIN1;
         if (irReceiver == 0 && irPin != -1)
         {
-          serialPrintln(F("IR RX Init"));
+          serialPrintln(F("INIT: IR RX"));
           irReceiver = new IRrecv(irPin, kCaptureBufferSize, P016_TIMEOUT, true);
           irReceiver->setUnknownThreshold(kMinUnknownSize); // Ignore messages with less than minimum on or off pulses.
           irReceiver->enableIRIn(); // Start the receiver

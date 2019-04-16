@@ -9,8 +9,19 @@
 #include <IRsend.h>
 #include <IRutils.h>
 
-IRsend *Plugin_035_irSender=nullptr;
+// Uncomment the following define to enable the extended decoding of AC messages (20K bytes in flash) (Plugin 016)
+// Also for using standardised common arguments for controlling all deeply supported A/C units
+//#define P035_Standardized_AC_Commands
 
+#ifdef P016_Extended_Decoding //They use the same library, so enable it for both plugins if already enabled in the other.
+#define P035_Standardized_AC_Commands
+#endif
+
+#ifdef P035_Standardized_AC_Commands // The following are needed for extended decoding of A/C Messages and or using standardised common arguments for controlling all deeply supported A/C units
+#include <IRac.h>
+#endif
+
+IRsend *Plugin_035_irSender=nullptr;
 
 #define PLUGIN_035
 #define PLUGIN_ID_035         35
@@ -55,7 +66,7 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
           case PLUGIN_WEBFORM_LOAD:
       {
         addRowLabel(F("Command"));
-        addHtml(F("IRSENT,[PROTOCOL],[DATA],[BITS optional],[REPEATS optional]<BR>BITS and REPEATS are optional and default to 0"));
+        addHtml(F("IRSEND,[PROTOCOL],[DATA],[BITS optional],[REPEATS optional]<BR>BITS and REPEATS are optional and default to 0"));
 
         success = true;
         break;
@@ -270,39 +281,42 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
             IrBits = 0;                                                                   //Leave it to 0 for default protocol bits
             if (GetArgv(string.c_str(), TmpStr1, 5)) IrRepeat = str2int(TmpStr1.c_str()); // Nr. of times the message is to be repeated
 
-            if (IrType.equals(F("aiwa_rc_t501")))       sendIRCode(AIWA_RC_T501,IrCode,IrBits,IrRepeat);
-            if (IrType.equals(F("carrier_ac")))         sendIRCode(CARRIER_AC,IrCode,IrBits,IrRepeat);
-            if (IrType.equals(F("coolix")))             sendIRCode(COOLIX,IrCode,IrBits,IrRepeat);
-            if (IrType.equals(F("denon")))              sendIRCode(DENON,IrCode,IrBits,IrRepeat);
-            if (IrType.equals(F("dish")))               sendIRCode(DISH,IrCode,IrBits,IrRepeat);
-            if (IrType.equals(F("gicable")))            sendIRCode(GICABLE,IrCode,IrBits,IrRepeat);
-            if (IrType.equals(F("jvc")))                sendIRCode(JVC,IrCode,IrBits,IrRepeat);
-            if (IrType.equals(F("lasertag")))           sendIRCode(LASERTAG,IrCode,IrBits,IrRepeat);
-            if (IrType.equals(F("legopf")))             sendIRCode(LEGOPF,IrCode,IrBits,IrRepeat);
-            if (IrType.equals(F("lg")))                 sendIRCode(LG,IrCode,IrBits,IrRepeat);
-            if (IrType.equals(F("lg2")))                sendIRCode(LG2,IrCode,IrBits,IrRepeat);
-            if (IrType.equals(F("lutron")))             sendIRCode(LUTRON,IrCode,IrBits,IrRepeat);
-            if (IrType.equals(F("magiquest")))          sendIRCode(MAGIQUEST,IrCode,IrBits,IrRepeat);
-            if (IrType.equals(F("midea")))              sendIRCode(MIDEA,IrCode,IrBits,IrRepeat);
-            if (IrType.equals(F("mitsubishi")))         sendIRCode(MITSUBISHI,IrCode,IrBits,IrRepeat);
-            if (IrType.equals(F("mitsubishi2")))        sendIRCode(MITSUBISHI2,IrCode,IrBits,IrRepeat);
-            if (IrType.equals(F("nikai")))              sendIRCode(NIKAI,IrCode,IrBits,IrRepeat);
-            if (IrType.equals(F("nec")))                sendIRCode(NEC,IrCode,IrBits,IrRepeat);
-            if (IrType.equals(F("panasonic")))          sendIRCode(PANASONIC,IrCode,IrBits,IrRepeat);
-            if (IrType.equals(F("pioneer")))            sendIRCode(PIONEER,IrCode,IrBits,IrRepeat);
-            if (IrType.equals(F("rc5x")))               sendIRCode(RC5X,IrCode,IrBits,IrRepeat);
-            if (IrType.equals(F("rc5")))                sendIRCode(RC5,IrCode,IrBits,IrRepeat);
-            if (IrType.equals(F("rc6")))                sendIRCode(RC6,IrCode,IrBits,IrRepeat);	
-            if (IrType.equals(F("rcmm")))               sendIRCode(RCMM,IrCode,IrBits,IrRepeat);
-            if (IrType.equals(F("samsung")))            sendIRCode(SAMSUNG,IrCode,IrBits,IrRepeat);
-			      if (IrType.equals(F("samsung36")))          sendIRCode(SAMSUNG36,IrCode,IrBits,IrRepeat);
-            if (IrType.equals(F("sanyo_lc7461")))       sendIRCode(SANYO_LC7461,IrCode,IrBits,IrRepeat);
-			      if (IrType.equals(F("sharp")))              sendIRCode(SHARP,IrCode,IrBits,IrRepeat);
-            if (IrType.equals(F("sherwood")))           sendIRCode(SHERWOOD,IrCode,IrBits,IrRepeat);
-            if (IrType.equals(F("sony")))               sendIRCode(SONY,IrCode,IrBits,IrRepeat);
-            if (IrType.equals(F("teco")))               sendIRCode(TECO,IrCode,IrBits,IrRepeat);
-			      if (IrType.equals(F("vestel_ac")))          sendIRCode(VESTEL_AC,IrCode,IrBits,IrRepeat);
-            if (IrType.equals(F("whynter")))            sendIRCode(WHYNTER,IrCode,IrBits,IrRepeat);
+            if (IrType.equals(F("aiwa_rc_t501")))         sendIRCode(AIWA_RC_T501,IrCode,IrBits,IrRepeat);
+            if (IrType.equals(F("carrier_ac")))           sendIRCode(CARRIER_AC,IrCode,IrBits,IrRepeat);
+            if (IrType.equals(F("coolix")))               sendIRCode(COOLIX,IrCode,IrBits,IrRepeat);
+            if (IrType.equals(F("denon")))                sendIRCode(DENON,IrCode,IrBits,IrRepeat);
+            if (IrType.equals(F("dish")))                 sendIRCode(DISH,IrCode,IrBits,IrRepeat);
+            if (IrType.equals(F("gicable")))              sendIRCode(GICABLE,IrCode,IrBits,IrRepeat);
+            if (IrType.equals(F("jvc")))                  sendIRCode(JVC,IrCode,IrBits,IrRepeat);
+            if (IrType.equals(F("lasertag")))             sendIRCode(LASERTAG,IrCode,IrBits,IrRepeat);
+            if (IrType.equals(F("legopf")))               sendIRCode(LEGOPF,IrCode,IrBits,IrRepeat);
+            if (IrType.equals(F("lg")))                   sendIRCode(LG,IrCode,IrBits,IrRepeat);
+            if (IrType.equals(F("lg2")))                  sendIRCode(LG2,IrCode,IrBits,IrRepeat);
+            if (IrType.equals(F("lutron")))               sendIRCode(LUTRON,IrCode,IrBits,IrRepeat);
+            if (IrType.equals(F("magiquest")))            sendIRCode(MAGIQUEST,IrCode,IrBits,IrRepeat);
+            if (IrType.equals(F("midea")))                sendIRCode(MIDEA,IrCode,IrBits,IrRepeat);
+            if (IrType.equals(F("mitsubishi")))           sendIRCode(MITSUBISHI,IrCode,IrBits,IrRepeat);
+            if (IrType.equals(F("mitsubishi2")))          sendIRCode(MITSUBISHI2,IrCode,IrBits,IrRepeat);
+            if (IrType.equals(F("nikai")))                sendIRCode(NIKAI,IrCode,IrBits,IrRepeat);
+            if (IrType.equals(F("nec")))                  sendIRCode(NEC,IrCode,IrBits,IrRepeat);
+            if (IrType.equals(F("panasonic")))            sendIRCode(PANASONIC,IrCode,IrBits,IrRepeat);
+            if (IrType.equals(F("pioneer")))              sendIRCode(PIONEER,IrCode,IrBits,IrRepeat);
+            if (IrType.equals(F("rc5x")))                 sendIRCode(RC5X,IrCode,IrBits,IrRepeat);
+            if (IrType.equals(F("rc5")))                  sendIRCode(RC5,IrCode,IrBits,IrRepeat);
+            if (IrType.equals(F("rc6")))                  sendIRCode(RC6,IrCode,IrBits,IrRepeat);	
+            if (IrType.equals(F("rcmm")))                 sendIRCode(RCMM,IrCode,IrBits,IrRepeat);
+            if (IrType.equals(F("samsung")))              sendIRCode(SAMSUNG,IrCode,IrBits,IrRepeat);
+			      if (IrType.equals(F("samsung36")))            sendIRCode(SAMSUNG36,IrCode,IrBits,IrRepeat);
+            if (IrType.equals(F("sanyo_lc7461")))         sendIRCode(SANYO_LC7461,IrCode,IrBits,IrRepeat);
+			      if (IrType.equals(F("sharp")))                sendIRCode(SHARP,IrCode,IrBits,IrRepeat);
+            if (IrType.equals(F("sherwood")))             sendIRCode(SHERWOOD,IrCode,IrBits,IrRepeat);
+            if (IrType.equals(F("sony")))                 sendIRCode(SONY,IrCode,IrBits,IrRepeat);
+            if (IrType.equals(F("teco")))                 sendIRCode(TECO,IrCode,IrBits,IrRepeat);
+			      if (IrType.equals(F("vestel_ac")))            sendIRCode(VESTEL_AC,IrCode,IrBits,IrRepeat);
+            if (IrType.equals(F("whynter")))              sendIRCode(WHYNTER,IrCode,IrBits,IrRepeat);
+            if (IrType.equals(F("mitsubishi_heavy_88")))  sendIRCode(MITSUBISHI_HEAVY_88,IrCode,IrBits,IrRepeat);
+            if (IrType.equals(F("mitsubishi_heavy_152"))) sendIRCode(MITSUBISHI_HEAVY_152,IrCode,IrBits,IrRepeat);
+            
 
             //if (IrType.equals(F("raw")))              parseStringAndSendRaw(Plugin_035_irSender, code_str);   //too big String is needed for this, 
                                                                                                                 //also conflicts with the keyword RAW (for the encoding) and RAW as in the library meanning of the timmings information. 
@@ -341,10 +355,10 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
           #endif
         }
         break;
-      }
-  }
+      } //PLUGIN_WRITE END
+  } // SWITCH END
   return success;
-}
+} // Plugin_035 END
 
 boolean addErrorTrue() {
     addLog(LOG_LEVEL_ERROR, F("RAW2: Invalid encoding!"));
@@ -659,6 +673,12 @@ bool  parseStringAndSendAirCon(const uint16_t irType, const String& str) {
     case MITSUBISHI_AC:
       stateSize = kMitsubishiACStateLength;
       break;
+    case MITSUBISHI_HEAVY_88:
+      stateSize = kMitsubishiHeavy88StateLength;
+      break;
+    case MITSUBISHI_HEAVY_152:
+      stateSize = kMitsubishiHeavy152StateLength;
+      break;
     case PANASONIC_AC:
       stateSize = kPanasonicAcStateLength;
       break;
@@ -795,6 +815,14 @@ bool  parseStringAndSendAirCon(const uint16_t irType, const String& str) {
       Plugin_035_irSender->sendMitsubishiAC(reinterpret_cast<uint8_t *>(state));
       break;
 #endif
+#if SEND_MITSUBISHIHEAVY
+    case MITSUBISHI_HEAVY_88:  // 59
+      Plugin_035_irSender->sendMitsubishiHeavy88(reinterpret_cast<uint8_t *>(state));
+      break;
+    case MITSUBISHI_HEAVY_152:  // 60
+      Plugin_035_irSender->sendMitsubishiHeavy152(reinterpret_cast<uint8_t *>(state));
+      break;
+#endif  // SEND_MITSUBISHIHEAVY
 #if SEND_TROTEC
     case TROTEC:
       Plugin_035_irSender->sendTrotec(reinterpret_cast<uint8_t *>(state));
