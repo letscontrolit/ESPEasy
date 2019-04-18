@@ -54,17 +54,25 @@ for ENV in \
   normal_core_241_ESP8266_1M\
   normal_core_241_ESP8266_4M\
   normal_core_242_ESP8266_1M\
+  normal_core_250_ESP8266_16M\
   normal_core_250_ESP8266_1M\
   normal_core_250_ESP8266_4M\
   normal_core_250_IR_ESP8266_4M\
   normal_core_250_WROOM02_2M256\
+  normal_core_260_sdk222_alpha_ESP8266_16M\
+  normal_core_260_sdk222_alpha_ESP8266_4M\
+  normal_core_260_sdk2_alpha_ESP8266_16M\
   normal_core_260_sdk2_alpha_ESP8266_4M\
   test_ESP8266_4M_VCC\
   test_core_242_ESP8266_4M\
+  test_core_250_ESP8266_16M\
   test_core_250_ESP8266_4M\
-  test_core_260_alpha_ESP8266_4M_VCC\
-  test_core_260_sdk2_alpha_ESP8266_4M\
+  test_core_260_sdk222_alpha_ESP8266_16M\
   test_core_260_sdk222_alpha_ESP8266_4M\
+  test_core_260_sdk2_alpha_ESP8266_16M\
+  test_core_260_sdk2_alpha_ESP8266_4M\
+  test_core_260_sdk2_alpha_ESP8266_4M_VCC\
+  test_core_260_sdk3_alpha_ESP8266_16M\
   test_core_260_sdk3_alpha_ESP8266_4M;\
 do
   MAX_FILESIZE=1044464
