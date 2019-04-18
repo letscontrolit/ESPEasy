@@ -324,7 +324,7 @@ struct RTC_cache_handler_struct
     return "";
   }
 
-  void deleteOldestCacheBlock() {
+  bool deleteOldestCacheBlock() {
     if (updateRTC_filenameCounters()) {
       if (RTC_cache.readFileNr != RTC_cache.writeFileNr) {
         // read and write file nr are not the same file, remove the read file nr.
@@ -337,9 +337,11 @@ struct RTC_cache_handler_struct
           #endif
           updateRTC_filenameCounters();
           writeerror = false;
+          return true;
         }
       }
     }
+    return false;
   }
 
 private:

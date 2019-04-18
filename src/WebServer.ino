@@ -3914,7 +3914,7 @@ void handle_tools() {
 
   addFormSubHeader(F("Filesystem"));
 
-  addWideButtonPlusDescription(F("filelist"),      F("Flash"),         F("Show files on internal flash"));
+  addWideButtonPlusDescription(F("filelist"),      F("File browser"),   F("Show files on internal flash file system"));
   addWideButtonPlusDescription(F("/factoryreset"), F("Factory Reset"), F("Select pre-defined configuration or full erase of settings"));
 #ifdef FEATURE_SD
   addWideButtonPlusDescription(F("SDfilelist"),    F("SD Card"),       F("Show files on SD-Card"));
@@ -5805,172 +5805,147 @@ void handle_filelist() {
   TXBuffer.startStream();
   sendHeadandTail_stdtemplate();
 
-#if defined(ESP8266)
-
   String fdelete = WebServer.arg(F("delete"));
-
   if (tryDeleteFile(fdelete))
   {
     checkRuleSets();
   }
-
+  #ifdef USES_C016
+  if (WebServer.hasArg(F("delcache"))) {
+    while (C016_deleteOldestCacheBlock()) {
+      delay(1);
+    }
+    while (GarbageCollection()) {
+      delay(1);
+    }
+  }
+  #endif
   const int pageSize = 25;
   int startIdx = 0;
-
   String fstart = WebServer.arg(F("start"));
   if (fstart.length() > 0)
   {
     startIdx = atoi(fstart.c_str());
   }
   int endIdx = startIdx + pageSize - 1;
-
   html_table_class_multirow();
   html_table_header("", 50);
   html_table_header(F("Filename"));
   html_table_header(F("Size"), 80);
+  int count = -1;
+
+  bool moreFilesPresent = false;
+  bool cacheFilesPresent = false;
+
+#if defined(ESP8266)
 
   fs::Dir dir = SPIFFS.openDir("");
-
-  int count = -1;
-  while (dir.next())
+  while (dir.next() && count < endIdx)
   {
     ++count;
-
-    if (count < startIdx)
+    if (count >= startIdx)
     {
-      continue;
-    }
-
-    html_TR_TD();
-    if (dir.fileName() != F(FILE_CONFIG) && dir.fileName() != F(FILE_SECURITY) && dir.fileName() != F(FILE_NOTIFICATION))
-    {
-      html_add_button_prefix();
-      TXBuffer += F("filelist?delete=");
-      TXBuffer += dir.fileName();
-      if (startIdx > 0)
-      {
-        TXBuffer += F("&start=");
-        TXBuffer += startIdx;
+      int filesize = -1;
+      fs::File f = dir.openFile("r");
+      if (f) {
+        filesize = f.size();
       }
-      TXBuffer += F("'>Del</a>");
-    }
-
-    TXBuffer += F("<TD><a href=\"");
-    TXBuffer += dir.fileName();
-    TXBuffer += "\">";
-    TXBuffer += dir.fileName();
-    TXBuffer += F("</a>");
-    fs::File f = dir.openFile("r");
-    html_TD();
-    if (f) {
-      TXBuffer += f.size();
-      f.close();
-    }
-    if (count >= endIdx)
-    {
-      break;
+      if (!cacheFilesPresent && getCacheFileCountFromFilename(dir.fileName()) != -1)
+      {
+        cacheFilesPresent = true;
+      }
+      handle_filelist_add_file(dir.fileName(), filesize, startIdx);
     }
   }
-  html_end_table();
-  html_end_form();
-  html_BR();
-  addButton(F("/upload"), F("Upload"));
-  if (startIdx > 0)
-  {
-    html_add_button_prefix();
-    TXBuffer += F("/filelist?start=");
-    TXBuffer += std::max(0, startIdx - pageSize);
-    TXBuffer += F("'>Previous</a>");
-  }
-  if (count >= endIdx and dir.next())
-  {
-    html_add_button_prefix();
-    TXBuffer += F("/filelist?start=");
-    TXBuffer += endIdx + 1;
-    TXBuffer += F("'>Next</a>");
-  }
-  TXBuffer += F("<BR><BR>");
-  sendHeadandTail_stdtemplate(true);
-  TXBuffer.endStream();
+  moreFilesPresent = dir.next();
 #endif
 #if defined(ESP32)
-  String fdelete = WebServer.arg(F("delete"));
-  tryDeleteFile(fdelete);
-
-  const int pageSize = 25;
-  int startIdx = 0;
-
-  String fstart = WebServer.arg(F("start"));
-  if (fstart.length() > 0)
-  {
-    startIdx = atoi(fstart.c_str());
-  }
-  int endIdx = startIdx + pageSize - 1;
-
-  html_table_class_multirow();
-  html_table_header("");
-  html_table_header(F("Filename"));
-  html_table_header("Size");
-
   File root = SPIFFS.open("/");
   File file = root.openNextFile();
-  int count = -1;
-  while (file and count < endIdx)
+  while (file && count < endIdx)
   {
     if(!file.isDirectory()){
       ++count;
-
       if (count >= startIdx)
       {
-        html_TR_TD();
-        if (strcmp(file.name(), FILE_CONFIG) != 0 && strcmp(file.name(), FILE_SECURITY) != 0 && strcmp(file.name(), FILE_NOTIFICATION) != 0)
+        if (!cacheFilesPresent && getCacheFileCountFromFilename(file.name()) != -1)
         {
-          html_add_button_prefix();
-          TXBuffer += F("filelist?delete=");
-          TXBuffer += file.name();
-          if (startIdx > 0)
-          {
-            TXBuffer += F("&start=");
-            TXBuffer += startIdx;
-          }
-          TXBuffer += F("'>Del</a>");
+          cacheFilesPresent = true;
         }
-
-        TXBuffer += F("<TD><a href=\"");
-        TXBuffer += file.name();
-        TXBuffer += "\">";
-        TXBuffer += file.name();
-        TXBuffer += F("</a>");
-        html_TD();
-        TXBuffer += file.size();
+        handle_filelist_add_file(file.name(), file.size(), startIdx);
       }
     }
     file = root.openNextFile();
   }
+  moreFilesPresent = file;
+#endif
+
+  int start_prev = -1;
+  if (startIdx > 0)
+  {
+    start_prev = startIdx < pageSize ? 0 : startIdx - pageSize;
+  }
+  int start_next = -1;
+  if (count >= endIdx && moreFilesPresent) {
+    start_next = endIdx + 1;
+  }
+  handle_filelist_buttons(start_prev, start_next, cacheFilesPresent);
+}
+
+void handle_filelist_add_file(const String& filename, int filesize, int startIdx) {
+  html_TR_TD();
+  if (filename != F(FILE_CONFIG) && filename != F(FILE_SECURITY) && filename != F(FILE_NOTIFICATION))
+  {
+    html_add_button_prefix();
+    TXBuffer += F("filelist?delete=");
+    TXBuffer += filename;
+    if (startIdx > 0)
+    {
+      TXBuffer += F("&start=");
+      TXBuffer += startIdx;
+    }
+    TXBuffer += F("'>Del</a>");
+  }
+
+  TXBuffer += F("<TD><a href=\"");
+  TXBuffer += filename;
+  TXBuffer += "\">";
+  TXBuffer += filename;
+  TXBuffer += F("</a>");
+  html_TD();
+  if (filesize >= 0) {
+    TXBuffer += String(filesize);
+  }
+}
+
+void handle_filelist_buttons(int start_prev, int start_next, bool cacheFilesPresent) {
   html_end_table();
   html_end_form();
   html_BR();
   addButton(F("/upload"), F("Upload"));
-  if (startIdx > 0)
+  if (start_prev >= 0)
   {
     html_add_button_prefix();
     TXBuffer += F("/filelist?start=");
-    TXBuffer += startIdx < pageSize ? 0 : startIdx - pageSize;
+    TXBuffer += start_prev;
     TXBuffer += F("'>Previous</a>");
   }
-  if (count >= endIdx and file)
+  if (start_next >= 0)
   {
     html_add_button_prefix();
     TXBuffer += F("/filelist?start=");
-    TXBuffer += endIdx + 1;
+    TXBuffer += start_next;
     TXBuffer += F("'>Next</a>");
   }
+  if (cacheFilesPresent) {
+    html_add_button_prefix(F("red"), true);
+    TXBuffer += F("filelist?delcache");
+    TXBuffer += F("'>Delete Cache Files</a>");
+  }
   TXBuffer += F("<BR><BR>");
-    sendHeadandTail_stdtemplate(true);
-    TXBuffer.endStream();
-#endif
+  sendHeadandTail_stdtemplate(true);
+  TXBuffer.endStream();
 }
-
 
 //********************************************************************************
 // Web Interface SD card file and directory list

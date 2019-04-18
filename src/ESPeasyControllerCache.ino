@@ -46,10 +46,11 @@ struct ControllerCache_struct {
   // Clear all caches
   void clearCache() {}
 
-  void deleteOldestCacheBlock() {
+  bool deleteOldestCacheBlock() {
     if (_RTC_cache_handler != nullptr) {
-      _RTC_cache_handler->deleteOldestCacheBlock();
+      return _RTC_cache_handler->deleteOldestCacheBlock();
     }
+    return false;
   }
 
   void resetpeek() {

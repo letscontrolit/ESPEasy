@@ -139,8 +139,8 @@ String C016_getCacheFileName(bool& islast) {
   return ControllerCache.getPeekCacheFileName(islast);
 }
 
-void C016_deleteOldestCacheBlock() {
-  ControllerCache.deleteOldestCacheBlock();
+bool C016_deleteOldestCacheBlock() {
+  return ControllerCache.deleteOldestCacheBlock();
 }
 
 bool C016_getCSVline(
