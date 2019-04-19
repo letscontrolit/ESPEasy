@@ -82,6 +82,7 @@ void sensorTypeHelper_webformLoad(struct EventStruct *event, byte pconfigIndex, 
   if (getValueCountFromSensorType(choice) != Device[DeviceIndex].ValueCount) {
     // Invalid value
     choice = Device[DeviceIndex].VType;
+    PCONFIG(pconfigIndex) = choice;
   }
   addRowLabel(F("Output Data Type"));
   addSelector_Head(PCONFIG_LABEL(pconfigIndex), false);
@@ -105,6 +106,7 @@ void sensorTypeHelper_saveSensorType(struct EventStruct *event, byte pconfigInde
 {
   pconfig_webformSave(event, pconfigIndex);
   sensorTypeHelper_setSensorType(event, pconfigIndex);
+  ExtraTaskSettings.clearUnusedValueNames(getValueCountFromSensorType(PCONFIG(pconfigIndex)));
 }
 
 void sensorTypeHelper_setSensorType(struct EventStruct *event, byte pconfigIndex)

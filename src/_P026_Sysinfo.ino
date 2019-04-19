@@ -39,8 +39,8 @@ boolean Plugin_026(byte function, struct EventStruct *event, String& string)
     case PLUGIN_DEVICE_ADD:
       {
         Device[++deviceCount].Number = PLUGIN_ID_026;
-        Device[deviceCount].VType = SENSOR_TYPE_SINGLE;
-        Device[deviceCount].ValueCount = 1;
+        Device[deviceCount].VType = SENSOR_TYPE_QUAD;
+        Device[deviceCount].ValueCount = 4;
         Device[deviceCount].SendDataOption = true;
         Device[deviceCount].TimerOption = true;
         Device[deviceCount].FormulaOption = true;
@@ -68,6 +68,17 @@ boolean Plugin_026(byte function, struct EventStruct *event, String& string)
         }
         break;
       }
+
+    case PLUGIN_SET_DEFAULTS:
+    {
+      PCONFIG(0) = 0; // "Uptime"
+      for (byte i = 1; i < VARS_PER_TASK; ++i) {
+        PCONFIG(i) = 11; // "None"
+      }
+      PCONFIG(P026_SENSOR_TYPE_INDEX) = SENSOR_TYPE_QUAD;
+      success = true;
+      break;
+    }
 
     case PLUGIN_WEBFORM_LOAD:
       {
@@ -100,18 +111,6 @@ boolean Plugin_026(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
       {
-        bool allDefault = true;
-        for (byte i = 0; i < VARS_PER_TASK; ++i) {
-          if (PCONFIG(i) != 0) {
-            allDefault = false;
-          }
-        }
-        if (allDefault) {
-          // Reset nr 2 .. 4 to "None"
-          for (byte i = 1; i < VARS_PER_TASK; ++i) {
-            PCONFIG(i) = 11; // "None"
-          }
-        }
         sensorTypeHelper_setSensorType(event, P026_SENSOR_TYPE_INDEX);
         success = true;
         break;

@@ -1984,6 +1984,7 @@ void setTaskDevice_to_TaskIndex(byte taskdevicenumber, byte taskIndex) {
   {
     //NOTE: do not enable task by default. allow user to enter sensible valus first and let him enable it when ready.
     PluginCall(PLUGIN_GET_DEVICEVALUENAMES, &TempEvent, dummy); //the plugin should populate ExtraTaskSettings with its default values.
+    PluginCall(PLUGIN_SET_DEFAULTS, &TempEvent, dummy);
   } else {
     // New task is empty task, thus save config now.
     taskClear(taskIndex, true); // clear settings, and save

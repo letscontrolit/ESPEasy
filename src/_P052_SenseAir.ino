@@ -137,6 +137,18 @@ boolean Plugin_052(byte function, struct EventStruct *event, String &string) {
     break;
   }
 
+  case PLUGIN_SET_DEFAULTS:
+  {
+    PCONFIG(0) = 1; // "CO2"
+    for (byte i = 1; i < VARS_PER_TASK; ++i) {
+      PCONFIG(i) = 0; // "Empty"
+    }
+//    PCONFIG(P052_SENSOR_TYPE_INDEX) = SENSOR_TYPE_SINGLE;
+    success = true;
+    break;
+  }
+
+
   case PLUGIN_WRITE: {
     String cmd = parseString(string, 1);
     String param1 = parseString(string, 2);
