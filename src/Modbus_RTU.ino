@@ -61,6 +61,10 @@ struct ModbusRTU_struct  {
   }
 
   bool init(const int16_t serial_rx, const int16_t serial_tx, int16_t baudrate, byte address) {
+    return init(serial_rx, serial_tx, baudrate, address, -1);
+  }
+
+  bool init(const int16_t serial_rx, const int16_t serial_tx, int16_t baudrate, byte address, int8_t dere_pin) {
     if (serial_rx < 0 || serial_tx < 0)
       return false;
     reset();
@@ -68,6 +72,10 @@ struct ModbusRTU_struct  {
     easySerial->begin(baudrate);
     if (!isInitialized()) return false;
     _modbus_address = address;
+    _dere_pin = dere_pin;
+    if (_dere_pin != -1) {   //set output pin mode for DE/RE pin when used (for control MAX485)
+      pinMode(_dere_pin, OUTPUT);
+    }
 
     detected_device_description = getDevice_description(_modbus_address);
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -401,9 +409,10 @@ struct ModbusRTU_struct  {
     while (nrRetriesLeft > 0) {
       return_value = 0;
       // Send the byte array
+      startWrite();
       easySerial->write(_sendframe, _sendframe_used);
-      delay(50);
-
+      startRead();
+      delay(50);  // FIXME TD-er: Still needed?
       // Read answer from sensor
       _recv_buf_used = 0;
       while (easySerial->available() &&
@@ -601,11 +610,31 @@ struct ModbusRTU_struct  {
   String detected_device_description;
 
 private:
+
+  void startWrite() {
+    //transmit to device  -> DE Enable, /RE Disable (for control MAX485)
+    if (_dere_pin == -1 || !isInitialized()) return;
+    digitalWrite(_dere_pin, HIGH);
+    delay(2); // Switching may take some time
+  }
+
+  void startRead() {
+    if (!isInitialized()) return;
+    easySerial->flush();  //clear out tx buffer
+
+    //receive from device -> DE Disable, /RE Enable (for control MAX485)
+    if (_dere_pin != -1) {
+      digitalWrite(_dere_pin, LOW);
+    }
+  }
+
+
   byte _sendframe[8] = {0};
   byte _sendframe_used = 0;
   byte _recv_buf[MODBUS_RECEIVE_BUFFER] = {0xff};
   byte _recv_buf_used = 0;
   byte _modbus_address = MODBUS_BROADCAST_ADDRESS;
+  int8_t _dere_pin = -1;
   uint32_t _reads_pass = 0;
   uint32_t _reads_crc_failed = 0;
 
