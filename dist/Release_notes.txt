@@ -1,4 +1,16 @@
 -------------------------------------------------
+Changes in release mega-20190419 (since mega-20190416)
+-------------------------------------------------
+
+Release date: Fri Apr 19 04:00:28 CEST 2019
+
+TD-er (3):
+      [SPIFFS] Add 16M14M option for build images
+      [16M flash] Add warning about slow speed for 16M flash builds
+      [Cache Controller] Add option to delete all cache files
+
+
+-------------------------------------------------
 Changes in release mega-20190416 (since mega-20190413)
 -------------------------------------------------
 
