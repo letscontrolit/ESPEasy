@@ -289,7 +289,7 @@ struct RTC_cache_handler_struct
     initRTCcache_data();
     for (int i=0; i < 2; ++i) {
       String fname = createCacheFilename(RTC_cache.readFileNr);
-      if (SPIFFS.exists(fname)) {
+      if (FILESYSTEMTYPE.exists(fname)) {
         if (i != 0) {
           // First attempt failed, so stored read position is not valid
           RTC_cache.readPos = 0;
@@ -318,7 +318,7 @@ struct RTC_cache_handler_struct
       fname = createCacheFilename(peekfilenr);
     }
     islast = peekfilenr > RTC_cache.writeFileNr;
-    if (SPIFFS.exists(fname)) {
+    if (FILESYSTEMTYPE.exists(fname)) {
       return fname;
     }
     return "";
@@ -331,7 +331,7 @@ struct RTC_cache_handler_struct
         String fname = createCacheFilename(RTC_cache.readFileNr);
         if (tryDeleteFile(fname)) {
           #ifdef RTC_STRUCT_DEBUG
-          String log = F("RTC  : Removed file from SPIFFS: ");
+          String log = F("RTC  : Removed file from FS: ");
           log += fname;
           addLog(LOG_LEVEL_INFO, String(log));
           #endif
@@ -461,9 +461,9 @@ private:
 //    if (storageLocation != CACHE_STORAGE_SPIFFS) {
 //      return false;
 //    }
-    if (SpiffsFull()) {
+    if (FS_full()) {
       #ifdef RTC_STRUCT_DEBUG
-      addLog(LOG_LEVEL_ERROR, String(F("RTC  : SPIFFS full")));
+      addLog(LOG_LEVEL_ERROR, String(F("RTC  : FS full")));
       #endif
       return false;
     }
@@ -478,7 +478,7 @@ private:
         // Open file to write
         initRTCcache_data();
         if (updateRTC_filenameCounters()) {
-          if (writeerror || SpiffsFreeSpace() < ((2 * CACHE_FILE_MAX_SIZE) + SpiffsBlocksize())) {
+          if (writeerror || FS_freeSpace() < ((2 * CACHE_FILE_MAX_SIZE) + FS_blockSize())) {
             // Not enough room for another file, remove the oldest one.
             deleteOldestCacheBlock();
           }

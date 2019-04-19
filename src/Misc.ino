@@ -1057,11 +1057,11 @@ void ResetFactory()
   saveToRTC();
 
   //always format on factory reset, in case of corrupt SPIFFS
-  SPIFFS.end();
+  FILESYSTEMTYPE.end();
   serialPrintln(F("RESET: formatting..."));
-  SPIFFS.format();
+  FILESYSTEMTYPE.format();
   serialPrintln(F("RESET: formatting done..."));
-  if (!SPIFFS.begin())
+  if (!FILESYSTEMTYPE.begin())
   {
     serialPrintln(F("RESET: FORMAT SPIFFS FAILED!"));
     return;
@@ -1562,7 +1562,7 @@ void delayedReboot(int rebootDelay)
 void reboot() {
   // FIXME TD-er: Should network connections be actively closed or does this introduce new issues?
   flushAndDisconnectAllClients();
-  SPIFFS.end();
+  FILESYSTEMTYPE.end();
   #if defined(ESP32)
     ESP.restart();
   #else
@@ -2672,7 +2672,7 @@ void ArduinoOTAInit()
 
   ArduinoOTA.onStart([]() {
       serialPrintln(F("OTA  : Start upload"));
-      SPIFFS.end(); //important, otherwise it fails
+      FILESYSTEMTYPE.end(); //important, otherwise it fails
   });
 
   ArduinoOTA.onEnd([]() {

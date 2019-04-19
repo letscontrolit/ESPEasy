@@ -56,6 +56,12 @@ To create/register a plugin, you have to :
   #endif
 #endif // ESP32
 
+#ifdef LITTLE_FS
+  #define FILESYSTEMTYPE  LittleFS
+#else
+  #define FILESYSTEMTYPE  SPIFFS
+#endif
+
 /******************************************************************************\
  * BUILD Configs **************************************************************
 \******************************************************************************/

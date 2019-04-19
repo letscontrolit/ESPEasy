@@ -217,7 +217,7 @@ void handle_rules_delete() {
 
   if(fileName.length() > 0 )
   {
-    removed = SPIFFS.remove(fileName);
+    removed = FILESYSTEMTYPE.remove(fileName);
   }
   if(removed)
   {
@@ -291,7 +291,7 @@ bool handle_rules_edit(String originalUri, bool isAddNew) {
       Serial.print(F("File name: "));
       Serial.println(fileName);
       #endif
-      bool isEdit = SPIFFS.exists(fileName);
+      bool isEdit = FILESYSTEMTYPE.exists(fileName);
       if (WebServer.args() > 0)
       {
         rules = WebServer.arg(F("rules"));
@@ -457,7 +457,7 @@ bool EnumerateFileAndDirectory(String& rootPath
   int count = 0;
   bool next = true;
   #ifdef ESP8266
-  fs::Dir dir = SPIFFS.openDir(rootPath);
+  fs::Dir dir = FILESYSTEMTYPE.openDir(rootPath);
   Serial.print(F("Enumerate files of "));
   Serial.println(rootPath);
   while (next && dir.next()) {
@@ -478,7 +478,7 @@ bool EnumerateFileAndDirectory(String& rootPath
   hasMore = dir.next();
   #endif
   #ifdef ESP32
-  File root = SPIFFS.open(rootPath);
+  File root = FILESYSTEMTYPE.open(rootPath);
   if (root)
   {
     File file = root.openNextFile();

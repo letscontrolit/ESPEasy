@@ -40,7 +40,7 @@ void checkRuleSets() {
 #endif
     fileName += x + 1;
     fileName += F(".txt");
-    if (SPIFFS.exists(fileName))
+    if (FILESYSTEMTYPE.exists(fileName))
       activeRuleSets[x] = true;
     else
       activeRuleSets[x] = false;
@@ -88,7 +88,7 @@ void rulesProcessing(String &event) {
   } else {
     String fileName = EventToFileName(event);
     // if exists processed the rule file
-    if (SPIFFS.exists(fileName))
+    if (FILESYSTEMTYPE.exists(fileName))
       rulesProcessingFile(fileName, event);
 #ifndef BUILD_NO_DEBUG
       else
@@ -139,7 +139,7 @@ String rulesProcessingFile(const String &fileName, String &event) {
   }
 
   fs::File f = tryOpenFile(fileName, "r+");
-  SPIFFS_CHECK(f, fileName.c_str());
+  FS_RES_CHECK(f, fileName.c_str());
 
   String line = "";
   bool match = false;
@@ -157,7 +157,7 @@ String rulesProcessingFile(const String &fileName, String &event) {
     for (int x = 0; x < len; x++) {
       data = buf[x];
 
-      SPIFFS_CHECK(data >= 0, fileName.c_str());
+      FS_RES_CHECK(data >= 0, fileName.c_str());
 
       if (data != 10) {
         line += char(data);

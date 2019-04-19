@@ -766,7 +766,7 @@ void getWebPageTemplateVar(const String& varName )
 
   else if (varName == F("logo"))
   {
-    if (SPIFFS.exists(F("esp.png")))
+    if (FILESYSTEMTYPE.exists(F("esp.png")))
     {
       TXBuffer = F("<img src=\"esp.png\" width=48 height=48 align=right>");
     }
@@ -774,7 +774,7 @@ void getWebPageTemplateVar(const String& varName )
 
   else if (varName == F("css"))
   {
-    if (SPIFFS.exists(F("esp.css")))   //now css is written in writeDefaultCSS() to SPIFFS and always present
+    if (FILESYSTEMTYPE.exists(F("esp.css")))   //now css is written in writeDefaultCSS() to SPIFFS and always present
     //if (0) //TODO
     {
       TXBuffer = F("<link rel=\"stylesheet\" type=\"text/css\" href=\"esp.css\">");
@@ -821,7 +821,7 @@ void writeDefaultCSS(void)
 {
   return; //TODO
 
-  if (!SPIFFS.exists(F("esp.css")))
+  if (!FILESYSTEMTYPE.exists(F("esp.css")))
   {
     String defaultCSS;
 
@@ -3877,7 +3877,7 @@ void handle_tools() {
 
 #ifdef WEBSERVER_NEW_UI
   #if defined(ESP8266)
-    if ((SpiffsFreeSpace() / 1024) > 50) {
+    if ((FS_freeSpace() / 1024) > 50) {
       TXBuffer += F("<TR><TD>");
       TXBuffer += F("<script>function downloadUI() { fetch('https://raw.githubusercontent.com/letscontrolit/espeasy_ui/master/build/index.htm.gz').then(r=>r.arrayBuffer()).then(r => {var f=new FormData();f.append('file', new File([new Blob([new Uint8Array(r)])], 'index.htm.gz'));f.append('edit', 1);fetch('/upload',{method:'POST',body:f}).then(() => {window.location.href='/';});}); }</script>");
       TXBuffer += F("<a class=\"button link wide\" onclick=\"downloadUI()\">Download new UI</a>");
@@ -5734,7 +5734,7 @@ void handle_filelist_json() {
   TXBuffer += "[{";
   bool firstentry = true;
   #if defined(ESP32)
-    File root = SPIFFS.open("/");
+    File root = FILESYSTEMTYPE.open("/");
     File file = root.openNextFile();
     int count = -1;
     while (file and count < endIdx)
@@ -5758,7 +5758,7 @@ void handle_filelist_json() {
     }
   #endif
   #if defined(ESP8266)
-  fs::Dir dir = SPIFFS.openDir("");
+  fs::Dir dir = FILESYSTEMTYPE.openDir("");
 
   int count = -1;
   while (dir.next())
@@ -5839,7 +5839,7 @@ void handle_filelist() {
 
 #if defined(ESP8266)
 
-  fs::Dir dir = SPIFFS.openDir("");
+  fs::Dir dir = FILESYSTEMTYPE.openDir("");
   while (dir.next() && count < endIdx)
   {
     ++count;
@@ -5860,7 +5860,7 @@ void handle_filelist() {
   moreFilesPresent = dir.next();
 #endif
 #if defined(ESP32)
-  File root = SPIFFS.open("/");
+  File root = FILESYSTEMTYPE.open("/");
   File file = root.openNextFile();
   while (file && count < endIdx)
   {
@@ -6504,7 +6504,7 @@ void handle_rules() {
     }
     else // changed set, check if file exists and create new
     {
-      if (!SPIFFS.exists(fileName))
+      if (!FILESYSTEMTYPE.exists(fileName))
       {
         log += F(" Create new file: ");
         log += fileName;
@@ -6760,8 +6760,8 @@ void handle_sysinfo_json() {
     json_number(F("sketch_size"),  String(ESP.getSketchSize() / 1024));
     json_number(F("sketch_free"),  String(ESP.getFreeSketchSpace() / 1024));
 
-    json_number(F("spiffs_size"),  String(SpiffsTotalBytes() / 1024));
-    json_number(F("spiffs_free"),  String(SpiffsFreeSpace() / 1024));
+    json_number(F("spiffs_size"),  String(FS_totalBytes() / 1024));
+    json_number(F("spiffs_free"),  String(FS_freeSpace() / 1024));
   json_close();
   json_close();
 
@@ -7072,25 +7072,25 @@ void handle_sysinfo() {
    TXBuffer += F(" kB free)");
   #endif
 
-  addRowLabel(getLabel(LabelType::SPIFFS_SIZE));
-  TXBuffer += SpiffsTotalBytes() / 1024;
+  addRowLabel(getLabel(LabelType::FS_SIZE));
+  TXBuffer += FS_totalBytes() / 1024;
   TXBuffer += F(" kB (");
-  TXBuffer += SpiffsFreeSpace() / 1024;
+  TXBuffer += FS_freeSpace() / 1024;
   TXBuffer += F(" kB free)");
 
   addRowLabel(F("Page size"));
-  TXBuffer += String(SpiffsPagesize());
+  TXBuffer += String(FS_pageSize());
 
   addRowLabel(F("Block size"));
-  TXBuffer += String(SpiffsBlocksize());
+  TXBuffer += String(FS_blockSize());
 
   addRowLabel(F("Number of blocks"));
-  TXBuffer += String(SpiffsTotalBytes() / SpiffsBlocksize());
+  TXBuffer += String(FS_totalBytes() / FS_blockSize());
 
   {
   #if defined(ESP8266)
     fs::FSInfo fs_info;
-    SPIFFS.info(fs_info);
+    FILESYSTEMTYPE.info(fs_info);
     addRowLabel(F("Maximum open files"));
     TXBuffer += String(fs_info.maxOpenFiles);
 

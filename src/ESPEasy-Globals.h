@@ -491,6 +491,7 @@ void setBitToUL(uint32_t& number, byte bitnr, bool value);
 void serialHelper_getGpioNames(struct EventStruct *event, bool rxOptional=false, bool txOptional=false);
 
 fs::File tryOpenFile(const String& fname, const String& mode);
+//String FileError(int line, const char * fname);
 
 enum SettingsType {
   BasicSettings_Type = 0,
@@ -565,10 +566,19 @@ bool showSettingsFileLayout = false;
   extern "C" {
   #include "spi_flash.h"
   }
-  extern "C" uint32_t _SPIFFS_start;
-  extern "C" uint32_t _SPIFFS_end;
-  extern "C" uint32_t _SPIFFS_page;
-  extern "C" uint32_t _SPIFFS_block;
+
+  #ifdef LITTLE_FS
+    #include "LittleFS.h"
+    extern "C" uint32_t _FS_start;
+    extern "C" uint32_t _FS_end;
+    extern "C" uint32_t _FS_page;
+    extern "C" uint32_t _FS_block;
+  #else
+    extern "C" uint32_t _SPIFFS_start;
+    extern "C" uint32_t _SPIFFS_end;
+    extern "C" uint32_t _SPIFFS_page;
+    extern "C" uint32_t _SPIFFS_block;
+  #endif
   #ifdef FEATURE_MDNS
     #include <ESP8266mDNS.h>
   #endif
@@ -2095,13 +2105,14 @@ unsigned long timingstats_last_reset = 0;
 #define WIFI_NOTCONNECTED_STATS 40
 #define LOAD_TASK_SETTINGS      41
 #define TRY_OPEN_FILE           42
-#define SPIFFS_GC_SUCCESS       43
-#define SPIFFS_GC_FAIL          44
-#define RULES_PROCESSING        45
-#define GRAT_ARP_STATS          46
-#define BACKGROUND_TASKS        47
-#define HANDLE_SCHEDULER_IDLE   48
-#define HANDLE_SCHEDULER_TASK   49
+#define CLEARFILE_STATS         43
+#define SPIFFS_GC_SUCCESS       44
+#define SPIFFS_GC_FAIL          45
+#define RULES_PROCESSING        46
+#define GRAT_ARP_STATS          47
+#define BACKGROUND_TASKS        48
+#define HANDLE_SCHEDULER_IDLE   49
+#define HANDLE_SCHEDULER_TASK   50
 
 
 
@@ -2117,6 +2128,7 @@ String getMiscStatsName(int stat) {
     switch (stat) {
         case LOADFILE_STATS:        return F("Load File");
         case SAVEFILE_STATS:        return F("Save File");
+        case CLEARFILE_STATS:       return F("Clear File");
         case LOOP_STATS:            return F("Loop");
         case PLUGIN_CALL_50PS:      return F("Plugin call 50 p/s");
         case PLUGIN_CALL_10PS:      return F("Plugin call 10 p/s");
@@ -2348,7 +2360,7 @@ void addPredefinedRules(const GpioFactorySettingsStruct& gpio_settings);
 // may not filter the ifdef checks properly.
 // Also the functions use a lot of global defined variables, so include at the end of this file.
 #include "ESPEasyWiFiEvent.h"
-#define SPIFFS_CHECK(result, fname) if (!(result)) { return(FileError(__LINE__, fname)); }
+#define FS_RES_CHECK(result, fname) if (!(result)) { return(FileError(__LINE__, fname)); }
 #include "WebServer_Rules.h"
 
 #endif /* ESPEASY_GLOBALS_H_ */

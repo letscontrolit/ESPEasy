@@ -159,7 +159,7 @@ void setup()
   APModeStationDisconnectedHandler = WiFi.onSoftAPModeStationDisconnected(onDisonnectedAPmode);
 #endif
 
-  if (SpiffsSectors() < 32)
+  if (FS_sectorCount() < 32)
   {
     serialPrintln(F("\nNo (or too small) SPIFFS area..\nSystem Halted\nPlease reflash with 128k SPIFFS minimum!"));
     while (true)
@@ -577,7 +577,7 @@ void loop()
     runPeriodicalMQTT();
     flushAndDisconnectAllClients();
 
-    SPIFFS.end();
+    FILESYSTEMTYPE.end();
 
     deepSleep(Settings.Delay);
     //deepsleep will never return, its a special kind of reboot

@@ -86,8 +86,13 @@ String getLabel(LabelType::Enum label) {
     case LabelType::FLASH_WRITE_COUNT:      return F("Flash Writes");
     case LabelType::SKETCH_SIZE:            return F("Sketch Size");
     case LabelType::SKETCH_FREE:            return F("Sketch Free");
-    case LabelType::SPIFFS_SIZE:            return F("SPIFFS Size");
-    case LabelType::SPIFFS_FREE:            return F("SPIFFS Free");
+  #ifdef LITTLE_FS
+    case LabelType::FS_SIZE:                return F("LittleFS Size");
+    case LabelType::FS_FREE:                return F("LittleFS Free");
+  #else
+    case LabelType::FS_SIZE:                return F("SPIFFS Size");
+    case LabelType::FS_FREE:                return F("SPIFFS Free");
+  #endif
 
   }
   return F("MissingString");
@@ -182,8 +187,8 @@ String getValue(LabelType::Enum label) {
     case LabelType::FLASH_WRITE_COUNT:      break;
     case LabelType::SKETCH_SIZE:            break;
     case LabelType::SKETCH_FREE:            break;
-    case LabelType::SPIFFS_SIZE:            break;
-    case LabelType::SPIFFS_FREE:            break;
+    case LabelType::FS_SIZE:            break;
+    case LabelType::FS_FREE:            break;
 
   }
   return F("MissingString");

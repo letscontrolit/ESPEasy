@@ -82,8 +82,8 @@ enum Enum {
   FLASH_WRITE_COUNT,
   SKETCH_SIZE,
   SKETCH_FREE,
-  SPIFFS_SIZE,
-  SPIFFS_FREE,
+  FS_SIZE,
+  FS_FREE,
 
 
 };
