@@ -194,24 +194,24 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
 \*********************************************************************************************/
 void Plugin_003_pulsecheck(byte Index)
 {
-  // Check if the conditions of the last edge are fulfilled to increase the counter
-  // 1. Condition: The edge has to be according to the selected mode (either "CHANGE" --> Rising + Falling edge accepted, otherwise the edge has to be falling or rising
-  // 2. Condition: The length of the recent pulse has to be longer than the set debounce time
-
   const unsigned long PulseLength=timePassedSince(Plugin_003_lastChangetime[Index]);
-  if(((Plugin_003_SelectedMode == 3) || (Plugin_003_SelectedMode == 1 && Plugin_003_edgeType_last[Index] == 1) || (Plugin_003_SelectedMode == 2 && Plugin_003_edgeType_last[Index] == 0)) && (PulseLength > (unsigned long)Settings.TaskDevicePluginConfig[Index][0]))
-  {
-	  const unsigned long PulseTime=timePassedSince(Plugin_003_pulseTimePrevious[Index]);
-      Plugin_003_pulseCounter[Index]++;
-      Plugin_003_pulseTotalCounter[Index]++;
-      Plugin_003_pulseTime[Index] = PulseTime;
-      Plugin_003_pulseTimePrevious[Index]=millis();
-
-  }
-  // Safe recent values for the next edge detection
-  bool edgeType = digitalRead(Plugin_003_InputPin[Index]);
-  Plugin_003_edgeType_last[Index] = edgeType;
   Plugin_003_lastChangetime[Index] = millis();
+  
+  if(PulseLength > (unsigned long)Settings.TaskDevicePluginConfig[Index][0])
+  {
+	  // Read state of the digital input
+	  bool edgeType = digitalRead(Plugin_003_InputPin[Index]);
+	  
+	  if(edgeType != Plugin_003_edgeType_last[Index] && ((Plugin_003_SelectedMode == CHANGE) || (Plugin_003_SelectedMode == RISING && Plugin_003_edgeType_last[Index] == 1) || (Plugin_003_SelectedMode == FALLING && Plugin_003_edgeType_last[Index] == 0)))
+	  {
+		const unsigned long PulseTime=timePassedSince(Plugin_003_pulseTimePrevious[Index]);
+		Plugin_003_pulseCounter[Index]++;
+		Plugin_003_pulseTotalCounter[Index]++;
+		Plugin_003_pulseTime[Index] = PulseTime;
+		Plugin_003_pulseTimePrevious[Index]=millis();
+	  } 
+	  Plugin_003_edgeType_last[Index] = edgeType;
+  }
 }
 
 
