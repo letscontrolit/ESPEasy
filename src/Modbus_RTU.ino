@@ -461,6 +461,12 @@ struct ModbusRTU_struct  {
     return result;
   }
 
+  uint32_t read_32b_HoldingRegister(short address) {
+    uint32_t result = 0;
+    process_32b_register(_modbus_address, MODBUS_READ_HOLDING_REGISTERS, address, result);
+    return result;
+  }
+
   int readInputRegister(short address) {
     // Only read 1 register
     return process_16b_register(_modbus_address, MODBUS_READ_INPUT_REGISTERS, address, 1);
@@ -553,6 +559,22 @@ struct ModbusRTU_struct  {
     }
     logModbusException(process_result);
     return -1;
+  }
+
+  bool process_32b_register(byte slaveAddress, byte functionCode,
+                                      short startAddress, uint32_t& result) {
+    buildFrame(slaveAddress, functionCode, startAddress, 2);
+    const byte process_result = processCommand();
+    if (process_result == 0) {
+      result = 0;
+      for (byte i = 0; i < 4; ++i) {
+        result = result << 8;
+        result += _recv_buf[i + 3];
+      }
+      return true;
+    }
+    logModbusException(process_result);
+    return false;
   }
 
   int writeSpecialCommandRegister(byte command) {
