@@ -154,6 +154,25 @@ boolean Plugin_084(byte function, struct EventStruct *event, String &string) {
       chksumStats += '/';
       chksumStats += reads_crc_failed;
       addHtml(chksumStats);
+
+      addFormCheckBox(F("Enable data logging"), F("p084_en_log"), P084_data->modbus.readHoldingRegister(0x500));
+
+      addRowLabel(F("Mode of data logging"));
+      addHtml(String(P084_data->modbus.readHoldingRegister(0x501)));
+
+      addFormNumericBox(F("Log Interval"), F("p084_log_int"), P084_data->modbus.readHoldingRegister(0x502), 1, 1440);
+      addUnit(F("minutes"));
+
+      addFormNumericBox(F("Full Range Current Value"), F("p084_fr_curr"), P084_data->modbus.readHoldingRegister(0x104), 20, 50000);
+      addUnit(F("A"));
+
+      addFormNumericBox(F("Full Range Shunt Value"), F("p084_fr_shunt"), P084_data->modbus.readHoldingRegister(0x105), 50, 100);
+      addUnit(F("mV"));
+
+      addFormNumericBox(F("Full Range Voltage Value"), F("p084_fr_volt"), P084_data->modbus.readHoldingRegister(0x107), 5, 9999);
+      addUnit(F("V"));
+
+
     }
 
     sensorTypeHelper_webformLoad_simple(event, P084_SENSOR_TYPE_INDEX);
@@ -168,6 +187,29 @@ boolean Plugin_084(byte function, struct EventStruct *event, String &string) {
       pconfig_webformSave(event, i);
     }
     sensorTypeHelper_saveSensorType(event, P084_SENSOR_TYPE_INDEX);
+    P084_data_struct *P084_data =
+        static_cast<P084_data_struct *>(getPluginTaskData(event->TaskIndex));
+    if (nullptr != P084_data && P084_data->isInitialized()) {
+      uint16_t log_enabled = isFormItemChecked(F("p084_en_log")) ? 1 : 0;
+      P084_data->modbus.writeMultipleRegisters(0x500, log_enabled);
+      delay(1);
+
+      uint16_t log_int = getFormItemInt(F("p084_log_int"));
+      P084_data->modbus.writeMultipleRegisters(0x502, log_int);
+      delay(1);
+
+      uint16_t current = getFormItemInt(F("p084_fr_curr"));
+      P084_data->modbus.writeMultipleRegisters(0x104, current);
+      delay(1);
+
+      uint16_t shunt = getFormItemInt(F("p084_fr_shunt"));
+      P084_data->modbus.writeMultipleRegisters(0x105, shunt);
+      delay(1);
+
+      uint16_t voltage = getFormItemInt(F("p084_fr_volt"));
+      P084_data->modbus.writeMultipleRegisters(0x107, voltage);
+    }
+
 
     success = true;
     break;
@@ -206,20 +248,13 @@ boolean Plugin_084(byte function, struct EventStruct *event, String &string) {
     if (nullptr != P084_data && P084_data->isInitialized()) {
       event->sensorType = PCONFIG(P084_SENSOR_TYPE_INDEX);
 
-      uint32_t ival = 0;
-      ival = P084_data->modbus.read_32b_HoldingRegister(0x200);
-      float voltage = *reinterpret_cast<float*>(&ival);
-      ival = P084_data->modbus.read_32b_HoldingRegister(0x202);
-      float current = *reinterpret_cast<float*>(&ival);
-      ival = P084_data->modbus.read_32b_HoldingRegister(0x204);
-      float power = *reinterpret_cast<float*>(&ival);
-      ival = P084_data->modbus.read_32b_HoldingRegister(0x300);
-      float import_energy = *reinterpret_cast<float*>(&ival);
-
-      UserVar[event->BaseVarIndex] = voltage;
-      UserVar[event->BaseVarIndex + 1] = current;
-      UserVar[event->BaseVarIndex + 2] = power;
-      UserVar[event->BaseVarIndex + 3] = import_energy;
+      UserVar[event->BaseVarIndex + 0] = P084_data->modbus.read_float_HoldingRegister(0x200); // voltage
+      delay(1);
+      UserVar[event->BaseVarIndex + 1] = P084_data->modbus.read_float_HoldingRegister(0x202); // current
+      delay(1);
+      UserVar[event->BaseVarIndex + 2] = P084_data->modbus.read_float_HoldingRegister(0x204) * 1000.0; // power (kW => W)
+      delay(1);
+      UserVar[event->BaseVarIndex + 3] = P084_data->modbus.read_32b_HoldingRegister(0x304) / 100.0; // total energy
 
       success = true;
     }

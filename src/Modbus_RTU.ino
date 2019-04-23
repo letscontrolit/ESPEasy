@@ -7,6 +7,7 @@
 #define MODBUS_READ_HOLDING_REGISTERS 0x03
 #define MODBUS_READ_INPUT_REGISTERS   0x04
 #define MODBUS_WRITE_SINGLE_REGISTER  0x06
+#define MODBUS_WRITE_MULTIPLE_REGISTERS  0x10
 
 #define MODBUS_CMD_READ_RAM      0x44
 #define MODBUS_CMD_READ_EEPROM   0x46
@@ -179,6 +180,20 @@ struct ModbusRTU_struct  {
     _sendframe[5] = value;
     _sendframe_used = 6;
   }
+
+  void buildWriteMult16bRegister(byte slaveAddress, uint16_t startAddress, uint16_t value) {
+    _sendframe[0] = slaveAddress;
+    _sendframe[1] = MODBUS_WRITE_MULTIPLE_REGISTERS;
+    _sendframe[2] = (byte)(startAddress >> 8);
+    _sendframe[3] = (byte)(startAddress & 0xFF);
+    _sendframe[4] = 0;  // nr reg hi
+    _sendframe[5] = 1;  // nr reg lo
+    _sendframe[6] = 2;  // nr bytes to follow (2 bytes per register)
+    _sendframe[7] = (byte)(value >> 8);
+    _sendframe[8] = (byte)(value & 0xFF);
+    _sendframe_used = 9;
+  }
+
 
   void buildFrame(byte slaveAddress, byte functionCode,
                              short startAddress, short parameter) {
@@ -467,6 +482,19 @@ struct ModbusRTU_struct  {
     return result;
   }
 
+  float read_float_HoldingRegister(short address) {
+    union {
+      uint32_t ival;
+      float fval;
+    } conversion;
+
+    conversion.ival = read_32b_HoldingRegister(address);
+    return conversion.fval;
+//    uint32_t ival = read_32b_HoldingRegister(address);
+//    float fval = *reinterpret_cast<float*>(&ival);
+//    return fval;
+  }
+
   int readInputRegister(short address) {
     // Only read 1 register
     return process_16b_register(_modbus_address, MODBUS_READ_INPUT_REGISTERS, address, 1);
@@ -483,6 +511,11 @@ struct ModbusRTU_struct  {
     // GN: Untested, will probably not work
     return process_16b_register(
         _modbus_address, MODBUS_WRITE_SINGLE_REGISTER, address, value);
+  }
+
+  int writeMultipleRegisters(short address, short value) {
+    return preset_mult16b_register(
+        _modbus_address, address, value);
   }
 
   byte modbus_get_MEI(byte slaveAddress, byte object_id,
@@ -556,6 +589,17 @@ struct ModbusRTU_struct  {
     const byte process_result = processCommand();
     if (process_result == 0) {
       return (_recv_buf[3] << 8) | (_recv_buf[4]);
+    }
+    logModbusException(process_result);
+    return -1;
+  }
+
+  // Still writing single register, but calling it using "Preset Multiple Registers" function (FC=16)
+  int preset_mult16b_register(byte slaveAddress, uint16_t startAddress, uint16_t value) {
+    buildWriteMult16bRegister(slaveAddress, startAddress, value);
+    const byte process_result = processCommand();
+    if (process_result == 0) {
+      return ((_recv_buf[4] << 8) | (_recv_buf[5]));
     }
     logModbusException(process_result);
     return -1;
@@ -651,7 +695,7 @@ private:
   }
 
 
-  byte _sendframe[8] = {0};
+  byte _sendframe[12] = {0};
   byte _sendframe_used = 0;
   byte _recv_buf[MODBUS_RECEIVE_BUFFER] = {0xff};
   byte _recv_buf_used = 0;
