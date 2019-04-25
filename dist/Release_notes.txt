@@ -1,4 +1,15 @@
 -------------------------------------------------
+Changes in release mega-20190425 (since mega-20190419)
+-------------------------------------------------
+
+Release date: Thu Apr 25 04:00:18 CEST 2019
+
+TD-er (2):
+      [SHT1x] Add delay to slow down clock rate (#2444)
+      [SHT1x] Make clock delay configurable.
+
+
+-------------------------------------------------
 Changes in release mega-20190419 (since mega-20190416)
 -------------------------------------------------
 
