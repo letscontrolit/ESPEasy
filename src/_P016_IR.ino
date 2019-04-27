@@ -15,15 +15,6 @@
 #include <IRrecv.h>
 #include <IRutils.h>
 
-#ifdef P035_Standardized_AC_Commands //They use the same library, so enable it for both plugins if already enabled in the other.
-#define P016_Extended_Decoding
-#endif
-
-#ifdef P016_Extended_Decoding // The following are needed for extended decoding of A/C Messages and or using standardised common arguments for controlling all deeply supported A/C units
-#include <IRac.h>
-#define P035_Standardized_AC_Commands
-#endif
-
 #define PLUGIN_016
 #define PLUGIN_ID_016         16
 #define PLUGIN_NAME_016       "Communication - TSOP4838"
@@ -197,7 +188,7 @@ boolean Plugin_016(byte function, struct EventStruct *event, String& string)
            //addLog(LOG_LEVEL_DEBUG,(String(F("IR: RAW TIMINGS: ")) + resultToSourceCode(&results))); // Output the results as RAW source code //not showing up nicely in the web log
           }
 
-#ifdef P016_Extended_Decoding
+#ifdef P016_P035_Extended_AC
           // Display any extra A/C info if we have it.
           // Display the human readable state of an A/C message if we can.
           String description = "";
@@ -331,7 +322,7 @@ boolean Plugin_016(byte function, struct EventStruct *event, String& string)
 
   // If we got a human-readable description of the message, display it.
           if (description != "") addLog(LOG_LEVEL_INFO, description);
-#endif  // Extended Messages
+#endif  // P016_P035_Extended_AC
           
           unsigned long IRcode = results.value;
           UserVar[event->BaseVarIndex] = (IRcode & 0xFFFF);

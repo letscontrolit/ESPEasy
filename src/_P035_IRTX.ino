@@ -9,18 +9,6 @@
 #include <IRsend.h>
 #include <IRutils.h>
 
-// Uncomment the following define to enable the extended decoding of AC messages (20K bytes in flash) (Plugin 016)
-// Also for using standardised common arguments for controlling all deeply supported A/C units
-//#define P035_Standardized_AC_Commands
-
-#ifdef P016_Extended_Decoding //They use the same library, so enable it for both plugins if already enabled in the other.
-#define P035_Standardized_AC_Commands
-#endif
-
-#ifdef P035_Standardized_AC_Commands // The following are needed for extended decoding of A/C Messages and or using standardised common arguments for controlling all deeply supported A/C units
-#include <IRac.h>
-#endif
-
 IRsend *Plugin_035_irSender=nullptr;
 
 #define PLUGIN_035
@@ -281,67 +269,25 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
             IrBits = 0;                                                                   //Leave it to 0 for default protocol bits
             if (GetArgv(string.c_str(), TmpStr1, 5)) IrRepeat = str2int(TmpStr1.c_str()); // Nr. of times the message is to be repeated
 
-            if (IrType.equals(F("aiwa_rc_t501")))         sendIRCode(AIWA_RC_T501,IrCode,IrBits,IrRepeat);
-            if (IrType.equals(F("carrier_ac")))           sendIRCode(CARRIER_AC,IrCode,IrBits,IrRepeat);
-            if (IrType.equals(F("coolix")))               sendIRCode(COOLIX,IrCode,IrBits,IrRepeat);
-            if (IrType.equals(F("denon")))                sendIRCode(DENON,IrCode,IrBits,IrRepeat);
-            if (IrType.equals(F("dish")))                 sendIRCode(DISH,IrCode,IrBits,IrRepeat);
-            if (IrType.equals(F("gicable")))              sendIRCode(GICABLE,IrCode,IrBits,IrRepeat);
-            if (IrType.equals(F("jvc")))                  sendIRCode(JVC,IrCode,IrBits,IrRepeat);
-            if (IrType.equals(F("lasertag")))             sendIRCode(LASERTAG,IrCode,IrBits,IrRepeat);
-            if (IrType.equals(F("legopf")))               sendIRCode(LEGOPF,IrCode,IrBits,IrRepeat);
-            if (IrType.equals(F("lg")))                   sendIRCode(LG,IrCode,IrBits,IrRepeat);
-            if (IrType.equals(F("lg2")))                  sendIRCode(LG2,IrCode,IrBits,IrRepeat);
-            if (IrType.equals(F("lutron")))               sendIRCode(LUTRON,IrCode,IrBits,IrRepeat);
-            if (IrType.equals(F("magiquest")))            sendIRCode(MAGIQUEST,IrCode,IrBits,IrRepeat);
-            if (IrType.equals(F("midea")))                sendIRCode(MIDEA,IrCode,IrBits,IrRepeat);
-            if (IrType.equals(F("mitsubishi")))           sendIRCode(MITSUBISHI,IrCode,IrBits,IrRepeat);
-            if (IrType.equals(F("mitsubishi2")))          sendIRCode(MITSUBISHI2,IrCode,IrBits,IrRepeat);
-            if (IrType.equals(F("nikai")))                sendIRCode(NIKAI,IrCode,IrBits,IrRepeat);
-            if (IrType.equals(F("nec")))                  sendIRCode(NEC,IrCode,IrBits,IrRepeat);
-            if (IrType.equals(F("panasonic")))            sendIRCode(PANASONIC,IrCode,IrBits,IrRepeat);
-            if (IrType.equals(F("pioneer")))              sendIRCode(PIONEER,IrCode,IrBits,IrRepeat);
-            if (IrType.equals(F("rc5x")))                 sendIRCode(RC5X,IrCode,IrBits,IrRepeat);
-            if (IrType.equals(F("rc5")))                  sendIRCode(RC5,IrCode,IrBits,IrRepeat);
-            if (IrType.equals(F("rc6")))                  sendIRCode(RC6,IrCode,IrBits,IrRepeat);	
-            if (IrType.equals(F("rcmm")))                 sendIRCode(RCMM,IrCode,IrBits,IrRepeat);
-            if (IrType.equals(F("samsung")))              sendIRCode(SAMSUNG,IrCode,IrBits,IrRepeat);
-			      if (IrType.equals(F("samsung36")))            sendIRCode(SAMSUNG36,IrCode,IrBits,IrRepeat);
-            if (IrType.equals(F("sanyo_lc7461")))         sendIRCode(SANYO_LC7461,IrCode,IrBits,IrRepeat);
-			      if (IrType.equals(F("sharp")))                sendIRCode(SHARP,IrCode,IrBits,IrRepeat);
-            if (IrType.equals(F("sherwood")))             sendIRCode(SHERWOOD,IrCode,IrBits,IrRepeat);
-            if (IrType.equals(F("sony")))                 sendIRCode(SONY,IrCode,IrBits,IrRepeat);
-            if (IrType.equals(F("teco")))                 sendIRCode(TECO,IrCode,IrBits,IrRepeat);
-			      if (IrType.equals(F("vestel_ac")))            sendIRCode(VESTEL_AC,IrCode,IrBits,IrRepeat);
-            if (IrType.equals(F("whynter")))              sendIRCode(WHYNTER,IrCode,IrBits,IrRepeat);
-            if (IrType.equals(F("mitsubishi_heavy_88")))  sendIRCode(MITSUBISHI_HEAVY_88,IrCode,IrBits,IrRepeat);
-            if (IrType.equals(F("mitsubishi_heavy_152"))) sendIRCode(MITSUBISHI_HEAVY_152,IrCode,IrBits,IrRepeat);
-            
-
-            //if (IrType.equals(F("raw")))              parseStringAndSendRaw(Plugin_035_irSender, code_str);   //too big String is needed for this, 
+            //if (IrType.equals(F("raw")))      parseStringAndSendRaw(Plugin_035_irSender, code_str);   //too big String is needed for this, 
                                                                                                                 //also conflicts with the keyword RAW (for the encoding) and RAW as in the library meanning of the timmings information. 
-            if (IrType.equals(F("gc")))                 parseStringAndSendGC(ircodestr);                        //Needs testing
-            if (IrType.equals(F("pronto")))             parseStringAndSendPronto(ircodestr, 0);                 //Needs testing
-            if (IrType.equals(F("mitsubishi_ac")))      parseStringAndSendAirCon(MITSUBISHI_AC, ircodestr);
-            if (IrType.equals(F("fujitsu_ac")))         parseStringAndSendAirCon(FUJITSU_AC, ircodestr);
-            if (IrType.equals(F("kelvinator")))         parseStringAndSendAirCon(KELVINATOR, ircodestr);
-            if (IrType.equals(F("daikin")))             parseStringAndSendAirCon(DAIKIN, ircodestr);
-            if (IrType.equals(F("daikin2")))            parseStringAndSendAirCon(DAIKIN2, ircodestr);
-            if (IrType.equals(F("gree")))               parseStringAndSendAirCon(GREE, ircodestr);	
-            if (IrType.equals(F("argo")))               parseStringAndSendAirCon(ARGO, ircodestr);
-            if (IrType.equals(F("trotec")))             parseStringAndSendAirCon(TROTEC, ircodestr);
-            if (IrType.equals(F("toshiba_ac")))         parseStringAndSendAirCon(TOSHIBA_AC, ircodestr);
-            if (IrType.equals(F("haier_ac")))           parseStringAndSendAirCon(HAIER_AC, ircodestr);
-            if (IrType.equals(F("haier_ac_yrw02")))     parseStringAndSendAirCon(HAIER_AC_YRW02, ircodestr);
-            if (IrType.equals(F("hitachi_ac")))         parseStringAndSendAirCon(HITACHI_AC, ircodestr);
-            if (IrType.equals(F("hitachi_ac1")))        parseStringAndSendAirCon(HITACHI_AC1, ircodestr);
-            if (IrType.equals(F("hitachi_ac2")))        parseStringAndSendAirCon(HITACHI_AC2, ircodestr);
-            if (IrType.equals(F("electra_ac")))         parseStringAndSendAirCon(ELECTRA_AC, ircodestr);
-            if (IrType.equals(F("panasonic_ac")))       parseStringAndSendAirCon(PANASONIC_AC, ircodestr);
-            if (IrType.equals(F("samsung_ac")))         parseStringAndSendAirCon(SAMSUNG_AC, ircodestr);
-            if (IrType.equals(F("whirlpool_ac")))       parseStringAndSendAirCon(WHIRLPOOL_AC, ircodestr);
-            if (IrType.equals(F("mwm")))                parseStringAndSendAirCon(MWM, ircodestr);
-            if (IrType.equals(F("tcl112ac")))           parseStringAndSendAirCon(TCL112AC, ircodestr);
+           // if (IrType.equals(F("gc")))       parseStringAndSendGC(ircodestr);          //Needs testing
+           // if (IrType.equals(F("pronto")))   parseStringAndSendPronto(ircodestr, 0);   //Needs testing
+
+            if (IrType.equals(F("mitsubishi_ac")) || IrType.equals(F("fujitsu_ac")) || IrType.equals(F("kelvinator"))
+              || IrType.equals(F("daikin")) || IrType.equals(F("daikin2")) || IrType.equals(F("gree"))
+              || IrType.equals(F("argo")) || IrType.equals(F("trotec")) || IrType.equals(F("toshiba_ac"))
+               || IrType.equals(F("haier_ac")) || IrType.equals(F("haier_ac_yrw02")) || IrType.equals(F("hitachi_ac"))
+               || IrType.equals(F("hitachi_ac1")) || IrType.equals(F("hitachi_ac2")) || IrType.equals(F("electra_ac"))
+               || IrType.equals(F("panasonic_ac")) || IrType.equals(F("samsung_ac")) || IrType.equals(F("whirlpool_ac"))
+               || IrType.equals(F("mwm")) || IrType.equals(F("tcl112ac")))  
+               {parseStringAndSendAirCon(strToDecodeType(IrType.c_str()), ircodestr); } 
+               else {
+               sendIRCode(strToDecodeType(IrType.c_str()),IrCode,IrBits,IrRepeat);
+               }
+
+
+          }
           }
 
           addLog(LOG_LEVEL_INFO, String(F("IRTX: IR Code Sent: ")) + IrType_orig);

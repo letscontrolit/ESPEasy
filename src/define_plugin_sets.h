@@ -185,7 +185,7 @@ To create/register a plugin, you have to :
 // Disable all settings like these when not needed:
 // #define DECODE_TOSHIBA_AC      true
 // #define SEND_TOSHIBA_AC        true
-// The following are needed for extended decoding of A/C Messages and or using standardised common arguments for controlling all deeply supported A/C units
+// The following define is needed for extended decoding of A/C Messages and or using standardised common arguments for controlling all deeply supported A/C units
 // #define P016_P035_Extended_AC
 
 #ifdef PLUGIN_BUILD_IR
