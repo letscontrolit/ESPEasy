@@ -395,3 +395,23 @@ TEST(TestCountBits, Integer) {
   ASSERT_EQ(64, countBits(data, 64));
   ASSERT_EQ(0, countBits(data, 64, false));
 }
+
+TEST(TestStrToDecodeType, strToDecodeType) {
+  EXPECT_EQ(decode_type_t::NEC, strToDecodeType("NEC"));
+  EXPECT_EQ(decode_type_t::KELVINATOR, strToDecodeType("KELVINATOR"));
+  EXPECT_EQ(decode_type_t::UNKNOWN, strToDecodeType("foo"));
+}
+
+TEST(TestUtils, htmlEscape) {
+  EXPECT_EQ("", htmlEscape(""));
+  EXPECT_EQ("No Changes", htmlEscape("No Changes"));
+  EXPECT_EQ("No\tChanges+_%^$@~`\n:\\", htmlEscape("No\tChanges+_%^$@~`\n:\\"));
+  EXPECT_EQ("&quot;With Changes&quot;", htmlEscape("\"With Changes\""));
+  EXPECT_EQ(
+      "&apos;&semi;&excl;&dash;&quot;&lt;&gt;&#equals;&amp;&num;&lcub;&rcub;"
+      "&lpar;&rpar;", htmlEscape("';!-\"<>=&#{}()"));
+  EXPECT_EQ("&quot;&quot;", htmlEscape("\"\""));
+  EXPECT_EQ(
+      "&amp;quot&semi;&amp;lt&semi;&amp;apos&semi;&amp;gt&semi;&amp;amp&semi;",
+      htmlEscape("&quot;&lt;&apos;&gt;&amp;"));
+}
