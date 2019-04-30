@@ -7,7 +7,7 @@
 CONFIG
 TaskDevicePluginConfig settings:
 0: send boot state (true,false)
-1:
+1: portmask Output bit 0..7
 2:
 3:
 4: use doubleclick (0,1,2,3)
@@ -30,8 +30,9 @@ TaskDevicePluginConfigLong settings:
 
 #define PLUGIN_019
 #define PLUGIN_ID_019         19
-#define PLUGIN_NAME_019       "Switch input - PCF8574"
+#define PLUGIN_NAME_019       "Switch I/O - PCF8574"
 #define PLUGIN_VALUENAME1_019 "State"
+#define PLUGIN_VALUENAME2_019 "pcfGPIO#"
 #define PLUGIN_019_DOUBLECLICK_MIN_INTERVAL 1000
 #define PLUGIN_019_DOUBLECLICK_MAX_INTERVAL 3000
 #define PLUGIN_019_LONGPRESS_MIN_INTERVAL 1000
@@ -79,6 +80,8 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
     case PLUGIN_GET_DEVICEVALUENAMES:
       {
         strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_019));
+        // Input prefix i.e. "pcfGPIO#"
+        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], PSTR(PLUGIN_VALUENAME2_019));
         break;
       }
 
@@ -129,6 +132,22 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
 
         addFormCheckBox(F("Use Safe Button (slower)"), F("p019_sb"), round(PCONFIG_FLOAT(3)));
 
+        // additional options for auto-detect output pins by C014 homie controller.
+        addFormSubHeader(F("Port # used as OUTPUT"));
+        bool portOutput = false;
+        String label = "";
+        String id = "";
+        for (int i=0;i<8;i++) {
+          portOutput = (PCONFIG(1) & 1<<(i));
+          label = F("Port#");
+          label += (i+1);
+          id = F("p019_");
+          id += label;
+          addFormCheckBox(label, id, portOutput);
+        }
+        portOutput = (PCONFIG(1) & 1<<(8));
+        addFormCheckBox(F("Inversed Output Logic"), F("p019_inverseOutput"), portOutput);
+
         success = true;
         break;
       }
@@ -147,6 +166,21 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
         PCONFIG_FLOAT(2) = getFormItemInt(F("p019_lpmininterval"));
 
         PCONFIG_FLOAT(3) = isFormItemChecked(F("p019_sb"));
+
+        // additional options for auto-detect output pins by C014 homie controller.
+        String label = "";
+        String id = "";
+        PCONFIG(1)=0;
+        for (int i=0;i<8;i++) {
+          label = F("Port#");
+          label += i;
+          id = F("p019_");
+          id += label;
+          if (isFormItemChecked(id)) {
+            PCONFIG(1) |= (1U << i);
+          }
+        }
+        if (isFormItemChecked(F("p019_inverseOutput"))) PCONFIG(1) |= (1U << 8);
 
         //check if a task has been edited and remove task flag from the previous pin
         for (std::map<uint32_t,portStatusStruct>::iterator it=globalMapPortStatus.begin(); it!=globalMapPortStatus.end(); ++it) {

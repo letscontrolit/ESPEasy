@@ -29,6 +29,7 @@
 #define CPLUGIN_014_SYSTEM_DEVICE   "SYSTEM" // name for system device Plugin for cmd and GIO values
 #define CPLUGIN_014_CMD_VALUE       "cmd" // name for command value
 #define CPLUGIN_014_GPIO_VALUE      "gpio" // name for gpio value i.e. "gpio1"
+#define CPLUGIN_014_PCF_VALUE       "Port" // name for pcf gpio value i.e. "Port1"
 #define CPLUGIN_014_CMD_VALUE_NAME  "Command" // human readabele name for command value
 
 byte msgCounter=0; // counter for send Messages (currently for information / log only!
@@ -419,6 +420,40 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
 */                      }
                       }
                     } // end loop throug values
+
+                    // special values for receiving plugins (TESTING)
+
+                    if (Device[DeviceIndex].Number==19) {// pcf8574 port expander
+                      if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+                        String log = F("C014 : pcd8574 detected: ");
+                        log += ExtraTaskSettings.TaskDeviceName;
+                        log += F(" I/O Seting: ");
+                        log += Settings.TaskDevicePluginConfig[x][1];
+                        addLog(LOG_LEVEL_DEBUG, log);
+                      }
+                      bool portOutput = false;
+                      String name = "";
+                      for (int i=0;i<8;i++) {
+                        //Settings.TaskDevicePluginConfig[event->TaskIndex][(n)]
+                        portOutput = (Settings.TaskDevicePluginConfig[x][1] & 1<<(i));
+                        if (portOutput) {
+                          valueName = F("Port");
+                          if (Settings.TaskDevicePort[x]>31 && Settings.TaskDevicePort[x]<40) { // pcf8574 Port 0x20-0x27
+                            valueName += ((Settings.TaskDevicePort[x]-32)*8)+i+1;
+                          } else if (Settings.TaskDevicePort[x]>55 && Settings.TaskDevicePort[x]<64){ // pcf8574APort 0x38-0x3f
+                            valueName += ((Settings.TaskDevicePort[x]-63)*8)+i+65;
+                          } else { // unclear port
+                            valueName += i+1;
+                          }
+                          name = F("pcf GPIO");
+                          name += (i+1);
+                          CPLUGIN_014_addToList(valuesList,valueName.c_str());
+                          CPlugin_014_sendMQTTnode(nodename, deviceName.c_str(), valueName.c_str(), "/$name", name.c_str(), errorCounter);
+                          CPlugin_014_sendMQTTnode(nodename, deviceName.c_str(), valueName.c_str(), "/$datatype", "boolean", errorCounter);
+                          CPlugin_014_sendMQTTnode(nodename, deviceName.c_str(), valueName.c_str(), "/$settable", "true", errorCounter);
+                        }
+                      }
+                    }
                   } else { // Device has custom Values
                     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
                       String log = F("C014 : Device has custom values: ");
@@ -561,6 +596,17 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
               int deviceNr=CPlugin_014_getPluginNr(nodeName);
               int pluginID=Device[getDeviceIndex(Settings.TaskDeviceNumber[deviceNr])].Number;
 
+              if (pluginID==19) // Plugin 19 PCF8574
+              { // PCFGPIO,<pin>,<value>	1,0	Control PCF8574 output pins (1 or 0) >, works only with new version of P019!
+                cmd = F("PCFGPIO,"); // Set a Dummy Device Value
+                cmd += valueName.substring(strlen(CPLUGIN_014_PCF_VALUE)).toInt(); // correct Port already encodet into Port# Topic
+                cmd += F(",");
+                bool portOutputInv = (Settings.TaskDevicePluginConfig[deviceNr][1] & 1<<(8));
+                if (event->String2==F("true")) cmd += !portOutputInv;
+                  else cmd += portOutputInv;
+                validTopic = true;
+              }
+
               if (pluginID==33) // Plugin 33 Dummy Device
               { // DummyValueSet,<task/device nr>,<value nr>,<value/formula (!ToDo) >, works only with new version of P033!
                 int valueNr = CPlugin_014_getValueNr(deviceNr,valueName);
@@ -667,8 +713,8 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
 
       case CPLUGIN_ACKNOWLEDGE:
       {
-        LoadTaskSettings(event->Par1-1);
-        if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+//        LoadTaskSettings(event->Par1-1); // ToDo: This aussumes that the TaskSettings are still loaded!
+        if (loglevelActiveFor(LOG_LEVEL_DEBUG_DEV)) {
           String log = F("CPLUGIN_ACKNOWLEDGE: ");
           log += string;
           log += F(" / ");
@@ -701,7 +747,7 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
           log += event->Par4;
           log += F(" P5:");
           log += event->Par5;
-          addLog(LOG_LEVEL_DEBUG, log);
+          addLog(LOG_LEVEL_DEBUG_DEV, log);
         }
         success = false;
         if (string!="") {
@@ -743,16 +789,20 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
           {
             String topic = CPLUGIN_014_PUBLISH;
             topic.replace(F("%sysname%"), Settings.Name);
-            int deviceIndex = event->Par1; //parseString(string, 2).toInt();
-            LoadTaskSettings(deviceIndex-1);
-            String deviceName = ExtraTaskSettings.TaskDeviceName;
-            topic.replace(F("%tskname%"), deviceName);
-            String valueName = ExtraTaskSettings.TaskDeviceValueNames[event->Par2-1]; //parseString(string, 3).toInt()-1];
-            topic.replace(F("%valname%"), valueName);
+            int deviceIndex = 0;
+            String deviceName = "";
+            String valueName = "";
+            String valueStr = "";
 
             if ((commandName == F("taskvalueset")) || (commandName == F("dummyvalueset"))) // should work for both
             {
-              String valueStr = toString(UserVar[event->BaseVarIndex+event->Par2-1],ExtraTaskSettings.TaskDeviceValueDecimals[event->Par2-1]); //parseString(string, 4);
+              deviceIndex = event->Par1; //parseString(string, 2).toInt();
+              LoadTaskSettings(deviceIndex-1);
+              deviceName = ExtraTaskSettings.TaskDeviceName;
+              topic.replace(F("%tskname%"), deviceName);
+              valueName = ExtraTaskSettings.TaskDeviceValueNames[event->Par2-1]; // get Value Name
+              topic.replace(F("%valname%"), valueName);
+              valueStr = toString(UserVar[event->BaseVarIndex+event->Par2-1],ExtraTaskSettings.TaskDeviceValueDecimals[event->Par2-1]); //parseString(string, 4);
               success = MQTTpublish(CPLUGIN_ID_014, topic.c_str(), valueStr.c_str(), false);
               if (loglevelActiveFor(LOG_LEVEL_INFO) && success) {
                 String log = F("C014 : Acknowledged: ");
@@ -766,7 +816,38 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
                 addLog(LOG_LEVEL_INFO, log+" success!");
               }
               if (loglevelActiveFor(LOG_LEVEL_ERROR) && !success) {
-                String log = F("C014 : Aacknowledged: ");
+                String log = F("C014 : Acknowledged: ");
+                log += deviceName;
+                log += F(" var: ");
+                log += valueName;
+                log += F(" topic: ");
+                log += topic;
+                log += F(" value: ");
+                log += valueStr;
+                addLog(LOG_LEVEL_ERROR, log+" ERROR!");
+              }
+            } else if (commandName == F("pcfgpio")) {
+              deviceName = ExtraTaskSettings.TaskDeviceName;
+              topic.replace(F("%tskname%"), deviceName);
+              valueName = F(CPLUGIN_014_PCF_VALUE);
+              valueName += event -> Par1;
+              topic.replace(F("%valname%"), valueName);
+              bool portOutputInv = (Settings.TaskDevicePluginConfig[ExtraTaskSettings.TaskIndex][1] & 1<<(8));
+              valueStr = toString((event -> Par2) ^ portOutputInv);
+              success = MQTTpublish(CPLUGIN_ID_014, topic.c_str(), valueStr.c_str(), false);
+              if (loglevelActiveFor(LOG_LEVEL_INFO) && success) {
+                String log = F("C014 : Acknowledged: ");
+                log += deviceName;
+                log += F(" var: ");
+                log += valueName;
+                log += F(" topic: ");
+                log += topic;
+                log += F(" value: ");
+                log += valueStr;
+                addLog(LOG_LEVEL_INFO, log+" success!");
+              }
+              if (loglevelActiveFor(LOG_LEVEL_ERROR) && !success) {
+                String log = F("C014 : Acknowledged: ");
                 log += deviceName;
                 log += F(" var: ");
                 log += valueName;
