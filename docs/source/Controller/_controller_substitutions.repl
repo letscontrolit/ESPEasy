@@ -144,6 +144,17 @@
 .. |C013_maintainer| replace:: `.`
 .. |C013_compileinfo| replace:: `.`
 
+.. |C014_name| replace:: :cyan:`Homie MQTT (Version 3.0.1 & 4.0.0dev)`
+.. |C014_type| replace:: :cyan:`Controller`
+.. |C014_typename| replace:: :cyan:`Controller - Homie MQTT convention`
+.. |C014_status| replace:: :green:`TESTING`
+.. |C014_github| replace:: C014.ino
+.. _C014_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_C014.ino
+.. |C014_usedby| replace:: `.`
+.. |C014_shortinfo| replace:: `Controller for communication following the Homie convention`
+.. |C014_maintainer| replace:: `.`
+.. |C014_compileinfo| replace:: `Can be compiled for Homie 3.0.1 or 4.0.0dev`
+
 .. |C016_name| replace:: :cyan:`Cache`
 .. |C016_type| replace:: :cyan:`Controller`
 .. |C016_typename| replace:: :cyan:`Controller - Cache`

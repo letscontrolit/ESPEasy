@@ -1,0 +1,8 @@
+.. csv-table::
+        :header: "Attribute", "Description", "Example", "3.0.1", "4.0.0"
+        :widths: 10, 50, 20, 10, 10
+
+        "``$name``", "Friendly name of the device", "EPSEasy#1", ":green:`required`", ":green:`required`"
+        "``$homie``", "The implemented Homie convention version", "4.0.0", ":green:`required`", ":green:`required`"
+        "``$state``", "See chapter Features below", "ready", ":green:`required`", ":green:`required`"
+        "``$nodes``", "Nodes the device exposes separated by commas for multiple ones. Sent at the end for performance reasons.", "SYSTEM SysInfo", ":green:`required`", ":green:`required`"

@@ -32,6 +32,7 @@ Controller Plugins
    ":ref:`C011_page`","|C011_status|","C011"
    ":ref:`C012_page`","|C012_status|","C012"
    ":ref:`C013_page`","|C013_status|","C013"
+   ":ref:`C014_page`","|C014_status|","C013"
    ":ref:`C016_page`","|C016_status|","C016"
 
 
