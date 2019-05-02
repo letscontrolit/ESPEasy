@@ -147,7 +147,7 @@
 .. |C014_name| replace:: :cyan:`Homie MQTT (Version 3.0.1 & 4.0.0dev)`
 .. |C014_type| replace:: :cyan:`Controller`
 .. |C014_typename| replace:: :cyan:`Controller - Homie MQTT convention`
-.. |C014_status| replace:: :green:`TESTING`
+.. |C014_status| replace:: :yellow:`TESTING`
 .. |C014_github| replace:: C014.ino
 .. _C014_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_C014.ino
 .. |C014_usedby| replace:: `.`

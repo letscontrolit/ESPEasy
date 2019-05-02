@@ -36,9 +36,9 @@ This controller connects to a MQTT Server providing auto-discover information an
 
 For more information on `Homie convention <https://homieiot.github.io/>`_
 
-The inital idea to implement this controller was to have a easy way to include ESPEasy in modern home automation systems without or with as less efford as possible. Imagine your device pops up in i.e. openHAB and you only have to pic the values you are interested in and can imidiatly see measurements or switch GPIOs without a single line of code.
+The initial idea to implement this controller was to have a easy way to include ESPEasy in modern home automation systems without or with as less efford as possible. Imagine your device pops up in i.e. openHAB and you only have to pic the values you are interested in and can imidiatly see measurements or switch GPIOs without a single line of code.
 
-When a MQTT connection is established for the first time the controller sends auto-discovery information for system services like commands and basic GPIO functions and for all values send by configured devices. Whenn all messages where sent sucessfully a homie compatible home automation server or other compatible controllers should be able to detect the unit and establish zwo way communication.
+When a MQTT connection is established after boot the controller sends auto-discovery information for system services like commands and basic GPIO functions and for all values send by configured devices. When all messages where sent sucessfully a homie compatible home automation server or other compatible controllers should be able to detect the unit and establish zwo way communication.
 
 MQTT topic scheme
 -----------------
@@ -81,17 +81,17 @@ Setup
   5584 : EVENT: MQTT#Connected
   5754 : C014 : autodiscover information of 4 Devices and 6 Nodes sent with no errors! (26 messages)
 
-Limitations
------------
+Troubleshoot
+------------
 
-The auto-discover information is sent throug a big number of messages (usual more than 20). If your controller software shows errors during the auto-discover process try the following steps:
+The auto-discover information is sent through a big number of messages (usual more than 20). If your controller software shows errors during the auto-discover process try the following steps:
 
 - For testing purposes start with a basic setup with none or only one device configured and enabled.
-- More devices can be added or (re-)enabeled later.
+- More devices can be added or (re-)enabled later.
 - Disable already configured devices (devices without the enabled box ticked will be ignored)
 - Check with a MQTT client if all messages are sent. The last message is ``$nodes`` attribute listing minimum the ``SYSTEM`` node if no devices are enabled.
-- check your WIFI connection. Perhaps bring your device nearer to your access point. (only nessesary during the setup process because the messages should be stored by the broker)
-- check via syslog or serial console if the messages are sent sucessfull (you can't see the log output in the web log)
+- check your WIFI connection. Perhaps bring your device nearer to your access point. (only necessary during the setup process because the messages should be stored by the broker)
+- check via syslog or serial console if the messages are sent successful (you can't see the log output in the web log)
 - use the `mqqt-forget <https://www.npmjs.com/package/mqtt-forget>`_ tool to delete unused retained messages from your broker via wildcards
 
 Features
@@ -104,17 +104,17 @@ The controller currently supports these features
 - switch GPIOs through ``homie/%unitName%/SYSTEM/gpio#/set`` topic. The GPIO port must be set to **default low** or **default high** in the hardware tab to be included during autodiscover.
 - send updates of GPIO ports to ``homie/%unitName%/SYSTEM/gpio#`` regardles from where the change is triggered (to be fully tested).
 - receive values for dummy devices via ``homie/%unitName%/%dummyDeviceName%/%valueName%/set``. From there the values can be processed further by using rules.
-- set gpio pins of pcf8574 port expanders. Use the updated pcf8574 (P019) plugin to select wich gpio pins should act as an output  (to be fully tested).
+- set gpio pins of pcf8574 port expanders. Use the updated pcf8574 (P019) plugin to select witch gpio pins should act as an output  (to be fully tested).
 - handle ``$state`` attribute (for complete list see atrribute table above)
 
-  - ``init`` during boot processe
+  - ``init`` during boot process
   - ``ready`` during normal operation and as a heartbeat every 30sec (to be tested)
   - ``alert`` currently only if auto-discover fails. (ToDo: inform about more error states)
   - ``sleeping`` sent before deep sleep
   - ``lost`` should be configured as LWT
-  - ``disconnected`` sent to the old topic if the unit name chnages to inform that the old topic is not valid any more. Auto-discover messages are sent automaticly to the modified topic tree.
+  - ``disconnected`` sent to the old topic if the unit name changes to inform that the old topic is not valid any more. Auto-discover messages are sent automaticly to the modified topic tree.
 
-- acknolage received messege by the ``homie/%unitName%/%deviceName%/%valueName%/set`` topic to the coresponding value ``homie/%unitName%/%deviceName%/%valueName%`` (needs further testing)
+- acknowledge received message by the ``homie/%unitName%/%deviceName%/%valueName%/set`` topic to the corresponding value ``homie/%unitName%/%deviceName%/%valueName%`` even if the value was changed by a different source like HTTP or rule to keep the state in your home automation system allays up to date. (Needs further testing)
 
 Future / planned features
 -------------------------
@@ -132,6 +132,8 @@ Under the hood
 Auto-dicover information is sent by several $attributes
 
 currently the following attributes will be sent during boot
+
+
 
 .. include:: C014_attributes.repl
 
