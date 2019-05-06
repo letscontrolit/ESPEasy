@@ -187,6 +187,42 @@ public:
 #define C012_queue_element queue_element_single_value_base
 
 
+/*********************************************************************************************\
+ * C016_queue_element for queueing requests for C016: Cached HTTP.
+\*********************************************************************************************/
+class C016_queue_element {
+public:
+  C016_queue_element() : controller_idx(0), TaskIndex(0), sensorType(0) {}
+  C016_queue_element(const struct EventStruct* event, byte value_count, unsigned long unixTime) :
+    timestamp(unixTime),
+    controller_idx(event->ControllerIndex),
+    TaskIndex(event->TaskIndex),
+    sensorType(event->sensorType),
+    valueCount(value_count)
+  {
+    const byte BaseVarIndex = TaskIndex * VARS_PER_TASK;
+    for (byte i = 0; i < VARS_PER_TASK; ++i) {
+      if (i < value_count) {
+        values[i] = UserVar[BaseVarIndex + i];
+      } else {
+        values[i] = 0.0;
+      }
+    }
+  }
+
+  size_t getSize() const {
+    return sizeof(this);
+  }
+
+  float values[VARS_PER_TASK];
+  unsigned long timestamp;  // Unix timestamp
+  byte controller_idx;
+  byte TaskIndex;
+  byte sensorType;
+  byte valueCount;
+};
+
+
 
 /*********************************************************************************************\
  * ControllerDelayHandlerStruct
@@ -386,6 +422,43 @@ ControllerDelayHandlerStruct<MQTT_queue_element> MQTTDelayHandler;
   DEFINE_Cxxx_DELAY_QUEUE_MACRO(013, 13)
 #endif
 */
+/*
+#ifdef USES_C014
+  DEFINE_Cxxx_DELAY_QUEUE_MACRO(014, 14)
+#endif
+*/
+/*
+#ifdef USES_C015
+  DEFINE_Cxxx_DELAY_QUEUE_MACRO(015, 15)
+#endif
+*/
+
+#ifdef USES_C016
+  DEFINE_Cxxx_DELAY_QUEUE_MACRO(016, 16)
+#endif
+
+/*
+#ifdef USES_C017
+  DEFINE_Cxxx_DELAY_QUEUE_MACRO(017, 17)
+#endif
+*/
+/*
+#ifdef USES_C018
+  DEFINE_Cxxx_DELAY_QUEUE_MACRO(018, 18)
+#endif
+*/
+/*
+#ifdef USES_C019
+  DEFINE_Cxxx_DELAY_QUEUE_MACRO(019, 19)
+#endif
+*/
+/*
+#ifdef USES_C020
+  DEFINE_Cxxx_DELAY_QUEUE_MACRO(020, 20)
+#endif
+*/
+
+
 // When extending this, also extend in Scheduler.ino:
 // void process_interval_timer(unsigned long id, unsigned long lasttimer)
 

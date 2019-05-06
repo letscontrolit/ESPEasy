@@ -1,4 +1,103 @@
 -------------------------------------------------
+Changes in release mega-20190425 (since mega-20190419)
+-------------------------------------------------
+
+Release date: Thu Apr 25 04:00:18 CEST 2019
+
+TD-er (2):
+      [SHT1x] Add delay to slow down clock rate (#2444)
+      [SHT1x] Make clock delay configurable.
+
+
+-------------------------------------------------
+Changes in release mega-20190419 (since mega-20190416)
+-------------------------------------------------
+
+Release date: Fri Apr 19 04:00:28 CEST 2019
+
+TD-er (3):
+      [SPIFFS] Add 16M14M option for build images
+      [16M flash] Add warning about slow speed for 16M flash builds
+      [Cache Controller] Add option to delete all cache files
+
+
+-------------------------------------------------
+Changes in release mega-20190416 (since mega-20190413)
+-------------------------------------------------
+
+Release date: Tue Apr 16 04:00:12 CEST 2019
+
+Christian-Me (5):
+      For 1st pull request
+      Updates on pull request
+      Hook for CPLUGIN_GOT_INVALID implemented & minor chnages
+      Update platformio.ini
+      Revert "Update platformio.ini"
+
+Gijs Noorlander (1):
+      Fix P005_DHT enabling interrupts on error reading.
+
+TD-er (4):
+      [Cache Controller] Delete oldest files when no room left
+      [SPIFFS] Use standard functions for SPIFFS operations
+      [SPIFFS] Use result of GarbageCollectio()
+      [SPIFFS] Add garbage collection timing statistics
+
+
+-------------------------------------------------
+Changes in release mega-20190413 (since mega-20190409)
+-------------------------------------------------
+
+Release date: Sat Apr 13 04:00:21 CEST 2019
+
+jimmys01 (3):
+      [IR TX] Add back repeat functionality in a reverse compatible way
+      [IR RX] Small enchacments, again
+      Add F() Macros to the IR lib
+
+
+-------------------------------------------------
+Changes in release mega-20190409 (since mega-20190406)
+-------------------------------------------------
+
+Release date: Tue Apr  9 04:00:17 CEST 2019
+
+Gijs Noorlander (1):
+      [ESP32] Fix build/flash issue (#2403)
+
+TD-er (16):
+      [RTC] Move RTC related functions to a separate file
+      [C014] Cached HTTP controller
+      [C014 cache] Use RTC cache to store samples then move to file
+      [C014 cache] Write part is ready
+      [C014 cache] Dump to CSV
+      [C014 cache] Dump to CSV in all columns
+      [C014 cache] Compile issues using core 2.4.2
+      [C014 cache] Read JSON to fetch cache files.
+      [Cache controller] Add UTC timestamp to the CSV export columns
+      [C014] Fix logging to flash without network connection
+      [Cache controller] Rename C014 to C016
+      [Cache controller] Clean up code
+      [Cache controller] Documentation
+      [Controller Queue] Add code examples for future controllers up-to ID 20
+      [Cache controller] ESP32 compile issues SPIFFS related
+      [RTC user var] Store read values in RTC memory to survive crash
+
+
+-------------------------------------------------
+Changes in release mega-20190406 (since mega-20190404)
+-------------------------------------------------
+
+Release date: Sat Apr  6 04:00:18 CEST 2019
+
+TD-er (4):
+      [SPIFFS] optimizations file access & 0-terminate strings in settings
+      Flush stored data in the delay queue before sleep
+      [SPIFFS] Fix ESP32 build
+      [SPIFFS] Fix ESP32 build issues
+
+
+-------------------------------------------------
 Changes in release mega-20190404 (since mega-20190315)
 -------------------------------------------------
 

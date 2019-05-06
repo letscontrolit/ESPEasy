@@ -1185,6 +1185,7 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
                 STOP_TIMER_TASK(x,Function);
                 delay(0); // SMY: call delay(0) unconditionally
                 if (retval) {
+                  CPluginCall(CPLUGIN_ACKNOWLEDGE, &TempEvent, str);
                   return true;
                 }
               }
@@ -1196,6 +1197,7 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
           if (Plugin_id[x] != 0) {
             if (Plugin_ptr[x](Function, event, str)) {
               delay(0); // SMY: call delay(0) unconditionally
+              CPluginCall(CPLUGIN_ACKNOWLEDGE, event, str);
               return true;
             }
           }
@@ -1303,6 +1305,9 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
           checkRAM(F("PluginCall_init"),x);
           START_TIMER;
           bool retval =  Plugin_ptr[x](Function, event, str);
+          if (retval && Function == PLUGIN_READ) {
+            saveUserVarToRTC();
+          }
           if (Function == PLUGIN_GET_DEVICEVALUENAMES) {
             ExtraTaskSettings.TaskIndex = event->TaskIndex;
           }
@@ -1315,7 +1320,6 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
         }
       }
       return false;
-      break;
     }
 
   }// case

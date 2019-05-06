@@ -38,6 +38,14 @@ MemorySize can be:
 - 1M  => 1 MB flash modules (e.g. almost all Sonoff modules)
 - 2M  => 2 MB flash modules (e.g. Shelly1/WROOM02)
 - 4M  => 4 MB flash modules (e.g. NodeMCU/ESP32)
+- 16M => 16 MB flash modules (e.g. Wemos D1 mini pro)
+
+Please note that the performance of 14MB SPIFFS (16M flash modules) is really slow.
+All file access takes a lot longer and since the settings are also read from flash, the entire node will perform slower.
+See [Arduino issue - SPIFFS file access slow on 16/14M flash config](https://github.com/esp8266/Arduino/issues/5932)
+
+If these speed issues will be fixed, it is very likely the SPIFFS must then be re-partitioned, thus loosing all data in the SPIFFS.
+
 
 Special memory partitioning:
 - 2M256  => 2 MB flash modules (e.g. Shelly1/WROOM02) with 256k SPIFFS (only core 2.5.0 or newer)
@@ -57,6 +65,7 @@ To help recover from a bad flash, there are also blank images included.
 - blank_1MB.bin
 - blank_2MB.bin
 - blank_4MB.bin
+- blank_16MB.bin
 
 When the wrong image is flashed, or the module behaves unstable, or is in a reboot loop,
 flash these images first and then the right image for the module.

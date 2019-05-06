@@ -64,7 +64,7 @@ const uint16_t kCaptureBufferSize = 1024;
 //#if DECODE_AC
 // Some A/C units have gaps in their protocols of ~40ms. e.g. Kelvinator
 // A value this large may swallow repeats of some protocols
-const uint8_t P016_TIMEOUT = 90;
+const uint8_t P016_TIMEOUT = 50;
 //#else   // DECODE_AC
 // Suits most messages, while not swallowing many repeats.
 //const uint8_t P016_TIMEOUT = 15;
@@ -173,14 +173,26 @@ boolean Plugin_016(byte function, struct EventStruct *event, String& string)
         success = true;
         break;
       }
-      
+        case PLUGIN_WEBFORM_LOAD:
+      {
+        addRowLabel(F("Info"));
+        addHtml(F("Check serial or web log for replay solutions via Communication - IR Transmit plugin"));
+
+        success = true;
+        break;
+      }
 
     case PLUGIN_TEN_PER_SECOND:
       {
         if (irReceiver->decode(&results))
         {
-          if (results.overflow)
-            addLog(LOG_LEVEL_INFO,  F("IR: WARNING, IR code is too big for buffer."));
+          yield(); // Feed the WDT after a time expensive decoding procedure
+          if (results.overflow){
+        addLog(LOG_LEVEL_INFO,  F("IR: WARNING, IR code is too big for buffer. Try pressing the transmiter button only momenteraly"));
+        success = false;
+        break; //Do not continue and risk hanging the ESP
+          }
+
           
           // Display the basic output of what we found.
           if (results.decode_type != UNKNOWN) { 
@@ -189,7 +201,8 @@ boolean Plugin_016(byte function, struct EventStruct *event, String& string)
           //Check if a solution for RAW2 is found and if not give the user the option to access the timings info.
           if (results.decode_type == UNKNOWN && !displayRawToReadableB32Hex()){
            addLog(LOG_LEVEL_INFO, F("IR: No replay solutions found! Press button again or try RAW encoding (timmings are in the serial output)"));   
-           serialPrint(String(F("IR: RAW TIMINGS: ")) + resultToSourceCode(&results)); 
+           serialPrint(String(F("IR: RAW TIMINGS: ")) + resultToSourceCode(&results));
+           yield(); // Feed the WDT as it can take a while to print.
            //addLog(LOG_LEVEL_DEBUG,(String(F("IR: RAW TIMINGS: ")) + resultToSourceCode(&results))); // Output the results as RAW source code //not showing up nicely in the web log
           }
 

@@ -250,7 +250,7 @@ void sendHeadandTail(const String& tmplName, boolean Tail = false, boolean reboo
   String pageTemplate = "";
   String fileName = tmplName;
   fileName += F(".htm");
-  fs::File f = SPIFFS.open(fileName, "r+");
+  fs::File f = tryOpenFile(fileName, "r");
 
   if (f) {
     pageTemplate.reserve(f.size());
@@ -498,6 +498,9 @@ void WebServerInit()
   WebServer.on(F("/controllers"), handle_controllers);
   WebServer.on(F("/devices"), handle_devices);
   WebServer.on(F("/download"), handle_download);
+  WebServer.on(F("/dumpcache"), handle_dumpcache);
+  WebServer.on(F("/cache_json"), handle_cache_json);
+  WebServer.on(F("/cache_csv"), handle_cache_csv);
   WebServer.on(F("/factoryreset"), handle_factoryreset);
   WebServer.on(F("/favicon.ico"), handle_favicon);
   WebServer.on(F("/filelist"), handle_filelist);
@@ -822,7 +825,7 @@ void writeDefaultCSS(void)
   {
     String defaultCSS;
 
-    fs::File f = SPIFFS.open(F("esp.css"), "w");
+    fs::File f = tryOpenFile(F("esp.css"), "w");
     if (f)
     {
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -1178,6 +1181,9 @@ void handle_config() {
   {
     if (strcmp(Settings.Name, name.c_str()) != 0) {
       addLog(LOG_LEVEL_INFO, F("Unit Name changed."));
+      if (CPluginCall(CPLUGIN_GOT_INVALID, 0)) { // inform controllers that the old name will be invalid from now on.
+        MQTTDisconnect(); // disconnect form MQTT Server if invalid message was sent succesfull.
+      }
       MQTTclient_should_reconnect = true;
     }
     // Unit name
@@ -1712,6 +1718,7 @@ void handle_notifications() {
     for (byte x = 0; x < NOTIFICATION_MAX; x++)
     {
       LoadNotificationSettings(x, (byte*)&NotificationSettings, sizeof(NotificationSettingsStruct));
+      NotificationSettings.validate();
       html_TR_TD();
       html_add_button_prefix();
       TXBuffer += F("notifications?index=");
@@ -1770,6 +1777,7 @@ void handle_notifications() {
     {
       MakeNotificationSettings(NotificationSettings);
       LoadNotificationSettings(notificationindex, (byte*)&NotificationSettings, sizeof(NotificationSettingsStruct));
+      NotificationSettings.validate();
 
       byte NotificationProtocolIndex = getNotificationProtocolIndex(Settings.Notification[notificationindex]);
       if (NotificationProtocolIndex!=NPLUGIN_NOT_FOUND)
@@ -3869,9 +3877,7 @@ void handle_tools() {
 
 #ifdef WEBSERVER_NEW_UI
   #if defined(ESP8266)
-    fs::FSInfo fs_info;
-    SPIFFS.info(fs_info);
-    if ((fs_info.totalBytes - fs_info.usedBytes) / 1024 > 50) {
+    if ((SpiffsFreeSpace() / 1024) > 50) {
       TXBuffer += F("<TR><TD>");
       TXBuffer += F("<script>function downloadUI() { fetch('https://raw.githubusercontent.com/letscontrolit/espeasy_ui/master/build/index.htm.gz').then(r=>r.arrayBuffer()).then(r => {var f=new FormData();f.append('file', new File([new Blob([new Uint8Array(r)])], 'index.htm.gz'));f.append('edit', 1);fetch('/upload',{method:'POST',body:f}).then(() => {window.location.href='/';});}); }</script>");
       TXBuffer += F("<a class=\"button link wide\" onclick=\"downloadUI()\">Download new UI</a>");
@@ -3908,7 +3914,7 @@ void handle_tools() {
 
   addFormSubHeader(F("Filesystem"));
 
-  addWideButtonPlusDescription(F("filelist"),      F("Flash"),         F("Show files on internal flash"));
+  addWideButtonPlusDescription(F("filelist"),      F("File browser"),   F("Show files on internal flash file system"));
   addWideButtonPlusDescription(F("/factoryreset"), F("Factory Reset"), F("Select pre-defined configuration or full erase of settings"));
 #ifdef FEATURE_SD
   addWideButtonPlusDescription(F("SDfilelist"),    F("SD Card"),       F("Show files on SD-Card"));
@@ -4083,7 +4089,6 @@ void handle_i2cscanner_json() {
   TXBuffer.startJsonStream();
   TXBuffer += "[{";
 
-  char *TempString = (char*)malloc(80);
   bool firstentry = true;
   byte error, address;
   for (address = 1; address <= 127; address++ )
@@ -4101,7 +4106,6 @@ void handle_i2cscanner_json() {
   }
   TXBuffer += "]";
   TXBuffer.endStream();
-  free(TempString);
 }
 #endif // WEBSERVER_NEW_UI
 
@@ -4111,8 +4115,6 @@ void handle_i2cscanner() {
   navMenuIndex = MENU_INDEX_TOOLS;
   TXBuffer.startStream();
   sendHeadandTail_stdtemplate(_HEAD);
-
-  char *TempString = (char*)malloc(80);
 
   html_table_class_multirow();
   html_table_header(F("I2C Addresses in use"));
@@ -4241,7 +4243,6 @@ void handle_i2cscanner() {
   html_end_table();
   sendHeadandTail_stdtemplate(_TAIL);
   TXBuffer.endStream();
-  free(TempString);
 }
 
 #ifdef WEBSERVER_NEW_UI
@@ -4452,10 +4453,7 @@ void handle_control() {
    Streaming versions directly to TXBuffer
   \*********************************************************************************************/
 
-void stream_to_json_object_value(const String& object, const String& value) {
-  TXBuffer += '\"';
-  TXBuffer += object;
-  TXBuffer += "\":";
+void stream_to_json_value(const String& value) {
   if (value.length() == 0 || !isFloat(value)) {
     TXBuffer += '\"';
     TXBuffer += value;
@@ -4463,6 +4461,13 @@ void stream_to_json_object_value(const String& object, const String& value) {
   } else {
     TXBuffer += value;
   }
+}
+
+void stream_to_json_object_value(const String& object, const String& value) {
+  TXBuffer += '\"';
+  TXBuffer += object;
+  TXBuffer += "\":";
+  stream_to_json_value(value);
 }
 
 String jsonBool(bool value) {
@@ -5158,6 +5163,136 @@ boolean isLoggedIn()
   return true;
 }
 
+void handle_dumpcache() {
+  if (!isLoggedIn()) return;
+
+  #ifdef USES_C016
+/*
+    String str = F("attachment; filename=cache_");
+    str += Settings.Name;
+    str += "_U";
+    str += Settings.Unit;
+    str += F("_Build");
+    str += BUILD;
+    str += '_';
+    if (systemTimePresent())
+    {
+      str += getDateTimeString('\0', '\0', '\0');
+    }
+    str += F(".csv");
+    WebServer.sendHeader(F("Content-Disposition"), str);
+//    WebServer.streamFile(dataFile, F("application/octet-stream"));
+*/
+    C016_startCSVdump();
+    unsigned long  timestamp;
+    byte  controller_idx;
+    byte  TaskIndex;
+    byte  sensorType;
+    byte  valueCount;
+    float  val1;
+    float  val2;
+    float  val3;
+    float  val4;
+
+    TXBuffer.startStream();
+    TXBuffer += F("UNIX timestamp;contr. idx;sensortype;taskindex;value count");
+    for (int i = 0; i < TASKS_MAX; ++i) {
+      LoadTaskSettings(i);
+      for (int j = 0; j < VARS_PER_TASK; ++j) {
+        TXBuffer += ';';
+        TXBuffer += ExtraTaskSettings.TaskDeviceName;
+        TXBuffer += '#';
+        TXBuffer += ExtraTaskSettings.TaskDeviceValueNames[j];
+      }
+    }
+    TXBuffer += F("<BR>");
+    float csv_values[VARS_PER_TASK * TASKS_MAX];
+    for (int i = 0; i < VARS_PER_TASK * TASKS_MAX; ++i) {
+      csv_values[i] = 0.0;
+    }
+
+    while (C016_getCSVline(timestamp, controller_idx, TaskIndex, sensorType,
+                           valueCount, val1, val2, val3, val4)) {
+      TXBuffer += timestamp;
+      TXBuffer += ';';
+      TXBuffer += controller_idx;
+      TXBuffer += ';';
+      TXBuffer += sensorType;
+      TXBuffer += ';';
+      TXBuffer += TaskIndex;
+      TXBuffer += ';';
+      TXBuffer += valueCount;
+      int valindex = TaskIndex * VARS_PER_TASK;
+      csv_values[valindex++] = val1;
+      csv_values[valindex++] = val2;
+      csv_values[valindex++] = val3;
+      csv_values[valindex++] = val4;
+      for (int i = 0; i < VARS_PER_TASK * TASKS_MAX; ++i) {
+        TXBuffer += ';';
+        if (csv_values[i] == 0.0) {
+          TXBuffer += '0';
+        } else {
+          TXBuffer += String(csv_values[i], 6);
+        }
+      }
+      TXBuffer += F("<BR>");
+      delay(0);
+    }
+    TXBuffer.endStream();
+
+  #endif
+}
+
+void handle_cache_json() {
+  if (!isLoggedIn()) return;
+
+  #ifdef USES_C016
+  TXBuffer.startJsonStream();
+  TXBuffer += F("{\"columns\": [");
+
+//     TXBuffer += F("UNIX timestamp;contr. idx;sensortype;taskindex;value count");
+  stream_to_json_value(F("UNIX timestamp"));
+  TXBuffer += ',';
+  stream_to_json_value(F("UTC timestamp"));
+  TXBuffer += ',';
+  stream_to_json_value(F("task index"));
+  for (int i = 0; i < TASKS_MAX; ++i) {
+    LoadTaskSettings(i);
+    for (int j = 0; j < VARS_PER_TASK; ++j) {
+      String label = ExtraTaskSettings.TaskDeviceName;
+      label += '#';
+      label += ExtraTaskSettings.TaskDeviceValueNames[j];
+      TXBuffer += ',';
+      stream_to_json_value(label);
+    }
+  }
+  TXBuffer += F("],\n");
+  C016_startCSVdump();
+  TXBuffer += F("\"files\": [");
+  bool islast = false;
+  int filenr = 0;
+  while (!islast) {
+    String currentFile = C016_getCacheFileName(islast);
+    if (currentFile.length() > 0) {
+      if (filenr != 0) {
+        TXBuffer += ',';
+      }
+      stream_to_json_value(currentFile);
+      ++filenr;
+    }
+  }
+  TXBuffer += F("],\n");
+  stream_last_json_object_value(F("nrfiles"), String(filenr));
+  TXBuffer += F("\n");
+  TXBuffer.endStream();
+  #endif
+}
+
+void handle_cache_csv() {
+  if (!isLoggedIn()) return;
+
+}
+
 
 //********************************************************************************
 // Web Interface download page
@@ -5171,7 +5306,7 @@ void handle_download()
 //  sendHeadandTail_stdtemplate();
 
 
-  fs::File dataFile = SPIFFS.open(F(FILE_CONFIG), "r");
+  fs::File dataFile = tryOpenFile(F(FILE_CONFIG), "r");
   if (!dataFile)
     return;
 
@@ -5315,8 +5450,8 @@ void handleFileUpload() {
       if (valid)
       {
         // once we're safe, remove file and create empty one...
-        SPIFFS.remove((char *)upload.filename.c_str());
-        uploadFile = SPIFFS.open(upload.filename.c_str(), "w");
+        tryDeleteFile(upload.filename);
+        uploadFile = tryOpenFile(upload.filename.c_str(), "w");
         // dont count manual uploads: flashCount();
       }
     }
@@ -5380,7 +5515,7 @@ bool loadFromFS(boolean spiffs, String path) {
   path = path.substring(1);
   if (spiffs)
   {
-    fs::File dataFile = SPIFFS.open(path.c_str(), "r");
+    fs::File dataFile = tryOpenFile(path.c_str(), "r");
     if (!dataFile)
       return false;
 
@@ -5424,7 +5559,7 @@ boolean handle_custom(String path) {
   path = path.substring(1);
 
   // create a dynamic custom page, parsing task values into [<taskname>#<taskvalue>] placeholders and parsing %xx% system variables
-  fs::File dataFile = SPIFFS.open(path.c_str(), "r");
+  fs::File dataFile = tryOpenFile(path.c_str(), "r");
   const bool dashboardPage = path.startsWith(F("dashboard"));
   if (!dataFile && !dashboardPage) {
     return false; // unknown file that does not exist...
@@ -5577,10 +5712,7 @@ void handle_filelist_json() {
   TXBuffer.startJsonStream();
 
   String fdelete = WebServer.arg(F("delete"));
-
-  if (fdelete.length() > 0)
-  {
-    SPIFFS.remove(fdelete);
+  if (tryDeleteFile(fdelete)) {
     #if defined(ESP32)
     // flashCount();
     #endif
@@ -5673,178 +5805,147 @@ void handle_filelist() {
   TXBuffer.startStream();
   sendHeadandTail_stdtemplate();
 
-#if defined(ESP8266)
-
   String fdelete = WebServer.arg(F("delete"));
-
-  if (fdelete.length() > 0)
+  if (tryDeleteFile(fdelete))
   {
-    SPIFFS.remove(fdelete);
     checkRuleSets();
   }
-
+  #ifdef USES_C016
+  if (WebServer.hasArg(F("delcache"))) {
+    while (C016_deleteOldestCacheBlock()) {
+      delay(1);
+    }
+    while (GarbageCollection()) {
+      delay(1);
+    }
+  }
+  #endif
   const int pageSize = 25;
   int startIdx = 0;
-
   String fstart = WebServer.arg(F("start"));
   if (fstart.length() > 0)
   {
     startIdx = atoi(fstart.c_str());
   }
   int endIdx = startIdx + pageSize - 1;
-
   html_table_class_multirow();
   html_table_header("", 50);
   html_table_header(F("Filename"));
   html_table_header(F("Size"), 80);
+  int count = -1;
+
+  bool moreFilesPresent = false;
+  bool cacheFilesPresent = false;
+
+#if defined(ESP8266)
 
   fs::Dir dir = SPIFFS.openDir("");
-
-  int count = -1;
-  while (dir.next())
+  while (dir.next() && count < endIdx)
   {
     ++count;
-
-    if (count < startIdx)
+    if (count >= startIdx)
     {
-      continue;
-    }
-
-    html_TR_TD();
-    if (dir.fileName() != F(FILE_CONFIG) && dir.fileName() != F(FILE_SECURITY) && dir.fileName() != F(FILE_NOTIFICATION))
-    {
-      html_add_button_prefix();
-      TXBuffer += F("filelist?delete=");
-      TXBuffer += dir.fileName();
-      if (startIdx > 0)
-      {
-        TXBuffer += F("&start=");
-        TXBuffer += startIdx;
+      int filesize = -1;
+      fs::File f = dir.openFile("r");
+      if (f) {
+        filesize = f.size();
       }
-      TXBuffer += F("'>Del</a>");
-    }
-
-    TXBuffer += F("<TD><a href=\"");
-    TXBuffer += dir.fileName();
-    TXBuffer += "\">";
-    TXBuffer += dir.fileName();
-    TXBuffer += F("</a>");
-    fs::File f = dir.openFile("r");
-    html_TD();
-    if (f) {
-      TXBuffer += f.size();
-      f.close();
-    }
-    if (count >= endIdx)
-    {
-      break;
+      if (!cacheFilesPresent && getCacheFileCountFromFilename(dir.fileName()) != -1)
+      {
+        cacheFilesPresent = true;
+      }
+      handle_filelist_add_file(dir.fileName(), filesize, startIdx);
     }
   }
-  html_end_table();
-  html_end_form();
-  html_BR();
-  addButton(F("/upload"), F("Upload"));
-  if (startIdx > 0)
-  {
-    html_add_button_prefix();
-    TXBuffer += F("/filelist?start=");
-    TXBuffer += std::max(0, startIdx - pageSize);
-    TXBuffer += F("'>Previous</a>");
-  }
-  if (count >= endIdx and dir.next())
-  {
-    html_add_button_prefix();
-    TXBuffer += F("/filelist?start=");
-    TXBuffer += endIdx + 1;
-    TXBuffer += F("'>Next</a>");
-  }
-  TXBuffer += F("<BR><BR>");
-  sendHeadandTail_stdtemplate(true);
-  TXBuffer.endStream();
+  moreFilesPresent = dir.next();
 #endif
 #if defined(ESP32)
-  String fdelete = WebServer.arg(F("delete"));
-
-  if (fdelete.length() > 0)
-  {
-    SPIFFS.remove(fdelete);
-    // flashCount();
-  }
-
-  const int pageSize = 25;
-  int startIdx = 0;
-
-  String fstart = WebServer.arg(F("start"));
-  if (fstart.length() > 0)
-  {
-    startIdx = atoi(fstart.c_str());
-  }
-  int endIdx = startIdx + pageSize - 1;
-
-  html_table_class_multirow();
-  html_table_header("");
-  html_table_header(F("Filename"));
-  html_table_header("Size");
-
   File root = SPIFFS.open("/");
   File file = root.openNextFile();
-  int count = -1;
-  while (file and count < endIdx)
+  while (file && count < endIdx)
   {
     if(!file.isDirectory()){
       ++count;
-
       if (count >= startIdx)
       {
-        html_TR_TD();
-        if (strcmp(file.name(), FILE_CONFIG) != 0 && strcmp(file.name(), FILE_SECURITY) != 0 && strcmp(file.name(), FILE_NOTIFICATION) != 0)
+        if (!cacheFilesPresent && getCacheFileCountFromFilename(file.name()) != -1)
         {
-          html_add_button_prefix();
-          TXBuffer += F("filelist?delete=");
-          TXBuffer += file.name();
-          if (startIdx > 0)
-          {
-            TXBuffer += F("&start=");
-            TXBuffer += startIdx;
-          }
-          TXBuffer += F("'>Del</a>");
+          cacheFilesPresent = true;
         }
-
-        TXBuffer += F("<TD><a href=\"");
-        TXBuffer += file.name();
-        TXBuffer += "\">";
-        TXBuffer += file.name();
-        TXBuffer += F("</a>");
-        html_TD();
-        TXBuffer += file.size();
+        handle_filelist_add_file(file.name(), file.size(), startIdx);
       }
     }
     file = root.openNextFile();
   }
+  moreFilesPresent = file;
+#endif
+
+  int start_prev = -1;
+  if (startIdx > 0)
+  {
+    start_prev = startIdx < pageSize ? 0 : startIdx - pageSize;
+  }
+  int start_next = -1;
+  if (count >= endIdx && moreFilesPresent) {
+    start_next = endIdx + 1;
+  }
+  handle_filelist_buttons(start_prev, start_next, cacheFilesPresent);
+}
+
+void handle_filelist_add_file(const String& filename, int filesize, int startIdx) {
+  html_TR_TD();
+  if (filename != F(FILE_CONFIG) && filename != F(FILE_SECURITY) && filename != F(FILE_NOTIFICATION))
+  {
+    html_add_button_prefix();
+    TXBuffer += F("filelist?delete=");
+    TXBuffer += filename;
+    if (startIdx > 0)
+    {
+      TXBuffer += F("&start=");
+      TXBuffer += startIdx;
+    }
+    TXBuffer += F("'>Del</a>");
+  }
+
+  TXBuffer += F("<TD><a href=\"");
+  TXBuffer += filename;
+  TXBuffer += "\">";
+  TXBuffer += filename;
+  TXBuffer += F("</a>");
+  html_TD();
+  if (filesize >= 0) {
+    TXBuffer += String(filesize);
+  }
+}
+
+void handle_filelist_buttons(int start_prev, int start_next, bool cacheFilesPresent) {
   html_end_table();
   html_end_form();
   html_BR();
   addButton(F("/upload"), F("Upload"));
-  if (startIdx > 0)
+  if (start_prev >= 0)
   {
     html_add_button_prefix();
     TXBuffer += F("/filelist?start=");
-    TXBuffer += startIdx < pageSize ? 0 : startIdx - pageSize;
+    TXBuffer += start_prev;
     TXBuffer += F("'>Previous</a>");
   }
-  if (count >= endIdx and file)
+  if (start_next >= 0)
   {
     html_add_button_prefix();
     TXBuffer += F("/filelist?start=");
-    TXBuffer += endIdx + 1;
+    TXBuffer += start_next;
     TXBuffer += F("'>Next</a>");
   }
+  if (cacheFilesPresent) {
+    html_add_button_prefix(F("red"), true);
+    TXBuffer += F("filelist?delcache");
+    TXBuffer += F("'>Delete Cache Files</a>");
+  }
   TXBuffer += F("<BR><BR>");
-    sendHeadandTail_stdtemplate(true);
-    TXBuffer.endStream();
-#endif
+  sendHeadandTail_stdtemplate(true);
+  TXBuffer.endStream();
 }
-
 
 //********************************************************************************
 // Web Interface SD card file and directory list
@@ -6389,7 +6490,7 @@ void handle_rules() {
         // }
         // else
         // {
-          fs::File f = SPIFFS.open(fileName, "w");
+          fs::File f = tryOpenFile(fileName, "w");
           if (f)
           {
             log += F(" Write to file: ");
@@ -6407,7 +6508,7 @@ void handle_rules() {
       {
         log += F(" Create new file: ");
         log += fileName;
-        fs::File f = SPIFFS.open(fileName, "w");
+        fs::File f = tryOpenFile(fileName, "w");
         if (f) f.close();
       }
     }
@@ -6450,7 +6551,7 @@ void handle_rules() {
   // load form data from flash
 
   int size = 0;
-  fs::File f = SPIFFS.open(fileName, "r+");
+  fs::File f = tryOpenFile(fileName, "r");
   if (f)
   {
     size = f.size();
@@ -6659,14 +6760,8 @@ void handle_sysinfo_json() {
     json_number(F("sketch_size"),  String(ESP.getSketchSize() / 1024));
     json_number(F("sketch_free"),  String(ESP.getFreeSketchSpace() / 1024));
 
-  {
-  #if defined(ESP8266)
-    fs::FSInfo fs_info;
-    SPIFFS.info(fs_info);
-    json_number(F("spiffs_size"),  String(fs_info.totalBytes / 1024));
-    json_number(F("spiffs_free"),  String((fs_info.totalBytes - fs_info.usedBytes) / 1024));
-  #endif
-  }
+    json_number(F("spiffs_size"),  String(SpiffsTotalBytes() / 1024));
+    json_number(F("spiffs_free"),  String(SpiffsFreeSpace() / 1024));
   json_close();
   json_close();
 
@@ -6978,14 +7073,30 @@ void handle_sysinfo() {
   #endif
 
   addRowLabel(getLabel(LabelType::SPIFFS_SIZE));
+  TXBuffer += SpiffsTotalBytes() / 1024;
+  TXBuffer += F(" kB (");
+  TXBuffer += SpiffsFreeSpace() / 1024;
+  TXBuffer += F(" kB free)");
+
+  addRowLabel(F("Page size"));
+  TXBuffer += String(SpiffsPagesize());
+
+  addRowLabel(F("Block size"));
+  TXBuffer += String(SpiffsBlocksize());
+
+  addRowLabel(F("Number of blocks"));
+  TXBuffer += String(SpiffsTotalBytes() / SpiffsBlocksize());
+
   {
   #if defined(ESP8266)
     fs::FSInfo fs_info;
     SPIFFS.info(fs_info);
-    TXBuffer += fs_info.totalBytes / 1024;
-    TXBuffer += F(" kB (");
-    TXBuffer += (fs_info.totalBytes - fs_info.usedBytes) / 1024;
-    TXBuffer += F(" kB free)");
+    addRowLabel(F("Maximum open files"));
+    TXBuffer += String(fs_info.maxOpenFiles);
+
+    addRowLabel(F("Maximum path length"));
+    TXBuffer += String(fs_info.maxPathLength);
+
   #endif
   }
 

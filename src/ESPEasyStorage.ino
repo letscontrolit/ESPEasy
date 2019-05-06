@@ -42,18 +42,48 @@ String flashGuard()
 
 
 String appendLineToFile(const String& fname, const String& line) {
-  fs::File f = SPIFFS.open(fname, "a+");
+  return appendToFile(fname, reinterpret_cast<const uint8_t* >(line.c_str()), line.length());
+}
+
+String appendToFile(const String& fname, const uint8_t* data, unsigned int size) {
+  fs::File f = tryOpenFile(fname, "a+");
   SPIFFS_CHECK(f, fname.c_str());
-  const size_t lineLength = line.length();
-  for (size_t i = 0; i < lineLength; ++i) {
-    // See https://github.com/esp8266/Arduino/commit/b1da9eda467cc935307d553692fdde2e670db258#r32622483
-    uint8_t value = static_cast<uint8_t>(line[i]);
-    SPIFFS_CHECK(f.write(&value, 1), fname.c_str());
-  }
+  SPIFFS_CHECK(f.write(data, size), fname.c_str());
   f.close();
   return "";
 }
 
+bool fileExists(const String& fname) {
+  return SPIFFS.exists(fname);
+}
+
+
+fs::File tryOpenFile(const String& fname, const String& mode) {
+  START_TIMER;
+  fs::File f;
+  if (mode == "r" && !fileExists(fname)) {
+    return f;
+  }
+  f = SPIFFS.open(fname, mode.c_str());
+  STOP_TIMER(TRY_OPEN_FILE);
+  return f;
+}
+
+bool tryDeleteFile(const String& fname) {
+  if (fname.length() > 0)
+  {
+    bool res = SPIFFS.remove(fname);
+
+    // A call to GarbageCollection() will at most erase a single block. (e.g. 8k block size)
+    // A deleted file may have covered more than a single block, so try to clear multiple blocks.
+    uint8_t retries = 3;
+    while (retries > 0 && GarbageCollection()) {
+      --retries;
+    }
+    return res;
+  }
+  return false;
+}
 
 /********************************************************************************************\
   Fix stuff to clear out differences between releases
@@ -66,7 +96,7 @@ String BuildFixes()
   if (Settings.Build < 145)
   {
     String fname=F(FILE_NOTIFICATION);
-    fs::File f = SPIFFS.open(fname, "w");
+    fs::File f = tryOpenFile(fname, "w");
     SPIFFS_CHECK(f, fname.c_str());
 
     if (f)
@@ -127,9 +157,14 @@ void fileSystemCheck()
         log=log+fs_info.totalBytes;
         addLog(LOG_LEVEL_INFO, log);
       }
+      // Run garbage collection before any file is open.
+      uint8_t retries = 3;
+      while (retries > 0 && GarbageCollection()) {
+        --retries;
+      }
     #endif
 
-    fs::File f = SPIFFS.open(FILE_CONFIG, "r");
+    fs::File f = tryOpenFile(FILE_CONFIG, "r");
     if (!f)
     {
       ResetFactory();
@@ -143,6 +178,27 @@ void fileSystemCheck()
     addLog(LOG_LEVEL_ERROR, log);
     ResetFactory();
   }
+}
+
+
+/********************************************************************************************\
+  Garbage collection
+  \*********************************************************************************************/
+bool GarbageCollection() {
+  #ifdef CORE_POST_2_6_0
+    // Perform garbage collection
+    START_TIMER;
+    if (SPIFFS.gc()) {
+      addLog(LOG_LEVEL_INFO, F("FS   : Success garbage collection"));
+      STOP_TIMER(SPIFFS_GC_SUCCESS);
+      return true;
+    }
+    STOP_TIMER(SPIFFS_GC_FAIL);
+    return false;
+  #else
+    // Not supported, so nothing was removed.
+    return false;
+  #endif
 }
 
 /********************************************************************************************\
@@ -178,6 +234,7 @@ String SaveSettings(void)
 
 //  }
 
+  SecuritySettings.validate();
   memcpy( SecuritySettings.ProgmemMd5, CRCValues.runTimeMD5, 16);
   md5.begin();
   md5.add((uint8_t *)&SecuritySettings, sizeof(SecuritySettings)-16);
@@ -257,6 +314,7 @@ String LoadSettings()
   }
   setUseStaticIP(useStaticIP());
   afterloadSettings();
+  SecuritySettings.validate();
   return(err);
 }
 
@@ -441,6 +499,7 @@ String LoadTaskSettings(byte TaskIndex)
     //the plugin call should populate ExtraTaskSettings with its default values.
     PluginCall(PLUGIN_GET_DEVICEVALUENAMES, &TempEvent, dummyString);
   }
+  ExtraTaskSettings.validate();
   STOP_TIMER(LOAD_TASK_SETTINGS);
 
   return result;
@@ -570,7 +629,7 @@ String InitFile(const char* fname, int datasize)
   checkRAM(F("InitFile"));
   FLASH_GUARD();
 
-  fs::File f = SPIFFS.open(fname, "w");
+  fs::File f = tryOpenFile(fname, "w");
   if (f) {
     SPIFFS_CHECK(f, fname);
 
@@ -618,7 +677,7 @@ String SaveToFile(char* fname, int index, byte* memAddress, int datasize)
   }
   delay(1);
   unsigned long timer = millis() + 50;
-  fs::File f = SPIFFS.open(fname, "r+");
+  fs::File f = tryOpenFile(fname, "r+");
   if (f) {
     SPIFFS_CHECK(f, fname);
     SPIFFS_CHECK(f.seek(index, fs::SeekSet), fname);
@@ -677,7 +736,7 @@ String ClearInFile(char* fname, int index, int datasize)
   checkRAM(F("ClearInFile"));
   FLASH_GUARD();
 
-  fs::File f = SPIFFS.open(fname, "r+");
+  fs::File f = tryOpenFile(fname, "r+");
   if (f) {
     SPIFFS_CHECK(f, fname);
 
@@ -718,7 +777,7 @@ String LoadFromFile(char* fname, int offset, byte* memAddress, int datasize)
   START_TIMER;
 
   checkRAM(F("LoadFromFile"));
-  fs::File f = SPIFFS.open(fname, "r+");
+  fs::File f = tryOpenFile(fname, "r");
   SPIFFS_CHECK(f, fname);
   SPIFFS_CHECK(f.seek(offset, fs::SeekSet), fname);
   SPIFFS_CHECK(f.read(memAddress,datasize), fname);
@@ -805,6 +864,154 @@ int SpiffsSectors()
     return 32;
   #endif
 }
+
+size_t SpiffsUsedBytes() {
+  size_t result = 1; // Do not output 0, this may be used in divisions.
+  #ifdef ESP32
+  result = SPIFFS.usedBytes();
+  #endif
+  #ifdef ESP8266
+  fs::FSInfo fs_info;
+  SPIFFS.info(fs_info);
+  result = fs_info.usedBytes;
+  #endif
+  return result;
+}
+
+size_t SpiffsTotalBytes() {
+  size_t result = 1; // Do not output 0, this may be used in divisions.
+  #ifdef ESP32
+  result = SPIFFS.totalBytes();
+  #endif
+  #ifdef ESP8266
+  fs::FSInfo fs_info;
+  SPIFFS.info(fs_info);
+  result = fs_info.totalBytes;
+  #endif
+  return result;
+}
+
+size_t SpiffsBlocksize() {
+  size_t result = 8192; // Some default viable for most 1 MB SPIFFS filesystems
+  #ifdef ESP32
+  result = 8192; // Just assume 8k, since we cannot query it
+  #endif
+  #ifdef ESP8266
+  fs::FSInfo fs_info;
+  SPIFFS.info(fs_info);
+  result = fs_info.blockSize;
+  #endif
+  return result;
+}
+
+size_t SpiffsPagesize() {
+  size_t result = 256; // Most common
+  #ifdef ESP32
+  result = 256; // Just assume 256, since we cannot query it
+  #endif
+  #ifdef ESP8266
+  fs::FSInfo fs_info;
+  SPIFFS.info(fs_info);
+  result = fs_info.pageSize;
+  #endif
+  return result;
+}
+
+size_t SpiffsFreeSpace() {
+  int freeSpace = SpiffsTotalBytes() - SpiffsUsedBytes();
+  if (freeSpace < static_cast<int>(2 * SpiffsBlocksize())) {
+    // Not enough free space left to store anything
+    // There needs to be minimum of 2 free blocks.
+    return 0;
+  }
+  return freeSpace - 2 * SpiffsBlocksize();
+}
+
+bool SpiffsFull() {
+  return SpiffsFreeSpace() == 0;
+}
+
+/********************************************************************************************\
+  Handling cached data
+  \*********************************************************************************************/
+
+String createCacheFilename(unsigned int count) {
+  String fname;
+  fname.reserve(16);
+  #ifdef ESP32
+  fname = '/';
+  #endif
+  fname += "cache_";
+  fname += String(count);
+  fname += ".bin";
+  return fname;
+}
+
+// Match string with an integer between '_' and ".bin"
+int getCacheFileCountFromFilename(const String& fname) {
+  int startpos = fname.indexOf('_');
+  if (startpos < 0) return -1;
+  int endpos = fname.indexOf(F(".bin"));
+  if (endpos < 0) return -1;
+  String digits = fname.substring(startpos + 1, endpos);
+  int result;
+  if (validIntFromString(fname.substring(startpos + 1, endpos), result)) {
+    return result;
+  }
+  return -1;
+}
+
+// Look into the filesystem to see if there are any cache files present on the filesystem
+// Return true if any found.
+bool getCacheFileCounters(uint16_t& lowest, uint16_t& highest, size_t& filesizeHighest) {
+  lowest = 65535;
+  highest = 0;
+  filesizeHighest = 0;
+#ifdef ESP8266
+  Dir dir = SPIFFS.openDir("cache");
+  while (dir.next()) {
+    String filename = dir.fileName();
+    int count = getCacheFileCountFromFilename(filename);
+    if (count >= 0) {
+      if (lowest > count) {
+        lowest = count;
+      }
+      if (highest < count) {
+        highest = count;
+        filesizeHighest = dir.fileSize();
+      }
+    }
+  }
+#endif  // ESP8266
+#ifdef ESP32
+  File root = SPIFFS.open("/cache");
+  File file = root.openNextFile();
+  while (file)
+  {
+    if(!file.isDirectory()){
+      int count = getCacheFileCountFromFilename(file.name());
+      if (count >= 0) {
+        if (lowest > count) {
+          lowest = count;
+        }
+        if (highest < count) {
+          highest = count;
+          filesizeHighest = file.size();
+        }
+      }
+    }
+    file = root.openNextFile();
+  }
+#endif // ESP32
+  if (lowest <= highest) {
+    return true;
+  }
+  lowest = 0;
+  highest = 0;
+  return false;
+}
+
+
 
 /********************************************************************************************\
   Get partition table information
