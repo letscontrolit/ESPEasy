@@ -25,6 +25,9 @@
 #define P36_CONTRAST_MED  0xCF
 #define P36_CONTRAST_HIGH 0xFF
 
+#define P36_SIZE_128X32 32
+#define P36_SIZE_128X64 64
+
 
 #include "SSD1306.h"
 #include "SH1106Wire.h"
@@ -170,6 +173,16 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
         optionValues6[2] = P36_CONTRAST_HIGH;
         addFormSelector(F("Contrast"), F("p036_contrast"), 3, options6, optionValues6, choice6);
 
+        // size 64 or 128
+        byte choice7 = PCONFIG(7);
+        String options7[2];
+        options7[0] = F("128x32");
+        options7[1] = F("128x64");
+        int optionValues7[2];
+        optionValues7[0] = P36_SIZE_128X32;
+        optionValues7[1] = P36_SIZE_128X64;
+        addFormSelector(F("Screen Size"), F("p036_screen_size"), 2, options7, optionValues7, choice7);
+
         success = true;
         break;
       }
@@ -188,6 +201,7 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
         PCONFIG(4) = getFormItemInt(F("p036_timer"));
         PCONFIG(5) = getFormItemInt(F("p036_controller"));
         PCONFIG(6) = getFormItemInt(F("p036_contrast"));
+        PCONFIG(7) = getFormItemInt(F("p036_screen_size"));
 
         String error;
         char P036_deviceTemplate[P36_Nlines][P36_Nchars];
@@ -224,7 +238,12 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
 
         uint8_t OLED_address = PCONFIG(0);
         if (PCONFIG(5) == 1) {
-          display = new SSD1306Wire(OLED_address, Settings.Pin_i2c_sda, Settings.Pin_i2c_scl);
+          if(PCONFIG(7) == P36_SIZE_128X32) {
+            digitalWrite(16, HIGH);
+            display = new SSD1306Wire(OLED_address, Settings.Pin_i2c_sda, Settings.Pin_i2c_scl, 128, 32);
+          } else {
+            display = new SSD1306Wire(OLED_address, Settings.Pin_i2c_sda, Settings.Pin_i2c_scl, 128, 64);
+          }
         } else {
           display = new SH1106Wire(OLED_address, Settings.Pin_i2c_sda, Settings.Pin_i2c_scl);
         }
@@ -381,12 +400,14 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
 
         //      Update display
         display_header();
-        display_indicator(currentFrameToDisplay, nrFramesToDisplay);
+        if(PCONFIG(7) != P36_SIZE_128X32) {
+          display_indicator(currentFrameToDisplay, nrFramesToDisplay);
+        }
 //        display_indicator(frameCounter, NFrames);
         display->display();
 
         int scrollspeed = PCONFIG(3);
-        display_scroll(oldString, newString, linesPerFrame, scrollspeed);
+        display_scroll(oldString, newString, linesPerFrame, scrollspeed, PCONFIG(7));
 
         success = true;
         break;
@@ -578,7 +599,7 @@ void display_indicator(int iframe, int frameCount) {
   }
 }
 
-void display_scroll(String outString[], String inString[], int nlines, int scrollspeed)
+void display_scroll(String outString[], String inString[], int nlines, int scrollspeed, int screenSize)
 {
 
   // outString contains the outgoing strings in this frame
@@ -587,34 +608,40 @@ void display_scroll(String outString[], String inString[], int nlines, int scrol
 
   int ypos[4]; // ypos contains the heights of the various lines - this depends on the font and the number of lines
 
-  if (nlines == 1)
-  {
-    display->setFont(ArialMT_Plain_24);
-    ypos[0] = 20;
-  }
-
-  if (nlines == 2)
-  {
+  if(screenSize == P36_SIZE_128X32) {
+    nlines = 1;
     display->setFont(ArialMT_Plain_16);
     ypos[0] = 15;
-    ypos[1] = 34;
-  }
+  } else {
+    if (nlines == 1)
+    {
+      display->setFont(ArialMT_Plain_24);
+      ypos[0] = 20;
+    }
 
-  if (nlines == 3)
-  {
-    display->setFont(Dialog_plain_12);
-    ypos[0] = 13;
-    ypos[1] = 25;
-    ypos[2] = 37;
-  }
+    if (nlines == 2)
+    {
+      display->setFont(ArialMT_Plain_16);
+      ypos[0] = 15;
+      ypos[1] = 34;
+    }
 
-  if (nlines == 4)
-  {
-    display->setFont(ArialMT_Plain_10);
-    ypos[0] = 12;
-    ypos[1] = 22;
-    ypos[2] = 32;
-    ypos[3] = 42;
+    if (nlines == 3)
+    {
+      display->setFont(Dialog_plain_12);
+      ypos[0] = 13;
+      ypos[1] = 25;
+      ypos[2] = 37;
+    }
+
+    if (nlines == 4)
+    {
+      display->setFont(ArialMT_Plain_10);
+      ypos[0] = 12;
+      ypos[1] = 22;
+      ypos[2] = 32;
+      ypos[3] = 42;
+    }
   }
 
   display->setTextAlignment(TEXT_ALIGN_CENTER);
@@ -626,7 +653,11 @@ void display_scroll(String outString[], String inString[], int nlines, int scrol
 
     display->setColor(BLACK);
     // We allow 12 pixels at the top because otherwise the wifi indicator gets too squashed!!
-    display->fillRect(0, 12, 128, 42);   // scrolling window is 44 pixels high - ie 64 less margin of 10 at top and bottom
+    if(screenSize == P36_SIZE_128X32) {
+      display->fillRect(0, 15, 128, 32);
+    } else {
+      display->fillRect(0, 12, 128, 42);   // scrolling window is 44 pixels high - ie 64 less margin of 10 at top and bottom
+    }
     display->setColor(WHITE);
 
     // Now draw the strings
