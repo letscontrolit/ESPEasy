@@ -65,6 +65,23 @@ bool I2C_write16_LE_reg(uint8_t i2caddr, byte reg, uint16_t value) {
 }
 
 //**************************************************************************/
+// Reads an 8 bit value over I2C
+//**************************************************************************/
+uint8_t I2C_read8(uint8_t i2caddr, bool * is_ok) {
+  uint8_t value;
+
+  byte count = Wire.requestFrom(i2caddr, (byte)1);
+  if (is_ok != NULL) {
+    *is_ok = (count == 1);
+  }
+  
+  value = Wire.read();
+
+
+  return value;
+}
+
+//**************************************************************************/
 // Reads an 8 bit value from a register over I2C
 //**************************************************************************/
 uint8_t I2C_read8_reg(uint8_t i2caddr, byte reg, bool * is_ok) {
