@@ -423,7 +423,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
           if (round(PCONFIG_FLOAT(3)) && state != currentStatus.state && PCONFIG_LONG(3)==0)
           {
 #ifndef BUILD_NO_DEBUG
-            addLog(LOG_LEVEL_DEBUG,F("SW  :SafeButton 1st click"));
+            addLog(LOG_LEVEL_DEBUG,F("SW  : 1st click"));
 #endif
             PCONFIG_LONG(3) = 1;
           }

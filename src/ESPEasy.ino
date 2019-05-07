@@ -610,6 +610,7 @@ void flushAndDisconnectAllClients() {
       MQTTclient.disconnect();
       updateMQTTclient_connected();
     }
+    saveToRTC();
     delay(100); // Flush anything in the network buffers.
   }
 }
@@ -825,6 +826,9 @@ void runEach30Seconds()
   }
   sendSysInfoUDP(1);
   refreshNodeList();
+
+  // sending $stats to homie controller
+  CPluginCall(CPLUGIN_INTERVAL, 0);
 
   #if defined(ESP8266)
   if (Settings.UseSSDP)

@@ -615,12 +615,14 @@ To create/register a plugin, you have to :
     #define USES_P081   // Cron
     #define USES_P082   // GPS
     #define USES_P083   // SGP30
+    #define USES_P084   // VEML6070
 #endif
 
 
 #ifdef CONTROLLER_SET_TESTING
     #define USES_C011   // Generic HTTP Advanced
     #define USES_C012   // Blynk HTTP
+    #define USES_C014   // homie 3 & 4dev MQTT
 #endif
 
 
@@ -705,6 +707,7 @@ To create/register a plugin, you have to :
 
 
 #ifdef CONTROLLER_SET_EXPERIMENTAL
+  #define USES_C016   // Cache controller
 #endif
 
 

@@ -248,6 +248,13 @@ void check_size() {
 #define TIMER_C011_DELAY_QUEUE             16
 #define TIMER_C012_DELAY_QUEUE             17
 #define TIMER_C013_DELAY_QUEUE             18
+#define TIMER_C014_DELAY_QUEUE             19
+#define TIMER_C015_DELAY_QUEUE             20
+#define TIMER_C016_DELAY_QUEUE             21
+#define TIMER_C017_DELAY_QUEUE             22
+#define TIMER_C018_DELAY_QUEUE             23
+#define TIMER_C019_DELAY_QUEUE             24
+#define TIMER_C020_DELAY_QUEUE             25
 
 #define TIMING_STATS_THRESHOLD             100000
 #define TIMER_GRATUITOUS_ARP_MAX           5000
@@ -256,7 +263,7 @@ void check_size() {
 #define CONTROLLER_DELAY_QUEUE_DELAY_MAX   3600000
 #define CONTROLLER_DELAY_QUEUE_DELAY_DFLT  100
 // Queue length for controller messages not yet sent.
-#define CONTROLLER_DELAY_QUEUE_DEPTH_MAX   25
+#define CONTROLLER_DELAY_QUEUE_DEPTH_MAX   50
 #define CONTROLLER_DELAY_QUEUE_DEPTH_DFLT  10
 // Number of retries to send a message by a controller.
 // N.B. Retries without a connection to wifi do not count as retry.
@@ -309,6 +316,13 @@ void check_size() {
 #define CPLUGIN_INIT                       50
 #define CPLUGIN_UDP_IN                     51
 #define CPLUGIN_FLUSH                      52
+
+#define CPLUGIN_FLUSH                      52
+// new messages for autodiscover controller plugins (experimental) i.e. C014
+#define CPLUGIN_GOT_CONNECTED              53 // call after connected to mqtt server to publich device autodicover features
+#define CPLUGIN_GOT_INVALID                54 // should be called before major changes i.e. changing the device name to clean up data on the controller. !ToDo
+#define CPLUGIN_INTERVAL                   55 // call every interval loop
+#define CPLUGIN_ACKNOWLEDGE                56 // call for sending acknolages !ToDo done by direct function call in PluginCall() for now.
 
 #define CONTROLLER_HOSTNAME                 1
 #define CONTROLLER_IP                       2
@@ -1634,6 +1648,10 @@ struct pinStatesStruct
 // this offsets are in blocks, bytes = blocks * 4
 #define RTC_BASE_STRUCT 64
 #define RTC_BASE_USERVAR 74
+#define RTC_BASE_CACHE 124
+
+#define RTC_CACHE_DATA_SIZE 240
+#define CACHE_FILE_MAX_SIZE 24000
 
 /*********************************************************************************************\
  * RTCStruct
@@ -1664,6 +1682,22 @@ String printWebString = "";
 boolean printToWebJSON = false;
 
 float UserVar[VARS_PER_TASK * TASKS_MAX];
+
+/********************************************************************************************\
+  RTC_cache_struct
+\*********************************************************************************************/
+struct RTC_cache_struct
+{
+  uint32_t checksumData = 0;
+  uint16_t readFileNr = 0;       // File number used to read from.
+  uint16_t writeFileNr = 0;      // File number to write to.
+  uint16_t readPos = 0;          // Read position in file based cache
+  uint16_t writePos = 0;         // Write position in the RTC memory
+  uint32_t checksumMetadata = 0;
+};
+
+struct RTC_cache_handler_struct;
+
 
 /*********************************************************************************************\
  * rulesTimerStruct
@@ -2045,20 +2079,29 @@ unsigned long timingstats_last_reset = 0;
 #define C011_DELAY_QUEUE        24
 #define C012_DELAY_QUEUE        25
 #define C013_DELAY_QUEUE        26
-#define TRY_CONNECT_HOST_TCP    27
-#define TRY_CONNECT_HOST_UDP    28
-#define HOST_BY_NAME_STATS      29
-#define CONNECT_CLIENT_STATS    30
-#define LOAD_CUSTOM_TASK_STATS  31
-#define WIFI_ISCONNECTED_STATS  32
-#define WIFI_NOTCONNECTED_STATS 33
-#define LOAD_TASK_SETTINGS      34
-#define TRY_OPEN_FILE           35
-#define RULES_PROCESSING        36
-#define GRAT_ARP_STATS          37
-#define BACKGROUND_TASKS        38
-#define HANDLE_SCHEDULER_IDLE   39
-#define HANDLE_SCHEDULER_TASK   40
+#define C014_DELAY_QUEUE        27
+#define C015_DELAY_QUEUE        28
+#define C016_DELAY_QUEUE        29
+#define C017_DELAY_QUEUE        30
+#define C018_DELAY_QUEUE        31
+#define C019_DELAY_QUEUE        32
+#define C020_DELAY_QUEUE        33
+#define TRY_CONNECT_HOST_TCP    34
+#define TRY_CONNECT_HOST_UDP    35
+#define HOST_BY_NAME_STATS      36
+#define CONNECT_CLIENT_STATS    37
+#define LOAD_CUSTOM_TASK_STATS  38
+#define WIFI_ISCONNECTED_STATS  39
+#define WIFI_NOTCONNECTED_STATS 40
+#define LOAD_TASK_SETTINGS      41
+#define TRY_OPEN_FILE           42
+#define SPIFFS_GC_SUCCESS       43
+#define SPIFFS_GC_FAIL          44
+#define RULES_PROCESSING        45
+#define GRAT_ARP_STATS          46
+#define BACKGROUND_TASKS        47
+#define HANDLE_SCHEDULER_IDLE   48
+#define HANDLE_SCHEDULER_TASK   49
 
 
 
@@ -2095,6 +2138,8 @@ String getMiscStatsName(int stat) {
         case WIFI_NOTCONNECTED_STATS: return F("WiFi.isConnected() (fail)");
         case LOAD_TASK_SETTINGS:     return F("LoadTaskSettings()");
         case TRY_OPEN_FILE:          return F("TryOpenFile()");
+        case SPIFFS_GC_SUCCESS:      return F("SPIFFS GC success");
+        case SPIFFS_GC_FAIL:         return F("SPIFFS GC fail");
         case RULES_PROCESSING:       return F("rulesProcessing()");
         case GRAT_ARP_STATS:         return F("sendGratuitousARP()");
         case BACKGROUND_TASKS:       return F("backgroundtasks()");
@@ -2113,6 +2158,13 @@ String getMiscStatsName(int stat) {
         case C011_DELAY_QUEUE:
         case C012_DELAY_QUEUE:
         case C013_DELAY_QUEUE:
+        case C014_DELAY_QUEUE:
+        case C015_DELAY_QUEUE:
+        case C016_DELAY_QUEUE:
+        case C017_DELAY_QUEUE:
+        case C018_DELAY_QUEUE:
+        case C019_DELAY_QUEUE:
+        case C020_DELAY_QUEUE:
         {
           String result;
           result.reserve(16);

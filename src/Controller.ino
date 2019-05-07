@@ -121,6 +121,17 @@ void callback(char* c_topic, byte* b_payload, unsigned int length) {
   schedule_controller_event_timer(ProtocolIndex, CPLUGIN_PROTOCOL_RECV, &TempEvent);
 }
 
+/*********************************************************************************************\
+ * Disconnect from MQTT message broker
+\*********************************************************************************************/
+void MQTTDisconnect()
+{
+  if (MQTTclient.connected()) {
+    MQTTclient.disconnect();
+    addLog(LOG_LEVEL_INFO, F("MQTT : Disconnected from broker"));
+    updateMQTTclient_connected();
+  }
+}
 
 /*********************************************************************************************\
  * Connect to MQTT message broker
@@ -209,7 +220,6 @@ bool MQTTConnect(int controller_idx)
     updateMQTTclient_connected();
     return false;
   }
-  MQTTclient_should_reconnect = false;
   String log = F("MQTT : Connected to broker with client ID: ");
   log += clientid;
   addLog(LOG_LEVEL_INFO, log);
@@ -224,6 +234,9 @@ bool MQTTConnect(int controller_idx)
     updateMQTTclient_connected();
     statusLED(true);
     mqtt_reconnect_count = 0;
+    // call all installed controller to publish autodiscover data
+    if (MQTTclient_should_reconnect) CPluginCall(CPLUGIN_GOT_CONNECTED, 0);
+    MQTTclient_should_reconnect = false;
     return true; // end loop if succesfull
   }
   return false;
