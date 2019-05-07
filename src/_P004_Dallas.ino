@@ -16,6 +16,7 @@
 #define PLUGIN_VALUENAME1_004 "Temperature"
 
 int8_t Plugin_004_DallasPin;
+uint8_t Plugin_004_reset_time = 0;
 
 boolean Plugin_004(byte function, struct EventStruct * event, String& string)
 {
@@ -217,6 +218,17 @@ byte Plugin_004_DS_scan(byte getDeviceROM, uint8_t* ROM)
     return devCount;
 }
 
+// read power supply
+bool Plugin_004_DS_is_parasite(uint8_t ROM[8])
+{
+    Plugin_004_DS_reset();
+    Plugin_004_DS_write(0x55); // Choose ROM
+    for (byte i = 0; i < 8; i++)
+        Plugin_004_DS_write(ROM[i]);
+    Plugin_004_DS_write(0xB4); // read power supply
+    return !Plugin_004_DS_read_bit();
+}
+
 /*********************************************************************************************\
 *  Dallas Start Temperature Conversion, expected duration:
 *    9 bits resolution ->  93.75 ms
@@ -265,6 +277,10 @@ boolean Plugin_004_DS_readTemp(uint8_t ROM[8], float * value)
 
         if (crc_ok)
             log += F(",OK");
+        if (Plugin_004_DS_is_parasite(ROM))
+        	log += F(",P");
+        log+=',';
+        log+= String(Plugin_004_reset_time,DEC);
         addLog(LOG_LEVEL_DEBUG, log);
     }
 
@@ -429,11 +445,13 @@ uint8_t Plugin_004_DS_reset()
     pinMode(Plugin_004_DallasPin, OUTPUT);
     delayMicroseconds(500);
     pinMode(Plugin_004_DallasPin, INPUT); // Float
-    for (uint8_t i = 0 ; i < 34; i++)      // 480us RX minimum
+    for (uint8_t i = 0 ; i < 45; i++)      // 480us RX minimum
     {
       delayMicroseconds(15);
-      if (!digitalRead(Plugin_004_DallasPin))
+      if (!digitalRead(Plugin_004_DallasPin)) {
         r = 1;
+        Plugin_004_reset_time = i;
+      }
     }
     #if defined(ESP32)
       ESP32interrupts();

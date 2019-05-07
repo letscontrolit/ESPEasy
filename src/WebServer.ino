@@ -5449,9 +5449,14 @@ void handleFileUpload() {
       }
       if (valid)
       {
+        String filename;
+#if defined(ESP32)
+        filename += '/';
+#endif
+        filename += upload.filename;
         // once we're safe, remove file and create empty one...
-        tryDeleteFile(upload.filename);
-        uploadFile = tryOpenFile(upload.filename.c_str(), "w");
+        tryDeleteFile(filename);
+        uploadFile = tryOpenFile(filename.c_str(), "w");
         // dont count manual uploads: flashCount();
       }
     }
@@ -5504,6 +5509,7 @@ bool loadFromFS(boolean spiffs, String path) {
   else if (path.endsWith(F(".txt")) ||
            path.endsWith(F(".dat"))) dataType = F("application/octet-stream");
   else if (path.endsWith(F(".esp"))) return handle_custom(path);
+
 #ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     String log = F("HTML : Request file ");
@@ -5512,7 +5518,10 @@ bool loadFromFS(boolean spiffs, String path) {
   }
 #endif
 
+#if !defined(ESP32)
   path = path.substring(1);
+#endif
+
   if (spiffs)
   {
     fs::File dataFile = tryOpenFile(path.c_str(), "r");
@@ -5556,7 +5565,10 @@ boolean handle_custom(String path) {
   // path is a deepcopy, since it will be changed.
   checkRAM(F("handle_custom"));
   if (!clientIPallowed()) return false;
+  
+#if !defined(ESP32)
   path = path.substring(1);
+#endif
 
   // create a dynamic custom page, parsing task values into [<taskname>#<taskvalue>] placeholders and parsing %xx% system variables
   fs::File dataFile = tryOpenFile(path.c_str(), "r");
