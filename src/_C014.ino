@@ -19,8 +19,8 @@
   #define CPLUGIN_NAME_014            "Homie MQTT (Version 4.0.0 dev)"
 #endif
 
-// subscribe and publish shemes should not be changed by the user. This will probably break the homie convention. Do @ your own risk;)
-#define CPLUGIN_014_SUBSCRIBE       "homie/%sysname%/#" // "homie/%sysname%/+/+/#" causes problems (!ToDo)
+// subscribe and publish schemes should not be changed by the user. This will probably break the homie convention. Do @ your own risk;)
+#define CPLUGIN_014_SUBSCRIBE       "homie/%sysname%/+/+/set" // only subscribe to /set topics to reduce load by receiving all retained messages
 #define CPLUGIN_014_PUBLISH         "homie/%sysname%/%tskname%/%valname%"
 
 #define CPLUGIN_014_BASE_TOPIC      "homie/%sysname%/#"
