@@ -41,6 +41,16 @@
 
 #define P084_SENSOR_TYPE_INDEX (VARS_PER_TASK + 3)
 
+#define P084_QUERY_V       0
+#define P084_QUERY_A       1
+#define P084_QUERY_W       2
+#define P084_QUERY_Wh_imp  3
+#define P084_QUERY_Wh_exp  4
+#define P084_QUERY_Wh_tot  5
+#define P084_QUERY_Wh_net  6
+#define P084_QUERY_h_tot   7
+#define P084_QUERY_h_load  8
+
 #include <ESPeasySerial.h>
 
 struct P084_data_struct : public PluginTaskData_base {
@@ -155,6 +165,19 @@ boolean Plugin_084(byte function, struct EventStruct *event, String &string) {
       chksumStats += reads_crc_failed;
       addHtml(chksumStats);
 
+      addFormSubHeader(F("Calibration"));
+
+      addFormNumericBox(F("Full Range Voltage Value"), F("p084_fr_volt"), P084_data->modbus.readHoldingRegister(0x107), 5, 9999);
+      addUnit(F("V"));
+
+      addFormNumericBox(F("Full Range Current Value"), F("p084_fr_curr"), P084_data->modbus.readHoldingRegister(0x104), 20, 50000);
+      addUnit(F("A"));
+
+      addFormNumericBox(F("Full Range Shunt Value"), F("p084_fr_shunt"), P084_data->modbus.readHoldingRegister(0x105), 50, 100);
+      addUnit(F("mV"));
+
+      addFormSubHeader(F("Logging"));
+
       addFormCheckBox(F("Enable data logging"), F("p084_en_log"), P084_data->modbus.readHoldingRegister(0x500));
 
       addRowLabel(F("Mode of data logging"));
@@ -163,19 +186,19 @@ boolean Plugin_084(byte function, struct EventStruct *event, String &string) {
       addFormNumericBox(F("Log Interval"), F("p084_log_int"), P084_data->modbus.readHoldingRegister(0x502), 1, 1440);
       addUnit(F("minutes"));
 
-      addFormNumericBox(F("Full Range Current Value"), F("p084_fr_curr"), P084_data->modbus.readHoldingRegister(0x104), 20, 50000);
-      addUnit(F("A"));
+      addFormSubHeader(F("Logged Values"));
+      p084_showValueLoadPage(P084_QUERY_Wh_imp, event);
+      p084_showValueLoadPage(P084_QUERY_Wh_exp, event);
+      p084_showValueLoadPage(P084_QUERY_Wh_tot, event);
+      p084_showValueLoadPage(P084_QUERY_Wh_net, event);
+      p084_showValueLoadPage(P084_QUERY_h_tot,  event);
+      p084_showValueLoadPage(P084_QUERY_h_load, event);
 
-      addFormNumericBox(F("Full Range Shunt Value"), F("p084_fr_shunt"), P084_data->modbus.readHoldingRegister(0x105), 50, 100);
-      addUnit(F("mV"));
-
-      addFormNumericBox(F("Full Range Voltage Value"), F("p084_fr_volt"), P084_data->modbus.readHoldingRegister(0x107), 5, 9999);
-      addUnit(F("V"));
-
-
+      addFormCheckBox(F("Clear logged values"), F("p084_clear_log"), false);
+      addFormNote(F("Will clear all logged values when checked and saved"));
     }
 
-    sensorTypeHelper_webformLoad_simple(event, P084_SENSOR_TYPE_INDEX);
+//    sensorTypeHelper_webformLoad_simple(event, P084_SENSOR_TYPE_INDEX);
 
     success = true;
     break;
@@ -186,7 +209,7 @@ boolean Plugin_084(byte function, struct EventStruct *event, String &string) {
     for (int i = 0; i < 7; ++i) {
       pconfig_webformSave(event, i);
     }
-    sensorTypeHelper_saveSensorType(event, P084_SENSOR_TYPE_INDEX);
+//    sensorTypeHelper_saveSensorType(event, P084_SENSOR_TYPE_INDEX);
     P084_data_struct *P084_data =
         static_cast<P084_data_struct *>(getPluginTaskData(event->TaskIndex));
     if (nullptr != P084_data && P084_data->isInitialized()) {
@@ -208,6 +231,17 @@ boolean Plugin_084(byte function, struct EventStruct *event, String &string) {
 
       uint16_t voltage = getFormItemInt(F("p084_fr_volt"));
       P084_data->modbus.writeMultipleRegisters(0x107, voltage);
+
+      if (isFormItemChecked(F("p084_clear_log")))
+      {
+        // Clear all logged values in the meter.
+        P084_data->modbus.writeMultipleRegisters(0x122, 0x0A); // Clear Energy
+        P084_data->modbus.writeMultipleRegisters(0x123, 0x0A); // Clear Meter Running Hour
+        P084_data->modbus.writeMultipleRegisters(0x124, 0x0A); // Clear Meter Load Hour
+        P084_data->modbus.writeMultipleRegisters(0x127, 0x0A); // Clear Ah
+        P084_data->modbus.writeMultipleRegisters(0x128, 0x0A); // Clear Min/Max value
+        P084_data->modbus.writeMultipleRegisters(0x129, 0x0A); // Clear Data Logging
+      }
     }
 
 
@@ -227,7 +261,7 @@ boolean Plugin_084(byte function, struct EventStruct *event, String &string) {
     if (P084_data->init(serial_rx, serial_tx, P084_DEPIN,
                         p084_storageValueToBaudrate(P084_BAUDRATE),
                         P084_DEV_ID)) {
-      sensorTypeHelper_setSensorType(event, P084_SENSOR_TYPE_INDEX);
+//      sensorTypeHelper_setSensorType(event, P084_SENSOR_TYPE_INDEX);
 
       success = true;
     } else {
@@ -246,15 +280,15 @@ boolean Plugin_084(byte function, struct EventStruct *event, String &string) {
     P084_data_struct *P084_data =
         static_cast<P084_data_struct *>(getPluginTaskData(event->TaskIndex));
     if (nullptr != P084_data && P084_data->isInitialized()) {
-      event->sensorType = PCONFIG(P084_SENSOR_TYPE_INDEX);
+//      event->sensorType = PCONFIG(P084_SENSOR_TYPE_INDEX);
 
-      UserVar[event->BaseVarIndex + 0] = P084_data->modbus.read_float_HoldingRegister(0x200); // voltage
+      UserVar[event->BaseVarIndex + 0] = p084_readValue(P084_QUERY_V, event); // voltage
       delay(1);
-      UserVar[event->BaseVarIndex + 1] = P084_data->modbus.read_float_HoldingRegister(0x202); // current
+      UserVar[event->BaseVarIndex + 1] = p084_readValue(P084_QUERY_A, event); // current
       delay(1);
-      UserVar[event->BaseVarIndex + 2] = P084_data->modbus.read_float_HoldingRegister(0x204) * 1000.0; // power (kW => W)
+      UserVar[event->BaseVarIndex + 2] = p084_readValue(P084_QUERY_W, event); // power (kW => W)
       delay(1);
-      UserVar[event->BaseVarIndex + 3] = P084_data->modbus.read_32b_HoldingRegister(0x304) / 100.0; // total energy
+      UserVar[event->BaseVarIndex + 3] = p084_readValue(P084_QUERY_Wh_tot, event); // total energy
 
       success = true;
     }
@@ -266,21 +300,23 @@ boolean Plugin_084(byte function, struct EventStruct *event, String &string) {
 
 String p084_getQueryString(byte query) {
   switch (query) {
-  case 0:
+  case P084_QUERY_V:
     return F("Voltage (V)");
-  case 1:
+  case P084_QUERY_A:
     return F("Current (A)");
-  case 2:
+  case P084_QUERY_W:
     return F("Power (W)");
-  case 3:
-    return F("Import Active Energy (Wh)");
-  case 4:
-    return F("Export Active Energy (Wh)");
-  case 5:
-    return F("Total Active Energy (Wh)");
-  case 6:
+  case P084_QUERY_Wh_imp:
+    return F("Import Energy (Wh)");
+  case P084_QUERY_Wh_exp:
+    return F("Export Energy (Wh)");
+  case P084_QUERY_Wh_tot:
+    return F("Total Energy (Wh)");
+  case P084_QUERY_Wh_net:
+    return F("Net Energy (Wh)");
+  case P084_QUERY_h_tot:
     return F("Meter Running Time (h)");
-  case 7:
+  case P084_QUERY_h_load:
     return F("Load Running Time (h)");
   }
   return "";
@@ -288,21 +324,23 @@ String p084_getQueryString(byte query) {
 
 String p084_getQueryValueString(byte query) {
   switch (query) {
-  case 0:
+  case P084_QUERY_V:
     return F("V");
-  case 1:
+  case P084_QUERY_A:
     return F("A");
-  case 2:
+  case P084_QUERY_W:
     return F("W");
-  case 3:
+  case P084_QUERY_Wh_imp:
     return F("Wh_imp");
-  case 4:
+  case P084_QUERY_Wh_exp:
     return F("Wh_exp");
-  case 5:
+  case P084_QUERY_Wh_tot:
     return F("Wh_tot");
-  case 6:
+  case P084_QUERY_Wh_net:
+    return F("Wh_net");
+  case P084_QUERY_h_tot:
     return F("h_tot");
-  case 7:
+  case P084_QUERY_h_load:
     return F("h_load");
   }
   return "";
@@ -325,5 +363,47 @@ int p084_storageValueToBaudrate(byte baudrate_setting) {
   }
   return 19200;
 }
+
+float p084_readValue(byte query, struct EventStruct *event) {
+  P084_data_struct *P084_data =
+      static_cast<P084_data_struct *>(getPluginTaskData(event->TaskIndex));
+  if (nullptr != P084_data && P084_data->isInitialized()) {
+    switch (query) {
+    case P084_QUERY_V:
+      return P084_data->modbus.read_float_HoldingRegister(0x200);
+    case P084_QUERY_A:
+      return P084_data->modbus.read_float_HoldingRegister(0x202);
+    case P084_QUERY_W:
+      return P084_data->modbus.read_float_HoldingRegister(0x204) * 1000.0; // power (kW => W)
+    case P084_QUERY_Wh_imp:
+      return P084_data->modbus.read_32b_HoldingRegister(0x300) * 10.0; // 0.01 kWh => Wh
+    case P084_QUERY_Wh_exp:
+      return P084_data->modbus.read_32b_HoldingRegister(0x302) * 10.0; // 0.01 kWh => Wh
+    case P084_QUERY_Wh_tot:
+      return P084_data->modbus.read_32b_HoldingRegister(0x304) * 10.0; // 0.01 kWh => Wh
+    case P084_QUERY_Wh_net:
+    {
+      int64_t intvalue = P084_data->modbus.read_32b_HoldingRegister(0x306);
+      if (intvalue >= (1<<31)) {
+        intvalue = 4294967296 - intvalue;
+      }
+      float value = static_cast<float>(intvalue);
+      value *= 10.0; // 0.01 kWh => Wh
+      return value;
+    }
+    case P084_QUERY_h_tot:
+      return P084_data->modbus.read_32b_HoldingRegister(0x280) / 100.0;
+    case P084_QUERY_h_load:
+      return P084_data->modbus.read_32b_HoldingRegister(0x282) / 100.0;
+    }
+  }
+  return 0.0;
+}
+
+void p084_showValueLoadPage(byte query, struct EventStruct *event) {
+  addRowLabel(p084_getQueryString(query));
+  addHtml(String(p084_readValue(query, event)));
+}
+
 
 #endif // USES_P084
