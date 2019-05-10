@@ -52,6 +52,14 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
         event->String1 = formatGpioName_output("LED");
         break;
       }
+          case PLUGIN_WEBFORM_LOAD:
+      {
+        addRowLabel(F("Command"));
+        addHtml(F("IRSENT,[PROTOCOL],[DATA],[BITS optional],[REPEATS optional]<BR>BITS and REPEATS are optional and default to 0"));
+
+        success = true;
+        break;
+      }
 
     case PLUGIN_INIT:
       {
@@ -75,8 +83,7 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WRITE:
       {
         uint64_t IrCode=0;
-        unsigned int IrBits=0;
-        //char log[120];
+        uint16_t  IrBits=0;
 
         String cmdCode = string;
         int argIndex = cmdCode.indexOf(',');
@@ -247,7 +254,7 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
             //sprintf_P(log, PSTR("IR Params2: RAW Code:%s"), IrRaw.c_str());
             //addLog(LOG_LEVEL_INFO, log);
           } else {
-           // unsigned int IrRepeat=0;
+           uint16_t  IrRepeat=0;
           //  unsigned long IrSecondCode=0UL;
             String ircodestr;
             if (GetArgv(string.c_str(), TmpStr1, 2)) {
@@ -258,47 +265,49 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
             if (GetArgv(string.c_str(), ircodestr, 3)) {
               IrCode = strtoull(ircodestr.c_str(), NULL, 16);
             }
-            // This code left over from the legasy Ir library. Ir bits are pretty much a set value and repeats as far as I can tell are handled from the library.
-            //if (GetArgv(string.c_str(), TmpStr1, 4)) IrBits = str2int(TmpStr1); //not needed any more... leave it for reverce compatibility or remove it and break existing instalations?
-            //if (GetArgv(string.c_str(), TmpStr1, 5)) IrRepeat = str2int(TmpStr1); // Ir repeat is usfull in some circonstances, have to see how to add it and have it be reverse compatible as well.
-            //if (GetArgv(string.c_str(), TmpStr1, 6)) IrSecondCode = strtoul(TmpStr1, NULL, 16);
 
-            //Comented out need char[] for input Needs fixing
-            if (IrType.equals(F("aiwa_rc_t501")))       Plugin_035_irSender->sendAiwaRCT501(IrCode);
-            if (IrType.equals(F("carrier_ac")))         Plugin_035_irSender->sendCarrierAC(IrCode);			
-            if (IrType.equals(F("coolix")))             Plugin_035_irSender->sendCOOLIX(IrCode);
-            if (IrType.equals(F("denon")))              Plugin_035_irSender->sendDenon(IrCode);
-            if (IrType.equals(F("dish")))               Plugin_035_irSender->sendDISH(IrCode);
-            if (IrType.equals(F("gicable")))            Plugin_035_irSender->sendGICable(IrCode);		
-            if (IrType.equals(F("jvc")))                Plugin_035_irSender->sendJVC(IrCode);			
-            if (IrType.equals(F("lasertag")))           Plugin_035_irSender->sendLasertag(IrCode);	
-            if (IrType.equals(F("legopf")))             Plugin_035_irSender->sendLegoPf(IrCode);			
-            if (IrType.equals(F("lg")))                 Plugin_035_irSender->sendLG(IrCode);
-            if (IrType.equals(F("lg2")))                Plugin_035_irSender->sendLG2(IrCode);			
-            if (IrType.equals(F("lutron")))             Plugin_035_irSender->sendLutron(IrCode);			
-            if (IrType.equals(F("magiquest")))          Plugin_035_irSender->sendMagiQuest(IrCode);
-            if (IrType.equals(F("midea")))              Plugin_035_irSender->sendMidea(IrCode);
-            if (IrType.equals(F("mitsubishi")))         Plugin_035_irSender->sendMitsubishi(IrCode);
-            if (IrType.equals(F("mitsubishi2")))        Plugin_035_irSender->sendMitsubishi2(IrCode);
-            if (IrType.equals(F("nikai")))              Plugin_035_irSender->sendNikai(IrCode);
-            if (IrType.equals(F("nec")))                Plugin_035_irSender->sendNEC(IrCode);			
-            if (IrType.equals(F("panasonic")))          Plugin_035_irSender->sendPanasonic64(IrCode);
-            if (IrType.equals(F("pioneer")))            Plugin_035_irSender->sendPioneer(IrCode);
-            if (IrType.equals(F("rc5")))                Plugin_035_irSender->sendRC5(IrCode);
-            if (IrType.equals(F("rc6")))                Plugin_035_irSender->sendRC6(IrCode);			
-            if (IrType.equals(F("rcmm")))               Plugin_035_irSender->sendRCMM(IrCode);				
-            if (IrType.equals(F("samsung")))            Plugin_035_irSender->sendSAMSUNG(IrCode);
-			      if (IrType.equals(F("samsung36")))          Plugin_035_irSender->sendSamsung36(IrCode);			
-            if (IrType.equals(F("sanyo_lc7461")))       Plugin_035_irSender->sendSanyoLC7461(IrCode);		
-			      if (IrType.equals(F("sharp")))              Plugin_035_irSender->sendSharpRaw(IrBits);
-            if (IrType.equals(F("sherwood")))           Plugin_035_irSender->sendSherwood(IrCode);						
-            if (IrType.equals(F("sony")))               Plugin_035_irSender->sendSony(IrCode);						
-            if (IrType.equals(F("teco")))               Plugin_035_irSender->sendTeco(IrCode);									
-			      if (IrType.equals(F("vestel_ac")))          Plugin_035_irSender->sendVestelAc(IrCode);
-            if (IrType.equals(F("whynter")))            Plugin_035_irSender->sendWhynter(IrCode);		
-			
-            if (IrType.equals(F("gc")))                 parseStringAndSendGC(ircodestr);              //Needs testing
-            if (IrType.equals(F("pronto")))             parseStringAndSendPronto(ircodestr, 0);       //Needs testing
+            if (GetArgv(string.c_str(), TmpStr1, 4)) IrBits = str2int(TmpStr1.c_str());   //not needed any more as I can tell... Left for reverse compitability so we won't brake old forum posts etc..
+            IrBits = 0;                                                                   //Leave it to 0 for default protocol bits
+            if (GetArgv(string.c_str(), TmpStr1, 5)) IrRepeat = str2int(TmpStr1.c_str()); // Nr. of times the message is to be repeated
+
+            if (IrType.equals(F("aiwa_rc_t501")))       sendIRCode(AIWA_RC_T501,IrCode,IrBits,IrRepeat);
+            if (IrType.equals(F("carrier_ac")))         sendIRCode(CARRIER_AC,IrCode,IrBits,IrRepeat);
+            if (IrType.equals(F("coolix")))             sendIRCode(COOLIX,IrCode,IrBits,IrRepeat);
+            if (IrType.equals(F("denon")))              sendIRCode(DENON,IrCode,IrBits,IrRepeat);
+            if (IrType.equals(F("dish")))               sendIRCode(DISH,IrCode,IrBits,IrRepeat);
+            if (IrType.equals(F("gicable")))            sendIRCode(GICABLE,IrCode,IrBits,IrRepeat);
+            if (IrType.equals(F("jvc")))                sendIRCode(JVC,IrCode,IrBits,IrRepeat);
+            if (IrType.equals(F("lasertag")))           sendIRCode(LASERTAG,IrCode,IrBits,IrRepeat);
+            if (IrType.equals(F("legopf")))             sendIRCode(LEGOPF,IrCode,IrBits,IrRepeat);
+            if (IrType.equals(F("lg")))                 sendIRCode(LG,IrCode,IrBits,IrRepeat);
+            if (IrType.equals(F("lg2")))                sendIRCode(LG2,IrCode,IrBits,IrRepeat);
+            if (IrType.equals(F("lutron")))             sendIRCode(LUTRON,IrCode,IrBits,IrRepeat);
+            if (IrType.equals(F("magiquest")))          sendIRCode(MAGIQUEST,IrCode,IrBits,IrRepeat);
+            if (IrType.equals(F("midea")))              sendIRCode(MIDEA,IrCode,IrBits,IrRepeat);
+            if (IrType.equals(F("mitsubishi")))         sendIRCode(MITSUBISHI,IrCode,IrBits,IrRepeat);
+            if (IrType.equals(F("mitsubishi2")))        sendIRCode(MITSUBISHI2,IrCode,IrBits,IrRepeat);
+            if (IrType.equals(F("nikai")))              sendIRCode(NIKAI,IrCode,IrBits,IrRepeat);
+            if (IrType.equals(F("nec")))                sendIRCode(NEC,IrCode,IrBits,IrRepeat);
+            if (IrType.equals(F("panasonic")))          sendIRCode(PANASONIC,IrCode,IrBits,IrRepeat);
+            if (IrType.equals(F("pioneer")))            sendIRCode(PIONEER,IrCode,IrBits,IrRepeat);
+            if (IrType.equals(F("rc5x")))               sendIRCode(RC5X,IrCode,IrBits,IrRepeat);
+            if (IrType.equals(F("rc5")))                sendIRCode(RC5,IrCode,IrBits,IrRepeat);
+            if (IrType.equals(F("rc6")))                sendIRCode(RC6,IrCode,IrBits,IrRepeat);	
+            if (IrType.equals(F("rcmm")))               sendIRCode(RCMM,IrCode,IrBits,IrRepeat);
+            if (IrType.equals(F("samsung")))            sendIRCode(SAMSUNG,IrCode,IrBits,IrRepeat);
+			      if (IrType.equals(F("samsung36")))          sendIRCode(SAMSUNG36,IrCode,IrBits,IrRepeat);
+            if (IrType.equals(F("sanyo_lc7461")))       sendIRCode(SANYO_LC7461,IrCode,IrBits,IrRepeat);
+			      if (IrType.equals(F("sharp")))              sendIRCode(SHARP,IrCode,IrBits,IrRepeat);
+            if (IrType.equals(F("sherwood")))           sendIRCode(SHERWOOD,IrCode,IrBits,IrRepeat);
+            if (IrType.equals(F("sony")))               sendIRCode(SONY,IrCode,IrBits,IrRepeat);
+            if (IrType.equals(F("teco")))               sendIRCode(TECO,IrCode,IrBits,IrRepeat);
+			      if (IrType.equals(F("vestel_ac")))          sendIRCode(VESTEL_AC,IrCode,IrBits,IrRepeat);
+            if (IrType.equals(F("whynter")))            sendIRCode(WHYNTER,IrCode,IrBits,IrRepeat);
+
+            //if (IrType.equals(F("raw")))              parseStringAndSendRaw(Plugin_035_irSender, code_str);   //too big String is needed for this, 
+                                                                                                                //also conflicts with the keyword RAW (for the encoding) and RAW as in the library meanning of the timmings information. 
+            if (IrType.equals(F("gc")))                 parseStringAndSendGC(ircodestr);                        //Needs testing
+            if (IrType.equals(F("pronto")))             parseStringAndSendPronto(ircodestr, 0);                 //Needs testing
             if (IrType.equals(F("mitsubishi_ac")))      parseStringAndSendAirCon(MITSUBISHI_AC, ircodestr);
             if (IrType.equals(F("fujitsu_ac")))         parseStringAndSendAirCon(FUJITSU_AC, ircodestr);
             if (IrType.equals(F("kelvinator")))         parseStringAndSendAirCon(KELVINATOR, ircodestr);
@@ -345,13 +354,281 @@ boolean addErrorTrue() {
 // A lot of the following code has been taken directly (with permission) from the IRMQTTServer.ino example code
 // of the IRremoteESP8266 library. (https://github.com/markszabo/IRremoteESP8266)
 
+
+
+// Transmit the given IR message.
+//
+// Args:
+//   irsend:   A pointer to a IRsend object to transmit via.
+//   ir_type:  enum of the protocol to be sent.
+//   code:     Numeric payload of the IR message. Most protocols use this.
+//   code_str: The unparsed code to be sent. Used by complex protocol encodings.
+//   bits:     Nr. of bits in the protocol. 0 means use the protocol's default.
+//   repeat:   Nr. of times the message is to be repeated. (Not all protcols.)
+// Returns:
+//   bool: Successfully sent or not.
+bool sendIRCode(int const ir_type,
+                uint64_t const code, uint16_t bits,
+                uint16_t repeat) {
+  // Create a pseudo-lock so we don't try to send two codes at the same time.
+
+  bool success = true;  // Assume success.
+
+  // send the IR message.
+  switch (ir_type) {
+#if SEND_RC5
+    case RC5:  // 1
+      if (bits == 0)
+        bits = kRC5Bits;
+      Plugin_035_irSender->sendRC5(code, bits, repeat);
+      break;
+#endif
+#if SEND_RC6
+    case RC6:  // 2
+      if (bits == 0)
+        bits = kRC6Mode0Bits;
+      Plugin_035_irSender->sendRC6(code, bits, repeat);
+      break;
+#endif
+#if SEND_NEC
+    case NEC:  // 3
+      if (bits == 0)
+        bits = kNECBits;
+      Plugin_035_irSender->sendNEC(code, bits, repeat);
+      break;
+#endif
+#if SEND_SONY
+    case SONY:  // 4
+      if (bits == 0)
+        bits = kSony12Bits;
+      repeat = std::max(repeat, kSonyMinRepeat);
+      Plugin_035_irSender->sendSony(code, bits, repeat);
+      break;
+#endif
+#if SEND_PANASONIC
+    case PANASONIC:  // 5
+      if (bits == 0)
+        bits = kPanasonicBits;
+      Plugin_035_irSender->sendPanasonic64(code, bits, repeat);
+      break;
+#endif
+#if SEND_JVC
+    case JVC:  // 6
+      if (bits == 0)
+        bits = kJvcBits;
+      Plugin_035_irSender->sendJVC(code, bits, repeat);
+      break;
+#endif
+#if SEND_SAMSUNG
+    case SAMSUNG:  // 7
+      if (bits == 0)
+        bits = kSamsungBits;
+      Plugin_035_irSender->sendSAMSUNG(code, bits, repeat);
+      break;
+#endif
+#if SEND_SAMSUNG36
+    case SAMSUNG36:  // 56
+      if (bits == 0)
+        bits = kSamsung36Bits;
+      Plugin_035_irSender->sendSamsung36(code, bits, repeat);
+      break;
+#endif
+#if SEND_WHYNTER
+    case WHYNTER:  // 8
+      if (bits == 0)
+        bits = kWhynterBits;
+      Plugin_035_irSender->sendWhynter(code, bits, repeat);
+      break;
+#endif
+#if SEND_AIWA_RC_T501
+    case AIWA_RC_T501:  // 9
+      if (bits == 0)
+        bits = kAiwaRcT501Bits;
+      repeat = std::max(repeat, kAiwaRcT501MinRepeats);
+      Plugin_035_irSender->sendAiwaRCT501(code, bits, repeat);
+      break;
+#endif
+#if SEND_LG
+    case LG:  // 10
+      if (bits == 0)
+        bits = kLgBits;
+      Plugin_035_irSender->sendLG(code, bits, repeat);
+      break;
+#endif
+#if SEND_MITSUBISHI
+    case MITSUBISHI:  // 12
+      if (bits == 0)
+        bits = kMitsubishiBits;
+      repeat = std::max(repeat, kMitsubishiMinRepeat);
+      Plugin_035_irSender->sendMitsubishi(code, bits, repeat);
+      break;
+#endif
+#if SEND_DISH
+    case DISH:  // 13
+      if (bits == 0)
+        bits = kDishBits;
+      repeat = std::max(repeat, kDishMinRepeat);
+      Plugin_035_irSender->sendDISH(code, bits, repeat);
+      break;
+#endif
+#if SEND_SHARP
+    case SHARP:  // 14
+      if (bits == 0)
+        bits = kSharpBits;
+      Plugin_035_irSender->sendSharpRaw(code, bits, repeat);
+      break;
+#endif
+#if SEND_COOLIX
+    case COOLIX:  // 15
+      if (bits == 0)
+        bits = kCoolixBits;
+      Plugin_035_irSender->sendCOOLIX(code, bits, repeat);
+      break;
+#endif
+#if SEND_DENON
+    case DENON:  // 17
+      if (bits == 0)
+        bits = DENON_BITS;
+      Plugin_035_irSender->sendDenon(code, bits, repeat);
+      break;
+#endif
+#if SEND_SHERWOOD
+    case SHERWOOD:  // 19
+      if (bits == 0)
+        bits = kSherwoodBits;
+      repeat = std::max(repeat, kSherwoodMinRepeat);
+      Plugin_035_irSender->sendSherwood(code, bits, repeat);
+      break;
+#endif
+#if SEND_RCMM
+    case RCMM:  // 21
+      if (bits == 0)
+        bits = kRCMMBits;
+      Plugin_035_irSender->sendRCMM(code, bits, repeat);
+      break;
+#endif
+#if SEND_SANYO
+    case SANYO_LC7461:  // 22
+      if (bits == 0)
+        bits = kSanyoLC7461Bits;
+      Plugin_035_irSender->sendSanyoLC7461(code, bits, repeat);
+      break;
+#endif
+#if SEND_RC5
+    case RC5X:  // 23
+      if (bits == 0)
+        bits = kRC5XBits;
+      Plugin_035_irSender->sendRC5(code, bits, repeat);
+      break;
+#endif
+#if SEND_NIKAI
+    case NIKAI:  // 29
+      if (bits == 0)
+        bits = kNikaiBits;
+      Plugin_035_irSender->sendNikai(code, bits, repeat);
+      break;
+#endif
+#if SEND_MIDEA
+    case MIDEA:  // 34
+      if (bits == 0)
+        bits = kMideaBits;
+      Plugin_035_irSender->sendMidea(code, bits, repeat);
+      break;
+#endif
+#if SEND_MAGIQUEST
+    case MAGIQUEST:  // 35
+      if (bits == 0)
+        bits = kMagiquestBits;
+      Plugin_035_irSender->sendMagiQuest(code, bits, repeat);
+      break;
+#endif
+#if SEND_LASERTAG
+    case LASERTAG:  // 36
+      if (bits == 0)
+        bits = kLasertagBits;
+      Plugin_035_irSender->sendLasertag(code, bits, repeat);
+      break;
+#endif
+#if SEND_CARRIER_AC
+    case CARRIER_AC:  // 37
+      if (bits == 0)
+        bits = kCarrierAcBits;
+      Plugin_035_irSender->sendCarrierAC(code, bits, repeat);
+      break;
+#endif
+#if SEND_MITSUBISHI2
+    case MITSUBISHI2:  // 39
+      if (bits == 0)
+        bits = kMitsubishiBits;
+      repeat = std::max(repeat, kMitsubishiMinRepeat);
+      Plugin_035_irSender->sendMitsubishi2(code, bits, repeat);
+      break;
+#endif
+#if SEND_GICABLE
+    case GICABLE:  // 43
+      if (bits == 0)
+        bits = kGicableBits;
+      repeat = std::max(repeat, kGicableMinRepeat);
+      Plugin_035_irSender->sendGICable(code, bits, repeat);
+      break;
+#endif
+#if SEND_LUTRON
+    case LUTRON:  // 47
+      if (bits == 0)
+        bits = kLutronBits;
+      Plugin_035_irSender->sendLutron(code, bits, repeat);
+      break;
+#endif
+#if SEND_PIONEER
+    case PIONEER:  // 50
+      if (bits == 0)
+        bits = kPioneerBits;
+      Plugin_035_irSender->sendPioneer(code, bits, repeat);
+      break;
+#endif
+#if SEND_LG
+    case LG2:  // 51
+      if (bits == 0)
+        bits = kLgBits;
+      Plugin_035_irSender->sendLG2(code, bits, repeat);
+      break;
+#endif
+#if SEND_VESTEL_AC
+    case VESTEL_AC:  // 54
+      if (bits == 0)
+        bits = kVestelAcBits;
+      Plugin_035_irSender->sendVestelAc(code, bits, repeat);
+      break;
+#endif
+#if SEND_TECO
+    case TECO:  // 55
+      if (bits == 0)
+        bits = kTecoBits;
+      Plugin_035_irSender->sendTeco(code, bits, repeat);
+      break;
+#endif
+#if SEND_LEGOPF
+    case LEGOPF:  // 58
+      if (bits == 0)
+        bits = kLegoPfBits;
+      Plugin_035_irSender->sendLegoPf(code, bits, repeat);
+      break;
+#endif
+    default:
+      // If we got here, we didn't know how to send it.
+      success = false;
+  }
+  return success;
+}
+
+
 // Parse an Air Conditioner A/C Hex String/code and send it.
 // Args:
 //   irType: Nr. of the protocol we need to send.
 //   str: A hexadecimal string containing the state to be sent.
 bool  parseStringAndSendAirCon(const uint16_t irType, const String& str) {
-  uint8_t strOffset = 0;
-  uint8_t state[STATE_SIZE_MAX] = {0};  // All array elements are set to 0.
+ uint8_t strOffset = 0;
+  uint8_t state[kStateSizeMax] = {0};  // All array elements are set to 0.
   uint16_t stateSize = 0;
 
   if (str.startsWith("0x") || str.startsWith("0X"))
@@ -359,7 +636,7 @@ bool  parseStringAndSendAirCon(const uint16_t irType, const String& str) {
   // Calculate how many hexadecimal characters there are.
   uint16_t inputLength = str.length() - strOffset;
   if (inputLength == 0) {
- //   debug("Zero length AirCon code encountered. Ignored.");
+    //debug("Zero length AirCon code encountered. Ignored.");
     return false;  // No input. Abort.
   }
 
@@ -455,15 +732,15 @@ bool  parseStringAndSendAirCon(const uint16_t irType, const String& str) {
       // Cap the maximum size.
       stateSize = std::min(stateSize, kStateSizeMax);
       break;
-	 case TCL112AC:
+    case TCL112AC:
       stateSize = kTcl112AcStateLength;
       break;
     default:  // Not a protocol we expected. Abort.
-   //   debug("Unexpected AirCon protocol detected. Ignoring.");
+      //debug("Unexpected AirCon protocol detected. Ignoring.");
       return false;
   }
   if (inputLength > stateSize * 2) {
-   // debug("AirCon code to large for the given protocol.");
+    //debug("AirCon code to large for the given protocol.");
     return false;
   }
 
@@ -480,7 +757,7 @@ bool  parseStringAndSendAirCon(const uint16_t irType, const String& str) {
       else
         c = c - 'a' + 10;
     } else {
-    //  debug("Aborting! Non-hexadecimal char found in AirCon state: " + str);
+      //debug("Aborting! Non-hexadecimal char found in AirCon state: " + str);
       return false;
     }
     if (i % 2 == 1) {  // Odd: Upper half of the byte.

@@ -50,6 +50,14 @@ bool CPlugin_007(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case CPLUGIN_FLUSH:
+      {
+        process_c007_delay_queue();
+        delay(0);
+        break;
+      }
+
+
   }
   return success;
 }
