@@ -1,4 +1,40 @@
 -------------------------------------------------
+Changes in release mega-20190508 (since mega-20190425)
+-------------------------------------------------
+
+Release date: Wed May  8 04:00:18 CEST 2019
+
+Bartlomiej Zimon (7):
+      1wire - add more data for debug, add a little more time for reset response
+      ESP32: fix files upload
+      ESP32: fix spiffs files downloading
+      ESP32: fix (custom) dashboard downloading
+      ESP32: fix booting after flash
+      spiffs.open -> tryOpenFile
+      # Conflicts:     #	src/WebServer.ino
+
+MrBenzim (2):
+      Update _P003_Pulse.ino
+      Update _P003_Pulse.ino
+
+Remco van Essen (3):
+      [VEML6070] Added VEML 6070 UV sensor
+      [VEML6070] Updates to plugin and add I2C function for 8 bit reads without sending command code first
+      [VEML6070] Removed unneeded include
+
+
+-------------------------------------------------
+Changes in release mega-20190425 (since mega-20190419)
+-------------------------------------------------
+
+Release date: Thu Apr 25 04:00:18 CEST 2019
+
+TD-er (2):
+      [SHT1x] Add delay to slow down clock rate (#2444)
+      [SHT1x] Make clock delay configurable.
+
+
+-------------------------------------------------
 Changes in release mega-20190419 (since mega-20190416)
 -------------------------------------------------
 
