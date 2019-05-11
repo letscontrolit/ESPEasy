@@ -1,4 +1,24 @@
 -------------------------------------------------
+Changes in release mega-20190511 (since mega-20190508)
+-------------------------------------------------
+
+Release date: Sat May 11 04:00:20 CEST 2019
+
+Christian Meinert (6):
+      Modified P019 & C014 to receive Values
+      1st draft version of docs for C014 Homie Controller
+      Minor fixes
+      C014 Documentation
+      Fixed subscribe topic default
+      Revert "Modified P019 & C014 to receive Values"
+
+svmac (3):
+      PullDown for GPIO16
+      Update _P001_Switch.ino
+      Changes requested
+
+
+-------------------------------------------------
 Changes in release mega-20190508 (since mega-20190425)
 -------------------------------------------------
 
