@@ -21,6 +21,12 @@
 // eg: NeoPixel,<led nr>,<red 0-255>,<green 0-255>,<blue 0-255>,<brightness 0-255>
 // The NeoPixelLine command does not work for RGBW, cause espeasy currently only allows max. 5 parameters
 
+//Added HSV compatibility for Homie convention and others
+// Hue, Satuation and Value (Intensity/Brightness) is a more human readable and easier to adjust color space with only 3 values
+// can therfor be used for RGBW LEDs too without limitations mentioned above.
+// expects Hue from 0-360° and satuation and value form 0-100% so can be used with integers too.
+// Used functions HUE2RGB & HUE2RGBW can handle float and are precice but not optimized for speed!
+
 #include <Adafruit_NeoPixel.h>
 
 Adafruit_NeoPixel *Plugin_038_pixels;
@@ -107,6 +113,12 @@ boolean Plugin_038(byte function, struct EventStruct *event, String& string)
       {
         if (Plugin_038_pixels)
         {
+          String log = "";
+          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+            log = F("P038 : ");
+            log += string;
+          }
+
           String tmpString  = string;
           int argIndex = tmpString.indexOf(',');
           if (argIndex)
@@ -125,6 +137,32 @@ boolean Plugin_038(byte function, struct EventStruct *event, String& string)
             success = true;
           }
 
+          // extra function to receive HSV values (i.e. homie controler)
+          if (tmpString.equalsIgnoreCase(F("NeoPixelHSV")))
+          {
+            int rgbw[4];
+            rgbw[3]=0;
+            if (PCONFIG(1)==1) { // RGB
+              HSV2RGB(event->Par2,event->Par3,event->Par4,rgbw);
+            } else { // RGBW
+              HSV2RGBW(event->Par2,event->Par3,event->Par4,rgbw);
+            }
+            if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+              log += F(" HSV converted to RGB(W):");
+              log += rgbw[0];
+              log += ",";
+              log += rgbw[1];
+              log += ",";
+              log += rgbw[2];
+              log += ",";
+              log += rgbw[3];
+              addLog(LOG_LEVEL_INFO,log);
+            }
+            Plugin_038_pixels->setPixelColor(event->Par1 - 1, Plugin_038_pixels->Color(rgbw[0], rgbw[1], rgbw[2], rgbw[3]));
+            Plugin_038_pixels->show(); // This sends the updated pixel color to the hardware.
+            success = true;
+          }
+
           if (tmpString.equalsIgnoreCase(F("NeoPixelAll")))
 				  {
 					  // char Line[80];
@@ -137,6 +175,35 @@ boolean Plugin_038(byte function, struct EventStruct *event, String& string)
 					  }
 					  Plugin_038_pixels->show();
 					  success = true;
+          }
+
+
+          if (tmpString.equalsIgnoreCase(F("NeoPixelAllHSV"))) {
+            int rgbw[4];
+            rgbw[3]=0;
+            if (PCONFIG(1)==1) { // RGB
+              HSV2RGB(event->Par1,event->Par2,event->Par3,rgbw);
+            } else { // RGBW
+              HSV2RGBW(event->Par1,event->Par2,event->Par3,rgbw);
+            }
+            if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+              log += F(" HSV converted to RGB(W):");
+              log += rgbw[0];
+              log += ",";
+              log += rgbw[1];
+              log += ",";
+              log += rgbw[2];
+              log += ",";
+              log += rgbw[3];
+              addLog(LOG_LEVEL_INFO,log);
+            }
+
+           for (int i = 0; i < MaxPixels; i++)
+          	 {
+                Plugin_038_pixels->setPixelColor(i, Plugin_038_pixels->Color(rgbw[0], rgbw[1], rgbw[2], rgbw[3]));
+          	 }
+           Plugin_038_pixels->show();
+           success = true;
           }
 
           if (tmpString.equalsIgnoreCase(F("NeoPixelLine")))
@@ -156,6 +223,36 @@ boolean Plugin_038(byte function, struct EventStruct *event, String& string)
 				  	Plugin_038_pixels->show();
 					  success = true;
           }
+
+          if (tmpString.equalsIgnoreCase(F("NeoPixelLineHSV")))
+				  {
+            int rgbw[4];
+            rgbw[3]=0;
+            if (PCONFIG(1)==1) { // RGB
+              HSV2RGB(event->Par3,event->Par4,event->Par5,rgbw);
+            } else { // RGBW
+              HSV2RGBW(event->Par3,event->Par4,event->Par5,rgbw);
+            }
+            if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+              log += F(" HSV converted to RGB(W):");
+              log += rgbw[0];
+              log += ",";
+              log += rgbw[1];
+              log += ",";
+              log += rgbw[2];
+              log += ",";
+              log += rgbw[3];
+              addLog(LOG_LEVEL_INFO,log);
+            }
+
+  					for (int i = event->Par1 - 1; i < event->Par2; i++)
+	  				{
+		  				Plugin_038_pixels->setPixelColor(i, Plugin_038_pixels->Color(rgbw[0], rgbw[1], rgbw[2], rgbw[3]));
+			  		}
+				  	Plugin_038_pixels->show();
+					  success = true;
+          }
+
         }
         break;
       }
