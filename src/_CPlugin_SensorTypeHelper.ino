@@ -66,6 +66,8 @@ void sensorTypeHelper_webformLoad_allTypes(struct EventStruct *event, byte pconf
 
 void sensorTypeHelper_webformLoad_simple(struct EventStruct *event, byte pconfigIndex)
 {
+  addFormSubHeader(F("Output Configuration"));
+
   byte optionValues[4];
   optionValues[0] = SENSOR_TYPE_SINGLE;
   optionValues[1] = SENSOR_TYPE_DUAL;

@@ -97,6 +97,14 @@ struct ModbusRTU_struct  {
     fail = _reads_crc_failed;
   }
 
+  void setModbusTimeout(uint16_t timeout) {
+    _modbus_timeout = timeout;
+  }
+
+  uint16_t getModbusTimeout() const {
+    return _modbus_timeout;
+  }
+
 
   String getDevice_description(byte slaveAddress) {
     bool more_follows = true;
@@ -429,7 +437,7 @@ struct ModbusRTU_struct  {
       startRead();
       // Read answer from sensor
       _recv_buf_used = 0;
-      unsigned long timeout = millis() + 300;
+      unsigned long timeout = millis() + _modbus_timeout;
       bool validPacket = false;
       while (!validPacket && _recv_buf_used < MODBUS_RECEIVE_BUFFER && !timeOutReached(timeout)) {
         while (easySerial->available()) {
@@ -516,6 +524,7 @@ struct ModbusRTU_struct  {
         _modbus_address, MODBUS_WRITE_SINGLE_REGISTER, address, value);
   }
 
+  // Function 16 (0x10) "Write Multiple Registers" to write to a single holding register
   int writeMultipleRegisters(short address, short value) {
     return preset_mult16b_register(
         _modbus_address, address, value);
@@ -706,6 +715,7 @@ private:
   int8_t _dere_pin = -1;
   uint32_t _reads_pass = 0;
   uint32_t _reads_crc_failed = 0;
+  uint16_t _modbus_timeout = 180;
 
   ESPeasySerial *easySerial;
 };

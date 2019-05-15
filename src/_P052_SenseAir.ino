@@ -66,16 +66,27 @@
 #define P052_SCR_WRITE_TIMESTAMP_TO_LOGGER 0x34
 #define P052_SCR_SINGLE_MEASUREMENT 0x35
 
-#define P052_IR_METERSTATUS 0
-#define P052_IR_ALARMSTATUS 1
+// IR (Input Register)
+#define P052_IR_ERRORSTATUS  0
+#define P052_IR_ALARMSTATUS  1
 #define P052_IR_OUTPUTSTATUS 2
-#define P052_IR_SPACE_CO2 3
+#define P052_IR_SPACE_CO2    3  // also called CO2 value filtered
+#define P052_IR_TEMPERATURE  4  // Chip temperature in 1/100th degree C
+#define P052_IR_SPACE_HUMIDITY    5
+#define P052_IR_MEASUREMENT_COUNT  6 // Range 0 .. 255, to see if a measurement has been done.
+#define P052_IR_MEASUREMENT_CYCLE_TIME  7 // Time in current cycle (in 2 seconds steps)
+#define P052_IR_CO2_UNFILTERED 8
+
+
 
 #define P052_HR_ACK_REG 0
 #define P052_HR_SPACE_CO2 3
 #define P052_HR_ABC_PERIOD 31
 
+//#define P052_MODBUS_SLAVE_ADDRESS 0x68
 #define P052_MODBUS_SLAVE_ADDRESS 0xFE // Modbus "any address"
+
+#define P052_MODBUS_TIMEOUT  180    // 100 msec communication timeout.
 
 #include <ESPeasySerial.h>
 
@@ -98,6 +109,7 @@ struct P052_data_struct : public PluginTaskData_base {
   }
 
   ModbusRTU_struct modbus;
+  byte sensortype;
 };
 
 unsigned int _plugin_052_last_measurement = 0;
@@ -204,20 +216,64 @@ boolean Plugin_052(byte function, struct EventStruct *event, String &string) {
     P052_data_struct *P052_data =
         static_cast<P052_data_struct *>(getPluginTaskData(event->TaskIndex));
     if (nullptr != P052_data && P052_data->isInitialized()) {
-      String detectedString = P052_data->modbus.detected_device_description;
-      if (detectedString.length() > 0) {
-        addFormNote(detectedString);
-      }
-      addRowLabel(F("Checksum (pass/fail)"));
-      uint32_t reads_pass, reads_crc_failed;
-      P052_data->modbus.getStatistics(reads_pass, reads_crc_failed);
-      String chksumStats;
-      chksumStats = reads_pass;
-      chksumStats += '/';
-      chksumStats += reads_crc_failed;
-      addHtml(chksumStats);
-    }
+      addFormSubHeader(F("Device Information"));
+      {
+        String detectedString = P052_data->modbus.detected_device_description;
+        if (detectedString.length() > 0) {
+          addRowLabel(F("Detected Device"));
+          addHtml(detectedString);
+        }
+        addRowLabel(F("Checksum (pass/fail)"));
+        uint32_t reads_pass, reads_crc_failed;
+        P052_data->modbus.getStatistics(reads_pass, reads_crc_failed);
+        String chksumStats;
+        chksumStats = reads_pass;
+        chksumStats += '/';
+        chksumStats += reads_crc_failed;
+        addHtml(chksumStats);
 
+        int value = P052_data->modbus.readInputRegister(0x06);
+        if (value != -1) {
+          addRowLabel(F("Measurement Count"));
+          addHtml(String(value));
+        }
+
+        value = P052_data->modbus.readInputRegister(0x07);
+        if (value != -1) {
+          addRowLabel(F("Measurement Cycle time"));
+          addHtml(String(value * 2));
+        }
+
+        value = P052_data->modbus.readInputRegister(0x08);
+        if (value != -1) {
+          addRowLabel(F("Unfiltered CO2"));
+          addHtml(String(value));
+        }
+      }
+
+      {
+        int meas_mode = P052_data->modbus.readHoldingRegister(0x0A);
+        int period = P052_data->modbus.readHoldingRegister(0x0B);
+        int samp_meas = P052_data->modbus.readHoldingRegister(0x0C);
+        if (meas_mode != -1 && period != -1 && samp_meas != -1) {
+          addFormSubHeader(F("Device Settings"));
+          // Disable selector for now, since single measurement not yet supported.
+          /*
+          if (meas_mode != -1) {
+            String options[2] = { F("Continuous"), F("Single Measurement") };
+            addFormSelector(F("Measurement Mode"), F("p052_mode"), 2, options, NULL, meas_mode);
+          }
+          */
+          if (period != -1) {
+            addFormNumericBox(F("Measurement Period"), F("p052_period"), period, 2, 65534);
+            addUnit(F("s"));
+          }
+          if (samp_meas != -1) {
+            addFormNumericBox(F("Samples per measurement"), F("p052_samp_meas"), samp_meas, 1, 1024);
+          }
+        }
+      }
+    }
     sensorTypeHelper_webformLoad_simple(event, P052_SENSOR_TYPE_INDEX);
 
     /*
@@ -252,6 +308,37 @@ boolean Plugin_052(byte function, struct EventStruct *event, String &string) {
     }
     sensorTypeHelper_saveSensorType(event, P052_SENSOR_TYPE_INDEX);
 
+    P052_data_struct *P052_data =
+        static_cast<P052_data_struct *>(getPluginTaskData(event->TaskIndex));
+    if (nullptr != P052_data && P052_data->isInitialized()) {
+      bool changed = false;
+      uint16_t mode = getFormItemInt(F("p052_mode"), 65535);
+      if ((mode == 0 || mode == 1) && P052_data->modbus.readHoldingRegister(0x0A) != mode) {
+        P052_data->modbus.writeMultipleRegisters(0x0A, mode);
+        delay(0);
+        changed = true;
+      }
+      uint16_t period = getFormItemInt(F("p052_period"), 0);
+      if (period > 1 && P052_data->modbus.readHoldingRegister(0x0B) != period) {
+        P052_data->modbus.writeMultipleRegisters(0x0B, period);
+        delay(0);
+        changed = true;
+      }
+      uint16_t samp_meas = getFormItemInt(F("p052_samp_meas"), 0);
+      if (samp_meas > 0 && samp_meas <= 1024 && P052_data->modbus.readHoldingRegister(0x0C) != samp_meas) {
+        P052_data->modbus.writeMultipleRegisters(0x0C, samp_meas);
+        delay(0);
+        changed = true;
+      }
+      if (changed) {
+        // Restart sensor.
+        P052_data->modbus.writeMultipleRegisters(0x11, 0xFF);
+        // FIXME TD-er: Must leave the sensor to boot for a while.
+        delay(35);
+      }
+    }
+
+
     /*
     // ABC functionality disabled for now, due to a bug in the firmware.
     // See https://github.com/letscontrolit/ESPEasy/issues/759
@@ -282,6 +369,10 @@ boolean Plugin_052(byte function, struct EventStruct *event, String &string) {
       Plugin_052_setABCperiod(periodInHours[choiceABCperiod]);
       */
       sensorTypeHelper_setSensorType(event, P052_SENSOR_TYPE_INDEX);
+      P052_data->modbus.setModbusTimeout(P052_MODBUS_TIMEOUT);
+//      P052_data->modbus.writeMultipleRegisters(0x09, 1); // Start Single Measurement
+//      P052_data->modbus.writeMultipleRegisters(0x0B, 16); // Measurement Period
+//      P052_data->modbus.writeMultipleRegisters(0x0C, 8); // Number of samples
 
       success = true;
     } else {
@@ -305,15 +396,19 @@ boolean Plugin_052(byte function, struct EventStruct *event, String &string) {
       for (int varnr = 0; varnr < getValueCountFromSensorType(PCONFIG(P052_SENSOR_TYPE_INDEX)); ++varnr) {
         switch (PCONFIG(varnr)) {
           case 1: {
-            int co2 = P052_data->modbus.readInputRegister(0x03);
+            int co2 = P052_data->modbus.readInputRegister(P052_IR_SPACE_CO2);
             UserVar[event->BaseVarIndex + varnr] = co2;
             log += F("co2 = ");
             log += co2;
             break;
           }
           case 2: {
-            int temperatureX100 = P052_data->modbus.read_RAM_EEPROM(
-                P052_CMD_READ_RAM, P052_RAM_ADDR_DET_TEMPERATURE, 2);  // SenseAir S8, not for other modules.
+            int temperatureX100 = P052_data->modbus.readInputRegister(P052_IR_TEMPERATURE);
+            if (temperatureX100 == -1) {
+              // SenseAir S8, not for other modules.
+              temperatureX100 = P052_data->modbus.read_RAM_EEPROM(
+                  P052_CMD_READ_RAM, P052_RAM_ADDR_DET_TEMPERATURE, 2);
+            }
             float temperature = static_cast<float>(temperatureX100) / 100.0;
             UserVar[event->BaseVarIndex + varnr] = (float)temperature;
             log += F("temperature = ");
@@ -321,7 +416,7 @@ boolean Plugin_052(byte function, struct EventStruct *event, String &string) {
             break;
           }
           case 3: {
-            int rhX100 = P052_data->modbus.readInputRegister(0x05);
+            int rhX100 = P052_data->modbus.readInputRegister(P052_IR_SPACE_HUMIDITY);
             float rh = static_cast<float>(rhX100) / 100.0;
             UserVar[event->BaseVarIndex + varnr] = rh;
             log += F("humidity = ");
@@ -345,7 +440,7 @@ boolean Plugin_052(byte function, struct EventStruct *event, String &string) {
           }
 
           case 7: {
-            int errorWord = P052_data->modbus.readInputRegister(0x00);
+            int errorWord = P052_data->modbus.readInputRegister(P052_IR_ERRORSTATUS);
             for (size_t i = 0; i < 9; i++) {
               if (bitRead(errorWord, i)) {
                 UserVar[event->BaseVarIndex + varnr] = i;
@@ -514,5 +609,6 @@ int Plugin_052_readModbusAddress(void) {
   return P052_data->modbus.readHoldingRegister(63); // HR64 MAC address Modbus address, valid range 1 - 253
 }
 */
+
 
 #endif // USES_P052
