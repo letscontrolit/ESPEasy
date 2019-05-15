@@ -427,26 +427,29 @@ struct ModbusRTU_struct  {
       startWrite();
       easySerial->write(_sendframe, _sendframe_used);
       startRead();
-      delay(50);  // FIXME TD-er: Still needed?
       // Read answer from sensor
       _recv_buf_used = 0;
-      while (easySerial->available() &&
-             _recv_buf_used < MODBUS_RECEIVE_BUFFER) {
-        _recv_buf[_recv_buf_used++] =
-            easySerial->read();
+      unsigned long timeout = millis() + 300;
+      bool validPacket = false;
+      while (!validPacket && _recv_buf_used < MODBUS_RECEIVE_BUFFER && !timeOutReached(timeout)) {
+        while (easySerial->available()) {
+          _recv_buf[_recv_buf_used++] = easySerial->read();
+        }
+        // Check checksum
+        crc = ModRTU_CRC(_recv_buf, _recv_buf_used);
+        validPacket = crc == 0;
+        delay(0);
       }
 
       // Check for MODBUS exception
-      const byte received_functionCode = _recv_buf[1];
-      if ((received_functionCode & 0x80) != 0) {
-        return_value = _recv_buf[2];
-      }
-      // Check checksum
-      crc = ModRTU_CRC(_recv_buf, _recv_buf_used);
       if (crc != 0u) {
         ++_reads_crc_failed;
         return_value = MODBUS_BADCRC;
       } else {
+        const byte received_functionCode = _recv_buf[1];
+        if ((received_functionCode & 0x80) != 0) {
+          return_value = _recv_buf[2];
+        }
         ++_reads_pass;
       }
       switch (return_value) {
