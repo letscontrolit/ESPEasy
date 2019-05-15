@@ -615,7 +615,8 @@ To create/register a plugin, you have to :
     #define USES_P081   // Cron
     #define USES_P082   // GPS
     #define USES_P083   // SGP30
-    #define USES_P085   // Homie translate receiving values to rule events Works together with C014 Homie controller
+    #define USES_P084   // VEML6070
+    #define USES_P085   // Homie receiver
 #endif
 
 
