@@ -72,8 +72,8 @@ public:
    const RawDegrees &rawLng()     { updated = false; return rawLngData; }
    double lat();
    double lng();
-   FixQuality Quality() { updated = false; return fixQuality; }
-   FixMode Mode() { updated = false; return fixMode; }
+   FixQuality Quality() { /* updated = false; */ return fixQuality; }
+   FixMode Mode() { /* updated = false; */ return fixMode; }
 
    TinyGPSLocation() : valid(false), updated(false), fixQuality(Invalid), newFixQuality(Invalid), fixMode(N), newFixMode(N)
    {}
