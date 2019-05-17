@@ -29,17 +29,8 @@
 #define P085_QUERY4         PCONFIG(6)
 #define P085_DEPIN          CONFIG_PIN3
 
-#define P085_DEV_ID_DFLT 1   // Modbus communication address
-#define P085_MODEL_DFLT 0    // AcuDC24x
-#define P085_BAUDRATE_DFLT 4 // 19200 baud
-#define P085_QUERY1_DFLT 0   // Voltage (V)
-#define P085_QUERY2_DFLT 1   // Current (A)
-#define P085_QUERY3_DFLT 2   // Power (W)
-#define P085_QUERY4_DFLT 5   // Power Factor (cos-phi)
-
-#define P085_MEASUREMENT_INTERVAL 60000L
-
-#define P085_SENSOR_TYPE_INDEX (VARS_PER_TASK + 3)
+#define P085_NR_VALUES          VARS_PER_TASK
+#define P085_QUERY1_CONFIG_POS  3
 
 #define P085_QUERY_V       0
 #define P085_QUERY_A       1
@@ -50,6 +41,17 @@
 #define P085_QUERY_Wh_net  6
 #define P085_QUERY_h_tot   7
 #define P085_QUERY_h_load  8
+#define P085_QUERY_COUNT   9  // Must be the last one
+
+#define P085_DEV_ID_DFLT   1 // Modbus communication address
+#define P085_MODEL_DFLT    0 // AcuDC24x
+#define P085_BAUDRATE_DFLT 4 // 19200 baud
+#define P085_QUERY1_DFLT   P085_QUERY_V
+#define P085_QUERY2_DFLT   P085_QUERY_A
+#define P085_QUERY3_DFLT   P085_QUERY_W
+#define P085_QUERY4_DFLT   P085_QUERY_Wh_tot
+
+#define P085_MEASUREMENT_INTERVAL 60000L
 
 #include <ESPeasySerial.h>
 
@@ -84,7 +86,7 @@ boolean Plugin_085(byte function, struct EventStruct *event, String &string) {
     Device[deviceCount].PullUpOption = false;
     Device[deviceCount].InverseLogicOption = false;
     Device[deviceCount].FormulaOption = true;
-    Device[deviceCount].ValueCount = 4;
+    Device[deviceCount].ValueCount = P085_NR_VALUES;
     Device[deviceCount].SendDataOption = true;
     Device[deviceCount].TimerOption = true;
     Device[deviceCount].GlobalSyncOption = true;
@@ -97,18 +99,17 @@ boolean Plugin_085(byte function, struct EventStruct *event, String &string) {
   }
 
   case PLUGIN_GET_DEVICEVALUENAMES: {
-    safe_strncpy(ExtraTaskSettings.TaskDeviceValueNames[0],
-                 p085_getQueryValueString(P085_QUERY1),
-                 sizeof(ExtraTaskSettings.TaskDeviceValueNames[0]));
-    safe_strncpy(ExtraTaskSettings.TaskDeviceValueNames[1],
-                 p085_getQueryValueString(P085_QUERY2),
-                 sizeof(ExtraTaskSettings.TaskDeviceValueNames[1]));
-    safe_strncpy(ExtraTaskSettings.TaskDeviceValueNames[2],
-                 p085_getQueryValueString(P085_QUERY3),
-                 sizeof(ExtraTaskSettings.TaskDeviceValueNames[2]));
-    safe_strncpy(ExtraTaskSettings.TaskDeviceValueNames[3],
-                 p085_getQueryValueString(P085_QUERY4),
-                 sizeof(ExtraTaskSettings.TaskDeviceValueNames[3]));
+    for (byte i = 0; i < VARS_PER_TASK; ++i) {
+      if ( i < P085_NR_VALUES) {
+        byte choice = PCONFIG(i + P085_QUERY1_CONFIG_POS);
+        safe_strncpy(
+          ExtraTaskSettings.TaskDeviceValueNames[i],
+          p085_valuename(choice, false),
+          sizeof(ExtraTaskSettings.TaskDeviceValueNames[i]));
+      } else {
+        ZERO_FILL(ExtraTaskSettings.TaskDeviceValueNames[i]);
+      }
+    }
     break;
   }
 
@@ -127,7 +128,6 @@ boolean Plugin_085(byte function, struct EventStruct *event, String &string) {
     P085_QUERY3 = P085_QUERY3_DFLT;
     P085_QUERY4 = P085_QUERY4_DFLT;
 
-    //    PCONFIG(P085_SENSOR_TYPE_INDEX) = SENSOR_TYPE_SINGLE;
     success = true;
     break;
   }
@@ -139,14 +139,15 @@ boolean Plugin_085(byte function, struct EventStruct *event, String &string) {
   case PLUGIN_WEBFORM_LOAD: {
     serialHelper_webformLoad(event);
 
-    String options_baudrate[6];
-    for (int i = 0; i < 6; ++i) {
-      options_baudrate[i] = String(p085_storageValueToBaudrate(i));
+    {
+      // Modbus parameters put in scope to make sure the String array will not keep memory occupied.
+      String options_baudrate[6];
+      for (int i = 0; i < 6; ++i) {
+        options_baudrate[i] = String(p085_storageValueToBaudrate(i));
+      }
+      addFormSelector(F("Baud Rate"), P085_BAUDRATE_LABEL, 6, options_baudrate,
+                      NULL, P085_BAUDRATE);
     }
-    addFormNumericBox(F("Modbus Address"), P085_DEV_ID_LABEL, P085_DEV_ID, 1,
-                      247);
-    addFormSelector(F("Baud Rate"), P085_BAUDRATE_LABEL, 6, options_baudrate,
-                    NULL, P085_BAUDRATE);
 
     P085_data_struct *P085_data =
         static_cast<P085_data_struct *>(getPluginTaskData(event->TaskIndex));
@@ -199,18 +200,41 @@ boolean Plugin_085(byte function, struct EventStruct *event, String &string) {
       addFormNote(F("Will clear all logged values when checked and saved"));
     }
 
-//    sensorTypeHelper_webformLoad_simple(event, P085_SENSOR_TYPE_INDEX);
-
+    {
+      // In a separate scope to free memory of String array as soon as possible
+      sensorTypeHelper_webformLoad_header();
+      String options_query[P085_QUERY_COUNT];
+      for (int i = 0; i < P085_QUERY_COUNT; ++i) {
+        options_query[i] = p085_valuename(i, true);
+      }
+      String label;
+      for (byte i = 0; i < P085_NR_VALUES; ++i) {
+        byte choice = PCONFIG(i + P085_QUERY1_CONFIG_POS);
+        label = F("Indicator ");
+        label += (i+1);
+        addFormSelector(label, PCONFIG_LABEL(i + P085_QUERY1_CONFIG_POS), P085_QUERY_COUNT, options_query, NULL, choice);
+      }
+    }
     success = true;
     break;
   }
 
   case PLUGIN_WEBFORM_SAVE: {
     serialHelper_webformSave(event);
-    for (int i = 0; i < 7; ++i) {
+    // Save normal parameters
+    for (int i = 0; i < P085_QUERY1_CONFIG_POS; ++i) {
       pconfig_webformSave(event, i);
     }
-//    sensorTypeHelper_saveSensorType(event, P085_SENSOR_TYPE_INDEX);
+    // Save output selector parameters.
+    for (int i = 0; i < P085_NR_VALUES; ++i) {
+      int index = i + P085_QUERY1_CONFIG_POS;
+      byte choice = PCONFIG(index);
+      String cur_valname = String(ExtraTaskSettings.TaskDeviceValueNames[i]);
+      if (cur_valname == p085_valuename(choice, false)) {
+        ZERO_FILL(ExtraTaskSettings.TaskDeviceValueNames[i]);
+      }
+      pconfig_webformSave(event, index);
+    }
     P085_data_struct *P085_data =
         static_cast<P085_data_struct *>(getPluginTaskData(event->TaskIndex));
     if (nullptr != P085_data && P085_data->isInitialized()) {
@@ -262,7 +286,6 @@ boolean Plugin_085(byte function, struct EventStruct *event, String &string) {
     if (P085_data->init(serial_rx, serial_tx, P085_DEPIN,
                         p085_storageValueToBaudrate(P085_BAUDRATE),
                         P085_DEV_ID)) {
-//      sensorTypeHelper_setSensorType(event, P085_SENSOR_TYPE_INDEX);
 
       success = true;
     } else {
@@ -281,15 +304,10 @@ boolean Plugin_085(byte function, struct EventStruct *event, String &string) {
     P085_data_struct *P085_data =
         static_cast<P085_data_struct *>(getPluginTaskData(event->TaskIndex));
     if (nullptr != P085_data && P085_data->isInitialized()) {
-//      event->sensorType = PCONFIG(P085_SENSOR_TYPE_INDEX);
-
-      UserVar[event->BaseVarIndex + 0] = p085_readValue(P085_QUERY_V, event); // voltage
-      delay(1);
-      UserVar[event->BaseVarIndex + 1] = p085_readValue(P085_QUERY_A, event); // current
-      delay(1);
-      UserVar[event->BaseVarIndex + 2] = p085_readValue(P085_QUERY_W, event); // power (kW => W)
-      delay(1);
-      UserVar[event->BaseVarIndex + 3] = p085_readValue(P085_QUERY_Wh_tot, event); // total energy
+      for (int i = 0; i < P085_QUERY1_CONFIG_POS; ++i) {
+        UserVar[event->BaseVarIndex + i] = p085_readValue(PCONFIG(i + P085_QUERY1_CONFIG_POS), event);
+        delay(1);
+      }
 
       success = true;
     }
@@ -299,50 +317,17 @@ boolean Plugin_085(byte function, struct EventStruct *event, String &string) {
   return success;
 }
 
-String p085_getQueryString(byte query) {
-  switch (query) {
-  case P085_QUERY_V:
-    return F("Voltage (V)");
-  case P085_QUERY_A:
-    return F("Current (A)");
-  case P085_QUERY_W:
-    return F("Power (W)");
-  case P085_QUERY_Wh_imp:
-    return F("Import Energy (Wh)");
-  case P085_QUERY_Wh_exp:
-    return F("Export Energy (Wh)");
-  case P085_QUERY_Wh_tot:
-    return F("Total Energy (Wh)");
-  case P085_QUERY_Wh_net:
-    return F("Net Energy (Wh)");
-  case P085_QUERY_h_tot:
-    return F("Meter Running Time (h)");
-  case P085_QUERY_h_load:
-    return F("Load Running Time (h)");
-  }
-  return "";
-}
-
-String p085_getQueryValueString(byte query) {
-  switch (query) {
-  case P085_QUERY_V:
-    return F("V");
-  case P085_QUERY_A:
-    return F("A");
-  case P085_QUERY_W:
-    return F("W");
-  case P085_QUERY_Wh_imp:
-    return F("Wh_imp");
-  case P085_QUERY_Wh_exp:
-    return F("Wh_exp");
-  case P085_QUERY_Wh_tot:
-    return F("Wh_tot");
-  case P085_QUERY_Wh_net:
-    return F("Wh_net");
-  case P085_QUERY_h_tot:
-    return F("h_tot");
-  case P085_QUERY_h_load:
-    return F("h_load");
+String p085_valuename(byte value_nr, bool displayString) {
+  switch (value_nr) {
+  case P085_QUERY_V:      return displayString ? F("Voltage (V)") : F("V");
+  case P085_QUERY_A:      return displayString ? F("Current (A)") : F("A");
+  case P085_QUERY_W:      return displayString ? F("Power (W)") : F("W");
+  case P085_QUERY_Wh_imp: return displayString ? F("Import Energy (Wh)") : F("Wh_imp");
+  case P085_QUERY_Wh_exp: return displayString ? F("Export Energy (Wh)") : F("Wh_exp");
+  case P085_QUERY_Wh_tot: return displayString ? F("Total Energy (Wh)") : F("Wh_tot");
+  case P085_QUERY_Wh_net: return displayString ? F("Net Energy (Wh)") : F("Wh_net");
+  case P085_QUERY_h_tot:  return displayString ? F("Meter Running Time (h)") : F("h_tot");
+  case P085_QUERY_h_load: return displayString ? F("Load Running Time (h)") : F("h_load");
   }
   return "";
 }
@@ -402,7 +387,7 @@ float p085_readValue(byte query, struct EventStruct *event) {
 }
 
 void p085_showValueLoadPage(byte query, struct EventStruct *event) {
-  addRowLabel(p085_getQueryString(query));
+  addRowLabel(p085_valuename(query, true));
   addHtml(String(p085_readValue(query, event)));
 }
 

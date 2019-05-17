@@ -1983,8 +1983,8 @@ void setTaskDevice_to_TaskIndex(byte taskdevicenumber, byte taskIndex) {
   if (taskdevicenumber != 0) // set default values if a new device has been selected
   {
     //NOTE: do not enable task by default. allow user to enter sensible valus first and let him enable it when ready.
-    PluginCall(PLUGIN_GET_DEVICEVALUENAMES, &TempEvent, dummy); //the plugin should populate ExtraTaskSettings with its default values.
     PluginCall(PLUGIN_SET_DEFAULTS, &TempEvent, dummy);
+    PluginCall(PLUGIN_GET_DEVICEVALUENAMES, &TempEvent, dummy); //the plugin should populate ExtraTaskSettings with its default values.
   } else {
     // New task is empty task, thus save config now.
     taskClear(taskIndex, true); // clear settings, and save
@@ -5566,7 +5566,7 @@ boolean handle_custom(String path) {
   // path is a deepcopy, since it will be changed.
   checkRAM(F("handle_custom"));
   if (!clientIPallowed()) return false;
-  
+
 #if !defined(ESP32)
   path = path.substring(1);
 #endif
