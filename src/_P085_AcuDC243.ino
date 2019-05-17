@@ -29,7 +29,7 @@
 #define P085_QUERY4         PCONFIG(6)
 #define P085_DEPIN          CONFIG_PIN3
 
-#define P085_NR_VALUES          VARS_PER_TASK
+#define P085_NR_OUTPUT_VALUES   VARS_PER_TASK
 #define P085_QUERY1_CONFIG_POS  3
 
 #define P085_QUERY_V       0
@@ -41,7 +41,7 @@
 #define P085_QUERY_Wh_net  6
 #define P085_QUERY_h_tot   7
 #define P085_QUERY_h_load  8
-#define P085_QUERY_COUNT   9  // Must be the last one
+#define P085_NR_OUTPUT_OPTIONS   9  // Must be the last one
 
 #define P085_DEV_ID_DFLT   1 // Modbus communication address
 #define P085_MODEL_DFLT    0 // AcuDC24x
@@ -86,7 +86,7 @@ boolean Plugin_085(byte function, struct EventStruct *event, String &string) {
     Device[deviceCount].PullUpOption = false;
     Device[deviceCount].InverseLogicOption = false;
     Device[deviceCount].FormulaOption = true;
-    Device[deviceCount].ValueCount = P085_NR_VALUES;
+    Device[deviceCount].ValueCount = P085_NR_OUTPUT_VALUES;
     Device[deviceCount].SendDataOption = true;
     Device[deviceCount].TimerOption = true;
     Device[deviceCount].GlobalSyncOption = true;
@@ -100,11 +100,12 @@ boolean Plugin_085(byte function, struct EventStruct *event, String &string) {
 
   case PLUGIN_GET_DEVICEVALUENAMES: {
     for (byte i = 0; i < VARS_PER_TASK; ++i) {
-      if ( i < P085_NR_VALUES) {
-        byte choice = PCONFIG(i + P085_QUERY1_CONFIG_POS);
+      if ( i < P085_NR_OUTPUT_VALUES) {
+        const byte pconfigIndex = i + P085_QUERY1_CONFIG_POS;
+        byte choice = PCONFIG(pconfigIndex);
         safe_strncpy(
           ExtraTaskSettings.TaskDeviceValueNames[i],
-          p085_valuename(choice, false),
+          Plugin_085_valuename(choice, false),
           sizeof(ExtraTaskSettings.TaskDeviceValueNames[i]));
       } else {
         ZERO_FILL(ExtraTaskSettings.TaskDeviceValueNames[i]);
@@ -203,16 +204,13 @@ boolean Plugin_085(byte function, struct EventStruct *event, String &string) {
     {
       // In a separate scope to free memory of String array as soon as possible
       sensorTypeHelper_webformLoad_header();
-      String options_query[P085_QUERY_COUNT];
-      for (int i = 0; i < P085_QUERY_COUNT; ++i) {
-        options_query[i] = p085_valuename(i, true);
+      String options[P085_NR_OUTPUT_OPTIONS];
+      for (int i = 0; i < P085_NR_OUTPUT_OPTIONS; ++i) {
+        options[i] = Plugin_085_valuename(i, true);
       }
-      String label;
-      for (byte i = 0; i < P085_NR_VALUES; ++i) {
-        byte choice = PCONFIG(i + P085_QUERY1_CONFIG_POS);
-        label = F("Indicator ");
-        label += (i+1);
-        addFormSelector(label, PCONFIG_LABEL(i + P085_QUERY1_CONFIG_POS), P085_QUERY_COUNT, options_query, NULL, choice);
+      for (byte i = 0; i < P085_NR_OUTPUT_VALUES; ++i) {
+        const byte pconfigIndex = i + P085_QUERY1_CONFIG_POS;
+        sensorTypeHelper_loadOutputSelector(event, pconfigIndex, i, P085_NR_OUTPUT_OPTIONS, options);
       }
     }
     success = true;
@@ -226,14 +224,10 @@ boolean Plugin_085(byte function, struct EventStruct *event, String &string) {
       pconfig_webformSave(event, i);
     }
     // Save output selector parameters.
-    for (int i = 0; i < P085_NR_VALUES; ++i) {
-      int index = i + P085_QUERY1_CONFIG_POS;
-      byte choice = PCONFIG(index);
-      String cur_valname = String(ExtraTaskSettings.TaskDeviceValueNames[i]);
-      if (cur_valname == p085_valuename(choice, false)) {
-        ZERO_FILL(ExtraTaskSettings.TaskDeviceValueNames[i]);
-      }
-      pconfig_webformSave(event, index);
+    for (byte i = 0; i < P085_NR_OUTPUT_VALUES; ++i) {
+      const byte pconfigIndex = i + P085_QUERY1_CONFIG_POS;
+      const byte choice = PCONFIG(pconfigIndex);
+      sensorTypeHelper_saveOutputSelector(event, pconfigIndex, i, Plugin_085_valuename(choice, false));
     }
     P085_data_struct *P085_data =
         static_cast<P085_data_struct *>(getPluginTaskData(event->TaskIndex));
@@ -317,7 +311,7 @@ boolean Plugin_085(byte function, struct EventStruct *event, String &string) {
   return success;
 }
 
-String p085_valuename(byte value_nr, bool displayString) {
+String Plugin_085_valuename(byte value_nr, bool displayString) {
   switch (value_nr) {
   case P085_QUERY_V:      return displayString ? F("Voltage (V)") : F("V");
   case P085_QUERY_A:      return displayString ? F("Current (A)") : F("A");
@@ -387,7 +381,7 @@ float p085_readValue(byte query, struct EventStruct *event) {
 }
 
 void p085_showValueLoadPage(byte query, struct EventStruct *event) {
-  addRowLabel(p085_valuename(query, true));
+  addRowLabel(Plugin_085_valuename(query, true));
   addHtml(String(p085_readValue(query, event)));
 }
 

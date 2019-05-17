@@ -81,7 +81,7 @@ void sensorTypeHelper_webformLoad_simple(struct EventStruct *event, byte pconfig
   sensorTypeHelper_webformLoad(event, pconfigIndex, 4, optionValues);
 }
 
-void sensorTypeHelper_webformLoad(struct EventStruct *event, byte pconfigIndex, int optionCount, const byte options[]) //, bool simple)
+void sensorTypeHelper_webformLoad(struct EventStruct *event, byte pconfigIndex, int optionCount, const byte options[])
 {
 
   byte choice = PCONFIG(pconfigIndex);
@@ -125,7 +125,25 @@ void sensorTypeHelper_setSensorType(struct EventStruct *event, byte pconfigIndex
 }
 
 
+void sensorTypeHelper_saveOutputSelector(struct EventStruct *event, byte pconfigIndex, byte valueIndex, const String& defaultValueName)
+{
+  if (defaultValueName.equals(ExtraTaskSettings.TaskDeviceValueNames[valueIndex])) {
+    ZERO_FILL(ExtraTaskSettings.TaskDeviceValueNames[valueIndex]);
+  }
+  pconfig_webformSave(event, pconfigIndex);
+}
+
 void pconfig_webformSave(struct EventStruct *event, byte pconfigIndex)
 {
   PCONFIG(pconfigIndex) = getFormItemInt(PCONFIG_LABEL(pconfigIndex), 0);
+}
+
+void sensorTypeHelper_loadOutputSelector(
+    struct EventStruct *event, byte pconfigIndex, byte valuenr,
+    int optionCount, const String options[])
+{
+  byte choice = PCONFIG(pconfigIndex);
+  String label = F("Value ");
+  label += (valuenr + 1);
+  addFormSelector(label, PCONFIG_LABEL(pconfigIndex), optionCount, options, NULL, choice);
 }

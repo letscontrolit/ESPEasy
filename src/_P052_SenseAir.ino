@@ -26,7 +26,13 @@
 
 #define P052_MEASUREMENT_INTERVAL 60000L
 
-#define P052_SENSOR_TYPE_INDEX  (VARS_PER_TASK + 1)
+
+#define P052_QUERY1_CONFIG_POS  0
+#define P052_SENSOR_TYPE_INDEX  P052_QUERY1_CONFIG_POS + (VARS_PER_TASK + 1)
+#define P052_NR_OUTPUT_VALUES   getValueCountFromSensorType(PCONFIG(P052_SENSOR_TYPE_INDEX))
+
+#define P052_NR_OUTPUT_OPTIONS  8
+
 
 
 // For layout and status flags in RAM/EEPROM, see document
@@ -114,6 +120,25 @@ struct P052_data_struct : public PluginTaskData_base {
 
 unsigned int _plugin_052_last_measurement = 0;
 
+
+String Plugin_052_valuename(byte value_nr, bool displayString) {
+  switch (value_nr) {
+    case 0:  return displayString ? F("Empty") : F("");
+    case 1:  return displayString ? F("Carbon Dioxide") : F("co2");
+    case 2:  return displayString ? F("Temperature") : F("T");
+    case 3:  return displayString ? F("Humidity") : F("H");
+    case 4:  return displayString ? F("Relay Status") : F("rel");
+    case 5:  return displayString ? F("Temperature Adjustment") : F("Tadj");
+    case 6:  return displayString ? F("ABC period") : F("abc_per");
+    case 7:  return displayString ? F("Error Status") : F("err");
+    default:
+    break;
+  }
+  return "";
+}
+
+
+
 boolean Plugin_052(byte function, struct EventStruct *event, String &string) {
   boolean success = false;
   switch (function) {
@@ -139,8 +164,18 @@ boolean Plugin_052(byte function, struct EventStruct *event, String &string) {
   }
 
   case PLUGIN_GET_DEVICEVALUENAMES: {
-    strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0],
-             PSTR(PLUGIN_VALUENAME1_052));
+    for (byte i = 0; i < VARS_PER_TASK; ++i) {
+      if ( i < P052_NR_OUTPUT_VALUES) {
+        const byte pconfigIndex = i + P052_QUERY1_CONFIG_POS;
+        byte choice = PCONFIG(pconfigIndex);
+        safe_strncpy(
+          ExtraTaskSettings.TaskDeviceValueNames[i],
+          Plugin_052_valuename(choice, false),
+          sizeof(ExtraTaskSettings.TaskDeviceValueNames[i]));
+      } else {
+        ZERO_FILL(ExtraTaskSettings.TaskDeviceValueNames[i]);
+      }
+    }
     break;
   }
 
@@ -286,15 +321,15 @@ boolean Plugin_052(byte function, struct EventStruct *event, String &string) {
     NULL, choiceABCperiod);
     */
 
-    String optionsSensor[8] = {F("Empty"),        F("Carbon Dioxide"),
-                               F("Temperature"),  F("Humidity"),
-                               F("Relay Status"), F("Temperature Adjustment"),
-                               F("ABC period"),   F("Error Status")};
-
-    for (int i = 0; i < getValueCountFromSensorType(PCONFIG(P052_SENSOR_TYPE_INDEX)); ++i) {
-      String sensorText = F("Value ");
-      sensorText += String(i + 1);
-      addFormSelector(sensorText, PCONFIG_LABEL(i), 8, optionsSensor, NULL, PCONFIG(i));
+    {
+      String options[P052_NR_OUTPUT_OPTIONS];
+      for (byte i = 0; i < P052_NR_OUTPUT_OPTIONS; ++i) {
+        options[i] = Plugin_052_valuename(i, true);
+      }
+      for (byte i = 0; i < P052_NR_OUTPUT_VALUES; ++i) {
+        const byte pconfigIndex = i + P052_QUERY1_CONFIG_POS;
+        sensorTypeHelper_loadOutputSelector(event, pconfigIndex, i, P052_NR_OUTPUT_OPTIONS, options);
+      }
     }
 
     success = true;
@@ -303,8 +338,11 @@ boolean Plugin_052(byte function, struct EventStruct *event, String &string) {
 
   case PLUGIN_WEBFORM_SAVE: {
     serialHelper_webformSave(event);
-    for (int i = 0; i < getValueCountFromSensorType(PCONFIG(P052_SENSOR_TYPE_INDEX)); ++i) {
-      pconfig_webformSave(event, i);
+    // Save output selector parameters.
+    for (byte i = 0; i < P052_NR_OUTPUT_VALUES; ++i) {
+      const byte pconfigIndex = i + P052_QUERY1_CONFIG_POS;
+      const byte choice = PCONFIG(pconfigIndex);
+      sensorTypeHelper_saveOutputSelector(event, pconfigIndex, i, Plugin_052_valuename(choice, false));
     }
     sensorTypeHelper_saveSensorType(event, P052_SENSOR_TYPE_INDEX);
 
@@ -393,7 +431,7 @@ boolean Plugin_052(byte function, struct EventStruct *event, String &string) {
     if (nullptr != P052_data && P052_data->isInitialized()) {
       event->sensorType = PCONFIG(P052_SENSOR_TYPE_INDEX);
       String log = F("Senseair: ");
-      for (int varnr = 0; varnr < getValueCountFromSensorType(PCONFIG(P052_SENSOR_TYPE_INDEX)); ++varnr) {
+      for (int varnr = 0; varnr < P052_NR_OUTPUT_VALUES; ++varnr) {
         switch (PCONFIG(varnr)) {
           case 1: {
             int co2 = P052_data->modbus.readInputRegister(P052_IR_SPACE_CO2);
