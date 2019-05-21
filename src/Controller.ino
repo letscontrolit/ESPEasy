@@ -205,12 +205,13 @@ bool MQTTConnect(int controller_idx)
   boolean MQTTresult = false;
   uint8_t willQos = 0;
   boolean willRetain = true;
+  boolean cleanSession = false; // As suggested here: https://github.com/knolleary/pubsubclient/issues/458#issuecomment-493875150
 
   if ((SecuritySettings.ControllerUser[controller_idx] != 0) && (SecuritySettings.ControllerPassword[controller_idx] != 0)) {
     MQTTresult = MQTTclient.connect(clientid.c_str(), SecuritySettings.ControllerUser[controller_idx], SecuritySettings.ControllerPassword[controller_idx],
-                                    LWTTopic.c_str(), willQos, willRetain, LWTMessageDisconnect.c_str());
+                                    LWTTopic.c_str(), willQos, willRetain, LWTMessageDisconnect.c_str(), cleanSession);
   } else {
-    MQTTresult = MQTTclient.connect(clientid.c_str(), LWTTopic.c_str(), willQos, willRetain, LWTMessageDisconnect.c_str());
+    MQTTresult = MQTTclient.connect(clientid.c_str(), nullptr, nullptr, LWTTopic.c_str(), willQos, willRetain, LWTMessageDisconnect.c_str(), cleanSession);
   }
   delay(0);
 
