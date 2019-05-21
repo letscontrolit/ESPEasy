@@ -40,6 +40,8 @@ Idea is to provide an easy way to include ESPEasy in modern home automation syst
 
 When a MQTT connection is established after (re-)boot the controller sends auto-discovery information for system services like commands, basic GPIO functions and for all configured devices and there values. When all messages where sent successfully a homie compatible home automation server/hub or other compatible controllers should be able to detect the unit and establish two way communication.
 
+The :ref:`P086_page` plug-in can be used to set values and trigger actions / rules.
+
 MQTT topic scheme
 -----------------
 
@@ -104,6 +106,7 @@ The controller currently supports these features
 - receive commands through the ``homie/%unitName%/SYSTEM/cmd/set`` topic.
 - switch GPIOs through ``homie/%unitName%/SYSTEM/gpio#/set`` topic. The GPIO port must be set to **default low** or **default high** in the hardware tab to be included during auto-discover.
 - send updates of GPIO ports to ``homie/%unitName%/SYSTEM/gpio#`` regardless from where the change is triggered (to be fully tested).
+- in conjunction with :ref:`P086_page` actuators can be used according to the Homie convetion using rules.
 - receive values for dummy devices via ``homie/%unitName%/%dummyDeviceName%/%valueName%/set``. From there the values can be processed further by using rules.
 - handle ``$state`` attribute (for complete list see attribute table below)
 
@@ -119,11 +122,10 @@ The controller currently supports these features
 Future / planned features
 -------------------------
 
-- a special Homie Plugin is in devolopment to pass ``\set`` messages to rules for further handling. Here ``$datatype`` and ``$format`` attributes for ``$setable`` values can be specified there. This will enable ESPEasy to handle direct inputs to plug-ins like dimmers (%,0:100), colors (RGB & HSV, 255,255,255), enum devices like remote controls (Play, Pause, Vol+, Vol-, ...).
-- Currently receiving plug-ins can only be controlled by sending the corresponding command to ``../SYSTEM/cmd/set`` (except the **dummy device**).
+- a special Homie Plugin is in devolopment to pass ``\set`` messages to rules for further handling. Here ``$datatype`` and ``$format`` attributes for ``$setable`` values can be specified there. This will enable ESPEasy to handle direct inputs to plug-ins like dimmers (%,0:100), colors (RGB & HSV, 255,255,255), enum devices like remote controls (Play, Pause, Vol+, Vol-, ...). :yellow:`Testing` see :ref:`P086_page`
 - Further in field testing with different MQTT brokers and home automation systems.
 - Handling units via the ``$unit`` attribute. As ESPEasy is currenty "unitless" this needs a global concept within ESPEasy
-- Handling ``$datatype`` attribute. Currenly all values (except cmd and gpio) are defined as ``float``.
+- Handling ``$datatype`` attribute. Currenly all values (except cmd and gpio) are defined as ``float``. :yellow:`Testing` see :ref:`P086_page` 
 - Prepare some "working examples".
 
 Under the hood

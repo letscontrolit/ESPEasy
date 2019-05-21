@@ -25,7 +25,7 @@
 
 #define CPLUGIN_014_BASE_TOPIC      "homie/%sysname%/#"
 #define CPLUGIN_014_BASE_VALUE      "homie/%sysname%/%device%/%node%/%property%"
-#define CPLUGIN_014_INTERVAL        "90" // to prevent timeout !ToDo set by towest plugin interval
+#define CPLUGIN_014_INTERVAL        "90" // to prevent timeout !ToDo set by lowest plugin interval
 #define CPLUGIN_014_SYSTEM_DEVICE   "SYSTEM" // name for system device Plugin for cmd and GIO values
 #define CPLUGIN_014_CMD_VALUE       "cmd" // name for command value
 #define CPLUGIN_014_GPIO_VALUE      "gpio" // name for gpio value i.e. "gpio1"
@@ -349,7 +349,7 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
 
                 if (!Device[DeviceIndex].SendDataOption) // check if device is not sending data = assume that it can receive.
                 {
-                  if (Device[DeviceIndex].Number==85) // Homie receiver
+                  if (Device[DeviceIndex].Number==86) // Homie receiver
                   {
                     for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++) {
                       if (Settings.TaskDeviceNumber[x] != 0) {
@@ -383,8 +383,12 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
                             case 4: valueName = F("enum");
                                     unitName = ExtraTaskSettings.TaskDeviceFormula[varNr];
                                     break;
-                            case 5: valueName = F("rgb"); break;
-                            case 6: valueName = F("hsv"); break;
+                            case 5: valueName = F("color");
+                                    unitName = F("rgb");
+                                    break;
+                            case 6: valueName = F("color");
+                                    unitName = F("hsv");
+                                    break;
                           }
                           CPlugin_014_sendMQTTnode(nodename, deviceName.c_str(), ExtraTaskSettings.TaskDeviceValueNames[varNr], "/$datatype", valueName.c_str(), errorCounter);
                           if (unitName!="") CPlugin_014_sendMQTTnode(nodename, deviceName.c_str(), ExtraTaskSettings.TaskDeviceValueNames[varNr], "/$format", unitName.c_str(), errorCounter);
@@ -604,16 +608,26 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
                   cmd += event->String2; // expect float as payload!
                   validTopic = true;
                 }
-              } else if (pluginID==85) { // Plugin Homie receiver. Schedules the event defined in the plugin. Does NOT store the value. Use HomieValueSet to save the value. This will acknolage back to the controller too.
+              } else if (pluginID==86) { // Plugin Homie receiver. Schedules the event defined in the plugin. Does NOT store the value. Use HomieValueSet to save the value. This will acknolage back to the controller too.
                 valueNr = CPlugin_014_getValueNr(deviceNr,valueName);
                 cmd = F("event,");
                 cmd += valueName;
                 cmd += "=";
-                if (Settings.TaskDevicePluginConfig[deviceNr][valueNr]==3) { // Quote Sting parameters. PLUGIN_085_VALUE_STRING
+                if (Settings.TaskDevicePluginConfig[deviceNr][valueNr]==3) { // Quote Sting parameters. PLUGIN_086_VALUE_STRING
                   cmd += '"';
                   cmd += event->String2;
                   cmd += '"';
                 } else {
+                  if (Settings.TaskDevicePluginConfig[deviceNr][valueNr]==4) { // Enumeration parameter, find Number of item. PLUGIN_086_VALUE_ENUM
+                    String enumList = ExtraTaskSettings.TaskDeviceFormula[event->Par2-1];
+                    int i = 1;
+                    while (parseString(enumList,i)!="") { // lookup result in enum List
+                      if (parseString(enumList,i)==event->String2) break;
+                      i++;
+                    }
+                    cmd += i;
+                    cmd += ",";
+                  }
                   cmd += event->String2;
                 }
                 validTopic = true;
@@ -826,7 +840,7 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
                 log += valueStr;
                 addLog(LOG_LEVEL_ERROR, log+" ERROR!");
               }
-            } else if (parseString(commandName, 1) == F("homievalueset")) { // acknolages value form P085 Homie Receiver
+            } else if (parseString(commandName, 1) == F("homievalueset")) { // acknolages value form P086 Homie Receiver
               switch (Settings.TaskDevicePluginConfig[deviceIndex-1][event->Par2-1]) {
                 case 0: // PLUGIN_085_VALUE_INTEGER
                   valueInt = static_cast<int>(UserVar[event->BaseVarIndex+event->Par2-1]);
