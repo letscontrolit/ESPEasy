@@ -16,6 +16,10 @@
 #define P031_COMMAND_NO_ACK  4
 #define P031_NO_DATA         5
 
+// see https://github.com/letscontrolit/ESPEasy/issues/2444
+#define P031_DELAY_LONGER_CABLES  delayMicroseconds(_clockdelay);
+#define P031_MAX_CLOCK_DELAY  30   // delay of 10 usec is enough for a 30m CAT6 UTP cable.
+
 class P031_data_struct: public PluginTaskData_base
 {
 public:
@@ -28,9 +32,13 @@ public:
 
 	P031_data_struct() {}
 
-  byte init(byte data_pin, byte clock_pin, bool pullUp) {
+  byte init(byte data_pin, byte clock_pin, bool pullUp, byte clockdelay) {
     _dataPin = data_pin;
     _clockPin = clock_pin;
+    _clockdelay = clockdelay;
+    if (_clockdelay > P031_MAX_CLOCK_DELAY) {
+      _clockdelay = P031_MAX_CLOCK_DELAY;
+    }
     input_mode = pullUp ? INPUT_PULLUP : INPUT;
     state = P031_IDLE;
 
@@ -134,21 +142,27 @@ public:
     // Transmission Start sequence
     digitalWrite(_dataPin, HIGH);
     digitalWrite(_clockPin, HIGH);
+    P031_DELAY_LONGER_CABLES
     digitalWrite(_dataPin, LOW);
     digitalWrite(_clockPin, LOW);
+    P031_DELAY_LONGER_CABLES
     digitalWrite(_clockPin, HIGH);
+    P031_DELAY_LONGER_CABLES
     digitalWrite(_dataPin, HIGH);
     digitalWrite(_clockPin, LOW);
+    P031_DELAY_LONGER_CABLES
 
     // Send the command (address must be 000b)
-    shiftOut(_dataPin, _clockPin, MSBFIRST, cmd);
+    p031_shiftOut(_dataPin, _clockPin, MSBFIRST, cmd);
 
     // Wait for ACK
     bool ackerror = false;
     digitalWrite(_clockPin, HIGH);
+    P031_DELAY_LONGER_CABLES
     pinMode(_dataPin, input_mode);
     if (digitalRead(_dataPin) != LOW) ackerror = true;
     digitalWrite(_clockPin, LOW);
+    P031_DELAY_LONGER_CABLES
 
     if (cmd == SHT1X_CMD_MEASURE_TEMP || cmd == SHT1X_CMD_MEASURE_RH) {
       delayMicroseconds(1); /* Give the sensor time to release the data line */
@@ -165,26 +179,65 @@ public:
 
     if (bits == 16) {
       // Read most significant byte
-      val = shiftIn(_dataPin, _clockPin, 8);
+      val = p031_shiftIn(_dataPin, _clockPin, MSBFIRST);
       val <<= 8;
 
       // Send ACK
       pinMode(_dataPin, OUTPUT);
       digitalWrite(_dataPin, LOW);
       digitalWrite(_clockPin, HIGH);
+      P031_DELAY_LONGER_CABLES
       digitalWrite(_clockPin, LOW);
+      P031_DELAY_LONGER_CABLES
       pinMode(_dataPin, input_mode);
     }
 
     // Read least significant byte
-    val |= shiftIn(_dataPin, _clockPin, 8);
+    val |= p031_shiftIn(_dataPin, _clockPin, MSBFIRST);
 
     // Keep DATA pin high to skip CRC
     digitalWrite(_clockPin, HIGH);
+    P031_DELAY_LONGER_CABLES
     digitalWrite(_clockPin, LOW);
+    P031_DELAY_LONGER_CABLES
 
     return val;
   }
+
+  uint8_t p031_shiftIn(uint8_t dataPin, uint8_t clockPin, uint8_t bitOrder) {
+  	uint8_t value = 0;
+  	uint8_t i;
+
+  	for (i = 0; i < 8; ++i) {
+  		digitalWrite(clockPin, HIGH);
+      P031_DELAY_LONGER_CABLES
+  		if (bitOrder == LSBFIRST)
+  			value |= digitalRead(dataPin) << i;
+  		else
+  			value |= digitalRead(dataPin) << (7 - i);
+  		digitalWrite(clockPin, LOW);
+      P031_DELAY_LONGER_CABLES
+  	}
+  	return value;
+  }
+
+  void p031_shiftOut(uint8_t dataPin, uint8_t clockPin, uint8_t bitOrder, uint8_t val)
+  {
+  	uint8_t i;
+
+  	for (i = 0; i < 8; i++)  {
+  		if (bitOrder == LSBFIRST)
+  			digitalWrite(dataPin, !!(val & (1 << i)));
+  		else
+  			digitalWrite(dataPin, !!(val & (1 << (7 - i))));
+
+  		digitalWrite(clockPin, HIGH);
+      P031_DELAY_LONGER_CABLES
+  		digitalWrite(clockPin, LOW);
+      P031_DELAY_LONGER_CABLES
+  	}
+  }
+
 
   float tempC = 0.0;
   float rhTrue = 0.0;
@@ -194,6 +247,7 @@ public:
   byte _dataPin = 0;
   byte _clockPin = 0;
   byte state = P031_IDLE;
+  byte _clockdelay = 0;
 };
 
 
@@ -240,6 +294,22 @@ boolean Plugin_031(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_WEBFORM_LOAD:
+    {
+      addFormNumericBox(F("Clock Delay"), F("p031_delay"), PCONFIG(0), 0, P031_MAX_CLOCK_DELAY);
+      addUnit(F("usec"));
+      addFormNote(F("Reduce clock/data frequency to allow for longer cables"));
+      success = true;
+      break;
+    }
+    case PLUGIN_WEBFORM_SAVE:
+      {
+        PCONFIG(0) = getFormItemInt(F("p031_delay"));
+        success = true;
+        break;
+      }
+
+
     case PLUGIN_INIT:
       {
         initPluginTaskData(event->TaskIndex, new P031_data_struct());
@@ -248,7 +318,10 @@ boolean Plugin_031(byte function, struct EventStruct *event, String& string)
         if (nullptr == P031_data) {
           return success;
         }
-        byte status = P031_data->init(CONFIG_PIN1, CONFIG_PIN2, Settings.TaskDevicePin1PullUp[event->TaskIndex]);
+        byte status = P031_data->init(
+          CONFIG_PIN1, CONFIG_PIN2,
+          Settings.TaskDevicePin1PullUp[event->TaskIndex],
+          PCONFIG(0));
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
           String log = F("SHT1X : Status byte: ");
           log += String(status, HEX);
@@ -310,4 +383,6 @@ boolean Plugin_031(byte function, struct EventStruct *event, String& string)
   }
   return success;
 }
+
+
 #endif // USES_P031
