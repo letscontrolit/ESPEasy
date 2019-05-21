@@ -302,6 +302,8 @@ void check_size() {
 #define PLUGIN_REQUEST                     26
 #define PLUGIN_TIME_CHANGE                 27
 #define PLUGIN_MONITOR                     28
+#define PLUGIN_SET_DEFAULTS                29
+
 
 // Make sure the CPLUGIN_* does not overlap PLUGIN_*
 #define CPLUGIN_PROTOCOL_ADD               41
@@ -1301,6 +1303,14 @@ struct ExtraTaskSettingsStruct
       }
     }
     return true;
+  }
+
+  void clearUnusedValueNames(byte usedVars) {
+    for (byte i = usedVars; i < VARS_PER_TASK; ++i) {
+      TaskDeviceValueDecimals[i] = 2;
+      ZERO_FILL(TaskDeviceFormula[i]);
+      ZERO_FILL(TaskDeviceValueNames[i]);
+    }
   }
 
   bool checkInvalidCharInNames(const char* name) {
