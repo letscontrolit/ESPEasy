@@ -85,8 +85,4 @@ void jsonStatistics(bool clearStats) {
   stream_json_end_array_element(true);  // end "function" array
   stream_json_end_object_element(true); // end "plugin" object
   stream_json_end_array_element(true);  // end "plugin" array
-  if (clearStats) {
-    timediff_calls = 0;
-    timediff_cpu_cycles_total = 0;
-  }
 }

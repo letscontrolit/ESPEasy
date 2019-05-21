@@ -2058,8 +2058,6 @@ bool mustLogCFunction(int function) {
 std::map<int,TimingStats> pluginStats;
 std::map<int,TimingStats> controllerStats;
 std::map<int,TimingStats> miscStats;
-unsigned long timediff_calls = 0;
-unsigned long timediff_cpu_cycles_total = 0;
 unsigned long timingstats_last_reset = 0;
 
 #define LOADFILE_STATS          0
