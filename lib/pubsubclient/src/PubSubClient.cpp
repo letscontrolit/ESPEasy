@@ -121,6 +121,9 @@ boolean PubSubClient::connect(const char *id, const char *user, const char *pass
     if (!connected()) {
         int result = 0;
 
+        if (_client == nullptr) {
+            return false;
+        }
         if (_client->connected()) {
             result = 1;
         } else {
@@ -225,6 +228,9 @@ boolean PubSubClient::connect(const char *id, const char *user, const char *pass
 
 // reads a byte into result
 boolean PubSubClient::readByte(uint8_t * result) {
+   if (_client == nullptr) {
+     return false;
+   }
    uint32_t previousMillis = millis();
    while(!_client->available()) {
      delay(1);  // Prevent watchdog crashes
@@ -481,11 +487,17 @@ int PubSubClient::endPublish() {
 
 size_t PubSubClient::write(uint8_t data) {
     lastOutActivity = millis();
+    if (_client == nullptr) {
+      return 0;
+    }
     return _client->write(data);
 }
 
 size_t PubSubClient::write(const uint8_t *buffer, size_t size) {
     lastOutActivity = millis();
+    if (_client == nullptr) {
+      return 0;
+    }
     return _client->write(buffer,size);
 }
 
@@ -587,10 +599,12 @@ boolean PubSubClient::unsubscribe(const char* topic) {
 void PubSubClient::disconnect() {
     buffer[0] = MQTTDISCONNECT;
     buffer[1] = 0;
-    _client->write(buffer,2);
+    if (_client != nullptr) {
+      _client->write(buffer,2);
+      _client->flush();
+      _client->stop();
+    }
     _state = MQTT_DISCONNECTED;
-    _client->flush();
-    _client->stop();
     lastInActivity = lastOutActivity = millis();
 }
 
