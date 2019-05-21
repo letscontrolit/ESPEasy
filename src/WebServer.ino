@@ -4846,8 +4846,6 @@ long stream_timing_statistics(bool clearStats) {
       }
   }
   if (clearStats) {
-    timediff_calls = 0;
-    timediff_cpu_cycles_total = 0;
     timingstats_last_reset = millis();
   }
   return timeSinceLastReset;

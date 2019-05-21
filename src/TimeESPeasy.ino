@@ -477,7 +477,6 @@ bool getNtpTime(double& unixTime_d)
 // Returned value is positive when "next" is after "prev"
 long timeDiff(const unsigned long prev, const unsigned long next)
 {
-  unsigned long start = ESP.getCycleCount();
   long signed_diff = 0;
   // To cast a value to a signed long, the difference may not exceed half the ULONG_MAX
   const unsigned long half_max_unsigned_long = 2147483647u; // = 2^31 -1
@@ -503,11 +502,6 @@ long timeDiff(const unsigned long prev, const unsigned long next)
       // next has overflow, return a positive difference value
       signed_diff = static_cast<long>((ULONG_MAX - prev) + next + 1u);
     }
-  }
-  unsigned long end = ESP.getCycleCount();
-  if (end > start) {
-    ++timediff_calls;
-    timediff_cpu_cycles_total += (end - start);
   }
   return signed_diff;
 }
