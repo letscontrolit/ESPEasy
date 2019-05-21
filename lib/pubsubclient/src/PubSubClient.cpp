@@ -371,11 +371,13 @@ boolean PubSubClient::loop() {
 }
 
 boolean PubSubClient::publish(const char* topic, const char* payload) {
-    return publish(topic,(const uint8_t*)payload,strlen(payload),false);
+    size_t plength = (payload != nullptr) ? strlen(payload) : 0;
+    return publish(topic,(const uint8_t*)payload,plength,false);
 }
 
 boolean PubSubClient::publish(const char* topic, const char* payload, boolean retained) {
-    return publish(topic,(const uint8_t*)payload,strlen(payload),retained);
+    size_t plength = (payload != nullptr) ? strlen(payload) : 0;
+    return publish(topic,(const uint8_t*)payload,plength,retained);
 }
 
 boolean PubSubClient::publish(const char* topic, const uint8_t* payload, unsigned int plength) {
@@ -405,7 +407,8 @@ boolean PubSubClient::publish(const char* topic, const uint8_t* payload, unsigne
 }
 
 boolean PubSubClient::publish_P(const char* topic, const char* payload, boolean retained) {
-    return publish_P(topic, (const uint8_t*)payload, strlen(payload), retained);
+    size_t plength = (payload != nullptr) ? strlen(payload) : 0;
+    return publish_P(topic, (const uint8_t*)payload, plength, retained);
 }
 
 boolean PubSubClient::publish_P(const char* topic, const uint8_t* payload, unsigned int plength, boolean retained) {
