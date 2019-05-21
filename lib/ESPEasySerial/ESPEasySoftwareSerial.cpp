@@ -29,7 +29,7 @@ extern "C" {
 
 #include <ESPEasySoftwareSerial.h>
 
-#define MAX_PIN 15
+#define MAX_PIN 16
 #define USABLE_PINS 10
 #define NR_CONCURRENT_SOFT_SERIALS 3
 
