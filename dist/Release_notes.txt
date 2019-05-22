@@ -1,4 +1,43 @@
 -------------------------------------------------
+Changes in release mega-20190522 (since mega-20190511)
+-------------------------------------------------
+
+Release date: Wed May 22 04:00:19 CEST 2019
+
+Gijs Noorlander (10):
+      [P003 Pulse] Adding ICACHE_RAM_ATTR attributes
+      [PubSubClient] Fix Publish_P return value
+      [PubSubClient] Removed an unused variable 618
+      [PubSubClient] Support pre-connected client
+      [PubSubClient] Add delay() calls in connect() and write()
+      [PubSubClient] Fix publish() for payload == nullptr (528)
+      [MQTT] Do not connect with cleanSession flag set
+      [PubSubClient] Check for valid initialized _client
+      [PIO build] Core 2.5.2 has been released
+      [TimeDiff] Clean up timeDiff() function and add ICACHE_RAM_ATTR
+
+Meek Home Automation (1):
+      Update ESPEasySoftwareSerial.cpp
+
+TD-er (15):
+      [Plugins] Make number of outputs dynamic for some plugins
+      [Plugins] Add plugin call to load defaults
+      [Modbus RTU] Add DE/RE pin for use with MAX485 chip
+      [WiFi] Use RSSI value to determine connected state
+      New plugin: AccuEnergy Modbus
+      [AccuEnergy] Allow setup internal parameters
+      [AccuEnergy] Improve calibration and allow to clear logged data
+      [WiFi] Perform explicit disconnect when wifi gets disconnected
+      [AccuEnergy] Rename plugin to P085
+      [Modbus RTU] Removed a delay and increase reading success
+      [SenseAir] Add preliminary support for S11 Sunrise CO2 sensor
+      [AccuEnergy] Make output value selectable
+      Make output value selection more dynamic
+      [GPS] Allow to select output values and update on time or distance travelled
+      [PubSubClient] Upgrade to 2.7
+
+
+-------------------------------------------------
 Changes in release mega-20190511 (since mega-20190508)
 -------------------------------------------------
 

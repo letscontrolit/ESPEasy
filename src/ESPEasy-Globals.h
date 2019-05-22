@@ -302,6 +302,8 @@ void check_size() {
 #define PLUGIN_REQUEST                     26
 #define PLUGIN_TIME_CHANGE                 27
 #define PLUGIN_MONITOR                     28
+#define PLUGIN_SET_DEFAULTS                29
+
 
 // Make sure the CPLUGIN_* does not overlap PLUGIN_*
 #define CPLUGIN_PROTOCOL_ADD               41
@@ -1303,6 +1305,14 @@ struct ExtraTaskSettingsStruct
     return true;
   }
 
+  void clearUnusedValueNames(byte usedVars) {
+    for (byte i = usedVars; i < VARS_PER_TASK; ++i) {
+      TaskDeviceValueDecimals[i] = 2;
+      ZERO_FILL(TaskDeviceFormula[i]);
+      ZERO_FILL(TaskDeviceValueNames[i]);
+    }
+  }
+
   bool checkInvalidCharInNames(const char* name) {
     int pos = 0;
     while (*(name+pos) != 0) {
@@ -2048,8 +2058,6 @@ bool mustLogCFunction(int function) {
 std::map<int,TimingStats> pluginStats;
 std::map<int,TimingStats> controllerStats;
 std::map<int,TimingStats> miscStats;
-unsigned long timediff_calls = 0;
-unsigned long timediff_cpu_cycles_total = 0;
 unsigned long timingstats_last_reset = 0;
 
 #define LOADFILE_STATS          0
