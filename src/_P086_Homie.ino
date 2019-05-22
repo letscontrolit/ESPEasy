@@ -5,7 +5,7 @@
 
 #define PLUGIN_086
 #define PLUGIN_ID_086         86
-#define PLUGIN_NAME_086       "Generic - Homie receiver"
+#define PLUGIN_NAME_086       "Generic - Homie receiver [TESTING]"
 
 // empty default names because settings will be ignored / not used if value name is empty
 #define PLUGIN_VALUENAME1_086 ""
@@ -69,7 +69,7 @@ boolean Plugin_086(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        addFormNote(F("Translation Plugin for controllers able to recieve value updates according to Homie convention."));
+        addFormNote(F("Translation Plugin for controllers able to receive value updates according to the Homie convention."));
 
         byte choice = 0;
         String labelText = "";
