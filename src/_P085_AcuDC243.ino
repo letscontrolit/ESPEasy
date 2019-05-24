@@ -299,7 +299,7 @@ boolean Plugin_085(byte function, struct EventStruct *event, String &string) {
     P085_data_struct *P085_data =
         static_cast<P085_data_struct *>(getPluginTaskData(event->TaskIndex));
     if (nullptr != P085_data && P085_data->isInitialized()) {
-      for (int i = 0; i < P085_QUERY1_CONFIG_POS; ++i) {
+      for (int i = 0; i < P085_NR_OUTPUT_VALUES; ++i) {
         UserVar[event->BaseVarIndex + i] = p085_readValue(PCONFIG(i + P085_QUERY1_CONFIG_POS), event);
         delay(1);
       }
