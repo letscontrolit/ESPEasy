@@ -6,8 +6,20 @@
   #define STR(x) STR_HELPER(x)
 #endif
 
-#include <cstddef>
-#include "FS.h"
+#ifdef __GCC__
+#pragma GCC system_header
+#endif
+
+#include <stddef.h>
+
+namespace std 
+{
+  using ::ptrdiff_t;
+  using ::size_t;
+}
+
+
+#include <FS.h>
 
 // ********************************************************************************
 // Check struct sizes at compile time
@@ -521,8 +533,11 @@ bool showSettingsFileLayout = false;
 #include "Custom.h"
 #endif
 
+#include "define_plugin_sets.h"
 #include "WebStaticData.h"
 #include "ESPEasyTimeTypes.h"
+#include "StringProviderTypes.h"
+#include "ESPeasySerial.h"
 #include "I2CTypes.h"
 #include <I2Cdev.h>
 #include <map>
