@@ -856,8 +856,14 @@ int SpiffsSectors()
 {
   checkRAM(F("SpiffsSectors"));
   #if defined(ESP8266)
-    uint32_t _sectorStart = ((uint32_t)&_SPIFFS_start - 0x40200000) / SPI_FLASH_SEC_SIZE;
-    uint32_t _sectorEnd = ((uint32_t)&_SPIFFS_end - 0x40200000) / SPI_FLASH_SEC_SIZE;
+    #ifdef CORE_POST_2_6_0
+      uint32_t _sectorStart = ((uint32_t)&_FS_start - 0x40200000) / SPI_FLASH_SEC_SIZE;
+      uint32_t _sectorEnd = ((uint32_t)&_FS_end - 0x40200000) / SPI_FLASH_SEC_SIZE;
+    #else
+      uint32_t _sectorStart = ((uint32_t)&_SPIFFS_start - 0x40200000) / SPI_FLASH_SEC_SIZE;
+      uint32_t _sectorEnd = ((uint32_t)&_SPIFFS_end - 0x40200000) / SPI_FLASH_SEC_SIZE;
+    #endif
+
     return _sectorEnd - _sectorStart;
   #endif
   #if defined(ESP32)

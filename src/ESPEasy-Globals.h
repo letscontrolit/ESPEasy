@@ -12,7 +12,7 @@
 
 #include <stddef.h>
 
-namespace std 
+namespace std
 {
   using ::ptrdiff_t;
   using ::size_t;
@@ -582,10 +582,18 @@ bool showSettingsFileLayout = false;
   extern "C" {
   #include "spi_flash.h"
   }
-  extern "C" uint32_t _SPIFFS_start;
-  extern "C" uint32_t _SPIFFS_end;
-  extern "C" uint32_t _SPIFFS_page;
-  extern "C" uint32_t _SPIFFS_block;
+  #ifdef CORE_POST_2_6_0
+    extern "C" uint32_t _FS_start;
+    extern "C" uint32_t _FS_end;
+    extern "C" uint32_t _FS_page;
+    extern "C" uint32_t _FS_block;
+  #else
+    extern "C" uint32_t _SPIFFS_start;
+    extern "C" uint32_t _SPIFFS_end;
+    extern "C" uint32_t _SPIFFS_page;
+    extern "C" uint32_t _SPIFFS_block;
+  #endif
+
   #ifdef FEATURE_MDNS
     #include <ESP8266mDNS.h>
   #endif
