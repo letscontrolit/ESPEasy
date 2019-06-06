@@ -1,4 +1,6 @@
-#include <ESPeasySerial.h>
+#include "ESPeasySerial.h"
+
+struct ESPeasySerialType;
 
 static String serialHelper_getSerialTypeLabel(ESPeasySerialType::serialtype serType) {
   if (serType == ESPeasySerialType::serialtype::software) return F("SoftwareSerial");

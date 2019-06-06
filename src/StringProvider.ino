@@ -1,4 +1,4 @@
-#include <StringProviderTypes.h>
+#include "StringProviderTypes.h"
 
 String getInternalLabel(LabelType::Enum label) {
   return to_internal_string(getLabel(label));
