@@ -25,7 +25,7 @@
 
 #define CPLUGIN_014_BASE_TOPIC      "homie/%sysname%/#"
 #define CPLUGIN_014_BASE_VALUE      "homie/%sysname%/%device%/%node%/%property%"
-#define CPLUGIN_014_INTERVAL        "90" // to prevent timeout !ToDo set by towest plugin interval
+#define CPLUGIN_014_INTERVAL        "90" // to prevent timeout !ToDo set by lowest plugin interval
 #define CPLUGIN_014_SYSTEM_DEVICE   "SYSTEM" // name for system device Plugin for cmd and GIO values
 #define CPLUGIN_014_CMD_VALUE       "cmd" // name for command value
 #define CPLUGIN_014_GPIO_VALUE      "gpio" // name for gpio value i.e. "gpio1"
@@ -345,36 +345,58 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
 
               if (Settings.TaskDeviceEnabled[x])  // Device is enabled so send information
               { // device enabled
-                CPLUGIN_014_addToList(nodesList,deviceName.c_str());
-                deviceCount++;
-                // $name	Device → Controller	Friendly name of the Node	Yes	Yes
-                CPlugin_014_sendMQTTnode(nodename, deviceName.c_str(), "$name", "",ExtraTaskSettings.TaskDeviceName, errorCounter);
-
-                // $type	Device → Controller	Type of the node	Yes	Yes
-                CPlugin_014_sendMQTTnode(nodename, deviceName.c_str(), "$type", "", getPluginNameFromDeviceIndex(DeviceIndex).c_str(), errorCounter);
-
                 valuesList="";
 
                 if (!Device[DeviceIndex].SendDataOption) // check if device is not sending data = assume that it can receive.
                 {
-/*                  if (Device[DeviceIndex].Number==12) // LCD 2 or 4 Lines
+                  if (Device[DeviceIndex].Number==86) // Homie receiver
                   {
-                    CPLUGIN_014_addToList(valuesList,"LCD");
-                    CPLUGIN_014_addToList(valuesList,"LCDCMD");
-                    //$settable	Device → Controller	Specifies whether the property is settable (true) or readonly (false)	true or false	Yes	No (false)
-                    CPlugin_014_sendMQTTnode(nodename, deviceName.c_str(), "LCD", "/$settable", "true", errorCounter);
-                    CPlugin_014_sendMQTTnode(nodename, deviceName.c_str(), "LCDCMD", "/$settable", "true", errorCounter);
-
-                    //$name	Device → Controller	Friendly name of the property.	Any String	Yes	No ("")
-                    CPlugin_014_sendMQTTnode(nodename, deviceName.c_str(), "LCD", "/$name","LCD text", errorCounter);
-                    CPlugin_014_sendMQTTnode(nodename, deviceName.c_str(), "LCDCMD", "/$name","LCD command", errorCounter);
-
-                    //$datatype	The data type. See Payloads.	Enum: [integer, float, boolean,string, enum, color]
-                    CPlugin_014_sendMQTTnode(nodename, deviceName.c_str(), "LCD", "/$datatype", "string", errorCounter);
-                    CPlugin_014_sendMQTTnode(nodename, deviceName.c_str(), "LCDCMD", "/$datatype", "string", errorCounter);
-
-                    nodeCount++;
-                  } */
+                    for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++) {
+                      if (Settings.TaskDeviceNumber[x] != 0) {
+                        if (ExtraTaskSettings.TaskDeviceValueNames[varNr][0]!=0) { // do not send if Value Name is empty!
+                          CPLUGIN_014_addToList(valuesList,ExtraTaskSettings.TaskDeviceValueNames[varNr]);
+                          //$settable	Device → Controller	Specifies whether the property is settable (true) or readonly (false)	true or false	Yes	No (false)
+                          CPlugin_014_sendMQTTnode(nodename, deviceName.c_str(), ExtraTaskSettings.TaskDeviceValueNames[varNr], "/$settable", "true", errorCounter);
+                          //$name	Device → Controller	Friendly name of the property.	Any String	Yes	No ("")
+                          valueName = F("Homie Receiver: ");
+                          valueName += ExtraTaskSettings.TaskDeviceValueNames[varNr];
+                          CPlugin_014_sendMQTTnode(nodename, deviceName.c_str(), ExtraTaskSettings.TaskDeviceValueNames[varNr], "/$name",valueName.c_str(), errorCounter);
+                          //$datatype	The data type. See Payloads.	Enum: [integer, float, boolean,string, enum, color]
+                          unitName = "";
+                          switch(Settings.TaskDevicePluginConfig[x][varNr]) {
+                            case 0: valueName = F("integer");
+                                    if (ExtraTaskSettings.TaskDevicePluginConfig[varNr]!=0 || ExtraTaskSettings.TaskDevicePluginConfig[varNr+5]!=0) {
+                                      unitName = ExtraTaskSettings.TaskDevicePluginConfig[varNr];
+                                      unitName += ":";
+                                      unitName += ExtraTaskSettings.TaskDevicePluginConfig[varNr+Device[DeviceIndex].ValueCount];
+                                    }
+                                    break;
+                            case 1: valueName = F("float");
+                                    if (ExtraTaskSettings.TaskDevicePluginConfig[varNr]!=0 || ExtraTaskSettings.TaskDevicePluginConfig[varNr+5]!=0) {
+                                      unitName = ExtraTaskSettings.TaskDevicePluginConfig[varNr];
+                                      unitName += ":";
+                                      unitName += ExtraTaskSettings.TaskDevicePluginConfig[varNr+Device[DeviceIndex].ValueCount];
+                                    }
+                                    break;
+                            case 2: valueName = F("boolean"); break;
+                            case 3: valueName = F("string"); break;
+                            case 4: valueName = F("enum");
+                                    unitName = ExtraTaskSettings.TaskDeviceFormula[varNr];
+                                    break;
+                            case 5: valueName = F("color");
+                                    unitName = F("rgb");
+                                    break;
+                            case 6: valueName = F("color");
+                                    unitName = F("hsv");
+                                    break;
+                          }
+                          CPlugin_014_sendMQTTnode(nodename, deviceName.c_str(), ExtraTaskSettings.TaskDeviceValueNames[varNr], "/$datatype", valueName.c_str(), errorCounter);
+                          if (unitName!="") CPlugin_014_sendMQTTnode(nodename, deviceName.c_str(), ExtraTaskSettings.TaskDeviceValueNames[varNr], "/$format", unitName.c_str(), errorCounter);
+                          nodeCount++;
+                        }
+                      }
+                    }
+                  }
                 } else {
                   // ignore cutom values for now! Assume all Values are standard float.
                   // customValues = PluginCall(PLUGIN_WEBFORM_SHOW_VALUES, &TempEvent,TXBuffer.buf);
@@ -429,6 +451,16 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
                 }
                 if (valuesList!="")
                 {
+                  // only add device to list if it has nodes!
+                  // $name	Device → Controller	Friendly name of the Node	Yes	Yes
+                  CPlugin_014_sendMQTTnode(nodename, deviceName.c_str(), "$name", "",ExtraTaskSettings.TaskDeviceName, errorCounter);
+
+                  // $type	Device → Controller	Type of the node	Yes	Yes
+                  CPlugin_014_sendMQTTnode(nodename, deviceName.c_str(), "$type", "", getPluginNameFromDeviceIndex(DeviceIndex).c_str(), errorCounter);
+
+                  // add device to device list
+                  CPLUGIN_014_addToList(nodesList,deviceName.c_str());
+                  deviceCount++;
                   // $properties	Device → Controller	Properties the node exposes, with format id separated by a , if there are multiple nodes.	Yes	Yes
                   CPlugin_014_sendMQTTnode(nodename, deviceName.c_str(), "$properties", "", valuesList.c_str(), errorCounter);
                   valuesList="";
@@ -517,6 +549,8 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
           break;
         } else {
           String cmd;
+          int valueNr=0;
+          int deviceNr=0;
           struct EventStruct TempEvent;
           TempEvent.TaskIndex = event->TaskIndex;
           TempEvent.Source = VALUE_SOURCE_MQTT; // to trigger the correct acknowledgment
@@ -558,12 +592,12 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
               }
             } else // msg to a receiving plugin
             {
-              int deviceNr=CPlugin_014_getPluginNr(nodeName);
+              deviceNr=CPlugin_014_getPluginNr(nodeName);
               int pluginID=Device[getDeviceIndex(Settings.TaskDeviceNumber[deviceNr])].Number;
 
               if (pluginID==33) // Plugin 33 Dummy Device
               { // DummyValueSet,<task/device nr>,<value nr>,<value/formula (!ToDo) >, works only with new version of P033!
-                int valueNr = CPlugin_014_getValueNr(deviceNr,valueName);
+                valueNr = CPlugin_014_getValueNr(deviceNr,valueName);
                 if (valueNr > -1) // value Name identified
                 {
                   cmd = F("DummyValueSet,"); // Set a Dummy Device Value
@@ -574,6 +608,29 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
                   cmd += event->String2; // expect float as payload!
                   validTopic = true;
                 }
+              } else if (pluginID==86) { // Plugin Homie receiver. Schedules the event defined in the plugin. Does NOT store the value. Use HomieValueSet to save the value. This will acknolage back to the controller too.
+                valueNr = CPlugin_014_getValueNr(deviceNr,valueName);
+                cmd = F("event,");
+                cmd += valueName;
+                cmd += "=";
+                if (Settings.TaskDevicePluginConfig[deviceNr][valueNr]==3) { // Quote Sting parameters. PLUGIN_086_VALUE_STRING
+                  cmd += '"';
+                  cmd += event->String2;
+                  cmd += '"';
+                } else {
+                  if (Settings.TaskDevicePluginConfig[deviceNr][valueNr]==4) { // Enumeration parameter, find Number of item. PLUGIN_086_VALUE_ENUM
+                    String enumList = ExtraTaskSettings.TaskDeviceFormula[event->Par2-1];
+                    int i = 1;
+                    while (parseString(enumList,i)!="") { // lookup result in enum List
+                      if (parseString(enumList,i)==event->String2) break;
+                      i++;
+                    }
+                    cmd += i;
+                    cmd += ",";
+                  }
+                  cmd += event->String2;
+                }
+                validTopic = true;
               }
             }
 
@@ -586,23 +643,28 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
               }
             } else {
               if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-                addLog(LOG_LEVEL_INFO, log+ F(" ERROR"));
+                addLog(LOG_LEVEL_INFO, log+ F(" INVALID MSG"));
               }
             }
           }
 
           if (validTopic) {
-            if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-              log=F("C014 : Exec > ");
-            }
             // in case of event, store to buffer and return...
             String command = parseString(cmd, 1);
             if (command == F("event"))
             {
-              if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-                log+=F("Event!");
-              }
               eventBuffer = cmd.substring(6);
+              if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+                log=F("C014 : deviceNr:");
+                log+=deviceNr;
+                log+=F(" valueNr:");
+                log+=valueNr;
+                log+=F(" valueType:");
+                log+=Settings.TaskDevicePluginConfig[deviceNr][valueNr];
+                log+=F(" Event: ");
+                log+=eventBuffer;
+                addLog(LOG_LEVEL_INFO, log);
+              }
             } else { // not an event
               if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                 log=F("C014 : PluginCall:");
@@ -610,7 +672,7 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
               if (!PluginCall(PLUGIN_WRITE, &TempEvent, cmd)) {
                 remoteConfig(&TempEvent, cmd);
                 if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-                  log +=F(" remoteConfig?");
+                  log +=F(" failed! remoteConfig?");
                 }
               } else {
                 if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -668,7 +730,7 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
       case CPLUGIN_ACKNOWLEDGE:
       {
         LoadTaskSettings(event->Par1-1);
-        if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+/*        if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
           String log = F("CPLUGIN_ACKNOWLEDGE: ");
           log += string;
           log += F(" / ");
@@ -702,7 +764,7 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
           log += F(" P5:");
           log += event->Par5;
           addLog(LOG_LEVEL_DEBUG, log);
-        }
+        } */
         success = false;
         if (string!="") {
           String commandName = parseString(string, 1); // could not find a way to get the command out of the event structure.
@@ -749,10 +811,12 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
             topic.replace(F("%tskname%"), deviceName);
             String valueName = ExtraTaskSettings.TaskDeviceValueNames[event->Par2-1]; //parseString(string, 3).toInt()-1];
             topic.replace(F("%valname%"), valueName);
+            String valueStr = "";
+            int valueInt = 0;
 
             if ((commandName == F("taskvalueset")) || (commandName == F("dummyvalueset"))) // should work for both
             {
-              String valueStr = toString(UserVar[event->BaseVarIndex+event->Par2-1],ExtraTaskSettings.TaskDeviceValueDecimals[event->Par2-1]); //parseString(string, 4);
+              valueStr = toString(UserVar[event->BaseVarIndex+event->Par2-1],ExtraTaskSettings.TaskDeviceValueDecimals[event->Par2-1]); //parseString(string, 4);
               success = MQTTpublish(CPLUGIN_ID_014, topic.c_str(), valueStr.c_str(), false);
               if (loglevelActiveFor(LOG_LEVEL_INFO) && success) {
                 String log = F("C014 : Acknowledged: ");
@@ -776,9 +840,70 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
                 log += valueStr;
                 addLog(LOG_LEVEL_ERROR, log+" ERROR!");
               }
+            } else if (parseString(commandName, 1) == F("homievalueset")) { // acknolages value form P086 Homie Receiver
+              switch (Settings.TaskDevicePluginConfig[deviceIndex-1][event->Par2-1]) {
+                case 0: // PLUGIN_085_VALUE_INTEGER
+                  valueInt = static_cast<int>(UserVar[event->BaseVarIndex+event->Par2-1]);
+                  valueStr = toString(UserVar[event->BaseVarIndex+event->Par2-1],0);
+                  break;
+                case 1: // PLUGIN_085_VALUE_FLOAT
+                  valueStr = toString(UserVar[event->BaseVarIndex+event->Par2-1],ExtraTaskSettings.TaskDeviceValueDecimals[event->Par2-1]);
+                  break;
+                case 2: // PLUGIN_085_VALUE_BOOLEAN
+                  if ( UserVar[event->BaseVarIndex+event->Par2-1] == 1) valueStr="true";
+                    else valueStr = "false";
+                  break;
+                case 3: // PLUGIN_085_VALUE_STRING
+                  //valueStr = ExtraTaskSettings.TaskDeviceFormula[event->Par2-1];
+                  valueStr = parseStringToEndKeepCase(string,4);
+                  break;
+                case 4: // PLUGIN_085_VALUE_ENUM
+                  valueInt = static_cast<int>(UserVar[event->BaseVarIndex+event->Par2-1]);
+                  valueStr = parseStringKeepCase(ExtraTaskSettings.TaskDeviceFormula[event->Par2-1],valueInt);
+                  break;
+                case 5: // PLUGIN_085_VALUE_RGB
+                  //valueStr = ExtraTaskSettings.TaskDeviceFormula[event->Par2-1];
+                  valueStr = parseStringToEnd(string,4);
+                  break;
+                case 6: // PLUGIN_085_VALUE_HSV
+                  //valueStr = ExtraTaskSettings.TaskDeviceFormula[event->Par2-1];
+                  valueStr = parseStringToEnd(string,4);
+                  break;
+              }
+              success = MQTTpublish(CPLUGIN_ID_014, topic.c_str(), valueStr.c_str(), false);
+              if (loglevelActiveFor(LOG_LEVEL_INFO) && success) {
+                String log = F("C014 : homie acknowledge: ");
+                log += deviceName;
+                log += F(" deviceNr:");
+                log += deviceIndex;
+                log += F(" valueNr:");
+                log += event->Par2;
+                log += F(" valueName:");
+                log += valueName;
+                log += F(" valueType:");
+                log += Settings.TaskDevicePluginConfig[deviceIndex-1][event->Par2-1];
+                log += F(" topic:");
+                log += topic;
+                log += F(" valueInt:");
+                log += valueInt;
+                log += F(" valueStr:");
+                log += valueStr;
+                addLog(LOG_LEVEL_INFO, log+" success!");
+              }
+              if (loglevelActiveFor(LOG_LEVEL_ERROR) && !success) {
+                String log = F("C014 : homie acknowledge: ");
+                log += deviceName;
+                log += F(" var: ");
+                log += valueName;
+                log += F(" topic: ");
+                log += topic;
+                log += F(" value: ");
+                log += valueStr;
+                addLog(LOG_LEVEL_ERROR, log+" failed!");
+              }
             } else // Acknowledge not implemented yet
             {
-              if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+/*              if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                 String log = F("C014 : Plugin acknowledged: ");
                 log+=function;
                 log+=F(" / ");
@@ -787,7 +912,7 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
                 log+=string;
                 log+=F(" not implemented!");
                 addLog(LOG_LEVEL_ERROR, log);
-              }
+              } */
               success = false;
             }
           }
