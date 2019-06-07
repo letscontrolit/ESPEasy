@@ -378,6 +378,14 @@ bool sendIRCode(int const ir_type,
       irsend->sendPanasonic64(code, bits, repeat);
       break;
 #endif
+#if SEND_INAX
+    case INAX:  // 64
+      if (bits == 0)
+        bits = kInaxBits;
+      repeat = std::max(repeat, kInaxMinRepeat);
+      irsend->sendInax(code, bits, repeat);
+      break;
+#endif
 #if SEND_JVC
     case JVC:  // 6
       if (bits == 0)
@@ -453,6 +461,7 @@ bool sendIRCode(int const ir_type,
 #endif
     case DAIKIN:  // 16
     case DAIKIN2:  // 53
+    case DAIKIN216:  // 61
     case KELVINATOR:  // 18
     case MITSUBISHI_AC:  // 20
     case GREE:  // 24
@@ -467,6 +476,7 @@ bool sendIRCode(int const ir_type,
     case HITACHI_AC2:  // 42
     case WHIRLPOOL_AC:  // 45
     case SAMSUNG_AC:  // 46
+    case SHARP_AC:  // 62
     case ELECTRA_AC:  // 48
     case PANASONIC_AC:  // 49
     case MWM:  // 52
@@ -475,7 +485,7 @@ bool sendIRCode(int const ir_type,
 #if SEND_DENON
     case DENON:  // 17
       if (bits == 0)
-        bits = DENON_BITS;
+        bits = kDenonBits;
       irsend->sendDenon(code, bits, repeat);
       break;
 #endif
@@ -510,7 +520,7 @@ bool sendIRCode(int const ir_type,
 #endif
 #if SEND_PRONTO
     case PRONTO:  // 25
-     // success = parseStringAndSendPronto(irsend, code_str, repeat);
+      //success = parseStringAndSendPronto(irsend, code_str, repeat);
       break;
 #endif
 #if SEND_NIKAI
@@ -522,12 +532,12 @@ bool sendIRCode(int const ir_type,
 #endif
 #if SEND_RAW
     case RAW:  // 30
-      //success = parseStringAndSendRaw(irsend, code_str);
+     // success = parseStringAndSendRaw(irsend, code_str);
       break;
 #endif
 #if SEND_GLOBALCACHE
     case GLOBALCACHE:  // 31
-     // success = parseStringAndSendGC(irsend, code_str);
+      //success = parseStringAndSendGC(irsend, code_str);
       break;
 #endif
 #if SEND_MIDEA
@@ -616,6 +626,13 @@ bool sendIRCode(int const ir_type,
       irsend->sendLegoPf(code, bits, repeat);
       break;
 #endif
+#if SEND_GOODWEATHER
+    case GOODWEATHER:  // 63
+      if (bits == 0) bits = kGoodweatherBits;
+      repeat = std::max(repeat, kGoodweatherMinRepeat);
+      irsend->sendGoodweather(code, bits, repeat);
+      break;
+#endif  // SEND_GOODWEATHER
     default:
       // If we got here, we didn't know how to send it.
       success = false;
@@ -651,10 +668,27 @@ uint8_t strOffset = 0;
       stateSize = kToshibaACStateLength;
       break;
     case DAIKIN:
-      stateSize = kDaikinStateLength;
+      // Daikin has 2 different possible size states.
+      // (The correct size, and a legacy shorter size.)
+      // Guess which one we are being presented with based on the number of
+      // hexadecimal digits provided. i.e. Zero-pad if you need to to get
+      // the correct length/byte size.
+      // This should provide backward compatiblity with legacy messages.
+      stateSize = inputLength / 2;  // Every two hex chars is a byte.
+      // Use at least the minimum size.
+      stateSize = std::max(stateSize, kDaikinStateLengthShort);
+      // If we think it isn't a "short" message.
+      if (stateSize > kDaikinStateLengthShort)
+        // Then it has to be at least the version of the "normal" size.
+        stateSize = std::max(stateSize, kDaikinStateLength);
+      // Lastly, it should never exceed the "normal" size.
+      stateSize = std::min(stateSize, kDaikinStateLength);
       break;
     case DAIKIN2:
       stateSize = kDaikin2StateLength;
+      break;
+    case DAIKIN216:
+      stateSize = kDaikin216StateLength;
       break;
     case ELECTRA_AC:
       stateSize = kElectraAcStateLength;
@@ -730,6 +764,9 @@ uint8_t strOffset = 0;
       // Lastly, it should never exceed the maximum "extended" size.
       stateSize = std::min(stateSize, kSamsungAcExtendedStateLength);
       break;
+    case SHARP_AC:
+      stateSize = kSharpAcStateLength;
+      break;
     case MWM:
       // MWM has variable size states, so make a best guess
       // which one we are being presented with based on the number of
@@ -800,6 +837,11 @@ uint8_t strOffset = 0;
       irsend->sendDaikin2(reinterpret_cast<uint8_t *>(state));
       break;
 #endif
+#if SEND_DAIKIN216
+    case DAIKIN216:  // 61
+      irsend->sendDaikin216(reinterpret_cast<uint8_t *>(state));
+      break;
+#endif  // SEND_DAIKIN216
 #if SEND_MITSUBISHI_AC
     case MITSUBISHI_AC:
       irsend->sendMitsubishiAC(reinterpret_cast<uint8_t *>(state));
@@ -868,6 +910,11 @@ uint8_t strOffset = 0;
       irsend->sendSamsungAC(reinterpret_cast<uint8_t *>(state), stateSize);
       break;
 #endif
+#if SEND_SHARP_AC
+    case SHARP_AC:  // 62
+      irsend->sendSharpAc(reinterpret_cast<uint8_t *>(state));
+      break;
+#endif  // SEND_SHARP_AC
 #if SEND_ELECTRA_AC
     case ELECTRA_AC:
       irsend->sendElectraAC(reinterpret_cast<uint8_t *>(state));
