@@ -1,4 +1,25 @@
 -------------------------------------------------
+Changes in release mega-20190607 (since mega-20190523)
+-------------------------------------------------
+
+Release date: Fri Jun  7 04:00:17 CEST 2019
+
+Christian Meinert (3):
+      Handling incomming messages via Plugin
+      Plugin Number chnaged to 86, HSV2RGB functions moved to misc.ino, little bugfixes and documentation
+      Changes as requested
+
+Gijs Noorlander (4):
+      [AcuDC243] Fix modbus address not set
+      [AcuDC243] Fix bug in reading 4th set variable
+      [build] Changes from SPIFFS to FS #2482
+      [Readme] Added download counter
+
+TD-er (1):
+      [Build] Make it build in Arduino IDE again (#2481)
+
+
+-------------------------------------------------
 Changes in release mega-20190523 (since mega-20190522)
 -------------------------------------------------
 
