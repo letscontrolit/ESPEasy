@@ -178,7 +178,7 @@ boolean Plugin_016(byte function, struct EventStruct *event, String& string)
           
           // Display the basic output of what we found.
           if (results.decode_type != UNKNOWN) { 
-                addLog(LOG_LEVEL_INFO, String(F("IRSEND,")) + typeToString(results.decode_type, results.repeat) + ',' + resultToHexidecimal(&results)); //Show the appropriate command to the user, so he can replay the message via P035
+                addLog(LOG_LEVEL_INFO, String(F("IRSEND,")) + typeToString(results.decode_type, results.repeat) + ',' + resultToHexidecimal(&results) + ',' + uint64ToString(results.bits)); //Show the appropriate command to the user, so he can replay the message via P035
           } 
           //Check if a solution for RAW2 is found and if not give the user the option to access the timings info.
           if (results.decode_type == UNKNOWN && !displayRawToReadableB32Hex()){
@@ -193,176 +193,176 @@ boolean Plugin_016(byte function, struct EventStruct *event, String& string)
           // Display the human readable state of an A/C message if we can.
           String description = "";
 #if DECODE_ARGO
-  if (results->decode_type == ARGO) {
+  if (results.decode_type == ARGO) {
     IRArgoAC ac(0);
-    ac.setRaw(results->state);
+    ac.setRaw(results.state);
     description = ac.toString();
   }
 #endif  // DECODE_ARGO
 #if DECODE_DAIKIN
-  if (results->decode_type == DAIKIN) {
+  if (results.decode_type == DAIKIN) {
     IRDaikinESP ac(0);
-    ac.setRaw(results->state);
+    ac.setRaw(results.state);
     description = ac.toString();
   }
 #endif  // DECODE_DAIKIN
 #if DECODE_DAIKIN2
-  if (results->decode_type == DAIKIN2) {
+  if (results.decode_type == DAIKIN2) {
     IRDaikin2 ac(0);
-    ac.setRaw(results->state);
+    ac.setRaw(results.state);
     description = ac.toString();
   }
 #endif  // DECODE_DAIKIN2
 #if DECODE_DAIKIN216
-  if (results->decode_type == DAIKIN216) {
+  if (results.decode_type == DAIKIN216) {
     IRDaikin216 ac(0);
-    ac.setRaw(results->state);
+    ac.setRaw(results.state);
     description = ac.toString();
   }
 #endif  // DECODE_DAIKIN216
 #if DECODE_FUJITSU_AC
-  if (results->decode_type == FUJITSU_AC) {
+  if (results.decode_type == FUJITSU_AC) {
     IRFujitsuAC ac(0);
-    ac.setRaw(results->state, results->bits / 8);
+    ac.setRaw(results.state, results.bits / 8);
     description = ac.toString();
   }
 #endif  // DECODE_FUJITSU_AC
 #if DECODE_KELVINATOR
-  if (results->decode_type == KELVINATOR) {
+  if (results.decode_type == KELVINATOR) {
     IRKelvinatorAC ac(0);
-    ac.setRaw(results->state);
+    ac.setRaw(results.state);
     description = ac.toString();
   }
 #endif  // DECODE_KELVINATOR
 #if DECODE_MITSUBISHI_AC
-  if (results->decode_type == MITSUBISHI_AC) {
+  if (results.decode_type == MITSUBISHI_AC) {
     IRMitsubishiAC ac(0);
-    ac.setRaw(results->state);
+    ac.setRaw(results.state);
     description = ac.toString();
   }
 #endif  // DECODE_MITSUBISHI_AC
 #if DECODE_MITSUBISHIHEAVY
-  if (results->decode_type == MITSUBISHI_HEAVY_88) {
+  if (results.decode_type == MITSUBISHI_HEAVY_88) {
     IRMitsubishiHeavy88Ac ac(0);
-    ac.setRaw(results->state);
+    ac.setRaw(results.state);
     description = ac.toString();
   }
-  if (results->decode_type == MITSUBISHI_HEAVY_152) {
+  if (results.decode_type == MITSUBISHI_HEAVY_152) {
     IRMitsubishiHeavy152Ac ac(0);
-    ac.setRaw(results->state);
+    ac.setRaw(results.state);
     description = ac.toString();
   }
 #endif  // DECODE_MITSUBISHIHEAVY
 #if DECODE_TOSHIBA_AC
-  if (results->decode_type == TOSHIBA_AC) {
+  if (results.decode_type == TOSHIBA_AC) {
     IRToshibaAC ac(0);
-    ac.setRaw(results->state);
+    ac.setRaw(results.state);
     description = ac.toString();
   }
 #endif  // DECODE_TOSHIBA_AC
 #if DECODE_TROTEC
-  if (results->decode_type == TROTEC) {
+  if (results.decode_type == TROTEC) {
     IRTrotecESP ac(0);
-    ac.setRaw(results->state);
+    ac.setRaw(results.state);
     description = ac.toString();
   }
 #endif  // DECODE_TROTEC
 #if DECODE_GOODWEATHER
-  if (results->decode_type == GOODWEATHER) {
+  if (results.decode_type == GOODWEATHER) {
     IRGoodweatherAc ac(0);
-    ac.setRaw(results->value);  // Goodweather uses value instead of state.
+    ac.setRaw(results.value);  // Goodweather uses value instead of state.
     description = ac.toString();
   }
 #endif  // DECODE_GOODWEATHER
 #if DECODE_GREE
-  if (results->decode_type == GREE) {
+  if (results.decode_type == GREE) {
     IRGreeAC ac(0);
-    ac.setRaw(results->state);
+    ac.setRaw(results.state);
     description = ac.toString();
   }
 #endif  // DECODE_GREE
 #if DECODE_MIDEA
-  if (results->decode_type == MIDEA) {
+  if (results.decode_type == MIDEA) {
     IRMideaAC ac(0);
-    ac.setRaw(results->value);  // Midea uses value instead of state.
+    ac.setRaw(results.value);  // Midea uses value instead of state.
     description = ac.toString();
   }
 #endif  // DECODE_MIDEA
 #if DECODE_HAIER_AC
-  if (results->decode_type == HAIER_AC) {
+  if (results.decode_type == HAIER_AC) {
     IRHaierAC ac(0);
-    ac.setRaw(results->state);
+    ac.setRaw(results.state);
     description = ac.toString();
   }
 #endif  // DECODE_HAIER_AC
 #if DECODE_HAIER_AC_YRW02
-  if (results->decode_type == HAIER_AC_YRW02) {
+  if (results.decode_type == HAIER_AC_YRW02) {
     IRHaierACYRW02 ac(0);
-    ac.setRaw(results->state);
+    ac.setRaw(results.state);
     description = ac.toString();
   }
 #endif  // DECODE_HAIER_AC_YRW02
 #if DECODE_SAMSUNG_AC
-  if (results->decode_type == SAMSUNG_AC) {
+  if (results.decode_type == SAMSUNG_AC) {
     IRSamsungAc ac(0);
-    ac.setRaw(results->state, results->bits / 8);
+    ac.setRaw(results.state, results.bits / 8);
     description = ac.toString();
   }
 #endif  // DECODE_SAMSUNG_AC
 #if DECODE_SHARP_AC
-  if (results->decode_type == SHARP_AC) {
+  if (results.decode_type == SHARP_AC) {
     IRSharpAc ac(0);
-    ac.setRaw(results->state);
+    ac.setRaw(results.state);
     description = ac.toString();
   }
 #endif  // DECODE_SHARP_AC
 #if DECODE_COOLIX
-  if (results->decode_type == COOLIX) {
+  if (results.decode_type == COOLIX) {
     IRCoolixAC ac(0);
-    ac.setRaw(results->value);  // Coolix uses value instead of state.
+    ac.setRaw(results.value);  // Coolix uses value instead of state.
     description = ac.toString();
   }
 #endif  // DECODE_COOLIX
 #if DECODE_PANASONIC_AC
-  if (results->decode_type == PANASONIC_AC &&
-      results->bits > kPanasonicAcShortBits) {
+  if (results.decode_type == PANASONIC_AC &&
+      results.bits > kPanasonicAcShortBits) {
     IRPanasonicAc ac(0);
-    ac.setRaw(results->state);
+    ac.setRaw(results.state);
     description = ac.toString();
   }
 #endif  // DECODE_PANASONIC_AC
 #if DECODE_HITACHI_AC
-  if (results->decode_type == HITACHI_AC) {
+  if (results.decode_type == HITACHI_AC) {
     IRHitachiAc ac(0);
-    ac.setRaw(results->state);
+    ac.setRaw(results.state);
     description = ac.toString();
   }
 #endif  // DECODE_HITACHI_AC
 #if DECODE_WHIRLPOOL_AC
-  if (results->decode_type == WHIRLPOOL_AC) {
+  if (results.decode_type == WHIRLPOOL_AC) {
     IRWhirlpoolAc ac(0);
-    ac.setRaw(results->state);
+    ac.setRaw(results.state);
     description = ac.toString();
   }
 #endif  // DECODE_WHIRLPOOL_AC
 #if DECODE_VESTEL_AC
-  if (results->decode_type == VESTEL_AC) {
+  if (results.decode_type == VESTEL_AC) {
     IRVestelAc ac(0);
-    ac.setRaw(results->value);  // Like Coolix, use value instead of state.
+    ac.setRaw(results.value);  // Like Coolix, use value instead of state.
     description = ac.toString();
   }
 #endif  // DECODE_VESTEL_AC
 #if DECODE_TECO
-  if (results->decode_type == TECO) {
+  if (results.decode_type == TECO) {
     IRTecoAc ac(0);
-    ac.setRaw(results->value);  // Like Coolix, use value instead of state.
+    ac.setRaw(results.value);  // Like Coolix, use value instead of state.
     description = ac.toString();
   }
 #endif  // DECODE_TECO
 #if DECODE_TCL112AC
-  if (results->decode_type == TCL112AC) {
+  if (results.decode_type == TCL112AC) {
     IRTcl112Ac ac(0);
-    ac.setRaw(results->state);
+    ac.setRaw(results.state);
     description = ac.toString();
   }
 #endif  // DECODE_TCL112AC

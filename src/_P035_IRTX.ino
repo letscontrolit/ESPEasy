@@ -264,11 +264,9 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
             if (GetArgv(string.c_str(), ircodestr, 3)) {
               IrCode = strtoull(ircodestr.c_str(), NULL, 16);
             }
-
-            if (GetArgv(string.c_str(), TmpStr1, 4)) IrBits = str2int(TmpStr1.c_str());   //not needed any more as I can tell... Left for reverse compitability so we won't brake old forum posts etc..
             IrBits = 0;                                                                   //Leave it to 0 for default protocol bits
+            if (GetArgv(string.c_str(), TmpStr1, 4)) IrBits = str2int(TmpStr1.c_str());   // Number of bits to be sent. USE 0 for default protocol bits
             if (GetArgv(string.c_str(), TmpStr1, 5)) IrRepeat = str2int(TmpStr1.c_str()); // Nr. of times the message is to be repeated
-
             sendIRCode(strToDecodeType(IrType.c_str()),IrCode,ircodestr.c_str(),IrBits,IrRepeat);
 
           }
