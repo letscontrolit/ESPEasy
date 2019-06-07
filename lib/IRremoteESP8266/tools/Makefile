@@ -50,7 +50,8 @@ PROTOCOLS = ir_NEC.o ir_Sony.o ir_Samsung.o ir_JVC.o ir_RCMM.o ir_RC5_RC6.o \
             ir_Magiquest.o ir_Lasertag.o ir_Carrier.o ir_Haier.o ir_Hitachi.o \
             ir_GICable.o ir_Whirlpool.o ir_Lutron.o ir_Electra.o ir_Pioneer.o \
             ir_MWM.o ir_Vestel.o ir_Teco.o ir_Tcl.o ir_Lego.o \
-						ir_MitsubishiHeavy.o
+            ir_MitsubishiHeavy.o ir_Goodweather.o ir_Inax.o ir_Argo.o \
+						ir_Trotec.o
 
 # Common object files
 COMMON_OBJ = IRutils.o IRtimer.o IRsend.o IRrecv.o $(PROTOCOLS)
@@ -104,6 +105,9 @@ ir_Samsung.o : $(USER_DIR)/ir_Samsung.cpp $(USER_DIR)/ir_Samsung.h $(COMMON_DEPS
 ir_Kelvinator.o : $(USER_DIR)/ir_Kelvinator.cpp $(USER_DIR)/ir_Kelvinator.h $(COMMON_DEPS)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c $(USER_DIR)/ir_Kelvinator.cpp
 
+ir_Inax.o : $(USER_DIR)/ir_Inax.cpp $(COMMON_DEPS)
+		$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/ir_Inax.cpp
+
 ir_JVC.o : $(USER_DIR)/ir_JVC.cpp $(COMMON_DEPS)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/ir_JVC.cpp
 
@@ -122,8 +126,8 @@ ir_MitsubishiHeavy.o : $(USER_DIR)/ir_MitsubishiHeavy.h $(USER_DIR)/ir_Mitsubish
 ir_Fujitsu.o : $(USER_DIR)/ir_Fujitsu.h $(USER_DIR)/ir_Fujitsu.cpp $(COMMON_DEPS)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c $(USER_DIR)/ir_Fujitsu.cpp
 
-ir_Sharp.o : $(USER_DIR)/ir_Sharp.cpp $(COMMON_DEPS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/ir_Sharp.cpp
+ir_Sharp.o : $(USER_DIR)/ir_Sharp.h $(USER_DIR)/ir_Sharp.cpp $(COMMON_DEPS)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c $(USER_DIR)/ir_Sharp.cpp
 
 ir_RC5_RC6.o : $(USER_DIR)/ir_RC5_RC6.cpp $(COMMON_DEPS)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/ir_RC5_RC6.cpp
@@ -209,5 +213,14 @@ ir_Teco.o : $(USER_DIR)/ir_Teco.cpp $(GTEST_HEADERS)
 ir_Tcl.o : $(USER_DIR)/ir_Tcl.cpp $(USER_DIR)/ir_Tcl.h $(GTEST_HEADERS)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c $(USER_DIR)/ir_Tcl.cpp
 
+ir_Trotec.o : $(USER_DIR)/ir_Trotec.cpp $(USER_DIR)/ir_Trotec.h $(GTEST_HEADERS)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c $(USER_DIR)/ir_Trotec.cpp
+
 ir_Lego.o : $(USER_DIR)/ir_Lego.cpp $(GTEST_HEADERS)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/ir_Lego.cpp
+
+ir_Argo.o : $(USER_DIR)/ir_Argo.cpp $(USER_DIR)/ir_Argo.h $(GTEST_HEADERS)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c $(USER_DIR)/ir_Argo.cpp
+
+ir_Goodweather.o : $(USER_DIR)/ir_Goodweather.cpp $(USER_DIR)/ir_Goodweather.h $(GTEST_HEADERS)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c $(USER_DIR)/ir_Goodweather.cpp

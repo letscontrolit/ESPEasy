@@ -15,6 +15,7 @@
 #endif
 #include "IRsend.h"
 #include "IRremoteESP8266.h"
+#include "IRutils.h"
 #include "ir_Argo.h"
 #include "ir_Coolix.h"
 #include "ir_Daikin.h"
@@ -27,6 +28,7 @@
 #include "ir_MitsubishiHeavy.h"
 #include "ir_Panasonic.h"
 #include "ir_Samsung.h"
+#include "ir_Sharp.h"
 #include "ir_Tcl.h"
 #include "ir_Teco.h"
 #include "ir_Toshiba.h"
@@ -51,8 +53,14 @@ bool IRac::isProtocolSupported(const decode_type_t protocol) {
 #if SEND_DAIKIN2
     case decode_type_t::DAIKIN2:
 #endif
+#if SEND_DAIKIN216
+    case decode_type_t::DAIKIN216:
+#endif
 #if SEND_FUJITSU_AC
     case decode_type_t::FUJITSU_AC:
+#endif
+#if SEND_GOODWEATHER
+    case decode_type_t::GOODWEATHER:
 #endif
 #if SEND_GREE
     case decode_type_t::GREE:
@@ -85,6 +93,9 @@ bool IRac::isProtocolSupported(const decode_type_t protocol) {
 #if SEND_SAMSUNG_AC
     case decode_type_t::SAMSUNG_AC:
 #endif
+#if SEND_SHARP_AC
+    case decode_type_t::SHARP_AC:
+#endif
 #if SEND_TCL112AC
     case decode_type_t::TCL112AC:
 #endif
@@ -115,19 +126,7 @@ void IRac::argo(IRArgoAC *ac,
                 const stdAc::fanspeed_t fan, const stdAc::swingv_t swingv,
                 const bool turbo, const int16_t sleep) {
   ac->setPower(on);
-  switch (mode) {
-    case stdAc::opmode_t::kCool:
-      ac->setCoolMode(kArgoCoolOn);
-      break;
-    case stdAc::opmode_t::kHeat:
-      ac->setHeatMode(kArgoHeatOn);
-      break;
-    case stdAc::opmode_t::kDry:
-      ac->setCoolMode(kArgoCoolHum);
-      break;
-    default:  // No idea how to set Fan mode.
-      ac->setCoolMode(kArgoCoolAuto);
-  }
+  ac->setMode(ac->convertMode(mode));
   ac->setTemp(degrees);
   ac->setFan(ac->convertFan(fan));
   ac->setFlap(ac->convertSwingV(swingv));
@@ -242,33 +241,101 @@ void IRac::daikin2(IRDaikin2 *ac,
 }
 #endif  // SEND_DAIKIN2
 
+#if SEND_DAIKIN216
+void IRac::daikin216(IRDaikin216 *ac,
+                     const bool on, const stdAc::opmode_t mode,
+                     const float degrees, const stdAc::fanspeed_t fan,
+                     const stdAc::swingv_t swingv, const stdAc::swingh_t swingh,
+                     const bool quiet, const bool turbo) {
+  ac->setPower(on);
+  ac->setMode(ac->convertMode(mode));
+  ac->setTemp(degrees);
+  ac->setFan(ac->convertFan(fan));
+  ac->setSwingVertical((int8_t)swingv >= 0);
+  ac->setSwingHorizontal((int8_t)swingh >= 0);
+  ac->setQuiet(quiet);
+  ac->setPowerful(turbo);
+  ac->send();
+}
+#endif  // SEND_DAIKIN216
+
 #if SEND_FUJITSU_AC
 void IRac::fujitsu(IRFujitsuAC *ac, const fujitsu_ac_remote_model_t model,
                    const bool on, const stdAc::opmode_t mode,
                    const float degrees, const stdAc::fanspeed_t fan,
                    const stdAc::swingv_t swingv, const stdAc::swingh_t swingh,
-                   const bool quiet) {
+                   const bool quiet, const bool turbo, const bool econo) {
   ac->setModel(model);
-  ac->setMode(ac->convertMode(mode));
-  ac->setTemp(degrees);
-  ac->setFanSpeed(ac->convertFan(fan));
-  uint8_t swing = kFujitsuAcSwingOff;
-  if (swingv > stdAc::swingv_t::kOff) swing |= kFujitsuAcSwingVert;
-  if (swingh > stdAc::swingh_t::kOff) swing |= kFujitsuAcSwingHoriz;
-  ac->setSwing(swing);
-  if (quiet) ac->setFanSpeed(kFujitsuAcFanQuiet);
-  // No Turbo setting available.
-  // No Light setting available.
-  // No Econo setting available.
-  // No Filter setting available.
-  // No Clean setting available.
-  // No Beep setting available.
-  // No Sleep setting available.
-  // No Clock setting available.
-  if (!on) ac->off();
+  if (on) {
+    // Do all special messages (except "Off") first,
+    // These need to be sent separately.
+    switch (ac->getModel()) {
+      // Some functions are only available on some models.
+      case fujitsu_ac_remote_model_t::ARREB1E:
+        if (turbo) {
+          ac->setCmd(kFujitsuAcCmdPowerful);
+          // Powerful is a separate command.
+          ac->send();
+        }
+        if (econo) {
+          ac->setCmd(kFujitsuAcCmdEcono);
+          // Econo is a separate command.
+          ac->send();
+        }
+        break;
+      default:
+        {};
+    }
+    // Normal operation.
+    ac->setMode(ac->convertMode(mode));
+    ac->setTemp(degrees);
+    ac->setFanSpeed(ac->convertFan(fan));
+    uint8_t swing = kFujitsuAcSwingOff;
+    if (swingv > stdAc::swingv_t::kOff) swing |= kFujitsuAcSwingVert;
+    if (swingh > stdAc::swingh_t::kOff) swing |= kFujitsuAcSwingHoriz;
+    ac->setSwing(swing);
+    if (quiet) ac->setFanSpeed(kFujitsuAcFanQuiet);
+    // No Light setting available.
+    // No Filter setting available.
+    // No Clean setting available.
+    // No Beep setting available.
+    // No Sleep setting available.
+    // No Clock setting available.
+  } else {
+    // Off is special case/message. We don't need to send other messages.
+    ac->off();
+  }
   ac->send();
 }
 #endif  // SEND_FUJITSU_AC
+
+#if SEND_GOODWEATHER
+void IRac::goodweather(IRGoodweatherAc *ac,
+                       const bool on, const stdAc::opmode_t mode,
+                       const float degrees,
+                       const stdAc::fanspeed_t fan,
+                       const stdAc::swingv_t swingv,
+                       const bool turbo, const bool light,
+                       const int16_t sleep) {
+  ac->setMode(ac->convertMode(mode));
+  ac->setTemp(degrees);
+  ac->setFan(ac->convertFan(fan));
+  ac->setSwing(swingv == stdAc::swingv_t::kOff ? kGoodweatherSwingOff
+                                               : kGoodweatherSwingSlow);
+  ac->setTurbo(turbo);
+  ac->setLight(light);
+  // No Clean setting available.
+  ac->setSleep(sleep >= 0);  // Sleep on this A/C is either on or off.
+  // No Horizontal Swing setting available.
+  // No Econo setting available.
+  // No Filter setting available.
+  // No Beep setting available.
+  // No Quiet setting available.
+  // No Clock setting available.
+  ac->setPower(on);
+  ac->send();
+}
+#endif  // SEND_GOODWEATHER
 
 #if SEND_GREE
 void IRac::gree(IRGreeAC *ac,
@@ -287,6 +354,7 @@ void IRac::gree(IRGreeAC *ac,
   ac->setXFan(clean);
   ac->setSleep(sleep >= 0);  // Sleep on this A/C is either on or off.
   // No Horizontal Swing setting available.
+  // No Econo setting available.
   // No Filter setting available.
   // No Beep setting available.
   // No Quiet setting available.
@@ -526,16 +594,9 @@ void IRac::samsung(IRSamsungAc *ac,
                    const float degrees,
                    const stdAc::fanspeed_t fan, const stdAc::swingv_t swingv,
                    const bool quiet, const bool turbo, const bool clean,
-                   const bool beep, const bool sendOnOffHack) {
-  if (sendOnOffHack) {
-    // Use a hack to for the unit on or off.
-    // See: https://github.com/markszabo/IRremoteESP8266/issues/604#issuecomment-475020036
-    if (on)
-      ac->sendOn();
-    else
-      ac->sendOff();
-  }
-  ac->setPower(on);
+                   const bool beep, const bool dopower) {
+  // dopower is for unit testing only. It should only ever be false in tests.
+  if (dopower) ac->setPower(on);
   ac->setMode(ac->convertMode(mode));
   ac->setTemp(degrees);
   ac->setFan(ac->convertFan(fan));
@@ -555,6 +616,31 @@ void IRac::samsung(IRSamsungAc *ac,
   ac->send();
 }
 #endif  // SEND_SAMSUNG_AC
+
+#if SEND_SHARP_AC
+void IRac::sharp(IRSharpAc *ac,
+                 const bool on, const stdAc::opmode_t mode,
+                 const float degrees, const stdAc::fanspeed_t fan) {
+  ac->setPower(on);
+  ac->setMode(ac->convertMode(mode));
+  ac->setTemp(degrees);
+  ac->setFan(ac->convertFan(fan));
+  // No Vertical swing setting available.
+  // No Horizontal swing setting available.
+  // No Quiet setting available.
+  // No Turbo setting available.
+  // No Light setting available.
+  // No Econo setting available.
+  // No Filter setting available.
+  // No Clean setting available.
+  // No Beep setting available.
+  // No Sleep setting available.
+  // No Clock setting available.
+  // Do setMode() again as it can affect fan speed and temp.
+  ac->setMode(ac->convertMode(mode));
+  ac->send();
+}
+#endif  // SEND_SHARP_AC
 
 #if SEND_TCL112AC
 void IRac::tcl112(IRTcl112Ac *ac,
@@ -711,7 +797,7 @@ void IRac::whirlpool(IRWhirlpoolAc *ac, const whirlpool_ac_remote_model_t model,
 //   on:      Should the unit be powered on? (or in some cases, toggled)
 //   mode:    What operating mode should the unit perform? e.g. Cool, Heat etc.
 //   degrees: What temperature should the unit be set to?
-//   celsius: Use degreees Celsius, otherwise Fahrenheit.
+//   celsius: Use degrees Celsius, otherwise Fahrenheit.
 //   fan:     Fan speed.
 // The following args are all "if supported" by the underlying A/C classes.
 //   swingv:  Control the vertical swing of the vanes.
@@ -737,11 +823,11 @@ bool IRac::sendAc(const decode_type_t vendor, const int16_t model,
                   const bool beep, const int16_t sleep, const int16_t clock) {
   // Convert the temperature to Celsius.
   float degC;
-  bool on = power;
   if (celsius)
     degC = degrees;
   else
-    degC = (degrees - 32.0) * (5.0 / 9.0);
+    degC = fahrenheitToCelsius(degrees);
+  bool on = power;
   // A hack for Home Assistant, it appears to need/want an Off opmode.
   if (mode == stdAc::opmode_t::kOff) on = false;
   // Per vendor settings & setup.
@@ -780,17 +866,34 @@ bool IRac::sendAc(const decode_type_t vendor, const int16_t model,
               light, econo, filter, clean, beep, sleep, clock);
       break;
     }
-#endif  // SEND_DAIKIN2
+#endif  // SEND_DAIKIN216
+#if SEND_DAIKIN216
+    case DAIKIN216:
+    {
+      IRDaikin216 ac(_pin);
+      daikin216(&ac, on, mode, degC, fan, swingv, swingh, quiet, turbo);
+      break;
+    }
+#endif  // SEND_DAIKIN216
 #if SEND_FUJITSU_AC
     case FUJITSU_AC:
     {
       IRFujitsuAC ac(_pin);
       ac.begin();
       fujitsu(&ac, (fujitsu_ac_remote_model_t)model, on, mode, degC, fan,
-              swingv, swingh, quiet);
+              swingv, swingh, quiet, turbo, econo);
       break;
     }
 #endif  // SEND_FUJITSU_AC
+#if SEND_GOODWEATHER
+    case GOODWEATHER:
+    {
+      IRGoodweatherAc ac(_pin);
+      ac.begin();
+      goodweather(&ac, on, mode, degC, fan, swingv, turbo, light, sleep);
+      break;
+    }
+#endif  // SEND_GOODWEATHER
 #if SEND_GREE
     case GREE:
     {
@@ -892,6 +995,15 @@ bool IRac::sendAc(const decode_type_t vendor, const int16_t model,
       break;
     }
 #endif  // SEND_SAMSUNG_AC
+#if SEND_SHARP_AC
+    case SHARP_AC:
+    {
+      IRSharpAc ac(_pin);
+      ac.begin();
+      sharp(&ac, on, mode, degC, fan);
+      break;
+    }
+#endif  // SEND_SHARP_AC
 #if SEND_TCL112AC
     case TCL112AC:
     {

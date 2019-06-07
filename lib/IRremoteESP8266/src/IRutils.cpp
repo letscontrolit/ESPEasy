@@ -57,6 +57,11 @@ std::string uint64ToString(uint64_t input, uint8_t base) {
   // i.e. [0-9A-Z] == 36
   if (base > 36) base = 10;
 
+  // Reserve some string space to reduce fragmentation.
+  // 16 bytes should store a uint64 in hex text which is the likely worst case.
+  // 64 bytes would be the worst case (base 2).
+  result.reserve(16);
+
   do {
     char c = input % base;
     input /= base;
@@ -89,7 +94,7 @@ void serialPrintUint64(uint64_t input, uint8_t base) {
 //   str:  An upper-case C-style string.
 // Returns:
 //  A decode_type_t enum.
-decode_type_t strToDecodeType(const char *str) {
+decode_type_t strToDecodeType(const char * const str) {
   if (!strcmp(str, "UNKNOWN"))
     return decode_type_t::UNKNOWN;
   else if (!strcmp(str, "UNUSED"))
@@ -106,6 +111,8 @@ decode_type_t strToDecodeType(const char *str) {
     return decode_type_t::DAIKIN;
   else if (!strcmp(str, "DAIKIN2"))
     return decode_type_t::DAIKIN2;
+  else if (!strcmp(str, "DAIKIN216"))
+    return decode_type_t::DAIKIN216;
   else if (!strcmp(str, "DENON"))
     return decode_type_t::DENON;
   else if (!strcmp(str, "DISH"))
@@ -118,6 +125,8 @@ decode_type_t strToDecodeType(const char *str) {
     return decode_type_t::GICABLE;
   else if (!strcmp(str, "GLOBALCACHE"))
     return decode_type_t::GLOBALCACHE;
+  else if (!strcmp(str, "GOODWEATHER"))
+    return decode_type_t::GOODWEATHER;
   else if (!strcmp(str, "GREE"))
     return decode_type_t::GREE;
   else if (!strcmp(str, "HAIER_AC"))
@@ -130,6 +139,8 @@ decode_type_t strToDecodeType(const char *str) {
     return decode_type_t::HITACHI_AC1;
   else if (!strcmp(str, "HITACHI_AC2"))
     return decode_type_t::HITACHI_AC2;
+  else if (!strcmp(str, "INAX"))
+    return decode_type_t::INAX;
   else if (!strcmp(str, "JVC"))
     return decode_type_t::JVC;
   else if (!strcmp(str, "KELVINATOR"))
@@ -190,6 +201,8 @@ decode_type_t strToDecodeType(const char *str) {
     return decode_type_t::SANYO_LC7461;
   else if (!strcmp(str, "SHARP"))
     return decode_type_t::SHARP;
+  else if (!strcmp(str, "SHARP_AC"))
+    return decode_type_t::SHARP_AC;
   else if (!strcmp(str, "SHERWOOD"))
     return decode_type_t::SHERWOOD;
   else if (!strcmp(str, "SONY"))
@@ -319,6 +332,9 @@ std::string typeToString(const decode_type_t protocol, const bool isRepeat) {
     case DAIKIN2:
       result = F("DAIKIN2");
       break;
+    case DAIKIN216:
+      result = F("DAIKIN216");
+      break;
     case DENON:
       result = F("DENON");
       break;
@@ -337,6 +353,9 @@ std::string typeToString(const decode_type_t protocol, const bool isRepeat) {
     case GLOBALCACHE:
       result = F("GLOBALCACHE");
       break;
+    case GOODWEATHER:
+      result = F("GOODWEATHER");
+      break;
     case GREE:
       result = F("GREE");
       break;
@@ -354,6 +373,9 @@ std::string typeToString(const decode_type_t protocol, const bool isRepeat) {
       break;
     case HITACHI_AC2:
       result = F("HITACHI_AC2");
+      break;
+    case INAX:
+      result = F("INAX");
       break;
     case JVC:
       result = F("JVC");
@@ -454,6 +476,9 @@ std::string typeToString(const decode_type_t protocol, const bool isRepeat) {
     case SHARP:
       result = F("SHARP");
       break;
+    case SHARP_AC:
+      result = F("SHARP_AC");
+      break;
     case SHERWOOD:
       result = F("SHERWOOD");
       break;
@@ -493,8 +518,10 @@ std::string typeToString(const decode_type_t protocol, const bool isRepeat) {
 // Does the given protocol use a complex state as part of the decode?
 bool hasACState(const decode_type_t protocol) {
   switch (protocol) {
+    case ARGO:
     case DAIKIN:
     case DAIKIN2:
+    case DAIKIN216:
     case ELECTRA_AC:
     case FUJITSU_AC:
     case GREE:
@@ -510,8 +537,10 @@ bool hasACState(const decode_type_t protocol) {
     case MWM:
     case PANASONIC_AC:
     case SAMSUNG_AC:
+    case SHARP_AC:
     case TCL112AC:
     case TOSHIBA_AC:
+    case TROTEC:
     case WHIRLPOOL_AC:
       return true;
     default:
@@ -525,7 +554,7 @@ bool hasACState(const decode_type_t protocol) {
 //   results: A ptr to a decode result.
 // Returns:
 //   A uint16_t containing the length.
-uint16_t getCorrectedRawLength(const decode_results *results) {
+uint16_t getCorrectedRawLength(const decode_results * const results) {
   uint16_t extended_length = results->rawlen - 1;
   for (uint16_t i = 0; i < results->rawlen - 1; i++) {
     uint32_t usecs = results->rawbuf[i] * kRawTick;
@@ -538,12 +567,14 @@ uint16_t getCorrectedRawLength(const decode_results *results) {
 // Return a string containing the key values of a decode_results structure
 // in a C/C++ code style format.
 #ifdef ARDUINO
-String resultToSourceCode(const decode_results *results) {
+String resultToSourceCode(const decode_results * const results) {
   String output = "";
 #else
-std::string resultToSourceCode(const decode_results *results) {
+std::string resultToSourceCode(const decode_results * const results) {
   std::string output = "";
 #endif
+  // Reserve some space for the string to reduce heap fragmentation.
+  output.reserve(1536);  // 1.5KB should cover most cases.
   // Start declaration
   output += F("uint16_t ");  // variable type
   output += F("rawData[");   // array name
@@ -620,14 +651,16 @@ std::string resultToSourceCode(const decode_results *results) {
 // Dump out the decode_results structure.
 //
 #ifdef ARDUINO
-String resultToTimingInfo(const decode_results *results) {
+String resultToTimingInfo(const decode_results * const results) {
   String output = "";
   String value = "";
 #else
-std::string resultToTimingInfo(const decode_results *results) {
+std::string resultToTimingInfo(const decode_results * const results) {
   std::string output = "";
   std::string value = "";
 #endif
+  // Reserve some space for the string to reduce heap fragmentation.
+  output.reserve(2048);  // 2KB should cover most cases.
   output += F("Raw Timing[");
   output += uint64ToString(results->rawlen - 1, 10);
   output += F("]:\n");
@@ -652,12 +685,14 @@ std::string resultToTimingInfo(const decode_results *results) {
 // Convert the decode_results structure's value/state to simple hexadecimal.
 //
 #ifdef ARDUINO
-String resultToHexidecimal(const decode_results *result) {
+String resultToHexidecimal(const decode_results * const result) {
   String output = "";
 #else
-std::string resultToHexidecimal(const decode_results *result) {
+std::string resultToHexidecimal(const decode_results * const result) {
   std::string output = "";
 #endif
+  // Reserve some space for the string to reduce heap fragmentation.
+  output.reserve(2 * kStateSizeMax);  // Should cover worst cases.
   if (hasACState(result->decode_type)) {
 #if DECODE_AC
     for (uint16_t i = 0; result->bits > i * 8; i++) {
@@ -674,12 +709,14 @@ std::string resultToHexidecimal(const decode_results *result) {
 // Dump out the decode_results structure.
 //
 #ifdef ARDUINO
-String resultToHumanReadableBasic(const decode_results *results) {
+String resultToHumanReadableBasic(const decode_results * const results) {
   String output = "";
 #else
-std::string resultToHumanReadableBasic(const decode_results *results) {
+std::string resultToHumanReadableBasic(const decode_results *const results) {
   std::string output = "";
 #endif
+  // Reserve some space for the string to reduce heap fragmentation.
+  output.reserve(2 * kStateSizeMax + 50);  // Should cover most cases.
   // Show Encoding standard
   output += F("Encoding  : ");
   output += typeToString(results->decode_type, results->repeat);
@@ -694,16 +731,43 @@ std::string resultToHumanReadableBasic(const decode_results *results) {
   return output;
 }
 
-uint8_t sumBytes(uint8_t *start, const uint16_t length, const uint8_t init) {
+// Convert a decode_results into an array suitable for `sendRaw()`.
+// Args:
+//   decode:  A pointer to an IR decode_results structure that contains a mesg.
+// Returns:
+//   A pointer to a dynamically allocated uint16_t sendRaw compatible array.
+// Note:
+//   Result needs to be delete[]'ed/free()'ed (deallocated) after use by caller.
+uint16_t * resultToRawArray(const decode_results * const decode) {
+  uint16_t *result = new uint16_t[getCorrectedRawLength(decode)];
+  if (result != NULL) {  // The memory was allocated successfully.
+    // Convert the decode data.
+    uint16_t pos = 0;
+    for (uint16_t i = 1; i < decode->rawlen; i++) {
+      uint32_t usecs = decode->rawbuf[i] * kRawTick;
+      while (usecs > UINT16_MAX) {  // Keep truncating till it fits.
+        result[pos++] = UINT16_MAX;
+        result[pos++] = 0;  // A 0 in a sendRaw() array basically means skip.
+        usecs -= UINT16_MAX;
+      }
+      result[pos++] = usecs;
+    }
+  }
+  return result;
+}
+
+uint8_t sumBytes(const uint8_t * const start, const uint16_t length,
+                 const uint8_t init) {
   uint8_t checksum = init;
-  uint8_t *ptr;
+  const uint8_t *ptr;
   for (ptr = start; ptr - start < length; ptr++) checksum += *ptr;
   return checksum;
 }
 
-uint8_t xorBytes(uint8_t *start, const uint16_t length, const uint8_t init) {
+uint8_t xorBytes(const uint8_t * const start, const uint16_t length,
+                 const uint8_t init) {
   uint8_t checksum = init;
-  uint8_t *ptr;
+  const uint8_t *ptr;
   for (ptr = start; ptr - start < length; ptr++) checksum ^= *ptr;
   return checksum;
 }
@@ -716,8 +780,8 @@ uint8_t xorBytes(uint8_t *start, const uint16_t length, const uint8_t init) {
 //   init: Start the counting from this value.
 // Returns:
 //   Nr. of bits found.
-uint16_t countBits(const uint8_t *start, const uint16_t length, const bool ones,
-                   const uint16_t init) {
+uint16_t countBits(const uint8_t * const start, const uint16_t length,
+                   const bool ones, const uint16_t init) {
   uint16_t count = init;
   for (uint16_t offset = 0; offset < length; offset++)
     for (uint8_t currentbyte = *(start + offset);
@@ -760,3 +824,7 @@ uint64_t invertBits(const uint64_t data, const uint16_t nbits) {
   // Mask off any unwanted bits and return the result.
   return (result & ((1ULL << nbits) - 1));
 }
+
+float celsiusToFahrenheit(const float deg) { return (deg * 9.0) / 5.0 + 32.0; }
+
+float fahrenheitToCelsius(const float deg) { return (deg - 32.0) * 5.0 / 9.0; }

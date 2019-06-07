@@ -78,6 +78,12 @@ const uint32_t kMqttReconnectTime = 5000;  // Delay(ms) between reconnect tries.
 #endif  // MQTT_ENABLE
 
 // ------------------------ IR Capture Settings --------------------------------
+// Should we stop listening for IR messages when we send a message via IR?
+// Set this to `true` if your IR demodulator is picking up self transmissions.
+// Use `false` if it isn't or can't see the self-sent transmissions
+// Using `true` may mean some incoming IR messages are lost or garbled.
+// i.e. `false` is better if you can get away with it.
+#define DISABLE_CAPTURE_WHILE_TRANSMITTING true
 // Let's use a larger than normal buffer so we can handle AirCon remote codes.
 const uint16_t kCaptureBufferSize = 1024;
 #if DECODE_AC
@@ -93,6 +99,26 @@ const uint16_t kMinUnknownSize = 2 * 10;
 #define REPORT_UNKNOWNS false  // Report inbound IR messages that we don't know.
 #define REPORT_RAW_UNKNOWNS false  // Report the whole buffer, recommended:
                                    // MQTT_MAX_PACKET_SIZE of 1024 or more
+
+// Should we use and report individual A/C settings we capture via IR if we
+// can understand the individual settings of the remote.
+// e.g. Aquire the A/C settings from an actual A/C IR remote and override
+//      any local settings set via MQTT/HTTP etc.
+#define USE_DECODED_AC_SETTINGS true  // `false` to disable. `true` to enable.
+// Should we allow or ignore an A/C IR remote to override the A/C protocol/model
+// as set via MQTT or HTTP?
+// e.g. If `true`, you can use any fully supported A/C remote to control
+//      another brand's or model's A/C unit. `false` means change to the new
+//      protocol/model if we support it via `USE_DECODED_AC_SETTINGS`.
+#define IGNORE_DECODED_AC_PROTOCOL true
+// Do we (re-)send the captured & decoded A/C message via the IR_LED?
+// `false` if you don't want to repeat the captured message.
+// e.g. Useful if the IR demodulator is located in the path between the remote
+//      and the A/C unit so the command isn't sent twice.
+// `true` if want it sent anyway.
+// e.g. The IR demodulator is in a completely different location than than the
+//      actual a/c unit.
+#define REPLAY_DECODED_AC_MESSAGE false
 
 // ------------------------ Advanced Usage Only --------------------------------
 // Change if you need multiple independent send gpio/topics.
@@ -155,7 +181,7 @@ const uint8_t kPasswordLength = 20;
 // ----------------- End of User Configuration Section -------------------------
 
 // Constants
-#define _MY_VERSION_ "v1.0.0-gamma"
+#define _MY_VERSION_ "v1.1.1-beta"
 
 const uint8_t kSendTableSize = sizeof(gpioTable);
 // JSON stuff
@@ -173,6 +199,10 @@ const char* kHttpPassKey = "http_pass";
 #if MQTT_ENABLE
 const uint32_t kBroadcastPeriodMs = MQTTbroadcastInterval * 1000;  // mSeconds.
 const uint32_t kStatListenPeriodMs = 5 * 1000;  // mSeconds
+const int32_t kMaxPauseMs = 10000;  // 10 Seconds.
+const char * kSequenceDelimiter = ";";
+const char * kCommandDelimiter = ",";
+const char kPauseChar = 'P';
 
 void mqttCallback(char* topic, byte* payload, unsigned int length);
 String listOfCommandTopics(void);
@@ -185,7 +215,7 @@ void receivingMQTT(String const topic_name, String const callback_str);
 void callback(char* topic, byte* payload, unsigned int length);
 void sendMQTTDiscovery(const char *topic);
 void doBroadcast(TimerMs *timer, const uint32_t interval,
-                 const commonAcState_t state, const bool retain,
+                 const stdAc::state_t state, const bool retain,
                  const bool force);
 #endif  // MQTT_ENABLE
 bool isSerialGpioUsedByIr(void);
@@ -249,10 +279,12 @@ bool sendInt(const String topic, const int32_t num, const bool retain);
 bool sendBool(const String topic, const bool on, const bool retain);
 bool sendString(const String topic, const String str, const bool retain);
 bool sendFloat(const String topic, const float_t temp, const bool retain);
-commonAcState_t updateClimate(commonAcState_t current, const String str,
+stdAc::state_t updateClimate(stdAc::state_t current, const String str,
                               const String prefix, const String payload);
-bool cmpClimate(const commonAcState_t a, const commonAcState_t b);
-bool sendClimate(const commonAcState_t prev, const commonAcState_t next,
+bool cmpClimate(const stdAc::state_t a, const stdAc::state_t b);
+bool sendClimate(const stdAc::state_t prev, const stdAc::state_t next,
                  const String topic_prefix, const bool retain,
-                 const bool forceMQTT, const bool forceIR);
+                 const bool forceMQTT, const bool forceIR,
+                 const bool enableIR = true);
+bool decodeCommonAc(const decode_results *decode);
 #endif  // EXAMPLES_IRMQTTSERVER_IRMQTTSERVER_H_

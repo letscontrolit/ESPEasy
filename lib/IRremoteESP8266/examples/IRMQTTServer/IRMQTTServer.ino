@@ -102,6 +102,19 @@
  *                bit/byte size you want to send as some A/C units have units
  *                have different sized messages. e.g. Fujitsu A/C units.
  *
+ *   Sequences.
+ *     You can send a sequence of IR messages via MQTT using the above methods
+ *     if you separate them with a ';' character. In addition you can add a
+ *     pause/gap between sequenced messages by using 'P' followed immediately by
+ *     the number of milliseconds you wish to wait (up to a max of kMaxPauseMs).
+ *       e.g. 7,E0E09966;4,f50,12
+ *         Send a Samsung(7) TV Power on code, followed immediately by a Sony(4)
+ *         TV power off message.
+ *       or:  19,C1A28877;P500;19,C1A25AA5;P500;19,C1A2E21D,0,30
+ *         Turn on a Sherwood(19) Amplifier, Wait 1/2 a second, Switch the
+ *         Amplifier to Video input 2, wait 1/2 a second, then send the Sherwood
+ *         Amp the "Volume Up" message 30 times.
+ *
  *   In short:
  *     No spaces after/before commas.
  *     Values are comma separated.
@@ -325,6 +338,7 @@ bool lastSendSucceeded = false;  // Store the success status of the last send.
 uint32_t lastSendTime = 0;
 int8_t offset;  // The calculated period offset for this chip and library.
 IRsend *IrSendTable[kSendTableSize];
+String lastClimateSource;
 
 #ifdef IR_RX
 String lastIrReceived = "None";
@@ -333,8 +347,8 @@ uint32_t irRecvCounter = 0;
 #endif  // IR_RX
 
 // Climate stuff
-commonAcState_t climate;
-commonAcState_t climate_prev;
+stdAc::state_t climate;
+stdAc::state_t climate_prev;
 IRac commonAc(gpioTable[0]);
 TimerMs lastClimateIr = TimerMs();  // When we last sent the IR Climate mesg.
 uint32_t irClimateCounter = 0;  // How many have we sent?
@@ -590,6 +604,8 @@ void handleRoot(void) {
         "<option value='17'>Denon</option>"
         "<option value='13'>Dish</option>"
         "<option value='43'>GICable</option>"
+        "<option value='63'>Goodweather</option>"
+        "<option value='64'>Inax</option>"
         "<option value='6'>JVC</option>"
         "<option value='36'>Lasertag</option>"
         "<option value='58'>LEGOPF</option>"
@@ -652,6 +668,7 @@ void handleRoot(void) {
         "<option value='27'>Argo</option>"
         "<option value='16'>Daikin</option>"
         "<option value='53'>Daikin2</option>"
+        "<option value='61'>Daikin216 (27 bytes)</option>"
         "<option value='48'>Electra</option>"
         "<option value='33'>Fujitsu</option>"
         "<option value='24'>Gree</option>"
@@ -666,6 +683,7 @@ void handleRoot(void) {
         "<option value='60'>Mitsubishi Heavy (19 bytes)</option>"
         "<option value='52'>MWM</option>"
         "<option value='46'>Samsung</option>"
+        "<option value='62'>Sharp</option>"
         "<option value='57'>TCL112</option>"
         "<option value='32'>Toshiba</option>"
         "<option value='28'>Trotec</option>"
@@ -1060,7 +1078,7 @@ void handleAirConSet(void) {
     return server.requestAuthentication();
   }
 #endif
-  commonAcState_t result = climate;
+  stdAc::state_t result = climate;
   debug("New common a/c received via HTTP");
   for (uint16_t i = 0; i < server.args(); i++)
     result = updateClimate(result, server.argName(i), "", server.arg(i));
@@ -1071,6 +1089,7 @@ void handleAirConSet(void) {
 #else  // MQTT_ENABLE
   sendClimate(climate, result, "", false, false, false);
 #endif  // MQTT_ENABLE
+  lastClimateSource = F("HTTP");
   // Update the old climate state with the new one.
   climate = result;
   // Redirect back to the aircon page.
@@ -1208,6 +1227,7 @@ void handleInfo(void) {
     "<h4>Climate Information</h4>"
     "<p>"
     "IR Send GPIO: " + String(gpioTable[0]) + "<br>"
+    "Last update source: " + lastClimateSource + "<br>"
     "Total sent: " + String(irClimateCounter) + "<br>"
     "Last send: " + String(hasClimateBeenSent ?
         (String(lastClimateSucceeded ? "Ok" : "FAILED") +
@@ -1333,10 +1353,27 @@ bool parseStringAndSendAirCon(IRsend *irsend, const uint16_t irType,
       stateSize = kToshibaACStateLength;
       break;
     case DAIKIN:
-      stateSize = kDaikinStateLength;
+      // Daikin has 2 different possible size states.
+      // (The correct size, and a legacy shorter size.)
+      // Guess which one we are being presented with based on the number of
+      // hexadecimal digits provided. i.e. Zero-pad if you need to to get
+      // the correct length/byte size.
+      // This should provide backward compatiblity with legacy messages.
+      stateSize = inputLength / 2;  // Every two hex chars is a byte.
+      // Use at least the minimum size.
+      stateSize = std::max(stateSize, kDaikinStateLengthShort);
+      // If we think it isn't a "short" message.
+      if (stateSize > kDaikinStateLengthShort)
+        // Then it has to be at least the version of the "normal" size.
+        stateSize = std::max(stateSize, kDaikinStateLength);
+      // Lastly, it should never exceed the "normal" size.
+      stateSize = std::min(stateSize, kDaikinStateLength);
       break;
     case DAIKIN2:
       stateSize = kDaikin2StateLength;
+      break;
+    case DAIKIN216:
+      stateSize = kDaikin216StateLength;
       break;
     case ELECTRA_AC:
       stateSize = kElectraAcStateLength;
@@ -1412,6 +1449,9 @@ bool parseStringAndSendAirCon(IRsend *irsend, const uint16_t irType,
       // Lastly, it should never exceed the maximum "extended" size.
       stateSize = std::min(stateSize, kSamsungAcExtendedStateLength);
       break;
+    case SHARP_AC:
+      stateSize = kSharpAcStateLength;
+      break;
     case MWM:
       // MWM has variable size states, so make a best guess
       // which one we are being presented with based on the number of
@@ -1482,6 +1522,11 @@ bool parseStringAndSendAirCon(IRsend *irsend, const uint16_t irType,
       irsend->sendDaikin2(reinterpret_cast<uint8_t *>(state));
       break;
 #endif
+#if SEND_DAIKIN216
+    case DAIKIN216:  // 61
+      irsend->sendDaikin216(reinterpret_cast<uint8_t *>(state));
+      break;
+#endif  // SEND_DAIKIN216
 #if SEND_MITSUBISHI_AC
     case MITSUBISHI_AC:
       irsend->sendMitsubishiAC(reinterpret_cast<uint8_t *>(state));
@@ -1550,6 +1595,11 @@ bool parseStringAndSendAirCon(IRsend *irsend, const uint16_t irType,
       irsend->sendSamsungAC(reinterpret_cast<uint8_t *>(state), stateSize);
       break;
 #endif
+#if SEND_SHARP_AC
+    case SHARP_AC:  // 62
+      irsend->sendSharpAc(reinterpret_cast<uint8_t *>(state));
+      break;
+#endif  // SEND_SHARP_AC
 #if SEND_ELECTRA_AC
     case ELECTRA_AC:
       irsend->sendElectraAC(reinterpret_cast<uint8_t *>(state));
@@ -1653,7 +1703,6 @@ bool parseStringAndSendGC(IRsend *irsend, const String str) {
     start_from = index + 1;
     count++;
   } while (index != -1);
-
   irsend->sendGC(code_array, count);  // All done. Send it.
   free(code_array);  // Free up the memory allocated.
   if (count > 0)
@@ -1956,6 +2005,7 @@ void setup(void) {
   climate.sleep = -1;  // Off
   climate.clock = -1;  // Don't set.
   climate_prev = climate;
+  lastClimateSource = F("None");
 
   // Initialise all the IR transmitters.
   for (uint8_t i = 0; i < kSendTableSize; i++) {
@@ -2201,7 +2251,7 @@ void handleSendMqttDiscovery(void) {
 }
 
 void doBroadcast(TimerMs *timer, const uint32_t interval,
-                 const commonAcState_t state, const bool retain,
+                 const stdAc::state_t state, const bool retain,
                  const bool force) {
   if (force || (!lockMqttBroadcast && timer->elapsed() > interval)) {
     debug("Sending MQTT stat update broadcast.");
@@ -2213,7 +2263,6 @@ void doBroadcast(TimerMs *timer, const uint32_t interval,
 }
 
 void receivingMQTT(String const topic_name, String const callback_str) {
-  char* tok_ptr;
   uint64_t code = 0;
   uint16_t nbits = 0;
   uint16_t repeat = 0;
@@ -2232,10 +2281,11 @@ void receivingMQTT(String const topic_name, String const callback_str) {
   if (topic_name.startsWith(MqttClimate)) {
     if (topic_name.startsWith(MqttClimateCmnd)) {
       debug("It's a climate command topic");
-      commonAcState_t updated = updateClimate(
+      stdAc::state_t updated = updateClimate(
           climate, topic_name, MqttClimateCmnd, callback_str);
-      sendClimate(climate, updated, MqttClimateStat,
-                  true, false, false);
+      if (sendClimate(climate, updated, MqttClimateStat,
+                      true, false, false))
+        lastClimateSource = F("MQTT");
       climate = updated;
     } else if (topic_name.startsWith(MqttClimateStat)) {
       debug("It's a climate state topic. Update internal state and DON'T send");
@@ -2261,33 +2311,61 @@ void receivingMQTT(String const topic_name, String const callback_str) {
   debug("MQTT Payload (raw):");
   debug(callback_c_str);
 
-  // Get the numeric protocol type.
-  int ir_type = strtoul(strtok_r(callback_c_str, ",", &tok_ptr), NULL, 10);
-  char* next = strtok_r(NULL, ",", &tok_ptr);
-  // If there is unparsed string left, try to convert it assuming it's hex.
-  if (next != NULL) {
-    code = getUInt64fromHex(next);
-    next = strtok_r(NULL, ",", &tok_ptr);
-  } else {
-    // We require at least two value in the string. Give up.
-    return;
+  // Chop up the str into command chunks.
+  // i.e. commands in a sequence are delimitered by ';'.
+  char* sequence_tok_ptr;
+  for (char* sequence_item = strtok_r(callback_c_str, kSequenceDelimiter,
+                                      &sequence_tok_ptr);
+       sequence_item != NULL;
+       sequence_item = strtok_r(NULL, kSequenceDelimiter, &sequence_tok_ptr)) {
+    // Now, process each command individually.
+    char* tok_ptr;
+    // Make a copy of the sequence_item str as strtok_r stomps on it.
+    char* ircommand = strdup(sequence_item);
+    // Check if it is a pause command.
+    switch (ircommand[0]) {
+      case kPauseChar:
+        {  // It's a pause. Everything after the 'P' should be a number.
+          int32_t msecs = std::min((int32_t) strtoul(ircommand + 1, NULL, 10),
+                                   kMaxPauseMs);
+          delay(msecs);
+          mqtt_client.publish(MqttAck.c_str(),
+                              String(kPauseChar + String(msecs)).c_str());
+          mqttSentCounter++;
+          break;
+        }
+      default:  // It's an IR command.
+        {
+          // Get the numeric protocol type.
+          int32_t ir_type = strtoul(strtok_r(ircommand, kCommandDelimiter,
+                                             &tok_ptr), NULL, 10);
+          char* next = strtok_r(NULL, kCommandDelimiter, &tok_ptr);
+          // If there is unparsed string left, try to convert it assuming it's
+          // hex.
+          if (next != NULL) {
+            code = getUInt64fromHex(next);
+            next = strtok_r(NULL, kCommandDelimiter, &tok_ptr);
+          } else {
+            // We require at least two value in the string. Give up.
+            break;
+          }
+          // If there is still string left, assume it is the bit size.
+          if (next != NULL) {
+            nbits = atoi(next);
+            next = strtok_r(NULL, kCommandDelimiter, &tok_ptr);
+          }
+          // If there is still string left, assume it is the repeat count.
+          if (next != NULL)
+            repeat = atoi(next);
+          // send received MQTT value by IR signal
+          lastSendSucceeded = sendIRCode(
+              IrSendTable[channel], ir_type, code,
+              strchr(sequence_item, kCommandDelimiter[0]), nbits, repeat);
+        }
+    }
+    free(ircommand);
   }
-  // If there is still string left, assume it is the bit size.
-  if (next != NULL) {
-    nbits = atoi(next);
-    next = strtok_r(NULL, ",", &tok_ptr);
-  }
-  // If there is still string left, assume it is the repeat count.
-  if (next != NULL)
-    repeat = atoi(next);
-
   free(callback_c_str);
-
-  // send received MQTT value by IR signal
-  lastSendSucceeded = sendIRCode(
-      IrSendTable[channel], ir_type, code,
-      callback_str.substring(callback_str.indexOf(",") + 1).c_str(),
-      nbits, repeat);
 }
 
 // Callback function, when we receive an MQTT value on the topics
@@ -2403,6 +2481,7 @@ void loop(void) {
         mqttLog("The state was recovered from MQTT broker. Updating.");
         sendClimate(climate_prev, climate, MqttClimateStat,
                     true, false, false);
+        lastClimateSource = F("MQTT (via retain)");
       }
       lockMqttBroadcast = false;  // Release the lock so we can broadcast again.
     }
@@ -2418,7 +2497,7 @@ void loop(void) {
   if (irrecv.decode(&capture) && capture.decode_type != UNKNOWN) {
 #endif  // REPORT_UNKNOWNS
     lastIrReceivedTime = millis();
-    lastIrReceived = String(capture.decode_type) + "," +
+    lastIrReceived = String(capture.decode_type) + kCommandDelimiter[0] +
         resultToHexidecimal(&capture);
 #if REPORT_RAW_UNKNOWNS
     if (capture.decode_type == UNKNOWN) {
@@ -2438,14 +2517,17 @@ void loop(void) {
 #endif  // REPORT_RAW_UNKNOWNS
     // If it isn't an AC code, add the bits.
     if (!hasACState(capture.decode_type))
-      lastIrReceived += "," + String(capture.bits);
+      lastIrReceived += kCommandDelimiter[0] + String(capture.bits);
 #if MQTT_ENABLE
     mqtt_client.publish(MqttRecv.c_str(), lastIrReceived.c_str());
     mqttSentCounter++;
-#endif  // MQTT_ENABLE
-    irRecvCounter++;
     debug("Incoming IR message sent to MQTT:");
     debug(lastIrReceived.c_str());
+#endif  // MQTT_ENABLE
+    irRecvCounter++;
+#if USE_DECODED_AC_SETTINGS
+    if (decodeCommonAc(&capture)) lastClimateSource = F("IR");
+#endif  // USE_DECODED_AC_SETTINGS
   }
 #endif  // IR_RX
   delay(100);
@@ -2492,6 +2574,10 @@ bool sendIRCode(IRsend *irsend, int const ir_type,
 
   bool success = true;  // Assume success.
 
+  // Turn off IR capture if we need to.
+#if defined (IR_RX) && DISABLE_CAPTURE_WHILE_TRANSMITTING
+  irrecv.disableIRIn();  // Stop the IR receiver
+#endif  // defined (IR_RX) && DISABLE_CAPTURE_WHILE_TRANSMITTING
   // send the IR message.
   switch (ir_type) {
 #if SEND_RC5
@@ -2528,6 +2614,14 @@ bool sendIRCode(IRsend *irsend, int const ir_type,
       if (bits == 0)
         bits = kPanasonicBits;
       irsend->sendPanasonic64(code, bits, repeat);
+      break;
+#endif
+#if SEND_INAX
+    case INAX:  // 64
+      if (bits == 0)
+        bits = kInaxBits;
+      repeat = std::max(repeat, kInaxMinRepeat);
+      irsend->sendInax(code, bits, repeat);
       break;
 #endif
 #if SEND_JVC
@@ -2605,6 +2699,7 @@ bool sendIRCode(IRsend *irsend, int const ir_type,
 #endif
     case DAIKIN:  // 16
     case DAIKIN2:  // 53
+    case DAIKIN216:  // 61
     case KELVINATOR:  // 18
     case MITSUBISHI_AC:  // 20
     case GREE:  // 24
@@ -2619,6 +2714,7 @@ bool sendIRCode(IRsend *irsend, int const ir_type,
     case HITACHI_AC2:  // 42
     case WHIRLPOOL_AC:  // 45
     case SAMSUNG_AC:  // 46
+    case SHARP_AC:  // 62
     case ELECTRA_AC:  // 48
     case PANASONIC_AC:  // 49
     case MWM:  // 52
@@ -2627,7 +2723,7 @@ bool sendIRCode(IRsend *irsend, int const ir_type,
 #if SEND_DENON
     case DENON:  // 17
       if (bits == 0)
-        bits = DENON_BITS;
+        bits = kDenonBits;
       irsend->sendDenon(code, bits, repeat);
       break;
 #endif
@@ -2768,10 +2864,21 @@ bool sendIRCode(IRsend *irsend, int const ir_type,
       irsend->sendLegoPf(code, bits, repeat);
       break;
 #endif
+#if SEND_GOODWEATHER
+    case GOODWEATHER:  // 63
+      if (bits == 0) bits = kGoodweatherBits;
+      repeat = std::max(repeat, kGoodweatherMinRepeat);
+      irsend->sendGoodweather(code, bits, repeat);
+      break;
+#endif  // SEND_GOODWEATHER
     default:
       // If we got here, we didn't know how to send it.
       success = false;
   }
+  // Turn IR capture back on if we need to.
+#if defined (IR_RX) && DISABLE_CAPTURE_WHILE_TRANSMITTING
+  irrecv.enableIRIn();  // Restart the receiver
+#endif  // defined (IR_RX) && DISABLE_CAPTURE_WHILE_TRANSMITTING
   lastSendTime = millis();
   // Release the lock.
   lockIr = false;
@@ -2796,11 +2903,14 @@ bool sendIRCode(IRsend *irsend, int const ir_type,
 #if MQTT_ENABLE
     if (success) {
       if (ir_type == PRONTO && repeat > 0)
-        mqtt_client.publish(MqttAck.c_str(), (String(ir_type) + ",R" +
-                                              String(repeat) + "," +
+        mqtt_client.publish(MqttAck.c_str(), (String(ir_type) +
+                                              kCommandDelimiter[0] + 'R' +
+                                              String(repeat) +
+                                              kCommandDelimiter[0] +
                                               String(code_str)).c_str());
       else
-        mqtt_client.publish(MqttAck.c_str(), (String(ir_type) + "," +
+        mqtt_client.publish(MqttAck.c_str(), (String(ir_type) +
+                                              kCommandDelimiter[0] +
                                               String(code_str)).c_str());
       mqttSentCounter++;
     }
@@ -2811,9 +2921,12 @@ bool sendIRCode(IRsend *irsend, int const ir_type,
     debug(("Repeats: " + String(repeat)).c_str());
 #if MQTT_ENABLE
     if (success) {
-      mqtt_client.publish(MqttAck.c_str(), (String(ir_type) + "," +
-                                            uint64ToString(code, 16)
-                                            + "," + String(bits) + "," +
+      mqtt_client.publish(MqttAck.c_str(), (String(ir_type) +
+                                            kCommandDelimiter[0] +
+                                            uint64ToString(code, 16) +
+                                            kCommandDelimiter[0] +
+                                            String(bits) +
+                                            kCommandDelimiter[0] +
                                             String(repeat)).c_str());
       mqttSentCounter++;
     }
@@ -2858,9 +2971,9 @@ bool sendFloat(const String topic, const float_t temp, const bool retain) {
 #endif  // MQTT_ENABLE
 }
 
-commonAcState_t updateClimate(commonAcState_t current, const String str,
+stdAc::state_t updateClimate(stdAc::state_t current, const String str,
                               const String prefix, const String payload) {
-  commonAcState_t result = current;
+  stdAc::state_t result = current;
   String value = payload;
   value.toUpperCase();
   if (str.equals(prefix + KEY_PROTOCOL))
@@ -2902,7 +3015,7 @@ commonAcState_t updateClimate(commonAcState_t current, const String str,
 
 // Compare two AirCon states (climates).
 // Returns: True if they differ, False if they don't.
-bool cmpClimate(const commonAcState_t a, const commonAcState_t b) {
+bool cmpClimate(const stdAc::state_t a, const stdAc::state_t b) {
   return a.protocol != b.protocol || a.model != b.model || a.power != b.power ||
       a.mode != b.mode || a.degrees != b.degrees || a.celsius != b.celsius ||
       a.fanspeed != b.fanspeed || a.swingv != b.swingv ||
@@ -2911,9 +3024,10 @@ bool cmpClimate(const commonAcState_t a, const commonAcState_t b) {
       a.clean != b.clean || a.beep != b.beep || a.sleep != b.sleep;
 }
 
-bool sendClimate(const commonAcState_t prev, const commonAcState_t next,
+bool sendClimate(const stdAc::state_t prev, const stdAc::state_t next,
                  const String topic_prefix, const bool retain,
-                 const bool forceMQTT, const bool forceIR) {
+                 const bool forceMQTT, const bool forceIR,
+                 const bool enableIR) {
   bool diff = false;
   bool success = true;
 
@@ -2993,13 +3107,21 @@ bool sendClimate(const commonAcState_t prev, const commonAcState_t next,
   else
     debug("NO difference in common A/C state detected.");
   // Only send an IR message if we need to.
-  if ((diff && !forceMQTT) || forceIR) {
+  if (enableIR && ((diff && !forceMQTT) || forceIR)) {
     debug("Sending common A/C state via IR.");
+    // Turn IR capture off if we need to.
+#if defined (IR_RX) && DISABLE_CAPTURE_WHILE_TRANSMITTING
+    irrecv.disableIRIn();  // Stop the IR receiver
+#endif  // defined (IR_RX) && DISABLE_CAPTURE_WHILE_TRANSMITTING
     lastClimateSucceeded = commonAc.sendAc(
         next.protocol, next.model, next.power, next.mode,
         next.degrees, next.celsius, next.fanspeed, next.swingv, next.swingh,
         next.quiet, next.turbo, next.econo, next.light, next.filter, next.clean,
         next.beep, next.sleep, -1);
+  // Turn IR capture back on if we need to.
+#if defined (IR_RX) && DISABLE_CAPTURE_WHILE_TRANSMITTING
+    irrecv.enableIRIn();  // Restart the receiver
+#endif  // defined (IR_RX) && DISABLE_CAPTURE_WHILE_TRANSMITTING
     if (lastClimateSucceeded) hasClimateBeenSent = true;
     success &= lastClimateSucceeded;
     lastClimateIr.reset();
@@ -3008,3 +3130,247 @@ bool sendClimate(const commonAcState_t prev, const commonAcState_t next,
   }
   return success;
 }
+
+#if USE_DECODED_AC_SETTINGS && defined (IR_RX)
+// Decode and use a valid IR A/C remote that we understand enough to convert
+// to a Common A/C format.
+// Args:
+//   decode: A successful raw IR decode object.
+// Returns:
+//   A boolean indicating success or failure.
+bool decodeCommonAc(const decode_results *decode) {
+  if (!IRac::isProtocolSupported(decode->decode_type)) {
+    debug("Inbound IR messages isn't a supported common A/C protocol");
+    return false;
+  }
+  stdAc::state_t state = climate;
+  debug("Converting inbound IR A/C message to common A/C");
+  switch (decode->decode_type) {
+#if DECODE_ARGO
+    case decode_type_t::ARGO: {
+      IRArgoAC ac(IR_LED);
+      ac.setRaw(decode->state);
+      state = ac.toCommon();
+      break;
+    }
+#endif  // DECODE_ARGO
+#if DECODE_COOLIX
+    case decode_type_t::COOLIX: {
+      IRCoolixAC ac(IR_LED);
+      ac.setRaw(decode->value);  // Uses value instead of state.
+      state = ac.toCommon();
+      break;
+    }
+#endif  // DECODE_COOLIX
+#if DECODE_DAIKIN
+    case decode_type_t::DAIKIN: {
+      IRDaikinESP ac(IR_LED);
+      ac.setRaw(decode->state);
+      state = ac.toCommon();
+      break;
+    }
+#endif  // DECODE_DAIKIN
+#if DECODE_DAIKIN2
+    case decode_type_t::DAIKIN2: {
+      IRDaikin2 ac(IR_LED);
+      ac.setRaw(decode->state);
+      state = ac.toCommon();
+      break;
+    }
+#endif  // DECODE_DAIKIN2
+#if DECODE_DAIKIN216
+    case decode_type_t::DAIKIN216: {
+      IRDaikin216 ac(IR_LED);
+      ac.setRaw(decode->state);
+      state = ac.toCommon();
+      break;
+    }
+#endif  // DECODE_DAIKIN216
+#if DECODE_FUJITSU_AC
+    case decode_type_t::FUJITSU_AC: {
+      IRFujitsuAC ac(IR_LED);
+      ac.setRaw(decode->state, decode->bits / 8);
+      state = ac.toCommon();
+      break;
+    }
+#endif  // DECODE_FUJITSU_AC
+#if DECODE_GOODWEATHER
+    case decode_type_t::GOODWEATHER: {
+      IRGoodweatherAc ac(IR_LED);
+      ac.setRaw(decode->value);  // Uses value instead of state.
+      state = ac.toCommon();
+      break;
+    }
+#endif  // DECODE_GOODWEATHER
+#if DECODE_GREE
+    case decode_type_t::GREE: {
+      IRGreeAC ac(IR_LED);
+      ac.setRaw(decode->state);
+      state = ac.toCommon();
+      break;
+    }
+#endif  // DECODE_GREE
+#if DECODE_HAIER_AC
+    case decode_type_t::HAIER_AC: {
+      IRHaierAC ac(IR_LED);
+      ac.setRaw(decode->state);
+      state = ac.toCommon();
+      break;
+    }
+#endif  // DECODE_HAIER_AC
+#if DECODE_HAIER_AC_YRW02
+    case decode_type_t::HAIER_AC_YRW02: {
+      IRHaierACYRW02 ac(IR_LED);
+      ac.setRaw(decode->state);
+      state = ac.toCommon();
+      break;
+    }
+#endif  // DECODE_HAIER_AC_YRW02
+#if (DECODE_HITACHI_AC || DECODE_HITACHI_AC2)
+    case decode_type_t::HITACHI_AC: {
+      IRHitachiAc ac(IR_LED);
+      ac.setRaw(decode->state);
+      state = ac.toCommon();
+      break;
+    }
+#endif  // (DECODE_HITACHI_AC || DECODE_HITACHI_AC2)
+#if DECODE_KELVINATOR
+    case decode_type_t::KELVINATOR: {
+      IRKelvinatorAC ac(IR_LED);
+      ac.setRaw(decode->state);
+      state = ac.toCommon();
+      break;
+    }
+#endif  // DECODE_KELVINATOR
+#if DECODE_MIDEA
+    case decode_type_t::MIDEA: {
+      IRMideaAC ac(IR_LED);
+      ac.setRaw(decode->value);  // Uses value instead of state.
+      state = ac.toCommon();
+      break;
+    }
+#endif  // DECODE_MIDEA
+#if DECODE_MITSUBISHI_AC
+    case decode_type_t::MITSUBISHI_AC: {
+      IRMitsubishiAC ac(IR_LED);
+      ac.setRaw(decode->state);
+      state = ac.toCommon();
+      break;
+    }
+#endif  // DECODE_MITSUBISHI_AC
+#if DECODE_MITSUBISHIHEAVY
+    case decode_type_t::MITSUBISHI_HEAVY_88: {
+      IRMitsubishiHeavy88Ac ac(IR_LED);
+      ac.setRaw(decode->state);
+      state = ac.toCommon();
+      break;
+    }
+    case decode_type_t::MITSUBISHI_HEAVY_152: {
+      IRMitsubishiHeavy152Ac ac(IR_LED);
+      ac.setRaw(decode->state);
+      state = ac.toCommon();
+      break;
+    }
+#endif  // DECODE_MITSUBISHIHEAVY
+#if DECODE_PANASONIC_AC
+    case decode_type_t::PANASONIC_AC: {
+      IRPanasonicAc ac(IR_LED);
+      ac.setRaw(decode->state);
+      state = ac.toCommon();
+      break;
+    }
+#endif  // DECODE_PANASONIC_AC
+#if DECODE_SAMSUNG_AC
+    case decode_type_t::SAMSUNG_AC: {
+      IRSamsungAc ac(IR_LED);
+      ac.setRaw(decode->state);
+      state = ac.toCommon();
+      break;
+    }
+#endif  // DECODE_SAMSUNG_AC
+#if DECODE_SHARP_AC
+    case decode_type_t::SHARP_AC: {
+      IRSharpAc ac(IR_LED);
+      ac.setRaw(decode->state);
+      state = ac.toCommon();
+      break;
+    }
+#endif  // DECODE_SHARP_AC
+#if DECODE_TCL112AC
+    case decode_type_t::TCL112AC: {
+      IRTcl112Ac ac(IR_LED);
+      ac.setRaw(decode->state);
+      state = ac.toCommon();
+      break;
+    }
+#endif  // DECODE_TCL112AC
+#if DECODE_TECO
+    case decode_type_t::TECO: {
+      IRTecoAc ac(IR_LED);
+      ac.setRaw(decode->value);  // Uses value instead of state.
+      state = ac.toCommon();
+      break;
+    }
+#endif  // DECODE_TECO
+#if DECODE_TOSHIBA_AC
+    case decode_type_t::TOSHIBA_AC: {
+      IRToshibaAC ac(IR_LED);
+      ac.setRaw(decode->state);
+      state = ac.toCommon();
+      break;
+    }
+#endif  // DECODE_TOSHIBA_AC
+#if DECODE_TROTEC
+    case decode_type_t::TROTEC: {
+      IRTrotecESP ac(IR_LED);
+      ac.setRaw(decode->state);
+      state = ac.toCommon();
+      break;
+    }
+#endif  // DECODE_TROTEC
+#if DECODE_VESTEL_AC
+    case decode_type_t::VESTEL_AC: {
+      IRVestelAc ac(IR_LED);
+      ac.setRaw(decode->value);  // Uses value instead of state.
+      state = ac.toCommon();
+      break;
+    }
+#endif  // DECODE_VESTEL_AC
+#if DECODE_WHIRLPOOL_AC
+    case decode_type_t::WHIRLPOOL_AC: {
+      IRWhirlpoolAc ac(IR_LED);
+      ac.setRaw(decode->state);
+      state = ac.toCommon();
+      break;
+    }
+#endif  // DECODE_WHIRLPOOL_AC
+    default:
+      debug("Failed to convert to common A/C.");  // This shouldn't happen!
+      return false;
+  }
+#if IGNORE_DECODED_AC_PROTOCOL
+  if (climate.protocol != decode_type_t::UNKNOWN) {
+    // Use the previous protcol/model if set.
+    state.protocol = climate.protocol;
+    state.model = climate.model;
+  }
+#endif  // IGNORE_DECODED_AC_PROTOCOL
+// Continue to use the previously prefered temperature units.
+// i.e. Keep using Celsius or Fahrenheit.
+if (climate.celsius != state.celsius) {
+  // We've got a mismatch, so we need to convert.
+  state.degrees = climate.celsius ? fahrenheitToCelsius(state.degrees)
+                                  : celsiusToFahrenheit(state.degrees);
+  state.celsius = climate.celsius;
+}
+#if MQTT_ENABLE
+  sendClimate(climate, state, MqttClimateStat, true, false, false,
+              REPLAY_DECODED_AC_MESSAGE);
+#else  // MQTT_ENABLE
+  sendClimate(climate, state, "", false, false, false,
+              REPLAY_DECODED_AC_MESSAGE);
+#endif  // MQTT_ENABLE
+  climate = state;  // Copy over the new climate state.
+  return true;
+}
+#endif  // USE_DECODED_AC_SETTINGS && defined (IR_RX)
