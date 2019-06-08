@@ -58,7 +58,7 @@ bool CPlugin_002(byte function, struct EventStruct *event, String& string)
         if (ControllerID < CONTROLLER_MAX) {
           StaticJsonDocument<512> jsonBuffer;
           DynamicJsonDocument root(1024);
-		  DeserializationError error = deserializeJson(root, event->String2.c_str());
+		deserializeJson(root, event->String2.c_str());
           if (!root.isNull())
           {
             unsigned int idx = root[F("idx")];
