@@ -33,3 +33,15 @@
 .. |P082_maintainer| replace:: `TD-er`
 .. |P082_compileinfo| replace:: `.`
 .. |P082_usedlibraries| replace:: https://github.com/mikalhart/TinyGPSPlus/tree/v1.0.2
+
+.. |P086_name| replace:: :cyan:`Homie receiver`
+.. |P086_type| replace:: :cyan:`Generic`
+.. |P086_typename| replace:: :cyan:`Generic - Homie receiver`
+.. |P086_status| replace:: :yellow:`TESTING`
+.. |P086_github| replace:: P086_Homie.ino
+.. _P086_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P086_Homie.ino
+.. |P086_usedby| replace:: `.`
+.. |P086_shortinfo| replace:: `Triggers configurable events when data is received form the Homie controller (C014).`
+.. |P086_maintainer| replace:: `.`
+.. |P086_compileinfo| replace:: `.`
+.. |P086_usedlibraries| replace:: `.`

@@ -1,0 +1,10 @@
+.. csv-table::
+        :header: "Parameter", "Description", "UI Element", "value example", "3.0.1 & 4.0.0"
+        :widths: 10, 55, 10, 10, 15
+
+        "``integer``","Hole numbers (positive or negative). Minimum and maximum limits can be set.","Number Box", "1234",":red:`required`"
+        "``float``","Floating point values. Minimum and maximum limits can be set.","Slider / Dimmer", "1.123",":red:`required`"
+        "``boolean``","Boolean true or false","switch", "true,false",":red:`required`"
+        "``string``","Textual value","text box","display this!", ":green:`default`"
+        "``enum``","One item out of a comma seperated list","drop down list", "option 1,option 2,option 3",":red:`required`"
+        "``color``","Color value defined by rgb or hsv values. ``$fomat`` attribute required defining if ``rgb`` or ``hsv`` values are expected.","color picker", "255,255,255",":red:`required`"

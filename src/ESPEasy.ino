@@ -86,7 +86,6 @@
 #include "ESPEasy-Globals.h"
 // Must be included after all the defines, since it is using TASKS_MAX
 #include "_Plugin_Helper.h"
-#include "define_plugin_sets.h"
 // Plugin helper needs the defined controller sets, thus include after 'define_plugin_sets.h'
 #include "_CPlugin_Helper.h"
 
@@ -129,6 +128,7 @@ void setup()
   WiFi.persistent(false); // Do not use SDK storage of SSID/WPA parameters
   WiFi.setAutoReconnect(false);
   WiFi.mode(WIFI_OFF);
+  run_compiletime_checks();
   lowestFreeStack = getFreeStackWatermark();
   lowestRAM = FreeMem();
 
@@ -576,6 +576,8 @@ void loop()
     runPeriodicalMQTT();
     flushAndDisconnectAllClients();
 
+    SPIFFS.end();
+
     deepSleep(Settings.Delay);
     //deepsleep will never return, its a special kind of reboot
   }
@@ -583,19 +585,33 @@ void loop()
 
 bool checkConnectionsEstablished() {
   if (wifiStatus != ESPEASY_WIFI_SERVICES_INITIALIZED) return false;
+/*
   if (firstEnabledMQTTController() >= 0) {
     // There should be a MQTT connection.
     return MQTTclient_connected;
   }
+*/
   return true;
 }
 
 void flushAndDisconnectAllClients() {
-  if (MQTTclient.connected()) {
-    MQTTclient.disconnect();
-    updateMQTTclient_connected();
+  if (anyControllerEnabled()) {
+    bool mqttControllerEnabled = firstEnabledMQTTController() >= 0;
+    unsigned long timer = millis() + 1000;
+    while (!timeOutReached(timer)) {
+      // call to all controllers (delay queue) to flush all data.
+      CPluginCall(CPLUGIN_FLUSH, 0);
+      if (mqttControllerEnabled && MQTTclient.connected()) {
+        MQTTclient.loop();
+      }
+    }
+    if (mqttControllerEnabled && MQTTclient.connected()) {
+      MQTTclient.disconnect();
+      updateMQTTclient_connected();
+    }
+    saveToRTC();
+    delay(100); // Flush anything in the network buffers.
   }
-  /// FIXME TD-er: add call to all controllers (delay queue) to flush all data.
 }
 
 void runPeriodicalMQTT() {
@@ -809,6 +825,9 @@ void runEach30Seconds()
   }
   sendSysInfoUDP(1);
   refreshNodeList();
+
+  // sending $stats to homie controller
+  CPluginCall(CPLUGIN_INTERVAL, 0);
 
   #if defined(ESP8266)
   if (Settings.UseSSDP)

@@ -45,41 +45,22 @@ boolean Plugin_033(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        byte choice = PCONFIG(0);
-        String options[11];
-        options[0] = F("SENSOR_TYPE_SINGLE");
-        options[1] = F("SENSOR_TYPE_TEMP_HUM");
-        options[2] = F("SENSOR_TYPE_TEMP_BARO");
-        options[3] = F("SENSOR_TYPE_TEMP_HUM_BARO");
-        options[4] = F("SENSOR_TYPE_DUAL");
-        options[5] = F("SENSOR_TYPE_TRIPLE");
-        options[6] = F("SENSOR_TYPE_QUAD");
-        options[7] = F("SENSOR_TYPE_SWITCH");
-        options[8] = F("SENSOR_TYPE_DIMMER");
-        options[9] = F("SENSOR_TYPE_LONG");
-        options[10] = F("SENSOR_TYPE_WIND");
-        int optionValues[11];
-        optionValues[0] = SENSOR_TYPE_SINGLE;
-        optionValues[1] = SENSOR_TYPE_TEMP_HUM;
-        optionValues[2] = SENSOR_TYPE_TEMP_BARO;
-        optionValues[3] = SENSOR_TYPE_TEMP_HUM_BARO;
-        optionValues[4] = SENSOR_TYPE_DUAL;
-        optionValues[5] = SENSOR_TYPE_TRIPLE;
-        optionValues[6] = SENSOR_TYPE_QUAD;
-        optionValues[7] = SENSOR_TYPE_SWITCH;
-        optionValues[8] = SENSOR_TYPE_DIMMER;
-        optionValues[9] = SENSOR_TYPE_LONG;
-        optionValues[10] = SENSOR_TYPE_WIND;
-
-        addFormSelector(F("Simulate Data Type"), F("p033_sensortype"), 11, options, optionValues, choice );
-
+        sensorTypeHelper_webformLoad_allTypes(event, 0);
         success = true;
         break;
       }
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        PCONFIG(0) = getFormItemInt(F("p033_sensortype"));
+        pconfig_webformSave(event, 0);
+        success = true;
+        break;
+      }
+
+    case PLUGIN_INIT:
+      {
+        // Do not set the sensor type, or else it will be set for all instances of the Dummy plugin.
+        //sensorTypeHelper_setSensorType(event, 0);
         success = true;
         break;
       }
@@ -87,7 +68,7 @@ boolean Plugin_033(byte function, struct EventStruct *event, String& string)
     case PLUGIN_READ:
       {
         event->sensorType = PCONFIG(0);
-        for (byte x=0; x<4;x++)
+        for (byte x = 0; x < getValueCountFromSensorType(PCONFIG(0)); x++)
         {
           String log = F("Dummy: value ");
           log += x+1;
@@ -96,6 +77,46 @@ boolean Plugin_033(byte function, struct EventStruct *event, String& string)
           addLog(LOG_LEVEL_INFO,log);
         }
         success = true;
+        break;
+      }
+
+    case PLUGIN_WRITE:
+      {
+        String command = parseString(string, 1);
+        if (command == F("dummyvalueset"))
+        {
+          if (event->Par1 == event->TaskIndex+1) // make sure that this instance is the target
+          {
+            float floatValue=0;
+            if (string2float(parseString(string, 4),floatValue))
+            {
+              if (loglevelActiveFor(LOG_LEVEL_INFO))
+              {
+                String log = F("Dummy: Index ");
+                log += event->Par1;
+                log += F(" value ");
+                log += event->Par2;
+                log += F(" set to ");
+                log += floatValue;
+                addLog(LOG_LEVEL_INFO,log);
+              }
+              UserVar[event->BaseVarIndex+event->Par2-1]=floatValue;
+              success = true;
+            } else { // float conversion failed!
+              if (loglevelActiveFor(LOG_LEVEL_ERROR))
+              {
+                String log = F("Dummy: Index ");
+                log += event->Par1;
+                log += F(" value ");
+                log += event->Par2;
+                log += F(" parameter3: ");
+                log += parseString(string, 4);
+                log += F(" not a float value!");
+                addLog(LOG_LEVEL_ERROR,log);
+              }
+            }
+          }
+        }
         break;
       }
   }

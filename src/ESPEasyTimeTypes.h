@@ -57,11 +57,12 @@ void setTimeZone(const TimeChangeRule& dstStart, const TimeChangeRule& stdStart,
 uint32_t calcTimeChangeForRule(const TimeChangeRule& r, int yr);
 String getTimeString(char delimiter, bool show_seconds=true);
 String getTimeString_ampm(char delimiter, bool show_seconds=true);
-long timeDiff(unsigned long prev, unsigned long next);
-long timePassedSince(unsigned long timestamp);
-boolean timeOutReached(unsigned long timer);
-long usecPassedSince(unsigned long timestamp);
-boolean usecTimeOutReached(unsigned long timer);
+
+long timeDiff(unsigned long prev, unsigned long next) ICACHE_RAM_ATTR;
+long timePassedSince(unsigned long timestamp) ICACHE_RAM_ATTR;
+boolean timeOutReached(unsigned long timer) ICACHE_RAM_ATTR;
+long usecPassedSince(unsigned long timestamp) ICACHE_RAM_ATTR;
+boolean usecTimeOutReached(unsigned long timer) ICACHE_RAM_ATTR;
 void setPluginTaskTimer(unsigned long msecFromNow, byte plugin, short taskIndex, int Par1,
   int Par2 = 0, int Par3 = 0, int Par4 = 0, int Par5 = 0);
 void setGPIOTimer(unsigned long msecFromNow, int Par1,

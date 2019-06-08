@@ -1,0 +1,9 @@
+.. csv-table::
+        :header: "Parameter", "Description", "used by", "3.0.1 & 4.0.0"
+        :widths: 20, 40, 20, 20
+
+        "**event name**","Name of the event which should be triggered as soon as a value arrives on the ``.../%eventName%/set`` topic ",":green:`all`",":red:`required`"
+        "**minimum**","Minimum limits of the value. Suitable for sliders and gauges. If min and max both are 0 no limits will be send.",":blue:`integer` :blue:`float`",":yellow:`optional`"
+        "**maximum**","Maximum limits of the value. Suitable for sliders and gauges. If min and max both are 0 no limits will be send.",":blue:`integer` :blue:`float`",":yellow:`optional`"
+        "**decimals**","As every data is sent over MQTT is sent as string a number of valid decimals can be specified",":blue:`integer` :blue:`float`",":yellow:`optional`"
+        "**enum values**","Comma separated list of possible states, or default text for string values",":blue:`enum`", ":red:`required for enum`"
