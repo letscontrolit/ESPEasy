@@ -1,0 +1,7 @@
+.. csv-table::
+        :header: "Parameter", "Description", "UI Element", "Example", "3.0.1 & 4.0.0"
+        :widths: 10, 55, 10, 10, 15
+
+        "``min:max``","Range from min to max for numeric vaues.","gauges and sliders","0:100", ":yellow:`optional`"
+        "``rgb``","Colour value defined by red, green and blue values. Good to have direct control over each LED intensity of an RGB light.","colour picker", "255,255,255",":red:`required`"
+        "``hsv``","Color value defined by hue, saturation and value / intensity. Intuitive description of colours independent of the technology producing the colour. Good to drive RGBW LEDs","colour picker", "360,100,100",":red:`required`"

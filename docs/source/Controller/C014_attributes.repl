@@ -1,0 +1,16 @@
+.. csv-table::
+        :header: "Attribute", "Description", "Example", "3.0.1","Spec.","4.0.0","Spec."
+        :widths: 10, 35, 15, 10, 5, 10, 5
+
+        "``$name``", "Friendly name of the device", "EPSEasy#1", "YES", ":green:`required`", "YES", ":green:`required`"
+        "``$homie``", "The implemented Homie convention version", "4.0.0", "YES",":green:`required`", "YES", ":green:`required`"
+        "``$state``", "See chapter features", "ready", "YES",":green:`required`", "YES", ":green:`required`"
+        "``$localip``", "IP of the device on the local network", "192.168.2.10", "YES", ":green:`required`", "NO", ":red:`void`"
+        "``$mac``", "Mac address of the device network interface.", "A1:B2:C3:D4:E5:F6", "YES", ":green:`required`", "NO", ":red:`void`"
+        "``$fw/name``", "Name of the firmware running on the device.", "ESPEasy mega", "YES", ":green:`required`", "NO", ":red:`void`"
+        "``$fw/version``", "Version of the firmware running on the device.", "20103 - Mega", "YES", ":green:`required`", "NO", ":red:`void`"
+        "``$nodes``", "Nodes which the device exposes separated by commas. Sent at the end for performance reasons.", "SYSTEM,SysInfo", "YES",":green:`required`", "YES", ":green:`required`"
+        "``$implementation``", "An identifier for the Homie implementation.", "ESP8266", "YES", ":green:`required`", "NO", ":red:`void`"
+        "``$stats/interval``", "Interval in seconds at which the device refreshes.", "60", "YES", ":green:`required`", "NO", ":red:`void`"
+        "``$stats/uptime``", "Time elapsed in seconds since the boot of the device.", "12345", "YES", ":green:`required`", "NO", ":red:`void`"
+        "``$stats/signal``", "Signal strength in %.", "75", "YES", ":blue:`optional`", "NO", ":red:`void`"

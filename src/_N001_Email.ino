@@ -50,6 +50,7 @@ boolean NPlugin_001(byte function, struct EventStruct *event, String& string)
 	{
 		MakeNotificationSettings(NotificationSettings);
 		LoadNotificationSettings(event->NotificationIndex, (byte*)&NotificationSettings, sizeof(NotificationSettingsStruct));
+    NotificationSettings.validate();
 		String subject = NotificationSettings.Subject;
 		String body = "";
 		if (event->String1.length() > 0)

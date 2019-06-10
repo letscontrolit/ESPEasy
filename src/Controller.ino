@@ -121,6 +121,17 @@ void callback(char* c_topic, byte* b_payload, unsigned int length) {
   schedule_controller_event_timer(ProtocolIndex, CPLUGIN_PROTOCOL_RECV, &TempEvent);
 }
 
+/*********************************************************************************************\
+ * Disconnect from MQTT message broker
+\*********************************************************************************************/
+void MQTTDisconnect()
+{
+  if (MQTTclient.connected()) {
+    MQTTclient.disconnect();
+    addLog(LOG_LEVEL_INFO, F("MQTT : Disconnected from broker"));
+    updateMQTTclient_connected();
+  }
+}
 
 /*********************************************************************************************\
  * Connect to MQTT message broker
@@ -194,12 +205,13 @@ bool MQTTConnect(int controller_idx)
   boolean MQTTresult = false;
   uint8_t willQos = 0;
   boolean willRetain = true;
+  boolean cleanSession = false; // As suggested here: https://github.com/knolleary/pubsubclient/issues/458#issuecomment-493875150
 
   if ((SecuritySettings.ControllerUser[controller_idx] != 0) && (SecuritySettings.ControllerPassword[controller_idx] != 0)) {
     MQTTresult = MQTTclient.connect(clientid.c_str(), SecuritySettings.ControllerUser[controller_idx], SecuritySettings.ControllerPassword[controller_idx],
-                                    LWTTopic.c_str(), willQos, willRetain, LWTMessageDisconnect.c_str());
+                                    LWTTopic.c_str(), willQos, willRetain, LWTMessageDisconnect.c_str(), cleanSession);
   } else {
-    MQTTresult = MQTTclient.connect(clientid.c_str(), LWTTopic.c_str(), willQos, willRetain, LWTMessageDisconnect.c_str());
+    MQTTresult = MQTTclient.connect(clientid.c_str(), nullptr, nullptr, LWTTopic.c_str(), willQos, willRetain, LWTMessageDisconnect.c_str(), cleanSession);
   }
   delay(0);
 
@@ -209,7 +221,6 @@ bool MQTTConnect(int controller_idx)
     updateMQTTclient_connected();
     return false;
   }
-  MQTTclient_should_reconnect = false;
   String log = F("MQTT : Connected to broker with client ID: ");
   log += clientid;
   addLog(LOG_LEVEL_INFO, log);
@@ -224,6 +235,9 @@ bool MQTTConnect(int controller_idx)
     updateMQTTclient_connected();
     statusLED(true);
     mqtt_reconnect_count = 0;
+    // call all installed controller to publish autodiscover data
+    if (MQTTclient_should_reconnect) CPluginCall(CPLUGIN_GOT_CONNECTED, 0);
+    MQTTclient_should_reconnect = false;
     return true; // end loop if succesfull
   }
   return false;

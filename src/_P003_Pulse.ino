@@ -15,16 +15,18 @@ void Plugin_003_pulse_interrupt1() ICACHE_RAM_ATTR;
 void Plugin_003_pulse_interrupt2() ICACHE_RAM_ATTR;
 void Plugin_003_pulse_interrupt3() ICACHE_RAM_ATTR;
 void Plugin_003_pulse_interrupt4() ICACHE_RAM_ATTR;
+void Plugin_003_pulsecheck(byte Index) ICACHE_RAM_ATTR;
+
 //this takes 20 bytes of IRAM per handler
 // void Plugin_003_pulse_interrupt5() ICACHE_RAM_ATTR;
 // void Plugin_003_pulse_interrupt6() ICACHE_RAM_ATTR;
 // void Plugin_003_pulse_interrupt7() ICACHE_RAM_ATTR;
 // void Plugin_003_pulse_interrupt8() ICACHE_RAM_ATTR;
 
-unsigned long Plugin_003_pulseCounter[TASKS_MAX];
-unsigned long Plugin_003_pulseTotalCounter[TASKS_MAX];
-unsigned long Plugin_003_pulseTime[TASKS_MAX];
-unsigned long Plugin_003_pulseTimePrevious[TASKS_MAX];
+volatile unsigned long Plugin_003_pulseCounter[TASKS_MAX];
+volatile unsigned long Plugin_003_pulseTotalCounter[TASKS_MAX];
+volatile unsigned long Plugin_003_pulseTime[TASKS_MAX];
+volatile unsigned long Plugin_003_pulseTimePrevious[TASKS_MAX];
 
 boolean Plugin_003(byte function, struct EventStruct *event, String& string)
 {
@@ -72,10 +74,10 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
       {
       	addFormNumericBox(F("Debounce Time (mSec)"), F("p003")
-      			, PCONFIG(0));
+      			, Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
 
-        byte choice = PCONFIG(1);
-        byte choice2 = PCONFIG(2);
+        byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
+        byte choice2 = Settings.TaskDevicePluginConfig[event->TaskIndex][2];
         String options[4] = { F("Delta"), F("Delta/Total/Time"), F("Total"), F("Delta/Total") };
         addFormSelector(F("Counter Type"), F("p003_countertype"), 4, options, NULL, choice );
 
@@ -101,9 +103,9 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        PCONFIG(0) = getFormItemInt(F("p003"));
-        PCONFIG(1) = getFormItemInt(F("p003_countertype"));
-        PCONFIG(2) = getFormItemInt(F("p003_raisetype"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("p003"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("p003_countertype"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("p003_raisetype"));
         success = true;
         break;
       }
@@ -130,10 +132,10 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
     case PLUGIN_INIT:
       {
         String log = F("INIT : Pulse ");
-        log += CONFIG_PIN1;
+        log += Settings.TaskDevicePin1[event->TaskIndex];
         addLog(LOG_LEVEL_INFO,log);
-        pinMode(CONFIG_PIN1, INPUT_PULLUP);
-        success = Plugin_003_pulseinit(CONFIG_PIN1, event->TaskIndex,PCONFIG(2));
+        pinMode(Settings.TaskDevicePin1[event->TaskIndex], INPUT_PULLUP);
+        success = Plugin_003_pulseinit(Settings.TaskDevicePin1[event->TaskIndex], event->TaskIndex,Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
         break;
       }
 
@@ -143,7 +145,7 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
         UserVar[event->BaseVarIndex+1] = Plugin_003_pulseTotalCounter[event->TaskIndex];
         UserVar[event->BaseVarIndex+2] = Plugin_003_pulseTime[event->TaskIndex];
 
-        switch (PCONFIG(1))
+        switch (Settings.TaskDevicePluginConfig[event->TaskIndex][1])
         {
           case 0:
           {
@@ -187,7 +189,12 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
 \*********************************************************************************************/
 void Plugin_003_pulsecheck(byte Index)
 {
-  const unsigned long PulseTime=timePassedSince(Plugin_003_pulseTimePrevious[Index]);
+  noInterrupts(); // s0170071: avoid nested interrups due to bouncing.
+  
+  //  s0170071: the following gives a glitch if millis() rolls over (every 50 days) and there is a bouncing to be avoided at the exact same time. Very rare.
+  //  Alternatively there is timePassedSince(Plugin_003_pulseTimePrevious[Index]); but this is not in IRAM at this time, so do not use in a ISR!
+  const unsigned long PulseTime=millis() - Plugin_003_pulseTimePrevious[Index]; 
+  
   if(PulseTime > (unsigned long)Settings.TaskDevicePluginConfig[Index][0]) // check with debounce time for this task
     {
       Plugin_003_pulseCounter[Index]++;
@@ -195,6 +202,7 @@ void Plugin_003_pulsecheck(byte Index)
       Plugin_003_pulseTime[Index] = PulseTime;
       Plugin_003_pulseTimePrevious[Index]=millis();
     }
+  interrupts();   // enable interrupts again.
 }
 
 

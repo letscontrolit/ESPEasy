@@ -27,8 +27,8 @@ void ReportStatus()
     return;
   }
 
-  StaticJsonBuffer<256> jsonBuffer;
-  JsonObject& root = jsonBuffer.createObject();
+  StaticJsonDocument<256> jsonBuffer;
+  JsonObject root = jsonBuffer.createObject();
 
   root[F("chipId")]   = ESP.getChipId();
   root[F("flashId")]  = ESP.getFlashChipId();

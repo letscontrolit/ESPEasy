@@ -6,6 +6,38 @@
   #define STR(x) STR_HELPER(x)
 #endif
 
+#ifdef __GCC__
+#pragma GCC system_header
+#endif
+
+#include <stddef.h>
+
+namespace std
+{
+  using ::ptrdiff_t;
+  using ::size_t;
+}
+
+
+#include <FS.h>
+
+// ********************************************************************************
+// Check struct sizes at compile time
+// Usage:
+//   struct foo
+//   {
+//     char bla[16];
+//   };
+//
+//   check_size<foo, 8>();
+// ********************************************************************************
+template <typename ToCheck, std::size_t ExpectedSize, std::size_t RealSize = sizeof(ToCheck)>
+void check_size() {
+  static_assert(ExpectedSize == RealSize, "");
+}
+
+
+
 // ********************************************************************************
 //   User specific configuration
 // ********************************************************************************
@@ -228,6 +260,13 @@
 #define TIMER_C011_DELAY_QUEUE             16
 #define TIMER_C012_DELAY_QUEUE             17
 #define TIMER_C013_DELAY_QUEUE             18
+#define TIMER_C014_DELAY_QUEUE             19
+#define TIMER_C015_DELAY_QUEUE             20
+#define TIMER_C016_DELAY_QUEUE             21
+#define TIMER_C017_DELAY_QUEUE             22
+#define TIMER_C018_DELAY_QUEUE             23
+#define TIMER_C019_DELAY_QUEUE             24
+#define TIMER_C020_DELAY_QUEUE             25
 
 #define TIMING_STATS_THRESHOLD             100000
 #define TIMER_GRATUITOUS_ARP_MAX           5000
@@ -236,7 +275,7 @@
 #define CONTROLLER_DELAY_QUEUE_DELAY_MAX   3600000
 #define CONTROLLER_DELAY_QUEUE_DELAY_DFLT  100
 // Queue length for controller messages not yet sent.
-#define CONTROLLER_DELAY_QUEUE_DEPTH_MAX   25
+#define CONTROLLER_DELAY_QUEUE_DEPTH_MAX   50
 #define CONTROLLER_DELAY_QUEUE_DEPTH_DFLT  10
 // Number of retries to send a message by a controller.
 // N.B. Retries without a connection to wifi do not count as retry.
@@ -275,6 +314,8 @@
 #define PLUGIN_REQUEST                     26
 #define PLUGIN_TIME_CHANGE                 27
 #define PLUGIN_MONITOR                     28
+#define PLUGIN_SET_DEFAULTS                29
+
 
 // Make sure the CPLUGIN_* does not overlap PLUGIN_*
 #define CPLUGIN_PROTOCOL_ADD               41
@@ -288,6 +329,14 @@
 #define CPLUGIN_TASK_CHANGE_NOTIFICATION   49
 #define CPLUGIN_INIT                       50
 #define CPLUGIN_UDP_IN                     51
+#define CPLUGIN_FLUSH                      52
+
+#define CPLUGIN_FLUSH                      52
+// new messages for autodiscover controller plugins (experimental) i.e. C014
+#define CPLUGIN_GOT_CONNECTED              53 // call after connected to mqtt server to publich device autodicover features
+#define CPLUGIN_GOT_INVALID                54 // should be called before major changes i.e. changing the device name to clean up data on the controller. !ToDo
+#define CPLUGIN_INTERVAL                   55 // call every interval loop
+#define CPLUGIN_ACKNOWLEDGE                56 // call for sending acknolages !ToDo done by direct function call in PluginCall() for now.
 
 #define CONTROLLER_HOSTNAME                 1
 #define CONTROLLER_IP                       2
@@ -432,6 +481,8 @@
   #define CONFIG_FILE_SIZE               131072
 #endif
 
+#define ZERO_FILL(S)  memset((S), 0, sizeof(S))
+#define ZERO_TERMINATE(S)  S[sizeof(S) - 1] = 0
 
 // Forward declaration
 struct ControllerSettingsStruct;
@@ -452,6 +503,8 @@ bool getBitFromUL(uint32_t number, byte bitnr);
 void setBitToUL(uint32_t& number, byte bitnr, bool value);
 
 void serialHelper_getGpioNames(struct EventStruct *event, bool rxOptional=false, bool txOptional=false);
+
+fs::File tryOpenFile(const String& fname, const String& mode);
 
 enum SettingsType {
   BasicSettings_Type = 0,
@@ -480,8 +533,11 @@ bool showSettingsFileLayout = false;
 #include "Custom.h"
 #endif
 
+#include "define_plugin_sets.h"
 #include "WebStaticData.h"
 #include "ESPEasyTimeTypes.h"
+#include "StringProviderTypes.h"
+#include "ESPeasySerial.h"
 #include "I2CTypes.h"
 #include <I2Cdev.h>
 #include <map>
@@ -526,10 +582,18 @@ bool showSettingsFileLayout = false;
   extern "C" {
   #include "spi_flash.h"
   }
-  extern "C" uint32_t _SPIFFS_start;
-  extern "C" uint32_t _SPIFFS_end;
-  extern "C" uint32_t _SPIFFS_page;
-  extern "C" uint32_t _SPIFFS_block;
+  #ifdef CORE_POST_2_6_0
+    extern "C" uint32_t _FS_start;
+    extern "C" uint32_t _FS_end;
+    extern "C" uint32_t _FS_page;
+    extern "C" uint32_t _FS_block;
+  #else
+    extern "C" uint32_t _SPIFFS_start;
+    extern "C" uint32_t _SPIFFS_end;
+    extern "C" uint32_t _SPIFFS_page;
+    extern "C" uint32_t _SPIFFS_block;
+  #endif
+
   #ifdef FEATURE_MDNS
     #include <ESP8266mDNS.h>
   #endif
@@ -672,16 +736,29 @@ bool safe_strncpy(char* dest, const char* source, size_t max_size);
 struct SecurityStruct
 {
   SecurityStruct() {
-    memset(WifiSSID, 0, sizeof(WifiSSID));
-    memset(WifiKey, 0, sizeof(WifiKey));
-    memset(WifiSSID2, 0, sizeof(WifiSSID2));
-    memset(WifiKey2, 0, sizeof(WifiKey2));
-    memset(WifiAPKey, 0, sizeof(WifiAPKey));
+    ZERO_FILL(WifiSSID);
+    ZERO_FILL(WifiKey);
+    ZERO_FILL(WifiSSID2);
+    ZERO_FILL(WifiKey2);
+    ZERO_FILL(WifiAPKey);
     for (byte i = 0; i < CONTROLLER_MAX; ++i) {
-      memset(ControllerUser[i], 0, sizeof(ControllerUser[i]));
-      memset(ControllerPassword[i], 0, sizeof(ControllerPassword[i]));
+      ZERO_FILL(ControllerUser[i]);
+      ZERO_FILL(ControllerPassword[i]);
     }
-    memset(Password, 0, sizeof(Password));
+    ZERO_FILL(Password);
+  }
+
+  void validate() {
+    ZERO_TERMINATE(WifiSSID);
+    ZERO_TERMINATE(WifiKey);
+    ZERO_TERMINATE(WifiSSID2);
+    ZERO_TERMINATE(WifiKey2);
+    ZERO_TERMINATE(WifiAPKey);
+    for (byte i = 0; i < CONTROLLER_MAX; ++i) {
+      ZERO_TERMINATE(ControllerUser[i]);
+      ZERO_TERMINATE(ControllerPassword[i]);
+    }
+    ZERO_TERMINATE(Password);
   }
 
   char          WifiSSID[32];
@@ -700,6 +777,8 @@ struct SecurityStruct
   uint8_t       ProgmemMd5[16]; // crc of the binary that last saved the struct to file.
   uint8_t       md5[16];
 } SecuritySettings;
+
+
 
 
 /*********************************************************************************************\
@@ -753,6 +832,8 @@ struct SettingsStruct
     if (Latitude  < -90.0  || Latitude > 90.0) Latitude = 0.0;
     if (Longitude < -180.0 || Longitude > 180.0) Longitude = 0.0;
     if (VariousBits1 > (1 << 30)) VariousBits1 = 0;
+    ZERO_TERMINATE(Name);
+    ZERO_TERMINATE(NTPHost);
   }
 
   bool networkSettingsEmpty() {
@@ -770,7 +851,7 @@ struct SettingsStruct
 
   void clearTimeSettings() {
     UseNTP = false;
-    NTPHost[0] = 0;
+    ZERO_FILL(NTPHost);
     TimeZone = 0;
     DST = false;
     DST_Start = 0;
@@ -810,7 +891,7 @@ struct SettingsStruct
 
   void clearUnitNameSettings() {
     Unit = 0;
-    Name[0] = 0;
+    ZERO_FILL(Name);
     UDPPort = 0;
   }
 
@@ -992,37 +1073,6 @@ SettingsStruct* SettingsStruct_ptr = new SettingsStruct;
 SettingsStruct& Settings = *SettingsStruct_ptr;
 */
 
-String ReportOffsetErrorInStruct(const String& structname, size_t offset) {
-  String error;
-  error.reserve(48 + structname.length());
-  error = F("Error: Incorrect offset in struct: ");
-  error += structname;
-  error += '(';
-  error += String(offset);
-  error += ')';
-  return error;
-}
-
-/*********************************************************************************************\
- *  Analyze SettingsStruct and report inconsistencies
- *  Not a member function to be able to use the F-macro
-\*********************************************************************************************/
-bool SettingsCheck(String& error) {
-  error = "";
-#ifdef esp8266
-  size_t offset = offsetof(SettingsStruct, ResetFactoryDefaultPreference);
-  if (offset != 1224) {
-    error = ReportOffsetErrorInStruct(F("SettingsStruct"), offset);
-  }
-#endif
-  if (!Settings.networkSettingsEmpty()) {
-    if (Settings.IP[0] == 0 || Settings.Gateway[0] == 0 || Settings.Subnet[0] == 0 || Settings.DNS[0] == 0) {
-      error += F("Error: Either fill all IP settings fields or leave all empty");
-    }
-  }
-
-  return error.length() == 0;
-}
 
 /*********************************************************************************************\
  * ControllerSettingsStruct definition
@@ -1035,13 +1085,14 @@ struct ControllerSettingsStruct
     for (byte i = 0; i < 4; ++i) {
       IP[i] = 0;
     }
-    memset(HostName, 0, sizeof(HostName));
-    memset(Publish, 0, sizeof(Publish));
-    memset(Subscribe, 0, sizeof(Subscribe));
-    memset(MQTTLwtTopic, 0, sizeof(MQTTLwtTopic));
-    memset(LWTMessageConnect, 0, sizeof(LWTMessageConnect));
-    memset(LWTMessageDisconnect, 0, sizeof(LWTMessageDisconnect));
+    ZERO_FILL(HostName);
+    ZERO_FILL(Publish);
+    ZERO_FILL(Subscribe);
+    ZERO_FILL(MQTTLwtTopic);
+    ZERO_FILL(LWTMessageConnect);
+    ZERO_FILL(LWTMessageDisconnect);
   }
+
   boolean       UseDNS;
   byte          IP[4];
   unsigned int  Port;
@@ -1069,6 +1120,12 @@ struct ControllerSettingsStruct
     if (ClientTimeout < 10 || ClientTimeout > CONTROLLER_CLIENTTIMEOUT_MAX) {
       ClientTimeout = CONTROLLER_CLIENTTIMEOUT_DFLT;
     }
+    ZERO_TERMINATE(HostName);
+    ZERO_TERMINATE(Publish);
+    ZERO_TERMINATE(Subscribe);
+    ZERO_TERMINATE(MQTTLwtTopic);
+    ZERO_TERMINATE(LWTMessageConnect);
+    ZERO_TERMINATE(LWTMessageDisconnect);
   }
 
   IPAddress getIP() const {
@@ -1183,14 +1240,25 @@ typedef std::shared_ptr<ControllerSettingsStruct> ControllerSettingsStruct_ptr_t
 struct NotificationSettingsStruct
 {
   NotificationSettingsStruct() : Port(0), Pin1(0), Pin2(0) {
-    memset(Server,   0, sizeof(Server));
-    memset(Domain,   0, sizeof(Domain));
-    memset(Sender,   0, sizeof(Sender));
-    memset(Receiver, 0, sizeof(Receiver));
-    memset(Subject,  0, sizeof(Subject));
-    memset(Body,     0, sizeof(Body));
-    memset(User,     0, sizeof(User));
-    memset(Pass,     0, sizeof(Pass));
+    ZERO_FILL(Server);
+    ZERO_FILL(Domain);
+    ZERO_FILL(Sender);
+    ZERO_FILL(Receiver);
+    ZERO_FILL(Subject);
+    ZERO_FILL(Body);
+    ZERO_FILL(User);
+    ZERO_FILL(Pass);
+  }
+
+  void validate() {
+    ZERO_TERMINATE(Server);
+    ZERO_TERMINATE(Domain);
+    ZERO_TERMINATE(Sender);
+    ZERO_TERMINATE(Receiver);
+    ZERO_TERMINATE(Subject);
+    ZERO_TERMINATE(Body);
+    ZERO_TERMINATE(User);
+    ZERO_TERMINATE(Pass);
   }
 
   char          Server[65];
@@ -1228,19 +1296,23 @@ struct ExtraTaskSettingsStruct
 
   void clear() {
     TaskIndex = TASKS_MAX;
-    for (byte j = 0; j < (NAME_FORMULA_LENGTH_MAX + 1); ++j) {
-      TaskDeviceName[j] = 0;
-    }
+    ZERO_FILL(TaskDeviceName);
     for (byte i = 0; i < VARS_PER_TASK; ++i) {
-      for (byte j = 0; j < (NAME_FORMULA_LENGTH_MAX + 1); ++j) {
-        TaskDeviceFormula[i][j] = 0;
-        TaskDeviceValueNames[i][j] = 0;
-        TaskDeviceValueDecimals[i] = 2;
-      }
+      TaskDeviceValueDecimals[i] = 2;
+      ZERO_FILL(TaskDeviceFormula[i]);
+      ZERO_FILL(TaskDeviceValueNames[i]);
     }
     for (byte i = 0; i < PLUGIN_EXTRACONFIGVAR_MAX; ++i) {
       TaskDevicePluginConfigLong[i] = 0;
       TaskDevicePluginConfig[i] = 0;
+    }
+  }
+
+  void validate() {
+    ZERO_TERMINATE(TaskDeviceName);
+    for (byte i = 0; i < VARS_PER_TASK; ++i) {
+      ZERO_TERMINATE(TaskDeviceFormula[i]);
+      ZERO_TERMINATE(TaskDeviceValueNames[i]);
     }
   }
 
@@ -1254,6 +1326,14 @@ struct ExtraTaskSettingsStruct
       }
     }
     return true;
+  }
+
+  void clearUnusedValueNames(byte usedVars) {
+    for (byte i = usedVars; i < VARS_PER_TASK; ++i) {
+      TaskDeviceValueDecimals[i] = 2;
+      ZERO_FILL(TaskDeviceFormula[i]);
+      ZERO_FILL(TaskDeviceValueNames[i]);
+    }
   }
 
   bool checkInvalidCharInNames(const char* name) {
@@ -1455,12 +1535,12 @@ struct LogStruct {
       }
     }
 
+    String Message[LOG_STRUCT_MESSAGE_LINES];
+    unsigned long timeStamp[LOG_STRUCT_MESSAGE_LINES];
     int write_idx;
     int read_idx;
-    unsigned long timeStamp[LOG_STRUCT_MESSAGE_LINES];
     unsigned long lastReadTimeStamp;
     byte log_level[LOG_STRUCT_MESSAGE_LINES];
-    String Message[LOG_STRUCT_MESSAGE_LINES];
 
 } Logging;
 
@@ -1601,6 +1681,10 @@ struct pinStatesStruct
 // this offsets are in blocks, bytes = blocks * 4
 #define RTC_BASE_STRUCT 64
 #define RTC_BASE_USERVAR 74
+#define RTC_BASE_CACHE 124
+
+#define RTC_CACHE_DATA_SIZE 240
+#define CACHE_FILE_MAX_SIZE 24000
 
 /*********************************************************************************************\
  * RTCStruct
@@ -1631,6 +1715,22 @@ String printWebString = "";
 boolean printToWebJSON = false;
 
 float UserVar[VARS_PER_TASK * TASKS_MAX];
+
+/********************************************************************************************\
+  RTC_cache_struct
+\*********************************************************************************************/
+struct RTC_cache_struct
+{
+  uint32_t checksumData = 0;
+  uint16_t readFileNr = 0;       // File number used to read from.
+  uint16_t writeFileNr = 0;      // File number to write to.
+  uint16_t readPos = 0;          // Read position in file based cache
+  uint16_t writePos = 0;         // Write position in the RTC memory
+  uint32_t checksumMetadata = 0;
+};
+
+struct RTC_cache_handler_struct;
+
 
 /*********************************************************************************************\
  * rulesTimerStruct
@@ -1981,8 +2081,6 @@ bool mustLogCFunction(int function) {
 std::map<int,TimingStats> pluginStats;
 std::map<int,TimingStats> controllerStats;
 std::map<int,TimingStats> miscStats;
-unsigned long timediff_calls = 0;
-unsigned long timediff_cpu_cycles_total = 0;
 unsigned long timingstats_last_reset = 0;
 
 #define LOADFILE_STATS          0
@@ -2012,19 +2110,29 @@ unsigned long timingstats_last_reset = 0;
 #define C011_DELAY_QUEUE        24
 #define C012_DELAY_QUEUE        25
 #define C013_DELAY_QUEUE        26
-#define TRY_CONNECT_HOST_TCP    27
-#define TRY_CONNECT_HOST_UDP    28
-#define HOST_BY_NAME_STATS      29
-#define CONNECT_CLIENT_STATS    30
-#define LOAD_CUSTOM_TASK_STATS  31
-#define WIFI_ISCONNECTED_STATS  32
-#define WIFI_NOTCONNECTED_STATS 33
-#define LOAD_TASK_SETTINGS      34
-#define RULES_PROCESSING        35
-#define GRAT_ARP_STATS          36
-#define BACKGROUND_TASKS        37
-#define HANDLE_SCHEDULER_IDLE   38
-#define HANDLE_SCHEDULER_TASK   39
+#define C014_DELAY_QUEUE        27
+#define C015_DELAY_QUEUE        28
+#define C016_DELAY_QUEUE        29
+#define C017_DELAY_QUEUE        30
+#define C018_DELAY_QUEUE        31
+#define C019_DELAY_QUEUE        32
+#define C020_DELAY_QUEUE        33
+#define TRY_CONNECT_HOST_TCP    34
+#define TRY_CONNECT_HOST_UDP    35
+#define HOST_BY_NAME_STATS      36
+#define CONNECT_CLIENT_STATS    37
+#define LOAD_CUSTOM_TASK_STATS  38
+#define WIFI_ISCONNECTED_STATS  39
+#define WIFI_NOTCONNECTED_STATS 40
+#define LOAD_TASK_SETTINGS      41
+#define TRY_OPEN_FILE           42
+#define SPIFFS_GC_SUCCESS       43
+#define SPIFFS_GC_FAIL          44
+#define RULES_PROCESSING        45
+#define GRAT_ARP_STATS          46
+#define BACKGROUND_TASKS        47
+#define HANDLE_SCHEDULER_IDLE   48
+#define HANDLE_SCHEDULER_TASK   49
 
 
 
@@ -2060,6 +2168,9 @@ String getMiscStatsName(int stat) {
         case WIFI_ISCONNECTED_STATS: return F("WiFi.isConnected()");
         case WIFI_NOTCONNECTED_STATS: return F("WiFi.isConnected() (fail)");
         case LOAD_TASK_SETTINGS:     return F("LoadTaskSettings()");
+        case TRY_OPEN_FILE:          return F("TryOpenFile()");
+        case SPIFFS_GC_SUCCESS:      return F("SPIFFS GC success");
+        case SPIFFS_GC_FAIL:         return F("SPIFFS GC fail");
         case RULES_PROCESSING:       return F("rulesProcessing()");
         case GRAT_ARP_STATS:         return F("sendGratuitousARP()");
         case BACKGROUND_TASKS:       return F("backgroundtasks()");
@@ -2078,6 +2189,13 @@ String getMiscStatsName(int stat) {
         case C011_DELAY_QUEUE:
         case C012_DELAY_QUEUE:
         case C013_DELAY_QUEUE:
+        case C014_DELAY_QUEUE:
+        case C015_DELAY_QUEUE:
+        case C016_DELAY_QUEUE:
+        case C017_DELAY_QUEUE:
+        case C018_DELAY_QUEUE:
+        case C019_DELAY_QUEUE:
+        case C020_DELAY_QUEUE:
         {
           String result;
           result.reserve(16);
