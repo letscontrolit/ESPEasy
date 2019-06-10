@@ -85,13 +85,11 @@ uint8_t calcLGChecksum(uint16_t data) {
 //   IR Remote models: 6711A20083V
 void IRsend::sendLG(uint64_t data, uint16_t nbits, uint16_t repeat) {
   uint16_t repeatHeaderMark = 0;
-  uint8_t duty = kDutyDefault;
 
   if (nbits >= kLg32Bits) {
     // LG 32bit protocol is near identical to Samsung except for repeats.
     sendSAMSUNG(data, nbits, 0);  // Send it as a single Samsung message.
     repeatHeaderMark = kLg32RptHdrMark;
-    duty = 33;
     repeat++;
   } else {
     // LG (28-bit) protocol.
@@ -99,7 +97,7 @@ void IRsend::sendLG(uint64_t data, uint16_t nbits, uint16_t repeat) {
     sendGeneric(kLgHdrMark, kLgHdrSpace, kLgBitMark, kLgOneSpace, kLgBitMark,
                 kLgZeroSpace, kLgBitMark, kLgMinGap, kLgMinMessageLength, data,
                 nbits, 38, true, 0,  // Repeats are handled later.
-                duty);
+                50);
   }
 
   // Repeat
@@ -107,7 +105,7 @@ void IRsend::sendLG(uint64_t data, uint16_t nbits, uint16_t repeat) {
   if (repeat)
     sendGeneric(repeatHeaderMark, kLgRptSpace, 0, 0, 0, 0,  // No data is sent.
                 kLgBitMark, kLgMinGap, kLgMinMessageLength, 0, 0,  // No data.
-                38, true, repeat - 1, duty);
+                38, true, repeat - 1, 50);
 }
 
 // Send an LG Variant-2 formatted message.

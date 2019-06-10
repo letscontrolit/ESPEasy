@@ -14,7 +14,6 @@ TEST(TestSendSherwood, SendDataOnly) {
   irsend.reset();
   irsend.sendSherwood(0xC1A28877);
   EXPECT_EQ(
-      "f38000d33"
       "m8960s4480m560s1680m560s1680m560s560m560s560m560s560m560s560"
       "m560s560m560s1680m560s1680m560s560m560s1680m560s560m560s560"
       "m560s560m560s1680m560s560m560s1680m560s560m560s560m560s560"
@@ -32,7 +31,6 @@ TEST(TestSendSherwood, SendDataWithRepeats) {
   irsend.reset();
   irsend.sendSherwood(0xC1A28877, 32, 2);
   EXPECT_EQ(
-      "f38000d33"
       "m8960s4480m560s1680m560s1680m560s560m560s560m560s560m560s560"
       "m560s560m560s1680m560s1680m560s560m560s1680m560s560m560s560"
       "m560s560m560s1680m560s560m560s1680m560s560m560s560m560s560"
@@ -52,7 +50,6 @@ TEST(TestSendSherwood, SendDataWithZeroRepeats) {
   irsend.sendSherwood(0xC1A28877, 32, 0);
   // Should have a single NEC repeat, as we always send one.
   EXPECT_EQ(
-      "f38000d33"
       "m8960s4480m560s1680m560s1680m560s560m560s560m560s560m560s560"
       "m560s560m560s1680m560s1680m560s560m560s1680m560s560m560s560"
       "m560s560m560s1680m560s560m560s1680m560s560m560s560m560s560"

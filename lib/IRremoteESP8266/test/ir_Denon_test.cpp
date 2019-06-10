@@ -14,7 +14,6 @@ TEST(TestSendDenon, SendDataOnly) {
   irsend.reset();
   irsend.sendDenon(0x2278);  // Denon AVR Power On. (Sharp)
   EXPECT_EQ(
-      "f38000d33"
       "m260s780m260s1820m260s780m260s780m260s780m260s1820m260s780m260s780"
       "m260s1820m260s1820m260s1820m260s1820m260s780m260s780m260s780"
       "m260s43602"
@@ -25,9 +24,8 @@ TEST(TestSendDenon, SendDataOnly) {
 
   irsend.reset();
   // Denon Eco Mode On. (Panasonic/Kaseikyo)
-  irsend.sendDenon(0x2A4C028D6CE3, kDenon48Bits);
+  irsend.sendDenon(0x2A4C028D6CE3, DENON_48_BITS);
   EXPECT_EQ(
-      "f36700d50"
       "m3456s1728"
       "m432s432m432s432m432s1296m432s432m432s1296m432s432m432s1296m432s432"
       "m432s432m432s1296m432s432m432s432m432s1296m432s1296m432s432m432s432"
@@ -45,9 +43,8 @@ TEST(TestSendDenon, SendNormalWithRepeats) {
   irsend.begin();
 
   irsend.reset();
-  irsend.sendDenon(0x2278, kDenonBits, 1);  // 1 repeat.
+  irsend.sendDenon(0x2278, DENON_BITS, 1);  // 1 repeat.
   EXPECT_EQ(
-      "f38000d33"
       "m260s780m260s1820m260s780m260s780m260s780m260s1820m260s780m260s780"
       "m260s1820m260s1820m260s1820m260s1820m260s780m260s780m260s780"
       "m260s43602"
@@ -61,9 +58,8 @@ TEST(TestSendDenon, SendNormalWithRepeats) {
       "m260s780m260s780m260s780m260s780m260s1820m260s1820m260s1820"
       "m260s43602",
       irsend.outputStr());
-  irsend.sendDenon(0x2278, kDenonBits, 2);  // 2 repeats.
+  irsend.sendDenon(0x2278, DENON_BITS, 2);  // 2 repeats.
   EXPECT_EQ(
-      "f38000d33"
       "m260s780m260s1820m260s780m260s780m260s780m260s1820m260s780m260s780"
       "m260s1820m260s1820m260s1820m260s1820m260s780m260s780m260s780"
       "m260s43602"
@@ -90,9 +86,8 @@ TEST(TestSendDenon, Send48BitWithRepeats) {
   irsend.begin();
 
   irsend.reset();
-  irsend.sendDenon(0x2A4C028D6CE3, kDenon48Bits, 1);  // 1 repeat.
+  irsend.sendDenon(0x2A4C028D6CE3, DENON_48_BITS, 1);  // 1 repeat.
   EXPECT_EQ(
-      "f36700d50"
       "m3456s1728"
       "m432s432m432s432m432s1296m432s432m432s1296m432s432m432s1296m432s432"
       "m432s432m432s1296m432s432m432s432m432s1296m432s1296m432s432m432s432"
@@ -110,9 +105,8 @@ TEST(TestSendDenon, Send48BitWithRepeats) {
       "m432s1296m432s1296m432s1296m432s432m432s432m432s432m432s1296m432s1296"
       "m432s98928",
       irsend.outputStr());
-  irsend.sendDenon(0x2A4C028D6CE3, kDenon48Bits, 2);  // 2 repeats.
+  irsend.sendDenon(0x2A4C028D6CE3, DENON_48_BITS, 2);  // 2 repeats.
   EXPECT_EQ(
-      "f36700d50"
       "m3456s1728"
       "m432s432m432s432m432s1296m432s432m432s1296m432s432m432s1296m432s432"
       "m432s432m432s1296m432s432m432s432m432s1296m432s1296m432s432m432s432"
@@ -148,7 +142,6 @@ TEST(TestSendDenon, SendUnusualSize) {
   irsend.reset();
   irsend.sendDenon(0x12, 8);
   EXPECT_EQ(
-      "f38000d33"
       "m260s780m260s780m260s780m260s1820m260s780m260s780m260s1820m260s780"
       "m260s43602"
       "m260s1820m260s1820m260s1820m260s780m260s1820m260s1820m260s780m260s1820"
@@ -158,7 +151,6 @@ TEST(TestSendDenon, SendUnusualSize) {
   irsend.reset();
   irsend.sendDenon(0x1234567890ABCDEF, 64);
   EXPECT_EQ(
-      "f36700d50"
       "m3456s1728"
       "m432s432m432s432m432s432m432s1296m432s432m432s432m432s1296m432s432"
       "m432s432m432s432m432s1296m432s1296m432s432m432s1296m432s432m432s432"
@@ -185,9 +177,9 @@ TEST(TestDecodeDenon, NormalDecodeWithStrict) {
   irsend.sendDenon(0x2278);
   irsend.makeDecodeResult();
 
-  ASSERT_TRUE(irrecv.decodeDenon(&irsend.capture, kDenonBits, true));
+  ASSERT_TRUE(irrecv.decodeDenon(&irsend.capture, DENON_BITS, true));
   EXPECT_EQ(DENON, irsend.capture.decode_type);
-  EXPECT_EQ(kDenonBits, irsend.capture.bits);
+  EXPECT_EQ(DENON_BITS, irsend.capture.bits);
   EXPECT_EQ(0x2278, irsend.capture.value);
   EXPECT_EQ(0x2, irsend.capture.address);
   EXPECT_EQ(0x79, irsend.capture.command);
@@ -208,11 +200,11 @@ TEST(TestDecodeDenon, NormalDecodeWithStrict) {
 
   // Normal Denon 48-bit message. (Panasonic/Kaseikyo)
   irsend.reset();
-  irsend.sendDenon(0x2A4C028D6CE3, kDenon48Bits);
+  irsend.sendDenon(0x2A4C028D6CE3, DENON_48_BITS);
   irsend.makeDecodeResult();
-  ASSERT_TRUE(irrecv.decodeDenon(&irsend.capture, kDenon48Bits, true));
+  ASSERT_TRUE(irrecv.decodeDenon(&irsend.capture, DENON_48_BITS, true));
   EXPECT_EQ(DENON, irsend.capture.decode_type);
-  EXPECT_EQ(kDenon48Bits, irsend.capture.bits);
+  EXPECT_EQ(DENON_48_BITS, irsend.capture.bits);
   EXPECT_EQ(0x2A4C028D6CE3, irsend.capture.value);
   EXPECT_EQ(0x2A4C, irsend.capture.address);
   EXPECT_EQ(0x028D6CE3, irsend.capture.command);
@@ -235,9 +227,9 @@ TEST(TestDecodeDenon, DecodeGlobalCacheExample) {
   irsend.sendGC(gc_test_power, 67);
   irsend.makeDecodeResult();
 
-  ASSERT_TRUE(irrecv.decodeDenon(&irsend.capture, kDenonBits, true));
+  ASSERT_TRUE(irrecv.decodeDenon(&irsend.capture, DENON_BITS, true));
   EXPECT_EQ(DENON, irsend.capture.decode_type);
-  EXPECT_EQ(kDenonBits, irsend.capture.bits);
+  EXPECT_EQ(DENON_BITS, irsend.capture.bits);
   EXPECT_EQ(0x2278, irsend.capture.value);
   EXPECT_EQ(0x2, irsend.capture.address);
   EXPECT_EQ(0x79, irsend.capture.command);
@@ -256,9 +248,9 @@ TEST(TestDecodeDenon, DecodeGlobalCacheExample) {
   irsend.sendGC(gc_test_eco, 103);
   irsend.makeDecodeResult();
 
-  ASSERT_TRUE(irrecv.decodeDenon(&irsend.capture, kDenon48Bits, true));
+  ASSERT_TRUE(irrecv.decodeDenon(&irsend.capture, DENON_48_BITS, true));
   EXPECT_EQ(DENON, irsend.capture.decode_type);
-  EXPECT_EQ(kDenon48Bits, irsend.capture.bits);
+  EXPECT_EQ(DENON_48_BITS, irsend.capture.bits);
   EXPECT_EQ(0x2A4C028D6CE3, irsend.capture.value);
   EXPECT_EQ(0x2A4C, irsend.capture.address);
   EXPECT_EQ(0x028D6CE3, irsend.capture.command);
@@ -281,6 +273,6 @@ TEST(TestDecodeDenon, FailToDecodeNonDenonExample) {
 
   ASSERT_FALSE(irrecv.decodeDenon(&irsend.capture));
   ASSERT_FALSE(irrecv.decodeDenon(&irsend.capture, kDenonLegacyBits, false));
-  ASSERT_FALSE(irrecv.decodeDenon(&irsend.capture, kDenonBits, false));
-  ASSERT_FALSE(irrecv.decodeDenon(&irsend.capture, kDenon48Bits, false));
+  ASSERT_FALSE(irrecv.decodeDenon(&irsend.capture, DENON_BITS, false));
+  ASSERT_FALSE(irrecv.decodeDenon(&irsend.capture, DENON_48_BITS, false));
 }

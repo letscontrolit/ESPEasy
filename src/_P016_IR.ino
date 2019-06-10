@@ -4,7 +4,6 @@
 //#######################################################################################################
 
 // Uncomment the following define to enable the extended decoding of AC messages (20K bytes in flash)
-// Also for using standardised common arguments for controlling all deeply supported A/C units (Plugin 035)
 // Example of those messages: "Mesg Desc.: Power: On, Fan: 5 (AUTO), Mode: 3 (HEAT), Temp: 22C, Zone Follow: Off, Sensor Temp: Ignored"
 //#define P016_Extended_Decoding
 
@@ -14,6 +13,25 @@
 
 #include <IRrecv.h>
 #include <IRutils.h>
+
+#ifdef P016_Extended_Decoding // The following are only needed for extended decoding of A/C Messages
+#include <ir_Coolix.h>
+#include <ir_Daikin.h>
+#include <ir_Fujitsu.h>
+#include <ir_Gree.h>
+#include <ir_Haier.h>
+#include <ir_Hitachi.h>
+#include <ir_Kelvinator.h>
+#include <ir_Midea.h>
+#include <ir_Mitsubishi.h>
+#include <ir_Panasonic.h>
+#include <ir_Samsung.h>
+#include <ir_Tcl.h>
+#include <ir_Teco.h>
+#include <ir_Toshiba.h>
+#include <ir_Vestel.h>
+#include <ir_Whirlpool.h>
+#endif
 
 #define PLUGIN_016
 #define PLUGIN_ID_016         16
@@ -128,7 +146,7 @@ boolean Plugin_016(byte function, struct EventStruct *event, String& string)
         int irPin = CONFIG_PIN1;
         if (irReceiver == 0 && irPin != -1)
         {
-          serialPrintln(F("INIT: IR RX"));
+          serialPrintln(F("IR RX Init"));
           irReceiver = new IRrecv(irPin, kCaptureBufferSize, P016_TIMEOUT, true);
           irReceiver->setUnknownThreshold(kMinUnknownSize); // Ignore messages with less than minimum on or off pulses.
           irReceiver->enableIRIn(); // Start the receiver
@@ -178,7 +196,7 @@ boolean Plugin_016(byte function, struct EventStruct *event, String& string)
           
           // Display the basic output of what we found.
           if (results.decode_type != UNKNOWN) { 
-                addLog(LOG_LEVEL_INFO, String(F("IRSEND,")) + typeToString(results.decode_type, results.repeat) + ',' + resultToHexidecimal(&results) + ',' + uint64ToString(results.bits)); //Show the appropriate command to the user, so he can replay the message via P035
+                addLog(LOG_LEVEL_INFO, String(F("IRSEND,")) + typeToString(results.decode_type, results.repeat) + ',' + resultToHexidecimal(&results)); //Show the appropriate command to the user, so he can replay the message via P035
           } 
           //Check if a solution for RAW2 is found and if not give the user the option to access the timings info.
           if (results.decode_type == UNKNOWN && !displayRawToReadableB32Hex()){
@@ -188,17 +206,10 @@ boolean Plugin_016(byte function, struct EventStruct *event, String& string)
            //addLog(LOG_LEVEL_DEBUG,(String(F("IR: RAW TIMINGS: ")) + resultToSourceCode(&results))); // Output the results as RAW source code //not showing up nicely in the web log
           }
 
-#ifdef P016_P035_Extended_AC
+#ifdef P016_Extended_Decoding
           // Display any extra A/C info if we have it.
           // Display the human readable state of an A/C message if we can.
           String description = "";
-#if DECODE_ARGO
-  if (results.decode_type == ARGO) {
-    IRArgoAC ac(0);
-    ac.setRaw(results.state);
-    description = ac.toString();
-  }
-#endif  // DECODE_ARGO
 #if DECODE_DAIKIN
   if (results.decode_type == DAIKIN) {
     IRDaikinESP ac(0);
@@ -212,14 +223,7 @@ boolean Plugin_016(byte function, struct EventStruct *event, String& string)
     ac.setRaw(results.state);
     description = ac.toString();
   }
-#endif  // DECODE_DAIKIN2
-#if DECODE_DAIKIN216
-  if (results.decode_type == DAIKIN216) {
-    IRDaikin216 ac(0);
-    ac.setRaw(results.state);
-    description = ac.toString();
-  }
-#endif  // DECODE_DAIKIN216
+#endif // DECODE_DAIKIN2
 #if DECODE_FUJITSU_AC
   if (results.decode_type == FUJITSU_AC) {
     IRFujitsuAC ac(0);
@@ -241,18 +245,6 @@ boolean Plugin_016(byte function, struct EventStruct *event, String& string)
     description = ac.toString();
   }
 #endif  // DECODE_MITSUBISHI_AC
-#if DECODE_MITSUBISHIHEAVY
-  if (results.decode_type == MITSUBISHI_HEAVY_88) {
-    IRMitsubishiHeavy88Ac ac(0);
-    ac.setRaw(results.state);
-    description = ac.toString();
-  }
-  if (results.decode_type == MITSUBISHI_HEAVY_152) {
-    IRMitsubishiHeavy152Ac ac(0);
-    ac.setRaw(results.state);
-    description = ac.toString();
-  }
-#endif  // DECODE_MITSUBISHIHEAVY
 #if DECODE_TOSHIBA_AC
   if (results.decode_type == TOSHIBA_AC) {
     IRToshibaAC ac(0);
@@ -260,20 +252,6 @@ boolean Plugin_016(byte function, struct EventStruct *event, String& string)
     description = ac.toString();
   }
 #endif  // DECODE_TOSHIBA_AC
-#if DECODE_TROTEC
-  if (results.decode_type == TROTEC) {
-    IRTrotecESP ac(0);
-    ac.setRaw(results.state);
-    description = ac.toString();
-  }
-#endif  // DECODE_TROTEC
-#if DECODE_GOODWEATHER
-  if (results.decode_type == GOODWEATHER) {
-    IRGoodweatherAc ac(0);
-    ac.setRaw(results.value);  // Goodweather uses value instead of state.
-    description = ac.toString();
-  }
-#endif  // DECODE_GOODWEATHER
 #if DECODE_GREE
   if (results.decode_type == GREE) {
     IRGreeAC ac(0);
@@ -305,17 +283,10 @@ boolean Plugin_016(byte function, struct EventStruct *event, String& string)
 #if DECODE_SAMSUNG_AC
   if (results.decode_type == SAMSUNG_AC) {
     IRSamsungAc ac(0);
-    ac.setRaw(results.state, results.bits / 8);
-    description = ac.toString();
-  }
-#endif  // DECODE_SAMSUNG_AC
-#if DECODE_SHARP_AC
-  if (results.decode_type == SHARP_AC) {
-    IRSharpAc ac(0);
     ac.setRaw(results.state);
     description = ac.toString();
   }
-#endif  // DECODE_SHARP_AC
+#endif  // DECODE_SAMSUNG_AC
 #if DECODE_COOLIX
   if (results.decode_type == COOLIX) {
     IRCoolixAC ac(0);
@@ -329,7 +300,7 @@ boolean Plugin_016(byte function, struct EventStruct *event, String& string)
     IRPanasonicAc ac(0);
     ac.setRaw(results.state);
     description = ac.toString();
-  }
+  } 
 #endif  // DECODE_PANASONIC_AC
 #if DECODE_HITACHI_AC
   if (results.decode_type == HITACHI_AC) {
@@ -365,11 +336,11 @@ boolean Plugin_016(byte function, struct EventStruct *event, String& string)
     ac.setRaw(results.state);
     description = ac.toString();
   }
-#endif  // DECODE_TCL112AC
+#endif // DECODE_TCL112AC
 
   // If we got a human-readable description of the message, display it.
           if (description != "") addLog(LOG_LEVEL_INFO, description);
-#endif  // P016_P035_Extended_AC
+#endif  // Extended Messages
           
           unsigned long IRcode = results.value;
           UserVar[event->BaseVarIndex] = (IRcode & 0xFFFF);

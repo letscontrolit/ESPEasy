@@ -14,9 +14,6 @@
 #endif
 #include "IRremoteESP8266.h"
 #include "IRsend.h"
-#ifdef UNIT_TEST
-#include "IRsend_test.h"
-#endif
 
 //              SSSS   AAA    MMM    SSSS  U   U  N   N   GGGG
 //             S      A   A  M M M  S      U   U  NN  N  G
@@ -61,64 +58,52 @@ const uint64_t kSamsungAcPowerSection = 0x1D20F00000000;
 // Classes
 class IRSamsungAc {
  public:
-  explicit IRSamsungAc(const uint16_t pin);
+  explicit IRSamsungAc(uint16_t pin);
 
-  void stateReset(void);
+  void stateReset();
 #if SEND_SAMSUNG_AC
   void send(const uint16_t repeat = kSamsungAcDefaultRepeat,
             const bool calcchecksum = true);
   void sendExtended(const uint16_t repeat = kSamsungAcDefaultRepeat,
                     const bool calcchecksum = true);
-  void sendOn(const uint16_t repeat = kSamsungAcDefaultRepeat);
-  void sendOff(const uint16_t repeat = kSamsungAcDefaultRepeat);
 #endif  // SEND_SAMSUNG_AC
-  void begin(void);
-  void on(void);
-  void off(void);
-  void setPower(const bool on);
-  bool getPower(void);
+  void begin();
+  void on();
+  void off();
+  void setPower(const bool state);
+  bool getPower();
   void setTemp(const uint8_t temp);
-  uint8_t getTemp(void);
+  uint8_t getTemp();
   void setFan(const uint8_t speed);
-  uint8_t getFan(void);
+  uint8_t getFan();
   void setMode(const uint8_t mode);
-  uint8_t getMode(void);
-  void setSwing(const bool on);
-  bool getSwing(void);
-  void setBeep(const bool on);
-  bool getBeep(void);
-  void setClean(const bool on);
-  bool getClean(void);
-  void setQuiet(const bool on);
-  bool getQuiet(void);
-  uint8_t* getRaw(void);
+  uint8_t getMode();
+  void setSwing(const bool state);
+  bool getSwing();
+  void setBeep(const bool state);
+  bool getBeep();
+  void setClean(const bool state);
+  bool getClean();
+  void setQuiet(const bool state);
+  bool getQuiet();
+  uint8_t* getRaw();
   void setRaw(const uint8_t new_code[],
               const uint16_t length = kSamsungAcStateLength);
   static bool validChecksum(const uint8_t state[],
                             const uint16_t length = kSamsungAcStateLength);
   static uint8_t calcChecksum(const uint8_t state[],
                               const uint16_t length = kSamsungAcStateLength);
-  uint8_t convertMode(const stdAc::opmode_t mode);
-  uint8_t convertFan(const stdAc::fanspeed_t speed);
-  static stdAc::opmode_t toCommonMode(const uint8_t mode);
-  static stdAc::fanspeed_t toCommonFanSpeed(const uint8_t speed);
-  stdAc::state_t toCommon(void);
 #ifdef ARDUINO
-  String toString(void);
+  String toString();
 #else
-  std::string toString(void);
+  std::string toString();
 #endif
-#ifndef UNIT_TEST
 
  private:
-  IRsend _irsend;
-#else
-  IRsendTest _irsend;
-#endif
   // The state of the IR remote in IR code form.
   uint8_t remote_state[kSamsungAcExtendedStateLength];
-  bool _sendpower;  // Hack to know when we need to send a special power mesg.
   void checksum(const uint16_t length = kSamsungAcStateLength);
+  IRsend _irsend;
 };
 
 #endif  // IR_SAMSUNG_H_

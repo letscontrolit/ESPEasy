@@ -15,7 +15,6 @@ TEST(TestSendSony, SendDataOnly) {
   irsend.sendSony(0);
   // We expect three 20-bit commands to be sent.
   EXPECT_EQ(
-      "f40000d33"
       "m2400s600m600s600m600s600m600s600m600s600m600s600m600s600m600s600"
       "m600s600m600s600m600s600m600s600m600s600m600s600m600s600m600s600"
       "m600s600m600s600m600s600m600s600m600s18600"
@@ -31,7 +30,6 @@ TEST(TestSendSony, SendDataOnly) {
   irsend.sendSony(0x240C, kSony20Bits);
   // We expect three 20-bit commands to be sent.
   EXPECT_EQ(
-      "f40000d33"
       "m2400s600m600s600m600s600m600s600m600s600m600s600m600s600m1200s600"
       "m600s600m600s600m1200s600m600s600m600s600m600s600m600s600m600s600"
       "m600s600m1200s600m1200s600m600s600m600s16200"
@@ -47,7 +45,6 @@ TEST(TestSendSony, SendDataOnly) {
   irsend.sendSony(0x240C, kSony15Bits);
   // We expect three 15-bit commands to be sent.
   EXPECT_EQ(
-      "f40000d33"
       "m2400s600m600s600m1200s600m600s600m600s600m1200s600m600s600"
       "m600s600m600s600m600s600m600s600m600s600m1200s600m1200s600m600s600"
       "m600s22200"
@@ -63,7 +60,6 @@ TEST(TestSendSony, SendDataOnly) {
   irsend.sendSony(0xA90, kSony12Bits);
   // We expect three 15-bit commands to be sent.
   EXPECT_EQ(
-      "f40000d33"
       "m2400s600m1200s600m600s600m1200s600m600s600m1200s600m600s600"
       "m600s600m1200s600m600s600m600s600m600s600m600s25800"
       "m2400s600m1200s600m600s600m1200s600m600s600m1200s600m600s600"
@@ -81,14 +77,12 @@ TEST(TestSendSony, SendWithDiffRepeats) {
   irsend.reset();
   irsend.sendSony(0x240C, kSony20Bits, 0);  // Send a command with 0 repeats.
   EXPECT_EQ(
-      "f40000d33"
       "m2400s600m600s600m600s600m600s600m600s600m600s600m600s600m1200s600"
       "m600s600m600s600m1200s600m600s600m600s600m600s600m600s600m600s600"
       "m600s600m1200s600m1200s600m600s600m600s16200",
       irsend.outputStr());
   irsend.sendSony(0x240C, kSony20Bits, 1);  // Send a command with 1 repeat.
   EXPECT_EQ(
-      "f40000d33"
       "m2400s600m600s600m600s600m600s600m600s600m600s600m600s600m1200s600"
       "m600s600m600s600m1200s600m600s600m600s600m600s600m600s600m600s600"
       "m600s600m1200s600m1200s600m600s600m600s16200"
@@ -98,7 +92,6 @@ TEST(TestSendSony, SendWithDiffRepeats) {
       irsend.outputStr());
   irsend.sendSony(0x240C, kSony20Bits, 3);  // Send a command with 3 repeats.
   EXPECT_EQ(
-      "f40000d33"
       "m2400s600m600s600m600s600m600s600m600s600m600s600m600s600m1200s600"
       "m600s600m600s600m1200s600m600s600m600s600m600s600m600s600m600s600"
       "m600s600m1200s600m1200s600m600s600m600s16200"

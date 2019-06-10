@@ -12,9 +12,6 @@
 #endif
 #include "IRremoteESP8266.h"
 #include "IRsend.h"
-#ifdef UNIT_TEST
-#include "IRsend_test.h"
-#endif
 
 //       PPPP    AAA   N   N   AAA    SSSS   OOO   N   N  IIIII   CCCC
 //       P   P  A   A  NN  N  A   A  S      O   O  NN  N    I    C
@@ -81,73 +78,61 @@ enum panasonic_ac_remote_model_t {
 
 class IRPanasonicAc {
  public:
-  explicit IRPanasonicAc(const uint16_t pin);
+  explicit IRPanasonicAc(uint16_t pin);
 
-  void stateReset(void);
+  void stateReset();
 #if SEND_PANASONIC
   void send(const uint16_t repeat = kPanasonicAcDefaultRepeat);
 #endif  // SEND_PANASONIC
-  void begin(void);
-  void on(void);
-  void off(void);
-  void setPower(const bool on);
-  bool getPower(void);
+  void begin();
+  void on();
+  void off();
+  void setPower(const bool state);
+  bool getPower();
   void setTemp(const uint8_t temp, const bool remember = true);
-  uint8_t getTemp(void);
+  uint8_t getTemp();
   void setFan(const uint8_t fan);
-  uint8_t getFan(void);
+  uint8_t getFan();
   void setMode(const uint8_t mode);
-  uint8_t getMode(void);
+  uint8_t getMode();
   void setRaw(const uint8_t state[]);
-  uint8_t *getRaw(void);
+  uint8_t *getRaw();
   static bool validChecksum(uint8_t *state,
                             const uint16_t length = kPanasonicAcStateLength);
   static uint8_t calcChecksum(uint8_t *state,
                               const uint16_t length = kPanasonicAcStateLength);
-  void setQuiet(const bool on);
-  bool getQuiet(void);
-  void setPowerful(const bool on);
-  bool getPowerful(void);
+  void setQuiet(const bool state);
+  bool getQuiet();
+  void setPowerful(const bool state);
+  bool getPowerful();
   void setModel(const panasonic_ac_remote_model_t model);
-  panasonic_ac_remote_model_t getModel(void);
+  panasonic_ac_remote_model_t getModel();
   void setSwingVertical(const uint8_t elevation);
-  uint8_t getSwingVertical(void);
+  uint8_t getSwingVertical();
   void setSwingHorizontal(const uint8_t direction);
-  uint8_t getSwingHorizontal(void);
+  uint8_t getSwingHorizontal();
   static uint16_t encodeTime(const uint8_t hours, const uint8_t mins);
-  uint16_t getClock(void);
+  uint16_t getClock();
   void setClock(const uint16_t mins_since_midnight);
-  uint16_t getOnTimer(void);
+  uint16_t getOnTimer();
   void setOnTimer(const uint16_t mins_since_midnight, const bool enable = true);
-  void cancelOnTimer(void);
-  bool isOnTimerEnabled(void);
-  uint16_t getOffTimer(void);
+  void cancelOnTimer();
+  bool isOnTimerEnabled();
+  uint16_t getOffTimer();
   void setOffTimer(const uint16_t mins_since_midnight,
                    const bool enable = true);
-  void cancelOffTimer(void);
-  bool isOffTimerEnabled(void);
-  uint8_t convertMode(const stdAc::opmode_t mode);
-  uint8_t convertFan(const stdAc::fanspeed_t speed);
-  uint8_t convertSwingV(const stdAc::swingv_t position);
-  uint8_t convertSwingH(const stdAc::swingh_t position);
-  static stdAc::opmode_t toCommonMode(const uint8_t mode);
-  static stdAc::fanspeed_t toCommonFanSpeed(const uint8_t speed);
-  static stdAc::swingv_t toCommonSwingV(const uint8_t pos);
-  static stdAc::swingh_t toCommonSwingH(const uint8_t pos);
-  stdAc::state_t toCommon(void);
+  void cancelOffTimer();
+  bool isOffTimerEnabled();
 #ifdef ARDUINO
-  String toString(void);
+  String toString();
   static String timeToString(const uint16_t mins_since_midnight);
 #else
-  std::string toString(void);
+  std::string toString();
   static std::string timeToString(const uint16_t mins_since_midnight);
 #endif
 #ifndef UNIT_TEST
 
  private:
-  IRsend _irsend;
-#else
-  IRsendTest _irsend;
 #endif
   uint8_t remote_state[kPanasonicAcStateLength];
   uint8_t _swingh;
@@ -155,6 +140,7 @@ class IRPanasonicAc {
   void fixChecksum(const uint16_t length = kPanasonicAcStateLength);
   static uint8_t calcChecksum(const uint8_t *state,
                               const uint16_t length = kPanasonicAcStateLength);
+  IRsend _irsend;
 };
 
 #endif  // IR_PANASONIC_H_

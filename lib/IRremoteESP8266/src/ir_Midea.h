@@ -11,9 +11,6 @@
 #endif
 #include "IRremoteESP8266.h"
 #include "IRsend.h"
-#ifdef UNIT_TEST
-#include "IRsend_test.h"
-#endif
 
 //                  MM    MM IIIII DDDDD   EEEEEEE   AAA
 //                  MMM  MMM  III  DD  DD  EE       AAAAA
@@ -66,48 +63,41 @@ const uint64_t kMideaACChecksumMask = 0x0000FFFFFFFFFF00;
 
 class IRMideaAC {
  public:
-  explicit IRMideaAC(const uint16_t pin);
+  explicit IRMideaAC(uint16_t pin);
 
-  void stateReset(void);
+  void stateReset();
 #if SEND_MIDEA
   void send(const uint16_t repeat = kMideaMinRepeat);
 #endif  // SEND_MIDEA
-  void begin(void);
-  void on(void);
-  void off(void);
-  void setPower(const bool on);
-  bool getPower(void);
+  void begin();
+  void on();
+  void off();
+  void setPower(const bool state);
+  bool getPower();
   void setTemp(const uint8_t temp, const bool useCelsius = false);
   uint8_t getTemp(const bool useCelsius = false);
   void setFan(const uint8_t fan);
-  uint8_t getFan(void);
+  uint8_t getFan();
   void setMode(const uint8_t mode);
-  uint8_t getMode(void);
-  void setRaw(const uint64_t newState);
-  uint64_t getRaw(void);
+  uint8_t getMode();
+  void setRaw(uint64_t newState);
+  uint64_t getRaw();
   static bool validChecksum(const uint64_t state);
-  void setSleep(const bool on);
-  bool getSleep(void);
-  uint8_t convertMode(const stdAc::opmode_t mode);
-  uint8_t convertFan(const stdAc::fanspeed_t speed);
-  static stdAc::opmode_t toCommonMode(const uint8_t mode);
-  static stdAc::fanspeed_t toCommonFanSpeed(const uint8_t speed);
-  stdAc::state_t toCommon(void);
+  void setSleep(const bool state);
+  bool getSleep();
 #ifdef ARDUINO
-  String toString(void);
+  String toString();
 #else
-  std::string toString(void);
+  std::string toString();
 #endif
 #ifndef UNIT_TEST
 
  private:
-  IRsend _irsend;
-#else
-  IRsendTest _irsend;
 #endif
   uint64_t remote_state;
-  void checksum(void);
+  void checksum();
   static uint8_t calcChecksum(const uint64_t state);
+  IRsend _irsend;
 };
 
 #endif  // IR_MIDEA_H_

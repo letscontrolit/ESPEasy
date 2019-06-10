@@ -32,7 +32,6 @@ TEST(TestSendPanasonic64, SendDataOnly) {
   irsend.reset();
   irsend.sendPanasonic64(0x0);
   EXPECT_EQ(
-      "f36700d50"
       "m3456s1728"
       "m432s432m432s432m432s432m432s432m432s432m432s432m432s432m432s432"
       "m432s432m432s432m432s432m432s432m432s432m432s432m432s432m432s432"
@@ -46,7 +45,6 @@ TEST(TestSendPanasonic64, SendDataOnly) {
   irsend.reset();
   irsend.sendPanasonic64(0x40040190ED7C);
   EXPECT_EQ(
-      "f36700d50"
       "m3456s1728"
       "m432s432m432s1296m432s432m432s432m432s432m432s432m432s432m432s432"
       "m432s432m432s432m432s432m432s432m432s432m432s1296m432s432m432s432"
@@ -60,7 +58,6 @@ TEST(TestSendPanasonic64, SendDataOnly) {
   irsend.reset();
   irsend.sendPanasonic64(0xFFFFFFFFFFFF);
   EXPECT_EQ(
-      "f36700d50"
       "m3456s1728"
       "m432s1296m432s1296m432s1296m432s1296m432s1296m432s1296m432s1296m432s1296"
       "m432s1296m432s1296m432s1296m432s1296m432s1296m432s1296m432s1296m432s1296"
@@ -80,7 +77,6 @@ TEST(TestSendPanasonic64, SendWithRepeats) {
   irsend.reset();
   irsend.sendPanasonic64(0x40040190ED7C, kPanasonicBits, 0);  // 0 repeats.
   EXPECT_EQ(
-      "f36700d50"
       "m3456s1728"
       "m432s432m432s1296m432s432m432s432m432s432m432s432m432s432m432s432"
       "m432s432m432s432m432s432m432s432m432s432m432s1296m432s432m432s432"
@@ -94,7 +90,6 @@ TEST(TestSendPanasonic64, SendWithRepeats) {
   irsend.reset();
   irsend.sendPanasonic64(0x40040190ED7C, kPanasonicBits, 1);  // 1 repeat.
   EXPECT_EQ(
-      "f36700d50"
       "m3456s1728"
       "m432s432m432s1296m432s432m432s432m432s432m432s432m432s432m432s432"
       "m432s432m432s432m432s432m432s432m432s432m432s1296m432s432m432s432"
@@ -115,7 +110,6 @@ TEST(TestSendPanasonic64, SendWithRepeats) {
 
   irsend.sendPanasonic64(0x40040190ED7C, kPanasonicBits, 2);  // 2 repeats.
   EXPECT_EQ(
-      "f36700d50"
       "m3456s1728"
       "m432s432m432s1296m432s432m432s432m432s432m432s432m432s432m432s432"
       "m432s432m432s432m432s432m432s432m432s432m432s1296m432s432m432s432"
@@ -151,7 +145,6 @@ TEST(TestSendPanasonic64, SendUnusualSize) {
   irsend.reset();
   irsend.sendPanasonic64(0x0, 8);
   EXPECT_EQ(
-      "f36700d50"
       "m3456s1728"
       "m432s432m432s432m432s432m432s432m432s432m432s432m432s432m432s432"
       "m432s150768",
@@ -160,7 +153,6 @@ TEST(TestSendPanasonic64, SendUnusualSize) {
   irsend.reset();
   irsend.sendPanasonic64(0x1234567890ABCDEF, 64);
   EXPECT_EQ(
-      "f36700d50"
       "m3456s1728"
       "m432s432m432s432m432s432m432s1296m432s432m432s432m432s1296m432s432"
       "m432s432m432s432m432s1296m432s1296m432s432m432s1296m432s432m432s432"
@@ -491,7 +483,6 @@ TEST(TestSendPanasonicAC, SendDataOnly) {
       0x00, 0x06, 0x60, 0x00, 0x00, 0x80, 0x00, 0x06, 0x83};
   irsend.sendPanasonicAC(state);
   EXPECT_EQ(
-      "f36700d50"
       "m3456s1728"
       "m432s432m432s1296m432s432m432s432m432s432m432s432m432s432m432s432"
       "m432s432m432s432m432s432m432s432m432s432m432s1296m432s432m432s432"
@@ -1141,37 +1132,4 @@ TEST(TestDecodePanasonicAC, CkpModelSpecifics) {
   EXPECT_FALSE(pana.getQuiet());
   EXPECT_EQ(kPanasonicCkp, pana.getModel());
   EXPECT_STATE_EQ(ckpPowerfulOn, pana.getRaw(), kPanasonicAcBits);
-}
-
-TEST(TestIRPanasonicAcClass, toCommon) {
-  IRPanasonicAc ac(0);
-  ac.setModel(panasonic_ac_remote_model_t::kPanasonicDke);
-  ac.setPower(true);
-  ac.setMode(kPanasonicAcCool);
-  ac.setTemp(20);
-  ac.setFan(kPanasonicAcFanMax);
-  ac.setSwingVertical(kPanasonicAcSwingVAuto);
-  ac.setSwingHorizontal(kPanasonicAcSwingHMiddle);
-  ac.setPowerful(true);
-  ac.setQuiet(false);
-  // Now test it.
-  ASSERT_EQ(decode_type_t::PANASONIC_AC, ac.toCommon().protocol);
-  ASSERT_EQ(panasonic_ac_remote_model_t::kPanasonicDke, ac.toCommon().model);
-  ASSERT_TRUE(ac.toCommon().power);
-  ASSERT_TRUE(ac.toCommon().celsius);
-  ASSERT_EQ(20, ac.toCommon().degrees);
-  ASSERT_EQ(stdAc::opmode_t::kCool, ac.toCommon().mode);
-  ASSERT_EQ(stdAc::fanspeed_t::kMax, ac.toCommon().fanspeed);
-  ASSERT_EQ(stdAc::swingv_t::kAuto, ac.toCommon().swingv);
-  ASSERT_EQ(stdAc::swingh_t::kMiddle, ac.toCommon().swingh);
-  ASSERT_TRUE(ac.toCommon().turbo);
-  ASSERT_FALSE(ac.toCommon().quiet);
-  // Unsupported.
-  ASSERT_FALSE(ac.toCommon().econo);
-  ASSERT_FALSE(ac.toCommon().clean);
-  ASSERT_FALSE(ac.toCommon().light);
-  ASSERT_FALSE(ac.toCommon().filter);
-  ASSERT_FALSE(ac.toCommon().beep);
-  ASSERT_EQ(-1, ac.toCommon().sleep);
-  ASSERT_EQ(-1, ac.toCommon().clock);
 }

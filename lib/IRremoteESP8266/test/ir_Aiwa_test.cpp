@@ -14,7 +14,6 @@ TEST(TestSendAiwa, SendDataOnly) {
   irsend.reset();
   irsend.sendAiwaRCT501(0x7F);  // Aiwa Power Toggle.
   EXPECT_EQ(
-      "f38000d33"
       "m8960s4480"
       "m560s560m560s1680m560s1680m560s1680m560s560m560s1680m560s1680m560s560"
       "m560s560m560s560m560s560m560s560m560s560m560s1680m560s560m560s560"
@@ -44,7 +43,6 @@ TEST(TestSendAiwa, SendWithRepeats) {
   irsend.reset();
   irsend.sendAiwaRCT501(0x7F, kAiwaRcT501Bits, 0);  // No repeats.
   EXPECT_EQ(
-      "f38000d33"
       "m8960s4480"
       "m560s560m560s1680m560s1680m560s1680m560s560m560s1680m560s1680m560s560"
       "m560s560m560s560m560s560m560s560m560s560m560s1680m560s560m560s560"
@@ -56,7 +54,6 @@ TEST(TestSendAiwa, SendWithRepeats) {
   irsend.reset();
   irsend.sendAiwaRCT501(0x7F, kAiwaRcT501Bits, 1);  // 1 repeat.
   EXPECT_EQ(
-      "f38000d33"
       "m8960s4480"
       "m560s560m560s1680m560s1680m560s1680m560s560m560s1680m560s1680m560s560"
       "m560s560m560s560m560s560m560s560m560s560m560s1680m560s560m560s560"
@@ -69,7 +66,6 @@ TEST(TestSendAiwa, SendWithRepeats) {
   irsend.reset();
   irsend.sendAiwaRCT501(0x7F, kAiwaRcT501Bits, 2);  // 2 repeats.
   EXPECT_EQ(
-      "f38000d33"
       "m8960s4480"
       "m560s560m560s1680m560s1680m560s1680m560s560m560s1680m560s1680m560s560"
       "m560s560m560s560m560s560m560s560m560s560m560s1680m560s560m560s560"
@@ -90,7 +86,6 @@ TEST(TestSendAiwa, SendUnusualSize) {
   irsend.reset();
   irsend.sendAiwaRCT501(0x12, 8);
   EXPECT_EQ(
-      "f38000d33"
       "m8960s4480"
       "m560s560m560s1680m560s1680m560s1680m560s560m560s1680m560s1680m560s560"
       "m560s560m560s560m560s560m560s560m560s560m560s1680m560s560m560s560"
@@ -103,7 +98,6 @@ TEST(TestSendAiwa, SendUnusualSize) {
   irsend.reset();
   irsend.sendAiwaRCT501(0x1234567890, 37);
   EXPECT_EQ(
-      "f38000d33"
       "m8960s4480"
       "m560s560m560s1680m560s1680m560s1680m560s560m560s1680m560s1680m560s560"
       "m560s560m560s560m560s560m560s560m560s560m560s1680m560s560m560s560"

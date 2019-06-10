@@ -14,9 +14,6 @@
 #endif
 #include "IRremoteESP8266.h"
 #include "IRsend.h"
-#ifdef UNIT_TEST
-#include "IRsend_test.h"
-#endif
 
 //    WW      WW HH   HH IIIII RRRRRR  LL      PPPPPP   OOOOO   OOOOO  LL
 //    WW      WW HH   HH  III  RR   RR LL      PP   PP OO   OO OO   OO LL
@@ -87,70 +84,64 @@ enum whirlpool_ac_remote_model_t {
 // Classes
 class IRWhirlpoolAc {
  public:
-  explicit IRWhirlpoolAc(const uint16_t pin);
+  explicit IRWhirlpoolAc(uint16_t pin);
 
-  void stateReset(void);
+  void stateReset();
 #if SEND_WHIRLPOOL_AC
   void send(const uint16_t repeat = kWhirlpoolAcDefaultRepeat,
             const bool calcchecksum = true);
 #endif  // SEND_WHIRLPOOL_AC
-  void begin(void);
-  void on(void);
-  void off(void);
+  void begin();
+  void on();
+  void off();
   void setPowerToggle(const bool on);
-  bool getPowerToggle(void);
+  bool getPowerToggle();
   void setSleep(const bool on);
-  bool getSleep(void);
+  bool getSleep();
   void setSuper(const bool on);
-  bool getSuper(void);
+  bool getSuper();
   void setTemp(const uint8_t temp);
-  uint8_t getTemp(void);
+  uint8_t getTemp();
   void setFan(const uint8_t speed);
-  uint8_t getFan(void);
+  uint8_t getFan();
   void setMode(const uint8_t mode);
-  uint8_t getMode(void);
+  uint8_t getMode();
   void setSwing(const bool on);
-  bool getSwing(void);
+  bool getSwing();
   void setLight(const bool on);
-  bool getLight(void);
-  uint16_t getClock(void);
+  bool getLight();
+  uint16_t getClock();
   void setClock(const uint16_t minspastmidnight);
-  uint16_t getOnTimer(void);
+  uint16_t getOnTimer();
   void setOnTimer(const uint16_t minspastmidnight);
-  void enableOnTimer(const bool on);
-  bool isOnTimerEnabled(void);
-  uint16_t getOffTimer(void);
+  void enableOnTimer(const bool state);
+  bool isOnTimerEnabled();
+  uint16_t getOffTimer();
   void setOffTimer(const uint16_t minspastmidnight);
-  void enableOffTimer(const bool on);
-  bool isOffTimerEnabled(void);
+  void enableOffTimer(const bool state);
+  bool isOffTimerEnabled();
   void setCommand(const uint8_t code);
-  uint8_t getCommand(void);
-  whirlpool_ac_remote_model_t getModel(void);
+  uint8_t getCommand();
+  whirlpool_ac_remote_model_t getModel();
   void setModel(const whirlpool_ac_remote_model_t model);
   uint8_t* getRaw(const bool calcchecksum = true);
   void setRaw(const uint8_t new_code[],
               const uint16_t length = kWhirlpoolAcStateLength);
   static bool validChecksum(uint8_t state[],
                             const uint16_t length = kWhirlpoolAcStateLength);
-  uint8_t convertMode(const stdAc::opmode_t mode);
-  uint8_t convertFan(const stdAc::fanspeed_t speed);
-  static stdAc::opmode_t toCommonMode(const uint8_t mode);
-  static stdAc::fanspeed_t toCommonFanSpeed(const uint8_t speed);
-  stdAc::state_t toCommon(void);
 #ifdef ARDUINO
-  String toString(void);
+  String toString();
 #else
-  std::string toString(void);
+  std::string toString();
 #endif
+
 #ifndef UNIT_TEST
 
  private:
-  IRsend _irsend;
-#else
-  IRsendTest _irsend;
 #endif
   // The state of the IR remote in IR code form.
   uint8_t remote_state[kWhirlpoolAcStateLength];
+  IRsend _irsend;
   uint8_t _desiredtemp;
   void checksum(const uint16_t length = kWhirlpoolAcStateLength);
   uint16_t getTime(const uint16_t pos);
@@ -159,7 +150,7 @@ class IRWhirlpoolAc {
   void enableTimer(const uint16_t pos, const bool state);
   void _setTemp(const uint8_t temp, const bool remember = true);
   void _setMode(const uint8_t mode);
-  int8_t getTempOffset(void);
+  int8_t getTempOffset();
 #ifdef ARDUINO
   String timeToString(uint16_t minspastmidnight);
 #else

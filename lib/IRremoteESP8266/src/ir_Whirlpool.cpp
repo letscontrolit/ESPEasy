@@ -53,8 +53,8 @@ const uint8_t kWhirlpoolAcSections = 3;
 //
 // Ref:
 //   https://github.com/markszabo/IRremoteESP8266/issues/509
-void IRsend::sendWhirlpoolAC(const unsigned char data[], const uint16_t nbytes,
-                             const uint16_t repeat) {
+void IRsend::sendWhirlpoolAC(unsigned char data[], uint16_t nbytes,
+                             uint16_t repeat) {
   if (nbytes < kWhirlpoolAcStateLength)
     return;  // Not enough bytes to send a proper message.
   for (uint16_t r = 0; r <= repeat; r++) {
@@ -85,19 +85,17 @@ void IRsend::sendWhirlpoolAC(const unsigned char data[], const uint16_t nbytes,
 // Decoding help from:
 //   @redmusicxd, @josh929800, @raducostea
 
-IRWhirlpoolAc::IRWhirlpoolAc(const uint16_t pin) : _irsend(pin) {
-  this->stateReset();
-}
+IRWhirlpoolAc::IRWhirlpoolAc(uint16_t pin) : _irsend(pin) { stateReset(); }
 
-void IRWhirlpoolAc::stateReset(void) {
+void IRWhirlpoolAc::stateReset() {
   for (uint8_t i = 2; i < kWhirlpoolAcStateLength; i++) remote_state[i] = 0x0;
   remote_state[0] = 0x83;
   remote_state[1] = 0x06;
   remote_state[6] = 0x80;
-  this->_setTemp(kWhirlpoolAcAutoTemp);  // Default to a sane value.
+  _setTemp(kWhirlpoolAcAutoTemp);  // Default to a sane value.
 }
 
-void IRWhirlpoolAc::begin(void) { _irsend.begin(); }
+void IRWhirlpoolAc::begin() { _irsend.begin(); }
 
 bool IRWhirlpoolAc::validChecksum(uint8_t state[], const uint16_t length) {
   if (length > kWhirlpoolAcChecksumByte1 &&
@@ -130,13 +128,13 @@ void IRWhirlpoolAc::checksum(uint16_t length) {
 
 #if SEND_WHIRLPOOL_AC
 void IRWhirlpoolAc::send(const uint16_t repeat, const bool calcchecksum) {
-  if (calcchecksum) this->checksum();
+  if (calcchecksum) checksum();
   _irsend.sendWhirlpoolAC(remote_state, kWhirlpoolAcStateLength, repeat);
 }
 #endif  // SEND_WHIRLPOOL_AC
 
 uint8_t *IRWhirlpoolAc::getRaw(const bool calcchecksum) {
-  if (calcchecksum) this->checksum();
+  if (calcchecksum) checksum();
   return remote_state;
 }
 
@@ -145,7 +143,7 @@ void IRWhirlpoolAc::setRaw(const uint8_t new_code[], const uint16_t length) {
     remote_state[i] = new_code[i];
 }
 
-whirlpool_ac_remote_model_t IRWhirlpoolAc::getModel(void) {
+whirlpool_ac_remote_model_t IRWhirlpoolAc::getModel() {
   if (remote_state[kWhirlpoolAcAltTempPos] & kWhirlpoolAcAltTempMask)
     return DG11J191;
   else
@@ -162,13 +160,13 @@ void IRWhirlpoolAc::setModel(const whirlpool_ac_remote_model_t model) {
     default:
       remote_state[kWhirlpoolAcAltTempPos] &= ~kWhirlpoolAcAltTempMask;
   }
-  this->_setTemp(_desiredtemp);  // Different models have different temp values.
+  _setTemp(_desiredtemp);  // Different models have different temp values.
 }
 
 // Return the temp. offset in deg C for the current model.
-int8_t IRWhirlpoolAc::getTempOffset(void) {
-  switch (this->getModel()) {
-    case whirlpool_ac_remote_model_t::DG11J191:
+int8_t IRWhirlpoolAc::getTempOffset() {
+  switch (getModel()) {
+    case DG11J191:
       return -2;
       break;
     default:
@@ -179,7 +177,7 @@ int8_t IRWhirlpoolAc::getTempOffset(void) {
 // Set the temp. in deg C
 void IRWhirlpoolAc::_setTemp(const uint8_t temp, const bool remember) {
   if (remember) _desiredtemp = temp;
-  int8_t offset = this->getTempOffset();  // Cache the min temp for the model.
+  int8_t offset = getTempOffset();  // Cache the min temp for the model.
   uint8_t newtemp = std::max((uint8_t)(kWhirlpoolAcMinTemp + offset), temp);
   newtemp = std::min((uint8_t)(kWhirlpoolAcMaxTemp + offset), newtemp);
   remote_state[kWhirlpoolAcTempPos] =
@@ -189,23 +187,23 @@ void IRWhirlpoolAc::_setTemp(const uint8_t temp, const bool remember) {
 
 // Set the temp. in deg C
 void IRWhirlpoolAc::setTemp(const uint8_t temp) {
-  this->_setTemp(temp);
-  this->setSuper(false);  // Changing temp cancels Super/Jet mode.
-  this->setCommand(kWhirlpoolAcCommandTemp);
+  _setTemp(temp);
+  setSuper(false);  // Changing temp cancels Super/Jet mode.
+  setCommand(kWhirlpoolAcCommandTemp);
 }
 
 // Return the set temp. in deg C
-uint8_t IRWhirlpoolAc::getTemp(void) {
+uint8_t IRWhirlpoolAc::getTemp() {
   return ((remote_state[kWhirlpoolAcTempPos] & kWhirlpoolAcTempMask) >> 4) +
-         + kWhirlpoolAcMinTemp + this->getTempOffset();
+         + kWhirlpoolAcMinTemp + getTempOffset();
 }
 
 void IRWhirlpoolAc::_setMode(const uint8_t mode) {
   switch (mode) {
     case kWhirlpoolAcAuto:
-      this->setFan(kWhirlpoolAcFanAuto);
-      this->_setTemp(kWhirlpoolAcAutoTemp, false);
-      this->setSleep(false);  // Cancel sleep mode when in auto/6thsense mode.
+      setFan(kWhirlpoolAcFanAuto);
+      _setTemp(kWhirlpoolAcAutoTemp, false);
+      setSleep(false);  // Cancel sleep mode when in auto/6thsense mode.
       // FALL THRU
     case kWhirlpoolAcHeat:
     case kWhirlpoolAcCool:
@@ -213,20 +211,20 @@ void IRWhirlpoolAc::_setMode(const uint8_t mode) {
     case kWhirlpoolAcFan:
       remote_state[kWhirlpoolAcModePos] &= ~kWhirlpoolAcModeMask;
       remote_state[kWhirlpoolAcModePos] |= mode;
-      this->setCommand(kWhirlpoolAcCommandMode);
+      setCommand(kWhirlpoolAcCommandMode);
       break;
     default:
       return;
   }
-  if (mode == kWhirlpoolAcAuto) this->setCommand(kWhirlpoolAcCommand6thSense);
+  if (mode == kWhirlpoolAcAuto) setCommand(kWhirlpoolAcCommand6thSense);
 }
 
 void IRWhirlpoolAc::setMode(const uint8_t mode) {
-    this->setSuper(false);  // Changing mode cancels Super/Jet mode.
-    this->_setMode(mode);
+    setSuper(false);  // Changing mode cancels Super/Jet mode.
+    _setMode(mode);
 }
 
-uint8_t IRWhirlpoolAc::getMode(void) {
+uint8_t IRWhirlpoolAc::getMode() {
   return remote_state[kWhirlpoolAcModePos] & kWhirlpoolAcModeMask;
 }
 
@@ -238,13 +236,13 @@ void IRWhirlpoolAc::setFan(const uint8_t speed) {
     case kWhirlpoolAcFanHigh:
       remote_state[kWhirlpoolAcFanPos] =
           (remote_state[kWhirlpoolAcFanPos] & ~kWhirlpoolAcFanMask) | speed;
-      this->setSuper(false);  // Changing fan speed cancels Super/Jet mode.
-      this->setCommand(kWhirlpoolAcCommandFanSpeed);
+      setSuper(false);  // Changing fan speed cancels Super/Jet mode.
+      setCommand(kWhirlpoolAcCommandFanSpeed);
       break;
   }
 }
 
-uint8_t IRWhirlpoolAc::getFan(void) {
+uint8_t IRWhirlpoolAc::getFan() {
   return remote_state[kWhirlpoolAcFanPos] & kWhirlpoolAcFanMask;
 }
 
@@ -259,7 +257,7 @@ void IRWhirlpoolAc::setSwing(const bool on) {
   setCommand(kWhirlpoolAcCommandSwing);
 }
 
-bool IRWhirlpoolAc::getSwing(void) {
+bool IRWhirlpoolAc::getSwing() {
   return (remote_state[kWhirlpoolAcFanPos] & kWhirlpoolAcSwing1Mask) &&
          (remote_state[kWhirlpoolAcOffTimerPos] & kWhirlpoolAcSwing2Mask);
 }
@@ -271,7 +269,7 @@ void IRWhirlpoolAc::setLight(const bool on) {
     remote_state[kWhirlpoolAcClockPos] |= kWhirlpoolAcLightMask;
 }
 
-bool IRWhirlpoolAc::getLight(void) {
+bool IRWhirlpoolAc::getLight() {
   return !(remote_state[kWhirlpoolAcClockPos] & kWhirlpoolAcLightMask);
 }
 
@@ -294,53 +292,49 @@ bool IRWhirlpoolAc::isTimerEnabled(const uint16_t pos) {
   return remote_state[pos - 1] & kWhirlpoolAcTimerEnableMask;
 }
 
-void IRWhirlpoolAc::enableTimer(const uint16_t pos, const bool on) {
-  if (on)
+void IRWhirlpoolAc::enableTimer(const uint16_t pos, const bool state) {
+  if (state)
     remote_state[pos - 1] |= kWhirlpoolAcTimerEnableMask;
   else
     remote_state[pos - 1] &= ~kWhirlpoolAcTimerEnableMask;
 }
 
 void IRWhirlpoolAc::setClock(const uint16_t minspastmidnight) {
-  this->setTime(kWhirlpoolAcClockPos, minspastmidnight);
+  setTime(kWhirlpoolAcClockPos, minspastmidnight);
 }
 
-uint16_t IRWhirlpoolAc::getClock(void) {
-  return this->getTime(kWhirlpoolAcClockPos);
-}
+uint16_t IRWhirlpoolAc::getClock() { return getTime(kWhirlpoolAcClockPos); }
 
 void IRWhirlpoolAc::setOffTimer(const uint16_t minspastmidnight) {
-  this->setTime(kWhirlpoolAcOffTimerPos, minspastmidnight);
+  setTime(kWhirlpoolAcOffTimerPos, minspastmidnight);
 }
 
-uint16_t IRWhirlpoolAc::getOffTimer(void) {
-  return this->getTime(kWhirlpoolAcOffTimerPos);
+uint16_t IRWhirlpoolAc::getOffTimer() {
+  return getTime(kWhirlpoolAcOffTimerPos);
 }
 
-bool IRWhirlpoolAc::isOffTimerEnabled(void) {
-  return this->isTimerEnabled(kWhirlpoolAcOffTimerPos);
+bool IRWhirlpoolAc::isOffTimerEnabled() {
+  return isTimerEnabled(kWhirlpoolAcOffTimerPos);
 }
 
-void IRWhirlpoolAc::enableOffTimer(const bool on) {
-  this->enableTimer(kWhirlpoolAcOffTimerPos, on);
-  this->setCommand(kWhirlpoolAcCommandOffTimer);
+void IRWhirlpoolAc::enableOffTimer(const bool state) {
+  enableTimer(kWhirlpoolAcOffTimerPos, state);
+  setCommand(kWhirlpoolAcCommandOffTimer);
 }
 
 void IRWhirlpoolAc::setOnTimer(const uint16_t minspastmidnight) {
-  this->setTime(kWhirlpoolAcOnTimerPos, minspastmidnight);
+  setTime(kWhirlpoolAcOnTimerPos, minspastmidnight);
 }
 
-uint16_t IRWhirlpoolAc::getOnTimer(void) {
-  return this->getTime(kWhirlpoolAcOnTimerPos);
+uint16_t IRWhirlpoolAc::getOnTimer() { return getTime(kWhirlpoolAcOnTimerPos); }
+
+bool IRWhirlpoolAc::isOnTimerEnabled() {
+  return isTimerEnabled(kWhirlpoolAcOnTimerPos);
 }
 
-bool IRWhirlpoolAc::isOnTimerEnabled(void) {
-  return this->isTimerEnabled(kWhirlpoolAcOnTimerPos);
-}
-
-void IRWhirlpoolAc::enableOnTimer(const bool on) {
-  this->enableTimer(kWhirlpoolAcOnTimerPos, on);
-  this->setCommand(kWhirlpoolAcCommandOnTimer);
+void IRWhirlpoolAc::enableOnTimer(const bool state) {
+  enableTimer(kWhirlpoolAcOnTimerPos, state);
+  setCommand(kWhirlpoolAcCommandOnTimer);
 }
 
 void IRWhirlpoolAc::setPowerToggle(const bool on) {
@@ -348,138 +342,59 @@ void IRWhirlpoolAc::setPowerToggle(const bool on) {
     remote_state[kWhirlpoolAcPowerTogglePos] |= kWhirlpoolAcPowerToggleMask;
   else
     remote_state[kWhirlpoolAcPowerTogglePos] &= ~kWhirlpoolAcPowerToggleMask;
-  this->setSuper(false);  // Changing power cancels Super/Jet mode.
-  this->setCommand(kWhirlpoolAcCommandPower);
+  setSuper(false);  // Changing power cancels Super/Jet mode.
+  setCommand(kWhirlpoolAcCommandPower);
 }
 
-bool IRWhirlpoolAc::getPowerToggle(void) {
+bool IRWhirlpoolAc::getPowerToggle() {
   return remote_state[kWhirlpoolAcPowerTogglePos] & kWhirlpoolAcPowerToggleMask;
 }
 
-uint8_t IRWhirlpoolAc::getCommand(void) {
+uint8_t IRWhirlpoolAc::getCommand() {
   return remote_state[kWhirlpoolAcCommandPos];
 }
 
 void IRWhirlpoolAc::setSleep(const bool on) {
   if (on) {
     remote_state[kWhirlpoolAcSleepPos] |= kWhirlpoolAcSleepMask;
-    this->setFan(kWhirlpoolAcFanLow);
+    setFan(kWhirlpoolAcFanLow);
   } else {
     remote_state[kWhirlpoolAcSleepPos] &= ~kWhirlpoolAcSleepMask;
   }
-  this->setCommand(kWhirlpoolAcCommandSleep);
+  setCommand(kWhirlpoolAcCommandSleep);
 }
 
-bool IRWhirlpoolAc::getSleep(void) {
+bool IRWhirlpoolAc::getSleep() {
   return remote_state[kWhirlpoolAcSleepPos] & kWhirlpoolAcSleepMask;
 }
 
 // AKA Jet/Turbo mode.
 void IRWhirlpoolAc::setSuper(const bool on) {
   if (on) {
-    this->setFan(kWhirlpoolAcFanHigh);
-    switch (this->getMode()) {
+    setFan(kWhirlpoolAcFanHigh);
+    switch (getMode()) {
       case kWhirlpoolAcHeat:
-        this->setTemp(kWhirlpoolAcMaxTemp + this->getTempOffset());
+        setTemp(kWhirlpoolAcMaxTemp + getTempOffset());
         break;
       case kWhirlpoolAcCool:
       default:
-        this->setTemp(kWhirlpoolAcMinTemp + this->getTempOffset());
-        this->setMode(kWhirlpoolAcCool);
+        setTemp(kWhirlpoolAcMinTemp + getTempOffset());
+        setMode(kWhirlpoolAcCool);
         break;
     }
     remote_state[kWhirlpoolAcSuperPos] |= kWhirlpoolAcSuperMask;
   } else {
     remote_state[kWhirlpoolAcSuperPos] &= ~kWhirlpoolAcSuperMask;
   }
-  this->setCommand(kWhirlpoolAcCommandSuper);
+  setCommand(kWhirlpoolAcCommandSuper);
 }
 
-bool IRWhirlpoolAc::getSuper(void) {
+bool IRWhirlpoolAc::getSuper() {
   return remote_state[kWhirlpoolAcSuperPos] & kWhirlpoolAcSuperMask;
 }
 
 void IRWhirlpoolAc::setCommand(const uint8_t code) {
   remote_state[kWhirlpoolAcCommandPos] = code;
-}
-
-// Convert a standard A/C mode into its native mode.
-uint8_t IRWhirlpoolAc::convertMode(const stdAc::opmode_t mode) {
-  switch (mode) {
-    case stdAc::opmode_t::kCool:
-      return kWhirlpoolAcCool;
-    case stdAc::opmode_t::kHeat:
-      return kWhirlpoolAcHeat;
-    case stdAc::opmode_t::kDry:
-      return kWhirlpoolAcDry;
-    case stdAc::opmode_t::kFan:
-      return kWhirlpoolAcFan;
-    default:
-      return kWhirlpoolAcAuto;
-  }
-}
-
-// Convert a standard A/C Fan speed into its native fan speed.
-uint8_t IRWhirlpoolAc::convertFan(const stdAc::fanspeed_t speed) {
-  switch (speed) {
-    case stdAc::fanspeed_t::kMin:
-    case stdAc::fanspeed_t::kLow:
-      return kWhirlpoolAcFanLow;
-    case stdAc::fanspeed_t::kMedium:
-      return kWhirlpoolAcFanMedium;
-    case stdAc::fanspeed_t::kHigh:
-    case stdAc::fanspeed_t::kMax:
-      return kWhirlpoolAcFanHigh;
-    default:
-      return kWhirlpoolAcFanAuto;
-  }
-}
-
-// Convert a native mode to it's common equivalent.
-stdAc::opmode_t IRWhirlpoolAc::toCommonMode(const uint8_t mode) {
-  switch (mode) {
-    case kWhirlpoolAcCool: return stdAc::opmode_t::kCool;
-    case kWhirlpoolAcHeat: return stdAc::opmode_t::kHeat;
-    case kWhirlpoolAcDry: return stdAc::opmode_t::kDry;
-    case kWhirlpoolAcFan: return stdAc::opmode_t::kFan;
-    default: return stdAc::opmode_t::kAuto;
-  }
-}
-
-// Convert a native fan speed to it's common equivalent.
-stdAc::fanspeed_t IRWhirlpoolAc::toCommonFanSpeed(const uint8_t speed) {
-  switch (speed) {
-    case kWhirlpoolAcFanHigh: return stdAc::fanspeed_t::kMax;
-    case kWhirlpoolAcFanMedium: return stdAc::fanspeed_t::kMedium;
-    case kWhirlpoolAcFanLow: return stdAc::fanspeed_t::kMin;
-    default: return stdAc::fanspeed_t::kAuto;
-  }
-}
-
-// Convert the A/C state to it's common equivalent.
-stdAc::state_t IRWhirlpoolAc::toCommon(void) {
-  stdAc::state_t result;
-  result.protocol = decode_type_t::WHIRLPOOL_AC;
-  result.model = this->getModel();
-  result.power = this->getPowerToggle();
-  result.mode = this->toCommonMode(this->getMode());
-  result.celsius = true;
-  result.degrees = this->getTemp();
-  result.fanspeed = this->toCommonFanSpeed(this->getFan());
-  result.swingv = this->getSwing() ? stdAc::swingv_t::kAuto :
-                                     stdAc::swingv_t::kOff;
-  result.turbo = this->getSuper();
-  result.light = this->getLight();
-  result.sleep = this->getSleep() ? 0 : -1;
-  // Not supported.
-  result.swingh = stdAc::swingh_t::kOff;
-  result.quiet = false;
-  result.filter = false;
-  result.econo = false;
-  result.clean = false;
-  result.beep = false;
-  result.clock = -1;
-  return result;
 }
 
 #ifdef ARDUINO
@@ -501,16 +416,15 @@ std::string IRWhirlpoolAc::timeToString(const uint16_t minspastmidnight) {
 
 // Convert the internal state into a human readable string.
 #ifdef ARDUINO
-String IRWhirlpoolAc::toString(void) {
+String IRWhirlpoolAc::toString() {
   String result = "";
 #else
-std::string IRWhirlpoolAc::toString(void) {
+std::string IRWhirlpoolAc::toString() {
   std::string result = "";
 #endif  // ARDUINO
-  result.reserve(200);  // Reserve some heap for the string to reduce fragging.
   result += F("Model: ");
-  result += uint64ToString(this->getModel());
-  switch (this->getModel()) {
+  result += uint64ToString(getModel());
+  switch (getModel()) {
     case DG11J191:
       result += F(" (DG11J191)");
       break;
@@ -521,10 +435,13 @@ std::string IRWhirlpoolAc::toString(void) {
       result += F(" (UNKNOWN)");
   }
   result += F(", Power toggle: ");
-  result += this->getPowerToggle() ? F("On") : F("Off");
+  if (getPowerToggle())
+    result += F("On");
+  else
+    result += F("Off");
   result += F(", Mode: ");
-  result += uint64ToString(this->getMode());
-  switch (this->getMode()) {
+  result += uint64ToString(getMode());
+  switch (getMode()) {
     case kWhirlpoolAcHeat:
       result += F(" (HEAT)");
       break;
@@ -544,9 +461,9 @@ std::string IRWhirlpoolAc::toString(void) {
       result += F(" (UNKNOWN)");
   }
   result += F(", Temp: ");
-  result += uint64ToString(this->getTemp());
+  result += uint64ToString(getTemp());
   result += F("C, Fan: ");
-  result += uint64ToString(this->getFan());
+  result += uint64ToString(getFan());
   switch (getFan()) {
     case kWhirlpoolAcFanAuto:
       result += F(" (AUTO)");
@@ -565,28 +482,40 @@ std::string IRWhirlpoolAc::toString(void) {
       break;
   }
   result += F(", Swing: ");
-  result += this->getSwing() ? F("On") : F("Off");
+  if (getSwing())
+    result += F("On");
+  else
+    result += F("Off");
   result += F(", Light: ");
-  result += this->getLight() ? F("On") : F("Off");
+  if (getLight())
+    result += F("On");
+  else
+    result += F("Off");
   result += F(", Clock: ");
-  result += this->timeToString(this->getClock());
+  result += timeToString(getClock());
   result += F(", On Timer: ");
-  if (this->isOnTimerEnabled())
-    result += this->timeToString(this->getOnTimer());
+  if (isOnTimerEnabled())
+    result += timeToString(getOnTimer());
   else
     result += F("Off");
   result += F(", Off Timer: ");
-  if (this->isOffTimerEnabled())
-    result += this->timeToString(this->getOffTimer());
+  if (isOffTimerEnabled())
+    result += timeToString(getOffTimer());
   else
     result += F("Off");
   result += F(", Sleep: ");
-  result += this->getSleep() ? F("On") : F("Off");
+  if (getSleep())
+    result += F("On");
+  else
+    result += F("Off");
   result += F(", Super: ");
-  result += this->getSuper() ? F("On") : F("Off");
+  if (getSuper())
+    result += F("On");
+  else
+    result += F("Off");
   result += F(", Command: ");
-  result += uint64ToString(this->getCommand());
-  switch (this->getCommand()) {
+  result += uint64ToString(getCommand());
+  switch (getCommand()) {
     case kWhirlpoolAcCommandLight:
       result += F(" (LIGHT)");
       break;
@@ -645,8 +574,8 @@ std::string IRWhirlpoolAc::toString(void) {
 //
 // Ref:
 //   https://github.com/markszabo/IRremoteESP8266/issues/509
-bool IRrecv::decodeWhirlpoolAC(decode_results *results, const uint16_t nbits,
-                               const bool strict) {
+bool IRrecv::decodeWhirlpoolAC(decode_results *results, uint16_t nbits,
+                               bool strict) {
   if (results->rawlen < 2 * nbits + 4 + kHeader + kFooter - 1)
     return false;  // Can't possibly be a valid Whirlpool A/C message.
   if (strict) {

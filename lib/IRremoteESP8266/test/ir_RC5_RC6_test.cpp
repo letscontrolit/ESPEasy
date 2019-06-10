@@ -79,7 +79,6 @@ TEST(TestSendRC5, SendDataOnly) {
   irsend.reset();
   irsend.sendRC5(0x0, kRC5Bits);
   EXPECT_EQ(
-      "f36000d25"
       "m889s889m1778s889m889s889m889s889m889s889m889s889m889"
       "s889m889s889m889s889m889s889m889s889m889s889m889s90664",
       irsend.outputStr());
@@ -87,7 +86,6 @@ TEST(TestSendRC5, SendDataOnly) {
   irsend.reset();
   irsend.sendRC5(0x1AAA, kRC5Bits);
   EXPECT_EQ(
-      "f36000d25"
       "m889s889m889s889m1778s1778m1778s1778m1778s1778"
       "m1778s1778m1778s1778m1778s90664",
       irsend.outputStr());
@@ -95,7 +93,6 @@ TEST(TestSendRC5, SendDataOnly) {
   irsend.reset();
   irsend.sendRC5(0x175, kRC5Bits);
   EXPECT_EQ(
-      "f36000d25"
       "m889s889m1778s889m889s889m889s1778m1778s1778"
       "m889s889m889s889m1778s1778m1778s1778m889s89775",
       irsend.outputStr());
@@ -103,7 +100,6 @@ TEST(TestSendRC5, SendDataOnly) {
   irsend.reset();
   irsend.sendRC5(0x3FFF, kRC5Bits);
   EXPECT_EQ(
-      "f36000d25"
       "m889s889m889s889m889s889m889s889m889s889m889s889m889s889"
       "m889s889m889s889m889s889m889s889m889s889m889s889m889s89775",
       irsend.outputStr());
@@ -111,7 +107,6 @@ TEST(TestSendRC5, SendDataOnly) {
   irsend.reset();
   irsend.sendRC5(0x0, kRC5XBits);
   EXPECT_EQ(
-      "f36000d25"
       "m889s889m1778s889m889s889m889s889m889s889m889s889m889"
       "s889m889s889m889s889m889s889m889s889m889s889m889s90664",
       irsend.outputStr());
@@ -119,7 +114,6 @@ TEST(TestSendRC5, SendDataOnly) {
   irsend.reset();
   irsend.sendRC5(0x1AAA, kRC5XBits);
   EXPECT_EQ(
-      "f36000d25"
       "m1778s1778m1778s1778m1778s1778m1778"
       "s1778m1778s1778m1778s1778m1778s90664",
       irsend.outputStr());
@@ -127,7 +121,6 @@ TEST(TestSendRC5, SendDataOnly) {
   irsend.reset();
   irsend.sendRC5(0x175, kRC5XBits);
   EXPECT_EQ(
-      "f36000d25"
       "m889s889m1778s889m889s889m889s1778m1778s1778"
       "m889s889m889s889m1778s1778m1778s1778m889s89775",
       irsend.outputStr());
@@ -135,7 +128,6 @@ TEST(TestSendRC5, SendDataOnly) {
   irsend.reset();
   irsend.sendRC5(0x3FFF, kRC5XBits);
   EXPECT_EQ(
-      "f36000d25"
       "m1778s1778m889s889m889s889m889s889m889s889m889s889m889"
       "s889m889s889m889s889m889s889m889s889m889s889m889s89775",
       irsend.outputStr());
@@ -149,7 +141,6 @@ TEST(TestSendRC5, SendWithRepeats) {
   irsend.reset();
   irsend.sendRC5(0x175, kRC5Bits, 1);
   EXPECT_EQ(
-      "f36000d25"
       "m889s889m1778s889m889s889m889s1778m1778s1778"
       "m889s889m889s889m1778s1778m1778s1778m889s90664"
       "m889s889m1778s889m889s889m889s1778m1778s1778"
@@ -159,7 +150,6 @@ TEST(TestSendRC5, SendWithRepeats) {
   irsend.reset();
   irsend.sendRC5(0x175, kRC5Bits, 2);
   EXPECT_EQ(
-      "f36000d25"
       "m889s889m1778s889m889s889m889s1778m1778s1778"
       "m889s889m889s889m1778s1778m1778s1778m889s90664"
       "m889s889m1778s889m889s889m889s1778m1778s1778"
@@ -171,7 +161,6 @@ TEST(TestSendRC5, SendWithRepeats) {
   irsend.reset();
   irsend.sendRC5(0x175, kRC5XBits, 1);
   EXPECT_EQ(
-      "f36000d25"
       "m889s889m1778s889m889s889m889s1778m1778s1778"
       "m889s889m889s889m1778s1778m1778s1778m889s90664"
       "m889s889m1778s889m889s889m889s1778m1778s1778"
@@ -181,7 +170,6 @@ TEST(TestSendRC5, SendWithRepeats) {
   irsend.reset();
   irsend.sendRC5(0x1175, kRC5XBits, 2);
   EXPECT_EQ(
-      "f36000d25"
       "m1778s889m889s889m889s889m889s1778m1778s1778"
       "m889s889m889s889m1778s1778m1778s1778m889s90664"
       "m1778s889m889s889m889s889m889s1778m1778s1778"
@@ -456,7 +444,6 @@ TEST(TestSendRC6, SendMode0DataOnly) {
   irsend.reset();
   irsend.sendRC6(0x0);
   EXPECT_EQ(
-      "f36000d33"
       "m2664s888"
       "m444s888m444s444m444s444m444s888m888s444m444s444m444s444"
       "m444s444m444s444m444s444m444s444m444s444m444s444m444s444"
@@ -467,7 +454,6 @@ TEST(TestSendRC6, SendMode0DataOnly) {
   irsend.reset();
   irsend.sendRC6(0x1FFFF);
   EXPECT_EQ(
-      "f36000d33"
       "m2664s888"
       "m444s888m444s444m444s444m1332s888m444s444m444s444m444s444"
       "m444s444m444s444m444s444m444s444m444s444m444s444m444s444"
@@ -478,7 +464,6 @@ TEST(TestSendRC6, SendMode0DataOnly) {
   irsend.reset();
   irsend.sendRC6(0x15555);
   EXPECT_EQ(
-      "f36000d33"
       "m2664s888"
       "m444s888m444s444m444s444m1332s1332m888s888m888s888"
       "m888s888m888s888m888s888m888s888m888s888m888"
@@ -494,7 +479,6 @@ TEST(TestSendRC6, Send36BitDataOnly) {
   irsend.reset();
   irsend.sendRC6(0x0, kRC6_36Bits);
   EXPECT_EQ(
-      "f36000d33"
       "m2664s888"
       "m444s888m444s444m444s444m444"
       "s888m888"
@@ -508,7 +492,6 @@ TEST(TestSendRC6, Send36BitDataOnly) {
   irsend.reset();
   irsend.sendRC6(0xFFFFFFFFF, kRC6_36Bits);
   EXPECT_EQ(
-      "f36000d33"
       "m2664s888"
       "m444s444m444s444m444s444m444s444"
       "m888s888"
@@ -522,7 +505,6 @@ TEST(TestSendRC6, Send36BitDataOnly) {
   irsend.reset();
   irsend.sendRC6(0xAAAAAAAAAA, kRC6_36Bits);
   EXPECT_EQ(
-      "f36000d33"
       "m2664s888m444s444m444s888m888"
       "s1332m1332"
       "s888m888s888m888s888m888s888m888s888m888s888m888s888m888s888m888s888m888"
@@ -532,7 +514,6 @@ TEST(TestSendRC6, Send36BitDataOnly) {
   irsend.reset();
   irsend.sendRC6(0xC800F740C, kRC6_36Bits);  // Xbox 360 OnOff code
   EXPECT_EQ(
-      "f36000d33"
       "m2664s888"
       "m444s444m444s444m444s888m444"
       "s888m1332"
@@ -545,7 +526,6 @@ TEST(TestSendRC6, Send36BitDataOnly) {
   irsend.sendRC6(irsend.toggleRC6(0xC800F740C, kRC6_36Bits),
                  kRC6_36Bits);  // Xbox 360 OnOff code (toggled)
   EXPECT_EQ(
-      "f36000d33"
       "m2664s888"
       "m444s444m444s444m444s888m444"
       "s888m1332"
@@ -564,7 +544,6 @@ TEST(TestSendRC6, SendMode0WithRepeats) {
   irsend.reset();
   irsend.sendRC6(0x175, kRC6Mode0Bits, 0);
   EXPECT_EQ(
-      "f36000d33"
       "m2664s888"
       "m444s888m444s444m444s444m444"
       "s888m888"
@@ -575,7 +554,6 @@ TEST(TestSendRC6, SendMode0WithRepeats) {
   irsend.reset();
   irsend.sendRC6(0x175, kRC6Mode0Bits, 1);
   EXPECT_EQ(
-      "f36000d33"
       "m2664s888"
       "m444s888m444s444m444s444m444"
       "s888m888"
@@ -591,7 +569,6 @@ TEST(TestSendRC6, SendMode0WithRepeats) {
   irsend.reset();
   irsend.sendRC6(0x175, kRC6Mode0Bits, 2);
   EXPECT_EQ(
-      "f36000d33"
       "m2664s888"
       "m444s888m444s444m444s444m444"
       "s888m888"
@@ -618,7 +595,6 @@ TEST(TestSendRC6, Send36BitWithRepeats) {
   irsend.reset();
   irsend.sendRC6(0x175, kRC6_36Bits, 0);
   EXPECT_EQ(
-      "f36000d33"
       "m2664s888"
       "m444s888m444s444m444s444m444"
       "s888m888"
@@ -631,7 +607,6 @@ TEST(TestSendRC6, Send36BitWithRepeats) {
   irsend.reset();
   irsend.sendRC6(0x175, kRC6_36Bits, 1);
   EXPECT_EQ(
-      "f36000d33"
       "m2664s888"
       "m444s888m444s444m444s444m444"
       "s888m888"
@@ -651,7 +626,6 @@ TEST(TestSendRC6, Send36BitWithRepeats) {
   irsend.reset();
   irsend.sendRC6(0x175, kRC6_36Bits, 2);
   EXPECT_EQ(
-      "f36000d33"
       "m2664s888"
       "m444s888m444s444m444s444m444"
       "s888m888"
