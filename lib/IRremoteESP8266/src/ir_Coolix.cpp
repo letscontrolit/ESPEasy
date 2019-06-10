@@ -1,5 +1,5 @@
 // Copyright bakrus
-// Copyright 2017 David Conran
+// Copyright 2017,2019 David Conran
 
 #include "ir_Coolix.h"
 #include <algorithm>
@@ -20,6 +20,7 @@
 //
 // Supports:
 //   RG57K7(B)/BGEF remote control for Beko BINR 070/071 split-type aircon.
+//   MSABAU-07HRFN1-QRD0GW Midea aircon unit (circa 2016)
 // Ref:
 //   https://github.com/markszabo/IRremoteESP8266/issues/484
 
@@ -200,6 +201,14 @@ void IRCoolixAC::setPower(const bool power) {
   }
 }
 
+void IRCoolixAC::on(void) {
+  this->setPower(true);
+}
+
+void IRCoolixAC::off(void) {
+  this->setPower(false);
+}
+
 bool IRCoolixAC::getSwing() { return remote_state == kCoolixSwing; }
 
 void IRCoolixAC::setSwing() {
@@ -260,18 +269,30 @@ void IRCoolixAC::clearSensorTemp() {
 
 void IRCoolixAC::setMode(const uint8_t mode) {
   uint32_t actualmode = mode;
+  switch (actualmode) {
+    case kCoolixAuto:
+    case kCoolixDry:
+      if (this->getFan() == kCoolixFanAuto)
+        //  No kCoolixFanAuto in Dry/Auto mode.
+        this->setFan(kCoolixFanAuto0, false);
+      break;
+    case kCoolixCool:
+    case kCoolixHeat:
+    case kCoolixFan:
+      if (this->getFan() == kCoolixFanAuto0)
+        // kCoolixFanAuto0 only in Dry/Auto mode.
+        this->setFan(kCoolixFanAuto, false);
+      break;
+    default:  // Anything else, go with Auto mode.
+      this->setMode(kCoolixAuto);
+      return;
+  }
   // Fan mode is a special case of Dry.
   if (mode == kCoolixFan) actualmode = kCoolixDry;
-  switch (actualmode) {
-    case kCoolixCool:
-    case kCoolixAuto:
-    case kCoolixHeat:
-    case kCoolixDry:
-      recoverSavedState();
-      remote_state = (remote_state & ~kCoolixModeMask) | (actualmode << 2);
-      // Force the temp into a known-good state.
-      setTemp(getTemp());
-  }
+  recoverSavedState();
+  remote_state = (remote_state & ~kCoolixModeMask) | (actualmode << 2);
+  // Force the temp into a known-good state.
+  setTemp(getTemp());
   if (mode == kCoolixFan) setTempRaw(kCoolixFanTempCode);
 }
 
@@ -286,15 +307,33 @@ uint8_t IRCoolixAC::getFan() {
   return (getNormalState() & kCoolixFanMask) >> 13;
 }
 
-void IRCoolixAC::setFan(const uint8_t speed) {
+void IRCoolixAC::setFan(const uint8_t speed, const bool modecheck) {
   recoverSavedState();
   uint8_t newspeed = speed;
   switch (speed) {
+    case kCoolixFanAuto:  // Dry & Auto mode can't have this speed.
+      if (modecheck) {
+        switch (this->getMode()) {
+          case kCoolixAuto:
+          case kCoolixDry:
+            newspeed = kCoolixFanAuto0;
+        }
+      }
+      break;
+    case kCoolixFanAuto0:  // Only Dry & Auto mode can have this speed.
+      if (modecheck) {
+        switch (this->getMode()) {
+          case kCoolixAuto:
+          case kCoolixDry:
+            break;
+          default:
+            newspeed = kCoolixFanAuto;
+        }
+      }
+      break;
     case kCoolixFanMin:
     case kCoolixFanMed:
     case kCoolixFanMax:
-    case kCoolixFanAuto:
-    case kCoolixFanAuto0:
     case kCoolixFanZoneFollow:
     case kCoolixFanFixed:
       break;
@@ -305,6 +344,86 @@ void IRCoolixAC::setFan(const uint8_t speed) {
   remote_state |= ((newspeed << 13) & kCoolixFanMask);
 }
 
+// Convert a standard A/C mode into its native mode.
+uint8_t IRCoolixAC::convertMode(const stdAc::opmode_t mode) {
+  switch (mode) {
+    case stdAc::opmode_t::kCool:
+      return kCoolixCool;
+    case stdAc::opmode_t::kHeat:
+      return kCoolixHeat;
+    case stdAc::opmode_t::kDry:
+      return kCoolixDry;
+    case stdAc::opmode_t::kFan:
+      return kCoolixFan;
+    default:
+      return kCoolixAuto;
+  }
+}
+
+// Convert a standard A/C Fan speed into its native fan speed.
+uint8_t IRCoolixAC::convertFan(const stdAc::fanspeed_t speed) {
+  switch (speed) {
+    case stdAc::fanspeed_t::kMin:
+    case stdAc::fanspeed_t::kLow:
+      return kCoolixFanMin;
+    case stdAc::fanspeed_t::kMedium:
+      return kCoolixFanMed;
+    case stdAc::fanspeed_t::kHigh:
+    case stdAc::fanspeed_t::kMax:
+      return kCoolixFanMax;
+    default:
+      return kCoolixFanAuto;
+  }
+}
+
+// Convert a native mode to it's common equivalent.
+stdAc::opmode_t IRCoolixAC::toCommonMode(const uint8_t mode) {
+  switch (mode) {
+    case kCoolixCool: return stdAc::opmode_t::kCool;
+    case kCoolixHeat: return stdAc::opmode_t::kHeat;
+    case kCoolixDry: return stdAc::opmode_t::kDry;
+    case kCoolixFan: return stdAc::opmode_t::kFan;
+    default: return stdAc::opmode_t::kAuto;
+  }
+}
+
+// Convert a native fan speed to it's common equivalent.
+stdAc::fanspeed_t IRCoolixAC::toCommonFanSpeed(const uint8_t speed) {
+  switch (speed) {
+    case kCoolixFanMax: return stdAc::fanspeed_t::kMax;
+    case kCoolixFanMed: return stdAc::fanspeed_t::kMedium;
+    case kCoolixFanMin: return stdAc::fanspeed_t::kMin;
+    default: return stdAc::fanspeed_t::kAuto;
+  }
+}
+
+// Convert the A/C state to it's common equivalent.
+stdAc::state_t IRCoolixAC::toCommon(void) {
+  stdAc::state_t result;
+  result.protocol = decode_type_t::COOLIX;
+  result.model = -1;  // No models used.
+  result.power = this->getPower();
+  result.mode = this->toCommonMode(this->getMode());
+  result.celsius = true;
+  result.degrees = this->getTemp();
+  result.fanspeed = this->toCommonFanSpeed(this->getFan());
+  result.swingv = this->getSwing() ? stdAc::swingv_t::kAuto :
+                                     stdAc::swingv_t::kOff;
+  result.swingh = this->getSwing() ? stdAc::swingh_t::kAuto :
+                                     stdAc::swingh_t::kOff;
+  result.turbo = this->getTurbo();
+  result.sleep = this->getSleep() ? 0 : -1;
+  result.light = this->getLed();
+  result.clean = this->getClean();
+  // Not supported.
+  result.quiet = false;
+  result.econo = false;
+  result.filter = false;
+  result.beep = false;
+  result.clock = -1;
+  return result;
+}
+
 // Convert the internal state into a human readable string.
 #ifdef ARDUINO
 String IRCoolixAC::toString() {
@@ -313,6 +432,7 @@ String IRCoolixAC::toString() {
 std::string IRCoolixAC::toString() {
   std::string result = "";
 #endif  // ARDUINO
+  result.reserve(100);  // Reserve some heap for the string to reduce fragging.
   result += F("Power: ");
   if (getPower()) {
     result += F("On");
