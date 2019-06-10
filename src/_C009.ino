@@ -95,7 +95,6 @@ bool do_process_c009_delay_queue(int controller_number, const C009_queue_element
   String jsonString;
   {
     // Create json root object
-    DynamicJsonDocument jsonBuffer(1024);
     DynamicJsonDocument root(1024);
     root[F("module")] = String(F("ESPEasy"));
     root[F("version")] = String(F("1.04"));
