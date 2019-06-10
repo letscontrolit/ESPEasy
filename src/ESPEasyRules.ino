@@ -116,7 +116,7 @@ void rulesProcessing(String &event) {
   Rules processing
   \*********************************************************************************************/
 String rulesProcessingFile(const String &fileName, String &event) {
-  if (!Settings.UseRules || !fileExists(fileName))
+  if (!Settings.UseRules)
     return "";
   checkRAM(F("rulesProcessingFile"));
 #ifndef BUILD_NO_DEBUG
@@ -138,7 +138,7 @@ String rulesProcessingFile(const String &fileName, String &event) {
     return (log);
   }
 
-  fs::File f = tryOpenFile(fileName, "r+");
+  fs::File f = SPIFFS.open(fileName, "r+");
   SPIFFS_CHECK(f, fileName.c_str());
 
   String line = "";

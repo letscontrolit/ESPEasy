@@ -1,11 +1,8 @@
 #ifndef STRING_PROVIDER_TYPES_H
 #define STRING_PROVIDER_TYPES_H
 
-struct LabelType;
-//enum LabelType::Enum : short;
-
 struct LabelType {
-enum Enum : short {
+enum Enum {
   UNIT_NR,
   UNIT_NAME,
   HOST_NAME,
@@ -90,8 +87,10 @@ enum Enum : short {
 
 
 };
-};
 
+
+
+};
 
 String getInternalLabel(LabelType::Enum label);
 String getLabel(LabelType::Enum label);

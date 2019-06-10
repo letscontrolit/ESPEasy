@@ -73,11 +73,8 @@ void Plugin_037_update_connect_status() {
     }
     if (!connected) {
       // workaround see: https://github.com/esp8266/Arduino/issues/4497#issuecomment-373023864
-      if (MQTTclient_037 != NULL) {
-        espclient_037 = WiFiClient();
-        espclient_037.setTimeout(CONTROLLER_CLIENTTIMEOUT_DFLT);
-        MQTTclient_037->setClient(espclient_037);
-      }
+      espclient_037 = WiFiClient();
+      espclient_037.setTimeout(CONTROLLER_CLIENTTIMEOUT_DFLT);
       ++reconnectCount;
       addLog(LOG_LEVEL_ERROR, F("IMPT : MQTT 037 Connection lost"));
     }

@@ -492,7 +492,7 @@ bool WiFiConnected() {
   START_TIMER;
   // For ESP82xx, do not rely on WiFi.status() with event based wifi.
   if (wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED) {
-    if (WiFi.RSSI() < 0 && WiFi.isConnected()) {
+    if (WiFi.isConnected()) {
       STOP_TIMER(WIFI_ISCONNECTED_STATS);
       return true;
     }

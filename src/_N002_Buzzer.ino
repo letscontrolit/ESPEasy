@@ -46,7 +46,6 @@ boolean NPlugin_002(byte function, struct EventStruct *event, String& string)
       {
         MakeNotificationSettings(NotificationSettings);
         LoadNotificationSettings(event->NotificationIndex, (byte*)&NotificationSettings, sizeof(NotificationSettingsStruct));
-        NotificationSettings.validate();
         //this reserves IRAM and uninitialized RAM
         #ifndef ESP32
         // Buzzer not compatible with ESP32 due to lack of tone command.

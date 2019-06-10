@@ -56,10 +56,9 @@ bool CPlugin_002(byte function, struct EventStruct *event, String& string)
         // Find first enabled controller index with this protocol
         byte ControllerID = findFirstEnabledControllerWithId(CPLUGIN_ID_002);
         if (ControllerID < CONTROLLER_MAX) {
-          StaticJsonDocument<512> jsonBuffer;
-          DynamicJsonDocument root(1024);
-		deserializeJson(root, event->String2.c_str());
-          if (!root.isNull())
+          StaticJsonBuffer<512> jsonBuffer;
+          JsonObject& root = jsonBuffer.parseObject(event->String2.c_str());
+          if (root.success())
           {
             unsigned int idx = root[F("idx")];
             float nvalue = root[F("nvalue")];
@@ -85,7 +84,7 @@ bool CPlugin_002(byte function, struct EventStruct *event, String& string)
                   {
                     action = F("inputSwitchState,");
                     action += x;
-                    action += ',';
+                    action += ",";
                     action += nvalue;
                     break;
                   }
@@ -98,7 +97,7 @@ bool CPlugin_002(byte function, struct EventStruct *event, String& string)
                       int pwmValue = UserVar[baseVar];
                       action = F("pwm,");
                       action += Settings.TaskDevicePin1[x];
-                      action += ',';
+                      action += ",";
                       switch ((int)nvalue)
                       {
                         case 0:
@@ -118,7 +117,7 @@ bool CPlugin_002(byte function, struct EventStruct *event, String& string)
                       UserVar[baseVar] = nvalue;
                       action = F("gpio,");
                       action += Settings.TaskDevicePin1[x];
-                      action += ',';
+                      action += ",";
                       action += nvalue;
                     }
                     break;
@@ -155,8 +154,9 @@ bool CPlugin_002(byte function, struct EventStruct *event, String& string)
             break;
           }
 */
+          StaticJsonBuffer<200> jsonBuffer;
 
-          DynamicJsonDocument root(200);
+          JsonObject& root = jsonBuffer.createObject();
           root[F("idx")] = event->idx;
           root[F("RSSI")] = mapRSSItoDomoticz();
           #if FEATURE_ADC_VCC
@@ -197,7 +197,7 @@ bool CPlugin_002(byte function, struct EventStruct *event, String& string)
           }
 
           String json;
-          serializeJson(root,json);
+          root.printTo(json);
 #ifndef BUILD_NO_DEBUG
           String log = F("MQTT : ");
           log += json;
@@ -219,13 +219,6 @@ bool CPlugin_002(byte function, struct EventStruct *event, String& string)
           String log = F("MQTT : IDX cannot be zero!");
           addLog(LOG_LEVEL_ERROR, log);
         }
-        break;
-      }
-
-    case CPLUGIN_FLUSH:
-      {
-        processMQTTdelayQueue();
-        delay(0);
         break;
       }
 

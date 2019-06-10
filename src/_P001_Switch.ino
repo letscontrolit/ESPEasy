@@ -273,14 +273,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
           //setPinState(PLUGIN_ID_001, CONFIG_PIN1, PIN_MODE_INPUT, switchstate[event->TaskIndex]);
           //  if it is in the device list we assume it's an input pin
           if (Settings.TaskDevicePin1PullUp[event->TaskIndex]) {
-            #if defined(ESP8266)
-            if (CONFIG_PIN1 == 16)
-              pinMode(CONFIG_PIN1, INPUT_PULLDOWN_16);
-            else
-              pinMode(CONFIG_PIN1, INPUT_PULLUP);
-            #else
             pinMode(CONFIG_PIN1, INPUT_PULLUP);
-            #endif
             newStatus.mode = PIN_MODE_INPUT_PULLUP;
           } else {
             pinMode(CONFIG_PIN1, INPUT);
@@ -430,7 +423,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
           if (round(PCONFIG_FLOAT(3)) && state != currentStatus.state && PCONFIG_LONG(3)==0)
           {
 #ifndef BUILD_NO_DEBUG
-            addLog(LOG_LEVEL_DEBUG,F("SW  : 1st click"));
+            addLog(LOG_LEVEL_DEBUG,F("SW  :SafeButton 1st click"));
 #endif
             PCONFIG_LONG(3) = 1;
           }

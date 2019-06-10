@@ -90,14 +90,6 @@ bool CPlugin_013(byte function, struct EventStruct *event, String& string)
         break;
       }
 
-/*
-    case CPLUGIN_FLUSH:
-      {
-        process_c013_delay_queue();
-        delay(0);
-        break;
-      }
-*/
   }
   return success;
 }

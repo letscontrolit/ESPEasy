@@ -1572,6 +1572,109 @@ void reboot() {
 
 
 /********************************************************************************************\
+  Save RTC struct to RTC memory
+  \*********************************************************************************************/
+boolean saveToRTC()
+{
+  #if defined(ESP32)
+    return false;
+  #else
+    if (!system_rtc_mem_write(RTC_BASE_STRUCT, (byte*)&RTC, sizeof(RTC)) || !readFromRTC())
+    {
+      addLog(LOG_LEVEL_ERROR, F("RTC  : Error while writing to RTC"));
+      return(false);
+    }
+    else
+    {
+      return(true);
+    }
+  #endif
+}
+
+
+/********************************************************************************************\
+  Initialize RTC memory
+  \*********************************************************************************************/
+void initRTC()
+{
+  memset(&RTC, 0, sizeof(RTC));
+  RTC.ID1 = 0xAA;
+  RTC.ID2 = 0x55;
+  saveToRTC();
+
+  memset(&UserVar, 0, sizeof(UserVar));
+  saveUserVarToRTC();
+}
+
+/********************************************************************************************\
+  Read RTC struct from RTC memory
+  \*********************************************************************************************/
+boolean readFromRTC()
+{
+  #if defined(ESP32)
+    return false;
+  #else
+    if (!system_rtc_mem_read(RTC_BASE_STRUCT, (byte*)&RTC, sizeof(RTC)))
+      return(false);
+    return (RTC.ID1 == 0xAA && RTC.ID2 == 0x55);
+  #endif
+}
+
+
+/********************************************************************************************\
+  Save values to RTC memory
+\*********************************************************************************************/
+boolean saveUserVarToRTC()
+{
+  #if defined(ESP32)
+    return false;
+  #else
+    //addLog(LOG_LEVEL_DEBUG, F("RTCMEM: saveUserVarToRTC"));
+    byte* buffer = (byte*)&UserVar;
+    size_t size = sizeof(UserVar);
+    uint32_t sum = getChecksum(buffer, size);
+    boolean ret = system_rtc_mem_write(RTC_BASE_USERVAR, buffer, size);
+    ret &= system_rtc_mem_write(RTC_BASE_USERVAR+(size>>2), (byte*)&sum, 4);
+    return ret;
+  #endif
+}
+
+
+/********************************************************************************************\
+  Read RTC struct from RTC memory
+\*********************************************************************************************/
+boolean readUserVarFromRTC()
+{
+  #if defined(ESP32)
+    return false;
+  #else
+    //addLog(LOG_LEVEL_DEBUG, F("RTCMEM: readUserVarFromRTC"));
+    byte* buffer = (byte*)&UserVar;
+    size_t size = sizeof(UserVar);
+    boolean ret = system_rtc_mem_read(RTC_BASE_USERVAR, buffer, size);
+    uint32_t sumRAM = getChecksum(buffer, size);
+    uint32_t sumRTC = 0;
+    ret &= system_rtc_mem_read(RTC_BASE_USERVAR+(size>>2), (byte*)&sumRTC, 4);
+    if (!ret || sumRTC != sumRAM)
+    {
+      addLog(LOG_LEVEL_ERROR, F("RTC  : Checksum error on reading RTC user var"));
+      memset(buffer, 0, size);
+    }
+    return ret;
+  #endif
+}
+
+
+uint32_t getChecksum(byte* buffer, size_t size)
+{
+  uint32_t sum = 0x82662342;   //some magic to avoid valid checksum on new, uninitialized ESP
+  for (size_t i=0; i<size; i++)
+    sum += buffer[i];
+  return sum;
+}
+
+
+/********************************************************************************************\
   Parse string template
   \*********************************************************************************************/
 String parseTemplate(String &tmpString, byte lineSize)
@@ -2462,7 +2565,7 @@ void checkRAM( String &a ) {
 
 //#ifdef PLUGIN_BUILD_TESTING
 
-//#define isdigit(n) (n >= '0' && n <= '9') //Conflicts with ArduJson 6+, when this lib is used there is no need for this macro
+#define isdigit(n) (n >= '0' && n <= '9')
 
 /********************************************************************************************\
   Generate a tone of specified frequency on pin
@@ -2734,25 +2837,6 @@ int calc_CRC16(const char *ptr, int count)
     return crc;
 }
 
-uint32_t calc_CRC32(const uint8_t *data, size_t length) {
-  uint32_t crc = 0xffffffff;
-  while (length--) {
-    uint8_t c = *data++;
-    for (uint32_t i = 0x80; i > 0; i >>= 1) {
-      bool bit = crc & 0x80000000;
-      if (c & i) {
-        bit = !bit;
-      }
-      crc <<= 1;
-      if (bit) {
-        crc ^= 0x04c11db7;
-      }
-    }
-  }
-  return crc;
-}
-
-
 // Compute the dew point temperature, given temperature and humidity (temp in Celcius)
 // Formula: http://www.ajdesigner.com/phphumidity/dewpoint_equation_dewpoint_temperature.php
 // Td = (f/100)^(1/8) * (112 + 0.9*T) + 0.1*T - 112
@@ -2823,84 +2907,4 @@ uint16_t getPluginFromKey(uint32_t key) {
 
 uint16_t getPortFromKey(uint32_t key) {
   return (uint16_t)(key);
-}
-
-//#######################################################################################################
-//############################ quite acurate but slow color converter####################################
-//#######################################################################################################
-// uses H 0..360 S 1..100 I/V 1..100 (according to homie convention)
-// Source https://blog.saikoled.com/post/44677718712/how-to-convert-from-hsi-to-rgb-white
-
-void HSV2RGB(float H, float S, float I, int rgb[3]) {
-  int r, g, b;
-  H = fmod(H,360); // cycle H around to 0-360 degrees
-  H = 3.14159*H/(float)180; // Convert to radians.
-  S = S / 100;
-  S = S>0?(S<1?S:1):0; // clamp S and I to interval [0,1]
-  I = I / 100;
-  I = I>0?(I<1?I:1):0;
-
-  // Math! Thanks in part to Kyle Miller.
-  if(H < 2.09439) {
-    r = 255*I/3*(1+S*cos(H)/cos(1.047196667-H));
-    g = 255*I/3*(1+S*(1-cos(H)/cos(1.047196667-H)));
-    b = 255*I/3*(1-S);
-  } else if(H < 4.188787) {
-    H = H - 2.09439;
-    g = 255*I/3*(1+S*cos(H)/cos(1.047196667-H));
-    b = 255*I/3*(1+S*(1-cos(H)/cos(1.047196667-H)));
-    r = 255*I/3*(1-S);
-  } else {
-    H = H - 4.188787;
-    b = 255*I/3*(1+S*cos(H)/cos(1.047196667-H));
-    r = 255*I/3*(1+S*(1-cos(H)/cos(1.047196667-H)));
-    g = 255*I/3*(1-S);
-  }
-  rgb[0]=r;
-  rgb[1]=g;
-  rgb[2]=b;
-}
-
-// uses H 0..360 S 1..100 I/V 1..100 (according to homie convention)
-// Source https://blog.saikoled.com/post/44677718712/how-to-convert-from-hsi-to-rgb-white
-
-void HSV2RGBW(float H, float S, float I, int rgbw[4]) {
-  int r, g, b, w;
-  float cos_h, cos_1047_h;
-  H = fmod(H,360); // cycle H around to 0-360 degrees
-  H = 3.14159*H/(float)180; // Convert to radians.
-  S = S / 100;
-  S = S>0?(S<1?S:1):0; // clamp S and I to interval [0,1]
-  I = I / 100;
-  I = I>0?(I<1?I:1):0;
-
-  if(H < 2.09439) {
-    cos_h = cos(H);
-    cos_1047_h = cos(1.047196667-H);
-    r = S*255*I/3*(1+cos_h/cos_1047_h);
-    g = S*255*I/3*(1+(1-cos_h/cos_1047_h));
-    b = 0;
-    w = 255*(1-S)*I;
-  } else if(H < 4.188787) {
-    H = H - 2.09439;
-    cos_h = cos(H);
-    cos_1047_h = cos(1.047196667-H);
-    g = S*255*I/3*(1+cos_h/cos_1047_h);
-    b = S*255*I/3*(1+(1-cos_h/cos_1047_h));
-    r = 0;
-    w = 255*(1-S)*I;
-  } else {
-    H = H - 4.188787;
-    cos_h = cos(H);
-    cos_1047_h = cos(1.047196667-H);
-    b = S*255*I/3*(1+cos_h/cos_1047_h);
-    r = S*255*I/3*(1+(1-cos_h/cos_1047_h));
-    g = 0;
-    w = 255*(1-S)*I;
-  }
-
-  rgbw[0]=r;
-  rgbw[1]=g;
-  rgbw[2]=b;
-  rgbw[3]=w;
 }

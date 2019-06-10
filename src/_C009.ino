@@ -71,14 +71,6 @@ bool CPlugin_009(byte function, struct EventStruct *event, String& string)
         scheduleNextDelayQueue(TIMER_C009_DELAY_QUEUE, C009_DelayHandler.getNextScheduleTime());
         break;
       }
-
-    case CPLUGIN_FLUSH:
-      {
-        process_c009_delay_queue();
-        delay(0);
-        break;
-      }
-
   }
   return success;
 }
@@ -95,13 +87,14 @@ bool do_process_c009_delay_queue(int controller_number, const C009_queue_element
   String jsonString;
   {
     // Create json root object
-    DynamicJsonDocument root(1024);
+    DynamicJsonBuffer jsonBuffer;
+    JsonObject& root = jsonBuffer.createObject();
     root[F("module")] = String(F("ESPEasy"));
     root[F("version")] = String(F("1.04"));
 
     // Create nested objects
-    JsonObject data = root.createNestedObject(String(F("data")));
-    JsonObject ESP = data.createNestedObject(String(F("ESP")));
+    JsonObject& data = root.createNestedObject(String(F("data")));
+    JsonObject& ESP = data.createNestedObject(String(F("ESP")));
     ESP[F("name")] = Settings.Name;
     ESP[F("unit")] = Settings.Unit;
     ESP[F("version")] = Settings.Version;
@@ -118,14 +111,14 @@ bool do_process_c009_delay_queue(int controller_number, const C009_queue_element
     ESP[F("ip")] = WiFi.localIP().toString();
 
     // Create nested SENSOR json object
-    JsonObject SENSOR = data.createNestedObject(String(F("SENSOR")));
+    JsonObject& SENSOR = data.createNestedObject(String(F("SENSOR")));
     byte valueCount = getValueCountFromSensorType(element.sensorType);
     // char itemNames[valueCount][2];
     for (byte x = 0; x < valueCount; x++)
     {
       // Each sensor value get an own object (0..n)
       // sprintf(itemNames[x],"%d",x);
-      JsonObject val = SENSOR.createNestedObject(String(x));
+      JsonObject& val = SENSOR.createNestedObject(String(x));
       val[F("deviceName")] = getTaskDeviceName(element.TaskIndex);
       val[F("valueName")]  = ExtraTaskSettings.TaskDeviceValueNames[x];
       val[F("type")]       = element.sensorType;
@@ -133,7 +126,7 @@ bool do_process_c009_delay_queue(int controller_number, const C009_queue_element
     }
 
     // Create json buffer
-    serializeJson(root, jsonString);
+    root.printTo(jsonString);
   }
 
   // We now create a URI for the request
