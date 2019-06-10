@@ -155,7 +155,6 @@ bool CPlugin_002(byte function, struct EventStruct *event, String& string)
             break;
           }
 */
-          StaticJsonDocument<200> jsonBuffer;
 
           DynamicJsonDocument root(200);
           root[F("idx")] = event->idx;
