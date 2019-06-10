@@ -26,25 +26,20 @@
 #include <IRremoteESP8266.h>
 #include <IRutils.h>
 // The following are only needed for extended decoding of A/C Messages
-#include <ir_Argo.h>
 #include <ir_Coolix.h>
 #include <ir_Daikin.h>
 #include <ir_Fujitsu.h>
-#include <ir_Goodweather.h>
 #include <ir_Gree.h>
 #include <ir_Haier.h>
 #include <ir_Hitachi.h>
 #include <ir_Kelvinator.h>
 #include <ir_Midea.h>
 #include <ir_Mitsubishi.h>
-#include <ir_MitsubishiHeavy.h>
 #include <ir_Panasonic.h>
 #include <ir_Samsung.h>
-#include <ir_Sharp.h>
 #include <ir_Tcl.h>
 #include <ir_Teco.h>
 #include <ir_Toshiba.h>
-#include <ir_Trotec.h>
 #include <ir_Vestel.h>
 #include <ir_Whirlpool.h>
 
@@ -122,15 +117,8 @@ IRrecv irrecv(kRecvPin, kCaptureBufferSize, kTimeout, true);
 decode_results results;  // Somewhere to store the results
 
 // Display the human readable state of an A/C message if we can.
-void dumpACInfo(const decode_results * const results) {
+void dumpACInfo(decode_results *results) {
   String description = "";
-#if DECODE_ARGO
-  if (results->decode_type == ARGO) {
-    IRArgoAC ac(0);
-    ac.setRaw(results->state);
-    description = ac.toString();
-  }
-#endif  // DECODE_ARGO
 #if DECODE_DAIKIN
   if (results->decode_type == DAIKIN) {
     IRDaikinESP ac(0);
@@ -145,13 +133,6 @@ void dumpACInfo(const decode_results * const results) {
     description = ac.toString();
   }
 #endif  // DECODE_DAIKIN2
-#if DECODE_DAIKIN216
-  if (results->decode_type == DAIKIN216) {
-    IRDaikin216 ac(0);
-    ac.setRaw(results->state);
-    description = ac.toString();
-  }
-#endif  // DECODE_DAIKIN216
 #if DECODE_FUJITSU_AC
   if (results->decode_type == FUJITSU_AC) {
     IRFujitsuAC ac(0);
@@ -173,18 +154,6 @@ void dumpACInfo(const decode_results * const results) {
     description = ac.toString();
   }
 #endif  // DECODE_MITSUBISHI_AC
-#if DECODE_MITSUBISHIHEAVY
-  if (results->decode_type == MITSUBISHI_HEAVY_88) {
-    IRMitsubishiHeavy88Ac ac(0);
-    ac.setRaw(results->state);
-    description = ac.toString();
-  }
-  if (results->decode_type == MITSUBISHI_HEAVY_152) {
-    IRMitsubishiHeavy152Ac ac(0);
-    ac.setRaw(results->state);
-    description = ac.toString();
-  }
-#endif  // DECODE_MITSUBISHIHEAVY
 #if DECODE_TOSHIBA_AC
   if (results->decode_type == TOSHIBA_AC) {
     IRToshibaAC ac(0);
@@ -192,20 +161,6 @@ void dumpACInfo(const decode_results * const results) {
     description = ac.toString();
   }
 #endif  // DECODE_TOSHIBA_AC
-#if DECODE_TROTEC
-  if (results->decode_type == TROTEC) {
-    IRTrotecESP ac(0);
-    ac.setRaw(results->state);
-    description = ac.toString();
-  }
-#endif  // DECODE_TROTEC
-#if DECODE_GOODWEATHER
-  if (results->decode_type == GOODWEATHER) {
-    IRGoodweatherAc ac(0);
-    ac.setRaw(results->value);  // Goodweather uses value instead of state.
-    description = ac.toString();
-  }
-#endif  // DECODE_GOODWEATHER
 #if DECODE_GREE
   if (results->decode_type == GREE) {
     IRGreeAC ac(0);
@@ -241,13 +196,6 @@ void dumpACInfo(const decode_results * const results) {
     description = ac.toString();
   }
 #endif  // DECODE_SAMSUNG_AC
-#if DECODE_SHARP_AC
-  if (results->decode_type == SHARP_AC) {
-    IRSharpAc ac(0);
-    ac.setRaw(results->state);
-    description = ac.toString();
-  }
-#endif  // DECODE_SHARP_AC
 #if DECODE_COOLIX
   if (results->decode_type == COOLIX) {
     IRCoolixAC ac(0);

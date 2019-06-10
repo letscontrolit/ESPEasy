@@ -11,19 +11,17 @@ TEST(TestSendLutron, SendDataOnly) {
   IRsendTest irsend(0);
   irsend.begin();
   irsend.sendLutron(0);
-  EXPECT_EQ("f40000d40m2288s230080", irsend.outputStr());
+  EXPECT_EQ("m2288s230080", irsend.outputStr());
   irsend.sendLutron(0xAAAAAAAAA);  // Longest possible sequence. (I think)
   EXPECT_EQ(
-      "f40000d40"
       "m2288s2288m2288s2288m2288s2288m2288s2288m2288s2288m2288s2288m2288s2288"
       "m2288s2288m2288s2288m2288s2288m2288s2288m2288s2288m2288s2288m2288s2288"
       "m2288s2288m2288s2288m2288s2288m2288s152288",
       irsend.outputStr());
   irsend.sendLutron(0x7FFFFFFFF);
-  EXPECT_EQ("f40000d40m82368s150000", irsend.outputStr());
+  EXPECT_EQ("m82368s150000", irsend.outputStr());
   irsend.sendLutron(0x7F88BD120);
   EXPECT_EQ(
-      "f40000d40"
       "m20592s6864m2288s6864m2288s2288m9152s2288m2288s6864m2288s4576m2288"
       "s161440",
       irsend.outputStr());
@@ -36,14 +34,12 @@ TEST(TestSendLutron, SendWithRepeats) {
   // Send a command with 0 repeats.
   irsend.sendLutron(0x7F88BD120, kLutronBits, 0);
   EXPECT_EQ(
-      "f40000d40"
       "m20592s6864m2288s6864m2288s2288m9152s2288m2288s6864m2288s4576m2288"
       "s161440",
       irsend.outputStr());
   // Send a command with 1 repeat.
   irsend.sendLutron(0x7F88BD120, kLutronBits, 1);
   EXPECT_EQ(
-      "f40000d40"
       "m20592s6864m2288s6864m2288s2288m9152s2288m2288s6864m2288s4576m2288"
       "s161440"
       "m20592s6864m2288s6864m2288s2288m9152s2288m2288s6864m2288s4576m2288"
@@ -52,7 +48,6 @@ TEST(TestSendLutron, SendWithRepeats) {
   // Send a command with 3 repeats.
   irsend.sendLutron(0x7F88BD120, kLutronBits, 3);
   EXPECT_EQ(
-      "f40000d40"
       "m20592s6864m2288s6864m2288s2288m9152s2288m2288s6864m2288s4576m2288"
       "s161440"
       "m20592s6864m2288s6864m2288s2288m9152s2288m2288s6864m2288s4576m2288"

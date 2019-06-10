@@ -14,7 +14,6 @@ TEST(TestSendDish, SendDataOnly) {
   irsend.reset();
   irsend.sendDISH(0x0);
   EXPECT_EQ(
-      "f57600d50"
       "m400s6100"
       "m400s2800m400s2800m400s2800m400s2800m400s2800m400s2800m400s2800m400s2800"
       "m400s2800m400s2800m400s2800m400s2800m400s2800m400s2800m400s2800m400s2800"
@@ -33,7 +32,6 @@ TEST(TestSendDish, SendDataOnly) {
   irsend.reset();
   irsend.sendDISH(0x9C00);  // Power on.
   EXPECT_EQ(
-      "f57600d50"
       "m400s6100"
       "m400s1700m400s2800m400s2800m400s1700m400s1700m400s1700m400s2800m400s2800"
       "m400s2800m400s2800m400s2800m400s2800m400s2800m400s2800m400s2800m400s2800"
@@ -52,7 +50,6 @@ TEST(TestSendDish, SendDataOnly) {
   irsend.reset();
   irsend.sendDISH(0xFFFF);
   EXPECT_EQ(
-      "f57600d50"
       "m400s6100"
       "m400s1700m400s1700m400s1700m400s1700m400s1700m400s1700m400s1700m400s1700"
       "m400s1700m400s1700m400s1700m400s1700m400s1700m400s1700m400s1700m400s1700"
@@ -77,7 +74,6 @@ TEST(TestSendDish, SendWithRepeats) {
   irsend.reset();
   irsend.sendDISH(0x9C00, kDishBits, 0);  // 0 repeats.
   EXPECT_EQ(
-      "f57600d50"
       "m400s6100"
       "m400s1700m400s2800m400s2800m400s1700m400s1700m400s1700m400s2800m400s2800"
       "m400s2800m400s2800m400s2800m400s2800m400s2800m400s2800m400s2800m400s2800"
@@ -87,7 +83,6 @@ TEST(TestSendDish, SendWithRepeats) {
   irsend.reset();
   irsend.sendDISH(0x9C00, kDishBits, 1);  // 1 repeat.
   EXPECT_EQ(
-      "f57600d50"
       "m400s6100"
       "m400s1700m400s2800m400s2800m400s1700m400s1700m400s1700m400s2800m400s2800"
       "m400s2800m400s2800m400s2800m400s2800m400s2800m400s2800m400s2800m400s2800"
@@ -99,7 +94,6 @@ TEST(TestSendDish, SendWithRepeats) {
 
   irsend.sendDISH(0x9C00, kDishBits, 2);  // 2 repeats.
   EXPECT_EQ(
-      "f57600d50"
       "m400s6100"
       "m400s1700m400s2800m400s2800m400s1700m400s1700m400s1700m400s2800m400s2800"
       "m400s2800m400s2800m400s2800m400s2800m400s2800m400s2800m400s2800m400s2800"
@@ -121,7 +115,6 @@ TEST(TestSendDish, SendUnusualSize) {
   irsend.reset();
   irsend.sendDISH(0x0, 8);
   EXPECT_EQ(
-      "f57600d50"
       "m400s6100"
       "m400s2800m400s2800m400s2800m400s2800m400s2800m400s2800m400s2800m400s2800"
       "m400s6100"
@@ -136,7 +129,6 @@ TEST(TestSendDish, SendUnusualSize) {
   irsend.reset();
   irsend.sendDISH(0x1234567890ABCDEF, 64);
   EXPECT_EQ(
-      "f57600d50"
       "m400s6100"
       "m400s2800m400s2800m400s2800m400s1700m400s2800m400s2800m400s1700m400s2800"
       "m400s2800m400s2800m400s1700m400s1700m400s2800m400s1700m400s2800m400s2800"

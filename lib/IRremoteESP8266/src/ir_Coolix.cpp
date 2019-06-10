@@ -305,86 +305,6 @@ void IRCoolixAC::setFan(const uint8_t speed) {
   remote_state |= ((newspeed << 13) & kCoolixFanMask);
 }
 
-// Convert a standard A/C mode into its native mode.
-uint8_t IRCoolixAC::convertMode(const stdAc::opmode_t mode) {
-  switch (mode) {
-    case stdAc::opmode_t::kCool:
-      return kCoolixCool;
-    case stdAc::opmode_t::kHeat:
-      return kCoolixHeat;
-    case stdAc::opmode_t::kDry:
-      return kCoolixDry;
-    case stdAc::opmode_t::kFan:
-      return kCoolixFan;
-    default:
-      return kCoolixAuto;
-  }
-}
-
-// Convert a standard A/C Fan speed into its native fan speed.
-uint8_t IRCoolixAC::convertFan(const stdAc::fanspeed_t speed) {
-  switch (speed) {
-    case stdAc::fanspeed_t::kMin:
-    case stdAc::fanspeed_t::kLow:
-      return kCoolixFanMin;
-    case stdAc::fanspeed_t::kMedium:
-      return kCoolixFanMed;
-    case stdAc::fanspeed_t::kHigh:
-    case stdAc::fanspeed_t::kMax:
-      return kCoolixFanMax;
-    default:
-      return kCoolixFanAuto;
-  }
-}
-
-// Convert a native mode to it's common equivalent.
-stdAc::opmode_t IRCoolixAC::toCommonMode(const uint8_t mode) {
-  switch (mode) {
-    case kCoolixCool: return stdAc::opmode_t::kCool;
-    case kCoolixHeat: return stdAc::opmode_t::kHeat;
-    case kCoolixDry: return stdAc::opmode_t::kDry;
-    case kCoolixFan: return stdAc::opmode_t::kFan;
-    default: return stdAc::opmode_t::kAuto;
-  }
-}
-
-// Convert a native fan speed to it's common equivalent.
-stdAc::fanspeed_t IRCoolixAC::toCommonFanSpeed(const uint8_t speed) {
-  switch (speed) {
-    case kCoolixFanMax: return stdAc::fanspeed_t::kMax;
-    case kCoolixFanMed: return stdAc::fanspeed_t::kMedium;
-    case kCoolixFanMin: return stdAc::fanspeed_t::kMin;
-    default: return stdAc::fanspeed_t::kAuto;
-  }
-}
-
-// Convert the A/C state to it's common equivalent.
-stdAc::state_t IRCoolixAC::toCommon(void) {
-  stdAc::state_t result;
-  result.protocol = decode_type_t::COOLIX;
-  result.model = -1;  // No models used.
-  result.power = this->getPower();
-  result.mode = this->toCommonMode(this->getMode());
-  result.celsius = true;
-  result.degrees = this->getTemp();
-  result.fanspeed = this->toCommonFanSpeed(this->getFan());
-  result.swingv = this->getSwing() ? stdAc::swingv_t::kAuto :
-                                     stdAc::swingv_t::kOff;
-  result.swingh = this->getSwing() ? stdAc::swingh_t::kAuto :
-                                     stdAc::swingh_t::kOff;
-  result.turbo = this->getTurbo();
-  result.sleep = this->getSleep() ? 0 : -1;
-  result.light = this->getLed();
-  result.clean = this->getClean();
-  // Not supported.
-  result.quiet = false;
-  result.econo = false;
-  result.filter = false;
-  result.beep = false;
-  result.clock = -1;
-  return result;
-}
-
 // Convert the internal state into a human readable string.
 #ifdef ARDUINO
 String IRCoolixAC::toString() {
@@ -393,7 +313,6 @@ String IRCoolixAC::toString() {
 std::string IRCoolixAC::toString() {
   std::string result = "";
 #endif  // ARDUINO
-  result.reserve(100);  // Reserve some heap for the string to reduce fragging.
   result += F("Power: ");
   if (getPower()) {
     result += F("On");

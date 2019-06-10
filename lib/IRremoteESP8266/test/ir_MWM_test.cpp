@@ -36,7 +36,6 @@ TEST(TestSendMWM, SendDataOnly) {
   */
   irsend.sendMWM(test1, sizeof(test1), 0);
   EXPECT_EQ(
-      "f38000d25"
       "m834s834m417s417m834s834"
       "m417s417m834s834m1251s417"
       "m2085s417m1251s417"
@@ -66,7 +65,6 @@ TEST(TestSendMWM, SendDataOnly) {
   };
   irsend.sendMWM(test2, sizeof(test2), 0);
   EXPECT_EQ(
-      "f38000d25"
       "m417s417m834s834m834s834"
       "m834s834m834s417m834s417"
       "m834s834m834s834m417s417"
