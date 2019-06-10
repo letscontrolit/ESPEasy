@@ -14,6 +14,9 @@
 #endif
 #include "IRremoteESP8266.h"
 #include "IRsend.h"
+#ifdef UNIT_TEST
+#include "IRsend_test.h"
+#endif
 
 // Constants
 const uint8_t kHitachiAcAuto = 2;
@@ -31,45 +34,54 @@ const uint8_t kHitachiAcAutoTemp = 23;  // 23C
 // Classes
 class IRHitachiAc {
  public:
-  explicit IRHitachiAc(uint16_t pin);
+  explicit IRHitachiAc(const uint16_t pin);
 
-  void stateReset();
+  void stateReset(void);
 #if SEND_HITACHI_AC
   void send(const uint16_t repeat = kHitachiAcDefaultRepeat);
 #endif  // SEND_HITACHI_AC
-  void begin();
-  void on();
-  void off();
+  void begin(void);
+  void on(void);
+  void off(void);
   void setPower(const bool on);
-  bool getPower();
+  bool getPower(void);
   void setTemp(const uint8_t temp);
-  uint8_t getTemp();
+  uint8_t getTemp(void);
   void setFan(const uint8_t speed);
-  uint8_t getFan();
+  uint8_t getFan(void);
   void setMode(const uint8_t mode);
-  uint8_t getMode();
+  uint8_t getMode(void);
   void setSwingVertical(const bool on);
-  bool getSwingVertical();
+  bool getSwingVertical(void);
   void setSwingHorizontal(const bool on);
-  bool getSwingHorizontal();
-  uint8_t* getRaw();
+  bool getSwingHorizontal(void);
+  uint8_t* getRaw(void);
   void setRaw(const uint8_t new_code[],
               const uint16_t length = kHitachiAcStateLength);
   static bool validChecksum(const uint8_t state[],
                             const uint16_t length = kHitachiAcStateLength);
   static uint8_t calcChecksum(const uint8_t state[],
                               const uint16_t length = kHitachiAcStateLength);
+  uint8_t convertMode(const stdAc::opmode_t mode);
+  uint8_t convertFan(const stdAc::fanspeed_t speed);
+  static stdAc::opmode_t toCommonMode(const uint8_t mode);
+  static stdAc::fanspeed_t toCommonFanSpeed(const uint8_t speed);
+  stdAc::state_t toCommon(void);
 #ifdef ARDUINO
-  String toString();
+  String toString(void);
 #else
-  std::string toString();
+  std::string toString(void);
 #endif
+#ifndef UNIT_TEST
 
  private:
+  IRsend _irsend;
+#else
+  IRsendTest _irsend;
+#endif
   // The state of the IR remote in IR code form.
   uint8_t remote_state[kHitachiAcStateLength];
   void checksum(const uint16_t length = kHitachiAcStateLength);
-  IRsend _irsend;
   uint8_t _previoustemp;
 };
 

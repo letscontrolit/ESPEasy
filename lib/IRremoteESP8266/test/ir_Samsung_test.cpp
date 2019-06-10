@@ -1,5 +1,6 @@
 // Copyright 2017, 2018, 2019 David Conran
 
+#include <string>
 #include "ir_Samsung.h"
 #include "IRrecv.h"
 #include "IRrecv_test.h"
@@ -24,6 +25,7 @@ TEST(TestSendSamsung, SendDataOnly) {
   irsend.reset();
   irsend.sendSAMSUNG(0xE0E09966);  // Samsung TV Power On.
   EXPECT_EQ(
+      "f38000d33"
       "m4480s4480"
       "m560s1680m560s1680m560s1680m560s560m560s560m560s560m560s560"
       "m560s560m560s1680m560s1680m560s1680m560s560m560s560m560s560"
@@ -43,6 +45,7 @@ TEST(TestSendSamsung, SendWithRepeats) {
   irsend.reset();
   irsend.sendSAMSUNG(0xE0E09966, kSamsungBits, 1);  // 1 repeat.
   EXPECT_EQ(
+      "f38000d33"
       "m4480s4480"
       "m560s1680m560s1680m560s1680m560s560m560s560m560s560m560s560"
       "m560s560m560s1680m560s1680m560s1680m560s560m560s560m560s560"
@@ -58,6 +61,7 @@ TEST(TestSendSamsung, SendWithRepeats) {
       irsend.outputStr());
   irsend.sendSAMSUNG(0xE0E09966, kSamsungBits, 2);  // 2 repeats.
   EXPECT_EQ(
+      "f38000d33"
       "m4480s4480"
       "m560s1680m560s1680m560s1680m560s560m560s560m560s560m560s560"
       "m560s560m560s1680m560s1680m560s1680m560s560m560s560m560s560"
@@ -305,6 +309,7 @@ TEST(TestSendSamsungAC, SendDataOnly) {
       0x01, 0x02, 0xAF, 0x71, 0x00, 0x15, 0xF0};
   irsend.sendSamsungAC(data);
   EXPECT_EQ(
+      "f38000d50"
       "m690s17844"
       "m3086s8864"
       "m586s436m586s1432m586s436m586s436m586s436m586s436m586s436m586s436"
@@ -338,6 +343,7 @@ TEST(TestSendSamsungAC, SendExtendedData) {
       0x01, 0x02, 0xFF, 0x71, 0x80, 0x11, 0xC0};
   irsend.sendSamsungAC(data, kSamsungAcExtendedStateLength);
   EXPECT_EQ(
+      "f38000d50"
       "m690s17844"
       "m3086s8864"
       "m586s436m586s1432m586s436m586s436m586s436m586s436m586s436m586s436"
@@ -997,6 +1003,7 @@ TEST(TestSendSamsung36, SendDataOnly) {
   irsend.reset();
   irsend.sendSamsung36(0);
   EXPECT_EQ(
+      "f38000d50"
       "m4480s4480"
       "m560s560m560s560m560s560m560s560m560s560m560s560m560s560m560s560"
       "m560s560m560s560m560s560m560s560m560s560m560s560m560s560m560s560"
@@ -1008,6 +1015,7 @@ TEST(TestSendSamsung36, SendDataOnly) {
       irsend.outputStr());
   irsend.sendSamsung36(0x400E00FF);
   EXPECT_EQ(
+      "f38000d50"
       "m4480s4480"
       "m560s560m560s560m560s560m560s560m560s560m560s1680m560s560m560s560"
       "m560s560m560s560m560s560m560s560m560s560m560s560m560s560m560s560"
@@ -1034,6 +1042,7 @@ TEST(TestSendSamsung36, SendWithRepeats) {
   irsend.reset();
   irsend.sendSamsung36(0x400E00FF, kSamsung36Bits, 1);  // 1 repeat.
   EXPECT_EQ(
+      "f38000d50"
       "m4480s4480"
       "m560s560m560s560m560s560m560s560m560s560m560s1680m560s560m560s560"
       "m560s560m560s560m560s560m560s560m560s560m560s560m560s560m560s560"
@@ -1053,6 +1062,7 @@ TEST(TestSendSamsung36, SendWithRepeats) {
       irsend.outputStr());
       irsend.sendSamsung36(0x400E00FF, kSamsung36Bits, 2);  // 2 repeats.
   EXPECT_EQ(
+      "f38000d50"
       "m4480s4480"
       "m560s560m560s560m560s560m560s560m560s560m560s1680m560s560m560s560"
       "m560s560m560s560m560s560m560s560m560s560m560s560m560s560m560s560"
@@ -1118,4 +1128,121 @@ TEST(TestDecodeSamsung36, SyntheticExample) {
   EXPECT_EQ(0x400E00FF, irsend.capture.value);
   EXPECT_EQ(0xE00FF, irsend.capture.command);
   EXPECT_EQ(0x400, irsend.capture.address);
+}
+
+// https://github.com/markszabo/IRremoteESP8266/issues/604
+TEST(TestIRSamsungAcClass, Issue604SendPowerHack) {
+  IRSamsungAc ac(0);
+  ac.begin();
+
+  std::string freqduty = "f38000d50";
+
+  std::string poweron =
+      "m690s17844"
+      "m3086s8864"
+      "m586s436m586s1432m586s436m586s436m586s436m586s436m586s436m586s436"
+      "m586s436m586s1432m586s436m586s436m586s1432m586s436m586s436m586s1432"
+      "m586s1432m586s1432m586s1432m586s1432m586s436m586s436m586s436m586s436"
+      "m586s436m586s436m586s436m586s436m586s436m586s436m586s436m586s436"
+      "m586s436m586s436m586s436m586s436m586s436m586s436m586s436m586s436"
+      "m586s436m586s436m586s436m586s436m586s436m586s436m586s436m586s436"
+      "m586s436m586s436m586s436m586s436m586s1432m586s1432m586s1432m586s1432"
+      "m586s2886"
+      "m3086s8864"
+      "m586s1432m586s436m586s436m586s436m586s436m586s436m586s436m586s436"
+      "m586s436m586s1432m586s436m586s436m586s1432m586s436m586s1432m586s1432"
+      "m586s1432m586s1432m586s1432m586s1432m586s436m586s436m586s436m586s436"
+      "m586s436m586s436m586s436m586s436m586s436m586s436m586s436m586s436"
+      "m586s436m586s436m586s436m586s436m586s436m586s436m586s436m586s436"
+      "m586s436m586s436m586s436m586s436m586s436m586s436m586s436m586s436"
+      "m586s436m586s436m586s436m586s436m586s436m586s436m586s436m586s436"
+      "m586s2886"
+      "m3086s8864"
+      "m586s1432m586s436m586s436m586s436m586s436m586s436m586s436m586s436"
+      "m586s436m586s1432m586s436m586s436m586s436m586s1432m586s1432m586s1432"
+      "m586s436m586s1432m586s1432m586s1432m586s1432m586s1432m586s1432m586s1432"
+      "m586s1432m586s436m586s436m586s436m586s1432m586s1432m586s1432m586s436"
+      "m586s436m586s436m586s436m586s436m586s436m586s436m586s436m586s1432"
+      "m586s1432m586s436m586s436m586s436m586s1432m586s436m586s436m586s436"
+      "m586s436m586s436m586s436m586s436m586s1432m586s1432m586s1432m586s1432"
+      "m586s100000";
+  std::string settings =
+      "m690s17844"
+      "m3086s8864"
+      "m586s436m586s1432m586s436m586s436m586s436m586s436m586s436m586s436"
+      "m586s436m586s1432m586s436m586s436m586s1432m586s436m586s436m586s1432"
+      "m586s1432m586s1432m586s1432m586s1432m586s436m586s436m586s436m586s436"
+      "m586s436m586s436m586s436m586s436m586s436m586s436m586s436m586s436"
+      "m586s436m586s436m586s436m586s436m586s436m586s436m586s436m586s436"
+      "m586s436m586s436m586s436m586s436m586s436m586s436m586s436m586s436"
+      "m586s436m586s436m586s436m586s436m586s1432m586s1432m586s1432m586s1432"
+      "m586s2886"
+      "m3086s8864"
+      "m586s1432m586s436m586s436m586s436m586s436m586s436m586s436m586s436"
+      "m586s436m586s1432m586s436m586s436m586s1432m586s436m586s1432m586s1432"
+      "m586s436m586s1432m586s1432m586s1432m586s436m586s1432m586s436m586s1432"
+      "m586s1432m586s436m586s436m586s436m586s1432m586s1432m586s1432m586s436"
+      "m586s436m586s436m586s436m586s436m586s1432m586s1432m586s1432m586s436"
+      "m586s1432m586s436m586s436m586s1432m586s1432m586s436m586s436m586s436"
+      "m586s436m586s436m586s436m586s436m586s1432m586s1432m586s1432m586s1432"
+      "m586s100000";
+  std::string text = "Power: On, Mode: 1 (COOL), Temp: 23C, Fan: 4 (MED), "
+                     "Swing: On, Beep: Off, Clean: Off, Quiet: Off";
+  // Don't do a setPower()/on()/off() as that will trigger the special message.
+  // So it should only be the normal "settings" message.
+  ac.setTemp(23);
+  ac.setMode(kSamsungAcCool);
+  ac.setFan(kSamsungAcFanMed);
+  ac.send();
+  EXPECT_EQ(text, ac.toString());
+  EXPECT_EQ(freqduty + settings, ac._irsend.outputStr());
+  ac._irsend.reset();
+  // Now trigger a special power message by using a power method.
+  ac.on();
+  ac.send();  // This should result in two messages. 1 x extended + 1 x normal.
+  EXPECT_EQ(text, ac.toString());
+  EXPECT_EQ(freqduty + poweron + settings, ac._irsend.outputStr());
+  ac._irsend.reset();
+  // Subsequent sending should be just the "settings" message.
+  ac.send();
+  EXPECT_EQ(text, ac.toString());
+  EXPECT_EQ(freqduty + settings, ac._irsend.outputStr());
+  ac._irsend.reset();
+  // Now trigger a special power message by using a power method (again).
+  ac.setPower(true);
+  ac.send();  // This should result in two messages. 1 x extended + 1 x normal.
+  EXPECT_EQ(text, ac.toString());
+  EXPECT_EQ(freqduty + poweron + settings, ac._irsend.outputStr());
+}
+
+TEST(TestIRSamsungAcClass, toCommon) {
+  IRSamsungAc ac(0);
+  ac.setPower(true);
+  ac.setMode(kSamsungAcCool);
+  ac.setTemp(20);
+  ac.setFan(kSamsungAcFanAuto);
+  ac.setSwing(true);
+  ac.setBeep(true);
+  ac.setClean(true);
+  ac.setQuiet(true);
+  // Now test it.
+  ASSERT_EQ(decode_type_t::SAMSUNG_AC, ac.toCommon().protocol);
+  ASSERT_EQ(-1, ac.toCommon().model);
+  ASSERT_TRUE(ac.toCommon().power);
+  ASSERT_TRUE(ac.toCommon().celsius);
+  ASSERT_EQ(20, ac.toCommon().degrees);
+  ASSERT_EQ(stdAc::opmode_t::kCool, ac.toCommon().mode);
+  ASSERT_EQ(stdAc::fanspeed_t::kAuto, ac.toCommon().fanspeed);
+  ASSERT_EQ(stdAc::swingv_t::kAuto, ac.toCommon().swingv);
+  ASSERT_FALSE(ac.toCommon().turbo);
+  ASSERT_TRUE(ac.toCommon().quiet);
+  ASSERT_TRUE(ac.toCommon().clean);
+  ASSERT_TRUE(ac.toCommon().beep);
+  // Unsupported.
+  ASSERT_EQ(stdAc::swingh_t::kOff, ac.toCommon().swingh);
+  ASSERT_FALSE(ac.toCommon().econo);
+  ASSERT_FALSE(ac.toCommon().light);
+  ASSERT_FALSE(ac.toCommon().filter);
+  ASSERT_EQ(-1, ac.toCommon().sleep);
+  ASSERT_EQ(-1, ac.toCommon().clock);
 }
