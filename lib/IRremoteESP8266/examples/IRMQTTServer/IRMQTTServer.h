@@ -181,7 +181,7 @@ const uint8_t kPasswordLength = 20;
 // ----------------- End of User Configuration Section -------------------------
 
 // Constants
-#define _MY_VERSION_ "v1.1.1"
+#define _MY_VERSION_ "v1.1.2"
 
 const uint8_t kSendTableSize = sizeof(gpioTable);
 // JSON stuff
@@ -233,11 +233,6 @@ void handleRoot(void);
 String addJsReloadUrl(const String url, const uint16_t timeout_s,
                       const bool notify);
 void handleExamples(void);
-String boolToString(const bool value);
-String opmodeToString(const stdAc::opmode_t mode);
-String fanspeedToString(const stdAc::fanspeed_t speed);
-String swingvToString(const stdAc::swingv_t swingv);
-String swinghToString(const stdAc::swingh_t swingh);
 String htmlSelectBool(const String name, const bool def);
 String htmlSelectProtocol(const String name, const decode_type_t def);
 String htmlSelectModel(const String name, const int16_t def);

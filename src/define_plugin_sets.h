@@ -186,16 +186,16 @@ To create/register a plugin, you have to :
 // #define DECODE_TOSHIBA_AC      true
 // #define SEND_TOSHIBA_AC        true
 // The following define is needed for extended decoding of A/C Messages and or using standardised common arguments for controlling all deeply supported A/C units
-// #define P016_P035_Extended_AC
+#define P016_P035_Extended_AC
+
+#ifdef P016_P035_Extended_AC 
+#include <IRac.h>
+#endif
 
 #ifdef PLUGIN_BUILD_IR
     #define PLUGIN_DESCR  "IR"
     #define USES_P016      // IR
     #define USES_P035      // IRTX
-#endif
-
-#ifdef P016_P035_Extended_AC 
-#include <IRac.h>
 #endif
 
 /******************************************************************************\
