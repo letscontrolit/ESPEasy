@@ -479,7 +479,7 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
           doc[F("Sleep")] = state.sleep; //Nr. of mins of sleep mode, or use sleep mode. (<= 0 means off.)
         if (state.clock > 0)
           doc[F("Clock")] = state.clock; //Nr. of mins past midnight to set the clock to. (< 0 means off.)
-        String output = "IRSENDAC,";
+        String output = F("IRSENDAC,");
         serializeJson(doc, output);
         addLog(LOG_LEVEL_INFO, output); //Show the command that the user can put to replay the AC state with P035
       }

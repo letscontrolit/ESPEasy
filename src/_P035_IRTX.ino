@@ -8,12 +8,13 @@
 #endif
 #ifdef P016_P035_Extended_AC
 #include <IRac.h>
+IRac *Plugin_035_commonAc = nullptr;
 #endif
 #include <IRsend.h>
 #include <IRutils.h>
 
 IRsend *Plugin_035_irSender = nullptr;
-IRac *Plugin_035_commonAc = nullptr;
+
 
 #define PLUGIN_035
 #define PLUGIN_ID_035 35
@@ -108,7 +109,11 @@ boolean Plugin_035(byte function, struct EventStruct *event, String &string)
     if (argIndex)
       cmdCode = cmdCode.substring(0, argIndex);
 
+#ifdef P016_P035_Extended_AC
     if ((cmdCode.equalsIgnoreCase(F("IRSEND")) || cmdCode.equalsIgnoreCase(F("IRSENDAC"))) && (Plugin_035_irSender != 0 || Plugin_035_commonAc != 0))
+#else
+    if ((cmdCode.equalsIgnoreCase(F("IRSEND")) || cmdCode.equalsIgnoreCase(F("IRSENDAC"))) && (Plugin_035_irSender != 0))
+#endif
     {
       success = true;
 #ifdef PLUGIN_016
@@ -350,7 +355,7 @@ boolean Plugin_035(byte function, struct EventStruct *event, String &string)
           ReEnableIRIn();
           return true; //do not continue with sending of the signal.
         }
-        uint16_t model = doc[F("Model")] | -1;    //The specific model of A/C if applicable. //strToModel();. Defaults to -1 (unknow) if missing from JSON
+        uint16_t model = doc[F("Model")] | -1;    //The specific model of A/C if applicable. //strToModel();. Defaults to -1 (unknown) if missing from JSON
         bool power = doc[F("Power")];             //POWER ON or OFF. Defaults to false if missing from JSON
         float degrees = doc[F("Degrees")] | 22.0; //What temperature should the unit be set to?. Defaults to 22c if missing from JSON
         bool celsius = doc[F("Celsius")] | true;  //Use degreees Celsius, otherwise Fahrenheit. Defaults to true if missing from JSON
