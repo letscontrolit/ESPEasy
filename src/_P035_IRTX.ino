@@ -6,7 +6,7 @@
 #ifdef ESP8266 // Needed for precompile issues.
 #include <IRremoteESP8266.h>
 #endif
-#ifdef P016_P035_Extended_AC 
+#ifdef P016_P035_Extended_AC
 #include <IRac.h>
 #endif
 #include <IRsend.h>
@@ -80,19 +80,19 @@ boolean Plugin_035(byte function, struct EventStruct *event, String &string)
       Plugin_035_irSender = 0;
     }
 
-    #ifdef P016_P035_Extended_AC
-            if (Plugin_035_commonAc == 0 && irPin != -1)
-            {
-              addLog(LOG_LEVEL_INFO, F("INIT AC: IR TX"));
-              Plugin_035_commonAc = new IRac(irPin);
-            }
-            if (Plugin_035_commonAc != 0 && irPin == -1)
-            {
-              addLog(LOG_LEVEL_INFO, F("INIT AC: IR TX Removed"));
-              delete Plugin_035_commonAc;
-              Plugin_035_commonAc = 0;
-            }
-    #endif
+#ifdef P016_P035_Extended_AC
+    if (Plugin_035_commonAc == 0 && irPin != -1)
+    {
+      addLog(LOG_LEVEL_INFO, F("INIT AC: IR TX"));
+      Plugin_035_commonAc = new IRac(irPin);
+    }
+    if (Plugin_035_commonAc != 0 && irPin == -1)
+    {
+      addLog(LOG_LEVEL_INFO, F("INIT AC: IR TX Removed"));
+      delete Plugin_035_commonAc;
+      Plugin_035_commonAc = 0;
+    }
+#endif
 
     success = true;
     break;
@@ -339,40 +339,47 @@ boolean Plugin_035(byte function, struct EventStruct *event, String &string)
         if (error)
         {
           addLog(LOG_LEVEL_INFO, String(F("IRTX: Deserialize Json failed: ")) + error.c_str());
+          ReEnableIRIn();
           return true; //do not continue with sending the signal.
         }
 
         decode_type_t protocol = strToDecodeType(doc[F("Protocol")]);
-        if (!hasACState(protocol))
+        if (!hasACState(protocol)) //Check if we support the protocol
         {
           addLog(LOG_LEVEL_INFO, String(F("IRTX: Protocol not supported")));
-          return true; //do not continue with sending the signal.
+          ReEnableIRIn();
+          return true; //do not continue with sending of the signal.
         }
-        uint16_t model = doc[F("Model")] | -1;                                                          //The specific model of A/C if applicable. //strToModel();
-        bool power = doc[F("Power")];                                                                   //POWER ON or OFF
-        float degrees = doc[F("Degrees")] | 22.0;                                                       //What temperature should the unit be set to?
-        bool celsius = doc[F("Celsius")] | true;                                                               //Use degreees Celsius, otherwise Fahrenheit.
+        uint16_t model = doc[F("Model")] | -1;    //The specific model of A/C if applicable. //strToModel();. Defaults to -1 (unknow) if missing from JSON
+        bool power = doc[F("Power")];             //POWER ON or OFF. Defaults to false if missing from JSON
+        float degrees = doc[F("Degrees")] | 22.0; //What temperature should the unit be set to?. Defaults to 22c if missing from JSON
+        bool celsius = doc[F("Celsius")] | true;  //Use degreees Celsius, otherwise Fahrenheit. Defaults to true if missing from JSON
         String sopmode = doc[F("Opmode")];
         String sfanspeed = doc[F("Fanspeed")];
         String sswingv = doc[F("Swingv")];
         String sswingh = doc[F("Swingh")];
-        stdAc::opmode_t opmode = IRac::strToOpmode(sopmode.c_str(), stdAc::opmode_t::kAuto);           //What operating mode should the unit perform? e.g. Cool = doc[""]; Heat etc.        
-        stdAc::fanspeed_t fanspeed = IRac::strToFanspeed(sfanspeed.c_str(),stdAc::fanspeed_t::kAuto); //Fan Speed setting
-        stdAc::swingv_t swingv = IRac::strToSwingV(sswingv.c_str(), stdAc::swingv_t::kAuto);           //Vertical swing setting
-        stdAc::swingh_t swingh = IRac::strToSwingH(sswingh.c_str(), stdAc::swingh_t::kAuto);           //Horizontal Swing setting
-        bool quiet = doc[F("Quiet")];                                                                   //Quiet setting ON or OFF
-        bool turbo = doc[F("Turbo")];                                                                   //Turbo setting ON or OFF
-        bool econo = doc[F("Econo")];                                                                   //Economy setting ON or OFF
-        bool light = doc[F("Light")];                                                                   //Light setting ON or OFF
-        bool filter = doc[F("Filter")];                                                                 //Filter setting ON or OFF
-        bool clean = doc[F("Clean")];                                                                   //Clean setting ON or OFF
-        bool beep = doc[F("Beep")];                                                                     //Beep setting ON or OFF
-        int16_t sleep = doc[F("Sleep")] | -1;                                                           //Nr. of mins of sleep mode, or use sleep mode. (<= 0 means off.)
-        int16_t clock = doc[F("Clock")] | -1;                                                           //Nr. of mins past midnight to set the clock to. (< 0 means off.)
+        sopmode.toUpperCase(); //strToOpmode expects capital letters
+        sfanspeed.toUpperCase();
+        sswingv.toUpperCase();
+        sswingh.toUpperCase();
+        stdAc::opmode_t opmode = IRac::strToOpmode(sopmode.c_str(), stdAc::opmode_t::kAuto);           //What operating mode should the unit perform? e.g. Cool. Defaults to auto if missing from JSON
+        stdAc::fanspeed_t fanspeed = IRac::strToFanspeed(sfanspeed.c_str(), stdAc::fanspeed_t::kAuto); //Fan Speed setting. Defaults to auto if missing from JSON
+        stdAc::swingv_t swingv = IRac::strToSwingV(sswingv.c_str(), stdAc::swingv_t::kAuto);           //Vertical swing setting. Defaults to auto if missing from JSON
+        stdAc::swingh_t swingh = IRac::strToSwingH(sswingh.c_str(), stdAc::swingh_t::kAuto);           //Horizontal Swing setting. Defaults to auto if missing from JSON
+        bool quiet = doc[F("Quiet")];                                                                  //Quiet setting ON or OFF. Defaults to false if missing from JSON
+        bool turbo = doc[F("Turbo")];                                                                  //Turbo setting ON or OFF. Defaults to false if missing from JSON
+        bool econo = doc[F("Econo")];                                                                  //Economy setting ON or OFF. Defaults to false if missing from JSON
+        bool light = doc[F("Light")];                                                                  //Light setting ON or OFF. Defaults to false if missing from JSON
+        bool filter = doc[F("Filter")];                                                                //Filter setting ON or OFF. Defaults to false if missing from JSON
+        bool clean = doc[F("Clean")];                                                                  //Clean setting ON or OFF. Defaults to false if missing from JSON
+        bool beep = doc[F("Beep")];                                                                    //Beep setting ON or OFF. Defaults to false if missing from JSON
+        int16_t sleep = doc[F("Sleep")] | -1;                                                          //Nr. of mins of sleep mode, or use sleep mode. (<= 0 means off.). Defaults to -1 if missing from JSON
+        int16_t clock = doc[F("Clock")] | -1;                                                          //Nr. of mins past midnight to set the clock to. (< 0 means off.). Defaults to -1 if missing from JSON
 
-        Plugin_035_commonAc->sendAc(protocol, model, power, opmode,degrees, celsius, fanspeed, swingv, swingh,quiet, turbo, econo, light, filter, clean,beep, sleep, clock);
-
-        //Serial.printf("  %s\n", Plugin_035_commonAc->toString().c_str());
+        //Send the IR command
+        Plugin_035_commonAc->sendAc(protocol, model, power, opmode, degrees, celsius, fanspeed, swingv, swingh, quiet, turbo, econo, light, filter, clean, beep, sleep, clock);
+        ReEnableIRIn();
+        //addLog(LOG_LEVEL_INFO, String(F("IRTX: IR Code Sent: ")) + Plugin_035_commonAc->toString().c_str());
       }
 #endif // P016_P035_Extended_AC
 
@@ -382,10 +389,7 @@ boolean Plugin_035(byte function, struct EventStruct *event, String &string)
         printWebString += String(F("IRTX: IR Code Sent: ")) + IrType_orig + String(F("<BR>"));
       }
 
-#ifdef PLUGIN_016
-      if (irReceiver != 0)
-        irReceiver->enableIRIn(); // Start the receiver
-#endif
+      ReEnableIRIn();
     }
     break;
   } //PLUGIN_WRITE END
@@ -396,7 +400,16 @@ boolean Plugin_035(byte function, struct EventStruct *event, String &string)
 boolean addErrorTrue()
 {
   addLog(LOG_LEVEL_ERROR, F("RAW2: Invalid encoding!"));
+  ReEnableIRIn();
   return true;
+}
+
+void ReEnableIRIn()
+{
+#ifdef PLUGIN_016
+  if (irReceiver != 0)
+    irReceiver->enableIRIn(); // Start the receiver
+#endif
 }
 
 // A lot of the following code has been taken directly (with permission) from the IRMQTTServer.ino example code

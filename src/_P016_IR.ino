@@ -11,7 +11,7 @@
 #ifdef ESP8266 // Needed for precompile issues.
 #include <IRremoteESP8266.h>
 #endif
-#ifdef P016_P035_Extended_AC 
+#ifdef P016_P035_Extended_AC
 #include <IRac.h>
 #endif
 #include <IRrecv.h>
@@ -196,6 +196,25 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
       // Display the human readable state of an A/C message if we can.
       String description = "";
       stdAc::state_t state;
+      //Initialize state settings
+      state.protocol = decode_type_t::UNKNOWN;
+      state.model = -1; // Unknown.
+      state.power = false;
+      state.mode = stdAc::opmode_t::kAuto;
+      state.celsius = true;
+      state.degrees = 22;
+      state.fanspeed = stdAc::fanspeed_t::kAuto;
+      state.swingv = stdAc::swingv_t::kAuto;
+      state.swingh = stdAc::swingh_t::kAuto;
+      state.quiet = false;
+      state.turbo = false;
+      state.econo = false;
+      state.light = false;
+      state.filter = false;
+      state.clean = false;
+      state.beep = false;
+      state.sleep = -1;
+      state.clock = -1;
 #if DECODE_ARGO
       if (results.decode_type == ARGO)
       {
@@ -427,7 +446,7 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
         addLog(LOG_LEVEL_INFO, description);
 
         StaticJsonDocument<300> doc;
-        //Checks if a particular state is something else than the default and only then
+        //Checks if a particular state is something else than the default and only then it adds it to the JSON document
         doc[F("Protocol")] = typeToString(state.protocol);
         if (state.model >= 0)
           doc[F("Model")] = state.model;                     //The specific model of A/C if applicable.
@@ -462,7 +481,7 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
           doc[F("Clock")] = state.clock; //Nr. of mins past midnight to set the clock to. (< 0 means off.)
         String output = "IRSENDAC,";
         serializeJson(doc, output);
-        addLog(LOG_LEVEL_INFO, output);
+        addLog(LOG_LEVEL_INFO, output); //Show the command that the user can put to replay the AC state with P035
       }
 
 #endif // P016_P035_Extended_AC
