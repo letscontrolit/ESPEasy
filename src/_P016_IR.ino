@@ -11,7 +11,9 @@
 #ifdef ESP8266 // Needed for precompile issues.
 #include <IRremoteESP8266.h>
 #endif
-
+#ifdef P016_P035_Extended_AC 
+#include <IRac.h>
+#endif
 #include <IRrecv.h>
 #include <IRutils.h>
 
