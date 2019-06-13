@@ -15,7 +15,6 @@ IRac *Plugin_035_commonAc = nullptr;
 
 IRsend *Plugin_035_irSender = nullptr;
 
-
 #define PLUGIN_035
 #define PLUGIN_ID_035 35
 #define PLUGIN_NAME_035 "Communication - IR Transmit"
@@ -112,7 +111,7 @@ boolean Plugin_035(byte function, struct EventStruct *event, String &string)
 #ifdef P016_P035_Extended_AC
     if ((cmdCode.equalsIgnoreCase(F("IRSEND")) || cmdCode.equalsIgnoreCase(F("IRSENDAC"))) && (Plugin_035_irSender != 0 || Plugin_035_commonAc != 0))
 #else
-    if ((cmdCode.equalsIgnoreCase(F("IRSEND")) || cmdCode.equalsIgnoreCase(F("IRSENDAC"))) && (Plugin_035_irSender != 0))
+    if (cmdCode.equalsIgnoreCase(F("IRSEND")) && Plugin_035_irSender != 0)
 #endif
     {
       success = true;
@@ -349,7 +348,7 @@ boolean Plugin_035(byte function, struct EventStruct *event, String &string)
         }
 
         decode_type_t protocol = strToDecodeType(doc[F("Protocol")]);
-        if (!hasACState(protocol)) //Check if we support the protocol
+        if (!IRac::isProtocolSupported(protocol)) //Check if we support the protocol
         {
           addLog(LOG_LEVEL_INFO, String(F("IRTX: Protocol not supported")));
           ReEnableIRIn();
@@ -555,6 +554,7 @@ bool sendIRCode(int const ir_type,
   case COOLIX: // 15
     if (bits == 0)
       bits = kCoolixBits;
+      repeat = std::max(repeat, kCoolixDefaultRepeat);
     irsend->sendCOOLIX(code, bits, repeat);
     break;
 #endif

@@ -440,11 +440,10 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
       }
 #endif // DECODE_TCL112AC
 
-      // If we got a human-readable description of the message, display it.
-      if (results.decode_type != decode_type_t::UNKNOWN && results.decode_type != decode_type_t::UNUSED)
+      if (description != "")
+        addLog(LOG_LEVEL_INFO, String(F("AC State: ")) + description); // If we got a human-readable description of the message, display it.
+      if (IRac::isProtocolSupported(state.protocol))                                  //Check If there is a replayable AC state show the JSON command that can be send
       {
-        addLog(LOG_LEVEL_INFO, description);
-
         StaticJsonDocument<300> doc;
         //Checks if a particular state is something else than the default and only then it adds it to the JSON document
         doc[F("Protocol")] = typeToString(state.protocol);
@@ -483,7 +482,6 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
         serializeJson(doc, output);
         addLog(LOG_LEVEL_INFO, output); //Show the command that the user can put to replay the AC state with P035
       }
-
 #endif // P016_P035_Extended_AC
 
       unsigned long IRcode = results.value;
