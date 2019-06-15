@@ -3,10 +3,20 @@
 //#################################### Plugin 016: Input IR #############################################
 //#######################################################################################################
 
-// Uncomment the following define to enable the extended decoding of AC messages (20K bytes in flash)
-// Also for using standardised common arguments for controlling all deeply supported A/C units (Plugin 035)
-// Example of those messages: "Mesg Desc.: Power: On, Fan: 5 (AUTO), Mode: 3 (HEAT), Temp: 22C, Zone Follow: Off, Sensor Temp: Ignored"
-//#define P016_Extended_Decoding
+// Usage: Connect a TSOP module, preferably a 38Khz one, preferably to GPIO14 (D5)
+// On the device tab add a new device and select "Communication - TSOP4838"
+// Enable the device and select the GPIO pin
+// Power on the ESP and connect to it
+// By monitoring the serial or the web log (Tools -> Log) and then pressing a button on a remote
+// you will get as output the replay solutions that where found.
+// Typicaly solutions are given by the IRremoteESP8266 library (example IRSEND,NEC,ASDFZCV,32)
+// but if no replay solutions are found by this library then a RAW2 solution in computed (example IRSEND,RAW2,ASDFASDFASDFASDF,38,50,40)
+// If RAW2 also fails, then in the serial monitor there are dumped the raw IR data timings
+// that can be used to calculate a RAW solution with use of GDocs for this purpose.
+//
+// IF the IR code is an Air Condition protocol that the  IR library can decode, then there will be a human-readable description of that IR message.
+// If the IR library can encode those kind of messages then a JSON formated command will be given, that can be replayed by P035 as well.
+// That commands format is: IRSENDAC,{"Protocol":"COOLIX","Power":true,"Opmode":"dry","Fanspeed":"auto","Degrees":22,"Swingv":"max","Swingh":"off"}
 
 #ifdef ESP8266 // Needed for precompile issues.
 #include <IRremoteESP8266.h>
@@ -442,7 +452,7 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
 
       if (description != "")
         addLog(LOG_LEVEL_INFO, String(F("AC State: ")) + description); // If we got a human-readable description of the message, display it.
-      if (IRac::isProtocolSupported(state.protocol))                                  //Check If there is a replayable AC state show the JSON command that can be send
+      if (IRac::isProtocolSupported(state.protocol))                   //Check If there is a replayable AC state show the JSON command that can be send
       {
         StaticJsonDocument<300> doc;
         //Checks if a particular state is something else than the default and only then it adds it to the JSON document

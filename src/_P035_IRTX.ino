@@ -3,6 +3,33 @@
 //#################################### Plugin 035: Output IR ############################################
 //#######################################################################################################
 
+// Usage: Connect an IR led to ESP8266 GPIO14 (D5) preferably. (various schematics can be found online)
+// On the device tab add a new device and select "Communication - IR Transmit"
+// Enable the device and select the GPIO led pin
+// Power on the ESP and connect to it
+// Commands can be send to this plug in and it will translate them to IR signals.
+// Possible commands are IRSEND and IRSENDAC
+//---IRSEND: That commands format is: IRSEND,<protocol>,<data>,<bits>,<repeat>
+// bits and repeat default to 0 if not used and they are optional
+// For protocols RAW and RAW2 there is no bits and repeat part, they are supposed to be replayed as they are calculated by a Google docs sheet or by plugin P016
+//---IRSENDAC: That commands format is: IRSENDAC,{"Protocol":"COOLIX","Power":true,"Opmode":"dry","Fanspeed":"auto","Degrees":22,"Swingv":"max","Swingh":"off"}
+// The possible values
+// Protocols: Argo Coolix Daikin Fujitsu Haier Hitachi Kelvinator Midea Mitsubishi MitsubishiHeavy Panasonic Samsung Sharp Tcl Teco Toshiba Trotec Vestel Whirlpool
+//---Opmodes:      ---Fanspeed:   --Swingv:       --Swingh:
+// - "off"          - "auto"       - "off"         - "off"
+// - "auto"         - "min"        - "auto"        - "auto"
+// - "cool"         - "low"        - "highest"     - "leftmax"
+// - "heat"         - "medium"     - "high"        - "left"
+// - "dry"          - "high"       - "middle"      - "middle"
+// - "fan_only"     - "max"        - "low"         - "right"
+//                                 - "lowest"      - "rightmax"
+// TRUE - FALSE parameters are:
+// - "Power" - "Celsius" - "Quiet" - "Turbo" - "Econo" - "Light" - "Filter" - "Clean" - "Light" - "Beep"
+// If celcius is set to FALSE then farenheit will be used
+// - "Sleep" Nr. of mins of sleep mode, or use sleep mode. (<= 0 means off.)
+// - "Clock" Nr. of mins past midnight to set the clock to. (< 0 means off.)
+
+
 #ifdef ESP8266 // Needed for precompile issues.
 #include <IRremoteESP8266.h>
 #endif
