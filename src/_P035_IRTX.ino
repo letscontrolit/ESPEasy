@@ -29,7 +29,6 @@
 // - "Sleep" Nr. of mins of sleep mode, or use sleep mode. (<= 0 means off.)
 // - "Clock" Nr. of mins past midnight to set the clock to. (< 0 means off.)
 
-
 #ifdef ESP8266 // Needed for precompile issues.
 #include <IRremoteESP8266.h>
 #endif
@@ -373,8 +372,9 @@ boolean Plugin_035(byte function, struct EventStruct *event, String &string)
           ReEnableIRIn();
           return true; //do not continue with sending the signal.
         }
-
-        decode_type_t protocol = strToDecodeType(doc[F("Protocol")]);
+        String sprotocol = doc[F("Protocol")];
+        sprotocol.toUpperCase();
+        decode_type_t protocol = strToDecodeType(sprotocol.c_str());
         if (!IRac::isProtocolSupported(protocol)) //Check if we support the protocol
         {
           addLog(LOG_LEVEL_INFO, String(F("IRTX: Protocol not supported")));
@@ -581,7 +581,7 @@ bool sendIRCode(int const ir_type,
   case COOLIX: // 15
     if (bits == 0)
       bits = kCoolixBits;
-      repeat = std::max(repeat, kCoolixDefaultRepeat);
+    repeat = std::max(repeat, kCoolixDefaultRepeat);
     irsend->sendCOOLIX(code, bits, repeat);
     break;
 #endif
