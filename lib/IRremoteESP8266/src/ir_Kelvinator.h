@@ -2,6 +2,18 @@
 //
 // Copyright 2016 David Conran
 
+// Supports:
+//   Brand: Kelvinator,  Model: YALIF Remote
+//   Brand: Kelvinator,  Model: KSV26CRC A/C
+//   Brand: Kelvinator,  Model: KSV26HRC A/C
+//   Brand: Kelvinator,  Model: KSV35CRC A/C
+//   Brand: Kelvinator,  Model: KSV35HRC A/C
+//   Brand: Kelvinator,  Model: KSV53HRC A/C
+//   Brand: Kelvinator,  Model: KSV62HRC A/C
+//   Brand: Kelvinator,  Model: KSV70CRC A/C
+//   Brand: Kelvinator,  Model: KSV70HRC A/C
+//   Brand: Kelvinator,  Model: KSV80HRC A/C
+
 #ifndef IR_KELVINATOR_H_
 #define IR_KELVINATOR_H_
 
@@ -9,20 +21,12 @@
 #include <stdint.h>
 #ifndef UNIT_TEST
 #include <Arduino.h>
-#else
-#include <string>
 #endif
 #include "IRremoteESP8266.h"
 #include "IRsend.h"
 #ifdef UNIT_TEST
 #include "IRsend_test.h"
 #endif
-
-// KK  KK EEEEEEE LL     VV     VV IIIII NN   NN   AAA   TTTTTTT  OOOOO  RRRRRR
-// KK KK  EE      LL     VV     VV  III  NNN  NN  AAAAA    TTT   OO   OO RR   RR
-// KKKK   EEEEE   LL      VV   VV   III  NN N NN AA   AA   TTT   OO   OO RRRRRR
-// KK KK  EE      LL       VV VV    III  NN  NNN AAAAAAA   TTT   OO   OO RR  RR
-// KK  KK EEEEEEE LLLLLLL   VVV    IIIII NN   NN AA   AA   TTT    OOOO0  RR   RR
 
 // Constants
 const uint8_t kKelvinatorAuto = 0;
@@ -171,11 +175,7 @@ class IRKelvinatorAC {
   static stdAc::opmode_t toCommonMode(const uint8_t mode);
   static stdAc::fanspeed_t toCommonFanSpeed(const uint8_t speed);
   stdAc::state_t toCommon(void);
-#ifdef ARDUINO
   String toString(void);
-#else
-  std::string toString(void);
-#endif
 #ifndef UNIT_TEST
 
  private:

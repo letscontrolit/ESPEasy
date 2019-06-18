@@ -1,5 +1,12 @@
 // Copyright 2009 Ken Shirriff
 // Copyright 2017 David Conran
+
+// Mitsubishi
+
+// Supports:
+//   Brand: Mitsubishi,  Model: TV
+//   Brand: Mitsubishi,  Model: HC3000 Projector
+
 #ifndef IR_MITSUBISHI_H_
 #define IR_MITSUBISHI_H_
 
@@ -7,20 +14,12 @@
 #include <stdint.h>
 #ifndef UNIT_TEST
 #include <Arduino.h>
-#else
-#include <string>
 #endif
 #include "IRremoteESP8266.h"
 #include "IRsend.h"
 #ifdef UNIT_TEST
 #include "IRsend_test.h"
 #endif
-
-//    MMMMM  IIIII TTTTT   SSSS  U   U  BBBB   IIIII   SSSS  H   H  IIIII
-//    M M M    I     T    S      U   U  B   B    I    S      H   H    I
-//    M M M    I     T     SSS   U   U  BBBB     I     SSS   HHHHH    I
-//    M   M    I     T        S  U   U  B   B    I        S  H   H    I
-//    M   M  IIIII   T    SSSS    UUU   BBBBB  IIIII  SSSS   H   H  IIIII
 
 // Mitsubishi (TV) decoding added from https://github.com/z3t0/Arduino-IRremote
 // Mitsubishi (TV) sending & Mitsubishi A/C support added by David Conran
@@ -100,11 +99,7 @@ class IRMitsubishiAC {
   static stdAc::fanspeed_t toCommonFanSpeed(const uint8_t speed);
   static stdAc::swingv_t toCommonSwingV(const uint8_t pos);
   stdAc::state_t toCommon(void);
-#ifdef ARDUINO
   String toString(void);
-#else
-  std::string toString(void);
-#endif
 #ifndef UNIT_TEST
 
  private:
@@ -112,11 +107,7 @@ class IRMitsubishiAC {
 #else
   IRsendTest _irsend;
 #endif
-#ifdef ARDUINO
   String timeToString(const uint64_t time);
-#else
-  std::string timeToString(const uint64_t time);
-#endif
   uint8_t remote_state[kMitsubishiACStateLength];
   void checksum(void);
 };

@@ -1,12 +1,17 @@
 // Copyright 2019 David Conran
 
+// Supports:
+//   Brand: Mitsubishi Heavy Industries,  Model: RLA502A700B remote
+//   Brand: Mitsubishi Heavy Industries,  Model: SRKxxZM-S A/C
+//   Brand: Mitsubishi Heavy Industries,  Model: SRKxxZMXA-S A/C
+//   Brand: Mitsubishi Heavy Industries,  Model: RKX502A001C remote
+//   Brand: Mitsubishi Heavy Industries,  Model: SRKxxZJ-S A/C
+
 #ifndef IR_MITSUBISHIHEAVY_H_
 #define IR_MITSUBISHIHEAVY_H_
 
 #ifndef UNIT_TEST
 #include <Arduino.h>
-#else
-#include <string>
 #endif
 #include "IRremoteESP8266.h"
 #include "IRsend.h"
@@ -182,11 +187,7 @@ class IRMitsubishiHeavy152Ac {
   static stdAc::swingv_t toCommonSwingV(const uint8_t pos);
   static stdAc::swingh_t toCommonSwingH(const uint8_t pos);
   stdAc::state_t toCommon(void);
-#ifdef ARDUINO
   String toString(void);
-#else  // ARDUINO
-  std::string toString(void);
-#endif  // ARDUINO
 #ifndef UNIT_TEST
 
  private:
@@ -255,11 +256,7 @@ class IRMitsubishiHeavy88Ac {
   static stdAc::swingv_t toCommonSwingV(const uint8_t pos);
   static stdAc::swingh_t toCommonSwingH(const uint8_t pos);
   stdAc::state_t toCommon(void);
-#ifdef ARDUINO
   String toString(void);
-#else  // ARDUINO
-  std::string toString(void);
-#endif  // ARDUINO
 #ifndef UNIT_TEST
 
  private:

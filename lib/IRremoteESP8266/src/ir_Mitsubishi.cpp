@@ -2,6 +2,8 @@
 // Copyright 2017-2018 David Conran
 // Copyright 2018 Denes Varga
 
+// Mitsubishi
+
 #include "ir_Mitsubishi.h"
 #include <algorithm>
 #ifndef ARDUINO
@@ -10,12 +12,6 @@
 #include "IRrecv.h"
 #include "IRsend.h"
 #include "IRutils.h"
-
-//    MMMMM  IIIII TTTTT   SSSS  U   U  BBBB   IIIII   SSSS  H   H  IIIII
-//    M M M    I     T    S      U   U  B   B    I    S      H   H    I
-//    M M M    I     T     SSS   U   U  BBBB     I     SSS   HHHHH    I
-//    M   M    I     T        S  U   U  B   B    I        S  H   H    I
-//    M   M  IIIII   T    SSSS    UUU   BBBBB  IIIII  SSSS   H   H  IIIII
 
 // Mitsubishi (TV) decoding added from https://github.com/z3t0/Arduino-IRremote
 // Mitsubishi (TV) sending & Mitsubishi A/C support added by David Conran
@@ -268,8 +264,8 @@ bool IRrecv::decodeMitsubishi2(decode_results *results, uint16_t nbits,
 //
 // Status: BETA / Appears to be working.
 //
-void IRsend::sendMitsubishiAC(unsigned char data[], uint16_t nbytes,
-                              uint16_t repeat) {
+void IRsend::sendMitsubishiAC(const unsigned char data[], const uint16_t nbytes,
+                              const uint16_t repeat) {
   if (nbytes < kMitsubishiACStateLength)
     return;  // Not enough bytes to send a proper message.
 
@@ -729,13 +725,9 @@ stdAc::state_t IRMitsubishiAC::toCommon(void) {
   return result;
 }
 
-#ifdef ARDUINO
 String IRMitsubishiAC::timeToString(const uint64_t time) {
   String result = "";
-#else
-std::string IRMitsubishiAC::timeToString(const uint64_t time) {
-  std::string result = "";
-#endif  // ARDUINO
+  result.reserve(6);
   if (time / 6 < 10) result += '0';
   result += uint64ToString(time / 6);
   result += ':';
@@ -745,13 +737,8 @@ std::string IRMitsubishiAC::timeToString(const uint64_t time) {
 }
 
 // Convert the internal state into a human readable string.
-#ifdef ARDUINO
 String IRMitsubishiAC::toString(void) {
   String result = "";
-#else
-std::string IRMitsubishiAC::toString(void) {
-  std::string result = "";
-#endif  // ARDUINO
   result.reserve(110);  // Reserve some heap for the string to reduce fragging.
   result += F("Power: ");
   if (this->getPower())

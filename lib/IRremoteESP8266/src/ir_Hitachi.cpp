@@ -15,12 +15,6 @@
 #include "IRsend.h"
 #include "IRutils.h"
 
-//              HH   HH IIIII TTTTTTT   AAA    CCCCC  HH   HH IIIII
-//              HH   HH  III    TTT    AAAAA  CC    C HH   HH  III
-//              HHHHHHH  III    TTT   AA   AA CC      HHHHHHH  III
-//              HH   HH  III    TTT   AAAAAAA CC    C HH   HH  III
-//              HH   HH IIIII   TTT   AA   AA  CCCCC  HH   HH IIIII
-
 // Constants
 // Ref: https://github.com/markszabo/IRremoteESP8266/issues/417
 const uint16_t kHitachiAcHdrMark = 3300;
@@ -343,13 +337,8 @@ stdAc::state_t IRHitachiAc::toCommon(void) {
 }
 
 // Convert the internal state into a human readable string.
-#ifdef ARDUINO
 String IRHitachiAc::toString(void) {
   String result = "";
-#else
-std::string IRHitachiAc::toString(void) {
-  std::string result = "";
-#endif  // ARDUINO
   result.reserve(110);  // Reserve some heap for the string to reduce fragging.
   result += F("Power: ");
   if (getPower())

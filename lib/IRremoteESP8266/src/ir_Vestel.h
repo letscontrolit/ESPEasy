@@ -1,6 +1,9 @@
 // Copyright 2018 Erdem U. Altinyurt
 // Copyright 2019 David Conran
 
+// Supports:
+//   Brand: Vestel,  Model: BIOX CXP-9 A/C (9K BTU)
+
 #ifndef IR_VESTEL_H_
 #define IR_VESTEL_H_
 
@@ -8,20 +11,12 @@
 #include <stdint.h>
 #ifdef ARDUINO
 #include <Arduino.h>
-#else
-#include <string>
 #endif
 #include "IRremoteESP8266.h"
 #include "IRsend.h"
 #ifdef UNIT_TEST
 #include "IRsend_test.h"
 #endif
-
-//                 VV     VV  EEEEEEE   SSSSS  TTTTTTTT  EEEEEEE  LL
-//                 VV     VV  EE       S          TT     EE       LL
-//                  VV   VV   EEEEE     SSSS      TT     EEEEE    LL
-//                   VV VV    EE            S     TT     EE       LL
-//                    VVV     EEEEEEE  SSSSS      TT     EEEEEEE  LLLLLLL
 
 // Vestel added by Erdem U. Altinyurt
 
@@ -160,11 +155,7 @@ class IRVestelAc {
   static stdAc::opmode_t toCommonMode(const uint8_t mode);
   static stdAc::fanspeed_t toCommonFanSpeed(const uint8_t speed);
   stdAc::state_t toCommon(void);
-#ifdef ARDUINO
   String toString(void);
-#else
-  std::string toString(void);
-#endif
 #ifndef UNIT_TEST
 
  private:

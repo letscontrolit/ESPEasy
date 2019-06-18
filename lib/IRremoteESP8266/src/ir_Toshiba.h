@@ -1,4 +1,15 @@
 // Copyright 2017 David Conran
+
+// Toshiba A/C support added by David Conran
+
+// Supports:
+//   Brand: Toshiba,  Model: RAS-B13N3KV2
+//   Brand: Toshiba,  Model: Akita EVO II
+//   Brand: Toshiba,  Model: RAS-B13N3KVP-E
+//   Brand: Toshiba,  Model: RAS 18SKP-ES
+//   Brand: Toshiba,  Model: WH-TA04NE
+//   Brand: Toshiba,  Model: WC-L03SE
+
 #ifndef IR_TOSHIBA_H_
 #define IR_TOSHIBA_H_
 
@@ -6,22 +17,12 @@
 #include <stdint.h>
 #ifdef ARDUINO
 #include <Arduino.h>
-#else
-#include <string>
 #endif
 #include "IRremoteESP8266.h"
 #include "IRsend.h"
 #ifdef UNIT_TEST
 #include "IRsend_test.h"
 #endif
-
-//     TTTTTTT  OOOOO   SSSSS  HH   HH IIIII BBBBB     AAA
-//       TTT   OO   OO SS      HH   HH  III  BB   B   AAAAA
-//       TTT   OO   OO  SSSSS  HHHHHHH  III  BBBBBB  AA   AA
-//       TTT   OO   OO      SS HH   HH  III  BB   BB AAAAAAA
-//       TTT    OOOO0   SSSSS  HH   HH IIIII BBBBBB  AA   AA
-
-// Toshiba A/C support added by David Conran
 
 // Constants
 const uint8_t kToshibaAcAuto = 0;
@@ -74,11 +75,7 @@ class IRToshibaAC {
   static stdAc::opmode_t toCommonMode(const uint8_t mode);
   static stdAc::fanspeed_t toCommonFanSpeed(const uint8_t speed);
   stdAc::state_t toCommon(void);
-#ifdef ARDUINO
   String toString(void);
-#else
-  std::string toString(void);
-#endif
 #ifndef UNIT_TEST
 
  private:

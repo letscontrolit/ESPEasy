@@ -1,4 +1,5 @@
 // Copyright 2018 crankyoldgit
+// Code to emulate Haier protocol compatible devices.
 // The specifics of reverse engineering the protocols details:
 // * HSU07-HEA03 by kuzin2006.
 // * YR-W02/HSU-09HMC203 by non7top.
@@ -6,17 +7,9 @@
 #include "ir_Haier.h"
 #ifndef UNIT_TEST
 #include <Arduino.h>
-#else
-#include <string>
 #endif
 #include "IRremoteESP8266.h"
 #include "IRutils.h"
-
-//                      HH   HH   AAA   IIIII EEEEEEE RRRRRR
-//                      HH   HH  AAAAA   III  EE      RR   RR
-//                      HHHHHHH AA   AA  III  EEEEE   RRRRRR
-//                      HH   HH AAAAAAA  III  EE      RR  RR
-//                      HH   HH AA   AA IIIII EEEEEEE RR   RR
 
 // Supported devices:
 //   * Haier HSU07-HEA03 Remote control.
@@ -304,14 +297,8 @@ void IRHaierAC::setSwing(const uint8_t state) {
 }
 
 // Convert a Haier time into a human readable string.
-#ifdef ARDUINO
 String IRHaierAC::timeToString(const uint16_t nr_mins) {
   String result = "";
-#else
-std::string IRHaierAC::timeToString(const uint16_t nr_mins) {
-  std::string result = "";
-#endif  // ARDUINO
-
   if (nr_mins / 24 < 10) result += '0';  // Zero pad.
   result += uint64ToString(nr_mins / 60);
   result += ':';
@@ -427,13 +414,8 @@ stdAc::state_t IRHaierAC::toCommon(void) {
 }
 
 // Convert the internal state into a human readable string.
-#ifdef ARDUINO
 String IRHaierAC::toString(void) {
   String result = "";
-#else
-std::string IRHaierAC::toString(void) {
-  std::string result = "";
-#endif  // ARDUINO
   result.reserve(150);  // Reserve some heap for the string to reduce fragging.
   uint8_t cmd = getCommand();
   result += F("Command: ");
@@ -867,13 +849,8 @@ stdAc::state_t IRHaierACYRW02::toCommon(void) {
 }
 
 // Convert the internal state into a human readable string.
-#ifdef ARDUINO
 String IRHaierACYRW02::toString(void) {
   String result = "";
-#else
-std::string IRHaierACYRW02::toString(void) {
-  std::string result = "";
-#endif  // ARDUINO
   result.reserve(130);  // Reserve some heap for the string to reduce fragging.
   result += F("Power: ");
   if (getPower())

@@ -340,13 +340,8 @@ stdAc::state_t IRTcl112Ac::toCommon(void) {
 }
 
 // Convert the internal state into a human readable string.
-#ifdef ARDUINO
 String IRTcl112Ac::toString(void) {
   String result = "";
-#else
-std::string IRTcl112Ac::toString(void) {
-  std::string result = "";
-#endif  // ARDUINO
   result.reserve(140);  // Reserve some heap for the string to reduce fragging.
   result += F("Power: ");
   result += (this->getPower() ? F("On") : F("Off"));
@@ -440,7 +435,7 @@ bool IRrecv::decodeTcl112Ac(decode_results *results, const uint16_t nbits,
        i++, dataBitsSoFar += 8, offset += data_result.used) {
     data_result = matchData(&(results->rawbuf[offset]), 8, kTcl112AcBitMark,
                             kTcl112AcOneSpace, kTcl112AcBitMark,
-                            kTcl112AcZeroSpace, kTolerance, 0, false);
+                            kTcl112AcZeroSpace, kTcl112AcTolerance, 0, false);
     if (data_result.success == false) {
       DPRINT("DEBUG: offset = ");
       DPRINTLN(offset + data_result.used);

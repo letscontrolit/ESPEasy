@@ -1,6 +1,9 @@
-// Kelvinator A/C
-//
 // Copyright 2016 David Conran
+// Gree A/C
+//
+// Supports:
+//   Brand: Ultimate,  Model: Heat Pump
+//   Brand: EKOKAI,  Model: A/C
 
 #ifndef IR_GREE_H_
 #define IR_GREE_H_
@@ -9,20 +12,12 @@
 #include <stdint.h>
 #ifndef UNIT_TEST
 #include <Arduino.h>
-#else
-#include <string>
 #endif
 #include "IRremoteESP8266.h"
 #include "IRsend.h"
 #ifdef UNIT_TEST
 #include "IRsend_test.h"
 #endif
-
-//                      GGGG  RRRRRR  EEEEEEE EEEEEEE
-//                     GG  GG RR   RR EE      EE
-//                    GG      RRRRRR  EEEEE   EEEEE
-//                    GG   GG RR  RR  EE      EE
-//                     GGGGGG RR   RR EEEEEEE EEEEEEE
 
 // Constants
 const uint8_t kGreeAuto = 0;
@@ -125,11 +120,7 @@ class IRGreeAC {
   void setRaw(const uint8_t new_code[]);
   static bool validChecksum(const uint8_t state[],
                             const uint16_t length = kGreeStateLength);
-#ifdef ARDUINO
   String toString(void);
-#else
-  std::string toString(void);
-#endif
 #ifndef UNIT_TEST
 
  private:

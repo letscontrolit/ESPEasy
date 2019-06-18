@@ -3,6 +3,9 @@
 // Copyright 2019 ribeirodanielf
 // Copyright 2019 David Conran
 
+// Supports:
+//   Brand: Goodweather,  Model: ZH/JT-03 remote
+
 #ifndef IR_GOODWEATHER_H_
 #define IR_GOODWEATHER_H_
 
@@ -10,8 +13,6 @@
 #include <stdint.h>
 #ifndef UNIT_TEST
 #include <Arduino.h>
-#else
-#include <string>
 #endif
 #include "IRremoteESP8266.h"
 #include "IRsend.h"
@@ -19,8 +20,6 @@
 #include "IRsend_test.h"
 #endif
 
-// Supports:
-//   ZH/JT-03 remote controller
 // Ref:
 //   https://github.com/markszabo/IRremoteESP8266/issues/697
 
@@ -124,11 +123,7 @@ class IRGoodweatherAc {
   static stdAc::opmode_t toCommonMode(const uint8_t mode);
   static stdAc::fanspeed_t toCommonFanSpeed(const uint8_t speed);
   stdAc::state_t toCommon(void);
-#ifdef ARDUINO
   String toString();
-#else
-  std::string toString();
-#endif
 #ifndef UNIT_TEST
 
  private:

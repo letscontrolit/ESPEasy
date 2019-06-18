@@ -1,13 +1,14 @@
-/* Copyright 2017 Schmolders
+// Copyright 2017 Schmolders
 // Adds support for Argo Ulisse 13 DCI Mobile Split ACs.
-*/
+
+// Supports:
+//   Brand: Argo,  Model: Ulisse 13 DCI Mobile Split A/C
+
 #ifndef IR_ARGO_H_
 #define IR_ARGO_H_
 
 #ifndef UNIT_TEST
 #include <Arduino.h>
-#else
-#include <string>
 #endif
 #include "IRremoteESP8266.h"
 #include "IRsend.h"
@@ -159,11 +160,7 @@ class IRArgoAC {
   static stdAc::opmode_t toCommonMode(const uint8_t mode);
   static stdAc::fanspeed_t toCommonFanSpeed(const uint8_t speed);
   stdAc::state_t toCommon(void);
-#ifdef ARDUINO
   String toString();
-#else
-  std::string toString();
-#endif
 #ifndef UNIT_TEST
 
  private:

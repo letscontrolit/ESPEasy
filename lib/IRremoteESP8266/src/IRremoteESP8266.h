@@ -47,10 +47,11 @@
 #include <stdint.h>
 #ifdef UNIT_TEST
 #include <iostream>
-#endif
+#include <string>
+#endif  // UNIT_TEST
 
 // Library Version
-#define _IRREMOTEESP8266_VERSION_ "2.6.1"
+#define _IRREMOTEESP8266_VERSION_ "2.6.2"
 // Supported IR protocols
 // Each protocol you include costs memory and, during decode, costs time
 // Disable (set to false) all the protocols you do not need/want!
@@ -234,6 +235,9 @@
 #define DECODE_DAIKIN216       true
 #define SEND_DAIKIN216         true
 
+#define DECODE_DAIKIN160       true
+#define SEND_DAIKIN160         true
+
 #if (DECODE_ARGO || DECODE_DAIKIN || DECODE_FUJITSU_AC || DECODE_GREE || \
      DECODE_KELVINATOR || DECODE_MITSUBISHI_AC || DECODE_TOSHIBA_AC || \
      DECODE_TROTEC || DECODE_HAIER_AC || DECODE_HITACHI_AC || \
@@ -241,7 +245,7 @@
      DECODE_WHIRLPOOL_AC || DECODE_SAMSUNG_AC || DECODE_ELECTRA_AC || \
      DECODE_PANASONIC_AC || DECODE_MWM || DECODE_DAIKIN2 || \
      DECODE_VESTEL_AC || DECODE_TCL112AC || DECODE_MITSUBISHIHEAVY || \
-     DECODE_DAIKIN216 || DECODE_SHARP_AC)
+     DECODE_DAIKIN216 || DECODE_SHARP_AC || DECODE_DAIKIN160)
 #define DECODE_AC true  // We need some common infrastructure for decoding A/Cs.
 #else
 #define DECODE_AC false   // We don't need that infrastructure.
@@ -325,8 +329,9 @@ enum decode_type_t {
   SHARP_AC,
   GOODWEATHER,
   INAX,
+  DAIKIN160,  // 65
   // Add new entries before this one, and update it to point to the last entry.
-  kLastDecodeType = INAX,
+  kLastDecodeType = DAIKIN160,
 };
 
 // Message lengths & required repeat values
@@ -339,7 +344,7 @@ const uint16_t kArgoStateLength = 12;
 const uint16_t kArgoBits = kArgoStateLength * 8;
 const uint16_t kArgoDefaultRepeat = kNoRepeat;
 const uint16_t kCoolixBits = 24;
-const uint16_t kCoolixDefaultRepeat = 1;
+const uint16_t kCoolixDefaultRepeat = kSingleRepeat;
 const uint16_t kCarrierAcBits = 32;
 const uint16_t kCarrierAcMinRepeat = kNoRepeat;
 const uint16_t kDaikinStateLength = 35;
@@ -350,6 +355,9 @@ const uint16_t kDaikinDefaultRepeat = kNoRepeat;
 const uint16_t kDaikin2StateLength = 39;
 const uint16_t kDaikin2Bits = kDaikin2StateLength * 8;
 const uint16_t kDaikin2DefaultRepeat = kNoRepeat;
+const uint16_t kDaikin160StateLength = 20;
+const uint16_t kDaikin160Bits = kDaikin160StateLength * 8;
+const uint16_t kDaikin160DefaultRepeat = kNoRepeat;
 const uint16_t kDaikin216StateLength = 27;
 const uint16_t kDaikin216Bits = kDaikin216StateLength * 8;
 const uint16_t kDaikin216DefaultRepeat = kNoRepeat;
@@ -553,13 +561,7 @@ const uint8_t  kVestelAcBits = 56;
 // See: https://github.com/markszabo/IRremoteESP8266/issues/667
 #define F(x) x
 #endif  // F
-#ifndef IRSTRING
-#define IRSTRING std::string
-#endif  // IRSTRING
-#else  // UNIT_TEST
-#ifndef IRSTRING
-#define IRSTRING String
-#endif  // IRSTRING
+typedef std::string String;
 #endif  // UNIT_TEST
 
 #endif  // IRREMOTEESP8266_H_

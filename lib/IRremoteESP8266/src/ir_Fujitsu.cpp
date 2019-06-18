@@ -42,8 +42,8 @@ const uint16_t kFujitsuAcMinGap = 8100;
 //
 // Status: STABLE / Known Good.
 //
-void IRsend::sendFujitsuAC(unsigned char data[], uint16_t nbytes,
-                           uint16_t repeat) {
+void IRsend::sendFujitsuAC(const unsigned char data[], const uint16_t nbytes,
+                           const uint16_t repeat) {
   sendGeneric(kFujitsuAcHdrMark, kFujitsuAcHdrSpace, kFujitsuAcBitMark,
               kFujitsuAcOneSpace, kFujitsuAcBitMark, kFujitsuAcZeroSpace,
               kFujitsuAcBitMark, kFujitsuAcMinGap, data, nbytes, 38, false,
@@ -525,13 +525,8 @@ stdAc::state_t IRFujitsuAC::toCommon(void) {
 }
 
 // Convert the internal state into a human readable string.
-#ifdef ARDUINO
 String IRFujitsuAC::toString(void) {
   String result = "";
-#else
-std::string IRFujitsuAC::toString(void) {
-  std::string result = "";
-#endif  // ARDUINO
   result.reserve(100);  // Reserve some heap for the string to reduce fragging.
   result += F("Model: ");
   fujitsu_ac_remote_model_t model = this->getModel();

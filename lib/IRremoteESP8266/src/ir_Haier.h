@@ -1,25 +1,22 @@
 // Copyright 2018 crankyoldgit
 // The specifics of reverse engineering the protocol details by kuzin2006
 
+// Supports:
+//   Brand: Haier,  Model: HSU07-HEA03 remote
+//   Brand: Haier,  Model: YR-W02 remote
+//   Brand: Haier,  Model: HSU-09HMC203 A/C
+
 #ifndef IR_HAIER_H_
 #define IR_HAIER_H_
 
 #ifndef UNIT_TEST
 #include <Arduino.h>
-#else
-#include <string>
 #endif
 #include "IRremoteESP8266.h"
 #include "IRsend.h"
 #ifdef UNIT_TEST
 #include "IRsend_test.h"
 #endif
-
-//                      HH   HH   AAA   IIIII EEEEEEE RRRRRR
-//                      HH   HH  AAAAA   III  EE      RR   RR
-//                      HHHHHHH AA   AA  III  EEEEE   RRRRRR
-//                      HH   HH AAAAAAA  III  EE      RR  RR
-//                      HH   HH AA   AA IIIII EEEEEEE RR   RR
 
 // Ref:
 //   https://github.com/markszabo/IRremoteESP8266/issues/404
@@ -238,13 +235,8 @@ class IRHaierAC {
   static stdAc::fanspeed_t toCommonFanSpeed(const uint8_t speed);
   static stdAc::swingv_t toCommonSwingV(const uint8_t pos);
   stdAc::state_t toCommon(void);
-#ifdef ARDUINO
   String toString(void);
   static String timeToString(const uint16_t nr_mins);
-#else
-  std::string toString(void);
-  static std::string timeToString(const uint16_t nr_mins);
-#endif
 #ifndef UNIT_TEST
 
  private:
@@ -307,11 +299,7 @@ class IRHaierACYRW02 {
   static stdAc::fanspeed_t toCommonFanSpeed(const uint8_t speed);
   static stdAc::swingv_t toCommonSwingV(const uint8_t pos);
   stdAc::state_t toCommon(void);
-#ifdef ARDUINO
   String toString(void);
-#else
-  std::string toString(void);
-#endif
 #ifndef UNIT_TEST
 
  private:

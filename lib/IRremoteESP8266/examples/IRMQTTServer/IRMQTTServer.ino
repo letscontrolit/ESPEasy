@@ -7,11 +7,13 @@
  *   resources. I'm *NOT* claiming complete Copyright ownership of all the code.
  *   Likewise, feel free to borrow from this as much as you want.
  *
- * NOTE: An IR LED circuit SHOULD be connected to ESP8266 GPIO4 (D2) if
- *       you want to send IR messages.
- *       A compatible IR RX modules SHOULD be connected to ESP8266 GPIO14 (D5)
- *       if you want to capture & decode IR nessages.
- *       See 'IR_LED' & 'IR_RX' in IRMQTTServer.h.
+ * NOTE: An IR LED circuit SHOULD be connected to the ESP if
+ *       you want to send IR messages. e.g. GPIO4 (D2)
+ *       A compatible IR RX modules SHOULD be connected to ESP
+ *       if you want to capture & decode IR nessages. e.g. GPIO14 (D5)
+ *       See 'IR_RX' in IRMQTTServer.h.
+ *       GPIOs are configurable from the http://<your_esp8266's_ip_address>/gpio
+ *       page.
  *
  * WARN: This is *very* advanced & complicated example code. Not for beginners.
  *       You are strongly suggested to try & look at other example code first
@@ -29,9 +31,10 @@
  *
  * - Arduino IDE:
  *   o Install the following libraries via Library Manager
- *     - ArduinoJson (https://arduinojson.org/) (Version >= 5.x and < 6)
+ *     - ArduinoJson (https://arduinojson.org/) (Version >= 5.0 and < 6.0)
  *     - PubSubClient (https://pubsubclient.knolleary.net/)
- *     - WiFiManager (https://github.com/tzapu/WiFiManager) (Version >= 0.14)
+ *     - WiFiManager (https://github.com/tzapu/WiFiManager)
+ *                   (ESP8266: Version >= 0.14, ESP32: 'development' branch.)
  *   o You MUST change <PubSubClient.h> to have the following (or larger) value:
  *     (with REPORT_RAW_UNKNOWNS 1024 or more is recommended)
  *     #define MQTT_MAX_PACKET_SIZE 768
@@ -40,10 +43,10 @@
  *     the accompanying platformio.ini file.
  *
  * ## First Boot (Initial setup)
- * The ESP8266 board will boot into the WiFiManager's AP mode.
+ * The ESP board will boot into the WiFiManager's AP mode.
  * i.e. It will create a WiFi Access Point with a SSID like: "ESP123456" etc.
  * Connect to that SSID. Then point your browser to http://192.168.4.1/ and
- * configure the ESP8266 to connect to your desired WiFi network and associated
+ * configure the ESP to connect to your desired WiFi network and associated
  * required settings. It will remember these details on next boot if the device
  * connects successfully.
  * More information can be found here:
@@ -55,6 +58,9 @@
  * ## Normal Use (After initial setup)
  * Enter 'http://<your_esp8266's_ip_address/' in your browser & follow the
  * instructions there to send IR codes via HTTP/HTML.
+ * Visit the http://<your_esp8266's_ip_address>/gpio page to configure the GPIOs
+ * for the IR LED(s) and/or IR RX demodulator.
+ *
  * You can send URLs like the following, with similar data type limitations as
  * the MQTT formating in the next section. e.g:
  *   http://<your_esp8266's_ip_address>/ir?type=7&code=E0E09966
@@ -292,12 +298,21 @@
 #include <Arduino.h>
 #include <FS.h>
 #include <ArduinoJson.h>
+#if defined(ESP8266)
 #include <ESP8266WiFi.h>
+#include <ESP8266WebServer.h>
+#include <ESP8266mDNS.h>
+#endif  // ESP8266
+#if defined(ESP32)
+#include <ESPmDNS.h>
+#include <WebServer.h>
+#include <WiFi.h>
+#include <SPIFFS.h>
+#include <Update.h>
+#endif  // ESP32
 #include <WiFiClient.h>
 #include <DNSServer.h>
-#include <ESP8266WebServer.h>
 #include <WiFiManager.h>
-#include <ESP8266mDNS.h>
 #include <IRremoteESP8266.h>
 #include <IRrecv.h>
 #include <IRsend.h>
@@ -317,12 +332,15 @@
 #include <string>
 
 // Globals
+#if defined(ESP8266)
 ESP8266WebServer server(kHttpPort);
-#ifdef IR_RX
-IRrecv irrecv(IR_RX, kCaptureBufferSize, kCaptureTimeout, true);
-decode_results capture;  // Somewhere to store inbound IR messages.
-#endif  // IR_RX
+#endif  // ESP8266
+#if defined(ESP32)
+WebServer server(kHttpPort);
+#endif  // ESP32
+#if MDNS_ENABLE
 MDNSResponder mdns;
+#endif  // MDNS_ENABLE
 WiFiClient espClient;
 WiFiManager wifiManager;
 bool flagSaveWifiConfig = false;
@@ -332,15 +350,18 @@ char Hostname[kHostnameLength + 1] = "ir_server";  // Default hostname.
 uint16_t *codeArray;
 uint32_t lastReconnectAttempt = 0;  // MQTT last attempt reconnection number
 bool boot = true;
-bool lockIr = false;  // Primitive locking for gating the IR LED.
+volatile bool lockIr = false;  // Primitive locking for gating the IR LED.
 uint32_t sendReqCounter = 0;
 bool lastSendSucceeded = false;  // Store the success status of the last send.
 uint32_t lastSendTime = 0;
 int8_t offset;  // The calculated period offset for this chip and library.
-IRsend *IrSendTable[kSendTableSize];
+IRsend *IrSendTable[kNrOfIrTxGpios];
+int8_t txGpioTable[kNrOfIrTxGpios] = {kDefaultIrLed};
 String lastClimateSource;
-
-#ifdef IR_RX
+#if IR_RX
+IRrecv *irrecv = NULL;
+decode_results capture;  // Somewhere to store inbound IR messages.
+int8_t rx_gpio = kDefaultIrRx;
 String lastIrReceived = "None";
 uint32_t lastIrReceivedTime = 0;
 uint32_t irRecvCounter = 0;
@@ -349,7 +370,8 @@ uint32_t irRecvCounter = 0;
 // Climate stuff
 stdAc::state_t climate;
 stdAc::state_t climate_prev;
-IRac commonAc(gpioTable[0]);
+IRac *commonAc = NULL;
+
 TimerMs lastClimateIr = TimerMs();  // When we last sent the IR Climate mesg.
 uint32_t irClimateCounter = 0;  // How many have we sent?
 // Store the success status of the last climate send.
@@ -396,16 +418,29 @@ TimerMs statListenTime = TimerMs();  // How long we've been listening for.
 #endif  // MQTT_ENABLE
 
 bool isSerialGpioUsedByIr(void) {
-  const uint8_t kSerialTxGpio = 1;  // The GPIO serial output is sent too.
-                                    // Note: *DOES NOT* control Serial output.
+  const int8_t kSerialTxGpio = 1;  // The GPIO serial output is sent to.
+                                   // Note: *DOES NOT* control Serial output.
+#if defined(ESP32)
+  const int8_t kSerialRxGpio = 3;  // The GPIO serial input is received on.
+#endif  // ESP32
   // Ensure we are not trodding on anything IR related.
-#ifdef IR_RX
-  if (IR_RX == kSerialTxGpio)
-    return true;  // Serial port is in use by IR capture. Abort.
+#if IR_RX
+  switch (rx_gpio) {
+#if defined(ESP32)
+    case kSerialRxGpio:
+#endif  // ESP32
+    case kSerialTxGpio:
+      return true;  // Serial port is in use by IR capture. Abort.
+  }
 #endif  // IR_RX
-  for (uint8_t i = 0; i < kSendTableSize; i++)
-    if (gpioTable[i] == kSerialTxGpio)
-      return true;  // Serial port is in use for IR sending. Abort.
+  for (uint8_t i = 0; i < kNrOfIrTxGpios; i++)
+    switch (txGpioTable[i]) {
+#if defined(ESP32)
+      case kSerialRxGpio:
+#endif  // ESP32
+      case kSerialTxGpio:
+        return true;  // Serial port is in use for IR sending. Abort.
+    }
   return false;  // Not in use as far as we can tell.
 }
 
@@ -424,8 +459,27 @@ void saveWifiConfigCallback(void) {
   flagSaveWifiConfig = true;
 }
 
-void saveWifiConfig(void) {
-  debug("Saving the wifi config.");
+// Forcibly mount the SPIFFS. Formatting the SPIFFS if needed.
+//
+// Returns:
+//   A boolean indicating success or failure.
+bool mountSpiffs(void) {
+  debug("Mounting SPIFFS...");
+  if (SPIFFS.begin()) return true;  // We mounted it okay.
+  // We failed the first time.
+  debug("Failed to mount SPIFFS!\nFormatting SPIFFS and trying again...");
+  SPIFFS.format();
+  if (!SPIFFS.begin()) {  // Did we fail?
+    debug("DANGER: Failed to mount SPIFFS even after formatting!");
+    delay(10000);  // Make sure the debug message doesn't just float by.
+    return false;
+  }
+  return true;  // Success!
+}
+
+bool saveConfig(void) {
+  debug("Saving the config.");
+  bool success = false;
   DynamicJsonBuffer jsonBuffer;
   JsonObject& json = jsonBuffer.createObject();
 #if MQTT_ENABLE
@@ -438,8 +492,15 @@ void saveWifiConfig(void) {
   json[kHostnameKey] = Hostname;
   json[kHttpUserKey] = HttpUsername;
   json[kHttpPassKey] = HttpPassword;
+#if IR_RX
+  json[KEY_RX_GPIO] = static_cast<int>(rx_gpio);
+#endif  // IR_RX
+  for (uint16_t i = 0; i < kNrOfIrTxGpios; i++) {
+    const String key = KEY_TX_GPIO + String(i);
+    json[key] = static_cast<int>(txGpioTable[i]);
+  }
 
-  if (SPIFFS.begin()) {
+  if (mountSpiffs()) {
     File configFile = SPIFFS.open(kConfigFile, "w");
     if (!configFile) {
       debug("Failed to open config file for writing.");
@@ -448,15 +509,17 @@ void saveWifiConfig(void) {
       json.printTo(configFile);
       configFile.close();
       debug("Finished writing config file.");
+      success = true;
     }
     SPIFFS.end();
   }
+  return success;
 }
 
-void loadWifiConfigFile(void) {
-  debug("Trying to mount SPIFFS");
-  if (SPIFFS.begin()) {
-    debug("mounted file system");
+bool loadConfigFile(void) {
+  bool success = false;
+  if (mountSpiffs()) {
+    debug("mounted the file system");
     if (SPIFFS.exists(kConfigFile)) {
       debug("config file exists");
 
@@ -482,7 +545,17 @@ void loadWifiConfigFile(void) {
           strncpy(Hostname, json[kHostnameKey] | "", kHostnameLength);
           strncpy(HttpUsername, json[kHttpUserKey] | "", kUsernameLength);
           strncpy(HttpPassword, json[kHttpPassKey] | "", kPasswordLength);
+          // Read in the GPIO settings.
+#if IR_RX
+          // Single RX gpio
+          rx_gpio = json[KEY_RX_GPIO] | kDefaultIrRx;
+#endif  // IR_RX
+          // Potentially multiple TX gpios
+          for (uint16_t i = 0; i < kNrOfIrTxGpios; i++)
+            txGpioTable[i] = json[String(KEY_TX_GPIO + String(i)).c_str()] |
+                           kDefaultIrLed;
           debug("Recovered Json fields.");
+          success = true;
         } else {
           debug("Failed to load json config");
         }
@@ -494,9 +567,8 @@ void loadWifiConfigFile(void) {
     }
     debug("Unmounting SPIFFS.");
     SPIFFS.end();
-  } else {
-    debug("Failed to mount SPIFFS");
   }
+  return success;
 }
 
 String msToHumanString(uint32_t const msecs) {
@@ -542,41 +614,43 @@ String timeSince(uint32_t const start) {
   return msToHumanString(diff) + " ago";
 }
 
+String gpioToString(const int16_t gpio) {
+  if (gpio == kGpioUnused)
+    return "Unused";
+  else
+    return String(gpio);
+}
+
+int8_t getDefaultTxGpio(void) {
+  for (int8_t i = 0; i < kNrOfIrTxGpios; i++)
+    if (txGpioTable[i] != kGpioUnused) return txGpioTable[i];
+  return kGpioUnused;
+}
+
 // Return a string containing the comma separated list of sending gpios.
-String listOfSendGpios(void) {
-  String result = String(gpioTable[0]);
-  if (kSendTableSize > 1) result += " (default)";
-  for (uint8_t i = 1; i < kSendTableSize; i++) {
-    result += ", " + String(gpioTable[i]);
+String listOfTxGpios(void) {
+  bool found = false;
+  String result = "";
+  for (uint8_t i = 0; i < kNrOfIrTxGpios; i++) {
+    if (i) result += ", ";
+    result += gpioToString(txGpioTable[i]);
+    if (!found && txGpioTable[i] == getDefaultTxGpio()) {
+      result += " (default)";
+      found = true;
+    }
   }
   return result;
 }
 
 String htmlMenu(void) {
-  return F(
-      "<center>"
-        "<button type='button' "
-          "onclick='window.location=\"/\"'>"
-          "Home"
-        "</button>"
-        "<button type='button' "
-          "onclick='window.location=\"/aircon\"'>"
-          "Aircon"
-        "</button>"
-        "<button type='button' "
-          "onclick='window.location=\"/examples\"'>"
-          "Examples"
-        "</button>"
-        "<button type='button' "
-          "onclick='window.location=\"/info\"'>"
-          "System Info"
-        "</button>"
-        "<button type='button' "
-          "onclick='window.location=\"/admin\"'>"
-          "Admin"
-        "</button>"
-      "</center>"
-      "<hr>");
+  String html = F("<center>");
+  html += htmlButton(kUrlRoot, F("Home"));
+  html += htmlButton(kUrlAircon, F("Aircon"));
+  html += htmlButton(kUrlExamples, F("Examples"));
+  html += htmlButton(kUrlInfo, F("System Info"));
+  html += htmlButton(kUrlAdmin, F("Admin"));
+  html += F("</center><hr>");
+  return html;
 }
 
 // Root web page with example usage etc.
@@ -587,11 +661,8 @@ void handleRoot(void) {
     return server.requestAuthentication();
   }
 #endif
-  String html = F(
-    "<html><head><title>IR MQTT server</title></head>"
-    "<body>"
-    "<center><h1>ESP8266 IR MQTT Server</h1></center>"
-    "<center><small><i>" _MY_VERSION_ "</i></small></center>");
+  String html = htmlHeader(F("ESP IR MQTT Server"));
+  html += F("<center><small><i>" _MY_VERSION_ "</i></small></center>");
   html += htmlMenu();
   html += F(
     "<h3>Send a simple IR message</h3><p>"
@@ -666,8 +737,9 @@ void handleRoot(void) {
       "Type: "
       "<select name='type'>"
         "<option value='27'>Argo</option>"
-        "<option value='16'>Daikin</option>"
-        "<option value='53'>Daikin2</option>"
+        "<option value='16'>Daikin (35 bytes)</option>"
+        "<option value='65'>Daikin160 (20 bytes)</option>"
+        "<option value='53'>Daikin2 (39 bytes)</option>"
         "<option value='61'>Daikin216 (27 bytes)</option>"
         "<option value='48'>Electra</option>"
         "<option value='33'>Fujitsu</option>"
@@ -736,7 +808,8 @@ void handleRoot(void) {
           "size='2' maxlength='2'>"
       " <input type='submit' value='Send Pronto'>"
     "</form>"
-    "<br></body></html>");
+    "<br>");
+  html += htmlEnd();
   server.send(200, "text/html", html);
 }
 
@@ -772,11 +845,7 @@ void handleExamples(void) {
     return server.requestAuthentication();
   }
 #endif
-  String html = F(
-    "<html><head><title>IR MQTT examples</title></head>"
-    "<body>"
-    "<center><h1>ESP8266 IR MQTT Server</h1></center>"
-    "<center><small><i>" _MY_VERSION_ "</i></small></center>");
+  String html = htmlHeader(F("IR MQTT examples"));
   html += htmlMenu();
   html += F(
     "<h3>Hardcoded examples</h3>"
@@ -809,7 +878,8 @@ void handleExamples(void) {
       "Change just the temp to 27C <i>(via HTTP aircon interface)</i></a></p>"
     "<p><a href=\"aircon/set?power=off&mode=off\">"
       "Turn OFF the current A/C <i>(via HTTP aircon interface)</i></a></p>"
-    "<br><hr></body></html>");
+    "<br><hr>");
+  html += htmlEnd();
   server.send(200, "text/html", html);
 }
 
@@ -858,6 +928,26 @@ String htmlSelectModel(const String name, const int16_t def) {
       html += F("Default");
     else if (i == 0)
       html += F("Unknown");
+    else
+      html += num;
+    html += F("</option>");
+  }
+  html += F("</select>");
+  return html;
+}
+
+String htmlSelectGpio(const String name, const int16_t def,
+                      const int8_t list[], const int16_t length) {
+  String html = ": <select name='" + name + "'>";
+  for (int16_t i = 0; i < length; i++) {
+    String num = String(list[i]);
+    html += F("<option value='");
+    html += num;
+    html += '\'';
+    if (list[i] == def) html += F(" selected='selected'");
+    html += '>';
+    if (list[i] == kGpioUnused)
+      html += F("Unused");
     else
       html += num;
     html += F("</option>");
@@ -930,12 +1020,35 @@ String htmlSelectSwingh(const String name, const stdAc::swingh_t def) {
   return html;
 }
 
+String htmlHeader(const String title, const String h1_text) {
+  String html = F("<html><head><title>");
+  html += title;
+  html += F("</title></head><body><center><h1>");
+  if (h1_text.length())
+    html += h1_text;
+  else
+    html += title;
+  html += F("</h1></center>");
+  return html;
+}
+
+String htmlEnd(void) {
+  return F("</body></html>");
+}
+
+String htmlButton(const String url, const String button, const String text) {
+  String html = F("<button type='button' onclick='window.location=\"");
+  html += url;
+  html += F("\"'>");
+  html += button;
+  html += F("</button> ");
+  html += text;
+  return html;
+}
+
 // Admin web page
 void handleAirCon(void) {
-  String html = F(
-    "<html><head><title>AirCon control</title></head>"
-    "<body>"
-    "<center><h1>Air Conditioner Control</h1></center>");
+  String html = htmlHeader(F("Air Conditioner Control"));
   html += htmlMenu();
   html += "<h3>Current Settings</h3>"
       "<form method='POST' action='/aircon/set' enctype='multipart/form-data'>"
@@ -980,8 +1093,7 @@ void handleAirCon(void) {
       "</table>"
       "<input type='submit' value='Update & Send'>"
       "</form>";
-  // Display the current settings.
-  html += F("</body></html>");
+  html += htmlEnd();
   server.send(200, "text/html", html);
 }
 
@@ -1008,49 +1120,45 @@ void handleAirConSet(void) {
   // Update the old climate state with the new one.
   climate = result;
   // Redirect back to the aircon page.
-  String html = F(
-      "<html><head><title>Update Aircon</title></head>"
-      "<body>"
-      "<center><h1>Aircon updated!</h1></center>");
-  html += addJsReloadUrl("/aircon", 2, false);
-  html += F("</body></html>");
+  String html = htmlHeader(F("Aircon updated!"));
+  html += addJsReloadUrl(kUrlAircon, kQuickDisplayTime, false);
+  html += htmlEnd();
   server.send(200, "text/html", html);
+}
+
+String htmlDisabled(void) {
+  String html = F(
+      "<i>Updates disabled until you set a password. "
+      "You will need to <a href='");
+  html += kUrlWipe;
+  html += F("'>wipe & reset</a> to set one.</i><br><br>");
+  return html;
 }
 
 // Admin web page
 void handleAdmin(void) {
-  String html = F(
-    "<html><head><title>IR MQTT server admin</title></head>"
-    "<body>"
-    "<center><h1>Administration</h1></center>");
+  String html = htmlHeader(F("Administration"));
   html += htmlMenu();
-  html += F(
-    "<h3>Special commands</h3>"
+  html += F("<h3>Special commands</h3>");
 #if MQTT_ENABLE
-      "<button type='button' "
-        "onclick='window.location=\"/send_discovery\"'>"
-        "Send MQTT Discovery"
-      "</button> "
-      "Send a Climate MQTT discovery message to Home Assistant.<br><br>"
+  html += htmlButton(
+      kUrlSendDiscovery, F("Send MQTT Discovery"),
+      F("Send a Climate MQTT discovery message to Home Assistant.<br><br>"));
 #endif  // MQTT_ENABLE
-      "<button type='button' "
-        "onclick='window.location=\"/quitquitquit\"'>"
-        "Reboot"
-      "</button> A simple reboot of the ESP8266. "
-          "<small>ie. No changes</small><br><br>"
-      "<button type='button' "
-        "onclick='window.location=\"/reset\"'>"
-        "Wipe Settings"
-      "</button> <mark>Warning:</mark> "
-      "Resets the device back to original settings. "
-          "<small>ie. Goes back to AP/Setup mode.</small><br>");
+  html += htmlButton(
+      kUrlReboot, F("Reboot"),
+      F("A simple reboot of the ESP8266. <small>ie. No changes</small><br>"
+        "<br>"));
+  html += htmlButton(
+      kUrlWipe, F("Wipe Settings"),
+      F("<mark>Warning:</mark> Resets the device back to original settings. "
+        "<small>ie. Goes back to AP/Setup mode.</small><br><br>"));
+  html += htmlButton(kUrlGpio, F("GPIOs"), F("Change the IR GPIOs.<br>"));
 #if FIRMWARE_OTA
   html += F("<hr><h3>Update firmware</h3><p>"
-          "<b><mark>Warning:</mark></b><br> ");
+            "<b><mark>Warning:</mark></b><br> ");
   if (!strlen(HttpPassword))  // Deny if password not set
-    html += F("<i>OTA firmware is disabled until you set a password. "
-              "You will need to <a href='/reset'>wipe & reset</a> to set one."
-              "</i><br><br>");
+    html += htmlDisabled();
   else  // default password has been changed, so allow it.
     html += F(
         "<i>Updating your firmware may screw up your access to the device. "
@@ -1061,16 +1169,13 @@ void handleAdmin(void) {
           "<input type='submit' value='Update'>"
         "</form>");
 #endif  // FIRMWARE_OTA
-  html += F("</body></html>");
+  html += htmlEnd();
   server.send(200, "text/html", html);
 }
 
 // Info web page
 void handleInfo(void) {
-  String html =
-    "<html><head><title>IR MQTT server info</title></head>"
-    "<body>"
-    "<center><h1>Information</h1></center>";
+  String html = htmlHeader(F("IR MQTT server info"));
   html += htmlMenu();
   html +=
     "<h3>General</h3>"
@@ -1082,13 +1187,19 @@ void handleInfo(void) {
       " " __TIME__ "<br>"
     "Period Offset: " + String(offset) + "us<br>"
     "IR Lib Version: " _IRREMOTEESP8266_VERSION_ "<br>"
+#if defined(ESP8266)
     "ESP8266 Core Version: " + ESP.getCoreVersion() + "<br>"
-    "IR Send GPIO(s): " + listOfSendGpios() + "<br>"
+#endif  // ESP8266
+#if defined(ESP32)
+    "ESP32 SDK Version: " + ESP.getSdkVersion() + "<br>"
+#endif  // ESP32
+    "Cpu Freq: " + String(ESP.getCpuFreqMHz()) + "MHz<br>"
+    "IR Send GPIO(s): " + listOfTxGpios() + "<br>"
     "Total send requests: " + String(sendReqCounter) + "<br>"
     "Last message sent: " + String(lastSendSucceeded ? "Ok" : "FAILED") +
     " <i>(" + timeSince(lastSendTime) + ")</i><br>"
-#ifdef IR_RX
-    "IR Recv GPIO: " + String(IR_RX) +
+#if IR_RX
+    "IR Recv GPIO: " + gpioToString(rx_gpio) +
 #if IR_RX_PULLUP
     " (pullup)"
 #endif  // IR_RX_PULLUP
@@ -1124,7 +1235,7 @@ void handleInfo(void) {
     "Client id: " + MqttClientId + "<br>"
     "Command topic(s): " + listOfCommandTopics() + "<br>"
     "Acknowledgements topic: " + MqttAck + "<br>"
-#ifdef IR_RX
+#if IR_RX
     "IR Received topic: " + MqttRecv + "<br>"
 #endif  // IR_RX
     "Log topic: " + MqttLog + "<br>"
@@ -1141,7 +1252,7 @@ void handleInfo(void) {
 #endif  // MQTT_ENABLE
     "<h4>Climate Information</h4>"
     "<p>"
-    "IR Send GPIO: " + String(gpioTable[0]) + "<br>"
+    "IR Send GPIO: " + String(txGpioTable[0]) + "<br>"
     "Last update source: " + lastClimateSource + "<br>"
     "Total sent: " + String(irClimateCounter) + "<br>"
     "Last send: " + String(hasClimateBeenSent ?
@@ -1160,47 +1271,37 @@ void handleInfo(void) {
             timeElapsed(lastDiscovery.elapsed()) :
             String("<i>Never</i>"))) +
         "<br>"
-    "Command topics: " + MqttClimateCmnd +
-      "(" KEY_PROTOCOL "|" KEY_MODEL "|" KEY_POWER "|" KEY_MODE "|" KEY_TEMP "|"
-          KEY_FANSPEED "|" KEY_SWINGV "|" KEY_SWINGH "|" KEY_QUIET "|"
-          KEY_TURBO "|" KEY_LIGHT "|" KEY_BEEP "|" KEY_ECONO "|" KEY_SLEEP "|"
-          KEY_CLOCK "|" KEY_FILTER "|" KEY_CLEAN "|" KEY_CELSIUS ")<br>"
-    "State topics: " + MqttClimateStat +
-      "(" KEY_PROTOCOL "|" KEY_MODEL "|" KEY_POWER "|" KEY_MODE "|" KEY_TEMP "|"
-          KEY_FANSPEED "|" KEY_SWINGV "|" KEY_SWINGH "|" KEY_QUIET "|"
-          KEY_TURBO "|" KEY_LIGHT "|" KEY_BEEP "|" KEY_ECONO "|" KEY_SLEEP "|"
-          KEY_CLOCK "|" KEY_FILTER "|" KEY_CLEAN "|" KEY_CELSIUS ")<br>"
+    "Command topics: " + MqttClimateCmnd + kClimateTopics +
+    "State topics: " + MqttClimateStat + kClimateTopics +
 #endif  // MQTT_ENABLE
     "</p>"
     // Page footer
     "<hr><p><small><center>"
       "<i>(Note: Page will refresh every 60 seconds.)</i>"
     "<centre></small></p>";
-  html += addJsReloadUrl("/info", 60, false);
-  html += "</body></html>";
+  html += addJsReloadUrl(kUrlInfo, 60, false);
+  html += htmlEnd();
   server.send(200, "text/html", html);
 }
 // Reset web page
 void handleReset(void) {
 #if HTML_PASSWORD_ENABLE
   if (!server.authenticate(HttpUsername, HttpPassword)) {
-    debug("Basic HTTP authentication failure for /reset.");
+    debug("Basic HTTP authentication failure for " + kUrlWipe);
     return server.requestAuthentication();
   }
 #endif
   server.send(200, "text/html",
-    "<html><head><title>Reset WiFi Config</title></head>"
-    "<body>"
-    "<h1>Resetting the WiFiManager config back to defaults.</h1>"
+    htmlHeader(F("Reset WiFi Config"),
+               F("Resetting the WiFiManager config back to defaults.")) +
     "<p>Device restarting. Try connecting in a few seconds.</p>" +
-    addJsReloadUrl("/", 10, true) +
-    "</body></html>");
+    addJsReloadUrl(kUrlRoot, 10, true) +
+    htmlEnd());
   // Do the reset.
 #if MQTT_ENABLE
   mqttLog("Wiping all saved config settings.");
 #endif  // MQTT_ENABLE
-  debug("Trying to mount SPIFFS");
-  if (SPIFFS.begin()) {
+  if (mountSpiffs()) {
     debug("Removing JSON config file");
     SPIFFS.remove(kConfigFile);
     SPIFFS.end();
@@ -1218,17 +1319,15 @@ void handleReset(void) {
 void handleReboot() {
 #if HTML_PASSWORD_ENABLE
   if (!server.authenticate(HttpUsername, HttpPassword)) {
-    debug("Basic HTTP authentication failure for /quitquitquit.");
+    debug("Basic HTTP authentication failure for " + kUrlReboot);
     return server.requestAuthentication();
   }
 #endif
   server.send(200, "text/html",
-    "<html><head><title>Rebooting</title></head>"
-    "<body>"
-    "<h1>Device restarting.</h1>"
+    htmlHeader(F("Device restarting.")) +
     "<p>Try connecting in a few seconds.</p>" +
-    addJsReloadUrl("/", 15, true) +
-    "</body></html>");
+    addJsReloadUrl(kUrlRoot, kRebootTime, true) +
+    htmlEnd());
 #if MQTT_ENABLE
   mqttLog("Reboot requested");
 #endif  // MQTT_ENABLE
@@ -1283,6 +1382,9 @@ bool parseStringAndSendAirCon(IRsend *irsend, const uint16_t irType,
         stateSize = std::max(stateSize, kDaikinStateLength);
       // Lastly, it should never exceed the "normal" size.
       stateSize = std::min(stateSize, kDaikinStateLength);
+      break;
+    case DAIKIN160:
+      stateSize = kDaikin160StateLength;
       break;
     case DAIKIN2:
       stateSize = kDaikin2StateLength;
@@ -1432,6 +1534,11 @@ bool parseStringAndSendAirCon(IRsend *irsend, const uint16_t irType,
       irsend->sendDaikin(reinterpret_cast<uint8_t *>(state));
       break;
 #endif
+#if SEND_DAIKIN160
+    case DAIKIN160:  // 65
+      irsend->sendDaikin160(reinterpret_cast<uint8_t *>(state));
+      break;
+#endif  // SEND_DAIKIN160
 #if SEND_DAIKIN2
     case DAIKIN2:
       irsend->sendDaikin2(reinterpret_cast<uint8_t *>(state));
@@ -1562,16 +1669,16 @@ uint16_t countValuesInStr(const String str, char sep) {
 // Args:
 //   size:  Nr. of uint16_t's need to be in the new array.
 // Returns:
-//   A Ptr to the new array. Restarts the ESP8266 if it fails.
+//   A Ptr to the new array. Restarts the ESP if it fails.
 uint16_t * newCodeArray(const uint16_t size) {
   uint16_t *result;
 
   result = reinterpret_cast<uint16_t*>(malloc(size * sizeof(uint16_t)));
   // Check we malloc'ed successfully.
   if (result == NULL) {  // malloc failed, so give up.
-    Serial.printf("\nCan't allocate %d bytes. (%d bytes free)\n",
-                  size * sizeof(uint16_t), ESP.getFreeHeap());
-    Serial.println("Giving up & forcing a reboot.");
+    debug("FATAL: Can't allocate memory for an array for a new message!");
+    debug("Giving up & forcing a reboot.");
+    delay(5000);
     ESP.restart();  // Reboot.
     delay(500);  // Wait for the restart to happen.
     return result;  // Should never get here, but just in case.
@@ -1736,6 +1843,16 @@ bool parseStringAndSendRaw(IRsend *irsend, const String str) {
 }
 #endif  // SEND_RAW
 
+uint8_t getDefaultIrSendIdx(void) {
+  for (uint16_t i = 0; i < kNrOfIrTxGpios; i++)
+    if (IrSendTable[i] != NULL) return i;
+  return 0;
+}
+
+IRsend* getDefaultIrSendPtr(void) {
+  return IrSendTable[getDefaultIrSendIdx()];
+}
+
 // Parse the URL args to find the IR code.
 void handleIr(void) {
 #if HTML_PASSWORD_ENABLE
@@ -1764,15 +1881,109 @@ void handleIr(void) {
     }
   }
   debug("New code received via HTTP");
-  lastSendSucceeded = sendIRCode(IrSendTable[0], ir_type, data,
+  lastSendSucceeded = sendIRCode(getDefaultIrSendPtr(), ir_type, data,
                                  data_str.c_str(), nbits, repeat);
-  String html = F(
-     "<html><head><title>Send IR command</title></head>"
-     "<body>"
-     "<center><h1>IR command sent!</h1></center>");
-  html += addJsReloadUrl("/", 2, true);
-  html += F("</body></html>");
+  String html = htmlHeader(F("IR command sent!"));
+  html += addJsReloadUrl(kUrlRoot, kQuickDisplayTime, true);
+  html += htmlEnd();
   server.send(200, "text/html", html);
+}
+
+// GPIO menu page
+void handleGpio(void) {
+#if HTML_PASSWORD_ENABLE
+  if (!server.authenticate(HttpUsername, HttpPassword)) {
+    debug("Basic HTTP authentication failure for /gpios.");
+    return server.requestAuthentication();
+  }
+#endif
+  String html = htmlHeader(F("GPIO config"));
+  html += F(
+      "<form method='POST' action='/gpio/set' enctype='multipart/form-data'>");
+  html += htmlMenu();
+  html += F("<h2><mark>WARNING: Choose carefully! You can cause damage to your "
+            "hardware or make the device unresponsive.</mark></h2>");
+  html += F("<h3>Send</h3>IR LED");
+  for (uint16_t i = 0; i < kNrOfIrTxGpios; i++) {
+    if (kNrOfIrTxGpios > 1) {
+      html += F(" #");
+      html += String(i);
+    }
+    html += htmlSelectGpio(KEY_TX_GPIO + String(i), txGpioTable[i], kTxGpios,
+                           sizeof(kTxGpios));
+  }
+#if IR_RX
+  html += F("<h3>Receive</h3>IR RX Module");
+  html += htmlSelectGpio(KEY_RX_GPIO, rx_gpio, kRxGpios,
+                         sizeof(kRxGpios));
+#endif  // IR_RX
+  html += F("<br><br><hr>");
+  if (strlen(HttpPassword))  // Allow if password set
+    html += F("<input type='submit' value='Save & Reboot'>");
+  else
+    html += htmlDisabled();
+  html += F("</form>");
+  html += htmlEnd();
+  server.send(200, "text/html", html);
+}
+
+// GPIO setting page
+void handleGpioSetting(void) {
+  bool changed = false;
+  if (!server.authenticate(HttpUsername, HttpPassword)) {
+    debug("Basic HTTP authentication failure for /gpios.");
+    return server.requestAuthentication();
+  }
+  String html = htmlHeader(F("Update GPIOs"));
+  if (!strlen(HttpPassword)) {  // Don't allow if password not set
+    html += htmlDisabled();
+  } else {
+    debug("Attempt to change GPIOs");
+    for (uint16_t arg = 0; arg < server.args(); arg++) {
+      int8_t num = std::max(static_cast<int8_t>(server.arg(arg).toInt()),
+                            kGpioUnused);
+#if IR_RX
+      if (server.argName(arg).equals(KEY_RX_GPIO)) {
+        if (rx_gpio != num) {
+          rx_gpio = num;
+          changed = true;
+        }
+      } else {
+#endif  // IR_RX
+        for (uint16_t i = 0; i < kNrOfIrTxGpios; i++) {
+          if (server.argName(arg).equals(KEY_TX_GPIO + String(i))) {
+            if (txGpioTable[i] != num) {
+              txGpioTable[i] = num;
+              changed = true;
+            }
+          }
+        }
+#if IR_RX
+      }
+#endif  // IR_RX
+    }
+    if (!changed) {
+      html += F("<h2>No changes detected!</h2>");
+    } else if (saveConfig()) {
+      html += F("<h2>Saved changes & rebooting.</h2>");
+    } else {
+      html += F("<h2><mark>ERROR: Changes didn't save correctly! "
+                "Rebooting.</h2>");
+    }
+  }
+  html += addJsReloadUrl(changed ? kUrlRoot : kUrlGpio,
+                         changed ? kRebootTime : kQuickDisplayTime,
+                         true);
+  html += htmlEnd();
+  server.send(200, "text/html", html);
+  if (changed) {
+#if MQTT_ENABLE
+    mqttLog("GPIOs were changed. Rebooting!");
+#endif  // MQTT_ENABLE
+    delay(1000);
+    ESP.restart();
+    delay(2000);
+  }
 }
 
 void handleNotFound(void) {
@@ -1791,7 +2002,7 @@ void handleNotFound(void) {
 
 void setup_wifi(void) {
   delay(10);
-  loadWifiConfigFile();
+  loadConfigFile();
   // We start by connecting to a WiFi network
   wifiManager.setTimeout(300);  // Time out after 5 mins.
   // Set up additional parameters for WiFiManager config menu page.
@@ -1837,7 +2048,7 @@ void setup_wifi(void) {
       kMqttPrefixKey, "Leave empty to use Hostname", MqttPrefix,
       kHostnameLength);
   wifiManager.addParameter(&custom_mqtt_prefix);
-  #endif  // MQTT_ENABLE
+#endif  // MQTT_ENABLE
 #if USE_STATIC_IP
   // Use a static IP config rather than the one supplied via DHCP.
   wifiManager.setSTAStaticIPConfig(kIPAddress, kGateway, kSubnetMask);
@@ -1851,7 +2062,7 @@ void setup_wifi(void) {
     debug("Wifi failed to connect and hit timeout. Rebooting...");
     delay(3000);
     // Reboot. A.k.a. "Have you tried turning it Off and On again?"
-    ESP.reset();
+    ESP.restart();
     delay(5000);
   }
 
@@ -1866,7 +2077,7 @@ void setup_wifi(void) {
   strncpy(HttpUsername, custom_http_username.getValue(), kUsernameLength);
   strncpy(HttpPassword, custom_http_password.getValue(), kPasswordLength);
   if (flagSaveWifiConfig) {
-    saveWifiConfig();
+    saveConfig();
   }
   debug("WiFi connected. IP address:");
   debug(WiFi.localIP().toString().c_str());
@@ -1895,7 +2106,7 @@ void init_vars(void) {
   MqttDiscovery = "homeassistant/climate/" + String(Hostname) + "/config";
   MqttHAName = String(Hostname) + "_aircon";
   // Create a unique MQTT client id.
-  MqttClientId = String(Hostname) + String(ESP.getChipId(), HEX);
+  MqttClientId = String(Hostname) + String(kChipId, HEX);
 #endif  // MQTT_ENABLE
 }
 
@@ -1922,27 +2133,14 @@ void setup(void) {
   climate_prev = climate;
   lastClimateSource = F("None");
 
-  // Initialise all the IR transmitters.
-  for (uint8_t i = 0; i < kSendTableSize; i++) {
-    IrSendTable[i] = new IRsend(gpioTable[i]);
-    IrSendTable[i]->begin();
-    offset = IrSendTable[i]->calibrate();
-  }
-#ifdef IR_RX
-#if IR_RX_PULLUP
-  pinMode(IR_RX, INPUT_PULLUP);
-#endif  // IR_RX_PULLUP
-#if DECODE_HASH
-  // Ignore messages with less than minimum on or off pulses.
-  irrecv.setUnknownThreshold(kMinUnknownSize);
-#endif  // DECODE_HASH
-  irrecv.enableIRIn();  // Start the receiver
-#endif  // IR_RX
-
 #if DEBUG
   if (!isSerialGpioUsedByIr()) {
+#if defined(ESP8266)
     // Use SERIAL_TX_ONLY so that the RX pin can be freed up for GPIO/IR use.
     Serial.begin(BAUD_RATE, SERIAL_8N1, SERIAL_TX_ONLY);
+#else  // ESP8266
+    Serial.begin(BAUD_RATE, SERIAL_8N1);
+#endif  // ESP8266
     while (!Serial)  // Wait for the serial connection to be establised.
       delay(50);
     Serial.println();
@@ -1952,36 +2150,78 @@ void setup(void) {
 
   setup_wifi();
 
+#if DEBUG
+  // After the config has been loaded, check again if we are using a Serial GPIO
+  if (isSerialGpioUsedByIr()) Serial.end();
+#endif  // DEBUG
+
+  // Initialise all the IR transmitters.
+  for (uint8_t i = 0; i < kNrOfIrTxGpios; i++) {
+    if (txGpioTable[i] == kGpioUnused) {
+      IrSendTable[i] = NULL;
+    } else {
+      IrSendTable[i] = new IRsend(txGpioTable[i]);
+      if (IrSendTable[i] == NULL) break;
+      IrSendTable[i]->begin();
+      offset = IrSendTable[i]->calibrate();
+    }
+  }
+#if IR_RX
+  if (rx_gpio != kGpioUnused)
+    irrecv = new IRrecv(rx_gpio, kCaptureBufferSize, kCaptureTimeout, true);
+  if (irrecv != NULL) {
+#if IR_RX_PULLUP
+    pinMode(rx_gpio, INPUT_PULLUP);
+#endif  // IR_RX_PULLUP
+#if DECODE_HASH
+    // Ignore messages with less than minimum on or off pulses.
+    irrecv->setUnknownThreshold(kMinUnknownSize);
+#endif  // DECODE_HASH
+    irrecv->enableIRIn();  // Start the receiver
+  }
+#endif  // IR_RX
+  commonAc = new IRac(txGpioTable[0]);
+
   // Wait a bit for things to settle.
   delay(500);
 
   lastReconnectAttempt = 0;
 
+#if MDNS_ENABLE
+#if defined(ESP8266)
   if (mdns.begin(Hostname, WiFi.localIP())) {
+#else  // ESP8266
+  if (mdns.begin(Hostname)) {
+#endif  // ESP8266
     debug("MDNS responder started");
   }
+#endif  // MDNS_ENABLE
 
   // Setup the root web page.
-  server.on("/", handleRoot);
+  server.on(kUrlRoot, handleRoot);
   // Setup the examples web page.
-  server.on("/examples", handleExamples);
+  server.on(kUrlExamples, handleExamples);
   // Setup the page to handle web-based IR codes.
   server.on("/ir", handleIr);
   // Setup the aircon page.
-  server.on("/aircon", handleAirCon);
+  server.on(kUrlAircon, handleAirCon);
   // Setup the aircon update page.
   server.on("/aircon/set", handleAirConSet);
   // Setup the info page.
-  server.on("/info", handleInfo);
+  server.on(kUrlInfo, handleInfo);
   // Setup the admin page.
-  server.on("/admin", handleAdmin);
+  server.on(kUrlAdmin, handleAdmin);
   // Setup a reset page to cause WiFiManager information to be reset.
-  server.on("/reset", handleReset);
+  server.on(kUrlWipe, handleReset);
   // Reboot url
-  server.on("/quitquitquit", handleReboot);
+  server.on(kUrlReboot, handleReboot);
+  // Show & pick which gpios are used for what etc.
+  server.on(kUrlGpio, handleGpio);
+  // Parse and update the new gpios.
+  server.on(kUrlGpioSet, handleGpioSetting);
 #if MQTT_ENABLE
   // MQTT Discovery url
-  server.on("/send_discovery", handleSendMqttDiscovery);
+  server.on(kUrlSendDiscovery, handleSendMqttDiscovery);
   // Finish setup of the mqtt clent object.
   mqtt_client.setServer(MqttServer, atoi(MqttPort));
   mqtt_client.setCallback(mqttCallback);
@@ -1998,9 +2238,7 @@ void setup(void) {
         delay(1000);
 #endif  // MQTT_ENABLE
         server.send(200, "text/html",
-            "<html><head><title>Updating firmware.</title></head>"
-            "<body>"
-            "<h1>Updating firmware</h1>"
+            htmlHeader(F("Updating firmware")) +
             "<hr>"
             "<h3>Warning! Don't power off the device for 60 seconds!</h3>"
             "<p>The firmware is uploading and will try to flash itself. "
@@ -2008,8 +2246,8 @@ void setup(void) {
             "<p>The firmware upload seems to have " +
             String(Update.hasError() ? "FAILED!" : "SUCCEEDED!") +
             " Rebooting! </p>" +
-            addJsReloadUrl("/", 20, true) +
-            "</body></html>");
+            addJsReloadUrl(kUrlRoot, 20, true) +
+            htmlEnd());
         delay(1000);
         ESP.restart();
         delay(1000);
@@ -2020,11 +2258,15 @@ void setup(void) {
         }
         HTTPUpload& upload = server.upload();
         if (upload.status == UPLOAD_FILE_START) {
-          WiFiUDP::stopAll();
           debug("Update:");
           debug(upload.filename.c_str());
+#if defined(ESP8266)
+          WiFiUDP::stopAll();
           uint32_t maxSketchSpace = (ESP.getFreeSketchSpace() - 0x1000) &
               0xFFFFF000;
+#else  // ESP8266
+          uint32_t maxSketchSpace = UPDATE_SIZE_UNKNOWN;
+#endif  // ESP8266
           if (!Update.begin(maxSketchSpace)) {  // start with max available size
 #if DEBUG
             if (!isSerialGpioUsedByIr())
@@ -2116,7 +2358,7 @@ bool reconnect(void) {
 
       // Subscribing to topic(s)
       subscribing(MqttSend);
-      for (uint8_t i = 0; i < kSendTableSize; i++) {
+      for (uint8_t i = 0; i < kNrOfIrTxGpios; i++) {
         subscribing(MqttSend + '_' + String(static_cast<int>(i)));
       }
       // Climate command topics.
@@ -2135,7 +2377,7 @@ bool reconnect(void) {
 // Return a string containing the comma separated list of MQTT command topics.
 String listOfCommandTopics(void) {
   String result = MqttSend;
-  for (uint16_t i = 0; i < kSendTableSize; i++) {
+  for (uint16_t i = 0; i < kNrOfIrTxGpios; i++) {
     result += ", " + MqttSend + '_' + String(i);
   }
   return result;
@@ -2150,9 +2392,7 @@ void handleSendMqttDiscovery(void) {
   }
 #endif  // HTML_PASSWORD_ENABLE
   server.send(200, "text/html",
-      "<html><head><title>Sending MQTT Discovery message</title></head>"
-      "<body>"
-      "<h1>Sending MQTT Discovery message.</h1>" +
+      htmlHeader(F("Sending MQTT Discovery message")) +
       htmlMenu() +
       "<p>The Home Assistant MQTT Discovery message is being sent to topic: " +
       MqttDiscovery + ". It will show up in Home Assistant in a few seconds."
@@ -2160,8 +2400,8 @@ void handleSendMqttDiscovery(void) {
       "<h3>Warning!</h3>"
       "<p>Home Assistant's config for this device is reset each time this is "
       " is sent.</p>" +
-      addJsReloadUrl("/", 15, true) +
-      "</body></html>");
+      addJsReloadUrl(kUrlRoot, kRebootTime, true) +
+      htmlEnd());
   sendMQTTDiscovery(MqttDiscovery.c_str());
 }
 
@@ -2181,7 +2421,7 @@ void receivingMQTT(String const topic_name, String const callback_str) {
   uint64_t code = 0;
   uint16_t nbits = 0;
   uint16_t repeat = 0;
-  uint8_t channel = 0;  // Default to the first channel. e.g. "*_0"
+  uint8_t channel = getDefaultIrSendIdx();  // Default to first usable channel.
 
   debug("Receiving data by MQTT topic:");
   debug(topic_name.c_str());
@@ -2210,7 +2450,7 @@ void receivingMQTT(String const topic_name, String const callback_str) {
     return;  // We are done for now.
   }
   // Check if a specific channel was requested by looking for a "*_[0-9]" suffix
-  for (uint8_t i = 0; i < kSendTableSize; i++) {
+  for (uint8_t i = 0; i < kNrOfIrTxGpios; i++) {
     debug(("Checking if " + topic_name + " ends with _" + String(i)).c_str());
     if (topic_name.endsWith("_" + String(i))) {
       channel = i;
@@ -2220,7 +2460,7 @@ void receivingMQTT(String const topic_name, String const callback_str) {
   }
 
   debug(("Using transmit channel " + String(static_cast<int>(channel)) +
-         " / GPIO " + String(static_cast<int>(gpioTable[channel]))).c_str());
+         " / GPIO " + String(static_cast<int>(txGpioTable[channel]))).c_str());
   // Make a copy of the callback string as strtok destroys it.
   char* callback_c_str = strdup(callback_str.c_str());
   debug("MQTT Payload (raw):");
@@ -2291,6 +2531,10 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
   // constructing the PUBLISH packet.
   // Allocate the correct amount of memory for the payload copy
   byte* payload_copy = reinterpret_cast<byte*>(malloc(length + 1));
+  if (payload_copy == NULL) {
+    debug("Can't allocate memory for `payload_copy`. Skipping callback!");
+    return;
+  }
   // Copy the payload to the new buffer
   memcpy(payload_copy, payload, length);
 
@@ -2367,10 +2611,10 @@ void loop(void) {
         lastReconnectAttempt = 0;
         wasConnected = true;
         if (boot) {
-          mqttLog("IR Server just booted");
+          mqttLog("IRMQTTServer " _MY_VERSION_ " just booted");
           boot = false;
         } else {
-          mqttLog("IR Server just (re)connected to MQTT. "
+          mqttLog("IRMQTTServer just (re)connected to MQTT. "
                   "Lost connection about " + timeSince(lastConnectedTime));
         }
         lastConnectedTime = now;
@@ -2404,12 +2648,13 @@ void loop(void) {
     doBroadcast(&lastBroadcast, kBroadcastPeriodMs, climate, false, false);
   }
 #endif  // MQTT_ENABLE
-#ifdef IR_RX
+#if IR_RX
   // Check if an IR code has been received via the IR RX module.
 #if REPORT_UNKNOWNS
-  if (irrecv.decode(&capture)) {
+  if (irrecv != NULL && irrecv->decode(&capture)) {
 #else  // REPORT_UNKNOWNS
-  if (irrecv.decode(&capture) && capture.decode_type != UNKNOWN) {
+  if (irrecv != NULL && irrecv->decode(&capture) &&
+      capture.decode_type != UNKNOWN) {
 #endif  // REPORT_UNKNOWNS
     lastIrReceivedTime = millis();
     lastIrReceived = String(capture.decode_type) + kCommandDelimiter[0] +
@@ -2482,6 +2727,7 @@ uint64_t getUInt64fromHex(char const *str) {
 bool sendIRCode(IRsend *irsend, int const ir_type,
                 uint64_t const code, char const * code_str, uint16_t bits,
                 uint16_t repeat) {
+  if (irsend == NULL) return false;
   // Create a pseudo-lock so we don't try to send two codes at the same time.
   while (lockIr)
     delay(20);
@@ -2490,9 +2736,9 @@ bool sendIRCode(IRsend *irsend, int const ir_type,
   bool success = true;  // Assume success.
 
   // Turn off IR capture if we need to.
-#if defined (IR_RX) && DISABLE_CAPTURE_WHILE_TRANSMITTING
-  irrecv.disableIRIn();  // Stop the IR receiver
-#endif  // defined (IR_RX) && DISABLE_CAPTURE_WHILE_TRANSMITTING
+#if IR_RX && DISABLE_CAPTURE_WHILE_TRANSMITTING
+  if (irrecv != NULL) irrecv->disableIRIn();  // Stop the IR receiver
+#endif  // IR_RX && DISABLE_CAPTURE_WHILE_TRANSMITTING
   // send the IR message.
   switch (ir_type) {
 #if SEND_RC5
@@ -2609,10 +2855,12 @@ bool sendIRCode(IRsend *irsend, int const ir_type,
     case COOLIX:  // 15
       if (bits == 0)
         bits = kCoolixBits;
+      repeat = std::max(repeat, kCoolixDefaultRepeat);
       irsend->sendCOOLIX(code, bits, repeat);
       break;
 #endif
     case DAIKIN:  // 16
+    case DAIKIN160:  // 65
     case DAIKIN2:  // 53
     case DAIKIN216:  // 61
     case KELVINATOR:  // 18
@@ -2790,10 +3038,10 @@ bool sendIRCode(IRsend *irsend, int const ir_type,
       // If we got here, we didn't know how to send it.
       success = false;
   }
+#if IR_RX && DISABLE_CAPTURE_WHILE_TRANSMITTING
   // Turn IR capture back on if we need to.
-#if defined (IR_RX) && DISABLE_CAPTURE_WHILE_TRANSMITTING
-  irrecv.enableIRIn();  // Restart the receiver
-#endif  // defined (IR_RX) && DISABLE_CAPTURE_WHILE_TRANSMITTING
+  if (irrecv != NULL) irrecv->enableIRIn();  // Restart the receiver
+#endif  // IR_RX && DISABLE_CAPTURE_WHILE_TRANSMITTING
   lastSendTime = millis();
   // Release the lock.
   lockIr = false;
@@ -2923,8 +3171,6 @@ stdAc::state_t updateClimate(stdAc::state_t current, const String str,
     result.clean = IRac::strToBool(value.c_str());
   else if (str.equals(prefix + KEY_SLEEP))
     result.sleep = value.toInt();
-  else if (str.equals(prefix + KEY_CLOCK))
-    result.clock = value.toInt();
   return result;
 }
 
@@ -3025,19 +3271,19 @@ bool sendClimate(const stdAc::state_t prev, const stdAc::state_t next,
   // Only send an IR message if we need to.
   if (enableIR && ((diff && !forceMQTT) || forceIR)) {
     debug("Sending common A/C state via IR.");
+#if IR_RX && DISABLE_CAPTURE_WHILE_TRANSMITTING
     // Turn IR capture off if we need to.
-#if defined (IR_RX) && DISABLE_CAPTURE_WHILE_TRANSMITTING
-    irrecv.disableIRIn();  // Stop the IR receiver
-#endif  // defined (IR_RX) && DISABLE_CAPTURE_WHILE_TRANSMITTING
-    lastClimateSucceeded = commonAc.sendAc(
+    if (irrecv != NULL) irrecv->disableIRIn();  // Stop the IR receiver
+#endif  // IR_RX && DISABLE_CAPTURE_WHILE_TRANSMITTING
+    lastClimateSucceeded = commonAc->sendAc(
         next.protocol, next.model, next.power, next.mode,
         next.degrees, next.celsius, next.fanspeed, next.swingv, next.swingh,
         next.quiet, next.turbo, next.econo, next.light, next.filter, next.clean,
         next.beep, next.sleep, -1);
-  // Turn IR capture back on if we need to.
-#if defined (IR_RX) && DISABLE_CAPTURE_WHILE_TRANSMITTING
-    irrecv.enableIRIn();  // Restart the receiver
-#endif  // defined (IR_RX) && DISABLE_CAPTURE_WHILE_TRANSMITTING
+#if IR_RX && DISABLE_CAPTURE_WHILE_TRANSMITTING
+    // Turn IR capture back on if we need to.
+    if (irrecv != NULL) irrecv->enableIRIn();  // Restart the receiver
+#endif  // IR_RX && DISABLE_CAPTURE_WHILE_TRANSMITTING
     if (lastClimateSucceeded) hasClimateBeenSent = true;
     success &= lastClimateSucceeded;
     lastClimateIr.reset();
@@ -3047,7 +3293,7 @@ bool sendClimate(const stdAc::state_t prev, const stdAc::state_t next,
   return success;
 }
 
-#if USE_DECODED_AC_SETTINGS && defined (IR_RX)
+#if USE_DECODED_AC_SETTINGS && IR_RX
 // Decode and use a valid IR A/C remote that we understand enough to convert
 // to a Common A/C format.
 // Args:
@@ -3061,10 +3307,11 @@ bool decodeCommonAc(const decode_results *decode) {
   }
   stdAc::state_t state = climate;
   debug("Converting inbound IR A/C message to common A/C");
+  int8_t txgpio = getDefaultTxGpio();
   switch (decode->decode_type) {
 #if DECODE_ARGO
     case decode_type_t::ARGO: {
-      IRArgoAC ac(IR_LED);
+      IRArgoAC ac(txgpio);
       ac.setRaw(decode->state);
       state = ac.toCommon();
       break;
@@ -3072,7 +3319,7 @@ bool decodeCommonAc(const decode_results *decode) {
 #endif  // DECODE_ARGO
 #if DECODE_COOLIX
     case decode_type_t::COOLIX: {
-      IRCoolixAC ac(IR_LED);
+      IRCoolixAC ac(txgpio);
       ac.setRaw(decode->value);  // Uses value instead of state.
       state = ac.toCommon();
       break;
@@ -3080,7 +3327,7 @@ bool decodeCommonAc(const decode_results *decode) {
 #endif  // DECODE_COOLIX
 #if DECODE_DAIKIN
     case decode_type_t::DAIKIN: {
-      IRDaikinESP ac(IR_LED);
+      IRDaikinESP ac(txgpio);
       ac.setRaw(decode->state);
       state = ac.toCommon();
       break;
@@ -3088,7 +3335,7 @@ bool decodeCommonAc(const decode_results *decode) {
 #endif  // DECODE_DAIKIN
 #if DECODE_DAIKIN2
     case decode_type_t::DAIKIN2: {
-      IRDaikin2 ac(IR_LED);
+      IRDaikin2 ac(txgpio);
       ac.setRaw(decode->state);
       state = ac.toCommon();
       break;
@@ -3096,7 +3343,7 @@ bool decodeCommonAc(const decode_results *decode) {
 #endif  // DECODE_DAIKIN2
 #if DECODE_DAIKIN216
     case decode_type_t::DAIKIN216: {
-      IRDaikin216 ac(IR_LED);
+      IRDaikin216 ac(txgpio);
       ac.setRaw(decode->state);
       state = ac.toCommon();
       break;
@@ -3104,7 +3351,7 @@ bool decodeCommonAc(const decode_results *decode) {
 #endif  // DECODE_DAIKIN216
 #if DECODE_FUJITSU_AC
     case decode_type_t::FUJITSU_AC: {
-      IRFujitsuAC ac(IR_LED);
+      IRFujitsuAC ac(txgpio);
       ac.setRaw(decode->state, decode->bits / 8);
       state = ac.toCommon();
       break;
@@ -3112,7 +3359,7 @@ bool decodeCommonAc(const decode_results *decode) {
 #endif  // DECODE_FUJITSU_AC
 #if DECODE_GOODWEATHER
     case decode_type_t::GOODWEATHER: {
-      IRGoodweatherAc ac(IR_LED);
+      IRGoodweatherAc ac(txgpio);
       ac.setRaw(decode->value);  // Uses value instead of state.
       state = ac.toCommon();
       break;
@@ -3120,7 +3367,7 @@ bool decodeCommonAc(const decode_results *decode) {
 #endif  // DECODE_GOODWEATHER
 #if DECODE_GREE
     case decode_type_t::GREE: {
-      IRGreeAC ac(IR_LED);
+      IRGreeAC ac(txgpio);
       ac.setRaw(decode->state);
       state = ac.toCommon();
       break;
@@ -3128,7 +3375,7 @@ bool decodeCommonAc(const decode_results *decode) {
 #endif  // DECODE_GREE
 #if DECODE_HAIER_AC
     case decode_type_t::HAIER_AC: {
-      IRHaierAC ac(IR_LED);
+      IRHaierAC ac(txgpio);
       ac.setRaw(decode->state);
       state = ac.toCommon();
       break;
@@ -3136,7 +3383,7 @@ bool decodeCommonAc(const decode_results *decode) {
 #endif  // DECODE_HAIER_AC
 #if DECODE_HAIER_AC_YRW02
     case decode_type_t::HAIER_AC_YRW02: {
-      IRHaierACYRW02 ac(IR_LED);
+      IRHaierACYRW02 ac(txgpio);
       ac.setRaw(decode->state);
       state = ac.toCommon();
       break;
@@ -3144,7 +3391,7 @@ bool decodeCommonAc(const decode_results *decode) {
 #endif  // DECODE_HAIER_AC_YRW02
 #if (DECODE_HITACHI_AC || DECODE_HITACHI_AC2)
     case decode_type_t::HITACHI_AC: {
-      IRHitachiAc ac(IR_LED);
+      IRHitachiAc ac(txgpio);
       ac.setRaw(decode->state);
       state = ac.toCommon();
       break;
@@ -3152,7 +3399,7 @@ bool decodeCommonAc(const decode_results *decode) {
 #endif  // (DECODE_HITACHI_AC || DECODE_HITACHI_AC2)
 #if DECODE_KELVINATOR
     case decode_type_t::KELVINATOR: {
-      IRKelvinatorAC ac(IR_LED);
+      IRKelvinatorAC ac(txgpio);
       ac.setRaw(decode->state);
       state = ac.toCommon();
       break;
@@ -3160,7 +3407,7 @@ bool decodeCommonAc(const decode_results *decode) {
 #endif  // DECODE_KELVINATOR
 #if DECODE_MIDEA
     case decode_type_t::MIDEA: {
-      IRMideaAC ac(IR_LED);
+      IRMideaAC ac(txgpio);
       ac.setRaw(decode->value);  // Uses value instead of state.
       state = ac.toCommon();
       break;
@@ -3168,7 +3415,7 @@ bool decodeCommonAc(const decode_results *decode) {
 #endif  // DECODE_MIDEA
 #if DECODE_MITSUBISHI_AC
     case decode_type_t::MITSUBISHI_AC: {
-      IRMitsubishiAC ac(IR_LED);
+      IRMitsubishiAC ac(txgpio);
       ac.setRaw(decode->state);
       state = ac.toCommon();
       break;
@@ -3176,13 +3423,13 @@ bool decodeCommonAc(const decode_results *decode) {
 #endif  // DECODE_MITSUBISHI_AC
 #if DECODE_MITSUBISHIHEAVY
     case decode_type_t::MITSUBISHI_HEAVY_88: {
-      IRMitsubishiHeavy88Ac ac(IR_LED);
+      IRMitsubishiHeavy88Ac ac(txgpio);
       ac.setRaw(decode->state);
       state = ac.toCommon();
       break;
     }
     case decode_type_t::MITSUBISHI_HEAVY_152: {
-      IRMitsubishiHeavy152Ac ac(IR_LED);
+      IRMitsubishiHeavy152Ac ac(txgpio);
       ac.setRaw(decode->state);
       state = ac.toCommon();
       break;
@@ -3190,7 +3437,7 @@ bool decodeCommonAc(const decode_results *decode) {
 #endif  // DECODE_MITSUBISHIHEAVY
 #if DECODE_PANASONIC_AC
     case decode_type_t::PANASONIC_AC: {
-      IRPanasonicAc ac(IR_LED);
+      IRPanasonicAc ac(txgpio);
       ac.setRaw(decode->state);
       state = ac.toCommon();
       break;
@@ -3198,7 +3445,7 @@ bool decodeCommonAc(const decode_results *decode) {
 #endif  // DECODE_PANASONIC_AC
 #if DECODE_SAMSUNG_AC
     case decode_type_t::SAMSUNG_AC: {
-      IRSamsungAc ac(IR_LED);
+      IRSamsungAc ac(txgpio);
       ac.setRaw(decode->state);
       state = ac.toCommon();
       break;
@@ -3206,7 +3453,7 @@ bool decodeCommonAc(const decode_results *decode) {
 #endif  // DECODE_SAMSUNG_AC
 #if DECODE_SHARP_AC
     case decode_type_t::SHARP_AC: {
-      IRSharpAc ac(IR_LED);
+      IRSharpAc ac(txgpio);
       ac.setRaw(decode->state);
       state = ac.toCommon();
       break;
@@ -3214,7 +3461,7 @@ bool decodeCommonAc(const decode_results *decode) {
 #endif  // DECODE_SHARP_AC
 #if DECODE_TCL112AC
     case decode_type_t::TCL112AC: {
-      IRTcl112Ac ac(IR_LED);
+      IRTcl112Ac ac(txgpio);
       ac.setRaw(decode->state);
       state = ac.toCommon();
       break;
@@ -3222,7 +3469,7 @@ bool decodeCommonAc(const decode_results *decode) {
 #endif  // DECODE_TCL112AC
 #if DECODE_TECO
     case decode_type_t::TECO: {
-      IRTecoAc ac(IR_LED);
+      IRTecoAc ac(txgpio);
       ac.setRaw(decode->value);  // Uses value instead of state.
       state = ac.toCommon();
       break;
@@ -3230,7 +3477,7 @@ bool decodeCommonAc(const decode_results *decode) {
 #endif  // DECODE_TECO
 #if DECODE_TOSHIBA_AC
     case decode_type_t::TOSHIBA_AC: {
-      IRToshibaAC ac(IR_LED);
+      IRToshibaAC ac(txgpio);
       ac.setRaw(decode->state);
       state = ac.toCommon();
       break;
@@ -3238,7 +3485,7 @@ bool decodeCommonAc(const decode_results *decode) {
 #endif  // DECODE_TOSHIBA_AC
 #if DECODE_TROTEC
     case decode_type_t::TROTEC: {
-      IRTrotecESP ac(IR_LED);
+      IRTrotecESP ac(txgpio);
       ac.setRaw(decode->state);
       state = ac.toCommon();
       break;
@@ -3246,7 +3493,7 @@ bool decodeCommonAc(const decode_results *decode) {
 #endif  // DECODE_TROTEC
 #if DECODE_VESTEL_AC
     case decode_type_t::VESTEL_AC: {
-      IRVestelAc ac(IR_LED);
+      IRVestelAc ac(txgpio);
       ac.setRaw(decode->value);  // Uses value instead of state.
       state = ac.toCommon();
       break;
@@ -3254,7 +3501,7 @@ bool decodeCommonAc(const decode_results *decode) {
 #endif  // DECODE_VESTEL_AC
 #if DECODE_WHIRLPOOL_AC
     case decode_type_t::WHIRLPOOL_AC: {
-      IRWhirlpoolAc ac(IR_LED);
+      IRWhirlpoolAc ac(txgpio);
       ac.setRaw(decode->state);
       state = ac.toCommon();
       break;
@@ -3289,4 +3536,4 @@ if (climate.celsius != state.celsius) {
   climate = state;  // Copy over the new climate state.
   return true;
 }
-#endif  // USE_DECODED_AC_SETTINGS && defined (IR_RX)
+#endif  // USE_DECODED_AC_SETTINGS && IR_RX

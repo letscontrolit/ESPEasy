@@ -19,9 +19,7 @@
  * Based on Ken Shirriff's IrsendDemo Version 0.1 July, 2009,
  */
 
-#ifndef UNIT_TEST
 #include <Arduino.h>
-#endif
 #include <IRrecv.h>
 #include <IRremoteESP8266.h>
 #include <IRutils.h>
@@ -302,9 +300,13 @@ void dumpACInfo(const decode_results * const results) {
   if (description != "") Serial.println("Mesg Desc.: " + description);
 }
 
-// The section of code run only once at start-up.
+// This section of code runs only once at start-up.
 void setup() {
+#if defined(ESP8266)
   Serial.begin(kBaudRate, SERIAL_8N1, SERIAL_TX_ONLY);
+#else  // ESP8266
+  Serial.begin(kBaudRate, SERIAL_8N1);
+#endif  // ESP8266
   while (!Serial)  // Wait for the serial connection to be establised.
     delay(50);
   Serial.println();

@@ -24,12 +24,6 @@
 #include "IRsend.h"
 #include "IRutils.h"
 
-// KK  KK EEEEEEE LL     VV     VV IIIII NN   NN   AAA   TTTTTTT  OOOOO  RRRRRR
-// KK KK  EE      LL     VV     VV  III  NNN  NN  AAAAA    TTT   OO   OO RR   RR
-// KKKK   EEEEE   LL      VV   VV   III  NN N NN AA   AA   TTT   OO   OO RRRRRR
-// KK KK  EE      LL       VV VV    III  NN  NNN AAAAAAA   TTT   OO   OO RR  RR
-// KK  KK EEEEEEE LLLLLLL   VVV    IIIII NN   NN AA   AA   TTT    OOOO0  RR   RR
-
 // Constants
 
 const uint16_t kKelvinatorTick = 85;
@@ -82,8 +76,8 @@ const uint8_t kKelvinatorTurbo = 1 << kKelvinatorTurboOffset;
 //
 // Status: STABLE / Known working.
 //
-void IRsend::sendKelvinator(unsigned char data[], uint16_t nbytes,
-                            uint16_t repeat) {
+void IRsend::sendKelvinator(const unsigned char data[], const uint16_t nbytes,
+                            const uint16_t repeat) {
   if (nbytes < kKelvinatorStateLength)
     return;  // Not enough bytes to send a proper message.
 
@@ -419,13 +413,8 @@ stdAc::state_t IRKelvinatorAC::toCommon(void) {
 }
 
 // Convert the internal state into a human readable string.
-#ifdef ARDUINO
 String IRKelvinatorAC::toString(void) {
   String result = "";
-#else
-std::string IRKelvinatorAC::toString(void) {
-  std::string result = "";
-#endif  // ARDUINO
   result.reserve(160);  // Reserve some heap for the string to reduce fragging.
   result += F("Power: ");
   result += getPower() ? F("On") : F("Off");

@@ -9,8 +9,6 @@
 #include <stdint.h>
 #ifndef UNIT_TEST
 #include <Arduino.h>
-#else
-#include <string>
 #endif
 #include "IRremoteESP8266.h"
 #include "IRsend.h"
@@ -18,14 +16,10 @@
 #include "IRsend_test.h"
 #endif
 
-//              SSSS   AAA    MMM    SSSS  U   U  N   N   GGGG
-//             S      A   A  M M M  S      U   U  NN  N  G
-//              SSS   AAAAA  M M M   SSS   U   U  N N N  G  GG
-//                 S  A   A  M   M      S  U   U  N  NN  G   G
-//             SSSS   A   A  M   M  SSSS    UUU   N   N   GGG
-
-// Supported Samsung A/C models/remotes:
-// * Samsung AR12KSFPEWQNET
+// Supports:
+//   Brand: Samsung,  Model: UA55H6300 TV
+//   Brand: Samsung,  Model: IEC-R03 remote
+//   Brand: Samsung,  Model: AR12KSFPEWQNET A/C
 
 // Ref:
 //   https://github.com/markszabo/IRremoteESP8266/issues/505
@@ -112,11 +106,7 @@ class IRSamsungAc {
   static stdAc::opmode_t toCommonMode(const uint8_t mode);
   static stdAc::fanspeed_t toCommonFanSpeed(const uint8_t speed);
   stdAc::state_t toCommon(void);
-#ifdef ARDUINO
   String toString(void);
-#else
-  std::string toString(void);
-#endif
 #ifndef UNIT_TEST
 
  private:

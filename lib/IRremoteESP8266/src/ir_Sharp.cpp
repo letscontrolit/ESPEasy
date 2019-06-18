@@ -1,6 +1,8 @@
 // Copyright 2009 Ken Shirriff
 // Copyright 2017, 2019 David Conran
 
+// Sharp remote emulation
+
 #include "ir_Sharp.h"
 #include <algorithm>
 #ifndef ARDUINO
@@ -9,12 +11,6 @@
 #include "IRrecv.h"
 #include "IRsend.h"
 #include "IRutils.h"
-
-//                       SSSS  H   H   AAA   RRRR   PPPP
-//                      S      H   H  A   A  R   R  P   P
-//                       SSS   HHHHH  AAAAA  RRRR   PPPP
-//                          S  H   H  A   A  R  R   P
-//                      SSSS   H   H  A   A  R   R  P
 
 // Equipment it seems compatible with:
 //  * Sharp LC-52D62U
@@ -521,13 +517,8 @@ stdAc::state_t IRSharpAc::toCommon(void) {
 }
 
 // Convert the internal state into a human readable string.
-#ifdef ARDUINO
 String IRSharpAc::toString(void) {
   String result = "";
-#else   // ARDUINO
-std::string IRSharpAc::toString(void) {
-  std::string result = "";
-#endif  // ARDUINO
   result.reserve(60);  // Reserve some heap for the string to reduce fragging.
   result += F("Power: ");
   result += this->getPower() ? F("On") : F("Off");
