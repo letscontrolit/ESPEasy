@@ -2,7 +2,7 @@
 //#######################################################################################################
 //#################################### Plugin 035: Output IR ############################################
 //#######################################################################################################
-
+//
 // Usage: Connect an IR led to ESP8266 GPIO14 (D5) preferably. (various schematics can be found online)
 // On the device tab add a new device and select "Communication - IR Transmit"
 // Enable the device and select the GPIO led pin
