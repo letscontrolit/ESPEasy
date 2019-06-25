@@ -1,18 +1,18 @@
-#ifdef USES_C015
+#ifdef USES_C017
 //#######################################################################################################
-//###########################   Controller Plugin 015: ZABBIX  ##########################################
+//###########################   Controller Plugin 017: ZABBIX  ##########################################
 //#######################################################################################################
 // Based on https://www.zabbix.com/documentation/current/manual/appendix/items/trapper
 // and https://www.zabbix.com/documentation/4.2/manual/appendix/protocols/header_datalen
 
 
 
-#define CPLUGIN_015
-#define CPLUGIN_ID_015 15
-#define CPLUGIN_NAME_015 "Zabbix"
+#define CPLUGIN_017
+#define CPLUGIN_ID_017 17
+#define CPLUGIN_NAME_017 "Zabbix"
 #include <ArduinoJson.h>
 
-bool CPlugin_015(byte function, struct EventStruct *event, String &string)
+bool CPlugin_017(byte function, struct EventStruct *event, String &string)
 {
   bool success = false;
 
@@ -20,7 +20,7 @@ bool CPlugin_015(byte function, struct EventStruct *event, String &string)
   {
   case CPLUGIN_PROTOCOL_ADD:
   {
-    Protocol[++protocolCount].Number = CPLUGIN_ID_015;
+    Protocol[++protocolCount].Number = CPLUGIN_ID_017;
     Protocol[protocolCount].usesMQTT = false;
     Protocol[protocolCount].usesTemplate = false;
     Protocol[protocolCount].usesAccount = false;
@@ -32,14 +32,14 @@ bool CPlugin_015(byte function, struct EventStruct *event, String &string)
 
   case CPLUGIN_GET_DEVICENAME:
   {
-    string = F(CPLUGIN_NAME_015);
+    string = F(CPLUGIN_NAME_017);
     break;
   }
 
   case CPLUGIN_PROTOCOL_SEND:
   {
     byte valueCount = getValueCountFromSensorType(event->sensorType);
-    C015_queue_element element(event);
+    C017_queue_element element(event);
 
     MakeControllerSettings(ControllerSettings);
     LoadControllerSettings(event->ControllerIndex, ControllerSettings);
@@ -48,14 +48,14 @@ bool CPlugin_015(byte function, struct EventStruct *event, String &string)
     {
       element.txt[x] = formatUserVarNoCheck(event, x);
     }
-    success = C015_DelayHandler.addToQueue(element);
-    scheduleNextDelayQueue(TIMER_C015_DELAY_QUEUE, C015_DelayHandler.getNextScheduleTime());
+    success = C017_DelayHandler.addToQueue(element);
+    scheduleNextDelayQueue(TIMER_C017_DELAY_QUEUE, C017_DelayHandler.getNextScheduleTime());
     break;
   }
 
   case CPLUGIN_FLUSH:
   {
-    process_c015_delay_queue();
+    process_c017_delay_queue();
     delay(0);
     break;
   }
@@ -63,7 +63,7 @@ bool CPlugin_015(byte function, struct EventStruct *event, String &string)
   return success;
 }
 
-bool do_process_c015_delay_queue(int controller_number, const C015_queue_element &element, ControllerSettingsStruct &ControllerSettings)
+bool do_process_c017_delay_queue(int controller_number, const C017_queue_element &element, ControllerSettingsStruct &ControllerSettings)
 {
 
   if (!WiFiConnected(10))
