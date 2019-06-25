@@ -625,6 +625,7 @@ To create/register a plugin, you have to :
     #define USES_C011   // Generic HTTP Advanced
     #define USES_C012   // Blynk HTTP
     #define USES_C014   // homie 3 & 4dev MQTT
+    #define USES_C015   // Zabbix
 #endif
 
 

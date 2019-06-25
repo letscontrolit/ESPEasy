@@ -169,6 +169,7 @@ public:
 };
 
 
+
 /*********************************************************************************************\
  * C010_queue_element for queueing requests for 010: Generic UDP
  * Using queue_element_single_value_base
@@ -186,7 +187,29 @@ public:
 \*********************************************************************************************/
 #define C012_queue_element queue_element_single_value_base
 
+class C015_queue_element {
+public:
+  C015_queue_element() : controller_idx(0), TaskIndex(0), idx(0), sensorType(0) {}
+  C015_queue_element(const struct EventStruct* event) :
+    controller_idx(event->ControllerIndex),
+    TaskIndex(event->TaskIndex),
+    idx(event->idx),
+    sensorType(event->sensorType) {}
 
+  size_t getSize() const {
+    size_t total = sizeof(this);
+    for (int i = 0; i < VARS_PER_TASK; ++i) {
+      total += txt[i].length();
+    }
+    return total;
+  }
+
+  String txt[VARS_PER_TASK];
+  int controller_idx;
+  byte TaskIndex;
+  int idx;
+  byte sensorType;
+};
 /*********************************************************************************************\
  * C016_queue_element for queueing requests for C016: Cached HTTP.
 \*********************************************************************************************/
