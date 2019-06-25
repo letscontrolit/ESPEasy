@@ -236,29 +236,55 @@ void IRGreeAC::setMode(const uint8_t new_mode) {
 uint8_t IRGreeAC::getMode(void) { return (remote_state[0] & kGreeModeMask); }
 
 void IRGreeAC::setLight(const bool on) {
-  remote_state[2] &= ~kGreeLightMask;
-  remote_state[2] |= (on << 5);
+  if (on)
+    remote_state[2] |= kGreeLightMask;
+  else
+    remote_state[2] &= ~kGreeLightMask;
 }
 
 bool IRGreeAC::getLight(void) { return remote_state[2] & kGreeLightMask; }
 
+void IRGreeAC::setIFeel(const bool on) {
+  if (on)
+    remote_state[5] |= kGreeIFeelMask;
+  else
+    remote_state[5] &= ~kGreeIFeelMask;
+}
+
+bool IRGreeAC::getIFeel(void) { return remote_state[5] & kGreeIFeelMask; }
+
+void IRGreeAC::setWiFi(const bool on) {
+  if (on)
+    remote_state[5] |= kGreeWiFiMask;
+  else
+    remote_state[5] &= ~kGreeWiFiMask;
+}
+
+bool IRGreeAC::getWiFi(void) { return remote_state[5] & kGreeWiFiMask; }
+
 void IRGreeAC::setXFan(const bool on) {
-  remote_state[2] &= ~kGreeXfanMask;
-  remote_state[2] |= (on << 7);
+  if (on)
+    remote_state[2] |= kGreeXfanMask;
+  else
+    remote_state[2] &= ~kGreeXfanMask;
 }
 
 bool IRGreeAC::getXFan(void) { return remote_state[2] & kGreeXfanMask; }
 
 void IRGreeAC::setSleep(const bool on) {
-  remote_state[0] &= ~kGreeSleepMask;
-  remote_state[0] |= (on << 7);
+  if (on)
+    remote_state[0] |= kGreeSleepMask;
+  else
+    remote_state[0] &= ~kGreeSleepMask;
 }
 
 bool IRGreeAC::getSleep(void) { return remote_state[0] & kGreeSleepMask; }
 
 void IRGreeAC::setTurbo(const bool on) {
-  remote_state[2] &= ~kGreeTurboMask;
-  remote_state[2] |= (on << 4);
+  if (on)
+    remote_state[2] |= kGreeTurboMask;
+  else
+    remote_state[2] &= ~kGreeTurboMask;
 }
 
 bool IRGreeAC::getTurbo(void) { return remote_state[2] & kGreeTurboMask; }
@@ -418,10 +444,7 @@ String IRGreeAC::toString(void) {
   String result = "";
   result.reserve(150);  // Reserve some heap for the string to reduce fragging.
   result += F("Power: ");
-  if (getPower())
-    result += F("On");
-  else
-    result += F("Off");
+  result += this->getPower() ? F("On") : F("Off");
   result += F(", Mode: ");
   result += uint64ToString(getMode());
   switch (getMode()) {
@@ -456,30 +479,19 @@ String IRGreeAC::toString(void) {
       break;
   }
   result += F(", Turbo: ");
-  if (getTurbo())
-    result += F("On");
-  else
-    result += F("Off");
+  result += this->getTurbo() ? F("On") : F("Off");
+  result += F(", IFeel: ");
+  result += this->getIFeel() ? F("On") : F("Off");
+  result += F(", WiFi: ");
+  result += this->getWiFi() ? F("On") : F("Off");
   result += F(", XFan: ");
-  if (getXFan())
-    result += F("On");
-  else
-    result += F("Off");
+  result += this->getXFan() ? F("On") : F("Off");
   result += F(", Light: ");
-  if (getLight())
-    result += F("On");
-  else
-    result += F("Off");
+  result += this->getLight() ? F("On") : F("Off");
   result += F(", Sleep: ");
-  if (getSleep())
-    result += F("On");
-  else
-    result += F("Off");
+  result += this->getSleep() ? F("On") : F("Off");
   result += F(", Swing Vertical Mode: ");
-  if (getSwingVerticalAuto())
-    result += F("Auto");
-  else
-    result += F("Manual");
+  result += this->getSwingVerticalAuto() ? F("Auto") : F("Manual");
   result += F(", Swing Vertical Pos: ");
   result += uint64ToString(getSwingVerticalPosition());
   switch (getSwingVerticalPosition()) {
@@ -511,31 +523,25 @@ bool IRrecv::decodeGree(decode_results* results, uint16_t nbits, bool strict) {
   if (strict && nbits != kGreeBits)
     return false;  // Not strictly a Gree message.
 
-  uint32_t data;
   uint16_t offset = kStartOffset;
 
   // There are two blocks back-to-back in a full Gree IR message
   // sequence.
-  int8_t state_pos = 0;
-  match_result_t data_result;
 
-  // Header
-  if (!matchMark(results->rawbuf[offset++], kGreeHdrMark)) return false;
-  if (!matchSpace(results->rawbuf[offset++], kGreeHdrSpace)) return false;
-  // Data Block #1 (32 bits)
-  data_result =
-      matchData(&(results->rawbuf[offset]), 32, kGreeBitMark, kGreeOneSpace,
-                kGreeBitMark, kGreeZeroSpace, kTolerance, kMarkExcess, false);
-  if (data_result.success == false) return false;
-  data = data_result.data;
-  offset += data_result.used;
-
-  // Record Data Block #1 in the state.
-  for (uint16_t i = 0; i < 4; i++, data >>= 8)
-    results->state[state_pos + i] = data & 0xFF;
-  state_pos += 4;
+  uint16_t used;
+  // Header + Data Block #1 (32 bits)
+  used = matchGeneric(results->rawbuf + offset, results->state,
+                      results->rawlen - offset, nbits / 2,
+                      kGreeHdrMark, kGreeHdrSpace,
+                      kGreeBitMark, kGreeOneSpace,
+                      kGreeBitMark, kGreeZeroSpace,
+                      0, 0, false,
+                      kTolerance, kMarkExcess, false);
+  if (used == 0) return false;
+  offset += used;
 
   // Block #1 footer (3 bits, B010)
+  match_result_t data_result;
   data_result = matchData(&(results->rawbuf[offset]), kGreeBlockFooterBits,
                           kGreeBitMark, kGreeOneSpace, kGreeBitMark,
                           kGreeZeroSpace, kTolerance, kMarkExcess, false);
@@ -543,40 +549,24 @@ bool IRrecv::decodeGree(decode_results* results, uint16_t nbits, bool strict) {
   if (data_result.data != kGreeBlockFooter) return false;
   offset += data_result.used;
 
-  // Inter-block gap.
-  if (!matchMark(results->rawbuf[offset++], kGreeBitMark)) return false;
-  if (!matchSpace(results->rawbuf[offset++], kGreeMsgSpace)) return false;
-
-  // Data Block #2 (32 bits)
-  data_result =
-      matchData(&(results->rawbuf[offset]), 32, kGreeBitMark, kGreeOneSpace,
-                kGreeBitMark, kGreeZeroSpace, kTolerance, kMarkExcess, false);
-  if (data_result.success == false) return false;
-  data = data_result.data;
-  offset += data_result.used;
-
-  // Record Data Block #2 in the state.
-  for (uint16_t i = 0; i < 4; i++, data >>= 8)
-    results->state[state_pos + i] = data & 0xFF;
-  state_pos += 4;
-
-  // Footer.
-  if (!matchMark(results->rawbuf[offset++], kGreeBitMark)) return false;
-  if (offset <= results->rawlen &&
-      !matchAtLeast(results->rawbuf[offset], kGreeMsgSpace))
-    return false;
+  // Inter-block gap + Data Block #2 (32 bits) + Footer
+  if (!matchGeneric(results->rawbuf + offset, results->state + 4,
+                    results->rawlen - offset, nbits / 2,
+                    kGreeBitMark, kGreeMsgSpace,
+                    kGreeBitMark, kGreeOneSpace,
+                    kGreeBitMark, kGreeZeroSpace,
+                    kGreeBitMark, kGreeMsgSpace, true,
+                    kTolerance, kMarkExcess, false)) return false;
 
   // Compliance
   if (strict) {
-    // Correct size/length)
-    if (state_pos != kGreeStateLength) return false;
     // Verify the message's checksum is correct.
     if (!IRGreeAC::validChecksum(results->state)) return false;
   }
 
   // Success
   results->decode_type = GREE;
-  results->bits = state_pos * 8;
+  results->bits = nbits;
   // No need to record the state as we stored it as we decoded it.
   // As we use result->state, we don't record value, address, or command as it
   // is a union data type.

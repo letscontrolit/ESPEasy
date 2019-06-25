@@ -81,7 +81,9 @@ const uint32_t kMqttReconnectTime = 5000;  // Delay(ms) between reconnect tries.
 #define MQTT_CLIMATE "ac"  // Sub-topic for the climate topics.
 #define MQTT_CLIMATE_CMND "cmnd"  // Sub-topic for the climate command topics.
 #define MQTT_CLIMATE_STAT "stat"  // Sub-topic for the climate stat topics.
-#define MQTTbroadcastInterval 10 * 60  // Seconds between rebroadcasts
+// Enable sending/receiving climate via JSON. `true` cost ~5k of program space.
+#define MQTT_CLIMATE_JSON false
+#define MQTTbroadcastInterval 10 * 60  // Seconds between rebroadcasts.
 
 #define QOS 1  // MQTT broker should queue up any unreceived messages for us
 // #define QOS 0  // MQTT broker WON'T queue up messages for us. Fire & Forget.
@@ -149,6 +151,7 @@ const uint16_t kMinUnknownSize = 2 * 10;
 #define KEY_FILTER "filter"
 #define KEY_CLEAN "clean"
 #define KEY_CELSIUS "use_celsius"
+#define KEY_JSON "json"
 
 // HTML arguments we will parse for IR code information.
 #define KEY_TYPE "type"  // KEY_PROTOCOL is also checked too.
@@ -180,7 +183,7 @@ const uint8_t kPasswordLength = 20;
 // ----------------- End of User Configuration Section -------------------------
 
 // Constants
-#define _MY_VERSION_ "v1.2.0"
+#define _MY_VERSION_ "v1.2.2-testing"
 
 const uint8_t kRebootTime = 15;  // Seconds
 const uint8_t kQuickDisplayTime = 2;  // Seconds
@@ -192,12 +195,13 @@ const int8_t kTxGpios[] = {-1, 0, 1, 2, 3, 4, 5, 12, 13, 14, 15, 16};
 const int8_t kRxGpios[] = {-1, 0, 1, 2, 3, 4, 5, 12, 13, 14, 15};
 #endif  // ESP8266
 #if defined(ESP32)
+// Ref: https://randomnerdtutorials.com/esp32-pinout-reference-gpios/
 const int8_t kTxGpios[] = {
-    -1, 0, 1, 2, 3, 4, 5, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
-    25, 26, 27, 28, 29, 30, 31, 32, 33};
+    -1, 0, 1, 2, 3, 4, 5, 12, 13, 14, 15, 16, 17, 18, 19, 21, 22, 23,
+    25, 26, 27, 32, 33};
 const int8_t kRxGpios[] = {
-    -1, 1, 2, 3, 4, 5, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
-    25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39};
+    -1, 1, 2, 3, 4, 5, 12, 13, 14, 15, 16, 17, 18, 19, 21, 22, 23,
+    25, 26, 27, 32, 33, 34, 35, 36, 39};
 #endif  // ESP32
 
 // JSON stuff
@@ -242,7 +246,11 @@ const char* kClimateTopics =
     "(" KEY_PROTOCOL "|" KEY_MODEL "|" KEY_POWER "|" KEY_MODE "|" KEY_TEMP "|"
     KEY_FANSPEED "|" KEY_SWINGV "|" KEY_SWINGH "|" KEY_QUIET "|"
     KEY_TURBO "|" KEY_LIGHT "|" KEY_BEEP "|" KEY_ECONO "|" KEY_SLEEP "|"
-    KEY_FILTER "|" KEY_CLEAN "|" KEY_CELSIUS ")<br>";
+    KEY_FILTER "|" KEY_CLEAN "|" KEY_CELSIUS
+#if MQTT_CLIMATE_JSON
+    "|" KEY_JSON
+#endif  // MQTT_CLIMATE_JSON
+    ")<br>";
 
 void mqttCallback(char* topic, byte* payload, unsigned int length);
 String listOfCommandTopics(void);
@@ -258,6 +266,11 @@ void sendMQTTDiscovery(const char *topic);
 void doBroadcast(TimerMs *timer, const uint32_t interval,
                  const stdAc::state_t state, const bool retain,
                  const bool force);
+#if MQTT_CLIMATE_JSON
+stdAc::state_t jsonToState(const stdAc::state_t current, const String str);
+void sendJsonState(const stdAc::state_t state, const String topic,
+                   const bool retain = false, const bool ha_mode = true);
+#endif  // MQTT_CLIMATE_JSON
 #endif  // MQTT_ENABLE
 bool isSerialGpioUsedByIr(void);
 void debug(const char *str);
