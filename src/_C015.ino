@@ -112,7 +112,7 @@ data_0["value"] = atof(element.txt[x].c_str());
   root.printTo((char*)packet_content, root.measureLength()+1);
   unsigned long long content_len = sizeof(packet_content);
 
-  addLog(LOG_LEVEL_INFO, String(F("ZBX: ")) + packet_content);
+  //addLog(LOG_LEVEL_INFO, String(F("ZBX: ")) + packet_content);
   ControllerSettings.connectToHost(client);
   client.write(packet_header, sizeof(packet_header) - 1);
   client.write((char *)&content_len, sizeof(content_len));
