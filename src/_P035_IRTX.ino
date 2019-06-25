@@ -373,7 +373,6 @@ boolean Plugin_035(byte function, struct EventStruct *event, String &string)
           return true; //do not continue with sending the signal.
         }
         String sprotocol = doc[F("Protocol")];
-        sprotocol.toUpperCase();
         decode_type_t protocol = strToDecodeType(sprotocol.c_str());
         if (!IRac::isProtocolSupported(protocol)) //Check if we support the protocol
         {
@@ -389,10 +388,6 @@ boolean Plugin_035(byte function, struct EventStruct *event, String &string)
         String sfanspeed = doc[F("Fanspeed")];
         String sswingv = doc[F("Swingv")];
         String sswingh = doc[F("Swingh")];
-        sopmode.toUpperCase(); //strToOpmode expects capital letters
-        sfanspeed.toUpperCase();
-        sswingv.toUpperCase();
-        sswingh.toUpperCase();
         stdAc::opmode_t opmode = IRac::strToOpmode(sopmode.c_str(), stdAc::opmode_t::kAuto);           //What operating mode should the unit perform? e.g. Cool. Defaults to auto if missing from JSON
         stdAc::fanspeed_t fanspeed = IRac::strToFanspeed(sfanspeed.c_str(), stdAc::fanspeed_t::kAuto); //Fan Speed setting. Defaults to auto if missing from JSON
         stdAc::swingv_t swingv = IRac::strToSwingV(sswingv.c_str(), stdAc::swingv_t::kAuto);           //Vertical swing setting. Defaults to auto if missing from JSON
@@ -586,6 +581,7 @@ bool sendIRCode(int const ir_type,
     break;
 #endif
   case DAIKIN:         // 16
+  case DAIKIN160:  // 65
   case DAIKIN2:        // 53
   case DAIKIN216:      // 61
   case KELVINATOR:     // 18
@@ -813,6 +809,9 @@ bool parseStringAndSendAirCon(const uint16_t irType, const String str)
     // Lastly, it should never exceed the "normal" size.
     stateSize = std::min(stateSize, kDaikinStateLength);
     break;
+  case DAIKIN160:
+    stateSize = kDaikin160StateLength;
+    break;
   case DAIKIN2:
     stateSize = kDaikin2StateLength;
     break;
@@ -970,6 +969,11 @@ bool parseStringAndSendAirCon(const uint16_t irType, const String str)
     irsend->sendDaikin(reinterpret_cast<uint8_t *>(state));
     break;
 #endif
+#if SEND_DAIKIN160
+    case DAIKIN160:  // 65
+      irsend->sendDaikin160(reinterpret_cast<uint8_t *>(state));
+      break;
+#endif  // SEND_DAIKIN160
 #if SEND_DAIKIN2
   case DAIKIN2:
     irsend->sendDaikin2(reinterpret_cast<uint8_t *>(state));
