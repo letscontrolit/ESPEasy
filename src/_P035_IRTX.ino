@@ -85,6 +85,7 @@ boolean Plugin_035(byte function, struct EventStruct *event, String &string)
   {
     addRowLabel(F("Command"));
     addHtml(F("IRSEND,[PROTOCOL],[DATA],[BITS optional],[REPEATS optional]<BR>BITS and REPEATS are optional and default to 0"));
+    addHtml(F("IRSENDAC,{JSON formated AC command}"));
 
     success = true;
     break;
@@ -372,35 +373,55 @@ boolean Plugin_035(byte function, struct EventStruct *event, String &string)
           ReEnableIRIn();
           return true; //do not continue with sending the signal.
         }
-        String sprotocol = doc[F("Protocol")];
+        String sprotocol = doc[F("protocol")];
         decode_type_t protocol = strToDecodeType(sprotocol.c_str());
         if (!IRac::isProtocolSupported(protocol)) //Check if we support the protocol
         {
-          addLog(LOG_LEVEL_INFO, String(F("IRTX: Protocol not supported")));
+          addLog(LOG_LEVEL_INFO, String(F("IRTX: Protocol not supported:")) + sprotocol);
           ReEnableIRIn();
           return true; //do not continue with sending of the signal.
         }
-        uint16_t model = doc[F("Model")] | -1;    //The specific model of A/C if applicable. //strToModel();. Defaults to -1 (unknown) if missing from JSON
-        bool power = doc[F("Power")];             //POWER ON or OFF. Defaults to false if missing from JSON
-        float degrees = doc[F("Degrees")] | 22.0; //What temperature should the unit be set to?. Defaults to 22c if missing from JSON
-        bool celsius = doc[F("Celsius")] | true;  //Use degreees Celsius, otherwise Fahrenheit. Defaults to true if missing from JSON
-        String sopmode = doc[F("Opmode")];
-        String sfanspeed = doc[F("Fanspeed")];
-        String sswingv = doc[F("Swingv")];
-        String sswingh = doc[F("Swingh")];
-        stdAc::opmode_t opmode = IRac::strToOpmode(sopmode.c_str(), stdAc::opmode_t::kAuto);           //What operating mode should the unit perform? e.g. Cool. Defaults to auto if missing from JSON
-        stdAc::fanspeed_t fanspeed = IRac::strToFanspeed(sfanspeed.c_str(), stdAc::fanspeed_t::kAuto); //Fan Speed setting. Defaults to auto if missing from JSON
-        stdAc::swingv_t swingv = IRac::strToSwingV(sswingv.c_str(), stdAc::swingv_t::kAuto);           //Vertical swing setting. Defaults to auto if missing from JSON
-        stdAc::swingh_t swingh = IRac::strToSwingH(sswingh.c_str(), stdAc::swingh_t::kAuto);           //Horizontal Swing setting. Defaults to auto if missing from JSON
-        bool quiet = doc[F("Quiet")];                                                                  //Quiet setting ON or OFF. Defaults to false if missing from JSON
-        bool turbo = doc[F("Turbo")];                                                                  //Turbo setting ON or OFF. Defaults to false if missing from JSON
-        bool econo = doc[F("Econo")];                                                                  //Economy setting ON or OFF. Defaults to false if missing from JSON
-        bool light = doc[F("Light")];                                                                  //Light setting ON or OFF. Defaults to false if missing from JSON
-        bool filter = doc[F("Filter")];                                                                //Filter setting ON or OFF. Defaults to false if missing from JSON
-        bool clean = doc[F("Clean")];                                                                  //Clean setting ON or OFF. Defaults to false if missing from JSON
-        bool beep = doc[F("Beep")];                                                                    //Beep setting ON or OFF. Defaults to false if missing from JSON
-        int16_t sleep = doc[F("Sleep")] | -1;                                                          //Nr. of mins of sleep mode, or use sleep mode. (<= 0 means off.). Defaults to -1 if missing from JSON
-        int16_t clock = doc[F("Clock")] | -1;                                                          //Nr. of mins past midnight to set the clock to. (< 0 means off.). Defaults to -1 if missing from JSON
+        //Check for Values that absolutly need to exist in the JSON
+        // if (doc.containsKey(F("power")) && doc.containsKey(F("temp")) && doc.containsKey(F("mode")))
+        // {
+        //   addLog(LOG_LEVEL_ERROR, String(F("IRTX: JSON keys missing")));
+        //   ReEnableIRIn();
+        //   return true; //do not continue with sending of the signal.
+        // }
+
+        String tempstr = "";
+        tempstr = doc[F("model")].as<String>();
+        uint16_t model = IRac::strToModel(tempstr.c_str()); //The specific model of A/C if applicable. //strToModel();. Defaults to -1 (unknown) if missing from JSON
+        tempstr = doc[F("power")].as<String>();
+        bool power = IRac::strToBool(tempstr.c_str(), false); //POWER ON or OFF. Defaults to false if missing from JSON
+        float degrees = doc[F("temp")] | 22.0;                //What temperature should the unit be set to?. Defaults to 22c if missing from JSON
+        tempstr = doc[F("use_celsius")].as<String>();
+        bool celsius = IRac::strToBool(tempstr.c_str(), true); //Use degreees Celsius, otherwise Fahrenheit. Defaults to true if missing from JSON
+        tempstr = doc[F("mode")].as<String>();
+        stdAc::opmode_t opmode = IRac::strToOpmode(tempstr.c_str(), stdAc::opmode_t::kAuto); //What operating mode should the unit perform? e.g. Cool. Defaults to auto if missing from JSON
+        tempstr = doc[F("fanspeed")].as<String>();
+        stdAc::fanspeed_t fanspeed = IRac::strToFanspeed(tempstr.c_str(), stdAc::fanspeed_t::kAuto); //Fan Speed setting. Defaults to auto if missing from JSON
+        tempstr = doc[F("swingv")].as<String>();
+        stdAc::swingv_t swingv = IRac::strToSwingV(tempstr.c_str(), stdAc::swingv_t::kAuto); //Vertical swing setting. Defaults to auto if missing from JSON
+        tempstr = doc[F("swingh")].as<String>();
+        stdAc::swingh_t swingh = IRac::strToSwingH(tempstr.c_str(), stdAc::swingh_t::kAuto); //Horizontal Swing setting. Defaults to auto if missing from JSON
+        tempstr = doc[F("quiet")].as<String>();
+        bool quiet = IRac::strToBool(tempstr.c_str(), false); //Quiet setting ON or OFF. Defaults to false if missing from JSON
+        tempstr = doc[F("turbo")].as<String>();
+        bool turbo = IRac::strToBool(tempstr.c_str(), false); //Turbo setting ON or OFF. Defaults to false if missing from JSON
+        tempstr = doc[F("econo")].as<String>();
+        bool econo = IRac::strToBool(tempstr.c_str(), false); //Economy setting ON or OFF. Defaults to false if missing from JSON
+        tempstr = doc[F("light")].as<String>();
+        bool light = IRac::strToBool(tempstr.c_str(), false); //Light setting ON or OFF. Defaults to false if missing from JSON
+        tempstr = doc[F("filter")].as<String>();
+        bool filter = IRac::strToBool(tempstr.c_str(), false); //Filter setting ON or OFF. Defaults to false if missing from JSON
+        tempstr = doc[F("clean")].as<String>();
+        bool clean = IRac::strToBool(tempstr.c_str(), false); //Clean setting ON or OFF. Defaults to false if missing from JSON
+        tempstr = doc[F("beep")].as<String>();
+        bool beep = IRac::strToBool(tempstr.c_str(), false); //Beep setting ON or OFF. Defaults to false if missing from JSON
+
+        int16_t sleep = doc[F("sleep")] | -1; //Nr. of mins of sleep mode, or use sleep mode. (<= 0 means off.). Defaults to -1 if missing from JSON
+        int16_t clock = doc[F("clock")] | -1; //Nr. of mins past midnight to set the clock to. (< 0 means off.). Defaults to -1 if missing from JSON
 
         //Send the IR command
         Plugin_035_commonAc->sendAc(protocol, model, power, opmode, degrees, celsius, fanspeed, swingv, swingh, quiet, turbo, econo, light, filter, clean, beep, sleep, clock);
@@ -581,7 +602,7 @@ bool sendIRCode(int const ir_type,
     break;
 #endif
   case DAIKIN:         // 16
-  case DAIKIN160:  // 65
+  case DAIKIN160:      // 65
   case DAIKIN2:        // 53
   case DAIKIN216:      // 61
   case KELVINATOR:     // 18
@@ -970,10 +991,10 @@ bool parseStringAndSendAirCon(const uint16_t irType, const String str)
     break;
 #endif
 #if SEND_DAIKIN160
-    case DAIKIN160:  // 65
-      irsend->sendDaikin160(reinterpret_cast<uint8_t *>(state));
-      break;
-#endif  // SEND_DAIKIN160
+  case DAIKIN160: // 65
+    irsend->sendDaikin160(reinterpret_cast<uint8_t *>(state));
+    break;
+#endif // SEND_DAIKIN160
 #if SEND_DAIKIN2
   case DAIKIN2:
     irsend->sendDaikin2(reinterpret_cast<uint8_t *>(state));

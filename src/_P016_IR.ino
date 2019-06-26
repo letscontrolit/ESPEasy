@@ -16,7 +16,7 @@
 //
 // IF the IR code is an Air Condition protocol that the  IR library can decode, then there will be a human-readable description of that IR message.
 // If the IR library can encode those kind of messages then a JSON formated command will be given, that can be replayed by P035 as well.
-// That commands format is: IRSENDAC,{"Protocol":"COOLIX","Power":true,"Opmode":"dry","Fanspeed":"auto","Degrees":22,"Swingv":"max","Swingh":"off"}
+// That commands format is: IRSENDAC,{"Protocol":"COOLIX","Power":true,"Opmode":"dry","Fanspeed":"auto","Degrees":22,"swingv":"max","swingh":"off"}
 
 #ifdef ESP8266 // Needed for precompile issues.
 #include <IRremoteESP8266.h>
@@ -456,38 +456,38 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
       {
         StaticJsonDocument<300> doc;
         //Checks if a particular state is something else than the default and only then it adds it to the JSON document
-        doc[F("Protocol")] = typeToString(state.protocol);
+        doc[F("protocol")] = typeToString(state.protocol);
         if (state.model >= 0)
-          doc[F("Model")] = state.model;                     //The specific model of A/C if applicable.
-        doc[F("Power")] = state.power;                       //POWER ON or OFF
-        doc[F("Opmode")] = IRac::opmodeToString(state.mode); //What operating mode should the unit perform? e.g. Cool = doc[""]; Heat etc.
-        doc[F("Degrees")] = state.degrees;                   //What temperature should the unit be set to?
+          doc[F("model")] = IRac::strToModel(String(state.model).c_str()); //The specific model of A/C if applicable.
+        doc[F("power")] = IRac::boolToString(state.power);                 //POWER ON or OFF
+        doc[F("mode")] = IRac::opmodeToString(state.mode);                 //What operating mode should the unit perform? e.g. Cool = doc[""]; Heat etc.
+        doc[F("temp")] = state.degrees;                                    //What temperature should the unit be set to?
         if (!state.celsius)
-          doc[F("Celsius")] = state.celsius; //Use degreees Celsius, otherwise Fahrenheit.
+          doc[F("use_celsius")] = state.celsius; //Use degreees Celsius, otherwise Fahrenheit.
         if (state.fanspeed != stdAc::fanspeed_t::kAuto)
-          doc[F("Fanspeed")] = IRac::fanspeedToString(state.fanspeed); //Fan Speed setting
+          doc[F("fanspeed")] = IRac::fanspeedToString(state.fanspeed); //Fan Speed setting
         if (state.swingv != stdAc::swingv_t::kAuto)
-          doc[F("Swingv")] = IRac::swingvToString(state.swingv); //Vertical swing setting
+          doc[F("swingv")] = IRac::swingvToString(state.swingv); //Vertical swing setting
         if (state.swingh != stdAc::swingh_t::kAuto)
-          doc[F("Swingh")] = IRac::swinghToString(state.swingh); //Horizontal Swing setting
+          doc[F("swingh")] = IRac::swinghToString(state.swingh); //Horizontal swing setting
         if (state.quiet)
-          doc[F("Quiet")] = state.quiet; //Quiet setting ON or OFF
+          doc[F("quiet")] = IRac::boolToString(state.quiet); //Quiet setting ON or OFF
         if (state.turbo)
-          doc[F("Turbo")] = state.turbo; //Turbo setting ON or OFF
+          doc[F("turbo")] = IRac::boolToString(state.turbo); //Turbo setting ON or OFF
         if (state.econo)
-          doc[F("Econo")] = state.econo; //Economy setting ON or OFF
+          doc[F("econo")] = IRac::boolToString(state.econo); //Economy setting ON or OFF
         if (state.light)
-          doc[F("Light")] = state.light; //Light setting ON or OFF
+          doc[F("light")] = IRac::boolToString(state.light); //Light setting ON or OFF
         if (state.filter)
-          doc[F("Filter")] = state.filter; //Filter setting ON or OFF
+          doc[F("filter")] = IRac::boolToString(state.filter); //Filter setting ON or OFF
         if (state.clean)
-          doc[F("Clean")] = state.clean; //Clean setting ON or OFF
+          doc[F("clean")] = IRac::boolToString(state.clean); //Clean setting ON or OFF
         if (state.beep)
-          doc[F("Beep")] = state.beep; //Beep setting ON or OFF
+          doc[F("beep")] = IRac::boolToString(state.beep); //Beep setting ON or OFF
         if (state.sleep > 0)
-          doc[F("Sleep")] = state.sleep; //Nr. of mins of sleep mode, or use sleep mode. (<= 0 means off.)
+          doc[F("sleep")] = state.sleep; //Nr. of mins of sleep mode, or use sleep mode. (<= 0 means off.)
         if (state.clock > 0)
-          doc[F("Clock")] = state.clock; //Nr. of mins past midnight to set the clock to. (< 0 means off.)
+          doc[F("clock")] = state.clock; //Nr. of mins past midnight to set the clock to. (< 0 means off.)
         String output = F("IRSENDAC,");
         serializeJson(doc, output);
         addLog(LOG_LEVEL_INFO, output); //Show the command that the user can put to replay the AC state with P035
