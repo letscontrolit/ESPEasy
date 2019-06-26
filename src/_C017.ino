@@ -71,6 +71,9 @@ bool CPlugin_017(byte function, struct EventStruct *event, String &string)
 
 bool do_process_c017_delay_queue(int controller_number, const C017_queue_element &element, ControllerSettingsStruct &ControllerSettings)
 {
+  byte valueCount = getValueCountFromSensorType(element.sensorType);
+  if (valueCount == 0)
+    return true; //exit if we don't have anything to send.
 
   if (!WiFiConnected(10))
   {
@@ -90,45 +93,22 @@ bool do_process_c017_delay_queue(int controller_number, const C017_queue_element
 
   LoadTaskSettings(element.TaskIndex);
 
-  byte valueCount = getValueCountFromSensorType(element.sensorType);
-  // char itemNames[valueCount][2];
-
   const size_t capacity = JSON_ARRAY_SIZE(4) + JSON_OBJECT_SIZE(2) + 4 * JSON_OBJECT_SIZE(3); //Size for esp8266: 513
   DynamicJsonBuffer jsonBuffer(capacity);
 
+  // Create the schafolding
   JsonObject &root = jsonBuffer.createObject();
   root["request"] = "sender data";
-
   JsonArray &data = root.createNestedArray("data");
-
-  //In my understanding ESPEasy wont return more than 4 Device Values per task
-  JsonObject &data_0 = data.createNestedObject();
-  data_0["host"] = Settings.Name;                            // zabbix hostname, Unit Name for the ESP easy
-  data_0["key"] = ExtraTaskSettings.TaskDeviceValueNames[0]; //valueName // zabbix item
-  data_0["value"] = atof(element.txt[0].c_str());            // ESPeasy supports only floats
-
-  if (valueCount >= 1)
+  // Populate JSON with the data
+  for (uint8_t i = 0; i < valueCount; i++)
   {
-    JsonObject &data_1 = data.createNestedObject();
-    data_1["host"] = Settings.Name;                            // zabbix hostname, Unit Name for the ESP easy
-    data_1["key"] = ExtraTaskSettings.TaskDeviceValueNames[1]; //valueName // zabbix item key
-    data_1["value"] = atof(element.txt[1].c_str());            // ESPeasy supports only floats
+    JsonObject &block = data.createNestedObject();
+    block["host"] = Settings.Name;
+    block["key"] = ExtraTaskSettings.TaskDeviceValueNames[i];
+    block["value"] = atof(element.txt[i].c_str());
   }
-  if (valueCount >= 2)
-  {
-    JsonObject &data_2 = data.createNestedObject();
-    data_2["host"] = Settings.Name;                            // zabbix hostname, Unit Name for the ESP easy
-    data_2["key"] = ExtraTaskSettings.TaskDeviceValueNames[2]; //valueName // zabbix item key
-    data_2["value"] = atof(element.txt[2].c_str());            // ESPeasy supports only floats
-  }
-  if (valueCount >= 3)
-  {
-    JsonObject &data_3 = data.createNestedObject();
-    data_3["host"] = Settings.Name;                            // zabbix hostname, Unit Name for the ESP easy
-    data_3["key"] = ExtraTaskSettings.TaskDeviceValueNames[3]; //valueName // zabbix item key
-    data_3["value"] = atof(element.txt[3].c_str());            // ESPeasy supports only floats
-  }
-
+  //assemble packet
   char packet_header[] = "ZBXD\1";
   char packet_content[capacity];
 
@@ -136,11 +116,11 @@ bool do_process_c017_delay_queue(int controller_number, const C017_queue_element
   unsigned long long content_len = sizeof(packet_content);
 
   //addLog(LOG_LEVEL_INFO, String(F("ZBX: ")) + packet_content);
-  ControllerSettings.connectToHost(client);
+  // Send the packet
   client.write(packet_header, sizeof(packet_header) - 1);
   client.write((char *)&content_len, sizeof(content_len));
   client.write(packet_content, content_len);
-  
+
   client.stop();
   return true;
 }
