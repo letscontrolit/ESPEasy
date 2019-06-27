@@ -93,29 +93,32 @@ bool do_process_c017_delay_queue(int controller_number, const C017_queue_element
 
   LoadTaskSettings(element.TaskIndex);
 
-  const size_t capacity = JSON_ARRAY_SIZE(4) + JSON_OBJECT_SIZE(2) + 4 * JSON_OBJECT_SIZE(3); //Size for esp8266: 513
+  const size_t capacity = JSON_ARRAY_SIZE(VARS_PER_TASK) + JSON_OBJECT_SIZE(2) + VARS_PER_TASK * JSON_OBJECT_SIZE(3); //Size for esp8266 with 4 variables per task: 513
   DynamicJsonBuffer jsonBuffer(capacity);
 
   // Create the schafolding
   JsonObject &root = jsonBuffer.createObject();
-  root["request"] = "sender data";
-  JsonArray &data = root.createNestedArray("data");
+  root[F("request")] = F("sender data");
+  JsonArray &data = root.createNestedArray(F("data"));
   // Populate JSON with the data
   for (uint8_t i = 0; i < valueCount; i++)
   {
+    if (ExtraTaskSettings.TaskDeviceValueNames[i][0] == 0)
+      continue; //Zabbix will ignore an empty key anyway
     JsonObject &block = data.createNestedObject();
-    block["host"] = Settings.Name;
-    block["key"] = ExtraTaskSettings.TaskDeviceValueNames[i];
-    block["value"] = atof(element.txt[i].c_str());
+    block[F("host")] = Settings.Name;                            // Zabbix hostname, Unit Name for the ESP easy
+    block[F("key")] = ExtraTaskSettings.TaskDeviceValueNames[i]; // Zabbix item key // Value Name for the ESP easy
+    block[F("value")] = atof(element.txt[i].c_str());            // ESPeasy supports only floats
   }
-  //assemble packet
+  
+  // Assemble packet
   char packet_header[] = "ZBXD\1";
   char packet_content[capacity];
 
   root.printTo((char *)packet_content, root.measureLength() + 1);
   unsigned long long content_len = sizeof(packet_content);
 
-  //addLog(LOG_LEVEL_INFO, String(F("ZBX: ")) + packet_content);
+  // addLog(LOG_LEVEL_INFO, String(F("ZBX: ")) + packet_content);
   // Send the packet
   client.write(packet_header, sizeof(packet_header) - 1);
   client.write((char *)&content_len, sizeof(content_len));
