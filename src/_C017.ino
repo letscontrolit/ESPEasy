@@ -93,7 +93,7 @@ bool do_process_c017_delay_queue(int controller_number, const C017_queue_element
 
   LoadTaskSettings(element.TaskIndex);
 
-  const size_t capacity = JSON_ARRAY_SIZE(VARS_PER_TASK) + JSON_OBJECT_SIZE(2) + VARS_PER_TASK * JSON_OBJECT_SIZE(3); //Size for esp8266 with 4 variables per task: 513
+  const size_t capacity = JSON_ARRAY_SIZE(VARS_PER_TASK) + JSON_OBJECT_SIZE(2) + VARS_PER_TASK * JSON_OBJECT_SIZE(3)+220; //Size for esp8266 with 4 variables per task: 288+220
   DynamicJsonDocument root(capacity);
 
   // Create the schafolding
