@@ -169,6 +169,7 @@ public:
 };
 
 
+
 /*********************************************************************************************\
  * C010_queue_element for queueing requests for 010: Generic UDP
  * Using queue_element_single_value_base
@@ -185,7 +186,6 @@ public:
  * Using queue_element_single_value_base
 \*********************************************************************************************/
 #define C012_queue_element queue_element_single_value_base
-
 
 /*********************************************************************************************\
  * C016_queue_element for queueing requests for C016: Cached HTTP.
@@ -222,7 +222,32 @@ public:
   byte valueCount;
 };
 
+/*********************************************************************************************\
+ * C017_queue_element for queueing requests for C017: Zabbix Trapper Protocol.
+\*********************************************************************************************/
+class C017_queue_element {
+public:
+  C017_queue_element() : controller_idx(0), TaskIndex(0), idx(0), sensorType(0) {}
+  C017_queue_element(const struct EventStruct* event) :
+    controller_idx(event->ControllerIndex),
+    TaskIndex(event->TaskIndex),
+    idx(event->idx),
+    sensorType(event->sensorType) {}
 
+  size_t getSize() const {
+    size_t total = sizeof(this);
+    for (int i = 0; i < VARS_PER_TASK; ++i) {
+      total += txt[i].length();
+    }
+    return total;
+  }
+
+  String txt[VARS_PER_TASK];
+  int controller_idx;
+  byte TaskIndex;
+  int idx;
+  byte sensorType;
+};
 
 /*********************************************************************************************\
  * ControllerDelayHandlerStruct
@@ -437,11 +462,11 @@ ControllerDelayHandlerStruct<MQTT_queue_element> MQTTDelayHandler;
   DEFINE_Cxxx_DELAY_QUEUE_MACRO(016, 16)
 #endif
 
-/*
+
 #ifdef USES_C017
   DEFINE_Cxxx_DELAY_QUEUE_MACRO(017, 17)
 #endif
-*/
+
 /*
 #ifdef USES_C018
   DEFINE_Cxxx_DELAY_QUEUE_MACRO(018, 18)
