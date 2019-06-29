@@ -95,14 +95,13 @@ bool do_process_c009_delay_queue(int controller_number, const C009_queue_element
   String jsonString;
   {
     // Create json root object
-    DynamicJsonBuffer jsonBuffer;
-    JsonObject& root = jsonBuffer.createObject();
+    DynamicJsonDocument root(1024);
     root[F("module")] = String(F("ESPEasy"));
     root[F("version")] = String(F("1.04"));
 
     // Create nested objects
-    JsonObject& data = root.createNestedObject(String(F("data")));
-    JsonObject& ESP = data.createNestedObject(String(F("ESP")));
+    JsonObject data = root.createNestedObject(String(F("data")));
+    JsonObject ESP = data.createNestedObject(String(F("ESP")));
     ESP[F("name")] = Settings.Name;
     ESP[F("unit")] = Settings.Unit;
     ESP[F("version")] = Settings.Version;
@@ -119,14 +118,14 @@ bool do_process_c009_delay_queue(int controller_number, const C009_queue_element
     ESP[F("ip")] = WiFi.localIP().toString();
 
     // Create nested SENSOR json object
-    JsonObject& SENSOR = data.createNestedObject(String(F("SENSOR")));
+    JsonObject SENSOR = data.createNestedObject(String(F("SENSOR")));
     byte valueCount = getValueCountFromSensorType(element.sensorType);
     // char itemNames[valueCount][2];
     for (byte x = 0; x < valueCount; x++)
     {
       // Each sensor value get an own object (0..n)
       // sprintf(itemNames[x],"%d",x);
-      JsonObject& val = SENSOR.createNestedObject(String(x));
+      JsonObject val = SENSOR.createNestedObject(String(x));
       val[F("deviceName")] = getTaskDeviceName(element.TaskIndex);
       val[F("valueName")]  = ExtraTaskSettings.TaskDeviceValueNames[x];
       val[F("type")]       = element.sensorType;
@@ -134,7 +133,7 @@ bool do_process_c009_delay_queue(int controller_number, const C009_queue_element
     }
 
     // Create json buffer
-    root.printTo(jsonString);
+    serializeJson(root, jsonString);
   }
 
   // We now create a URI for the request

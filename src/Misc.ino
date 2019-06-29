@@ -2462,7 +2462,7 @@ void checkRAM( String &a ) {
 
 //#ifdef PLUGIN_BUILD_TESTING
 
-#define isdigit(n) (n >= '0' && n <= '9')
+//#define isdigit(n) (n >= '0' && n <= '9') //Conflicts with ArduJson 6+, when this lib is used there is no need for this macro
 
 /********************************************************************************************\
   Generate a tone of specified frequency on pin
