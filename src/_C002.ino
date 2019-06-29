@@ -56,7 +56,7 @@ bool CPlugin_002(byte function, struct EventStruct *event, String& string)
         // Find first enabled controller index with this protocol
         byte ControllerID = findFirstEnabledControllerWithId(CPLUGIN_ID_002);
         if (ControllerID < CONTROLLER_MAX) {
-          DynamicJsonDocument root(1024);
+          DynamicJsonDocument root(512);
 		deserializeJson(root, event->String2.c_str());
           if (!root.isNull())
           {
