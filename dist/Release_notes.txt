@@ -1,4 +1,16 @@
 -------------------------------------------------
+Changes in release mega-20190630 (since mega-20190626)
+-------------------------------------------------
+
+Release date: Sun Jun 30 04:00:18 CEST 2019
+
+jimmys01 (3):
+      [JSON] Update to Json 6
+      Update code to version JSON 6
+      Update _C002.ino
+
+
+-------------------------------------------------
 Changes in release mega-20190626 (since mega-20190607)
 -------------------------------------------------
 
