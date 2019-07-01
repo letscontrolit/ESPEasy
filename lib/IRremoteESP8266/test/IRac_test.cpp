@@ -12,6 +12,7 @@
 #include "ir_Midea.h"
 #include "ir_Mitsubishi.h"
 #include "ir_MitsubishiHeavy.h"
+#include "ir_Neoclima.h"
 #include "ir_Panasonic.h"
 #include "ir_Samsung.h"
 #include "ir_Sharp.h"
@@ -134,6 +135,30 @@ TEST(TestIRac, Daikin) {
               false,                       // Turbo
               true,                        // Filter
               true);                       // Clean
+  ASSERT_EQ(expected, ac.toString());
+}
+
+TEST(TestIRac, Daikin160) {
+  IRDaikin160 ac(0);
+  IRac irac(0);
+  IRrecv capture(0);
+  char expected[] =
+      "Power: On, Mode: 2 (DRY), Temp: 23C, Fan: 1 (MIN), "
+      "Vent Position (V): 3 (Middle)";
+
+  ac.begin();
+  irac.daikin160(&ac,
+                 true,                        // Power
+                 stdAc::opmode_t::kDry,       // Mode
+                 23,                          // Celsius
+                 stdAc::fanspeed_t::kMin,     // Fan speed
+                 stdAc::swingv_t::kMiddle);   // Veritcal swing
+  ASSERT_EQ(expected, ac.toString());
+  ac._irsend.makeDecodeResult();
+  EXPECT_TRUE(capture.decode(&ac._irsend.capture));
+  ASSERT_EQ(DAIKIN160, ac._irsend.capture.decode_type);
+  ASSERT_EQ(kDaikin160Bits, ac._irsend.capture.bits);
+  ac.setRaw(ac._irsend.capture.state);
   ASSERT_EQ(expected, ac.toString());
 }
 
@@ -342,7 +367,7 @@ TEST(TestIRac, HaierYrwo2) {
   IRac irac(0);
   IRrecv capture(0);
   char expected[] =
-      "Power: On, Button: 5 (Power), Mode: 2 (Cool), Temp: 23C, Fan: 4 (Med), "
+      "Power: On, Button: 5 (Power), Mode: 2 (COOL), Temp: 23C, Fan: 4 (Med), "
       "Turbo: 1 (High), Swing: 1 (Top), Sleep: On, Health: On";
 
   ac.begin();
@@ -451,7 +476,7 @@ TEST(TestIRac, Mitsubishi) {
   IRac irac(0);
   IRrecv capture(0);
   char expected[] =
-      "Power: On (COOL), Temp: 20C, FAN: 2, VANE: AUTO, Time: 14:30, "
+      "Power: On, Mode: 24 (COOL), Temp: 20C, FAN: 2, VANE: AUTO, Time: 14:30, "
       "On timer: 00:00, Off timer: 00:00, Timer: -";
 
   ac.begin();
@@ -477,7 +502,7 @@ TEST(TestIRac, MitsubishiHeavy88) {
   IRac irac(0);
   IRrecv capture(0);
   char expected[] =
-      "Power: On, Mode: 1 (Cool), Temp: 21C, Fan: 3 (Med), "
+      "Power: On, Mode: 1 (COOL), Temp: 21C, Fan: 3 (Med), "
       "Swing (V): 16 (Auto), Swing (H): 0 (Off), Turbo: Off, Econo: Off, "
       "3D: Off, Clean: On";
 
@@ -506,7 +531,7 @@ TEST(TestIRac, MitsubishiHeavy152) {
   IRac irac(0);
   IRrecv capture(0);
   char expected[] =
-      "Power: On, Mode: 1 (Cool), Temp: 20C, Fan: 6 (Econo), "
+      "Power: On, Mode: 1 (COOL), Temp: 20C, Fan: 6 (Econo), "
       "Swing (V): 6 (Off), Swing (H): 0 (Auto), Silent: On, Turbo: Off, "
       "Econo: On, Night: On, Filter: On, 3D: Off, Clean: Off";
 
@@ -529,6 +554,37 @@ TEST(TestIRac, MitsubishiHeavy152) {
   EXPECT_TRUE(capture.decode(&ac._irsend.capture));
   ASSERT_EQ(MITSUBISHI_HEAVY_152, ac._irsend.capture.decode_type);
   ASSERT_EQ(kMitsubishiHeavy152Bits, ac._irsend.capture.bits);
+  ac.setRaw(ac._irsend.capture.state);
+  ASSERT_EQ(expected, ac.toString());
+}
+
+TEST(TestIRac, Neoclima) {
+  IRNeoclimaAc ac(0);
+  IRac irac(0);
+  IRrecv capture(0);
+  char expected[] =
+      "Power: On, Mode: 1 (COOL), Temp: 20C, Fan: 3 (Low), "
+      "Swing(V): Off, Swing(H): On, Sleep: On, Turbo: Off, Hold: Off, Ion: On, "
+      "Eye: Off, Light: On, Follow: Off, 8C Heat: Off, Fresh: Off, "
+      "Button: 0 (Power)";
+
+  ac.begin();
+  irac.neoclima(&ac,
+                true,                        // Power
+                stdAc::opmode_t::kCool,      // Mode
+                20,                          // Celsius
+                stdAc::fanspeed_t::kLow,     // Fan speed
+                stdAc::swingv_t::kOff,       // Veritcal swing
+                stdAc::swingh_t::kAuto,      // Horizontal swing
+                false,                       // Turbo
+                true,                        // Light
+                true,                        // Filter
+                8 * 60);                     // Sleep
+  ASSERT_EQ(expected, ac.toString());
+  ac._irsend.makeDecodeResult();
+  EXPECT_TRUE(capture.decode(&ac._irsend.capture));
+  ASSERT_EQ(decode_type_t::NEOCLIMA, ac._irsend.capture.decode_type);
+  ASSERT_EQ(kNeoclimaBits, ac._irsend.capture.bits);
   ac.setRaw(ac._irsend.capture.state);
   ASSERT_EQ(expected, ac.toString());
 }

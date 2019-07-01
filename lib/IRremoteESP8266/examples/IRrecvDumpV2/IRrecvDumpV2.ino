@@ -36,6 +36,7 @@
 #include <ir_Midea.h>
 #include <ir_Mitsubishi.h>
 #include <ir_MitsubishiHeavy.h>
+#include <ir_Neoclima.h>
 #include <ir_Panasonic.h>
 #include <ir_Samsung.h>
 #include <ir_Sharp.h>
@@ -136,6 +137,13 @@ void dumpACInfo(const decode_results * const results) {
     description = ac.toString();
   }
 #endif  // DECODE_DAIKIN
+#if DECODE_DAIKIN160
+  if (results->decode_type == DAIKIN160) {
+    IRDaikin160 ac(0);
+    ac.setRaw(results->state);
+    description = ac.toString();
+  }
+#endif  // DECODE_DAIKIN160
 #if DECODE_DAIKIN2
   if (results->decode_type == DAIKIN2) {
     IRDaikin2 ac(0);
@@ -183,6 +191,13 @@ void dumpACInfo(const decode_results * const results) {
     description = ac.toString();
   }
 #endif  // DECODE_MITSUBISHIHEAVY
+#if DECODE_NEOCLIMA
+  if (results->decode_type == NEOCLIMA) {
+    IRNeoclimaAc ac(0);
+    ac.setRaw(results->state);
+    description = ac.toString();
+  }
+#endif  // DECODE_NEOCLIMA
 #if DECODE_TOSHIBA_AC
   if (results->decode_type == TOSHIBA_AC) {
     IRToshibaAC ac(0);

@@ -25,6 +25,7 @@
 #include "ir_Midea.h"
 #include "ir_Mitsubishi.h"
 #include "ir_MitsubishiHeavy.h"
+#include "ir_Neoclima.h"
 #include "ir_Panasonic.h"
 #include "ir_Samsung.h"
 #include "ir_Sharp.h"
@@ -48,6 +49,9 @@ bool IRac::isProtocolSupported(const decode_type_t protocol) {
 #endif
 #if SEND_DAIKIN
     case decode_type_t::DAIKIN:
+#endif
+#if SEND_DAIKIN160
+    case decode_type_t::DAIKIN160:
 #endif
 #if SEND_DAIKIN2
     case decode_type_t::DAIKIN2:
@@ -85,6 +89,9 @@ bool IRac::isProtocolSupported(const decode_type_t protocol) {
 #if SEND_MITSUBISHIHEAVY
     case decode_type_t::MITSUBISHI_HEAVY_88:
     case decode_type_t::MITSUBISHI_HEAVY_152:
+#endif
+#if SEND_NEOCLIMA
+    case decode_type_t::NEOCLIMA:
 #endif
 #if SEND_PANASONIC_AC
     case decode_type_t::PANASONIC_AC:
@@ -212,6 +219,20 @@ void IRac::daikin(IRDaikinESP *ac,
   ac->send();
 }
 #endif  // SEND_DAIKIN
+
+#if SEND_DAIKIN160
+void IRac::daikin160(IRDaikin160 *ac,
+                     const bool on, const stdAc::opmode_t mode,
+                     const float degrees, const stdAc::fanspeed_t fan,
+                     const stdAc::swingv_t swingv) {
+  ac->setPower(on);
+  ac->setMode(ac->convertMode(mode));
+  ac->setTemp(degrees);
+  ac->setFan(ac->convertFan(fan));
+  ac->setSwingVertical(ac->convertSwingV(swingv));
+  ac->send();
+}
+#endif  // SEND_DAIKIN160
 
 #if SEND_DAIKIN2
 void IRac::daikin2(IRDaikin2 *ac,
@@ -561,6 +582,32 @@ void IRac::mitsubishiHeavy152(IRMitsubishiHeavy152Ac *ac,
 }
 #endif  // SEND_MITSUBISHIHEAVY
 
+#if SEND_NEOCLIMA
+void IRac::neoclima(IRNeoclimaAc *ac,
+                    const bool on, const stdAc::opmode_t mode,
+                    const float degrees, const stdAc::fanspeed_t fan,
+                    const stdAc::swingv_t swingv, const stdAc::swingh_t swingh,
+                    const bool turbo, const bool light, const bool filter,
+                    const int16_t sleep) {
+  ac->setMode(ac->convertMode(mode));
+  ac->setTemp(degrees);
+  ac->setFan(ac->convertFan(fan));
+  ac->setSwingV(swingv != stdAc::swingv_t::kOff);
+  ac->setSwingH(swingh != stdAc::swingh_t::kOff);
+  // No Quiet setting available.
+  ac->setTurbo(turbo);
+  ac->setLight(light);
+  // No Econo setting available.
+  ac->setIon(filter);
+  // No Clean setting available.
+  // No Beep setting available.
+  ac->setSleep(sleep >= 0);  // Sleep is either on/off, so convert to boolean.
+  // No Clock setting available.
+  ac->setPower(on);
+  ac->send();
+}
+#endif  // SEND_NEOCLIMA
+
 #if SEND_PANASONIC_AC
 void IRac::panasonic(IRPanasonicAc *ac, const panasonic_ac_remote_model_t model,
                      const bool on, const stdAc::opmode_t mode,
@@ -899,6 +946,14 @@ bool IRac::sendAc(const decode_type_t vendor, const int16_t model,
       break;
     }
 #endif  // SEND_DAIKIN
+#if SEND_DAIKIN160
+    case DAIKIN160:
+    {
+      IRDaikin160 ac(_pin);
+      daikin160(&ac, on, mode, degC, fan, swingv);
+      break;
+    }
+#endif  // SEND_DAIKIN160
 #if SEND_DAIKIN2
     case DAIKIN2:
     {
@@ -1017,6 +1072,16 @@ bool IRac::sendAc(const decode_type_t vendor, const int16_t model,
       break;
     }
 #endif  // SEND_MITSUBISHIHEAVY
+#if SEND_NEOCLIMA
+    case NEOCLIMA:
+    {
+      IRNeoclimaAc ac(_pin);
+      ac.begin();
+      neoclima(&ac, on, mode, degC, fan, swingv, swingh, turbo, light, filter,
+               sleep);
+      break;
+    }
+#endif  // SEND_NEOCLIMA
 #if SEND_PANASONIC_AC
     case PANASONIC_AC:
     {

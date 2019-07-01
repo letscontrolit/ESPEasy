@@ -15,6 +15,9 @@ extern "C" {
 #include <Arduino.h>
 #endif
 #include <algorithm>
+#ifdef UNIT_TEST
+#include <cassert>
+#endif  // UNIT_TEST
 #include "IRremoteESP8266.h"
 #include "IRutils.h"
 
@@ -636,6 +639,10 @@ bool IRrecv::decode(decode_results *results, irparams_t *save) {
   DPRINTLN("Attempting Daikin160 decode");
   if (decodeDaikin160(results)) return true;
 #endif  // DECODE_DAIKIN160
+#if DECODE_NEOCLIMA
+  DPRINTLN("Attempting Neoclima decode");
+  if (decodeNeoclima(results)) return true;
+#endif  // DECODE_NEOCLIMA
 #if DECODE_HASH
   // decodeHash returns a hash on any input.
   // Thus, it needs to be last in the list.
@@ -696,6 +703,17 @@ bool IRrecv::match(uint32_t measured, uint32_t desired, uint8_t tolerance,
   DPRINT(measured);
   DPRINT(" <= ");
   DPRINTLN(ticksHigh(desired, tolerance, delta));
+#ifdef UNIT_TEST
+  // Sanity checks that we don't have values that cause integer over/underflow.
+  // Only performed during testing so there is no performance hit in normal
+  // operation.
+  assert(ticksLow(desired, tolerance, delta) <= desired);
+  // Check if we overflowed.  (UINT32_MAX >> 3 is approx 9 minutes!)
+  assert(ticksHigh(desired, tolerance, delta) < UINT32_MAX >> 3);
+  // Check if our high mark is below where we started. This could happen.
+  // If there is a legit case, then this should be removed.
+  assert(ticksHigh(desired, tolerance, delta) >= desired);
+#endif  // UNIT_TEST
   return (measured >= ticksLow(desired, tolerance, delta) &&
           measured <= ticksHigh(desired, tolerance, delta));
 }
@@ -729,6 +747,17 @@ bool IRrecv::matchAtLeast(uint32_t measured, uint32_t desired,
   DPRINT(", ");
   DPRINT(ticksLow(MS_TO_USEC(irparams.timeout), tolerance, delta));
   DPRINTLN(")]");
+#ifdef UNIT_TEST
+  // Sanity checks that we don't have values that cause integer over/underflow.
+  // Only performed during testing so there is no performance hit in normal
+  // operation.
+  assert(ticksLow(desired, tolerance, delta) <= desired);
+  // Check if we overflowed.  (UINT32_MAX >> 3 is approx 9 minutes!)
+  assert(ticksHigh(desired, tolerance, delta) < UINT32_MAX >> 3);
+  // Check if our high mark is below where we started. This could happen.
+  // If there is a legit case, then this should be removed.
+  assert(ticksHigh(desired, tolerance, delta) >= desired);
+#endif  // UNIT_TEST
   // We really should never get a value of 0, except as the last value
   // in the buffer. If that is the case, then assume infinity and return true.
   if (measured == 0) return true;
