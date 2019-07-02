@@ -691,7 +691,9 @@ bool tryConnectWiFi() {
   }
   setupStaticIPconfig();
   setConnectionSpeed();
+  #ifndef ESP32
   WiFi.forceSleepWake(); // Make sure WiFi is really active.
+  #endif
   last_wifi_connect_attempt_moment = millis();
   switch (wifi_connect_attempt) {
     case 0:
