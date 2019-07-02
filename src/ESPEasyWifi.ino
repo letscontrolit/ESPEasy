@@ -691,6 +691,7 @@ bool tryConnectWiFi() {
   }
   setupStaticIPconfig();
   setConnectionSpeed();
+  WiFi.forceSleepWake(); // Make sure WiFi is really active.
   last_wifi_connect_attempt_moment = millis();
   switch (wifi_connect_attempt) {
     case 0:
