@@ -37,6 +37,39 @@ unsigned long getMixedId(unsigned long timerType, unsigned long id) {
   return (timerType << TIMER_ID_SHIFT) + id;
 }
 
+unsigned long decodeSchedulerId(unsigned long mixed_id, unsigned long& timerType) {
+  timerType = (mixed_id >> TIMER_ID_SHIFT);
+  const unsigned long mask = (1 << TIMER_ID_SHIFT) -1;
+  return mixed_id & mask;
+}
+
+String decodeSchedulerId(unsigned long mixed_id) {
+  if (mixed_id == 0) {
+    return F("Background Task");
+  }
+  unsigned long timerType = 0;
+  const unsigned long id = decodeSchedulerId(mixed_id, timerType);
+  String result;
+  result.reserve(32);
+  switch (timerType) {
+    case CONST_INTERVAL_TIMER:
+      result = F("Const Interval");
+      break;
+    case PLUGIN_TASK_TIMER:
+      result = F("Plugin Task");
+      break;
+    case TASK_DEVICE_TIMER:
+      result = F("Task Device");
+      break;
+    case GPIO_TIMER:
+      result = F("GPIO");
+      break;
+  }
+  result += F(" timer, id: ");
+  result += String(id);
+  return result;
+}
+
 /*********************************************************************************************\
  * Handle scheduled timers.
 \*********************************************************************************************/
@@ -48,6 +81,10 @@ void handle_schedule() {
     // Make sure system event queue will be looked at every now and then.
     mixed_id = msecTimerHandler.getNextId(timer);
   }
+  if (RTC.lastMixedSchedulerId != mixed_id) {
+    RTC.lastMixedSchedulerId = mixed_id;
+    saveToRTC();
+  }
   if (mixed_id == 0) {
     // No id ready to run right now.
     // Events are not that important to run immediately.
@@ -58,9 +95,9 @@ void handle_schedule() {
     STOP_TIMER(HANDLE_SCHEDULER_IDLE);
     return;
   }
-  const unsigned long timerType = (mixed_id >> TIMER_ID_SHIFT);
-  const unsigned long mask = (1 << TIMER_ID_SHIFT) -1;
-  const unsigned long id = mixed_id & mask;
+
+  unsigned long timerType = 0;
+  const unsigned long id = decodeSchedulerId(mixed_id, timerType);
 
   delay(0); // See: https://github.com/letscontrolit/ESPEasy/issues/1818#issuecomment-425351328
 

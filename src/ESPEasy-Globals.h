@@ -1694,7 +1694,7 @@ struct RTCStruct
 {
   RTCStruct() : ID1(0), ID2(0), unused1(false), factoryResetCounter(0),
                 deepSleepState(0), bootFailedCount(0), flashDayCounter(0),
-                flashCounter(0), bootCounter(0) {}
+                flashCounter(0), bootCounter(0), lastMixedSchedulerId(0) {}
   byte ID1;
   byte ID2;
   boolean unused1;
@@ -1704,6 +1704,7 @@ struct RTCStruct
   byte flashDayCounter;
   unsigned long flashCounter;
   unsigned long bootCounter;
+  unsigned long lastMixedSchedulerId;
 } RTC;
 
 int deviceCount = -1;
@@ -1788,6 +1789,7 @@ unsigned long createSystemEventMixedId(PluginPtrType ptr_type, uint16_t crc16);
 
 
 byte lastBootCause = BOOT_CAUSE_MANUAL_REBOOT;
+unsigned long lastMixedSchedulerId_beforereboot = 0;
 
 #if defined(ESP32)
 enum WiFiDisconnectReason

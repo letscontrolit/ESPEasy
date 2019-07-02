@@ -183,6 +183,7 @@ void setup()
   {
     RTC.bootFailedCount++;
     RTC.bootCounter++;
+    lastMixedSchedulerId_beforereboot = RTC.lastMixedSchedulerId;
     readUserVarFromRTC();
 
     if (RTC.deepSleepState == 1)
@@ -194,7 +195,8 @@ void setup()
       log = F("INIT : Warm boot #");
 
     log += RTC.bootCounter;
-
+    log += F(" Last Task: ");
+    log += decodeSchedulerId(lastMixedSchedulerId_beforereboot);
   }
   //cold boot (RTC memory empty)
   else
