@@ -28,6 +28,8 @@ String getLabel(LabelType::Enum label) {
     case LabelType::BOOT_COUNT:             return F("Boot Count");
     case LabelType::RESET_REASON:           return F("Reset Reason");
     case LabelType::LAST_TASK_BEFORE_REBOOT: return F("Last Task");
+    case LabelType::SW_WD_COUNT:            return F("SW WD count");
+
 
     case LabelType::WIFI_CONNECTION:        return F("WiFi Connection");
     case LabelType::WIFI_RSSI:              return F("RSSI");
@@ -125,6 +127,7 @@ String getValue(LabelType::Enum label) {
     case LabelType::BOOT_COUNT:             break;
     case LabelType::RESET_REASON:           return getResetReasonString();
     case LabelType::LAST_TASK_BEFORE_REBOOT: return decodeSchedulerId(lastMixedSchedulerId_beforereboot);
+    case LabelType::SW_WD_COUNT:            return String(sw_watchdog_callback_count);
 
     case LabelType::WIFI_CONNECTION:        break;
     case LabelType::WIFI_RSSI:              return String(WiFi.RSSI());

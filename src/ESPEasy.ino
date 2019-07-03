@@ -118,6 +118,15 @@ void preinit() {
 #endif
 
 /*********************************************************************************************\
+ * ISR call back function for handling the watchdog.
+\*********************************************************************************************/
+void sw_watchdog_callback(void *arg) 
+{
+  yield(); // feed the WD
+  ++sw_watchdog_callback_count;
+}
+
+/*********************************************************************************************\
  * SETUP
 \*********************************************************************************************/
 void setup()
@@ -131,6 +140,9 @@ void setup()
   run_compiletime_checks();
   lowestFreeStack = getFreeStackWatermark();
   lowestRAM = FreeMem();
+#ifndef ESP32
+  ets_isr_attach(8, sw_watchdog_callback, NULL);  // Set a callback for feeding the watchdog.
+#endif
 
   resetPluginTaskData();
   Plugin_id.resize(PLUGIN_MAX);
