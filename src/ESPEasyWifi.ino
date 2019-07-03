@@ -1,4 +1,4 @@
-
+#define WIFI_RECONNECT_WAIT         20000   // in milliSeconds
 #define WIFI_AP_OFF_TIMER_DURATION  60000   // in milliSeconds
 
 bool unprocessedWifiEvents() {
@@ -12,10 +12,9 @@ bool unprocessedWifiEvents() {
 //********************************************************************************
 void processConnect() {
   if (processedConnect) return;
-  processedConnect = true;
   delay(100); // FIXME TD-er: See https://github.com/letscontrolit/ESPEasy/issues/1987#issuecomment-451644424
   ++wifi_reconnects;
-  if (wifiStatus < ESPEASY_WIFI_CONNECTED) return;
+  if ((wifiStatus & ESPEASY_WIFI_CONNECTED) == 0) return;
   const long connect_duration = timeDiff(last_wifi_connect_attempt_moment, lastConnectMoment);
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("WIFI : Connected! AP: ");
@@ -44,11 +43,11 @@ void processConnect() {
     WiFi.setAutoConnect(true);
   }
   logConnectionStatus();
+  processedConnect = true;
 }
 
 void processDisconnect() {
   if (processedDisconnect) return;
-  processedDisconnect = true;
   delay(100); // FIXME TD-er: See https://github.com/letscontrolit/ESPEasy/issues/1987#issuecomment-451644424
   if (Settings.UseRules) {
     String event = F("WiFi#Disconnected");
@@ -64,11 +63,15 @@ void processDisconnect() {
     }
     addLog(LOG_LEVEL_INFO, log);
   }
+  WiFiUDP::stopAll();
+  WiFiClient::stopAll();
+  mqtt_reconnect_count = 0;
   if (Settings.WiFiRestart_connection_lost()) {
-    setWifiMode(WIFI_OFF);
-    delay(100);
+    WifiDisconnect();
+    //setWifiMode(WIFI_OFF);
   }
   logConnectionStatus();
+  processedDisconnect = true;
 }
 
 
@@ -316,9 +319,9 @@ void WifiScanAsync() {
 bool WifiIsAP(WiFiMode_t wifimode)
 {
   #if defined(ESP32)
-    return (wifimode == WIFI_MODE_AP) || (wifimode == WIFI_MODE_APSTA);
+    return ((wifimode & WIFI_MODE_AP) != 0);
   #else
-    return (wifimode == WIFI_AP) || (wifimode == WIFI_AP_STA);
+    return ((wifimode & WIFI_AP) != 0);
   #endif
 }
 
@@ -356,6 +359,9 @@ void setSTA(bool enable) {
 
 void setAP(bool enable) {
   WiFiMode_t wifimode = WiFi.getMode();
+  if (WifiIsAP(wifimode) == enable) {
+    return;
+  }
   switch(wifimode) {
     case WIFI_OFF:
       if (enable) setWifiMode(WIFI_AP);
@@ -370,15 +376,8 @@ void setAP(bool enable) {
       if (!enable) setWifiMode(WIFI_STA);
       break;
     default:
+      addLog(LOG_LEVEL_INFO, F("WIFI : Unknown mode (setAP)"));
       break;
-  }
-  if (WifiIsAP(wifimode) && !enable) {
-    String event = F("WiFi#APmodeDisabled");
-    rulesProcessing(event);
-  }
-  if (WifiIsAP(wifimode) != enable) {
-    // Mode has changed
-    setAPinternal(enable);
   }
 }
 
@@ -386,7 +385,6 @@ void setAP(bool enable) {
 void setAPinternal(bool enable)
 {
   if (enable) {
-    timerAPoff = millis() + WIFI_AP_OFF_TIMER_DURATION;
     // create and store unique AP SSID/PW to prevent ESP from starting AP mode with default SSID and No password!
     // setup ssid for AP Mode when needed
     String softAPSSID=WifiGetAPssid();
@@ -434,9 +432,14 @@ void setAPinternal(bool enable)
 
 
 void setWifiMode(WiFiMode_t wifimode) {
-  if (WiFi.getMode() == wifimode) {
+  const WiFiMode_t cur_mode = WiFi.getMode();
+  if (cur_mode == wifimode) {
     return;
   }
+  String log = F("WIFI : Current mode ");
+  log += String(cur_mode);
+  addLog(LOG_LEVEL_INFO, log);
+
   switch (wifimode) {
     case WIFI_OFF:
       addLog(LOG_LEVEL_INFO, F("WIFI : Switch off WiFi"));
@@ -451,11 +454,23 @@ void setWifiMode(WiFiMode_t wifimode) {
       addLog(LOG_LEVEL_INFO, F("WIFI : Set WiFi to AP+STA"));
       break;
     default:
+      addLog(LOG_LEVEL_INFO, F("WIFI : Unknown mode"));
       break;
   }
-  setUseStaticIP(useStaticIP());
-  WiFi.mode(wifimode);
+  if (!WiFi.mode(wifimode)) {
+      addLog(LOG_LEVEL_INFO, F("WIFI : Cannot set mode!!!!!"));
+  }
+  setupStaticIPconfig();
   delay(30); // Must allow for some time to init.
+  bool new_mode_AP_enabled = WifiIsAP(wifimode);
+  if (WifiIsAP(cur_mode) && !new_mode_AP_enabled) {
+    String event = F("WiFi#APmodeDisabled");
+    rulesProcessing(event);
+  }
+  if (WifiIsAP(cur_mode) != new_mode_AP_enabled) {
+    // Mode has changed
+    setAPinternal(new_mode_AP_enabled);
+  }
 }
 
 
@@ -493,6 +508,8 @@ bool WiFiConnected() {
   // For ESP82xx, do not rely on WiFi.status() with event based wifi.
   if (wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED) {
     if (WiFi.RSSI() < 0 && WiFi.isConnected()) {
+      timerAPstart = 0;
+      processDisableAPmode();
       STOP_TIMER(WIFI_ISCONNECTED_STATS);
       return true;
     }
@@ -500,14 +517,21 @@ bool WiFiConnected() {
     addLog(LOG_LEVEL_INFO, F("WIFI  : WiFiConnected() out of sync"));
     resetWiFi();
   }
+  if (timerAPstart == 0) {
+    timerAPstart = millis() + WIFI_RECONNECT_WAIT;
+  }
+  if (timeOutReached(timerAPstart)) {
+    setAP(true);
+  }
   delay(1);
   STOP_TIMER(WIFI_NOTCONNECTED_STATS);
   return false;
 }
 
 void WiFiConnectRelaxed() {
-  if (WiFiConnected())
+  if (WiFiConnected()) {
     return;   //already connected, need to disconnect first
+  }
   if (prepareWiFi()) {
     if (selectValidWiFiSettings()) {
       tryConnectWiFi();
@@ -633,7 +657,12 @@ void setConnectionSpeed() {
 
 void setupStaticIPconfig() {
   setUseStaticIP(useStaticIP());
-  if (!useStaticIP()) return;
+  if (!useStaticIP()) {
+    // For newer core versions, simply setting to 0's will disable DHCPc
+    uint32_t zero_ip = 0u;
+    WiFi.config(zero_ip, zero_ip, zero_ip, zero_ip);
+    return;
+  }
   const IPAddress ip = Settings.IP;
   const IPAddress gw = Settings.Gateway;
   const IPAddress subnet = Settings.Subnet;
@@ -702,6 +731,7 @@ bool tryConnectWiFi() {
     default:
       WiFi.begin(ssid, passphrase);
   }
+  delay(100); // FIXME TD-er: Not sure why, but a delay is really needed here or else you will run into timeouts.
   ++wifi_connect_attempt;
   logConnectionStatus();
   switch (WiFi.status()) {
@@ -903,8 +933,8 @@ void WifiCheck()
 {
   if(wifiSetup)
     return;
-
-  processDisableAPmode();
+  delay(0);
+//  processDisableAPmode();
   IPAddress ip = WiFi.localIP();
   if (WiFiConnected()) { // let's just check for wifi, no matter if we have an IP or not...
     if (!useStaticIP()) {
@@ -921,11 +951,25 @@ void WifiCheck()
     }
   }
 
-  if (wifiStatus != ESPEASY_WIFI_SERVICES_INITIALIZED) {
-    if (timeOutReached(last_wifi_connect_attempt_moment + (1000 + wifi_connect_attempt * 200))) {
-      WiFiConnectRelaxed();
-    }
+  if (WiFi.status() == WL_DISCONNECTED && timePassedSince(last_wifi_connect_attempt_moment) > 5000) {
+    WifiDisconnect();
   }
+
+  switch (wifiStatus) {
+    case ESPEASY_WIFI_SERVICES_INITIALIZED:
+      break;
+    case ESPEASY_WIFI_DISCONNECTED:
+      if (lastDisconnectMoment == 0 || timeOutReached(lastDisconnectMoment + 500)) {
+        WiFiConnectRelaxed();
+      }
+      break;
+    default:
+      if (timeOutReached(last_wifi_connect_attempt_moment + (10000 + wifi_connect_attempt * 200))) {
+        WifiDisconnect();
+      }
+      break;
+  }
+
   if (mqtt_reconnect_count > 10) {
     connectionCheckHandler();
   }

@@ -1755,6 +1755,8 @@ byte cmd_within_mainloop = 0;
 unsigned long connectionFailures = 0;
 unsigned long wdcounter = 0;
 unsigned long timerAPoff = 0;
+unsigned long timerAPstart = 0;
+unsigned long timerWiFiReconnect = 0;
 unsigned long timerAwakeFromDeepSleep = 0;
 unsigned long last_system_event_run = 0;
 

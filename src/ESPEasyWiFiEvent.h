@@ -27,7 +27,7 @@ void setUseStaticIP(bool enabled) {
 
 void markGotIP() {
   lastGetIPmoment = millis();
-  wifiStatus = ESPEASY_WIFI_GOT_IP;
+  wifiStatus = wifiStatus | ESPEASY_WIFI_GOT_IP;
   processedGetIP = false;
 }
 
@@ -41,7 +41,7 @@ void WiFiEvent(system_event_id_t event, system_event_info_t info) {
     case SYSTEM_EVENT_STA_CONNECTED:
       lastConnectMoment = millis();
       processedConnect = false;
-      wifiStatus = ESPEASY_WIFI_CONNECTED;
+      wifiStatus = wifiStatus | ESPEASY_WIFI_CONNECTED;
       break;
     case SYSTEM_EVENT_STA_DISCONNECTED:
       lastDisconnectMoment = millis();
@@ -66,7 +66,7 @@ void WiFiEvent(system_event_id_t event, system_event_info_t info) {
       break;
     case SYSTEM_EVENT_AP_STADISCONNECTED:
       for (byte i = 0; i < 6; ++i) {
-        lastMacConnectedAPmode[i] = info.sta_disconnected.mac[i];
+        lastMacDisconnectedAPmode[i] = info.sta_disconnected.mac[i];
       }
       processedDisconnectAPmode = false;
       break;
@@ -86,7 +86,7 @@ void WiFiEvent(system_event_id_t event, system_event_info_t info) {
 void onConnected(const WiFiEventStationModeConnected& event){
   lastConnectMoment = millis();
   processedConnect = false;
-  wifiStatus = ESPEASY_WIFI_CONNECTED;
+  wifiStatus = wifiStatus | ESPEASY_WIFI_CONNECTED;
   last_channel = event.channel;
   last_ssid = event.ssid;
   bssid_changed = false;

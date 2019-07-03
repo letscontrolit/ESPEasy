@@ -312,7 +312,7 @@ String LoadSettings()
   else{
     addLog(LOG_LEVEL_ERROR, F("CRC  : SecuritySettings CRC   ...FAIL"));
   }
-  setUseStaticIP(useStaticIP());
+  setupStaticIPconfig();
   afterloadSettings();
   SecuritySettings.validate();
   return(err);
