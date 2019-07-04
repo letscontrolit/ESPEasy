@@ -771,12 +771,13 @@ To create/register a plugin, you have to :
 
 
 //**************************--IR LIBRARY SHARED DEPENDENCIES--***************************
-#if defined(PLUGIN_BUILD_IR)
+#ifdef PLUGIN_BUILD_IR
 #include <IRremoteESP8266.h>
 #include <IRutils.h>
 #endif
-#if defined(PLUGIN_BUILD_IR_EXTENDED)
-#include <IRac.h>       // It includes IRremoteESP8266.h
+#ifdef PLUGIN_BUILD_IR_EXTENDED
+#include <IRremoteESP8266.h>
+#include <IRac.h>
 #include <IRutils.h>
 #endif
 

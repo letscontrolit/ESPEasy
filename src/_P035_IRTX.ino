@@ -31,6 +31,10 @@
 
 #include <IRsend.h>
 
+// Forward declare fumctions to make compiler happy
+bool sendIRCode(decode_type_t const ir_type, uint64_t  code, char const *code_str, uint16_t bits,uint16_t repeat);
+bool parseStringAndSendAirCon(const decode_type_t irType, const String str);
+
 #ifdef P016_P035_Extended_AC
 IRac *Plugin_035_commonAc = nullptr;
 #endif
@@ -461,7 +465,6 @@ void ReEnableIRIn()
 // Transmit the given IR message.
 //
 // Args:
-//   irsend:   A pointer to a IRsend object to transmit via.
 //   ir_type:  enum of the protocol to be sent.
 //   code:     Numeric payload of the IR message. Most protocols use this.
 //   code_str: The unparsed code to be sent. Used by complex protocol encodings.
@@ -469,7 +472,7 @@ void ReEnableIRIn()
 //   repeat:   Nr. of times the message is to be repeated. (Not all protcols.)
 // Returns:
 //   bool: Successfully sent or not.
-bool sendIRCode(decode_type_t  const ir_type,
+bool sendIRCode(decode_type_t const ir_type,
                 uint64_t  code, char const *code_str, uint16_t bits,
                 uint16_t repeat)
 {
@@ -485,7 +488,6 @@ bool sendIRCode(decode_type_t  const ir_type,
         
   return success;
 }
-
 
 // Parse an Air Conditioner A/C Hex String/code and send it.
 // Args:
@@ -631,24 +633,5 @@ uint16_t countValuesInStr(const String &str, char sep)
   } while (index != -1);
   return count;
 }
-// Dynamically allocate an array of uint16_t's.
-// Args:
-//   size:  Nr. of uint16_t's need to be in the new array.
-// Returns:
-//   A Ptr to the new array. Restarts the ESP8266 if it fails.
-//uint16_t * newCodeArray(const uint16_t size) {
-//  uint16_t *result;
-//
-//  result = reinterpret_cast<uint16_t*>(malloc(size * sizeof(uint16_t)));
-//  // Check we malloc'ed successfully.
-//  if (result == NULL) {  // malloc failed, so give up.
-//    Serial.printf("\nCan't allocate %d bytes. (%d bytes free)\n",
-//                  size * sizeof(uint16_t), ESP.getFreeHeap());
-//    serialPrintln("Giving up & forcing a reboot.");
-//    ESP.restart();  // Reboot.
-//    delay(500);  // Wait for the restart to happen.
-//    return result;  // Should never get here, but just in case.
-//  }
-//  return result;
-//}
+
 #endif // USES_P035
