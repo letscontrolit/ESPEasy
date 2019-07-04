@@ -193,7 +193,7 @@ bool do_process_c015_delay_queue(int controller_plugin_number, const C015_queue_
     // controller has been disabled. Answer true to flush queue.
     return true;
 
-  if (wifiStatus != ESPEASY_WIFI_SERVICES_INITIALIZED) {
+  if (!WiFiConnected()) {
     return false;
   }
 

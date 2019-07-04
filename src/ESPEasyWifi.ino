@@ -2,7 +2,7 @@
 #define WIFI_AP_OFF_TIMER_DURATION  60000   // in milliSeconds
 
 bool unprocessedWifiEvents() {
-  if (processedConnect && processedGetIP && processedDisconnect) return false;
+  if (processedConnect && processedGetIP && processedDisconnect && processedDHCPTimeout) return false;
   return true;
 }
 
@@ -14,7 +14,7 @@ void processConnect() {
   if (processedConnect) return;
   delay(100); // FIXME TD-er: See https://github.com/letscontrolit/ESPEasy/issues/1987#issuecomment-451644424
   ++wifi_reconnects;
-  if ((wifiStatus & ESPEASY_WIFI_CONNECTED) == 0) return;
+//  if ((wifiStatus & ESPEASY_WIFI_CONNECTED) == 0) return;
   const long connect_duration = timeDiff(last_wifi_connect_attempt_moment, lastConnectMoment);
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("WIFI : Connected! AP: ");
@@ -63,8 +63,10 @@ void processDisconnect() {
     }
     addLog(LOG_LEVEL_INFO, log);
   }
+  #ifdef ESP8266
   WiFiUDP::stopAll();
   WiFiClient::stopAll();
+  #endif
   mqtt_reconnect_count = 0;
   if (Settings.WiFiRestart_connection_lost()) {
     WifiDisconnect();
@@ -155,7 +157,7 @@ void processGotIP() {
   }
   statusLED(true);
 //  WiFi.scanDelete();
-  wifiStatus = ESPEASY_WIFI_SERVICES_INITIALIZED;
+//  wifiStatus = ESPEASY_WIFI_SERVICES_INITIALIZED;
   setWebserverRunning(true);
   #ifdef FEATURE_MDNS
   if (mdns_started) {
@@ -505,6 +507,7 @@ bool useStaticIP() {
 
 bool WiFiConnected() {
   START_TIMER;
+  if (unprocessedWifiEvents()) return false;
   // For ESP82xx, do not rely on WiFi.status() with event based wifi.
   if (wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED) {
     if (WiFi.RSSI() < 0 && WiFi.isConnected()) {
@@ -720,6 +723,9 @@ bool tryConnectWiFi() {
   }
   setupStaticIPconfig();
   setConnectionSpeed();
+  #ifdef ESP8266
+  WiFi.forceSleepWake(); // Make sure WiFi is really active.
+  #endif
   last_wifi_connect_attempt_moment = millis();
   switch (wifi_connect_attempt) {
     case 0:
@@ -753,7 +759,7 @@ bool tryConnectWiFi() {
     }
     case WL_DISCONNECTED: {
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        String log = F("WIFI : Not configured in Station Mode!!: ");
+        String log = F("WIFI : WiFi.status() = WL_DISCONNECTED  SSID: ");
         log += ssid;
         addLog(LOG_LEVEL_INFO, log);
       }
@@ -944,11 +950,6 @@ void WifiCheck()
         resetWiFi();
       }
     }
-  } else {
-    if (wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED) { // SMY: WiFi seems to be disconnected and out of sync with internal state... strange... we should never get here!!
-      addLog(LOG_LEVEL_ERROR, F("WIFI : WiFiCheck out of sync"));
-      resetWiFi();
-    }
   }
 
   if (WiFi.status() == WL_DISCONNECTED && timePassedSince(last_wifi_connect_attempt_moment) > 5000) {
@@ -959,7 +960,7 @@ void WifiCheck()
     case ESPEASY_WIFI_SERVICES_INITIALIZED:
       break;
     case ESPEASY_WIFI_DISCONNECTED:
-      if (lastDisconnectMoment == 0 || timeOutReached(lastDisconnectMoment + 500)) {
+      if (lastDisconnectMoment == 0 || timeOutReached(lastDisconnectMoment + 5000)) {
         WiFiConnectRelaxed();
       }
       break;

@@ -166,6 +166,7 @@ void setup()
   stationConnectedHandler = WiFi.onStationModeConnected(onConnected);
 	stationDisconnectedHandler = WiFi.onStationModeDisconnected(onDisconnect);
 	stationGotIpHandler = WiFi.onStationModeGotIP(onGotIP);
+  stationModeDHCPTimeoutHandler = WiFi.onStationModeDHCPTimeout(onDHCPTimeout);
   APModeStationConnectedHandler = WiFi.onSoftAPModeStationConnected(onConnectedAPmode);
   APModeStationDisconnectedHandler = WiFi.onSoftAPModeStationDisconnected(onDisonnectedAPmode);
 #endif
@@ -525,18 +526,49 @@ void loop()
     WiFiConnectRelaxed();
     wifiSetupConnect = false;
   }
+  if (WiFi.status() == WL_DISCONNECTED) {
+    delay(100);
+  }
   if ((wifiStatus != ESPEASY_WIFI_SERVICES_INITIALIZED) || unprocessedWifiEvents()) {
     // WiFi connection is not yet available, so introduce some extra delays to
     // help the background tasks managing wifi connections
     delay(1);
-    if (wifiStatus >= ESPEASY_WIFI_CONNECTED) processConnect();
-    if (wifiStatus >= ESPEASY_WIFI_GOT_IP) processGotIP();
-    if (wifiStatus == ESPEASY_WIFI_DISCONNECTED) processDisconnect();
+    if (!processedConnect) {
+      addLog(LOG_LEVEL_INFO, F("WIFI : Entering processConnect()"));
+      processConnect();
+    }
+    if (!processedGetIP) {
+      addLog(LOG_LEVEL_INFO, F("WIFI : Entering processGotIP()"));
+      processGotIP();
+    }
+    if (!processedDisconnect) {
+      addLog(LOG_LEVEL_INFO, F("WIFI : Entering processDisconnect()"));
+      processDisconnect();
+    }
+    if (!processedDHCPTimeout) {
+      addLog(LOG_LEVEL_INFO, F("WIFI : DHCP timeout, Calling disconnect()"));
+      processedDHCPTimeout = true;
+      processDisconnect();
+    }
+    if ((wifiStatus & ESPEASY_WIFI_GOT_IP) && (wifiStatus & ESPEASY_WIFI_CONNECTED)) {
+      wifiStatus = ESPEASY_WIFI_SERVICES_INITIALIZED;
+    }
   } else if (!WiFiConnected()) {
     // Somehow the WiFi has entered a limbo state.
     // FIXME TD-er: This may happen on WiFi config with AP_STA mode active.
 //    addLog(LOG_LEVEL_ERROR, F("Wifi status out sync"));
 //    resetWiFi();
+    String wifilog  = F("WIFI : Wifi status out sync WiFi.status() = ");
+    wifilog += String(WiFi.status());
+
+    addLog(LOG_LEVEL_INFO, wifilog);
+  }
+  if (wifiStatus == ESPEASY_WIFI_DISCONNECTED) {
+    String wifilog  = F("WIFI : Disconnected: WiFi.status() = ");
+    wifilog += String(WiFi.status());
+
+    addLog(LOG_LEVEL_INFO, wifilog);
+    delay(100);
   }
   if (!processedConnectAPmode) processConnectAPmode();
   if (!processedDisconnectAPmode) processDisconnectAPmode();
@@ -544,6 +576,7 @@ void loop()
 
   bool firstLoopConnectionsEstablished = checkConnectionsEstablished() && firstLoop;
   if (firstLoopConnectionsEstablished) {
+     addLog(LOG_LEVEL_INFO, F("firstLoopConnectionsEstablished"));
      firstLoop = false;
      timerAwakeFromDeepSleep = millis(); // Allow to run for "awake" number of seconds, now we have wifi.
      // schedule_all_task_device_timers(); Disabled for now, since we are now using queues for controllers.
@@ -599,6 +632,7 @@ void loop()
 
 bool checkConnectionsEstablished() {
   if (wifiStatus != ESPEASY_WIFI_SERVICES_INITIALIZED) return false;
+  if (!processedConnect) return false;
 /*
   if (firstEnabledMQTTController() >= 0) {
     // There should be a MQTT connection.
@@ -830,7 +864,7 @@ void runEach30Seconds()
   wdcounter++;
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log;
-    log.reserve(60);
+    log.reserve(80);
     log = F("WD   : Uptime ");
     log += wdcounter / 2;
     log += F(" ConnectFailures ");
@@ -838,7 +872,9 @@ void runEach30Seconds()
     log += F(" FreeMem ");
     log += FreeMem();
     log += F(" WiFiStatus ");
-    log += wifiStatus;
+    log += WiFi.status();
+//    log += F(" ListenInterval ");
+//    log += WiFi.getListenInterval();
     addLog(LOG_LEVEL_INFO, log);
   }
   sendSysInfoUDP(1);

@@ -119,6 +119,10 @@ void onGotIP(const WiFiEventStationModeGotIP& event){
   markGotIP();
 }
 
+void onDHCPTimeout() {
+  processedDHCPTimeout = false;
+}
+
 void onConnectedAPmode(const WiFiEventSoftAPModeStationConnected& event) {
   for (byte i = 0; i < 6; ++i) {
     lastMacConnectedAPmode[i] = event.mac[i];

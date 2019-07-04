@@ -655,7 +655,7 @@ ADC_MODE(ADC_VCC);
 #define ESPEASY_WIFI_DISCONNECTED            0
 #define ESPEASY_WIFI_CONNECTED               1
 #define ESPEASY_WIFI_GOT_IP                  2
-#define ESPEASY_WIFI_SERVICES_INITIALIZED    3
+#define ESPEASY_WIFI_SERVICES_INITIALIZED    4
 
 #if defined(ESP32)
 void WiFiEvent(system_event_id_t event, system_event_info_t info);
@@ -663,6 +663,7 @@ void WiFiEvent(system_event_id_t event, system_event_info_t info);
 WiFiEventHandler stationConnectedHandler;
 WiFiEventHandler stationDisconnectedHandler;
 WiFiEventHandler stationGotIpHandler;
+WiFiEventHandler stationModeDHCPTimeoutHandler;
 WiFiEventHandler APModeStationConnectedHandler;
 WiFiEventHandler APModeStationDisconnectedHandler;
 #endif
@@ -1870,6 +1871,7 @@ uint8_t  scan_done_number = 0;
 bool processedConnect = true;
 bool processedDisconnect = true;
 bool processedGetIP = true;
+bool processedDHCPTimeout = true;
 bool processedConnectAPmode = true;
 bool processedDisconnectAPmode = true;
 bool processedScanDone = true;
