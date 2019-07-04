@@ -29,15 +29,11 @@
 // - "Sleep" Nr. of mins of sleep mode, or use sleep mode. (<= 0 means off.)
 // - "Clock" Nr. of mins past midnight to set the clock to. (< 0 means off.)
 
-#ifdef ESP8266 // Needed for precompile issues.
-#include <IRremoteESP8266.h>
-#endif
+#include <IRsend.h>
+
 #ifdef P016_P035_Extended_AC
-#include <IRac.h>
 IRac *Plugin_035_commonAc = nullptr;
 #endif
-#include <IRsend.h>
-#include <IRutils.h>
 
 IRsend *Plugin_035_irSender = nullptr;
 
@@ -147,9 +143,9 @@ boolean Plugin_035(byte function, struct EventStruct *event, String &string)
         irReceiver->disableIRIn(); // Stop the receiver
 #endif
 
-      String IrType;
-      String IrType_orig;
-      String TmpStr1;
+      String IrType ="";
+      String IrType_orig= "";
+      String TmpStr1 ="";
       if (GetArgv(string.c_str(), TmpStr1, 2))
       {
         IrType = TmpStr1;
@@ -336,7 +332,7 @@ boolean Plugin_035(byte function, struct EventStruct *event, String &string)
       {
         uint16_t IrRepeat = 0;
         //  unsigned long IrSecondCode=0UL;
-        String ircodestr;
+        String ircodestr ="";
         if (GetArgv(string.c_str(), TmpStr1, 2))
         {
           IrType = TmpStr1;
@@ -473,470 +469,117 @@ void ReEnableIRIn()
 //   repeat:   Nr. of times the message is to be repeated. (Not all protcols.)
 // Returns:
 //   bool: Successfully sent or not.
-bool sendIRCode(int const ir_type,
-                uint64_t const code, char const *code_str, uint16_t bits,
+bool sendIRCode(decode_type_t  const ir_type,
+                uint64_t  code, char const *code_str, uint16_t bits,
                 uint16_t repeat)
 {
   bool success = true; // Assume success.
-  IRsend *irsend = Plugin_035_irSender;
-
+  repeat = std::max(IRsend::minRepeats(ir_type), repeat);
+    if (bits == 0) bits = IRsend::defaultBits(ir_type);
   // send the IR message.
-  switch (ir_type)
-  {
-#if SEND_RC5
-  case RC5: // 1
-    if (bits == 0)
-      bits = kRC5Bits;
-    irsend->sendRC5(code, bits, repeat);
-    break;
-#endif
-#if SEND_RC6
-  case RC6: // 2
-    if (bits == 0)
-      bits = kRC6Mode0Bits;
-    irsend->sendRC6(code, bits, repeat);
-    break;
-#endif
-#if SEND_NEC
-  case NEC: // 3
-    if (bits == 0)
-      bits = kNECBits;
-    irsend->sendNEC(code, bits, repeat);
-    break;
-#endif
-#if SEND_SONY
-  case SONY: // 4
-    if (bits == 0)
-      bits = kSony12Bits;
-    repeat = std::max(repeat, kSonyMinRepeat);
-    irsend->sendSony(code, bits, repeat);
-    break;
-#endif
-#if SEND_PANASONIC
-  case PANASONIC: // 5
-    if (bits == 0)
-      bits = kPanasonicBits;
-    irsend->sendPanasonic64(code, bits, repeat);
-    break;
-#endif
-#if SEND_INAX
-  case INAX: // 64
-    if (bits == 0)
-      bits = kInaxBits;
-    repeat = std::max(repeat, kInaxMinRepeat);
-    irsend->sendInax(code, bits, repeat);
-    break;
-#endif
-#if SEND_JVC
-  case JVC: // 6
-    if (bits == 0)
-      bits = kJvcBits;
-    irsend->sendJVC(code, bits, repeat);
-    break;
-#endif
-#if SEND_SAMSUNG
-  case SAMSUNG: // 7
-    if (bits == 0)
-      bits = kSamsungBits;
-    irsend->sendSAMSUNG(code, bits, repeat);
-    break;
-#endif
-#if SEND_SAMSUNG36
-  case SAMSUNG36: // 56
-    if (bits == 0)
-      bits = kSamsung36Bits;
-    irsend->sendSamsung36(code, bits, repeat);
-    break;
-#endif
-#if SEND_WHYNTER
-  case WHYNTER: // 8
-    if (bits == 0)
-      bits = kWhynterBits;
-    irsend->sendWhynter(code, bits, repeat);
-    break;
-#endif
-#if SEND_AIWA_RC_T501
-  case AIWA_RC_T501: // 9
-    if (bits == 0)
-      bits = kAiwaRcT501Bits;
-    repeat = std::max(repeat, kAiwaRcT501MinRepeats);
-    irsend->sendAiwaRCT501(code, bits, repeat);
-    break;
-#endif
-#if SEND_LG
-  case LG: // 10
-    if (bits == 0)
-      bits = kLgBits;
-    irsend->sendLG(code, bits, repeat);
-    break;
-#endif
-#if SEND_MITSUBISHI
-  case MITSUBISHI: // 12
-    if (bits == 0)
-      bits = kMitsubishiBits;
-    repeat = std::max(repeat, kMitsubishiMinRepeat);
-    irsend->sendMitsubishi(code, bits, repeat);
-    break;
-#endif
-#if SEND_DISH
-  case DISH: // 13
-    if (bits == 0)
-      bits = kDishBits;
-    repeat = std::max(repeat, kDishMinRepeat);
-    irsend->sendDISH(code, bits, repeat);
-    break;
-#endif
-#if SEND_SHARP
-  case SHARP: // 14
-    if (bits == 0)
-      bits = kSharpBits;
-    irsend->sendSharpRaw(code, bits, repeat);
-    break;
-#endif
-#if SEND_COOLIX
-  case COOLIX: // 15
-    if (bits == 0)
-      bits = kCoolixBits;
-    repeat = std::max(repeat, kCoolixDefaultRepeat);
-    irsend->sendCOOLIX(code, bits, repeat);
-    break;
-#endif
-  case DAIKIN:         // 16
-  case DAIKIN160:      // 65
-  case DAIKIN2:        // 53
-  case DAIKIN216:      // 61
-  case KELVINATOR:     // 18
-  case MITSUBISHI_AC:  // 20
-  case GREE:           // 24
-  case ARGO:           // 27
-  case TROTEC:         // 28
-  case TOSHIBA_AC:     // 32
-  case FUJITSU_AC:     // 33
-  case HAIER_AC:       // 38
-  case HAIER_AC_YRW02: // 44
-  case HITACHI_AC:     // 40
-  case HITACHI_AC1:    // 41
-  case HITACHI_AC2:    // 42
-  case WHIRLPOOL_AC:   // 45
-  case SAMSUNG_AC:     // 46
-  case SHARP_AC:       // 62
-  case ELECTRA_AC:     // 48
-  case PANASONIC_AC:   // 49
-  case MWM:            // 52
-    success = parseStringAndSendAirCon(ir_type, code_str);
-    break;
-#if SEND_DENON
-  case DENON: // 17
-    if (bits == 0)
-      bits = kDenonBits;
-    irsend->sendDenon(code, bits, repeat);
-    break;
-#endif
-#if SEND_SHERWOOD
-  case SHERWOOD: // 19
-    if (bits == 0)
-      bits = kSherwoodBits;
-    repeat = std::max(repeat, kSherwoodMinRepeat);
-    irsend->sendSherwood(code, bits, repeat);
-    break;
-#endif
-#if SEND_RCMM
-  case RCMM: // 21
-    if (bits == 0)
-      bits = kRCMMBits;
-    irsend->sendRCMM(code, bits, repeat);
-    break;
-#endif
-#if SEND_SANYO
-  case SANYO_LC7461: // 22
-    if (bits == 0)
-      bits = kSanyoLC7461Bits;
-    irsend->sendSanyoLC7461(code, bits, repeat);
-    break;
-#endif
-#if SEND_RC5
-  case RC5X: // 23
-    if (bits == 0)
-      bits = kRC5XBits;
-    irsend->sendRC5(code, bits, repeat);
-    break;
-#endif
-#if SEND_PRONTO
-  case PRONTO: // 25
-    //success = parseStringAndSendPronto(irsend, code_str, repeat);
-    break;
-#endif
-#if SEND_NIKAI
-  case NIKAI: // 29
-    if (bits == 0)
-      bits = kNikaiBits;
-    irsend->sendNikai(code, bits, repeat);
-    break;
-#endif
-#if SEND_RAW
-  case RAW: // 30
-            // success = parseStringAndSendRaw(irsend, code_str);
-    break;
-#endif
-#if SEND_GLOBALCACHE
-  case GLOBALCACHE: // 31
-    //success = parseStringAndSendGC(irsend, code_str);
-    break;
-#endif
-#if SEND_MIDEA
-  case MIDEA: // 34
-    if (bits == 0)
-      bits = kMideaBits;
-    irsend->sendMidea(code, bits, repeat);
-    break;
-#endif
-#if SEND_MAGIQUEST
-  case MAGIQUEST: // 35
-    if (bits == 0)
-      bits = kMagiquestBits;
-    irsend->sendMagiQuest(code, bits, repeat);
-    break;
-#endif
-#if SEND_LASERTAG
-  case LASERTAG: // 36
-    if (bits == 0)
-      bits = kLasertagBits;
-    irsend->sendLasertag(code, bits, repeat);
-    break;
-#endif
-#if SEND_CARRIER_AC
-  case CARRIER_AC: // 37
-    if (bits == 0)
-      bits = kCarrierAcBits;
-    irsend->sendCarrierAC(code, bits, repeat);
-    break;
-#endif
-#if SEND_MITSUBISHI2
-  case MITSUBISHI2: // 39
-    if (bits == 0)
-      bits = kMitsubishiBits;
-    repeat = std::max(repeat, kMitsubishiMinRepeat);
-    irsend->sendMitsubishi2(code, bits, repeat);
-    break;
-#endif
-#if SEND_GICABLE
-  case GICABLE: // 43
-    if (bits == 0)
-      bits = kGicableBits;
-    repeat = std::max(repeat, kGicableMinRepeat);
-    irsend->sendGICable(code, bits, repeat);
-    break;
-#endif
-#if SEND_LUTRON
-  case LUTRON: // 47
-    if (bits == 0)
-      bits = kLutronBits;
-    irsend->sendLutron(code, bits, repeat);
-    break;
-#endif
-#if SEND_PIONEER
-  case PIONEER: // 50
-    if (bits == 0)
-      bits = kPioneerBits;
-    irsend->sendPioneer(code, bits, repeat);
-    break;
-#endif
-#if SEND_LG
-  case LG2: // 51
-    if (bits == 0)
-      bits = kLgBits;
-    irsend->sendLG2(code, bits, repeat);
-    break;
-#endif
-#if SEND_VESTEL_AC
-  case VESTEL_AC: // 54
-    if (bits == 0)
-      bits = kVestelAcBits;
-    irsend->sendVestelAc(code, bits, repeat);
-    break;
-#endif
-#if SEND_TECO
-  case TECO: // 55
-    if (bits == 0)
-      bits = kTecoBits;
-    irsend->sendTeco(code, bits, repeat);
-    break;
-#endif
-#if SEND_LEGOPF
-  case LEGOPF: // 58
-    if (bits == 0)
-      bits = kLegoPfBits;
-    irsend->sendLegoPf(code, bits, repeat);
-    break;
-#endif
-#if SEND_GOODWEATHER
-  case GOODWEATHER: // 63
-    if (bits == 0)
-      bits = kGoodweatherBits;
-    repeat = std::max(repeat, kGoodweatherMinRepeat);
-    irsend->sendGoodweather(code, bits, repeat);
-    break;
-#endif // SEND_GOODWEATHER
-  default:
-    // If we got here, we didn't know how to send it.
-    success = false;
-  }
+
+      if (hasACState(ir_type))  // protocols with > 64 bits
+        success = parseStringAndSendAirCon(ir_type, code_str);
+      else  // protocols with <= 64 bits
+        success = Plugin_035_irSender->send(ir_type, code, bits, repeat);
+        
   return success;
 }
 
+
 // Parse an Air Conditioner A/C Hex String/code and send it.
 // Args:
+//   irsend: A Ptr to the IRsend object to transmit via.
 //   irType: Nr. of the protocol we need to send.
 //   str: A hexadecimal string containing the state to be sent.
-bool parseStringAndSendAirCon(const uint16_t irType, const String str)
-{
-  IRsend *irsend = Plugin_035_irSender;
+// Returns:
+//   bool: Successfully sent or not.
+bool parseStringAndSendAirCon(const decode_type_t irType,
+                              const String str) {
   uint8_t strOffset = 0;
-  uint8_t state[kStateSizeMax] = {0}; // All array elements are set to 0.
+  uint8_t state[kStateSizeMax] = {0};  // All array elements are set to 0.
   uint16_t stateSize = 0;
 
   if (str.startsWith("0x") || str.startsWith("0X"))
     strOffset = 2;
   // Calculate how many hexadecimal characters there are.
   uint16_t inputLength = str.length() - strOffset;
-  if (inputLength == 0)
-  {
-    //debug("Zero length AirCon code encountered. Ignored.");
-    return false; // No input. Abort.
+  if (inputLength == 0) {
+   // debug("Zero length AirCon code encountered. Ignored.");
+    return false;  // No input. Abort.
   }
 
-  switch (irType)
-  { // Get the correct state size for the protocol.
-  case KELVINATOR:
-    stateSize = kKelvinatorStateLength;
-    break;
-  case TOSHIBA_AC:
-    stateSize = kToshibaACStateLength;
-    break;
-  case DAIKIN:
-    // Daikin has 2 different possible size states.
-    // (The correct size, and a legacy shorter size.)
-    // Guess which one we are being presented with based on the number of
-    // hexadecimal digits provided. i.e. Zero-pad if you need to to get
-    // the correct length/byte size.
-    // This should provide backward compatiblity with legacy messages.
-    stateSize = inputLength / 2; // Every two hex chars is a byte.
-    // Use at least the minimum size.
-    stateSize = std::max(stateSize, kDaikinStateLengthShort);
-    // If we think it isn't a "short" message.
-    if (stateSize > kDaikinStateLengthShort)
-      // Then it has to be at least the version of the "normal" size.
-      stateSize = std::max(stateSize, kDaikinStateLength);
-    // Lastly, it should never exceed the "normal" size.
-    stateSize = std::min(stateSize, kDaikinStateLength);
-    break;
-  case DAIKIN160:
-    stateSize = kDaikin160StateLength;
-    break;
-  case DAIKIN2:
-    stateSize = kDaikin2StateLength;
-    break;
-  case DAIKIN216:
-    stateSize = kDaikin216StateLength;
-    break;
-  case ELECTRA_AC:
-    stateSize = kElectraAcStateLength;
-    break;
-  case MITSUBISHI_AC:
-    stateSize = kMitsubishiACStateLength;
-    break;
-  case MITSUBISHI_HEAVY_88:
-    stateSize = kMitsubishiHeavy88StateLength;
-    break;
-  case MITSUBISHI_HEAVY_152:
-    stateSize = kMitsubishiHeavy152StateLength;
-    break;
-  case PANASONIC_AC:
-    stateSize = kPanasonicAcStateLength;
-    break;
-  case TROTEC:
-    stateSize = kTrotecStateLength;
-    break;
-  case ARGO:
-    stateSize = kArgoStateLength;
-    break;
-  case GREE:
-    stateSize = kGreeStateLength;
-    break;
-  case FUJITSU_AC:
-    // Fujitsu has four distinct & different size states, so make a best guess
-    // which one we are being presented with based on the number of
-    // hexadecimal digits provided. i.e. Zero-pad if you need to to get
-    // the correct length/byte size.
-    stateSize = inputLength / 2; // Every two hex chars is a byte.
-    // Use at least the minimum size.
-    stateSize = std::max(stateSize,
-                         (uint16_t)(kFujitsuAcStateLengthShort - 1));
-    // If we think it isn't a "short" message.
-    if (stateSize > kFujitsuAcStateLengthShort)
-      // Then it has to be at least the smaller version of the "normal" size.
-      stateSize = std::max(stateSize, (uint16_t)(kFujitsuAcStateLength - 1));
-    // Lastly, it should never exceed the maximum "normal" size.
-    stateSize = std::min(stateSize, kFujitsuAcStateLength);
-    break;
-  case HAIER_AC:
-    stateSize = kHaierACStateLength;
-    break;
-  case HAIER_AC_YRW02:
-    stateSize = kHaierACYRW02StateLength;
-    break;
-  case HITACHI_AC:
-    stateSize = kHitachiAcStateLength;
-    break;
-  case HITACHI_AC1:
-    stateSize = kHitachiAc1StateLength;
-    break;
-  case HITACHI_AC2:
-    stateSize = kHitachiAc2StateLength;
-    break;
-  case WHIRLPOOL_AC:
-    stateSize = kWhirlpoolAcStateLength;
-    break;
-  case SAMSUNG_AC:
-    // Samsung has two distinct & different size states, so make a best guess
-    // which one we are being presented with based on the number of
-    // hexadecimal digits provided. i.e. Zero-pad if you need to to get
-    // the correct length/byte size.
-    stateSize = inputLength / 2; // Every two hex chars is a byte.
-    // Use at least the minimum size.
-    stateSize = std::max(stateSize, (uint16_t)(kSamsungAcStateLength));
-    // If we think it isn't a "normal" message.
-    if (stateSize > kSamsungAcStateLength)
-      // Then it probably the extended size.
+  switch (irType) {  // Get the correct state size for the protocol.
+    case DAIKIN:
+      // Daikin has 2 different possible size states.
+      // (The correct size, and a legacy shorter size.)
+      // Guess which one we are being presented with based on the number of
+      // hexadecimal digits provided. i.e. Zero-pad if you need to to get
+      // the correct length/byte size.
+      // This should provide backward compatiblity with legacy messages.
+      stateSize = inputLength / 2;  // Every two hex chars is a byte.
+      // Use at least the minimum size.
+      stateSize = std::max(stateSize, kDaikinStateLengthShort);
+      // If we think it isn't a "short" message.
+      if (stateSize > kDaikinStateLengthShort)
+        // Then it has to be at least the version of the "normal" size.
+        stateSize = std::max(stateSize, kDaikinStateLength);
+      // Lastly, it should never exceed the "normal" size.
+      stateSize = std::min(stateSize, kDaikinStateLength);
+      break;
+    case FUJITSU_AC:
+      // Fujitsu has four distinct & different size states, so make a best guess
+      // which one we are being presented with based on the number of
+      // hexadecimal digits provided. i.e. Zero-pad if you need to to get
+      // the correct length/byte size.
+      stateSize = inputLength / 2;  // Every two hex chars is a byte.
+      // Use at least the minimum size.
       stateSize = std::max(stateSize,
-                           (uint16_t)(kSamsungAcExtendedStateLength));
-    // Lastly, it should never exceed the maximum "extended" size.
-    stateSize = std::min(stateSize, kSamsungAcExtendedStateLength);
-    break;
-  case SHARP_AC:
-    stateSize = kSharpAcStateLength;
-    break;
-  case MWM:
-    // MWM has variable size states, so make a best guess
-    // which one we are being presented with based on the number of
-    // hexadecimal digits provided. i.e. Zero-pad if you need to to get
-    // the correct length/byte size.
-    stateSize = inputLength / 2; // Every two hex chars is a byte.
-    // Use at least the minimum size.
-    stateSize = std::max(stateSize, (uint16_t)3);
-    // Cap the maximum size.
-    stateSize = std::min(stateSize, kStateSizeMax);
-    break;
-  case TCL112AC:
-    stateSize = kTcl112AcStateLength;
-    break;
-  default: // Not a protocol we expected. Abort.
-    //debug("Unexpected AirCon protocol detected. Ignoring.");
-    return false;
+                           (uint16_t) (kFujitsuAcStateLengthShort - 1));
+      // If we think it isn't a "short" message.
+      if (stateSize > kFujitsuAcStateLengthShort)
+        // Then it has to be at least the smaller version of the "normal" size.
+        stateSize = std::max(stateSize, (uint16_t) (kFujitsuAcStateLength - 1));
+      // Lastly, it should never exceed the maximum "normal" size.
+      stateSize = std::min(stateSize, kFujitsuAcStateLength);
+      break;
+    case MWM:
+      // MWM has variable size states, so make a best guess
+      // which one we are being presented with based on the number of
+      // hexadecimal digits provided. i.e. Zero-pad if you need to to get
+      // the correct length/byte size.
+      stateSize = inputLength / 2;  // Every two hex chars is a byte.
+      // Use at least the minimum size.
+      stateSize = std::max(stateSize, (uint16_t) 3);
+      // Cap the maximum size.
+      stateSize = std::min(stateSize, kStateSizeMax);
+      break;
+    case SAMSUNG_AC:
+      // Samsung has two distinct & different size states, so make a best guess
+      // which one we are being presented with based on the number of
+      // hexadecimal digits provided. i.e. Zero-pad if you need to to get
+      // the correct length/byte size.
+      stateSize = inputLength / 2;  // Every two hex chars is a byte.
+      // Use at least the minimum size.
+      stateSize = std::max(stateSize, (uint16_t) (kSamsungAcStateLength));
+      // If we think it isn't a "normal" message.
+      if (stateSize > kSamsungAcStateLength)
+        // Then it probably the extended size.
+        stateSize = std::max(stateSize,
+                             (uint16_t) (kSamsungAcExtendedStateLength));
+      // Lastly, it should never exceed the maximum "extended" size.
+      stateSize = std::min(stateSize, kSamsungAcExtendedStateLength);
+      break;
+    default:  // Everything else.
+      stateSize = IRsend::defaultBits(irType) / 8;
+      if (!stateSize || !hasACState(irType)) {
+        // Not a protocol we expected. Abort.
+       // debug("Unexpected AirCon protocol detected. Ignoring.");
+        return false;
+      }
   }
-  if (inputLength > stateSize * 2)
-  {
-    //debug("AirCon code to large for the given protocol.");
+  if (inputLength > stateSize * 2) {
+   // debug("AirCon code to large for the given protocol.");
     return false;
   }
 
@@ -944,165 +587,31 @@ bool parseStringAndSendAirCon(const uint16_t irType, const String str)
   uint8_t *statePtr = &state[stateSize - 1];
 
   // Convert the string into a state array of the correct length.
-  for (uint16_t i = 0; i < inputLength; i++)
-  {
+  for (uint16_t i = 0; i < inputLength; i++) {
     // Grab the next least sigificant hexadecimal digit from the string.
     uint8_t c = tolower(str[inputLength + strOffset - i - 1]);
-    if (isxdigit(c))
-    {
+    if (isxdigit(c)) {
       if (isdigit(c))
         c -= '0';
       else
         c = c - 'a' + 10;
-    }
-    else
-    {
-      // debug("Aborting! Non-hexadecimal char found in AirCon state:");
-      // debug(str.c_str());
+    } else {
+     // debug("Aborting! Non-hexadecimal char found in AirCon state:");
+     // debug(str.c_str());
       return false;
     }
-    if (i % 2 == 1)
-    { // Odd: Upper half of the byte.
+    if (i % 2 == 1) {  // Odd: Upper half of the byte.
       *statePtr += (c << 4);
-      statePtr--; // Advance up to the next least significant byte of state.
-    }
-    else
-    { // Even: Lower half of the byte.
+      statePtr--;  // Advance up to the next least significant byte of state.
+    } else {  // Even: Lower half of the byte.
       *statePtr = c;
     }
   }
-
-  // Make the appropriate call for the protocol type.
-  switch (irType)
-  {
-#if SEND_KELVINATOR
-  case KELVINATOR:
-    irsend->sendKelvinator(reinterpret_cast<uint8_t *>(state));
-    break;
-#endif
-#if SEND_TOSHIBA_AC
-  case TOSHIBA_AC:
-    irsend->sendToshibaAC(reinterpret_cast<uint8_t *>(state));
-    break;
-#endif
-#if SEND_DAIKIN
-  case DAIKIN:
-    irsend->sendDaikin(reinterpret_cast<uint8_t *>(state));
-    break;
-#endif
-#if SEND_DAIKIN160
-  case DAIKIN160: // 65
-    irsend->sendDaikin160(reinterpret_cast<uint8_t *>(state));
-    break;
-#endif // SEND_DAIKIN160
-#if SEND_DAIKIN2
-  case DAIKIN2:
-    irsend->sendDaikin2(reinterpret_cast<uint8_t *>(state));
-    break;
-#endif
-#if SEND_DAIKIN216
-  case DAIKIN216: // 61
-    irsend->sendDaikin216(reinterpret_cast<uint8_t *>(state));
-    break;
-#endif // SEND_DAIKIN216
-#if SEND_MITSUBISHI_AC
-  case MITSUBISHI_AC:
-    irsend->sendMitsubishiAC(reinterpret_cast<uint8_t *>(state));
-    break;
-#endif
-#if SEND_MITSUBISHIHEAVY
-  case MITSUBISHI_HEAVY_88: // 59
-    irsend->sendMitsubishiHeavy88(reinterpret_cast<uint8_t *>(state));
-    break;
-  case MITSUBISHI_HEAVY_152: // 60
-    irsend->sendMitsubishiHeavy152(reinterpret_cast<uint8_t *>(state));
-    break;
-#endif // SEND_MITSUBISHIHEAVY
-#if SEND_TROTEC
-  case TROTEC:
-    irsend->sendTrotec(reinterpret_cast<uint8_t *>(state));
-    break;
-#endif
-#if SEND_ARGO
-  case ARGO:
-    irsend->sendArgo(reinterpret_cast<uint8_t *>(state));
-    break;
-#endif
-#if SEND_GREE
-  case GREE:
-    irsend->sendGree(reinterpret_cast<uint8_t *>(state));
-    break;
-#endif
-#if SEND_FUJITSU_AC
-  case FUJITSU_AC:
-    irsend->sendFujitsuAC(reinterpret_cast<uint8_t *>(state), stateSize);
-    break;
-#endif
-#if SEND_HAIER_AC
-  case HAIER_AC:
-    irsend->sendHaierAC(reinterpret_cast<uint8_t *>(state));
-    break;
-#endif
-#if SEND_HAIER_AC_YRW02
-  case HAIER_AC_YRW02:
-    irsend->sendHaierACYRW02(reinterpret_cast<uint8_t *>(state));
-    break;
-#endif
-#if SEND_HITACHI_AC
-  case HITACHI_AC:
-    irsend->sendHitachiAC(reinterpret_cast<uint8_t *>(state));
-    break;
-#endif
-#if SEND_HITACHI_AC1
-  case HITACHI_AC1:
-    irsend->sendHitachiAC1(reinterpret_cast<uint8_t *>(state));
-    break;
-#endif
-#if SEND_HITACHI_AC2
-  case HITACHI_AC2:
-    irsend->sendHitachiAC2(reinterpret_cast<uint8_t *>(state));
-    break;
-#endif
-#if SEND_WHIRLPOOL_AC
-  case WHIRLPOOL_AC:
-    irsend->sendWhirlpoolAC(reinterpret_cast<uint8_t *>(state));
-    break;
-#endif
-#if SEND_SAMSUNG_AC
-  case SAMSUNG_AC:
-    irsend->sendSamsungAC(reinterpret_cast<uint8_t *>(state), stateSize);
-    break;
-#endif
-#if SEND_SHARP_AC
-  case SHARP_AC: // 62
-    irsend->sendSharpAc(reinterpret_cast<uint8_t *>(state));
-    break;
-#endif // SEND_SHARP_AC
-#if SEND_ELECTRA_AC
-  case ELECTRA_AC:
-    irsend->sendElectraAC(reinterpret_cast<uint8_t *>(state));
-    break;
-#endif
-#if SEND_PANASONIC_AC
-  case PANASONIC_AC:
-    irsend->sendPanasonicAC(reinterpret_cast<uint8_t *>(state));
-    break;
-#endif
-#if SEND_MWM
-  case MWM:
-    irsend->sendMWM(reinterpret_cast<uint8_t *>(state), stateSize);
-    break;
-#endif
-#if SEND_TCL112AC
-  case TCL112AC:
-    irsend->sendTcl112Ac(reinterpret_cast<uint8_t *>(state));
-    break;
-#endif
-  default:
+  if (!Plugin_035_irSender->send(irType, state, stateSize)) {
     //debug("Unexpected AirCon type in send request. Not sent.");
     return false;
   }
-  return true; // We were successful as far as we can tell.
+  return true;  // We were successful as far as we can tell.
 }
 
 // Count how many values are in the String.

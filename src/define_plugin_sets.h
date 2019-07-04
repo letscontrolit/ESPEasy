@@ -769,6 +769,17 @@ To create/register a plugin, you have to :
   #define DISABLE_SOFTWARE_SERIAL
 #endif
 
+
+//**************************--IR LIBRARY SHARED DEPENDENCIES--***************************
+#if defined(PLUGIN_BUILD_IR)
+#include <IRremoteESP8266.h>
+#include <IRutils.h>
+#endif
+#if defined(PLUGIN_BUILD_IR_EXTENDED)
+#include <IRac.h>       // It includes IRremoteESP8266.h
+#include <IRutils.h>
+#endif
+
 /*
 #if defined(USES_P00x) || defined(USES_P00y)
 #include <the_required_lib.h>
