@@ -38,6 +38,9 @@
  *   o You MUST change <PubSubClient.h> to have the following (or larger) value:
  *     (with REPORT_RAW_UNKNOWNS 1024 or more is recommended)
  *     #define MQTT_MAX_PACKET_SIZE 768
+ *   o Use the smallest non-zero SPIFFS size you can for your board.
+ *     (See the Tools -> Flash Size menu)
+ *
  * - PlatformIO IDE:
  *     If you are using PlatformIO, this should already been done for you in
  *     the accompanying platformio.ini file.
@@ -182,6 +185,13 @@
  * acknowledge this via the relevant state topic for that command.
  * e.g. If the aircon/climate changes from power off to power on, it will
  *      send an "on" payload to "ir_server/ac/stat/power"
+ *
+ * There is a special command available to force the ESP to resend the current
+ * A/C state in an IR message. To do so use the `resend` command MQTT topic,
+ * e.g. `ir_server/ac/cmnd/resend` with a payload message of `resend`.
+ * There is no corresponding "stat" message update for this particular topic,
+ * but a log message is produced indicating it was received.
+ *
  * NOTE: These "stat" messages have the MQTT retain flag set to on. Thus the
  *       MQTT broker will remember them until reset/restarted etc.
  *
@@ -269,9 +279,13 @@
  *   `ir_server/log`
  *
  * ## Updates
- * You can upload new firmware over the air (OTA) via the form on the device's
+ * You can upload new firmware Over The Air (OTA) via the form on the device's
  * "Admin" page. No need to connect to the device again via USB. \o/
  * Your settings should be remembered between updates. \o/ \o/
+ *
+ * On boards with 1 Meg of flash should use an SPIFFS size of 64k if you want a
+ * hope of being able to load a firmware via OTA.
+ * Boards with only 512k flash have no chance of OTA with this firmware.
  *
  * ## Security
  * <security-hat="on">
@@ -404,7 +418,9 @@ String MqttLwt;  // Topic for the Last Will & Testament.
 String MqttClimate;  // Sub-topic for the climate topics.
 String MqttClimateCmnd;  // Sub-topic for the climate command topics.
 String MqttClimateStat;  // Sub-topic for the climate stat topics.
+#if MQTT_DISCOVERY_ENABLE
 String MqttDiscovery;
+#endif  // MQTT_DISCOVERY_ENABLE
 String MqttHAName;
 String MqttClientId;
 
@@ -646,7 +662,9 @@ String htmlMenu(void) {
   String html = F("<center>");
   html += htmlButton(kUrlRoot, F("Home"));
   html += htmlButton(kUrlAircon, F("Aircon"));
+#if EXAMPLES_ENABLE
   html += htmlButton(kUrlExamples, F("Examples"));
+#endif  // EXAMPLES_ENABLE
   html += htmlButton(kUrlInfo, F("System Info"));
   html += htmlButton(kUrlAdmin, F("Admin"));
   html += F("</center><hr>");
@@ -768,7 +786,11 @@ void handleRoot(void) {
   html += F("' maxlength='");
   html += String(kStateSizeMax * 2);
   html += F("'"
-          " value='190B8050000000E0190B8070000010F0'>"
+          " value='"
+#if EXAMPLES_ENABLE
+                "190B8050000000E0190B8070000010F0"
+#endif   // EXAMPLES_ENABLE
+                "'>"
       " <input type='submit' value='Send A/C State'>"
     "</form>"
     "<br><hr>"
@@ -776,11 +798,15 @@ void handleRoot(void) {
     "<form method='POST' action='/ir' enctype='multipart/form-data'>"
       "<input type='hidden' name='type' value='30'>"
       "String: (freq,array data) <input type='text' name='code' size='132'"
-      " value='38000,4420,4420,520,1638,520,1638,520,1638,520,520,520,520,520,"
+      " value='"
+#if EXAMPLES_ENABLE
+          "38000,4420,4420,520,1638,520,1638,520,1638,520,520,520,520,520,"
           "520,520,520,520,520,520,1638,520,1638,520,1638,520,520,520,"
           "520,520,520,520,520,520,520,520,520,520,1638,520,520,520,520,520,"
           "520,520,520,520,520,520,520,520,1638,520,520,520,1638,520,1638,520,"
-          "1638,520,1638,520,1638,520,1638,520'>"
+          "1638,520,1638,520,1638,520,1638,520"
+#endif   // EXAMPLES_ENABLE
+          "'>"
       " <input type='submit' value='Send Raw'>"
     "</form>"
     "<br><hr>"
@@ -789,10 +815,14 @@ void handleRoot(void) {
     "<form method='POST' action='/ir' enctype='multipart/form-data'>"
       "<input type='hidden' name='type' value='31'>"
       "String: 1:1,1,<input type='text' name='code' size='132'"
-      " value='38000,1,1,170,170,20,63,20,63,20,63,20,20,20,20,20,20,20,20,20,"
+      " value='"
+#if EXAMPLES_ENABLE
+          "38000,1,1,170,170,20,63,20,63,20,63,20,20,20,20,20,20,20,20,20,"
           "20,20,63,20,63,20,63,20,20,20,20,20,20,20,20,20,20,20,20,20,63,20,"
           "20,20,20,20,20,20,20,20,20,20,20,20,63,20,20,20,63,20,63,20,63,20,"
-          "63,20,63,20,63,20,1798'>"
+          "63,20,63,20,63,20,1798"
+#endif   // EXAMPLES_ENABLE
+          "'>"
       " <input type='submit' value='Send GlobalCache'>"
     "</form>"
     "<br><hr>"
@@ -801,10 +831,14 @@ void handleRoot(void) {
     "<form method='POST' action='/ir' enctype='multipart/form-data'>"
       "<input type='hidden' name='type' value='25'>"
       "String (comma separated): <input type='text' name='code' size='132'"
-      " value='0000,0067,0000,0015,0060,0018,0018,0018,0030,0018,0030,0018,"
+      " value='"
+#if EXAMPLES_ENABLE
+          "0000,0067,0000,0015,0060,0018,0018,0018,0030,0018,0030,0018,"
           "0030,0018,0018,0018,0030,0018,0018,0018,0018,0018,0030,0018,0018,"
           "0018,0030,0018,0030,0018,0030,0018,0018,0018,0018,0018,0030,0018,"
-          "0018,0018,0018,0018,0030,0018,0018,03f6'>"
+          "0018,0018,0018,0018,0030,0018,0018,03f6"
+#endif   // EXAMPLES_ENABLE
+          "'>"
       " Repeats: <input type='number' name='repeats' min='0' max='99' value='0'"
           "size='2' maxlength='2'>"
       " <input type='submit' value='Send Pronto'>"
@@ -838,6 +872,7 @@ String addJsReloadUrl(const String url, const uint16_t timeout_s,
   return html;
 }
 
+#if EXAMPLES_ENABLE
 // Web page with hardcoded example usage etc.
 void handleExamples(void) {
 #if HTML_PASSWORD_ENABLE
@@ -883,6 +918,7 @@ void handleExamples(void) {
   html += htmlEnd();
   server.send(200, "text/html", html);
 }
+#endif  // EXAMPLES_ENABLE
 
 String htmlSelectBool(const String name, const bool def) {
   String html = "<select name='" + name + "'>";
@@ -1091,6 +1127,8 @@ void handleAirCon(void) {
           "</td></tr>"
       "<tr><td>Beep</td><td>" + htmlSelectBool(KEY_BEEP, climate.beep) +
           "</td></tr>"
+      "<tr><td>Force resend</td><td>" + htmlSelectBool(KEY_RESEND, false) +
+          "</td></tr>"
       "</table>"
       "<input type='submit' value='Update & Send'>"
       "</form>";
@@ -1108,14 +1146,18 @@ void handleAirConSet(void) {
 #endif
   stdAc::state_t result = climate;
   debug("New common a/c received via HTTP");
-  for (uint16_t i = 0; i < server.args(); i++)
-    result = updateClimate(result, server.argName(i), "", server.arg(i));
+  bool force_resend = false;
+  for (uint16_t i = 0; i < server.args(); i++) {
+    if (server.argName(i).equals(KEY_RESEND))
+      force_resend = IRac::strToBool(server.arg(i).c_str());
+    else
+      result = updateClimate(result, server.argName(i), "", server.arg(i));
+  }
 
 #if MQTT_ENABLE
-  sendClimate(climate, result, MqttClimateStat,
-              true, false, false);
+  sendClimate(climate, result, MqttClimateStat, true, false, force_resend);
 #else  // MQTT_ENABLE
-  sendClimate(climate, result, "", false, false, false);
+  sendClimate(climate, result, "", false, false, force_resend);
 #endif  // MQTT_ENABLE
   lastClimateSource = F("HTTP");
   // Update the old climate state with the new one.
@@ -1142,9 +1184,11 @@ void handleAdmin(void) {
   html += htmlMenu();
   html += F("<h3>Special commands</h3>");
 #if MQTT_ENABLE
+#if MQTT_DISCOVERY_ENABLE
   html += htmlButton(
       kUrlSendDiscovery, F("Send MQTT Discovery"),
       F("Send a Climate MQTT discovery message to Home Assistant.<br><br>"));
+#endif  // MQTT_DISCOVERY_ENABLE
 #endif  // MQTT_ENABLE
   html += htmlButton(
       kUrlReboot, F("Reboot"),
@@ -1174,6 +1218,14 @@ void handleAdmin(void) {
   server.send(200, "text/html", html);
 }
 
+uint32_t maxSketchSpace(void) {
+#if defined(ESP8266)
+  return (ESP.getFreeSketchSpace() - 0x1000) & 0xFFFFF000;
+#else  // defined(ESP8266)
+  return UPDATE_SIZE_UNKNOWN;
+#endif  // defined(ESP8266)
+}
+
 // Info web page
 void handleInfo(void) {
   String html = htmlHeader(F("IR MQTT server info"));
@@ -1190,6 +1242,7 @@ void handleInfo(void) {
     "IR Lib Version: " _IRREMOTEESP8266_VERSION_ "<br>"
 #if defined(ESP8266)
     "ESP8266 Core Version: " + ESP.getCoreVersion() + "<br>"
+    "Free Sketch Space: " + String(maxSketchSpace() >> 10) + "k<br>"
 #endif  // ESP8266
 #if defined(ESP32)
     "ESP32 SDK Version: " + ESP.getSdkVersion() + "<br>"
@@ -1284,6 +1337,19 @@ void handleInfo(void) {
   html += htmlEnd();
   server.send(200, "text/html", html);
 }
+
+void doRestart(const char* str, const bool serial_only) {
+#if MQTT_ENABLE
+  if (!serial_only)
+    mqttLog(str);
+  else
+#endif  // MQTT_ENABLE
+    debug(str);
+  delay(2000);  // Enough time for messages to be sent.
+  ESP.restart();
+  delay(5000);  // Enough time to ensure we don't return.
+}
+
 // Reset web page
 void handleReset(void) {
 #if HTML_PASSWORD_ENABLE
@@ -1310,10 +1376,7 @@ void handleReset(void) {
   delay(1000);
   debug("Reseting wifiManager's settings.");
   wifiManager.resetSettings();
-  delay(1000);
-  debug("rebooting...");
-  ESP.restart();
-  delay(1000);
+  doRestart("Rebooting...");
 }
 
 // Reboot web page
@@ -1329,13 +1392,7 @@ void handleReboot() {
     "<p>Try connecting in a few seconds.</p>" +
     addJsReloadUrl(kUrlRoot, kRebootTime, true) +
     htmlEnd());
-#if MQTT_ENABLE
-  mqttLog("Reboot requested");
-#endif  // MQTT_ENABLE
-  // Do the reset.
-  delay(1000);
-  ESP.restart();
-  delay(1000);
+  doRestart("Reboot requested");
 }
 
 // Parse an Air Conditioner A/C Hex String/code and send it.
@@ -1345,7 +1402,7 @@ void handleReboot() {
 //   str: A hexadecimal string containing the state to be sent.
 // Returns:
 //   bool: Successfully sent or not.
-bool parseStringAndSendAirCon(IRsend *irsend, const uint16_t irType,
+bool parseStringAndSendAirCon(IRsend *irsend, const decode_type_t irType,
                               const String str) {
   uint8_t strOffset = 0;
   uint8_t state[kStateSizeMax] = {0};  // All array elements are set to 0.
@@ -1361,12 +1418,6 @@ bool parseStringAndSendAirCon(IRsend *irsend, const uint16_t irType,
   }
 
   switch (irType) {  // Get the correct state size for the protocol.
-    case KELVINATOR:
-      stateSize = kKelvinatorStateLength;
-      break;
-    case TOSHIBA_AC:
-      stateSize = kToshibaACStateLength;
-      break;
     case DAIKIN:
       // Daikin has 2 different possible size states.
       // (The correct size, and a legacy shorter size.)
@@ -1384,39 +1435,6 @@ bool parseStringAndSendAirCon(IRsend *irsend, const uint16_t irType,
       // Lastly, it should never exceed the "normal" size.
       stateSize = std::min(stateSize, kDaikinStateLength);
       break;
-    case DAIKIN160:
-      stateSize = kDaikin160StateLength;
-      break;
-    case DAIKIN2:
-      stateSize = kDaikin2StateLength;
-      break;
-    case DAIKIN216:
-      stateSize = kDaikin216StateLength;
-      break;
-    case ELECTRA_AC:
-      stateSize = kElectraAcStateLength;
-      break;
-    case MITSUBISHI_AC:
-      stateSize = kMitsubishiACStateLength;
-      break;
-    case MITSUBISHI_HEAVY_88:
-      stateSize = kMitsubishiHeavy88StateLength;
-      break;
-    case MITSUBISHI_HEAVY_152:
-      stateSize = kMitsubishiHeavy152StateLength;
-      break;
-    case PANASONIC_AC:
-      stateSize = kPanasonicAcStateLength;
-      break;
-    case TROTEC:
-      stateSize = kTrotecStateLength;
-      break;
-    case ARGO:
-      stateSize = kArgoStateLength;
-      break;
-    case GREE:
-      stateSize = kGreeStateLength;
-      break;
     case FUJITSU_AC:
       // Fujitsu has four distinct & different size states, so make a best guess
       // which one we are being presented with based on the number of
@@ -1433,23 +1451,16 @@ bool parseStringAndSendAirCon(IRsend *irsend, const uint16_t irType,
       // Lastly, it should never exceed the maximum "normal" size.
       stateSize = std::min(stateSize, kFujitsuAcStateLength);
       break;
-    case HAIER_AC:
-      stateSize = kHaierACStateLength;
-      break;
-    case HAIER_AC_YRW02:
-      stateSize = kHaierACYRW02StateLength;
-      break;
-    case HITACHI_AC:
-      stateSize = kHitachiAcStateLength;
-      break;
-    case HITACHI_AC1:
-      stateSize = kHitachiAc1StateLength;
-      break;
-    case HITACHI_AC2:
-      stateSize = kHitachiAc2StateLength;
-      break;
-    case WHIRLPOOL_AC:
-      stateSize = kWhirlpoolAcStateLength;
+    case MWM:
+      // MWM has variable size states, so make a best guess
+      // which one we are being presented with based on the number of
+      // hexadecimal digits provided. i.e. Zero-pad if you need to to get
+      // the correct length/byte size.
+      stateSize = inputLength / 2;  // Every two hex chars is a byte.
+      // Use at least the minimum size.
+      stateSize = std::max(stateSize, (uint16_t) 3);
+      // Cap the maximum size.
+      stateSize = std::min(stateSize, kStateSizeMax);
       break;
     case SAMSUNG_AC:
       // Samsung has two distinct & different size states, so make a best guess
@@ -1467,29 +1478,13 @@ bool parseStringAndSendAirCon(IRsend *irsend, const uint16_t irType,
       // Lastly, it should never exceed the maximum "extended" size.
       stateSize = std::min(stateSize, kSamsungAcExtendedStateLength);
       break;
-    case SHARP_AC:
-      stateSize = kSharpAcStateLength;
-      break;
-    case MWM:
-      // MWM has variable size states, so make a best guess
-      // which one we are being presented with based on the number of
-      // hexadecimal digits provided. i.e. Zero-pad if you need to to get
-      // the correct length/byte size.
-      stateSize = inputLength / 2;  // Every two hex chars is a byte.
-      // Use at least the minimum size.
-      stateSize = std::max(stateSize, (uint16_t) 3);
-      // Cap the maximum size.
-      stateSize = std::min(stateSize, kStateSizeMax);
-      break;
-    case TCL112AC:
-      stateSize = kTcl112AcStateLength;
-      break;
-    case NEOCLIMA:
-      stateSize = kNeoclimaStateLength;
-      break;
-    default:  // Not a protocol we expected. Abort.
-      debug("Unexpected AirCon protocol detected. Ignoring.");
-      return false;
+    default:  // Everything else.
+      stateSize = IRsend::defaultBits(irType) / 8;
+      if (!stateSize || !hasACState(irType)) {
+        // Not a protocol we expected. Abort.
+        debug("Unexpected AirCon protocol detected. Ignoring.");
+        return false;
+      }
   }
   if (inputLength > stateSize * 2) {
     debug("AirCon code to large for the given protocol.");
@@ -1520,140 +1515,9 @@ bool parseStringAndSendAirCon(IRsend *irsend, const uint16_t irType,
       *statePtr = c;
     }
   }
-
-  // Make the appropriate call for the protocol type.
-  switch (irType) {
-#if SEND_KELVINATOR
-    case KELVINATOR:
-      irsend->sendKelvinator(reinterpret_cast<uint8_t *>(state));
-      break;
-#endif
-#if SEND_TOSHIBA_AC
-    case TOSHIBA_AC:
-      irsend->sendToshibaAC(reinterpret_cast<uint8_t *>(state));
-      break;
-#endif
-#if SEND_DAIKIN
-    case DAIKIN:
-      irsend->sendDaikin(reinterpret_cast<uint8_t *>(state));
-      break;
-#endif
-#if SEND_DAIKIN160
-    case DAIKIN160:  // 65
-      irsend->sendDaikin160(reinterpret_cast<uint8_t *>(state));
-      break;
-#endif  // SEND_DAIKIN160
-#if SEND_DAIKIN2
-    case DAIKIN2:
-      irsend->sendDaikin2(reinterpret_cast<uint8_t *>(state));
-      break;
-#endif
-#if SEND_DAIKIN216
-    case DAIKIN216:  // 61
-      irsend->sendDaikin216(reinterpret_cast<uint8_t *>(state));
-      break;
-#endif  // SEND_DAIKIN216
-#if SEND_MITSUBISHI_AC
-    case MITSUBISHI_AC:
-      irsend->sendMitsubishiAC(reinterpret_cast<uint8_t *>(state));
-      break;
-#endif
-#if SEND_MITSUBISHIHEAVY
-    case MITSUBISHI_HEAVY_88:  // 59
-      irsend->sendMitsubishiHeavy88(reinterpret_cast<uint8_t *>(state));
-      break;
-    case MITSUBISHI_HEAVY_152:  // 60
-      irsend->sendMitsubishiHeavy152(reinterpret_cast<uint8_t *>(state));
-      break;
-#endif  // SEND_MITSUBISHIHEAVY
-#if SEND_TROTEC
-    case TROTEC:
-      irsend->sendTrotec(reinterpret_cast<uint8_t *>(state));
-      break;
-#endif
-#if SEND_ARGO
-    case ARGO:
-      irsend->sendArgo(reinterpret_cast<uint8_t *>(state));
-      break;
-#endif
-#if SEND_GREE
-    case GREE:
-      irsend->sendGree(reinterpret_cast<uint8_t *>(state));
-      break;
-#endif
-#if SEND_FUJITSU_AC
-    case FUJITSU_AC:
-      irsend->sendFujitsuAC(reinterpret_cast<uint8_t *>(state), stateSize);
-      break;
-#endif
-#if SEND_HAIER_AC
-    case HAIER_AC:
-      irsend->sendHaierAC(reinterpret_cast<uint8_t *>(state));
-      break;
-#endif
-#if SEND_HAIER_AC_YRW02
-    case HAIER_AC_YRW02:
-      irsend->sendHaierACYRW02(reinterpret_cast<uint8_t *>(state));
-      break;
-#endif
-#if SEND_HITACHI_AC
-    case HITACHI_AC:
-      irsend->sendHitachiAC(reinterpret_cast<uint8_t *>(state));
-      break;
-#endif
-#if SEND_HITACHI_AC1
-    case HITACHI_AC1:
-      irsend->sendHitachiAC1(reinterpret_cast<uint8_t *>(state));
-      break;
-#endif
-#if SEND_HITACHI_AC2
-    case HITACHI_AC2:
-      irsend->sendHitachiAC2(reinterpret_cast<uint8_t *>(state));
-      break;
-#endif
-#if SEND_WHIRLPOOL_AC
-    case WHIRLPOOL_AC:
-      irsend->sendWhirlpoolAC(reinterpret_cast<uint8_t *>(state));
-      break;
-#endif
-#if SEND_SAMSUNG_AC
-    case SAMSUNG_AC:
-      irsend->sendSamsungAC(reinterpret_cast<uint8_t *>(state), stateSize);
-      break;
-#endif
-#if SEND_SHARP_AC
-    case SHARP_AC:  // 62
-      irsend->sendSharpAc(reinterpret_cast<uint8_t *>(state));
-      break;
-#endif  // SEND_SHARP_AC
-#if SEND_ELECTRA_AC
-    case ELECTRA_AC:
-      irsend->sendElectraAC(reinterpret_cast<uint8_t *>(state));
-      break;
-#endif
-#if SEND_PANASONIC_AC
-    case PANASONIC_AC:
-      irsend->sendPanasonicAC(reinterpret_cast<uint8_t *>(state));
-      break;
-#endif
-#if SEND_MWM
-    case MWM:
-      irsend->sendMWM(reinterpret_cast<uint8_t *>(state), stateSize);
-      break;
-#endif
-#if SEND_TCL112AC
-    case TCL112AC:
-      irsend->sendTcl112Ac(reinterpret_cast<uint8_t *>(state));
-      break;
-#endif
-#if SEND_NEOCLIMA
-    case NEOCLIMA:  // 66
-      irsend->sendNeoclima(reinterpret_cast<uint8_t *>(state));
-      break;
-#endif  // SEND_NEOCLIMA
-    default:
-      debug("Unexpected AirCon type in send request. Not sent.");
-      return false;
+  if (!irsend->send(irType, state, stateSize)) {
+    debug("Unexpected AirCon type in send request. Not sent.");
+    return false;
   }
   return true;  // We were successful as far as we can tell.
 }
@@ -1684,14 +1548,10 @@ uint16_t * newCodeArray(const uint16_t size) {
 
   result = reinterpret_cast<uint16_t*>(malloc(size * sizeof(uint16_t)));
   // Check we malloc'ed successfully.
-  if (result == NULL) {  // malloc failed, so give up.
-    debug("FATAL: Can't allocate memory for an array for a new message!");
-    debug("Giving up & forcing a reboot.");
-    delay(5000);
-    ESP.restart();  // Reboot.
-    delay(500);  // Wait for the restart to happen.
-    return result;  // Should never get here, but just in case.
-  }
+  if (result == NULL)  // malloc failed, so give up.
+    doRestart(
+        "FATAL: Can't allocate memory for an array for a new message! "
+        "Forcing a reboot!", true);  // Send to serial only as we are in low mem
   return result;
 }
 
@@ -1872,7 +1732,7 @@ void handleIr(void) {
 #endif
   uint64_t data = 0;
   String data_str = "";
-  int16_t ir_type = decode_type_t::NEC;  // Default to NEC codes.
+  decode_type_t ir_type = decode_type_t::NEC;  // Default to NEC codes.
   uint16_t nbits = 0;
   uint16_t repeat = 0;
 
@@ -1985,14 +1845,7 @@ void handleGpioSetting(void) {
                          true);
   html += htmlEnd();
   server.send(200, "text/html", html);
-  if (changed) {
-#if MQTT_ENABLE
-    mqttLog("GPIOs were changed. Rebooting!");
-#endif  // MQTT_ENABLE
-    delay(1000);
-    ESP.restart();
-    delay(2000);
-  }
+  if (changed) doRestart("GPIOs were changed. Rebooting!");
 }
 
 void handleNotFound(void) {
@@ -2067,13 +1920,9 @@ void setup_wifi(void) {
 #endif  // MIN_SIGNAL_STRENGTH
   wifiManager.setRemoveDuplicateAPs(HIDE_DUPLIATE_NETWORKS);
 
-  if (!wifiManager.autoConnect()) {
-    debug("Wifi failed to connect and hit timeout. Rebooting...");
-    delay(3000);
+  if (!wifiManager.autoConnect())
     // Reboot. A.k.a. "Have you tried turning it Off and On again?"
-    ESP.restart();
-    delay(5000);
-  }
+    doRestart("Wifi failed to connect and hit timeout. Rebooting...", true);
 
 #if MQTT_ENABLE
   strncpy(MqttServer, custom_mqtt_server.getValue(), kHostnameLength);
@@ -2112,7 +1961,9 @@ void init_vars(void) {
   MqttClimateCmnd = MqttClimate + '/' + MQTT_CLIMATE_CMND + '/';
   // Sub-topic for the climate stat topics.
   MqttClimateStat = MqttClimate + '/' + MQTT_CLIMATE_STAT + '/';
+#if MQTT_DISCOVERY_ENABLE
   MqttDiscovery = "homeassistant/climate/" + String(Hostname) + "/config";
+#endif  // MQTT_DISCOVERY_ENABLE
   MqttHAName = String(Hostname) + "_aircon";
   // Create a unique MQTT client id.
   MqttClientId = String(Hostname) + String(kChipId, HEX);
@@ -2153,7 +2004,7 @@ void setup(void) {
     while (!Serial)  // Wait for the serial connection to be establised.
       delay(50);
     Serial.println();
-    debug("IRMQTTServer " _MY_VERSION_" has booted.");
+    debug("IRMQTTServer " _MY_VERSION_ " has booted.");
   }
 #endif  // DEBUG
 
@@ -2205,8 +2056,10 @@ void setup(void) {
 
   // Setup the root web page.
   server.on(kUrlRoot, handleRoot);
+#if EXAMPLES_ENABLE
   // Setup the examples web page.
   server.on(kUrlExamples, handleExamples);
+#endif  // EXAMPLES_ENABLE
   // Setup the page to handle web-based IR codes.
   server.on("/ir", handleIr);
   // Setup the aircon page.
@@ -2226,8 +2079,10 @@ void setup(void) {
   // Parse and update the new gpios.
   server.on(kUrlGpioSet, handleGpioSetting);
 #if MQTT_ENABLE
+#if MQTT_DISCOVERY_ENABLE
   // MQTT Discovery url
   server.on(kUrlSendDiscovery, handleSendMqttDiscovery);
+#endif  // MQTT_DISCOVERY_ENABLE
   // Finish setup of the mqtt clent object.
   mqtt_client.setServer(MqttServer, atoi(MqttPort));
   mqtt_client.setCallback(mqttCallback);
@@ -2254,9 +2109,7 @@ void setup(void) {
             " Rebooting! </p>" +
             addJsReloadUrl(kUrlRoot, 20, true) +
             htmlEnd());
-        delay(1000);
-        ESP.restart();
-        delay(1000);
+        doRestart("Post firmware reboot.");
       }, [](){
         if (!server.authenticate(HttpUsername, HttpPassword)) {
           debug("Basic HTTP authentication failure for /update.");
@@ -2268,12 +2121,8 @@ void setup(void) {
           debug(upload.filename.c_str());
 #if defined(ESP8266)
           WiFiUDP::stopAll();
-          uint32_t maxSketchSpace = (ESP.getFreeSketchSpace() - 0x1000) &
-              0xFFFFF000;
-#else  // ESP8266
-          uint32_t maxSketchSpace = UPDATE_SIZE_UNKNOWN;
-#endif  // ESP8266
-          if (!Update.begin(maxSketchSpace)) {  // start with max available size
+#endif  // defined(ESP8266)
+          if (!Update.begin(maxSketchSpace())) {  // start with max available
 #if DEBUG
             if (!isSerialGpioUsedByIr())
               Update.printError(Serial);
@@ -2328,9 +2177,9 @@ void unsubscribing(const String topic_name) {
   debug(topic_name.c_str());
 }
 
-void mqttLog(const String mesg) {
-  debug(mesg.c_str());
-  mqtt_client.publish(MqttLog.c_str(), mesg.c_str());
+void mqttLog(const char* str) {
+  debug(str);
+  mqtt_client.publish(MqttLog.c_str(), str);
   mqttSentCounter++;
 }
 
@@ -2389,6 +2238,7 @@ String listOfCommandTopics(void) {
   return result;
 }
 
+#if MQTT_DISCOVERY_ENABLE
 // MQTT Discovery web page
 void handleSendMqttDiscovery(void) {
 #if HTML_PASSWORD_ENABLE
@@ -2410,6 +2260,7 @@ void handleSendMqttDiscovery(void) {
       htmlEnd());
   sendMQTTDiscovery(MqttDiscovery.c_str());
 }
+#endif  // MQTT_DISCOVERY_ENABLE
 
 void doBroadcast(TimerMs *timer, const uint32_t interval,
                  const stdAc::state_t state, const bool retain,
@@ -2447,8 +2298,15 @@ void receivingMQTT(String const topic_name, String const callback_str) {
       debug("It's a climate command topic");
       stdAc::state_t updated = updateClimate(
           climate, topic_name, MqttClimateCmnd, callback_str);
+      // Handle the special command for forcing a resend of the state via IR.
+      bool force_resend = false;
+      if (topic_name.equals(MqttClimateCmnd + KEY_RESEND) &&
+          callback_str.equalsIgnoreCase(KEY_RESEND)) {
+        force_resend = true;
+        mqttLog("Climate resend requested.");
+      }
       if (sendClimate(climate, updated, MqttClimateStat,
-                      true, false, false))
+                      true, false, force_resend) && !force_resend)
         lastClimateSource = F("MQTT");
       climate = updated;
     } else if (topic_name.startsWith(MqttClimateStat)) {
@@ -2501,8 +2359,8 @@ void receivingMQTT(String const topic_name, String const callback_str) {
       default:  // It's an IR command.
         {
           // Get the numeric protocol type.
-          int32_t ir_type = strtoul(strtok_r(ircommand, kCommandDelimiter,
-                                             &tok_ptr), NULL, 10);
+          decode_type_t ir_type = (decode_type_t)atoi(strtok_r(
+              ircommand, kCommandDelimiter, &tok_ptr));
           char* next = strtok_r(NULL, kCommandDelimiter, &tok_ptr);
           // If there is unparsed string left, try to convert it assuming it's
           // hex.
@@ -2559,6 +2417,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
   free(payload_copy);
 }
 
+#if MQTT_DISCOVERY_ENABLE
 void sendMQTTDiscovery(const char *topic) {
   if (mqtt_client.publish(
       topic, String(
@@ -2597,6 +2456,7 @@ void sendMQTTDiscovery(const char *topic) {
     mqttLog("MQTT climate discovery FAILED to send.");
   }
 }
+#endif  // MQTT_DISCOVERY_ENABLE
 #endif  // MQTT_ENABLE
 
 void loop(void) {
@@ -2623,8 +2483,9 @@ void loop(void) {
           mqttLog("IRMQTTServer " _MY_VERSION_ " just booted");
           boot = false;
         } else {
-          mqttLog("IRMQTTServer just (re)connected to MQTT. "
-                  "Lost connection about " + timeSince(lastConnectedTime));
+          mqttLog(String(
+              "IRMQTTServer just (re)connected to MQTT. Lost connection about "
+              + timeSince(lastConnectedTime)).c_str());
         }
         lastConnectedTime = now;
         debug("successful client mqtt connection");
@@ -2648,7 +2509,7 @@ void loop(void) {
       if (IRac::cmpStates(climate, climate_prev)) {  // Something changed.
         mqttLog("The state was recovered from MQTT broker. Updating.");
         sendClimate(climate_prev, climate, MqttClimateStat,
-                    true, false, false);
+                    true, false, false, MQTT_CLIMATE_IR_SEND_ON_RESTART);
         lastClimateSource = F("MQTT (via retain)");
       }
       lockMqttBroadcast = false;  // Release the lock so we can broadcast again.
@@ -2733,16 +2594,19 @@ uint64_t getUInt64fromHex(char const *str) {
 //   repeat:   Nr. of times the message is to be repeated. (Not all protcols.)
 // Returns:
 //   bool: Successfully sent or not.
-bool sendIRCode(IRsend *irsend, int const ir_type,
+bool sendIRCode(IRsend *irsend, decode_type_t const ir_type,
                 uint64_t const code, char const * code_str, uint16_t bits,
                 uint16_t repeat) {
   if (irsend == NULL) return false;
+  bool success = true;  // Assume success.
+  // Ensure we have enough repeats.
+  repeat = std::max(IRsend::minRepeats(ir_type), repeat);
+  if (bits == 0) bits = IRsend::defaultBits(ir_type);
   // Create a pseudo-lock so we don't try to send two codes at the same time.
   while (lockIr)
     delay(20);
   lockIr = true;
 
-  bool success = true;  // Assume success.
 
   // Turn off IR capture if we need to.
 #if IR_RX && DISABLE_CAPTURE_WHILE_TRANSMITTING
@@ -2750,306 +2614,26 @@ bool sendIRCode(IRsend *irsend, int const ir_type,
 #endif  // IR_RX && DISABLE_CAPTURE_WHILE_TRANSMITTING
   // send the IR message.
   switch (ir_type) {
-#if SEND_RC5
-    case RC5:  // 1
-      if (bits == 0)
-        bits = kRC5Bits;
-      irsend->sendRC5(code, bits, repeat);
-      break;
-#endif
-#if SEND_RC6
-    case RC6:  // 2
-      if (bits == 0)
-        bits = kRC6Mode0Bits;
-      irsend->sendRC6(code, bits, repeat);
-      break;
-#endif
-#if SEND_NEC
-    case NEC:  // 3
-      if (bits == 0)
-        bits = kNECBits;
-      irsend->sendNEC(code, bits, repeat);
-      break;
-#endif
-#if SEND_SONY
-    case SONY:  // 4
-      if (bits == 0)
-        bits = kSony12Bits;
-      repeat = std::max(repeat, kSonyMinRepeat);
-      irsend->sendSony(code, bits, repeat);
-      break;
-#endif
-#if SEND_PANASONIC
-    case PANASONIC:  // 5
-      if (bits == 0)
-        bits = kPanasonicBits;
-      irsend->sendPanasonic64(code, bits, repeat);
-      break;
-#endif
-#if SEND_INAX
-    case INAX:  // 64
-      if (bits == 0)
-        bits = kInaxBits;
-      repeat = std::max(repeat, kInaxMinRepeat);
-      irsend->sendInax(code, bits, repeat);
-      break;
-#endif
-#if SEND_JVC
-    case JVC:  // 6
-      if (bits == 0)
-        bits = kJvcBits;
-      irsend->sendJVC(code, bits, repeat);
-      break;
-#endif
-#if SEND_SAMSUNG
-    case SAMSUNG:  // 7
-      if (bits == 0)
-        bits = kSamsungBits;
-      irsend->sendSAMSUNG(code, bits, repeat);
-      break;
-#endif
-#if SEND_SAMSUNG36
-    case SAMSUNG36:  // 56
-      if (bits == 0)
-        bits = kSamsung36Bits;
-      irsend->sendSamsung36(code, bits, repeat);
-      break;
-#endif
-#if SEND_WHYNTER
-    case WHYNTER:  // 8
-      if (bits == 0)
-        bits = kWhynterBits;
-      irsend->sendWhynter(code, bits, repeat);
-      break;
-#endif
-#if SEND_AIWA_RC_T501
-    case AIWA_RC_T501:  // 9
-      if (bits == 0)
-        bits = kAiwaRcT501Bits;
-      repeat = std::max(repeat, kAiwaRcT501MinRepeats);
-      irsend->sendAiwaRCT501(code, bits, repeat);
-      break;
-#endif
-#if SEND_LG
-    case LG:  // 10
-      if (bits == 0)
-        bits = kLgBits;
-      irsend->sendLG(code, bits, repeat);
-      break;
-#endif
-#if SEND_MITSUBISHI
-    case MITSUBISHI:  // 12
-      if (bits == 0)
-        bits = kMitsubishiBits;
-      repeat = std::max(repeat, kMitsubishiMinRepeat);
-      irsend->sendMitsubishi(code, bits, repeat);
-      break;
-#endif
-#if SEND_DISH
-    case DISH:  // 13
-      if (bits == 0)
-        bits = kDishBits;
-      repeat = std::max(repeat, kDishMinRepeat);
-      irsend->sendDISH(code, bits, repeat);
-      break;
-#endif
-#if SEND_SHARP
-    case SHARP:  // 14
-      if (bits == 0)
-        bits = kSharpBits;
-      irsend->sendSharpRaw(code, bits, repeat);
-      break;
-#endif
-#if SEND_COOLIX
-    case COOLIX:  // 15
-      if (bits == 0)
-        bits = kCoolixBits;
-      repeat = std::max(repeat, kCoolixDefaultRepeat);
-      irsend->sendCOOLIX(code, bits, repeat);
-      break;
-#endif
-    case ARGO:  // 27
-    case DAIKIN:  // 16
-    case DAIKIN160:  // 65
-    case DAIKIN2:  // 53
-    case DAIKIN216:  // 61
-    case ELECTRA_AC:  // 48
-    case FUJITSU_AC:  // 33
-    case GREE:  // 24
-    case HAIER_AC:  // 38
-    case HAIER_AC_YRW02:  // 44
-    case HITACHI_AC:  // 40
-    case HITACHI_AC1:  // 41
-    case HITACHI_AC2:  // 42
-    case KELVINATOR:  // 18
-    case MITSUBISHI_AC:  // 20
-    case MITSUBISHI_HEAVY_88:  // 59
-    case MITSUBISHI_HEAVY_152:  // 60
-    case MWM:  // 52
-    case NEOCLIMA:  // 66
-    case PANASONIC_AC:  // 49
-    case SAMSUNG_AC:  // 46
-    case SHARP_AC:  // 62
-    case TCL112AC:  // 57
-    case TOSHIBA_AC:  // 32
-    case TROTEC:  // 28
-    case WHIRLPOOL_AC:  // 45
-      success = parseStringAndSendAirCon(irsend, ir_type, code_str);
-      break;
-#if SEND_DENON
-    case DENON:  // 17
-      if (bits == 0)
-        bits = kDenonBits;
-      irsend->sendDenon(code, bits, repeat);
-      break;
-#endif
-#if SEND_SHERWOOD
-    case SHERWOOD:  // 19
-      if (bits == 0)
-        bits = kSherwoodBits;
-      repeat = std::max(repeat, kSherwoodMinRepeat);
-      irsend->sendSherwood(code, bits, repeat);
-      break;
-#endif
-#if SEND_RCMM
-    case RCMM:  // 21
-      if (bits == 0)
-        bits = kRCMMBits;
-      irsend->sendRCMM(code, bits, repeat);
-      break;
-#endif
-#if SEND_SANYO
-    case SANYO_LC7461:  // 22
-      if (bits == 0)
-        bits = kSanyoLC7461Bits;
-      irsend->sendSanyoLC7461(code, bits, repeat);
-      break;
-#endif
-#if SEND_RC5
-    case RC5X:  // 23
-      if (bits == 0)
-        bits = kRC5XBits;
-      irsend->sendRC5(code, bits, repeat);
-      break;
-#endif
 #if SEND_PRONTO
-    case PRONTO:  // 25
+    case decode_type_t::PRONTO:  // 25
       success = parseStringAndSendPronto(irsend, code_str, repeat);
       break;
-#endif
-#if SEND_NIKAI
-    case NIKAI:  // 29
-      if (bits == 0)
-        bits = kNikaiBits;
-      irsend->sendNikai(code, bits, repeat);
-      break;
-#endif
+#endif  // SEND_PRONTO
+    case decode_type_t::RAW:  // 30
 #if SEND_RAW
-    case RAW:  // 30
       success = parseStringAndSendRaw(irsend, code_str);
       break;
 #endif
 #if SEND_GLOBALCACHE
-    case GLOBALCACHE:  // 31
+    case decode_type_t::GLOBALCACHE:  // 31
       success = parseStringAndSendGC(irsend, code_str);
       break;
 #endif
-#if SEND_MIDEA
-    case MIDEA:  // 34
-      if (bits == 0)
-        bits = kMideaBits;
-      irsend->sendMidea(code, bits, repeat);
-      break;
-#endif
-#if SEND_MAGIQUEST
-    case MAGIQUEST:  // 35
-      if (bits == 0)
-        bits = kMagiquestBits;
-      irsend->sendMagiQuest(code, bits, repeat);
-      break;
-#endif
-#if SEND_LASERTAG
-    case LASERTAG:  // 36
-      if (bits == 0)
-        bits = kLasertagBits;
-      irsend->sendLasertag(code, bits, repeat);
-      break;
-#endif
-#if SEND_CARRIER_AC
-    case CARRIER_AC:  // 37
-      if (bits == 0)
-        bits = kCarrierAcBits;
-      irsend->sendCarrierAC(code, bits, repeat);
-      break;
-#endif
-#if SEND_MITSUBISHI2
-    case MITSUBISHI2:  // 39
-      if (bits == 0)
-        bits = kMitsubishiBits;
-      repeat = std::max(repeat, kMitsubishiMinRepeat);
-      irsend->sendMitsubishi2(code, bits, repeat);
-      break;
-#endif
-#if SEND_GICABLE
-    case GICABLE:  // 43
-      if (bits == 0)
-        bits = kGicableBits;
-      repeat = std::max(repeat, kGicableMinRepeat);
-      irsend->sendGICable(code, bits, repeat);
-      break;
-#endif
-#if SEND_LUTRON
-    case LUTRON:  // 47
-      if (bits == 0)
-        bits = kLutronBits;
-      irsend->sendLutron(code, bits, repeat);
-      break;
-#endif
-#if SEND_PIONEER
-    case PIONEER:  // 50
-      if (bits == 0)
-        bits = kPioneerBits;
-      irsend->sendPioneer(code, bits, repeat);
-      break;
-#endif
-#if SEND_LG
-    case LG2:  // 51
-      if (bits == 0)
-        bits = kLgBits;
-      irsend->sendLG2(code, bits, repeat);
-      break;
-#endif
-#if SEND_VESTEL_AC
-    case VESTEL_AC:  // 54
-      if (bits == 0)
-        bits = kVestelAcBits;
-      irsend->sendVestelAc(code, bits, repeat);
-      break;
-#endif
-#if SEND_TECO
-    case TECO:  // 55
-      if (bits == 0)
-        bits = kTecoBits;
-      irsend->sendTeco(code, bits, repeat);
-      break;
-#endif
-#if SEND_LEGOPF
-    case LEGOPF:  // 58
-      if (bits == 0)
-        bits = kLegoPfBits;
-      irsend->sendLegoPf(code, bits, repeat);
-      break;
-#endif
-#if SEND_GOODWEATHER
-    case GOODWEATHER:  // 63
-      if (bits == 0) bits = kGoodweatherBits;
-      repeat = std::max(repeat, kGoodweatherMinRepeat);
-      irsend->sendGoodweather(code, bits, repeat);
-      break;
-#endif  // SEND_GOODWEATHER
-    default:
-      // If we got here, we didn't know how to send it.
-      success = false;
+    default:  // Everything else.
+      if (hasACState(ir_type))  // protocols with > 64 bits
+        success = parseStringAndSendAirCon(irsend, ir_type, code_str);
+      else  // protocols with <= 64 bits
+        success = irsend->send(ir_type, code, bits, repeat);
   }
 #if IR_RX && DISABLE_CAPTURE_WHILE_TRANSMITTING
   // Turn IR capture back on if we need to.
@@ -3069,9 +2653,7 @@ bool sendIRCode(IRsend *irsend, int const ir_type,
   debug("Type:");
   debug(String(ir_type).c_str());
   // For "long" codes we basically repeat what we got.
-  if (hasACState((decode_type_t) ir_type) ||
-      ir_type == PRONTO ||
-      ir_type == RAW ||
+  if (hasACState(ir_type) || ir_type == PRONTO || ir_type == RAW ||
       ir_type == GLOBALCACHE) {
     debug("Code: ");
     debug(code_str);
@@ -3228,7 +2810,7 @@ stdAc::state_t jsonToState(const stdAc::state_t current, const String str) {
 #endif  // MQTT_CLIMATE_JSON
 
 stdAc::state_t updateClimate(stdAc::state_t current, const String str,
-                              const String prefix, const String payload) {
+                             const String prefix, const String payload) {
   stdAc::state_t result = current;
 #if MQTT_CLIMATE_JSON
   if (str.equals(prefix + KEY_JSON))
@@ -3394,223 +2976,7 @@ bool decodeCommonAc(const decode_results *decode) {
   }
   stdAc::state_t state = climate;
   debug("Converting inbound IR A/C message to common A/C");
-  int8_t txgpio = getDefaultTxGpio();
-  switch (decode->decode_type) {
-#if DECODE_ARGO
-    case decode_type_t::ARGO: {
-      IRArgoAC ac(txgpio);
-      ac.setRaw(decode->state);
-      state = ac.toCommon();
-      break;
-    }
-#endif  // DECODE_ARGO
-#if DECODE_COOLIX
-    case decode_type_t::COOLIX: {
-      IRCoolixAC ac(txgpio);
-      ac.setRaw(decode->value);  // Uses value instead of state.
-      state = ac.toCommon();
-      break;
-    }
-#endif  // DECODE_COOLIX
-#if DECODE_DAIKIN
-    case decode_type_t::DAIKIN: {
-      IRDaikinESP ac(txgpio);
-      ac.setRaw(decode->state);
-      state = ac.toCommon();
-      break;
-    }
-#endif  // DECODE_DAIKIN
-#if DECODE_DAIKIN160
-    case decode_type_t::DAIKIN160: {
-      IRDaikin160 ac(txgpio);
-      ac.setRaw(decode->state);
-      state = ac.toCommon();
-      break;
-    }
-#endif  // DECODE_DAIKIN160
-#if DECODE_DAIKIN2
-    case decode_type_t::DAIKIN2: {
-      IRDaikin2 ac(txgpio);
-      ac.setRaw(decode->state);
-      state = ac.toCommon();
-      break;
-    }
-#endif  // DECODE_DAIKIN2
-#if DECODE_DAIKIN216
-    case decode_type_t::DAIKIN216: {
-      IRDaikin216 ac(txgpio);
-      ac.setRaw(decode->state);
-      state = ac.toCommon();
-      break;
-    }
-#endif  // DECODE_DAIKIN216
-#if DECODE_FUJITSU_AC
-    case decode_type_t::FUJITSU_AC: {
-      IRFujitsuAC ac(txgpio);
-      ac.setRaw(decode->state, decode->bits / 8);
-      state = ac.toCommon();
-      break;
-    }
-#endif  // DECODE_FUJITSU_AC
-#if DECODE_GOODWEATHER
-    case decode_type_t::GOODWEATHER: {
-      IRGoodweatherAc ac(txgpio);
-      ac.setRaw(decode->value);  // Uses value instead of state.
-      state = ac.toCommon();
-      break;
-    }
-#endif  // DECODE_GOODWEATHER
-#if DECODE_GREE
-    case decode_type_t::GREE: {
-      IRGreeAC ac(txgpio);
-      ac.setRaw(decode->state);
-      state = ac.toCommon();
-      break;
-    }
-#endif  // DECODE_GREE
-#if DECODE_HAIER_AC
-    case decode_type_t::HAIER_AC: {
-      IRHaierAC ac(txgpio);
-      ac.setRaw(decode->state);
-      state = ac.toCommon();
-      break;
-    }
-#endif  // DECODE_HAIER_AC
-#if DECODE_HAIER_AC_YRW02
-    case decode_type_t::HAIER_AC_YRW02: {
-      IRHaierACYRW02 ac(txgpio);
-      ac.setRaw(decode->state);
-      state = ac.toCommon();
-      break;
-    }
-#endif  // DECODE_HAIER_AC_YRW02
-#if (DECODE_HITACHI_AC || DECODE_HITACHI_AC2)
-    case decode_type_t::HITACHI_AC: {
-      IRHitachiAc ac(txgpio);
-      ac.setRaw(decode->state);
-      state = ac.toCommon();
-      break;
-    }
-#endif  // (DECODE_HITACHI_AC || DECODE_HITACHI_AC2)
-#if DECODE_KELVINATOR
-    case decode_type_t::KELVINATOR: {
-      IRKelvinatorAC ac(txgpio);
-      ac.setRaw(decode->state);
-      state = ac.toCommon();
-      break;
-    }
-#endif  // DECODE_KELVINATOR
-#if DECODE_MIDEA
-    case decode_type_t::MIDEA: {
-      IRMideaAC ac(txgpio);
-      ac.setRaw(decode->value);  // Uses value instead of state.
-      state = ac.toCommon();
-      break;
-    }
-#endif  // DECODE_MIDEA
-#if DECODE_MITSUBISHI_AC
-    case decode_type_t::MITSUBISHI_AC: {
-      IRMitsubishiAC ac(txgpio);
-      ac.setRaw(decode->state);
-      state = ac.toCommon();
-      break;
-    }
-#endif  // DECODE_MITSUBISHI_AC
-#if DECODE_MITSUBISHIHEAVY
-    case decode_type_t::MITSUBISHI_HEAVY_88: {
-      IRMitsubishiHeavy88Ac ac(txgpio);
-      ac.setRaw(decode->state);
-      state = ac.toCommon();
-      break;
-    }
-    case decode_type_t::MITSUBISHI_HEAVY_152: {
-      IRMitsubishiHeavy152Ac ac(txgpio);
-      ac.setRaw(decode->state);
-      state = ac.toCommon();
-      break;
-    }
-#endif  // DECODE_MITSUBISHIHEAVY
-#if DECODE_NEOCLIMA
-    case decode_type_t::NEOCLIMA: {
-      IRNeoclimaAc ac(txgpio);
-      ac.setRaw(decode->state);
-      state = ac.toCommon();
-      break;
-    }
-#endif  // DECODE_NEOCLIMA
-#if DECODE_PANASONIC_AC
-    case decode_type_t::PANASONIC_AC: {
-      IRPanasonicAc ac(txgpio);
-      ac.setRaw(decode->state);
-      state = ac.toCommon();
-      break;
-    }
-#endif  // DECODE_PANASONIC_AC
-#if DECODE_SAMSUNG_AC
-    case decode_type_t::SAMSUNG_AC: {
-      IRSamsungAc ac(txgpio);
-      ac.setRaw(decode->state);
-      state = ac.toCommon();
-      break;
-    }
-#endif  // DECODE_SAMSUNG_AC
-#if DECODE_SHARP_AC
-    case decode_type_t::SHARP_AC: {
-      IRSharpAc ac(txgpio);
-      ac.setRaw(decode->state);
-      state = ac.toCommon();
-      break;
-    }
-#endif  // DECODE_SHARP_AC
-#if DECODE_TCL112AC
-    case decode_type_t::TCL112AC: {
-      IRTcl112Ac ac(txgpio);
-      ac.setRaw(decode->state);
-      state = ac.toCommon();
-      break;
-    }
-#endif  // DECODE_TCL112AC
-#if DECODE_TECO
-    case decode_type_t::TECO: {
-      IRTecoAc ac(txgpio);
-      ac.setRaw(decode->value);  // Uses value instead of state.
-      state = ac.toCommon();
-      break;
-    }
-#endif  // DECODE_TECO
-#if DECODE_TOSHIBA_AC
-    case decode_type_t::TOSHIBA_AC: {
-      IRToshibaAC ac(txgpio);
-      ac.setRaw(decode->state);
-      state = ac.toCommon();
-      break;
-    }
-#endif  // DECODE_TOSHIBA_AC
-#if DECODE_TROTEC
-    case decode_type_t::TROTEC: {
-      IRTrotecESP ac(txgpio);
-      ac.setRaw(decode->state);
-      state = ac.toCommon();
-      break;
-    }
-#endif  // DECODE_TROTEC
-#if DECODE_VESTEL_AC
-    case decode_type_t::VESTEL_AC: {
-      IRVestelAc ac(txgpio);
-      ac.setRaw(decode->value);  // Uses value instead of state.
-      state = ac.toCommon();
-      break;
-    }
-#endif  // DECODE_VESTEL_AC
-#if DECODE_WHIRLPOOL_AC
-    case decode_type_t::WHIRLPOOL_AC: {
-      IRWhirlpoolAc ac(txgpio);
-      ac.setRaw(decode->state);
-      state = ac.toCommon();
-      break;
-    }
-#endif  // DECODE_WHIRLPOOL_AC
-    default:
+  if (!IRAcUtils::decodeToState(decode, &state)) {
       debug("Failed to convert to common A/C.");  // This shouldn't happen!
       return false;
   }
@@ -3630,10 +2996,10 @@ if (climate.celsius != state.celsius) {
   state.celsius = climate.celsius;
 }
 #if MQTT_ENABLE
-  sendClimate(climate, state, MqttClimateStat, true, false, false,
-              REPLAY_DECODED_AC_MESSAGE);
+  sendClimate(climate, state, MqttClimateStat, true, false,
+              REPLAY_DECODED_AC_MESSAGE, REPLAY_DECODED_AC_MESSAGE);
 #else  // MQTT_ENABLE
-  sendClimate(climate, state, "", false, false, false,
+  sendClimate(climate, state, "", false, false, REPLAY_DECODED_AC_MESSAGE,
               REPLAY_DECODED_AC_MESSAGE);
 #endif  // MQTT_ENABLE
   climate = state;  // Copy over the new climate state.

@@ -51,7 +51,7 @@
 #endif  // UNIT_TEST
 
 // Library Version
-#define _IRREMOTEESP8266_VERSION_ "2.6.2"
+#define _IRREMOTEESP8266_VERSION_ "2.6.3"
 // Supported IR protocols
 // Each protocol you include costs memory and, during decode, costs time
 // Disable (set to false) all the protocols you do not need/want!
@@ -372,6 +372,7 @@ const uint16_t kDishBits = 16;
 const uint16_t kDishMinRepeat = 3;
 const uint16_t kElectraAcStateLength = 13;
 const uint16_t kElectraAcBits = kElectraAcStateLength * 8;
+const uint16_t kElectraAcMinRepeat = kNoRepeat;
 const uint16_t kFujitsuAcMinRepeat = kNoRepeat;
 const uint16_t kFujitsuAcStateLength = 16;
 const uint16_t kFujitsuAcStateLengthShort = 7;
