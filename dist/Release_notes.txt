@@ -1,4 +1,36 @@
 -------------------------------------------------
+Changes in release mega-20190630 (since mega-20190626)
+-------------------------------------------------
+
+Release date: Sun Jun 30 04:00:18 CEST 2019
+
+jimmys01 (3):
+      [JSON] Update to Json 6
+      Update code to version JSON 6
+      Update _C002.ino
+
+
+-------------------------------------------------
+Changes in release mega-20190626 (since mega-20190607)
+-------------------------------------------------
+
+Release date: Wed Jun 26 04:00:15 CEST 2019
+
+okarasev (11):
+      testing version
+      compilation fixes
+      plugin number changed 14->15
+      blynk library added
+      EspEasy changes only
+      library files added
+      fix: reconnect_interval not worked correctly
+      ssl support (disabled by default)
+      fix
+      log prefix show in log (ssl/open)
+      thumbrint gui set option (when compilled in ssl mode)
+
+
+-------------------------------------------------
 Changes in release mega-20190607 (since mega-20190523)
 -------------------------------------------------
 
