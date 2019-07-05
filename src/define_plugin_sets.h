@@ -191,6 +191,13 @@ To create/register a plugin, you have to :
     #define USES_P035      // IRTX
 #endif
 
+#ifdef PLUGIN_BUILD_IR_EXTENDED
+    #define PLUGIN_DESCR  "IR_Extended"
+    #define USES_P016      // IR
+    #define USES_P035      // IRTX
+    // The following define is needed for extended decoding of A/C Messages and or using standardised common arguments for controlling all deeply supported A/C units
+    #define P016_P035_Extended_AC
+#endif
 
 /******************************************************************************\
  * Devices ********************************************************************
