@@ -112,17 +112,16 @@ bool do_process_c017_delay_queue(int controller_number, const C017_queue_element
 
   // Assemble packet
   char packet_header[] = "ZBXD\1";
-  char packet_content[capacity];
+  String JSON_packet_content="";
 
-  //root.printTo((char *)packet_content, root.measureLength() + 1);
-  serializeJson(root, packet_content);
-  unsigned long long content_len = sizeof(packet_content);
-
-  // addLog(LOG_LEVEL_INFO, String(F("ZBX: ")) + packet_content);
+  serializeJson(root, JSON_packet_content);
+  uint64_t payload_len = JSON_packet_content.length();
+  
+  // addLog(LOG_LEVEL_INFO, String(F("ZBX: ")) + JSON_packet_content);
   // Send the packet
-  client.write(packet_header, sizeof(packet_header) - 1);  // (4 bytes) + 1 Byte Protocol Flag (0x01)
-  client.write((char *)&content_len, sizeof(content_len)); //data length (4 bytes) little-endian format
-  client.write(packet_content, content_len);               //JSON formated payload
+  client.write(packet_header, sizeof(packet_header) - 1);
+  client.write((char *)&payload_len, sizeof(payload_len));
+  client.write(JSON_packet_content.c_str(), payload_len);
 
   client.stop();
   return true;
