@@ -29,12 +29,6 @@
 // - "Sleep" Nr. of mins of sleep mode, or use sleep mode. (<= 0 means off.)
 // - "Clock" Nr. of mins past midnight to set the clock to. (< 0 means off.)
 
-#include <IRsend.h>
-
-// Forward declare fumctions to make compiler happy
-bool sendIRCode(decode_type_t const ir_type, uint64_t  code, char const *code_str, uint16_t bits,uint16_t repeat);
-bool parseStringAndSendAirCon(const decode_type_t irType, const String str);
-
 #ifdef P016_P035_Extended_AC
 IRac *Plugin_035_commonAc = nullptr;
 #endif
@@ -465,39 +459,39 @@ void ReEnableIRIn()
 // Transmit the given IR message.
 //
 // Args:
-//   ir_type:  enum of the protocol to be sent.
+//   irsend:   A pointer to a IRsend object to transmit via.
+//   irtype:  enum of the protocol to be sent.
 //   code:     Numeric payload of the IR message. Most protocols use this.
 //   code_str: The unparsed code to be sent. Used by complex protocol encodings.
 //   bits:     Nr. of bits in the protocol. 0 means use the protocol's default.
 //   repeat:   Nr. of times the message is to be repeated. (Not all protcols.)
 // Returns:
 //   bool: Successfully sent or not.
-bool sendIRCode(decode_type_t const ir_type,
-                uint64_t  code, char const *code_str, uint16_t bits,
+bool sendIRCode(int const irtype,
+                uint64_t const code, char const *code_str, uint16_t bits,
                 uint16_t repeat)
 {
+  decode_type_t irType = (decode_type_t)irtype;
   bool success = true; // Assume success.
-  repeat = std::max(IRsend::minRepeats(ir_type), repeat);
-    if (bits == 0) bits = IRsend::defaultBits(ir_type);
+  repeat = std::max(IRsend::minRepeats(irType), repeat);
+    if (bits == 0) bits = IRsend::defaultBits(irType);
   // send the IR message.
 
-      if (hasACState(ir_type))  // protocols with > 64 bits
-        success = parseStringAndSendAirCon(ir_type, code_str);
+      if (hasACState(irType))  // protocols with > 64 bits
+        success = parseStringAndSendAirCon(irType, code_str);
       else  // protocols with <= 64 bits
-        success = Plugin_035_irSender->send(ir_type, code, bits, repeat);
+        success = Plugin_035_irSender->send(irType, code, bits, repeat);
         
   return success;
 }
 
 // Parse an Air Conditioner A/C Hex String/code and send it.
 // Args:
-//   irsend: A Ptr to the IRsend object to transmit via.
-//   irType: Nr. of the protocol we need to send.
+//   irtype: Nr. of the protocol we need to send.
 //   str: A hexadecimal string containing the state to be sent.
-// Returns:
-//   bool: Successfully sent or not.
-bool parseStringAndSendAirCon(const decode_type_t irType,
-                              const String str) {
+bool parseStringAndSendAirCon(const int irtype, const String str)
+{
+  decode_type_t irType = (decode_type_t)irtype;
   uint8_t strOffset = 0;
   uint8_t state[kStateSizeMax] = {0};  // All array elements are set to 0.
   uint16_t stateSize = 0;
