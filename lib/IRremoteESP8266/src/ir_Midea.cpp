@@ -1,4 +1,5 @@
 // Copyright 2017 bwze, crankyoldgit
+// Midea
 
 #include "ir_Midea.h"
 #include <algorithm>
@@ -8,12 +9,6 @@
 #include "IRrecv.h"
 #include "IRsend.h"
 #include "IRutils.h"
-
-//                  MM    MM IIIII DDDDD   EEEEEEE   AAA
-//                  MMM  MMM  III  DD  DD  EE       AAAAA
-//                  MM MM MM  III  DD   DD EEEEE   AA   AA
-//                  MM    MM  III  DD   DD EE      AAAAAAA
-//                  MM    MM IIIII DDDDDD  EEEEEEE AA   AA
 
 // Midea A/C added by (send) bwze/crankyoldgit & (decode) crankyoldgit
 //
@@ -91,52 +86,54 @@ void IRsend::sendMidea(uint64_t data, uint16_t nbits, uint16_t repeat) {
 // Warning: Consider this very alpha code.
 
 // Initialise the object.
-IRMideaAC::IRMideaAC(uint16_t pin) : _irsend(pin) { stateReset(); }
+IRMideaAC::IRMideaAC(const uint16_t pin) : _irsend(pin) { this->stateReset(); }
 
 // Reset the state of the remote to a known good state/sequence.
-void IRMideaAC::stateReset() {
+void IRMideaAC::stateReset(void) {
   // Power On, Mode Auto, Fan Auto, Temp = 25C/77F
   remote_state = 0xA1826FFFFF62;
 }
 
 // Configure the pin for output.
-void IRMideaAC::begin() { _irsend.begin(); }
+void IRMideaAC::begin(void) { _irsend.begin(); }
 
 #if SEND_MIDEA
 // Send the current desired state to the IR LED.
 void IRMideaAC::send(const uint16_t repeat) {
-  checksum();  // Ensure correct checksum before sending.
+  this->checksum();  // Ensure correct checksum before sending.
   _irsend.sendMidea(remote_state, kMideaBits, repeat);
 }
 #endif  // SEND_MIDEA
 
 // Return a pointer to the internal state date of the remote.
-uint64_t IRMideaAC::getRaw() {
-  checksum();
+uint64_t IRMideaAC::getRaw(void) {
+  this->checksum();
   return remote_state & kMideaACStateMask;
 }
 
 // Override the internal state with the new state.
-void IRMideaAC::setRaw(uint64_t newState) {
+void IRMideaAC::setRaw(const uint64_t newState) {
   remote_state = newState & kMideaACStateMask;
 }
 
 // Set the requested power state of the A/C to off.
-void IRMideaAC::on() { remote_state |= kMideaACPower; }
+void IRMideaAC::on(void) { remote_state |= kMideaACPower; }
 
 // Set the requested power state of the A/C to off.
-void IRMideaAC::off() { remote_state &= (kMideaACStateMask ^ kMideaACPower); }
+void IRMideaAC::off(void) {
+  remote_state &= (kMideaACStateMask ^ kMideaACPower);
+}
 
 // Set the requested power state of the A/C.
-void IRMideaAC::setPower(const bool state) {
-  if (state)
-    on();
+void IRMideaAC::setPower(const bool on) {
+  if (on)
+    this->on();
   else
-    off();
+    this->off();
 }
 
 // Return the requested power state of the A/C.
-bool IRMideaAC::getPower() { return (remote_state & kMideaACPower); }
+bool IRMideaAC::getPower(void) { return (remote_state & kMideaACPower); }
 
 // Set the temperature.
 // Args:
@@ -147,7 +144,8 @@ void IRMideaAC::setTemp(const uint8_t temp, const bool useCelsius) {
   if (useCelsius) {
     new_temp = std::max(kMideaACMinTempC, new_temp);
     new_temp = std::min(kMideaACMaxTempC, new_temp);
-    new_temp = (uint8_t)((new_temp * 1.8) + 32.5);  // 0.5 so we rounding.
+    // Convert and add 0.5 for rounding.
+    new_temp = celsiusToFahrenheit(new_temp) + 0.5;
   }
   new_temp = std::max(kMideaACMinTempF, new_temp);
   new_temp = std::min(kMideaACMaxTempF, new_temp);
@@ -164,7 +162,7 @@ void IRMideaAC::setTemp(const uint8_t temp, const bool useCelsius) {
 uint8_t IRMideaAC::getTemp(const bool useCelsius) {
   uint8_t temp = ((remote_state >> 24) & 0x1F) + kMideaACMinTempF;
   if (useCelsius) {
-    temp = (uint8_t)((temp - 32) / 1.8);
+    temp = fahrenheitToCelsius(temp);
   }
   return temp;
 }
@@ -187,42 +185,39 @@ void IRMideaAC::setFan(const uint8_t fan) {
 }
 
 // Return the requested state of the unit's fan.
-uint8_t IRMideaAC::getFan() { return (remote_state >> 35) & 0b111; }
+uint8_t IRMideaAC::getFan(void) { return (remote_state >> 35) & 0b111; }
 
 // Get the requested climate operation mode of the a/c unit.
 // Returns:
 //   A uint8_t containing the A/C mode.
-uint8_t IRMideaAC::getMode() { return ((remote_state >> 32) & 0b111); }
+uint8_t IRMideaAC::getMode(void) { return ((remote_state >> 32) & 0b111); }
 
 // Set the requested climate operation mode of the a/c unit.
 void IRMideaAC::setMode(const uint8_t mode) {
-  // If we get an unexpected mode, default to AUTO.
-  uint64_t new_mode;
   switch (mode) {
     case kMideaACAuto:
     case kMideaACCool:
     case kMideaACHeat:
     case kMideaACDry:
     case kMideaACFan:
-      new_mode = mode;
-      break;
+      remote_state &= kMideaACModeMask;
+      remote_state |= ((uint64_t)mode << 32);
+      return;
     default:
-      new_mode = kMideaACAuto;
+      this->setMode(kMideaACAuto);
   }
-  remote_state &= kMideaACModeMask;
-  remote_state |= (new_mode << 32);
 }
 
 // Set the Sleep state of the A/C.
-void IRMideaAC::setSleep(const bool state) {
-  if (state)
+void IRMideaAC::setSleep(const bool on) {
+  if (on)
     remote_state |= kMideaACSleep;
   else
     remote_state &= (kMideaACStateMask ^ kMideaACSleep);
 }
 
 // Return the Sleep state of the A/C.
-bool IRMideaAC::getSleep() { return (remote_state & kMideaACSleep); }
+bool IRMideaAC::getSleep(void) { return (remote_state & kMideaACSleep); }
 
 // Calculate the checksum for a given array.
 // Args:
@@ -251,46 +246,99 @@ bool IRMideaAC::validChecksum(const uint64_t state) {
 }
 
 // Calculate & set the checksum for the current internal state of the remote.
-void IRMideaAC::checksum() {
+void IRMideaAC::checksum(void) {
   // Stored the checksum value in the last byte.
   remote_state &= kMideaACChecksumMask;
   remote_state |= calcChecksum(remote_state);
 }
 
-// Convert the internal state into a human readable string.
-#ifdef ARDUINO
-String IRMideaAC::toString() {
-  String result = "";
-#else
-std::string IRMideaAC::toString() {
-  std::string result = "";
-#endif  // ARDUINO
-  result += F("Power: ");
-  if (getPower())
-    result += F("On");
-  else
-    result += F("Off");
-  result += F(", Mode: ");
-  result += uint64ToString(getMode());
-  switch (getMode()) {
-    case kMideaACAuto:
-      result += F(" (AUTO)");
-      break;
-    case kMideaACCool:
-      result += F(" (COOL)");
-      break;
-    case kMideaACHeat:
-      result += F(" (HEAT)");
-      break;
-    case kMideaACDry:
-      result += F(" (DRY)");
-      break;
-    case kMideaACFan:
-      result += F(" (FAN)");
-      break;
+
+// Convert a standard A/C mode into its native mode.
+uint8_t IRMideaAC::convertMode(const stdAc::opmode_t mode) {
+  switch (mode) {
+    case stdAc::opmode_t::kCool:
+      return kMideaACCool;
+    case stdAc::opmode_t::kHeat:
+      return kMideaACHeat;
+    case stdAc::opmode_t::kDry:
+      return kMideaACDry;
+    case stdAc::opmode_t::kFan:
+      return kMideaACFan;
     default:
-      result += F(" (UNKNOWN)");
+      return kMideaACAuto;
   }
+}
+
+// Convert a standard A/C Fan speed into its native fan speed.
+uint8_t IRMideaAC::convertFan(const stdAc::fanspeed_t speed) {
+  switch (speed) {
+    case stdAc::fanspeed_t::kMin:
+    case stdAc::fanspeed_t::kLow:
+      return kMideaACFanLow;
+    case stdAc::fanspeed_t::kMedium:
+      return kMideaACFanMed;
+    case stdAc::fanspeed_t::kHigh:
+    case stdAc::fanspeed_t::kMax:
+      return kMideaACFanHigh;
+    default:
+      return kMideaACFanAuto;
+  }
+}
+
+// Convert a native mode to it's common equivalent.
+stdAc::opmode_t IRMideaAC::toCommonMode(const uint8_t mode) {
+  switch (mode) {
+    case kMideaACCool: return stdAc::opmode_t::kCool;
+    case kMideaACHeat: return stdAc::opmode_t::kHeat;
+    case kMideaACDry: return stdAc::opmode_t::kDry;
+    case kMideaACFan: return stdAc::opmode_t::kFan;
+    default: return stdAc::opmode_t::kAuto;
+  }
+}
+
+// Convert a native fan speed to it's common equivalent.
+stdAc::fanspeed_t IRMideaAC::toCommonFanSpeed(const uint8_t speed) {
+  switch (speed) {
+    case kMideaACFanHigh: return stdAc::fanspeed_t::kMax;
+    case kMideaACFanMed: return stdAc::fanspeed_t::kMedium;
+    case kMideaACFanLow: return stdAc::fanspeed_t::kMin;
+    default: return stdAc::fanspeed_t::kAuto;
+  }
+}
+
+// Convert the A/C state to it's common equivalent.
+stdAc::state_t IRMideaAC::toCommon(void) {
+  stdAc::state_t result;
+  result.protocol = decode_type_t::MIDEA;
+  result.model = -1;  // No models used.
+  result.power = this->getPower();
+  result.mode = this->toCommonMode(this->getMode());
+  result.celsius = true;
+  result.degrees = this->getTemp(result.celsius);
+  result.fanspeed = this->toCommonFanSpeed(this->getFan());
+  result.sleep = this->getSleep() ? 0 : -1;
+  // Not supported.
+  result.swingv = stdAc::swingv_t::kOff;
+  result.swingh = stdAc::swingh_t::kOff;
+  result.quiet = false;
+  result.turbo = false;
+  result.clean = false;
+  result.econo = false;
+  result.filter = false;
+  result.light = false;
+  result.beep = false;
+  result.clock = -1;
+  return result;
+}
+
+// Convert the internal state into a human readable string.
+String IRMideaAC::toString(void) {
+  String result = "";
+  result.reserve(70);  // Reserve some heap for the string to reduce fragging.
+  result += IRutils::acBoolToString(getPower(), F("Power"), false);
+  result += IRutils::acModeToString(getMode(), kMideaACAuto, kMideaACCool,
+                                    kMideaACHeat, kMideaACDry,
+                                    kMideaACFan);
   result += F(", Temp: ");
   result += uint64ToString(getTemp(true));
   result += F("C/");
@@ -311,11 +359,7 @@ std::string IRMideaAC::toString() {
       result += F(" (HI)");
       break;
   }
-  result += F(", Sleep: ");
-  if (getSleep())
-    result += F("On");
-  else
-    result += F("Off");
+  result += IRutils::acBoolToString(getSleep(), F("Sleep"));
   return result;
 }
 
@@ -332,9 +376,6 @@ std::string IRMideaAC::toString() {
 // Status: Alpha / Needs testing against a real device.
 //
 bool IRrecv::decodeMidea(decode_results *results, uint16_t nbits, bool strict) {
-  if (nbits % 8 != 0)  // nbits has to be a multiple of nr. of bits in a byte.
-    return false;
-
   uint8_t min_nr_of_messages = 1;
   if (strict) {
     if (nbits != kMideaBits) return false;  // Not strictly a MIDEA message.
@@ -355,35 +396,16 @@ bool IRrecv::decodeMidea(decode_results *results, uint16_t nbits, bool strict) {
     return false;  // We can't possibly capture a Midea packet that big.
 
   for (uint8_t i = 0; i < min_nr_of_messages; i++) {
-    // Header
-    if (!matchMark(results->rawbuf[offset], kMideaHdrMark)) return false;
-    // Calculate how long the common tick time is based on the header mark.
-    uint32_t m_tick = results->rawbuf[offset++] * kRawTick / kMideaHdrMarkTicks;
-    if (!matchSpace(results->rawbuf[offset], kMideaHdrSpace)) return false;
-    // Calculate how long the common tick time is based on the header space.
-    uint32_t s_tick =
-        results->rawbuf[offset++] * kRawTick / kMideaHdrSpaceTicks;
-
-    // Data (Normal)
-    match_result_t data_result = matchData(
-        &(results->rawbuf[offset]), nbits, kMideaBitMarkTicks * m_tick,
-        kMideaOneSpaceTicks * s_tick, kMideaBitMarkTicks * m_tick,
-        kMideaZeroSpaceTicks * s_tick, kMideaTolerance);
-    if (data_result.success == false) return false;
-    offset += data_result.used;
-    if (i % 2 == 0)
-      data = data_result.data;
-    else
-      inverted = data_result.data;
-
-    // Footer
-    if (!matchMark(results->rawbuf[offset++], kMideaBitMarkTicks * m_tick,
-                   kMideaTolerance))
-      return false;
-    if (offset < results->rawlen &&
-        !matchAtLeast(results->rawbuf[offset++], kMideaMinGapTicks * s_tick,
-                      kMideaTolerance))
-      return false;
+    // Match Header + Data + Footer
+    uint16_t used;
+    used = matchGeneric(results->rawbuf + offset, i % 2 ? &inverted : &data,
+                        results->rawlen - offset, nbits,
+                        kMideaHdrMark, kMideaHdrSpace,
+                        kMideaBitMark, kMideaOneSpace,
+                        kMideaBitMark, kMideaZeroSpace,
+                        kMideaBitMark, kMideaMinGap, false, kMideaTolerance);
+    if (!used) return false;
+    offset += used;
   }
 
   // Compliance

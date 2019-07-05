@@ -19,15 +19,10 @@
 #ifndef ARDUINO
 #include <string>
 #endif
+#include "IRac.h"
 #include "IRrecv.h"
 #include "IRsend.h"
 #include "IRutils.h"
-
-// KK  KK EEEEEEE LL     VV     VV IIIII NN   NN   AAA   TTTTTTT  OOOOO  RRRRRR
-// KK KK  EE      LL     VV     VV  III  NNN  NN  AAAAA    TTT   OO   OO RR   RR
-// KKKK   EEEEE   LL      VV   VV   III  NN N NN AA   AA   TTT   OO   OO RRRRRR
-// KK KK  EE      LL       VV VV    III  NN  NNN AAAAAAA   TTT   OO   OO RR  RR
-// KK  KK EEEEEEE LLLLLLL   VVV    IIIII NN   NN AA   AA   TTT    OOOO0  RR   RR
 
 // Constants
 
@@ -81,8 +76,8 @@ const uint8_t kKelvinatorTurbo = 1 << kKelvinatorTurboOffset;
 //
 // Status: STABLE / Known working.
 //
-void IRsend::sendKelvinator(unsigned char data[], uint16_t nbytes,
-                            uint16_t repeat) {
+void IRsend::sendKelvinator(const unsigned char data[], const uint16_t nbytes,
+                            const uint16_t repeat) {
   if (nbytes < kKelvinatorStateLength)
     return;  // Not enough bytes to send a proper message.
 
@@ -123,36 +118,38 @@ void IRsend::sendKelvinator(unsigned char data[], uint16_t nbytes,
 }
 #endif  // SEND_KELVINATOR
 
-IRKelvinatorAC::IRKelvinatorAC(uint16_t pin) : _irsend(pin) { stateReset(); }
+IRKelvinatorAC::IRKelvinatorAC(uint16_t pin) : _irsend(pin) {
+  this->stateReset();
+}
 
-void IRKelvinatorAC::stateReset() {
+void IRKelvinatorAC::stateReset(void) {
   for (uint8_t i = 0; i < kKelvinatorStateLength; i++) remote_state[i] = 0x0;
   remote_state[3] = 0x50;
   remote_state[11] = 0x70;
 }
 
-void IRKelvinatorAC::begin() { _irsend.begin(); }
+void IRKelvinatorAC::begin(void) { _irsend.begin(); }
 
-void IRKelvinatorAC::fixup() {
+void IRKelvinatorAC::fixup(void) {
   // X-Fan mode is only valid in COOL or DRY modes.
-  if (getMode() != kKelvinatorCool && getMode() != kKelvinatorDry)
-    setXFan(false);
-  checksum();  // Calculate the checksums
+  if (this->getMode() != kKelvinatorCool && this->getMode() != kKelvinatorDry)
+    this->setXFan(false);
+  this->checksum();  // Calculate the checksums
 }
 
 #if SEND_KELVINATOR
 void IRKelvinatorAC::send(const uint16_t repeat) {
-  fixup();  // Ensure correct settings before sending.
+  this->fixup();  // Ensure correct settings before sending.
   _irsend.sendKelvinator(remote_state, kKelvinatorStateLength, repeat);
 }
 #endif  // SEND_KELVINATOR
 
-uint8_t *IRKelvinatorAC::getRaw() {
-  fixup();  // Ensure correct settings before sending.
+uint8_t *IRKelvinatorAC::getRaw(void) {
+  this->fixup();  // Ensure correct settings before sending.
   return remote_state;
 }
 
-void IRKelvinatorAC::setRaw(uint8_t new_code[]) {
+void IRKelvinatorAC::setRaw(const uint8_t new_code[]) {
   for (uint8_t i = 0; i < kKelvinatorStateLength; i++) {
     remote_state[i] = new_code[i];
   }
@@ -195,46 +192,46 @@ bool IRKelvinatorAC::validChecksum(const uint8_t state[],
   return true;
 }
 
-void IRKelvinatorAC::on() {
+void IRKelvinatorAC::on(void) {
   remote_state[0] |= kKelvinatorPower;
   remote_state[8] = remote_state[0];  // Duplicate to the 2nd command chunk.
 }
 
-void IRKelvinatorAC::off() {
+void IRKelvinatorAC::off(void) {
   remote_state[0] &= ~kKelvinatorPower;
   remote_state[8] = remote_state[0];  // Duplicate to the 2nd command chunk.
 }
 
-void IRKelvinatorAC::setPower(bool state) {
-  if (state)
-    on();
+void IRKelvinatorAC::setPower(const bool on) {
+  if (on)
+    this->on();
   else
-    off();
+    this->off();
 }
 
-bool IRKelvinatorAC::getPower() {
-  return ((remote_state[0] & kKelvinatorPower) != 0);
+bool IRKelvinatorAC::getPower(void) {
+  return remote_state[0] & kKelvinatorPower;
 }
 
 // Set the temp. in deg C
-void IRKelvinatorAC::setTemp(uint8_t temp) {
-  temp = std::max(kKelvinatorMinTemp, temp);
+void IRKelvinatorAC::setTemp(const uint8_t degrees) {
+  uint8_t temp = std::max(kKelvinatorMinTemp, degrees);
   temp = std::min(kKelvinatorMaxTemp, temp);
   remote_state[1] = (remote_state[1] & 0xF0U) | (temp - kKelvinatorMinTemp);
   remote_state[9] = remote_state[1];  // Duplicate to the 2nd command chunk.
 }
 
 // Return the set temp. in deg C
-uint8_t IRKelvinatorAC::getTemp() {
+uint8_t IRKelvinatorAC::getTemp(void) {
   return ((remote_state[1] & 0xFU) + kKelvinatorMinTemp);
 }
 
 // Set the speed of the fan, 0-5, 0 is auto, 1-5 is the speed
-void IRKelvinatorAC::setFan(uint8_t fan) {
-  fan = std::min(kKelvinatorFanMax, fan);  // Bounds check
+void IRKelvinatorAC::setFan(const uint8_t speed) {
+  uint8_t fan = std::min(kKelvinatorFanMax, speed);  // Bounds check
 
   // Only change things if we need to.
-  if (fan != getFan()) {
+  if (fan != this->getFan()) {
     // Set the basic fan values.
     uint8_t fan_basic = std::min(kKelvinatorBasicFanMax, fan);
     remote_state[0] = (remote_state[0] & kKelvinatorBasicFanMask) |
@@ -243,144 +240,186 @@ void IRKelvinatorAC::setFan(uint8_t fan) {
     // Set the advanced(?) fan value.
     remote_state[14] =
         (remote_state[14] & kKelvinatorFanMask) | (fan << kKelvinatorFanOffset);
-    setTurbo(false);  // Turbo mode is turned off if we change the fan settings.
+    // Turbo mode is turned off if we change the fan settings.
+    this->setTurbo(false);
   }
 }
 
-uint8_t IRKelvinatorAC::getFan() {
+uint8_t IRKelvinatorAC::getFan(void) {
   return ((remote_state[14] & ~kKelvinatorFanMask) >> kKelvinatorFanOffset);
 }
 
-uint8_t IRKelvinatorAC::getMode() {
+uint8_t IRKelvinatorAC::getMode(void) {
   return (remote_state[0] & ~kKelvinatorModeMask);
 }
 
-void IRKelvinatorAC::setMode(uint8_t mode) {
-  // If we get an unexpected mode, default to AUTO.
-  if (mode > kKelvinatorHeat) mode = kKelvinatorAuto;
-  remote_state[0] = (remote_state[0] & kKelvinatorModeMask) | mode;
-  remote_state[8] = remote_state[0];  // Duplicate to the 2nd command chunk.
-  if (mode == kKelvinatorAuto || kKelvinatorDry)
-    // When the remote is set to Auto or Dry, it defaults to 25C and doesn't
-    // show it.
-    setTemp(kKelvinatorAutoTemp);
+void IRKelvinatorAC::setMode(const uint8_t mode) {
+  switch (mode) {
+    case kKelvinatorAuto:
+    case kKelvinatorDry:
+      // When the remote is set to Auto or Dry, it defaults to 25C and doesn't
+      // show it.
+      this->setTemp(kKelvinatorAutoTemp);
+      // FALL-THRU
+    case kKelvinatorHeat:
+    case kKelvinatorCool:
+    case kKelvinatorFan:
+      remote_state[0] = (remote_state[0] & kKelvinatorModeMask) | mode;
+      remote_state[8] = remote_state[0];  // Duplicate to the 2nd command chunk.
+      break;
+    default:  // If we get an unexpected mode, default to AUTO.
+      this->setMode(kKelvinatorAuto);
+  }
 }
 
-void IRKelvinatorAC::setSwingVertical(bool state) {
-  if (state) {
+void IRKelvinatorAC::setSwingVertical(const bool on) {
+  if (on) {
     remote_state[0] |= kKelvinatorVentSwing;
     remote_state[4] |= kKelvinatorVentSwingV;
   } else {
     remote_state[4] &= ~kKelvinatorVentSwingV;
-    if (!getSwingHorizontal()) remote_state[0] &= ~kKelvinatorVentSwing;
+    if (!this->getSwingHorizontal()) remote_state[0] &= ~kKelvinatorVentSwing;
   }
   remote_state[8] = remote_state[0];  // Duplicate to the 2nd command chunk.
 }
 
-bool IRKelvinatorAC::getSwingVertical() {
-  return ((remote_state[4] & kKelvinatorVentSwingV) != 0);
+bool IRKelvinatorAC::getSwingVertical(void) {
+  return remote_state[4] & kKelvinatorVentSwingV;
 }
 
-void IRKelvinatorAC::setSwingHorizontal(bool state) {
-  if (state) {
+void IRKelvinatorAC::setSwingHorizontal(const bool on) {
+  if (on) {
     remote_state[0] |= kKelvinatorVentSwing;
     remote_state[4] |= kKelvinatorVentSwingH;
   } else {
     remote_state[4] &= ~kKelvinatorVentSwingH;
-    if (!getSwingVertical()) remote_state[0] &= ~kKelvinatorVentSwing;
+    if (!this->getSwingVertical()) remote_state[0] &= ~kKelvinatorVentSwing;
   }
   remote_state[8] = remote_state[0];  // Duplicate to the 2nd command chunk.
 }
 
-bool IRKelvinatorAC::getSwingHorizontal() {
-  return ((remote_state[4] & kKelvinatorVentSwingH) != 0);
+bool IRKelvinatorAC::getSwingHorizontal(void) {
+  return remote_state[4] & kKelvinatorVentSwingH;
 }
 
-void IRKelvinatorAC::setQuiet(bool state) {
+void IRKelvinatorAC::setQuiet(const bool on) {
   remote_state[12] &= ~kKelvinatorQuiet;
-  remote_state[12] |= (state << kKelvinatorQuietOffset);
+  remote_state[12] |= (on << kKelvinatorQuietOffset);
 }
 
-bool IRKelvinatorAC::getQuiet() {
-  return ((remote_state[12] & kKelvinatorQuiet) != 0);
+bool IRKelvinatorAC::getQuiet(void) {
+  return remote_state[12] & kKelvinatorQuiet;
 }
 
-void IRKelvinatorAC::setIonFilter(bool state) {
+void IRKelvinatorAC::setIonFilter(const bool on) {
   remote_state[2] &= ~kKelvinatorIonFilter;
-  remote_state[2] |= (state << kKelvinatorIonFilterOffset);
+  remote_state[2] |= (on << kKelvinatorIonFilterOffset);
   remote_state[10] = remote_state[2];  // Duplicate to the 2nd command chunk.
 }
 
-bool IRKelvinatorAC::getIonFilter() {
-  return ((remote_state[2] & kKelvinatorIonFilter) != 0);
+bool IRKelvinatorAC::getIonFilter(void) {
+  return remote_state[2] & kKelvinatorIonFilter;
 }
 
-void IRKelvinatorAC::setLight(bool state) {
+void IRKelvinatorAC::setLight(const bool on) {
   remote_state[2] &= ~kKelvinatorLight;
-  remote_state[2] |= (state << kKelvinatorLightOffset);
+  remote_state[2] |= (on << kKelvinatorLightOffset);
   remote_state[10] = remote_state[2];  // Duplicate to the 2nd command chunk.
 }
 
-bool IRKelvinatorAC::getLight() {
-  return ((remote_state[2] & kKelvinatorLight) != 0);
+bool IRKelvinatorAC::getLight(void) {
+  return remote_state[2] & kKelvinatorLight;
 }
 
 // Note: XFan mode is only valid in Cool or Dry mode.
-void IRKelvinatorAC::setXFan(bool state) {
+void IRKelvinatorAC::setXFan(const bool on) {
   remote_state[2] &= ~kKelvinatorXfan;
-  remote_state[2] |= (state << kKelvinatorXfanOffset);
+  remote_state[2] |= (on << kKelvinatorXfanOffset);
   remote_state[10] = remote_state[2];  // Duplicate to the 2nd command chunk.
 }
 
-bool IRKelvinatorAC::getXFan() {
-  return ((remote_state[2] & kKelvinatorXfan) != 0);
+bool IRKelvinatorAC::getXFan(void) {
+  return remote_state[2] & kKelvinatorXfan;
 }
 
 // Note: Turbo mode is turned off if the fan speed is changed.
-void IRKelvinatorAC::setTurbo(bool state) {
+void IRKelvinatorAC::setTurbo(const bool on) {
   remote_state[2] &= ~kKelvinatorTurbo;
-  remote_state[2] |= (state << kKelvinatorTurboOffset);
+  remote_state[2] |= (on << kKelvinatorTurboOffset);
   remote_state[10] = remote_state[2];  // Duplicate to the 2nd command chunk.
 }
 
-bool IRKelvinatorAC::getTurbo() {
-  return ((remote_state[2] & kKelvinatorTurbo) != 0);
+bool IRKelvinatorAC::getTurbo(void) {
+  return remote_state[2] & kKelvinatorTurbo;
+}
+
+// Convert a standard A/C mode into its native mode.
+uint8_t IRKelvinatorAC::convertMode(const stdAc::opmode_t mode) {
+  switch (mode) {
+    case stdAc::opmode_t::kCool:
+      return kKelvinatorCool;
+    case stdAc::opmode_t::kHeat:
+      return kKelvinatorHeat;
+    case stdAc::opmode_t::kDry:
+      return kKelvinatorDry;
+    case stdAc::opmode_t::kFan:
+      return kKelvinatorFan;
+    default:
+      return kKelvinatorAuto;
+  }
+}
+
+// Convert a native mode to it's common equivalent.
+stdAc::opmode_t IRKelvinatorAC::toCommonMode(const uint8_t mode) {
+  switch (mode) {
+    case kKelvinatorCool: return stdAc::opmode_t::kCool;
+    case kKelvinatorHeat: return stdAc::opmode_t::kHeat;
+    case kKelvinatorDry: return stdAc::opmode_t::kDry;
+    case kKelvinatorFan: return stdAc::opmode_t::kFan;
+    default: return stdAc::opmode_t::kAuto;
+  }
+}
+
+// Convert a native fan speed to it's common equivalent.
+stdAc::fanspeed_t IRKelvinatorAC::toCommonFanSpeed(const uint8_t speed) {
+  return (stdAc::fanspeed_t)speed;
+}
+
+// Convert the A/C state to it's common equivalent.
+stdAc::state_t IRKelvinatorAC::toCommon(void) {
+  stdAc::state_t result;
+  result.protocol = decode_type_t::KELVINATOR;
+  result.model = -1;  // Unused.
+  result.power = this->getPower();
+  result.mode = this->toCommonMode(this->getMode());
+  result.celsius = true;
+  result.degrees = this->getTemp();
+  result.fanspeed = this->toCommonFanSpeed(this->getFan());
+  result.swingv = this->getSwingVertical() ? stdAc::swingv_t::kAuto :
+                                             stdAc::swingv_t::kOff;
+  result.swingh = this->getSwingHorizontal() ? stdAc::swingh_t::kAuto :
+                                               stdAc::swingh_t::kOff;
+  result.quiet = this->getQuiet();
+  result.turbo = this->getTurbo();
+  result.light = this->getLight();
+  result.filter = this->getIonFilter();
+  result.clean = this->getXFan();
+  // Not supported.
+  result.econo = false;
+  result.beep = false;
+  result.sleep = -1;
+  result.clock = -1;
+  return result;
 }
 
 // Convert the internal state into a human readable string.
-#ifdef ARDUINO
-String IRKelvinatorAC::toString() {
+String IRKelvinatorAC::toString(void) {
   String result = "";
-#else
-std::string IRKelvinatorAC::toString() {
-  std::string result = "";
-#endif  // ARDUINO
-  result += F("Power: ");
-  if (getPower())
-    result += F("On");
-  else
-    result += F("Off");
-  result += F(", Mode: ");
-  result += uint64ToString(getMode());
-  switch (getMode()) {
-    case kKelvinatorAuto:
-      result += F(" (AUTO)");
-      break;
-    case kKelvinatorCool:
-      result += F(" (COOL)");
-      break;
-    case kKelvinatorHeat:
-      result += F(" (HEAT)");
-      break;
-    case kKelvinatorDry:
-      result += F(" (DRY)");
-      break;
-    case kKelvinatorFan:
-      result += F(" (FAN)");
-      break;
-    default:
-      result += F(" (UNKNOWN)");
-  }
+  result.reserve(160);  // Reserve some heap for the string to reduce fragging.
+  result += IRutils::acBoolToString(getPower(), F("Power"), false);
+  result += IRutils::acModeToString(getMode(), kKelvinatorAuto, kKelvinatorCool,
+                                    kKelvinatorHeat, kKelvinatorDry,
+                                    kKelvinatorFan);
   result += F(", Temp: ");
   result += uint64ToString(getTemp());
   result += F("C, Fan: ");
@@ -393,41 +432,14 @@ std::string IRKelvinatorAC::toString() {
       result += F(" (MAX)");
       break;
   }
-  result += F(", Turbo: ");
-  if (getTurbo())
-    result += F("On");
-  else
-    result += F("Off");
-  result += F(", Quiet: ");
-  if (getQuiet())
-    result += F("On");
-  else
-    result += F("Off");
-  result += F(", XFan: ");
-  if (getXFan())
-    result += F("On");
-  else
-    result += F("Off");
-  result += F(", IonFilter: ");
-  if (getIonFilter())
-    result += F("On");
-  else
-    result += F("Off");
-  result += F(", Light: ");
-  if (getLight())
-    result += F("On");
-  else
-    result += F("Off");
-  result += F(", Swing (Horizontal): ");
-  if (getSwingHorizontal())
-    result += F("On");
-  else
-    result += F("Off");
-  result += F(", Swing (Vertical): ");
-  if (getSwingVertical())
-    result += F("On");
-  else
-    result += F("Off");
+  result += IRutils::acBoolToString(getTurbo(), F("Turbo"));
+  result += IRutils::acBoolToString(getQuiet(), F("Quiet"));
+  result += IRutils::acBoolToString(getXFan(), F("XFan"));
+  result += IRutils::acBoolToString(getIonFilter(), F("IonFilter"));
+  result += IRutils::acBoolToString(getLight(), F("Light"));
+  result += IRutils::acBoolToString(getSwingHorizontal(),
+                                    F("Swing (Horizontal)"));
+  result += IRutils::acBoolToString(getSwingVertical(), F("Swing (Vertical)"));
   return result;
 }
 
@@ -441,7 +453,7 @@ std::string IRKelvinatorAC::toString() {
 // Returns:
 //   boolean: True if it can decode it, false if it can't.
 //
-// Status: ALPHA / Untested.
+// Status: STABLE / Known working.
 bool IRrecv::decodeKelvinator(decode_results *results, uint16_t nbits,
                               bool strict) {
   if (results->rawlen <
@@ -450,101 +462,66 @@ bool IRrecv::decodeKelvinator(decode_results *results, uint16_t nbits,
   if (strict && nbits != kKelvinatorBits)
     return false;  // Not strictly a Kelvinator message.
 
-  uint32_t data;
   uint16_t offset = kStartOffset;
 
   // There are two messages back-to-back in a full Kelvinator IR message
   // sequence.
-  int8_t state_pos = 0;
+  int8_t pos = 0;
   for (uint8_t s = 0; s < 2; s++) {
     match_result_t data_result;
 
-    // Header
-    if (!matchMark(results->rawbuf[offset], kKelvinatorHdrMark)) return false;
-    // Calculate how long the lowest tick time is based on the header mark.
-    uint32_t mark_tick =
-        results->rawbuf[offset++] * kRawTick / kKelvinatorHdrMarkTicks;
-    if (!matchSpace(results->rawbuf[offset], kKelvinatorHdrSpace)) return false;
-    // Calculate how long the common tick time is based on the header space.
-    uint32_t space_tick =
-        results->rawbuf[offset++] * kRawTick / kKelvinatorHdrSpaceTicks;
-
-    // Data (Command) (32 bits)
-    data_result = matchData(
-        &(results->rawbuf[offset]), 32, kKelvinatorBitMarkTicks * mark_tick,
-        kKelvinatorOneSpaceTicks * space_tick,
-        kKelvinatorBitMarkTicks * mark_tick,
-        kKelvinatorZeroSpaceTicks * space_tick, kTolerance, kMarkExcess, false);
-    if (data_result.success == false) return false;
-    data = data_result.data;
-    offset += data_result.used;
-
-    // Record command data in the state.
-    for (uint16_t i = 0; i < 4; i++, data >>= 8)
-      results->state[state_pos + i] = data & 0xFF;
-    state_pos += 4;
+    uint16_t used;
+    // Header + Data Block #1 (32 bits)
+    used = matchGeneric(results->rawbuf + offset, results->state + pos,
+                        results->rawlen - offset, 32,
+                        kKelvinatorHdrMark, kKelvinatorHdrSpace,
+                        kKelvinatorBitMark, kKelvinatorOneSpace,
+                        kKelvinatorBitMark, kKelvinatorZeroSpace,
+                        0, 0, false,
+                        kTolerance, kMarkExcess, false);
+    if (used == 0) return false;
+    offset += used;
+    pos += 4;
 
     // Command data footer (3 bits, B010)
     data_result = matchData(
         &(results->rawbuf[offset]), kKelvinatorCmdFooterBits,
-        kKelvinatorBitMarkTicks * mark_tick,
-        kKelvinatorOneSpaceTicks * space_tick,
-        kKelvinatorBitMarkTicks * mark_tick,
-        kKelvinatorZeroSpaceTicks * space_tick, kTolerance, kMarkExcess, false);
+        kKelvinatorBitMark, kKelvinatorOneSpace,
+        kKelvinatorBitMark, kKelvinatorZeroSpace,
+        kTolerance, kMarkExcess, false);
     if (data_result.success == false) return false;
     if (data_result.data != kKelvinatorCmdFooter) return false;
     offset += data_result.used;
 
     // Interdata gap.
-    if (!matchMark(results->rawbuf[offset++],
-                   kKelvinatorBitMarkTicks * mark_tick))
+    if (!matchMark(results->rawbuf[offset++], kKelvinatorBitMark))
       return false;
-    if (!matchSpace(results->rawbuf[offset++],
-                    kKelvinatorGapSpaceTicks * space_tick))
+    if (!matchSpace(results->rawbuf[offset++], kKelvinatorGapSpace))
       return false;
 
     // Data (Options) (32 bits)
-    data_result = matchData(
-        &(results->rawbuf[offset]), 32, kKelvinatorBitMarkTicks * mark_tick,
-        kKelvinatorOneSpaceTicks * space_tick,
-        kKelvinatorBitMarkTicks * mark_tick,
-        kKelvinatorZeroSpaceTicks * space_tick, kTolerance, kMarkExcess, false);
-    if (data_result.success == false) return false;
-    data = data_result.data;
-    offset += data_result.used;
-
-    // Record option data in the state.
-    for (uint16_t i = 0; i < 4; i++, data >>= 8)
-      results->state[state_pos + i] = data & 0xFF;
-    state_pos += 4;
-
-    // Inter-sequence gap. (Double length gap)
-    if (!matchMark(results->rawbuf[offset++],
-                   kKelvinatorBitMarkTicks * mark_tick))
-      return false;
-    if (s == 0) {
-      if (!matchSpace(results->rawbuf[offset++],
-                      kKelvinatorGapSpaceTicks * space_tick * 2))
-        return false;
-    } else {
-      if (offset <= results->rawlen &&
-          !matchAtLeast(results->rawbuf[offset],
-                        kKelvinatorGapSpaceTicks * 2 * space_tick))
-        return false;
-    }
+    used = matchGeneric(results->rawbuf + offset, results->state + pos,
+                        results->rawlen - offset, 32,
+                        0, 0,
+                        kKelvinatorBitMark, kKelvinatorOneSpace,
+                        kKelvinatorBitMark, kKelvinatorZeroSpace,
+                        kKelvinatorBitMark, kKelvinatorGapSpace * 2,
+                        s > 0,
+                        kTolerance, kMarkExcess, false);
+    if (used == 0) return false;
+    offset += used;
+    pos += 4;
   }
 
   // Compliance
   if (strict) {
-    // Correct size/length)
-    if (state_pos != kKelvinatorStateLength) return false;
     // Verify the message's checksum is correct.
     if (!IRKelvinatorAC::validChecksum(results->state)) return false;
   }
 
   // Success
-  results->decode_type = KELVINATOR;
-  results->bits = state_pos * 8;
+  results->decode_type = decode_type_t::KELVINATOR;
+  results->bits = nbits;
   // No need to record the state as we stored it as we decoded it.
   // As we use result->state, we don't record value, address, or command as it
   // is a union data type.

@@ -1,6 +1,8 @@
 // Copyright 2009 Ken Shirriff
 // Copyright 2017 David Conran
 
+// NEC originally added from https://github.com/shirriff/Arduino-IRremote/
+
 #define __STDC_LIMIT_MACROS
 #include "ir_NEC.h"
 #include <stdint.h>
@@ -8,14 +10,6 @@
 #include "IRrecv.h"
 #include "IRsend.h"
 #include "IRutils.h"
-
-//                           N   N  EEEEE   CCCC
-//                           NN  N  E      C
-//                           N N N  EEE    C
-//                           N  NN  E      C
-//                           N   N  EEEEE   CCCC
-
-// NEC originally added from https://github.com/shirriff/Arduino-IRremote/
 
 #if (SEND_NEC || SEND_SHERWOOD || SEND_AIWA_RC_T501 || SEND_SANYO || \
      SEND_PIONEER)
@@ -103,13 +97,11 @@ bool IRrecv::decodeNEC(decode_results *results, uint16_t nbits, bool strict) {
   uint16_t offset = kStartOffset;
 
   // Header
-  if (!matchMark(results->rawbuf[offset], kNecHdrMark)) return false;
-  // Calculate how long the lowest tick time is based on the header mark.
-  uint32_t mark_tick = results->rawbuf[offset++] * kRawTick / kNecHdrMarkTicks;
+  if (!matchMark(results->rawbuf[offset++], kNecHdrMark)) return false;
   // Check if it is a repeat code.
   if (results->rawlen == kNecRptLength &&
       matchSpace(results->rawbuf[offset], kNecRptSpace) &&
-      matchMark(results->rawbuf[offset + 1], kNecBitMarkTicks * mark_tick)) {
+      matchMark(results->rawbuf[offset + 1], kNecBitMark)) {
     results->value = kRepeat;
     results->decode_type = NEC;
     results->bits = 0;
@@ -119,27 +111,13 @@ bool IRrecv::decodeNEC(decode_results *results, uint16_t nbits, bool strict) {
     return true;
   }
 
-  // Header (cont.)
-  if (!matchSpace(results->rawbuf[offset], kNecHdrSpace)) return false;
-  // Calculate how long the common tick time is based on the header space.
-  uint32_t space_tick =
-      results->rawbuf[offset++] * kRawTick / kNecHdrSpaceTicks;
-  // Data
-  match_result_t data_result =
-      matchData(&(results->rawbuf[offset]), nbits, kNecBitMarkTicks * mark_tick,
-                kNecOneSpaceTicks * space_tick, kNecBitMarkTicks * mark_tick,
-                kNecZeroSpaceTicks * space_tick);
-  if (data_result.success == false) return false;
-  data = data_result.data;
-  offset += data_result.used;
-
-  // Footer
-  if (!matchMark(results->rawbuf[offset++], kNecBitMarkTicks * mark_tick))
-    return false;
-  if (offset < results->rawlen &&
-      !matchAtLeast(results->rawbuf[offset], kNecMinGapTicks * space_tick))
-    return false;
-
+  // Match Header (cont.) + Data + Footer
+  if (!matchGeneric(results->rawbuf + offset, &data,
+                    results->rawlen - offset, nbits,
+                    0, kNecHdrSpace,
+                    kNecBitMark, kNecOneSpace,
+                    kNecBitMark, kNecZeroSpace,
+                    kNecBitMark, kNecMinGap, true)) return false;
   // Compliance
   // Calculate command and optionally enforce integrity checking.
   uint8_t command = (data & 0xFF00) >> 8;
@@ -166,4 +144,4 @@ bool IRrecv::decodeNEC(decode_results *results, uint16_t nbits, bool strict) {
     results->address = reverseBits((data >> 16) & UINT16_MAX, 16);
   return true;
 }
-#endif
+#endif  // DECODE_NEC || DECODE_SHERWOOD || DECODE_AIWA_RC_T501 || DECODE_SANYO

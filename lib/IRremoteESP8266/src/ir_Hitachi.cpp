@@ -15,12 +15,6 @@
 #include "IRsend.h"
 #include "IRutils.h"
 
-//              HH   HH IIIII TTTTTTT   AAA    CCCCC  HH   HH IIIII
-//              HH   HH  III    TTT    AAAAA  CC    C HH   HH  III
-//              HHHHHHH  III    TTT   AA   AA CC      HHHHHHH  III
-//              HH   HH  III    TTT   AAAAAAA CC    C HH   HH  III
-//              HH   HH IIIII   TTT   AA   AA  CCCCC  HH   HH IIIII
-
 // Constants
 // Ref: https://github.com/markszabo/IRremoteESP8266/issues/417
 const uint16_t kHitachiAcHdrMark = 3300;
@@ -44,8 +38,8 @@ const uint32_t kHitachiAcMinGap = kDefaultMessageGap;  // Just a guess.
 //
 // Ref:
 //   https://github.com/markszabo/IRremoteESP8266/issues/417
-void IRsend::sendHitachiAC(unsigned char data[], uint16_t nbytes,
-                           uint16_t repeat) {
+void IRsend::sendHitachiAC(const unsigned char data[], const uint16_t nbytes,
+                           const uint16_t repeat) {
   if (nbytes < kHitachiAcStateLength)
     return;  // Not enough bytes to send a proper message.
   sendGeneric(kHitachiAcHdrMark, kHitachiAcHdrSpace, kHitachiAcBitMark,
@@ -71,8 +65,8 @@ void IRsend::sendHitachiAC(unsigned char data[], uint16_t nbytes,
 // Ref:
 //   https://github.com/markszabo/IRremoteESP8266/issues/453
 //   Basically the same as sendHitatchiAC() except different size and header.
-void IRsend::sendHitachiAC1(unsigned char data[], uint16_t nbytes,
-                            uint16_t repeat) {
+void IRsend::sendHitachiAC1(const unsigned char data[], const uint16_t nbytes,
+                            const uint16_t repeat) {
   if (nbytes < kHitachiAc1StateLength)
     return;  // Not enough bytes to send a proper message.
   sendGeneric(kHitachiAc1HdrMark, kHitachiAc1HdrSpace, kHitachiAcBitMark,
@@ -98,21 +92,21 @@ void IRsend::sendHitachiAC1(unsigned char data[], uint16_t nbytes,
 // Ref:
 //   https://github.com/markszabo/IRremoteESP8266/issues/417
 //   Basically the same as sendHitatchiAC() except different size.
-void IRsend::sendHitachiAC2(unsigned char data[], uint16_t nbytes,
-                            uint16_t repeat) {
+void IRsend::sendHitachiAC2(const unsigned char data[], const uint16_t nbytes,
+                            const uint16_t repeat) {
   if (nbytes < kHitachiAc2StateLength)
     return;  // Not enough bytes to send a proper message.
   sendHitachiAC(data, nbytes, repeat);
 }
 #endif  // SEND_HITACHI_AC2
 
-// Class for handling the remote control oh a Hitachi 28 byte A/C message.
+// Class for handling the remote control on a Hitachi 28 byte A/C message.
 // Inspired by:
 // https://github.com/ToniA/arduino-heatpumpir/blob/master/HitachiHeatpumpIR.cpp
 
-IRHitachiAc::IRHitachiAc(uint16_t pin) : _irsend(pin) { stateReset(); }
+IRHitachiAc::IRHitachiAc(const uint16_t pin) : _irsend(pin) { stateReset(); }
 
-void IRHitachiAc::stateReset() {
+void IRHitachiAc::stateReset(void) {
   remote_state[0] = 0x80;
   remote_state[1] = 0x08;
   remote_state[2] = 0x0C;
@@ -130,7 +124,7 @@ void IRHitachiAc::stateReset() {
   setTemp(23);
 }
 
-void IRHitachiAc::begin() { _irsend.begin(); }
+void IRHitachiAc::begin(void) { _irsend.begin(); }
 
 uint8_t IRHitachiAc::calcChecksum(const uint8_t state[],
                                   const uint16_t length) {
@@ -148,7 +142,7 @@ bool IRHitachiAc::validChecksum(const uint8_t state[], const uint16_t length) {
   return (state[length - 1] == calcChecksum(state, length));
 }
 
-uint8_t *IRHitachiAc::getRaw() {
+uint8_t *IRHitachiAc::getRaw(void) {
   checksum();
   return remote_state;
 }
@@ -165,7 +159,7 @@ void IRHitachiAc::send(const uint16_t repeat) {
 }
 #endif  // SEND_HITACHI_AC
 
-bool IRHitachiAc::getPower() { return (remote_state[17] & 0x01); }
+bool IRHitachiAc::getPower(void) { return (remote_state[17] & 0x01); }
 
 void IRHitachiAc::setPower(const bool on) {
   if (on)
@@ -174,11 +168,11 @@ void IRHitachiAc::setPower(const bool on) {
     remote_state[17] &= 0xFE;
 }
 
-void IRHitachiAc::on() { setPower(true); }
+void IRHitachiAc::on(void) { setPower(true); }
 
-void IRHitachiAc::off() { setPower(false); }
+void IRHitachiAc::off(void) { setPower(false); }
 
-uint8_t IRHitachiAc::getMode() { return reverseBits(remote_state[10], 8); }
+uint8_t IRHitachiAc::getMode(void) { return reverseBits(remote_state[10], 8); }
 
 void IRHitachiAc::setMode(const uint8_t mode) {
   uint8_t newmode = mode;
@@ -200,7 +194,9 @@ void IRHitachiAc::setMode(const uint8_t mode) {
   setFan(getFan());  // Reset the fan speed after the mode change.
 }
 
-uint8_t IRHitachiAc::getTemp() { return reverseBits(remote_state[11], 8) >> 1; }
+uint8_t IRHitachiAc::getTemp(void) {
+  return reverseBits(remote_state[11], 8) >> 1;
+}
 
 void IRHitachiAc::setTemp(const uint8_t celsius) {
   uint8_t temp;
@@ -220,7 +216,7 @@ void IRHitachiAc::setTemp(const uint8_t celsius) {
     remote_state[9] = 0x10;
 }
 
-uint8_t IRHitachiAc::getFan() { return reverseBits(remote_state[13], 8); }
+uint8_t IRHitachiAc::getFan(void) { return reverseBits(remote_state[13], 8); }
 
 void IRHitachiAc::setFan(const uint8_t speed) {
   uint8_t fanmin = kHitachiAcFanAuto;
@@ -239,7 +235,7 @@ void IRHitachiAc::setFan(const uint8_t speed) {
   remote_state[13] = reverseBits(newspeed, 8);
 }
 
-bool IRHitachiAc::getSwingVertical() { return remote_state[14] & 0x80; }
+bool IRHitachiAc::getSwingVertical(void) { return remote_state[14] & 0x80; }
 
 void IRHitachiAc::setSwingVertical(const bool on) {
   if (on)
@@ -248,7 +244,7 @@ void IRHitachiAc::setSwingVertical(const bool on) {
     remote_state[14] &= 0x7F;
 }
 
-bool IRHitachiAc::getSwingHorizontal() { return remote_state[15] & 0x80; }
+bool IRHitachiAc::getSwingHorizontal(void) { return remote_state[15] & 0x80; }
 
 void IRHitachiAc::setSwingHorizontal(const bool on) {
   if (on)
@@ -257,40 +253,97 @@ void IRHitachiAc::setSwingHorizontal(const bool on) {
     remote_state[15] &= 0x7F;
 }
 
-// Convert the internal state into a human readable string.
-#ifdef ARDUINO
-String IRHitachiAc::toString() {
-  String result = "";
-#else
-std::string IRHitachiAc::toString() {
-  std::string result = "";
-#endif  // ARDUINO
-  result += F("Power: ");
-  if (getPower())
-    result += F("On");
-  else
-    result += F("Off");
-  result += F(", Mode: ");
-  result += uint64ToString(getMode());
-  switch (getMode()) {
-    case kHitachiAcAuto:
-      result += F(" (AUTO)");
-      break;
-    case kHitachiAcCool:
-      result += F(" (COOL)");
-      break;
-    case kHitachiAcHeat:
-      result += F(" (HEAT)");
-      break;
-    case kHitachiAcDry:
-      result += F(" (DRY)");
-      break;
-    case kHitachiAcFan:
-      result += F(" (FAN)");
-      break;
+
+// Convert a standard A/C mode into its native mode.
+uint8_t IRHitachiAc::convertMode(const stdAc::opmode_t mode) {
+  switch (mode) {
+    case stdAc::opmode_t::kCool:
+      return kHitachiAcCool;
+    case stdAc::opmode_t::kHeat:
+      return kHitachiAcHeat;
+    case stdAc::opmode_t::kDry:
+      return kHitachiAcDry;
+    case stdAc::opmode_t::kFan:
+      return kHitachiAcFan;
     default:
-      result += F(" (UNKNOWN)");
+      return kHitachiAcAuto;
   }
+}
+
+// Convert a standard A/C Fan speed into its native fan speed.
+uint8_t IRHitachiAc::convertFan(const stdAc::fanspeed_t speed) {
+  switch (speed) {
+    case stdAc::fanspeed_t::kMin:
+    case stdAc::fanspeed_t::kLow:
+      return kHitachiAcFanLow;
+    case stdAc::fanspeed_t::kMedium:
+      return kHitachiAcFanLow + 1;
+    case stdAc::fanspeed_t::kHigh:
+      return kHitachiAcFanHigh - 1;
+    case stdAc::fanspeed_t::kMax:
+      return kHitachiAcFanHigh;
+    default:
+      return kHitachiAcFanAuto;
+  }
+}
+
+// Convert a native mode to it's common equivalent.
+stdAc::opmode_t IRHitachiAc::toCommonMode(const uint8_t mode) {
+  switch (mode) {
+    case kHitachiAcCool: return stdAc::opmode_t::kCool;
+    case kHitachiAcHeat: return stdAc::opmode_t::kHeat;
+    case kHitachiAcDry: return stdAc::opmode_t::kDry;
+    case kHitachiAcFan: return stdAc::opmode_t::kFan;
+    default: return stdAc::opmode_t::kAuto;
+  }
+}
+
+// Convert a native fan speed to it's common equivalent.
+stdAc::fanspeed_t IRHitachiAc::toCommonFanSpeed(const uint8_t speed) {
+  switch (speed) {
+    case kHitachiAcFanHigh: return stdAc::fanspeed_t::kMax;
+    case kHitachiAcFanHigh - 1: return stdAc::fanspeed_t::kHigh;
+    case kHitachiAcFanLow + 1: return stdAc::fanspeed_t::kMedium;
+    case kHitachiAcFanLow: return stdAc::fanspeed_t::kLow;
+    default: return stdAc::fanspeed_t::kAuto;
+  }
+}
+
+// Convert the A/C state to it's common equivalent.
+stdAc::state_t IRHitachiAc::toCommon(void) {
+  stdAc::state_t result;
+  result.protocol = decode_type_t::HITACHI_AC;
+  result.model = -1;  // No models used.
+  result.power = this->getPower();
+  result.mode = this->toCommonMode(this->getMode());
+  result.celsius = true;
+  result.degrees = this->getTemp();
+  result.fanspeed = this->toCommonFanSpeed(this->getFan());
+  result.swingv = this->getSwingVertical() ? stdAc::swingv_t::kAuto :
+                                             stdAc::swingv_t::kOff;
+  result.swingh = this->getSwingHorizontal() ? stdAc::swingh_t::kAuto :
+                                               stdAc::swingh_t::kOff;
+  // Not supported.
+  result.quiet = false;
+  result.turbo = false;
+  result.clean = false;
+  result.econo = false;
+  result.filter = false;
+  result.light = false;
+  result.beep = false;
+  result.sleep = -1;
+  result.clock = -1;
+  return result;
+}
+
+// Convert the internal state into a human readable string.
+String IRHitachiAc::toString(void) {
+  String result = "";
+  result.reserve(110);  // Reserve some heap for the string to reduce fragging.
+  result += IRutils::acBoolToString(getPower(), F("Power"), false);
+  result += IRutils::acModeToString(getMode(), kHitachiAcAuto,
+                                    kHitachiAcCool, kHitachiAcHeat,
+                                    kHitachiAcDry, kHitachiAcFan);
   result += F(", Temp: ");
   result += uint64ToString(getTemp());
   result += F("C, Fan: ");
@@ -309,16 +362,10 @@ std::string IRHitachiAc::toString() {
       result += F(" (UNKNOWN)");
       break;
   }
-  result += F(", Swing (Vertical): ");
-  if (getSwingVertical())
-    result += F("On");
-  else
-    result += F("Off");
-  result += F(", Swing (Horizontal): ");
-  if (getSwingHorizontal())
-    result += F("On");
-  else
-    result += F("Off");
+  result += IRutils::acBoolToString(getSwingVertical(), F("Swing (Vertical)"));
+  result += IRutils::acBoolToString(getSwingHorizontal(),
+                                    F("Swing (Horizontal)"));
+
   return result;
 }
 
@@ -341,8 +388,8 @@ std::string IRHitachiAc::toString() {
 // Ref:
 //   https://github.com/markszabo/IRremoteESP8266/issues/417
 //   https://github.com/markszabo/IRremoteESP8266/issues/453
-bool IRrecv::decodeHitachiAC(decode_results *results, uint16_t nbits,
-                             bool strict) {
+bool IRrecv::decodeHitachiAC(decode_results *results, const uint16_t nbits,
+                             const bool strict) {
   const uint8_t kTolerance = 30;
   if (results->rawlen < 2 * nbits + kHeader + kFooter - 1)
     return false;  // Can't possibly be a valid HitachiAC message.
@@ -357,57 +404,33 @@ bool IRrecv::decodeHitachiAC(decode_results *results, uint16_t nbits,
     }
   }
   uint16_t offset = kStartOffset;
-  uint16_t dataBitsSoFar = 0;
-  match_result_t data_result;
-
-  // Header
+  uint16_t hmark;
+  uint32_t hspace;
   if (nbits == kHitachiAc1Bits) {
-    if (!matchMark(results->rawbuf[offset++], kHitachiAc1HdrMark, kTolerance))
-      return false;
-    if (!matchSpace(results->rawbuf[offset++], kHitachiAc1HdrSpace, kTolerance))
-      return false;
-  } else {  // Everything else.
-    if (!matchMark(results->rawbuf[offset++], kHitachiAcHdrMark, kTolerance))
-      return false;
-    if (!matchSpace(results->rawbuf[offset++], kHitachiAcHdrSpace, kTolerance))
-      return false;
+    hmark = kHitachiAc1HdrMark;
+    hspace = kHitachiAc1HdrSpace;
+  } else {
+    hmark = kHitachiAcHdrMark;
+    hspace = kHitachiAcHdrSpace;
   }
-  // Data
-  // Keep reading bytes until we either run out of message or state to fill.
-  for (uint16_t i = 0; offset <= results->rawlen - 16 && i < nbits / 8;
-       i++, dataBitsSoFar += 8, offset += data_result.used) {
-    data_result = matchData(&(results->rawbuf[offset]), 8, kHitachiAcBitMark,
-                            kHitachiAcOneSpace, kHitachiAcBitMark,
-                            kHitachiAcZeroSpace, kTolerance);
-    if (data_result.success == false) break;  // Fail
-    results->state[i] = (uint8_t)data_result.data;
-  }
-
-  // Footer
-  if (!matchMark(results->rawbuf[offset++], kHitachiAcBitMark, kTolerance))
-    return false;
-  if (offset <= results->rawlen &&
-      !matchAtLeast(results->rawbuf[offset], kHitachiAcMinGap, kTolerance))
-    return false;
+  // Match Header + Data + Footer
+  if (!matchGeneric(results->rawbuf + offset, results->state,
+                    results->rawlen - offset, nbits,
+                    hmark, hspace,
+                    kHitachiAcBitMark, kHitachiAcOneSpace,
+                    kHitachiAcBitMark, kHitachiAcZeroSpace,
+                    kHitachiAcBitMark, kHitachiAcMinGap, true,
+                    kTolerance)) return false;
 
   // Compliance
   if (strict) {
-    // Re-check we got the correct size/length due to the way we read the data.
-    switch (dataBitsSoFar / 8) {
-      case kHitachiAcStateLength:
-      case kHitachiAc1StateLength:
-      case kHitachiAc2StateLength:
-        break;  // Continue
-      default:
-        return false;
-    }
-    if (dataBitsSoFar / 8 == kHitachiAcStateLength &&
+    if (nbits / 8 == kHitachiAcStateLength &&
         !IRHitachiAc::validChecksum(results->state, kHitachiAcStateLength))
       return false;
   }
 
   // Success
-  switch (dataBitsSoFar) {
+  switch (nbits) {
     case kHitachiAc1Bits:
       results->decode_type = HITACHI_AC1;
       break;
@@ -418,7 +441,7 @@ bool IRrecv::decodeHitachiAC(decode_results *results, uint16_t nbits,
     default:
       results->decode_type = HITACHI_AC;
   }
-  results->bits = dataBitsSoFar;
+  results->bits = nbits;
   // No need to record the state as we stored it as we decoded it.
   // As we use result->state, we don't record value, address, or command as it
   // is a union data type.

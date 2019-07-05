@@ -20,7 +20,8 @@ TEST(TestSendGreeChars, SendData) {
   irsend.reset();
   irsend.sendGree(gree_code);
   EXPECT_EQ(
-      "m9000s4000"
+      "f38000d50"
+      "m9000s4500"
       "m620s540m620s1600m620s540m620s540m620s1600m620s540m620s540m620s540"
       "m620s540m620s540m620s1600m620s540m620s1600m620s1600m620s540m620s540"
       "m620s540m620s1600m620s1600m620s540m620s1600m620s540m620s1600m620s540"
@@ -42,7 +43,8 @@ TEST(TestSendGreeUint64, SendData) {
   irsend.reset();
   irsend.sendGree(0x1234567890ABCDEF);
   EXPECT_EQ(
-      "m9000s4000"
+      "f38000d50"
+      "m9000s4500"
       "m620s540m620s1600m620s540m620s540m620s1600m620s540m620s540m620s540"
       "m620s540m620s540m620s1600m620s540m620s1600m620s1600m620s540m620s540"
       "m620s540m620s1600m620s1600m620s540m620s1600m620s540m620s1600m620s540"
@@ -69,7 +71,8 @@ TEST(TestSendGreeChars, SendWithRepeats) {
 
   irsend.sendGree(gree_code, kGreeStateLength, 1);
   EXPECT_EQ(
-      "m9000s4000"
+      "f38000d50"
+      "m9000s4500"
       "m620s540m620s1600m620s540m620s540m620s1600m620s540m620s540m620s540"
       "m620s540m620s540m620s1600m620s540m620s1600m620s1600m620s540m620s540"
       "m620s540m620s1600m620s1600m620s540m620s1600m620s540m620s1600m620s540"
@@ -81,7 +84,7 @@ TEST(TestSendGreeChars, SendWithRepeats) {
       "m620s1600m620s540m620s1600m620s1600m620s540m620s540m620s1600m620s1600"
       "m620s1600m620s1600m620s1600m620s1600m620s540m620s1600m620s1600m620s1600"
       "m620s19000"
-      "m9000s4000"
+      "m9000s4500"
       "m620s540m620s1600m620s540m620s540m620s1600m620s540m620s540m620s540"
       "m620s540m620s540m620s1600m620s540m620s1600m620s1600m620s540m620s540"
       "m620s540m620s1600m620s1600m620s540m620s1600m620s540m620s1600m620s540"
@@ -103,7 +106,8 @@ TEST(TestSendGreeUint64, SendWithRepeats) {
   irsend.reset();
   irsend.sendGree(0x1234567890ABCDEF, kGreeBits, 1);
   EXPECT_EQ(
-      "m9000s4000"
+      "f38000d50"
+      "m9000s4500"
       "m620s540m620s1600m620s540m620s540m620s1600m620s540m620s540m620s540"
       "m620s540m620s540m620s1600m620s540m620s1600m620s1600m620s540m620s540"
       "m620s540m620s1600m620s1600m620s540m620s1600m620s540m620s1600m620s540"
@@ -115,7 +119,7 @@ TEST(TestSendGreeUint64, SendWithRepeats) {
       "m620s1600m620s540m620s1600m620s1600m620s540m620s540m620s1600m620s1600"
       "m620s1600m620s1600m620s1600m620s1600m620s540m620s1600m620s1600m620s1600"
       "m620s19000"
-      "m9000s4000"
+      "m9000s4500"
       "m620s540m620s1600m620s540m620s540m620s1600m620s540m620s540m620s540"
       "m620s540m620s540m620s1600m620s540m620s1600m620s1600m620s540m620s540"
       "m620s540m620s1600m620s1600m620s540m620s1600m620s540m620s1600m620s540"
@@ -146,7 +150,8 @@ TEST(TestSendGreeChars, SendUnexpectedSizes) {
   irsend.reset();
   irsend.sendGree(gree_long_code, kGreeStateLength + 1);
   ASSERT_EQ(
-      "m9000s4000"
+      "f38000d50"
+      "m9000s4500"
       "m620s540m620s1600m620s540m620s540m620s1600m620s540m620s540m620s540"
       "m620s540m620s540m620s1600m620s540m620s1600m620s1600m620s540m620s540"
       "m620s540m620s1600m620s1600m620s540m620s1600m620s540m620s1600m620s540"
@@ -333,6 +338,50 @@ TEST(TestGreeClass, Turbo) {
   EXPECT_TRUE(irgree.getTurbo());
 }
 
+TEST(TestGreeClass, IFeel) {
+  IRGreeAC ac(0);
+  ac.begin();
+
+  ac.setIFeel(true);
+  EXPECT_TRUE(ac.getIFeel());
+
+  ac.setIFeel(false);
+  EXPECT_FALSE(ac.getIFeel());
+
+  ac.setIFeel(true);
+  EXPECT_TRUE(ac.getIFeel());
+
+  // https://github.com/markszabo/IRremoteESP8266/pull/770#issuecomment-504992209
+  uint8_t on[8] = {0x08, 0x09, 0x60, 0x50, 0x00, 0x44, 0x00, 0xF0};
+  uint8_t off[8] = {0x08, 0x09, 0x60, 0x50, 0x00, 0x40, 0x00, 0xF0};
+  ac.setRaw(off);
+  EXPECT_FALSE(ac.getIFeel());
+  ac.setRaw(on);
+  EXPECT_TRUE(ac.getIFeel());
+}
+
+TEST(TestGreeClass, WiFi) {
+  IRGreeAC ac(0);
+  ac.begin();
+
+  ac.setWiFi(true);
+  EXPECT_TRUE(ac.getWiFi());
+
+  ac.setWiFi(false);
+  EXPECT_FALSE(ac.getWiFi());
+
+  ac.setWiFi(true);
+  EXPECT_TRUE(ac.getWiFi());
+
+  // https://github.com/markszabo/IRremoteESP8266/pull/770#issuecomment-504992209
+  uint8_t on[8] = {0x09, 0x09, 0x60, 0x50, 0x00, 0x40, 0x00, 0x00};
+  uint8_t off[8] = {0x09, 0x09, 0x60, 0x50, 0x00, 0x00, 0x00, 0xC0};
+  ac.setRaw(off);
+  EXPECT_FALSE(ac.getWiFi());
+  ac.setRaw(on);
+  EXPECT_TRUE(ac.getWiFi());
+}
+
 TEST(TestGreeClass, Sleep) {
   IRGreeAC irgree(0);
   irgree.begin();
@@ -447,8 +496,8 @@ TEST(TestGreeClass, HumanReadable) {
 
   EXPECT_EQ(
       "Power: Off, Mode: 0 (AUTO), Temp: 25C, Fan: 0 (AUTO), Turbo: Off, "
-      "XFan: Off, Light: On, Sleep: Off, Swing Vertical Mode: Manual, "
-      "Swing Vertical Pos: 0 (Last Pos)",
+      "IFeel: Off, WiFi: Off, XFan: Off, Light: On, Sleep: Off, "
+      "Swing Vertical Mode: Manual, Swing Vertical Pos: 0 (Last Pos)",
       irgree.toString());
   irgree.on();
   irgree.setMode(kGreeCool);
@@ -458,11 +507,13 @@ TEST(TestGreeClass, HumanReadable) {
   irgree.setSleep(true);
   irgree.setLight(false);
   irgree.setTurbo(true);
+  irgree.setIFeel(true);
+  irgree.setWiFi(true);
   irgree.setSwingVertical(true, kGreeSwingAuto);
   EXPECT_EQ(
       "Power: On, Mode: 1 (COOL), Temp: 16C, Fan: 3 (MAX), Turbo: On, "
-      "XFan: On, Light: Off, Sleep: On, Swing Vertical Mode: Auto, "
-      "Swing Vertical Pos: 1 (Auto)",
+      "IFeel: On, WiFi: On, XFan: On, Light: Off, Sleep: On, "
+      "Swing Vertical Mode: Auto, Swing Vertical Pos: 1 (Auto)",
       irgree.toString());
 }
 
@@ -486,7 +537,7 @@ TEST(TestDecodeGree, NormalSynthetic) {
   EXPECT_STATE_EQ(gree_code, irsend.capture.state, kGreeBits);
 }
 
-// Decode a synthetic Gree message.
+// Decode a real Gree message.
 TEST(TestDecodeGree, NormalRealExample) {
   IRsendTest irsend(4);
   IRrecv irrecv(4);
@@ -521,7 +572,40 @@ TEST(TestDecodeGree, NormalRealExample) {
   irgree.setRaw(irsend.capture.state);
   EXPECT_EQ(
       "Power: On, Mode: 1 (COOL), Temp: 26C, Fan: 1, Turbo: Off, "
-      "XFan: Off, Light: On, Sleep: Off, Swing Vertical Mode: Manual, "
-      "Swing Vertical Pos: 2",
+      "IFeel: Off, WiFi: Off, XFan: Off, Light: On, Sleep: Off, "
+      "Swing Vertical Mode: Manual, Swing Vertical Pos: 2",
       irgree.toString());
+}
+
+TEST(TestGreeClass, toCommon) {
+  IRGreeAC ac(0);
+  ac.setPower(true);
+  ac.setMode(kGreeCool);
+  ac.setTemp(20);
+  ac.setFan(kGreeFanMax);
+  ac.setSwingVertical(false, kGreeSwingUp);
+  ac.setTurbo(true);
+  ac.setXFan(true);
+  ac.setLight(true);
+  ac.setSleep(true);
+  // Now test it.
+  ASSERT_EQ(decode_type_t::GREE, ac.toCommon().protocol);
+  ASSERT_EQ(-1, ac.toCommon().model);
+  ASSERT_TRUE(ac.toCommon().power);
+  ASSERT_TRUE(ac.toCommon().celsius);
+  ASSERT_EQ(20, ac.toCommon().degrees);
+  ASSERT_TRUE(ac.toCommon().turbo);
+  ASSERT_TRUE(ac.toCommon().clean);
+  ASSERT_TRUE(ac.toCommon().light);
+  ASSERT_EQ(stdAc::opmode_t::kCool, ac.toCommon().mode);
+  ASSERT_EQ(stdAc::fanspeed_t::kMax, ac.toCommon().fanspeed);
+  ASSERT_EQ(stdAc::swingv_t::kHighest, ac.toCommon().swingv);
+  ASSERT_EQ(0, ac.toCommon().sleep);
+  // Unsupported.
+  ASSERT_EQ(stdAc::swingh_t::kOff, ac.toCommon().swingh);
+  ASSERT_FALSE(ac.toCommon().quiet);
+  ASSERT_FALSE(ac.toCommon().econo);
+  ASSERT_FALSE(ac.toCommon().filter);
+  ASSERT_FALSE(ac.toCommon().beep);
+  ASSERT_EQ(-1, ac.toCommon().clock);
 }

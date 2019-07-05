@@ -1,19 +1,16 @@
 // Copyright 2018 David Conran
 
+// Supports:
+//   Brand: Carrier/Surrey,  Model: 42QG5A55970 remote
+//   Brand: Carrier/Surrey,  Model: 619EGX0090E0 A/C
+//   Brand: Carrier/Surrey,  Model: 619EGX0120E0 A/C
+//   Brand: Carrier/Surrey,  Model: 619EGX0180E0 A/C
+//   Brand: Carrier/Surrey,  Model: 619EGX0220E0 A/C
+//   Brand: Carrier/Surrey,  Model: 53NGK009/012 Inverter
+
 #include "IRrecv.h"
 #include "IRsend.h"
 #include "IRutils.h"
-
-//             CCCCC    AAA   RRRRRR  RRRRRR  IIIII EEEEEEE RRRRRR
-//            CC    C  AAAAA  RR   RR RR   RR  III  EE      RR   RR
-//            CC      AA   AA RRRRRR  RRRRRR   III  EEEEE   RRRRRR
-//            CC    C AAAAAAA RR  RR  RR  RR   III  EE      RR  RR
-//             CCCCC  AA   AA RR   RR RR   RR IIIII EEEEEEE RR   RR
-
-// Suits Carrier/Surrey HVAC models:
-//   42QG5A55970 (remote)
-//   619EGX0090E0 / 619EGX0120E0 / 619EGX0180E0 / 619EGX0220E0 (indoor units)
-//   53NGK009/012 (inverter)
 
 // Constants
 // Ref:
@@ -77,22 +74,16 @@ bool IRrecv::decodeCarrierAC(decode_results *results, uint16_t nbits,
 
   for (uint8_t i = 0; i < 3; i++) {
     prev_data = data;
-    // Header
-    if (!matchMark(results->rawbuf[offset++], kCarrierAcHdrMark)) return false;
-    if (!matchSpace(results->rawbuf[offset++], kCarrierAcHdrSpace))
-      return false;
-    // Data
-    match_result_t data_result =
-        matchData(&(results->rawbuf[offset]), nbits, kCarrierAcBitMark,
-                  kCarrierAcOneSpace, kCarrierAcBitMark, kCarrierAcZeroSpace);
-    if (data_result.success == false) return false;
-    data = data_result.data;
-    offset += data_result.used;
-    // Footer
-    if (!matchMark(results->rawbuf[offset++], kCarrierAcBitMark)) return false;
-    if (offset < results->rawlen &&
-        !matchAtLeast(results->rawbuf[offset++], kCarrierAcGap))
-      return false;
+    // Match Header + Data + Footer
+    uint16_t used;
+    used = matchGeneric(results->rawbuf + offset, &data,
+                        results->rawlen - offset, nbits,
+                        kCarrierAcHdrMark, kCarrierAcHdrSpace,
+                        kCarrierAcBitMark, kCarrierAcOneSpace,
+                        kCarrierAcBitMark, kCarrierAcZeroSpace,
+                        kCarrierAcBitMark, kCarrierAcGap, true);
+    if (!used) return false;
+    offset += used;
     // Compliance.
     if (strict) {
       // Check if the data is an inverted copy of the previous data.

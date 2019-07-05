@@ -6,12 +6,6 @@
 #include "IRsend.h"
 #include "IRutils.h"
 
-//                    DDDD   EEEEE  N   N   OOO   N   N
-//                     D  D  E      NN  N  O   O  NN  N
-//                     D  D  EEE    N N N  O   O  N N N
-//                     D  D  E      N  NN  O   O  N  NN
-//                    DDDD   EEEEE  N   N   OOO   N   N
-
 // Original Denon support added by https://github.com/csBlueChip
 // Ported over by Massimiliano Pinto
 
@@ -43,7 +37,7 @@ const uint64_t kDenonManufacturer = 0x2A4CULL;
 //
 // Args:
 //   data:   Contents of the message to be sent.
-//   nbits:  Nr. of bits of data to be sent. Typically DENON_BITS.
+//   nbits:  Nr. of bits of data to be sent. Typically kDenonBits.
 //   repeat: Nr. of additional times the message is to be sent.
 //
 // Status: BETA / Should be working.
@@ -70,7 +64,7 @@ void IRsend::sendDenon(uint64_t data, uint16_t nbits, uint16_t repeat) {
 //
 // Args:
 //   results: Ptr to the data to decode and where to store the decode result.
-//   nbits:   Expected nr. of data bits. (Typically DENON_BITS)
+//   nbits:   Expected nr. of data bits. (Typically kDenonBits)
 // Returns:
 //   boolean: True if it can decode it, false if it can't.
 //
@@ -82,8 +76,8 @@ bool IRrecv::decodeDenon(decode_results *results, uint16_t nbits, bool strict) {
   // Compliance
   if (strict) {
     switch (nbits) {
-      case DENON_BITS:
-      case DENON_48_BITS:
+      case kDenonBits:
+      case kDenon48Bits:
       case kDenonLegacyBits:
         break;
       default:
@@ -103,33 +97,18 @@ bool IRrecv::decodeDenon(decode_results *results, uint16_t nbits, bool strict) {
     // We couldn't decode it as expected, so try the old legacy method.
     // NOTE: I don't think this following protocol actually exists.
     //       Looks like a partial version of the Sharp protocol.
-    // Check we have enough data
-    if (results->rawlen < 2 * nbits + kHeader + kFooter - 1) return false;
     if (strict && nbits != kDenonLegacyBits) return false;
 
     uint64_t data = 0;
     uint16_t offset = kStartOffset;
 
-    // Header
-    if (!matchMark(results->rawbuf[offset], kDenonHdrMark)) return false;
-    // Calculate how long the common tick time is based on the header mark.
-    uint32_t m_tick = results->rawbuf[offset++] * kRawTick / kDenonHdrMarkTicks;
-    if (!matchSpace(results->rawbuf[offset], kDenonHdrSpace)) return false;
-    uint32_t s_tick =
-        results->rawbuf[offset++] * kRawTick / kDenonHdrSpaceTicks;
-
-    // Data
-    match_result_t data_result =
-        matchData(&(results->rawbuf[offset]), nbits,
-                  kDenonBitMarkTicks * m_tick, kDenonOneSpaceTicks * s_tick,
-                  kDenonBitMarkTicks * m_tick, kDenonZeroSpaceTicks * s_tick);
-    if (data_result.success == false) return false;
-    data = data_result.data;
-    offset += data_result.used;
-
-    // Footer
-    if (!matchMark(results->rawbuf[offset++], kDenonBitMarkTicks * m_tick))
-      return false;
+    // Match Header + Data + Footer
+    if (!matchGeneric(results->rawbuf + offset, &data,
+                      results->rawlen - offset, nbits,
+                      kDenonHdrMark, kDenonHdrSpace,
+                      kDenonBitMark, kDenonOneSpace,
+                      kDenonBitMark, kDenonZeroSpace,
+                      kDenonBitMark, 0, false)) return false;
 
     // Success
     results->bits = nbits;
