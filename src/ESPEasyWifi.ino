@@ -1,6 +1,10 @@
 #define WIFI_RECONNECT_WAIT         20000   // in milliSeconds
 #define WIFI_AP_OFF_TIMER_DURATION  60000   // in milliSeconds
 
+#ifdef CORE_POST_2_5_0
+#include <AddrList.h>
+#endif
+
 bool unprocessedWifiEvents() {
   if (processedConnect && processedGetIP && processedDisconnect && processedDHCPTimeout) return false;
   return true;
@@ -70,7 +74,6 @@ void processDisconnect() {
   mqtt_reconnect_count = 0;
   if (Settings.WiFiRestart_connection_lost()) {
     WifiDisconnect();
-    //setWifiMode(WIFI_OFF);
   }
   logConnectionStatus();
   processedDisconnect = true;
@@ -109,6 +112,7 @@ void processGotIP() {
       log += F(" ms");
     }
     addLog(LOG_LEVEL_INFO, log);
+    WiFi.setAutoReconnect(true);
   }
 
   // Might not work in core 2.5.0
@@ -275,6 +279,25 @@ void resetWiFi() {
   // See https://github.com/esp8266/Arduino/issues/5527#issuecomment-460537616
   WiFi.~ESP8266WiFiClass();
   WiFi = ESP8266WiFiClass();
+#endif
+}
+
+
+bool hasIPaddr() {
+#ifdef CORE_POST_2_5_0
+  bool configured = false;
+  for (auto addr : addrList) {
+      if ((configured = !addr.isLocal() && addr.ifnumber() == STATION_IF)) {
+        Serial.printf("STA: IF='%s' hostname='%s' addr= %s\n",
+                      addr.ifname().c_str(),
+                      addr.ifhostname(),
+                      addr.toString().c_str());
+//        break;
+      }
+  }
+  return configured;
+#else
+  return WiFi.isConnected();
 #endif
 }
 
@@ -519,6 +542,10 @@ bool WiFiConnected() {
     // else wifiStatus is no longer in sync.
     addLog(LOG_LEVEL_INFO, F("WIFI  : WiFiConnected() out of sync"));
     resetWiFi();
+  } else {
+    if (hasIPaddr()) {
+      wifiStatus = ESPEASY_WIFI_SERVICES_INITIALIZED;
+    }
   }
   if (timerAPstart == 0) {
     timerAPstart = millis() + WIFI_RECONNECT_WAIT;
@@ -538,6 +565,13 @@ void WiFiConnectRelaxed() {
   if (prepareWiFi()) {
     if (selectValidWiFiSettings()) {
       tryConnectWiFi();
+      unsigned long timeout = millis() + 5000;
+      while (WiFi.status() == WL_DISCONNECTED && !timeOutReached(timeout)) {
+        addLog(LOG_LEVEL_INFO, F("Waiting for WiFi connect"));
+        process_serialWriteBuffer();
+        delay(100);
+      }
+
       return;
     }
   }
@@ -555,6 +589,10 @@ bool prepareWiFi() {
     return false;
   }
   setSTA(true);
+  delay(100);
+  #ifdef ESP8266
+  WiFi.forceSleepWake(); // Make sure WiFi is really active.
+  #endif
   char hostname[40];
   safe_strncpy(hostname, WifiGetHostname().c_str(), sizeof(hostname));
   #if defined(ESP8266)
@@ -662,8 +700,8 @@ void setupStaticIPconfig() {
   setUseStaticIP(useStaticIP());
   if (!useStaticIP()) {
     // For newer core versions, simply setting to 0's will disable DHCPc
-    uint32_t zero_ip = 0u;
-    WiFi.config(zero_ip, zero_ip, zero_ip, zero_ip);
+//    uint32_t zero_ip = 0u;
+//    WiFi.config(zero_ip, zero_ip, zero_ip, zero_ip);
     return;
   }
   const IPAddress ip = Settings.IP;
@@ -723,9 +761,6 @@ bool tryConnectWiFi() {
   }
   setupStaticIPconfig();
   setConnectionSpeed();
-  #ifdef ESP8266
-  WiFi.forceSleepWake(); // Make sure WiFi is really active.
-  #endif
   last_wifi_connect_attempt_moment = millis();
   switch (wifi_connect_attempt) {
     case 0:
@@ -795,7 +830,8 @@ void WifiDisconnect()
     ETS_UART_INTR_ENABLE();
   #endif
   wifiStatus = ESPEASY_WIFI_DISCONNECTED;
-  processedDisconnect = false;
+  //processedDisconnect = false;
+  setSTA(false);
 }
 
 

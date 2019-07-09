@@ -537,7 +537,7 @@ void loop()
       addLog(LOG_LEVEL_INFO, F("WIFI : Entering processConnect()"));
       processConnect();
     }
-    if (!processedGetIP) {
+    if (hasIPaddr() || !processedGetIP) {
       addLog(LOG_LEVEL_INFO, F("WIFI : Entering processGotIP()"));
       processGotIP();
     }

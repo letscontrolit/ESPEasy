@@ -88,7 +88,7 @@ void onConnected(const WiFiEventStationModeConnected& event){
   processedConnect = false;
   wifiStatus = wifiStatus | ESPEASY_WIFI_CONNECTED;
   last_channel = event.channel;
-  last_ssid = event.ssid;
+//  last_ssid = event.ssid;
   bssid_changed = false;
   for (byte i=0; i < 6; ++i) {
     if (lastBSSID[i] != event.bssid[i]) {
@@ -108,11 +108,11 @@ void onDisconnect(const WiFiEventStationModeDisconnected& event){
   }
   lastDisconnectReason = event.reason;
   wifiStatus = ESPEASY_WIFI_DISCONNECTED;
+  processedDisconnect = false;
   if (WiFi.status() == WL_CONNECTED) {
     // See https://github.com/esp8266/Arduino/issues/5912
     WiFi.disconnect();
   }
-  processedDisconnect = false;
 }
 
 void onGotIP(const WiFiEventStationModeGotIP& event){
