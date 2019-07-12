@@ -15,6 +15,7 @@
 #define PLUGIN_VALUENAME1_015 "Lux"
 #define PLUGIN_VALUENAME2_015 "Infrared"
 #define PLUGIN_VALUENAME3_015 "Broadband"
+#define PLUGIN_VALUENAME4_015 "Ratio"
 
 bool Plugin_015_init = false;
 
@@ -28,6 +29,11 @@ bool Plugin_015_init = false;
 #define TSL2561_REG_TIMING    0x01
 #define TSL2561_REG_DATA_0    0x0C
 #define TSL2561_REG_DATA_1    0x0E
+
+#define P015_NO_GAIN          0
+#define P015_16X_GAIN         1
+#define P015_AUTO_GAIN        2
+#define P015_EXT_AUTO_GAIN    3
 
 
 byte plugin_015_i2caddr;
@@ -173,7 +179,7 @@ bool plugin_015_setTiming(bool gain, unsigned char time)
   return false;
 }
 
-bool plugin_015_setTiming(bool gain, unsigned char time, unsigned int& ms)
+bool plugin_015_setTiming(bool gain, unsigned char time, float& ms)
 
 // If gain = false (0), device is set to low gain (1X)
 // If gain = high (1), device is set to high gain (16X)
@@ -188,10 +194,10 @@ bool plugin_015_setTiming(bool gain, unsigned char time, unsigned int& ms)
   // Calculate ms for user
   switch (time)
   {
-    case 0: ms  = 14; break;
+    case 0: ms  = 13.7; break;
     case 1: ms  = 101; break;
     case 2: ms  = 402; break;
-    default: ms = 0;
+    default: ms = 402; // used in a division, so do not use 0
   }
 
   // Set integration using base function
@@ -200,7 +206,7 @@ bool plugin_015_setTiming(bool gain, unsigned char time, unsigned int& ms)
 
 // Determine if either sensor saturated (max depends on clock freq. and integration time)
 // If so, abandon ship (calculation will not be accurate)
-bool plugin_015_ADC_saturated(unsigned char time, unsigned int CH0, unsigned int CH1) {
+bool plugin_015_ADC_saturated(unsigned char time, unsigned int value) {
   unsigned int max_ADC_count = 65535;
 
   switch (time)
@@ -210,7 +216,7 @@ bool plugin_015_ADC_saturated(unsigned char time, unsigned int CH0, unsigned int
     case 2:
     default: break;
   }
-  return CH0 == max_ADC_count  || CH1 == max_ADC_count;
+  return value >= max_ADC_count;
 }
 
 bool plugin_015_setPowerUp(void)
@@ -249,7 +255,7 @@ bool plugin_015_getData(unsigned int& data0, unsigned int& data1)
 }
 
 void plugin_015_getLux(unsigned char gain,
-                       unsigned int  ms,
+                       float         ms,
                        unsigned int  CH0,
                        unsigned int  CH1,
                        double      & lux,
@@ -339,44 +345,57 @@ boolean Plugin_015(byte function, struct EventStruct *event, String& string)
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_015));
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], PSTR(PLUGIN_VALUENAME2_015));
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[2], PSTR(PLUGIN_VALUENAME3_015));
-
+      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[3], PSTR(PLUGIN_VALUENAME4_015));
       break;
     }
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      byte choice1 = PCONFIG(0);
+      {
+        /*
+            String options1[3];
+            options1[0] = F("0x39 - (default)");
+            options1[1] = F("0x49");
+            options1[2] = F("0x29");
+         */
+        int optionValues[3];
+        optionValues[0] = TSL2561_ADDR;
+        optionValues[1] = TSL2561_ADDR_1;
+        optionValues[2] = TSL2561_ADDR_0;
+        addFormSelectorI2C(F("p015_tsl2561_i2c"), 3, optionValues, PCONFIG(0));
+      }
 
-      /*
-          String options1[3];
-          options1[0] = F("0x39 - (default)");
-          options1[1] = F("0x49");
-          options1[2] = F("0x29");
-       */
-      int optionValues1[3];
-      optionValues1[0] = TSL2561_ADDR;
-      optionValues1[1] = TSL2561_ADDR_1;
-      optionValues1[2] = TSL2561_ADDR_0;
-      addFormSelectorI2C(F("p015_tsl2561_i2c"), 3, optionValues1, choice1);
 
+      {
         #define TSL2561_INTEGRATION_OPTION 3
-
-      byte choice2 = PCONFIG(1);
-      String options2[TSL2561_INTEGRATION_OPTION];
-      int optionValues2[TSL2561_INTEGRATION_OPTION];
-      optionValues2[0] = 0x00;
-      options2[0]      = F("13 ms");
-      optionValues2[1] = 0x01;
-      options2[1]      = F("101 ms");
-      optionValues2[2] = 0x02;
-      options2[2]      = F("402 ms");
-      addFormSelector(F("Integration time"), F("p015_integration"), TSL2561_INTEGRATION_OPTION, options2, optionValues2, choice2);
+        String options[TSL2561_INTEGRATION_OPTION];
+        int    optionValues[TSL2561_INTEGRATION_OPTION];
+        optionValues[0] = 0x00;
+        options[0]      = F("13.7 ms");
+        optionValues[1] = 0x01;
+        options[1]      = F("101 ms");
+        optionValues[2] = 0x02;
+        options[2]      = F("402 ms");
+        addFormSelector(F("Integration time"), F("p015_integration"), TSL2561_INTEGRATION_OPTION, options, optionValues, PCONFIG(1));
+      }
 
       addFormCheckBox(F("Send sensor to sleep:"), F("p015_sleep"),
                       PCONFIG(2));
 
-      addFormCheckBox(F("Enable 16x Gain:"), F("p015_gain"),
-                      PCONFIG(3));
+      {
+        #define TSL2561_GAIN_OPTION 4
+        String options[TSL2561_GAIN_OPTION];
+        int    optionValues[TSL2561_GAIN_OPTION];
+        optionValues[0] = P015_NO_GAIN;
+        options[0]      = F("No Gain");
+        optionValues[1] = P015_16X_GAIN;
+        options[1]      = F("16x Gain");
+        optionValues[2] = P015_AUTO_GAIN;
+        options[2]      = F("Auto Gain");
+        optionValues[3] = P015_EXT_AUTO_GAIN;
+        options[3]      = F("Extended Auto Gain");
+        addFormSelector(F("Gain"), F("p015_gain"), TSL2561_GAIN_OPTION, options, optionValues, PCONFIG(3));
+      }
 
       success = true;
       break;
@@ -387,7 +406,7 @@ boolean Plugin_015(byte function, struct EventStruct *event, String& string)
       PCONFIG(0) = getFormItemInt(F("p015_tsl2561_i2c"));
       PCONFIG(1) = getFormItemInt(F("p015_integration"));
       PCONFIG(2) = isFormItemChecked(F("p015_sleep"));
-      PCONFIG(3) = isFormItemChecked(F("p015_gain"));
+      PCONFIG(3) = getFormItemInt(F("p015_gain"));
 
       success = true;
       break;
@@ -397,66 +416,115 @@ boolean Plugin_015(byte function, struct EventStruct *event, String& string)
     {
       plugin_015_i2caddr = PCONFIG(0);
 
-      bool gain;    // Gain setting, 0 = X1, 1 = X16;
-      unsigned int ms; // Integration ("shutter") time in milliseconds
+      unsigned int gain; // Gain setting, 0 = X1, 1 = X16, 2 = auto, 3 = extended auto;
+      float ms;          // Integration ("shutter") time in milliseconds
 
       plugin_015_begin();
 
       // If gain = false (0), device is set to low gain (1X)
       // If gain = high (1), device is set to high gain (16X)
       gain = PCONFIG(3);
+      const bool autoGain       = gain == P015_AUTO_GAIN || gain == P015_EXT_AUTO_GAIN;
+      static bool gain16xActive = gain == 1; // FIXME TD-er: Do not use static, it may affect multiple instances of this plugin
 
-      // If time = 0, integration will be 13.7ms
-      // If time = 1, integration will be 101ms
-      // If time = 2, integration will be 402ms
-      unsigned char time = PCONFIG(1);
-      plugin_015_setTiming(gain, time, ms);
-      plugin_015_setPowerUp();
-      delayBackground(ms);
-      unsigned int data0, data1;
-
-      if (plugin_015_getData(data0, data1))
-      {
-        double lux;       // Resulting lux value
-        double infrared;  // Resulting infrared value
-        double broadband; // Resulting broadband value
-
-        // Perform lux calculation:
-        success = !plugin_015_ADC_saturated(time,  data0, data1);
-        plugin_015_getLux(gain, ms, data0, data1, lux, infrared, broadband);
-        UserVar[event->BaseVarIndex]     = lux;
-        UserVar[event->BaseVarIndex + 1] = infrared;
-        UserVar[event->BaseVarIndex + 2] = broadband;
-
-        if (!success)
-        {
-          addLog(LOG_LEVEL_INFO, F("TSL2561: Sensor saturated! > 65535 Lux"));
-          break;
-        }
-
-        success = true;
-
-        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-          String log = F("TSL2561: Address: 0x");
-          log += String(plugin_015_i2caddr, HEX);
-          log += F(": Mode: ");
-          log += String(time, HEX);
-          log += F(": Gain: ");
-          log += String(gain, HEX);
-          log += F(": Lux: ");
-          log += UserVar[event->BaseVarIndex];
-          log += F(": Infrared: ");
-          log += UserVar[event->BaseVarIndex + 1];
-          log += F(": Broadband: ");
-          log += UserVar[event->BaseVarIndex + 2];
-          addLog(LOG_LEVEL_INFO, log);
-        }
+      if (!autoGain) {
+        gain16xActive = gain == 1;
       }
-      else
-      {
-        // getData() returned false because of an I2C error, inform the user.
-        addLog(LOG_LEVEL_ERROR, F("TSL2561: i2c error"));
-        success = false;
+
+      int attempt = autoGain ? 2 : 1;
+
+      while (!success && attempt > 0) {
+        --attempt;
+
+        // If time = 0, integration will be 13.7ms
+        // If time = 1, integration will be 101ms
+        // If time = 2, integration will be 402ms
+        unsigned char time = PCONFIG(1);
+        plugin_015_setTiming(gain16xActive, time, ms);
+        plugin_015_setPowerUp();
+        delayBackground(ms); // FIXME TD-er: Do not use delayBackground but collect data later.
+        unsigned int data0, data1;
+
+        if (plugin_015_getData(data0, data1))
+        {
+          double lux;       // Resulting lux value
+          double infrared;  // Resulting infrared value
+          double broadband; // Resulting broadband value
+
+
+          // Perform lux calculation:
+          success = !plugin_015_ADC_saturated(time,  data0) && !plugin_015_ADC_saturated(time, data1);
+          plugin_015_getLux(gain16xActive, ms, data0, data1, lux, infrared, broadband);
+
+          if (autoGain) {
+            if (gain16xActive) {
+              // Last reading was using 16x gain
+              // Check using some margin to see if gain is still needed
+              if (plugin_015_ADC_saturated(time,  data0 * 16)) {
+                gain16xActive = false;
+              }
+            } else {
+              // Check using some margin to see if gain will improve reading resolution
+              if (lux < 40) {
+                gain16xActive = true;
+              }
+            }
+          }
+
+          if (success) {
+            if (broadband > 0.0) {
+              // Store the ratio in an unused user var. (should we make it available?)
+              // Only store/update it when not close to the limits of both ADC ranges.
+              // When using this value to compute extended ranges, it must not be using a ratio taken from a
+              // heated sensor, since then the IR part may be off quite a bit resulting in very unrealistic values.
+              if (!plugin_015_ADC_saturated(time,  data0 * 2) && !plugin_015_ADC_saturated(time, data1 * 2)) {
+                UserVar[event->BaseVarIndex + 3] = infrared / broadband;
+              }
+            }
+          } else {
+            // Use last known ratio to reconstruct the broadband value
+            // If IR is saturated, output the max value based on the last known ratio.
+            if ((UserVar[event->BaseVarIndex + 3] > 0.0) && (gain == P015_EXT_AUTO_GAIN)) {
+              data0 = static_cast<double>(data1) / UserVar[event->BaseVarIndex + 3];
+              plugin_015_getLux(gain16xActive, ms, data0, data1, lux, infrared, broadband);
+              success = true;
+            }
+          }
+          UserVar[event->BaseVarIndex]     = lux;
+          UserVar[event->BaseVarIndex + 1] = infrared;
+          UserVar[event->BaseVarIndex + 2] = broadband;
+
+          if (!success)
+          {
+            addLog(LOG_LEVEL_INFO, F("TSL2561: Sensor saturated!"));
+            break;
+          }
+
+          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+            String log = F("TSL2561: Address: 0x");
+            log += String(plugin_015_i2caddr, HEX);
+            log += F(": Mode: ");
+            log += String(time, HEX);
+            log += F(": Gain: ");
+            log += String(gain, HEX);
+            log += F(": Lux: ");
+            log += UserVar[event->BaseVarIndex];
+            log += F(": Infrared: ");
+            log += UserVar[event->BaseVarIndex + 1];
+            log += F(": Broadband: ");
+            log += UserVar[event->BaseVarIndex + 2];
+            log += F(": Ratio: ");
+            log += UserVar[event->BaseVarIndex + 3];
+            addLog(LOG_LEVEL_INFO, log);
+          }
+        }
+        else
+        {
+          // getData() returned false because of an I2C error, inform the user.
+          addLog(LOG_LEVEL_ERROR, F("TSL2561: i2c error"));
+          success = false;
+          attempt = 0;
+        }
       }
 
       if (PCONFIG(2)) {
