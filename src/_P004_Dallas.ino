@@ -20,6 +20,7 @@
 #define P004_ERROR_MIN_RANGE  1
 #define P004_ERROR_ZERO       2
 #define P004_ERROR_MAX_RANGE  3
+#define P004_ERROR_IGNORE     4
 
 
 uint8_t Plugin_004_reset_time = 0;
@@ -119,9 +120,9 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
 
         {
           // Value in case of Error
-          String resultsOptions[4]      = { F("NaN"), F("-55"), F("0"), F("125") };
-          int    resultsOptionValues[4] = { P004_ERROR_NAN, P004_ERROR_MIN_RANGE, P004_ERROR_ZERO, P004_ERROR_MAX_RANGE };
-          addFormSelector(F("Error State Value"), F("p004_err"), 4, resultsOptions, resultsOptionValues, PCONFIG(0));
+          String resultsOptions[5]      = { F("NaN"), F("-127"), F("0"), F("125"), F("Ignore") };
+          int    resultsOptionValues[5] = { P004_ERROR_NAN, P004_ERROR_MIN_RANGE, P004_ERROR_ZERO, P004_ERROR_MAX_RANGE, P004_ERROR_IGNORE };
+          addFormSelector(F("Error State Value"), F("p004_err"), 5, resultsOptions, resultsOptionValues, PCONFIG(0));
         }
       }
       success = true;
@@ -198,17 +199,19 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
           }
           else
           {
-            float errorValue = NAN;
+            if (PCONFIG(0) != P004_ERROR_IGNORE) {
+              float errorValue = NAN;
 
-            switch (PCONFIG(0)) {
-              case P004_ERROR_MIN_RANGE: errorValue = -55; break;
-              case P004_ERROR_ZERO: errorValue      = 0; break;
-              case P004_ERROR_MAX_RANGE: errorValue = 125; break;
-              default:
-                break;
+              switch (PCONFIG(0)) {
+                case P004_ERROR_MIN_RANGE: errorValue = -127; break;
+                case P004_ERROR_ZERO:      errorValue = 0; break;
+                case P004_ERROR_MAX_RANGE: errorValue = 125; break;
+                default:
+                  break;
+              }
+              UserVar[event->BaseVarIndex] = errorValue;
             }
-            UserVar[event->BaseVarIndex] = errorValue;
-            log                         += F("Error!");
+            log += F("Error!");
           }
           Plugin_004_DS_startConversion(addr, Plugin_004_DallasPin);
 
