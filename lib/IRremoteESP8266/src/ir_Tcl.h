@@ -1,15 +1,20 @@
 // Copyright 2019 David Conran
 
+// Supports:
+//   Brand: Leberg,  Model: LBS-TOR07 A/C
+
 #ifndef IR_TCL_H_
 #define IR_TCL_H_
 
 #ifndef UNIT_TEST
 #include <Arduino.h>
-#else
-#include <string>
 #endif
 #include "IRremoteESP8266.h"
 #include "IRsend.h"
+#include "IRrecv.h"
+#ifdef UNIT_TEST
+#include "IRsend_test.h"
+#endif
 
 // Constants
 const uint16_t kTcl112AcHdrMark = 3000;
@@ -18,6 +23,7 @@ const uint16_t kTcl112AcBitMark = 500;
 const uint16_t kTcl112AcOneSpace = 1050;
 const uint16_t kTcl112AcZeroSpace = 325;
 const uint32_t kTcl112AcGap = kDefaultMessageGap;  // Just a guess.
+const uint8_t kTcl112AcTolerance = kTolerance + 5;  // Percent
 
 const uint8_t kTcl112AcHeat = 1;
 const uint8_t kTcl112AcDry =  2;
@@ -45,10 +51,11 @@ const uint8_t kTcl112AcBitTurbo  = 0b01000000;
 
 class IRTcl112Ac {
  public:
-  explicit IRTcl112Ac(uint16_t pin);
+  explicit IRTcl112Ac(const uint16_t pin);
 
 #if SEND_TCL112AC
   void send(const uint16_t repeat = kTcl112AcDefaultRepeat);
+  uint8_t calibrate(void) { return _irsend.calibrate(); }
 #endif  // SEND_TCL
   void begin(void);
   uint8_t* getRaw(void);
@@ -80,17 +87,22 @@ class IRTcl112Ac {
   bool getSwingVertical(void);
   void setTurbo(const bool on);
   bool getTurbo(void);
-#ifdef ARDUINO
-  String toString();
-#else
-  std::string toString();
-#endif
+  uint8_t convertMode(const stdAc::opmode_t mode);
+  uint8_t convertFan(const stdAc::fanspeed_t speed);
+  static stdAc::opmode_t toCommonMode(const uint8_t mode);
+  static stdAc::fanspeed_t toCommonFanSpeed(const uint8_t speed);
+  stdAc::state_t toCommon(void);
+  String toString(void);
+#ifndef UNIT_TEST
 
  private:
-  uint8_t remote_state[kTcl112AcStateLength];
-  void stateReset();
-  void checksum(const uint16_t length = kTcl112AcStateLength);
   IRsend _irsend;
+#else
+  IRsendTest _irsend;
+#endif
+  uint8_t remote_state[kTcl112AcStateLength];
+  void stateReset(void);
+  void checksum(const uint16_t length = kTcl112AcStateLength);
 };
 
 #endif  // IR_TCL_H_
