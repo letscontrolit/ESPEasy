@@ -489,11 +489,9 @@ ControllerDelayHandlerStruct<MQTT_queue_element> MQTTDelayHandler;
   DEFINE_Cxxx_DELAY_QUEUE_MACRO(014, 14)
 #endif
 */
-/*
 #ifdef USES_C015
   DEFINE_Cxxx_DELAY_QUEUE_MACRO(015, 15)
 #endif
-*/
 
 #ifdef USES_C016
   DEFINE_Cxxx_DELAY_QUEUE_MACRO(016, 16)
