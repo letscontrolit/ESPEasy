@@ -7,7 +7,15 @@
 //  #endif
 
 #include <lwip/netif.h>
+#ifdef ESP8266
+  #if !defined(ARDUINO_ESP8266_RELEASE_2_4_0) && !defined(ARDUINO_ESP8266_RELEASE_2_3_0)
+    #define SUPPORT_ARP
+  #endif
+#endif
+
+#ifdef SUPPORT_ARP
 #include <lwip/etharp.h>
+#endif
 
 /*********************************************************************************************\
    Syslog client
@@ -783,7 +791,8 @@ void sendGratuitousARP() {
   if (!WiFiConnected()) {
     return;
   }
-#ifndef ESP32
+#ifdef SUPPORT_ARP
+
   // See https://github.com/letscontrolit/ESPEasy/issues/2374
   START_TIMER;
   netif *n = netif_list;

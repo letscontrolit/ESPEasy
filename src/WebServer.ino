@@ -4578,7 +4578,9 @@ void handle_json()
 #ifdef ESP8266
       stream_next_json_object_value(LabelType::FORCE_WIFI_NOSLEEP);
 #endif
+#ifdef SUPPORT_ARP
       stream_next_json_object_value(LabelType::PERIODICAL_GRAT_ARP);
+#endif
       stream_next_json_object_value(LabelType::CONNECTION_FAIL_THRESH);
       stream_last_json_object_value(LabelType::WIFI_RSSI);
       TXBuffer += ",\n";
@@ -4951,7 +4953,9 @@ void handle_advanced() {
     Settings.WiFiRestart_connection_lost(isFormItemChecked(getInternalLabel(LabelType::RESTART_WIFI_LOST_CONN)));
     Settings.EcoPowerMode(isFormItemChecked(getInternalLabel(LabelType::CPU_ECO_MODE)));
     Settings.WifiNoneSleep(isFormItemChecked(getInternalLabel(LabelType::FORCE_WIFI_NOSLEEP)));
+#ifdef SUPPORT_ARP
     Settings.gratuitousARP(isFormItemChecked(getInternalLabel(LabelType::PERIODICAL_GRAT_ARP)));
+#endif
 
     addHtmlError(SaveSettings());
     if (systemTimePresent())
@@ -5052,7 +5056,9 @@ void handle_advanced() {
   addFormCheckBox(LabelType::FORCE_WIFI_NOSLEEP, Settings.WifiNoneSleep());
 #endif
   addFormNote(F("Change WiFi sleep settings requires reboot to activate"));
+#ifdef SUPPORT_ARP
   addFormCheckBox(LabelType::PERIODICAL_GRAT_ARP, Settings.gratuitousARP());
+#endif
   addFormCheckBox(LabelType::CPU_ECO_MODE, Settings.EcoPowerMode());
   addFormNote(F("Node may miss receiving packets with Eco mode enabled"));
   addFormSeparator(2);
@@ -6935,7 +6941,9 @@ void handle_sysinfo() {
 #ifdef ESP8266
   addRowLabelValue(LabelType::FORCE_WIFI_NOSLEEP);
 #endif
+#ifdef SUPPORT_ARP
   addRowLabelValue(LabelType::PERIODICAL_GRAT_ARP);
+#endif
   addRowLabelValue(LabelType::CONNECTION_FAIL_THRESH);
 
   addTableSeparator(F("Firmware"), 2, 3);
