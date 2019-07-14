@@ -1,4 +1,43 @@
 -------------------------------------------------
+Changes in release mega-20190714 (since mega-20190630)
+-------------------------------------------------
+
+Release date: Sun Jul 14 04:00:15 CEST 2019
+
+Gijs Noorlander (15):
+      [PIO] Fix build issue with PIO core 4.0.0
+      [Crash info] Report last scheduled task before reboot
+      [PIO] Ignore .pio folder in Git.
+      [SW WD] Count SW watchdog and feed HW watchdog
+      [WiF] Improve disconnect/reconnect stability
+      [WiFi] Debugging connect/disconnect behavior
+      [WiFi] Add more debug information
+      [Uncrustify] Move uncrustify.cfg to project dir
+      [Build] Set core 2.5.2 as default and add custom build
+      [TSL2561] Small fix to detect saturation of ADC
+      [TSL2561] Add auto gain and extended auto gain
+      [Dallas 1wire] Add error state value selector
+      [Dallas] Add ignore option as error state output value
+      [WiFi] Code cleanup WiFi/WiFi event files
+      [ESP32] Upgrade to core v1.9.0
+
+jimmys01 (13):
+      [Controller] Zabbix controller initial commit
+      Scheduler fix
+      Zabbix secont attempt
+      Improvments
+      More improvments
+      [ZABBIX] Update code to JSON6+
+      Increace PLUGIN_MAX by 10
+      Update IR library to 2.6.3
+      [IR TX RX] Extended AC commands
+      Couple payload_len to actual JSON payload length.
+      Resolve conflicts with C015
+      Resolving conflicts #2
+      Commit the changed define_plugin_sets.h after conflicts have been resolved
+
+
+-------------------------------------------------
 Changes in release mega-20190630 (since mega-20190626)
 -------------------------------------------------
 
