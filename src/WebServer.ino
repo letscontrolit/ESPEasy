@@ -6866,6 +6866,8 @@ void handle_sysinfo() {
   TXBuffer += RTC.bootCounter;
   TXBuffer += ')';
   addRowLabelValue(LabelType::RESET_REASON);
+  addRowLabelValue(LabelType::LAST_TASK_BEFORE_REBOOT);
+  addRowLabelValue(LabelType::SW_WD_COUNT);
 
   addTableSeparator(F("Network"), 2, 3, F("Wifi"));
 

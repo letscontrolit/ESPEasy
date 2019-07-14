@@ -24,3 +24,5 @@ test/output_export.cpp
 .vscode/launch.json
 
 docs/build/
+
+\.pio/

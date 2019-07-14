@@ -26,6 +26,8 @@ enum Enum : short {
   BOOT_TYPE,                   // Cold boot
   BOOT_COUNT,                  // 0
   RESET_REASON,                // Software/System restart
+  LAST_TASK_BEFORE_REBOOT,     // Last scheduled task.
+  SW_WD_COUNT,
 
   WIFI_CONNECTION,             // 802.11G
   WIFI_RSSI,                   // -67

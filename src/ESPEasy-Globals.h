@@ -655,7 +655,7 @@ ADC_MODE(ADC_VCC);
 #define ESPEASY_WIFI_DISCONNECTED            0
 #define ESPEASY_WIFI_CONNECTED               1
 #define ESPEASY_WIFI_GOT_IP                  2
-#define ESPEASY_WIFI_SERVICES_INITIALIZED    3
+#define ESPEASY_WIFI_SERVICES_INITIALIZED    4
 
 #if defined(ESP32)
 void WiFiEvent(system_event_id_t event, system_event_info_t info);
@@ -663,6 +663,7 @@ void WiFiEvent(system_event_id_t event, system_event_info_t info);
 WiFiEventHandler stationConnectedHandler;
 WiFiEventHandler stationDisconnectedHandler;
 WiFiEventHandler stationGotIpHandler;
+WiFiEventHandler stationModeDHCPTimeoutHandler;
 WiFiEventHandler APModeStationConnectedHandler;
 WiFiEventHandler APModeStationDisconnectedHandler;
 #endif
@@ -1694,7 +1695,7 @@ struct RTCStruct
 {
   RTCStruct() : ID1(0), ID2(0), unused1(false), factoryResetCounter(0),
                 deepSleepState(0), bootFailedCount(0), flashDayCounter(0),
-                flashCounter(0), bootCounter(0) {}
+                flashCounter(0), bootCounter(0), lastMixedSchedulerId(0) {}
   byte ID1;
   byte ID2;
   boolean unused1;
@@ -1704,6 +1705,7 @@ struct RTCStruct
   byte flashDayCounter;
   unsigned long flashCounter;
   unsigned long bootCounter;
+  unsigned long lastMixedSchedulerId;
 } RTC;
 
 int deviceCount = -1;
@@ -1754,6 +1756,8 @@ byte cmd_within_mainloop = 0;
 unsigned long connectionFailures = 0;
 unsigned long wdcounter = 0;
 unsigned long timerAPoff = 0;
+unsigned long timerAPstart = 0;
+unsigned long timerWiFiReconnect = 0;
 unsigned long timerAwakeFromDeepSleep = 0;
 unsigned long last_system_event_run = 0;
 
@@ -1788,6 +1792,7 @@ unsigned long createSystemEventMixedId(PluginPtrType ptr_type, uint16_t crc16);
 
 
 byte lastBootCause = BOOT_CAUSE_MANUAL_REBOOT;
+unsigned long lastMixedSchedulerId_beforereboot = 0;
 
 #if defined(ESP32)
 enum WiFiDisconnectReason
@@ -1866,6 +1871,7 @@ uint8_t  scan_done_number = 0;
 bool processedConnect = true;
 bool processedDisconnect = true;
 bool processedGetIP = true;
+bool processedDHCPTimeout = true;
 bool processedConnectAPmode = true;
 bool processedDisconnectAPmode = true;
 bool processedScanDone = true;
@@ -1888,6 +1894,7 @@ float loop_usec_duration_total = 0.0;
 unsigned long countFindPluginId = 0;
 
 unsigned long dailyResetCounter = 0;
+volatile unsigned long sw_watchdog_callback_count = 0;
 
 String eventBuffer = "";
 

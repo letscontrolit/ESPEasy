@@ -33,6 +33,7 @@ fi
 mkdir -p ${TMP_DIST}/memstats
 
 for ENV in \
+  custom_ESP8266_4M\
   dev_ESP8266_4M\
   esp-wrover-kit_test_1M8_partition\
   esp32test_1M8_partition\
@@ -40,8 +41,10 @@ for ENV in \
   hard_Ventus_W266\
   hard_core_252_SONOFF_POW_4M\
   hard_core_252_Shelly_1_2M256\
-  minimal_ESP8266_1M_OTA\
-  minimal_ESP8285_1M_OTA\
+  hard_core_252_other_POW_ESP8285_1M\
+  hard_other_POW_ESP8285_1M\
+  minimal_core_242_ESP8266_1M_OTA\
+  minimal_core_242_ESP8285_1M_OTA\
   minimal_core_252_ESP8266_1M_OTA\
   minimal_core_252_ESP8285_1M_OTA\
   normal_ESP8266_1M\

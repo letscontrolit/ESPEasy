@@ -721,6 +721,7 @@ bool connectClient(WiFiClient& client, IPAddress ip, uint16_t port)
     return false;
   }
   bool connected = (client.connect(ip, port) == 1);
+  yield();
   if (!connected) {
     sendGratuitousARP_now();
   }
@@ -743,6 +744,7 @@ bool resolveHostByName(const char* aHostname, IPAddress& aResult) {
 #else
   bool resolvedIP = WiFi.hostByName(aHostname, aResult, CONTROLLER_CLIENTTIMEOUT_DFLT) == 1;
 #endif
+  yield();
   if (!resolvedIP) {
     sendGratuitousARP_now();
   }
@@ -778,6 +780,9 @@ bool beginWiFiUDP_randomPort(WiFiUDP& udp) {
 }
 
 void sendGratuitousARP() {
+  if (!WiFiConnected()) {
+    return;
+  }
 #ifndef ESP32
   // See https://github.com/letscontrolit/ESPEasy/issues/2374
   START_TIMER;
