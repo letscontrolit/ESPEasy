@@ -71,8 +71,14 @@ To create/register a plugin, you have to :
     #define PLUGIN_BUILD_IR
 #endif
 
+#ifdef PLUGIN_BUILD_MINIMAL_IR
+    #define PLUGIN_BUILD_MINIMAL_OTA
+    #define PLUGIN_BUILD_IR
+#endif
+
 #ifdef PLUGIN_BUILD_NORMAL_IR
     #define PLUGIN_BUILD_NORMAL     // add stable
+    #define PLUGIN_DESCR  "Minimal 1M IR"
     #define PLUGIN_BUILD_IR
 #endif
 
@@ -111,7 +117,9 @@ To create/register a plugin, you have to :
 #endif
 
 #ifdef PLUGIN_BUILD_MINIMAL_OTA
-    #define PLUGIN_DESCR  "Minimal 1M OTA"
+    #ifndef PLUGIN_DESCR
+      #define PLUGIN_DESCR  "Minimal 1M OTA"
+    #endif
 
     #define CONTROLLER_SET_NONE
 
