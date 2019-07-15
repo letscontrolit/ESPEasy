@@ -1,4 +1,15 @@
 -------------------------------------------------
+Changes in release mega-20190715 (since mega-20190714)
+-------------------------------------------------
+
+Release date: Mon Jul 15 04:00:12 CEST 2019
+
+Gijs Noorlander (2):
+      [Build] Reduce build size normal_esp8266_IR_1M to minimal
+      [Build] Fix build issue on core 2.4.0
+
+
+-------------------------------------------------
 Changes in release mega-20190714 (since mega-20190630)
 -------------------------------------------------
 
