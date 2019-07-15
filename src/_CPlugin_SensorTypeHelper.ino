@@ -1,7 +1,6 @@
 /*********************************************************************************************\
    Get value count from sensor type
-  \*********************************************************************************************/
-
+\*********************************************************************************************/
 byte getValueCountFromSensorType(byte sensorType)
 {
   switch (sensorType)
@@ -12,7 +11,7 @@ byte getValueCountFromSensorType(byte sensorType)
     case SENSOR_TYPE_SWITCH:
     case SENSOR_TYPE_DIMMER:
       return 1;
-    case SENSOR_TYPE_LONG:   // single LONG value, stored in two floats (rfid tags)
+    case SENSOR_TYPE_LONG: // single LONG value, stored in two floats (rfid tags)
       return 1;
     case SENSOR_TYPE_TEMP_HUM:
     case SENSOR_TYPE_TEMP_BARO:
@@ -32,17 +31,17 @@ byte getValueCountFromSensorType(byte sensorType)
 
 String getSensorTypeLabel(byte sensorType) {
   switch (sensorType) {
-    case SENSOR_TYPE_SINGLE:           return  F("Single");
-    case SENSOR_TYPE_TEMP_HUM:         return  F("Temp / Hum");
-    case SENSOR_TYPE_TEMP_BARO:        return  F("Temp / Baro");
-    case SENSOR_TYPE_TEMP_HUM_BARO:    return  F("Temp / Hum / Baro");
-    case SENSOR_TYPE_DUAL:             return  F("Dual");
-    case SENSOR_TYPE_TRIPLE:           return  F("Triple");
-    case SENSOR_TYPE_QUAD:             return  F("Quad");
-    case SENSOR_TYPE_SWITCH:           return  F("Switch");
-    case SENSOR_TYPE_DIMMER:           return  F("Dimmer");
-    case SENSOR_TYPE_LONG:             return  F("Long");
-    case SENSOR_TYPE_WIND:             return  F("Wind");
+    case SENSOR_TYPE_SINGLE:           return F("Single");
+    case SENSOR_TYPE_TEMP_HUM:         return F("Temp / Hum");
+    case SENSOR_TYPE_TEMP_BARO:        return F("Temp / Baro");
+    case SENSOR_TYPE_TEMP_HUM_BARO:    return F("Temp / Hum / Baro");
+    case SENSOR_TYPE_DUAL:             return F("Dual");
+    case SENSOR_TYPE_TRIPLE:           return F("Triple");
+    case SENSOR_TYPE_QUAD:             return F("Quad");
+    case SENSOR_TYPE_SWITCH:           return F("Switch");
+    case SENSOR_TYPE_DIMMER:           return F("Dimmer");
+    case SENSOR_TYPE_LONG:             return F("Long");
+    case SENSOR_TYPE_WIND:             return F("Wind");
   }
   return "";
 }
@@ -50,16 +49,17 @@ String getSensorTypeLabel(byte sensorType) {
 void sensorTypeHelper_webformLoad_allTypes(struct EventStruct *event, byte pconfigIndex)
 {
   byte optionValues[11];
-  optionValues[0] = SENSOR_TYPE_SINGLE;
-  optionValues[1] = SENSOR_TYPE_TEMP_HUM;
-  optionValues[2] = SENSOR_TYPE_TEMP_BARO;
-  optionValues[3] = SENSOR_TYPE_TEMP_HUM_BARO;
-  optionValues[4] = SENSOR_TYPE_DUAL;
-  optionValues[5] = SENSOR_TYPE_TRIPLE;
-  optionValues[6] = SENSOR_TYPE_QUAD;
-  optionValues[7] = SENSOR_TYPE_SWITCH;
-  optionValues[8] = SENSOR_TYPE_DIMMER;
-  optionValues[9] = SENSOR_TYPE_LONG;
+
+  optionValues[0]  = SENSOR_TYPE_SINGLE;
+  optionValues[1]  = SENSOR_TYPE_TEMP_HUM;
+  optionValues[2]  = SENSOR_TYPE_TEMP_BARO;
+  optionValues[3]  = SENSOR_TYPE_TEMP_HUM_BARO;
+  optionValues[4]  = SENSOR_TYPE_DUAL;
+  optionValues[5]  = SENSOR_TYPE_TRIPLE;
+  optionValues[6]  = SENSOR_TYPE_QUAD;
+  optionValues[7]  = SENSOR_TYPE_SWITCH;
+  optionValues[8]  = SENSOR_TYPE_DIMMER;
+  optionValues[9]  = SENSOR_TYPE_LONG;
   optionValues[10] = SENSOR_TYPE_WIND;
   sensorTypeHelper_webformLoad(event, pconfigIndex, 11, optionValues);
 }
@@ -83,20 +83,21 @@ void sensorTypeHelper_webformLoad_simple(struct EventStruct *event, byte pconfig
 
 void sensorTypeHelper_webformLoad(struct EventStruct *event, byte pconfigIndex, int optionCount, const byte options[])
 {
-
-  byte choice = PCONFIG(pconfigIndex);
+  byte choice      = PCONFIG(pconfigIndex);
   byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[event->TaskIndex]);
+
   if (getValueCountFromSensorType(choice) != Device[DeviceIndex].ValueCount) {
     // Invalid value
-    choice = Device[DeviceIndex].VType;
+    choice                = Device[DeviceIndex].VType;
     PCONFIG(pconfigIndex) = choice;
   }
   addRowLabel(F("Output Data Type"));
   addSelector_Head(PCONFIG_LABEL(pconfigIndex), false);
+
   for (byte x = 0; x < optionCount; x++)
   {
-    String name = getSensorTypeLabel(options[x]);
-    bool disabled = false;
+    String name     = getSensorTypeLabel(options[x]);
+    bool   disabled = false;
     addSelector_Item(name,
                      options[x],
                      choice == options[x],
@@ -106,7 +107,7 @@ void sensorTypeHelper_webformLoad(struct EventStruct *event, byte pconfigIndex, 
   addSelector_Foot();
   addFormNote(F("Changing 'Output Data Type' may affect behavior of some controllers (e.g. Domoticz)"));
 
-  //addFormSelector(F("Output Data Type"), PCONFIG_LABEL(pconfigIndex), 11, options, optionValues, choice);
+  // addFormSelector(F("Output Data Type"), PCONFIG_LABEL(pconfigIndex), 11, options, optionValues, choice);
 }
 
 void sensorTypeHelper_saveSensorType(struct EventStruct *event, byte pconfigIndex)
@@ -118,12 +119,12 @@ void sensorTypeHelper_saveSensorType(struct EventStruct *event, byte pconfigInde
 
 void sensorTypeHelper_setSensorType(struct EventStruct *event, byte pconfigIndex)
 {
-  byte sensorType = PCONFIG(pconfigIndex);
+  byte sensorType  = PCONFIG(pconfigIndex);
   byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[event->TaskIndex]);
-  Device[DeviceIndex].VType = sensorType;
+
+  Device[DeviceIndex].VType      = sensorType;
   Device[DeviceIndex].ValueCount = getValueCountFromSensorType(sensorType);
 }
-
 
 void sensorTypeHelper_saveOutputSelector(struct EventStruct *event, byte pconfigIndex, byte valueIndex, const String& defaultValueName)
 {
@@ -139,11 +140,12 @@ void pconfig_webformSave(struct EventStruct *event, byte pconfigIndex)
 }
 
 void sensorTypeHelper_loadOutputSelector(
-    struct EventStruct *event, byte pconfigIndex, byte valuenr,
-    int optionCount, const String options[])
+  struct EventStruct *event, byte pconfigIndex, byte valuenr,
+  int optionCount, const String options[])
 {
-  byte choice = PCONFIG(pconfigIndex);
-  String label = F("Value ");
+  byte   choice = PCONFIG(pconfigIndex);
+  String label  = F("Value ");
+
   label += (valuenr + 1);
   addFormSelector(label, PCONFIG_LABEL(pconfigIndex), optionCount, options, NULL, choice);
 }

@@ -1,9 +1,10 @@
-//not finished yet
+// not finished yet
 
 #ifdef FEATURE_REPORTING
 
 
 #include <ArduinoJson.h>
+
 // NO, too big: #include <ESP8266HTTPClient.h>
 
 #define REPORT_HOST "espeasy.datux.nl"
@@ -12,15 +13,16 @@
 void ReportStatus()
 {
   String log;
-  String host=F(REPORT_HOST);
+  String host = F(REPORT_HOST);
 
-  log=F("REP  : Reporting status to ");
-  log+=host;
+  log  = F("REP  : Reporting status to ");
+  log += host;
   addLog(LOG_LEVEL_INFO, log);
 
 
   WiFiClient client;
   client.setTimeout(CONTROLLER_CLIENTTIMEOUT_DFLT);
+
   if (!connectClient(client, host.c_str(), 80))
   {
     addLog(LOG_LEVEL_ERROR, F("REP  : connection failed"));
@@ -30,10 +32,9 @@ void ReportStatus()
   StaticJsonBuffer<256> jsonBuffer;
   JsonObject& root = jsonBuffer.createObject();
 
-  root[F("chipId")]   = ESP.getChipId();
-  root[F("flashId")]  = ESP.getFlashChipId();
-  root[F("uptime")]   = wdcounter /2;
-
+  root[F("chipId")]  = ESP.getChipId();
+  root[F("flashId")] = ESP.getFlashChipId();
+  root[F("uptime")]  = wdcounter / 2;
 
 
   String body;
@@ -56,43 +57,41 @@ void ReportStatus()
   client.print(payload);
 
 
-
   addLog(LOG_LEVEL_INFO, F("REP  : report uploaded"));
-
 }
 
 /*
-Code below unfortunatly uses a lot of flash+r.o. ram because of the httpclient library.
-So we only use wificlient and do our own http magic.
+   Code below unfortunatly uses a lot of flash+r.o. ram because of the httpclient library.
+   So we only use wificlient and do our own http magic.
 
-plugin                        |cache IRAM |init RAM   |r.o. RAM   |uninit RAM |Flash ROM
-src/_Reporting.ino            |0          |0          |156        |-8         |4000
+   plugin                        |cache IRAM |init RAM   |r.o. RAM   |uninit RAM |Flash ROM
+   src/_Reporting.ino            |0          |0          |156        |-8         |4000
 
-void ReportStatus()
-{
-  String log;
-  String url=F(REPORT_URL);
+   void ReportStatus()
+   {
+   String log;
+   String url=F(REPORT_URL);
 
-  log=F("REP  : Reporting status to ");
-  log+=url;
-  addLog(LOG_LEVEL_INFO, log);
+   log=F("REP  : Reporting status to ");
+   log+=url;
+   addLog(LOG_LEVEL_INFO, log);
 
-  HTTPClient http;
-  http.begin(url);
-  int httpCode=http.POST(F("moin"));
+   HTTPClient http;
+   http.begin(url);
+   int httpCode=http.POST(F("moin"));
 
-  if (httpCode>0)
-  {
+   if (httpCode>0)
+   {
     log=F("REP  : Report uploaded, http code ");
     log+=httpCode;
-  }
-  else
-  {
+   }
+   else
+   {
     log=F("REP  : Error, ");
     log+=http.errorToString(httpCode);
-  }
-  addLog(LOG_LEVEL_INFO,log);
-}
-*/
+   }
+   addLog(LOG_LEVEL_INFO,log);
+   }
+ */
 
-#endif
+#endif // ifdef FEATURE_REPORTING
