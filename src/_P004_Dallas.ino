@@ -173,7 +173,8 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
         Plugin_004_get_addr(addr, event->TaskIndex);
         Plugin_004_DS_startConversion(addr, Plugin_004_DallasPin);
 
-        //              delay(800); //give it time to do intial conversion
+        // FIXME TD-er: Must introduce some internal state to get rid of such long delays
+        delay(800); //give it time to do intial conversion        
       }
       success = true;
       break;
