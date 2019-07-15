@@ -442,6 +442,7 @@ void check_size() {
 #define SENSOR_TYPE_DIMMER                 11
 #define SENSOR_TYPE_LONG                   20
 #define SENSOR_TYPE_WIND                   21
+#define SENSOR_TYPE_STRING                 22
 
 #define UNIT_NUMBER_MAX                  9999  // Stored in Settings.Unit
 #define DOMOTICZ_MAX_IDX            999999999  // Looks like it is an unsigned int, so could be up to 4 bln.

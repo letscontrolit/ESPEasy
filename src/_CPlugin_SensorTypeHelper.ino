@@ -24,6 +24,8 @@ byte getValueCountFromSensorType(byte sensorType)
       return 3;
     case SENSOR_TYPE_QUAD:
       return 4;
+    case SENSOR_TYPE_STRING:  // String type data stored in the event->String2
+      return 1;
   }
   addLog(LOG_LEVEL_ERROR, F("getValueCountFromSensorType: Unknown sensortype"));
   return 0;
@@ -42,13 +44,14 @@ String getSensorTypeLabel(byte sensorType) {
     case SENSOR_TYPE_DIMMER:           return F("Dimmer");
     case SENSOR_TYPE_LONG:             return F("Long");
     case SENSOR_TYPE_WIND:             return F("Wind");
+    case SENSOR_TYPE_STRING:           return F("String");
   }
   return "";
 }
 
 void sensorTypeHelper_webformLoad_allTypes(struct EventStruct *event, byte pconfigIndex)
 {
-  byte optionValues[11];
+  byte optionValues[12];
 
   optionValues[0]  = SENSOR_TYPE_SINGLE;
   optionValues[1]  = SENSOR_TYPE_TEMP_HUM;
@@ -61,6 +64,7 @@ void sensorTypeHelper_webformLoad_allTypes(struct EventStruct *event, byte pconf
   optionValues[8]  = SENSOR_TYPE_DIMMER;
   optionValues[9]  = SENSOR_TYPE_LONG;
   optionValues[10] = SENSOR_TYPE_WIND;
+  optionValues[11] = SENSOR_TYPE_STRING;
   sensorTypeHelper_webformLoad(event, pconfigIndex, 11, optionValues);
 }
 

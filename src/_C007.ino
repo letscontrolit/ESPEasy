@@ -40,6 +40,10 @@ bool CPlugin_007(byte function, struct EventStruct *event, String& string)
 
     case CPLUGIN_PROTOCOL_SEND:
       {
+        if (event->sensorType == SENSOR_TYPE_STRING) {
+          addLog(LOG_LEVEL_ERROR, F("emoncms : No support for SENSOR_TYPE_STRING"));
+          break;
+        }
         const byte valueCount = getValueCountFromSensorType(event->sensorType);
         if (valueCount == 0 || valueCount > 3) {
           addLog(LOG_LEVEL_ERROR, F("emoncms : Unknown sensortype or too many sensor values"));

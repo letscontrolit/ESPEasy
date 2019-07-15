@@ -841,27 +841,37 @@ void rulesTimers() {
 /********************************************************************************************\
    Generate rule events based on task refresh
  \*********************************************************************************************/
-void createRuleEvents(byte TaskIndex) {
+void createRuleEvents(struct EventStruct *event) {
   if (!Settings.UseRules) {
     return;
   }
-  LoadTaskSettings(TaskIndex);
-  byte BaseVarIndex = TaskIndex * VARS_PER_TASK;
-  byte DeviceIndex  = getDeviceIndex(Settings.TaskDeviceNumber[TaskIndex]);
+  LoadTaskSettings(event->TaskIndex);
+  byte BaseVarIndex = event->TaskIndex * VARS_PER_TASK;
+  byte DeviceIndex  = getDeviceIndex(Settings.TaskDeviceNumber[event->TaskIndex]);
   byte sensorType   = Device[DeviceIndex].VType;
 
   for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++) {
-    String eventString = getTaskDeviceName(TaskIndex);
+    String eventString;
+    eventString.reserve(32); // Enough for most use cases, prevent lots of memory allocations.
+    eventString = getTaskDeviceName(event->TaskIndex);
     eventString += F("#");
     eventString += ExtraTaskSettings.TaskDeviceValueNames[varNr];
     eventString += F("=");
 
-    if (sensorType == SENSOR_TYPE_LONG) {
-      eventString += (unsigned long)UserVar[BaseVarIndex] +
-                     ((unsigned long)UserVar[BaseVarIndex + 1] << 16);
-    }
-    else {
-      eventString += UserVar[BaseVarIndex + varNr];
+    switch (sensorType) {
+      case SENSOR_TYPE_LONG:
+        eventString += (unsigned long)UserVar[BaseVarIndex] +
+                       ((unsigned long)UserVar[BaseVarIndex + 1] << 16);
+        break;
+      case SENSOR_TYPE_STRING:
+
+        // FIXME TD-er: What to add here? length of string?        
+        break;
+      default:
+
+        // FIXME TD-er: Do we need to call formatUserVarNoCheck here? (or with check)
+        eventString += UserVar[BaseVarIndex + varNr];
+        break;
     }
 
     rulesProcessing(eventString);

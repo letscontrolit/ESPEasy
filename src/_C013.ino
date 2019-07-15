@@ -278,12 +278,15 @@ void C013_Receive(struct EventStruct *event) {
           // only if this task has a remote feed, update values
           if (Settings.TaskDeviceDataFeed[dataReply.destTaskIndex] != 0)
           {
+            struct EventStruct TempEvent;
             for (byte x = 0; x < VARS_PER_TASK; x++)
             {
               UserVar[dataReply.destTaskIndex * VARS_PER_TASK + x] = dataReply.Values[x];
             }
-            if (Settings.UseRules)
-              createRuleEvents(dataReply.destTaskIndex);
+            if (Settings.UseRules) {
+              TempEvent.TaskIndex = dataReply.destTaskIndex;
+              createRuleEvents(&TempEvent);
+            }
           }
         }
         break;

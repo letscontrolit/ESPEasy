@@ -181,27 +181,33 @@ void addNewLine(String& line) {
 /*********************************************************************************************\
    Format a value to the set number of decimals
 \*********************************************************************************************/
-String doFormatUserVar(byte TaskIndex, byte rel_index, bool mustCheck, bool& isvalid) {
+String doFormatUserVar(struct EventStruct *event, byte rel_index, bool mustCheck, bool& isvalid) {
   isvalid = true;
-  const byte BaseVarIndex = TaskIndex * VARS_PER_TASK;
-  const byte DeviceIndex  = getDeviceIndex(Settings.TaskDeviceNumber[TaskIndex]);
+  const byte BaseVarIndex = event->TaskIndex * VARS_PER_TASK;
+  const byte DeviceIndex  = getDeviceIndex(Settings.TaskDeviceNumber[event->TaskIndex]);
 
   if (Device[DeviceIndex].ValueCount <= rel_index) {
     isvalid = false;
 
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
       String log = F("No sensor value for TaskIndex: ");
-      log += TaskIndex;
+      log += event->TaskIndex;
       log += F(" varnumber: ");
       log += rel_index;
       addLog(LOG_LEVEL_ERROR, log);
     }
     return "";
   }
+  switch (Device[DeviceIndex].VType) {
+    case SENSOR_TYPE_LONG:
+      return String((unsigned long)UserVar[BaseVarIndex] + ((unsigned long)UserVar[BaseVarIndex + 1] << 16));
+    case SENSOR_TYPE_STRING:
+      return event->String2;
 
-  if (Device[DeviceIndex].VType == SENSOR_TYPE_LONG) {
-    return String((unsigned long)UserVar[BaseVarIndex] + ((unsigned long)UserVar[BaseVarIndex + 1] << 16));
+    default:
+      break;
   }
+
   float f(UserVar[BaseVarIndex + rel_index]);
 
   if (mustCheck && !isValidFloat(f)) {
@@ -223,22 +229,28 @@ String doFormatUserVar(byte TaskIndex, byte rel_index, bool mustCheck, bool& isv
 
 String formatUserVarNoCheck(byte TaskIndex, byte rel_index) {
   bool isvalid;
-
-  return doFormatUserVar(TaskIndex, rel_index, false, isvalid);
+  // FIXME TD-er: calls to this function cannot handle SENSOR_TYPE_STRING
+  struct EventStruct TempEvent;
+  TempEvent.TaskIndex = TaskIndex;
+  return doFormatUserVar(&TempEvent, rel_index, false, isvalid);
 }
 
 String formatUserVar(byte TaskIndex, byte rel_index, bool& isvalid) {
-  return doFormatUserVar(TaskIndex, rel_index, true, isvalid);
+  // FIXME TD-er: calls to this function cannot handle SENSOR_TYPE_STRING
+  struct EventStruct TempEvent;
+  TempEvent.TaskIndex = TaskIndex;
+  return doFormatUserVar(&TempEvent, rel_index, true, isvalid);
 }
 
 String formatUserVarNoCheck(struct EventStruct *event, byte rel_index)
 {
-  return formatUserVarNoCheck(event->TaskIndex, rel_index);
+  bool isvalid;
+  return doFormatUserVar(event, rel_index, false, isvalid);
 }
 
 String formatUserVar(struct EventStruct *event, byte rel_index, bool& isvalid)
 {
-  return formatUserVar(event->TaskIndex, rel_index, isvalid);
+  return doFormatUserVar(event, rel_index, true, isvalid);
 }
 
 /*********************************************************************************************\

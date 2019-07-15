@@ -70,7 +70,11 @@ public:
     controller_idx(event->ControllerIndex),
     TaskIndex(event->TaskIndex),
     idx(event->idx),
-    sensorType(event->sensorType) {}
+    sensorType(event->sensorType) {
+    if (sensorType == SENSOR_TYPE_STRING) {
+      txt = event->String2;
+    }
+  }
 
   size_t getSize() const {
     return sizeof(this);
@@ -80,6 +84,7 @@ public:
   byte TaskIndex;
   int idx;
   byte sensorType;
+  String txt;
 };
 
 /*********************************************************************************************\
