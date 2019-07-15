@@ -4,10 +4,10 @@
 #include <Arduino.h>
 #include <vector>
 
-//**************************************************************************/
+// **************************************************************************/
 // Object to store data to and from I2C devices
-//**************************************************************************/
-template <class T>
+// **************************************************************************/
+template<class T>
 struct I2Cdata {
   I2Cdata(uint8_t length) : start_reg(0) {
     data.resize(length);
@@ -18,19 +18,20 @@ struct I2Cdata {
   }
 
   T operator[](uint8_t n) const {
-    if (n < start_reg) return 0;
-    if (n >= (data.size() + start_reg)) return 0;
+    if (n < start_reg) { return 0; }
+
+    if (n >= (data.size() + start_reg)) { return 0; }
     return data[(n - start_reg)];
   }
 
   bool addAtIndex(uint8_t index, T value) {
-    if (index >= data.size()) return false;
+    if (index >= data.size()) { return false; }
     data[index] = value;
     return true;
   }
 
   bool addRegister(uint8_t reg, T value) {
-    if (reg < start_reg) return false;
+    if (reg < start_reg) { return false; }
     return addAtIndex(reg - start_reg, value);
   }
 
@@ -47,11 +48,12 @@ struct I2Cdata {
   }
 
 private:
-  uint8_t start_reg;
-  std::vector<T> data;
+
+  uint8_t       start_reg;
+  std::vector<T>data;
 };
 
 typedef I2Cdata<uint8_t> I2Cdata_bytes;
-typedef I2Cdata<uint16_t> I2Cdata_words;
+typedef I2Cdata<uint16_t>I2Cdata_words;
 
 #endif // I2C_TYPES_H

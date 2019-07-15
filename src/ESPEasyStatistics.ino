@@ -1,6 +1,6 @@
 /*
-void logStatistics(byte loglevel, bool clearStats) {
-  if (loglevelActiveFor(loglevel)) {
+   void logStatistics(byte loglevel, bool clearStats) {
+   if (loglevelActiveFor(loglevel)) {
     String log;
     log.reserve(80);
     for (auto& x: pluginStats) {
@@ -39,29 +39,35 @@ void logStatistics(byte loglevel, bool clearStats) {
       timediff_calls = 0;
       timediff_cpu_cycles_total = 0;
     }
-  }
-}
-*/
+   }
+   }
+ */
 void jsonStatistics(bool clearStats) {
-  bool firstPlugin = true;
-  bool firstFunction = true;
-  int currentPluginId = -1;
+  bool firstPlugin     = true;
+  bool firstFunction   = true;
+  int  currentPluginId = -1;
+
   stream_json_start_array(F("plugin"));
+
   for (auto& x: pluginStats) {
     if (!x.second.isEmpty()) {
-      const int pluginId = x.first/256;
+      const int pluginId = x.first / 256;
+
       if (currentPluginId != pluginId) {
         // new plugin
         currentPluginId = pluginId;
+
         if (!firstFunction) {
           // close previous function
           stream_json_end_object_element(true); // close open function object
         }
+
         if (!firstPlugin) {
           // close previous plugin
           stream_json_end_array_element(true); // Close open function array
           stream_json_end_object_element(false);
         }
+
         // Start new plugin stream
         stream_plugin_timing_stats_json(pluginId);
         firstFunction = true;
@@ -73,12 +79,13 @@ void jsonStatistics(bool clearStats) {
       }
 
       unsigned long minVal, maxVal;
-      unsigned int c = x.second.getMinMax(minVal, maxVal);
-      stream_plugin_function_timing_stats_json(getPluginFunctionName(x.first%256),
+      unsigned int  c = x.second.getMinMax(minVal, maxVal);
+      stream_plugin_function_timing_stats_json(getPluginFunctionName(x.first % 256),
                                                c, minVal, maxVal, x.second.getAvg());
-      if (clearStats) x.second.reset();
+
+      if (clearStats) { x.second.reset(); }
       firstFunction = false;
-      firstPlugin = false;
+      firstPlugin   = false;
     }
   }
   stream_json_end_object_element(true); // end "function" object
