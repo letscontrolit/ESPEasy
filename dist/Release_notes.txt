@@ -1,4 +1,16 @@
 -------------------------------------------------
+Changes in release mega-20190716 (since mega-20190715)
+-------------------------------------------------
+
+Release date: Tue Jul 16 04:00:10 CEST 2019
+
+Gijs Noorlander (3):
+      [Build] PIO 4.0 uses different locations for built binary
+      [Dallas] Accidentally removed delay in init call.
+      [Uncrustify] Cleanup code using Uncrustify
+
+
+-------------------------------------------------
 Changes in release mega-20190715 (since mega-20190714)
 -------------------------------------------------
 
