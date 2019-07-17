@@ -2108,9 +2108,10 @@ unsigned int op_arg_count(const char c)
 
 int Calculate(const char *input, float* result)
 {
+  #define TOKEN_LENGTH 25
   checkRAM(F("Calculate"));
   const char *strpos = input, *strend = input + strlen(input);
-  char token[25];
+  char token[TOKEN_LENGTH];
   char c, oc, *TokenPos = token;
   char stack[32];       // operator stack
   unsigned int sl = 0;  // stack length
@@ -2128,6 +2129,7 @@ int Calculate(const char *input, float* result)
 
   while (strpos < strend)
   {
+	  if ((TokenPos - &token[0]) >= (TOKEN_LENGTH - 1)) return CALCULATE_ERROR_STACK_OVERFLOW;
     // read one token from the input stream
     oc = c;
     c = *strpos;
@@ -2147,7 +2149,7 @@ int Calculate(const char *input, float* result)
         error = RPNCalculate(token);
         TokenPos = token;
         if (error)return error;
-        while (sl > 0)
+        while (sl > 0 && sl < 31)
         {
           sc = stack[sl - 1];
           // While there is an operator token, op2, at the top of the stack
@@ -2176,6 +2178,7 @@ int Calculate(const char *input, float* result)
       // If the token is a left parenthesis, then push it onto the stack.
       else if (c == '(')
       {
+		if (sl >= 32) return CALCULATE_ERROR_STACK_OVERFLOW;
         stack[sl] = c;
         ++sl;
       }
@@ -2191,6 +2194,7 @@ int Calculate(const char *input, float* result)
           error = RPNCalculate(token);
           TokenPos = token;
           if (error)return error;
+          if (sl > 32) return CALCULATE_ERROR_STACK_OVERFLOW;
           sc = stack[sl - 1];
           if (sc == '(')
           {
@@ -2212,7 +2216,8 @@ int Calculate(const char *input, float* result)
         sl--;
 
         // If the token at the top of the stack is a function token, pop it onto the token queue.
-        if (sl > 0)
+		// FIXME TD-er: This sc value is never used, it is re-assigned a new value before it is being checked.
+        if (sl > 0 && sl < 32)
           sc = stack[sl - 1];
 
       }
