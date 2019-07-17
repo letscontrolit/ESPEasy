@@ -3,7 +3,7 @@
 // and initialize the function call pointer into the CCPlugin array
 //********************************************************************************
 
-static const char ADDCPLUGIN_ERROR[] PROGMEM = "System: Error - To much C-Plugins";
+static const char ADDCPLUGIN_ERROR[] PROGMEM = "System: Error - Too many C-Plugins";
 
 // Because of compiler-bug (multiline defines gives an error if file ending is CRLF) the define is striped to a single line
 /*
