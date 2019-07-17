@@ -81,6 +81,7 @@ void processDisconnect() {
   WiFiClient::stopAll();
   #endif // ifdef ESP8266
   mqtt_reconnect_count = 0;
+  resetWiFi();
 
   if (Settings.WiFiRestart_connection_lost()) {
     WifiDisconnect();
@@ -309,13 +310,13 @@ void resetWiFi() {
   lastDisconnectMoment = millis();
   WifiDisconnect();
 
-  //  setWifiMode(WIFI_OFF);
+  setWifiMode(WIFI_OFF);
 
 #ifdef ESP8266
 
   // See https://github.com/esp8266/Arduino/issues/5527#issuecomment-460537616
-  WiFi.~ESP8266WiFiClass();
-  WiFi = ESP8266WiFiClass();
+//  WiFi.~ESP8266WiFiClass();
+//  WiFi = ESP8266WiFiClass();
 #endif // ifdef ESP8266
 }
 
@@ -539,8 +540,12 @@ void setWifiMode(WiFiMode_t wifimode) {
   if (!WiFi.mode(wifimode)) {
     addLog(LOG_LEVEL_INFO, F("WIFI : Cannot set mode!!!!!"));
   }
-  setupStaticIPconfig();
-  delay(30); // Must allow for some time to init.
+  if (wifimode == WIFI_OFF) {
+    delay(1000);
+  } else {
+    setupStaticIPconfig();  
+    delay(30); // Must allow for some time to init.
+  }
   bool new_mode_AP_enabled = WifiIsAP(wifimode);
 
   if (WifiIsAP(cur_mode) && !new_mode_AP_enabled) {
@@ -848,12 +853,14 @@ bool tryConnectWiFi() {
   switch (wifi_connect_attempt) {
     case 0:
 
-      if (lastBSSID[0] == 0) {
+//      if (lastBSSID[0] == 0) {
         WiFi.begin(ssid, passphrase);
+/*
       }
       else {
         WiFi.begin(ssid, passphrase, last_channel, &lastBSSID[0]);
       }
+*/
       break;
     default:
       WiFi.begin(ssid, passphrase);
@@ -912,9 +919,9 @@ void WifiDisconnect()
   #if defined(ESP32)
   WiFi.disconnect();
   #else // if defined(ESP32)
-  ETS_UART_INTR_DISABLE();
-  wifi_station_disconnect();
-  ETS_UART_INTR_ENABLE();
+//  ETS_UART_INTR_DISABLE();
+//  wifi_station_disconnect();
+//  ETS_UART_INTR_ENABLE();
   #endif // if defined(ESP32)
   wifiStatus = ESPEASY_WIFI_DISCONNECTED;
 
