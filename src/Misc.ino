@@ -896,12 +896,12 @@ bool GetArgvBeginEnd(const char *string, const unsigned int argc, int& pos_begin
   pos_end = -1;
   size_t string_len = strlen(string);
   unsigned int string_pos = 0, argc_pos = 0;
-  char c, d; // c = current char, d = next char (if available)
   boolean parenthesis = false;
   char matching_parenthesis = '"';
 
   while (string_pos < string_len)
   {
+	char c, d; // c = current char, d = next char (if available)
     c = string[string_pos];
     d = 0;
     if ((string_pos + 1) < string_len) {
@@ -1728,8 +1728,8 @@ void transformValue(
       String tempValueFormat = valueFormat;
       int tempValueFormatLength = tempValueFormat.length();
       const int invertedIndex = tempValueFormat.indexOf('!');
-      const bool inverted = invertedIndex >= 0 ? 1 : 0;
-      if (inverted)
+      const int inverted = invertedIndex >= 0 ? 1 : 0;
+      if (inverted != 0)
         tempValueFormat.remove(invertedIndex,1);
 
       const int rightJustifyIndex = tempValueFormat.indexOf('R');
@@ -2297,13 +2297,14 @@ int CalculateParam(const char *TmpStr) {
 
 void SendValueLogger(byte TaskIndex)
 {
+#if !defined(BUILD_NO_DEBUG) || defined(FEATURE_SD)
   bool featureSD = false;
   #ifdef FEATURE_SD
     featureSD = true;
   #endif
-
-  String logger;
+  
   if (featureSD || loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+    String logger;
     LoadTaskSettings(TaskIndex);
     byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[TaskIndex]);
     for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++)
@@ -2322,10 +2323,9 @@ void SendValueLogger(byte TaskIndex)
       logger += "\r\n";
     }
 
-#ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_DEBUG, logger);
-#endif
   }
+#endif
 
 #ifdef FEATURE_SD
   String filename = F("VALUES.CSV");
@@ -2717,12 +2717,11 @@ int calc_CRC16(const String& text) {
 int calc_CRC16(const char *ptr, int count)
 {
     int  crc;
-    char i;
     crc = 0;
     while (--count >= 0)
     {
         crc = crc ^ (int) *ptr++ << 8;
-        i = 8;
+        char i = 8;
         do
         {
             if (crc & 0x8000)
@@ -2776,6 +2775,7 @@ float compute_humidity_from_dewpoint(float temperature, float dew_temperature) {
 **********************************************************/
 
 void savePortStatus(uint32_t key, struct portStatusStruct &tempStatus) {
+  // FIXME TD-er: task and monitor are unsigned, should we only check for == ????
   if (tempStatus.task<=0 && tempStatus.monitor<=0 && tempStatus.command<=0)
     globalMapPortStatus.erase(key);
   else

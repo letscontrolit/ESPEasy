@@ -172,6 +172,7 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
             success = true;
           }
         }
+		break;
       }
 
     case PLUGIN_TEN_PER_SECOND:

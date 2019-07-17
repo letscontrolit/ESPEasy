@@ -232,7 +232,7 @@ public:
   }
 
   String txt[VARS_PER_TASK];
-  int vPin[VARS_PER_TASK];
+  int vPin[VARS_PER_TASK] = {0};
   int controller_idx;
   byte TaskIndex;
   int idx;
@@ -246,7 +246,7 @@ public:
 class C016_queue_element {
 public:
 
-  C016_queue_element() : controller_idx(0), TaskIndex(0), sensorType(0) {}
+  C016_queue_element() : timestamp(0), controller_idx(0), TaskIndex(0), sensorType(0) {}
 
   C016_queue_element(const struct EventStruct *event, byte value_count, unsigned long unixTime) :
     timestamp(unixTime),
