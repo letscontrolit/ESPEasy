@@ -316,42 +316,34 @@ String Plugin_013_getErrorStatusString(unsigned int taskIndex)
   switch ((P_013_sensordefs[taskIndex])->getErrorState()) {
     case NewPingESP8266::STATUS_SENSOR_READY: {
       return String(F("Sensor ready"));
-      break;
     }
 
     case NewPingESP8266::STATUS_MEASUREMENT_VALID: {
       return String(F("no error, measurement valid"));
-      break;
     }
 
     case NewPingESP8266::STATUS_ECHO_TRIGGERED: {
       return String(F("Echo triggered, waiting for Echo end"));
-      break;
     }
 
     case NewPingESP8266::STATUS_ECHO_STATE_ERROR: {
       return String(F("Echo pulse error, Echopin not low on trigger"));
-      break;
     }
 
     case NewPingESP8266::STATUS_ECHO_START_TIMEOUT_50ms: {
       return String(F("Echo timeout error, no echo start whithin 50 ms"));
-      break;
     }
 
     case NewPingESP8266::STATUS_ECHO_START_TIMEOUT_DISTANCE: {
       return String(F("Echo timeout error, no echo start whithin time for max. distance"));
-      break;
     }
 
     case NewPingESP8266::STATUS_MAX_DISTANCE_EXCEEDED: {
       return String(F("Echo too late, maximum distance exceeded"));
-      break;
     }
 
     default: {
       return String(F("unknown error"));
-      break;
     }
 
   }

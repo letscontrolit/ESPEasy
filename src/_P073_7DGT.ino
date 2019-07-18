@@ -1094,8 +1094,6 @@ void max7219_spiTransfer(struct EventStruct *event, uint8_t din_pin,
     return;
   }
 
-  P073_data->spidata[0] = (byte)0;
-  P073_data->spidata[1] = (byte)0;
   P073_data->spidata[1] = opcode;
   P073_data->spidata[0] = data;
   digitalWrite(cs_pin, LOW);
