@@ -1045,7 +1045,6 @@ String ESPeasyWifiStatusToString() {
 }
 
 void logConnectionStatus() {
-  String log;
 
   #ifndef ESP32
   const uint8_t arduino_corelib_wifistatus = WiFi.status();

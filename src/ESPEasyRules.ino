@@ -143,7 +143,6 @@ String rulesProcessingFile(const String& fileName, String& event) {
 #endif // ifndef BUILD_NO_DEBUG
 
   static byte nestingLevel = 0;
-  int data                 = 0;
   String log               = "";
 
   nestingLevel++;
@@ -167,13 +166,12 @@ String rulesProcessingFile(const String& fileName, String& event) {
   byte   fakeIfBlock = 0;
 
   byte *buf = new byte[RULES_BUFFER_SIZE]();
-  int   len = 0;
 
   while (f.available()) {
-    len = f.read((byte *)buf, RULES_BUFFER_SIZE);
+    int len = f.read((byte *)buf, RULES_BUFFER_SIZE);
 
     for (int x = 0; x < len; x++) {
-      data = buf[x];
+      int data = buf[x];
 
       SPIFFS_CHECK(data >= 0, fileName.c_str());
 
