@@ -95,7 +95,7 @@ float minutesToDay(int minutes) {
 String minutesToDayHour(int minutes) {
   int  days  = minutes / 1440;
   int  hours = (minutes % 1440) / 60;
-  char TimeString[6]; // 5 digits plus the null char
+  char TimeString[8] = {0}; // 5 digits plus the null char minimum
 
   sprintf_P(TimeString, PSTR("%d%c%02d%c"), days, 'd', hours, 'h');
   return TimeString;
@@ -104,7 +104,7 @@ String minutesToDayHour(int minutes) {
 String minutesToHourMinute(int minutes) {
   int  hours = (minutes % 1440) / 60;
   int  mins  = (minutes % 1440) % 60;
-  char TimeString[20];
+  char TimeString[20] = {0};
 
   sprintf_P(TimeString, PSTR("%d%c%02d%c"), hours, 'h', mins, 'm');
   return TimeString;
@@ -114,7 +114,7 @@ String minutesToDayHourMinute(int minutes) {
   int  days  = minutes / 1440;
   int  hours = (minutes % 1440) / 60;
   int  mins  = (minutes % 1440) % 60;
-  char TimeString[20];
+  char TimeString[20] = {0};
 
   sprintf_P(TimeString, PSTR("%d%c%02d%c%02d%c"), days, 'd', hours, 'h', mins, 'm');
   return TimeString;
@@ -126,7 +126,7 @@ String secondsToDayHourMinuteSecond(int seconds) {
   int  days    = minutes / 1440;
   int  hours   = (minutes % 1440) / 60;
   int  mins    = (minutes % 1440) % 60;
-  char TimeString[20];
+  char TimeString[20] = {0};
 
   sprintf_P(TimeString, PSTR("%d%c%02d%c%02d%c%02d"), days, 'd', hours, ':', mins, ':', sec);
   return TimeString;

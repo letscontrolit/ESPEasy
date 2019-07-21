@@ -193,3 +193,31 @@ String getValue(LabelType::Enum label) {
   }
   return F("MissingString");
 }
+
+String getExtendedValue(LabelType::Enum label) {
+  switch (label)
+  {
+    case LabelType::UPTIME:
+    {
+      String result;
+      result.reserve(40);
+      int minutes = wdcounter / 2;
+      int days = minutes / 1440;
+      minutes = minutes % 1440;
+      int hrs = minutes / 60;
+      minutes = minutes % 60;
+
+      result += days;
+      result += F(" days ");
+      result += hrs;
+      result += F(" hours ");
+      result += minutes;
+      result += F(" minutes");
+      return result;
+    }
+
+    default:
+    break;
+  }
+  return "";
+}

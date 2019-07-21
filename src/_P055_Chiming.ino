@@ -255,7 +255,7 @@ boolean Plugin_055(byte function, struct EventStruct *event, String& string)
 
           if (Plugin_055_Data->chimeClock)
           {
-            char tmpString[8];
+            char tmpString[8] = {0};
 
             sprintf_P(tmpString, PSTR("%02d%02d"), hours, minutes);
             if (Plugin_055_ReadChime(tmpString, tokens))

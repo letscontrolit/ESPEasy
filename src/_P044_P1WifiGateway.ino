@@ -217,8 +217,9 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
                 addLog(LOG_LEVEL_ERROR, F("P1   : Error: network buffer full!"));
               }
               net_buf[count] = 0; // before logging as a char array, zero terminate the last position to be safe.
-              char log[P044_NETBUF_SIZE + 40];
+              char log[P044_NETBUF_SIZE + 40] = {0};
               sprintf_P(log, PSTR("P1   : Error: N>: %s"), (char*)net_buf);
+              ZERO_TERMINATE(log);
               addLog(LOG_LEVEL_DEBUG, log);
             }
           }
