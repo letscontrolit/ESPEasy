@@ -28,7 +28,7 @@ void setUseStaticIP(bool enabled) {
   tmp_wifi.set_use_static_ip(enabled);
 }
 
-void markGotIP() {
+inline void markGotIP() {
   lastGetIPmoment = millis();
   wifiStatus      = wifiStatus | ESPEASY_WIFI_GOT_IP;
   processedGetIP  = false;
@@ -39,7 +39,7 @@ void markGotIP() {
 // Make sure not to call anything in these functions that result in delay() or yield()
 // ********************************************************************************
 #ifdef ESP32
-void WiFiEvent(system_event_id_t event, system_event_info_t info) {
+void IRAM_ATTR WiFiEvent(system_event_id_t event, system_event_info_t info) {
   switch (event) {
     case SYSTEM_EVENT_STA_CONNECTED:
       lastConnectMoment = millis();
@@ -92,7 +92,7 @@ void WiFiEvent(system_event_id_t event, system_event_info_t info) {
 
 #else // ifdef ESP32
 
-void onConnected(const WiFiEventStationModeConnected& event) {
+void ICACHE_RAM_ATTR onConnected(const WiFiEventStationModeConnected& event) {
   lastConnectMoment = millis();
   processedConnect  = false;
   wifiStatus        = wifiStatus | ESPEASY_WIFI_CONNECTED;
@@ -109,7 +109,7 @@ void onConnected(const WiFiEventStationModeConnected& event) {
   }
 }
 
-void onDisconnect(const WiFiEventStationModeDisconnected& event) {
+void ICACHE_RAM_ATTR onDisconnect(const WiFiEventStationModeDisconnected& event) {
   lastDisconnectMoment = millis();
 
   if (timeDiff(lastConnectMoment, last_wifi_connect_attempt_moment) > 0) {
@@ -128,29 +128,29 @@ void onDisconnect(const WiFiEventStationModeDisconnected& event) {
   }
 }
 
-void onGotIP(const WiFiEventStationModeGotIP& event) {
+void ICACHE_RAM_ATTR onGotIP(const WiFiEventStationModeGotIP& event) {
   markGotIP();
 }
 
-void onDHCPTimeout() {
+void ICACHE_RAM_ATTR onDHCPTimeout() {
   processedDHCPTimeout = false;
 }
 
-void onConnectedAPmode(const WiFiEventSoftAPModeStationConnected& event) {
+void ICACHE_RAM_ATTR onConnectedAPmode(const WiFiEventSoftAPModeStationConnected& event) {
   for (byte i = 0; i < 6; ++i) {
     lastMacConnectedAPmode[i] = event.mac[i];
   }
   processedConnectAPmode = false;
 }
 
-void onDisonnectedAPmode(const WiFiEventSoftAPModeStationDisconnected& event) {
+void ICACHE_RAM_ATTR onDisonnectedAPmode(const WiFiEventSoftAPModeStationDisconnected& event) {
   for (byte i = 0; i < 6; ++i) {
     lastMacDisconnectedAPmode[i] = event.mac[i];
   }
   processedDisconnectAPmode = false;
 }
 
-void onScanFinished(int networksFound) {
+void ICACHE_RAM_ATTR onScanFinished(int networksFound) {
   lastGetScanMoment = millis();
   scan_done_number  = networksFound;
   processedScanDone = false;

@@ -207,7 +207,7 @@ void processConnectAPmode() {
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("AP Mode: Client connected: ");
-    log += formatMAC(lastMacConnectedAPmode);
+    log += volatileFormatMac(lastMacConnectedAPmode);
     log += F(" Connected devices: ");
     log += WiFi.softAPgetStationNum();
     addLog(LOG_LEVEL_INFO, log);
@@ -231,7 +231,7 @@ void processDisconnectAPmode() {
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("AP Mode: Client disconnected: ");
-    log += formatMAC(lastMacDisconnectedAPmode);
+    log += volatileFormatMac(lastMacDisconnectedAPmode);
     log += F(" Connected devices: ");
     log += nrStationsConnected;
     addLog(LOG_LEVEL_INFO, log);
