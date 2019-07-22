@@ -90,7 +90,7 @@ void check_size() {
 //   2 = Domoticz MQTT
 //   3 = Nodo Telnet
 //   4 = ThingSpeak
-//   5 = OpenHAB MQTT
+//   5 = Home Assistant (openHAB) MQTT
 //   6 = PiDome MQTT
 //   7 = EmonCMS
 //   8 = Generic HTTP
