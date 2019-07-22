@@ -41,8 +41,8 @@ bool CPlugin_005(byte function, struct EventStruct *event, String& string)
 
     case CPLUGIN_PROTOCOL_TEMPLATE:
       {
-        event->String1 = F("/%sysname%/#");
-        event->String2 = F("/%sysname%/%tskname%/%valname%");
+        event->String1 = F("%sysname%/#");
+        event->String2 = F("%sysname%/%tskname%/%valname%");
         break;
       }
 
