@@ -28,9 +28,9 @@ void setUseStaticIP(bool enabled) {
   tmp_wifi.set_use_static_ip(enabled);
 }
 
-inline void markGotIP() {
+void markGotIP() {
   lastGetIPmoment = millis();
-  wifiStatus      = wifiStatus | ESPEASY_WIFI_GOT_IP;
+  wifiStatus      = ESPEASY_WIFI_GOT_IP;
   processedGetIP  = false;
 }
 
@@ -39,12 +39,12 @@ inline void markGotIP() {
 // Make sure not to call anything in these functions that result in delay() or yield()
 // ********************************************************************************
 #ifdef ESP32
-void IRAM_ATTR WiFiEvent(system_event_id_t event, system_event_info_t info) {
+void WiFiEvent(system_event_id_t event, system_event_info_t info) {
   switch (event) {
     case SYSTEM_EVENT_STA_CONNECTED:
       lastConnectMoment = millis();
       processedConnect  = false;
-      wifiStatus        = wifiStatus | ESPEASY_WIFI_CONNECTED;
+      wifiStatus        = ESPEASY_WIFI_CONNECTED;
       break;
     case SYSTEM_EVENT_STA_DISCONNECTED:
       lastDisconnectMoment = millis();
@@ -72,7 +72,7 @@ void IRAM_ATTR WiFiEvent(system_event_id_t event, system_event_info_t info) {
     case SYSTEM_EVENT_AP_STADISCONNECTED:
 
       for (byte i = 0; i < 6; ++i) {
-        lastMacDisconnectedAPmode[i] = info.sta_disconnected.mac[i];
+        lastMacConnectedAPmode[i] = info.sta_disconnected.mac[i];
       }
       processedDisconnectAPmode = false;
       break;
@@ -92,14 +92,13 @@ void IRAM_ATTR WiFiEvent(system_event_id_t event, system_event_info_t info) {
 
 #else // ifdef ESP32
 
-void ICACHE_RAM_ATTR onConnected(const WiFiEventStationModeConnected& event) {
+void onConnected(const WiFiEventStationModeConnected& event) {
   lastConnectMoment = millis();
   processedConnect  = false;
-  wifiStatus        = wifiStatus | ESPEASY_WIFI_CONNECTED;
+  wifiStatus        = ESPEASY_WIFI_CONNECTED;
   last_channel      = event.channel;
-
-  //  last_ssid = event.ssid;
-  bssid_changed = false;
+  last_ssid         = event.ssid;
+  bssid_changed     = false;
 
   for (byte i = 0; i < 6; ++i) {
     if (lastBSSID[i] != event.bssid[i]) {
@@ -109,7 +108,7 @@ void ICACHE_RAM_ATTR onConnected(const WiFiEventStationModeConnected& event) {
   }
 }
 
-void ICACHE_RAM_ATTR onDisconnect(const WiFiEventStationModeDisconnected& event) {
+void onDisconnect(const WiFiEventStationModeDisconnected& event) {
   lastDisconnectMoment = millis();
 
   if (timeDiff(lastConnectMoment, last_wifi_connect_attempt_moment) > 0) {
@@ -120,15 +119,15 @@ void ICACHE_RAM_ATTR onDisconnect(const WiFiEventStationModeDisconnected& event)
   }
   lastDisconnectReason = event.reason;
   wifiStatus           = ESPEASY_WIFI_DISCONNECTED;
-  processedDisconnect  = false;
 
   if (WiFi.status() == WL_CONNECTED) {
     // See https://github.com/esp8266/Arduino/issues/5912
     WiFi.disconnect();
   }
+  processedDisconnect = false;
 }
 
-void ICACHE_RAM_ATTR onGotIP(const WiFiEventStationModeGotIP& event) {
+void onGotIP(const WiFiEventStationModeGotIP& event) {
   markGotIP();
 }
 
@@ -136,21 +135,21 @@ void ICACHE_RAM_ATTR onDHCPTimeout() {
   processedDHCPTimeout = false;
 }
 
-void ICACHE_RAM_ATTR onConnectedAPmode(const WiFiEventSoftAPModeStationConnected& event) {
+void onConnectedAPmode(const WiFiEventSoftAPModeStationConnected& event) {
   for (byte i = 0; i < 6; ++i) {
     lastMacConnectedAPmode[i] = event.mac[i];
   }
   processedConnectAPmode = false;
 }
 
-void ICACHE_RAM_ATTR onDisonnectedAPmode(const WiFiEventSoftAPModeStationDisconnected& event) {
+void onDisonnectedAPmode(const WiFiEventSoftAPModeStationDisconnected& event) {
   for (byte i = 0; i < 6; ++i) {
     lastMacDisconnectedAPmode[i] = event.mac[i];
   }
   processedDisconnectAPmode = false;
 }
 
-void ICACHE_RAM_ATTR onScanFinished(int networksFound) {
+void onScanFinished(int networksFound) {
   lastGetScanMoment = millis();
   scan_done_number  = networksFound;
   processedScanDone = false;

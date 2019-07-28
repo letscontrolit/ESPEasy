@@ -87,7 +87,7 @@ void handle_schedule() {
 
   if (RTC.lastMixedSchedulerId != mixed_id) {
     RTC.lastMixedSchedulerId = mixed_id;
-    saveToRTC();
+//    saveToRTC();
   }
 
   if (mixed_id == 0) {

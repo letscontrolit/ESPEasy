@@ -715,7 +715,6 @@ bool WiFiConnected();
 bool hostReachable(const IPAddress& ip);
 bool hostReachable(const String& hostname);
 void formatMAC(const uint8_t* mac, char (&strMAC)[20]);
-String volatileFormatMac(volatile uint8_t* mac);
 String to_json_object_value(const String& object, const String& value);
 
 
@@ -1845,27 +1844,27 @@ bool useStaticIP();
 // WiFi related data
 boolean wifiSetup = false;
 boolean wifiSetupConnect = false;
-volatile uint8_t lastBSSID[6] = {0};
-volatile uint8_t wifiStatus = ESPEASY_WIFI_DISCONNECTED;
-volatile unsigned long last_wifi_connect_attempt_moment = 0;
-volatile unsigned int wifi_connect_attempt = 0;
-volatile int wifi_reconnects = -1; // First connection attempt is not a reconnect.
-volatile uint8_t lastWiFiSettings = 0;
-volatile String last_ssid;
-volatile bool bssid_changed = false;
-volatile uint8_t last_channel = 0;
-volatile WiFiDisconnectReason lastDisconnectReason = WIFI_DISCONNECT_REASON_UNSPECIFIED;
-volatile unsigned long lastConnectMoment = 0;
-volatile unsigned long lastDisconnectMoment = 0;
-volatile unsigned long lastGetIPmoment = 0;
-volatile unsigned long lastGetScanMoment = 0;
-volatile unsigned long lastConnectedDuration = 0;
+uint8_t lastBSSID[6] = {0};
+uint8_t wifiStatus = ESPEASY_WIFI_DISCONNECTED;
+unsigned long last_wifi_connect_attempt_moment = 0;
+unsigned int wifi_connect_attempt = 0;
+int wifi_reconnects = -1; // First connection attempt is not a reconnect.
+uint8_t lastWiFiSettings = 0;
+String last_ssid;
+bool bssid_changed = false;
+uint8_t last_channel = 0;
+WiFiDisconnectReason lastDisconnectReason = WIFI_DISCONNECT_REASON_UNSPECIFIED;
+unsigned long lastConnectMoment = 0;
+unsigned long lastDisconnectMoment = 0;
+unsigned long lastGetIPmoment = 0;
+unsigned long lastGetScanMoment = 0;
+unsigned long lastConnectedDuration = 0;
 bool intent_to_reboot = false;
-volatile uint8_t lastMacConnectedAPmode[6] = {0};
-volatile uint8_t lastMacDisconnectedAPmode[6] = {0};
+uint8_t lastMacConnectedAPmode[6] = {0};
+uint8_t lastMacDisconnectedAPmode[6] = {0};
 
 //uint32_t scan_done_status = 0;
-volatile uint8_t  scan_done_number = 0;
+uint8_t  scan_done_number = 0;
 //uint8_t  scan_done_scan_id = 0;
 
 // Semaphore like booleans for processing data gathered from WiFi events.
