@@ -63,16 +63,62 @@ struct P087_data_struct : public PluginTaskData_base {
     bool fullSentenceReceived = false;
 
     if (P087_easySerial != nullptr) {
-      while (P087_easySerial->available() > 0) {
+      while (P087_easySerial->available() > 0 && !fullSentenceReceived) {
+        // Look for end marker
         char c = P087_easySerial->read();
 
-        // Look for end marker
+        switch (c) {
+          case 13:
+            fullSentenceReceived = true;
+            break;
+          case 10:
+
+            // Ignore LF
+            break;
+          default:
+            sentence_part += c;
+            break;
+        }
+
+        if (max_length_reached()) { fullSentenceReceived = true; }
       }
+    }
+
+    if (fullSentenceReceived) {
+      sentence_full = sentence_part;
+      sentence_part = "";
+      newData       = true;
+      ++sentences_received;
     }
     return fullSentenceReceived;
   }
 
+  String getFullSentence() {
+    newData = false;
+    return sentence_full;
+  }
+
+  bool hasNewData() const {
+    return newData;
+  }
+
+  uint32_t getSentencesReceived() const {
+    return sentences_received;
+  }
+
+private:
+
+  bool max_length_reached() const {
+    if (max_length == 0) { return false; }
+    return sentence_part.length() >= max_length;
+  }
+
   ESPeasySerial *P087_easySerial = nullptr;
+  String         sentence_part;
+  String         sentence_full;
+  int16_t        max_length = 128;
+  uint32_t sentences_received = 0;
+  bool           newData    = false;
 };
 
 
@@ -213,15 +259,17 @@ boolean Plugin_087(byte function, struct EventStruct *event, String& string) {
     }
 
     case PLUGIN_TEN_PER_SECOND: {
-      P087_data_struct *P087_data =
-        static_cast<P087_data_struct *>(getPluginTaskData(event->TaskIndex));
+      if (Settings.TaskDeviceEnabled[event->TaskIndex]) {
+        P087_data_struct *P087_data =
+          static_cast<P087_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if ((nullptr != P087_data) && P087_data->loop()) {
-        schedule_task_device_timer(event->TaskIndex, millis() + 10);
-        delay(0); // Processing a full sentence may take a while, run some
-                  // background tasks.
+        if ((nullptr != P087_data) && P087_data->loop()) {
+          schedule_task_device_timer(event->TaskIndex, millis() + 10);
+          delay(0); // Processing a full sentence may take a while, run some
+                    // background tasks.
+        }
+        success = true;
       }
-      success = true;
       break;
     }
 
@@ -232,6 +280,14 @@ boolean Plugin_087(byte function, struct EventStruct *event, String& string) {
       if ((nullptr != P087_data) && P087_data->isInitialized()) {
         // Check for internal state (waiting for reply or reply ready)
         // Output received data.
+        if (P087_data->hasNewData()) {
+          String log;
+          log = F("Proxy: ");
+          log += P087_data->getFullSentence();
+          addLog(LOG_LEVEL_INFO, log);
+          UserVar[event->BaseVarIndex] = P087_data->getSentencesReceived();
+          success = true;
+        }
       }
       break;
     }
