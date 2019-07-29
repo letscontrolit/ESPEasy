@@ -455,7 +455,7 @@ private:
     }
 
     // Only compute the checksum over the number of samples stored.
-    return calc_CRC32((byte *)&RTC_cache_data[0], RTC_CACHE_DATA_SIZE);
+    return calc_CRC32((byte *)&RTC_cache_data[0], /*dataLength*/ RTC_CACHE_DATA_SIZE);
   }
 
   void initRTCcache_data() {

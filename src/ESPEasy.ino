@@ -136,12 +136,12 @@ void setup()
 #endif
   WiFi.persistent(false); // Do not use SDK storage of SSID/WPA parameters
   WiFi.setAutoReconnect(false);
-  WiFi.mode(WIFI_OFF);
+  setWifiMode(WIFI_OFF);
   run_compiletime_checks();
   lowestFreeStack = getFreeStackWatermark();
   lowestRAM = FreeMem();
 #ifndef ESP32
-  ets_isr_attach(8, sw_watchdog_callback, NULL);  // Set a callback for feeding the watchdog.
+//  ets_isr_attach(8, sw_watchdog_callback, NULL);  // Set a callback for feeding the watchdog.
 #endif
 
   resetPluginTaskData();

@@ -896,12 +896,12 @@ bool GetArgvBeginEnd(const char *string, const unsigned int argc, int& pos_begin
   pos_end = -1;
   size_t string_len = strlen(string);
   unsigned int string_pos = 0, argc_pos = 0;
-  char c, d; // c = current char, d = next char (if available)
   boolean parenthesis = false;
   char matching_parenthesis = '"';
 
   while (string_pos < string_len)
   {
+	char c, d; // c = current char, d = next char (if available)
     c = string[string_pos];
     d = 0;
     if ((string_pos + 1) < string_len) {
@@ -1256,6 +1256,18 @@ unsigned long FreeMem(void)
   #endif
 }
 
+
+unsigned long getMaxFreeBlock()
+{
+  unsigned long freemem = FreeMem();
+  #ifdef CORE_POST_2_5_0
+    // computing max free block is a rather extensive operation, so only perform when free memory is already low.
+    if (freemem < 6144) {
+      return ESP.getMaxFreeBlockSize();
+    }
+  #endif
+  return freemem;
+}
 
 
 
@@ -1728,8 +1740,8 @@ void transformValue(
       String tempValueFormat = valueFormat;
       int tempValueFormatLength = tempValueFormat.length();
       const int invertedIndex = tempValueFormat.indexOf('!');
-      const bool inverted = invertedIndex >= 0 ? 1 : 0;
-      if (inverted)
+      const int inverted = invertedIndex >= 0 ? 1 : 0;
+      if (inverted != 0)
         tempValueFormat.remove(invertedIndex,1);
 
       const int rightJustifyIndex = tempValueFormat.indexOf('R');
@@ -2096,9 +2108,10 @@ unsigned int op_arg_count(const char c)
 
 int Calculate(const char *input, float* result)
 {
+  #define TOKEN_LENGTH 25
   checkRAM(F("Calculate"));
   const char *strpos = input, *strend = input + strlen(input);
-  char token[25];
+  char token[TOKEN_LENGTH];
   char c, oc, *TokenPos = token;
   char stack[32];       // operator stack
   unsigned int sl = 0;  // stack length
@@ -2116,6 +2129,7 @@ int Calculate(const char *input, float* result)
 
   while (strpos < strend)
   {
+	  if ((TokenPos - &token[0]) >= (TOKEN_LENGTH - 1)) return CALCULATE_ERROR_STACK_OVERFLOW;
     // read one token from the input stream
     oc = c;
     c = *strpos;
@@ -2135,7 +2149,7 @@ int Calculate(const char *input, float* result)
         error = RPNCalculate(token);
         TokenPos = token;
         if (error)return error;
-        while (sl > 0)
+        while (sl > 0 && sl < 31)
         {
           sc = stack[sl - 1];
           // While there is an operator token, op2, at the top of the stack
@@ -2164,6 +2178,7 @@ int Calculate(const char *input, float* result)
       // If the token is a left parenthesis, then push it onto the stack.
       else if (c == '(')
       {
+		if (sl >= 32) return CALCULATE_ERROR_STACK_OVERFLOW;
         stack[sl] = c;
         ++sl;
       }
@@ -2179,6 +2194,7 @@ int Calculate(const char *input, float* result)
           error = RPNCalculate(token);
           TokenPos = token;
           if (error)return error;
+          if (sl > 32) return CALCULATE_ERROR_STACK_OVERFLOW;
           sc = stack[sl - 1];
           if (sc == '(')
           {
@@ -2200,7 +2216,8 @@ int Calculate(const char *input, float* result)
         sl--;
 
         // If the token at the top of the stack is a function token, pop it onto the token queue.
-        if (sl > 0)
+		// FIXME TD-er: This sc value is never used, it is re-assigned a new value before it is being checked.
+        if (sl > 0 && sl < 32)
           sc = stack[sl - 1];
 
       }
@@ -2297,13 +2314,14 @@ int CalculateParam(const char *TmpStr) {
 
 void SendValueLogger(byte TaskIndex)
 {
+#if !defined(BUILD_NO_DEBUG) || defined(FEATURE_SD)
   bool featureSD = false;
   #ifdef FEATURE_SD
     featureSD = true;
   #endif
-
-  String logger;
+  
   if (featureSD || loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+    String logger;
     LoadTaskSettings(TaskIndex);
     byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[TaskIndex]);
     for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++)
@@ -2322,10 +2340,9 @@ void SendValueLogger(byte TaskIndex)
       logger += "\r\n";
     }
 
-#ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_DEBUG, logger);
-#endif
   }
+#endif
 
 #ifdef FEATURE_SD
   String filename = F("VALUES.CSV");
@@ -2717,12 +2734,11 @@ int calc_CRC16(const String& text) {
 int calc_CRC16(const char *ptr, int count)
 {
     int  crc;
-    char i;
     crc = 0;
     while (--count >= 0)
     {
         crc = crc ^ (int) *ptr++ << 8;
-        i = 8;
+        char i = 8;
         do
         {
             if (crc & 0x8000)
@@ -2776,6 +2792,7 @@ float compute_humidity_from_dewpoint(float temperature, float dew_temperature) {
 **********************************************************/
 
 void savePortStatus(uint32_t key, struct portStatusStruct &tempStatus) {
+  // FIXME TD-er: task and monitor are unsigned, should we only check for == ????
   if (tempStatus.task<=0 && tempStatus.monitor<=0 && tempStatus.command<=0)
     globalMapPortStatus.erase(key);
   else

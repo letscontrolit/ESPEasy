@@ -547,10 +547,10 @@ String LoadTaskSettings(byte TaskIndex)
     // if field set empty, reload defaults
     struct EventStruct TempEvent;
     TempEvent.TaskIndex = TaskIndex;
-    String dummyString;
+    String tmp;
 
     // the plugin call should populate ExtraTaskSettings with its default values.
-    PluginCall(PLUGIN_GET_DEVICEVALUENAMES, &TempEvent, dummyString);
+    PluginCall(PLUGIN_GET_DEVICEVALUENAMES, &TempEvent, tmp);
   }
   ExtraTaskSettings.validate();
   STOP_TIMER(LOAD_TASK_SETTINGS);
@@ -1028,7 +1028,7 @@ int getCacheFileCountFromFilename(const String& fname) {
   int endpos = fname.indexOf(F(".bin"));
 
   if (endpos < 0) { return -1; }
-  String digits = fname.substring(startpos + 1, endpos);
+//  String digits = fname.substring(startpos + 1, endpos);
   int    result;
 
   if (validIntFromString(fname.substring(startpos + 1, endpos), result)) {
@@ -1154,12 +1154,11 @@ String getPartitionTableHeader(const String& itemSep, const String& lineEnd) {
 String getPartitionTable(byte pType, const String& itemSep, const String& lineEnd) {
   esp_partition_type_t partitionType = static_cast<esp_partition_type_t>(pType);
   String result;
-  const esp_partition_t   *_mypart;
   esp_partition_iterator_t _mypartiterator = esp_partition_find(partitionType, ESP_PARTITION_SUBTYPE_ANY, NULL);
 
   if (_mypartiterator) {
     do {
-      _mypart = esp_partition_get(_mypartiterator);
+      const esp_partition_t   *_mypart = esp_partition_get(_mypartiterator);
       result += formatToHex(_mypart->address);
       result += itemSep;
       result += formatToHex_decimal(_mypart->size, 1024);

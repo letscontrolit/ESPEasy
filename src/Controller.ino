@@ -386,10 +386,10 @@ void processMQTTdelayQueue() {
 \*********************************************************************************************/
 void MQTTStatus(const String& status)
 {
-  MakeControllerSettings(ControllerSettings);
   int enabledMqttController = firstEnabledMQTTController();
 
   if (enabledMqttController >= 0) {
+    MakeControllerSettings(ControllerSettings);
     LoadControllerSettings(enabledMqttController, ControllerSettings);
     String pubname = ControllerSettings.Subscribe;
     pubname.replace(F("/#"), F("/status"));

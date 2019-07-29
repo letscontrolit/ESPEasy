@@ -51,7 +51,7 @@ private:
 uint8_t _address;
 uint8_t _motor;
 bool _use_STBY_IO = false;
-uint8_t _STBY_IO;
+uint8_t _STBY_IO = 0;
 };
 
 #endif

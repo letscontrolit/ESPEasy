@@ -53,7 +53,7 @@ void serial()
 void addToSerialBuffer(const char *line) {
   process_serialWriteBuffer(); // Try to make some room first.
   const size_t line_length = strlen(line);
-  int roomLeft             = ESP.getFreeHeap();
+  int roomLeft             = getMaxFreeBlock();
 
   if (roomLeft < 500) {
     roomLeft = 0;                              // Do not append to buffer.
@@ -74,6 +74,7 @@ void addToSerialBuffer(const char *line) {
 }
 
 void addNewlineToSerialBuffer() {
+  process_serialWriteBuffer(); // Try to make some room first.
   serialWriteBuffer.push_back('\r');
   serialWriteBuffer.push_back('\n');
 }

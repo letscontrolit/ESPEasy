@@ -143,7 +143,7 @@ void checkUDP()
                 if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
                   char macaddress[20];
                   formatMAC(mac, macaddress);
-                  char log[80];
+                  char log[80] = {0};
                   sprintf_P(log, PSTR("UDP  : %s,%s,%u"), macaddress, formatIP(ip).c_str(), unit);
                   addLog(LOG_LEVEL_DEBUG_MORE, log);
                 }
@@ -490,7 +490,7 @@ void SSDP_send(byte method) {
                                    "LOCATION: http://%u.%u.%u.%u:80/ssdp.xml\r\n" // WiFi.localIP(),
                                    "\r\n");
   {
-    char uuid[64];
+    char uuid[64] = {0};
     uint32_t chipId = ESP.getChipId();
     sprintf_P(uuid, PSTR("38323636-4558-4dda-9188-cda0e6%02x%02x%02x"),
               (uint16_t) ((chipId >> 16) & 0xff),

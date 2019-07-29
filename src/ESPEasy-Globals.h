@@ -396,7 +396,7 @@ void check_size() {
 #define PLUGIN_CONFIGFLOATVAR_MAX           4
 #define PLUGIN_CONFIGLONGVAR_MAX            4
 #define PLUGIN_EXTRACONFIGVAR_MAX          16
-#define CPLUGIN_MAX                        16
+#define CPLUGIN_MAX                        20
 #define NPLUGIN_MAX                         4
 #define UNIT_MAX                          254 // unit 255 = broadcast
 #define RULES_TIMER_MAX                     8
@@ -775,8 +775,8 @@ struct SecurityStruct
   byte          IPblockLevel;
 
   //its safe to extend this struct, up to 4096 bytes, default values in config are 0. Make sure crc is last
-  uint8_t       ProgmemMd5[16]; // crc of the binary that last saved the struct to file.
-  uint8_t       md5[16];
+  uint8_t       ProgmemMd5[16] = {0}; // crc of the binary that last saved the struct to file.
+  uint8_t       md5[16] = {0};
 } SecuritySettings;
 
 
@@ -1868,13 +1868,13 @@ uint8_t  scan_done_number = 0;
 //uint8_t  scan_done_scan_id = 0;
 
 // Semaphore like booleans for processing data gathered from WiFi events.
-bool processedConnect = true;
-bool processedDisconnect = true;
-bool processedGetIP = true;
-bool processedDHCPTimeout = true;
-bool processedConnectAPmode = true;
-bool processedDisconnectAPmode = true;
-bool processedScanDone = true;
+volatile bool processedConnect = true;
+volatile bool processedDisconnect = true;
+volatile bool processedGetIP = true;
+volatile bool processedDHCPTimeout = true;
+volatile bool processedConnectAPmode = true;
+volatile bool processedDisconnectAPmode = true;
+volatile bool processedScanDone = true;
 
 bool webserver_state = false;
 bool webserver_init = false;

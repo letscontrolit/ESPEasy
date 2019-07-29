@@ -51,10 +51,11 @@ String formatIP(const IPAddress& ip) {
 
 void formatMAC(const uint8_t *mac, char (& strMAC)[20]) {
   sprintf_P(strMAC, PSTR("%02X:%02X:%02X:%02X:%02X:%02X"), mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+  ZERO_TERMINATE(strMAC);
 }
 
 String formatMAC(const uint8_t *mac) {
-  char str[20];
+  char str[20] = {0};
 
   formatMAC(mac, str);
   return String(str);
@@ -625,7 +626,7 @@ void parseSystemVariables(String& s, boolean useURLencode)
     repl(F("%sysname%"), Settings.Name, s, useURLencode);
 
     // valueString is being used by the macro.
-    char valueString[5];
+    char valueString[5] = {0};
     #define SMART_REPL_TIME(T, F, V) \
   if (s.indexOf(T) != -1) { sprintf_P(valueString, (F), (V)); repl((T), valueString, s, useURLencode); }
     SMART_REPL_TIME(F("%sysyear%"),  PSTR("%d"), year())

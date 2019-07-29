@@ -290,7 +290,7 @@ boolean Plugin_052(byte function, struct EventStruct *event, String &string) {
         int meas_mode = P052_data->modbus.readHoldingRegister(0x0A);
         int period = P052_data->modbus.readHoldingRegister(0x0B);
         int samp_meas = P052_data->modbus.readHoldingRegister(0x0C);
-        if (meas_mode != -1 && period != -1 && samp_meas != -1) {
+        if (meas_mode != -1 || period != -1 || samp_meas != -1) {
           addFormSubHeader(F("Device Settings"));
           // Disable selector for now, since single measurement not yet supported.
           /*

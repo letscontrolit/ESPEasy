@@ -3,7 +3,7 @@
 // and initialize the function call pointer into the CNPlugin array
 //********************************************************************************
 
-static const char ADDNPLUGIN_ERROR[] PROGMEM = "System: Error - To much N-Plugins";
+static const char ADDNPLUGIN_ERROR[] PROGMEM = "System: Error - Too many N-Plugins";
 
 
 // Because of compiler-bug (multiline defines gives an error if file ending is CRLF) the define is striped to a single line

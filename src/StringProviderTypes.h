@@ -98,6 +98,7 @@ enum Enum : short {
 String getInternalLabel(LabelType::Enum label);
 String getLabel(LabelType::Enum label);
 String getValue(LabelType::Enum label);
+String getExtendedValue(LabelType::Enum label);
 void stream_next_json_object_value(LabelType::Enum label);
 void stream_last_json_object_value(LabelType::Enum label);
 void addRowLabelValue(LabelType::Enum label);

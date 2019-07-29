@@ -514,7 +514,7 @@ bool getNtpTime(double& unixTime_d)
 // Return the time difference as a signed value, taking into account the timers may overflow.
 // Returned timediff is between -24.9 days and +24.9 days.
 // Returned value is positive when "next" is after "prev"
-long timeDiff(const unsigned long prev, const unsigned long next)
+long ICACHE_RAM_ATTR timeDiff(const unsigned long prev, const unsigned long next)
 {
   long signed_diff = 0;
 

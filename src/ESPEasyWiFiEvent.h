@@ -30,7 +30,7 @@ void setUseStaticIP(bool enabled) {
 
 void markGotIP() {
   lastGetIPmoment = millis();
-  wifiStatus      = wifiStatus | ESPEASY_WIFI_GOT_IP;
+  wifiStatus      = ESPEASY_WIFI_GOT_IP;
   processedGetIP  = false;
 }
 
@@ -44,7 +44,7 @@ void WiFiEvent(system_event_id_t event, system_event_info_t info) {
     case SYSTEM_EVENT_STA_CONNECTED:
       lastConnectMoment = millis();
       processedConnect  = false;
-      wifiStatus        = wifiStatus | ESPEASY_WIFI_CONNECTED;
+      wifiStatus        = ESPEASY_WIFI_CONNECTED;
       break;
     case SYSTEM_EVENT_STA_DISCONNECTED:
       lastDisconnectMoment = millis();
@@ -72,7 +72,7 @@ void WiFiEvent(system_event_id_t event, system_event_info_t info) {
     case SYSTEM_EVENT_AP_STADISCONNECTED:
 
       for (byte i = 0; i < 6; ++i) {
-        lastMacDisconnectedAPmode[i] = info.sta_disconnected.mac[i];
+        lastMacConnectedAPmode[i] = info.sta_disconnected.mac[i];
       }
       processedDisconnectAPmode = false;
       break;
@@ -95,11 +95,10 @@ void WiFiEvent(system_event_id_t event, system_event_info_t info) {
 void onConnected(const WiFiEventStationModeConnected& event) {
   lastConnectMoment = millis();
   processedConnect  = false;
-  wifiStatus        = wifiStatus | ESPEASY_WIFI_CONNECTED;
+  wifiStatus        = ESPEASY_WIFI_CONNECTED;
   last_channel      = event.channel;
-
-  //  last_ssid = event.ssid;
-  bssid_changed = false;
+  last_ssid         = event.ssid;
+  bssid_changed     = false;
 
   for (byte i = 0; i < 6; ++i) {
     if (lastBSSID[i] != event.bssid[i]) {
@@ -120,19 +119,19 @@ void onDisconnect(const WiFiEventStationModeDisconnected& event) {
   }
   lastDisconnectReason = event.reason;
   wifiStatus           = ESPEASY_WIFI_DISCONNECTED;
-  processedDisconnect  = false;
 
   if (WiFi.status() == WL_CONNECTED) {
     // See https://github.com/esp8266/Arduino/issues/5912
     WiFi.disconnect();
   }
+  processedDisconnect = false;
 }
 
 void onGotIP(const WiFiEventStationModeGotIP& event) {
   markGotIP();
 }
 
-void onDHCPTimeout() {
+void ICACHE_RAM_ATTR onDHCPTimeout() {
   processedDHCPTimeout = false;
 }
 

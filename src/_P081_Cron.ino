@@ -272,7 +272,7 @@ boolean Plugin_081(byte function, struct EventStruct *event, String& string)
 
       }
       success = true;
-
+	  break;
     }
 
     case PLUGIN_TEN_PER_SECOND:
@@ -281,7 +281,7 @@ boolean Plugin_081(byte function, struct EventStruct *event, String& string)
       //be careful on what is added here. Heavy processing will result in slowing the module down!
 
       success = true;
-
+	  break;
     }
   }   // switch
   return success;

@@ -1000,14 +1000,7 @@ void handle_root() {
 
     addRowLabel(getLabel(LabelType::UPTIME));
     {
-        int minutes = wdcounter / 2;
-        int days = minutes / 1440;
-        minutes = minutes % 1440;
-        int hrs = minutes / 60;
-        minutes = minutes % 60;
-        char strUpTime[40];
-        sprintf_P(strUpTime, PSTR("%d days %d hours %d minutes"), days, hrs, minutes);
-        TXBuffer += strUpTime;
+      TXBuffer += getExtendedValue(LabelType::UPTIME);
     }
     addRowLabel(getLabel(LabelType::LOAD_PCT));
     if (wdcounter > 0)
@@ -6623,15 +6616,7 @@ void handle_sysinfo_json() {
   json_open(false, F("general"));
     json_number(F("unit"), String(Settings.Unit));
     json_prop(F("time"), getDateTimeString('-', ':', ' '));
-
-  char strUpTime[40];
-  int minutes = wdcounter / 2;
-  int days = minutes / 1440;
-  minutes = minutes % 1440;
-  int hrs = minutes / 60;
-  minutes = minutes % 60;
-  sprintf_P(strUpTime, PSTR("%d days %d hours %d minutes"), days, hrs, minutes);
-    json_prop(F("uptime"), strUpTime);
+    json_prop(F("uptime"), getExtendedValue(LabelType::UPTIME));
     json_number(F("cpu_load"), String(getCPUload()));
     json_number(F("loop_count"), String(getLoopCountPerSec()));
   json_close();
@@ -6825,14 +6810,7 @@ void handle_sysinfo() {
 
   addRowLabel(getLabel(LabelType::UPTIME));
   {
-    char strUpTime[40];
-    int minutes = wdcounter / 2;
-    int days = minutes / 1440;
-    minutes = minutes % 1440;
-    int hrs = minutes / 60;
-    minutes = minutes % 60;
-    sprintf_P(strUpTime, PSTR("%d days %d hours %d minutes"), days, hrs, minutes);
-    TXBuffer += strUpTime;
+    TXBuffer += getExtendedValue(LabelType::UPTIME);
   }
 
   addRowLabel(getLabel(LabelType::LOAD_PCT));

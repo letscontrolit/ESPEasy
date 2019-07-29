@@ -6,7 +6,7 @@
 #endif // ifdef CORE_POST_2_5_0
 
 bool unprocessedWifiEvents() {
-  if (processedConnect && processedGetIP && processedDisconnect && processedDHCPTimeout) { return false; }
+  if (processedConnect && processedGetIP && processedDisconnect) { return false; }
   return true;
 }
 
@@ -16,10 +16,11 @@ bool unprocessedWifiEvents() {
 // ********************************************************************************
 void processConnect() {
   if (processedConnect) { return; }
+  processedConnect = true;
   delay(100); // FIXME TD-er: See https://github.com/letscontrolit/ESPEasy/issues/1987#issuecomment-451644424
   ++wifi_reconnects;
 
-  //  if ((wifiStatus & ESPEASY_WIFI_CONNECTED) == 0) return;
+  if (wifiStatus < ESPEASY_WIFI_CONNECTED) { return; }
   const long connect_duration = timeDiff(last_wifi_connect_attempt_moment, lastConnectMoment);
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -53,11 +54,11 @@ void processConnect() {
     WiFi.setAutoConnect(true);
   }
   logConnectionStatus();
-  processedConnect = true;
 }
 
 void processDisconnect() {
   if (processedDisconnect) { return; }
+  processedDisconnect = true;
   delay(100); // FIXME TD-er: See https://github.com/letscontrolit/ESPEasy/issues/1987#issuecomment-451644424
 
   if (Settings.UseRules) {
@@ -76,17 +77,12 @@ void processDisconnect() {
     }
     addLog(LOG_LEVEL_INFO, log);
   }
-  #ifdef ESP8266
-  WiFiUDP::stopAll();
-  WiFiClient::stopAll();
-  #endif // ifdef ESP8266
-  mqtt_reconnect_count = 0;
 
   if (Settings.WiFiRestart_connection_lost()) {
-    WifiDisconnect();
+    setWifiMode(WIFI_OFF);
+    delay(100);
   }
   logConnectionStatus();
-  processedDisconnect = true;
 }
 
 void processGotIP() {
@@ -128,7 +124,6 @@ void processGotIP() {
       log += F(" ms");
     }
     addLog(LOG_LEVEL_INFO, log);
-    WiFi.setAutoReconnect(true);
   }
 
   // Might not work in core 2.5.0
@@ -182,7 +177,7 @@ void processGotIP() {
   statusLED(true);
 
   //  WiFi.scanDelete();
-  //  wifiStatus = ESPEASY_WIFI_SERVICES_INITIALIZED;
+  wifiStatus = ESPEASY_WIFI_SERVICES_INITIALIZED;
   setWebserverRunning(true);
   #ifdef FEATURE_MDNS
 
@@ -326,11 +321,11 @@ bool hasIPaddr() {
   for (auto addr : addrList) {
     if ((configured = !addr.isLocal() && (addr.ifnumber() == STATION_IF))) {
       /*
-      Serial.printf("STA: IF='%s' hostname='%s' addr= %s\n",
+         Serial.printf("STA: IF='%s' hostname='%s' addr= %s\n",
                     addr.ifname().c_str(),
                     addr.ifhostname(),
                     addr.toString().c_str());
-      */
+       */
       break;
     }
   }
@@ -384,9 +379,9 @@ void WifiScanAsync() {
 bool WifiIsAP(WiFiMode_t wifimode)
 {
   #if defined(ESP32)
-  return (wifimode & WIFI_MODE_AP) != 0;
+  return (wifimode == WIFI_MODE_AP) || (wifimode == WIFI_MODE_APSTA);
   #else // if defined(ESP32)
-  return (wifimode & WIFI_AP) != 0;
+  return (wifimode == WIFI_AP) || (wifimode == WIFI_AP_STA);
   #endif // if defined(ESP32)
 }
 
@@ -428,10 +423,6 @@ void setSTA(bool enable) {
 void setAP(bool enable) {
   WiFiMode_t wifimode = WiFi.getMode();
 
-  if (WifiIsAP(wifimode) == enable) {
-    return;
-  }
-
   switch (wifimode) {
     case WIFI_OFF:
 
@@ -450,7 +441,6 @@ void setAP(bool enable) {
       if (!enable) { setWifiMode(WIFI_STA); }
       break;
     default:
-      addLog(LOG_LEVEL_INFO, F("WIFI : Unknown mode (setAP)"));
       break;
   }
 }
@@ -514,9 +504,15 @@ void setWifiMode(WiFiMode_t wifimode) {
   if (cur_mode == wifimode) {
     return;
   }
-  String log = F("WIFI : Current mode ");
-  log += String(cur_mode);
-  addLog(LOG_LEVEL_INFO, log);
+
+  if (wifimode != WIFI_OFF) {
+    #ifdef ESP8266
+
+    // See: https://github.com/esp8266/Arduino/issues/6172#issuecomment-500457407
+    WiFi.forceSleepWake(); // Make sure WiFi is really active.
+    #endif // ifdef ESP8266
+    delay(100);
+  }
 
   switch (wifimode) {
     case WIFI_OFF:
@@ -539,8 +535,17 @@ void setWifiMode(WiFiMode_t wifimode) {
   if (!WiFi.mode(wifimode)) {
     addLog(LOG_LEVEL_INFO, F("WIFI : Cannot set mode!!!!!"));
   }
-  setupStaticIPconfig();
-  delay(30); // Must allow for some time to init.
+
+  if (wifimode == WIFI_OFF) {
+    delay(1000);
+    #ifdef ESP8266
+    WiFi.forceSleepBegin();
+    #endif
+    delay(1);
+  } else {
+    setupStaticIPconfig();
+    delay(30); // Must allow for some time to init.
+  }
   bool new_mode_AP_enabled = WifiIsAP(wifimode);
 
   if (WifiIsAP(cur_mode) && !new_mode_AP_enabled) {
@@ -627,14 +632,6 @@ void WiFiConnectRelaxed() {
   if (prepareWiFi()) {
     if (selectValidWiFiSettings()) {
       tryConnectWiFi();
-      unsigned long timeout = millis() + 5000;
-
-      while (WiFi.status() == WL_DISCONNECTED && !timeOutReached(timeout)) {
-        addLog(LOG_LEVEL_INFO, F("Waiting for WiFi connect"));
-        process_serialWriteBuffer();
-        delay(100);
-      }
-
       return;
     }
   }
@@ -653,10 +650,6 @@ bool prepareWiFi() {
     return false;
   }
   setSTA(true);
-  delay(100);
-  #ifdef ESP8266
-  WiFi.forceSleepWake(); // Make sure WiFi is really active.
-  #endif // ifdef ESP8266
   char hostname[40];
   safe_strncpy(hostname, WifiGetHostname().c_str(), sizeof(hostname));
   #if defined(ESP8266)
@@ -773,12 +766,7 @@ void setConnectionSpeed() {
 void setupStaticIPconfig() {
   setUseStaticIP(useStaticIP());
 
-  if (!useStaticIP()) {
-    // For newer core versions, simply setting to 0's will disable DHCPc
-    //    uint32_t zero_ip = 0u;
-    //    WiFi.config(zero_ip, zero_ip, zero_ip, zero_ip);
-    return;
-  }
+  if (!useStaticIP()) { return; }
   const IPAddress ip     = Settings.IP;
   const IPAddress gw     = Settings.Gateway;
   const IPAddress subnet = Settings.Subnet;
@@ -858,7 +846,6 @@ bool tryConnectWiFi() {
     default:
       WiFi.begin(ssid, passphrase);
   }
-  delay(100); // FIXME TD-er: Not sure why, but a delay is really needed here or else you will run into timeouts.
   ++wifi_connect_attempt;
   logConnectionStatus();
 
@@ -916,10 +903,8 @@ void WifiDisconnect()
   wifi_station_disconnect();
   ETS_UART_INTR_ENABLE();
   #endif // if defined(ESP32)
-  wifiStatus = ESPEASY_WIFI_DISCONNECTED;
-
-  // processedDisconnect = false;
-  setSTA(false);
+  wifiStatus          = ESPEASY_WIFI_DISCONNECTED;
+  processedDisconnect = false;
 }
 
 // ********************************************************************************
@@ -1074,9 +1059,8 @@ void WifiCheck()
   if (wifiSetup) {
     return;
   }
-  delay(0);
 
-  //  processDisableAPmode();
+  processDisableAPmode();
   IPAddress ip = WiFi.localIP();
 
   if (WiFiConnected()) { // let's just check for wifi, no matter if we have an IP or not...
@@ -1087,27 +1071,18 @@ void WifiCheck()
         resetWiFi();
       }
     }
+  } else {
+    if (wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED) { // SMY: WiFi seems to be disconnected and out of sync with internal state...
+                                                           // strange... we should never get here!!
+      addLog(LOG_LEVEL_ERROR, F("WIFI : WiFiCheck out of sync"));
+      resetWiFi();
+    }
   }
 
-  if ((WiFi.status() == WL_DISCONNECTED) && (timePassedSince(last_wifi_connect_attempt_moment) > 5000)) {
-    WifiDisconnect();
-  }
-
-  switch (wifiStatus) {
-    case ESPEASY_WIFI_SERVICES_INITIALIZED:
-      break;
-    case ESPEASY_WIFI_DISCONNECTED:
-
-      if ((lastDisconnectMoment == 0) || timeOutReached(lastDisconnectMoment + 5000)) {
-        WiFiConnectRelaxed();
-      }
-      break;
-    default:
-
-      if (timeOutReached(last_wifi_connect_attempt_moment + (10000 + wifi_connect_attempt * 200))) {
-        WifiDisconnect();
-      }
-      break;
+  if (wifiStatus != ESPEASY_WIFI_SERVICES_INITIALIZED) {
+    if (timeOutReached(last_wifi_connect_attempt_moment + (1000 + wifi_connect_attempt * 200))) {
+      WiFiConnectRelaxed();
+    }
   }
 
   if (mqtt_reconnect_count > 10) {

@@ -241,9 +241,9 @@ public:
 
   float tempC = 0.0;
   float rhTrue = 0.0;
-  unsigned long sendCommandTime;
+  unsigned long sendCommandTime = 0;
 
-  int input_mode;
+  int input_mode = 0;
   byte _dataPin = 0;
   byte _clockPin = 0;
   byte state = P031_IDLE;
@@ -326,11 +326,11 @@ boolean Plugin_031(byte function, struct EventStruct *event, String& string)
           String log = F("SHT1X : Status byte: ");
           log += String(status, HEX);
           log += F(" - resolution: ");
-          log += (status & 1 ? F("low") : F("high"));
+          log += ((status & 1) ? F("low") : F("high"));
           log += F(" reload from OTP: ");
-          log += ((status >> 1) & 1 ? F("yes") : F("no"));
+          log += (((status >> 1) & 1) ? F("yes") : F("no"));
           log += F(", heater: ");
-          log += ((status >> 2) & 1 ? F("on") : F("off"));
+          log += (((status >> 2) & 1) ? F("on") : F("off"));
           addLog(LOG_LEVEL_DEBUG, log);
         }
         success = true;
