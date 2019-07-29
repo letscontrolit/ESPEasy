@@ -538,7 +538,9 @@ void setWifiMode(WiFiMode_t wifimode) {
 
   if (wifimode == WIFI_OFF) {
     delay(1000);
+    #ifdef ESP8266
     WiFi.forceSleepBegin();
+    #endif
     delay(1);
   } else {
     setupStaticIPconfig();
