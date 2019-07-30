@@ -1,4 +1,28 @@
 -------------------------------------------------
+Changes in release mega-20190730 (since mega-20190716)
+-------------------------------------------------
+
+Release date: Tue Jul 30 04:00:18 CEST 2019
+
+Gijs Noorlander (15):
+      [7dgt]  Uncrustify cleanup and remove F() & PROGMEM macro
+      [WiFi] Add 1000 msec delay after WIFI_OFF and fix initial connect
+      [CPPcheck] Fix some suggestions from CPPcheck
+      [Memory] Be a bit more careful with memory allocation for serial buffer
+      [Range check] Perform some basic range checks in Calculate function
+      [PIO] include latest fixes for core 2.5.2 (PIO espressif8266@2.2.2)
+      Change "To much plugins" to "Too many plugins"
+      [CPPcheck] Remove unneeded code
+      [Build] Remove hidden unicode characters preventing build of AccuEnergy
+      [CPPcheck] Reduce scope of variables
+      [Strings] Make sure generated strings are zero-terminated
+      Use volatile and IRAM attributes on wifi event related code
+      [ESP32] Force Gratuitous ARP
+      [WiFi] Revert WiFi changes to 20190630 and force wifi wake/sleep
+      [WiFi] Fix build issue on ESP32
+
+
+-------------------------------------------------
 Changes in release mega-20190716 (since mega-20190715)
 -------------------------------------------------
 
