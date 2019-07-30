@@ -43,7 +43,7 @@ struct P087_data_struct : public PluginTaskData_base {
   }
 
   bool init(const int16_t serial_rx, const int16_t serial_tx) {
-    if ((serial_rx < 0) || (serial_tx < 0)) {
+    if ((serial_rx < 0) && (serial_tx < 0)) {
       return false;
     }
     reset();
@@ -69,8 +69,23 @@ struct P087_data_struct : public PluginTaskData_base {
 
         switch (c) {
           case 13:
-            fullSentenceReceived = true;
+          {
+            const size_t length = sentence_part.length();
+            bool valid = length > 0;
+
+            for (size_t i = 0; i < length && valid; ++i) {
+              if (sentence_part[i] > 127 || sentence_part[i] < 32) {
+                sentence_part = "";
+                ++sentences_received_error;
+                valid = false;
+              }
+            }
+
+            if (valid) {
+              fullSentenceReceived = true;
+            }
             break;
+          }
           case 10:
 
             // Ignore LF
@@ -85,21 +100,14 @@ struct P087_data_struct : public PluginTaskData_base {
     }
 
     if (fullSentenceReceived) {
-      sentence_full = sentence_part;
-      sentence_part = "";
-      newData       = true;
       ++sentences_received;
     }
     return fullSentenceReceived;
   }
 
-  String getFullSentence() {
-    newData = false;
-    return sentence_full;
-  }
-
-  bool hasNewData() const {
-    return newData;
+  void getSentence(String& string) {
+    string = sentence_part;
+    sentence_part = "";
   }
 
   uint32_t getSentencesReceived() const {
@@ -115,11 +123,26 @@ private:
 
   ESPeasySerial *P087_easySerial = nullptr;
   String         sentence_part;
-  String         sentence_full;
-  int16_t        max_length = 128;
-  uint32_t sentences_received = 0;
-  bool           newData    = false;
+  int16_t        max_length               = 128;
+  uint32_t       sentences_received       = 0;
+  uint32_t       sentences_received_error = 0;
 };
+
+
+// Plugin settings:
+// Validate:
+// - [0..9]
+// - "+", "-", "."
+// - [A..Z]
+// - [a..z]
+// - ASCII 32 - 217
+// Sentence start:  char
+// Sentence end:  CR/CRLF/LF/char
+// Max length sentence: 1k max
+// Interpret as:
+// - Float
+// - int
+// - String
 
 
 boolean Plugin_087(byte function, struct EventStruct *event, String& string) {
@@ -128,16 +151,16 @@ boolean Plugin_087(byte function, struct EventStruct *event, String& string) {
   switch (function) {
     case PLUGIN_DEVICE_ADD: {
       Device[++deviceCount].Number           = PLUGIN_ID_087;
-      Device[deviceCount].Type               = DEVICE_TYPE_TRIPLE;
-      Device[deviceCount].VType              = SENSOR_TYPE_QUAD;
+      Device[deviceCount].Type               = DEVICE_TYPE_DUAL;
+      Device[deviceCount].VType              = SENSOR_TYPE_STRING;
       Device[deviceCount].Ports              = 0;
       Device[deviceCount].PullUpOption       = false;
       Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = true;
-      Device[deviceCount].ValueCount         = 4;
+      Device[deviceCount].FormulaOption      = false;
+      Device[deviceCount].ValueCount         = 1;
       Device[deviceCount].SendDataOption     = true;
       Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].GlobalSyncOption   = true;
+      Device[deviceCount].GlobalSyncOption   = false;
       break;
     }
 
@@ -264,9 +287,11 @@ boolean Plugin_087(byte function, struct EventStruct *event, String& string) {
           static_cast<P087_data_struct *>(getPluginTaskData(event->TaskIndex));
 
         if ((nullptr != P087_data) && P087_data->loop()) {
-          schedule_task_device_timer(event->TaskIndex, millis() + 10);
+          //schedule_task_device_timer(event->TaskIndex, millis() + 10);
           delay(0); // Processing a full sentence may take a while, run some
                     // background tasks.
+          P087_data->getSentence(event->String2);
+          sendData(event);
         }
         success = true;
       }
@@ -274,21 +299,6 @@ boolean Plugin_087(byte function, struct EventStruct *event, String& string) {
     }
 
     case PLUGIN_READ: {
-      P087_data_struct *P087_data =
-        static_cast<P087_data_struct *>(getPluginTaskData(event->TaskIndex));
-
-      if ((nullptr != P087_data) && P087_data->isInitialized()) {
-        // Check for internal state (waiting for reply or reply ready)
-        // Output received data.
-        if (P087_data->hasNewData()) {
-          String log;
-          log = F("Proxy: ");
-          log += P087_data->getFullSentence();
-          addLog(LOG_LEVEL_INFO, log);
-          UserVar[event->BaseVarIndex] = P087_data->getSentencesReceived();
-          success = true;
-        }
-      }
       break;
     }
   }

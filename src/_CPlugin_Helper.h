@@ -77,7 +77,7 @@ public:
   }
 
   size_t getSize() const {
-    return sizeof(this);
+    return sizeof(this) + txt.length();
   }
 
   int controller_idx;
