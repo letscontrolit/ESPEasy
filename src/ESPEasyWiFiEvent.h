@@ -31,7 +31,7 @@ void setUseStaticIP(bool enabled) {
 void markGotIP() {
   lastGetIPmoment = millis();
   wifiStatus      = ESPEASY_WIFI_GOT_IP;
-  processedGetIP  = false;
+  processedGotIP  = false;
 }
 
 // ********************************************************************************

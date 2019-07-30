@@ -6,7 +6,7 @@
 #endif // ifdef CORE_POST_2_5_0
 
 bool unprocessedWifiEvents() {
-  if (processedConnect && processedGetIP && processedDisconnect) { return false; }
+  if (processedConnect && processedGotIP && processedDisconnect) { return false; }
   return true;
 }
 
@@ -17,6 +17,7 @@ bool unprocessedWifiEvents() {
 void processConnect() {
   if (processedConnect) { return; }
   processedConnect = true;
+  wifiStatus |= ESPEASY_WIFI_CONNECTED;
   delay(100); // FIXME TD-er: See https://github.com/letscontrolit/ESPEasy/issues/1987#issuecomment-451644424
   ++wifi_reconnects;
 
@@ -46,8 +47,7 @@ void processConnect() {
   }
 
   if (useStaticIP()) {
-    setupStaticIPconfig();
-    markGotIP();
+    markGotIP(); // in static IP config the got IP event is never fired.
   }
 
   if (!WiFi.getAutoConnect()) {
@@ -59,6 +59,7 @@ void processConnect() {
 void processDisconnect() {
   if (processedDisconnect) { return; }
   processedDisconnect = true;
+  wifiStatus = ESPEASY_WIFI_DISCONNECTED;
   delay(100); // FIXME TD-er: See https://github.com/letscontrolit/ESPEasy/issues/1987#issuecomment-451644424
 
   if (Settings.UseRules) {
@@ -86,7 +87,7 @@ void processDisconnect() {
 }
 
 void processGotIP() {
-  if (processedGetIP) {
+  if (processedGotIP) {
     return;
   }
   IPAddress ip = WiFi.localIP();
@@ -96,7 +97,8 @@ void processGotIP() {
       return;
     }
   }
-  processedGetIP = true;
+  processedGotIP = true;
+  wifiStatus |= ESPEASY_WIFI_GOT_IP;
   const IPAddress gw       = WiFi.gatewayIP();
   const IPAddress subnet   = WiFi.subnetMask();
   const long dhcp_duration = timeDiff(lastConnectMoment, lastGetIPmoment);
@@ -177,7 +179,6 @@ void processGotIP() {
   statusLED(true);
 
   //  WiFi.scanDelete();
-  wifiStatus = ESPEASY_WIFI_SERVICES_INITIALIZED;
   setWebserverRunning(true);
   #ifdef FEATURE_MDNS
 
@@ -302,6 +303,14 @@ void processScanDone() {
 void resetWiFi() {
   addLog(LOG_LEVEL_INFO, F("Reset WiFi."));
   lastDisconnectMoment = millis();
+  // Mark all flags to default to prevent handling old events.
+  processedConnect = true;
+  processedDisconnect = true;
+  processedGotIP = true;
+  processedDHCPTimeout = true;
+  processedConnectAPmode = true;
+  processedDisconnectAPmode = true;
+  processedScanDone = true;
   WifiDisconnect();
 
   //  setWifiMode(WIFI_OFF);
@@ -543,7 +552,6 @@ void setWifiMode(WiFiMode_t wifimode) {
     #endif
     delay(1);
   } else {
-    setupStaticIPconfig();
     delay(30); // Must allow for some time to init.
   }
   bool new_mode_AP_enabled = WifiIsAP(wifimode);
@@ -607,7 +615,7 @@ bool WiFiConnected() {
     addLog(LOG_LEVEL_INFO, F("WIFI  : WiFiConnected() out of sync"));
     resetWiFi();
   } else {
-    if (hasIPaddr()) {
+    if (hasIPaddr() && WiFi.isConnected()) {
       wifiStatus = ESPEASY_WIFI_SERVICES_INITIALIZED;
     }
   }

@@ -1870,7 +1870,7 @@ uint8_t  scan_done_number = 0;
 // Semaphore like booleans for processing data gathered from WiFi events.
 volatile bool processedConnect = true;
 volatile bool processedDisconnect = true;
-volatile bool processedGetIP = true;
+volatile bool processedGotIP = true;
 volatile bool processedDHCPTimeout = true;
 volatile bool processedConnectAPmode = true;
 volatile bool processedDisconnectAPmode = true;

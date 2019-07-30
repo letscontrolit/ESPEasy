@@ -338,7 +338,8 @@ String LoadSettings()
   else {
     addLog(LOG_LEVEL_ERROR, F("CRC  : SecuritySettings CRC   ...FAIL"));
   }
-  setupStaticIPconfig();
+//  setupStaticIPconfig();
+  // FIXME TD-er: Must check if static/dynamic IP was changed and trigger a reconnect? Or is a reboot better when changing those settings?
   afterloadSettings();
   SecuritySettings.validate();
   return err;

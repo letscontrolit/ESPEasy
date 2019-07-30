@@ -537,7 +537,7 @@ void loop()
       addLog(LOG_LEVEL_INFO, F("WIFI : Entering processConnect()"));
       processConnect();
     }
-    if (hasIPaddr() || !processedGetIP) {
+    if (!processedGotIP) {
       addLog(LOG_LEVEL_INFO, F("WIFI : Entering processGotIP()"));
       processGotIP();
     }
@@ -550,7 +550,7 @@ void loop()
       processedDHCPTimeout = true;
       processDisconnect();
     }
-    if ((wifiStatus & ESPEASY_WIFI_GOT_IP) && (wifiStatus & ESPEASY_WIFI_CONNECTED)) {
+    if ((wifiStatus & ESPEASY_WIFI_GOT_IP) && (wifiStatus & ESPEASY_WIFI_CONNECTED) && WiFi.isConnected()) {
       wifiStatus = ESPEASY_WIFI_SERVICES_INITIALIZED;
     }
   } else if (!WiFiConnected()) {
