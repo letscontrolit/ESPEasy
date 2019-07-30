@@ -77,7 +77,7 @@ struct P082_data_struct : public PluginTaskData_base {
   }
 
   bool init(const int16_t serial_rx, const int16_t serial_tx) {
-    if (serial_rx < 0 || serial_tx < 0)
+    if (serial_rx < 0)
       return false;
     reset();
     gps = new TinyGPSPlus();
