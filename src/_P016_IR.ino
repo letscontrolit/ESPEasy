@@ -16,7 +16,7 @@
 //
 // IF the IR code is an Air Condition protocol that the  IR library can decode, then there will be a human-readable description of that IR message.
 // If the IR library can encode those kind of messages then a JSON formated command will be given, that can be replayed by P035 as well.
-// That commands format is: IRSENDAC,{"Protocol":"COOLIX","Power":true,"Opmode":"dry","Fanspeed":"auto","Degrees":22,"swingv":"max","swingh":"off"}
+// That commands format is: IRSENDAC,{"Protocol":"COOLIX","Power":"on","Opmode":"dry","Fanspeed":"auto","Degrees":22,"swingv":"max","swingh":"off"}
 #include <IRremoteESP8266.h>
 #include <IRutils.h>
 #include <IRrecv.h>
@@ -137,7 +137,8 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
     int irPin = CONFIG_PIN1;
     if (irReceiver == 0 && irPin != -1)
     {
-      serialPrintln(F("INIT: IR RX"));
+      addLog(LOG_LEVEL_INFO, String(F("INIT: IR RX")));
+      addLog(LOG_LEVEL_INFO, String(F("IR lib Version: "))+_IRREMOTEESP8266_VERSION_);
       irReceiver = new IRrecv(irPin, kCaptureBufferSize, P016_TIMEOUT, true);
       irReceiver->setUnknownThreshold(kMinUnknownSize); // Ignore messages with less than minimum on or off pulses.
       irReceiver->enableIRIn();                         // Start the receiver
@@ -238,7 +239,7 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
         doc[F("mode")] = IRac::opmodeToString(state.mode);                 //What operating mode should the unit perform? e.g. Cool = doc[""]; Heat etc.
         doc[F("temp")] = state.degrees;                                    //What temperature should the unit be set to?
         if (!state.celsius)
-          doc[F("use_celsius")] = state.celsius; //Use degreees Celsius, otherwise Fahrenheit.
+          doc[F("use_celsius")] = IRac::boolToString(state.celsius); //Use degreees Celsius, otherwise Fahrenheit.
         if (state.fanspeed != stdAc::fanspeed_t::kAuto)
           doc[F("fanspeed")] = IRac::fanspeedToString(state.fanspeed); //Fan Speed setting
         if (state.swingv != stdAc::swingv_t::kAuto)

@@ -12,7 +12,7 @@
 //---IRSEND: That commands format is: IRSEND,<protocol>,<data>,<bits>,<repeat>
 // bits and repeat default to 0 if not used and they are optional
 // For protocols RAW and RAW2 there is no bits and repeat part, they are supposed to be replayed as they are calculated by a Google docs sheet or by plugin P016
-//---IRSENDAC: That commands format is: IRSENDAC,{"Protocol":"COOLIX","Power":true,"Opmode":"dry","Fanspeed":"auto","Degrees":22,"Swingv":"max","Swingh":"off"}
+//---IRSENDAC: That commands format is: IRSENDAC,{"Protocol":"COOLIX","Power":"on","Opmode":"dry","Fanspeed":"auto","Degrees":22,"Swingv":"max","Swingh":"off"}
 // The possible values
 // Protocols: Argo Coolix Daikin Fujitsu Haier Hitachi Kelvinator Midea Mitsubishi MitsubishiHeavy Panasonic Samsung Sharp Tcl Teco Toshiba Trotec Vestel Whirlpool
 //---Opmodes:      ---Fanspeed:   --Swingv:       --Swingh:
@@ -23,9 +23,9 @@
 // - "dry"          - "high"       - "middle"      - "middle"
 // - "fan_only"     - "max"        - "low"         - "right"
 //                                 - "lowest"      - "rightmax"
-// TRUE - FALSE parameters are:
+// "on" - "off" parameters are:
 // - "Power" - "Celsius" - "Quiet" - "Turbo" - "Econo" - "Light" - "Filter" - "Clean" - "Light" - "Beep"
-// If celcius is set to FALSE then farenheit will be used
+// If celcius is set to "off" then farenheit will be used
 // - "Sleep" Nr. of mins of sleep mode, or use sleep mode. (<= 0 means off.)
 // - "Clock" Nr. of mins past midnight to set the clock to. (< 0 means off.)
 #include <IRremoteESP8266.h>
@@ -96,6 +96,7 @@ boolean Plugin_035(byte function, struct EventStruct *event, String &string)
     if (Plugin_035_irSender == 0 && irPin != -1)
     {
       addLog(LOG_LEVEL_INFO, F("INIT: IR TX"));
+      addLog(LOG_LEVEL_INFO, String(F("IR lib Version: ")) + _IRREMOTEESP8266_VERSION_);
       Plugin_035_irSender = new IRsend(irPin);
       Plugin_035_irSender->begin(); // Start the sender
     }
@@ -146,9 +147,9 @@ boolean Plugin_035(byte function, struct EventStruct *event, String &string)
         irReceiver->disableIRIn(); // Stop the receiver
 #endif
 
-      String IrType ="";
-      String IrType_orig= "";
-      String TmpStr1 ="";
+      String IrType = "";
+      String IrType_orig = "";
+      String TmpStr1 = "";
       if (GetArgv(string.c_str(), TmpStr1, 2))
       {
         IrType = TmpStr1;
@@ -335,7 +336,7 @@ boolean Plugin_035(byte function, struct EventStruct *event, String &string)
       {
         uint16_t IrRepeat = 0;
         //  unsigned long IrSecondCode=0UL;
-        String ircodestr ="";
+        String ircodestr = "";
         if (GetArgv(string.c_str(), TmpStr1, 2))
         {
           IrType = TmpStr1;
@@ -350,8 +351,8 @@ boolean Plugin_035(byte function, struct EventStruct *event, String &string)
         if (GetArgv(string.c_str(), TmpStr1, 4))
           IrBits = str2int(TmpStr1.c_str()); // Number of bits to be sent. USE 0 for default protocol bits
         if (GetArgv(string.c_str(), TmpStr1, 5))
-          IrRepeat = str2int(TmpStr1.c_str()); // Nr. of times the message is to be repeated
-        sendIRCode(strToDecodeType(IrType.c_str()), IrCode, ircodestr.c_str(), IrBits, IrRepeat);
+          IrRepeat = str2int(TmpStr1.c_str());                                                    // Nr. of times the message is to be repeated
+        sendIRCode(strToDecodeType(IrType.c_str()), IrCode, ircodestr.c_str(), IrBits, IrRepeat); //Send the IR command
       }
 #ifdef P016_P035_Extended_AC
       if (cmdCode.equalsIgnoreCase(F("IRSENDAC")))
@@ -479,14 +480,15 @@ bool sendIRCode(int const irtype,
   decode_type_t irType = (decode_type_t)irtype;
   bool success = true; // Assume success.
   repeat = std::max(IRsend::minRepeats(irType), repeat);
-    if (bits == 0) bits = IRsend::defaultBits(irType);
+  if (bits == 0)
+    bits = IRsend::defaultBits(irType);
   // send the IR message.
 
-      if (hasACState(irType))  // protocols with > 64 bits
-        success = parseStringAndSendAirCon(irType, code_str);
-      else  // protocols with <= 64 bits
-        success = Plugin_035_irSender->send(irType, code, bits, repeat);
-        
+  if (hasACState(irType)) // protocols with > 64 bits
+    success = parseStringAndSendAirCon(irType, code_str);
+  else // protocols with <= 64 bits
+    success = Plugin_035_irSender->send(irType, code, bits, repeat);
+
   return success;
 }
 
@@ -498,89 +500,93 @@ bool parseStringAndSendAirCon(const int irtype, const String str)
 {
   decode_type_t irType = (decode_type_t)irtype;
   uint8_t strOffset = 0;
-  uint8_t state[kStateSizeMax] = {0};  // All array elements are set to 0.
+  uint8_t state[kStateSizeMax] = {0}; // All array elements are set to 0.
   uint16_t stateSize = 0;
 
   if (str.startsWith("0x") || str.startsWith("0X"))
     strOffset = 2;
   // Calculate how many hexadecimal characters there are.
   uint16_t inputLength = str.length() - strOffset;
-  if (inputLength == 0) {
-   // debug("Zero length AirCon code encountered. Ignored.");
-    return false;  // No input. Abort.
+  if (inputLength == 0)
+  {
+    // debug("Zero length AirCon code encountered. Ignored.");
+    return false; // No input. Abort.
   }
 
-  switch (irType) {  // Get the correct state size for the protocol.
-    case DAIKIN:
-      // Daikin has 2 different possible size states.
-      // (The correct size, and a legacy shorter size.)
-      // Guess which one we are being presented with based on the number of
-      // hexadecimal digits provided. i.e. Zero-pad if you need to to get
-      // the correct length/byte size.
-      // This should provide backward compatiblity with legacy messages.
-      stateSize = inputLength / 2;  // Every two hex chars is a byte.
-      // Use at least the minimum size.
-      stateSize = std::max(stateSize, kDaikinStateLengthShort);
-      // If we think it isn't a "short" message.
-      if (stateSize > kDaikinStateLengthShort)
-        // Then it has to be at least the version of the "normal" size.
-        stateSize = std::max(stateSize, kDaikinStateLength);
-      // Lastly, it should never exceed the "normal" size.
-      stateSize = std::min(stateSize, kDaikinStateLength);
-      break;
-    case FUJITSU_AC:
-      // Fujitsu has four distinct & different size states, so make a best guess
-      // which one we are being presented with based on the number of
-      // hexadecimal digits provided. i.e. Zero-pad if you need to to get
-      // the correct length/byte size.
-      stateSize = inputLength / 2;  // Every two hex chars is a byte.
-      // Use at least the minimum size.
+  switch (irType)
+  { // Get the correct state size for the protocol.
+  case DAIKIN:
+    // Daikin has 2 different possible size states.
+    // (The correct size, and a legacy shorter size.)
+    // Guess which one we are being presented with based on the number of
+    // hexadecimal digits provided. i.e. Zero-pad if you need to to get
+    // the correct length/byte size.
+    // This should provide backward compatiblity with legacy messages.
+    stateSize = inputLength / 2; // Every two hex chars is a byte.
+    // Use at least the minimum size.
+    stateSize = std::max(stateSize, kDaikinStateLengthShort);
+    // If we think it isn't a "short" message.
+    if (stateSize > kDaikinStateLengthShort)
+      // Then it has to be at least the version of the "normal" size.
+      stateSize = std::max(stateSize, kDaikinStateLength);
+    // Lastly, it should never exceed the "normal" size.
+    stateSize = std::min(stateSize, kDaikinStateLength);
+    break;
+  case FUJITSU_AC:
+    // Fujitsu has four distinct & different size states, so make a best guess
+    // which one we are being presented with based on the number of
+    // hexadecimal digits provided. i.e. Zero-pad if you need to to get
+    // the correct length/byte size.
+    stateSize = inputLength / 2; // Every two hex chars is a byte.
+    // Use at least the minimum size.
+    stateSize = std::max(stateSize,
+                         (uint16_t)(kFujitsuAcStateLengthShort - 1));
+    // If we think it isn't a "short" message.
+    if (stateSize > kFujitsuAcStateLengthShort)
+      // Then it has to be at least the smaller version of the "normal" size.
+      stateSize = std::max(stateSize, (uint16_t)(kFujitsuAcStateLength - 1));
+    // Lastly, it should never exceed the maximum "normal" size.
+    stateSize = std::min(stateSize, kFujitsuAcStateLength);
+    break;
+  case MWM:
+    // MWM has variable size states, so make a best guess
+    // which one we are being presented with based on the number of
+    // hexadecimal digits provided. i.e. Zero-pad if you need to to get
+    // the correct length/byte size.
+    stateSize = inputLength / 2; // Every two hex chars is a byte.
+    // Use at least the minimum size.
+    stateSize = std::max(stateSize, (uint16_t)3);
+    // Cap the maximum size.
+    stateSize = std::min(stateSize, kStateSizeMax);
+    break;
+  case SAMSUNG_AC:
+    // Samsung has two distinct & different size states, so make a best guess
+    // which one we are being presented with based on the number of
+    // hexadecimal digits provided. i.e. Zero-pad if you need to to get
+    // the correct length/byte size.
+    stateSize = inputLength / 2; // Every two hex chars is a byte.
+    // Use at least the minimum size.
+    stateSize = std::max(stateSize, (uint16_t)(kSamsungAcStateLength));
+    // If we think it isn't a "normal" message.
+    if (stateSize > kSamsungAcStateLength)
+      // Then it probably the extended size.
       stateSize = std::max(stateSize,
-                           (uint16_t) (kFujitsuAcStateLengthShort - 1));
-      // If we think it isn't a "short" message.
-      if (stateSize > kFujitsuAcStateLengthShort)
-        // Then it has to be at least the smaller version of the "normal" size.
-        stateSize = std::max(stateSize, (uint16_t) (kFujitsuAcStateLength - 1));
-      // Lastly, it should never exceed the maximum "normal" size.
-      stateSize = std::min(stateSize, kFujitsuAcStateLength);
-      break;
-    case MWM:
-      // MWM has variable size states, so make a best guess
-      // which one we are being presented with based on the number of
-      // hexadecimal digits provided. i.e. Zero-pad if you need to to get
-      // the correct length/byte size.
-      stateSize = inputLength / 2;  // Every two hex chars is a byte.
-      // Use at least the minimum size.
-      stateSize = std::max(stateSize, (uint16_t) 3);
-      // Cap the maximum size.
-      stateSize = std::min(stateSize, kStateSizeMax);
-      break;
-    case SAMSUNG_AC:
-      // Samsung has two distinct & different size states, so make a best guess
-      // which one we are being presented with based on the number of
-      // hexadecimal digits provided. i.e. Zero-pad if you need to to get
-      // the correct length/byte size.
-      stateSize = inputLength / 2;  // Every two hex chars is a byte.
-      // Use at least the minimum size.
-      stateSize = std::max(stateSize, (uint16_t) (kSamsungAcStateLength));
-      // If we think it isn't a "normal" message.
-      if (stateSize > kSamsungAcStateLength)
-        // Then it probably the extended size.
-        stateSize = std::max(stateSize,
-                             (uint16_t) (kSamsungAcExtendedStateLength));
-      // Lastly, it should never exceed the maximum "extended" size.
-      stateSize = std::min(stateSize, kSamsungAcExtendedStateLength);
-      break;
-    default:  // Everything else.
-      stateSize = IRsend::defaultBits(irType) / 8;
-      if (!stateSize || !hasACState(irType)) {
-        // Not a protocol we expected. Abort.
-       // debug("Unexpected AirCon protocol detected. Ignoring.");
-        return false;
-      }
+                           (uint16_t)(kSamsungAcExtendedStateLength));
+    // Lastly, it should never exceed the maximum "extended" size.
+    stateSize = std::min(stateSize, kSamsungAcExtendedStateLength);
+    break;
+  default: // Everything else.
+    stateSize = IRsend::defaultBits(irType) / 8;
+    if (!stateSize || !hasACState(irType))
+    {
+      // Not a protocol we expected. Abort.
+      // debug("Unexpected AirCon protocol detected. Ignoring.");
+      return false;
+    }
   }
-  if (inputLength > stateSize * 2) {
-   // debug("AirCon code to large for the given protocol.");
+  if (inputLength > stateSize * 2)
+  {
+    // debug("AirCon code to large for the given protocol.");
     return false;
   }
 
@@ -588,31 +594,39 @@ bool parseStringAndSendAirCon(const int irtype, const String str)
   uint8_t *statePtr = &state[stateSize - 1];
 
   // Convert the string into a state array of the correct length.
-  for (uint16_t i = 0; i < inputLength; i++) {
+  for (uint16_t i = 0; i < inputLength; i++)
+  {
     // Grab the next least sigificant hexadecimal digit from the string.
     uint8_t c = tolower(str[inputLength + strOffset - i - 1]);
-    if (isxdigit(c)) {
+    if (isxdigit(c))
+    {
       if (isdigit(c))
         c -= '0';
       else
         c = c - 'a' + 10;
-    } else {
-     // debug("Aborting! Non-hexadecimal char found in AirCon state:");
-     // debug(str.c_str());
+    }
+    else
+    {
+      // debug("Aborting! Non-hexadecimal char found in AirCon state:");
+      // debug(str.c_str());
       return false;
     }
-    if (i % 2 == 1) {  // Odd: Upper half of the byte.
+    if (i % 2 == 1)
+    { // Odd: Upper half of the byte.
       *statePtr += (c << 4);
-      statePtr--;  // Advance up to the next least significant byte of state.
-    } else {  // Even: Lower half of the byte.
+      statePtr--; // Advance up to the next least significant byte of state.
+    }
+    else
+    { // Even: Lower half of the byte.
       *statePtr = c;
     }
   }
-  if (!Plugin_035_irSender->send(irType, state, stateSize)) {
+  if (!Plugin_035_irSender->send(irType, state, stateSize))
+  {
     //debug("Unexpected AirCon type in send request. Not sent.");
     return false;
   }
-  return true;  // We were successful as far as we can tell.
+  return true; // We were successful as far as we can tell.
 }
 
 // Count how many values are in the String.
