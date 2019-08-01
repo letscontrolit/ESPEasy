@@ -23,7 +23,7 @@
 //   Brand: Neoclima,  Model: ZH/TY-01 remote
 
 // Ref:
-//  https://github.com/markszabo/IRremoteESP8266/issues/764
+//  https://github.com/crankyoldgit/IRremoteESP8266/issues/764
 //  https://drive.google.com/file/d/1kjYk4zS9NQcMQhFkak-L4mp4UuaAIesW/view
 
 // Constants
@@ -82,7 +82,8 @@ const uint8_t kNeoclimaHeat =     0b100;
 // Classes
 class IRNeoclimaAc {
  public:
-  explicit IRNeoclimaAc(const uint16_t pin);
+  explicit IRNeoclimaAc(const uint16_t pin, const bool inverted = false,
+                        const bool use_modulation = true);
 
   void stateReset(void);
 #if SEND_NEOCLIMA

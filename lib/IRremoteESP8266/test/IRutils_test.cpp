@@ -404,19 +404,19 @@ TEST(TestStrToDecodeType, strToDecodeType) {
 }
 
 TEST(TestUtils, htmlEscape) {
-  EXPECT_EQ("", IRutils::htmlEscape(""));
-  EXPECT_EQ("No Changes", IRutils::htmlEscape("No Changes"));
+  EXPECT_EQ("", irutils::htmlEscape(""));
+  EXPECT_EQ("No Changes", irutils::htmlEscape("No Changes"));
   EXPECT_EQ("No\tChanges+_%^$@~`\n:\\",
-            IRutils::htmlEscape("No\tChanges+_%^$@~`\n:\\"));
+            irutils::htmlEscape("No\tChanges+_%^$@~`\n:\\"));
   EXPECT_EQ("&quot;With Changes&quot;",
-            IRutils::htmlEscape("\"With Changes\""));
+            irutils::htmlEscape("\"With Changes\""));
   EXPECT_EQ(
       "&apos;&semi;&excl;&dash;&quot;&lt;&gt;&#equals;&amp;&num;&lcub;&rcub;"
-      "&lpar;&rpar;", IRutils::htmlEscape("';!-\"<>=&#{}()"));
-  EXPECT_EQ("&quot;&quot;", IRutils::htmlEscape("\"\""));
+      "&lpar;&rpar;", irutils::htmlEscape("';!-\"<>=&#{}()"));
+  EXPECT_EQ("&quot;&quot;", irutils::htmlEscape("\"\""));
   EXPECT_EQ(
       "&amp;quot&semi;&amp;lt&semi;&amp;apos&semi;&amp;gt&semi;&amp;amp&semi;",
-      IRutils::htmlEscape("&quot;&lt;&apos;&gt;&amp;"));
+      irutils::htmlEscape("&quot;&lt;&apos;&gt;&amp;"));
 }
 
 TEST(TestUtils, TemperatureConversion) {
@@ -502,4 +502,41 @@ TEST(TestUtils, TypeStringConversionRangeTests) {
         "Protocol " << typeToString((decode_type_t)i) <<
         " doesn't decode from a string correctly";
   }
+}
+
+TEST(TestUtils, MinsToString) {
+  EXPECT_EQ("00:00", irutils::minsToString(0));
+  EXPECT_EQ("00:01", irutils::minsToString(1));
+  EXPECT_EQ("00:10", irutils::minsToString(10));
+  EXPECT_EQ("00:59", irutils::minsToString(59));
+
+  EXPECT_EQ("01:00", irutils::minsToString(60));
+  EXPECT_EQ("01:01", irutils::minsToString(61));
+  EXPECT_EQ("01:59", irutils::minsToString(60 + 59));
+  EXPECT_EQ("18:59", irutils::minsToString(18 * 60 + 59));
+  EXPECT_EQ("23:59", irutils::minsToString(23 * 60 + 59));
+}
+
+TEST(TestUtils, sumNibbles) {
+  uint8_t testdata[] = {0x01, 0x23, 0x45};
+  EXPECT_EQ(0, irutils::sumNibbles(testdata, 0));
+  EXPECT_EQ(1, irutils::sumNibbles(testdata, 0, 1));
+  EXPECT_EQ(1, irutils::sumNibbles(testdata, 1));
+  EXPECT_EQ(2, irutils::sumNibbles(testdata, 1, 1));
+  EXPECT_EQ(15, irutils::sumNibbles(testdata, 3));
+  EXPECT_EQ(115, irutils::sumNibbles(testdata, 3, 100));
+}
+
+TEST(TestUtils, BCD) {
+  EXPECT_EQ(0, irutils::uint8ToBcd(0));
+  EXPECT_EQ(0, irutils::bcdToUint8(0));
+  EXPECT_EQ(1, irutils::uint8ToBcd(1));
+  EXPECT_EQ(10, irutils::bcdToUint8(0x10));
+  EXPECT_EQ(0x10, irutils::uint8ToBcd(10));
+  EXPECT_EQ(11, irutils::bcdToUint8(0x11));
+  EXPECT_EQ(0x11, irutils::uint8ToBcd(11));
+  EXPECT_EQ(99, irutils::bcdToUint8(0x99));
+  EXPECT_EQ(0x99, irutils::uint8ToBcd(99));
+  EXPECT_EQ(255, irutils::bcdToUint8(0x9A));
+  EXPECT_EQ(255, irutils::uint8ToBcd(100));
 }

@@ -29,6 +29,7 @@ const uint8_t kHitachiAcDry = 5;
 const uint8_t kHitachiAcFan = 0xC;
 const uint8_t kHitachiAcFanAuto = 1;
 const uint8_t kHitachiAcFanLow = 2;
+const uint8_t kHitachiAcFanMed = 3;
 const uint8_t kHitachiAcFanHigh = 5;
 const uint8_t kHitachiAcMinTemp = 16;   // 16C
 const uint8_t kHitachiAcMaxTemp = 32;   // 32C
@@ -37,7 +38,8 @@ const uint8_t kHitachiAcAutoTemp = 23;  // 23C
 // Classes
 class IRHitachiAc {
  public:
-  explicit IRHitachiAc(const uint16_t pin);
+  explicit IRHitachiAc(const uint16_t pin, const bool inverted = false,
+                       const bool use_modulation = true);
 
   void stateReset(void);
 #if SEND_HITACHI_AC

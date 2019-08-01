@@ -31,6 +31,13 @@ const uint16_t kToshibaAcOneSpace = 1623;
 const uint16_t kToshibaAcZeroSpace = 472;
 const uint16_t kToshibaAcMinGap = 7048;
 
+using irutils::addBoolToString;
+using irutils::addFanToString;
+using irutils::addIntToString;
+using irutils::addLabeledString;
+using irutils::addModeToString;
+using irutils::addTempToString;
+
 #if SEND_TOSHIBA_AC
 // Send a Toshiba A/C message.
 //
@@ -60,9 +67,9 @@ void IRsend::sendToshibaAC(const unsigned char data[], const uint16_t nbytes,
 // Status:  STABLE / Working.
 //
 // Initialise the object.
-IRToshibaAC::IRToshibaAC(const uint16_t pin) : _irsend(pin) {
-  this->stateReset();
-}
+IRToshibaAC::IRToshibaAC(const uint16_t pin, const bool inverted,
+                         const bool use_modulation)
+    : _irsend(pin, inverted, use_modulation) { this->stateReset(); }
 
 // Reset the state of the remote to a known good state/sequence.
 void IRToshibaAC::stateReset(void) {
@@ -316,22 +323,13 @@ stdAc::state_t IRToshibaAC::toCommon(void) {
 String IRToshibaAC::toString(void) {
   String result = "";
   result.reserve(40);
-  result += IRutils::acBoolToString(getPower(), F("Power"), false);
-  result += IRutils::acModeToString(getMode(), kToshibaAcAuto,
-                                    kToshibaAcCool, kToshibaAcHeat,
-                                    kToshibaAcDry, kToshibaAcAuto);
-  result += F(", Temp: ");
-  result += uint64ToString(this->getTemp());
-  result += F("C, Fan: ");
-  result += uint64ToString(this->getFan());
-  switch (this->getFan()) {
-    case kToshibaAcFanAuto:
-      result += F(" (AUTO)");
-      break;
-    case kToshibaAcFanMax:
-      result += F(" (MAX)");
-      break;
-  }
+  result += addBoolToString(getPower(), F("Power"), false);
+  result += addModeToString(getMode(), kToshibaAcAuto, kToshibaAcCool,
+                            kToshibaAcHeat, kToshibaAcDry, kToshibaAcAuto);
+  result += addTempToString(getTemp());
+  result += addFanToString(getFan(), kToshibaAcFanMax, kToshibaAcFanMin,
+                           kToshibaAcFanAuto, kToshibaAcFanAuto,
+                           kToshibaAcFanMed);
   return result;
 }
 

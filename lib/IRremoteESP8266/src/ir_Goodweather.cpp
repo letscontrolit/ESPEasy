@@ -16,6 +16,13 @@
 #include "IRsend.h"
 #include "IRutils.h"
 
+using irutils::addBoolToString;
+using irutils::addIntToString;
+using irutils::addLabeledString;
+using irutils::addModeToString;
+using irutils::addFanToString;
+using irutils::addTempToString;
+
 #if SEND_GOODWEATHER
 // Send a Goodweather message.
 //
@@ -27,7 +34,7 @@
 // Status: ALPHA / Untested.
 //
 // Ref:
-//   https://github.com/markszabo/IRremoteESP8266/issues/697
+//   https://github.com/crankyoldgit/IRremoteESP8266/issues/697
 void IRsend::sendGoodweather(const uint64_t data, const uint16_t nbits,
                              const uint16_t repeat) {
   if (nbits != kGoodweatherBits)
@@ -57,7 +64,9 @@ void IRsend::sendGoodweather(const uint64_t data, const uint16_t nbits,
 }
 #endif  // SEND_GOODWEATHER
 
-IRGoodweatherAc::IRGoodweatherAc(uint16_t pin) : _irsend(pin) { stateReset(); }
+IRGoodweatherAc::IRGoodweatherAc(const uint16_t pin, const bool inverted,
+                                 const bool use_modulation)
+    : _irsend(pin, inverted, use_modulation) { stateReset(); }
 
 void IRGoodweatherAc::stateReset(void) {
 }
@@ -303,36 +312,17 @@ stdAc::state_t IRGoodweatherAc::toCommon(void) {
 String IRGoodweatherAc::toString() {
   String result = "";
   result.reserve(150);  // Reserve some heap for the string to reduce fragging.
-  result += IRutils::acBoolToString(getPower(), F("Power"), false);
-  result += IRutils::acModeToString(getMode(), kGoodweatherAuto,
-                                    kGoodweatherCool, kGoodweatherHeat,
-                                    kGoodweatherDry, kGoodweatherFan);
-  result += F(", Temp: ");
-  result += uint64ToString(this->getTemp());
-  result += F("C, Fan: ");
-  result += uint64ToString(this->getFan());
-  switch (this->getFan()) {
-    case kGoodweatherFanAuto:
-      result += F(" (AUTO)");
-      break;
-    case kGoodweatherFanHigh:
-      result += F(" (HIGH)");
-      break;
-    case kGoodweatherFanMed:
-      result += F(" (MED)");
-      break;
-    case kGoodweatherFanLow:
-      result += F(" (LOW)");
-      break;
-  }
-  result += F(", Turbo: ");
-  result += this->getTurbo() ? F("Toggle") : F("-");
-  result += F(", Light: ");
-  result += this->getLight() ? F("Toggle") : F("-");
-  result += F(", Sleep: ");
-  result += this->getSleep() ? F("Toggle") : F("-");
-  result += F(", Swing: ");
-  result += uint64ToString(this->getSwing());
+  result += addBoolToString(getPower(), F("Power"), false);
+  result += addModeToString(getMode(), kGoodweatherAuto, kGoodweatherCool,
+                            kGoodweatherHeat, kGoodweatherDry, kGoodweatherFan);
+  result += addTempToString(getTemp());
+  result += addFanToString(getFan(), kGoodweatherFanHigh, kGoodweatherFanLow,
+                           kGoodweatherFanAuto, kGoodweatherFanAuto,
+                           kGoodweatherFanMed);
+  result += addLabeledString(getTurbo() ? F("Toggle") : F("-"), F("Turbo"));
+  result += addLabeledString(getLight() ? F("Toggle") : F("-"), F("Light"));
+  result += addLabeledString(getSleep() ? F("Toggle") : F("-"), F("Sleep"));
+  result += addIntToString(getSwing(), F("Swing"));
   switch (this->getSwing()) {
     case kGoodweatherSwingFast:
       result += F(" (Fast)");
@@ -346,8 +336,7 @@ String IRGoodweatherAc::toString() {
     default:
       result += F(" (UNKNOWN)");
   }
-  result += F(", Command: ");
-  result += uint64ToString(this->getCommand());
+  result += addIntToString(getCommand(), F("Command"));
   switch (this->getCommand()) {
     case kGoodweatherCmdPower:
       result += F(" (Power)");

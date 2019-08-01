@@ -22,7 +22,7 @@
 #endif
 
 // Ref:
-//   https://github.com/markszabo/IRremoteESP8266/issues/660
+//   https://github.com/crankyoldgit/IRremoteESP8266/issues/660
 //   https://github.com/ToniA/Raw-IR-decoder-for-Arduino/blob/master/MitsubishiHeavy.cpp
 //   https://github.com/ToniA/arduino-heatpumpir/blob/master/MitsubishiHeavyHeatpumpIR.cpp
 
@@ -33,6 +33,12 @@ const uint16_t kMitsubishiHeavyBitMark = 370;
 const uint16_t kMitsubishiHeavyOneSpace = 420;
 const uint16_t kMitsubishiHeavyZeroSpace = 1220;
 const uint32_t kMitsubishiHeavyGap = kDefaultMessageGap;  // Just a guess.
+
+using irutils::addBoolToString;
+using irutils::addIntToString;
+using irutils::addLabeledString;
+using irutils::addModeToString;
+using irutils::addTempToString;
 
 #if SEND_MITSUBISHIHEAVY
 // Send a MitsubishiHeavy 88 bit A/C message.
@@ -73,8 +79,10 @@ void IRsend::sendMitsubishiHeavy152(const unsigned char data[],
 #endif  // SEND_MITSUBISHIHEAVY
 
 // Class for decoding and constructing MitsubishiHeavy152 AC messages.
-IRMitsubishiHeavy152Ac::IRMitsubishiHeavy152Ac(
-    const uint16_t pin) : _irsend(pin) { stateReset(); }
+IRMitsubishiHeavy152Ac::IRMitsubishiHeavy152Ac(const uint16_t pin,
+                                               const bool inverted,
+                                               const bool use_modulation)
+    : _irsend(pin, inverted, use_modulation) { stateReset(); }
 
 void IRMitsubishiHeavy152Ac::begin(void) { _irsend.begin(); }
 
@@ -455,41 +463,40 @@ stdAc::state_t IRMitsubishiHeavy152Ac::toCommon(void) {
 String IRMitsubishiHeavy152Ac::toString(void) {
   String result = "";
   result.reserve(180);  // Reserve some heap for the string to reduce fragging.
-  result += IRutils::acBoolToString(getPower(), F("Power"), false);
-  result += IRutils::acModeToString(getMode(), kMitsubishiHeavyAuto,
-                                    kMitsubishiHeavyCool, kMitsubishiHeavyHeat,
-                                    kMitsubishiHeavyDry, kMitsubishiHeavyFan);
-  result += F(", Temp: ");
-  result += uint64ToString(this->getTemp()) + 'C';
-  result += F(", Fan: ");
-  result += uint64ToString(this->getFan());
+  result += addBoolToString(getPower(), F("Power"), false);
+  result += addModeToString(getMode(), kMitsubishiHeavyAuto,
+                            kMitsubishiHeavyCool, kMitsubishiHeavyHeat,
+                            kMitsubishiHeavyDry, kMitsubishiHeavyFan);
+  result += addTempToString(getTemp());
+  result += addIntToString(getFan(), F("Fan"));
+  result += F(" (");
   switch (this->getFan()) {
     case kMitsubishiHeavy152FanAuto:
-      result += F(" (Auto)");
+      result += F("Auto");
       break;
     case kMitsubishiHeavy152FanHigh:
-      result += F(" (High)");
+      result += F("High");
       break;
     case kMitsubishiHeavy152FanLow:
-      result += F(" (Low)");
+      result += F("Low");
       break;
     case kMitsubishiHeavy152FanMed:
-      result += F(" (Med)");
+      result += F("Medium");
       break;
     case kMitsubishiHeavy152FanMax:
-      result += F(" (Max)");
+      result += F("Max");
       break;
     case kMitsubishiHeavy152FanEcono:
-      result += F(" (Econo)");
+      result += F("Econo");
       break;
     case kMitsubishiHeavy152FanTurbo:
-      result += F(" (Turbo)");
+      result += F("Turbo");
       break;
     default:
-      result += F(" (UNKNOWN)");
+      result += F("UNKNOWN");
   }
-  result += F(", Swing (V): ");
-  result += uint64ToString(this->getSwingVertical());
+  result += ')';
+  result += addIntToString(getSwingVertical(), F("Swing (V)"));
   switch (this->getSwingVertical()) {
     case kMitsubishiHeavy152SwingVAuto:
       result += F(" (Auto)");
@@ -515,8 +522,7 @@ String IRMitsubishiHeavy152Ac::toString(void) {
     default:
       result += F(" (UNKNOWN)");
   }
-  result += F(", Swing (H): ");
-  result += uint64ToString(this->getSwingHorizontal());
+  result += addIntToString(getSwingHorizontal(), F("Swing (H)"));
   switch (this->getSwingHorizontal()) {
     case kMitsubishiHeavy152SwingHAuto:
       result += F(" (Auto)");
@@ -548,20 +554,22 @@ String IRMitsubishiHeavy152Ac::toString(void) {
     default:
       result += F(" (UNKNOWN)");
   }
-  result += IRutils::acBoolToString(getSilent(), F("Silent"));
-  result += IRutils::acBoolToString(getTurbo(), F("Turbo"));
-  result += IRutils::acBoolToString(getEcono(), F("Econo"));
-  result += IRutils::acBoolToString(getNight(), F("Night"));
-  result += IRutils::acBoolToString(getFilter(), F("Filter"));
-  result += IRutils::acBoolToString(get3D(), F("3D"));
-  result += IRutils::acBoolToString(getClean(), F("Clean"));
+  result += addBoolToString(getSilent(), F("Silent"));
+  result += addBoolToString(getTurbo(), F("Turbo"));
+  result += addBoolToString(getEcono(), F("Econo"));
+  result += addBoolToString(getNight(), F("Night"));
+  result += addBoolToString(getFilter(), F("Filter"));
+  result += addBoolToString(get3D(), F("3D"));
+  result += addBoolToString(getClean(), F("Clean"));
   return result;
 }
 
 
 // Class for decoding and constructing MitsubishiHeavy88 AC messages.
-IRMitsubishiHeavy88Ac::IRMitsubishiHeavy88Ac(
-    const uint16_t pin) : _irsend(pin) { stateReset(); }
+IRMitsubishiHeavy88Ac::IRMitsubishiHeavy88Ac(const uint16_t pin,
+                                             const bool inverted,
+                                             const bool use_modulation)
+    : _irsend(pin, inverted, use_modulation) { stateReset(); }
 
 void IRMitsubishiHeavy88Ac::begin(void) { _irsend.begin(); }
 
@@ -905,38 +913,37 @@ stdAc::state_t IRMitsubishiHeavy88Ac::toCommon(void) {
 String IRMitsubishiHeavy88Ac::toString(void) {
   String result = "";
   result.reserve(140);  // Reserve some heap for the string to reduce fragging.
-  result += IRutils::acBoolToString(getPower(), F("Power"), false);
-  result += IRutils::acModeToString(getMode(), kMitsubishiHeavyAuto,
-                                    kMitsubishiHeavyCool, kMitsubishiHeavyHeat,
-                                    kMitsubishiHeavyDry, kMitsubishiHeavyFan);
-  result += F(", Temp: ");
-  result += uint64ToString(this->getTemp()) + 'C';
-  result += F(", Fan: ");
-  result += uint64ToString(this->getFan());
+  result += addBoolToString(getPower(), F("Power"), false);
+  result += addModeToString(getMode(), kMitsubishiHeavyAuto,
+                            kMitsubishiHeavyCool, kMitsubishiHeavyHeat,
+                            kMitsubishiHeavyDry, kMitsubishiHeavyFan);
+  result += addTempToString(getTemp());
+  result += addIntToString(getFan(), F("Fan"));
+  result += F(" (");
   switch (this->getFan()) {
     case kMitsubishiHeavy88FanAuto:
-      result += F(" (Auto)");
+      result += F("Auto");
       break;
     case kMitsubishiHeavy88FanHigh:
-      result += F(" (High)");
+      result += F("High");
       break;
     case kMitsubishiHeavy88FanLow:
-      result += F(" (Low)");
+      result += F("Low");
       break;
     case kMitsubishiHeavy88FanMed:
-      result += F(" (Med)");
+      result += F("Medium");
       break;
     case kMitsubishiHeavy88FanEcono:
-      result += F(" (Econo)");
+      result += F("Econo");
       break;
     case kMitsubishiHeavy88FanTurbo:
-      result += F(" (Turbo)");
+      result += F("Turbo");
       break;
     default:
-      result += F(" (UNKNOWN)");
+      result += F("UNKNOWN");
   }
-  result += F(", Swing (V): ");
-  result += uint64ToString(this->getSwingVertical());
+  result += ')';
+  result += addIntToString(getSwingVertical(), F("Swing (V)"));
   switch (this->getSwingVertical()) {
     case kMitsubishiHeavy88SwingVAuto:
       result += F(" (Auto)");
@@ -962,8 +969,7 @@ String IRMitsubishiHeavy88Ac::toString(void) {
     default:
       result += F(" (UNKNOWN)");
   }
-  result += F(", Swing (H): ");
-  result += uint64ToString(this->getSwingHorizontal());
+  result += addIntToString(getSwingHorizontal(), F("Swing (H)"));
   switch (this->getSwingHorizontal()) {
     case kMitsubishiHeavy88SwingHAuto:
       result += F(" (Auto)");
@@ -998,10 +1004,10 @@ String IRMitsubishiHeavy88Ac::toString(void) {
     default:
       result += F(" (UNKNOWN)");
   }
-  result += IRutils::acBoolToString(getTurbo(), F("Turbo"));
-  result += IRutils::acBoolToString(getEcono(), F("Econo"));
-  result += IRutils::acBoolToString(get3D(), F("3D"));
-  result += IRutils::acBoolToString(getClean(), F("Clean"));
+  result += addBoolToString(getTurbo(), F("Turbo"));
+  result += addBoolToString(getEcono(), F("Econo"));
+  result += addBoolToString(get3D(), F("3D"));
+  result += addBoolToString(getClean(), F("Clean"));
   return result;
 }
 

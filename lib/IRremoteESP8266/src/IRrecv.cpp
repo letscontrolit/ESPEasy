@@ -41,7 +41,7 @@ extern "C" {
 // code on ESP32
 // Updated by Sebastien Warin (http://sebastien.warin.fr) for receiving IR code
 // on ESP8266
-// Updated by markszabo (https://github.com/markszabo/IRremoteESP8266) for
+// Updated by markszabo (https://github.com/crankyoldgit/IRremoteESP8266) for
 // sending IR code on ESP8266
 
 // Globals
@@ -643,6 +643,18 @@ bool IRrecv::decode(decode_results *results, irparams_t *save) {
   DPRINTLN("Attempting Neoclima decode");
   if (decodeNeoclima(results)) return true;
 #endif  // DECODE_NEOCLIMA
+#if DECODE_DAIKIN176
+  DPRINTLN("Attempting Daikin176 decode");
+  if (decodeDaikin176(results)) return true;
+#endif  // DECODE_DAIKIN176
+#if DECODE_DAIKIN128
+  DPRINTLN("Attempting Daikin128 decode");
+  if (decodeDaikin128(results)) return true;
+#endif  // DECODE_DAIKIN128
+#if DECODE_AMCOR
+  DPRINTLN("Attempting Amcor decode");
+  if (decodeAmcor(results)) return true;
+#endif  // DECODE_AMCOR
 #if DECODE_HASH
   // decodeHash returns a hash on any input.
   // Thus, it needs to be last in the list.

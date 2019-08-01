@@ -34,6 +34,7 @@ const uint8_t kMitsubishiAcFanAuto = 0;
 const uint8_t kMitsubishiAcFanMax = 5;
 const uint8_t kMitsubishiAcFanRealMax = 4;
 const uint8_t kMitsubishiAcFanSilent = 6;
+const uint8_t kMitsubishiAcFanQuiet = kMitsubishiAcFanSilent;
 const uint8_t kMitsubishiAcMinTemp = 16;  // 16C
 const uint8_t kMitsubishiAcMaxTemp = 31;  // 31C
 const uint8_t kMitsubishiAcVaneAuto = 0;
@@ -42,6 +43,7 @@ const uint8_t kMitsubishiAcNoTimer = 0;
 const uint8_t kMitsubishiAcStartTimer = 5;
 const uint8_t kMitsubishiAcStopTimer = 3;
 const uint8_t kMitsubishiAcStartStopTimer = 7;
+const uint8_t kMitsubishiAcWideVaneAuto = 8;
 
 // Legacy defines (Deprecated)
 #define MITSUBISHI_AC_VANE_AUTO_MOVE kMitsubishiAcVaneAutoMove
@@ -60,7 +62,8 @@ const uint8_t kMitsubishiAcStartStopTimer = 7;
 
 class IRMitsubishiAC {
  public:
-  explicit IRMitsubishiAC(const uint16_t pin);
+  explicit IRMitsubishiAC(const uint16_t pin, const bool inverted = false,
+                          const bool use_modulation = true);
 
   static uint8_t calculateChecksum(const uint8_t* data);
 
@@ -81,7 +84,9 @@ class IRMitsubishiAC {
   void setMode(const uint8_t mode);
   uint8_t getMode(void);
   void setVane(const uint8_t position);
+  void setWideVane(const uint8_t position);
   uint8_t getVane(void);
+  uint8_t getWideVane(void);
   uint8_t* getRaw(void);
   void setRaw(const uint8_t* data);
   uint8_t getClock(void);
@@ -95,9 +100,11 @@ class IRMitsubishiAC {
   uint8_t convertMode(const stdAc::opmode_t mode);
   uint8_t convertFan(const stdAc::fanspeed_t speed);
   uint8_t convertSwingV(const stdAc::swingv_t position);
+  uint8_t convertSwingH(const stdAc::swingh_t position);
   static stdAc::opmode_t toCommonMode(const uint8_t mode);
   static stdAc::fanspeed_t toCommonFanSpeed(const uint8_t speed);
   static stdAc::swingv_t toCommonSwingV(const uint8_t pos);
+  static stdAc::swingh_t toCommonSwingH(const uint8_t pos);
   stdAc::state_t toCommon(void);
   String toString(void);
 #ifndef UNIT_TEST
@@ -107,7 +114,6 @@ class IRMitsubishiAC {
 #else
   IRsendTest _irsend;
 #endif
-  String timeToString(const uint64_t time);
   uint8_t remote_state[kMitsubishiACStateLength];
   void checksum(void);
 };

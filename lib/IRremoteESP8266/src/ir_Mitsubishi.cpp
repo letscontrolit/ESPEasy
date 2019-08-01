@@ -38,7 +38,7 @@ const uint16_t kMitsubishiMinGap = kMitsubishiMinGapTicks * kMitsubishiTick;
 
 // Mitsubishi Projector (HC3000)
 // Ref:
-//   https://github.com/markszabo/IRremoteESP8266/issues/441
+//   https://github.com/crankyoldgit/IRremoteESP8266/issues/441
 
 const uint16_t kMitsubishi2HdrMark = 8400;
 const uint16_t kMitsubishi2HdrSpace = kMitsubishi2HdrMark / 2;
@@ -58,6 +58,14 @@ const uint16_t kMitsubishiAcOneSpace = 1300;
 const uint16_t kMitsubishiAcZeroSpace = 420;
 const uint16_t kMitsubishiAcRptMark = 440;
 const uint16_t kMitsubishiAcRptSpace = 17100;
+
+using irutils::addBoolToString;
+using irutils::addFanToString;
+using irutils::addIntToString;
+using irutils::addLabeledString;
+using irutils::addModeToString;
+using irutils::addTempToString;
+using irutils::minsToString;
 
 #if SEND_MITSUBISHI
 // Send a Mitsubishi message
@@ -143,7 +151,7 @@ bool IRrecv::decodeMitsubishi(decode_results *results, uint16_t nbits,
 //   i.e. Allegedly, the real remote requires the "Off" button pressed twice.
 //        You will need to add a suitable gap yourself.
 // Ref:
-//   https://github.com/markszabo/IRremoteESP8266/issues/441
+//   https://github.com/crankyoldgit/IRremoteESP8266/issues/441
 void IRsend::sendMitsubishi2(uint64_t data, uint16_t nbits, uint16_t repeat) {
   for (uint16_t i = 0; i <= repeat; i++) {
     // First half of the data.
@@ -178,7 +186,7 @@ void IRsend::sendMitsubishi2(uint64_t data, uint16_t nbits, uint16_t repeat) {
 //     * Mitsubishi HC3000 projector's remote.
 //
 // Ref:
-//   https://github.com/markszabo/IRremoteESP8266/issues/441
+//   https://github.com/crankyoldgit/IRremoteESP8266/issues/441
 bool IRrecv::decodeMitsubishi2(decode_results *results, uint16_t nbits,
                                bool strict) {
   if (results->rawlen < 2 * nbits + kHeader + (kFooter * 2) - 1)
@@ -382,9 +390,9 @@ bool IRrecv::decodeMitsubishiAC(decode_results *results, uint16_t nbits,
 // Equipment it seems compatible with:
 //  * <Add models (A/C & remotes) you've gotten it working with here>
 // Initialise the object.
-IRMitsubishiAC::IRMitsubishiAC(const uint16_t pin) : _irsend(pin) {
-  this->stateReset();
-}
+IRMitsubishiAC::IRMitsubishiAC(const uint16_t pin, const bool inverted,
+                               const bool use_modulation)
+    : _irsend(pin, inverted, use_modulation) { this->stateReset(); }
 
 // Reset the state of the remote to a known good state/sequence.
 void IRMitsubishiAC::stateReset(void) {
@@ -545,9 +553,22 @@ void IRMitsubishiAC::setVane(const uint8_t position) {
   remote_state[9] |= pos;
 }
 
+// Set the requested wide-vane operation mode of the a/c unit.
+void IRMitsubishiAC::setWideVane(const uint8_t position) {
+  uint8_t pos = std::min(position, kMitsubishiAcWideVaneAuto);  // bounds check
+  pos <<= 4;
+  remote_state[8] &= 0b00001111;  // Clear the previous setting.
+  remote_state[8] |= pos;
+}
+
 // Return the requested vane operation mode of the a/c unit.
 uint8_t IRMitsubishiAC::getVane(void) {
   return ((remote_state[9] & 0b00111000) >> 3);
+}
+
+// Return the requested wide vane operation mode of the a/c unit.
+uint8_t IRMitsubishiAC::getWideVane(void) {
+  return (remote_state[8] >> 4);
 }
 
 // Return the clock setting of the message. 1=1/6 hour. e.g. 4pm = 48
@@ -622,13 +643,41 @@ uint8_t IRMitsubishiAC::convertFan(const stdAc::fanspeed_t speed) {
 uint8_t IRMitsubishiAC::convertSwingV(const stdAc::swingv_t position) {
   switch (position) {
     case stdAc::swingv_t::kHighest:
+      return kMitsubishiAcVaneAutoMove - 6;
     case stdAc::swingv_t::kHigh:
+      return kMitsubishiAcVaneAutoMove - 5;
     case stdAc::swingv_t::kMiddle:
+      return kMitsubishiAcVaneAutoMove - 4;
     case stdAc::swingv_t::kLow:
+      return kMitsubishiAcVaneAutoMove - 3;
     case stdAc::swingv_t::kLowest:
-      return kMitsubishiAcVaneAutoMove;
+      return kMitsubishiAcVaneAutoMove - 2;
+    case stdAc::swingv_t::kAuto:
+       return kMitsubishiAcVaneAutoMove;
     default:
-      return kMitsubishiAcVaneAuto;
+       return kMitsubishiAcVaneAuto;
+  }
+}
+
+// Convert a standard A/C wide wane swing into its native setting.
+uint8_t IRMitsubishiAC::convertSwingH(const stdAc::swingh_t position) {
+  switch (position) {
+    case stdAc::swingh_t::kLeftMax:
+      return kMitsubishiAcWideVaneAuto - 7;
+    case stdAc::swingh_t::kLeft:
+      return kMitsubishiAcWideVaneAuto - 6;
+    case stdAc::swingh_t::kMiddle:
+      return kMitsubishiAcWideVaneAuto - 5;
+    case stdAc::swingh_t::kRight:
+      return kMitsubishiAcWideVaneAuto - 4;
+    case stdAc::swingh_t::kRightMax:
+      return kMitsubishiAcWideVaneAuto - 3;
+    case stdAc::swingh_t::kWide:
+      return kMitsubishiAcWideVaneAuto - 2;
+    case stdAc::swingh_t::kAuto:
+      return kMitsubishiAcWideVaneAuto;
+    default:
+      return kMitsubishiAcWideVaneAuto - 5;
   }
 }
 
@@ -666,6 +715,19 @@ stdAc::swingv_t IRMitsubishiAC::toCommonSwingV(const uint8_t pos) {
   }
 }
 
+// Convert a native horizontal swing to it's common equivalent.
+stdAc::swingh_t IRMitsubishiAC::toCommonSwingH(const uint8_t pos) {
+  switch (pos) {
+    case 1: return stdAc::swingh_t::kLeftMax;
+    case 2: return stdAc::swingh_t::kLeft;
+    case 3: return stdAc::swingh_t::kMiddle;
+    case 4: return stdAc::swingh_t::kRight;
+    case 5: return stdAc::swingh_t::kRightMax;
+    case 6: return stdAc::swingh_t::kWide;
+    default: return stdAc::swingh_t::kAuto;
+  }
+}
+
 // Convert the A/C state to it's common equivalent.
 stdAc::state_t IRMitsubishiAC::toCommon(void) {
   stdAc::state_t result;
@@ -677,9 +739,9 @@ stdAc::state_t IRMitsubishiAC::toCommon(void) {
   result.degrees = this->getTemp();
   result.fanspeed = this->toCommonFanSpeed(this->getFan());
   result.swingv = this->toCommonSwingV(this->getVane());
+  result.swingh = this->toCommonSwingH(this->getWideVane());
   result.quiet = this->getFan() == kMitsubishiAcFanSilent;
   // Not supported.
-  result.swingh = stdAc::swingh_t::kOff;
   result.turbo = false;
   result.clean = false;
   result.econo = false;
@@ -691,42 +753,20 @@ stdAc::state_t IRMitsubishiAC::toCommon(void) {
   return result;
 }
 
-String IRMitsubishiAC::timeToString(const uint64_t time) {
-  String result = "";
-  result.reserve(6);
-  if (time / 6 < 10) result += '0';
-  result += uint64ToString(time / 6);
-  result += ':';
-  if (time * 10 % 60 < 10) result += '0';
-  result += uint64ToString(time * 10 % 60);
-  return result;
-}
-
 // Convert the internal state into a human readable string.
 String IRMitsubishiAC::toString(void) {
   String result = "";
   result.reserve(110);  // Reserve some heap for the string to reduce fragging.
-  result += IRutils::acBoolToString(getPower(), F("Power"), false);
-  result += IRutils::acModeToString(getMode(), kMitsubishiAcAuto,
-                                    kMitsubishiAcCool, kMitsubishiAcHeat,
-                                    kMitsubishiAcDry, kMitsubishiAcAuto);
-  result += F(", Temp: ");
-  result += uint64ToString(this->getTemp());
-  result += F("C, FAN: ");
-  switch (this->getFan()) {
-    case MITSUBISHI_AC_FAN_AUTO:
-      result += F("AUTO");
-      break;
-    case MITSUBISHI_AC_FAN_MAX:
-      result += F("MAX");
-      break;
-    case MITSUBISHI_AC_FAN_SILENT:
-      result += F("SILENT");
-      break;
-    default:
-      result += uint64ToString(this->getFan());
-  }
-  result += F(", VANE: ");
+  result += addBoolToString(getPower(), F("Power"), false);
+  result += addModeToString(getMode(), kMitsubishiAcAuto, kMitsubishiAcCool,
+                            kMitsubishiAcHeat, kMitsubishiAcDry,
+                            kMitsubishiAcAuto);
+  result += addTempToString(getTemp());
+  result += addFanToString(getFan(), kMitsubishiAcFanRealMax,
+                           kMitsubishiAcFanRealMax - 3,
+                           kMitsubishiAcFanAuto, kMitsubishiAcFanQuiet,
+                           kMitsubishiAcFanRealMax - 2);
+  result += F(", Vane: ");
   switch (this->getVane()) {
     case MITSUBISHI_AC_VANE_AUTO:
       result += F("AUTO");
@@ -737,12 +777,17 @@ String IRMitsubishiAC::toString(void) {
     default:
       result += uint64ToString(this->getVane());
   }
-  result += F(", Time: ");
-  result += this->timeToString(this->getClock());
-  result += F(", On timer: ");
-  result += this->timeToString(this->getStartClock());
-  result += F(", Off timer: ");
-  result += this->timeToString(this->getStopClock());
+  result += F(", Wide Vane: ");
+  switch (this->getWideVane()) {
+    case kMitsubishiAcWideVaneAuto:
+      result += F("AUTO");
+      break;
+    default:
+      result += uint64ToString(this->getWideVane());
+  }
+  result += addLabeledString(minsToString(getClock() * 10), F("Time"));
+  result += addLabeledString(minsToString(getStartClock() * 10), F("On timer"));
+  result += addLabeledString(minsToString(getStopClock() * 10), F("Off timer"));
   result += F(", Timer: ");
   switch (this->getTimer()) {
     case kMitsubishiAcNoTimer:
