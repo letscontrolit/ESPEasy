@@ -134,7 +134,7 @@ To create/register a plugin, you have to :
 
     #define USES_C001   // Domoticz HTTP
     #define USES_C002   // Domoticz MQTT
-    #define USES_C005   // OpenHAB MQTT
+    #define USES_C005   // Home Assistant (openHAB) MQTT
 //    #define USES_C006   // PiDome MQTT
     #define USES_C008   // Generic HTTP
     #define USES_C009   // FHEM HTTP
@@ -571,7 +571,7 @@ To create/register a plugin, you have to :
     #define USES_C002   // Domoticz MQTT
     #define USES_C003   // Nodo telnet
     #define USES_C004   // ThingSpeak
-    #define USES_C005   // OpenHAB MQTT
+    #define USES_C005   // Home Assistant (openHAB) MQTT
     #define USES_C006   // PiDome MQTT
     #define USES_C007   // Emoncms
     #define USES_C008   // Generic HTTP

@@ -45,9 +45,9 @@
 .. |C004_maintainer| replace:: `.`
 .. |C004_compileinfo| replace:: `.`
 
-.. |C005_name| replace:: :cyan:`OpenHAB MQTT`
+.. |C005_name| replace:: :cyan:`Home Assistant (openHAB) MQTT`
 .. |C005_type| replace:: :cyan:`Controller`
-.. |C005_typename| replace:: :cyan:`Controller - OpenHAB MQTT`
+.. |C005_typename| replace:: :cyan:`Controller - Home Assistant (openHAB) MQTT`
 .. |C005_status| replace:: :green:`NORMAL`
 .. |C005_github| replace:: C005.ino
 .. _C005_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_C005.ino

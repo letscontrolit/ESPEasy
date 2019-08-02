@@ -1,11 +1,11 @@
 #ifdef USES_C005
 //#######################################################################################################
-//########################### Controller Plugin 005: OpenHAB MQTT #######################################
+//################### Controller Plugin 005: Home Assistant (openHAB) MQTT ##############################
 //#######################################################################################################
 
 #define CPLUGIN_005
 #define CPLUGIN_ID_005         5
-#define CPLUGIN_NAME_005       "OpenHAB MQTT"
+#define CPLUGIN_NAME_005       "Home Assistant (openHAB) MQTT"
 
 bool CPlugin_005(byte function, struct EventStruct *event, String& string)
 {
@@ -41,8 +41,8 @@ bool CPlugin_005(byte function, struct EventStruct *event, String& string)
 
     case CPLUGIN_PROTOCOL_TEMPLATE:
       {
-        event->String1 = F("/%sysname%/#");
-        event->String2 = F("/%sysname%/%tskname%/%valname%");
+        event->String1 = F("%sysname%/#");
+        event->String2 = F("%sysname%/%tskname%/%valname%");
         break;
       }
 
