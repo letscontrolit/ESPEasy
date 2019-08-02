@@ -15,10 +15,8 @@
 #define PLUGIN_NAME_087       "Communication - Serial Proxy [TESTING]"
 
 
-#define P087_TIMEOUT        PCONFIG(0)
-#define P087_TIMEOUT_LABEL  PCONFIG_LABEL(0)
-#define P087_BAUDRATE       PCONFIG(1)
-#define P087_BAUDRATE_LABEL PCONFIG_LABEL(1)
+#define P087_BAUDRATE       PCONFIG_LONG(0)
+#define P087_BAUDRATE_LABEL PCONFIG_LABEL(0)
 
 #define P087_QUERY_VALUE        0 // Temp placement holder until we know what selectors are needed.
 #define P087_NR_OUTPUT_OPTIONS  1
@@ -26,7 +24,7 @@
 #define P087_NR_OUTPUT_VALUES   VARS_PER_TASK
 #define P087_QUERY1_CONFIG_POS  3
 
-#define P087_DEFAULT_TIMEOUT 2500
+#define P087_DEFAULT_BAUDRATE 38400
 
 struct P087_data_struct : public PluginTaskData_base {
   P087_data_struct() :  P087_easySerial(nullptr) {}
@@ -42,18 +40,26 @@ struct P087_data_struct : public PluginTaskData_base {
     }
   }
 
-  bool init(const int16_t serial_rx, const int16_t serial_tx) {
+  bool init(const int16_t serial_rx, const int16_t serial_tx, unsigned long baudrate) {
     if ((serial_rx < 0) && (serial_tx < 0)) {
       return false;
     }
     reset();
     P087_easySerial = new ESPeasySerial(serial_rx, serial_tx);
-    P087_easySerial->begin(9600);
+    P087_easySerial->begin(baudrate);
+
+    //    P087_easySerial->write("V\r\n");
     return isInitialized();
   }
 
   bool isInitialized() const {
     return P087_easySerial != nullptr;
+  }
+
+  void sendInitString() {
+    if (isInitialized()) {
+      P087_easySerial->write("brt\r\n");
+    }
   }
 
   bool loop() {
@@ -71,10 +77,10 @@ struct P087_data_struct : public PluginTaskData_base {
           case 13:
           {
             const size_t length = sentence_part.length();
-            bool valid = length > 0;
+            bool valid          = length > 0;
 
             for (size_t i = 0; i < length && valid; ++i) {
-              if (sentence_part[i] > 127 || sentence_part[i] < 32) {
+              if ((sentence_part[i] > 127) || (sentence_part[i] < 32)) {
                 sentence_part = "";
                 ++sentences_received_error;
                 valid = false;
@@ -106,12 +112,13 @@ struct P087_data_struct : public PluginTaskData_base {
   }
 
   void getSentence(String& string) {
-    string = sentence_part;
+    string        = sentence_part;
     sentence_part = "";
   }
 
-  uint32_t getSentencesReceived() const {
-    return sentences_received;
+  void getSentencesReceived(uint32_t& succes, uint32_t& error) const {
+    succes = sentences_received;
+    error  = sentences_received_error;
   }
 
 private:
@@ -123,7 +130,7 @@ private:
 
   ESPeasySerial *P087_easySerial = nullptr;
   String         sentence_part;
-  int16_t        max_length               = 128;
+  int16_t        max_length               = 550;
   uint32_t       sentences_received       = 0;
   uint32_t       sentences_received_error = 0;
 };
@@ -143,6 +150,8 @@ private:
 // - Float
 // - int
 // - String
+// Init string (incl parsing CRLF like characters)
+// Timeout between sentences.
 
 
 boolean Plugin_087(byte function, struct EventStruct *event, String& string) {
@@ -192,7 +201,7 @@ boolean Plugin_087(byte function, struct EventStruct *event, String& string) {
 
     case PLUGIN_SET_DEFAULTS:
     {
-      P087_TIMEOUT = P087_DEFAULT_TIMEOUT;
+      P087_BAUDRATE = P087_DEFAULT_BAUDRATE;
 
       success = true;
       break;
@@ -211,8 +220,8 @@ boolean Plugin_087(byte function, struct EventStruct *event, String& string) {
             addUnit(detectedString);
        */
 
-      addFormNumericBox(F("Fix Timeout"), P087_TIMEOUT_LABEL, P087_TIMEOUT, 100, 10000);
-      addUnit(F("ms"));
+      addFormNumericBox(F("Baudrate"), P087_BAUDRATE_LABEL, P087_BAUDRATE, 2400, 115200);
+      addUnit(F("baud"));
 
       {
         // In a separate scope to free memory of String array as soon as possible
@@ -229,13 +238,15 @@ boolean Plugin_087(byte function, struct EventStruct *event, String& string) {
         }
       }
 
+      P087_html_show_stats(event);
+
       success = true;
       break;
     }
 
     case PLUGIN_WEBFORM_SAVE: {
       serialHelper_webformSave(event);
-      P087_TIMEOUT = getFormItemInt(P087_TIMEOUT_LABEL);
+      P087_BAUDRATE = getFormItemInt(P087_BAUDRATE_LABEL);
 
       // Save output selector parameters.
       for (byte i = 0; i < P087_NR_OUTPUT_VALUES; ++i) {
@@ -259,7 +270,7 @@ boolean Plugin_087(byte function, struct EventStruct *event, String& string) {
         return success;
       }
 
-      if (P087_data->init(serial_rx, serial_tx)) {
+      if (P087_data->init(serial_rx, serial_tx, P087_BAUDRATE)) {
         success = true;
 
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
@@ -287,7 +298,7 @@ boolean Plugin_087(byte function, struct EventStruct *event, String& string) {
           static_cast<P087_data_struct *>(getPluginTaskData(event->TaskIndex));
 
         if ((nullptr != P087_data) && P087_data->loop()) {
-          //schedule_task_device_timer(event->TaskIndex, millis() + 10);
+          // schedule_task_device_timer(event->TaskIndex, millis() + 10);
           delay(0); // Processing a full sentence may take a while, run some
                     // background tasks.
           P087_data->getSentence(event->String2);
@@ -299,6 +310,12 @@ boolean Plugin_087(byte function, struct EventStruct *event, String& string) {
     }
 
     case PLUGIN_READ: {
+      P087_data_struct *P087_data =
+        static_cast<P087_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if ((nullptr != P087_data)) {
+        P087_data->sendInitString();
+      }
       break;
     }
   }
@@ -310,6 +327,32 @@ String Plugin_087_valuename(byte value_nr, bool displayString) {
     case P087_QUERY_VALUE: return displayString ? F("Value")          : F("v");
   }
   return "";
+}
+
+void P087_html_show_stats(struct EventStruct *event) {
+  P087_data_struct *P087_data =
+    static_cast<P087_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+  if ((nullptr == P087_data) || !P087_data->isInitialized()) {
+    return;
+  }
+  {
+    addRowLabel(F("Current Sentence"));
+    String sentencePart;
+    P087_data->getSentence(sentencePart);
+    addHtml(sentencePart);
+  }
+
+  {
+    addRowLabel(F("Sentences (pass/fail)"));
+    String   chksumStats;
+    uint32_t success, error;
+    P087_data->getSentencesReceived(success, error);
+    chksumStats  = success;
+    chksumStats += '/';
+    chksumStats += error;
+    addHtml(chksumStats);
+  }
 }
 
 #endif // USES_P087
