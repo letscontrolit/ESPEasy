@@ -26,6 +26,13 @@
 
 #define P087_DEFAULT_BAUDRATE 38400
 
+#define P87_Nlines 2
+#define P87_Nchars 80
+
+#define P087_INITSTRING 0
+#define P087_EXITSTRING 1
+
+
 struct P087_data_struct : public PluginTaskData_base {
   P087_data_struct() :  P087_easySerial(nullptr) {}
 
@@ -48,7 +55,6 @@ struct P087_data_struct : public PluginTaskData_base {
     P087_easySerial = new ESPeasySerial(serial_rx, serial_tx);
     P087_easySerial->begin(baudrate);
 
-    //    P087_easySerial->write("V\r\n");
     return isInitialized();
   }
 
@@ -56,9 +62,17 @@ struct P087_data_struct : public PluginTaskData_base {
     return P087_easySerial != nullptr;
   }
 
-  void sendInitString() {
+  void sendString(const String& data) {
     if (isInitialized()) {
-      P087_easySerial->write("brt\r\n");
+      if (data.length() > 0) {
+        P087_easySerial->write(data.c_str());
+
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          String log = F("Proxy: Sending: ");
+          log += data;
+          addLog(LOG_LEVEL_INFO, log);
+        }
+      }
     }
   }
 
@@ -121,6 +135,10 @@ struct P087_data_struct : public PluginTaskData_base {
     error  = sentences_received_error;
   }
 
+  void setMaxLength(uint16_t maxlenght) {
+    max_length = maxlenght;
+  }
+
 private:
 
   bool max_length_reached() const {
@@ -130,7 +148,7 @@ private:
 
   ESPeasySerial *P087_easySerial = nullptr;
   String         sentence_part;
-  int16_t        max_length               = 550;
+  uint16_t       max_length               = 550;
   uint32_t       sentences_received       = 0;
   uint32_t       sentences_received_error = 0;
 };
@@ -153,6 +171,24 @@ private:
 // Init string (incl parsing CRLF like characters)
 // Timeout between sentences.
 
+void P087_loadStrings(byte taskIndex, String& init, String& exit) {
+  // Loading strings
+  char P087_deviceTemplate[P87_Nlines][P87_Nchars];
+
+  LoadCustomTaskSettings(taskIndex, (byte *)&P087_deviceTemplate, sizeof(P087_deviceTemplate));
+
+  for (byte varNr = 0; varNr < P87_Nlines; varNr++)
+  {
+    P087_deviceTemplate[varNr][P87_Nchars - 1] = 0; // terminate in case of uninitialized data.
+
+    switch (varNr) {
+      case P087_INITSTRING: init = String(P087_deviceTemplate[varNr]); break;
+      case P087_EXITSTRING: exit = String(P087_deviceTemplate[varNr]); break;
+      default:
+        break;
+    }
+  }
+}
 
 boolean Plugin_087(byte function, struct EventStruct *event, String& string) {
   boolean success = false;
@@ -223,20 +259,47 @@ boolean Plugin_087(byte function, struct EventStruct *event, String& string) {
       addFormNumericBox(F("Baudrate"), P087_BAUDRATE_LABEL, P087_BAUDRATE, 2400, 115200);
       addUnit(F("baud"));
 
-      {
-        // In a separate scope to free memory of String array as soon as possible
-        sensorTypeHelper_webformLoad_header();
-        String options[P087_NR_OUTPUT_OPTIONS];
+      /*
+         {
+         // In a separate scope to free memory of String array as soon as possible
+         sensorTypeHelper_webformLoad_header();
+         String options[P087_NR_OUTPUT_OPTIONS];
 
-        for (int i = 0; i < P087_NR_OUTPUT_OPTIONS; ++i) {
+         for (int i = 0; i < P087_NR_OUTPUT_OPTIONS; ++i) {
           options[i] = Plugin_087_valuename(i, true);
-        }
+         }
 
-        for (byte i = 0; i < P087_NR_OUTPUT_VALUES; ++i) {
+         for (byte i = 0; i < P087_NR_OUTPUT_VALUES; ++i) {
           const byte pconfigIndex = i + P087_QUERY1_CONFIG_POS;
           sensorTypeHelper_loadOutputSelector(event, pconfigIndex, i, P087_NR_OUTPUT_OPTIONS, options);
+         }
+         }
+       */
+
+      {
+        String initString, exitString;
+        P087_loadStrings(event->TaskIndex, initString, exitString);
+
+        for (byte varNr = 0; varNr < P87_Nlines; varNr++)
+        {
+          String argName = F("p087_template");
+          argName += varNr + 1;
+
+          switch (varNr) {
+            case P087_INITSTRING:
+              addFormTextBox(F("Init"), argName, initString, P87_Nchars);
+              break;
+            case P087_EXITSTRING:
+
+              // addFormTextBox(F("Exit"), argName, exitString, P87_Nchars);
+              break;
+
+            default:
+              break;
+          }
         }
       }
+
 
       P087_html_show_stats(event);
 
@@ -254,6 +317,24 @@ boolean Plugin_087(byte function, struct EventStruct *event, String& string) {
         const byte choice       = PCONFIG(pconfigIndex);
         sensorTypeHelper_saveOutputSelector(event, pconfigIndex, i, Plugin_087_valuename(choice, false));
       }
+
+      String error;
+      char   P087_deviceTemplate[P87_Nlines][P87_Nchars];
+
+      for (byte varNr = 0; varNr < P87_Nlines; varNr++)
+      {
+        String argName = F("p087_template");
+        argName += varNr + 1;
+
+        if (!safe_strncpy(P087_deviceTemplate[varNr], WebServer.arg(argName), P87_Nchars)) {
+          error += getCustomTaskSettingsError(varNr);
+        }
+      }
+
+      if (error.length() > 0) {
+        addHtmlError(error);
+      }
+      SaveCustomTaskSettings(event->TaskIndex, (byte *)&P087_deviceTemplate, sizeof(P087_deviceTemplate));
 
       success = true;
       break;
@@ -314,7 +395,12 @@ boolean Plugin_087(byte function, struct EventStruct *event, String& string) {
         static_cast<P087_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if ((nullptr != P087_data)) {
-        P087_data->sendInitString();
+        String initString, exitString;
+        P087_loadStrings(event->TaskIndex, initString, exitString);
+        parseSystemVariables(initString, false);
+
+        //        parseSystemVariables(exitString, false);
+        P087_data->sendString(initString);
       }
       break;
     }
