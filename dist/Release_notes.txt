@@ -1,4 +1,15 @@
 -------------------------------------------------
+Changes in release mega-20190803 (since mega-20190731)
+-------------------------------------------------
+
+Release date: Sat Aug  3 04:00:17 CEST 2019
+
+Misiu (2):
+      Rename OpenHAB MQTT to Home Assistant (openHAB) MQTT
+      Remove backslash at start
+
+
+-------------------------------------------------
 Changes in release mega-20190731 (since mega-20190730)
 -------------------------------------------------
 
