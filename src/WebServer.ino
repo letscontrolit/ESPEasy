@@ -7246,6 +7246,8 @@ void handle_sysvars() {
   addTableSeparator(F("System"), 3, 3);
   addSysVar_html(F("%uptime%"));
   addSysVar_html(F("%unixtime%"));
+  addSysVar_html(F("%unixday%"));
+  addSysVar_html(F("%unixday_sec%"));
   addSysVar_html(F("%sunset%"));
   addSysVar_html(F("%sunset-1h%"));
   addSysVar_html(F("%sunrise%"));
