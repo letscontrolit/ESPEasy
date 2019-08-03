@@ -84,11 +84,11 @@ for ENV in \
   test_core_260_sdk3_alpha_ESP8266_4M;\
 do
   MAX_FILESIZE=1044464
-  if [[ ${ENV} == *"1024"* ]]; then
-    # max 602 kiB
+  if [[ ${ENV} == *"1M"* ]]; then
+    # max 871 kiB
     MAX_FILESIZE=892912
   fi
-  if [[ ${ENV} == *"1024_OTA"* ]]; then
+  if [[ ${ENV} == *"1M_OTA"* ]]; then
     # max 602 kiB
     MAX_FILESIZE=616448
   fi
