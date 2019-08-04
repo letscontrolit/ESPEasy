@@ -1269,7 +1269,7 @@ void handle_config() {
 
   addFormIPBox(F("ESP IP"), F("espip"), Settings.IP);
   addFormIPBox(F("ESP GW"), F("espgateway"), Settings.Gateway);
-  addFormIPBox(F("ESP Subnet"), F("espsubnet"), Settings.Subnet);
+  addFormIPBox(F("ESP Subnetmask"), F("espsubnet"), Settings.Subnet);
   addFormIPBox(F("ESP DNS"), F("espdns"), Settings.DNS);
   addFormNote(F("Leave empty for DHCP"));
 
@@ -1281,12 +1281,7 @@ void handle_config() {
   addHelpButton(F("SleepMode"));
   addFormNote(F("0 = Sleep Disabled, else time awake from sleep"));
 
-  int dsmax = 4294; // About 71 minutes
-#if defined(CORE_POST_2_5_0)
-  dsmax = INT_MAX;
-  if ((ESP.deepSleepMax()/1000000ULL) <= (uint64_t)INT_MAX)
-    dsmax = (int)(ESP.deepSleepMax()/1000000ULL);
-#endif
+  int dsmax = getDeepSleepMax();
   addFormNumericBox( F("Sleep time"), F("delay"), Settings.Delay, 0, dsmax);   //limited by hardware
   {
     String maxSleeptimeUnit = F("sec (max: ");

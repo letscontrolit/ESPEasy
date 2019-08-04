@@ -322,16 +322,38 @@ bool allocatedOnStack(const void* address) {
 #endif // ARDUINO_ESP8266_RELEASE_2_x_x
 #endif // ESP32
 
+
+/**********************************************************
+*                                                         *
+* Deep Sleep related functions                            *
+*                                                         *
+**********************************************************/
+int getDeepSleepMax()
+{
+  int dsmax = 4294; // About 71 minutes, limited by hardware
+
+#if defined(CORE_POST_2_5_0)
+  dsmax = INT_MAX;
+
+  if ((ESP.deepSleepMax() / 1000000ULL) <= (uint64_t)INT_MAX) {
+    dsmax = (int)(ESP.deepSleepMax() / 1000000ULL);
+  }
+#endif // if defined(CORE_POST_2_5_0)
+  return dsmax;
+}
+
 bool isDeepSleepEnabled()
 {
-  if (!Settings.deepSleep)
+  if (!Settings.deepSleep) {
     return false;
+  }
 
-  //cancel deep sleep loop by pulling the pin GPIO16(D0) to GND
-  //recommended wiring: 3-pin-header with 1=RST, 2=D0, 3=GND
+  // cancel deep sleep loop by pulling the pin GPIO16(D0) to GND
+  // recommended wiring: 3-pin-header with 1=RST, 2=D0, 3=GND
   //                    short 1-2 for normal deep sleep / wakeup loop
   //                    short 2-3 to cancel sleep loop for modifying settings
-  pinMode(16,INPUT_PULLUP);
+  pinMode(16, INPUT_PULLUP);
+
   if (!digitalRead(16))
   {
     return false;
@@ -341,8 +363,10 @@ bool isDeepSleepEnabled()
 
 bool readyForSleep()
 {
-  if (!isDeepSleepEnabled())
+  if (!isDeepSleepEnabled()) {
     return false;
+  }
+
   if (!checkConnectionsEstablished()) {
     // Allow 12 seconds to establish connections
     return timeOutReached(timerAwakeFromDeepSleep + 12000);
@@ -352,86 +376,104 @@ bool readyForSleep()
 
 void deepSleep(int dsdelay)
 {
-
   checkRAM(F("deepSleep"));
+
   if (!isDeepSleepEnabled())
   {
-    //Deep sleep canceled by GPIO16(D0)=LOW
+    // Deep sleep canceled by GPIO16(D0)=LOW
     return;
   }
 
-  //first time deep sleep? offer a way to escape
-  if (lastBootCause!=BOOT_CAUSE_DEEP_SLEEP)
+  // first time deep sleep? offer a way to escape
+  if (lastBootCause != BOOT_CAUSE_DEEP_SLEEP)
   {
     addLog(LOG_LEVEL_INFO, F("SLEEP: Entering deep sleep in 30 seconds."));
+
     if (Settings.UseRules && isDeepSleepEnabled())
-      {
-        String event = F("System#NoSleep=30");
-        rulesProcessing(event);
-      }
+    {
+      String event = F("System#NoSleep=30");
+      rulesProcessing(event);
+    }
     delayBackground(30000);
-    //disabled?
+
+    // disabled?
     if (!isDeepSleepEnabled())
     {
       addLog(LOG_LEVEL_INFO, F("SLEEP: Deep sleep cancelled (GPIO16 connected to GND)"));
       return;
     }
   }
-  saveUserVarToRTC();
   deepSleepStart(dsdelay); // Call deepSleepStart function after these checks
 }
 
 void deepSleepStart(int dsdelay)
 {
   // separate function that is called from above function or directly from rules, usign deepSleep as a one-shot
-  String event = F("System#Sleep");
-  rulesProcessing(event);
+  if (Settings.UseRules)
+  {
+    String event = F("System#Sleep");
+    rulesProcessing(event);
+  }
+
+  // Flush outstanding MQTT messages
+  runPeriodicalMQTT();
+
+  addLog(LOG_LEVEL_INFO, F("SLEEP: Powering down to deepsleep..."));
+  process_serialWriteBuffer();
+  flushAndDisconnectAllClients();
+  saveUserVarToRTC();
+  delay(100); // give the node time to send above log message before going to sleep
 
   RTC.deepSleepState = 1;
   saveToRTC();
+  SPIFFS.end();
 
-  addLog(LOG_LEVEL_INFO, F("SLEEP: Powering down to deepsleep..."));
-  delay(100); // give the node time to send above log message before going to sleep
   #if defined(ESP8266)
-    #if defined(CORE_POST_2_5_0)
-      uint64_t deepSleep_usec = dsdelay * 1000000ULL;
-      if ((deepSleep_usec > ESP.deepSleepMax()) || dsdelay < 0) {
-        deepSleep_usec = ESP.deepSleepMax();
-      }
-      ESP.deepSleepInstant(deepSleep_usec, WAKE_RF_DEFAULT);
-    #else
-      if (dsdelay > 4294 || dsdelay < 0)
-        dsdelay = 4294;   //max sleep time ~71 minutes
-      ESP.deepSleep((uint32_t)dsdelay * 1000000, WAKE_RF_DEFAULT);
-    #endif
-  #endif
+    # if defined(CORE_POST_2_5_0)
+  uint64_t deepSleep_usec = dsdelay * 1000000ULL;
+
+  if ((deepSleep_usec > ESP.deepSleepMax()) || (dsdelay < 0)) {
+    deepSleep_usec = ESP.deepSleepMax();
+  }
+  ESP.deepSleepInstant(deepSleep_usec, WAKE_RF_DEFAULT);
+    # else // if defined(CORE_POST_2_5_0)
+
+  if ((dsdelay > 4294) || (dsdelay < 0)) {
+    dsdelay = 4294; // max sleep time ~71 minutes
+  }
+  ESP.deepSleep((uint32_t)dsdelay * 1000000, WAKE_RF_DEFAULT);
+    # endif // if defined(CORE_POST_2_5_0)
+  #endif // if defined(ESP8266)
   #if defined(ESP32)
-    esp_sleep_enable_timer_wakeup((uint32_t)dsdelay * 1000000);
-    esp_deep_sleep_start();
-  #endif
+  esp_sleep_enable_timer_wakeup((uint32_t)dsdelay * 1000000);
+  esp_deep_sleep_start();
+  #endif // if defined(ESP32)
 }
 
 boolean remoteConfig(struct EventStruct *event, const String& string)
 {
   checkRAM(F("remoteConfig"));
   boolean success = false;
-  String command = parseString(string, 1);
+  String  command = parseString(string, 1);
 
   if (command == F("config"))
   {
     success = true;
+
     if (parseString(string, 2) == F("task"))
     {
       String configTaskName = parseStringKeepCase(string, 3);
-      String configCommand = parseStringToEndKeepCase(string, 4);
-      if (configTaskName.length() == 0 || configCommand.length() == 0)
-        return success; // TD-er: Should this be return false?
+      String configCommand  = parseStringToEndKeepCase(string, 4);
 
+      if ((configTaskName.length() == 0) || (configCommand.length() == 0)) {
+        return success; // TD-er: Should this be return false?
+      }
       int8_t index = getTaskIndexByName(configTaskName);
+
       if (index != -1)
       {
         event->TaskIndex = index;
-        success = PluginCall(PLUGIN_SET_CONFIG, event, configCommand);
+        success          = PluginCall(PLUGIN_SET_CONFIG, event, configCommand);
       }
     }
   }
@@ -440,12 +482,12 @@ boolean remoteConfig(struct EventStruct *event, const String& string)
 
 int8_t getTaskIndexByName(const String& TaskNameSearch)
 {
-
   for (byte x = 0; x < TASKS_MAX; x++)
   {
     LoadTaskSettings(x);
     String TaskName = getTaskDeviceName(x);
-    if ((TaskName.length() != 0 ) && (TaskNameSearch.equalsIgnoreCase(TaskName)))
+
+    if ((TaskName.length() != 0) && (TaskNameSearch.equalsIgnoreCase(TaskName)))
     {
       return x;
     }
@@ -455,7 +497,7 @@ int8_t getTaskIndexByName(const String& TaskNameSearch)
 
 /*********************************************************************************************\
    Device GPIO name functions to share flash strings
-  \*********************************************************************************************/
+\*********************************************************************************************/
 String formatGpioDirection(gpio_direction direction) {
   switch (direction) {
     case gpio_input:         return F("&larr; ");
@@ -466,8 +508,9 @@ String formatGpioDirection(gpio_direction direction) {
 }
 
 String formatGpioLabel(int gpio, bool includeWarning) {
-  int pinnr = -1;
+  int  pinnr = -1;
   bool input, output, warning;
+
   if (getGpioInfo(gpio, pinnr, input, output, warning)) {
     if (!includeWarning) {
       return createGPIO_label(gpio, pinnr, true, true, false);
@@ -479,6 +522,7 @@ String formatGpioLabel(int gpio, bool includeWarning) {
 
 String formatGpioName(const String& label, gpio_direction direction, bool optional) {
   int reserveLength = 5 /* "GPIO " */ + 8 /* "&#8644; " */ + label.length();
+
   if (optional) {
     reserveLength += 11;
   }
@@ -487,8 +531,10 @@ String formatGpioName(const String& label, gpio_direction direction, bool option
   result += F("GPIO ");
   result += formatGpioDirection(direction);
   result += label;
-  if (optional)
+
+  if (optional) {
     result += F("(optional)");
+  }
   return result;
 }
 
@@ -818,14 +864,12 @@ String checkTaskSettings(byte taskIndex) {
   return err;
 }
 
-
-
 /********************************************************************************************\
-  Find device index corresponding to task number setting
-  \*********************************************************************************************/
+   Find device index corresponding to task number setting
+ \*********************************************************************************************/
 byte getDeviceIndex(byte Number)
 {
-  for (byte x = 0; x <= deviceCount ; x++) {
+  for (byte x = 0; x <= deviceCount; x++) {
     if (Device[x].Number == Number) {
       return x;
     }
@@ -834,21 +878,21 @@ byte getDeviceIndex(byte Number)
 }
 
 /********************************************************************************************\
-  Find name of plugin given the plugin device index..
-  \*********************************************************************************************/
+   Find name of plugin given the plugin device index..
+ \*********************************************************************************************/
 String getPluginNameFromDeviceIndex(byte deviceIndex) {
   String deviceName = "";
+
   Plugin_ptr[deviceIndex](PLUGIN_GET_DEVICENAME, 0, deviceName);
   return deviceName;
 }
 
-
 /********************************************************************************************\
-  Find protocol index corresponding to protocol setting
-  \*********************************************************************************************/
+   Find protocol index corresponding to protocol setting
+ \*********************************************************************************************/
 byte getProtocolIndex(byte Number)
 {
-  for (byte x = 0; x <= protocolCount ; x++) {
+  for (byte x = 0; x <= protocolCount; x++) {
     if (Protocol[x].Number == Number) {
       return x;
     }
@@ -893,29 +937,31 @@ bool GetArgv(const char *string, String& argvString, unsigned int argc) {
 
 bool GetArgvBeginEnd(const char *string, const unsigned int argc, int& pos_begin, int& pos_end) {
   pos_begin = -1;
-  pos_end = -1;
+  pos_end   = -1;
   size_t string_len = strlen(string);
   unsigned int string_pos = 0, argc_pos = 0;
-  boolean parenthesis = false;
-  char matching_parenthesis = '"';
+  boolean parenthesis          = false;
+  char    matching_parenthesis = '"';
 
   while (string_pos < string_len)
   {
-	char c, d; // c = current char, d = next char (if available)
+    char c, d; // c = current char, d = next char (if available)
     c = string[string_pos];
     d = 0;
+
     if ((string_pos + 1) < string_len) {
       d = string[string_pos + 1];
     }
 
-    if       (!parenthesis && c == ' ' && d == ' ') {}
-    else if  (!parenthesis && c == ' ' && d == ',') {}
-    else if  (!parenthesis && c == ',' && d == ' ') {}
-    else if  (!parenthesis && c == ' ' && d >= 33 && d <= 126) {}
-    else if  (!parenthesis && c == ',' && d >= 33 && d <= 126) {}
-    else if  (c == '"' || c == '\'' || c == '[') {
-      parenthesis = true;
+    if       (!parenthesis && (c == ' ') && (d == ' ')) {}
+    else if  (!parenthesis && (c == ' ') && (d == ',')) {}
+    else if  (!parenthesis && (c == ',') && (d == ' ')) {}
+    else if  (!parenthesis && (c == ' ') && (d >= 33) && (d <= 126)) {}
+    else if  (!parenthesis && (c == ',') && (d >= 33) && (d <= 126)) {}
+    else if  ((c == '"') || (c == '\'') || (c == '[')) {
+      parenthesis          = true;
       matching_parenthesis = c;
+
       if (c == '[') {
         matching_parenthesis = ']';
       }
@@ -924,11 +970,11 @@ bool GetArgvBeginEnd(const char *string, const unsigned int argc, int& pos_begin
     {
       if (pos_begin == -1) {
         pos_begin = string_pos;
-        pos_end = string_pos;
+        pos_end   = string_pos;
       }
       ++pos_end;
 
-      if ((!parenthesis && (d == ' ' || d == ',' || d == 0)) || (parenthesis && (d == matching_parenthesis))) // end of word
+      if ((!parenthesis && ((d == ' ') || (d == ',') || (d == 0))) || (parenthesis && (d == matching_parenthesis))) // end of word
       {
         if (d == matching_parenthesis) {
           parenthesis = false;
@@ -940,7 +986,7 @@ bool GetArgvBeginEnd(const char *string, const unsigned int argc, int& pos_begin
           return true;
         }
         pos_begin = -1;
-        pos_end = -1;
+        pos_end   = -1;
         string_pos++;
       }
     }
