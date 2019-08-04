@@ -586,7 +586,7 @@ String ClearCustomTaskSettings(int TaskIndex)
 }
 
 /********************************************************************************************\
-   Load Custom Task settings to SPIFFS
+   Load Custom Task settings from SPIFFS
  \*********************************************************************************************/
 String LoadCustomTaskSettings(int TaskIndex, byte *memAddress, int datasize)
 {
@@ -596,6 +596,29 @@ String LoadCustomTaskSettings(int TaskIndex, byte *memAddress, int datasize)
   STOP_TIMER(LOAD_CUSTOM_TASK_STATS);
   return result;
 }
+
+/********************************************************************************************\
+   Load array of Strings from Custom Task settings
+ \*********************************************************************************************/
+ String LoadCustomTaskSettings(int TaskIndex, String strings[], uint16_t nrStrings, uint16_t maxStringLenght)
+ {
+   START_TIMER;
+   checkRAM(F("LoadCustomTaskSettings"));
+
+   // FIXME TD-er: For now stack allocated, may need to be heap allocated?
+   if (maxStringLenght >= 128) return F("Max 128 chars allowed");
+   char tmpStr[128];
+   String result;
+   for (int i = 0; i < nrStrings; ++i) {
+     result += LoadFromFile(CustomTaskSettings_Type, TaskIndex, (char *)FILE_CONFIG, (byte *)&tmpStr, maxStringLenght, maxStringLenght * i);
+     tmpStr[maxStringLenght] = 0; // Terminate in case of uninitalized data
+     strings[i] = String(tmpStr);
+   }
+   STOP_TIMER(LOAD_CUSTOM_TASK_STATS);
+   return result;
+ }
+
+
 
 /********************************************************************************************\
    Save Controller settings to SPIFFS
@@ -874,7 +897,7 @@ String getSettingsFileDatasizeError(bool read, SettingsType settingsType, int in
   return error;
 }
 
-String LoadFromFile(SettingsType settingsType, int index, char *fname, byte *memAddress, int datasize) {
+String LoadFromFile(SettingsType settingsType, int index, char *fname, byte *memAddress, int datasize, int offset_in_block) {
   bool read = true;
   int  offset, max_size;
 
@@ -882,10 +905,14 @@ String LoadFromFile(SettingsType settingsType, int index, char *fname, byte *mem
     return getSettingsFileIndexRangeError(read, settingsType, index);
   }
 
-  if (datasize > max_size) {
+  if ((datasize + offset_in_block) > max_size) {
     return getSettingsFileDatasizeError(read, settingsType, index, datasize, max_size);
   }
-  return LoadFromFile(fname, offset, memAddress, datasize);
+  return LoadFromFile(fname, (offset + offset_in_block), memAddress, datasize);
+}
+
+String LoadFromFile(SettingsType settingsType, int index, char *fname, byte *memAddress, int datasize) {
+  return LoadFromFile(settingsType, index, fname, memAddress, datasize, 0);
 }
 
 String SaveToFile(SettingsType settingsType, int index, char *fname, byte *memAddress, int datasize) {

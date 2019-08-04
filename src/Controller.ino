@@ -9,7 +9,7 @@ void sendData(struct EventStruct *event)
   LoadTaskSettings(event->TaskIndex);
 
   if (Settings.UseRules) {
-    createRuleEvents(event->TaskIndex);
+    createRuleEvents(event);
   }
 
   if (Settings.UseValueLogger && Settings.InitSPI && (Settings.Pin_sd_cs >= 0)) {
@@ -75,7 +75,15 @@ void sendData(struct EventStruct *event)
   STOP_TIMER(SEND_DATA_STATS);
 }
 
-boolean validUserVar(struct EventStruct *event) {
+bool validUserVar(struct EventStruct *event) {
+  const byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[event->TaskIndex]);
+
+  switch (Device[DeviceIndex].VType) {
+    case SENSOR_TYPE_LONG:    return true;
+    case SENSOR_TYPE_STRING:  return true; // FIXME TD-er: Must look at length of event->String2 ?
+    default:
+      break;
+  }
   byte valueCount = getValueCountFromSensorType(event->sensorType);
 
   for (int i = 0; i < valueCount; ++i) {

@@ -146,7 +146,7 @@ bool CPlugin_002(byte function, struct EventStruct *event, String& string)
 
                 // trigger rulesprocessing
                 if (Settings.UseRules) {
-                  createRuleEvents(x);
+                  createRuleEvents(&TempEvent);
                 }
               }
             }
@@ -211,6 +211,7 @@ bool CPlugin_002(byte function, struct EventStruct *event, String& string)
           case SENSOR_TYPE_TEMP_EMPTY_BARO:
           case SENSOR_TYPE_TEMP_HUM_BARO:
           case SENSOR_TYPE_WIND:
+          case SENSOR_TYPE_STRING:
           default:
             root[F("nvalue")] = 0;
             root[F("svalue")] = formatDomoticzSensorType(event);

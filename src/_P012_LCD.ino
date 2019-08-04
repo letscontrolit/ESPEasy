@@ -83,12 +83,13 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
         int optionValues2[2] = { 1, 2 };
         addFormSelector(F("Display Size"), F("p012_size"), 2, options2, optionValues2, choice2);
 
-
-        char deviceTemplate[P12_Nlines][P12_Nchars];
-        LoadCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
-        for (byte varNr = 0; varNr < P12_Nlines; varNr++)
         {
-          addFormTextBox(String(F("Line ")) + (varNr + 1), String(F("p012_template")) + (varNr + 1), deviceTemplate[varNr], P12_Nchars);
+          String strings[P12_Nlines];
+          LoadCustomTaskSettings(event->TaskIndex, strings, P12_Nlines, P12_Nchars);
+          for (byte varNr = 0; varNr < P12_Nlines; varNr++)
+          {
+            addFormTextBox(String(F("Line ")) + (varNr + 1), getPluginCustomArgName(varNr), strings[varNr], P12_Nchars);
+          }
         }
 
         addRowLabel(F("Display button"));
@@ -118,9 +119,7 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
         String error;
         for (byte varNr = 0; varNr < P12_Nlines; varNr++)
         {
-          String argName = F("p012_template");
-          argName += varNr + 1;
-          if (!safe_strncpy(deviceTemplate[varNr], WebServer.arg(argName), P12_Nchars)) {
+          if (!safe_strncpy(deviceTemplate[varNr], WebServer.arg(getPluginCustomArgName(varNr)), P12_Nchars)) {
             error += getCustomTaskSettingsError(varNr);
           }
         }

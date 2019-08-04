@@ -307,6 +307,34 @@ This example for two switches that toggle one device (LED and Relay on GPIO 13 a
   gpio,13,[dummy#var1]
  endon
 
+Please note that the values stored in a Dummy Value are of type float.
+This does mean you only have about 20 bits of resolution for the value.
+
+Storing large numbers like the unix time (31 bits of resolution needed) do need some tricks to be stored.
+For the Unix time there are now 2 variables included:
+
+- %unixday%
+- %unixday_sec%
+
+Here some example used to store the Unix time in the dummy plugin to keep track of actions.
+The values stored in the Dummy variables will be kept and restored on a crash/reboot as long as the ESP remains powered.
+
+.. code-block:: html
+
+ if [DT#YMD]=0 and %unixday%>0
+  taskvalueset,7,1,%unixday%-1
+ endif
+ if %unixday%>0
+  let,5,%unixday%-[DT#YMD]
+  let,4,%v5%*86400-[DT#HMS]+%unixday_sec%
+ else
+  let,4,0
+ endif
+ if %v4%>[Config#MinWateringDelay] 
+  event,Irrigate
+ endif
+
+
 
 Event value (%eventvalue%)
 --------------------------

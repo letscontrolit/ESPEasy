@@ -43,13 +43,7 @@ OLEDDisplay *display=NULL;
 String P036_displayLines[P36_Nlines];
 
 void Plugin_036_loadDisplayLines(byte taskIndex) {
-  char P036_deviceTemplate[P36_Nlines][P36_Nchars];
-  LoadCustomTaskSettings(taskIndex, (byte*)&P036_deviceTemplate, sizeof(P036_deviceTemplate));
-  for (byte varNr = 0; varNr < P36_Nlines; varNr++) {
-    P036_displayLines[varNr] = P036_deviceTemplate[varNr];
-  }
-
-
+  LoadCustomTaskSettings(taskIndex, P036_displayLines, P36_Nlines, P36_Nchars);
 }
 
 boolean Plugin_036(byte function, struct EventStruct *event, String& string)
@@ -150,7 +144,7 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
         Plugin_036_loadDisplayLines(event->TaskIndex);
         for (byte varNr = 0; varNr < P36_Nlines; varNr++)
         {
-          addFormTextBox(String(F("Line ")) + (varNr + 1), String(F("p036_template")) + (varNr + 1), P036_displayLines[varNr], P36_Nchars);
+          addFormTextBox(String(F("Line ")) + (varNr + 1), getPluginCustomArgName(varNr), P036_displayLines[varNr], P36_Nchars);
         }
 
         // FIXME TD-er: Why is this using pin3 and not pin1? And why isn't this using the normal pin selection functions?
@@ -193,9 +187,7 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
         char P036_deviceTemplate[P36_Nlines][P36_Nchars];
         for (byte varNr = 0; varNr < P36_Nlines; varNr++)
         {
-          String argName = F("p036_template");
-          argName += varNr + 1;
-          if (!safe_strncpy(P036_deviceTemplate[varNr], WebServer.arg(argName), P36_Nchars)) {
+          if (!safe_strncpy(P036_deviceTemplate[varNr], WebServer.arg(getPluginCustomArgName(varNr)), P36_Nchars)) {
             error += getCustomTaskSettingsError(varNr);
           }
         }

@@ -118,6 +118,11 @@ void serialHelper_plugin_init(struct EventStruct *event) {
   if (serType == ESPeasySerialType::serialtype::serial0) {
     Settings.UseSerial = false; // Disable global Serial port.
   }
+  #ifdef ESP8266
+  if (serType == ESPeasySerialType::serialtype::serial0_swap) {
+    Settings.UseSerial = false; // Disable global Serial port.
+  }
+  #endif
 }
 
 bool serialHelper_isValid_serialconfig(byte serialconfig) {

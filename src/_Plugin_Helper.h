@@ -101,4 +101,10 @@ bool pluginTaskData_initialized(byte taskIndex) {
   return false;
 }
 
+String getPluginCustomArgName(int varNr) {
+  String argName = F("plugin_custom_arg");
+  argName += varNr + 1;
+  return argName;
+}
+
 #endif // PLUGIN_HELPER_H
