@@ -13,6 +13,7 @@
 //   Brand: Kelvinator,  Model: KSV70CRC A/C
 //   Brand: Kelvinator,  Model: KSV70HRC A/C
 //   Brand: Kelvinator,  Model: KSV80HRC A/C
+//   Brand: Green,  Model: YAPOF3 remote
 
 #ifndef IR_KELVINATOR_H_
 #define IR_KELVINATOR_H_
@@ -36,6 +37,7 @@ const uint8_t kKelvinatorFan = 3;
 const uint8_t kKelvinatorHeat = 4;
 const uint8_t kKelvinatorBasicFanMax = 3;
 const uint8_t kKelvinatorFanAuto = 0;
+const uint8_t kKelvinatorFanMin = 1;
 const uint8_t kKelvinatorFanMax = 5;
 const uint8_t kKelvinatorMinTemp = 16;   // 16C
 const uint8_t kKelvinatorMaxTemp = 30;   // 30C
@@ -133,7 +135,8 @@ const uint8_t kKelvinatorAutoTemp = 25;  // 25C
 // Classes
 class IRKelvinatorAC {
  public:
-  explicit IRKelvinatorAC(uint16_t pin);
+  explicit IRKelvinatorAC(const uint16_t pin, const bool inverted = false,
+                          const bool use_modulation = true);
 
   void stateReset(void);
 #if SEND_KELVINATOR

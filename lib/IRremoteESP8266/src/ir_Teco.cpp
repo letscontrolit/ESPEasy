@@ -20,6 +20,13 @@ const uint16_t kTecoOneSpace = 1650;
 const uint16_t kTecoZeroSpace = 580;
 const uint32_t kTecoGap = kDefaultMessageGap;  // Made-up value. Just a guess.
 
+using irutils::addBoolToString;
+using irutils::addFanToString;
+using irutils::addIntToString;
+using irutils::addLabeledString;
+using irutils::addModeToString;
+using irutils::addTempToString;
+
 #if SEND_TECO
 // Send a Teco A/C message.
 //
@@ -36,7 +43,9 @@ void IRsend::sendTeco(const uint64_t data, const uint16_t nbits,
 #endif  // SEND_TECO
 
 // Class for decoding and constructing Teco AC messages.
-IRTecoAc::IRTecoAc(const uint16_t pin) : _irsend(pin) { this->stateReset(); }
+IRTecoAc::IRTecoAc(const uint16_t pin, const bool inverted,
+                   const bool use_modulation)
+    : _irsend(pin, inverted, use_modulation) { this->stateReset(); }
 
 void IRTecoAc::begin(void) { _irsend.begin(); }
 
@@ -220,32 +229,14 @@ stdAc::state_t IRTecoAc::toCommon(void) {
 String IRTecoAc::toString(void) {
   String result = "";
   result.reserve(80);  // Reserve some heap for the string to reduce fragging.
-  result += IRutils::acBoolToString(getPower(), F("Power"), false);
-  result += IRutils::acModeToString(getMode(), kTecoAuto,
-                                    kTecoCool, kTecoHeat,
-                                    kTecoDry, kTecoFan);
-  result += F(", Temp: ");
-  result += uint64ToString(getTemp());
-  result += F("C, Fan: ");
-  result += uint64ToString(getFan());
-  switch (this->getFan()) {
-    case kTecoFanAuto:
-      result += F(" (Auto)");
-      break;
-    case kTecoFanHigh:
-      result += F(" (High)");
-      break;
-    case kTecoFanLow:
-      result += F(" (Low)");
-      break;
-    case kTecoFanMed:
-      result += F(" (Med)");
-      break;
-    default:
-      result += F(" (UNKNOWN)");
-  }
-  result += IRutils::acBoolToString(getSleep(), F("Sleep"));
-  result += IRutils::acBoolToString(getSwing(), F("Swing"));
+  result += addBoolToString(getPower(), F("Power"), false);
+  result += addModeToString(getMode(), kTecoAuto, kTecoCool, kTecoHeat,
+                            kTecoDry, kTecoFan);
+  result += addTempToString(getTemp());
+  result += addFanToString(getFan(), kTecoFanHigh, kTecoFanLow,
+                           kTecoFanAuto, kTecoFanAuto, kTecoFanMed);
+  result += addBoolToString(getSleep(), F("Sleep"));
+  result += addBoolToString(getSwing(), F("Swing"));
   return result;
 }
 

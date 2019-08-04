@@ -25,7 +25,7 @@
 #include "IRutils.h"
 
 // Constants
-// Ref: https://github.com/markszabo/IRremoteESP8266/issues/509
+// Ref: https://github.com/crankyoldgit/IRremoteESP8266/issues/509
 const uint16_t kWhirlpoolAcHdrMark = 8950;
 const uint16_t kWhirlpoolAcHdrSpace = 4484;
 const uint16_t kWhirlpoolAcBitMark = 597;
@@ -34,6 +34,14 @@ const uint16_t kWhirlpoolAcZeroSpace = 533;
 const uint16_t kWhirlpoolAcGap = 7920;
 const uint32_t kWhirlpoolAcMinGap = kDefaultMessageGap;  // Just a guess.
 const uint8_t kWhirlpoolAcSections = 3;
+
+using irutils::addBoolToString;
+using irutils::addFanToString;
+using irutils::addIntToString;
+using irutils::addLabeledString;
+using irutils::addModeToString;
+using irutils::addTempToString;
+using irutils::minsToString;
 
 #if SEND_WHIRLPOOL_AC
 // Send a Whirlpool A/C message.
@@ -46,7 +54,7 @@ const uint8_t kWhirlpoolAcSections = 3;
 // Status: ALPHA / Untested.
 //
 // Ref:
-//   https://github.com/markszabo/IRremoteESP8266/issues/509
+//   https://github.com/crankyoldgit/IRremoteESP8266/issues/509
 void IRsend::sendWhirlpoolAC(const unsigned char data[], const uint16_t nbytes,
                              const uint16_t repeat) {
   if (nbytes < kWhirlpoolAcStateLength)
@@ -79,9 +87,9 @@ void IRsend::sendWhirlpoolAC(const unsigned char data[], const uint16_t nbytes,
 // Decoding help from:
 //   @redmusicxd, @josh929800, @raducostea
 
-IRWhirlpoolAc::IRWhirlpoolAc(const uint16_t pin) : _irsend(pin) {
-  this->stateReset();
-}
+IRWhirlpoolAc::IRWhirlpoolAc(const uint16_t pin, const bool inverted,
+                             const bool use_modulation)
+    : _irsend(pin, inverted, use_modulation) { this->stateReset(); }
 
 void IRWhirlpoolAc::stateReset(void) {
   for (uint8_t i = 2; i < kWhirlpoolAcStateLength; i++) remote_state[i] = 0x0;
@@ -476,18 +484,6 @@ stdAc::state_t IRWhirlpoolAc::toCommon(void) {
   return result;
 }
 
-String IRWhirlpoolAc::timeToString(const uint16_t minspastmidnight) {
-  String result = "";
-  uint8_t hours = minspastmidnight / 60;
-  if (hours < 10) result += '0';
-  result += uint64ToString(hours);
-  result += ':';
-  uint8_t mins = minspastmidnight % 60;
-  if (mins < 10) result += '0';
-  result += uint64ToString(mins);
-  return result;
-}
-
 // Convert the internal state into a human readable string.
 String IRWhirlpoolAc::toString(void) {
   String result = "";
@@ -504,49 +500,25 @@ String IRWhirlpoolAc::toString(void) {
     default:
       result += F(" (UNKNOWN)");
   }
-  result += IRutils::acBoolToString(getPowerToggle(), F("Power toggle"));
-  result += IRutils::acModeToString(getMode(), kWhirlpoolAcAuto,
-                                    kWhirlpoolAcCool, kWhirlpoolAcHeat,
-                                    kWhirlpoolAcDry, kWhirlpoolAcFan);
-  result += F(", Temp: ");
-  result += uint64ToString(this->getTemp());
-  result += F("C, Fan: ");
-  result += uint64ToString(this->getFan());
-  switch (getFan()) {
-    case kWhirlpoolAcFanAuto:
-      result += F(" (AUTO)");
-      break;
-    case kWhirlpoolAcFanHigh:
-      result += F(" (HIGH)");
-      break;
-    case kWhirlpoolAcFanMedium:
-      result += F(" (MEDIUM)");
-      break;
-    case kWhirlpoolAcFanLow:
-      result += F(" (LOW)");
-      break;
-    default:
-      result += F(" (UNKNOWN)");
-      break;
-  }
-  result += IRutils::acBoolToString(getSwing(), F("Swing"));
-  result += IRutils::acBoolToString(getLight(), F("Light"));
-  result += F(", Clock: ");
-  result += this->timeToString(this->getClock());
-  result += F(", On Timer: ");
-  if (this->isOnTimerEnabled())
-    result += this->timeToString(this->getOnTimer());
-  else
-    result += F("Off");
-  result += F(", Off Timer: ");
-  if (this->isOffTimerEnabled())
-    result += this->timeToString(this->getOffTimer());
-  else
-    result += F("Off");
-  result += IRutils::acBoolToString(getSleep(), F("Sleep"));
-  result += IRutils::acBoolToString(getSuper(), F("Super"));
-  result += F(", Command: ");
-  result += uint64ToString(this->getCommand());
+  result += addBoolToString(getPowerToggle(), F("Power toggle"));
+  result += addModeToString(getMode(), kWhirlpoolAcAuto, kWhirlpoolAcCool,
+                            kWhirlpoolAcHeat, kWhirlpoolAcDry, kWhirlpoolAcFan);
+  result += addTempToString(getTemp());
+  result += addFanToString(getFan(), kWhirlpoolAcFanHigh, kWhirlpoolAcFanLow,
+                           kWhirlpoolAcFanAuto, kWhirlpoolAcFanAuto,
+                           kWhirlpoolAcFanMedium);
+  result += addBoolToString(getSwing(), F("Swing"));
+  result += addBoolToString(getLight(), F("Light"));
+  result += addLabeledString(minsToString(getClock()), F("Clock"));
+  result += addLabeledString(
+      isOnTimerEnabled() ? minsToString(getOnTimer()) : F("Off"),
+      F("On Timer"));
+  result += addLabeledString(
+      isOffTimerEnabled() ? minsToString(getOffTimer()) : F("Off"),
+      F("Off Timer"));
+  result += addBoolToString(getSleep(), F("Sleep"));
+  result += addBoolToString(getSuper(), F("Super"));
+  result += addIntToString(getCommand(), F("Command"));
   switch (this->getCommand()) {
     case kWhirlpoolAcCommandLight:
       result += F(" (LIGHT)");
@@ -605,7 +577,7 @@ String IRWhirlpoolAc::toString(void) {
 //
 //
 // Ref:
-//   https://github.com/markszabo/IRremoteESP8266/issues/509
+//   https://github.com/crankyoldgit/IRremoteESP8266/issues/509
 bool IRrecv::decodeWhirlpoolAC(decode_results *results, const uint16_t nbits,
                                const bool strict) {
   if (results->rawlen < 2 * nbits + 4 + kHeader + kFooter - 1)

@@ -16,7 +16,7 @@
 #include "IRtimer.h"
 
 // Originally from https://github.com/shirriff/Arduino-IRremote/
-// Updated by markszabo (https://github.com/markszabo/IRremoteESP8266) for
+// Updated by markszabo (https://github.com/crankyoldgit/IRremoteESP8266) for
 // sending IR code on ESP8266
 
 // IRsend ----------------------------------------------------------------------
@@ -500,6 +500,7 @@ uint16_t IRsend::minRepeats(const decode_type_t protocol) {
   switch (protocol) {
     // Single repeats
     case AIWA_RC_T501:
+    case AMCOR:
     case COOLIX:
     case GICABLE:
     case INAX:
@@ -574,14 +575,19 @@ uint16_t IRsend::defaultBits(const decode_type_t protocol) {
     case MAGIQUEST:
     case VESTEL_AC:
       return 56;
+    case AMCOR:
     case PIONEER:
       return 64;
     case ARGO:
       return kArgoBits;
     case DAIKIN:
       return kDaikinBits;
+    case DAIKIN128:
+      return kDaikin128Bits;
     case DAIKIN160:
       return kDaikin160Bits;
+    case DAIKIN176:
+      return kDaikin176Bits;
     case DAIKIN2:
       return kDaikin2Bits;
     case DAIKIN216:
@@ -837,6 +843,11 @@ bool IRsend::send(const decode_type_t type, const uint64_t data,
 bool IRsend::send(const decode_type_t type, const unsigned char *state,
                   const uint16_t nbytes) {
   switch (type) {
+#if SEND_AMCOR
+    case AMCOR:
+      sendAmcor(state, nbytes);
+      break;
+#endif
 #if SEND_ARGO
     case ARGO:
       sendArgo(state, nbytes);
@@ -847,11 +858,21 @@ bool IRsend::send(const decode_type_t type, const unsigned char *state,
       sendDaikin(state, nbytes);
       break;
 #endif  // SEND_DAIKIN
+#if SEND_DAIKIN128
+    case DAIKIN128:
+        sendDaikin128(state, nbytes);
+        break;
+#endif  // SEND_DAIKIN128
 #if SEND_DAIKIN160
     case DAIKIN160:
       sendDaikin160(state, nbytes);
       break;
 #endif  // SEND_DAIKIN160
+#if SEND_DAIKIN176
+    case DAIKIN176:
+      sendDaikin176(state, nbytes);
+      break;
+#endif  // SEND_DAIKIN176
 #if SEND_DAIKIN2
     case DAIKIN2:
       sendDaikin2(state, nbytes);

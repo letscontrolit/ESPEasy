@@ -31,6 +31,8 @@ const uint8_t kToshibaAcDry = 2;
 const uint8_t kToshibaAcHeat = 3;
 const uint8_t kToshibaAcPower = 4;
 const uint8_t kToshibaAcFanAuto = 0;
+const uint8_t kToshibaAcFanMin = 1;
+const uint8_t kToshibaAcFanMed = 3;
 const uint8_t kToshibaAcFanMax = 5;
 const uint8_t kToshibaAcMinTemp = 17;  // 17C
 const uint8_t kToshibaAcMaxTemp = 30;  // 30C
@@ -48,7 +50,8 @@ const uint8_t kToshibaAcMaxTemp = 30;  // 30C
 
 class IRToshibaAC {
  public:
-  explicit IRToshibaAC(const uint16_t pin);
+  explicit IRToshibaAC(const uint16_t pin, const bool inverted = false,
+                       const bool use_modulation = true);
 
   void stateReset(void);
 #if SEND_TOSHIBA_AC

@@ -364,7 +364,7 @@ TEST(TestDecodeSharp, FailToDecodeNonSharpExample) {
   ASSERT_FALSE(irrecv.decodeSharp(&irsend.capture, kSharpBits, false));
 }
 
-// https://github.com/markszabo/IRremoteESP8266/issues/638#issue-421064165
+// https://github.com/crankyoldgit/IRremoteESP8266/issues/638#issue-421064165
 TEST(TestDecodeSharpAc, RealExample) {
   IRsendTest irsend(0);
   IRrecv irrecv(0);
@@ -402,11 +402,11 @@ TEST(TestDecodeSharpAc, RealExample) {
   IRSharpAc ac(0);
   ac.begin();
   ac.setRaw(irsend.capture.state);
-  EXPECT_EQ("Power: On, Mode: 2 (COOL), Temp: 27C, Fan: 2 (AUTO)",
+  EXPECT_EQ("Power: On, Mode: 2 (COOL), Temp: 27C, Fan: 2 (Auto)",
             ac.toString());
 }
 
-// https://github.com/markszabo/IRremoteESP8266/issues/638#issue-421064165
+// https://github.com/crankyoldgit/IRremoteESP8266/issues/638#issue-421064165
 TEST(TestDecodeSharpAc, SyntheticExample) {
   IRsendTest irsend(0);
   IRrecv irrecv(0);
@@ -584,7 +584,7 @@ TEST(TestSharpAcClass, ReconstructKnownState) {
   ac.setTemp(kSharpAcMinTemp);
   ac.setFan(kSharpAcFanAuto);
   EXPECT_STATE_EQ(on_auto_auto, ac.getRaw(), kSharpAcBits);
-  EXPECT_EQ("Power: On, Mode: 0 (AUTO), Temp: 15C, Fan: 2 (AUTO)",
+  EXPECT_EQ("Power: On, Mode: 0 (AUTO), Temp: 15C, Fan: 2 (Auto)",
             ac.toString());
 
   uint8_t cool_auto_28[kSharpAcStateLength] = {
@@ -595,12 +595,12 @@ TEST(TestSharpAcClass, ReconstructKnownState) {
   ac.setMode(kSharpAcCool);
   ac.setTemp(28);
   ac.setFan(kSharpAcFanAuto);
-  EXPECT_EQ("Power: On, Mode: 2 (COOL), Temp: 28C, Fan: 2 (AUTO)",
+  EXPECT_EQ("Power: On, Mode: 2 (COOL), Temp: 28C, Fan: 2 (Auto)",
             ac.toString());
   EXPECT_STATE_EQ(cool_auto_28, ac.getRaw(), kSharpAcBits);
 }
 
-// https://github.com/markszabo/IRremoteESP8266/issues/638#issue-421064165
+// https://github.com/crankyoldgit/IRremoteESP8266/issues/638#issue-421064165
 TEST(TestSharpAcClass, KnownStates) {
   IRSharpAc ac(0);
   ac.begin();
@@ -610,49 +610,49 @@ TEST(TestSharpAcClass, KnownStates) {
       0x31};
   ASSERT_TRUE(ac.validChecksum(off_auto_auto));
   ac.setRaw(off_auto_auto);
-  EXPECT_EQ("Power: Off, Mode: 0 (AUTO), Temp: 15C, Fan: 2 (AUTO)",
+  EXPECT_EQ("Power: Off, Mode: 0 (AUTO), Temp: 15C, Fan: 2 (Auto)",
             ac.toString());
   uint8_t on_auto_auto[kSharpAcStateLength] = {
       0xAA, 0x5A, 0xCF, 0x10, 0x00, 0x11, 0x20, 0x00, 0x08, 0x80, 0x00, 0xE0,
       0x01};
   ASSERT_TRUE(ac.validChecksum(on_auto_auto));
   ac.setRaw(on_auto_auto);
-  EXPECT_EQ("Power: On, Mode: 0 (AUTO), Temp: 15C, Fan: 2 (AUTO)",
+  EXPECT_EQ("Power: On, Mode: 0 (AUTO), Temp: 15C, Fan: 2 (Auto)",
             ac.toString());
   uint8_t cool_auto_28[kSharpAcStateLength] = {
       0xAA, 0x5A, 0xCF, 0x10, 0xCD, 0x31, 0x22, 0x00, 0x08, 0x80, 0x04, 0xE0,
       0x51};
   ASSERT_TRUE(ac.validChecksum(cool_auto_28));
   ac.setRaw(cool_auto_28);
-  EXPECT_EQ("Power: On, Mode: 2 (COOL), Temp: 28C, Fan: 2 (AUTO)",
+  EXPECT_EQ("Power: On, Mode: 2 (COOL), Temp: 28C, Fan: 2 (Auto)",
             ac.toString());
   uint8_t cool_fan1_28[kSharpAcStateLength] = {
       0xAA, 0x5A, 0xCF, 0x10, 0xCD, 0x31, 0x42, 0x00, 0x08, 0x80, 0x05, 0xE0,
       0x21};
   ASSERT_TRUE(ac.validChecksum(cool_fan1_28));
   ac.setRaw(cool_fan1_28);
-  EXPECT_EQ("Power: On, Mode: 2 (COOL), Temp: 28C, Fan: 4 (MIN)",
+  EXPECT_EQ("Power: On, Mode: 2 (COOL), Temp: 28C, Fan: 4 (Low)",
             ac.toString());
   uint8_t cool_fan2_28[kSharpAcStateLength] = {
       0xAA, 0x5A, 0xCF, 0x10, 0xCD, 0x31, 0x32, 0x00, 0x08, 0x80, 0x05, 0xE0,
       0x51};
   ASSERT_TRUE(ac.validChecksum(cool_fan2_28));
   ac.setRaw(cool_fan2_28);
-  EXPECT_EQ("Power: On, Mode: 2 (COOL), Temp: 28C, Fan: 3 (MED)",
+  EXPECT_EQ("Power: On, Mode: 2 (COOL), Temp: 28C, Fan: 3 (Medium)",
             ac.toString());
   uint8_t cool_fan3_28[kSharpAcStateLength] = {
       0xAA, 0x5A, 0xCF, 0x10, 0xCD, 0x31, 0x52, 0x00, 0x08, 0x80, 0x05, 0xE0,
       0x31};
   ASSERT_TRUE(ac.validChecksum(cool_fan3_28));
   ac.setRaw(cool_fan3_28);
-  EXPECT_EQ("Power: On, Mode: 2 (COOL), Temp: 28C, Fan: 5 (HIGH)",
+  EXPECT_EQ("Power: On, Mode: 2 (COOL), Temp: 28C, Fan: 5 (UNKNOWN)",
             ac.toString());
   uint8_t cool_fan4_28[kSharpAcStateLength] = {
       0xAA, 0x5A, 0xCF, 0x10, 0xCD, 0x31, 0x72, 0x00, 0x08, 0x80, 0x05, 0xE0,
       0x11};
   ASSERT_TRUE(ac.validChecksum(cool_fan4_28));
   ac.setRaw(cool_fan4_28);
-  EXPECT_EQ("Power: On, Mode: 2 (COOL), Temp: 28C, Fan: 7 (MAX)",
+  EXPECT_EQ("Power: On, Mode: 2 (COOL), Temp: 28C, Fan: 7 (High)",
             ac.toString());
   /* Unsupported / Not yet reverse engineered.
   uint8_t cool_fan4_28_ion_on[kSharpAcStateLength] = {
@@ -674,7 +674,7 @@ TEST(TestSharpAcClass, KnownStates) {
       0x11};
   ASSERT_TRUE(ac.validChecksum(dry_auto));
   ac.setRaw(dry_auto);
-  EXPECT_EQ("Power: On, Mode: 3 (DRY), Temp: 15C, Fan: 2 (AUTO)",
+  EXPECT_EQ("Power: On, Mode: 3 (DRY), Temp: 15C, Fan: 2 (Auto)",
             ac.toString());
 }
 

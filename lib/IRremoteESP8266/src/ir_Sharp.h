@@ -51,7 +51,8 @@ const uint8_t kSharpAcBitTempManual = 0b00000100;
 
 class IRSharpAc {
  public:
-  explicit IRSharpAc(const uint16_t pin);
+  explicit IRSharpAc(const uint16_t pin, const bool inverted = false,
+                     const bool use_modulation = true);
 
 #if SEND_SHARP_AC
   void send(const uint16_t repeat = kSharpAcDefaultRepeat);
@@ -79,7 +80,6 @@ class IRSharpAc {
   static stdAc::fanspeed_t toCommonFanSpeed(const uint8_t speed);
   stdAc::state_t toCommon(void);
   String toString(void);
-  static String renderTime(const uint16_t timemins);
 #ifndef UNIT_TEST
 
  private:

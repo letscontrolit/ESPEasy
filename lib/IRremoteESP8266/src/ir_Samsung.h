@@ -23,7 +23,7 @@
 //   Brand: Samsung,  Model: AR12HSSDBWKNEU A/C
 
 // Ref:
-//   https://github.com/markszabo/IRremoteESP8266/issues/505
+//   https://github.com/crankyoldgit/IRremoteESP8266/issues/505
 
 // Constants
 const uint8_t kSamsungAcAuto = 0;
@@ -62,7 +62,8 @@ const uint64_t kSamsungAcPowerSection = 0x1D20F00000000;
 // Classes
 class IRSamsungAc {
  public:
-  explicit IRSamsungAc(const uint16_t pin);
+  explicit IRSamsungAc(const uint16_t pin, const bool inverted = false,
+                       const bool use_modulation = true);
 
   void stateReset(void);
 #if SEND_SAMSUNG_AC

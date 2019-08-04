@@ -20,7 +20,7 @@
 #endif
 
 // Ref:
-//   https://github.com/markszabo/IRremoteESP8266/issues/660
+//   https://github.com/crankyoldgit/IRremoteESP8266/issues/660
 //   https://github.com/ToniA/Raw-IR-decoder-for-Arduino/blob/master/MitsubishiHeavy.cpp
 //   https://github.com/ToniA/arduino-heatpumpir/blob/master/MitsubishiHeavyHeatpumpIR.cpp
 
@@ -122,7 +122,9 @@ const uint8_t kMitsubishiHeavy88SwingVOff =       0b00000000;  // 0x00
 // Classes
 class IRMitsubishiHeavy152Ac {
  public:
-  explicit IRMitsubishiHeavy152Ac(const uint16_t pin);
+  explicit IRMitsubishiHeavy152Ac(const uint16_t pin,
+                                  const bool inverted = false,
+                                  const bool use_modulation = true);
 
   void stateReset(void);
 #if SEND_MITSUBISHIHEAVY
@@ -202,7 +204,9 @@ class IRMitsubishiHeavy152Ac {
 
 class IRMitsubishiHeavy88Ac {
  public:
-  explicit IRMitsubishiHeavy88Ac(const uint16_t pin);
+  explicit IRMitsubishiHeavy88Ac(const uint16_t pin,
+                                 const bool inverted = false,
+                                 const bool use_modulation = true);
 
   void stateReset(void);
 #if SEND_MITSUBISHIHEAVY

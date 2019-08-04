@@ -16,7 +16,7 @@
 #include "IRutils.h"
 
 // Constants
-// Ref: https://github.com/markszabo/IRremoteESP8266/issues/417
+// Ref: https://github.com/crankyoldgit/IRremoteESP8266/issues/417
 const uint16_t kHitachiAcHdrMark = 3300;
 const uint16_t kHitachiAcHdrSpace = 1700;
 const uint16_t kHitachiAc1HdrMark = 3400;
@@ -25,6 +25,13 @@ const uint16_t kHitachiAcBitMark = 400;
 const uint16_t kHitachiAcOneSpace = 1250;
 const uint16_t kHitachiAcZeroSpace = 500;
 const uint32_t kHitachiAcMinGap = kDefaultMessageGap;  // Just a guess.
+
+using irutils::addBoolToString;
+using irutils::addIntToString;
+using irutils::addLabeledString;
+using irutils::addModeToString;
+using irutils::addFanToString;
+using irutils::addTempToString;
 
 #if (SEND_HITACHI_AC || SEND_HITACHI_AC2)
 // Send a Hitachi A/C message.
@@ -37,7 +44,7 @@ const uint32_t kHitachiAcMinGap = kDefaultMessageGap;  // Just a guess.
 // Status: ALPHA / Untested.
 //
 // Ref:
-//   https://github.com/markszabo/IRremoteESP8266/issues/417
+//   https://github.com/crankyoldgit/IRremoteESP8266/issues/417
 void IRsend::sendHitachiAC(const unsigned char data[], const uint16_t nbytes,
                            const uint16_t repeat) {
   if (nbytes < kHitachiAcStateLength)
@@ -63,7 +70,7 @@ void IRsend::sendHitachiAC(const unsigned char data[], const uint16_t nbytes,
 // Status: BETA / Appears to work.
 //
 // Ref:
-//   https://github.com/markszabo/IRremoteESP8266/issues/453
+//   https://github.com/crankyoldgit/IRremoteESP8266/issues/453
 //   Basically the same as sendHitatchiAC() except different size and header.
 void IRsend::sendHitachiAC1(const unsigned char data[], const uint16_t nbytes,
                             const uint16_t repeat) {
@@ -90,7 +97,7 @@ void IRsend::sendHitachiAC1(const unsigned char data[], const uint16_t nbytes,
 // Status: BETA / Appears to work.
 //
 // Ref:
-//   https://github.com/markszabo/IRremoteESP8266/issues/417
+//   https://github.com/crankyoldgit/IRremoteESP8266/issues/417
 //   Basically the same as sendHitatchiAC() except different size.
 void IRsend::sendHitachiAC2(const unsigned char data[], const uint16_t nbytes,
                             const uint16_t repeat) {
@@ -104,7 +111,9 @@ void IRsend::sendHitachiAC2(const unsigned char data[], const uint16_t nbytes,
 // Inspired by:
 // https://github.com/ToniA/arduino-heatpumpir/blob/master/HitachiHeatpumpIR.cpp
 
-IRHitachiAc::IRHitachiAc(const uint16_t pin) : _irsend(pin) { stateReset(); }
+IRHitachiAc::IRHitachiAc(const uint16_t pin, const bool inverted,
+                         const bool use_modulation)
+    : _irsend(pin, inverted, use_modulation) { stateReset(); }
 
 void IRHitachiAc::stateReset(void) {
   remote_state[0] = 0x80;
@@ -340,32 +349,15 @@ stdAc::state_t IRHitachiAc::toCommon(void) {
 String IRHitachiAc::toString(void) {
   String result = "";
   result.reserve(110);  // Reserve some heap for the string to reduce fragging.
-  result += IRutils::acBoolToString(getPower(), F("Power"), false);
-  result += IRutils::acModeToString(getMode(), kHitachiAcAuto,
-                                    kHitachiAcCool, kHitachiAcHeat,
-                                    kHitachiAcDry, kHitachiAcFan);
-  result += F(", Temp: ");
-  result += uint64ToString(getTemp());
-  result += F("C, Fan: ");
-  result += uint64ToString(getFan());
-  switch (getFan()) {
-    case kHitachiAcFanAuto:
-      result += F(" (AUTO)");
-      break;
-    case kHitachiAcFanLow:
-      result += F(" (LOW)");
-      break;
-    case kHitachiAcFanHigh:
-      result += F(" (HIGH)");
-      break;
-    default:
-      result += F(" (UNKNOWN)");
-      break;
-  }
-  result += IRutils::acBoolToString(getSwingVertical(), F("Swing (Vertical)"));
-  result += IRutils::acBoolToString(getSwingHorizontal(),
-                                    F("Swing (Horizontal)"));
-
+  result += addBoolToString(getPower(), F("Power"), false);
+  result += addModeToString(getMode(), kHitachiAcAuto, kHitachiAcCool,
+                            kHitachiAcHeat, kHitachiAcDry, kHitachiAcFan);
+  result += addTempToString(getTemp());
+  result += addFanToString(getFan(), kHitachiAcFanHigh, kHitachiAcFanLow,
+                           kHitachiAcFanAuto, kHitachiAcFanAuto,
+                           kHitachiAcFanMed);
+  result += addBoolToString(getSwingVertical(), F("Swing (Vertical)"));
+  result += addBoolToString(getSwingHorizontal(), F("Swing (Horizontal)"));
   return result;
 }
 
@@ -386,8 +378,8 @@ String IRHitachiAc::toString(void) {
 //  Hitachi A/C Series VI (Circa 2007) / Remote: LT0541-HTA
 //
 // Ref:
-//   https://github.com/markszabo/IRremoteESP8266/issues/417
-//   https://github.com/markszabo/IRremoteESP8266/issues/453
+//   https://github.com/crankyoldgit/IRremoteESP8266/issues/417
+//   https://github.com/crankyoldgit/IRremoteESP8266/issues/453
 bool IRrecv::decodeHitachiAC(decode_results *results, const uint16_t nbits,
                              const bool strict) {
   const uint8_t kTolerance = 30;

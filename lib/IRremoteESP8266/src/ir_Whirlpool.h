@@ -27,7 +27,7 @@
 #endif
 
 // Ref:
-//   https://github.com/markszabo/IRremoteESP8266/issues/509
+//   https://github.com/crankyoldgit/IRremoteESP8266/issues/509
 
 // Constants
 const uint8_t kWhirlpoolAcChecksumByte1 = 13;
@@ -89,7 +89,8 @@ enum whirlpool_ac_remote_model_t {
 // Classes
 class IRWhirlpoolAc {
  public:
-  explicit IRWhirlpoolAc(const uint16_t pin);
+  explicit IRWhirlpoolAc(const uint16_t pin, const bool inverted = false,
+                         const bool use_modulation = true);
 
   void stateReset(void);
 #if SEND_WHIRLPOOL_AC
@@ -159,7 +160,6 @@ class IRWhirlpoolAc {
   void _setTemp(const uint8_t temp, const bool remember = true);
   void _setMode(const uint8_t mode);
   int8_t getTempOffset(void);
-  String timeToString(uint16_t minspastmidnight);
 };
 
 #endif  // IR_WHIRLPOOL_H_

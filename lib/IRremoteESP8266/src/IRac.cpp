@@ -37,7 +37,11 @@
 #include "ir_Vestel.h"
 #include "ir_Whirlpool.h"
 
-IRac::IRac(uint8_t pin) { _pin = pin; }
+IRac::IRac(const uint16_t pin, const bool inverted, const bool use_modulation) {
+  _pin = pin;
+  _inverted = inverted;
+  _modulation = use_modulation;
+}
 
 // Is the given protocol supported by the IRac class?
 bool IRac::isProtocolSupported(const decode_type_t protocol) {
@@ -51,8 +55,14 @@ bool IRac::isProtocolSupported(const decode_type_t protocol) {
 #if SEND_DAIKIN
     case decode_type_t::DAIKIN:
 #endif
+#if SEND_DAIKIN128
+    case decode_type_t::DAIKIN128:
+#endif
 #if SEND_DAIKIN160
     case decode_type_t::DAIKIN160:
+#endif
+#if SEND_DAIKIN176
+    case decode_type_t::DAIKIN176:
 #endif
 #if SEND_DAIKIN2
     case decode_type_t::DAIKIN2:
@@ -224,6 +234,32 @@ void IRac::daikin(IRDaikinESP *ac,
 }
 #endif  // SEND_DAIKIN
 
+#if SEND_DAIKIN128
+void IRac::daikin128(IRDaikin128 *ac,
+                  const bool on, const stdAc::opmode_t mode,
+                  const float degrees, const stdAc::fanspeed_t fan,
+                  const stdAc::swingv_t swingv,
+                  const bool quiet, const bool turbo, const bool light,
+                  const bool econo, const int16_t sleep, const int16_t clock) {
+  ac->setPowerToggle(on);
+  ac->setMode(ac->convertMode(mode));
+  ac->setTemp(degrees);
+  ac->setFan(ac->convertFan(fan));
+  ac->setSwingVertical((int8_t)swingv >= 0);
+  // No Horizontal Swing setting avaliable.
+  ac->setQuiet(quiet);
+  ac->setLightToggle(light ? kDaikin128BitWall : 0);
+  // No Filter setting available.
+  ac->setPowerful(turbo);
+  ac->setEcono(econo);
+  // No Clean setting available.
+  // No Beep setting available.
+  ac->setSleep(sleep > 0);
+  if (clock >= 0) ac->setClock(clock);
+  ac->send();
+}
+#endif  // SEND_DAIKIN128
+
 #if SEND_DAIKIN160
 void IRac::daikin160(IRDaikin160 *ac,
                      const bool on, const stdAc::opmode_t mode,
@@ -237,6 +273,20 @@ void IRac::daikin160(IRDaikin160 *ac,
   ac->send();
 }
 #endif  // SEND_DAIKIN160
+
+#if SEND_DAIKIN176
+void IRac::daikin176(IRDaikin176 *ac,
+                     const bool on, const stdAc::opmode_t mode,
+                     const float degrees, const stdAc::fanspeed_t fan,
+                     const stdAc::swingh_t swingh) {
+  ac->setPower(on);
+  ac->setMode(ac->convertMode(mode));
+  ac->setTemp(degrees);
+  ac->setFan(ac->convertFan(fan));
+  ac->setSwingHorizontal(ac->convertSwingH(swingh));
+  ac->send();
+}
+#endif  // SEND_DAIKIN176
 
 #if SEND_DAIKIN2
 void IRac::daikin2(IRDaikin2 *ac,
@@ -387,11 +437,12 @@ void IRac::goodweather(IRGoodweatherAc *ac,
 #endif  // SEND_GOODWEATHER
 
 #if SEND_GREE
-void IRac::gree(IRGreeAC *ac,
+void IRac::gree(IRGreeAC *ac, const gree_ac_remote_model_t model,
                 const bool on, const stdAc::opmode_t mode, const float degrees,
                 const stdAc::fanspeed_t fan, const stdAc::swingv_t swingv,
                 const bool turbo, const bool light, const bool clean,
                 const int16_t sleep) {
+  ac->setModel(model);
   ac->setPower(on);
   ac->setMode(ac->convertMode(mode));
   ac->setTemp(degrees);
@@ -512,13 +563,15 @@ void IRac::kelvinator(IRKelvinatorAC *ac,
 
 #if SEND_MIDEA
 void IRac::midea(IRMideaAC *ac,
-                 const bool on, const stdAc::opmode_t mode, const float degrees,
-                 const stdAc::fanspeed_t fan, const int16_t sleep) {
+                 const bool on, const stdAc::opmode_t mode, const bool celsius,
+                 const float degrees, const stdAc::fanspeed_t fan,
+                 const stdAc::swingv_t swingv, const int16_t sleep) {
   ac->setPower(on);
   ac->setMode(ac->convertMode(mode));
-  ac->setTemp(degrees, true);  // true means use Celsius.
+  ac->setUseCelsius(celsius);
+  ac->setTemp(degrees, celsius);
   ac->setFan(ac->convertFan(fan));
-  // No Vertical swing setting available.
+  ac->setSwingVToggle(swingv != stdAc::swingv_t::kOff);
   // No Horizontal swing setting available.
   // No Quiet setting available.
   // No Turbo setting available.
@@ -537,13 +590,14 @@ void IRac::mitsubishi(IRMitsubishiAC *ac,
                       const bool on, const stdAc::opmode_t mode,
                       const float degrees,
                       const stdAc::fanspeed_t fan, const stdAc::swingv_t swingv,
+                      const stdAc::swingh_t swingh,
                       const bool quiet, const int16_t clock) {
   ac->setPower(on);
   ac->setMode(ac->convertMode(mode));
   ac->setTemp(degrees);
   ac->setFan(ac->convertFan(fan));
   ac->setVane(ac->convertSwingV(swingv));
-  // No Horizontal swing setting available.
+  ac->setWideVane(ac->convertSwingH(swingh));
   if (quiet) ac->setFan(kMitsubishiAcFanSilent);
   // No Turbo setting available.
   // No Light setting available.
@@ -890,7 +944,18 @@ stdAc::state_t IRac::handleToggles(const stdAc::state_t desired,
         result.turbo = desired.turbo ^ prev->turbo;
         result.light = desired.light ^ prev->light;
         result.clean = desired.clean ^ prev->clean;
-        result.sleep = (desired.sleep ^ prev->sleep) ? 0 : -1;
+        result.sleep = ((desired.sleep >= 0) ^ (prev->sleep >= 0)) ? 0 : -1;
+        break;
+      case decode_type_t::DAIKIN128:
+        result.power = desired.power ^ prev->power;
+        result.light = desired.light ^ prev->light;
+        break;
+      case decode_type_t::MIDEA:
+        if ((desired.swingv == stdAc::swingv_t::kOff) ^
+            (prev->swingv == stdAc::swingv_t::kOff))  // It changed, so toggle.
+          result.swingv = stdAc::swingv_t::kAuto;
+        else
+          result.swingv = stdAc::swingv_t::kOff;  // No change, so no toggle.
         break;
       case decode_type_t::WHIRLPOOL_AC:
         result.power = desired.power ^ prev->power;
@@ -952,50 +1017,67 @@ bool IRac::sendAc(const decode_type_t vendor, const int16_t model,
 #if SEND_ARGO
     case ARGO:
     {
-      IRArgoAC ac(_pin);
+      IRArgoAC ac(_pin, _inverted, _modulation);
       argo(&ac, on, mode, degC, fan, swingv, turbo, sleep);
       break;
     }
-#endif  // SEND_DAIKIN
+#endif  // SEND_ARGO
 #if SEND_COOLIX
     case COOLIX:
     {
-      IRCoolixAC ac(_pin);
+      IRCoolixAC ac(_pin, _inverted, _modulation);
       coolix(&ac, on, mode, degC, fan, swingv, swingh,
-             quiet, turbo, econo, clean);
+             turbo, light, clean, sleep);
       break;
     }
-#endif  // SEND_DAIKIN
+#endif  // SEND_COOLIX
 #if SEND_DAIKIN
     case DAIKIN:
     {
-      IRDaikinESP ac(_pin);
+      IRDaikinESP ac(_pin, _inverted, _modulation);
       daikin(&ac, on, mode, degC, fan, swingv, swingh,
              quiet, turbo, econo, clean);
       break;
     }
 #endif  // SEND_DAIKIN
+#if SEND_DAIKIN128
+    case DAIKIN128:
+    {
+      IRDaikin128 ac(_pin, _inverted, _modulation);
+      daikin128(&ac, on, mode, degC, fan, swingv, quiet, turbo,
+                light, econo, sleep, clock);
+      break;
+    }
+#endif  // SEND_DAIKIN2
 #if SEND_DAIKIN160
     case DAIKIN160:
     {
-      IRDaikin160 ac(_pin);
+      IRDaikin160 ac(_pin, _inverted, _modulation);
       daikin160(&ac, on, mode, degC, fan, swingv);
       break;
     }
 #endif  // SEND_DAIKIN160
+#if SEND_DAIKIN176
+    case DAIKIN176:
+    {
+      IRDaikin176 ac(_pin, _inverted, _modulation);
+      daikin176(&ac, on, mode, degC, fan, swingh);
+      break;
+    }
+#endif  // SEND_DAIKIN176
 #if SEND_DAIKIN2
     case DAIKIN2:
     {
-      IRDaikin2 ac(_pin);
+      IRDaikin2 ac(_pin, _inverted, _modulation);
       daikin2(&ac, on, mode, degC, fan, swingv, swingh, quiet, turbo,
               light, econo, filter, clean, beep, sleep, clock);
       break;
     }
-#endif  // SEND_DAIKIN216
+#endif  // SEND_DAIKIN2
 #if SEND_DAIKIN216
     case DAIKIN216:
     {
-      IRDaikin216 ac(_pin);
+      IRDaikin216 ac(_pin, _inverted, _modulation);
       daikin216(&ac, on, mode, degC, fan, swingv, swingh, quiet, turbo);
       break;
     }
@@ -1003,7 +1085,7 @@ bool IRac::sendAc(const decode_type_t vendor, const int16_t model,
 #if SEND_ELECTRA_AC
     case ELECTRA_AC:
     {
-      IRElectraAc ac(_pin);
+      IRElectraAc ac(_pin, _inverted, _modulation);
       ac.begin();
       electra(&ac, on, mode, degC, fan, swingv, swingh);
       break;
@@ -1012,7 +1094,8 @@ bool IRac::sendAc(const decode_type_t vendor, const int16_t model,
 #if SEND_FUJITSU_AC
     case FUJITSU_AC:
     {
-      IRFujitsuAC ac(_pin);
+      IRFujitsuAC ac(_pin, (fujitsu_ac_remote_model_t)model, _inverted,
+                     _modulation);
       ac.begin();
       fujitsu(&ac, (fujitsu_ac_remote_model_t)model, on, mode, degC, fan,
               swingv, swingh, quiet, turbo, econo);
@@ -1022,7 +1105,7 @@ bool IRac::sendAc(const decode_type_t vendor, const int16_t model,
 #if SEND_GOODWEATHER
     case GOODWEATHER:
     {
-      IRGoodweatherAc ac(_pin);
+      IRGoodweatherAc ac(_pin, _inverted, _modulation);
       ac.begin();
       goodweather(&ac, on, mode, degC, fan, swingv, turbo, light, sleep);
       break;
@@ -1031,16 +1114,17 @@ bool IRac::sendAc(const decode_type_t vendor, const int16_t model,
 #if SEND_GREE
     case GREE:
     {
-      IRGreeAC ac(_pin);
+      IRGreeAC ac(_pin, (gree_ac_remote_model_t)model, _inverted, _modulation);
       ac.begin();
-      gree(&ac, on, mode, degC, fan, swingv, light, turbo, clean, sleep);
+      gree(&ac, (gree_ac_remote_model_t)model, on, mode, degC, fan, swingv,
+           turbo, light, clean, sleep);
       break;
     }
 #endif  // SEND_GREE
 #if SEND_HAIER_AC
     case HAIER_AC:
     {
-      IRHaierAC ac(_pin);
+      IRHaierAC ac(_pin, _inverted, _modulation);
       ac.begin();
       haier(&ac, on, mode, degC, fan, swingv, filter, sleep, clock);
       break;
@@ -1049,7 +1133,7 @@ bool IRac::sendAc(const decode_type_t vendor, const int16_t model,
 #if SEND_HAIER_AC_YRW02
     case HAIER_AC_YRW02:
     {
-      IRHaierACYRW02 ac(_pin);
+      IRHaierACYRW02 ac(_pin, _inverted, _modulation);
       ac.begin();
       haierYrwo2(&ac, on, mode, degC, fan, swingv, turbo, filter, sleep);
       break;
@@ -1058,7 +1142,7 @@ bool IRac::sendAc(const decode_type_t vendor, const int16_t model,
 #if SEND_HITACHI_AC
     case HITACHI_AC:
     {
-      IRHitachiAc ac(_pin);
+      IRHitachiAc ac(_pin, _inverted, _modulation);
       ac.begin();
       hitachi(&ac, on, mode, degC, fan, swingv, swingh);
       break;
@@ -1067,7 +1151,7 @@ bool IRac::sendAc(const decode_type_t vendor, const int16_t model,
 #if SEND_KELVINATOR
     case KELVINATOR:
     {
-      IRKelvinatorAC ac(_pin);
+      IRKelvinatorAC ac(_pin, _inverted, _modulation);
       ac.begin();
       kelvinator(&ac, on, mode, degC, fan, swingv, swingh, quiet, turbo,
                  light, filter, clean);
@@ -1077,25 +1161,25 @@ bool IRac::sendAc(const decode_type_t vendor, const int16_t model,
 #if SEND_MIDEA
     case MIDEA:
     {
-      IRMideaAC ac(_pin);
+      IRMideaAC ac(_pin, _inverted, _modulation);
       ac.begin();
-      midea(&ac, on, mode, degC, fan, sleep);
+      midea(&ac, on, mode, celsius, degrees, fan, swingv, sleep);
       break;
     }
 #endif  // SEND_MIDEA
 #if SEND_MITSUBISHI_AC
     case MITSUBISHI_AC:
     {
-      IRMitsubishiAC ac(_pin);
+      IRMitsubishiAC ac(_pin, _inverted, _modulation);
       ac.begin();
-      mitsubishi(&ac, on, mode, degC, fan, swingv, quiet, clock);
+      mitsubishi(&ac, on, mode, degC, fan, swingv, swingh, quiet, clock);
       break;
     }
 #endif  // SEND_MITSUBISHI_AC
 #if SEND_MITSUBISHIHEAVY
     case MITSUBISHI_HEAVY_88:
     {
-      IRMitsubishiHeavy88Ac ac(_pin);
+      IRMitsubishiHeavy88Ac ac(_pin, _inverted, _modulation);
       ac.begin();
       mitsubishiHeavy88(&ac, on, mode, degC, fan, swingv, swingh,
                         turbo, econo, clean);
@@ -1103,7 +1187,7 @@ bool IRac::sendAc(const decode_type_t vendor, const int16_t model,
     }
     case MITSUBISHI_HEAVY_152:
     {
-      IRMitsubishiHeavy152Ac ac(_pin);
+      IRMitsubishiHeavy152Ac ac(_pin, _inverted, _modulation);
       ac.begin();
       mitsubishiHeavy152(&ac, on, mode, degC, fan, swingv, swingh,
                          quiet, turbo, econo, filter, clean, sleep);
@@ -1113,7 +1197,7 @@ bool IRac::sendAc(const decode_type_t vendor, const int16_t model,
 #if SEND_NEOCLIMA
     case NEOCLIMA:
     {
-      IRNeoclimaAc ac(_pin);
+      IRNeoclimaAc ac(_pin, _inverted, _modulation);
       ac.begin();
       neoclima(&ac, on, mode, degC, fan, swingv, swingh, turbo, light, filter,
                sleep);
@@ -1123,7 +1207,7 @@ bool IRac::sendAc(const decode_type_t vendor, const int16_t model,
 #if SEND_PANASONIC_AC
     case PANASONIC_AC:
     {
-      IRPanasonicAc ac(_pin);
+      IRPanasonicAc ac(_pin, _inverted, _modulation);
       ac.begin();
       panasonic(&ac, (panasonic_ac_remote_model_t)model, on, mode, degC, fan,
                 swingv, swingh, quiet, turbo, clock);
@@ -1133,7 +1217,7 @@ bool IRac::sendAc(const decode_type_t vendor, const int16_t model,
 #if SEND_SAMSUNG_AC
     case SAMSUNG_AC:
     {
-      IRSamsungAc ac(_pin);
+      IRSamsungAc ac(_pin, _inverted, _modulation);
       ac.begin();
       samsung(&ac, on, mode, degC, fan, swingv, quiet, turbo, clean, beep);
       break;
@@ -1142,7 +1226,7 @@ bool IRac::sendAc(const decode_type_t vendor, const int16_t model,
 #if SEND_SHARP_AC
     case SHARP_AC:
     {
-      IRSharpAc ac(_pin);
+      IRSharpAc ac(_pin, _inverted, _modulation);
       ac.begin();
       sharp(&ac, on, mode, degC, fan);
       break;
@@ -1151,7 +1235,7 @@ bool IRac::sendAc(const decode_type_t vendor, const int16_t model,
 #if SEND_TCL112AC
     case TCL112AC:
     {
-      IRTcl112Ac ac(_pin);
+      IRTcl112Ac ac(_pin, _inverted, _modulation);
       ac.begin();
       tcl112(&ac, on, mode, degC, fan, swingv, swingh, turbo, light, econo,
              filter);
@@ -1161,7 +1245,7 @@ bool IRac::sendAc(const decode_type_t vendor, const int16_t model,
 #if SEND_TECO
     case TECO:
     {
-      IRTecoAc ac(_pin);
+      IRTecoAc ac(_pin, _inverted, _modulation);
       ac.begin();
       teco(&ac, on, mode, degC, fan, swingv, sleep);
       break;
@@ -1170,7 +1254,7 @@ bool IRac::sendAc(const decode_type_t vendor, const int16_t model,
 #if SEND_TOSHIBA_AC
     case TOSHIBA_AC:
     {
-      IRToshibaAC ac(_pin);
+      IRToshibaAC ac(_pin, _inverted, _modulation);
       ac.begin();
       toshiba(&ac, on, mode, degC, fan);
       break;
@@ -1179,7 +1263,7 @@ bool IRac::sendAc(const decode_type_t vendor, const int16_t model,
 #if SEND_TROTEC
     case TROTEC:
     {
-      IRTrotecESP ac(_pin);
+      IRTrotecESP ac(_pin, _inverted, _modulation);
       ac.begin();
       trotec(&ac, on, mode, degC, fan, sleep);
       break;
@@ -1188,7 +1272,7 @@ bool IRac::sendAc(const decode_type_t vendor, const int16_t model,
 #if SEND_VESTEL_AC
     case VESTEL_AC:
     {
-      IRVestelAc ac(_pin);
+      IRVestelAc ac(_pin, _inverted, _modulation);
       ac.begin();
       vestel(&ac, on, mode, degC, fan, swingv, turbo, filter, sleep, clock);
       break;
@@ -1197,7 +1281,7 @@ bool IRac::sendAc(const decode_type_t vendor, const int16_t model,
 #if SEND_WHIRLPOOL_AC
     case WHIRLPOOL_AC:
     {
-      IRWhirlpoolAc ac(_pin);
+      IRWhirlpoolAc ac(_pin, _inverted, _modulation);
       ac.begin();
       whirlpool(&ac, (whirlpool_ac_remote_model_t)model, on, mode, degC, fan,
                 swingv, turbo, light, sleep, clock);
@@ -1329,6 +1413,8 @@ stdAc::swingh_t IRac::strToSwingH(const char *str,
            !strcasecmp(str, "MAXRIGHT") || !strcasecmp(str, "MAX RIGHT") ||
            !strcasecmp(str, "FARRIGHT") || !strcasecmp(str, "FAR RIGHT"))
     return stdAc::swingh_t::kRightMax;
+  else if (!strcasecmp(str, "WIDE"))
+    return stdAc::swingh_t::kWide;
   else
     return def;
 }
@@ -1458,6 +1544,8 @@ String IRac::swinghToString(const stdAc::swingh_t swingh) {
       return F("right");
     case stdAc::swingh_t::kRightMax:
       return F("rightmax");
+    case stdAc::swingh_t::kWide:
+      return F("leftright");
     default:
       return F("unknown");
   }
@@ -1485,9 +1573,23 @@ namespace IRAcUtils {
         return ac.toString();
       }
 #endif  // DECODE_DAIKIN
+#if DECODE_DAIKIN128
+      case decode_type_t::DAIKIN128: {
+        IRDaikin128 ac(0);
+        ac.setRaw(result->state);
+        return ac.toString();
+      }
+#endif  // DECODE_DAIKIN128
 #if DECODE_DAIKIN160
       case decode_type_t::DAIKIN160: {
         IRDaikin160 ac(0);
+        ac.setRaw(result->state);
+        return ac.toString();
+      }
+#endif  // DECODE_DAIKIN160
+#if DECODE_DAIKIN176
+      case decode_type_t::DAIKIN176: {
+        IRDaikin176 ac(0);
         ac.setRaw(result->state);
         return ac.toString();
       }
@@ -1679,9 +1781,11 @@ namespace IRAcUtils {
   // Args:
   //   decode: A PTR to a successful raw IR decode object.
   //   result: A PTR to a state structure to store the result in.
+  //   prev:   A PTR to a state structure which has the prev. state. (optional)
   // Returns:
   //   A boolean indicating success or failure.
-  bool decodeToState(const decode_results *decode, stdAc::state_t *result) {
+  bool decodeToState(const decode_results *decode, stdAc::state_t *result,
+                     const stdAc::state_t *prev) {
     if (decode == NULL || result == NULL) return false;  // Safety check.
     switch (decode->decode_type) {
 #if DECODE_ARGO
@@ -1696,7 +1800,7 @@ namespace IRAcUtils {
       case decode_type_t::COOLIX: {
         IRCoolixAC ac(kGpioUnused);
         ac.setRaw(decode->value);  // Uses value instead of state.
-        *result = ac.toCommon();
+        *result = ac.toCommon(prev);
         break;
       }
 #endif  // DECODE_COOLIX
@@ -1711,6 +1815,14 @@ namespace IRAcUtils {
 #if DECODE_DAIKIN160
       case decode_type_t::DAIKIN160: {
         IRDaikin160 ac(kGpioUnused);
+        ac.setRaw(decode->state);
+        *result = ac.toCommon();
+        break;
+      }
+#endif  // DECODE_DAIKIN160
+#if DECODE_DAIKIN176
+      case decode_type_t::DAIKIN176: {
+        IRDaikin176 ac(kGpioUnused);
         ac.setRaw(decode->state);
         *result = ac.toCommon();
         break;
@@ -1800,7 +1912,7 @@ namespace IRAcUtils {
       case decode_type_t::MIDEA: {
         IRMideaAC ac(kGpioUnused);
         ac.setRaw(decode->value);  // Uses value instead of state.
-        *result = ac.toCommon();
+        *result = ac.toCommon(prev);
         break;
       }
 #endif  // DECODE_MIDEA

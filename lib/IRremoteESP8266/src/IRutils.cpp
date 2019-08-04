@@ -95,6 +95,8 @@ decode_type_t strToDecodeType(const char * const str) {
     return decode_type_t::UNUSED;
   else if (!strcasecmp(str, "AIWA_RC_T501"))
     return decode_type_t::AIWA_RC_T501;
+  else if (!strcasecmp(str, "AMCOR"))
+    return decode_type_t::AMCOR;
   else if (!strcasecmp(str, "ARGO"))
     return decode_type_t::ARGO;
   else if (!strcasecmp(str, "CARRIER_AC"))
@@ -103,8 +105,12 @@ decode_type_t strToDecodeType(const char * const str) {
     return decode_type_t::COOLIX;
   else if (!strcasecmp(str, "DAIKIN"))
     return decode_type_t::DAIKIN;
+  else if (!strcasecmp(str, "DAIKIN128"))
+    return decode_type_t::DAIKIN128;
   else if (!strcasecmp(str, "DAIKIN160"))
     return decode_type_t::DAIKIN160;
+  else if (!strcasecmp(str, "DAIKIN176"))
+    return decode_type_t::DAIKIN176;
   else if (!strcasecmp(str, "DAIKIN2"))
     return decode_type_t::DAIKIN2;
   else if (!strcasecmp(str, "DAIKIN216"))
@@ -250,6 +256,9 @@ String typeToString(const decode_type_t protocol, const bool isRepeat) {
     case AIWA_RC_T501:
       result = F("AIWA_RC_T501");
       break;
+    case AMCOR:
+      result = F("AMCOR");
+      break;
     case ARGO:
       result = F("ARGO");
       break;
@@ -262,8 +271,14 @@ String typeToString(const decode_type_t protocol, const bool isRepeat) {
     case DAIKIN:
       result = F("DAIKIN");
       break;
+    case DAIKIN128:
+      result = F("DAIKIN128");
+      break;
     case DAIKIN160:
       result = F("DAIKIN160");
+      break;
+    case DAIKIN176:
+      result = F("DAIKIN176");
       break;
     case DAIKIN2:
       result = F("DAIKIN2");
@@ -457,9 +472,12 @@ String typeToString(const decode_type_t protocol, const bool isRepeat) {
 // Does the given protocol use a complex state as part of the decode?
 bool hasACState(const decode_type_t protocol) {
   switch (protocol) {
+    case AMCOR:
     case ARGO:
     case DAIKIN:
+    case DAIKIN128:
     case DAIKIN160:
+    case DAIKIN176:
     case DAIKIN2:
     case DAIKIN216:
     case ELECTRA_AC:
@@ -750,21 +768,37 @@ float celsiusToFahrenheit(const float deg) { return (deg * 9.0) / 5.0 + 32.0; }
 
 float fahrenheitToCelsius(const float deg) { return (deg - 32.0) * 5.0 / 9.0; }
 
-namespace IRutils {
-  String acBoolToString(const bool value, const String text,
-                        const bool precomma) {
+namespace irutils {
+  String addLabeledString(const String value, const String label,
+                          const bool precomma) {
     String result = "";
     if (precomma) result += F(", ");
-    result += text;
+    result += label;
     result += F(": ");
-    return result + (value ? F("On") : F("Off"));
+    return result + value;
   }
 
-  String acModeToString(const uint8_t mode, const uint8_t automatic,
-                        const uint8_t cool, const uint8_t heat,
-                        const uint8_t dry, const uint8_t fan) {
-    String result = ", Mode: ";
-    result += uint64ToString(mode);
+  String addBoolToString(const bool value, const String label,
+                         const bool precomma) {
+    return addLabeledString((value ? F("On") : F("Off")), label, precomma);
+  }
+
+  String addIntToString(const uint16_t value, const String label,
+                        const bool precomma) {
+    return addLabeledString(uint64ToString(value), label, precomma);
+  }
+
+  String addTempToString(const uint16_t degrees, const bool celsius,
+                         const bool precomma) {
+    String result = addIntToString(degrees, F("Temp"), precomma);
+    result += celsius ? 'C' : 'F';
+    return result;
+  }
+
+  String addModeToString(const uint8_t mode, const uint8_t automatic,
+                         const uint8_t cool, const uint8_t heat,
+                         const uint8_t dry, const uint8_t fan) {
+    String result = addIntToString(mode, F("Mode"));
     result += F(" (");
     if (mode == automatic) result += F("AUTO");
     else if (mode == cool) result += F("COOL");
@@ -773,6 +807,21 @@ namespace IRutils {
     else if (mode == fan) result += F("FAN");
     else
       result += F("UNKNOWN");
+    return result + ')';
+  }
+
+  String addFanToString(const uint8_t speed, const uint8_t high,
+                        const uint8_t low, const uint8_t automatic,
+                        const uint8_t quiet, const uint8_t medium) {
+    String result = addIntToString(speed, F("Fan"));
+    result += F(" (");
+    if (speed == high) result += F("High");
+    else if (speed == low) result += F("Low");
+    else if (speed == automatic) result += F("Auto");
+    else if (speed == quiet) result += F("Quiet");
+    else if (speed == medium) result += F("Medium");
+    else
+     result += F("UNKNOWN");
     return result + ')';
   }
 
@@ -838,4 +887,72 @@ namespace IRutils {
     return result;
   }
 
-}  // namespace IRutils
+  String msToString(uint32_t const msecs) {
+    uint32_t totalseconds = msecs / 1000;
+    if (totalseconds == 0) return F("Now");
+
+    // Note: uint32_t can only hold up to 45 days, so uint8_t is safe.
+    uint8_t days = totalseconds / (60 * 60 * 24);
+    uint8_t hours = (totalseconds / (60 * 60)) % 24;
+    uint8_t minutes = (totalseconds / 60) % 60;
+    uint8_t seconds = totalseconds % 60;
+
+    String result = "";
+    if (days) {
+      result += uint64ToString(days) + F(" day");
+      if (days > 1) result += 's';
+    }
+    if (hours) {
+      if (result.length()) result += ' ';
+      result += uint64ToString(hours) + F(" hour");
+      if (hours > 1) result += 's';
+    }
+    if (minutes) {
+      if (result.length()) result += ' ';
+      result += uint64ToString(minutes) + F(" minute");
+      if (minutes > 1) result += 's';
+    }
+    if (seconds) {
+      if (result.length()) result += ' ';
+      result += uint64ToString(seconds) + F(" second");
+      if (seconds > 1) result += 's';
+    }
+    return result;
+  }
+
+  String minsToString(const uint16_t mins) {
+    String result = "";
+    result.reserve(5);  // 23:59 is the typical worst case.
+    if (mins / 60 < 10) result += '0';  // Zero pad the hours
+    result += uint64ToString(mins / 60) + ':';
+    if (mins % 60 < 10) result += '0';  // Zero pad the minutes.
+    result += uint64ToString(mins % 60);
+    return result;
+  }
+
+  // Sum all the nibbles together in a series of bytes.
+  // Args:
+  //   start: PTR to the start of the bytes.
+  //   length: Nr of bytes to sum the nibbles of.
+  //   init: Starting value of the sum.
+  // Returns:
+  //   A uint8_t sum of all the nibbles inc the init.
+  uint8_t sumNibbles(const uint8_t * const start, const uint16_t length,
+                     const uint8_t init) {
+    uint8_t sum = init;
+    const uint8_t *ptr;
+    for (ptr = start; ptr - start < length; ptr++)
+      sum += (*ptr >> 4) + (*ptr & 0xF);
+    return sum;
+  }
+
+  uint8_t bcdToUint8(const uint8_t bcd) {
+    if (bcd > 0x99) return 255;  // Too big.
+    return (bcd >> 4) * 10 + (bcd & 0xF);
+  }
+
+  uint8_t uint8ToBcd(const uint8_t integer) {
+    if (integer > 99) return 255;  // Too big.
+    return ((integer / 10) << 4) + (integer % 10);
+  }
+}  // namespace irutils
