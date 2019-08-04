@@ -55,6 +55,14 @@ TaskDevicePluginConfigLong settings:
 #define PLUGIN_001_LONGPRESS_HIGH 2
 #define PLUGIN_001_LONGPRESS_BOTH 3
 
+// Separate IDs for the pin states key.
+#define PLUGIN_001_PWM     1024
+
+// FIXME TD-er: needed to store values for switch plugin which need extra data like PWM.
+typedef uint16_t portStateExtra_t;
+std::map<uint32_t, portStateExtra_t> p001_MapPortStatus_extras;
+
+
 boolean Plugin_001_read_switch_state(struct EventStruct *event) {
   byte pinNumber = CONFIG_PIN1;
   const uint32_t key = createKey(PLUGIN_ID_001, pinNumber);
@@ -726,10 +734,12 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
           if (event->Par1 >= 0 && event->Par1 <= PIN_D_MAX)
           {
             portStatusStruct tempStatus;
+            // FIXME TD-er: PWM values cannot be stored very well in the portStatusStruct.
             const uint32_t key = createKey(PLUGIN_ID_001,event->Par1);
             // WARNING: operator [] creates an entry in the map if key does not exist
             // So the next command should be part of each command:
             tempStatus = globalMapPortStatus[key];
+            portStateExtra_t psExtra = p001_MapPortStatus_extras[key];
 
             #if defined(ESP8266)
               pinMode(event->Par1, OUTPUT);
@@ -737,7 +747,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
             if(event->Par3 != 0)
             {
               const byte prev_mode = tempStatus.mode;
-              uint16_t prev_value = tempStatus.state;
+              uint16_t prev_value = psExtra;
               //getPinState(PLUGIN_ID_001, event->Par1, &prev_mode, &prev_value);
               if(prev_mode != PIN_MODE_PWM)
                 prev_value = 0;
@@ -771,6 +781,10 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
             tempStatus.state = event->Par2;
             tempStatus.output = event->Par2;
             tempStatus.command=1; //set to 1 in order to display the status in the PinStatus page
+
+            psExtra = event->Par2;
+            p001_MapPortStatus_extras[key] = psExtra;
+
 
             savePortStatus(key,tempStatus);
             log = F("SW   : GPIO ");
