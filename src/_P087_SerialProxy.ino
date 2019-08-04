@@ -21,13 +21,13 @@
 #define P087_QUERY_VALUE        0 // Temp placement holder until we know what selectors are needed.
 #define P087_NR_OUTPUT_OPTIONS  1
 
-#define P087_NR_OUTPUT_VALUES   VARS_PER_TASK
+#define P087_NR_OUTPUT_VALUES   1
 #define P087_QUERY1_CONFIG_POS  3
 
 #define P087_DEFAULT_BAUDRATE 38400
 
 #define P87_Nlines 2
-#define P87_Nchars 80
+#define P87_Nchars 64
 
 #define P087_INITSTRING 0
 #define P087_EXITSTRING 1
@@ -171,24 +171,6 @@ private:
 // Init string (incl parsing CRLF like characters)
 // Timeout between sentences.
 
-void P087_loadStrings(byte taskIndex, String& init, String& exit) {
-  // Loading strings
-  char P087_deviceTemplate[P87_Nlines][P87_Nchars];
-
-  LoadCustomTaskSettings(taskIndex, (byte *)&P087_deviceTemplate, sizeof(P087_deviceTemplate));
-
-  for (byte varNr = 0; varNr < P87_Nlines; varNr++)
-  {
-    P087_deviceTemplate[varNr][P87_Nchars - 1] = 0; // terminate in case of uninitialized data.
-
-    switch (varNr) {
-      case P087_INITSTRING: init = String(P087_deviceTemplate[varNr]); break;
-      case P087_EXITSTRING: exit = String(P087_deviceTemplate[varNr]); break;
-      default:
-        break;
-    }
-  }
-}
 
 boolean Plugin_087(byte function, struct EventStruct *event, String& string) {
   boolean success = false;
@@ -277,26 +259,14 @@ boolean Plugin_087(byte function, struct EventStruct *event, String& string) {
        */
 
       {
-        String initString, exitString;
-        P087_loadStrings(event->TaskIndex, initString, exitString);
+        String strings[P87_Nlines];
+        LoadCustomTaskSettings(event->TaskIndex, strings, P87_Nlines, P87_Nchars);
 
         for (byte varNr = 0; varNr < P87_Nlines; varNr++)
         {
-          String argName = F("p087_template");
-          argName += varNr + 1;
-
-          switch (varNr) {
-            case P087_INITSTRING:
-              addFormTextBox(F("Init"), argName, initString, P87_Nchars);
-              break;
-            case P087_EXITSTRING:
-
-              // addFormTextBox(F("Exit"), argName, exitString, P87_Nchars);
-              break;
-
-            default:
-              break;
-          }
+          String label = F("Init ");
+          label += String(varNr + 1);
+          addFormTextBox(label, getPluginCustomArgName(varNr), strings[varNr], P87_Nchars);
         }
       }
 
@@ -311,22 +281,12 @@ boolean Plugin_087(byte function, struct EventStruct *event, String& string) {
       serialHelper_webformSave(event);
       P087_BAUDRATE = getFormItemInt(P087_BAUDRATE_LABEL);
 
-      // Save output selector parameters.
-      for (byte i = 0; i < P087_NR_OUTPUT_VALUES; ++i) {
-        const byte pconfigIndex = i + P087_QUERY1_CONFIG_POS;
-        const byte choice       = PCONFIG(pconfigIndex);
-        sensorTypeHelper_saveOutputSelector(event, pconfigIndex, i, Plugin_087_valuename(choice, false));
-      }
-
       String error;
       char   P087_deviceTemplate[P87_Nlines][P87_Nchars];
 
       for (byte varNr = 0; varNr < P87_Nlines; varNr++)
       {
-        String argName = F("p087_template");
-        argName += varNr + 1;
-
-        if (!safe_strncpy(P087_deviceTemplate[varNr], WebServer.arg(argName), P87_Nchars)) {
+        if (!safe_strncpy(P087_deviceTemplate[varNr], WebServer.arg(getPluginCustomArgName(varNr)), P87_Nchars)) {
           error += getCustomTaskSettingsError(varNr);
         }
       }
@@ -395,12 +355,10 @@ boolean Plugin_087(byte function, struct EventStruct *event, String& string) {
         static_cast<P087_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if ((nullptr != P087_data)) {
-        String initString, exitString;
-        P087_loadStrings(event->TaskIndex, initString, exitString);
-        parseSystemVariables(initString, false);
-
-        //        parseSystemVariables(exitString, false);
-        P087_data->sendString(initString);
+        String strings[P87_Nlines];
+        LoadCustomTaskSettings(event->TaskIndex, strings, P87_Nlines, P87_Nchars);
+        parseSystemVariables(strings[0], false);
+        P087_data->sendString(strings[0]);
       }
       break;
     }

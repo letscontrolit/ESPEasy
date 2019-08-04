@@ -73,11 +73,7 @@ struct P075_data_struct : public PluginTaskData_base {
   }
 
   void loadDisplayLines(byte taskIndex) {
-    char deviceTemplate[P75_Nlines][P75_Nchars];
-    LoadCustomTaskSettings(taskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
-    for (byte varNr = 0; varNr < P75_Nlines; varNr++) {
-      displayLines[varNr] = deviceTemplate[varNr];
-    }
+    LoadCustomTaskSettings(taskIndex, displayLines, P75_Nlines, P75_Nchars);
   }
 
   String getLogString() const {
@@ -174,7 +170,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
       if (nullptr != P075_data) {
         P075_data->loadDisplayLines(event->TaskIndex);
         for (byte varNr = 0; varNr < P75_Nlines; varNr++) {
-          addFormTextBox(String(F("Line ")) + (varNr + 1), String(F("p075_template")) + (varNr + 1), P075_data->displayLines[varNr], P75_Nchars-1);
+          addFormTextBox(String(F("Line ")) + (varNr + 1), getPluginCustomArgName(varNr), P075_data->displayLines[varNr], P75_Nchars-1);
         }
       }
       if( Settings.TaskDeviceTimer[event->TaskIndex]==0) { // Is interval timer disabled?
@@ -202,9 +198,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
         String error;
         for (byte varNr = 0; varNr < P75_Nlines; varNr++)
         {
-          String argName = F("p075_template");
-          argName += varNr + 1;
-          if (!safe_strncpy(deviceTemplate[varNr], WebServer.arg(argName), P75_Nchars)) {
+          if (!safe_strncpy(deviceTemplate[varNr], WebServer.arg(getPluginCustomArgName(varNr)), P75_Nchars)) {
             error += getCustomTaskSettingsError(varNr);
           }
         }
