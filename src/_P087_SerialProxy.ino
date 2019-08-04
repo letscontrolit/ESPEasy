@@ -333,7 +333,7 @@ boolean Plugin_087(byte function, struct EventStruct *event, String& string) {
       break;
     }
 
-    case PLUGIN_TEN_PER_SECOND: {
+    case PLUGIN_FIFTY_PER_SECOND: {
       if (Settings.TaskDeviceEnabled[event->TaskIndex]) {
         P087_data_struct *P087_data =
           static_cast<P087_data_struct *>(getPluginTaskData(event->TaskIndex));
