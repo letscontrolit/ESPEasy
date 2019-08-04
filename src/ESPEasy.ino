@@ -614,17 +614,6 @@ void loop()
   backgroundtasks();
 
   if (readyForSleep()){
-    if (Settings.UseRules)
-    {
-      String event = F("System#Sleep");
-      rulesProcessing(event);
-    }
-    // Flush outstanding MQTT messages
-    runPeriodicalMQTT();
-    flushAndDisconnectAllClients();
-
-    SPIFFS.end();
-
     deepSleep(Settings.Delay);
     //deepsleep will never return, its a special kind of reboot
   }
@@ -660,6 +649,7 @@ void flushAndDisconnectAllClients() {
     saveToRTC();
     delay(100); // Flush anything in the network buffers.
   }
+  process_serialWriteBuffer();
 }
 
 void runPeriodicalMQTT() {

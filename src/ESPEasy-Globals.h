@@ -989,7 +989,7 @@ struct SettingsStruct
   byte          Unit;
   char          Name[26];
   char          NTPHost[64];
-  unsigned long Delay;
+  unsigned long Delay;              // Sleep time in seconds
   int8_t        Pin_i2c_sda;
   int8_t        Pin_i2c_scl;
   int8_t        Pin_status_led;
@@ -1003,7 +1003,7 @@ struct SettingsStruct
   byte          SDLogLevel;
   unsigned long BaudRate;
   unsigned long MessageDelay;
-  byte          deepSleep;
+  byte          deepSleep;   // 0 = Sleep Disabled, else time awake from sleep in seconds
   boolean       CustomCSS;
   boolean       DST;
   byte          WDI2CAddress;

@@ -11,12 +11,12 @@
 #include <ESPeasySerial.h>
 
 #define PLUGIN_087
-#define PLUGIN_ID_087          87
-#define PLUGIN_NAME_087       "Communication - Serial Proxy [TESTING]"
+#define PLUGIN_ID_087           87
+#define PLUGIN_NAME_087         "Communication - Serial Proxy [TESTING]"
 
 
-#define P087_BAUDRATE       PCONFIG_LONG(0)
-#define P087_BAUDRATE_LABEL PCONFIG_LABEL(0)
+#define P087_BAUDRATE           PCONFIG_LONG(0)
+#define P087_BAUDRATE_LABEL     PCONFIG_LABEL(0)
 
 #define P087_QUERY_VALUE        0 // Temp placement holder until we know what selectors are needed.
 #define P087_NR_OUTPUT_OPTIONS  1
@@ -24,13 +24,13 @@
 #define P087_NR_OUTPUT_VALUES   1
 #define P087_QUERY1_CONFIG_POS  3
 
-#define P087_DEFAULT_BAUDRATE 38400
+#define P087_DEFAULT_BAUDRATE   38400
 
-#define P87_Nlines 2
-#define P87_Nchars 64
+#define P87_Nlines              2
+#define P87_Nchars              64
 
-#define P087_INITSTRING 0
-#define P087_EXITSTRING 1
+#define P087_INITSTRING         0
+#define P087_EXITSTRING         1
 
 
 struct P087_data_struct : public PluginTaskData_base {
@@ -53,9 +53,12 @@ struct P087_data_struct : public PluginTaskData_base {
     }
     reset();
     P087_easySerial = new ESPeasySerial(serial_rx, serial_tx);
-    P087_easySerial->begin(baudrate);
 
-    return isInitialized();
+    if (isInitialized()) {
+      P087_easySerial->begin(baudrate);
+      return true;
+    }
+    return false;
   }
 
   bool isInitialized() const {
@@ -333,7 +336,7 @@ boolean Plugin_087(byte function, struct EventStruct *event, String& string) {
       break;
     }
 
-    case PLUGIN_TEN_PER_SECOND: {
+    case PLUGIN_FIFTY_PER_SECOND: {
       if (Settings.TaskDeviceEnabled[event->TaskIndex]) {
         P087_data_struct *P087_data =
           static_cast<P087_data_struct *>(getPluginTaskData(event->TaskIndex));
