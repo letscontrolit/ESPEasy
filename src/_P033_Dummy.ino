@@ -80,7 +80,24 @@ boolean Plugin_033(byte function, struct EventStruct *event, String& string)
         break;
       }
 
-    case PLUGIN_WRITE:
+      case PLUGIN_SET_CONFIG:
+      {
+        String command = parseString(string, 1);
+        if (command == F("save"))
+        {
+          SaveCustomTaskSettings(event->TaskIndex, (byte *)&UserVar[event->BaseVarIndex], VARS_PER_TASK * sizeof(float));
+          success = true;
+        }
+        else if (command == F("load"))
+        {
+          LoadCustomTaskSettings(event->TaskIndex, (byte *)&UserVar[event->BaseVarIndex], VARS_PER_TASK*sizeof(float));
+          success = true;
+        }
+        
+        break;
+      }
+      
+      case PLUGIN_WRITE:
       {
         String command = parseString(string, 1);
         if (command == F("dummyvalueset"))
