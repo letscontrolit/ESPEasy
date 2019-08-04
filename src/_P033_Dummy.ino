@@ -83,12 +83,12 @@ boolean Plugin_033(byte function, struct EventStruct *event, String& string)
       case PLUGIN_SET_CONFIG:
       {
         String command = parseString(string, 1);
-        if (command == F("save"))
+        if (command == F("dummysave"))
         {
           SaveCustomTaskSettings(event->TaskIndex, (byte *)&UserVar[event->BaseVarIndex], VARS_PER_TASK * sizeof(float));
           success = true;
         }
-        else if (command == F("load"))
+        else if (command == F("dummyload"))
         {
           LoadCustomTaskSettings(event->TaskIndex, (byte *)&UserVar[event->BaseVarIndex], VARS_PER_TASK*sizeof(float));
           success = true;
