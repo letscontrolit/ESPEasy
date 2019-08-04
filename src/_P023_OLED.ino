@@ -103,7 +103,7 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
         }
         {
           String strings[P23_Nlines];
-          LoadCustomTaskSettings(taskIndex, strings, P23_Nlines, P23_Nchars);
+          LoadCustomTaskSettings(event->TaskIndex, strings, P23_Nlines, P23_Nchars);
           for (byte varNr = 0; varNr < 8; varNr++)
           {
             addFormTextBox(String(F("Line ")) + (varNr + 1), getPluginCustomArgName(varNr), strings[varNr], 64);
@@ -215,7 +215,7 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
     case PLUGIN_READ:
       {
         String strings[P23_Nlines];
-        LoadCustomTaskSettings(taskIndex, strings, P23_Nlines, P23_Nchars);
+        LoadCustomTaskSettings(event->TaskIndex, strings, P23_Nlines, P23_Nchars);
         int index = PCONFIG(0) == 0x3C
           ? 0
           : 1;
