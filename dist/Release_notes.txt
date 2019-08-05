@@ -1,4 +1,39 @@
 -------------------------------------------------
+Changes in release mega-20190805 (since mega-20190803)
+-------------------------------------------------
+
+Release date: Mon Aug  5 04:00:12 CEST 2019
+
+Artem (1):
+      Introduced unix time part variables
+
+Gijs Noorlander (19):
+      [New Plugin] Serial Proxy plugin skeleton
+      [String support] Make controllers aware of String type values
+      [Serial Proxy] Read sentence
+      [GPS] Only serial RX pin is really needed.
+      [GPS] Uncrustify GPS plugin source code.
+      [Serial Proxy] Process sentence and send to controller
+      [Serial Proxy] Send init string and read sentences from serial
+      [Serial Proxy] Use custom init string
+      [OTA] Fix check 1M filesize during build
+      Make loading of custom task settings more memory efficient
+      [PWM] Fade always starts at 0, not the last set value
+      Uncrustify of P001 Switch plugin.
+      [Custom Build] Move custom build definition up in platformio.ini
+      Disable Serial Proxy in other builds
+      Fix build issue in changes of P023_OLED.
+      [Docs] Document the new %unixday% and %unixday_sec$ variables
+      [Serial Proxy] Must read at 50x sec interval
+      [DeepSleep] Proper flush when going to deep sleep from rules
+      [Serial Proxy] Check for null pointer
+
+jimmys01 (2):
+      [IR TX RX] Minor adjustments
+      IR library update
+
+
+-------------------------------------------------
 Changes in release mega-20190803 (since mega-20190731)
 -------------------------------------------------
 
