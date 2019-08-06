@@ -2239,11 +2239,32 @@ void handle_devices() {
         TXBuffer += ExtraTaskSettings.TaskDeviceName;
         html_TD();
 
-        byte customConfig = false;
-        customConfig = PluginCall(PLUGIN_WEBFORM_SHOW_CONFIG, &TempEvent,TXBuffer.buf);
-        if (!customConfig)
-          if (Device[DeviceIndex].Ports != 0)
-            TXBuffer += formatToHex_decimal(Settings.TaskDevicePort[x]);
+        if (Settings.TaskDeviceDataFeed[x] != 0) {
+          // Show originating node number
+          byte remoteUnit = Settings.TaskDeviceDataFeed[x];
+          TXBuffer += F("Unit ");
+          TXBuffer += remoteUnit;
+          if (remoteUnit != 255) {
+            NodesMap::iterator it = Nodes.find(remoteUnit);
+            if (it != Nodes.end()) {
+              TXBuffer += F(" - ");
+              TXBuffer += it->second.nodeName;
+            } else {
+              TXBuffer += F(" - Not Seen recently");
+            }
+          }
+        } else {
+          String portDescr;
+          if (PluginCall(PLUGIN_WEBFORM_SHOW_CONFIG, &TempEvent, portDescr)) {
+            TXBuffer += portDescr;
+          } else {
+            // Plugin has no custom port formatting, show default one.
+            if (Device[DeviceIndex].Ports != 0)
+            {
+              TXBuffer += formatToHex_decimal(Settings.TaskDevicePort[x]);
+            }
+          }
+        }
 
         html_TD();
 
