@@ -603,6 +603,13 @@ void loop()
 
      RTC.bootFailedCount = 0;
      saveToRTC();
+     sendSysInfoUDP(1);
+  }
+  // Work around for nodes that do not have WiFi connection for a long time and may reboot after N unsuccessful connect attempts
+  if ((wdcounter / 2) > 2) {
+    // Apparently the uptime is already a few minutes. Let's consider it a successful boot.
+     RTC.bootFailedCount = 0;
+     saveToRTC();
   }
 
   // Deep sleep mode, just run all tasks one (more) time and go back to sleep as fast as possible
