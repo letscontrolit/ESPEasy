@@ -338,8 +338,6 @@ void setup()
   if (Settings.UDPPort != 0)
     portUDP.begin(Settings.UDPPort);
 
-  sendSysInfoUDP(3);
-
   if (systemTimePresent())
     initTime();
 
@@ -534,19 +532,27 @@ void loop()
     // help the background tasks managing wifi connections
     delay(1);
     if (!processedConnect) {
-      addLog(LOG_LEVEL_INFO, F("WIFI : Entering processConnect()"));
+      #ifndef BUILD_NO_DEBUG
+      addLog(LOG_LEVEL_DEBUG, F("WIFI : Entering processConnect()"));
+      #endif
       processConnect();
     }
     if (!processedGotIP) {
-      addLog(LOG_LEVEL_INFO, F("WIFI : Entering processGotIP()"));
+      #ifndef BUILD_NO_DEBUG
+      addLog(LOG_LEVEL_DEBUG, F("WIFI : Entering processGotIP()"));
+      #endif
       processGotIP();
     }
     if (!processedDisconnect) {
-      addLog(LOG_LEVEL_INFO, F("WIFI : Entering processDisconnect()"));
+      #ifndef BUILD_NO_DEBUG
+      addLog(LOG_LEVEL_DEBUG, F("WIFI : Entering processDisconnect()"));
+      #endif
       processDisconnect();
     }
     if (!processedDHCPTimeout) {
-      addLog(LOG_LEVEL_INFO, F("WIFI : DHCP timeout, Calling disconnect()"));
+      #ifndef BUILD_NO_DEBUG
+      addLog(LOG_LEVEL_DEBUG, F("WIFI : DHCP timeout, Calling disconnect()"));
+      #endif
       processedDHCPTimeout = true;
       processDisconnect();
     }
@@ -558,17 +564,24 @@ void loop()
     // FIXME TD-er: This may happen on WiFi config with AP_STA mode active.
 //    addLog(LOG_LEVEL_ERROR, F("Wifi status out sync"));
 //    resetWiFi();
-    String wifilog  = F("WIFI : Wifi status out sync WiFi.status() = ");
-    wifilog += String(WiFi.status());
+    if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+        String wifilog  = F("WIFI : Wifi status out sync WiFi.status() = ");
+        wifilog += String(WiFi.status());
 
-    addLog(LOG_LEVEL_INFO, wifilog);
+        addLog(LOG_LEVEL_ERROR, wifilog);
+    }
   }
   if (wifiStatus == ESPEASY_WIFI_DISCONNECTED) {
-    String wifilog  = F("WIFI : Disconnected: WiFi.status() = ");
-    wifilog += String(WiFi.status());
+    #ifndef BUILD_NO_DEBUG
+    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+      String wifilog  = F("WIFI : Disconnected: WiFi.status() = ");
+      wifilog += String(WiFi.status());
 
-    addLog(LOG_LEVEL_INFO, wifilog);
-    delay(100);
+      addLog(LOG_LEVEL_DEBUG, wifilog);
+    }
+    #endif
+    // While connecting to WiFi make sure the device has ample time to do so
+    delay(10);
   }
   if (!processedConnectAPmode) processConnectAPmode();
   if (!processedDisconnectAPmode) processDisconnectAPmode();

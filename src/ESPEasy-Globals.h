@@ -167,7 +167,8 @@ void check_size() {
 #if defined(ESP32)
 #define ARDUINO_OTA_PORT  3232
 #else
-#define ARDUINO_OTA_PORT  8266
+// Do not use port 8266 for OTA, since that's used for ESPeasy p2p
+#define ARDUINO_OTA_PORT  18266
 #endif
 
 #if defined(ESP8266)
@@ -1019,7 +1020,7 @@ struct SettingsStruct
   boolean       InitSPI;
   byte          Protocol[CONTROLLER_MAX];
   byte          Notification[NOTIFICATION_MAX]; //notifications, point to a NPLUGIN id
-  byte          TaskDeviceNumber[TASKS_MAX];
+  byte          TaskDeviceNumber[TASKS_MAX]; // The "plugin number" set at as task (e.g. 4 for P004_dallas)
   unsigned int  OLD_TaskDeviceID[TASKS_MAX];  //UNUSED: this can be removed
   union {
     struct {
@@ -1837,7 +1838,7 @@ enum WiFiDisconnectReason
 Ticker connectionCheck;
 #endif
 
-bool reconnectChecker = false;
+
 void connectionCheckHandler();
 
 bool useStaticIP();
