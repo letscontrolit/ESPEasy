@@ -728,6 +728,7 @@ To create/register a plugin, you have to :
 
 #ifdef CONTROLLER_SET_EXPERIMENTAL
   #define USES_C016   // Cache controller
+  //#define USES_C018   // TTN/RN2483
 #endif
 
 

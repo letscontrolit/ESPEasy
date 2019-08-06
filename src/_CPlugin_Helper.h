@@ -314,6 +314,42 @@ public:
 };
 
 /*********************************************************************************************\
+* C018_queue_element for queueing requests for C018: TTN/RN2483
+\*********************************************************************************************/
+class C018_queue_element {
+public:
+
+  C018_queue_element() : controller_idx(0), TaskIndex(0), sensorType(0) {}
+
+  C018_queue_element(const struct EventStruct *event, byte value_count) :
+    controller_idx(event->ControllerIndex),
+    TaskIndex(event->TaskIndex),
+    sensorType(event->sensorType),
+    valueCount(value_count)
+  {
+    const byte BaseVarIndex = TaskIndex * VARS_PER_TASK;
+
+    for (byte i = 0; i < VARS_PER_TASK; ++i) {
+      if (i < value_count) {
+        values[i] = UserVar[BaseVarIndex + i];
+      } else {
+        values[i] = 0.0;
+      }
+    }
+  }
+
+  size_t getSize() const {
+    return sizeof(this);
+  }
+
+  float values[VARS_PER_TASK];
+  byte controller_idx;
+  byte TaskIndex;
+  byte sensorType;
+  byte valueCount;
+};
+
+/*********************************************************************************************\
 * ControllerDelayHandlerStruct
 \*********************************************************************************************/
 template<class T>
@@ -552,11 +588,10 @@ DEFINE_Cxxx_DELAY_QUEUE_MACRO(016, 16)
 DEFINE_Cxxx_DELAY_QUEUE_MACRO(017, 17)
 #endif // ifdef USES_C017
 
-/*
- #ifdef USES_C018
-   DEFINE_Cxxx_DELAY_QUEUE_MACRO(018, 18)
- #endif
- */
+#ifdef USES_C018
+DEFINE_Cxxx_DELAY_QUEUE_MACRO(018, 18)
+#endif
+
 
 /*
  #ifdef USES_C019
