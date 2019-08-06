@@ -37,7 +37,7 @@ ESPeasySerial::ESPeasySerial(int receivePin, int transmitPin, bool inverse_logic
   _serialtype = ESPeasySerialType::getSerialType(receivePin, transmitPin);
   if (isSWserial()) {
     _swserial = new ESPeasySoftwareSerial(receivePin, transmitPin, inverse_logic, buffSize);
-  } else {
+  } else if (isValid()) {
     getHW()->pins(transmitPin, receivePin);
   }
 }
