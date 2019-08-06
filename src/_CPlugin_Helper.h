@@ -824,6 +824,7 @@ bool count_connection_results(bool success, const String& prefix, int controller
 
 bool try_connect_host(int controller_number, WiFiUDP& client, ControllerSettingsStruct& ControllerSettings) {
   START_TIMER;
+  if (!WiFiConnected()) return false;
   client.setTimeout(ControllerSettings.ClientTimeout);
 #ifndef BUILD_NO_DEBUG
   log_connecting_to(F("UDP  : "), controller_number, ControllerSettings);
@@ -838,6 +839,7 @@ bool try_connect_host(int controller_number, WiFiUDP& client, ControllerSettings
 
 bool try_connect_host(int controller_number, WiFiClient& client, ControllerSettingsStruct& ControllerSettings) {
   START_TIMER;
+  if (!WiFiConnected()) return false;
 
   // Use WiFiClient class to create TCP connections
   client.setTimeout(ControllerSettings.ClientTimeout);
