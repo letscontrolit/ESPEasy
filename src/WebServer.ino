@@ -1153,25 +1153,24 @@ void handle_config() {
     timerAPoff = millis() + 2000L;  //user has reached the main page - AP can be switched off in 2..3 sec
 
 
-  String name = WebServer.arg(F("name"));
-  name.trim();
-  //String password = WebServer.arg(F("password"));
-  String iprangelow = WebServer.arg(F("iprangelow"));
-  String iprangehigh = WebServer.arg(F("iprangehigh"));
-
-  Settings.Delay = getFormItemInt(F("delay"), Settings.Delay);
-  Settings.deepSleep = getFormItemInt(F("deepsleep"), Settings.deepSleep);
-  String espip = WebServer.arg(F("espip"));
-  String espgateway = WebServer.arg(F("espgateway"));
-  String espsubnet = WebServer.arg(F("espsubnet"));
-  String espdns = WebServer.arg(F("espdns"));
-  Settings.Unit = getFormItemInt(F("unit"), Settings.Unit);
-  //String apkey = WebServer.arg(F("apkey"));
-  String ssid = WebServer.arg(F("ssid"));
-
-
-  if (ssid[0] != 0)
+  if (WebServer.args() != 0)
   {
+    String name = WebServer.arg(F("name"));
+    name.trim();
+    //String password = WebServer.arg(F("password"));
+    String iprangelow = WebServer.arg(F("iprangelow"));
+    String iprangehigh = WebServer.arg(F("iprangehigh"));
+
+    Settings.Delay = getFormItemInt(F("delay"), Settings.Delay);
+    Settings.deepSleep = getFormItemInt(F("deepsleep"), Settings.deepSleep);
+    String espip = WebServer.arg(F("espip"));
+    String espgateway = WebServer.arg(F("espgateway"));
+    String espsubnet = WebServer.arg(F("espsubnet"));
+    String espdns = WebServer.arg(F("espdns"));
+    Settings.Unit = getFormItemInt(F("unit"), Settings.Unit);
+    //String apkey = WebServer.arg(F("apkey"));
+    String ssid = WebServer.arg(F("ssid"));
+
     if (strcmp(Settings.Name, name.c_str()) != 0) {
       addLog(LOG_LEVEL_INFO, F("Unit Name changed."));
       if (CPluginCall(CPLUGIN_GOT_INVALID, 0)) { // inform controllers that the old name will be invalid from now on.
