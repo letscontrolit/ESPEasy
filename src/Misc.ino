@@ -1601,9 +1601,9 @@ void prepareShutdown()
   process_serialWriteBuffer();
   flushAndDisconnectAllClients();
   saveUserVarToRTC();
-  delay(100); // give the node time to flush all before reboot or sleep
   saveToRTC();
   SPIFFS.end();
+  delay(100); // give the node time to flush all before reboot or sleep
 }
 
 
