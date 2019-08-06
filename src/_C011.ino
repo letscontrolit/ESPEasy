@@ -1,6 +1,6 @@
 #ifdef USES_C011
 //#######################################################################################################
-//########################### Controller Plugin 011: Generic HTTP #######################################
+//########################### Controller Plugin 011: Generic HTTP Advanced ##############################
 //#######################################################################################################
 
 // #ifdef PLUGIN_BUILD_TESTING
@@ -60,41 +60,29 @@ bool CPlugin_011(byte function, struct EventStruct *event, String& string)
 
         LoadCustomControllerSettings(event->ControllerIndex,(byte*)&customConfig, sizeof(customConfig));
         customConfig.zero_last();
-        String methods[] = { F("GET"), F("POST"), F("PUT"), F("HEAD"), F("PATCH") };
-        string += F("<TR><TD>HTTP Method :<TD><select name='P011httpmethod'>");
-        for (byte i = 0; i < 5; i++)
         {
-          string += F("<option value='");
-          string += methods[i] + "'";
-          string += methods[i].equals(customConfig.HttpMethod) ? F(" selected='selected'") : F("");
-          string += '>';
-          string += methods[i];
-          string += F("</option>");
+          byte choice = 0;
+          String methods[] = { F("GET"), F("POST"), F("PUT"), F("HEAD"), F("PATCH") };
+          for (byte i = 0; i < 5; i++)
+          {
+            if (methods[i].equals(customConfig.HttpMethod)) {
+              choice = i;
+            }
+          }
+          addFormSelector(F("HTTP Method"), F("P011httpmethod"), 5, methods, NULL, choice);
         }
-        string += F("</select>");
 
-        string += F("<TR><TD>HTTP URI:<TD><input type='text' name='P011httpuri' size=80 maxlength='");
-        string += C011_HTTP_URI_MAX_LEN-1;
-        string += F("' value='");
-        string += customConfig.HttpUri;
-
-        string += "'>";
-
-        string += F("<TR><TD>HTTP Header:<TD><textarea name='P011httpheader' rows='4' cols='50' maxlength='");
-        string += C011_HTTP_HEADER_MAX_LEN-1;
-        string += "'>";
-        escapeBuffer=customConfig.HttpHeader;
-        htmlEscape(escapeBuffer);
-        string += escapeBuffer;
-        string += F("</textarea>");
-
-        string += F("<TR><TD>HTTP Body:<TD><textarea name='P011httpbody' rows='8' cols='50' maxlength='");
-        string += C011_HTTP_BODY_MAX_LEN-1;
-        string += "'>";
-        escapeBuffer=customConfig.HttpBody;
-        htmlEscape(escapeBuffer);
-        string += escapeBuffer;
-        string += F("</textarea>");
+        addFormTextBox(F("HTTP URI"), F("P011httpuri"), customConfig.HttpUri, C011_HTTP_URI_MAX_LEN-1);
+        {
+          String escapeBuffer = customConfig.HttpHeader;
+          htmlEscape(escapeBuffer);
+          addFormTextBox(F("HTTP Header"), F("P011httpheader"), escapeBuffer, C011_HTTP_HEADER_MAX_LEN-1);
+        }
+        {
+          String escapeBuffer = customConfig.HttpBody;
+          htmlEscape(escapeBuffer);
+          addFormTextBox(F("HTTP Body"), F("P011httpbody"), escapeBuffer, C011_HTTP_BODY_MAX_LEN-1);
+        }
         break;
       }
 
