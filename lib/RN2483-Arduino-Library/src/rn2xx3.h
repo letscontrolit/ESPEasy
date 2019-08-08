@@ -105,7 +105,7 @@ class rn2xx3
      * NwkSKey: Network Session Key as a HEX string.
      *          Example "AE17E567AECC8787F749A62F5541D522"
      */
-    bool initABP(String addr, String AppSKey, String NwkSKey);
+    bool initABP(const String& addr, const String& AppSKey, const String& NwkSKey);
 
     //TODO: initABP(uint8_t * addr, uint8_t * AppSKey, uint8_t * NwkSKey)
 
@@ -124,7 +124,7 @@ class rn2xx3
      * they will be used. Otherwise the join will fail and this function
      * will return false.
      */
-    bool initOTAA(String AppEUI="", String AppKey="", String DevEUI="");
+    bool initOTAA(const String& AppEUI="", const String& AppKey="", const String& DevEUI="");
 
     /*
      * Initialise the RN2xx3 and join a network using over the air activation,
@@ -144,7 +144,7 @@ class rn2xx3
      *
      * Parameter is an ascii text string.
      */
-    TX_RETURN_TYPE tx(String);
+    TX_RETURN_TYPE tx(const String&);
 
     /*
      * Transmit raw byte encoded data via LoRa WAN.
@@ -158,14 +158,14 @@ class rn2xx3
      *
      * Parameter is an ascii text string.
      */
-    TX_RETURN_TYPE txCnf(String);
+    TX_RETURN_TYPE txCnf(const String&);
 
     /*
      * Do an unconfirmed transmission via LoRa WAN.
      *
      * Parameter is an ascii text string.
      */
-    TX_RETURN_TYPE txUncnf(String);
+    TX_RETURN_TYPE txUncnf(const String&);
 
     /*
      * Transmit the provided data using the provided command.
@@ -175,7 +175,7 @@ class rn2xx3
      * String - an ascii text string if bool is true. A HEX string if bool is false.
      * bool - should the data string be hex encoded or not
      */
-    TX_RETURN_TYPE txCommand(String, String, bool);
+    TX_RETURN_TYPE txCommand(const String&, const String&, bool);
 
     /*
      * Change the datarate at which the RN2xx3 transmits.
@@ -232,13 +232,13 @@ class rn2xx3
      * Encode an ASCII string to a HEX string as needed when passed
      * to the RN2xx3 module.
      */
-    String base16encode(String);
+    String base16encode(const String&);
 
     /*
      * Decode a HEX string to an ASCII string. Useful to decode a
      * string received from the RN2xx3.
      */
-    String base16decode(String);
+    String base16decode(const String&);
 
     /*
      * Almost all commands can return "invalid_param"
@@ -282,7 +282,7 @@ class rn2xx3
      */
     RN2xx3_t configureModuleType();
 
-    void sendEncoded(String);
+    void sendEncoded(const String&);
 
     enum received_t {
       busy,
@@ -302,7 +302,7 @@ class rn2xx3
       UNKNOWN
     };
 
-    static received_t decodeReceived(const String& receivedData);
+    static received_t determineReceivedDataType(const String& receivedData);
 
     int readIntValue(const String& command);
 

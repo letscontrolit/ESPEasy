@@ -107,7 +107,7 @@ bool rn2xx3::init()
 }
 
 
-bool rn2xx3::initOTAA(String AppEUI, String AppKey, String DevEUI)
+bool rn2xx3::initOTAA(const String& AppEUI, const String& AppKey, const String& DevEUI)
 {
   _otaa = true;
   _nwkskey = "0";
@@ -256,7 +256,7 @@ bool rn2xx3::initOTAA(uint8_t * AppEUI, uint8_t * AppKey, uint8_t * DevEUI)
   return initOTAA(app_eui, app_key, dev_eui);
 }
 
-bool rn2xx3::initABP(String devAddr, String AppSKey, String NwkSKey)
+bool rn2xx3::initABP(const String& devAddr, const String& AppSKey, const String& NwkSKey)
 {
   _otaa = false;
   _devAddr = devAddr;
@@ -324,7 +324,7 @@ bool rn2xx3::initABP(String devAddr, String AppSKey, String NwkSKey)
   }
 }
 
-TX_RETURN_TYPE rn2xx3::tx(String data)
+TX_RETURN_TYPE rn2xx3::tx(const String& data)
 {
   return txUncnf(data); //we are unsure which mode we're in. Better not to wait for acks.
 }
@@ -343,17 +343,17 @@ TX_RETURN_TYPE rn2xx3::txBytes(const byte* data, uint8_t size)
   return txCommand("mac tx uncnf 1 ", dataToTx, false);
 }
 
-TX_RETURN_TYPE rn2xx3::txCnf(String data)
+TX_RETURN_TYPE rn2xx3::txCnf(const String& data)
 {
   return txCommand("mac tx cnf 1 ", data, true);
 }
 
-TX_RETURN_TYPE rn2xx3::txUncnf(String data)
+TX_RETURN_TYPE rn2xx3::txUncnf(const String& data)
 {
   return txCommand("mac tx uncnf 1 ", data, true);
 }
 
-TX_RETURN_TYPE rn2xx3::txCommand(String command, String data, bool shouldEncode)
+TX_RETURN_TYPE rn2xx3::txCommand(const String& command, const String& data, bool shouldEncode)
 {
   bool send_success = false;
   uint8_t busy_count = 0;
@@ -386,7 +386,7 @@ TX_RETURN_TYPE rn2xx3::txCommand(String command, String data, bool shouldEncode)
     String receivedData = _serial.readStringUntil('\n');
     //TODO: Debug print on receivedData
 
-    switch (decodeReceived(receivedData))
+    switch (determineReceivedDataType(receivedData))
     {
       case rn2xx3::ok:
       {
@@ -396,7 +396,7 @@ TX_RETURN_TYPE rn2xx3::txCommand(String command, String data, bool shouldEncode)
 
         //TODO: Debug print on receivedData
 
-        switch (decodeReceived(receivedData))
+        switch (determineReceivedDataType(receivedData))
         {
           case rn2xx3::mac_tx_ok:
           {
@@ -526,40 +526,34 @@ TX_RETURN_TYPE rn2xx3::txCommand(String command, String data, bool shouldEncode)
   return TX_FAIL; //should never reach this
 }
 
-void rn2xx3::sendEncoded(String input)
+void rn2xx3::sendEncoded(const String& input)
 {
-  char working;
   char buffer[3];
   for (unsigned i=0; i<input.length(); i++)
   {
-    working = input.charAt(i);
-    sprintf(buffer, "%02x", int(working));
+    sprintf(buffer, "%02x", static_cast<int>(input.charAt(i)));
     _serial.print(buffer);
   }
 }
 
-String rn2xx3::base16encode(String input)
+String rn2xx3::base16encode(const String& input_c)
 {
-  char charsOut[input.length()*2+1];
-  char charsIn[input.length()+1];
+  String input(input_c); // Make a deep copy to be able to do trim()
   input.trim();
-  input.toCharArray(charsIn, input.length()+1);
-
-  unsigned i = 0;
-  for(i = 0; i<input.length()+1; i++)
+  const size_t inputLength = input.length();
+  String output;
+  output.reserve(inputLength * 2);
+  
+  for(size_t i = 0; i < inputLength; ++i)
   {
-    if(charsIn[i] == '\0') break;
-
-    int value = int(charsIn[i]);
+    if(input[i] == '\0') break;
 
     char buffer[3];
-    sprintf(buffer, "%02x", value);
-    charsOut[2*i] = buffer[0];
-    charsOut[2*i+1] = buffer[1];
+    sprintf(buffer, "%02x", static_cast<int>(input[i]));
+    output += buffer[0];
+    output += buffer[1];
   }
-  charsOut[2*i] = '\0';
-  String toReturn = String(charsOut);
-  return toReturn;
+  return output;
 }
 
 String rn2xx3::getRx() {
@@ -576,31 +570,28 @@ int rn2xx3::getVbat()
   return readIntValue(F("sys get vdd"));
 }
 
-String rn2xx3::base16decode(String input)
+String rn2xx3::base16decode(const String& input_c)
 {
-  char charsIn[input.length()+1];
-  char charsOut[input.length()/2+1];
+  String input(input_c); // Make a deep copy to be able to do trim()
   input.trim();
-  input.toCharArray(charsIn, input.length()+1);
+  const size_t inputLength = input.length();
+  const size_t outputLength = inputLength / 2;
+  String output;
+  output.reserve(outputLength);
 
-  unsigned i = 0;
-  for(i = 0; i<input.length()/2+1; i++)
+  for(size_t i = 0; i < outputLength; ++i)
   {
-    if(charsIn[i*2] == '\0') break;
-    if(charsIn[i*2+1] == '\0') break;
-
-    char toDo[2];
-    toDo[0] = charsIn[i*2];
-    toDo[1] = charsIn[i*2+1];
+    char toDo[3];
+    toDo[0] = input[i*2];
+    toDo[1] = input[i*2+1];
+    toDo[2] = '\0';
     int out = strtoul(toDo, 0, 16);
-
-    if(out<128)
+    if((out & 0xFF) == 0)
     {
-      charsOut[i] = char(out);
+      output += char(out);
     }
   }
-  charsOut[i] = '\0';
-  return charsOut;
+  return output;
 }
 
 void rn2xx3::setDR(int dr)
@@ -778,7 +769,7 @@ bool rn2xx3::setFrequencyPlan(FREQ_PLAN fp)
 }
 
 
-rn2xx3::received_t rn2xx3::decodeReceived(const String& receivedData) {
+rn2xx3::received_t rn2xx3::determineReceivedDataType(const String& receivedData) {
   if (receivedData.length() != 0) {
     #define MATCH_STRING(S) \
     if (receivedData.startsWith(F(#S))) return (rn2xx3::S);
