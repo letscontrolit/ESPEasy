@@ -124,6 +124,7 @@ struct P087_data_struct : public PluginTaskData_base {
 
     if (fullSentenceReceived) {
       ++sentences_received;
+      length_last_received = sentence_part.length();
     }
     return fullSentenceReceived;
   }
@@ -133,9 +134,10 @@ struct P087_data_struct : public PluginTaskData_base {
     sentence_part = "";
   }
 
-  void getSentencesReceived(uint32_t& succes, uint32_t& error) const {
-    succes = sentences_received;
-    error  = sentences_received_error;
+  void getSentencesReceived(uint32_t& succes, uint32_t& error, uint32_t& length_last) const {
+    succes      = sentences_received;
+    error       = sentences_received_error;
+    length_last = length_last_received;
   }
 
   void setMaxLength(uint16_t maxlenght) {
@@ -154,6 +156,7 @@ private:
   uint16_t       max_length               = 550;
   uint32_t       sentences_received       = 0;
   uint32_t       sentences_received_error = 0;
+  uint32_t       length_last_received     = 0;
 };
 
 
@@ -217,6 +220,24 @@ boolean Plugin_087(byte function, struct EventStruct *event, String& string) {
 
     case PLUGIN_GET_DEVICEGPIONAMES: {
       serialHelper_getGpioNames(event, false, true); // TX optional
+      break;
+    }
+
+    case PLUGIN_WEBFORM_SHOW_VALUES:
+    {
+      P087_data_struct *P087_data =
+        static_cast<P087_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if ((nullptr != P087_data) && P087_data->isInitialized()) {
+        uint32_t success, error, length_last;
+        P087_data->getSentencesReceived(success, error, length_last);
+        byte varNr = VARS_PER_TASK;
+        addHtml(pluginWebformShowValue(event->TaskIndex, varNr++, F("Success"),     String(success)));
+        addHtml(pluginWebformShowValue(event->TaskIndex, varNr++, F("Error"),       String(error)));
+        addHtml(pluginWebformShowValue(event->TaskIndex, varNr++, F("Length Last"), String(length_last), true));
+
+        // success = true;
+      }
       break;
     }
 
@@ -399,12 +420,14 @@ void P087_html_show_stats(struct EventStruct *event) {
   {
     addRowLabel(F("Sentences (pass/fail)"));
     String   chksumStats;
-    uint32_t success, error;
-    P087_data->getSentencesReceived(success, error);
+    uint32_t success, error, length_last;
+    P087_data->getSentencesReceived(success, error, length_last);
     chksumStats  = success;
     chksumStats += '/';
     chksumStats += error;
     addHtml(chksumStats);
+    addRowLabel(F("Length Last Sentence"));
+    addHtml(String(length_last));
   }
 }
 

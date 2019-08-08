@@ -255,6 +255,22 @@ boolean Plugin_082(byte function, struct EventStruct *event, String& string) {
       break;
     }
 
+    case PLUGIN_WEBFORM_SHOW_VALUES:
+    {
+      P082_data_struct *P082_data =
+        static_cast<P082_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if ((nullptr != P082_data) && P082_data->isInitialized()) {
+        byte varNr = VARS_PER_TASK;
+        addHtml(pluginWebformShowValue(event->TaskIndex, varNr++, F("Fix"),     String(P082_data->hasFix(P082_TIMEOUT) ? 1 : 0)));
+        addHtml(pluginWebformShowValue(event->TaskIndex, varNr++, F("Tracked"),       String(P082_data->gps->satellitesStats.nrSatsTracked())));
+        addHtml(pluginWebformShowValue(event->TaskIndex, varNr++, F("Best SNR"), String(P082_data->gps->satellitesStats.getBestSNR()), true));
+
+        // success = true;
+      }
+      break;
+    }
+
     case PLUGIN_GET_DEVICEGPIONAMES: {
       serialHelper_getGpioNames(event, false, true); // TX optional
       event->String3 = formatGpioName_input_optional(F("PPS"));

@@ -2328,21 +2328,7 @@ void handle_devices() {
           {
             if (Settings.TaskDeviceNumber[x] != 0)
             {
-              if (varNr > 0)
-                TXBuffer += F("<div class='div_br'></div>");
-              TXBuffer += F("<div class='div_l' id='valuename_");
-              TXBuffer  += x;
-              TXBuffer  += '_';
-              TXBuffer  += varNr;
-              TXBuffer  += "'>";
-              TXBuffer += ExtraTaskSettings.TaskDeviceValueNames[varNr];
-              TXBuffer += F(":</div><div class='div_r' id='value_");
-              TXBuffer  += x;
-              TXBuffer  += '_';
-              TXBuffer  += varNr;
-              TXBuffer  += "'>";
-              TXBuffer += formatUserVarNoCheck(x, varNr);
-              TXBuffer += "</div>";
+              TXBuffer += pluginWebformShowValue(x, varNr, ExtraTaskSettings.TaskDeviceValueNames[varNr], formatUserVarNoCheck(x, varNr));
             }
           }
         }
