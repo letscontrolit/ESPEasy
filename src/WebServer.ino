@@ -25,7 +25,10 @@ public:
   unsigned int sentBytes;
   uint32_t flashStringCalls;
   uint32_t flashStringData;
+private:
   String buf;
+
+public:
 
   StreamingBuffer(void) : lowMemorySkip(false),
     initialRam(0), beforeTXRam(0), duringTXRam(0), finalRam(0), maxCoreUsage(0),
@@ -843,24 +846,6 @@ void writeDefaultCSS(void)
 }
 
 
-//********************************************************************************
-// Add top menu
-//********************************************************************************
-void addHeader(boolean showMenu, String& str)
-{
-  //not longer used - now part of template
-}
-
-
-//********************************************************************************
-// Add footer to web page
-//********************************************************************************
-void addFooter(const String& str)
-{
-  //not longer used - now part of template
-}
-
-
 int8_t level = 0;
 int8_t lastLevel = -1;
 
@@ -1153,25 +1138,24 @@ void handle_config() {
     timerAPoff = millis() + 2000L;  //user has reached the main page - AP can be switched off in 2..3 sec
 
 
-  String name = WebServer.arg(F("name"));
-  name.trim();
-  //String password = WebServer.arg(F("password"));
-  String iprangelow = WebServer.arg(F("iprangelow"));
-  String iprangehigh = WebServer.arg(F("iprangehigh"));
-
-  Settings.Delay = getFormItemInt(F("delay"), Settings.Delay);
-  Settings.deepSleep = getFormItemInt(F("deepsleep"), Settings.deepSleep);
-  String espip = WebServer.arg(F("espip"));
-  String espgateway = WebServer.arg(F("espgateway"));
-  String espsubnet = WebServer.arg(F("espsubnet"));
-  String espdns = WebServer.arg(F("espdns"));
-  Settings.Unit = getFormItemInt(F("unit"), Settings.Unit);
-  //String apkey = WebServer.arg(F("apkey"));
-  String ssid = WebServer.arg(F("ssid"));
-
-
-  if (ssid[0] != 0)
+  if (WebServer.args() != 0)
   {
+    String name = WebServer.arg(F("name"));
+    name.trim();
+    //String password = WebServer.arg(F("password"));
+    String iprangelow = WebServer.arg(F("iprangelow"));
+    String iprangehigh = WebServer.arg(F("iprangehigh"));
+
+    Settings.Delay = getFormItemInt(F("delay"), Settings.Delay);
+    Settings.deepSleep = getFormItemInt(F("deepsleep"), Settings.deepSleep);
+    String espip = WebServer.arg(F("espip"));
+    String espgateway = WebServer.arg(F("espgateway"));
+    String espsubnet = WebServer.arg(F("espsubnet"));
+    String espdns = WebServer.arg(F("espdns"));
+    Settings.Unit = getFormItemInt(F("unit"), Settings.Unit);
+    //String apkey = WebServer.arg(F("apkey"));
+    String ssid = WebServer.arg(F("ssid"));
+
     if (strcmp(Settings.Name, name.c_str()) != 0) {
       addLog(LOG_LEVEL_INFO, F("Unit Name changed."));
       if (CPluginCall(CPLUGIN_GOT_INVALID, 0)) { // inform controllers that the old name will be invalid from now on.
@@ -1607,8 +1591,12 @@ void handle_controllers() {
 
       TempEvent.ControllerIndex = controllerindex;
       TempEvent.ProtocolIndex = ProtocolIndex;
-      CPluginCall(ProtocolIndex, CPLUGIN_WEBFORM_LOAD, &TempEvent,TXBuffer.buf);
 
+      String webformLoadString;
+      CPluginCall(ProtocolIndex, CPLUGIN_WEBFORM_LOAD, &TempEvent, webformLoadString);
+      if (webformLoadString.length() > 0) {
+        addHtmlError(F("Bug in CPLUGIN_WEBFORM_LOAD, should not append to string, use addHtml() instead"));
+      }
     }
 
     addFormSeparator(2);
@@ -1800,7 +1788,11 @@ void handle_notifications() {
         addCheckBox(F("notificationenabled"), Settings.NotificationEnabled[notificationindex]);
 
         TempEvent.NotificationIndex = notificationindex;
-        NPlugin_ptr[NotificationProtocolIndex](NPLUGIN_WEBFORM_LOAD, &TempEvent,TXBuffer.buf);
+        String webformLoadString;
+        NPlugin_ptr[NotificationProtocolIndex](NPLUGIN_WEBFORM_LOAD, &TempEvent, webformLoadString);
+        if (webformLoadString.length() > 0) {
+          addHtmlError(F("Bug in NPLUGIN_WEBFORM_LOAD, should not append to string, use addHtml() instead"));
+        }
       }
     }
 
@@ -2240,11 +2232,32 @@ void handle_devices() {
         TXBuffer += ExtraTaskSettings.TaskDeviceName;
         html_TD();
 
-        byte customConfig = false;
-        customConfig = PluginCall(PLUGIN_WEBFORM_SHOW_CONFIG, &TempEvent,TXBuffer.buf);
-        if (!customConfig)
-          if (Device[DeviceIndex].Ports != 0)
-            TXBuffer += formatToHex_decimal(Settings.TaskDevicePort[x]);
+        if (Settings.TaskDeviceDataFeed[x] != 0) {
+          // Show originating node number
+          byte remoteUnit = Settings.TaskDeviceDataFeed[x];
+          TXBuffer += F("Unit ");
+          TXBuffer += remoteUnit;
+          if (remoteUnit != 255) {
+            NodesMap::iterator it = Nodes.find(remoteUnit);
+            if (it != Nodes.end()) {
+              TXBuffer += F(" - ");
+              TXBuffer += it->second.nodeName;
+            } else {
+              TXBuffer += F(" - Not Seen recently");
+            }
+          }
+        } else {
+          String portDescr;
+          if (PluginCall(PLUGIN_WEBFORM_SHOW_CONFIG, &TempEvent, portDescr)) {
+            TXBuffer += portDescr;
+          } else {
+            // Plugin has no custom port formatting, show default one.
+            if (Device[DeviceIndex].Ports != 0)
+            {
+              TXBuffer += formatToHex_decimal(Settings.TaskDevicePort[x]);
+            }
+          }
+        }
 
         html_TD();
 
@@ -2307,7 +2320,8 @@ void handle_devices() {
 
         html_TD();
         byte customValues = false;
-        customValues = PluginCall(PLUGIN_WEBFORM_SHOW_VALUES, &TempEvent,TXBuffer.buf);
+        String customValuesString;
+        customValues = PluginCall(PLUGIN_WEBFORM_SHOW_VALUES, &TempEvent, customValuesString);
         if (!customValues)
         {
           for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++)
@@ -4671,6 +4685,7 @@ void handle_json()
         stream_next_json_object_value(F("TaskInterval"), String(taskInterval));
         stream_next_json_object_value(F("Type"), getPluginNameFromDeviceIndex(DeviceIndex));
         stream_next_json_object_value(F("TaskName"), String(ExtraTaskSettings.TaskDeviceName));
+        stream_next_json_object_value(F("TaskDeviceNumber"), String(Settings.TaskDeviceNumber[TaskIndex]));
       }
       stream_next_json_object_value(F("TaskEnabled"), jsonBool(Settings.TaskDeviceEnabled[TaskIndex]));
       stream_last_json_object_value(F("TaskNumber"), String(TaskIndex + 1));
@@ -6146,8 +6161,6 @@ void handle_setup() {
   TXBuffer.startStream();
   sendHeadandTail(F("TmplAP"));
 
-  addHeader(false,TXBuffer.buf);
-
   if (WiFiConnected())
   {
     addHtmlError(SaveSettings());
@@ -6778,7 +6791,6 @@ void handle_sysinfo() {
 
   int freeMem = ESP.getFreeHeap();
 
-  addHeader(true,  TXBuffer.buf);
   TXBuffer += printWebString;
   TXBuffer += F("<form>");
 
@@ -7167,8 +7179,6 @@ void handle_sysvars() {
   if (!isLoggedIn()) return;
   TXBuffer.startStream();
   sendHeadandTail_stdtemplate();
-
-  addHeader(true,  TXBuffer.buf);
 
   html_BR();
   TXBuffer += F("<p>This page may load slow.<BR>Do not load too often, since it may affect performance of the node.</p>");

@@ -34,10 +34,12 @@ void ESPeasySerial::begin(unsigned long baud, uint32_t config
   // Make sure the extra bit is set for the config. The config differs between ESP32 and ESP82xx
   config = config | 0x8000000;
 
-  // Timeout added for 1.0.1
-  // See: https://github.com/espressif/arduino-esp32/commit/233d31bed22211e8c85f82bcf2492977604bbc78
-//  getHW()->begin(baud, config, _receivePin, _transmitPin, invert, timeout_ms);
-  getHW()->begin(baud, config, _receivePin, _transmitPin, _inverse_logic);
+  if (isValid()) {
+    // Timeout added for 1.0.1
+    // See: https://github.com/espressif/arduino-esp32/commit/233d31bed22211e8c85f82bcf2492977604bbc78
+    //getHW()->begin(baud, config, _receivePin, _transmitPin, invert, timeout_ms);
+    getHW()->begin(baud, config, _receivePin, _transmitPin, _inverse_logic);
+  }
 }
 
 void ESPeasySerial::end() {

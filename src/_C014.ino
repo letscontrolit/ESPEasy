@@ -399,7 +399,8 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
                   }
                 } else {
                   // ignore cutom values for now! Assume all Values are standard float.
-                  // customValues = PluginCall(PLUGIN_WEBFORM_SHOW_VALUES, &TempEvent,TXBuffer.buf);
+                  // String customValuesStr;
+                  // customValues = PluginCall(PLUGIN_WEBFORM_SHOW_VALUES, &TempEvent, customValuesStr);
                   byte customValues = false;
                   if (!customValues)
                   { // standard Values

@@ -245,7 +245,7 @@ void C013_Receive(struct EventStruct *event) {
           {
             taskClear(infoReply.destTaskIndex, false);
             Settings.TaskDeviceNumber[infoReply.destTaskIndex] = infoReply.deviceNumber;
-            Settings.TaskDeviceDataFeed[infoReply.destTaskIndex] = 1;  // remote feed
+            Settings.TaskDeviceDataFeed[infoReply.destTaskIndex] = infoReply.sourcelUnit;  // remote feed store unit nr sending the data
             for (byte x = 0; x < CONTROLLER_MAX; x++)
               Settings.TaskDeviceSendData[x][infoReply.destTaskIndex] = false;
             strcpy(ExtraTaskSettings.TaskDeviceName, infoReply.taskName);
@@ -276,7 +276,8 @@ void C013_Receive(struct EventStruct *event) {
           memcpy((byte*)&dataReply, (byte*)event->Data, sizeof(C013_SensorDataStruct));
 
           // only if this task has a remote feed, update values
-          if (Settings.TaskDeviceDataFeed[dataReply.destTaskIndex] != 0)
+          const byte remoteFeed = Settings.TaskDeviceDataFeed[dataReply.destTaskIndex];
+          if (remoteFeed != 0 && remoteFeed == dataReply.sourcelUnit)
           {
             struct EventStruct TempEvent;
             for (byte x = 0; x < VARS_PER_TASK; x++)

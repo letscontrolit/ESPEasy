@@ -147,15 +147,15 @@ boolean Plugin_081(byte function, struct EventStruct *event, String& string)
       time_t last = converter.time;
       converter.value = NEXTEXECUTION;
       time_t next = converter.time;
-      string += F("<div class=\"div_l\">");
-      string += ExtraTaskSettings.TaskDeviceValueNames[0];
-      string += F(":</div><div class=\"div_r\">");
-      string += getDateTimeString(*gmtime(&last));
-      string += F("</div><div class=\"div_br\"></div><div class=\"div_l\">");
-      string += ExtraTaskSettings.TaskDeviceValueNames[1];
-      string += F(":</div><div class=\"div_r\">");
-      string += getDateTimeString(*gmtime(&next));
-      string += F("</div>");
+      addHtml(F("<div class=\"div_l\">"));
+      addHtml(ExtraTaskSettings.TaskDeviceValueNames[0]);
+      addHtml(F(":</div><div class=\"div_r\">"));
+      addHtml(getDateTimeString(*gmtime(&last)));
+      addHtml(F("</div><div class=\"div_br\"></div><div class=\"div_l\">"));
+      addHtml(ExtraTaskSettings.TaskDeviceValueNames[1]);
+      addHtml(F(":</div><div class=\"div_r\">"));
+      addHtml(getDateTimeString(*gmtime(&next)));
+      addHtml(F("</div>"));
       success = true;
       break;
     }

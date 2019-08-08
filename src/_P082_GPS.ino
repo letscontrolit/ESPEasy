@@ -274,6 +274,12 @@ boolean Plugin_082(byte function, struct EventStruct *event, String& string) {
       break;
     }
 
+    case PLUGIN_WEBFORM_SHOW_CONFIG:
+      {
+        string += serialHelper_getSerialTypeLabel(event);
+        success = true;
+        break;
+      }
 
     case PLUGIN_WEBFORM_LOAD: {
       serialHelper_webformLoad(event);

@@ -119,6 +119,13 @@ boolean Plugin_085(byte function, struct EventStruct *event, String &string) {
     break;
   }
 
+  case PLUGIN_WEBFORM_SHOW_CONFIG:
+  {
+    string += serialHelper_getSerialTypeLabel(event);
+    success = true;
+    break;
+  }
+
   case PLUGIN_SET_DEFAULTS: {
     P085_DEV_ID = P085_DEV_ID_DFLT;
     P085_MODEL = P085_MODEL_DFLT;

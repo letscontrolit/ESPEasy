@@ -111,12 +111,16 @@ struct ESPeasySerialType {
     if (receivePin == 3 && transmitPin == 1) {
       return serialtype::serial0; // UART0
     }
+    // Serial1 on ESP32 uses default pins connected to flash
+    // So must make sure to set them to other pins.
+    if (receivePin == 13 && transmitPin == 15) {
+      return serialtype::serial1; // UART1
+    }
     if (receivePin == 16 && transmitPin == 17) {
       return serialtype::serial2; // UART2
     }
-    // Serial1 on ESP32 uses default pins connected to flash
-    // So must make sure to set them to other pins.
-    return serialtype::serial1;
+
+    return serialtype::MAX_SERIAL_TYPE;
   }
 
 #endif // ESP32
@@ -136,6 +140,10 @@ struct ESPeasySerialType {
       // UART1 can not be used to receive data because normally
       // it's RX pin is occupied for flash chip connection.
       return serialtype::serial1;
+    }
+    if (receivePin == -1 && transmitPin == -1) {
+      // No pins set, so no serial type
+      return serialtype::MAX_SERIAL_TYPE;
     }
     return serialtype::software;
   }

@@ -415,18 +415,9 @@ void deepSleepStart(int dsdelay)
     rulesProcessing(event);
   }
 
-  // Flush outstanding MQTT messages
-  runPeriodicalMQTT();
-
   addLog(LOG_LEVEL_INFO, F("SLEEP: Powering down to deepsleep..."));
-  process_serialWriteBuffer();
-  flushAndDisconnectAllClients();
-  saveUserVarToRTC();
-  delay(100); // give the node time to send above log message before going to sleep
-
   RTC.deepSleepState = 1;
-  saveToRTC();
-  SPIFFS.end();
+  prepareShutdown();
 
   #if defined(ESP8266)
     # if defined(CORE_POST_2_5_0)
@@ -1602,6 +1593,21 @@ void addToLog(byte logLevel, const char *line)
 
 
 /********************************************************************************************\
+  Clean up all before going to sleep or reboot.
+  \*********************************************************************************************/
+void prepareShutdown()
+{
+  runPeriodicalMQTT();  // Flush outstanding MQTT messages
+  process_serialWriteBuffer();
+  flushAndDisconnectAllClients();
+  saveUserVarToRTC();
+  saveToRTC();
+  SPIFFS.end();
+  delay(100); // give the node time to flush all before reboot or sleep
+}
+
+
+/********************************************************************************************\
   Delayed reboot, in case of issues, do not reboot with high frequency as it might not help...
   \*********************************************************************************************/
 void delayedReboot(int rebootDelay)
@@ -1618,9 +1624,7 @@ void delayedReboot(int rebootDelay)
 }
 
 void reboot() {
-  // FIXME TD-er: Should network connections be actively closed or does this introduce new issues?
-  flushAndDisconnectAllClients();
-  SPIFFS.end();
+  prepareShutdown();
   #if defined(ESP32)
     ESP.restart();
   #else
@@ -2735,6 +2739,7 @@ void ArduinoOTAInit()
 
   ArduinoOTA.onStart([]() {
       serialPrintln(F("OTA  : Start upload"));
+      ArduinoOTAtriggered = true;
       SPIFFS.end(); //important, otherwise it fails
   });
 

@@ -3,15 +3,16 @@
 struct ESPeasySerialType;
 
 static String serialHelper_getSerialTypeLabel(ESPeasySerialType::serialtype serType) {
-  if (serType == ESPeasySerialType::serialtype::software) { return F("SoftwareSerial"); }
-
-  if (serType == ESPeasySerialType::serialtype::serial0_swap) { return F("HW Serial0 swap"); }
   int portnr = 0;
-
-  if (serType == ESPeasySerialType::serialtype::serial1) { portnr = 1; }
-
-  if (serType == ESPeasySerialType::serialtype::serial2) { portnr = 2; }
-
+  switch (serType) {
+    case ESPeasySerialType::serialtype::software:        return F("SoftwareSerial"); 
+    case ESPeasySerialType::serialtype::serial0_swap:    return F("HW Serial0 swap");
+    case ESPeasySerialType::serialtype::serial0:         portnr = 0; break;
+    case ESPeasySerialType::serialtype::serial1:         portnr = 1; break;
+    case ESPeasySerialType::serialtype::serial2:         portnr = 2; break;
+    default:
+      return "";
+  }
   String label = F("HW Serial");
   label += portnr;
   return label;
@@ -34,6 +35,10 @@ ESPeasySerialType::serialtype serialHelper_getSerialType(struct EventStruct *eve
   return ESPeasySerialType::getSerialType(
     serialHelper_getRxPin(event),
     serialHelper_getTxPin(event));
+}
+
+String serialHelper_getSerialTypeLabel(struct EventStruct *event) {
+  return serialHelper_getSerialTypeLabel(serialHelper_getSerialType(event));
 }
 
 void serialHelper_webformLoad(struct EventStruct *event) {

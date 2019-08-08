@@ -346,13 +346,16 @@ bool hasIPaddr() {
 
 void connectionCheckHandler()
 {
-  if ((reconnectChecker == false) && !WiFiConnected()) {
-    reconnectChecker = true;
-    resetWiFi();
-    WiFi.reconnect();
-  }
-  else if (WiFiConnected() && (reconnectChecker == true)) {
-    reconnectChecker = false;
+  static bool reconnectChecker = false; // Keep state
+  const bool connected = WiFiConnected();
+  if (connected == reconnectChecker) {
+    if (!connected) {
+      reconnectChecker = true;
+      resetWiFi();
+      WiFi.reconnect();
+    } else {
+      reconnectChecker = false;
+    }
   }
 }
 
@@ -1031,8 +1034,6 @@ String ESPeasyWifiStatusToString() {
 }
 
 void logConnectionStatus() {
-  String log;
-
   #ifndef ESP32
   const uint8_t arduino_corelib_wifistatus = WiFi.status();
   const uint8_t sdk_wifistatus             = wifi_station_get_connect_status();
