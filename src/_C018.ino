@@ -11,9 +11,62 @@
 #include <rn2xx3.h>
 #include <ESPeasySerial.h>
 
-       ESPeasySerial myeasySerial(12, 14);
-       rn2xx3 myLora(myeasySerial);
+struct C018_data_struct {
+  C018_data_struct() : C018_easySerial(nullptr), myLora(nullptr) {}
 
+  ~C018_data_struct() {
+    reset();
+  }
+
+  void reset() {
+    if (myLora != nullptr) {
+      delete myLora;
+      myLora = nullptr;
+    }
+    if (C018_easySerial != nullptr) {
+      delete C018_easySerial;
+      C018_easySerial = nullptr;
+    }
+  }
+
+  bool init(const int16_t serial_rx, const int16_t serial_tx, unsigned long baudrate) {
+    if ((serial_rx < 0) && (serial_tx < 0)) {
+      return false;
+    }
+    reset();
+    C018_easySerial = new ESPeasySerial(serial_rx, serial_tx);
+
+    if (C018_easySerial != nullptr) {
+      C018_easySerial->begin(baudrate);
+      myLora = new rn2xx3(*C018_easySerial);
+      myLora->autobaud();
+    }
+    return isInitialized();
+  }
+
+  bool isInitialized() const {
+    return (C018_easySerial != nullptr) && (myLora != nullptr);
+  }
+
+  bool txUncnfBytes(const byte* data, uint8_t size) {
+    if (!isInitialized()) return false;
+    return myLora->txBytes(data, size) != TX_FAIL;
+  }
+
+  bool txUncnf(const String& data) {
+    if (!isInitialized()) return false;
+    return myLora->tx(data) != TX_FAIL;
+  }
+
+  bool initOTAA(String AppEUI="", String AppKey="", String DevEUI="") {
+    if (!isInitialized()) return false;
+    return myLora->initOTAA(AppEUI, AppKey, DevEUI);
+  }
+
+  private:
+    ESPeasySerial* C018_easySerial = nullptr;
+    rn2xx3* myLora = nullptr;
+} C018_data;
 
 bool CPlugin_018(byte function, struct EventStruct *event, String& string)
 {
@@ -44,15 +97,15 @@ bool CPlugin_018(byte function, struct EventStruct *event, String& string)
         LoadControllerSettings(event->ControllerIndex, ControllerSettings);
         C018_DelayHandler.configureControllerSettings(ControllerSettings);
 
-        myeasySerial.begin(9600);
-        myLora.autobaud();
+        
+        C018_data.init(12, 14, 9600);
 
         String AppEUI = SecuritySettings.ControllerUser[event->ControllerIndex];
         String AppKey = SecuritySettings.ControllerPassword[event->ControllerIndex];
 
-        myLora.initOTAA(AppEUI, AppKey);
+        C018_data.initOTAA(AppEUI, AppKey);
 
-        myLora.txUncnf("ESPeasy (TTN)");
+        C018_data.txUncnf("ESPeasy (TTN)");
 
 
         break;
@@ -60,6 +113,7 @@ bool CPlugin_018(byte function, struct EventStruct *event, String& string)
 
     case CPLUGIN_WEBFORM_LOAD:
     {
+      /*
         myeasySerial.begin(9600);
         myLora.autobaud();
 
@@ -79,6 +133,8 @@ bool CPlugin_018(byte function, struct EventStruct *event, String& string)
 
         addRowLabel(F("Last Command Error"));
         addHtml(myLora.getLastErrorInvalidParam());
+
+        */
 
     }
     break;
