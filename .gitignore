@@ -26,3 +26,5 @@ test/output_export.cpp
 docs/build/
 
 \.pio/
+
+docs/source/_build/
