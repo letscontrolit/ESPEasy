@@ -65,8 +65,20 @@ bool CPlugin_018(byte function, struct EventStruct *event, String& string)
 
         addRowLabel(F("OTAA DevEUI"));
         addHtml(String(myLora.hweui()));
-        addRowLabel(F("Version number"));
+        addRowLabel(F("Version Number"));
         addHtml(String(myLora.sysver()));
+
+        addRowLabel(F("Voltage"));
+        addHtml(String(static_cast<float>(myLora.getVbat()) / 1000.0));
+
+        addRowLabel(F("Dev Addr"));
+        addHtml(myLora.sendRawCommand(F("mac get devaddr")));
+
+        addRowLabel(F("Uplink Frame Counter"));
+        addHtml(myLora.sendRawCommand(F("mac get upctr")));
+
+        addRowLabel(F("Last Command Error"));
+        addHtml(myLora.getLastErrorInvalidParam());
 
     }
     break;
