@@ -107,4 +107,43 @@ String getPluginCustomArgName(int varNr) {
   return argName;
 }
 
+// Helper function to create formatted custom values for display in the devices overview page.
+// When called from PLUGIN_WEBFORM_SHOW_VALUES, the last item should add a traling div_br class
+// if the regular values should also be displayed.
+// The call to PLUGIN_WEBFORM_SHOW_VALUES should only return success = true when no regular values should be displayed
+// Note that the varNr of the custom values should not conflict with the existing variable numbers (e.g. start at VARS_PER_TASK)
+String pluginWebformShowValue(byte taskIndex, byte varNr, const String& label, const String& value, bool addTrailingBreak) {
+  String result;
+  size_t length = 96 + label.length() + value.length();
+  String breakStr = F("<div class='div_br'></div>");
+  if (addTrailingBreak) {
+    length += breakStr.length();
+  }
+  result.reserve(length);
+  if (varNr > 0) {
+    result += breakStr;
+  }
+  result += F("<div class='div_l' id='valuename_");
+  result += String(taskIndex);
+  result += '_';
+  result += String(varNr);
+  result += "'>";
+  result += label;
+  result += F(":</div><div class='div_r' id='value_");
+  result += String(taskIndex);
+  result += '_';
+  result += String(varNr);
+  result += "'>";
+  result += value;
+  result += "</div>";
+  if (addTrailingBreak) {
+    result += breakStr;
+  }
+  return result;
+}
+
+String pluginWebformShowValue(byte taskIndex, byte varNr, const String& label, const String& value) {
+  return pluginWebformShowValue(taskIndex, varNr, label, value, false);
+}
+
 #endif // PLUGIN_HELPER_H
