@@ -198,7 +198,7 @@ class rn2xx3
      * Returns the raw string as received back from the RN2xx3.
      * If the RN2xx3 replies with multiple line, only the first line will be returned.
      */
-    String sendRawCommand(String command);
+    String sendRawCommand(const String& command);
 
     /*
      * Returns the module type either RN2903 or RN2483, or NA.
@@ -223,6 +223,12 @@ class rn2xx3
     int getSNR();
 
     /*
+     * Get the RN2xx3's voltage measurement on the Vdd in mVolt
+     * 0–3600 (decimal value from 0 to 3600)
+     */
+    int getVbat();
+
+    /*
      * Encode an ASCII string to a HEX string as needed when passed
      * to the RN2xx3 module.
      */
@@ -233,6 +239,13 @@ class rn2xx3
      * string received from the RN2xx3.
      */
     String base16decode(String);
+
+    /*
+     * Almost all commands can return "invalid_param"
+     * The last command resulting in such an error can be retrieved.
+     * Reading this will clear the error.
+     */
+    String getLastErrorInvalidParam();
 
   private:
     Stream& _serial;
@@ -262,12 +275,56 @@ class rn2xx3
     // The downlink messenge
     String _rxMessenge = "";
 
+    String _lastErrorInvalidParam = "";
+
     /*
      * Auto configure for either RN2903 or RN2483 module
      */
     RN2xx3_t configureModuleType();
 
     void sendEncoded(String);
+
+    enum received_t {
+      busy,
+      frame_counter_err_rejoin_needed,
+      invalid_data_len,
+      invalid_param,
+      mac_err,
+      mac_paused,
+      mac_rx,
+      mac_tx_ok,
+      no_free_ch,
+      not_joined,
+      ok,
+      radio_err,
+      radio_tx_ok,
+      silent,
+      UNKNOWN
+    };
+
+    static received_t decodeReceived(const String& receivedData);
+
+    int readIntValue(const String& command);
+
+
+    // All "mac set ..." commands return either "ok" or "invalid_param"
+    bool sendMacSet(const String& param, const String& value);
+    bool sendMacSetEnabled(const String& param, bool enabled);
+    bool sendMacSetCh(const String& param, unsigned int channel, const String& value);
+    bool sendMacSetCh(const String& param, unsigned int channel, uint32_t value);
+    bool setChannelDutyCycle(unsigned int channel, unsigned int dutyCycle);
+    bool setChannelFrequency(unsigned int channel, uint32_t frequency);
+    bool setChannelDataRateRange(unsigned int channel, unsigned int minRange, unsigned int maxRange);
+
+    // Set channel enabled/disabled.
+    // Frequency, data range, duty cycle must be issued prior to enabling the status of that channe
+    bool setChannelEnabled(unsigned int channel, bool enabled);
+    
+    bool set2ndRecvWindow(unsigned int dataRate, uint32_t frequency);
+    bool setAdaptiveDataRate(bool enabled);
+    bool setAutomaticReply(bool enabled);
+    bool setTXoutputPower(int pwridx);
+
 };
 
 #endif

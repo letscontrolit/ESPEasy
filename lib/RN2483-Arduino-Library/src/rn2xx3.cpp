@@ -37,7 +37,7 @@ void rn2xx3::autobaud()
     _serial.write(0x55);
     _serial.println();
     // we could use sendRawCommand(F("sys get ver")); here
-    _serial.println("sys get ver");
+    _serial.println(F("sys get ver"));
     response = _serial.readStringUntil('\n');
   }
 }
@@ -150,46 +150,47 @@ bool rn2xx3::initOTAA(String AppEUI, String AppKey, String DevEUI)
     // else fall back to the hard coded value in the header file
   }
 
-  sendRawCommand("mac set deveui "+_deveui);
+  sendMacSet(F("deveui"), _deveui);
 
   // A valid length App EUI was given. Use it.
   if ( AppEUI.length() == 16 )
   {
       _appeui = AppEUI;
-      sendRawCommand("mac set appeui "+_appeui);
+      sendMacSet(F("appeui"), _appeui);
   }
 
   // A valid length App Key was give. Use it.
   if ( AppKey.length() == 32 )
   {
     _appskey = AppKey; //reuse the same variable as for ABP
-    sendRawCommand("mac set appkey "+_appskey);
+    sendMacSet(F("appkey"), _appskey);
   }
 
   if (_moduleType == RN2903)
   {
-    sendRawCommand(F("mac set pwridx 5"));
+    setTXoutputPower(5);
   }
   else
   {
-    sendRawCommand(F("mac set pwridx 1"));
+    setTXoutputPower(1);
   }
 
   // TTN does not yet support Adaptive Data Rate.
   // Using it is also only necessary in limited situations.
   // Therefore disable it by default.
-  sendRawCommand(F("mac set adr off"));
+  setAdaptiveDataRate(false);
 
   // Switch off automatic replies, because this library can not
   // handle more than one mac_rx per tx. See RN2483 datasheet,
   // 2.4.8.14, page 27 and the scenario on page 19.
-  sendRawCommand(F("mac set ar off"));
+
+  setAutomaticReply(false);
 
   // Semtech and TTN both use a non default RX2 window freq and SF.
   // Maybe we should not specify this for other networks.
   // if (_moduleType == RN2483)
   // {
-  //   sendRawCommand(F("mac set rx2 3 869525000"));
+  //   set2ndRecvWindow(3, 869525000);
   // }
   // Disabled for now because an OTAA join seems to work fine without.
 
@@ -205,7 +206,7 @@ bool rn2xx3::initOTAA(String AppEUI, String AppKey, String DevEUI)
     // Parse 2nd response
     receivedData = _serial.readStringUntil('\n');
 
-    if(receivedData.startsWith("accepted"))
+    if(receivedData.startsWith(F("accepted")))
     {
       joined=true;
       delay(1000);
@@ -275,7 +276,7 @@ bool rn2xx3::initABP(String devAddr, String AppSKey, String NwkSKey)
       break;
     case RN2483:
       sendRawCommand(F("mac reset 868"));
-      // sendRawCommand(F("mac set rx2 3 869525000"));
+      // set2ndRecvWindow(3, 869525000);
       // In the past we set the downlink channel here,
       // but setFrequencyPlan is a better place to do it.
       break;
@@ -284,25 +285,25 @@ bool rn2xx3::initABP(String devAddr, String AppSKey, String NwkSKey)
       return false;
   }
 
-  sendRawCommand("mac set nwkskey "+_nwkskey);
-  sendRawCommand("mac set appskey "+_appskey);
-  sendRawCommand("mac set devaddr "+_devAddr);
-  sendRawCommand(F("mac set adr off"));
+  sendMacSet(F("nwkskey"), _nwkskey);
+  sendMacSet(F("appskey"), _appskey);
+  sendMacSet(F("devaddr"), _devAddr);
+  setAdaptiveDataRate(false);
 
   // Switch off automatic replies, because this library can not
   // handle more than one mac_rx per tx. See RN2483 datasheet,
   // 2.4.8.14, page 27 and the scenario on page 19.
-  sendRawCommand(F("mac set ar off"));
+  setAutomaticReply(false);
 
   if (_moduleType == RN2903)
   {
-    sendRawCommand("mac set pwridx 5");
+    setTXoutputPower(5);
   }
   else
   {
-    sendRawCommand(F("mac set pwridx 1"));
+    setTXoutputPower(1);
   }
-  sendRawCommand(F("mac set dr 5")); //0= min, 7=max
+  sendMacSet(F("dr"), String(5)); //0= min, 7=max
 
   _serial.setTimeout(60000);
   sendRawCommand(F("mac save"));
@@ -312,7 +313,7 @@ bool rn2xx3::initABP(String devAddr, String AppSKey, String NwkSKey)
   _serial.setTimeout(2000);
   delay(1000);
 
-  if(receivedData.startsWith("accepted"))
+  if(receivedData.startsWith(F("accepted")))
   {
     return true;
     //with abp we can always join successfully as long as the keys are valid
@@ -385,124 +386,140 @@ TX_RETURN_TYPE rn2xx3::txCommand(String command, String data, bool shouldEncode)
     String receivedData = _serial.readStringUntil('\n');
     //TODO: Debug print on receivedData
 
-    if(receivedData.startsWith("ok"))
+    switch (decodeReceived(receivedData))
     {
-      _serial.setTimeout(30000);
-      receivedData = _serial.readStringUntil('\n');
-      _serial.setTimeout(2000);
-
-      //TODO: Debug print on receivedData
-
-      if(receivedData.startsWith("mac_tx_ok"))
+      case rn2xx3::ok:
       {
-        //SUCCESS!!
-        send_success = true;
-        return TX_SUCCESS;
+        _serial.setTimeout(30000);
+        receivedData = _serial.readStringUntil('\n');
+        _serial.setTimeout(2000);
+
+        //TODO: Debug print on receivedData
+
+        switch (decodeReceived(receivedData))
+        {
+          case rn2xx3::mac_tx_ok:
+          {
+            //SUCCESS!!
+            send_success = true;
+            return TX_SUCCESS;
+          }
+
+          case rn2xx3::mac_rx:
+          {
+            //example: mac_rx 1 54657374696E6720313233
+            _rxMessenge = receivedData.substring(receivedData.indexOf(' ', 7)+1);
+            send_success = true;
+            return TX_WITH_RX;
+          }
+
+          case rn2xx3::mac_err:
+          {
+            init();
+            break;
+          }
+
+          case rn2xx3::invalid_data_len:
+          {
+            //this should never happen if the prototype worked
+            send_success = true;
+            return TX_FAIL;
+          }
+
+          case rn2xx3::radio_tx_ok:
+          {
+            //SUCCESS!!
+            send_success = true;
+            return TX_SUCCESS;
+          }
+
+          case rn2xx3::radio_err:
+          {
+            //This should never happen. If it does, something major is wrong.
+            init();
+            break;
+          }
+
+          default:
+          {
+            //unknown response
+            //init();
+          }
+        } // End while after "ok"
+        break;
       }
 
-      else if(receivedData.startsWith("mac_rx"))
+      case rn2xx3::invalid_param:
       {
-        //example: mac_rx 1 54657374696E6720313233
-        _rxMessenge = receivedData.substring(receivedData.indexOf(' ', 7)+1);
-        send_success = true;
-        return TX_WITH_RX;
-      }
-
-      else if(receivedData.startsWith("mac_err"))
-      {
-        init();
-      }
-
-      else if(receivedData.startsWith("invalid_data_len"))
-      {
-        //this should never happen if the prototype worked
+        //should not happen if we typed the commands correctly
         send_success = true;
         return TX_FAIL;
       }
 
-      else if(receivedData.startsWith("radio_tx_ok"))
-      {
-        //SUCCESS!!
-        send_success = true;
-        return TX_SUCCESS;
-      }
-
-      else if(receivedData.startsWith("radio_err"))
-      {
-        //This should never happen. If it does, something major is wrong.
-        init();
-      }
-
-      else
-      {
-        //unknown response
-        //init();
-      }
-    }
-
-    else if(receivedData.startsWith("invalid_param"))
-    {
-      //should not happen if we typed the commands correctly
-      send_success = true;
-      return TX_FAIL;
-    }
-
-    else if(receivedData.startsWith("not_joined"))
-    {
-      init();
-    }
-
-    else if(receivedData.startsWith("no_free_ch"))
-    {
-      //retry
-      delay(1000);
-    }
-
-    else if(receivedData.startsWith("silent"))
-    {
-      init();
-    }
-
-    else if(receivedData.startsWith("frame_counter_err_rejoin_needed"))
-    {
-      init();
-    }
-
-    else if(receivedData.startsWith("busy"))
-    {
-      busy_count++;
-
-      // Not sure if this is wise. At low data rates with large packets
-      // this can perhaps cause transmissions at more than 1% duty cycle.
-      // Need to calculate the correct constant value.
-      // But it is wise to have this check and re-init in case the
-      // lorawan stack in the RN2xx3 hangs.
-      if(busy_count>=10)
+      case rn2xx3::not_joined:
       {
         init();
+        break;
       }
-      else
+
+      case rn2xx3::no_free_ch:
       {
+        //retry
         delay(1000);
+        break;
       }
-    }
 
-    else if(receivedData.startsWith("mac_paused"))
-    {
-      init();
-    }
+      case rn2xx3::silent:
+      {
+        init();
+        break;
+      }
 
-    else if(receivedData.startsWith("invalid_data_len"))
-    {
-      //should not happen if the prototype worked
-      send_success = true;
-      return TX_FAIL;
-    }
+      case rn2xx3::frame_counter_err_rejoin_needed:
+      {
+        init();
+        break;
+      }
 
-    else
-    {
-      //unknown response after mac tx command
-      init();
+      case rn2xx3::busy:
+      {
+        busy_count++;
+
+        // Not sure if this is wise. At low data rates with large packets
+        // this can perhaps cause transmissions at more than 1% duty cycle.
+        // Need to calculate the correct constant value.
+        // But it is wise to have this check and re-init in case the
+        // lorawan stack in the RN2xx3 hangs.
+        if(busy_count>=10)
+        {
+          init();
+        }
+        else
+        {
+          delay(1000);
+        }
+        break;
+      }
+
+      case rn2xx3::mac_paused:
+      {
+        init();
+        break;
+      }
+
+      case rn2xx3::invalid_data_len:
+      {
+        //should not happen if the prototype worked
+        send_success = true;
+        return TX_FAIL;
+      }
+
+      default:
+      {
+        //unknown response after mac tx command
+        init();
+        break;
+      }
     }
   }
 
@@ -551,9 +568,12 @@ String rn2xx3::getRx() {
 
 int rn2xx3::getSNR()
 {
-  String snr = sendRawCommand(F("radio get snr"));
-  snr.trim();
-  return snr.toInt();
+  return readIntValue(F("radio get snr"));
+}
+
+int rn2xx3::getVbat()
+{
+  return readIntValue(F("sys get vdd"));
 }
 
 String rn2xx3::base16decode(String input)
@@ -587,12 +607,7 @@ void rn2xx3::setDR(int dr)
 {
   if(dr>=0 && dr<=5)
   {
-    delay(100);
-    while(_serial.available())
-      _serial.read();
-    _serial.print("mac set dr ");
-    _serial.println(dr);
-    _serial.readStringUntil('\n');
+    sendMacSet(F("dr"), String(dr));
   }
 }
 
@@ -602,15 +617,20 @@ void rn2xx3::sleep(long msec)
   _serial.println(msec);
 }
 
-
-String rn2xx3::sendRawCommand(String command)
+String rn2xx3::sendRawCommand(const String& command)
 {
   delay(100);
   while(_serial.available())
     _serial.read();
   _serial.println(command);
+
   String ret = _serial.readStringUntil('\n');
   ret.trim();
+
+  if (ret.equals(F("invalid_param")))
+  {
+    _lastErrorInvalidParam = command;
+  }
 
   //TODO: Add debug print
 
@@ -633,12 +653,15 @@ bool rn2xx3::setFrequencyPlan(FREQ_PLAN fp)
       if(_moduleType == RN2483)
       {
         //mac set rx2 <dataRate> <frequency>
-        //sendRawCommand(F("mac set rx2 5 868100000")); //use this for "strict" one channel gateways
-        sendRawCommand(F("mac set rx2 3 869525000")); //use for "non-strict" one channel gateways
-        sendRawCommand(F("mac set ch dcycle 0 99")); //1% duty cycle for this channel
-        sendRawCommand(F("mac set ch dcycle 1 65535")); //almost never use this channel
-        sendRawCommand(F("mac set ch dcycle 2 65535")); //almost never use this channel
-
+        //set2ndRecvWindow(5, 868100000); //use this for "strict" one channel gateways
+        set2ndRecvWindow(3, 869525000); //use for "non-strict" one channel gateways
+        setChannelDutyCycle(0, 99); //1% duty cycle for this channel
+        setChannelDutyCycle(1, 65535); //almost never use this channel
+        setChannelDutyCycle(2, 65535); //almost never use this channel
+        for (uint8_t ch = 3; ch < 8; ch++)
+        {
+          setChannelEnabled(ch, false);
+        }
         returnValue = true;
       }
       else
@@ -667,48 +690,25 @@ bool rn2xx3::setFrequencyPlan(FREQ_PLAN fp)
        * https://github.com/TheThingsNetwork/arduino-device-lib
        */
 
+        uint32_t freq = 867100000;
+        for (uint8_t ch = 0; ch < 8; ch++)
+        {
+          setChannelDutyCycle(ch, 799); // All channels
+          if (ch == 1)
+          {
+            setChannelDataRateRange(ch, 0, 6);
+          }
+          else if (ch > 2)
+          {
+            setChannelDataRateRange(ch, 0, 5);
+            setChannelFrequency(ch, freq);
+            freq = freq + 200000;
+          }
+          setChannelEnabled(ch, true);  // frequency, data rate and duty cycle must be set first.
+        }
+
         //RX window 2
-        sendRawCommand(F("mac set rx2 3 869525000"));
-
-        //channel 0
-        sendRawCommand(F("mac set ch dcycle 0 799"));
-
-        //channel 1
-        sendRawCommand(F("mac set ch drrange 1 0 6"));
-        sendRawCommand(F("mac set ch dcycle 1 799"));
-
-        //channel 2
-        sendRawCommand(F("mac set ch dcycle 2 799"));
-
-        //channel 3
-        sendRawCommand(F("mac set ch freq 3 867100000"));
-        sendRawCommand(F("mac set ch drrange 3 0 5"));
-        sendRawCommand(F("mac set ch dcycle 3 799"));
-        sendRawCommand(F("mac set ch status 3 on"));
-
-        //channel 4
-        sendRawCommand(F("mac set ch freq 4 867300000"));
-        sendRawCommand(F("mac set ch drrange 4 0 5"));
-        sendRawCommand(F("mac set ch dcycle 4 799"));
-        sendRawCommand(F("mac set ch status 4 on"));
-
-        //channel 5
-        sendRawCommand(F("mac set ch freq 5 867500000"));
-        sendRawCommand(F("mac set ch drrange 5 0 5"));
-        sendRawCommand(F("mac set ch dcycle 5 799"));
-        sendRawCommand(F("mac set ch status 5 on"));
-
-        //channel 6
-        sendRawCommand(F("mac set ch freq 6 867700000"));
-        sendRawCommand(F("mac set ch drrange 6 0 5"));
-        sendRawCommand(F("mac set ch dcycle 6 799"));
-        sendRawCommand(F("mac set ch status 6 on"));
-
-        //channel 7
-        sendRawCommand(F("mac set ch freq 7 867900000"));
-        sendRawCommand(F("mac set ch drrange 7 0 5"));
-        sendRawCommand(F("mac set ch dcycle 7 799"));
-        sendRawCommand(F("mac set ch status 7 on"));
+        set2ndRecvWindow(3, 869525000);
 
         returnValue = true;
       }
@@ -730,18 +730,8 @@ bool rn2xx3::setFrequencyPlan(FREQ_PLAN fp)
       {
         for(int channel=0; channel<72; channel++)
         {
-          // Build command string. First init, then add int.
-          String command = F("mac set ch status ");
-          command += channel;
-
-          if(channel>=8 && channel<16)
-          {
-            sendRawCommand(command+F(" on"));
-          }
-          else
-          {
-            sendRawCommand(command+F(" off"));
-          }
+          bool enabled = (channel>=8 && channel<16);
+          setChannelEnabled(channel, enabled);
         }
         returnValue = true;
       }
@@ -756,18 +746,17 @@ bool rn2xx3::setFrequencyPlan(FREQ_PLAN fp)
     {
       if(_moduleType == RN2483)
       {
-        //fix duty cycle - 1% = 0.33% per channel
-        sendRawCommand(F("mac set ch dcycle 0 799"));
-        sendRawCommand(F("mac set ch dcycle 1 799"));
-        sendRawCommand(F("mac set ch dcycle 2 799"));
-
-        //disable non-default channels
-        sendRawCommand(F("mac set ch status 3 on"));
-        sendRawCommand(F("mac set ch status 4 on"));
-        sendRawCommand(F("mac set ch status 5 on"));
-        sendRawCommand(F("mac set ch status 6 on"));
-        sendRawCommand(F("mac set ch status 7 on"));
-
+        for(int channel=0; channel<8; channel++)
+        {
+          if (channel < 3) {
+            //fix duty cycle - 1% = 0.33% per channel
+            setChannelDutyCycle(channel, 799);
+            setChannelEnabled(channel, true);
+          } else {
+            //disable non-default channels
+            setChannelEnabled(channel, false);
+          }
+        }
         returnValue = true;
       }
       else
@@ -786,4 +775,144 @@ bool rn2xx3::setFrequencyPlan(FREQ_PLAN fp)
   }
 
   return returnValue;
+}
+
+
+rn2xx3::received_t rn2xx3::decodeReceived(const String& receivedData) {
+  if (receivedData.length() != 0) {
+    #define MATCH_STRING(S) \
+    if (receivedData.startsWith(F(#S))) return (rn2xx3::S);
+
+    switch (receivedData[0]) {
+      case 'b': 
+        MATCH_STRING(busy);
+        break;
+      case 'f': 
+        MATCH_STRING(frame_counter_err_rejoin_needed);
+        break;
+      case 'i': 
+        MATCH_STRING(invalid_data_len);
+        MATCH_STRING(invalid_param);
+        break;
+      case 'm': 
+        MATCH_STRING(mac_err);
+        MATCH_STRING(mac_paused);
+        MATCH_STRING(mac_rx);
+        MATCH_STRING(mac_tx_ok);
+        break;
+      case 'n': 
+        MATCH_STRING(no_free_ch);
+        MATCH_STRING(not_joined);
+        break;
+      case 'o': 
+        MATCH_STRING(ok);
+        break;
+      case 'r': 
+        MATCH_STRING(radio_err);
+        MATCH_STRING(radio_tx_ok);
+        break;
+      case 's': 
+        MATCH_STRING(silent);
+        break;
+    }
+    #undef MATCH_STRING
+  }
+  return rn2xx3::UNKNOWN;
+}
+
+
+int rn2xx3::readIntValue(const String& command)
+{
+  String value = sendRawCommand(command);
+  value.trim();
+  return value.toInt();
+}
+
+String rn2xx3::getLastErrorInvalidParam() 
+{
+  String res = _lastErrorInvalidParam;
+  _lastErrorInvalidParam = "";
+  return res;
+}
+
+bool rn2xx3::sendMacSet(const String& param, const String& value)
+{
+  String command;
+  command.reserve(10 + param.length() + value.length());
+  command = F("mac set ");
+  command += param;
+  command += ' ';
+  command += value;
+
+  return sendRawCommand(command).equals(F("ok"));
+}
+
+bool rn2xx3::sendMacSetEnabled(const String& param, bool enabled)
+{
+  return sendMacSet(param, enabled ? F("on") : F("off"));
+}
+
+bool rn2xx3::sendMacSetCh(const String& param, unsigned int channel, const String& value)
+{
+  String command;
+  command.reserve(20);
+  command = param;
+  command += ' ';
+  command += channel;
+  command += ' ';
+  command += value;
+  return sendMacSet(F("ch"), command);
+}
+
+bool rn2xx3::sendMacSetCh(const String& param, unsigned int channel, uint32_t value)
+{
+  return sendMacSetCh(param, channel, String(value));
+}
+
+bool rn2xx3::setChannelDutyCycle(unsigned int channel, unsigned int dutyCycle)
+{
+  return sendMacSetCh(F("dcycle"), channel, dutyCycle);
+}
+
+bool rn2xx3::setChannelFrequency(unsigned int channel, uint32_t frequency)
+{
+  return sendMacSetCh(F("freq"), channel, frequency);
+}
+
+bool rn2xx3::setChannelDataRateRange(unsigned int channel, unsigned int minRange, unsigned int maxRange)
+{
+  String value;
+  value = String(minRange);
+  value += ' ';
+  value += String(maxRange);
+  return sendMacSetCh(F("drrange"), channel, value);
+}
+
+bool rn2xx3::setChannelEnabled(unsigned int channel, bool enabled)
+{
+  return sendMacSetCh(F("status"), channel, enabled ? F("on") : F("off"));
+}
+
+bool rn2xx3::set2ndRecvWindow(unsigned int dataRate, uint32_t frequency)
+{
+  String value;
+  value = String(dataRate);
+  value += ' ';
+  value += String(frequency);
+  return sendMacSet(F("rx2"), value);
+}
+
+bool rn2xx3::setAdaptiveDataRate(bool enabled)
+{
+  return sendMacSetEnabled(F("adr"), enabled);
+}
+
+bool rn2xx3::setAutomaticReply(bool enabled)
+{
+  return sendMacSetEnabled(F("ar"), enabled);
+}
+
+bool rn2xx3::setTXoutputPower(int pwridx)
+{
+  return sendMacSet(F("pwridx"), String(pwridx));
 }
