@@ -1,4 +1,8 @@
 
+// ********************************************************************************
+// ULRs needed for C016_CacheController 
+// to help dump the content of the binary log files
+// ********************************************************************************
 void handle_dumpcache() {
   if (!isLoggedIn()) { return; }
 
