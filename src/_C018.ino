@@ -230,6 +230,7 @@ bool CPlugin_018(byte function, struct EventStruct *event, String& string)
           success = false;
           break;
       }
+      break;
     }
 
     case CPLUGIN_PROTOCOL_SEND:

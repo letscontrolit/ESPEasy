@@ -918,6 +918,7 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
             }
           }
         }
+        break;
       }
   }
 
