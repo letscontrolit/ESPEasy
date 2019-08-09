@@ -1,4 +1,32 @@
 -------------------------------------------------
+Changes in release mega-20190809 (since mega-20190805)
+-------------------------------------------------
+
+Release date: Fri Aug  9 04:00:19 CEST 2019
+
+Artem (1):
+      String representation for requested weekday
+
+Bartłomiej Zimoń (1):
+      [P076] setMode is not needed in interrupt mode
+
+Gijs Noorlander (13):
+      Config page not able to clear all WiFi settings
+      Check for WiFi connected before trying to connect to host
+      [ESPeasy Serial] Update to 1.0.12 to allow invalid pin config
+      [Serial] Show serial port description as port in device page
+      [ESPeasy p2p] Show remote node as port description on device page
+      [Webserver] Do not allow writing to internal buffer for chunked transfer
+      [WiFi] Cleanup some WiFi code
+      [WiFi] Fix issue where node could disable plugins when offline for long
+      [Reboot] Flush all buffers and controllers before reboot
+      [ArduinoOTA] Suggest UDP port to use 18266 since 8266 is for ESPeasy p2p
+      [Shutdown] Move delay(100) to after SPIFFS.end()
+      [Plugin info] Show extra info in devices web page
+      [Docs] Document sharing plugin via ESPeasy p2p controller
+
+
+-------------------------------------------------
 Changes in release mega-20190805 (since mega-20190803)
 -------------------------------------------------
 
