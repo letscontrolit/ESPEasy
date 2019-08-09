@@ -833,61 +833,7 @@ void json_prop(const String& name, const String& value) {
   lastLevel = level;
 }
 
-// ********************************************************************************
-// Web Interface device page
-// ********************************************************************************
-// 19480 (11128)
 
-// change of device: cleanup old device and reset default settings
-void setTaskDevice_to_TaskIndex(byte taskdevicenumber, byte taskIndex) {
-  struct EventStruct TempEvent;
-
-  TempEvent.TaskIndex = taskIndex;
-  String dummy;
-
-  // let the plugin do its cleanup by calling PLUGIN_EXIT with this TaskIndex
-  PluginCall(PLUGIN_EXIT, &TempEvent, dummy);
-  taskClear(taskIndex, false); // clear settings, but do not save
-  ClearCustomTaskSettings(taskIndex);
-
-  Settings.TaskDeviceNumber[taskIndex] = taskdevicenumber;
-
-  if (taskdevicenumber != 0) // set default values if a new device has been selected
-  {
-    // NOTE: do not enable task by default. allow user to enter sensible valus first and let him enable it when ready.
-    PluginCall(PLUGIN_SET_DEFAULTS,         &TempEvent, dummy);
-    PluginCall(PLUGIN_GET_DEVICEVALUENAMES, &TempEvent, dummy); // the plugin should populate ExtraTaskSettings with its default values.
-  } else {
-    // New task is empty task, thus save config now.
-    taskClear(taskIndex, true);                                 // clear settings, and save
-  }
-}
-
-void setBasicTaskValues(byte taskIndex, unsigned long taskdevicetimer,
-                        bool enabled, const String& name, int pin1, int pin2, int pin3) {
-  LoadTaskSettings(taskIndex); // Make sure ExtraTaskSettings are up-to-date
-  byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[taskIndex]);
-
-  if (taskdevicetimer > 0) {
-    Settings.TaskDeviceTimer[taskIndex] = taskdevicetimer;
-  } else {
-    if (!Device[DeviceIndex].TimerOptional) { // Set default delay, unless it's optional...
-      Settings.TaskDeviceTimer[taskIndex] = Settings.Delay;
-    }
-    else {
-      Settings.TaskDeviceTimer[taskIndex] = 0;
-    }
-  }
-  Settings.TaskDeviceEnabled[taskIndex] = enabled;
-  safe_strncpy(ExtraTaskSettings.TaskDeviceName, name.c_str(), sizeof(ExtraTaskSettings.TaskDeviceName));
-
-  if (pin1 >= 0) { Settings.TaskDevicePin1[taskIndex] = pin1; }
-
-  if (pin2 >= 0) { Settings.TaskDevicePin2[taskIndex] = pin2; }
-
-  if (pin3 >= 0) { Settings.TaskDevicePin3[taskIndex] = pin3; }
-  SaveTaskSettings(taskIndex);
-}
 
 // ********************************************************************************
 // Add a task select dropdown list
