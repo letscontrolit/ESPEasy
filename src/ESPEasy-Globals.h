@@ -338,7 +338,7 @@ void check_size() {
 #define CPLUGIN_INTERVAL                   55 // call every interval loop
 #define CPLUGIN_ACKNOWLEDGE                56 // call for sending acknowledges !ToDo done by direct function call in PluginCall() for now.
 
-#define CPLUGIN_WEBFORM_SHOW_CONFIG        57
+#define CPLUGIN_WEBFORM_SHOW_HOST_CONFIG   57 // Used for showing host information for the controller.
 
 #define CONTROLLER_USE_DNS                  1
 #define CONTROLLER_HOSTNAME                 2

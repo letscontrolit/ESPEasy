@@ -35,8 +35,9 @@ struct C018_data_struct {
   }
 
   bool init(const int16_t serial_rx, const int16_t serial_tx, unsigned long baudrate) {
-    cacheHWEUI = "";
+    cacheHWEUI  = "";
     cacheSysVer = "";
+
     if ((serial_rx < 0) && (serial_tx < 0)) {
       return false;
     }
@@ -47,7 +48,7 @@ struct C018_data_struct {
       C018_easySerial->begin(baudrate);
       myLora = new rn2xx3(*C018_easySerial);
       myLora->autobaud();
-      cacheHWEUI = myLora->hweui();
+      cacheHWEUI  = myLora->hweui();
       cacheSysVer = myLora->sysver();
     }
     return isInitialized();
@@ -114,6 +115,7 @@ private:
 
   void updateCacheOnInit(bool success) {
     cacheDevAddr = "";
+
     if (!success || !isInitialized()) { return; }
     cacheDevAddr = myLora->sendRawCommand(F("mac get devaddr"));
   }
@@ -149,6 +151,13 @@ bool CPlugin_018(byte function, struct EventStruct *event, String& string)
       break;
     }
 
+    case CPLUGIN_WEBFORM_SHOW_HOST_CONFIG:
+    {
+      string = F("Dev addr: ");
+      string += C018_data.getDevaddr();
+      break;
+    }
+
     case CPLUGIN_INIT:
     {
       MakeControllerSettings(ControllerSettings);
@@ -171,8 +180,8 @@ bool CPlugin_018(byte function, struct EventStruct *event, String& string)
 
     case CPLUGIN_WEBFORM_LOAD:
     {
-      int rxpin = 12;
-      int txpin = 14;
+      int rxpin    = 12;
+      int txpin    = 14;
       int resetpin = -1;
 
       // Optional reset pin RN2xx3
@@ -224,7 +233,7 @@ bool CPlugin_018(byte function, struct EventStruct *event, String& string)
         case CONTROLLER_TIMEOUT:
           string = F("Gateway Timeout");
           break;
-          case CONTROLLER_PORT:
+        case CONTROLLER_PORT:
           string = F("Port");
         default:
           success = false;

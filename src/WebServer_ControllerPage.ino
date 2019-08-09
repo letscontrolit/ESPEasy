@@ -153,13 +153,24 @@ void handle_controllers_ShowAllControllersTable()
       addEnabled(Settings.ControllerEnabled[x]);
 
       html_TD();
-      byte   ProtocolIndex = getProtocolIndex(Settings.Protocol[x]);
-      String ProtocolName  = "";
-      CPluginCall(ProtocolIndex, CPLUGIN_GET_DEVICENAME, 0, ProtocolName);
-      TXBuffer += ProtocolName;
-
+      byte ProtocolIndex = getProtocolIndex(Settings.Protocol[x]);
+      {
+        String ProtocolName = "";
+        CPluginCall(ProtocolIndex, CPLUGIN_GET_DEVICENAME, 0, ProtocolName);
+        TXBuffer += ProtocolName;
+      }
       html_TD();
-      TXBuffer += ControllerSettings.getHost();
+      {
+        String hostDescription;
+        CPluginCall(ProtocolIndex, CPLUGIN_WEBFORM_SHOW_HOST_CONFIG, 0, hostDescription);
+
+        if (hostDescription.length() != 0) {
+          TXBuffer += hostDescription;
+        } else {
+          TXBuffer += ControllerSettings.getHost();
+        }
+      }
+
       html_TD();
       TXBuffer += ControllerSettings.Port;
     }
