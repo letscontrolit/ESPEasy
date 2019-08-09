@@ -1,10 +1,11 @@
 
-//********************************************************************************
+// ********************************************************************************
 // Web Interface Factory Reset
-//********************************************************************************
+// ********************************************************************************
 void handle_factoryreset() {
   checkRAM(F("handle_factoryreset"));
-  if (!isLoggedIn()) return;
+
+  if (!isLoggedIn()) { return; }
   navMenuIndex = MENU_INDEX_TOOLS;
   TXBuffer.startStream();
   sendHeadandTail_stdtemplate(_HEAD);
@@ -15,22 +16,28 @@ void handle_factoryreset() {
 
   if (WebServer.hasArg("fdm")) {
     DeviceModel model = static_cast<DeviceModel>(getFormItemInt("fdm"));
+
     if (modelMatchingFlashSize(model)) {
       setFactoryDefault(model);
     }
   }
+
   if (WebServer.hasArg("kun")) {
     ResetFactoryDefaultPreference.keepUnitName(isFormItemChecked("kun"));
   }
+
   if (WebServer.hasArg("kw")) {
     ResetFactoryDefaultPreference.keepWiFi(isFormItemChecked("kw"));
   }
+
   if (WebServer.hasArg("knet")) {
     ResetFactoryDefaultPreference.keepNetwork(isFormItemChecked("knet"));
   }
+
   if (WebServer.hasArg("kntp")) {
     ResetFactoryDefaultPreference.keepNTP(isFormItemChecked("kntp"));
   }
+
   if (WebServer.hasArg("klog")) {
     ResetFactoryDefaultPreference.keepLogSettings(isFormItemChecked("klog"));
   }
@@ -40,11 +47,13 @@ void handle_factoryreset() {
     applyFactoryDefaultPref();
     addHtmlError(SaveSettings());
   }
+
   if (WebServer.hasArg(F("performfactoryreset"))) {
-      // User confirmed to really perform the reset.
-      applyFactoryDefaultPref();
-      // No need to call SaveSettings(); ResetFactory() will save the new settings.
-      ResetFactory();
+    // User confirmed to really perform the reset.
+    applyFactoryDefaultPref();
+
+    // No need to call SaveSettings(); ResetFactory() will save the new settings.
+    ResetFactory();
   } else {
     // Nothing chosen yet, show options.
     addTableSeparator(F("Settings to keep"), 2, 3);
@@ -85,19 +94,16 @@ void handle_factoryreset() {
   html_end_form();
   sendHeadandTail_stdtemplate(_TAIL);
   TXBuffer.endStream();
-
 }
 
-
-
-
-
-//********************************************************************************
+// ********************************************************************************
 // Create pre-defined config selector
-//********************************************************************************
+// ********************************************************************************
 void addPreDefinedConfigSelector() {
   DeviceModel active_model = ResetFactoryDefaultPreference.getDeviceModel();
+
   addSelector_Head("fdm", true);
+
   for (byte x = 0; x < DeviceModel_MAX; ++x) {
     DeviceModel model = static_cast<DeviceModel>(x);
     addSelector_Item(
@@ -106,35 +112,41 @@ void addPreDefinedConfigSelector() {
       model == active_model,
       !modelMatchingFlashSize(model),
       ""
-    );
+      );
   }
   addSelector_Foot();
 }
 
 #ifdef WEBSERVER_NEW_UI
 void handle_factoryreset_json() {
-  if (!isLoggedIn()) return;
+  if (!isLoggedIn()) { return; }
   TXBuffer.startJsonStream();
-  TXBuffer+="{";
+  TXBuffer += "{";
 
   if (WebServer.hasArg("fdm")) {
     DeviceModel model = static_cast<DeviceModel>(getFormItemInt("fdm"));
+
     if (modelMatchingFlashSize(model)) {
       setFactoryDefault(model);
     }
   }
+
   if (WebServer.hasArg("kun")) {
     ResetFactoryDefaultPreference.keepUnitName(isFormItemChecked("kun"));
   }
+
   if (WebServer.hasArg("kw")) {
     ResetFactoryDefaultPreference.keepWiFi(isFormItemChecked("kw"));
   }
+
   if (WebServer.hasArg("knet")) {
     ResetFactoryDefaultPreference.keepNetwork(isFormItemChecked("knet"));
   }
+
   if (WebServer.hasArg("kntp")) {
     ResetFactoryDefaultPreference.keepNTP(isFormItemChecked("kntp"));
   }
+
   if (WebServer.hasArg("klog")) {
     ResetFactoryDefaultPreference.keepLogSettings(isFormItemChecked("klog"));
   }
@@ -145,18 +157,21 @@ void handle_factoryreset_json() {
     addHtmlError(SaveSettings());
     stream_last_json_object_value(F("status"), F("ok"));
   }
+
   if (WebServer.hasArg(F("performfactoryreset"))) {
-      // User confirmed to really perform the reset.
-      applyFactoryDefaultPref();
-      stream_last_json_object_value(F("status"), F("ok"));
-      TXBuffer+="}";
-      TXBuffer.endStream();
-      // No need to call SaveSettings(); ResetFactory() will save the new settings.
-      ResetFactory();
+    // User confirmed to really perform the reset.
+    applyFactoryDefaultPref();
+    stream_last_json_object_value(F("status"), F("ok"));
+    TXBuffer += "}";
+    TXBuffer.endStream();
+
+    // No need to call SaveSettings(); ResetFactory() will save the new settings.
+    ResetFactory();
   } else {
     stream_last_json_object_value(F("status"), F("error"));
   }
-  TXBuffer+="}";
+  TXBuffer += "}";
   TXBuffer.endStream();
 }
+
 #endif // WEBSERVER_NEW_UI

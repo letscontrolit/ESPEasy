@@ -1,19 +1,23 @@
 
-//********************************************************************************
+// ********************************************************************************
 // Web Interface download page
-//********************************************************************************
+// ********************************************************************************
 void handle_download()
 {
   checkRAM(F("handle_download"));
-  if (!isLoggedIn()) return;
+
+  if (!isLoggedIn()) { return; }
   navMenuIndex = MENU_INDEX_TOOLS;
-//  TXBuffer.startStream();
-//  sendHeadandTail_stdtemplate();
+
+  //  TXBuffer.startStream();
+  //  sendHeadandTail_stdtemplate();
 
 
   fs::File dataFile = tryOpenFile(F(FILE_CONFIG), "r");
-  if (!dataFile)
+
+  if (!dataFile) {
     return;
+  }
 
   String str = F("attachment; filename=config_");
   str += Settings.Name;
@@ -22,6 +26,7 @@ void handle_download()
   str += F("_Build");
   str += BUILD;
   str += '_';
+
   if (systemTimePresent())
   {
     str += getDateTimeString('\0', '\0', '\0');

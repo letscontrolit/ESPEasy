@@ -1,34 +1,34 @@
 
 
-//********************************************************************************
+// ********************************************************************************
 // Web Interface upload page
-//********************************************************************************
+// ********************************************************************************
 byte uploadResult = 0;
 void handle_upload() {
-  if (!isLoggedIn()) return;
+  if (!isLoggedIn()) { return; }
   navMenuIndex = MENU_INDEX_TOOLS;
   TXBuffer.startStream();
   sendHeadandTail_stdtemplate();
 
-  TXBuffer += F("<form enctype='multipart/form-data' method='post'><p>Upload settings file:<br><input type='file' name='datafile' size='40'></p><div><input class='button link' type='submit' value='Upload'></div><input type='hidden' name='edit' value='1'></form>");
+  TXBuffer += F(
+    "<form enctype='multipart/form-data' method='post'><p>Upload settings file:<br><input type='file' name='datafile' size='40'></p><div><input class='button link' type='submit' value='Upload'></div><input type='hidden' name='edit' value='1'></form>");
   sendHeadandTail_stdtemplate(true);
   TXBuffer.endStream();
   printWebString = "";
-  printToWeb = false;
+  printToWeb     = false;
 }
 
-
-//********************************************************************************
+// ********************************************************************************
 // Web Interface upload page
-//********************************************************************************
+// ********************************************************************************
 void handle_upload_post() {
   checkRAM(F("handle_upload_post"));
-  if (!isLoggedIn()) return;
+
+  if (!isLoggedIn()) { return; }
 
   navMenuIndex = MENU_INDEX_TOOLS;
   TXBuffer.startStream();
   sendHeadandTail_stdtemplate();
-
 
 
   if (uploadResult == 1)
@@ -37,25 +37,28 @@ void handle_upload_post() {
     LoadSettings();
   }
 
-  if (uploadResult == 2)
+  if (uploadResult == 2) {
     TXBuffer += F("<font color=\"red\">Upload file invalid!</font>");
+  }
 
-  if (uploadResult == 3)
+  if (uploadResult == 3) {
     TXBuffer += F("<font color=\"red\">No filename!</font>");
+  }
 
 
   TXBuffer += F("Upload finished");
   sendHeadandTail_stdtemplate(true);
   TXBuffer.endStream();
   printWebString = "";
-  printToWeb = false;
+  printToWeb     = false;
 }
 
 #ifdef WEBSERVER_NEW_UI
 void handle_upload_json() {
   checkRAM(F("handle_upload_post"));
   uint8_t result = uploadResult;
-  if (!isLoggedIn()) result = 255;
+
+  if (!isLoggedIn()) { result = 255; }
 
   TXBuffer.startJsonStream();
   TXBuffer += "{";
@@ -64,15 +67,17 @@ void handle_upload_json() {
 
   TXBuffer.endStream();
 }
+
 #endif // WEBSERVER_NEW_UI
 
-//********************************************************************************
+// ********************************************************************************
 // Web Interface upload handler
-//********************************************************************************
+// ********************************************************************************
 fs::File uploadFile;
 void handleFileUpload() {
   checkRAM(F("handleFileUpload"));
-  if (!isLoggedIn()) return;
+
+  if (!isLoggedIn()) { return; }
 
   static boolean valid = false;
 
@@ -91,7 +96,7 @@ void handleFileUpload() {
       log += upload.filename;
       addLog(LOG_LEVEL_INFO, log);
     }
-    valid = false;
+    valid        = false;
     uploadResult = 0;
   }
   else if (upload.status == UPLOAD_FILE_WRITE)
@@ -103,35 +108,43 @@ void handleFileUpload() {
       {
         struct TempStruct {
           unsigned long PID;
-          int Version;
+          int           Version;
         } Temp;
+
         for (unsigned int x = 0; x < sizeof(struct TempStruct); x++)
         {
           byte b = upload.buf[x];
-          memcpy((byte*)&Temp + x, &b, 1);
+          memcpy((byte *)&Temp + x, &b, 1);
         }
-        if (Temp.Version == VERSION && Temp.PID == ESP_PROJECT_PID)
+
+        if ((Temp.Version == VERSION) && (Temp.PID == ESP_PROJECT_PID)) {
           valid = true;
+        }
       }
       else
       {
         // other files are always valid...
         valid = true;
       }
+
       if (valid)
       {
         String filename;
 #if defined(ESP32)
         filename += '/';
-#endif
+#endif // if defined(ESP32)
         filename += upload.filename;
+
         // once we're safe, remove file and create empty one...
         tryDeleteFile(filename);
         uploadFile = tryOpenFile(filename.c_str(), "w");
+
         // dont count manual uploads: flashCount();
       }
     }
-    if (uploadFile) uploadFile.write(upload.buf, upload.currentSize);
+
+    if (uploadFile) { uploadFile.write(upload.buf, upload.currentSize); }
+
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log = F("Upload: WRITE, Bytes: ");
       log += upload.currentSize;
@@ -140,7 +153,8 @@ void handleFileUpload() {
   }
   else if (upload.status == UPLOAD_FILE_END)
   {
-    if (uploadFile) uploadFile.close();
+    if (uploadFile) { uploadFile.close(); }
+
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log = F("Upload: END, Size: ");
       log += upload.totalSize;
@@ -148,9 +162,10 @@ void handleFileUpload() {
     }
   }
 
-  if (valid)
+  if (valid) {
     uploadResult = 1;
-  else
+  }
+  else {
     uploadResult = 2;
-
+  }
 }

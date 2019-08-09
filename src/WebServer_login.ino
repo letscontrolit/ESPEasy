@@ -1,11 +1,12 @@
 
 
-//********************************************************************************
+// ********************************************************************************
 // Web Interface login page
-//********************************************************************************
+// ********************************************************************************
 void handle_login() {
   checkRAM(F("handle_login"));
-  if (!clientIPallowed()) return;
+
+  if (!clientIPallowed()) { return; }
   TXBuffer.startStream();
   sendHeadandTail_stdtemplate(_HEAD);
 
@@ -32,13 +33,14 @@ void handle_login() {
     // compare with stored password and set timer if there's a match
     if ((strcasecmp(command, SecuritySettings.Password) == 0) || (SecuritySettings.Password[0] == 0))
     {
-      WebLoggedIn = true;
+      WebLoggedIn      = true;
       WebLoggedInTimer = 0;
-      TXBuffer = F("<script>window.location = '.'</script>");
+      TXBuffer         = F("<script>window.location = '.'</script>");
     }
     else
     {
       TXBuffer += F("Invalid password!");
+
       if (Settings.UseRules)
       {
         String event = F("Login#Failed");
@@ -50,6 +52,5 @@ void handle_login() {
   sendHeadandTail_stdtemplate(_TAIL);
   TXBuffer.endStream();
   printWebString = "";
-  printToWeb = false;
+  printToWeb     = false;
 }
-

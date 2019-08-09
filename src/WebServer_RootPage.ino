@@ -1,41 +1,46 @@
 
-//********************************************************************************
+// ********************************************************************************
 // Web Interface root page
-//********************************************************************************
+// ********************************************************************************
 void handle_root() {
   checkRAM(F("handle_root"));
+
   // if Wifi setup, launch setup wizard
   if (wifiSetup)
   {
     WebServer.send(200, F("text/html"), F("<meta HTTP-EQUIV='REFRESH' content='0; url=/setup'>"));
     return;
   }
-  if (!isLoggedIn()) return;
+
+  if (!isLoggedIn()) { return; }
   navMenuIndex = 0;
 
   // if index.htm exists on SPIFFS serve that one (first check if gziped version exists)
-  if (loadFromFS(true, F("/index.htm.gz"))) return;
-  if (loadFromFS(false, F("/index.htm.gz"))) return;
-  if (loadFromFS(true, F("/index.htm"))) return;
-  if (loadFromFS(false, F("/index.htm"))) return;
+  if (loadFromFS(true, F("/index.htm.gz"))) { return; }
+
+  if (loadFromFS(false, F("/index.htm.gz"))) { return; }
+
+  if (loadFromFS(true, F("/index.htm"))) { return; }
+
+  if (loadFromFS(false, F("/index.htm"))) { return; }
 
   TXBuffer.startStream();
-  String sCommand = WebServer.arg(F("cmd"));
+  String  sCommand  = WebServer.arg(F("cmd"));
   boolean rebootCmd = strcasecmp_P(sCommand.c_str(), PSTR("reboot")) == 0;
   sendHeadandTail_stdtemplate(_HEAD, rebootCmd);
 
   int freeMem = ESP.getFreeHeap();
 
 
-  if ((strcasecmp_P(sCommand.c_str(), PSTR("wifidisconnect")) != 0) && (rebootCmd == false)&& (strcasecmp_P(sCommand.c_str(), PSTR("reset")) != 0))
+  if ((strcasecmp_P(sCommand.c_str(),
+                    PSTR("wifidisconnect")) != 0) && (rebootCmd == false) && (strcasecmp_P(sCommand.c_str(), PSTR("reset")) != 0))
   {
-    if (timerAPoff)
-      timerAPoff = millis() + 2000L;  //user has reached the main page - AP can be switched off in 2..3 sec
-
-
-
-    printToWeb = true;
+    if (timerAPoff) {
+      timerAPoff = millis() + 2000L; // user has reached the main page - AP can be switched off in 2..3 sec
+    }
+    printToWeb     = true;
     printWebString = "";
+
     if (sCommand.length() > 0) {
       ExecuteCommand(VALUE_SOURCE_HTTP, sCommand.c_str());
     }
@@ -51,18 +56,21 @@ void handle_root() {
     addRowLabelValue(LabelType::UNIT_NR);
     addRowLabelValue(LabelType::GIT_BUILD);
     addRowLabel(getLabel(LabelType::LOCAL_TIME));
+
     if (systemTimePresent())
     {
       TXBuffer += getValue(LabelType::LOCAL_TIME);
     }
-    else
+    else {
       TXBuffer += F("<font color='red'>No system time source</font>");
+    }
 
     addRowLabel(getLabel(LabelType::UPTIME));
     {
       TXBuffer += getExtendedValue(LabelType::UPTIME);
     }
     addRowLabel(getLabel(LabelType::LOAD_PCT));
+
     if (wdcounter > 0)
     {
       TXBuffer += String(getCPUload());
@@ -88,6 +96,7 @@ void handle_root() {
 
     addRowLabelValue(LabelType::IP_ADDRESS);
     addRowLabel(getLabel(LabelType::WIFI_RSSI));
+
     if (WiFiConnected())
     {
       TXBuffer += String(WiFi.RSSI());
@@ -97,14 +106,14 @@ void handle_root() {
     }
 
     #ifdef FEATURE_MDNS
-      html_TR_TD();
-      TXBuffer += F("mDNS:<TD><a href='http://");
-      TXBuffer += WifiGetHostname();
-      TXBuffer += F(".local'>");
-      TXBuffer += WifiGetHostname();
-      TXBuffer += F(".local</a>");
-      html_TD(3);
-    #endif
+    html_TR_TD();
+    TXBuffer += F("mDNS:<TD><a href='http://");
+    TXBuffer += WifiGetHostname();
+    TXBuffer += F(".local'>");
+    TXBuffer += WifiGetHostname();
+    TXBuffer += F(".local</a>");
+    html_TD(3);
+    #endif // ifdef FEATURE_MDNS
     html_TR_TD();
     html_TD();
     addButton(F("sysinfo"), F("More info"));
@@ -120,26 +129,35 @@ void handle_root() {
     html_table_header("Type");
     html_table_header("IP", 160); // Should fit "255.255.255.255"
     html_table_header("Age");
+
     for (NodesMap::iterator it = Nodes.begin(); it != Nodes.end(); ++it)
     {
       if (it->second.ip[0] != 0)
       {
         bool isThisUnit = it->first == Settings.Unit;
-        if (isThisUnit)
+
+        if (isThisUnit) {
           html_TR_TD_highlight();
-        else
+        }
+        else {
           html_TR_TD();
+        }
 
         TXBuffer += F("Unit ");
         TXBuffer += String(it->first);
         html_TD();
-        if (isThisUnit)
+
+        if (isThisUnit) {
           TXBuffer += Settings.Name;
-        else
+        }
+        else {
           TXBuffer += it->second.nodeName;
+        }
         html_TD();
-        if (it->second.build)
+
+        if (it->second.build) {
           TXBuffer += String(it->second.build);
+        }
         html_TD();
         TXBuffer += getNodeTypeDisplayString(it->second.nodeType);
         html_TD();
@@ -150,7 +168,7 @@ void handle_root() {
         TXBuffer += it->second.ip.toString();
         TXBuffer += "</a>";
         html_TD();
-        TXBuffer += String( it->second.age);
+        TXBuffer += String(it->second.age);
       }
     }
 
@@ -158,14 +176,13 @@ void handle_root() {
     html_end_form();
 
     printWebString = "";
-    printToWeb = false;
+    printToWeb     = false;
     sendHeadandTail_stdtemplate(_TAIL);
     TXBuffer.endStream();
-
   }
   else
   {
-    //TODO: move this to handle_tools, from where it is actually called?
+    // TODO: move this to handle_tools, from where it is actually called?
 
     // have to disconnect or reboot from within the main loop
     // because the webconnection is still active at this point
@@ -181,17 +198,18 @@ void handle_root() {
       addLog(LOG_LEVEL_INFO, F("     : Rebooting..."));
       cmd_within_mainloop = CMD_REBOOT;
     }
-   if (strcasecmp_P(sCommand.c_str(), PSTR("reset")) == 0)
+
+    if (strcasecmp_P(sCommand.c_str(), PSTR("reset")) == 0)
     {
       addLog(LOG_LEVEL_INFO, F("     : factory reset..."));
       cmd_within_mainloop = CMD_REBOOT;
-      TXBuffer += F("OK. Please wait > 1 min and connect to Acces point.<BR><BR>PW=configesp<BR>URL=<a href='http://192.168.4.1'>192.168.4.1</a>");
+      TXBuffer           += F(
+        "OK. Please wait > 1 min and connect to Acces point.<BR><BR>PW=configesp<BR>URL=<a href='http://192.168.4.1'>192.168.4.1</a>");
       TXBuffer.endStream();
       ExecuteCommand(VALUE_SOURCE_HTTP, sCommand.c_str());
     }
 
     TXBuffer += "OK";
     TXBuffer.endStream();
-
   }
 }

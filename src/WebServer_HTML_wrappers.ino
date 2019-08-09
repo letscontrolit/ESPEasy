@@ -1,8 +1,8 @@
 
-//********************************************************************************
+// ********************************************************************************
 // HTML string re-use to keep the executable smaller
 // Flash strings are not checked for duplication.
-//********************************************************************************
+// ********************************************************************************
 void wrap_html_tag(const String& tag, const String& text) {
   TXBuffer += '<';
   TXBuffer += tag;
@@ -102,6 +102,7 @@ void html_table(const String& tableclass, bool boxed) {
   TXBuffer += F("<table class='");
   TXBuffer += tableclass;
   TXBuffer += '\'';
+
   if (boxed) {
     TXBuffer += F("' border=1px frame='box' rules='all'");
   }
@@ -118,6 +119,7 @@ void html_table_header(const String& label, int width) {
 
 void html_table_header(const String& label, const String& helpButton, int width) {
   TXBuffer += F("<TH");
+
   if (width > 0) {
     TXBuffer += F(" style='width:");
     TXBuffer += String(width);
@@ -125,8 +127,10 @@ void html_table_header(const String& label, const String& helpButton, int width)
   }
   TXBuffer += '>';
   TXBuffer += label;
-  if (helpButton.length() > 0)
+
+  if (helpButton.length() > 0) {
     addHelpButton(helpButton);
+  }
   TXBuffer += F("</TH>");
 }
 
@@ -144,14 +148,17 @@ void html_add_button_prefix() {
 
 void html_add_button_prefix(const String& classes, bool enabled) {
   TXBuffer += F(" <a class='button link");
+
   if (classes.length() > 0) {
     TXBuffer += ' ';
     TXBuffer += classes;
   }
+
   if (!enabled) {
     addDisabled();
   }
   TXBuffer += '\'';
+
   if (!enabled) {
     addDisabled();
   }
@@ -164,8 +171,9 @@ void html_add_wide_button_prefix() {
 
 void html_add_wide_button_prefix(const String& classes, bool enabled) {
   String wide_classes;
+
   wide_classes.reserve(classes.length() + 5);
-  wide_classes = F("wide ");
+  wide_classes  = F("wide ");
   wide_classes += classes;
   html_add_button_prefix(wide_classes, enabled);
 }
@@ -174,11 +182,10 @@ void html_add_form() {
   TXBuffer += F("<form name='frmselect' method='post'>");
 }
 
-
 void html_add_autosubmit_form() {
   TXBuffer += F("<script><!--\n"
-           "function dept_onchange(frmselect) {frmselect.submit();}"
-           "\n//--></script>");
+                "function dept_onchange(frmselect) {frmselect.submit();}"
+                "\n//--></script>");
 }
 
 void html_add_script(const String& script, bool defer) {
@@ -189,6 +196,7 @@ void html_add_script(const String& script, bool defer) {
 
 void html_add_script(bool defer) {
   TXBuffer += F("<script");
+
   if (defer) {
     TXBuffer += F(" defer");
   }
@@ -199,12 +207,12 @@ void html_add_script_end() {
   TXBuffer += F("</script>");
 }
 
-
-//if there is an error-string, add it to the html code with correct formatting
-void addHtmlError(const String& error){
-  if (error.length()>0)
+// if there is an error-string, add it to the html code with correct formatting
+void addHtmlError(const String& error) {
+  if (error.length() > 0)
   {
     TXBuffer += F("<div class=\"");
+
     if (error.startsWith(F("Warn"))) {
       TXBuffer += F("warning");
     } else {
@@ -217,6 +225,7 @@ void addHtmlError(const String& error){
   else
   {
     TXBuffer += jsToastMessageBegin;
+
     // we can push custom messages here in future releases...
     TXBuffer += F("Submitted");
     TXBuffer += jsToastMessageEnd;
@@ -231,7 +240,6 @@ void addDisabled() {
   TXBuffer += F(" disabled");
 }
 
-
 void addHtmlLink(const String& htmlclass, const String& url, const String& label) {
   TXBuffer += F(" <a class='");
   TXBuffer += htmlclass;
@@ -245,9 +253,12 @@ void addHtmlLink(const String& htmlclass, const String& url, const String& label
 void addEnabled(boolean enabled)
 {
   TXBuffer += F("<span class='enabled ");
-  if (enabled)
+
+  if (enabled) {
     TXBuffer += F("on'>&#10004;");
-  else
+  }
+  else {
     TXBuffer += F("off'>&#10060;");
+  }
   TXBuffer += F("</span>");
 }

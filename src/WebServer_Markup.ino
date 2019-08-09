@@ -1,13 +1,23 @@
 
 
-
-
-
-void addSelector(const String& id, int optionCount, const String options[], const int indices[], const String attr[], int selectedIndex, boolean reloadonchange) {
+void addSelector(const String& id,
+                 int           optionCount,
+                 const String  options[],
+                 const int     indices[],
+                 const String  attr[],
+                 int           selectedIndex,
+                 boolean       reloadonchange) {
   addSelector(id, optionCount, options, indices, attr, selectedIndex, reloadonchange, true);
 }
 
-void addSelector(const String& id, int optionCount, const String options[], const int indices[], const String attr[], int selectedIndex, boolean reloadonchange, bool enabled)
+void addSelector(const String& id,
+                 int           optionCount,
+                 const String  options[],
+                 const int     indices[],
+                 const String  attr[],
+                 int           selectedIndex,
+                 boolean       reloadonchange,
+                 bool          enabled)
 {
   // FIXME TD-er Change boolean to disabled
   addSelector_Head(id, reloadonchange, !enabled);
@@ -18,16 +28,22 @@ void addSelector(const String& id, int optionCount, const String options[], cons
 void addSelector_options(int optionCount, const String options[], const int indices[], const String attr[], int selectedIndex)
 {
   int index;
+
   for (byte x = 0; x < optionCount; x++)
   {
-    if (indices)
+    if (indices) {
       index = indices[x];
-    else
+    }
+    else {
       index = x;
+    }
     TXBuffer += F("<option value=");
     TXBuffer += index;
-    if (selectedIndex == index)
+
+    if (selectedIndex == index) {
       TXBuffer += F(" selected");
+    }
+
     if (attr)
     {
       TXBuffer += ' ';
@@ -46,9 +62,9 @@ void addSelector_Head(const String& id, boolean reloadonchange) {
 void addSelector_Head(const String& id, boolean reloadonchange, bool disabled)
 {
   if (reloadonchange) {
-    addSelector_Head(id, (const String) F("return dept_onchange(frmselect)"), disabled);
+    addSelector_Head(id, (const String)F("return dept_onchange(frmselect)"), disabled);
   } else {
-    addSelector_Head(id, (const String) "", disabled);
+    addSelector_Head(id, (const String)"", disabled);
   }
 }
 
@@ -59,9 +75,11 @@ void addSelector_Head(const String& id, const String& onChangeCall, bool disable
   TXBuffer += F("' id='");
   TXBuffer += id;
   TXBuffer += '\'';
+
   if (disabled) {
     addDisabled();
   }
+
   if (onChangeCall.length() > 0) {
     TXBuffer += F(" onchange='");
     TXBuffer += onChangeCall;
@@ -70,16 +88,20 @@ void addSelector_Head(const String& id, const String& onChangeCall, bool disable
   TXBuffer += '>';
 }
 
-
 void addSelector_Item(const String& option, int index, boolean selected, boolean disabled, const String& attr)
 {
   TXBuffer += F("<option value=");
   TXBuffer += index;
-  if (selected)
+
+  if (selected) {
     TXBuffer += F(" selected");
-  if (disabled)
+  }
+
+  if (disabled) {
     addDisabled();
-  if (attr && attr.length() > 0)
+  }
+
+  if (attr && (attr.length() > 0))
   {
     TXBuffer += ' ';
     TXBuffer += attr;
@@ -89,12 +111,10 @@ void addSelector_Item(const String& option, int index, boolean selected, boolean
   TXBuffer += F("</option>");
 }
 
-
 void addSelector_Foot()
 {
   TXBuffer += F("</select>");
 }
-
 
 void addUnit(const String& unit)
 {
@@ -142,10 +162,9 @@ void addRowLabelValue_copy(LabelType::Enum label) {
   TXBuffer += getValue(label);
 }
 
-
-//********************************************************************************
+// ********************************************************************************
 // Add a header
-//********************************************************************************
+// ********************************************************************************
 void addTableSeparator(const String& label, int colspan, int h_size) {
   addTableSeparator(label, colspan, h_size, "");
 }
@@ -157,8 +176,10 @@ void addTableSeparator(const String& label, int colspan, int h_size, const Strin
   TXBuffer += h_size;
   TXBuffer += '>';
   TXBuffer += label;
-  if (helpButton.length() > 0)
+
+  if (helpButton.length() > 0) {
     addHelpButton(helpButton);
+  }
   TXBuffer += "</H";
   TXBuffer += h_size;
   TXBuffer += F("></TD></TR>");
@@ -176,20 +197,17 @@ void addFormHeader(const String& header)
   addFormHeader(header, "");
 }
 
-
-//********************************************************************************
+// ********************************************************************************
 // Add a sub header
-//********************************************************************************
+// ********************************************************************************
 void addFormSubHeader(const String& header)
 {
   addTableSeparator(header, 2, 3);
 }
 
-
-
-//********************************************************************************
+// ********************************************************************************
 // Add a checkbox
-//********************************************************************************
+// ********************************************************************************
 void addCheckBox(const String& id, boolean checked) {
   addCheckBox(id, checked, false);
 }
@@ -202,28 +220,33 @@ void addCheckBox(const String& id, boolean checked, bool disabled)
   TXBuffer += F("' name='");
   TXBuffer += id;
   TXBuffer += '\'';
-  if (checked)
+
+  if (checked) {
     TXBuffer += F(" checked");
-  if (disabled) addDisabled();
+  }
+
+  if (disabled) { addDisabled(); }
   TXBuffer += F("><span class='checkmark");
-  if (disabled) addDisabled();
+
+  if (disabled) { addDisabled(); }
   TXBuffer += F("'></span></label>");
 }
 
-
-//********************************************************************************
+// ********************************************************************************
 // Add a numeric box
-//********************************************************************************
+// ********************************************************************************
 void addNumericBox(const String& id, int value, int min, int max)
 {
   TXBuffer += F("<input class='widenumber' type='number' name='");
   TXBuffer += id;
   TXBuffer += '\'';
+
   if (min != INT_MIN)
   {
     TXBuffer += F(" min=");
     TXBuffer += min;
   }
+
   if (max != INT_MAX)
   {
     TXBuffer += F(" max=");
@@ -238,7 +261,6 @@ void addNumericBox(const String& id, int value)
 {
   addNumericBox(id, value, INT_MIN, INT_MAX);
 }
-
 
 void addFloatNumberBox(const String& id, float value, float min, float max)
 {
@@ -255,10 +277,9 @@ void addFloatNumberBox(const String& id, float value, float min, float max)
   TXBuffer += '>';
 }
 
-
-//********************************************************************************
+// ********************************************************************************
 // Add Textbox
-//********************************************************************************
+// ********************************************************************************
 
 void addTextBox(const String& id, const String&  value, int maxlength, bool readonly, bool required, const String& pattern)
 {
@@ -269,13 +290,16 @@ void addTextBox(const String& id, const String&  value, int maxlength, bool read
   TXBuffer += F(" value='");
   TXBuffer += value;
   TXBuffer += '\'';
-  if(readonly){
+
+  if (readonly) {
     TXBuffer += F(" readonly ");
   }
-  if(required){
+
+  if (required) {
     TXBuffer += F(" required ");
   }
-  if(pattern.length()>0){
+
+  if (pattern.length() > 0) {
     TXBuffer += F("pattern = '");
     TXBuffer += pattern;
     TXBuffer += '\'';
@@ -297,7 +321,6 @@ void addTextBox(const String& id, const String&  value, int maxlength, bool read
 {
   addTextBox(id, value, maxlength, false, false, "");
 }
-
 
 // adds a Help Button with points to the the given Wiki Subpage
 // If url starts with "RTD", it will be considered as a Read-the-docs link
@@ -324,10 +347,13 @@ void addHelpButton(const String& url, bool isRTD)
 
 void addRTDPluginButton(int taskDeviceNumber) {
   String url;
+
   url.reserve(16);
   url = F("Plugin/P");
-  if (taskDeviceNumber < 100) url += '0';
-  if (taskDeviceNumber < 10) url += '0';
+
+  if (taskDeviceNumber < 100) { url += '0'; }
+
+  if (taskDeviceNumber < 10) { url += '0'; }
   url += String(taskDeviceNumber);
   url += F(".html");
   addRTDHelpButton(url);
@@ -340,12 +366,12 @@ void addRTDPluginButton(int taskDeviceNumber) {
         makeDocLink(F("Reference/Safety.html"), true),
         F("&#9889;")); // High voltage sign
       break;
-
   }
 }
 
 String makeDocLink(const String& url, bool isRTD) {
   String result;
+
   if (!url.startsWith(F("http"))) {
     if (isRTD) {
       result += F("https://espeasy.readthedocs.io/en/latest/");
@@ -357,39 +383,36 @@ String makeDocLink(const String& url, bool isRTD) {
   return result;
 }
 
-
-
-
-
-
-
-
-
-//********************************************************************************
+// ********************************************************************************
 // Add a GPIO pin select dropdown list for 8266, 8285 or ESP32
-//********************************************************************************
+// ********************************************************************************
 String createGPIO_label(int gpio, int pinnr, bool input, bool output, bool warning) {
-  if (gpio < 0) return F("- None -");
+  if (gpio < 0) { return F("- None -"); }
   String result;
   result.reserve(24);
-  result = F("GPIO-");
+  result  = F("GPIO-");
   result += gpio;
+
   if (pinnr >= 0) {
     result += F(" (D");
     result += pinnr;
     result += ')';
   }
+
   if (input != output) {
     result += ' ';
     result += input ? F(HTML_SYMBOL_INPUT) : F(HTML_SYMBOL_OUTPUT);
   }
+
   if (warning) {
     result += ' ';
     result += F(HTML_SYMBOL_WARNING);
   }
   bool serialPinConflict = (Settings.UseSerial && (gpio == 1 || gpio == 3));
+
   if (serialPinConflict) {
     if (gpio == 1) { result += F(" TX0"); }
+
     if (gpio == 3) { result += F(" RX0"); }
   }
   return result;
@@ -398,22 +421,24 @@ String createGPIO_label(int gpio, int pinnr, bool input, bool output, bool warni
 void addPinSelect(boolean forI2C, String id,  int choice)
 {
   #ifdef ESP32
-    #define NR_ITEMS_PIN_DROPDOWN  35 // 34 GPIO + 1
-  #else
-    #define NR_ITEMS_PIN_DROPDOWN  14 // 13 GPIO + 1
-  #endif
+    # define NR_ITEMS_PIN_DROPDOWN  35 // 34 GPIO + 1
+  #else // ifdef ESP32
+    # define NR_ITEMS_PIN_DROPDOWN  14 // 13 GPIO + 1
+  #endif // ifdef ESP32
 
-  String * gpio_labels = new String[NR_ITEMS_PIN_DROPDOWN];
-  int * gpio_numbers = new int[NR_ITEMS_PIN_DROPDOWN];
+  String *gpio_labels  = new String[NR_ITEMS_PIN_DROPDOWN];
+  int    *gpio_numbers = new int[NR_ITEMS_PIN_DROPDOWN];
 
   // At i == 0 && gpio == -1, add the "- None -" option first
-  int i = 0;
+  int i    = 0;
   int gpio = -1;
+
   while (i < NR_ITEMS_PIN_DROPDOWN && gpio <= MAX_GPIO) {
-    int pinnr = -1;
+    int  pinnr = -1;
     bool input, output, warning;
-    if (getGpioInfo(gpio, pinnr, input, output, warning) || i == 0) {
-      gpio_labels[i] = createGPIO_label(gpio, pinnr, input, output, warning);
+
+    if (getGpioInfo(gpio, pinnr, input, output, warning) || (i == 0)) {
+      gpio_labels[i]  = createGPIO_label(gpio, pinnr, input, output, warning);
       gpio_numbers[i] = gpio;
       ++i;
     }
@@ -425,22 +450,25 @@ void addPinSelect(boolean forI2C, String id,  int choice)
   #undef NR_ITEMS_PIN_DROPDOWN
 }
 
-
-//********************************************************************************
+// ********************************************************************************
 // Helper function actually rendering dropdown list for addPinSelect()
-//********************************************************************************
+// ********************************************************************************
 void renderHTMLForPinSelect(String options[], int optionValues[], boolean forI2C, const String& id,  int choice, int count) {
   addSelector_Head(id, false);
+
   for (byte x = 0; x < count; x++)
   {
     boolean disabled = false;
 
     if (optionValues[x] != -1) // empty selection can never be disabled...
     {
-      if (!forI2C && ((optionValues[x] == Settings.Pin_i2c_sda) || (optionValues[x] == Settings.Pin_i2c_scl)))
+      if (!forI2C && ((optionValues[x] == Settings.Pin_i2c_sda) || (optionValues[x] == Settings.Pin_i2c_scl))) {
         disabled = true;
-      if (Settings.UseSerial && ((optionValues[x] == 1) || (optionValues[x] == 3)))
+      }
+
+      if (Settings.UseSerial && ((optionValues[x] == 1) || (optionValues[x] == 3))) {
         disabled = true;
+      }
     }
     addSelector_Item(options[x],
                      optionValues[x],

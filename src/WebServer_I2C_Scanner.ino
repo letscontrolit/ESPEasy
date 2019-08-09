@@ -1,18 +1,21 @@
 
 #ifdef WEBSERVER_NEW_UI
-//********************************************************************************
+
+// ********************************************************************************
 // Web Interface I2C scanner
-//********************************************************************************
+// ********************************************************************************
 void handle_i2cscanner_json() {
   checkRAM(F("handle_i2cscanner"));
-  if (!isLoggedIn()) return;
+
+  if (!isLoggedIn()) { return; }
   navMenuIndex = MENU_INDEX_TOOLS;
   TXBuffer.startJsonStream();
   TXBuffer += "[{";
 
   bool firstentry = true;
   byte error, address;
-  for (address = 1; address <= 127; address++ )
+
+  for (address = 1; address <= 127; address++)
   {
     if (firstentry) {
       firstentry = false;
@@ -28,11 +31,13 @@ void handle_i2cscanner_json() {
   TXBuffer += "]";
   TXBuffer.endStream();
 }
+
 #endif // WEBSERVER_NEW_UI
 
 void handle_i2cscanner() {
   checkRAM(F("handle_i2cscanner"));
-  if (!isLoggedIn()) return;
+
+  if (!isLoggedIn()) { return; }
   navMenuIndex = MENU_INDEX_TOOLS;
   TXBuffer.startStream();
   sendHeadandTail_stdtemplate(_HEAD);
@@ -42,17 +47,20 @@ void handle_i2cscanner() {
   html_table_header(F("Supported devices"));
 
   byte error, address;
-  int nDevices;
+  int  nDevices;
   nDevices = 0;
-  for (address = 1; address <= 127; address++ )
+
+  for (address = 1; address <= 127; address++)
   {
     Wire.beginTransmission(address);
     error = Wire.endTransmission();
+
     if (error == 0)
     {
       TXBuffer += "<TR><TD>";
       TXBuffer += formatToHex(address);
       TXBuffer += "<TD>";
+
       switch (address)
       {
         case 0x20:
@@ -154,12 +162,13 @@ void handle_i2cscanner() {
     else if (error == 4)
     {
       html_TR_TD(); TXBuffer += F("Unknown error at address ");
-      TXBuffer += formatToHex(address);
+      TXBuffer               += formatToHex(address);
     }
   }
 
-  if (nDevices == 0)
+  if (nDevices == 0) {
     TXBuffer += F("<TR>No I2C devices found");
+  }
 
   html_end_table();
   sendHeadandTail_stdtemplate(_TAIL);

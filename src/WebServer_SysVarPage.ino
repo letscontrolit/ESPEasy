@@ -1,11 +1,13 @@
 
 #ifdef WEBSERVER_SYSVARS
-//********************************************************************************
+
+// ********************************************************************************
 // Web Interface sysvars showing all system vars and their value.
-//********************************************************************************
+// ********************************************************************************
 void handle_sysvars() {
   checkRAM(F("handle_sysvars"));
-  if (!isLoggedIn()) return;
+
+  if (!isLoggedIn()) { return; }
   TXBuffer.startStream();
   sendHeadandTail_stdtemplate();
 
@@ -31,7 +33,7 @@ void handle_sysvars() {
   addSysVar_html(F("%mac%"));
 #if defined(ESP8266)
   addSysVar_html(F("%mac_int%"));
-#endif
+#endif // if defined(ESP8266)
   addSysVar_html(F("%ip4%"));
   addSysVar_html(F("%ip%"));
   addSysVar_html(F("%rssi%"));
@@ -46,7 +48,7 @@ void handle_sysvars() {
   addSysVar_html(F("%sysname%"));
 #if FEATURE_ADC_VCC
   addSysVar_html(F("%vcc%"));
-#endif
+#endif // if FEATURE_ADC_VCC
 
   addTableSeparator(F("System status"), 3, 3);
 
@@ -88,12 +90,13 @@ void handle_sysvars() {
   addSysVar_html(F("%sunrise+10m%"));
 
   addTableSeparator(F("Custom Variables"), 3, 3);
+
   for (byte i = 0; i < CUSTOM_VARS_MAX; ++i) {
-    addSysVar_html("%v"+toString(i+1,0)+'%');
+    addSysVar_html("%v" + toString(i + 1, 0) + '%');
   }
 
   addTableSeparator(F("Special Characters"), 3, 2);
-  addTableSeparator(F("Degree"), 3, 3);
+  addTableSeparator(F("Degree"),             3, 3);
   addSysVar_html(F("{D}"));
   addSysVar_html(F("&deg;"));
 
@@ -168,9 +171,6 @@ void handle_sysvars() {
   TXBuffer.endStream();
 }
 
-
-
-
 void addSysVar_html(const String& input) {
   html_TR_TD();
   TXBuffer += F("<pre>"); // Make monospaced (<tt> tag?)
@@ -179,7 +179,7 @@ void addSysVar_html(const String& input) {
   TXBuffer += F("</xmp>");
   TXBuffer += F("</pre>");
   html_TD();
-  String replacement(input); // Make deepcopy for replacement
+  String replacement(input);                // Make deepcopy for replacement
   parseSystemVariables(replacement, false); // Not URL encoded
   parseStandardConversions(replacement, false);
   TXBuffer += replacement;

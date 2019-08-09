@@ -6,12 +6,13 @@
 #endif // ifdef BUILD_MINIMAL_OTA
 
 
-//********************************************************************************
+// ********************************************************************************
 // Web Interface rules page
-//********************************************************************************
+// ********************************************************************************
 void handle_rules() {
   checkRAM(F("handle_rules"));
-  if (!isLoggedIn() || !Settings.UseRules) return;
+
+  if (!isLoggedIn() || !Settings.UseRules) { return; }
   navMenuIndex = MENU_INDEX_RULES;
   TXBuffer.startStream();
   sendHeadandTail_stdtemplate();
@@ -20,17 +21,16 @@ void handle_rules() {
   const byte rulesSet = getFormItemInt(F("set"), 1);
 
   #if defined(ESP8266)
-    String fileName = F("rules");
-  #endif
+  String fileName = F("rules");
+  #endif // if defined(ESP8266)
   #if defined(ESP32)
-    String fileName = F("/rules");
-  #endif
+  String fileName = F("/rules");
+  #endif // if defined(ESP32)
   fileName += rulesSet;
   fileName += F(".txt");
 
 
   checkRAM(F("handle_rules"));
-
 
 
   if (WebServer.args() > 0)
@@ -45,11 +45,12 @@ void handle_rules() {
       String rules = WebServer.arg(F("rules"));
       log += F(" rules.length(): ");
       log += rules.length();
-      if (rules.length() > RULES_MAX_SIZE)
+
+      if (rules.length() > RULES_MAX_SIZE) {
         TXBuffer += F("<span style=\"color:red\">Data was not saved, exceeds web editor limit!</span>");
+      }
       else
       {
-
         // if (RTC.flashDayCounter > MAX_FLASHWRITES_PER_DAY)
         // {
         //   String log = F("FS   : Daily flash write rate exceeded! (powercyle to reset this)");
@@ -58,15 +59,18 @@ void handle_rules() {
         // }
         // else
         // {
-          fs::File f = tryOpenFile(fileName, "w");
-          if (f)
-          {
-            log += F(" Write to file: ");
-            log += fileName;
-            f.print(rules);
-            f.close();
-            // flashCount();
-          }
+        fs::File f = tryOpenFile(fileName, "w");
+
+        if (f)
+        {
+          log += F(" Write to file: ");
+          log += fileName;
+          f.print(rules);
+          f.close();
+
+          // flashCount();
+        }
+
         // }
       }
     }
@@ -77,12 +81,14 @@ void handle_rules() {
         log += F(" Create new file: ");
         log += fileName;
         fs::File f = tryOpenFile(fileName, "w");
-        if (f) f.close();
+
+        if (f) { f.close(); }
       }
     }
     addLog(LOG_LEVEL_INFO, log);
 
     log = F(" Webserver args:");
+
     for (int i = 0; i < WebServer.args(); ++i) {
       log += ' ';
       log += i;
@@ -94,56 +100,62 @@ void handle_rules() {
     addLog(LOG_LEVEL_INFO, log);
   }
 
-  if (rulesSet != currentSet)
+  if (rulesSet != currentSet) {
     currentSet = rulesSet;
+  }
 
   TXBuffer += F("<form name = 'frmselect' method = 'post'>");
   html_table_class_normal();
   html_TR();
   html_table_header(F("Rules"));
 
-  byte choice = rulesSet;
+  byte   choice = rulesSet;
   String options[RULESETS_MAX];
-  int optionValues[RULESETS_MAX];
+  int    optionValues[RULESETS_MAX];
+
   for (byte x = 0; x < RULESETS_MAX; x++)
   {
-    options[x] = F("Rules Set ");
-    options[x] += x + 1;
+    options[x]      = F("Rules Set ");
+    options[x]     += x + 1;
     optionValues[x] = x + 1;
   }
 
-   html_TR_TD();
+  html_TR_TD();
   addSelector(F("set"), RULESETS_MAX, options, optionValues, NULL, choice, true);
   addHelpButton(F("Tutorial_Rules"));
 
   // load form data from flash
 
-  int size = 0;
+  int size   = 0;
   fs::File f = tryOpenFile(fileName, "r");
+
   if (f)
   {
     size = f.size();
-    if (size > RULES_MAX_SIZE)
-       TXBuffer += F("<span style=\"color:red\">Filesize exceeds web editor limit!</span>");
+
+    if (size > RULES_MAX_SIZE) {
+      TXBuffer += F("<span style=\"color:red\">Filesize exceeds web editor limit!</span>");
+    }
     else
     {
-       html_TR_TD(); TXBuffer += F("<textarea name='rules' rows='30' wrap='off'>");
+      html_TR_TD(); TXBuffer += F("<textarea name='rules' rows='30' wrap='off'>");
+
       while (f.available())
       {
         String c((char)f.read());
         htmlEscape(c);
-         TXBuffer += c;
+        TXBuffer += c;
       }
-       TXBuffer += F("</textarea>");
+      TXBuffer += F("</textarea>");
     }
     f.close();
   }
 
   html_TR_TD(); TXBuffer += F("Current size: ");
-  TXBuffer += size;
-  TXBuffer += F(" characters (Max ");
-  TXBuffer += RULES_MAX_SIZE;
-  TXBuffer += ')';
+  TXBuffer               += size;
+  TXBuffer               += F(" characters (Max ");
+  TXBuffer               += RULES_MAX_SIZE;
+  TXBuffer               += ')';
 
   addFormSeparator(2);
 

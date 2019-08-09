@@ -34,12 +34,12 @@ void handle_timingstats() {
   TXBuffer.endStream();
 }
 
-
-//********************************************************************************
+// ********************************************************************************
 // HTML table formatted timing statistics
-//********************************************************************************
+// ********************************************************************************
 void format_using_threshhold(unsigned long value) {
   float value_msec = value / 1000.0;
+
   if (value > TIMING_STATS_THRESHOLD) {
     html_B(String(value_msec, 3));
   } else {
@@ -48,82 +48,90 @@ void format_using_threshhold(unsigned long value) {
 }
 
 void stream_html_timing_stats(const TimingStats& stats, long timeSinceLastReset) {
-    unsigned long minVal, maxVal;
-    unsigned int c = stats.getMinMax(minVal, maxVal);
+  unsigned long minVal, maxVal;
+  unsigned int  c = stats.getMinMax(minVal, maxVal);
 
-    html_TD();
-    TXBuffer += c;
-    html_TD();
-    float call_per_sec = static_cast<float>(c) / static_cast<float>(timeSinceLastReset) * 1000.0;
-    TXBuffer += call_per_sec;
-    html_TD();
-    format_using_threshhold(minVal);
-    html_TD();
-    format_using_threshhold(stats.getAvg());
-    html_TD();
-    format_using_threshhold(maxVal);
+  html_TD();
+  TXBuffer += c;
+  html_TD();
+  float call_per_sec = static_cast<float>(c) / static_cast<float>(timeSinceLastReset) * 1000.0;
+  TXBuffer += call_per_sec;
+  html_TD();
+  format_using_threshhold(minVal);
+  html_TD();
+  format_using_threshhold(stats.getAvg());
+  html_TD();
+  format_using_threshhold(maxVal);
 }
-
-
 
 long stream_timing_statistics(bool clearStats) {
   long timeSinceLastReset = timePassedSince(timingstats_last_reset);
+
   for (auto& x: pluginStats) {
-      if (!x.second.isEmpty()) {
-          const int pluginId = x.first/256;
-          String P_name = "";
-          Plugin_ptr[pluginId](PLUGIN_GET_DEVICENAME, NULL, P_name);
-          if (x.second.thresholdExceeded(TIMING_STATS_THRESHOLD)) {
-            html_TR_TD_highlight();
-          } else {
-            html_TR_TD();
-          }
-          TXBuffer += F("P_");
-          TXBuffer += Device[pluginId].Number;
-          TXBuffer += '_';
-          TXBuffer += P_name;
-          html_TD();
-          TXBuffer += getPluginFunctionName(x.first%256);
-          stream_html_timing_stats(x.second, timeSinceLastReset);
-          if (clearStats) x.second.reset();
+    if (!x.second.isEmpty()) {
+      const int pluginId = x.first / 256;
+      String    P_name   = "";
+      Plugin_ptr[pluginId](PLUGIN_GET_DEVICENAME, NULL, P_name);
+
+      if (x.second.thresholdExceeded(TIMING_STATS_THRESHOLD)) {
+        html_TR_TD_highlight();
+      } else {
+        html_TR_TD();
       }
+      TXBuffer += F("P_");
+      TXBuffer += Device[pluginId].Number;
+      TXBuffer += '_';
+      TXBuffer += P_name;
+      html_TD();
+      TXBuffer += getPluginFunctionName(x.first % 256);
+      stream_html_timing_stats(x.second, timeSinceLastReset);
+
+      if (clearStats) { x.second.reset(); }
+    }
   }
+
   for (auto& x: controllerStats) {
-      if (!x.second.isEmpty()) {
-          const int pluginId = x.first/256;
-          String C_name = "";
-          CPluginCall(pluginId, CPLUGIN_GET_DEVICENAME, NULL, C_name);
-          if (x.second.thresholdExceeded(TIMING_STATS_THRESHOLD)) {
-            html_TR_TD_highlight();
-          } else {
-            html_TR_TD();
-          }
-          TXBuffer += F("C_");
-          TXBuffer += Protocol[pluginId].Number;
-          TXBuffer += '_';
-          TXBuffer += C_name;
-          html_TD();
-          TXBuffer += getCPluginCFunctionName(x.first%256);
-          stream_html_timing_stats(x.second, timeSinceLastReset);
-          if (clearStats) x.second.reset();
+    if (!x.second.isEmpty()) {
+      const int pluginId = x.first / 256;
+      String    C_name   = "";
+      CPluginCall(pluginId, CPLUGIN_GET_DEVICENAME, NULL, C_name);
+
+      if (x.second.thresholdExceeded(TIMING_STATS_THRESHOLD)) {
+        html_TR_TD_highlight();
+      } else {
+        html_TR_TD();
       }
+      TXBuffer += F("C_");
+      TXBuffer += Protocol[pluginId].Number;
+      TXBuffer += '_';
+      TXBuffer += C_name;
+      html_TD();
+      TXBuffer += getCPluginCFunctionName(x.first % 256);
+      stream_html_timing_stats(x.second, timeSinceLastReset);
+
+      if (clearStats) { x.second.reset(); }
+    }
   }
+
   for (auto& x: miscStats) {
-      if (!x.second.isEmpty()) {
-          if (x.second.thresholdExceeded(TIMING_STATS_THRESHOLD)) {
-            html_TR_TD_highlight();
-          } else {
-            html_TR_TD();
-          }
-          TXBuffer += getMiscStatsName(x.first);
-          html_TD();
-          stream_html_timing_stats(x.second, timeSinceLastReset);
-          if (clearStats) x.second.reset();
+    if (!x.second.isEmpty()) {
+      if (x.second.thresholdExceeded(TIMING_STATS_THRESHOLD)) {
+        html_TR_TD_highlight();
+      } else {
+        html_TR_TD();
       }
+      TXBuffer += getMiscStatsName(x.first);
+      html_TD();
+      stream_html_timing_stats(x.second, timeSinceLastReset);
+
+      if (clearStats) { x.second.reset(); }
+    }
   }
+
   if (clearStats) {
     timingstats_last_reset = millis();
   }
   return timeSinceLastReset;
 }
+
 #endif // WEBSERVER_TIMINGSTATS

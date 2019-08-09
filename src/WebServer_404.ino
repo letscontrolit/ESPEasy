@@ -1,8 +1,8 @@
 
 
-//********************************************************************************
+// ********************************************************************************
 // Web Interface handle other requests
-//********************************************************************************
+// ********************************************************************************
 void handleNotFound() {
   checkRAM(F("handleNotFound"));
 
@@ -12,10 +12,13 @@ void handleNotFound() {
     return;
   }
 
-  if (!isLoggedIn()) return;
-  if (handle_rules_edit(WebServer.uri())) return;
-  if (loadFromFS(true, WebServer.uri())) return;
-  if (loadFromFS(false, WebServer.uri())) return;
+  if (!isLoggedIn()) { return; }
+
+  if (handle_rules_edit(WebServer.uri())) { return; }
+
+  if (loadFromFS(true, WebServer.uri())) { return; }
+
+  if (loadFromFS(false, WebServer.uri())) { return; }
   String message = F("URI: ");
   message += WebServer.uri();
   message += F("\nMethod: ");
@@ -23,6 +26,7 @@ void handleNotFound() {
   message += F("\nArguments: ");
   message += WebServer.args();
   message += "\n";
+
   for (uint8_t i = 0; i < WebServer.args(); i++) {
     message += F(" NAME:");
     message += WebServer.argName(i);
