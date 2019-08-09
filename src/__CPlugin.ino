@@ -144,7 +144,7 @@ bool CPluginCall(byte pluginNumber, byte Function, struct EventStruct *event, St
 
 bool CPluginCall(byte Function, struct EventStruct *event, String& str)
 {
-  int x;
+  
   struct EventStruct TempEvent;
 
  if (event == 0)
@@ -154,7 +154,7 @@ bool CPluginCall(byte Function, struct EventStruct *event, String& str)
   {
     // Unconditional calls to all plugins
     case CPLUGIN_PROTOCOL_ADD:
-      for (x = 0; x < CPLUGIN_MAX; x++) {
+      for (byte x = 0; x < CPLUGIN_MAX; x++) {
         if (CPlugin_id[x] != 0) {
           const unsigned int next_ProtocolIndex = protocolCount + 2;
           if (next_ProtocolIndex > Protocol.size()) {
@@ -164,7 +164,8 @@ bool CPluginCall(byte Function, struct EventStruct *event, String& str)
             Protocol.resize(newSize);
           }
           checkRAM(F("CPluginCallADD"),x);
-          CPluginCall(x, Function, event, dummyString);
+          String dummy;
+          CPluginCall(x, Function, event, dummy);
         }
       }
       return true;
@@ -181,7 +182,8 @@ bool CPluginCall(byte Function, struct EventStruct *event, String& str)
       for (byte x=0; x < CONTROLLER_MAX; x++)
         if (Settings.Protocol[x] != 0 && Settings.ControllerEnabled[x]) {
           event->ProtocolIndex = getProtocolIndex(Settings.Protocol[x]);
-          CPluginCall(event->ProtocolIndex, Function, event, dummyString);
+          String dummy;
+          CPluginCall(event->ProtocolIndex, Function, event, dummy);
         }
       return true;
       break;
@@ -221,5 +223,6 @@ byte findFirstEnabledControllerWithId(byte cpluginid) {
 }
 
 bool CPluginCall(byte Function, struct EventStruct *event) {
-  return CPluginCall(Function, event, dummyString);
+  String dummy;
+  return CPluginCall(Function, event, dummy);
 }

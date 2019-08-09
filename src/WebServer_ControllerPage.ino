@@ -78,7 +78,8 @@ void handle_controllers_clearLoadDefaults(byte controllerindex, ControllerSettin
   struct EventStruct TempEvent;
 
   if (Protocol[ProtocolIndex].usesTemplate) {
-    CPluginCall(ProtocolIndex, CPLUGIN_PROTOCOL_TEMPLATE, &TempEvent, dummyString);
+    String dummy;
+    CPluginCall(ProtocolIndex, CPLUGIN_PROTOCOL_TEMPLATE, &TempEvent, dummy);
   }
   safe_strncpy(ControllerSettings.Subscribe,            TempEvent.String1.c_str(), sizeof(ControllerSettings.Subscribe));
   safe_strncpy(ControllerSettings.Publish,              TempEvent.String2.c_str(), sizeof(ControllerSettings.Publish));
@@ -112,10 +113,11 @@ void handle_controllers_CopySubmittedSettings(byte controllerindex, ControllerSe
   TempEvent.ProtocolIndex   = ProtocolIndex;
 
   // Call controller plugin to save CustomControllerSettings
-  CPluginCall(ProtocolIndex, CPLUGIN_WEBFORM_SAVE, &TempEvent, dummyString);
+  String dummy;
+  CPluginCall(ProtocolIndex, CPLUGIN_WEBFORM_SAVE, &TempEvent, dummy);
 
   // Init controller plugin using the new settings.
-  CPluginCall(ProtocolIndex, CPLUGIN_INIT,         &TempEvent, dummyString);
+  CPluginCall(ProtocolIndex, CPLUGIN_INIT,         &TempEvent, dummy);
 }
 
 // ********************************************************************************

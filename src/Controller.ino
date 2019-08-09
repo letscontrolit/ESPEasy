@@ -53,7 +53,8 @@ void sendData(struct EventStruct *event)
       event->ProtocolIndex = getProtocolIndex(Settings.Protocol[event->ControllerIndex]);
 
       if (validUserVar(event)) {
-        CPluginCall(event->ProtocolIndex, CPLUGIN_PROTOCOL_SEND, event, dummyString);
+        String dummy;
+        CPluginCall(event->ProtocolIndex, CPLUGIN_PROTOCOL_SEND, event, dummy);
       }
 #ifndef BUILD_NO_DEBUG
       else {
@@ -70,7 +71,10 @@ void sendData(struct EventStruct *event)
   }
 
   // FIXME TD-er: This PLUGIN_EVENT_OUT seems to be unused.
-  PluginCall(PLUGIN_EVENT_OUT, event, dummyString);
+  {
+    String dummy;
+    PluginCall(PLUGIN_EVENT_OUT, event, dummy);
+  }
   lastSend = millis();
   STOP_TIMER(SEND_DATA_STATS);
 }

@@ -120,7 +120,8 @@ boolean handle_custom(String path) {
     }
 
     // handle some update processes first, before returning page update...
-    PluginCall(PLUGIN_TEN_PER_SECOND, 0, dummyString);
+    String dummy;
+    PluginCall(PLUGIN_TEN_PER_SECOND, 0, dummy);
   }
 
 

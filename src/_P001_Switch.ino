@@ -1003,9 +1003,10 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         {
           success = true;
           const uint32_t key = createKey(PLUGIN_ID_001, event->Par2); // WARNING: 'status' uses Par2 instead of Par1
-          SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, dummyString, 0);
+          String dummy;
+          SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, dummy, 0);
 
-          // SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_001, event->Par2, dummyString, 0));
+          // SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_001, event->Par2, dummy, 0));
         }
       }  else if (command == F("monitor")) {
         if (parseString(string, 2) == F("gpio"))
@@ -1023,14 +1024,16 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
 
           log = String(F("SW   : GPIO ")) + String(event->Par2) + String(F(" added to monitor list."));
           addLog(LOG_LEVEL_INFO, log);
-          SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, dummyString, 0);
+          String dummy;
+          SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, dummy, 0);
         }
       }  else if (command == F("unmonitor")) {
         if (parseString(string, 2) == F("gpio"))
         {
           success = true;
           const uint32_t key = createKey(PLUGIN_ID_001, event->Par2); // WARNING: 'monitor' uses Par2 instead of Par1
-          SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, dummyString, 0);
+          String dummy;
+          SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, dummy, 0);
 
           removeMonitorFromPort(key);
           log = String(F("SW   : GPIO ")) + String(event->Par2) + String(F(" removed from monitor list."));
