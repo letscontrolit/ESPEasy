@@ -350,6 +350,7 @@ void check_size() {
 #define CONTROLLER_LWT_TOPIC                8
 #define CONTROLLER_LWT_CONNECT_MESSAGE      9
 #define CONTROLLER_LWT_DISCONNECT_MESSAGE  10
+#define CONTROLLER_TIMEOUT                 11
 
 #define NPLUGIN_PROTOCOL_ADD                1
 #define NPLUGIN_GET_DEVICENAME              2
@@ -1597,15 +1598,18 @@ struct ProtocolStruct
 {
   ProtocolStruct() :
     defaultPort(0), Number(0), usesMQTT(false), usesAccount(false), usesPassword(false),
-    usesTemplate(false), usesID(false), Custom(false) {}
+    usesTemplate(false), usesID(false), Custom(false), usesHost(true), usesPort(true), usesQueue(true) {}
   uint16_t defaultPort;
   byte Number;
-  boolean usesMQTT;
-  boolean usesAccount;
-  boolean usesPassword;
-  boolean usesTemplate;
-  boolean usesID;
-  boolean Custom;
+  bool usesMQTT : 1;
+  bool usesAccount : 1;
+  bool usesPassword : 1;
+  bool usesTemplate : 1;
+  bool usesID : 1;
+  bool Custom : 1;
+  bool usesHost : 1;
+  bool usesPort : 1;
+  bool usesQueue : 1;
 };
 typedef std::vector<ProtocolStruct> ProtocolVector;
 ProtocolVector Protocol;

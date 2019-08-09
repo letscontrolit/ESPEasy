@@ -438,7 +438,23 @@ int firstEnabledMQTTController() {
 bool getControllerProtocolDisplayName(byte ProtocolIndex, byte parameterIdx, String& protoDisplayName) {
   EventStruct tmpEvent;
   tmpEvent.idx=parameterIdx;
-  return CPluginCall(ProtocolIndex, CPLUGIN_GET_PROTOCOL_DISPLAY_NAME, &tmpEvent, protoDisplayName);
+  
+  if (CPluginCall(ProtocolIndex, CPLUGIN_GET_PROTOCOL_DISPLAY_NAME, &tmpEvent, protoDisplayName)) {
+    // Found an alternative name for it.
+    return true;
+  }
+  switch (parameterIdx) {
+    case CONTROLLER_PORT:      protoDisplayName = F("Controller Port"); break;
+    case CONTROLLER_TIMEOUT:   protoDisplayName = F("Client Timeout"); break;
+    case CONTROLLER_USER:      protoDisplayName = F("Controller User"); break;
+    case CONTROLLER_PASS:      protoDisplayName = F("Controller Password"); break;
+    case CONTROLLER_SUBSCRIBE: protoDisplayName = F("Controller Subscribe"); break;
+    case CONTROLLER_PUBLISH:   protoDisplayName = F("Controller Publish"); break;
+    case CONTROLLER_LWT_TOPIC: protoDisplayName = F("Controller LWT Topic"); break;
+    case CONTROLLER_LWT_CONNECT_MESSAGE: protoDisplayName = F("LWT Connect Message"); break;
+    case CONTROLLER_LWT_DISCONNECT_MESSAGE: protoDisplayName = F("LWT Disconnect Message"); break;
+  }
+  return false;
 }
 
 void updateLoopStats() {

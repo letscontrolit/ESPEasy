@@ -1500,39 +1500,43 @@ void handle_controllers() {
       byte ProtocolIndex = getProtocolIndex(Settings.Protocol[controllerindex]);
       if (!Protocol[ProtocolIndex].Custom)
       {
-
-        addFormSelector(F("Locate Controller"), F("usedns"), 2, options, NULL, NULL, choice, true);
-        if (ControllerSettings.UseDNS)
-        {
-          addFormTextBox( F("Controller Hostname"), F("controllerhostname"), ControllerSettings.HostName, sizeof(ControllerSettings.HostName)-1);
+        if (Protocol[ProtocolIndex].usesHost) {
+          addFormSelector(F("Locate Controller"), F("usedns"), 2, options, NULL, NULL, choice, true);
+          if (ControllerSettings.UseDNS)
+          {
+            addFormTextBox( F("Controller Hostname"), F("controllerhostname"), ControllerSettings.HostName, sizeof(ControllerSettings.HostName)-1);
+          }
+          else
+          {
+            addFormIPBox(F("Controller IP"), F("controllerip"), ControllerSettings.IP);
+          }
         }
-        else
-        {
-          addFormIPBox(F("Controller IP"), F("controllerip"), ControllerSettings.IP);
-        }
 
-        addFormNumericBox( F("Controller Port"), F("controllerport"), ControllerSettings.Port, 1, 65535);
-        addFormNumericBox( F("Minimum Send Interval"), F("minimumsendinterval"), ControllerSettings.MinimalTimeBetweenMessages, 1, CONTROLLER_DELAY_QUEUE_DELAY_MAX);
-        addUnit(F("ms"));
-        addFormNumericBox( F("Max Queue Depth"), F("maxqueuedepth"), ControllerSettings.MaxQueueDepth, 1, CONTROLLER_DELAY_QUEUE_DEPTH_MAX);
-        addFormNumericBox( F("Max Retries"), F("maxretry"), ControllerSettings.MaxRetry, 1, CONTROLLER_DELAY_QUEUE_RETRY_MAX);
-        addFormSelector(F("Full Queue Action"), F("deleteoldest"), 2, options_delete_oldest, NULL, NULL, choice_delete_oldest, true);
+        String protoDisplayName;
+
+        getControllerProtocolDisplayName(ProtocolIndex, CONTROLLER_PORT, protoDisplayName);
+        addFormNumericBox(protoDisplayName, F("controllerport"), ControllerSettings.Port, 1, 65535);
+        if (Protocol[ProtocolIndex].usesQueue) {
+          addFormNumericBox( F("Minimum Send Interval"), F("minimumsendinterval"), ControllerSettings.MinimalTimeBetweenMessages, 1, CONTROLLER_DELAY_QUEUE_DELAY_MAX);
+          addUnit(F("ms"));
+          addFormNumericBox( F("Max Queue Depth"), F("maxqueuedepth"), ControllerSettings.MaxQueueDepth, 1, CONTROLLER_DELAY_QUEUE_DEPTH_MAX);
+          addFormNumericBox( F("Max Retries"), F("maxretry"), ControllerSettings.MaxRetry, 1, CONTROLLER_DELAY_QUEUE_RETRY_MAX);
+          addFormSelector(F("Full Queue Action"), F("deleteoldest"), 2, options_delete_oldest, NULL, NULL, choice_delete_oldest, true);
+        }
 
         addFormSelector(F("Check Reply"), F("mustcheckreply"), 2, options_mustcheckreply, NULL, NULL, choice_mustcheckreply, true);
-        addFormNumericBox( F("Client Timeout"), F("clienttimeout"), ControllerSettings.ClientTimeout, 10, CONTROLLER_CLIENTTIMEOUT_MAX);
+
+        getControllerProtocolDisplayName(ProtocolIndex, CONTROLLER_TIMEOUT, protoDisplayName);
+        addFormNumericBox(protoDisplayName, F("clienttimeout"), ControllerSettings.ClientTimeout, 10, CONTROLLER_CLIENTTIMEOUT_MAX);
         addUnit(F("ms"));
 
         if (Protocol[ProtocolIndex].usesAccount)
         {
-          String protoDisplayName;
-          if (!getControllerProtocolDisplayName(ProtocolIndex, CONTROLLER_USER, protoDisplayName)) {
-            protoDisplayName = F("Controller User");
-          }
+          getControllerProtocolDisplayName(ProtocolIndex, CONTROLLER_USER, protoDisplayName);
           addFormTextBox(protoDisplayName, F("controlleruser"), SecuritySettings.ControllerUser[controllerindex], sizeof(SecuritySettings.ControllerUser[0])-1);
         }
         if (Protocol[ProtocolIndex].usesPassword)
         {
-          String protoDisplayName;
           if (getControllerProtocolDisplayName(ProtocolIndex, CONTROLLER_PASS, protoDisplayName)) {
             // It is not a regular password, thus use normal text field.
             addFormTextBox(protoDisplayName, F("controllerpassword"), SecuritySettings.ControllerPassword[controllerindex], sizeof(SecuritySettings.ControllerPassword[0])-1);
@@ -1543,46 +1547,31 @@ void handle_controllers() {
 
         if (Protocol[ProtocolIndex].usesTemplate || Protocol[ProtocolIndex].usesMQTT)
         {
-          String protoDisplayName;
-          if (!getControllerProtocolDisplayName(ProtocolIndex, CONTROLLER_SUBSCRIBE, protoDisplayName)) {
-            protoDisplayName = F("Controller Subscribe");
-          }
+          getControllerProtocolDisplayName(ProtocolIndex, CONTROLLER_SUBSCRIBE, protoDisplayName);
           addFormTextBox(protoDisplayName, F("controllersubscribe"), ControllerSettings.Subscribe, sizeof(ControllerSettings.Subscribe)-1);
         }
 
         if (Protocol[ProtocolIndex].usesTemplate || Protocol[ProtocolIndex].usesMQTT)
         {
-          String protoDisplayName;
-          if (!getControllerProtocolDisplayName(ProtocolIndex, CONTROLLER_PUBLISH, protoDisplayName)) {
-            protoDisplayName = F("Controller Publish");
-          }
+          getControllerProtocolDisplayName(ProtocolIndex, CONTROLLER_PUBLISH, protoDisplayName);
           addFormTextBox(protoDisplayName, F("controllerpublish"), ControllerSettings.Publish, sizeof(ControllerSettings.Publish)-1);
         }
 
         if (Protocol[ProtocolIndex].usesMQTT)
         {
-          String protoDisplayName;
-          if (!getControllerProtocolDisplayName(ProtocolIndex, CONTROLLER_LWT_TOPIC, protoDisplayName)) {
-            protoDisplayName = F("Controller lwl topic");
-          }
+          getControllerProtocolDisplayName(ProtocolIndex, CONTROLLER_LWT_TOPIC, protoDisplayName);
           addFormTextBox(protoDisplayName, F("mqttlwttopic"), ControllerSettings.MQTTLwtTopic, sizeof(ControllerSettings.MQTTLwtTopic)-1);
         }
 
         if (Protocol[ProtocolIndex].usesMQTT)
         {
-          String protoDisplayName;
-          if (!getControllerProtocolDisplayName(ProtocolIndex, CONTROLLER_LWT_CONNECT_MESSAGE, protoDisplayName)) {
-            protoDisplayName = F("LWT Connect Message");
-          }
+          getControllerProtocolDisplayName(ProtocolIndex, CONTROLLER_LWT_CONNECT_MESSAGE, protoDisplayName);
           addFormTextBox(protoDisplayName, F("lwtmessageconnect"), ControllerSettings.LWTMessageConnect, sizeof(ControllerSettings.LWTMessageConnect)-1);
         }
 
         if (Protocol[ProtocolIndex].usesMQTT)
         {
-          String protoDisplayName;
-          if (!getControllerProtocolDisplayName(ProtocolIndex, CONTROLLER_LWT_DISCONNECT_MESSAGE, protoDisplayName)) {
-            protoDisplayName = F("LWT Disconnect Message");
-          }
+          getControllerProtocolDisplayName(ProtocolIndex, CONTROLLER_LWT_DISCONNECT_MESSAGE, protoDisplayName);
           addFormTextBox(protoDisplayName, F("lwtmessagedisconnect"), ControllerSettings.LWTMessageDisconnect, sizeof(ControllerSettings.LWTMessageDisconnect)-1);
         }
       }
