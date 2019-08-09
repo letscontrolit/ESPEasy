@@ -436,6 +436,8 @@ bool getCheckWebserverArg_int(const String &key, int& value) {
 #define update_whenset_FormItemInt(K,V) { int tmpVal; if (getCheckWebserverArg_int(K, tmpVal)) V=tmpVal;}
 
 
+// Note: Checkbox values will not appear in POST Form data if unchecked.
+// So if webserver does not have an argument for a checkbox form, it means it should be considered unchecked.
 bool isFormItemChecked(const String& id)
 {
   return WebServer.arg(id) == F("on");
@@ -1303,37 +1305,29 @@ void handle_controllers() {
 
   byte controllerindex = getFormItemInt(F("index"), 0);
   boolean controllerNotSet = controllerindex == 0;
-  --controllerindex;
+  --controllerindex; // Index in URL is starting from 1, but starting from 0 in the array.
 
-  String usedns = WebServer.arg(F("usedns"));
-  String controllerip = WebServer.arg(F("controllerip"));
-  const int controllerport = getFormItemInt(F("controllerport"), 0);
   const int protocol = getFormItemInt(F("protocol"), -1);
-  const int minimumsendinterval = getFormItemInt(F("minimumsendinterval"), 100);
-  const int maxqueuedepth = getFormItemInt(F("maxqueuedepth"), 10);
-  const int maxretry = getFormItemInt(F("maxretry"), 10);
-  const int clienttimeout = getFormItemInt(F("clienttimeout"), CONTROLLER_CLIENTTIMEOUT_DFLT);
-
 
   //submitted data
   if (protocol != -1 && !controllerNotSet)
   {
     MakeControllerSettings(ControllerSettings);
-    //submitted changed protocol
     if (Settings.Protocol[controllerindex] != protocol)
     {
-
+      // Protocol has changed.
       Settings.Protocol[controllerindex] = protocol;
 
       //there is a protocol selected?
-      if (Settings.Protocol[controllerindex]!=0)
+      if (protocol != 0)
       {
-        //reset (some) default-settings
+        // Protocol has changed and it was not an empty one.
+        // reset (some) default-settings
         byte ProtocolIndex = getProtocolIndex(Settings.Protocol[controllerindex]);
+        ControllerSettings.reset();
         ControllerSettings.Port = Protocol[ProtocolIndex].defaultPort;
-        ControllerSettings.MinimalTimeBetweenMessages = CONTROLLER_DELAY_QUEUE_DELAY_DFLT;
-        ControllerSettings.ClientTimeout = CONTROLLER_CLIENTTIMEOUT_DFLT;
-//        ControllerSettings.MaxQueueDepth = 0;
+
+        // Load some templates from the controller.
         if (Protocol[ProtocolIndex].usesTemplate)
           CPluginCall(ProtocolIndex, CPLUGIN_PROTOCOL_TEMPLATE, &TempEvent, dummyString);
         safe_strncpy(ControllerSettings.Subscribe, TempEvent.String1.c_str(), sizeof(ControllerSettings.Subscribe));
@@ -1347,6 +1341,7 @@ void handle_controllers() {
         TempEvent.String4 = "";
         TempEvent.String5 = "";
         //NOTE: do not enable controller by default, give user a change to enter sensible values first
+        Settings.ControllerEnabled[controllerindex] = false;
 
         //not resetted to default (for convenience)
         //SecuritySettings.ControllerUser[controllerindex]
@@ -1354,53 +1349,25 @@ void handle_controllers() {
 
         ClearCustomControllerSettings(controllerindex);
       }
-
     }
 
     //subitted same protocol
     else
     {
       //there is a protocol selected
-      if (Settings.Protocol != 0)
+      if (protocol != 0)
       {
-        //copy all settings to conroller settings struct
+        //copy all settings to controller settings struct
+        for (int parameterIdx = 1; parameterIdx <= CONTROLLER_ENABLED; ++parameterIdx) {
+          saveControllerParameterForm(ControllerSettings, controllerindex, parameterIdx);
+        }
+        
         byte ProtocolIndex = getProtocolIndex(Settings.Protocol[controllerindex]);
         TempEvent.ControllerIndex = controllerindex;
         TempEvent.ProtocolIndex = ProtocolIndex;
+        // Call controller plugin to save CustomControllerSettings
         CPluginCall(ProtocolIndex, CPLUGIN_WEBFORM_SAVE, &TempEvent, dummyString);
-        ControllerSettings.UseDNS = usedns.toInt();
-        if (ControllerSettings.UseDNS)
-        {
-          strncpy_webserver_arg(ControllerSettings.HostName, F("controllerhostname"));
-          IPAddress IP;
-          resolveHostByName(ControllerSettings.HostName, IP);
-          for (byte x = 0; x < 4; x++)
-            ControllerSettings.IP[x] = IP[x];
-        }
-        //no protocol selected
-        else
-        {
-          str2ip(controllerip, ControllerSettings.IP);
-        }
-        //copy settings to struct
-        Settings.ControllerEnabled[controllerindex] = isFormItemChecked(F("controllerenabled"));
-        ControllerSettings.Port = controllerport;
-        strncpy_webserver_arg(SecuritySettings.ControllerUser[controllerindex], F("controlleruser"));
-        //safe_strncpy(SecuritySettings.ControllerPassword[controllerindex], controllerpassword.c_str(), sizeof(SecuritySettings.ControllerPassword[0]));
-        copyFormPassword(F("controllerpassword"), SecuritySettings.ControllerPassword[controllerindex], sizeof(SecuritySettings.ControllerPassword[0]));
-        strncpy_webserver_arg(ControllerSettings.Subscribe, F("controllersubscribe"));
-        strncpy_webserver_arg(ControllerSettings.Publish, F("controllerpublish"));
-        strncpy_webserver_arg(ControllerSettings.MQTTLwtTopic, F("mqttlwttopic"));
-        strncpy_webserver_arg(ControllerSettings.LWTMessageConnect, F("lwtmessageconnect"));
-        strncpy_webserver_arg(ControllerSettings.LWTMessageDisconnect, F("lwtmessagedisconnect"));
-        ControllerSettings.MinimalTimeBetweenMessages = minimumsendinterval;
-        ControllerSettings.MaxQueueDepth = maxqueuedepth;
-        ControllerSettings.MaxRetry = maxretry;
-        ControllerSettings.DeleteOldest = getFormItemInt(F("deleteoldest"), ControllerSettings.DeleteOldest);
-        ControllerSettings.MustCheckReply = getFormItemInt(F("mustcheckreply"), ControllerSettings.MustCheckReply);
-        ControllerSettings.ClientTimeout = clienttimeout;
-
-
+        // Init controller plugin using the new settings.
         CPluginCall(ProtocolIndex, CPLUGIN_INIT, &TempEvent, dummyString);
       }
     }
@@ -1457,6 +1424,7 @@ void handle_controllers() {
   }
   else
   {
+    // Show controller settings page
     html_table_class_normal();
     addFormHeader(F("Controller Settings"));
     addRowLabel(F("Protocol"));
@@ -1481,111 +1449,65 @@ void handle_controllers() {
     {
       MakeControllerSettings(ControllerSettings);
       LoadControllerSettings(controllerindex, ControllerSettings);
-      byte choice = ControllerSettings.UseDNS;
-      String options[2];
-      options[0] = F("Use IP address");
-      options[1] = F("Use Hostname");
-
-      byte choice_delete_oldest = ControllerSettings.DeleteOldest;
-      String options_delete_oldest[2];
-      options_delete_oldest[0] = F("Ignore New");
-      options_delete_oldest[1] = F("Delete Oldest");
-
-      byte choice_mustcheckreply = ControllerSettings.MustCheckReply;
-      String options_mustcheckreply[2];
-      options_mustcheckreply[0] = F("Ignore Acknowledgement");
-      options_mustcheckreply[1] = F("Check Acknowledgement");
-
 
       byte ProtocolIndex = getProtocolIndex(Settings.Protocol[controllerindex]);
       if (!Protocol[ProtocolIndex].Custom)
       {
         if (Protocol[ProtocolIndex].usesHost) {
-          addFormSelector(F("Locate Controller"), F("usedns"), 2, options, NULL, NULL, choice, true);
+          addControllerParameterForm(ControllerSettings, controllerindex, CONTROLLER_USE_DNS);
           if (ControllerSettings.UseDNS)
           {
-            addFormTextBox( F("Controller Hostname"), F("controllerhostname"), ControllerSettings.HostName, sizeof(ControllerSettings.HostName)-1);
+            addControllerParameterForm(ControllerSettings, controllerindex, CONTROLLER_HOSTNAME);
           }
           else
           {
-            addFormIPBox(F("Controller IP"), F("controllerip"), ControllerSettings.IP);
+            addControllerParameterForm(ControllerSettings, controllerindex, CONTROLLER_IP);
           }
         }
-
-        String protoDisplayName;
-
-        getControllerProtocolDisplayName(ProtocolIndex, CONTROLLER_PORT, protoDisplayName);
-        addFormNumericBox(protoDisplayName, F("controllerport"), ControllerSettings.Port, 1, 65535);
+        addControllerParameterForm(ControllerSettings, controllerindex, CONTROLLER_PORT);
         if (Protocol[ProtocolIndex].usesQueue) {
-          addFormNumericBox( F("Minimum Send Interval"), F("minimumsendinterval"), ControllerSettings.MinimalTimeBetweenMessages, 1, CONTROLLER_DELAY_QUEUE_DELAY_MAX);
-          addUnit(F("ms"));
-          addFormNumericBox( F("Max Queue Depth"), F("maxqueuedepth"), ControllerSettings.MaxQueueDepth, 1, CONTROLLER_DELAY_QUEUE_DEPTH_MAX);
-          addFormNumericBox( F("Max Retries"), F("maxretry"), ControllerSettings.MaxRetry, 1, CONTROLLER_DELAY_QUEUE_RETRY_MAX);
-          addFormSelector(F("Full Queue Action"), F("deleteoldest"), 2, options_delete_oldest, NULL, NULL, choice_delete_oldest, true);
+          addControllerParameterForm(ControllerSettings, controllerindex, CONTROLLER_MIN_SEND_INTERVAL);
+          addControllerParameterForm(ControllerSettings, controllerindex, CONTROLLER_MAX_QUEUE_DEPTH);
+          addControllerParameterForm(ControllerSettings, controllerindex, CONTROLLER_MAX_RETRIES);
+          addControllerParameterForm(ControllerSettings, controllerindex, CONTROLLER_FULL_QUEUE_ACTION);
         }
-
-        addFormSelector(F("Check Reply"), F("mustcheckreply"), 2, options_mustcheckreply, NULL, NULL, choice_mustcheckreply, true);
-
-        getControllerProtocolDisplayName(ProtocolIndex, CONTROLLER_TIMEOUT, protoDisplayName);
-        addFormNumericBox(protoDisplayName, F("clienttimeout"), ControllerSettings.ClientTimeout, 10, CONTROLLER_CLIENTTIMEOUT_MAX);
-        addUnit(F("ms"));
+        addControllerParameterForm(ControllerSettings, controllerindex, CONTROLLER_CHECK_REPLY);
+        addControllerParameterForm(ControllerSettings, controllerindex, CONTROLLER_TIMEOUT);
 
         if (Protocol[ProtocolIndex].usesAccount)
         {
-          getControllerProtocolDisplayName(ProtocolIndex, CONTROLLER_USER, protoDisplayName);
-          addFormTextBox(protoDisplayName, F("controlleruser"), SecuritySettings.ControllerUser[controllerindex], sizeof(SecuritySettings.ControllerUser[0])-1);
+          addControllerParameterForm(ControllerSettings, controllerindex, CONTROLLER_USER);
         }
         if (Protocol[ProtocolIndex].usesPassword)
         {
-          if (getControllerProtocolDisplayName(ProtocolIndex, CONTROLLER_PASS, protoDisplayName)) {
-            // It is not a regular password, thus use normal text field.
-            addFormTextBox(protoDisplayName, F("controllerpassword"), SecuritySettings.ControllerPassword[controllerindex], sizeof(SecuritySettings.ControllerPassword[0])-1);
-          } else {
-            addFormPasswordBox(F("Controller Password"), F("controllerpassword"), SecuritySettings.ControllerPassword[controllerindex], sizeof(SecuritySettings.ControllerPassword[0])-1);
-          }
+          addControllerParameterForm(ControllerSettings, controllerindex, CONTROLLER_PASS);
         }
 
         if (Protocol[ProtocolIndex].usesTemplate || Protocol[ProtocolIndex].usesMQTT)
         {
-          getControllerProtocolDisplayName(ProtocolIndex, CONTROLLER_SUBSCRIBE, protoDisplayName);
-          addFormTextBox(protoDisplayName, F("controllersubscribe"), ControllerSettings.Subscribe, sizeof(ControllerSettings.Subscribe)-1);
-        }
-
-        if (Protocol[ProtocolIndex].usesTemplate || Protocol[ProtocolIndex].usesMQTT)
-        {
-          getControllerProtocolDisplayName(ProtocolIndex, CONTROLLER_PUBLISH, protoDisplayName);
-          addFormTextBox(protoDisplayName, F("controllerpublish"), ControllerSettings.Publish, sizeof(ControllerSettings.Publish)-1);
+          addControllerParameterForm(ControllerSettings, controllerindex, CONTROLLER_SUBSCRIBE);
+          addControllerParameterForm(ControllerSettings, controllerindex, CONTROLLER_PUBLISH);
         }
 
         if (Protocol[ProtocolIndex].usesMQTT)
         {
-          getControllerProtocolDisplayName(ProtocolIndex, CONTROLLER_LWT_TOPIC, protoDisplayName);
-          addFormTextBox(protoDisplayName, F("mqttlwttopic"), ControllerSettings.MQTTLwtTopic, sizeof(ControllerSettings.MQTTLwtTopic)-1);
-        }
-
-        if (Protocol[ProtocolIndex].usesMQTT)
-        {
-          getControllerProtocolDisplayName(ProtocolIndex, CONTROLLER_LWT_CONNECT_MESSAGE, protoDisplayName);
-          addFormTextBox(protoDisplayName, F("lwtmessageconnect"), ControllerSettings.LWTMessageConnect, sizeof(ControllerSettings.LWTMessageConnect)-1);
-        }
-
-        if (Protocol[ProtocolIndex].usesMQTT)
-        {
-          getControllerProtocolDisplayName(ProtocolIndex, CONTROLLER_LWT_DISCONNECT_MESSAGE, protoDisplayName);
-          addFormTextBox(protoDisplayName, F("lwtmessagedisconnect"), ControllerSettings.LWTMessageDisconnect, sizeof(ControllerSettings.LWTMessageDisconnect)-1);
+          addControllerParameterForm(ControllerSettings, controllerindex, CONTROLLER_LWT_TOPIC);
+          addControllerParameterForm(ControllerSettings, controllerindex, CONTROLLER_LWT_CONNECT_MESSAGE);
+          addControllerParameterForm(ControllerSettings, controllerindex, CONTROLLER_LWT_DISCONNECT_MESSAGE);
         }
       }
+      {
+        // Load controller specific settings
+        TempEvent.ControllerIndex = controllerindex;
+        TempEvent.ProtocolIndex = ProtocolIndex;
 
-      addFormCheckBox(F("Enabled"), F("controllerenabled"), Settings.ControllerEnabled[controllerindex]);
-
-      TempEvent.ControllerIndex = controllerindex;
-      TempEvent.ProtocolIndex = ProtocolIndex;
-
-      String webformLoadString;
-      CPluginCall(ProtocolIndex, CPLUGIN_WEBFORM_LOAD, &TempEvent, webformLoadString);
-      if (webformLoadString.length() > 0) {
-        addHtmlError(F("Bug in CPLUGIN_WEBFORM_LOAD, should not append to string, use addHtml() instead"));
+        String webformLoadString;
+        CPluginCall(ProtocolIndex, CPLUGIN_WEBFORM_LOAD, &TempEvent, webformLoadString);
+        if (webformLoadString.length() > 0) {
+          addHtmlError(F("Bug in CPLUGIN_WEBFORM_LOAD, should not append to string, use addHtml() instead"));
+        }
       }
+      addControllerParameterForm(ControllerSettings, controllerindex, CONTROLLER_ENABLED);
     }
 
     addFormSeparator(2);

@@ -284,7 +284,7 @@ void check_size() {
 #define CONTROLLER_DELAY_QUEUE_RETRY_DFLT  10
 // Timeout of the client in msec.
 #define CONTROLLER_CLIENTTIMEOUT_MAX     1000
-#define CONTROLLER_CLIENTTIMEOUT_DFLT    1000
+#define CONTROLLER_CLIENTTIMEOUT_DFLT     100
 
 
 #define PLUGIN_INIT_ALL                     1
@@ -340,17 +340,24 @@ void check_size() {
 
 #define CPLUGIN_WEBFORM_SHOW_CONFIG        57
 
-#define CONTROLLER_HOSTNAME                 1
-#define CONTROLLER_IP                       2
-#define CONTROLLER_PORT                     3
-#define CONTROLLER_USER                     4
-#define CONTROLLER_PASS                     5
-#define CONTROLLER_SUBSCRIBE                6
-#define CONTROLLER_PUBLISH                  7
-#define CONTROLLER_LWT_TOPIC                8
-#define CONTROLLER_LWT_CONNECT_MESSAGE      9
-#define CONTROLLER_LWT_DISCONNECT_MESSAGE  10
-#define CONTROLLER_TIMEOUT                 11
+#define CONTROLLER_USE_DNS                  1
+#define CONTROLLER_HOSTNAME                 2
+#define CONTROLLER_IP                       3 
+#define CONTROLLER_PORT                     4
+#define CONTROLLER_USER                     5
+#define CONTROLLER_PASS                     6
+#define CONTROLLER_MIN_SEND_INTERVAL        7
+#define CONTROLLER_MAX_QUEUE_DEPTH          8
+#define CONTROLLER_MAX_RETRIES              9
+#define CONTROLLER_FULL_QUEUE_ACTION        10
+#define CONTROLLER_CHECK_REPLY              12
+#define CONTROLLER_SUBSCRIBE                13
+#define CONTROLLER_PUBLISH                  14
+#define CONTROLLER_LWT_TOPIC                15
+#define CONTROLLER_LWT_CONNECT_MESSAGE      16
+#define CONTROLLER_LWT_DISCONNECT_MESSAGE   17
+#define CONTROLLER_TIMEOUT                  18
+#define CONTROLLER_ENABLED                  19  // Keep this as last, is used to loop over all parameters
 
 #define NPLUGIN_PROTOCOL_ADD                1
 #define NPLUGIN_GET_DEVICENAME              2
@@ -1084,9 +1091,20 @@ SettingsStruct& Settings = *SettingsStruct_ptr;
 \*********************************************************************************************/
 struct ControllerSettingsStruct
 {
-  ControllerSettingsStruct() : UseDNS(false), Port(0),
-      MinimalTimeBetweenMessages(100), MaxQueueDepth(10), MaxRetry(10),
-      DeleteOldest(false), ClientTimeout(100), MustCheckReply(false) {
+  ControllerSettingsStruct()
+  {
+    reset();
+  }
+
+  void reset() {
+    UseDNS = false;
+    Port = 0;
+    MinimalTimeBetweenMessages = CONTROLLER_DELAY_QUEUE_DELAY_DFLT;
+    MaxQueueDepth = CONTROLLER_DELAY_QUEUE_DEPTH_DFLT;
+    MaxRetry = CONTROLLER_DELAY_QUEUE_RETRY_DFLT;
+    DeleteOldest = false;
+    ClientTimeout = CONTROLLER_CLIENTTIMEOUT_DFLT;
+    MustCheckReply = false;
     for (byte i = 0; i < 4; ++i) {
       IP[i] = 0;
     }
@@ -1604,7 +1622,7 @@ struct ProtocolStruct
   bool usesMQTT : 1;
   bool usesAccount : 1;
   bool usesPassword : 1;
-  bool usesTemplate : 1;
+  bool usesTemplate : 1;  // When set, the protocol will pre-load some templates like default MQTT topics
   bool usesID : 1;
   bool Custom : 1;
   bool usesHost : 1;
