@@ -184,6 +184,7 @@ bool CPlugin_018(byte function, struct EventStruct *event, String& string)
       int txpin    = 14;
       int resetpin = -1;
 
+addTableSeparator(F("Serial Port Configuration"), 2, 3);
       // Optional reset pin RN2xx3
       addRowLabel(formatGpioName_output_optional(F("Reset")));
       addPinSelect(false, F("taskdevicepin3"), resetpin);
@@ -198,6 +199,8 @@ bool CPlugin_018(byte function, struct EventStruct *event, String& string)
       addFormNumericBox(F("Baudrate"), C018_BAUDRATE_LABEL, C018_BAUDRATE, 2400, 115200);
       addUnit(F("baud"));
 
+
+addTableSeparator(F("Device Status"), 2, 3);
       // Some information on detected device
       addRowLabel(F("OTAA DevEUI"));
       addHtml(String(C018_data.hweui()));
@@ -244,7 +247,8 @@ bool CPlugin_018(byte function, struct EventStruct *event, String& string)
 
     case CPLUGIN_PROTOCOL_SEND:
     {
-      success = C018_DelayHandler.addToQueue(C018_queue_element(event, VARS_PER_TASK));
+      byte valueCount = getValueCountFromSensorType(event->sensorType);
+      success = C018_DelayHandler.addToQueue(C018_queue_element(event, valueCount));
       scheduleNextDelayQueue(TIMER_C018_DELAY_QUEUE, C018_DelayHandler.getNextScheduleTime());
 
       break;
@@ -261,7 +265,11 @@ bool CPlugin_018(byte function, struct EventStruct *event, String& string)
 }
 
 bool do_process_c018_delay_queue(int controller_number, const C018_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
-  return true;
+  byte *buffer = new byte[64];
+  byte length = element.encode(buffer, 64);
+  bool success = C018_data.txUncnfBytes(buffer, length);
+  delete[] buffer;
+  return success;
 }
 
 #endif // ifdef USES_C018

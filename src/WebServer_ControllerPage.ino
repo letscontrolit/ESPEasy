@@ -234,6 +234,7 @@ void handle_controllers_ControllerSettingsPage(byte controllerindex)
       addControllerParameterForm(ControllerSettings, controllerindex, CONTROLLER_PORT);
 
       if (Protocol[ProtocolIndex].usesQueue) {
+        addTableSeparator(F("Controller Queue"), 2, 3);
         addControllerParameterForm(ControllerSettings, controllerindex, CONTROLLER_MIN_SEND_INTERVAL);
         addControllerParameterForm(ControllerSettings, controllerindex, CONTROLLER_MAX_QUEUE_DEPTH);
         addControllerParameterForm(ControllerSettings, controllerindex, CONTROLLER_MAX_RETRIES);
@@ -241,6 +242,10 @@ void handle_controllers_ControllerSettingsPage(byte controllerindex)
       }
       addControllerParameterForm(ControllerSettings, controllerindex, CONTROLLER_CHECK_REPLY);
       addControllerParameterForm(ControllerSettings, controllerindex, CONTROLLER_TIMEOUT);
+
+      if (Protocol[ProtocolIndex].usesAccount || Protocol[ProtocolIndex].usesPassword) {
+        addTableSeparator(F("Credentials"), 2, 3);
+      }
 
       if (Protocol[ProtocolIndex].usesAccount)
       {
@@ -250,6 +255,10 @@ void handle_controllers_ControllerSettingsPage(byte controllerindex)
       if (Protocol[ProtocolIndex].usesPassword)
       {
         addControllerParameterForm(ControllerSettings, controllerindex, CONTROLLER_PASS);
+      }
+
+      if (Protocol[ProtocolIndex].usesMQTT) {
+        addTableSeparator(F("MQTT"), 2, 3);
       }
 
       if (Protocol[ProtocolIndex].usesTemplate || Protocol[ProtocolIndex].usesMQTT)

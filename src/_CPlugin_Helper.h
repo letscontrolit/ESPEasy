@@ -319,10 +319,11 @@ public:
 class C018_queue_element {
 public:
 
-  C018_queue_element() : controller_idx(0), TaskIndex(0), sensorType(0) {}
+  C018_queue_element() : idx(0), TaskIndex(0), sensorType(0) {}
 
   C018_queue_element(const struct EventStruct *event, byte value_count) :
     controller_idx(event->ControllerIndex),
+    idx(event->idx),
     TaskIndex(event->TaskIndex),
     sensorType(event->sensorType),
     valueCount(value_count)
@@ -338,12 +339,30 @@ public:
     }
   }
 
+  uint8_t encode(byte *data, uint8_t size) const {
+    uint8_t pos = 0;
+    data[pos++] = TaskIndex;
+    data[pos++] = (idx & 0xFF);
+    data[pos++] = ((idx >> 8) & 0xFF);
+    data[pos++] = valueCount;
+
+    for (int i = 0; i < valueCount; ++i) {
+      // For now, just store the floats as an int32 by multiplying the value with 10000.
+      int32_t value = values[i] * 10000;
+      for (uint8_t x = 0; x < 4; x++) {
+        data[pos++] = static_cast<byte>((value >> (x * 8)) & 0xFF);
+      }
+    }
+    return pos;
+  }
+
   size_t getSize() const {
     return sizeof(this);
   }
 
   float values[VARS_PER_TASK];
-  byte controller_idx;
+  int controller_idx;
+  uint16_t idx;
   byte TaskIndex;
   byte sensorType;
   byte valueCount;

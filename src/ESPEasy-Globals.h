@@ -1623,8 +1623,8 @@ struct ProtocolStruct
   bool usesAccount : 1;
   bool usesPassword : 1;
   bool usesTemplate : 1;  // When set, the protocol will pre-load some templates like default MQTT topics
-  bool usesID : 1;
-  bool Custom : 1;
+  bool usesID : 1;        // Whether a controller supports sending an IDX value sent along with plugin data
+  bool Custom : 1;        // When set, the controller has to define all parameters on the controller setup page
   bool usesHost : 1;
   bool usesPort : 1;
   bool usesQueue : 1;
