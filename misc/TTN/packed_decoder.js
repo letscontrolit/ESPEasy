@@ -14,19 +14,19 @@ function Decoder(bytes, port) {
   if (port === 1) {
     // Single value
     if (bytes.length === 8) {
-      return decode(bytes, [uint8, uint16, uint8, int32_10k], ['taskindex', 'IDX', 'valuecount', 'val_1']);
+      return decode(bytes, [pluginid, uint16, uint8, int32_10k], ['plugin_id', 'IDX', 'valuecount', 'val_1']);
     }
     // Dual value
     if (bytes.length === 12) {
-      return decode(bytes, [uint8, uint16, uint8, int32_10k, int32_10k], ['taskindex', 'IDX', 'valuecount', 'val_1', 'val_2']);
+      return decode(bytes, [pluginid, uint16, uint8, int32_10k, int32_10k], ['plugin_id', 'IDX', 'valuecount', 'val_1', 'val_2']);
     }
     // Triple value
     if (bytes.length === 16) {
-      return decode(bytes, [uint8, uint16, uint8, int32_10k, int32_10k, int32_10k], ['taskindex', 'IDX', 'valuecount', 'val_1', 'val_2', 'val_3']);
+      return decode(bytes, [pluginid, uint16, uint8, int32_10k, int32_10k, int32_10k], ['plugin_id', 'IDX', 'valuecount', 'val_1', 'val_2', 'val_3']);
     }
     // Quad value
     if (bytes.length === 20) {
-      return decode(bytes, [uint8, uint16, uint8, int32_10k, int32_10k, int32_10k, int32_10k], ['taskindex', 'IDX', 'valuecount', 'val_1', 'val_2', 'val_3', 'val_4']);
+      return decode(bytes, [pluginid, uint16, uint8, int32_10k, int32_10k, int32_10k, int32_10k], ['plugin_id', 'IDX', 'valuecount', 'val_1', 'val_2', 'val_3', 'val_4']);
     }
   }
 
@@ -124,6 +124,12 @@ var int32_10k = function (bytes) {
   return +(int32(bytes) / 1e4).toFixed(4);
 };
 int32_10k.BYTES = int32.BYTES;
+
+var pluginid = function (bytes) {
+  return +(uint8(bytes);
+};
+pluginid.BYTES = uint8.BYTES;
+
 
 var latLng = function (bytes) {
   return +(int32(bytes) / 1e6).toFixed(6);
@@ -242,6 +248,7 @@ if (typeof module === 'object' && typeof module.exports !== 'undefined') {
     int16: int16,
     int32: int32,
     int32_10k: int32_10k,
+    pluginid: pluginid,
     uptime: uptime,
     float: float,
     ufloat: ufloat,

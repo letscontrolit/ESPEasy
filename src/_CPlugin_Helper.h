@@ -341,7 +341,7 @@ public:
 
   uint8_t encode(byte *data, uint8_t size) const {
     uint8_t pos = 0;
-    data[pos++] = TaskIndex;
+    data[pos++] = Settings.TaskDeviceNumber[TaskIndex];
     data[pos++] = (idx & 0xFF);
     data[pos++] = ((idx >> 8) & 0xFF);
     data[pos++] = valueCount;
