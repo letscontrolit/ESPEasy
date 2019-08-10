@@ -153,7 +153,7 @@ bool CPlugin_018(byte function, struct EventStruct *event, String& string)
 
     case CPLUGIN_WEBFORM_SHOW_HOST_CONFIG:
     {
-      string = F("Dev addr: ");
+      string  = F("Dev addr: ");
       string += C018_data.getDevaddr();
       break;
     }
@@ -184,7 +184,8 @@ bool CPlugin_018(byte function, struct EventStruct *event, String& string)
       int txpin    = 14;
       int resetpin = -1;
 
-addTableSeparator(F("Serial Port Configuration"), 2, 3);
+      addTableSeparator(F("Serial Port Configuration"), 2, 3);
+
       // Optional reset pin RN2xx3
       addRowLabel(formatGpioName_output_optional(F("Reset")));
       addPinSelect(false, F("taskdevicepin3"), resetpin);
@@ -200,7 +201,8 @@ addTableSeparator(F("Serial Port Configuration"), 2, 3);
       addUnit(F("baud"));
 
 
-addTableSeparator(F("Device Status"), 2, 3);
+      addTableSeparator(F("Device Status"), 2, 3);
+
       // Some information on detected device
       addRowLabel(F("OTAA DevEUI"));
       addHtml(String(C018_data.hweui()));
@@ -265,9 +267,10 @@ addTableSeparator(F("Device Status"), 2, 3);
 }
 
 bool do_process_c018_delay_queue(int controller_number, const C018_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
-  byte *buffer = new byte[64];
-  byte length = element.encode(buffer, 64);
-  bool success = C018_data.txUncnfBytes(buffer, length);
+  byte *buffer  = new byte[64];
+  byte  length  = element.encode(buffer, 64);
+  bool  success = C018_data.txUncnfBytes(buffer, length);
+
   delete[] buffer;
   return success;
 }

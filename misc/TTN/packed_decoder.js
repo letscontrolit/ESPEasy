@@ -126,7 +126,7 @@ var int32_10k = function (bytes) {
 int32_10k.BYTES = int32.BYTES;
 
 var pluginid = function (bytes) {
-  return +(uint8(bytes);
+  return +(uint8(bytes));
 };
 pluginid.BYTES = uint8.BYTES;
 
