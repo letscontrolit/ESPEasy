@@ -14,19 +14,19 @@ function Decoder(bytes, port) {
   if (port === 1) {
     // Single value
     if (bytes.length === 8) {
-      return decode(bytes, [pluginid, uint16, uint8, int32_10k], ['plugin_id', 'IDX', 'valuecount', 'val_1']);
+      return decode(bytes, [pluginid, uint16, uint8, int32_1e4], ['plugin_id', 'IDX', 'valuecount', 'val_1']);
     }
     // Dual value
     if (bytes.length === 12) {
-      return decode(bytes, [pluginid, uint16, uint8, int32_10k, int32_10k], ['plugin_id', 'IDX', 'valuecount', 'val_1', 'val_2']);
+      return decode(bytes, [pluginid, uint16, uint8, int32_1e4, int32_1e4], ['plugin_id', 'IDX', 'valuecount', 'val_1', 'val_2']);
     }
     // Triple value
     if (bytes.length === 16) {
-      return decode(bytes, [pluginid, uint16, uint8, int32_10k, int32_10k, int32_10k], ['plugin_id', 'IDX', 'valuecount', 'val_1', 'val_2', 'val_3']);
+      return decode(bytes, [pluginid, uint16, uint8, int32_1e4, int32_1e4, int32_1e4], ['plugin_id', 'IDX', 'valuecount', 'val_1', 'val_2', 'val_3']);
     }
     // Quad value
     if (bytes.length === 20) {
-      return decode(bytes, [pluginid, uint16, uint8, int32_10k, int32_10k, int32_10k, int32_10k], ['plugin_id', 'IDX', 'valuecount', 'val_1', 'val_2', 'val_3', 'val_4']);
+      return decode(bytes, [pluginid, uint16, uint8, int32_1e4, int32_1e4, int32_1e4, int32_1e4], ['plugin_id', 'IDX', 'valuecount', 'val_1', 'val_2', 'val_3', 'val_4']);
     }
   }
 
@@ -60,6 +60,21 @@ var uint8 = function (bytes) {
 };
 uint8.BYTES = 1;
 
+var uint8_1e3 = function (bytes) {
+  return +(uint8(bytes) / 1e3).toFixed(3);
+};
+uint8_1e3.BYTES = uint8.BYTES;
+
+var uint8_1e2 = function (bytes) {
+  return +(uint8(bytes) / 1e2).toFixed(2);
+};
+uint8_1e2.BYTES = uint8.BYTES;
+
+var uint8_1e1 = function (bytes) {
+  return +(uint8(bytes) / 1e1).toFixed(1);
+};
+uint8_1e1.BYTES = uint8.BYTES;
+
 var uint16 = function (bytes) {
   if (bytes.length !== uint16.BYTES) {
     throw new Error('uint16 must have exactly 2 bytes');
@@ -67,6 +82,44 @@ var uint16 = function (bytes) {
   return bytesToInt(bytes);
 };
 uint16.BYTES = 2;
+
+var uint16_1e6 = function (bytes) {
+  return +(uint16(bytes) / 1e6).toFixed(6);
+};
+uint16_1e6.BYTES = uint16.BYTES;
+
+var uint16_1e4 = function (bytes) {
+  return +(uint16(bytes) / 1e4).toFixed(4);
+};
+uint16_1e4.BYTES = uint16.BYTES;
+
+var uint16_1e2 = function (bytes) {
+  return +(uint16(bytes) / 1e2).toFixed(2);
+};
+uint16_1e2.BYTES = uint16.BYTES;
+
+var uint24 = function (bytes) {
+  if (bytes.length !== uint24.BYTES) {
+    throw new Error('uint24 must have exactly 3 bytes');
+  }
+  return bytesToInt(bytes);
+};
+uint24.BYTES = 3;
+
+var uint24_1e6 = function (bytes) {
+  return +(uint24(bytes) / 1e6).toFixed(6);
+};
+uint24_1e6.BYTES = uint24.BYTES;
+
+var uint24_1e4 = function (bytes) {
+  return +(uint24(bytes) / 1e4).toFixed(4);
+};
+uint24_1e4.BYTES = uint24.BYTES;
+
+var uint24_1e2 = function (bytes) {
+  return +(uint24(bytes) / 1e2).toFixed(2);
+};
+uint24_1e2.BYTES = uint24.BYTES;
 
 var uint32 = function (bytes) {
   if (bytes.length !== uint32.BYTES) {
@@ -96,6 +149,21 @@ var int8 = function (bytes) {
 };
 int8.BYTES = 1;
 
+var int8_1e3 = function (bytes) {
+  return +(int8(bytes) / 1e3).toFixed(3);
+};
+int8_1e3.BYTES = int8.BYTES;
+
+var int8_1e2 = function (bytes) {
+  return +(int8(bytes) / 1e2).toFixed(2);
+};
+int8_1e2.BYTES = int8.BYTES;
+
+var int8_1e1 = function (bytes) {
+  return +(int8(bytes) / 1e1).toFixed(1);
+};
+int8_1e1.BYTES = int8.BYTES;
+
 var int16 = function (bytes) {
   if (bytes.length !== int16.BYTES) {
     throw new Error('int16 must have exactly 2 bytes');
@@ -107,6 +175,49 @@ var int16 = function (bytes) {
   return value;
 };
 int16.BYTES = 2;
+
+var int16_1e6 = function (bytes) {
+  return +(int16(bytes) / 1e6).toFixed(6);
+};
+int16_1e6.BYTES = int16.BYTES;
+
+var int16_1e4 = function (bytes) {
+  return +(int16(bytes) / 1e4).toFixed(4);
+};
+int16_1e4.BYTES = int16.BYTES;
+
+var int16_1e2 = function (bytes) {
+  return +(int16(bytes) / 1e2).toFixed(2);
+};
+int16_1e2.BYTES = int16.BYTES;
+
+
+var int24 = function (bytes) {
+  if (bytes.length !== int24.BYTES) {
+    throw new Error('int24 must have exactly 3 bytes');
+  }
+  var value = +(bytesToInt(bytes));
+  if (value > 8388608) {
+    value -= 16777216;
+  }
+  return value;
+};
+int24.BYTES = 3;
+
+var int24_1e6 = function (bytes) {
+  return +(int24(bytes) / 1e6).toFixed(6);
+};
+int24_1e6.BYTES = int24.BYTES;
+
+var int24_1e4 = function (bytes) {
+  return +(int24(bytes) / 1e4).toFixed(4);
+};
+int24_1e4.BYTES = int24.BYTES;
+
+var int24_1e2 = function (bytes) {
+  return +(int24(bytes) / 1e2).toFixed(2);
+};
+int24_1e2.BYTES = int24.BYTES;
 
 var int32 = function (bytes) {
   if (bytes.length !== int32.BYTES) {
@@ -120,10 +231,20 @@ var int32 = function (bytes) {
 };
 int32.BYTES = 4;
 
-var int32_10k = function (bytes) {
+var int32_1e6 = function (bytes) {
+  return +(int32(bytes) / 1e6).toFixed(6);
+};
+int32_1e6.BYTES = int32.BYTES;
+
+var int32_1e4 = function (bytes) {
   return +(int32(bytes) / 1e4).toFixed(4);
 };
-int32_10k.BYTES = int32.BYTES;
+int32_1e4.BYTES = int32.BYTES;
+
+var int32_1e2 = function (bytes) {
+  return +(int32(bytes) / 100).toFixed(2);
+};
+int32_1e2.BYTES = int32.BYTES;
 
 var pluginid = function (bytes) {
   return +(uint8(bytes));
@@ -132,62 +253,22 @@ pluginid.BYTES = uint8.BYTES;
 
 
 var latLng = function (bytes) {
-  return +(int32(bytes) / 1e6).toFixed(6);
+  return +(int32_1e6(bytes));
 };
 latLng.BYTES = int32.BYTES;
 
-var uptime = function (bytes) {
-  return uint64(bytes);
-};
-uptime.BYTES = uint64.BYTES;
-
 var hdop = function (bytes) {
-  return +(uint16(bytes) / 100).toFixed(2);
+  
+  return +(uint8(bytes) / 100).toFixed(2);
 };
-hdop.BYTES = uint16.BYTES;
+hdop.BYTES = uint8.BYTES;
 
 var altitude = function (bytes) {
   // Option to increase altitude resolution (also on encoder side)
-  // return +(int16(bytes) / 4 - 1000).toFixed(1);
-  return +(int16(bytes));
+  return +(int16(bytes) / 4 - 1000).toFixed(1);
 };
 altitude.BYTES = int16.BYTES;
 
-
-var float = function (bytes) {
-  if (bytes.length !== float.BYTES) {
-    throw new Error('Float must have exactly 2 bytes');
-  }
-  var isNegative = bytes[0] & 0x80;
-  var b = ('00000000' + Number(bytes[0]).toString(2)).slice(-8)
-    + ('00000000' + Number(bytes[1]).toString(2)).slice(-8);
-  if (isNegative) {
-    var arr = b.split('').map(function (x) { return !Number(x); });
-    for (var i = arr.length - 1; i > 0; i--) {
-      arr[i] = !arr[i];
-      if (arr[i]) {
-        break;
-      }
-    }
-    b = arr.map(Number).join('');
-  }
-  var t = parseInt(b, 2);
-  if (isNegative) {
-    t = -t;
-  }
-  return +(t / 100).toFixed(2);
-};
-float.BYTES = 2;
-
-var ufloat = function (bytes) {
-  return +(uint16(bytes) / 100).toFixed(2);
-};
-ufloat.BYTES = uint16.BYTES;
-
-var pressure = function (bytes) {
-  return +(uint16(bytes) / 10).toFixed(1);
-};
-pressure.BYTES = uint16.BYTES;
 
 var bitmap1 = function (byte) {
   if (byte.length !== bitmap1.BYTES) {
@@ -242,17 +323,35 @@ var decode = function (bytes, mask, names) {
 if (typeof module === 'object' && typeof module.exports !== 'undefined') {
   module.exports = {
     uint8: uint8,
+    uint8_1e3: uint8_1e3,
+    uint8_1e2: uint8_1e2,
+    uint8_1e1: uint8_1e1,
     uint16: uint16,
+    uint16_1e6: uint16_1e6,
+    uint16_1e4: uint16_1e4,
+    uint16_1e2: uint16_1e2,
+    uint24: uint24,
+    uint24_1e6: uint24_1e6,
+    uint24_1e4: uint24_1e4,
+    uint24_1e2: uint24_1e2,
     uint32: uint32,
     int8: int8,
+    int8_1e3: int8_1e3,
+    int8_1e2: int8_1e2,
+    int8_1e1: int8_1e1,
     int16: int16,
+    int16_1e6: int16_1e6,
+    int16_1e4: int16_1e4,
+    int16_1e2: int16_1e2,
+    int24: int24,
+    int24_1e6: int24_1e6,
+    int24_1e4: int24_1e4,
+    int24_1e2: int24_1e2,
     int32: int32,
-    int32_10k: int32_10k,
+    int32_1e6: int32_1e6,
+    int32_1e4: int32_1e4,
+    int32_1e2: int32_1e2,
     pluginid: pluginid,
-    uptime: uptime,
-    float: float,
-    ufloat: ufloat,
-    pressure: pressure,
     latLng: latLng,
     hdop: hdop,
     altitude: altitude,
