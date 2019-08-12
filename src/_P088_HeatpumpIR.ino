@@ -1,11 +1,12 @@
-#ifdef USES_P115
+#ifdef USES_P088
 //#######################################################################################################
-//#################################### Plugin 115: Heatpump IR ##########################################
+//#################################### Plugin 088: Heatpump IR ##########################################
 //#######################################################################################################
 
-#define PLUGIN_115
-#define PLUGIN_ID_115         115
-#define PLUGIN_NAME_115       "Heatpump IR transmitter"
+#define PLUGIN_088
+#define PLUGIN_ID_088         88
+#define PLUGIN_NAME_088       "Heatpump IR transmitter"
+
 
 /*
  * ESPEasy plugin to send air conditioner / heatpump IR signals
@@ -80,11 +81,11 @@ HeatpumpIR *heatpumpIR[] = {new PanasonicCKPHeatpumpIR(), new PanasonicDKEHeatpu
                             new BalluHeatpumpIR(), new AUXHeatpumpIR(),
                             NULL};
 
-IRSenderIRremoteESP8266 *Plugin_115_irSender;
+IRSenderIRremoteESP8266 *Plugin_088_irSender;
 
 int panasonicCKPTimer = 0;
 
-boolean Plugin_115(byte function, struct EventStruct *event, String& string)
+boolean Plugin_088(byte function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -92,7 +93,7 @@ boolean Plugin_115(byte function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
       {
-        Device[++deviceCount].Number = PLUGIN_ID_115;
+        Device[++deviceCount].Number = PLUGIN_ID_088;
         Device[deviceCount].Type = DEVICE_TYPE_SINGLE;
         Device[deviceCount].VType = SENSOR_TYPE_NONE;
         Device[deviceCount].Ports = 0;
@@ -111,7 +112,7 @@ boolean Plugin_115(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_GET_DEVICENAME:
       {
-        string = F(PLUGIN_NAME_115);
+        string = F(PLUGIN_NAME_088);
         break;
       }
 
@@ -151,18 +152,18 @@ boolean Plugin_115(byte function, struct EventStruct *event, String& string)
         int irPin = Settings.TaskDevicePin1[event->TaskIndex];
         if (irPin != -1)
         {
-          addLog(LOG_LEVEL_INFO, F("P115: Heatpump IR transmitter activated"));
-          if (Plugin_115_irSender != NULL)
+          addLog(LOG_LEVEL_INFO, F("P088: Heatpump IR transmitter activated"));
+          if (Plugin_088_irSender != NULL)
           {
-            delete Plugin_115_irSender;
+            delete Plugin_088_irSender;
           }
-          Plugin_115_irSender = new IRSenderIRremoteESP8266(irPin);
+          Plugin_088_irSender = new IRSenderIRremoteESP8266(irPin);
         }
-        if (Plugin_115_irSender != 0 && irPin == -1)
+        if (Plugin_088_irSender != 0 && irPin == -1)
         {
-          addLog(LOG_LEVEL_INFO, F("P115: Heatpump IR transmitter deactivated"));
-          delete Plugin_115_irSender;
-          Plugin_115_irSender = NULL;
+          addLog(LOG_LEVEL_INFO, F("P088: Heatpump IR transmitter deactivated"));
+          delete Plugin_088_irSender;
+          Plugin_088_irSender = NULL;
         }
         success = true;
         break;
@@ -192,7 +193,7 @@ boolean Plugin_115(byte function, struct EventStruct *event, String& string)
         int argIndex = tmpString.indexOf(',');
         if (argIndex) tmpString = tmpString.substring(0, argIndex);
 
-        if (tmpString.equalsIgnoreCase("HEATPUMPIR") && Plugin_115_irSender != NULL)
+        if (tmpString.equalsIgnoreCase(F("HEATPUMPIR")) && Plugin_088_irSender != NULL)
         {
           if (GetArgv(command, TmpStr1, 2)) heatpumpModel = TmpStr1;
           if (GetArgv(command, TmpStr1, 3)) powerMode = str2int(TmpStr1.c_str());
@@ -210,11 +211,19 @@ boolean Plugin_115(byte function, struct EventStruct *event, String& string)
 
             if (strcmp_P(heatpumpModel.c_str(), shortName) == 0)
             {
-              heatpumpIR[i]->send(*Plugin_115_irSender, powerMode, operatingMode, fanSpeed, temperature, vDir, hDir);
-              addLog(LOG_LEVEL_INFO, F("P115: Heatpump IR code transmitted"));
+              #ifdef PLUGIN_016
+              if (irReceiver != 0)
+              irReceiver->disableIRIn(); // Stop the receiver
+              #endif
+              heatpumpIR[i]->send(*Plugin_088_irSender, powerMode, operatingMode, fanSpeed, temperature, vDir, hDir);
+              #ifdef PLUGIN_016
+              if (irReceiver != 0)
+              irReceiver->enableIRIn(); // Start the receiver
+              #endif
+              addLog(LOG_LEVEL_INFO, F("P088: Heatpump IR code transmitted"));
               if (printToWeb)
               {
-                printWebString += F("P115: Heatpump IR code transmitted");
+                printWebString += F("P088: Heatpump IR code transmitted");
               }
 
               // Panasonic CKP can only be turned ON/OFF by using the timer,
@@ -235,11 +244,11 @@ boolean Plugin_115(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_EXIT:
     	{
-        addLog(LOG_LEVEL_INFO, F("P115: Heatpump IR transmitter deactivated"));
+        addLog(LOG_LEVEL_INFO, F("P088: Heatpump IR transmitter deactivated"));
 
-        if (Plugin_115_irSender != NULL)
+        if (Plugin_088_irSender != NULL)
         {
-          delete Plugin_115_irSender;
+          delete Plugin_088_irSender;
         }
 
     	  break;
@@ -253,8 +262,17 @@ boolean Plugin_115(byte function, struct EventStruct *event, String& string)
           if (panasonicCKPTimer == 0)
           {
             PanasonicCKPHeatpumpIR *panasonicHeatpumpIR = new PanasonicCKPHeatpumpIR();
-            panasonicHeatpumpIR->sendPanasonicCKPCancelTimer(*Plugin_115_irSender);
-            addLog(LOG_LEVEL_INFO, F("P115: The TIMER led on Panasonic CKP should now be OFF"));
+
+            #ifdef PLUGIN_016
+            if (irReceiver != 0)
+            irReceiver->disableIRIn(); // Stop the receiver
+            #endif
+            panasonicHeatpumpIR->sendPanasonicCKPCancelTimer(*Plugin_088_irSender);
+             #ifdef PLUGIN_016
+            if (irReceiver != 0)
+            irReceiver->enableIRIn(); // Start the receiver
+            #endif
+            addLog(LOG_LEVEL_INFO, F("P088: The TIMER led on Panasonic CKP should now be OFF"));
           }
         }
         success = true;
@@ -271,4 +289,4 @@ boolean Plugin_115(byte function, struct EventStruct *event, String& string)
   return success;
 }
 
-#endif // USES_P115
+#endif // USES_P088
