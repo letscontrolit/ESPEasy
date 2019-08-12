@@ -1,7 +1,6 @@
 /*********************************************************************************************\
- * Functions to load and store controller settings on the web page.
+* Functions to load and store controller settings on the web page.
 \*********************************************************************************************/
-
 String getControllerParameterName(byte ProtocolIndex, byte parameterIdx, bool displayName, bool& isAlternative) {
   String name;
 
@@ -141,7 +140,7 @@ void addControllerParameterForm(const ControllerSettingsStruct& ControllerSettin
       String options[2];
       options[0] = F("Ignore New");
       options[1] = F("Delete Oldest");
-      addFormSelector(displayName, internalName, 2, options, NULL, NULL, ControllerSettings.DeleteOldest, true);
+      addFormSelector(displayName, internalName, 2, options, NULL, NULL, ControllerSettings.DeleteOldest, false);
       break;
     }
     case CONTROLLER_CHECK_REPLY:
@@ -149,7 +148,7 @@ void addControllerParameterForm(const ControllerSettingsStruct& ControllerSettin
       String options[2];
       options[0] = F("Ignore Acknowledgement");
       options[1] = F("Check Acknowledgement");
-      addFormSelector(displayName, internalName, 2, options, NULL, NULL, ControllerSettings.MustCheckReply, true);
+      addFormSelector(displayName, internalName, 2, options, NULL, NULL, ControllerSettings.MustCheckReply, false);
       break;
     }
     case CONTROLLER_SUBSCRIBE:

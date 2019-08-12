@@ -25,21 +25,28 @@ _serial(serial)
 }
 
 //TODO: change to a boolean
-void rn2xx3::autobaud()
+bool rn2xx3::autobaud()
 {
   String response = "";
 
   // Try a maximum of 10 times with a 1 second delay
-  for (uint8_t i=0; i<10 && response==""; i++)
+  for (uint8_t i=0; i<10 && response.length() == 0; i++)
   {
     delay(1000);
     _serial.write((byte)0x00);
     _serial.write(0x55);
     _serial.println();
+    //clear serial buffer
+    while(_serial.available())
+      _serial.read();
+    
     // we could use sendRawCommand(F("sys get ver")); here
     _serial.println(F("sys get ver"));
     response = _serial.readStringUntil('\n');
   }
+  // Returned text should be
+  // RN2483 X.Y.Z MMM DD YYYY HH:MM:SS
+  return response.length() > 10;
 }
 
 
@@ -88,6 +95,32 @@ String rn2xx3::appkey()
 String rn2xx3::deveui()
 {
   return (sendRawCommand(F("mac get deveui")));
+}
+
+bool rn2xx3::setSF(uint8_t sf)
+{
+  int dr;
+  switch (_fp)
+  {
+    case TTN_EU:
+    case SINGLE_CHANNEL_EU:
+    case DEFAULT_EU:
+    //  case TTN_FP_EU868:
+    //  case TTN_FP_IN865_867:
+    //  case TTN_FP_AS920_923:
+    //  case TTN_FP_AS923_925:
+    //  case TTN_FP_KR920_923:
+      dr = 12 - sf;
+      break;
+    case TTN_US:
+    //case TTN_FP_US915:
+    //case TTN_FP_AU915:
+      dr = 10 - sf;
+      break;
+    default:
+      return false;
+  }
+  return setDR(dr);
 }
 
 bool rn2xx3::init()
@@ -174,6 +207,7 @@ bool rn2xx3::initOTAA(const String& AppEUI, const String& AppKey, const String& 
   {
     setTXoutputPower(1);
   }
+  sendMacSet(F("dr"), String(5)); //0= min, 7=max
 
   // TTN does not yet support Adaptive Data Rate.
   // Using it is also only necessary in limited situations.
@@ -197,10 +231,10 @@ bool rn2xx3::initOTAA(const String& AppEUI, const String& AppKey, const String& 
   _serial.setTimeout(30000);
   sendRawCommand(F("mac save"));
 
-  bool joined = false;
+  _joined = false;
 
   // Only try twice to join, then return and let the user handle it.
-  for(int i=0; i<2 && !joined; i++)
+  for(int i=0; i<2 && !_joined; i++)
   {
     sendRawCommand(F("mac join otaa"));
     // Parse 2nd response
@@ -208,16 +242,17 @@ bool rn2xx3::initOTAA(const String& AppEUI, const String& AppKey, const String& 
 
     if(receivedData.startsWith(F("accepted")))
     {
-      joined=true;
+      _joined=true;
       delay(1000);
     }
     else
     {
+      _lastErrorInvalidParam = receivedData;
       delay(1000);
     }
   }
   _serial.setTimeout(2000);
-  return joined;
+  return _joined;
 }
 
 
@@ -313,15 +348,9 @@ bool rn2xx3::initABP(const String& devAddr, const String& AppSKey, const String&
   _serial.setTimeout(2000);
   delay(1000);
 
-  if(receivedData.startsWith(F("accepted")))
-  {
-    return true;
-    //with abp we can always join successfully as long as the keys are valid
-  }
-  else
-  {
-    return false;
-  }
+  //with abp we can always join successfully as long as the keys are valid
+  _joined = receivedData.startsWith(F("accepted"));
+  return _joined;
 }
 
 TX_RETURN_TYPE rn2xx3::tx(const String& data)
@@ -415,6 +444,7 @@ TX_RETURN_TYPE rn2xx3::txCommand(const String& command, const String& data, bool
 
           case rn2xx3::mac_err:
           {
+            _lastErrorInvalidParam = receivedData;
             init();
             break;
           }
@@ -423,6 +453,7 @@ TX_RETURN_TYPE rn2xx3::txCommand(const String& command, const String& data, bool
           {
             //this should never happen if the prototype worked
             send_success = true;
+            _lastErrorInvalidParam = receivedData;
             return TX_FAIL;
           }
 
@@ -436,6 +467,7 @@ TX_RETURN_TYPE rn2xx3::txCommand(const String& command, const String& data, bool
           case rn2xx3::radio_err:
           {
             //This should never happen. If it does, something major is wrong.
+            _lastErrorInvalidParam = receivedData;
             init();
             break;
           }
@@ -444,6 +476,7 @@ TX_RETURN_TYPE rn2xx3::txCommand(const String& command, const String& data, bool
           {
             //unknown response
             //init();
+            _lastErrorInvalidParam = receivedData;
           }
         } // End while after "ok"
         break;
@@ -458,6 +491,8 @@ TX_RETURN_TYPE rn2xx3::txCommand(const String& command, const String& data, bool
 
       case rn2xx3::not_joined:
       {
+        _lastErrorInvalidParam = receivedData;
+        _joined = false;
         init();
         break;
       }
@@ -465,18 +500,21 @@ TX_RETURN_TYPE rn2xx3::txCommand(const String& command, const String& data, bool
       case rn2xx3::no_free_ch:
       {
         //retry
+        _lastErrorInvalidParam = receivedData;
         delay(1000);
         break;
       }
 
       case rn2xx3::silent:
       {
+        _lastErrorInvalidParam = receivedData;
         init();
         break;
       }
 
       case rn2xx3::frame_counter_err_rejoin_needed:
       {
+        _lastErrorInvalidParam = receivedData;
         init();
         break;
       }
@@ -503,6 +541,7 @@ TX_RETURN_TYPE rn2xx3::txCommand(const String& command, const String& data, bool
 
       case rn2xx3::mac_paused:
       {
+        _lastErrorInvalidParam = receivedData;
         init();
         break;
       }
@@ -510,6 +549,7 @@ TX_RETURN_TYPE rn2xx3::txCommand(const String& command, const String& data, bool
       case rn2xx3::invalid_data_len:
       {
         //should not happen if the prototype worked
+        _lastErrorInvalidParam = receivedData;
         send_success = true;
         return TX_FAIL;
       }
@@ -594,12 +634,13 @@ String rn2xx3::base16decode(const String& input_c)
   return output;
 }
 
-void rn2xx3::setDR(int dr)
+bool rn2xx3::setDR(int dr)
 {
   if(dr>=0 && dr<=5)
   {
-    sendMacSet(F("dr"), String(dr));
+    return sendMacSet(F("dr"), String(dr));
   }
+  return false;
 }
 
 void rn2xx3::sleep(long msec)
@@ -820,10 +861,12 @@ int rn2xx3::readIntValue(const String& command)
 }
 
 String rn2xx3::getLastErrorInvalidParam() 
-{
+{/*
   String res = _lastErrorInvalidParam;
   _lastErrorInvalidParam = "";
   return res;
+  */
+  return _lastErrorInvalidParam;;
 }
 
 bool rn2xx3::sendMacSet(const String& param, const String& value)

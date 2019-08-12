@@ -19,7 +19,7 @@ enum RN2xx3_t {
 };
 
 enum FREQ_PLAN {
-  SINGLE_CHANNEL_EU,
+  SINGLE_CHANNEL_EU = 0,
   TTN_EU,
   TTN_US,
   DEFAULT_EU
@@ -51,7 +51,7 @@ class rn2xx3
      * Transmit the correct sequence to the rn2xx3 to trigger its autobauding feature.
      * After this operation the rn2xx3 should communicate at the same baud rate than us.
      */
-    void autobaud();
+    bool autobaud();
 
     /*
      * Get the hardware EUI of the radio, so that we can register it on The Things Network
@@ -86,6 +86,8 @@ class rn2xx3
      * to detect if the module is either an RN2483 or an RN2903.
      */
     String sysver();
+
+    bool setSF(uint8_t sf);
 
     /*
      * Initialise the RN2xx3 and join the LoRa network (if applicable).
@@ -184,7 +186,7 @@ class rn2xx3
      * This can be overwritten by the network when using OTAA.
      * So to force a datarate, call this function after initOTAA().
      */
-    void setDR(int dr);
+    bool setDR(int dr);
 
     /*
      * Put the RN2xx3 to sleep for a specified timeframe.
@@ -247,6 +249,8 @@ class rn2xx3
      */
     String getLastErrorInvalidParam();
 
+    bool hasJoined() { return _joined; }
+
   private:
     Stream& _serial;
 
@@ -254,6 +258,11 @@ class rn2xx3
 
     //Flags to switch code paths. Default is to use OTAA.
     bool _otaa = true;
+
+    // Keeping track of whether the module is (still) joined
+    bool _joined = false;
+
+    FREQ_PLAN _fp = TTN_EU;
 
     //The default address to use on TTN if no address is defined.
     //This one falls in the "testing" address space.

@@ -107,18 +107,22 @@ void serialHelper_webformLoad(int rxPinDef, int txPinDef, bool allowSoftwareSeri
   }
 }
 
-void serialHelper_webformSave(struct EventStruct *event) {
+void serialHelper_webformSave(int8_t &rxPin, int8_t &txPin) {
   int serialPortSelected = getFormItemInt(F("serPort"), 0);
 
   if (serialPortSelected > 0) {
-    int rxPin, txPin;
+    int tmprxPin, tmptxPin;
     ESPeasySerialType::serialtype serType = static_cast<ESPeasySerialType::serialtype>(serialPortSelected);
 
-    if (ESPeasySerialType::getSerialTypePins(serType, rxPin, txPin)) {
-      CONFIG_PIN1 = rxPin;
-      CONFIG_PIN2 = txPin;
+    if (ESPeasySerialType::getSerialTypePins(serType, tmprxPin, tmptxPin)) {
+      rxPin = tmprxPin;
+      txPin = tmptxPin;
     }
   }
+}
+
+void serialHelper_webformSave(struct EventStruct *event) {
+  serialHelper_webformSave(CONFIG_PIN1, CONFIG_PIN2);
 }
 
 void serialHelper_plugin_init(struct EventStruct *event) {

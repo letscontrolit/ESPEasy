@@ -20,6 +20,7 @@ void handle_controllers() {
   if ((protocol != -1) && !controllerNotSet)
   {
     MakeControllerSettings(ControllerSettings);
+    bool mustInit = false;
 
     if (Settings.Protocol[controllerindex] != protocol)
     {
@@ -29,6 +30,7 @@ void handle_controllers() {
       // there is a protocol selected?
       if (protocol != 0)
       {
+        mustInit = true;
         handle_controllers_clearLoadDefaults(controllerindex, ControllerSettings);
       }
     }
@@ -39,11 +41,22 @@ void handle_controllers() {
       // there is a protocol selected
       if (protocol != 0)
       {
+        mustInit = true;
         handle_controllers_CopySubmittedSettings(controllerindex, ControllerSettings);
       }
     }
     addHtmlError(SaveControllerSettings(controllerindex, ControllerSettings));
     addHtmlError(SaveSettings());
+
+    if (mustInit) {
+      // Init controller plugin using the new settings.
+      byte ProtocolIndex = getProtocolIndex(Settings.Protocol[controllerindex]);
+      struct EventStruct TempEvent;
+      TempEvent.ControllerIndex = controllerindex;
+      TempEvent.ProtocolIndex   = ProtocolIndex;
+      String dummy;
+      CPluginCall(ProtocolIndex, CPLUGIN_INIT, &TempEvent, dummy);
+    }
   }
 
   html_add_form();
@@ -115,9 +128,6 @@ void handle_controllers_CopySubmittedSettings(byte controllerindex, ControllerSe
   // Call controller plugin to save CustomControllerSettings
   String dummy;
   CPluginCall(ProtocolIndex, CPLUGIN_WEBFORM_SAVE, &TempEvent, dummy);
-
-  // Init controller plugin using the new settings.
-  CPluginCall(ProtocolIndex, CPLUGIN_INIT,         &TempEvent, dummy);
 }
 
 // ********************************************************************************
