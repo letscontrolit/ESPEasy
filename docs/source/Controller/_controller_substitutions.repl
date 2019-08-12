@@ -141,7 +141,7 @@
 .. _C013_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_C013.ino
 .. |C013_usedby| replace:: `.`
 .. |C013_shortinfo| replace:: `.`
-.. |C013_maintainer| replace:: `.`
+.. |C013_maintainer| replace:: `TD-er`
 .. |C013_compileinfo| replace:: `.`
 
 .. |C014_name| replace:: :cyan:`Homie MQTT (Version 3.0.1 & 4.0.0dev)`
@@ -165,3 +165,25 @@
 .. |C016_shortinfo| replace:: `Cache layer to collect data while offline`
 .. |C016_maintainer| replace:: `TD-er`
 .. |C016_compileinfo| replace:: `Not in nightly builds. Only pre-built for special builds.`
+
+.. |C017_name| replace:: :cyan:`Zabbix`
+.. |C017_type| replace:: :cyan:`Controller`
+.. |C017_typename| replace:: :cyan:`Controller - Zabbix`
+.. |C017_status| replace:: :yellow:`TESTING`
+.. |C017_github| replace:: C017.ino
+.. _C017_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_C017.ino
+.. |C017_usedby| replace:: `.`
+.. |C017_shortinfo| replace:: `.`
+.. |C017_maintainer| replace:: `.`
+.. |C017_compileinfo| replace:: `.`
+
+.. |C018_name| replace:: :cyan:`LoRa TTN - RN2483/RN2903`
+.. |C018_type| replace:: :cyan:`Controller`
+.. |C018_typename| replace:: :cyan:`Controller - LoRa TTN - RN2483/RN2903`
+.. |C018_status| replace:: :yellow:`TESTING`
+.. |C018_github| replace:: C018.ino
+.. _C018_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_C018.ino
+.. |C018_usedby| replace:: `.`
+.. |C018_shortinfo| replace:: `.`
+.. |C018_maintainer| replace:: `TD-er`
+.. |C018_compileinfo| replace:: `.`

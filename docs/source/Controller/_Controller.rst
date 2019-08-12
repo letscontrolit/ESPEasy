@@ -34,6 +34,8 @@ Controller Plugins
    ":ref:`C013_page`","|C013_status|","C013"
    ":ref:`C014_page`","|C014_status|","C014"
    ":ref:`C016_page`","|C016_status|","C016"
+   ":ref:`C017_page`","|C017_status|","C017"
+   ":ref:`C018_page`","|C018_status|","C018"
 
 
 Controller Parameters

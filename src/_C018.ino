@@ -1,12 +1,12 @@
 #ifdef USES_C018
 
 // #######################################################################################################
-// ########################### Controller Plugin 018: TTN - RN2483/RN2903 ################################
+// ########################### Controller Plugin 018: LoRa TTN - RN2483/RN2903 ###########################
 // #######################################################################################################
 
 #define CPLUGIN_018
 #define CPLUGIN_ID_018         18
-#define CPLUGIN_NAME_018       "TTN - RN2483/RN2903"
+#define CPLUGIN_NAME_018       "LoRa TTN - RN2483/RN2903 [TESTING]"
 
 #define C018_BAUDRATE           9600
 #define C018_BAUDRATE_LABEL     "baudrate"
@@ -34,7 +34,7 @@ struct C018_data_struct {
     }
   }
 
-  bool init(const int16_t serial_rx, const int16_t serial_tx, unsigned long baudrate) {
+  bool init(const int8_t serial_rx, const int8_t serial_tx, unsigned long baudrate) {
     cacheHWEUI       = "";
     cacheSysVer      = "";
     autobaud_success = false;
