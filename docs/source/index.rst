@@ -27,6 +27,7 @@ Welcome to ESP Easy's documentation!
    :maxdepth: 2
    :caption: Appendix
 
+   Participate/PlatformIO.rst
    Participate/Documentation.rst
    Reference/Safety.rst
    Reference/Command.rst

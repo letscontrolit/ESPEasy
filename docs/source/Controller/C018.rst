@@ -1,0 +1,33 @@
+.. include:: _controller_substitutions.repl
+
+.. _C018_page:
+
+|C018_typename|
+==================================================
+
+|C018_shortinfo|
+
+Controller details
+------------------
+
+Type: |C018_type|
+
+Name: |C018_name|
+
+Status: |C018_status|
+
+GitHub: |C018_github|_
+
+Maintainer: |C018_maintainer|
+
+Change log
+----------
+
+.. versionadded:: 2.0 
+  ...
+
+  |added|
+  Initial release version.
+
+Description
+-----------

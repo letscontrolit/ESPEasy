@@ -2,8 +2,8 @@
 typedef struct s_fileinfo
 {
   String Name;
-  int Size;
-  bool isDirectory = false;
+  int    Size;
+  bool   isDirectory = false;
 } fileInfo;
 
-typedef std::function<bool(fileInfo)> HandlerFileInfo;
+typedef std::function<bool (fileInfo)> HandlerFileInfo;

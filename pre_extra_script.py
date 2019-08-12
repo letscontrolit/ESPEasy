@@ -29,5 +29,7 @@ env.Append(CPPDEFINES=[
   "USES_P085",  # AcuDC24x
   "USES_P087",  # Serial Proxy
 
+  "USES_C018", 
+
   ("WEBSERVER_RULES_DEBUG", "0")
 ])

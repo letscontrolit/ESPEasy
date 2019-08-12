@@ -5,8 +5,173 @@
   # undef WEBSERVER_RULES_DEBUG
 #endif // ifdef BUILD_MINIMAL_OTA
 
+
 // ********************************************************************************
 // Web Interface rules page
+// ********************************************************************************
+void handle_rules() {
+  checkRAM(F("handle_rules"));
+
+  if (!isLoggedIn() || !Settings.UseRules) { return; }
+  navMenuIndex = MENU_INDEX_RULES;
+  TXBuffer.startStream();
+  sendHeadandTail_stdtemplate();
+  static byte currentSet = 1;
+
+  const byte rulesSet = getFormItemInt(F("set"), 1);
+
+  #if defined(ESP8266)
+  String fileName = F("rules");
+  #endif // if defined(ESP8266)
+  #if defined(ESP32)
+  String fileName = F("/rules");
+  #endif // if defined(ESP32)
+  fileName += rulesSet;
+  fileName += F(".txt");
+
+
+  checkRAM(F("handle_rules"));
+
+
+  if (WebServer.args() > 0)
+  {
+    String log = F("Rules : Save rulesSet: ");
+    log += rulesSet;
+    log += F(" currentSet: ");
+    log += currentSet;
+
+    if (currentSet == rulesSet) // only save when the dropbox was not used to change set
+    {
+      String rules = WebServer.arg(F("rules"));
+      log += F(" rules.length(): ");
+      log += rules.length();
+
+      if (rules.length() > RULES_MAX_SIZE) {
+        TXBuffer += F("<span style=\"color:red\">Data was not saved, exceeds web editor limit!</span>");
+      }
+      else
+      {
+        // if (RTC.flashDayCounter > MAX_FLASHWRITES_PER_DAY)
+        // {
+        //   String log = F("FS   : Daily flash write rate exceeded! (powercyle to reset this)");
+        //   addLog(LOG_LEVEL_ERROR, log);
+        //   TXBuffer += F("<span style=\"color:red\">Error saving to flash!</span>");
+        // }
+        // else
+        // {
+        fs::File f = tryOpenFile(fileName, "w");
+
+        if (f)
+        {
+          log += F(" Write to file: ");
+          log += fileName;
+          f.print(rules);
+          f.close();
+
+          // flashCount();
+        }
+
+        // }
+      }
+    }
+    else // changed set, check if file exists and create new
+    {
+      if (!SPIFFS.exists(fileName))
+      {
+        log += F(" Create new file: ");
+        log += fileName;
+        fs::File f = tryOpenFile(fileName, "w");
+
+        if (f) { f.close(); }
+      }
+    }
+    addLog(LOG_LEVEL_INFO, log);
+
+    log = F(" Webserver args:");
+
+    for (int i = 0; i < WebServer.args(); ++i) {
+      log += ' ';
+      log += i;
+      log += F(": '");
+      log += WebServer.argName(i);
+      log += F("' length: ");
+      log += WebServer.arg(i).length();
+    }
+    addLog(LOG_LEVEL_INFO, log);
+  }
+
+  if (rulesSet != currentSet) {
+    currentSet = rulesSet;
+  }
+
+  TXBuffer += F("<form name = 'frmselect' method = 'post'>");
+  html_table_class_normal();
+  html_TR();
+  html_table_header(F("Rules"));
+
+  byte   choice = rulesSet;
+  String options[RULESETS_MAX];
+  int    optionValues[RULESETS_MAX];
+
+  for (byte x = 0; x < RULESETS_MAX; x++)
+  {
+    options[x]      = F("Rules Set ");
+    options[x]     += x + 1;
+    optionValues[x] = x + 1;
+  }
+
+  html_TR_TD();
+  addSelector(F("set"), RULESETS_MAX, options, optionValues, NULL, choice, true);
+  addHelpButton(F("Tutorial_Rules"));
+
+  // load form data from flash
+
+  int size   = 0;
+  fs::File f = tryOpenFile(fileName, "r");
+
+  if (f)
+  {
+    size = f.size();
+
+    if (size > RULES_MAX_SIZE) {
+      TXBuffer += F("<span style=\"color:red\">Filesize exceeds web editor limit!</span>");
+    }
+    else
+    {
+      html_TR_TD(); TXBuffer += F("<textarea name='rules' rows='30' wrap='off'>");
+
+      while (f.available())
+      {
+        String c((char)f.read());
+        htmlEscape(c);
+        TXBuffer += c;
+      }
+      TXBuffer += F("</textarea>");
+    }
+    f.close();
+  }
+
+  html_TR_TD(); TXBuffer += F("Current size: ");
+  TXBuffer               += size;
+  TXBuffer               += F(" characters (Max ");
+  TXBuffer               += RULES_MAX_SIZE;
+  TXBuffer               += ')';
+
+  addFormSeparator(2);
+
+  html_TR_TD();
+  addSubmitButton();
+  addButton(fileName, F("Download to file"));
+  html_end_table();
+  html_end_form();
+  sendHeadandTail_stdtemplate(true);
+  TXBuffer.endStream();
+
+  checkRuleSets();
+}
+
+// ********************************************************************************
+// Web Interface rules page  (NEW)
 // ********************************************************************************
 void handle_rules_new() {
   if (!isLoggedIn() || !Settings.UseRules) { return; }

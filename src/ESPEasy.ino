@@ -435,11 +435,6 @@ int firstEnabledMQTTController() {
   return -1;
 }
 
-bool getControllerProtocolDisplayName(byte ProtocolIndex, byte parameterIdx, String& protoDisplayName) {
-  EventStruct tmpEvent;
-  tmpEvent.idx=parameterIdx;
-  return CPluginCall(ProtocolIndex, CPLUGIN_GET_PROTOCOL_DISPLAY_NAME, &tmpEvent, protoDisplayName);
-}
 
 void updateLoopStats() {
   ++loopCounter;
@@ -729,7 +724,8 @@ void updateMQTTclient_connected() {
 
 void run50TimesPerSecond() {
   START_TIMER;
-  PluginCall(PLUGIN_FIFTY_PER_SECOND, 0, dummyString);
+  String dummy;
+  PluginCall(PLUGIN_FIFTY_PER_SECOND, 0, dummy);
   STOP_TIMER(PLUGIN_CALL_50PS);
 }
 
@@ -737,15 +733,16 @@ void run50TimesPerSecond() {
  * Tasks that run 10 times per second
 \*********************************************************************************************/
 void run10TimesPerSecond() {
+  String dummy;
   {
     START_TIMER;
-    PluginCall(PLUGIN_TEN_PER_SECOND, 0, dummyString);
+    PluginCall(PLUGIN_TEN_PER_SECOND, 0, dummy);
     STOP_TIMER(PLUGIN_CALL_10PS);
   }
   {
     START_TIMER;
 //    PluginCall(PLUGIN_UNCONDITIONAL_POLL, 0, dummyString);
-    PluginCall(PLUGIN_MONITOR, 0, dummyString);
+    PluginCall(PLUGIN_MONITOR, 0, dummy);
     STOP_TIMER(PLUGIN_CALL_10PSU);
   }
   if (Settings.UseRules && eventBuffer.length() > 0)
@@ -807,7 +804,8 @@ void runOncePerSecond()
     checkTime();
 
 //  unsigned long start = micros();
-  PluginCall(PLUGIN_ONCE_A_SECOND, 0, dummyString);
+  String dummy;
+  PluginCall(PLUGIN_ONCE_A_SECOND, 0, dummy);
 //  unsigned long elapsed = micros() - start;
 
   if (Settings.UseRules)
@@ -945,7 +943,10 @@ void SensorSendTask(byte TaskIndex)
       preValue[varNr] = UserVar[varIndex + varNr];
 
     if(Settings.TaskDeviceDataFeed[TaskIndex] == 0)  // only read local connected sensorsfeeds
-      success = PluginCall(PLUGIN_READ, &TempEvent, dummyString);
+    {
+      String dummy;
+      success = PluginCall(PLUGIN_READ, &TempEvent, dummy);
+    }
     else
       success = true;
 
@@ -1009,7 +1010,8 @@ void backgroundtasks()
   process_serialWriteBuffer();
   if(!UseRTOSMultitasking){
     if (Settings.UseSerial && Serial.available()) {
-      if (!PluginCall(PLUGIN_SERIAL_IN, 0, dummyString)) {
+      String dummy;
+      if (!PluginCall(PLUGIN_SERIAL_IN, 0, dummy)) {
         serial();
       }
     }

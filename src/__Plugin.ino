@@ -21,21 +21,18 @@ static const char ADDPLUGIN_ERROR[] PROGMEM = "System: Error - Too many Plugins"
 
 void PluginInit(void)
 {
-  byte x;
-
   // Clear pointer table for all plugins
-  for (x = 0; x < PLUGIN_MAX; x++)
+  for (byte x = 0; x < PLUGIN_MAX; x++)
   {
     Plugin_ptr[x] = 0;
     Plugin_id[x] = 0;
   }
   // Clear the cache.
-  for (x = 0; x < TASKS_MAX; x++)
+  for (byte x = 0; x < TASKS_MAX; x++)
   {
     Task_id_to_Plugin_id[x] = -1;
   }
-
-  x = 0;
+  int x = 0; // Used in ADDPLUGIN macro
 
 #ifdef PLUGIN_001
   ADDPLUGIN(001)
@@ -1057,8 +1054,9 @@ void PluginInit(void)
   ADDPLUGIN(255)
 #endif
 
-  PluginCall(PLUGIN_DEVICE_ADD, 0, dummyString);
-  PluginCall(PLUGIN_INIT_ALL, 0, dummyString);
+  String dummy;
+  PluginCall(PLUGIN_DEVICE_ADD, 0, dummy);
+  PluginCall(PLUGIN_INIT_ALL, 0, dummy);
 
 }
 
@@ -1140,7 +1138,6 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
         }
       }
       return true;
-      break;
 
       case PLUGIN_MONITOR:
         for (auto it=globalMapPortStatus.begin(); it!=globalMapPortStatus.end(); ++it) {
@@ -1161,7 +1158,7 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
           }
         }
         return true;
-        break;
+
 
     // Call to all plugins. Return at first match
     case PLUGIN_WRITE:

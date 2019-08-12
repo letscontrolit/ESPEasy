@@ -46,6 +46,8 @@ bool CPlugin_016(byte function, struct EventStruct *event, String& string)
         Protocol[protocolCount].usesPassword = false;
         Protocol[protocolCount].defaultPort = 80;
         Protocol[protocolCount].usesID = false;
+        Protocol[protocolCount].usesHost = false;
+        Protocol[protocolCount].usesPort = false;
         break;
       }
 

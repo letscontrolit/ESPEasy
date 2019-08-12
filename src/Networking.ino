@@ -157,7 +157,8 @@ void checkUDP()
                 TempEvent.Data = reinterpret_cast<byte*>(&packetBuffer[0]);
                 TempEvent.Par1 = remoteIP[3];
                 TempEvent.Par2 = len;
-                PluginCall(PLUGIN_UDP_IN, &TempEvent, dummyString);
+                String dummy;
+                PluginCall(PLUGIN_UDP_IN, &TempEvent, dummy);
                 CPluginCall(CPLUGIN_UDP_IN, &TempEvent);
                 break;
               }

@@ -190,7 +190,7 @@ void QEIx4::loop()
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void QEIx4::processStateMachine()
+void ICACHE_RAM_ATTR QEIx4::processStateMachine()
 {
 	DEB(".");
 
@@ -227,7 +227,7 @@ void QEIx4::processStateMachine()
 	}
 }
 
-void QEIx4::ISR()
+void ICACHE_RAM_ATTR QEIx4::ISR()
 {
 	for (byte i=0; i<4; i++)
 		if (__instance[i])
