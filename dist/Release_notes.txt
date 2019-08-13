@@ -1,4 +1,38 @@
 -------------------------------------------------
+Changes in release mega-20190813 (since mega-20190809)
+-------------------------------------------------
+
+Release date: Tue Aug 13 04:00:10 CEST 2019
+
+Gijs Noorlander (21):
+      [TTN] Add RN2483-Arduino-Library
+      [TTN] Skeleton for C018 TTN RN2xx3 controller
+      [RN2384 lib] Only use const String& in function parameters
+      [LoRa plugin] Use separate object for C018 data
+      [LoRa TTN] Create special interface for LoRa TTN controller
+      [Controller page] Restructure Controller rendering page
+      Missing break; statement in controllers function switch statement
+      [Cleanup] Split Webserver.ino is separate files per page
+      [Cleanup] Uncrustify of all WebServer_*.ino files
+      [Cleanup] Split handle_controllers() function into separate functions
+      [Cleanup] Split handle_devices() function into separate functions
+      [Cleanup] Stop using global declared dummyString
+      [LoRa TTN] Show Dev Addr in controller overview page as host
+      [LoRa TTN] Send data to the TTN network + decoder
+      [LoRa TTN] Start working on the interpreter of decoded data
+      [Encoder] ICACHE_RAM_ATTR added for encoder plugin
+      [LoRa TTN] Add basic decoder for all plugins
+      [Docs] Building ESPeasy using PlatformIO in VS-Code
+      [LoRa TTN] Add decoder types
+      [LoRa TTN] Make settings configurable & add support ABP
+      [LoRa TTN] Add documentation stubs for C018-LoRaTTN and C017-Zabbix
+
+TD-er (2):
+      Improve RN2xx3 LoRo TTN library
+      [LoRa TTN] Add some statistics to the controller info page
+
+
+-------------------------------------------------
 Changes in release mega-20190809 (since mega-20190805)
 -------------------------------------------------
 
