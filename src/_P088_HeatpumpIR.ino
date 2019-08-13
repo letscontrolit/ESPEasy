@@ -207,7 +207,6 @@ boolean Plugin_088(byte function, struct EventStruct *event, String& string)
           do
           {
             const char* shortName = heatpumpIR[i]->model();
-            const char* longName = heatpumpIR[i]->info();
 
             if (strcmp_P(heatpumpModel.c_str(), shortName) == 0)
             {

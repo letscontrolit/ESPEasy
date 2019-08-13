@@ -17,6 +17,7 @@ class IRSender
     IRSender(uint8_t pin); // Cannot create generic IRSender instances
 
   public:
+    virtual ~IRSender() = default;
     virtual void setFrequency(int frequency);
     void sendIRbyte(uint8_t sendByte, int bitMarkLength, int zeroSpaceLength, int oneSpaceLength);
     uint8_t bitReverse(uint8_t x);
