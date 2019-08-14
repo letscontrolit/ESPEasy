@@ -32,16 +32,25 @@ struct C018_data_struct {
       delete C018_easySerial;
       C018_easySerial = nullptr;
     }
-  }
-
-  bool init(const int8_t serial_rx, const int8_t serial_tx, unsigned long baudrate) {
     cacheHWEUI       = "";
     cacheSysVer      = "";
     autobaud_success = false;
+  }
 
-    if ((serial_rx < 0) && (serial_tx < 0)) {
+  bool init(const int8_t serial_rx, const int8_t serial_tx, unsigned long baudrate) {
+    if ((serial_rx < 0) || (serial_tx < 0)) {
+      // Both pins are needed, or else no 
       return false;
     }
+    if (isInitialized()) {
+      // Check to see if serial parameters have changed.
+      bool notChanged = true;
+      notChanged &= C018_easySerial->getRxPin() == serial_rx;
+      notChanged &= C018_easySerial->getTxPin() == serial_tx;
+      notChanged &= C018_easySerial->getBaudRate() == baudrate;
+      if (notChanged) return true;
+    }
+
     reset();
     C018_easySerial = new ESPeasySerial(serial_rx, serial_tx);
 
@@ -111,6 +120,16 @@ struct C018_data_struct {
   String getLastErrorInvalidParam() {
     if (!isInitialized()) { return ""; }
     return myLora->getLastErrorInvalidParam();
+  }
+
+  bool getFrameCounters(uint32_t &dnctr, uint32_t &upctr, uint32_t &mcastdnctr) {
+    if (!isInitialized()) { return ""; }
+    return myLora->getFrameCounters(dnctr, upctr, mcastdnctr);
+  }
+
+  bool setFrameCounters(uint32_t dnctr, uint32_t upctr, uint32_t mcastdnctr) {
+    if (!isInitialized()) { return ""; }
+    return myLora->setFrameCounters(dnctr, upctr, mcastdnctr);
   }
 
   // Cached data, only changing occasionally.
@@ -279,19 +298,39 @@ bool CPlugin_018(byte function, struct EventStruct *event, String& string)
       LoadCustomControllerSettings(event->ControllerIndex, (byte *)&customConfig, sizeof(customConfig));
       customConfig.validate();
 
-      addFormTextBox(F("OTAA: Device EUI"), F("deveui"), customConfig.DeviceEUI, C018_DEVICE_EUI_LEN - 1);
-      addFormNote(F("Leave empty to use HW DevEUI"));
+      {
+        // Script to toggle visibility of OTAA/ABP field, based on the activation method selector.
+        byte   ProtocolIndex            = getProtocolIndex(Settings.Protocol[event->ControllerIndex]);
+        String script = F("function joinChanged(elem){ var styleOTAA = elem.value == 0 ? '' : 'none'; var styleABP = elem.value == 1 ? '' : 'none';");
+        script += c018_add_joinChanged_script_element_line(getControllerParameterInternalName(ProtocolIndex, CONTROLLER_USER), true);
+        script += c018_add_joinChanged_script_element_line(getControllerParameterInternalName(ProtocolIndex, CONTROLLER_PASS), true);
+        script += c018_add_joinChanged_script_element_line(F("deveui"), true);
+        script += c018_add_joinChanged_script_element_line(F("deveui_note"), true);
 
-      addFormTextBox(F("ABP: Device Addr"),         F("devaddr"), customConfig.DeviceAddr,        C018_DEVICE_ADDR_LEN - 1);
-      addFormTextBox(F("ABP: Network Session Key"), F("nskey"),   customConfig.NetworkSessionKey, C018_NETWORK_SESSION_KEY_LEN - 1);
-      addFormTextBox(F("ABP: App Session Key"),     F("appskey"), customConfig.AppSessionKey,     C018_APP_SESSION_KEY_LEN - 1);
+        script += c018_add_joinChanged_script_element_line(F("devaddr"), false);
+        script += c018_add_joinChanged_script_element_line(F("nskey"), false);
+        script += c018_add_joinChanged_script_element_line(F("appskey"), false);
+        script += '}';
+
+        html_add_script(script, false);
+      }
+
+      addFormTextBox(F("Device EUI"), F("deveui"), customConfig.DeviceEUI, C018_DEVICE_EUI_LEN - 1);
+      addFormNote(F("Leave empty to use HW DevEUI"), F("deveui_note"));
+
+      addFormTextBox(F("Device Addr"),         F("devaddr"), customConfig.DeviceAddr,        C018_DEVICE_ADDR_LEN - 1);
+      addFormTextBox(F("Network Session Key"), F("nskey"),   customConfig.NetworkSessionKey, C018_NETWORK_SESSION_KEY_LEN - 1);
+      addFormTextBox(F("App Session Key"),     F("appskey"), customConfig.AppSessionKey,     C018_APP_SESSION_KEY_LEN - 1);
 
       {
         byte   choice     = customConfig.joinmethod;
         String options[2] = { F("OTAA"),  F("ABP") };
         int    values[2]  = { C018_USE_OTAA, C018_USE_ABP };
-        addFormSelector(F("Activation Method"), F("joinmethod"), 2, options, values, NULL, choice, false);
+        addFormSelector_script(F("Activation Method"), F("joinmethod"), 2,
+         options, values, NULL, choice, 
+         F("joinChanged(this)")); // Script to toggle OTAA/ABP fields visibility when changing selection.
       }
+      html_add_script(F("document.getElementById('joinmethod').onchange();"), false);
 
       addTableSeparator(F("Connection Configuration"), 2, 3);
       {
@@ -307,8 +346,7 @@ bool CPlugin_018(byte function, struct EventStruct *event, String& string)
       addTableSeparator(F("Serial Port Configuration"), 2, 3);
 
       // Optional reset pin RN2xx3
-      addRowLabel(formatGpioName_output_optional(F("Reset")));
-      addPinSelect(false, F("taskdevicepin3"), customConfig.resetpin);
+      addFormPinSelect(formatGpioName_output_optional(F("Reset")), F("taskdevicepin3"), customConfig.resetpin);
 
       // Show serial port selection
       addFormPinSelect(formatGpioName_RX(false), F("taskdevicepin1"), customConfig.rxpin);
@@ -333,8 +371,16 @@ bool CPlugin_018(byte function, struct EventStruct *event, String& string)
       addRowLabel(F("Dev Addr"));
       addHtml(C018_data.getDevaddr());
 
-      addRowLabel(F("Uplink Frame Counter"));
-      addHtml(C018_data.sendRawCommand(F("mac get upctr")));
+      uint32_t dnctr, upctr, mcastdnctr;
+      if (C018_data.getFrameCounters(dnctr, upctr, mcastdnctr)) {
+        addRowLabel(F("Frame Counters (down/up/mcastdown)"));
+        String values = String(dnctr);
+        values += '/';
+        values += upctr;
+        values += '/';
+        values += mcastdnctr;
+        addHtml(values);
+      }
 
       addRowLabel(F("Last Command Error"));
       addHtml(C018_data.getLastErrorInvalidParam());
@@ -373,10 +419,10 @@ bool CPlugin_018(byte function, struct EventStruct *event, String& string)
 
       switch (event->idx) {
         case CONTROLLER_USER:
-          string = F("OTAA: AppEUI");
+          string = F("AppEUI");
           break;
         case CONTROLLER_PASS:
-          string = F("OTAA: AppKey");
+          string = F("AppKey");
           break;
         case CONTROLLER_TIMEOUT:
           string = F("Gateway Timeout");
@@ -416,6 +462,15 @@ bool do_process_c018_delay_queue(int controller_number, const C018_queue_element
 
   delete[] buffer;
   return success;
+}
+
+String c018_add_joinChanged_script_element_line(const String& id, bool forOTAA) {
+  String result = F("document.getElementById('tr_");
+  result += id;
+  result += F("').style.display = style");
+  result += forOTAA ? F("OTAA") : F("ABP");
+  result += ';';
+  return result;
 }
 
 #endif // ifdef USES_C018

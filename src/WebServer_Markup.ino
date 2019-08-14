@@ -128,6 +128,13 @@ void addRowLabel(const String& label)
   addRowLabel(label, "");
 }
 
+void addRowLabel_tr_id(const String& label, const String& id)
+{
+  String tr_id = F("tr_");
+  tr_id += id;
+  addRowLabel(label, tr_id);
+}
+
 void addRowLabel(const String& label, const String& id)
 {
   if (id.length() > 0) {
@@ -137,8 +144,10 @@ void addRowLabel(const String& label, const String& id)
   } else {
     html_TR_TD();
   }
-  TXBuffer += label;
-  TXBuffer += ':';
+  if (label.length() != 0) {
+    TXBuffer += label;
+    TXBuffer += ':';
+  }
   html_TD();
 }
 
