@@ -13,20 +13,20 @@ function Decoder(bytes, port) {
 
   if (port === 1) {
     // Single value
-    if (bytes.length === 8) {
-      return decode(bytes, [pluginid, uint16, uint8, int32_1e4], ['plugin_id', 'IDX', 'valuecount', 'val_1']);
+    if (bytes.length === 9) {
+      return decode(bytes, [pluginid, uint16, uint8, uint8, int32_1e4], ['plugin_id', 'IDX', 'samplesetcount', 'valuecount', 'val_1']);
     }
     // Dual value
-    if (bytes.length === 12) {
-      return decode(bytes, [pluginid, uint16, uint8, int32_1e4, int32_1e4], ['plugin_id', 'IDX', 'valuecount', 'val_1', 'val_2']);
+    if (bytes.length === 13) {
+      return decode(bytes, [pluginid, uint16, uint8, uint8, int32_1e4, int32_1e4], ['plugin_id', 'IDX', 'samplesetcount', 'valuecount', 'val_1', 'val_2']);
     }
     // Triple value
-    if (bytes.length === 16) {
-      return decode(bytes, [pluginid, uint16, uint8, int32_1e4, int32_1e4, int32_1e4], ['plugin_id', 'IDX', 'valuecount', 'val_1', 'val_2', 'val_3']);
+    if (bytes.length === 17) {
+      return decode(bytes, [pluginid, uint16, uint8, uint8, int32_1e4, int32_1e4, int32_1e4], ['plugin_id', 'IDX', 'samplesetcount', 'valuecount', 'val_1', 'val_2', 'val_3']);
     }
     // Quad value
-    if (bytes.length === 20) {
-      return decode(bytes, [pluginid, uint16, uint8, int32_1e4, int32_1e4, int32_1e4, int32_1e4], ['plugin_id', 'IDX', 'valuecount', 'val_1', 'val_2', 'val_3', 'val_4']);
+    if (bytes.length === 21) {
+      return decode(bytes, [pluginid, uint16, uint8, uint8, int32_1e4, int32_1e4, int32_1e4, int32_1e4], ['plugin_id', 'IDX', 'samplesetcount', 'valuecount', 'val_1', 'val_2', 'val_3', 'val_4']);
     }
   }
 

@@ -319,14 +319,15 @@ public:
 class C018_queue_element {
 public:
 
-  C018_queue_element() : idx(0), TaskIndex(0), sensorType(0) {}
+  C018_queue_element() : idx(0), TaskIndex(0), sensorType(0), valueCount(0), sampleSetCount(0) {}
 
-  C018_queue_element(const struct EventStruct *event, byte value_count) :
+  C018_queue_element(const struct EventStruct *event, byte value_count, uint8_t sampleSet_count) :
     controller_idx(event->ControllerIndex),
     idx(event->idx),
     TaskIndex(event->TaskIndex),
     sensorType(event->sensorType),
-    valueCount(value_count)
+    valueCount(value_count),
+    sampleSetCount(sampleSet_count)
   {
     const byte BaseVarIndex = TaskIndex * VARS_PER_TASK;
 
@@ -344,6 +345,7 @@ public:
     data[pos++] = Settings.TaskDeviceNumber[TaskIndex];
     data[pos++] = (idx & 0xFF);
     data[pos++] = ((idx >> 8) & 0xFF);
+    data[pos++] = sampleSetCount;
     data[pos++] = valueCount;
 
     for (int i = 0; i < valueCount; ++i) {
@@ -366,6 +368,7 @@ public:
   byte TaskIndex;
   byte sensorType;
   byte valueCount;
+  uint8_t sampleSetCount;
 };
 
 /*********************************************************************************************\

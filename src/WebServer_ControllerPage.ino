@@ -252,6 +252,9 @@ void handle_controllers_ControllerSettingsPage(byte controllerindex)
       }
       addControllerParameterForm(ControllerSettings, controllerindex, CONTROLLER_CHECK_REPLY);
       addControllerParameterForm(ControllerSettings, controllerindex, CONTROLLER_TIMEOUT);
+      if (Protocol[ProtocolIndex].usesSampleSets) {
+        addControllerParameterForm(ControllerSettings, controllerindex, CONTROLLER_SAMPLE_SET_INITIATOR);
+      }
 
       if (Protocol[ProtocolIndex].usesAccount || Protocol[ProtocolIndex].usesPassword) {
         addTableSeparator(F("Credentials"), 2, 3);

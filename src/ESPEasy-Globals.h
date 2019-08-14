@@ -357,7 +357,8 @@ void check_size() {
 #define CONTROLLER_LWT_CONNECT_MESSAGE      16
 #define CONTROLLER_LWT_DISCONNECT_MESSAGE   17
 #define CONTROLLER_TIMEOUT                  18
-#define CONTROLLER_ENABLED                  19  // Keep this as last, is used to loop over all parameters
+#define CONTROLLER_SAMPLE_SET_INITIATOR       19
+#define CONTROLLER_ENABLED                  20  // Keep this as last, is used to loop over all parameters
 
 #define NPLUGIN_PROTOCOL_ADD                1
 #define NPLUGIN_GET_DEVICENAME              2
@@ -1105,6 +1106,7 @@ struct ControllerSettingsStruct
     DeleteOldest = false;
     ClientTimeout = CONTROLLER_CLIENTTIMEOUT_DFLT;
     MustCheckReply = false;
+    SampleSetInitiator = 0;
     for (byte i = 0; i < 4; ++i) {
       IP[i] = 0;
     }
@@ -1131,6 +1133,7 @@ struct ControllerSettingsStruct
   boolean       DeleteOldest; // Action to perform when buffer full, delete oldest, or ignore newest.
   unsigned int  ClientTimeout;
   boolean       MustCheckReply; // When set to false, a sent message is considered always successful.
+  uint8_t       SampleSetInitiator; // The first plugin to start a sample set.
 
   void validate() {
     if (Port > 65535) Port = 0;
@@ -1616,7 +1619,8 @@ struct ProtocolStruct
 {
   ProtocolStruct() :
     defaultPort(0), Number(0), usesMQTT(false), usesAccount(false), usesPassword(false),
-    usesTemplate(false), usesID(false), Custom(false), usesHost(true), usesPort(true), usesQueue(true) {}
+    usesTemplate(false), usesID(false), Custom(false), usesHost(true), usesPort(true), 
+    usesQueue(true), usesSampleSets(false) {}
   uint16_t defaultPort;
   byte Number;
   bool usesMQTT : 1;
@@ -1628,6 +1632,7 @@ struct ProtocolStruct
   bool usesHost : 1;
   bool usesPort : 1;
   bool usesQueue : 1;
+  bool usesSampleSets : 1;
 };
 typedef std::vector<ProtocolStruct> ProtocolVector;
 ProtocolVector Protocol;

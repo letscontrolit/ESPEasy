@@ -37,11 +37,12 @@ struct C018_data_struct {
     autobaud_success = false;
   }
 
-  bool init(const int8_t serial_rx, const int8_t serial_tx, unsigned long baudrate, bool joinIsOTAA) {
+  bool init(const int8_t serial_rx, const int8_t serial_tx, unsigned long baudrate, bool joinIsOTAA, uint8_t sampleSet_Initiator) {
     if ((serial_rx < 0) || (serial_tx < 0)) {
       // Both pins are needed, or else no serial possible
       return false;
     }
+    sampleSetInitiator = sampleSet_Initiator;
 
     if (isInitialized()) {
       // Check to see if serial parameters have changed.
@@ -178,6 +179,17 @@ struct C018_data_struct {
     return cacheSysVer;
   }
 
+  uint8_t getSampleSetCount() const { return sampleSetCounter; }
+
+  uint8_t getSampleSetCount(uint8_t taskIndex) {
+    if (sampleSetInitiator == taskIndex)
+    {
+      ++sampleSetCounter;
+    }
+    return sampleSetCounter;
+  }
+
+
 private:
 
   void C018_logError(const String& command) {
@@ -214,6 +226,8 @@ private:
   String         cacheDevAddr;
   String         cacheHWEUI;
   String         cacheSysVer;
+  uint8_t        sampleSetCounter = 0;
+  uint8_t        sampleSetInitiator = 0;
   bool           autobaud_success = false;
 } C018_data;
 
@@ -277,13 +291,14 @@ bool CPlugin_018(byte function, struct EventStruct *event, String& string)
   {
     case CPLUGIN_PROTOCOL_ADD:
     {
-      Protocol[++protocolCount].Number     = CPLUGIN_ID_018;
-      Protocol[protocolCount].usesMQTT     = false;
-      Protocol[protocolCount].usesAccount  = true;
-      Protocol[protocolCount].usesPassword = true;
-      Protocol[protocolCount].defaultPort  = 1;
-      Protocol[protocolCount].usesID       = true;
-      Protocol[protocolCount].usesHost     = false;
+      Protocol[++protocolCount].Number       = CPLUGIN_ID_018;
+      Protocol[protocolCount].usesMQTT       = false;
+      Protocol[protocolCount].usesAccount    = true;
+      Protocol[protocolCount].usesPassword   = true;
+      Protocol[protocolCount].defaultPort    = 1;
+      Protocol[protocolCount].usesID         = true;
+      Protocol[protocolCount].usesHost       = false;
+      Protocol[protocolCount].usesSampleSets = true;
       break;
     }
 
@@ -315,7 +330,9 @@ bool CPlugin_018(byte function, struct EventStruct *event, String& string)
       LoadCustomControllerSettings(event->ControllerIndex, (byte *)&customConfig, sizeof(customConfig));
       customConfig.validate();
 
-      C018_data.init(customConfig.rxpin, customConfig.txpin, customConfig.baudrate, customConfig.joinmethod == C018_USE_OTAA);
+      C018_data.init(customConfig.rxpin, customConfig.txpin, customConfig.baudrate, 
+                     customConfig.joinmethod == C018_USE_OTAA,
+                     ControllerSettings.SampleSetInitiator);
 
       C018_data.setFrequencyPlan(static_cast<FREQ_PLAN>(customConfig.frequencyplan));
 
@@ -402,7 +419,6 @@ bool CPlugin_018(byte function, struct EventStruct *event, String& string)
       addFormNumericBox(F("Baudrate"), F(C018_BAUDRATE_LABEL), customConfig.baudrate, 2400, 115200);
       addUnit(F("baud"));
 
-
       addTableSeparator(F("Device Status"), 2, 3);
 
       // Some information on detected device
@@ -429,6 +445,9 @@ bool CPlugin_018(byte function, struct EventStruct *event, String& string)
 
       addRowLabel(F("Last Command Error"));
       addHtml(C018_data.getLastErrorInvalidParam());
+
+      addRowLabel(F("Sample Set Counter"));
+      addHtml(String(C018_data.getSampleSetCount()));
 
       addRowLabel(F("Status"));
       addHtml(String(C018_data.getRawStatus()));
@@ -487,7 +506,7 @@ bool CPlugin_018(byte function, struct EventStruct *event, String& string)
     case CPLUGIN_PROTOCOL_SEND:
     {
       byte valueCount = getValueCountFromSensorType(event->sensorType);
-      success = C018_DelayHandler.addToQueue(C018_queue_element(event, valueCount));
+      success = C018_DelayHandler.addToQueue(C018_queue_element(event, valueCount, C018_data.getSampleSetCount(event->TaskIndex)));
       scheduleNextDelayQueue(TIMER_C018_DELAY_QUEUE, C018_DelayHandler.getNextScheduleTime());
 
       break;
