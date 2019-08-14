@@ -246,6 +246,10 @@ public:
 
   using Print::write;
 
+  int getRxPin() const { return _receivePin; }
+  int getTxPin() const { return _transmitPin; }
+  unsigned long getBaudRate() const { return _baud; }
+
 private:
 
   const HardwareSerial* getHW() const;
