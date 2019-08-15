@@ -148,10 +148,8 @@ boolean Plugin_026(byte function, struct EventStruct *event, String& string)
     {
       // Matching JS code:
       // return decode(bytes, 
-      //  [pluginid, idx, uint8, uint8, 
-      //  uint24, uint24, int8, vcc, pct_8, uint8, uint8, uint8, uint8, uint24, uint16],
-      //  ['plugin_id', 'IDX', 'samplesetcount', 'valuecount', 
-      //  'uptime', 'freeheap', 'rssi', 'vcc', 'load', 'ip1', 'ip2', 'ip3', 'ip4', 'web', 'freestack']);
+      //  [header, uint24, uint24, int8, vcc, pct_8, uint8, uint8, uint8, uint8, uint24, uint16],
+      //  ['header', 'uptime', 'freeheap', 'rssi', 'vcc', 'load', 'ip1', 'ip2', 'ip3', 'ip4', 'web', 'freestack']);
       int index = 0;
       string += LoRa_addInt(P026_get_value(index++), PackedData_uint24);  // uptime
       string += LoRa_addInt(P026_get_value(index++), PackedData_uint24);  // freeheap

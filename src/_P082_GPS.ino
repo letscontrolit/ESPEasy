@@ -527,8 +527,8 @@ boolean Plugin_082(byte function, struct EventStruct *event, String& string) {
 
       if ((nullptr != P082_data) && P082_data->isInitialized()) {
         // Matching JS code:
-        // return decode(bytes, [pluginid, idx, uint8, uint8, latLng, latLng, altitude, uint16_1e2, hdop, uint8, uint8],
-        //      ['plugin_id', 'IDX', 'samplesetcount', 'valuecount', 'latitude', 'longitude', 'altitude', 'speed', 'hdop', 'max_snr', 'sat_tracked']);
+        // return decode(bytes, [header, latLng, latLng, altitude, uint16_1e2, hdop, uint8, uint8],
+        //      ['header', 'latitude', 'longitude', 'altitude', 'speed', 'hdop', 'max_snr', 'sat_tracked']);
         // altitude type: return +(int16(bytes) / 4 - 1000).toFixed(1);
         string += LoRa_addFloat(P082_data->cache[P082_QUERY_LAT], PackedData_latLng);
         string += LoRa_addFloat(P082_data->cache[P082_QUERY_LONG], PackedData_latLng);
