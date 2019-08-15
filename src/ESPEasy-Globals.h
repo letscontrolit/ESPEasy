@@ -2547,11 +2547,11 @@ static uint8_t getPackedDataTypeSize(PackedData_enum dtype, float& factor, float
     case PackedData_int32_1e2:   factor = 1e2;       return 4;
     case PackedData_int32_1e1:   factor = 1e1;       return 4;
     case PackedData_pluginid:    factor = 1;         return 1;
-    case PackedData_latLng:      factor = 46600;     return 4; // 2^23 / 180
+    case PackedData_latLng:      factor = 46600;     return 3; // 2^23 / 180
     case PackedData_hdop:        factor = 10;        return 1;
-    case PackedData_altitude:    factor = 4;  offset = 1000; return 2; // -1000 .. 15383.75 meter
-    case PackedData_vcc:         factor = 41.83; offset = 1; return 1; // -1 .. 5.12V
-    case PackedData_pct_8:       factor = 2.56;      return 2; // 0 .. 100%
+    case PackedData_altitude:    factor = 4;     offset = 1000; return 2; // -1000 .. 15383.75 meter
+    case PackedData_vcc:         factor = 41.83; offset = 1;    return 1; // -1 .. 5.12V
+    case PackedData_pct_8:       factor = 2.56;                 return 1; // 0 .. 100%
   }
 
   // Unknown type

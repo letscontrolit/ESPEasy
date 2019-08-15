@@ -16,33 +16,31 @@ function Decoder(bytes, port) {
       case 26:
         // SysInfo
         return decode(bytes, 
-          [pluginid, uint16, uint8, uint8, 
-          uint24, uint24, int8, vcc, pct_8, uint8, uint8, uint8, uint8, uint24, uint16],
-          ['plugin_id', 'IDX', 'samplesetcount', 'valuecount', 
-          'uptime', 'freeheap', 'rssi', 'vcc', 'load', 'ip1', 'ip2', 'ip3', 'ip4', 'web', 'freestack']);
+          [header, uint24, uint24, int8, vcc, pct_8, uint8, uint8, uint8, uint8, uint24, uint16],
+          ['header', 'uptime', 'freeheap', 'rssi', 'vcc', 'load', 'ip1', 'ip2', 'ip3', 'ip4', 'web', 'freestack']);
   
       case 82:
         // GPS
-        return decode(bytes, [pluginid, uint16, uint8, uint8, latLng, latLng, altitude, uint16_1e2, hdop, uint8, uint8],
-          ['plugin_id', 'IDX', 'samplesetcount', 'valuecount', 'latitude', 'longitude', 'altitude', 'speed', 'hdop', 'max_snr', 'sat_tracked']);
+        return decode(bytes, [header, latLng, latLng, altitude, uint16_1e2, hdop, uint8, uint8],
+          ['header', 'latitude', 'longitude', 'altitude', 'speed', 'hdop', 'max_snr', 'sat_tracked']);
 
     }
 
 
     if (bytes.length === 9) {
-      return decode(bytes, [pluginid, uint16, uint8, uint8, int32_1e4], ['plugin_id', 'IDX', 'samplesetcount', 'valuecount', 'val_1']);
+      return decode(bytes, [header, int32_1e4], ['header', 'val_1']);
     }
     // Dual value
     if (bytes.length === 13) {
-      return decode(bytes, [pluginid, uint16, uint8, uint8, int32_1e4, int32_1e4], ['plugin_id', 'IDX', 'samplesetcount', 'valuecount', 'val_1', 'val_2']);
+      return decode(bytes, [header, int32_1e4, int32_1e4], ['header', 'val_1', 'val_2']);
     }
     // Triple value
     if (bytes.length === 17) {
-      return decode(bytes, [pluginid, uint16, uint8, uint8, int32_1e4, int32_1e4, int32_1e4], ['plugin_id', 'IDX', 'samplesetcount', 'valuecount', 'val_1', 'val_2', 'val_3']);
+      return decode(bytes, [header, int32_1e4, int32_1e4, int32_1e4], ['header', 'val_1', 'val_2', 'val_3']);
     }
     // Quad value
     if (bytes.length === 21) {
-      return decode(bytes, [pluginid, uint16, uint8, uint8, int32_1e4, int32_1e4, int32_1e4, int32_1e4], ['plugin_id', 'IDX', 'samplesetcount', 'valuecount', 'val_1', 'val_2', 'val_3', 'val_4']);
+      return decode(bytes, [header, int32_1e4, int32_1e4, int32_1e4, int32_1e4], ['header', 'val_1', 'val_2', 'val_3', 'val_4']);
     }
   }
 
@@ -215,9 +213,9 @@ pluginid.BYTES = uint8.BYTES;
 
 var latLng = function (bytes) {
   // 2^23 / 180 = 46603...
-  return +(int32(bytes) / 46600);
+  return +(int24(bytes) / 46600);
 };
-latLng.BYTES = int32.BYTES;
+latLng.BYTES = int24.BYTES;
 
 var hdop = function (bytes) {
   return +(uint8(bytes) / 10).toFixed(2);
@@ -270,6 +268,25 @@ var bitmap2 = function (byte) {
     }, {});
 };
 bitmap2.BYTES = 1;
+
+var header = function (byte) {
+  if (byte.length !== header.BYTES) {
+    throw new Error('header must have exactly 5 bytes');
+  }
+  var values = [ 0, 0, 0, 0 ];
+  values[0] = bytesToInt(byte.slice(0,1));
+  values[1] = bytesToInt(byte.slice(1,3));
+  values[2] = bytesToInt(byte.slice(3,4));
+  values[3] = bytesToInt(byte.slice(4,5));
+
+  return ['plugin_id', 'IDX', 'samplesetcount', 'valuecount']
+    .reduce(function (obj, pos, index) {
+      obj[pos] = +values[index];
+      return obj;
+    }, {});
+};
+header.BYTES = 5;
+
 
 var decode = function (bytes, mask, names) {
 
@@ -351,6 +368,7 @@ if (typeof module === 'object' && typeof module.exports !== 'undefined') {
     pct_8: pct_8,
     bitmap1: bitmap1,
     bitmap2: bitmap2,
+    header: header,
     version: version,
     decode: decode
   };

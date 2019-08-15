@@ -7,8 +7,8 @@ function Converter(decoded, port) {
     var name = "";
 
     if (port === 1) {
-        if ('plugin_id' in converted) {
-            switch (converted.plugin_id) {
+        if ('header' in converted) {
+            switch (converted.header.plugin_id) {
                 case 1:
                     converted.name = "Switch";
                     converted.v1  = converted.val_1;
