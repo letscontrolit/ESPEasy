@@ -544,10 +544,10 @@ function Converter(decoded, port) {
                     // The GPS plugin must be set first to output like this.
                     // HDOP is needed by TTN mapper to weigh the quality of the data.
                     // When using TTN mapper, make sure to output these values.
-                    converted.longitude  = converted.val_1;
-                    converted.latitude  = converted.val_2;
-                    converted.altitude  = converted.val_3;
-                    converted.hdop  = converted.val_4;
+//                    converted.longitude  = converted.val_1;
+//                    converted.latitude  = converted.val_2;
+//                    converted.altitude  = converted.val_3;
+//                    converted.hdop  = converted.val_4;
                     break;
 
                 case 83:

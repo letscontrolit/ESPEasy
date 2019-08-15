@@ -87,6 +87,11 @@ struct C018_data_struct {
     return myLora->txBytes(data, size, port) != TX_FAIL;
   }
 
+  bool txHexBytes(const String& data, uint8_t port) {
+    if (!hasJoined()) { return false; }
+    return myLora->txHexBytes(data, port) != TX_FAIL;
+  }
+
   bool txUncnf(const String& data, uint8_t port) {
     if (!hasJoined()) { return false; }
     return myLora->tx(data, port) != TX_FAIL;
@@ -506,7 +511,11 @@ bool CPlugin_018(byte function, struct EventStruct *event, String& string)
     case CPLUGIN_PROTOCOL_SEND:
     {
       byte valueCount = getValueCountFromSensorType(event->sensorType);
-      success = C018_DelayHandler.addToQueue(C018_queue_element(event, valueCount, C018_data.getSampleSetCount(event->TaskIndex)));
+      String raw_packed;
+      if (PluginCall(PLUGIN_GET_PACKED_RAW_DATA, event, raw_packed)) {
+        valueCount = event->Par1;        
+      }
+      success = C018_DelayHandler.addToQueue(C018_queue_element(event, valueCount, C018_data.getSampleSetCount(event->TaskIndex), raw_packed));
       scheduleNextDelayQueue(TIMER_C018_DELAY_QUEUE, C018_DelayHandler.getNextScheduleTime());
 
       break;
@@ -523,11 +532,7 @@ bool CPlugin_018(byte function, struct EventStruct *event, String& string)
 }
 
 bool do_process_c018_delay_queue(int controller_number, const C018_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
-  byte *buffer  = new byte[64];
-  byte  length  = element.encode(buffer, 64);
-  bool  success = C018_data.txUncnfBytes(buffer, length, ControllerSettings.Port);
-
-  delete[] buffer;
+  bool  success = C018_data.txHexBytes(element.packed, ControllerSettings.Port);
   return success;
 }
 

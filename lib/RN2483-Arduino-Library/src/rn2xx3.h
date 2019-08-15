@@ -155,6 +155,8 @@ class rn2xx3
      */
     TX_RETURN_TYPE txBytes(const byte*, uint8_t size, uint8_t port = 1);
 
+    TX_RETURN_TYPE txHexBytes(const String&, uint8_t port = 1);
+
     /*
      * Do a confirmed transmission via LoRa WAN.
      *

@@ -373,16 +373,21 @@ TX_RETURN_TYPE rn2xx3::tx(const String& data, uint8_t port)
 
 TX_RETURN_TYPE rn2xx3::txBytes(const byte* data, uint8_t size, uint8_t port)
 {
-  char msgBuffer[size*2 + 1];
-
+  String dataToTx;
+  dataToTx.reserve(size * 2);
   char buffer[3];
   for (unsigned i=0; i<size; i++)
   {
     sprintf(buffer, "%02X", data[i]);
-    memcpy(&msgBuffer[i*2], &buffer, sizeof(buffer));
+    dataToTx += buffer[0];
+    dataToTx += buffer[1];
   }
-  String dataToTx(msgBuffer);
   return txCommand("mac tx uncnf ", dataToTx, false, port);
+}
+
+TX_RETURN_TYPE rn2xx3::txHexBytes(const String& hexEncoded, uint8_t port)
+{
+  return txCommand("mac tx uncnf ", hexEncoded, false, port);
 }
 
 TX_RETURN_TYPE rn2xx3::txCnf(const String& data, uint8_t port)
