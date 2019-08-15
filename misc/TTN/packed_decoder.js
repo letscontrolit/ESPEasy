@@ -13,6 +13,14 @@ function Decoder(bytes, port) {
 
   if (port === 1) {
     switch (bytes[0]) {
+      case 26:
+        // SysInfo
+        return decode(bytes, 
+          [pluginid, uint16, uint8, uint8, 
+          uint24, uint24, int8, vcc, pct_8, uint8, uint8, uint8, uint8, uint24, uint16],
+          ['plugin_id', 'IDX', 'samplesetcount', 'valuecount', 
+          'uptime', 'freeheap', 'rssi', 'vcc', 'load', 'ip1', 'ip2', 'ip3', 'ip4', 'web', 'freestack']);
+  
       case 82:
         // GPS
         return decode(bytes, [pluginid, uint16, uint8, uint8, latLng, latLng, altitude, uint16_1e2, hdop, uint8, uint8],
@@ -222,6 +230,18 @@ var altitude = function (bytes) {
 };
 altitude.BYTES = int16.BYTES;
 
+// -1 .. 5.12V
+var vcc = function (bytes) {
+  return +(uint8(bytes) / 41.83 - 1.0).toFixed(2);
+};
+vcc.BYTES = uint8.BYTES;
+
+// 0 .. 100%
+var pct_8 = function (bytes) {
+  return +(uint8(bytes) / 2.56).toFixed(2);
+};
+pct_8.BYTES = uint8.BYTES;
+
 
 var bitmap1 = function (byte) {
   if (byte.length !== bitmap1.BYTES) {
@@ -327,6 +347,8 @@ if (typeof module === 'object' && typeof module.exports !== 'undefined') {
     latLng: latLng,
     hdop: hdop,
     altitude: altitude,
+    vcc: vcc,
+    pct_8: pct_8,
     bitmap1: bitmap1,
     bitmap2: bitmap2,
     version: version,

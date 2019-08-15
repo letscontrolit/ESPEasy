@@ -2490,10 +2490,13 @@ enum PackedData_enum {
   PackedData_pluginid,
   PackedData_latLng,
   PackedData_hdop,
-  PackedData_altitude
+  PackedData_altitude,
+  PackedData_vcc,
+  PackedData_pct_8
 };
 
-static uint8_t getPackedDataTypeSize(PackedData_enum dtype, unsigned long& factor) {
+static uint8_t getPackedDataTypeSize(PackedData_enum dtype, float& factor, float& offset) {
+  offset = 0;
   switch (dtype) {
     case PackedData_uint8:       factor = 1;         return 1;
     case PackedData_uint16:      factor = 1;         return 2;
@@ -2546,7 +2549,9 @@ static uint8_t getPackedDataTypeSize(PackedData_enum dtype, unsigned long& facto
     case PackedData_pluginid:    factor = 1;         return 1;
     case PackedData_latLng:      factor = 46600;     return 4; // 2^23 / 180
     case PackedData_hdop:        factor = 10;        return 1;
-    case PackedData_altitude:    factor = 4;         return 2;
+    case PackedData_altitude:    factor = 4;  offset = 1000; return 2; // -1000 .. 15383.75 meter
+    case PackedData_vcc:         factor = 41.83; offset = 1; return 1; // -1 .. 5.12V
+    case PackedData_pct_8:       factor = 2.56;      return 2; // 0 .. 100%
   }
 
   // Unknown type

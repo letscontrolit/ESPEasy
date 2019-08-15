@@ -532,8 +532,7 @@ boolean Plugin_082(byte function, struct EventStruct *event, String& string) {
         // altitude type: return +(int16(bytes) / 4 - 1000).toFixed(1);
         string += LoRa_addFloat(P082_data->cache[P082_QUERY_LAT], PackedData_latLng);
         string += LoRa_addFloat(P082_data->cache[P082_QUERY_LONG], PackedData_latLng);
-        // Decoding of altitude type: return +(int16(bytes) / 4 - 1000).toFixed(1);
-        string += LoRa_addFloat(P082_data->cache[P082_QUERY_ALT] + 1000, PackedData_altitude);
+        string += LoRa_addFloat(P082_data->cache[P082_QUERY_ALT], PackedData_altitude);
         string += LoRa_addFloat(P082_data->cache[P082_QUERY_SPD], PackedData_uint16_1e2);
         string += LoRa_addFloat(P082_data->cache[P082_QUERY_HDOP], PackedData_hdop);
         string += LoRa_addFloat(P082_data->cache[P082_QUERY_DB_MAX], PackedData_uint8);

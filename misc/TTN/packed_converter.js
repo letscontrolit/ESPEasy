@@ -173,10 +173,13 @@ function Converter(decoded, port) {
 
                 case 26:
                     converted.name = "Sysinfo";
+                    /*
                     converted.v1  = converted.val_1;
                     converted.v2  = converted.val_2;
                     converted.v3  = converted.val_3;
                     converted.v4  = converted.val_4;
+                    */
+                    converted.ip = [converted.ip1, converted.ip2, converted.ip3, converted.ip4].join('.');
                     break;
 
                 case 27:
