@@ -457,6 +457,8 @@ struct ModbusRTU_struct  {
       // Send the byte array
       startWrite();
       easySerial->write(_sendframe, _sendframe_used);
+      // drop all data from buffer
+      easySerial->flush();
       startRead();
 
       // Read answer from sensor
