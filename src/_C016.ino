@@ -48,6 +48,7 @@ bool CPlugin_016(byte function, struct EventStruct *event, String& string)
         Protocol[protocolCount].usesID = false;
         Protocol[protocolCount].usesHost = false;
         Protocol[protocolCount].usesPort = false;
+        Protocol[protocolCount].usesSampleSets = false;
         break;
       }
 

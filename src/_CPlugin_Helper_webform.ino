@@ -36,6 +36,7 @@ String getControllerParameterName(byte ProtocolIndex, byte parameterIdx, bool di
     case CONTROLLER_LWT_CONNECT_MESSAGE:      name = F("LWT Connect Message");    break;
     case CONTROLLER_LWT_DISCONNECT_MESSAGE:   name = F("LWT Disconnect Message"); break;
     case CONTROLLER_TIMEOUT:                  name = F("Client Timeout");         break;
+    case CONTROLLER_SAMPLE_SET_INITIATOR:     name = F("Sample Set Initiator");     break;
 
     case CONTROLLER_ENABLED:
 
@@ -170,6 +171,9 @@ void addControllerParameterForm(const ControllerSettingsStruct& ControllerSettin
       addFormNumericBox(displayName, internalName, ControllerSettings.ClientTimeout, 10, CONTROLLER_CLIENTTIMEOUT_MAX);
       addUnit(F("ms"));
       break;
+    case CONTROLLER_SAMPLE_SET_INITIATOR:
+      addTaskSelectBox(displayName, internalName, ControllerSettings.SampleSetInitiator);
+      break;
     case CONTROLLER_ENABLED:
       addFormCheckBox(displayName, internalName, Settings.ControllerEnabled[controllerindex]);
       break;
@@ -246,6 +250,9 @@ void saveControllerParameterForm(ControllerSettingsStruct& ControllerSettings, b
       break;
     case CONTROLLER_TIMEOUT:
       ControllerSettings.ClientTimeout = getFormItemInt(internalName, ControllerSettings.ClientTimeout);
+      break;
+    case CONTROLLER_SAMPLE_SET_INITIATOR:
+      ControllerSettings.SampleSetInitiator = getFormItemInt(internalName, ControllerSettings.SampleSetInitiator);
       break;
     case CONTROLLER_ENABLED:
       Settings.ControllerEnabled[controllerindex] = isFormItemChecked(internalName);

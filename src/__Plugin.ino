@@ -1286,6 +1286,7 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
     case PLUGIN_READ:
     case PLUGIN_SET_CONFIG:
     case PLUGIN_GET_CONFIG:
+    case PLUGIN_GET_PACKED_RAW_DATA:
     case PLUGIN_SET_DEFAULTS:
     {
       const int x = getPluginId(event->TaskIndex);

@@ -18,13 +18,11 @@ extern "C" {
 /*
   @param serial Needs to be an already opened Stream ({Software/Hardware}Serial) to write to and read from.
 */
-rn2xx3::rn2xx3(Stream& serial):
-_serial(serial)
+rn2xx3::rn2xx3(Stream& serial) : _serial(serial)
 {
-  _serial.setTimeout(2000);
+  setSerialTimeout();
 }
 
-//TODO: change to a boolean
 bool rn2xx3::autobaud()
 {
   String response = "";
@@ -32,13 +30,14 @@ bool rn2xx3::autobaud()
   // Try a maximum of 10 times with a 1 second delay
   for (uint8_t i=0; i<10 && response.length() == 0; i++)
   {
-    delay(1000);
+    if (i != 0)
+    { 
+      delay(1000); 
+    }
     _serial.write((byte)0x00);
     _serial.write(0x55);
     _serial.println();
-    //clear serial buffer
-    while(_serial.available())
-      _serial.read();
+    clearSerialBuffer();
     
     // we could use sendRawCommand(F("sys get ver")); here
     _serial.println(F("sys get ver"));
@@ -46,6 +45,7 @@ bool rn2xx3::autobaud()
   }
   // Returned text should be
   // RN2483 X.Y.Z MMM DD YYYY HH:MM:SS
+  // Apparently not always the whole stream is read during autobaud.
   return response.length() > 10;
 }
 
@@ -75,6 +75,28 @@ RN2xx3_t rn2xx3::configureModuleType()
   return _moduleType;
 }
 
+bool rn2xx3::resetModule()
+{
+  // reset the module - this will clear all keys set previously
+  String result;
+  switch (configureModuleType())
+  {    
+    case RN2903:
+      result = sendRawCommand(F("mac reset"));
+      break;
+    case RN2483:
+      result = sendRawCommand(F("mac reset 868"));
+      break;
+    default:
+      // we shouldn't go forward with the init
+      _lastErrorInvalidParam = F("error in reset");
+      return false;
+  }
+  _lastErrorInvalidParam += F("success resetmodule");;
+  return true;
+//  return determineReceivedDataType(result) == ok;
+}
+
 String rn2xx3::hweui()
 {
   return (sendRawCommand(F("sys get hweui")));
@@ -99,28 +121,37 @@ String rn2xx3::deveui()
 
 bool rn2xx3::setSF(uint8_t sf)
 {
-  int dr;
-  switch (_fp)
+  if (sf >= 7 && sf <= 12)
   {
-    case TTN_EU:
-    case SINGLE_CHANNEL_EU:
-    case DEFAULT_EU:
-    //  case TTN_FP_EU868:
-    //  case TTN_FP_IN865_867:
-    //  case TTN_FP_AS920_923:
-    //  case TTN_FP_AS923_925:
-    //  case TTN_FP_KR920_923:
-      dr = 12 - sf;
-      break;
-    case TTN_US:
-    //case TTN_FP_US915:
-    //case TTN_FP_AU915:
-      dr = 10 - sf;
-      break;
-    default:
-      return false;
+    int dr = -1;
+    switch (_fp)
+    {
+      case TTN_EU:
+      case SINGLE_CHANNEL_EU:
+      case DEFAULT_EU:
+      //  case TTN_FP_EU868:
+      //  case TTN_FP_IN865_867:
+      //  case TTN_FP_AS920_923:
+      //  case TTN_FP_AS923_925:
+      //  case TTN_FP_KR920_923:
+        dr = 12 - sf;
+        break;
+      case TTN_US:
+      //case TTN_FP_US915:
+      //case TTN_FP_AU915:
+        dr = 10 - sf;
+        break;
+      default:
+        break;
+    }
+    if (dr >= 0) 
+    {
+      _sf = sf;
+      return setDR(dr);
+    }
   }
-  return setDR(dr);
+  _lastErrorInvalidParam = F("error in setSF");
+  return false;
 }
 
 bool rn2xx3::init()
@@ -129,7 +160,7 @@ bool rn2xx3::init()
   {
     return false;
   }
-  else if(_otaa==true)
+  else if(_otaa)
   {
     return initOTAA(_appeui, _appskey);
   }
@@ -142,31 +173,6 @@ bool rn2xx3::init()
 
 bool rn2xx3::initOTAA(const String& AppEUI, const String& AppKey, const String& DevEUI)
 {
-  _otaa = true;
-  _nwkskey = "0";
-  String receivedData;
-
-  //clear serial buffer
-  while(_serial.available())
-    _serial.read();
-
-  // detect which model radio we are using
-  configureModuleType();
-
-  // reset the module - this will clear all keys set previously
-  switch (_moduleType)
-  {
-    case RN2903:
-      sendRawCommand(F("mac reset"));
-      break;
-    case RN2483:
-      sendRawCommand(F("mac reset 868"));
-      break;
-    default:
-      // we shouldn't go forward with the init
-      return false;
-  }
-
   // If the Device EUI was given as a parameter, use it
   // otherwise use the Hardware EUI.
   if (DevEUI.length() == 16)
@@ -180,24 +186,40 @@ bool rn2xx3::initOTAA(const String& AppEUI, const String& AppKey, const String& 
     {
       _deveui = addr;
     }
-    // else fall back to the hard coded value in the header file
+    else
+    {
+      //The default address to use on TTN if no address is defined.
+      //This one falls in the "testing" address space.
+      _devAddr = "03FFBEEF";
+    }
   }
+    
+  if ( AppEUI.length() != 16 || AppKey.length() != 32 || _deveui.length() != 16)
+  {
+    // No valid config
+    _lastErrorInvalidParam = F("InitOTAA: Not all keys are valid.");
+    return false;
+  }
+  _appeui = AppEUI;
+  _appskey = AppKey; //reuse the same variable as for ABP
+
+  if (_otaa && Status.Joined) {
+    saveUpdatedStatus();
+    if (Status.Joined && !Status.RejoinNeeded) {
+      return true;
+    }
+  }
+
+  _otaa = true;
+  _nwkskey = "0";
+
+  clearSerialBuffer();
+
+  if (!resetModule()) { return false; }
 
   sendMacSet(F("deveui"), _deveui);
-
-  // A valid length App EUI was given. Use it.
-  if ( AppEUI.length() == 16 )
-  {
-      _appeui = AppEUI;
-      sendMacSet(F("appeui"), _appeui);
-  }
-
-  // A valid length App Key was give. Use it.
-  if ( AppKey.length() == 32 )
-  {
-    _appskey = AppKey; //reuse the same variable as for ABP
-    sendMacSet(F("appkey"), _appskey);
-  }
+  sendMacSet(F("appeui"), _appeui);
+  sendMacSet(F("appkey"), _appskey);
 
   if (_moduleType == RN2903)
   {
@@ -207,7 +229,7 @@ bool rn2xx3::initOTAA(const String& AppEUI, const String& AppKey, const String& 
   {
     setTXoutputPower(1);
   }
-  sendMacSet(F("dr"), String(5)); //0= min, 7=max
+  setSF(_sf);
 
   // TTN does not yet support Adaptive Data Rate.
   // Using it is also only necessary in limited situations.
@@ -228,31 +250,31 @@ bool rn2xx3::initOTAA(const String& AppEUI, const String& AppKey, const String& 
   // }
   // Disabled for now because an OTAA join seems to work fine without.
 
+  // TODO this is a really long timeout. Will setSerialTimeoutRX2() do?
   _serial.setTimeout(30000);
-  sendRawCommand(F("mac save"));
-
-  _joined = false;
-
+//  sendRawCommand(F("mac save")); 
+  
   // Only try twice to join, then return and let the user handle it.
-  for(int i=0; i<2 && !_joined; i++)
+  Status.Joined = false;
+  updateStatus();
+  for(int i=0; i<2 && !Status.Joined; i++)
   {
     sendRawCommand(F("mac join otaa"));
     // Parse 2nd response
-    receivedData = _serial.readStringUntil('\n');
+    String receivedData = _serial.readStringUntil('\n');
 
-    if(receivedData.startsWith(F("accepted")))
+    if(determineReceivedDataType(receivedData) == accepted)
     {
-      _joined=true;
-      delay(1000);
-    }
-    else
-    {
+      Status.Joined = true;
+    } else {
       _lastErrorInvalidParam = receivedData;
-      delay(1000);
     }
+    delay(2000); // Needed to make sure even RX2 replies are processed.
+    updateStatus();
   }
-  _serial.setTimeout(2000);
-  return _joined;
+  setSerialTimeout();
+  saveUpdatedStatus();
+  return Status.Joined;
 }
 
 
@@ -293,104 +315,99 @@ bool rn2xx3::initOTAA(uint8_t * AppEUI, uint8_t * AppKey, uint8_t * DevEUI)
 
 bool rn2xx3::initABP(const String& devAddr, const String& AppSKey, const String& NwkSKey)
 {
-  _otaa = false;
-  _devAddr = devAddr;
-  _appskey = AppSKey;
-  _nwkskey = NwkSKey;
-  String receivedData;
 
-  //clear serial buffer
-  while(_serial.available())
-    _serial.read();
+  clearSerialBuffer();
+  if (!Status.Joined || _otaa) {
+    _otaa = false;
+    _devAddr = devAddr;
+    _appskey = AppSKey;
+    _nwkskey = NwkSKey;
+    String receivedData;
 
-  configureModuleType();
+    if (!resetModule()) { return false; }
 
-  switch (_moduleType) {
-    case RN2903:
-      sendRawCommand(F("mac reset"));
-      break;
-    case RN2483:
-      sendRawCommand(F("mac reset 868"));
-      // set2ndRecvWindow(3, 869525000);
-      // In the past we set the downlink channel here,
-      // but setFrequencyPlan is a better place to do it.
-      break;
-    default:
-      // we shouldn't go forward with the init
-      return false;
+    sendMacSet(F("nwkskey"), _nwkskey);
+    sendMacSet(F("appskey"), _appskey);
+    sendMacSet(F("devaddr"), _devAddr);
+    setAdaptiveDataRate(false);
+
+    // Switch off automatic replies, because this library can not
+    // handle more than one mac_rx per tx. See RN2483 datasheet,
+    // 2.4.8.14, page 27 and the scenario on page 19.
+    setAutomaticReply(false);
+
+    if (_moduleType == RN2903)
+    {
+      setTXoutputPower(5);
+    }
+    else
+    {
+      setTXoutputPower(1);
+    }
+    setSF(_sf);
+
+    // TODO Determine proper delay for this timeout.
+    // Is this as long as for a normal RX2 delay?
+    // setSerialTimeoutRX2();
+    _serial.setTimeout(60000);
+    sendRawCommand(F("mac join abp"));
+    // Wait for the 2nd response.
+    receivedData = _serial.readStringUntil('\n');
+
+    setSerialTimeout();
+    //with abp we can always join successfully as long as the keys are valid
+    if (determineReceivedDataType(receivedData) != accepted) {
+      _lastErrorInvalidParam = receivedData;
+      Status.Joined = false;
+    }
+    delay(2000); // Needed to make sure even RX2 replies are processed.
   }
-
-  sendMacSet(F("nwkskey"), _nwkskey);
-  sendMacSet(F("appskey"), _appskey);
-  sendMacSet(F("devaddr"), _devAddr);
-  setAdaptiveDataRate(false);
-
-  // Switch off automatic replies, because this library can not
-  // handle more than one mac_rx per tx. See RN2483 datasheet,
-  // 2.4.8.14, page 27 and the scenario on page 19.
-  setAutomaticReply(false);
-
-  if (_moduleType == RN2903)
-  {
-    setTXoutputPower(5);
-  }
-  else
-  {
-    setTXoutputPower(1);
-  }
-  sendMacSet(F("dr"), String(5)); //0= min, 7=max
-
-  _serial.setTimeout(60000);
-  sendRawCommand(F("mac save"));
-  sendRawCommand(F("mac join abp"));
-  receivedData = _serial.readStringUntil('\n');
-
-  _serial.setTimeout(2000);
-  delay(1000);
-
-  //with abp we can always join successfully as long as the keys are valid
-  _joined = receivedData.startsWith(F("accepted"));
-  return _joined;
+  saveUpdatedStatus();
+  return Status.Joined;
 }
 
-TX_RETURN_TYPE rn2xx3::tx(const String& data)
+TX_RETURN_TYPE rn2xx3::tx(const String& data, uint8_t port)
 {
   return txUncnf(data); //we are unsure which mode we're in. Better not to wait for acks.
 }
 
-TX_RETURN_TYPE rn2xx3::txBytes(const byte* data, uint8_t size)
+TX_RETURN_TYPE rn2xx3::txBytes(const byte* data, uint8_t size, uint8_t port)
 {
-  char msgBuffer[size*2 + 1];
-
+  String dataToTx;
+  dataToTx.reserve(size * 2);
   char buffer[3];
   for (unsigned i=0; i<size; i++)
   {
     sprintf(buffer, "%02X", data[i]);
-    memcpy(&msgBuffer[i*2], &buffer, sizeof(buffer));
+    dataToTx += buffer[0];
+    dataToTx += buffer[1];
   }
-  String dataToTx(msgBuffer);
-  return txCommand("mac tx uncnf 1 ", dataToTx, false);
+  return txCommand("mac tx uncnf ", dataToTx, false, port);
 }
 
-TX_RETURN_TYPE rn2xx3::txCnf(const String& data)
+TX_RETURN_TYPE rn2xx3::txHexBytes(const String& hexEncoded, uint8_t port)
 {
-  return txCommand("mac tx cnf 1 ", data, true);
+  return txCommand("mac tx uncnf ", hexEncoded, false, port);
 }
 
-TX_RETURN_TYPE rn2xx3::txUncnf(const String& data)
+TX_RETURN_TYPE rn2xx3::txCnf(const String& data, uint8_t port)
 {
-  return txCommand("mac tx uncnf 1 ", data, true);
+  return txCommand("mac tx cnf ", data, true, port);
 }
 
-TX_RETURN_TYPE rn2xx3::txCommand(const String& command, const String& data, bool shouldEncode)
+TX_RETURN_TYPE rn2xx3::txUncnf(const String& data, uint8_t port)
 {
+  return txCommand("mac tx uncnf ", data, true, port);
+}
+
+TX_RETURN_TYPE rn2xx3::txCommand(const String& command, const String& data, bool shouldEncode, uint8_t port)
+{
+  updateStatus();
   bool send_success = false;
   uint8_t busy_count = 0;
   uint8_t retry_count = 0;
 
-  //clear serial buffer
-  while(_serial.available())
-    _serial.read();
+  clearSerialBuffer();
 
   while(!send_success)
   {
@@ -402,6 +419,11 @@ TX_RETURN_TYPE rn2xx3::txCommand(const String& command, const String& data, bool
     }
 
     _serial.print(command);
+    if (command.endsWith(F("cnf "))) {
+      // No port was given in the command, so add the port.
+      _serial.print(port);
+      _serial.print(' ');
+    }
     if(shouldEncode)
     {
       sendEncoded(data);
@@ -415,90 +437,45 @@ TX_RETURN_TYPE rn2xx3::txCommand(const String& command, const String& data, bool
     String receivedData = _serial.readStringUntil('\n');
     //TODO: Debug print on receivedData
 
+    // "mac tx" commands may receive a second response if the first one was "ok"
+    bool firstResponseAfterSendingCommand = true;
+    if (determineReceivedDataType(receivedData) == rn2xx3::ok) {
+      // parameters and configurations are valid and the packet was forwarded to the radio transceiver for transmission
+      setSerialTimeoutRX2();
+      receivedData = _serial.readStringUntil('\n');
+      setSerialTimeout();
+      firstResponseAfterSendingCommand = false;
+    }
+
     switch (determineReceivedDataType(receivedData))
     {
       case rn2xx3::ok:
       {
-        _serial.setTimeout(30000);
-        receivedData = _serial.readStringUntil('\n');
-        _serial.setTimeout(2000);
-
-        //TODO: Debug print on receivedData
-
-        switch (determineReceivedDataType(receivedData))
-        {
-          case rn2xx3::mac_tx_ok:
-          {
-            //SUCCESS!!
-            send_success = true;
-            return TX_SUCCESS;
-          }
-
-          case rn2xx3::mac_rx:
-          {
-            //example: mac_rx 1 54657374696E6720313233
-            _rxMessenge = receivedData.substring(receivedData.indexOf(' ', 7)+1);
-            send_success = true;
-            return TX_WITH_RX;
-          }
-
-          case rn2xx3::mac_err:
-          {
-            _lastErrorInvalidParam = receivedData;
-            init();
-            break;
-          }
-
-          case rn2xx3::invalid_data_len:
-          {
-            //this should never happen if the prototype worked
-            send_success = true;
-            _lastErrorInvalidParam = receivedData;
-            return TX_FAIL;
-          }
-
-          case rn2xx3::radio_tx_ok:
-          {
-            //SUCCESS!!
-            send_success = true;
-            return TX_SUCCESS;
-          }
-
-          case rn2xx3::radio_err:
-          {
-            //This should never happen. If it does, something major is wrong.
-            _lastErrorInvalidParam = receivedData;
-            init();
-            break;
-          }
-
-          default:
-          {
-            //unknown response
-            //init();
-            _lastErrorInvalidParam = receivedData;
-          }
-        } // End while after "ok"
+        // Already handled.
         break;
       }
 
       case rn2xx3::invalid_param:
       {
-        //should not happen if we typed the commands correctly
+        // parameters (<type> <portno> <data>) are not valid
+        // should not happen if we typed the commands correctly
         send_success = true;
         return TX_FAIL;
       }
 
       case rn2xx3::not_joined:
       {
+        // the network is not joined
         _lastErrorInvalidParam = receivedData;
-        _joined = false;
+        Status.Joined = false;
         init();
         break;
       }
 
       case rn2xx3::no_free_ch:
       {
+        // all channels are busy
+        // probably duty cycle limits exceeded.
         //retry
         _lastErrorInvalidParam = receivedData;
         delay(1000);
@@ -507,6 +484,11 @@ TX_RETURN_TYPE rn2xx3::txCommand(const String& command, const String& data, bool
 
       case rn2xx3::silent:
       {
+        // the module is in a Silent Immediately state
+        // This is enforced by the network.
+        // To enable: 
+        // sendRawCommand(F("mac forceENABLE"));
+        // N.B. One has to think about why this has happened.
         _lastErrorInvalidParam = receivedData;
         init();
         break;
@@ -514,6 +496,7 @@ TX_RETURN_TYPE rn2xx3::txCommand(const String& command, const String& data, bool
 
       case rn2xx3::frame_counter_err_rejoin_needed:
       {
+        // the frame counter rolled over
         _lastErrorInvalidParam = receivedData;
         init();
         break;
@@ -521,6 +504,7 @@ TX_RETURN_TYPE rn2xx3::txCommand(const String& command, const String& data, bool
 
       case rn2xx3::busy:
       {
+        // MAC state is not in an Idle state
         busy_count++;
 
         // Not sure if this is wise. At low data rates with large packets
@@ -541,6 +525,7 @@ TX_RETURN_TYPE rn2xx3::txCommand(const String& command, const String& data, bool
 
       case rn2xx3::mac_paused:
       {
+        // MAC was paused and not resumed back
         _lastErrorInvalidParam = receivedData;
         init();
         break;
@@ -548,15 +533,61 @@ TX_RETURN_TYPE rn2xx3::txCommand(const String& command, const String& data, bool
 
       case rn2xx3::invalid_data_len:
       {
-        //should not happen if the prototype worked
+        if (firstResponseAfterSendingCommand)
+        {
+          // application payload length is greater than the maximum application payload length corresponding to the current data rate
+
+        }
+        else 
+        {
+          // application payload length is greater than the maximum application payload length corresponding to the current data rate. 
+          // This can occur after an earlier uplink attempt if retransmission back-off has reduced the data rate.
+
+        }
         _lastErrorInvalidParam = receivedData;
         send_success = true;
         return TX_FAIL;
       }
 
+      case rn2xx3::mac_tx_ok:
+      {
+        // if uplink transmission was successful and no downlink data was received back from the server
+        //SUCCESS!!
+        send_success = true;
+        return TX_SUCCESS;
+      }
+
+      case rn2xx3::mac_rx:
+      {
+        // mac_rx <portno> <data> 
+        // transmission was successful
+        // <portno>: port number, from 1 to 223
+        // <data>: hexadecimal value that was received from theserver
+        //example: mac_rx 1 54657374696E6720313233
+        _rxMessenge = receivedData.substring(receivedData.indexOf(' ', 7)+1);
+        send_success = true;
+        return TX_WITH_RX;
+      }
+
+      case rn2xx3::mac_err:
+      {
+        _lastErrorInvalidParam = receivedData;
+        init();
+        break;
+      }
+
+      case rn2xx3::radio_err:
+      {
+        // transmission was unsuccessful, ACK not received back from the server
+        // This should never happen. If it does, something major is wrong.
+        _lastErrorInvalidParam = receivedData;
+        init();
+        break;
+      }
       default:
       {
         //unknown response after mac tx command
+        _lastErrorInvalidParam = receivedData;
         init();
         break;
       }
@@ -610,8 +641,24 @@ int rn2xx3::getVbat()
   return readIntValue(F("sys get vdd"));
 }
 
+String rn2xx3::getDataRate()
+{
+  String output;
+  output.reserve(9);
+  output = sendRawCommand(F("radio get sf"));
+  output += "bw";
+  output += readIntValue(F("radio get bw"));
+  return output;
+}
+
+int rn2xx3::getRSSI()
+{
+  return readIntValue(F("radio get rssi"));
+}
+
 String rn2xx3::base16decode(const String& input_c)
 {
+  if (!isHexStr(input_c)) return "";
   String input(input_c); // Make a deep copy to be able to do trim()
   input.trim();
   const size_t inputLength = input.length();
@@ -625,10 +672,10 @@ String rn2xx3::base16decode(const String& input_c)
     toDo[0] = input[i*2];
     toDo[1] = input[i*2+1];
     toDo[2] = '\0';
-    int out = strtoul(toDo, 0, 16);
-    if((out & 0xFF) == 0)
+    unsigned long out = strtoul(toDo, 0, 16);
+    if(out <= 0xFF)
     {
-      output += char(out);
+      output += char(out & 0xFF);
     }
   }
   return output;
@@ -636,7 +683,7 @@ String rn2xx3::base16decode(const String& input_c)
 
 bool rn2xx3::setDR(int dr)
 {
-  if(dr>=0 && dr<=5)
+  if(dr>=0 && dr<=7)
   {
     return sendMacSet(F("dr"), String(dr));
   }
@@ -651,20 +698,31 @@ void rn2xx3::sleep(long msec)
 
 String rn2xx3::sendRawCommand(const String& command)
 {
-  delay(100);
-  while(_serial.available())
-    _serial.read();
+//  delay(100);
+  clearSerialBuffer();
   _serial.println(command);
 
   String ret = _serial.readStringUntil('\n');
   ret.trim();
 
-  if (ret.equals(F("invalid_param")))
+  switch (determineReceivedDataType(ret))
   {
-    _lastErrorInvalidParam = command;
+    case ok:
+    case UNKNOWN:
+    case accepted:
+      break;
+    default:
+      _lastErrorInvalidParam = command;    
   }
+  /*
+  String log = F("SendRaw: ");
+  log += command;
+  log += F(" -> ");
+  log += ret;
+  _lastErrorInvalidParam = log;
 
   //TODO: Add debug print
+   */
 
   return ret;
 }
@@ -816,8 +874,14 @@ rn2xx3::received_t rn2xx3::determineReceivedDataType(const String& receivedData)
     if (receivedData.startsWith(F(#S))) return (rn2xx3::S);
 
     switch (receivedData[0]) {
+      case 'a': 
+        MATCH_STRING(accepted);
+        break;
       case 'b': 
         MATCH_STRING(busy);
+        break;
+      case 'd': 
+        MATCH_STRING(denied);
         break;
       case 'f': 
         MATCH_STRING(frame_counter_err_rejoin_needed);
@@ -825,6 +889,9 @@ rn2xx3::received_t rn2xx3::determineReceivedDataType(const String& receivedData)
       case 'i': 
         MATCH_STRING(invalid_data_len);
         MATCH_STRING(invalid_param);
+        break;
+      case 'k': 
+        MATCH_STRING(keys_not_init);
         break;
       case 'm': 
         MATCH_STRING(mac_err);
@@ -860,13 +927,45 @@ int rn2xx3::readIntValue(const String& command)
   return value.toInt();
 }
 
+bool rn2xx3::readUIntMacGet(const String& param, uint32_t &value)
+{
+  String command;
+  command.reserve(8 + param.length());
+  command = F("mac get ");
+  command += param;
+  String value_str = sendRawCommand(command);
+  if (value_str.length() == 0)
+  {
+    return false;
+  }
+  value = strtoul(value_str.c_str(), 0, 10);
+  return true;
+}
+
+String rn2xx3::peekLastErrorInvalidParam()
+{
+  return _lastErrorInvalidParam;;
+}
+
 String rn2xx3::getLastErrorInvalidParam() 
-{/*
+{
   String res = _lastErrorInvalidParam;
   _lastErrorInvalidParam = "";
   return res;
-  */
-  return _lastErrorInvalidParam;;
+}
+
+bool rn2xx3::getFrameCounters(uint32_t &dnctr, uint32_t &upctr)
+{
+  return 
+    readUIntMacGet(F("dnctr"), dnctr) &&
+    readUIntMacGet(F("upctr"), upctr);
+}
+
+bool rn2xx3::setFrameCounters(uint32_t dnctr, uint32_t upctr)
+{
+  return 
+    sendMacSet(F("dnctr"), String(dnctr)) &&
+    sendMacSet(F("upctr"), String(upctr));
 }
 
 bool rn2xx3::sendMacSet(const String& param, const String& value)
@@ -878,7 +977,7 @@ bool rn2xx3::sendMacSet(const String& param, const String& value)
   command += ' ';
   command += value;
 
-  return sendRawCommand(command).equals(F("ok"));
+  return determineReceivedDataType(sendRawCommand(command)) == ok;
 }
 
 bool rn2xx3::sendMacSetEnabled(const String& param, bool enabled)
@@ -949,4 +1048,80 @@ bool rn2xx3::setAutomaticReply(bool enabled)
 bool rn2xx3::setTXoutputPower(int pwridx)
 {
   return sendMacSet(F("pwridx"), String(pwridx));
+}
+
+bool rn2xx3::updateStatus()
+{
+  const String status_str = sendRawCommand(F("mac get status"));
+  const size_t strlength = status_str.length();
+  if (strlength != 8 || !isHexStr(status_str)) { 
+    _lastErrorInvalidParam = F("mac get status  : No valid hex string");
+    return false; 
+  }
+  uint32_t status_value = strtoul(status_str.c_str(), 0, 16);
+  Status.decode(status_value);
+  if (rxdelay1 == 0 || rxdelay2 == 0 || Status.SecondReceiveWindowParamUpdated)
+  {
+    readUIntMacGet(F("rxdelay1"), rxdelay1);
+    readUIntMacGet(F("rxdelay2"), rxdelay2);
+    Status.SecondReceiveWindowParamUpdated = false;
+  }  
+  return true;
+}
+
+bool rn2xx3::saveUpdatedStatus()
+{
+
+  // Only save to the eeprom when really needed.
+  // No need to store the current config when there is no active connection.
+  // Todo: Must keep track of last saved counters and decide to update when current counter differs more than set threshold.
+  bool saved = false;
+  if (updateStatus())
+  {
+    if (Status.Joined && !Status.RejoinNeeded && Status.saveSettingsNeeded())
+    {
+      saved = determineReceivedDataType(sendRawCommand(F("mac save"))) == ok;
+      Status.clearSaveSettingsNeeded();
+      updateStatus();
+    }
+  }
+  return saved;
+}
+
+void rn2xx3::setSerialTimeout()
+{
+  // Enough time to wait for:
+  // sending the command module + reading reply
+  // TODO Determine correct delay based on baud rate + response time of module
+  _serial.setTimeout(2000);
+}
+
+void rn2xx3::setSerialTimeoutRX2() 
+{
+  // Enough time to wait for:
+  // Transmit Time On Air + receive_delay2 + receiving RX2 packet.
+  // 
+  // TODO: Compute exact time, for now just 2x rxdelay2
+  _serial.setTimeout(2 * rxdelay2);
+}
+
+void rn2xx3::clearSerialBuffer()
+{
+  while(_serial.available())
+    _serial.read();
+}
+
+bool rn2xx3::isHexStr(const String& str)
+{
+  const size_t strlength = str.length();
+  if (strlength != 8) { return false; }
+  for (size_t i = 0; i < strlength; ++i) {
+    const char ch = str[i];
+    bool valid = (ch >= '0' && ch <= '9') || (ch >= 'A' && ch <= 'F') || (ch >= 'a' && ch <= 'f');
+    if (!valid)
+    {
+      return false;      
+    }
+  }
+  return true;
 }

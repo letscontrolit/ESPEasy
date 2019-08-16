@@ -7,8 +7,8 @@ function Converter(decoded, port) {
     var name = "";
 
     if (port === 1) {
-        if ('plugin_id' in converted) {
-            switch (converted.plugin_id) {
+        if ('header' in converted) {
+            switch (converted.header.plugin_id) {
                 case 1:
                     converted.name = "Switch";
                     converted.v1  = converted.val_1;
@@ -173,10 +173,13 @@ function Converter(decoded, port) {
 
                 case 26:
                     converted.name = "Sysinfo";
+                    /*
                     converted.v1  = converted.val_1;
                     converted.v2  = converted.val_2;
                     converted.v3  = converted.val_3;
                     converted.v4  = converted.val_4;
+                    */
+                    converted.ip = [converted.ip1, converted.ip2, converted.ip3, converted.ip4].join('.');
                     break;
 
                 case 27:
@@ -544,10 +547,10 @@ function Converter(decoded, port) {
                     // The GPS plugin must be set first to output like this.
                     // HDOP is needed by TTN mapper to weigh the quality of the data.
                     // When using TTN mapper, make sure to output these values.
-                    converted.longitude  = converted.val_1;
-                    converted.latitude  = converted.val_2;
-                    converted.altitude  = converted.val_3;
-                    converted.hdop  = converted.val_4;
+//                    converted.longitude  = converted.val_1;
+//                    converted.latitude  = converted.val_2;
+//                    converted.altitude  = converted.val_3;
+//                    converted.hdop  = converted.val_4;
                     break;
 
                 case 83:

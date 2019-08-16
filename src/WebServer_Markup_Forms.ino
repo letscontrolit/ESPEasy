@@ -14,8 +14,13 @@ void addFormSeparator(int clspan)
 // ********************************************************************************
 void addFormNote(const String& text)
 {
-  html_TR_TD();
-  html_TD();
+  addFormNote(text, "");
+}
+
+
+void addFormNote(const String& text, const String& id)
+{
+  addRowLabel_tr_id("", id);
   TXBuffer += F("<div class='note'>Note: ");
   TXBuffer += text;
   TXBuffer += F("</div>");
@@ -40,7 +45,7 @@ void addFormCheckBox_disabled(const String& label, const String& id, boolean che
 
 void addFormCheckBox(const String& label, const String& id, boolean checked, bool disabled)
 {
-  addRowLabel(label);
+  addRowLabel_tr_id(label, id);
   addCheckBox(id, checked, disabled);
 }
 
@@ -58,7 +63,7 @@ void addFormCheckBox_disabled(LabelType::Enum label, boolean checked) {
 
 void addFormNumericBox(const String& label, const String& id, int value, int min, int max)
 {
-  addRowLabel(label);
+  addRowLabel_tr_id(label, id);
   addNumericBox(id, value, min, max);
 }
 
@@ -69,9 +74,19 @@ void addFormNumericBox(const String& label, const String& id, int value)
 
 void addFormFloatNumberBox(const String& label, const String& id, float value, float min, float max)
 {
-  addRowLabel(label);
+  addRowLabel_tr_id(label, id);
   addFloatNumberBox(id, value, min, max);
 }
+
+// ********************************************************************************
+// Add a task selector form
+// ********************************************************************************
+void addTaskSelectBox(const String& label, const String& id, int choice)
+{
+  addRowLabel_tr_id(label, id);
+  addTaskSelect(id, choice);
+}
+
 
 // ********************************************************************************
 // Add a Text Box form
@@ -79,19 +94,19 @@ void addFormFloatNumberBox(const String& label, const String& id, float value, f
 
 void addFormTextBox(const String& label, const String& id, const String&  value, int maxlength)
 {
-  addRowLabel(label);
+  addRowLabel_tr_id(label, id);
   addTextBox(id, value, maxlength);
 }
 
 void addFormTextBox(const String& label, const String& id, const String&  value, int maxlength, bool readonly)
 {
-  addRowLabel(label);
+  addRowLabel_tr_id(label, id);
   addTextBox(id, value, maxlength, readonly);
 }
 
 void addFormTextBox(const String& label, const String& id, const String&  value, int maxlength, bool readonly, bool required)
 {
-  addRowLabel(label);
+  addRowLabel_tr_id(label, id);
   addTextBox(id, value, maxlength, readonly, required);
 }
 
@@ -103,7 +118,7 @@ void addFormTextBox(const String& label,
                     bool          required,
                     const String& pattern)
 {
-  addRowLabel(label);
+  addRowLabel_tr_id(label, id);
   addTextBox(id, value, maxlength, readonly, required, pattern);
 }
 
@@ -113,7 +128,7 @@ void addFormTextBox(const String& label,
 
 void addFormPasswordBox(const String& label, const String& id, const String& password, int maxlength)
 {
-  addRowLabel(label);
+  addRowLabel_tr_id(label, id);
   TXBuffer += F("<input class='wide' type='password' name='");
   TXBuffer += id;
   TXBuffer += F("' maxlength=");
@@ -136,7 +151,7 @@ void addFormIPBox(const String& label, const String& id, const byte ip[4])
 {
   bool empty_IP = (ip[0] == 0 && ip[1] == 0 && ip[2] == 0 && ip[3] == 0);
 
-  addRowLabel(label);
+  addRowLabel_tr_id(label, id);
   TXBuffer += F("<input class='wide' type='text' name='");
   TXBuffer += id;
   TXBuffer += F("' value='");
@@ -152,7 +167,7 @@ void addFormIPBox(const String& label, const String& id, const byte ip[4])
 // ********************************************************************************
 void addFormIPaccessControlSelect(const String& label, const String& id, int choice)
 {
-  addRowLabel(label);
+  addRowLabel_tr_id(label, id);
   addIPaccessControlSelect(id, choice);
 }
 
@@ -162,13 +177,13 @@ void addFormIPaccessControlSelect(const String& label, const String& id, int cho
 
 void addFormPinSelect(const String& label, const String& id, int choice)
 {
-  addRowLabel(label, String("tr_") + id);
+  addRowLabel_tr_id(label, id);
   addPinSelect(false, id, choice);
 }
 
 void addFormPinSelectI2C(const String& label, const String& id, int choice)
 {
-  addRowLabel(label, String("tr_") + id);
+  addRowLabel_tr_id(label, id);
   addPinSelect(true, id, choice);
 }
 
@@ -212,7 +227,7 @@ void addFormSelector(const String& label,
                      int           selectedIndex,
                      boolean       reloadonchange)
 {
-  addRowLabel(label);
+  addRowLabel_tr_id(label, id);
   addSelector(id, optionCount, options, indices, attr, selectedIndex, reloadonchange);
 }
 
@@ -225,7 +240,7 @@ void addFormSelector_script(const String& label,
                             int           selectedIndex,
                             const String& onChangeCall)
 {
-  addRowLabel(label);
+  addRowLabel_tr_id(label, id);
   addSelector_Head(id, onChangeCall, false);
   addSelector_options(optionCount, options, indices, attr, selectedIndex);
   addSelector_Foot();
@@ -236,7 +251,7 @@ void addFormSelector_script(const String& label,
 // ********************************************************************************
 void addFormPinStateSelect(const String& label, const String& id, int choice, bool enabled)
 {
-  addRowLabel(label);
+  addRowLabel_tr_id(label, id);
   String options[4] = { F("Default"), F("Output Low"), F("Output High"), F("Input") };
   addSelector(id, 4, options, NULL, NULL, choice, false, enabled);
 }

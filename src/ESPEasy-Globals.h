@@ -316,6 +316,7 @@ void check_size() {
 #define PLUGIN_TIME_CHANGE                 27
 #define PLUGIN_MONITOR                     28
 #define PLUGIN_SET_DEFAULTS                29
+#define PLUGIN_GET_PACKED_RAW_DATA                30 // Return all data in a compact binary format specific for that plugin.
 
 
 // Make sure the CPLUGIN_* does not overlap PLUGIN_*
@@ -357,7 +358,8 @@ void check_size() {
 #define CONTROLLER_LWT_CONNECT_MESSAGE      16
 #define CONTROLLER_LWT_DISCONNECT_MESSAGE   17
 #define CONTROLLER_TIMEOUT                  18
-#define CONTROLLER_ENABLED                  19  // Keep this as last, is used to loop over all parameters
+#define CONTROLLER_SAMPLE_SET_INITIATOR       19
+#define CONTROLLER_ENABLED                  20  // Keep this as last, is used to loop over all parameters
 
 #define NPLUGIN_PROTOCOL_ADD                1
 #define NPLUGIN_GET_DEVICENAME              2
@@ -554,6 +556,7 @@ bool showSettingsFileLayout = false;
 #include <map>
 #include <deque>
 
+
 #define FS_NO_GLOBALS
 #if defined(ESP8266)
   #include "core_version.h"
@@ -741,6 +744,8 @@ I2Cdev i2cdev;
 
 bool safe_strncpy(char* dest, const String& source, size_t max_size);
 bool safe_strncpy(char* dest, const char* source, size_t max_size);
+
+
 
 /*********************************************************************************************\
  * SecurityStruct
@@ -1105,6 +1110,7 @@ struct ControllerSettingsStruct
     DeleteOldest = false;
     ClientTimeout = CONTROLLER_CLIENTTIMEOUT_DFLT;
     MustCheckReply = false;
+    SampleSetInitiator = 0;
     for (byte i = 0; i < 4; ++i) {
       IP[i] = 0;
     }
@@ -1131,6 +1137,7 @@ struct ControllerSettingsStruct
   boolean       DeleteOldest; // Action to perform when buffer full, delete oldest, or ignore newest.
   unsigned int  ClientTimeout;
   boolean       MustCheckReply; // When set to false, a sent message is considered always successful.
+  uint8_t       SampleSetInitiator; // The first plugin to start a sample set.
 
   void validate() {
     if (Port > 65535) Port = 0;
@@ -1616,7 +1623,8 @@ struct ProtocolStruct
 {
   ProtocolStruct() :
     defaultPort(0), Number(0), usesMQTT(false), usesAccount(false), usesPassword(false),
-    usesTemplate(false), usesID(false), Custom(false), usesHost(true), usesPort(true), usesQueue(true) {}
+    usesTemplate(false), usesID(false), Custom(false), usesHost(true), usesPort(true), 
+    usesQueue(true), usesSampleSets(false) {}
   uint16_t defaultPort;
   byte Number;
   bool usesMQTT : 1;
@@ -1628,6 +1636,7 @@ struct ProtocolStruct
   bool usesHost : 1;
   bool usesPort : 1;
   bool usesQueue : 1;
+  bool usesSampleSets : 1;
 };
 typedef std::vector<ProtocolStruct> ProtocolVector;
 ProtocolVector Protocol;
@@ -2405,6 +2414,154 @@ struct GpioFactorySettingsStruct {
 bool modelMatchingFlashSize(DeviceModel model, int size_MB);
 void addPredefinedPlugins(const GpioFactorySettingsStruct& gpio_settings);
 void addPredefinedRules(const GpioFactorySettingsStruct& gpio_settings);
+
+
+
+/* #######################################################################################################
+# Supported units of measure as output type for sensor values
+####################################################################################################### */
+struct UnitOfMeasure {
+  enum uom_t {
+    latitude,
+    longitude,
+    altitude,
+    speed,
+    hdop,
+    snr_dBHz,
+  };
+};
+
+
+
+// Data types used in packed encoder.
+// p_uint16_1e2 means it is a 16 bit unsigned int, but multiplied by 100 first.
+// This allows to store 2 decimals of a floating point value in 8 bits, ranging from 0.00 ... 2.55
+// For example p_int24_1e6 is a 24-bit signed value, ideal to store a GPS coordinate
+// with 6 decimals using only 3 bytes instead of 4 a normal float would use.
+enum PackedData_enum {
+  PackedData_uint8,
+  PackedData_uint16,
+  PackedData_uint24,
+  PackedData_uint32,
+  PackedData_int8,
+  PackedData_int16,
+  PackedData_int24,
+  PackedData_int32,
+  PackedData_uint8_1e3,
+  PackedData_uint8_1e2,
+  PackedData_uint8_1e1,
+  PackedData_uint16_1e5,
+  PackedData_uint16_1e4,
+  PackedData_uint16_1e3,
+  PackedData_uint16_1e2,
+  PackedData_uint16_1e1,
+  PackedData_uint24_1e6,
+  PackedData_uint24_1e5,
+  PackedData_uint24_1e4,
+  PackedData_uint24_1e3,
+  PackedData_uint24_1e2,
+  PackedData_uint24_1e1,
+  PackedData_uint32_1e6,
+  PackedData_uint32_1e5,
+  PackedData_uint32_1e4,
+  PackedData_uint32_1e3,
+  PackedData_uint32_1e2,
+  PackedData_uint32_1e1,
+  PackedData_int8_1e3,
+  PackedData_int8_1e2,
+  PackedData_int8_1e1,
+  PackedData_int16_1e5,
+  PackedData_int16_1e4,
+  PackedData_int16_1e3,
+  PackedData_int16_1e2,
+  PackedData_int16_1e1,
+  PackedData_int24_1e6,
+  PackedData_int24_1e5,
+  PackedData_int24_1e4,
+  PackedData_int24_1e3,
+  PackedData_int24_1e2,
+  PackedData_int24_1e1,
+  PackedData_int32_1e6,
+  PackedData_int32_1e5,
+  PackedData_int32_1e4,
+  PackedData_int32_1e3,
+  PackedData_int32_1e2,
+  PackedData_int32_1e1,
+  PackedData_pluginid,
+  PackedData_latLng,
+  PackedData_hdop,
+  PackedData_altitude,
+  PackedData_vcc,
+  PackedData_pct_8
+};
+
+static uint8_t getPackedDataTypeSize(PackedData_enum dtype, float& factor, float& offset) {
+  offset = 0;
+  switch (dtype) {
+    case PackedData_uint8:       factor = 1;         return 1;
+    case PackedData_uint16:      factor = 1;         return 2;
+    case PackedData_uint24:      factor = 1;         return 3;
+    case PackedData_uint32:      factor = 1;         return 4;
+    case PackedData_int8:        factor = 1;         return 1;
+    case PackedData_int16:       factor = 1;         return 2;
+    case PackedData_int24:       factor = 1;         return 3;
+    case PackedData_int32:       factor = 1;         return 4;
+    case PackedData_uint8_1e3:   factor = 1e3;       return 1;
+    case PackedData_uint8_1e2:   factor = 1e2;       return 1;
+    case PackedData_uint8_1e1:   factor = 1e1;       return 1;
+    case PackedData_uint16_1e5:  factor = 1e5;       return 2;
+    case PackedData_uint16_1e4:  factor = 1e4;       return 2;
+    case PackedData_uint16_1e3:  factor = 1e3;       return 2;
+    case PackedData_uint16_1e2:  factor = 1e2;       return 2;
+    case PackedData_uint16_1e1:  factor = 1e1;       return 2;
+    case PackedData_uint24_1e6:  factor = 1e6;       return 3;
+    case PackedData_uint24_1e5:  factor = 1e5;       return 3;
+    case PackedData_uint24_1e4:  factor = 1e4;       return 3;
+    case PackedData_uint24_1e3:  factor = 1e3;       return 3;
+    case PackedData_uint24_1e2:  factor = 1e2;       return 3;
+    case PackedData_uint24_1e1:  factor = 1e1;       return 3;
+    case PackedData_uint32_1e6:  factor = 1e6;       return 4;
+    case PackedData_uint32_1e5:  factor = 1e5;       return 4;
+    case PackedData_uint32_1e4:  factor = 1e4;       return 4;
+    case PackedData_uint32_1e3:  factor = 1e3;       return 4;
+    case PackedData_uint32_1e2:  factor = 1e2;       return 4;
+    case PackedData_uint32_1e1:  factor = 1e1;       return 4;
+    case PackedData_int8_1e3:    factor = 1e3;       return 1;
+    case PackedData_int8_1e2:    factor = 1e2;       return 1;
+    case PackedData_int8_1e1:    factor = 1e1;       return 1;
+    case PackedData_int16_1e5:   factor = 1e5;       return 2;
+    case PackedData_int16_1e4:   factor = 1e4;       return 2;
+    case PackedData_int16_1e3:   factor = 1e3;       return 2;
+    case PackedData_int16_1e2:   factor = 1e2;       return 2;
+    case PackedData_int16_1e1:   factor = 1e1;       return 2;
+    case PackedData_int24_1e6:   factor = 1e6;       return 3;
+    case PackedData_int24_1e5:   factor = 1e5;       return 3;
+    case PackedData_int24_1e4:   factor = 1e4;       return 3;
+    case PackedData_int24_1e3:   factor = 1e3;       return 3;
+    case PackedData_int24_1e2:   factor = 1e2;       return 3;
+    case PackedData_int24_1e1:   factor = 1e1;       return 3;
+    case PackedData_int32_1e6:   factor = 1e6;       return 4;
+    case PackedData_int32_1e5:   factor = 1e5;       return 4;
+    case PackedData_int32_1e4:   factor = 1e4;       return 4;
+    case PackedData_int32_1e3:   factor = 1e3;       return 4;
+    case PackedData_int32_1e2:   factor = 1e2;       return 4;
+    case PackedData_int32_1e1:   factor = 1e1;       return 4;
+    case PackedData_pluginid:    factor = 1;         return 1;
+    case PackedData_latLng:      factor = 46600;     return 3; // 2^23 / 180
+    case PackedData_hdop:        factor = 10;        return 1;
+    case PackedData_altitude:    factor = 4;     offset = 1000; return 2; // -1000 .. 15383.75 meter
+    case PackedData_vcc:         factor = 41.83; offset = 1;    return 1; // -1 .. 5.12V
+    case PackedData_pct_8:       factor = 2.56;                 return 1; // 0 .. 100%
+  }
+
+  // Unknown type
+  factor = 1;
+  return 0;
+}
+
+// Forward declarations PackedData related functions
+String LoRa_addInt(uint64_t value, PackedData_enum datatype);
+String LoRa_addFloat(float value, PackedData_enum datatype);
 
 
 // These wifi event functions must be in a .h-file because otherwise the preprocessor

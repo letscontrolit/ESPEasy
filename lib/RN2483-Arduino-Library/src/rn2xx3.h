@@ -146,28 +146,30 @@ class rn2xx3
      *
      * Parameter is an ascii text string.
      */
-    TX_RETURN_TYPE tx(const String&);
+    TX_RETURN_TYPE tx(const String& , uint8_t port = 1);
 
     /*
      * Transmit raw byte encoded data via LoRa WAN.
      * This method expects a raw byte array as first parameter.
      * The second parameter is the count of the bytes to send.
      */
-    TX_RETURN_TYPE txBytes(const byte*, uint8_t);
+    TX_RETURN_TYPE txBytes(const byte*, uint8_t size, uint8_t port = 1);
+
+    TX_RETURN_TYPE txHexBytes(const String&, uint8_t port = 1);
 
     /*
      * Do a confirmed transmission via LoRa WAN.
      *
      * Parameter is an ascii text string.
      */
-    TX_RETURN_TYPE txCnf(const String&);
+    TX_RETURN_TYPE txCnf(const String&, uint8_t port = 1);
 
     /*
      * Do an unconfirmed transmission via LoRa WAN.
      *
      * Parameter is an ascii text string.
      */
-    TX_RETURN_TYPE txUncnf(const String&);
+    TX_RETURN_TYPE txUncnf(const String&, uint8_t port = 1);
 
     /*
      * Transmit the provided data using the provided command.
@@ -177,7 +179,7 @@ class rn2xx3
      * String - an ascii text string if bool is true. A HEX string if bool is false.
      * bool - should the data string be hex encoded or not
      */
-    TX_RETURN_TYPE txCommand(const String&, const String&, bool);
+    TX_RETURN_TYPE txCommand(const String&, const String&, bool, uint8_t port = 1);
 
     /*
      * Change the datarate at which the RN2xx3 transmits.
@@ -231,6 +233,19 @@ class rn2xx3
     int getVbat();
 
     /*
+     * Return the current data rate formatted like sf7bw125
+     * Firmware 1.0.1 returns always "sf9"
+     */
+    String getDataRate();
+
+    /*
+     * Return radio Received Signal Strength Indication (rssi) value
+     * for the last received frame.
+     * Supported since firmware 1.0.5
+     */
+    int getRSSI();
+
+    /*
      * Encode an ASCII string to a HEX string as needed when passed
      * to the RN2xx3 module.
      */
@@ -249,7 +264,128 @@ class rn2xx3
      */
     String getLastErrorInvalidParam();
 
-    bool hasJoined() { return _joined; }
+    String peekLastErrorInvalidParam();
+
+    bool hasJoined() const { return Status.Joined; }
+
+    bool useOTAA() const { return _otaa; }
+
+    // Get the current frame counter values for downlink and uplink
+    bool getFrameCounters(uint32_t &dnctr, uint32_t &upctr);
+
+    // Set frame counter values for downlink and uplink
+    // E.g. to restore them after a reboot or reset of the module.
+    bool setFrameCounters(uint32_t dnctr, uint32_t upctr);
+
+    // At init() the module is assumed to be joined, which is also checked against the 
+    // _otaa flag.
+    // Allow to set the last used join mode to help prevent unneeded join requests.
+    void setLastUsedJoinMode(bool isOTAA) { _otaa = isOTAA; }
+    
+    struct Status_t {
+      Status_t() { decode(0); }
+      Status_t(uint32_t value) { decode(value); }
+
+      enum MacState_t {
+        Idle = 0,                  // Idle (transmissions are possible)
+        TransmissionOccurring = 1, // Transmission occurring
+        PreOpenReceiveWindow1 = 2, // Before the opening of Receive window 1
+        ReceiveWindow1Open = 3,    // Receive window 1 is open
+        BetwReceiveWindow1_2 = 4,  // Between Receive window 1 and Receive window 2
+        ReceiveWindow2Open = 5,    // Receive window 2 is open
+        RetransDelay = 6,          // Retransmission delay - used for ADR_ACK delay, FSK can occur
+        APB_delay = 7,             //APB_delay
+        Class_C_RX2_1_open = 8, // Class C RX2 1 open
+        Class_C_RX2_2_open = 9  // Class C RX2 2 open
+      } MacState;
+
+      // Joined does not seem to be updated in the status bits.
+      // Assume joined at first unless a transmit command returns "not_joined".
+      // This will prevent a lot of unneeded join requests.
+      bool Joined = true;    
+      bool AutoReply;
+      bool ADR;
+      bool SilentImmediately; // indicates the device has been silenced by the network. To enable: "mac forceENABLE"
+      bool MacPause;          // Temporary disable the LoRaWAN protocol interpreter. (e.g. to change radio settings)
+      bool RxDone;
+      bool LinkCheck;
+      bool ChannelsUpdated;
+      bool OutputPowerUpdated;
+      bool NbRepUpdated;  // NbRep is the number of repetitions for unconfirmed packets
+      bool PrescalerUpdated;
+      bool SecondReceiveWindowParamUpdated;
+      bool RXtimingSetupUpdated;
+      bool RejoinNeeded;
+      bool Multicast;
+
+      bool decode(uint32_t value) {
+        _rawstatus = value;
+
+        MacState = static_cast<MacState_t>(value & 0xF);
+        value = value >> 4;
+        Joined                          = Joined | (value & 1); value = value >> 1;
+        AutoReply                       = (value & 1); value = value >> 1;
+        ADR                             = (value & 1); value = value >> 1;
+        SilentImmediately               = (value & 1); value = value >> 1;
+        MacPause                        = (value & 1); value = value >> 1;
+        RxDone                          = (value & 1); value = value >> 1;
+        LinkCheck                       = (value & 1); value = value >> 1;
+        ChannelsUpdated                 = ChannelsUpdated                 | (value & 1); value = value >> 1;
+        OutputPowerUpdated              = OutputPowerUpdated              | (value & 1); value = value >> 1;
+        NbRepUpdated                    = NbRepUpdated                    | (value & 1); value = value >> 1;
+        PrescalerUpdated                = PrescalerUpdated                | (value & 1); value = value >> 1;
+        SecondReceiveWindowParamUpdated = SecondReceiveWindowParamUpdated | (value & 1); value = value >> 1;
+        RXtimingSetupUpdated            = RXtimingSetupUpdated            | (value & 1); value = value >> 1;
+        RejoinNeeded                    = (value & 1); value = value >> 1;
+        Multicast                       = (value & 1); value = value >> 1;
+
+
+        /*
+        The following bits are cleared after issuing a “mac get status” command:
+        - 11 (Channels updated)
+        - 12 (Output power updated)
+        - 13 (NbRep updated)
+        - 14 (Prescaler updated)
+        - 15 (Second Receive window parameters updated)
+        - 16 (RX timing setup updated) 
+
+        So we must keep track of them to see if they were updated since the last time they were saved to the 
+        */
+
+        _saveSettingsNeeded = 
+          _saveSettingsNeeded ||
+          ChannelsUpdated || 
+          OutputPowerUpdated || 
+          NbRepUpdated || 
+          PrescalerUpdated || 
+          SecondReceiveWindowParamUpdated || 
+          RXtimingSetupUpdated;
+        return _saveSettingsNeeded;
+      }
+
+      bool saveSettingsNeeded() const { return _saveSettingsNeeded; }
+
+      bool clearSaveSettingsNeeded() {
+        bool ret = _saveSettingsNeeded;
+
+        _saveSettingsNeeded = false;
+        ChannelsUpdated = false;
+        OutputPowerUpdated = false;
+        NbRepUpdated = false;
+        PrescalerUpdated = false;
+        SecondReceiveWindowParamUpdated = false;
+        RXtimingSetupUpdated = false;
+
+        return ret;
+      }
+
+      uint32_t getRawStatus() const { return _rawstatus; };
+
+
+    private:
+      uint32_t _rawstatus = 0;
+      bool _saveSettingsNeeded = false;
+    } Status;
 
   private:
     Stream& _serial;
@@ -259,10 +395,11 @@ class rn2xx3
     //Flags to switch code paths. Default is to use OTAA.
     bool _otaa = true;
 
-    // Keeping track of whether the module is (still) joined
-    bool _joined = false;
-
     FREQ_PLAN _fp = TTN_EU;
+    uint8_t _sf = 7;
+
+    uint32_t rxdelay1 = 1000;
+    uint32_t rxdelay2 = 2000;
 
     //The default address to use on TTN if no address is defined.
     //This one falls in the "testing" address space.
@@ -291,13 +428,18 @@ class rn2xx3
      */
     RN2xx3_t configureModuleType();
 
+    bool resetModule();
+
     void sendEncoded(const String&);
 
     enum received_t {
+      accepted,
       busy,
+      denied,
       frame_counter_err_rejoin_needed,
       invalid_data_len,
       invalid_param,
+      keys_not_init,
       mac_err,
       mac_paused,
       mac_rx,
@@ -315,6 +457,8 @@ class rn2xx3
 
     int readIntValue(const String& command);
 
+    bool readUIntMacGet(const String& param, uint32_t &value);
+
 
     // All "mac set ..." commands return either "ok" or "invalid_param"
     bool sendMacSet(const String& param, const String& value);
@@ -326,13 +470,27 @@ class rn2xx3
     bool setChannelDataRateRange(unsigned int channel, unsigned int minRange, unsigned int maxRange);
 
     // Set channel enabled/disabled.
-    // Frequency, data range, duty cycle must be issued prior to enabling the status of that channe
+    // Frequency, data range, duty cycle must be issued prior to enabling the status of that channel
     bool setChannelEnabled(unsigned int channel, bool enabled);
     
     bool set2ndRecvWindow(unsigned int dataRate, uint32_t frequency);
     bool setAdaptiveDataRate(bool enabled);
     bool setAutomaticReply(bool enabled);
     bool setTXoutputPower(int pwridx);
+
+    // Read the internal status of the module
+    // @retval true when update was successful
+    bool updateStatus();
+    bool saveUpdatedStatus();
+
+    // Set the serial timeout for standard transactions. (not waiting for a packet acknowledgement)
+    void setSerialTimeout();
+    // Set serial timeout to wait for 2nd receive window (RX2)
+    void setSerialTimeoutRX2();
+
+    void clearSerialBuffer();
+
+    static bool isHexStr(const String& string);
 
 };
 

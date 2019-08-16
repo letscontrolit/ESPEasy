@@ -199,6 +199,8 @@ struct P082_data_struct : public PluginTaskData_base {
   String lastSentence;
   String currentSentence;
 #endif // ifdef P082_SEND_GPS_TO_LOG
+  
+  float cache[P082_NR_OUTPUT_OPTIONS] = {0};
 };
 
 // Must use volatile declared variable (which will end up in iRAM)
@@ -263,7 +265,8 @@ boolean Plugin_082(byte function, struct EventStruct *event, String& string) {
       if ((nullptr != P082_data) && P082_data->isInitialized()) {
         byte varNr = VARS_PER_TASK;
         addHtml(pluginWebformShowValue(event->TaskIndex, varNr++, F("Fix"),     String(P082_data->hasFix(P082_TIMEOUT) ? 1 : 0)));
-        addHtml(pluginWebformShowValue(event->TaskIndex, varNr++, F("Tracked"),       String(P082_data->gps->satellitesStats.nrSatsTracked())));
+        addHtml(pluginWebformShowValue(event->TaskIndex, varNr++, F("Tracked"),
+                                       String(P082_data->gps->satellitesStats.nrSatsTracked())));
         addHtml(pluginWebformShowValue(event->TaskIndex, varNr++, F("Best SNR"), String(P082_data->gps->satellitesStats.getBestSNR()), true));
 
         // success = true;
@@ -291,11 +294,11 @@ boolean Plugin_082(byte function, struct EventStruct *event, String& string) {
     }
 
     case PLUGIN_WEBFORM_SHOW_CONFIG:
-      {
-        string += serialHelper_getSerialTypeLabel(event);
-        success = true;
-        break;
-      }
+    {
+      string += serialHelper_getSerialTypeLabel(event);
+      success = true;
+      break;
+    }
 
     case PLUGIN_WEBFORM_LOAD: {
       serialHelper_webformLoad(event);
@@ -517,6 +520,29 @@ boolean Plugin_082(byte function, struct EventStruct *event, String& string) {
       }
       break;
     }
+    case PLUGIN_GET_PACKED_RAW_DATA:
+    {
+      P082_data_struct *P082_data =
+        static_cast<P082_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if ((nullptr != P082_data) && P082_data->isInitialized()) {
+        // Matching JS code:
+        // return decode(bytes, [header, latLng, latLng, altitude, uint16_1e2, hdop, uint8, uint8],
+        //      ['header', 'latitude', 'longitude', 'altitude', 'speed', 'hdop', 'max_snr', 'sat_tracked']);
+        // altitude type: return +(int16(bytes) / 4 - 1000).toFixed(1);
+        string += LoRa_addFloat(P082_data->cache[P082_QUERY_LAT], PackedData_latLng);
+        string += LoRa_addFloat(P082_data->cache[P082_QUERY_LONG], PackedData_latLng);
+        string += LoRa_addFloat(P082_data->cache[P082_QUERY_ALT], PackedData_altitude);
+        string += LoRa_addFloat(P082_data->cache[P082_QUERY_SPD], PackedData_uint16_1e2);
+        string += LoRa_addFloat(P082_data->cache[P082_QUERY_HDOP], PackedData_hdop);
+        string += LoRa_addFloat(P082_data->cache[P082_QUERY_DB_MAX], PackedData_uint8);
+        string += LoRa_addFloat(P082_data->cache[P082_QUERY_SATUSE], PackedData_uint8);
+        event->Par1 = 7; // valuecount 7 
+        
+        success = true;
+      }
+      break;
+    }
   }
   return success;
 }
@@ -528,6 +554,8 @@ void P082_setOutputValue(struct EventStruct *event, byte outputType, float value
   if ((nullptr == P082_data) || !P082_data->isInitialized()) {
     return;
   }
+  if (outputType < P082_NR_OUTPUT_OPTIONS)
+    P082_data->cache[outputType] = value;
 
   for (byte i = 0; i < P082_NR_OUTPUT_VALUES; ++i) {
     const byte pconfigIndex = i + P082_QUERY1_CONFIG_POS;
