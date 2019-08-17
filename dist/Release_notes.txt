@@ -1,4 +1,21 @@
 -------------------------------------------------
+Changes in release mega-20190817 (since mega-20190813)
+-------------------------------------------------
+
+Release date: Sat Aug 17 04:00:12 CEST 2019
+
+Gijs Noorlander (8):
+      [LoRa/TTN] Document LoRaWAN/TTN controller
+      [LoRa/TTN] Toggle visibility of OTAA/ABP parameters based on selection
+      [LoRa/TTN] Reduce number of join requests
+      [LoRa/TTN] Add Sample Set Initiator to mark samples of the same set
+      [LoRa/TTN] Output packed raw format for uploading to TTN
+      [LoRa/TTN] Add raw encoder/decoder for sysinfo plugin
+      [LoRa/TTN] Add decoder for the packet header
+      [LoRa/TTN] Correct decoder example in comments
+
+
+-------------------------------------------------
 Changes in release mega-20190813 (since mega-20190809)
 -------------------------------------------------
 
