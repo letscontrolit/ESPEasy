@@ -477,9 +477,8 @@ struct ModbusRTU_struct  {
 
         if (_recv_buf_used > 2) { // got length
           if (_recv_buf_used >= (3+_recv_buf[2]+2)) { // got whole pkt
-            // Check checksum
-            crc = ModRTU_CRC(_recv_buf, _recv_buf_used);
-            validPacket = crc == 0;
+            crc = ModRTU_CRC(_recv_buf, _recv_buf_used); // crc16 is 0 for whole valid pkt
+            validPacket = crc == 0 && _recv_buf[0] == _sendframe[0]; // check crc and address
             return_value = 0; // reset return value
           }
         }
