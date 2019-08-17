@@ -457,7 +457,7 @@ struct ModbusRTU_struct  {
       // Send the byte array
       startWrite();
       easySerial->write(_sendframe, _sendframe_used);
-      // drop all data from buffer
+      // sent all data from buffer
       easySerial->flush();
       startRead();
 
@@ -471,7 +471,7 @@ struct ModbusRTU_struct  {
       // recv: 0x02,0x03,0x02,0x01,0x57,0xBC,0x2A
 
       while (!validPacket && _recv_buf_used < MODBUS_RECEIVE_BUFFER && !timeOutReached(timeout)) {
-        while (easySerial->available() && !timeOutReached(timeout)) {
+        while (easySerial->available() && _recv_buf_used < MODBUS_RECEIVE_BUFFER && !timeOutReached(timeout)) {
           _recv_buf[_recv_buf_used++] = easySerial->read();
         }
 
