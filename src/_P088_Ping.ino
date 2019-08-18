@@ -31,7 +31,7 @@ extern "C"
 
 struct P088_icmp_pcb {
   struct raw_pcb *m_IcmpPCB = NULL;
-  uint8_t instances;
+  uint8_t instances; /* Sort of refcount */
 };
 
 struct P088_icmp_pcb *P088_data = NULL;
@@ -41,9 +41,31 @@ public:
   P088_data_struct() {
     destIPAddress.addr = 0;
     idseq = 0;
+    if (!P088_data) {
+      P088_data = new P088_icmp_pcb();
+      P088_data->m_IcmpPCB = raw_new(IP_PROTO_ICMP);
+      raw_recv(P088_data->m_IcmpPCB, PingReceiver, NULL);
+      raw_bind(P088_data->m_IcmpPCB, IP_ADDR_ANY);
+      P088_data->instances = 1;
+    } else {
+      P088_data->instances++;
+    }
   }
+
+  ~P088_data_struct() {
+      if (P088_data != nullptr) {
+        P088_data->instances--;
+        if (P088_data->instances == 0) {
+          raw_remove(P088_data->m_IcmpPCB);
+          delete P088_data;
+          P088_data = NULL;
+        }
+      }
+  }
+
   ip_addr_t destIPAddress;
   uint32_t idseq;
+  uint8_t active;
 
   bool send_ping(struct EventStruct *event) {
     bool is_failure = false;
@@ -52,7 +74,7 @@ public:
     // Do we have unanswered pings? If we are sending new one, this means old one is lost
     if (destIPAddress.addr != 0)
       is_failure = true;
-    
+
     /* This ping lost for sure */
     if (!WiFiConnected()) {
       return true;
@@ -161,16 +183,8 @@ boolean Plugin_088(byte function, struct EventStruct *event, String& string)
   case PLUGIN_INIT:
   {
     initPluginTaskData(event->TaskIndex, new P088_data_struct());
-    if (!P088_data) {
-      P088_data = new P088_icmp_pcb();
-      P088_data->m_IcmpPCB = raw_new(IP_PROTO_ICMP);
-      raw_recv(P088_data->m_IcmpPCB, PingReceiver, NULL);
-      raw_bind(P088_data->m_IcmpPCB, IP_ADDR_ANY);
-      P088_data->instances = 1;
-    } else {
-      P088_data->instances++;
-    }
     UserVar[event->BaseVarIndex] = 0;
+    addLog(LOG_LEVEL_ERROR, "PLUGIN_INIT r " + String(P088_data->instances));
     success = true;
     break;
   }
@@ -178,12 +192,6 @@ boolean Plugin_088(byte function, struct EventStruct *event, String& string)
   case PLUGIN_EXIT:
   {
     clearPluginTaskData(event->TaskIndex);
-    P088_data->instances--;
-    if (P088_data->instances == 0) {
-      raw_remove(P088_data->m_IcmpPCB);
-      delete P088_data;
-      P088_data = NULL;
-    }
     break;
   }
 
@@ -191,9 +199,13 @@ boolean Plugin_088(byte function, struct EventStruct *event, String& string)
   {
     P088_data_struct *P088_taskdata =
       static_cast<P088_data_struct *>(getPluginTaskData(event->TaskIndex));
+    if (nullptr == P088_taskdata)
+      break;
+
     if (P088_taskdata->send_ping(event))
       UserVar[event->BaseVarIndex]++;
 
+    success = true;
     break;
   }
 
@@ -226,7 +238,7 @@ uint8_t PingReceiver (void *origin, struct raw_pcb *pcb, struct pbuf *packetBuff
 {
   if (packetBuffer == nullptr || addr == nullptr)
     return 0;
-  
+
   if (packetBuffer->len < sizeof(struct ip_hdr) + sizeof(struct icmp_echo_hdr) + ICMP_PAYLOAD_LEN)
     return 0;
 
@@ -252,7 +264,7 @@ uint8_t PingReceiver (void *origin, struct raw_pcb *pcb, struct pbuf *packetBuff
     // Match all ping plugin instances and check them
     if (plugin > 0 && Plugin_id[plugin] == PLUGIN_ID_088) {
       P088_data_struct *P088_taskdata = static_cast<P088_data_struct *>(getPluginTaskData(index));
-      if (icmp_hdr->id == (uint16_t)((P088_taskdata->idseq & 0xffff0000) >> 16 ) &&
+      if (P088_taskdata != nullptr && icmp_hdr->id == (uint16_t)((P088_taskdata->idseq & 0xffff0000) >> 16 ) &&
           icmp_hdr->seqno == (uint16_t)(P088_taskdata->idseq & 0xffff) ) {
         UserVar[index * VARS_PER_TASK] = 0; // Reset "fails", we got reply
         P088_taskdata->idseq = 0;
