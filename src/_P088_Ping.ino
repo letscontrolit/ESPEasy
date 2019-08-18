@@ -27,15 +27,82 @@ extern "C"
 #define PLUGIN_088_HOSTNAME_SIZE  64
 #define PLUGIN_088_MAX_INSTANCES  8
 
-/* Most efficient data packing if we order from place elements from largest to smallest */
-struct P088_data_struct {
-  ip_addr_t destIPAddress[TASKS_MAX];
-  uint32_t idseq[TASKS_MAX];
+#define ICMP_PAYLOAD_LEN          32
+
+struct P088_icmp_pcb {
   struct raw_pcb *m_IcmpPCB = NULL;
   uint8_t instances;
 };
 
-struct P088_data_struct *P088_data = NULL;
+struct P088_icmp_pcb *P088_data = NULL;
+
+class P088_data_struct: public PluginTaskData_base {
+public:
+  P088_data_struct() {
+    destIPAddress.addr = 0;
+    idseq = 0;
+  }
+  ip_addr_t destIPAddress;
+  uint32_t idseq;
+
+  bool send_ping(struct EventStruct *event) {
+    bool is_failure = false;
+    IPAddress ip;
+
+    // Do we have unanswered pings? If we are sending new one, this means old one is lost
+    if (destIPAddress.addr != 0)
+      is_failure = true;
+    
+    /* This ping lost for sure */
+    if (!WiFiConnected()) {
+      return true;
+    }
+
+    char hostname[PLUGIN_088_HOSTNAME_SIZE];
+    LoadCustomTaskSettings(event->TaskIndex, (byte*)&hostname, PLUGIN_088_HOSTNAME_SIZE);
+
+    /* This one lost as well, DNS dead? */
+    if (WiFi.hostByName(hostname, ip) == false) {
+      return true;
+    }
+    destIPAddress.addr = ip;
+
+    /* Generate random ID & seq */
+    idseq = random(UINT32_MAX);
+    u16_t ping_len = ICMP_PAYLOAD_LEN + sizeof(struct icmp_echo_hdr);
+    struct pbuf *packetBuffer = pbuf_alloc(PBUF_IP, ping_len, PBUF_RAM);
+    /* Lost for sure, TODO: Might be good to log such failures, this means we are short on ram? */
+    if (packetBuffer == NULL) {
+      return true;
+    }
+
+    struct icmp_echo_hdr * echoRequestHeader = (struct icmp_echo_hdr *)packetBuffer->payload;
+    ICMPH_TYPE_SET(echoRequestHeader, ICMP_ECHO);
+    ICMPH_CODE_SET(echoRequestHeader, 0);
+    echoRequestHeader->chksum = 0;
+    echoRequestHeader->id = (uint16_t)((idseq & 0xffff0000) >> 16 );
+    echoRequestHeader->seqno = (uint16_t)(idseq & 0xffff);
+    size_t icmpHeaderLen = sizeof(struct icmp_echo_hdr);
+    size_t icmpDataLen = ping_len - icmpHeaderLen;
+    char dataByte = 0x61;
+    for (size_t i = 0; i < icmpDataLen; i++) {
+      ((char*)echoRequestHeader)[icmpHeaderLen + i] = dataByte;
+      ++dataByte;
+      if (dataByte > 0x77) // 'w' character
+      {
+        dataByte = 0x61;
+      }
+    }
+    echoRequestHeader->chksum = inet_chksum(echoRequestHeader, ping_len);
+    ip_addr_t destIPAddress;
+    destIPAddress.addr = ip;
+    raw_sendto(P088_data->m_IcmpPCB, packetBuffer, &destIPAddress);
+
+    pbuf_free(packetBuffer);
+
+    return is_failure;
+  }
+};
 
 boolean Plugin_088(byte function, struct EventStruct *event, String& string)
 {
@@ -83,6 +150,8 @@ boolean Plugin_088(byte function, struct EventStruct *event, String& string)
   case PLUGIN_WEBFORM_SAVE:
   {
     char hostname[PLUGIN_088_HOSTNAME_SIZE];
+    // Reset "Fails" if settings updated
+    UserVar[event->BaseVarIndex] = 0;
     strncpy(hostname,  WebServer.arg(F("p088_ping_host")).c_str() , sizeof(hostname));
     SaveCustomTaskSettings(event->TaskIndex, (byte*)&hostname, PLUGIN_088_HOSTNAME_SIZE);
     success = true;
@@ -91,15 +160,12 @@ boolean Plugin_088(byte function, struct EventStruct *event, String& string)
 
   case PLUGIN_INIT:
   {
+    initPluginTaskData(event->TaskIndex, new P088_data_struct());
     if (!P088_data) {
-      P088_data = new P088_data_struct();
+      P088_data = new P088_icmp_pcb();
       P088_data->m_IcmpPCB = raw_new(IP_PROTO_ICMP);
       raw_recv(P088_data->m_IcmpPCB, PingReceiver, NULL);
       raw_bind(P088_data->m_IcmpPCB, IP_ADDR_ANY);
-      for (int i = 0; i < PLUGIN_088_MAX_INSTANCES; i++) {
-        memset(&P088_data->destIPAddress[i], 0x0, sizeof(P088_data->destIPAddress[0]));
-        memset(&P088_data->idseq[i], 0x0, sizeof(P088_data->idseq[0]));
-      }
       P088_data->instances = 1;
     } else {
       P088_data->instances++;
@@ -111,67 +177,22 @@ boolean Plugin_088(byte function, struct EventStruct *event, String& string)
 
   case PLUGIN_EXIT:
   {
+    clearPluginTaskData(event->TaskIndex);
     P088_data->instances--;
     if (P088_data->instances == 0) {
       raw_remove(P088_data->m_IcmpPCB);
       delete P088_data;
+      P088_data = NULL;
     }
     break;
   }
 
   case PLUGIN_READ:
   {
-    char hostname[PLUGIN_088_HOSTNAME_SIZE];
-    IPAddress ip;
-
-    // Does we have unanswered pings?
-    if (P088_data->destIPAddress[event->TaskIndex].addr != 0) {
+    P088_data_struct *P088_taskdata =
+      static_cast<P088_data_struct *>(getPluginTaskData(event->TaskIndex));
+    if (P088_taskdata->send_ping(event))
       UserVar[event->BaseVarIndex]++;
-    }
-
-    success = true;
-    if (!WiFiConnected()) {
-      break;
-    }
-    LoadCustomTaskSettings(event->TaskIndex, (byte*)&hostname, PLUGIN_088_HOSTNAME_SIZE);
-
-    if (WiFi.hostByName(hostname, ip) == false) {
-      break;
-    }
-
-    P088_data->destIPAddress[event->TaskIndex].addr = ip;
-
-    /* Generate random ID & seq */
-    P088_data->idseq[event->TaskIndex] = random(UINT32_MAX);
-    u16_t ping_len = 32 + sizeof(struct icmp_echo_hdr);
-    struct pbuf *packetBuffer = pbuf_alloc(PBUF_IP, ping_len, PBUF_RAM);
-    if (packetBuffer == NULL) {
-      break;
-    }
-
-    struct icmp_echo_hdr * echoRequestHeader = (struct icmp_echo_hdr *)packetBuffer->payload;
-    ICMPH_TYPE_SET(echoRequestHeader, ICMP_ECHO);
-    ICMPH_CODE_SET(echoRequestHeader, 0);
-    echoRequestHeader->chksum = 0;
-    echoRequestHeader->id = (uint16_t)((P088_data->idseq[event->TaskIndex] & 0xffff0000) >> 16 );
-    echoRequestHeader->seqno = (uint16_t)(P088_data->idseq[event->TaskIndex] & 0xffff);
-    size_t icmpHeaderLen = sizeof(struct icmp_echo_hdr);
-    size_t icmpDataLen = ping_len - icmpHeaderLen;
-    char dataByte = 0x61;
-    for (size_t i = 0; i < icmpDataLen; i++) {
-      ((char*)echoRequestHeader)[icmpHeaderLen + i] = dataByte;
-      ++dataByte;
-      if (dataByte > 0x77) // 'w' character
-      {
-        dataByte = 0x61;
-      }
-    }
-    echoRequestHeader->chksum = inet_chksum(echoRequestHeader, ping_len);
-    ip_addr_t destIPAddress;
-    destIPAddress.addr = ip;
-    raw_sendto(P088_data->m_IcmpPCB, packetBuffer, &destIPAddress);
-
-    pbuf_free(packetBuffer);
 
     break;
   }
@@ -205,47 +226,43 @@ uint8_t PingReceiver (void *origin, struct raw_pcb *pcb, struct pbuf *packetBuff
 {
   if (packetBuffer == nullptr || addr == nullptr)
     return 0;
-  // Save IPv4 header structure to read ttl value
-  struct ip_hdr * ip = (struct ip_hdr *)packetBuffer->payload;
-  if (ip == nullptr)
-  {
+  
+  if (packetBuffer->len < sizeof(struct ip_hdr) + sizeof(struct icmp_echo_hdr) + ICMP_PAYLOAD_LEN)
     return 0;
-  }
+
+  // TODO: Check some ipv4 header values?
+  // struct ip_hdr * ip = (struct ip_hdr *)packetBuffer->payload;
 
   if (pbuf_header(packetBuffer, -PBUF_IP_HLEN) != 0)
-  {
     return 0;
-  }
 
-  // After the IPv4 header, one can access the icmp echo header
+  // After the IPv4 header, we can access the icmp echo header
   struct icmp_echo_hdr * icmp_hdr = (struct icmp_echo_hdr *)packetBuffer->payload;
-  if (icmp_hdr == nullptr)
-  {
-    // Restore original position of ->payload pointer
+
+  // Is it echo reply?
+  if (icmp_hdr->type != 0) {
     pbuf_header(packetBuffer, PBUF_IP_HLEN);
     return 0;
   }
 
   uint8_t index;
-
+  bool is_found = false;
   for (index = 0; index < TASKS_MAX; index++) {
-    // Does IP match?
-    if (P088_data->destIPAddress[index].addr == addr->addr) {
-      // Verify also seqno and id
-      if (icmp_hdr->id == (uint16_t)((P088_data->idseq[index] & 0xffff0000) >> 16 ) &&
-          icmp_hdr->seqno == (uint16_t)(P088_data->idseq[index] & 0xffff) ) {
-
-        P088_data->destIPAddress[index].addr = 0;
-        P088_data->idseq[index] = 0;
-        // FIXME? Do we need atomic/synchronization? I think on ESP32 - definitely
-        UserVar[index * VARS_PER_TASK] = 0; // Reset fails, we got reply
-        break;
+    int plugin = getPluginId(index);
+    // Match all ping plugin instances and check them
+    if (plugin > 0 && Plugin_id[plugin] == PLUGIN_ID_088) {
+      P088_data_struct *P088_taskdata = static_cast<P088_data_struct *>(getPluginTaskData(index));
+      if (icmp_hdr->id == (uint16_t)((P088_taskdata->idseq & 0xffff0000) >> 16 ) &&
+          icmp_hdr->seqno == (uint16_t)(P088_taskdata->idseq & 0xffff) ) {
+        UserVar[index * VARS_PER_TASK] = 0; // Reset "fails", we got reply
+        P088_taskdata->idseq = 0;
+        P088_taskdata->destIPAddress.addr = 0;
+        is_found = true;
       }
     }
   }
 
-  // Not found, because we reached the end and not breaked in middle
-  if (index == TASKS_MAX) {
+  if (!is_found) {
     pbuf_header(packetBuffer, PBUF_IP_HLEN);
     return 0;
   }
