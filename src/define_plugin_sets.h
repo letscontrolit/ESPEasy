@@ -73,13 +73,26 @@ To create/register a plugin, you have to :
 
 #ifdef PLUGIN_BUILD_MINIMAL_IR
     #define PLUGIN_BUILD_MINIMAL_OTA
+    #define PLUGIN_DESCR  "Minimal, IR"
     #define PLUGIN_BUILD_IR
+#endif
+
+#ifdef PLUGIN_BUILD_MINIMAL_IRext
+    #define PLUGIN_BUILD_MINIMAL_OTA
+    #define PLUGIN_DESCR  "Minimal, IR with AC"
+    #define PLUGIN_BUILD_IR_EXTENDED
 #endif
 
 #ifdef PLUGIN_BUILD_NORMAL_IR
     #define PLUGIN_BUILD_NORMAL     // add stable
-    #define PLUGIN_DESCR  "Minimal 1M IR"
+    #define PLUGIN_DESCR  "Normal, IR"
     #define PLUGIN_BUILD_IR
+#endif
+
+#ifdef PLUGIN_BUILD_NORMAL_IRext
+    #define PLUGIN_BUILD_NORMAL     // add stable
+    #define PLUGIN_DESCR  "Normal, IR with AC"
+    #define PLUGIN_BUILD_IR_EXTENDED
 #endif
 
 #ifdef PLUGIN_BUILD_DEV
@@ -205,6 +218,7 @@ To create/register a plugin, you have to :
     #define USES_P035      // IRTX
     // The following define is needed for extended decoding of A/C Messages and or using standardised common arguments for controlling all deeply supported A/C units
     #define P016_P035_Extended_AC
+    #define USES_P088      //ToniA IR plugin
 #endif
 
 /******************************************************************************\
@@ -678,7 +692,7 @@ To create/register a plugin, you have to :
 	//#define USES_P112	// RFTX
 	#define USES_P113	// SI1145
 	#define USES_P114	// DSM501
-	#define USES_P115	// HeatpumpIR
+	//#define USES_P115	// HeatpumpIR - P088 in the main repo.
 	#define USES_P116	// ID12
 	#define USES_P117	// LW12FC
 	//#define USES_P117	// Neopixels
@@ -777,6 +791,12 @@ To create/register a plugin, you have to :
 #else
   // No plugin uses serial, so make sure software serial is not included.
   #define DISABLE_SOFTWARE_SERIAL
+#endif
+
+
+// MQTT_MAX_PACKET_SIZE : Maximum packet size
+#ifndef MQTT_MAX_PACKET_SIZE
+  #define MQTT_MAX_PACKET_SIZE 1024 // Is also used in PubSubClient
 #endif
 
 /*
