@@ -457,6 +457,8 @@ struct ModbusRTU_struct  {
       // Send the byte array
       startWrite();
       easySerial->write(_sendframe, _sendframe_used);
+      // sent all data from buffer
+      easySerial->flush();
       startRead();
 
       // Read answer from sensor
@@ -464,19 +466,27 @@ struct ModbusRTU_struct  {
       unsigned long timeout = millis() + _modbus_timeout;
       bool validPacket      = false;
 
+      //  idx:    0,   1,   2,   3,   4,   5,   6,   7
+      // send: 0x02,0x03,0x00,0x00,0x00,0x01,0x39,0x84
+      // recv: 0x02,0x03,0x02,0x01,0x57,0xBC,0x2A
+
       while (!validPacket && _recv_buf_used < MODBUS_RECEIVE_BUFFER && !timeOutReached(timeout)) {
-        while (easySerial->available()) {
+        while (easySerial->available() && _recv_buf_used < MODBUS_RECEIVE_BUFFER && !timeOutReached(timeout)) {
           _recv_buf[_recv_buf_used++] = easySerial->read();
         }
 
-        // Check checksum
-        crc         = ModRTU_CRC(_recv_buf, _recv_buf_used);
-        validPacket = crc == 0;
+        if (_recv_buf_used > 2) { // got length
+          if (_recv_buf_used >= (3+_recv_buf[2]+2)) { // got whole pkt
+            crc = ModRTU_CRC(_recv_buf, _recv_buf_used); // crc16 is 0 for whole valid pkt
+            validPacket = crc == 0 && _recv_buf[0] == _sendframe[0]; // check crc and address
+            return_value = 0; // reset return value
+          }
+        }
         delay(0);
       }
 
       // Check for MODBUS exception
-      if (crc != 0u) {
+      if (!validPacket) {
         ++_reads_crc_failed;
         return_value = MODBUS_BADCRC;
       } else {
