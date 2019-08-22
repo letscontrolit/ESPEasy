@@ -372,10 +372,6 @@ void setup()
     }
   #endif
 
-//  #ifndef ESP32
-//  connectionCheck.attach(30, connectionCheckHandler);
-//  #endif
-
   // Start the interval timers at N msec from now.
   // Make sure to start them at some time after eachother,
   // since they will keep running at the same interval.
@@ -513,12 +509,6 @@ void loop()
 
   updateLoopStats();
 
-  if (wifiSetupConnect)
-  {
-    // try to connect for setup wizard
-    WiFiConnectRelaxed();
-    wifiSetupConnect = false;
-  }
   if (WiFi.status() == WL_DISCONNECTED) {
     delay(100);
   }
@@ -526,6 +516,15 @@ void loop()
     // WiFi connection is not yet available, so introduce some extra delays to
     // help the background tasks managing wifi connections
     delay(1);
+    if (wifiConnectAttemptNeeded) {
+      WiFiConnectRelaxed();
+    }
+    if (!processedDisconnect) {
+      #ifndef BUILD_NO_DEBUG
+      addLog(LOG_LEVEL_DEBUG, F("WIFI : Entering processDisconnect()"));
+      #endif
+      processDisconnect();
+    }
     if (!processedConnect) {
       #ifndef BUILD_NO_DEBUG
       addLog(LOG_LEVEL_DEBUG, F("WIFI : Entering processConnect()"));
@@ -538,12 +537,6 @@ void loop()
       #endif
       processGotIP();
     }
-    if (!processedDisconnect) {
-      #ifndef BUILD_NO_DEBUG
-      addLog(LOG_LEVEL_DEBUG, F("WIFI : Entering processDisconnect()"));
-      #endif
-      processDisconnect();
-    }
     if (!processedDHCPTimeout) {
       #ifndef BUILD_NO_DEBUG
       addLog(LOG_LEVEL_DEBUG, F("WIFI : DHCP timeout, Calling disconnect()"));
@@ -553,6 +546,7 @@ void loop()
     }
     if ((wifiStatus & ESPEASY_WIFI_GOT_IP) && (wifiStatus & ESPEASY_WIFI_CONNECTED) && WiFi.isConnected()) {
       wifiStatus = ESPEASY_WIFI_SERVICES_INITIALIZED;
+      resetAPdisableTimer();
     }
   } else if (!WiFiConnected()) {
     // Somehow the WiFi has entered a limbo state.
@@ -565,7 +559,7 @@ void loop()
 
         addLog(LOG_LEVEL_ERROR, wifilog);
     }
-  }
+  }  
   if (wifiStatus == ESPEASY_WIFI_DISCONNECTED) {
     #ifndef BUILD_NO_DEBUG
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
@@ -578,8 +572,9 @@ void loop()
     // While connecting to WiFi make sure the device has ample time to do so
     delay(10);
   }
-  if (!processedConnectAPmode) processConnectAPmode();
   if (!processedDisconnectAPmode) processDisconnectAPmode();
+  if (!processedConnectAPmode) processConnectAPmode();
+  if (timerAPoff != 0) processDisableAPmode();
   if (!processedScanDone) processScanDone();
 
   bool firstLoopConnectionsEstablished = checkConnectionsEstablished() && firstLoop;
@@ -797,8 +792,6 @@ void runOncePerSecond()
     }
     cmd_within_mainloop = 0;
   }
-  WifiCheck();
-
   // clock events
   if (systemTimePresent())
     checkTime();
@@ -1015,14 +1008,16 @@ void backgroundtasks()
         serial();
       }
     }
-    if (wifiConnected) {
+    if (webserverRunning) {
       WebServer.handleClient();
+    }
+    if (WiFi.getMode() != WIFI_OFF) {
       checkUDP();
     }
   }
 
   // process DNS, only used if the ESP has no valid WiFi config
-  if (dnsServerActive && wifiConnected)
+  if (dnsServerActive)
     dnsServer.processNextRequest();
 
   #ifdef FEATURE_ARDUINO_OTA

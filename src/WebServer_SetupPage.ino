@@ -24,9 +24,6 @@ void handle_setup() {
     TXBuffer.endStream();
 
     wifiSetup = false;
-
-    // setWifiMode(WIFI_STA);  //this forces the iPhone to exit safari and this page was never displayed
-    timerAPoff = millis() + 60000L; // switch the AP off in 1 minute
     return;
   }
 
@@ -48,6 +45,7 @@ void handle_setup() {
     safe_strncpy(SecuritySettings.WifiKey,  password.c_str(), sizeof(SecuritySettings.WifiKey));
     safe_strncpy(SecuritySettings.WifiSSID, ssid.c_str(),     sizeof(SecuritySettings.WifiSSID));
     wifiSetupConnect = true;
+    wifiConnectAttemptNeeded = true;
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String reconnectlog = F("WIFI : Credentials Changed, retry connection. SSID: ");
@@ -66,6 +64,7 @@ void handle_setup() {
     WiFiMode_t cur_wifimode = WiFi.getMode();
 
     if (n == 0) {
+      addLog(LOG_LEVEL_INFO, F("Start scan for WiFi APs"));
       n = WiFi.scanNetworks(false, true);
     }
     setWifiMode(cur_wifimode);
@@ -125,10 +124,11 @@ void handle_setup() {
       //      safe_strncpy(SecuritySettings.WifiSSID, "ssid", sizeof(SecuritySettings.WifiSSID));
       //      SecuritySettings.WifiKey[0] = 0;
       TXBuffer += F("<a class='button' href='setup'>Back to Setup</a><BR><BR>");
+      wifiSetupConnect = false;
     }
     else
     {
-      int wait = 20;
+      int wait = WIFI_RECONNECT_WAIT / 1000;
 
       if (refreshCount != 0) {
         wait = 3;

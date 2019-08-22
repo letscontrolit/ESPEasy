@@ -133,7 +133,7 @@ void check_size() {
 #define LOG_TO_SDCARD         4
 #define DEFAULT_SYSLOG_IP                       ""                      // Syslog IP Address
 #define DEFAULT_SYSLOG_LEVEL            0                               // Syslog Log Level
-#define DEFAULT_SERIAL_LOG_LEVEL        0                               // Serial Log Level
+#define DEFAULT_SERIAL_LOG_LEVEL        LOG_LEVEL_INFO                  // Serial Log Level
 #define DEFAULT_WEB_LOG_LEVEL           LOG_LEVEL_INFO                  // Web Log Level
 #define DEFAULT_SD_LOG_LEVEL            0                               // SD Card Log Level
 #define DEFAULT_USE_SD_LOG                      false                   // (true|false) Enable Logging to the SD card
@@ -929,7 +929,7 @@ struct SettingsStruct
     CustomCSS = false;
     WDI2CAddress = 0;
     UseRules = false;
-    UseSerial = false;
+    UseSerial = true;
     UseSSDP = false;
     WireClockStretchLimit = 0;
     GlobalSync = false;
@@ -1789,9 +1789,8 @@ unsigned long lastWeb = 0;
 byte cmd_within_mainloop = 0;
 unsigned long connectionFailures = 0;
 unsigned long wdcounter = 0;
-unsigned long timerAPoff = 0;
-unsigned long timerAPstart = 0;
-unsigned long timerWiFiReconnect = 0;
+unsigned long timerAPoff = 0;    // Timer to check whether the AP mode should be disabled (0 = disabled)
+unsigned long timerAPstart = 0;  // Timer to start AP mode, started when no valid network is detected.
 unsigned long timerAwakeFromDeepSleep = 0;
 unsigned long last_system_event_run = 0;
 
@@ -1864,15 +1863,6 @@ enum WiFiDisconnectReason
 #endif
 
 
-#ifndef ESP32
-// To do some reconnection check.
-#include <Ticker.h>
-Ticker connectionCheck;
-#endif
-
-
-void connectionCheckHandler();
-
 bool useStaticIP();
 
 // WiFi related data
@@ -1909,8 +1899,9 @@ volatile bool processedDHCPTimeout = true;
 volatile bool processedConnectAPmode = true;
 volatile bool processedDisconnectAPmode = true;
 volatile bool processedScanDone = true;
+bool wifiConnectAttemptNeeded = true;
 
-bool webserver_state = false;
+bool webserverRunning = false;
 bool webserver_init = false;
 
 unsigned long idle_msec_per_sec = 0;

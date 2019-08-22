@@ -670,8 +670,6 @@ bool WiFiConnected(uint32_t timeout_ms) {
     min_delay = 10;
   }
   // Apparently something needs network, perform check to see if it is ready now.
-//  if (!tryConnectWiFi())
-//    return false;
   while (!WiFiConnected()) {
     if (timeOutReached(timer)) {
       return false;

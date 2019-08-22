@@ -410,6 +410,8 @@ void sendHeadandTail_stdtemplate(boolean Tail = false, boolean rebooting = false
 
 void WebServerInit()
 {
+  if (webserver_init) return;
+  webserver_init = true;
   // Prepare webserver pages
   WebServer.on("/",                 handle_root);
   WebServer.on(F("/advanced"),      handle_advanced);
@@ -502,22 +504,19 @@ void WebServerInit()
 }
 
 void setWebserverRunning(bool state) {
-  if (webserver_state == state) {
+  if (webserverRunning == state) {
     return;
   }
 
   if (state) {
-    if (!webserver_init) {
-      WebServerInit();
-      webserver_init = true;
-    }
+    WebServerInit();
     WebServer.begin();
     addLog(LOG_LEVEL_INFO, F("Webserver: start"));
   } else {
     WebServer.stop();
     addLog(LOG_LEVEL_INFO, F("Webserver: stop"));
   }
-  webserver_state = state;
+  webserverRunning = state;
 }
 
 void getWebPageTemplateDefault(const String& tmplName, String& tmpl)

@@ -86,7 +86,6 @@ String Command_Wifi_Mode(struct EventStruct *event, const char* Line)
 		}
 		if (mode >= WIFI_OFF && mode < WIFI_MODE_MAX) {
 			setWifiMode(mode);
-			setAPinternal(WifiIsAP(mode));
 		} else {
 			serialPrintln();
 			return return_result(event, F("Wifi Mode: invalid arguments"));
