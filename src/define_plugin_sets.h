@@ -793,6 +793,12 @@ To create/register a plugin, you have to :
   #define DISABLE_SOFTWARE_SERIAL
 #endif
 
+
+// MQTT_MAX_PACKET_SIZE : Maximum packet size
+#ifndef MQTT_MAX_PACKET_SIZE
+  #define MQTT_MAX_PACKET_SIZE 1024 // Is also used in PubSubClient
+#endif
+
 /*
 #if defined(USES_P00x) || defined(USES_P00y)
 #include <the_required_lib.h>

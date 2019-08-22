@@ -112,7 +112,7 @@ void callback(char *c_topic, byte *b_payload, unsigned int length) {
     return;
   }
 
-  if (length > 384)
+  if (length > MQTT_MAX_PACKET_SIZE)
   {
     addLog(LOG_LEVEL_ERROR, F("MQTT : Ignored too big message"));
     return;
