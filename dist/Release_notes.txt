@@ -1,4 +1,34 @@
 -------------------------------------------------
+Changes in release mega-20190823 (since mega-20190817)
+-------------------------------------------------
+
+Release date: Fri Aug 23 04:00:05 CEST 2019
+
+Bartlomiej Zimon (4):
+      [Modbus RTU] drop all data in buffers
+      [Modbus RTU] do more checks with received packet
+      [Modbus RTU] one more buffer check
+      [Modbus RTU] add slave number check
+
+Gijs Noorlander (9):
+      Rename _P115_HeatpumpIR.ino to _P088_HeatpumpIR.ino
+      Wrap P088 in USES_P088 defines
+      Fix Build issues P088_HeatpumpIR
+      [Heatpump IR] Add minimal IR_ext build for 4M flash nodes
+      [PlatformIO] Move duplicate lines to global [env]
+      [PlatformIO]  Maintain same order of platform and build_flags
+      [PlatformIO] Fix missing define on some core 2.4.x builds
+      Remove test_core_260_sdk2_alpha builds
+      [Build] Remove all core 2.6.0 SDK2 builds
+
+Toni (4):
+      Add HeatpumpIR 1.0.9 library
+      Add HeatpumpIR plugin P115
+      Fix compile warnings in HeatpumpIR plugin
+      Configurable MQTT package size in Controller.ino
+
+
+-------------------------------------------------
 Changes in release mega-20190817 (since mega-20190813)
 -------------------------------------------------
 
