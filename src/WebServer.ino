@@ -384,6 +384,12 @@ void sendHeadandTail(const String& tmplName, boolean Tail = false, boolean reboo
 
 void sendHeadandTail_stdtemplate(boolean Tail = false, boolean rebooting = false) {
   sendHeadandTail(F("TmplStd"), Tail, rebooting);
+
+  if (!Tail) {
+    if (!clientIPinSubnet() && WifiIsAP(WiFi.getMode()) && (WiFi.softAPgetStationNum() > 0)) {
+      addHtmlError(F("Warning: Connected via AP"));
+    }
+  }
 }
 
 // ********************************************************************************
@@ -410,8 +416,9 @@ void sendHeadandTail_stdtemplate(boolean Tail = false, boolean rebooting = false
 
 void WebServerInit()
 {
-  if (webserver_init) return;
+  if (webserver_init) { return; }
   webserver_init = true;
+
   // Prepare webserver pages
   WebServer.on("/",                 handle_root);
   WebServer.on(F("/advanced"),      handle_advanced);
@@ -831,8 +838,6 @@ void json_prop(const String& name, const String& value) {
   json_quote_val(value);
   lastLevel = level;
 }
-
-
 
 // ********************************************************************************
 // Add a task select dropdown list

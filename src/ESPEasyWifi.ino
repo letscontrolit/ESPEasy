@@ -5,40 +5,41 @@
 // ********************************************************************************
 // WiFi state
 // ********************************************************************************
+
 /*
-WiFi STA states:
-1 STA off                 => ESPEASY_WIFI_DISCONNECTED
-2 STA connecting          
-3 STA connected           => ESPEASY_WIFI_CONNECTED
-4 STA got IP              => ESPEASY_WIFI_GOT_IP
-5 STA connected && got IP => ESPEASY_WIFI_SERVICES_INITIALIZED
+   WiFi STA states:
+   1 STA off                 => ESPEASY_WIFI_DISCONNECTED
+   2 STA connecting
+   3 STA connected           => ESPEASY_WIFI_CONNECTED
+   4 STA got IP              => ESPEASY_WIFI_GOT_IP
+   5 STA connected && got IP => ESPEASY_WIFI_SERVICES_INITIALIZED
 
-The flag wifiConnectAttemptNeeded indicates whether a new connect attempt is needed.
-This is set to true when:
-- Security settings have been saved with AP mode enabled. FIXME TD-er, this may not be the best check.
-- WiFi connect timeout reached
-- Wifi is reset
-- WiFi setup page has been loaded with SSID/pass values.
+   The flag wifiConnectAttemptNeeded indicates whether a new connect attempt is needed.
+   This is set to true when:
+   - Security settings have been saved with AP mode enabled. FIXME TD-er, this may not be the best check.
+   - WiFi connect timeout reached
+   - Wifi is reset
+   - WiFi setup page has been loaded with SSID/pass values.
 
 
-WiFi AP mode states:
-1 AP on                        => reset AP disable timer
-2 AP client connect/disconnect => reset AP disable timer
-3 AP off                       => AP disable timer = 0;
+   WiFi AP mode states:
+   1 AP on                        => reset AP disable timer
+   2 AP client connect/disconnect => reset AP disable timer
+   3 AP off                       => AP disable timer = 0;
 
-AP mode will be disabled when both apply:
-- AP disable timer (timerAPoff) expired
-- No client is connected to the AP.
+   AP mode will be disabled when both apply:
+   - AP disable timer (timerAPoff) expired
+   - No client is connected to the AP.
 
-AP mode will be enabled when at least one applies:
-- No valid WiFi settings
-- Start AP timer (timerAPstart) expired
+   AP mode will be enabled when at least one applies:
+   - No valid WiFi settings
+   - Start AP timer (timerAPstart) expired
 
-Start AP timer is set or cleared at:
-- Set timerAPstart when "valid WiFi connection" state is observed.
-- Disable timerAPstart when ESPEASY_WIFI_SERVICES_INITIALIZED wifi state is reached.
+   Start AP timer is set or cleared at:
+   - Set timerAPstart when "valid WiFi connection" state is observed.
+   - Disable timerAPstart when ESPEASY_WIFI_SERVICES_INITIALIZED wifi state is reached.
 
-*/
+ */
 
 
 // ********************************************************************************
@@ -185,8 +186,6 @@ bool prepareWiFi() {
   return true;
 }
 
-
-
 // Set timer to disable AP mode
 void resetAPdisableTimer() {
   bool APmodeActive = WifiIsAP(WiFi.getMode());
@@ -197,7 +196,6 @@ void resetAPdisableTimer() {
     timerAPoff = 0;
   }
 }
-
 
 void resetWiFi() {
   addLog(LOG_LEVEL_INFO, F("Reset WiFi."));
@@ -224,7 +222,6 @@ void resetWiFi() {
   WiFi = ESP8266WiFiClass();
 #endif // ifdef ESP8266
 }
-
 
 // ********************************************************************************
 // Disconnect from Wifi AP
@@ -274,16 +271,16 @@ void WifiScan()
   }
   else
   {
-    serialPrint(     F("WIFI : "));
+    serialPrint(F("WIFI : "));
     serialPrint(String(n));
     serialPrintln(F(" networks found"));
 
     for (int i = 0; i < n; ++i)
     {
       // Print SSID and RSSI for each network found
-      serialPrint(     F("WIFI : "));
+      serialPrint(F("WIFI : "));
       serialPrint(String(i + 1));
-      serialPrint(  ": ");
+      serialPrint(": ");
       serialPrintln(formatScanResult(i, " "));
       delay(10);
     }
@@ -472,7 +469,6 @@ bool WifiIsSTA(WiFiMode_t wifimode)
   #endif // if defined(ESP32)
 }
 
-
 // ********************************************************************************
 // Determine Wifi AP name to set. (also used for mDNS)
 // ********************************************************************************
@@ -502,9 +498,6 @@ String WifiGetHostname()
 bool useStaticIP() {
   return Settings.IP[0] != 0 && Settings.IP[0] != 255;
 }
-
-
-
 
 bool wifiConnectTimeoutReached() {
   // For the first attempt, do not wait to start connecting.
@@ -583,12 +576,16 @@ void setupStaticIPconfig() {
   WiFi.config(ip, gw, subnet, dns);
 }
 
-
-
 // ********************************************************************************
 // Formatting WiFi related strings
 // ********************************************************************************
 String formatScanResult(int i, const String& separator) {
+  int32_t rssi = 0;
+
+  return formatScanResult(i, separator, rssi);
+}
+
+String formatScanResult(int i, const String& separator, int32_t& rssi) {
   String result = WiFi.SSID(i);
 
   htmlEscape(result);
@@ -598,13 +595,14 @@ String formatScanResult(int i, const String& separator) {
     result += F("#Hidden#");
   }
   #endif // ifndef ESP32
+  rssi    = WiFi.RSSI(i);
   result += separator;
   result += WiFi.BSSIDstr(i);
   result += separator;
   result += F("Ch:");
   result += WiFi.channel(i);
   result += " (";
-  result += WiFi.RSSI(i);
+  result += rssi;
   result += F("dBm) ");
 
   switch (WiFi.encryptionType(i)) {

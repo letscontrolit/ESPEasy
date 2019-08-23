@@ -7,6 +7,96 @@ bool unprocessedWifiEvents() {
 }
 
 // ********************************************************************************
+// Called from the loop() to make sure events are processed as soon as possible.
+// These functions are called from Setup() or Loop() and thus may call delay() or yield()
+// ********************************************************************************
+void handle_unprocessedWiFiEvents()
+{
+  if (WiFi.status() == WL_DISCONNECTED) {
+    delay(100);
+  }
+
+  if ((wifiStatus != ESPEASY_WIFI_SERVICES_INITIALIZED) || unprocessedWifiEvents()) {
+    // WiFi connection is not yet available, so introduce some extra delays to
+    // help the background tasks managing wifi connections
+    delay(1);
+
+    if (wifiConnectAttemptNeeded) {
+      WiFiConnectRelaxed();
+    }
+
+    // Process disconnect events before connect events.
+    if (!processedDisconnect) {
+      #ifndef BUILD_NO_DEBUG
+      addLog(LOG_LEVEL_DEBUG, F("WIFI : Entering processDisconnect()"));
+      #endif // ifndef BUILD_NO_DEBUG
+      processDisconnect();
+    }
+
+    if (!processedConnect) {
+      #ifndef BUILD_NO_DEBUG
+      addLog(LOG_LEVEL_DEBUG, F("WIFI : Entering processConnect()"));
+      #endif // ifndef BUILD_NO_DEBUG
+      processConnect();
+    }
+
+    if (!processedGotIP) {
+      #ifndef BUILD_NO_DEBUG
+      addLog(LOG_LEVEL_DEBUG, F("WIFI : Entering processGotIP()"));
+      #endif // ifndef BUILD_NO_DEBUG
+      processGotIP();
+    }
+
+    if (!processedDHCPTimeout) {
+      #ifndef BUILD_NO_DEBUG
+      addLog(LOG_LEVEL_DEBUG, F("WIFI : DHCP timeout, Calling disconnect()"));
+      #endif // ifndef BUILD_NO_DEBUG
+      processedDHCPTimeout = true;
+      processDisconnect();
+    }
+
+    if ((wifiStatus & ESPEASY_WIFI_GOT_IP) && (wifiStatus & ESPEASY_WIFI_CONNECTED) && WiFi.isConnected()) {
+      wifiStatus = ESPEASY_WIFI_SERVICES_INITIALIZED;
+      resetAPdisableTimer();
+    }
+  } else if (!WiFiConnected()) {
+    // Somehow the WiFi has entered a limbo state.
+    // FIXME TD-er: This may happen on WiFi config with AP_STA mode active.
+    //    addLog(LOG_LEVEL_ERROR, F("Wifi status out sync"));
+    //    resetWiFi();
+    if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+      String wifilog = F("WIFI : Wifi status out sync WiFi.status() = ");
+      wifilog += String(WiFi.status());
+
+      addLog(LOG_LEVEL_ERROR, wifilog);
+    }
+  }
+
+  if (wifiStatus == ESPEASY_WIFI_DISCONNECTED) {
+    #ifndef BUILD_NO_DEBUG
+
+    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+      String wifilog = F("WIFI : Disconnected: WiFi.status() = ");
+      wifilog += String(WiFi.status());
+
+      addLog(LOG_LEVEL_DEBUG, wifilog);
+    }
+    #endif // ifndef BUILD_NO_DEBUG
+
+    // While connecting to WiFi make sure the device has ample time to do so
+    delay(10);
+  }
+
+  if (!processedDisconnectAPmode) { processDisconnectAPmode(); }
+
+  if (!processedConnectAPmode) { processConnectAPmode(); }
+
+  if (timerAPoff != 0) { processDisableAPmode(); }
+
+  if (!processedScanDone) { processScanDone(); }
+}
+
+// ********************************************************************************
 // Functions to process the data gathered from the events.
 // These functions are called from Setup() or Loop() and thus may call delay() or yield()
 // ********************************************************************************
@@ -48,10 +138,10 @@ void processConnect() {
   ++wifi_reconnects;
 
   if (wifiStatus < ESPEASY_WIFI_CONNECTED) { return; }
-  
+
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     const long connect_duration = timeDiff(last_wifi_connect_attempt_moment, lastConnectMoment);
-    String log = F("WIFI : Connected! AP: ");
+    String     log              = F("WIFI : Connected! AP: ");
     log += WiFi.SSID();
     log += " (";
     log += WiFi.BSSIDstr();
@@ -231,7 +321,6 @@ void processConnectAPmode() {
     dnsServer.start(DNS_PORT, "*", apIP);
   }
 }
-
 
 // Switch of AP mode when timeout reached and no client connected anymore.
 void processDisableAPmode() {

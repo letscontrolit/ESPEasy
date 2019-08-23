@@ -669,11 +669,6 @@ void SSDP_update() {
 // ********************************************************************************
 bool getSubnetRange(IPAddress& low, IPAddress& high)
 {
-  if (WifiIsAP(WiFi.getMode())) {
-    // WiFi is active as accesspoint, do not check.
-    return false;
-  }
-
   if (wifiStatus < ESPEASY_WIFI_GOT_IP) {
     return false;
   }

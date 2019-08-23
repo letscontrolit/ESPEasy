@@ -367,7 +367,7 @@ bool readyForSleep()
     return false;
   }
 
-  if (!checkConnectionsEstablished()) {
+  if (!WiFiConnected()) {
     // Allow 12 seconds to establish connections
     return timeOutReached(timerAwakeFromDeepSleep + 12000);
   }

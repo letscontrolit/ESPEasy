@@ -1,5 +1,4 @@
 // ********************************************************************************
-
 // Allowed IP range check
 // ********************************************************************************
 #define ALL_ALLOWED            0
@@ -42,6 +41,11 @@ bool getIPallowedRange(IPAddress& low, IPAddress& high)
 {
   switch (SecuritySettings.IPblockLevel) {
     case LOCAL_SUBNET_ALLOWED:
+
+      if (WifiIsAP(WiFi.getMode())) {
+        // WiFi is active as accesspoint, do not check.
+        return false;
+      }
       return getSubnetRange(low, high);
     case ONLY_IP_RANGE_ALLOWED:
       low  = SecuritySettings.AllowedIPrangeLow;
@@ -53,6 +57,17 @@ bool getIPallowedRange(IPAddress& low, IPAddress& high)
       return false;
   }
   return true;
+}
+
+bool clientIPinSubnet() {
+  IPAddress low, high;
+
+  if (!getSubnetRange(low, high)) {
+    // Could not determine subnet.
+    return false;
+  }
+  WiFiClient client(WebServer.client());
+  return ipInRange(client.remoteIP(), low, high);
 }
 
 boolean clientIPallowed()
