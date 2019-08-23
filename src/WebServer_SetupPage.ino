@@ -44,7 +44,7 @@ void handle_setup() {
   {
     safe_strncpy(SecuritySettings.WifiKey,  password.c_str(), sizeof(SecuritySettings.WifiKey));
     safe_strncpy(SecuritySettings.WifiSSID, ssid.c_str(),     sizeof(SecuritySettings.WifiSSID));
-    wifiSetupConnect = true;
+    wifiSetupConnect         = true;
     wifiConnectAttemptNeeded = true;
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -123,7 +123,7 @@ void handle_setup() {
 
       //      safe_strncpy(SecuritySettings.WifiSSID, "ssid", sizeof(SecuritySettings.WifiSSID));
       //      SecuritySettings.WifiKey[0] = 0;
-      TXBuffer += F("<a class='button' href='setup'>Back to Setup</a><BR><BR>");
+      TXBuffer        += F("<a class='button' href='setup'>Back to Setup</a><BR><BR>");
       wifiSetupConnect = false;
     }
     else

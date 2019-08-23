@@ -519,6 +519,7 @@ void loop()
     if (wifiConnectAttemptNeeded) {
       WiFiConnectRelaxed();
     }
+    // Process disconnect events before connect events.
     if (!processedDisconnect) {
       #ifndef BUILD_NO_DEBUG
       addLog(LOG_LEVEL_DEBUG, F("WIFI : Entering processDisconnect()"));

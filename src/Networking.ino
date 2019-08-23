@@ -661,6 +661,70 @@ void SSDP_update() {
 }
 #endif
 
+
+
+
+// ********************************************************************************
+// Return subnet range of WiFi.
+// ********************************************************************************
+bool getSubnetRange(IPAddress& low, IPAddress& high)
+{
+  if (WifiIsAP(WiFi.getMode())) {
+    // WiFi is active as accesspoint, do not check.
+    return false;
+  }
+
+  if (wifiStatus < ESPEASY_WIFI_GOT_IP) {
+    return false;
+  }
+  const IPAddress ip     = WiFi.localIP();
+  const IPAddress subnet = WiFi.subnetMask();
+  low  = ip;
+  high = ip;
+
+  // Compute subnet range.
+  for (byte i = 0; i < 4; ++i) {
+    if (subnet[i] != 255) {
+      low[i]  = low[i] & subnet[i];
+      high[i] = high[i] | ~subnet[i];
+    }
+  }
+  return true;
+}
+
+
+
+// ********************************************************************************
+// Functions to test and handle network/client connectivity.
+// ********************************************************************************
+
+#ifdef CORE_POST_2_5_0
+# include <AddrList.h>
+#endif // ifdef CORE_POST_2_5_0
+
+
+bool hasIPaddr() {
+#ifdef CORE_POST_2_5_0
+  bool configured = false;
+
+  for (auto addr : addrList) {
+    if ((configured = !addr.isLocal() && (addr.ifnumber() == STATION_IF))) {
+      /*
+         Serial.printf("STA: IF='%s' hostname='%s' addr= %s\n",
+                    addr.ifname().c_str(),
+                    addr.ifhostname(),
+                    addr.toString().c_str());
+       */
+      break;
+    }
+  }
+  return configured;
+#else // ifdef CORE_POST_2_5_0
+  return WiFi.isConnected();
+#endif // ifdef CORE_POST_2_5_0
+}
+
+
 // Check WiFi connection. Maximum timeout 500 msec.
 bool WiFiConnected(uint32_t timeout_ms) {
   uint32_t timer = millis() + (timeout_ms > 500 ? 500 : timeout_ms);
