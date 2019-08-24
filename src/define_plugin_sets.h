@@ -488,12 +488,12 @@ To create/register a plugin, you have to :
 
 // STABLE #####################################
 #ifdef PLUGIN_SET_STABLE
-    #define USE_SERVO
+   #define USE_SERVO
 
     #define USES_P001   // Switch
     #define USES_P002   // ADC
     #define USES_P003   // Pulse
-    #define USES_P004   // Dallas
+/*     #define USES_P004   // Dallas
     #define USES_P005   // DHT
     #define USES_P006   // BMP085
     #define USES_P007   // PCF8591
@@ -540,34 +540,34 @@ To create/register a plugin, you have to :
     #define USES_P044   // P1WifiGateway
 
     #define USES_P049   // MHZ19
-
+    #define USES_P050 
     #define USES_P052   // SenseAir
     #define USES_P056   // SDS011-Dust
     #define USES_P059   // Encoder
 
     #define USES_P063   // TTP229_KeyPad
-    #define USES_P079   // Wemos Motoshield
+    #define USES_P079   // Wemos Motoshield */
 #endif
 
 
 #ifdef CONTROLLER_SET_STABLE
-    #define USES_C001   // Domoticz HTTP
-    #define USES_C002   // Domoticz MQTT
-    #define USES_C003   // Nodo telnet
-    #define USES_C004   // ThingSpeak
+   // #define USES_C001   // Domoticz HTTP
+   // #define USES_C002   // Domoticz MQTT
+    //#define USES_C003   // Nodo telnet
+   // #define USES_C004   // ThingSpeak
     #define USES_C005   // OpenHAB MQTT
-    #define USES_C006   // PiDome MQTT
-    #define USES_C007   // Emoncms
+  //  #define USES_C006   // PiDome MQTT
+   // #define USES_C007   // Emoncms
     #define USES_C008   // Generic HTTP
-    #define USES_C009   // FHEM HTTP
-    #define USES_C010   // Generic UDP
+   // #define USES_C009   // FHEM HTTP
+   // #define USES_C010   // Generic UDP
     #define USES_C013   // ESPEasy P2P network
 #endif
 
 
 #ifdef NOTIFIER_SET_STABLE
-    #define USES_N001   // Email
-    #define USES_N002   // Buzzer
+ //   #define USES_N001   // Email
+ //   #define USES_N002   // Buzzer
 
     #ifdef NOTIFIER_SET_NONE
       #undef NOTIFIER_SET_NONE
@@ -578,7 +578,7 @@ To create/register a plugin, you have to :
 
 // TESTING #####################################
 #ifdef PLUGIN_SET_TESTING
-    #define USES_P045   // MPU6050
+  /*   #define USES_P045   // MPU6050
     #define USES_P047   // I2C_soil_misture
     #define USES_P048   // Motoshield_v2
 
@@ -616,13 +616,13 @@ To create/register a plugin, you have to :
     #define USES_P082   // GPS
     #define USES_P083   // SGP30
     #define USES_P084   // VEML6070
-    #define USES_P085   // AcuDC24x
+    #define USES_P085   // AcuDC24x */
 #endif
 
 
 #ifdef CONTROLLER_SET_TESTING
     #define USES_C011   // Generic HTTP Advanced
-    #define USES_C012   // Blynk HTTP
+    #define USES_C012   // Blynk HTTP */
     #define USES_C014   // homie 3 & 4dev MQTT
 #endif
 

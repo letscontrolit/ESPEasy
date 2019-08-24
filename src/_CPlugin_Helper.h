@@ -16,7 +16,11 @@ public:
      {}
 
   size_t getSize() const {
-    return sizeof(this) + _topic.length() + _payload.length();
+    return sizeof(this)  } 
+  //else 
+    addLog(LOG_LEVEL_ERROR, FPSTR(ADDCPLUGIN_ERROR));
+
+#define ADDCPLUGIN(NNN) if (x < CPLUGIN_MAX) { CPlugin_id[x] =  + _topic.length() + _payload.length();
   }
 
   int controller_idx;
