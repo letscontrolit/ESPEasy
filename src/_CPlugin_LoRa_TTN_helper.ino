@@ -2,58 +2,46 @@
 // #  Helper functions to encode data for use on LoRa/TTN network.
 // #######################################################################################################
 
-static void LoRa_uintToBytes(uint64_t value, uint8_t byteSize, byte *data, uint8_t& cursor) {
-  // Clip values to upper limit
-  const uint64_t upperlimit = (1 << (8*byteSize)) - 1;
-  if (value > upperlimit) { value = upperlimit; }
-  for (uint8_t x = 0; x < byteSize; x++) {
-    byte next = 0;
-    if (sizeof(value) > x) {
-      next = static_cast<byte>((value >> (x * 8)) & 0xFF);
+#if defined(USES_PACKED_RAW_DATA)
+
+
+
+String getPackedFromPlugin(struct EventStruct *event, uint8_t sampleSetCount)
+{
+  byte value_count = getValueCountFromSensorType(event->sensorType);
+  String raw_packed;
+  if (PluginCall(PLUGIN_GET_PACKED_RAW_DATA, event, raw_packed)) {
+    value_count = event->Par1;
+  }
+  String packed;
+  packed.reserve(32);
+  packed += LoRa_addInt(Settings.TaskDeviceNumber[event->TaskIndex], PackedData_uint8);
+  packed += LoRa_addInt(event->idx, PackedData_uint16);
+  packed += LoRa_addInt(sampleSetCount, PackedData_uint8);
+  packed += LoRa_addInt(value_count, PackedData_uint8);
+
+  if (raw_packed.length() > 0) {
+    packed += raw_packed;
+  } else {
+    const byte BaseVarIndex = event->TaskIndex * VARS_PER_TASK;
+    switch (event->sensorType)
+    {
+      case SENSOR_TYPE_LONG:
+      {
+        unsigned long longval = (unsigned long)UserVar[BaseVarIndex] + ((unsigned long)UserVar[BaseVarIndex + 1] << 16);
+        packed += LoRa_addInt(longval, PackedData_uint32);
+        break;
+      }
+
+      default:
+        for (byte i = 0; i < value_count && i < VARS_PER_TASK; ++i) {
+          // For now, just store the floats as an int32 by multiplying the value with 10000.
+          packed += LoRa_addFloat(value_count, PackedData_int32_1e4);
+        }
+        break;
     }
-    data[cursor] = next;
-    ++cursor;
   }
+  return packed;
 }
 
-static void LoRa_intToBytes(int64_t value, uint8_t byteSize, byte *data, uint8_t& cursor) {
-  // Clip values to lower limit
-  const int64_t lowerlimit = (1 << ((8*byteSize) - 1)) * -1;
-  if (value < lowerlimit) { value = lowerlimit; }
-  if (value < 0) {
-    value += (1 << (8*byteSize));
-  }
-  LoRa_uintToBytes(value, byteSize, data, cursor);
-}
-
-static String LoRa_base16Encode(byte *data, size_t size) {
-  String output;
-  output.reserve(size * 2);
-  char buffer[3];
-  for (unsigned i=0; i<size; i++)
-  {
-    sprintf(buffer, "%02X", data[i]);
-    output += buffer[0];
-    output += buffer[1];
-  }
-  return output;
-}
-
-String LoRa_addInt(uint64_t value, PackedData_enum datatype) {
-  float factor, offset;
-  uint8_t byteSize = getPackedDataTypeSize(datatype, factor, offset);
-  byte data[4] = {0};
-  uint8_t cursor = 0;
-  LoRa_uintToBytes((value + offset) * factor, byteSize, &data[0], cursor);
-  return LoRa_base16Encode(data, cursor);
-}
-
-
-String LoRa_addFloat(float value, PackedData_enum datatype) {
-  float factor, offset;
-  uint8_t byteSize = getPackedDataTypeSize(datatype, factor, offset);
-  byte data[4] = {0};
-  uint8_t cursor = 0;
-  LoRa_intToBytes((value + offset) * factor, byteSize, &data[0], cursor);
-  return LoRa_base16Encode(data, cursor);
-}
+#endif // USES_PACKED_RAW_DATA

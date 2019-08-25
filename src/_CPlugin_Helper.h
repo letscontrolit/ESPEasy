@@ -324,45 +324,22 @@ public:
 
   C018_queue_element() {}
 
-  C018_queue_element(const struct EventStruct *event, byte value_count, uint8_t sampleSetCount, const String& raw_packed) :
+  C018_queue_element(struct EventStruct *event, uint8_t sampleSetCount) :
     controller_idx(event->ControllerIndex)
   {
-    packed.reserve(32);
-    packed += LoRa_addInt(Settings.TaskDeviceNumber[event->TaskIndex], PackedData_uint8);
-    packed += LoRa_addInt(event->idx, PackedData_uint16);
-    packed += LoRa_addInt(sampleSetCount, PackedData_uint8);
-    packed += LoRa_addInt(value_count, PackedData_uint8);
-
-    if (raw_packed.length() > 0) {
-      packed += raw_packed;
-    } else {
-      const byte BaseVarIndex = event->TaskIndex * VARS_PER_TASK;
-      switch (event->sensorType)
-      {
-      case SENSOR_TYPE_LONG:
-      {
-        unsigned long longval = (unsigned long)UserVar[BaseVarIndex] + ((unsigned long)UserVar[BaseVarIndex + 1] << 16);
-        packed += LoRa_addInt(longval, PackedData_uint32);
-        break;
-      }
-      
-      default:
-        for (byte i = 0; i < value_count && i < VARS_PER_TASK; ++i) {
-          // For now, just store the floats as an int32 by multiplying the value with 10000.
-          packed += LoRa_addFloat(value_count, PackedData_int32_1e4);
-        }
-        break;
-      }      
-    }
+    #ifdef USES_PACKED_RAW_DATA
+    packed = getPackedFromPlugin(event, sampleSetCount);
+    #endif // USES_PACKED_RAW_DATA
   }
 
   size_t getSize() const {
-    return sizeof(this);
+    return sizeof(this) + packed.length();
   }
 
   int controller_idx = 0;
   String packed;
 };
+
 
 /*********************************************************************************************\
 * ControllerDelayHandlerStruct

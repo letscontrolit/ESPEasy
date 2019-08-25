@@ -510,12 +510,8 @@ bool CPlugin_018(byte function, struct EventStruct *event, String& string)
 
     case CPLUGIN_PROTOCOL_SEND:
     {
-      byte valueCount = getValueCountFromSensorType(event->sensorType);
-      String raw_packed;
-      if (PluginCall(PLUGIN_GET_PACKED_RAW_DATA, event, raw_packed)) {
-        valueCount = event->Par1;        
-      }
-      success = C018_DelayHandler.addToQueue(C018_queue_element(event, valueCount, C018_data.getSampleSetCount(event->TaskIndex), raw_packed));
+      success = C018_DelayHandler.addToQueue(
+        C018_queue_element(event, C018_data.getSampleSetCount(event->TaskIndex)));
       scheduleNextDelayQueue(TIMER_C018_DELAY_QUEUE, C018_DelayHandler.getNextScheduleTime());
 
       break;
