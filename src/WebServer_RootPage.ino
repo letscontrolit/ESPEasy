@@ -35,9 +35,6 @@ void handle_root() {
   if ((strcasecmp_P(sCommand.c_str(),
                     PSTR("wifidisconnect")) != 0) && (rebootCmd == false) && (strcasecmp_P(sCommand.c_str(), PSTR("reset")) != 0))
   {
-    if (timerAPoff) {
-      timerAPoff = millis() + 2000L; // user has reached the main page - AP can be switched off in 2..3 sec
-    }
     printToWeb     = true;
     printWebString = "";
 

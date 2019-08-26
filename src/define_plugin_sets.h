@@ -804,3 +804,8 @@ To create/register a plugin, you have to :
 #include <the_required_lib.h>
 #endif
 */
+
+
+#if defined(USES_C018)
+  #define USES_PACKED_RAW_DATA
+#endif

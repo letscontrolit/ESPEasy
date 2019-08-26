@@ -372,10 +372,6 @@ void setup()
     }
   #endif
 
-//  #ifndef ESP32
-//  connectionCheck.attach(30, connectionCheckHandler);
-//  #endif
-
   // Start the interval timers at N msec from now.
   // Make sure to start them at some time after eachother,
   // since they will keep running at the same interval.
@@ -424,16 +420,6 @@ void RTOS_HandleSchedule( void * parameter )
 }
 
 #endif
-
-int firstEnabledMQTTController() {
-  for (byte i = 0; i < CONTROLLER_MAX; ++i) {
-    byte ProtocolIndex = getProtocolIndex(Settings.Protocol[i]);
-    if (Protocol[ProtocolIndex].usesMQTT && Settings.ControllerEnabled[i]) {
-      return i;
-    }
-  }
-  return -1;
-}
 
 
 void updateLoopStats() {
@@ -513,76 +499,9 @@ void loop()
 
   updateLoopStats();
 
-  if (wifiSetupConnect)
-  {
-    // try to connect for setup wizard
-    WiFiConnectRelaxed();
-    wifiSetupConnect = false;
-  }
-  if (WiFi.status() == WL_DISCONNECTED) {
-    delay(100);
-  }
-  if ((wifiStatus != ESPEASY_WIFI_SERVICES_INITIALIZED) || unprocessedWifiEvents()) {
-    // WiFi connection is not yet available, so introduce some extra delays to
-    // help the background tasks managing wifi connections
-    delay(1);
-    if (!processedConnect) {
-      #ifndef BUILD_NO_DEBUG
-      addLog(LOG_LEVEL_DEBUG, F("WIFI : Entering processConnect()"));
-      #endif
-      processConnect();
-    }
-    if (!processedGotIP) {
-      #ifndef BUILD_NO_DEBUG
-      addLog(LOG_LEVEL_DEBUG, F("WIFI : Entering processGotIP()"));
-      #endif
-      processGotIP();
-    }
-    if (!processedDisconnect) {
-      #ifndef BUILD_NO_DEBUG
-      addLog(LOG_LEVEL_DEBUG, F("WIFI : Entering processDisconnect()"));
-      #endif
-      processDisconnect();
-    }
-    if (!processedDHCPTimeout) {
-      #ifndef BUILD_NO_DEBUG
-      addLog(LOG_LEVEL_DEBUG, F("WIFI : DHCP timeout, Calling disconnect()"));
-      #endif
-      processedDHCPTimeout = true;
-      processDisconnect();
-    }
-    if ((wifiStatus & ESPEASY_WIFI_GOT_IP) && (wifiStatus & ESPEASY_WIFI_CONNECTED) && WiFi.isConnected()) {
-      wifiStatus = ESPEASY_WIFI_SERVICES_INITIALIZED;
-    }
-  } else if (!WiFiConnected()) {
-    // Somehow the WiFi has entered a limbo state.
-    // FIXME TD-er: This may happen on WiFi config with AP_STA mode active.
-//    addLog(LOG_LEVEL_ERROR, F("Wifi status out sync"));
-//    resetWiFi();
-    if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-        String wifilog  = F("WIFI : Wifi status out sync WiFi.status() = ");
-        wifilog += String(WiFi.status());
+  handle_unprocessedWiFiEvents();
 
-        addLog(LOG_LEVEL_ERROR, wifilog);
-    }
-  }
-  if (wifiStatus == ESPEASY_WIFI_DISCONNECTED) {
-    #ifndef BUILD_NO_DEBUG
-    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-      String wifilog  = F("WIFI : Disconnected: WiFi.status() = ");
-      wifilog += String(WiFi.status());
-
-      addLog(LOG_LEVEL_DEBUG, wifilog);
-    }
-    #endif
-    // While connecting to WiFi make sure the device has ample time to do so
-    delay(10);
-  }
-  if (!processedConnectAPmode) processConnectAPmode();
-  if (!processedDisconnectAPmode) processDisconnectAPmode();
-  if (!processedScanDone) processScanDone();
-
-  bool firstLoopConnectionsEstablished = checkConnectionsEstablished() && firstLoop;
+  bool firstLoopConnectionsEstablished = WiFiConnected() && firstLoop;
   if (firstLoopConnectionsEstablished) {
      addLog(LOG_LEVEL_INFO, F("firstLoopConnectionsEstablished"));
      firstLoop = false;
@@ -632,18 +551,6 @@ void loop()
     deepSleep(Settings.Delay);
     //deepsleep will never return, its a special kind of reboot
   }
-}
-
-bool checkConnectionsEstablished() {
-  if (wifiStatus != ESPEASY_WIFI_SERVICES_INITIALIZED) return false;
-  if (!processedConnect) return false;
-/*
-  if (firstEnabledMQTTController() >= 0) {
-    // There should be a MQTT connection.
-    return MQTTclient_connected;
-  }
-*/
-  return true;
 }
 
 void flushAndDisconnectAllClients() {
@@ -717,6 +624,17 @@ void updateMQTTclient_connected() {
   }
   setIntervalTimer(TIMER_MQTT);
 }
+
+int firstEnabledMQTTController() {
+  for (byte i = 0; i < CONTROLLER_MAX; ++i) {
+    byte ProtocolIndex = getProtocolIndex(Settings.Protocol[i]);
+    if (Protocol[ProtocolIndex].usesMQTT && Settings.ControllerEnabled[i]) {
+      return i;
+    }
+  }
+  return -1;
+}
+
 
 /*********************************************************************************************\
  * Tasks that run 50 times per second
@@ -797,8 +715,6 @@ void runOncePerSecond()
     }
     cmd_within_mainloop = 0;
   }
-  WifiCheck();
-
   // clock events
   if (systemTimePresent())
     checkTime();
@@ -1015,14 +931,16 @@ void backgroundtasks()
         serial();
       }
     }
-    if (wifiConnected) {
+    if (webserverRunning) {
       WebServer.handleClient();
+    }
+    if (WiFi.getMode() != WIFI_OFF) {
       checkUDP();
     }
   }
 
   // process DNS, only used if the ESP has no valid WiFi config
-  if (dnsServerActive && wifiConnected)
+  if (dnsServerActive)
     dnsServer.processNextRequest();
 
   #ifdef FEATURE_ARDUINO_OTA

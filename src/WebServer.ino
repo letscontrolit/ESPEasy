@@ -384,6 +384,12 @@ void sendHeadandTail(const String& tmplName, boolean Tail = false, boolean reboo
 
 void sendHeadandTail_stdtemplate(boolean Tail = false, boolean rebooting = false) {
   sendHeadandTail(F("TmplStd"), Tail, rebooting);
+
+  if (!Tail) {
+    if (!clientIPinSubnet() && WifiIsAP(WiFi.getMode()) && (WiFi.softAPgetStationNum() > 0)) {
+      addHtmlError(F("Warning: Connected via AP"));
+    }
+  }
 }
 
 // ********************************************************************************
@@ -410,6 +416,9 @@ void sendHeadandTail_stdtemplate(boolean Tail = false, boolean rebooting = false
 
 void WebServerInit()
 {
+  if (webserver_init) { return; }
+  webserver_init = true;
+
   // Prepare webserver pages
   WebServer.on("/",                 handle_root);
   WebServer.on(F("/advanced"),      handle_advanced);
@@ -502,22 +511,19 @@ void WebServerInit()
 }
 
 void setWebserverRunning(bool state) {
-  if (webserver_state == state) {
+  if (webserverRunning == state) {
     return;
   }
 
   if (state) {
-    if (!webserver_init) {
-      WebServerInit();
-      webserver_init = true;
-    }
+    WebServerInit();
     WebServer.begin();
     addLog(LOG_LEVEL_INFO, F("Webserver: start"));
   } else {
     WebServer.stop();
     addLog(LOG_LEVEL_INFO, F("Webserver: stop"));
   }
-  webserver_state = state;
+  webserverRunning = state;
 }
 
 void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
@@ -833,8 +839,6 @@ void json_prop(const String& name, const String& value) {
   lastLevel = level;
 }
 
-
-
 // ********************************************************************************
 // Add a task select dropdown list
 // ********************************************************************************
@@ -961,7 +965,42 @@ String getControllerSymbol(byte index)
    return ret;
    }
  */
-void createSvgRectPath(unsigned int color, int xoffset, int yoffset, int size, int height, int range, float SVG_BAR_WIDTH) {
+
+void addSVG_param(const String& key, float value) {
+  String value_str = String(value, 2);
+  addSVG_param(key, value_str);
+}
+
+void addSVG_param(const String& key, const String& value) {
+  TXBuffer += ' ';
+  TXBuffer += key;
+  TXBuffer += '=';
+  TXBuffer += '\"';
+  TXBuffer += value;
+  TXBuffer += '\"';
+}
+
+void createSvgRect_noStroke(unsigned int fillColor, float xoffset, float yoffset, float width, float height, float rx, float ry) {
+  createSvgRect(fillColor, fillColor, xoffset, yoffset, width, height, 0, rx, ry);
+}
+
+void createSvgRect(unsigned int fillColor, unsigned int strokeColor, float xoffset, float yoffset, float width, float height, float strokeWidth, float rx, float ry) {
+  TXBuffer += F("<rect");
+  addSVG_param(F("fill"), formatToHex(fillColor, F("#")));
+  if (strokeWidth != 0) {
+    addSVG_param(F("stroke"), formatToHex(strokeColor, F("#")));
+    addSVG_param(F("stroke-width"), strokeWidth);
+  }
+  addSVG_param("x", xoffset);
+  addSVG_param("y", yoffset);
+  addSVG_param(F("width"), width);
+  addSVG_param(F("height"), height);
+  addSVG_param(F("rx"), rx);
+  addSVG_param(F("ry"), ry);
+  TXBuffer += F("/>");
+}
+
+void createSvgHorRectPath(unsigned int color, int xoffset, int yoffset, int size, int height, int range, float SVG_BAR_WIDTH) {
   float width = SVG_BAR_WIDTH * size / range;
 
   if (width < 2) { width = 2; }
@@ -1035,18 +1074,36 @@ void write_SVG_image_header(int width, int height, bool useViewbox) {
 }
 
 /*
-   void getESPeasyLogo(int width_pixels) {
-   write_SVG_image_header(width_pixels, width_pixels, true);
-   TXBuffer += F("<g transform=\"translate(-33.686 -7.8142)\">");
-   TXBuffer += F("<rect x=\"49\" y=\"23.1\" width=\"69.3\" height=\"69.3\" fill=\"#2c72da\" stroke=\"#2c72da\" stroke-linecap=\"round\"
-      stroke-linejoin=\"round\" stroke-width=\"30.7\"/>");
-   TXBuffer += F("<g transform=\"matrix(3.3092 0 0 3.3092 -77.788 -248.96)\">");
-   TXBuffer += F("<path d=\"m37.4 89 7.5-7.5M37.4 96.5l15-15M37.4 96.5l15-15M37.4 104l22.5-22.5M44.9 104l15-15\" fill=\"none\"
-      stroke=\"#fff\" stroke-linecap=\"round\" stroke-width=\"2.6\"/>");
-   TXBuffer += F("<circle cx=\"58\" cy=\"102.1\" r=\"3\" fill=\"#fff\"/>");
-   TXBuffer += F("</g></g></svg>");
-   }
- */
+void getESPeasyLogo(int width_pixels) {
+  write_SVG_image_header(width_pixels, width_pixels, true);
+  TXBuffer += F("<g transform=\"translate(-33.686 -7.8142)\">");
+  TXBuffer += F("<rect x=\"49\" y=\"23.1\" width=\"69.3\" height=\"69.3\" fill=\"#2c72da\" stroke=\"#2c72da\" stroke-linecap=\"round\"stroke-linejoin=\"round\" stroke-width=\"30.7\"/>");
+  TXBuffer += F("<g transform=\"matrix(3.3092 0 0 3.3092 -77.788 -248.96)\">");
+  TXBuffer += F("<path d=\"m37.4 89 7.5-7.5M37.4 96.5l15-15M37.4 96.5l15-15M37.4 104l22.5-22.5M44.9 104l15-15\" fill=\"none\"stroke=\"#fff\" stroke-linecap=\"round\" stroke-width=\"2.6\"/>");
+  TXBuffer += F("<circle cx=\"58\" cy=\"102.1\" r=\"3\" fill=\"#fff\"/>");
+  TXBuffer += F("</g></g></svg>");
+}
+*/
+
+void getWiFi_RSSI_icon(int rssi, int width_pixels)
+{
+  const int nbars_filled = (rssi + 100) / 8;
+  int nbars = 5;
+  int white_between_bar = (static_cast<float>(width_pixels) / nbars) * 0.2;
+  if (white_between_bar < 1) { white_between_bar = 1; }
+  const int barWidth = (width_pixels - (nbars - 1) * white_between_bar) / nbars;
+  int svg_width_pixels = nbars * barWidth + (nbars - 1) * white_between_bar;
+  write_SVG_image_header(svg_width_pixels, svg_width_pixels, true);
+  float scale = 100 / svg_width_pixels;
+  const int bar_height_step = 100 / nbars;
+  for (int i = 0; i < nbars; ++i) {
+    unsigned int color = i < nbars_filled ? 0x0 : 0xa1a1a1;  // Black/Grey
+    int barHeight = (i + 1) * bar_height_step;
+    createSvgRect_noStroke(color, i * (barWidth + white_between_bar) * scale, 100 - barHeight, barWidth, barHeight, 0, 0);
+  }
+  TXBuffer += F("</svg>\n");
+}
+
 
 #ifndef BUILD_MINIMAL_OTA
 void getConfig_dat_file_layout() {
@@ -1060,7 +1117,7 @@ void getConfig_dat_file_layout() {
 
   // background
   const uint32_t realSize = getFileSize(TaskSettings_Type);
-  createSvgRectPath(0xcdcdcd, 0, yOffset, realSize, SVG_BAR_HEIGHT - 2, realSize, SVG_BAR_WIDTH);
+  createSvgHorRectPath(0xcdcdcd, 0, yOffset, realSize, SVG_BAR_HEIGHT - 2, realSize, SVG_BAR_WIDTH);
 
   for (int st = 0; st < SettingsType_MAX; ++st) {
     SettingsType settingsType = static_cast<SettingsType>(st);
@@ -1073,7 +1130,7 @@ void getConfig_dat_file_layout() {
         getSettingsParameters(settingsType, i, offset, max_size);
 
         // Struct position
-        createSvgRectPath(color, offset, yOffset, max_size, SVG_BAR_HEIGHT - 2, realSize, SVG_BAR_WIDTH);
+        createSvgHorRectPath(color, offset, yOffset, max_size, SVG_BAR_HEIGHT - 2, realSize, SVG_BAR_WIDTH);
       }
     }
   }
@@ -1105,10 +1162,10 @@ void getStorageTableSVG(SettingsType settingsType) {
     getSettingsParameters(settingsType, i, offset, max_size);
 
     // background
-    createSvgRectPath(0xcdcdcd, 0,      yOffset, realSize, SVG_BAR_HEIGHT - 2, realSize, SVG_BAR_WIDTH);
+    createSvgHorRectPath(0xcdcdcd, 0,      yOffset, realSize, SVG_BAR_HEIGHT - 2, realSize, SVG_BAR_WIDTH);
 
     // Struct position
-    createSvgRectPath(color,    offset, yOffset, max_size, SVG_BAR_HEIGHT - 2, realSize, SVG_BAR_WIDTH);
+    createSvgHorRectPath(color,    offset, yOffset, max_size, SVG_BAR_HEIGHT - 2, realSize, SVG_BAR_WIDTH);
 
     // Text labels
     float textXoffset = SVG_BAR_WIDTH + 2;
@@ -1122,11 +1179,11 @@ void getStorageTableSVG(SettingsType settingsType) {
   }
 
   // usage
-  createSvgRectPath(0xcdcdcd, 0, yOffset, max_size, SVG_BAR_HEIGHT - 2, max_size, SVG_BAR_WIDTH);
+  createSvgHorRectPath(0xcdcdcd, 0, yOffset, max_size, SVG_BAR_HEIGHT - 2, max_size, SVG_BAR_WIDTH);
 
   // Struct size (used part of the reserved space)
   if (struct_size != 0) {
-    createSvgRectPath(color, 0, yOffset, struct_size, SVG_BAR_HEIGHT - 2, max_size, SVG_BAR_WIDTH);
+    createSvgHorRectPath(color, 0, yOffset, struct_size, SVG_BAR_HEIGHT - 2, max_size, SVG_BAR_WIDTH);
   }
 
   // Text labels
@@ -1180,8 +1237,8 @@ void getPartitionTableSVG(byte pType, unsigned int partitionColor) {
   if (_mypartiterator) {
     do {
       _mypart = esp_partition_get(_mypartiterator);
-      createSvgRectPath(0xcdcdcd,       0,                yOffset, realSize,      SVG_BAR_HEIGHT - 2, realSize, SVG_BAR_WIDTH);
-      createSvgRectPath(partitionColor, _mypart->address, yOffset, _mypart->size, SVG_BAR_HEIGHT - 2, realSize, SVG_BAR_WIDTH);
+      createSvgHorRectPath(0xcdcdcd,       0,                yOffset, realSize,      SVG_BAR_HEIGHT - 2, realSize, SVG_BAR_WIDTH);
+      createSvgHorRectPath(partitionColor, _mypart->address, yOffset, _mypart->size, SVG_BAR_HEIGHT - 2, realSize, SVG_BAR_WIDTH);
       float textXoffset = SVG_BAR_WIDTH + 2;
       float textYoffset = yOffset + 0.9 * SVG_BAR_HEIGHT;
       createSvgTextElement(formatHumanReadable(_mypart->size, 1024),          textXoffset, textYoffset);

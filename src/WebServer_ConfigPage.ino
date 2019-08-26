@@ -11,10 +11,6 @@ void handle_config() {
   TXBuffer.startStream();
   sendHeadandTail_stdtemplate(_HEAD);
 
-  if (timerAPoff) {
-    timerAPoff = millis() + 2000L; // user has reached the main page - AP can be switched off in 2..3 sec
-  }
-
   if (WebServer.args() != 0)
   {
     String name = WebServer.arg(F("name"));

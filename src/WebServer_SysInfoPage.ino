@@ -184,8 +184,6 @@ void handle_sysinfo() {
   TXBuffer.startStream();
   sendHeadandTail_stdtemplate();
 
-  int freeMem = ESP.getFreeHeap();
-
   TXBuffer += printWebString;
   TXBuffer += F("<form>");
 
@@ -203,6 +201,28 @@ void handle_sysinfo() {
   TXBuffer += DATA_GITHUB_CLIPBOARD_JS;
   html_add_script_end();
 
+  handle_sysinfo_basicInfo();
+
+  handle_sysinfo_Network();
+
+  handle_sysinfo_WiFiSettings();
+
+  handle_sysinfo_Firmware();
+
+  handle_sysinfo_SystemStatus();
+
+  handle_sysinfo_ESP_Board();
+
+  handle_sysinfo_Storage();
+
+
+  html_end_table();
+  html_end_form();
+  sendHeadandTail_stdtemplate(true);
+  TXBuffer.endStream();
+}
+
+void handle_sysinfo_basicInfo() {
   addRowLabelValue(LabelType::UNIT_NR);
 
   if (systemTimePresent())
@@ -226,6 +246,7 @@ void handle_sysinfo() {
   }
   addRowLabelValue(LabelType::CPU_ECO_MODE);
 
+  int freeMem = ESP.getFreeHeap();
   addRowLabel(F("Free Mem"));
   TXBuffer += freeMem;
   TXBuffer += " (";
@@ -255,7 +276,9 @@ void handle_sysinfo() {
   addRowLabelValue(LabelType::RESET_REASON);
   addRowLabelValue(LabelType::LAST_TASK_BEFORE_REBOOT);
   addRowLabelValue(LabelType::SW_WD_COUNT);
+}
 
+void handle_sysinfo_Network() {
   addTableSeparator(F("Network"), 2, 3, F("Wifi"));
 
   if (WiFiConnected())
@@ -316,7 +339,9 @@ void handle_sysinfo() {
   addRowLabel(getLabel(LabelType::LAST_DISCONNECT_REASON));
   TXBuffer += getValue(LabelType::LAST_DISC_REASON_STR);
   addRowLabelValue(LabelType::NUMBER_RECONNECTS);
+}
 
+void handle_sysinfo_WiFiSettings() {
   addTableSeparator(F("WiFi Settings"), 2, 3);
   addRowLabelValue(LabelType::FORCE_WIFI_BG);
   addRowLabelValue(LabelType::RESTART_WIFI_LOST_CONN);
@@ -327,7 +352,9 @@ void handle_sysinfo() {
   addRowLabelValue(LabelType::PERIODICAL_GRAT_ARP);
 #endif // ifdef SUPPORT_ARP
   addRowLabelValue(LabelType::CONNECTION_FAIL_THRESH);
+}
 
+void handle_sysinfo_Firmware() {
   addTableSeparator(F("Firmware"), 2, 3);
 
   addRowLabelValue_copy(LabelType::BUILD_DESC);
@@ -365,20 +392,22 @@ void handle_sysinfo() {
   } else {
     TXBuffer += String(CRCValues.binaryFilename);
   }
+}
 
+void handle_sysinfo_SystemStatus() {
   addTableSeparator(F("System Status"), 2, 3);
-  {
-    // Actual Loglevel
-    addRowLabelValue(LabelType::SYSLOG_LOG_LEVEL);
-    addRowLabelValue(LabelType::SERIAL_LOG_LEVEL);
-    addRowLabelValue(LabelType::WEB_LOG_LEVEL);
+
+  // Actual Loglevel
+  addRowLabelValue(LabelType::SYSLOG_LOG_LEVEL);
+  addRowLabelValue(LabelType::SERIAL_LOG_LEVEL);
+  addRowLabelValue(LabelType::WEB_LOG_LEVEL);
     #ifdef FEATURE_SD
-    addRowLabelValue(LabelType::SD_LOG_LEVEL);
+  addRowLabelValue(LabelType::SD_LOG_LEVEL);
     #endif // ifdef FEATURE_SD
-  }
+}
 
-
-  addTableSeparator(F("ESP board"), 2, 3);
+void handle_sysinfo_ESP_Board() {
+  addTableSeparator(F("ESP Board"), 2, 3);
 
   addRowLabel(getLabel(LabelType::ESP_CHIP_ID));
   #if defined(ESP8266)
@@ -414,7 +443,9 @@ void handle_sysinfo() {
   addRowLabel(getLabel(LabelType::ESP_BOARD_NAME));
   TXBuffer += ARDUINO_BOARD;
   #endif // ifdef ARDUINO_BOARD
+}
 
+void handle_sysinfo_Storage() {
   addTableSeparator(F("Storage"), 2, 3);
 
   addRowLabel(getLabel(LabelType::FLASH_CHIP_ID));
@@ -551,9 +582,4 @@ void handle_sysinfo() {
   //   TXBuffer += getPartitionTable(ESP_PARTITION_TYPE_APP , F(" - "), F("<BR>"));
   getPartitionTableSVG(ESP_PARTITION_TYPE_APP, 0xab56e6);
   #endif // ifdef ESP32
-
-  html_end_table();
-  html_end_form();
-  sendHeadandTail_stdtemplate(true);
-  TXBuffer.endStream();
 }
