@@ -112,7 +112,7 @@ void handle_setup_scan_and_show(const String& ssid, const String& other, const S
       int32_t rssi = 0;
       TXBuffer +=  formatScanResult(i, "<BR>", rssi);
       html_TD();
-      TXBuffer += rssi;
+      getWiFi_RSSI_icon(rssi, 45);
     }
     html_end_table();
   }
