@@ -12,10 +12,11 @@
 //---IRSEND: That commands format is: IRSEND,<protocol>,<data>,<bits>,<repeat>
 // bits and repeat default to 0 if not used and they are optional
 // For protocols RAW and RAW2 there is no bits and repeat part, they are supposed to be replayed as they are calculated by a Google docs sheet or by plugin P016
-//---IRSENDAC: That commands format is: IRSENDAC,{"Protocol":"COOLIX","Power":"on","Opmode":"dry","Fanspeed":"auto","Degrees":22,"Swingv":"max","Swingh":"off"}
+//---IRSENDAC: That commands format is: IRSENDAC,{"protocol":"COOLIX","power":"on","opmode":"dry","fanspeed":"auto","degrees":22,"swingv":"max","swingh":"off"}
+//--- The JSON keys are case sensitive and allways small case. The JSON data are case insensitive
 // The possible values
 // Protocols: Argo Coolix Daikin Fujitsu Haier Hitachi Kelvinator Midea Mitsubishi MitsubishiHeavy Panasonic Samsung Sharp Tcl Teco Toshiba Trotec Vestel Whirlpool
-//---Opmodes:      ---Fanspeed:   --Swingv:       --Swingh:
+//---opmodes:      ---fanspeed:   --swingv:       --swingh:
 // - "off"          - "auto"       - "off"         - "off"
 // - "auto"         - "min"        - "auto"        - "auto"
 // - "cool"         - "low"        - "highest"     - "leftmax"
@@ -23,11 +24,14 @@
 // - "dry"          - "high"       - "middle"      - "middle"
 // - "fan_only"     - "max"        - "low"         - "right"
 //                                 - "lowest"      - "rightmax"
+//                                                 - "wide"
 // "on" - "off" parameters are:
-// - "Power" - "Celsius" - "Quiet" - "Turbo" - "Econo" - "Light" - "Filter" - "Clean" - "Light" - "Beep"
+// - "power" - "celsius" - "quiet" - "turbo" - "econo" - "light" - "filter" - "clean" - "light" - "beep"
 // If celcius is set to "off" then farenheit will be used
-// - "Sleep" Nr. of mins of sleep mode, or use sleep mode. (<= 0 means off.)
-// - "Clock" Nr. of mins past midnight to set the clock to. (< 0 means off.)
+// - "sleep" Nr. of mins of sleep mode, or use sleep mode. (<= 0 means off.)
+// - "clock" Nr. of mins past midnight to set the clock to. (< 0 means off.)
+// - "model" . Nr or string representation of the model. Better to find it throught P016 - IR RX (0 means default.)
+
 #include <IRremoteESP8266.h>
 #include <IRac.h>
 #include <IRutils.h>

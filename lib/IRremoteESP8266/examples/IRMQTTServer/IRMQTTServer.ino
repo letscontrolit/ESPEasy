@@ -347,6 +347,10 @@
 
 using irutils::msToString;
 
+#if REPORT_VCC
+  ADC_MODE(ADC_VCC);
+#endif  // REPORT_VCC
+
 // Globals
 #if defined(ESP8266)
 ESP8266WebServer server(kHttpPort);
@@ -913,7 +917,7 @@ String htmlSelectGpio(const String name, const int16_t def,
 
 String htmlSelectMode(const String name, const stdAc::opmode_t def) {
   String html = "<select name='" + name + "'>";
-  for (int8_t i = -1; i <= 4; i++) {
+  for (int8_t i = -1; i <= (int8_t)stdAc::opmode_t::kLastOpmodeEnum; i++) {
     String mode = IRac::opmodeToString((stdAc::opmode_t)i);
     html += htmlOptionItem(mode, mode, (stdAc::opmode_t)i == def);
   }
@@ -923,7 +927,7 @@ String htmlSelectMode(const String name, const stdAc::opmode_t def) {
 
 String htmlSelectFanspeed(const String name, const stdAc::fanspeed_t def) {
   String html = "<select name='" + name + "'>";
-  for (int8_t i = 0; i <= 5; i++) {
+  for (int8_t i = 0; i <= (int8_t)stdAc::fanspeed_t::kLastFanspeedEnum; i++) {
     String speed = IRac::fanspeedToString((stdAc::fanspeed_t)i);
     html += htmlOptionItem(speed, speed, (stdAc::fanspeed_t)i == def);
   }
@@ -933,7 +937,7 @@ String htmlSelectFanspeed(const String name, const stdAc::fanspeed_t def) {
 
 String htmlSelectSwingv(const String name, const stdAc::swingv_t def) {
   String html = "<select name='" + name + "'>";
-  for (int8_t i = -1; i <= 5; i++) {
+  for (int8_t i = -1; i <= (int8_t)stdAc::swingv_t::kLastSwingvEnum; i++) {
     String swing = IRac::swingvToString((stdAc::swingv_t)i);
     html += htmlOptionItem(swing, swing, (stdAc::swingv_t)i == def);
   }
@@ -943,7 +947,7 @@ String htmlSelectSwingv(const String name, const stdAc::swingv_t def) {
 
 String htmlSelectSwingh(const String name, const stdAc::swingh_t def) {
   String html = "<select name='" + name + "'>";
-  for (int8_t i = -1; i <= 5; i++) {
+  for (int8_t i = -1; i <= (int8_t)stdAc::swingh_t::kLastSwinghEnum; i++) {
     String swing = IRac::swinghToString((stdAc::swingh_t)i);
     html += htmlOptionItem(swing, swing, (stdAc::swingh_t)i == def);
   }
@@ -1121,6 +1125,10 @@ uint32_t maxSketchSpace(void) {
 #endif  // defined(ESP8266)
 }
 
+#if REPORT_VCC
+String vccToString(void) { return String(ESP.getVcc() / 1000.0); }
+#endif  // REPORT_VCC
+
 // Info web page
 void handleInfo(void) {
   String html = htmlHeader(F("IR MQTT server info"));
@@ -1175,6 +1183,11 @@ void handleInfo(void) {
         "Off"
 #endif  // DEBUG
         "<br>"
+#if REPORT_VCC
+    "Vcc: ";
+    html += vccToString();
+    html += "V<br>"
+#endif  // REPORT_VCC
     "</p>"
 #if MQTT_ENABLE
     "<h4>MQTT Information</h4>"
@@ -1252,7 +1265,8 @@ void doRestart(const char* str, const bool serial_only) {
 void handleReset(void) {
 #if HTML_PASSWORD_ENABLE
   if (!server.authenticate(HttpUsername, HttpPassword)) {
-    debug("Basic HTTP authentication failure for " + kUrlWipe);
+    debug(("Basic HTTP authentication failure for " +
+           String(kUrlWipe)).c_str());
     return server.requestAuthentication();
   }
 #endif
@@ -1281,7 +1295,8 @@ void handleReset(void) {
 void handleReboot() {
 #if HTML_PASSWORD_ENABLE
   if (!server.authenticate(HttpUsername, HttpPassword)) {
-    debug("Basic HTTP authentication failure for " + kUrlReboot);
+    debug(("Basic HTTP authentication failure for " +
+           String(kUrlReboot)).c_str());
     return server.requestAuthentication();
   }
 #endif
@@ -2167,6 +2182,9 @@ void doBroadcast(TimerMs *timer, const uint32_t interval,
     debug("Sending MQTT stat update broadcast.");
     sendClimate(state, state, MqttClimateStat,
                 retain, true, false);
+#if REPORT_VCC
+    sendString(MqttClimateStat + KEY_VCC, vccToString(), false);
+#endif  // REPORT_VCC
 #if MQTT_CLIMATE_JSON
     sendJsonState(state, MqttClimateStat + KEY_JSON);
 #endif  // MQTT_CLIMATE_JSON
@@ -2322,29 +2340,22 @@ void sendMQTTDiscovery(const char *topic) {
       "{"
       "\"~\":\"" + MqttClimate + "\","
       "\"name\":\"" + MqttHAName + "\","
-      "\"pow_cmd_t\":\"~" MQTT_CLIMATE "/" MQTT_CLIMATE_CMND "/" KEY_POWER "\","
-      "\"mode_cmd_t\":\"~" MQTT_CLIMATE "/" MQTT_CLIMATE_CMND "/" KEY_MODE "\","
-      "\"mode_stat_t\":\"~" MQTT_CLIMATE "/" MQTT_CLIMATE_STAT "/" KEY_MODE
-          "\","
+      "\"pow_cmd_t\":\"~/" MQTT_CLIMATE_CMND "/" KEY_POWER "\","
+      "\"mode_cmd_t\":\"~/" MQTT_CLIMATE_CMND "/" KEY_MODE "\","
+      "\"mode_stat_t\":\"~/" MQTT_CLIMATE_STAT "/" KEY_MODE "\","
       "\"modes\":[\"off\",\"auto\",\"cool\",\"heat\",\"dry\",\"fan_only\"],"
-      "\"temp_cmd_t\":\"~" MQTT_CLIMATE "/" MQTT_CLIMATE_CMND "/" KEY_TEMP "\","
-      "\"temp_stat_t\":\"~" MQTT_CLIMATE "/" MQTT_CLIMATE_STAT "/" KEY_TEMP
-          "\","
+      "\"temp_cmd_t\":\"~/" MQTT_CLIMATE_CMND "/" KEY_TEMP "\","
+      "\"temp_stat_t\":\"~/" MQTT_CLIMATE_STAT "/" KEY_TEMP "\","
       "\"min_temp\":\"16\","
       "\"max_temp\":\"30\","
       "\"temp_step\":\"1\","
-      "\"fan_mode_cmd_t\":\"~" MQTT_CLIMATE "/" MQTT_CLIMATE_CMND "/"
-          KEY_FANSPEED "\","
-      "\"fan_mode_stat_t\":\"~" MQTT_CLIMATE "/" MQTT_CLIMATE_STAT "/"
-          KEY_FANSPEED "\","
+      "\"fan_mode_cmd_t\":\"~/" MQTT_CLIMATE_CMND "/" KEY_FANSPEED "\","
+      "\"fan_mode_stat_t\":\"~/" MQTT_CLIMATE_STAT "/" KEY_FANSPEED "\","
       "\"fan_modes\":[\"auto\",\"min\",\"low\",\"medium\",\"high\",\"max\"],"
-      "\"swing_mode_cmd_t\":\"~" MQTT_CLIMATE "/" MQTT_CLIMATE_CMND "/"
-          KEY_SWINGV "\","
-      "\"swing_mode_stat_t\":\"~" MQTT_CLIMATE "/" MQTT_CLIMATE_STAT "/"
-          KEY_SWINGV "\","
+      "\"swing_mode_cmd_t\":\"~/" MQTT_CLIMATE_CMND "/" KEY_SWINGV "\","
+      "\"swing_mode_stat_t\":\"~/" MQTT_CLIMATE_STAT "/" KEY_SWINGV "\","
       "\"swing_modes\":["
-        "\"off\",\"auto\",\"highest\",\"high\",\"middle\",\"low\",\"lowest\""
-      "]"
+        "\"off\",\"auto\",\"highest\",\"high\",\"middle\",\"low\",\"lowest\"]"
       "}").c_str())) {
     mqttLog("MQTT climate discovery successful sent.");
     hasDiscoveryBeenSent = true;

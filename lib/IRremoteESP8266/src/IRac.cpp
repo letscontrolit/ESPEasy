@@ -15,6 +15,7 @@
 #include "IRsend.h"
 #include "IRremoteESP8266.h"
 #include "IRutils.h"
+#include "ir_Amcor.h"
 #include "ir_Argo.h"
 #include "ir_Coolix.h"
 #include "ir_Daikin.h"
@@ -46,7 +47,10 @@ IRac::IRac(const uint16_t pin, const bool inverted, const bool use_modulation) {
 // Is the given protocol supported by the IRac class?
 bool IRac::isProtocolSupported(const decode_type_t protocol) {
   switch (protocol) {
-#if SEND_ARGO
+#if SEND_AMCOR
+    case decode_type_t::AMCOR:
+#endif
+#if SEND_AMCOR
     case decode_type_t::ARGO:
 #endif
 #if SEND_COOLIX
@@ -139,6 +143,27 @@ bool IRac::isProtocolSupported(const decode_type_t protocol) {
       return false;
   }
 }
+
+#if SEND_AMCOR
+void IRac::amcor(IRAmcorAc *ac,
+                const bool on, const stdAc::opmode_t mode, const float degrees,
+                const stdAc::fanspeed_t fan) {
+  ac->setPower(on);
+  ac->setMode(ac->convertMode(mode));
+  ac->setTemp(degrees);
+  ac->setFan(ac->convertFan(fan));
+  // No Swing setting available.
+  // No Quiet setting available.
+  // No Light setting available.
+  // No Filter setting available.
+  // No Turbo setting available.
+  // No Economy setting available.
+  // No Clean setting available.
+  // No Beep setting available.
+  // No Sleep setting available.
+  ac->send();
+}
+#endif  // SEND_AMCOR
 
 #if SEND_ARGO
 void IRac::argo(IRArgoAC *ac,
@@ -400,6 +425,7 @@ void IRac::fujitsu(IRFujitsuAC *ac, const fujitsu_ac_remote_model_t model,
     // No Beep setting available.
     // No Sleep setting available.
     // No Clock setting available.
+    ac->on();  // Ref: Issue #860
   } else {
     // Off is special case/message. We don't need to send other messages.
     ac->off();
@@ -801,7 +827,7 @@ void IRac::tcl112(IRTcl112Ac *ac,
 void IRac::teco(IRTecoAc *ac,
                 const bool on, const stdAc::opmode_t mode, const float degrees,
                 const stdAc::fanspeed_t fan, const stdAc::swingv_t swingv,
-                const int16_t sleep) {
+                const bool light, const int16_t sleep) {
   ac->setPower(on);
   ac->setMode(ac->convertMode(mode));
   ac->setTemp(degrees);
@@ -810,7 +836,7 @@ void IRac::teco(IRTecoAc *ac,
   // No Horizontal swing setting available.
   // No Quiet setting available.
   // No Turbo setting available.
-  // No Light setting available.
+  ac->setLight(light);
   // No Filter setting available.
   // No Clean setting available.
   // No Beep setting available.
@@ -1014,6 +1040,14 @@ bool IRac::sendAc(const decode_type_t vendor, const int16_t model,
   if (mode == stdAc::opmode_t::kOff) on = false;
   // Per vendor settings & setup.
   switch (vendor) {
+#if SEND_AMCOR
+    case AMCOR:
+    {
+      IRAmcorAc ac(_pin, _inverted, _modulation);
+      amcor(&ac, on, mode, degC, fan);
+      break;
+    }
+#endif  // SEND_AMCOR
 #if SEND_ARGO
     case ARGO:
     {
@@ -1247,7 +1281,7 @@ bool IRac::sendAc(const decode_type_t vendor, const int16_t model,
     {
       IRTecoAc ac(_pin, _inverted, _modulation);
       ac.begin();
-      teco(&ac, on, mode, degC, fan, swingv, sleep);
+      teco(&ac, on, mode, degC, fan, swingv, light, sleep);
       break;
     }
 #endif  // SEND_TECO
@@ -1421,11 +1455,20 @@ stdAc::swingh_t IRac::strToSwingH(const char *str,
 
 // Assumes str is the model or an integer >= 1.
 int16_t IRac::strToModel(const char *str, const int16_t def) {
+  // Gree
+  if (!strcasecmp(str, "YAW1F")) {
+    return gree_ac_remote_model_t::YAW1F;
+  } else if (!strcasecmp(str, "YBOFB")) {
+    return gree_ac_remote_model_t::YBOFB;
   // Fujitsu A/C models
-  if (!strcasecmp(str, "ARRAH2E")) {
+  } else if (!strcasecmp(str, "ARRAH2E")) {
     return fujitsu_ac_remote_model_t::ARRAH2E;
   } else if (!strcasecmp(str, "ARDB1")) {
     return fujitsu_ac_remote_model_t::ARDB1;
+  } else if (!strcasecmp(str, "ARREB1E")) {
+    return fujitsu_ac_remote_model_t::ARREB1E;
+  } else if (!strcasecmp(str, "ARJW2")) {
+    return fujitsu_ac_remote_model_t::ARJW2;
   // Panasonic A/C families
   } else if (!strcasecmp(str, "LKE") || !strcasecmp(str, "PANASONICLKE")) {
     return panasonic_ac_remote_model_t::kPanasonicLke;
@@ -1545,7 +1588,7 @@ String IRac::swinghToString(const stdAc::swingh_t swingh) {
     case stdAc::swingh_t::kRightMax:
       return F("rightmax");
     case stdAc::swingh_t::kWide:
-      return F("leftright");
+      return F("wide");
     default:
       return F("unknown");
   }
@@ -1559,6 +1602,13 @@ namespace IRAcUtils {
   //   A string with the human description of the A/C message. "" if we can't.
   String resultAcToString(const decode_results * const result) {
     switch (result->decode_type) {
+#if DECODE_AMCOR
+      case decode_type_t::AMCOR: {
+        IRAmcorAc ac(0);
+        ac.setRaw(result->state);
+        return ac.toString();
+      }
+#endif  // DECODE_AMCOR
 #if DECODE_ARGO
       case decode_type_t::ARGO: {
         IRArgoAC ac(0);
@@ -1788,6 +1838,14 @@ namespace IRAcUtils {
                      const stdAc::state_t *prev) {
     if (decode == NULL || result == NULL) return false;  // Safety check.
     switch (decode->decode_type) {
+#if DECODE_AMCOR
+      case decode_type_t::AMCOR: {
+        IRAmcorAc ac(kGpioUnused);
+        ac.setRaw(decode->state);
+        *result = ac.toCommon();
+        break;
+      }
+#endif  // DECODE_AMCOR
 #if DECODE_ARGO
       case decode_type_t::ARGO: {
         IRArgoAC ac(kGpioUnused);

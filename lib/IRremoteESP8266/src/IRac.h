@@ -7,6 +7,7 @@
 #include <Arduino.h>
 #endif
 #include "IRremoteESP8266.h"
+#include "ir_Amcor.h"
 #include "ir_Argo.h"
 #include "ir_Coolix.h"
 #include "ir_Daikin.h"
@@ -73,6 +74,11 @@ class IRac {
   uint16_t _pin;
   bool _inverted;
   bool _modulation;
+#if SEND_AMCOR
+  void amcor(IRAmcorAc *ac,
+             const bool on, const stdAc::opmode_t mode, const float degrees,
+             const stdAc::fanspeed_t fan);
+#endif  // SEND_AMCOR
 #if SEND_ARGO
   void argo(IRArgoAC *ac,
             const bool on, const stdAc::opmode_t mode, const float degrees,
@@ -260,7 +266,7 @@ void electra(IRElectraAc *ac,
   void teco(IRTecoAc *ac,
             const bool on, const stdAc::opmode_t mode, const float degrees,
             const stdAc::fanspeed_t fan, const stdAc::swingv_t swingv,
-            const int16_t sleep = -1);
+            const bool light, const int16_t sleep = -1);
 #endif  // SEND_TECO
 #if SEND_TOSHIBA_AC
   void toshiba(IRToshibaAC *ac,
