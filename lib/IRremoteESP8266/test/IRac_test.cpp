@@ -1,6 +1,7 @@
 // Copyright 2019 David Conran
 
 #include <string>
+#include "ir_Amcor.h"
 #include "ir_Argo.h"
 #include "ir_Daikin.h"
 #include "ir_Electra.h"
@@ -32,6 +33,27 @@
 #include "gtest/gtest.h"
 
 // Tests for IRac class.
+
+TEST(TestIRac, Amcor) {
+  IRAmcorAc ac(0);
+  IRac irac(0);
+  IRrecv capture(0);
+  char expected[] =
+      "Power: On, Mode: 5 (AUTO), Fan: 3 (High), Temp: 19C, Max: Off";
+
+  ac.begin();
+  irac.amcor(&ac,
+             true,                        // Power
+             stdAc::opmode_t::kAuto,      // Mode
+             19,                          // Celsius
+             stdAc::fanspeed_t::kHigh);   // Fan speed
+  ASSERT_EQ(expected, ac.toString());
+  ac._irsend.makeDecodeResult();
+  EXPECT_TRUE(capture.decode(&ac._irsend.capture));
+  ASSERT_EQ(AMCOR, ac._irsend.capture.decode_type);
+  ASSERT_EQ(kAmcorBits, ac._irsend.capture.bits);
+  ASSERT_EQ(expected, IRAcUtils::resultAcToString(&ac._irsend.capture));
+}
 
 TEST(TestIRac, Argo) {
   IRArgoAC ac(0);
@@ -390,7 +412,7 @@ TEST(TestIRac, Gree) {
       "Model: 1 (YAW1F), Power: On, Mode: 1 (COOL), Temp: 22C, "
       "Fan: 2 (Medium), Turbo: Off, IFeel: Off, WiFi: Off, XFan: On, "
       "Light: On, Sleep: On, Swing Vertical Mode: Manual, "
-      "Swing Vertical Pos: 3";
+      "Swing Vertical Pos: 3, Timer: Off";
 
   ac.begin();
   irac.gree(&ac,
@@ -822,7 +844,7 @@ TEST(TestIRac, Teco) {
   IRrecv capture(0);
   char expected[] =
       "Power: On, Mode: 0 (AUTO), Temp: 21C, Fan: 2 (Medium), Sleep: On, "
-      "Swing: On";
+      "Swing: On, Light: On, Humid: Off, Save: Off";
 
   ac.begin();
   irac.teco(&ac,
@@ -831,6 +853,7 @@ TEST(TestIRac, Teco) {
             21,                          // Celsius
             stdAc::fanspeed_t::kMedium,  // Fan speed
             stdAc::swingv_t::kAuto,      // Veritcal swing
+            true,                        // Light
             8 * 60 + 30);                // Sleep
   ASSERT_EQ(expected, ac.toString());
   ac._irsend.makeDecodeResult();
@@ -1220,6 +1243,7 @@ TEST(TestIRac, swinghToString) {
   EXPECT_EQ("off", IRac::swinghToString(stdAc::swingh_t::kOff));
   EXPECT_EQ("left", IRac::swinghToString(stdAc::swingh_t::kLeft));
   EXPECT_EQ("auto", IRac::swinghToString(stdAc::swingh_t::kAuto));
+  EXPECT_EQ("wide", IRac::swinghToString(stdAc::swingh_t::kWide));
   EXPECT_EQ("unknown", IRac::swinghToString((stdAc::swingh_t)500));
 }
 
