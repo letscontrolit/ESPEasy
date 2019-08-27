@@ -680,6 +680,22 @@ String get_formatted_Controller_number(int controller_number) {
   return result;
 }
 
+
+String get_auth_header(const String& user, const String& pass) {
+  String authHeader = "";
+
+  if (user.length() != 0 && pass.length() != 0) {
+      base64 encoder;
+      String auth = user;
+      auth       += ":";
+      auth       += pass;
+      authHeader  = F("Authorization: Basic ");
+      authHeader += encoder.encode(auth);
+      authHeader += F(" \r\n");
+  }
+  return authHeader;
+}
+
 String get_auth_header(int controller_index) {
   String authHeader = "";
 
@@ -687,13 +703,9 @@ String get_auth_header(int controller_index) {
     if ((SecuritySettings.ControllerUser[controller_index][0] != 0) &&
         (SecuritySettings.ControllerPassword[controller_index][0] != 0))
     {
-      base64 encoder;
-      String auth = SecuritySettings.ControllerUser[controller_index];
-      auth       += ":";
-      auth       += SecuritySettings.ControllerPassword[controller_index];
-      authHeader  = F("Authorization: Basic ");
-      authHeader += encoder.encode(auth);
-      authHeader += F(" \r\n");
+      authHeader = get_auth_header(
+        String(SecuritySettings.ControllerUser[controller_index]), 
+        String(SecuritySettings.ControllerPassword[controller_index]));
     }
   } else {
     addLog(LOG_LEVEL_ERROR, F("Invalid controller index"));

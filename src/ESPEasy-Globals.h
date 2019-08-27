@@ -2311,6 +2311,24 @@ struct ResetFactoryDefaultPreference_struct {
   bool keepUnitName() const { return getBitFromUL(_preference, 13); }
   void keepUnitName(bool keep) {       setBitToUL(_preference, 13, keep); }
 
+  // filenr = 0...3 for files rules1.txt ... rules4.txt
+  bool fetchRulesTXT(int filenr) const { return getBitFromUL(_preference, 14 + filenr); }
+  void fetchRulesTXT(int filenr, bool fetch) {       setBitToUL(_preference, 14 + filenr, fetch); }
+
+  bool fetchNotificationDat() const { return getBitFromUL(_preference, 18); }
+  void fetchNotificationDat(bool fetch) {       setBitToUL(_preference, 18, fetch); }
+
+  bool fetchSecurityDat() const { return getBitFromUL(_preference, 19); }
+  void fetchSecurityDat(bool fetch) {       setBitToUL(_preference, 19, fetch); }
+
+  bool fetchConfigDat() const { return getBitFromUL(_preference, 20); }
+  void fetchConfigDat(bool fetch) {       setBitToUL(_preference, 20, fetch); }
+
+  bool deleteFirst() const { return getBitFromUL(_preference, 21); }
+  void deleteFirst(bool checked) {       setBitToUL(_preference, 21, checked); }
+
+  
+
   uint32_t getPreference() { return _preference; }
 
   // TODO TD-er: Add extra flags for settings to keep/set when reset to default.
