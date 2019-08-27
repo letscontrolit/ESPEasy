@@ -234,6 +234,8 @@ and the Sonoff Basic cannot be selected on a board with 4 MB flash.
 Settings Archive
 ================
 
+(Only available for core 2.5.0 and newer)
+
 ESPeasy does not support an "undo" when it comes to settings.
 Also cloning the settings of a node can be a lot of work.
 
