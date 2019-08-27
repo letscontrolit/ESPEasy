@@ -229,3 +229,62 @@ For example, the Sonoff POW modules will not be selectable on a module with 1 MB
 and the Sonoff Basic cannot be selected on a board with 4 MB flash.
 
 .. warning:: Pressing the red "Factory Reset" button will immediately perform the reset with the set selection.
+
+
+Settings Archive
+================
+
+ESPeasy does not support an "undo" when it comes to settings.
+Also cloning the settings of a node can be a lot of work.
+
+The Settings Archive is an initial step to help cloning settings or reverting to an older version of the settings.
+To revert to an older version, one still has to have a backup of the settings stored on some server which is accessible via HTTP.
+
+Later the (automatic) upload of settings will be added, including encryption.
+
+Download Settings
+-----------------
+
+.. image:: images/SettingsArchive_download1.png
+
+In order to download settings files, one has to select which ones to download and from where.
+In the example shown here, the notification settings and rules were cloned from another ESPeasy node.
+This other node is protected using a login, just to show basic authentication is also allowed.
+
+Due to the needed memory resources, it is not possible to download from HTTPS.
+This also meand the settings file and credentials are sent in plain text. 
+So do not use this to download settings with sensitive information directly from the internet.
+
+On some nodes the remaining free space on the SPIFFS filesystem may be too small to keep the original file and a downloaded version.
+For example on 1MB nodes, there is only 120k SPIFFS, which means it is not possible to have the ''config.dat'' file stored twice on the filesystem.
+
+For these, the "Delete First" checkbox should be used.
+But be aware that the file is deleted first, even if the host holding the files to download is unavailable.
+
+Better try first with a smaller file on such nodes.
+Especially if the node is hard to reach for a proper clean setup.
+
+.. image:: images/SettingsArchive_download2.png
+
+After downloading the files, a summary is given.
+A returned error can be something like 404 (file not available) or 401 (not authorized).
+These are the standard HTTP error codes.
+
+If ''config.dat'' or ''security.dat'' was downloaded, it is very important to do a reboot and not try to change (and save) anything on the ESPeasy node.
+The old settings are still active in memory and if something will be saved, only the changed part may be saved.
+This would corrupt the settings file.
+
+
+Side Effects on cloning
+-----------------------
+
+Please note that cloning settings from another node may have some side effects.
+For example the host name and unit number will be the same.
+But also the controllers will be active and may start sending incorrect data.
+
+Controller credentials may also be used on multiple nodes, which may also lead to various issues.
+
+If the original node is configured to use static IP, the clone will use the same IP address.
+This can render both inaccessible.
+
+
