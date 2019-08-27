@@ -149,28 +149,32 @@ bool P005_do_plugin_read(struct EventStruct *event) {
 
   pinMode(Plugin_005_DHT_Pin, OUTPUT);
   digitalWrite(Plugin_005_DHT_Pin, LOW);              // Pull low
+  
   switch (Par3) {
-    case P005_DHT11:
-    case P005_DHT22:
-    case P005_DHT12:  delay(18); break;  // FIXME TD-er: Must this be so long?
+    case P005_DHT11:  delay(18); break;  // minimum 18ms
+    case P005_DHT22:  delay(2);  break;  // minimum 1ms
+    case P005_DHT12:  delay(200); break; // minimum 200ms
     case P005_AM2301: delayMicroseconds(900); break;
     case P005_SI7021: delayMicroseconds(500); break;
   }
+  
+  digitalWrite(Plugin_005_DHT_Pin, HIGH);
+  
   switch (Par3) {
     case P005_DHT11:
     case P005_DHT22:
     case P005_DHT12:
     case P005_AM2301:
-      pinMode(Plugin_005_DHT_Pin, INPUT);
       delayMicroseconds(50);
       break;
     case P005_SI7021:
       // See: https://github.com/letscontrolit/ESPEasy/issues/1798
-      digitalWrite(Plugin_005_DHT_Pin, HIGH);
       delayMicroseconds(20);
-      pinMode(Plugin_005_DHT_Pin, INPUT);
       break;
   }
+  
+  pinMode(Plugin_005_DHT_Pin, INPUT);
+
   if(!P005_waitState(0)) {P005_log(event, P005_error_no_reading); return false; }
   if(!P005_waitState(1)) {P005_log(event, P005_error_no_reading); return false; }
   noInterrupts();
