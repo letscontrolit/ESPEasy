@@ -973,6 +973,8 @@ String splitURL(const String& fullURL, String& host, uint16_t& port, String& fil
   return fullURL.substring(endhost);
 }
 
+#ifdef CORE_POST_2_5_0
+
 // Download a file from a given URL and save to a local file named "file_save"
 // If the URL ends with a /, the file part will be assumed the same as file_save.
 // If file_save is empty, the file part from the URL will be used as local file name.
@@ -1090,3 +1092,5 @@ bool downloadFile(const String& url, String file_save, const String& user, const
   addLog(LOG_LEVEL_ERROR, error);
   return false;
 }
+
+#endif // ifdef CORE_POST_2_5_0
