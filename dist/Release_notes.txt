@@ -1,4 +1,24 @@
 -------------------------------------------------
+Changes in release mega-20190827 (since mega-20190823)
+-------------------------------------------------
+
+Release date: Tue Aug 27 04:00:07 CEST 2019
+
+Gijs Noorlander (5):
+      [WiFi] Improve WiFi reconnect stability and fix initial setup
+      [Docs] Document Timing Stats page
+      [WiFi] Move functions to separate files and document
+      [WiFi] Clean up WiFi code and modernize WiFi setup page
+      [WiFi] Add RSSI symbol to WiFi setup page
+
+TD-er (1):
+      [LoRa] Keep out LoRa code if no supported controller is used
+
+jimmys01 (1):
+      IR Update library and usage instructions
+
+
+-------------------------------------------------
 Changes in release mega-20190823 (since mega-20190817)
 -------------------------------------------------
 
