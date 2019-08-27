@@ -17,7 +17,6 @@ extern "C"
 #include <lwip/inet_chksum.h> // needed for inet_chksum()
 #include <lwip/sys.h> // needed for sys_now()
 #include <lwip/netif.h>
-//#include "ESP8266WiFi.h" // needed for WiFi.hostByName()
 }
 
 #define PLUGIN_088
@@ -30,23 +29,23 @@ extern "C"
 #define ICMP_PAYLOAD_LEN          32
 
 struct P088_icmp_pcb {
-  struct raw_pcb *m_IcmpPCB = NULL;
+  P088_icmp_pcb() : m_IcmpPCB(nullptr), instances(1) {}
+  struct raw_pcb *m_IcmpPCB;
   uint8_t instances; /* Sort of refcount */
 };
 
-struct P088_icmp_pcb *P088_data = NULL;
+struct P088_icmp_pcb *P088_data = nullptr;
 
 class P088_data_struct: public PluginTaskData_base {
 public:
   P088_data_struct() {
     destIPAddress.addr = 0;
     idseq = 0;
-    if (!P088_data) {
+    if (nullptr == P088_data) {
       P088_data = new P088_icmp_pcb();
       P088_data->m_IcmpPCB = raw_new(IP_PROTO_ICMP);
       raw_recv(P088_data->m_IcmpPCB, PingReceiver, NULL);
       raw_bind(P088_data->m_IcmpPCB, IP_ADDR_ANY);
-      P088_data->instances = 1;
     } else {
       P088_data->instances++;
     }
@@ -58,14 +57,13 @@ public:
         if (P088_data->instances == 0) {
           raw_remove(P088_data->m_IcmpPCB);
           delete P088_data;
-          P088_data = NULL;
+          P088_data = nullptr;
         }
       }
   }
 
   ip_addr_t destIPAddress;
   uint32_t idseq;
-  uint8_t active;
 
   bool send_ping(struct EventStruct *event) {
     bool is_failure = false;
@@ -184,7 +182,6 @@ boolean Plugin_088(byte function, struct EventStruct *event, String& string)
   {
     initPluginTaskData(event->TaskIndex, new P088_data_struct());
     UserVar[event->BaseVarIndex] = 0;
-    addLog(LOG_LEVEL_ERROR, "PLUGIN_INIT r " + String(P088_data->instances));
     success = true;
     break;
   }
