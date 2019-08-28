@@ -821,7 +821,3 @@ To create/register a plugin, you have to :
 #if defined(USES_C002) || defined (USES_C005) || defined(USES_C006) || defined(USES_C014)
   #define USES_MQTT
 #endif
-
-#if defined(USES_C012) || defined (USES_C015)
-  #define USES_BLYNK
-#endif
