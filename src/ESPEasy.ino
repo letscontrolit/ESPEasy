@@ -89,6 +89,7 @@
 // Plugin helper needs the defined controller sets, thus include after 'define_plugin_sets.h'
 #include "_CPlugin_Helper.h"
 
+#ifdef USES_BLYNK
 // Blynk_get prototype
 boolean Blynk_get(const String& command, byte controllerIndex,float *data = NULL );
 
@@ -101,6 +102,7 @@ int firstEnabledBlynkController() {
   }
   return -1;
 }
+#endif //USES_BLYNK
 
 //void checkRAM( const __FlashStringHelper* flashString);
 
