@@ -655,9 +655,7 @@ bool showSettingsFileLayout = false;
 #include <DNSServer.h>
 #include <Wire.h>
 #include <SPI.h>
-#ifdef USES_MQTT
 #include <PubSubClient.h>
-#endif //USES_MQTT
 #include <FS.h>
 #ifdef FEATURE_SD
 #include <SD.h>
@@ -691,14 +689,12 @@ IPAddress apIP(DEFAULT_AP_IP);
 DNSServer dnsServer;
 bool dnsServerActive = false;
 
-#ifdef USES_MQTT
 // MQTT client
 WiFiClient mqtt;
 PubSubClient MQTTclient(mqtt);
 bool MQTTclient_should_reconnect = true;
 bool MQTTclient_connected = false;
 int mqtt_reconnect_count = 0;
-#endif //USES_MQTT
 
 //NTP status
 bool statusNTPInitialized = false;
