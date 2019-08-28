@@ -31,6 +31,7 @@ String getSettingsTypeString(SettingsType settingsType) {
   return "";
 }
 
+#ifdef USES_MQTT
 String getMQTT_state() {
   switch (MQTTclient.state()) {
     case MQTT_CONNECTION_TIMEOUT     : return F("Connection timeout");
@@ -47,6 +48,7 @@ String getMQTT_state() {
   }
   return "";
 }
+#endif //USES_MQTT
 
 /********************************************************************************************\
   Get system information
