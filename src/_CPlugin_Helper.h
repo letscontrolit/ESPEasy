@@ -522,7 +522,7 @@ ControllerDelayHandlerStruct<MQTT_queue_element> MQTTDelayHandler;
 // *INDENT-OFF*
 
 
-// This macro defines the code needed to create the 'process_c##NNN##_delay_queue()'
+// This macro defines the code needed to create the 'process_c##NNN####M##_delay_queue()'
 // function and all needed objects and forward declarations.
 // It is a macro to prevent common typo errors.
 // This function will perform the (re)scheduling and mark if it is processed (and can be removed)
@@ -532,95 +532,95 @@ ControllerDelayHandlerStruct<MQTT_queue_element> MQTTDelayHandler;
 // N.B. some controllers only can send one value per iteration, so a returned "false" can mean it
 //      was still successful. The controller should keep track of the last value sent
 //      in the element stored in the queue.
-#define DEFINE_Cxxx_DELAY_QUEUE_MACRO(NNN, M)                                                              \
-  ControllerDelayHandlerStruct<C##NNN##_queue_element>C##NNN##_DelayHandler;                               \
-  bool do_process_c##NNN##_delay_queue(int controller_number,                                              \
-                                           const C##NNN##_queue_element & element,                         \
-                                           ControllerSettingsStruct & ControllerSettings);                 \
-  void process_c##NNN##_delay_queue() {                                                                    \
-    C##NNN##_queue_element *element(C##NNN##_DelayHandler.getNext());                                      \
-    if (element == NULL) return;                                                                           \
-    MakeControllerSettings (ControllerSettings);                                                           \
-    LoadControllerSettings(element->controller_idx, ControllerSettings);                                   \
-    C##NNN##_DelayHandler.configureControllerSettings(ControllerSettings);                                 \
-    if (!WiFiConnected(10)) {                                                                              \
-      scheduleNextDelayQueue(TIMER_C##NNN##_DELAY_QUEUE, C##NNN##_DelayHandler.getNextScheduleTime());     \
-      return;                                                                                              \
-    }                                                                                                      \
-    START_TIMER;                                                                                           \
-    C##NNN##_DelayHandler.markProcessed(do_process_c##NNN##_delay_queue(M, *element, ControllerSettings)); \
-    STOP_TIMER(C##NNN##_DELAY_QUEUE);                                                                      \
-    scheduleNextDelayQueue(TIMER_C##NNN##_DELAY_QUEUE, C##NNN##_DelayHandler.getNextScheduleTime());       \
+#define DEFINE_Cxxx_DELAY_QUEUE_MACRO(NNN, M)                                                                        \
+  ControllerDelayHandlerStruct<C##NNN####M##_queue_element>C##NNN####M##_DelayHandler;                               \
+  bool do_process_c##NNN####M##_delay_queue(int controller_number,                                                   \
+                                           const C##NNN####M##_queue_element & element,                              \
+                                           ControllerSettingsStruct & ControllerSettings);                           \
+  void process_c##NNN####M##_delay_queue() {                                                                         \
+    C##NNN####M##_queue_element *element(C##NNN####M##_DelayHandler.getNext());                                      \
+    if (element == NULL) return;                                                                                     \
+    MakeControllerSettings (ControllerSettings);                                                                     \
+    LoadControllerSettings(element->controller_idx, ControllerSettings);                                             \
+    C##NNN####M##_DelayHandler.configureControllerSettings(ControllerSettings);                                      \
+    if (!WiFiConnected(10)) {                                                                                        \
+      scheduleNextDelayQueue(TIMER_C##NNN####M##_DELAY_QUEUE, C##NNN####M##_DelayHandler.getNextScheduleTime());     \
+      return;                                                                                                        \
+    }                                                                                                                \
+    START_TIMER;                                                                                                     \
+    C##NNN####M##_DelayHandler.markProcessed(do_process_c##NNN####M##_delay_queue(M, *element, ControllerSettings)); \
+    STOP_TIMER(C##NNN####M##_DELAY_QUEUE);                                                                           \
+    scheduleNextDelayQueue(TIMER_C##NNN####M##_DELAY_QUEUE, C##NNN####M##_DelayHandler.getNextScheduleTime());       \
   }
 
 // Define the function wrappers to handle the calling to Cxxx_DelayHandler etc.
 // If someone knows how to add leading zeros in macros, please be my guest :)
 #ifdef USES_C001
-DEFINE_Cxxx_DELAY_QUEUE_MACRO(001,  1)
+DEFINE_Cxxx_DELAY_QUEUE_MACRO(00,  1)
 #endif // ifdef USES_C001
 #ifdef USES_C003
-DEFINE_Cxxx_DELAY_QUEUE_MACRO(003,  3)
+DEFINE_Cxxx_DELAY_QUEUE_MACRO(00,  3)
 #endif // ifdef USES_C003
 #ifdef USES_C004
-DEFINE_Cxxx_DELAY_QUEUE_MACRO(004,  4)
+DEFINE_Cxxx_DELAY_QUEUE_MACRO(00,  4)
 #endif // ifdef USES_C004
 #ifdef USES_C007
-DEFINE_Cxxx_DELAY_QUEUE_MACRO(007,  7)
+DEFINE_Cxxx_DELAY_QUEUE_MACRO(00,  7)
 #endif // ifdef USES_C007
 #ifdef USES_C008
-DEFINE_Cxxx_DELAY_QUEUE_MACRO(008, 8)
+DEFINE_Cxxx_DELAY_QUEUE_MACRO(00, 8)
 #endif // ifdef USES_C008
 #ifdef USES_C009
-DEFINE_Cxxx_DELAY_QUEUE_MACRO(009, 9)
+DEFINE_Cxxx_DELAY_QUEUE_MACRO(00, 9)
 #endif // ifdef USES_C009
 #ifdef USES_C010
-DEFINE_Cxxx_DELAY_QUEUE_MACRO(010,  10)
+DEFINE_Cxxx_DELAY_QUEUE_MACRO(0,  10)
 #endif // ifdef USES_C010
 #ifdef USES_C011
-DEFINE_Cxxx_DELAY_QUEUE_MACRO(011,  11)
+DEFINE_Cxxx_DELAY_QUEUE_MACRO(0,  11)
 #endif // ifdef USES_C011
 #ifdef USES_C012
-DEFINE_Cxxx_DELAY_QUEUE_MACRO(012,  12)
+DEFINE_Cxxx_DELAY_QUEUE_MACRO(0,  12)
 #endif // ifdef USES_C012
 
 /*
  #ifdef USES_C013
-   DEFINE_Cxxx_DELAY_QUEUE_MACRO(013, 13)
+   DEFINE_Cxxx_DELAY_QUEUE_MACRO(0, 13)
  #endif
  */
 
 /*
  #ifdef USES_C014
-   DEFINE_Cxxx_DELAY_QUEUE_MACRO(014, 14)
+   DEFINE_Cxxx_DELAY_QUEUE_MACRO(0, 14)
  #endif
  */
 #ifdef USES_C015
-DEFINE_Cxxx_DELAY_QUEUE_MACRO(015, 15)
+DEFINE_Cxxx_DELAY_QUEUE_MACRO(0, 15)
 #endif // ifdef USES_C015
 
 #ifdef USES_C016
-DEFINE_Cxxx_DELAY_QUEUE_MACRO(016, 16)
+DEFINE_Cxxx_DELAY_QUEUE_MACRO(0, 16)
 #endif // ifdef USES_C016
 
 
 #ifdef USES_C017
-DEFINE_Cxxx_DELAY_QUEUE_MACRO(017, 17)
+DEFINE_Cxxx_DELAY_QUEUE_MACRO(0, 17)
 #endif // ifdef USES_C017
 
 #ifdef USES_C018
-DEFINE_Cxxx_DELAY_QUEUE_MACRO(018, 18)
+DEFINE_Cxxx_DELAY_QUEUE_MACRO(0, 18)
 #endif
 
 
 /*
  #ifdef USES_C019
-   DEFINE_Cxxx_DELAY_QUEUE_MACRO(019, 19)
+   DEFINE_Cxxx_DELAY_QUEUE_MACRO(0, 19)
  #endif
  */
 
 /*
  #ifdef USES_C020
-   DEFINE_Cxxx_DELAY_QUEUE_MACRO(020, 20)
+   DEFINE_Cxxx_DELAY_QUEUE_MACRO(0, 20)
  #endif
  */
 
