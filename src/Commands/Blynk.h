@@ -1,6 +1,7 @@
 #ifndef COMMAND_BLYNK_H
 #define COMMAND_BLYNK_H
 
+#ifdef USES_BLINK
 #ifdef USES_C012
   //FIXME: this should go to PLUGIN_WRITE in _C012.ino
 String Command_Blynk_Get(struct EventStruct *event, const char* Line)
@@ -35,6 +36,7 @@ String Command_Blynk_Get(struct EventStruct *event, const char* Line)
   }
   return return_command_success();
 }
-#endif
+#endif //USES_C012
+#endif //USES_BLINK
 
 #endif // COMMAND_BLYNK_H
