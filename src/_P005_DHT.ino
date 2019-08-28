@@ -187,7 +187,7 @@ bool P005_do_plugin_read(struct EventStruct *event) {
   byte dht_dat[5];
   for (i = 0; i < 5 && !readingAborted; i++)
   {
-      byte data = Plugin_005_read_dht_dat();
+      int data = Plugin_005_read_dht_dat();
       if(data == -1)
       {   P005_log(event, P005_error_protocol_timeout);
           readingAborted = true;
