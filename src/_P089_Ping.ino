@@ -1,6 +1,6 @@
-#ifdef USES_P088
+#ifdef USES_P089
 //#######################################################################################################
-//#################### Plugin 088 ICMP Ping probing ##############
+//#################### Plugin 089 ICMP Ping probing ##############
 //#######################################################################################################
 /*
    Ping tests for hostnames and ips
@@ -19,45 +19,45 @@ extern "C"
 #include <lwip/netif.h>
 }
 
-#define PLUGIN_088
-#define PLUGIN_ID_088             88
-#define PLUGIN_NAME_088           "Communication - Ping"
-#define PLUGIN_VALUENAME1_088     "Fails"
-#define PLUGIN_088_HOSTNAME_SIZE  64
-#define PLUGIN_088_MAX_INSTANCES  8
+#define PLUGIN_089
+#define PLUGIN_ID_089             89
+#define PLUGIN_NAME_089           "Communication - Ping"
+#define PLUGIN_VALUENAME1_089     "Fails"
+#define PLUGIN_089_HOSTNAME_SIZE  64
+#define PLUGIN_089_MAX_INSTANCES  8
 
 #define ICMP_PAYLOAD_LEN          32
 
-struct P088_icmp_pcb {
-  P088_icmp_pcb() : m_IcmpPCB(nullptr), instances(1) {}
+struct P089_icmp_pcb {
+  P089_icmp_pcb() : m_IcmpPCB(nullptr), instances(1) {}
   struct raw_pcb *m_IcmpPCB;
   uint8_t instances; /* Sort of refcount */
 };
 
-struct P088_icmp_pcb *P088_data = nullptr;
+struct P089_icmp_pcb *P089_data = nullptr;
 
-class P088_data_struct: public PluginTaskData_base {
+class P089_data_struct: public PluginTaskData_base {
 public:
-  P088_data_struct() {
+  P089_data_struct() {
     destIPAddress.addr = 0;
     idseq = 0;
-    if (nullptr == P088_data) {
-      P088_data = new P088_icmp_pcb();
-      P088_data->m_IcmpPCB = raw_new(IP_PROTO_ICMP);
-      raw_recv(P088_data->m_IcmpPCB, PingReceiver, NULL);
-      raw_bind(P088_data->m_IcmpPCB, IP_ADDR_ANY);
+    if (nullptr == P089_data) {
+      P089_data = new P089_icmp_pcb();
+      P089_data->m_IcmpPCB = raw_new(IP_PROTO_ICMP);
+      raw_recv(P089_data->m_IcmpPCB, PingReceiver, NULL);
+      raw_bind(P089_data->m_IcmpPCB, IP_ADDR_ANY);
     } else {
-      P088_data->instances++;
+      P089_data->instances++;
     }
   }
 
-  ~P088_data_struct() {
-      if (P088_data != nullptr) {
-        P088_data->instances--;
-        if (P088_data->instances == 0) {
-          raw_remove(P088_data->m_IcmpPCB);
-          delete P088_data;
-          P088_data = nullptr;
+  ~P089_data_struct() {
+      if (P089_data != nullptr) {
+        P089_data->instances--;
+        if (P089_data->instances == 0) {
+          raw_remove(P089_data->m_IcmpPCB);
+          delete P089_data;
+          P089_data = nullptr;
         }
       }
   }
@@ -78,8 +78,8 @@ public:
       return true;
     }
 
-    char hostname[PLUGIN_088_HOSTNAME_SIZE];
-    LoadCustomTaskSettings(event->TaskIndex, (byte*)&hostname, PLUGIN_088_HOSTNAME_SIZE);
+    char hostname[PLUGIN_089_HOSTNAME_SIZE];
+    LoadCustomTaskSettings(event->TaskIndex, (byte*)&hostname, PLUGIN_089_HOSTNAME_SIZE);
 
     /* This one lost as well, DNS dead? */
     if (WiFi.hostByName(hostname, ip) == false) {
@@ -116,7 +116,7 @@ public:
     echoRequestHeader->chksum = inet_chksum(echoRequestHeader, ping_len);
     ip_addr_t destIPAddress;
     destIPAddress.addr = ip;
-    raw_sendto(P088_data->m_IcmpPCB, packetBuffer, &destIPAddress);
+    raw_sendto(P089_data->m_IcmpPCB, packetBuffer, &destIPAddress);
 
     pbuf_free(packetBuffer);
 
@@ -124,7 +124,7 @@ public:
   }
 };
 
-boolean Plugin_088(byte function, struct EventStruct *event, String& string)
+boolean Plugin_089(byte function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -132,7 +132,7 @@ boolean Plugin_088(byte function, struct EventStruct *event, String& string)
   {
   case PLUGIN_DEVICE_ADD:
   {
-    Device[++deviceCount].Number = PLUGIN_ID_088;
+    Device[++deviceCount].Number = PLUGIN_ID_089;
     Device[deviceCount].Type = DEVICE_TYPE_DUMMY;
     Device[deviceCount].VType = DEVICE_TYPE_SINGLE;
     Device[deviceCount].Ports = 0;
@@ -149,38 +149,38 @@ boolean Plugin_088(byte function, struct EventStruct *event, String& string)
   case PLUGIN_GET_DEVICENAME:
   {
     //return the device name
-    string = F(PLUGIN_NAME_088);
+    string = F(PLUGIN_NAME_089);
     break;
   }
   case PLUGIN_GET_DEVICEVALUENAMES:
   {
-    strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_088));
+    strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_089));
     break;
   }
 
   case PLUGIN_WEBFORM_LOAD:
   {
-    char hostname[PLUGIN_088_HOSTNAME_SIZE];
-    LoadCustomTaskSettings(event->TaskIndex, (byte*)&hostname, PLUGIN_088_HOSTNAME_SIZE);
-    addFormTextBox(String(F("Hostname")), F("p088_ping_host"), hostname, PLUGIN_088_HOSTNAME_SIZE - 2);
+    char hostname[PLUGIN_089_HOSTNAME_SIZE];
+    LoadCustomTaskSettings(event->TaskIndex, (byte*)&hostname, PLUGIN_089_HOSTNAME_SIZE);
+    addFormTextBox(String(F("Hostname")), F("p089_ping_host"), hostname, PLUGIN_089_HOSTNAME_SIZE - 2);
     success = true;
     break;
   }
 
   case PLUGIN_WEBFORM_SAVE:
   {
-    char hostname[PLUGIN_088_HOSTNAME_SIZE];
+    char hostname[PLUGIN_089_HOSTNAME_SIZE];
     // Reset "Fails" if settings updated
     UserVar[event->BaseVarIndex] = 0;
-    strncpy(hostname,  WebServer.arg(F("p088_ping_host")).c_str() , sizeof(hostname));
-    SaveCustomTaskSettings(event->TaskIndex, (byte*)&hostname, PLUGIN_088_HOSTNAME_SIZE);
+    strncpy(hostname,  WebServer.arg(F("p089_ping_host")).c_str() , sizeof(hostname));
+    SaveCustomTaskSettings(event->TaskIndex, (byte*)&hostname, PLUGIN_089_HOSTNAME_SIZE);
     success = true;
     break;
   }
 
   case PLUGIN_INIT:
   {
-    initPluginTaskData(event->TaskIndex, new P088_data_struct());
+    initPluginTaskData(event->TaskIndex, new P089_data_struct());
     UserVar[event->BaseVarIndex] = 0;
     success = true;
     break;
@@ -194,12 +194,12 @@ boolean Plugin_088(byte function, struct EventStruct *event, String& string)
 
   case PLUGIN_READ:
   {
-    P088_data_struct *P088_taskdata =
-      static_cast<P088_data_struct *>(getPluginTaskData(event->TaskIndex));
-    if (nullptr == P088_taskdata)
+    P089_data_struct *P089_taskdata =
+      static_cast<P089_data_struct *>(getPluginTaskData(event->TaskIndex));
+    if (nullptr == P089_taskdata)
       break;
 
-    if (P088_taskdata->send_ping(event))
+    if (P089_taskdata->send_ping(event))
       UserVar[event->BaseVarIndex]++;
 
     success = true;
@@ -259,13 +259,13 @@ uint8_t PingReceiver (void *origin, struct raw_pcb *pcb, struct pbuf *packetBuff
   for (index = 0; index < TASKS_MAX; index++) {
     int plugin = getPluginId(index);
     // Match all ping plugin instances and check them
-    if (plugin > 0 && Plugin_id[plugin] == PLUGIN_ID_088) {
-      P088_data_struct *P088_taskdata = static_cast<P088_data_struct *>(getPluginTaskData(index));
-      if (P088_taskdata != nullptr && icmp_hdr->id == (uint16_t)((P088_taskdata->idseq & 0xffff0000) >> 16 ) &&
-          icmp_hdr->seqno == (uint16_t)(P088_taskdata->idseq & 0xffff) ) {
+    if (plugin > 0 && Plugin_id[plugin] == PLUGIN_ID_089) {
+      P089_data_struct *P089_taskdata = static_cast<P089_data_struct *>(getPluginTaskData(index));
+      if (P089_taskdata != nullptr && icmp_hdr->id == (uint16_t)((P089_taskdata->idseq & 0xffff0000) >> 16 ) &&
+          icmp_hdr->seqno == (uint16_t)(P089_taskdata->idseq & 0xffff) ) {
         UserVar[index * VARS_PER_TASK] = 0; // Reset "fails", we got reply
-        P088_taskdata->idseq = 0;
-        P088_taskdata->destIPAddress.addr = 0;
+        P089_taskdata->idseq = 0;
+        P089_taskdata->destIPAddress.addr = 0;
         is_found = true;
       }
     }
