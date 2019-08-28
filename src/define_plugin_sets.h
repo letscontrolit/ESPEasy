@@ -809,3 +809,15 @@ To create/register a plugin, you have to :
 #if defined(USES_C018)
   #define USES_PACKED_RAW_DATA
 #endif
+
+#if defined(USES_P085) || defined (USES_P052) || defined(USES_P078)
+  #define USES_MODBUS
+#endif
+
+#if defined(USES_C081) || defined (USES_C002) || defined(USES_P029)
+  #define USES_DOMOTICZ
+#endif
+
+#if defined(USES_C082) || defined (USES_C005) || defined(USES_C006) || defined(USES_C014)
+  #define USES_MQTT
+#endif

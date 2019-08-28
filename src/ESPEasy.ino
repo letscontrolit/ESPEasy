@@ -529,7 +529,9 @@ void loop()
   // Deep sleep mode, just run all tasks one (more) time and go back to sleep as fast as possible
   if ((firstLoopConnectionsEstablished || readyForSleep()) && isDeepSleepEnabled())
   {
+#ifdef USES_MQTT
       runPeriodicalMQTT();
+#endif //USES_MQTT
       // Now run all frequent tasks
       run50TimesPerSecond();
       run10TimesPerSecond();
@@ -555,25 +557,32 @@ void loop()
 
 void flushAndDisconnectAllClients() {
   if (anyControllerEnabled()) {
+#ifdef USES_MQTT
     bool mqttControllerEnabled = firstEnabledMQTTController() >= 0;
+#endif //USES_MQTT
     unsigned long timer = millis() + 1000;
     while (!timeOutReached(timer)) {
       // call to all controllers (delay queue) to flush all data.
       CPluginCall(CPLUGIN_FLUSH, 0);
+#ifdef USES_MQTT      
       if (mqttControllerEnabled && MQTTclient.connected()) {
         MQTTclient.loop();
       }
+#endif //USES_MQTT      
     }
+#ifdef USES_MQTT    
     if (mqttControllerEnabled && MQTTclient.connected()) {
       MQTTclient.disconnect();
       updateMQTTclient_connected();
     }
+#endif USES_MQTT      
     saveToRTC();
     delay(100); // Flush anything in the network buffers.
   }
   process_serialWriteBuffer();
 }
 
+#ifdef USES_MQTT
 void runPeriodicalMQTT() {
   // MQTT_KEEPALIVE = 15 seconds.
   if (!WiFiConnected(10)) {
@@ -634,6 +643,7 @@ int firstEnabledMQTTController() {
   }
   return -1;
 }
+#endif //USES_MQTT
 
 
 /*********************************************************************************************\

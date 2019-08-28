@@ -1597,7 +1597,9 @@ void addToLog(byte logLevel, const char *line)
   \*********************************************************************************************/
 void prepareShutdown()
 {
+#ifdef USES_MQTT
   runPeriodicalMQTT();  // Flush outstanding MQTT messages
+#endif //USES_MQTT
   process_serialWriteBuffer();
   flushAndDisconnectAllClients();
   saveUserVarToRTC();
