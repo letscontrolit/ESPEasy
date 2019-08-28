@@ -214,7 +214,9 @@ void process_interval_timer(unsigned long id, unsigned long lasttimer) {
       break;
     case TIMER_1SEC:             runOncePerSecond();      break;
     case TIMER_30SEC:            runEach30Seconds();      break;
+#ifdef USES_MQTT
     case TIMER_MQTT:             runPeriodicalMQTT();     break;
+#endif //USES_MQTT    
     case TIMER_STATISTICS:       logTimerStatistics();    break;
     case TIMER_GRATUITOUS_ARP:
 
@@ -229,7 +231,9 @@ void process_interval_timer(unsigned long id, unsigned long lasttimer) {
         sendGratuitousARP();
       }
       break;
+#ifdef USES_MQTT      
     case TIMER_MQTT_DELAY_QUEUE: processMQTTdelayQueue(); break;
+#endif //USES_MQTT
   #ifdef USES_C001
     case TIMER_C001_DELAY_QUEUE:
       process_c001_delay_queue();
@@ -456,6 +460,7 @@ void schedule_all_task_device_timers() {
   }
 }
 
+#ifdef USES_MQTT
 void schedule_all_tasks_using_MQTT_controller() {
   int ControllerIndex = firstEnabledMQTTController();
 
@@ -470,6 +475,7 @@ void schedule_all_tasks_using_MQTT_controller() {
     }
   }
 }
+#endif //USES_MQTT
 
 void schedule_task_device_timer(unsigned long task_index, unsigned long runAt) {
   /*

@@ -1,3 +1,4 @@
+#ifdef USES_DOMOTICZ
 // HUM_STAT can be one of:
 
 // 0=Normal
@@ -167,3 +168,4 @@ String formatDomoticzSensorType(struct EventStruct *event) {
   }
   return values;
 }
+#endif // USES_DOMOTICZ

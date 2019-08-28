@@ -1,3 +1,4 @@
+#ifdef USES_MODBUS
 #include <Arduino.h>
 #include <ESPeasySerial.h>
 
@@ -775,3 +776,4 @@ private:
 
   ESPeasySerial *easySerial;
 };
+#endif //USES_MODBUS
