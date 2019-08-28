@@ -575,7 +575,7 @@ void flushAndDisconnectAllClients() {
       MQTTclient.disconnect();
       updateMQTTclient_connected();
     }
-#endif USES_MQTT      
+#endif //USES_MQTT      
     saveToRTC();
     delay(100); // Flush anything in the network buffers.
   }
