@@ -251,10 +251,12 @@ void processGotIP() {
   if (systemTimePresent()) {
     initTime();
   }
+#ifdef USES_MQTT
   mqtt_reconnect_count        = 0;
   MQTTclient_should_reconnect = true;
   timermqtt_interval          = 100;
   setIntervalTimer(TIMER_MQTT);
+#endif //USES_MQTT
   sendGratuitousARP_now();
 
   if (Settings.UseRules)

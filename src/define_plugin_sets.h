@@ -793,11 +793,12 @@ To create/register a plugin, you have to :
   #define DISABLE_SOFTWARE_SERIAL
 #endif
 
-
+#ifdef USES_MQTT
 // MQTT_MAX_PACKET_SIZE : Maximum packet size
 #ifndef MQTT_MAX_PACKET_SIZE
   #define MQTT_MAX_PACKET_SIZE 1024 // Is also used in PubSubClient
 #endif
+#endif //USES_MQTT
 
 /*
 #if defined(USES_P00x) || defined(USES_P00y)
@@ -818,6 +819,6 @@ To create/register a plugin, you have to :
   #define USES_DOMOTICZ
 #endif
 
-#if defined(USES_C002) || defined (USES_C005) || defined(USES_C006) || defined(USES_C014)
+#if defined(USES_C002) || defined (USES_C005) || defined(USES_C006) || defined(USES_C014) || defined(USES_P037)
   #define USES_MQTT
 #endif
