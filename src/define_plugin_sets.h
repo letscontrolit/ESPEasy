@@ -818,6 +818,6 @@ To create/register a plugin, you have to :
   #define USES_DOMOTICZ
 #endif
 
-#if defined(USES_C001) || defined(USES_C002) || defined (USES_C005) || defined(USES_C006) || defined(USES_C014)
+#if defined(USES_C002) || defined (USES_C005) || defined(USES_C006) || defined(USES_C014)
   #define USES_MQTT
 #endif
