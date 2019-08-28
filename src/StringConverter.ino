@@ -216,7 +216,7 @@ String doFormatUserVar(struct EventStruct *event, byte rel_index, bool mustCheck
 
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
       String log = F("Invalid float value for TaskIndex: ");
-      log += TaskIndex;
+      log += event->TaskIndex;
       log += F(" varnumber: ");
       log += rel_index;
       addLog(LOG_LEVEL_DEBUG, log);

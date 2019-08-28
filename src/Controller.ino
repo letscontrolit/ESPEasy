@@ -98,6 +98,7 @@ bool validUserVar(struct EventStruct *event) {
   return true;
 }
 
+#ifdef USES_MQTT
 /*********************************************************************************************\
 * Handle incoming MQTT messages
 \*********************************************************************************************/
@@ -321,6 +322,7 @@ bool MQTTCheck(int controller_idx)
   // When no MQTT protocol is enabled, all is fine.
   return true;
 }
+#endif //USES_MQTT
 
 /*********************************************************************************************\
 * Send status info to request source
@@ -347,15 +349,18 @@ void SendStatus(byte source, const String& status)
         printWebString += status;
       }
       break;
+#ifdef USES_MQTT
     case VALUE_SOURCE_MQTT:
       MQTTStatus(status);
       break;
+#endif //USES_MQTT
     case VALUE_SOURCE_SERIAL:
       serialPrintln(status);
       break;
   }
 }
 
+#ifdef USES_MQTT
 boolean MQTTpublish(int controller_idx, const char *topic, const char *payload, boolean retained)
 {
   const bool success = MQTTDelayHandler.addToQueue(MQTT_queue_element(controller_idx, topic, payload, retained));
@@ -409,3 +414,4 @@ void MQTTStatus(const String& status)
     MQTTpublish(enabledMqttController, pubname.c_str(), status.c_str(), Settings.MQTTRetainFlag);
   }
 }
+#endif //USES_MQTT

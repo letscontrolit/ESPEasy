@@ -520,13 +520,13 @@ boolean Plugin_082(byte function, struct EventStruct *event, String& string) {
       }
       break;
     }
+#ifdef USES_PACKED_RAW_DATA
     case PLUGIN_GET_PACKED_RAW_DATA:
     {
       P082_data_struct *P082_data =
         static_cast<P082_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if ((nullptr != P082_data) && P082_data->isInitialized()) {
-        #ifdef USES_PACKED_RAW_DATA
         // Matching JS code:
         // return decode(bytes, [header, latLng, latLng, altitude, uint16_1e2, hdop, uint8, uint8],
         //      ['header', 'latitude', 'longitude', 'altitude', 'speed', 'hdop', 'max_snr', 'sat_tracked']);
@@ -541,10 +541,11 @@ boolean Plugin_082(byte function, struct EventStruct *event, String& string) {
         event->Par1 = 7; // valuecount 7 
         
         success = true;
-        #endif // USES_PACKED_RAW_DATA
       }
       break;
     }
+#endif // USES_PACKED_RAW_DATA
+
   }
   return success;
 }

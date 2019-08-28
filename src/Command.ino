@@ -5,7 +5,9 @@
 #include "Commands/Diagnostic.h"
 #include "Commands/HTTP.h"
 #include "Commands/i2c.h"
+#ifdef USES_MQTT
 #include "Commands/MQTT.h"
+#endif //USES_MQTT
 #include "Commands/Networks.h"
 #include "Commands/Notifications.h"
 #include "Commands/RTC.h"
@@ -104,8 +106,10 @@ String doExecuteCommand(const char *cmd, struct EventStruct *event, const char *
       COMMAND_CASE("malloc",         Command_Malloc);            // Diagnostic.h
       COMMAND_CASE("meminfo",        Command_MemInfo);           // Diagnostic.h
       COMMAND_CASE("meminfodetail",  Command_MemInfo_detail);    // Diagnostic.h
+#ifdef USES_MQTT      
       COMMAND_CASE("messagedelay",   Command_MQTT_messageDelay); // MQTT.h
       COMMAND_CASE("mqttretainflag", Command_MQTT_Retain);       // MQTT.h
+#endif //USES_MQTT
       break;
     }
     case 'n': {
@@ -117,7 +121,9 @@ String doExecuteCommand(const char *cmd, struct EventStruct *event, const char *
     }
     case 'p': {
       COMMAND_CASE("password", Command_Settings_Password); // Settings.h
+#ifdef USES_MQTT
       COMMAND_CASE("publish",  Command_MQTT_Publish);      // MQTT.h
+#endif //USES_MQTT
       break;
     }
     case 'r': {
