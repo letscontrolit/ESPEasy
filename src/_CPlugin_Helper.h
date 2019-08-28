@@ -46,21 +46,16 @@ public:
 };
 
 
-#ifdef USES_C001
 /*********************************************************************************************\
 * C001_queue_element for queueing requests for C001.
 \*********************************************************************************************/
 #define C001_queue_element simple_queue_element_string_only
-#endif //USES_C001
 
-#ifdef USES_C003
 /*********************************************************************************************\
 * C003_queue_element for queueing requests for C003 Nodo Telnet.
 \*********************************************************************************************/
 #define C003_queue_element simple_queue_element_string_only
-#endif //USES_C003
 
-#ifdef USES_C004
 /*********************************************************************************************\
 * C004_queue_element for queueing requests for C004 ThingSpeak.
 *   Typical use case for Thingspeak is to only send values every N seconds/minutes.
@@ -91,9 +86,7 @@ public:
   byte sensorType;
   String txt;
 };
-#endif //USES_C004
 
-#ifdef USES_C007
 /*********************************************************************************************\
 * C007_queue_element for queueing requests for C007 Emoncms
 \*********************************************************************************************/
@@ -117,7 +110,6 @@ public:
   int idx;
   byte sensorType;
 };
-#endif //USES_C007
 
 /*********************************************************************************************\
 * Base class for controllers that only send a single value per request and thus needs to
@@ -158,15 +150,12 @@ public:
 };
 
 
-#ifdef USES_C008
 /*********************************************************************************************\
 * C008_queue_element for queueing requests for 008: Generic HTTP
 * Using queue_element_single_value_base
 \*********************************************************************************************/
 #define C008_queue_element queue_element_single_value_base
-#endif //USES_C008
 
-#ifdef USES_C009
 /*********************************************************************************************\
 * C009_queue_element for queueing requests for C009: FHEM HTTP.
 \*********************************************************************************************/
@@ -196,33 +185,25 @@ public:
   int idx;
   byte sensorType;
 };
-#endif //USES_C009
 
 
-#ifdef USES_C010
 /*********************************************************************************************\
 * C010_queue_element for queueing requests for 010: Generic UDP
 * Using queue_element_single_value_base
 \*********************************************************************************************/
 #define C010_queue_element queue_element_single_value_base
-#endif //USES_C010
 
-#ifdef USES_C011
 /*********************************************************************************************\
 * C011_queue_element for queueing requests for 011: Generic HTTP Advanced
 \*********************************************************************************************/
 #define C011_queue_element simple_queue_element_string_only
-#endif //USES_C011
 
-#ifdef USES_C012
 /*********************************************************************************************\
 * C012_queue_element for queueing requests for 012: Blynk
 * Using queue_element_single_value_base
 \*********************************************************************************************/
 #define C012_queue_element queue_element_single_value_base
-#endif //USES_C012
 
-#ifdef USES_C015
 /*********************************************************************************************\
 * C015_queue_element for queueing requests for 015: Blynk
 * Using queue_element_single_value_base
@@ -263,9 +244,7 @@ public:
   mutable byte valuesSent; // Value must be set by const function checkDone()
   byte valueCount;
 };
-#endif //USES_C015
 
-#ifdef USES_C016
 /*********************************************************************************************\
 * C016_queue_element for queueing requests for C016: Cached HTTP.
 \*********************************************************************************************/
@@ -304,9 +283,7 @@ public:
   byte valueCount;
 };
 
-#endif //USES_C016
 
-#ifdef USES_C017
 /*********************************************************************************************\
 * C017_queue_element for queueing requests for C017: Zabbix Trapper Protocol.
 \*********************************************************************************************/
@@ -336,9 +313,7 @@ public:
   int idx;
   byte sensorType;
 };
-#endif //USES_C017
 
-#ifdef USES_C018
 /*********************************************************************************************\
 * C018_queue_element for queueing requests for C018: TTN/RN2483
 \*********************************************************************************************/
@@ -366,7 +341,6 @@ public:
   String packed;
 };
 
-#endif //USES_C018
 
 /*********************************************************************************************\
 * ControllerDelayHandlerStruct
