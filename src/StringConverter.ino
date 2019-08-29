@@ -216,7 +216,7 @@ String doFormatUserVar(struct EventStruct *event, byte rel_index, bool mustCheck
 
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
       String log = F("Invalid float value for TaskIndex: ");
-      log += TaskIndex;
+      log += event->TaskIndex;
       log += F(" varnumber: ");
       log += rel_index;
       addLog(LOG_LEVEL_DEBUG, log);
@@ -698,7 +698,9 @@ void parseSystemVariables(String& s, boolean useURLencode)
   SMART_REPL_T(F("%sunrise"), replSunRiseTimeString)
 
   if (s.indexOf(F("%is")) != -1) {
+#ifdef USES_MQTT
     SMART_REPL(F("%ismqtt%"),    String(MQTTclient_connected));
+#endif    
     SMART_REPL(F("%iswifi%"),    String(wifiStatus)); // 0=disconnected, 1=connected, 2=got ip, 3=services initialized
     SMART_REPL(F("%isntp%"),     String(statusNTPInitialized));
     #ifdef USES_P037

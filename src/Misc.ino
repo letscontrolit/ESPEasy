@@ -31,6 +31,7 @@ String getSettingsTypeString(SettingsType settingsType) {
   return "";
 }
 
+#ifdef USES_MQTT
 String getMQTT_state() {
   switch (MQTTclient.state()) {
     case MQTT_CONNECTION_TIMEOUT     : return F("Connection timeout");
@@ -47,6 +48,7 @@ String getMQTT_state() {
   }
   return "";
 }
+#endif //USES_MQTT
 
 /********************************************************************************************\
   Get system information
@@ -1597,7 +1599,9 @@ void addToLog(byte logLevel, const char *line)
   \*********************************************************************************************/
 void prepareShutdown()
 {
+#ifdef USES_MQTT
   runPeriodicalMQTT();  // Flush outstanding MQTT messages
+#endif //USES_MQTT
   process_serialWriteBuffer();
   flushAndDisconnectAllClients();
   saveUserVarToRTC();
