@@ -16,6 +16,10 @@
   # endif // if !defined(ARDUINO_ESP8266_RELEASE_2_4_0) && !defined(ARDUINO_ESP8266_RELEASE_2_3_0)
 #endif // ifdef ESP8266
 
+#ifdef ESP32
+#define SUPPORT_ARP
+#endif
+
 #ifdef SUPPORT_ARP
 # include <lwip/etharp.h>
 #endif // ifdef SUPPORT_ARP
@@ -918,7 +922,11 @@ void sendGratuitousARP() {
   netif *n = netif_list;
 
   while (n) {
-    etharp_gratuitous(n);
+    if ((n->hwaddr_len == ETH_HWADDR_LEN) && 
+        (n->flags & NETIF_FLAG_ETHARP) && 
+        ((n->flags & NETIF_FLAG_LINK_UP) || (n->flags & NETIF_FLAG_UP))) {
+      etharp_gratuitous(n);
+    }
     n = n->next;
   }
   STOP_TIMER(GRAT_ARP_STATS);
