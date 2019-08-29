@@ -435,6 +435,9 @@ void WebServerInit()
 
 
   WebServer.on(F("/factoryreset"),  handle_factoryreset);
+  #ifdef CORE_POST_2_5_0
+  WebServer.on(F("/settingsarchive"), handle_settingsarchive);
+  #endif
   WebServer.on(F("/favicon.ico"),   handle_favicon);
   WebServer.on(F("/filelist"),      handle_filelist);
   WebServer.on(F("/hardware"),      handle_hardware);

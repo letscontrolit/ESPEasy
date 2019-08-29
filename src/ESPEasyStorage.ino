@@ -73,6 +73,13 @@ fs::File tryOpenFile(const String& fname, const String& mode) {
   return f;
 }
 
+bool tryRenameFile(const String& fname_old, const String& fname_new) {
+  if (fileExists(fname_old) && !fileExists(fname_new)) {
+    return SPIFFS.rename(fname_old, fname_new);
+  }
+  return false;
+}
+
 bool tryDeleteFile(const String& fname) {
   if (fname.length() > 0)
   {
@@ -190,6 +197,8 @@ void fileSystemCheck()
     ResetFactory();
   }
 }
+
+
 
 /********************************************************************************************\
    Garbage collection

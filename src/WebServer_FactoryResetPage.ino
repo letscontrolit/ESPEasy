@@ -22,28 +22,13 @@ void handle_factoryreset() {
     }
   }
 
-  if (WebServer.hasArg("kun")) {
-    ResetFactoryDefaultPreference.keepUnitName(isFormItemChecked("kun"));
-  }
-
-  if (WebServer.hasArg("kw")) {
-    ResetFactoryDefaultPreference.keepWiFi(isFormItemChecked("kw"));
-  }
-
-  if (WebServer.hasArg("knet")) {
-    ResetFactoryDefaultPreference.keepNetwork(isFormItemChecked("knet"));
-  }
-
-  if (WebServer.hasArg("kntp")) {
-    ResetFactoryDefaultPreference.keepNTP(isFormItemChecked("kntp"));
-  }
-
-  if (WebServer.hasArg("klog")) {
-    ResetFactoryDefaultPreference.keepLogSettings(isFormItemChecked("klog"));
-  }
-
   if (WebServer.hasArg(F("savepref"))) {
     // User choose a pre-defined config and wants to save it as the new default.
+    ResetFactoryDefaultPreference.keepUnitName(isFormItemChecked("kun"));
+    ResetFactoryDefaultPreference.keepWiFi(isFormItemChecked("kw"));
+    ResetFactoryDefaultPreference.keepNetwork(isFormItemChecked("knet"));
+    ResetFactoryDefaultPreference.keepNTP(isFormItemChecked("kntp"));
+    ResetFactoryDefaultPreference.keepLogSettings(isFormItemChecked("klog"));
     applyFactoryDefaultPref();
     addHtmlError(SaveSettings());
   }
