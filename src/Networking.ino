@@ -946,7 +946,7 @@ void sendGratuitousARP() {
   while (n) {
     if ((n->hwaddr_len == ETH_HWADDR_LEN) && 
         (n->flags & NETIF_FLAG_ETHARP) && 
-        ((n->flags & NETIF_FLAG_LINK_UP) || (n->flags & NETIF_FLAG_UP))) {
+        ((n->flags & NETIF_FLAG_LINK_UP) && (n->flags & NETIF_FLAG_UP))) {
       #ifdef ESP32
         etharp_gratuitous_r(n);
       #else
