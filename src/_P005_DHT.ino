@@ -159,6 +159,7 @@ bool P005_do_plugin_read(struct EventStruct *event) {
   }
   
   digitalWrite(Plugin_005_DHT_Pin, HIGH);
+  pinMode(Plugin_005_DHT_Pin, INPUT);
   
   switch (Par3) {
     case P005_DHT11:
@@ -173,8 +174,6 @@ bool P005_do_plugin_read(struct EventStruct *event) {
       break;
   }
   
-  pinMode(Plugin_005_DHT_Pin, INPUT);
-
   if(!P005_waitState(0)) {P005_log(event, P005_error_no_reading); return false; }
   if(!P005_waitState(1)) {P005_log(event, P005_error_no_reading); return false; }
   noInterrupts();
