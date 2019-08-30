@@ -158,8 +158,7 @@ bool P005_do_plugin_read(struct EventStruct *event) {
     case P005_SI7021: delayMicroseconds(500); break;
   }
   
-  digitalWrite(Plugin_005_DHT_Pin, HIGH);
-  pinMode(Plugin_005_DHT_Pin, INPUT);
+  pinMode(Plugin_005_DHT_Pin, INPUT_PULLUP);
   
   switch (Par3) {
     case P005_DHT11:
