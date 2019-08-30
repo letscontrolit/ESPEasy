@@ -45,3 +45,15 @@
 .. |P086_maintainer| replace:: `.`
 .. |P086_compileinfo| replace:: `.`
 .. |P086_usedlibraries| replace:: `.`
+
+.. |P088_name| replace:: :cyan:`HeatpumpIR`
+.. |P088_type| replace:: :cyan:`Communication`
+.. |P088_typename| replace:: :cyan:`Communication - HeatpumpIR`
+.. |P088_status| replace:: :yellow:`TESTING`
+.. |P088_github| replace:: P088_HeatpumpIR.ino
+.. _P088_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P088_HeatpumpIR.ino
+.. |P088_usedby| replace:: `.`
+.. |P088_shortinfo| replace:: `Sends air conditioner / heatpump infrared commands.`
+.. |P088_maintainer| replace:: `.`
+.. |P088_compileinfo| replace:: `.`
+.. |P088_usedlibraries| replace:: https://github.com/ToniA/arduino-heatpumpir
