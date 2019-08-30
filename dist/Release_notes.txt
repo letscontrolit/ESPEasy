@@ -1,4 +1,35 @@
 -------------------------------------------------
+Changes in release mega-20190830 (since mega-20190827)
+-------------------------------------------------
+
+Release date: Fri Aug 30 04:00:13 CEST 2019
+
+Bartłomiej Zimoń (2):
+      [DHT] start conversion improvements
+      [DHT] fix timeout reading
+
+Gijs Noorlander (9):
+      [Settings Archive] Allow to download settings from some HTTP archive
+      [Settings Archive] Documentation
+      [Settings Archive] Only allow on core 2.5.0 and newer
+      [Gratuitous ARP] Only send ARP packets when IF is up
+      [PlatformIO] Changes for core 2.6.0 (Tasmota patched core)
+      [Settings Archive] Allow to download settings from some HTTP archive
+      [Settings Archive] Documentation
+      [Settings Archive] Only allow on core 2.5.0 and newer
+      Move dev build to core 2.6.0 (to make it fit)
+
+stefan (7):
+      Reduce bin size by excluding unneded parts
+      Reduce bin size -- Typos.
+      Reduce bin size -- changed macro definitions
+      Reduce bin size -- add PubSubClient to #ifdef's
+      Reduce bin size -- cast blynk code
+      Reduce bin size -- enable all controller structs again
+      Revert "Reduce bin size -- cast blynk code"
+
+
+-------------------------------------------------
 Changes in release mega-20190827 (since mega-20190823)
 -------------------------------------------------
 
