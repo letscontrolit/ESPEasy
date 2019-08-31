@@ -49,16 +49,16 @@ for ENV in \
   hard_core_252_Shelly_1_2M256\
   hard_core_252_other_POW_ESP8285_1M\
   hard_other_POW_ESP8285_1M\
+  minimal_IRext_ESP8266_1M\
+  minimal_IRext_ESP8266_4M\
   minimal_core_242_ESP8266_1M_OTA\
   minimal_core_242_ESP8285_1M_OTA\
   minimal_core_252_ESP8266_1M_OTA\
   minimal_core_252_ESP8285_1M_OTA\
-  minimal_IRext_ESP8266_1M\
   normal_ESP8266_1M\
   normal_ESP8266_1M_VCC\
   normal_ESP8266_4M\
   normal_ESP8285_1M\
-  normal_IRext_ESP8266_4M\
   normal_WROOM02_2M\
   normal_core_241_ESP8266_1M\
   normal_core_241_ESP8266_4M\
