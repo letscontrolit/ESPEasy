@@ -1,15 +1,6 @@
-
-
-void addSelector(const String& id,
-                 int           optionCount,
-                 const String  options[],
-                 const int     indices[],
-                 const String  attr[],
-                 int           selectedIndex,
-                 boolean       reloadonchange) {
-  addSelector(id, optionCount, options, indices, attr, selectedIndex, reloadonchange, true);
-}
-
+// ********************************************************************************
+// Add Selector
+// ********************************************************************************
 void addSelector(const String& id,
                  int           optionCount,
                  const String  options[],
@@ -123,11 +114,6 @@ void addUnit(const String& unit)
   TXBuffer += "]";
 }
 
-void addRowLabel(const String& label)
-{
-  addRowLabel(label, "");
-}
-
 void addRowLabel_tr_id(const String& label, const String& id)
 {
   String tr_id = F("tr_");
@@ -174,10 +160,6 @@ void addRowLabelValue_copy(LabelType::Enum label) {
 // ********************************************************************************
 // Add a header
 // ********************************************************************************
-void addTableSeparator(const String& label, int colspan, int h_size) {
-  addTableSeparator(label, colspan, h_size, "");
-}
-
 void addTableSeparator(const String& label, int colspan, int h_size, const String& helpButton) {
   TXBuffer += F("<TR><TD colspan=");
   TXBuffer += colspan;
@@ -201,10 +183,6 @@ void addFormHeader(const String& header, const String& helpButton)
   html_table_header("");
 }
 
-void addFormHeader(const String& header)
-{
-  addFormHeader(header, "");
-}
 
 // ********************************************************************************
 // Add a sub header
@@ -217,10 +195,6 @@ void addFormSubHeader(const String& header)
 // ********************************************************************************
 // Add a checkbox
 // ********************************************************************************
-void addCheckBox(const String& id, boolean checked) {
-  addCheckBox(id, checked, false);
-}
-
 void addCheckBox(const String& id, boolean checked, bool disabled)
 {
   TXBuffer += F("<label class='container'>&nbsp;");
@@ -266,11 +240,6 @@ void addNumericBox(const String& id, int value, int min, int max)
   TXBuffer += '>';
 }
 
-void addNumericBox(const String& id, int value)
-{
-  addNumericBox(id, value, INT_MIN, INT_MAX);
-}
-
 void addFloatNumberBox(const String& id, float value, float min, float max)
 {
   TXBuffer += F("<input type='number' name='");
@@ -289,7 +258,6 @@ void addFloatNumberBox(const String& id, float value, float min, float max)
 // ********************************************************************************
 // Add Textbox
 // ********************************************************************************
-
 void addTextBox(const String& id, const String&  value, int maxlength, bool readonly, bool required, const String& pattern)
 {
   TXBuffer += F("<input class='wide' type='text' name='");
@@ -316,20 +284,36 @@ void addTextBox(const String& id, const String&  value, int maxlength, bool read
   TXBuffer += '>';
 }
 
-void addTextBox(const String& id, const String&  value, int maxlength)
+// ********************************************************************************
+// Add Textarea
+// ********************************************************************************
+void addTextArea(const String& id, const String& value, int maxlength, int rows, int columns, bool readonly, bool required)
 {
-  addTextBox(id, value, maxlength, false);
+  TXBuffer += F("<textarea class='wide' type='text' name='");
+  TXBuffer += id;
+  TXBuffer += F("' maxlength=");
+  TXBuffer += maxlength;
+  TXBuffer += F("' rows=");
+  TXBuffer += rows;
+  TXBuffer += F("' cols=");
+  TXBuffer += columns;
+  TXBuffer += '\'';
+
+  if (readonly) {
+    TXBuffer += F(" readonly ");
+  }
+
+  if (required) {
+    TXBuffer += F(" required ");
+  }
+  TXBuffer += '>';
+  TXBuffer += value;
+  TXBuffer += F("</textarea>");
 }
 
-void addTextBox(const String& id, const String&  value, int maxlength, bool readonly)
-{
-  addTextBox(id, value, maxlength, false, false, "");
-}
-
-void addTextBox(const String& id, const String&  value, int maxlength, bool readonly, bool required)
-{
-  addTextBox(id, value, maxlength, false, false, "");
-}
+// ********************************************************************************
+// Add Help Buttons
+// ********************************************************************************
 
 // adds a Help Button with points to the the given Wiki Subpage
 // If url starts with "RTD", it will be considered as a Read-the-docs link

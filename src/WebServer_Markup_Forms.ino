@@ -12,12 +12,6 @@ void addFormSeparator(int clspan)
 // ********************************************************************************
 // Add a note as row start
 // ********************************************************************************
-void addFormNote(const String& text)
-{
-  addFormNote(text, "");
-}
-
-
 void addFormNote(const String& text, const String& id)
 {
   addRowLabel_tr_id("", id);
@@ -34,10 +28,6 @@ void addFormNote(const String& text, const String& id)
 // ********************************************************************************
 // Add a checkbox Form
 // ********************************************************************************
-
-void addFormCheckBox(const String& label, const String& id, boolean checked) {
-  addFormCheckBox(label, id, checked, false);
-}
 
 void addFormCheckBox_disabled(const String& label, const String& id, boolean checked) {
   addFormCheckBox(label, id, checked, true);
@@ -60,16 +50,10 @@ void addFormCheckBox_disabled(LabelType::Enum label, boolean checked) {
 // ********************************************************************************
 // Add a Numeric Box form
 // ********************************************************************************
-
 void addFormNumericBox(const String& label, const String& id, int value, int min, int max)
 {
   addRowLabel_tr_id(label, id);
   addNumericBox(id, value, min, max);
-}
-
-void addFormNumericBox(const String& label, const String& id, int value)
-{
-  addFormNumericBox(label, id, value, INT_MIN, INT_MAX);
 }
 
 void addFormFloatNumberBox(const String& label, const String& id, float value, float min, float max)
@@ -91,25 +75,6 @@ void addTaskSelectBox(const String& label, const String& id, int choice)
 // ********************************************************************************
 // Add a Text Box form
 // ********************************************************************************
-
-void addFormTextBox(const String& label, const String& id, const String&  value, int maxlength)
-{
-  addRowLabel_tr_id(label, id);
-  addTextBox(id, value, maxlength);
-}
-
-void addFormTextBox(const String& label, const String& id, const String&  value, int maxlength, bool readonly)
-{
-  addRowLabel_tr_id(label, id);
-  addTextBox(id, value, maxlength, readonly);
-}
-
-void addFormTextBox(const String& label, const String& id, const String&  value, int maxlength, bool readonly, bool required)
-{
-  addRowLabel_tr_id(label, id);
-  addTextBox(id, value, maxlength, readonly, required);
-}
-
 void addFormTextBox(const String& label,
                     const String& id,
                     const String& value,
@@ -120,6 +85,19 @@ void addFormTextBox(const String& label,
 {
   addRowLabel_tr_id(label, id);
   addTextBox(id, value, maxlength, readonly, required, pattern);
+}
+
+void addFormTextArea(const String& label,
+                    const String& id,
+                    const String& value,
+                    int           maxlength,
+                    int           rows, 
+                    int           columns,
+                    bool          readonly,
+                    bool          required)
+{
+  addRowLabel_tr_id(label, id);
+  addTextArea(id, value, maxlength, rows, columns, readonly, required);
 }
 
 // ********************************************************************************

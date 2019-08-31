@@ -76,12 +76,12 @@ bool CPlugin_011(byte function, struct EventStruct *event, String& string)
         {
           String escapeBuffer = customConfig.HttpHeader;
           htmlEscape(escapeBuffer);
-          addFormTextBox(F("HTTP Header"), F("P011httpheader"), escapeBuffer, C011_HTTP_HEADER_MAX_LEN-1);
+          addFormTextArea(F("HTTP Header"), F("P011httpheader"), escapeBuffer, C011_HTTP_HEADER_MAX_LEN-1, 4, 50);
         }
         {
           String escapeBuffer = customConfig.HttpBody;
           htmlEscape(escapeBuffer);
-          addFormTextBox(F("HTTP Body"), F("P011httpbody"), escapeBuffer, C011_HTTP_BODY_MAX_LEN-1);
+          addFormTextArea(F("HTTP Body"), F("P011httpbody"), escapeBuffer, C011_HTTP_BODY_MAX_LEN-1, 8, 50);
         }
         break;
       }
