@@ -1,6 +1,7 @@
 #ifndef WEBSERVER_FWD_DECL_H
 #define WEBSERVER_FWD_DECL_H
 
+#include "limits.h"
 #include "StringProviderTypes.h"
 
 

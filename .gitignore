@@ -28,3 +28,7 @@ docs/build/
 \.pio/
 
 docs/source/_build/
+
+venv/
+
+.idea/
