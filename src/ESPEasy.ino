@@ -379,13 +379,6 @@ void setup()
 }
 
 #ifdef USE_RTOS_MULTITASKING
-void RTOS_TaskServers( void * parameter );
-void RTOS_TaskSerial( void * parameter );
-void RTOS_Task10ps( void * parameter );
-void RTOS_HandleSchedule( void * parameter );
-#endif
-
-#ifdef USE_RTOS_MULTITASKING
 void RTOS_TaskServers( void * parameter )
 {
  while (true){

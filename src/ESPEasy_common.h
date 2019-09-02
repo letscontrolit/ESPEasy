@@ -18,16 +18,7 @@ namespace std
 /*********************************************************************************************\
    Bitwise operators
   \*********************************************************************************************/
-static bool getBitFromUL(uint32_t number, byte bitnr);
-static void setBitToUL(uint32_t& number, byte bitnr, bool value);
-
-bool getBitFromUL(uint32_t number, byte bitnr) {
-  return (number >> bitnr) & 1UL;
-}
-
-void setBitToUL(uint32_t& number, byte bitnr, bool value) {
-  uint32_t newbit = value ? 1UL : 0UL;
-  number ^= (-newbit ^ number) & (1UL << bitnr);
-}
+bool getBitFromUL(uint32_t number, byte bitnr);
+void setBitToUL(uint32_t& number, byte bitnr, bool value);
 
 #endif // ESPEASY_COMMON_H
