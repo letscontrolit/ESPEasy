@@ -1,6 +1,9 @@
 #ifndef CPLUGIN_HELPER_H
 #define CPLUGIN_HELPER_H CPLUGIN_HELPER_H
 
+#include "DataStructs/ControllerSettingsStruct.h"
+#include "ESPEasy_fdwdecl.h"
+
 // These element classes should be defined as class, to be used as template.
 
 /*********************************************************************************************\
@@ -343,6 +346,9 @@ public:
 * C018_queue_element for queueing requests for C018: TTN/RN2483
 \*********************************************************************************************/
 
+#ifdef USES_PACKED_RAW_DATA
+String getPackedFromPlugin(struct EventStruct *event, uint8_t sampleSetCount);
+#endif // USES_PACKED_RAW_DATA
 
 
 class C018_queue_element {

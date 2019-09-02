@@ -1,6 +1,10 @@
 #ifndef ESPEASY_FWD_DECL_H
 #define ESPEASY_FWD_DECL_H
 
+
+// FIXME TD-er: This header file should only be included from .ino or .cpp files
+// This is only needed until the classes that need these can include the appropriate .h files to have these forward declared.
+
 #if defined(ESP8266)
 //  #include <lwip/init.h>
   #include <ESP8266WiFi.h>
@@ -14,6 +18,7 @@
 #include "I2CTypes.h"
 #include "I2Cdev.h"
 
+#include <FS.h>
 
 
 // Forward declaration
@@ -30,9 +35,6 @@ void backgroundtasks();
 uint32_t getCurrentFreeStack();
 uint32_t getFreeStackWatermark();
 bool canYield();
-
-bool getBitFromUL(uint32_t number, byte bitnr);
-void setBitToUL(uint32_t& number, byte bitnr, bool value);
 
 void serialHelper_getGpioNames(struct EventStruct *event, bool rxOptional=false, bool txOptional=false);
 
@@ -61,11 +63,40 @@ int32_t I2C_read24_reg(uint8_t i2caddr, byte reg);
 uint16_t I2C_read16_LE_reg(uint8_t i2caddr, byte reg);
 int16_t I2C_readS16_reg(uint8_t i2caddr, byte reg);
 int16_t I2C_readS16_LE_reg(uint8_t i2caddr, byte reg);
-I2Cdev i2cdev;
+
 
 
 bool safe_strncpy(char* dest, const String& source, size_t max_size);
 bool safe_strncpy(char* dest, const char* source, size_t max_size);
 
+
+
+
+void rulesProcessing(String& event);
+void setIntervalTimer(unsigned long id);
+byte getProtocolIndex(byte Number);
+
+#ifdef USES_PACKED_RAW_DATA
+// Forward declarations PackedData related functions
+typedef uint32_t PackedData_enum;
+uint8_t getPackedDataTypeSize(PackedData_enum dtype, float& factor, float& offset);
+void LoRa_uintToBytes(uint64_t value, uint8_t byteSize, byte *data, uint8_t& cursor);
+String LoRa_base16Encode(byte *data, size_t size);
+String LoRa_addInt(uint64_t value, PackedData_enum datatype);
+static String LoRa_addFloat(float value, PackedData_enum datatype);
+//String getPackedFromPlugin(struct EventStruct *event, uint8_t sampleSetCount);
+#endif // USES_PACKED_RAW_DATA
+
+#ifdef USES_MQTT
+//void runPeriodicalMQTT();
+//void updateMQTTclient_connected();
+//int firstEnabledMQTTController();
+//String getMQTT_state();
+void callback(char *c_topic, byte *b_payload, unsigned int length);
+void MQTTDisconnect();
+bool MQTTConnect(int controller_idx);
+bool MQTTCheck(int controller_idx);
+void schedule_all_tasks_using_MQTT_controller();
+#endif
 
 #endif // ESPEASY_FWD_DECL_H
