@@ -53,7 +53,7 @@ PLATFORMIO_BUILD_FLAGS="-D CONTINUOUS_INTEGRATION" platformio run -e ${PIO_BUILD
 
 # rename and check file
 DATE=`date +%Y%m%d`
-DESCRIPTION = `echo "${DATE}_${PIO_BUILDENV}_vagrant"`
-${SRC}/before_deploy ${DESCRIPTION}
+DESCRIPTION=`echo "${DATE}_vagrant"`
+${SRC}/before_deploy -d ${DESCRIPTION}
 mkdir -p /vagrant/build
 mv *.zip /vagrant/build/

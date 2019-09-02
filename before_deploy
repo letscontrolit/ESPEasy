@@ -95,16 +95,19 @@ do
     MAX_FILESIZE=1900544
   fi
 
-  FILESIZE=$(stat -c%s ${BINARY_PATH}/${ENV}/firmware.bin )
-  if (( FILESIZE < MAX_FILESIZE )); then
-    echo
-    echo "### Deploying environment $ENV for version $VERSION"
-    BIN=${BINARY_PATH}/${ENV}/ESP_Easy_${VERSION}_${ENV}.bin
-    cp ${BINARY_PATH}/${ENV}/firmware.bin $BIN
-    python2 crc2.py $BIN
-    mv $BIN "${TMP_DIST}/bin/ESP_Easy_${VERSION}_${ENV}.bin"
-  else
-    echo "Build too large for $ENV $FILESIZE > $MAX_FILESIZE "
+  FIRMWARE_BIN=`echo "${BINARY_PATH}/${ENV}/firmware.bin"`
+  if [ -f $FIRMWARE_BIN ]; then
+    FILESIZE=$(stat -c%s `echo "${FIRMWARE_BIN}"` )
+    if (( FILESIZE < MAX_FILESIZE )); then
+      echo
+      echo "### Deploying environment $ENV for version $VERSION"
+      BIN=${BINARY_PATH}/${ENV}/ESP_Easy_${VERSION}_${ENV}.bin
+      cp ${FIRMWARE_BIN} $BIN
+      python2 crc2.py $BIN
+      mv $BIN "${TMP_DIST}/bin/ESP_Easy_${VERSION}_${ENV}.bin"
+    else
+      echo "Build too large for $ENV $FILESIZE > $MAX_FILESIZE "
+    fi
   fi
 
   ELFFILE=`echo "${BINARY_PATH}/${ENV}/firmware.elf"`
@@ -128,7 +131,7 @@ cd ${TMP_DIST}
 
 echo
 echo "### Creating zip archive"
-zip ${CURPATH}/ESPEasy_$VERSION.zip -r .
+zip -qq ${CURPATH}/ESPEasy_$VERSION.zip -r .
 
 rm -Rf ${TMP_DIST}/* 2>/dev/null
 rmdir ${TMP_DIST}
