@@ -56,6 +56,16 @@ To create/register a plugin, you have to :
   #endif
 #endif // ESP32
 
+
+/******************************************************************************\
+ * Available options **********************************************************
+\******************************************************************************/
+#ifdef CORE_POST_2_5_0
+    #ifndef USE_SETTINGS_ARCHIVE
+        #define USE_SETTINGS_ARCHIVE
+    #endif // USE_SETTINGS_ARCHIVE
+#endif
+
 /******************************************************************************\
  * BUILD Configs **************************************************************
 \******************************************************************************/
@@ -159,6 +169,11 @@ To create/register a plugin, you have to :
 
     #define PLUGIN_SET_NONE
 
+    #ifdef USE_SETTINGS_ARCHIVE
+        #undef USE_SETTINGS_ARCHIVE
+    #endif // USE_SETTINGS_ARCHIVE
+
+
     #ifndef USES_P001
         #define USES_P001   // switch
     #endif
@@ -213,7 +228,9 @@ To create/register a plugin, you have to :
 #endif
 
 #ifdef PLUGIN_BUILD_IR_EXTENDED
-    #define PLUGIN_DESCR  "IR_Extended"
+    #ifndef PLUGIN_DESCR
+        #define PLUGIN_DESCR  "IR_Extended"
+    #endif // PLUGIN_DESCR
     #define USES_P016      // IR
     #define USES_P035      // IRTX
     // The following define is needed for extended decoding of A/C Messages and or using standardised common arguments for controlling all deeply supported A/C units

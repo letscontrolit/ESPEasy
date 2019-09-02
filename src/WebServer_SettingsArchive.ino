@@ -1,4 +1,4 @@
-#ifdef CORE_POST_2_5_0
+#ifdef USE_SETTINGS_ARCHIVE
 
 // ********************************************************************************
 // Web Interface to manage archived settings
@@ -194,4 +194,4 @@ bool tryDownloadFileType(const String& url, const String& user, const String& pa
   return res;
 }
 
-#endif // ifdef CORE_POST_2_5_0
+#endif // ifdef USE_SETTINGS_ARCHIVE
