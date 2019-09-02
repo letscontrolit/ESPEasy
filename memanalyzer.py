@@ -23,7 +23,7 @@ import os
 TOTAL_IRAM = 32786;
 TOTAL_DRAM = 81920;
 
-env="dev_ESP8266_4096"
+env="memanalyze_ESP8266"
 
 sections = OrderedDict([
     ("data", "Initialized Data (RAM)"),
@@ -83,56 +83,23 @@ def analyse_memory(elfFile):
     # print("Free IRam : %d" % usedIRAM)
     return(ret)
 
-# reenable all plugins and libs
-def enable_all():
-
-    for plugin in glob.glob(".src/*"):
-        os.rename(plugin, "src/"+os.path.basename(plugin))
-
-    for lib in glob.glob(".lib/*"):
-        os.rename(lib, "lib/"+os.path.basename(lib))
-
-def disable_plugin(plugin):
-    os.rename(plugin, ".src/"+os.path.basename(plugin))
-
-def enable_plugin(plugin):
-    os.rename(".src/"+os.path.basename(plugin), plugin)
-
-def disable_lib(lib):
-    os.rename(lib, ".lib/"+os.path.basename(lib))
-
-def enable_lib(lib):
-    os.rename(".lib/"+os.path.basename(lib), lib)
 
 
 try:
 
-
-    if not os.path.exists(".src"):
-        os.mkdir(".src")
-
-    if not os.path.exists(".lib"):
-        os.mkdir(".lib")
-
-
     ################### start
-    if len(sys.argv) < 1:
+    if len(sys.argv) <= 1:
         print("Usage: \n\t%s%s <path_to_objdump>" % sys.argv[0])
         sys.exit(1)
 
+    # e.g.
+    # ~/.platformio/packages/toolchain-xtensa/bin/xtensa-lx106-elf-objdump
+    # c:/Users/gijs/.platformio/packages/toolchain-xtensa/bin/xtensa-lx106-elf-objdump.exe
     objectDumpBin = sys.argv[1]
 
-    enable_all()
-
-
     #get list of all plugins
-    plugins=glob.glob("src/_[CPN]*.ino")
+    plugins=glob.glob("src/_[CPN][0-9][0-9][0-9]*.ino")
     plugins.sort()
-
-    #get list of all libs
-    libs=glob.glob("lib/*")
-    libs.remove("lib/pubsubclient")
-    libs.sort()
 
     #which plugins to test?
     if len(sys.argv)>2:
@@ -144,8 +111,8 @@ try:
     print("Analysing ESPEasy memory usage for env {} ...\n".format(env))
 
     #### disable all plugins and to get base size
-    for plugin in plugins:
-        disable_plugin(plugin)
+    #for plugin in plugins:
+    #    disable_plugin(plugin)
 
 
     # for lib in libs:
@@ -156,7 +123,7 @@ try:
     # #two times, sometimes it changes a few bytes somehow
     # SEEMS TO BE NOT USEFULL
     # subprocess.check_call("platformio run --silent --environment dev_4096", shell=True)
-    base=analyse_memory(".pioenvs/"+env+"/firmware.elf")
+    base=analyse_memory(".pio/build/"+env+"/firmware.elf")
 
 
     output_format="{:<30}|{:<11}|{:<11}|{:<11}|{:<11}|{:<11}"
@@ -180,35 +147,15 @@ try:
     ))
 
 
-    # note: unused libs never use any memory, so dont have to test this
-    # ##### test per lib
-    # results={}
-    # for lib in libs:
-    #     enable_lib(lib)
-    #     subprocess.check_call("platformio run --silent --environment dev_ESP8266_4096", shell=True)
-    #     results[lib]=analyse_memory(".pioenvs/dev_ESP8266_4096/firmware.elf")
-    #     disable_lib(lib)
-    #
-    #     print(output_format.format(
-    #         lib,
-    #         results[lib]['text']-base['text'],
-    #         results[lib]['data']-base['data'],
-    #         results[lib]['rodata']-base['rodata'],
-    #         results[lib]['bss']-base['bss'],
-    #         results[lib]['irom0_text']-base['irom0_text'],
-    #     ))
-
-
-
-
-
     ##### test per plugin
     results={}
     for plugin in plugins:
-        enable_plugin(plugin)
-        subprocess.check_call("platformio run --silent --environment "+env, shell=True)
-        results[plugin]=analyse_memory(".pioenvs/"+env+"/firmware.elf")
-        disable_plugin(plugin)
+        pluginname=plugin[plugin.find('_'):]
+        usesflag="-DUSES{}".format(pluginname[:5])
+        my_env = os.environ.copy()
+        my_env["PLATFORMIO_BUILD_FLAGS"] = usesflag
+        subprocess.check_call("platformio run --silent --environment {}".format(env), shell=True, env=my_env)
+        results[plugin]=analyse_memory(".pio/build/"+env+"/firmware.elf")
 
         print(output_format.format(
             plugin,
@@ -219,14 +166,8 @@ try:
             results[plugin]['irom0_text']-base['irom0_text'],
         ))
 
-
-
-    ##### test with all test_plugins at once
-    for plugin in plugins:
-        enable_plugin(plugin)
-
     subprocess.check_call("platformio run --silent --environment "+env, shell=True)
-    total=analyse_memory(".pioenvs/"+env+"/firmware.elf")
+    total=analyse_memory(".pio/build/"+env+"/firmware.elf")
 
     print(output_format.format(
         "ALL PLUGINS",
@@ -247,11 +188,8 @@ try:
     ))
 
 except:
-    enable_all()
 
     raise
 
-
-enable_all()
 
 print("\n")

@@ -28,3 +28,11 @@ docs/build/
 \.pio/
 
 docs/source/_build/
+
+venv/
+
+.idea/
+
+tools/vagrant/.vagrant/
+
+tools/vagrant/build/
