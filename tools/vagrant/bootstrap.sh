@@ -3,7 +3,7 @@ SRC=~/GitHub/letscontrolit/ESPEasy
 REPO=https://github.com/letscontrolit/ESPEasy.git
 BRANCH=mega
 
-PIO_BUILDENV=custom_ESP8266_4M
+PIO_BUILDENV=custom_ESP8266_4M1M
 
 PULL_REQ=0
 DESCRIPTION=""
