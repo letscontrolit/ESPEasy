@@ -10,7 +10,6 @@
 //  #endif
 
 #include <lwip/netif.h>
-
 #ifdef ESP8266
   # if !defined(ARDUINO_ESP8266_RELEASE_2_4_0) && !defined(ARDUINO_ESP8266_RELEASE_2_3_0)
     #  define SUPPORT_ARP
@@ -19,31 +18,25 @@
 
 #ifdef ESP32
 #define SUPPORT_ARP
-#include <lwip/opt.h>
-#include <lwip/tcp.h>
-#include <lwip/etharp.h>
-#include <lwip/priv/tcpip_priv.h>
+#endif
 
-typedef struct {
-  struct tcpip_api_call_data call;
-  struct netif *netif;
-} espeasy_tcpip_netif_msg_t;
+#ifdef SUPPORT_ARP
+# include <lwip/etharp.h>
 
+#ifdef ESP32
+# include <lwip/etharp.h>
+# include <lwip/tcpip.h>
 
-//err_t _do_netif_etharp_gratuitous(struct tcpip_api_call_data *ptr) {
-int8_t _do_netif_etharp_gratuitous(struct tcpip_api_call_data *ptr) {
-  espeasy_tcpip_netif_msg_t *msg = (espeasy_tcpip_netif_msg_t *)(void *)ptr;
-  etharp_gratuitous(msg->netif);
-  return ERR_OK;
+void _etharp_gratuitous_func(struct netif *netif) {
+  etharp_gratuitous(netif);
 }
 
 void etharp_gratuitous_r(struct netif *netif) {
-  espeasy_tcpip_netif_msg_t msg;
-  msg.netif = netif;
-  tcpip_api_call(_do_netif_etharp_gratuitous, (struct tcpip_api_call_data *)&msg);
+  tcpip_callback_with_block((tcpip_callback_fn)_etharp_gratuitous_func, netif, 0);
 }
-#elif defined(SUPPORT_ARP)
-# include <lwip/etharp.h>
+
+#endif // ifdef ESP32
+
 #endif // ifdef SUPPORT_ARP
 
 /*********************************************************************************************\
