@@ -89,7 +89,7 @@
 #include "_Plugin_Helper.h"
 // Plugin helper needs the defined controller sets, thus include after 'define_plugin_sets.h'
 #include "_CPlugin_Helper.h"
-#include "DelayQueueElements.h"
+#include "ControllerQueue/DelayQueueElements.h"
 
 
 // Get functions to give access to global defined variables.
@@ -101,6 +101,8 @@ CRCStruct& getCRCValues() { return CRCValues; }
 unsigned long& getConnectionFailures() { return connectionFailures; }
 byte& getHighestActiveLogLevel() { return highest_active_log_level; }
 int getPluginId_from_TaskIndex(byte taskIndex) { return Task_id_to_Plugin_id[taskIndex]; }
+
+float& getUserVar(unsigned int varIndex) {return UserVar[varIndex]; }
 
 
 #ifdef USES_BLYNK

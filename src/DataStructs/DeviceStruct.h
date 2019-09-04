@@ -60,7 +60,7 @@ struct DeviceStruct
   bool DecimalsOnly : 1;       // Allow to set the number of decimals (otherwise treated a 0 decimals)
 };
 typedef std::vector<DeviceStruct> DeviceVector;
-DeviceVector Device;
+static DeviceVector Device;
 
 
 #endif // DATASTRUCTS_DEVICESTRUCTS_H

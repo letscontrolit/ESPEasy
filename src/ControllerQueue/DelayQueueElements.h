@@ -4,49 +4,20 @@
 #include "DataStructs/ControllerSettingsStruct.h"
 #include "ESPEasy_fdwdecl.h"
 
+#include "ControllerQueue/MQTT_queue_element.h"
+#include "ControllerQueue/SimpleQueueElement_string_only.h"
+#include "ControllerQueue/queue_element_single_value_base.h"
+#include "ControllerQueue/C004_queue_element.h"
+#include "ControllerQueue/C007_queue_element.h"
+#include "ControllerQueue/C009_queue_element.h"
+#include "ControllerQueue/C015_queue_element.h"
+#include "ControllerQueue/C016_queue_element.h"
+#include "ControllerQueue/C017_queue_element.h"
+#include "ControllerQueue/C018_queue_element.h"
+
 // These element classes should be defined as class, to be used as template.
 
-/*********************************************************************************************\
-* MQTT_queue_element for all MQTT base controllers
-\*********************************************************************************************/
-class MQTT_queue_element {
-public:
 
-  MQTT_queue_element() : controller_idx(0), _retained(false) {}
-
-  MQTT_queue_element(int ctrl_idx,
-                     const String& topic, const String& payload, boolean retained) :
-    controller_idx(ctrl_idx), _topic(topic), _payload(payload), _retained(retained)
-  {}
-
-  size_t getSize() const {
-    return sizeof(this) + _topic.length() + _payload.length();
-  }
-
-  int controller_idx;
-  String _topic;
-  String _payload;
-  boolean _retained;
-};
-
-/*********************************************************************************************\
-* Simple queue element, only storing controller index and some String
-\*********************************************************************************************/
-class simple_queue_element_string_only {
-public:
-
-  simple_queue_element_string_only() : controller_idx(0) {}
-
-  simple_queue_element_string_only(int ctrl_idx, const String& req) :
-    controller_idx(ctrl_idx), txt(req) {}
-
-  size_t getSize() const {
-    return sizeof(this) + txt.length();
-  }
-
-  int controller_idx;
-  String txt;
-};
 
 
 //#ifdef USES_C001
@@ -63,102 +34,7 @@ public:
 #define C003_queue_element simple_queue_element_string_only
 //#endif //USES_C003
 
-//#ifdef USES_C004
-/*********************************************************************************************\
-* C004_queue_element for queueing requests for C004 ThingSpeak.
-*   Typical use case for Thingspeak is to only send values every N seconds/minutes.
-*   So we just store everything needed to recreate the event when the time is ready.
-\*********************************************************************************************/
-class C004_queue_element {
-public:
 
-  C004_queue_element() : controller_idx(0), TaskIndex(0), idx(0), sensorType(0) {}
-
-  C004_queue_element(const struct EventStruct *event) :
-    controller_idx(event->ControllerIndex),
-    TaskIndex(event->TaskIndex),
-    idx(event->idx),
-    sensorType(event->sensorType) {
-    if (sensorType == SENSOR_TYPE_STRING) {
-      txt = event->String2;
-    }
-  }
-
-  size_t getSize() const {
-    return sizeof(this) + txt.length();
-  }
-
-  int controller_idx;
-  byte TaskIndex;
-  int idx;
-  byte sensorType;
-  String txt;
-};
-//#endif //USES_C004
-
-//#ifdef USES_C007
-/*********************************************************************************************\
-* C007_queue_element for queueing requests for C007 Emoncms
-\*********************************************************************************************/
-class C007_queue_element {
-public:
-
-  C007_queue_element() : controller_idx(0), TaskIndex(0), idx(0), sensorType(0) {}
-
-  C007_queue_element(const struct EventStruct *event) :
-    controller_idx(event->ControllerIndex),
-    TaskIndex(event->TaskIndex),
-    idx(event->idx),
-    sensorType(event->sensorType) {}
-
-  size_t getSize() const {
-    return sizeof(this);
-  }
-
-  int controller_idx;
-  byte TaskIndex;
-  int idx;
-  byte sensorType;
-};
-//#endif //USES_C007
-
-/*********************************************************************************************\
-* Base class for controllers that only send a single value per request and thus needs to
-* keep track of the number of values already sent.
-\*********************************************************************************************/
-class queue_element_single_value_base {
-public:
-
-  queue_element_single_value_base() : controller_idx(0), TaskIndex(0), idx(0), valuesSent(0) {}
-
-  queue_element_single_value_base(const struct EventStruct *event, byte value_count) :
-    controller_idx(event->ControllerIndex),
-    TaskIndex(event->TaskIndex),
-    idx(event->idx),
-    valuesSent(0),
-    valueCount(value_count) {}
-
-  bool checkDone(bool succesfull) const {
-    if (succesfull) { ++valuesSent; }
-    return valuesSent >= valueCount || valuesSent >= VARS_PER_TASK;
-  }
-
-  size_t getSize() const {
-    size_t total = sizeof(this);
-
-    for (int i = 0; i < VARS_PER_TASK; ++i) {
-      total += txt[i].length();
-    }
-    return total;
-  }
-
-  String txt[VARS_PER_TASK];
-  int controller_idx;
-  byte TaskIndex;
-  int idx;
-  mutable byte valuesSent; // Value must be set by const function checkDone()
-  byte valueCount;
-};
 
 
 //#ifdef USES_C008
@@ -169,37 +45,6 @@ public:
 #define C008_queue_element queue_element_single_value_base
 //#endif //USES_C008
 
-//#ifdef USES_C009
-/*********************************************************************************************\
-* C009_queue_element for queueing requests for C009: FHEM HTTP.
-\*********************************************************************************************/
-class C009_queue_element {
-public:
-
-  C009_queue_element() : controller_idx(0), TaskIndex(0), idx(0), sensorType(0) {}
-
-  C009_queue_element(const struct EventStruct *event) :
-    controller_idx(event->ControllerIndex),
-    TaskIndex(event->TaskIndex),
-    idx(event->idx),
-    sensorType(event->sensorType) {}
-
-  size_t getSize() const {
-    size_t total = sizeof(this);
-
-    for (int i = 0; i < VARS_PER_TASK; ++i) {
-      total += txt[i].length();
-    }
-    return total;
-  }
-
-  String txt[VARS_PER_TASK];
-  int controller_idx;
-  byte TaskIndex;
-  int idx;
-  byte sensorType;
-};
-//#endif //USES_C009
 
 
 //#ifdef USES_C010
@@ -225,154 +70,9 @@ public:
 #define C012_queue_element queue_element_single_value_base
 //#endif //USES_C012
 
-//#ifdef USES_C015
-/*********************************************************************************************\
-* C015_queue_element for queueing requests for 015: Blynk
-* Using queue_element_single_value_base
-\*********************************************************************************************/
-
-// #define C015_queue_element queue_element_single_value_base
-class C015_queue_element {
-public:
-
-  C015_queue_element() : controller_idx(0), TaskIndex(0), idx(0), valuesSent(0) {}
-
-  C015_queue_element(const struct EventStruct *event, byte value_count) :
-    controller_idx(event->ControllerIndex),
-    TaskIndex(event->TaskIndex),
-    idx(event->idx),
-    valuesSent(0),
-    valueCount(value_count) {}
-
-  bool checkDone(bool succesfull) const {
-    if (succesfull) { ++valuesSent; }
-    return valuesSent >= valueCount || valuesSent >= VARS_PER_TASK;
-  }
-
-  size_t getSize() const {
-    size_t total = sizeof(this);
-
-    for (int i = 0; i < VARS_PER_TASK; ++i) {
-      total += txt[i].length();
-    }
-    return total;
-  }
-
-  String txt[VARS_PER_TASK];
-  int vPin[VARS_PER_TASK] = {0};
-  int controller_idx;
-  byte TaskIndex;
-  int idx;
-  mutable byte valuesSent; // Value must be set by const function checkDone()
-  byte valueCount;
-};
-//#endif //USES_C015
-
-//#ifdef USES_C016
-/*********************************************************************************************\
-* C016_queue_element for queueing requests for C016: Cached HTTP.
-\*********************************************************************************************/
-class C016_queue_element {
-public:
-
-  C016_queue_element() : timestamp(0), controller_idx(0), TaskIndex(0), sensorType(0) {}
-
-  C016_queue_element(const struct EventStruct *event, byte value_count, unsigned long unixTime) :
-    timestamp(unixTime),
-    controller_idx(event->ControllerIndex),
-    TaskIndex(event->TaskIndex),
-    sensorType(event->sensorType),
-    valueCount(value_count)
-  {
-    const byte BaseVarIndex = TaskIndex * VARS_PER_TASK;
-
-    for (byte i = 0; i < VARS_PER_TASK; ++i) {
-      if (i < value_count) {
-        values[i] = UserVar[BaseVarIndex + i];
-      } else {
-        values[i] = 0.0;
-      }
-    }
-  }
-
-  size_t getSize() const {
-    return sizeof(this);
-  }
-
-  float values[VARS_PER_TASK];
-  unsigned long timestamp; // Unix timestamp
-  byte controller_idx;
-  byte TaskIndex;
-  byte sensorType;
-  byte valueCount;
-};
-
-//#endif //USES_C016
-
-//#ifdef USES_C017
-/*********************************************************************************************\
-* C017_queue_element for queueing requests for C017: Zabbix Trapper Protocol.
-\*********************************************************************************************/
-class C017_queue_element {
-public:
-
-  C017_queue_element() : controller_idx(0), TaskIndex(0), idx(0), sensorType(0) {}
-
-  C017_queue_element(const struct EventStruct *event) :
-    controller_idx(event->ControllerIndex),
-    TaskIndex(event->TaskIndex),
-    idx(event->idx),
-    sensorType(event->sensorType) {}
-
-  size_t getSize() const {
-    size_t total = sizeof(this);
-
-    for (int i = 0; i < VARS_PER_TASK; ++i) {
-      total += txt[i].length();
-    }
-    return total;
-  }
-
-  String txt[VARS_PER_TASK];
-  int controller_idx;
-  byte TaskIndex;
-  int idx;
-  byte sensorType;
-};
-//#endif //USES_C017
-
-//#ifdef USES_C018
-/*********************************************************************************************\
-* C018_queue_element for queueing requests for C018: TTN/RN2483
-\*********************************************************************************************/
-
-#ifdef USES_PACKED_RAW_DATA
-String getPackedFromPlugin(struct EventStruct *event, uint8_t sampleSetCount);
-#endif // USES_PACKED_RAW_DATA
 
 
-class C018_queue_element {
-public:
 
-  C018_queue_element() {}
-
-  C018_queue_element(struct EventStruct *event, uint8_t sampleSetCount) :
-    controller_idx(event->ControllerIndex)
-  {
-    #ifdef USES_PACKED_RAW_DATA
-    packed = getPackedFromPlugin(event, sampleSetCount);
-    #endif // USES_PACKED_RAW_DATA
-  }
-
-  size_t getSize() const {
-    return sizeof(this) + packed.length();
-  }
-
-  int controller_idx = 0;
-  String packed;
-};
-
-//#endif //USES_C018
 
 
 
@@ -542,10 +242,10 @@ ControllerDelayHandlerStruct<MQTT_queue_element> MQTTDelayHandler;
 //      was still successful. The controller should keep track of the last value sent
 //      in the element stored in the queue.
 #define DEFINE_Cxxx_DELAY_QUEUE_MACRO(NNN, M)                                                                        \
-  ControllerDelayHandlerStruct<C##NNN####M##_queue_element>C##NNN####M##_DelayHandler;                               \
   bool do_process_c##NNN####M##_delay_queue(int controller_number,                                                   \
                                            const C##NNN####M##_queue_element & element,                              \
                                            ControllerSettingsStruct & ControllerSettings);                           \
+  ControllerDelayHandlerStruct<C##NNN####M##_queue_element>C##NNN####M##_DelayHandler;                               \
   void process_c##NNN####M##_delay_queue() {                                                                         \
     C##NNN####M##_queue_element *element(C##NNN####M##_DelayHandler.getNext());                                      \
     if (element == NULL) return;                                                                                     \
