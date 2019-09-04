@@ -12,6 +12,7 @@
 
 #include <ESPeasySerial.h>
 #include <TinyGPS++.h>
+#include "ESPEasy_packed_raw_data.h"
 
 #define PLUGIN_082
 #define PLUGIN_ID_082          82

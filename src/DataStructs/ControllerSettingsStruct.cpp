@@ -1,6 +1,7 @@
+#include "DataStructs/ControllerSettingsStruct.h"
+
 #include "ESPEasy_common.h"
 #include "ESPEasy_fdwdecl.h"
-#include "DataStructs/ControllerSettingsStruct.h"
 #include "DataStructs/ESPEasyLimits.h"
 #include "DataStructs/ESPEasyDefaults.h"
 

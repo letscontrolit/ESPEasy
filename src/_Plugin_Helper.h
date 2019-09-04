@@ -1,6 +1,9 @@
 #ifndef PLUGIN_HELPER_H
 #define PLUGIN_HELPER_H
 
+#include "ESPEasy_common.h"
+#include "DataStructs/ESPEasyLimits.h"
+
 // Defines to make plugins more readable.
 
 #ifndef PCONFIG
@@ -30,14 +33,7 @@
   # define CONFIG_PORT (Settings.TaskDevicePort[event->TaskIndex])
 #endif // ifndef CONFIG_PORT
 
-String PCONFIG_LABEL(int n) {
-  if (n < PLUGIN_CONFIGVAR_MAX) {
-    String result = "pconf_";
-    result += n;
-    return result;
-  }
-  return "error";
-}
+String PCONFIG_LABEL(int n);
 
 // ==============================================
 // Data used by instances of plugins.
@@ -56,94 +52,28 @@ struct PluginTaskData_base {
   int _taskdata_plugin_id = -1;
 };
 
-PluginTaskData_base *Plugin_task_data[TASKS_MAX] = { NULL, };
 
-void resetPluginTaskData() {
-  for (byte i = 0; i < TASKS_MAX; ++i) {
-    Plugin_task_data[i] = nullptr;
-  }
-}
 
-void clearPluginTaskData(byte taskIndex) {
-  if (taskIndex < TASKS_MAX) {
-    if (Plugin_task_data[taskIndex] != nullptr) {
-      delete Plugin_task_data[taskIndex];
-      Plugin_task_data[taskIndex] = nullptr;
-    }
-  }
-}
+void resetPluginTaskData();
 
-void initPluginTaskData(byte taskIndex, PluginTaskData_base *data) {
-  clearPluginTaskData(taskIndex);
+void clearPluginTaskData(byte taskIndex);
 
-  if ((taskIndex < TASKS_MAX) && Settings.TaskDeviceEnabled[taskIndex]) {
-    Plugin_task_data[taskIndex]                      = data;
-    Plugin_task_data[taskIndex]->_taskdata_plugin_id = Task_id_to_Plugin_id[taskIndex];
-  }
-}
+void initPluginTaskData(byte taskIndex, PluginTaskData_base *data);
 
-PluginTaskData_base* getPluginTaskData(byte taskIndex) {
-  if (taskIndex >= TASKS_MAX) {
-    return nullptr;
-  }
+PluginTaskData_base* getPluginTaskData(byte taskIndex);
 
-  if ((Plugin_task_data[taskIndex] != nullptr) && (Plugin_task_data[taskIndex]->_taskdata_plugin_id == Task_id_to_Plugin_id[taskIndex])) {
-    return Plugin_task_data[taskIndex];
-  }
-  return nullptr;
-}
+bool pluginTaskData_initialized(byte taskIndex);
 
-bool pluginTaskData_initialized(byte taskIndex) {
-  // FIXME TD-er: Must check for type also.
-  if (taskIndex < TASKS_MAX) {
-    return Plugin_task_data[taskIndex] != nullptr;
-  }
-  return false;
-}
-
-String getPluginCustomArgName(int varNr) {
-  String argName = F("plugin_custom_arg");
-  argName += varNr + 1;
-  return argName;
-}
+String getPluginCustomArgName(int varNr);
 
 // Helper function to create formatted custom values for display in the devices overview page.
 // When called from PLUGIN_WEBFORM_SHOW_VALUES, the last item should add a traling div_br class
 // if the regular values should also be displayed.
 // The call to PLUGIN_WEBFORM_SHOW_VALUES should only return success = true when no regular values should be displayed
 // Note that the varNr of the custom values should not conflict with the existing variable numbers (e.g. start at VARS_PER_TASK)
-String pluginWebformShowValue(byte taskIndex, byte varNr, const String& label, const String& value, bool addTrailingBreak) {
-  String result;
-  size_t length = 96 + label.length() + value.length();
-  String breakStr = F("<div class='div_br'></div>");
-  if (addTrailingBreak) {
-    length += breakStr.length();
-  }
-  result.reserve(length);
-  if (varNr > 0) {
-    result += breakStr;
-  }
-  result += F("<div class='div_l' id='valuename_");
-  result += String(taskIndex);
-  result += '_';
-  result += String(varNr);
-  result += "'>";
-  result += label;
-  result += F(":</div><div class='div_r' id='value_");
-  result += String(taskIndex);
-  result += '_';
-  result += String(varNr);
-  result += "'>";
-  result += value;
-  result += "</div>";
-  if (addTrailingBreak) {
-    result += breakStr;
-  }
-  return result;
-}
+String pluginWebformShowValue(byte taskIndex, byte varNr, const String& label, const String& value, bool addTrailingBreak = false);
 
-String pluginWebformShowValue(byte taskIndex, byte varNr, const String& label, const String& value) {
-  return pluginWebformShowValue(taskIndex, varNr, label, value, false);
-}
+
+
 
 #endif // PLUGIN_HELPER_H

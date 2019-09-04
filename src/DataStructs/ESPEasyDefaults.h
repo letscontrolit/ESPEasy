@@ -183,11 +183,6 @@
 #define DEFAULT_USE_DST                         false   // (true|false) Use Daily Time Saving
 #endif
 
-#define LOG_TO_SERIAL         1
-#define LOG_TO_SYSLOG         2
-#define LOG_TO_WEBLOG         3
-#define LOG_TO_SDCARD         4
-
 #ifndef DEFAULT_SYSLOG_IP
 #define DEFAULT_SYSLOG_IP                       ""                      // Syslog IP Address
 #endif

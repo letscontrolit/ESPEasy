@@ -334,7 +334,7 @@ void process_interval_timer(unsigned long id, unsigned long lasttimer) {
        #endif
        */
 
-      // When extending this, also extend in _CPlugin_Helper.h
+      // When extending this, also extend in DelayQueueElements.h
       // Look for DEFINE_Cxxx_DELAY_QUEUE_MACRO
   }
 }

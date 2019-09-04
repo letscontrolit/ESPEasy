@@ -5,6 +5,8 @@
  * ControllerSettingsStruct definition
 \*********************************************************************************************/
 #include <Arduino.h>
+#include <memory> // For std::shared_ptr
+
 class IPAddress;
 class WiFiClient;
 class WiFiUDP;
@@ -23,6 +25,31 @@ class WiFiUDP;
 #define CONTROLLER_CLIENTTIMEOUT_MAX     1000
 #define CONTROLLER_CLIENTTIMEOUT_DFLT     100
 
+
+
+// ********************************************************************************
+//   IDs of controller settings, used to generate web forms
+// ********************************************************************************
+
+#define CONTROLLER_USE_DNS                  1
+#define CONTROLLER_HOSTNAME                 2
+#define CONTROLLER_IP                       3 
+#define CONTROLLER_PORT                     4
+#define CONTROLLER_USER                     5
+#define CONTROLLER_PASS                     6
+#define CONTROLLER_MIN_SEND_INTERVAL        7
+#define CONTROLLER_MAX_QUEUE_DEPTH          8
+#define CONTROLLER_MAX_RETRIES              9
+#define CONTROLLER_FULL_QUEUE_ACTION        10
+#define CONTROLLER_CHECK_REPLY              12
+#define CONTROLLER_SUBSCRIBE                13
+#define CONTROLLER_PUBLISH                  14
+#define CONTROLLER_LWT_TOPIC                15
+#define CONTROLLER_LWT_CONNECT_MESSAGE      16
+#define CONTROLLER_LWT_DISCONNECT_MESSAGE   17
+#define CONTROLLER_TIMEOUT                  18
+#define CONTROLLER_SAMPLE_SET_INITIATOR       19
+#define CONTROLLER_ENABLED                  20  // Keep this as last, is used to loop over all parameters
 
 struct ControllerSettingsStruct
 {
@@ -74,5 +101,5 @@ private:
 typedef std::shared_ptr<ControllerSettingsStruct> ControllerSettingsStruct_ptr_type;
 #define MakeControllerSettings(T) ControllerSettingsStruct_ptr_type ControllerSettingsStruct_ptr(new ControllerSettingsStruct());\
                                     ControllerSettingsStruct& T = *ControllerSettingsStruct_ptr;
-                                    
+
 #endif // DATASTRUCTS_CONTROLLERSETTINGSSTRUCT_H

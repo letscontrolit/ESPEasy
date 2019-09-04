@@ -14,4 +14,5 @@ struct CRCStruct{
   uint32_t numberOfCRCBytes=0;
 };
 
+
 #endif // DATASTRUCTS_CRCSTRUCT_H

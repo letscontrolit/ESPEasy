@@ -160,4 +160,6 @@ SettingsStruct* SettingsStruct_ptr = new SettingsStruct;
 SettingsStruct& Settings = *SettingsStruct_ptr;
 */
 
+
+
 #endif // DATASTRUCTS_SETTINGSSTRUCT_H

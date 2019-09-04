@@ -82,8 +82,25 @@
 //   SHT1X temperature/humidity sensors
 //   Ser2Net server
 
+
 // Define globals before plugin sets to allow a personal override of the selected plugins
 #include "ESPEasy-Globals.h"
+// Must be included after all the defines, since it is using TASKS_MAX
+#include "_Plugin_Helper.h"
+// Plugin helper needs the defined controller sets, thus include after 'define_plugin_sets.h'
+#include "_CPlugin_Helper.h"
+#include "DelayQueueElements.h"
+
+
+// Get functions to give access to global defined variables.
+// These are needed to get direct access to global defined variables, since they cannot be defined in .h files and included more than once.
+SettingsStruct& getSettings() { return Settings; }
+SecurityStruct& getSecuritySettings() { return SecuritySettings; }
+CRCStruct& getCRCValues() { return CRCValues; }
+
+unsigned long& getConnectionFailures() { return connectionFailures; }
+byte& getHighestActiveLogLevel() { return highest_active_log_level; }
+int getPluginId_from_TaskIndex(byte taskIndex) { return Task_id_to_Plugin_id[taskIndex]; }
 
 
 #ifdef USES_BLYNK
@@ -120,6 +137,9 @@ void sw_watchdog_callback(void *arg)
   yield(); // feed the WD
   ++sw_watchdog_callback_count;
 }
+
+
+
 
 /*********************************************************************************************\
  * SETUP

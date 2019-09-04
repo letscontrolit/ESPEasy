@@ -20,21 +20,34 @@
 
 #include <FS.h>
 
+struct SettingsStruct;
+struct SecurityStruct;
+struct CRCStruct;
 
-// Forward declaration
+// Forward declaration to give access to global member variables
+SettingsStruct& getSettings();
+SecurityStruct& getSecuritySettings();
+CRCStruct& getCRCValues();
+unsigned long& getConnectionFailures();
+byte& getHighestActiveLogLevel();
+int getPluginId_from_TaskIndex(byte taskIndex);
+
+
 struct ControllerSettingsStruct;
 String getUnknownString();
 void scheduleNextDelayQueue(unsigned long id, unsigned long nextTime);
 String LoadControllerSettings(int ControllerIndex, ControllerSettingsStruct& controller_settings);
 String get_formatted_Controller_number(int controller_index);
-bool loglevelActiveFor(byte logLevel);
-void addToLog(byte loglevel, const String& string);
-void addToLog(byte logLevel, const __FlashStringHelper* flashString);
 void statusLED(boolean traffic);
 void backgroundtasks();
 uint32_t getCurrentFreeStack();
 uint32_t getFreeStackWatermark();
 bool canYield();
+
+
+boolean timeOutReached(unsigned long timer);
+long timePassedSince(unsigned long timestamp);
+long usecPassedSince(unsigned long timestamp);
 
 void serialHelper_getGpioNames(struct EventStruct *event, bool rxOptional=false, bool txOptional=false);
 
@@ -76,17 +89,6 @@ void rulesProcessing(String& event);
 void setIntervalTimer(unsigned long id);
 byte getProtocolIndex(byte Number);
 
-#ifdef USES_PACKED_RAW_DATA
-// Forward declarations PackedData related functions
-typedef uint32_t PackedData_enum;
-uint8_t getPackedDataTypeSize(PackedData_enum dtype, float& factor, float& offset);
-void LoRa_uintToBytes(uint64_t value, uint8_t byteSize, byte *data, uint8_t& cursor);
-String LoRa_base16Encode(byte *data, size_t size);
-String LoRa_addInt(uint64_t value, PackedData_enum datatype);
-static String LoRa_addFloat(float value, PackedData_enum datatype);
-//String getPackedFromPlugin(struct EventStruct *event, uint8_t sampleSetCount);
-#endif // USES_PACKED_RAW_DATA
-
 #ifdef USES_MQTT
 //void runPeriodicalMQTT();
 //void updateMQTTclient_connected();
@@ -98,5 +100,6 @@ bool MQTTConnect(int controller_idx);
 bool MQTTCheck(int controller_idx);
 void schedule_all_tasks_using_MQTT_controller();
 #endif
+
 
 #endif // ESPEASY_FWD_DECL_H

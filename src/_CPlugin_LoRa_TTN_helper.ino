@@ -4,6 +4,7 @@
 
 #if defined(USES_PACKED_RAW_DATA)
 
+#include "ESPEasy_packed_raw_data.h"
 
 
 String getPackedFromPlugin(struct EventStruct *event, uint8_t sampleSetCount)

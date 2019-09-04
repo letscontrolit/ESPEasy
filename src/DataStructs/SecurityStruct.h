@@ -1,37 +1,17 @@
 #ifndef DATASTRUCTS_SECURITYSTRUCT_H
 #define DATASTRUCTS_SECURITYSTRUCT_H
 
+#include "ESPEasy_common.h"
+#include "DataStructs/ESPEasyLimits.h"
 
 /*********************************************************************************************\
  * SecurityStruct
 \*********************************************************************************************/
 struct SecurityStruct
 {
-  SecurityStruct() {
-    ZERO_FILL(WifiSSID);
-    ZERO_FILL(WifiKey);
-    ZERO_FILL(WifiSSID2);
-    ZERO_FILL(WifiKey2);
-    ZERO_FILL(WifiAPKey);
-    for (byte i = 0; i < CONTROLLER_MAX; ++i) {
-      ZERO_FILL(ControllerUser[i]);
-      ZERO_FILL(ControllerPassword[i]);
-    }
-    ZERO_FILL(Password);
-  }
+  SecurityStruct();
 
-  void validate() {
-    ZERO_TERMINATE(WifiSSID);
-    ZERO_TERMINATE(WifiKey);
-    ZERO_TERMINATE(WifiSSID2);
-    ZERO_TERMINATE(WifiKey2);
-    ZERO_TERMINATE(WifiAPKey);
-    for (byte i = 0; i < CONTROLLER_MAX; ++i) {
-      ZERO_TERMINATE(ControllerUser[i]);
-      ZERO_TERMINATE(ControllerPassword[i]);
-    }
-    ZERO_TERMINATE(Password);
-  }
+  void validate();
 
   char          WifiSSID[32];
   char          WifiKey[64];
@@ -49,5 +29,6 @@ struct SecurityStruct
   uint8_t       ProgmemMd5[16] = {0}; // crc of the binary that last saved the struct to file.
   uint8_t       md5[16] = {0};
 };
+
 
 #endif // DATASTRUCTS_SECURITYSTRUCT_H
