@@ -1,4 +1,35 @@
 -------------------------------------------------
+Changes in release mega-20190903 (since mega-20190830)
+-------------------------------------------------
+
+Release date: Tue Sep  3 04:00:13 CEST 2019
+
+Bartlomiej Zimon (3):
+      - [C011] fix method save #2550
+      [DHT] change pin into input before delay
+      [DHT] change to input with pullup
+
+Gijs Noorlander (11):
+      [build] Add Minimal IRext 4M build
+      Add minimal_IRext_ESP8266_4M2M build using 2M SPIFFS
+      [Build] Fix typo error in platformIO.ini
+      Disable Settings Archive on minimal builds
+      Add TextArea option for C11 and fix some build inconsistencies
+      [MemAnalyzer] Fix MemAnalyzer.py script to work with USES_.... defines
+      Disable Home MQTT for dev build to make it fit max sketch size
+      [Build] Start making Vagrant provisioning for quick self builds
+      [Vagrant] Check if file exists before adding CRC info and quiet ZIP
+      [Vagrant] Fix changed PIO env name in bootstrap.sh
+      [Build] Fix build error after rename flash layouts
+
+Toni (1):
+      Documentation for P088 HeatpumpIR plugin
+
+jimmys01 (1):
+      [Git] Ignore custom files and the .ino.cpp
+
+
+-------------------------------------------------
 Changes in release mega-20190830 (since mega-20190827)
 -------------------------------------------------
 
