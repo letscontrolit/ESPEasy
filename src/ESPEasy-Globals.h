@@ -19,20 +19,6 @@
 #include "ESPEasy_buildinfo.h"
 
 
-// User configuration
-#include "DataStructs/ESPEasyDefaults.h"
-/*
-    To modify the stock configuration without changing this repo file :
-    - define USE_CUSTOM_H as a build flags. ie : export PLATFORMIO_BUILD_FLAGS="'-DUSE_CUSTOM_H'"
-    - add a "Custom.h" file in this folder.
-
-*/
-#ifdef USE_CUSTOM_H
-#include "Custom.h"
-#endif
-
-
-
 //#include <FS.h>
 
 // ********************************************************************************
@@ -101,6 +87,22 @@ void check_size() {
 
 //add this if you want SD support (add 10k flash)
 //#define FEATURE_SD
+
+// User configuration
+#include "DataStructs/ESPEasyDefaults.h"
+/*
+    To modify the stock configuration without changing this repo file :
+    - define USE_CUSTOM_H as a build flags. ie : export PLATFORMIO_BUILD_FLAGS="'-DUSE_CUSTOM_H'"
+    - add a "Custom.h" file in this folder.
+
+*/
+#ifdef USE_CUSTOM_H
+#include "Custom.h"
+#endif
+
+// Make sure to have this as early as possible in the build process.
+#include "define_plugin_sets.h"
+
 
 // ********************************************************************************
 //   DO NOT CHANGE ANYTHING BELOW THIS LINE
@@ -243,8 +245,6 @@ std::vector<int> Task_id_to_Plugin_id;
 
 
 
-
-#include "define_plugin_sets.h"
 #include "ESPEasy_Log.h"
 #include "WebStaticData.h"
 #include "ESPEasyTimeTypes.h"

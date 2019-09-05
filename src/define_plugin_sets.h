@@ -57,10 +57,24 @@ To create/register a plugin, you have to :
 #endif // ESP32
 
 
+#ifdef MEMORY_ANALYSIS
+  #ifndef WEBSERVER_RULES_DEBUG
+    #define WEBSERVER_RULES_DEBUG 0
+  #endif
+  #ifdef MQTT_ONLY
+    #define USES_C002   // Domoticz MQTT
+    #define USES_C005   // Home Assistant (openHAB) MQTT
+    #define USES_C006   // PiDome MQTT
+    #define USES_C014   // homie 3 & 4dev MQTT
+    #define USES_P037   // MQTTImport
+  #endif
+#endif
+
+
 /******************************************************************************\
  * Available options **********************************************************
 \******************************************************************************/
-#ifdef CORE_POST_2_5_0
+#if defined(CORE_POST_2_5_0) && !defined(MEMORY_ANALYSIS)
     #ifndef USE_SETTINGS_ARCHIVE
         #define USE_SETTINGS_ARCHIVE
     #endif // USE_SETTINGS_ARCHIVE
@@ -838,6 +852,7 @@ To create/register a plugin, you have to :
 #if defined(USES_C012) || defined (USES_C015)
   #define USES_BLYNK
 #endif
+
 
 
 #ifdef USES_MQTT
