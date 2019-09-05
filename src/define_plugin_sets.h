@@ -672,7 +672,7 @@ To create/register a plugin, you have to :
     #define USES_C011   // Generic HTTP Advanced
     #define USES_C012   // Blynk HTTP
     #define USES_C014   // homie 3 & 4dev MQTT
-    #define USES_C015   // Blynk
+    //#define USES_C015   // Blynk
     #define USES_C017   // Zabbix
     // #define USES_C018 // TTN RN2483
 #endif
@@ -759,7 +759,7 @@ To create/register a plugin, you have to :
 
 
 #ifdef CONTROLLER_SET_EXPERIMENTAL
-  #define USES_C016   // Cache controller
+  //#define USES_C016   // Cache controller
   //#define USES_C018   // TTN/RN2483
 #endif
 
@@ -851,4 +851,12 @@ To create/register a plugin, you have to :
 // Disable Homie plugin for now in the dev build to make it fit.
 #if defined(PLUGIN_BUILD_DEV) && defined(USES_C014)
   #undef USES_C014
+#endif
+
+
+// Due to size restrictions, disable a few plugins/controllers for 1M builds
+#ifdef SIZE_1M
+  #ifdef USES_C003
+    #undef USES_C003
+  #endif
 #endif

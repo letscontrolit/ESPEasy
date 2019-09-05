@@ -118,6 +118,8 @@ bool CPlugin_016(byte function, struct EventStruct *event, String& string)
 //********************************************************************************
 // Process the data from the cache
 //********************************************************************************
+bool do_process_c016_delay_queue(int controller_number, const C016_queue_element& element, ControllerSettingsStruct& ControllerSettings);
+
 bool do_process_c016_delay_queue(int controller_number, const C016_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
   return true;
   // FIXME TD-er: Hand over data to wherever it needs to be.

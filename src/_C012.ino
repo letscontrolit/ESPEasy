@@ -76,6 +76,8 @@ bool CPlugin_012(byte function, struct EventStruct *event, String& string)
 //********************************************************************************
 // Process Queued Blynk request, with data set to NULL
 //********************************************************************************
+bool do_process_c012_delay_queue(int controller_number, const C012_queue_element& element, ControllerSettingsStruct& ControllerSettings);
+
 bool do_process_c012_delay_queue(int controller_number, const C012_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
   while (element.txt[element.valuesSent] == "") {
     // A non valid value, which we are not going to send.

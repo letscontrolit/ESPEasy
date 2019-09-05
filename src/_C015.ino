@@ -38,6 +38,7 @@
 #endif
 
 
+
 static unsigned long _C015_LastConnectAttempt[CONTROLLER_MAX] = {0,0,0};
 
 void CPlugin_015_handleInterrupt() {
@@ -190,6 +191,8 @@ bool CPlugin_015(byte function, struct EventStruct *event, String& string)
 // Process Queued Blynk request, with data set to NULL
 //********************************************************************************
 // controller_plugin_number = 015 because of C015
+bool do_process_c015_delay_queue(int controller_plugin_number, const C015_queue_element& element, ControllerSettingsStruct& ControllerSettings);
+
 bool do_process_c015_delay_queue(int controller_plugin_number, const C015_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
   if (!Settings.ControllerEnabled[element.controller_idx])
     // controller has been disabled. Answer true to flush queue.

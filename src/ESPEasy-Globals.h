@@ -18,6 +18,21 @@
 
 #include "ESPEasy_buildinfo.h"
 
+
+// User configuration
+#include "DataStructs/ESPEasyDefaults.h"
+/*
+    To modify the stock configuration without changing this repo file :
+    - define USE_CUSTOM_H as a build flags. ie : export PLATFORMIO_BUILD_FLAGS="'-DUSE_CUSTOM_H'"
+    - add a "Custom.h" file in this folder.
+
+*/
+#ifdef USE_CUSTOM_H
+#include "Custom.h"
+#endif
+
+
+
 //#include <FS.h>
 
 // ********************************************************************************
@@ -34,10 +49,6 @@ template <typename ToCheck, std::size_t ExpectedSize, std::size_t RealSize = siz
 void check_size() {
   static_assert(ExpectedSize == RealSize, "");
 }
-
-
-// User configuration
-#include "DataStructs/ESPEasyDefaults.h"
 
 
 
@@ -103,6 +114,11 @@ void check_size() {
 #define NODE_TYPE_ID_ARDUINO_EASY_STD      65
 #define NODE_TYPE_ID_NANO_EASY_STD         81
 
+
+
+// ********************************************************************************
+//   Timers used in the scheduler
+// ********************************************************************************
 #define TIMER_20MSEC                        1
 #define TIMER_100MSEC                       2
 #define TIMER_1SEC                          3
@@ -164,17 +180,6 @@ void check_size() {
 #define BOOT_CAUSE_EXT_WD                  10
 
 
-
-/*
-        To modify the stock configuration without changing this repo file :
-    - define USE_CUSTOM_H as a build flags. ie : export PLATFORMIO_BUILD_FLAGS="'-DUSE_CUSTOM_H'"
-        - add a "Custom.h" file in this folder.
-
-*/
-#ifdef USE_CUSTOM_H
-#include "Custom.h"
-#endif
-
 #include <map>
 #include <deque>
 
@@ -209,7 +214,7 @@ ExtraTaskSettingsStruct ExtraTaskSettings;
 LogStruct Logging;
 NotificationStruct Notification[NPLUGIN_MAX];
 RTCStruct RTC;
-
+DeviceVector Device;
 
 std::map<int, TimingStats> pluginStats;
 std::map<int, TimingStats> controllerStats;

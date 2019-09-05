@@ -335,7 +335,7 @@ void process_interval_timer(unsigned long id, unsigned long lasttimer) {
        */
 
       // When extending this, also extend in DelayQueueElements.h
-      // Look for DEFINE_Cxxx_DELAY_QUEUE_MACRO
+      // Also make sure to extend the "TIMER_C020_DELAY_QUEUE" list of defines.
   }
 }
 
