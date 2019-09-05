@@ -214,7 +214,7 @@ To create/register a plugin, you have to :
 #endif
 
 
-#ifndef BUILD_MINIMAL_OTA
+#if !defined(BUILD_MINIMAL_OTA) && !defined(MEMORY_ANALYSIS)
   #ifndef WEBSERVER_TIMINGSTATS
     #define WEBSERVER_TIMINGSTATS
   #endif

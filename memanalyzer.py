@@ -90,6 +90,10 @@ try:
     ################### start
     if len(sys.argv) <= 1:
         print("Usage: \n\t%s%s <path_to_objdump>" % sys.argv[0])
+        print(" e.g.")
+        print("  ~/.platformio/packages/toolchain-xtensa/bin/xtensa-lx106-elf-objdump")
+        print("  c:/Users/gijs/.platformio/packages/toolchain-xtensa/bin/xtensa-lx106-elf-objdump.exe")
+
         sys.exit(1)
 
     # e.g.
