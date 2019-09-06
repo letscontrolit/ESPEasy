@@ -359,7 +359,9 @@ void setup()
     initTime();
 
 #if FEATURE_ADC_VCC
-  vcc = ESP.getVcc() / 1000.0;
+  if (!wifiConnectInProgress) {
+    vcc = ESP.getVcc() / 1000.0;
+  }
 #endif
 
   if (Settings.UseRules)
@@ -841,7 +843,9 @@ void runEach30Seconds()
     SSDP_update();
   #endif
 #if FEATURE_ADC_VCC
-  vcc = ESP.getVcc() / 1000.0;
+  if (!wifiConnectInProgress) {
+    vcc = ESP.getVcc() / 1000.0;
+  }
 #endif
 
   #ifdef FEATURE_REPORTING

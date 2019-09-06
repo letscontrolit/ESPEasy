@@ -613,6 +613,7 @@ volatile bool processedConnectAPmode = true;
 volatile bool processedDisconnectAPmode = true;
 volatile bool processedScanDone = true;
 bool wifiConnectAttemptNeeded = true;
+bool wifiConnectInProgress = false;
 
 bool webserverRunning = false;
 bool webserver_init = false;

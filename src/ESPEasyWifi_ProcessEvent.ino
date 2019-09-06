@@ -57,6 +57,7 @@ void handle_unprocessedWiFiEvents()
 
     if ((wifiStatus & ESPEASY_WIFI_GOT_IP) && (wifiStatus & ESPEASY_WIFI_CONNECTED) && WiFi.isConnected()) {
       wifiStatus = ESPEASY_WIFI_SERVICES_INITIALIZED;
+      wifiConnectInProgress = false;
       resetAPdisableTimer();
     }
   } else if (!WiFiConnected()) {

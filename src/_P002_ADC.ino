@@ -193,9 +193,12 @@ float P002_applyCalibration(struct EventStruct *event, float float_value) {
 }
 
 uint16_t P002_performRead(struct EventStruct *event) {
-  uint16_t value = 0;
+  // Define it static so we just return the last value when no read can be performed.
+  static uint16_t value = 0;
   #if defined(ESP8266)
+  if (!wifiConnectInProgress) {
     value = analogRead(A0);
+  }
   #endif
   #if defined(ESP32)
     value = analogRead(CONFIG_PIN1);

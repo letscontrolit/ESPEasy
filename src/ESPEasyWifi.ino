@@ -66,6 +66,7 @@ bool WiFiConnected() {
     if (validWiFi) {
       // Set internal wifiStatus and reset timer to disable AP mode
       wifiStatus = ESPEASY_WIFI_SERVICES_INITIALIZED;
+      wifiConnectInProgress = false;
       resetAPdisableTimer();
     }
   }
@@ -94,6 +95,7 @@ bool WiFiConnected() {
   if (wifiConnectTimeoutReached() && !wifiSetup) {
     // It took too long to make a connection, set flag we need to try again
     wifiConnectAttemptNeeded = true;
+    wifiConnectInProgress = false;
   }
   delay(1);
   STOP_TIMER(WIFI_NOTCONNECTED_STATS);
@@ -138,6 +140,7 @@ void WiFiConnectRelaxed() {
   setupStaticIPconfig();
   setConnectionSpeed();
   last_wifi_connect_attempt_moment = millis();
+  wifiConnectInProgress = true;
 
   // First try quick reconnect using last known BSSID and channel.
   switch (wifi_connect_attempt) {
