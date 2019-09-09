@@ -163,6 +163,11 @@ void processConnect() {
     rulesProcessing(event);
   }
 
+  if (Settings.UseRules && channel_changed) {
+    String event = F("WiFi#ChangedWiFichannel");
+    rulesProcessing(event);
+  }
+
   if (useStaticIP()) {
     markGotIP(); // in static IP config the got IP event is never fired.
   }

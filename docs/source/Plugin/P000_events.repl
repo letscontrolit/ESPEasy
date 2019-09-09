@@ -124,6 +124,19 @@
 
    "
    "
+   ``WiFi#ChangedWiFichannel``
+   Triggered when the ESP is connected to the AP on a different channel, will also trigger first time the unit connects to the Wi-Fi.
+   This has been added in build mega-20190910
+   ","
+
+   .. code-block:: html
+
+	   on WiFi#ChangedWiFichannel do
+	    Publish,%sysname%/status,channel changed
+	   endon
+
+   "
+   "
    ``WiFi#APmodeEnabled``
    Triggered when the ESP has set the AP mode (access point) active.
    This may happen when no valid WiFi settings are found or the ESP cannot connect to the set AP, but it can also be enabled via some command.

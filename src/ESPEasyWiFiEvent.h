@@ -96,6 +96,7 @@ void onConnected(const WiFiEventStationModeConnected& event) {
   lastConnectMoment = millis();
   processedConnect  = false;
   wifiStatus        = ESPEASY_WIFI_CONNECTED;
+  channel_changed   = last_channel != event.channel;
   last_channel      = event.channel;
   last_ssid         = event.ssid;
   bssid_changed     = false;

@@ -589,6 +589,7 @@ int wifi_reconnects = -1; // First connection attempt is not a reconnect.
 uint8_t lastWiFiSettings = 0;
 String last_ssid;
 bool bssid_changed = false;
+bool channel_changed = false;
 uint8_t last_channel = 0;
 WiFiDisconnectReason lastDisconnectReason = WIFI_DISCONNECT_REASON_UNSPECIFIED;
 unsigned long lastConnectMoment = 0;
