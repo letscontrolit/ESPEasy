@@ -403,6 +403,31 @@ byte disableNotification(byte bootFailedCount) {
   return bootFailedCount;
 }
 
+
+#define DAT_TASKS_DISTANCE               2048  // DAT_TASKS_SIZE + DAT_TASKS_CUSTOM_SIZE
+#define DAT_TASKS_SIZE                   1024
+#define DAT_TASKS_CUSTOM_OFFSET          1024  // Equal to DAT_TASKS_SIZE
+#define DAT_TASKS_CUSTOM_SIZE            1024
+#define DAT_CUSTOM_CONTROLLER_SIZE       1024
+#define DAT_CONTROLLER_SIZE              1024
+#define DAT_NOTIFICATION_SIZE            1024
+
+#define DAT_BASIC_SETTINGS_SIZE          4096
+
+#if defined(ESP8266)
+  #define DAT_OFFSET_TASKS                 4096  // each task = 2k, (1024 basic + 1024 bytes custom), 12 max
+  #define DAT_OFFSET_CONTROLLER           28672  // each controller = 1k, 4 max
+  #define DAT_OFFSET_CUSTOM_CONTROLLER    32768  // each custom controller config = 1k, 4 max.
+  #define CONFIG_FILE_SIZE                65536
+#endif
+#if defined(ESP32)
+  #define DAT_OFFSET_CONTROLLER            8192  // each controller = 1k, 4 max
+  #define DAT_OFFSET_CUSTOM_CONTROLLER    12288  // each custom controller config = 1k, 4 max.
+  #define DAT_OFFSET_TASKS                32768  // each task = 2k, (1024 basic + 1024 bytes custom), 32 max
+  #define CONFIG_FILE_SIZE               131072
+#endif
+
+
 /********************************************************************************************\
    Offsets in settings files
  \*********************************************************************************************/

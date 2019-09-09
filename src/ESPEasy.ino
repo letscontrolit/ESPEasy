@@ -82,27 +82,41 @@
 //   SHT1X temperature/humidity sensors
 //   Ser2Net server
 
+
 // Define globals before plugin sets to allow a personal override of the selected plugins
 #include "ESPEasy-Globals.h"
 // Must be included after all the defines, since it is using TASKS_MAX
 #include "_Plugin_Helper.h"
 // Plugin helper needs the defined controller sets, thus include after 'define_plugin_sets.h'
 #include "_CPlugin_Helper.h"
+#include "ControllerQueue/DelayQueueElements.h"
 
+
+// Get functions to give access to global defined variables.
+// These are needed to get direct access to global defined variables, since they cannot be defined in .h files and included more than once.
+SettingsStruct& getSettings() { return Settings; }
+SecurityStruct& getSecuritySettings() { return SecuritySettings; }
+CRCStruct& getCRCValues() { return CRCValues; }
+
+unsigned long& getConnectionFailures() { return connectionFailures; }
+byte& getHighestActiveLogLevel() { return highest_active_log_level; }
+int getPluginId_from_TaskIndex(byte taskIndex) { return Task_id_to_Plugin_id[taskIndex]; }
+
+float& getUserVar(unsigned int varIndex) {return UserVar[varIndex]; }
+
+
+#ifdef USES_BLYNK
 // Blynk_get prototype
 boolean Blynk_get(const String& command, byte controllerIndex,float *data = NULL );
 
-int firstEnabledBlynkController() {
-  for (byte i = 0; i < CONTROLLER_MAX; ++i) {
-    byte ProtocolIndex = getProtocolIndex(Settings.Protocol[i]);
-    if (Protocol[ProtocolIndex].Number == 12 && Settings.ControllerEnabled[i]) {
-      return i;
-    }
-  }
-  return -1;
-}
+int firstEnabledBlynkController();
+#endif
 
 //void checkRAM( const __FlashStringHelper* flashString);
+
+#ifdef CORE_POST_2_5_0
+void preinit();
+#endif
 
 #ifdef CORE_POST_2_5_0
 /*********************************************************************************************\
@@ -125,6 +139,9 @@ void sw_watchdog_callback(void *arg)
   yield(); // feed the WD
   ++sw_watchdog_callback_count;
 }
+
+
+
 
 /*********************************************************************************************\
  * SETUP
@@ -342,7 +359,9 @@ void setup()
     initTime();
 
 #if FEATURE_ADC_VCC
-  vcc = ESP.getVcc() / 1000.0;
+  if (!wifiConnectInProgress) {
+    vcc = ESP.getVcc() / 1000.0;
+  }
 #endif
 
   if (Settings.UseRules)
@@ -582,29 +601,8 @@ void flushAndDisconnectAllClients() {
   process_serialWriteBuffer();
 }
 
+
 #ifdef USES_MQTT
-void runPeriodicalMQTT() {
-  // MQTT_KEEPALIVE = 15 seconds.
-  if (!WiFiConnected(10)) {
-    updateMQTTclient_connected();
-    return;
-  }
-  //dont do this in backgroundtasks(), otherwise causes crashes. (https://github.com/letscontrolit/ESPEasy/issues/683)
-  int enabledMqttController = firstEnabledMQTTController();
-  if (enabledMqttController >= 0) {
-    if (!MQTTclient.loop()) {
-      updateMQTTclient_connected();
-      if (MQTTCheck(enabledMqttController)) {
-        updateMQTTclient_connected();
-      }
-    }
-  } else {
-    if (MQTTclient.connected()) {
-      MQTTclient.disconnect();
-      updateMQTTclient_connected();
-    }
-  }
-}
 
 void updateMQTTclient_connected() {
   if (MQTTclient_connected != MQTTclient.connected()) {
@@ -634,6 +632,29 @@ void updateMQTTclient_connected() {
   setIntervalTimer(TIMER_MQTT);
 }
 
+void runPeriodicalMQTT() {
+  // MQTT_KEEPALIVE = 15 seconds.
+  if (!WiFiConnected(10)) {
+    updateMQTTclient_connected();
+    return;
+  }
+  //dont do this in backgroundtasks(), otherwise causes crashes. (https://github.com/letscontrolit/ESPEasy/issues/683)
+  int enabledMqttController = firstEnabledMQTTController();
+  if (enabledMqttController >= 0) {
+    if (!MQTTclient.loop()) {
+      updateMQTTclient_connected();
+      if (MQTTCheck(enabledMqttController)) {
+        updateMQTTclient_connected();
+      }
+    }
+  } else {
+    if (MQTTclient.connected()) {
+      MQTTclient.disconnect();
+      updateMQTTclient_connected();
+    }
+  }
+}
+
 int firstEnabledMQTTController() {
   for (byte i = 0; i < CONTROLLER_MAX; ++i) {
     byte ProtocolIndex = getProtocolIndex(Settings.Protocol[i]);
@@ -643,8 +664,8 @@ int firstEnabledMQTTController() {
   }
   return -1;
 }
-#endif //USES_MQTT
 
+#endif //USES_MQTT
 
 /*********************************************************************************************\
  * Tasks that run 50 times per second
@@ -822,7 +843,9 @@ void runEach30Seconds()
     SSDP_update();
   #endif
 #if FEATURE_ADC_VCC
-  vcc = ESP.getVcc() / 1000.0;
+  if (!wifiConnectInProgress) {
+    vcc = ESP.getVcc() / 1000.0;
+  }
 #endif
 
   #ifdef FEATURE_REPORTING

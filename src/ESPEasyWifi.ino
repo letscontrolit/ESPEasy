@@ -66,6 +66,7 @@ bool WiFiConnected() {
     if (validWiFi) {
       // Set internal wifiStatus and reset timer to disable AP mode
       wifiStatus = ESPEASY_WIFI_SERVICES_INITIALIZED;
+      wifiConnectInProgress = false;
       resetAPdisableTimer();
     }
   }
@@ -94,6 +95,7 @@ bool WiFiConnected() {
   if (wifiConnectTimeoutReached() && !wifiSetup) {
     // It took too long to make a connection, set flag we need to try again
     wifiConnectAttemptNeeded = true;
+    wifiConnectInProgress = false;
   }
   delay(1);
   STOP_TIMER(WIFI_NOTCONNECTED_STATS);
@@ -119,11 +121,15 @@ void WiFiConnectRelaxed() {
     // wifiSetupConnect is when run from the setup page.
     lastWiFiSettings     = 0; // Force to load the first settings.
     wifi_connect_attempt = 0;
+    wifiSetupConnect     = false;
   }
 
   // Switch between WiFi credentials
   if ((wifi_connect_attempt != 0) && ((wifi_connect_attempt % 2) == 0)) {
-    selectNextWiFiSettings();
+    if (selectNextWiFiSettings()) {
+      // Switch WiFi settings, so the last known BSSID cannot be used for a quick reconnect.
+      lastBSSID[0] = 0;
+    }
   }
   const char *ssid       = getLastWiFiSettingsSSID();
   const char *passphrase = getLastWiFiSettingsPassphrase();
@@ -138,20 +144,14 @@ void WiFiConnectRelaxed() {
   setupStaticIPconfig();
   setConnectionSpeed();
   last_wifi_connect_attempt_moment = millis();
+  wifiConnectInProgress = true;
 
   // First try quick reconnect using last known BSSID and channel.
-  switch (wifi_connect_attempt) {
-    case 0:
-
-      if (lastBSSID[0] == 0) {
-        WiFi.begin(ssid, passphrase);
-      }
-      else {
-        WiFi.begin(ssid, passphrase, last_channel, &lastBSSID[0]);
-      }
-      break;
-    default:
-      WiFi.begin(ssid, passphrase);
+  bool useQuickConnect = lastBSSID[0] != 0 && wifi_connect_attempt < 3;
+  if (useQuickConnect) {
+    WiFi.begin(ssid, passphrase, last_channel, &lastBSSID[0]);
+  } else {
+    WiFi.begin(ssid, passphrase);
   }
   ++wifi_connect_attempt;
   logConnectionStatus();

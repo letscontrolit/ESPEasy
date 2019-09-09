@@ -69,6 +69,8 @@ bool CPlugin_017(byte function, struct EventStruct *event, String &string)
   return success;
 }
 
+bool do_process_c017_delay_queue(int controller_number, const C017_queue_element &element, ControllerSettingsStruct &ControllerSettings);
+
 bool do_process_c017_delay_queue(int controller_number, const C017_queue_element &element, ControllerSettingsStruct &ControllerSettings)
 {
   byte valueCount = getValueCountFromSensorType(element.sensorType);

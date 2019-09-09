@@ -66,6 +66,8 @@ bool CPlugin_007(byte function, struct EventStruct *event, String& string)
   return success;
 }
 
+bool do_process_c007_delay_queue(int controller_number, const C007_queue_element& element, ControllerSettingsStruct& ControllerSettings);
+
 bool do_process_c007_delay_queue(int controller_number, const C007_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
   WiFiClient client;
   if (!try_connect_host(controller_number, client, ControllerSettings))

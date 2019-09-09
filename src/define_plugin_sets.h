@@ -57,10 +57,24 @@ To create/register a plugin, you have to :
 #endif // ESP32
 
 
+#ifdef MEMORY_ANALYSIS
+  #ifndef WEBSERVER_RULES_DEBUG
+    #define WEBSERVER_RULES_DEBUG 0
+  #endif
+  #ifdef MQTT_ONLY
+    #define USES_C002   // Domoticz MQTT
+    #define USES_C005   // Home Assistant (openHAB) MQTT
+    #define USES_C006   // PiDome MQTT
+    #define USES_C014   // homie 3 & 4dev MQTT
+    #define USES_P037   // MQTTImport
+  #endif
+#endif
+
+
 /******************************************************************************\
  * Available options **********************************************************
 \******************************************************************************/
-#ifdef CORE_POST_2_5_0
+#if defined(CORE_POST_2_5_0) && !defined(MEMORY_ANALYSIS) && !defined(USE_CUSTOM_H)
     #ifndef USE_SETTINGS_ARCHIVE
         #define USE_SETTINGS_ARCHIVE
     #endif // USE_SETTINGS_ARCHIVE
@@ -200,7 +214,7 @@ To create/register a plugin, you have to :
 #endif
 
 
-#ifndef BUILD_MINIMAL_OTA
+#if !defined(BUILD_MINIMAL_OTA) && !defined(MEMORY_ANALYSIS)
   #ifndef WEBSERVER_TIMINGSTATS
     #define WEBSERVER_TIMINGSTATS
   #endif
@@ -672,7 +686,7 @@ To create/register a plugin, you have to :
     #define USES_C011   // Generic HTTP Advanced
     #define USES_C012   // Blynk HTTP
     #define USES_C014   // homie 3 & 4dev MQTT
-    #define USES_C015   // Blynk
+    //#define USES_C015   // Blynk
     #define USES_C017   // Zabbix
     // #define USES_C018 // TTN RN2483
 #endif
@@ -759,7 +773,7 @@ To create/register a plugin, you have to :
 
 
 #ifdef CONTROLLER_SET_EXPERIMENTAL
-  #define USES_C016   // Cache controller
+  //#define USES_C016   // Cache controller
   //#define USES_C018   // TTN/RN2483
 #endif
 
@@ -840,6 +854,7 @@ To create/register a plugin, you have to :
 #endif
 
 
+
 #ifdef USES_MQTT
 // MQTT_MAX_PACKET_SIZE : Maximum packet size
 #ifndef MQTT_MAX_PACKET_SIZE
@@ -851,4 +866,12 @@ To create/register a plugin, you have to :
 // Disable Homie plugin for now in the dev build to make it fit.
 #if defined(PLUGIN_BUILD_DEV) && defined(USES_C014)
   #undef USES_C014
+#endif
+
+
+// Due to size restrictions, disable a few plugins/controllers for 1M builds
+#ifdef SIZE_1M
+  #ifdef USES_C003
+    #undef USES_C003
+  #endif
 #endif

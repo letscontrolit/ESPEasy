@@ -1,7 +1,9 @@
 
 #include "Commands/Common.h"
+#ifdef USES_BLYNK
 #include "Commands/Blynk.h"
 #include "Commands/Blynk_c015.h"
+#endif
 #include "Commands/Diagnostic.h"
 #include "Commands/HTTP.h"
 #include "Commands/i2c.h"

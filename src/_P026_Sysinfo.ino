@@ -4,6 +4,8 @@
 //#######################################################################################################
 
 
+#include "ESPEasy_packed_raw_data.h"
+
 #define PLUGIN_026
 #define PLUGIN_ID_026         26
 #define PLUGIN_NAME_026       "Generic - System Info"
