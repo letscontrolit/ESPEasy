@@ -51,7 +51,7 @@
 #endif  // UNIT_TEST
 
 // Library Version
-#define _IRREMOTEESP8266_VERSION_ "2.6.4"
+#define _IRREMOTEESP8266_VERSION_ "2.6.5"
 // Supported IR protocols
 // Each protocol you include costs memory and, during decode, costs time
 // Disable (set to false) all the protocols you do not need/want!
@@ -129,6 +129,9 @@
 
 #define DECODE_MITSUBISHI_AC   true  // Beta.
 #define SEND_MITSUBISHI_AC     true
+
+#define DECODE_MITSUBISHI136   true
+#define SEND_MITSUBISHI136     true
 
 #define DECODE_FUJITSU_AC      true
 #define SEND_FUJITSU_AC        true
@@ -250,6 +253,9 @@
 #define DECODE_AMCOR           true
 #define SEND_AMCOR             true
 
+#define DECODE_DAIKIN152       true
+#define SEND_DAIKIN152         true
+
 #if (DECODE_ARGO || DECODE_DAIKIN || DECODE_FUJITSU_AC || DECODE_GREE || \
      DECODE_KELVINATOR || DECODE_MITSUBISHI_AC || DECODE_TOSHIBA_AC || \
      DECODE_TROTEC || DECODE_HAIER_AC || DECODE_HITACHI_AC || \
@@ -258,7 +264,8 @@
      DECODE_PANASONIC_AC || DECODE_MWM || DECODE_DAIKIN2 || \
      DECODE_VESTEL_AC || DECODE_TCL112AC || DECODE_MITSUBISHIHEAVY || \
      DECODE_DAIKIN216 || DECODE_SHARP_AC || DECODE_DAIKIN160 || \
-     DECODE_NEOCLIMA || DECODE_DAIKIN176 || DECODE_DAIKIN128 || DECODE_AMCOR)
+     DECODE_NEOCLIMA || DECODE_DAIKIN176 || DECODE_DAIKIN128 || \
+     DECODE_AMCOR || DECODE_DAIKIN152 || DECODE_MITSUBISHI136)
 #define DECODE_AC true  // We need some common infrastructure for decoding A/Cs.
 #else
 #define DECODE_AC false   // We don't need that infrastructure.
@@ -347,8 +354,10 @@ enum decode_type_t {
   DAIKIN176,
   DAIKIN128,
   AMCOR,
+  DAIKIN152,  // 70
+  MITSUBISHI136,
   // Add new entries before this one, and update it to point to the last entry.
-  kLastDecodeType = AMCOR,
+  kLastDecodeType = MITSUBISHI136,
 };
 
 // Message lengths & required repeat values
@@ -381,6 +390,9 @@ const uint16_t kDaikin160DefaultRepeat = kNoRepeat;
 const uint16_t kDaikin128StateLength = 16;
 const uint16_t kDaikin128Bits = kDaikin128StateLength * 8;
 const uint16_t kDaikin128DefaultRepeat = kNoRepeat;
+const uint16_t kDaikin152StateLength = 19;
+const uint16_t kDaikin152Bits = kDaikin152StateLength * 8;
+const uint16_t kDaikin152DefaultRepeat = kNoRepeat;
 const uint16_t kDaikin176StateLength = 22;
 const uint16_t kDaikin176Bits = kDaikin176StateLength * 8;
 const uint16_t kDaikin176DefaultRepeat = kNoRepeat;
@@ -443,6 +455,9 @@ const uint16_t kMitsubishiMinRepeat = kSingleRepeat;
 const uint16_t kMitsubishiACStateLength = 18;
 const uint16_t kMitsubishiACBits = kMitsubishiACStateLength * 8;
 const uint16_t kMitsubishiACMinRepeat = kSingleRepeat;
+const uint16_t kMitsubishi136StateLength = 17;
+const uint16_t kMitsubishi136Bits = kMitsubishi136StateLength * 8;
+const uint16_t kMitsubishi136MinRepeat = kNoRepeat;
 const uint16_t kMitsubishiHeavy88StateLength = 11;
 const uint16_t kMitsubishiHeavy88Bits = kMitsubishiHeavy88StateLength * 8;
 const uint16_t kMitsubishiHeavy88MinRepeat = kNoRepeat;

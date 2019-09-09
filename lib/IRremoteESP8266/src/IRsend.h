@@ -275,6 +275,11 @@ class IRsend {
   void sendMitsubishi(uint64_t data, uint16_t nbits = kMitsubishiBits,
                       uint16_t repeat = kMitsubishiMinRepeat);
 #endif
+#if SEND_MITSUBISHI136
+  void sendMitsubishi136(const unsigned char data[],
+                         const uint16_t nbytes = kMitsubishi136StateLength,
+                         const uint16_t repeat = kMitsubishi136MinRepeat);
+#endif
 #if SEND_MITSUBISHI2
   void sendMitsubishi2(uint64_t data, uint16_t nbits = kMitsubishiBits,
                        uint16_t repeat = kMitsubishiMinRepeat);
@@ -320,6 +325,11 @@ class IRsend {
                      const uint16_t nbytes = kDaikin128StateLength,
                      const uint16_t repeat = kDaikin128DefaultRepeat);
 #endif  // SEND_DAIKIN128
+#if SEND_DAIKIN152
+  void sendDaikin152(const unsigned char data[],
+                     const uint16_t nbytes = kDaikin152StateLength,
+                     const uint16_t repeat = kDaikin152DefaultRepeat);
+#endif  // SEND_DAIKIN152
 #if SEND_DAIKIN160
   void sendDaikin160(const unsigned char data[],
                      const uint16_t nbytes = kDaikin160StateLength,
