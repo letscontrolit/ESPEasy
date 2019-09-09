@@ -240,6 +240,7 @@ To create/register a plugin, you have to :
 
 #ifdef PLUGIN_BUILD_IR_EXTENDED_NO_RX
     #ifndef PLUGIN_DESCR
+        #define PLUGIN_DESCR  "IR_Extended, no IR RX"
     #endif // PLUGIN_DESCR
     #define USES_P035      // IRTX
     // The following define is needed for extended decoding of A/C Messages and or using standardised common arguments for controlling all deeply supported A/C units
