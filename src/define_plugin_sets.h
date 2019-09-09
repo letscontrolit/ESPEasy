@@ -74,7 +74,7 @@ To create/register a plugin, you have to :
 /******************************************************************************\
  * Available options **********************************************************
 \******************************************************************************/
-#if defined(CORE_POST_2_5_0) && !defined(MEMORY_ANALYSIS)
+#if defined(CORE_POST_2_5_0) && !defined(MEMORY_ANALYSIS) && !defined(USE_CUSTOM_H)
     #ifndef USE_SETTINGS_ARCHIVE
         #define USE_SETTINGS_ARCHIVE
     #endif // USE_SETTINGS_ARCHIVE

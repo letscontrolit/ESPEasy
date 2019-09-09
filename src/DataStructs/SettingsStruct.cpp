@@ -141,7 +141,7 @@
     WiFiRestart_connection_lost(DEFAULT_WIFI_RESTART_WIFI_CONN_LOST);
     EcoPowerMode(DEFAULT_ECO_MODE);
     WifiNoneSleep(DEFAULT_WIFI_NONE_SLEEP);
-    gratuitousARP(DEFAULT_GRATUITOUS_ARD);
+    gratuitousARP(DEFAULT_GRATUITOUS_ARP);
   }
 
   void SettingsStruct::clearAll() {

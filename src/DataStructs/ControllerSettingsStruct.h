@@ -48,7 +48,7 @@ class WiFiUDP;
 #define CONTROLLER_LWT_CONNECT_MESSAGE      16
 #define CONTROLLER_LWT_DISCONNECT_MESSAGE   17
 #define CONTROLLER_TIMEOUT                  18
-#define CONTROLLER_SAMPLE_SET_INITIATOR       19
+#define CONTROLLER_SAMPLE_SET_INITIATOR     19
 #define CONTROLLER_ENABLED                  20  // Keep this as last, is used to loop over all parameters
 
 struct ControllerSettingsStruct

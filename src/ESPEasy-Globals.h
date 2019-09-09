@@ -90,15 +90,6 @@ void check_size() {
 
 // User configuration
 #include "DataStructs/ESPEasyDefaults.h"
-/*
-    To modify the stock configuration without changing this repo file :
-    - define USE_CUSTOM_H as a build flags. ie : export PLATFORMIO_BUILD_FLAGS="'-DUSE_CUSTOM_H'"
-    - add a "Custom.h" file in this folder.
-
-*/
-#ifdef USE_CUSTOM_H
-#include "Custom.h"
-#endif
 
 // Make sure to have this as early as possible in the build process.
 #include "define_plugin_sets.h"

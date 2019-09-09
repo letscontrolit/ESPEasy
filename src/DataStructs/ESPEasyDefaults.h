@@ -1,6 +1,12 @@
 #ifndef ESPEASY_DEFAULTS_H_
 #define ESPEASY_DEFAULTS_H_
 
+/*
+    To modify the stock configuration without changing this repo file :
+    - define USE_CUSTOM_H as a build flags. ie : export PLATFORMIO_BUILD_FLAGS="'-DUSE_CUSTOM_H'"
+    - add a "Custom.h" file in this folder.
+
+*/
 #ifdef USE_CUSTOM_H
 #include "Custom.h"
 #endif
@@ -84,8 +90,8 @@
 #ifndef DEFAULT_WIFI_NONE_SLEEP
 #define DEFAULT_WIFI_NONE_SLEEP          false  // When set, the wifi will be set to no longer sleep (more power used and need reboot to reset mode)
 #endif
-#ifndef DEFAULT_GRATUITOUS_ARD
-#define DEFAULT_GRATUITOUS_ARD           false  // When set, the node will send periodical gratuitous ARP packets to announce itself.
+#ifndef DEFAULT_GRATUITOUS_ARP
+#define DEFAULT_GRATUITOUS_ARP           false  // When set, the node will send periodical gratuitous ARP packets to announce itself.
 #endif
 
 // --- Default Controller ------------------------------------------------------------------------------

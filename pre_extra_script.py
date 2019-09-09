@@ -1,4 +1,5 @@
 Import("env")
+import os
 
 # access to global construction environment
 #print env
@@ -13,23 +14,29 @@ Import("env")
 # - dependent libraries
 env.Append(CPPDEFINES=[
   "PIO_FRAMEWORK_ARDUINO_ESPRESSIF_SDK22y",
-  "CONTROLLER_SET_ALL",
-  "NOTIFIER_SET_NONE",
-  "PLUGIN_SET_ONLY_SWITCH",
-  "USES_P001",  # Switch
-  "USES_P002",  # ADC
-  "USES_P004",  # Dallas DS18b20
-  "USES_P028",  # BME280
-  "USES_P036",  # FrameOLED
-  "USES_P049",  # MHZ19
-  "USES_P052",  # SenseAir
-  "USES_P056",  # SDS011-Dust
-  "USES_P059",  # Encoder
-  "USES_P082",  # GPS
-  "USES_P085",  # AcuDC24x
-  "USES_P087",  # Serial Proxy
-
-  "USES_C018", 
-
   ("WEBSERVER_RULES_DEBUG", "0")
 ])
+if os.path.isfile('src/Custom.h'):
+  env['CPPDEFINES'].append("USE_CUSTOM_H")
+else:
+  env['CPPDEFINES'].append([
+    "CONTROLLER_SET_ALL",
+    "NOTIFIER_SET_NONE",
+    "PLUGIN_SET_ONLY_SWITCH",
+    "USES_P001",  # Switch
+    "USES_P002",  # ADC
+    "USES_P004",  # Dallas DS18b20
+    "USES_P028",  # BME280
+    "USES_P036",  # FrameOLED
+    "USES_P049",  # MHZ19
+    "USES_P052",  # SenseAir
+    "USES_P056",  # SDS011-Dust
+    "USES_P059",  # Encoder
+    "USES_P082",  # GPS
+    "USES_P085",  # AcuDC24x
+    "USES_P087",  # Serial Proxy
+
+    "USES_C018"
+  ])
+
+print(env['CPPDEFINES'])
