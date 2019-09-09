@@ -68,7 +68,7 @@ const IPAddress kSubnetMask = IPAddress(255, 255, 255, 0);
 #endif  // USE_STATIC_IP
 
 // See: https://github.com/tzapu/WiFiManager#filter-networks for these settings.
-#define HIDE_DUPLIATE_NETWORKS false  // Should WifiManager hide duplicate SSIDs
+#define HIDE_DUPLICATE_NETWORKS false  // Make WifiManager hide duplicate SSIDs
 // #define MIN_SIGNAL_STRENGTH 20  // Minimum WiFi signal stength (percentage)
                                    // before we will connect.
                                    // The unset default is 8%.
@@ -209,6 +209,11 @@ const uint8_t kPortLength = 5;  // Largest value of uint16_t is "65535".
 const uint8_t kUsernameLength = 15;
 const uint8_t kPasswordLength = 20;
 
+// -------------------------- Json Settings ------------------------------------
+
+const uint16_t kJsonConfigMaxSize = 512;    // Bytes
+const uint16_t kJsonAcStateMaxSize = 1024;  // Bytes
+
 // -------------------------- Debug Settings -----------------------------------
 // Debug output is disabled if any of the IR pins are on the TX (D1) pin.
 // See `isSerialGpioUsedByIr()`.
@@ -220,7 +225,7 @@ const uint8_t kPasswordLength = 20;
 // ----------------- End of User Configuration Section -------------------------
 
 // Constants
-#define _MY_VERSION_ "v1.3.4-beta"
+#define _MY_VERSION_ "v1.4.0-alpha"
 
 const uint8_t kRebootTime = 15;  // Seconds
 const uint8_t kQuickDisplayTime = 2;  // Seconds

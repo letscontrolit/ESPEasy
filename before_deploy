@@ -50,6 +50,7 @@ for ENV in \
   minimal_IRext_ESP8266_1M\
   minimal_IRext_ESP8266_4M1M\
   minimal_IRext_ESP8266_4M2M\
+  normal_IRext_no_rx_ESP8266_4M2M\
   minimal_core_242_ESP8266_1M_OTA\
   minimal_core_242_ESP8285_1M_OTA\
   minimal_core_252_ESP8266_1M_OTA\
