@@ -1,4 +1,30 @@
 -------------------------------------------------
+Changes in release mega-20190910 (since mega-20190903)
+-------------------------------------------------
+
+Release date: Tue Sep 10 04:00:11 CEST 2019
+
+Gijs Noorlander (12):
+      [Cleanup] Split settings from global.h into separate .h and .cpp
+      [Cleanup] Fix warnings of unused (static) functions
+      [Cleanup] Move structs to separate .h/.cpp files
+      [Cleanup] Move/split Controller QueueElement class to separate .h/.cpp
+      [Cleanup] Allow Controller QueueElements to be excluded from a build
+      [Memory Analyzer] Simplify analyzer and check for sets also
+      [Memory Analyzer] Give hints on used parameters and reduce core size test
+      Skip analog read during WiFi connect (#2566)
+      [WiFi] Fix No reconnect when setup page was not completed
+      [LoRa] Add air time calculation function
+      [Vagrant] Allow Custom.h file to be used
+      [build] Remove some builds from Travis test build due to build time
+
+jimmys01 (3):
+      [IR] Add Normal plugin set with only IR TX extended
+      [IR} Update the IR library
+      Add missed plugin description
+
+
+-------------------------------------------------
 Changes in release mega-20190903 (since mega-20190830)
 -------------------------------------------------
 
