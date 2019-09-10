@@ -102,7 +102,7 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
   {
     Device[++deviceCount].Number = PLUGIN_ID_016;
     Device[deviceCount].Type = DEVICE_TYPE_SINGLE;
-    Device[deviceCount].VType = SENSOR_TYPE_LONG;
+    Device[deviceCount].VType = SENSOR_TYPE_STRING;
     Device[deviceCount].Ports = 0;
     Device[deviceCount].PullUpOption = true;
     Device[deviceCount].InverseLogicOption = true;
@@ -138,7 +138,7 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
     if (irReceiver == 0 && irPin != -1)
     {
       addLog(LOG_LEVEL_INFO, String(F("INIT: IR RX")));
-      addLog(LOG_LEVEL_INFO, String(F("IR lib Version: "))+_IRREMOTEESP8266_VERSION_);
+      addLog(LOG_LEVEL_INFO, String(F("IR lib Version: ")) + _IRREMOTEESP8266_VERSION_);
       irReceiver = new IRrecv(irPin, kCaptureBufferSize, P016_TIMEOUT, true);
       irReceiver->setUnknownThreshold(kMinUnknownSize); // Ignore messages with less than minimum on or off pulses.
       irReceiver->enableIRIn();                         // Start the receiver
@@ -189,13 +189,16 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
       // Display the basic output of what we found.
       if (results.decode_type != decode_type_t::UNKNOWN)
       {
-        addLog(LOG_LEVEL_INFO, String(F("IRSEND,")) + typeToString(results.decode_type, results.repeat) + ',' + resultToHexidecimal(&results) + ',' + uint64ToString(results.bits)); //Show the appropriate command to the user, so he can replay the message via P035
+        String output = String(F("IRSEND,")) + typeToString(results.decode_type, results.repeat) + ',' + resultToHexidecimal(&results) + ',' + uint64ToString(results.bits);
+        addLog(LOG_LEVEL_INFO, output); //Show the appropriate command to the user, so he can replay the message via P035
+        event->String2 = output;
       }
       //Check if a solution for RAW2 is found and if not give the user the option to access the timings info.
-      if (results.decode_type == decode_type_t::UNKNOWN && !displayRawToReadableB32Hex())
+      if (results.decode_type == decode_type_t::UNKNOWN && !displayRawToReadableB32Hex(event->String2))
       {
         addLog(LOG_LEVEL_INFO, F("IR: No replay solutions found! Press button again or try RAW encoding (timmings are in the serial output)"));
         serialPrint(String(F("IR: RAW TIMINGS: ")) + resultToSourceCode(&results));
+        event->String2 = F("NaN");
         yield(); // Feed the WDT as it can take a while to print.
                  //addLog(LOG_LEVEL_DEBUG,(String(F("IR: RAW TIMINGS: ")) + resultToSourceCode(&results))); // Output the results as RAW source code //not showing up nicely in the web log
       }
@@ -223,11 +226,11 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
       state.beep = false;
       state.sleep = -1;
       state.clock = -1;
-      
+
       String description = IRAcUtils::resultAcToString(&results);
       if (description != "")
         addLog(LOG_LEVEL_INFO, String(F("AC State: ")) + description); // If we got a human-readable description of the message, display it.
-      if (IRac::isProtocolSupported(results.decode_type))                   //Check If there is a replayable AC state and show the JSON command that can be send
+      if (IRac::isProtocolSupported(results.decode_type))              //Check If there is a replayable AC state and show the JSON command that can be send
       {
         IRAcUtils::decodeToState(&results, &state);
         StaticJsonDocument<300> doc;
@@ -266,6 +269,7 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
           doc[F("clock")] = state.clock; //Nr. of mins past midnight to set the clock to. (< 0 means off.)
         String output = F("IRSENDAC,");
         serializeJson(doc, output);
+        event->String2 = output;
         addLog(LOG_LEVEL_INFO, output); //Show the command that the user can put to replay the AC state with P035
       }
 #endif // P016_P035_Extended_AC
@@ -299,7 +303,7 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
 //
 // Author: Gilad Raz (jazzgil)  23sep2018
 
-boolean displayRawToReadableB32Hex()
+boolean displayRawToReadableB32Hex(String &outputStr)
 {
   String line;
   uint16_t div[2];
@@ -411,6 +415,7 @@ boolean displayRawToReadableB32Hex()
   out[iOut] = 0;
   line = String(F("IRSEND,RAW2,")) + String(out) + String(F(",38,")) + uint64ToString(div[0], 10) + ',' + uint64ToString(div[1], 10);
   addLog(LOG_LEVEL_INFO, line);
+  outputStr = line;
   return true;
 }
 
