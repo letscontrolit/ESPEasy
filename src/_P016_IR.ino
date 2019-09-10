@@ -274,9 +274,9 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
       }
 #endif // P016_P035_Extended_AC
 
-      unsigned long IRcode = results.value;
-      UserVar[event->BaseVarIndex] = (IRcode & 0xFFFF);
-      UserVar[event->BaseVarIndex + 1] = ((IRcode >> 16) & 0xFFFF);
+      //unsigned long IRcode = results.value;
+      //UserVar[event->BaseVarIndex] = (IRcode & 0xFFFF);
+      //UserVar[event->BaseVarIndex + 1] = ((IRcode >> 16) & 0xFFFF);
       sendData(event);
     }
     success = true;
