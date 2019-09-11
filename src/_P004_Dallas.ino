@@ -172,9 +172,6 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
         uint8_t addr[8];
         Plugin_004_get_addr(addr, event->TaskIndex);
         Plugin_004_DS_startConversion(addr, Plugin_004_DallasPin);
-
-        // FIXME TD-er: Must introduce some internal state to get rid of such long delays
-        delay(800); //give it time to do intial conversion        
       }
       success = true;
       break;
@@ -191,8 +188,8 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
         if (Plugin_004_DallasPin != -1) {
           float  value = 0;
           String log   = F("DS   : Temperature: ");
-
-          if (Plugin_004_DS_readTemp(addr, &value, Plugin_004_DallasPin))
+          Plugin_004_DS_startConversion(addr, Plugin_004_DallasPin); //Get the temperature measurment here.
+          if (Plugin_004_DS_readTemp(addr, &value, Plugin_004_DallasPin))   //Read the temperature here
           {
             UserVar[event->BaseVarIndex] = value;
             log                         += UserVar[event->BaseVarIndex];
@@ -214,9 +211,8 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
             }
             log += F("Error!");
           }
-          Plugin_004_DS_startConversion(addr, Plugin_004_DallasPin);
 
-          log += (" (");
+          log += F(" (");
 
           for (byte x = 0; x < 8; x++)
           {
@@ -289,6 +285,11 @@ void Plugin_004_DS_startConversion(uint8_t ROM[8], int8_t Plugin_004_DallasPin)
 {
   Plugin_004_DS_address_ROM(ROM, Plugin_004_DallasPin);
   Plugin_004_DS_write(0x44, Plugin_004_DallasPin); // Take temperature mesurement
+    // FIXME TD-er: Must introduce some internal state to get rid of such long delays
+    // We have to pass the resolution in this calculation to get the max needed delay time
+    //int delayInMillis = 750 / (1 << (12 - Plugin_004_DS_getResolution(savedAddress, Plugin_004_DallasPin))); 
+    //delay(delayInMillis); //give it time to do the conversion      
+    delay(750);
 }
 
 /*********************************************************************************************\
@@ -341,7 +342,7 @@ boolean Plugin_004_DS_readTemp(uint8_t ROM[8], float *value, int8_t Plugin_004_D
   {
     DSTemp = (ScratchPad[1] << 8) + ScratchPad[0];
 
-    if (DSTemp == 0x550) { // power-on reset value
+    if (DSTemp == 0x550) { // power-on reset value - Stands for 85c after conversion, so this temp is unobtainable
       return false;
     }
     *value = (float(DSTemp) * 0.0625);
