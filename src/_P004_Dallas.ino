@@ -171,7 +171,6 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
       if (Plugin_004_DallasPin != -1) {
         uint8_t addr[8];
         Plugin_004_get_addr(addr, event->TaskIndex);
-        Plugin_004_DS_startConversion(addr, Plugin_004_DallasPin);
       }
       success = true;
       break;
