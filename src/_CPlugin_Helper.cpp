@@ -4,13 +4,13 @@
 #include "ESPEasy_Log.h"
 #include "ESPEasy_buildinfo.h"
 
-#include "DataStructs/SecurityStruct.h"
-#include "DataStructs/CRCStruct.h"
-#include "DataStructs/SettingsStruct.h"
+#include "src/DataStructs/SecurityStruct.h"
+#include "src/DataStructs/CRCStruct.h"
+#include "src/DataStructs/SettingsStruct.h"
 
-#include "DataStructs/ControllerSettingsStruct.h"
-#include "DataStructs/ESPEasyLimits.h"
-#include "DataStructs/TimingStats.h"
+#include "src/DataStructs/ControllerSettingsStruct.h"
+#include "src/DataStructs/ESPEasyLimits.h"
+#include "src/DataStructs/TimingStats.h"
 
 #include <WiFiClient.h>
 #include <WiFiUdp.h>

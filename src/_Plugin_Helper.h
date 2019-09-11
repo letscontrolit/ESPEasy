@@ -2,7 +2,7 @@
 #define PLUGIN_HELPER_H
 
 #include "ESPEasy_common.h"
-#include "DataStructs/ESPEasyLimits.h"
+#include "src/DataStructs/ESPEasyLimits.h"
 
 // Defines to make plugins more readable.
 

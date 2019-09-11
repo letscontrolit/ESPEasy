@@ -13,7 +13,7 @@
 #include "ESPEasy_common.h"
 #include "ESPEasy_fdwdecl.h"
 
-#include "DataStructs/ESPEasyLimits.h"
+#include "src/DataStructs/ESPEasyLimits.h"
 #include "ESPEasy_plugindefs.h"
 
 #include "ESPEasy_buildinfo.h"
@@ -89,7 +89,7 @@ void check_size() {
 //#define FEATURE_SD
 
 // User configuration
-#include "DataStructs/ESPEasyDefaults.h"
+#include "src/DataStructs/ESPEasyDefaults.h"
 
 // Make sure to have this as early as possible in the build process.
 #include "define_plugin_sets.h"
@@ -176,27 +176,27 @@ void check_size() {
 #include <map>
 #include <deque>
 
-#include "DataStructs/ESPEasyLimits.h"
+#include "src/DataStructs/ESPEasyLimits.h"
 
-#include "DataStructs/ESPEasy_EventStruct.h"
-#include "DataStructs/SettingsType.h"
-#include "DataStructs/CRCStruct.h"
-#include "DataStructs/SecurityStruct.h"
-#include "DataStructs/SettingsStruct.h"
-#include "DataStructs/DeviceModel.h"
-#include "DataStructs/FactoryDefaultPref.h"
-#include "DataStructs/ControllerSettingsStruct.h"
-#include "DataStructs/NotificationSettingsStruct.h"
-#include "DataStructs/ExtraTaskSettingsStruct.h"
-#include "DataStructs/DeviceStruct.h"
-#include "DataStructs/TimingStats.h"
-#include "DataStructs/LogStruct.h"
-#include "DataStructs/ProtocolStruct.h"
-#include "DataStructs/NotificationStruct.h"
-#include "DataStructs/NodeStruct.h"
-#include "DataStructs/SystemTimerStruct.h"
-#include "DataStructs/RTCStruct.h"
-#include "DataStructs/PortStatusStruct.h"
+#include "src/DataStructs/ESPEasy_EventStruct.h"
+#include "src/DataStructs/SettingsType.h"
+#include "src/DataStructs/CRCStruct.h"
+#include "src/DataStructs/SecurityStruct.h"
+#include "src/DataStructs/SettingsStruct.h"
+#include "src/DataStructs/DeviceModel.h"
+#include "src/DataStructs/FactoryDefaultPref.h"
+#include "src/DataStructs/ControllerSettingsStruct.h"
+#include "src/DataStructs/NotificationSettingsStruct.h"
+#include "src/DataStructs/ExtraTaskSettingsStruct.h"
+#include "src/DataStructs/DeviceStruct.h"
+#include "src/DataStructs/TimingStats.h"
+#include "src/DataStructs/LogStruct.h"
+#include "src/DataStructs/ProtocolStruct.h"
+#include "src/DataStructs/NotificationStruct.h"
+#include "src/DataStructs/NodeStruct.h"
+#include "src/DataStructs/SystemTimerStruct.h"
+#include "src/DataStructs/RTCStruct.h"
+#include "src/DataStructs/PortStatusStruct.h"
 
 
 CRCStruct CRCValues;
