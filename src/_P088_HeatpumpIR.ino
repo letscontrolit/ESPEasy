@@ -71,6 +71,7 @@ HeatpumpIR *heatpumpIR[] = {new PanasonicCKPHeatpumpIR(), new PanasonicDKEHeatpu
                             new CarrierNQVHeatpumpIR(), new CarrierMCAHeatpumpIR(),
                             new MideaHeatpumpIR(), new FujitsuHeatpumpIR(),
                             new MitsubishiFDHeatpumpIR(), new MitsubishiFEHeatpumpIR(), new MitsubishiMSYHeatpumpIR(), new MitsubishiFAHeatpumpIR(),
+							new MitsubishiKJHeatpumpIR(),
                             new SamsungAQVHeatpumpIR(), new SamsungFJMHeatpumpIR(),new SharpHeatpumpIR(), new DaikinHeatpumpIR(),
                             new MitsubishiHeavyZJHeatpumpIR(), new MitsubishiHeavyZMHeatpumpIR(),
                             new MitsubishiSEZKDXXHeatpumpIR(),
@@ -202,7 +203,11 @@ boolean Plugin_088(byte function, struct EventStruct *event, String& string)
           if (GetArgv(command, TmpStr1, 6)) temperature = str2int(TmpStr1.c_str());
           if (GetArgv(command, TmpStr1, 7)) vDir = str2int(TmpStr1.c_str());
           if (GetArgv(command, TmpStr1, 8)) hDir = str2int(TmpStr1.c_str());
-
+#ifdef IR_SEND_TIME
+          sendHour = hour();
+          sendMinute = minute();
+          sendWeekday = weekday();
+#endif
           int i = 0;
           do
           {
@@ -220,9 +225,17 @@ boolean Plugin_088(byte function, struct EventStruct *event, String& string)
               irReceiver->enableIRIn(); // Start the receiver
               #endif
               addLog(LOG_LEVEL_INFO, F("P088: Heatpump IR code transmitted"));
+#ifdef IR_DEBUG_PACKET
+              addLog(LOG_LEVEL_DEBUG, IRPacket);
+#endif
               if (printToWeb)
               {
                 printWebString += F("P088: Heatpump IR code transmitted");
+#ifdef IR_DEBUG_PACKET
+                printWebString += F(" <BR>\n"); // do both <BR> and \n to break line both in browser and curl -s
+                printWebString += IRPacket;
+                printWebString += F("\n"); 
+#endif
               }
 
               // Panasonic CKP can only be turned ON/OFF by using the timer,
