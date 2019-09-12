@@ -242,6 +242,8 @@
 // Special plugins needing IR library
 // #define USES_P016   // IR
 // #define USES_P035   // IRTX
+// #define P016_P035_Extended_AC // The following define is needed for extended decoding of A/C Messages and or using standardised 
+                                 //common arguments for controlling all deeply supported A/C units
 // #define USES_P088   // Heatpump IR
 
 
