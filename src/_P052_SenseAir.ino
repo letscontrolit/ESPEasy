@@ -265,13 +265,15 @@ boolean Plugin_052(byte function, struct EventStruct *event, String &string) {
           addRowLabel(F("Detected Device"));
           addHtml(detectedString);
         }
-        addRowLabel(F("Checksum (pass/fail)"));
-        uint32_t reads_pass, reads_crc_failed;
-        P052_data->modbus.getStatistics(reads_pass, reads_crc_failed);
+        addRowLabel(F("Checksum (pass/fail/nodata)"));
+        uint32_t reads_pass, reads_crc_failed, reads_nodata;
+        P052_data->modbus.getStatistics(reads_pass, reads_crc_failed, reads_nodata);
         String chksumStats;
         chksumStats = reads_pass;
         chksumStats += '/';
         chksumStats += reads_crc_failed;
+        chksumStats += '/';
+        chksumStats += reads_nodata;
         addHtml(chksumStats);
 
         int value = P052_data->modbus.readInputRegister(0x06);
@@ -438,13 +440,13 @@ boolean Plugin_052(byte function, struct EventStruct *event, String &string) {
     if (nullptr != P052_data && P052_data->isInitialized()) {
       event->sensorType = PCONFIG(P052_SENSOR_TYPE_INDEX);
       String log = F("Senseair: ");
+      String logPrefix;
       for (int varnr = 0; varnr < P052_NR_OUTPUT_VALUES; ++varnr) {
+        int value = 0;
         switch (PCONFIG(varnr)) {
           case 1: {
-            int co2 = P052_data->modbus.readInputRegister(P052_IR_SPACE_CO2);
-            UserVar[event->BaseVarIndex + varnr] = co2;
-            log += F("co2 = ");
-            log += co2;
+            value = P052_data->modbus.readInputRegister(P052_IR_SPACE_CO2);
+            logPrefix = F("co2 = ");
             break;
           }
           case 2: {
@@ -505,6 +507,11 @@ boolean Plugin_052(byte function, struct EventStruct *event, String &string) {
             UserVar[event->BaseVarIndex + varnr] = 0;
             break;
           }
+        }
+        if (P052_data->modbus.getLastError() == 0) {
+          UserVar[event->BaseVarIndex + varnr] = value;
+          log += logPrefix;
+          log += value;
         }
       }
       addLog(LOG_LEVEL_INFO, log);
