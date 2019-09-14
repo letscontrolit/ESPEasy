@@ -10,7 +10,7 @@ sudo: false
 cache:
   directories:
   - "~/.platformio"
-  - "./.pioenvs"
+  - "./.pio"
 
 
 
