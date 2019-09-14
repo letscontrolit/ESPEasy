@@ -1437,130 +1437,212 @@ void delayedReboot(int rebootDelay)
 void reboot() {
   prepareShutdown();
   #if defined(ESP32)
-    ESP.restart();
-  #else
-    ESP.reset();
-  #endif
+  ESP.restart();
+  #else // if defined(ESP32)
+  ESP.reset();
+  #endif // if defined(ESP32)
 }
 
-
 /********************************************************************************************\
-  Parse string template
-  \*********************************************************************************************/
-String parseTemplate(String &tmpString, byte lineSize)
+   Parse string template
+ \*********************************************************************************************/
+String parseTemplate(String& tmpString, byte lineSize)
 {
   checkRAM(F("parseTemplate"));
-  String newString = "";
-  //String tmpStringMid = "";
+
+  // Keep current loaded taskSettings to restore at the end.
+  byte   currentTaskIndex = ExtraTaskSettings.TaskIndex;
+  String newString        = "";
+
+  // String tmpStringMid = "";
   newString.reserve(lineSize);
 
   parseSystemVariables(tmpString, false);
+  
 
-  // replace task template variables
-  int leftBracketIndex = tmpString.indexOf('[');
-  if (leftBracketIndex == -1)
-    newString = tmpString;
-  else
-  {
-    byte count = 0;
-    byte currentTaskIndex = ExtraTaskSettings.TaskIndex;
+  int startpos = 0;
+  int lastStartpos = 0;
+  int endpos = 0;
+  String deviceName, valueName, format;
 
-    while (leftBracketIndex >= 0 && count < 10 - 1)
+  while (findNextDevValNameInString(tmpString, startpos, endpos, deviceName, valueName, format)) {
+    // First copy all upto the start of the [...#...] part to be replaced.
+    newString += tmpString.substring(lastStartpos, startpos);
+
+    if (deviceName.equalsIgnoreCase(F("Plugin")))
     {
-      newString += tmpString.substring(0, leftBracketIndex);
-      tmpString = tmpString.substring(leftBracketIndex + 1);
-      int rightBracketIndex = tmpString.indexOf(']');
-      if (rightBracketIndex >= 0)
-      {
-        String tmpStringMid = tmpString.substring(0, rightBracketIndex);
-        tmpString = tmpString.substring(rightBracketIndex + 1);
-        int hashtagIndex = tmpStringMid.indexOf('#');
-        if (hashtagIndex >= 0) {
-          String deviceName = tmpStringMid.substring(0, hashtagIndex);
-          String valueName = tmpStringMid.substring(hashtagIndex + 1);
-          String valueFormat = "";
-          hashtagIndex = valueName.indexOf('#');
-          if (hashtagIndex >= 0)
-          {
-            valueFormat = valueName.substring(hashtagIndex + 1);
-            valueName = valueName.substring(0, hashtagIndex);
-          }
+      // Handle a plugin request.
+      // For example: "[Plugin#GPIO#Pinstate#N]"
+      // The command is stored in valueName & format
+      String command;
+      command.reserve(valueName.length() + format.length() + 1);
+      command  = valueName;
+      command += '#';
+      command += format;
+      command.replace('#', ',');
 
-          if (deviceName.equalsIgnoreCase(F("Plugin")))
-          {
-            String tmpString = tmpStringMid.substring(7);
-            tmpString.replace('#', ',');
-            if (PluginCall(PLUGIN_REQUEST, 0, tmpString))
-              newString += tmpString;
-          }
-          else if (deviceName.equalsIgnoreCase(F("Var"))) {
-            String tmpString = tmpStringMid.substring(4);
-            if (tmpString.length()>0 && isDigit(tmpString[0])) {
-              const int varNum = tmpString.toInt();
-              if (varNum > 0 && varNum <= CUSTOM_VARS_MAX)
-                newString += String(customFloatVar[varNum-1]);
-            }
-          }
-          else
-            for (byte y = 0; y < TASKS_MAX; y++)
-            {
-              if (Settings.TaskDeviceEnabled[y])
-              {
-                LoadTaskSettings(y);
-                String taskDeviceName = getTaskDeviceName(y);
-                if (taskDeviceName.length() != 0)
-                {
-                  if (deviceName.equalsIgnoreCase(taskDeviceName))
-                  {
-                    boolean match = false;
-                    for (byte z = 0; z < VARS_PER_TASK; z++)
-                      if (valueName.equalsIgnoreCase(ExtraTaskSettings.TaskDeviceValueNames[z]))
-                      {
-                        // here we know the task and value, so find the uservar
-                        // Try to format and transform the values
-                        // y = taskNr
-                        // z = var_of_task
-                        match = true;
-                        bool isvalid;
-                        String value = formatUserVar(y, z, isvalid);
-                        if (isvalid) {
-                          transformValue(newString, lineSize, value, valueFormat, tmpString);
-                          break;
-                        }
-                      }
-                    if (!match) // try if this is a get config request
-                    {
-                      struct EventStruct TempEvent;
-                      TempEvent.TaskIndex = y;
-                      String tmpName = valueName;
-                      if (PluginCall(PLUGIN_GET_CONFIG, &TempEvent, tmpName))
-                        newString += tmpName;
-                    }
-                    break;
-                  }
-                }
-              }
-            }
+      if (PluginCall(PLUGIN_REQUEST, 0, command))
+      {
+        newString += command;
+      }
+    }
+    else if (deviceName.equalsIgnoreCase(F("Var"))) 
+    {
+      // Address an internal variable
+      // For example: Let,10,[VAR#9]
+      int varNum;
+
+      if (validIntFromString(valueName, varNum)) {
+        if ((varNum > 0) && (varNum <= CUSTOM_VARS_MAX)) {
+          newString += String(customFloatVar[varNum - 1]);
         }
       }
-      leftBracketIndex = tmpString.indexOf('[');
-      count++;
     }
-    checkRAM(F("parseTemplate2"));
-    newString += tmpString;
+    else 
+    {
+      // Address a value from a plugin.
+      // For example: "[bme#temp]"
+      // If value name is unknown, run a PLUGIN_GET_CONFIG command.
+      // For example: "[<taskname>#getLevel]"
+      byte taskIndex = findTaskIndexByName(deviceName);
 
-    if (currentTaskIndex != 255)
-      LoadTaskSettings(currentTaskIndex);
+      if (taskIndex != TASKS_MAX) {
+        byte valueNr = findDeviceValueIndexByName(valueName, taskIndex);
+
+        if (valueNr != VARS_PER_TASK) {
+          // here we know the task and value, so find the uservar
+          // Try to format and transform the values
+          bool   isvalid;
+          String value = formatUserVar(taskIndex, valueNr, isvalid);
+
+          if (isvalid) {
+            transformValue(newString, lineSize, value, format, tmpString);
+          }
+        } else {
+          // try if this is a get config request
+          struct EventStruct TempEvent;
+          TempEvent.TaskIndex = taskIndex;
+          String tmpName = valueName;
+
+          if (PluginCall(PLUGIN_GET_CONFIG, &TempEvent, tmpName))
+          {
+            newString += tmpName;
+          }                  
+        }
+      }
+    }
+
+    // Conversion is done (or impossible) for the found "[...#...]"
+    // Continue with the next one.
+    lastStartpos = endpos + 1;
+    startpos     = endpos + 1;
+
+    // This may have taken some time, so call delay()
+    delay(0);
   }
 
-  //parseSystemVariables(newString, false);
+  // Copy the rest of the string (or all if no replacements were done)
+  newString += tmpString.substring(lastStartpos);
+  checkRAM(F("parseTemplate2"));
+
+  // Restore previous loaded taskSettings
+  if (currentTaskIndex != 255)
+  {
+    LoadTaskSettings(currentTaskIndex);
+  }
+
+  // parseSystemVariables(newString, false);
   parseStandardConversions(newString, false);
 
   // padding spaces
-  while (newString.length() < lineSize)
+  while (newString.length() < lineSize) {
     newString += ' ';
+  }
   checkRAM(F("parseTemplate3"));
   return newString;
+}
+
+// Find the first enabled task with given name
+// Return TASKS_MAX when not found, else return taskIndex
+byte findTaskIndexByName(const String& deviceName)
+{
+  // FIXME TD-er: Should cache this.
+  for (byte taskIndex = 0; taskIndex < TASKS_MAX; taskIndex++)
+  {
+    if (Settings.TaskDeviceEnabled[taskIndex])
+    {
+      LoadTaskSettings(taskIndex);
+      String taskDeviceName = getTaskDeviceName(taskIndex);
+
+      if (taskDeviceName.length() != 0)
+      {
+        if (deviceName.equalsIgnoreCase(taskDeviceName))
+        {
+          return taskIndex;
+        }
+      }
+    }
+  }
+  return TASKS_MAX;
+}
+
+// Find the first device value index of a taskIndex.
+// Return VARS_PER_TASK if none found.
+byte findDeviceValueIndexByName(const String& valueName, byte taskIndex) 
+{
+  // FIXME TD-er: Should cache this.
+  LoadTaskSettings(taskIndex); // Probably already loaded, but just to be sure
+
+  for (byte valueNr = 0; valueNr < VARS_PER_TASK; valueNr++)
+  {
+    if (valueName.equalsIgnoreCase(ExtraTaskSettings.TaskDeviceValueNames[valueNr]))
+    {
+      return valueNr;
+    }
+  }
+  return VARS_PER_TASK;
+}
+
+// Find positions of [...#...] in the given string.
+// Only update pos values on success.
+// Return true when found.
+bool findNextValMarkInString(const String& input, int& startpos, int& hashpos, int& endpos) {
+  int tmpStartpos = input.indexOf('[', startpos);
+
+  if (tmpStartpos == -1) { return false; }
+  int tmpHashpos = input.indexOf('#', tmpStartpos);
+
+  if (tmpHashpos == -1) { return false; }
+  int tmpEndpos = input.indexOf(']', tmpStartpos);
+
+  if (tmpEndpos == -1) { return false; }
+
+  if (tmpHashpos < tmpEndpos) {
+    hashpos  = tmpHashpos;
+    startpos = tmpStartpos;
+    endpos   = tmpEndpos;
+    return true;
+  }
+  return false;
+}
+
+// Find [deviceName#valueName] or [deviceName#valueName#format]
+bool findNextDevValNameInString(const String& input, int& startpos, int& endpos, String& deviceName, String& valueName, String& format) {
+  int hashpos;
+
+  if (!findNextValMarkInString(input, startpos, hashpos, endpos)) { return false; }
+  deviceName = input.substring(startpos + 1, hashpos);
+  valueName  = input.substring(hashpos + 1, endpos);
+  hashpos    = valueName.indexOf('#');
+
+  if (hashpos != -1) {
+    // Found an extra '#' in the valueName, will split valueName and format.
+    format    = valueName.substring(hashpos + 1);
+    valueName = valueName.substring(0, hashpos);
+  } else {
+    format = "";
+  }
+  return true;
 }
 
 /********************************************************************************************\
