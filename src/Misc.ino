@@ -1597,7 +1597,10 @@ byte findDeviceValueIndexByName(const String& valueName, byte taskIndex)
   }
   LoadTaskSettings(taskIndex); // Probably already loaded, but just to be sure
 
-  for (byte valueNr = 0; valueNr < VARS_PER_TASK; valueNr++)
+  const byte pluginID = getDeviceIndex(Settings.TaskDeviceNumber[taskIndex]);
+  const byte valCount = Device[pluginID].ValueCount;
+
+  for (byte valueNr = 0; valueNr < valCount; valueNr++)
   {
     if (valueName.equalsIgnoreCase(ExtraTaskSettings.TaskDeviceValueNames[valueNr]))
     {
