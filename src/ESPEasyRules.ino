@@ -156,42 +156,83 @@ String rulesProcessingFile(const String& fileName, String& event) {
   fs::File f = tryOpenFile(fileName, "r+");
   SPIFFS_CHECK(f, fileName.c_str());
 
-  String line      = "";
-  bool   match     = false;
-  bool   codeBlock = false;
-  bool   isCommand = false;
-  bool   condition[RULES_IF_MAX_NESTING_LEVEL];
-  bool   ifBranche[RULES_IF_MAX_NESTING_LEVEL];
-  byte   ifBlock     = 0;
-  byte   fakeIfBlock = 0;
+  String line;
+  line.reserve(RULES_IF_MAX_NESTING_LEVEL);
+  bool match     = false;
+  bool codeBlock = false;
+  bool isCommand = false;
+  bool condition[RULES_IF_MAX_NESTING_LEVEL];
+  bool ifBranche[RULES_IF_MAX_NESTING_LEVEL];
+  byte ifBlock     = 0;
+  byte fakeIfBlock = 0;
 
-  byte *buf = new byte[RULES_BUFFER_SIZE]();
+  std::vector<byte> buf;
+  buf.resize(RULES_BUFFER_SIZE);
+
+  bool firstNonSpaceRead = false;
+  bool commentFound      = false;
 
   while (f.available()) {
-    int len = f.read((byte *)buf, RULES_BUFFER_SIZE);
+    int len = f.read(&buf[0], RULES_BUFFER_SIZE);
 
     for (int x = 0; x < len; x++) {
       int data = buf[x];
 
       SPIFFS_CHECK(data >= 0, fileName.c_str());
 
-      if (data != 10) {
-        line += char(data);
-      } else { // if line complete, parse this rule
-        line.replace("\r", "");
+      switch (static_cast<char>(data))
+      {
+        case 10: // "\n"
+        {
+          // Line end, parse rule
+          if (!line.startsWith(F("//")) && (line.length() > 0)) {
+            parseCompleteNonCommentLine(line, event, log, match, codeBlock,
+                                        isCommand, condition, ifBranche, ifBlock,
+                                        fakeIfBlock);
+            backgroundtasks();
+          }
 
-        if ((line.substring(0, 2) != F("//")) && (line.length() > 0)) {
-          parseCompleteNonCommentLine(line, event, log, match, codeBlock,
-                                      isCommand, condition, ifBranche, ifBlock,
-                                      fakeIfBlock);
-          backgroundtasks();
+          // Prepare for new line
+          line              = "";
+          firstNonSpaceRead = false;
+          commentFound      = false;
+          break;
         }
+        case 13:   // "\r", Just skip this character
+          break;
+        case '\t': // tab
+        case 32:   // space
+        {
+          // Strip leading spaces.
+          if (firstNonSpaceRead) {
+            line += ' ';
+          }
+          break;
+        }
+        case '/':
+        {
+          if (!commentFound) {
+            line += '/';
 
-        line = "";
+            if (line.endsWith("//")) {
+              // consider the rest of the line a comment
+              commentFound = true;
+            }
+          }
+          break;
+        }
+        default: // Any other character
+        {
+          firstNonSpaceRead = true;
+
+          if (!commentFound) {
+            line += char(data);
+          }
+          break;
+        }
       }
     }
   }
-  delete[] buf;
 
   if (f) {
     f.close();
@@ -200,6 +241,25 @@ String rulesProcessingFile(const String& fileName, String& event) {
   nestingLevel--;
   checkRAM(F("rulesProcessingFile2"));
   return "";
+}
+
+void replace_EventValueN_Argv(String& line, const String& argString, unsigned int argc)
+{
+  String eventvalue;
+
+  eventvalue.reserve(16);
+  eventvalue  = F("%eventvalue");
+  eventvalue += argc;
+  eventvalue += '%';
+  String tmpParam;
+
+  if (GetArgv(argString.c_str(), tmpParam, argc)) {
+    if (argc == 1) {
+      // For compatibility reasons also replace %eventvalue%
+      line.replace(F("%eventvalue%"), tmpParam);
+    }
+    line.replace(eventvalue, tmpParam);
+  }
 }
 
 void parseCompleteNonCommentLine(String& line, String& event, String& log,
@@ -220,7 +280,8 @@ void parseCompleteNonCommentLine(String& line, String& event, String& log,
     // "on" (no codeBlock)
     // This to avoid waisting CPU time...
 
-    if (match && !fakeIfBlock) {
+    // Only process the %eventvalueX% replacements if there is any present.
+    if (match && !fakeIfBlock && (line.indexOf(F("%eventvalue")) != -1)) {
       // substitution of %eventvalue% is made here so it can be used on if
       // statement too
       if (event.charAt(0) == '!') {
@@ -231,38 +292,12 @@ void parseCompleteNonCommentLine(String& line, String& event, String& log,
         int equalsPos = event.indexOf("=");
 
         if (equalsPos > 0) {
-          String tmpString = event.substring(equalsPos + 1);
+          // Replace %eventvalueX% with the actual value of the event.
+          String argString = event.substring(equalsPos + 1);
 
-          // line.replace(F("%eventvalue%"), tmpString); // substitute
-          // %eventvalue% with the actual value from the event
-          String tmpParam;
-
-          if (GetArgv(tmpString.c_str(), tmpParam, 1)) {
-            line.replace(F("%eventvalue%"),
-                         tmpParam); // for compatibility issues
-            line.replace(F("%eventvalue1%"),
-                         tmpParam); // substitute %eventvalue1% in actions with
-                                    // the actual value from the event
+          for (unsigned int argc = 1; argc <= 4; ++argc) {
+            replace_EventValueN_Argv(line, argString, argc);
           }
-
-          if (GetArgv(tmpString.c_str(), tmpParam, 2)) {
-            line.replace(F("%eventvalue2%"),
-                         tmpParam); // substitute %eventvalue2% in actions with
-          }
-
-          // the actual value from the event
-          if (GetArgv(tmpString.c_str(), tmpParam, 3)) {
-            line.replace(F("%eventvalue3%"),
-                         tmpParam); // substitute %eventvalue3% in actions with
-          }
-
-          // the actual value from the event
-          if (GetArgv(tmpString.c_str(), tmpParam, 4)) {
-            line.replace(F("%eventvalue4%"),
-                         tmpParam); // substitute %eventvalue4% in actions with
-          }
-
-          // the actual value from the event
         }
       }
     }
@@ -853,7 +888,7 @@ void createRuleEvents(struct EventStruct *event) {
   for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++) {
     String eventString;
     eventString.reserve(32); // Enough for most use cases, prevent lots of memory allocations.
-    eventString = getTaskDeviceName(event->TaskIndex);
+    eventString  = getTaskDeviceName(event->TaskIndex);
     eventString += F("#");
     eventString += ExtraTaskSettings.TaskDeviceValueNames[varNr];
     eventString += F("=");
@@ -865,7 +900,7 @@ void createRuleEvents(struct EventStruct *event) {
         break;
       case SENSOR_TYPE_STRING:
 
-        // FIXME TD-er: What to add here? length of string?        
+        // FIXME TD-er: What to add here? length of string?
         break;
       default:
 

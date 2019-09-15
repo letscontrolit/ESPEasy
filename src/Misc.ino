@@ -460,9 +460,9 @@ boolean remoteConfig(struct EventStruct *event, const String& string)
       if ((configTaskName.length() == 0) || (configCommand.length() == 0)) {
         return success; // TD-er: Should this be return false?
       }
-      int8_t index = getTaskIndexByName(configTaskName);
+      byte index = findTaskIndexByName(configTaskName);
 
-      if (index != -1)
+      if (index != TASKS_MAX)
       {
         event->TaskIndex = index;
         success          = PluginCall(PLUGIN_SET_CONFIG, event, configCommand);
@@ -470,21 +470,6 @@ boolean remoteConfig(struct EventStruct *event, const String& string)
     }
   }
   return success;
-}
-
-int8_t getTaskIndexByName(const String& TaskNameSearch)
-{
-  for (byte x = 0; x < TASKS_MAX; x++)
-  {
-    LoadTaskSettings(x);
-    String TaskName = getTaskDeviceName(x);
-
-    if ((TaskName.length() != 0) && (TaskNameSearch.equalsIgnoreCase(TaskName)))
-    {
-      return x;
-    }
-  }
-  return -1;
 }
 
 /*********************************************************************************************\
@@ -828,6 +813,7 @@ String checkTaskSettings(byte taskIndex) {
       return F("Warning: Task Device Name is empty. It is adviced to give tasks an unique name");
     }
   }
+  // Do not use the cached function findTaskIndexByName since that one does rely on the fact names should be unique.
   for (int i = 0; i < TASKS_MAX; ++i) {
     if (i != taskIndex && Settings.TaskDeviceEnabled[i]) {
       LoadTaskSettings(i);
@@ -1468,7 +1454,7 @@ String parseTemplate(String& tmpString, byte lineSize)
   while (findNextDevValNameInString(tmpString, startpos, endpos, deviceName, valueName, format)) {
     // First copy all upto the start of the [...#...] part to be replaced.
     newString += tmpString.substring(lastStartpos, startpos);
-
+    
     if (deviceName.equalsIgnoreCase(F("Plugin")))
     {
       // Handle a plugin request.
@@ -1483,18 +1469,29 @@ String parseTemplate(String& tmpString, byte lineSize)
 
       if (PluginCall(PLUGIN_REQUEST, 0, command))
       {
+        // Do not call transformValue here.
+        // The "format" is not empty so must not call the formatter function.
         newString += command;
       }
     }
-    else if (deviceName.equalsIgnoreCase(F("Var"))) 
+    else if (deviceName.equalsIgnoreCase(F("Var")) || deviceName.equalsIgnoreCase(F("Int"))) 
     {
-      // Address an internal variable
+      // Address an internal variable either as float or as int
       // For example: Let,10,[VAR#9]
       int varNum;
 
       if (validIntFromString(valueName, varNum)) {
         if ((varNum > 0) && (varNum <= CUSTOM_VARS_MAX)) {
-          newString += String(customFloatVar[varNum - 1]);
+          unsigned char nr_decimals = 2;
+          if (deviceName.equalsIgnoreCase(F("Int"))) {
+            nr_decimals = 0;
+          } else if (format.length() != 0)
+          {
+            // There is some formatting here, so do not throw away decimals
+            nr_decimals = 6;
+          }
+          String value = String(customFloatVar[varNum - 1], nr_decimals);
+          transformValue(newString, lineSize, value, format, tmpString);
         }
       }
     }
@@ -1506,7 +1503,7 @@ String parseTemplate(String& tmpString, byte lineSize)
       // For example: "[<taskname>#getLevel]"
       byte taskIndex = findTaskIndexByName(deviceName);
 
-      if (taskIndex != TASKS_MAX) {
+      if (taskIndex != TASKS_MAX && Settings.TaskDeviceEnabled[taskIndex]) {
         byte valueNr = findDeviceValueIndexByName(valueName, taskIndex);
 
         if (valueNr != VARS_PER_TASK) {
@@ -1526,11 +1523,12 @@ String parseTemplate(String& tmpString, byte lineSize)
 
           if (PluginCall(PLUGIN_GET_CONFIG, &TempEvent, tmpName))
           {
-            newString += tmpName;
+            transformValue(newString, lineSize, tmpName, format, tmpString);
           }                  
         }
       }
     }
+    
 
     // Conversion is done (or impossible) for the found "[...#...]"
     // Continue with the next one.
@@ -1562,24 +1560,26 @@ String parseTemplate(String& tmpString, byte lineSize)
   return newString;
 }
 
-// Find the first enabled task with given name
+// Find the first task with given name
 // Return TASKS_MAX when not found, else return taskIndex
 byte findTaskIndexByName(const String& deviceName)
 {
-  // FIXME TD-er: Should cache this.
+  // cache this, since LoadTaskSettings does take some time.
+  auto result = Cache.taskIndexName.find(deviceName);
+  if (result != Cache.taskIndexName.end()) {
+    return result->second;
+  }
   for (byte taskIndex = 0; taskIndex < TASKS_MAX; taskIndex++)
   {
-    if (Settings.TaskDeviceEnabled[taskIndex])
-    {
-      LoadTaskSettings(taskIndex);
-      String taskDeviceName = getTaskDeviceName(taskIndex);
+    LoadTaskSettings(taskIndex);
+    String taskDeviceName = getTaskDeviceName(taskIndex);
 
-      if (taskDeviceName.length() != 0)
+    if (taskDeviceName.length() != 0)
+    {
+      if (deviceName.equalsIgnoreCase(taskDeviceName))
       {
-        if (deviceName.equalsIgnoreCase(taskDeviceName))
-        {
-          return taskIndex;
-        }
+        Cache.taskIndexName[deviceName] = taskIndex;
+        return taskIndex;
       }
     }
   }
@@ -1590,13 +1590,18 @@ byte findTaskIndexByName(const String& deviceName)
 // Return VARS_PER_TASK if none found.
 byte findDeviceValueIndexByName(const String& valueName, byte taskIndex) 
 {
-  // FIXME TD-er: Should cache this.
+  // cache this, since LoadTaskSettings does take some time.
+  auto result = Cache.taskIndexValueName.find(valueName);
+  if (result != Cache.taskIndexValueName.end()) {
+    return result->second;
+  }
   LoadTaskSettings(taskIndex); // Probably already loaded, but just to be sure
 
   for (byte valueNr = 0; valueNr < VARS_PER_TASK; valueNr++)
   {
     if (valueName.equalsIgnoreCase(ExtraTaskSettings.TaskDeviceValueNames[valueNr]))
     {
+      Cache.taskIndexValueName[valueName] = valueNr;
       return valueNr;
     }
   }
@@ -1677,22 +1682,34 @@ void transformValue(
     // valueJust="justification"
     if (valueFormat.length() > 0) //do the checks only if a Format is defined to optimize loop
     {
-      const int val = value == "0" ? 0 : 1; //to be used for GPIO status (0 or 1)
-      const float valFloat = value.toFloat();
-
+      int logicVal = 0;
+      float valFloat = 0.0;
+      if (validFloatFromString(value, valFloat))
+      {
+        //to be used for binary values (0 or 1)
+        logicVal = static_cast<int>(roundf(valFloat)) == 0 ? 0 : 1; 
+      } else {
+        if (value.length() > 0) {
+          logicVal = 1;
+        }        
+      }
       String tempValueFormat = valueFormat;
-      int tempValueFormatLength = tempValueFormat.length();
-      const int invertedIndex = tempValueFormat.indexOf('!');
-      const int inverted = invertedIndex >= 0 ? 1 : 0;
-      if (inverted != 0)
-        tempValueFormat.remove(invertedIndex,1);
+      {
+        const int invertedIndex = tempValueFormat.indexOf('!');
+        if (invertedIndex != -1) {
+          // We must invert the value.
+          logicVal = (logicVal == 0) ? 1 : 0;
+          // Remove the '!' from the string.
+          tempValueFormat.remove(invertedIndex,1);
+        }
+      }
 
       const int rightJustifyIndex = tempValueFormat.indexOf('R');
       const bool rightJustify = rightJustifyIndex >= 0 ? 1 : 0;
       if (rightJustify)
         tempValueFormat.remove(rightJustifyIndex,1);
 
-      tempValueFormatLength = tempValueFormat.length(); //needed because could have been changed after '!' and 'R' removal
+      const int tempValueFormatLength = tempValueFormat.length();
 
       //Check Transformation syntax
       if (tempValueFormatLength > 0)
@@ -1702,40 +1719,40 @@ void transformValue(
           case 'V': //value = value without transformations
             break;
           case 'O':
-            value = val == inverted ? F("OFF") : F(" ON"); //(equivalent to XOR operator)
+            value = logicVal == 0 ? F("OFF") : F(" ON"); //(equivalent to XOR operator)
             break;
           case 'C':
-            value = val == inverted ? F("CLOSE") : F(" OPEN");
+            value = logicVal == 0 ? F("CLOSE") : F(" OPEN");
             break;
           case 'M':
-            value = val == inverted ? F("AUTO") : F(" MAN");
+            value = logicVal == 0 ? F("AUTO") : F(" MAN");
             break;
           case 'm':
-            value = val == inverted ? F("A") : F("M");
+            value = logicVal == 0 ? F("A") : F("M");
             break;
           case 'H':
-            value = val == inverted ? F("COLD") : F(" HOT");
+            value = logicVal == 0 ? F("COLD") : F(" HOT");
             break;
           case 'U':
-            value = val == inverted ? F("DOWN") : F("  UP");
+            value = logicVal == 0 ? F("DOWN") : F("  UP");
             break;
           case 'u':
-            value = val == inverted ? F("D") : F("U");
+            value = logicVal == 0 ? F("D") : F("U");
             break;
           case 'Y':
-            value = val == inverted ? F(" NO") : F("YES");
+            value = logicVal == 0 ? F(" NO") : F("YES");
             break;
           case 'y':
-            value = val == inverted ? F("N") : F("Y");
+            value = logicVal == 0 ? F("N") : F("Y");
             break;
           case 'X':
-            value = val == inverted ? F("O") : F("X");
+            value = logicVal == 0 ? F("O") : F("X");
             break;
           case 'I':
-            value = val == inverted ? F("OUT") : F(" IN");
+            value = logicVal == 0 ? F("OUT") : F(" IN");
             break;
           case 'Z' :// return "0" or "1"
-            value = val == inverted ? "0" : "1";
+            value = logicVal == 0 ? "0" : "1";
             break;
           case 'D' ://Dx.y min 'x' digits zero filled & 'y' decimal fixed digits
             {
@@ -1770,10 +1787,13 @@ void transformValue(
                   break;
               }
               value = toString(valFloat,y);
-              int indexDot;
-              indexDot = value.indexOf('.') > 0 ? value.indexOf('.') : value.length();
-              for (byte f = 0; f < (x - indexDot); f++)
+              int indexDot = value.indexOf('.');
+              if (indexDot == -1) {
+                indexDot = value.length();
+              }              
+              for (byte f = 0; f < (x - indexDot); f++) {
                 value = "0" + value;
+              }
               break;
             }
           case 'F' :// FLOOR (round down)
@@ -1874,7 +1894,7 @@ void transformValue(
   }
   //end of changes by giig1967g - 2018-04-18
 
-  newString += String(value);
+  newString += value;
   {
 #ifndef BUILD_NO_DEBUG
     if (loglevelActiveFor(LOG_LEVEL_DEBUG_DEV)) {

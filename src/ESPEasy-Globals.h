@@ -197,6 +197,7 @@ void check_size() {
 #include "DataStructs/SystemTimerStruct.h"
 #include "DataStructs/RTCStruct.h"
 #include "DataStructs/PortStatusStruct.h"
+#include "DataStructs/Caches.h"
 
 
 CRCStruct CRCValues;
@@ -208,6 +209,7 @@ LogStruct Logging;
 NotificationStruct Notification[NPLUGIN_MAX];
 RTCStruct RTC;
 DeviceVector Device;
+Caches Cache;
 
 std::map<int, TimingStats> pluginStats;
 std::map<int, TimingStats> controllerStats;

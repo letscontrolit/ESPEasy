@@ -239,17 +239,17 @@ remember to add them after the code and always begin with "//":
   endif //this is another comment
  endon
 
-Refering values
+Referring values
 ---------------
 
 Rules and some plugins can use references to other (dynamic) values within ESPeasy.
 
-The syntax for refering other values is: ``[...#...]``
+The syntax for referring other values is: ``[...#...]``
 Sometimes it can be useful to have some extra options, each separated using a '#' like this: ``[...#...#...]``
 
 Reference to a value of a specific task: ``[TaskName#ValueName]``
 
-Refering a value using some pre-defined format: ``[TaskName#ValueName#transformation#justification]``
+Referring a value using some pre-defined format: ``[TaskName#ValueName#transformation#justification]``
 
 
 For example, there is a task named "bme280" which has a value named "temperature".
@@ -265,36 +265,42 @@ N.B. these references to task values only yield a value when the task is enabled
 Special task names
 ------------------
 
-You must not use the task names ``Plugin`` or ``VAR`` as these hae special meaning.
+You must not use the task names ``Plugin``, ``VAR`` ``INT`` as these hae special meaning.
 
 ``Plugin`` can be used in a so called ``PLUGIN_REQUEST``, for example: 
 ``[Plugin#GPIO#Pinstate#N]`` to get the pin state of a GPIO pin.
 
-``Var`` is used for internal variables. 
+``Var`` and ``INT`` are used for internal variables. 
 The variables set with the ``Let`` command will be available in rules
-as ``VAR#N`` where ``N`` is 1..16.
+as ``VAR#N`` or ``INT#N`` where ``N`` is 1..16.
 For example: ``Let,10,[VAR#9]``
 
-Clock, Rules and System etc. are not recommended either since they are used in
+N.B. ``INT`` and ``VAR`` use the same variable, only ``INT`` does round them to 0 decimals.
+N.B.2  ``INT`` is added in build 20190916.
+
+``Clock``, ``Rules`` and ``System`` etc. are not recommended either since they are used in
 event names.
 
 Please observe that task names are case insensitive meaning that VAR, var, and Var etc.
 are all treated the same.
 
+
 Formatting refered values
 -------------------------
 
-When refering another value, some basic formatting can be used.
+When referring another value, some basic formatting can be used.
 
-Refering a value using some pre-defined format: ``[TaskName#ValueName#transformation#justification]``
+Referring a value using some pre-defined format: ``[TaskName#ValueName#transformation#justification]``
 
 Transformation
 ^^^^^^^^^^^^^^
 
 * Transformations are case sensitive. (``M`` differs from ``m``, capital is more verbose)
-* Most transformations work on "binary" values (0 or 1)
+* Transformations can not be used on "Plugin" calls, like ``[Plugin#GPIO#Pinstate#N]``, since these already use multiple occurences of ``#``.
+* Most transformations work on "binary" values (logic values 0 or 1)
 * A "binary" transformation can be "inverted" by adding a leading ``!``.
-* A "binary" value is considered 0 when its string value is "0", otherwise it is an 1. (best to round a value to 0 decimals for this)
+* A "binary" value is considered 0 when its string value is "0" or empty, otherwise it is an 1. (float values are rounded)
+* A "binary" value can also be used to detect presence of a string, as it is 0 on an empty string or 1 otherwise.
 
 Binary transformations:
 

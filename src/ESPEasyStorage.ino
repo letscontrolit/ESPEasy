@@ -788,6 +788,7 @@ String SaveToFile(char *fname, int index, byte *memAddress, int datasize)
   fs::File f          = tryOpenFile(fname, "r+");
 
   if (f) {
+    Cache.clearAllCaches();
     SPIFFS_CHECK(f,                          fname);
     SPIFFS_CHECK(f.seek(index, fs::SeekSet), fname);
     byte *pointerToByteToSave = memAddress;
