@@ -3,7 +3,7 @@ python:
   - '2.7'
 
 #we want a newer cppcheck, so use trusty
-dist: trusty
+dist: bionic
 
 sudo: false
 
