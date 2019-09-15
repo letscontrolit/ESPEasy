@@ -250,7 +250,11 @@ void replace_EventValueN_Argv(String& line, const String& argString, unsigned in
   eventvalue.reserve(16);
   eventvalue = F("%eventvalue");
 
-  if (argc != 0) {
+  if (argc == 0) {
+    // Used for compatibility reasons
+    // it still needs to call the "1st" argument
+    argc = 1;
+  } else {
     eventvalue += argc;
   }
   eventvalue += '%';
