@@ -147,10 +147,6 @@ To create/register a plugin, you have to :
     #ifndef BUILD_NO_DEBUG
       #define BUILD_NO_DEBUG
     #endif
-    #ifdef WEBSERVER_RULES_DEBUG
-      #undef WEBSERVER_RULES_DEBUG
-    #endif
-    #define WEBSERVER_RULES_DEBUG 0
 #endif
 
 #ifdef PLUGIN_BUILD_MINIMAL_OTA
@@ -164,10 +160,6 @@ To create/register a plugin, you have to :
     #ifndef BUILD_NO_DEBUG
       #define BUILD_NO_DEBUG
     #endif
-    #ifdef WEBSERVER_RULES_DEBUG
-      #undef WEBSERVER_RULES_DEBUG
-    #endif
-    #define WEBSERVER_RULES_DEBUG 0
 
     #define USES_C001   // Domoticz HTTP
     #define USES_C002   // Domoticz MQTT
@@ -226,6 +218,14 @@ To create/register a plugin, you have to :
   #endif
 #endif
 
+
+
+#ifdef BUILD_NO_DEBUG
+    #ifdef WEBSERVER_RULES_DEBUG
+        #undef WEBSERVER_RULES_DEBUG
+    #endif
+    #define WEBSERVER_RULES_DEBUG 0
+#endif
 
 
 /******************************************************************************\
