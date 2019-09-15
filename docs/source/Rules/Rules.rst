@@ -240,7 +240,7 @@ remember to add them after the code and always begin with "//":
  endon
 
 Referring values
----------------
+----------------
 
 Rules and some plugins can use references to other (dynamic) values within ESPeasy.
 
@@ -265,18 +265,18 @@ N.B. these references to task values only yield a value when the task is enabled
 Special task names
 ------------------
 
-You must not use the task names ``Plugin``, ``VAR`` ``INT`` as these hae special meaning.
+You must not use the task names ``Plugin``, ``var`` ``int`` as these have special meaning.
 
 ``Plugin`` can be used in a so called ``PLUGIN_REQUEST``, for example: 
 ``[Plugin#GPIO#Pinstate#N]`` to get the pin state of a GPIO pin.
 
-``Var`` and ``INT`` are used for internal variables. 
+``Var`` and ``int`` are used for internal variables. 
 The variables set with the ``Let`` command will be available in rules
-as ``VAR#N`` or ``INT#N`` where ``N`` is 1..16.
-For example: ``Let,10,[VAR#9]``
+as ``var#N`` or ``int#N`` where ``N`` is 1..16.
+For example: ``Let,10,[var#9]``
 
-N.B. ``INT`` and ``VAR`` use the same variable, only ``INT`` does round them to 0 decimals.
-N.B.2  ``INT`` is added in build 20190916.
+N.B. ``int`` and ``var`` use the same variable, only ``int`` does round them to 0 decimals.
+N.B.2  ``int`` is added in build 20190916.
 
 ``Clock``, ``Rules`` and ``System`` etc. are not recommended either since they are used in
 event names.
@@ -495,8 +495,8 @@ A really great feature to use is the 16 internal variables. You set them like th
  Let,<n>,<value>
 
 Where n can be 1 to 16 and the value an float. To use the values in strings you can
-either use the ``%v7%`` syntax or ``[VAR#7]``. BUT for formulas you need to use the square
-brackets in order for it to compute, i.e. ``[VAR#12]``.
+either use the ``%v7%`` syntax or ``[var#7]``. BUT for formulas you need to use the square
+brackets in order for it to compute, i.e. ``[var#12]``.
 
 
 Averaging filters

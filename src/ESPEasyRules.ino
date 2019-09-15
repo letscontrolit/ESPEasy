@@ -182,7 +182,7 @@ String rulesProcessingFile(const String& fileName, String& event) {
 
       switch (static_cast<char>(data))
       {
-        case 10: // "\n"
+        case '\n':
         {
           // Line end, parse rule
           if (!line.startsWith(F("//")) && (line.length() > 0)) {
@@ -198,10 +198,10 @@ String rulesProcessingFile(const String& fileName, String& event) {
           commentFound      = false;
           break;
         }
-        case 13:   // "\r", Just skip this character
+        case '\r': // Just skip this character
           break;
         case '\t': // tab
-        case 32:   // space
+        case ' ':  // space
         {
           // Strip leading spaces.
           if (firstNonSpaceRead) {
@@ -248,16 +248,15 @@ void replace_EventValueN_Argv(String& line, const String& argString, unsigned in
   String eventvalue;
 
   eventvalue.reserve(16);
-  eventvalue  = F("%eventvalue");
-  eventvalue += argc;
+  eventvalue = F("%eventvalue");
+
+  if (argc != 0) {
+    eventvalue += argc;
+  }
   eventvalue += '%';
   String tmpParam;
 
   if (GetArgv(argString.c_str(), tmpParam, argc)) {
-    if (argc == 1) {
-      // For compatibility reasons also replace %eventvalue%
-      line.replace(F("%eventvalue%"), tmpParam);
-    }
     line.replace(eventvalue, tmpParam);
   }
 }
@@ -293,9 +292,10 @@ void parseCompleteNonCommentLine(String& line, String& event, String& log,
 
         if (equalsPos > 0) {
           // Replace %eventvalueX% with the actual value of the event.
+          // For compatibility reasons also replace %eventvalue%  (argc = 0)
           String argString = event.substring(equalsPos + 1);
 
-          for (unsigned int argc = 1; argc <= 4; ++argc) {
+          for (unsigned int argc = 0; argc <= 4; ++argc) {
             replace_EventValueN_Argv(line, argString, argc);
           }
         }
