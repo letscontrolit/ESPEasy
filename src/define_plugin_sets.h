@@ -250,6 +250,8 @@ To create/register a plugin, you have to :
     // The following define is needed for extended decoding of A/C Messages and or using standardised common arguments for controlling all deeply supported A/C units
     #define P016_P035_Extended_AC
     #define USES_P088      //ToniA IR plugin
+    #define PLUGIN_SET_ONLY_SWITCH
+    #define PLUGIN_SET_ONLY_TEMP_HUM
 #endif
 
 #ifdef PLUGIN_BUILD_IR_EXTENDED_NO_RX
