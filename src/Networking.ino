@@ -17,8 +17,8 @@
 #endif    // ifdef ESP8266
 
 #ifdef ESP32
-#define SUPPORT_ARP
-#endif
+# define SUPPORT_ARP
+#endif // ifdef ESP32
 
 #ifdef SUPPORT_ARP
 # include <lwip/etharp.h>
@@ -39,12 +39,14 @@ void etharp_gratuitous_r(struct netif *netif) {
 
 #endif // ifdef SUPPORT_ARP
 
-#ifdef ESP8266
-# include <ESP8266HTTPClient.h>
-#endif // ifdef ESP8266
-#ifdef ESP32
-# include "HTTPClient.h"
-#endif // ifdef ESP32
+#ifdef USE_SETTINGS_ARCHIVE
+# ifdef ESP8266
+#  include <ESP8266HTTPClient.h>
+# endif // ifdef ESP8266
+# ifdef ESP32
+#  include "HTTPClient.h"
+# endif // ifdef ESP32
+#endif  // USE_SETTINGS_ARCHIVE
 
 /*********************************************************************************************\
    Syslog client
@@ -1000,7 +1002,8 @@ String splitURL(const String& fullURL, String& host, uint16_t& port, String& fil
   return fullURL.substring(endhost);
 }
 
-#ifdef CORE_POST_2_5_0
+#ifdef USE_SETTINGS_ARCHIVE
+# ifdef CORE_POST_2_5_0
 
 // Download a file from a given URL and save to a local file named "file_save"
 // If the URL ends with a /, the file part will be assumed the same as file_save.
@@ -1121,4 +1124,5 @@ bool downloadFile(const String& url, String file_save, const String& user, const
   return false;
 }
 
-#endif // ifdef CORE_POST_2_5_0
+# endif // ifdef CORE_POST_2_5_0
+#endif  // USE_SETTINGS_ARCHIVE
