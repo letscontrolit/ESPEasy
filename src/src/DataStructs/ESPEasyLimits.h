@@ -5,6 +5,7 @@
 // * These limits have direct impact on the settings files
 // * Do not change them!
 // * Else settings files will no longer be compatible with official builds
+// * Some of these are related to the values defined in StorageLayout.h
 // ***********************************************************************
 
 #if defined(ESP8266)
