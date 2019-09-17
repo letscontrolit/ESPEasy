@@ -3,8 +3,8 @@
 #include "ESPEasy_common.h"
 #include "ESPEasy_fdwdecl.h"
 
-#include "DataStructs/ESPEasyLimits.h"
-#include "DataStructs/SettingsStruct.h"
+#include "src/DataStructs/ESPEasyLimits.h"
+#include "src/DataStructs/SettingsStruct.h"
 
 PluginTaskData_base *Plugin_task_data[TASKS_MAX] = { NULL, };
 
