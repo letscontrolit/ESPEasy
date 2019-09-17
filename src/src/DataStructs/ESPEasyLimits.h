@@ -9,13 +9,13 @@
 // ***********************************************************************
 
 #if defined(ESP8266)
-  #define TASKS_MAX                          12 // max 12!
-  #define MAX_GPIO                           16
-#endif
+  # define TASKS_MAX                          12 // max 12!
+  # define MAX_GPIO                           16
+#endif // if defined(ESP8266)
 #if defined(ESP32)
-  #define TASKS_MAX                          32
-  #define MAX_GPIO                           39
-#endif
+  # define TASKS_MAX                          32
+  # define MAX_GPIO                           39
+#endif // if defined(ESP32)
 
 #define CONTROLLER_MAX                      3 // max 4!
 #define NOTIFICATION_MAX                    3 // max 4!
@@ -27,45 +27,52 @@
 #define NAME_FORMULA_LENGTH_MAX            40
 
 
-
 // ***********************************************************************
 // * The next limits affect memory usage
 // ***********************************************************************
 
 #if defined(PLUGIN_BUILD_TESTING) || defined(PLUGIN_BUILD_DEV)
-  #define DEVICES_MAX                      95
-#else
-  #ifdef ESP32
-    #define DEVICES_MAX                      85
-  #else
-    #define DEVICES_MAX                      60
-  #endif
-#endif
+  # define DEVICES_MAX                      95
+#else    // if defined(PLUGIN_BUILD_TESTING) || defined(PLUGIN_BUILD_DEV)
+  # ifdef ESP32
+    #  define DEVICES_MAX                      85
+  # else // ifdef ESP32
+    #  define DEVICES_MAX                      60
+  # endif // ifdef ESP32
+#endif // if defined(PLUGIN_BUILD_TESTING) || defined(PLUGIN_BUILD_DEV)
 
 #define PLUGIN_MAX                DEVICES_MAX
-#define CPLUGIN_MAX                        20
+#ifndef CPLUGIN_MAX
+# define CPLUGIN_MAX                        20
+#endif // ifndef CPLUGIN_MAX
 #define NPLUGIN_MAX                         4
 
 #define UNIT_MAX                          254 // unit 255 = broadcast
 #define CUSTOM_VARS_MAX                    16
 
 
-
 // ***********************************************************************
 // * Limits regarding Rules
 // ***********************************************************************
 
-#define RULES_TIMER_MAX                     8
-//#define PINSTATE_TABLE_MAX                 32
+#ifndef RULES_TIMER_MAX
+# define RULES_TIMER_MAX                     8
+#endif // ifndef RULES_TIMER_MAX
+
+// #define PINSTATE_TABLE_MAX                 32
 #define RULES_MAX_SIZE                   2048
 #define RULES_MAX_NESTING_LEVEL             3
 #define RULESETS_MAX                        4
 #define RULES_BUFFER_SIZE                  64
 
-#define RULES_IF_MAX_NESTING_LEVEL          4
+#ifndef RULES_IF_MAX_NESTING_LEVEL
+# define RULES_IF_MAX_NESTING_LEVEL          4
+#endif // ifndef RULES_IF_MAX_NESTING_LEVEL
 
+#ifndef INPUT_COMMAND_SIZE
+# define INPUT_COMMAND_SIZE                240 // Affects maximum command length in rules and other commands
+#endif // ifndef INPUT_COMMAND_SIZE
 
-#define INPUT_COMMAND_SIZE                240 // Affects maximum command length in rules and other commands
 // FIXME TD-er: INPUT_COMMAND_SIZE is also used in commands where simply a check for valid parameter is needed
 // and some may need less memory. (which is stack allocated)
 
@@ -76,13 +83,10 @@
 
 #define MAX_FLASHWRITES_PER_DAY           100 // per 24 hour window
 #define UDP_PACKETSIZE_MAX               2048
-#define TIMER_GRATUITOUS_ARP_MAX           5000
+#define TIMER_GRATUITOUS_ARP_MAX         5000
 
-#define UNIT_NUMBER_MAX                  9999  // Stored in Settings.Unit
-#define DOMOTICZ_MAX_IDX            999999999  // Looks like it is an unsigned int, so could be up to 4 bln.
-
-
-
+#define UNIT_NUMBER_MAX                  9999 // Stored in Settings.Unit
+#define DOMOTICZ_MAX_IDX            999999999 // Looks like it is an unsigned int, so could be up to 4 bln.
 
 
 #endif // DATASTRUCTS_ESPEASY_LIMITS_H
