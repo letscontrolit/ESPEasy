@@ -12,18 +12,34 @@ class WiFiClient;
 class WiFiUDP;
 
 // Minimum delay between messages for a controller to send in msec.
+#ifndef CONTROLLER_DELAY_QUEUE_DELAY_MAX
 #define CONTROLLER_DELAY_QUEUE_DELAY_MAX   3600000
+#endif
+#ifndef CONTROLLER_DELAY_QUEUE_DELAY_DFLT
 #define CONTROLLER_DELAY_QUEUE_DELAY_DFLT  100
+#endif
 // Queue length for controller messages not yet sent.
+#ifndef CONTROLLER_DELAY_QUEUE_DEPTH_MAX
 #define CONTROLLER_DELAY_QUEUE_DEPTH_MAX   50
+#endif
+#ifndef CONTROLLER_DELAY_QUEUE_DEPTH_DFLT
 #define CONTROLLER_DELAY_QUEUE_DEPTH_DFLT  10
+#endif
 // Number of retries to send a message by a controller.
 // N.B. Retries without a connection to wifi do not count as retry.
+#ifndef CONTROLLER_DELAY_QUEUE_RETRY_MAX
 #define CONTROLLER_DELAY_QUEUE_RETRY_MAX   10
+#endif
+#ifndef CONTROLLER_DELAY_QUEUE_RETRY_DFLT
 #define CONTROLLER_DELAY_QUEUE_RETRY_DFLT  10
+#endif
 // Timeout of the client in msec.
+#ifndef CONTROLLER_CLIENTTIMEOUT_MAX
 #define CONTROLLER_CLIENTTIMEOUT_MAX     1000
+#endif
+#ifndef CONTROLLER_CLIENTTIMEOUT_DFLT
 #define CONTROLLER_CLIENTTIMEOUT_DFLT     100
+#endif
 
 
 

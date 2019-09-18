@@ -176,7 +176,7 @@ void check_size() {
 #include <map>
 #include <deque>
 
-#include "src/DataStructs/ESPEasyLimits.h"
+//SMY #include "src/DataStructs/ESPEasyLimits.h" //already included
 
 #include "src/DataStructs/ESPEasy_EventStruct.h"
 #include "src/DataStructs/SettingsType.h"
