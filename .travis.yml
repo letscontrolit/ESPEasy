@@ -9,8 +9,8 @@ sudo: false
 
 cache:
   directories:
-  - "~/.platformio"
-  - "./.pio"
+  # - "~/.platformio"
+  # - "./.pio"
 
 
 
