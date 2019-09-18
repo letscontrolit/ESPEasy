@@ -1003,7 +1003,6 @@ String splitURL(const String& fullURL, String& host, uint16_t& port, String& fil
 }
 
 #ifdef USE_SETTINGS_ARCHIVE
-# ifdef CORE_POST_2_5_0
 
 // Download a file from a given URL and save to a local file named "file_save"
 // If the URL ends with a /, the file part will be assumed the same as file_save.
@@ -1124,5 +1123,4 @@ bool downloadFile(const String& url, String file_save, const String& user, const
   return false;
 }
 
-# endif // ifdef CORE_POST_2_5_0
 #endif  // USE_SETTINGS_ARCHIVE

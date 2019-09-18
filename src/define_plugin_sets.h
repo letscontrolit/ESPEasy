@@ -80,6 +80,11 @@ To create/register a plugin, you have to :
     #endif // USE_SETTINGS_ARCHIVE
 #endif
 
+#if defined(USE_SETTINGS_ARCHIVE) && defined(FORCE_PRE_2_5_0)
+  #undef USE_SETTINGS_ARCHIVE
+#endif
+
+
 /******************************************************************************\
  * BUILD Configs **************************************************************
 \******************************************************************************/

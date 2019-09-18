@@ -22,6 +22,9 @@ void run_compiletime_checks() {
   check_size<portStatusStruct,                      4u>();
   check_size<ResetFactoryDefaultPreference_struct,  4u>();
   check_size<GpioFactorySettingsStruct,             11u>();
+  #if defined(USE_NON_STANDARD_24_TASKS) && defined(ESP8266)
+    static_assert(TASKS_MAX == 24, "TASKS_MAX invalid size");
+  #endif
 }
 
 String ReportOffsetErrorInStruct(const String& structname, size_t offset) {

@@ -46,7 +46,8 @@ Suggestion for 24 tasks setup:
 
 #define TASKS_MAX                          24
 #define DAT_OFFSET_CONTROLLER            DAT_OFFSET_TASKS + (DAT_TASKS_DISTANCE * TASKS_MAX)                        // each controller = 1k, 4 max 
-#define DAT_OFFSET_CUSTOM_CONTROLLER     DAT_OFFSET_CONTROLLER + (DAT_CUSTOM_CONTROLLER_SIZE * CONTROLLER_MAX)  // each custom controller config = 1k, 4 max
+#define DAT_OFFSET_CUSTOM_CONTROLLER     DAT_OFFSET_CONTROLLER + (DAT_CONTROLLER_SIZE * CONTROLLER_MAX)  // each custom controller config = 1k, 4 max
+
 
 Alternative:
 
@@ -62,13 +63,13 @@ Alternative:
 #if defined(ESP8266)
   #ifdef USE_NON_STANDARD_24_TASKS
   # ifndef DAT_OFFSET_TASKS
-  #  define DAT_OFFSET_TASKS                 4096 // each task = 2k, (1024 basic + 1024 bytes custom), 12 max
+  #  define DAT_OFFSET_TASKS                16384    // 0x4000 each task = 2k, (1024 basic + 1024 bytes custom)
   # endif // ifndef DAT_OFFSET_TASKS
   # ifndef DAT_OFFSET_CONTROLLER
-  #  define DAT_OFFSET_CONTROLLER            DAT_OFFSET_TASKS + (DAT_TASKS_DISTANCE * TASKS_MAX)  // each controller = 1k, 4 max 
+  #  define DAT_OFFSET_CONTROLLER            4096    // 0x1000 each controller = 1k, 4 max
   # endif // ifndef DAT_OFFSET_CONTROLLER
   # ifndef DAT_OFFSET_CUSTOM_CONTROLLER
-  #  define DAT_OFFSET_CUSTOM_CONTROLLER     DAT_OFFSET_CONTROLLER + (DAT_CUSTOM_CONTROLLER_SIZE * CONTROLLER_MAX)  // each custom controller config = 1k, 4 max
+  #  define DAT_OFFSET_CUSTOM_CONTROLLER     8192    // 0x2000 each custom controller config = 1k, 4 max.
   # endif // ifndef DAT_OFFSET_CUSTOM_CONTROLLER
   # ifndef CONFIG_FILE_SIZE
   #  define CONFIG_FILE_SIZE                65536
