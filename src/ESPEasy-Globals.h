@@ -10,6 +10,18 @@
 #pragma GCC system_header
 #endif
 
+/*
+    To modify the stock configuration without changing this repo file :
+    - define USE_CUSTOM_H as a build flags. ie : export PLATFORMIO_BUILD_FLAGS="'-DUSE_CUSTOM_H'"
+    - add a "Custom.h" file in this folder.
+
+*/
+#ifdef USE_CUSTOM_H
+#include "Custom.h"
+#endif
+
+
+
 #include "ESPEasy_common.h"
 #include "ESPEasy_fdwdecl.h"
 
@@ -87,6 +99,7 @@ void check_size() {
 
 //add this if you want SD support (add 10k flash)
 //#define FEATURE_SD
+
 
 // User configuration
 #include "src/DataStructs/ESPEasyDefaults.h"

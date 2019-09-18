@@ -1,16 +1,6 @@
 #ifndef ESPEASY_DEFAULTS_H_
 #define ESPEASY_DEFAULTS_H_
 
-/*
-    To modify the stock configuration without changing this repo file :
-    - define USE_CUSTOM_H as a build flags. ie : export PLATFORMIO_BUILD_FLAGS="'-DUSE_CUSTOM_H'"
-    - add a "Custom.h" file in this folder.
-
-*/
-#ifdef USE_CUSTOM_H
-#include "../../Custom.h"
-#endif
-
 // ********************************************************************************
 //   User specific configuration
 // ********************************************************************************

@@ -10,7 +10,11 @@
 
 #if defined(ESP8266)
   #ifndef TASKS_MAX
-    #define TASKS_MAX                          12 // max 12!
+    #ifdef USE_NON_STANDARD_24_TASKS
+     #define TASKS_MAX                          24
+    #else
+     #define TASKS_MAX                          12 // max 12!
+    #endif
   #endif
   #ifndef MAX_GPIO
     #define MAX_GPIO                           16
