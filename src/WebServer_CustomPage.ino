@@ -85,7 +85,7 @@ boolean handle_custom(String path) {
       }
     }
 
-    for (byte x = Settings.Unit + 1; x < UNIT_MAX; x++) {
+    for (byte x = Settings.Unit + 1; x < UNIT_NUMBER_MAX; x++) {
       it = Nodes.find(x);
 
       if (it != Nodes.end()) {

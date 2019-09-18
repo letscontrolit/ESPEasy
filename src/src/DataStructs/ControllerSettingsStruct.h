@@ -2,7 +2,7 @@
 #define DATASTRUCTS_CONTROLLERSETTINGSSTRUCT_H
 
 /*********************************************************************************************\
- * ControllerSettingsStruct definition
+* ControllerSettingsStruct definition
 \*********************************************************************************************/
 #include <Arduino.h>
 #include <memory> // For std::shared_ptr
@@ -12,19 +12,37 @@ class WiFiClient;
 class WiFiUDP;
 
 // Minimum delay between messages for a controller to send in msec.
-#define CONTROLLER_DELAY_QUEUE_DELAY_MAX   3600000
-#define CONTROLLER_DELAY_QUEUE_DELAY_DFLT  100
+#ifndef CONTROLLER_DELAY_QUEUE_DELAY_MAX
+# define CONTROLLER_DELAY_QUEUE_DELAY_MAX   3600000
+#endif // ifndef CONTROLLER_DELAY_QUEUE_DELAY_MAX
+#ifndef CONTROLLER_DELAY_QUEUE_DELAY_DFLT
+# define CONTROLLER_DELAY_QUEUE_DELAY_DFLT  100
+#endif // ifndef CONTROLLER_DELAY_QUEUE_DELAY_DFLT
+
 // Queue length for controller messages not yet sent.
-#define CONTROLLER_DELAY_QUEUE_DEPTH_MAX   50
-#define CONTROLLER_DELAY_QUEUE_DEPTH_DFLT  10
+#ifndef CONTROLLER_DELAY_QUEUE_DEPTH_MAX
+# define CONTROLLER_DELAY_QUEUE_DEPTH_MAX   50
+#endif // ifndef CONTROLLER_DELAY_QUEUE_DEPTH_MAX
+#ifndef CONTROLLER_DELAY_QUEUE_DEPTH_DFLT
+# define CONTROLLER_DELAY_QUEUE_DEPTH_DFLT  10
+#endif // ifndef CONTROLLER_DELAY_QUEUE_DEPTH_DFLT
+
 // Number of retries to send a message by a controller.
 // N.B. Retries without a connection to wifi do not count as retry.
-#define CONTROLLER_DELAY_QUEUE_RETRY_MAX   10
-#define CONTROLLER_DELAY_QUEUE_RETRY_DFLT  10
-// Timeout of the client in msec.
-#define CONTROLLER_CLIENTTIMEOUT_MAX     1000
-#define CONTROLLER_CLIENTTIMEOUT_DFLT     100
+#ifndef CONTROLLER_DELAY_QUEUE_RETRY_MAX
+# define CONTROLLER_DELAY_QUEUE_RETRY_MAX   10
+#endif // ifndef CONTROLLER_DELAY_QUEUE_RETRY_MAX
+#ifndef CONTROLLER_DELAY_QUEUE_RETRY_DFLT
+# define CONTROLLER_DELAY_QUEUE_RETRY_DFLT  10
+#endif // ifndef CONTROLLER_DELAY_QUEUE_RETRY_DFLT
 
+// Timeout of the client in msec.
+#ifndef CONTROLLER_CLIENTTIMEOUT_MAX
+# define CONTROLLER_CLIENTTIMEOUT_MAX     1000
+#endif // ifndef CONTROLLER_CLIENTTIMEOUT_MAX
+#ifndef CONTROLLER_CLIENTTIMEOUT_DFLT
+# define CONTROLLER_CLIENTTIMEOUT_DFLT     100
+#endif // ifndef CONTROLLER_CLIENTTIMEOUT_DFLT
 
 
 // ********************************************************************************
@@ -33,7 +51,7 @@ class WiFiUDP;
 
 #define CONTROLLER_USE_DNS                  1
 #define CONTROLLER_HOSTNAME                 2
-#define CONTROLLER_IP                       3 
+#define CONTROLLER_IP                       3
 #define CONTROLLER_PORT                     4
 #define CONTROLLER_USER                     5
 #define CONTROLLER_PASS                     6
@@ -49,47 +67,47 @@ class WiFiUDP;
 #define CONTROLLER_LWT_DISCONNECT_MESSAGE   17
 #define CONTROLLER_TIMEOUT                  18
 #define CONTROLLER_SAMPLE_SET_INITIATOR     19
-#define CONTROLLER_ENABLED                  20  // Keep this as last, is used to loop over all parameters
+#define CONTROLLER_ENABLED                  20 // Keep this as last, is used to loop over all parameters
 
 struct ControllerSettingsStruct
 {
   ControllerSettingsStruct();
 
-  void reset();
+  void      reset();
 
-  void validate();
+  void      validate();
 
   IPAddress getIP() const;
 
-  String getHost() const;
+  String    getHost() const;
 
-  void setHostname(const String& controllerhostname);
+  void      setHostname(const String& controllerhostname);
 
-  boolean checkHostReachable(bool quick);
+  boolean   checkHostReachable(bool quick);
 
-  boolean connectToHost(WiFiClient &client);
+  boolean   connectToHost(WiFiClient& client);
 
   // Returns 1 if successful, 0 if there was a problem resolving the hostname or port
-  int beginPacket(WiFiUDP &client);
+  int       beginPacket(WiFiUDP& client);
 
-  String getHostPortString() const;
+  String    getHostPortString() const;
 
-  boolean       UseDNS;
-  byte          IP[4];
-  unsigned int  Port;
-  char          HostName[65];
-  char          Publish[129];
-  char          Subscribe[129];
-  char          MQTTLwtTopic[129];
-  char          LWTMessageConnect[129];
-  char          LWTMessageDisconnect[129];
-  unsigned int  MinimalTimeBetweenMessages;
-  unsigned int  MaxQueueDepth;
-  unsigned int  MaxRetry;
-  boolean       DeleteOldest; // Action to perform when buffer full, delete oldest, or ignore newest.
-  unsigned int  ClientTimeout;
-  boolean       MustCheckReply; // When set to false, a sent message is considered always successful.
-  uint8_t       SampleSetInitiator; // The first plugin to start a sample set.
+  boolean      UseDNS;
+  byte         IP[4];
+  unsigned int Port;
+  char         HostName[65];
+  char         Publish[129];
+  char         Subscribe[129];
+  char         MQTTLwtTopic[129];
+  char         LWTMessageConnect[129];
+  char         LWTMessageDisconnect[129];
+  unsigned int MinimalTimeBetweenMessages;
+  unsigned int MaxQueueDepth;
+  unsigned int MaxRetry;
+  boolean      DeleteOldest;       // Action to perform when buffer full, delete oldest, or ignore newest.
+  unsigned int ClientTimeout;
+  boolean      MustCheckReply;     // When set to false, a sent message is considered always successful.
+  uint8_t      SampleSetInitiator; // The first plugin to start a sample set.
 
 private:
 
@@ -99,7 +117,7 @@ private:
 };
 
 typedef std::shared_ptr<ControllerSettingsStruct> ControllerSettingsStruct_ptr_type;
-#define MakeControllerSettings(T) ControllerSettingsStruct_ptr_type ControllerSettingsStruct_ptr(new ControllerSettingsStruct());\
-                                    ControllerSettingsStruct& T = *ControllerSettingsStruct_ptr;
+#define MakeControllerSettings(T) ControllerSettingsStruct_ptr_type ControllerSettingsStruct_ptr(new ControllerSettingsStruct()); \
+  ControllerSettingsStruct& T = *ControllerSettingsStruct_ptr;
 
 #endif // DATASTRUCTS_CONTROLLERSETTINGSSTRUCT_H

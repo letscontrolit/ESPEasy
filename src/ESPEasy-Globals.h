@@ -176,8 +176,6 @@ void check_size() {
 #include <map>
 #include <deque>
 
-#include "src/DataStructs/ESPEasyLimits.h"
-
 #include "src/DataStructs/CRCStruct.h"
 #include "src/DataStructs/Caches.h"
 #include "src/DataStructs/ControllerSettingsStruct.h"
