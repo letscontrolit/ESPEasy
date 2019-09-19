@@ -1071,6 +1071,7 @@ bool downloadFile(const String& url, String file_save, const String& user, const
       size_t c = stream->readBytes(buff, std::min((size_t)len, sizeof(buff)));
 
       if (c > 0) {
+        timeout = millis() + 2000;
         if (f.write(buff, c) != c) {
           error  = F("Error saving file, ");
           error += bytesWritten;
