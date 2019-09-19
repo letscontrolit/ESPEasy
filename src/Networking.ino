@@ -1035,7 +1035,7 @@ bool downloadFile(const String& url, String file_save, const String& user, const
     if ((user.length() > 0) && (pass.length() > 0)) {
       http.setAuthorization(user.c_str(), pass.c_str());
     }
-    
+
     /*
        String authHeader = get_auth_header(user, pass);
 
