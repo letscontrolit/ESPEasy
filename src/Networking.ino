@@ -1036,8 +1036,6 @@ bool downloadFile(const String& url, String file_save, const String& user, const
       http.setAuthorization(user.c_str(), pass.c_str());
     }
     
-    http.useHTTP10(true); // disable chunked encoding
-
     /*
        String authHeader = get_auth_header(user, pass);
 
