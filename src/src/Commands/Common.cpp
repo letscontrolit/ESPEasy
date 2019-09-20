@@ -1,8 +1,49 @@
-#ifndef COMMAND_COMMON_H
-#define COMMAND_COMMON_H
+#include "Common.h"
 
 #include <ctype.h>
-#include <Arduino.h>
+#include <IPAddress.h>
+#include "../../ESPEasy_common.h"
+#include "../../ESPEasy_fdwdecl.h"
+#include "../DataStructs/ESPEasy_EventStruct.h"
+
+// FIXME TD-er: These defines must be moved from ESPEasy-Globals.h to a separate .h file
+// For now, just a copy of the define.
+#define VALUE_SOURCE_SERIAL                 2
+
+
+// Simple function to return "Ok", to avoid flash string duplication in the firmware.
+String return_command_success()
+{
+  return F("\nOk");
+}
+
+String return_command_failed()
+{
+  return F("\nFailed");
+}
+
+String return_not_connected()
+{
+  return F("Not connected to WiFi");
+}
+
+String return_result(struct EventStruct *event, const String& result)
+{
+  serialPrintln(result);
+
+  if (event->Source == VALUE_SOURCE_SERIAL) {
+    return return_command_success();
+  }
+  return result;
+}
+
+String return_see_serial(struct EventStruct *event)
+{
+  if (event->Source == VALUE_SOURCE_SERIAL) {
+    return return_command_success();
+  }
+  return F("Output sent to serial");
+}
 
 bool IsNumeric(const char *source)
 {
@@ -36,7 +77,7 @@ String Command_GetORSetIP(struct EventStruct        *event,
     if (GetArgv(Line, TmpStr1, arg + 1)) {
       hasArgument = true;
 
-      if (!str2ip(TmpStr1.c_str(), IP)) {
+      if (!str2ip(TmpStr1, IP)) {
         String result = F("Invalid parameter: ");
         result += TmpStr1;
         return return_result(event, result);
@@ -128,5 +169,3 @@ String Command_GetORSetBool(struct EventStruct        *event,
   }
   return return_command_success();
 }
-
-#endif // COMMAND_COMMON_H

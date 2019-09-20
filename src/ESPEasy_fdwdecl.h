@@ -132,4 +132,20 @@ void schedule_all_tasks_using_MQTT_controller();
 #endif // ifdef USES_MQTT
 
 
+// Used in src/Commands/*
+void serialPrintln(const String& text);
+void serialPrintln();
+bool GetArgv(const char *string, String& argvString, unsigned int argc);
+bool HasArgv(const char *string, unsigned int argc);
+boolean str2ip(const String& string, byte *IP);
+bool useStaticIP();
+String formatIP(const IPAddress& ip);
+String toString(bool value);
+
+float getCPUload();
+int getLoopCountPerSec();
+void serialPrint(const String& text);
+void setLogLevelFor(byte destination, byte logLevel);
+uint16_t getPortFromKey(uint32_t key);
+
 #endif // ESPEASY_FWD_DECL_H

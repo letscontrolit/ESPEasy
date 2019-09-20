@@ -1,6 +1,9 @@
 #ifndef COMMAND_DIAGNOSTIC_H
 #define COMMAND_DIAGNOSTIC_H
 
+// FIXME TD-er Must complete moving these to the .cpp file
+
+#include "../../ESPEasy_common.h"
 
 String Command_Lowmem(struct EventStruct *event, const char* Line)
 {

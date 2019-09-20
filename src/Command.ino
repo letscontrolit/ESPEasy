@@ -1,28 +1,28 @@
 
-#include "Commands/Common.h"
+#include "src/Commands/Common.h"
 #ifdef USES_BLYNK
-#include "Commands/Blynk.h"
-#include "Commands/Blynk_c015.h"
+#include "src/Commands/Blynk.h"
+#include "src/Commands/Blynk_c015.h"
 #endif
-#include "Commands/Diagnostic.h"
-#include "Commands/HTTP.h"
-#include "Commands/i2c.h"
+#include "src/Commands/Diagnostic.h"
+#include "src/Commands/HTTP.h"
+#include "src/Commands/i2c.h"
 #ifdef USES_MQTT
-#include "Commands/MQTT.h"
+#include "src/Commands/MQTT.h"
 #endif //USES_MQTT
-#include "Commands/Networks.h"
-#include "Commands/Notifications.h"
-#include "Commands/RTC.h"
-#include "Commands/Rules.h"
-#include "Commands/SDCARD.h"
-#include "Commands/Settings.h"
-#include "Commands/System.h"
-#include "Commands/Tasks.h"
-#include "Commands/Time.h"
-#include "Commands/Timer.h"
-#include "Commands/UPD.h"
-#include "Commands/wd.h"
-#include "Commands/WiFi.h"
+#include "src/Commands/Networks.h"
+#include "src/Commands/Notifications.h"
+#include "src/Commands/RTC.h"
+#include "src/Commands/Rules.h"
+#include "src/Commands/SDCARD.h"
+#include "src/Commands/Settings.h"
+#include "src/Commands/System.h"
+#include "src/Commands/Tasks.h"
+#include "src/Commands/Time.h"
+#include "src/Commands/Timer.h"
+#include "src/Commands/UPD.h"
+#include "src/Commands/wd.h"
+#include "src/Commands/WiFi.h"
 
 
 /*********************************************************************************************\
@@ -201,39 +201,6 @@ String doExecuteCommand(const char *cmd, struct EventStruct *event, const char *
   #undef COMMAND_CASE
 }
 
-// Simple function to return "Ok", to avoid flash string duplication in the firmware.
-String return_command_success()
-{
-  return F("\nOk");
-}
-
-String return_command_failed()
-{
-  return F("\nFailed");
-}
-
-String return_not_connected()
-{
-  return F("Not connected to WiFi");
-}
-
-String return_result(struct EventStruct *event, const String& result)
-{
-  serialPrintln(result);
-
-  if (event->Source == VALUE_SOURCE_SERIAL) {
-    return return_command_success();
-  }
-  return result;
-}
-
-String return_see_serial(struct EventStruct *event)
-{
-  if (event->Source == VALUE_SOURCE_SERIAL) {
-    return return_command_success();
-  }
-  return F("Output sent to serial");
-}
 
 void ExecuteCommand(byte source, const char *Line)
 {
