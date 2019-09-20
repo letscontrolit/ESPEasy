@@ -790,6 +790,7 @@ void parseCommandString(struct EventStruct *event, const String& string)
   \*********************************************************************************************/
 void taskClear(byte taskIndex, boolean save)
 {
+  if (taskIndex >= TASKS_MAX) return;
   checkRAM(F("taskClear"));
   Settings.clearTask(taskIndex);
   ExtraTaskSettings.clear(); // Invalidate any cached values.

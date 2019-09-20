@@ -1,6 +1,7 @@
 #ifndef ESPEASY_BUILD_INFO_H
 #define ESPEASY_BUILD_INFO_H
 
+#include "ESPEasy_common.h"
 
 // ********************************************************************************
 //   DO NOT CHANGE ANYTHING BELOW THIS LINE

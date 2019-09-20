@@ -17,6 +17,8 @@
 
 */
 #ifdef USE_CUSTOM_H
+// make the compiler show a warning to confirm that this file is inlcuded
+#warning "**** Using Settings from Custom.h File ***"
 #include "Custom.h"
 #endif
 
@@ -29,6 +31,7 @@
 #include "ESPEasy_plugindefs.h"
 
 #include "ESPEasy_buildinfo.h"
+
 
 
 //#include <FS.h>
@@ -207,10 +210,12 @@ void check_size() {
 #include "src/DataStructs/SecurityStruct.h"
 #include "src/DataStructs/SettingsStruct.h"
 #include "src/DataStructs/SettingsType.h"
-#include "src/DataStructs/StorageLayout.h"
 #include "src/DataStructs/SystemTimerStruct.h"
 #include "src/DataStructs/TimingStats.h"
 
+
+// Included should not be here, but in the .cpp where used.
+// Here fwdecl them and include when used.
 
 CRCStruct CRCValues;
 SecurityStruct SecuritySettings;

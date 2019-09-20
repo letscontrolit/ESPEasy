@@ -1,3 +1,5 @@
+#include "ESPEasy_common.h"
+
 // ********************************************************************************
 
 // Work-around for setting _useStaticIP

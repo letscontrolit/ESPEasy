@@ -10,9 +10,6 @@
  */
 
 
-// make the compiler show a warning to confirm that this file is inlcuded
-#warning "**** Using Settings from Custom.h File ***"
-
 /*
 
  #######################################################################################################

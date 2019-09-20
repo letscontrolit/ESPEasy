@@ -2,7 +2,7 @@
 #define COMMAND_RULES_H
 
 
-#include "../ESPEasy-Globals.h"
+// #include "../ESPEasy-Globals.h"
 
 String Command_Rules_Execute(struct EventStruct *event, const char *Line)
 {

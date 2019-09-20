@@ -156,6 +156,7 @@
   }
 
   void SettingsStruct::clearTask(byte task) {
+    if (task >= TASKS_MAX) return;
     for (byte i = 0; i < CONTROLLER_MAX; ++i) {
       TaskDeviceID[i][task] = 0;
       TaskDeviceSendData[i][task] = false;

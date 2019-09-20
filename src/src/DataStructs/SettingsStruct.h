@@ -2,6 +2,7 @@
 #ifndef DATASTRUCTS_SETTINGSSTRUCT_H
 #define DATASTRUCTS_SETTINGSSTRUCT_H
 
+
 #include "../DataStructs/ESPEasyLimits.h"
 
 
@@ -61,6 +62,10 @@ struct SettingsStruct
   void clearAll();
 
   void clearTask(byte task);
+
+#ifdef USE_NON_STANDARD_24_TASKS
+  static_assert(TASKS_MAX == 24, "");
+#endif
 
   unsigned long PID;
   int           Version;

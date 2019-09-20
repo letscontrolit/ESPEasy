@@ -2,7 +2,7 @@
 #define CONTROLLERQUEUE_CONTROLLER_DELAY_HANDLER_STRUCT_H
 
 
-
+#include "../DataStructs/ControllerSettingsStruct.h"
 
 
 /*********************************************************************************************\

@@ -441,7 +441,7 @@ void handle_devicess_ShowAllTasksTable(byte page)
 
   String deviceName;
 
-  for (byte x = (page - 1) * TASKS_PER_PAGE; x < ((page) * TASKS_PER_PAGE); x++)
+  for (byte x = (page - 1) * TASKS_PER_PAGE; x < ((page) * TASKS_PER_PAGE) && x < TASKS_MAX; x++)
   {
     html_TR_TD();
     html_add_button_prefix();
@@ -594,6 +594,7 @@ void handle_devicess_ShowAllTasksTable(byte page)
 // ********************************************************************************
 void handle_devices_TaskSettingsPage(byte taskIndex, byte page)
 {
+  if (taskIndex >= TASKS_MAX) return;
   LoadTaskSettings(taskIndex);
   byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[taskIndex]);
   struct EventStruct TempEvent;

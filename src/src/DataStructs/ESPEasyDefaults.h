@@ -1,6 +1,8 @@
 #ifndef ESPEASY_DEFAULTS_H_
 #define ESPEASY_DEFAULTS_H_
 
+#include "../../ESPEasy_common.h"
+
 // ********************************************************************************
 //   User specific configuration
 // ********************************************************************************

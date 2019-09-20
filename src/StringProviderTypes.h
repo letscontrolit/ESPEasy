@@ -1,6 +1,8 @@
 #ifndef STRING_PROVIDER_TYPES_H
 #define STRING_PROVIDER_TYPES_H
 
+#include "ESPEasy_common.h"
+
 struct LabelType;
 //enum LabelType::Enum : short;
 

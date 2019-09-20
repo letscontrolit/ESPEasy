@@ -7,6 +7,8 @@
 #include <Arduino.h>
 #include <memory> // For std::shared_ptr
 
+#include "../../ESPEasy_common.h"
+
 class IPAddress;
 class WiFiClient;
 class WiFiUDP;

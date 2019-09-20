@@ -1,6 +1,8 @@
 #ifndef DATASTRUCTS_ESPEASY_LIMITS_H
 #define DATASTRUCTS_ESPEASY_LIMITS_H
 
+#include "../../ESPEasy_common.h"
+
 // ***********************************************************************
 // * These limits have direct impact on the settings files
 // * Do not change them!
@@ -8,13 +10,19 @@
 // * Some of these are related to the values defined in StorageLayout.h
 // ***********************************************************************
 
+
+// Performing a 2-stage define assignment using the _TMP defines
+// See: https://github.com/letscontrolit/ESPEasy/issues/2621
+#ifdef USE_NON_STANDARD_24_TASKS
+  #define TASKS_MAX_TMP                      24
+#else
+  #define TASKS_MAX_TMP                      12
+#endif
+
+
 #if defined(ESP8266)
   #ifndef TASKS_MAX
-    #ifdef USE_NON_STANDARD_24_TASKS
-     #define TASKS_MAX                          24
-    #else
-     #define TASKS_MAX                          12 // max 12!
-    #endif
+    #define TASKS_MAX                          TASKS_MAX_TMP
   #endif
   #ifndef MAX_GPIO
     #define MAX_GPIO                           16
