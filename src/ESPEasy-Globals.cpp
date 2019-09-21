@@ -14,8 +14,6 @@
 #include "src/DataStructs/NotificationStruct.h"
 #include "src/DataStructs/PortStatusStruct.h"
 #include "src/DataStructs/ProtocolStruct.h"
-
-#include "src/DataStructs/SecurityStruct.h"
 #include "src/DataStructs/SettingsStruct.h"
 #include "src/DataStructs/SettingsType.h"
 #include "src/DataStructs/SystemTimerStruct.h"
@@ -23,7 +21,7 @@
 
 
 
-SecurityStruct SecuritySettings;
+
 SettingsStruct Settings;
 ExtraTaskSettingsStruct ExtraTaskSettings;
 //NotificationStruct Notification[NPLUGIN_MAX];

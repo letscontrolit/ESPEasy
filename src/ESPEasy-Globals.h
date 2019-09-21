@@ -121,7 +121,6 @@
 #include "src/DataStructs/NotificationStruct.h"
 #include "src/DataStructs/PortStatusStruct.h"
 #include "src/DataStructs/ProtocolStruct.h"
-#include "src/DataStructs/SecurityStruct.h"
 #include "src/DataStructs/SettingsType.h"
 #include "src/DataStructs/SystemTimerStruct.h"
 #include "src/DataStructs/TimingStats.h"
@@ -129,7 +128,7 @@
 
 // Include should not be here, but in the .cpp
 // Here fwdecl them (as extern) and include when used.
-extern struct SecurityStruct SecuritySettings;
+
 extern struct SettingsStruct Settings;
 extern struct ExtraTaskSettingsStruct ExtraTaskSettings;
 NotificationStruct Notification[NPLUGIN_MAX];
@@ -146,13 +145,12 @@ extern struct RTCStruct RTC;
 #include "src/DataStructs/NotificationStruct.h"
 #include "src/DataStructs/PortStatusStruct.h"
 #include "src/DataStructs/ProtocolStruct.h"
-#include "src/DataStructs/SecurityStruct.h"
+
 #include "src/DataStructs/SettingsStruct.h"
 #include "src/DataStructs/SettingsType.h"
 #include "src/DataStructs/SystemTimerStruct.h"
 #include "src/DataStructs/TimingStats.h"
 
-SecurityStruct SecuritySettings;
 SettingsStruct Settings;
 ExtraTaskSettingsStruct ExtraTaskSettings;
 NotificationStruct Notification[NPLUGIN_MAX];

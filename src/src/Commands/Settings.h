@@ -1,6 +1,7 @@
 #ifndef COMMAND_SETTINGS_H
 #define COMMAND_SETTINGS_H
 
+#include "src/Globals/SecuritySettings.h"
 
 String Command_Settings_Build(struct EventStruct *event, const char* Line)
 {

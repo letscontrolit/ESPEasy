@@ -4,6 +4,7 @@
 // FIXME TD-er Must complete moving these to the .cpp file
 
 #include "../../ESPEasy_common.h"
+#include "src/Globals/SecuritySettings.h"
 
 String Command_Lowmem(struct EventStruct *event, const char* Line)
 {
