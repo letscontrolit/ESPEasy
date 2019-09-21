@@ -153,7 +153,6 @@ extern NodesMap Nodes;
 #include "src/DataStructs/NotificationStruct.h"
 #include "src/DataStructs/PortStatusStruct.h"
 #include "src/DataStructs/ProtocolStruct.h"
-#include "src/DataStructs/RTCStruct.h"
 #include "src/DataStructs/SecurityStruct.h"
 #include "src/DataStructs/SettingsStruct.h"
 #include "src/DataStructs/SettingsType.h"
@@ -166,7 +165,6 @@ SettingsStruct Settings;
 ResetFactoryDefaultPreference_struct ResetFactoryDefaultPreference;
 ExtraTaskSettingsStruct ExtraTaskSettings;
 NotificationStruct Notification[NPLUGIN_MAX];
-RTCStruct RTC;
 DeviceVector Device;
 
 NodesMap Nodes;

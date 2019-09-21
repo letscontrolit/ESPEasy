@@ -94,6 +94,8 @@
 
 #include "src/DataStructs/SchedulerTimers.h"
 #include "src/Globals/Plugins.h"
+#include "src/Globals/RTC.h"
+#include "src/DataStructs/RTCStruct.h"
 
 
 // Get functions to give access to global defined variables.

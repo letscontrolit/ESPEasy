@@ -1,3 +1,8 @@
+#include "src/Globals/RTC.h"
+#include "src/DataStructs/RTCStruct.h"
+#include "src/DataStructs/EventValueSource.h"
+
+
 #define TIMER_ID_SHIFT    28
 
 #define SYSTEM_EVENT_QUEUE   0 // Not really a timer.
@@ -6,7 +11,6 @@
 #define TASK_DEVICE_TIMER    3
 #define GPIO_TIMER           4
 
-#include "src/DataStructs/EventValueSource.h"
 
 #include <list>
 struct EventStructCommandWrapper {

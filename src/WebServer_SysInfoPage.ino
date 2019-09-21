@@ -1,3 +1,6 @@
+#include "src/Globals/RTC.h"
+#include "src/DataStructs/RTCStruct.h"
+
 
 #ifdef WEBSERVER_NEW_UI
 
