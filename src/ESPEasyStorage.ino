@@ -1,3 +1,5 @@
+#include "src/Globals/Cache.h"
+
 /********************************************************************************************\
    SPIFFS error handling
    Look here for error # reference: https://github.com/pellepl/spiffs/blob/master/src/spiffs.h
@@ -782,7 +784,7 @@ String SaveToFile(char *fname, int index, byte *memAddress, int datasize)
   fs::File f          = tryOpenFile(fname, "r+");
 
   if (f) {
-    Cache.clearAllCaches();
+    clearAllCaches();
     SPIFFS_CHECK(f,                          fname);
     SPIFFS_CHECK(f.seek(index, fs::SeekSet), fname);
     byte *pointerToByteToSave = memAddress;

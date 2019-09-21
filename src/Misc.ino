@@ -4,6 +4,8 @@
 
 #include "src/DataStructs/NodeStruct.h"
 #include "src/DataStructs/PinMode.h"
+#include "src/DataStructs/Caches.h"
+#include "src/Globals/Cache.h"
 
 String getNodeTypeDisplayString(byte nodeType) {
   switch (nodeType)

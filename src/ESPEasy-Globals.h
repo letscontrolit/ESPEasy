@@ -138,12 +138,10 @@ extern struct ExtraTaskSettingsStruct ExtraTaskSettings;
 NotificationStruct Notification[NPLUGIN_MAX];
 extern struct RTCStruct RTC;
 extern DeviceVector Device;
-extern struct Caches Cache;
 extern NodesMap Nodes;
 */
 
 #include "src/DataStructs/CRCStruct.h"
-#include "src/DataStructs/Caches.h"
 #include "src/DataStructs/ControllerSettingsStruct.h"
 #include "src/DataStructs/DeviceModel.h"
 #include "src/DataStructs/DeviceStruct.h"
@@ -170,7 +168,7 @@ ExtraTaskSettingsStruct ExtraTaskSettings;
 NotificationStruct Notification[NPLUGIN_MAX];
 RTCStruct RTC;
 DeviceVector Device;
-Caches Cache;
+
 NodesMap Nodes;
 
 
