@@ -5,7 +5,7 @@
 
 #include "src/DataStructs/ControllerSettingsStruct.h"
 #include "src/DataStructs/DeviceModel.h"
-#include "src/DataStructs/DeviceStruct.h"
+
 #include "src/DataStructs/ESPEasy_EventStruct.h"
 #include "src/DataStructs/ExtraTaskSettingsStruct.h"
 #include "src/DataStructs/FactoryDefaultPref.h"
@@ -27,7 +27,7 @@ SecurityStruct SecuritySettings;
 SettingsStruct Settings;
 ExtraTaskSettingsStruct ExtraTaskSettings;
 //NotificationStruct Notification[NPLUGIN_MAX];
-DeviceVector Device;
+
 */
 
 unsigned long connectionFailures(0);

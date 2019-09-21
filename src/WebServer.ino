@@ -3,6 +3,8 @@
 #define CHUNKED_BUFFER_SIZE          400
 
 
+#include "src/Globals/Device.h"
+
 // ********************************************************************************
 // Core part of WebServer, the chunked streaming buffer
 // This must remain in the WebServer.ino file at the top.

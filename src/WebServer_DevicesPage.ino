@@ -1,4 +1,5 @@
 #include "src/Globals/Nodes.h"
+#include "src/Globals/Device.h"
 
 void handle_devices() {
   checkRAM(F("handle_devices"));

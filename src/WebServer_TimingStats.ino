@@ -1,5 +1,8 @@
 
 #ifdef WEBSERVER_TIMINGSTATS
+#include "src/Globals/Device.h"
+
+
 void handle_timingstats() {
   checkRAM(F("handle_timingstats"));
   navMenuIndex = MENU_INDEX_TOOLS;

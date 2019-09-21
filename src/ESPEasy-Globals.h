@@ -115,7 +115,7 @@
 
 #include "src/DataStructs/ControllerSettingsStruct.h"
 #include "src/DataStructs/DeviceModel.h"
-#include "src/DataStructs/DeviceStruct.h"
+
 #include "src/DataStructs/ESPEasy_EventStruct.h"
 #include "src/DataStructs/NotificationSettingsStruct.h"
 #include "src/DataStructs/NotificationStruct.h"
@@ -134,13 +134,12 @@ extern struct SettingsStruct Settings;
 extern struct ExtraTaskSettingsStruct ExtraTaskSettings;
 NotificationStruct Notification[NPLUGIN_MAX];
 extern struct RTCStruct RTC;
-extern DeviceVector Device;
+
 */
 
 
 #include "src/DataStructs/ControllerSettingsStruct.h"
 #include "src/DataStructs/DeviceModel.h"
-#include "src/DataStructs/DeviceStruct.h"
 #include "src/DataStructs/ESPEasy_EventStruct.h"
 #include "src/DataStructs/ExtraTaskSettingsStruct.h"
 #include "src/DataStructs/NotificationSettingsStruct.h"
@@ -157,7 +156,7 @@ SecurityStruct SecuritySettings;
 SettingsStruct Settings;
 ExtraTaskSettingsStruct ExtraTaskSettings;
 NotificationStruct Notification[NPLUGIN_MAX];
-DeviceVector Device;
+
 
 
 

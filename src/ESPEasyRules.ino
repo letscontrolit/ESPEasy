@@ -2,6 +2,7 @@
 #define RULE_MAX_FILENAME_LENGTH 24
 
 #include "src/DataStructs/EventValueSource.h"
+#include "src/Globals/Device.h"
 
 String EventToFileName(String& eventName) {
   int size  = eventName.length();

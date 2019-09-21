@@ -1,3 +1,5 @@
+#include "src/Globals/Device.h"
+
 // ********************************************************************************
 
 // Interface for Sending to Controllers

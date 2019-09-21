@@ -1,4 +1,5 @@
 #include "src/Globals/Nodes.h"
+#include "src/Globals/Device.h"
 
 // ********************************************************************************
 // Web Interface custom page handler

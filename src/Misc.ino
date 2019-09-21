@@ -2,6 +2,7 @@
 #include "src/DataStructs/RTCStruct.h"
 #include "src/Globals/ResetFactoryDefaultPref.h"
 #include "src/Globals/CRCValues.h"
+#include "src/Globals/Device.h"
 
 
 /*********************************************************************************************\

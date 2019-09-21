@@ -1,7 +1,7 @@
 #include "src/Globals/RTC.h"
 #include "src/DataStructs/RTCStruct.h"
 #include "src/DataStructs/EventValueSource.h"
-
+#include "src/Globals/Device.h"
 
 #define TIMER_ID_SHIFT    28
 
