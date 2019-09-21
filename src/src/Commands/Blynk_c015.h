@@ -1,7 +1,7 @@
 #ifndef COMMAND_BLYNK_C015_H
 #define COMMAND_BLYNK_C015_H
 
-#include "../define_plugin_sets.h"
+#include "../../define_plugin_sets.h"
 
 #ifdef USES_C015
 
