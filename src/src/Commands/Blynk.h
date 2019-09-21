@@ -1,7 +1,7 @@
 #ifndef COMMAND_BLYNK_H
 #define COMMAND_BLYNK_H
 
-#include "../define_plugin_sets.h"
+#include "../../define_plugin_sets.h"
 
 #ifdef USES_C012
   //FIXME: this should go to PLUGIN_WRITE in _C012.ino
