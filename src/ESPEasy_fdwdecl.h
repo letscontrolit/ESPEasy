@@ -36,7 +36,6 @@ SecurityStruct& getSecuritySettings();
 CRCStruct     & getCRCValues();
 unsigned long & getConnectionFailures();
 byte          & getHighestActiveLogLevel();
-int             getPluginId_from_TaskIndex(byte taskIndex);
 float         & getUserVar(unsigned int varIndex);
 
 

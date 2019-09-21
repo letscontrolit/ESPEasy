@@ -1,3 +1,5 @@
+#include <Arduino.h>
+
 /*#include "ESPEasy-Globals.h"
 
 #include "src/DataStructs/CRCStruct.h"
@@ -33,3 +35,8 @@ RTCStruct RTC;
 DeviceVector Device;
 Caches Cache;
 */
+
+unsigned long connectionFailures(0);
+byte highest_active_log_level(0);
+bool log_to_serial_disabled(false);
+

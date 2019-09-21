@@ -1060,6 +1060,8 @@ void PluginInit(void)
 
 }
 
+
+// TODO TD-er: Move to Plugins.cpp
 int getPluginId(byte taskId) {
   if (taskId < TASKS_MAX) {
     int retry = 1;
@@ -1076,6 +1078,7 @@ int getPluginId(byte taskId) {
   return -1;
 }
 
+// TODO TD-er: Move to Plugins.cpp
 void updateTaskPluginCache() {
   ++countFindPluginId; // Used for statistics.
   Task_id_to_Plugin_id.resize(TASKS_MAX);

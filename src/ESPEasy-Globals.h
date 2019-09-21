@@ -184,14 +184,10 @@ NodesMap Nodes;
 
 
 
-unsigned long connectionFailures = 0;
-byte highest_active_log_level = 0;
-bool log_to_serial_disabled = false;
+extern unsigned long connectionFailures;
+extern byte highest_active_log_level;
+extern bool log_to_serial_disabled;
 
-boolean (*Plugin_ptr[PLUGIN_MAX])(byte, struct EventStruct*, String&);
-
-std::vector<byte> Plugin_id;
-std::vector<int> Task_id_to_Plugin_id;
 
 
 
@@ -581,7 +577,7 @@ unsigned long shortestLoop = 10000000;
 unsigned long longestLoop = 0;
 unsigned long loopCounter_full = 1;
 float loop_usec_duration_total = 0.0;
-unsigned long countFindPluginId = 0;
+
 
 unsigned long dailyResetCounter = 0;
 volatile unsigned long sw_watchdog_callback_count = 0;

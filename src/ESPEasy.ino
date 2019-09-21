@@ -93,6 +93,7 @@
 
 
 #include "src/DataStructs/SchedulerTimers.h"
+#include "src/Globals/Plugins.h"
 
 
 // Get functions to give access to global defined variables.
@@ -103,7 +104,7 @@ CRCStruct& getCRCValues() { return CRCValues; }
 
 unsigned long& getConnectionFailures() { return connectionFailures; }
 byte& getHighestActiveLogLevel() { return highest_active_log_level; }
-int getPluginId_from_TaskIndex(byte taskIndex) { return Task_id_to_Plugin_id[taskIndex]; }
+
 
 float& getUserVar(unsigned int varIndex) {return UserVar[varIndex]; }
 

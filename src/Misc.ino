@@ -851,16 +851,6 @@ byte getDeviceIndex(byte Number)
 }
 
 /********************************************************************************************\
-   Find name of plugin given the plugin device index..
- \*********************************************************************************************/
-String getPluginNameFromDeviceIndex(byte deviceIndex) {
-  String deviceName = "";
-
-  Plugin_ptr[deviceIndex](PLUGIN_GET_DEVICENAME, 0, deviceName);
-  return deviceName;
-}
-
-/********************************************************************************************\
    Find protocol index corresponding to protocol setting
  \*********************************************************************************************/
 byte getProtocolIndex(byte Number)

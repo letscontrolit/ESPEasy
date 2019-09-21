@@ -5,6 +5,7 @@
 
 #include "src/DataStructs/ESPEasyLimits.h"
 #include "src/DataStructs/SettingsStruct.h"
+#include "src/Globals/Plugins.h"
 
 PluginTaskData_base *Plugin_task_data[TASKS_MAX] = { NULL, };
 
