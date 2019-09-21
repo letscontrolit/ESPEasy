@@ -10,7 +10,6 @@
 #include "src/DataStructs/ESPEasy_EventStruct.h"
 #include "src/DataStructs/ExtraTaskSettingsStruct.h"
 #include "src/DataStructs/FactoryDefaultPref.h"
-#include "src/DataStructs/LogStruct.h"
 #include "src/DataStructs/NodeStruct.h"
 #include "src/DataStructs/NotificationSettingsStruct.h"
 #include "src/DataStructs/NotificationStruct.h"
@@ -29,7 +28,6 @@ SecurityStruct SecuritySettings;
 SettingsStruct Settings;
 ResetFactoryDefaultPreference_struct ResetFactoryDefaultPreference;
 ExtraTaskSettingsStruct ExtraTaskSettings;
-LogStruct Logging;
 //NotificationStruct Notification[NPLUGIN_MAX];
 RTCStruct RTC;
 DeviceVector Device;
@@ -37,6 +35,5 @@ Caches Cache;
 */
 
 unsigned long connectionFailures(0);
-byte highest_active_log_level(0);
-bool log_to_serial_disabled(false);
+
 

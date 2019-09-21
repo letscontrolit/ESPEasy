@@ -103,7 +103,7 @@ SecurityStruct& getSecuritySettings() { return SecuritySettings; }
 CRCStruct& getCRCValues() { return CRCValues; }
 
 unsigned long& getConnectionFailures() { return connectionFailures; }
-byte& getHighestActiveLogLevel() { return highest_active_log_level; }
+
 
 
 float& getUserVar(unsigned int varIndex) {return UserVar[varIndex]; }

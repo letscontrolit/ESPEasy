@@ -135,7 +135,6 @@ extern struct SecurityStruct SecuritySettings;
 extern struct SettingsStruct Settings;
 extern struct ResetFactoryDefaultPreference_struct ResetFactoryDefaultPreference;
 extern struct ExtraTaskSettingsStruct ExtraTaskSettings;
-extern struct LogStruct Logging;
 NotificationStruct Notification[NPLUGIN_MAX];
 extern struct RTCStruct RTC;
 extern DeviceVector Device;
@@ -151,7 +150,6 @@ extern NodesMap Nodes;
 #include "src/DataStructs/ESPEasy_EventStruct.h"
 #include "src/DataStructs/ExtraTaskSettingsStruct.h"
 #include "src/DataStructs/FactoryDefaultPref.h"
-#include "src/DataStructs/LogStruct.h"
 #include "src/DataStructs/NodeStruct.h"
 #include "src/DataStructs/NotificationSettingsStruct.h"
 #include "src/DataStructs/NotificationStruct.h"
@@ -169,7 +167,6 @@ SecurityStruct SecuritySettings;
 SettingsStruct Settings;
 ResetFactoryDefaultPreference_struct ResetFactoryDefaultPreference;
 ExtraTaskSettingsStruct ExtraTaskSettings;
-LogStruct Logging;
 NotificationStruct Notification[NPLUGIN_MAX];
 RTCStruct RTC;
 DeviceVector Device;
@@ -185,8 +182,7 @@ NodesMap Nodes;
 
 
 extern unsigned long connectionFailures;
-extern byte highest_active_log_level;
-extern bool log_to_serial_disabled;
+
 
 
 

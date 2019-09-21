@@ -35,7 +35,6 @@ SettingsStruct& getSettings();
 SecurityStruct& getSecuritySettings();
 CRCStruct     & getCRCValues();
 unsigned long & getConnectionFailures();
-byte          & getHighestActiveLogLevel();
 float         & getUserVar(unsigned int varIndex);
 
 
