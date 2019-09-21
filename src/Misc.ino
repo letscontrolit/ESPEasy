@@ -1,5 +1,7 @@
 #include "src/Globals/RTC.h"
 #include "src/DataStructs/RTCStruct.h"
+#include "src/Globals/ResetFactoryDefaultPref.h"
+#include "src/Globals/CRCValues.h"
 
 
 /*********************************************************************************************\
@@ -482,6 +484,15 @@ boolean remoteConfig(struct EventStruct *event, const String& string)
   }
   return success;
 }
+
+/*********************************************************************************************\
+   Collect the stored preference for factory default 
+\*********************************************************************************************/
+void applyFactoryDefaultPref() {
+  // TODO TD-er: Store it in more places to make it more persistent
+  Settings.ResetFactoryDefaultPreference = ResetFactoryDefaultPreference.getPreference();
+}
+
 
 /*********************************************************************************************\
    Device GPIO name functions to share flash strings

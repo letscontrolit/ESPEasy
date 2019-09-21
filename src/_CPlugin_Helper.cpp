@@ -12,6 +12,8 @@
 #include "src/DataStructs/ESPEasyLimits.h"
 #include "src/DataStructs/TimingStats.h"
 
+#include "src/Globals/CRCValues.h"
+
 #include <WiFiClient.h>
 #include <WiFiUdp.h>
 #include <base64.h>
@@ -130,9 +132,9 @@ String get_user_agent_request_header_field() {
   request   += F("ESP Easy/");
   request   += BUILD;
   request   += '/';
-  request   += String(getCRCValues().compileDate);
+  request   += String(CRCValues.compileDate);
   request   += ' ';
-  request   += String(getCRCValues().compileTime);
+  request   += String(CRCValues.compileTime);
   request   += "\r\n";
   agent_size = request.length();
   return request;

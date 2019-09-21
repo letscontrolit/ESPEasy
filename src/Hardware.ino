@@ -1,4 +1,5 @@
 #include "src/DataStructs/PinMode.h"
+#include "src/Globals/ResetFactoryDefaultPref.h"
 
 /********************************************************************************************\
  * Initialize specific hardware settings (only global ones, others are set through devices)

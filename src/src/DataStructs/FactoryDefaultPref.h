@@ -3,6 +3,8 @@
 
 #include "../DataStructs/DeviceModel.h"
 
+#include <stdint.h>
+
 struct ResetFactoryDefaultPreference_struct {
   ResetFactoryDefaultPreference_struct(uint32_t preference = 0);
 

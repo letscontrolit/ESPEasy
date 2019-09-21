@@ -129,23 +129,20 @@
 
 // Include should not be here, but in the .cpp
 // Here fwdecl them (as extern) and include when used.
-extern struct CRCStruct CRCValues;
 extern struct SecurityStruct SecuritySettings;
 extern struct SettingsStruct Settings;
-extern struct ResetFactoryDefaultPreference_struct ResetFactoryDefaultPreference;
 extern struct ExtraTaskSettingsStruct ExtraTaskSettings;
 NotificationStruct Notification[NPLUGIN_MAX];
 extern struct RTCStruct RTC;
 extern DeviceVector Device;
 */
 
-#include "src/DataStructs/CRCStruct.h"
+
 #include "src/DataStructs/ControllerSettingsStruct.h"
 #include "src/DataStructs/DeviceModel.h"
 #include "src/DataStructs/DeviceStruct.h"
 #include "src/DataStructs/ESPEasy_EventStruct.h"
 #include "src/DataStructs/ExtraTaskSettingsStruct.h"
-#include "src/DataStructs/FactoryDefaultPref.h"
 #include "src/DataStructs/NotificationSettingsStruct.h"
 #include "src/DataStructs/NotificationStruct.h"
 #include "src/DataStructs/PortStatusStruct.h"
@@ -156,10 +153,8 @@ extern DeviceVector Device;
 #include "src/DataStructs/SystemTimerStruct.h"
 #include "src/DataStructs/TimingStats.h"
 
-CRCStruct CRCValues;
 SecurityStruct SecuritySettings;
 SettingsStruct Settings;
-ResetFactoryDefaultPreference_struct ResetFactoryDefaultPreference;
 ExtraTaskSettingsStruct ExtraTaskSettings;
 NotificationStruct Notification[NPLUGIN_MAX];
 DeviceVector Device;
@@ -621,10 +616,6 @@ String getLogLine(const TimingStats& stats) {
 
 
 
-void applyFactoryDefaultPref() {
-  // TODO TD-er: Store it in more places to make it more persistent
-  Settings.ResetFactoryDefaultPreference = ResetFactoryDefaultPreference.getPreference();
-}
 
 struct GpioFactorySettingsStruct {
   GpioFactorySettingsStruct(DeviceModel model = DeviceModel_default) {

@@ -1,4 +1,6 @@
 #include "src/Globals/Cache.h"
+#include "src/Globals/ResetFactoryDefaultPref.h"
+#include "src/Globals/CRCValues.h"
 
 /********************************************************************************************\
    SPIFFS error handling

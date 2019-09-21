@@ -33,7 +33,6 @@ struct CRCStruct;
 // Forward declaration to give access to global member variables
 SettingsStruct& getSettings();
 SecurityStruct& getSecuritySettings();
-CRCStruct     & getCRCValues();
 unsigned long & getConnectionFailures();
 float         & getUserVar(unsigned int varIndex);
 

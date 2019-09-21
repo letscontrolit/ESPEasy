@@ -102,7 +102,7 @@
 // These are needed to get direct access to global defined variables, since they cannot be defined in .h files and included more than once.
 SettingsStruct& getSettings() { return Settings; }
 SecurityStruct& getSecuritySettings() { return SecuritySettings; }
-CRCStruct& getCRCValues() { return CRCValues; }
+
 
 unsigned long& getConnectionFailures() { return connectionFailures; }
 
