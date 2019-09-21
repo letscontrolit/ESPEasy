@@ -192,6 +192,47 @@ void check_size() {
 #include <map>
 #include <deque>
 
+
+/*
+// TODO TD-er: Declare global variables as extern and construct them in the .cpp.
+// Move all other defines in this file to separate .h files
+// This file should only have the "extern" declared global variables so it can be included where they are needed.
+//
+// For a very good tutorial on how C++ handles global variables, see:
+//    https://www.fluentcpp.com/2019/07/23/how-to-define-a-global-constant-in-cpp/
+// For more information about the discussion which lead to this big change:
+//    https://github.com/letscontrolit/ESPEasy/issues/2621#issuecomment-533673956
+
+
+#include "src/DataStructs/ControllerSettingsStruct.h"
+#include "src/DataStructs/DeviceModel.h"
+#include "src/DataStructs/DeviceStruct.h"
+#include "src/DataStructs/ESPEasy_EventStruct.h"
+#include "src/DataStructs/NodeStruct.h"
+#include "src/DataStructs/NotificationSettingsStruct.h"
+#include "src/DataStructs/NotificationStruct.h"
+#include "src/DataStructs/PortStatusStruct.h"
+#include "src/DataStructs/ProtocolStruct.h"
+#include "src/DataStructs/SecurityStruct.h"
+#include "src/DataStructs/SettingsType.h"
+#include "src/DataStructs/SystemTimerStruct.h"
+#include "src/DataStructs/TimingStats.h"
+
+
+// Include should not be here, but in the .cpp
+// Here fwdecl them (as extern) and include when used.
+extern struct CRCStruct CRCValues;
+extern struct SecurityStruct SecuritySettings;
+extern struct SettingsStruct Settings;
+extern struct ResetFactoryDefaultPreference_struct ResetFactoryDefaultPreference;
+extern struct ExtraTaskSettingsStruct ExtraTaskSettings;
+extern struct LogStruct Logging;
+NotificationStruct Notification[NPLUGIN_MAX];
+extern struct RTCStruct RTC;
+extern DeviceVector Device;
+extern struct Caches Cache;
+*/
+
 #include "src/DataStructs/CRCStruct.h"
 #include "src/DataStructs/Caches.h"
 #include "src/DataStructs/ControllerSettingsStruct.h"
@@ -213,10 +254,6 @@ void check_size() {
 #include "src/DataStructs/SystemTimerStruct.h"
 #include "src/DataStructs/TimingStats.h"
 
-
-// Included should not be here, but in the .cpp where used.
-// Here fwdecl them and include when used.
-
 CRCStruct CRCValues;
 SecurityStruct SecuritySettings;
 SettingsStruct Settings;
@@ -227,6 +264,7 @@ NotificationStruct Notification[NPLUGIN_MAX];
 RTCStruct RTC;
 DeviceVector Device;
 Caches Cache;
+
 
 std::map<int, TimingStats> pluginStats;
 std::map<int, TimingStats> controllerStats;
