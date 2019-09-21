@@ -98,6 +98,7 @@
 #include "src/DataStructs/RTCStruct.h"
 #include "src/Globals/Device.h"
 #include "src/Globals/SecuritySettings.h"
+#include "src/Globals/ExtraTaskSettings.h"
 
 
 // Get functions to give access to global defined variables.

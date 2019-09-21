@@ -7,7 +7,6 @@
 #include "src/DataStructs/DeviceModel.h"
 
 #include "src/DataStructs/ESPEasy_EventStruct.h"
-#include "src/DataStructs/ExtraTaskSettingsStruct.h"
 #include "src/DataStructs/FactoryDefaultPref.h"
 #include "src/DataStructs/NodeStruct.h"
 #include "src/DataStructs/NotificationSettingsStruct.h"
@@ -23,7 +22,6 @@
 
 
 SettingsStruct Settings;
-ExtraTaskSettingsStruct ExtraTaskSettings;
 //NotificationStruct Notification[NPLUGIN_MAX];
 
 */

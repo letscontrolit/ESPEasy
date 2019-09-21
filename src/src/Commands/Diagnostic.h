@@ -5,6 +5,7 @@
 
 #include "../../ESPEasy_common.h"
 #include "src/Globals/SecuritySettings.h"
+#include "src/Globals/ExtraTaskSettings.h"
 
 String Command_Lowmem(struct EventStruct *event, const char* Line)
 {

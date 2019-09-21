@@ -130,7 +130,6 @@
 // Here fwdecl them (as extern) and include when used.
 
 extern struct SettingsStruct Settings;
-extern struct ExtraTaskSettingsStruct ExtraTaskSettings;
 NotificationStruct Notification[NPLUGIN_MAX];
 extern struct RTCStruct RTC;
 
@@ -140,7 +139,7 @@ extern struct RTCStruct RTC;
 #include "src/DataStructs/ControllerSettingsStruct.h"
 #include "src/DataStructs/DeviceModel.h"
 #include "src/DataStructs/ESPEasy_EventStruct.h"
-#include "src/DataStructs/ExtraTaskSettingsStruct.h"
+
 #include "src/DataStructs/NotificationSettingsStruct.h"
 #include "src/DataStructs/NotificationStruct.h"
 #include "src/DataStructs/PortStatusStruct.h"
@@ -152,7 +151,6 @@ extern struct RTCStruct RTC;
 #include "src/DataStructs/TimingStats.h"
 
 SettingsStruct Settings;
-ExtraTaskSettingsStruct ExtraTaskSettings;
 NotificationStruct Notification[NPLUGIN_MAX];
 
 
