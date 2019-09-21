@@ -1,3 +1,4 @@
+#include "src/DataStructs/NodeStruct.h"
 
 // ********************************************************************************
 // Check struct sizes at compile time

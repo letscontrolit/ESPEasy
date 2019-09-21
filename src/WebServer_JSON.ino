@@ -1,3 +1,4 @@
+#include "src/Globals/Nodes.h"
 
 // ********************************************************************************
 // Web Interface JSON page (no password!)

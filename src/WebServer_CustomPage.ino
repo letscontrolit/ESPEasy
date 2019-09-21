@@ -1,4 +1,4 @@
-
+#include "src/Globals/Nodes.h"
 
 // ********************************************************************************
 // Web Interface custom page handler

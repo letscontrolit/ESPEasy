@@ -1,3 +1,5 @@
+#include "src/Globals/Nodes.h"
+
 // Generic Networking routines
 
 // Syslog
