@@ -111,46 +111,12 @@
 //    https://www.fluentcpp.com/2019/07/23/how-to-define-a-global-constant-in-cpp/
 // For more information about the discussion which lead to this big change:
 //    https://github.com/letscontrolit/ESPEasy/issues/2621#issuecomment-533673956
-
-
-#include "src/DataStructs/ControllerSettingsStruct.h"
-#include "src/DataStructs/DeviceModel.h"
-
-#include "src/DataStructs/ESPEasy_EventStruct.h"
-#include "src/DataStructs/NotificationSettingsStruct.h"
-#include "src/DataStructs/NotificationStruct.h"
-#include "src/DataStructs/PortStatusStruct.h"
-#include "src/DataStructs/ProtocolStruct.h"
-#include "src/DataStructs/SettingsType.h"
-#include "src/DataStructs/SystemTimerStruct.h"
-#include "src/DataStructs/TimingStats.h"
-
-
-// Include should not be here, but in the .cpp
-// Here fwdecl them (as extern) and include when used.
-
-extern struct SettingsStruct Settings;
-NotificationStruct Notification[NPLUGIN_MAX];
-extern struct RTCStruct RTC;
-
 */
 
 
-#include "src/DataStructs/ControllerSettingsStruct.h"
-#include "src/DataStructs/DeviceModel.h"
-#include "src/DataStructs/ESPEasy_EventStruct.h"
-
 #include "src/DataStructs/NotificationSettingsStruct.h"
 #include "src/DataStructs/NotificationStruct.h"
-#include "src/DataStructs/PortStatusStruct.h"
-#include "src/DataStructs/ProtocolStruct.h"
 
-#include "src/DataStructs/SettingsStruct.h"
-#include "src/DataStructs/SettingsType.h"
-#include "src/DataStructs/SystemTimerStruct.h"
-#include "src/DataStructs/TimingStats.h"
-
-SettingsStruct Settings;
 NotificationStruct Notification[NPLUGIN_MAX];
 
 
@@ -610,7 +576,7 @@ String getLogLine(const TimingStats& stats) {
 
 
 
-
+#include "src/DataStructs/DeviceModel.h"
 
 struct GpioFactorySettingsStruct {
   GpioFactorySettingsStruct(DeviceModel model = DeviceModel_default) {
@@ -703,20 +669,6 @@ void addPredefinedRules(const GpioFactorySettingsStruct& gpio_settings);
 #define SPIFFS_CHECK(result, fname) if (!(result)) { return(FileError(__LINE__, fname)); }
 #include "WebServer_Rules.h"
 
-#ifdef USES_BLYNK
-// Blynk_get prototype
-//boolean Blynk_get(const String& command, byte controllerIndex,float *data = NULL );
-
-int firstEnabledBlynkController() {
-  for (byte i = 0; i < CONTROLLER_MAX; ++i) {
-    byte ProtocolIndex = getProtocolIndex(Settings.Protocol[i]);
-    if (Protocol[ProtocolIndex].Number == 12 && Settings.ControllerEnabled[i]) {
-      return i;
-    }
-  }
-  return -1;
-}
-#endif
 
 
 

@@ -1,5 +1,6 @@
 #include "src/DataStructs/NodeStruct.h"
 #include "src/DataStructs/CRCStruct.h"
+#include "src/DataStructs/SettingsStruct.h"
 
 // ********************************************************************************
 // Check struct sizes at compile time

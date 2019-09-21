@@ -4,8 +4,13 @@
 // FIXME TD-er Must complete moving these to the .cpp file
 
 #include "../../ESPEasy_common.h"
+#include "src/Globals/Settings.h"
 #include "src/Globals/SecuritySettings.h"
 #include "src/Globals/ExtraTaskSettings.h"
+#include "src/Globals/Device.h"
+#include "src/DataStructs/SettingsType.h"
+
+#include "ESPEasy_fdwdecl.h"
 
 String Command_Lowmem(struct EventStruct *event, const char* Line)
 {

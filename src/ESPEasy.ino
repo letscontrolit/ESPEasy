@@ -92,19 +92,28 @@
 #include "src/ControllerQueue/DelayQueueElements.h"
 
 
+#include "src/DataStructs/ControllerSettingsStruct.h"
+#include "src/DataStructs/DeviceModel.h"
+#include "src/DataStructs/ESPEasy_EventStruct.h"
+#include "src/DataStructs/PortStatusStruct.h"
+#include "src/DataStructs/ProtocolStruct.h"
 #include "src/DataStructs/SchedulerTimers.h"
+#include "src/DataStructs/SettingsType.h"
+#include "src/DataStructs/SystemTimerStruct.h"
+#include "src/DataStructs/TimingStats.h"
+
 #include "src/Globals/Plugins.h"
 #include "src/Globals/RTC.h"
 #include "src/DataStructs/RTCStruct.h"
 #include "src/Globals/Device.h"
+#include "src/Globals/Settings.h"
 #include "src/Globals/SecuritySettings.h"
 #include "src/Globals/ExtraTaskSettings.h"
+#include "src/Globals/Settings.h"
 
 
 // Get functions to give access to global defined variables.
 // These are needed to get direct access to global defined variables, since they cannot be defined in .h files and included more than once.
-SettingsStruct& getSettings() { return Settings; }
-SecurityStruct& getSecuritySettings() { return SecuritySettings; }
 
 
 unsigned long& getConnectionFailures() { return connectionFailures; }
@@ -675,6 +684,22 @@ int firstEnabledMQTTController() {
 }
 
 #endif //USES_MQTT
+
+#ifdef USES_BLYNK
+// Blynk_get prototype
+//boolean Blynk_get(const String& command, byte controllerIndex,float *data = NULL );
+
+int firstEnabledBlynkController() {
+  for (byte i = 0; i < CONTROLLER_MAX; ++i) {
+    byte ProtocolIndex = getProtocolIndex(Settings.Protocol[i]);
+    if (Protocol[ProtocolIndex].Number == 12 && Settings.ControllerEnabled[i]) {
+      return i;
+    }
+  }
+  return -1;
+}
+#endif
+
 
 /*********************************************************************************************\
  * Tasks that run 50 times per second

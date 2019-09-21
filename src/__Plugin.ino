@@ -1,5 +1,7 @@
 #include "src/Globals/Device.h"
 
+#include "src/DataStructs/TimingStats.h"
+
 //********************************************************************************
 // Initialize all plugins that where defined earlier
 // and initialize the function call pointer into the plugin array

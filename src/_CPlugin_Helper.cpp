@@ -13,6 +13,8 @@
 #include "src/DataStructs/TimingStats.h"
 
 #include "src/Globals/CRCValues.h"
+#include "src/Globals/Settings.h"
+#include "src/Globals/SecuritySettings.h"
 
 #include <WiFiClient.h>
 #include <WiFiUdp.h>
@@ -110,12 +112,12 @@ String get_auth_header(int controller_index) {
   String authHeader = "";
 
   if (controller_index < CONTROLLER_MAX) {
-    if ((getSecuritySettings().ControllerUser[controller_index][0] != 0) &&
-        (getSecuritySettings().ControllerPassword[controller_index][0] != 0))
+    if ((SecuritySettings.ControllerUser[controller_index][0] != 0) &&
+        (SecuritySettings.ControllerPassword[controller_index][0] != 0))
     {
       authHeader = get_auth_header(
-        String(getSecuritySettings().ControllerUser[controller_index]), 
-        String(getSecuritySettings().ControllerPassword[controller_index]));
+        String(SecuritySettings.ControllerUser[controller_index]), 
+        String(SecuritySettings.ControllerPassword[controller_index]));
     }
   } else {
     addLog(LOG_LEVEL_ERROR, F("Invalid controller index"));
@@ -250,7 +252,7 @@ void log_connecting_fail(const String& prefix, int controller_number, Controller
     log += F(" connection failed (");
     log += getConnectionFailures();
     log += F("/");
-    log += getSettings().ConnectionFailuresThreshold;
+    log += Settings.ConnectionFailuresThreshold;
     log += F(")");
     addLog(LOG_LEVEL_ERROR, log);
   }

@@ -6,6 +6,9 @@
 #include "src/DataStructs/ESPEasyLimits.h"
 #include "src/DataStructs/SettingsStruct.h"
 #include "src/Globals/Plugins.h"
+#include "src/Globals/Settings.h"
+#include "src/Globals/SecuritySettings.h"
+
 
 PluginTaskData_base *Plugin_task_data[TASKS_MAX] = { NULL, };
 
@@ -37,7 +40,7 @@ void clearPluginTaskData(byte taskIndex) {
 void initPluginTaskData(byte taskIndex, PluginTaskData_base *data) {
   clearPluginTaskData(taskIndex);
 
-  if ((taskIndex < TASKS_MAX) && getSettings().TaskDeviceEnabled[taskIndex]) {
+  if ((taskIndex < TASKS_MAX) && Settings.TaskDeviceEnabled[taskIndex]) {
     Plugin_task_data[taskIndex]                      = data;
     Plugin_task_data[taskIndex]->_taskdata_plugin_id = getPluginId_from_TaskIndex(taskIndex);
   }

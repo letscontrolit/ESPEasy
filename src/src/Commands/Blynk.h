@@ -3,6 +3,9 @@
 
 #include "../../define_plugin_sets.h"
 
+#include "src/DataStructs/ESPEasy_EventStruct.h"
+#include "ESPEasy_fdwdecl.h"
+
 #ifdef USES_C012
   //FIXME: this should go to PLUGIN_WRITE in _C012.ino
 String Command_Blynk_Get(struct EventStruct *event, const char* Line)

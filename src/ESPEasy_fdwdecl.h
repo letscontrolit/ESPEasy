@@ -3,6 +3,7 @@
 
 #include "ESPEasy_common.h"
 #include "define_plugin_sets.h"  // For USES_MQTT
+#include "src/DataStructs/ESPEasy_EventStruct.h"
 
 // FIXME TD-er: This header file should only be included from .ino or .cpp files
 // This is only needed until the classes that need these can include the appropriate .h files to have these forward declared.
@@ -26,13 +27,8 @@
 
 #include <FS.h>
 
-struct SettingsStruct;
-struct SecurityStruct;
-struct CRCStruct;
 
 // Forward declaration to give access to global member variables
-SettingsStruct& getSettings();
-SecurityStruct& getSecuritySettings();
 unsigned long & getConnectionFailures();
 float         & getUserVar(unsigned int varIndex);
 

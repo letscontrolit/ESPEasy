@@ -4,6 +4,7 @@
 
 #include "../DataStructs/ControllerSettingsStruct.h"
 #include "src/DataStructs/SchedulerTimers.h"
+#include "src/DataStructs/TimingStats.h"
 
 
 /*********************************************************************************************\
