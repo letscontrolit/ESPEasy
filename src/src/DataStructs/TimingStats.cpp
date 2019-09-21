@@ -3,6 +3,16 @@
 #include "../../ESPEasy_plugindefs.h"
 #include "../../_CPlugin_Helper.h"
 
+
+
+std::map<int, TimingStats> pluginStats;
+std::map<int, TimingStats> controllerStats;
+std::map<int, TimingStats> miscStats;
+unsigned long timingstats_last_reset(0);
+
+
+
+
 TimingStats::TimingStats() : _timeTotal(0.0), _count(0), _maxVal(0), _minVal(4294967295) {}
 
 void TimingStats::add(unsigned long time) {

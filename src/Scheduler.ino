@@ -6,6 +6,8 @@
 #define TASK_DEVICE_TIMER    3
 #define GPIO_TIMER           4
 
+#include "src/DataStructs/EventValueSource.h"
+
 #include <list>
 struct EventStructCommandWrapper {
   EventStructCommandWrapper() : id(0) {}

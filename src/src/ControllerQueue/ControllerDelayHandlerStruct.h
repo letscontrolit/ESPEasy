@@ -3,6 +3,7 @@
 
 
 #include "../DataStructs/ControllerSettingsStruct.h"
+#include "src/DataStructs/SchedulerTimers.h"
 
 
 /*********************************************************************************************\

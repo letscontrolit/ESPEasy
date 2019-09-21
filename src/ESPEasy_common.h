@@ -64,4 +64,34 @@ void setBitToUL(uint32_t& number, byte bitnr, bool value);
   #endif
 #endif // ESP32
 
+
+
+
+// Enable FEATURE_ADC_VCC to measure supply voltage using the analog pin
+// Please note that the TOUT pin has to be disconnected in this mode
+// Use the "System Info" device to read the VCC value
+#ifndef FEATURE_ADC_VCC
+  #define FEATURE_ADC_VCC                  false
+#endif
+
+#if defined(ESP32)
+  #define ARDUINO_OTA_PORT  3232
+#else
+  // Do not use port 8266 for OTA, since that's used for ESPeasy p2p
+  #define ARDUINO_OTA_PORT  18266
+#endif
+
+#if defined(ESP8266)
+  //enable Arduino OTA updating.
+  //Note: This adds around 10kb to the firmware size, and 1kb extra ram.
+  // #define FEATURE_ARDUINO_OTA
+
+  //enable mDNS mode (adds about 6kb ram and some bytes IRAM)
+  // #define FEATURE_MDNS
+#endif
+#if defined(ESP32)
+ #define FEATURE_ARDUINO_OTA
+ //#define FEATURE_MDNS
+#endif
+
 #endif // ESPEASY_COMMON_H

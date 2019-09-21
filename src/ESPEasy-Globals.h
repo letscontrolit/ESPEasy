@@ -34,51 +34,11 @@
 
 
 
+
+
 //#include <FS.h>
 
-// ********************************************************************************
-// Check struct sizes at compile time
-// Usage:
-//   struct foo
-//   {
-//     char bla[16];
-//   };
-//
-//   check_size<foo, 8>();
-// ********************************************************************************
-template <typename ToCheck, std::size_t ExpectedSize, std::size_t RealSize = sizeof(ToCheck)>
-void check_size() {
-  static_assert(ExpectedSize == RealSize, "");
-}
 
-
-
-// Enable FEATURE_ADC_VCC to measure supply voltage using the analog pin
-// Please note that the TOUT pin has to be disconnected in this mode
-// Use the "System Info" device to read the VCC value
-#ifndef FEATURE_ADC_VCC
-  #define FEATURE_ADC_VCC                  false
-#endif
-
-#if defined(ESP32)
-#define ARDUINO_OTA_PORT  3232
-#else
-// Do not use port 8266 for OTA, since that's used for ESPeasy p2p
-#define ARDUINO_OTA_PORT  18266
-#endif
-
-#if defined(ESP8266)
-  //enable Arduino OTA updating.
-  //Note: This adds around 10kb to the firmware size, and 1kb extra ram.
-  // #define FEATURE_ARDUINO_OTA
-
-  //enable mDNS mode (adds about 6kb ram and some bytes IRAM)
-  // #define FEATURE_MDNS
-#endif
-#if defined(ESP32)
- #define FEATURE_ARDUINO_OTA
- //#define FEATURE_MDNS
-#endif
 
 //enable reporting status to ESPEasy developers.
 //this informs us of crashes and stability issues.
@@ -116,45 +76,7 @@ void check_size() {
 // ********************************************************************************
 
 
-#define NODE_TYPE_ID_ESP_EASY_STD           1
-#define NODE_TYPE_ID_RPI_EASY_STD           5  // https://github.com/enesbcs/rpieasy
-#define NODE_TYPE_ID_ESP_EASYM_STD         17
-#define NODE_TYPE_ID_ESP_EASY32_STD        33
-#define NODE_TYPE_ID_ARDUINO_EASY_STD      65
-#define NODE_TYPE_ID_NANO_EASY_STD         81
 
-
-
-// ********************************************************************************
-//   Timers used in the scheduler
-// ********************************************************************************
-#define TIMER_20MSEC                        1
-#define TIMER_100MSEC                       2
-#define TIMER_1SEC                          3
-#define TIMER_30SEC                         4
-#define TIMER_MQTT                          5
-#define TIMER_STATISTICS                    6
-#define TIMER_GRATUITOUS_ARP                7
-#define TIMER_MQTT_DELAY_QUEUE              8
-#define TIMER_C001_DELAY_QUEUE              9
-#define TIMER_C003_DELAY_QUEUE             10
-#define TIMER_C004_DELAY_QUEUE             11
-#define TIMER_C007_DELAY_QUEUE             12
-#define TIMER_C008_DELAY_QUEUE             13
-#define TIMER_C009_DELAY_QUEUE             14
-#define TIMER_C010_DELAY_QUEUE             15
-#define TIMER_C011_DELAY_QUEUE             16
-#define TIMER_C012_DELAY_QUEUE             17
-#define TIMER_C013_DELAY_QUEUE             18
-#define TIMER_C014_DELAY_QUEUE             19
-#define TIMER_C015_DELAY_QUEUE             20
-#define TIMER_C016_DELAY_QUEUE             21
-#define TIMER_C017_DELAY_QUEUE             22
-#define TIMER_C018_DELAY_QUEUE             23
-#define TIMER_C019_DELAY_QUEUE             24
-#define TIMER_C020_DELAY_QUEUE             25
-
-#define TIMING_STATS_THRESHOLD             100000
 
 
 
@@ -163,25 +85,12 @@ void check_size() {
 
 
 
-#define PIN_MODE_UNDEFINED                  0
-#define PIN_MODE_INPUT                      1
-#define PIN_MODE_OUTPUT                     2
-#define PIN_MODE_PWM                        3
-#define PIN_MODE_SERVO                      4
-#define PIN_MODE_INPUT_PULLUP               5
-#define PIN_MODE_OFFLINE                    6
-
-#define SEARCH_PIN_STATE                 true
-#define NO_SEARCH_PIN_STATE             false
 
 
 
-#define VALUE_SOURCE_SYSTEM                 1
-#define VALUE_SOURCE_SERIAL                 2
-#define VALUE_SOURCE_HTTP                   3
-#define VALUE_SOURCE_MQTT                   4
-#define VALUE_SOURCE_UDP                    5
-#define VALUE_SOURCE_WEB_FRONTEND           6
+
+
+
 
 #define BOOT_CAUSE_MANUAL_REBOOT            0
 #define BOOT_CAUSE_COLD_BOOT                1
@@ -231,6 +140,7 @@ NotificationStruct Notification[NPLUGIN_MAX];
 extern struct RTCStruct RTC;
 extern DeviceVector Device;
 extern struct Caches Cache;
+extern NodesMap Nodes;
 */
 
 #include "src/DataStructs/CRCStruct.h"
@@ -264,22 +174,14 @@ NotificationStruct Notification[NPLUGIN_MAX];
 RTCStruct RTC;
 DeviceVector Device;
 Caches Cache;
+NodesMap Nodes;
 
 
-std::map<int, TimingStats> pluginStats;
-std::map<int, TimingStats> controllerStats;
-std::map<int, TimingStats> miscStats;
-unsigned long timingstats_last_reset = 0;
 
 
-#define START_TIMER const unsigned statisticsTimerStart(micros());
-#define STOP_TIMER_TASK(T, F) \
-  if (mustLogFunction(F)) pluginStats[T * 256 + F].add(usecPassedSince(statisticsTimerStart));
-#define STOP_TIMER_CONTROLLER(T, F) \
-  if (mustLogCFunction(F)) controllerStats[T * 256 + F].add(usecPassedSince(statisticsTimerStart));
 
-// #define STOP_TIMER_LOADFILE miscStats[LOADFILE_STATS].add(usecPassedSince(statisticsTimerStart));
-#define STOP_TIMER(L) miscStats[L].add(usecPassedSince(statisticsTimerStart));
+
+
 
 
 unsigned long connectionFailures = 0;

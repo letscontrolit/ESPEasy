@@ -1,3 +1,20 @@
+
+// ********************************************************************************
+// Check struct sizes at compile time
+// Usage:
+//   struct foo
+//   {
+//     char bla[16];
+//   };
+//
+//   check_size<foo, 8>();
+// ********************************************************************************
+template <typename ToCheck, std::size_t ExpectedSize, std::size_t RealSize = sizeof(ToCheck)>
+void check_size() {
+  static_assert(ExpectedSize == RealSize, "");
+}
+
+
 void run_compiletime_checks() {
   check_size<CRCStruct,                             168u>();
   check_size<SecurityStruct,                        593u>();

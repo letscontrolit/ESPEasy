@@ -1,3 +1,5 @@
+#include "src/DataStructs/PinMode.h"
+
 /********************************************************************************************\
  * Initialize specific hardware settings (only global ones, others are set through devices)
  \*********************************************************************************************/

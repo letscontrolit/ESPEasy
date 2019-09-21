@@ -2,6 +2,8 @@
    ESPEasy specific strings
 \*********************************************************************************************/
 
+#include "src/DataStructs/NodeStruct.h"
+#include "src/DataStructs/PinMode.h"
 
 String getNodeTypeDisplayString(byte nodeType) {
   switch (nodeType)

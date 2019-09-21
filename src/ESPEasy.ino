@@ -92,6 +92,9 @@
 #include "src/ControllerQueue/DelayQueueElements.h"
 
 
+#include "src/DataStructs/SchedulerTimers.h"
+
+
 // Get functions to give access to global defined variables.
 // These are needed to get direct access to global defined variables, since they cannot be defined in .h files and included more than once.
 SettingsStruct& getSettings() { return Settings; }

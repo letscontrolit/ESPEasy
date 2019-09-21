@@ -2,6 +2,7 @@
 #define ESPEASY_EVENTSTRUCT_H
 
 #include "../../ESPEasy_common.h"
+#include "EventValueSource.h"
 
 /*********************************************************************************************\
 * EventStruct
@@ -23,7 +24,7 @@ struct EventStruct
   int    Par3;
   int    Par4;
   int    Par5;
-  byte   Source;
+  byte   Source;            // The origin of the values in the event. See EventValueSource.h
   byte   TaskIndex;         // index position in TaskSettings array, 0-11
   byte   ControllerIndex;   // index position in Settings.Controller, 0-3
   byte   ProtocolIndex;     // index position in protocol array, depending on which controller plugins are loaded.
