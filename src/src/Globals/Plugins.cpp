@@ -1,32 +1,8 @@
 #include "Plugins.h"
 #include "src/DataStructs/ESPEasy_EventStruct.h"
 #include "ESPEasy_plugindefs.h"
+#include "src/Globals/Settings.h"
 
-int getPluginId_from_TaskIndex(byte taskIndex) {
-  if (taskIndex >= Task_id_to_Plugin_id.size())
-  {
-    return 0;
-  }
-  return Task_id_to_Plugin_id[taskIndex]; 
-}
-
-/*
-// TODO TD-er: Move from _Plugin.ino as soon as Settings is global defined.
-int getPluginId(byte taskId) {
-  if (taskId < TASKS_MAX) {
-    int retry = 1;
-    while (retry >= 0) {
-      int plugin = Task_id_to_Plugin_id[taskId];
-      if (plugin >= 0 && plugin < PLUGIN_MAX) {
-        if (Plugin_id[plugin] == Settings.TaskDeviceNumber[taskId])
-          return plugin;
-      }
-      updateTaskPluginCache();
-      --retry;
-    }
-  }
-  return -1;
-}
 
 void updateTaskPluginCache() {
   ++countFindPluginId; // Used for statistics.
@@ -42,7 +18,23 @@ void updateTaskPluginCache() {
     }
   }
 }
-*/
+
+int getPluginId_from_TaskIndex(byte taskIndex) {
+  if (taskIndex < TASKS_MAX) {
+    int retry = 1;
+    while (retry >= 0) {
+      int plugin = Task_id_to_Plugin_id[taskIndex];
+      if (plugin >= 0 && plugin < PLUGIN_MAX) {
+        if (Plugin_id[plugin] == Settings.TaskDeviceNumber[taskIndex])
+          return plugin;
+      }
+      updateTaskPluginCache();
+      --retry;
+    }
+  }
+  return -1;
+}
+
 
 
 /********************************************************************************************\

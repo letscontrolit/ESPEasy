@@ -1,4 +1,5 @@
 #include "src/Globals/Nodes.h"
+#include "src/Globals/ESPEasyWiFiEvent.h"
 
 // Generic Networking routines
 

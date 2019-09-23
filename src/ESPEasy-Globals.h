@@ -92,10 +92,6 @@
 
 
 
-#define BOOT_CAUSE_MANUAL_REBOOT            0
-#define BOOT_CAUSE_COLD_BOOT                1
-#define BOOT_CAUSE_DEEP_SLEEP               2
-#define BOOT_CAUSE_EXT_WD                  10
 
 
 #include <map>
@@ -117,26 +113,16 @@
 #include "src/DataStructs/NotificationSettingsStruct.h"
 #include "src/DataStructs/NotificationStruct.h"
 
-NotificationStruct Notification[NPLUGIN_MAX];
+extern NotificationStruct Notification[NPLUGIN_MAX];
 
 
 
-
-
-
-
-
-
-
-
-extern unsigned long connectionFailures;
 
 
 
 
 
 #include "ESPEasy_Log.h"
-#include "WebStaticData.h"
 #include "ESPEasyTimeTypes.h"
 #include "StringProviderTypes.h"
 #include "ESPeasySerial.h"
@@ -149,7 +135,7 @@ extern unsigned long connectionFailures;
 #define FS_NO_GLOBALS
 #if defined(ESP8266)
   #include "core_version.h"
-  #define NODE_TYPE_ID                        NODE_TYPE_ID_ESP_EASYM_STD
+  #define NODE_TYPE_ID      NODE_TYPE_ID_ESP_EASYM_STD
   #define FILE_CONFIG       "config.dat"
   #define FILE_SECURITY     "security.dat"
   #define FILE_NOTIFICATION "notification.dat"
@@ -165,12 +151,8 @@ extern unsigned long connectionFailures;
   #endif
   #include <ESP8266WiFi.h>
   //#include <ESP8266Ping.h>
-  #include <ESP8266WebServer.h>
-  ESP8266WebServer WebServer(80);
   #include <DNSServer.h>
   #include <Servo.h>
-  #include <ESP8266HTTPUpdateServer.h>
-  ESP8266HTTPUpdateServer httpUpdater(true);
   #ifndef LWIP_OPEN_SRC
   #define LWIP_OPEN_SRC
   #endif
@@ -202,11 +184,6 @@ extern unsigned long connectionFailures;
   #endif
   #define SMALLEST_OTA_IMAGE 276848 // smallest known 2-step OTA image
   #define MAX_SKETCH_SIZE 1044464
-  #ifdef FEATURE_ARDUINO_OTA
-    #include <ArduinoOTA.h>
-    #include <ESP8266mDNS.h>
-    bool ArduinoOTAtriggered=false;
-  #endif
   #define PIN_D_MAX        16
 #endif
 #if defined(ESP32)
@@ -222,21 +199,14 @@ extern unsigned long connectionFailures;
   #define FILE_RULES        "/rules1.txt"
   #include <WiFi.h>
 //  #include  "esp32_ping.h"
-  #include <WebServer.h>
   #include "SPIFFS.h"
   #include <rom/rtc.h>
   #include "esp_wifi.h" // Needed to call ESP-IDF functions like esp_wifi_....
-  WebServer WebServer(80);
   #ifdef FEATURE_MDNS
     #include <ESPmDNS.h>
   #endif
-  #ifdef FEATURE_ARDUINO_OTA
-    #include <ArduinoOTA.h>
-    #include <ESPmDNS.h>
-    bool ArduinoOTAtriggered=false;
-  #endif
   #define PIN_D_MAX        39
-  int8_t ledChannelPin[16];
+  extern int8_t ledChannelPin[16];
 #endif
 
 #include <WiFiUdp.h>
@@ -250,55 +220,25 @@ extern unsigned long connectionFailures;
 using namespace fs;
 #endif
 #include <base64.h>
-#if FEATURE_ADC_VCC
-ADC_MODE(ADC_VCC);
-#endif
 
 
-I2Cdev i2cdev;
+extern I2Cdev i2cdev;
 
-#ifdef USES_MQTT
-#include <PubSubClient.h>
-// MQTT client
-WiFiClient mqtt;
-PubSubClient MQTTclient(mqtt);
-bool MQTTclient_should_reconnect = true;
-bool MQTTclient_connected = false;
-int mqtt_reconnect_count = 0;
-#endif //USES_MQTT
 
-#ifdef USES_P037
-// mqtt import status
-bool P037_MQTTImport_connected = false;
-#endif
 
-#define ESPEASY_WIFI_DISCONNECTED            0
-#define ESPEASY_WIFI_CONNECTED               1
-#define ESPEASY_WIFI_GOT_IP                  2
-#define ESPEASY_WIFI_SERVICES_INITIALIZED    4
 
-#if defined(ESP32)
-void WiFiEvent(system_event_id_t event, system_event_info_t info);
-#else
-WiFiEventHandler stationConnectedHandler;
-WiFiEventHandler stationDisconnectedHandler;
-WiFiEventHandler stationGotIpHandler;
-WiFiEventHandler stationModeDHCPTimeoutHandler;
-WiFiEventHandler APModeStationConnectedHandler;
-WiFiEventHandler APModeStationDisconnectedHandler;
-#endif
 
 // Setup DNS, only used if the ESP has no valid WiFi config
-const byte DNS_PORT = 53;
-IPAddress apIP(DEFAULT_AP_IP);
-DNSServer dnsServer;
-bool dnsServerActive = false;
+extern const byte DNS_PORT;
+extern IPAddress apIP;
+extern DNSServer dnsServer;
+extern bool dnsServerActive;
 
 //NTP status
-bool statusNTPInitialized = false;
+extern bool statusNTPInitialized;
 
 // udp protocol stuff (syslog, global sync, node info list, ntp time)
-WiFiUDP portUDP;
+extern WiFiUDP portUDP;
 
 
 /*********************************************************************************************\
@@ -308,11 +248,9 @@ WiFiUDP portUDP;
  * let,1,10
  * if %v1%=10 do ...
 \*********************************************************************************************/
-float customFloatVar[CUSTOM_VARS_MAX];
+extern float customFloatVar[CUSTOM_VARS_MAX];
 
-float UserVar[VARS_PER_TASK * TASKS_MAX];
-
-
+extern float UserVar[VARS_PER_TASK * TASKS_MAX];
 
 
 
@@ -321,10 +259,9 @@ float UserVar[VARS_PER_TASK * TASKS_MAX];
 
 
 
-/*********************************************************************************************\
- * Buffer for outputting logs via serial port.
-\*********************************************************************************************/
-std::deque<char> serialWriteBuffer;
+
+
+
 
 
 
@@ -351,13 +288,13 @@ struct pinStatesStruct
 */
 
 
-int deviceCount = -1;
-int protocolCount = -1;
-int notificationCount = -1;
+extern int deviceCount;
+extern int protocolCount;
+extern int notificationCount;
 
-boolean printToWeb = false;
-String printWebString = "";
-boolean printToWebJSON = false;
+extern boolean printToWeb;
+extern String printWebString;
+extern boolean printToWebJSON;
 
 /********************************************************************************************\
   RTC_cache_struct
@@ -385,36 +322,38 @@ struct rulesTimerStatus
   unsigned long timestamp;
   unsigned int interval; //interval in milliseconds
   boolean paused;
-} RulesTimer[RULES_TIMER_MAX];
+};
 
-msecTimerHandlerStruct msecTimerHandler;
+extern rulesTimerStatus RulesTimer[RULES_TIMER_MAX];
 
-unsigned long timer_gratuitous_arp_interval = 5000;
-unsigned long timermqtt_interval = 250;
-unsigned long lastSend = 0;
-unsigned long lastWeb = 0;
-byte cmd_within_mainloop = 0;
-unsigned long wdcounter = 0;
-unsigned long timerAPoff = 0;    // Timer to check whether the AP mode should be disabled (0 = disabled)
-unsigned long timerAPstart = 0;  // Timer to start AP mode, started when no valid network is detected.
-unsigned long timerAwakeFromDeepSleep = 0;
-unsigned long last_system_event_run = 0;
+extern msecTimerHandlerStruct msecTimerHandler;
+
+extern unsigned long timer_gratuitous_arp_interval;
+extern unsigned long timermqtt_interval;
+extern unsigned long lastSend;
+extern unsigned long lastWeb;
+extern byte cmd_within_mainloop;
+extern unsigned long wdcounter;
+extern unsigned long timerAPoff;    // Timer to check whether the AP mode should be disabled (0 = disabled)
+extern unsigned long timerAPstart;  // Timer to start AP mode, started when no valid network is detected.
+extern unsigned long timerAwakeFromDeepSleep;
+extern unsigned long last_system_event_run;
 
 #if FEATURE_ADC_VCC
-float vcc = -1.0;
+extern float vcc;
 #endif
 
-boolean WebLoggedIn = false;
-int WebLoggedInTimer = 300;
+extern boolean WebLoggedIn;
+extern int WebLoggedInTimer;
 
 
-bool (*CPlugin_ptr[CPLUGIN_MAX])(byte, struct EventStruct*, String&);
-byte CPlugin_id[CPLUGIN_MAX];
+extern bool (*CPlugin_ptr[CPLUGIN_MAX])(byte, struct EventStruct*, String&);
+extern byte CPlugin_id[CPLUGIN_MAX];
 
-boolean (*NPlugin_ptr[NPLUGIN_MAX])(byte, struct EventStruct*, String&);
-byte NPlugin_id[NPLUGIN_MAX];
+extern boolean (*NPlugin_ptr[NPLUGIN_MAX])(byte, struct EventStruct*, String&);
+extern byte NPlugin_id[NPLUGIN_MAX];
 
-String dummyString = "";  // FIXME @TD-er  This may take a lot of memory over time, since long-lived Strings only tend to grow.
+extern String dummyString;  // FIXME @TD-er  This may take a lot of memory over time, since long-lived Strings only tend to grow.
 
 enum PluginPtrType {
   TaskPluginEnum,
@@ -427,119 +366,25 @@ unsigned long createSystemEventMixedId(PluginPtrType ptr_type, byte Index, byte 
 unsigned long createSystemEventMixedId(PluginPtrType ptr_type, uint16_t crc16);
 
 
-byte lastBootCause = BOOT_CAUSE_MANUAL_REBOOT;
-unsigned long lastMixedSchedulerId_beforereboot = 0;
-
-#if defined(ESP32)
-enum WiFiDisconnectReason
-{
-    WIFI_DISCONNECT_REASON_UNSPECIFIED              = 1,
-    WIFI_DISCONNECT_REASON_AUTH_EXPIRE              = 2,
-    WIFI_DISCONNECT_REASON_AUTH_LEAVE               = 3,
-    WIFI_DISCONNECT_REASON_ASSOC_EXPIRE             = 4,
-    WIFI_DISCONNECT_REASON_ASSOC_TOOMANY            = 5,
-    WIFI_DISCONNECT_REASON_NOT_AUTHED               = 6,
-    WIFI_DISCONNECT_REASON_NOT_ASSOCED              = 7,
-    WIFI_DISCONNECT_REASON_ASSOC_LEAVE              = 8,
-    WIFI_DISCONNECT_REASON_ASSOC_NOT_AUTHED         = 9,
-    WIFI_DISCONNECT_REASON_DISASSOC_PWRCAP_BAD      = 10,  /* 11h */
-    WIFI_DISCONNECT_REASON_DISASSOC_SUPCHAN_BAD     = 11,  /* 11h */
-    WIFI_DISCONNECT_REASON_IE_INVALID               = 13,  /* 11i */
-    WIFI_DISCONNECT_REASON_MIC_FAILURE              = 14,  /* 11i */
-    WIFI_DISCONNECT_REASON_4WAY_HANDSHAKE_TIMEOUT   = 15,  /* 11i */
-    WIFI_DISCONNECT_REASON_GROUP_KEY_UPDATE_TIMEOUT = 16,  /* 11i */
-    WIFI_DISCONNECT_REASON_IE_IN_4WAY_DIFFERS       = 17,  /* 11i */
-    WIFI_DISCONNECT_REASON_GROUP_CIPHER_INVALID     = 18,  /* 11i */
-    WIFI_DISCONNECT_REASON_PAIRWISE_CIPHER_INVALID  = 19,  /* 11i */
-    WIFI_DISCONNECT_REASON_AKMP_INVALID             = 20,  /* 11i */
-    WIFI_DISCONNECT_REASON_UNSUPP_RSN_IE_VERSION    = 21,  /* 11i */
-    WIFI_DISCONNECT_REASON_INVALID_RSN_IE_CAP       = 22,  /* 11i */
-    WIFI_DISCONNECT_REASON_802_1X_AUTH_FAILED       = 23,  /* 11i */
-    WIFI_DISCONNECT_REASON_CIPHER_SUITE_REJECTED    = 24,  /* 11i */
-
-    WIFI_DISCONNECT_REASON_BEACON_TIMEOUT           = 200,
-    WIFI_DISCONNECT_REASON_NO_AP_FOUND              = 201,
-    WIFI_DISCONNECT_REASON_AUTH_FAIL                = 202,
-    WIFI_DISCONNECT_REASON_ASSOC_FAIL               = 203,
-    WIFI_DISCONNECT_REASON_HANDSHAKE_TIMEOUT        = 204
-};
-#endif
 
 
-bool useStaticIP();
-
-// WiFi related data
-boolean wifiSetup = false;
-boolean wifiSetupConnect = false;
-uint8_t lastBSSID[6] = {0};
-uint8_t wifiStatus = ESPEASY_WIFI_DISCONNECTED;
-unsigned long last_wifi_connect_attempt_moment = 0;
-unsigned int wifi_connect_attempt = 0;
-int wifi_reconnects = -1; // First connection attempt is not a reconnect.
-uint8_t lastWiFiSettings = 0;
-String last_ssid;
-bool bssid_changed = false;
-bool channel_changed = false;
-uint8_t last_channel = 0;
-WiFiDisconnectReason lastDisconnectReason = WIFI_DISCONNECT_REASON_UNSPECIFIED;
-unsigned long lastConnectMoment = 0;
-unsigned long lastDisconnectMoment = 0;
-unsigned long lastGetIPmoment = 0;
-unsigned long lastGetScanMoment = 0;
-unsigned long lastConnectedDuration = 0;
-bool intent_to_reboot = false;
-uint8_t lastMacConnectedAPmode[6] = {0};
-uint8_t lastMacDisconnectedAPmode[6] = {0};
-
-//uint32_t scan_done_status = 0;
-uint8_t  scan_done_number = 0;
-//uint8_t  scan_done_scan_id = 0;
-
-// Semaphore like booleans for processing data gathered from WiFi events.
-volatile bool processedConnect = true;
-volatile bool processedDisconnect = true;
-volatile bool processedGotIP = true;
-volatile bool processedDHCPTimeout = true;
-volatile bool processedConnectAPmode = true;
-volatile bool processedDisconnectAPmode = true;
-volatile bool processedScanDone = true;
-bool wifiConnectAttemptNeeded = true;
-bool wifiConnectInProgress = false;
-
-bool webserverRunning = false;
-bool webserver_init = false;
-
-unsigned long idle_msec_per_sec = 0;
-unsigned long elapsed10ps = 0;
-unsigned long elapsed10psU = 0;
-unsigned long elapsed50ps = 0;
-unsigned long loopCounter = 0;
-unsigned long loopCounterLast = 0;
-unsigned long loopCounterMax = 1;
-unsigned long lastLoopStart = 0;
-unsigned long shortestLoop = 10000000;
-unsigned long longestLoop = 0;
-unsigned long loopCounter_full = 1;
-float loop_usec_duration_total = 0.0;
 
 
-unsigned long dailyResetCounter = 0;
-volatile unsigned long sw_watchdog_callback_count = 0;
 
-String eventBuffer = "";
-
-uint32_t lowestRAM = 0;
-String lowestRAMfunction = "";
-uint32_t lowestFreeStack = 0;
-String lowestFreeStackfunction = "";
+extern bool webserverRunning;
+extern bool webserver_init;
 
 
-bool shouldReboot=false;
-bool firstLoop=true;
+extern String eventBuffer;
 
-boolean activeRuleSets[RULESETS_MAX];
 
-boolean UseRTOSMultitasking = false;
+extern bool shouldReboot;
+extern bool firstLoop;
+
+extern boolean activeRuleSets[RULESETS_MAX];
+
+extern boolean UseRTOSMultitasking;
+
 
 // void (*MainLoopCall_ptr)(void); //FIXME TD-er: No idea what this does.
 

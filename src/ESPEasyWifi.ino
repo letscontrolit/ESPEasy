@@ -1,6 +1,7 @@
 #define WIFI_RECONNECT_WAIT         20000 // in milliSeconds
 #define WIFI_AP_OFF_TIMER_DURATION  60000 // in milliSeconds
 
+#include "src/Globals/ESPEasyWiFiEvent.h"
 
 // ********************************************************************************
 // WiFi state

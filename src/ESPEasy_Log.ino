@@ -1,5 +1,6 @@
 #include "ESPEasy_Log.h"
 #include "src/Globals/Logging.h"
+#include "src/Globals/ESPEasyWiFiEvent.h"
 #include "src/DataStructs/LogStruct.h"
 
 /********************************************************************************************\

@@ -1,5 +1,7 @@
 #include "src/Globals/Nodes.h"
 #include "src/Globals/Device.h"
+#include "src/Static/WebStaticData.h"
+
 
 void handle_devices() {
   checkRAM(F("handle_devices"));

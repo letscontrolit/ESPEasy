@@ -24,7 +24,7 @@ struct portStatusStruct {
   int8_t x; // used to synchronize the Plugin_prt vector index (x) with the PLUGIN_ID
 };
 
-std::map<uint32_t, portStatusStruct> globalMapPortStatus;
+typedef std::map<uint32_t, portStatusStruct> MapPortStatus;
 
 
 #endif // DATASTRUCTS_PORTSTATUSSTRUCT_H

@@ -5,7 +5,6 @@
 #include "src/DataStructs/ESPEasyLimits.h"
 
 
-//int getPluginId(byte taskId);
 int getPluginId_from_TaskIndex(byte taskIndex);
 
 String getPluginNameFromDeviceIndex(byte deviceIndex);

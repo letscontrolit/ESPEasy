@@ -1,5 +1,6 @@
 #include "src/Globals/CRCValues.h"
 #include "src/Globals/Device.h"
+#include "src/Globals/ESPEasyWiFiEvent.h"
 
 /********************************************************************************************\
    Convert a char string to integer

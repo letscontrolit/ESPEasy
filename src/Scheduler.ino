@@ -391,7 +391,7 @@ void process_plugin_task_timer(unsigned long id) {
 
   // TD-er: Not sure if we have to keep original source for notifications.
   TempEvent.Source = VALUE_SOURCE_SYSTEM;
-  const int y = getPluginId(timer_data.TaskIndex);
+  const int y = getPluginId_from_TaskIndex(timer_data.TaskIndex);
 
   /*
      String log = F("proc_system_timer: Pluginid: ");

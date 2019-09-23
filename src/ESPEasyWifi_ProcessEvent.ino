@@ -1,3 +1,5 @@
+#include "src/Globals/ESPEasyWiFiEvent.h"
+
 bool unprocessedWifiEvents() {
   if (processedConnect && processedDisconnect && processedGotIP && processedDHCPTimeout)
   {

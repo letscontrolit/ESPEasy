@@ -1,18 +1,34 @@
-
-// FIXME TD-er Must make global variables available to complete this transition to .cpp file.
-/*
 #include "Diagnostic.h"
-
+/*
 #include "Common.h"
 #include "../../ESPEasy_common.h"
 #include "../../ESPEasy_fdwdecl.h"
 #include "../DataStructs/ESPEasy_EventStruct.h"
 #include "../DataStructs/SettingsType.h"
-#include "../DataStructs/PortStatusStruct.h"
-#include "../../ESPEasy_Log.h"
+*/
 
 #include <map>
 #include <stdint.h>
+
+#include "../../ESPEasy_common.h"
+#include "src/Commands/Common.h"
+#include "src/Globals/Settings.h"
+#include "src/Globals/SecuritySettings.h"
+#include "src/Globals/ExtraTaskSettings.h"
+#include "src/Globals/Device.h"
+#include "src/DataStructs/SettingsType.h"
+#include "src/DataStructs/PortStatusStruct.h"
+#include "src/Globals/GlobalMapPortStatus.h"
+#include "../../ESPEasy_Log.h"
+#include "../Globals/Statistics.h"
+
+
+#include "ESPEasy_fdwdecl.h"
+
+
+#ifndef BUILD_MINIMAL_OTA
+	bool showSettingsFileLayout = false;
+#endif
 
 String Command_Lowmem(struct EventStruct *event, const char* Line)
 {
@@ -175,5 +191,3 @@ String Command_logPortStatus(struct EventStruct *event, const char* Line)
 	logPortStatus("Rules");
 	return return_command_success();
 }
-
-*/

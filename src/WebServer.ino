@@ -4,6 +4,7 @@
 
 
 #include "src/Globals/Device.h"
+#include "src/Static/WebStaticData.h"
 
 // ********************************************************************************
 // Core part of WebServer, the chunked streaming buffer

@@ -18,9 +18,5 @@ String getSettingsTypeString(SettingsType settingsType);
 bool getSettingsParameters(SettingsType settingsType, int index, int& offset, int& max_size);
 bool getSettingsParameters(SettingsType settingsType, int index, int& max_index, int& offset, int& max_size, int& struct_size);
 
-#ifndef BUILD_MINIMAL_OTA
-bool showSettingsFileLayout = false;
-#endif
-
 
 #endif // DATASTRUCTS_SETTINGSTYPE_H

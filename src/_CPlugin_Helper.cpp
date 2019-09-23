@@ -15,6 +15,7 @@
 #include "src/Globals/CRCValues.h"
 #include "src/Globals/Settings.h"
 #include "src/Globals/SecuritySettings.h"
+#include "src/Globals/ESPEasyWiFiEvent.h"
 
 #include <WiFiClient.h>
 #include <WiFiUdp.h>
@@ -250,7 +251,7 @@ void log_connecting_fail(const String& prefix, int controller_number, Controller
     String log = prefix;
     log += get_formatted_Controller_number(controller_number);
     log += F(" connection failed (");
-    log += getConnectionFailures();
+    log += connectionFailures;
     log += F("/");
     log += Settings.ConnectionFailuresThreshold;
     log += F(")");
@@ -261,14 +262,14 @@ void log_connecting_fail(const String& prefix, int controller_number, Controller
 bool count_connection_results(bool success, const String& prefix, int controller_number, ControllerSettingsStruct& ControllerSettings) {
   if (!success)
   {
-    getConnectionFailures()++;
+    connectionFailures++;
     log_connecting_fail(prefix, controller_number, ControllerSettings);
     return false;
   }
   statusLED(true);
 
-  if (getConnectionFailures()) {
-    getConnectionFailures()--;
+  if (connectionFailures) {
+    connectionFailures--;
   }
   return true;
 }

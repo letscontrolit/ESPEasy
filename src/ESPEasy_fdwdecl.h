@@ -29,7 +29,6 @@
 
 
 // Forward declaration to give access to global member variables
-unsigned long & getConnectionFailures();
 float         & getUserVar(unsigned int varIndex);
 
 
@@ -70,6 +69,7 @@ bool     connectClient(WiFiClient& client,
 
 bool   WiFiConnected(uint32_t timeout_ms);
 bool   WiFiConnected();
+bool   useStaticIP();
 bool   hostReachable(const IPAddress& ip);
 bool   hostReachable(const String& hostname);
 void formatMAC(const uint8_t * mac, char (& strMAC)[20]);
