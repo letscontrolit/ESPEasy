@@ -1,6 +1,7 @@
 #include "src/Globals/CRCValues.h"
 #include "src/Globals/Device.h"
 #include "src/Globals/ESPEasyWiFiEvent.h"
+#include "src/Globals/MQTT.h"
 
 /********************************************************************************************\
    Convert a char string to integer
