@@ -1,7 +1,7 @@
 #include "Plugins.h"
-#include "src/DataStructs/ESPEasy_EventStruct.h"
+#include "../DataStructs/ESPEasy_EventStruct.h"
 #include "ESPEasy_plugindefs.h"
-#include "src/Globals/Settings.h"
+#include "../Globals/Settings.h"
 
 
 void updateTaskPluginCache() {

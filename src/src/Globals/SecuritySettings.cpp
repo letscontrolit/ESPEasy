@@ -1,4 +1,4 @@
-#include "src/Globals/SecuritySettings.h"
+#include "../Globals/SecuritySettings.h"
 
 
 SecurityStruct SecuritySettings;

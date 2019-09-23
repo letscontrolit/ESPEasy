@@ -1,6 +1,6 @@
-#include "src/Globals/Cache.h"
+#include "../Globals/Cache.h"
 
-#include "src/DataStructs/Caches.h"
+#include "../DataStructs/Caches.h"
 
 void clearAllCaches()
 {

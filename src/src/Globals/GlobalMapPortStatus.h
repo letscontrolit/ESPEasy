@@ -1,7 +1,7 @@
 #ifndef GLOBALS_GLOBAL_MAP_PORT_STATUS_H
 #define GLOBALS_GLOBAL_MAP_PORT_STATUS_H
 
-#include "src/DataStructs/PortStatusStruct.h"
+#include "../DataStructs/PortStatusStruct.h"
 
 extern MapPortStatus globalMapPortStatus;
 

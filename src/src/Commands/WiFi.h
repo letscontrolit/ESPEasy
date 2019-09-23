@@ -1,7 +1,7 @@
 #ifndef COMMAND_WIFI_H
 #define COMMAND_WIFI_H
 
-#include "src/Globals/SecuritySettings.h"
+#include "../Globals/SecuritySettings.h"
 
 #define WIFI_MODE_MAX (WiFiMode_t)4
 

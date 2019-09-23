@@ -1,6 +1,6 @@
-#include "src/Globals/RTC.h"
+#include "../Globals/RTC.h"
 
-#include "src/DataStructs/RTCStruct.h"
+#include "../DataStructs/RTCStruct.h"
 
 
 RTCStruct RTC;

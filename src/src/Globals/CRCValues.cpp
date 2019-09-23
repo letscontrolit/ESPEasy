@@ -1,3 +1,3 @@
-#include "src/Globals/CRCValues.h"
+#include "../Globals/CRCValues.h"
 
 CRCStruct CRCValues;

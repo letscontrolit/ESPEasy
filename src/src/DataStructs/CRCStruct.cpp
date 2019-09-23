@@ -1,4 +1,4 @@
-#include "src/DataStructs/CRCStruct.h"
+#include "../DataStructs/CRCStruct.h"
 
 #include <string.h>
 

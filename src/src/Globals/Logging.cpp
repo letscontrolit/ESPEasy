@@ -1,6 +1,6 @@
-#include "src/Globals/Logging.h"
+#include "../Globals/Logging.h"
 
-#include "src/DataStructs/LogStruct.h"
+#include "../DataStructs/LogStruct.h"
 
 
 LogStruct Logging;

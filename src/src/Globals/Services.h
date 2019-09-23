@@ -1,7 +1,7 @@
 #ifndef GLOBALS_SERVICES_H
 #define GLOBALS_SERVICES_H
 
-#include "ESPEasy_common.h"
+#include "../../ESPEasy_common.h"
 
 #ifdef FEATURE_ARDUINO_OTA
   #include <ArduinoOTA.h>

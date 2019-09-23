@@ -1,7 +1,7 @@
 #ifndef GLOBALS_CRC_VALUES_H
 #define GLOBALS_CRC_VALUES_H
 
-#include "src/DataStructs/CRCStruct.h"
+#include "../DataStructs/CRCStruct.h"
 
 extern CRCStruct CRCValues;
 

@@ -1,4 +1,4 @@
-#include "src/Globals/Settings.h"
+#include "../Globals/Settings.h"
 
 
 SettingsStruct Settings;

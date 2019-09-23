@@ -1,4 +1,4 @@
-#include "src/Globals/ResetFactoryDefaultPref.h"
-#include "src/DataStructs/FactoryDefaultPref.h"
+#include "../Globals/ResetFactoryDefaultPref.h"
+#include "../DataStructs/FactoryDefaultPref.h"
 
 ResetFactoryDefaultPreference_struct ResetFactoryDefaultPreference;

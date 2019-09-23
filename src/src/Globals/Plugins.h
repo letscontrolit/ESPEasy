@@ -2,7 +2,7 @@
 #define GLOBALS_PLUGIN_H
 
 #include <vector>
-#include "src/DataStructs/ESPEasyLimits.h"
+#include "../DataStructs/ESPEasyLimits.h"
 
 
 int getPluginId_from_TaskIndex(byte taskIndex);
