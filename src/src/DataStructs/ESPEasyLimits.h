@@ -124,16 +124,6 @@
   #define RULES_IF_MAX_NESTING_LEVEL          4
 #endif
 
-#ifndef INPUT_COMMAND_SIZE
-# define INPUT_COMMAND_SIZE                240 // Affects maximum command length in rules and other commands
-#endif // ifndef INPUT_COMMAND_SIZE
-
-#ifndef INPUT_COMMAND_SIZE
-  #define INPUT_COMMAND_SIZE                240 // Affects maximum command length in rules and other commands
-#endif
-// FIXME TD-er: INPUT_COMMAND_SIZE is also used in commands where simply a check for valid parameter is needed
-// and some may need less memory. (which is stack allocated)
-
 
 // ***********************************************************************
 // * Other operational limits

@@ -2,6 +2,10 @@
 
 #include "src/DataStructs/TimingStats.h"
 
+#include "define_plugin_sets.h"
+
+
+
 //********************************************************************************
 // Initialize all plugins that where defined earlier
 // and initialize the function call pointer into the plugin array

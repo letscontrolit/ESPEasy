@@ -229,6 +229,7 @@ String doFormatUserVar(struct EventStruct *event, byte rel_index, bool mustCheck
 #endif // ifndef BUILD_NO_DEBUG
     f = 0;
   }
+  LoadTaskSettings(event->TaskIndex);
   return toString(f, ExtraTaskSettings.TaskDeviceValueDecimals[rel_index]);
 }
 
@@ -767,8 +768,7 @@ void parseEventVariables(String& s, struct EventStruct *event, boolean useURLenc
       SMART_REPL(F("%val4%"), formatUserVarNoCheck(event, 3))
     }
   }
-
-  // FIXME TD-er: Must make sure LoadTaskSettings has been performed before this is called.
+  LoadTaskSettings(event->TaskIndex);
   repl(F("%tskname%"), ExtraTaskSettings.TaskDeviceName, s, useURLencode);
 
   if (s.indexOf(F("%vname")) != -1) {

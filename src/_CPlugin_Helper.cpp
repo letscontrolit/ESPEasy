@@ -275,7 +275,7 @@ bool count_connection_results(bool success, const String& prefix, int controller
 }
 
 bool try_connect_host(int controller_number, WiFiUDP& client, ControllerSettingsStruct& ControllerSettings) {
-  //START_TIMER; // FIXME TD-er Timingstats macros currently not callable from .cpp file
+  START_TIMER;
   if (!WiFiConnected()) return false;
   client.setTimeout(ControllerSettings.ClientTimeout);
 #ifndef BUILD_NO_DEBUG
@@ -285,12 +285,12 @@ bool try_connect_host(int controller_number, WiFiUDP& client, ControllerSettings
   const bool result = count_connection_results(
     success,
     F("UDP  : "), controller_number, ControllerSettings);
-  //STOP_TIMER(TRY_CONNECT_HOST_UDP);
+  STOP_TIMER(TRY_CONNECT_HOST_UDP);
   return result;
 }
 
 bool try_connect_host(int controller_number, WiFiClient& client, ControllerSettingsStruct& ControllerSettings) {
-  //START_TIMER; // FIXME TD-er Timingstats macros currently not callable from .cpp file
+  START_TIMER;
   if (!WiFiConnected()) return false;
 
   // Use WiFiClient class to create TCP connections
@@ -302,7 +302,7 @@ bool try_connect_host(int controller_number, WiFiClient& client, ControllerSetti
   const bool result = count_connection_results(
     success,
     F("HTTP : "), controller_number, ControllerSettings);
-  //STOP_TIMER(TRY_CONNECT_HOST_TCP);
+  STOP_TIMER(TRY_CONNECT_HOST_TCP);
   return result;
 }
 

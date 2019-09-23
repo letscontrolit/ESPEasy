@@ -5,10 +5,7 @@
 #include "../../ESPEasy_common.h"
 #include "../../ESPEasy_fdwdecl.h"
 #include "../DataStructs/ESPEasy_EventStruct.h"
-
-// FIXME TD-er: These defines must be moved from ESPEasy-Globals.h to a separate .h file
-// For now, just a copy of the define.
-#define VALUE_SOURCE_SERIAL                 2
+#include "../DataStructs/EventValueSource.h"
 
 
 // Simple function to return "Ok", to avoid flash string duplication in the firmware.
