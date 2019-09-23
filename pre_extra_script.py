@@ -19,7 +19,7 @@ env.Append(CPPDEFINES=[
 if os.path.isfile('src/Custom.h'):
   env['CPPDEFINES'].append("USE_CUSTOM_H")
 else:
-  env['CPPDEFINES'].append([
+  env['CPPDEFINES'].extend([
     "CONTROLLER_SET_ALL",
     "NOTIFIER_SET_NONE",
     "PLUGIN_SET_ONLY_SWITCH",
