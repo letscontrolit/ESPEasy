@@ -139,13 +139,13 @@
 
 #if defined(ESP32)
   # ifndef DAT_OFFSET_TASKS
-  #  define DAT_OFFSET_TASKS                 8192 // each controller = 1k, 4 max
+  #  define DAT_OFFSET_TASKS                 32768  // each task = 2k, (1024 basic + 1024 bytes custom), 32 max
   # endif // ifndef DAT_OFFSET_TASKS
   # ifndef DAT_OFFSET_CONTROLLER
-  #  define DAT_OFFSET_CONTROLLER           12288 // each custom controller config = 1k, 4 max.
+  #  define DAT_OFFSET_CONTROLLER           8192  // each controller = 1k, 4 max
   # endif // ifndef DAT_OFFSET_CONTROLLER
   # ifndef DAT_OFFSET_CUSTOM_CONTROLLER
-  #  define DAT_OFFSET_CUSTOM_CONTROLLER    32768 // each task = 2k, (1024 basic + 1024 bytes custom), 32 max
+  #  define DAT_OFFSET_CUSTOM_CONTROLLER    12288  // each custom controller config = 1k, 4 max.
   # endif // ifndef DAT_OFFSET_CUSTOM_CONTROLLER
   # ifndef CONFIG_FILE_SIZE
   #  define CONFIG_FILE_SIZE               131072
