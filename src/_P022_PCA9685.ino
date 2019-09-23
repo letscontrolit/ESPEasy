@@ -13,25 +13,58 @@
 #define PLUGIN_VALUENAME1_022 "PWM"
 
 #define PLUGIN_022_PCA9685_MODE1   0x00 // location for Mode1 register address
-#define PCA9685_MODE2   0x01            // location for Mode2 register address
-#define PCA9685_MODE2_VALUES   0x20
-#define PCA9685_LED0    0x06            // location for start of LED0 registers
-#define PCA9685_ADDRESS 0x40            // I2C address
-#define PCA9685_MAX_ADDRESS 0x7F
-#define PCA9685_NUMS_ADDRESS PCA9685_MAX_ADDRESS - PCA9685_ADDRESS
-#define PCA9685_MAX_PINS  15
-#define PCA9685_MAX_PWM 4095
-#define PCA9685_MIN_FREQUENCY   23.0   // Min possible PWM cycle frequency
-#define PCA9685_MAX_FREQUENCY   1500.0 // Max possible PWM cycle frequency
-#define PCA9685_ALLLED_REG          (byte)0xFA
+#define PCA9685_MODE2              0x01 // location for Mode2 register address
+#define PCA9685_MODE2_VALUES       0x20
+#define PCA9685_LED0               0x06 // location for start of LED0 registers
+#define PCA9685_ADDRESS            0x40 // I2C address
+#define PCA9685_MAX_ADDRESS        0x7F
+#define PCA9685_NUMS_ADDRESS       (PCA9685_MAX_ADDRESS - PCA9685_ADDRESS)
+#define PCA9685_MAX_PINS           15
+#define PCA9685_MAX_PWM            4095
+#define PCA9685_MIN_FREQUENCY      23.0   // Min possible PWM cycle frequency
+#define PCA9685_MAX_FREQUENCY      1500.0 // Max possible PWM cycle frequency
+#define PCA9685_ALLLED_REG         (byte)0xFA
 
-/*
-   is bit flag any bit rapresent the initialization state of PCA9685
-   es:  bit 3 is set 1 PCA9685 with address 0X40 + 0x03 is intin
- */
-#define IS_INIT(state, bit) ((bit >= 0) && (bit < 32) && ((state & (1 << bit)) != 0))
-#define SET_INIT(state, bit) (state |= (1 << bit))
-long long initializeState; //
+
+// Bit mask to keep track of addresses initialized.
+static uint32_t initializeState_lo = 0;
+static uint32_t initializeState_hi = 0;
+
+bool p022_is_init(uint8_t address) {
+  if ((address < PCA9685_ADDRESS) || (address > PCA9685_MAX_ADDRESS)) { return false; }
+  uint32_t address_offset = address - PCA9685_ADDRESS;
+
+  if (address_offset < 32) {
+    return initializeState_lo & (1 << address_offset);
+  } else {
+    return initializeState_hi & (1 << (address_offset - 32));
+  }
+}
+
+bool p022_set_init(uint8_t address) {
+  if ((address < PCA9685_ADDRESS) || (address > PCA9685_MAX_ADDRESS)) { return false; }
+  uint32_t address_offset = address - PCA9685_ADDRESS;
+
+  if (address_offset < 32) {
+    initializeState_lo |= (1 << address_offset);
+  } else {
+    initializeState_hi |= (1 << (address_offset - 32));
+  }
+  return true;
+}
+
+bool p022_clear_init(uint8_t address) {
+  if ((address < PCA9685_ADDRESS) || (address > PCA9685_MAX_ADDRESS)) { return false; }
+  uint32_t address_offset = address - PCA9685_ADDRESS;
+
+  if (address_offset < 32) {
+    initializeState_lo &= ~(1 << address_offset);
+  } else {
+    initializeState_hi &= ~(1 << (address_offset - 32));
+  }
+  return true;
+}
+
 
 boolean Plugin_022(byte function, struct EventStruct *event, String& string)
 {
@@ -47,6 +80,10 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
     mode2   = PCONFIG(0);
     freq    = PCONFIG(1);
     range   = PCONFIG(2);
+  }
+
+  if ((address < PCA9685_ADDRESS) || (address > PCA9685_MAX_ADDRESS)) {
+    address = PCA9685_ADDRESS;
   }
 
   if (freq == 0) {
@@ -88,56 +125,66 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      int optionValues[PCA9685_NUMS_ADDRESS];
-
-      for (int i = 0; i < PCA9685_NUMS_ADDRESS; i++)
+      // The options lists are quite long.
+      // To prevent stack overflow issues, each selection has its own scope.
       {
-        optionValues[i] = PCA9685_ADDRESS + i;
-      }
-      addFormSelectorI2C(F("i2c_addr"), PCA9685_NUMS_ADDRESS, optionValues, address);
+        int optionValues[PCA9685_NUMS_ADDRESS];
 
-      String m2Options[PCA9685_MODE2_VALUES];
-      int    m2Values[PCA9685_MODE2_VALUES];
-
-      for (int i = 0; i < PCA9685_MODE2_VALUES; i++)
-      {
-        m2Values[i]  = i;
-        m2Options[i] = formatToHex_decimal(i);
-
-        if (i == 0x10) {
-          m2Options[i] += F(" - (default)");
+        for (int i = 0; i < PCA9685_NUMS_ADDRESS; i++)
+        {
+          optionValues[i] = PCA9685_ADDRESS + i;
         }
+        addFormSelectorI2C(F("i2c_addr"), PCA9685_NUMS_ADDRESS, optionValues, address);
       }
-      addFormSelector(F("MODE2"), F("p022_mode2"), PCA9685_MODE2_VALUES, m2Options, m2Values, mode2);
+      {
+        String m2Options[PCA9685_MODE2_VALUES];
+        int    m2Values[PCA9685_MODE2_VALUES];
 
-      String freqString = F("Frequency (");
-      freqString += PCA9685_MIN_FREQUENCY;
-      freqString += '-';
-      freqString += PCA9685_MAX_FREQUENCY;
-      freqString += ')';
-      addFormNumericBox(freqString, F("p022_freq"), freq, PCA9685_MIN_FREQUENCY, PCA9685_MAX_FREQUENCY);
-      String funitString = F("default ");
-      funitString += PCA9685_MAX_FREQUENCY;
-      addUnit(funitString);
+        for (int i = 0; i < PCA9685_MODE2_VALUES; i++)
+        {
+          m2Values[i]  = i;
+          m2Options[i] = formatToHex_decimal(i);
 
-      addFormNumericBox(F("Range (1-10000)"), F("p022_range"), range, 1, 10000);
-      String runitString = F("default ");
-      runitString += PCA9685_MAX_PWM;
-      addUnit(runitString);
-
+          if (i == 0x10) {
+            m2Options[i] += F(" - (default)");
+          }
+        }
+        addFormSelector(F("MODE2"), F("p022_mode2"), PCA9685_MODE2_VALUES, m2Options, m2Values, mode2);
+      }
+      {
+        String freqString = F("Frequency (");
+        freqString += PCA9685_MIN_FREQUENCY;
+        freqString += '-';
+        freqString += PCA9685_MAX_FREQUENCY;
+        freqString += ')';
+        addFormNumericBox(freqString, F("p022_freq"), freq, PCA9685_MIN_FREQUENCY, PCA9685_MAX_FREQUENCY);
+      }
+      {
+        String funitString = F("default ");
+        funitString += PCA9685_MAX_FREQUENCY;
+        addUnit(funitString);
+      }
+      {
+        addFormNumericBox(F("Range (1-10000)"), F("p022_range"), range, 1, 10000);
+        String runitString = F("default ");
+        runitString += PCA9685_MAX_PWM;
+        addUnit(runitString);
+      }
       success = true;
       break;
     }
 
     case PLUGIN_WEBFORM_SAVE:
     {
+      p022_clear_init(CONFIG_PORT);
       CONFIG_PORT = getFormItemInt(F("i2c_addr"));
       PCONFIG(0)  = getFormItemInt(F("p022_mode2"));
       PCONFIG(1)  = getFormItemInt(F("p022_freq"));
       PCONFIG(2)  = getFormItemInt(F("p022_range"));
 
-      if (!IS_INIT(initializeState, (CONFIG_PORT - PCA9685_ADDRESS)))
+      if (!p022_is_init(CONFIG_PORT))
       {
+        Plugin_022_initialize(address);
         if (PCONFIG(0) != mode2) {
           Plugin_022_writeRegister(address, PCA9685_MODE2, PCONFIG(0));
         }
@@ -186,7 +233,7 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
         {
           if ((event->Par2 >= 0) && (event->Par2 <= range))
           {
-            if (!IS_INIT(initializeState, (address - PCA9685_ADDRESS)))
+            if (!p022_is_init(address))
             {
               Plugin_022_initialize(address);
               Plugin_022_writeRegister(address, PCA9685_MODE2, mode2);
@@ -225,7 +272,7 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
 
         if ((event->Par1 >= PCA9685_MIN_FREQUENCY) && (event->Par1 <= PCA9685_MAX_FREQUENCY))
         {
-          if (!IS_INIT(initializeState, (address - PCA9685_ADDRESS)))
+          if (!p022_is_init(address))
           {
             Plugin_022_initialize(address);
             Plugin_022_writeRegister(address, PCA9685_MODE2, mode2);
@@ -262,7 +309,7 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
 
         if ((event->Par1 >= 0) && (event->Par1 < PCA9685_MODE2_VALUES))
         {
-          if (!IS_INIT(initializeState, (address - PCA9685_ADDRESS)))
+          if (!p022_is_init(address))
           {
             Plugin_022_initialize(address);
             Plugin_022_Frequency(address, freq);
@@ -282,7 +329,7 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
       {
         if (parseString(line, 2) == F("pca"))
         {
-          if (!IS_INIT(initializeState, (address - PCA9685_ADDRESS)))
+          if (!p022_is_init(address))
           {
             Plugin_022_initialize(address);
             Plugin_022_writeRegister(address, PCA9685_MODE2, mode2);
@@ -302,7 +349,7 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
 
         if ((event->Par1 >= 0) && (event->Par1 <= PCA9685_MAX_PINS))
         {
-          if (!IS_INIT(initializeState, (address - PCA9685_ADDRESS)))
+          if (!p022_is_init(address))
           {
             Plugin_022_initialize(address);
             Plugin_022_writeRegister(address, PCA9685_MODE2, mode2);
@@ -358,7 +405,7 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
 
         if ((event->Par1 >= 0) && (event->Par1 <= PCA9685_MAX_PINS))
         {
-          if (!IS_INIT(initializeState, (address - PCA9685_ADDRESS)))
+          if (!p022_is_init(address))
           {
             Plugin_022_initialize(address);
             Plugin_022_writeRegister(address, PCA9685_MODE2, mode2);
@@ -561,7 +608,7 @@ void Plugin_022_initialize(int address)
   delay(1);
   Plugin_022_writeRegister(i2cAddress, PLUGIN_022_PCA9685_MODE1, (byte)B10100000); // set up for auto increment
   // Plugin_022_writeRegister(i2cAddress, PCA9685_MODE2, (byte)0x10); // set to output
-  SET_INIT(initializeState, (address - PCA9685_ADDRESS));
+  p022_set_init(address);
 }
 
 #endif // USES_P022
