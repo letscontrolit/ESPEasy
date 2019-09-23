@@ -13,7 +13,6 @@ import os
 # - frameworks
 # - dependent libraries
 env.Append(CPPDEFINES=[
-  "PIO_FRAMEWORK_ARDUINO_ESPRESSIF_SDK22y",
   ("WEBSERVER_RULES_DEBUG", "0")
 ])
 if os.path.isfile('src/Custom.h'):
@@ -33,7 +32,6 @@ else:
     "USES_P056",  # SDS011-Dust
     "USES_P059",  # Encoder
     "USES_P082",  # GPS
-    "USES_P085",  # AcuDC24x
     "USES_P087",  # Serial Proxy
 
     "USE_SETTINGS_ARCHIVE"
