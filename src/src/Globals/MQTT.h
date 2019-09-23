@@ -1,7 +1,7 @@
 #ifndef GLOBALS_MQTT_H
 #define GLOBALS_MQTT_H
 
-#include "define_plugin_sets.h"
+#include "../../define_plugin_sets.h"
 
 
 #ifdef USES_MQTT

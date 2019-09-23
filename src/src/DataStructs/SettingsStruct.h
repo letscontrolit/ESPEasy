@@ -63,7 +63,9 @@ struct SettingsStruct
 
   void clearTask(byte task);
 
-#ifdef USE_NON_STANDARD_24_TASKS
+#if defined(USE_NON_STANDARD_24_TASKS) && defined(ESP8266)
+  // FIXME TD-er: Make 24 tasks option available for ESP32, so the files can be exchanged between ESP8266 and ESP32
+
   static_assert(TASKS_MAX == 24, "");
 #endif
 
