@@ -37,6 +37,15 @@ For development of ESPeasy, a number of extensions has to be installed in VS-Cod
 * Arduino for Visual Studio Code (by Microsoft)
 * Uncrustify (by Laurent Tréguier)
 
+Optional:
+* Bookmarks (by Alessandro Fragnani)
+* Bracket Pair Colorizer 2 (by CoenraadS)
+* GitLens - Git supercharged (by Eric Amodio)
+* Todo Tree (by Gruntfuggly)
+* All Autocomplete (by Atishay Jain)
+* Excel Viewer (by GrapeCity)
+
+
 Uncrustify
 ----------
 
