@@ -52,7 +52,7 @@ boolean Plugin_033(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        pconfig_webformSave(event, 0);
+        sensorTypeHelper_saveSensorType(event, 0);
         success = true;
         break;
       }
