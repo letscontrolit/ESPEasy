@@ -235,7 +235,7 @@ String SaveSettings(void)
   uint8_t    tmp_md5[16] = { 0 };
   String     err;
 
-  Settings.StructSize = sizeof(struct SettingsStruct);
+  Settings.StructSize = sizeof(Settings);
 
   // FIXME @TD-er: As discussed in #1292, the CRC for the settings is now disabled.
 

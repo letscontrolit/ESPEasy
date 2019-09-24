@@ -9,9 +9,11 @@
 /*********************************************************************************************\
  * SettingsStruct
 \*********************************************************************************************/
-struct SettingsStruct
+template <unsigned int N_TASKS>
+class SettingsStruct_tmpl
 {
-  SettingsStruct();
+  public:
+  SettingsStruct_tmpl();
 
   // VariousBits1 defaults to 0, keep in mind when adding bit lookups.
   bool appendUnitToHostname();
@@ -63,12 +65,6 @@ struct SettingsStruct
 
   void clearTask(byte task);
 
-#if defined(USE_NON_STANDARD_24_TASKS) && defined(ESP8266)
-  // FIXME TD-er: Make 24 tasks option available for ESP32, so the files can be exchanged between ESP8266 and ESP32
-
-  static_assert(TASKS_MAX == 24, "");
-#endif
-
   unsigned long PID;
   int           Version;
   int16_t       Build;
@@ -110,31 +106,31 @@ struct SettingsStruct
   boolean       InitSPI;
   byte          Protocol[CONTROLLER_MAX];
   byte          Notification[NOTIFICATION_MAX]; //notifications, point to a NPLUGIN id
-  byte          TaskDeviceNumber[TASKS_MAX]; // The "plugin number" set at as task (e.g. 4 for P004_dallas)
-  unsigned int  OLD_TaskDeviceID[TASKS_MAX];  //UNUSED: this can be removed
+  byte          TaskDeviceNumber[N_TASKS]; // The "plugin number" set at as task (e.g. 4 for P004_dallas)
+  unsigned int  OLD_TaskDeviceID[N_TASKS];  //UNUSED: this can be removed
   union {
     struct {
-      int8_t        TaskDevicePin1[TASKS_MAX];
-      int8_t        TaskDevicePin2[TASKS_MAX];
-      int8_t        TaskDevicePin3[TASKS_MAX];
-      byte          TaskDevicePort[TASKS_MAX];
+      int8_t        TaskDevicePin1[N_TASKS];
+      int8_t        TaskDevicePin2[N_TASKS];
+      int8_t        TaskDevicePin3[N_TASKS];
+      byte          TaskDevicePort[N_TASKS];
     };
-    int8_t        TaskDevicePin[4][TASKS_MAX];
+    int8_t        TaskDevicePin[4][N_TASKS];
   };
-  boolean       TaskDevicePin1PullUp[TASKS_MAX];
-  int16_t       TaskDevicePluginConfig[TASKS_MAX][PLUGIN_CONFIGVAR_MAX];
-  boolean       TaskDevicePin1Inversed[TASKS_MAX];
-  float         TaskDevicePluginConfigFloat[TASKS_MAX][PLUGIN_CONFIGFLOATVAR_MAX];
-  long          TaskDevicePluginConfigLong[TASKS_MAX][PLUGIN_CONFIGLONGVAR_MAX];
-  boolean       OLD_TaskDeviceSendData[TASKS_MAX];
-  boolean       TaskDeviceGlobalSync[TASKS_MAX];
-  byte          TaskDeviceDataFeed[TASKS_MAX];    // When set to 0, only read local connected sensorsfeeds
-  unsigned long TaskDeviceTimer[TASKS_MAX];
-  boolean       TaskDeviceEnabled[TASKS_MAX];
+  boolean       TaskDevicePin1PullUp[N_TASKS];
+  int16_t       TaskDevicePluginConfig[N_TASKS][PLUGIN_CONFIGVAR_MAX];
+  boolean       TaskDevicePin1Inversed[N_TASKS];
+  float         TaskDevicePluginConfigFloat[N_TASKS][PLUGIN_CONFIGFLOATVAR_MAX];
+  long          TaskDevicePluginConfigLong[N_TASKS][PLUGIN_CONFIGLONGVAR_MAX];
+  boolean       OLD_TaskDeviceSendData[N_TASKS];
+  boolean       TaskDeviceGlobalSync[N_TASKS];
+  byte          TaskDeviceDataFeed[N_TASKS];    // When set to 0, only read local connected sensorsfeeds
+  unsigned long TaskDeviceTimer[N_TASKS];
+  boolean       TaskDeviceEnabled[N_TASKS];
   boolean       ControllerEnabled[CONTROLLER_MAX];
   boolean       NotificationEnabled[NOTIFICATION_MAX];
-  unsigned int  TaskDeviceID[CONTROLLER_MAX][TASKS_MAX];        // IDX number (mainly used by Domoticz)
-  boolean       TaskDeviceSendData[CONTROLLER_MAX][TASKS_MAX];
+  unsigned int  TaskDeviceID[CONTROLLER_MAX][N_TASKS];        // IDX number (mainly used by Domoticz)
+  boolean       TaskDeviceSendData[CONTROLLER_MAX][N_TASKS];
   boolean       Pin_status_led_Inversed;
   boolean       deepSleepOnFail;
   boolean       UseValueLogger;
@@ -168,5 +164,7 @@ SettingsStruct& Settings = *SettingsStruct_ptr;
 */
 
 
+
+typedef SettingsStruct_tmpl<TASKS_MAX> SettingsStruct;
 
 #endif // DATASTRUCTS_SETTINGSSTRUCT_H

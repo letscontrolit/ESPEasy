@@ -3,6 +3,9 @@
 
 #include "../DataStructs/SettingsStruct.h"
 
+// include the source file since it is a template class.
+#include "../DataStructs/SettingsStruct.cpp"
+
 extern SettingsStruct Settings;
 
 
