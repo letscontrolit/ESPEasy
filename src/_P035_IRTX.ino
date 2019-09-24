@@ -12,7 +12,7 @@
 //---IRSEND: That commands format is: IRSEND,<protocol>,<data>,<bits>,<repeat>
 // bits and repeat default to 0 if not used and they are optional
 // For protocols RAW and RAW2 there is no bits and repeat part, they are supposed to be replayed as they are calculated by a Google docs sheet or by plugin P016
-//---IRSENDAC: That commands format is: IRSENDAC,{"protocol":"COOLIX","power":"on","opmode":"dry","fanspeed":"auto","degrees":22,"swingv":"max","swingh":"off"}
+//---IRSENDAC: That commands format is: IRSENDAC,{"protocol":"COOLIX","power":"on","mode":"dry","fanspeed":"auto","temp":22,"swingv":"max","swingh":"off"}
 //--- The JSON keys are case sensitive and allways small case. The JSON data are case insensitive
 // The possible values
 // Protocols: Argo Coolix Daikin Fujitsu Haier Hitachi Kelvinator Midea Mitsubishi MitsubishiHeavy Panasonic Samsung Sharp Tcl Teco Toshiba Trotec Vestel Whirlpool
