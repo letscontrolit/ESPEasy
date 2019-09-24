@@ -22,6 +22,21 @@
 
 #ifdef SUPPORT_ARP
 # include <lwip/etharp.h>
+
+#ifdef ESP32
+# include <lwip/etharp.h>
+# include <lwip/tcpip.h>
+
+void _etharp_gratuitous_func(struct netif *netif) {
+  etharp_gratuitous(netif);
+}
+
+void etharp_gratuitous_r(struct netif *netif) {
+  tcpip_callback_with_block((tcpip_callback_fn)_etharp_gratuitous_func, netif, 0);
+}
+
+#endif // ifdef ESP32
+
 #endif // ifdef SUPPORT_ARP
 
 #ifdef ESP8266
@@ -931,8 +946,12 @@ void sendGratuitousARP() {
   while (n) {
     if ((n->hwaddr_len == ETH_HWADDR_LEN) && 
         (n->flags & NETIF_FLAG_ETHARP) && 
-        ((n->flags & NETIF_FLAG_LINK_UP) || (n->flags & NETIF_FLAG_UP))) {
-      etharp_gratuitous(n);
+        ((n->flags & NETIF_FLAG_LINK_UP) && (n->flags & NETIF_FLAG_UP))) {
+      #ifdef ESP32
+        etharp_gratuitous_r(n);
+      #else
+        etharp_gratuitous(n);
+      #endif
     }
     n = n->next;
   }
