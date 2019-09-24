@@ -2,7 +2,7 @@
 
 #include "ESPEasy_fdwdecl.h"
 #include "ESPEasy_Log.h"
-#include "ESPEasy_buildinfo.h"
+#include "ESPEasy_common.h"
 
 #include "src/DataStructs/SecurityStruct.h"
 #include "src/DataStructs/CRCStruct.h"

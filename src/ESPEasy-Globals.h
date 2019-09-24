@@ -30,7 +30,7 @@
 #include "src/DataStructs/ESPEasyLimits.h"
 #include "ESPEasy_plugindefs.h"
 
-#include "ESPEasy_buildinfo.h"
+
 
 
 

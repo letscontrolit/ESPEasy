@@ -15,6 +15,8 @@ namespace std
 #include "Custom.h"
 #endif
 
+// Include custom first, then build info. (one may want to set BUILD_GIT for example)
+#include "ESPEasy_buildinfo.h"
 
 #define ZERO_FILL(S)  memset((S), 0, sizeof(S))
 #define ZERO_TERMINATE(S)  S[sizeof(S) - 1] = 0
@@ -74,11 +76,13 @@ void setBitToUL(uint32_t& number, byte bitnr, bool value);
   #define FEATURE_ADC_VCC                  false
 #endif
 
-#if defined(ESP32)
-  #define ARDUINO_OTA_PORT  3232
-#else
-  // Do not use port 8266 for OTA, since that's used for ESPeasy p2p
-  #define ARDUINO_OTA_PORT  18266
+#ifndef ARDUINO_OTA_PORT
+  #if defined(ESP32)
+    #define ARDUINO_OTA_PORT  3232
+  #else
+    // Do not use port 8266 for OTA, since that's used for ESPeasy p2p
+    #define ARDUINO_OTA_PORT  18266
+  #endif
 #endif
 
 #if defined(ESP8266)
