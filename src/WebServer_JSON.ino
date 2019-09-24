@@ -71,7 +71,7 @@ void handle_json()
       stream_next_json_object_value(LabelType::GATEWAY);
       stream_next_json_object_value(LabelType::STA_MAC);
       stream_next_json_object_value(LabelType::DNS_1);
-      stream_next_json_object_value(LabelType::DNS_1);
+      stream_next_json_object_value(LabelType::DNS_2);
       stream_next_json_object_value(LabelType::SSID);
       stream_next_json_object_value(LabelType::BSSID);
       stream_next_json_object_value(LabelType::CHANNEL);
