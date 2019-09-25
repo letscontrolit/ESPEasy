@@ -3,6 +3,7 @@
 VERSION=$(git describe)
 TMP_DIST=`mktemp -d`
 CURPATH=`pwd`
+BUILD_LOG=`echo "{TMP_DIST}/buildlog.txt"`
 
 # PIO 3.x :
 # BINARY_PATH=".pioenvs"
@@ -88,19 +89,25 @@ do
   fi
 
   FIRMWARE_BIN=`echo "${BINARY_PATH}/${ENV}/firmware.bin"`
+
+  echo "ESP_Easy_${VERSION}_${ENV}.bin : " >> ${BUILD_LOG}
   if [ -f $FIRMWARE_BIN ]; then
     FILESIZE=$(stat -c%s `echo "${FIRMWARE_BIN}"` )
     if (( FILESIZE < MAX_FILESIZE )); then
       echo
-      echo "### Deploying environment $ENV for version $VERSION"
+      echo "Build SUCCESS for $ENV :  $FILESIZE < $MAX_FILESIZE Bytes" >> ${BUILD_LOG}
       BIN=${BINARY_PATH}/${ENV}/ESP_Easy_${VERSION}_${ENV}.bin
       cp ${FIRMWARE_BIN} $BIN
       python2 crc2.py $BIN
       mv $BIN "${TMP_DIST}/bin/ESP_Easy_${VERSION}_${ENV}.bin"
     else
-      echo "Build too large for $ENV $FILESIZE > $MAX_FILESIZE "
+      echo "Build FAILED: too large for $ENV  $FILESIZE > $MAX_FILESIZE Bytes" >> ${BUILD_LOG}
     fi
+  else
+    echo "Build FAILED: No file created." >> ${BUILD_LOG}
   fi
+
+  echo "\n" >> ${BUILD_LOG}
 
   ELFFILE=`echo "${BINARY_PATH}/${ENV}/firmware.elf"`
   if [ -f $ELFFILE ]; then
