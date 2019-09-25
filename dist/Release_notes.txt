@@ -1,4 +1,43 @@
 -------------------------------------------------
+Changes in release mega-20190925 (since mega-20190910)
+-------------------------------------------------
+
+Release date: Wed Sep 25 04:00:14 CEST 2019
+
+Bartlomiej Zimon (1):
+      [Dummy] small fix for save action fix for #2600
+
+Bartłomiej Zimoń (4):
+      [Settings Archive] disable chunked encoding in download file
+      [Settings Archive] move timeout if get some data
+      [Settings Archive] remove http 1.0 request, 1.1 works ok
+      [Settings Archive] clean up
+
+Hans-Rune Bue (1):
+      Support for MITSUBISHI KJ heatpumps (SG 161 0927 remote)
+
+Maxim Prokhorov (3):
+      [Gratuitous ARP] thread-safe etharp_gratuitous for esp32
+      [Gratuitous ARP] Check that IF has both LINK_UP and UP flags
+      [Gratuitous ARP] use public non-blocking API
+
+Toni (2):
+      Add plugin sets PLUGIN_SET_ONLY_SWITCH and PLUGIN_SET_ONLY_TEMP_HUM to the minimal_IRext_ESP8266_1M image
+      Add 'Output - Domoticz MQTT Helper' into PLUGIN_BUILD_IR_EXTENDED
+
+Victor Antonovich (1):
+      Fix duplicated "DNS 1" value in JSON output
+
+jimmys01 (6):
+      Dallas improvments
+      Remove reduntand conversion call
+      Add a define in custom-sample.h for the Extended IR capability
+      Make the reading of the sensor not blocking.
+      Add compile time and date to differentiate between custom builds
+      Fix IR TX RX instructions
+
+
+-------------------------------------------------
 Changes in release mega-20190910 (since mega-20190903)
 -------------------------------------------------
 
