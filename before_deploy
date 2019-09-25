@@ -132,5 +132,8 @@ echo
 echo "### Creating zip archive"
 zip -qq ${CURPATH}/ESPEasy_$VERSION.zip -r .
 
+# Display the build log.
+cat ${BUILD_LOG}
+
 rm -Rf ${TMP_DIST}/* 2>/dev/null
 rmdir ${TMP_DIST}
