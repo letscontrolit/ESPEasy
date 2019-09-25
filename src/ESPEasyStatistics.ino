@@ -6,12 +6,10 @@
     for (auto& x: pluginStats) {
         if (!x.second.isEmpty()) {
             const int pluginId = x.first/256;
-            String P_name = "";
-            Plugin_ptr[pluginId](PLUGIN_GET_DEVICENAME, NULL, P_name);
             log = F("PluginStats P_");
             log += pluginId + 1;
             log += '_';
-            log += P_name;
+            log += getPluginNameFromDeviceIndex(pluginId);
             log += ' ';
             log += getPluginFunctionName(x.first%256);
             log += ' ';

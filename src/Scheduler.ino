@@ -1,3 +1,8 @@
+#include "src/Globals/RTC.h"
+#include "src/DataStructs/RTCStruct.h"
+#include "src/DataStructs/EventValueSource.h"
+#include "src/Globals/Device.h"
+
 #define TIMER_ID_SHIFT    28
 
 #define SYSTEM_EVENT_QUEUE   0 // Not really a timer.
@@ -5,6 +10,7 @@
 #define PLUGIN_TASK_TIMER    2
 #define TASK_DEVICE_TIMER    3
 #define GPIO_TIMER           4
+
 
 #include <list>
 struct EventStructCommandWrapper {
@@ -385,7 +391,7 @@ void process_plugin_task_timer(unsigned long id) {
 
   // TD-er: Not sure if we have to keep original source for notifications.
   TempEvent.Source = VALUE_SOURCE_SYSTEM;
-  const int y = getPluginId(timer_data.TaskIndex);
+  const int y = getPluginId_from_TaskIndex(timer_data.TaskIndex);
 
   /*
      String log = F("proc_system_timer: Pluginid: ");

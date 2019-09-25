@@ -1,5 +1,8 @@
 
 #ifdef WEBSERVER_TIMINGSTATS
+#include "src/Globals/Device.h"
+
+
 void handle_timingstats() {
   checkRAM(F("handle_timingstats"));
   navMenuIndex = MENU_INDEX_TOOLS;
@@ -70,9 +73,6 @@ long stream_timing_statistics(bool clearStats) {
   for (auto& x: pluginStats) {
     if (!x.second.isEmpty()) {
       const int pluginId = x.first / 256;
-      String    P_name   = "";
-      Plugin_ptr[pluginId](PLUGIN_GET_DEVICENAME, NULL, P_name);
-
       if (x.second.thresholdExceeded(TIMING_STATS_THRESHOLD)) {
         html_TR_TD_highlight();
       } else {
@@ -81,7 +81,7 @@ long stream_timing_statistics(bool clearStats) {
       TXBuffer += F("P_");
       TXBuffer += Device[pluginId].Number;
       TXBuffer += '_';
-      TXBuffer += P_name;
+      TXBuffer += getPluginNameFromDeviceIndex(pluginId);
       html_TD();
       TXBuffer += getPluginFunctionName(x.first % 256);
       stream_html_timing_stats(x.second, timeSinceLastReset);

@@ -1,4 +1,6 @@
 #ifdef USES_C014
+
+#include "src/Globals/Device.h"
 //#######################################################################################################
 //################################# Controller Plugin 0014: Homie 3/4 ###################################
 //#######################################################################################################
@@ -117,32 +119,6 @@ void CPLUGIN_014_addToList(String& valuesList, const char* node)
 {
   if (valuesList.length()>0) valuesList += F(",");
   valuesList += node;
-}
-
-// search for a Plugin by (user given) Name and gives back the Number in the Device List. Unique Dames are important!
-int CPlugin_014_getPluginNr(String& setNodeName)
-{
-  byte x = 0;
-
-  while (x < TASKS_MAX)
-  {
-    LoadTaskSettings(x);
-    if (strcmp(ExtraTaskSettings.TaskDeviceName,setNodeName.c_str())==0) return x;
-    x++;
-  }
-  return x;
-}
-
-// search for a value name and gives back the first value number in the Plugin. Unique names are REQUIRED!
-int CPlugin_014_getValueNr(int DeviceIndex, String& valueName)
-{
-  LoadTaskSettings(DeviceIndex);
-
-  for (byte varNr = 0; varNr < Device[getDeviceIndex(Settings.TaskDeviceNumber[DeviceIndex])].ValueCount; varNr++)
-  {
-    if (strcmp(ExtraTaskSettings.TaskDeviceValueNames[varNr],valueName.c_str())==0) return varNr;
-  }
-  return -1;
 }
 
 bool CPlugin_014(byte function, struct EventStruct *event, String& string)
@@ -551,7 +527,7 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
         } else {
           String cmd;
           int valueNr=0;
-          int deviceNr=0;
+          int taskIndex=0;
           struct EventStruct TempEvent;
           TempEvent.TaskIndex = event->TaskIndex;
           TempEvent.Source = VALUE_SOURCE_MQTT; // to trigger the correct acknowledgment
@@ -593,45 +569,49 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
               }
             } else // msg to a receiving plugin
             {
-              deviceNr=CPlugin_014_getPluginNr(nodeName);
-              int pluginID=Device[getDeviceIndex(Settings.TaskDeviceNumber[deviceNr])].Number;
+              taskIndex=findTaskIndexByName(nodeName);
+              if (taskIndex != TASKS_MAX) {
+                int pluginID=Device[getDeviceIndex(Settings.TaskDeviceNumber[taskIndex])].Number;
 
-              if (pluginID==33) // Plugin 33 Dummy Device
-              { // DummyValueSet,<task/device nr>,<value nr>,<value/formula (!ToDo) >, works only with new version of P033!
-                valueNr = CPlugin_014_getValueNr(deviceNr,valueName);
-                if (valueNr > -1) // value Name identified
-                {
-                  cmd = F("DummyValueSet,"); // Set a Dummy Device Value
-                  cmd += (deviceNr+1); // set the device Number
-                  cmd += F(",");
-                  cmd += (valueNr+1); // set the value Number
-                  cmd += F(",");
-                  cmd += event->String2; // expect float as payload!
-                  validTopic = true;
-                }
-              } else if (pluginID==86) { // Plugin Homie receiver. Schedules the event defined in the plugin. Does NOT store the value. Use HomieValueSet to save the value. This will acknolage back to the controller too.
-                valueNr = CPlugin_014_getValueNr(deviceNr,valueName);
-                cmd = F("event,");
-                cmd += valueName;
-                cmd += "=";
-                if (Settings.TaskDevicePluginConfig[deviceNr][valueNr]==3) { // Quote Sting parameters. PLUGIN_086_VALUE_STRING
-                  cmd += '"';
-                  cmd += event->String2;
-                  cmd += '"';
-                } else {
-                  if (Settings.TaskDevicePluginConfig[deviceNr][valueNr]==4) { // Enumeration parameter, find Number of item. PLUGIN_086_VALUE_ENUM
-                    String enumList = ExtraTaskSettings.TaskDeviceFormula[event->Par2-1];
-                    int i = 1;
-                    while (parseString(enumList,i)!="") { // lookup result in enum List
-                      if (parseString(enumList,i)==event->String2) break;
-                      i++;
-                    }
-                    cmd += i;
-                    cmd += ",";
+                if (pluginID==33) // Plugin 33 Dummy Device
+                { // DummyValueSet,<task/device nr>,<value nr>,<value/formula (!ToDo) >, works only with new version of P033!
+                  valueNr = findDeviceValueIndexByName(valueName, taskIndex);
+                  if (valueNr != VARS_PER_TASK) // value Name identified
+                  {
+                    cmd = F("DummyValueSet,"); // Set a Dummy Device Value
+                    cmd += (taskIndex+1); // set the device Number
+                    cmd += F(",");
+                    cmd += (valueNr+1); // set the value Number
+                    cmd += F(",");
+                    cmd += event->String2; // expect float as payload!
+                    validTopic = true;
                   }
-                  cmd += event->String2;
+                } else if (pluginID==86) { // Plugin Homie receiver. Schedules the event defined in the plugin. Does NOT store the value. Use HomieValueSet to save the value. This will acknolage back to the controller too.
+                  valueNr = findDeviceValueIndexByName(valueName, taskIndex);
+                  if (valueNr != VARS_PER_TASK) {
+                    cmd = F("event,");
+                    cmd += valueName;
+                    cmd += "=";
+                    if (Settings.TaskDevicePluginConfig[taskIndex][valueNr]==3) { // Quote Sting parameters. PLUGIN_086_VALUE_STRING
+                      cmd += '"';
+                      cmd += event->String2;
+                      cmd += '"';
+                    } else {
+                      if (Settings.TaskDevicePluginConfig[taskIndex][valueNr]==4) { // Enumeration parameter, find Number of item. PLUGIN_086_VALUE_ENUM
+                        String enumList = ExtraTaskSettings.TaskDeviceFormula[event->Par2-1];
+                        int i = 1;
+                        while (parseString(enumList,i)!="") { // lookup result in enum List
+                          if (parseString(enumList,i)==event->String2) break;
+                          i++;
+                        }
+                        cmd += i;
+                        cmd += ",";
+                      }
+                      cmd += event->String2;
+                    }
+                    validTopic = true;
+                  }
                 }
-                validTopic = true;
               }
             }
 
@@ -656,12 +636,13 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
             {
               eventBuffer = cmd.substring(6);
               if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-                log=F("C014 : deviceNr:");
-                log+=deviceNr;
+                log=F("C014 : taskIndex:");
+                log+=taskIndex;
                 log+=F(" valueNr:");
                 log+=valueNr;
                 log+=F(" valueType:");
-                log+=Settings.TaskDevicePluginConfig[deviceNr][valueNr];
+                // TODO TD-er: Check if taskIndex & valueNr are within range
+                log+=Settings.TaskDevicePluginConfig[taskIndex][valueNr];
                 log+=F(" Event: ");
                 log+=eventBuffer;
                 addLog(LOG_LEVEL_INFO, log);
@@ -877,7 +858,7 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
               if (loglevelActiveFor(LOG_LEVEL_INFO) && success) {
                 String log = F("C014 : homie acknowledge: ");
                 log += deviceName;
-                log += F(" deviceNr:");
+                log += F(" taskIndex:");
                 log += deviceIndex;
                 log += F(" valueNr:");
                 log += event->Par2;

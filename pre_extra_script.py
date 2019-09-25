@@ -19,7 +19,7 @@ env.Append(CPPDEFINES=[
 if os.path.isfile('src/Custom.h'):
   env['CPPDEFINES'].append("USE_CUSTOM_H")
 else:
-  env['CPPDEFINES'].append([
+  env['CPPDEFINES'].extend([
     "CONTROLLER_SET_ALL",
     "NOTIFIER_SET_NONE",
     "PLUGIN_SET_ONLY_SWITCH",
@@ -36,7 +36,7 @@ else:
     "USES_P085",  # AcuDC24x
     "USES_P087",  # Serial Proxy
 
-    "USES_C018"
+    "USE_SETTINGS_ARCHIVE"
   ])
 
 print(env['CPPDEFINES'])

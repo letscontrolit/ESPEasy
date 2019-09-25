@@ -1,3 +1,5 @@
+#include "ESPEasy_common.h"
+
 /*
 #################################################
  This is the place where plugins are registered
@@ -21,40 +23,7 @@ To create/register a plugin, you have to :
 
 
 
-/******************************************************************************\
- * Detect core versions *******************************************************
-\******************************************************************************/
 
-#ifndef ESP32
-  #if defined(ARDUINO_ESP8266_RELEASE_2_4_0) || defined(ARDUINO_ESP8266_RELEASE_2_4_1)  || defined(ARDUINO_ESP8266_RELEASE_2_4_2)
-    #ifndef CORE_2_4_X
-      #define CORE_2_4_X
-    #endif
-  #endif
-
-  #if defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(ARDUINO_ESP8266_RELEASE_2_4_0) || defined(ARDUINO_ESP8266_RELEASE_2_4_1)
-    #ifndef CORE_PRE_2_4_2
-      #define CORE_PRE_2_4_2
-    #endif
-  #endif
-
-  #if defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(CORE_2_4_X)
-    #ifndef CORE_PRE_2_5_0
-      #define CORE_PRE_2_5_0
-    #endif
-  #else
-    #ifndef CORE_POST_2_5_0
-      #define CORE_POST_2_5_0
-    #endif
-  #endif
-
-
-  #ifdef FORCE_PRE_2_5_0
-    #ifdef CORE_POST_2_5_0
-      #undef CORE_POST_2_5_0
-    #endif
-  #endif
-#endif // ESP32
 
 
 #ifdef MEMORY_ANALYSIS
@@ -76,9 +45,15 @@ To create/register a plugin, you have to :
 \******************************************************************************/
 #if defined(CORE_POST_2_5_0) && !defined(MEMORY_ANALYSIS) && !defined(USE_CUSTOM_H)
     #ifndef USE_SETTINGS_ARCHIVE
-        #define USE_SETTINGS_ARCHIVE
+    // FIXME TD-er: Disabled for now, to reduce binary size
+//        #define USE_SETTINGS_ARCHIVE
     #endif // USE_SETTINGS_ARCHIVE
 #endif
+
+#if defined(USE_SETTINGS_ARCHIVE) && defined(FORCE_PRE_2_5_0)
+  #undef USE_SETTINGS_ARCHIVE
+#endif
+
 
 /******************************************************************************\
  * BUILD Configs **************************************************************
@@ -147,10 +122,6 @@ To create/register a plugin, you have to :
     #ifndef BUILD_NO_DEBUG
       #define BUILD_NO_DEBUG
     #endif
-    #ifdef WEBSERVER_RULES_DEBUG
-      #undef WEBSERVER_RULES_DEBUG
-    #endif
-    #define WEBSERVER_RULES_DEBUG 0
 #endif
 
 #ifdef PLUGIN_BUILD_MINIMAL_OTA
@@ -164,10 +135,6 @@ To create/register a plugin, you have to :
     #ifndef BUILD_NO_DEBUG
       #define BUILD_NO_DEBUG
     #endif
-    #ifdef WEBSERVER_RULES_DEBUG
-      #undef WEBSERVER_RULES_DEBUG
-    #endif
-    #define WEBSERVER_RULES_DEBUG 0
 
     #define USES_C001   // Domoticz HTTP
     #define USES_C002   // Domoticz MQTT
@@ -226,6 +193,14 @@ To create/register a plugin, you have to :
   #endif
 #endif
 
+
+
+#ifdef BUILD_NO_DEBUG
+    #ifdef WEBSERVER_RULES_DEBUG
+        #undef WEBSERVER_RULES_DEBUG
+    #endif
+    #define WEBSERVER_RULES_DEBUG 0
+#endif
 
 
 /******************************************************************************\
@@ -607,8 +582,9 @@ To create/register a plugin, you have to :
     #define USES_P039   // Environment - Thermocouple
 
     #define USES_P040   // RFID - ID12LA/RDM6300
-    #define USES_P041   // NeoClock
-    #define USES_P042   // Candle
+    // FIXME TD-er: Disabled NeoClock and Candle plugin to make builds fit in max bin size.
+//    #define USES_P041   // NeoClock
+//    #define USES_P042   // Candle
     #define USES_P043   // ClkOutput
     #define USES_P044   // P1WifiGateway
 

@@ -1,4 +1,5 @@
-
+#include "src/Globals/Nodes.h"
+#include "src/Globals/Device.h"
 
 // ********************************************************************************
 // Web Interface custom page handler
@@ -85,7 +86,7 @@ boolean handle_custom(String path) {
       }
     }
 
-    for (byte x = Settings.Unit + 1; x < UNIT_MAX; x++) {
+    for (byte x = Settings.Unit + 1; x < UNIT_NUMBER_MAX; x++) {
       it = Nodes.find(x);
 
       if (it != Nodes.end()) {

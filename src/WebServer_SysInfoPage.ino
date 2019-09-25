@@ -1,3 +1,7 @@
+#include "src/Globals/RTC.h"
+#include "src/DataStructs/RTCStruct.h"
+#include "src/Globals/CRCValues.h"
+#include "src/Static/WebStaticData.h"
 
 #ifdef WEBSERVER_NEW_UI
 

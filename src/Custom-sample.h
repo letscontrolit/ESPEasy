@@ -10,9 +10,6 @@
  */
 
 
-// make the compiler show a warning to confirm that this file is inlcuded
-#warning "**** Using Settings from Custom.h File ***"
-
 /*
 
  #######################################################################################################
@@ -124,6 +121,14 @@
 #define BUILD_NO_DEBUG
 
 // #define USE_SETTINGS_ARCHIVE
+
+/*
+ #######################################################################################################
+   Special settings  (rendering settings incompatible with other builds)
+ #######################################################################################################
+ */
+
+// #define USE_NON_STANDARD_24_TASKS
 
 /*
  #######################################################################################################

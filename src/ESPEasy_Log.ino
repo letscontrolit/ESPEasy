@@ -1,5 +1,7 @@
 #include "ESPEasy_Log.h"
-
+#include "src/Globals/Logging.h"
+#include "src/Globals/ESPEasyWiFiEvent.h"
+#include "src/DataStructs/LogStruct.h"
 
 /********************************************************************************************\
   Init critical variables for logging (important during initial factory reset stuff )

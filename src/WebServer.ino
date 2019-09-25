@@ -3,6 +3,9 @@
 #define CHUNKED_BUFFER_SIZE          400
 
 
+#include "src/Globals/Device.h"
+#include "src/Static/WebStaticData.h"
+
 // ********************************************************************************
 // Core part of WebServer, the chunked streaming buffer
 // This must remain in the WebServer.ino file at the top.
@@ -402,12 +405,7 @@ void sendHeadandTail_stdtemplate(boolean Tail = false, boolean rebooting = false
 #define HTML_SYMBOL_I_O     "&#8660;"
 
 
-#if defined(ESP8266)
-  # define TASKS_PER_PAGE 12
-#endif // if defined(ESP8266)
-#if defined(ESP32)
-  # define TASKS_PER_PAGE 32
-#endif // if defined(ESP32)
+# define TASKS_PER_PAGE TASKS_MAX
 
 #define strncpy_webserver_arg(D, N) safe_strncpy(D, WebServer.arg(N).c_str(), sizeof(D));
 #define update_whenset_FormItemInt(K, V) { int tmpVal; \

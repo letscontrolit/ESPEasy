@@ -1,3 +1,16 @@
+#include "src/DataStructs/Caches.h"
+#include "src/DataStructs/NodeStruct.h"
+#include "src/DataStructs/PinMode.h"
+#include "src/DataStructs/RTCStruct.h"
+
+#include "src/Globals/CRCValues.h"
+#include "src/Globals/Cache.h"
+#include "src/Globals/Device.h"
+#include "src/Globals/RTC.h"
+#include "src/Globals/ResetFactoryDefaultPref.h"
+#include "src/Globals/Services.h"
+
+
 /*********************************************************************************************\
    ESPEasy specific strings
 \*********************************************************************************************/
@@ -142,6 +155,9 @@ String getPluginDescriptionString() {
   result += " [";
   result += F(PLUGIN_DESCR);
   result += ']';
+  #endif
+  #ifdef USE_NON_STANDARD_24_TASKS
+  result += F(" 24tasks");
   #endif
   return result;
 }
@@ -460,9 +476,9 @@ boolean remoteConfig(struct EventStruct *event, const String& string)
       if ((configTaskName.length() == 0) || (configCommand.length() == 0)) {
         return success; // TD-er: Should this be return false?
       }
-      int8_t index = getTaskIndexByName(configTaskName);
+      byte index = findTaskIndexByName(configTaskName);
 
-      if (index != -1)
+      if (index != TASKS_MAX)
       {
         event->TaskIndex = index;
         success          = PluginCall(PLUGIN_SET_CONFIG, event, configCommand);
@@ -472,20 +488,14 @@ boolean remoteConfig(struct EventStruct *event, const String& string)
   return success;
 }
 
-int8_t getTaskIndexByName(const String& TaskNameSearch)
-{
-  for (byte x = 0; x < TASKS_MAX; x++)
-  {
-    LoadTaskSettings(x);
-    String TaskName = getTaskDeviceName(x);
-
-    if ((TaskName.length() != 0) && (TaskNameSearch.equalsIgnoreCase(TaskName)))
-    {
-      return x;
-    }
-  }
-  return -1;
+/*********************************************************************************************\
+   Collect the stored preference for factory default 
+\*********************************************************************************************/
+void applyFactoryDefaultPref() {
+  // TODO TD-er: Store it in more places to make it more persistent
+  Settings.ResetFactoryDefaultPreference = ResetFactoryDefaultPreference.getPreference();
 }
+
 
 /*********************************************************************************************\
    Device GPIO name functions to share flash strings
@@ -802,6 +812,7 @@ void parseCommandString(struct EventStruct *event, const String& string)
   \*********************************************************************************************/
 void taskClear(byte taskIndex, boolean save)
 {
+  if (taskIndex >= TASKS_MAX) return;
   checkRAM(F("taskClear"));
   Settings.clearTask(taskIndex);
   ExtraTaskSettings.clear(); // Invalidate any cached values.
@@ -828,6 +839,7 @@ String checkTaskSettings(byte taskIndex) {
       return F("Warning: Task Device Name is empty. It is adviced to give tasks an unique name");
     }
   }
+  // Do not use the cached function findTaskIndexByName since that one does rely on the fact names should be unique.
   for (int i = 0; i < TASKS_MAX; ++i) {
     if (i != taskIndex && Settings.TaskDeviceEnabled[i]) {
       LoadTaskSettings(i);
@@ -856,16 +868,6 @@ byte getDeviceIndex(byte Number)
     }
   }
   return 0;
-}
-
-/********************************************************************************************\
-   Find name of plugin given the plugin device index..
- \*********************************************************************************************/
-String getPluginNameFromDeviceIndex(byte deviceIndex) {
-  String deviceName = "";
-
-  Plugin_ptr[deviceIndex](PLUGIN_GET_DEVICENAME, 0, deviceName);
-  return deviceName;
 }
 
 /********************************************************************************************\
@@ -1437,130 +1439,234 @@ void delayedReboot(int rebootDelay)
 void reboot() {
   prepareShutdown();
   #if defined(ESP32)
-    ESP.restart();
-  #else
-    ESP.reset();
-  #endif
+  ESP.restart();
+  #else // if defined(ESP32)
+  ESP.reset();
+  #endif // if defined(ESP32)
 }
 
-
 /********************************************************************************************\
-  Parse string template
-  \*********************************************************************************************/
-String parseTemplate(String &tmpString, byte lineSize)
+   Parse string template
+ \*********************************************************************************************/
+String parseTemplate(String& tmpString, byte lineSize)
 {
   checkRAM(F("parseTemplate"));
-  String newString = "";
-  //String tmpStringMid = "";
+
+  // Keep current loaded taskSettings to restore at the end.
+  byte   currentTaskIndex = ExtraTaskSettings.TaskIndex;
+  String newString        = "";
+
+  // String tmpStringMid = "";
   newString.reserve(lineSize);
 
   parseSystemVariables(tmpString, false);
+  
 
-  // replace task template variables
-  int leftBracketIndex = tmpString.indexOf('[');
-  if (leftBracketIndex == -1)
-    newString = tmpString;
-  else
-  {
-    byte count = 0;
-    byte currentTaskIndex = ExtraTaskSettings.TaskIndex;
+  int startpos = 0;
+  int lastStartpos = 0;
+  int endpos = 0;
+  String deviceName, valueName, format;
 
-    while (leftBracketIndex >= 0 && count < 10 - 1)
+  while (findNextDevValNameInString(tmpString, startpos, endpos, deviceName, valueName, format)) {
+    // First copy all upto the start of the [...#...] part to be replaced.
+    newString += tmpString.substring(lastStartpos, startpos);
+    
+    if (deviceName.equalsIgnoreCase(F("Plugin")))
     {
-      newString += tmpString.substring(0, leftBracketIndex);
-      tmpString = tmpString.substring(leftBracketIndex + 1);
-      int rightBracketIndex = tmpString.indexOf(']');
-      if (rightBracketIndex >= 0)
-      {
-        String tmpStringMid = tmpString.substring(0, rightBracketIndex);
-        tmpString = tmpString.substring(rightBracketIndex + 1);
-        int hashtagIndex = tmpStringMid.indexOf('#');
-        if (hashtagIndex >= 0) {
-          String deviceName = tmpStringMid.substring(0, hashtagIndex);
-          String valueName = tmpStringMid.substring(hashtagIndex + 1);
-          String valueFormat = "";
-          hashtagIndex = valueName.indexOf('#');
-          if (hashtagIndex >= 0)
-          {
-            valueFormat = valueName.substring(hashtagIndex + 1);
-            valueName = valueName.substring(0, hashtagIndex);
-          }
+      // Handle a plugin request.
+      // For example: "[Plugin#GPIO#Pinstate#N]"
+      // The command is stored in valueName & format
+      String command;
+      command.reserve(valueName.length() + format.length() + 1);
+      command  = valueName;
+      command += '#';
+      command += format;
+      command.replace('#', ',');
 
-          if (deviceName.equalsIgnoreCase(F("Plugin")))
+      if (PluginCall(PLUGIN_REQUEST, 0, command))
+      {
+        // Do not call transformValue here.
+        // The "format" is not empty so must not call the formatter function.
+        newString += command;
+      }
+    }
+    else if (deviceName.equalsIgnoreCase(F("Var")) || deviceName.equalsIgnoreCase(F("Int"))) 
+    {
+      // Address an internal variable either as float or as int
+      // For example: Let,10,[VAR#9]
+      int varNum;
+
+      if (validIntFromString(valueName, varNum)) {
+        if ((varNum > 0) && (varNum <= CUSTOM_VARS_MAX)) {
+          unsigned char nr_decimals = 2;
+          if (deviceName.equalsIgnoreCase(F("Int"))) {
+            nr_decimals = 0;
+          } else if (format.length() != 0)
           {
-            String tmpString = tmpStringMid.substring(7);
-            tmpString.replace('#', ',');
-            if (PluginCall(PLUGIN_REQUEST, 0, tmpString))
-              newString += tmpString;
+            // There is some formatting here, so do not throw away decimals
+            nr_decimals = 6;
           }
-          else if (deviceName.equalsIgnoreCase(F("Var"))) {
-            String tmpString = tmpStringMid.substring(4);
-            if (tmpString.length()>0 && isDigit(tmpString[0])) {
-              const int varNum = tmpString.toInt();
-              if (varNum > 0 && varNum <= CUSTOM_VARS_MAX)
-                newString += String(customFloatVar[varNum-1]);
-            }
-          }
-          else
-            for (byte y = 0; y < TASKS_MAX; y++)
-            {
-              if (Settings.TaskDeviceEnabled[y])
-              {
-                LoadTaskSettings(y);
-                String taskDeviceName = getTaskDeviceName(y);
-                if (taskDeviceName.length() != 0)
-                {
-                  if (deviceName.equalsIgnoreCase(taskDeviceName))
-                  {
-                    boolean match = false;
-                    for (byte z = 0; z < VARS_PER_TASK; z++)
-                      if (valueName.equalsIgnoreCase(ExtraTaskSettings.TaskDeviceValueNames[z]))
-                      {
-                        // here we know the task and value, so find the uservar
-                        // Try to format and transform the values
-                        // y = taskNr
-                        // z = var_of_task
-                        match = true;
-                        bool isvalid;
-                        String value = formatUserVar(y, z, isvalid);
-                        if (isvalid) {
-                          transformValue(newString, lineSize, value, valueFormat, tmpString);
-                          break;
-                        }
-                      }
-                    if (!match) // try if this is a get config request
-                    {
-                      struct EventStruct TempEvent;
-                      TempEvent.TaskIndex = y;
-                      String tmpName = valueName;
-                      if (PluginCall(PLUGIN_GET_CONFIG, &TempEvent, tmpName))
-                        newString += tmpName;
-                    }
-                    break;
-                  }
-                }
-              }
-            }
+          String value = String(customFloatVar[varNum - 1], nr_decimals);
+          transformValue(newString, lineSize, value, format, tmpString);
         }
       }
-      leftBracketIndex = tmpString.indexOf('[');
-      count++;
     }
-    checkRAM(F("parseTemplate2"));
-    newString += tmpString;
+    else 
+    {
+      // Address a value from a plugin.
+      // For example: "[bme#temp]"
+      // If value name is unknown, run a PLUGIN_GET_CONFIG command.
+      // For example: "[<taskname>#getLevel]"
+      byte taskIndex = findTaskIndexByName(deviceName);
 
-    if (currentTaskIndex != 255)
-      LoadTaskSettings(currentTaskIndex);
+      if (taskIndex != TASKS_MAX && Settings.TaskDeviceEnabled[taskIndex]) {
+        byte valueNr = findDeviceValueIndexByName(valueName, taskIndex);
+
+        if (valueNr != VARS_PER_TASK) {
+          // here we know the task and value, so find the uservar
+          // Try to format and transform the values
+          bool   isvalid;
+          String value = formatUserVar(taskIndex, valueNr, isvalid);
+
+          if (isvalid) {
+            transformValue(newString, lineSize, value, format, tmpString);
+          }
+        } else {
+          // try if this is a get config request
+          struct EventStruct TempEvent;
+          TempEvent.TaskIndex = taskIndex;
+          String tmpName = valueName;
+
+          if (PluginCall(PLUGIN_GET_CONFIG, &TempEvent, tmpName))
+          {
+            transformValue(newString, lineSize, tmpName, format, tmpString);
+          }                  
+        }
+      }
+    }
+    
+
+    // Conversion is done (or impossible) for the found "[...#...]"
+    // Continue with the next one.
+    lastStartpos = endpos + 1;
+    startpos     = endpos + 1;
+
+    // This may have taken some time, so call delay()
+    delay(0);
   }
 
-  //parseSystemVariables(newString, false);
+  // Copy the rest of the string (or all if no replacements were done)
+  newString += tmpString.substring(lastStartpos);
+  checkRAM(F("parseTemplate2"));
+
+  // Restore previous loaded taskSettings
+  if (currentTaskIndex != 255)
+  {
+    LoadTaskSettings(currentTaskIndex);
+  }
+
+  // parseSystemVariables(newString, false);
   parseStandardConversions(newString, false);
 
   // padding spaces
-  while (newString.length() < lineSize)
+  while (newString.length() < lineSize) {
     newString += ' ';
+  }
   checkRAM(F("parseTemplate3"));
   return newString;
+}
+
+// Find the first task with given name
+// Return TASKS_MAX when not found, else return taskIndex
+byte findTaskIndexByName(const String& deviceName)
+{
+  // cache this, since LoadTaskSettings does take some time.
+  auto result = Cache.taskIndexName.find(deviceName);
+  if (result != Cache.taskIndexName.end()) {
+    return result->second;
+  }
+  for (byte taskIndex = 0; taskIndex < TASKS_MAX; taskIndex++)
+  {
+    LoadTaskSettings(taskIndex);
+    String taskDeviceName = getTaskDeviceName(taskIndex);
+
+    if (taskDeviceName.length() != 0)
+    {
+      if (deviceName.equalsIgnoreCase(taskDeviceName))
+      {
+        Cache.taskIndexName[deviceName] = taskIndex;
+        return taskIndex;
+      }
+    }
+  }
+  return TASKS_MAX;
+}
+
+// Find the first device value index of a taskIndex.
+// Return VARS_PER_TASK if none found.
+byte findDeviceValueIndexByName(const String& valueName, byte taskIndex) 
+{
+  // cache this, since LoadTaskSettings does take some time.
+  auto result = Cache.taskIndexValueName.find(valueName);
+  if (result != Cache.taskIndexValueName.end()) {
+    return result->second;
+  }
+  LoadTaskSettings(taskIndex); // Probably already loaded, but just to be sure
+
+  const byte pluginID = getDeviceIndex(Settings.TaskDeviceNumber[taskIndex]);
+  const byte valCount = Device[pluginID].ValueCount;
+
+  for (byte valueNr = 0; valueNr < valCount; valueNr++)
+  {
+    if (valueName.equalsIgnoreCase(ExtraTaskSettings.TaskDeviceValueNames[valueNr]))
+    {
+      Cache.taskIndexValueName[valueName] = valueNr;
+      return valueNr;
+    }
+  }
+  return VARS_PER_TASK;
+}
+
+// Find positions of [...#...] in the given string.
+// Only update pos values on success.
+// Return true when found.
+bool findNextValMarkInString(const String& input, int& startpos, int& hashpos, int& endpos) {
+  int tmpStartpos = input.indexOf('[', startpos);
+
+  if (tmpStartpos == -1) { return false; }
+  int tmpHashpos = input.indexOf('#', tmpStartpos);
+
+  if (tmpHashpos == -1) { return false; }
+  int tmpEndpos = input.indexOf(']', tmpStartpos);
+
+  if (tmpEndpos == -1) { return false; }
+
+  if (tmpHashpos < tmpEndpos) {
+    hashpos  = tmpHashpos;
+    startpos = tmpStartpos;
+    endpos   = tmpEndpos;
+    return true;
+  }
+  return false;
+}
+
+// Find [deviceName#valueName] or [deviceName#valueName#format]
+bool findNextDevValNameInString(const String& input, int& startpos, int& endpos, String& deviceName, String& valueName, String& format) {
+  int hashpos;
+
+  if (!findNextValMarkInString(input, startpos, hashpos, endpos)) { return false; }
+  deviceName = input.substring(startpos + 1, hashpos);
+  valueName  = input.substring(hashpos + 1, endpos);
+  hashpos    = valueName.indexOf('#');
+
+  if (hashpos != -1) {
+    // Found an extra '#' in the valueName, will split valueName and format.
+    format    = valueName.substring(hashpos + 1);
+    valueName = valueName.substring(0, hashpos);
+  } else {
+    format = "";
+  }
+  return true;
 }
 
 /********************************************************************************************\
@@ -1595,22 +1701,34 @@ void transformValue(
     // valueJust="justification"
     if (valueFormat.length() > 0) //do the checks only if a Format is defined to optimize loop
     {
-      const int val = value == "0" ? 0 : 1; //to be used for GPIO status (0 or 1)
-      const float valFloat = value.toFloat();
-
+      int logicVal = 0;
+      float valFloat = 0.0;
+      if (validFloatFromString(value, valFloat))
+      {
+        //to be used for binary values (0 or 1)
+        logicVal = static_cast<int>(roundf(valFloat)) == 0 ? 0 : 1; 
+      } else {
+        if (value.length() > 0) {
+          logicVal = 1;
+        }        
+      }
       String tempValueFormat = valueFormat;
-      int tempValueFormatLength = tempValueFormat.length();
-      const int invertedIndex = tempValueFormat.indexOf('!');
-      const int inverted = invertedIndex >= 0 ? 1 : 0;
-      if (inverted != 0)
-        tempValueFormat.remove(invertedIndex,1);
+      {
+        const int invertedIndex = tempValueFormat.indexOf('!');
+        if (invertedIndex != -1) {
+          // We must invert the value.
+          logicVal = (logicVal == 0) ? 1 : 0;
+          // Remove the '!' from the string.
+          tempValueFormat.remove(invertedIndex,1);
+        }
+      }
 
       const int rightJustifyIndex = tempValueFormat.indexOf('R');
       const bool rightJustify = rightJustifyIndex >= 0 ? 1 : 0;
       if (rightJustify)
         tempValueFormat.remove(rightJustifyIndex,1);
 
-      tempValueFormatLength = tempValueFormat.length(); //needed because could have been changed after '!' and 'R' removal
+      const int tempValueFormatLength = tempValueFormat.length();
 
       //Check Transformation syntax
       if (tempValueFormatLength > 0)
@@ -1620,40 +1738,40 @@ void transformValue(
           case 'V': //value = value without transformations
             break;
           case 'O':
-            value = val == inverted ? F("OFF") : F(" ON"); //(equivalent to XOR operator)
+            value = logicVal == 0 ? F("OFF") : F(" ON"); //(equivalent to XOR operator)
             break;
           case 'C':
-            value = val == inverted ? F("CLOSE") : F(" OPEN");
+            value = logicVal == 0 ? F("CLOSE") : F(" OPEN");
             break;
           case 'M':
-            value = val == inverted ? F("AUTO") : F(" MAN");
+            value = logicVal == 0 ? F("AUTO") : F(" MAN");
             break;
           case 'm':
-            value = val == inverted ? F("A") : F("M");
+            value = logicVal == 0 ? F("A") : F("M");
             break;
           case 'H':
-            value = val == inverted ? F("COLD") : F(" HOT");
+            value = logicVal == 0 ? F("COLD") : F(" HOT");
             break;
           case 'U':
-            value = val == inverted ? F("DOWN") : F("  UP");
+            value = logicVal == 0 ? F("DOWN") : F("  UP");
             break;
           case 'u':
-            value = val == inverted ? F("D") : F("U");
+            value = logicVal == 0 ? F("D") : F("U");
             break;
           case 'Y':
-            value = val == inverted ? F(" NO") : F("YES");
+            value = logicVal == 0 ? F(" NO") : F("YES");
             break;
           case 'y':
-            value = val == inverted ? F("N") : F("Y");
+            value = logicVal == 0 ? F("N") : F("Y");
             break;
           case 'X':
-            value = val == inverted ? F("O") : F("X");
+            value = logicVal == 0 ? F("O") : F("X");
             break;
           case 'I':
-            value = val == inverted ? F("OUT") : F(" IN");
+            value = logicVal == 0 ? F("OUT") : F(" IN");
             break;
           case 'Z' :// return "0" or "1"
-            value = val == inverted ? "0" : "1";
+            value = logicVal == 0 ? "0" : "1";
             break;
           case 'D' ://Dx.y min 'x' digits zero filled & 'y' decimal fixed digits
             {
@@ -1688,10 +1806,13 @@ void transformValue(
                   break;
               }
               value = toString(valFloat,y);
-              int indexDot;
-              indexDot = value.indexOf('.') > 0 ? value.indexOf('.') : value.length();
-              for (byte f = 0; f < (x - indexDot); f++)
+              int indexDot = value.indexOf('.');
+              if (indexDot == -1) {
+                indexDot = value.length();
+              }              
+              for (byte f = 0; f < (x - indexDot); f++) {
                 value = "0" + value;
+              }
               break;
             }
           case 'F' :// FLOOR (round down)
@@ -1792,7 +1913,7 @@ void transformValue(
   }
   //end of changes by giig1967g - 2018-04-18
 
-  newString += String(value);
+  newString += value;
   {
 #ifndef BUILD_NO_DEBUG
     if (loglevelActiveFor(LOG_LEVEL_DEBUG_DEV)) {

@@ -1,3 +1,7 @@
+#include "src/Globals/Cache.h"
+#include "src/Globals/ResetFactoryDefaultPref.h"
+#include "src/Globals/CRCValues.h"
+
 /********************************************************************************************\
    SPIFFS error handling
    Look here for error # reference: https://github.com/pellepl/spiffs/blob/master/src/spiffs.h
@@ -198,8 +202,6 @@ void fileSystemCheck()
   }
 }
 
-
-
 /********************************************************************************************\
    Garbage collection
  \*********************************************************************************************/
@@ -233,7 +235,7 @@ String SaveSettings(void)
   uint8_t    tmp_md5[16] = { 0 };
   String     err;
 
-  Settings.StructSize = sizeof(struct SettingsStruct);
+  Settings.StructSize = sizeof(Settings);
 
   // FIXME @TD-er: As discussed in #1292, the CRC for the settings is now disabled.
 
@@ -274,7 +276,7 @@ String SaveSettings(void)
 
     if (WifiIsAP(WiFi.getMode())) {
       // Security settings are saved, may be update of WiFi settings or hostname.
-      wifiSetupConnect = true;
+      wifiSetupConnect         = true;
       wifiConnectAttemptNeeded = true;
     }
   }
@@ -348,7 +350,8 @@ String LoadSettings()
   else {
     addLog(LOG_LEVEL_ERROR, F("CRC  : SecuritySettings CRC   ...FAIL"));
   }
-//  setupStaticIPconfig();
+
+  //  setupStaticIPconfig();
   // FIXME TD-er: Must check if static/dynamic IP was changed and trigger a reconnect? Or is a reboot better when changing those settings?
   afterloadSettings();
   SecuritySettings.validate();
@@ -403,82 +406,73 @@ byte disableNotification(byte bootFailedCount) {
   return bootFailedCount;
 }
 
-
-#define DAT_TASKS_DISTANCE               2048  // DAT_TASKS_SIZE + DAT_TASKS_CUSTOM_SIZE
-#define DAT_TASKS_SIZE                   1024
-#define DAT_TASKS_CUSTOM_OFFSET          1024  // Equal to DAT_TASKS_SIZE
-#define DAT_TASKS_CUSTOM_SIZE            1024
-#define DAT_CUSTOM_CONTROLLER_SIZE       1024
-#define DAT_CONTROLLER_SIZE              1024
-#define DAT_NOTIFICATION_SIZE            1024
-
-#define DAT_BASIC_SETTINGS_SIZE          4096
-
-#if defined(ESP8266)
-  #define DAT_OFFSET_TASKS                 4096  // each task = 2k, (1024 basic + 1024 bytes custom), 12 max
-  #define DAT_OFFSET_CONTROLLER           28672  // each controller = 1k, 4 max
-  #define DAT_OFFSET_CUSTOM_CONTROLLER    32768  // each custom controller config = 1k, 4 max.
-  #define CONFIG_FILE_SIZE                65536
-#endif
-#if defined(ESP32)
-  #define DAT_OFFSET_CONTROLLER            8192  // each controller = 1k, 4 max
-  #define DAT_OFFSET_CUSTOM_CONTROLLER    12288  // each custom controller config = 1k, 4 max.
-  #define DAT_OFFSET_TASKS                32768  // each task = 2k, (1024 basic + 1024 bytes custom), 32 max
-  #define CONFIG_FILE_SIZE               131072
-#endif
-
+#include "src/DataStructs/StorageLayout.h"
 
 /********************************************************************************************\
    Offsets in settings files
  \*********************************************************************************************/
 bool getSettingsParameters(SettingsType settingsType, int index, int& max_index, int& offset, int& max_size, int& struct_size) {
+  // The defined offsets should be used with () just in case they are the result of a formula in the defines.
   struct_size = 0;
 
   switch (settingsType) {
     case BasicSettings_Type:
+    {
       max_index   = 1;
       offset      = 0;
-      max_size    = DAT_BASIC_SETTINGS_SIZE;
+      max_size    = (DAT_BASIC_SETTINGS_SIZE);
       struct_size = sizeof(SettingsStruct);
       break;
+    }
     case TaskSettings_Type:
+    {
       max_index   = TASKS_MAX;
-      offset      = DAT_OFFSET_TASKS + (index * DAT_TASKS_DISTANCE);
+      offset      = (DAT_OFFSET_TASKS) + (index * (DAT_TASKS_DISTANCE));
       max_size    = DAT_TASKS_SIZE;
       struct_size = sizeof(ExtraTaskSettingsStruct);
       break;
+    }
     case CustomTaskSettings_Type:
-      max_index = TASKS_MAX;
-      offset    = DAT_OFFSET_TASKS + (index * DAT_TASKS_DISTANCE) + DAT_TASKS_CUSTOM_OFFSET;
+    {
+      getSettingsParameters(TaskSettings_Type, index, max_index, offset, max_size, struct_size);
+      offset    += (DAT_TASKS_CUSTOM_OFFSET);
       max_size  = DAT_TASKS_CUSTOM_SIZE;
+      break;
 
       // struct_size may differ.
-      break;
+    }
     case ControllerSettings_Type:
+    {
       max_index   = CONTROLLER_MAX;
-      offset      = DAT_OFFSET_CONTROLLER + (index * DAT_CONTROLLER_SIZE);
+      offset      = (DAT_OFFSET_CONTROLLER) + (index * (DAT_CONTROLLER_SIZE));
       max_size    = DAT_CONTROLLER_SIZE;
       struct_size = sizeof(ControllerSettingsStruct);
       break;
+    }
     case CustomControllerSettings_Type:
+    {
       max_index = CONTROLLER_MAX;
-      offset    = DAT_OFFSET_CUSTOM_CONTROLLER + (index * DAT_CUSTOM_CONTROLLER_SIZE);
+      offset    = (DAT_OFFSET_CUSTOM_CONTROLLER) + (index * (DAT_CUSTOM_CONTROLLER_SIZE));
       max_size  = DAT_CUSTOM_CONTROLLER_SIZE;
 
       // struct_size may differ.
-      break;
+    }    break;
     case NotificationSettings_Type:
+    {
       max_index   = NOTIFICATION_MAX;
-      offset      = index * DAT_NOTIFICATION_SIZE;
+      offset      = index * (DAT_NOTIFICATION_SIZE);
       max_size    = DAT_NOTIFICATION_SIZE;
       struct_size = sizeof(NotificationSettingsStruct);
       break;
+    }
     default:
+    {
       max_index = -1;
       offset    = -1;
       return false;
+    }
   }
-  return true;
+  return index >= 0 && index < max_index;
 }
 
 int getMaxFilePos(SettingsType settingsType) {
@@ -562,14 +556,14 @@ String SaveTaskSettings(byte TaskIndex)
  \*********************************************************************************************/
 String LoadTaskSettings(byte TaskIndex)
 {
+  if (ExtraTaskSettings.TaskIndex == TaskIndex) {
+    return String(); // already loaded
+  }
   if ((TaskIndex < 0) || (TaskIndex >= TASKS_MAX)) {
     return String(); // Un-initialized task index.
   }
   checkRAM(F("LoadTaskSettings"));
 
-  if (ExtraTaskSettings.TaskIndex == TaskIndex) {
-    return String(); // already loaded
-  }
   START_TIMER
   ExtraTaskSettings.clear();
   String result = "";
@@ -635,25 +629,29 @@ String LoadCustomTaskSettings(int TaskIndex, byte *memAddress, int datasize)
 /********************************************************************************************\
    Load array of Strings from Custom Task settings
  \*********************************************************************************************/
- String LoadCustomTaskSettings(int TaskIndex, String strings[], uint16_t nrStrings, uint16_t maxStringLenght)
- {
-   START_TIMER;
-   checkRAM(F("LoadCustomTaskSettings"));
+String LoadCustomTaskSettings(int TaskIndex, String strings[], uint16_t nrStrings, uint16_t maxStringLenght)
+{
+  START_TIMER;
+  checkRAM(F("LoadCustomTaskSettings"));
 
-   // FIXME TD-er: For now stack allocated, may need to be heap allocated?
-   if (maxStringLenght >= 128) return F("Max 128 chars allowed");
-   char tmpStr[128];
-   String result;
-   for (int i = 0; i < nrStrings; ++i) {
-     result += LoadFromFile(CustomTaskSettings_Type, TaskIndex, (char *)FILE_CONFIG, (byte *)&tmpStr, maxStringLenght, maxStringLenght * i);
-     tmpStr[maxStringLenght] = 0; // Terminate in case of uninitalized data
-     strings[i] = String(tmpStr);
-   }
-   STOP_TIMER(LOAD_CUSTOM_TASK_STATS);
-   return result;
- }
+  // FIXME TD-er: For now stack allocated, may need to be heap allocated?
+  if (maxStringLenght >= 128) { return F("Max 128 chars allowed"); }
+  char   tmpStr[128];
+  String result;
 
-
+  for (int i = 0; i < nrStrings; ++i) {
+    result += LoadFromFile(CustomTaskSettings_Type,
+                           TaskIndex,
+                           (char *)FILE_CONFIG,
+                           (byte *)&tmpStr,
+                           maxStringLenght,
+                           maxStringLenght * i);
+    tmpStr[maxStringLenght] = 0; // Terminate in case of uninitalized data
+    strings[i]              = String(tmpStr);
+  }
+  STOP_TIMER(LOAD_CUSTOM_TASK_STATS);
+  return result;
+}
 
 /********************************************************************************************\
    Save Controller settings to SPIFFS
@@ -788,6 +786,7 @@ String SaveToFile(char *fname, int index, byte *memAddress, int datasize)
   fs::File f          = tryOpenFile(fname, "r+");
 
   if (f) {
+    clearAllCaches();
     SPIFFS_CHECK(f,                          fname);
     SPIFFS_CHECK(f.seek(index, fs::SeekSet), fname);
     byte *pointerToByteToSave = memAddress;
@@ -1091,8 +1090,9 @@ int getCacheFileCountFromFilename(const String& fname) {
   int endpos = fname.indexOf(F(".bin"));
 
   if (endpos < 0) { return -1; }
-//  String digits = fname.substring(startpos + 1, endpos);
-  int    result;
+
+  //  String digits = fname.substring(startpos + 1, endpos);
+  int result;
 
   if (validIntFromString(fname.substring(startpos + 1, endpos), result)) {
     return result;
@@ -1221,7 +1221,7 @@ String getPartitionTable(byte pType, const String& itemSep, const String& lineEn
 
   if (_mypartiterator) {
     do {
-      const esp_partition_t   *_mypart = esp_partition_get(_mypartiterator);
+      const esp_partition_t *_mypart = esp_partition_get(_mypartiterator);
       result += formatToHex(_mypart->address);
       result += itemSep;
       result += formatToHex_decimal(_mypart->size, 1024);

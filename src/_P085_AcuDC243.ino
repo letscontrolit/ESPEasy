@@ -165,13 +165,15 @@ boolean Plugin_085(byte function, struct EventStruct *event, String &string) {
       if (detectedString.length() > 0) {
         addFormNote(detectedString);
       }
-      addRowLabel(F("Checksum (pass/fail)"));
-      uint32_t reads_pass, reads_crc_failed;
-      P085_data->modbus.getStatistics(reads_pass, reads_crc_failed);
+      addRowLabel(F("Checksum (pass/fail/nodata)"));
+      uint32_t reads_pass, reads_crc_failed, reads_nodata;
+      P085_data->modbus.getStatistics(reads_pass, reads_crc_failed, reads_nodata);
       String chksumStats;
       chksumStats = reads_pass;
       chksumStats += '/';
       chksumStats += reads_crc_failed;
+      chksumStats += '/';
+      chksumStats += reads_nodata;
       addHtml(chksumStats);
 
       addFormSubHeader(F("Calibration"));

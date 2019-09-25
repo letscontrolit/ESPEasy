@@ -35,6 +35,8 @@
 #define MODBUS_UNKEXC   (MODBUS_EXCEPTION_GATEWAY_TARGET + 4)
 #define MODBUS_MDATA    (MODBUS_EXCEPTION_GATEWAY_TARGET + 5)
 #define MODBUS_BADSLAVE (MODBUS_EXCEPTION_GATEWAY_TARGET + 6)
+#define MODBUS_TIMEOUT  (MODBUS_EXCEPTION_GATEWAY_TARGET + 7)
+#define MODBUS_NODATA   (MODBUS_EXCEPTION_GATEWAY_TARGET + 8)
 
 
 struct ModbusRTU_struct  {
@@ -63,6 +65,7 @@ struct ModbusRTU_struct  {
     _modbus_address   = MODBUS_BROADCAST_ADDRESS;
     _reads_pass       = 0;
     _reads_crc_failed = 0;
+    _reads_nodata     = 0;
   }
 
   bool init(const int16_t serial_rx, const int16_t serial_tx, int16_t baudrate, byte address) {
@@ -100,9 +103,10 @@ struct ModbusRTU_struct  {
     return easySerial != nullptr;
   }
 
-  void getStatistics(uint32_t& pass, uint32_t& fail) {
+  void getStatistics(uint32_t& pass, uint32_t& fail, uint32_t& nodata) {
     pass = _reads_pass;
     fail = _reads_crc_failed;
+    nodata = _reads_nodata;
   }
 
   void setModbusTimeout(uint16_t timeout) {
@@ -408,6 +412,12 @@ struct ModbusRTU_struct  {
        case MODBUS_BADSLAVE:
         log += F("Response not from requested slave");
         break;
+       case MODBUS_TIMEOUT:
+        log += F("Modbus Timeout");
+        break;
+       case MODBUS_NODATA:
+        log += F("Modbus No Data");
+        break;
        default:
         log += String(F("Unknown Exception code: ")) + value;
         break;
@@ -466,20 +476,27 @@ struct ModbusRTU_struct  {
       _recv_buf_used = 0;
       unsigned long timeout = millis() + _modbus_timeout;
       bool validPacket      = false;
+      bool invalidDueToTimeout = false;
 
       //  idx:    0,   1,   2,   3,   4,   5,   6,   7
       // send: 0x02,0x03,0x00,0x00,0x00,0x01,0x39,0x84
       // recv: 0x02,0x03,0x02,0x01,0x57,0xBC,0x2A
 
-      while (!validPacket && _recv_buf_used < MODBUS_RECEIVE_BUFFER && !timeOutReached(timeout)) {
-        while (easySerial->available() && _recv_buf_used < MODBUS_RECEIVE_BUFFER && !timeOutReached(timeout)) {
+      while (!validPacket && !invalidDueToTimeout && _recv_buf_used < MODBUS_RECEIVE_BUFFER) {
+        if (timeOutReached(timeout)) {
+          invalidDueToTimeout = true;
+        }
+        while (!invalidDueToTimeout && easySerial->available() && _recv_buf_used < MODBUS_RECEIVE_BUFFER) {
+          if (timeOutReached(timeout)) {
+            invalidDueToTimeout = true;
+          }
           _recv_buf[_recv_buf_used++] = easySerial->read();
         }
 
         if (_recv_buf_used > 2) { // got length
           if (_recv_buf_used >= (3+_recv_buf[2]+2)) { // got whole pkt
             crc = ModRTU_CRC(_recv_buf, _recv_buf_used); // crc16 is 0 for whole valid pkt
-            validPacket = crc == 0 && _recv_buf[0] == _sendframe[0]; // check crc and address
+            validPacket = (crc == 0) && (_recv_buf[0] == _sendframe[0]); // check crc and address
             return_value = 0; // reset return value
           }
         }
@@ -487,7 +504,14 @@ struct ModbusRTU_struct  {
       }
 
       // Check for MODBUS exception
-      if (!validPacket) {
+      if (invalidDueToTimeout) {
+        ++_reads_nodata;
+        if (_recv_buf_used == 0) {
+          return_value = MODBUS_NODATA;
+        } else {
+          return_value = MODBUS_TIMEOUT;
+        }
+      } else if (!validPacket) {
         ++_reads_crc_failed;
         return_value = MODBUS_BADCRC;
       } else {
@@ -497,12 +521,14 @@ struct ModbusRTU_struct  {
           return_value = _recv_buf[2];
         }
         ++_reads_pass;
+        _reads_nodata = 0;
       }
 
       switch (return_value) {
         case MODBUS_EXCEPTION_ACKNOWLEDGE:
         case MODBUS_EXCEPTION_SLAVE_OR_SERVER_BUSY:
         case MODBUS_BADCRC:
+        case MODBUS_TIMEOUT:
 
           // Bad communication, makes sense to retry.
           break;
@@ -512,6 +538,7 @@ struct ModbusRTU_struct  {
       }
       --nrRetriesLeft;
     }
+    _last_error = return_value;
     return return_value;
   }
 
@@ -653,7 +680,7 @@ struct ModbusRTU_struct  {
       return (_recv_buf[3] << 8) | (_recv_buf[4]);
     }
     logModbusException(process_result);
-    return -1;
+    return -1 * process_result;
   }
 
   // Still writing single register, but calling it using "Preset Multiple Registers" function (FC=16)
@@ -665,7 +692,7 @@ struct ModbusRTU_struct  {
       return (_recv_buf[4] << 8) | (_recv_buf[5]);
     }
     logModbusException(process_result);
-    return -1;
+    return -1 * process_result;
   }
 
   bool process_32b_register(byte slaveAddress, byte functionCode,
@@ -694,7 +721,7 @@ struct ModbusRTU_struct  {
       return 0;
     }
     logModbusException(process_result);
-    return -1;
+    return -1 * process_result;
   }
 
   unsigned int read_RAM_EEPROM(byte command, byte startAddress,
@@ -713,7 +740,7 @@ struct ModbusRTU_struct  {
       return result;
     }
     logModbusException(process_result);
-    return -1;
+    return -1 * process_result;
   }
 
   // Compute the MODBUS RTU CRC
@@ -741,6 +768,14 @@ struct ModbusRTU_struct  {
 
   uint32_t readSensorId() {
     return read_32b_InputRegister(29);
+  }
+
+  uint8_t getLastError() {
+    return _last_error;
+  }
+
+  uint32_t getFailedReadsSinceLastValid() {
+    return _reads_nodata;
   }
 
   String detected_device_description;
@@ -772,7 +807,9 @@ private:
   int8_t   _dere_pin                        = -1;
   uint32_t _reads_pass                      = 0;
   uint32_t _reads_crc_failed                = 0;
+  uint32_t _reads_nodata                    = 0; // This will be reset as soon as a valid packet has been received.
   uint16_t _modbus_timeout                  = 180;
+  uint8_t  _last_error                      = 0;
 
   ESPeasySerial *easySerial;
 };

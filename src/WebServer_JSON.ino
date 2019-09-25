@@ -1,3 +1,5 @@
+#include "src/Globals/Nodes.h"
+#include "src/Globals/Device.h"
 
 // ********************************************************************************
 // Web Interface JSON page (no password!)
@@ -250,11 +252,8 @@ void stream_plugin_function_timing_stats_json(
 }
 
 void stream_plugin_timing_stats_json(int pluginId) {
-  String P_name = "";
-
-  Plugin_ptr[pluginId](PLUGIN_GET_DEVICENAME, NULL, P_name);
   TXBuffer += '{';
-  stream_next_json_object_value(F("name"), P_name);
+  stream_next_json_object_value(F("name"), getPluginNameFromDeviceIndex(pluginId));
   stream_next_json_object_value(F("id"),   String(pluginId));
   stream_json_start_array(F("function"));
 }

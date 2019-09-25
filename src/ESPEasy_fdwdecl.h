@@ -1,9 +1,15 @@
 #ifndef ESPEASY_FWD_DECL_H
 #define ESPEASY_FWD_DECL_H
 
+#include "ESPEasy_common.h"
+#include "define_plugin_sets.h"  // For USES_MQTT
+#include "src/DataStructs/ESPEasy_EventStruct.h"
 
 // FIXME TD-er: This header file should only be included from .ino or .cpp files
 // This is only needed until the classes that need these can include the appropriate .h files to have these forward declared.
+
+
+
 
 #if defined(ESP8266)
 
@@ -21,17 +27,8 @@
 
 #include <FS.h>
 
-struct SettingsStruct;
-struct SecurityStruct;
-struct CRCStruct;
 
 // Forward declaration to give access to global member variables
-SettingsStruct& getSettings();
-SecurityStruct& getSecuritySettings();
-CRCStruct     & getCRCValues();
-unsigned long & getConnectionFailures();
-byte          & getHighestActiveLogLevel();
-int             getPluginId_from_TaskIndex(byte taskIndex);
 float         & getUserVar(unsigned int varIndex);
 
 
@@ -72,6 +69,7 @@ bool     connectClient(WiFiClient& client,
 
 bool   WiFiConnected(uint32_t timeout_ms);
 bool   WiFiConnected();
+bool   useStaticIP();
 bool   hostReachable(const IPAddress& ip);
 bool   hostReachable(const String& hostname);
 void formatMAC(const uint8_t * mac, char (& strMAC)[20]);
@@ -126,5 +124,21 @@ bool MQTTCheck(int controller_idx);
 void schedule_all_tasks_using_MQTT_controller();
 #endif // ifdef USES_MQTT
 
+
+// Used in src/Commands/*
+void serialPrintln(const String& text);
+void serialPrintln();
+bool GetArgv(const char *string, String& argvString, unsigned int argc);
+bool HasArgv(const char *string, unsigned int argc);
+boolean str2ip(const String& string, byte *IP);
+bool useStaticIP();
+String formatIP(const IPAddress& ip);
+String toString(bool value);
+
+float getCPUload();
+int getLoopCountPerSec();
+void serialPrint(const String& text);
+void setLogLevelFor(byte destination, byte logLevel);
+uint16_t getPortFromKey(uint32_t key);
 
 #endif // ESPEASY_FWD_DECL_H

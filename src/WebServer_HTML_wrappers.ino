@@ -1,3 +1,5 @@
+#include "src/Static/WebStaticData.h"
+
 
 // ********************************************************************************
 // HTML string re-use to keep the executable smaller

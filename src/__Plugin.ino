@@ -1,3 +1,11 @@
+#include "src/Globals/Device.h"
+
+#include "src/DataStructs/TimingStats.h"
+
+#include "define_plugin_sets.h"
+
+
+
 //********************************************************************************
 // Initialize all plugins that where defined earlier
 // and initialize the function call pointer into the plugin array
@@ -1060,36 +1068,7 @@ void PluginInit(void)
 
 }
 
-int getPluginId(byte taskId) {
-  if (taskId < TASKS_MAX) {
-    int retry = 1;
-    while (retry >= 0) {
-      int plugin = Task_id_to_Plugin_id[taskId];
-      if (plugin >= 0 && plugin < PLUGIN_MAX) {
-        if (Plugin_id[plugin] == Settings.TaskDeviceNumber[taskId])
-          return plugin;
-      }
-      updateTaskPluginCache();
-      --retry;
-    }
-  }
-  return -1;
-}
 
-void updateTaskPluginCache() {
-  ++countFindPluginId; // Used for statistics.
-  Task_id_to_Plugin_id.resize(TASKS_MAX);
-  for (byte y = 0; y < TASKS_MAX; ++y) {
-    Task_id_to_Plugin_id[y] = -1;
-    bool foundPlugin = false;
-    for (byte x = 0; x < PLUGIN_MAX && !foundPlugin; ++x) {
-      if (Plugin_id[x] != 0 && Plugin_id[x] == Settings.TaskDeviceNumber[y]) {
-        foundPlugin = true;
-        Task_id_to_Plugin_id[y] = x;
-      }
-    }
-  }
-}
 
 int8_t getXFromPluginId(byte pluginID) {
   std::vector<byte>::iterator it;
@@ -1170,7 +1149,7 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
           {
             if (Settings.TaskDeviceDataFeed[y] == 0) // these calls only to tasks with local feed
             {
-              const int x = getPluginId(y);
+              const int x = getPluginId_from_TaskIndex(y);
               if (x >= 0) {
                 byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[y]);
                 TempEvent.TaskIndex = y;
@@ -1210,7 +1189,7 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
         {
           if (Settings.TaskDeviceEnabled[y] && Settings.TaskDeviceNumber[y] != 0)
           {
-            const int x = getPluginId(y);
+            const int x = getPluginId_from_TaskIndex(y);
             if (x >= 0) {
               byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[y]);
               TempEvent.TaskIndex = y;
@@ -1249,7 +1228,7 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
           {
             if (Settings.TaskDeviceDataFeed[y] == 0) // these calls only to tasks with local feed
             {
-              const int x = getPluginId(y);
+              const int x = getPluginId_from_TaskIndex(y);
               if (x >= 0) {
                 byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[y]);
                 TempEvent.TaskIndex = y;
@@ -1289,7 +1268,7 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
     case PLUGIN_GET_PACKED_RAW_DATA:
     case PLUGIN_SET_DEFAULTS:
     {
-      const int x = getPluginId(event->TaskIndex);
+      const int x = getPluginId_from_TaskIndex(event->TaskIndex);
       if (x >= 0) {
         if (Plugin_id[x] != 0 ) {
           if (Function == PLUGIN_INIT) {
