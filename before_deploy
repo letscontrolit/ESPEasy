@@ -3,7 +3,7 @@
 VERSION=$(git describe)
 TMP_DIST=`mktemp -d`
 CURPATH=`pwd`
-BUILD_LOG=`echo "{TMP_DIST}/buildlog.txt"`
+BUILD_LOG=`echo "${TMP_DIST}/buildlog.txt"`
 
 # PIO 3.x :
 # BINARY_PATH=".pioenvs"
@@ -107,7 +107,7 @@ do
     echo "Build FAILED: No file created." >> ${BUILD_LOG}
   fi
 
-  echo "\n" >> ${BUILD_LOG}
+  echo "---" >> ${BUILD_LOG}
 
   ELFFILE=`echo "${BINARY_PATH}/${ENV}/firmware.elf"`
   if [ -f $ELFFILE ]; then
