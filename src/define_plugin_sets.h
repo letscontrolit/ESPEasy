@@ -427,8 +427,14 @@ To create/register a plugin, you have to :
     #ifndef USES_P005
         #define USES_P005   // DHT
     #endif
+    #ifndef USES_P014
+        #define USES_P014   // SI7021
+    #endif
     #ifndef USES_P028
         #define USES_P028   // BME280
+    #endif
+    #ifndef USES_P034
+        #define USES_P034   // DHT12
     #endif
 #endif
 
