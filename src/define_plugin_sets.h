@@ -27,9 +27,6 @@ To create/register a plugin, you have to :
 
 
 #ifdef MEMORY_ANALYSIS
-  #ifndef WEBSERVER_RULES_DEBUG
-    #define WEBSERVER_RULES_DEBUG 0
-  #endif
   #ifdef MQTT_ONLY
     #define USES_C002   // Domoticz MQTT
     #define USES_C005   // Home Assistant (openHAB) MQTT
@@ -189,7 +186,7 @@ To create/register a plugin, you have to :
     #define WEBSERVER_SYSVARS
   #endif
   #ifndef WEBSERVER_NEW_UI
-    #define WEBSERVER_NEW_UI
+//    #define WEBSERVER_NEW_UI
   #endif
 #endif
 
@@ -199,7 +196,6 @@ To create/register a plugin, you have to :
     #ifdef WEBSERVER_RULES_DEBUG
         #undef WEBSERVER_RULES_DEBUG
     #endif
-    #define WEBSERVER_RULES_DEBUG 0
 #endif
 
 
