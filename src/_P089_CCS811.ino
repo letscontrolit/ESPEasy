@@ -315,16 +315,18 @@ boolean Plugin_089(byte function, struct EventStruct *event, String& string)
       // Mode 4 = RAW mode (not used)
       returnCode = myCCS811.setDriveMode(P089_READ_INTERVAL);
 
+      if (returnCode != CCS811Core::SENSOR_SUCCESS) {
       #ifndef BUILD_NO_DEBUG
 
-      if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-        String log = F("CCS811 : Mode request exited with: ");
-        log += myCCS811.getDriverError(returnCode);
-        addLog(LOG_LEVEL_DEBUG, log);
-      }
+        if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+          String log = F("CCS811 : Mode request exited with: ");
+          log += myCCS811.getDriverError(returnCode);
+          addLog(LOG_LEVEL_DEBUG, log);
+        }
       #endif // ifndef BUILD_NO_DEBUG
-
-      success = true;
+      } else {
+        success = true;
+      }
       break;
     }
 
