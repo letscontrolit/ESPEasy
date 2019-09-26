@@ -192,7 +192,11 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
         addLog(LOG_LEVEL_INFO, String(F("IRSEND,")) + typeToString(results.decode_type, results.repeat) + ',' + resultToHexidecimal(&results) + ',' + uint64ToString(results.bits)); //Show the appropriate command to the user, so he can replay the message via P035
       }
       //Check if a solution for RAW2 is found and if not give the user the option to access the timings info.
-      if (results.decode_type == decode_type_t::UNKNOWN && !displayRawToReadableB32Hex())
+      if (results.decode_type == decode_type_t::UNKNOWN 
+      #ifdef P016_P035_USE_RAW_RAW2
+       && !displayRawToReadableB32Hex()
+      #endif
+      )
       {
         addLog(LOG_LEVEL_INFO, F("IR: No replay solutions found! Press button again or try RAW encoding (timmings are in the serial output)"));
         serialPrint(String(F("IR: RAW TIMINGS: ")) + resultToSourceCode(&results));
@@ -298,7 +302,7 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
 // by GusPS is that it allows easy inspections and modifications after the code is constructed.
 //
 // Author: Gilad Raz (jazzgil)  23sep2018
-
+#ifdef P016_P035_USE_RAW_RAW2
 boolean displayRawToReadableB32Hex()
 {
   String line;
@@ -425,5 +429,6 @@ unsigned int storeB32Hex(char out[], unsigned int iOut, unsigned int val)
   out[iOut++] = to_32hex(val);
   return iOut;
 }
+#endif //P016_P035_RAW_RAW2
 
 #endif // USES_P016
