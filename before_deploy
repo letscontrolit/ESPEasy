@@ -94,16 +94,16 @@ do
     FILESIZE=$(stat -c%s `echo "${FIRMWARE_BIN}"` )
     if (( FILESIZE < MAX_FILESIZE )); then
       echo
-      echo "SUCCESS:  $FILESIZE < $MAX_FILESIZE Bytes. \t(${ENV})" >> ${BUILD_LOG}
+      echo "SUCCESS:  $FILESIZE < $MAX_FILESIZE Bytes. (${ENV})" >> ${BUILD_LOG}
       BIN=${BINARY_PATH}/${ENV}/ESP_Easy_${VERSION}_${ENV}.bin
       cp ${FIRMWARE_BIN} $BIN
       python2 crc2.py $BIN
       mv $BIN "${TMP_DIST}/bin/ESP_Easy_${VERSION}_${ENV}.bin"
     else
-      echo "FAILED: too large $FILESIZE > $MAX_FILESIZE Bytes. \t(${ENV})" >> ${BUILD_LOG}
+      echo "FAILED: too large $FILESIZE > $MAX_FILESIZE Bytes. (${ENV})" >> ${BUILD_LOG}
     fi
   else
-    echo "FAILED: No file created. \t(${ENV})" >> ${BUILD_LOG}
+    echo "FAILED: No file created. (${ENV})" >> ${BUILD_LOG}
   fi
 
   ELFFILE=`echo "${BINARY_PATH}/${ENV}/firmware.elf"`
