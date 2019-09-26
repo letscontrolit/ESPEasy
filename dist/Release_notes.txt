@@ -1,4 +1,74 @@
 -------------------------------------------------
+Changes in release mega-20190926 (since mega-20190925)
+-------------------------------------------------
+
+Release date: Thu Sep 26 04:00:05 CEST 2019
+
+Gijs Noorlander (58):
+      [Rules] Reduce memory usage when parsing rules templates
+      [Modbus RTU] Add "timeout" and "no data" as error
+      [Build] No longer ignore IR libraries to allow IR builds from Vagrant
+      [Travis] Do not remove old builds to reduce build time
+      [Travis] Add .pio dir as cache directory
+      [Build] Remove some build types from the nightly build
+      [Travis] Change Ubuntu 14.04 to 18.04 for builds
+      [Rules] Allow transformations on [var#n] and add [int#n]
+      [Cache] Add cache to help find task value name.
+      [Rules] Some minor code improvements (suggests from @uzi18 )
+      [C014 Homie] Use cached functions to find task value by name
+      [Rules] Compatibility Replace %eventvalue% by using the 1st argument
+      [Build] Remove debug logs from 1M builds
+      [Rules] Only match task value names which can be set
+      Only include HttpClient when Settings Archive is being used
+      [cleanup] make it compile again on ArduinoIDE
+      [Custom.h] Storage layout parameters moved and wrapped in #ifndef
+      [Storage layout] Add suggestions for 24 tasks layout
+      [Custom.h] Allow for other defines to be set by the user.
+      [Build] Fix include path to make ArduinoIDE able to build again
+      [Travis CI] Reduce Travis test build duration
+      [PIO] Use original platform for core 2.6.0, not Tasmota's one
+      [Travis] Disable Travis cache
+      [Build] Make sure Custom.h is leading during compilation.
+      [ESP32] Fix build when SettingsArchive is set in Custom.h
+      Fix using includes to get defines right during compile
+      Move all header files in Commands/*.h to src/Commands/ for ArduinoIDE
+      [Build] Fix path change in include
+      Initial step for proper declaring global variables in .h files
+      [Build] Another forgotten path update in moved .h file
+      Move defines out of ESPEasy-Globals.h
+      Move Plugin administration from ESPEasy-Globals.h to Globals/Plugin.h
+      Move Logging from ESPEasy-Globals.h to Globals/Logging.h
+      Move Cache from ESPEasy-Globals.h to Globals/Cache.h
+      Move RTC from ESPEasy-Globals.h to Globals/RTC.h
+      Move Nodes from ESPEasy-Globals.h to Globals/Nodes.h
+      Move FactDefPrefs & CRCValues from ESPEasy-Globals.h to Globals/...h
+      Move Device array from ESPEasy-Globals.h to Globals/Device.h
+      Move SecuritySettings from ESPEasy-Globals.h to Globals/SecuritySettings.h
+      Move ExtraTaskSettings from ESPEasy-Globals.h to Globals/...h
+      Move Settings from ESPEasy-Globals.h to Globals/Settings.h
+      Split Diagnostic.h & ESPEasyWiFiEvent.h into .h/.cpp
+      [Arduino IDE] Make include paths relative to file location
+      [Build] Forgotten include of MQTT related global variable.
+      [Cleanup] Remove FIXME/TODO remarks which are now done.
+      [Arduino IDE] Fix path in includes.
+      [ESP32] Fix storage layout on ESP32 settings file.
+      Uncrustify P022_PCA9685
+      [PCA9685] Add range checks and memory optimization
+      [PIO] Switch to core_stage for core 2.6.0 builds
+      [Build] Fix pre_extra_script.py  build Cpp defines
+      [Build] Add Custom ESP32 and disable plugins to reduce binary size
+      Define build info from ESPEasy_common.h
+      [Docs] Describe project directory structure
+      Turn SettingsStruct into templated variable
+      Create build log txt file to track missing files
+      Show the build log text at the end of the build
+      Small fix in creating build log file
+
+TD-er (1):
+      [PIO] Update core 2.5.2 to espressif8266@2.2.3
+
+
+-------------------------------------------------
 Changes in release mega-20190925 (since mega-20190910)
 -------------------------------------------------
 
