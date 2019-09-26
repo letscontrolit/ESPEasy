@@ -665,19 +665,19 @@ TEST(TestIRPanasonicAcClass, SetAndGetSwings) {
   pana.setSwingVertical(kPanasonicAcSwingVAuto);
   EXPECT_EQ(kPanasonicAcSwingVAuto, pana.getSwingVertical());
 
-  pana.setSwingVertical(kPanasonicAcSwingVUp);
-  EXPECT_EQ(kPanasonicAcSwingVUp, pana.getSwingVertical());
-  pana.setSwingVertical(kPanasonicAcSwingVUp - 1);
-  EXPECT_EQ(kPanasonicAcSwingVUp, pana.getSwingVertical());
-  pana.setSwingVertical(kPanasonicAcSwingVUp + 1);
-  EXPECT_EQ(kPanasonicAcSwingVUp + 1, pana.getSwingVertical());
+  pana.setSwingVertical(kPanasonicAcSwingVHighest);
+  EXPECT_EQ(kPanasonicAcSwingVHighest, pana.getSwingVertical());
+  pana.setSwingVertical(kPanasonicAcSwingVHighest - 1);
+  EXPECT_EQ(kPanasonicAcSwingVHighest, pana.getSwingVertical());
+  pana.setSwingVertical(kPanasonicAcSwingVHighest + 1);
+  EXPECT_EQ(kPanasonicAcSwingVHighest + 1, pana.getSwingVertical());
 
-  pana.setSwingVertical(kPanasonicAcSwingVDown);
-  EXPECT_EQ(kPanasonicAcSwingVDown, pana.getSwingVertical());
-  pana.setSwingVertical(kPanasonicAcSwingVDown + 1);
-  EXPECT_EQ(kPanasonicAcSwingVDown, pana.getSwingVertical());
-  pana.setSwingVertical(kPanasonicAcSwingVDown - 1);
-  EXPECT_EQ(kPanasonicAcSwingVDown - 1, pana.getSwingVertical());
+  pana.setSwingVertical(kPanasonicAcSwingVLowest);
+  EXPECT_EQ(kPanasonicAcSwingVLowest, pana.getSwingVertical());
+  pana.setSwingVertical(kPanasonicAcSwingVLowest + 1);
+  EXPECT_EQ(kPanasonicAcSwingVLowest, pana.getSwingVertical());
+  pana.setSwingVertical(kPanasonicAcSwingVLowest - 1);
+  EXPECT_EQ(kPanasonicAcSwingVLowest - 1, pana.getSwingVertical());
 
   pana.setSwingVertical(kPanasonicAcSwingVAuto);
   EXPECT_EQ(kPanasonicAcSwingVAuto, pana.getSwingVertical());
@@ -737,8 +737,8 @@ TEST(TestIRPanasonicAcClass, QuietAndPowerful) {
 TEST(TestIRPanasonicAcClass, HumanReadable) {
   IRPanasonicAc pana(0);
   EXPECT_EQ(
-      "Model: 4 (JKE), Power: Off, Mode: 0 (AUTO), Temp: 0C, "
-      "Fan: 253 (UNKNOWN), Swing (Vertical): 0 (UNKNOWN), Quiet: Off, "
+      "Model: 4 (JKE), Power: Off, Mode: 0 (Auto), Temp: 0C, "
+      "Fan: 253 (UNKNOWN), Swing(V): 0 (UNKNOWN), Quiet: Off, "
       "Powerful: Off, Clock: 00:00, On Timer: Off, Off Timer: Off",
       pana.toString());
   pana.setPower(true);
@@ -748,24 +748,24 @@ TEST(TestIRPanasonicAcClass, HumanReadable) {
   pana.setSwingVertical(kPanasonicAcSwingVAuto);
   pana.setPowerful(true);
   EXPECT_EQ(
-      "Model: 4 (JKE), Power: On, Mode: 4 (HEAT), Temp: 30C, "
-      "Fan: 4 (High), Swing (Vertical): 15 (AUTO), Quiet: Off, "
+      "Model: 4 (JKE), Power: On, Mode: 4 (Heat), Temp: 30C, "
+      "Fan: 4 (High), Swing(V): 15 (Auto), Quiet: Off, "
       "Powerful: On, Clock: 00:00, On Timer: Off, Off Timer: Off",
       pana.toString());
   pana.setQuiet(true);
   pana.setModel(kPanasonicLke);
   EXPECT_EQ(
-      "Model: 1 (LKE), Power: Off, Mode: 4 (HEAT), Temp: 30C, "
-      "Fan: 4 (High), Swing (Vertical): 15 (AUTO), "
-      "Swing (Horizontal): 6 (Middle), Quiet: On, Powerful: Off, "
+      "Model: 1 (LKE), Power: Off, Mode: 4 (Heat), Temp: 30C, "
+      "Fan: 4 (High), Swing(V): 15 (Auto), "
+      "Swing(H): 6 (Middle), Quiet: On, Powerful: Off, "
       "Clock: 00:00, On Timer: 00:00, Off Timer: Off",
       pana.toString());
   pana.setModel(kPanasonicDke);
   pana.setSwingHorizontal(kPanasonicAcSwingHRight);
   EXPECT_EQ(
-      "Model: 3 (DKE), Power: Off, Mode: 4 (HEAT), Temp: 30C, "
-      "Fan: 4 (High), Swing (Vertical): 15 (AUTO), "
-      "Swing (Horizontal): 11 (Right), Quiet: On, Powerful: Off, "
+      "Model: 3 (DKE), Power: Off, Mode: 4 (Heat), Temp: 30C, "
+      "Fan: 4 (High), Swing(V): 15 (Auto), "
+      "Swing(H): 11 (Right), Quiet: On, Powerful: Off, "
       "Clock: 00:00, On Timer: Off, Off Timer: Off",
       pana.toString());
 }
@@ -856,8 +856,8 @@ TEST(TestDecodePanasonicAC, SyntheticExample) {
   IRPanasonicAc pana(0);
   pana.setRaw(irsend.capture.state);
   EXPECT_EQ(
-      "Model: 4 (JKE), Power: Off, Mode: 3 (COOL), Temp: 25C, "
-      "Fan: 7 (Auto), Swing (Vertical): 15 (AUTO), Quiet: Off, "
+      "Model: 4 (JKE), Power: Off, Mode: 3 (Cool), Temp: 25C, "
+      "Fan: 7 (Auto), Swing(V): 15 (Auto), Quiet: Off, "
       "Powerful: Off, Clock: 00:00, On Timer: Off, Off Timer: Off",
       pana.toString());
 }
@@ -935,9 +935,9 @@ TEST(TestDecodePanasonicAC, Issue540) {
   pana.setRaw(irsend.capture.state);
   // TODO(crankyoldgit): Try to figure out what model this should be.
   EXPECT_EQ(
-      "Model: 0 (UNKNOWN), Power: On, Mode: 3 (COOL), Temp: 26C, "
-      "Fan: 7 (Auto), Swing (Vertical): 15 (AUTO), "
-      "Swing (Horizontal): 13 (AUTO), Quiet: Off, Powerful: Off, "
+      "Model: 0 (UNKNOWN), Power: On, Mode: 3 (Cool), Temp: 26C, "
+      "Fan: 7 (Auto), Swing(V): 15 (Auto), "
+      "Swing(H): 13 (Auto), Quiet: Off, Powerful: Off, "
       "Clock: 00:00, On Timer: Off, Off Timer: Off",
       pana.toString());
 }
@@ -1115,8 +1115,8 @@ TEST(TestDecodePanasonicAC, CkpModelSpecifics) {
   IRPanasonicAc pana(0);
   pana.setRaw(irsend.capture.state);
   EXPECT_EQ(
-      "Model: 5 (CKP), Power: Off, Mode: 4 (HEAT), Temp: 23C, "
-      "Fan: 7 (Auto), Swing (Vertical): 15 (AUTO), Quiet: Off, "
+      "Model: 5 (CKP), Power: Off, Mode: 4 (Heat), Temp: 23C, "
+      "Fan: 7 (Auto), Swing(V): 15 (Auto), Quiet: Off, "
       "Powerful: On, Clock: 00:00, On Timer: 00:00, Off Timer: 00:00",
       pana.toString());
 
@@ -1164,4 +1164,17 @@ TEST(TestIRPanasonicAcClass, toCommon) {
   ASSERT_FALSE(ac.toCommon().beep);
   ASSERT_EQ(-1, ac.toCommon().sleep);
   ASSERT_EQ(-1, ac.toCommon().clock);
+
+  // Ref: https://github.com/crankyoldgit/IRremoteESP8266/issues/921#issuecomment-532267240
+  ac.setSwingVertical(kPanasonicAcSwingVLow);
+  ASSERT_EQ(stdAc::swingv_t::kLow, ac.toCommon().swingv);
+  // Real data.
+  uint8_t swingVMiddle[27] = {
+      0x02, 0x20, 0xE0, 0x04, 0x00, 0x00, 0x00, 0x06, 0x02, 0x20, 0xE0, 0x04,
+      0x00, 0x39, 0x32, 0x80, 0x73, 0x00, 0x00, 0x0E, 0xE0, 0x00, 0x00, 0x89,
+      0x00, 0x00, 0xDB};
+  ac.setRaw(swingVMiddle);
+  ASSERT_EQ(stdAc::swingv_t::kMiddle, ac.toCommon().swingv);
+  ASSERT_EQ(kPanasonicAcSwingVMiddle,
+            IRPanasonicAc::convertSwingV(stdAc::swingv_t::kMiddle));
 }
