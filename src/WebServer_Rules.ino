@@ -1,9 +1,4 @@
-#ifndef WEBSERVER_RULES_DEBUG
-  # define WEBSERVER_RULES_DEBUG 1
-#endif // ifndef WEBSERVER_RULES_DEBUG
-#ifdef BUILD_MINIMAL_OTA
-  # undef WEBSERVER_RULES_DEBUG
-#endif // ifdef BUILD_MINIMAL_OTA
+// #define WEBSERVER_RULES_DEBUG
 
 
 // ********************************************************************************

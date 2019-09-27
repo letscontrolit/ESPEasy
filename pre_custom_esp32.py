@@ -13,7 +13,7 @@ import os
 # - frameworks
 # - dependent libraries
 env.Append(CPPDEFINES=[
-  ("WEBSERVER_RULES_DEBUG", "0")
+#  ("WEBSERVER_RULES_DEBUG", "1")
 ])
 if os.path.isfile('src/Custom.h'):
   env['CPPDEFINES'].append("USE_CUSTOM_H")
