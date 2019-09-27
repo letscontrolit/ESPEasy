@@ -27,7 +27,7 @@
 # undef BUILD_GIT
 #endif // ifdef BUILD_GIT
 
-#define BUILD_GIT           "My Build: "  __DATE__  __TIME__
+#define BUILD_GIT           "My Build: "  __DATE__ " "  __TIME__
 
 
 #define DEFAULT_NAME        "MyEspEasyDevice"                        // Enter your device friendly name
