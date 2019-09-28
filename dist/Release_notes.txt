@@ -1,4 +1,22 @@
 -------------------------------------------------
+Changes in release mega-20190928 (since mega-20190926)
+-------------------------------------------------
+
+Release date: Sat Sep 28 04:00:07 CEST 2019
+
+Gijs Noorlander (3):
+      [Build] Fix binary size check for xxx_1M builds
+      [Build] Build log file does not interpret /t
+      [Build] Fix use of flag BUILD_NO_DEBUG
+
+Saverio Cisternino (1):
+      Update ccronexpr library to v20190415
+
+jimmys01 (1):
+      Add to PLUGIN_SET_ONLY_TEMP_HUM left over sensors
+
+
+-------------------------------------------------
 Changes in release mega-20190926 (since mega-20190925)
 -------------------------------------------------
 
