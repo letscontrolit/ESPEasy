@@ -125,6 +125,7 @@ try:
     plugins.append('USE_SETTINGS_ARCHIVE')
     plugins.append('WEBSERVER_RULES_DEBUG=1')
     plugins.append('WEBSERVER_TIMINGSTATS')
+    plugins.append('WEBSERVER_NEW_UI')
 
     
 

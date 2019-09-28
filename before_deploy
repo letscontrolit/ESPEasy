@@ -3,6 +3,7 @@
 VERSION=$(git describe)
 TMP_DIST=`mktemp -d`
 CURPATH=`pwd`
+BUILD_LOG=`echo "${TMP_DIST}/buildlog.txt"`
 
 # PIO 3.x :
 # BINARY_PATH=".pioenvs"
@@ -72,11 +73,11 @@ for ENV in \
   hard_Ventus_W266;\
 do
   MAX_FILESIZE=1044464
-  if [[ ${ENV} == *"1M"* ]]; then
+  if [[ ${ENV} == *"_1M"* ]]; then
     # max 871 kiB
     MAX_FILESIZE=892912
   fi
-  if [[ ${ENV} == *"1M_OTA"* ]]; then
+  if [[ ${ENV} == *"_1M_OTA"* ]]; then
     # max 602 kiB
     MAX_FILESIZE=616448
   fi
@@ -88,18 +89,21 @@ do
   fi
 
   FIRMWARE_BIN=`echo "${BINARY_PATH}/${ENV}/firmware.bin"`
+
   if [ -f $FIRMWARE_BIN ]; then
     FILESIZE=$(stat -c%s `echo "${FIRMWARE_BIN}"` )
     if (( FILESIZE < MAX_FILESIZE )); then
       echo
-      echo "### Deploying environment $ENV for version $VERSION"
+      echo "SUCCESS:  $FILESIZE < $MAX_FILESIZE Bytes. (${ENV})" >> ${BUILD_LOG}
       BIN=${BINARY_PATH}/${ENV}/ESP_Easy_${VERSION}_${ENV}.bin
       cp ${FIRMWARE_BIN} $BIN
       python2 crc2.py $BIN
       mv $BIN "${TMP_DIST}/bin/ESP_Easy_${VERSION}_${ENV}.bin"
     else
-      echo "Build too large for $ENV $FILESIZE > $MAX_FILESIZE "
+      echo "FAILED: too large $FILESIZE > $MAX_FILESIZE Bytes. (${ENV})" >> ${BUILD_LOG}
     fi
+  else
+    echo "FAILED: No file created. (${ENV})" >> ${BUILD_LOG}
   fi
 
   ELFFILE=`echo "${BINARY_PATH}/${ENV}/firmware.elf"`
@@ -110,6 +114,7 @@ do
     objdump  -s -j .rodata ${ELFFILE} > ${STRINGS_STATS}
   fi
 done
+
 
 #create a source structure that is the same as the original ESPEasy project (and works with the howto on the wiki)
 #rm -rf dist/Source 2>/dev/null
@@ -124,6 +129,12 @@ cd ${TMP_DIST}
 echo
 echo "### Creating zip archive"
 zip -qq ${CURPATH}/ESPEasy_$VERSION.zip -r .
+
+
+
+# Display the build log.
+cat ${BUILD_LOG}
+
 
 rm -Rf ${TMP_DIST}/* 2>/dev/null
 rmdir ${TMP_DIST}
