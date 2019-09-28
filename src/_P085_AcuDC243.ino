@@ -166,39 +166,63 @@ boolean Plugin_085(byte function, struct EventStruct *event, String &string) {
         addFormNote(detectedString);
       }
       addRowLabel(F("Checksum (pass/fail/nodata)"));
-      uint32_t reads_pass, reads_crc_failed, reads_nodata;
-      P085_data->modbus.getStatistics(reads_pass, reads_crc_failed, reads_nodata);
-      String chksumStats;
-      chksumStats = reads_pass;
-      chksumStats += '/';
-      chksumStats += reads_crc_failed;
-      chksumStats += '/';
-      chksumStats += reads_nodata;
-      addHtml(chksumStats);
+        uint32_t reads_pass, reads_crc_failed, reads_nodata;
+        P085_data->modbus.getStatistics(reads_pass, reads_crc_failed, reads_nodata);
+        String chksumStats;
+        chksumStats  = reads_pass;
+        chksumStats += '/';
+        chksumStats += reads_crc_failed;
+        chksumStats += '/';
+        chksumStats += reads_nodata;
+        addHtml(chksumStats);
 
-      addFormSubHeader(F("Calibration"));
-      // Calibration data is stored in the AcuDC module, not in the settings of ESPeasy.
-      addFormNumericBox(F("Full Range Voltage Value"), F("p085_fr_volt"), P085_data->modbus.readHoldingRegister(0x107), 5, 9999);
-      addUnit(F("V"));
+        addFormSubHeader(F("Calibration"));
 
-      addFormNumericBox(F("Full Range Current Value"), F("p085_fr_curr"), P085_data->modbus.readHoldingRegister(0x104), 20, 50000);
-      addUnit(F("A"));
+        // Calibration data is stored in the AcuDC module, not in the settings of ESPeasy.
+        {
+          byte errorcode = 0;
+          int  value     = P085_data->modbus.readHoldingRegister(0x107, errorcode);
 
-      addFormNumericBox(F("Full Range Shunt Value"), F("p085_fr_shunt"), P085_data->modbus.readHoldingRegister(0x105), 50, 100);
-      addUnit(F("mV"));
+          if (errorcode == 0) {
+            addFormNumericBox(F("Full Range Voltage Value"), F("p085_fr_volt"), value, 5, 9999);
+            addUnit(F("V"));
+          }
+          value = P085_data->modbus.readHoldingRegister(0x104, errorcode);
 
-      addFormSubHeader(F("Logging"));
+          if (errorcode == 0) {
+            addFormNumericBox(F("Full Range Current Value"), F("p085_fr_curr"), value, 20, 50000);
+            addUnit(F("A"));
+          }
+          value = P085_data->modbus.readHoldingRegister(0x105, errorcode);
 
-      addFormCheckBox(F("Enable data logging"), F("p085_en_log"), P085_data->modbus.readHoldingRegister(0x500));
+          if (errorcode == 0) {
+            addFormNumericBox(F("Full Range Shunt Value"), F("p085_fr_shunt"), value, 50, 100);
+            addUnit(F("mV"));
+          }
 
-      addRowLabel(F("Mode of data logging"));
-      addHtml(String(P085_data->modbus.readHoldingRegister(0x501)));
+          addFormSubHeader(F("Logging"));
 
-      addFormNumericBox(F("Log Interval"), F("p085_log_int"), P085_data->modbus.readHoldingRegister(0x502), 1, 1440);
-      addUnit(F("minutes"));
+          value = P085_data->modbus.readHoldingRegister(0x500, errorcode);
 
-      addFormSubHeader(F("Logged Values"));
-      p085_showValueLoadPage(P085_QUERY_Wh_imp, event);
+          if (errorcode == 0) {
+            addFormCheckBox(F("Enable data logging"), F("p085_en_log"), value);
+          }
+          value = P085_data->modbus.readHoldingRegister(0x501, errorcode);
+
+          if (errorcode == 0) {
+            addRowLabel(F("Mode of data logging"));
+            addHtml(String(value));
+          }
+          value = P085_data->modbus.readHoldingRegister(0x502, errorcode);
+
+          if (errorcode == 0) {
+            addFormNumericBox(F("Log Interval"), F("p085_log_int"), value, 1, 1440);
+            addUnit(F("minutes"));
+          }
+        }
+
+        addFormSubHeader(F("Logged Values"));
+        p085_showValueLoadPage(P085_QUERY_Wh_imp, event);
       p085_showValueLoadPage(P085_QUERY_Wh_exp, event);
       p085_showValueLoadPage(P085_QUERY_Wh_tot, event);
       p085_showValueLoadPage(P085_QUERY_Wh_net, event);

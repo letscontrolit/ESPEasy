@@ -544,10 +544,11 @@ struct ModbusRTU_struct  {
 
   uint32_t read_32b_InputRegister(short address) {
     uint32_t result = 0;
-    int idHigh      = readInputRegister(address);
-    int idLow       = readInputRegister(address + 1);
-
-    if ((idHigh >= 0) && (idLow >= 0)) {
+    byte errorcode;
+    int idHigh      = readInputRegister(address, errorcode);
+    if (errorcode != 0) return result;
+    int idLow       = readInputRegister(address + 1, errorcode);
+    if (errorcode == 0) {
       result  = idHigh;
       result  = result << 16;
       result += idLow;
@@ -576,22 +577,28 @@ struct ModbusRTU_struct  {
     //    return fval;
   }
 
-  int readInputRegister(short address) {
+  int readInputRegister(short address, byte& errorcode) {
     // Only read 1 register
-    return process_16b_register(_modbus_address, MODBUS_READ_INPUT_REGISTERS, address, 1);
+    return process_16b_register(_modbus_address, MODBUS_READ_INPUT_REGISTERS, address, 1, errorcode);
   }
 
-  int readHoldingRegister(short address) {
+  int readHoldingRegister(short address, byte& errorcode) {
     // Only read 1 register
     return process_16b_register(
-      _modbus_address, MODBUS_READ_HOLDING_REGISTERS, address, 1);
+      _modbus_address, MODBUS_READ_HOLDING_REGISTERS, address, 1, errorcode);
   }
 
   // Write to holding register.
   int writeSingleRegister(short address, short value) {
+    // No check for the specific error code.
+    byte errorcode = 0;
+    return writeSingleRegister(address, value, errorcode);
+  }
+
+  int writeSingleRegister(short address, short value, byte& errorcode) {
     // GN: Untested, will probably not work
     return process_16b_register(
-      _modbus_address, MODBUS_WRITE_SINGLE_REGISTER, address, value);
+      _modbus_address, MODBUS_WRITE_SINGLE_REGISTER, address, value, errorcode);
   }
 
   // Function 16 (0x10) "Write Multiple Registers" to write to a single holding register
@@ -672,15 +679,16 @@ struct ModbusRTU_struct  {
   }
 
   int process_16b_register(byte slaveAddress, byte functionCode,
-                           short startAddress, short parameter) {
+                           short startAddress, short parameter,
+                           byte& errorcode) {
     buildFrame(slaveAddress, functionCode, startAddress, parameter);
-    const byte process_result = processCommand();
+    errorcode = processCommand();
 
-    if (process_result == 0) {
+    if (errorcode == 0) {
       return (_recv_buf[3] << 8) | (_recv_buf[4]);
     }
-    logModbusException(process_result);
-    return -1 * process_result;
+    logModbusException(errorcode);
+    return -1;
   }
 
   // Still writing single register, but calling it using "Preset Multiple Registers" function (FC=16)
@@ -725,12 +733,13 @@ struct ModbusRTU_struct  {
   }
 
   unsigned int read_RAM_EEPROM(byte command, byte startAddress,
-                               byte nrBytes) {
+                               byte nrBytes,
+                               byte& errorcode) {
     buildRead_RAM_EEPROM(_modbus_address, command,
                          startAddress, nrBytes);
-    const byte process_result = processCommand();
+    errorcode = processCommand();
 
-    if (process_result == 0) {
+    if (errorcode == 0) {
       unsigned int result = 0;
 
       for (int i = 0; i < _recv_buf[2]; ++i) {
@@ -739,8 +748,8 @@ struct ModbusRTU_struct  {
       }
       return result;
     }
-    logModbusException(process_result);
-    return -1 * process_result;
+    logModbusException(errorcode);
+    return 0;
   }
 
   // Compute the MODBUS RTU CRC

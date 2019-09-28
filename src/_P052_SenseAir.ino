@@ -276,43 +276,48 @@ boolean Plugin_052(byte function, struct EventStruct *event, String &string) {
         chksumStats += reads_nodata;
         addHtml(chksumStats);
 
-        int value = P052_data->modbus.readInputRegister(0x06);
-        if (value != -1) {
+        byte errorcode = 0;
+        int value = P052_data->modbus.readInputRegister(0x06, errorcode);
+        if (errorcode == 0) {
           addRowLabel(F("Measurement Count"));
           addHtml(String(value));
         }
 
-        value = P052_data->modbus.readInputRegister(0x07);
-        if (value != -1) {
+        value = P052_data->modbus.readInputRegister(0x07, errorcode);
+        if (errorcode == 0) {
           addRowLabel(F("Measurement Cycle time"));
           addHtml(String(value * 2));
         }
 
-        value = P052_data->modbus.readInputRegister(0x08);
-        if (value != -1) {
+        value = P052_data->modbus.readInputRegister(0x08, errorcode);
+        if (errorcode == 0) {
           addRowLabel(F("Unfiltered CO2"));
           addHtml(String(value));
         }
       }
 
       {
-        int meas_mode = P052_data->modbus.readHoldingRegister(0x0A);
-        int period = P052_data->modbus.readHoldingRegister(0x0B);
-        int samp_meas = P052_data->modbus.readHoldingRegister(0x0C);
-        if (meas_mode != -1 || period != -1 || samp_meas != -1) {
+        byte errorcode = 0;
+        int meas_mode = P052_data->modbus.readHoldingRegister(0x0A, errorcode);
+        bool has_meas_mode = errorcode == 0;
+        int period = P052_data->modbus.readHoldingRegister(0x0B, errorcode);
+        bool has_period = errorcode == 0;
+        int samp_meas = P052_data->modbus.readHoldingRegister(0x0C, errorcode);
+        bool has_samp_meas = errorcode == 0;
+        if (has_meas_mode || has_period || has_samp_meas) {
           addFormSubHeader(F("Device Settings"));
           // Disable selector for now, since single measurement not yet supported.
           /*
-          if (meas_mode != -1) {
+          if (has_meas_mode) {
             String options[2] = { F("Continuous"), F("Single Measurement") };
             addFormSelector(F("Measurement Mode"), F("p052_mode"), 2, options, NULL, meas_mode);
           }
           */
-          if (period != -1) {
+          if (has_period) {
             addFormNumericBox(F("Measurement Period"), F("p052_period"), period, 2, 65534);
             addUnit(F("s"));
           }
-          if (samp_meas != -1) {
+          if (has_samp_meas) {
             addFormNumericBox(F("Samples per measurement"), F("p052_samp_meas"), samp_meas, 1, 1024);
           }
         }
@@ -360,22 +365,34 @@ boolean Plugin_052(byte function, struct EventStruct *event, String &string) {
     if (nullptr != P052_data && P052_data->isInitialized()) {
       bool changed = false;
       uint16_t mode = getFormItemInt(F("p052_mode"), 65535);
-      if ((mode == 0 || mode == 1) && P052_data->modbus.readHoldingRegister(0x0A) != mode) {
-        P052_data->modbus.writeMultipleRegisters(0x0A, mode);
-        delay(0);
-        changed = true;
+      if ((mode == 0 || mode == 1)) {
+        byte errorcode;
+        int readVal = P052_data->modbus.readHoldingRegister(0x0A, errorcode);
+        if (errorcode == 0 && readVal != mode) {
+          P052_data->modbus.writeMultipleRegisters(0x0A, mode);
+          delay(0);
+          changed = true;
+        }
       }
       uint16_t period = getFormItemInt(F("p052_period"), 0);
-      if (period > 1 && P052_data->modbus.readHoldingRegister(0x0B) != period) {
-        P052_data->modbus.writeMultipleRegisters(0x0B, period);
-        delay(0);
-        changed = true;
+      if (period > 1) {
+        byte errorcode;
+        int readVal = P052_data->modbus.readHoldingRegister(0x0B, errorcode);
+        if (errorcode == 0 && readVal != period) {
+          P052_data->modbus.writeMultipleRegisters(0x0B, period);
+          delay(0);
+          changed = true;
+        }
       }
       uint16_t samp_meas = getFormItemInt(F("p052_samp_meas"), 0);
-      if (samp_meas > 0 && samp_meas <= 1024 && P052_data->modbus.readHoldingRegister(0x0C) != samp_meas) {
-        P052_data->modbus.writeMultipleRegisters(0x0C, samp_meas);
-        delay(0);
-        changed = true;
+      if (samp_meas > 0 && samp_meas <= 1024) {
+        byte errorcode;
+        int readVal = P052_data->modbus.readHoldingRegister(0x0C, errorcode);
+        if (errorcode == 0 && readVal != samp_meas) {
+          P052_data->modbus.writeMultipleRegisters(0x0C, samp_meas);
+          delay(0);
+          changed = true;
+        }
       }
       if (changed) {
         // Restart sensor.
@@ -442,52 +459,51 @@ boolean Plugin_052(byte function, struct EventStruct *event, String &string) {
       String log = F("Senseair: ");
       String logPrefix;
       for (int varnr = 0; varnr < P052_NR_OUTPUT_VALUES; ++varnr) {
-        int value = 0;
+        byte errorcode = 0;
+        float value = 0;
         switch (PCONFIG(varnr)) {
           case 1: {
-            value = P052_data->modbus.readInputRegister(P052_IR_SPACE_CO2);
+            value = P052_data->modbus.readInputRegister(P052_IR_SPACE_CO2, errorcode);
             logPrefix = F("co2 = ");
             break;
           }
           case 2: {
-            int temperatureX100 = P052_data->modbus.readInputRegister(P052_IR_TEMPERATURE);
-            if (temperatureX100 == -1) {
+            int temperatureX100 = P052_data->modbus.readInputRegister(P052_IR_TEMPERATURE, errorcode);
+            if (errorcode != 0) {
               // SenseAir S8, not for other modules.
               temperatureX100 = P052_data->modbus.read_RAM_EEPROM(
-                  P052_CMD_READ_RAM, P052_RAM_ADDR_DET_TEMPERATURE, 2);
+                  P052_CMD_READ_RAM, P052_RAM_ADDR_DET_TEMPERATURE, 2, errorcode);
             }
-            float temperature = static_cast<float>(temperatureX100) / 100.0;
-            UserVar[event->BaseVarIndex + varnr] = (float)temperature;
-            log += F("temperature = ");
-            log += (float)temperature;
+            value = static_cast<float>(temperatureX100) / 100.0;
+            logPrefix = F("temperature = ");
             break;
           }
           case 3: {
-            int rhX100 = P052_data->modbus.readInputRegister(P052_IR_SPACE_HUMIDITY);
-            float rh = static_cast<float>(rhX100) / 100.0;
-            UserVar[event->BaseVarIndex + varnr] = rh;
-            log += F("humidity = ");
-            log += rh;
+            int rhX100 = P052_data->modbus.readInputRegister(P052_IR_SPACE_HUMIDITY, errorcode);
+            value = static_cast<float>(rhX100) / 100.0;
+            logPrefix = F("humidity = ");
             break;
           }
           case 4: {
-            int status = P052_data->modbus.readInputRegister(0x1C);
+            int status = P052_data->modbus.readInputRegister(0x1C, errorcode);
+            if (errorcode == 0) {
             int relayStatus = (status >> 8) & 0x1;
             UserVar[event->BaseVarIndex + varnr] = relayStatus;
             log += F("relay status = ");
             log += relayStatus;
+            }
             break;
           }
           case 5: {
-            int temperatureAdjustment = P052_data->modbus.readInputRegister(0x0A);
-            UserVar[event->BaseVarIndex + varnr] = temperatureAdjustment;
-            log += F("temperature adjustment = ");
-            log += temperatureAdjustment;
+            int temperatureAdjustment = P052_data->modbus.readInputRegister(0x0A, errorcode);
+            value = static_cast<float>(temperatureAdjustment);
+            logPrefix = F("temperature adjustment = ");
             break;
           }
 
           case 7: {
-            int errorWord = P052_data->modbus.readInputRegister(P052_IR_ERRORSTATUS);
+            int errorWord = P052_data->modbus.readInputRegister(P052_IR_ERRORSTATUS, errorcode);
+            if (errorcode == 0) {
             for (size_t i = 0; i < 9; i++) {
               if (bitRead(errorWord, i)) {
                 UserVar[event->BaseVarIndex + varnr] = i;
@@ -495,6 +511,7 @@ boolean Plugin_052(byte function, struct EventStruct *event, String &string) {
                 log += i;
                 break;
               }
+            }
             }
 
             UserVar[event->BaseVarIndex + varnr] = -1;
