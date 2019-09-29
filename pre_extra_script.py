@@ -36,6 +36,9 @@ else:
     "USES_P085",  # AcuDC24x
     "USES_P087",  # Serial Proxy
 
+    "USES_C016",  # Cache Controller
+    "USES_C018",  # TTN/RN2483
+
     "USE_SETTINGS_ARCHIVE"
   ])
 

@@ -1471,7 +1471,8 @@ String parseTemplate(String& tmpString, byte lineSize)
     // First copy all upto the start of the [...#...] part to be replaced.
     newString += tmpString.substring(lastStartpos, startpos);
     
-    if (deviceName.equalsIgnoreCase(F("Plugin")))
+    // deviceName is lower case, so we can compare literal string (no need for equalsIgnoreCase)
+    if (deviceName.equals(F("plugin")))
     {
       // Handle a plugin request.
       // For example: "[Plugin#GPIO#Pinstate#N]"
@@ -1490,7 +1491,7 @@ String parseTemplate(String& tmpString, byte lineSize)
         newString += command;
       }
     }
-    else if (deviceName.equalsIgnoreCase(F("Var")) || deviceName.equalsIgnoreCase(F("Int"))) 
+    else if (deviceName.equals(F("var")) || deviceName.equals(F("int"))) 
     {
       // Address an internal variable either as float or as int
       // For example: Let,10,[VAR#9]
@@ -1499,7 +1500,7 @@ String parseTemplate(String& tmpString, byte lineSize)
       if (validIntFromString(valueName, varNum)) {
         if ((varNum > 0) && (varNum <= CUSTOM_VARS_MAX)) {
           unsigned char nr_decimals = 2;
-          if (deviceName.equalsIgnoreCase(F("Int"))) {
+          if (deviceName.equals(F("int"))) {
             nr_decimals = 0;
           } else if (format.length() != 0)
           {
@@ -1576,7 +1577,7 @@ String parseTemplate(String& tmpString, byte lineSize)
   return newString;
 }
 
-// Find the first task with given name
+// Find the first (enabled) task with given name
 // Return TASKS_MAX when not found, else return taskIndex
 byte findTaskIndexByName(const String& deviceName)
 {
@@ -1587,15 +1588,16 @@ byte findTaskIndexByName(const String& deviceName)
   }
   for (byte taskIndex = 0; taskIndex < TASKS_MAX; taskIndex++)
   {
-    LoadTaskSettings(taskIndex);
-    String taskDeviceName = getTaskDeviceName(taskIndex);
-
-    if (taskDeviceName.length() != 0)
-    {
-      if (deviceName.equalsIgnoreCase(taskDeviceName))
+    if (Settings.TaskDeviceEnabled[taskIndex]) {
+      String taskDeviceName = getTaskDeviceName(taskIndex);
+      if (taskDeviceName.length() != 0)
       {
-        Cache.taskIndexName[deviceName] = taskIndex;
-        return taskIndex;
+        // Use entered taskDeviceName can have any case, so compare case insensitive.
+        if (deviceName.equalsIgnoreCase(taskDeviceName))
+        {
+          Cache.taskIndexName[deviceName] = taskIndex;
+          return taskIndex;
+        }
       }
     }
   }
@@ -1607,7 +1609,15 @@ byte findTaskIndexByName(const String& deviceName)
 byte findDeviceValueIndexByName(const String& valueName, byte taskIndex) 
 {
   // cache this, since LoadTaskSettings does take some time.
-  auto result = Cache.taskIndexValueName.find(valueName);
+  // We need to use a cache search key including the taskIndex,
+  // to allow several tasks to have the same value names.
+  String cache_valueName;
+  cache_valueName.reserve(valueName.length() + 3);
+  cache_valueName = valueName;
+  cache_valueName += '#'; // The '#' cannot exist in a value name, use it in the cache key.
+  cache_valueName += taskIndex;
+
+  auto result = Cache.taskIndexValueName.find(cache_valueName);
   if (result != Cache.taskIndexValueName.end()) {
     return result->second;
   }
@@ -1618,9 +1628,10 @@ byte findDeviceValueIndexByName(const String& valueName, byte taskIndex)
 
   for (byte valueNr = 0; valueNr < valCount; valueNr++)
   {
+    // Check case insensitive, since the user entered value name can have any case.
     if (valueName.equalsIgnoreCase(ExtraTaskSettings.TaskDeviceValueNames[valueNr]))
     {
-      Cache.taskIndexValueName[valueName] = valueNr;
+      Cache.taskIndexValueName[cache_valueName] = valueNr;
       return valueNr;
     }
   }
@@ -1651,6 +1662,8 @@ bool findNextValMarkInString(const String& input, int& startpos, int& hashpos, i
 }
 
 // Find [deviceName#valueName] or [deviceName#valueName#format]
+// DeviceName and valueName will be returned in lower case.
+// Format may contain case sensitive formatting syntax.
 bool findNextDevValNameInString(const String& input, int& startpos, int& endpos, String& deviceName, String& valueName, String& format) {
   int hashpos;
 
@@ -1666,6 +1679,8 @@ bool findNextDevValNameInString(const String& input, int& startpos, int& endpos,
   } else {
     format = "";
   }
+  deviceName.toLowerCase();
+  valueName.toLowerCase();
   return true;
 }
 
@@ -2374,7 +2389,7 @@ class RamTracker{
           }
         };
 
-    void registerRamState(String &s){    // store function
+    void registerRamState(const String &s){    // store function
        nextAction[writePtr]=s;                              // name and mem
        nextActionStartMemory[writePtr]=ESP.getFreeHeap();   // in cyclic buffer.
        int bestCase = bestCaseTrace();                      // find best case memory trace
@@ -2423,12 +2438,12 @@ void checkRAM(const __FlashStringHelper* flashString, int a ) {
  checkRAM(flashString,s);
 }
 
-void checkRAM(const __FlashStringHelper* flashString, String &a ) {
+void checkRAM(const __FlashStringHelper* flashString, const String &a ) {
   String s = flashString;
   checkRAM(s,a);
 }
 
-void checkRAM(String &flashString, String &a ) {
+void checkRAM(const String &flashString, const String &a ) {
   String s = flashString;
   s+=" (";
   s+=a;
@@ -2438,24 +2453,23 @@ void checkRAM(String &flashString, String &a ) {
 
 void checkRAM( const __FlashStringHelper* flashString)
 {
-  String s = flashString;
-  myRamTracker.registerRamState(s);
-
-  uint32_t freeRAM = FreeMem();
-  if (freeRAM < lowestRAM)
-  {
-    lowestRAM = freeRAM;
-    lowestRAMfunction = flashString;
-  }
-  uint32_t freeStack = getFreeStackWatermark();
-  if (freeStack < lowestFreeStack) {
-    lowestFreeStack = freeStack;
-    lowestFreeStackfunction = flashString;
-  }
+  checkRAM(String(flashString));
 }
 
-void checkRAM( String &a ) {
-  myRamTracker.registerRamState(a);
+void checkRAM( const String &descr ) {
+  myRamTracker.registerRamState(descr);
+  
+  uint32_t freeRAM = FreeMem();
+  if (freeRAM <= lowestRAM)
+  {
+    lowestRAM = freeRAM;
+    lowestRAMfunction = descr;
+  }
+  uint32_t freeStack = getFreeStackWatermark();
+  if (freeStack <= lowestFreeStack) {
+    lowestFreeStack = freeStack;
+    lowestFreeStackfunction = descr;
+  }
 }
 
 
