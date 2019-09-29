@@ -497,12 +497,13 @@ void WebServerInit()
 
   #if defined(ESP8266)
   {
+    #ifndef NO_HTTP_UPDATER
     uint32_t maxSketchSize;
     bool     use2step;
-
     if (OTA_possible(maxSketchSize, use2step)) {
       httpUpdater.setup(&WebServer);
     }
+    #endif
   }
   #endif // if defined(ESP8266)
 

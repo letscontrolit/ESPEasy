@@ -23,7 +23,9 @@
   #include <ESP8266HTTPUpdateServer.h>
 
   extern ESP8266WebServer WebServer;
+  #ifndef NO_HTTP_UPDATER
   extern ESP8266HTTPUpdateServer httpUpdater;
+  #endif
 
 #endif
 
