@@ -159,8 +159,10 @@ String rulesProcessingFile(const String& fileName, String& event) {
   fs::File f = tryOpenFile(fileName, "r+");
   SPIFFS_CHECK(f, fileName.c_str());
 
+  // Try to get the best possible estimate on line length based on earlier parsing of the rules.
+  static size_t longestLineSize = RULES_BUFFER_SIZE;
   String line;
-  line.reserve(RULES_IF_MAX_NESTING_LEVEL);
+  line.reserve(longestLineSize);
   bool match     = false;
   bool codeBlock = false;
   bool isCommand = false;
@@ -188,15 +190,28 @@ String rulesProcessingFile(const String& fileName, String& event) {
         case '\n':
         {
           // Line end, parse rule
-          if (!line.startsWith(F("//")) && (line.length() > 0)) {
-            parseCompleteNonCommentLine(line, event, log, match, codeBlock,
+          const size_t lineLength = line.length();
+          if (lineLength > longestLineSize) {
+            longestLineSize = lineLength;
+          }
+          if ((lineLength > 0) && !line.startsWith(F("//"))) {
+            // Parse the line and extract the action (if there is any)
+            String action;
+            parseCompleteNonCommentLine(line, event, log, action, match, codeBlock,
                                         isCommand, condition, ifBranche, ifBlock,
                                         fakeIfBlock);
+            if (match) // rule matched for one action or a block of actions
+            {
+              processMatchedRule(action, event, log, match, codeBlock,
+                                isCommand, condition, ifBranche, ifBlock, fakeIfBlock);
+            }
+
             backgroundtasks();
           }
 
           // Prepare for new line
           line              = "";
+          line.reserve(longestLineSize);
           firstNonSpaceRead = false;
           commentFound      = false;
           break;
@@ -269,9 +284,19 @@ void replace_EventValueN_Argv(String& line, const String& argString, unsigned in
 }
 
 void parseCompleteNonCommentLine(String& line, String& event, String& log,
-                                 bool& match, bool& codeBlock, bool& isCommand,
+                                 String& action, bool& match,
+                                 bool& codeBlock, bool& isCommand,
                                  bool condition[], bool ifBranche[],
                                  byte& ifBlock, byte& fakeIfBlock) {
+  const bool lineStartsWith_on = line.substring(0, 3).equalsIgnoreCase(F("on "));
+  if (!codeBlock && !match) {
+    // We're looking for a new code block. 
+    // Continue with next line if none was found on current line.
+    if (!lineStartsWith_on) {
+      return;
+    }
+  }
+
   isCommand = true;
 
   // Strip comments
@@ -280,11 +305,12 @@ void parseCompleteNonCommentLine(String& line, String& event, String& log,
   if (comment > 0) {
     line = line.substring(0, comment);
   }
+  line.trim();
 
   if (match || !codeBlock) {
     // only parse [xxx#yyy] if we have a matching ruleblock or need to eval the
     // "on" (no codeBlock)
-    // This to avoid waisting CPU time...
+    // This to avoid wasting CPU time...
 
     // Only process the %eventvalueX% replacements if there is any present.
     if (match && !fakeIfBlock && (line.indexOf(F("%eventvalue")) != -1)) {
@@ -308,28 +334,34 @@ void parseCompleteNonCommentLine(String& line, String& event, String& log,
         }
       }
     }
-    line = parseTemplate(line, line.length());
+    if (match || lineStartsWith_on) {
+      // Only parseTemplate when we are actually doing something with the line.
+      // When still looking for the "on ... do" part, do not change it before we found the block.
+      line = parseTemplate(line, line.length());
+    }
   }
-  line.trim();
+  
 
   String lineOrg = line; // store original line for future use
   line.toLowerCase();    // convert all to lower case to make checks easier
 
   String eventTrigger = "";
-  String action       = "";
+  action = "";
 
   if (!codeBlock) // do not check "on" rules if a block of actions is to be
                   // processed
   {
-    if (line.startsWith(F("on "))) {
+    if (lineStartsWith_on) {
       ifBlock     = 0;
       fakeIfBlock = 0;
       line        = line.substring(3);
-      int split = line.indexOf(F(" do"));
+      int split   = line.indexOf(F(" do"));
 
       if (split != -1) {
         eventTrigger = line.substring(0, split);
         action       = lineOrg.substring(split + 7);
+        // Remove trailing and leadin spaces on the eventTrigger and action.
+        eventTrigger.trim();
         action.trim();
       }
 
@@ -353,11 +385,8 @@ void parseCompleteNonCommentLine(String& line, String& event, String& log,
     action = lineOrg;
   }
 
-  String lcAction = action;
-  lcAction.toLowerCase();
-
-  if (lcAction == F("endon")) // Check if action block has ended, then we will
-                              // wait for a new "on" rule
+  if (action.equalsIgnoreCase(F("endon"))) // Check if action block has ended, then we will
+                                           // wait for a new "on" rule
   {
     isCommand   = false;
     codeBlock   = false;
@@ -378,18 +407,15 @@ void parseCompleteNonCommentLine(String& line, String& event, String& log,
     addLog(LOG_LEVEL_DEBUG_DEV, log);
   }
 #endif // ifndef BUILD_NO_DEBUG
-
-  if (match) // rule matched for one action or a block of actions
-  {
-    processMatchedRule(lcAction, action, event, log, match, codeBlock,
-                       isCommand, condition, ifBranche, ifBlock, fakeIfBlock);
-  }
 }
 
-void processMatchedRule(String& lcAction, String& action, String& event,
+void processMatchedRule(String& action, String& event,
                         String& log, bool& match, bool& codeBlock,
                         bool& isCommand, bool condition[], bool ifBranche[],
                         byte& ifBlock, byte& fakeIfBlock) {
+  String lcAction = action;
+  lcAction.toLowerCase();
+
   if (fakeIfBlock) {
     isCommand = false;
   }

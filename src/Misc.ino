@@ -1451,13 +1451,12 @@ void reboot() {
 String parseTemplate(String& tmpString, byte lineSize)
 {
   checkRAM(F("parseTemplate"));
+  START_TIMER
 
   // Keep current loaded taskSettings to restore at the end.
   byte   currentTaskIndex = ExtraTaskSettings.TaskIndex;
-  String newString        = "";
-
-  // String tmpStringMid = "";
-  newString.reserve(lineSize);
+  String newString;
+  newString.reserve(lineSize); // Our best guess of the new size.
 
   parseSystemVariables(tmpString, false);
   
@@ -1573,6 +1572,7 @@ String parseTemplate(String& tmpString, byte lineSize)
   while (newString.length() < lineSize) {
     newString += ' ';
   }
+  STOP_TIMER(PARSE_TEMPLATE);
   checkRAM(F("parseTemplate3"));
   return newString;
 }
@@ -1612,7 +1612,7 @@ byte findDeviceValueIndexByName(const String& valueName, byte taskIndex)
   // We need to use a cache search key including the taskIndex,
   // to allow several tasks to have the same value names.
   String cache_valueName;
-  cache_valueName.reserve(valueName.length() + 3);
+  cache_valueName.reserve(valueName.length() + 4);
   cache_valueName = valueName;
   cache_valueName += '#'; // The '#' cannot exist in a value name, use it in the cache key.
   cache_valueName += taskIndex;
@@ -1696,6 +1696,9 @@ void transformValue(
 	String& valueFormat,
   const String &tmpString)
 {
+  // FIXME TD-er: This function does append to newString and uses its length to perform right aling.
+  // Is this the way it is intended to use?
+  
   checkRAM(F("transformValue"));
 
   // start changes by giig1967g - 2018-04-20

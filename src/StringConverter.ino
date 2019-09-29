@@ -633,9 +633,11 @@ void parseSpecialCharacters(String& s, boolean useURLencode)
   if (s.indexOf(T) != -1) { (S((T), s, useURLencode)); }
 void parseSystemVariables(String& s, boolean useURLencode)
 {
+  START_TIMER
   parseSpecialCharacters(s, useURLencode);
 
   if (s.indexOf('%') == -1) {
+    STOP_TIMER(PARSE_SYSVAR_NOCHANGE);
     return; // Nothing to replace
   }
   #if FEATURE_ADC_VCC
@@ -720,6 +722,7 @@ void parseSystemVariables(String& s, boolean useURLencode)
       SMART_REPL("%v" + toString(i + 1, 0) + '%', String(customFloatVar[i]))
     }
   }
+  STOP_TIMER(PARSE_SYSVAR);
 }
 
 String getReplacementString(const String& format, String& s) {
