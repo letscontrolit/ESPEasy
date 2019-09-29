@@ -78,7 +78,7 @@ boolean Plugin_002(byte function, struct EventStruct *event, String& string)
 
         {
           // Output the statistics for the current settings.
-          int16_t raw_value = 0;
+          uint16_t raw_value = 0;
           float value = P002_getOutputValue(event, raw_value);
           P002_formatStatistics(F("Current"), raw_value, value);
 
@@ -115,7 +115,8 @@ boolean Plugin_002(byte function, struct EventStruct *event, String& string)
       {
         if (PCONFIG(0))   //Oversampling?
         {
-          uint16_t currentValue = P002_performRead(event);
+          uint16_t currentValue;
+          if (P002_performRead(event, currentValue)) {
           Plugin_002_OversamplingValue += currentValue;
           ++Plugin_002_OversamplingCount;
           if (currentValue > Plugin_002_OversamplingMaxVal) {
@@ -124,6 +125,7 @@ boolean Plugin_002(byte function, struct EventStruct *event, String& string)
           if (currentValue < Plugin_002_OversamplingMinVal) {
             Plugin_002_OversamplingMinVal = currentValue;
           }
+          }
         }
         success = true;
         break;
@@ -131,7 +133,7 @@ boolean Plugin_002(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
       {
-        int16_t raw_value = 0;
+        uint16_t raw_value = 0;
         UserVar[event->BaseVarIndex] = P002_getOutputValue(event, raw_value);
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           String log = F("ADC  : Analog value: ");
@@ -157,7 +159,7 @@ boolean Plugin_002(byte function, struct EventStruct *event, String& string)
   return success;
 }
 
-float P002_getOutputValue(struct EventStruct *event, int16_t &raw_value) {
+float P002_getOutputValue(struct EventStruct *event, uint16_t &raw_value) {
   float float_value = 0.0;
   if (PCONFIG(0) && Plugin_002_OversamplingCount > 0) {
     float sum = static_cast<float>(Plugin_002_OversamplingValue);
@@ -170,7 +172,7 @@ float P002_getOutputValue(struct EventStruct *event, int16_t &raw_value) {
     float_value = sum / count;
     raw_value = static_cast<int16_t>(float_value);
   } else {
-    raw_value = P002_performRead(event);
+    P002_performRead(event, raw_value);
     float_value = static_cast<float>(raw_value);
   }
   return P002_applyCalibration(event, float_value);
@@ -192,18 +194,22 @@ float P002_applyCalibration(struct EventStruct *event, float float_value) {
   return float_value;
 }
 
-uint16_t P002_performRead(struct EventStruct *event) {
+bool P002_performRead(struct EventStruct *, uint16_t& value) {
   // Define it static so we just return the last value when no read can be performed.
-  static uint16_t value = 0;
+  static uint16_t last_value = 0;
+  bool valid = true;
   #if defined(ESP8266)
   if (!wifiConnectInProgress) {
-    value = analogRead(A0);
+    last_value = analogRead(A0);
+  } else {
+    valid = false;
   }
   #endif
   #if defined(ESP32)
-    value = analogRead(CONFIG_PIN1);
+    last_value = analogRead(CONFIG_PIN1);
   #endif
-  return value;
+  value = last_value;
+  return valid;
 }
 
 void P002_formatStatistics(const String& label, int16_t raw, float float_value) {
