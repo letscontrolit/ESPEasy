@@ -458,10 +458,10 @@ void deepSleepStart(int dsdelay)
   #endif // if defined(ESP32)
 }
 
-boolean remoteConfig(struct EventStruct *event, const String& string)
+bool remoteConfig(struct EventStruct *event, const String& string)
 {
   checkRAM(F("remoteConfig"));
-  boolean success = false;
+  bool success = false;
   String  command = parseString(string, 1);
 
   if (command == F("config"))
@@ -590,7 +590,7 @@ void setPinState(byte plugin, byte index, byte mode, uint16_t value)
 {
   // plugin number and index form a unique key
   // first check if this pin is already known
-  boolean reUse = false;
+  bool reUse = false;
   for (byte x = 0; x < PINSTATE_TABLE_MAX; x++)
     if ((pinStates[x].plugin == plugin) && (pinStates[x].index == index))
     {
@@ -620,7 +620,7 @@ void setPinState(byte plugin, byte index, byte mode, uint16_t value)
   \*********************************************************************************************/
 
 /*
-boolean getPinState(byte plugin, byte index, byte *mode, uint16_t *value)
+bool getPinState(byte plugin, byte index, byte *mode, uint16_t *value)
 {
   for (byte x = 0; x < PINSTATE_TABLE_MAX; x++)
     if ((pinStates[x].plugin == plugin) && (pinStates[x].index == index))
@@ -637,7 +637,7 @@ boolean getPinState(byte plugin, byte index, byte *mode, uint16_t *value)
    check if pin mode & state is known (info table)
   \*********************************************************************************************/
 /*
-boolean hasPinState(byte plugin, byte index)
+bool hasPinState(byte plugin, byte index)
 {
   for (byte x = 0; x < PINSTATE_TABLE_MAX; x++)
     if ((pinStates[x].plugin == plugin) && (pinStates[x].index == index))
@@ -654,13 +654,13 @@ boolean hasPinState(byte plugin, byte index)
 /*********************************************************************************************\
    report pin mode & state (info table) using json
   \*********************************************************************************************/
-String getPinStateJSON(boolean search, uint32_t key, const String& log, int16_t noSearchValue)
+String getPinStateJSON(bool search, uint32_t key, const String& log, int16_t noSearchValue)
 {
   checkRAM(F("getPinStateJSON"));
   printToWebJSON = true;
   byte mode = PIN_MODE_INPUT;
   int16_t value = noSearchValue;
-  boolean found = false;
+  bool found = false;
 
   if (search && existPortStatus(key))
   {
@@ -716,7 +716,7 @@ String getPinModeString(byte mode) {
 #define STATUS_PWM_NORMALFADE (PWMRANGE>>8)
 #define STATUS_PWM_TRAFFICRISE (PWMRANGE>>1)
 
-void statusLED(boolean traffic)
+void statusLED(bool traffic)
 {
   static int gnStatusValueCurrent = -1;
   static long int gnLastUpdate = millis();
@@ -810,7 +810,7 @@ void parseCommandString(struct EventStruct *event, const String& string)
 /********************************************************************************************\
   Clear task settings for given task
   \*********************************************************************************************/
-void taskClear(byte taskIndex, boolean save)
+void taskClear(byte taskIndex, bool save)
 {
   if (taskIndex >= TASKS_MAX) return;
   checkRAM(F("taskClear"));
@@ -923,7 +923,7 @@ bool GetArgvBeginEnd(const char *string, const unsigned int argc, int& pos_begin
   pos_end   = -1;
   size_t string_len = strlen(string);
   unsigned int string_pos = 0, argc_pos = 0;
-  boolean parenthesis          = false;
+  bool parenthesis          = false;
   char    matching_parenthesis = '"';
 
   while (string_pos < string_len)
@@ -1303,11 +1303,11 @@ unsigned long getMaxFreeBlock()
 /********************************************************************************************\
   Check if string is valid float
   \*********************************************************************************************/
-boolean isFloat(const String& tBuf) {
+bool isFloat(const String& tBuf) {
   return isNumerical(tBuf, false);
 }
 
-boolean isValidFloat(float f) {
+bool isValidFloat(float f) {
   if (f == NAN)      return false; //("NaN");
   if (f == INFINITY) return false; //("INFINITY");
   if (-f == INFINITY)return false; //("-INFINITY");
@@ -1316,21 +1316,25 @@ boolean isValidFloat(float f) {
   return true;
 }
 
-boolean isInt(const String& tBuf) {
+bool isInt(const String& tBuf) {
   return isNumerical(tBuf, true);
 }
 
 bool validIntFromString(const String& tBuf, int& result) {
   const String numerical = getNumerical(tBuf, true);
-  const bool isvalid = isInt(numerical);
-  result = numerical.toInt();
+  const bool isvalid = numerical.length() > 0;
+  if (isvalid) {
+    result = numerical.toInt();
+  }
   return isvalid;
 }
 
 bool validFloatFromString(const String& tBuf, float& result) {
   const String numerical = getNumerical(tBuf, false);
-  const bool isvalid = isFloat(numerical);
-  result = numerical.toFloat();
+  const bool isvalid = numerical.length() > 0;
+  if (isvalid) {
+    result = numerical.toFloat();
+  }
   return isvalid;
 }
 
@@ -1338,13 +1342,18 @@ bool validFloatFromString(const String& tBuf, float& result) {
 String getNumerical(const String& tBuf, bool mustBeInteger) {
   String result = "";
   const unsigned int bufLength = tBuf.length();
-  if (bufLength == 0) return result;
-  boolean decPt = false;
-  int firstDec = 0;
-  char c = tBuf.charAt(0);
+  unsigned int firstDec = 0;
+  while (firstDec < bufLength && tBuf.charAt(firstDec) == ' ') {
+    ++firstDec;
+  }
+  if (firstDec >= bufLength) return result;
+
+  bool decPt = false;
+  
+  char c = tBuf.charAt(firstDec);
   if(c == '+' || c == '-') {
     result += c;
-    firstDec = 1;
+    ++firstDec;
   }
   for(unsigned int x=firstDec; x < bufLength; ++x) {
     c = tBuf.charAt(x);
@@ -1360,14 +1369,17 @@ String getNumerical(const String& tBuf, bool mustBeInteger) {
   return result;
 }
 
-boolean isNumerical(const String& tBuf, bool mustBeInteger) {
+bool isNumerical(const String& tBuf, bool mustBeInteger) {
   const unsigned int bufLength = tBuf.length();
-  if (bufLength == 0) return false;
-  boolean decPt = false;
-  int firstDec = 0;
-  char c = tBuf.charAt(0);
+  unsigned int firstDec = 0;
+  while (firstDec < bufLength && tBuf.charAt(firstDec) == ' ') {
+    ++firstDec;
+  }
+  if (firstDec >= bufLength) return false;
+  bool decPt = false;
+  char c = tBuf.charAt(firstDec);
   if(c == '+' || c == '-')
-    firstDec = 1;
+    ++firstDec;
   for(unsigned int x=firstDec; x < bufLength; ++x) {
     c = tBuf.charAt(x);
     if(c == '.') {
