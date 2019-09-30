@@ -191,26 +191,29 @@ String rulesProcessingFile(const String& fileName, String& event) {
         {
           // Line end, parse rule
           const size_t lineLength = line.length();
+
           if (lineLength > longestLineSize) {
             longestLineSize = lineLength;
           }
+
           if ((lineLength > 0) && !line.startsWith(F("//"))) {
             // Parse the line and extract the action (if there is any)
             String action;
             parseCompleteNonCommentLine(line, event, log, action, match, codeBlock,
                                         isCommand, condition, ifBranche, ifBlock,
                                         fakeIfBlock);
+
             if (match) // rule matched for one action or a block of actions
             {
               processMatchedRule(action, event, log, match, codeBlock,
-                                isCommand, condition, ifBranche, ifBlock, fakeIfBlock);
+                                 isCommand, condition, ifBranche, ifBlock, fakeIfBlock);
             }
 
             backgroundtasks();
           }
 
           // Prepare for new line
-          line              = "";
+          line = "";
           line.reserve(longestLineSize);
           firstNonSpaceRead = false;
           commentFound      = false;
@@ -283,14 +286,39 @@ void replace_EventValueN_Argv(String& line, const String& argString, unsigned in
   }
 }
 
+void substitute_eventvalue(String& line, const String& event) {
+  if (line.indexOf(F("%eventvalue")) == -1) { 
+    return; // Nothing to replace.
+  }
+
+  if (event.charAt(0) == '!') {
+    line.replace(F("%eventvalue%"), event); // substitute %eventvalue% with
+                                            // literal event string if
+                                            // starting with '!'
+  } else {
+    int equalsPos = event.indexOf("=");
+
+    if (equalsPos > 0) {
+      // Replace %eventvalueX% with the actual value of the event.
+      // For compatibility reasons also replace %eventvalue%  (argc = 0)
+      String argString = event.substring(equalsPos + 1);
+
+      for (unsigned int argc = 0; argc <= 4; ++argc) {
+        replace_EventValueN_Argv(line, argString, argc);
+      }
+    }
+  }
+}
+
 void parseCompleteNonCommentLine(String& line, String& event, String& log,
                                  String& action, bool& match,
                                  bool& codeBlock, bool& isCommand,
                                  bool condition[], bool ifBranche[],
                                  byte& ifBlock, byte& fakeIfBlock) {
   const bool lineStartsWith_on = line.substring(0, 3).equalsIgnoreCase(F("on "));
+
   if (!codeBlock && !match) {
-    // We're looking for a new code block. 
+    // We're looking for a new code block.
     // Continue with next line if none was found on current line.
     if (!lineStartsWith_on) {
       return;
@@ -299,10 +327,10 @@ void parseCompleteNonCommentLine(String& line, String& event, String& log,
 
   isCommand = true;
 
-  // Strip comments
+  // Strip trailing comments
   int comment = line.indexOf(F("//"));
 
-  if (comment > 0) {
+  if (comment >= 0) {
     line = line.substring(0, comment);
   }
   line.trim();
@@ -311,36 +339,19 @@ void parseCompleteNonCommentLine(String& line, String& event, String& log,
     // only parse [xxx#yyy] if we have a matching ruleblock or need to eval the
     // "on" (no codeBlock)
     // This to avoid wasting CPU time...
-
-    // Only process the %eventvalueX% replacements if there is any present.
-    if (match && !fakeIfBlock && (line.indexOf(F("%eventvalue")) != -1)) {
+    if (match && !fakeIfBlock) {
       // substitution of %eventvalue% is made here so it can be used on if
       // statement too
-      if (event.charAt(0) == '!') {
-        line.replace(F("%eventvalue%"), event); // substitute %eventvalue% with
-                                                // literal event string if
-                                                // starting with '!'
-      } else {
-        int equalsPos = event.indexOf("=");
-
-        if (equalsPos > 0) {
-          // Replace %eventvalueX% with the actual value of the event.
-          // For compatibility reasons also replace %eventvalue%  (argc = 0)
-          String argString = event.substring(equalsPos + 1);
-
-          for (unsigned int argc = 0; argc <= 4; ++argc) {
-            replace_EventValueN_Argv(line, argString, argc);
-          }
-        }
-      }
+      substitute_eventvalue(line, event);
     }
+
     if (match || lineStartsWith_on) {
       // Only parseTemplate when we are actually doing something with the line.
       // When still looking for the "on ... do" part, do not change it before we found the block.
       line = parseTemplate(line, line.length());
     }
   }
-  
+
 
   String lineOrg = line; // store original line for future use
   line.toLowerCase();    // convert all to lower case to make checks easier
@@ -355,11 +366,12 @@ void parseCompleteNonCommentLine(String& line, String& event, String& log,
       ifBlock     = 0;
       fakeIfBlock = 0;
       line        = line.substring(3);
-      int split   = line.indexOf(F(" do"));
+      int split = line.indexOf(F(" do"));
 
       if (split != -1) {
         eventTrigger = line.substring(0, split);
         action       = lineOrg.substring(split + 7);
+
         // Remove trailing and leadin spaces on the eventTrigger and action.
         eventTrigger.trim();
         action.trim();
@@ -414,6 +426,7 @@ void processMatchedRule(String& action, String& event,
                         bool& isCommand, bool condition[], bool ifBranche[],
                         byte& ifBlock, byte& fakeIfBlock) {
   String lcAction = action;
+
   lcAction.toLowerCase();
 
   if (fakeIfBlock) {
@@ -428,6 +441,7 @@ void processMatchedRule(String& action, String& event,
     lcAction.indexOf(F("elseif ")); // check for optional "elseif" condition
 
   if (split != -1) {
+    // Found "elseif" condition
     isCommand = false;
 
     if (ifBlock && !fakeIfBlock) {
@@ -524,46 +538,7 @@ void processMatchedRule(String& action, String& event,
   // process the action if it's a command and unconditional, or conditional and
   // the condition matches the if or else block.
   if (isCommand) {
-    if (event.charAt(0) == '!') {
-      action.replace(F("%eventvalue%"), event); // substitute %eventvalue% with
-                                                // literal event string if
-                                                // starting with '!'
-    } else {
-      int equalsPos = event.indexOf("=");
-
-      if (equalsPos > 0) {
-        String tmpString = event.substring(equalsPos + 1);
-
-        String tmpParam;
-
-        if (GetArgv(tmpString.c_str(), tmpParam, 1)) {
-          action.replace(F("%eventvalue%"),
-                         tmpParam); // for compatibility issues
-          action.replace(F("%eventvalue1%"),
-                         tmpParam); // substitute %eventvalue1% in actions with
-                                    // the actual value from the event
-        }
-
-        if (GetArgv(tmpString.c_str(), tmpParam, 2)) {
-          action.replace(F("%eventvalue2%"),
-                         tmpParam); // substitute %eventvalue2% in actions with
-        }
-
-        // the actual value from the event
-        if (GetArgv(tmpString.c_str(), tmpParam, 3)) {
-          action.replace(F("%eventvalue3%"),
-                         tmpParam); // substitute %eventvalue3% in actions with
-        }
-
-        // the actual value from the event
-        if (GetArgv(tmpString.c_str(), tmpParam, 4)) {
-          action.replace(F("%eventvalue4%"),
-                         tmpParam); // substitute %eventvalue4% in actions with
-        }
-
-        // the actual value from the event
-      }
-    }
+    substitute_eventvalue(action, event);
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log = F("ACT  : ");
@@ -606,18 +581,20 @@ void processMatchedRule(String& action, String& event,
  \*********************************************************************************************/
 bool ruleMatch(const String& event, const String& rule) {
   checkRAM(F("ruleMatch"));
-  bool match    = false;
+  bool match = false;
 
-  String  tmpEvent = event;
-  String  tmpRule  = rule;
+  String tmpEvent = event;
+  String tmpRule  = rule;
   tmpEvent.trim();
   tmpRule.trim();
+
   // Ignore escape char
   tmpRule.replace("[", "");
   tmpRule.replace("]", "");
 
-  if (tmpEvent.equalsIgnoreCase(tmpRule)) 
+  if (tmpEvent.equalsIgnoreCase(tmpRule)) {
     return true;
+  }
 
 
   // Special handling of literal string events, they should start with '!'
@@ -629,6 +606,7 @@ bool ruleMatch(const String& event, const String& rule) {
       return event.substring(0, pos - 1).equalsIgnoreCase(rule.substring(0, pos - 1));
     } else {
       const bool pound_char_found = rule.indexOf('#') != -1;
+
       if (!pound_char_found)
       {
         // no # sign in rule, use 'wildcard' match on event 'source'
@@ -665,6 +643,7 @@ bool ruleMatch(const String& event, const String& rule) {
   if (pos) {
     if (!validFloatFromString(event.substring(pos + 1), value)) {
       return false;
+
       // FIXME TD-er: What to do when trying to match NaN values?
     }
     tmpEvent = event.substring(0, pos);
@@ -696,12 +675,14 @@ bool ruleMatch(const String& event, const String& rule) {
   if (comparePos > 0) {
     if (!validFloatFromString(rule.substring(comparePos + 1), ruleValue)) {
       return false;
+
       // FIXME TD-er: What to do when trying to match NaN values?
     }
-    tmpRule   = rule.substring(0, comparePos);
+    tmpRule = rule.substring(0, comparePos);
   }
 
   const bool stringMatch = tmpRule.equalsIgnoreCase(tmpEvent);
+
   if (stringMatch) {
     switch (compare) {
       case '>':
@@ -726,12 +707,11 @@ bool ruleMatch(const String& event, const String& rule) {
         break;
 
       case ' ':
-        {
-          match = true;
-        }
+      {
+        match = true;
         break;
+      }
     }
-
   }
   checkRAM(F("ruleMatch2"));
   return match;
