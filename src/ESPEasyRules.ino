@@ -581,7 +581,6 @@ void processMatchedRule(String& action, String& event,
  \*********************************************************************************************/
 bool ruleMatch(const String& event, const String& rule) {
   checkRAM(F("ruleMatch"));
-  bool match = false;
 
   String tmpEvent = event;
   String tmpRule  = rule;
@@ -650,68 +649,28 @@ bool ruleMatch(const String& event, const String& rule) {
   }
 
   // parse rule
-  int  comparePos = 0;
-  char compare    = ' ';
-  comparePos = rule.indexOf(">");
+  int  posStart, posEnd;
+  char compare = findCompareCondition(rule, posStart, posEnd);
 
-  if (comparePos > 0) {
-    compare = '>';
-  } else {
-    comparePos = rule.indexOf("<");
+  const bool stringMatch = tmpEvent.equalsIgnoreCase(rule.substring(0, posStart));
 
-    if (comparePos > 0) {
-      compare = '<';
-    } else {
-      comparePos = rule.indexOf("=");
-
-      if (comparePos > 0) {
-        compare = '=';
-      }
-    }
+  if (compare == ' ') {
+    // No compare condition found, so just check if the event- and rule string match.
+    return stringMatch;
   }
 
   float ruleValue = 0;
 
-  if (comparePos > 0) {
-    if (!validFloatFromString(rule.substring(comparePos + 1), ruleValue)) {
-      return false;
+  if (!validFloatFromString(rule.substring(posEnd), ruleValue)) {
+    return false;
 
-      // FIXME TD-er: What to do when trying to match NaN values?
-    }
-    tmpRule = rule.substring(0, comparePos);
+    // FIXME TD-er: What to do when trying to match NaN values?
   }
 
-  const bool stringMatch = tmpRule.equalsIgnoreCase(tmpEvent);
+  bool match = false;
 
   if (stringMatch) {
-    switch (compare) {
-      case '>':
-
-        if (value > ruleValue) {
-          match = true;
-        }
-        break;
-
-      case '<':
-
-        if (value < ruleValue) {
-          match = true;
-        }
-        break;
-
-      case '=':
-
-        if (value == ruleValue) {
-          match = true;
-        }
-        break;
-
-      case ' ':
-      {
-        match = true;
-        break;
-      }
-    }
+    match = compareValues(compare, value, ruleValue);
   }
   checkRAM(F("ruleMatch2"));
   return match;
@@ -746,13 +705,13 @@ boolean conditionMatchExtended(String& check) {
   return leftcond;
 }
 
-char findCompareCondition(const String& check, int& posStart, int& posEnd, int& comparePos)
+char findCompareCondition(const String& check, int& posStart, int& posEnd)
 {
   char compare = ' ';
 
-  posStart   = check.length();
-  posEnd     = posStart;
-  comparePos = 0;
+  posStart = check.length();
+  posEnd   = posStart;
+  int comparePos = 0;
 
   if (((comparePos = check.indexOf("!=")) > 0) && (comparePos < posStart)) {
     posStart = comparePos;
@@ -849,8 +808,8 @@ bool compareValues(char compare, float Value1, float Value2)
 }
 
 bool conditionMatch(const String& check) {
-  int  posStart, posEnd, comparePos;
-  char compare = findCompareCondition(check, posStart, posEnd, comparePos);
+  int  posStart, posEnd;
+  char compare = findCompareCondition(check, posStart, posEnd);
 
   float Value1 = 0;
   float Value2 = 0;
