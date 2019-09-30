@@ -663,6 +663,7 @@ void parseSystemVariables(String& s, boolean useURLencode)
   if (s.indexOf(F("%sys")) != -1) {
     SMART_REPL(F("%sysload%"),       String(getCPUload()))
     SMART_REPL(F("%sysheap%"),       String(ESP.getFreeHeap()));
+    SMART_REPL(F("%sysstack%"),      String(getCurrentFreeStack()));
     SMART_REPL(F("%systm_hm%"),      getTimeString(':', false))
     SMART_REPL(F("%systm_hm_am%"),   getTimeString_ampm(':', false))
     SMART_REPL(F("%systime%"),       getTimeString(':'))
