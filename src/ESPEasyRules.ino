@@ -287,7 +287,7 @@ void replace_EventValueN_Argv(String& line, const String& argString, unsigned in
 }
 
 void substitute_eventvalue(String& line, const String& event) {
-  if (line.indexOf(F("%eventvalue")) == -1) { 
+  if (line.indexOf(F("%eventvalue")) == -1) {
     return; // Nothing to replace.
   }
 
@@ -746,14 +746,13 @@ boolean conditionMatchExtended(String& check) {
   return leftcond;
 }
 
-boolean conditionMatch(const String& check) {
-  boolean match = false;
-
+char findCompareCondition(const String& check, int& posStart, int& posEnd, int& comparePos)
+{
   char compare = ' ';
 
-  int posStart   = check.length();
-  int posEnd     = posStart;
-  int comparePos = 0;
+  posStart   = check.length();
+  posEnd     = posStart;
+  comparePos = 0;
 
   if (((comparePos = check.indexOf("!=")) > 0) && (comparePos < posStart)) {
     posStart = comparePos;
@@ -796,24 +795,12 @@ boolean conditionMatch(const String& check) {
     posEnd   = posStart + 1;
     compare  = '=';
   }
+  return compare;
+}
 
-  float Value1 = 0;
-  float Value2 = 0;
-
-  if (compare > ' ') {
-    String tmpCheck1 = check.substring(0, posStart);
-    String tmpCheck2 = check.substring(posEnd);
-
-    if (!isFloat(tmpCheck1) || !isFloat(tmpCheck2)) {
-      Value1 = timeStringToSeconds(tmpCheck1);
-      Value2 = timeStringToSeconds(tmpCheck2);
-    } else {
-      Value1 = tmpCheck1.toFloat();
-      Value2 = tmpCheck2.toFloat();
-    }
-  } else {
-    return false;
-  }
+bool compareValues(char compare, float Value1, float Value2)
+{
+  bool match = false;
 
   switch (compare) {
     case '>' + '=':
@@ -859,6 +846,31 @@ boolean conditionMatch(const String& check) {
       break;
   }
   return match;
+}
+
+bool conditionMatch(const String& check) {
+  int  posStart, posEnd, comparePos;
+  char compare = findCompareCondition(check, posStart, posEnd, comparePos);
+
+  float Value1 = 0;
+  float Value2 = 0;
+
+  if (compare > ' ') {
+    String tmpCheck1 = check.substring(0, posStart);
+    String tmpCheck2 = check.substring(posEnd);
+
+    if (!isFloat(tmpCheck1) || !isFloat(tmpCheck2)) {
+      Value1 = timeStringToSeconds(tmpCheck1);
+      Value2 = timeStringToSeconds(tmpCheck2);
+    } else {
+      Value1 = tmpCheck1.toFloat();
+      Value2 = tmpCheck2.toFloat();
+    }
+  } else {
+    return false;
+  }
+
+  return compareValues(compare, Value1, Value2);
 }
 
 /********************************************************************************************\
