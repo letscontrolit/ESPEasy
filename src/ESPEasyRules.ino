@@ -604,41 +604,38 @@ void processMatchedRule(String& action, String& event,
 /********************************************************************************************\
    Check if an event matches to a given rule
  \*********************************************************************************************/
-boolean ruleMatch(String& event, String& rule) {
+bool ruleMatch(const String& event, const String& rule) {
   checkRAM(F("ruleMatch"));
-  boolean match    = false;
+  bool match    = false;
+
   String  tmpEvent = event;
   String  tmpRule  = rule;
-
+  tmpEvent.trim();
+  tmpRule.trim();
   // Ignore escape char
   tmpRule.replace("[", "");
   tmpRule.replace("]", "");
 
+  if (tmpEvent.equalsIgnoreCase(tmpRule)) 
+    return true;
+
+
   // Special handling of literal string events, they should start with '!'
   if (event.charAt(0) == '!') {
-    int pos = rule.indexOf('*');
+    const int pos = rule.indexOf('*');
 
     if (pos != -1) // a * sign in rule, so use a'wildcard' match on message
     {
-      tmpEvent = event.substring(0, pos - 1);
-      tmpRule  = rule.substring(0, pos - 1);
+      return event.substring(0, pos - 1).equalsIgnoreCase(rule.substring(0, pos - 1));
     } else {
-      pos = rule.indexOf('#');
-
-      if (pos ==
-          -1) // no # sign in rule, use 'wildcard' match on event 'source'
+      const bool pound_char_found = rule.indexOf('#') != -1;
+      if (!pound_char_found)
       {
-        tmpEvent = event.substring(0, rule.length());
-        tmpRule  = rule;
+        // no # sign in rule, use 'wildcard' match on event 'source'
+        return event.substring(0, rule.length()).equalsIgnoreCase(rule);
       }
     }
-
-    if (tmpEvent.equalsIgnoreCase(tmpRule)) {
-      return true;
-    }
-    else {
-      return false;
-    }
+    return tmpEvent.equalsIgnoreCase(tmpRule);
   }
 
   if (event.startsWith(
@@ -648,23 +645,16 @@ boolean ruleMatch(String& event, String& rule) {
     int pos2 = rule.indexOf("=");
 
     if ((pos1 > 0) && (pos2 > 0)) {
-      tmpEvent = event.substring(0, pos1);
-      tmpRule  = rule.substring(0, pos2);
-
-      if (tmpRule.equalsIgnoreCase(tmpEvent)) // if this is a clock rule
+      if (event.substring(0, pos1).equalsIgnoreCase(rule.substring(0, pos2))) // if this is a clock rule
       {
-        tmpEvent = event.substring(pos1 + 1);
-        tmpRule  = rule.substring(pos2 + 1);
-        unsigned long clockEvent = string2TimeLong(tmpEvent);
-        unsigned long clockSet   = string2TimeLong(tmpRule);
+        unsigned long clockEvent = string2TimeLong(event.substring(pos1 + 1));
+        unsigned long clockSet   = string2TimeLong(rule.substring(pos2 + 1));
 
-        if (matchClockEvent(clockEvent, clockSet)) {
-          return true;
-        }
-        else {
-          return false;
-        }
+        return matchClockEvent(clockEvent, clockSet);
       }
+    } else {
+      // Not supported yet, see: https://github.com/letscontrolit/ESPEasy/issues/2640
+      return false;
     }
   }
 
@@ -673,8 +663,10 @@ boolean ruleMatch(String& event, String& rule) {
   int   pos   = event.indexOf("=");
 
   if (pos) {
-    tmpEvent = event.substring(pos + 1);
-    value    = tmpEvent.toFloat();
+    if (!validFloatFromString(event.substring(pos + 1), value)) {
+      return false;
+      // FIXME TD-er: What to do when trying to match NaN values?
+    }
     tmpEvent = event.substring(0, pos);
   }
 
@@ -702,39 +694,44 @@ boolean ruleMatch(String& event, String& rule) {
   float ruleValue = 0;
 
   if (comparePos > 0) {
-    tmpRule   = rule.substring(comparePos + 1);
-    ruleValue = tmpRule.toFloat();
+    if (!validFloatFromString(rule.substring(comparePos + 1), ruleValue)) {
+      return false;
+      // FIXME TD-er: What to do when trying to match NaN values?
+    }
     tmpRule   = rule.substring(0, comparePos);
   }
 
-  switch (compare) {
-    case '>':
+  const bool stringMatch = tmpRule.equalsIgnoreCase(tmpEvent);
+  if (stringMatch) {
+    switch (compare) {
+      case '>':
 
-      if (tmpRule.equalsIgnoreCase(tmpEvent) && (value > ruleValue)) {
-        match = true;
-      }
-      break;
+        if (value > ruleValue) {
+          match = true;
+        }
+        break;
 
-    case '<':
+      case '<':
 
-      if (tmpRule.equalsIgnoreCase(tmpEvent) && (value < ruleValue)) {
-        match = true;
-      }
-      break;
+        if (value < ruleValue) {
+          match = true;
+        }
+        break;
 
-    case '=':
+      case '=':
 
-      if (tmpRule.equalsIgnoreCase(tmpEvent) && (value == ruleValue)) {
-        match = true;
-      }
-      break;
+        if (value == ruleValue) {
+          match = true;
+        }
+        break;
 
-    case ' ':
+      case ' ':
+        {
+          match = true;
+        }
+        break;
+    }
 
-      if (tmpRule.equalsIgnoreCase(tmpEvent)) {
-        match = true;
-      }
-      break;
   }
   checkRAM(F("ruleMatch2"));
   return match;
