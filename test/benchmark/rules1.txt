@@ -1,4 +1,4 @@
-On StartTest Do
+On StartTest1 Do
 //Let,4,1 will stop the test
  LogEntry,Test started!
  Monitor,GPIO,2  //Set to trigger GPIO#2 events
