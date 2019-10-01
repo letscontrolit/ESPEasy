@@ -177,7 +177,7 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
         for (byte i = 0; i < 8; i++) {
         addr[i] = ExtraTaskSettings.TaskDevicePluginConfigLong[i];
         }
-        Plugin_004_DS_setResolution(ExtraTaskSettings.TaskDevicePluginConfigLong, getFormItemInt(F("p004_res")), Plugin_004_DallasPin);
+        Plugin_004_DS_setResolution(addr, getFormItemInt(F("p004_res")), Plugin_004_DallasPin);
       }
       success = true;
       break;
