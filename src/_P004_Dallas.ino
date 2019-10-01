@@ -173,6 +173,11 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
       if (Plugin_004_DallasPin != -1) {
         Plugin_004_timeoutGPIO[Plugin_004_DallasPin] = millis();
         Plugin_004_newValue[event->TaskIndex] = false;
+        uint8_t addr[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+        for (byte i = 0; i < 8; i++) {
+        addr[i] = ExtraTaskSettings.TaskDevicePluginConfigLong[i];
+        }
+        Plugin_004_DS_setResolution(ExtraTaskSettings.TaskDevicePluginConfigLong, getFormItemInt(F("p004_res")), Plugin_004_DallasPin);
       }
       success = true;
       break;
