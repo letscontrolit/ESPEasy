@@ -24,20 +24,20 @@ TEST(TestSendGoodweather, SendDataOnly) {
   irsend.sendGoodweather(0x0);
   EXPECT_EQ(
       "f38000d50"
-      "m6800s6800"
-      "m640s1600m640s1600m640s1600m640s1600m640s1600m640s1600m640s1600m640s1600"
-      "m640s580m640s580m640s580m640s580m640s580m640s580m640s580m640s580"
-      "m640s1600m640s1600m640s1600m640s1600m640s1600m640s1600m640s1600m640s1600"
-      "m640s580m640s580m640s580m640s580m640s580m640s580m640s580m640s580"
-      "m640s1600m640s1600m640s1600m640s1600m640s1600m640s1600m640s1600m640s1600"
-      "m640s580m640s580m640s580m640s580m640s580m640s580m640s580m640s580"
-      "m640s1600m640s1600m640s1600m640s1600m640s1600m640s1600m640s1600m640s1600"
-      "m640s580m640s580m640s580m640s580m640s580m640s580m640s580m640s580"
-      "m640s1600m640s1600m640s1600m640s1600m640s1600m640s1600m640s1600m640s1600"
-      "m640s580m640s580m640s580m640s580m640s580m640s580m640s580m640s580"
-      "m640s1600m640s1600m640s1600m640s1600m640s1600m640s1600m640s1600m640s1600"
-      "m640s580m640s580m640s580m640s580m640s580m640s580m640s580m640s580"
-      "m640s6800m640s100000",
+      "m6820s6820"
+      "m580s1860m580s1860m580s1860m580s1860m580s1860m580s1860m580s1860m580s1860"
+      "m580s580m580s580m580s580m580s580m580s580m580s580m580s580m580s580"
+      "m580s1860m580s1860m580s1860m580s1860m580s1860m580s1860m580s1860m580s1860"
+      "m580s580m580s580m580s580m580s580m580s580m580s580m580s580m580s580"
+      "m580s1860m580s1860m580s1860m580s1860m580s1860m580s1860m580s1860m580s1860"
+      "m580s580m580s580m580s580m580s580m580s580m580s580m580s580m580s580"
+      "m580s1860m580s1860m580s1860m580s1860m580s1860m580s1860m580s1860m580s1860"
+      "m580s580m580s580m580s580m580s580m580s580m580s580m580s580m580s580"
+      "m580s1860m580s1860m580s1860m580s1860m580s1860m580s1860m580s1860m580s1860"
+      "m580s580m580s580m580s580m580s580m580s580m580s580m580s580m580s580"
+      "m580s1860m580s1860m580s1860m580s1860m580s1860m580s1860m580s1860m580s1860"
+      "m580s580m580s580m580s580m580s580m580s580m580s580m580s580m580s580"
+      "m580s6820m580s100000",
       irsend.outputStr());
 
   irsend.reset();
@@ -113,7 +113,7 @@ TEST(TestDecodeGoodweather, RealExampleDecode) {
   EXPECT_FALSE(irsend.capture.repeat);
   ac.setRaw(irsend.capture.value);
   EXPECT_EQ(
-      "Power: On, Mode: 1 (COOL), Temp: 20C, Fan: 3 (Low), "
+      "Power: On, Mode: 1 (Cool), Temp: 20C, Fan: 3 (Low), "
       "Turbo: -, Light: -, Sleep: -, Swing: 0 (Fast), Command: 0 (Power)",
       ac.toString());
 
@@ -146,7 +146,7 @@ uint16_t rawData_FAD2BE31[197] = {
   EXPECT_FALSE(irsend.capture.repeat);
   ac.setRaw(irsend.capture.value);
   EXPECT_EQ(
-      "Power: Off, Mode: 1 (COOL), Temp: 22C, Fan: 3 (Low), Turbo: -, "
+      "Power: Off, Mode: 1 (Cool), Temp: 22C, Fan: 3 (Low), Turbo: -, "
       "Light: -, Sleep: -, Swing: 2 (Off), Command: 0 (Power)",
       ac.toString());
 
@@ -179,7 +179,7 @@ uint16_t rawData_FAD2BE31[197] = {
   EXPECT_FALSE(irsend.capture.repeat);
   ac.setRaw(irsend.capture.value);
   EXPECT_EQ(
-      "Power: On, Mode: 1 (COOL), Temp: 22C, Fan: 3 (Low), Turbo: -, "
+      "Power: On, Mode: 1 (Cool), Temp: 22C, Fan: 3 (Low), Turbo: -, "
       "Light: -, Sleep: -, Swing: 2 (Off), Command: 0 (Power)",
       ac.toString());
 
@@ -212,7 +212,7 @@ uint16_t rawData_FAD2BE31[197] = {
   EXPECT_FALSE(irsend.capture.repeat);
   ac.setRaw(irsend.capture.value);
   EXPECT_EQ(
-      "Power: On, Mode: 1 (COOL), Temp: 24C, Fan: 3 (Low), Turbo: -, "
+      "Power: On, Mode: 1 (Cool), Temp: 24C, Fan: 3 (Low), Turbo: -, "
       "Light: -, Sleep: -, Swing: 2 (Off), Command: 2 (Temp Up)",
       ac.toString());
 
@@ -245,7 +245,7 @@ uint16_t rawData_FAD2BE31[197] = {
   EXPECT_FALSE(irsend.capture.repeat);
   ac.setRaw(irsend.capture.value);
   EXPECT_EQ(
-      "Power: On, Mode: 1 (COOL), Temp: 23C, Fan: 3 (Low), "
+      "Power: On, Mode: 1 (Cool), Temp: 23C, Fan: 3 (Low), "
       "Turbo: -, Light: -, Sleep: -, Swing: 2 (Off), Command: 3 (Temp Down)",
       ac.toString());
 
@@ -278,7 +278,7 @@ uint16_t rawData_FAD2BE31[197] = {
   EXPECT_FALSE(irsend.capture.repeat);
   ac.setRaw(irsend.capture.value);
   EXPECT_EQ(
-      "Power: On, Mode: 1 (COOL), Temp: 22C, Fan: 3 (Low), Turbo: -, Light: -, "
+      "Power: On, Mode: 1 (Cool), Temp: 22C, Fan: 3 (Low), Turbo: -, Light: -, "
       "Sleep: -, Swing: 1 (Slow), Command: 4 (Swing)",
       ac.toString());
 }

@@ -445,18 +445,12 @@ uint8_t IRDaikinESP::convertMode(const stdAc::opmode_t mode) {
 // Convert a standard A/C Fan speed into its native fan speed.
 uint8_t IRDaikinESP::convertFan(const stdAc::fanspeed_t speed) {
   switch (speed) {
-    case stdAc::fanspeed_t::kMin:
-      return kDaikinFanQuiet;
-    case stdAc::fanspeed_t::kLow:
-      return kDaikinFanMin;
-    case stdAc::fanspeed_t::kMedium:
-      return kDaikinFanMin + 1;
-    case stdAc::fanspeed_t::kHigh:
-      return kDaikinFanMax - 1;
-    case stdAc::fanspeed_t::kMax:
-      return kDaikinFanMax;
-    default:
-      return kDaikinFanAuto;
+    case stdAc::fanspeed_t::kMin: return kDaikinFanQuiet;
+    case stdAc::fanspeed_t::kLow: return kDaikinFanMin;
+    case stdAc::fanspeed_t::kMedium: return kDaikinFanMed;
+    case stdAc::fanspeed_t::kHigh: return kDaikinFanMax - 1;
+    case stdAc::fanspeed_t::kMax: return kDaikinFanMax;
+    default: return kDaikinFanAuto;
   }
 }
 
@@ -476,6 +470,7 @@ stdAc::fanspeed_t IRDaikinESP::toCommonFanSpeed(const uint8_t speed) {
   switch (speed) {
     case kDaikinFanMax: return stdAc::fanspeed_t::kMax;
     case kDaikinFanMax - 1: return stdAc::fanspeed_t::kHigh;
+    case kDaikinFanMed:
     case kDaikinFanMin + 1: return stdAc::fanspeed_t::kMedium;
     case kDaikinFanMin: return stdAc::fanspeed_t::kLow;
     case kDaikinFanQuiet: return stdAc::fanspeed_t::kMin;
@@ -525,26 +520,26 @@ String IRDaikinESP::toString(void) {
   result += addBoolToString(getSensor(), F("Sensor"));
   result += addBoolToString(getMold(), F("Mold"));
   result += addBoolToString(getComfort(), F("Comfort"));
-  result += addBoolToString(getSwingHorizontal(), F("Swing (Horizontal)"));
-  result += addBoolToString(getSwingVertical(), F("Swing (Vertical)"));
+  result += addBoolToString(getSwingHorizontal(), F("Swing(H)"));
+  result += addBoolToString(getSwingVertical(), F("Swing(V)"));
   result += addLabeledString(minsToString(this->getCurrentTime()),
                              F("Current Time"));
   result += F(", Current Day: ");
   switch (this->getCurrentDay()) {
   case 1:
-    result +=F("SUN"); break;
+    result +=F("Sun"); break;
   case 2:
-    result +=F("MON"); break;
+    result +=F("Mon"); break;
   case 3:
-    result +=F("TUE"); break;
+    result +=F("Tue"); break;
   case 4:
-    result +=F("WED"); break;
+    result +=F("Wed"); break;
   case 5:
-    result +=F("THU"); break;
+    result +=F("Thu"); break;
   case 6:
-    result +=F("FRI"); break;
+    result +=F("Fri"); break;
   case 7:
-    result +=F("SAT"); break;
+    result +=F("Sat"); break;
   default:
     result +=F("(UNKNOWN)"); break;
   }
@@ -825,14 +820,17 @@ void IRDaikin2::setFan(const uint8_t fan) {
     fanset = kDaikinFanAuto;
   else
     fanset = 2 + fan;
-  remote_state[28] &= 0x0F;
-  remote_state[28] |= (fanset << 4);
+  remote_state[kDaikin2FanByte] &= 0x0F;
+  remote_state[kDaikin2FanByte] |= (fanset << 4);
 }
 
 uint8_t IRDaikin2::getFan() {
-  uint8_t fan = remote_state[28] >> 4;
-  if (fan != kDaikinFanQuiet && fan != kDaikinFanAuto) fan -= 2;
-  return fan;
+  const uint8_t fan = remote_state[kDaikin2FanByte] >> 4;
+  switch (fan) {
+    case kDaikinFanAuto:
+    case kDaikinFanQuiet: return fan;
+    default: return fan - 2;
+  }
 }
 
 uint8_t IRDaikin2::getTemp() { return remote_state[26] / 2; }
@@ -845,6 +843,7 @@ void IRDaikin2::setSwingVertical(const uint8_t position) {
     case 4:
     case 5:
     case kDaikin2SwingVLow:
+    case kDaikin2SwingVSwing:
     case kDaikin2SwingVBreeze:
     case kDaikin2SwingVCirculate:
     case kDaikin2SwingVAuto:
@@ -854,6 +853,34 @@ void IRDaikin2::setSwingVertical(const uint8_t position) {
 }
 
 uint8_t IRDaikin2::getSwingVertical() { return remote_state[18] & 0x0F; }
+
+// Convert a standard A/C vertical swing into its native version.
+uint8_t IRDaikin2::convertSwingV(const stdAc::swingv_t position) {
+  switch (position) {
+    case stdAc::swingv_t::kHighest:
+    case stdAc::swingv_t::kHigh:
+    case stdAc::swingv_t::kMiddle:
+    case stdAc::swingv_t::kLow:
+    case stdAc::swingv_t::kLowest:
+      return (uint8_t)position + kDaikin2SwingVHigh;
+    case stdAc::swingv_t::kAuto: return kDaikin2SwingVSwing;
+    default: return kDaikin2SwingVAuto;
+  }
+}
+
+// Convert a native vertical swing to it's common equivalent.
+stdAc::swingv_t IRDaikin2::toCommonSwingV(const uint8_t setting) {
+  switch (setting) {
+    case kDaikin2SwingVHigh: return stdAc::swingv_t::kHighest;
+    case kDaikin2SwingVHigh + 1: return stdAc::swingv_t::kHigh;
+    case kDaikin2SwingVHigh + 2:
+    case kDaikin2SwingVHigh + 3: return stdAc::swingv_t::kMiddle;
+    case kDaikin2SwingVLow - 1: return stdAc::swingv_t::kLow;
+    case kDaikin2SwingVLow: return stdAc::swingv_t::kLowest;
+    case kDaikin2SwingVAuto: return stdAc::swingv_t::kOff;
+    default: return stdAc::swingv_t::kAuto;
+  }
+}
 
 void IRDaikin2::setSwingHorizontal(const uint8_t position) {
   remote_state[17] = position;
@@ -1088,38 +1115,30 @@ uint8_t IRDaikin2::convertFan(const stdAc::fanspeed_t speed) {
   return IRDaikinESP::convertFan(speed);
 }
 
-// Convert a standard A/C vertical swing into its native version.
-uint8_t IRDaikin2::convertSwingV(const stdAc::swingv_t position) {
+// Convert a standard A/C horizontal swing into its native version.
+uint8_t IRDaikin2::convertSwingH(const stdAc::swingh_t position) {
   switch (position) {
-    case stdAc::swingv_t::kHighest:
-    case stdAc::swingv_t::kHigh:
-    case stdAc::swingv_t::kMiddle:
-    case stdAc::swingv_t::kLow:
-    case stdAc::swingv_t::kLowest:
-      return (uint8_t)position + kDaikin2SwingVHigh;
-    default:
-      return kDaikin2SwingVAuto;
-  }
-}
-
-// Convert a native vertical swing to it's common equivalent.
-stdAc::swingv_t IRDaikin2::toCommonSwingV(const uint8_t setting) {
-  switch (setting) {
-    case kDaikin2SwingVHigh: return stdAc::swingv_t::kHighest;
-    case kDaikin2SwingVHigh + 1: return stdAc::swingv_t::kHigh;
-    case kDaikin2SwingVHigh + 2:
-    case kDaikin2SwingVHigh + 3: return stdAc::swingv_t::kMiddle;
-    case kDaikin2SwingVLow - 1: return stdAc::swingv_t::kLow;
-    case kDaikin2SwingVLow: return stdAc::swingv_t::kLowest;
-    default: return stdAc::swingv_t::kAuto;
+    case stdAc::swingh_t::kAuto: return kDaikin2SwingHSwing;
+    case stdAc::swingh_t::kLeftMax: return kDaikin2SwingHLeftMax;
+    case stdAc::swingh_t::kLeft: return kDaikin2SwingHLeft;
+    case stdAc::swingh_t::kMiddle: return kDaikin2SwingHMiddle;
+    case stdAc::swingh_t::kRight: return kDaikin2SwingHRight;
+    case stdAc::swingh_t::kRightMax: return kDaikin2SwingHRightMax;
+    case stdAc::swingh_t::kWide: return kDaikin2SwingHWide;
+    default: return kDaikin2SwingHAuto;
   }
 }
 
 // Convert a native horizontal swing to it's common equivalent.
 stdAc::swingh_t IRDaikin2::toCommonSwingH(const uint8_t setting) {
   switch (setting) {
-    case kDaikin2SwingHSwing:
-    case kDaikin2SwingHAuto: return stdAc::swingh_t::kAuto;
+    case kDaikin2SwingHSwing: return stdAc::swingh_t::kAuto;
+    case kDaikin2SwingHLeftMax: return stdAc::swingh_t::kLeftMax;
+    case kDaikin2SwingHLeft: return stdAc::swingh_t::kLeft;
+    case kDaikin2SwingHMiddle: return stdAc::swingh_t::kMiddle;
+    case kDaikin2SwingHRight: return stdAc::swingh_t::kRight;
+    case kDaikin2SwingHRightMax: return stdAc::swingh_t::kRightMax;
+    case kDaikin2SwingHWide: return stdAc::swingh_t::kWide;
     default: return stdAc::swingh_t::kOff;
   }
 }
@@ -1137,12 +1156,12 @@ stdAc::state_t IRDaikin2::toCommon(void) {
   result.swingv = this->toCommonSwingV(this->getSwingVertical());
   result.swingh = this->toCommonSwingH(this->getSwingHorizontal());
   result.quiet = this->getQuiet();
-  result.light = this->getLight();
+  result.light = this->getLight() != 3;  // 3 is Off, everything else is On.
   result.turbo = this->getPowerful();
   result.clean = this->getMold();
   result.econo = this->getEcono();
   result.filter = this->getPurify();
-  result.beep = this->getBeep();
+  result.beep = this->getBeep() != 3;  // 3 is Off, everything else is On.
   result.sleep = this->getSleepTimerEnabled() ? this->getSleepTime() : -1;
   // Not supported.
   result.clock = -1;
@@ -1150,7 +1169,7 @@ stdAc::state_t IRDaikin2::toCommon(void) {
 }
 
 // Convert the internal state into a human readable string.
-String IRDaikin2::toString() {
+String IRDaikin2::toString(void) {
   String result = "";
   result.reserve(310);  // Reserve some heap for the string to reduce fragging.
   result += addBoolToString(getPower(), F("Power"), false);
@@ -1159,7 +1178,7 @@ String IRDaikin2::toString() {
   result += addTempToString(getTemp());
   result += addFanToString(getFan(), kDaikinFanMax, kDaikinFanMin,
                            kDaikinFanAuto, kDaikinFanQuiet, kDaikinFanMed);
-  result += addIntToString(getSwingVertical(), F("Swing (V)"));
+  result += addIntToString(getSwingVertical(), F("Swing(V)"));
   switch (getSwingVertical()) {
     case kDaikin2SwingVHigh:
       result += F(" (Highest)");
@@ -1181,10 +1200,13 @@ String IRDaikin2::toString() {
     case kDaikin2SwingVAuto:
       result += F(" (Auto)");
       break;
+    case kDaikin2SwingVSwing:
+      result += F(" (Swing)");
+      break;
     default:
       result += F(" (Unknown)");
   }
-  result += addIntToString(getSwingHorizontal(), F("Swing (H)"));
+  result += addIntToString(getSwingHorizontal(), F("Swing(H)"));
   switch (getSwingHorizontal()) {
     case kDaikin2SwingHAuto:
       result += F(" (Auto)");
@@ -1587,7 +1609,7 @@ stdAc::state_t IRDaikin216::toCommon(void) {
 }
 
 // Convert the internal state into a human readable string.
-String IRDaikin216::toString() {
+String IRDaikin216::toString(void) {
   String result = "";
   result.reserve(120);  // Reserve some heap for the string to reduce fragging.
   result += addBoolToString(getPower(), F("Power"), false);
@@ -1596,8 +1618,8 @@ String IRDaikin216::toString() {
   result += addTempToString(getTemp());
   result += addFanToString(getFan(), kDaikinFanMax, kDaikinFanMin,
                            kDaikinFanAuto, kDaikinFanQuiet, kDaikinFanMed);
-  result += addBoolToString(getSwingHorizontal(), F("Swing (Horizontal)"));
-  result += addBoolToString(getSwingVertical(), F("Swing (Vertical)"));
+  result += addBoolToString(getSwingHorizontal(), F("Swing(H)"));
+  result += addBoolToString(getSwingVertical(), F("Swing(V)"));
   result += addBoolToString(getQuiet(), F("Quiet"));
   result += addBoolToString(getPowerful(), F("Powerful"));
   return result;
@@ -1941,7 +1963,7 @@ stdAc::state_t IRDaikin160::toCommon(void) {
 }
 
 // Convert the internal state into a human readable string.
-String IRDaikin160::toString() {
+String IRDaikin160::toString(void) {
   String result = "";
   result.reserve(150);  // Reserve some heap for the string to reduce fragging.
   result += addBoolToString(getPower(), F("Power"), false);
@@ -1950,7 +1972,7 @@ String IRDaikin160::toString() {
   result += addTempToString(getTemp());
   result += addFanToString(getFan(), kDaikinFanMax, kDaikinFanMin,
                            kDaikinFanAuto, kDaikinFanQuiet, kDaikinFanMed);
-  result += addIntToString(getSwingVertical(), F("Vent Position (V)"));
+  result += addIntToString(getSwingVertical(), F("Swing(V)"));
   switch (getSwingVertical()) {
     case kDaikin160SwingVHighest: result += F(" (Highest)"); break;
     case kDaikin160SwingVHigh:    result += F(" (High)"); break;
@@ -1959,7 +1981,7 @@ String IRDaikin160::toString() {
     case kDaikin160SwingVLowest:  result += F(" (Lowest)"); break;
     case kDaikin160SwingVAuto:    result += F(" (Auto)"); break;
     default:
-      result += F(" (Unknown)");
+      result += F(" (UNKNOWN)");
   }
   return result;
 }
@@ -2315,7 +2337,7 @@ stdAc::state_t IRDaikin176::toCommon(void) {
 }
 
 // Convert the internal state into a human readable string.
-String IRDaikin176::toString() {
+String IRDaikin176::toString(void) {
   String result = "";
   result.reserve(80);  // Reserve some heap for the string to reduce fragging.
   result += addBoolToString(getPower(), F("Power"), false);
@@ -2324,8 +2346,7 @@ String IRDaikin176::toString() {
   result += addTempToString(getTemp());
   result += addFanToString(getFan(), kDaikin176FanMax, kDaikinFanMin,
                            kDaikinFanMin, kDaikinFanMin, kDaikinFanMin);
-  result += F(", Swing (H): ");
-  result += uint64ToString(getSwingHorizontal());
+  result += addIntToString(getSwingHorizontal(), F("Swing(H)"));
   switch (getSwingHorizontal()) {
     case kDaikin176SwingHAuto:
       result += F(" (Auto)");
@@ -2798,7 +2819,7 @@ String IRDaikin128::toString(void) {
                            kDaikin128FanMed);
   result += addBoolToString(getPowerful(), F("Powerful"));
   result += addBoolToString(getQuiet(), F("Quiet"));
-  result += addBoolToString(getSwingVertical(), F("Swing (V)"));
+  result += addBoolToString(getSwingVertical(), F("Swing(V)"));
   result += addBoolToString(getSleep(), F("Sleep"));
   result += addBoolToString(getEcono(), F("Econo"));
   result += addLabeledString(minsToString(getClock()), F("Clock"));
@@ -2924,7 +2945,7 @@ bool IRrecv::decodeDaikin128(decode_results *results, const uint16_t nbits,
 // Supported devices:
 // - Daikin ARC480A5 remote.
 //
-// Status: Beta / Probably working.
+// Status: STABLE / Known working.
 //
 // Ref: https://github.com/crankyoldgit/IRremoteESP8266/issues/873
 void IRsend::sendDaikin152(const unsigned char data[], const uint16_t nbytes,

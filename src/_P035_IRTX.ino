@@ -160,7 +160,7 @@ boolean Plugin_035(byte function, struct EventStruct *event, String &string)
         IrType_orig = TmpStr1;
         IrType.toLowerCase();
       }
-
+#ifdef P016_P035_USE_RAW_RAW2
       if (IrType.equals(F("raw")) || IrType.equals(F("raw2")))
       {
         String IrRaw;
@@ -336,7 +336,8 @@ boolean Plugin_035(byte function, struct EventStruct *event, String &string)
         //sprintf_P(log, PSTR("IR Params2: RAW Code:%s"), IrRaw.c_str());
         //addLog(LOG_LEVEL_INFO, log);
       }
-      else if (cmdCode.equalsIgnoreCase(F("IRSEND")))
+      else
+      #endif //P016_P035_USE_RAW_RAW2
       {
         uint16_t IrRepeat = 0;
         //  unsigned long IrSecondCode=0UL;
