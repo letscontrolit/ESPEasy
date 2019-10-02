@@ -104,8 +104,8 @@ struct ModbusRTU_struct  {
   }
 
   void getStatistics(uint32_t& pass, uint32_t& fail, uint32_t& nodata) {
-    pass = _reads_pass;
-    fail = _reads_crc_failed;
+    pass   = _reads_pass;
+    fail   = _reads_crc_failed;
     nodata = _reads_nodata;
   }
 
@@ -468,14 +468,15 @@ struct ModbusRTU_struct  {
       // Send the byte array
       startWrite();
       easySerial->write(_sendframe, _sendframe_used);
+
       // sent all data from buffer
       easySerial->flush();
       startRead();
 
       // Read answer from sensor
       _recv_buf_used = 0;
-      unsigned long timeout = millis() + _modbus_timeout;
-      bool validPacket      = false;
+      unsigned long timeout    = millis() + _modbus_timeout;
+      bool validPacket         = false;
       bool invalidDueToTimeout = false;
 
       //  idx:    0,   1,   2,   3,   4,   5,   6,   7
@@ -486,6 +487,7 @@ struct ModbusRTU_struct  {
         if (timeOutReached(timeout)) {
           invalidDueToTimeout = true;
         }
+
         while (!invalidDueToTimeout && easySerial->available() && _recv_buf_used < MODBUS_RECEIVE_BUFFER) {
           if (timeOutReached(timeout)) {
             invalidDueToTimeout = true;
@@ -493,11 +495,11 @@ struct ModbusRTU_struct  {
           _recv_buf[_recv_buf_used++] = easySerial->read();
         }
 
-        if (_recv_buf_used > 2) { // got length
-          if (_recv_buf_used >= (3+_recv_buf[2]+2)) { // got whole pkt
-            crc = ModRTU_CRC(_recv_buf, _recv_buf_used); // crc16 is 0 for whole valid pkt
-            validPacket = (crc == 0) && (_recv_buf[0] == _sendframe[0]); // check crc and address
-            return_value = 0; // reset return value
+        if (_recv_buf_used > 2) {                                         // got length
+          if (_recv_buf_used >= (3 + _recv_buf[2] + 2)) {                 // got whole pkt
+            crc          = ModRTU_CRC(_recv_buf, _recv_buf_used);         // crc16 is 0 for whole valid pkt
+            validPacket  = (crc == 0) && (_recv_buf[0] == _sendframe[0]); // check crc and address
+            return_value = 0;                                             // reset return value
           }
         }
         delay(0);
@@ -506,6 +508,7 @@ struct ModbusRTU_struct  {
       // Check for MODBUS exception
       if (invalidDueToTimeout) {
         ++_reads_nodata;
+
         if (_recv_buf_used == 0) {
           return_value = MODBUS_NODATA;
         } else {
@@ -544,10 +547,13 @@ struct ModbusRTU_struct  {
 
   uint32_t read_32b_InputRegister(short address) {
     uint32_t result = 0;
-    int idHigh      = readInputRegister(address);
-    int idLow       = readInputRegister(address + 1);
+    byte     errorcode;
+    int idHigh = readInputRegister(address, errorcode);
 
-    if ((idHigh >= 0) && (idLow >= 0)) {
+    if (errorcode != 0) { return result; }
+    int idLow = readInputRegister(address + 1, errorcode);
+
+    if (errorcode == 0) {
       result  = idHigh;
       result  = result << 16;
       result += idLow;
@@ -576,22 +582,29 @@ struct ModbusRTU_struct  {
     //    return fval;
   }
 
-  int readInputRegister(short address) {
+  int readInputRegister(short address, byte& errorcode) {
     // Only read 1 register
-    return process_16b_register(_modbus_address, MODBUS_READ_INPUT_REGISTERS, address, 1);
+    return process_16b_register(_modbus_address, MODBUS_READ_INPUT_REGISTERS, address, 1, errorcode);
   }
 
-  int readHoldingRegister(short address) {
+  int readHoldingRegister(short address, byte& errorcode) {
     // Only read 1 register
     return process_16b_register(
-      _modbus_address, MODBUS_READ_HOLDING_REGISTERS, address, 1);
+      _modbus_address, MODBUS_READ_HOLDING_REGISTERS, address, 1, errorcode);
   }
 
   // Write to holding register.
   int writeSingleRegister(short address, short value) {
+    // No check for the specific error code.
+    byte errorcode = 0;
+
+    return writeSingleRegister(address, value, errorcode);
+  }
+
+  int writeSingleRegister(short address, short value, byte& errorcode) {
     // GN: Untested, will probably not work
     return process_16b_register(
-      _modbus_address, MODBUS_WRITE_SINGLE_REGISTER, address, value);
+      _modbus_address, MODBUS_WRITE_SINGLE_REGISTER, address, value, errorcode);
   }
 
   // Function 16 (0x10) "Write Multiple Registers" to write to a single holding register
@@ -672,15 +685,16 @@ struct ModbusRTU_struct  {
   }
 
   int process_16b_register(byte slaveAddress, byte functionCode,
-                           short startAddress, short parameter) {
+                           short startAddress, short parameter,
+                           byte& errorcode) {
     buildFrame(slaveAddress, functionCode, startAddress, parameter);
-    const byte process_result = processCommand();
+    errorcode = processCommand();
 
-    if (process_result == 0) {
+    if (errorcode == 0) {
       return (_recv_buf[3] << 8) | (_recv_buf[4]);
     }
-    logModbusException(process_result);
-    return -1 * process_result;
+    logModbusException(errorcode);
+    return -1;
   }
 
   // Still writing single register, but calling it using "Preset Multiple Registers" function (FC=16)
@@ -725,12 +739,13 @@ struct ModbusRTU_struct  {
   }
 
   unsigned int read_RAM_EEPROM(byte command, byte startAddress,
-                               byte nrBytes) {
+                               byte nrBytes,
+                               byte& errorcode) {
     buildRead_RAM_EEPROM(_modbus_address, command,
                          startAddress, nrBytes);
-    const byte process_result = processCommand();
+    errorcode = processCommand();
 
-    if (process_result == 0) {
+    if (errorcode == 0) {
       unsigned int result = 0;
 
       for (int i = 0; i < _recv_buf[2]; ++i) {
@@ -739,8 +754,8 @@ struct ModbusRTU_struct  {
       }
       return result;
     }
-    logModbusException(process_result);
-    return -1 * process_result;
+    logModbusException(errorcode);
+    return 0;
   }
 
   // Compute the MODBUS RTU CRC
@@ -813,4 +828,4 @@ private:
 
   ESPeasySerial *easySerial;
 };
-#endif //USES_MODBUS
+#endif // USES_MODBUS

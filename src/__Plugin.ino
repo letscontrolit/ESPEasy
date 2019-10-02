@@ -1088,12 +1088,13 @@ int8_t getXFromPluginId(byte pluginID) {
 byte PluginCall(byte Function, struct EventStruct *event, String& str)
 {
   struct EventStruct TempEvent;
-
   if (event == 0)
     event = &TempEvent;
   else
     TempEvent = (*event);
 
+
+  checkRAM(F("PluginCall"), Function);
   switch (Function)
   {
     // Unconditional calls to all plugins
@@ -1280,7 +1281,11 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
             LoadTaskSettings(event->TaskIndex);
           }
           event->BaseVarIndex = event->TaskIndex * VARS_PER_TASK;
-          checkRAM(F("PluginCall_init"),x);
+          {
+            String descr = F("PluginCall_task_");
+            descr += event->TaskIndex;
+            checkRAM(descr, String(Function));
+          }
           START_TIMER;
           bool retval =  Plugin_ptr[x](Function, event, str);
           if (retval && Function == PLUGIN_READ) {

@@ -313,6 +313,14 @@ void sendHeaderBlocking(bool json, const String& origin) {
 }
 
 void sendHeadandTail(const String& tmplName, boolean Tail = false, boolean rebooting = false) {
+  // This function is called twice per serving a web page.
+  // So it must keep track of the timer longer than the scope of this function.
+  // Therefore use a local static variable.
+  static unsigned statisticsTimerStart = 0;
+  if (!Tail) {
+    statisticsTimerStart = micros();
+  }
+
   String pageTemplate = "";
   String fileName     = tmplName;
 
@@ -383,6 +391,7 @@ void sendHeadandTail(const String& tmplName, boolean Tail = false, boolean reboo
     TXBuffer += DATA_REBOOT_JS;
     html_add_script_end();
   }
+  STOP_TIMER(HANDLE_SERVING_WEBPAGE);
 }
 
 void sendHeadandTail_stdtemplate(boolean Tail = false, boolean rebooting = false) {
@@ -488,12 +497,13 @@ void WebServerInit()
 
   #if defined(ESP8266)
   {
+    #ifndef NO_HTTP_UPDATER
     uint32_t maxSketchSize;
     bool     use2step;
-
     if (OTA_possible(maxSketchSize, use2step)) {
       httpUpdater.setup(&WebServer);
     }
+    #endif
   }
   #endif // if defined(ESP8266)
 

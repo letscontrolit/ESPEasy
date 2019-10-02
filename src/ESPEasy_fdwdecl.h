@@ -39,7 +39,7 @@ void     scheduleNextDelayQueue(unsigned long id,
 String   LoadControllerSettings(int                       ControllerIndex,
                                 ControllerSettingsStruct& controller_settings);
 String   get_formatted_Controller_number(int controller_index);
-void     statusLED(boolean traffic);
+void     statusLED(bool traffic);
 void     backgroundtasks();
 uint32_t getCurrentFreeStack();
 uint32_t getFreeStackWatermark();
