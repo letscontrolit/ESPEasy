@@ -1,4 +1,36 @@
 -------------------------------------------------
+Changes in release mega-20191003 (since mega-20190928)
+-------------------------------------------------
+
+Release date: Thu Oct  3 04:00:10 CEST 2019
+
+Gijs Noorlander (13):
+      [PIO] Describe core 2.6.0 branches/repositories
+      [SenseAir] Fix incorrect handling of Modbus error codes
+      [Uncrustify] Format SenseAir, AcuDC24x and Modbus RTU file
+      Fix cached search for task value name may return wrong index (#2639)
+      [Rules] Optimize rules parsing
+      [INT#n] isn't doing transformations properly (#2642)
+      Add system variable %sysstack%
+      Disable firmware upload button when NO_HTTP_UPDATER is defined
+      [Rules] Optimize ruleMatch function
+      [Rules] Remove duplicate code to replace %eventvalue%
+      [Rules] Split conditionMatch to share with event match
+      [Rules] Allow extra inequality checks for rule event matching
+      [Build] Fix forward declaration build error
+
+TD-er (3):
+      [Build] Add NO_HTTP_UPDATER to exclude http updates
+      [ADC] Fix oversampling offset during WiFi connect
+      [ADC] Build fix ESP32 & Uncrustify
+
+jimmys01 (3):
+      [IR] Update lib to 2.6.6
+      [IR] Further granulate the selection of IR capabilities
+      Add the RAW RAW2 define also in the custom.h file as well
+
+
+-------------------------------------------------
 Changes in release mega-20190928 (since mega-20190926)
 -------------------------------------------------
 
