@@ -55,11 +55,15 @@
 #define TRY_OPEN_FILE           42
 #define SPIFFS_GC_SUCCESS       43
 #define SPIFFS_GC_FAIL          44
-#define RULES_PROCESSING        45
-#define GRAT_ARP_STATS          46
-#define BACKGROUND_TASKS        47
-#define HANDLE_SCHEDULER_IDLE   48
-#define HANDLE_SCHEDULER_TASK   49
+#define PARSE_SYSVAR            45
+#define PARSE_SYSVAR_NOCHANGE   46
+#define PARSE_TEMPLATE          47
+#define RULES_PROCESSING        48
+#define GRAT_ARP_STATS          49
+#define BACKGROUND_TASKS        50
+#define HANDLE_SCHEDULER_IDLE   51
+#define HANDLE_SCHEDULER_TASK   52
+#define HANDLE_SERVING_WEBPAGE  53
 
 class TimingStats {
 public:

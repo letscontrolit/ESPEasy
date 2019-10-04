@@ -410,8 +410,8 @@ uint8_t IRPanasonicAc::getSwingVertical(void) {
 void IRPanasonicAc::setSwingVertical(const uint8_t desired_elevation) {
   uint8_t elevation = desired_elevation;
   if (elevation != kPanasonicAcSwingVAuto) {
-    elevation = std::max(elevation, kPanasonicAcSwingVUp);
-    elevation = std::min(elevation, kPanasonicAcSwingVDown);
+    elevation = std::max(elevation, kPanasonicAcSwingVHighest);
+    elevation = std::min(elevation, kPanasonicAcSwingVLowest);
   }
   remote_state[16] &= 0xF0;
   remote_state[16] |= elevation;
@@ -636,12 +636,9 @@ uint8_t IRPanasonicAc::convertSwingV(const stdAc::swingv_t position) {
     case stdAc::swingv_t::kHighest:
     case stdAc::swingv_t::kHigh:
     case stdAc::swingv_t::kMiddle:
-      return kPanasonicAcSwingVUp;
     case stdAc::swingv_t::kLow:
-    case stdAc::swingv_t::kLowest:
-      return kPanasonicAcSwingVDown;
-    default:
-      return kPanasonicAcSwingVAuto;
+    case stdAc::swingv_t::kLowest: return (uint8_t)position;
+    default: return kPanasonicAcSwingVAuto;
   }
 }
 
@@ -700,11 +697,10 @@ stdAc::swingh_t IRPanasonicAc::toCommonSwingH(const uint8_t pos) {
 
 // Convert a native vertical swing to it's common equivalent.
 stdAc::swingv_t IRPanasonicAc::toCommonSwingV(const uint8_t pos) {
-  switch (pos) {
-    case kPanasonicAcSwingVUp: return stdAc::swingv_t::kHighest;
-    case kPanasonicAcSwingVDown: return stdAc::swingv_t::kLowest;
-    default: return stdAc::swingv_t::kAuto;
-  }
+  if (pos >= kPanasonicAcSwingVHighest && pos <= kPanasonicAcSwingVLowest)
+    return (stdAc::swingv_t)pos;
+  else
+    return stdAc::swingv_t::kAuto;
 }
 
 // Convert the A/C state to it's common equivalent.
@@ -767,15 +763,15 @@ String IRPanasonicAc::toString(void) {
   result += addFanToString(getFan(), kPanasonicAcFanMax, kPanasonicAcFanMin,
                            kPanasonicAcFanAuto, kPanasonicAcFanAuto,
                            kPanasonicAcFanMed);
-  result += addIntToString(getSwingVertical(), F("Swing (Vertical)"));
+  result += addIntToString(getSwingVertical(), F("Swing(V)"));
   switch (getSwingVertical()) {
     case kPanasonicAcSwingVAuto:
-      result += F(" (AUTO)");
+      result += F(" (Auto)");
       break;
-    case kPanasonicAcSwingVUp:
+    case kPanasonicAcSwingVHighest:
       result += F(" (Full Up)");
       break;
-    case kPanasonicAcSwingVDown:
+    case kPanasonicAcSwingVLowest:
       result += F(" (Full Down)");
       break;
     case 2:
@@ -791,10 +787,10 @@ String IRPanasonicAc::toString(void) {
     case kPanasonicCkp:
       break;  // No Horizontal Swing support.
     default:
-      result += addIntToString(getSwingHorizontal(), F("Swing (Horizontal)"));
+      result += addIntToString(getSwingHorizontal(), F("Swing(H)"));
       switch (getSwingHorizontal()) {
         case kPanasonicAcSwingHAuto:
-          result += F(" (AUTO)");
+          result += F(" (Auto)");
           break;
         case kPanasonicAcSwingHFullLeft:
           result += F(" (Full Left)");

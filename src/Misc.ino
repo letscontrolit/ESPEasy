@@ -458,10 +458,10 @@ void deepSleepStart(int dsdelay)
   #endif // if defined(ESP32)
 }
 
-boolean remoteConfig(struct EventStruct *event, const String& string)
+bool remoteConfig(struct EventStruct *event, const String& string)
 {
   checkRAM(F("remoteConfig"));
-  boolean success = false;
+  bool success = false;
   String  command = parseString(string, 1);
 
   if (command == F("config"))
@@ -590,7 +590,7 @@ void setPinState(byte plugin, byte index, byte mode, uint16_t value)
 {
   // plugin number and index form a unique key
   // first check if this pin is already known
-  boolean reUse = false;
+  bool reUse = false;
   for (byte x = 0; x < PINSTATE_TABLE_MAX; x++)
     if ((pinStates[x].plugin == plugin) && (pinStates[x].index == index))
     {
@@ -620,7 +620,7 @@ void setPinState(byte plugin, byte index, byte mode, uint16_t value)
   \*********************************************************************************************/
 
 /*
-boolean getPinState(byte plugin, byte index, byte *mode, uint16_t *value)
+bool getPinState(byte plugin, byte index, byte *mode, uint16_t *value)
 {
   for (byte x = 0; x < PINSTATE_TABLE_MAX; x++)
     if ((pinStates[x].plugin == plugin) && (pinStates[x].index == index))
@@ -637,7 +637,7 @@ boolean getPinState(byte plugin, byte index, byte *mode, uint16_t *value)
    check if pin mode & state is known (info table)
   \*********************************************************************************************/
 /*
-boolean hasPinState(byte plugin, byte index)
+bool hasPinState(byte plugin, byte index)
 {
   for (byte x = 0; x < PINSTATE_TABLE_MAX; x++)
     if ((pinStates[x].plugin == plugin) && (pinStates[x].index == index))
@@ -654,13 +654,13 @@ boolean hasPinState(byte plugin, byte index)
 /*********************************************************************************************\
    report pin mode & state (info table) using json
   \*********************************************************************************************/
-String getPinStateJSON(boolean search, uint32_t key, const String& log, int16_t noSearchValue)
+String getPinStateJSON(bool search, uint32_t key, const String& log, int16_t noSearchValue)
 {
   checkRAM(F("getPinStateJSON"));
   printToWebJSON = true;
   byte mode = PIN_MODE_INPUT;
   int16_t value = noSearchValue;
-  boolean found = false;
+  bool found = false;
 
   if (search && existPortStatus(key))
   {
@@ -716,7 +716,7 @@ String getPinModeString(byte mode) {
 #define STATUS_PWM_NORMALFADE (PWMRANGE>>8)
 #define STATUS_PWM_TRAFFICRISE (PWMRANGE>>1)
 
-void statusLED(boolean traffic)
+void statusLED(bool traffic)
 {
   static int gnStatusValueCurrent = -1;
   static long int gnLastUpdate = millis();
@@ -810,7 +810,7 @@ void parseCommandString(struct EventStruct *event, const String& string)
 /********************************************************************************************\
   Clear task settings for given task
   \*********************************************************************************************/
-void taskClear(byte taskIndex, boolean save)
+void taskClear(byte taskIndex, bool save)
 {
   if (taskIndex >= TASKS_MAX) return;
   checkRAM(F("taskClear"));
@@ -923,7 +923,7 @@ bool GetArgvBeginEnd(const char *string, const unsigned int argc, int& pos_begin
   pos_end   = -1;
   size_t string_len = strlen(string);
   unsigned int string_pos = 0, argc_pos = 0;
-  boolean parenthesis          = false;
+  bool parenthesis          = false;
   char    matching_parenthesis = '"';
 
   while (string_pos < string_len)
@@ -1303,11 +1303,11 @@ unsigned long getMaxFreeBlock()
 /********************************************************************************************\
   Check if string is valid float
   \*********************************************************************************************/
-boolean isFloat(const String& tBuf) {
+bool isFloat(const String& tBuf) {
   return isNumerical(tBuf, false);
 }
 
-boolean isValidFloat(float f) {
+bool isValidFloat(float f) {
   if (f == NAN)      return false; //("NaN");
   if (f == INFINITY) return false; //("INFINITY");
   if (-f == INFINITY)return false; //("-INFINITY");
@@ -1316,21 +1316,25 @@ boolean isValidFloat(float f) {
   return true;
 }
 
-boolean isInt(const String& tBuf) {
+bool isInt(const String& tBuf) {
   return isNumerical(tBuf, true);
 }
 
 bool validIntFromString(const String& tBuf, int& result) {
   const String numerical = getNumerical(tBuf, true);
-  const bool isvalid = isInt(numerical);
-  result = numerical.toInt();
+  const bool isvalid = numerical.length() > 0;
+  if (isvalid) {
+    result = numerical.toInt();
+  }
   return isvalid;
 }
 
 bool validFloatFromString(const String& tBuf, float& result) {
   const String numerical = getNumerical(tBuf, false);
-  const bool isvalid = isFloat(numerical);
-  result = numerical.toFloat();
+  const bool isvalid = numerical.length() > 0;
+  if (isvalid) {
+    result = numerical.toFloat();
+  }
   return isvalid;
 }
 
@@ -1338,13 +1342,18 @@ bool validFloatFromString(const String& tBuf, float& result) {
 String getNumerical(const String& tBuf, bool mustBeInteger) {
   String result = "";
   const unsigned int bufLength = tBuf.length();
-  if (bufLength == 0) return result;
-  boolean decPt = false;
-  int firstDec = 0;
-  char c = tBuf.charAt(0);
+  unsigned int firstDec = 0;
+  while (firstDec < bufLength && tBuf.charAt(firstDec) == ' ') {
+    ++firstDec;
+  }
+  if (firstDec >= bufLength) return result;
+
+  bool decPt = false;
+  
+  char c = tBuf.charAt(firstDec);
   if(c == '+' || c == '-') {
     result += c;
-    firstDec = 1;
+    ++firstDec;
   }
   for(unsigned int x=firstDec; x < bufLength; ++x) {
     c = tBuf.charAt(x);
@@ -1360,14 +1369,17 @@ String getNumerical(const String& tBuf, bool mustBeInteger) {
   return result;
 }
 
-boolean isNumerical(const String& tBuf, bool mustBeInteger) {
+bool isNumerical(const String& tBuf, bool mustBeInteger) {
   const unsigned int bufLength = tBuf.length();
-  if (bufLength == 0) return false;
-  boolean decPt = false;
-  int firstDec = 0;
-  char c = tBuf.charAt(0);
+  unsigned int firstDec = 0;
+  while (firstDec < bufLength && tBuf.charAt(firstDec) == ' ') {
+    ++firstDec;
+  }
+  if (firstDec >= bufLength) return false;
+  bool decPt = false;
+  char c = tBuf.charAt(firstDec);
   if(c == '+' || c == '-')
-    firstDec = 1;
+    ++firstDec;
   for(unsigned int x=firstDec; x < bufLength; ++x) {
     c = tBuf.charAt(x);
     if(c == '.') {
@@ -1451,13 +1463,12 @@ void reboot() {
 String parseTemplate(String& tmpString, byte lineSize)
 {
   checkRAM(F("parseTemplate"));
+  START_TIMER
 
   // Keep current loaded taskSettings to restore at the end.
   byte   currentTaskIndex = ExtraTaskSettings.TaskIndex;
-  String newString        = "";
-
-  // String tmpStringMid = "";
-  newString.reserve(lineSize);
+  String newString;
+  newString.reserve(lineSize); // Our best guess of the new size.
 
   parseSystemVariables(tmpString, false);
   
@@ -1471,7 +1482,8 @@ String parseTemplate(String& tmpString, byte lineSize)
     // First copy all upto the start of the [...#...] part to be replaced.
     newString += tmpString.substring(lastStartpos, startpos);
     
-    if (deviceName.equalsIgnoreCase(F("Plugin")))
+    // deviceName is lower case, so we can compare literal string (no need for equalsIgnoreCase)
+    if (deviceName.equals(F("plugin")))
     {
       // Handle a plugin request.
       // For example: "[Plugin#GPIO#Pinstate#N]"
@@ -1490,7 +1502,7 @@ String parseTemplate(String& tmpString, byte lineSize)
         newString += command;
       }
     }
-    else if (deviceName.equalsIgnoreCase(F("Var")) || deviceName.equalsIgnoreCase(F("Int"))) 
+    else if (deviceName.equals(F("var")) || deviceName.equals(F("int"))) 
     {
       // Address an internal variable either as float or as int
       // For example: Let,10,[VAR#9]
@@ -1499,7 +1511,7 @@ String parseTemplate(String& tmpString, byte lineSize)
       if (validIntFromString(valueName, varNum)) {
         if ((varNum > 0) && (varNum <= CUSTOM_VARS_MAX)) {
           unsigned char nr_decimals = 2;
-          if (deviceName.equalsIgnoreCase(F("Int"))) {
+          if (deviceName.equals(F("int"))) {
             nr_decimals = 0;
           } else if (format.length() != 0)
           {
@@ -1572,11 +1584,12 @@ String parseTemplate(String& tmpString, byte lineSize)
   while (newString.length() < lineSize) {
     newString += ' ';
   }
+  STOP_TIMER(PARSE_TEMPLATE);
   checkRAM(F("parseTemplate3"));
   return newString;
 }
 
-// Find the first task with given name
+// Find the first (enabled) task with given name
 // Return TASKS_MAX when not found, else return taskIndex
 byte findTaskIndexByName(const String& deviceName)
 {
@@ -1587,15 +1600,16 @@ byte findTaskIndexByName(const String& deviceName)
   }
   for (byte taskIndex = 0; taskIndex < TASKS_MAX; taskIndex++)
   {
-    LoadTaskSettings(taskIndex);
-    String taskDeviceName = getTaskDeviceName(taskIndex);
-
-    if (taskDeviceName.length() != 0)
-    {
-      if (deviceName.equalsIgnoreCase(taskDeviceName))
+    if (Settings.TaskDeviceEnabled[taskIndex]) {
+      String taskDeviceName = getTaskDeviceName(taskIndex);
+      if (taskDeviceName.length() != 0)
       {
-        Cache.taskIndexName[deviceName] = taskIndex;
-        return taskIndex;
+        // Use entered taskDeviceName can have any case, so compare case insensitive.
+        if (deviceName.equalsIgnoreCase(taskDeviceName))
+        {
+          Cache.taskIndexName[deviceName] = taskIndex;
+          return taskIndex;
+        }
       }
     }
   }
@@ -1607,7 +1621,15 @@ byte findTaskIndexByName(const String& deviceName)
 byte findDeviceValueIndexByName(const String& valueName, byte taskIndex) 
 {
   // cache this, since LoadTaskSettings does take some time.
-  auto result = Cache.taskIndexValueName.find(valueName);
+  // We need to use a cache search key including the taskIndex,
+  // to allow several tasks to have the same value names.
+  String cache_valueName;
+  cache_valueName.reserve(valueName.length() + 4);
+  cache_valueName = valueName;
+  cache_valueName += '#'; // The '#' cannot exist in a value name, use it in the cache key.
+  cache_valueName += taskIndex;
+
+  auto result = Cache.taskIndexValueName.find(cache_valueName);
   if (result != Cache.taskIndexValueName.end()) {
     return result->second;
   }
@@ -1618,9 +1640,10 @@ byte findDeviceValueIndexByName(const String& valueName, byte taskIndex)
 
   for (byte valueNr = 0; valueNr < valCount; valueNr++)
   {
+    // Check case insensitive, since the user entered value name can have any case.
     if (valueName.equalsIgnoreCase(ExtraTaskSettings.TaskDeviceValueNames[valueNr]))
     {
-      Cache.taskIndexValueName[valueName] = valueNr;
+      Cache.taskIndexValueName[cache_valueName] = valueNr;
       return valueNr;
     }
   }
@@ -1651,6 +1674,8 @@ bool findNextValMarkInString(const String& input, int& startpos, int& hashpos, i
 }
 
 // Find [deviceName#valueName] or [deviceName#valueName#format]
+// DeviceName and valueName will be returned in lower case.
+// Format may contain case sensitive formatting syntax.
 bool findNextDevValNameInString(const String& input, int& startpos, int& endpos, String& deviceName, String& valueName, String& format) {
   int hashpos;
 
@@ -1666,6 +1691,8 @@ bool findNextDevValNameInString(const String& input, int& startpos, int& endpos,
   } else {
     format = "";
   }
+  deviceName.toLowerCase();
+  valueName.toLowerCase();
   return true;
 }
 
@@ -1681,6 +1708,9 @@ void transformValue(
 	String& valueFormat,
   const String &tmpString)
 {
+  // FIXME TD-er: This function does append to newString and uses its length to perform right aling.
+  // Is this the way it is intended to use?
+  
   checkRAM(F("transformValue"));
 
   // start changes by giig1967g - 2018-04-20
@@ -2374,7 +2404,7 @@ class RamTracker{
           }
         };
 
-    void registerRamState(String &s){    // store function
+    void registerRamState(const String &s){    // store function
        nextAction[writePtr]=s;                              // name and mem
        nextActionStartMemory[writePtr]=ESP.getFreeHeap();   // in cyclic buffer.
        int bestCase = bestCaseTrace();                      // find best case memory trace
@@ -2423,12 +2453,12 @@ void checkRAM(const __FlashStringHelper* flashString, int a ) {
  checkRAM(flashString,s);
 }
 
-void checkRAM(const __FlashStringHelper* flashString, String &a ) {
+void checkRAM(const __FlashStringHelper* flashString, const String &a ) {
   String s = flashString;
   checkRAM(s,a);
 }
 
-void checkRAM(String &flashString, String &a ) {
+void checkRAM(const String &flashString, const String &a ) {
   String s = flashString;
   s+=" (";
   s+=a;
@@ -2438,24 +2468,23 @@ void checkRAM(String &flashString, String &a ) {
 
 void checkRAM( const __FlashStringHelper* flashString)
 {
-  String s = flashString;
-  myRamTracker.registerRamState(s);
-
-  uint32_t freeRAM = FreeMem();
-  if (freeRAM < lowestRAM)
-  {
-    lowestRAM = freeRAM;
-    lowestRAMfunction = flashString;
-  }
-  uint32_t freeStack = getFreeStackWatermark();
-  if (freeStack < lowestFreeStack) {
-    lowestFreeStack = freeStack;
-    lowestFreeStackfunction = flashString;
-  }
+  checkRAM(String(flashString));
 }
 
-void checkRAM( String &a ) {
-  myRamTracker.registerRamState(a);
+void checkRAM( const String &descr ) {
+  myRamTracker.registerRamState(descr);
+  
+  uint32_t freeRAM = FreeMem();
+  if (freeRAM <= lowestRAM)
+  {
+    lowestRAM = freeRAM;
+    lowestRAMfunction = descr;
+  }
+  uint32_t freeStack = getFreeStackWatermark();
+  if (freeStack <= lowestFreeStack) {
+    lowestFreeStack = freeStack;
+    lowestFreeStackfunction = descr;
+  }
 }
 
 

@@ -1,23 +1,25 @@
 #ifdef USES_P052
-//#######################################################################################################
-//############################# Plugin 052: Senseair CO2 Sensors ########################################
-//#######################################################################################################
+
+// #######################################################################################################
+// ############################# Plugin 052: Senseair CO2 Sensors ########################################
+// #######################################################################################################
+
 /*
-  Plugin originally written by: Daniel Tedenljung
-  info__AT__tedenljungconsulting.com
-  Rewritten by: Mikael Trieb mikael__AT__triebconsulting.se
+   Plugin originally written by: Daniel Tedenljung
+   info__AT__tedenljungconsulting.com
+   Rewritten by: Mikael Trieb mikael__AT__triebconsulting.se
 
-  This plugin reads available values of Senseair Co2 Sensors.
-  Datasheet can be found here:
-  S8: http://www.senseair.com/products/oem-modules/senseair-s8/
-  K30: http://www.senseair.com/products/oem-modules/k30/
-  K70/tSENSE: http://www.senseair.com/products/wall-mount/tsense/
+   This plugin reads available values of Senseair Co2 Sensors.
+   Datasheet can be found here:
+   S8: http://www.senseair.com/products/oem-modules/senseair-s8/
+   K30: http://www.senseair.com/products/oem-modules/k30/
+   K70/tSENSE: http://www.senseair.com/products/wall-mount/tsense/
 
-  Circuit wiring
+   Circuit wiring
     GPIO Setting 1 -> RX
     GPIO Setting 2 -> TX
     Use 1kOhm in serie on datapins!
-*/
+ */
 
 #define PLUGIN_052
 #define PLUGIN_ID_052 52
@@ -32,7 +34,6 @@
 #define P052_NR_OUTPUT_VALUES   getValueCountFromSensorType(PCONFIG(P052_SENSOR_TYPE_INDEX))
 
 #define P052_NR_OUTPUT_OPTIONS  8
-
 
 
 // For layout and status flags in RAM/EEPROM, see document
@@ -56,12 +57,12 @@
 #define P052_CMD_READ_RAM  0x44
 
 // EEPROM layout
-#define P052_EEPROM_ADDR_METERCONTROL 0x03    // U8
-#define P052_EEPROM_ADDR_METERCONFIG 0x06     // U16
-#define P052_EEPROM_ADDR_ABC_PERIOD 0x40      // U16 ABC period in hours
-#define P052_EEPROM_ADDR_HEARTBEATPERIOD 0xA2 // U8 Period in seconds
-#define P052_EEPROM_ADDR_PUMPPERIOD 0xA3      // U8 Period in seconds
-#define P052_EEPROM_ADDR_MEASUREMENT_SLEEP_PERIOD  0xB0 // U24 Measurement period (unit = seconds)
+#define P052_EEPROM_ADDR_METERCONTROL 0x03               // U8
+#define P052_EEPROM_ADDR_METERCONFIG 0x06                // U16
+#define P052_EEPROM_ADDR_ABC_PERIOD 0x40                 // U16 ABC period in hours
+#define P052_EEPROM_ADDR_HEARTBEATPERIOD 0xA2            // U8 Period in seconds
+#define P052_EEPROM_ADDR_PUMPPERIOD 0xA3                 // U8 Period in seconds
+#define P052_EEPROM_ADDR_MEASUREMENT_SLEEP_PERIOD  0xB0  // U24 Measurement period (unit = seconds)
 #define P052_EEPROM_ADDR_LOGGER_STRUCTURE_ADDRESS  0x200 // 16b Described in “BLG_ELG Logger Structure”
 
 // SCR (Special Control Register) commands
@@ -76,23 +77,22 @@
 #define P052_IR_ERRORSTATUS  0
 #define P052_IR_ALARMSTATUS  1
 #define P052_IR_OUTPUTSTATUS 2
-#define P052_IR_SPACE_CO2    3  // also called CO2 value filtered
-#define P052_IR_TEMPERATURE  4  // Chip temperature in 1/100th degree C
+#define P052_IR_SPACE_CO2    3            // also called CO2 value filtered
+#define P052_IR_TEMPERATURE  4            // Chip temperature in 1/100th degree C
 #define P052_IR_SPACE_HUMIDITY    5
-#define P052_IR_MEASUREMENT_COUNT  6 // Range 0 .. 255, to see if a measurement has been done.
+#define P052_IR_MEASUREMENT_COUNT  6      // Range 0 .. 255, to see if a measurement has been done.
 #define P052_IR_MEASUREMENT_CYCLE_TIME  7 // Time in current cycle (in 2 seconds steps)
 #define P052_IR_CO2_UNFILTERED 8
-
 
 
 #define P052_HR_ACK_REG 0
 #define P052_HR_SPACE_CO2 3
 #define P052_HR_ABC_PERIOD 31
 
-//#define P052_MODBUS_SLAVE_ADDRESS 0x68
+// #define P052_MODBUS_SLAVE_ADDRESS 0x68
 #define P052_MODBUS_SLAVE_ADDRESS 0xFE // Modbus "any address"
 
-#define P052_MODBUS_TIMEOUT  180    // 100 msec communication timeout.
+#define P052_MODBUS_TIMEOUT  180       // 100 msec communication timeout.
 
 #include <ESPeasySerial.h>
 
@@ -100,7 +100,9 @@
 struct P052_data_struct : public PluginTaskData_base {
   P052_data_struct() {}
 
-  ~P052_data_struct() { reset(); }
+  ~P052_data_struct() {
+    reset();
+  }
 
   void reset() {
     modbus.reset();
@@ -115,7 +117,7 @@ struct P052_data_struct : public PluginTaskData_base {
   }
 
   ModbusRTU_struct modbus;
-  byte sensortype;
+  byte             sensortype;
 };
 
 unsigned int _plugin_052_last_measurement = 0;
@@ -132,419 +134,470 @@ String Plugin_052_valuename(byte value_nr, bool displayString) {
     case 6:  return displayString ? F("ABC period") : F("abc_per");
     case 7:  return displayString ? F("Error Status") : F("err");
     default:
-    break;
+      break;
   }
   return "";
 }
 
-
-
-boolean Plugin_052(byte function, struct EventStruct *event, String &string) {
+boolean Plugin_052(byte function, struct EventStruct *event, String& string) {
   boolean success = false;
+
   switch (function) {
-
-  case PLUGIN_DEVICE_ADD: {
-    Device[++deviceCount].Number = PLUGIN_ID_052;
-    Device[deviceCount].Type = DEVICE_TYPE_DUAL;
-    Device[deviceCount].VType = SENSOR_TYPE_SINGLE;
-    Device[deviceCount].Ports = 0;
-    Device[deviceCount].PullUpOption = false;
-    Device[deviceCount].InverseLogicOption = false;
-    Device[deviceCount].FormulaOption = true;
-    Device[deviceCount].ValueCount = 1;
-    Device[deviceCount].SendDataOption = true;
-    Device[deviceCount].TimerOption = true;
-    Device[deviceCount].GlobalSyncOption = true;
-    break;
-  }
-
-  case PLUGIN_GET_DEVICENAME: {
-    string = F(PLUGIN_NAME_052);
-    break;
-  }
-
-  case PLUGIN_GET_DEVICEVALUENAMES: {
-    for (byte i = 0; i < VARS_PER_TASK; ++i) {
-      if ( i < P052_NR_OUTPUT_VALUES) {
-        const byte pconfigIndex = i + P052_QUERY1_CONFIG_POS;
-        byte choice = PCONFIG(pconfigIndex);
-        safe_strncpy(
-          ExtraTaskSettings.TaskDeviceValueNames[i],
-          Plugin_052_valuename(choice, false),
-          sizeof(ExtraTaskSettings.TaskDeviceValueNames[i]));
-      } else {
-        ZERO_FILL(ExtraTaskSettings.TaskDeviceValueNames[i]);
-      }
+    case PLUGIN_DEVICE_ADD: {
+      Device[++deviceCount].Number           = PLUGIN_ID_052;
+      Device[deviceCount].Type               = DEVICE_TYPE_DUAL;
+      Device[deviceCount].VType              = SENSOR_TYPE_SINGLE;
+      Device[deviceCount].Ports              = 0;
+      Device[deviceCount].PullUpOption       = false;
+      Device[deviceCount].InverseLogicOption = false;
+      Device[deviceCount].FormulaOption      = true;
+      Device[deviceCount].ValueCount         = 1;
+      Device[deviceCount].SendDataOption     = true;
+      Device[deviceCount].TimerOption        = true;
+      Device[deviceCount].GlobalSyncOption   = true;
+      break;
     }
-    break;
-  }
 
-  case PLUGIN_GET_DEVICEGPIONAMES: {
-    serialHelper_getGpioNames(event);
-    break;
-  }
+    case PLUGIN_GET_DEVICENAME: {
+      string = F(PLUGIN_NAME_052);
+      break;
+    }
 
-  case PLUGIN_WEBFORM_SHOW_CONFIG:
+    case PLUGIN_GET_DEVICEVALUENAMES: {
+      for (byte i = 0; i < VARS_PER_TASK; ++i) {
+        if (i < P052_NR_OUTPUT_VALUES) {
+          const byte pconfigIndex = i + P052_QUERY1_CONFIG_POS;
+          byte choice             = PCONFIG(pconfigIndex);
+          safe_strncpy(
+            ExtraTaskSettings.TaskDeviceValueNames[i],
+            Plugin_052_valuename(choice, false),
+            sizeof(ExtraTaskSettings.TaskDeviceValueNames[i]));
+        } else {
+          ZERO_FILL(ExtraTaskSettings.TaskDeviceValueNames[i]);
+        }
+      }
+      break;
+    }
+
+    case PLUGIN_GET_DEVICEGPIONAMES: {
+      serialHelper_getGpioNames(event);
+      break;
+    }
+
+    case PLUGIN_WEBFORM_SHOW_CONFIG:
     {
       string += serialHelper_getSerialTypeLabel(event);
       success = true;
       break;
     }
 
-  case PLUGIN_SET_DEFAULTS:
-  {
-    PCONFIG(0) = 1; // "CO2"
-    for (byte i = 1; i < VARS_PER_TASK; ++i) {
-      PCONFIG(i) = 0; // "Empty"
-    }
-//    PCONFIG(P052_SENSOR_TYPE_INDEX) = SENSOR_TYPE_SINGLE;
-    success = true;
-    break;
-  }
-
-
-  case PLUGIN_WRITE: {
-    String cmd = parseString(string, 1);
-    String param1 = parseString(string, 2);
-
-    if (cmd.equalsIgnoreCase(F("senseair_setrelay"))) {
-      int par1;
-      if (validIntFromString(param1, par1)) {
-        if (par1 == 0 || par1 == 1 || par1 == -1) {
-          short relaystatus = 0; // 0x3FFF represents 100% output.
-          //  Refer to sensor model’s specification for voltage at 100% output.
-          switch (par1) {
-          case 0:
-            relaystatus = 0;
-            break;
-          case 1:
-            relaystatus = 0x3FFF;
-            break;
-          default:
-            relaystatus = 0x7FFF;
-            break;
-          }
-          P052_data_struct *P052_data =
-              static_cast<P052_data_struct *>(getPluginTaskData(event->TaskIndex));
-          if (nullptr != P052_data && P052_data->isInitialized()) {
-            P052_data->modbus.writeSingleRegister(0x18, relaystatus);
-            addLog(LOG_LEVEL_INFO, String(F("Senseair command: relay=")) + param1);
-          }
-        }
-      }
-      success = true;
-    }
-
-    /*
-    // ABC functionality disabled for now, due to a bug in the firmware.
-    // See https://github.com/letscontrolit/ESPEasy/issues/759
-    if (cmd.equalsIgnoreCase(F("senseair_setABCperiod")))
+    case PLUGIN_SET_DEFAULTS:
     {
-      if (param1.toInt() >= 0) {
-        Plugin_052_setABCperiod(param1.toInt());
-        addLog(LOG_LEVEL_INFO, String(F("Senseair command: ABCperiod=")) +
-    param1);
+      PCONFIG(0) = 1;   // "CO2"
+
+      for (byte i = 1; i < VARS_PER_TASK; ++i) {
+        PCONFIG(i) = 0; // "Empty"
       }
+
+      //    PCONFIG(P052_SENSOR_TYPE_INDEX) = SENSOR_TYPE_SINGLE;
       success = true;
-    }
-    */
-
-    break;
-  }
-
-  case PLUGIN_WEBFORM_LOAD: {
-    serialHelper_webformLoad(event);
-
-    P052_data_struct *P052_data =
-        static_cast<P052_data_struct *>(getPluginTaskData(event->TaskIndex));
-    if (nullptr != P052_data && P052_data->isInitialized()) {
-      addFormSubHeader(F("Device Information"));
-      {
-        String detectedString = P052_data->modbus.detected_device_description;
-        if (detectedString.length() > 0) {
-          addRowLabel(F("Detected Device"));
-          addHtml(detectedString);
-        }
-        addRowLabel(F("Checksum (pass/fail/nodata)"));
-        uint32_t reads_pass, reads_crc_failed, reads_nodata;
-        P052_data->modbus.getStatistics(reads_pass, reads_crc_failed, reads_nodata);
-        String chksumStats;
-        chksumStats = reads_pass;
-        chksumStats += '/';
-        chksumStats += reads_crc_failed;
-        chksumStats += '/';
-        chksumStats += reads_nodata;
-        addHtml(chksumStats);
-
-        int value = P052_data->modbus.readInputRegister(0x06);
-        if (value != -1) {
-          addRowLabel(F("Measurement Count"));
-          addHtml(String(value));
-        }
-
-        value = P052_data->modbus.readInputRegister(0x07);
-        if (value != -1) {
-          addRowLabel(F("Measurement Cycle time"));
-          addHtml(String(value * 2));
-        }
-
-        value = P052_data->modbus.readInputRegister(0x08);
-        if (value != -1) {
-          addRowLabel(F("Unfiltered CO2"));
-          addHtml(String(value));
-        }
-      }
-
-      {
-        int meas_mode = P052_data->modbus.readHoldingRegister(0x0A);
-        int period = P052_data->modbus.readHoldingRegister(0x0B);
-        int samp_meas = P052_data->modbus.readHoldingRegister(0x0C);
-        if (meas_mode != -1 || period != -1 || samp_meas != -1) {
-          addFormSubHeader(F("Device Settings"));
-          // Disable selector for now, since single measurement not yet supported.
-          /*
-          if (meas_mode != -1) {
-            String options[2] = { F("Continuous"), F("Single Measurement") };
-            addFormSelector(F("Measurement Mode"), F("p052_mode"), 2, options, NULL, meas_mode);
-          }
-          */
-          if (period != -1) {
-            addFormNumericBox(F("Measurement Period"), F("p052_period"), period, 2, 65534);
-            addUnit(F("s"));
-          }
-          if (samp_meas != -1) {
-            addFormNumericBox(F("Samples per measurement"), F("p052_samp_meas"), samp_meas, 1, 1024);
-          }
-        }
-      }
-    }
-    sensorTypeHelper_webformLoad_simple(event, P052_SENSOR_TYPE_INDEX);
-
-    /*
-    // ABC functionality disabled for now, due to a bug in the firmware.
-    // See https://github.com/letscontrolit/ESPEasy/issues/759
-    byte choiceABCperiod = PCONFIG(4);
-    String optionsABCperiod[9] = { F("disable"), F("1 h"), F("12 h"), F("1
-    day"), F("2 days"), F("4 days"), F("7 days"), F("14 days"), F("30 days") };
-    addFormSelector(F("ABC period"), F("p052_ABC_period"), 9, optionsABCperiod,
-    NULL, choiceABCperiod);
-    */
-
-    {
-      String options[P052_NR_OUTPUT_OPTIONS];
-      for (byte i = 0; i < P052_NR_OUTPUT_OPTIONS; ++i) {
-        options[i] = Plugin_052_valuename(i, true);
-      }
-      for (byte i = 0; i < P052_NR_OUTPUT_VALUES; ++i) {
-        const byte pconfigIndex = i + P052_QUERY1_CONFIG_POS;
-        sensorTypeHelper_loadOutputSelector(event, pconfigIndex, i, P052_NR_OUTPUT_OPTIONS, options);
-      }
-    }
-
-    success = true;
-    break;
-  }
-
-  case PLUGIN_WEBFORM_SAVE: {
-    serialHelper_webformSave(event);
-    // Save output selector parameters.
-    for (byte i = 0; i < P052_NR_OUTPUT_VALUES; ++i) {
-      const byte pconfigIndex = i + P052_QUERY1_CONFIG_POS;
-      const byte choice = PCONFIG(pconfigIndex);
-      sensorTypeHelper_saveOutputSelector(event, pconfigIndex, i, Plugin_052_valuename(choice, false));
-    }
-    sensorTypeHelper_saveSensorType(event, P052_SENSOR_TYPE_INDEX);
-
-    P052_data_struct *P052_data =
-        static_cast<P052_data_struct *>(getPluginTaskData(event->TaskIndex));
-    if (nullptr != P052_data && P052_data->isInitialized()) {
-      bool changed = false;
-      uint16_t mode = getFormItemInt(F("p052_mode"), 65535);
-      if ((mode == 0 || mode == 1) && P052_data->modbus.readHoldingRegister(0x0A) != mode) {
-        P052_data->modbus.writeMultipleRegisters(0x0A, mode);
-        delay(0);
-        changed = true;
-      }
-      uint16_t period = getFormItemInt(F("p052_period"), 0);
-      if (period > 1 && P052_data->modbus.readHoldingRegister(0x0B) != period) {
-        P052_data->modbus.writeMultipleRegisters(0x0B, period);
-        delay(0);
-        changed = true;
-      }
-      uint16_t samp_meas = getFormItemInt(F("p052_samp_meas"), 0);
-      if (samp_meas > 0 && samp_meas <= 1024 && P052_data->modbus.readHoldingRegister(0x0C) != samp_meas) {
-        P052_data->modbus.writeMultipleRegisters(0x0C, samp_meas);
-        delay(0);
-        changed = true;
-      }
-      if (changed) {
-        // Restart sensor.
-        P052_data->modbus.writeMultipleRegisters(0x11, 0xFF);
-        // FIXME TD-er: Must leave the sensor to boot for a while.
-        delay(35);
-      }
+      break;
     }
 
 
-    /*
-    // ABC functionality disabled for now, due to a bug in the firmware.
-    // See https://github.com/letscontrolit/ESPEasy/issues/759
-    PCONFIG(4) = getFormItemInt(F("p052_ABC_period"));
-    */
+    case PLUGIN_WRITE: {
+      String cmd    = parseString(string, 1);
+      String param1 = parseString(string, 2);
 
-    success = true;
-    break;
-  }
+      if (cmd.equalsIgnoreCase(F("senseair_setrelay"))) {
+        int par1;
 
-  case PLUGIN_INIT: {
-    const int16_t serial_rx = CONFIG_PIN1;
-    const int16_t serial_tx = CONFIG_PIN2;
-    initPluginTaskData(event->TaskIndex, new P052_data_struct());
-    P052_data_struct *P052_data =
-        static_cast<P052_data_struct *>(getPluginTaskData(event->TaskIndex));
-    if (nullptr == P052_data) {
-      return success;
-    }
-    if (P052_data->init(serial_rx, serial_tx)) {
-      /*
-      // ABC functionality disabled for now, due to a bug in the firmware.
-      // See https://github.com/letscontrolit/ESPEasy/issues/759
-      const int periodInHours[9] = {0, 1, 12, (24*1), (24*2), (24*4), (24*7),
-      (24*14), (24*30) };
-      byte choiceABCperiod = PCONFIG(1);
+        if (validIntFromString(param1, par1)) {
+          if ((par1 == 0) || (par1 == 1) || (par1 == -1)) {
+            short relaystatus = 0; // 0x3FFF represents 100% output.
 
-      Plugin_052_setABCperiod(periodInHours[choiceABCperiod]);
-      */
-      sensorTypeHelper_setSensorType(event, P052_SENSOR_TYPE_INDEX);
-      P052_data->modbus.setModbusTimeout(P052_MODBUS_TIMEOUT);
-//      P052_data->modbus.writeMultipleRegisters(0x09, 1); // Start Single Measurement
-//      P052_data->modbus.writeMultipleRegisters(0x0B, 16); // Measurement Period
-//      P052_data->modbus.writeMultipleRegisters(0x0C, 8); // Number of samples
-
-      success = true;
-    } else {
-      clearPluginTaskData(event->TaskIndex);
-    }
-    break;
-  }
-
-  case PLUGIN_EXIT: {
-    clearPluginTaskData(event->TaskIndex);
-    success = true;
-    break;
-  }
-
-  case PLUGIN_READ: {
-    P052_data_struct *P052_data =
-        static_cast<P052_data_struct *>(getPluginTaskData(event->TaskIndex));
-    if (nullptr != P052_data && P052_data->isInitialized()) {
-      event->sensorType = PCONFIG(P052_SENSOR_TYPE_INDEX);
-      String log = F("Senseair: ");
-      String logPrefix;
-      for (int varnr = 0; varnr < P052_NR_OUTPUT_VALUES; ++varnr) {
-        int value = 0;
-        switch (PCONFIG(varnr)) {
-          case 1: {
-            value = P052_data->modbus.readInputRegister(P052_IR_SPACE_CO2);
-            logPrefix = F("co2 = ");
-            break;
-          }
-          case 2: {
-            int temperatureX100 = P052_data->modbus.readInputRegister(P052_IR_TEMPERATURE);
-            if (temperatureX100 == -1) {
-              // SenseAir S8, not for other modules.
-              temperatureX100 = P052_data->modbus.read_RAM_EEPROM(
-                  P052_CMD_READ_RAM, P052_RAM_ADDR_DET_TEMPERATURE, 2);
-            }
-            float temperature = static_cast<float>(temperatureX100) / 100.0;
-            UserVar[event->BaseVarIndex + varnr] = (float)temperature;
-            log += F("temperature = ");
-            log += (float)temperature;
-            break;
-          }
-          case 3: {
-            int rhX100 = P052_data->modbus.readInputRegister(P052_IR_SPACE_HUMIDITY);
-            float rh = static_cast<float>(rhX100) / 100.0;
-            UserVar[event->BaseVarIndex + varnr] = rh;
-            log += F("humidity = ");
-            log += rh;
-            break;
-          }
-          case 4: {
-            int status = P052_data->modbus.readInputRegister(0x1C);
-            int relayStatus = (status >> 8) & 0x1;
-            UserVar[event->BaseVarIndex + varnr] = relayStatus;
-            log += F("relay status = ");
-            log += relayStatus;
-            break;
-          }
-          case 5: {
-            int temperatureAdjustment = P052_data->modbus.readInputRegister(0x0A);
-            UserVar[event->BaseVarIndex + varnr] = temperatureAdjustment;
-            log += F("temperature adjustment = ");
-            log += temperatureAdjustment;
-            break;
-          }
-
-          case 7: {
-            int errorWord = P052_data->modbus.readInputRegister(P052_IR_ERRORSTATUS);
-            for (size_t i = 0; i < 9; i++) {
-              if (bitRead(errorWord, i)) {
-                UserVar[event->BaseVarIndex + varnr] = i;
-                log += F("error code = ");
-                log += i;
+            //  Refer to sensor model’s specification for voltage at 100% output.
+            switch (par1) {
+              case 0:
+                relaystatus = 0;
                 break;
-              }
+              case 1:
+                relaystatus = 0x3FFF;
+                break;
+              default:
+                relaystatus = 0x7FFF;
+                break;
+            }
+            P052_data_struct *P052_data =
+              static_cast<P052_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+            if ((nullptr != P052_data) && P052_data->isInitialized()) {
+              P052_data->modbus.writeSingleRegister(0x18, relaystatus);
+              addLog(LOG_LEVEL_INFO, String(F("Senseair command: relay=")) + param1);
+            }
+          }
+        }
+        success = true;
+      }
+
+      /*
+         // ABC functionality disabled for now, due to a bug in the firmware.
+         // See https://github.com/letscontrolit/ESPEasy/issues/759
+         if (cmd.equalsIgnoreCase(F("senseair_setABCperiod")))
+         {
+         if (param1.toInt() >= 0) {
+          Plugin_052_setABCperiod(param1.toInt());
+          addLog(LOG_LEVEL_INFO, String(F("Senseair command: ABCperiod=")) +
+         param1);
+         }
+         success = true;
+         }
+       */
+
+      break;
+    }
+
+    case PLUGIN_WEBFORM_LOAD: {
+      serialHelper_webformLoad(event);
+
+      P052_data_struct *P052_data =
+        static_cast<P052_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if ((nullptr != P052_data) && P052_data->isInitialized()) {
+        addFormSubHeader(F("Device Information"));
+        {
+          String detectedString = P052_data->modbus.detected_device_description;
+
+          if (detectedString.length() > 0) {
+            addRowLabel(F("Detected Device"));
+            addHtml(detectedString);
+          }
+          addRowLabel(F("Checksum (pass/fail/nodata)"));
+          uint32_t reads_pass, reads_crc_failed, reads_nodata;
+          P052_data->modbus.getStatistics(reads_pass, reads_crc_failed, reads_nodata);
+          String chksumStats;
+          chksumStats  = reads_pass;
+          chksumStats += '/';
+          chksumStats += reads_crc_failed;
+          chksumStats += '/';
+          chksumStats += reads_nodata;
+          addHtml(chksumStats);
+
+          byte errorcode = 0;
+          int  value     = P052_data->modbus.readInputRegister(0x06, errorcode);
+
+          if (errorcode == 0) {
+            addRowLabel(F("Measurement Count"));
+            addHtml(String(value));
+          }
+
+          value = P052_data->modbus.readInputRegister(0x07, errorcode);
+
+          if (errorcode == 0) {
+            addRowLabel(F("Measurement Cycle time"));
+            addHtml(String(value * 2));
+          }
+
+          value = P052_data->modbus.readInputRegister(0x08, errorcode);
+
+          if (errorcode == 0) {
+            addRowLabel(F("Unfiltered CO2"));
+            addHtml(String(value));
+          }
+        }
+
+        {
+          byte errorcode     = 0;
+          //int  meas_mode     = P052_data->modbus.readHoldingRegister(0x0A, errorcode);
+          //bool has_meas_mode = errorcode == 0;
+          int  period        = P052_data->modbus.readHoldingRegister(0x0B, errorcode);
+          bool has_period    = errorcode == 0;
+          int  samp_meas     = P052_data->modbus.readHoldingRegister(0x0C, errorcode);
+          bool has_samp_meas = errorcode == 0;
+
+          if (/* has_meas_mode || */ has_period || has_samp_meas) {
+            addFormSubHeader(F("Device Settings"));
+
+            // Disable selector for now, since single measurement not yet supported.
+
+            /*
+               if (has_meas_mode) {
+               String options[2] = { F("Continuous"), F("Single Measurement") };
+               addFormSelector(F("Measurement Mode"), F("p052_mode"), 2, options, NULL, meas_mode);
+               }
+             */
+            if (has_period) {
+              addFormNumericBox(F("Measurement Period"), F("p052_period"), period, 2, 65534);
+              addUnit(F("s"));
             }
 
-            UserVar[event->BaseVarIndex + varnr] = -1;
-            log += F("error code = ");
-            log += -1;
-            break;
+            if (has_samp_meas) {
+              addFormNumericBox(F("Samples per measurement"), F("p052_samp_meas"), samp_meas, 1, 1024);
+            }
           }
-          case 0:
-          default: {
-            UserVar[event->BaseVarIndex + varnr] = 0;
-            break;
-          }
-        }
-        if (P052_data->modbus.getLastError() == 0) {
-          UserVar[event->BaseVarIndex + varnr] = value;
-          log += logPrefix;
-          log += value;
         }
       }
-      addLog(LOG_LEVEL_INFO, log);
+      sensorTypeHelper_webformLoad_simple(event, P052_SENSOR_TYPE_INDEX);
+
+      /*
+         // ABC functionality disabled for now, due to a bug in the firmware.
+         // See https://github.com/letscontrolit/ESPEasy/issues/759
+         byte choiceABCperiod = PCONFIG(4);
+         String optionsABCperiod[9] = { F("disable"), F("1 h"), F("12 h"), F("1
+         day"), F("2 days"), F("4 days"), F("7 days"), F("14 days"), F("30 days") };
+         addFormSelector(F("ABC period"), F("p052_ABC_period"), 9, optionsABCperiod,
+         NULL, choiceABCperiod);
+       */
+
+      {
+        String options[P052_NR_OUTPUT_OPTIONS];
+
+        for (byte i = 0; i < P052_NR_OUTPUT_OPTIONS; ++i) {
+          options[i] = Plugin_052_valuename(i, true);
+        }
+
+        for (byte i = 0; i < P052_NR_OUTPUT_VALUES; ++i) {
+          const byte pconfigIndex = i + P052_QUERY1_CONFIG_POS;
+          sensorTypeHelper_loadOutputSelector(event, pconfigIndex, i, P052_NR_OUTPUT_OPTIONS, options);
+        }
+      }
 
       success = true;
       break;
     }
-    break;
-  }
+
+    case PLUGIN_WEBFORM_SAVE: {
+      serialHelper_webformSave(event);
+
+      // Save output selector parameters.
+      for (byte i = 0; i < P052_NR_OUTPUT_VALUES; ++i) {
+        const byte pconfigIndex = i + P052_QUERY1_CONFIG_POS;
+        const byte choice       = PCONFIG(pconfigIndex);
+        sensorTypeHelper_saveOutputSelector(event, pconfigIndex, i, Plugin_052_valuename(choice, false));
+      }
+      sensorTypeHelper_saveSensorType(event, P052_SENSOR_TYPE_INDEX);
+
+      P052_data_struct *P052_data =
+        static_cast<P052_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if ((nullptr != P052_data) && P052_data->isInitialized()) {
+        bool changed  = false;
+        uint16_t mode = getFormItemInt(F("p052_mode"), 65535);
+
+        if (((mode == 0) || (mode == 1))) {
+          byte errorcode;
+          int  readVal = P052_data->modbus.readHoldingRegister(0x0A, errorcode);
+
+          if ((errorcode == 0) && (readVal != mode)) {
+            P052_data->modbus.writeMultipleRegisters(0x0A, mode);
+            delay(0);
+            changed = true;
+          }
+        }
+        uint16_t period = getFormItemInt(F("p052_period"), 0);
+
+        if (period > 1) {
+          byte errorcode;
+          int  readVal = P052_data->modbus.readHoldingRegister(0x0B, errorcode);
+
+          if ((errorcode == 0) && (readVal != period)) {
+            P052_data->modbus.writeMultipleRegisters(0x0B, period);
+            delay(0);
+            changed = true;
+          }
+        }
+        uint16_t samp_meas = getFormItemInt(F("p052_samp_meas"), 0);
+
+        if ((samp_meas > 0) && (samp_meas <= 1024)) {
+          byte errorcode;
+          int  readVal = P052_data->modbus.readHoldingRegister(0x0C, errorcode);
+
+          if ((errorcode == 0) && (readVal != samp_meas)) {
+            P052_data->modbus.writeMultipleRegisters(0x0C, samp_meas);
+            delay(0);
+            changed = true;
+          }
+        }
+
+        if (changed) {
+          // Restart sensor.
+          P052_data->modbus.writeMultipleRegisters(0x11, 0xFF);
+
+          // FIXME TD-er: Must leave the sensor to boot for a while.
+          delay(35);
+        }
+      }
+
+
+      /*
+         // ABC functionality disabled for now, due to a bug in the firmware.
+         // See https://github.com/letscontrolit/ESPEasy/issues/759
+         PCONFIG(4) = getFormItemInt(F("p052_ABC_period"));
+       */
+
+      success = true;
+      break;
+    }
+
+    case PLUGIN_INIT: {
+      const int16_t serial_rx = CONFIG_PIN1;
+      const int16_t serial_tx = CONFIG_PIN2;
+      initPluginTaskData(event->TaskIndex, new P052_data_struct());
+      P052_data_struct *P052_data =
+        static_cast<P052_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (nullptr == P052_data) {
+        return success;
+      }
+
+      if (P052_data->init(serial_rx, serial_tx)) {
+        /*
+           // ABC functionality disabled for now, due to a bug in the firmware.
+           // See https://github.com/letscontrolit/ESPEasy/issues/759
+           const int periodInHours[9] = {0, 1, 12, (24*1), (24*2), (24*4), (24*7),
+           (24*14), (24*30) };
+           byte choiceABCperiod = PCONFIG(1);
+
+           Plugin_052_setABCperiod(periodInHours[choiceABCperiod]);
+         */
+        sensorTypeHelper_setSensorType(event, P052_SENSOR_TYPE_INDEX);
+        P052_data->modbus.setModbusTimeout(P052_MODBUS_TIMEOUT);
+
+        //      P052_data->modbus.writeMultipleRegisters(0x09, 1); // Start Single Measurement
+        //      P052_data->modbus.writeMultipleRegisters(0x0B, 16); // Measurement Period
+        //      P052_data->modbus.writeMultipleRegisters(0x0C, 8); // Number of samples
+
+        success = true;
+      } else {
+        clearPluginTaskData(event->TaskIndex);
+      }
+      break;
+    }
+
+    case PLUGIN_EXIT: {
+      clearPluginTaskData(event->TaskIndex);
+      success = true;
+      break;
+    }
+
+    case PLUGIN_READ: {
+      P052_data_struct *P052_data =
+        static_cast<P052_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if ((nullptr != P052_data) && P052_data->isInitialized()) {
+        event->sensorType = PCONFIG(P052_SENSOR_TYPE_INDEX);
+        String log = F("Senseair: ");
+        String logPrefix;
+
+        for (int varnr = 0; varnr < P052_NR_OUTPUT_VALUES; ++varnr) {
+          byte  errorcode = 0;
+          float value     = 0;
+
+          switch (PCONFIG(varnr)) {
+            case 1: {
+              value     = P052_data->modbus.readInputRegister(P052_IR_SPACE_CO2, errorcode);
+              logPrefix = F("co2 = ");
+              break;
+            }
+            case 2: {
+              int temperatureX100 = P052_data->modbus.readInputRegister(P052_IR_TEMPERATURE, errorcode);
+
+              if (errorcode != 0) {
+                // SenseAir S8, not for other modules.
+                temperatureX100 = P052_data->modbus.read_RAM_EEPROM(
+                  P052_CMD_READ_RAM, P052_RAM_ADDR_DET_TEMPERATURE, 2, errorcode);
+              }
+              value     = static_cast<float>(temperatureX100) / 100.0;
+              logPrefix = F("temperature = ");
+              break;
+            }
+            case 3: {
+              int rhX100 = P052_data->modbus.readInputRegister(P052_IR_SPACE_HUMIDITY, errorcode);
+              value     = static_cast<float>(rhX100) / 100.0;
+              logPrefix = F("humidity = ");
+              break;
+            }
+            case 4: {
+              int status = P052_data->modbus.readInputRegister(0x1C, errorcode);
+
+              if (errorcode == 0) {
+                int relayStatus = (status >> 8) & 0x1;
+                UserVar[event->BaseVarIndex + varnr] = relayStatus;
+                log                                 += F("relay status = ");
+                log                                 += relayStatus;
+              }
+              break;
+            }
+            case 5: {
+              int temperatureAdjustment = P052_data->modbus.readInputRegister(0x0A, errorcode);
+              value     = static_cast<float>(temperatureAdjustment);
+              logPrefix = F("temperature adjustment = ");
+              break;
+            }
+
+            case 7: {
+              int errorWord = P052_data->modbus.readInputRegister(P052_IR_ERRORSTATUS, errorcode);
+
+              if (errorcode == 0) {
+                for (size_t i = 0; i < 9; i++) {
+                  if (bitRead(errorWord, i)) {
+                    UserVar[event->BaseVarIndex + varnr] = i;
+                    log                                 += F("error code = ");
+                    log                                 += i;
+                    break;
+                  }
+                }
+              }
+
+              UserVar[event->BaseVarIndex + varnr] = -1;
+              log                                 += F("error code = ");
+              log                                 += -1;
+              break;
+            }
+            case 0:
+            default: {
+              UserVar[event->BaseVarIndex + varnr] = 0;
+              break;
+            }
+          }
+
+          if (P052_data->modbus.getLastError() == 0) {
+            UserVar[event->BaseVarIndex + varnr] = value;
+            log                                 += logPrefix;
+            log                                 += value;
+          }
+        }
+        addLog(LOG_LEVEL_INFO, log);
+
+        success = true;
+        break;
+      }
+      break;
+    }
   }
   return success;
 }
 
 /*
-bool getBitOfInt(int reg, int pos) {
-  // Create a mask
-  int mask = 0x01 << pos;
+   bool getBitOfInt(int reg, int pos) {
+   // Create a mask
+   int mask = 0x01 << pos;
 
-  // Mask the status register
-  int masked_register = mask & reg;
+   // Mask the status register
+   int masked_register = mask & reg;
 
-  // Shift the result of masked register back to position 0
-  int result = masked_register >> pos;
-  return (result == 1);
-}
+   // Shift the result of masked register back to position 0
+   int result = masked_register >> pos;
+   return (result == 1);
+   }
 
-bool Plugin_052_check_error_status() {
-  byte error_status = P052_data->modbus.read_RAM_EEPROM(P052_CMD_READ_RAM,
+   bool Plugin_052_check_error_status() {
+   byte error_status = P052_data->modbus.read_RAM_EEPROM(P052_CMD_READ_RAM,
                                                  P052_RAM_ADDR_ERROR_STATUS, 1);
-  if (error_status == 0)
+   if (error_status == 0)
     return true;
-  String log = F("P052 Error status:");
-  for (int i = 0; i < 8; ++i) {
+   String log = F("P052 Error status:");
+   for (int i = 0; i < 8; ++i) {
     if (getBitOfInt(error_status, i)) {
       log += F(" (");
       switch (i) {
@@ -575,65 +628,65 @@ bool Plugin_052_check_error_status() {
       }
       log += F(")");
     }
-  }
-  addLog(LOG_LEVEL_INFO, log);
-  return false;
-}
+   }
+   addLog(LOG_LEVEL_INFO, log);
+   return false;
+   }
 
-int Plugin_052_readCo2_from_RAM(void) {
-  bool valid_measurement = Plugin_052_prepare_single_measurement_from_RAM();
-  short co2 =
+   int Plugin_052_readCo2_from_RAM(void) {
+   bool valid_measurement = Plugin_052_prepare_single_measurement_from_RAM();
+   short co2 =
       P052_data->modbus.read_RAM_EEPROM(P052_CMD_READ_RAM, P052_RAM_ADDR_CO2, 2);
-  short temperature = P052_data->modbus.read_RAM_EEPROM(
+   short temperature = P052_data->modbus.read_RAM_EEPROM(
       P052_CMD_READ_RAM, P052_RAM_ADDR_SPACE_TEMPERATURE, 2);
-  short humidity = P052_data->modbus.read_RAM_EEPROM(
+   short humidity = P052_data->modbus.read_RAM_EEPROM(
       P052_CMD_READ_RAM, P052_RAM_ADDR_RELATIVE_HUMIDITY, 2);
-  String log = F("P052: ");
-  log += F("CO2: ");
-  log += co2;
-  log += F(" ppm Temp: ");
-  log += (float)temperature / 100.0;
-  log += F(" C Hum: ");
-  log += (float)humidity / 100.0;
-  log += F("%");
-  if (!valid_measurement)
+   String log = F("P052: ");
+   log += F("CO2: ");
+   log += co2;
+   log += F(" ppm Temp: ");
+   log += (float)temperature / 100.0;
+   log += F(" C Hum: ");
+   log += (float)humidity / 100.0;
+   log += F("%");
+   if (!valid_measurement)
     log += F(" (old)");
-  addLog(LOG_LEVEL_INFO, log);
-  return co2;
-}
+   addLog(LOG_LEVEL_INFO, log);
+   return co2;
+   }
 
-bool Plugin_052_measurement_active() {
-  unsigned int meter_status = P052_data->modbus.read_RAM_EEPROM(
+   bool Plugin_052_measurement_active() {
+   unsigned int meter_status = P052_data->modbus.read_RAM_EEPROM(
       P052_CMD_READ_RAM, P052_RAM_ADDR_METER_STATUS, 1);
-  // Meter Status bit 5 indicates single cycle measurement active
-  return getBitOfInt(meter_status, 5);
-}
+   // Meter Status bit 5 indicates single cycle measurement active
+   return getBitOfInt(meter_status, 5);
+   }
 
-// Perform a single measurement.
-// return value indicates a successful measurement update.
-bool Plugin_052_prepare_single_measurement_from_RAM() {
-  Plugin_052_check_error_status();
-  if (timeOutReached(_plugin_052_last_measurement +
+   // Perform a single measurement.
+   // return value indicates a successful measurement update.
+   bool Plugin_052_prepare_single_measurement_from_RAM() {
+   Plugin_052_check_error_status();
+   if (timeOutReached(_plugin_052_last_measurement +
                      P052_MEASUREMENT_INTERVAL)) {
     // Last measurement taken is still valid.
     return true;
-  }
-  int retry_count = 2;
-  addLog(LOG_LEVEL_INFO, F("P052: Start perform measurement"));
-  while (!Plugin_052_measurement_active() && retry_count > 0) {
+   }
+   int retry_count = 2;
+   addLog(LOG_LEVEL_INFO, F("P052: Start perform measurement"));
+   while (!Plugin_052_measurement_active() && retry_count > 0) {
     // Trigger new measurement and make sure it is set active.
     --retry_count;
     addLog(LOG_LEVEL_INFO, F("P052: Write to SCR: perform measurement"));
     Plugin_052_writeSpecialCommandRegister(P052_SCR_SINGLE_MEASUREMENT);
     delay(50);
-  }
-  if (!Plugin_052_measurement_active()) {
+   }
+   if (!Plugin_052_measurement_active()) {
     // Could not start measurement.
     addLog(LOG_LEVEL_INFO, F("P052: Could not start single measurement"));
     return false;
-  }
-  retry_count = 30;
-  while (retry_count > 0) {
+   }
+   retry_count = 30;
+   while (retry_count > 0) {
     --retry_count;
     if (retry_count < 14) {
       // Just wait for 16 seconds.
@@ -646,21 +699,21 @@ bool Plugin_052_prepare_single_measurement_from_RAM() {
       }
     }
     delay(1000);
-  }
-  return false;
-}
+   }
+   return false;
+   }
 
 
 
 
-int Plugin_052_readABCperiod(void) {
-  return P052_data->modbus.readHoldingRegister(0x1F);
-}
+   int Plugin_052_readABCperiod(void) {
+   return P052_data->modbus.readHoldingRegister(0x1F);
+   }
 
-int Plugin_052_readModbusAddress(void) {
-  return P052_data->modbus.readHoldingRegister(63); // HR64 MAC address Modbus address, valid range 1 - 253
-}
-*/
+   int Plugin_052_readModbusAddress(void) {
+   return P052_data->modbus.readHoldingRegister(63); // HR64 MAC address Modbus address, valid range 1 - 253
+   }
+ */
 
 
 #endif // USES_P052

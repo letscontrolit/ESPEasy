@@ -210,16 +210,18 @@ To create/register a plugin, you have to :
     #define PLUGIN_DESCR  "IR"
     #define USES_P016      // IR
     #define USES_P035      // IRTX
+    #define P016_P035_USE_RAW_RAW2 //Use the RAW and RAW2 encodings, disabling it saves 3.7Kb
 #endif
 
 #ifdef PLUGIN_BUILD_IR_EXTENDED
     #ifndef PLUGIN_DESCR
-        #define PLUGIN_DESCR  "IR_Extended"
+        #define PLUGIN_DESCR  "IR Extended"
     #endif // PLUGIN_DESCR
     #define USES_P016      // IR
     #define USES_P035      // IRTX
     // The following define is needed for extended decoding of A/C Messages and or using standardised common arguments for controlling all deeply supported A/C units
     #define P016_P035_Extended_AC
+    #define P016_P035_USE_RAW_RAW2 //Use the RAW and RAW2 encodings, disabling it saves 3.7Kb
     #define USES_P088      // ToniA IR plugin
     #define PLUGIN_SET_ONLY_SWITCH
     #define USES_P029      // Output - Domoticz MQTT Helper
@@ -228,11 +230,12 @@ To create/register a plugin, you have to :
 
 #ifdef PLUGIN_BUILD_IR_EXTENDED_NO_RX
     #ifndef PLUGIN_DESCR
-        #define PLUGIN_DESCR  "IR_Extended, no IR RX"
+        #define PLUGIN_DESCR  "IR Extended, no IR RX"
     #endif // PLUGIN_DESCR
     #define USES_P035      // IRTX
     // The following define is needed for extended decoding of A/C Messages and or using standardised common arguments for controlling all deeply supported A/C units
     #define P016_P035_Extended_AC
+    #define P016_P035_USE_RAW_RAW2 //Use the RAW and RAW2 encodings, disabling it saves 3.7Kb
     #define USES_P088      //ToniA IR plugin
 #endif
 
