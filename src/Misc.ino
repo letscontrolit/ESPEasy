@@ -1394,23 +1394,43 @@ bool isNumerical(const String& tBuf, bool mustBeInteger) {
 }
 
 // convert old and new time string to nr of seconds
-float timeStringToSeconds(String tBuf) {
-	float sec = 0;
-	int split = tBuf.indexOf(':');
-	if (split < 0) { // assume only hours
-		sec += tBuf.toFloat() * 60 * 60;
-	} else {
-		sec += tBuf.substring(0, split).toFloat() * 60 * 60;
-		tBuf = tBuf.substring(split +1);
-		split = tBuf.indexOf(':');
-		if (split < 0) { //old format
-			sec += tBuf.toFloat() * 60;
-		} else { //new format
-			sec += tBuf.substring(0, split).toFloat() * 60;
-			sec += tBuf.substring(split +1).toFloat();
-		}
-	}
-	return sec;
+// return whether it should be considered a time string.
+bool timeStringToSeconds(String tBuf, int& time_seconds) {
+  time_seconds = -1;
+  int hours = 0;
+  int minutes = 0;
+  int seconds = 0;
+  const int hour_sep_pos = tBuf.indexOf(':');
+  if (hour_sep_pos < 0) {
+    // Only hours, separator not found.
+    if (validIntFromString(tBuf, hours)) {
+      time_seconds = hours * 60 * 60;
+    }
+    // It is a valid time string, but could also be just a numerical.    
+    return false;
+  }
+  if (!validIntFromString(tBuf.substring(0, hour_sep_pos), hours)) {
+    return false;    
+  }
+  const int min_sep_pos = tBuf.indexOf(':', hour_sep_pos);
+  if (min_sep_pos < 0) {
+    // Old format, only HH:MM
+    if (!validIntFromString(tBuf.substring(hour_sep_pos + 1), minutes)) {
+      return false;    
+    }
+  } else {
+    // New format, only HH:MM:SS
+    if (!validIntFromString(tBuf.substring(hour_sep_pos + 1, min_sep_pos), minutes)) {
+      return false;
+    }
+    if (!validIntFromString(tBuf.substring(min_sep_pos+ 1), seconds)) {
+      return false;
+    }
+  }
+  if (minutes < 0 || minutes > 59) return false;
+  if (seconds < 0 || seconds > 59) return false;
+  time_seconds = hours * 60 * 60 + minutes * 60 + seconds;
+	return true;
 }
 
 
