@@ -396,7 +396,7 @@ boolean Plugin_035(byte function, struct EventStruct *event, String &string)
 
         String tempstr = "";
         tempstr = doc[F("model")].as<String>();
-        uint16_t model = IRac::strToModel(tempstr.c_str()); //The specific model of A/C if applicable. //strToModel();. Defaults to -1 (unknown) if missing from JSON
+        uint16_t model = IRac::strToModel(tempstr.c_str(),-1); //The specific model of A/C if applicable. //strToModel();. Defaults to -1 (unknown) if missing from JSON
         tempstr = doc[F("power")].as<String>();
         bool power = IRac::strToBool(tempstr.c_str(), false); //POWER ON or OFF. Defaults to false if missing from JSON
         float degrees = doc[F("temp")] | 22.0;                //What temperature should the unit be set to?. Defaults to 22c if missing from JSON

@@ -238,7 +238,7 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
         //Checks if a particular state is something else than the default and only then it adds it to the JSON document
         doc[F("protocol")] = typeToString(state.protocol);
         if (state.model >= 0)
-          doc[F("model")] = IRac::strToModel(String(state.model).c_str()); //The specific model of A/C if applicable.
+          doc[F("model")] = irutils::modelToStr(state.protocol,state.model); //The specific model of A/C if applicable.
         doc[F("power")] = IRac::boolToString(state.power);                 //POWER ON or OFF
         doc[F("mode")] = IRac::opmodeToString(state.mode);                 //What operating mode should the unit perform? e.g. Cool = doc[""]; Heat etc.
         doc[F("temp")] = state.degrees;                                    //What temperature should the unit be set to?
