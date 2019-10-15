@@ -80,8 +80,10 @@ boolean Plugin_002(byte function, struct EventStruct *event, String& string)
       {
         // Output the statistics for the current settings.
         uint16_t raw_value = 0;
-        float    value     = P002_getOutputValue(event, raw_value);
-        P002_formatStatistics(F("Current"), raw_value, value);
+        float value;
+        if (P002_getOutputValue(event, raw_value, value)) {
+          P002_formatStatistics(F("Current"), raw_value, value);
+        }
 
         if (PCONFIG(3)) {
           P002_formatStatistics(F("Minimum"),   0,                  P002_applyCalibration(event, 0));
@@ -138,36 +140,46 @@ boolean Plugin_002(byte function, struct EventStruct *event, String& string)
     case PLUGIN_READ:
     {
       uint16_t raw_value = 0;
-      UserVar[event->BaseVarIndex] = P002_getOutputValue(event, raw_value);
+      float res_value = 0.0;
+      if (P002_getOutputValue(event, raw_value, res_value)) {;
+        UserVar[event->BaseVarIndex] = res_value;
 
-      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        String log = F("ADC  : Analog value: ");
-        log += String(raw_value);
-        log += F(" = ");
-        log += String(UserVar[event->BaseVarIndex], 3);
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          String log = F("ADC  : Analog value: ");
+          log += String(raw_value);
+          log += F(" = ");
+          log += String(UserVar[event->BaseVarIndex], 3);
 
-        if (PCONFIG(0)) {
-          log += F(" (");
-          log += Plugin_002_OversamplingCount;
-          log += F(" samples)");
-        }
+          if (PCONFIG(0)) {
+            log += F(" (");
+            log += Plugin_002_OversamplingCount;
+            log += F(" samples)");
+          }
         addLog(LOG_LEVEL_INFO, log);
+        }
+        // Now reset the oversampling variables.
+        Plugin_002_OversamplingValue  = 0;
+        Plugin_002_OversamplingCount  = 0;
+        Plugin_002_OversamplingMinVal = P002_MAX_ADC_VALUE;
+        Plugin_002_OversamplingMaxVal = 0;
+        success                       = true;
+      } else {
+        if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+          String log = F("ADC  : No value received ");
+          addLog(LOG_LEVEL_ERROR, log);
+        }
+        success = false;
       }
 
-      // Now reset the oversampling variables.
-      Plugin_002_OversamplingValue  = 0;
-      Plugin_002_OversamplingCount  = 0;
-      Plugin_002_OversamplingMinVal = P002_MAX_ADC_VALUE;
-      Plugin_002_OversamplingMaxVal = 0;
-      success                       = true;
       break;
     }
   }
   return success;
 }
 
-float P002_getOutputValue(struct EventStruct *event, uint16_t& raw_value) {
+bool P002_getOutputValue(struct EventStruct *event, uint16_t& raw_value, float& res_value) {
   float float_value = 0.0;
+  bool success;
 
   if (PCONFIG(0) && (Plugin_002_OversamplingCount > 0)) {
     float sum   = static_cast<float>(Plugin_002_OversamplingValue);
@@ -180,11 +192,17 @@ float P002_getOutputValue(struct EventStruct *event, uint16_t& raw_value) {
     }
     float_value = sum / count;
     raw_value   = static_cast<int16_t>(float_value);
+    success = true;
   } else {
-    P002_performRead(event, raw_value);
-    float_value = static_cast<float>(raw_value);
+    if (P002_performRead(event, raw_value)) {
+      float_value = static_cast<float>(raw_value);
+      success = true;
+    } else {
+      success = false;
+    }
   }
-  return P002_applyCalibration(event, float_value);
+  if (success) res_value = P002_applyCalibration(event, float_value);
+  return success;
 }
 
 float P002_applyCalibration(struct EventStruct *event, float float_value) {
