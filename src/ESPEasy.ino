@@ -585,6 +585,7 @@ void loop()
       run10TimesPerSecond();
       runEach30Seconds();
       runOncePerSecond();
+      SensorSendAll();
   }
   //normal mode, run each task when its time
   else
@@ -886,13 +887,13 @@ void runEach30Seconds()
 /*********************************************************************************************\
  * send all sensordata
 \*********************************************************************************************/
-// void SensorSendAll()
-// {
-//   for (byte x = 0; x < TASKS_MAX; x++)
-//   {
-//     SensorSendTask(x);
-//   }
-// }
+void SensorSendAll()
+{
+  for (byte x = 0; x < TASKS_MAX; x++)
+  {
+    SensorSendTask(x);
+  }
+}
 
 
 /*********************************************************************************************\
