@@ -1,4 +1,34 @@
 -------------------------------------------------
+Changes in release mega-20191016 (since mega-20191003)
+-------------------------------------------------
+
+Release date: Wed Oct 16 04:00:07 CEST 2019
+
+Denys-ThreadPC (6):
+      ICMP ping plugin
+      Updated code
+      Additional checks for nullptr and moving ICMP PCB to constructor/destructor
+      Merging suggested fixes
+      Adding as testing, renaming from 088 to 089
+      Build only on ESP8266
+
+Grovkillen (2):
+      Benchmark tests (rules1.txt rules2.txt)
+      Benchmark test (added test number to starttest1)
+
+hennPi (1):
+      7segment display doesn't display lower case letter
+
+jimmys01 (3):
+      [IR] Update IR lib
+      [IR] Show the name of AC submodel instad of its number.
+      [IR TX] Set JSON default model to be -1
+
+stefan (1):
+      [ADC] Improve ADC handling
+
+
+-------------------------------------------------
 Changes in release mega-20191003 (since mega-20190928)
 -------------------------------------------------
 
