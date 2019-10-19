@@ -338,9 +338,9 @@ void setup()
     rulesProcessing(event);
   }
 
-  PluginInit();
   CPluginInit();
   NPluginInit();
+  PluginInit();
   log = F("INFO : Plugins: ");
   log += deviceCount + 1;
   log += getPluginDescriptionString();
@@ -554,7 +554,7 @@ void loop()
      addLog(LOG_LEVEL_INFO, F("firstLoopConnectionsEstablished"));
      firstLoop = false;
      timerAwakeFromDeepSleep = millis(); // Allow to run for "awake" number of seconds, now we have wifi.
-     // schedule_all_task_device_timers(); Disabled for now, since we are now using queues for controllers.
+     schedule_all_task_device_timers(); // reenabled again to ensure one (more) run of tasks after WiFi connection when using deepSleep
      if (Settings.UseRules && isDeepSleepEnabled())
      {
         String event = F("System#NoSleep=");
@@ -585,7 +585,6 @@ void loop()
       run10TimesPerSecond();
       runEach30Seconds();
       runOncePerSecond();
-      SensorSendAll();
   }
   //normal mode, run each task when its time
   else
