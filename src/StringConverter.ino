@@ -19,9 +19,7 @@ unsigned long str2int(const char *string)
    Check if valid float and convert string to float.
  \*********************************************************************************************/
 bool string2float(const String& string, float& floatvalue) {
-  if (!isFloat(string)) { return false; }
-  floatvalue = atof(string.c_str());
-  return true;
+  return validFloatFromString(string, floatvalue);
 }
 
 /********************************************************************************************\

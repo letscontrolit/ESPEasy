@@ -1539,6 +1539,7 @@ String parseTemplate(String& tmpString, byte lineSize)
             nr_decimals = 6;
           }
           String value = String(customFloatVar[varNum - 1], nr_decimals);
+          value.trim();
           transformValue(newString, lineSize, value, format, tmpString);
         }
       }
@@ -1648,6 +1649,7 @@ byte findDeviceValueIndexByName(const String& valueName, byte taskIndex)
   cache_valueName = valueName;
   cache_valueName += '#'; // The '#' cannot exist in a value name, use it in the cache key.
   cache_valueName += taskIndex;
+  cache_valueName.toLowerCase(); // No need to store multiple versions of the same entry with only different case.
 
   auto result = Cache.taskIndexValueName.find(cache_valueName);
   if (result != Cache.taskIndexValueName.end()) {
