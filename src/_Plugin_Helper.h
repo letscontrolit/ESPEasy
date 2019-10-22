@@ -3,6 +3,7 @@
 
 #include "ESPEasy_common.h"
 #include "src/DataStructs/ESPEasyLimits.h"
+#include "src/Globals/Plugins.h"
 
 // Defines to make plugins more readable.
 
@@ -49,7 +50,7 @@ struct PluginTaskData_base {
   // perform checks on the casting.
   // This is also a check to only use these functions and not to insert pointers
   // at random in the Plugin_task_data array.
-  int _taskdata_plugin_id = -1;
+  deviceIndex_t _taskdata_deviceIndex = INVALID_DEVICE_INDEX;
 };
 
 

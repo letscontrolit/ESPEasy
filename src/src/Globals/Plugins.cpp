@@ -1,58 +1,69 @@
 #include "Plugins.h"
 #include "../../ESPEasy_plugindefs.h"
 #include "../DataStructs/ESPEasy_EventStruct.h"
+#include "../Globals/Device.h"
 #include "../Globals/Settings.h"
+#include "../../ESPEasy_Log.h"
 
 
-void updateTaskPluginCache() {
-  ++countFindPluginId; // Used for statistics.
-  Task_id_to_Plugin_id.resize(TASKS_MAX);
-  for (byte y = 0; y < TASKS_MAX; ++y) {
-    Task_id_to_Plugin_id[y] = -1;
-    bool foundPlugin = false;
-    for (byte x = 0; x < PLUGIN_MAX && !foundPlugin; ++x) {
-      if (Plugin_id[x] != 0 && Plugin_id[x] == Settings.TaskDeviceNumber[y]) {
-        foundPlugin = true;
-        Task_id_to_Plugin_id[y] = x;
-      }
-    }
-  }
+
+deviceIndex_t INVALID_DEVICE_INDEX = PLUGIN_MAX;
+taskIndex_t   INVALID_TASK_INDEX = TASKS_MAX;
+pluginID_t    INVALID_PLUGIN_ID  = 0;
+
+std::map<pluginID_t, deviceIndex_t> Plugin_id_to_DeviceIndex;
+std::vector<pluginID_t> DeviceIndex_to_Plugin_id;
+
+boolean (*Plugin_ptr[PLUGIN_MAX])(byte, struct EventStruct*, String&);
+
+
+bool validDeviceIndex(deviceIndex_t index) {
+  return index < PLUGIN_MAX;
 }
 
-int getPluginId_from_TaskIndex(byte taskIndex) {
-  if (taskIndex < TASKS_MAX) {
-    int retry = 1;
-    while (retry >= 0) {
-      int plugin = Task_id_to_Plugin_id[taskIndex];
-      if (plugin >= 0 && plugin < PLUGIN_MAX) {
-        if (Plugin_id[plugin] == Settings.TaskDeviceNumber[taskIndex])
-          return plugin;
-      }
-      updateTaskPluginCache();
-      --retry;
-    }
+bool validTaskIndex(taskIndex_t index) {
+  return index < TASKS_MAX;
+}
+
+bool validPluginID(pluginID_t pluginID) {
+  return pluginID != 0;
+}
+
+bool supportedPluginID(pluginID_t pluginID) {
+  return validDeviceIndex(getDeviceIndex(pluginID));
+}
+
+deviceIndex_t getDeviceIndex_from_TaskIndex(taskIndex_t taskIndex) {
+  if (validTaskIndex(taskIndex)) {
+    return getDeviceIndex(Settings.TaskDeviceNumber[taskIndex]);
   }
-  return -1;
+  return INVALID_DEVICE_INDEX;
 }
 
 
+deviceIndex_t getDeviceIndex(pluginID_t pluginID)
+{
+  if (validPluginID(pluginID)) {
+    auto it = Plugin_id_to_DeviceIndex.find(pluginID);
+    if (it != Plugin_id_to_DeviceIndex.end())
+    {
+      if (Device[it->second].Number != pluginID) {
+        // FIXME TD-er: Just a check for now, can be removed later when it does not occur.
+        addLog(LOG_LEVEL_ERROR, F("getDeviceIndex error in Device Vector"));
+      }
+      return it->second;
+    }
+  }
+  return INVALID_DEVICE_INDEX;
+}
 
 /********************************************************************************************\
    Find name of plugin given the plugin device index..
  \*********************************************************************************************/
-String getPluginNameFromDeviceIndex(byte deviceIndex) {
+String getPluginNameFromDeviceIndex(deviceIndex_t deviceIndex) {
   String deviceName = "";
-  if (deviceIndex >= PLUGIN_MAX) {
-    return deviceName;
-  }
-
-  Plugin_ptr[deviceIndex](PLUGIN_GET_DEVICENAME, 0, deviceName);
+  if (validDeviceIndex(deviceIndex)) {
+    Plugin_ptr[deviceIndex](PLUGIN_GET_DEVICENAME, 0, deviceName);
+  }  
   return deviceName;
 }
-
-
-boolean (*Plugin_ptr[PLUGIN_MAX])(byte, struct EventStruct*, String&);
-
-std::vector<byte> Plugin_id;
-std::vector<int> Task_id_to_Plugin_id;
-unsigned long countFindPluginId = 0;

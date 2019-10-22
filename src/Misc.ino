@@ -6,6 +6,7 @@
 #include "src/Globals/CRCValues.h"
 #include "src/Globals/Cache.h"
 #include "src/Globals/Device.h"
+#include "src/Globals/Plugins.h"
 #include "src/Globals/RTC.h"
 #include "src/Globals/ResetFactoryDefaultPref.h"
 #include "src/Globals/Services.h"
@@ -857,18 +858,6 @@ String checkTaskSettings(byte taskIndex) {
   return err;
 }
 
-/********************************************************************************************\
-   Find device index corresponding to task number setting
- \*********************************************************************************************/
-byte getDeviceIndex(byte Number)
-{
-  for (byte x = 0; x <= deviceCount; x++) {
-    if (Device[x].Number == Number) {
-      return x;
-    }
-  }
-  return 0;
-}
 
 /********************************************************************************************\
    Find protocol index corresponding to protocol setting
@@ -1612,7 +1601,7 @@ String parseTemplate(String& tmpString, byte lineSize)
 
 // Find the first (enabled) task with given name
 // Return TASKS_MAX when not found, else return taskIndex
-byte findTaskIndexByName(const String& deviceName)
+taskIndex_t findTaskIndexByName(const String& deviceName)
 {
   // cache this, since LoadTaskSettings does take some time.
   auto result = Cache.taskIndexName.find(deviceName);
@@ -1641,6 +1630,9 @@ byte findTaskIndexByName(const String& deviceName)
 // Return VARS_PER_TASK if none found.
 byte findDeviceValueIndexByName(const String& valueName, byte taskIndex) 
 {
+  const deviceIndex_t deviceIndex = getDeviceIndex_from_TaskIndex(taskIndex);
+  if (!validDeviceIndex(deviceIndex)) return VARS_PER_TASK;
+
   // cache this, since LoadTaskSettings does take some time.
   // We need to use a cache search key including the taskIndex,
   // to allow several tasks to have the same value names.
@@ -1657,9 +1649,7 @@ byte findDeviceValueIndexByName(const String& valueName, byte taskIndex)
   }
   LoadTaskSettings(taskIndex); // Probably already loaded, but just to be sure
 
-  const byte pluginID = getDeviceIndex(Settings.TaskDeviceNumber[taskIndex]);
-  const byte valCount = Device[pluginID].ValueCount;
-
+  const byte valCount = Device[deviceIndex].ValueCount;
   for (byte valueNr = 0; valueNr < valCount; valueNr++)
   {
     // Check case insensitive, since the user entered value name can have any case.
@@ -2355,26 +2345,28 @@ void SendValueLogger(byte TaskIndex)
   #endif
   
   if (featureSD || loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-    String logger;
-    LoadTaskSettings(TaskIndex);
-    byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[TaskIndex]);
-    for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++)
-    {
-      logger += getDateString('-');
-      logger += ' ';
-      logger += getTimeString(':');
-      logger += ',';
-      logger += Settings.Unit;
-      logger += ',';
-      logger += getTaskDeviceName(TaskIndex);
-      logger += ',';
-      logger += ExtraTaskSettings.TaskDeviceValueNames[varNr];
-      logger += ',';
-      logger += formatUserVarNoCheck(TaskIndex, varNr);
-      logger += "\r\n";
+    deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(TaskIndex);
+    if (validDeviceIndex(DeviceIndex)) {
+      String logger;
+      LoadTaskSettings(TaskIndex);
+      for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++)
+      {
+        logger += getDateString('-');
+        logger += ' ';
+        logger += getTimeString(':');
+        logger += ',';
+        logger += Settings.Unit;
+        logger += ',';
+        logger += getTaskDeviceName(TaskIndex);
+        logger += ',';
+        logger += ExtraTaskSettings.TaskDeviceValueNames[varNr];
+        logger += ',';
+        logger += formatUserVarNoCheck(TaskIndex, varNr);
+        logger += "\r\n";
+      }
+      addLog(LOG_LEVEL_DEBUG, logger);
     }
 
-    addLog(LOG_LEVEL_DEBUG, logger);
   }
 #endif
 
@@ -2868,12 +2860,12 @@ uint32_t createKey(uint16_t pluginNumber, uint16_t portNumber) {
   return (uint32_t) pluginNumber << 16 | portNumber;
 }
 
-uint16_t getPluginFromKey(uint32_t key) {
-  return (uint16_t)(key >> 16);
+pluginID_t getPluginFromKey(uint32_t key) {
+  return static_cast<pluginID_t>((key >> 16) & 0xFFFF);
 }
 
 uint16_t getPortFromKey(uint32_t key) {
-  return (uint16_t)(key);
+  return static_cast<uint16_t>(key & 0xFFFF);
 }
 
 //#######################################################################################################

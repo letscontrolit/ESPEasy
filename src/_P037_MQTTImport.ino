@@ -8,6 +8,7 @@
 // This task reads data from the MQTT Import input stream and saves the value
 
 #include "src/Globals/MQTT.h"
+#include "src/Globals/Plugins.h"
 
 #define PLUGIN_037
 #define PLUGIN_ID_037         37
@@ -361,7 +362,12 @@ void mqttcallback_037(char* c_topic, byte* b_payload, unsigned int length)
   String payload = cpayload;		// convert byte to char string
   payload.trim();
 
-  byte DeviceIndex = getDeviceIndex(PLUGIN_ID_037);   // This is the device index of 037 modules -there should be one!
+  deviceIndex_t DeviceIndex = getDeviceIndex(PLUGIN_ID_037);   // This is the device index of 037 modules -there should be one!
+  if (!validDeviceIndex(DeviceIndex)) {
+    // This should never happen.
+    addLog(LOG_LEVEL_ERROR, F("Plugin 037 does not exist"));
+    return;
+  }
 
   // We generate a temp event structure to pass to the plugins
 

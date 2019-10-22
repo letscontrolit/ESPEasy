@@ -1,5 +1,6 @@
 #include "src/Globals/Nodes.h"
 #include "src/Globals/Device.h"
+#include "src/Globals/Plugins.h"
 #include "src/Static/WebStaticData.h"
 
 
@@ -178,12 +179,12 @@ void addDeviceSelect(const String& name,  int choice)
   {
     byte deviceIndex = sortedIndex[x];
 
-    if (Plugin_id[deviceIndex] != 0) {
+    if (validDeviceIndex(deviceIndex) && validPluginID(DeviceIndex_to_Plugin_id[deviceIndex])) {
       deviceName = getPluginNameFromDeviceIndex(deviceIndex);
     }
 
 #ifdef PLUGIN_BUILD_DEV
-    int num       = Plugin_id[deviceIndex];
+    pluginID_t num = DeviceIndex_to_Plugin_id[deviceIndex];
     String plugin = "P";
 
     if (num < 10) { plugin += '0'; }
@@ -275,7 +276,7 @@ void setTaskDevice_to_TaskIndex(byte taskdevicenumber, byte taskIndex) {
 
   Settings.TaskDeviceNumber[taskIndex] = taskdevicenumber;
 
-  if (taskdevicenumber != 0) // set default values if a new device has been selected
+  if (validPluginID(taskdevicenumber)) // set default values if a new device has been selected
   {
     // NOTE: do not enable task by default. allow user to enter sensible valus first and let him enable it when ready.
     PluginCall(PLUGIN_SET_DEFAULTS,         &TempEvent, dummy);
@@ -291,8 +292,11 @@ void setTaskDevice_to_TaskIndex(byte taskdevicenumber, byte taskIndex) {
 // ********************************************************************************
 void setBasicTaskValues(byte taskIndex, unsigned long taskdevicetimer,
                         bool enabled, const String& name, int pin1, int pin2, int pin3) {
+  if (!validTaskIndex(taskIndex)) return;
+  deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(taskIndex);
+  if (!validDeviceIndex(DeviceIndex)) return;
+
   LoadTaskSettings(taskIndex); // Make sure ExtraTaskSettings are up-to-date
-  byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[taskIndex]);
 
   if (taskdevicetimer > 0) {
     Settings.TaskDeviceTimer[taskIndex] = taskdevicetimer;
@@ -320,9 +324,14 @@ void setBasicTaskValues(byte taskIndex, unsigned long taskdevicetimer,
 // ********************************************************************************
 void handle_devices_CopySubmittedSettings(byte taskIndex, byte taskdevicenumber)
 {
-  unsigned long taskdevicetimer = getFormItemInt(F("TDT"), 0);
+  if (!validTaskIndex(taskIndex)) return;
+  deviceIndex_t DeviceIndex = getDeviceIndex(taskdevicenumber);
+  if (!validDeviceIndex(DeviceIndex)) return;
 
+  unsigned long taskdevicetimer = getFormItemInt(F("TDT"), 0);
   Settings.TaskDeviceNumber[taskIndex] = taskdevicenumber;
+
+
   int pin1 = -1;
   int pin2 = -1;
   int pin3 = -1;
@@ -339,8 +348,6 @@ void handle_devices_CopySubmittedSettings(byte taskIndex, byte taskdevicenumber)
     Settings.TaskDeviceID[controllerNr][taskIndex]       = getFormItemInt(String(F("TDID")) + (controllerNr + 1));
     Settings.TaskDeviceSendData[controllerNr][taskIndex] = isFormItemChecked(String(F("TDSD")) + (controllerNr + 1));
   }
-
-  byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[taskIndex]);
 
   if (Device[DeviceIndex].PullUpOption) {
     Settings.TaskDevicePin1PullUp[taskIndex] = isFormItemChecked(F("TDPPU"));
@@ -445,7 +452,7 @@ void handle_devicess_ShowAllTasksTable(byte page)
 
   String deviceName;
 
-  for (byte x = (page - 1) * TASKS_PER_PAGE; x < ((page) * TASKS_PER_PAGE) && x < TASKS_MAX; x++)
+  for (byte x = (page - 1) * TASKS_PER_PAGE; x < ((page) * TASKS_PER_PAGE) && validTaskIndex(x); x++)
   {
     html_TR_TD();
     html_add_button_prefix();
@@ -458,10 +465,10 @@ void handle_devicess_ShowAllTasksTable(byte page)
     TXBuffer += x + 1;
     html_TD();
 
-    if (Settings.TaskDeviceNumber[x] != 0)
+    deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(x);
+    if (validPluginID(Settings.TaskDeviceNumber[x]) && validDeviceIndex(DeviceIndex))
     {
       LoadTaskSettings(x);
-      byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[x]);
       struct EventStruct TempEvent;
       TempEvent.TaskIndex = x;
       addEnabled(Settings.TaskDeviceEnabled[x]);
@@ -578,7 +585,7 @@ void handle_devicess_ShowAllTasksTable(byte page)
       {
         for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++)
         {
-          if (Settings.TaskDeviceNumber[x] != 0)
+          if (validPluginID(Settings.TaskDeviceNumber[x]))
           {
             TXBuffer += pluginWebformShowValue(x, varNr, ExtraTaskSettings.TaskDeviceValueNames[varNr], formatUserVarNoCheck(x, varNr));
           }
@@ -598,9 +605,11 @@ void handle_devicess_ShowAllTasksTable(byte page)
 // ********************************************************************************
 void handle_devices_TaskSettingsPage(byte taskIndex, byte page)
 {
-  if (taskIndex >= TASKS_MAX) return;
+  if (!validTaskIndex(taskIndex)) return;
+  deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(taskIndex);\
+  if (!validDeviceIndex(DeviceIndex)) return;
+
   LoadTaskSettings(taskIndex);
-  byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[taskIndex]);
   struct EventStruct TempEvent;
   TempEvent.TaskIndex = taskIndex;
 
@@ -612,7 +621,7 @@ void handle_devices_TaskSettingsPage(byte taskIndex, byte page)
   TXBuffer += F("<TR><TD style='width:150px;' align='left'>Device:<TD>");
 
   // no device selected
-  if (Settings.TaskDeviceNumber[taskIndex] == 0)
+  if (!validPluginID(Settings.TaskDeviceNumber[taskIndex]))
   {
     // takes lots of memory/time so call this only when needed.
     addDeviceSelect("TDNUM", Settings.TaskDeviceNumber[taskIndex]); // ="taskdevicenumber"
@@ -815,7 +824,7 @@ void handle_devices_TaskSettingsPage(byte taskIndex, byte page)
   TXBuffer += F("<input type='hidden' name='page' value='1'>");
 
   // if user selected a device, add the delete button
-  if (Settings.TaskDeviceNumber[taskIndex] != 0) {
+  if (validPluginID(Settings.TaskDeviceNumber[taskIndex])) {
     addSubmitButton(F("Delete"), F("del"));
   }
 

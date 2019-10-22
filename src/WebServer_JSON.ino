@@ -1,5 +1,7 @@
 #include "src/Globals/Nodes.h"
 #include "src/Globals/Device.h"
+#include "src/Globals/Plugins.h"
+
 
 // ********************************************************************************
 // Web Interface JSON page (no password!)
@@ -146,7 +148,7 @@ void handle_json()
   byte lastActiveTaskIndex = 0;
 
   for (byte TaskIndex = firstTaskIndex; TaskIndex <= lastTaskIndex; TaskIndex++) {
-    if (Settings.TaskDeviceNumber[TaskIndex]) {
+    if (validPluginID(Settings.TaskDeviceNumber[TaskIndex])) {
       lastActiveTaskIndex = TaskIndex;
     }
   }
@@ -154,11 +156,11 @@ void handle_json()
   if (!showSpecificTask) { TXBuffer += F("\"Sensors\":[\n"); }
   unsigned long ttl_json = 60; // The shortest interval per enabled task (with output values) in seconds
 
-  for (byte TaskIndex = firstTaskIndex; TaskIndex <= lastActiveTaskIndex; TaskIndex++)
+  for (byte TaskIndex = firstTaskIndex; TaskIndex <= lastActiveTaskIndex && validTaskIndex(TaskIndex); TaskIndex++)
   {
-    if (Settings.TaskDeviceNumber[TaskIndex])
-    {
-      byte DeviceIndex                 = getDeviceIndex(Settings.TaskDeviceNumber[TaskIndex]);
+    const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(TaskIndex);
+    if (validDeviceIndex(DeviceIndex))
+    {      
       const unsigned long taskInterval = Settings.TaskDeviceTimer[TaskIndex];
       LoadTaskSettings(TaskIndex);
       TXBuffer += F("{\n");

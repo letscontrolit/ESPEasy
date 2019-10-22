@@ -2,6 +2,7 @@
 #include "src/Globals/Device.h"
 #include "src/Globals/ESPEasyWiFiEvent.h"
 #include "src/Globals/MQTT.h"
+#include "src/Globals/Plugins.h"
 
 /********************************************************************************************\
    Convert a char string to integer
@@ -186,8 +187,15 @@ void addNewLine(String& line) {
 \*********************************************************************************************/
 String doFormatUserVar(struct EventStruct *event, byte rel_index, bool mustCheck, bool& isvalid) {
   isvalid = true;
-  const byte BaseVarIndex = event->TaskIndex * VARS_PER_TASK;
-  const byte DeviceIndex  = getDeviceIndex(Settings.TaskDeviceNumber[event->TaskIndex]);
+  if (!validTaskIndex(event->TaskIndex)) {
+    isvalid = false;
+    return "0";
+  }
+  const deviceIndex_t DeviceIndex  = getDeviceIndex_from_TaskIndex(event->TaskIndex);
+  if (!validDeviceIndex(DeviceIndex)) {
+    isvalid = false;
+    return "0";
+  }
 
   if (Device[DeviceIndex].ValueCount <= rel_index) {
     isvalid = false;
@@ -201,6 +209,7 @@ String doFormatUserVar(struct EventStruct *event, byte rel_index, bool mustCheck
     }
     return "";
   }
+  const byte BaseVarIndex = event->TaskIndex * VARS_PER_TASK;
   switch (Device[DeviceIndex].VType) {
     case SENSOR_TYPE_LONG:
       return String((unsigned long)UserVar[BaseVarIndex] + ((unsigned long)UserVar[BaseVarIndex + 1] << 16));

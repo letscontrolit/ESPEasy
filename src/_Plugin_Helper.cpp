@@ -29,7 +29,7 @@ void resetPluginTaskData() {
 }
 
 void clearPluginTaskData(byte taskIndex) {
-  if (taskIndex < TASKS_MAX) {
+  if (validTaskIndex(taskIndex)) {
     if (Plugin_task_data[taskIndex] != nullptr) {
       delete Plugin_task_data[taskIndex];
       Plugin_task_data[taskIndex] = nullptr;
@@ -38,20 +38,21 @@ void clearPluginTaskData(byte taskIndex) {
 }
 
 void initPluginTaskData(byte taskIndex, PluginTaskData_base *data) {
+  if (!validTaskIndex(taskIndex)) return;
+  
   clearPluginTaskData(taskIndex);
-
-  if ((taskIndex < TASKS_MAX) && Settings.TaskDeviceEnabled[taskIndex]) {
+  if (Settings.TaskDeviceEnabled[taskIndex]) {
     Plugin_task_data[taskIndex]                      = data;
-    Plugin_task_data[taskIndex]->_taskdata_plugin_id = getPluginId_from_TaskIndex(taskIndex);
+    Plugin_task_data[taskIndex]->_taskdata_deviceIndex = getDeviceIndex_from_TaskIndex(taskIndex);
   }
 }
 
 PluginTaskData_base* getPluginTaskData(byte taskIndex) {
-  if (taskIndex >= TASKS_MAX) {
+  if (!validTaskIndex(taskIndex)) {
     return nullptr;
   }
 
-  if ((Plugin_task_data[taskIndex] != nullptr) && (Plugin_task_data[taskIndex]->_taskdata_plugin_id == getPluginId_from_TaskIndex(taskIndex))) {
+  if ((Plugin_task_data[taskIndex] != nullptr) && (Plugin_task_data[taskIndex]->_taskdata_deviceIndex == getDeviceIndex_from_TaskIndex(taskIndex))) {
     return Plugin_task_data[taskIndex];
   }
   return nullptr;
@@ -59,7 +60,7 @@ PluginTaskData_base* getPluginTaskData(byte taskIndex) {
 
 bool pluginTaskData_initialized(byte taskIndex) {
   // FIXME TD-er: Must check for type also.
-  if (taskIndex < TASKS_MAX) {
+  if (validTaskIndex(taskIndex)) {
     return Plugin_task_data[taskIndex] != nullptr;
   }
   return false;

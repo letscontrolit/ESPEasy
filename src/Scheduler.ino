@@ -391,11 +391,11 @@ void process_plugin_task_timer(unsigned long id) {
 
   // TD-er: Not sure if we have to keep original source for notifications.
   TempEvent.Source = VALUE_SOURCE_SYSTEM;
-  const int y = getPluginId_from_TaskIndex(timer_data.TaskIndex);
+  const deviceIndex_t deviceIndex = getDeviceIndex_from_TaskIndex(timer_data.TaskIndex);
 
   /*
      String log = F("proc_system_timer: Pluginid: ");
-     log += y;
+     log += deviceIndex;
      log += F(" taskIndex: ");
      log += timer_data.TaskIndex;
      log += F(" sysTimerID: ");
@@ -404,9 +404,9 @@ void process_plugin_task_timer(unsigned long id) {
    */
   systemTimers.erase(id);
 
-  if (y >= 0) {
+  if (validDeviceIndex(deviceIndex)) {
     String dummy;
-    Plugin_ptr[y](PLUGIN_TIMER_IN, &TempEvent, dummy);
+    Plugin_ptr[deviceIndex](PLUGIN_TIMER_IN, &TempEvent, dummy);
   }
   STOP_TIMER(PROC_SYS_TIMER);
 }
@@ -495,8 +495,10 @@ void schedule_task_device_timer(unsigned long task_index, unsigned long runAt) {
      addLog(LOG_LEVEL_INFO, log);
    */
 
-  if (task_index >= TASKS_MAX) { return; }
-  byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[task_index]);
+  if (!validTaskIndex(task_index)) { return; }
+  
+  deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(task_index);
+  if (!validDeviceIndex(DeviceIndex)) { return; }
 
   if (!Device[DeviceIndex].TimerOption) { return; }
 

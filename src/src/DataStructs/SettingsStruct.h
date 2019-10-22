@@ -106,6 +106,7 @@ class SettingsStruct_tmpl
   boolean       InitSPI;
   byte          Protocol[CONTROLLER_MAX];
   byte          Notification[NOTIFICATION_MAX]; //notifications, point to a NPLUGIN id
+  // FIXME TD-er: Must change to pluginID_t, but then also another check must be added since changing the pluginID_t will also render settings incompatible
   byte          TaskDeviceNumber[N_TASKS]; // The "plugin number" set at as task (e.g. 4 for P004_dallas)
   unsigned int  OLD_TaskDeviceID[N_TASKS];  //UNUSED: this can be removed
   union {

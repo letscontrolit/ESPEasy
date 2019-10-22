@@ -3,6 +3,7 @@
 
 #include "src/DataStructs/EventValueSource.h"
 #include "src/Globals/Device.h"
+#include "src/Globals/Plugins.h"
 
 String EventToFileName(String& eventName) {
   int size  = eventName.length();
@@ -838,9 +839,11 @@ void createRuleEvents(struct EventStruct *event) {
   if (!Settings.UseRules) {
     return;
   }
+  deviceIndex_t DeviceIndex  = getDeviceIndex_from_TaskIndex(event->TaskIndex);
+  if (!validDeviceIndex(DeviceIndex)) return;
+
   LoadTaskSettings(event->TaskIndex);
-  byte BaseVarIndex = event->TaskIndex * VARS_PER_TASK;
-  byte DeviceIndex  = getDeviceIndex(Settings.TaskDeviceNumber[event->TaskIndex]);
+  byte BaseVarIndex = event->TaskIndex * VARS_PER_TASK;  
   byte sensorType   = Device[DeviceIndex].VType;
 
   for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++) {

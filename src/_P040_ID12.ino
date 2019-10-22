@@ -1,4 +1,7 @@
 #ifdef USES_P040
+
+#include "src/Globals/Plugins.h"
+
 //#######################################################################################################
 //#################################### Plugin 040: Serial RFID ID-12 ####################################
 //#######################################################################################################
@@ -110,7 +113,10 @@ boolean Plugin_040(byte function, struct EventStruct *event, String& string)
               for (byte y = 0; y < TASKS_MAX; y++)
                 if (Settings.TaskDeviceNumber[y] == PLUGIN_ID_040)
                   index = y;
-              byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[index]);
+              deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(index);
+              if (!validDeviceIndex(DeviceIndex)) {
+                break;
+              }
               event->TaskIndex = index;
               event->BaseVarIndex = index * VARS_PER_TASK;
               event->sensorType = Device[DeviceIndex].VType;
