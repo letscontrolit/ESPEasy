@@ -212,7 +212,7 @@ boolean Plugin_089(byte function, struct EventStruct *event, String& string)
     if (command == F("pingset"))
     {
       String taskName = parseString(string, 2);
-      byte taskIndex = findTaskIndexByName(taskName);
+      taskIndex_t taskIndex = findTaskIndexByName(taskName);
       if (taskIndex != TASKS_MAX && taskIndex == event->TaskIndex) {
         success = true;
         String param1 = parseString(string, 3);
@@ -255,7 +255,7 @@ uint8_t PingReceiver (void *origin, struct raw_pcb *pcb, struct pbuf *packetBuff
   }
 
   bool is_found = false;
-  for (uint8_t index = 0; index < TASKS_MAX; index++) {
+  for (taskIndex_t index = 0; index < TASKS_MAX; index++) {
     deviceIndex_t deviceIndex = getDeviceIndex_from_TaskIndex(index);
     // Match all ping plugin instances and check them
     if (validDeviceIndex(deviceIndex) && DeviceIndex_to_Plugin_id[deviceIndex] == PLUGIN_ID_089) {

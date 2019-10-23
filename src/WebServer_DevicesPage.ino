@@ -18,7 +18,7 @@ void handle_devices() {
 
   // String taskindex = WebServer.arg(F("index"));
 
-  byte taskdevicenumber;
+  pluginID_t taskdevicenumber;
 
   if (WebServer.hasArg(F("del"))) {
     taskdevicenumber = 0;
@@ -97,7 +97,7 @@ void handle_devices() {
 
   // taskIndex in the URL is 1 ... TASKS_MAX
   // For use in other functions, set it to 0 ... (TASKS_MAX - 1)
-  byte taskIndex          = getFormItemInt(F("index"), 0);
+  taskIndex_t taskIndex          = getFormItemInt(F("index"), 0);
   boolean taskIndexNotSet = taskIndex == 0;
   --taskIndex;
 
@@ -205,7 +205,7 @@ void addDeviceSelect(const String& name,  int choice)
 // ********************************************************************************
 // change of device: cleanup old device and reset default settings
 // ********************************************************************************
-void setTaskDevice_to_TaskIndex(byte taskdevicenumber, byte taskIndex) {
+void setTaskDevice_to_TaskIndex(pluginID_t taskdevicenumber, taskIndex_t taskIndex) {
   struct EventStruct TempEvent;
 
   TempEvent.TaskIndex = taskIndex;
@@ -232,7 +232,7 @@ void setTaskDevice_to_TaskIndex(byte taskdevicenumber, byte taskIndex) {
 // ********************************************************************************
 // Initialize task with some default values applicable for almost all tasks
 // ********************************************************************************
-void setBasicTaskValues(byte taskIndex, unsigned long taskdevicetimer,
+void setBasicTaskValues(taskIndex_t taskIndex, unsigned long taskdevicetimer,
                         bool enabled, const String& name, int pin1, int pin2, int pin3) {
   if (!validTaskIndex(taskIndex)) return;
   deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(taskIndex);
@@ -264,7 +264,7 @@ void setBasicTaskValues(byte taskIndex, unsigned long taskdevicetimer,
 // ********************************************************************************
 // Collect all submitted form data and store the task settings
 // ********************************************************************************
-void handle_devices_CopySubmittedSettings(byte taskIndex, byte taskdevicenumber)
+void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t taskdevicenumber)
 {
   if (!validTaskIndex(taskIndex)) return;
   deviceIndex_t DeviceIndex = getDeviceIndex(taskdevicenumber);
@@ -568,7 +568,7 @@ void handle_devicess_ShowAllTasksTable(byte page)
 // ********************************************************************************
 // Show the task settings page
 // ********************************************************************************
-void handle_devices_TaskSettingsPage(byte taskIndex, byte page)
+void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, byte page)
 {
   if (!validTaskIndex(taskIndex)) return;
   deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(taskIndex);\

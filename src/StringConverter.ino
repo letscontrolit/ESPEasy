@@ -240,7 +240,7 @@ String doFormatUserVar(struct EventStruct *event, byte rel_index, bool mustCheck
   return toString(f, ExtraTaskSettings.TaskDeviceValueDecimals[rel_index]);
 }
 
-String formatUserVarNoCheck(byte TaskIndex, byte rel_index) {
+String formatUserVarNoCheck(taskIndex_t TaskIndex, byte rel_index) {
   bool isvalid;
   // FIXME TD-er: calls to this function cannot handle SENSOR_TYPE_STRING
   struct EventStruct TempEvent;
@@ -248,7 +248,7 @@ String formatUserVarNoCheck(byte TaskIndex, byte rel_index) {
   return doFormatUserVar(&TempEvent, rel_index, false, isvalid);
 }
 
-String formatUserVar(byte TaskIndex, byte rel_index, bool& isvalid) {
+String formatUserVar(taskIndex_t TaskIndex, byte rel_index, bool& isvalid) {
   // FIXME TD-er: calls to this function cannot handle SENSOR_TYPE_STRING
   struct EventStruct TempEvent;
   TempEvent.TaskIndex = TaskIndex;

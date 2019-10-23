@@ -148,7 +148,7 @@ boolean handle_custom(String path) {
         "<meta name='viewport' content='width=width=device-width, initial-scale=1'><STYLE>* {font-family:sans-serif; font-size:16pt;}.button {margin:4px; padding:4px 16px; background-color:#07D; color:#FFF; text-decoration:none; border-radius:4px}</STYLE>");
       html_table_class_normal();
 
-      for (byte x = 0; x < TASKS_MAX; x++)
+      for (taskIndex_t x = 0; x < TASKS_MAX; x++)
       {
         if (validPluginID(Settings.TaskDeviceNumber[x]))
         {

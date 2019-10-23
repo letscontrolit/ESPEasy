@@ -4,6 +4,7 @@
 
 
 #include "../DataStructs/ESPEasyLimits.h"
+#include "../../src/src/Globals/Plugins.h"
 
 
 /*********************************************************************************************\
@@ -63,7 +64,7 @@ class SettingsStruct_tmpl
 
   void clearAll();
 
-  void clearTask(byte task);
+  void clearTask(taskIndex_t task);
 
   unsigned long PID;
   int           Version;

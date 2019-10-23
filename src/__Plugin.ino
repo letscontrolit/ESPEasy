@@ -1181,7 +1181,7 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
     case PLUGIN_SERIAL_IN:
     case PLUGIN_UDP_IN:
       {
-        for (byte task = 0; task < TASKS_MAX; task++)
+        for (taskIndex_t task = 0; task < TASKS_MAX; task++)
         {
           if (Settings.TaskDeviceEnabled[task] && validPluginID(Settings.TaskDeviceNumber[task]))
           {
@@ -1217,7 +1217,7 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
       {
         if (Function == PLUGIN_INIT_ALL)
           Function = PLUGIN_INIT;
-        for (byte task = 0; task < TASKS_MAX; task++)
+        for (taskIndex_t task = 0; task < TASKS_MAX; task++)
         {
           if (Settings.TaskDeviceEnabled[task] && validPluginID(Settings.TaskDeviceNumber[task]))
           {

@@ -518,7 +518,7 @@ bool Plugin076_ReadMultipliers(double& current, double& voltage, double& power) 
 }
 
 
-bool Plugin076_LoadMultipliers(byte TaskIndex, double& current, double& voltage, double& power) {
+bool Plugin076_LoadMultipliers(taskIndex_t TaskIndex, double& current, double& voltage, double& power) {
   // If multipliers are empty load default ones and save all of them as
   // "CustomTaskSettings"
   if (!Plugin076_ReadMultipliers(current, voltage, power)) {
@@ -539,7 +539,7 @@ bool Plugin076_LoadMultipliers(byte TaskIndex, double& current, double& voltage,
   return (current > 1.0) && (voltage > 1.0) && (power > 1.0);
 }
 
-void Plugin076_Reset(byte TaskIndex) {
+void Plugin076_Reset(taskIndex_t TaskIndex) {
   if (Plugin_076_hlw) {
     const byte CF_PIN = Settings.TaskDevicePin3[TaskIndex];
     const byte CF1_PIN = Settings.TaskDevicePin2[TaskIndex];

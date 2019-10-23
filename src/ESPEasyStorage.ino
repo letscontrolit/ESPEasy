@@ -1,6 +1,7 @@
 #include "src/Globals/Cache.h"
-#include "src/Globals/ResetFactoryDefaultPref.h"
 #include "src/Globals/CRCValues.h"
+#include "src/Globals/ResetFactoryDefaultPref.h"
+#include "src/Globals/Plugins.h"
 
 /********************************************************************************************\
    SPIFFS error handling
@@ -362,7 +363,7 @@ String LoadSettings()
    Disable Plugin, based on bootFailedCount
  \*********************************************************************************************/
 byte disablePlugin(byte bootFailedCount) {
-  for (byte i = 0; i < TASKS_MAX && bootFailedCount > 0; ++i) {
+  for (taskIndex_t i = 0; i < TASKS_MAX && bootFailedCount > 0; ++i) {
     if (Settings.TaskDeviceEnabled[i]) {
       --bootFailedCount;
 
@@ -532,7 +533,7 @@ bool getSettingsParameters(SettingsType settingsType, int index, int& offset, in
 /********************************************************************************************\
    Save Task settings to SPIFFS
  \*********************************************************************************************/
-String SaveTaskSettings(byte TaskIndex)
+String SaveTaskSettings(taskIndex_t TaskIndex)
 {
   checkRAM(F("SaveTaskSettings"));
 
@@ -554,12 +555,12 @@ String SaveTaskSettings(byte TaskIndex)
 /********************************************************************************************\
    Load Task settings from SPIFFS
  \*********************************************************************************************/
-String LoadTaskSettings(byte TaskIndex)
+String LoadTaskSettings(taskIndex_t TaskIndex)
 {
   if (ExtraTaskSettings.TaskIndex == TaskIndex) {
     return String(); // already loaded
   }
-  if ((TaskIndex < 0) || (TaskIndex >= TASKS_MAX)) {
+  if (!validTaskIndex(TaskIndex)) {
     return String(); // Un-initialized task index.
   }
   checkRAM(F("LoadTaskSettings"));
@@ -591,7 +592,7 @@ String LoadTaskSettings(byte TaskIndex)
 /********************************************************************************************\
    Save Custom Task settings to SPIFFS
  \*********************************************************************************************/
-String SaveCustomTaskSettings(int TaskIndex, byte *memAddress, int datasize)
+String SaveCustomTaskSettings(taskIndex_t TaskIndex, byte *memAddress, int datasize)
 {
   checkRAM(F("SaveCustomTaskSettings"));
   return SaveToFile(CustomTaskSettings_Type, TaskIndex, (char *)FILE_CONFIG, memAddress, datasize);
@@ -608,7 +609,7 @@ String getCustomTaskSettingsError(byte varNr) {
 /********************************************************************************************\
    Clear custom task settings
  \*********************************************************************************************/
-String ClearCustomTaskSettings(int TaskIndex)
+String ClearCustomTaskSettings(taskIndex_t TaskIndex)
 {
   // addLog(LOG_LEVEL_DEBUG, F("Clearing custom task settings"));
   return ClearInFile(CustomTaskSettings_Type, TaskIndex, (char *)FILE_CONFIG);
@@ -617,7 +618,7 @@ String ClearCustomTaskSettings(int TaskIndex)
 /********************************************************************************************\
    Load Custom Task settings from SPIFFS
  \*********************************************************************************************/
-String LoadCustomTaskSettings(int TaskIndex, byte *memAddress, int datasize)
+String LoadCustomTaskSettings(taskIndex_t TaskIndex, byte *memAddress, int datasize)
 {
   START_TIMER;
   checkRAM(F("LoadCustomTaskSettings"));
@@ -629,7 +630,7 @@ String LoadCustomTaskSettings(int TaskIndex, byte *memAddress, int datasize)
 /********************************************************************************************\
    Load array of Strings from Custom Task settings
  \*********************************************************************************************/
-String LoadCustomTaskSettings(int TaskIndex, String strings[], uint16_t nrStrings, uint16_t maxStringLenght)
+String LoadCustomTaskSettings(taskIndex_t TaskIndex, String strings[], uint16_t nrStrings, uint16_t maxStringLenght)
 {
   START_TIMER;
   checkRAM(F("LoadCustomTaskSettings"));

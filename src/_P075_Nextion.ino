@@ -72,7 +72,7 @@ struct P075_data_struct : public PluginTaskData_base {
     }
   }
 
-  void loadDisplayLines(byte taskIndex) {
+  void loadDisplayLines(taskIndex_t taskIndex) {
     LoadCustomTaskSettings(taskIndex, displayLines, P75_Nlines, P75_Nchars);
   }
 
@@ -540,7 +540,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
 }
 
 
-void P075_sendCommand(byte taskIndex, const char *cmd)
+void P075_sendCommand(taskIndex_t taskIndex, const char *cmd)
 {
   P075_data_struct* P075_data = static_cast<P075_data_struct*>(getPluginTaskData(taskIndex));
   if (!P075_data) return;

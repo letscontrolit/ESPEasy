@@ -8,7 +8,7 @@
 // ********************************************************************************
 void handle_json()
 {
-  const int  taskNr           = getFormItemInt(F("tasknr"), -1);
+  const taskIndex_t  taskNr           = getFormItemInt(F("tasknr"), -1);
   const bool showSpecificTask = taskNr > 0;
   bool showSystem             = true;
   bool showWifi               = true;
@@ -137,17 +137,17 @@ void handle_json()
     }
   }
 
-  byte firstTaskIndex = 0;
-  byte lastTaskIndex  = TASKS_MAX - 1;
+  taskIndex_t firstTaskIndex = 0;
+  taskIndex_t lastTaskIndex  = TASKS_MAX - 1;
 
   if (showSpecificTask)
   {
     firstTaskIndex = taskNr - 1;
     lastTaskIndex  = taskNr - 1;
   }
-  byte lastActiveTaskIndex = 0;
+  taskIndex_t lastActiveTaskIndex = 0;
 
-  for (byte TaskIndex = firstTaskIndex; TaskIndex <= lastTaskIndex; TaskIndex++) {
+  for (taskIndex_t TaskIndex = firstTaskIndex; TaskIndex <= lastTaskIndex; TaskIndex++) {
     if (validPluginID(Settings.TaskDeviceNumber[TaskIndex])) {
       lastActiveTaskIndex = TaskIndex;
     }
@@ -156,7 +156,7 @@ void handle_json()
   if (!showSpecificTask) { TXBuffer += F("\"Sensors\":[\n"); }
   unsigned long ttl_json = 60; // The shortest interval per enabled task (with output values) in seconds
 
-  for (byte TaskIndex = firstTaskIndex; TaskIndex <= lastActiveTaskIndex && validTaskIndex(TaskIndex); TaskIndex++)
+  for (taskIndex_t TaskIndex = firstTaskIndex; TaskIndex <= lastActiveTaskIndex && validTaskIndex(TaskIndex); TaskIndex++)
   {
     const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(TaskIndex);
     if (validDeviceIndex(DeviceIndex))

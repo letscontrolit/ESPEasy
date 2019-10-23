@@ -42,7 +42,7 @@ OLEDDisplay *display=NULL;
 
 String P036_displayLines[P36_Nlines];
 
-void Plugin_036_loadDisplayLines(byte taskIndex) {
+void Plugin_036_loadDisplayLines(taskIndex_t taskIndex) {
   LoadCustomTaskSettings(taskIndex, P036_displayLines, P36_Nlines, P36_Nchars);
 }
 

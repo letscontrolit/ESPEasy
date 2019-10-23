@@ -477,7 +477,7 @@ bool remoteConfig(struct EventStruct *event, const String& string)
       if ((configTaskName.length() == 0) || (configCommand.length() == 0)) {
         return success; // TD-er: Should this be return false?
       }
-      byte index = findTaskIndexByName(configTaskName);
+      taskIndex_t index = findTaskIndexByName(configTaskName);
 
       if (index != TASKS_MAX)
       {
@@ -811,9 +811,9 @@ void parseCommandString(struct EventStruct *event, const String& string)
 /********************************************************************************************\
   Clear task settings for given task
   \*********************************************************************************************/
-void taskClear(byte taskIndex, bool save)
+void taskClear(taskIndex_t taskIndex, bool save)
 {
-  if (taskIndex >= TASKS_MAX) return;
+  if (!validTaskIndex(taskIndex)) return;
   checkRAM(F("taskClear"));
   Settings.clearTask(taskIndex);
   ExtraTaskSettings.clear(); // Invalidate any cached values.
@@ -824,7 +824,7 @@ void taskClear(byte taskIndex, bool save)
   }
 }
 
-String checkTaskSettings(byte taskIndex) {
+String checkTaskSettings(taskIndex_t taskIndex) {
   String err = LoadTaskSettings(taskIndex);
   if (err.length() > 0) return err;
   if (!ExtraTaskSettings.checkUniqueValueNames()) {
@@ -841,7 +841,7 @@ String checkTaskSettings(byte taskIndex) {
     }
   }
   // Do not use the cached function findTaskIndexByName since that one does rely on the fact names should be unique.
-  for (int i = 0; i < TASKS_MAX; ++i) {
+  for (taskIndex_t i = 0; i < TASKS_MAX; ++i) {
     if (i != taskIndex && Settings.TaskDeviceEnabled[i]) {
       LoadTaskSettings(i);
       if (ExtraTaskSettings.TaskDeviceName[0] != 0) {
@@ -1034,7 +1034,7 @@ uint32_t progMemMD5check(){
 /********************************************************************************************\
   Handler for keeping ExtraTaskSettings up to date using cache
   \*********************************************************************************************/
-String getTaskDeviceName(byte TaskIndex) {
+String getTaskDeviceName(taskIndex_t TaskIndex) {
   LoadTaskSettings(TaskIndex);
   return ExtraTaskSettings.TaskDeviceName;
 }
@@ -1174,7 +1174,7 @@ void ResetFactory()
   Settings.deepSleep       = false;
   Settings.CustomCSS       = false;
   Settings.InitSPI         = false;
-  for (byte x = 0; x < TASKS_MAX; x++)
+  for (taskIndex_t x = 0; x < TASKS_MAX; x++)
   {
     Settings.TaskDevicePin1[x] = -1;
     Settings.TaskDevicePin2[x] = -1;
@@ -1539,7 +1539,7 @@ String parseTemplate(String& tmpString, byte lineSize)
       // For example: "[bme#temp]"
       // If value name is unknown, run a PLUGIN_GET_CONFIG command.
       // For example: "[<taskname>#getLevel]"
-      byte taskIndex = findTaskIndexByName(deviceName);
+      taskIndex_t taskIndex = findTaskIndexByName(deviceName);
 
       if (taskIndex != TASKS_MAX && Settings.TaskDeviceEnabled[taskIndex]) {
         byte valueNr = findDeviceValueIndexByName(valueName, taskIndex);
@@ -1608,7 +1608,7 @@ taskIndex_t findTaskIndexByName(const String& deviceName)
   if (result != Cache.taskIndexName.end()) {
     return result->second;
   }
-  for (byte taskIndex = 0; taskIndex < TASKS_MAX; taskIndex++)
+  for (taskIndex_t taskIndex = 0; taskIndex < TASKS_MAX; taskIndex++)
   {
     if (Settings.TaskDeviceEnabled[taskIndex]) {
       String taskDeviceName = getTaskDeviceName(taskIndex);
@@ -1628,7 +1628,7 @@ taskIndex_t findTaskIndexByName(const String& deviceName)
 
 // Find the first device value index of a taskIndex.
 // Return VARS_PER_TASK if none found.
-byte findDeviceValueIndexByName(const String& valueName, byte taskIndex) 
+byte findDeviceValueIndexByName(const String& valueName, taskIndex_t taskIndex) 
 {
   const deviceIndex_t deviceIndex = getDeviceIndex_from_TaskIndex(taskIndex);
   if (!validDeviceIndex(deviceIndex)) return VARS_PER_TASK;
@@ -2336,7 +2336,7 @@ int CalculateParam(const char *TmpStr) {
   return returnValue;
 }
 
-void SendValueLogger(byte TaskIndex)
+void SendValueLogger(taskIndex_t TaskIndex)
 {
 #if !defined(BUILD_NO_DEBUG) || defined(FEATURE_SD)
   bool featureSD = false;

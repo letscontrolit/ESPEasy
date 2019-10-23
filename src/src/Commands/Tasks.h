@@ -11,7 +11,7 @@ String Command_Task_Clear(struct EventStruct *event, const char* Line)
 
 String Command_Task_ClearAll(struct EventStruct *event, const char* Line)
 {
-	for (byte t = 0; t < TASKS_MAX; t++)
+	for (taskIndex_t t = 0; t < TASKS_MAX; t++)
 		taskClear(t, false);
 	return return_command_success();
 }

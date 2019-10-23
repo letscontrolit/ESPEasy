@@ -853,7 +853,7 @@ void json_prop(const String& name, const String& value) {
 // ********************************************************************************
 // Add a task select dropdown list
 // ********************************************************************************
-void addTaskSelect(const String& name,  int choice)
+void addTaskSelect(const String& name,  taskIndex_t choice)
 {
   String deviceName;
 
@@ -861,7 +861,7 @@ void addTaskSelect(const String& name,  int choice)
   TXBuffer += name;
   TXBuffer += F("' onchange='return dept_onchange(frmselect)'>");
 
-  for (byte x = 0; x < TASKS_MAX; x++)
+  for (taskIndex_t x = 0; x < TASKS_MAX; x++)
   {
     deviceName = "";
     deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(x);
@@ -896,7 +896,7 @@ void addTaskSelect(const String& name,  int choice)
 // ********************************************************************************
 // Add a Value select dropdown list, based on TaskIndex
 // ********************************************************************************
-void addTaskValueSelect(const String& name, int choice, byte TaskIndex)
+void addTaskValueSelect(const String& name, int choice, taskIndex_t TaskIndex)
 {
   if (!validTaskIndex(TaskIndex)) return;
   deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(TaskIndex);

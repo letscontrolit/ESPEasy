@@ -109,8 +109,8 @@ boolean Plugin_040(byte function, struct EventStruct *event, String& string)
             if (code[5] == checksum)
             {
               // temp woraround, ESP Easy framework does not currently prepare this...
-              byte index = 0;
-              for (byte y = 0; y < TASKS_MAX; y++)
+              taskIndex_t index = INVALID_TASK_INDEX;
+              for (taskIndex_t y = 0; y < TASKS_MAX; y++)
                 if (Settings.TaskDeviceNumber[y] == PLUGIN_ID_040)
                   index = y;
               deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(index);

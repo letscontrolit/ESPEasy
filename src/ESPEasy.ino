@@ -883,7 +883,7 @@ void runEach30Seconds()
 \*********************************************************************************************/
 // void SensorSendAll()
 // {
-//   for (byte x = 0; x < TASKS_MAX; x++)
+//   for (taskIndex_t x = 0; x < TASKS_MAX; x++)
 //   {
 //     SensorSendTask(x);
 //   }
@@ -893,7 +893,7 @@ void runEach30Seconds()
 /*********************************************************************************************\
  * send specific sensor task data
 \*********************************************************************************************/
-void SensorSendTask(byte TaskIndex)
+void SensorSendTask(taskIndex_t TaskIndex)
 {
   if (!validTaskIndex(TaskIndex)) return;
   checkRAM(F("SensorSendTask"));

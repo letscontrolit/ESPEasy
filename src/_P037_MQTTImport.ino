@@ -308,7 +308,7 @@ boolean MQTTSubscribe_037()
 
   //	Loop over all tasks looking for a 037 instance
 
-  for (byte y = 0; y < TASKS_MAX; y++)
+  for (taskIndex_t y = 0; y < TASKS_MAX; y++)
   {
     if (Settings.TaskDeviceNumber[y] == PLUGIN_ID_037)
     {
@@ -378,7 +378,7 @@ void mqttcallback_037(char* c_topic, byte* b_payload, unsigned int length)
 
   //  Here we loop over all tasks and call each 037 plugin with function PLUGIN_IMPORT
 
-  for (byte y = 0; y < TASKS_MAX; y++)
+  for (taskIndex_t y = 0; y < TASKS_MAX; y++)
   {
     if (Settings.TaskDeviceNumber[y] == PLUGIN_ID_037)                // if we have found a 037 device, then give it something to think about!
     {

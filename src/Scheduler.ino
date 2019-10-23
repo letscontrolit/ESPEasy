@@ -465,7 +465,7 @@ void schedule_task_device_timer_at_init(unsigned long task_index) {
 
 // Typical use case is to run this when all needed connections are made.
 void schedule_all_task_device_timers() {
-  for (byte task = 0; task < TASKS_MAX; task++) {
+  for (taskIndex_t task = 0; task < TASKS_MAX; task++) {
     schedule_task_device_timer_at_init(task);
   }
 }
@@ -476,7 +476,7 @@ void schedule_all_tasks_using_MQTT_controller() {
 
   if (ControllerIndex < 0) { return; }
 
-  for (byte task = 0; task < TASKS_MAX; task++) {
+  for (taskIndex_t task = 0; task < TASKS_MAX; task++) {
     if (Settings.TaskDeviceSendData[ControllerIndex][task] &&
         Settings.ControllerEnabled[ControllerIndex] &&
         Settings.Protocol[ControllerIndex])

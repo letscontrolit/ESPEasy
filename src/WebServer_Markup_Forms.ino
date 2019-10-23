@@ -65,7 +65,7 @@ void addFormFloatNumberBox(const String& label, const String& id, float value, f
 // ********************************************************************************
 // Add a task selector form
 // ********************************************************************************
-void addTaskSelectBox(const String& label, const String& id, int choice)
+void addTaskSelectBox(const String& label, const String& id, taskIndex_t choice)
 {
   addRowLabel_tr_id(label, id);
   addTaskSelect(id, choice);

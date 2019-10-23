@@ -312,7 +312,7 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
           deviceCount++;
 
           // SECOND Plugins
-          for (byte x = 0; x < TASKS_MAX; x++)
+          for (taskIndex_t x = 0; x < TASKS_MAX; x++)
           {
             if (validPluginID((Settings.TaskDeviceNumber[x])))
             {
