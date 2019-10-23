@@ -2,6 +2,7 @@
 #include "../DataStructs/SettingsStruct.h"
 #include "../DataStructs/ESPEasyLimits.h"
 #include "../DataStructs/ESPEasyDefaults.h"
+#include "../Globals/Plugins.h"
 
 template<unsigned int N_TASKS>
 SettingsStruct_tmpl<N_TASKS>::SettingsStruct_tmpl() : ResetFactoryDefaultPreference(0) {

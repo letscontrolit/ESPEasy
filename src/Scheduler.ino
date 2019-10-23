@@ -348,9 +348,9 @@ void process_interval_timer(unsigned long id, unsigned long lasttimer) {
 /*********************************************************************************************\
 * Plugin Task Timer
 \*********************************************************************************************/
-unsigned long createPluginTaskTimerId(byte plugin, int Par1) {
+unsigned long createPluginTaskTimerId(deviceIndex_t deviceIndex, int Par1) {
   const unsigned long mask  = (1 << TIMER_ID_SHIFT) - 1;
-  const unsigned long mixed = (Par1 << 8) + plugin;
+  const unsigned long mixed = (Par1 << 8) + deviceIndex;
 
   return mixed & mask;
 }
@@ -362,10 +362,14 @@ unsigned long createPluginTaskTimerId(byte plugin, int Par1) {
    Par1 = (mixed_id & mask) >> 8;
    }
  */
-void setPluginTaskTimer(unsigned long msecFromNow, byte plugin, short taskIndex, int Par1, int Par2, int Par3, int Par4, int Par5)
+void setPluginTaskTimer(unsigned long msecFromNow, taskIndex_t taskIndex, int Par1, int Par2, int Par3, int Par4, int Par5)
 {
   // plugin number and par1 form a unique key that can be used to restart a timer
-  const unsigned long systemTimerId = createPluginTaskTimerId(plugin, Par1);
+  // Use deviceIndex instead of pluginID, since the deviceIndex uses less bits.
+  deviceIndex_t deviceIndex = getDeviceIndex_from_TaskIndex(taskIndex);
+  if (!validDeviceIndex(deviceIndex)) return;
+
+  const unsigned long systemTimerId = createPluginTaskTimerId(deviceIndex, Par1);
   systemTimerStruct   timer_data;
 
   timer_data.TaskIndex        = taskIndex;

@@ -1064,9 +1064,18 @@ void PluginInit(void)
 
   String dummy;
   PluginCall(PLUGIN_DEVICE_ADD, nullptr, dummy);
+    // Set all not supported plugins to disabled.
+  for (taskIndex_t task = 0; task < TASKS_MAX; ++task) {
+    if (!supportedPluginID(Settings.TaskDeviceNumber[task])) {
+      Settings.TaskDeviceEnabled[task] = false;
+    }
+  }
+
   PluginCall(PLUGIN_INIT_ALL, nullptr, dummy);
   sortDeviceIndexArray();  // Used in device selector dropdown.
 }
+
+
 
 
 /*********************************************************************************************\
@@ -1131,7 +1140,7 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
     case PLUGIN_WRITE:
     case PLUGIN_REQUEST:
       {
-        for (byte task = 0; task < TASKS_MAX; task++)
+        for (taskIndex_t task = 0; task < TASKS_MAX; task++)
         {
           if (Settings.TaskDeviceEnabled[task] && validPluginID(Settings.TaskDeviceNumber[task]))
           {
@@ -1156,9 +1165,9 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
           }
         }
         // @FIXME TD-er: work-around as long as gpio command is still performed in P001_switch.
-        for (byte x = 0; x < PLUGIN_MAX; x++) {
-          if (validPluginID(DeviceIndex_to_Plugin_id[x])) {
-            if (Plugin_ptr[x](Function, event, str)) {
+        for (deviceIndex_t deviceIndex = 0; deviceIndex < PLUGIN_MAX; deviceIndex++) {
+          if (validPluginID(DeviceIndex_to_Plugin_id[deviceIndex])) {
+            if (Plugin_ptr[deviceIndex](Function, event, str)) {
               delay(0); // SMY: call delay(0) unconditionally
               CPluginCall(CPLUGIN_ACKNOWLEDGE, event, str);
               return true;
