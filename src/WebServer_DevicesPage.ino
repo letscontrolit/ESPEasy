@@ -284,6 +284,7 @@ void handle_devices_CopySubmittedSettings(byte taskIndex, byte taskdevicenumber)
                      isFormItemChecked(F("TDE")), WebServer.arg(F("TDN")),
                      pin1, pin2, pin3);
   Settings.TaskDevicePort[taskIndex] = getFormItemInt(F("TDP"), 0);
+  update_whenset_FormItemInt(F("remoteFeed"), Settings.TaskDeviceDataFeed[taskIndex]);
 
   for (byte controllerNr = 0; controllerNr < CONTROLLER_MAX; controllerNr++)
   {
@@ -679,6 +680,22 @@ void handle_devices_TaskSettingsPage(byte taskIndex, byte page)
         addHtmlError(errorMessage);
       }
     }
+    else {
+      // Show remote feed information.
+      addFormSubHeader(F("Data Source"));
+      byte remoteUnit = Settings.TaskDeviceDataFeed[taskIndex];
+      addFormNumericBox(F("Remote Unit"), F("RemoteUnit"), remoteUnit, 0, 255);
+      if (remoteUnit != 255) {
+        NodesMap::iterator it = Nodes.find(remoteUnit);
+        if (it != Nodes.end()) {
+          addUnit(it->second.nodeName);
+        } else {
+          addUnit(F("Unknown Unit Name"));
+        }
+      }
+      addFormNote(F("0 = disable remote feed, 255 = broadcast")); // FIXME TD-er: Must verify if broadcast can be set.
+    }
+
 
     // section: Data Acquisition
     if (Device[DeviceIndex].SendDataOption)
