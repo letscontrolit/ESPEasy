@@ -32,7 +32,6 @@ float UserVar[VARS_PER_TASK * TASKS_MAX];
 
 
 
-int deviceCount = -1;
 int protocolCount = -1;
 int notificationCount = -1;
 

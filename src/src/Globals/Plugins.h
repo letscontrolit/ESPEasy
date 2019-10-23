@@ -29,10 +29,28 @@ extern deviceIndex_t INVALID_DEVICE_INDEX;
 extern taskIndex_t   INVALID_TASK_INDEX;
 extern pluginID_t    INVALID_PLUGIN_ID;
 
+extern int deviceCount;
+
+// Array of function pointers to call plugins.
+extern boolean (*Plugin_ptr[PLUGIN_MAX])(byte, struct EventStruct*, String&);
+
+// Map to match a plugin ID to a "DeviceIndex"
+extern std::map<pluginID_t, deviceIndex_t> Plugin_id_to_DeviceIndex;
+
+// Vector to match a "DeviceIndex" to a plugin ID.
+extern std::vector<pluginID_t> DeviceIndex_to_Plugin_id;
+
+// Vector containing "DeviceIndex" alfabetically sorted.
+extern std::vector<deviceIndex_t> DeviceIndex_sorted;
+
+
 bool validDeviceIndex(deviceIndex_t index);
 bool validTaskIndex(taskIndex_t index);
 bool validPluginID(pluginID_t pluginID);
 
+// Check if plugin is included in build. 
+// N.B. Invalid plugin is also not considered supported.
+// This is essentially (validPluginID && validDeviceIndex)
 bool supportedPluginID(pluginID_t pluginID);
 
 deviceIndex_t getDeviceIndex_from_TaskIndex(taskIndex_t taskIndex);
@@ -45,15 +63,9 @@ deviceIndex_t getDeviceIndex_from_TaskIndex(taskIndex_t taskIndex);
 deviceIndex_t getDeviceIndex(pluginID_t Number);
 
 String getPluginNameFromDeviceIndex(deviceIndex_t deviceIndex);
+String getPluginNameFromPluginID(pluginID_t pluginID);
 
-extern boolean (*Plugin_ptr[PLUGIN_MAX])(byte, struct EventStruct*, String&);
-
-
-// Map to match a plugin ID to a "DeviceIndex"
-extern std::map<pluginID_t, deviceIndex_t> Plugin_id_to_DeviceIndex;
-
-// Vector to match a "DeviceIndex" to a plugin ID.
-extern std::vector<pluginID_t> DeviceIndex_to_Plugin_id;
+void sortDeviceIndexArray();
 
 
 

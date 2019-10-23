@@ -31,6 +31,8 @@ static const char ADDPLUGIN_ERROR[] PROGMEM = "System: Error - Too many Plugins"
 
 void PluginInit(void)
 {
+  DeviceIndex_to_Plugin_id.resize(PLUGIN_MAX + 1); // INVALID_DEVICE_INDEX may be used as index for this array.
+  DeviceIndex_to_Plugin_id[PLUGIN_MAX] = INVALID_PLUGIN_ID;
   // Clear pointer table for all plugins
   for (byte x = 0; x < PLUGIN_MAX; x++)
   {
@@ -1063,6 +1065,7 @@ void PluginInit(void)
   String dummy;
   PluginCall(PLUGIN_DEVICE_ADD, nullptr, dummy);
   PluginCall(PLUGIN_INIT_ALL, nullptr, dummy);
+  sortDeviceIndexArray();  // Used in device selector dropdown.
 }
 
 

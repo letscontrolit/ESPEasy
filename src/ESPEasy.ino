@@ -191,7 +191,6 @@ void setup()
 #endif
 
   resetPluginTaskData();
-  DeviceIndex_to_Plugin_id.resize(PLUGIN_MAX);
 
   checkRAM(F("setup"));
   #if defined(ESP32)

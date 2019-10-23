@@ -271,7 +271,7 @@ struct pinStatesStruct
 */
 
 
-extern int deviceCount;
+
 extern int protocolCount;
 extern int notificationCount;
 
