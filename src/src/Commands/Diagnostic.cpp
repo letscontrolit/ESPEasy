@@ -133,7 +133,7 @@ String Command_Debug(struct EventStruct *event, const char* Line)
 
 String Command_logentry(struct EventStruct *event, const char* Line)
 {
-	addLog(LOG_LEVEL_INFO,Line);
+	addLog(LOG_LEVEL_INFO, parseStringToEndKeepCase(Line, 2));
 	return return_command_success();
 }
 

@@ -141,4 +141,6 @@ void serialPrint(const String& text);
 void setLogLevelFor(byte destination, byte logLevel);
 uint16_t getPortFromKey(uint32_t key);
 
+String parseStringToEndKeepCase(const String& string, byte indexFind);
+
 #endif // ESPEASY_FWD_DECL_H

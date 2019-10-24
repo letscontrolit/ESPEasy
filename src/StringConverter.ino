@@ -405,6 +405,7 @@ String parseString(const String& string, byte indexFind, bool toEndOfString, boo
   if (toLowerCase) {
     result.toLowerCase();
   }
+  result.trim();
   return stripQuotes(result);
 }
 
