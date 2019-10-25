@@ -753,7 +753,13 @@ String InitFile(const char *fname, int datasize)
 /********************************************************************************************\
    Save data into config file on SPIFFS
  \*********************************************************************************************/
-String SaveToFile(char *fname, int index, byte *memAddress, int datasize)
+String SaveToFile(const char *fname, int index, const byte *memAddress, int datasize)
+{
+  return SaveToFile(fname, index, memAddress, datasize, "r+");
+}
+
+// See for mode description: https://github.com/esp8266/Arduino/blob/master/doc/filesystem.rst
+String SaveToFile(const char *fname, int index, const byte *memAddress, int datasize, const char* mode)
 {
 #ifndef ESP32
 
@@ -777,20 +783,20 @@ String SaveToFile(char *fname, int index, byte *memAddress, int datasize)
   START_TIMER;
   checkRAM(F("SaveToFile"));
   FLASH_GUARD();
-  {
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("SaveToFile: free stack: ");
     log += getCurrentFreeStack();
     addLog(LOG_LEVEL_INFO, log);
   }
   delay(1);
   unsigned long timer = millis() + 50;
-  fs::File f          = tryOpenFile(fname, "r+");
+  fs::File f          = tryOpenFile(fname, mode);
 
   if (f) {
     clearAllCaches();
     SPIFFS_CHECK(f,                          fname);
     SPIFFS_CHECK(f.seek(index, fs::SeekSet), fname);
-    byte *pointerToByteToSave = memAddress;
+    const byte *pointerToByteToSave = memAddress;
 
     for (int x = 0; x < datasize; x++)
     {
@@ -811,9 +817,11 @@ String SaveToFile(char *fname, int index, byte *memAddress, int datasize)
       }
     }
     f.close();
-    String log = F("FILE : Saved ");
-    log = log + fname;
-    addLog(LOG_LEVEL_INFO, log);
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      String log = F("FILE : Saved ");
+      log = log + fname;
+      addLog(LOG_LEVEL_INFO, log);
+    }
   } else {
     String log = F("SaveToFile: ");
     log += fname;
@@ -822,7 +830,7 @@ String SaveToFile(char *fname, int index, byte *memAddress, int datasize)
     return log;
   }
   STOP_TIMER(SAVEFILE_STATS);
-  {
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("SaveToFile: free stack after: ");
     log += getCurrentFreeStack();
     addLog(LOG_LEVEL_INFO, log);
