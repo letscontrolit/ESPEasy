@@ -1,3 +1,4 @@
+#ifdef PLUGIN_BUILD_TESTING
 #ifdef USES_P242
 //#######################################################################################################
 //#################################### Plugin 242: ILI9341 TFT 2.4inches display #################################
@@ -5,7 +6,7 @@
 
 #define PLUGIN_242
 #define PLUGIN_ID_242         242
-#define PLUGIN_NAME_242       "Display - TFT 2.4 inches ILI9341/XPT2046"
+#define PLUGIN_NAME_242       "Display - TFT 2.4 inches ILI9341/XPT2046 [TESTING]"
 #define PLUGIN_VALUENAME1_242 "TFT"
 #define PLUGIN_242_MAX_DISPLAY 1
 
@@ -537,3 +538,4 @@ int Plugin_242_StringSplit(String &s, char c, String op[], int limit)
 
 
 #endif // USES_P242
+#endif // PLUGIN_BUILD_TESTING
