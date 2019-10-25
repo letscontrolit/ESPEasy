@@ -764,6 +764,7 @@ To create/register a plugin, you have to :
 	#define USES_P211	// MPU6050
 	#define USES_P212	// MY9291
 	#define USES_P213	// VEML6070
+	#define USES_P242	// TFT
 #endif
 
 
