@@ -674,6 +674,8 @@ To create/register a plugin, you have to :
     #define USES_P086   // Receiving values according Homie convention. Works together with C014 Homie controller
     //#define USES_P087   // Serial Proxy
     #define USES_P089   // Serial Proxy
+	#define USES_P242	// TFT
+
 #endif
 
 
@@ -764,7 +766,6 @@ To create/register a plugin, you have to :
 	#define USES_P211	// MPU6050
 	#define USES_P212	// MY9291
 	#define USES_P213	// VEML6070
-	#define USES_P242	// TFT
 #endif
 
 
