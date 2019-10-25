@@ -13,6 +13,7 @@
 .gcc-flags.json
 .piolibdeps
 pre_extra_script.py
+.pio
 
 ## Project #####################
 lib/readme.txt
