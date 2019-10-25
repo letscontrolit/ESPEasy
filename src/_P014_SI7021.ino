@@ -33,6 +33,8 @@ boolean Plugin_014_init = false;
 #define SI7021_RESOLUTION_11T_11RH 0x81 // 11 bits RH / 11 bits Temp
 #define SI7021_RESOLUTION_MASK 0B01111110
 
+#define MAX_COUNTER 5
+
 uint16_t si7021_humidity;    // latest humidity value read
 int16_t  si7021_temperature; // latest temperature value read (*100)
 
@@ -269,7 +271,7 @@ int8_t Plugin_014_si7021_startConv(uint8_t datatype, uint8_t resolution)
   if (datatype == SI7021_MEASURE_HUM)
     tmp *=2;
 
-  delay(tmp);
+  // delay(tmp);
 
   /*
   // Wait for data to become available, device will NACK during conversion
@@ -286,7 +288,13 @@ int8_t Plugin_014_si7021_startConv(uint8_t datatype, uint8_t resolution)
   // https://www.silabs.com/Support%20Documents/TechnicalDocs/Si7021-A20.pdf page 5
   while(error!=0 && tmp++<=12 );
   */
-  if ( Wire.requestFrom(SI7021_I2C_ADDRESS, 3) < 3 ) {
+
+  uint8_t toRead, counter;
+  for(counter = 0, toRead = 0 ; counter < MAX_COUNTER && toRead != 3; counter++){
+    delay(tmp);
+    toRead = Wire.requestFrom(SI7021_I2C_ADDRESS, 3);
+  }
+  if(counter == MAX_COUNTER){
     return -1;
   }
 
