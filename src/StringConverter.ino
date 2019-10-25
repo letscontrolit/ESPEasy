@@ -59,7 +59,7 @@ void formatMAC(const uint8_t *mac, char (& strMAC)[20]) {
 }
 
 String formatMAC(const uint8_t *mac) {
-  char str[20] = {0};
+  char str[20] = { 0 };
 
   formatMAC(mac, str);
   return String(str);
@@ -187,11 +187,13 @@ void addNewLine(String& line) {
 \*********************************************************************************************/
 String doFormatUserVar(struct EventStruct *event, byte rel_index, bool mustCheck, bool& isvalid) {
   isvalid = true;
+
   if (!validTaskIndex(event->TaskIndex)) {
     isvalid = false;
     return "0";
   }
-  const deviceIndex_t DeviceIndex  = getDeviceIndex_from_TaskIndex(event->TaskIndex);
+  const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(event->TaskIndex);
+
   if (!validDeviceIndex(DeviceIndex)) {
     isvalid = false;
     return "0";
@@ -210,6 +212,7 @@ String doFormatUserVar(struct EventStruct *event, byte rel_index, bool mustCheck
     return "";
   }
   const byte BaseVarIndex = event->TaskIndex * VARS_PER_TASK;
+
   switch (Device[DeviceIndex].VType) {
     case SENSOR_TYPE_LONG:
       return String((unsigned long)UserVar[BaseVarIndex] + ((unsigned long)UserVar[BaseVarIndex + 1] << 16));
@@ -242,8 +245,10 @@ String doFormatUserVar(struct EventStruct *event, byte rel_index, bool mustCheck
 
 String formatUserVarNoCheck(taskIndex_t TaskIndex, byte rel_index) {
   bool isvalid;
+
   // FIXME TD-er: calls to this function cannot handle SENSOR_TYPE_STRING
   struct EventStruct TempEvent;
+
   TempEvent.TaskIndex = TaskIndex;
   return doFormatUserVar(&TempEvent, rel_index, false, isvalid);
 }
@@ -251,6 +256,7 @@ String formatUserVarNoCheck(taskIndex_t TaskIndex, byte rel_index) {
 String formatUserVar(taskIndex_t TaskIndex, byte rel_index, bool& isvalid) {
   // FIXME TD-er: calls to this function cannot handle SENSOR_TYPE_STRING
   struct EventStruct TempEvent;
+
   TempEvent.TaskIndex = TaskIndex;
   return doFormatUserVar(&TempEvent, rel_index, true, isvalid);
 }
@@ -258,6 +264,7 @@ String formatUserVar(taskIndex_t TaskIndex, byte rel_index, bool& isvalid) {
 String formatUserVarNoCheck(struct EventStruct *event, byte rel_index)
 {
   bool isvalid;
+
   return doFormatUserVar(event, rel_index, false, isvalid);
 }
 
@@ -381,7 +388,8 @@ String to_internal_string(const String& input) {
 }
 
 /*********************************************************************************************\
-   Parse a string and get the xth command or parameter in lower case
+   Parse a string and get the xth command or parameter
+   N.B. indexFind == 0 will find the text until the first param separator.
 \*********************************************************************************************/
 String parseString(const String& string, byte indexFind, bool toEndOfString, bool toLowerCase) {
   int startpos = 0;
@@ -511,21 +519,20 @@ void htmlStrongEscape(String& html)
   html = escaped;
 }
 
-
-//********************************************************************************
+// ********************************************************************************
 // URNEncode char string to string object
-//********************************************************************************
-String URLEncode(const char* msg)
+// ********************************************************************************
+String URLEncode(const char *msg)
 {
-  const char *hex = "0123456789abcdef";
+  const char *hex   = "0123456789abcdef";
   String encodedMsg = "";
 
   while (*msg != '\0') {
-    if ( ('a' <= *msg && *msg <= 'z')
-         || ('A' <= *msg && *msg <= 'Z')
-         || ('0' <= *msg && *msg <= '9')
-         || ('-' == *msg) || ('_' == *msg)
-         || ('.' == *msg) || ('~' == *msg) ) {
+    if ((('a' <= *msg) && (*msg <= 'z'))
+        || (('A' <= *msg) && (*msg <= 'Z'))
+        || (('0' <= *msg) && (*msg <= '9'))
+        || ('-' == *msg) || ('_' == *msg)
+        || ('.' == *msg) || ('~' == *msg)) {
       encodedMsg += *msg;
     } else {
       encodedMsg += '%';
@@ -642,7 +649,7 @@ void parseSpecialCharacters(String& s, boolean useURLencode)
 void parseSystemVariables(String& s, boolean useURLencode)
 {
   START_TIMER
-  parseSpecialCharacters(s, useURLencode);
+    parseSpecialCharacters(s, useURLencode);
 
   if (s.indexOf('%') == -1) {
     STOP_TIMER(PARSE_SYSVAR_NOCHANGE);
@@ -681,7 +688,7 @@ void parseSystemVariables(String& s, boolean useURLencode)
     repl(F("%sysname%"), Settings.Name, s, useURLencode);
 
     // valueString is being used by the macro.
-    char valueString[5] = {0};
+    char valueString[5] = { 0 };
     #define SMART_REPL_TIME(T, F, V) \
   if (s.indexOf(T) != -1) { sprintf_P(valueString, (F), (V)); repl((T), valueString, s, useURLencode); }
     SMART_REPL_TIME(F("%sysyear%"),  PSTR("%d"), year())
@@ -705,11 +712,11 @@ void parseSystemVariables(String& s, boolean useURLencode)
 
     #undef SMART_REPL_TIME
   }
-  SMART_REPL(F("%lcltime%"),    getDateTimeString('-', ':', ' '))
-  SMART_REPL(F("%lcltime_am%"), getDateTimeString_ampm('-', ':', ' '))
-  SMART_REPL(F("%uptime%"),     String(wdcounter / 2))
-  SMART_REPL(F("%unixtime%"),   String(getUnixTime()))
-  SMART_REPL(F("%unixday%"),    String(getUnixTime() / 86400))
+  SMART_REPL(F("%lcltime%"),     getDateTimeString('-', ':', ' '))
+  SMART_REPL(F("%lcltime_am%"),  getDateTimeString_ampm('-', ':', ' '))
+  SMART_REPL(F("%uptime%"),      String(wdcounter / 2))
+  SMART_REPL(F("%unixtime%"),    String(getUnixTime()))
+  SMART_REPL(F("%unixday%"),     String(getUnixTime() / 86400))
   SMART_REPL(F("%unixday_sec%"), String(getUnixTime() % 86400))
   SMART_REPL_T(F("%sunset"),  replSunSetTimeString)
   SMART_REPL_T(F("%sunrise"), replSunRiseTimeString)
@@ -717,7 +724,7 @@ void parseSystemVariables(String& s, boolean useURLencode)
   if (s.indexOf(F("%is")) != -1) {
 #ifdef USES_MQTT
     SMART_REPL(F("%ismqtt%"),    String(MQTTclient_connected));
-#endif    
+#endif // ifdef USES_MQTT
     SMART_REPL(F("%iswifi%"),    String(wifiStatus)); // 0=disconnected, 1=connected, 2=got ip, 3=services initialized
     SMART_REPL(F("%isntp%"),     String(statusNTPInitialized));
     #ifdef USES_P037
