@@ -57,8 +57,13 @@ void handle_unprocessedWiFiEvents()
       processDisconnect();
     }
 
+    if (wifiStatus & ESPEASY_WIFI_CONNECTED) {
+      // The actual connection has been made, no need to wait for IP to release this semaphore.
+      wifiConnectInProgress = false;
+    }
+
     if ((wifiStatus & ESPEASY_WIFI_GOT_IP) && (wifiStatus & ESPEASY_WIFI_CONNECTED) && WiFi.isConnected()) {
-      wifiStatus = ESPEASY_WIFI_SERVICES_INITIALIZED;
+      wifiStatus            = ESPEASY_WIFI_SERVICES_INITIALIZED;
       wifiConnectInProgress = false;
       resetAPdisableTimer();
     }
@@ -264,7 +269,7 @@ void processGotIP() {
   MQTTclient_should_reconnect = true;
   timermqtt_interval          = 100;
   setIntervalTimer(TIMER_MQTT);
-#endif //USES_MQTT
+#endif // USES_MQTT
   sendGratuitousARP_now();
 
   if (Settings.UseRules)

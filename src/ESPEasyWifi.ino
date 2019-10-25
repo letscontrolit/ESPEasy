@@ -66,7 +66,7 @@ bool WiFiConnected() {
   if (wifiStatus != ESPEASY_WIFI_SERVICES_INITIALIZED) {
     if (validWiFi) {
       // Set internal wifiStatus and reset timer to disable AP mode
-      wifiStatus = ESPEASY_WIFI_SERVICES_INITIALIZED;
+      wifiStatus            = ESPEASY_WIFI_SERVICES_INITIALIZED;
       wifiConnectInProgress = false;
       resetAPdisableTimer();
     }
@@ -95,7 +95,9 @@ bool WiFiConnected() {
 
   if (wifiConnectTimeoutReached() && !wifiSetup) {
     // It took too long to make a connection, set flag we need to try again
-    wifiConnectAttemptNeeded = true;
+    if (!wifiAPmodeActivelyUsed()) {
+      wifiConnectAttemptNeeded = true;
+    }
     wifiConnectInProgress = false;
   }
   delay(1);
@@ -145,10 +147,11 @@ void WiFiConnectRelaxed() {
   setupStaticIPconfig();
   setConnectionSpeed();
   last_wifi_connect_attempt_moment = millis();
-  wifiConnectInProgress = true;
+  wifiConnectInProgress            = true;
 
   // First try quick reconnect using last known BSSID and channel.
   bool useQuickConnect = lastBSSID[0] != 0 && wifi_connect_attempt < 3;
+
   if (useQuickConnect) {
     WiFi.begin(ssid, passphrase, last_channel, &lastBSSID[0]);
   } else {
@@ -192,7 +195,9 @@ void resetAPdisableTimer() {
   bool APmodeActive = WifiIsAP(WiFi.getMode());
 
   if (APmodeActive) {
-    timerAPoff = millis() + WIFI_AP_OFF_TIMER_DURATION;
+    if (WiFi.softAPgetStationNum() != 0) {
+      timerAPoff = millis() + WIFI_AP_OFF_TIMER_DURATION;
+    }
   } else {
     timerAPoff = 0;
   }
@@ -523,6 +528,18 @@ bool wifiConnectTimeoutReached() {
   const unsigned int randomOffset_in_msec = (wifi_connect_attempt == 1) ? 0 : 1000 * ((ESP.getEfuseMac() & 0xF));
   #endif // if defined(ESP32)
   return timeOutReached(last_wifi_connect_attempt_moment + DEFAULT_WIFI_CONNECTION_TIMEOUT + randomOffset_in_msec);
+}
+
+bool wifiAPmodeActivelyUsed()
+{
+  if (!WifiIsAP(WiFi.getMode()) || (timerAPoff == 0)) {
+    // AP not active or soon to be disabled in processDisableAPmode()
+    return false;
+  }
+  return WiFi.softAPgetStationNum() != 0;
+
+  // FIXME TD-er: is effectively checking for AP active enough or must really check for connected clients to prevent automatic wifi
+  // reconnect?
 }
 
 void setConnectionSpeed() {
