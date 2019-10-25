@@ -3,7 +3,7 @@
 
 #include <map>
 #include "../../ESPEasy_common.h"
-#include "../../src/src/Globals/Plugins.h"
+#include "../Globals/Plugins.h"
 
 typedef std::map<String, taskIndex_t> TaskIndexNameMap;
 typedef std::map<String, byte> TaskIndexValueNameMap;

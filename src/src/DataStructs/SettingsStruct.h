@@ -4,7 +4,7 @@
 
 
 #include "../DataStructs/ESPEasyLimits.h"
-#include "../../src/src/Globals/Plugins.h"
+#include "../Globals/Plugins.h"
 
 
 /*********************************************************************************************\

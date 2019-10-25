@@ -2,7 +2,7 @@
 #define DATASTRUCTS_PORTSTATUSSTRUCT_H
 
 #include "../../ESPEasy_common.h"
-#include "../src/src/Globals/Plugins.h"
+#include "../Globals/Plugins.h"
 #include <map>
 
 struct portStatusStruct {

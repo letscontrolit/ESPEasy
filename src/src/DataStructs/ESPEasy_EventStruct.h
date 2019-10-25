@@ -3,7 +3,7 @@
 
 #include "../../ESPEasy_common.h"
 #include "EventValueSource.h"
-#include "../../src/src/Globals/Plugins.h"
+#include "../Globals/Plugins.h"
 
 /*********************************************************************************************\
 * EventStruct

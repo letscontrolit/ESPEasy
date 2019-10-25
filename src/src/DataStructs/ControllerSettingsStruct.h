@@ -8,7 +8,7 @@
 #include <memory> // For std::shared_ptr
 
 #include "../../ESPEasy_common.h"
-#include "../../src/src/Globals/Plugins.h"
+#include "../Globals/Plugins.h"
 
 class IPAddress;
 class WiFiClient;
