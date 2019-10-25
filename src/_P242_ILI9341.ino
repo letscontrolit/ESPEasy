@@ -20,6 +20,10 @@ This plugin allow to control a TFT screen (ILI9341) through HTTP API
 Tested with WEMOS D1 Mini Pro and Wemos TDFT 2.4
 Tested with ESPEasy 2.4.2  -tag mega-201902225)
 
+TFT Shield : https://docs.wemos.cc/en/latest/d1_mini_shiled/tft_2_4.html
+Price : ~ 5.40€/$ (https://fr.aliexpress.com/item/32919729730.html)
+
+
 ## Dependencies
 Plugin lib_deps = Adafruit GFX, Adafruit ILI9341
 
