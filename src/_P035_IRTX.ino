@@ -10,10 +10,11 @@
 // Commands can be send to this plug in and it will translate them to IR signals.
 // Possible commands are IRSEND and IRSENDAC
 //---IRSEND: That commands format is: IRSEND,<protocol>,<data>,<bits>,<repeat>
+// OR JSON formated:                  IRSEND,{"protocol":"<protocol>","data":"<data>","bits":<bits>,"repeats":<repeat>}
 // bits and repeat default to 0 if not used and they are optional
 // For protocols RAW and RAW2 there is no bits and repeat part, they are supposed to be replayed as they are calculated by a Google docs sheet or by plugin P016
 //---IRSENDAC: That commands format is: IRSENDAC,{"protocol":"COOLIX","power":"on","mode":"dry","fanspeed":"auto","temp":22,"swingv":"max","swingh":"off"}
-//--- The JSON keys are case sensitive and allways small case. The JSON data are case insensitive
+//--- The JSON keys are case sensitive and allways small case. The JSON data are not case sensitive
 // The possible values
 // Protocols: Argo Coolix Daikin Fujitsu Haier Hitachi Kelvinator Midea Mitsubishi MitsubishiHeavy Panasonic Samsung Sharp Tcl Teco Toshiba Trotec Vestel Whirlpool
 //---opmodes:      ---fanspeed:   --swingv:       --swingh:
@@ -54,7 +55,7 @@ IRsend *Plugin_035_irSender = nullptr;
 
 #define P35_Ntimings 250 //Defines the ammount of timings that can be stored. Used in RAW and RAW2 encodings
 
-boolean Plugin_035(byte function, struct EventStruct *event, String &string)
+boolean Plugin_035(byte function, struct EventStruct *event, String &command)
 {
   boolean success = false;
 
@@ -70,7 +71,7 @@ boolean Plugin_035(byte function, struct EventStruct *event, String &string)
 
   case PLUGIN_GET_DEVICENAME:
   {
-    string = F(PLUGIN_NAME_035);
+    command = F(PLUGIN_NAME_035);
     break;
   }
 
@@ -134,7 +135,7 @@ boolean Plugin_035(byte function, struct EventStruct *event, String &string)
     uint64_t IrCode = 0;
     uint16_t IrBits = 0;
 
-    String cmdCode = string;
+    String cmdCode = command;
     int argIndex = cmdCode.indexOf(',');
     if (argIndex)
       cmdCode = cmdCode.substring(0, argIndex);
@@ -154,7 +155,7 @@ boolean Plugin_035(byte function, struct EventStruct *event, String &string)
       String IrType = "";
       String IrType_orig = "";
       String TmpStr1 = "";
-      if (GetArgv(string.c_str(), TmpStr1, 2))
+      if (GetArgv(command.c_str(), TmpStr1, 2))
       {
         IrType = TmpStr1;
         IrType_orig = TmpStr1;
@@ -168,13 +169,13 @@ boolean Plugin_035(byte function, struct EventStruct *event, String &string)
         unsigned int IrPLen = 0;
         unsigned int IrBLen = 0;
 
-        if (GetArgv(string.c_str(), TmpStr1, 3))
+        if (GetArgv(command.c_str(), TmpStr1, 3))
           IrRaw = TmpStr1; //Get the "Base32" encoded/compressed Ir signal
-        if (GetArgv(string.c_str(), TmpStr1, 4))
+        if (GetArgv(command.c_str(), TmpStr1, 4))
           IrHz = str2int(TmpStr1.c_str()); //Get the base freguency of the signal (allways 38)
-        if (GetArgv(string.c_str(), TmpStr1, 5))
+        if (GetArgv(command.c_str(), TmpStr1, 5))
           IrPLen = str2int(TmpStr1.c_str()); //Get the Pulse Length in ms
-        if (GetArgv(string.c_str(), TmpStr1, 6))
+        if (GetArgv(command.c_str(), TmpStr1, 6))
           IrBLen = str2int(TmpStr1.c_str()); //Get the Blank Pulse Length in ms
 
         printWebString += IrType_orig + String(F(": Base32Hex RAW Code: ")) + IrRaw + String(F("<BR>kHz: ")) + IrHz + String(F("<BR>Pulse Len: ")) + IrPLen + String(F("<BR>Blank Len: ")) + IrBLen + String(F("<BR>"));
@@ -340,39 +341,50 @@ boolean Plugin_035(byte function, struct EventStruct *event, String &string)
       #endif //P016_P035_USE_RAW_RAW2
       {
         uint16_t IrRepeat = 0;
-        //  unsigned long IrSecondCode=0UL;
         String ircodestr = "";
-        if (GetArgv(string.c_str(), TmpStr1, 2))
+       
+          StaticJsonDocument<200> docTemp;
+          DeserializationError error = deserializeJson(docTemp, command.substring(command.indexOf(',')+1, command.length()));
+        if (!error) // If the command is in JSON format
+        {
+         IrType =  docTemp[F("protocol")].as<String>();
+         ircodestr = docTemp[F("data")].as<String>(); //JSON does not support hex values, thus we use command representation
+         IrCode = strtoull(ircodestr.c_str(), NULL, 16);
+         IrBits  = docTemp[F("bits")] | 0;
+         IrRepeat = docTemp[F("repeats")] | 0;
+        }
+        else { // If the command is NOT in JSON format (legacy)
+         if (GetArgv(command.c_str(), TmpStr1, 2))
         {
           IrType = TmpStr1;
           IrType_orig = TmpStr1;
-          IrType.toUpperCase(); //strToDecodeType assumes all capital letters
-        }
-        if (GetArgv(string.c_str(), ircodestr, 3))
+        
+        if (GetArgv(command.c_str(), ircodestr, 3))
         {
           IrCode = strtoull(ircodestr.c_str(), NULL, 16);
         }
         IrBits = 0; //Leave it to 0 for default protocol bits
-        if (GetArgv(string.c_str(), TmpStr1, 4))
+        if (GetArgv(command.c_str(), TmpStr1, 4))
           IrBits = str2int(TmpStr1.c_str()); // Number of bits to be sent. USE 0 for default protocol bits
-        if (GetArgv(string.c_str(), TmpStr1, 5))
-          IrRepeat = str2int(TmpStr1.c_str());                                                    // Nr. of times the message is to be repeated
-        sendIRCode(strToDecodeType(IrType.c_str()), IrCode, ircodestr.c_str(), IrBits, IrRepeat); //Send the IR command
+        if (GetArgv(command.c_str(), TmpStr1, 5))
+          IrRepeat = str2int(TmpStr1.c_str());  
+          }                                                  // Nr. of times the message is to be repeated
+      }
+       printLog(IrType, ircodestr, IrBits, IrRepeat);
+       sendIRCode(strToDecodeType(IrType.c_str()), IrCode, ircodestr.c_str(), IrBits, IrRepeat); //Send the IR command
       }
 #ifdef P016_P035_Extended_AC
       if (cmdCode.equalsIgnoreCase(F("IRSENDAC")))
-      { //Preliminary-test code for the standardized AC commands.
+      {
 
         StaticJsonDocument<300> doc;
-        int argIndex = string.indexOf(',') + 1;
+        int argIndex = command.indexOf(',') + 1;
         if (argIndex)
-          TmpStr1 = string.substring(argIndex, string.length());
+          TmpStr1 = command.substring(argIndex, command.length());
         addLog(LOG_LEVEL_INFO, String(F("IRTX: JSON received: ")) + TmpStr1);
 
-        // Deserialize the JSON document
-        DeserializationError error = deserializeJson(doc, TmpStr1);
-        // Test if parsing succeeds.
-        if (error)
+        DeserializationError error = deserializeJson(doc, TmpStr1);         // Deserialize the JSON document
+        if (error)         // Test if parsing succeeds.
         {
           addLog(LOG_LEVEL_INFO, String(F("IRTX: Deserialize Json failed: ")) + error.c_str());
           ReEnableIRIn();
@@ -403,7 +415,7 @@ boolean Plugin_035(byte function, struct EventStruct *event, String &string)
         tempstr = doc[F("use_celsius")].as<String>();
         bool celsius = IRac::strToBool(tempstr.c_str(), true); //Use degreees Celsius, otherwise Fahrenheit. Defaults to true if missing from JSON
         tempstr = doc[F("mode")].as<String>();
-        stdAc::opmode_t opmode = IRac::strToOpmode(tempstr.c_str(), stdAc::opmode_t::kAuto); //What operating mode should the unit perform? e.g. Cool. Defaults to auto if missing from JSON
+        stdAc::opmode_t mode = IRac::strToOpmode(tempstr.c_str(), stdAc::opmode_t::kAuto); //What operating mode should the unit perform? e.g. Cool. Defaults to auto if missing from JSON
         tempstr = doc[F("fanspeed")].as<String>();
         stdAc::fanspeed_t fanspeed = IRac::strToFanspeed(tempstr.c_str(), stdAc::fanspeed_t::kAuto); //Fan Speed setting. Defaults to auto if missing from JSON
         tempstr = doc[F("swingv")].as<String>();
@@ -429,17 +441,10 @@ boolean Plugin_035(byte function, struct EventStruct *event, String &string)
         int16_t clock = doc[F("clock")] | -1; //Nr. of mins past midnight to set the clock to. (< 0 means off.). Defaults to -1 if missing from JSON
 
         //Send the IR command
-        Plugin_035_commonAc->sendAc(protocol, model, power, opmode, degrees, celsius, fanspeed, swingv, swingh, quiet, turbo, econo, light, filter, clean, beep, sleep, clock);
+        Plugin_035_commonAc->sendAc(protocol, model, power, mode, degrees, celsius, fanspeed, swingv, swingh, quiet, turbo, econo, light, filter, clean, beep, sleep, clock);
         ReEnableIRIn();
-        //addLog(LOG_LEVEL_INFO, String(F("IRTX: IR Code Sent: ")) + Plugin_035_commonAc->toString().c_str());
       }
 #endif // P016_P035_Extended_AC
-
-      addLog(LOG_LEVEL_INFO, String(F("IRTX: IR Code Sent: ")) + IrType_orig);
-      if (printToWeb)
-      {
-        printWebString += String(F("IRTX: IR Code Sent: ")) + IrType_orig + String(F("<BR>"));
-      }
 
       ReEnableIRIn();
     }
@@ -448,6 +453,17 @@ boolean Plugin_035(byte function, struct EventStruct *event, String &string)
   } // SWITCH END
   return success;
 } // Plugin_035 END
+
+void printLog(String protocol, String data, int bits, int repeats){
+      String tmp = String(F("IRTX: IR Code Sent: ")) +protocol + String(F(" Data: "))+data;
+      if (bits>0) tmp+= String(F(" Bits: ")) +bits;
+      if (repeats>0) tmp+= String(F(" Repeats: ")) +repeats;
+      addLog(LOG_LEVEL_INFO, tmp);
+      if (printToWeb)
+      {
+        printWebString += tmp;
+      }
+}
 
 boolean addErrorTrue()
 {
@@ -632,24 +648,6 @@ bool parseStringAndSendAirCon(const int irtype, const String str)
     return false;
   }
   return true; // We were successful as far as we can tell.
-}
-
-// Count how many values are in the String.
-// Args:
-//   str:  String containing the values.
-//   sep:  Character that separates the values.
-// Returns:
-//   The number of values found in the String.
-uint16_t countValuesInStr(const String &str, char sep)
-{
-  int16_t index = -1;
-  uint16_t count = 1;
-  do
-  {
-    index = str.indexOf(sep, index + 1);
-    count++;
-  } while (index != -1);
-  return count;
 }
 
 #endif // USES_P035
