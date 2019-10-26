@@ -119,6 +119,7 @@ boolean Plugin_038(byte function, struct EventStruct *event, String& string)
             log += string;
           }
 
+          // FIXME TD-er: This one is not using parseString* function
           String tmpString  = string;
           int argIndex = tmpString.indexOf(',');
           if (argIndex)

@@ -43,7 +43,7 @@ String Command_Malloc(struct EventStruct *event, const char* Line)
 {
 	char* ramtest;
 	ramtest = (char*)malloc(event->Par1);
-	if (ramtest == NULL) return F("failed");
+	if (ramtest == NULL) return return_command_failed();
 	free(ramtest);
 	return return_command_success();
 }

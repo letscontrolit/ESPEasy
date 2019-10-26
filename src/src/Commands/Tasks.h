@@ -20,8 +20,10 @@ String Command_Task_ValueSet(struct EventStruct *event, const char* Line)
 {
 	String TmpStr1;
 	if (GetArgv(Line, TmpStr1, 4)) {
+		// Perform calculation with float result.
 		float result = 0;
 		Calculate(TmpStr1.c_str(), &result);
+		// FIXME TD-er: The return code of Calculate is not used.
 		UserVar[(VARS_PER_TASK * (event->Par1 - 1)) + event->Par2 - 1] = result;
 	}else  {
 		//TODO: Get Task description and var name

@@ -336,7 +336,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
 // Nextion commands received from events (including http) get processed here. PLUGIN_WRITE
 // does NOT process publish commands that are sent.
     case PLUGIN_WRITE: {
-
+        // FIXME TD-er: This one is not using parseString* function
         String tmpString = string;
         int argIndex = tmpString.indexOf(',');
         if (argIndex) tmpString = tmpString.substring(0, argIndex);

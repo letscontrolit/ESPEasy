@@ -45,7 +45,10 @@ String Command_MQTT_Publish(struct EventStruct *event, const char *Line)
       String value = parseStringKeepCase(Line, 2);
 
       if ((topic.length() > 0) && (value.length() > 0)) {
-        // @giig1967g: if payload starts with '=' then treat it as a Formula end evaluate accordingly
+        // @giig1967g: if payload starts with '=' then treat it as a Formula and evaluate accordingly
+        // The evaluated value is already present in event->Par2
+        // FIXME TD-er: Is the evaluated value always present in event->Par2 ?
+        // Should it already be evaluated, or should we evaluate it now?
         if (value.c_str()[0] != '=') {
           MQTTpublish(enabledMqttController, topic.c_str(), value.c_str(), Settings.MQTTRetainFlag);
         }

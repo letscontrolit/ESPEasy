@@ -134,6 +134,7 @@ boolean str2ip(const String& string, byte *IP);
 bool useStaticIP();
 String formatIP(const IPAddress& ip);
 String toString(bool value);
+bool isInt(const String& tBuf);
 
 float getCPUload();
 int getLoopCountPerSec();

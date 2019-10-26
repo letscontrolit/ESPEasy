@@ -418,6 +418,7 @@ boolean Plugin_076(byte function, struct EventStruct *event, String &string) {
 
   case PLUGIN_WRITE:
     if (Plugin_076_hlw) {
+      // FIXME TD-er: This one is not using parseString* function
       String tmpString = string;
       int argIndex = tmpString.indexOf(',');
       if (argIndex){
