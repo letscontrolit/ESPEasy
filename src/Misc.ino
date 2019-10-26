@@ -900,10 +900,12 @@ bool GetArgv(const char *string, String& argvString, unsigned int argc) {
   argvString = "";
   if (pos_begin >= 0 && pos_end >= 0) {
     argvString.reserve(pos_end - pos_begin);
-    for (int i = pos_begin; i < pos_end && i >= 0; ++i) {
+    for (int i = pos_begin; i < pos_end; ++i) {
       argvString += string[i];
     }
   }
+  argvString.trim();
+  argvString = stripQuotes(argvString);
   return hasArgument;
 }
 
@@ -913,7 +915,7 @@ bool GetArgvBeginEnd(const char *string, const unsigned int argc, int& pos_begin
   size_t string_len = strlen(string);
   unsigned int string_pos = 0, argc_pos = 0;
   bool parenthesis          = false;
-  char    matching_parenthesis = '"';
+  char matching_parenthesis = '"';
 
   while (string_pos < string_len)
   {
@@ -930,31 +932,32 @@ bool GetArgvBeginEnd(const char *string, const unsigned int argc, int& pos_begin
     else if  (!parenthesis && (c == ',') && (d == ' ')) {}
     else if  (!parenthesis && (c == ' ') && (d >= 33) && (d <= 126)) {}
     else if  (!parenthesis && (c == ',') && (d >= 33) && (d <= 126)) {}
-    else if  ((c == '"') || (c == '\'') || (c == '[')) {
-      parenthesis          = true;
-      matching_parenthesis = c;
-
-      if (c == '[') {
-        matching_parenthesis = ']';
-      }
-    }
     else
     {
+      if (!parenthesis && ((c == '"') || (c == '\'') || (c == '['))) {
+        parenthesis          = true;
+        matching_parenthesis = c;
+
+        if (c == '[') {
+          matching_parenthesis = ']';
+        }
+      } else if (parenthesis && (c == matching_parenthesis)) {
+        parenthesis = false;
+      }
+
       if (pos_begin == -1) {
         pos_begin = string_pos;
         pos_end   = string_pos;
       }
       ++pos_end;
 
-      if ((!parenthesis && ((d == ' ') || (d == ',') || (d == 0))) || (parenthesis && (d == matching_parenthesis))) // end of word
+      if ((!parenthesis && ((d == ' ') || (d == ',') || (d == 0)))) // end of word
       {
-        if (d == matching_parenthesis) {
-          parenthesis = false;
-        }
         argc_pos++;
 
         if (argc_pos == argc)
         {
+
           return true;
         }
         pos_begin = -1;

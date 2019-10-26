@@ -240,7 +240,9 @@ String doFormatUserVar(struct EventStruct *event, byte rel_index, bool mustCheck
     f = 0;
   }
   LoadTaskSettings(event->TaskIndex);
-  return toString(f, ExtraTaskSettings.TaskDeviceValueDecimals[rel_index]);
+  String result = toString(f, ExtraTaskSettings.TaskDeviceValueDecimals[rel_index]);
+  result.trim();
+  return result;
 }
 
 String formatUserVarNoCheck(taskIndex_t TaskIndex, byte rel_index) {
@@ -389,99 +391,52 @@ String to_internal_string(const String& input) {
 
 /*********************************************************************************************\
    Parse a string and get the xth command or parameter
-   N.B. indexFind == 0 will find the text until the first param separator.
 \*********************************************************************************************/
-String parseString(const String& string, byte indexFind, bool toEndOfString, bool toLowerCase) {
-  int startpos = 0;
+String parseString(const String& string, byte indexFind) {
+  String result = parseStringKeepCase(string, indexFind);
+  result.toLowerCase();
+  return result;
+}
 
-  if (indexFind > 0) {
-    startpos = getParamStartPos(string, indexFind);
-
-    if (startpos < 0) {
-      return "";
-    }
-  }
-  const int endpos = getParamStartPos(string, indexFind + 1);
-  String    result;
-
-  if (toEndOfString || (endpos <= 0)) {
-    result = string.substring(startpos);
-  } else {
-    result = string.substring(startpos, endpos - 1);
-  }
-
-  if (toLowerCase) {
-    result.toLowerCase();
+String parseStringKeepCase(const String& string, byte indexFind) {
+  String result;
+  if (!GetArgv(string.c_str(), result, indexFind)) {
+    return "";
   }
   result.trim();
   return stripQuotes(result);
 }
 
-String parseString(const String& string, byte indexFind) {
-  return parseString(string, indexFind, false, true);
-}
-
-String parseStringKeepCase(const String& string, byte indexFind) {
-  return parseString(string, indexFind, false, false);
-}
-
 String parseStringToEnd(const String& string, byte indexFind) {
-  return parseString(string, indexFind, true, true);
+  String result = parseStringToEndKeepCase(string, indexFind);
+  result.toLowerCase();
+  return result;
 }
 
 String parseStringToEndKeepCase(const String& string, byte indexFind) {
-  return parseString(string, indexFind, true, false);
-}
-
-/*********************************************************************************************\
-   Parse a string and get the xth command or parameter
-\*********************************************************************************************/
-int getParamStartPos(const String& string, byte indexFind)
-{
-  // We need to find the xth command, so we need to find the position of the (X-1)th separator.
-  if (indexFind <= 1) { return 0; }
-  byte count                     = 1;
-  bool quotedStringActive        = false;
-  char quoteStartChar            = '"';
-  unsigned int lastParamStartPos = 0;
-  const unsigned int strlength   = string.length();
-
-  if (strlength < indexFind) { return -1; }
-
-  for (unsigned int x = 0; x < (strlength - 1); ++x)
+  // Loop over the arguments to find the first and last pos of the arguments.
+  int pos_begin = string.length();
+  int pos_end = pos_begin;
+  int tmppos_begin, tmppos_end = -1;
+  byte nextArgument = indexFind;
+  bool hasArgument = false;
+  while (GetArgvBeginEnd(string.c_str(), nextArgument, tmppos_begin, tmppos_end))
   {
-    const char c = string.charAt(x);
-
-    // Check if we are parsing a quoted string parameter
-    if (!quotedStringActive) {
-      if (isQuoteChar(c)) {
-        // Only allow ' or " right after parameter separator.
-        if (lastParamStartPos == x) {
-          quotedStringActive = true;
-          quoteStartChar     = c;
-        }
-      }
-    } else {
-      if (c == quoteStartChar) {
-        // Found end of quoted string
-        quotedStringActive = false;
-      }
+    hasArgument = true;
+    if ((tmppos_begin < pos_begin) && (tmppos_begin >= 0)) { 
+      pos_begin = tmppos_begin; 
     }
-
-    // Do further parsing.
-    if (!quotedStringActive) {
-      if (isParameterSeparatorChar(c))
-      {
-        lastParamStartPos = x + 1;
-        ++count;
-
-        if (count == indexFind) {
-          return lastParamStartPos;
-        }
-      }
+    if ((tmppos_end >= 0)) { 
+      pos_end = tmppos_end; 
     }
+    ++nextArgument;
   }
-  return -1;
+  if (!hasArgument || (pos_begin < 0)) {
+    return "";
+  }
+  String result = string.substring(pos_begin, pos_end);
+  result.trim();
+  return stripQuotes(result);
 }
 
 // escapes special characters in strings for use in html-forms
