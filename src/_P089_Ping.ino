@@ -212,8 +212,8 @@ boolean Plugin_089(byte function, struct EventStruct *event, String& string)
     if (command == F("pingset"))
     {
       String taskName = parseString(string, 2);
-      int8_t taskIndex = getTaskIndexByName(taskName);
-      if (taskIndex != -1 && taskIndex == event->TaskIndex) {
+      taskIndex_t taskIndex = findTaskIndexByName(taskName);
+      if (taskIndex != TASKS_MAX && taskIndex == event->TaskIndex) {
         success = true;
         String param1 = parseString(string, 3);
         int val_new;
@@ -254,12 +254,11 @@ uint8_t PingReceiver (void *origin, struct raw_pcb *pcb, struct pbuf *packetBuff
     return 0;
   }
 
-  uint8_t index;
   bool is_found = false;
-  for (index = 0; index < TASKS_MAX; index++) {
-    int plugin = getPluginId(index);
+  for (taskIndex_t index = 0; index < TASKS_MAX; index++) {
+    deviceIndex_t deviceIndex = getDeviceIndex_from_TaskIndex(index);
     // Match all ping plugin instances and check them
-    if (plugin > 0 && Plugin_id[plugin] == PLUGIN_ID_089) {
+    if (validDeviceIndex(deviceIndex) && DeviceIndex_to_Plugin_id[deviceIndex] == PLUGIN_ID_089) {
       P089_data_struct *P089_taskdata = static_cast<P089_data_struct *>(getPluginTaskData(index));
       if (P089_taskdata != nullptr && icmp_hdr->id == (uint16_t)((P089_taskdata->idseq & 0xffff0000) >> 16 ) &&
           icmp_hdr->seqno == (uint16_t)(P089_taskdata->idseq & 0xffff) ) {

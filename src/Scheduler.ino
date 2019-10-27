@@ -348,9 +348,9 @@ void process_interval_timer(unsigned long id, unsigned long lasttimer) {
 /*********************************************************************************************\
 * Plugin Task Timer
 \*********************************************************************************************/
-unsigned long createPluginTaskTimerId(byte plugin, int Par1) {
+unsigned long createPluginTaskTimerId(deviceIndex_t deviceIndex, int Par1) {
   const unsigned long mask  = (1 << TIMER_ID_SHIFT) - 1;
-  const unsigned long mixed = (Par1 << 8) + plugin;
+  const unsigned long mixed = (Par1 << 8) + deviceIndex;
 
   return mixed & mask;
 }
@@ -362,10 +362,14 @@ unsigned long createPluginTaskTimerId(byte plugin, int Par1) {
    Par1 = (mixed_id & mask) >> 8;
    }
  */
-void setPluginTaskTimer(unsigned long msecFromNow, byte plugin, short taskIndex, int Par1, int Par2, int Par3, int Par4, int Par5)
+void setPluginTaskTimer(unsigned long msecFromNow, taskIndex_t taskIndex, int Par1, int Par2, int Par3, int Par4, int Par5)
 {
   // plugin number and par1 form a unique key that can be used to restart a timer
-  const unsigned long systemTimerId = createPluginTaskTimerId(plugin, Par1);
+  // Use deviceIndex instead of pluginID, since the deviceIndex uses less bits.
+  deviceIndex_t deviceIndex = getDeviceIndex_from_TaskIndex(taskIndex);
+  if (!validDeviceIndex(deviceIndex)) return;
+
+  const unsigned long systemTimerId = createPluginTaskTimerId(deviceIndex, Par1);
   systemTimerStruct   timer_data;
 
   timer_data.TaskIndex        = taskIndex;
@@ -391,11 +395,11 @@ void process_plugin_task_timer(unsigned long id) {
 
   // TD-er: Not sure if we have to keep original source for notifications.
   TempEvent.Source = VALUE_SOURCE_SYSTEM;
-  const int y = getPluginId_from_TaskIndex(timer_data.TaskIndex);
+  const deviceIndex_t deviceIndex = getDeviceIndex_from_TaskIndex(timer_data.TaskIndex);
 
   /*
      String log = F("proc_system_timer: Pluginid: ");
-     log += y;
+     log += deviceIndex;
      log += F(" taskIndex: ");
      log += timer_data.TaskIndex;
      log += F(" sysTimerID: ");
@@ -404,9 +408,9 @@ void process_plugin_task_timer(unsigned long id) {
    */
   systemTimers.erase(id);
 
-  if (y >= 0) {
+  if (validDeviceIndex(deviceIndex)) {
     String dummy;
-    Plugin_ptr[y](PLUGIN_TIMER_IN, &TempEvent, dummy);
+    Plugin_ptr[deviceIndex](PLUGIN_TIMER_IN, &TempEvent, dummy);
   }
   STOP_TIMER(PROC_SYS_TIMER);
 }
@@ -461,7 +465,7 @@ void schedule_task_device_timer_at_init(unsigned long task_index) {
 
 // Typical use case is to run this when all needed connections are made.
 void schedule_all_task_device_timers() {
-  for (byte task = 0; task < TASKS_MAX; task++) {
+  for (taskIndex_t task = 0; task < TASKS_MAX; task++) {
     schedule_task_device_timer_at_init(task);
   }
 }
@@ -472,7 +476,7 @@ void schedule_all_tasks_using_MQTT_controller() {
 
   if (ControllerIndex < 0) { return; }
 
-  for (byte task = 0; task < TASKS_MAX; task++) {
+  for (taskIndex_t task = 0; task < TASKS_MAX; task++) {
     if (Settings.TaskDeviceSendData[ControllerIndex][task] &&
         Settings.ControllerEnabled[ControllerIndex] &&
         Settings.Protocol[ControllerIndex])
@@ -495,8 +499,10 @@ void schedule_task_device_timer(unsigned long task_index, unsigned long runAt) {
      addLog(LOG_LEVEL_INFO, log);
    */
 
-  if (task_index >= TASKS_MAX) { return; }
-  byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[task_index]);
+  if (!validTaskIndex(task_index)) { return; }
+  
+  deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(task_index);
+  if (!validDeviceIndex(DeviceIndex)) { return; }
 
   if (!Device[DeviceIndex].TimerOption) { return; }
 

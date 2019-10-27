@@ -57,8 +57,13 @@ void handle_unprocessedWiFiEvents()
       processDisconnect();
     }
 
+    if (wifiStatus & ESPEASY_WIFI_CONNECTED) {
+      // The actual connection has been made, no need to wait for IP to release this semaphore.
+      wifiConnectInProgress = false;
+    }
+
     if ((wifiStatus & ESPEASY_WIFI_GOT_IP) && (wifiStatus & ESPEASY_WIFI_CONNECTED) && WiFi.isConnected()) {
-      wifiStatus = ESPEASY_WIFI_SERVICES_INITIALIZED;
+      wifiStatus            = ESPEASY_WIFI_SERVICES_INITIALIZED;
       wifiConnectInProgress = false;
       resetAPdisableTimer();
     }
@@ -97,6 +102,24 @@ void handle_unprocessedWiFiEvents()
   if (timerAPoff != 0) { processDisableAPmode(); }
 
   if (!processedScanDone) { processScanDone(); }
+
+  if (wifi_connect_attempt > 0) {
+    // We only want to clear this counter if the connection is currently stable.
+    if (wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED) {
+      if (timePassedSince(lastConnectMoment) > WIFI_CONNECTION_CONSIDERED_STABLE) {
+        // Connection considered stable
+        wifi_connect_attempt = 0;
+
+        if (!WiFi.getAutoConnect()) {
+          WiFi.setAutoConnect(true);
+        }
+      } else {
+        if (WiFi.getAutoConnect()) {
+          WiFi.setAutoConnect(false);
+        }
+      }
+    }
+  }
 }
 
 // ********************************************************************************
@@ -174,9 +197,6 @@ void processConnect() {
     markGotIP(); // in static IP config the got IP event is never fired.
   }
 
-  if (!WiFi.getAutoConnect()) {
-    WiFi.setAutoConnect(true);
-  }
   logConnectionStatus();
 }
 
@@ -264,7 +284,7 @@ void processGotIP() {
   MQTTclient_should_reconnect = true;
   timermqtt_interval          = 100;
   setIntervalTimer(TIMER_MQTT);
-#endif //USES_MQTT
+#endif // USES_MQTT
   sendGratuitousARP_now();
 
   if (Settings.UseRules)
@@ -282,7 +302,6 @@ void processGotIP() {
     MDNS.addService("http", "tcp", 80);
   }
   #endif // ifdef FEATURE_MDNS
-  wifi_connect_attempt = 0;
 
   if (wifiSetup) {
     // Wifi setup was active, Apparently these settings work.

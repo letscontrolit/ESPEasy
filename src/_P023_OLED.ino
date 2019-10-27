@@ -257,7 +257,7 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
           }
         }
 
-
+        // FIXME TD-er: This one is not using parseString* function
         int argIndex = arguments.indexOf(',');
         if (argIndex)
           arguments = arguments.substring(0, argIndex);

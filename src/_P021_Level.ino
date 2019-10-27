@@ -115,7 +115,7 @@ boolean Plugin_021(byte function, struct EventStruct *event, String& string)
     case PLUGIN_TEN_PER_SECOND:
       {
         // we're checking a var from another task, so calculate that basevar
-        byte TaskIndex = PCONFIG(0);
+        taskIndex_t TaskIndex = PCONFIG(0);
         byte BaseVarIndex = TaskIndex * VARS_PER_TASK + PCONFIG(1);
         float value = UserVar[BaseVarIndex];
         byte state = switchstate[event->TaskIndex];

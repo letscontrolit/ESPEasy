@@ -134,11 +134,17 @@ boolean str2ip(const String& string, byte *IP);
 bool useStaticIP();
 String formatIP(const IPAddress& ip);
 String toString(bool value);
+bool isInt(const String& tBuf);
 
 float getCPUload();
 int getLoopCountPerSec();
 void serialPrint(const String& text);
 void setLogLevelFor(byte destination, byte logLevel);
 uint16_t getPortFromKey(uint32_t key);
+
+String parseString(const String& string, byte indexFind);
+String parseStringKeepCase(const String& string, byte indexFind);
+String parseStringToEnd(const String& string, byte indexFind);
+String parseStringToEndKeepCase(const String& string, byte indexFind);
 
 #endif // ESPEASY_FWD_DECL_H

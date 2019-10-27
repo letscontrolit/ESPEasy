@@ -114,12 +114,20 @@ void C013_SendUDPTaskInfo(byte destUnit, byte sourceTaskIndex, byte destTaskInde
   if (!WiFiConnected(10)) {
     return;
   }
+  if (!validTaskIndex(sourceTaskIndex) || !validTaskIndex(destTaskIndex)) {
+    return;
+  }
+  pluginID_t pluginID = Settings.TaskDeviceNumber[sourceTaskIndex];
+  if (!validPluginID(pluginID)) {
+    return;
+  }
+
   struct C013_SensorInfoStruct infoReply;
   infoReply.sourcelUnit = Settings.Unit;
   infoReply.sourceTaskIndex = sourceTaskIndex;
   infoReply.destTaskIndex = destTaskIndex;
+  infoReply.deviceNumber = pluginID;
   LoadTaskSettings(infoReply.sourceTaskIndex);
-  infoReply.deviceNumber = Settings.TaskDeviceNumber[infoReply.sourceTaskIndex];
   strcpy(infoReply.taskName, getTaskDeviceName(infoReply.sourceTaskIndex).c_str());
   for (byte x = 0; x < VARS_PER_TASK; x++)
     strcpy(infoReply.ValueNames[x], ExtraTaskSettings.TaskDeviceValueNames[x]);
@@ -244,7 +252,9 @@ void C013_Receive(struct EventStruct *event) {
 
           // to prevent flash wear out (bugs in communication?) we can only write to an empty task
           // so it will write only once and has to be cleared manually through webgui
-          if (Settings.TaskDeviceNumber[infoReply.destTaskIndex] == 0)
+          // Also check the receiving end does support the plugin ID.
+          if (!validPluginID(Settings.TaskDeviceNumber[infoReply.destTaskIndex]) &&
+              supportedPluginID(infoReply.deviceNumber))
           {
             taskClear(infoReply.destTaskIndex, false);
             Settings.TaskDeviceNumber[infoReply.destTaskIndex] = infoReply.deviceNumber;

@@ -3,6 +3,7 @@
 
 #include "ESPEasy_common.h"
 #include "src/DataStructs/ESPEasyLimits.h"
+#include "src/Globals/Plugins.h"
 
 // Defines to make plugins more readable.
 
@@ -49,20 +50,20 @@ struct PluginTaskData_base {
   // perform checks on the casting.
   // This is also a check to only use these functions and not to insert pointers
   // at random in the Plugin_task_data array.
-  int _taskdata_plugin_id = -1;
+  deviceIndex_t _taskdata_deviceIndex = INVALID_DEVICE_INDEX;
 };
 
 
 
 void resetPluginTaskData();
 
-void clearPluginTaskData(byte taskIndex);
+void clearPluginTaskData(taskIndex_t taskIndex);
 
-void initPluginTaskData(byte taskIndex, PluginTaskData_base *data);
+void initPluginTaskData(taskIndex_t taskIndex, PluginTaskData_base *data);
 
-PluginTaskData_base* getPluginTaskData(byte taskIndex);
+PluginTaskData_base* getPluginTaskData(taskIndex_t taskIndex);
 
-bool pluginTaskData_initialized(byte taskIndex);
+bool pluginTaskData_initialized(taskIndex_t taskIndex);
 
 String getPluginCustomArgName(int varNr);
 
@@ -71,7 +72,7 @@ String getPluginCustomArgName(int varNr);
 // if the regular values should also be displayed.
 // The call to PLUGIN_WEBFORM_SHOW_VALUES should only return success = true when no regular values should be displayed
 // Note that the varNr of the custom values should not conflict with the existing variable numbers (e.g. start at VARS_PER_TASK)
-String pluginWebformShowValue(byte taskIndex, byte varNr, const String& label, const String& value, bool addTrailingBreak = false);
+String pluginWebformShowValue(taskIndex_t taskIndex, byte varNr, const String& label, const String& value, bool addTrailingBreak = false);
 
 
 

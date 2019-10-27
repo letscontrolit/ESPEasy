@@ -41,6 +41,19 @@ String doExecuteCommand(const char *cmd, struct EventStruct *event, const char *
     addLog(LOG_LEVEL_INFO,  log);
 #ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_DEBUG, line); // for debug purposes add the whole line.
+    String parameters;
+    parameters.reserve(64);
+    parameters += F("Par1: ");
+    parameters += event->Par1;
+    parameters += F(" Par2: ");
+    parameters += event->Par2;
+    parameters += F(" Par3: ");
+    parameters += event->Par3;
+    parameters += F(" Par4: ");
+    parameters += event->Par4;
+    parameters += F(" Par5: ");
+    parameters += event->Par5;
+    addLog(LOG_LEVEL_DEBUG, parameters);
 #endif // ifndef BUILD_NO_DEBUG
   }
 
@@ -215,20 +228,10 @@ void ExecuteCommand(byte source, const char *Line)
   // FIXME TD-er: Not sure what happens now, but TaskIndex cannot be set here
   // since commands can originate from anywhere.
   TempEvent.Source = source;
-  {
-    // Use extra scope to delete the TmpStr1 before executing command.
-    String TmpStr1;
-
-    if (GetArgv(Line, TmpStr1, 2)) { TempEvent.Par1 = CalculateParam(TmpStr1.c_str()); }
-
-    if (GetArgv(Line, TmpStr1, 3)) { TempEvent.Par2 = CalculateParam(TmpStr1.c_str()); }
-
-    if (GetArgv(Line, TmpStr1, 4)) { TempEvent.Par3 = CalculateParam(TmpStr1.c_str()); }
-
-    if (GetArgv(Line, TmpStr1, 5)) { TempEvent.Par4 = CalculateParam(TmpStr1.c_str()); }
-
-    if (GetArgv(Line, TmpStr1, 6)) { TempEvent.Par5 = CalculateParam(TmpStr1.c_str()); }
-  }
+  // Split the arguments into Par1...5 of the event.
+  // Do not split it in doExecuteCommand, since that one will be called from the scheduler with pre-set events.
+  // FIXME TD-er: Why call this for all commands? The CalculateParam function is quite heavy.
+  parseCommandString(&TempEvent, Line);
 
   String status = doExecuteCommand(cmd.c_str(), &TempEvent, Line);
   delay(0);

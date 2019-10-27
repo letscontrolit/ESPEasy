@@ -1,6 +1,8 @@
 #ifdef USES_C014
 
 #include "src/Globals/Device.h"
+#include "src/Globals/Plugins.h"
+
 //#######################################################################################################
 //################################# Controller Plugin 0014: Homie 3/4 ###################################
 //#######################################################################################################
@@ -225,7 +227,6 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
           nodename.replace(F("%sysname%"), Settings.Name);
           String nodesList = ""; // build comma separated List for nodes
           String valuesList = ""; // build comma separated List for values
-          byte DeviceIndex = 0;
           String deviceName = ""; // current Device Name nr:name
           String valueName = ""; // current Value Name
           String unitName = ""; // estaimate Units
@@ -311,15 +312,16 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
           deviceCount++;
 
           // SECOND Plugins
-          for (byte x = 0; x < TASKS_MAX; x++)
+          for (taskIndex_t x = 0; x < TASKS_MAX; x++)
           {
-            if (Settings.TaskDeviceNumber[x] != 0)
+            if (validPluginID((Settings.TaskDeviceNumber[x])))
             {
               LoadTaskSettings(x);
-              DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[x]);
+              deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(x);
+
               deviceName = ExtraTaskSettings.TaskDeviceName;
 
-              if (Settings.TaskDeviceEnabled[x])  // Device is enabled so send information
+              if (validDeviceIndex(DeviceIndex) && Settings.TaskDeviceEnabled[x])  // Device is enabled so send information
               { // device enabled
                 valuesList="";
 
@@ -328,7 +330,7 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
                   if (Device[DeviceIndex].Number==86) // Homie receiver
                   {
                     for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++) {
-                      if (Settings.TaskDeviceNumber[x] != 0) {
+                      if (validPluginID(Settings.TaskDeviceNumber[x])) {
                         if (ExtraTaskSettings.TaskDeviceValueNames[varNr][0]!=0) { // do not send if Value Name is empty!
                           CPLUGIN_014_addToList(valuesList,ExtraTaskSettings.TaskDeviceValueNames[varNr]);
                           //$settable	Device → Controller	Specifies whether the property is settable (true) or readonly (false)	true or false	Yes	No (false)
@@ -382,7 +384,7 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
                   { // standard Values
                     for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++)
                     {
-                      if (Settings.TaskDeviceNumber[x] != 0)
+                      if (validPluginID(Settings.TaskDeviceNumber[x]))
                       {
                         if (ExtraTaskSettings.TaskDeviceValueNames[varNr][0]!=0) // do not send if Value Name is empty!
                         {
@@ -421,7 +423,7 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
                   } else { // Device has custom Values
                     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
                       String log = F("C014 : Device has custom values: ");
-                      log += getPluginNameFromDeviceIndex(Settings.TaskDeviceNumber[x]);
+                      log += getPluginNameFromDeviceIndex(getDeviceIndex_from_TaskIndex(x));
                       addLog(LOG_LEVEL_DEBUG, log+" not implemented!")
                     }
                   }
@@ -445,7 +447,7 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
               } else { // device not enabeled
                 if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
                   String log = F("C014 : Device Disabled: ");
-                  log += getPluginNameFromDeviceIndex(Settings.TaskDeviceNumber[x]);
+                  log += getPluginNameFromDeviceIndex(getDeviceIndex_from_TaskIndex(x));
                   addLog(LOG_LEVEL_DEBUG, log+" not propagated!")
                 }
               }
@@ -527,7 +529,7 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
         } else {
           String cmd;
           int valueNr=0;
-          int taskIndex=0;
+          taskIndex_t taskIndex = INVALID_TASK_INDEX;
           struct EventStruct TempEvent;
           TempEvent.TaskIndex = event->TaskIndex;
           TempEvent.Source = VALUE_SOURCE_MQTT; // to trigger the correct acknowledgment
@@ -570,8 +572,8 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
             } else // msg to a receiving plugin
             {
               taskIndex=findTaskIndexByName(nodeName);
-              if (taskIndex != TASKS_MAX) {
-                int pluginID=Device[getDeviceIndex(Settings.TaskDeviceNumber[taskIndex])].Number;
+              if (validTaskIndex(taskIndex)) {
+                int pluginID=Device[getDeviceIndex_from_TaskIndex(taskIndex)].Number;
 
                 if (pluginID==33) // Plugin 33 Dummy Device
                 { // DummyValueSet,<task/device nr>,<value nr>,<value/formula (!ToDo) >, works only with new version of P033!
@@ -637,12 +639,15 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
               eventBuffer = cmd.substring(6);
               if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                 log=F("C014 : taskIndex:");
-                log+=taskIndex;
-                log+=F(" valueNr:");
-                log+=valueNr;
-                log+=F(" valueType:");
-                // TODO TD-er: Check if taskIndex & valueNr are within range
-                log+=Settings.TaskDevicePluginConfig[taskIndex][valueNr];
+                if (!validTaskIndex(taskIndex)) {
+                  log += F("Invalid");
+                } else {
+                  log+=taskIndex;
+                  log+=F(" valueNr:");
+                  log+=valueNr;
+                  log+=F(" valueType:");                
+                  log+=Settings.TaskDevicePluginConfig[taskIndex][valueNr];
+                }
                 log+=F(" Event: ");
                 log+=eventBuffer;
                 addLog(LOG_LEVEL_INFO, log);
@@ -691,7 +696,6 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
         parseControllerVariables(pubname, event, false);
 
         String value = "";
-        // byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[event->TaskIndex]);
         byte valueCount = getValueCountFromSensorType(event->sensorType);
         for (byte x = 0; x < valueCount; x++)
         {
