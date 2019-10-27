@@ -50,6 +50,8 @@ If these speed issues will be fixed, it is very likely the SPIFFS must then be r
 Special memory partitioning:
 - 2M256  => 2 MB flash modules (e.g. Shelly1/WROOM02) with 256k SPIFFS (only core 2.5.0 or newer)
 - 1M8_partition => For ESP32 with 4MB flash, sketch size is set to 1.8 MByte (default: 1.4 MByte)
+- 4M1M   => 4MB flash, 1 MB SPIFFS.
+- 4M2M   => 4MB flash, 2 MB SPIFFS.
 
 
 ESP32 now has 3 builds:
