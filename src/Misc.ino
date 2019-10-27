@@ -362,7 +362,7 @@ int getDeepSleepMax()
 
 bool isDeepSleepEnabled()
 {
-  if (!Settings.deepSleep) {
+  if (!Settings.deepSleep_wakeTime) {
     return false;
   }
 
@@ -389,12 +389,12 @@ bool readyForSleep()
     // Allow 12 seconds to establish connections
     return timeOutReached(timerAwakeFromDeepSleep + 12000);
   }
-  return timeOutReached(timerAwakeFromDeepSleep + 1000 * Settings.deepSleep);
+  return timeOutReached(timerAwakeFromDeepSleep + 1000 * Settings.deepSleep_wakeTime);
 }
 
-void deepSleep(int dsdelay)
+void prepare_deepSleep(int dsdelay)
 {
-  checkRAM(F("deepSleep"));
+  checkRAM(F("prepare_deepSleep"));
 
   if (!isDeepSleepEnabled())
   {
@@ -426,7 +426,7 @@ void deepSleep(int dsdelay)
 
 void deepSleepStart(int dsdelay)
 {
-  // separate function that is called from above function or directly from rules, usign deepSleep as a one-shot
+  // separate function that is called from above function or directly from rules, usign deepSleep_wakeTime as a one-shot
   if (Settings.UseRules)
   {
     String event = F("System#Sleep");
@@ -1174,7 +1174,7 @@ void ResetFactory()
   Settings.Pin_sd_cs       = -1;
   Settings.Pin_Reset       = -1;
   Settings.Protocol[0]     = DEFAULT_PROTOCOL;
-  Settings.deepSleep       = false;
+  Settings.deepSleep_wakeTime       = false;
   Settings.CustomCSS       = false;
   Settings.InitSPI         = false;
   for (taskIndex_t x = 0; x < TASKS_MAX; x++)

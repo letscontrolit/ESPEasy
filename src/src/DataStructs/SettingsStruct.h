@@ -77,6 +77,7 @@ class SettingsStruct_tmpl
   byte          Unit;
   char          Name[26];
   char          NTPHost[64];
+  // FIXME TD-er: Issue #2690
   unsigned long Delay;              // Sleep time in seconds
   int8_t        Pin_i2c_sda;
   int8_t        Pin_i2c_scl;
@@ -91,7 +92,7 @@ class SettingsStruct_tmpl
   byte          SDLogLevel;
   unsigned long BaudRate;
   unsigned long MessageDelay;
-  byte          deepSleep;   // 0 = Sleep Disabled, else time awake from sleep in seconds
+  byte          deepSleep_wakeTime;   // 0 = Sleep Disabled, else time awake from sleep in seconds
   boolean       CustomCSS;
   boolean       DST;
   byte          WDI2CAddress;

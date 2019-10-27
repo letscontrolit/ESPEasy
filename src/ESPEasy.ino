@@ -347,7 +347,7 @@ void setup()
   if (Settings.UseRules && isDeepSleepEnabled())
   {
     String event = F("System#NoSleep=");
-    event += Settings.deepSleep;
+    event += Settings.deepSleep_wakeTime;
     rulesProcessing(event);
   }
 
@@ -553,7 +553,7 @@ void loop()
      if (Settings.UseRules && isDeepSleepEnabled())
      {
         String event = F("System#NoSleep=");
-        event += Settings.deepSleep;
+        event += Settings.deepSleep_wakeTime;
         rulesProcessing(event);
      }
 
@@ -593,7 +593,7 @@ void loop()
   backgroundtasks();
 
   if (readyForSleep()){
-    deepSleep(Settings.Delay);
+    prepare_deepSleep(Settings.Delay);
     //deepsleep will never return, its a special kind of reboot
   }
 }

@@ -188,7 +188,7 @@ void SettingsStruct_tmpl<N_TASKS>::clearMisc() {
   for (byte i = 0; i < 17; ++i) { PinBootStates[i] = 0; }
   BaudRate                    = 0;
   MessageDelay                = 0;
-  deepSleep                   = 0;
+  deepSleep_wakeTime                   = 0;
   CustomCSS                   = false;
   WDI2CAddress                = 0;
   UseRules                    = false;
