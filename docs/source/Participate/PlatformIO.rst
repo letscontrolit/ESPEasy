@@ -90,7 +90,7 @@ For example:
 
 * ..._ESP8266_4M -> ESP8266 has external flash, which can vary in size from 512 kB to 16 MB.
 * ..._ESP8285_1M -> ESP8285 has the flash internal, so is always 1 MB.
-* ..._ESP32_1M8_partition -> ESP32 with 4 MB flash and a 1.8 MB partition for the sketch.
+* ..._ESP32_4M316k -> ESP32 with 4 MB flash and a 1.8 MB partition for the sketch. (316k SPIFFS)
 
 Make a custom build using PlatformIO
 ------------------------------------
