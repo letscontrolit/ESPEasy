@@ -19,6 +19,40 @@ Both are free to use and are available for Windows, MacOS and Linux.
 
 Apart from these two, there are more available, like Eclipse and probably more.
 
+
+PlatformIO Prerequisites
+========================
+
+PlatformIO does need at least the following:
+
+* Python
+* Git command line tools (`download <https://git-scm.com/downloads>`_)
+
+For most operating systems, Python is already present, but for Windows you may need to install it.
+Starting October 2019, Python 3.x is supported in all build tools we use for ESPEasy.
+
+Please follow `these steps <https://docs.platformio.org/en/latest/faq.html#faq-install-python>`_ to 
+install Pyton in Windows for PlatformIO.
+
+**Do not forget to check "Add Python xxx to PATH".**
+
+Windows ExecutionPolicy
+-----------------------
+
+For PlatformIO 4.1.x and newer in Windows, you may need to change the Windows ExecutionPolicy 
+to be able to start a powershell script.
+PlatformIO does use a PowerShell script to activate the Python virtual environment.
+
+Default Windows security settings prevent execution of a PowerShell script.
+
+Enter in the PowerShell terminal window in VScode::
+
+    Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope CurrentUser
+
+Please note this does lower your security, so make sure you know its implications.
+See `Microsoft - About Execution Policies <https:/go.microsoft.com/fwlink/?LinkID=135170>`_ for more details.
+
+
 PlatformIO with Atom
 ====================
 
