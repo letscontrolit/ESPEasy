@@ -191,8 +191,6 @@ void setup()
 #endif
 
   resetPluginTaskData();
-  Plugin_id.resize(PLUGIN_MAX);
-  Task_id_to_Plugin_id.resize(TASKS_MAX);
 
   checkRAM(F("setup"));
   #if defined(ESP32)
@@ -331,16 +329,9 @@ void setup()
 
   timermqtt_interval = 250; // Interval for checking MQTT
   timerAwakeFromDeepSleep = millis();
-  if (Settings.UseRules && isDeepSleepEnabled())
-  {
-    String event = F("System#NoSleep=");
-    event += Settings.deepSleep;
-    rulesProcessing(event);
-  }
-
-  PluginInit();
   CPluginInit();
   NPluginInit();
+  PluginInit();
   log = F("INFO : Plugins: ");
   log += deviceCount + 1;
   log += getPluginDescriptionString();
@@ -351,6 +342,13 @@ void setup()
 
   if (deviceCount + 1 >= PLUGIN_MAX) {
     addLog(LOG_LEVEL_ERROR, F("Programming error! - Increase PLUGIN_MAX"));
+  }
+
+  if (Settings.UseRules && isDeepSleepEnabled())
+  {
+    String event = F("System#NoSleep=");
+    event += Settings.deepSleep;
+    rulesProcessing(event);
   }
 
   if (Settings.UseRules)
@@ -512,12 +510,9 @@ void updateLoopStats_30sec(byte loglevel) {
     log += loopCounterMax;
     log += F(" loopCounterLast: ");
     log += loopCounterLast;
-    log += F(" countFindPluginId: ");
-    log += countFindPluginId;
     addLog(loglevel, log);
   }
 #endif
-  countFindPluginId = 0;
   loop_usec_duration_total = 0;
   loopCounter_full = 1;
 }
@@ -888,7 +883,7 @@ void runEach30Seconds()
 \*********************************************************************************************/
 // void SensorSendAll()
 // {
-//   for (byte x = 0; x < TASKS_MAX; x++)
+//   for (taskIndex_t x = 0; x < TASKS_MAX; x++)
 //   {
 //     SensorSendTask(x);
 //   }
@@ -898,15 +893,18 @@ void runEach30Seconds()
 /*********************************************************************************************\
  * send specific sensor task data
 \*********************************************************************************************/
-void SensorSendTask(byte TaskIndex)
+void SensorSendTask(taskIndex_t TaskIndex)
 {
+  if (!validTaskIndex(TaskIndex)) return;
   checkRAM(F("SensorSendTask"));
   if (Settings.TaskDeviceEnabled[TaskIndex])
   {
     byte varIndex = TaskIndex * VARS_PER_TASK;
 
     bool success = false;
-    byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[TaskIndex]);
+    deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(TaskIndex);
+    if (!validDeviceIndex(DeviceIndex)) return;
+
     LoadTaskSettings(TaskIndex);
 
     struct EventStruct TempEvent;

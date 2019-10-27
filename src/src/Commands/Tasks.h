@@ -11,7 +11,7 @@ String Command_Task_Clear(struct EventStruct *event, const char* Line)
 
 String Command_Task_ClearAll(struct EventStruct *event, const char* Line)
 {
-	for (byte t = 0; t < TASKS_MAX; t++)
+	for (taskIndex_t t = 0; t < TASKS_MAX; t++)
 		taskClear(t, false);
 	return return_command_success();
 }
@@ -20,8 +20,10 @@ String Command_Task_ValueSet(struct EventStruct *event, const char* Line)
 {
 	String TmpStr1;
 	if (GetArgv(Line, TmpStr1, 4)) {
+		// Perform calculation with float result.
 		float result = 0;
 		Calculate(TmpStr1.c_str(), &result);
+		// FIXME TD-er: The return code of Calculate is not used.
 		UserVar[(VARS_PER_TASK * (event->Par1 - 1)) + event->Par2 - 1] = result;
 	}else  {
 		//TODO: Get Task description and var name

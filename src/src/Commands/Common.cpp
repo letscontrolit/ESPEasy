@@ -42,22 +42,6 @@ String return_see_serial(struct EventStruct *event)
   return F("Output sent to serial");
 }
 
-bool IsNumeric(const char *source)
-{
-  bool result = false;
-
-  if (source) {
-    int len = strlen(source);
-
-    if (len != 0) {
-      int i;
-
-      for (i = 0; i < len && isdigit(source[i]); i++) {}
-      result = i == len;
-    }
-  }
-  return result;
-}
 
 String Command_GetORSetIP(struct EventStruct        *event,
                           const __FlashStringHelper *targetDescription,
@@ -149,7 +133,7 @@ String Command_GetORSetBool(struct EventStruct        *event,
       hasArgument = true;
       TmpStr1.toLowerCase();
 
-      if (IsNumeric(TmpStr1.c_str())) {
+      if (isInt(TmpStr1)) {
         *value = atoi(TmpStr1.c_str()) > 0;
       }
       else if (strcmp_P(PSTR("on"), TmpStr1.c_str()) == 0) { *value = true; }

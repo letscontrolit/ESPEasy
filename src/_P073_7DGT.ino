@@ -435,6 +435,7 @@ bool p073_plugin_write(struct EventStruct *event, const String& string) {
     return false;
   }
 
+  // FIXME TD-er: This one is not using parseString* function
   String tmpString = string;
   int    argIndex  = tmpString.indexOf(',');
 

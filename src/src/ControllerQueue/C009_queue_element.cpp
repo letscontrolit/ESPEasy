@@ -2,12 +2,12 @@
 
 #include "../DataStructs/ESPEasy_EventStruct.h"
 
-C009_queue_element::C009_queue_element() : controller_idx(0), TaskIndex(0), idx(0), sensorType(0) {}
+C009_queue_element::C009_queue_element() : controller_idx(0), idx(0), TaskIndex(INVALID_TASK_INDEX), sensorType(0) {}
 
 C009_queue_element::C009_queue_element(const struct EventStruct *event) :
   controller_idx(event->ControllerIndex),
-  TaskIndex(event->TaskIndex),
   idx(event->idx),
+  TaskIndex(event->TaskIndex),
   sensorType(event->sensorType) {}
 
 size_t C009_queue_element::getSize() const {

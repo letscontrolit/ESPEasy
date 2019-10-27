@@ -853,7 +853,7 @@ void json_prop(const String& name, const String& value) {
 // ********************************************************************************
 // Add a task select dropdown list
 // ********************************************************************************
-void addTaskSelect(const String& name,  int choice)
+void addTaskSelect(const String& name,  taskIndex_t choice)
 {
   String deviceName;
 
@@ -861,15 +861,13 @@ void addTaskSelect(const String& name,  int choice)
   TXBuffer += name;
   TXBuffer += F("' onchange='return dept_onchange(frmselect)'>");
 
-  for (byte x = 0; x < TASKS_MAX; x++)
+  for (taskIndex_t x = 0; x < TASKS_MAX; x++)
   {
     deviceName = "";
-
-    if (Settings.TaskDeviceNumber[x] != 0)
+    deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(x);
+    if (validDeviceIndex(DeviceIndex))
     {
-      byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[x]);
-
-      if (Plugin_id[DeviceIndex] != 0) {
+      if (validPluginID(DeviceIndex_to_Plugin_id[DeviceIndex])) {
         deviceName = getPluginNameFromDeviceIndex(DeviceIndex);
       }
     }
@@ -882,7 +880,7 @@ void addTaskSelect(const String& name,  int choice)
       TXBuffer += F(" selected");
     }
 
-    if (Settings.TaskDeviceNumber[x] == 0) {
+    if (!validPluginID(Settings.TaskDeviceNumber[x])) {
       addDisabled();
     }
     TXBuffer += '>';
@@ -898,14 +896,17 @@ void addTaskSelect(const String& name,  int choice)
 // ********************************************************************************
 // Add a Value select dropdown list, based on TaskIndex
 // ********************************************************************************
-void addTaskValueSelect(const String& name, int choice, byte TaskIndex)
+void addTaskValueSelect(const String& name, int choice, taskIndex_t TaskIndex)
 {
+  if (!validTaskIndex(TaskIndex)) return;
+  deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(TaskIndex);
+  if (!validDeviceIndex(DeviceIndex)) return;
+
   TXBuffer += F("<select id='selectwidth' name='");
   TXBuffer += name;
   TXBuffer += "'>";
 
-  byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[TaskIndex]);
-
+  LoadTaskSettings(TaskIndex);
   for (byte x = 0; x < Device[DeviceIndex].ValueCount; x++)
   {
     TXBuffer += F("<option value='");

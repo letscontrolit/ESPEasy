@@ -3,6 +3,7 @@
 
 #include "src/DataStructs/EventValueSource.h"
 #include "src/Globals/Device.h"
+#include "src/Globals/Plugins.h"
 
 String EventToFileName(String& eventName) {
   int size  = eventName.length();
@@ -639,7 +640,7 @@ bool ruleMatch(const String& event, const String& rule) {
   float value = 0;
   int   pos   = event.indexOf("=");
 
-  if (pos) {
+  if (pos >= 0) {
     if (!validFloatFromString(event.substring(pos + 1), value)) {
       return false;
 
@@ -650,15 +651,13 @@ bool ruleMatch(const String& event, const String& rule) {
 
   // parse rule
   int  posStart, posEnd;
-  char compare = findCompareCondition(rule, posStart, posEnd);
-
-  const bool stringMatch = tmpEvent.equalsIgnoreCase(rule.substring(0, posStart));
-
-  if (compare == ' ') {
+  char compare;
+  if (!findCompareCondition(rule, compare, posStart, posEnd)) {
     // No compare condition found, so just check if the event- and rule string match.
-    return stringMatch;
+    return tmpEvent.equalsIgnoreCase(rule);
   }
 
+  const bool stringMatch = tmpEvent.equalsIgnoreCase(rule.substring(0, posStart));
   float ruleValue = 0;
 
   if (!validFloatFromString(rule.substring(posEnd), ruleValue)) {
@@ -705,10 +704,11 @@ boolean conditionMatchExtended(String& check) {
   return leftcond;
 }
 
-char findCompareCondition(const String& check, int& posStart, int& posEnd)
+// Find the compare condition.
+// @param posStart = first position of the compare condition in the string
+// @param posEnd   = first position rest of the string, right after the compare condition.
+bool findCompareCondition(const String& check, char& compare, int& posStart, int& posEnd)
 {
-  char compare = ' ';
-
   posStart = check.length();
   posEnd   = posStart;
   int comparePos = 0;
@@ -717,116 +717,94 @@ char findCompareCondition(const String& check, int& posStart, int& posEnd)
     posStart = comparePos;
     posEnd   = posStart + 2;
     compare  = '!' + '=';
+    return true;
   }
 
   if (((comparePos = check.indexOf("<>")) > 0) && (comparePos < posStart)) {
     posStart = comparePos;
     posEnd   = posStart + 2;
     compare  = '!' + '=';
+    return true;
   }
 
   if (((comparePos = check.indexOf(">=")) > 0) && (comparePos < posStart)) {
     posStart = comparePos;
     posEnd   = posStart + 2;
     compare  = '>' + '=';
+    return true;
   }
 
   if (((comparePos = check.indexOf("<=")) > 0) && (comparePos < posStart)) {
     posStart = comparePos;
     posEnd   = posStart + 2;
     compare  = '<' + '=';
+    return true;
   }
 
   if (((comparePos = check.indexOf("<")) > 0) && (comparePos < posStart)) {
     posStart = comparePos;
     posEnd   = posStart + 1;
     compare  = '<';
+    return true;
   }
 
   if (((comparePos = check.indexOf(">")) > 0) && (comparePos < posStart)) {
     posStart = comparePos;
     posEnd   = posStart + 1;
     compare  = '>';
+    return true;
   }
 
   if (((comparePos = check.indexOf("=")) > 0) && (comparePos < posStart)) {
     posStart = comparePos;
     posEnd   = posStart + 1;
     compare  = '=';
+    return true;
   }
-  return compare;
+  return false;
 }
 
 bool compareValues(char compare, float Value1, float Value2)
 {
-  bool match = false;
-
   switch (compare) {
-    case '>' + '=':
-
-      if (Value1 >= Value2) {
-        match = true;
-      }
-      break;
-
-    case '<' + '=':
-
-      if (Value1 <= Value2) {
-        match = true;
-      }
-      break;
-
-    case '!' + '=':
-
-      if (Value1 != Value2) {
-        match = true;
-      }
-      break;
-
-    case '>':
-
-      if (Value1 > Value2) {
-        match = true;
-      }
-      break;
-
-    case '<':
-
-      if (Value1 < Value2) {
-        match = true;
-      }
-      break;
-
-    case '=':
-
-      if (Value1 == Value2) {
-        match = true;
-      }
-      break;
+    case '>' + '=': return  (Value1 >= Value2);
+    case '<' + '=': return  (Value1 <= Value2);
+    case '!' + '=': return  (Value1 != Value2);
+    case '>':       return  (Value1 > Value2);
+    case '<':       return  (Value1 < Value2);
+    case '=':       return  (Value1 == Value2);
   }
-  return match;
+  return false;
 }
 
 bool conditionMatch(const String& check) {
   int  posStart, posEnd;
-  char compare = findCompareCondition(check, posStart, posEnd);
+  char compare;
+  if (!findCompareCondition(check, compare, posStart, posEnd)) {
+    return false;
+  }
 
+  String tmpCheck1 = check.substring(0, posStart);
+  String tmpCheck2 = check.substring(posEnd);
   float Value1 = 0;
   float Value2 = 0;
 
-  if (compare > ' ') {
-    String tmpCheck1 = check.substring(0, posStart);
-    String tmpCheck2 = check.substring(posEnd);
-
-    if (!isFloat(tmpCheck1) || !isFloat(tmpCheck2)) {
-      Value1 = timeStringToSeconds(tmpCheck1);
-      Value2 = timeStringToSeconds(tmpCheck2);
-    } else {
-      Value1 = tmpCheck1.toFloat();
-      Value2 = tmpCheck2.toFloat();
-    }
+  int timeInSec1 = 0;
+  int timeInSec2 = 0;
+  bool validTime1 = timeStringToSeconds(tmpCheck1, timeInSec1);
+  bool validTime2 = timeStringToSeconds(tmpCheck2, timeInSec2);
+  if ((validTime1 || validTime2) && timeInSec1 != -1 && timeInSec2 != -1) 
+  {
+    // At least one is a time containing ':' separator
+    // AND both can be considered a time, so use it as a time and compare seconds.
+    Value1 = timeInSec1;
+    Value2 = timeInSec2;
   } else {
-    return false;
+    if (!validFloatFromString(tmpCheck1, Value1) ||
+        !validFloatFromString(tmpCheck2, Value2)) 
+    {
+      return false;
+    }
   }
 
   return compareValues(compare, Value1, Value2);
@@ -861,9 +839,11 @@ void createRuleEvents(struct EventStruct *event) {
   if (!Settings.UseRules) {
     return;
   }
+  deviceIndex_t DeviceIndex  = getDeviceIndex_from_TaskIndex(event->TaskIndex);
+  if (!validDeviceIndex(DeviceIndex)) return;
+
   LoadTaskSettings(event->TaskIndex);
-  byte BaseVarIndex = event->TaskIndex * VARS_PER_TASK;
-  byte DeviceIndex  = getDeviceIndex(Settings.TaskDeviceNumber[event->TaskIndex]);
+  byte BaseVarIndex = event->TaskIndex * VARS_PER_TASK;  
   byte sensorType   = Device[DeviceIndex].VType;
 
   for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++) {

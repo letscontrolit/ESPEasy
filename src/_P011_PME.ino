@@ -159,7 +159,7 @@ boolean Plugin_011(byte function, struct EventStruct *event, String& string)
           if (event->Par1 >= 0 && event->Par1 <= 13)
           {
             Plugin_011_Write(event->Par1, event->Par2);
-            setPluginTaskTimer(event->Par3 * 1000, PLUGIN_ID_011, event->TaskIndex, event->Par1, !event->Par2);
+            setPluginTaskTimer(event->Par3 * 1000, event->TaskIndex, event->Par1, !event->Par2);
 
             portStatusStruct tempStatus;
             const uint32_t key = createKey(PLUGIN_ID_011,event->Par1);

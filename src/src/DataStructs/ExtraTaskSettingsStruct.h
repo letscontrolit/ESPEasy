@@ -8,6 +8,7 @@
 #include <Arduino.h>
 
 #include "../DataStructs/ESPEasyLimits.h"
+#include "../Globals/Plugins.h"
 
 // This is only used by some plugins to store extra settings like formula descriptions.
 // These settings can only be active for one plugin, meaning they have to be loaded
@@ -29,7 +30,7 @@ struct ExtraTaskSettingsStruct
 
   bool checkInvalidCharInNames() const;
 
-  byte    TaskIndex;  // Always < TASKS_MAX
+  taskIndex_t  TaskIndex;  // Always < TASKS_MAX
   char    TaskDeviceName[NAME_FORMULA_LENGTH_MAX + 1];
   char    TaskDeviceFormula[VARS_PER_TASK][NAME_FORMULA_LENGTH_MAX + 1];
   char    TaskDeviceValueNames[VARS_PER_TASK][NAME_FORMULA_LENGTH_MAX + 1];

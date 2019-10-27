@@ -37,11 +37,11 @@ void handle_rules() {
 
     if (currentSet == rulesSet) // only save when the dropbox was not used to change set
     {
-      String rules = WebServer.arg(F("rules"));
+      size_t rulesLength = WebServer.arg(F("rules")).length();
       log += F(" rules.length(): ");
-      log += rules.length();
+      log += rulesLength;
 
-      if (rules.length() > RULES_MAX_SIZE) {
+      if (rulesLength > RULES_MAX_SIZE) {
         TXBuffer += F("<span style=\"color:red\">Data was not saved, exceeds web editor limit!</span>");
       }
       else
@@ -54,17 +54,9 @@ void handle_rules() {
         // }
         // else
         // {
-        fs::File f = tryOpenFile(fileName, "w");
-
-        if (f)
-        {
-          log += F(" Write to file: ");
-          log += fileName;
-          f.print(rules);
-          f.close();
-
+        const byte* memAddress = reinterpret_cast<const byte*>(WebServer.arg(F("rules")).c_str());
+        addHtmlError(SaveToFile(fileName.c_str(), 0, memAddress, rulesLength, "w"));
           // flashCount();
-        }
 
         // }
       }

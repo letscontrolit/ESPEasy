@@ -4,7 +4,7 @@
 
 EventStruct::EventStruct() :
   Data(nullptr), idx(0), Par1(0), Par2(0), Par3(0), Par4(0), Par5(0),
-  Source(0), TaskIndex(TASKS_MAX), ControllerIndex(0), ProtocolIndex(0), NotificationIndex(0),
+  Source(0), TaskIndex(INVALID_TASK_INDEX), ControllerIndex(0), ProtocolIndex(0), NotificationIndex(0),
   BaseVarIndex(0), sensorType(0), OriginTaskIndex(0) {}
 
 EventStruct::EventStruct(const struct EventStruct& event) :

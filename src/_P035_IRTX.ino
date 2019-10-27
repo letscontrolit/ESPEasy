@@ -135,6 +135,8 @@ boolean Plugin_035(byte function, struct EventStruct *event, String &command)
     uint64_t IrCode = 0;
     uint16_t IrBits = 0;
 
+
+    // FIXME TD-er: This one is not using parseString* function
     String cmdCode = command;
     int argIndex = cmdCode.indexOf(',');
     if (argIndex)

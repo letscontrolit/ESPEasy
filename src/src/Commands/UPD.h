@@ -23,6 +23,7 @@ String Command_UDP_Port(struct EventStruct *event, const char* Line)
 
 String Command_UPD_SendTo(struct EventStruct *event, const char* Line)
 {
+  // FIXME TD-er: This one is not using parseString* function
   String eventName = Line;
   eventName = eventName.substring(7);
   int index = eventName.indexOf(',');

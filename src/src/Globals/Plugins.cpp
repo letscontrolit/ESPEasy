@@ -1,58 +1,151 @@
 #include "Plugins.h"
 #include "../../ESPEasy_plugindefs.h"
 #include "../DataStructs/ESPEasy_EventStruct.h"
+#include "../Globals/Device.h"
 #include "../Globals/Settings.h"
+#include "../../ESPEasy_Log.h"
 
 
-void updateTaskPluginCache() {
-  ++countFindPluginId; // Used for statistics.
-  Task_id_to_Plugin_id.resize(TASKS_MAX);
-  for (byte y = 0; y < TASKS_MAX; ++y) {
-    Task_id_to_Plugin_id[y] = -1;
-    bool foundPlugin = false;
-    for (byte x = 0; x < PLUGIN_MAX && !foundPlugin; ++x) {
-      if (Plugin_id[x] != 0 && Plugin_id[x] == Settings.TaskDeviceNumber[y]) {
-        foundPlugin = true;
-        Task_id_to_Plugin_id[y] = x;
-      }
-    }
-  }
+
+deviceIndex_t INVALID_DEVICE_INDEX = PLUGIN_MAX;
+taskIndex_t   INVALID_TASK_INDEX = TASKS_MAX;
+pluginID_t    INVALID_PLUGIN_ID  = 0;
+
+std::map<pluginID_t, deviceIndex_t> Plugin_id_to_DeviceIndex;
+std::vector<pluginID_t> DeviceIndex_to_Plugin_id;
+std::vector<deviceIndex_t> DeviceIndex_sorted;
+
+int deviceCount = -1;
+
+boolean (*Plugin_ptr[PLUGIN_MAX])(byte, struct EventStruct*, String&);
+
+
+bool validDeviceIndex(deviceIndex_t index) {
+  return index < PLUGIN_MAX;
 }
 
-int getPluginId_from_TaskIndex(byte taskIndex) {
-  if (taskIndex < TASKS_MAX) {
-    int retry = 1;
-    while (retry >= 0) {
-      int plugin = Task_id_to_Plugin_id[taskIndex];
-      if (plugin >= 0 && plugin < PLUGIN_MAX) {
-        if (Plugin_id[plugin] == Settings.TaskDeviceNumber[taskIndex])
-          return plugin;
-      }
-      updateTaskPluginCache();
-      --retry;
-    }
+bool validTaskIndex(taskIndex_t index) {
+  return index < TASKS_MAX;
+}
+
+bool validPluginID(pluginID_t pluginID) {
+  return pluginID != 0;
+}
+
+bool supportedPluginID(pluginID_t pluginID) {
+  return validDeviceIndex(getDeviceIndex(pluginID));
+}
+
+deviceIndex_t getDeviceIndex_from_TaskIndex(taskIndex_t taskIndex) {
+  if (validTaskIndex(taskIndex)) {
+    return getDeviceIndex(Settings.TaskDeviceNumber[taskIndex]);
   }
-  return -1;
+  return INVALID_DEVICE_INDEX;
 }
 
 
+deviceIndex_t getDeviceIndex(pluginID_t pluginID)
+{
+  if (validPluginID(pluginID)) {
+    auto it = Plugin_id_to_DeviceIndex.find(pluginID);
+    if (it != Plugin_id_to_DeviceIndex.end())
+    {
+      if (Device[it->second].Number != pluginID) {
+        // FIXME TD-er: Just a check for now, can be removed later when it does not occur.
+        addLog(LOG_LEVEL_ERROR, F("getDeviceIndex error in Device Vector"));
+      }
+      return it->second;
+    }
+  }
+  return INVALID_DEVICE_INDEX;
+}
 
 /********************************************************************************************\
    Find name of plugin given the plugin device index..
  \*********************************************************************************************/
-String getPluginNameFromDeviceIndex(byte deviceIndex) {
+String getPluginNameFromDeviceIndex(deviceIndex_t deviceIndex) {
   String deviceName = "";
-  if (deviceIndex >= PLUGIN_MAX) {
-    return deviceName;
-  }
-
-  Plugin_ptr[deviceIndex](PLUGIN_GET_DEVICENAME, 0, deviceName);
+  if (validDeviceIndex(deviceIndex)) {
+    Plugin_ptr[deviceIndex](PLUGIN_GET_DEVICENAME, 0, deviceName);
+  }  
   return deviceName;
 }
 
+String getPluginNameFromPluginID(pluginID_t pluginID) {
+  deviceIndex_t deviceIndex = getDeviceIndex(pluginID);
+  if (!validDeviceIndex(deviceIndex)) {
+    String name = F("Plugin ");
+    name += String(static_cast<int>(pluginID));
+    name += F(" not included in build");
+    return name;
+  }
+  return getPluginNameFromDeviceIndex(deviceIndex);
+}
 
-boolean (*Plugin_ptr[PLUGIN_MAX])(byte, struct EventStruct*, String&);
 
-std::vector<byte> Plugin_id;
-std::vector<int> Task_id_to_Plugin_id;
-unsigned long countFindPluginId = 0;
+// ********************************************************************************
+// Device Sort routine, compare two array entries
+// ********************************************************************************
+bool arrayLessThan(const String& ptr_1, const String& ptr_2)
+{
+  unsigned int i = 0;
+
+  while (i < ptr_1.length()) // For each character in string 1, starting with the first:
+  {
+    if (ptr_2.length() < i)  // If string 2 is shorter, then switch them
+    {
+      return true;
+    }
+    else
+    {
+      const char check1 = static_cast<char>(ptr_1[i]); // get the same char from string 1 and string 2
+      const char check2 = static_cast<char>(ptr_2[i]);
+
+      if (check1 == check2) {
+        // they're equal so far; check the next char !!
+        i++;
+      } else {
+        return check2 > check1;
+      }
+    }
+  }
+  return false;
+}
+
+
+// ********************************************************************************
+// Device Sort routine, actual sorting alfabetically by plugin name.
+// Sorting does happen case sensitive.
+// ********************************************************************************
+void sortDeviceIndexArray() {
+  // First fill the existing number of the DeviceIndex.
+  DeviceIndex_sorted.resize(deviceCount + 1);
+  for (deviceIndex_t x = 0; x <= deviceCount; x++) {
+    if (validPluginID(DeviceIndex_to_Plugin_id[x])) {
+      DeviceIndex_sorted[x] = x;
+    } else {
+      DeviceIndex_sorted[x] = INVALID_DEVICE_INDEX;
+    }
+  }
+  // Do the sorting.
+  int innerLoop;
+  int mainLoop;
+
+  for (mainLoop = 1; mainLoop <= deviceCount; mainLoop++)
+  {
+    innerLoop = mainLoop;
+
+    while (innerLoop  >= 1)
+    {
+      if (arrayLessThan(
+            getPluginNameFromDeviceIndex(DeviceIndex_sorted[innerLoop]),
+            getPluginNameFromDeviceIndex(DeviceIndex_sorted[innerLoop - 1])))
+      {
+        deviceIndex_t temp = DeviceIndex_sorted[innerLoop - 1];
+        DeviceIndex_sorted[innerLoop - 1] = DeviceIndex_sorted[innerLoop];
+        DeviceIndex_sorted[innerLoop]     = temp;
+      }
+      innerLoop--;
+    }
+  }
+}

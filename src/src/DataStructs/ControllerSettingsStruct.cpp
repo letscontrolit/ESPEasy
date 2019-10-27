@@ -24,7 +24,7 @@
     DeleteOldest = false;
     ClientTimeout = CONTROLLER_CLIENTTIMEOUT_DFLT;
     MustCheckReply = false;
-    SampleSetInitiator = 0;
+    SampleSetInitiator = INVALID_TASK_INDEX;
     for (byte i = 0; i < 4; ++i) {
       IP[i] = 0;
     }
@@ -51,7 +51,7 @@
   boolean       DeleteOldest; // Action to perform when buffer full, delete oldest, or ignore newest.
   unsigned int  ClientTimeout;
   boolean       MustCheckReply; // When set to false, a sent message is considered always successful.
-  uint8_t       SampleSetInitiator; // The first plugin to start a sample set.
+  taskIndex_t   SampleSetInitiator; // The first task to start a sample set.
 
   void ControllerSettingsStruct::validate() {
     if (Port > 65535) Port = 0;

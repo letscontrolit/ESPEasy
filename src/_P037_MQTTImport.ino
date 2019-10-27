@@ -8,6 +8,7 @@
 // This task reads data from the MQTT Import input stream and saves the value
 
 #include "src/Globals/MQTT.h"
+#include "src/Globals/Plugins.h"
 
 #define PLUGIN_037
 #define PLUGIN_ID_037         37
@@ -307,7 +308,7 @@ boolean MQTTSubscribe_037()
 
   //	Loop over all tasks looking for a 037 instance
 
-  for (byte y = 0; y < TASKS_MAX; y++)
+  for (taskIndex_t y = 0; y < TASKS_MAX; y++)
   {
     if (Settings.TaskDeviceNumber[y] == PLUGIN_ID_037)
     {
@@ -361,7 +362,12 @@ void mqttcallback_037(char* c_topic, byte* b_payload, unsigned int length)
   String payload = cpayload;		// convert byte to char string
   payload.trim();
 
-  byte DeviceIndex = getDeviceIndex(PLUGIN_ID_037);   // This is the device index of 037 modules -there should be one!
+  deviceIndex_t DeviceIndex = getDeviceIndex(PLUGIN_ID_037);   // This is the device index of 037 modules -there should be one!
+  if (!validDeviceIndex(DeviceIndex)) {
+    // This should never happen.
+    addLog(LOG_LEVEL_ERROR, F("Plugin 037 does not exist"));
+    return;
+  }
 
   // We generate a temp event structure to pass to the plugins
 
@@ -372,7 +378,7 @@ void mqttcallback_037(char* c_topic, byte* b_payload, unsigned int length)
 
   //  Here we loop over all tasks and call each 037 plugin with function PLUGIN_IMPORT
 
-  for (byte y = 0; y < TASKS_MAX; y++)
+  for (taskIndex_t y = 0; y < TASKS_MAX; y++)
   {
     if (Settings.TaskDeviceNumber[y] == PLUGIN_ID_037)                // if we have found a 037 device, then give it something to think about!
     {
