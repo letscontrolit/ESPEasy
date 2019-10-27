@@ -237,7 +237,7 @@ unsigned long now() {
       timeSynced = true;
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        double time_offset = sysTime - unixTime_d;
+        double time_offset = unixTime_d - sysTime;
         String log         = F("Time adjusted by ");
         log += String(time_offset * 1000.0);
         log += F(" msec. Wander: ");
