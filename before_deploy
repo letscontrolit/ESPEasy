@@ -41,8 +41,8 @@ mkdir -p ${TMP_DIST}/memstats
 
 for ENV in \
   custom_ESP8266_4M1M\
-  esp-wrover-kit_test_1M8_partition\
-  esp32test_1M8_partition\
+  esp-wrover-kit_test_4M316k\
+  esp32test_4M316k\
   normal_ESP8266_1M\
   normal_ESP8266_1M_VCC\
   normal_ESP8285_1M\
@@ -84,7 +84,8 @@ do
   if [[ ${ENV} == *"esp32"* ]]; then
     MAX_FILESIZE=1310720
   fi
-  if [[ ${ENV} == *"1M8_partition"* ]]; then
+  if [[ ${ENV} == *"4M316k"* ]]; then
+    # ESP32 with 1800k of sketch space.
     MAX_FILESIZE=1900544
   fi
 
