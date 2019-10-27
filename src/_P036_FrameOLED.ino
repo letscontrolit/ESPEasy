@@ -17,8 +17,8 @@
 #define PLUGIN_NAME_036       "Display - OLED SSD1306/SH1106 Framed"
 #define PLUGIN_VALUENAME1_036 "OLED"
 
-#define P36_Nlines 12        // The number of different lines which can be displayed - each line is 32 chars max
-#define P36_Nchars 32
+#define P36_Nlines 12        // The number of different lines which can be displayed - each line is 64 chars max
+#define P36_Nchars 64
 
 #define P36_CONTRAST_OFF    1
 #define P36_CONTRAST_LOW    64
