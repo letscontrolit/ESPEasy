@@ -5,6 +5,9 @@
 #ifndef EXAMPLES_IRMQTTSERVER_IRMQTTSERVER_H_
 #define EXAMPLES_IRMQTTSERVER_IRMQTTSERVER_H_
 
+#if defined(ESP8266)
+#include <ESP8266WiFi.h>
+#endif  // ESP8266
 #include <IRremoteESP8266.h>
 #include <IRrecv.h>
 #include <IRsend.h>
@@ -65,7 +68,7 @@ const IPAddress kSubnetMask = IPAddress(255, 255, 255, 0);
 #endif  // USE_STATIC_IP
 
 // See: https://github.com/tzapu/WiFiManager#filter-networks for these settings.
-#define HIDE_DUPLIATE_NETWORKS false  // Should WifiManager hide duplicate SSIDs
+#define HIDE_DUPLICATE_NETWORKS false  // Make WifiManager hide duplicate SSIDs
 // #define MIN_SIGNAL_STRENGTH 20  // Minimum WiFi signal stength (percentage)
                                    // before we will connect.
                                    // The unset default is 8%.
@@ -97,6 +100,11 @@ const uint32_t kMqttReconnectTime = 5000;  // Delay(ms) between reconnect tries.
 #define MQTT_CLIMATE_STAT "stat"  // Sub-topic for the climate stat topics.
 // Enable sending/receiving climate via JSON. `true` cost ~5k of program space.
 #define MQTT_CLIMATE_JSON false
+// Use Home Assistant-style operation modes.
+// i.e. Change the climate mode to "off" when turning the power "off".
+// See: https://www.home-assistant.io/components/climate.mqtt/#modes
+// Change to false, if your home automation system doesn't like this.
+#define MQTT_CLIMATE_HA_MODE true
 // Do we send an IR message when we reboot and recover the existing A/C state?
 // If set to `false` you may miss requested state changes while the ESP was
 // down. If set to `true`, it will resend the previous desired state sent to the
@@ -106,9 +114,15 @@ const uint32_t kMqttReconnectTime = 5000;  // Delay(ms) between reconnect tries.
 
 #define QOS 1  // MQTT broker should queue up any unreceived messages for us
 // #define QOS 0  // MQTT broker WON'T queue up messages for us. Fire & Forget.
+
 // Enable(true)/Disable(false) the option to send a MQTT Discovery message for
-// the AirCon/Climate system to Home Assistant. `false` saves ~1.5k.
+// the AirCon/Climate system to Home Assistant. Note: `false` saves ~1.5k.
 #define MQTT_DISCOVERY_ENABLE true
+// Enable(true)/Disable(false) the option to clear any settings stored in MQTT
+// for this device's current config. e.g. Climate states using MQTT retain.
+// In theory, you shouldn't need this as you can always clean up by hand, hence
+// it is disabled by default. Note: `false` saves ~1.2k.
+#define MQTT_CLEAR_ENABLE false
 #endif  // MQTT_ENABLE
 
 // ------------------------ IR Capture Settings --------------------------------
@@ -156,6 +170,16 @@ const uint16_t kMinUnknownSize = 2 * 10;
 
 // ------------------------ Advanced Usage Only --------------------------------
 
+// Reports the input voltage to the ESP chip. **NOT** the input voltage
+// to the development board (e.g. NodeMCU, D1 Mini etc) which are typically
+// powered by USB (5V) which is then lowered to 3V via a Low Drop Out (LDO)
+// Voltage regulator. Hence, this feature is turned off by default as it
+// make little sense for most users as it really isn't the actual input voltage.
+// E.g. For purposes of monitoring a battery etc.
+// Note: Turning on the feature costs ~250 bytes of prog space.
+#define REPORT_VCC false  // Do we report Vcc via html info page & MQTT?
+
+// Keywords for MQTT topics, html arguments, or config file.
 #define KEY_PROTOCOL "protocol"
 #define KEY_MODEL "model"
 #define KEY_POWER "power"
@@ -175,12 +199,14 @@ const uint16_t kMinUnknownSize = 2 * 10;
 #define KEY_CELSIUS "use_celsius"
 #define KEY_JSON "json"
 #define KEY_RESEND "resend"
+#define KEY_VCC "vcc"
 
 // HTML arguments we will parse for IR code information.
 #define KEY_TYPE "type"  // KEY_PROTOCOL is also checked too.
 #define KEY_CODE "code"
 #define KEY_BITS "bits"
 #define KEY_REPEAT "repeats"
+#define KEY_CHANNEL "channel"  // Which IR TX channel to send on.
 
 // GPIO html/config keys
 #define KEY_TX_GPIO "tx"
@@ -195,6 +221,11 @@ const uint8_t kPortLength = 5;  // Largest value of uint16_t is "65535".
 const uint8_t kUsernameLength = 15;
 const uint8_t kPasswordLength = 20;
 
+// -------------------------- Json Settings ------------------------------------
+
+const uint16_t kJsonConfigMaxSize = 512;    // Bytes
+const uint16_t kJsonAcStateMaxSize = 1024;  // Bytes
+
 // -------------------------- Debug Settings -----------------------------------
 // Debug output is disabled if any of the IR pins are on the TX (D1) pin.
 // See `isSerialGpioUsedByIr()`.
@@ -206,7 +237,7 @@ const uint8_t kPasswordLength = 20;
 // ----------------- End of User Configuration Section -------------------------
 
 // Constants
-#define _MY_VERSION_ "v1.3.4-beta"
+#define _MY_VERSION_ "v1.4.4"
 
 const uint8_t kRebootTime = 15;  // Seconds
 const uint8_t kQuickDisplayTime = 2;  // Seconds
@@ -253,10 +284,13 @@ const char* kUrlGpioSet = "/gpio/set";
 const char* kUrlInfo = "/info";
 const char* kUrlReboot = "/quitquitquit";
 const char* kUrlWipe = "/reset";
+const char* kUrlClearMqtt = "/clear_retained";
 
 #if MQTT_ENABLE
 const uint32_t kBroadcastPeriodMs = MQTTbroadcastInterval * 1000;  // mSeconds.
-const uint32_t kStatListenPeriodMs = 5 * 1000;  // mSeconds
+// How long should we listen to recover for previous states?
+// Default is 5 seconds per IR TX GPIOs (channels) used.
+const uint32_t kStatListenPeriodMs = 5 * 1000 * kNrOfIrTxGpios;  // mSeconds
 const int32_t kMaxPauseMs = 10000;  // 10 Seconds.
 const char* kSequenceDelimiter = ";";
 const char kPauseChar = 'P';
@@ -276,6 +310,12 @@ const char* kClimateTopics =
     "|" KEY_JSON
 #endif  // MQTT_CLIMATE_JSON
     ")<br>";
+const char* kMqttTopics[] = {
+    KEY_PROTOCOL, KEY_MODEL, KEY_POWER, KEY_MODE, KEY_TEMP, KEY_FANSPEED,
+    KEY_SWINGV, KEY_SWINGH, KEY_QUIET, KEY_TURBO, KEY_LIGHT, KEY_BEEP,
+    KEY_ECONO, KEY_SLEEP, KEY_FILTER, KEY_CLEAN, KEY_CELSIUS, KEY_RESEND,
+    KEY_JSON};  // KEY_JSON needs to be the last one.
+
 
 void mqttCallback(char* topic, byte* payload, unsigned int length);
 String listOfCommandTopics(void);
@@ -289,14 +329,18 @@ void receivingMQTT(String const topic_name, String const callback_str);
 void callback(char* topic, byte* payload, unsigned int length);
 void sendMQTTDiscovery(const char *topic);
 void doBroadcast(TimerMs *timer, const uint32_t interval,
-                 const stdAc::state_t state, const bool retain,
+                 IRac *climates[], const bool retain,
                  const bool force);
 #if MQTT_CLIMATE_JSON
-stdAc::state_t jsonToState(const stdAc::state_t current, const String str);
+stdAc::state_t jsonToState(const stdAc::state_t current, const char *str);
 void sendJsonState(const stdAc::state_t state, const String topic,
-                   const bool retain = false, const bool ha_mode = true);
+                   const bool retain = false,
+                   const bool ha_mode = MQTT_CLIMATE_HA_MODE);
 #endif  // MQTT_CLIMATE_JSON
 #endif  // MQTT_ENABLE
+#if REPORT_VCC
+String vccToString(void);
+#endif  // REPORT_VCC
 bool isSerialGpioUsedByIr(void);
 void debug(const char *str);
 void saveWifiConfigCallback(void);
@@ -310,6 +354,7 @@ String gpioToString(const int16_t gpio);
 uint8_t getDefaultIrSendIdx(void);
 IRsend* getDefaultIrSendPtr(void);
 int8_t getDefaultTxGpio(void);
+String genStatTopic(const uint16_t channel = 0);
 String listOfTxGpios(void);
 bool hasUnsafeHTMLChars(String input);
 String htmlHeader(const String title, const String h1_text = "");
@@ -365,12 +410,11 @@ bool sendInt(const String topic, const int32_t num, const bool retain);
 bool sendBool(const String topic, const bool on, const bool retain);
 bool sendString(const String topic, const String str, const bool retain);
 bool sendFloat(const String topic, const float_t temp, const bool retain);
-stdAc::state_t updateClimate(stdAc::state_t current, const String str,
-                              const String prefix, const String payload);
+void updateClimate(stdAc::state_t *current, const String str,
+                   const String prefix, const String payload);
 bool cmpClimate(const stdAc::state_t a, const stdAc::state_t b);
-bool sendClimate(const stdAc::state_t prev, const stdAc::state_t next,
-                 const String topic_prefix, const bool retain,
+bool sendClimate(const String topic_prefix, const bool retain,
                  const bool forceMQTT, const bool forceIR,
-                 const bool enableIR = true);
+                 const bool enableIR = true, IRac *ac = NULL);
 bool decodeCommonAc(const decode_results *decode);
 #endif  // EXAMPLES_IRMQTTSERVER_IRMQTTSERVER_H_

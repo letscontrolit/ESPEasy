@@ -1,5 +1,63 @@
 # Release Notes
 
+## _v2.6.6 (20190923)_
+
+**[Bug Fixes]**
+- Ensure `begin()` is called for every supported common a/c. (#905, #899)
+- IRMQTTServer: Fix JSON state parsing. (#896)
+- IRMQTTServer: Fix compilation error when `MQTT_CLIMATE_JSON` is `true`. (#893)
+
+**[Features]**
+- Mitsubishi136: Full A/C support. (#898, #890)
+- Fujitsu: Add support for ARRY4 remote. (#895)
+- Web-AC-control: Add new WebUI example sketch. (#880, #886)
+- Improve Common A/C API (#913)
+- IRMQTTServer: Support for multiple climates. (#903)
+- IRMQTTServer: Add TX channel support for HTTP interface. (#929)
+- IRMQTTServer: Add option to clear retained settings. (#917)
+- auto_analyse_raw_data.py: Add decode code generation. (#909)
+- auto_analyse_raw_data.py: General improvements (#906)
+
+**[Misc]**
+- IRMQTTServer: Use latest API for common A/C. (#928)
+- IRMQTTServer: Add flag & documentation for Home Assistant mode. (#919)
+- IRMQTTServer: Move from ArduinoJson v5 to v6. (#878)
+- IRMQTTServer: Use retain for discovery message. (#881)
+- Goodweather: Adjust timings & minor fixes. (#924)
+- PanasonicAc: Add better SwingV support for common a/c framework. (#923)
+- Daikin2: Corrections for common A/C interface. (#910)
+- MitsubishiAC: Improve decoding. (#914)
+- Fujitsu: Disable horiz swing for ARRY4. (#907)
+- SamsungAc: Only send power on/off code if it's needed. (#884)
+- Teco: Add timer support. (#883)
+- More consistent A/C `::toString()` output. (#920)
+
+
+## _v2.6.5 (20190828)_
+
+**[Bug Fixes]**
+- IRMQTTServer: Remove duplicate MQTT_CLIMATE from HA discovery (#869)
+- Fujitsu: Ensure `on()` is called in common a/c framework. (#862)
+- Update `strToModel()` (#861)
+- IRMQTTServer: Add missing header file. (#858)
+- IRMQTTServer: Fix a compile error when HTML_PASSWORD_ENABLE is enabled. (#856)
+
+**[Features]**
+- IRrecv: Allow tolerance percentage to be set at run-time. (#865)
+- Basic support for Daikin152 A/C protocol. (#874)
+- Teco: Add light, humid, & save support. (#871)
+- Detailed support for Amcor A/C protocol. (#836, #854)
+- IRMQTTServer: Add ability to report Vcc at the ESP chip. (#845)
+- Gree: Add timer support. (#849)
+- IRac/Mitsubishi A/C: Support wide `swingh_t` mode (#844)
+- IRMQTTServer: Generate protocol and bit size html selects (#838)
+
+**[Misc]**
+- New example code to show how to use the `IRac` class to control A/Cs (#839)
+- Improve/fix `swingh_t::kWide` support (#846)
+- Kelvinator: Optimise code a little to save space. (#843)
+
+
 ## _v2.6.4 (20190726)_
 
 **[Bug Fixes]**

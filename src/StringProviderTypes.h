@@ -1,6 +1,8 @@
 #ifndef STRING_PROVIDER_TYPES_H
 #define STRING_PROVIDER_TYPES_H
 
+#include "ESPEasy_common.h"
+
 struct LabelType;
 //enum LabelType::Enum : short;
 
@@ -99,13 +101,26 @@ String getInternalLabel(LabelType::Enum label);
 String getLabel(LabelType::Enum label);
 String getValue(LabelType::Enum label);
 String getExtendedValue(LabelType::Enum label);
-void stream_next_json_object_value(LabelType::Enum label);
-void stream_last_json_object_value(LabelType::Enum label);
-void addRowLabelValue(LabelType::Enum label);
-void addRowLabelValue_copy(LabelType::Enum label);
-void addFormCheckBox(LabelType::Enum label, boolean checked, bool disabled = false);
-void addFormCheckBox_disabled(LabelType::Enum label, boolean checked);
 
+
+struct FileType {
+enum Enum : short {
+  CONFIG_DAT,
+  SECURITY_DAT,
+  RULES_TXT,
+  NOTIFICATION_DAT
+};
+};
+
+
+String getFileName(FileType::Enum filetype);
+String getFileName(FileType::Enum filetype, unsigned int filenr);
+
+// filenr = 0...3 for files rules1.txt ... rules4.txt
+String getRulesFileName(unsigned int filenr);
+void addDownloadFiletypeCheckbox(FileType::Enum filetype, unsigned int filenr = 0);
+void storeDownloadFiletypeCheckbox(FileType::Enum filetype, unsigned int filenr = 0);
+bool tryDownloadFileType(const String& url, const String& user, const String& pass, FileType::Enum filetype, unsigned int filenr = 0);
 
 
 #endif // STRING_PROVIDER_TYPES_H

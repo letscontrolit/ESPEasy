@@ -495,9 +495,10 @@ TEST(TestGreeClass, HumanReadable) {
   IRGreeAC irgree(0);
 
   EXPECT_EQ(
-      "Model: 1 (YAW1F), Power: Off, Mode: 0 (AUTO), Temp: 25C, Fan: 0 (Auto), "
+      "Model: 1 (YAW1F), Power: Off, Mode: 0 (Auto), Temp: 25C, Fan: 0 (Auto), "
       "Turbo: Off, IFeel: Off, WiFi: Off, XFan: Off, Light: On, Sleep: Off, "
-      "Swing Vertical Mode: Manual, Swing Vertical Pos: 0 (Last Pos)",
+      "Swing(V) Mode: Manual, Swing(V): 0 (Last), "
+      "Timer: Off",
       irgree.toString());
   irgree.on();
   irgree.setMode(kGreeCool);
@@ -510,10 +511,11 @@ TEST(TestGreeClass, HumanReadable) {
   irgree.setIFeel(true);
   irgree.setWiFi(true);
   irgree.setSwingVertical(true, kGreeSwingAuto);
+  irgree.setTimer(12 * 60 + 30);
   EXPECT_EQ(
-      "Model: 1 (YAW1F), Power: On, Mode: 1 (COOL), Temp: 16C, Fan: 3 (High), "
+      "Model: 1 (YAW1F), Power: On, Mode: 1 (Cool), Temp: 16C, Fan: 3 (High), "
       "Turbo: On, IFeel: On, WiFi: On, XFan: On, Light: Off, Sleep: On, "
-      "Swing Vertical Mode: Auto, Swing Vertical Pos: 1 (Auto)",
+      "Swing(V) Mode: Auto, Swing(V): 1 (Auto), Timer: 12:30",
       irgree.toString());
 }
 
@@ -571,9 +573,9 @@ TEST(TestDecodeGree, NormalRealExample) {
   EXPECT_STATE_EQ(gree_code, irsend.capture.state, kGreeBits);
   irgree.setRaw(irsend.capture.state);
   EXPECT_EQ(
-      "Model: 1 (YAW1F), Power: On, Mode: 1 (COOL), Temp: 26C, Fan: 1 (Low), "
+      "Model: 1 (YAW1F), Power: On, Mode: 1 (Cool), Temp: 26C, Fan: 1 (Low), "
       "Turbo: Off, IFeel: Off, WiFi: Off, XFan: Off, Light: On, Sleep: Off, "
-      "Swing Vertical Mode: Manual, Swing Vertical Pos: 2",
+      "Swing(V) Mode: Manual, Swing(V): 2 (UNKNOWN), Timer: Off",
       irgree.toString());
 }
 
@@ -626,9 +628,9 @@ TEST(TestGreeClass, Issue814Power) {
   EXPECT_TRUE(ac.getPower());
   EXPECT_EQ(gree_ac_remote_model_t::YBOFB, ac.getModel());
   EXPECT_EQ(
-      "Model: 2 (YBOFB), Power: On, Mode: 1 (COOL), Temp: 23C, Fan: 1 (Low), "
+      "Model: 2 (YBOFB), Power: On, Mode: 1 (Cool), Temp: 23C, Fan: 1 (Low), "
       "Turbo: Off, IFeel: Off, WiFi: Off, XFan: Off, Light: On, Sleep: Off, "
-      "Swing Vertical Mode: Auto, Swing Vertical Pos: 1 (Auto)",
+      "Swing(V) Mode: Auto, Swing(V): 1 (Auto), Timer: Off",
       ac.toString());
   ac.off();
   EXPECT_STATE_EQ(off, ac.getRaw(), kGreeBits);
@@ -642,4 +644,45 @@ TEST(TestGreeClass, Issue814Power) {
   ac.setModel(gree_ac_remote_model_t::YBOFB);
   ac.on();
   EXPECT_STATE_EQ(YBOFB_on, ac.getRaw(), kGreeBits);
+}
+
+TEST(TestGreeClass, Timer) {
+  IRGreeAC ac(0);
+  ac.begin();
+
+  ac.setTimer(0);
+  EXPECT_FALSE(ac.getTimerEnabled());
+  EXPECT_EQ(0, ac.getTimer());
+
+  ac.setTimer(29);
+  EXPECT_FALSE(ac.getTimerEnabled());
+  EXPECT_EQ(0, ac.getTimer());
+
+  ac.setTimer(30);
+  EXPECT_TRUE(ac.getTimerEnabled());
+  EXPECT_EQ(30, ac.getTimer());
+
+  ac.setTimer(60);
+  EXPECT_TRUE(ac.getTimerEnabled());
+  EXPECT_EQ(60, ac.getTimer());
+
+  ac.setTimer(90);
+  EXPECT_TRUE(ac.getTimerEnabled());
+  EXPECT_EQ(90, ac.getTimer());
+
+  ac.setTimer(10 * 60);
+  EXPECT_TRUE(ac.getTimerEnabled());
+  EXPECT_EQ(10 * 60, ac.getTimer());
+
+  ac.setTimer(23 * 60 + 59);
+  EXPECT_TRUE(ac.getTimerEnabled());
+  EXPECT_EQ(23 * 60 + 30, ac.getTimer());
+
+  ac.setTimer(24 * 60 + 1);
+  EXPECT_TRUE(ac.getTimerEnabled());
+  EXPECT_EQ(24 * 60, ac.getTimer());
+
+  ac.setTimer(24 * 60 + 30);
+  EXPECT_TRUE(ac.getTimerEnabled());
+  EXPECT_EQ(24 * 60, ac.getTimer());
 }

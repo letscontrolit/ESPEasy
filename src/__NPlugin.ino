@@ -149,8 +149,10 @@ byte NPluginCall(byte Function, struct EventStruct *event)
     // Unconditional calls to all plugins
     case NPLUGIN_PROTOCOL_ADD:
       for (x = 0; x < NPLUGIN_MAX; x++)
-        if (NPlugin_id[x] != 0)
-          NPlugin_ptr[x](Function, event, dummyString);
+        if (NPlugin_id[x] != 0) {
+          String dummy;
+          NPlugin_ptr[x](Function, event, dummy);
+        }
       return true;
       break;
   }

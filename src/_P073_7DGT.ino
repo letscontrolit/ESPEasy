@@ -211,7 +211,7 @@ uint8_t P073_mapCharToFontPosition(char character) {
     position = character - '0';
   } else if ((character >= 'A') && (character <= 'Z')) {
     position = character - 'A' + 16;
-  } else if ((character >= 'a') && (character <= 'a')) {
+  } else if ((character >= 'a') && (character <= 'z')) {
     position = character - 'a' + 16;
   } else {
     switch (character) {

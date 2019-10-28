@@ -344,7 +344,8 @@ void checkTime()
 
   if (tm.tm_min != PrevMinutes)
   {
-    PluginCall(PLUGIN_CLOCK_IN, 0, dummyString);
+    String dummy;
+    PluginCall(PLUGIN_CLOCK_IN, 0, dummy);
     PrevMinutes = tm.tm_min;
 
     if (Settings.UseRules)

@@ -34,6 +34,8 @@ Controller Plugins
    ":ref:`C013_page`","|C013_status|","C013"
    ":ref:`C014_page`","|C014_status|","C014"
    ":ref:`C016_page`","|C016_status|","C016"
+   ":ref:`C017_page`","|C017_status|","C017"
+   ":ref:`C018_page`","|C018_status|","C018"
 
 
 Controller Parameters
@@ -59,8 +61,12 @@ before WiFi connection is made or during lost connection.
 - **Max Queue Depth** - Maximum length of the buffer queue to keep unsent messages.
 - **Max Retries** - Maximum number of retries to send a message.
 - **Full Queue Action** - How to handle when queue is full, ignore new or delete oldest message.
-- **Client Timeout** - Timeout in msec for an network connection used by the controller.
 - **Check Reply** - When set to false, a sent message is considered always successful.
+- **Client Timeout** - Timeout in msec for an network connection used by the controller.
+- **Sample Set Initiator** - Some controllers (e.g. C018 LoRa/TTN) can mark samples to belong to a set of samples. A new sample from set task index will increment this counter.
+  Especially useful for controllers which cannot send samples in a burst. This makes the receiving time stamp useless to detect what samples were taken around the same time.
+  The sample set counter value can help matching received samples to a single set.
+
 
 
 Sample ThingSpeak configuration
@@ -91,3 +97,5 @@ MQTT related settings
 - **Controller lwl topic** - Topic to which LWT (Last Will Testament) messages should be sent.
 - **LWT Connect Message** - Connection established message.
 - **LWT Disconnect Message** - Connection lost message (sent to broker during connect and published by broker when connection is lost)
+
+

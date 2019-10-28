@@ -38,6 +38,7 @@
 #endif
 
 
+
 static unsigned long _C015_LastConnectAttempt[CONTROLLER_MAX] = {0,0,0};
 
 void CPlugin_015_handleInterrupt() {
@@ -138,8 +139,10 @@ bool CPlugin_015(byte function, struct EventStruct *event, String& string)
         // Collect the values at the same run, to make sure all are from the same sample
         byte valueCount = getValueCountFromSensorType(event->sensorType);
         C015_queue_element element(event, valueCount);
-        if (ExtraTaskSettings.TaskIndex != event->TaskIndex)
-          PluginCall(PLUGIN_GET_DEVICEVALUENAMES, event, dummyString);
+        if (ExtraTaskSettings.TaskIndex != event->TaskIndex) {
+          String dummy;
+          PluginCall(PLUGIN_GET_DEVICEVALUENAMES, event, dummy);
+        }
 
         for (byte x = 0; x < valueCount; x++)
         {
@@ -188,6 +191,8 @@ bool CPlugin_015(byte function, struct EventStruct *event, String& string)
 // Process Queued Blynk request, with data set to NULL
 //********************************************************************************
 // controller_plugin_number = 015 because of C015
+bool do_process_c015_delay_queue(int controller_plugin_number, const C015_queue_element& element, ControllerSettingsStruct& ControllerSettings);
+
 bool do_process_c015_delay_queue(int controller_plugin_number, const C015_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
   if (!Settings.ControllerEnabled[element.controller_idx])
     // controller has been disabled. Answer true to flush queue.

@@ -46,6 +46,9 @@ bool CPlugin_016(byte function, struct EventStruct *event, String& string)
         Protocol[protocolCount].usesPassword = false;
         Protocol[protocolCount].defaultPort = 80;
         Protocol[protocolCount].usesID = false;
+        Protocol[protocolCount].usesHost = false;
+        Protocol[protocolCount].usesPort = false;
+        Protocol[protocolCount].usesSampleSets = false;
         break;
       }
 
@@ -115,6 +118,8 @@ bool CPlugin_016(byte function, struct EventStruct *event, String& string)
 //********************************************************************************
 // Process the data from the cache
 //********************************************************************************
+bool do_process_c016_delay_queue(int controller_number, const C016_queue_element& element, ControllerSettingsStruct& ControllerSettings);
+
 bool do_process_c016_delay_queue(int controller_number, const C016_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
   return true;
   // FIXME TD-er: Hand over data to wherever it needs to be.

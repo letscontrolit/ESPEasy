@@ -445,7 +445,7 @@ TEST(TestMideaACClass, HumanReadableOutput) {
 
   ac.setRaw(0xA1826FFFFF62);
   EXPECT_EQ(
-      "Power: On, Mode: 2 (AUTO), Celsius: Off, Temp: 25C/77F, Fan: 0 (Auto), "
+      "Power: On, Mode: 2 (Auto), Celsius: Off, Temp: 25C/77F, Fan: 0 (Auto), "
       "Sleep: Off, Swing(V) Toggle: Off", ac.toString());
   ac.off();
   ac.setTemp(25, true);
@@ -453,16 +453,16 @@ TEST(TestMideaACClass, HumanReadableOutput) {
   ac.setMode(kMideaACDry);
   ac.setSleep(true);
   EXPECT_EQ(
-      "Power: Off, Mode: 1 (DRY), Celsius: Off, Temp: 25C/77F, Fan: 3 (High), "
+      "Power: Off, Mode: 1 (Dry), Celsius: Off, Temp: 25C/77F, Fan: 3 (High), "
       "Sleep: On, Swing(V) Toggle: Off", ac.toString());
   ac.setUseCelsius(true);
   EXPECT_EQ(
-      "Power: Off, Mode: 1 (DRY), Celsius: On, Temp: 25C/77F, Fan: 3 (High), "
+      "Power: Off, Mode: 1 (Dry), Celsius: On, Temp: 25C/77F, Fan: 3 (High), "
       "Sleep: On, Swing(V) Toggle: Off", ac.toString());
 
   ac.setRaw(0xA19867FFFF7E);
   EXPECT_EQ(
-      "Power: On, Mode: 0 (COOL), Celsius: Off, Temp: 21C/69F, Fan: 3 (High), "
+      "Power: On, Mode: 0 (Cool), Celsius: Off, Temp: 21C/69F, Fan: 3 (High), "
       "Sleep: Off, Swing(V) Toggle: Off", ac.toString());
 }
 
@@ -705,13 +705,13 @@ TEST(TestMideaACClass, CelsiusRemoteTemp) {
   EXPECT_TRUE(ac.getUseCelsius());
   EXPECT_EQ(on_cool_low_17c, ac.getRaw());
   EXPECT_EQ(
-      "Power: On, Mode: 0 (COOL), Celsius: On, Temp: 17C/62F, Fan: 1 (Low), "
+      "Power: On, Mode: 0 (Cool), Celsius: On, Temp: 17C/62F, Fan: 1 (Low), "
       "Sleep: Off, Swing(V) Toggle: Off", ac.toString());
   ac.setRaw(on_cool_low_17c);
   EXPECT_EQ(17, ac.getTemp(true));
   EXPECT_EQ(62, ac.getTemp(false));
   EXPECT_EQ(
-      "Power: On, Mode: 0 (COOL), Celsius: On, Temp: 17C/62F, Fan: 1 (Low), "
+      "Power: On, Mode: 0 (Cool), Celsius: On, Temp: 17C/62F, Fan: 1 (Low), "
       "Sleep: Off, Swing(V) Toggle: Off", ac.toString());
   ac.setTemp(17, true);
   EXPECT_EQ(17, ac.getTemp(true));
@@ -720,7 +720,7 @@ TEST(TestMideaACClass, CelsiusRemoteTemp) {
 
   ac.setRaw(on_cool_low_30c);
   EXPECT_EQ(
-      "Power: On, Mode: 0 (COOL), Celsius: On, Temp: 30C/86F, Fan: 1 (Low), "
+      "Power: On, Mode: 0 (Cool), Celsius: On, Temp: 30C/86F, Fan: 1 (Low), "
       "Sleep: Off, Swing(V) Toggle: Off", ac.toString());
 }
 
@@ -732,13 +732,44 @@ TEST(TestMideaACClass, SwingV) {
   ac.setSwingVToggle(true);
   ASSERT_TRUE(ac.getSwingVToggle());
   EXPECT_EQ(
-      "Power: On, Mode: 2 (AUTO), Celsius: Off, Temp: 25C/77F, Fan: 0 (Auto), "
+      "Power: On, Mode: 2 (Auto), Celsius: Off, Temp: 25C/77F, Fan: 0 (Auto), "
       "Sleep: Off, Swing(V) Toggle: On", ac.toString());
   ac.setSwingVToggle(false);
   ASSERT_FALSE(ac.getSwingVToggle());
   EXPECT_EQ(
-      "Power: On, Mode: 2 (AUTO), Celsius: Off, Temp: 25C/77F, Fan: 0 (Auto), "
+      "Power: On, Mode: 2 (Auto), Celsius: Off, Temp: 25C/77F, Fan: 0 (Auto), "
       "Sleep: Off, Swing(V) Toggle: Off", ac.toString());
   ac.setRaw(kMideaACToggleSwingV);
   EXPECT_EQ("Swing(V) Toggle: On", ac.toString());
+}
+
+// Test abusing the protocol for sending 6 arbitary bytes.
+// See https://github.com/crankyoldgit/IRremoteESP8266/issues/887
+TEST(TestDecodeMidea, Issue887) {
+  IRsendTest irsend(0);
+  IRrecv irrecv(0);
+  irsend.begin();
+  irsend.reset();
+
+  uint64_t hwaddr = 0x1234567890AB;  // 48bits doen't conform to Midea checksum
+
+  irsend.sendMidea(hwaddr);
+  irsend.makeDecodeResult();
+
+  // Test normal operation, it shouldn't match.
+  EXPECT_TRUE(irrecv.decode(&irsend.capture));
+  EXPECT_NE(MIDEA, irsend.capture.decode_type);
+  irsend.reset();
+  irsend.sendMidea(hwaddr);
+  irsend.makeDecodeResult();
+  EXPECT_FALSE(irrecv.decodeMidea(&irsend.capture));
+
+  // Now test it with Midea's strict processing turned off!
+  irsend.reset();
+  irsend.sendMidea(hwaddr);
+  irsend.makeDecodeResult();
+  EXPECT_TRUE(irrecv.decodeMidea(&irsend.capture, kMideaBits, false));
+  EXPECT_EQ(MIDEA, irsend.capture.decode_type);
+  EXPECT_EQ(kMideaBits, irsend.capture.bits);
+  EXPECT_EQ(hwaddr, irsend.capture.value);
 }

@@ -12,10 +12,11 @@
 //---IRSEND: That commands format is: IRSEND,<protocol>,<data>,<bits>,<repeat>
 // bits and repeat default to 0 if not used and they are optional
 // For protocols RAW and RAW2 there is no bits and repeat part, they are supposed to be replayed as they are calculated by a Google docs sheet or by plugin P016
-//---IRSENDAC: That commands format is: IRSENDAC,{"Protocol":"COOLIX","Power":"on","Opmode":"dry","Fanspeed":"auto","Degrees":22,"Swingv":"max","Swingh":"off"}
+//---IRSENDAC: That commands format is: IRSENDAC,{"protocol":"COOLIX","power":"on","mode":"dry","fanspeed":"auto","temp":22,"swingv":"max","swingh":"off"}
+//--- The JSON keys are case sensitive and allways small case. The JSON data are case insensitive
 // The possible values
 // Protocols: Argo Coolix Daikin Fujitsu Haier Hitachi Kelvinator Midea Mitsubishi MitsubishiHeavy Panasonic Samsung Sharp Tcl Teco Toshiba Trotec Vestel Whirlpool
-//---Opmodes:      ---Fanspeed:   --Swingv:       --Swingh:
+//---opmodes:      ---fanspeed:   --swingv:       --swingh:
 // - "off"          - "auto"       - "off"         - "off"
 // - "auto"         - "min"        - "auto"        - "auto"
 // - "cool"         - "low"        - "highest"     - "leftmax"
@@ -23,11 +24,14 @@
 // - "dry"          - "high"       - "middle"      - "middle"
 // - "fan_only"     - "max"        - "low"         - "right"
 //                                 - "lowest"      - "rightmax"
+//                                                 - "wide"
 // "on" - "off" parameters are:
-// - "Power" - "Celsius" - "Quiet" - "Turbo" - "Econo" - "Light" - "Filter" - "Clean" - "Light" - "Beep"
+// - "power" - "celsius" - "quiet" - "turbo" - "econo" - "light" - "filter" - "clean" - "light" - "beep"
 // If celcius is set to "off" then farenheit will be used
-// - "Sleep" Nr. of mins of sleep mode, or use sleep mode. (<= 0 means off.)
-// - "Clock" Nr. of mins past midnight to set the clock to. (< 0 means off.)
+// - "sleep" Nr. of mins of sleep mode, or use sleep mode. (<= 0 means off.)
+// - "clock" Nr. of mins past midnight to set the clock to. (< 0 means off.)
+// - "model" . Nr or string representation of the model. Better to find it throught P016 - IR RX (0 means default.)
+
 #include <IRremoteESP8266.h>
 #include <IRac.h>
 #include <IRutils.h>
@@ -156,7 +160,7 @@ boolean Plugin_035(byte function, struct EventStruct *event, String &string)
         IrType_orig = TmpStr1;
         IrType.toLowerCase();
       }
-
+#ifdef P016_P035_USE_RAW_RAW2
       if (IrType.equals(F("raw")) || IrType.equals(F("raw2")))
       {
         String IrRaw;
@@ -332,7 +336,8 @@ boolean Plugin_035(byte function, struct EventStruct *event, String &string)
         //sprintf_P(log, PSTR("IR Params2: RAW Code:%s"), IrRaw.c_str());
         //addLog(LOG_LEVEL_INFO, log);
       }
-      else if (cmdCode.equalsIgnoreCase(F("IRSEND")))
+      else
+      #endif //P016_P035_USE_RAW_RAW2
       {
         uint16_t IrRepeat = 0;
         //  unsigned long IrSecondCode=0UL;
@@ -391,7 +396,7 @@ boolean Plugin_035(byte function, struct EventStruct *event, String &string)
 
         String tempstr = "";
         tempstr = doc[F("model")].as<String>();
-        uint16_t model = IRac::strToModel(tempstr.c_str()); //The specific model of A/C if applicable. //strToModel();. Defaults to -1 (unknown) if missing from JSON
+        uint16_t model = IRac::strToModel(tempstr.c_str(),-1); //The specific model of A/C if applicable. //strToModel();. Defaults to -1 (unknown) if missing from JSON
         tempstr = doc[F("power")].as<String>();
         bool power = IRac::strToBool(tempstr.c_str(), false); //POWER ON or OFF. Defaults to false if missing from JSON
         float degrees = doc[F("temp")] | 22.0;                //What temperature should the unit be set to?. Defaults to 22c if missing from JSON

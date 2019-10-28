@@ -118,6 +118,87 @@ Show JSON
 Timing Stats
 ============
 
+The timing stats page is a diagnostics tool to help pinpoint possible causes for issues a user may experience.
+
+Throughout the code timing statistics are collected.
+These can be represented in one big table with these columns:
+
+- Description  - Name of the function/plugin/controller being monitored
+- Function     - For plugins and controllers, the function call of that item
+- #calls       - Number of times seen.
+- call/sec     - Number of calls per second.
+- min (ms)     - Minimum duration in msec.
+- Avg (ms)     - Average duration in msec.
+- max (ms)     - Maximum duration in msec.
+
+Please note that every time the timing stats page is loaded, the statistics will be reset.
+So the statistics in the table reflect the period mentioned at the bottom of the page.
+
+Interpret Statistics
+--------------------
+
+All timing values over 100 msec will be marked in bold.
+To further help pinpoint some of these extremes, any row containing a bold timing is also given a green hue.
+
+These are just some indicators where actions may take longer than optimal, 
+but it should not be considered as faulty when some value exceeds 100 msec.
+Sometimes there is a perfectly fine explanation, like when a host is contacted on the other side of the globe.
+
+Some function names give a good indication on how frequent they should be run.
+For example ``FIFTY_PER_SECOND`` or ``TEN_PER_SECOND`` should be run at 50x/sec, resp. 10x/sec.
+
+If these values differ substantially, something may be keeping the unit occupied.
+
+Please note that if multiple instances of the same plugin are active, the number of calls per second should also be higher.
+
+Also the number of samples should be large enough to be able to be useful.
+For example if the ``ONCE_A_SECOND`` function is only observed once over a time interval of 1.99 second, it will be shown as a frequency of about 0.5 calls/sec.
+That would seem much less than expected, but it fact it is perfectly fine.
+
+
+As noted, it is to be preferred if no scheduled action on the node takes over 100 msec.
+Some plugins, like OLED Framed may take more to update the display. Especially when scrolling is enabled.
+
+But for other plugins it may deserve some attention if a plugin (almost) always takes over 100 msec to perform an action.
+For example when minimum, average and maximum timing values are very close to each other, 
+then there may be reason to look into the plugin (or controller) to see if things can be improved.
+
+For stable WiFi connection, every now and then a call to ``yield()`` or ``delay()`` should be made.
+The time between such calls should be less than 10 msec.
+So if some code execution does take longer than 10 msec, it must also make sure to call yield() every now and then.
+
+When some entries in the timing stats happen frequently and take over 100 msec, 
+then they will for sure affect other plugins and controllers active on the same node.
+This is also a very good reason to try and keep the timing stats values as low as possible.
+
+
+
+Typical Outliers
+----------------
+
+Some of the timing stats are "nested".
+For example the ``loop()`` function is probably the row with the largest maximum timing value, since all other functions are called from the loop.
+
+The same applies for the two ``handle_schedule()`` functions. These either call scheduled actions to do, or things to be done when idle.
+
+Both the ``loop()`` and the ``handle_schedule()`` functions are called very often.
+Given enough time, their count value will be high, or even overflow since they are a 32-bit integer.
+When this happens, the values for calls/sec or avg will be no longer useful.
+
+A really busy node (CPU load > 75%) may drop a few scheduled calls in order to keep up.
+This will be noticable in low values for calls/sec of the most frequently called functions like ``FIFTY_PER_SECOND`` or ``TEN_PER_SECOND``.
+
+
+Tweaking Timeout using Timing Stats
+-----------------------------------
+
+As an example to tweak timing settings, take the time needed of one of the active controllers.
+Lets assume the average time needed to contact such a controller is 30 msec.
+Then it does not make sense to have the client timeout of that controller set to 1000 msec.
+2x - 3x the average time is often a perfectly fine value to use as a timeout.
+
+
+
 System Variables
 ================
 
@@ -148,3 +229,64 @@ For example, the Sonoff POW modules will not be selectable on a module with 1 MB
 and the Sonoff Basic cannot be selected on a board with 4 MB flash.
 
 .. warning:: Pressing the red "Factory Reset" button will immediately perform the reset with the set selection.
+
+
+Settings Archive
+================
+
+(Only available for core 2.5.0 and newer)
+
+ESPeasy does not support an "undo" when it comes to settings.
+Also cloning the settings of a node can be a lot of work.
+
+The Settings Archive is an initial step to help cloning settings or reverting to an older version of the settings.
+To revert to an older version, one still has to have a backup of the settings stored on some server which is accessible via HTTP.
+
+Later the (automatic) upload of settings will be added, including encryption.
+
+Download Settings
+-----------------
+
+.. image:: images/SettingsArchive_download1.png
+
+In order to download settings files, one has to select which ones to download and from where.
+In the example shown here, the notification settings and rules were cloned from another ESPeasy node.
+This other node is protected using a login, just to show basic authentication is also allowed.
+
+Due to the needed memory resources, it is not possible to download from HTTPS.
+This also meand the settings file and credentials are sent in plain text. 
+So do not use this to download settings with sensitive information directly from the internet.
+
+On some nodes the remaining free space on the SPIFFS filesystem may be too small to keep the original file and a downloaded version.
+For example on 1MB nodes, there is only 120k SPIFFS, which means it is not possible to have the ''config.dat'' file stored twice on the filesystem.
+
+For these, the "Delete First" checkbox should be used.
+But be aware that the file is deleted first, even if the host holding the files to download is unavailable.
+
+Better try first with a smaller file on such nodes.
+Especially if the node is hard to reach for a proper clean setup.
+
+.. image:: images/SettingsArchive_download2.png
+
+After downloading the files, a summary is given.
+A returned error can be something like 404 (file not available) or 401 (not authorized).
+These are the standard HTTP error codes.
+
+If ''config.dat'' or ''security.dat'' was downloaded, it is very important to do a reboot and not try to change (and save) anything on the ESPeasy node.
+The old settings are still active in memory and if something will be saved, only the changed part may be saved.
+This would corrupt the settings file.
+
+
+Side Effects on cloning
+-----------------------
+
+Please note that cloning settings from another node may have some side effects.
+For example the host name and unit number will be the same.
+But also the controllers will be active and may start sending incorrect data.
+
+Controller credentials may also be used on multiple nodes, which may also lead to various issues.
+
+If the original node is configured to use static IP, the clone will use the same IP address.
+This can render both inaccessible.
+
+

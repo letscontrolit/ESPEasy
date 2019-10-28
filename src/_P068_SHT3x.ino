@@ -189,6 +189,7 @@ boolean Plugin_068(byte function, struct EventStruct *event, String& string)
 		{
 			SHT3X* sht3x = static_cast<SHT3X*>(getPluginTaskData(event->TaskIndex));
 			if (nullptr == sht3x) {
+				addLog(LOG_LEVEL_ERROR, F("SHT3x: not initialised!"));
 			  return success;
 			}
 

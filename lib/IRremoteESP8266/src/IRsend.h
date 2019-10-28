@@ -49,6 +49,8 @@ namespace stdAc {
     kHeat =  2,
     kDry  =  3,
     kFan  =  4,
+    // Add new entries before this one, and update it to point to the last entry
+    kLastOpmodeEnum = kFan,
   };
 
   enum class fanspeed_t {
@@ -58,6 +60,8 @@ namespace stdAc {
     kMedium = 3,
     kHigh =   4,
     kMax =    5,
+    // Add new entries before this one, and update it to point to the last entry
+    kLastFanspeedEnum = kMax,
   };
 
   enum class swingv_t {
@@ -68,6 +72,8 @@ namespace stdAc {
     kMiddle =  3,
     kLow =     4,
     kLowest =  5,
+    // Add new entries before this one, and update it to point to the last entry
+    kLastSwingvEnum = kLowest,
   };
 
   enum class swingh_t {
@@ -78,7 +84,9 @@ namespace stdAc {
     kMiddle =   3,
     kRight =    4,
     kRightMax = 5,
-    kWide =     6,
+    kWide =     6,  // a.k.a. left & right at the same time.
+    // Add new entries before this one, and update it to point to the last entry
+    kLastSwinghEnum = kWide,
   };
 
   // Structure to hold a common A/C state.
@@ -103,6 +111,36 @@ namespace stdAc {
     int16_t clock;
   } state_t;
 };  // namespace stdAc
+
+
+enum fujitsu_ac_remote_model_t {
+  ARRAH2E = 1,  // (1) AR-RAH2E, AR-RAC1E, AR-RAE1E (Default)
+  ARDB1,        // (2) AR-DB1, AR-DL10 (AR-DL10 swing doesn't work)
+  ARREB1E,      // (3) AR-REB1E
+  ARJW2,        // (4) AR-JW2  (Same as ARDB1 but with horiz control)
+  ARRY4,        // (5) AR-RY4 (Same as AR-RAH2E but with clean & filter)
+};
+
+enum gree_ac_remote_model_t {
+  YAW1F = 1,  // (1) Ultimate, EKOKAI, RusClimate (Default)
+  YBOFB,     // (2) Green, YBOFB2, YAPOF3
+};
+
+enum panasonic_ac_remote_model_t {
+  kPanasonicUnknown = 0,
+  kPanasonicLke = 1,
+  kPanasonicNke = 2,
+  kPanasonicDke = 3,
+  kPanasonicJke = 4,
+  kPanasonicCkp = 5,
+  kPanasonicRkr = 6,
+};
+
+enum whirlpool_ac_remote_model_t {
+  DG11J13A = 1,  // DG11J1-04 too
+  DG11J191,
+};
+
 
 // Classes
 class IRsend {
@@ -267,6 +305,11 @@ class IRsend {
   void sendMitsubishi(uint64_t data, uint16_t nbits = kMitsubishiBits,
                       uint16_t repeat = kMitsubishiMinRepeat);
 #endif
+#if SEND_MITSUBISHI136
+  void sendMitsubishi136(const unsigned char data[],
+                         const uint16_t nbytes = kMitsubishi136StateLength,
+                         const uint16_t repeat = kMitsubishi136MinRepeat);
+#endif
 #if SEND_MITSUBISHI2
   void sendMitsubishi2(uint64_t data, uint16_t nbits = kMitsubishiBits,
                        uint16_t repeat = kMitsubishiMinRepeat);
@@ -312,6 +355,11 @@ class IRsend {
                      const uint16_t nbytes = kDaikin128StateLength,
                      const uint16_t repeat = kDaikin128DefaultRepeat);
 #endif  // SEND_DAIKIN128
+#if SEND_DAIKIN152
+  void sendDaikin152(const unsigned char data[],
+                     const uint16_t nbytes = kDaikin152StateLength,
+                     const uint16_t repeat = kDaikin152DefaultRepeat);
+#endif  // SEND_DAIKIN152
 #if SEND_DAIKIN160
   void sendDaikin160(const unsigned char data[],
                      const uint16_t nbytes = kDaikin160StateLength,

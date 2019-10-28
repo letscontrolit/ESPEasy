@@ -1,3 +1,8 @@
+#include "src/Globals/RTC.h"
+#include "src/DataStructs/RTCStruct.h"
+#include "src/DataStructs/EventValueSource.h"
+#include "src/Globals/Device.h"
+
 #define TIMER_ID_SHIFT    28
 
 #define SYSTEM_EVENT_QUEUE   0 // Not really a timer.
@@ -5,6 +10,7 @@
 #define PLUGIN_TASK_TIMER    2
 #define TASK_DEVICE_TIMER    3
 #define GPIO_TIMER           4
+
 
 #include <list>
 struct EventStructCommandWrapper {
@@ -214,7 +220,9 @@ void process_interval_timer(unsigned long id, unsigned long lasttimer) {
       break;
     case TIMER_1SEC:             runOncePerSecond();      break;
     case TIMER_30SEC:            runEach30Seconds();      break;
+#ifdef USES_MQTT
     case TIMER_MQTT:             runPeriodicalMQTT();     break;
+#endif //USES_MQTT    
     case TIMER_STATISTICS:       logTimerStatistics();    break;
     case TIMER_GRATUITOUS_ARP:
 
@@ -229,7 +237,9 @@ void process_interval_timer(unsigned long id, unsigned long lasttimer) {
         sendGratuitousARP();
       }
       break;
+#ifdef USES_MQTT      
     case TIMER_MQTT_DELAY_QUEUE: processMQTTdelayQueue(); break;
+#endif //USES_MQTT
   #ifdef USES_C001
     case TIMER_C001_DELAY_QUEUE:
       process_c001_delay_queue();
@@ -308,13 +318,11 @@ void process_interval_timer(unsigned long id, unsigned long lasttimer) {
       break;
   #endif // ifdef USES_C017
 
-      /*
-       #ifdef USES_C018
-          case TIMER_C018_DELAY_QUEUE:
-            process_c018_delay_queue();
-            break;
-       #endif
-       */
+  #ifdef USES_C018
+    case TIMER_C018_DELAY_QUEUE:
+      process_c018_delay_queue();
+      break;
+  #endif
 
       /*
        #ifdef USES_C019
@@ -332,8 +340,8 @@ void process_interval_timer(unsigned long id, unsigned long lasttimer) {
        #endif
        */
 
-      // When extending this, also extend in _CPlugin_Helper.h
-      // Look for DEFINE_Cxxx_DELAY_QUEUE_MACRO
+      // When extending this, also extend in DelayQueueElements.h
+      // Also make sure to extend the "TIMER_C020_DELAY_QUEUE" list of defines.
   }
 }
 
@@ -383,7 +391,7 @@ void process_plugin_task_timer(unsigned long id) {
 
   // TD-er: Not sure if we have to keep original source for notifications.
   TempEvent.Source = VALUE_SOURCE_SYSTEM;
-  const int y = getPluginId(timer_data.TaskIndex);
+  const int y = getPluginId_from_TaskIndex(timer_data.TaskIndex);
 
   /*
      String log = F("proc_system_timer: Pluginid: ");
@@ -458,6 +466,7 @@ void schedule_all_task_device_timers() {
   }
 }
 
+#ifdef USES_MQTT
 void schedule_all_tasks_using_MQTT_controller() {
   int ControllerIndex = firstEnabledMQTTController();
 
@@ -472,6 +481,7 @@ void schedule_all_tasks_using_MQTT_controller() {
     }
   }
 }
+#endif //USES_MQTT
 
 void schedule_task_device_timer(unsigned long task_index, unsigned long runAt) {
   /*

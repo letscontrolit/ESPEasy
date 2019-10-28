@@ -76,12 +76,12 @@ bool CPlugin_011(byte function, struct EventStruct *event, String& string)
         {
           String escapeBuffer = customConfig.HttpHeader;
           htmlEscape(escapeBuffer);
-          addFormTextBox(F("HTTP Header"), F("P011httpheader"), escapeBuffer, C011_HTTP_HEADER_MAX_LEN-1);
+          addFormTextArea(F("HTTP Header"), F("P011httpheader"), escapeBuffer, C011_HTTP_HEADER_MAX_LEN-1, 4, 50);
         }
         {
           String escapeBuffer = customConfig.HttpBody;
           htmlEscape(escapeBuffer);
-          addFormTextBox(F("HTTP Body"), F("P011httpbody"), escapeBuffer, C011_HTTP_BODY_MAX_LEN-1);
+          addFormTextArea(F("HTTP Body"), F("P011httpbody"), escapeBuffer, C011_HTTP_BODY_MAX_LEN-1, 8, 50);
         }
         break;
       }
@@ -89,12 +89,20 @@ bool CPlugin_011(byte function, struct EventStruct *event, String& string)
     case CPLUGIN_WEBFORM_SAVE:
       {
         C011_ConfigStruct customConfig;
-        String httpmethod = WebServer.arg(F("P011httpmethod"));
+        byte choice = 0;
+        String methods[] = { F("GET"), F("POST"), F("PUT"), F("HEAD"), F("PATCH") };
+        for (byte i = 0; i < 5; i++)
+        {
+          if (methods[i].equals(customConfig.HttpMethod)) {
+            choice = i;
+          }
+        }
+        int httpmethod = getFormItemInt(F("P011httpmethod"), choice);
         String httpuri = WebServer.arg(F("P011httpuri"));
         String httpheader = WebServer.arg(F("P011httpheader"));
         String httpbody = WebServer.arg(F("P011httpbody"));
 
-        strlcpy(customConfig.HttpMethod, httpmethod.c_str(), sizeof(customConfig.HttpMethod));
+        strlcpy(customConfig.HttpMethod, methods[httpmethod].c_str(), sizeof(customConfig.HttpMethod));
         strlcpy(customConfig.HttpUri, httpuri.c_str(), sizeof(customConfig.HttpUri));
         strlcpy(customConfig.HttpHeader, httpheader.c_str(), sizeof(customConfig.HttpHeader));
         strlcpy(customConfig.HttpBody, httpbody.c_str(), sizeof(customConfig.HttpBody));
@@ -123,6 +131,8 @@ bool CPlugin_011(byte function, struct EventStruct *event, String& string)
 //********************************************************************************
 // Generic HTTP request
 //********************************************************************************
+bool do_process_c011_delay_queue(int controller_number, const C011_queue_element& element, ControllerSettingsStruct& ControllerSettings);
+
 bool do_process_c011_delay_queue(int controller_number, const C011_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
   WiFiClient client;
   if (!try_connect_host(controller_number, client, ControllerSettings))
@@ -151,8 +161,10 @@ boolean Create_schedule_HTTP_C011(struct EventStruct *event)
   if (!try_connect_host(controller_number, client, ControllerSettings))
     return false;
 
-  if (ExtraTaskSettings.TaskIndex != event->TaskIndex)
-    PluginCall(PLUGIN_GET_DEVICEVALUENAMES, event, dummyString);
+  if (ExtraTaskSettings.TaskIndex != event->TaskIndex) {
+    String dummy;
+    PluginCall(PLUGIN_GET_DEVICEVALUENAMES, event, dummy);
+  }
 
   String payload = create_http_request_auth(
     controller_number, event->ControllerIndex, ControllerSettings,

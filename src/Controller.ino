@@ -1,3 +1,5 @@
+#include "src/Globals/Device.h"
+
 // ********************************************************************************
 
 // Interface for Sending to Controllers
@@ -53,7 +55,8 @@ void sendData(struct EventStruct *event)
       event->ProtocolIndex = getProtocolIndex(Settings.Protocol[event->ControllerIndex]);
 
       if (validUserVar(event)) {
-        CPluginCall(event->ProtocolIndex, CPLUGIN_PROTOCOL_SEND, event, dummyString);
+        String dummy;
+        CPluginCall(event->ProtocolIndex, CPLUGIN_PROTOCOL_SEND, event, dummy);
       }
 #ifndef BUILD_NO_DEBUG
       else {
@@ -70,7 +73,10 @@ void sendData(struct EventStruct *event)
   }
 
   // FIXME TD-er: This PLUGIN_EVENT_OUT seems to be unused.
-  PluginCall(PLUGIN_EVENT_OUT, event, dummyString);
+  {
+    String dummy;
+    PluginCall(PLUGIN_EVENT_OUT, event, dummy);
+  }
   lastSend = millis();
   STOP_TIMER(SEND_DATA_STATS);
 }
@@ -94,6 +100,7 @@ bool validUserVar(struct EventStruct *event) {
   return true;
 }
 
+#ifdef USES_MQTT
 /*********************************************************************************************\
 * Handle incoming MQTT messages
 \*********************************************************************************************/
@@ -108,7 +115,7 @@ void callback(char *c_topic, byte *b_payload, unsigned int length) {
     return;
   }
 
-  if (length > 384)
+  if (length > MQTT_MAX_PACKET_SIZE)
   {
     addLog(LOG_LEVEL_ERROR, F("MQTT : Ignored too big message"));
     return;
@@ -317,6 +324,7 @@ bool MQTTCheck(int controller_idx)
   // When no MQTT protocol is enabled, all is fine.
   return true;
 }
+#endif //USES_MQTT
 
 /*********************************************************************************************\
 * Send status info to request source
@@ -343,15 +351,18 @@ void SendStatus(byte source, const String& status)
         printWebString += status;
       }
       break;
+#ifdef USES_MQTT
     case VALUE_SOURCE_MQTT:
       MQTTStatus(status);
       break;
+#endif //USES_MQTT
     case VALUE_SOURCE_SERIAL:
       serialPrintln(status);
       break;
   }
 }
 
+#ifdef USES_MQTT
 boolean MQTTpublish(int controller_idx, const char *topic, const char *payload, boolean retained)
 {
   const bool success = MQTTDelayHandler.addToQueue(MQTT_queue_element(controller_idx, topic, payload, retained));
@@ -405,3 +416,4 @@ void MQTTStatus(const String& status)
     MQTTpublish(enabledMqttController, pubname.c_str(), status.c_str(), Settings.MQTTRetainFlag);
   }
 }
+#endif //USES_MQTT

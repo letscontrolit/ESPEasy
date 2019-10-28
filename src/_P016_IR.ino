@@ -16,7 +16,7 @@
 //
 // IF the IR code is an Air Condition protocol that the  IR library can decode, then there will be a human-readable description of that IR message.
 // If the IR library can encode those kind of messages then a JSON formated command will be given, that can be replayed by P035 as well.
-// That commands format is: IRSENDAC,{"Protocol":"COOLIX","Power":"on","Opmode":"dry","Fanspeed":"auto","Degrees":22,"swingv":"max","swingh":"off"}
+// That commands format is: IRSENDAC,{"protocol":"COOLIX","power":"on","mode":"dry","fanspeed":"auto","temp":22,"swingv":"max","swingh":"off"}
 #include <IRremoteESP8266.h>
 #include <IRutils.h>
 #include <IRrecv.h>
@@ -192,7 +192,11 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
         addLog(LOG_LEVEL_INFO, String(F("IRSEND,")) + typeToString(results.decode_type, results.repeat) + ',' + resultToHexidecimal(&results) + ',' + uint64ToString(results.bits)); //Show the appropriate command to the user, so he can replay the message via P035
       }
       //Check if a solution for RAW2 is found and if not give the user the option to access the timings info.
-      if (results.decode_type == decode_type_t::UNKNOWN && !displayRawToReadableB32Hex())
+      if (results.decode_type == decode_type_t::UNKNOWN 
+      #ifdef P016_P035_USE_RAW_RAW2
+       && !displayRawToReadableB32Hex()
+      #endif
+      )
       {
         addLog(LOG_LEVEL_INFO, F("IR: No replay solutions found! Press button again or try RAW encoding (timmings are in the serial output)"));
         serialPrint(String(F("IR: RAW TIMINGS: ")) + resultToSourceCode(&results));
@@ -234,7 +238,7 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
         //Checks if a particular state is something else than the default and only then it adds it to the JSON document
         doc[F("protocol")] = typeToString(state.protocol);
         if (state.model >= 0)
-          doc[F("model")] = IRac::strToModel(String(state.model).c_str()); //The specific model of A/C if applicable.
+          doc[F("model")] = irutils::modelToStr(state.protocol,state.model); //The specific model of A/C if applicable.
         doc[F("power")] = IRac::boolToString(state.power);                 //POWER ON or OFF
         doc[F("mode")] = IRac::opmodeToString(state.mode);                 //What operating mode should the unit perform? e.g. Cool = doc[""]; Heat etc.
         doc[F("temp")] = state.degrees;                                    //What temperature should the unit be set to?
@@ -298,7 +302,7 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
 // by GusPS is that it allows easy inspections and modifications after the code is constructed.
 //
 // Author: Gilad Raz (jazzgil)  23sep2018
-
+#ifdef P016_P035_USE_RAW_RAW2
 boolean displayRawToReadableB32Hex()
 {
   String line;
@@ -425,5 +429,6 @@ unsigned int storeB32Hex(char out[], unsigned int iOut, unsigned int val)
   out[iOut++] = to_32hex(val);
   return iOut;
 }
+#endif //P016_P035_RAW_RAW2
 
 #endif // USES_P016

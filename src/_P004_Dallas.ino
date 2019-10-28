@@ -22,8 +22,10 @@
 #define P004_ERROR_MAX_RANGE  3
 #define P004_ERROR_IGNORE     4
 
-
 uint8_t Plugin_004_reset_time = 0;
+
+static boolean Plugin_004_newValue[TASKS_MAX];
+static unsigned long Plugin_004_timeoutGPIO[MAX_GPIO];
 
 boolean Plugin_004(byte function, struct EventStruct *event, String& string)
 {
@@ -169,12 +171,8 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
       int8_t Plugin_004_DallasPin = CONFIG_PIN1;
 
       if (Plugin_004_DallasPin != -1) {
-        uint8_t addr[8];
-        Plugin_004_get_addr(addr, event->TaskIndex);
-        Plugin_004_DS_startConversion(addr, Plugin_004_DallasPin);
-
-        // FIXME TD-er: Must introduce some internal state to get rid of such long delays
-        delay(800); //give it time to do intial conversion        
+        Plugin_004_timeoutGPIO[Plugin_004_DallasPin] = millis();
+        Plugin_004_newValue[event->TaskIndex] = false;
       }
       success = true;
       break;
@@ -189,6 +187,15 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
         int8_t Plugin_004_DallasPin = CONFIG_PIN1;
 
         if (Plugin_004_DallasPin != -1) {
+          if (!timeOutReached(Plugin_004_timeoutGPIO[Plugin_004_DallasPin])){
+              schedule_task_device_timer(event->TaskIndex, Plugin_004_timeoutGPIO[Plugin_004_DallasPin]);
+          } else {
+          if (!Plugin_004_newValue[event->TaskIndex]){
+              Plugin_004_DS_startConversion(addr, Plugin_004_DallasPin);
+              schedule_task_device_timer(event->TaskIndex, Plugin_004_timeoutGPIO[Plugin_004_DallasPin]);
+              Plugin_004_newValue[event->TaskIndex] = true;
+          } else {
+          Plugin_004_newValue[event->TaskIndex] = false;
           float  value = 0;
           String log   = F("DS   : Temperature: ");
 
@@ -214,9 +221,8 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
             }
             log += F("Error!");
           }
-          Plugin_004_DS_startConversion(addr, Plugin_004_DallasPin);
 
-          log += (" (");
+          log += F(" (");
 
           for (byte x = 0; x < 8; x++)
           {
@@ -228,7 +234,9 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
 
           log += ')';
           addLog(LOG_LEVEL_INFO, log);
+          }
         }
+      }
       }
       break;
     }
@@ -244,6 +252,12 @@ void Plugin_004_get_addr(uint8_t addr[], byte TaskIndex)
   for (byte x = 0; x < 8; x++) {
     addr[x] = ExtraTaskSettings.TaskDevicePluginConfigLong[x];
   }
+}
+
+void Plugin_004_set_timeout(int res, int8_t Plugin_004_DallasPin)
+{
+  if (res < 9 || res >12)  res = 12;
+  Plugin_004_timeoutGPIO[Plugin_004_DallasPin] = millis()+(800/(1<<(12-res)));
 }
 
 /*********************************************************************************************\
@@ -279,7 +293,7 @@ bool Plugin_004_DS_is_parasite(uint8_t ROM[8], int8_t Plugin_004_DallasPin)
 }
 
 /*********************************************************************************************\
-*  Dallas Start Temperature Conversion, expected duration:
+*  Dallas Start Temperature Conversion, expected max duration:
 *    9 bits resolution ->  93.75 ms
 *   10 bits resolution -> 187.5 ms
 *   11 bits resolution -> 375 ms
@@ -287,6 +301,7 @@ bool Plugin_004_DS_is_parasite(uint8_t ROM[8], int8_t Plugin_004_DallasPin)
 \*********************************************************************************************/
 void Plugin_004_DS_startConversion(uint8_t ROM[8], int8_t Plugin_004_DallasPin)
 {
+  Plugin_004_set_timeout(Plugin_004_DS_getResolution(ROM, Plugin_004_DallasPin), Plugin_004_DallasPin);
   Plugin_004_DS_address_ROM(ROM, Plugin_004_DallasPin);
   Plugin_004_DS_write(0x44, Plugin_004_DallasPin); // Take temperature mesurement
 }
@@ -362,7 +377,7 @@ boolean Plugin_004_DS_readTemp(uint8_t ROM[8], float *value, int8_t Plugin_004_D
 /*********************************************************************************************\
 * Dallas Get Resolution
 \*********************************************************************************************/
-int Plugin_004_DS_getResolution(uint8_t ROM[8], int8_t Plugin_004_DallasPin)
+byte Plugin_004_DS_getResolution(uint8_t ROM[8], int8_t Plugin_004_DallasPin)
 {
   // DS1820 and DS18S20 have no resolution configuration register
   if (ROM[0] == 0x10) { return 12; }
@@ -784,5 +799,11 @@ boolean Plugin_004_DS_crc8(uint8_t *addr)
   }
   return crc == *addr; // addr 8
 }
+
+
+#if defined(ESP32)
+  #undef ESP32noInterrupts
+  #undef ESP32interrupts
+#endif
 
 #endif // USES_P004

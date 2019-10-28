@@ -1,4 +1,382 @@
 -------------------------------------------------
+Changes in release mega-20191016 (since mega-20191003)
+-------------------------------------------------
+
+Release date: Wed Oct 16 04:00:07 CEST 2019
+
+Denys-ThreadPC (6):
+      ICMP ping plugin
+      Updated code
+      Additional checks for nullptr and moving ICMP PCB to constructor/destructor
+      Merging suggested fixes
+      Adding as testing, renaming from 088 to 089
+      Build only on ESP8266
+
+Grovkillen (2):
+      Benchmark tests (rules1.txt rules2.txt)
+      Benchmark test (added test number to starttest1)
+
+hennPi (1):
+      7segment display doesn't display lower case letter
+
+jimmys01 (3):
+      [IR] Update IR lib
+      [IR] Show the name of AC submodel instad of its number.
+      [IR TX] Set JSON default model to be -1
+
+stefan (1):
+      [ADC] Improve ADC handling
+
+
+-------------------------------------------------
+Changes in release mega-20191003 (since mega-20190928)
+-------------------------------------------------
+
+Release date: Thu Oct  3 04:00:10 CEST 2019
+
+Gijs Noorlander (13):
+      [PIO] Describe core 2.6.0 branches/repositories
+      [SenseAir] Fix incorrect handling of Modbus error codes
+      [Uncrustify] Format SenseAir, AcuDC24x and Modbus RTU file
+      Fix cached search for task value name may return wrong index (#2639)
+      [Rules] Optimize rules parsing
+      [INT#n] isn't doing transformations properly (#2642)
+      Add system variable %sysstack%
+      Disable firmware upload button when NO_HTTP_UPDATER is defined
+      [Rules] Optimize ruleMatch function
+      [Rules] Remove duplicate code to replace %eventvalue%
+      [Rules] Split conditionMatch to share with event match
+      [Rules] Allow extra inequality checks for rule event matching
+      [Build] Fix forward declaration build error
+
+TD-er (3):
+      [Build] Add NO_HTTP_UPDATER to exclude http updates
+      [ADC] Fix oversampling offset during WiFi connect
+      [ADC] Build fix ESP32 & Uncrustify
+
+jimmys01 (3):
+      [IR] Update lib to 2.6.6
+      [IR] Further granulate the selection of IR capabilities
+      Add the RAW RAW2 define also in the custom.h file as well
+
+
+-------------------------------------------------
+Changes in release mega-20190928 (since mega-20190926)
+-------------------------------------------------
+
+Release date: Sat Sep 28 04:00:07 CEST 2019
+
+Gijs Noorlander (3):
+      [Build] Fix binary size check for xxx_1M builds
+      [Build] Build log file does not interpret /t
+      [Build] Fix use of flag BUILD_NO_DEBUG
+
+Saverio Cisternino (1):
+      Update ccronexpr library to v20190415
+
+jimmys01 (1):
+      Add to PLUGIN_SET_ONLY_TEMP_HUM left over sensors
+
+
+-------------------------------------------------
+Changes in release mega-20190926 (since mega-20190925)
+-------------------------------------------------
+
+Release date: Thu Sep 26 04:00:05 CEST 2019
+
+Gijs Noorlander (58):
+      [Rules] Reduce memory usage when parsing rules templates
+      [Modbus RTU] Add "timeout" and "no data" as error
+      [Build] No longer ignore IR libraries to allow IR builds from Vagrant
+      [Travis] Do not remove old builds to reduce build time
+      [Travis] Add .pio dir as cache directory
+      [Build] Remove some build types from the nightly build
+      [Travis] Change Ubuntu 14.04 to 18.04 for builds
+      [Rules] Allow transformations on [var#n] and add [int#n]
+      [Cache] Add cache to help find task value name.
+      [Rules] Some minor code improvements (suggests from @uzi18 )
+      [C014 Homie] Use cached functions to find task value by name
+      [Rules] Compatibility Replace %eventvalue% by using the 1st argument
+      [Build] Remove debug logs from 1M builds
+      [Rules] Only match task value names which can be set
+      Only include HttpClient when Settings Archive is being used
+      [cleanup] make it compile again on ArduinoIDE
+      [Custom.h] Storage layout parameters moved and wrapped in #ifndef
+      [Storage layout] Add suggestions for 24 tasks layout
+      [Custom.h] Allow for other defines to be set by the user.
+      [Build] Fix include path to make ArduinoIDE able to build again
+      [Travis CI] Reduce Travis test build duration
+      [PIO] Use original platform for core 2.6.0, not Tasmota's one
+      [Travis] Disable Travis cache
+      [Build] Make sure Custom.h is leading during compilation.
+      [ESP32] Fix build when SettingsArchive is set in Custom.h
+      Fix using includes to get defines right during compile
+      Move all header files in Commands/*.h to src/Commands/ for ArduinoIDE
+      [Build] Fix path change in include
+      Initial step for proper declaring global variables in .h files
+      [Build] Another forgotten path update in moved .h file
+      Move defines out of ESPEasy-Globals.h
+      Move Plugin administration from ESPEasy-Globals.h to Globals/Plugin.h
+      Move Logging from ESPEasy-Globals.h to Globals/Logging.h
+      Move Cache from ESPEasy-Globals.h to Globals/Cache.h
+      Move RTC from ESPEasy-Globals.h to Globals/RTC.h
+      Move Nodes from ESPEasy-Globals.h to Globals/Nodes.h
+      Move FactDefPrefs & CRCValues from ESPEasy-Globals.h to Globals/...h
+      Move Device array from ESPEasy-Globals.h to Globals/Device.h
+      Move SecuritySettings from ESPEasy-Globals.h to Globals/SecuritySettings.h
+      Move ExtraTaskSettings from ESPEasy-Globals.h to Globals/...h
+      Move Settings from ESPEasy-Globals.h to Globals/Settings.h
+      Split Diagnostic.h & ESPEasyWiFiEvent.h into .h/.cpp
+      [Arduino IDE] Make include paths relative to file location
+      [Build] Forgotten include of MQTT related global variable.
+      [Cleanup] Remove FIXME/TODO remarks which are now done.
+      [Arduino IDE] Fix path in includes.
+      [ESP32] Fix storage layout on ESP32 settings file.
+      Uncrustify P022_PCA9685
+      [PCA9685] Add range checks and memory optimization
+      [PIO] Switch to core_stage for core 2.6.0 builds
+      [Build] Fix pre_extra_script.py  build Cpp defines
+      [Build] Add Custom ESP32 and disable plugins to reduce binary size
+      Define build info from ESPEasy_common.h
+      [Docs] Describe project directory structure
+      Turn SettingsStruct into templated variable
+      Create build log txt file to track missing files
+      Show the build log text at the end of the build
+      Small fix in creating build log file
+
+TD-er (1):
+      [PIO] Update core 2.5.2 to espressif8266@2.2.3
+
+
+-------------------------------------------------
+Changes in release mega-20190925 (since mega-20190910)
+-------------------------------------------------
+
+Release date: Wed Sep 25 04:00:14 CEST 2019
+
+Bartlomiej Zimon (1):
+      [Dummy] small fix for save action fix for #2600
+
+Bartłomiej Zimoń (4):
+      [Settings Archive] disable chunked encoding in download file
+      [Settings Archive] move timeout if get some data
+      [Settings Archive] remove http 1.0 request, 1.1 works ok
+      [Settings Archive] clean up
+
+Hans-Rune Bue (1):
+      Support for MITSUBISHI KJ heatpumps (SG 161 0927 remote)
+
+Maxim Prokhorov (3):
+      [Gratuitous ARP] thread-safe etharp_gratuitous for esp32
+      [Gratuitous ARP] Check that IF has both LINK_UP and UP flags
+      [Gratuitous ARP] use public non-blocking API
+
+Toni (2):
+      Add plugin sets PLUGIN_SET_ONLY_SWITCH and PLUGIN_SET_ONLY_TEMP_HUM to the minimal_IRext_ESP8266_1M image
+      Add 'Output - Domoticz MQTT Helper' into PLUGIN_BUILD_IR_EXTENDED
+
+Victor Antonovich (1):
+      Fix duplicated "DNS 1" value in JSON output
+
+jimmys01 (6):
+      Dallas improvments
+      Remove reduntand conversion call
+      Add a define in custom-sample.h for the Extended IR capability
+      Make the reading of the sensor not blocking.
+      Add compile time and date to differentiate between custom builds
+      Fix IR TX RX instructions
+
+
+-------------------------------------------------
+Changes in release mega-20190910 (since mega-20190903)
+-------------------------------------------------
+
+Release date: Tue Sep 10 04:00:11 CEST 2019
+
+Gijs Noorlander (12):
+      [Cleanup] Split settings from global.h into separate .h and .cpp
+      [Cleanup] Fix warnings of unused (static) functions
+      [Cleanup] Move structs to separate .h/.cpp files
+      [Cleanup] Move/split Controller QueueElement class to separate .h/.cpp
+      [Cleanup] Allow Controller QueueElements to be excluded from a build
+      [Memory Analyzer] Simplify analyzer and check for sets also
+      [Memory Analyzer] Give hints on used parameters and reduce core size test
+      Skip analog read during WiFi connect (#2566)
+      [WiFi] Fix No reconnect when setup page was not completed
+      [LoRa] Add air time calculation function
+      [Vagrant] Allow Custom.h file to be used
+      [build] Remove some builds from Travis test build due to build time
+
+jimmys01 (3):
+      [IR] Add Normal plugin set with only IR TX extended
+      [IR} Update the IR library
+      Add missed plugin description
+
+
+-------------------------------------------------
+Changes in release mega-20190903 (since mega-20190830)
+-------------------------------------------------
+
+Release date: Tue Sep  3 04:00:13 CEST 2019
+
+Bartlomiej Zimon (3):
+      - [C011] fix method save #2550
+      [DHT] change pin into input before delay
+      [DHT] change to input with pullup
+
+Gijs Noorlander (11):
+      [build] Add Minimal IRext 4M build
+      Add minimal_IRext_ESP8266_4M2M build using 2M SPIFFS
+      [Build] Fix typo error in platformIO.ini
+      Disable Settings Archive on minimal builds
+      Add TextArea option for C11 and fix some build inconsistencies
+      [MemAnalyzer] Fix MemAnalyzer.py script to work with USES_.... defines
+      Disable Home MQTT for dev build to make it fit max sketch size
+      [Build] Start making Vagrant provisioning for quick self builds
+      [Vagrant] Check if file exists before adding CRC info and quiet ZIP
+      [Vagrant] Fix changed PIO env name in bootstrap.sh
+      [Build] Fix build error after rename flash layouts
+
+Toni (1):
+      Documentation for P088 HeatpumpIR plugin
+
+jimmys01 (1):
+      [Git] Ignore custom files and the .ino.cpp
+
+
+-------------------------------------------------
+Changes in release mega-20190830 (since mega-20190827)
+-------------------------------------------------
+
+Release date: Fri Aug 30 04:00:13 CEST 2019
+
+Bartłomiej Zimoń (2):
+      [DHT] start conversion improvements
+      [DHT] fix timeout reading
+
+Gijs Noorlander (9):
+      [Settings Archive] Allow to download settings from some HTTP archive
+      [Settings Archive] Documentation
+      [Settings Archive] Only allow on core 2.5.0 and newer
+      [Gratuitous ARP] Only send ARP packets when IF is up
+      [PlatformIO] Changes for core 2.6.0 (Tasmota patched core)
+      [Settings Archive] Allow to download settings from some HTTP archive
+      [Settings Archive] Documentation
+      [Settings Archive] Only allow on core 2.5.0 and newer
+      Move dev build to core 2.6.0 (to make it fit)
+
+stefan (7):
+      Reduce bin size by excluding unneded parts
+      Reduce bin size -- Typos.
+      Reduce bin size -- changed macro definitions
+      Reduce bin size -- add PubSubClient to #ifdef's
+      Reduce bin size -- cast blynk code
+      Reduce bin size -- enable all controller structs again
+      Revert "Reduce bin size -- cast blynk code"
+
+
+-------------------------------------------------
+Changes in release mega-20190827 (since mega-20190823)
+-------------------------------------------------
+
+Release date: Tue Aug 27 04:00:07 CEST 2019
+
+Gijs Noorlander (5):
+      [WiFi] Improve WiFi reconnect stability and fix initial setup
+      [Docs] Document Timing Stats page
+      [WiFi] Move functions to separate files and document
+      [WiFi] Clean up WiFi code and modernize WiFi setup page
+      [WiFi] Add RSSI symbol to WiFi setup page
+
+TD-er (1):
+      [LoRa] Keep out LoRa code if no supported controller is used
+
+jimmys01 (1):
+      IR Update library and usage instructions
+
+
+-------------------------------------------------
+Changes in release mega-20190823 (since mega-20190817)
+-------------------------------------------------
+
+Release date: Fri Aug 23 04:00:05 CEST 2019
+
+Bartlomiej Zimon (4):
+      [Modbus RTU] drop all data in buffers
+      [Modbus RTU] do more checks with received packet
+      [Modbus RTU] one more buffer check
+      [Modbus RTU] add slave number check
+
+Gijs Noorlander (9):
+      Rename _P115_HeatpumpIR.ino to _P088_HeatpumpIR.ino
+      Wrap P088 in USES_P088 defines
+      Fix Build issues P088_HeatpumpIR
+      [Heatpump IR] Add minimal IR_ext build for 4M flash nodes
+      [PlatformIO] Move duplicate lines to global [env]
+      [PlatformIO]  Maintain same order of platform and build_flags
+      [PlatformIO] Fix missing define on some core 2.4.x builds
+      Remove test_core_260_sdk2_alpha builds
+      [Build] Remove all core 2.6.0 SDK2 builds
+
+Toni (4):
+      Add HeatpumpIR 1.0.9 library
+      Add HeatpumpIR plugin P115
+      Fix compile warnings in HeatpumpIR plugin
+      Configurable MQTT package size in Controller.ino
+
+
+-------------------------------------------------
+Changes in release mega-20190817 (since mega-20190813)
+-------------------------------------------------
+
+Release date: Sat Aug 17 04:00:12 CEST 2019
+
+Gijs Noorlander (8):
+      [LoRa/TTN] Document LoRaWAN/TTN controller
+      [LoRa/TTN] Toggle visibility of OTAA/ABP parameters based on selection
+      [LoRa/TTN] Reduce number of join requests
+      [LoRa/TTN] Add Sample Set Initiator to mark samples of the same set
+      [LoRa/TTN] Output packed raw format for uploading to TTN
+      [LoRa/TTN] Add raw encoder/decoder for sysinfo plugin
+      [LoRa/TTN] Add decoder for the packet header
+      [LoRa/TTN] Correct decoder example in comments
+
+
+-------------------------------------------------
+Changes in release mega-20190813 (since mega-20190809)
+-------------------------------------------------
+
+Release date: Tue Aug 13 04:00:10 CEST 2019
+
+Gijs Noorlander (21):
+      [TTN] Add RN2483-Arduino-Library
+      [TTN] Skeleton for C018 TTN RN2xx3 controller
+      [RN2384 lib] Only use const String& in function parameters
+      [LoRa plugin] Use separate object for C018 data
+      [LoRa TTN] Create special interface for LoRa TTN controller
+      [Controller page] Restructure Controller rendering page
+      Missing break; statement in controllers function switch statement
+      [Cleanup] Split Webserver.ino is separate files per page
+      [Cleanup] Uncrustify of all WebServer_*.ino files
+      [Cleanup] Split handle_controllers() function into separate functions
+      [Cleanup] Split handle_devices() function into separate functions
+      [Cleanup] Stop using global declared dummyString
+      [LoRa TTN] Show Dev Addr in controller overview page as host
+      [LoRa TTN] Send data to the TTN network + decoder
+      [LoRa TTN] Start working on the interpreter of decoded data
+      [Encoder] ICACHE_RAM_ATTR added for encoder plugin
+      [LoRa TTN] Add basic decoder for all plugins
+      [Docs] Building ESPeasy using PlatformIO in VS-Code
+      [LoRa TTN] Add decoder types
+      [LoRa TTN] Make settings configurable & add support ABP
+      [LoRa TTN] Add documentation stubs for C018-LoRaTTN and C017-Zabbix
+
+TD-er (2):
+      Improve RN2xx3 LoRo TTN library
+      [LoRa TTN] Add some statistics to the controller info page
+
+
+-------------------------------------------------
 Changes in release mega-20190809 (since mega-20190805)
 -------------------------------------------------
 

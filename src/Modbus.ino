@@ -1,4 +1,4 @@
-
+#ifdef USES_MODBUS
 #ifndef MODBUS_H
 # define MODBUS_H
 
@@ -258,3 +258,4 @@ bool Modbus::tryRead(uint8_t ModbusID, uint16_t M_register,  MODBUS_registerType
   }
   return false;
 }
+#endif //USES_MODBUS

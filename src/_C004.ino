@@ -52,6 +52,7 @@ bool CPlugin_004(byte function, struct EventStruct *event, String& string)
             success = false;
             break;
         }
+        break;
       }
 
     case CPLUGIN_PROTOCOL_SEND:
@@ -72,6 +73,8 @@ bool CPlugin_004(byte function, struct EventStruct *event, String& string)
   }
   return success;
 }
+
+bool do_process_c004_delay_queue(int controller_number, const C004_queue_element& element, ControllerSettingsStruct& ControllerSettings);
 
 bool do_process_c004_delay_queue(int controller_number, const C004_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
   WiFiClient client;

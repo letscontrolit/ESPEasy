@@ -1,3 +1,8 @@
+#include "src/Globals/CRCValues.h"
+#include "src/Globals/Device.h"
+#include "src/Globals/ESPEasyWiFiEvent.h"
+#include "src/Globals/MQTT.h"
+
 /********************************************************************************************\
    Convert a char string to integer
  \*********************************************************************************************/
@@ -216,7 +221,7 @@ String doFormatUserVar(struct EventStruct *event, byte rel_index, bool mustCheck
 
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
       String log = F("Invalid float value for TaskIndex: ");
-      log += TaskIndex;
+      log += event->TaskIndex;
       log += F(" varnumber: ");
       log += rel_index;
       addLog(LOG_LEVEL_DEBUG, log);
@@ -224,6 +229,7 @@ String doFormatUserVar(struct EventStruct *event, byte rel_index, bool mustCheck
 #endif // ifndef BUILD_NO_DEBUG
     f = 0;
   }
+  LoadTaskSettings(event->TaskIndex);
   return toString(f, ExtraTaskSettings.TaskDeviceValueDecimals[rel_index]);
 }
 
@@ -497,6 +503,32 @@ void htmlStrongEscape(String& html)
   html = escaped;
 }
 
+
+//********************************************************************************
+// URNEncode char string to string object
+//********************************************************************************
+String URLEncode(const char* msg)
+{
+  const char *hex = "0123456789abcdef";
+  String encodedMsg = "";
+
+  while (*msg != '\0') {
+    if ( ('a' <= *msg && *msg <= 'z')
+         || ('A' <= *msg && *msg <= 'Z')
+         || ('0' <= *msg && *msg <= '9')
+         || ('-' == *msg) || ('_' == *msg)
+         || ('.' == *msg) || ('~' == *msg) ) {
+      encodedMsg += *msg;
+    } else {
+      encodedMsg += '%';
+      encodedMsg += hex[*msg >> 4];
+      encodedMsg += hex[*msg & 15];
+    }
+    msg++;
+  }
+  return encodedMsg;
+}
+
 /********************************************************************************************\
    replace other system variables like %sysname%, %systime%, %ip%
  \*********************************************************************************************/
@@ -601,9 +633,11 @@ void parseSpecialCharacters(String& s, boolean useURLencode)
   if (s.indexOf(T) != -1) { (S((T), s, useURLencode)); }
 void parseSystemVariables(String& s, boolean useURLencode)
 {
+  START_TIMER
   parseSpecialCharacters(s, useURLencode);
 
   if (s.indexOf('%') == -1) {
+    STOP_TIMER(PARSE_SYSVAR_NOCHANGE);
     return; // Nothing to replace
   }
   #if FEATURE_ADC_VCC
@@ -629,6 +663,7 @@ void parseSystemVariables(String& s, boolean useURLencode)
   if (s.indexOf(F("%sys")) != -1) {
     SMART_REPL(F("%sysload%"),       String(getCPUload()))
     SMART_REPL(F("%sysheap%"),       String(ESP.getFreeHeap()));
+    SMART_REPL(F("%sysstack%"),      String(getCurrentFreeStack()));
     SMART_REPL(F("%systm_hm%"),      getTimeString(':', false))
     SMART_REPL(F("%systm_hm_am%"),   getTimeString_ampm(':', false))
     SMART_REPL(F("%systime%"),       getTimeString(':'))
@@ -672,7 +707,9 @@ void parseSystemVariables(String& s, boolean useURLencode)
   SMART_REPL_T(F("%sunrise"), replSunRiseTimeString)
 
   if (s.indexOf(F("%is")) != -1) {
+#ifdef USES_MQTT
     SMART_REPL(F("%ismqtt%"),    String(MQTTclient_connected));
+#endif    
     SMART_REPL(F("%iswifi%"),    String(wifiStatus)); // 0=disconnected, 1=connected, 2=got ip, 3=services initialized
     SMART_REPL(F("%isntp%"),     String(statusNTPInitialized));
     #ifdef USES_P037
@@ -686,6 +723,7 @@ void parseSystemVariables(String& s, boolean useURLencode)
       SMART_REPL("%v" + toString(i + 1, 0) + '%', String(customFloatVar[i]))
     }
   }
+  STOP_TIMER(PARSE_SYSVAR);
 }
 
 String getReplacementString(const String& format, String& s) {
@@ -734,8 +772,7 @@ void parseEventVariables(String& s, struct EventStruct *event, boolean useURLenc
       SMART_REPL(F("%val4%"), formatUserVarNoCheck(event, 3))
     }
   }
-
-  // FIXME TD-er: Must make sure LoadTaskSettings has been performed before this is called.
+  LoadTaskSettings(event->TaskIndex);
   repl(F("%tskname%"), ExtraTaskSettings.TaskDeviceName, s, useURLencode);
 
   if (s.indexOf(F("%vname")) != -1) {
