@@ -5,8 +5,8 @@
 #include <map>
 
 struct portStatusStruct {
-  portStatusStruct() : state(-1), output(-1), command(0), init(0), mode(0), task(0), monitor(0), forceMonitor(0), forceEvent(0), previousTask(
-      -1), x(-1) {}
+  portStatusStruct() : state(-1), output(-1), command(0), init(0), mode(0), task(0), monitor(0), forceMonitor(0), forceEvent(0),
+      flashingState(-1), flashingCounter(0), previousTask(-1), x(-1) {}
 
   int8_t state   : 2;       // -1,0,1
   int8_t output  : 2;       // -1,0,1
@@ -18,6 +18,9 @@ struct portStatusStruct {
   uint8_t monitor      : 1; // 0,1
   uint8_t forceMonitor : 1; // 0,1
   uint8_t forceEvent   : 1; // 0,1
+
+  int8_t flashingState : 2; //-1,0,1
+  uint8_t flashingCounter; //0..100
 
   int8_t previousTask : 8;
 

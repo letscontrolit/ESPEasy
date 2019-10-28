@@ -19,7 +19,7 @@ void run_compiletime_checks() {
   check_size<systemTimerStruct,                     28u>();
   check_size<RTCStruct,                             20u>();
   check_size<rulesTimerStatus,                      12u>();
-  check_size<portStatusStruct,                      4u>();
+  check_size<portStatusStruct,                      6u>();
   check_size<ResetFactoryDefaultPreference_struct,  4u>();
   check_size<GpioFactorySettingsStruct,             11u>();
 }

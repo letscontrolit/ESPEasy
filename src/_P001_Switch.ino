@@ -9,7 +9,7 @@
    TaskDevicePluginConfig settings:
    0: button type (switch or dimmer)
    1: dim value
-   2: button option (normal, push high, push low)
+   2: button option (normal, push high, push low, flashing)
    3: send boot state (true,false)
    4: use doubleclick (0,1,2,3)
    5: use longpress (0,1,2,3)
@@ -43,6 +43,7 @@ Servo servo2;
 #define PLUGIN_001_BUTTON_TYPE_NORMAL_SWITCH     0
 #define PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_LOW   1
 #define PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_HIGH  2
+#define PLUGIN_001_BUTTON_TYPE_FLASHING_INPUT 3
 #define PLUGIN_001_DOUBLECLICK_MIN_INTERVAL      1000
 #define PLUGIN_001_DOUBLECLICK_MAX_INTERVAL      3000
 #define PLUGIN_001_LONGPRESS_MIN_INTERVAL        1000
@@ -107,6 +108,8 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
   // static byte outputstate[TASKS_MAX];
   // static int8_t PinMonitor[GPIO_MAX];
   // static int8_t PinMonitorState[GPIO_MAX];
+  //static byte flashingState[TASKS_MAX];
+  //static byte flashingCounter[TASKS_MAX];
 
   switch (function)
   {
@@ -174,13 +177,13 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
       }
 
       byte   choice = PCONFIG(2);
-      String buttonOptions[3];
+        String buttonOptions[4];
       buttonOptions[0] = F("Normal Switch");
       buttonOptions[1] = F("Push Button Active Low");
       buttonOptions[2] = F("Push Button Active High");
-      int buttonOptionValues[3] =
-      { PLUGIN_001_BUTTON_TYPE_NORMAL_SWITCH, PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_LOW, PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_HIGH };
-      addFormSelector(F("Switch Button Type"), F("p001_button"), 3, buttonOptions, buttonOptionValues, choice);
+      buttonOptions[3] = F("Flashing Input");
+      int buttonOptionValues[4] = {PLUGIN_001_BUTTON_TYPE_NORMAL_SWITCH, PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_LOW, PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_HIGH, PLUGIN_001_BUTTON_TYPE_FLASHING_INPUT};
+      addFormSelector(F("Switch Button Type"), F("p001_button"), 4, buttonOptions, buttonOptionValues, choice);
 
       addFormCheckBox(F("Send Boot state"), F("p001_boot"),
                       PCONFIG(3));
@@ -293,6 +296,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
 
         // read and store current state to prevent switching at boot time
         newStatus.state                                          = Plugin_001_read_switch_state(event);
+        newStatus.flashingState = newStatus.state;
         newStatus.output                                         = newStatus.state;
         (newStatus.task < 3) ? newStatus.task++ : newStatus.task = 3; // add this GPIO/port as a task
 
@@ -353,6 +357,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
           PCONFIG_FLOAT(2) = PLUGIN_001_LONGPRESS_MIN_INTERVAL;
         }
 
+        newStatus.flashingCounter = 100;
         savePortStatus(key, newStatus);
       }
       success = true;
@@ -438,6 +443,13 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
       const int8_t state = Plugin_001_read_switch_state(event);
 
       /**************************************************************************\
+        20191028 - @uwe: new flashing logic for PLUGIN_001_BUTTON_TYPE_FLASHING_INPUT is:
+        if there is a 'state' change -> output will be set to 2
+        If there is no following 'state' change within PCONFIG_FLOAT(2) ("Longpress min. interval (ms)")
+        -> output will be set to the original input 'state'
+        If there is a following 'state' change within PCONFIG_FLOAT(2) ("Longpress min. interval (ms)")
+        -> output will be kept at 2
+
          20181009 - @giig1967g: new doubleclick logic is:
          if there is a 'state' change, check debounce period.
          Then if doubleclick interval exceeded, reset PCONFIG(7) to 0
@@ -518,6 +530,10 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
 
             switch (PCONFIG(2))
             {
+              case PLUGIN_001_BUTTON_TYPE_FLASHING_INPUT:
+                currentStatus.flashingCounter = 0;
+                new_outputState = state;
+                break;
               case PLUGIN_001_BUTTON_TYPE_NORMAL_SWITCH:
                 new_outputState = state;
                 break;
@@ -539,6 +555,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
             if (currentOutputState != new_outputState)
             {
               byte output_value;
+              String eventString = F(" Output=");
               currentStatus.output = new_outputState;
               boolean sendState = new_outputState;
 
@@ -549,9 +566,22 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
               if ((PCONFIG(7) == 3) && (PCONFIG(4) > 0))
               {
                 output_value = 3;                 // double click
+              	eventString = F(" Doubleclick=");
               } else {
                 output_value = sendState ? 1 : 0; // single click
               }
+
+		          	if (PCONFIG(2) == PLUGIN_001_BUTTON_TYPE_FLASHING_INPUT) {
+			          	output_value = 2; //flashing
+		            	if (currentStatus.flashingState == output_value){
+            				savePortStatus(key,currentStatus);
+		              	success = true;
+		              	break;	// PLUGIN_TEN_PER_SECOND verlassen
+		            	}
+              		eventString = F(" Flashing=");
+		            	currentStatus.flashingState = output_value;
+		          	}
+
               event->sensorType = SENSOR_TYPE_SWITCH;
 
               if (P001_getSwitchType(event) == PLUGIN_001_TYPE_DIMMER) {
@@ -567,21 +597,76 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
               if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                 String log = F("SW  : GPIO=");
                 log += CONFIG_PIN1;
-                log += F(" State=");
+              		log += F(" -> Input=");
                 log += state ? '1' : '0';
-                log += output_value == 3 ? F(" Doubleclick=") : F(" Output value=");
+              		log += eventString;
                 log += output_value;
                 addLog(LOG_LEVEL_INFO, log);
               }
               sendData(event);
 
               // reset Userdata so it displays the correct state value in the web page
-              UserVar[event->BaseVarIndex] = sendState ? 1 : 0;
+//              UserVar[event->BaseVarIndex] = sendState ? 1 : 0;
             }
             PCONFIG_LONG(0) = millis();
           }
           savePortStatus(key, currentStatus);
         }
+
+ //check flashing
+        else if (PCONFIG(2) == PLUGIN_001_BUTTON_TYPE_FLASHING_INPUT)
+					{
+          const byte MaxFlashingDetection =  (byte)lround(PCONFIG_FLOAT(2)/100);
+          byte output_value = currentStatus.flashingState;
+	        const boolean currentOutputState = currentStatus.output;
+  	      boolean new_outputState = currentOutputState;
+          boolean sendState = new_outputState;
+
+            currentStatus.flashingCounter++;
+						if (currentStatus.flashingCounter > 200)
+	  					currentStatus.flashingCounter = 100;
+
+            if (currentStatus.flashingCounter == MaxFlashingDetection) {
+          		new_outputState = state;
+
+              currentStatus.output = new_outputState;
+
+              if (Settings.TaskDevicePin1Inversed[event->TaskIndex])
+                sendState = !sendState;
+
+              output_value = sendState ? 1 : 0; //single click
+						}
+
+            String eventString = F(" Output=");
+        		if (currentStatus.flashingCounter < MaxFlashingDetection) {
+          		output_value = 2;
+							eventString = F(" Flashing=");
+						}
+
+        		if (currentStatus.flashingState != output_value) {
+	        		currentStatus.flashingState = output_value;
+
+	            event->sensorType = SENSOR_TYPE_SWITCH;
+	            UserVar[event->BaseVarIndex] = output_value;
+
+              if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+		            String log = F("SW  : Flashing: GPIO=");
+		            log += CONFIG_PIN1;
+		            log += F(" -> Input=");
+		            log += state ? '1' : '0';
+	              log += eventString;
+	              log += output_value;
+		            log += F(" Counter=");
+	              log += currentStatus.flashingCounter;
+		            addLog(LOG_LEVEL_INFO, log);
+							}
+	            sendData(event);
+
+	            //reset Userdata so it displays the correct state value in the web page
+//	            UserVar[event->BaseVarIndex] = sendState ? 1 : 0;
+						}
+            savePortStatus(key,currentStatus);
+					}
 
         // just to simplify the reading of the code
   #define LP PCONFIG(5)
@@ -655,14 +740,14 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
                 log += CONFIG_PIN1;
                 log += F(" State=");
                 log += state ? '1' : '0';
-                log += F(" Output value=");
+              	log += F(" Output=");
                 log += output_value;
                 addLog(LOG_LEVEL_INFO, log);
               }
               sendData(event);
 
               // reset Userdata so it displays the correct state value in the web page
-              UserVar[event->BaseVarIndex] = sendState ? 1 : 0;
+//              UserVar[event->BaseVarIndex] = sendState ? 1 : 0;
             }
             savePortStatus(key, currentStatus);
           }
@@ -704,8 +789,21 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
       // We do not actually read the pin state as this is already done 10x/second
       // Instead we just send the last known state stored in Uservar
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        String log = F("SW   : State ");
+        	String log = F("SW  : GPIO=");
+        	log += CONFIG_PIN1;
+        	log += F(" -> State=");
         log += UserVar[event->BaseVarIndex];
+        	if (PCONFIG(2) == PLUGIN_001_BUTTON_TYPE_FLASHING_INPUT) {
+          	portStatusStruct currentStatus;
+          	const uint32_t key = createKey(PLUGIN_ID_001,CONFIG_PIN1);
+          	//WARNING operator [],creates an entry in map if key doesn't exist:
+          	currentStatus = globalMapPortStatus[key];
+            log += F(" Flashing=");
+            log += currentStatus.flashingState;
+            log += F(" Counter=");
+            log += currentStatus.flashingCounter;
+            savePortStatus(key,currentStatus);
+					}
         addLog(LOG_LEVEL_INFO, log);
       }
       success = true;
