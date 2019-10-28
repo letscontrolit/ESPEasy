@@ -1,4 +1,38 @@
 -------------------------------------------------
+Changes in release mega-20191028 (since mega-20191016)
+-------------------------------------------------
+
+Release date: Mon Oct 28 12:11:41 CET 2019
+
+Gijs Noorlander (25):
+      [Rules] Improve rules matching (#2660)
+      [PIO] Fix build issue using Python 3
+      [PIO] Fix build issue due to duplicate env in platformio.ini
+      [Rules] Make handling compare condition more deterministic.
+      [Cleanup] Make use of consistent names for DeviceIndex (#2676)
+      [Cleanup] Proper handling of tasks not supported in current build
+      [ESPEasy p2p] Allow changing remote unit on receiving plugin (#2679)
+      [Cleanup] Use of taskIndex_t & reduce memory usage in structs
+      [Cleanup] Use taskIndex_t everywhere where a task index is used.
+      [sendToHttp] Trim spaces from path (#2681, #2660)
+      [WDT reboot] Fix SW watchdog reboot when saving rules
+      [ADC] Perform first read of ADC at init, before starting WiFi (#2646)
+      [ArduinoIDE] Fix include errors for ArduinoIDE
+      [WiFi AP]  No automatic attempt to reconnect with connected client (#2650)
+      [WiFi] Only reset wifi connect attempt on stable connection (#2650)
+      [MQTT] Use parseString functions to disect publish command (#2657)
+      [Rules] Fix grammar in parsing parameters (#2686)
+      [Commands] Mark commands not using standard parse functions (#2686)
+      [PIO] Cleanup old environments and add debug definitions
+      Remove redundant Wire.beginTransmission (#1417)
+      [Build] Add custom 4M2M build
+      [Build] Rename ESP32 env 1M8_partition to 4M316k
+      [Docs] Describe PlatformIO installation
+      [NTP] Sign of time offset reported in log was wrong
+      [Cleanup] rename deepSleep functions and parameters (#1803)
+
+
+-------------------------------------------------
 Changes in release mega-20191016 (since mega-20191003)
 -------------------------------------------------
 
