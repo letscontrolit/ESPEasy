@@ -435,10 +435,11 @@ void WebServerInit()
   WebServer.on(F("/devices"),       handle_devices);
   WebServer.on(F("/download"),      handle_download);
 
-
-  WebServer.on(F("/dumpcache"),     handle_dumpcache);  // C016 specific entrie
+#ifdef USES_C016
+  // WebServer.on(F("/dumpcache"),     handle_dumpcache);  // C016 specific entrie
   WebServer.on(F("/cache_json"),    handle_cache_json); // C016 specific entrie
   WebServer.on(F("/cache_csv"),     handle_cache_csv);  // C016 specific entrie
+#endif // USES_C016
 
 
   WebServer.on(F("/factoryreset"),  handle_factoryreset);
@@ -448,7 +449,9 @@ void WebServerInit()
   WebServer.on(F("/favicon.ico"),   handle_favicon);
   WebServer.on(F("/filelist"),      handle_filelist);
   WebServer.on(F("/hardware"),      handle_hardware);
+  #ifdef WEBSERVER_I2C_SCANNER
   WebServer.on(F("/i2cscanner"),    handle_i2cscanner);
+  #endif
   WebServer.on(F("/json"),          handle_json);     // Also part of WEBSERVER_NEW_UI
   WebServer.on(F("/log"),           handle_log);
   WebServer.on(F("/login"),         handle_login);

@@ -51,7 +51,9 @@ void handle_tools() {
   addFormSubHeader(F("System"));
 
   addWideButtonPlusDescription(F("/?cmd=reboot"), F("Reboot"),           F("Reboots ESP"));
+  #ifdef WEBSERVER_LOG
   addWideButtonPlusDescription(F("log"),          F("Log"),              F("Open log output"));
+  #endif
   addWideButtonPlusDescription(F("sysinfo"),      F("Info"),             F("Open system info page"));
   addWideButtonPlusDescription(F("advanced"),     F("Advanced"),         F("Open advanced settings"));
   addWideButtonPlusDescription(F("json"),         F("Show JSON"),        F("Open JSON output"));
@@ -59,7 +61,9 @@ void handle_tools() {
   addWideButtonPlusDescription(F("timingstats"),  F("Timing stats"),     F("Open timing statistics of system"));
   #endif // WEBSERVER_TIMINGSTATS
   addWideButtonPlusDescription(F("pinstates"),    F("Pin state buffer"), F("Show Pin state buffer"));
+  #ifdef WEBSERVER_SYSVARS
   addWideButtonPlusDescription(F("sysvars"),      F("System Variables"), F("Show all system variables and conversions"));
+  #endif
 
   addFormSubHeader(F("Wifi"));
 
@@ -68,8 +72,10 @@ void handle_tools() {
   addWideButtonPlusDescription(F("wifiscanner"),          F("Scan"),       F("Scan for wifi networks"));
 
   addFormSubHeader(F("Interfaces"));
-
+  
+  #ifdef WEBSERVER_I2C_SCANNER
   addWideButtonPlusDescription(F("i2cscanner"), F("I2C Scan"), F("Scan for I2C devices"));
+  #endif
 
   addFormSubHeader(F("Settings"));
 
@@ -123,7 +129,9 @@ void handle_tools() {
 
   addWideButtonPlusDescription(F("filelist"),      F("File browser"),  F("Show files on internal flash file system"));
   addWideButtonPlusDescription(F("/factoryreset"), F("Factory Reset"), F("Select pre-defined configuration or full erase of settings"));
+  #ifdef USE_SETTINGS_ARCHIVE
   addWideButtonPlusDescription(F("/settingsarchive"), F("Settings Archive"), F("Download settings from some archive"));
+  #endif
 #ifdef FEATURE_SD
   addWideButtonPlusDescription(F("SDfilelist"),    F("SD Card"),       F("Show files on SD-Card"));
 #endif // ifdef FEATURE_SD

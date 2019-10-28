@@ -188,6 +188,15 @@ To create/register a plugin, you have to :
   #ifndef WEBSERVER_NEW_UI
 //    #define WEBSERVER_NEW_UI
   #endif
+  #ifndef WEBSERVER_I2C_SCANNER
+    #define WEBSERVER_I2C_SCANNER
+  #endif
+  #ifndef WEBSERVER_FAVICON
+    #define WEBSERVER_FAVICON
+  #endif
+  #ifndef WEBSERVER_LOG
+    #define WEBSERVER_LOG
+  #endif
 #endif
 
 
