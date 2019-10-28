@@ -675,7 +675,6 @@ To create/register a plugin, you have to :
     //#define USES_P087   // Serial Proxy
     #define USES_P089   // Serial Proxy
 	#define USES_P090	// TFT
-
 #endif
 
 
