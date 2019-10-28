@@ -3,6 +3,12 @@
 //********************************************************************************
 //19480 (11128)
 
+#include "src/Globals/Nodes.h"
+#include "src/Globals/Device.h"
+#include "src/Globals/Plugins.h"
+#include "src/Static/WebStaticData.h"
+
+
 void handle_data() {
   checkRAM(F("handle_data"));
   if (!isLoggedIn()) { return; }
@@ -29,11 +35,11 @@ void handle_data() {
 
   // taskIndex in the URL is 1 ... TASKS_MAX
   // For use in other functions, set it to 0 ... (TASKS_MAX - 1)
-  byte taskIndex = getFormItemInt(F("index"), 0);
+  taskIndex_t taskIndex          = getFormItemInt(F("index"), 0);
   boolean taskIndexNotSet = taskIndex == 0;
   --taskIndex;
 
-  byte DeviceIndex = 0;
+  deviceIndex_t DeviceIndex = 0;
   LoadTaskSettings(taskIndex); // Make sure ExtraTaskSettings are up-to-date
   // FIXME TD-er: Might have to clear any caches here.
 
@@ -69,10 +75,10 @@ void handle_data() {
     	TXBuffer += F("'>&gt;</a>");
   	}
 
-    html_table_header(F("Name"),70);
+    html_table_header(F("Name"),140);
     html_table_header(F("Values"));
 
-    for (byte x = (page - 1) * TASKS_PER_PAGE; x < ((page) * TASKS_PER_PAGE); x++)
+  for (byte x = (page - 1) * TASKS_PER_PAGE; x < ((page) * TASKS_PER_PAGE) && validTaskIndex(x); x++)
     {
       if (Settings.TaskDeviceNumber[x] != 0)
       {
@@ -93,7 +99,7 @@ void handle_data() {
         	{
           	for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++)
           	{
-            	if (Settings.TaskDeviceNumber[x] != 0)
+            if (validPluginID(Settings.TaskDeviceNumber[x]))
             	{
               	if (varNr > 0)
                 	TXBuffer += F("<div class='div_br'></div>");

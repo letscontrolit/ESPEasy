@@ -1,12 +1,12 @@
 //#######################################################################################################
-//########################### Plugin 089: DL-bus from Technische Alternative ############################
+//########################### Plugin 092: DL-bus from Technische Alternative ############################
 //#######################################################################################################
 
 /**************************************************\
    This plug-in reads and decodes the DL-Bus.
    The DL-Bus is used in heating control units e.g. sold by Technische Alternative (www.ta.co.at).
 
-   The idea for this plug-in is based on Martin Kropf's project UVR31_RF24 (https://github.com/martinkropf/UVR31_RF24) 
+   The idea for this plug-in is based on Martin Kropf's project UVR31_RF24 (https://github.com/martinkropf/UVR31_RF24)
 
    The plug-in is tested and workis fine for the ESR21 device.
    The plug-in should be also able to decode the information from the
@@ -16,25 +16,25 @@
    DLbus@12V - 8k6 - input@3.3V - 3k3 - ground
 \**************************************************/
 
-#define PLUGIN_089
-#define PLUGIN_ID_089         89
-//#define PLUGIN_089_DEBUG
-#define PLUGIN_NAME_089       "Heating - DL-Bus (Technische Alternative)"
-#define PLUGIN_VALUENAME1_089 "Value"
+#define PLUGIN_092
+#define PLUGIN_ID_092         92
+//#define PLUGIN_092_DEBUG
+#define PLUGIN_NAME_092       "Heating - DL-Bus (Technische Alternative)"
+#define PLUGIN_VALUENAME1_092 "Value"
 
 #define DLbus_OptionCount 8
 #define DLbus_ValueCount 1
 #define DLbus_DeviceCount 5
 
-void Plugin_089_Pin_changed() ICACHE_RAM_ATTR;
-volatile byte Plugin_089_DLB_Pin;
+void Plugin_092_Pin_changed() ICACHE_RAM_ATTR;
+volatile byte Plugin_092_DLB_Pin;
 volatile boolean receiving = false;                    // Übertragungs-Flag // currently receiving?
-boolean Plugin_089_init = false;
-boolean Plugin_089_ReceivedOK = false;
-unsigned long Plugin_089_LastReceived = 0;
-byte Plugin_089_MaxIdx[DLbus_OptionCount];
-int Plugin_089_ValueType[DLbus_ValueCount];
-int Plugin_089_ValueIdx[DLbus_ValueCount];
+boolean Plugin_092_init = false;
+boolean Plugin_092_ReceivedOK = false;
+unsigned long Plugin_092_LastReceived = 0;
+byte Plugin_092_MaxIdx[DLbus_OptionCount];
+int Plugin_092_ValueType[DLbus_ValueCount];
+int Plugin_092_ValueIdx[DLbus_ValueCount];
 struct DataStruct
 {
   byte          DataBytes;
@@ -137,15 +137,15 @@ int OptionValueDecimals[DLbus_OptionCount] = {
 #define double_min_width_50     (double_pulse_width_50 - (pulse_width_50 * percentage_variance / 100))
 #define double_max_width_50     (double_pulse_width_50 + (pulse_width_50 * percentage_variance / 100))
 
-boolean Plugin_089(byte function, struct EventStruct *event, String& string)
+boolean Plugin_092(byte function, struct EventStruct *event, String& string)
 {
   boolean success = false;
   int OptionIdx, CurIdx;
-  const String plugin_089_Values[DLbus_ValueCount] = {
-    F("p089_Value")
+  const String plugin_092_Values[DLbus_ValueCount] = {
+    F("p092_Value")
   };
-  const String plugin_089_Indizes[DLbus_ValueCount] = {
-    F("p089_Idx")
+  const String plugin_092_Indizes[DLbus_ValueCount] = {
+    F("p092_Idx")
   };
 
 
@@ -153,7 +153,7 @@ boolean Plugin_089(byte function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
       {
-        Device[++deviceCount].Number = PLUGIN_ID_089;
+        Device[++deviceCount].Number = PLUGIN_ID_092;
         Device[deviceCount].Type = DEVICE_TYPE_SINGLE;
         Device[deviceCount].VType = SENSOR_TYPE_SINGLE;
         Device[deviceCount].Ports = 0;
@@ -170,20 +170,20 @@ boolean Plugin_089(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_GET_DEVICENAME:
       {
-        string = F(PLUGIN_NAME_089);
+        string = F(PLUGIN_NAME_092);
         break;
       }
 
     case PLUGIN_GET_DEVICEVALUENAMES:
       {
-        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_089));
+        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_092));
         break;
       }
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        const String plugin_089_ValueNames[DLbus_ValueCount] = {
-          F(PLUGIN_VALUENAME1_089)
+        const String plugin_092_ValueNames[DLbus_ValueCount] = {
+          F(PLUGIN_VALUENAME1_092)
         };
         const String Options[DLbus_OptionCount] = {
           F("None"),
@@ -198,79 +198,79 @@ boolean Plugin_089(byte function, struct EventStruct *event, String& string)
         const String Devices[DLbus_DeviceCount] = { F("ESR21"), F("UVR31"), F("UVR1611"), F("UVR 61-3 (bis V8.2)"), F("UVR 61-3 (ab V8.3)") };
         int DevTypes[DLbus_DeviceCount] = { 21, 31, 1611, 6132, 6133 };
 
-        addFormSelector(F("DL-Bus Type"), F("p089_dlbtype"), DLbus_DeviceCount, Devices, DevTypes, NULL, PCONFIG(0), true );
+        addFormSelector(F("DL-Bus Type"), F("p092_dlbtype"), DLbus_DeviceCount, Devices, DevTypes, NULL, PCONFIG(0), true );
 
         // Calculation of the max indices for each sensor type
         switch (PCONFIG(0)) {
           case 21:  //ESR21
-            Plugin_089_MaxIdx[0] = 0; // None
-            Plugin_089_MaxIdx[1] = 3; // Sensor
-            Plugin_089_MaxIdx[2] = 6; // Ext. sensor
-            Plugin_089_MaxIdx[3] = 1; // Digital output
-            Plugin_089_MaxIdx[4] = 1; // Speed step
-            Plugin_089_MaxIdx[5] = 1; // Analog output
-            Plugin_089_MaxIdx[6] = 1; // Heat power (kW)
-            Plugin_089_MaxIdx[7] = 1; // Heat meter (MWh)
+            Plugin_092_MaxIdx[0] = 0; // None
+            Plugin_092_MaxIdx[1] = 3; // Sensor
+            Plugin_092_MaxIdx[2] = 6; // Ext. sensor
+            Plugin_092_MaxIdx[3] = 1; // Digital output
+            Plugin_092_MaxIdx[4] = 1; // Speed step
+            Plugin_092_MaxIdx[5] = 1; // Analog output
+            Plugin_092_MaxIdx[6] = 1; // Heat power (kW)
+            Plugin_092_MaxIdx[7] = 1; // Heat meter (MWh)
             break;
           case 31:  //UVR31
-            Plugin_089_MaxIdx[0] = 0; // None
-            Plugin_089_MaxIdx[1] = 3; // Sensor
-            Plugin_089_MaxIdx[2] = 0; // Ext. sensor
-            Plugin_089_MaxIdx[3] = 1; // Digital output
-            Plugin_089_MaxIdx[4] = 0; // Speed step
-            Plugin_089_MaxIdx[5] = 0; // Analog output
-            Plugin_089_MaxIdx[6] = 0; // Heat power (kW)
-            Plugin_089_MaxIdx[7] = 0; // Heat meter (MWh)
+            Plugin_092_MaxIdx[0] = 0; // None
+            Plugin_092_MaxIdx[1] = 3; // Sensor
+            Plugin_092_MaxIdx[2] = 0; // Ext. sensor
+            Plugin_092_MaxIdx[3] = 1; // Digital output
+            Plugin_092_MaxIdx[4] = 0; // Speed step
+            Plugin_092_MaxIdx[5] = 0; // Analog output
+            Plugin_092_MaxIdx[6] = 0; // Heat power (kW)
+            Plugin_092_MaxIdx[7] = 0; // Heat meter (MWh)
             break;
           case 1611:  //UVR1611
-            Plugin_089_MaxIdx[0] = 0; // None
-            Plugin_089_MaxIdx[1] = 16; // Sensor
-            Plugin_089_MaxIdx[2] = 0; // Ext. sensor
-            Plugin_089_MaxIdx[3] = 13; // Digital output
-            Plugin_089_MaxIdx[4] = 4; // Speed step
-            Plugin_089_MaxIdx[5] = 0; // Analog output
-            Plugin_089_MaxIdx[6] = 2; // Heat power (kW)
-            Plugin_089_MaxIdx[7] = 2; // Heat meter (MWh)
+            Plugin_092_MaxIdx[0] = 0; // None
+            Plugin_092_MaxIdx[1] = 16; // Sensor
+            Plugin_092_MaxIdx[2] = 0; // Ext. sensor
+            Plugin_092_MaxIdx[3] = 13; // Digital output
+            Plugin_092_MaxIdx[4] = 4; // Speed step
+            Plugin_092_MaxIdx[5] = 0; // Analog output
+            Plugin_092_MaxIdx[6] = 2; // Heat power (kW)
+            Plugin_092_MaxIdx[7] = 2; // Heat meter (MWh)
             break;
           case 6132:  //UVR 61-3 (bis V8.2)
-            Plugin_089_MaxIdx[0] = 0; // None
-            Plugin_089_MaxIdx[1] = 6; // Sensor
-            Plugin_089_MaxIdx[2] = 0; // Ext. sensor
-            Plugin_089_MaxIdx[3] = 8; // Digital output
-            Plugin_089_MaxIdx[4] = 1; // Speed step
-            Plugin_089_MaxIdx[5] = 1; // Analog output
-            Plugin_089_MaxIdx[6] = 1; // Heat power (kW)
-            Plugin_089_MaxIdx[7] = 1; // Heat meter (MWh)
+            Plugin_092_MaxIdx[0] = 0; // None
+            Plugin_092_MaxIdx[1] = 6; // Sensor
+            Plugin_092_MaxIdx[2] = 0; // Ext. sensor
+            Plugin_092_MaxIdx[3] = 8; // Digital output
+            Plugin_092_MaxIdx[4] = 1; // Speed step
+            Plugin_092_MaxIdx[5] = 1; // Analog output
+            Plugin_092_MaxIdx[6] = 1; // Heat power (kW)
+            Plugin_092_MaxIdx[7] = 1; // Heat meter (MWh)
             break;
           case 6133:  //UVR 61-3 (ab V8.3)
-            Plugin_089_MaxIdx[0] = 0; // None
-            Plugin_089_MaxIdx[1] = 6; // Sensor
-            Plugin_089_MaxIdx[2] = 9; // Ext. sensor
-            Plugin_089_MaxIdx[3] = 3; // Digital output
-            Plugin_089_MaxIdx[4] = 1; // Speed step
-            Plugin_089_MaxIdx[5] = 2; // Analog output
-            Plugin_089_MaxIdx[6] = 3; // Heat power (kW)
-            Plugin_089_MaxIdx[7] = 3; // Heat meter (MWh)
+            Plugin_092_MaxIdx[0] = 0; // None
+            Plugin_092_MaxIdx[1] = 6; // Sensor
+            Plugin_092_MaxIdx[2] = 9; // Ext. sensor
+            Plugin_092_MaxIdx[3] = 3; // Digital output
+            Plugin_092_MaxIdx[4] = 1; // Speed step
+            Plugin_092_MaxIdx[5] = 2; // Analog output
+            Plugin_092_MaxIdx[6] = 3; // Heat power (kW)
+            Plugin_092_MaxIdx[7] = 3; // Heat meter (MWh)
             break;
         }
 
         addFormSubHeader(F("Inputs"));
 
         for (int i = 0; i < DLbus_ValueCount; i++) {
-          Plugin_089_ValueType[i] = PCONFIG(i + 1) >> 8;
-          Plugin_089_ValueIdx[i] = PCONFIG(i + 1) & 0x00FF;
+          Plugin_092_ValueType[i] = PCONFIG(i + 1) >> 8;
+          Plugin_092_ValueIdx[i] = PCONFIG(i + 1) & 0x00FF;
 
-          addFormSelector(plugin_089_ValueNames[i], plugin_089_Values[i], DLbus_OptionCount, Options, OptionTypes, NULL, Plugin_089_ValueType[i], true);
-          if (Plugin_089_MaxIdx[Plugin_089_ValueType[i]] > 1) {
-            CurIdx = Plugin_089_ValueIdx[i];
+          addFormSelector(plugin_092_ValueNames[i], plugin_092_Values[i], DLbus_OptionCount, Options, OptionTypes, NULL, Plugin_092_ValueType[i], true);
+          if (Plugin_092_MaxIdx[Plugin_092_ValueType[i]] > 1) {
+            CurIdx = Plugin_092_ValueIdx[i];
             if (CurIdx < 1) {
               CurIdx = 1;
             }
-            if (CurIdx > Plugin_089_MaxIdx[Plugin_089_ValueType[i]]) {
-              CurIdx = Plugin_089_MaxIdx[Plugin_089_ValueType[i]];
+            if (CurIdx > Plugin_092_MaxIdx[Plugin_092_ValueType[i]]) {
+              CurIdx = Plugin_092_MaxIdx[Plugin_092_ValueType[i]];
             }
 	    addHtml(F(" Index: "));
-            addNumericBox(plugin_089_Indizes[i], CurIdx, 1, Plugin_089_MaxIdx[Plugin_089_ValueType[i]]);
+            addNumericBox(plugin_092_Indizes[i], CurIdx, 1, Plugin_092_MaxIdx[Plugin_092_ValueType[i]]);
           }
         }
 
@@ -282,12 +282,12 @@ boolean Plugin_089(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        PCONFIG(0) = getFormItemInt(F("p089_dlbtype"));
-        Plugin_089_SetIndices(PCONFIG(0));
+        PCONFIG(0) = getFormItemInt(F("p092_dlbtype"));
+        Plugin_092_SetIndices(PCONFIG(0));
 
         for (int i = 0; i < DLbus_ValueCount; i++) {
-          OptionIdx = getFormItemInt(plugin_089_Values[i]);
-          CurIdx = getFormItemInt(plugin_089_Indizes[i]);
+          OptionIdx = getFormItemInt(plugin_092_Values[i]);
+          CurIdx = getFormItemInt(plugin_092_Indizes[i]);
           if (CurIdx < 1) {
             CurIdx = 1;
           }
@@ -295,13 +295,13 @@ boolean Plugin_089(byte function, struct EventStruct *event, String& string)
           ExtraTaskSettings.TaskDeviceValueDecimals[event->BaseVarIndex + i] = OptionValueDecimals[OptionIdx];
         }
 
-#ifdef PLUGIN_089_DEBUG
+#ifdef PLUGIN_092_DEBUG
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-	        Plugin_089_DLB_Pin = CONFIG_PIN1;
+	        Plugin_092_DLB_Pin = CONFIG_PIN1;
 
 	        String log = F("PLUGIN_WEBFORM_SAVE :");
 	        log += F(" DLB_Pin:");
-	        log += Plugin_089_DLB_Pin;
+	        log += Plugin_092_DLB_Pin;
 	        log += F(" MinPulseWidth:");
 	        log += DataSettings.MinPulseWidth;
 	        log += F(" MaxPulseWidth:");
@@ -368,18 +368,18 @@ boolean Plugin_089(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
       {
-        if (Plugin_089_init) {
-          addLog(LOG_LEVEL_ERROR, F("PLUGIN_089_INIT -> Already done!"));
+        if (Plugin_092_init) {
+          addLog(LOG_LEVEL_ERROR, F("PLUGIN_092_INIT -> Already done!"));
           return true;
         }
-        Plugin_089_init = true;
-        addLog(LOG_LEVEL_ERROR, F("PLUGIN_089_INIT: attachInterrupt"));
-        Plugin_089_DLB_Pin = CONFIG_PIN1;
-        pinMode(Plugin_089_DLB_Pin, INPUT_PULLUP);
+        Plugin_092_init = true;
+        addLog(LOG_LEVEL_ERROR, F("PLUGIN_092_INIT: attachInterrupt"));
+        Plugin_092_DLB_Pin = CONFIG_PIN1;
+        pinMode(Plugin_092_DLB_Pin, INPUT_PULLUP);
         receiving = false;
         // bei einem CHANGE am Daten-Pin wird pin_changed aufgerufen
         // on a CHANGE on the data pin pin_changed is called
-        attachInterrupt(digitalPinToInterrupt(Plugin_089_DLB_Pin), Plugin_089_Pin_changed, CHANGE);
+        attachInterrupt(digitalPinToInterrupt(Plugin_092_DLB_Pin), Plugin_092_Pin_changed, CHANGE);
         UserVar[event->BaseVarIndex] = NAN;
         success = true;
         break;
@@ -387,11 +387,11 @@ boolean Plugin_089(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
       {
-        addLog(LOG_LEVEL_ERROR, F("PLUGIN_089_READ"));
-        if (Plugin_089_DLB_Pin != CONFIG_PIN1) {
+        addLog(LOG_LEVEL_ERROR, F("PLUGIN_092_READ"));
+        if (Plugin_092_DLB_Pin != CONFIG_PIN1) {
           String log = F("## Error DL-Bus: Device Pin setting not correct!");
           log += F(" DLB_Pin:");
-          log += Plugin_089_DLB_Pin;
+          log += Plugin_092_DLB_Pin;
           log += F(" Setting:");
           log += CONFIG_PIN1;
           addLog(LOG_LEVEL_ERROR, log);
@@ -405,21 +405,21 @@ boolean Plugin_089(byte function, struct EventStruct *event, String& string)
           addLog(LOG_LEVEL_ERROR, F("## Error DL-Bus: Still receiving!"));
           return false;
         }
-        if (Plugin_089_init == false) {
+        if (Plugin_092_init == false) {
           addLog(LOG_LEVEL_ERROR, F("## Error DL-Bus: Not initialized!"));
           return false;
         }
-        Plugin_089_SetIndices(PCONFIG(0));
+        Plugin_092_SetIndices(PCONFIG(0));
 
-        if ((Plugin_089_ReceivedOK == false) || ((millis()-Plugin_089_LastReceived)>(Settings.TaskDeviceTimer[event->TaskIndex] * 1000/2))) {
-          success = Plugin_089_Receiving();
+        if ((Plugin_092_ReceivedOK == false) || ((millis()-Plugin_092_LastReceived)>(Settings.TaskDeviceTimer[event->TaskIndex] * 1000/2))) {
+          success = Plugin_092_Receiving();
           if (success)
-            success = Plugin_089_Processing();
+            success = Plugin_092_Processing();
           if (success)
-            success = Plugin_089_CheckCRC();
+            success = Plugin_092_CheckCRC();
           if (success)
-            Plugin_089_LastReceived = millis();
-          Plugin_089_ReceivedOK = success;
+            Plugin_092_LastReceived = millis();
+          Plugin_092_ReceivedOK = success;
         }
         else
           success = true;
@@ -428,7 +428,7 @@ boolean Plugin_089(byte function, struct EventStruct *event, String& string)
           for (int i = 0; i < DLbus_ValueCount; i++) {
             OptionIdx = PCONFIG(i + 1) >> 8;
             CurIdx = PCONFIG(i + 1) & 0x00FF;
-            if (Plugin_089_GetData(OptionIdx, CurIdx)) {
+            if (Plugin_092_GetData(OptionIdx, CurIdx)) {
               UserVar[event->BaseVarIndex + i] = ReadData.value;
             }
             else {
@@ -444,7 +444,7 @@ boolean Plugin_089(byte function, struct EventStruct *event, String& string)
   return success;
 }
 
-void Plugin_089_SetIndices(int DeviceIndex) {
+void Plugin_092_SetIndices(int DeviceIndex) {
   // Sert the indices for the DL bus packet
   switch (DeviceIndex) {
     case 21:  //ESR21
@@ -651,7 +651,7 @@ int power_index, kwh_index, mwh_index;
   DLBus receiving
   \****************/
 
-boolean Plugin_089_Receiving(void) {
+boolean Plugin_092_Receiving(void) {
   byte rawval, val;
   int i;
   noInterrupts ();                              // make sure we don't get interrupted before we are ready
@@ -695,8 +695,8 @@ boolean Plugin_089_Receiving(void) {
         WrongTimings[WrongTimeCnt][3] = rawval;
         if ((rawval==0x80) && (BitStream[i-1]==0x05)) {
           // Add two additional short pulses
-          Plugin_089_process_bit(0);
-          Plugin_089_process_bit(1);
+          Plugin_092_process_bit(0);
+          Plugin_092_process_bit(1);
           WrongTimings[WrongTimeCnt][4] = flgSingleWidth;
           WrongTimings[WrongTimeCnt][5] = flgSingleWidth+1;
         }
@@ -711,12 +711,12 @@ boolean Plugin_089_Receiving(void) {
       val = rawval & 0x01;
       if ((rawval & flgDoubleWidth) == flgDoubleWidth) {
         // doppelte Pulsweite // double pulse width
-        Plugin_089_process_bit(!val);
-        Plugin_089_process_bit(val);
+        Plugin_092_process_bit(!val);
+        Plugin_092_process_bit(val);
       }
       else {
         // einfache Pulsweite // single pulse width
-        Plugin_089_process_bit(val);
+        Plugin_092_process_bit(val);
       }
     }
   }
@@ -757,12 +757,12 @@ boolean Plugin_089_Receiving(void) {
   DLBus interrupt
   \*****************/
 
-void Plugin_089_Pin_changed(void) {
+void Plugin_092_Pin_changed(void) {
   TimeInMicros = micros();
   time_diff = TimeInMicros - last_bit_change;
   last_bit_change = TimeInMicros;
   if (receiving) {
-    byte val = digitalRead(Plugin_089_DLB_Pin); // Zustand einlesen // read state
+    byte val = digitalRead(Plugin_092_DLB_Pin); // Zustand einlesen // read state
     // Pulsweite testen // check pulse width
     if (time_diff >= 2*MinDoublePulseWidth)     val |= 0x80; // länger als 2x doppelte Pulsweite // longer then 2x double pulse width
     else if (time_diff > MaxDoublePulseWidth)   val |= 0x40; // länger als doppelte Pulsweite  // longer then double pulse width
@@ -780,7 +780,7 @@ void Plugin_089_Pin_changed(void) {
   DLBus processing
   \*****************/
 
-void Plugin_089_process_bit(byte b) {
+void Plugin_092_process_bit(byte b) {
   // den ersten Impuls ignorieren // ignore first pulse
   pulse_count++;
   if (pulse_count % 2)
@@ -792,20 +792,20 @@ void Plugin_089_process_bit(byte b) {
     ByteStream[bit_number / 8] &= ~(1 << (bit_number % 8)); // Bit löschen // clear bit
 }
 
-boolean Plugin_089_Processing(void) {
+boolean Plugin_092_Processing(void) {
 boolean inverted = false;
 String log;
   addLog(LOG_LEVEL_INFO, F("Processing..."));
-  start_bit = Plugin_089_Analyze(); // Anfang des Datenrahmens finden // find the data frame's beginning
+  start_bit = Plugin_092_Analyze(); // Anfang des Datenrahmens finden // find the data frame's beginning
   // invertiertes Signal? // inverted signal?
   while (start_bit == -1) {
     if (inverted) {
       return false;
     }
     addLog(LOG_LEVEL_INFO, F("Invert bit stream..."));
-    Plugin_089_Invert(); // erneut invertieren // invert again
+    Plugin_092_Invert(); // erneut invertieren // invert again
     inverted = true;
-    start_bit = Plugin_089_Analyze();
+    start_bit = Plugin_092_Analyze();
     if (start_bit == -1) {
       addLog(LOG_LEVEL_ERROR, F("Error: No data frame available!"));
       return false;
@@ -832,8 +832,8 @@ String log;
 	  log += bit_number;
 	  addLog(LOG_LEVEL_INFO, log);
 	}
-  Plugin_089_Trim(); // Start- und Stopbits entfernen // remove start and stop bits
-  if (Plugin_089_CheckDevice()) // verbundenes Gerät prüfen // check connected device
+  Plugin_092_Trim(); // Start- und Stopbits entfernen // remove start and stop bits
+  if (Plugin_092_CheckDevice()) // verbundenes Gerät prüfen // check connected device
     return true;
   else {
     addLog(LOG_LEVEL_ERROR, F("Error: Device not found!"));
@@ -841,17 +841,17 @@ String log;
   }
 }
 
-int Plugin_089_Analyze() {
+int Plugin_092_Analyze() {
   byte sync=0;
   // finde SYNC (16 * aufeinanderfolgend 1) // find SYNC (16 * sequential 1)
   for (int i = 0; i < bit_number; i++) {
-    if (Plugin_089_ReadBit(i))
+    if (Plugin_092_ReadBit(i))
       sync++;
     else
       sync = 0;
     if (sync == 16) {
       // finde erste 0 // find first 0
-      while (Plugin_089_ReadBit(i) == 1)
+      while (Plugin_092_ReadBit(i) == 1)
         i++;
       return i; // Anfang des Datenrahmens // beginning of data frame
     }
@@ -859,16 +859,16 @@ int Plugin_089_Analyze() {
   // kein Datenrahmen vorhanden. Signal überprüfen?
   return -1; // no data frame available. check signal?
 }
-void Plugin_089_Invert() {
+void Plugin_092_Invert() {
   for (int i = 0; i < bit_number; i++)
-    Plugin_089_WriteBit(i, Plugin_089_ReadBit(i) ? 0 : 1); // jedes Bit umkehren // invert every bit
+    Plugin_092_WriteBit(i, Plugin_092_ReadBit(i) ? 0 : 1); // jedes Bit umkehren // invert every bit
 }
-byte Plugin_089_ReadBit(int pos) {
+byte Plugin_092_ReadBit(int pos) {
   int row = pos / 8; // Position in Bitmap ermitteln // detect position in bitmap
   int col = pos % 8;
   return (((ByteStream[row]) >> (col)) & 0x01); // Bit zurückgeben // return bit
 }
-void Plugin_089_WriteBit(int pos, byte set) {
+void Plugin_092_WriteBit(int pos, byte set) {
   int row = pos / 8; // Position in Bitmap ermitteln // detect position in bitmap
   int col = pos % 8;
   if (set)
@@ -876,7 +876,7 @@ void Plugin_089_WriteBit(int pos, byte set) {
   else
     ByteStream[row] &= ~(1 << col); // Bit löschen // clear bit
 }
-void Plugin_089_Trim() {
+void Plugin_092_Trim() {
   for (int i = start_bit, bit = 0; i < bit_number; i++) {
     int offset = i - start_bit;
     // Start- und Stop-Bits ignorieren:
@@ -886,7 +886,7 @@ void Plugin_089_Trim() {
     // start bits: 0 10 20 30, also  x    % 10 == 0
     // stop bits:  9 19 29 39, also (x+1) % 10 == 0
     if (offset % 10 && (offset + 1) % 10) {
-      Plugin_089_WriteBit(bit, Plugin_089_ReadBit(i));
+      Plugin_092_WriteBit(bit, Plugin_092_ReadBit(i));
       bit++;
     }
   }
@@ -896,7 +896,7 @@ void Plugin_089_Trim() {
   DLBus get data
   \****************/
 
-boolean Plugin_089_CheckDevice() {
+boolean Plugin_092_CheckDevice() {
   // Datenrahmen von eines Gerätes?
   if (ByteStream[0] == DataSettings.DeviceByte0) {
     if ((DataSettings.DeviceBytes == 1) || (ByteStream[1] == DataSettings.DeviceByte1))
@@ -916,7 +916,7 @@ boolean Plugin_089_CheckDevice() {
   return false;
 }
 
-boolean Plugin_089_CheckCRC() {
+boolean Plugin_092_CheckCRC() {
   // CRC-Prüfsumme
   if (DataSettings.IdxCRC == 0)
     return true;
@@ -937,7 +937,7 @@ boolean Plugin_089_CheckCRC() {
   return false;
 }
 
-boolean Plugin_089_GetData(int OptionIdx, int CurIdx) {
+boolean Plugin_092_GetData(int OptionIdx, int CurIdx) {
   String log;
   boolean result = false;
   switch (OptionIdx) {
