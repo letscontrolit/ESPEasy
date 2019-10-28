@@ -83,7 +83,7 @@ String decodeSchedulerId(unsigned long mixed_id) {
 \*********************************************************************************************/
 void handle_schedule() {
   START_TIMER
-  unsigned long timer;
+  unsigned long timer = 0;
   unsigned long mixed_id = 0;
 
   if (timePassedSince(last_system_event_run) < 500) {
