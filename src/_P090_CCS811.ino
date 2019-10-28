@@ -1,7 +1,7 @@
-#ifdef USES_P089
+#ifdef USES_P090
 
 // #######################################################################################################
-// ########################### Plugin 89: CCS811 Air Quality TVOC/eCO2 Sensor ###########################
+// ########################### Plugin 90: CCS811 Air Quality TVOC/eCO2 Sensor ###########################
 // #######################################################################################################
 
 /*
@@ -17,20 +17,20 @@
    The library has provisions for the other modes.
  */
 
-#define PLUGIN_089
-#define PLUGIN_ID_089         89
-#define PLUGIN_NAME_089       "Gases - CCS811 TVOC/eCO2 [TESTING]"
-#define PLUGIN_VALUENAME1_089 "TVOC"
-#define PLUGIN_VALUENAME2_089 "eCO2"
+#define PLUGIN_090
+#define PLUGIN_ID_090         90
+#define PLUGIN_NAME_090       "Gases - CCS811 TVOC/eCO2 [TESTING]"
+#define PLUGIN_VALUENAME1_090 "TVOC"
+#define PLUGIN_VALUENAME2_090 "eCO2"
 
-// int Plugin_089_WAKE_Pin;
-// int Plugin_089_INT_Pin;
+// int Plugin_090_WAKE_Pin;
+// int Plugin_090_INT_Pin;
 
-// #define Plugin_089_nWAKE           2
-// #define Plugin_089_nINT            14
+// #define Plugin_090_nWAKE           2
+// #define Plugin_090_nINT            14
 
-#define Plugin_089_D_AWAKE 20  // microseconds to wait before waking waking (deassert) sensor. min 20 microseconds
-#define Plugin_089_T_AWAKE 100 // microseconds to wait after waking sensor. min 50 microseconds
+#define Plugin_090_D_AWAKE 20  // microseconds to wait before waking waking (deassert) sensor. min 20 microseconds
+#define Plugin_090_T_AWAKE 100 // microseconds to wait after waking sensor. min 50 microseconds
 
 /******************************************************************************
    CCS811 Arduino library
@@ -75,14 +75,14 @@
 # define CSS811_SW_RESET        0xFF
 
 
-# define P089_I2C_ADDR                 Settings.TaskDevicePluginConfig[event->TaskIndex][0]
-# define P089_COMPENSATE_ENABLE        Settings.TaskDevicePluginConfig[event->TaskIndex][1]
-# define P089_TEMPERATURE_TASK_INDEX   Settings.TaskDevicePluginConfig[event->TaskIndex][2]
-# define P089_TEMPERATURE_TASK_VALUE   Settings.TaskDevicePluginConfig[event->TaskIndex][3]
-# define P089_HUMIDITY_TASK_INDEX      Settings.TaskDevicePluginConfig[event->TaskIndex][4]
-# define P089_HUMIDITY_TASK_VALUE      Settings.TaskDevicePluginConfig[event->TaskIndex][5]
-# define P089_TEMPERATURE_SCALE        Settings.TaskDevicePluginConfig[event->TaskIndex][6] // deg C/F
-# define P089_READ_INTERVAL           Settings.TaskDevicePluginConfigLong[event->TaskIndex][0]
+# define P090_I2C_ADDR                 Settings.TaskDevicePluginConfig[event->TaskIndex][0]
+# define P090_COMPENSATE_ENABLE        Settings.TaskDevicePluginConfig[event->TaskIndex][1]
+# define P090_TEMPERATURE_TASK_INDEX   Settings.TaskDevicePluginConfig[event->TaskIndex][2]
+# define P090_TEMPERATURE_TASK_VALUE   Settings.TaskDevicePluginConfig[event->TaskIndex][3]
+# define P090_HUMIDITY_TASK_INDEX      Settings.TaskDevicePluginConfig[event->TaskIndex][4]
+# define P090_HUMIDITY_TASK_VALUE      Settings.TaskDevicePluginConfig[event->TaskIndex][5]
+# define P090_TEMPERATURE_SCALE        Settings.TaskDevicePluginConfig[event->TaskIndex][6] // deg C/F
+# define P090_READ_INTERVAL           Settings.TaskDevicePluginConfigLong[event->TaskIndex][0]
 
 // This is the core operational class of the driver.
 //  CCS811Core contains only read and write operations towards the sensor.
@@ -151,7 +151,7 @@ public:
   bool     appValid(void);
   uint8_t  getErrorRegister(void);
   uint16_t getBaseline(void);
-  status setBaseline(uint16_t);
+  status   setBaseline(uint16_t);
   status   enableInterrupts(void);
   status   disableInterrupts(void);
   status   setDriveMode(uint8_t mode);
@@ -183,7 +183,7 @@ private:
 
 CCS811 myCCS811(0x5B); // start with default, but will update later on with user settings
 
-boolean Plugin_089(byte function, struct EventStruct *event, String& string)
+boolean Plugin_090(byte function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -191,7 +191,7 @@ boolean Plugin_089(byte function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_089;
+      Device[++deviceCount].Number           = PLUGIN_ID_090;
       Device[deviceCount].Type               = DEVICE_TYPE_I2C;
       Device[deviceCount].VType              = SENSOR_TYPE_DUAL;
       Device[deviceCount].Ports              = 0;
@@ -206,14 +206,14 @@ boolean Plugin_089(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_GET_DEVICENAME:
     {
-      string = F(PLUGIN_NAME_089);
+      string = F(PLUGIN_NAME_090);
       break;
     }
 
     case PLUGIN_GET_DEVICEVALUENAMES:
     {
-      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_089));
-      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], PSTR(PLUGIN_VALUENAME2_089));
+      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_090));
+      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], PSTR(PLUGIN_VALUENAME2_090));
       break;
     }
 
@@ -223,47 +223,47 @@ boolean Plugin_089(byte function, struct EventStruct *event, String& string)
         // I2C address choice
         String options[2]      = { F("0x5A (ADDR pin is LOW)"), F("0x5B (ADDR pin is HIGH)") };
         int    optionValues[2] = { 0x5A, 0x5B };
-        addFormSelector(F("I2C Address"), F("p089_i2c_address"), 2, options, optionValues, P089_I2C_ADDR);
+        addFormSelector(F("I2C Address"), F("p090_i2c_address"), 2, options, optionValues, P090_I2C_ADDR);
       }
 
       {
         // read frequency
-        int frequencyChoice        = (int)P089_READ_INTERVAL;
+        int frequencyChoice        = (int)P090_READ_INTERVAL;
         String frequencyOptions[3] = { F("1 second"), F("10 seconds"), F("60 seconds") };
         int    frequencyValues[3]  = { 1, 2, 3 };
-        addFormSelector(F("Take reading every"), F("p089_read_frequency"), 3, frequencyOptions, frequencyValues, frequencyChoice);
+        addFormSelector(F("Take reading every"), F("p090_read_frequency"), 3, frequencyOptions, frequencyValues, frequencyChoice);
       }
 
       addFormSeparator(2);
 
       {
         // mode
-        addFormCheckBox(F("Enable temp/humid compensation"), F("p089_enable_compensation"), P089_COMPENSATE_ENABLE);
+        addFormCheckBox(F("Enable temp/humid compensation"), F("p090_enable_compensation"), P090_COMPENSATE_ENABLE);
         addFormNote(F("If this is enabled, the Temperature and Humidity values below need to be configured."));
 
         // temperature
         addRowLabel(F("Temperature"));
-        addTaskSelect(F("p089_temperature_task"), P089_TEMPERATURE_TASK_INDEX);
-        LoadTaskSettings(P089_TEMPERATURE_TASK_INDEX); // we need to load the values from another task for selection!
+        addTaskSelect(F("p090_temperature_task"), P090_TEMPERATURE_TASK_INDEX);
+        LoadTaskSettings(P090_TEMPERATURE_TASK_INDEX); // we need to load the values from another task for selection!
         addRowLabel(F("Temperature Value:<TD>"));
-        addTaskValueSelect(F("p089_temperature_value"), P089_TEMPERATURE_TASK_VALUE, P089_TEMPERATURE_TASK_INDEX);
+        addTaskValueSelect(F("p090_temperature_value"), P090_TEMPERATURE_TASK_VALUE, P090_TEMPERATURE_TASK_INDEX);
 
         // temperature scale
-        int temperatureScale = P089_TEMPERATURE_SCALE;
+        int temperatureScale = P090_TEMPERATURE_SCALE;
         addRowLabel(F("Temperature Scale")); // checked
-        addHtml(F("<input type='radio' id='p089_temperature_c' name='p089_temperature_scale' value='0'"));
+        addHtml(F("<input type='radio' id='p090_temperature_c' name='p090_temperature_scale' value='0'"));
         addHtml((temperatureScale == 0) ? F(" checked>") : F(">"));
-        addHtml(F("<label for='p089_temperature_c'> &deg;C</label> &nbsp; "));
-        addHtml(F("<input type='radio' id='p089_temperature_f' name='p089_temperature_scale' value='1'"));
+        addHtml(F("<label for='p090_temperature_c'> &deg;C</label> &nbsp; "));
+        addHtml(F("<input type='radio' id='p090_temperature_f' name='p090_temperature_scale' value='1'"));
         addHtml((temperatureScale == 1) ? F(" checked>") : F(">"));
-        addHtml(F("<label for='p089_temperature_f'> &deg;F</label><br>"));
+        addHtml(F("<label for='p090_temperature_f'> &deg;F</label><br>"));
 
         // humidity
         addRowLabel(F("Humidity"));
-        addTaskSelect(F("p089_humidity_task"), P089_HUMIDITY_TASK_INDEX);
-        LoadTaskSettings(P089_HUMIDITY_TASK_INDEX); // we need to load the values from another task for selection!
+        addTaskSelect(F("p090_humidity_task"), P090_HUMIDITY_TASK_INDEX);
+        LoadTaskSettings(P090_HUMIDITY_TASK_INDEX); // we need to load the values from another task for selection!
         addRowLabel(F("Humidity Value"));
-        addTaskValueSelect(F("p089_humidity_value"), P089_HUMIDITY_TASK_VALUE, P089_HUMIDITY_TASK_INDEX);
+        addTaskValueSelect(F("p090_humidity_value"), P090_HUMIDITY_TASK_VALUE, P090_HUMIDITY_TASK_INDEX);
       }
 
       LoadTaskSettings(event->TaskIndex); // we need to restore our original taskvalues!
@@ -276,14 +276,14 @@ boolean Plugin_089(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      P089_I2C_ADDR               = getFormItemInt(F("p089_i2c_address"));
-      P089_COMPENSATE_ENABLE      = isFormItemChecked(F("p089_enable_compensation"));
-      P089_TEMPERATURE_TASK_INDEX = getFormItemInt(F("p089_temperature_task"));
-      P089_TEMPERATURE_TASK_VALUE = getFormItemInt(F("p089_temperature_value"));
-      P089_HUMIDITY_TASK_INDEX    = getFormItemInt(F("p089_humidity_task"));
-      P089_HUMIDITY_TASK_VALUE    = getFormItemInt(F("p089_humidity_value"));
-      P089_TEMPERATURE_SCALE      = getFormItemInt(F("p089_temperature_scale"));
-      P089_READ_INTERVAL          = getFormItemInt(F("p089_read_frequency"));
+      P090_I2C_ADDR               = getFormItemInt(F("p090_i2c_address"));
+      P090_COMPENSATE_ENABLE      = isFormItemChecked(F("p090_enable_compensation"));
+      P090_TEMPERATURE_TASK_INDEX = getFormItemInt(F("p090_temperature_task"));
+      P090_TEMPERATURE_TASK_VALUE = getFormItemInt(F("p090_temperature_value"));
+      P090_HUMIDITY_TASK_INDEX    = getFormItemInt(F("p090_humidity_task"));
+      P090_HUMIDITY_TASK_VALUE    = getFormItemInt(F("p090_humidity_value"));
+      P090_TEMPERATURE_SCALE      = getFormItemInt(F("p090_temperature_scale"));
+      P090_READ_INTERVAL          = getFormItemInt(F("p090_read_frequency"));
 
       success = true;
       break;
@@ -291,8 +291,8 @@ boolean Plugin_089(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      // Plugin_089_WAKE_Pin = Settings.TaskDevicePin1[event->TaskIndex];
-      myCCS811.setAddress(P089_I2C_ADDR);
+      // Plugin_090_WAKE_Pin = Settings.TaskDevicePin1[event->TaskIndex];
+      myCCS811.setAddress(P090_I2C_ADDR);
       CCS811Core::status returnCode;
       returnCode = myCCS811.begin();
 
@@ -313,7 +313,7 @@ boolean Plugin_089(byte function, struct EventStruct *event, String& string)
       // Mode 2 = every 10s
       // Mode 3 = every 60s
       // Mode 4 = RAW mode (not used)
-      returnCode = myCCS811.setDriveMode(P089_READ_INTERVAL);
+      returnCode = myCCS811.setDriveMode(P090_READ_INTERVAL);
 
       if (returnCode != CCS811Core::SENSOR_SUCCESS) {
       #ifndef BUILD_NO_DEBUG
@@ -333,14 +333,14 @@ boolean Plugin_089(byte function, struct EventStruct *event, String& string)
     case PLUGIN_READ:
     {
       // if CCS811 is compensated with temperature and humidity
-      if (P089_COMPENSATE_ENABLE)
+      if (P090_COMPENSATE_ENABLE)
       {
         // we're checking a var from another task, so calculate that basevar
-        byte  TaskIndex    = P089_TEMPERATURE_TASK_INDEX;
-        byte  BaseVarIndex = TaskIndex * VARS_PER_TASK + P089_TEMPERATURE_TASK_VALUE;
+        byte  TaskIndex    = P090_TEMPERATURE_TASK_INDEX;
+        byte  BaseVarIndex = TaskIndex * VARS_PER_TASK + P090_TEMPERATURE_TASK_VALUE;
         float temperature  = UserVar[BaseVarIndex]; // in degrees C
         // convert to celsius if required
-        int temperature_in_fahrenheit = P089_TEMPERATURE_SCALE;
+        int temperature_in_fahrenheit = P090_TEMPERATURE_SCALE;
         String temp                   = F("°C");
 
         if (temperature_in_fahrenheit)
@@ -349,8 +349,8 @@ boolean Plugin_089(byte function, struct EventStruct *event, String& string)
           temp        =  F("°F");
         }
 
-        byte  TaskIndex2    = P089_HUMIDITY_TASK_INDEX;
-        byte  BaseVarIndex2 = TaskIndex2 * VARS_PER_TASK + P089_HUMIDITY_TASK_VALUE;
+        byte  TaskIndex2    = P090_HUMIDITY_TASK_INDEX;
+        byte  BaseVarIndex2 = TaskIndex2 * VARS_PER_TASK + P090_HUMIDITY_TASK_VALUE;
         float humidity      = UserVar[BaseVarIndex2]; // in % relative
 
       #ifndef BUILD_NO_DEBUG
@@ -415,7 +415,7 @@ boolean Plugin_089(byte function, struct EventStruct *event, String& string)
   } // switch
 
   return success;
-}   // Plugin_089
+}   // Plugin_090
 
 // ****************************************************************************//
 //
@@ -966,4 +966,4 @@ String CCS811::getSensorError()
   return "";
 }
 
-#endif // ifdef USES_P089
+#endif // ifdef USES_P090

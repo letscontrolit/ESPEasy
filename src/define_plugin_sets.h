@@ -794,8 +794,8 @@ To create/register a plugin, you have to :
     #define USES_P085   // AcuDC24x
     #define USES_P086   // Receiving values according Homie convention. Works together with C014 Homie controller
     //#define USES_P087   // Serial Proxy
-    #define USES_P089   // Serial Proxy
-    #define USES_P089   // CCS811 TVOC/eCO2 Sensor 
+    #define USES_P089   // Ping
+    #define USES_P090   // CCS811 TVOC/eCO2 Sensor 
 #endif
 
 
