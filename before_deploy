@@ -3,6 +3,7 @@
 VERSION=$(git describe)
 TMP_DIST=`mktemp -d`
 CURPATH=`pwd`
+BUILD_LOG=`echo "${TMP_DIST}/buildlog.txt"`
 
 # PIO 3.x :
 # BINARY_PATH=".pioenvs"
@@ -40,68 +41,70 @@ mkdir -p ${TMP_DIST}/memstats
 
 for ENV in \
   custom_ESP8266_4M1M\
-  dev_ESP8266_4M1M\
-  esp-wrover-kit_test_1M8_partition\
-  esp32test_1M8_partition\
-  hard_SONOFF_POW_4M1M\
-  hard_Ventus_W266\
-  hard_core_252_SONOFF_POW_4M1M\
-  hard_other_POW_ESP8285_1M\
-  minimal_IRext_ESP8266_1M\
-  minimal_IRext_ESP8266_4M1M\
-  minimal_IRext_ESP8266_4M2M\
-  normal_IRext_no_rx_ESP8266_4M2M\
+  esp-wrover-kit_test_4M316k\
+  esp32test_4M316k\
+  normal_ESP8266_1M\
+  normal_ESP8266_1M_VCC\
+  normal_ESP8285_1M\
+  normal_core_241_ESP8266_1M\
+  normal_WROOM02_2M\
+  normal_core_252_WROOM02_2M256\
+  normal_ESP8266_4M1M\
+  normal_core_241_ESP8266_4M1M\
+  normal_core_252_ESP8266_16M\
+  normal_core_260_sdk222_alpha_ESP8266_4M1M\
+  normal_core_260_sdk222_alpha_ESP8266_16M\
   minimal_core_242_ESP8266_1M_OTA\
   minimal_core_242_ESP8285_1M_OTA\
   minimal_core_252_ESP8266_1M_OTA\
   minimal_core_252_ESP8285_1M_OTA\
-  normal_ESP8266_1M\
-  normal_ESP8266_1M_VCC\
-  normal_ESP8266_4M1M\
-  normal_ESP8285_1M\
-  normal_WROOM02_2M\
-  normal_core_241_ESP8266_1M\
-  normal_core_241_ESP8266_4M1M\
-  normal_core_242_ESP8266_1M\
-  normal_core_252_ESP8266_1M\
-  normal_core_252_ESP8266_4M1M\
-  normal_core_252_WROOM02_2M256\
-  normal_core_260_sdk222_alpha_ESP8266_4M1M\
-  test_ESP8266_4M_VCC\
-  test_core_242_ESP8266_4M1M\
-  test_core_252_ESP8266_4M1M\
+  minimal_IRext_ESP8266_1M\
+  minimal_IRext_ESP8266_4M1M\
+  minimal_IRext_ESP8266_4M2M\
+  normal_IRext_no_rx_ESP8266_4M2M\
   test_core_260_sdk222_alpha_ESP8266_4M1M\
-  test_core_260_sdk3_alpha_ESP8266_4M1M;\
+  test_core_260_sdk3_alpha_ESP8266_4M1M\
+  test_core_260_sdk222_alpha_ESP8266_16M\
+  test_ESP8266_4M_VCC\
+  dev_ESP8266_4M1M\
+  hard_SONOFF_POW_4M1M\
+  hard_other_POW_ESP8285_1M\
+  hard_Shelly_1_2M256\
+  hard_Ventus_W266;\
 do
   MAX_FILESIZE=1044464
-  if [[ ${ENV} == *"1M"* ]]; then
+  if [[ ${ENV} == *"_1M"* ]]; then
     # max 871 kiB
     MAX_FILESIZE=892912
   fi
-  if [[ ${ENV} == *"1M_OTA"* ]]; then
+  if [[ ${ENV} == *"_1M_OTA"* ]]; then
     # max 602 kiB
     MAX_FILESIZE=616448
   fi
   if [[ ${ENV} == *"esp32"* ]]; then
     MAX_FILESIZE=1310720
   fi
-  if [[ ${ENV} == *"1M8_partition"* ]]; then
+  if [[ ${ENV} == *"4M316k"* ]]; then
+    # ESP32 with 1800k of sketch space.
     MAX_FILESIZE=1900544
   fi
 
   FIRMWARE_BIN=`echo "${BINARY_PATH}/${ENV}/firmware.bin"`
+
   if [ -f $FIRMWARE_BIN ]; then
     FILESIZE=$(stat -c%s `echo "${FIRMWARE_BIN}"` )
     if (( FILESIZE < MAX_FILESIZE )); then
       echo
-      echo "### Deploying environment $ENV for version $VERSION"
+      echo "SUCCESS:  $FILESIZE < $MAX_FILESIZE Bytes. (${ENV})" >> ${BUILD_LOG}
       BIN=${BINARY_PATH}/${ENV}/ESP_Easy_${VERSION}_${ENV}.bin
       cp ${FIRMWARE_BIN} $BIN
       python2 crc2.py $BIN
       mv $BIN "${TMP_DIST}/bin/ESP_Easy_${VERSION}_${ENV}.bin"
     else
-      echo "Build too large for $ENV $FILESIZE > $MAX_FILESIZE "
+      echo "FAILED: too large $FILESIZE > $MAX_FILESIZE Bytes. (${ENV})" >> ${BUILD_LOG}
     fi
+  else
+    echo "FAILED: No file created. (${ENV})" >> ${BUILD_LOG}
   fi
 
   ELFFILE=`echo "${BINARY_PATH}/${ENV}/firmware.elf"`
@@ -112,6 +115,7 @@ do
     objdump  -s -j .rodata ${ELFFILE} > ${STRINGS_STATS}
   fi
 done
+
 
 #create a source structure that is the same as the original ESPEasy project (and works with the howto on the wiki)
 #rm -rf dist/Source 2>/dev/null
@@ -126,6 +130,12 @@ cd ${TMP_DIST}
 echo
 echo "### Creating zip archive"
 zip -qq ${CURPATH}/ESPEasy_$VERSION.zip -r .
+
+
+
+# Display the build log.
+cat ${BUILD_LOG}
+
 
 rm -Rf ${TMP_DIST}/* 2>/dev/null
 rmdir ${TMP_DIST}

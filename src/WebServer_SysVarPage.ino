@@ -45,6 +45,7 @@ void handle_sysvars() {
   addSysVar_html(F("%unit%"));
   addSysVar_html(F("%sysload%"));
   addSysVar_html(F("%sysheap%"));
+  addSysVar_html(F("%sysstack%"));
   addSysVar_html(F("%sysname%"));
 #if FEATURE_ADC_VCC
   addSysVar_html(F("%vcc%"));

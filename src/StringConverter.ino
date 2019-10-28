@@ -1,3 +1,9 @@
+#include "src/Globals/CRCValues.h"
+#include "src/Globals/Device.h"
+#include "src/Globals/ESPEasyWiFiEvent.h"
+#include "src/Globals/MQTT.h"
+#include "src/Globals/Plugins.h"
+
 /********************************************************************************************\
    Convert a char string to integer
  \*********************************************************************************************/
@@ -14,9 +20,7 @@ unsigned long str2int(const char *string)
    Check if valid float and convert string to float.
  \*********************************************************************************************/
 bool string2float(const String& string, float& floatvalue) {
-  if (!isFloat(string)) { return false; }
-  floatvalue = atof(string.c_str());
-  return true;
+  return validFloatFromString(string, floatvalue);
 }
 
 /********************************************************************************************\
@@ -55,7 +59,7 @@ void formatMAC(const uint8_t *mac, char (& strMAC)[20]) {
 }
 
 String formatMAC(const uint8_t *mac) {
-  char str[20] = {0};
+  char str[20] = { 0 };
 
   formatMAC(mac, str);
   return String(str);
@@ -183,8 +187,17 @@ void addNewLine(String& line) {
 \*********************************************************************************************/
 String doFormatUserVar(struct EventStruct *event, byte rel_index, bool mustCheck, bool& isvalid) {
   isvalid = true;
-  const byte BaseVarIndex = event->TaskIndex * VARS_PER_TASK;
-  const byte DeviceIndex  = getDeviceIndex(Settings.TaskDeviceNumber[event->TaskIndex]);
+
+  if (!validTaskIndex(event->TaskIndex)) {
+    isvalid = false;
+    return "0";
+  }
+  const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(event->TaskIndex);
+
+  if (!validDeviceIndex(DeviceIndex)) {
+    isvalid = false;
+    return "0";
+  }
 
   if (Device[DeviceIndex].ValueCount <= rel_index) {
     isvalid = false;
@@ -198,6 +211,8 @@ String doFormatUserVar(struct EventStruct *event, byte rel_index, bool mustCheck
     }
     return "";
   }
+  const byte BaseVarIndex = event->TaskIndex * VARS_PER_TASK;
+
   switch (Device[DeviceIndex].VType) {
     case SENSOR_TYPE_LONG:
       return String((unsigned long)UserVar[BaseVarIndex] + ((unsigned long)UserVar[BaseVarIndex + 1] << 16));
@@ -224,20 +239,26 @@ String doFormatUserVar(struct EventStruct *event, byte rel_index, bool mustCheck
 #endif // ifndef BUILD_NO_DEBUG
     f = 0;
   }
-  return toString(f, ExtraTaskSettings.TaskDeviceValueDecimals[rel_index]);
+  LoadTaskSettings(event->TaskIndex);
+  String result = toString(f, ExtraTaskSettings.TaskDeviceValueDecimals[rel_index]);
+  result.trim();
+  return result;
 }
 
-String formatUserVarNoCheck(byte TaskIndex, byte rel_index) {
+String formatUserVarNoCheck(taskIndex_t TaskIndex, byte rel_index) {
   bool isvalid;
+
   // FIXME TD-er: calls to this function cannot handle SENSOR_TYPE_STRING
   struct EventStruct TempEvent;
+
   TempEvent.TaskIndex = TaskIndex;
   return doFormatUserVar(&TempEvent, rel_index, false, isvalid);
 }
 
-String formatUserVar(byte TaskIndex, byte rel_index, bool& isvalid) {
+String formatUserVar(taskIndex_t TaskIndex, byte rel_index, bool& isvalid) {
   // FIXME TD-er: calls to this function cannot handle SENSOR_TYPE_STRING
   struct EventStruct TempEvent;
+
   TempEvent.TaskIndex = TaskIndex;
   return doFormatUserVar(&TempEvent, rel_index, true, isvalid);
 }
@@ -245,6 +266,7 @@ String formatUserVar(byte TaskIndex, byte rel_index, bool& isvalid) {
 String formatUserVarNoCheck(struct EventStruct *event, byte rel_index)
 {
   bool isvalid;
+
   return doFormatUserVar(event, rel_index, false, isvalid);
 }
 
@@ -368,98 +390,53 @@ String to_internal_string(const String& input) {
 }
 
 /*********************************************************************************************\
-   Parse a string and get the xth command or parameter in lower case
+   Parse a string and get the xth command or parameter
 \*********************************************************************************************/
-String parseString(const String& string, byte indexFind, bool toEndOfString, bool toLowerCase) {
-  int startpos = 0;
-
-  if (indexFind > 0) {
-    startpos = getParamStartPos(string, indexFind);
-
-    if (startpos < 0) {
-      return "";
-    }
-  }
-  const int endpos = getParamStartPos(string, indexFind + 1);
-  String    result;
-
-  if (toEndOfString || (endpos <= 0)) {
-    result = string.substring(startpos);
-  } else {
-    result = string.substring(startpos, endpos - 1);
-  }
-
-  if (toLowerCase) {
-    result.toLowerCase();
-  }
-  return stripQuotes(result);
-}
-
 String parseString(const String& string, byte indexFind) {
-  return parseString(string, indexFind, false, true);
+  String result = parseStringKeepCase(string, indexFind);
+  result.toLowerCase();
+  return result;
 }
 
 String parseStringKeepCase(const String& string, byte indexFind) {
-  return parseString(string, indexFind, false, false);
+  String result;
+  if (!GetArgv(string.c_str(), result, indexFind)) {
+    return "";
+  }
+  result.trim();
+  return stripQuotes(result);
 }
 
 String parseStringToEnd(const String& string, byte indexFind) {
-  return parseString(string, indexFind, true, true);
+  String result = parseStringToEndKeepCase(string, indexFind);
+  result.toLowerCase();
+  return result;
 }
 
 String parseStringToEndKeepCase(const String& string, byte indexFind) {
-  return parseString(string, indexFind, true, false);
-}
-
-/*********************************************************************************************\
-   Parse a string and get the xth command or parameter
-\*********************************************************************************************/
-int getParamStartPos(const String& string, byte indexFind)
-{
-  // We need to find the xth command, so we need to find the position of the (X-1)th separator.
-  if (indexFind <= 1) { return 0; }
-  byte count                     = 1;
-  bool quotedStringActive        = false;
-  char quoteStartChar            = '"';
-  unsigned int lastParamStartPos = 0;
-  const unsigned int strlength   = string.length();
-
-  if (strlength < indexFind) { return -1; }
-
-  for (unsigned int x = 0; x < (strlength - 1); ++x)
+  // Loop over the arguments to find the first and last pos of the arguments.
+  int pos_begin = string.length();
+  int pos_end = pos_begin;
+  int tmppos_begin, tmppos_end = -1;
+  byte nextArgument = indexFind;
+  bool hasArgument = false;
+  while (GetArgvBeginEnd(string.c_str(), nextArgument, tmppos_begin, tmppos_end))
   {
-    const char c = string.charAt(x);
-
-    // Check if we are parsing a quoted string parameter
-    if (!quotedStringActive) {
-      if (isQuoteChar(c)) {
-        // Only allow ' or " right after parameter separator.
-        if (lastParamStartPos == x) {
-          quotedStringActive = true;
-          quoteStartChar     = c;
-        }
-      }
-    } else {
-      if (c == quoteStartChar) {
-        // Found end of quoted string
-        quotedStringActive = false;
-      }
+    hasArgument = true;
+    if ((tmppos_begin < pos_begin) && (tmppos_begin >= 0)) { 
+      pos_begin = tmppos_begin; 
     }
-
-    // Do further parsing.
-    if (!quotedStringActive) {
-      if (isParameterSeparatorChar(c))
-      {
-        lastParamStartPos = x + 1;
-        ++count;
-
-        if (count == indexFind) {
-          return lastParamStartPos;
-        }
-      }
+    if ((tmppos_end >= 0)) { 
+      pos_end = tmppos_end; 
     }
+    ++nextArgument;
   }
-  return -1;
+  if (!hasArgument || (pos_begin < 0)) {
+    return "";
+  }
+  String result = string.substring(pos_begin, pos_end);
+  result.trim();
+  return stripQuotes(result);
 }
 
 // escapes special characters in strings for use in html-forms
@@ -497,21 +474,20 @@ void htmlStrongEscape(String& html)
   html = escaped;
 }
 
-
-//********************************************************************************
+// ********************************************************************************
 // URNEncode char string to string object
-//********************************************************************************
-String URLEncode(const char* msg)
+// ********************************************************************************
+String URLEncode(const char *msg)
 {
-  const char *hex = "0123456789abcdef";
+  const char *hex   = "0123456789abcdef";
   String encodedMsg = "";
 
   while (*msg != '\0') {
-    if ( ('a' <= *msg && *msg <= 'z')
-         || ('A' <= *msg && *msg <= 'Z')
-         || ('0' <= *msg && *msg <= '9')
-         || ('-' == *msg) || ('_' == *msg)
-         || ('.' == *msg) || ('~' == *msg) ) {
+    if ((('a' <= *msg) && (*msg <= 'z'))
+        || (('A' <= *msg) && (*msg <= 'Z'))
+        || (('0' <= *msg) && (*msg <= '9'))
+        || ('-' == *msg) || ('_' == *msg)
+        || ('.' == *msg) || ('~' == *msg)) {
       encodedMsg += *msg;
     } else {
       encodedMsg += '%';
@@ -627,9 +603,11 @@ void parseSpecialCharacters(String& s, boolean useURLencode)
   if (s.indexOf(T) != -1) { (S((T), s, useURLencode)); }
 void parseSystemVariables(String& s, boolean useURLencode)
 {
-  parseSpecialCharacters(s, useURLencode);
+  START_TIMER
+    parseSpecialCharacters(s, useURLencode);
 
   if (s.indexOf('%') == -1) {
+    STOP_TIMER(PARSE_SYSVAR_NOCHANGE);
     return; // Nothing to replace
   }
   #if FEATURE_ADC_VCC
@@ -655,6 +633,7 @@ void parseSystemVariables(String& s, boolean useURLencode)
   if (s.indexOf(F("%sys")) != -1) {
     SMART_REPL(F("%sysload%"),       String(getCPUload()))
     SMART_REPL(F("%sysheap%"),       String(ESP.getFreeHeap()));
+    SMART_REPL(F("%sysstack%"),      String(getCurrentFreeStack()));
     SMART_REPL(F("%systm_hm%"),      getTimeString(':', false))
     SMART_REPL(F("%systm_hm_am%"),   getTimeString_ampm(':', false))
     SMART_REPL(F("%systime%"),       getTimeString(':'))
@@ -664,7 +643,7 @@ void parseSystemVariables(String& s, boolean useURLencode)
     repl(F("%sysname%"), Settings.Name, s, useURLencode);
 
     // valueString is being used by the macro.
-    char valueString[5] = {0};
+    char valueString[5] = { 0 };
     #define SMART_REPL_TIME(T, F, V) \
   if (s.indexOf(T) != -1) { sprintf_P(valueString, (F), (V)); repl((T), valueString, s, useURLencode); }
     SMART_REPL_TIME(F("%sysyear%"),  PSTR("%d"), year())
@@ -688,11 +667,11 @@ void parseSystemVariables(String& s, boolean useURLencode)
 
     #undef SMART_REPL_TIME
   }
-  SMART_REPL(F("%lcltime%"),    getDateTimeString('-', ':', ' '))
-  SMART_REPL(F("%lcltime_am%"), getDateTimeString_ampm('-', ':', ' '))
-  SMART_REPL(F("%uptime%"),     String(wdcounter / 2))
-  SMART_REPL(F("%unixtime%"),   String(getUnixTime()))
-  SMART_REPL(F("%unixday%"),    String(getUnixTime() / 86400))
+  SMART_REPL(F("%lcltime%"),     getDateTimeString('-', ':', ' '))
+  SMART_REPL(F("%lcltime_am%"),  getDateTimeString_ampm('-', ':', ' '))
+  SMART_REPL(F("%uptime%"),      String(wdcounter / 2))
+  SMART_REPL(F("%unixtime%"),    String(getUnixTime()))
+  SMART_REPL(F("%unixday%"),     String(getUnixTime() / 86400))
   SMART_REPL(F("%unixday_sec%"), String(getUnixTime() % 86400))
   SMART_REPL_T(F("%sunset"),  replSunSetTimeString)
   SMART_REPL_T(F("%sunrise"), replSunRiseTimeString)
@@ -700,7 +679,7 @@ void parseSystemVariables(String& s, boolean useURLencode)
   if (s.indexOf(F("%is")) != -1) {
 #ifdef USES_MQTT
     SMART_REPL(F("%ismqtt%"),    String(MQTTclient_connected));
-#endif    
+#endif // ifdef USES_MQTT
     SMART_REPL(F("%iswifi%"),    String(wifiStatus)); // 0=disconnected, 1=connected, 2=got ip, 3=services initialized
     SMART_REPL(F("%isntp%"),     String(statusNTPInitialized));
     #ifdef USES_P037
@@ -714,6 +693,7 @@ void parseSystemVariables(String& s, boolean useURLencode)
       SMART_REPL("%v" + toString(i + 1, 0) + '%', String(customFloatVar[i]))
     }
   }
+  STOP_TIMER(PARSE_SYSVAR);
 }
 
 String getReplacementString(const String& format, String& s) {
@@ -762,8 +742,7 @@ void parseEventVariables(String& s, struct EventStruct *event, boolean useURLenc
       SMART_REPL(F("%val4%"), formatUserVarNoCheck(event, 3))
     }
   }
-
-  // FIXME TD-er: Must make sure LoadTaskSettings has been performed before this is called.
+  LoadTaskSettings(event->TaskIndex);
   repl(F("%tskname%"), ExtraTaskSettings.TaskDeviceName, s, useURLencode);
 
   if (s.indexOf(F("%vname")) != -1) {

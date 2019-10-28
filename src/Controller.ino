@@ -1,3 +1,6 @@
+#include "src/Globals/Device.h"
+#include "src/Globals/Plugins.h"
+
 // ********************************************************************************
 
 // Interface for Sending to Controllers
@@ -80,7 +83,8 @@ void sendData(struct EventStruct *event)
 }
 
 bool validUserVar(struct EventStruct *event) {
-  const byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[event->TaskIndex]);
+  const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(event->TaskIndex);
+  if (!validDeviceIndex(DeviceIndex)) return false;
 
   switch (Device[DeviceIndex].VType) {
     case SENSOR_TYPE_LONG:    return true;

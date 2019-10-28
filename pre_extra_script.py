@@ -13,13 +13,14 @@ import os
 # - frameworks
 # - dependent libraries
 env.Append(CPPDEFINES=[
-  "PIO_FRAMEWORK_ARDUINO_ESPRESSIF_SDK22y",
-  ("WEBSERVER_RULES_DEBUG", "0")
+  "PIO_FRAMEWORK_ARDUINO_ESPRESSIF_SDK22y"
+  # ,"NO_HTTP_UPDATER"
+  # ,("WEBSERVER_RULES_DEBUG", "0")
 ])
 if os.path.isfile('src/Custom.h'):
   env['CPPDEFINES'].append("USE_CUSTOM_H")
 else:
-  env['CPPDEFINES'].append([
+  env['CPPDEFINES'].extend([
     "CONTROLLER_SET_ALL",
     "NOTIFIER_SET_NONE",
     "PLUGIN_SET_ONLY_SWITCH",
@@ -36,7 +37,10 @@ else:
     "USES_P085",  # AcuDC24x
     "USES_P087",  # Serial Proxy
 
-    "USES_C018"
+    "USES_C016",  # Cache Controller
+    "USES_C018",  # TTN/RN2483
+
+    "USE_SETTINGS_ARCHIVE"
   ])
 
 print(env['CPPDEFINES'])

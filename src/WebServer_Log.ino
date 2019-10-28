@@ -1,3 +1,5 @@
+#include "src/Globals/Logging.h"
+#include "src/Static/WebStaticData.h"
 
 // ********************************************************************************
 // Web Interface log page

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-/*
+/* 
  * File:   ccronexpr.h
  * Author: alex
  *
@@ -39,7 +39,7 @@ extern "C" {
 /**
  * Parsed cron expression
  */
-typedef struct cron_expr_t{
+typedef struct {
     uint8_t seconds[8];
     uint8_t minutes[8];
     uint8_t hours[3];
@@ -48,10 +48,9 @@ typedef struct cron_expr_t{
     uint8_t months[2];
 } cron_expr;
 
-#define CRON_INVALID_INSTANT ((time_t) -1)
 /**
  * Parses specified cron expression.
- *
+ * 
  * @param expression cron expression as nul-terminated string,
  *        should be no longer that 256 bytes
  * @param pointer to cron expression structure, it's client code responsibility
@@ -64,10 +63,10 @@ void cron_parse_expr(const char* expression, cron_expr* target, const char** err
 
 /**
  * Uses the specified expression to calculate the next 'fire' date after
- * the specified date. All dates are processed as UTC (GMT) dates
- * without timezones information. To use local dates (current system timezone)
+ * the specified date. All dates are processed as UTC (GMT) dates 
+ * without timezones information. To use local dates (current system timezone) 
  * instead of GMT compile with '-DCRON_USE_LOCAL_TIME'
- *
+ * 
  * @param expr parsed cron expression to use in next date calculation
  * @param date start date to start calculation from
  * @return next 'fire' date in case of success, '((time_t) -1)' in case of error.
@@ -76,10 +75,10 @@ time_t cron_next(cron_expr* expr, time_t date);
 
 /**
  * Uses the specified expression to calculate the previous 'fire' date after
- * the specified date. All dates are processed as UTC (GMT) dates
- * without timezones information. To use local dates (current system timezone)
+ * the specified date. All dates are processed as UTC (GMT) dates 
+ * without timezones information. To use local dates (current system timezone) 
  * instead of GMT compile with '-DCRON_USE_LOCAL_TIME'
- *
+ * 
  * @param expr parsed cron expression to use in previous date calculation
  * @param date start date to start calculation from
  * @return previous 'fire' date in case of success, '((time_t) -1)' in case of error.
@@ -91,4 +90,30 @@ time_t cron_prev(cron_expr* expr, time_t date);
 } /* extern "C"*/
 #endif
 
+#define CRON_MAX_SECONDS 60
+#define CRON_MAX_MINUTES 60
+#define CRON_MAX_HOURS 24
+#define CRON_MAX_DAYS_OF_WEEK 8
+#define CRON_MAX_DAYS_OF_MONTH 32
+#define CRON_MAX_MONTHS 12
+#define CRON_MAX_YEARS_DIFF 4
+
+#define CRON_CF_SECOND 0
+#define CRON_CF_MINUTE 1
+#define CRON_CF_HOUR_OF_DAY 2
+#define CRON_CF_DAY_OF_WEEK 3
+#define CRON_CF_DAY_OF_MONTH 4
+#define CRON_CF_MONTH 5
+#define CRON_CF_YEAR 6
+
+#define CRON_CF_ARR_LEN 7
+
+#define CRON_INVALID_INSTANT ((time_t) -1)
+
+static const char* const DAYS_ARR[] = { "SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT" };
+#define CRON_DAYS_ARR_LEN 7
+static const char* const MONTHS_ARR[] = { "FOO", "JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC" };
+#define CRON_MONTHS_ARR_LEN 13
 #endif /* CCRONEXPR_H */
+
+

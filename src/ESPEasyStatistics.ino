@@ -5,13 +5,11 @@
     log.reserve(80);
     for (auto& x: pluginStats) {
         if (!x.second.isEmpty()) {
-            const int pluginId = x.first/256;
-            String P_name = "";
-            Plugin_ptr[pluginId](PLUGIN_GET_DEVICENAME, NULL, P_name);
+            const int deviceIndex = x.first/256;
             log = F("PluginStats P_");
-            log += pluginId + 1;
+            log += deviceIndex + 1;
             log += '_';
-            log += P_name;
+            log += getPluginNameFromDeviceIndex(deviceIndex);
             log += ' ';
             log += getPluginFunctionName(x.first%256);
             log += ' ';
@@ -51,11 +49,11 @@ void jsonStatistics(bool clearStats) {
 
   for (auto& x: pluginStats) {
     if (!x.second.isEmpty()) {
-      const int pluginId = x.first / 256;
+      const int deviceIndex = x.first / 256;
 
-      if (currentPluginId != pluginId) {
+      if (currentPluginId != deviceIndex) {
         // new plugin
-        currentPluginId = pluginId;
+        currentPluginId = deviceIndex;
 
         if (!firstFunction) {
           // close previous function
@@ -69,7 +67,7 @@ void jsonStatistics(bool clearStats) {
         }
 
         // Start new plugin stream
-        stream_plugin_timing_stats_json(pluginId);
+        stream_plugin_timing_stats_json(deviceIndex);
         firstFunction = true;
       } else {
         if (!firstFunction) {

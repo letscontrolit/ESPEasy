@@ -172,7 +172,7 @@ boolean Plugin_080(byte function, struct EventStruct * event, String& string)
     return success;
 }
 
-void Plugin_080_get_addr(uint8_t addr[], byte TaskIndex)
+void Plugin_080_get_addr(uint8_t addr[], taskIndex_t TaskIndex)
 {
   // Load ROM address from tasksettings
   LoadTaskSettings(TaskIndex);
@@ -545,4 +545,11 @@ boolean Plugin_080_DS_crc8(uint8_t * addr)
     }
     return crc == *addr; // addr 8
 }
+
+#if defined(ESP32)
+  #undef ESP32noInterrupts
+  #undef ESP32interrupts
+#endif
+
+
 #endif // USES_P080

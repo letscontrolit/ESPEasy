@@ -1,3 +1,6 @@
+#include "src/Globals/Nodes.h"
+#include "src/Globals/ESPEasyWiFiEvent.h"
+
 // Generic Networking routines
 
 // Syslog
@@ -17,19 +20,39 @@
 #endif    // ifdef ESP8266
 
 #ifdef ESP32
-#define SUPPORT_ARP
-#endif
+# define SUPPORT_ARP
+#endif // ifdef ESP32
 
 #ifdef SUPPORT_ARP
 # include <lwip/etharp.h>
+
+#ifdef ESP32
+# include <lwip/etharp.h>
+# include <lwip/tcpip.h>
+
+void _etharp_gratuitous_func(struct netif *netif) {
+  etharp_gratuitous(netif);
+}
+
+void etharp_gratuitous_r(struct netif *netif) {
+  tcpip_callback_with_block((tcpip_callback_fn)_etharp_gratuitous_func, netif, 0);
+}
+
+#endif // ifdef ESP32
+
 #endif // ifdef SUPPORT_ARP
 
-#ifdef ESP8266
-# include <ESP8266HTTPClient.h>
-#endif // ifdef ESP8266
-#ifdef ESP32
-# include "HTTPClient.h"
-#endif // ifdef ESP32
+#ifdef USE_SETTINGS_ARCHIVE
+# ifdef ESP8266
+#  include <ESP8266HTTPClient.h>
+# endif // ifdef ESP8266
+# ifdef ESP32
+#  include "HTTPClient.h"
+# endif // ifdef ESP32
+#endif  // USE_SETTINGS_ARCHIVE
+
+
+#include "src/DataStructs/EventValueSource.h"
 
 /*********************************************************************************************\
    Syslog client
@@ -931,8 +954,12 @@ void sendGratuitousARP() {
   while (n) {
     if ((n->hwaddr_len == ETH_HWADDR_LEN) && 
         (n->flags & NETIF_FLAG_ETHARP) && 
-        ((n->flags & NETIF_FLAG_LINK_UP) || (n->flags & NETIF_FLAG_UP))) {
-      etharp_gratuitous(n);
+        ((n->flags & NETIF_FLAG_LINK_UP) && (n->flags & NETIF_FLAG_UP))) {
+      #ifdef ESP32
+        etharp_gratuitous_r(n);
+      #else
+        etharp_gratuitous(n);
+      #endif
     }
     n = n->next;
   }
@@ -981,7 +1008,7 @@ String splitURL(const String& fullURL, String& host, uint16_t& port, String& fil
   return fullURL.substring(endhost);
 }
 
-#ifdef CORE_POST_2_5_0
+#ifdef USE_SETTINGS_ARCHIVE
 
 // Download a file from a given URL and save to a local file named "file_save"
 // If the URL ends with a /, the file part will be assumed the same as file_save.
@@ -1069,6 +1096,7 @@ bool downloadFile(const String& url, String file_save, const String& user, const
       size_t c = stream->readBytes(buff, std::min((size_t)len, sizeof(buff)));
 
       if (c > 0) {
+        timeout = millis() + 2000;
         if (f.write(buff, c) != c) {
           error  = F("Error saving file, ");
           error += bytesWritten;
@@ -1101,4 +1129,4 @@ bool downloadFile(const String& url, String file_save, const String& user, const
   return false;
 }
 
-#endif // ifdef CORE_POST_2_5_0
+#endif  // USE_SETTINGS_ARCHIVE

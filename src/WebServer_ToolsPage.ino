@@ -92,6 +92,7 @@ void handle_tools() {
 
 #if defined(ESP8266)
   {
+    #ifndef NO_HTTP_UPDATER
     {
       uint32_t maxSketchSize;
       bool     use2step;
@@ -114,6 +115,7 @@ void handle_tools() {
       TXBuffer += maxSketchSize / 1024;
       TXBuffer += F(" kB");
     }
+    #endif
   }
 #endif // if defined(ESP8266)
 

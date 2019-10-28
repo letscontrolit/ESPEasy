@@ -12,7 +12,7 @@
 //---IRSEND: That commands format is: IRSEND,<protocol>,<data>,<bits>,<repeat>
 // bits and repeat default to 0 if not used and they are optional
 // For protocols RAW and RAW2 there is no bits and repeat part, they are supposed to be replayed as they are calculated by a Google docs sheet or by plugin P016
-//---IRSENDAC: That commands format is: IRSENDAC,{"protocol":"COOLIX","power":"on","opmode":"dry","fanspeed":"auto","degrees":22,"swingv":"max","swingh":"off"}
+//---IRSENDAC: That commands format is: IRSENDAC,{"protocol":"COOLIX","power":"on","mode":"dry","fanspeed":"auto","temp":22,"swingv":"max","swingh":"off"}
 //--- The JSON keys are case sensitive and allways small case. The JSON data are case insensitive
 // The possible values
 // Protocols: Argo Coolix Daikin Fujitsu Haier Hitachi Kelvinator Midea Mitsubishi MitsubishiHeavy Panasonic Samsung Sharp Tcl Teco Toshiba Trotec Vestel Whirlpool
@@ -134,6 +134,7 @@ boolean Plugin_035(byte function, struct EventStruct *event, String &string)
     uint64_t IrCode = 0;
     uint16_t IrBits = 0;
 
+    // FIXME TD-er: This one is not using parseString* function
     String cmdCode = string;
     int argIndex = cmdCode.indexOf(',');
     if (argIndex)
@@ -160,7 +161,7 @@ boolean Plugin_035(byte function, struct EventStruct *event, String &string)
         IrType_orig = TmpStr1;
         IrType.toLowerCase();
       }
-
+#ifdef P016_P035_USE_RAW_RAW2
       if (IrType.equals(F("raw")) || IrType.equals(F("raw2")))
       {
         String IrRaw;
@@ -336,7 +337,8 @@ boolean Plugin_035(byte function, struct EventStruct *event, String &string)
         //sprintf_P(log, PSTR("IR Params2: RAW Code:%s"), IrRaw.c_str());
         //addLog(LOG_LEVEL_INFO, log);
       }
-      else if (cmdCode.equalsIgnoreCase(F("IRSEND")))
+      else
+      #endif //P016_P035_USE_RAW_RAW2
       {
         uint16_t IrRepeat = 0;
         //  unsigned long IrSecondCode=0UL;
@@ -395,7 +397,7 @@ boolean Plugin_035(byte function, struct EventStruct *event, String &string)
 
         String tempstr = "";
         tempstr = doc[F("model")].as<String>();
-        uint16_t model = IRac::strToModel(tempstr.c_str()); //The specific model of A/C if applicable. //strToModel();. Defaults to -1 (unknown) if missing from JSON
+        uint16_t model = IRac::strToModel(tempstr.c_str(),-1); //The specific model of A/C if applicable. //strToModel();. Defaults to -1 (unknown) if missing from JSON
         tempstr = doc[F("power")].as<String>();
         bool power = IRac::strToBool(tempstr.c_str(), false); //POWER ON or OFF. Defaults to false if missing from JSON
         float degrees = doc[F("temp")] | 22.0;                //What temperature should the unit be set to?. Defaults to 22c if missing from JSON

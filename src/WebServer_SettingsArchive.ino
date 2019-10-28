@@ -1,5 +1,7 @@
 #ifdef USE_SETTINGS_ARCHIVE
 
+#include "src/Globals/ResetFactoryDefaultPref.h"
+
 // ********************************************************************************
 // Web Interface to manage archived settings
 // ********************************************************************************
