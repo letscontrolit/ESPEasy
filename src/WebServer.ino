@@ -426,6 +426,7 @@ void WebServerInit()
   WebServer.on(F("/control"),       handle_control);
   WebServer.on(F("/controllers"),   handle_controllers);
   WebServer.on(F("/devices"),       handle_devices);
+  WebServer.on(F("/data"),          handle_data);
   WebServer.on(F("/download"),      handle_download);
 
 
@@ -644,9 +645,12 @@ void getErrorNotifications() {
 #define MENU_INDEX_CONTROLLERS   2
 #define MENU_INDEX_HARDWARE      3
 #define MENU_INDEX_DEVICES       4
-#define MENU_INDEX_RULES         5
-#define MENU_INDEX_NOTIFICATIONS 6
-#define MENU_INDEX_TOOLS         7
+#define MENU_INDEX_DATA          5
+#define MENU_INDEX_RULES         6
+#define MENU_INDEX_NOTIFICATIONS 7
+#define MENU_INDEX_TOOLS         8
+
+#define MENU_COUNT							 MENU_INDEX_TOOLS+1
 static byte navMenuIndex = MENU_INDEX_MAIN;
 
 
@@ -668,7 +672,7 @@ void getWebPageTemplateVar(const String& varName)
 
   else if (varName == F("menu"))
   {
-    static const __FlashStringHelper *gpMenu[8][3] = {
+    static const __FlashStringHelper* gpMenu[MENU_COUNT][3] = {
       // See https://github.com/letscontrolit/ESPEasy/issues/1650
       // Icon,        Full width label,   URL
       F("&#8962;"),   F("Main"),          F("/"),              // 0
@@ -676,14 +680,15 @@ void getWebPageTemplateVar(const String& varName)
       F("&#128172;"), F("Controllers"),   F("/controllers"),   // 2
       F("&#128204;"), F("Hardware"),      F("/hardware"),      // 3
       F("&#128268;"), F("Devices"),       F("/devices"),       // 4
-      F("&#10740;"),  F("Rules"),         F("/rules"),         // 5
-      F("&#9993;"),   F("Notifications"), F("/notifications"), // 6
-      F("&#128295;"), F("Tools"),         F("/tools"),         // 7
+      F("&#127760;"), F("Data"),          F("/data"),          //5
+      F("&#10740;"),  F("Rules"),         F("/rules"),         //6
+      F("&#9993;"),   F("Notifications"), F("/notifications"), //7
+      F("&#128295;"), F("Tools"),         F("/tools"),         //8
     };
 
     TXBuffer += F("<div class='menubar'>");
 
-    for (byte i = 0; i < 8; i++)
+    for (byte i = 0; i < MENU_COUNT; i++)
     {
       if ((i == MENU_INDEX_RULES) && !Settings.UseRules) { // hide rules menu item
         continue;
