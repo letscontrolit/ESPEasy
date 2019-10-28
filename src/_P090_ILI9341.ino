@@ -1,14 +1,14 @@
 #ifdef PLUGIN_BUILD_TESTING
-#ifdef USES_P242
+#ifdef USES_P090
 //#######################################################################################################
-//#################################### Plugin 242: ILI9341 TFT 2.4inches display #################################
+//#################################### Plugin 090: ILI9341 TFT 2.4inches display #################################
 //#######################################################################################################
 
-#define PLUGIN_242
-#define PLUGIN_ID_242         242
-#define PLUGIN_NAME_242       "Display - TFT 2.4 inches ILI9341/XPT2046 [TESTING]"
-#define PLUGIN_VALUENAME1_242 "TFT"
-#define PLUGIN_242_MAX_DISPLAY 1
+#define PLUGIN_090
+#define PLUGIN_ID_090         90
+#define PLUGIN_NAME_090       "Display - TFT 2.4 inches ILI9341/XPT2046 [TESTING]"
+#define PLUGIN_VALUENAME1_090 "TFT"
+#define PLUGIN_090_MAX_DISPLAY 1
 
 /* README.MD
 
@@ -106,13 +106,13 @@ Examples:
 #include <Adafruit_ILI9341.h>
 
 //declare functions for using default value parameters
-void Plugin_242_printText(const char *string, int X, int Y, unsigned int textSize = 1, unsigned short color = ILI9341_WHITE, unsigned short bkcolor = ILI9341_BLACK);
+void Plugin_090_printText(const char *string, int X, int Y, unsigned int textSize = 1, unsigned short color = ILI9341_WHITE, unsigned short bkcolor = ILI9341_BLACK);
 
 
 //The setting structure
-struct Plugin_242_TFT_SettingStruct
+struct Plugin_090_TFT_SettingStruct
 {
-  Plugin_242_TFT_SettingStruct()
+  Plugin_090_TFT_SettingStruct()
   : address_tft_cs(D0), address_tft_dc(D8), address_tft_rst(-1), address_ts_cs(D3), rotation(0){}
   byte address_tft_cs;
   byte address_tft_dc;
@@ -124,7 +124,7 @@ struct Plugin_242_TFT_SettingStruct
 //The display pointer
 Adafruit_ILI9341 *tft = NULL;
 
-boolean Plugin_242(byte function, struct EventStruct *event, String& string)
+boolean Plugin_090(byte function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -133,7 +133,7 @@ boolean Plugin_242(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_DEVICE_ADD:
       {
-        Device[++deviceCount].Number = PLUGIN_ID_242;
+        Device[++deviceCount].Number = PLUGIN_ID_090;
         Device[deviceCount].Type = DEVICE_TYPE_I2C;
         Device[deviceCount].VType = SENSOR_TYPE_NONE;
         Device[deviceCount].Ports = 0;
@@ -142,50 +142,61 @@ boolean Plugin_242(byte function, struct EventStruct *event, String& string)
         Device[deviceCount].FormulaOption = false;
         Device[deviceCount].ValueCount = 0;
         Device[deviceCount].SendDataOption = false;
-        Device[deviceCount].TimerOption = true;
+        Device[deviceCount].TimerOption = false;
         success = true;
         break;
       }
 
     case PLUGIN_GET_DEVICENAME:
       {
-        string = F(PLUGIN_NAME_242);
+        string = F(PLUGIN_NAME_090);
         success = true;
         break;
       }
 
     case PLUGIN_GET_DEVICEVALUENAMES:
       {
-        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_242));
+        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_090));
         success = true;
         break;
       }
 
     case PLUGIN_WEBFORM_LOAD:
       {
+
+        byte init = PCONFIG(0);
+
+        //if already configured take it from settings, else use default values (only for pin values)
+        if(init == 1)
         {
-          addFormPinSelect(F("TFT CS"), F("p242_tft_cs"), PCONFIG(0));
-          addFormPinSelect(F("TFT DC"), F("p242_tft_dc"), PCONFIG(1));
-          addFormPinSelect(F("TFT RST"), F("p242_tft_rst"), PCONFIG(2));
-          addFormPinSelect(F("TS CS"), F("ts_cs"), PCONFIG(3));
+          TFT_Settings.address_tft_cs = PIN(0);
+          TFT_Settings.address_tft_dc = PIN(1);
+          TFT_Settings.address_tft_rst = PIN(2);
+          TFT_Settings.address_ts_cs = PIN(3);
         }
-        {
-          byte choice2 = PCONFIG(4);
-          String options2[4] = { F("Normal"), F("+90°"), F("+180°"), F("+270°") };
-          int optionValues2[4] = { 0, 1, 2, 3 };
-          addFormSelector(F("Rotation"), F("p242_rotate"), 4, options2, optionValues2, choice2);
-        }
+        
+        addFormPinSelect(F("TFT CS"), F("p090_tft_cs"), TFT_Settings.address_tft_cs);
+        addFormPinSelect(F("TFT DC"), F("p090_tft_dc"), TFT_Settings.address_tft_dc);
+        addFormPinSelect(F("TFT RST"), F("p090_tft_rst"), TFT_Settings.address_tft_rst);
+        addFormPinSelect(F("TS CS"), F("ts_cs"), TFT_Settings.address_ts_cs);
+
+        byte choice2 = PCONFIG(1);
+        String options2[4] = { F("Normal"), F("+90°"), F("+180°"), F("+270°") };
+        int optionValues2[4] = { 0, 1, 2, 3 };
+        addFormSelector(F("Rotation"), F("p090_rotate"), 4, options2, optionValues2, choice2);
+
         success = true;
         break;
       }
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        PCONFIG(0) = getFormItemInt(F("p242_tft_cs"));
-        PCONFIG(1) = getFormItemInt(F("p242_tft_dc"));
-        PCONFIG(2) = getFormItemInt(F("p242_tft_rst"));
-        PCONFIG(3) = getFormItemInt(F("p242_ts_cs"));
-        PCONFIG(4) = getFormItemInt(F("p242_rotate"));
+        PCONFIG(0) = 1; //mark config as already saved (next time, will not use default values)
+        PIN(0) = getFormItemInt(F("p090_tft_cs"));
+        PIN(1) = getFormItemInt(F("p090_tft_dc"));
+        PIN(2) = getFormItemInt(F("p090_tft_rst"));
+        PIN(3) = getFormItemInt(F("p090_ts_cs"));
+        PCONFIG(1) = getFormItemInt(F("p090_rotate"));
         success = true;
         break;
       }
@@ -193,36 +204,18 @@ boolean Plugin_242(byte function, struct EventStruct *event, String& string)
     case PLUGIN_INIT:
       {
 
-        TFT_Settings.address_tft_cs = PCONFIG(0);
-        TFT_Settings.address_tft_dc = PCONFIG(1);
-        TFT_Settings.address_tft_rst = PCONFIG(2);
-        TFT_Settings.address_ts_cs = PCONFIG(3);
-        TFT_Settings.rotation = PCONFIG(4);
+        TFT_Settings.address_tft_cs = PIN(0);
+        TFT_Settings.address_tft_dc = PIN(1);
+        TFT_Settings.address_tft_rst = PIN(2);
+        TFT_Settings.address_ts_cs = PIN(3);
+        TFT_Settings.rotation = PCONFIG(1);
 
         tft = new Adafruit_ILI9341(TFT_Settings.address_tft_cs, TFT_Settings.address_tft_dc, TFT_Settings.address_tft_rst);
         tft->begin();
         tft->setRotation(TFT_Settings.rotation);
         tft->fillScreen(ILI9341_WHITE);
-        Plugin_242_printText("--cdt--", 1, 1);  
+        Plugin_090_printText("--cdt--", 1, 1);  
         success = true;
-        break;
-      }
-
-    case PLUGIN_TEN_PER_SECOND:
-      {
-        success = false;
-        break;
-      }
-
-    case PLUGIN_ONCE_A_SECOND:
-      {
-        success = false;
-        break;
-      }
-
-    case PLUGIN_READ:
-      {
-        success = false;
         break;
       }
 
@@ -279,7 +272,7 @@ boolean Plugin_242(byte function, struct EventStruct *event, String& string)
             else if(subcommand.equalsIgnoreCase(F("CLEAR")))
             {
               arguments = arguments.substring(argIndex + 1);
-              tft->fillScreen(Plugin_242_ParseColor(arguments));
+              tft->fillScreen(Plugin_090_ParseColor(arguments));
             } 
             else if(subcommand.equalsIgnoreCase(F("INV")))
             {
@@ -304,7 +297,7 @@ boolean Plugin_242(byte function, struct EventStruct *event, String& string)
 
             arguments = arguments.substring(argIndex + 1);
             String sParams[8];
-            int argCount = Plugin_242_StringSplit(arguments, ',', sParams, 8);
+            int argCount = Plugin_090_StringSplit(arguments, ',', sParams, 8);
 
             for(int a=0; a < argCount && a < 8; a++)
             {
@@ -322,9 +315,9 @@ boolean Plugin_242(byte function, struct EventStruct *event, String& string)
             else if(subcommand.equalsIgnoreCase(F("txc")) && (argCount == 1 || argCount == 2) )
             {
               if(argCount == 1)
-                tft->setTextColor(Plugin_242_ParseColor(sParams[0]));
+                tft->setTextColor(Plugin_090_ParseColor(sParams[0]));
               else //argCount=2
-                tft->setTextColor(Plugin_242_ParseColor(sParams[0]), Plugin_242_ParseColor(sParams[1]));
+                tft->setTextColor(Plugin_090_ParseColor(sParams[0]), Plugin_090_ParseColor(sParams[1]));
             }
             else if(subcommand.equalsIgnoreCase(F("txs")) && argCount == 1)
             {
@@ -335,19 +328,19 @@ boolean Plugin_242(byte function, struct EventStruct *event, String& string)
               switch (argCount)
               {
               case 3: //single text
-                Plugin_242_printText(sParams[2].c_str(), sParams[0].toInt() - 1,sParams[1].toInt() - 1);  
+                Plugin_090_printText(sParams[2].c_str(), sParams[0].toInt() - 1,sParams[1].toInt() - 1);  
                 break;
 
               case 4: //text + size
-                Plugin_242_printText(sParams[3].c_str(), sParams[0].toInt() - 1, sParams[1].toInt() - 1, sParams[2].toInt());  
+                Plugin_090_printText(sParams[3].c_str(), sParams[0].toInt() - 1, sParams[1].toInt() - 1, sParams[2].toInt());  
                 break;
 
               case 5: //text + size + color
-                Plugin_242_printText(sParams[4].c_str(), sParams[0].toInt() - 1, sParams[1].toInt() - 1, sParams[2].toInt(), Plugin_242_ParseColor(sParams[3]));  
+                Plugin_090_printText(sParams[4].c_str(), sParams[0].toInt() - 1, sParams[1].toInt() - 1, sParams[2].toInt(), Plugin_090_ParseColor(sParams[3]));  
                 break;
               
               case 6: //text + size + color
-                Plugin_242_printText(sParams[5].c_str(), sParams[0].toInt() - 1, sParams[1].toInt() - 1, sParams[2].toInt(), Plugin_242_ParseColor(sParams[3]), Plugin_242_ParseColor(sParams[4]));  
+                Plugin_090_printText(sParams[5].c_str(), sParams[0].toInt() - 1, sParams[1].toInt() - 1, sParams[2].toInt(), Plugin_090_ParseColor(sParams[3]), Plugin_090_ParseColor(sParams[4]));  
                 break;
               default:
                 success = false;
@@ -356,55 +349,55 @@ boolean Plugin_242(byte function, struct EventStruct *event, String& string)
             }
             else if(subcommand.equalsIgnoreCase(F("l")) && argCount == 5)
             {
-              tft->drawLine(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), Plugin_242_ParseColor(sParams[4]));
+              tft->drawLine(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), Plugin_090_ParseColor(sParams[4]));
             }          
             else if(subcommand.equalsIgnoreCase(F("lh")) && argCount == 3)
             {
-              tft->drawFastHLine(0, sParams[0].toInt(), sParams[1].toInt(), Plugin_242_ParseColor(sParams[2]));
+              tft->drawFastHLine(0, sParams[0].toInt(), sParams[1].toInt(), Plugin_090_ParseColor(sParams[2]));
             }          
             else if(subcommand.equalsIgnoreCase(F("lv")) && argCount == 3)
             {
-              tft->drawFastVLine(sParams[0].toInt(), 0, sParams[1].toInt(), Plugin_242_ParseColor(sParams[2]));
+              tft->drawFastVLine(sParams[0].toInt(), 0, sParams[1].toInt(), Plugin_090_ParseColor(sParams[2]));
             }          
             else if(subcommand.equalsIgnoreCase(F("r")) && argCount == 5)
             {
-              tft->drawRect(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), Plugin_242_ParseColor(sParams[4]));
+              tft->drawRect(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), Plugin_090_ParseColor(sParams[4]));
             }          
             else if(subcommand.equalsIgnoreCase(F("rf")) && argCount == 6)
             {
-              tft->fillRect(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), Plugin_242_ParseColor(sParams[5]));
-              tft->drawRect(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), Plugin_242_ParseColor(sParams[4]));
+              tft->fillRect(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), Plugin_090_ParseColor(sParams[5]));
+              tft->drawRect(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), Plugin_090_ParseColor(sParams[4]));
             }          
             else if(subcommand.equalsIgnoreCase(F("c")) && argCount == 4)
             {
-              tft->drawCircle(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), Plugin_242_ParseColor(sParams[3]));
+              tft->drawCircle(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), Plugin_090_ParseColor(sParams[3]));
             }          
             else if(subcommand.equalsIgnoreCase(F("cf")) && argCount == 5)
             {
-              tft->fillCircle(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), Plugin_242_ParseColor(sParams[4]));
-              tft->drawCircle(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), Plugin_242_ParseColor(sParams[3]));
+              tft->fillCircle(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), Plugin_090_ParseColor(sParams[4]));
+              tft->drawCircle(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), Plugin_090_ParseColor(sParams[3]));
             }
             else if(subcommand.equalsIgnoreCase(F("t")) && argCount == 7)
             {
-              tft->drawTriangle(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), sParams[4].toInt(), sParams[5].toInt(), Plugin_242_ParseColor(sParams[6]));
+              tft->drawTriangle(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), sParams[4].toInt(), sParams[5].toInt(), Plugin_090_ParseColor(sParams[6]));
             }           
             else if(subcommand.equalsIgnoreCase(F("tf")) && argCount == 8)
             {
-              tft->fillTriangle(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), sParams[4].toInt(), sParams[5].toInt(), Plugin_242_ParseColor(sParams[7]));
-              tft->drawTriangle(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), sParams[4].toInt(), sParams[5].toInt(), Plugin_242_ParseColor(sParams[6]));
+              tft->fillTriangle(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), sParams[4].toInt(), sParams[5].toInt(), Plugin_090_ParseColor(sParams[7]));
+              tft->drawTriangle(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), sParams[4].toInt(), sParams[5].toInt(), Plugin_090_ParseColor(sParams[6]));
             }           
             else if(subcommand.equalsIgnoreCase(F("rr")) && argCount == 6)
             {
-              tft->drawRoundRect(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), sParams[4].toInt(), Plugin_242_ParseColor(sParams[5]));
+              tft->drawRoundRect(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), sParams[4].toInt(), Plugin_090_ParseColor(sParams[5]));
             }          
             else if(subcommand.equalsIgnoreCase(F("rrf")) && argCount == 7)
             {
-              tft->fillRoundRect(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), sParams[4].toInt(), Plugin_242_ParseColor(sParams[6]));
-              tft->drawRoundRect(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), sParams[4].toInt(), Plugin_242_ParseColor(sParams[5]));
+              tft->fillRoundRect(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), sParams[4].toInt(), Plugin_090_ParseColor(sParams[6]));
+              tft->drawRoundRect(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), sParams[4].toInt(), Plugin_090_ParseColor(sParams[5]));
             } 
             else if(subcommand.equalsIgnoreCase(F("px")) && argCount == 3)
             {
-              tft->drawPixel(sParams[0].toInt(), sParams[1].toInt(), Plugin_242_ParseColor(sParams[2]));
+              tft->drawPixel(sParams[0].toInt(), sParams[1].toInt(), Plugin_090_ParseColor(sParams[2]));
             } 
             else 
             {
@@ -433,7 +426,7 @@ boolean Plugin_242(byte function, struct EventStruct *event, String& string)
 
         String log;
         log.reserve(110);                           // Prevent re-allocation
-        log = F("P242-ILI9341 : WRITE = ");
+        log = F("P090-ILI9341 : WRITE = ");
         log += tmpString;
         SendStatus(event->Source, log);             // Reply (echo) to sender. This will print message on browser.  
               
@@ -454,7 +447,7 @@ boolean Plugin_242(byte function, struct EventStruct *event, String& string)
 //param [in] textSize : The text size (default 1)
 //param [in] color : The fore color (default ILI9341_WHITE)
 //param [in] bkcolor : The background color (default ILI9341_BLACK)
-void Plugin_242_printText(const char *string, int X, int Y, unsigned int textSize, unsigned short color, unsigned short bkcolor)
+void Plugin_090_printText(const char *string, int X, int Y, unsigned int textSize, unsigned short color, unsigned short bkcolor)
 {
   tft->setCursor(X, Y);
   tft->setTextColor(color, bkcolor);
@@ -465,7 +458,7 @@ void Plugin_242_printText(const char *string, int X, int Y, unsigned int textSiz
 //Parse color string to ILI9341 color
 //param [in] s : The color string (white, red, ...)
 //return : color (default ILI9341_WHITE)
-unsigned short Plugin_242_ParseColor(String & s)
+unsigned short Plugin_090_ParseColor(String & s)
 {
   if (s.equalsIgnoreCase(F("BLACK")))
     return ILI9341_BLACK;
@@ -525,7 +518,7 @@ unsigned short Plugin_242_ParseColor(String & s)
 //param [out] op : The resulting string array
 //param [in] limit : The maximum strings to find
 //return : The string count
-int Plugin_242_StringSplit(String &s, char c, String op[], int limit)
+int Plugin_090_StringSplit(String &s, char c, String op[], int limit)
 {
   int count = 0;
   char * pch;
@@ -541,5 +534,5 @@ int Plugin_242_StringSplit(String &s, char c, String op[], int limit)
 }
 
 
-#endif // USES_P242
+#endif // USES_P090
 #endif // PLUGIN_BUILD_TESTING
