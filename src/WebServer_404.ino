@@ -14,7 +14,9 @@ void handleNotFound() {
 
   if (!isLoggedIn()) { return; }
 
+#ifdef WEBSERVER_RULES
   if (handle_rules_edit(WebServer.uri())) { return; }
+#endif
 
   if (loadFromFS(true, WebServer.uri())) { return; }
 

@@ -1,3 +1,4 @@
+#ifdef WEBSERVER_CONTROLLERS
 
 // ********************************************************************************
 // Web Interface controller page
@@ -252,6 +253,7 @@ void handle_controllers_ControllerSettingsPage(byte controllerindex)
       }
       addControllerParameterForm(ControllerSettings, controllerindex, CONTROLLER_CHECK_REPLY);
       addControllerParameterForm(ControllerSettings, controllerindex, CONTROLLER_TIMEOUT);
+
       if (Protocol[ProtocolIndex].usesSampleSets) {
         addControllerParameterForm(ControllerSettings, controllerindex, CONTROLLER_SAMPLE_SET_INITIATOR);
       }
@@ -311,3 +313,5 @@ void handle_controllers_ControllerSettingsPage(byte controllerindex)
   html_end_table();
   html_end_form();
 }
+
+#endif // ifdef WEBSERVER_CONTROLLERS

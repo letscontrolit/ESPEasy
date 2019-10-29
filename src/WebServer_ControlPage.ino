@@ -1,4 +1,6 @@
 
+#ifdef WEBSERVER_CONTROL
+
 // ********************************************************************************
 // Web Interface control page (no password!)
 // ********************************************************************************
@@ -77,3 +79,5 @@ void handle_control() {
   printToWeb     = false;
   printToWebJSON = false;
 }
+
+#endif // ifdef WEBSERVER_CONTROL

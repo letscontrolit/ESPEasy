@@ -862,8 +862,11 @@ void runEach30Seconds()
   CPluginCall(CPLUGIN_INTERVAL, 0);
 
   #if defined(ESP8266)
+  #ifdef USES_SSDP
   if (Settings.UseSSDP)
     SSDP_update();
+
+  #endif // USES_SSDP
   #endif
 #if FEATURE_ADC_VCC
   if (!wifiConnectInProgress) {
