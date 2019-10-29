@@ -2343,6 +2343,7 @@ void SendValueLogger(taskIndex_t TaskIndex)
 {
 #if !defined(BUILD_NO_DEBUG) || defined(FEATURE_SD)
   bool featureSD = false;
+  String logger;
   #ifdef FEATURE_SD
     featureSD = true;
   #endif
@@ -2350,7 +2351,6 @@ void SendValueLogger(taskIndex_t TaskIndex)
   if (featureSD || loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(TaskIndex);
     if (validDeviceIndex(DeviceIndex)) {
-      String logger;
       LoadTaskSettings(TaskIndex);
       for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++)
       {
@@ -2465,27 +2465,16 @@ void checkRAMtoLog(void){
   myRamTracker.getTraceBuffer();
 }
 
-void checkRAM(const __FlashStringHelper* flashString, int a ) {
- String s=String(a);
- checkRAM(flashString,s);
-}
-
-void checkRAM(const __FlashStringHelper* flashString, const String &a ) {
-  String s = flashString;
-  checkRAM(s,a);
+void checkRAM(const String &flashString, int a ) {
+  checkRAM(flashString, String(a));
 }
 
 void checkRAM(const String &flashString, const String &a ) {
   String s = flashString;
-  s+=" (";
-  s+=a;
-  s+=")";
+  s += " (";
+  s += a;
+  s += ')';
   checkRAM(s);
-}
-
-void checkRAM( const __FlashStringHelper* flashString)
-{
-  checkRAM(String(flashString));
 }
 
 void checkRAM( const String &descr ) {

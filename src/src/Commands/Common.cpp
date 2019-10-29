@@ -42,13 +42,12 @@ String return_see_serial(struct EventStruct *event)
   return F("Output sent to serial");
 }
 
-
-String Command_GetORSetIP(struct EventStruct        *event,
-                          const __FlashStringHelper *targetDescription,
-                          const char                *Line,
-                          byte                      *IP,
-                          IPAddress                  dhcpIP,
-                          int                        arg)
+String Command_GetORSetIP(struct EventStruct *event,
+                          const String      & targetDescription,
+                          const char         *Line,
+                          byte               *IP,
+                          IPAddress           dhcpIP,
+                          int                 arg)
 {
   bool hasArgument = false;
   {
@@ -81,12 +80,12 @@ String Command_GetORSetIP(struct EventStruct        *event,
   return return_command_success();
 }
 
-String Command_GetORSetString(struct EventStruct        *event,
-                              const __FlashStringHelper *targetDescription,
-                              const char                *Line,
-                              char                      *target,
-                              size_t                     len,
-                              int                        arg
+String Command_GetORSetString(struct EventStruct *event,
+                              const String      & targetDescription,
+                              const char         *Line,
+                              char               *target,
+                              size_t              len,
+                              int                 arg
                               )
 {
   bool hasArgument = false;
@@ -118,11 +117,11 @@ String Command_GetORSetString(struct EventStruct        *event,
   return return_command_success();
 }
 
-String Command_GetORSetBool(struct EventStruct        *event,
-                            const __FlashStringHelper *targetDescription,
-                            const char                *Line,
-                            bool                      *value,
-                            int                        arg)
+String Command_GetORSetBool(struct EventStruct *event,
+                            const String      & targetDescription,
+                            const char         *Line,
+                            bool               *value,
+                            int                 arg)
 {
   bool hasArgument = false;
   {

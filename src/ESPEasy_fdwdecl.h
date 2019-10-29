@@ -113,7 +113,7 @@ byte getProtocolIndex(byte Number);
 
 // void runPeriodicalMQTT();
 // void updateMQTTclient_connected();
-// int firstEnabledMQTTController();
+int firstEnabledMQTTController();
 // String getMQTT_state();
 void callback(char        *c_topic,
               byte        *b_payload,
@@ -122,6 +122,7 @@ void MQTTDisconnect();
 bool MQTTConnect(int controller_idx);
 bool MQTTCheck(int controller_idx);
 void schedule_all_tasks_using_MQTT_controller();
+bool MQTTpublish(int controller_idx, const char *topic, const char *payload, boolean retained);
 #endif // ifdef USES_MQTT
 
 
@@ -146,5 +147,30 @@ String parseString(const String& string, byte indexFind);
 String parseStringKeepCase(const String& string, byte indexFind);
 String parseStringToEnd(const String& string, byte indexFind);
 String parseStringToEndKeepCase(const String& string, byte indexFind);
+
+String describeAllowedIPrange();
+void clearAccessBlock();
+String rulesProcessingFile(const String& fileName, String& event);
+int Calculate(const char *input, float* result);
+
+
+# include <ESP8266WiFiType.h>
+void WifiScan();
+void WiFiConnectRelaxed();
+void WifiDisconnect();
+void setAP(bool enable);
+void setSTA(bool enable);
+void setWifiMode(WiFiMode_t wifimode);
+
+
+String SaveSettings(void);
+String LoadSettings();
+unsigned long FreeMem(void);
+void ResetFactory();
+void reboot();
+void SendUDPCommand(byte destUnit, char *data, byte dataLength);
+
+#include <FS.h>
+void printDirectory(File dir, int numTabs);
 
 #endif // ESPEASY_FWD_DECL_H
