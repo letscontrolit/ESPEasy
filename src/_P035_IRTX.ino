@@ -375,8 +375,9 @@ boolean Plugin_035(byte function, struct EventStruct *event, String &command)
           IrRepeat = str2int(TmpStr1.c_str());  
           }                                                  // Nr. of times the message is to be repeated
       }
-       printToLog(IrType, ircodestr, IrBits, IrRepeat);
-       sendIRCode(strToDecodeType(IrType.c_str()), IrCode, ircodestr.c_str(), IrBits, IrRepeat); //Send the IR command
+       
+       bool IRsent = sendIRCode(strToDecodeType(IrType.c_str()), IrCode, ircodestr.c_str(), IrBits, IrRepeat); //Send the IR command
+       if (IRsent) printToLog(IrType, ircodestr, IrBits, IrRepeat);
       }
 #ifdef P016_P035_Extended_AC
       if (cmdCode.equalsIgnoreCase(F("IRSENDAC")))
@@ -440,8 +441,7 @@ boolean Plugin_035(byte function, struct EventStruct *event, String &command)
 
         //Send the IR command
         bool IRsent = Plugin_035_commonAc->sendAc(st, &prev);
-        printToLog(typeToString(st.protocol),TmpStr1,0,0);
-        //Plugin_035_commonAc->sendAc(protocol, model, power, mode, degrees, celsius, fanspeed, swingv, swingh, quiet, turbo, econo, light, filter, clean, beep, sleep, clock);
+        if (IRsent) printToLog(typeToString(st.protocol),TmpStr1,0,0);
         ReEnableIRIn();
       }
 #endif // P016_P035_Extended_AC
@@ -461,13 +461,13 @@ void printToLog(String protocol, String data, int bits, int repeats){
       addLog(LOG_LEVEL_INFO, tmp);
       if (printToWeb)
       {
-        printWebString += tmp;
+        printWebString = tmp;
       }
 }
 
 String listProtocols() {
   String temp;
-  for (uint32_t i = 0 + 1; i <= kLastDecodeType; i++) {
+  for (uint32_t i = 0; i <= kLastDecodeType; i++) {
      if (IRsend::defaultBits((decode_type_t)i) > 0 )
       temp+=typeToString((decode_type_t)i)+ ' ';
   }
@@ -477,7 +477,7 @@ String listProtocols() {
 #ifdef P016_P035_Extended_AC
 String listACProtocols() {
   String temp;
-  for (uint32_t i = 0 + 1; i <= kLastDecodeType; i++) {
+  for (uint32_t i = 0; i <= kLastDecodeType; i++) {
     if (IRac::isProtocolSupported((decode_type_t)i)) 
      temp+=typeToString((decode_type_t)i)+ ' ';
   }
