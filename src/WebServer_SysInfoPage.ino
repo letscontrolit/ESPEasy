@@ -194,6 +194,8 @@ void handle_sysinfo() {
   // the table header
   html_table_class_normal();
 
+
+  #ifdef WEBSERVER_GITHUB_COPY
   // Not using addFormHeader() to get the copy button on the same header line as 2nd column
   html_TR();
   html_table_header(F("System Info"), 225);
@@ -204,6 +206,10 @@ void handle_sysinfo() {
   html_add_script(false);
   TXBuffer += DATA_GITHUB_CLIPBOARD_JS;
   html_add_script_end();
+  #else
+  addFormHeader(F("System Info"));
+
+  #endif // ifdef WEBSERVER_GITHUB_COPY
 
   handle_sysinfo_basicInfo();
 

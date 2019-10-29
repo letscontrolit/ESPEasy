@@ -70,10 +70,10 @@ void handle_tools() {
   addWideButtonPlusDescription(F("/?cmd=wificonnect"),    F("Connect"),    F("Connects to known Wifi network"));
   addWideButtonPlusDescription(F("/?cmd=wifidisconnect"), F("Disconnect"), F("Disconnect from wifi network"));
   addWideButtonPlusDescription(F("wifiscanner"),          F("Scan"),       F("Scan for wifi networks"));
-
-  addFormSubHeader(F("Interfaces"));
   
   #ifdef WEBSERVER_I2C_SCANNER
+  addFormSubHeader(F("Interfaces"));
+  
   addWideButtonPlusDescription(F("i2cscanner"), F("I2C Scan"), F("Scan for I2C devices"));
   #endif
 

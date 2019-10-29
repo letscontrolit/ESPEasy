@@ -21,7 +21,8 @@ To create/register a plugin, you have to :
  When found stable enought, the maintainer (and only him) will choose to move it to TESTING or STABLE
 */
 
-
+#define BUILD_MINIMAL_OTA
+#define PLUGIN_BUILD_MINIMAL_OTA
 
 
 
@@ -196,6 +197,9 @@ To create/register a plugin, you have to :
   #endif
   #ifndef WEBSERVER_LOG
     #define WEBSERVER_LOG
+  #endif
+  #ifndef WEBSERVER_GITHUB_COPY
+    #define WEBSERVER_GITHUB_COPY
   #endif
 #endif
 
