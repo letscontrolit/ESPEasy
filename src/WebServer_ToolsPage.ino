@@ -52,16 +52,29 @@ void handle_tools() {
   addFormSubHeader(F("System"));
 
   addWideButtonPlusDescription(F("/?cmd=reboot"), F("Reboot"),           F("Reboots ESP"));
+
   # ifdef WEBSERVER_LOG
   addWideButtonPlusDescription(F("log"),          F("Log"),              F("Open log output"));
   # endif // ifdef WEBSERVER_LOG
+
+  #ifdef WEBSERVER_SYSINFO
   addWideButtonPlusDescription(F("sysinfo"),      F("Info"),             F("Open system info page"));
+  #endif
+
+  #ifdef WEBSERVER_ADVANCED
   addWideButtonPlusDescription(F("advanced"),     F("Advanced"),         F("Open advanced settings"));
+  #endif
+
   addWideButtonPlusDescription(F("json"),         F("Show JSON"),        F("Open JSON output"));
+
   # ifdef WEBSERVER_TIMINGSTATS
   addWideButtonPlusDescription(F("timingstats"),  F("Timing stats"),     F("Open timing statistics of system"));
   # endif // WEBSERVER_TIMINGSTATS
+
+  #ifdef WEBSERVER_PINSTATES
   addWideButtonPlusDescription(F("pinstates"),    F("Pin state buffer"), F("Show Pin state buffer"));
+  #endif
+
   # ifdef WEBSERVER_SYSVARS
   addWideButtonPlusDescription(F("sysvars"),      F("System Variables"), F("Show all system variables and conversions"));
   # endif // ifdef WEBSERVER_SYSVARS
@@ -70,7 +83,10 @@ void handle_tools() {
 
   addWideButtonPlusDescription(F("/?cmd=wificonnect"),    F("Connect"),    F("Connects to known Wifi network"));
   addWideButtonPlusDescription(F("/?cmd=wifidisconnect"), F("Disconnect"), F("Disconnect from wifi network"));
+
+  #ifdef WEBSERVER_WIFI_SCANNER
   addWideButtonPlusDescription(F("wifiscanner"),          F("Scan"),       F("Scan for wifi networks"));
+  #endif
 
   # ifdef WEBSERVER_I2C_SCANNER
   addFormSubHeader(F("Interfaces"));
