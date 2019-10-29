@@ -267,7 +267,7 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
           doc[F("beep")] = IRac::boolToString(state.beep); //Beep setting ON or OFF
         if (state.sleep > 0)
           doc[F("sleep")] = state.sleep; //Nr. of mins of sleep mode, or use sleep mode. (<= 0 means off.)
-        if (state.clock > 0)
+        if (state.clock >= 0)
           doc[F("clock")] = state.clock; //Nr. of mins past midnight to set the clock to. (< 0 means off.)
         String output = F("IRSENDAC,");
         serializeJson(doc, output);
