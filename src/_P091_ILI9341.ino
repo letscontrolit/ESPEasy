@@ -108,12 +108,29 @@ Examples:
 //declare functions for using default value parameters
 void Plugin_091_printText(const char *string, int X, int Y, unsigned int textSize = 1, unsigned short color = ILI9341_WHITE, unsigned short bkcolor = ILI9341_BLACK);
 
+//Define the default values for both ESP32/lolin32 and D1 Mini 
+#ifdef ESP32
+//for D32 Pro with TFT connector
+  #define TFT_CS 14 
+  #define TFT_DC 27
+  #define TFT_RST 33
+  #define TS_CS 12
+#else
+ //for D1 Mini with shield connection
+  #define TFT_CS D0
+  #define TFT_DC D8
+  #define TFT_RST -1
+  #define TS_CS D3
+#endif
 
 //The setting structure
 struct Plugin_091_TFT_SettingStruct
 {
   Plugin_091_TFT_SettingStruct()
-  : address_tft_cs(D0), address_tft_dc(D8), address_tft_rst(-1), address_ts_cs(D3), rotation(0){}
+  : address_tft_cs(TFT_CS), address_tft_dc(TFT_DC), address_tft_rst(TFT_RST), address_ts_cs(TS_CS), rotation(0)
+  {
+
+  }
   byte address_tft_cs;
   byte address_tft_dc;
   byte address_tft_rst;
