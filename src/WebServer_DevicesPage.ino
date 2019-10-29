@@ -101,10 +101,11 @@ void handle_devices() {
   // For use in other functions, set it to 0 ... (TASKS_MAX - 1)
   taskIndex_t taskIndex       = getFormItemInt(F("index"), 0);
   boolean     taskIndexNotSet = taskIndex == 0;
-  --taskIndex;
 
-
-  LoadTaskSettings(taskIndex);         // Make sure ExtraTaskSettings are up-to-date
+  if (!taskIndexNotSet) {
+    --taskIndex;
+    LoadTaskSettings(taskIndex);       // Make sure ExtraTaskSettings are up-to-date
+  }
 
   // FIXME TD-er: Might have to clear any caches here.
   if ((edit != 0) && !taskIndexNotSet) // when form submitted

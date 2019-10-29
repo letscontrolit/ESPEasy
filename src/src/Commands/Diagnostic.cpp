@@ -1,4 +1,4 @@
-#include "Diagnostic.h"
+#include "../Commands/Diagnostic.h"
 /*
 #include "Common.h"
 #include "../../ESPEasy_common.h"

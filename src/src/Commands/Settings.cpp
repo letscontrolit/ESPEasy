@@ -1,4 +1,4 @@
-#include "Settings.h"
+#include "../Commands/Settings.h"
 
 #include "../../ESPEasy_common.h"
 #include "../Commands/Common.h"

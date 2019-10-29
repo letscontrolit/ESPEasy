@@ -1,4 +1,4 @@
-#include "Networks.h"
+#include "../Commands/Networks.h"
 
 #include "../../ESPEasy_common.h"
 #include "../Commands/Common.h"

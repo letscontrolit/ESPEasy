@@ -36,23 +36,6 @@
     ZERO_FILL(LWTMessageDisconnect);
   }
 
-  boolean       UseDNS;
-  byte          IP[4];
-  unsigned int  Port;
-  char          HostName[65];
-  char          Publish[129];
-  char          Subscribe[129];
-  char          MQTTLwtTopic[129];
-  char          LWTMessageConnect[129];
-  char          LWTMessageDisconnect[129];
-  unsigned int  MinimalTimeBetweenMessages;
-  unsigned int  MaxQueueDepth;
-  unsigned int  MaxRetry;
-  boolean       DeleteOldest; // Action to perform when buffer full, delete oldest, or ignore newest.
-  unsigned int  ClientTimeout;
-  boolean       MustCheckReply; // When set to false, a sent message is considered always successful.
-  taskIndex_t   SampleSetInitiator; // The first task to start a sample set.
-
   void ControllerSettingsStruct::validate() {
     if (Port > 65535) Port = 0;
     if (MinimalTimeBetweenMessages < 1  ||  MinimalTimeBetweenMessages > CONTROLLER_DELAY_QUEUE_DELAY_MAX)

@@ -2,12 +2,12 @@
 
 #include "../../ESPEasy_common.h"
 
-  ExtraTaskSettingsStruct::ExtraTaskSettingsStruct() : TaskIndex(TASKS_MAX) {
+  ExtraTaskSettingsStruct::ExtraTaskSettingsStruct() : TaskIndex(INVALID_TASK_INDEX) {
     clear();
   }
 
   void ExtraTaskSettingsStruct::clear() {
-    TaskIndex = TASKS_MAX;
+    TaskIndex = INVALID_TASK_INDEX;
     ZERO_FILL(TaskDeviceName);
     for (byte i = 0; i < VARS_PER_TASK; ++i) {
       TaskDeviceValueDecimals[i] = 2;

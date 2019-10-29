@@ -1,4 +1,4 @@
-#include "WiFi.h"
+#include "../Commands/WiFi.h"
 
 #include "../../ESPEasy_common.h"
 #include "../Commands/Common.h"

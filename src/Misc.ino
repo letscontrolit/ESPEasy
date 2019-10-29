@@ -479,7 +479,7 @@ bool remoteConfig(struct EventStruct *event, const String& string)
       }
       taskIndex_t index = findTaskIndexByName(configTaskName);
 
-      if (index != TASKS_MAX)
+      if (validTaskIndex(index))
       {
         event->TaskIndex = index;
         success          = PluginCall(PLUGIN_SET_CONFIG, event, configCommand);
@@ -1544,7 +1544,7 @@ String parseTemplate(String& tmpString, byte lineSize)
       // For example: "[<taskname>#getLevel]"
       taskIndex_t taskIndex = findTaskIndexByName(deviceName);
 
-      if (taskIndex != TASKS_MAX && Settings.TaskDeviceEnabled[taskIndex]) {
+      if (validTaskIndex(taskIndex) && Settings.TaskDeviceEnabled[taskIndex]) {
         byte valueNr = findDeviceValueIndexByName(valueName, taskIndex);
 
         if (valueNr != VARS_PER_TASK) {
@@ -1603,7 +1603,7 @@ String parseTemplate(String& tmpString, byte lineSize)
 }
 
 // Find the first (enabled) task with given name
-// Return TASKS_MAX when not found, else return taskIndex
+// Return INVALID_TASK_INDEX when not found, else return taskIndex
 taskIndex_t findTaskIndexByName(const String& deviceName)
 {
   // cache this, since LoadTaskSettings does take some time.
@@ -1626,7 +1626,7 @@ taskIndex_t findTaskIndexByName(const String& deviceName)
       }
     }
   }
-  return TASKS_MAX;
+  return INVALID_TASK_INDEX;
 }
 
 // Find the first device value index of a taskIndex.
