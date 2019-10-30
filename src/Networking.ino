@@ -232,7 +232,7 @@ void checkUDP()
 /*********************************************************************************************\
    Send event using UDP message
 \*********************************************************************************************/
-void SendUDPCommand(byte destUnit, char *data, byte dataLength)
+void SendUDPCommand(byte destUnit, const char *data, byte dataLength)
 {
   if (!WiFiConnected(10)) {
     return;
@@ -240,12 +240,12 @@ void SendUDPCommand(byte destUnit, char *data, byte dataLength)
 
   if (destUnit != 0)
   {
-    sendUDP(destUnit, (byte *)data, dataLength);
+    sendUDP(destUnit, (const byte *)data, dataLength);
     delay(10);
   } else {
     for (NodesMap::iterator it = Nodes.begin(); it != Nodes.end(); ++it) {
       if (it->first != Settings.Unit) {
-        sendUDP(it->first, (byte *)data, dataLength);
+        sendUDP(it->first, (const byte *)data, dataLength);
         delay(10);
       }
     }
@@ -256,7 +256,7 @@ void SendUDPCommand(byte destUnit, char *data, byte dataLength)
 /*********************************************************************************************\
    Send UDP message (unit 255=broadcast)
 \*********************************************************************************************/
-void sendUDP(byte unit, byte *data, byte size)
+void sendUDP(byte unit, const byte *data, byte size)
 {
   if (!WiFiConnected(10)) {
     return;

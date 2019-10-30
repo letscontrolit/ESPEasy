@@ -168,7 +168,7 @@ String LoadSettings();
 unsigned long FreeMem(void);
 void ResetFactory();
 void reboot();
-void SendUDPCommand(byte destUnit, char *data, byte dataLength);
+void SendUDPCommand(byte destUnit, const char *data, byte dataLength);
 
 #include <FS.h>
 void printDirectory(File dir, int numTabs);
