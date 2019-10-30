@@ -9,6 +9,7 @@
 #include "../Globals/Settings.h"
 
 #include "../../ESPEasy_fdwdecl.h"
+#include "../../ESPEasy_Log.h"
 
 
 String Command_MQTT_Retain(struct EventStruct *event, const char *Line)
@@ -50,8 +51,9 @@ String Command_MQTT_Publish(struct EventStruct *event, const char *Line)
 
     if (enabledMqttController >= 0) {
       // Command structure:  Publish,<topic>,<value>
-      String topic = parseStringKeepCase(Line, 1);
-      String value = parseStringKeepCase(Line, 2);
+      String topic = parseStringKeepCase(Line, 2);
+      String value = parseStringKeepCase(Line, 3);
+      addLog(LOG_LEVEL_DEBUG, String(F("Publish: ")) + topic + value);
 
       if ((topic.length() > 0) && (value.length() > 0)) {
         // @giig1967g: if payload starts with '=' then treat it as a Formula and evaluate accordingly
