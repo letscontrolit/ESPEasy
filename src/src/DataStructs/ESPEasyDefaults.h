@@ -126,7 +126,7 @@
 #endif
 
 #ifndef DEFAULT_PIN_STATUS_LED
-#define DEFAULT_PIN_STATUS_LED           -1
+#define DEFAULT_PIN_STATUS_LED           (-1)
 #endif
 #ifndef DEFAULT_PIN_STATUS_LED_INVERSED
 #define DEFAULT_PIN_STATUS_LED_INVERSED  true

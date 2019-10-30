@@ -101,9 +101,9 @@ extern unsigned long timingstats_last_reset;
 
 #define START_TIMER const unsigned statisticsTimerStart(micros());
 #define STOP_TIMER_TASK(T, F) \
-  if (mustLogFunction(F)) pluginStats[T * 256 + F].add(usecPassedSince(statisticsTimerStart));
+  if (mustLogFunction(F)) pluginStats[(T) * 256 + (F)].add(usecPassedSince(statisticsTimerStart));
 #define STOP_TIMER_CONTROLLER(T, F) \
-  if (mustLogCFunction(F)) controllerStats[T * 256 + F].add(usecPassedSince(statisticsTimerStart));
+  if (mustLogCFunction(F)) controllerStats[(T) * 256 + (F)].add(usecPassedSince(statisticsTimerStart));
 
 // #define STOP_TIMER_LOADFILE miscStats[LOADFILE_STATS].add(usecPassedSince(statisticsTimerStart));
 #define STOP_TIMER(L) miscStats[L].add(usecPassedSince(statisticsTimerStart));

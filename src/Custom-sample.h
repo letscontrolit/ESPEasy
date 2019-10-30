@@ -87,7 +87,7 @@
 #define DEFAULT_PIN_I2C_SDA                     4
 #define DEFAULT_PIN_I2C_SCL                     5
 
-#define DEFAULT_PIN_STATUS_LED                  -1
+#define DEFAULT_PIN_STATUS_LED                  (-1)
 #define DEFAULT_PIN_STATUS_LED_INVERSED         true
 
 
