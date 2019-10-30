@@ -82,8 +82,8 @@ String Command_Wifi_Mode(struct EventStruct *event, const char *Line)
   if (GetArgv(Line, TmpStr1, 2)) {
     WiFiMode_t mode = WIFI_MODE_MAX;
 
-    if (event->Par1 > 0) {
-      mode = (WiFiMode_t)(event->Par1 - 1);
+    if (event->Par1 > 0 && event->Par1 < WIFI_MODE_MAX) {
+      mode = static_cast<WiFiMode_t>(event->Par1 - 1);
     } else {
       TmpStr1.toLowerCase();
 

@@ -108,6 +108,8 @@ bool safe_strncpy(char       *dest,
 void rulesProcessing(String& event);
 void setIntervalTimer(unsigned long id);
 byte getProtocolIndex(byte Number);
+byte getNotificationProtocolIndex(byte Number);
+void schedule_notification_event_timer(byte NotificationProtocolIndex, byte Function, struct EventStruct *event);
 
 #ifdef USES_MQTT
 
@@ -146,6 +148,12 @@ void serialPrint(const String& text);
 void setLogLevelFor(byte destination, byte logLevel);
 uint16_t getPortFromKey(uint32_t key);
 
+void initRTC();
+void deepSleepStart(int dsdelay);
+void taskClear(taskIndex_t taskIndex, bool save);
+void SensorSendTask(taskIndex_t TaskIndex);
+bool remoteConfig(struct EventStruct *event, const String& string);
+
 String parseString(const String& string, byte indexFind);
 String parseStringKeepCase(const String& string, byte indexFind);
 String parseStringToEnd(const String& string, byte indexFind);
@@ -177,5 +185,7 @@ void SendUDPCommand(byte destUnit, const char *data, byte dataLength);
 
 #include <FS.h>
 void printDirectory(File dir, int numTabs);
+
+void delayBackground(unsigned long dsdelay);
 
 #endif // ESPEASY_FWD_DECL_H

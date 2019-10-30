@@ -13,7 +13,7 @@ String Command_UDP_Test(struct EventStruct *event, const char *Line)
   {
     String eventName = "Test ";
     eventName += x;
-    SendUDPCommand(event->Par1, (char *)eventName.c_str(), eventName.length());
+    SendUDPCommand(event->Par1, eventName.c_str(), eventName.length());
   }
   return return_command_success();
 }
