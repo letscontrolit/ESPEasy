@@ -263,31 +263,40 @@ To create/register a plugin, you have to :
 #endif
 
 
+// Strip out parts not needed for either MINIMAL_OTA and MEMORY_ANALYSIS
 #if defined(BUILD_MINIMAL_OTA) || defined(MEMORY_ANALYSIS)
-  #ifdef WEBSERVER_TIMINGSTATS
-    #undef WEBSERVER_TIMINGSTATS
-  #endif
-  #ifdef WEBSERVER_SYSVARS
-    #undef WEBSERVER_SYSVARS
-  #endif
-  #ifdef WEBSERVER_NEW_UI
-    #undef WEBSERVER_NEW_UI
-  #endif
-  #ifdef WEBSERVER_I2C_SCANNER
-    #undef WEBSERVER_I2C_SCANNER
-  #endif
-  #ifdef WEBSERVER_FAVICON
-    #undef WEBSERVER_FAVICON
-  #endif
-  #ifdef WEBSERVER_LOG
-    #undef WEBSERVER_LOG
-  #endif
-  #ifdef WEBSERVER_GITHUB_COPY
-    #undef WEBSERVER_GITHUB_COPY
-  #endif
-  #ifdef USES_SSDP
-    #undef USES_SSDP
-  #endif
+    #ifndef WEBSERVER_CUSTOM_BUILD_DEFINED
+        #ifdef WEBSERVER_TIMINGSTATS
+            #undef WEBSERVER_TIMINGSTATS
+        #endif
+        #ifdef WEBSERVER_SYSVARS
+            #undef WEBSERVER_SYSVARS
+        #endif
+        #ifdef WEBSERVER_NEW_UI
+            #undef WEBSERVER_NEW_UI
+        #endif
+        #ifdef WEBSERVER_I2C_SCANNER
+            #undef WEBSERVER_I2C_SCANNER
+        #endif
+        #ifdef WEBSERVER_FAVICON
+            #undef WEBSERVER_FAVICON
+        #endif
+        #ifdef WEBSERVER_LOG
+            #undef WEBSERVER_LOG
+        #endif
+        #ifdef WEBSERVER_GITHUB_COPY
+            #undef WEBSERVER_GITHUB_COPY
+        #endif
+        #ifdef WEBSERVER_PINSTATES
+            #undef WEBSERVER_PINSTATES
+        #endif
+        #ifdef WEBSERVER_WIFI_SCANNER
+            #undef WEBSERVER_WIFI_SCANNER
+        #endif
+        #ifdef USES_SSDP
+            #undef USES_SSDP
+        #endif
+    #endif // WEBSERVER_CUSTOM_BUILD_DEFINED
 #endif
 
 
