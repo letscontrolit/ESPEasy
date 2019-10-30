@@ -20,7 +20,7 @@ String Command_logentry(struct EventStruct *event, const char* Line);
 String Command_JSONPortStatus(struct EventStruct *event, const char* Line);
 void createLogPortStatus(std::map< uint32_t, portStatusStruct >::iterator it);
 void debugPortStatus(std::map< uint32_t, portStatusStruct >::iterator it);
-void logPortStatus(String from);
+void logPortStatus(const String& from);
 String Command_logPortStatus(struct EventStruct *event, const char* Line);
 
 

@@ -19,7 +19,7 @@ String Command_GetORSetIP(struct EventStruct *event,
                           const String      & targetDescription,
                           const char         *Line,
                           byte               *IP,
-                          IPAddress           dhcpIP,
+                          const IPAddress&    dhcpIP,
                           int                 arg);
 
 String Command_GetORSetString(struct EventStruct *event,
