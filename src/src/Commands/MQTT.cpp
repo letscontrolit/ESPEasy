@@ -1,3 +1,7 @@
+#include "../../define_plugin_sets.h"
+
+#ifdef USES_MQTT
+
 #include "../Commands/MQTT.h"
 
 #include "../../ESPEasy_common.h"
@@ -67,3 +71,5 @@ String Command_MQTT_Publish(struct EventStruct *event, const char *Line)
   }
   return return_not_connected();
 }
+
+#endif // ifdef USES_MQTT
