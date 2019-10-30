@@ -120,6 +120,10 @@
 
 #define BUILD_NO_DEBUG
 
+
+#define USES_SSDP
+
+
 // #define USE_SETTINGS_ARCHIVE
 
 /*

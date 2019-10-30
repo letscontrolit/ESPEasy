@@ -106,9 +106,10 @@ To create/register a plugin, you have to :
     #endif
 #endif 
 
-
-#ifndef USES_SSDP
-    #define USES_SSDP
+#ifndef USE_CUSTOM_H
+    #ifndef USES_SSDP
+        #define USES_SSDP
+    #endif
 #endif
 
 #ifdef MEMORY_ANALYSIS
