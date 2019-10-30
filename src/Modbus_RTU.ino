@@ -1,6 +1,14 @@
+#include "define_plugin_sets.h"
+
+// FIXME TD-er: No idea why, but in this file you cannot use the F() macro. (core 2.4.1)
+
 #ifdef USES_MODBUS
 #include <Arduino.h>
+#include <WString.h>
+#include <pgmspace.h>
 #include <ESPeasySerial.h>
+#include "ESPEasy_fdwdecl.h"
+#include "ESPEasy_common.h"
 
 #define MODBUS_RECEIVE_BUFFER 256
 #define MODBUS_BROADCAST_ADDRESS 0xFE
@@ -137,11 +145,11 @@ struct ModbusRTU_struct  {
       switch (object_id) {
         case 0x01:
 
-          if (result == 0) { label = F("Pcode"); }
+          if (result == 0) { label = "Pcode"; }
           break;
         case 0x02:
 
-          if (result == 0) { label = F("Rev"); }
+          if (result == 0) { label = "Rev"; }
           break;
         case 0x82:
         {
@@ -151,7 +159,7 @@ struct ModbusRTU_struct  {
             result   = 0;
           }
 
-          if (result == 0) { label = F("S/N"); }
+          if (result == 0) { label = "S/N"; }
           break;
         }
         case 0x83:
@@ -162,7 +170,7 @@ struct ModbusRTU_struct  {
             result   = 0;
           }
 
-          if (result == 0) { label = F("Type"); }
+          if (result == 0) { label = "Type"; }
           break;
         }
         default:
@@ -251,20 +259,20 @@ struct ModbusRTU_struct  {
     String result;
 
     switch (object_id) {
-      case 0:    result = F("VendorName");          break;
-      case 1:    result = F("ProductCode");         break;
-      case 2:    result = F("MajorMinorRevision");  break;
-      case 3:    result = F("VendorUrl");           break;
-      case 4:    result = F("ProductName");         break;
-      case 5:    result = F("ModelName");           break;
-      case 6:    result = F("UserApplicationName"); break;
-      case 0x80: result = F("MemoryMapVersion");    break;
-      case 0x81: result = F("Firmware Rev.");       break;
-      case 0x82: result = F("Sensor S/N");          break;
-      case 0x83: result = F("Sensor type");         break;
+      case 0:    result = "VendorName";          break;
+      case 1:    result = "ProductCode";         break;
+      case 2:    result = "MajorMinorRevision";  break;
+      case 3:    result = "VendorUrl";           break;
+      case 4:    result = "ProductName";         break;
+      case 5:    result = "ModelName";           break;
+      case 6:    result = "UserApplicationName"; break;
+      case 0x80: result = "MemoryMapVersion";    break;
+      case 0x81: result = "Firmware Rev.";       break;
+      case 0x82: result = "Sensor S/N";          break;
+      case 0x83: result = "Sensor type";         break;
       default:
-        result  = F("0x");
-        result += String(object_id, HEX);
+        result = formatToHex(object_id);
+        break;
     }
     return result;
   }
@@ -278,7 +286,7 @@ struct ModbusRTU_struct  {
     if (_recv_buf_used < 8) {
       // Too small.
       addLog(LOG_LEVEL_INFO,
-             String(F("MEI response too small: ")) + _recv_buf_used);
+             String("MEI response too small: ") + _recv_buf_used);
       next_object_id = 0xFF;
       more_follows   = false;
       return result;
@@ -316,15 +324,12 @@ struct ModbusRTU_struct  {
               object_value_int =
                 object_value_int << 8 | _recv_buf[pos++];
             }
-            object_value = F("0x");
-            String hexvalue(object_value_int, HEX);
-            hexvalue.toUpperCase();
-            object_value += hexvalue;
+            object_value += formatToHex(object_value_int);
           }
 
           if (i != 0) {
             // Append to existing description
-            result += F(", ");
+            result += ", ";
           }
           result += object_value;
         }

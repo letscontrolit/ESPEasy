@@ -137,6 +137,8 @@ String formatIP(const IPAddress& ip);
 String toString(float value, byte decimals);
 String toString(bool value);
 bool isInt(const String& tBuf);
+String formatToHex(unsigned long value, const String& prefix);
+String formatToHex(unsigned long value);
 
 float getCPUload();
 int getLoopCountPerSec();
