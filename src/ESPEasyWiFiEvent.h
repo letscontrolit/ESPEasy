@@ -1,3 +1,6 @@
+#ifndef ESPEASY_WIFI_EVENT_H
+#define ESPEASY_WIFI_EVENT_H
+
 #include "ESPEasy_common.h"
 
 #include <IPAddress.h>
@@ -58,3 +61,6 @@ void onDisonnectedAPmode(const WiFiEventSoftAPModeStationDisconnected& event);
 void onScanFinished(int networksFound);
 
 #endif // ifdef ESP32
+
+
+#endif // ESPEASY_WIFI_EVENT_H

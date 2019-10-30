@@ -1,3 +1,6 @@
+#ifndef DEFINE_PLUGIN_SETS_H
+#define DEFINE_PLUGIN_SETS_H
+
 #include "ESPEasy_common.h"
 
 /*
@@ -21,7 +24,7 @@ To create/register a plugin, you have to :
  When found stable enought, the maintainer (and only him) will choose to move it to TESTING or STABLE
 */
 
-
+//#define FEATURE_SD
 
 /******************************************************************************\
  * WebServer pages   **********************************************************
@@ -967,3 +970,5 @@ To create/register a plugin, you have to :
     #undef USES_C003
   #endif
 #endif
+
+#endif // DEFINE_PLUGIN_SETS_H
