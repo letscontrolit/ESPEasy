@@ -255,7 +255,7 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
           const portStatusStruct currentStatus = globalMapPortStatus[key];
 
           //if (currentStatus.monitor || currentStatus.command || currentStatus.init) {
-            byte state = Plugin_009_Read(event->Par1);
+            const int8_t state = Plugin_009_Read(event->Par1);
             if (currentStatus.state != state || currentStatus.forceMonitor) {
               if (!currentStatus.task) globalMapPortStatus[key].state = state; //do not update state if task flag=1 otherwise it will not be picked up by 10xSEC function
               if (currentStatus.monitor) {
@@ -527,7 +527,7 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
             // So the next command should be part of each command:
             tempStatus = globalMapPortStatus[key];
 
-            int8_t currentState = Plugin_009_Read(event->Par1);
+            const int8_t currentState = Plugin_009_Read(event->Par1);
 
             if (currentState == -1) {
               tempStatus.mode=PIN_MODE_OFFLINE;
@@ -565,7 +565,7 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
             // WARNING: operator [] creates an entry in the map if key does not exist
             // So the next command should be part of each command:
             tempStatus = globalMapPortStatus[key];
-            int8_t currentState = Plugin_009_Read(event->Par1);
+            const int8_t currentState = Plugin_009_Read(event->Par1);
             bool needToSave = false;
 
             if (currentState == -1) {
@@ -652,7 +652,7 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
               SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, dummyString, 0);
             else
            {
-             int state = Plugin_009_Read(event->Par2); // report as input
+             const int8_t state = Plugin_009_Read(event->Par2); // report as input
              if (state != -1)
                SendStatusOnlyIfNeeded(event->Source, NO_SEARCH_PIN_STATE, key, dummyString, state);
              }
