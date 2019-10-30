@@ -19,5 +19,5 @@ C018_queue_element::C018_queue_element(struct EventStruct *event, uint8_t sample
 }
 
 size_t C018_queue_element::getSize() const {
-  return sizeof(this) + packed.length();
+  return sizeof(*this) + packed.length();
 }
