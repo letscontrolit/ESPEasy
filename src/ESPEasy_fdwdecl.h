@@ -155,12 +155,14 @@ String rulesProcessingFile(const String& fileName, String& event);
 int Calculate(const char *input, float* result);
 
 
-# include <ESP8266WiFiType.h>
 void WifiScan();
 void WiFiConnectRelaxed();
 void WifiDisconnect();
 void setAP(bool enable);
 void setSTA(bool enable);
+
+#include "src/Globals/ESPEasyWiFiEvent.h"
+
 void setWifiMode(WiFiMode_t wifimode);
 
 

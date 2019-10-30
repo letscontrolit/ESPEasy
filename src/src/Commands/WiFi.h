@@ -5,8 +5,6 @@
 
 class String;
 
-#define WIFI_MODE_MAX (WiFiMode_t)4
-
 String Command_Wifi_SSID(struct EventStruct *event, const char* Line);
 String Command_Wifi_Key(struct EventStruct *event, const char* Line);
 String Command_Wifi_SSID2(struct EventStruct *event, const char* Line);

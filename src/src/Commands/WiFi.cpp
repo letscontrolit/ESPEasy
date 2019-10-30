@@ -6,6 +6,8 @@
 
 #include "../../ESPEasy_fdwdecl.h"
 
+#define WIFI_MODE_MAX (WiFiMode_t)4
+
 
 String Command_Wifi_SSID(struct EventStruct *event, const char *Line)
 {
