@@ -38,7 +38,7 @@ void handle_dumpcache() {
   TXBuffer.startStream();
   TXBuffer += F("UNIX timestamp;contr. idx;sensortype;taskindex;value count");
 
-  for (int i = 0; i < TASKS_MAX; ++i) {
+  for (taskIndex_t i = 0; i < TASKS_MAX; ++i) {
     LoadTaskSettings(i);
 
     for (int j = 0; j < VARS_PER_TASK; ++j) {
@@ -103,7 +103,7 @@ void handle_cache_json() {
   TXBuffer += ',';
   stream_to_json_value(F("task index"));
 
-  for (int i = 0; i < TASKS_MAX; ++i) {
+  for (taskIndex_t i = 0; i < TASKS_MAX; ++i) {
     LoadTaskSettings(i);
 
     for (int j = 0; j < VARS_PER_TASK; ++j) {

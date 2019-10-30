@@ -83,7 +83,7 @@ bool CPlugin_002(byte function, struct EventStruct *event, String& string)
             switchtype = "?";
           }
 
-          for (byte x = 0; x < TASKS_MAX; x++) {
+          for (taskIndex_t x = 0; x < TASKS_MAX; x++) {
             // We need the index of the controller we are: 0...CONTROLLER_MAX
             if (Settings.TaskDeviceEnabled[x] && (Settings.TaskDeviceID[ControllerID][x] == idx)) // get idx for our controller index
             {

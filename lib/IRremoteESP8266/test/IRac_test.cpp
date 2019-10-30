@@ -141,7 +141,7 @@ TEST(TestIRac, Daikin) {
   IRrecv capture(0);
   char expected[] =
       "Power: On, Mode: 3 (Cool), Temp: 19C, Fan: 5 (High), Powerful: Off, "
-      "Quiet: Off, Sensor: Off, Mold: On, Comfort: Off, "
+      "Quiet: Off, Sensor: Off, Mould: On, Comfort: Off, "
       "Swing(H): Off, Swing(V): Off, "
       "Clock: 00:00, Day: 0 (UNKNOWN), On Timer: Off, "
       "Off Timer: Off, Weekly Timer: On";
@@ -194,6 +194,32 @@ TEST(TestIRac, Daikin128) {
   EXPECT_TRUE(capture.decode(&ac._irsend.capture));
   ASSERT_EQ(DAIKIN128, ac._irsend.capture.decode_type);
   ASSERT_EQ(kDaikin128Bits, ac._irsend.capture.bits);
+  ASSERT_EQ(expected, IRAcUtils::resultAcToString(&ac._irsend.capture));
+}
+
+TEST(TestIRac, Daikin152) {
+  IRDaikin152 ac(0);
+  IRac irac(0);
+  IRrecv capture(0);
+  char expected[] =
+      "Power: On, Mode: 3 (Cool), Temp: 27C, Fan: 3 (Medium), Swing(V): On, "
+      "Powerful: Off, Quiet: Off, Econo: On, Sensor: Off, Comfort: Off";
+
+  ac.begin();
+  irac.daikin152(&ac,
+                 true,                        // Power
+                 stdAc::opmode_t::kCool,      // Mode
+                 27,                          // Celsius
+                 stdAc::fanspeed_t::kMedium,  // Fan speed
+                 stdAc::swingv_t::kAuto,      // Veritcal swing
+                 false,                       // Quiet
+                 false,                       // Turbo
+                 true);                       // Econo
+  ASSERT_EQ(expected, ac.toString());
+  ac._irsend.makeDecodeResult();
+  EXPECT_TRUE(capture.decode(&ac._irsend.capture));
+  ASSERT_EQ(DAIKIN152, ac._irsend.capture.decode_type);
+  ASSERT_EQ(kDaikin152Bits, ac._irsend.capture.bits);
   ASSERT_EQ(expected, IRAcUtils::resultAcToString(&ac._irsend.capture));
 }
 
@@ -250,7 +276,7 @@ TEST(TestIRac, Daikin2) {
       "Power: On, Mode: 3 (Cool), Temp: 19C, Fan: 1 (Low), "
       "Swing(V): 14 (Auto), Swing(H): 170 (UNKNOWN), Clock: 00:00, "
       "On Timer: Off, Off Timer: Off, Sleep Timer: Off, Beep: 2 (Loud), "
-      "Light: 1 (High), Mold: On, Clean: On, Fresh: Off, Eye: Off, "
+      "Light: 1 (High), Mould: On, Clean: On, Fresh: Off, Eye: Off, "
       "Eye Auto: Off, Quiet: Off, Powerful: Off, Purify: On, Econo: Off";
 
   ac.begin();

@@ -14,6 +14,7 @@ String Command_Blynk_Get(struct EventStruct *event, const char* Line)
   if (first_enabled_blynk_controller == -1) {
     return F("Controller not enabled");
   } else {
+    // FIXME TD-er: This one is not using parseString* function
     String strLine = Line;
     strLine = strLine.substring(9);
     int index = strLine.indexOf(',');

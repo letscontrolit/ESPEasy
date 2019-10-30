@@ -43,7 +43,7 @@ String Command_Malloc(struct EventStruct *event, const char* Line)
 {
 	char* ramtest;
 	ramtest = (char*)malloc(event->Par1);
-	if (ramtest == NULL) return F("failed");
+	if (ramtest == NULL) return return_command_failed();
 	free(ramtest);
 	return return_command_success();
 }
@@ -133,7 +133,8 @@ String Command_Debug(struct EventStruct *event, const char* Line)
 
 String Command_logentry(struct EventStruct *event, const char* Line)
 {
-	addLog(LOG_LEVEL_INFO,Line);
+	// FIXME TD-er: Add an extra optional parameter to set log level.
+	addLog(LOG_LEVEL_INFO, parseStringKeepCase(Line, 2));
 	return return_command_success();
 }
 

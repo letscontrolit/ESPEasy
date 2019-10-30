@@ -3,6 +3,7 @@
 
 #include "../../ESPEasy_common.h"
 #include "../DataStructs/ESPEasyLimits.h"
+#include "../Globals/Plugins.h"
 
 struct EventStruct;
 
@@ -28,8 +29,8 @@ public:
   String txt[VARS_PER_TASK];
   int vPin[VARS_PER_TASK] = { 0 };
   int controller_idx      = 0;
-  byte TaskIndex          = 0;
   int idx                 = 0;
+  taskIndex_t TaskIndex   = INVALID_TASK_INDEX;
   mutable byte valuesSent = 0; // Value must be set by const function checkDone()
   byte valueCount         = 0;
 };

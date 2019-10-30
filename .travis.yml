@@ -34,8 +34,8 @@ script:
   # - ./memanalyzer.py ~/.platformio/packages/toolchain-xtensa/bin/xtensa-lx106-elf-objdump
   # - PLATFORMIO_BUILD_FLAGS="-D CONTINUOUS_INTEGRATION" platformio run --target clean
   - PLATFORMIO_BUILD_FLAGS="-D CONTINUOUS_INTEGRATION" platformio run -e custom_ESP8266_4M1M
-  - PLATFORMIO_BUILD_FLAGS="-D CONTINUOUS_INTEGRATION" platformio run -e esp-wrover-kit_test_1M8_partition
-  - PLATFORMIO_BUILD_FLAGS="-D CONTINUOUS_INTEGRATION" platformio run -e esp32test_1M8_partition
+  - PLATFORMIO_BUILD_FLAGS="-D CONTINUOUS_INTEGRATION" platformio run -e esp-wrover-kit_test_4M316k
+  - PLATFORMIO_BUILD_FLAGS="-D CONTINUOUS_INTEGRATION" platformio run -e esp32test_4M316k
   - PLATFORMIO_BUILD_FLAGS="-D CONTINUOUS_INTEGRATION" platformio run -e normal_ESP8266_1M
   - PLATFORMIO_BUILD_FLAGS="-D CONTINUOUS_INTEGRATION" platformio run -e normal_ESP8266_1M_VCC
   - PLATFORMIO_BUILD_FLAGS="-D CONTINUOUS_INTEGRATION" platformio run -e normal_ESP8285_1M

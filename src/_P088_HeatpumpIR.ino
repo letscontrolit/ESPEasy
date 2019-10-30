@@ -190,6 +190,7 @@ boolean Plugin_088(byte function, struct EventStruct *event, String& string)
         String TmpStr1 = "";
         string.toCharArray(command, 80);
 
+        // FIXME TD-er: This one is not using parseString* function
         String tmpString = string;
         int argIndex = tmpString.indexOf(',');
         if (argIndex) tmpString = tmpString.substring(0, argIndex);

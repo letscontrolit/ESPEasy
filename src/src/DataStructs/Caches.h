@@ -3,8 +3,9 @@
 
 #include <map>
 #include "../../ESPEasy_common.h"
+#include "../Globals/Plugins.h"
 
-typedef std::map<String, byte> TaskIndexNameMap;
+typedef std::map<String, taskIndex_t> TaskIndexNameMap;
 typedef std::map<String, byte> TaskIndexValueNameMap;
 
 struct Caches {

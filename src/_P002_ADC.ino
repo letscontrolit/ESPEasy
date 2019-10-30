@@ -114,9 +114,17 @@ boolean Plugin_002(byte function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_INIT:  
+      if (!PCONFIG(0)) // Oversampling
+      {
+        // Read at least one value, see https://github.com/letscontrolit/ESPEasy/issues/2646
+        uint16_t currentValue;
+        P002_performRead(event, currentValue);
+      }
+      // Fall through to PLUGIN_TEN_PER_SECOND
     case PLUGIN_TEN_PER_SECOND:
     {
-      if (PCONFIG(0)) // Oversampling?
+      if (PCONFIG(0)) // Oversampling
       {
         uint16_t currentValue;
 

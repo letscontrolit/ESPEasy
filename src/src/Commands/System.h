@@ -5,8 +5,8 @@
 String Command_System_NoSleep(struct EventStruct *event, const char* Line)
 {
 	if (event->Par1 > 0)
-		Settings.deepSleep = event->Par1; // set deep Sleep awake time
-	else Settings.deepSleep = 0;
+		Settings.deepSleep_wakeTime = event->Par1; // set deep Sleep awake time
+	else Settings.deepSleep_wakeTime = 0;
 	return return_command_success();
 }
 

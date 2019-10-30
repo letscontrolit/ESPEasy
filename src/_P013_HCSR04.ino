@@ -275,7 +275,7 @@ boolean Plugin_013(byte function, struct EventStruct *event, String& string)
 }
 
 /*********************************************************************/
-float Plugin_013_read(unsigned int taskIndex)
+float Plugin_013_read(taskIndex_t taskIndex)
 /*********************************************************************/
 {
   if (P_013_sensordefs.count(taskIndex) == 0)
@@ -307,7 +307,7 @@ float Plugin_013_read(unsigned int taskIndex)
 }
 
 /*********************************************************************/
-String Plugin_013_getErrorStatusString(unsigned int taskIndex)
+String Plugin_013_getErrorStatusString(taskIndex_t taskIndex)
 /*********************************************************************/
 {
   if (P_013_sensordefs.count(taskIndex) == 0)

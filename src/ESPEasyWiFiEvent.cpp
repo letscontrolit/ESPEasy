@@ -3,16 +3,17 @@
 #include "ESPEasyTimeTypes.h"
 
 #ifdef ESP32
-  void WiFi_Access_Static_IP::set_use_static_ip(bool enabled) {
-    _useStaticIp = enabled;
-  }
-#endif
-#ifdef ESP8266
-  void WiFi_Access_Static_IP::set_use_static_ip(bool enabled) {
-    _useStaticIp = enabled;
-  }
-#endif
+void WiFi_Access_Static_IP::set_use_static_ip(bool enabled) {
+  _useStaticIp = enabled;
+}
 
+#endif // ifdef ESP32
+#ifdef ESP8266
+void WiFi_Access_Static_IP::set_use_static_ip(bool enabled) {
+  _useStaticIp = enabled;
+}
+
+#endif // ifdef ESP8266
 
 
 void setUseStaticIP(bool enabled) {
@@ -23,8 +24,8 @@ void setUseStaticIP(bool enabled) {
 
 void markGotIP() {
   lastGetIPmoment = millis();
-  wifiStatus      = ESPEASY_WIFI_GOT_IP;
-  processedGotIP  = false;
+  wifiStatus      != ESPEASY_WIFI_GOT_IP;
+  processedGotIP = false;
 }
 
 // ********************************************************************************
@@ -37,7 +38,7 @@ void WiFiEvent(system_event_id_t event, system_event_info_t info) {
     case SYSTEM_EVENT_STA_CONNECTED:
       lastConnectMoment = millis();
       processedConnect  = false;
-      wifiStatus        = ESPEASY_WIFI_CONNECTED;
+      wifiStatus       |= ESPEASY_WIFI_CONNECTED;
       break;
     case SYSTEM_EVENT_STA_DISCONNECTED:
       lastDisconnectMoment = millis();
@@ -50,7 +51,7 @@ void WiFiEvent(system_event_id_t event, system_event_info_t info) {
       }
       processedDisconnect  = false;
       lastDisconnectReason = static_cast<WiFiDisconnectReason>(info.disconnected.reason);
-      wifiStatus           = ESPEASY_WIFI_DISCONNECTED;
+      wifiStatus          |= ESPEASY_WIFI_DISCONNECTED;
       break;
     case SYSTEM_EVENT_STA_GOT_IP:
       markGotIP();
@@ -83,14 +84,14 @@ void WiFiEvent(system_event_id_t event, system_event_info_t info) {
   }
 }
 
-#endif
+#endif // ifdef ESP32
 
 #ifdef ESP8266
 
 void onConnected(const WiFiEventStationModeConnected& event) {
   lastConnectMoment = millis();
   processedConnect  = false;
-  wifiStatus        = ESPEASY_WIFI_CONNECTED;
+  wifiStatus       |= ESPEASY_WIFI_CONNECTED;
   channel_changed   = last_channel != event.channel;
   last_channel      = event.channel;
   last_ssid         = event.ssid;
@@ -151,4 +152,4 @@ void onScanFinished(int networksFound) {
   processedScanDone = false;
 }
 
-#endif
+#endif // ifdef ESP8266

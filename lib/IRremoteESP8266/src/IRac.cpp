@@ -107,6 +107,9 @@ bool IRac::isProtocolSupported(const decode_type_t protocol) {
 #if SEND_DAIKIN128
     case decode_type_t::DAIKIN128:
 #endif
+#if SEND_DAIKIN152
+    case decode_type_t::DAIKIN152:
+#endif
 #if SEND_DAIKIN160
     case decode_type_t::DAIKIN160:
 #endif
@@ -148,6 +151,9 @@ bool IRac::isProtocolSupported(const decode_type_t protocol) {
 #endif
 #if SEND_MITSUBISHI_AC
     case decode_type_t::MITSUBISHI_AC:
+#endif
+#if SEND_MITSUBISHI112
+    case decode_type_t::MITSUBISHI112:
 #endif
 #if SEND_MITSUBISHI136
     case decode_type_t::MITSUBISHI136:
@@ -245,6 +251,13 @@ void IRac::coolix(IRCoolixAC *ac,
                   const bool turbo, const bool light, const bool clean,
                   const int16_t sleep) {
   ac->begin();
+  ac->setPower(on);
+  if (!on) {
+      // after turn off AC no more commands should
+      // be accepted
+      ac->send();
+      return;
+  }
   ac->setMode(ac->convertMode(mode));
   ac->setTemp(degrees);
   ac->setFan(ac->convertFan(fan));
@@ -278,8 +291,6 @@ void IRac::coolix(IRCoolixAC *ac,
     ac->setClean();
     ac->send();
   }
-  // Power gets done last, as off has a special command.
-  ac->setPower(on);
   ac->send();
 }
 #endif  // SEND_COOLIX
@@ -337,6 +348,32 @@ void IRac::daikin128(IRDaikin128 *ac,
   ac->send();
 }
 #endif  // SEND_DAIKIN128
+
+#if SEND_DAIKIN152
+void IRac::daikin152(IRDaikin152 *ac,
+                  const bool on, const stdAc::opmode_t mode,
+                  const float degrees, const stdAc::fanspeed_t fan,
+                  const stdAc::swingv_t swingv,
+                  const bool quiet, const bool turbo, const bool econo) {
+  ac->begin();
+  ac->setPower(on);
+  ac->setMode(ac->convertMode(mode));
+  ac->setTemp(degrees);
+  ac->setFan(ac->convertFan(fan));
+  ac->setSwingV((int8_t)swingv >= 0);
+  // No Horizontal Swing setting avaliable.
+  ac->setQuiet(quiet);
+  // No Light setting available.
+  // No Filter setting available.
+  ac->setPowerful(turbo);
+  ac->setEcono(econo);
+  // No Clean setting available.
+  // No Beep setting available.
+  // No Sleep setting available.
+  // No Clock setting available.
+  ac->send();
+}
+#endif  // SEND_DAIKIN152
 
 #if SEND_DAIKIN160
 void IRac::daikin160(IRDaikin160 *ac,
@@ -704,6 +741,34 @@ void IRac::mitsubishi(IRMitsubishiAC *ac,
   ac->send();
 }
 #endif  // SEND_MITSUBISHI_AC
+
+#if SEND_MITSUBISHI112
+void IRac::mitsubishi112(IRMitsubishi112 *ac,
+                         const bool on, const stdAc::opmode_t mode,
+                         const float degrees, const stdAc::fanspeed_t fan,
+                         const stdAc::swingv_t swingv,
+                         const stdAc::swingh_t swingh,
+                         const bool quiet) {
+  ac->begin();
+  ac->setPower(on);
+  ac->setMode(ac->convertMode(mode));
+  ac->setTemp(degrees);
+  ac->setFan(ac->convertFan(fan));
+  ac->setSwingV(ac->convertSwingV(swingv));
+  ac->setSwingH(ac->convertSwingH(swingh));
+  ac->setQuiet(quiet);
+  // FIXME - Econo
+  // ac->setEcono(econo);
+  // No Turbo setting available.
+  // No Light setting available.
+  // No Filter setting available.
+  // No Clean setting available.
+  // No Beep setting available.
+  // No Sleep setting available.
+  // No Clock setting available.
+  ac->send();
+}
+#endif  // SEND_MITSUBISHI112
 
 #if SEND_MITSUBISHI136
 void IRac::mitsubishi136(IRMitsubishi136 *ac,
@@ -1207,6 +1272,15 @@ bool IRac::sendAc(const stdAc::state_t desired, const stdAc::state_t *prev) {
       break;
     }
 #endif  // SEND_DAIKIN2
+#if SEND_DAIKIN152
+    case DAIKIN152:
+    {
+      IRDaikin152 ac(_pin, _inverted, _modulation);
+      daikin152(&ac, on, send.mode, degC, send.fanspeed, send.swingv,
+                send.quiet, send.turbo, send.econo);
+      break;
+    }
+#endif  // SEND_DAIKIN152
 #if SEND_DAIKIN160
     case DAIKIN160:
     {
@@ -1337,6 +1411,15 @@ bool IRac::sendAc(const stdAc::state_t desired, const stdAc::state_t *prev) {
       break;
     }
 #endif  // SEND_MITSUBISHI_AC
+#if SEND_MITSUBISHI112
+    case MITSUBISHI112:
+    {
+      IRMitsubishi112 ac(_pin, _inverted, _modulation);
+      mitsubishi112(&ac, on, send.mode, degC, send.fanspeed, send.swingv,
+                    send.swingh, send.quiet);
+      break;
+    }
+#endif  // SEND_MITSUBISHI112
 #if SEND_MITSUBISHI136
     case MITSUBISHI136:
     {
@@ -1790,6 +1873,13 @@ namespace IRAcUtils {
         return ac.toString();
       }
 #endif  // DECODE_DAIKIN128
+#if DECODE_DAIKIN152
+      case decode_type_t::DAIKIN152: {
+        IRDaikin152 ac(0);
+        ac.setRaw(result->state);
+        return ac.toString();
+      }
+#endif  // DECODE_DAIKIN152
 #if DECODE_DAIKIN160
       case decode_type_t::DAIKIN160: {
         IRDaikin160 ac(0);
@@ -1846,6 +1936,13 @@ namespace IRAcUtils {
         return ac.toString();
       }
 #endif  // DECODE_MITSUBISHI_AC
+#if DECODE_MITSUBISHI112
+      case decode_type_t::MITSUBISHI112: {
+        IRMitsubishi112 ac(0);
+        ac.setRaw(result->state);
+        return ac.toString();
+      }
+#endif  // DECODE_MITSUBISHI112
 #if DECODE_MITSUBISHI136
       case decode_type_t::MITSUBISHI136: {
         IRMitsubishi136 ac(0);
@@ -1938,6 +2035,7 @@ namespace IRAcUtils {
 #if DECODE_COOLIX
       case decode_type_t::COOLIX: {
         IRCoolixAC ac(0);
+        ac.on();
         ac.setRaw(result->value);  // Coolix uses value instead of state.
         return ac.toString();
       }
@@ -2149,6 +2247,14 @@ namespace IRAcUtils {
         break;
       }
 #endif  // DECODE_MITSUBISHI_AC
+#if DECODE_MITSUBISHI112
+      case decode_type_t::MITSUBISHI112: {
+        IRMitsubishi112 ac(kGpioUnused);
+        ac.setRaw(decode->state);
+        *result = ac.toCommon();
+        break;
+      }
+#endif  // DECODE_MITSUBISHI112
 #if DECODE_MITSUBISHI136
       case decode_type_t::MITSUBISHI136: {
         IRMitsubishi136 ac(kGpioUnused);

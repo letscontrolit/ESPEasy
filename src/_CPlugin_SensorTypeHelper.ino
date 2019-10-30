@@ -1,4 +1,5 @@
 #include "src/Globals/Device.h"
+#include "src/Globals/Plugins.h"
 
 /*********************************************************************************************\
    Get value count from sensor type
@@ -90,9 +91,11 @@ void sensorTypeHelper_webformLoad_simple(struct EventStruct *event, byte pconfig
 void sensorTypeHelper_webformLoad(struct EventStruct *event, byte pconfigIndex, int optionCount, const byte options[])
 {
   byte choice      = PCONFIG(pconfigIndex);
-  byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[event->TaskIndex]);
-
-  if (getValueCountFromSensorType(choice) != Device[DeviceIndex].ValueCount) {
+  deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(event->TaskIndex);
+  if (!validDeviceIndex(DeviceIndex)) {
+    choice = 0;
+    PCONFIG(pconfigIndex) = choice;
+  } else if (getValueCountFromSensorType(choice) != Device[DeviceIndex].ValueCount) {
     // Invalid value
     choice                = Device[DeviceIndex].VType;
     PCONFIG(pconfigIndex) = choice;
@@ -126,10 +129,11 @@ void sensorTypeHelper_saveSensorType(struct EventStruct *event, byte pconfigInde
 void sensorTypeHelper_setSensorType(struct EventStruct *event, byte pconfigIndex)
 {
   byte sensorType  = PCONFIG(pconfigIndex);
-  byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[event->TaskIndex]);
-
-  Device[DeviceIndex].VType      = sensorType;
-  Device[DeviceIndex].ValueCount = getValueCountFromSensorType(sensorType);
+  deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(event->TaskIndex);
+  if (validDeviceIndex(DeviceIndex)) {
+    Device[DeviceIndex].VType      = sensorType;
+    Device[DeviceIndex].ValueCount = getValueCountFromSensorType(sensorType);
+  }
 }
 
 void sensorTypeHelper_saveOutputSelector(struct EventStruct *event, byte pconfigIndex, byte valueIndex, const String& defaultValueName)

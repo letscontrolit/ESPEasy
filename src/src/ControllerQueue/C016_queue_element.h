@@ -3,6 +3,7 @@
 
 #include "../../ESPEasy_common.h"
 #include "../DataStructs/ESPEasyLimits.h"
+#include "../Globals/Plugins.h"
 
 struct EventStruct;
 
@@ -25,8 +26,8 @@ public:
 
   float values[VARS_PER_TASK] = { 0 };
   unsigned long timestamp     = 0; // Unix timestamp
+  taskIndex_t TaskIndex       = INVALID_TASK_INDEX;
   byte controller_idx         = 0;
-  byte TaskIndex              = 0;
   byte sensorType             = 0;
   byte valueCount             = 0;
 };
