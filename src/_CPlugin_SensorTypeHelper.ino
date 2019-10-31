@@ -91,7 +91,7 @@ void sensorTypeHelper_webformLoad_simple(struct EventStruct *event, byte pconfig
 void sensorTypeHelper_webformLoad(struct EventStruct *event, byte pconfigIndex, int optionCount, const byte options[])
 {
   byte choice      = PCONFIG(pconfigIndex);
-  deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(event->TaskIndex);
+  const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(event->TaskIndex);
   if (!validDeviceIndex(DeviceIndex)) {
     choice = 0;
     PCONFIG(pconfigIndex) = choice;
@@ -128,8 +128,8 @@ void sensorTypeHelper_saveSensorType(struct EventStruct *event, byte pconfigInde
 
 void sensorTypeHelper_setSensorType(struct EventStruct *event, byte pconfigIndex)
 {
-  byte sensorType  = PCONFIG(pconfigIndex);
-  deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(event->TaskIndex);
+  const byte sensorType  = PCONFIG(pconfigIndex);
+  const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(event->TaskIndex);
   if (validDeviceIndex(DeviceIndex)) {
     Device[DeviceIndex].VType      = sensorType;
     Device[DeviceIndex].ValueCount = getValueCountFromSensorType(sensorType);

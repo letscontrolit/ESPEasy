@@ -24,10 +24,12 @@
 typedef byte deviceIndex_t;
 typedef byte taskIndex_t;
 typedef uint8_t pluginID_t;
+typedef uint16_t userVarIndex_t;
 
 extern deviceIndex_t INVALID_DEVICE_INDEX;
 extern taskIndex_t   INVALID_TASK_INDEX;
 extern pluginID_t    INVALID_PLUGIN_ID;
+extern userVarIndex_t INVALID_USERVAR_INDEX;
 
 extern int deviceCount;
 
@@ -47,6 +49,7 @@ extern std::vector<deviceIndex_t> DeviceIndex_sorted;
 bool validDeviceIndex(deviceIndex_t index);
 bool validTaskIndex(taskIndex_t index);
 bool validPluginID(pluginID_t pluginID);
+bool validUserVarIndex(userVarIndex_t index);
 
 // Check if plugin is included in build. 
 // N.B. Invalid plugin is also not considered supported.

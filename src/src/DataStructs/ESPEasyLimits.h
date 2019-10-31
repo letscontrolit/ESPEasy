@@ -141,5 +141,7 @@
 
 #define DOMOTICZ_MAX_IDX            999999999 // Looks like it is an unsigned int, so could be up to 4 bln.
 
+#define USERVAR_MAX_INDEX                    (VARS_PER_TASK * TASKS_MAX)
+
 
 #endif // DATASTRUCTS_ESPEASY_LIMITS_H

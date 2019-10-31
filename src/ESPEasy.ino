@@ -905,7 +905,7 @@ void SensorSendTask(taskIndex_t TaskIndex)
     byte varIndex = TaskIndex * VARS_PER_TASK;
 
     bool success = false;
-    deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(TaskIndex);
+    const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(TaskIndex);
     if (!validDeviceIndex(DeviceIndex)) return;
 
     LoadTaskSettings(TaskIndex);

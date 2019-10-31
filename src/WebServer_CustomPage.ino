@@ -152,7 +152,7 @@ boolean handle_custom(String path) {
       {
         if (validPluginID(Settings.TaskDeviceNumber[x]))
         {
-          deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(x);
+          const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(x);
           if (validDeviceIndex(DeviceIndex)) {
             LoadTaskSettings(x);
             html_TR_TD();

@@ -881,7 +881,7 @@ void createRuleEvents(struct EventStruct *event) {
   if (!Settings.UseRules) {
     return;
   }
-  deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(event->TaskIndex);
+  const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(event->TaskIndex);
 
   if (!validDeviceIndex(DeviceIndex)) { return; }
 

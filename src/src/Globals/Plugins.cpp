@@ -9,6 +9,7 @@
 deviceIndex_t INVALID_DEVICE_INDEX = PLUGIN_MAX;
 taskIndex_t   INVALID_TASK_INDEX   = TASKS_MAX;
 pluginID_t    INVALID_PLUGIN_ID    = 0;
+userVarIndex_t INVALID_USERVAR_INDEX = USERVAR_MAX_INDEX;
 
 std::map<pluginID_t, deviceIndex_t> Plugin_id_to_DeviceIndex;
 std::vector<pluginID_t>    DeviceIndex_to_Plugin_id;
@@ -33,6 +34,10 @@ bool validPluginID(pluginID_t pluginID) {
   return pluginID != 0;
 }
 
+bool validUserVarIndex(userVarIndex_t index) {
+  return index < USERVAR_MAX_INDEX;
+}
+
 bool supportedPluginID(pluginID_t pluginID) {
   return validDeviceIndex(getDeviceIndex(pluginID));
 }
@@ -51,6 +56,7 @@ deviceIndex_t getDeviceIndex(pluginID_t pluginID)
 
     if (it != Plugin_id_to_DeviceIndex.end())
     {
+      if (!validDeviceIndex(it->second)) return INVALID_DEVICE_INDEX;
       if (Device[it->second].Number != pluginID) {
         // FIXME TD-er: Just a check for now, can be removed later when it does not occur.
         addLog(LOG_LEVEL_ERROR, F("getDeviceIndex error in Device Vector"));

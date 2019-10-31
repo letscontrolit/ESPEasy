@@ -175,29 +175,31 @@ void addDeviceSelect(const String& name,  int choice)
   for (byte x = 0; x <= deviceCount; x++)
   {
     const deviceIndex_t deviceIndex = DeviceIndex_sorted[x];
-    const pluginID_t    pluginID    = DeviceIndex_to_Plugin_id[deviceIndex];
+    if (validDeviceIndex(deviceIndex)) {
+      const pluginID_t    pluginID    = DeviceIndex_to_Plugin_id[deviceIndex];
 
-    if (validPluginID(pluginID)) {
-      deviceName = getPluginNameFromDeviceIndex(deviceIndex);
+      if (validPluginID(pluginID)) {
+        deviceName = getPluginNameFromDeviceIndex(deviceIndex);
 
 
-#ifdef PLUGIN_BUILD_DEV
-      pluginID_t num    = DeviceIndex_to_Plugin_id[deviceIndex];
-      String     plugin = "P";
+  #ifdef PLUGIN_BUILD_DEV
+        pluginID_t num    = DeviceIndex_to_Plugin_id[deviceIndex];
+        String     plugin = "P";
 
-      if (num < 10) { plugin += '0'; }
+        if (num < 10) { plugin += '0'; }
 
-      if (num < 100) { plugin += '0'; }
-      plugin    += num;
-      plugin    += F(" - ");
-      deviceName = plugin + deviceName;
-#endif // ifdef PLUGIN_BUILD_DEV
+        if (num < 100) { plugin += '0'; }
+        plugin    += num;
+        plugin    += F(" - ");
+        deviceName = plugin + deviceName;
+  #endif // ifdef PLUGIN_BUILD_DEV
 
-      addSelector_Item(deviceName,
-                       Device[deviceIndex].Number,
-                       choice == Device[deviceIndex].Number,
-                       false,
-                       "");
+        addSelector_Item(deviceName,
+                        Device[deviceIndex].Number,
+                        choice == Device[deviceIndex].Number,
+                        false,
+                        "");
+      }
     }
   }
   addSelector_Foot();
@@ -210,7 +212,7 @@ void addDeviceSelect(const String& name,  int choice)
 void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t taskdevicenumber)
 {
   if (!validTaskIndex(taskIndex)) { return; }
-  deviceIndex_t DeviceIndex = getDeviceIndex(taskdevicenumber);
+  const deviceIndex_t DeviceIndex = getDeviceIndex(taskdevicenumber);
 
   if (!validDeviceIndex(DeviceIndex)) { return; }
 
@@ -521,7 +523,7 @@ void handle_devicess_ShowAllTasksTable(byte page)
 void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, byte page)
 {
   if (!validTaskIndex(taskIndex)) { return; }
-  deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(taskIndex); \
+  const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(taskIndex);
 
   LoadTaskSettings(taskIndex);
   struct EventStruct TempEvent;
@@ -534,7 +536,7 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, byte page)
 
   TXBuffer += F("<TR><TD style='width:150px;' align='left'>Device:<TD>");
 
-  // no (supported) device selected
+  // no (supported) device selected, this effectively checks for validDeviceIndex
   if (!supportedPluginID(Settings.TaskDeviceNumber[taskIndex]))
   {
     // takes lots of memory/time so call this only when needed.
@@ -801,7 +803,7 @@ void setTaskDevice_to_TaskIndex(pluginID_t taskdevicenumber, taskIndex_t taskInd
 void setBasicTaskValues(taskIndex_t taskIndex, unsigned long taskdevicetimer,
                         bool enabled, const String& name, int pin1, int pin2, int pin3) {
   if (!validTaskIndex(taskIndex)) { return; }
-  deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(taskIndex);
+  const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(taskIndex);
 
   if (!validDeviceIndex(DeviceIndex)) { return; }
 

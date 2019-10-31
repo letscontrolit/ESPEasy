@@ -572,8 +572,9 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
             } else // msg to a receiving plugin
             {
               taskIndex=findTaskIndexByName(nodeName);
-              if (validTaskIndex(taskIndex)) {
-                int pluginID=Device[getDeviceIndex_from_TaskIndex(taskIndex)].Number;
+              deviceIndex_t deviceIndex = getDeviceIndex_from_TaskIndex(taskIndex);
+              if (validDeviceIndex(deviceIndex)) {
+                int pluginID=Device[deviceIndex].Number;
 
                 if (pluginID==33) // Plugin 33 Dummy Device
                 { // DummyValueSet,<task/device nr>,<value nr>,<value/formula (!ToDo) >, works only with new version of P033!

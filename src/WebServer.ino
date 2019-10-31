@@ -903,7 +903,7 @@ void addTaskSelect(const String& name,  taskIndex_t choice)
   for (taskIndex_t x = 0; x < TASKS_MAX; x++)
   {
     deviceName = "";
-    deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(x);
+    const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(x);
     if (validDeviceIndex(DeviceIndex))
     {
       if (validPluginID(DeviceIndex_to_Plugin_id[DeviceIndex])) {
@@ -938,7 +938,7 @@ void addTaskSelect(const String& name,  taskIndex_t choice)
 void addTaskValueSelect(const String& name, int choice, taskIndex_t TaskIndex)
 {
   if (!validTaskIndex(TaskIndex)) return;
-  deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(TaskIndex);
+  const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(TaskIndex);
   if (!validDeviceIndex(DeviceIndex)) return;
 
   TXBuffer += F("<select id='selectwidth' name='");

@@ -2349,7 +2349,7 @@ void SendValueLogger(taskIndex_t TaskIndex)
   #endif
   
   if (featureSD || loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-    deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(TaskIndex);
+    const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(TaskIndex);
     if (validDeviceIndex(DeviceIndex)) {
       LoadTaskSettings(TaskIndex);
       for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++)
