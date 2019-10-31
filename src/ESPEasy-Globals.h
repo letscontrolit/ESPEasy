@@ -224,17 +224,6 @@ extern bool statusNTPInitialized;
 extern WiFiUDP portUDP;
 
 
-/*********************************************************************************************\
- * Custom Variables for usage in rules and http.
- * Syntax: %vX%
- * usage:
- * let,1,10
- * if %v1%=10 do ...
-\*********************************************************************************************/
-extern float customFloatVar[CUSTOM_VARS_MAX];
-
-extern float UserVar[VARS_PER_TASK * TASKS_MAX];
-
 
 
 

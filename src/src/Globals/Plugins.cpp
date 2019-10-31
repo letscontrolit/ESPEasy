@@ -10,10 +10,15 @@ deviceIndex_t INVALID_DEVICE_INDEX = PLUGIN_MAX;
 taskIndex_t   INVALID_TASK_INDEX   = TASKS_MAX;
 pluginID_t    INVALID_PLUGIN_ID    = 0;
 userVarIndex_t INVALID_USERVAR_INDEX = USERVAR_MAX_INDEX;
+taskVarIndex_t INVALID_TASKVAR_INDEX = VARS_PER_TASK;
 
 std::map<pluginID_t, deviceIndex_t> Plugin_id_to_DeviceIndex;
 std::vector<pluginID_t>    DeviceIndex_to_Plugin_id;
 std::vector<deviceIndex_t> DeviceIndex_sorted;
+
+float customFloatVar[CUSTOM_VARS_MAX];
+
+float UserVar[VARS_PER_TASK * TASKS_MAX];
 
 int deviceCount = -1;
 
@@ -36,6 +41,10 @@ bool validPluginID(pluginID_t pluginID) {
 
 bool validUserVarIndex(userVarIndex_t index) {
   return index < USERVAR_MAX_INDEX;
+}
+
+bool validTaskVarIndex(taskVarIndex_t index) {
+  return index < VARS_PER_TASK;
 }
 
 bool supportedPluginID(pluginID_t pluginID) {

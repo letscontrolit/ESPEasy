@@ -119,6 +119,9 @@ boolean Plugin_040(byte function, struct EventStruct *event, String& string)
               }
               event->TaskIndex = index;
               event->BaseVarIndex = index * VARS_PER_TASK;
+              if (!validUserVarIndex(event->BaseVarIndex)) {
+                break;
+              }
               event->sensorType = Device[DeviceIndex].VType;
               // endof workaround
 
