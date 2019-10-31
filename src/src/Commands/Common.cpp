@@ -143,7 +143,7 @@ String Command_GetORSetBool(struct EventStruct *event,
 
   if (hasArgument) {
     String result = targetDescription;
-    result += toString(*value);
+    result += boolToString(*value);
     return return_result(event, result);
   }
   return return_command_success();

@@ -165,7 +165,7 @@ String toString(WiFiMode_t mode)
   return result;
 }
 
-String toString(bool value) {
+String boolToString(bool value) {
   return value ? F("true") : F("false");
 }
 

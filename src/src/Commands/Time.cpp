@@ -23,7 +23,7 @@ String Command_useNTP(struct EventStruct *event, const char* Line)
 	} else {
 		serialPrintln();
 		String result = F("UseNTP:");
-		result += toString(Settings.UseNTP);
+		result += boolToString(Settings.UseNTP);
 		return return_result(event, result);
 	}
 	return return_command_success();
@@ -49,7 +49,7 @@ String Command_DST(struct EventStruct *event, const char* Line)
 	}else  {
 		serialPrintln();
 		String result = F("DST:");
-		result += toString(Settings.DST);
+		result += boolToString(Settings.DST);
 		return return_result(event, result);
 	}
 	return return_command_success();

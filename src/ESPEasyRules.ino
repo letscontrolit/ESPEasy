@@ -461,7 +461,7 @@ void processMatchedRule(String& action, String& event,
             log += F(": [elseif ");
             log += check;
             log += F("]=");
-            log += toString(condition[ifBlock - 1]);
+            log += boolToString(condition[ifBlock - 1]);
             addLog(LOG_LEVEL_DEBUG, log);
           }
 #endif // ifndef BUILD_NO_DEBUG
@@ -486,7 +486,7 @@ void processMatchedRule(String& action, String& event,
             log += F(": [if ");
             log += check;
             log += F("]=");
-            log += toString(condition[ifBlock - 1]);
+            log += boolToString(condition[ifBlock - 1]);
             addLog(LOG_LEVEL_DEBUG, log);
           }
 #endif // ifndef BUILD_NO_DEBUG
@@ -519,7 +519,7 @@ void processMatchedRule(String& action, String& event,
       log  = F("Lev.");
       log += String(ifBlock);
       log += F(": [else]=");
-      log += toString(condition[ifBlock - 1] == ifBranche[ifBlock - 1]);
+      log += boolToString(condition[ifBlock - 1] == ifBranche[ifBlock - 1]);
       addLog(LOG_LEVEL_DEBUG, log);
     }
 #endif // ifndef BUILD_NO_DEBUG
@@ -684,13 +684,15 @@ bool conditionMatchExtended(String& check) {
   int    condOr    = -1;
   bool   rightcond = false;
   bool   leftcond  = conditionMatch(check); // initial check
+  #ifndef BUILD_NO_DEBUG
   String debugstr;
-
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-    debugstr += toString(leftcond);
+    debugstr += boolToString(leftcond);
   }
+  #endif
 
   do {
+    #ifndef BUILD_NO_DEBUG
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
       String log = F("conditionMatchExtended: ");
       log += debugstr;
@@ -698,6 +700,7 @@ bool conditionMatchExtended(String& check) {
       log += check;
       addLog(LOG_LEVEL_DEBUG, log);
     }
+    #endif
     condAnd = check.indexOf(F(" and "));
     condOr  = check.indexOf(F(" or "));
 
@@ -708,28 +711,36 @@ bool conditionMatchExtended(String& check) {
         rightcond = conditionMatch(check);
         leftcond  = (leftcond && rightcond);
 
+        #ifndef BUILD_NO_DEBUG
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
           debugstr += F(" && ");
         }
+        #endif
       } else { // OR is first
         check     = check.substring(condOr + 4);
         rightcond = conditionMatch(check);
         leftcond  = (leftcond || rightcond);
 
+        #ifndef BUILD_NO_DEBUG
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
           debugstr += F(" || ");
         }
+        #endif
       }
-
+      
+      #ifndef BUILD_NO_DEBUG
       if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-        debugstr += toString(rightcond);
+        debugstr += boolToString(rightcond);
       }
+      #endif
     }
   } while (condAnd > 0 || condOr > 0);
 
+  #ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     check = debugstr;
   }
+  #endif
   return leftcond;
 }
 

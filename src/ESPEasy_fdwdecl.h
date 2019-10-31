@@ -138,7 +138,7 @@ boolean str2ip(const String& string, byte *IP);
 bool useStaticIP();
 String formatIP(const IPAddress& ip);
 String toString(float value, byte decimals);
-String toString(bool value);
+String boolToString(bool value);
 bool isInt(const String& tBuf);
 String formatToHex(unsigned long value, const String& prefix);
 String formatToHex(unsigned long value);
