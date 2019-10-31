@@ -10,7 +10,7 @@
 #include "src/Globals/SecuritySettings.h"
 
 
-PluginTaskData_base *Plugin_task_data[TASKS_MAX] = { NULL, };
+PluginTaskData_base *Plugin_task_data[TASKS_MAX] = { nullptr, };
 
 String PCONFIG_LABEL(int n) {
   if (n < PLUGIN_CONFIGVAR_MAX) {
@@ -38,7 +38,7 @@ void clearPluginTaskData(taskIndex_t taskIndex) {
 }
 
 void initPluginTaskData(taskIndex_t taskIndex, PluginTaskData_base *data) {
-  if (!validTaskIndex(taskIndex)) return;
+  if (!validTaskIndex(taskIndex)) { return; }
   
   clearPluginTaskData(taskIndex);
   if (Settings.TaskDeviceEnabled[taskIndex]) {

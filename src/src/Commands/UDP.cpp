@@ -37,7 +37,7 @@ String Command_UPD_SendTo(struct EventStruct *event, const char *Line)
   if (index > 0)
   {
     eventName = eventName.substring(index + 1);
-    SendUDPCommand(event->Par1, (const char *)eventName.c_str(), eventName.length());
+    SendUDPCommand(event->Par1, eventName.c_str(), eventName.length());
   }
   return return_command_success();
 }

@@ -46,7 +46,7 @@ String Command_GetORSetIP(struct EventStruct *event,
                           const String      & targetDescription,
                           const char         *Line,
                           byte               *IP,
-                          const IPAddress&    dhcpIP,
+                          const IPAddress   & dhcpIP,
                           int                 arg)
 {
   bool hasArgument = false;
@@ -102,9 +102,8 @@ String Command_GetORSetString(struct EventStruct *event,
         result += len;
         serialPrintln();
         return return_result(event, result);
-      } else {
-        strcpy(target, TmpStr1.c_str());
       }
+      strcpy(target, TmpStr1.c_str());
     }
   }
 

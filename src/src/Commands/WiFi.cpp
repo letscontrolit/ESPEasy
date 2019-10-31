@@ -102,7 +102,7 @@ String Command_Wifi_Mode(struct EventStruct *event, const char *Line)
   } else {
     serialPrintln();
     String result = F("WiFi Mode:");
-    result += toString(WiFi.getMode());
+    result += getWifiModeString(WiFi.getMode());
     return return_result(event, result);
   }
   return return_command_success();

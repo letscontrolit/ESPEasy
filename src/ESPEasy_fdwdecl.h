@@ -67,6 +67,7 @@ bool     connectClient(WiFiClient& client,
                        uint16_t    port);
 
 
+String getWifiModeString(WiFiMode_t wifimode);
 bool   WiFiConnected(uint32_t timeout_ms);
 bool   WiFiConnected();
 bool   useStaticIP();

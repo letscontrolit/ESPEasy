@@ -6,18 +6,19 @@
 #include "../../ESPEasy_Log.h"
 
 
-
 deviceIndex_t INVALID_DEVICE_INDEX = PLUGIN_MAX;
-taskIndex_t   INVALID_TASK_INDEX = TASKS_MAX;
-pluginID_t    INVALID_PLUGIN_ID  = 0;
+taskIndex_t   INVALID_TASK_INDEX   = TASKS_MAX;
+pluginID_t    INVALID_PLUGIN_ID    = 0;
 
 std::map<pluginID_t, deviceIndex_t> Plugin_id_to_DeviceIndex;
-std::vector<pluginID_t> DeviceIndex_to_Plugin_id;
+std::vector<pluginID_t>    DeviceIndex_to_Plugin_id;
 std::vector<deviceIndex_t> DeviceIndex_sorted;
 
 int deviceCount = -1;
 
-boolean (*Plugin_ptr[PLUGIN_MAX])(byte, struct EventStruct*, String&);
+boolean (*Plugin_ptr[PLUGIN_MAX])(byte,
+                                  struct EventStruct *,
+                                  String&);
 
 
 bool validDeviceIndex(deviceIndex_t index) {
@@ -43,11 +44,11 @@ deviceIndex_t getDeviceIndex_from_TaskIndex(taskIndex_t taskIndex) {
   return INVALID_DEVICE_INDEX;
 }
 
-
 deviceIndex_t getDeviceIndex(pluginID_t pluginID)
 {
   if (validPluginID(pluginID)) {
     auto it = Plugin_id_to_DeviceIndex.find(pluginID);
+
     if (it != Plugin_id_to_DeviceIndex.end())
     {
       if (Device[it->second].Number != pluginID) {
@@ -65,14 +66,16 @@ deviceIndex_t getDeviceIndex(pluginID_t pluginID)
  \*********************************************************************************************/
 String getPluginNameFromDeviceIndex(deviceIndex_t deviceIndex) {
   String deviceName = "";
+
   if (validDeviceIndex(deviceIndex)) {
-    Plugin_ptr[deviceIndex](PLUGIN_GET_DEVICENAME, 0, deviceName);
-  }  
+    Plugin_ptr[deviceIndex](PLUGIN_GET_DEVICENAME, nullptr, deviceName);
+  }
   return deviceName;
 }
 
 String getPluginNameFromPluginID(pluginID_t pluginID) {
   deviceIndex_t deviceIndex = getDeviceIndex(pluginID);
+
   if (!validDeviceIndex(deviceIndex)) {
     String name = F("Plugin ");
     name += String(static_cast<int>(pluginID));
@@ -81,7 +84,6 @@ String getPluginNameFromPluginID(pluginID_t pluginID) {
   }
   return getPluginNameFromDeviceIndex(deviceIndex);
 }
-
 
 // ********************************************************************************
 // Device Sort routine, compare two array entries
@@ -96,22 +98,18 @@ bool arrayLessThan(const String& ptr_1, const String& ptr_2)
     {
       return true;
     }
-    else
-    {
-      const char check1 = static_cast<char>(ptr_1[i]); // get the same char from string 1 and string 2
-      const char check2 = static_cast<char>(ptr_2[i]);
+    const char check1 = static_cast<char>(ptr_1[i]); // get the same char from string 1 and string 2
+    const char check2 = static_cast<char>(ptr_2[i]);
 
-      if (check1 == check2) {
-        // they're equal so far; check the next char !!
-        i++;
-      } else {
-        return check2 > check1;
-      }
+    if (check1 == check2) {
+      // they're equal so far; check the next char !!
+      i++;
+    } else {
+      return check2 > check1;
     }
   }
   return false;
 }
-
 
 // ********************************************************************************
 // Device Sort routine, actual sorting alfabetically by plugin name.
@@ -120,6 +118,7 @@ bool arrayLessThan(const String& ptr_1, const String& ptr_2)
 void sortDeviceIndexArray() {
   // First fill the existing number of the DeviceIndex.
   DeviceIndex_sorted.resize(deviceCount + 1);
+
   for (deviceIndex_t x = 0; x <= deviceCount; x++) {
     if (validPluginID(DeviceIndex_to_Plugin_id[x])) {
       DeviceIndex_sorted[x] = x;
@@ -127,6 +126,7 @@ void sortDeviceIndexArray() {
       DeviceIndex_sorted[x] = INVALID_DEVICE_INDEX;
     }
   }
+
   // Do the sorting.
   int innerLoop;
   int mainLoop;

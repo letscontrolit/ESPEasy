@@ -46,14 +46,12 @@ bool safeReadStringUntil(Stream     & input,
         }
 
         // found character, add to string
-        else {
-          str += char(c);
+        str += char(c);
 
-          // string at max size?
-          if (str.length() >= maxSize) {
-            addLog(LOG_LEVEL_ERROR, F("Not enough bufferspace to read all input data!"));
-            return false;
-          }
+        // string at max size?
+        if (str.length() >= maxSize) {
+          addLog(LOG_LEVEL_ERROR, F("Not enough bufferspace to read all input data!"));
+          return false;
         }
       }
 
@@ -97,12 +95,11 @@ String get_auth_header(const String& user, const String& pass) {
   String authHeader = "";
 
   if ((user.length() != 0) && (pass.length() != 0)) {
-    base64 encoder;
     String auth = user;
     auth       += ":";
     auth       += pass;
     authHeader  = F("Authorization: Basic ");
-    authHeader += encoder.encode(auth);
+    authHeader += base64::encode(auth);
     authHeader += F(" \r\n");
   }
   return authHeader;

@@ -304,7 +304,7 @@ struct rulesTimerStatus
 
   unsigned long timestamp;
   unsigned int interval; //interval in milliseconds
-  boolean paused;
+  bool paused;
 };
 
 extern rulesTimerStatus RulesTimer[RULES_TIMER_MAX];

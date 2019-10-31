@@ -414,6 +414,19 @@ void setAPinternal(bool enable)
   resetAPdisableTimer();
 }
 
+String getWifiModeString(WiFiMode_t wifimode)
+{
+  switch (wifimode) {
+    case WIFI_OFF:   return F("OFF");
+    case WIFI_STA:   return F("STA");
+    case WIFI_AP:    return F("AP");
+    case WIFI_AP_STA: return F("AP+STA");
+    default:
+      break;
+  }
+  return F("Unknown");
+}
+
 void setWifiMode(WiFiMode_t wifimode) {
   const WiFiMode_t cur_mode = WiFi.getMode();
 
@@ -430,23 +443,7 @@ void setWifiMode(WiFiMode_t wifimode) {
     delay(100);
   }
 
-  switch (wifimode) {
-    case WIFI_OFF:
-      addLog(LOG_LEVEL_INFO, F("WIFI : Switch off WiFi"));
-      break;
-    case WIFI_STA:
-      addLog(LOG_LEVEL_INFO, F("WIFI : Set WiFi to STA"));
-      break;
-    case WIFI_AP:
-      addLog(LOG_LEVEL_INFO, F("WIFI : Set WiFi to AP"));
-      break;
-    case WIFI_AP_STA:
-      addLog(LOG_LEVEL_INFO, F("WIFI : Set WiFi to AP+STA"));
-      break;
-    default:
-      addLog(LOG_LEVEL_INFO, F("WIFI : Unknown mode"));
-      break;
-  }
+  addLog(LOG_LEVEL_INFO, String(F("WIFI : Set WiFi to ")) + getWifiModeString(wifimode));
 
   if (!WiFi.mode(wifimode)) {
     addLog(LOG_LEVEL_INFO, F("WIFI : Cannot set mode!!!!!"));
