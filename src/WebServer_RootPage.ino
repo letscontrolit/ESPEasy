@@ -1,3 +1,5 @@
+#ifdef WEBSERVER_ROOT
+
 #include "src/Globals/Nodes.h"
 
 // ********************************************************************************
@@ -211,3 +213,5 @@ void handle_root() {
     TXBuffer.endStream();
   }
 }
+
+#endif // ifdef WEBSERVER_ROOT

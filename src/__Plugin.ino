@@ -3,7 +3,7 @@
 
 #include "src/DataStructs/TimingStats.h"
 
-#include "define_plugin_sets.h"
+#include "ESPEasy_common.h"
 
 
 
@@ -1275,7 +1275,9 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
           }
           event->BaseVarIndex = event->TaskIndex * VARS_PER_TASK;
           {
-            String descr = F("PluginCall_task_");
+            String descr;
+            descr.reserve(20);
+            descr = String(F("PluginCall_task_"));
             descr += event->TaskIndex;
             checkRAM(descr, String(Function));
           }

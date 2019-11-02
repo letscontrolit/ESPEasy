@@ -427,28 +427,50 @@ void WebServerInit()
   webserver_init = true;
 
   // Prepare webserver pages
+  #ifdef WEBSERVER_ROOT
   WebServer.on("/",                 handle_root);
+  #endif
+  #ifdef WEBSERVER_ADVANCED
   WebServer.on(F("/advanced"),      handle_advanced);
+  #endif
+  #ifdef WEBSERVER_CONFIG
   WebServer.on(F("/config"),        handle_config);
+  #endif
+  #ifdef WEBSERVER_CONTROL
   WebServer.on(F("/control"),       handle_control);
+  #endif
+  #ifdef WEBSERVER_CONTROLLERS
   WebServer.on(F("/controllers"),   handle_controllers);
+  #endif
+  #ifdef WEBSERVER_DEVICES
   WebServer.on(F("/devices"),       handle_devices);
+  #endif
+  #ifdef WEBSERVER_DOWNLOAD
   WebServer.on(F("/download"),      handle_download);
+  #endif
 
-
-  WebServer.on(F("/dumpcache"),     handle_dumpcache);  // C016 specific entrie
+#ifdef USES_C016
+  // WebServer.on(F("/dumpcache"),     handle_dumpcache);  // C016 specific entrie
   WebServer.on(F("/cache_json"),    handle_cache_json); // C016 specific entrie
   WebServer.on(F("/cache_csv"),     handle_cache_csv);  // C016 specific entrie
+#endif // USES_C016
 
-
+  #ifdef WEBSERVER_FACTORY_RESET
   WebServer.on(F("/factoryreset"),  handle_factoryreset);
+  #endif
   #ifdef USE_SETTINGS_ARCHIVE
   WebServer.on(F("/settingsarchive"), handle_settingsarchive);
   #endif
   WebServer.on(F("/favicon.ico"),   handle_favicon);
+  #ifdef WEBSERVER_FILELIST
   WebServer.on(F("/filelist"),      handle_filelist);
+  #endif
+  #ifdef WEBSERVER_HARDWARE
   WebServer.on(F("/hardware"),      handle_hardware);
+  #endif
+  #ifdef WEBSERVER_I2C_SCANNER
   WebServer.on(F("/i2cscanner"),    handle_i2cscanner);
+  #endif
   WebServer.on(F("/json"),          handle_json);     // Also part of WEBSERVER_NEW_UI
   WebServer.on(F("/log"),           handle_log);
   WebServer.on(F("/login"),         handle_login);
@@ -456,7 +478,10 @@ void WebServerInit()
 #ifndef NOTIFIER_SET_NONE
   WebServer.on(F("/notifications"), handle_notifications);
 #endif // ifndef NOTIFIER_SET_NONE
+  #ifdef WEBSERVER_PINSTATES
   WebServer.on(F("/pinstates"),     handle_pinstates);
+  #endif
+  #ifdef WEBSERVER_RULES
   WebServer.on(F("/rules"),         handle_rules_new);
   WebServer.on(F("/rules/"),        Goto_Rules_Root);
   WebServer.on(F("/rules/add"),     []()
@@ -465,21 +490,32 @@ void WebServerInit()
   });
   WebServer.on(F("/rules/backup"),      handle_rules_backup);
   WebServer.on(F("/rules/delete"),      handle_rules_delete);
+  #endif // WEBSERVER_RULES
 #ifdef FEATURE_SD
   WebServer.on(F("/SDfilelist"),        handle_SDfilelist);
 #endif // ifdef FEATURE_SD
+#ifdef WEBSERVER_SETUP
   WebServer.on(F("/setup"),             handle_setup);
+#endif
+#ifdef WEBSERVER_SYSINFO
   WebServer.on(F("/sysinfo"),           handle_sysinfo);
+#endif
 #ifdef WEBSERVER_SYSVARS
   WebServer.on(F("/sysvars"),           handle_sysvars);
 #endif // WEBSERVER_SYSVARS
 #ifdef WEBSERVER_TIMINGSTATS
   WebServer.on(F("/timingstats"),       handle_timingstats);
 #endif // WEBSERVER_TIMINGSTATS
+#ifdef WEBSERVER_TOOLS
   WebServer.on(F("/tools"),             handle_tools);
+#endif
+#ifdef WEBSERVER_UPLOAD
   WebServer.on(F("/upload"),            HTTP_GET,  handle_upload);
   WebServer.on(F("/upload"),            HTTP_POST, handle_upload_post, handleFileUpload);
+#endif
+#ifdef WEBSERVER_WIFI_SCANNER
   WebServer.on(F("/wifiscanner"),       handle_wifiscanner);
+#endif
 
 #ifdef WEBSERVER_NEW_UI
   WebServer.on(F("/factoryreset_json"), handle_factoryreset_json);
@@ -509,6 +545,8 @@ void WebServerInit()
 
   #if defined(ESP8266)
 
+  #ifdef USES_SSDP
+
   if (Settings.UseSSDP)
   {
     WebServer.on(F("/ssdp.xml"), HTTP_GET, []() {
@@ -518,6 +556,7 @@ void WebServerInit()
     });
     SSDP_begin();
   }
+  #endif // USES_SSDP
   #endif // if defined(ESP8266)
 }
 
@@ -864,7 +903,7 @@ void addTaskSelect(const String& name,  taskIndex_t choice)
   for (taskIndex_t x = 0; x < TASKS_MAX; x++)
   {
     deviceName = "";
-    deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(x);
+    const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(x);
     if (validDeviceIndex(DeviceIndex))
     {
       if (validPluginID(DeviceIndex_to_Plugin_id[DeviceIndex])) {
@@ -899,7 +938,7 @@ void addTaskSelect(const String& name,  taskIndex_t choice)
 void addTaskValueSelect(const String& name, int choice, taskIndex_t TaskIndex)
 {
   if (!validTaskIndex(TaskIndex)) return;
-  deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(TaskIndex);
+  const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(TaskIndex);
   if (!validDeviceIndex(DeviceIndex)) return;
 
   TXBuffer += F("<select id='selectwidth' name='");

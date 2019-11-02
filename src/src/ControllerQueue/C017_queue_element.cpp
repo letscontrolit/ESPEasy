@@ -11,7 +11,7 @@ C017_queue_element::C017_queue_element(const struct EventStruct *event) :
   sensorType(event->sensorType) {}
 
 size_t C017_queue_element::getSize() const {
-  size_t total = sizeof(this);
+  size_t total = sizeof(*this);
 
   for (int i = 0; i < VARS_PER_TASK; ++i) {
     total += txt[i].length();

@@ -1,4 +1,6 @@
 
+#ifdef WEBSERVER_SETUP
+
 // ********************************************************************************
 // Web Interface Setup Wizard
 // ********************************************************************************
@@ -198,3 +200,5 @@ void handle_setup_finish() {
   wifiSetup = false;
   sendHeadandTail_stdtemplate(_TAIL);
 }
+
+#endif // ifdef WEBSERVER_SETUP

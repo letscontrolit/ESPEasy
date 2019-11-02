@@ -113,12 +113,15 @@ boolean Plugin_040(byte function, struct EventStruct *event, String& string)
               for (taskIndex_t y = 0; y < TASKS_MAX; y++)
                 if (Settings.TaskDeviceNumber[y] == PLUGIN_ID_040)
                   index = y;
-              deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(index);
+              const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(index);
               if (!validDeviceIndex(DeviceIndex)) {
                 break;
               }
               event->TaskIndex = index;
               event->BaseVarIndex = index * VARS_PER_TASK;
+              if (!validUserVarIndex(event->BaseVarIndex)) {
+                break;
+              }
               event->sensorType = Device[DeviceIndex].VType;
               // endof workaround
 

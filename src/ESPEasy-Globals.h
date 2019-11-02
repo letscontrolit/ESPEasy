@@ -64,11 +64,6 @@
 //#define FEATURE_SD
 
 
-// User configuration
-#include "src/DataStructs/ESPEasyDefaults.h"
-
-// Make sure to have this as early as possible in the build process.
-#include "define_plugin_sets.h"
 
 
 // ********************************************************************************
@@ -224,17 +219,6 @@ extern bool statusNTPInitialized;
 extern WiFiUDP portUDP;
 
 
-/*********************************************************************************************\
- * Custom Variables for usage in rules and http.
- * Syntax: %vX%
- * usage:
- * let,1,10
- * if %v1%=10 do ...
-\*********************************************************************************************/
-extern float customFloatVar[CUSTOM_VARS_MAX];
-
-extern float UserVar[VARS_PER_TASK * TASKS_MAX];
-
 
 
 
@@ -304,7 +288,7 @@ struct rulesTimerStatus
 
   unsigned long timestamp;
   unsigned int interval; //interval in milliseconds
-  boolean paused;
+  bool paused;
 };
 
 extern rulesTimerStatus RulesTimer[RULES_TIMER_MAX];

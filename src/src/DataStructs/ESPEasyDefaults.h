@@ -1,7 +1,6 @@
 #ifndef ESPEASY_DEFAULTS_H_
 #define ESPEASY_DEFAULTS_H_
 
-#include "../../ESPEasy_common.h"
 
 // ********************************************************************************
 //   User specific configuration
@@ -126,7 +125,7 @@
 #endif
 
 #ifndef DEFAULT_PIN_STATUS_LED
-#define DEFAULT_PIN_STATUS_LED           -1
+#define DEFAULT_PIN_STATUS_LED           (-1)
 #endif
 #ifndef DEFAULT_PIN_STATUS_LED_INVERSED
 #define DEFAULT_PIN_STATUS_LED_INVERSED  true

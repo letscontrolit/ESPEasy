@@ -1,5 +1,6 @@
 // #define WEBSERVER_RULES_DEBUG
 
+#ifdef WEBSERVER_RULES
 
 // ********************************************************************************
 // Web Interface rules page
@@ -54,9 +55,10 @@ void handle_rules() {
         // }
         // else
         // {
-        const byte* memAddress = reinterpret_cast<const byte*>(WebServer.arg(F("rules")).c_str());
+        const byte *memAddress = reinterpret_cast<const byte *>(WebServer.arg(F("rules")).c_str());
         addHtmlError(SaveToFile(fileName.c_str(), 0, memAddress, rulesLength, "w"));
-          // flashCount();
+
+        // flashCount();
 
         // }
       }
@@ -695,3 +697,5 @@ bool EnumerateFileAndDirectory(String          & rootPath
   #endif // ifdef ESP32
   return hasMore;
 }
+
+#endif // ifdef WEBSERVER_RULES

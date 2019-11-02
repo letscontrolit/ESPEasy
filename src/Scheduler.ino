@@ -83,7 +83,7 @@ String decodeSchedulerId(unsigned long mixed_id) {
 \*********************************************************************************************/
 void handle_schedule() {
   START_TIMER
-  unsigned long timer;
+  unsigned long timer = 0;
   unsigned long mixed_id = 0;
 
   if (timePassedSince(last_system_event_run) < 500) {
@@ -366,7 +366,7 @@ void setPluginTaskTimer(unsigned long msecFromNow, taskIndex_t taskIndex, int Pa
 {
   // plugin number and par1 form a unique key that can be used to restart a timer
   // Use deviceIndex instead of pluginID, since the deviceIndex uses less bits.
-  deviceIndex_t deviceIndex = getDeviceIndex_from_TaskIndex(taskIndex);
+  const deviceIndex_t deviceIndex = getDeviceIndex_from_TaskIndex(taskIndex);
   if (!validDeviceIndex(deviceIndex)) return;
 
   const unsigned long systemTimerId = createPluginTaskTimerId(deviceIndex, Par1);
@@ -501,7 +501,7 @@ void schedule_task_device_timer(unsigned long task_index, unsigned long runAt) {
 
   if (!validTaskIndex(task_index)) { return; }
   
-  deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(task_index);
+  const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(task_index);
   if (!validDeviceIndex(DeviceIndex)) { return; }
 
   if (!Device[DeviceIndex].TimerOption) { return; }

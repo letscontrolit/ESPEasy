@@ -2,7 +2,6 @@
 #define ESPEASY_FWD_DECL_H
 
 #include "ESPEasy_common.h"
-#include "define_plugin_sets.h"  // For USES_MQTT
 #include "src/DataStructs/ESPEasy_EventStruct.h"
 
 // FIXME TD-er: This header file should only be included from .ino or .cpp files
@@ -67,6 +66,7 @@ bool     connectClient(WiFiClient& client,
                        uint16_t    port);
 
 
+String getWifiModeString(WiFiMode_t wifimode);
 bool   WiFiConnected(uint32_t timeout_ms);
 bool   WiFiConnected();
 bool   useStaticIP();
@@ -108,12 +108,14 @@ bool safe_strncpy(char       *dest,
 void rulesProcessing(String& event);
 void setIntervalTimer(unsigned long id);
 byte getProtocolIndex(byte Number);
+byte getNotificationProtocolIndex(byte Number);
+void schedule_notification_event_timer(byte NotificationProtocolIndex, byte Function, struct EventStruct *event);
 
 #ifdef USES_MQTT
 
 // void runPeriodicalMQTT();
 // void updateMQTTclient_connected();
-// int firstEnabledMQTTController();
+int firstEnabledMQTTController();
 // String getMQTT_state();
 void callback(char        *c_topic,
               byte        *b_payload,
@@ -122,6 +124,7 @@ void MQTTDisconnect();
 bool MQTTConnect(int controller_idx);
 bool MQTTCheck(int controller_idx);
 void schedule_all_tasks_using_MQTT_controller();
+bool MQTTpublish(int controller_idx, const char *topic, const char *payload, boolean retained);
 #endif // ifdef USES_MQTT
 
 
@@ -133,8 +136,11 @@ bool HasArgv(const char *string, unsigned int argc);
 boolean str2ip(const String& string, byte *IP);
 bool useStaticIP();
 String formatIP(const IPAddress& ip);
-String toString(bool value);
+String toString(float value, byte decimals);
+String boolToString(bool value);
 bool isInt(const String& tBuf);
+String formatToHex(unsigned long value, const String& prefix);
+String formatToHex(unsigned long value);
 
 float getCPUload();
 int getLoopCountPerSec();
@@ -142,9 +148,44 @@ void serialPrint(const String& text);
 void setLogLevelFor(byte destination, byte logLevel);
 uint16_t getPortFromKey(uint32_t key);
 
+void initRTC();
+void deepSleepStart(int dsdelay);
+void taskClear(taskIndex_t taskIndex, bool save);
+void SensorSendTask(taskIndex_t TaskIndex);
+bool remoteConfig(struct EventStruct *event, const String& string);
+
 String parseString(const String& string, byte indexFind);
 String parseStringKeepCase(const String& string, byte indexFind);
 String parseStringToEnd(const String& string, byte indexFind);
 String parseStringToEndKeepCase(const String& string, byte indexFind);
+
+String describeAllowedIPrange();
+void clearAccessBlock();
+String rulesProcessingFile(const String& fileName, String& event);
+int Calculate(const char *input, float* result);
+
+
+void WifiScan();
+void WiFiConnectRelaxed();
+void WifiDisconnect();
+void setAP(bool enable);
+void setSTA(bool enable);
+
+#include "src/Globals/ESPEasyWiFiEvent.h"
+
+void setWifiMode(WiFiMode_t wifimode);
+
+
+String SaveSettings(void);
+String LoadSettings();
+unsigned long FreeMem(void);
+void ResetFactory();
+void reboot();
+void SendUDPCommand(byte destUnit, const char *data, byte dataLength);
+
+#include <FS.h>
+void printDirectory(File dir, int numTabs);
+
+void delayBackground(unsigned long dsdelay);
 
 #endif // ESPEASY_FWD_DECL_H

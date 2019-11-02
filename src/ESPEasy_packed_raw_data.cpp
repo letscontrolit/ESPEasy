@@ -50,7 +50,7 @@ void LoRa_uintToBytes(uint64_t value, uint8_t byteSize, byte *data, uint8_t& cur
 
 void LoRa_intToBytes(int64_t value, uint8_t byteSize, byte *data, uint8_t& cursor) {
   // Clip values to lower limit
-  const int64_t lowerlimit = (1 << ((8*byteSize) - 1)) * -1;
+  const int64_t lowerlimit = (1ull << ((8*byteSize) - 1)) * -1;
   if (value < lowerlimit) { value = lowerlimit; }
   if (value < 0) {
     value += (1 << (8*byteSize));

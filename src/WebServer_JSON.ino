@@ -8,8 +8,8 @@
 // ********************************************************************************
 void handle_json()
 {
-  const taskIndex_t  taskNr           = getFormItemInt(F("tasknr"), -1);
-  const bool showSpecificTask = taskNr > 0;
+  const taskIndex_t  taskNr   = getFormItemInt(F("tasknr"), INVALID_TASK_INDEX);
+  const bool showSpecificTask = validTaskIndex(taskNr);
   bool showSystem             = true;
   bool showWifi               = true;
   bool showDataAcquisition    = true;
@@ -350,7 +350,7 @@ void stream_to_json_object_value(const String& object, const String& value) {
 }
 
 String jsonBool(bool value) {
-  return toString(value);
+  return boolToString(value);
 }
 
 // Add JSON formatted data directly to the TXbuffer, including a trailing comma.

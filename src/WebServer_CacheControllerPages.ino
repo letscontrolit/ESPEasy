@@ -1,29 +1,12 @@
+#ifdef USES_C016
 
 // ********************************************************************************
-// ULRs needed for C016_CacheController 
+// URLs needed for C016_CacheController 
 // to help dump the content of the binary log files
 // ********************************************************************************
 void handle_dumpcache() {
   if (!isLoggedIn()) { return; }
 
-  #ifdef USES_C016
-
-  /*
-      String str = F("attachment; filename=cache_");
-      str += Settings.Name;
-      str += "_U";
-      str += Settings.Unit;
-      str += F("_Build");
-      str += BUILD;
-      str += '_';
-      if (systemTimePresent())
-      {
-        str += getDateTimeString('\0', '\0', '\0');
-      }
-      str += F(".csv");
-      WebServer.sendHeader(F("Content-Disposition"), str);
-     //    WebServer.streamFile(dataFile, F("application/octet-stream"));
-   */
   C016_startCSVdump();
   unsigned long timestamp;
   byte  controller_idx;
@@ -86,13 +69,11 @@ void handle_dumpcache() {
   }
   TXBuffer.endStream();
 
-  #endif // ifdef USES_C016
 }
 
 void handle_cache_json() {
   if (!isLoggedIn()) { return; }
 
-  #ifdef USES_C016
   TXBuffer.startJsonStream();
   TXBuffer += F("{\"columns\": [");
 
@@ -135,9 +116,10 @@ void handle_cache_json() {
   stream_last_json_object_value(F("nrfiles"), String(filenr));
   TXBuffer += F("\n");
   TXBuffer.endStream();
-  #endif // ifdef USES_C016
 }
 
 void handle_cache_csv() {
   if (!isLoggedIn()) { return; }
 }
+
+#endif // ifdef USES_C016

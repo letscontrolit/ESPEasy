@@ -6,5 +6,5 @@ simple_queue_element_string_only::simple_queue_element_string_only(int ctrl_idx,
   controller_idx(ctrl_idx), txt(req) {}
 
 size_t simple_queue_element_string_only::getSize() const {
-  return sizeof(this) + txt.length();
+  return sizeof(*this) + txt.length();
 }

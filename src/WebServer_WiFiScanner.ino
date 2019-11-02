@@ -55,6 +55,8 @@ void handle_wifiscanner_json() {
 
 #endif // WEBSERVER_NEW_UI
 
+#ifdef WEBSERVER_WIFI_SCANNER
+
 void handle_wifiscanner() {
   checkRAM(F("handle_wifiscanner"));
 
@@ -86,3 +88,5 @@ void handle_wifiscanner() {
   sendHeadandTail_stdtemplate(_TAIL);
   TXBuffer.endStream();
 }
+
+#endif // ifdef WEBSERVER_WIFI_SCANNER

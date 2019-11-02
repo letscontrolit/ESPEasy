@@ -16,7 +16,7 @@ unsigned long timingstats_last_reset(0);
 TimingStats::TimingStats() : _timeTotal(0.0), _count(0), _maxVal(0), _minVal(4294967295) {}
 
 void TimingStats::add(unsigned long time) {
-  _timeTotal += time;
+  _timeTotal += static_cast<float>(time);
   ++_count;
 
   if (time > _maxVal) { _maxVal = time; }
@@ -37,7 +37,7 @@ bool TimingStats::isEmpty() const {
 
 float TimingStats::getAvg() const {
   if (_count == 0) { return 0.0; }
-  return _timeTotal / _count;
+  return _timeTotal / static_cast<float>(_count);
 }
 
 unsigned int TimingStats::getMinMax(unsigned long& minVal, unsigned long& maxVal) const {

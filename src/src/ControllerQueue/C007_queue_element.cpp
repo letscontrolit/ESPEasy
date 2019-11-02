@@ -11,5 +11,5 @@ C007_queue_element::C007_queue_element(const struct EventStruct *event) :
   sensorType(event->sensorType) {}
 
 size_t C007_queue_element::getSize() const {
-  return sizeof(this);
+  return sizeof(*this);
 }

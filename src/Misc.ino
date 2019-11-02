@@ -479,7 +479,7 @@ bool remoteConfig(struct EventStruct *event, const String& string)
       }
       taskIndex_t index = findTaskIndexByName(configTaskName);
 
-      if (index != TASKS_MAX)
+      if (validTaskIndex(index))
       {
         event->TaskIndex = index;
         success          = PluginCall(PLUGIN_SET_CONFIG, event, configCommand);
@@ -1544,7 +1544,7 @@ String parseTemplate(String& tmpString, byte lineSize)
       // For example: "[<taskname>#getLevel]"
       taskIndex_t taskIndex = findTaskIndexByName(deviceName);
 
-      if (taskIndex != TASKS_MAX && Settings.TaskDeviceEnabled[taskIndex]) {
+      if (validTaskIndex(taskIndex) && Settings.TaskDeviceEnabled[taskIndex]) {
         byte valueNr = findDeviceValueIndexByName(valueName, taskIndex);
 
         if (valueNr != VARS_PER_TASK) {
@@ -1603,7 +1603,7 @@ String parseTemplate(String& tmpString, byte lineSize)
 }
 
 // Find the first (enabled) task with given name
-// Return TASKS_MAX when not found, else return taskIndex
+// Return INVALID_TASK_INDEX when not found, else return taskIndex
 taskIndex_t findTaskIndexByName(const String& deviceName)
 {
   // cache this, since LoadTaskSettings does take some time.
@@ -1626,7 +1626,7 @@ taskIndex_t findTaskIndexByName(const String& deviceName)
       }
     }
   }
-  return TASKS_MAX;
+  return INVALID_TASK_INDEX;
 }
 
 // Find the first device value index of a taskIndex.
@@ -2343,14 +2343,14 @@ void SendValueLogger(taskIndex_t TaskIndex)
 {
 #if !defined(BUILD_NO_DEBUG) || defined(FEATURE_SD)
   bool featureSD = false;
+  String logger;
   #ifdef FEATURE_SD
     featureSD = true;
   #endif
   
   if (featureSD || loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-    deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(TaskIndex);
+    const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(TaskIndex);
     if (validDeviceIndex(DeviceIndex)) {
-      String logger;
       LoadTaskSettings(TaskIndex);
       for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++)
       {
@@ -2465,27 +2465,16 @@ void checkRAMtoLog(void){
   myRamTracker.getTraceBuffer();
 }
 
-void checkRAM(const __FlashStringHelper* flashString, int a ) {
- String s=String(a);
- checkRAM(flashString,s);
-}
-
-void checkRAM(const __FlashStringHelper* flashString, const String &a ) {
-  String s = flashString;
-  checkRAM(s,a);
+void checkRAM(const String &flashString, int a ) {
+  checkRAM(flashString, String(a));
 }
 
 void checkRAM(const String &flashString, const String &a ) {
   String s = flashString;
-  s+=" (";
-  s+=a;
-  s+=")";
+  s += " (";
+  s += a;
+  s += ')';
   checkRAM(s);
-}
-
-void checkRAM( const __FlashStringHelper* flashString)
-{
-  checkRAM(String(flashString));
 }
 
 void checkRAM( const String &descr ) {

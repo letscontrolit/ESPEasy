@@ -72,19 +72,21 @@ long stream_timing_statistics(bool clearStats) {
 
   for (auto& x: pluginStats) {
     if (!x.second.isEmpty()) {
-      const int deviceIndex = x.first / 256;
-      if (x.second.thresholdExceeded(TIMING_STATS_THRESHOLD)) {
-        html_TR_TD_highlight();
-      } else {
-        html_TR_TD();
+      const deviceIndex_t deviceIndex = static_cast<deviceIndex_t>(x.first / 256);
+      if (validDeviceIndex(deviceIndex)) {
+        if (x.second.thresholdExceeded(TIMING_STATS_THRESHOLD)) {
+          html_TR_TD_highlight();
+        } else {
+          html_TR_TD();
+        }
+        TXBuffer += F("P_");
+        TXBuffer += Device[deviceIndex].Number;
+        TXBuffer += '_';
+        TXBuffer += getPluginNameFromDeviceIndex(deviceIndex);
+        html_TD();
+        TXBuffer += getPluginFunctionName(x.first % 256);
+        stream_html_timing_stats(x.second, timeSinceLastReset);
       }
-      TXBuffer += F("P_");
-      TXBuffer += Device[deviceIndex].Number;
-      TXBuffer += '_';
-      TXBuffer += getPluginNameFromDeviceIndex(deviceIndex);
-      html_TD();
-      TXBuffer += getPluginFunctionName(x.first % 256);
-      stream_html_timing_stats(x.second, timeSinceLastReset);
 
       if (clearStats) { x.second.reset(); }
     }

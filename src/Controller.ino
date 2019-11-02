@@ -365,7 +365,7 @@ void SendStatus(byte source, const String& status)
 }
 
 #ifdef USES_MQTT
-boolean MQTTpublish(int controller_idx, const char *topic, const char *payload, boolean retained)
+bool MQTTpublish(int controller_idx, const char *topic, const char *payload, boolean retained)
 {
   const bool success = MQTTDelayHandler.addToQueue(MQTT_queue_element(controller_idx, topic, payload, retained));
 

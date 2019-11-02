@@ -8,11 +8,11 @@
 struct NotificationStruct
 {
   NotificationStruct() :
-    Number(0), usesMessaging(false), usesGPIO(0) {}
+    Number(0), usesGPIO(0), usesMessaging(false) {}
 
-  byte    Number;
-  boolean usesMessaging;
-  byte    usesGPIO;
+  byte Number;
+  byte usesGPIO;
+  bool usesMessaging;
 };
 
 

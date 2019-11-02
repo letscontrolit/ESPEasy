@@ -1,6 +1,12 @@
+// FIXME TD-er: No idea why, but in this file you cannot use the F() macro. (core 2.4.1)
+
 #ifdef USES_MODBUS
 #include <Arduino.h>
+#include <WString.h>
+#include <pgmspace.h>
 #include <ESPeasySerial.h>
+#include "ESPEasy_fdwdecl.h"
+#include "ESPEasy_common.h"
 
 #define MODBUS_RECEIVE_BUFFER 256
 #define MODBUS_BROADCAST_ADDRESS 0xFE
@@ -263,8 +269,8 @@ struct ModbusRTU_struct  {
       case 0x82: result = "Sensor S/N";          break;
       case 0x83: result = "Sensor type";         break;
       default:
-        result  = "0x";
-        result += String(object_id, HEX);
+        result = formatToHex(object_id);
+        break;
     }
     return result;
   }
@@ -316,15 +322,12 @@ struct ModbusRTU_struct  {
               object_value_int =
                 object_value_int << 8 | _recv_buf[pos++];
             }
-            object_value = "0x";
-            String hexvalue(object_value_int, HEX);
-            hexvalue.toUpperCase();
-            object_value += hexvalue;
+            object_value += formatToHex(object_value_int);
           }
 
           if (i != 0) {
             // Append to existing description
-            result += String(", ");
+            result += ", ";
           }
           result += object_value;
         }

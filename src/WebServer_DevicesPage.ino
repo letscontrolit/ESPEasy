@@ -1,3 +1,5 @@
+#ifdef WEBSERVER_DEVICES
+
 #include "src/Globals/Nodes.h"
 #include "src/Globals/Device.h"
 #include "src/Globals/Plugins.h"
@@ -97,12 +99,13 @@ void handle_devices() {
 
   // taskIndex in the URL is 1 ... TASKS_MAX
   // For use in other functions, set it to 0 ... (TASKS_MAX - 1)
-  taskIndex_t taskIndex          = getFormItemInt(F("index"), 0);
-  boolean taskIndexNotSet = taskIndex == 0;
-  --taskIndex;
+  taskIndex_t taskIndex       = getFormItemInt(F("index"), 0);
+  boolean     taskIndexNotSet = taskIndex == 0;
 
-
-  LoadTaskSettings(taskIndex);         // Make sure ExtraTaskSettings are up-to-date
+  if (!taskIndexNotSet) {
+    --taskIndex;
+    LoadTaskSettings(taskIndex);       // Make sure ExtraTaskSettings are up-to-date
+  }
 
   // FIXME TD-er: Might have to clear any caches here.
   if ((edit != 0) && !taskIndexNotSet) // when form submitted
@@ -159,7 +162,7 @@ void handle_devices() {
 
 // ********************************************************************************
 // Add a device select dropdown list
-// TODO TD-er: Add JavaScript filter: 
+// TODO TD-er: Add JavaScript filter:
 //             https://www.w3schools.com/howto/howto_js_filter_dropdown.asp
 // ********************************************************************************
 void addDeviceSelect(const String& name,  int choice)
@@ -172,103 +175,46 @@ void addDeviceSelect(const String& name,  int choice)
   for (byte x = 0; x <= deviceCount; x++)
   {
     const deviceIndex_t deviceIndex = DeviceIndex_sorted[x];
-    const pluginID_t pluginID = DeviceIndex_to_Plugin_id[deviceIndex];
+    if (validDeviceIndex(deviceIndex)) {
+      const pluginID_t    pluginID    = DeviceIndex_to_Plugin_id[deviceIndex];
 
-    if (validPluginID(pluginID)) {
-      deviceName = getPluginNameFromDeviceIndex(deviceIndex);
-    
+      if (validPluginID(pluginID)) {
+        deviceName = getPluginNameFromDeviceIndex(deviceIndex);
 
-#ifdef PLUGIN_BUILD_DEV
-      pluginID_t num = DeviceIndex_to_Plugin_id[deviceIndex];
-      String plugin = "P";
 
-      if (num < 10) { plugin += '0'; }
+  #ifdef PLUGIN_BUILD_DEV
+        pluginID_t num    = DeviceIndex_to_Plugin_id[deviceIndex];
+        String     plugin = "P";
 
-      if (num < 100) { plugin += '0'; }
-      plugin    += num;
-      plugin    += F(" - ");
-      deviceName = plugin + deviceName;
-#endif // ifdef PLUGIN_BUILD_DEV
+        if (num < 10) { plugin += '0'; }
 
-      addSelector_Item(deviceName,
-                      Device[deviceIndex].Number,
-                      choice == Device[deviceIndex].Number,
-                      false,
-                      "");
+        if (num < 100) { plugin += '0'; }
+        plugin    += num;
+        plugin    += F(" - ");
+        deviceName = plugin + deviceName;
+  #endif // ifdef PLUGIN_BUILD_DEV
+
+        addSelector_Item(deviceName,
+                        Device[deviceIndex].Number,
+                        choice == Device[deviceIndex].Number,
+                        false,
+                        "");
+      }
     }
   }
   addSelector_Foot();
 }
 
 
-
-// ********************************************************************************
-// change of device: cleanup old device and reset default settings
-// ********************************************************************************
-void setTaskDevice_to_TaskIndex(pluginID_t taskdevicenumber, taskIndex_t taskIndex) {
-  struct EventStruct TempEvent;
-
-  TempEvent.TaskIndex = taskIndex;
-  String dummy;
-
-  // let the plugin do its cleanup by calling PLUGIN_EXIT with this TaskIndex
-  PluginCall(PLUGIN_EXIT, &TempEvent, dummy);
-  taskClear(taskIndex, false); // clear settings, but do not save
-  ClearCustomTaskSettings(taskIndex);
-
-  Settings.TaskDeviceNumber[taskIndex] = taskdevicenumber;
-
-  if (validPluginID(taskdevicenumber)) // set default values if a new device has been selected
-  {
-    // NOTE: do not enable task by default. allow user to enter sensible valus first and let him enable it when ready.
-    PluginCall(PLUGIN_SET_DEFAULTS,         &TempEvent, dummy);
-    PluginCall(PLUGIN_GET_DEVICEVALUENAMES, &TempEvent, dummy); // the plugin should populate ExtraTaskSettings with its default values.
-  } else {
-    // New task is empty task, thus save config now.
-    taskClear(taskIndex, true);                                 // clear settings, and save
-  }
-}
-
-// ********************************************************************************
-// Initialize task with some default values applicable for almost all tasks
-// ********************************************************************************
-void setBasicTaskValues(taskIndex_t taskIndex, unsigned long taskdevicetimer,
-                        bool enabled, const String& name, int pin1, int pin2, int pin3) {
-  if (!validTaskIndex(taskIndex)) return;
-  deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(taskIndex);
-  if (!validDeviceIndex(DeviceIndex)) return;
-
-  LoadTaskSettings(taskIndex); // Make sure ExtraTaskSettings are up-to-date
-
-  if (taskdevicetimer > 0) {
-    Settings.TaskDeviceTimer[taskIndex] = taskdevicetimer;
-  } else {
-    if (!Device[DeviceIndex].TimerOptional) { // Set default delay, unless it's optional...
-      Settings.TaskDeviceTimer[taskIndex] = Settings.Delay;
-    }
-    else {
-      Settings.TaskDeviceTimer[taskIndex] = 0;
-    }
-  }
-  Settings.TaskDeviceEnabled[taskIndex] = enabled;
-  safe_strncpy(ExtraTaskSettings.TaskDeviceName, name.c_str(), sizeof(ExtraTaskSettings.TaskDeviceName));
-
-  if (pin1 >= 0) { Settings.TaskDevicePin1[taskIndex] = pin1; }
-
-  if (pin2 >= 0) { Settings.TaskDevicePin2[taskIndex] = pin2; }
-
-  if (pin3 >= 0) { Settings.TaskDevicePin3[taskIndex] = pin3; }
-  SaveTaskSettings(taskIndex);
-}
-
 // ********************************************************************************
 // Collect all submitted form data and store the task settings
 // ********************************************************************************
 void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t taskdevicenumber)
 {
-  if (!validTaskIndex(taskIndex)) return;
-  deviceIndex_t DeviceIndex = getDeviceIndex(taskdevicenumber);
-  if (!validDeviceIndex(DeviceIndex)) return;
+  if (!validTaskIndex(taskIndex)) { return; }
+  const deviceIndex_t DeviceIndex = getDeviceIndex(taskdevicenumber);
+
+  if (!validDeviceIndex(DeviceIndex)) { return; }
 
   unsigned long taskdevicetimer = getFormItemInt(F("TDT"), 0);
   Settings.TaskDeviceNumber[taskIndex] = taskdevicenumber;
@@ -397,11 +343,12 @@ void handle_devicess_ShowAllTasksTable(byte page)
 
   for (byte x = (page - 1) * TASKS_PER_PAGE; x < ((page) * TASKS_PER_PAGE) && validTaskIndex(x); x++)
   {
-    const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(x);
-    const bool pluginID_set = validPluginID(Settings.TaskDeviceNumber[x]);
+    const deviceIndex_t DeviceIndex      = getDeviceIndex_from_TaskIndex(x);
+    const bool pluginID_set              = validPluginID(Settings.TaskDeviceNumber[x]);
     const bool pluginID_set_notsupported = pluginID_set && !validDeviceIndex(DeviceIndex);
 
     html_TR_TD();
+
     if (pluginID_set_notsupported) {
       html_add_button_prefix(F("red"), true);
     } else {
@@ -412,6 +359,7 @@ void handle_devicess_ShowAllTasksTable(byte page)
     TXBuffer += F("&page=");
     TXBuffer += page;
     TXBuffer += F("'>");
+
     if (pluginID_set) {
       TXBuffer += F("Edit");
     } else {
@@ -423,7 +371,7 @@ void handle_devicess_ShowAllTasksTable(byte page)
     html_TD();
 
     // Show table of all configured tasks
-    // A task may also refer to a non supported plugin. 
+    // A task may also refer to a non supported plugin.
     // This will be shown as not supported.
     // Editing a task which has a non supported plugin will present the same as when assigning a new plugin to a task.
     if (pluginID_set)
@@ -438,6 +386,7 @@ void handle_devicess_ShowAllTasksTable(byte page)
       html_TD();
       TXBuffer += ExtraTaskSettings.TaskDeviceName;
       html_TD();
+
       if (validDeviceIndex(DeviceIndex)) {
         if (Settings.TaskDeviceDataFeed[x] != 0) {
           // Show originating node number
@@ -471,6 +420,7 @@ void handle_devicess_ShowAllTasksTable(byte page)
       }
 
       html_TD();
+
       if (validDeviceIndex(DeviceIndex)) {
         if (Device[DeviceIndex].SendDataOption)
         {
@@ -504,6 +454,7 @@ void handle_devicess_ShowAllTasksTable(byte page)
       }
 
       html_TD();
+
       if (validDeviceIndex(DeviceIndex)) {
         if (Settings.TaskDeviceDataFeed[x] == 0)
         {
@@ -540,6 +491,7 @@ void handle_devicess_ShowAllTasksTable(byte page)
       }
 
       html_TD();
+
       if (validDeviceIndex(DeviceIndex)) {
         byte   customValues = false;
         String customValuesString;
@@ -570,8 +522,8 @@ void handle_devicess_ShowAllTasksTable(byte page)
 // ********************************************************************************
 void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, byte page)
 {
-  if (!validTaskIndex(taskIndex)) return;
-  deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(taskIndex);\
+  if (!validTaskIndex(taskIndex)) { return; }
+  const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(taskIndex);
 
   LoadTaskSettings(taskIndex);
   struct EventStruct TempEvent;
@@ -584,7 +536,7 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, byte page)
 
   TXBuffer += F("<TR><TD style='width:150px;' align='left'>Device:<TD>");
 
-  // no (supported) device selected
+  // no (supported) device selected, this effectively checks for validDeviceIndex
   if (!supportedPluginID(Settings.TaskDeviceNumber[taskIndex]))
   {
     // takes lots of memory/time so call this only when needed.
@@ -685,8 +637,10 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, byte page)
       addFormSubHeader(F("Data Source"));
       byte remoteUnit = Settings.TaskDeviceDataFeed[taskIndex];
       addFormNumericBox(F("Remote Unit"), F("RemoteUnit"), remoteUnit, 0, 255);
+
       if (remoteUnit != 255) {
         NodesMap::iterator it = Nodes.find(remoteUnit);
+
         if (it != Nodes.end()) {
           addUnit(it->second.nodeName);
         } else {
@@ -810,4 +764,68 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, byte page)
 
   html_end_table();
   html_end_form();
+}
+
+#endif // ifdef WEBSERVER_DEVICES
+
+
+
+// ********************************************************************************
+// change of device: cleanup old device and reset default settings
+// ********************************************************************************
+void setTaskDevice_to_TaskIndex(pluginID_t taskdevicenumber, taskIndex_t taskIndex) {
+  struct EventStruct TempEvent;
+
+  TempEvent.TaskIndex = taskIndex;
+  String dummy;
+
+  // let the plugin do its cleanup by calling PLUGIN_EXIT with this TaskIndex
+  PluginCall(PLUGIN_EXIT, &TempEvent, dummy);
+  taskClear(taskIndex, false); // clear settings, but do not save
+  ClearCustomTaskSettings(taskIndex);
+
+  Settings.TaskDeviceNumber[taskIndex] = taskdevicenumber;
+
+  if (validPluginID(taskdevicenumber)) // set default values if a new device has been selected
+  {
+    // NOTE: do not enable task by default. allow user to enter sensible valus first and let him enable it when ready.
+    PluginCall(PLUGIN_SET_DEFAULTS,         &TempEvent, dummy);
+    PluginCall(PLUGIN_GET_DEVICEVALUENAMES, &TempEvent, dummy); // the plugin should populate ExtraTaskSettings with its default values.
+  } else {
+    // New task is empty task, thus save config now.
+    taskClear(taskIndex, true);                                 // clear settings, and save
+  }
+}
+
+// ********************************************************************************
+// Initialize task with some default values applicable for almost all tasks
+// ********************************************************************************
+void setBasicTaskValues(taskIndex_t taskIndex, unsigned long taskdevicetimer,
+                        bool enabled, const String& name, int pin1, int pin2, int pin3) {
+  if (!validTaskIndex(taskIndex)) { return; }
+  const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(taskIndex);
+
+  if (!validDeviceIndex(DeviceIndex)) { return; }
+
+  LoadTaskSettings(taskIndex); // Make sure ExtraTaskSettings are up-to-date
+
+  if (taskdevicetimer > 0) {
+    Settings.TaskDeviceTimer[taskIndex] = taskdevicetimer;
+  } else {
+    if (!Device[DeviceIndex].TimerOptional) { // Set default delay, unless it's optional...
+      Settings.TaskDeviceTimer[taskIndex] = Settings.Delay;
+    }
+    else {
+      Settings.TaskDeviceTimer[taskIndex] = 0;
+    }
+  }
+  Settings.TaskDeviceEnabled[taskIndex] = enabled;
+  safe_strncpy(ExtraTaskSettings.TaskDeviceName, name.c_str(), sizeof(ExtraTaskSettings.TaskDeviceName));
+
+  if (pin1 >= 0) { Settings.TaskDevicePin1[taskIndex] = pin1; }
+
+  if (pin2 >= 0) { Settings.TaskDevicePin2[taskIndex] = pin2; }
+
+  if (pin3 >= 0) { Settings.TaskDevicePin3[taskIndex] = pin3; }
+  SaveTaskSettings(taskIndex);
 }

@@ -165,7 +165,7 @@ String toString(WiFiMode_t mode)
   return result;
 }
 
-String toString(bool value) {
+String boolToString(bool value) {
   return value ? F("true") : F("false");
 }
 
@@ -188,12 +188,7 @@ void addNewLine(String& line) {
 String doFormatUserVar(struct EventStruct *event, byte rel_index, bool mustCheck, bool& isvalid) {
   isvalid = true;
 
-  if (!validTaskIndex(event->TaskIndex)) {
-    isvalid = false;
-    return "0";
-  }
   const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(event->TaskIndex);
-
   if (!validDeviceIndex(DeviceIndex)) {
     isvalid = false;
     return "0";

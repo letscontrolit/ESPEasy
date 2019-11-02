@@ -1,4 +1,4 @@
-#include "Common.h"
+#include "../Commands/Common.h"
 
 #include <ctype.h>
 #include <IPAddress.h>
@@ -42,13 +42,12 @@ String return_see_serial(struct EventStruct *event)
   return F("Output sent to serial");
 }
 
-
-String Command_GetORSetIP(struct EventStruct        *event,
-                          const __FlashStringHelper *targetDescription,
-                          const char                *Line,
-                          byte                      *IP,
-                          IPAddress                  dhcpIP,
-                          int                        arg)
+String Command_GetORSetIP(struct EventStruct *event,
+                          const String      & targetDescription,
+                          const char         *Line,
+                          byte               *IP,
+                          const IPAddress   & dhcpIP,
+                          int                 arg)
 {
   bool hasArgument = false;
   {
@@ -81,12 +80,12 @@ String Command_GetORSetIP(struct EventStruct        *event,
   return return_command_success();
 }
 
-String Command_GetORSetString(struct EventStruct        *event,
-                              const __FlashStringHelper *targetDescription,
-                              const char                *Line,
-                              char                      *target,
-                              size_t                     len,
-                              int                        arg
+String Command_GetORSetString(struct EventStruct *event,
+                              const String      & targetDescription,
+                              const char         *Line,
+                              char               *target,
+                              size_t              len,
+                              int                 arg
                               )
 {
   bool hasArgument = false;
@@ -103,9 +102,8 @@ String Command_GetORSetString(struct EventStruct        *event,
         result += len;
         serialPrintln();
         return return_result(event, result);
-      } else {
-        strcpy(target, TmpStr1.c_str());
       }
+      strcpy(target, TmpStr1.c_str());
     }
   }
 
@@ -118,11 +116,11 @@ String Command_GetORSetString(struct EventStruct        *event,
   return return_command_success();
 }
 
-String Command_GetORSetBool(struct EventStruct        *event,
-                            const __FlashStringHelper *targetDescription,
-                            const char                *Line,
-                            bool                      *value,
-                            int                        arg)
+String Command_GetORSetBool(struct EventStruct *event,
+                            const String      & targetDescription,
+                            const char         *Line,
+                            bool               *value,
+                            int                 arg)
 {
   bool hasArgument = false;
   {
@@ -145,7 +143,7 @@ String Command_GetORSetBool(struct EventStruct        *event,
 
   if (hasArgument) {
     String result = targetDescription;
-    result += toString(*value);
+    result += boolToString(*value);
     return return_result(event, result);
   }
   return return_command_success();

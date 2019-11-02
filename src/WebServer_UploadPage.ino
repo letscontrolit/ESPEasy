@@ -1,4 +1,5 @@
 
+#ifdef WEBSERVER_UPLOAD
 
 // ********************************************************************************
 // Web Interface upload page
@@ -169,3 +170,5 @@ void handleFileUpload() {
     uploadResult = 2;
   }
 }
+
+#endif // ifdef WEBSERVER_UPLOAD

@@ -26,9 +26,7 @@ bool statusNTPInitialized = false;
 // udp protocol stuff (syslog, global sync, node info list, ntp time)
 WiFiUDP portUDP;
 
-float customFloatVar[CUSTOM_VARS_MAX];
 
-float UserVar[VARS_PER_TASK * TASKS_MAX];
 
 
 

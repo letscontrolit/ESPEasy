@@ -24,6 +24,8 @@
 #include "src/Commands/wd.h"
 #include "src/Commands/WiFi.h"
 
+#include "ESPEasy_common.h"
+
 
 /*********************************************************************************************\
 * Registers command
