@@ -1,5 +1,3 @@
-#include "define_plugin_sets.h"
-
 // FIXME TD-er: No idea why, but in this file you cannot use the F() macro. (core 2.4.1)
 
 #ifdef USES_MODBUS

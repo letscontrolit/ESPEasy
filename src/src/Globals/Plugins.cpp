@@ -5,10 +5,12 @@
 #include "../Globals/Settings.h"
 #include "../../ESPEasy_Log.h"
 
+#define USERVAR_MAX_INDEX    (VARS_PER_TASK * TASKS_MAX)
 
-deviceIndex_t INVALID_DEVICE_INDEX = PLUGIN_MAX;
-taskIndex_t   INVALID_TASK_INDEX   = TASKS_MAX;
-pluginID_t    INVALID_PLUGIN_ID    = 0;
+
+deviceIndex_t  INVALID_DEVICE_INDEX  = PLUGIN_MAX;
+taskIndex_t    INVALID_TASK_INDEX    = TASKS_MAX;
+pluginID_t     INVALID_PLUGIN_ID     = 0;
 userVarIndex_t INVALID_USERVAR_INDEX = USERVAR_MAX_INDEX;
 taskVarIndex_t INVALID_TASKVAR_INDEX = VARS_PER_TASK;
 
@@ -65,7 +67,8 @@ deviceIndex_t getDeviceIndex(pluginID_t pluginID)
 
     if (it != Plugin_id_to_DeviceIndex.end())
     {
-      if (!validDeviceIndex(it->second)) return INVALID_DEVICE_INDEX;
+      if (!validDeviceIndex(it->second)) { return INVALID_DEVICE_INDEX; }
+
       if (Device[it->second].Number != pluginID) {
         // FIXME TD-er: Just a check for now, can be removed later when it does not occur.
         addLog(LOG_LEVEL_ERROR, F("getDeviceIndex error in Device Vector"));

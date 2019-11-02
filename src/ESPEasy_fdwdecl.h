@@ -2,7 +2,6 @@
 #define ESPEASY_FWD_DECL_H
 
 #include "ESPEasy_common.h"
-#include "define_plugin_sets.h"  // For USES_MQTT
 #include "src/DataStructs/ESPEasy_EventStruct.h"
 
 // FIXME TD-er: This header file should only be included from .ino or .cpp files

@@ -24,7 +24,7 @@
 #include "src/Commands/wd.h"
 #include "src/Commands/WiFi.h"
 
-#include "define_plugin_sets.h"
+#include "ESPEasy_common.h"
 
 
 /*********************************************************************************************\

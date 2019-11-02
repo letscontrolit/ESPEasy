@@ -11,12 +11,18 @@ namespace std
 #include <stdint.h>
 #include <Arduino.h>
 
+// User configuration
+#include "src/DataStructs/ESPEasyDefaults.h"
+
+
 #ifdef USE_CUSTOM_H
 #include "Custom.h"
 #endif
 
 // Include custom first, then build info. (one may want to set BUILD_GIT for example)
 #include "ESPEasy_buildinfo.h"
+
+#include "define_plugin_sets.h"
 
 #define ZERO_FILL(S)  memset((S), 0, sizeof(S))
 #define ZERO_TERMINATE(S)  S[sizeof(S) - 1] = 0

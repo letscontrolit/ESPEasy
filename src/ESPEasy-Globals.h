@@ -64,11 +64,6 @@
 //#define FEATURE_SD
 
 
-// User configuration
-#include "src/DataStructs/ESPEasyDefaults.h"
-
-// Make sure to have this as early as possible in the build process.
-#include "define_plugin_sets.h"
 
 
 // ********************************************************************************
