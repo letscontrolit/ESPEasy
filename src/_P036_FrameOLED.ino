@@ -14,7 +14,7 @@
 //
 // @uwekaditz: 2019-11-02
 // NEW: more OLED sizes (128x32, 64x48) added to the original 128x64 size
-// NEW: Display button can be inverted (saved as Bit16 in Settings.TaskDevicePluginConfigLong[event->TaskIndex]g[0])
+// NEW: Display button can be inverted (saved as Bit16 in Settings.TaskDevicePluginConfigLong[event->TaskIndex][0])
 // NEW: Content of header is adjustable, also the alternating function (saved as Bit 15-0 in Settings.TaskDevicePluginConfigLong[event->TaskIndex][0])
 // CHG: Parameters sorted
 
