@@ -141,22 +141,18 @@ boolean Plugin_035(byte function, struct EventStruct *event, String &command)
         if (argIndex)
           cmdCode = command.substring(0, argIndex);
 
-#ifdef P016_P035_Extended_AC
-        if ((cmdCode.equalsIgnoreCase(F("IRSEND")) || cmdCode.equalsIgnoreCase(F("IRSENDAC"))) && (Plugin_035_irSender != 0 || Plugin_035_commonAc != 0))
-#else
         if (cmdCode.equalsIgnoreCase(F("IRSEND")) && Plugin_035_irSender != 0)
-#endif
         {
           success = true;
-          ReEnableIRIn(false);
+          enableIR_RX(false);
 
+#ifdef P016_P035_USE_RAW_RAW2
           String IrType = "";
           String TmpStr1 = "";
           if (GetArgv(command.c_str(), TmpStr1, 2))
           {
             IrType = TmpStr1;
           }
-#ifdef P016_P035_USE_RAW_RAW2
           if (IrType.equalsIgnoreCase(F("RAW")))
           {
             handleRawRaw2Encoding(command, true);
@@ -168,17 +164,18 @@ boolean Plugin_035(byte function, struct EventStruct *event, String &command)
           }
 #endif //P016_P035_USE_RAW_RAW2
 
-          if (cmdCode.equalsIgnoreCase(F("IRSEND"))) {
-            handleIRremote(command);
-          }
-#ifdef P016_P035_Extended_AC
-          if (cmdCode.equalsIgnoreCase(F("IRSENDAC"))) {
-            command.toLowerCase();  // Circumvent the need to have case sensitive JSON keys
-            handle_AC_IRremote(command);
-          }
-#endif // P016_P035_Extended_AC
-          ReEnableIRIn(true);
+          handleIRremote(command);
         }
+
+#ifdef P016_P035_Extended_AC
+        else if (cmdCode.equalsIgnoreCase(F("IRSENDAC")) && Plugin_035_commonAc != 0) {
+          success = true;
+          enableIR_RX(false);
+          handle_AC_IRremote(command);
+        }
+#endif // P016_P035_Extended_AC
+
+        enableIR_RX(true);
         break;
       } //PLUGIN_WRITE END
   } // SWITCH END
@@ -226,7 +223,6 @@ boolean handleIRremote(const String &cmd) {
 
   bool IRsent = sendIRCode(strToDecodeType(IrType.c_str()), IrCode, ircodestr.c_str(), IrBits, IrRepeat); //Send the IR command
   if (IRsent) printToLog(IrType, ircodestr, IrBits, IrRepeat);
-  ReEnableIRIn(true);
   return IRsent;
 }
 
@@ -244,7 +240,6 @@ boolean handle_AC_IRremote(const String &cmd) {
   if (error)         // Test if parsing succeeds.
   {
     addLog(LOG_LEVEL_INFO, String(F("IRTX: Deserialize Json failed: ")) + error.c_str());
-    ReEnableIRIn(true);
     return false; //do not continue with sending the signal.
   }
   String sprotocol = doc[F("protocol")];
@@ -252,7 +247,6 @@ boolean handle_AC_IRremote(const String &cmd) {
   if (!IRac::isProtocolSupported(st.protocol)) //Check if we support the protocol
   {
     addLog(LOG_LEVEL_INFO, String(F("IRTX: Protocol not supported:")) + sprotocol);
-    ReEnableIRIn(true);
     return false; //do not continue with sending of the signal.
   }
 
@@ -292,7 +286,6 @@ boolean handle_AC_IRremote(const String &cmd) {
   //Send the IR command
   bool IRsent = Plugin_035_commonAc->sendAc(st, &prev);
   if (IRsent) printToLog(typeToString(st.protocol), TmpStr1, 0, 0);
-  ReEnableIRIn(true);
   return IRsent;
 }
 
@@ -463,7 +456,6 @@ boolean handleRawRaw2Encoding(const String &cmd, boolean raw) {
   // printWebString += String(F(": Base32Hex RAW Code Send "));
   delete[] buf;
   buf = nullptr;
-  ReEnableIRIn(true);
   return true;
 }
 
@@ -492,7 +484,7 @@ String listProtocols() {
 String listACProtocols() {
   String temp;
   for (uint32_t i = 0; i <= kLastDecodeType; i++) {
-    if (IRac::isProtocolSupported((decode_type_t)i))
+    if (hasACState((decode_type_t)i))
       temp += typeToString((decode_type_t)i) + ' ';
   }
   return temp;
@@ -502,14 +494,14 @@ String listACProtocols() {
 boolean addErrorTrue()
 {
   addLog(LOG_LEVEL_ERROR, F("RAW2: Invalid encoding!"));
-  ReEnableIRIn(true);
   return true;
 }
 
-void ReEnableIRIn(boolean enable)
+void enableIR_RX(boolean enable)
 {
 #ifdef PLUGIN_016
-  if (enable && irReceiver != 0) {
+  if (irReceiver == 0) return;
+  if (enable) {
     irReceiver->enableIRIn(); // Start the receiver
   } else {
     irReceiver->disableIRIn(); // Stop the receiver
