@@ -134,12 +134,7 @@ boolean Plugin_035(byte function, struct EventStruct *event, String &command)
 
     case PLUGIN_WRITE:
       {
-
-        // FIXME TD-er: This one is not using parseString* function
-        String cmdCode = "";
-        int argIndex = command.indexOf(',');
-        if (argIndex)
-          cmdCode = command.substring(0, argIndex);
+        String cmdCode = parseString(command,1);
 
         if (cmdCode.equalsIgnoreCase(F("IRSEND")) && Plugin_035_irSender != 0)
         {
@@ -147,21 +142,7 @@ boolean Plugin_035(byte function, struct EventStruct *event, String &command)
           enableIR_RX(false);
 
 #ifdef P016_P035_USE_RAW_RAW2
-          String IrType = "";
-          String TmpStr1 = "";
-          if (GetArgv(command.c_str(), TmpStr1, 2))
-          {
-            IrType = TmpStr1;
-          }
-          if (IrType.equalsIgnoreCase(F("RAW")))
-          {
-            handleRawRaw2Encoding(command, true);
-            break;
-          }
-          else if (IrType.equalsIgnoreCase(F("RAW2"))) {
-            handleRawRaw2Encoding(command, false);
-            break;
-          }
+          handleRawRaw2Encoding(command);
 #endif //P016_P035_USE_RAW_RAW2
 
           handleIRremote(command);
@@ -185,7 +166,6 @@ boolean Plugin_035(byte function, struct EventStruct *event, String &command)
 boolean handleIRremote(const String &cmd) {
 
   String IrType = "";
-  String IrType_orig = "";
   String TmpStr1 = "";
 
   uint64_t IrCode = 0;
@@ -207,7 +187,6 @@ boolean handleIRremote(const String &cmd) {
     if (GetArgv(cmd.c_str(), TmpStr1, 2))
     {
       IrType = TmpStr1;
-      IrType_orig = TmpStr1;
 
       if (GetArgv(cmd.c_str(), ircodestr, 3))
       {
@@ -227,16 +206,16 @@ boolean handleIRremote(const String &cmd) {
 }
 
 boolean handle_AC_IRremote(const String &cmd) {
-  String IrType = "";
-  String IrType_orig = "";
-  String TmpStr1 = "";
+  String irData = "";
   StaticJsonDocument<300> doc;
+
   int argIndex = cmd.indexOf(',') + 1;
   if (argIndex)
-    TmpStr1 = cmd.substring(argIndex, cmd.length());
-  addLog(LOG_LEVEL_INFO, String(F("IRTX: JSON received: ")) + TmpStr1);
-  TmpStr1.toLowerCase(); // Circumvent the need to have case sensitive JSON keys
-  DeserializationError error = deserializeJson(doc, TmpStr1);         // Deserialize the JSON document
+    irData = cmd.substring(argIndex, cmd.length());
+  //addLog(LOG_LEVEL_INFO, String(F("IRTX: JSON received: ")) + irData);
+  irData.toLowerCase(); // Circumvent the need to have case sensitive JSON keys
+
+  DeserializationError error = deserializeJson(doc, irData);         // Deserialize the JSON document
   if (error)         // Test if parsing succeeds.
   {
     addLog(LOG_LEVEL_INFO, String(F("IRTX: Deserialize Json failed: ")) + error.c_str());
@@ -285,12 +264,19 @@ boolean handle_AC_IRremote(const String &cmd) {
 
   //Send the IR command
   bool IRsent = Plugin_035_commonAc->sendAc(st, &prev);
-  if (IRsent) printToLog(typeToString(st.protocol), TmpStr1, 0, 0);
+  if (IRsent) printToLog(typeToString(st.protocol), irData, 0, 0);
   return IRsent;
 }
 
 
-boolean handleRawRaw2Encoding(const String &cmd, boolean raw) {
+boolean handleRawRaw2Encoding(const String &cmd) {
+  boolean raw=true;
+  String IrType = "";
+  if (!GetArgv(cmd.c_str(), IrType, 2)) return false;
+
+  if (IrType.equalsIgnoreCase(F("RAW"))) raw = true;
+  else if (IrType.equalsIgnoreCase(F("RAW2")))  raw = false;
+
 
   String IrRaw, TmpStr1;
   uint16_t IrHz = 0;
@@ -451,7 +437,7 @@ boolean handleRawRaw2Encoding(const String &cmd, boolean raw) {
   } //End RAW2
 
   Plugin_035_irSender->sendRaw(buf, idx, IrHz);
-  //printWebString += IrType_orig + String(F(": Base32Hex RAW Code: ")) + IrRaw + String(F("<BR>kHz: ")) + IrHz + String(F("<BR>Pulse Len: ")) + IrPLen + String(F("<BR>Blank Len: ")) + IrBLen + String(F("<BR>"));
+  //printWebString += IrType + String(F(": Base32Hex RAW Code: ")) + IrRaw + String(F("<BR>kHz: ")) + IrHz + String(F("<BR>Pulse Len: ")) + IrPLen + String(F("<BR>Blank Len: ")) + IrBLen + String(F("<BR>"));
   printToLog(String(F(": Base32Hex RAW Code Send ")), IrRaw, 0, 0);
   // printWebString += String(F(": Base32Hex RAW Code Send "));
   delete[] buf;
