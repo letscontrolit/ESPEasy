@@ -11,6 +11,12 @@
 // Major work on this plugin has been done by 'Namirda'
 // Added to the main repository with some optimizations and some limitations.
 // Al long as the device is not selected, no RAM is waisted.
+//
+// @uwekaditz: 2019-11-02
+// NEW: more OLED sizes (128x32, 64x48) added to the original 128x64 size
+// NEW: Display button can be inverted (saved as Bit16 in Settings.TaskDevicePluginConfigLong[event->TaskIndex]g[0])
+// NEW: Content of header is adjustable, also the alternating function (saved as Bit 15-0 in Settings.TaskDevicePluginConfigLong[event->TaskIndex][0])
+// CHG: Parameters sorted
 
 #define PLUGIN_036
 #define PLUGIN_ID_036         36
@@ -19,6 +25,8 @@
 
 #define P36_Nlines 12        // The number of different lines which can be displayed - each line is 32 chars max
 #define P36_Nchars 32
+#define P36_MaxSizesCount 3   // number of different OLED sizes
+#define P36_MaxDisplayWidth 128
 
 #define P36_CONTRAST_OFF    1
 #define P36_CONTRAST_LOW    64
@@ -35,6 +43,71 @@
 #define P36_WIFI_STATE_NOT_CONNECTED  -1
 
 static int8_t lastWiFiState = P36_WIFI_STATE_UNSET;
+static int OLEDIndex = 0;
+static boolean Pin3Invers;
+
+enum eHeaderContent {
+    eSSID = 1,
+    eSysName = 2,
+    eIP = 3,
+    eMAC = 4,
+    eRSSI = 5,
+    eBSSID = 6,
+    eWiFiCh = 7,
+    eUnit = 8,
+    eSysLoad = 9,
+    eSysHeap = 10,
+    eSysStack = 11,
+    eTime = 12,
+    eDate = 13
+};
+static eHeaderContent HeaderContent=eSysName;
+static eHeaderContent HeaderContentAlternative=eSysName;
+
+typedef struct {
+  byte          Top;                  // top in pix for this line setting
+  const char    *fontData;            // font for this line setting
+  byte          Space;                // space in pix between lines for this line setting
+} tFontSettings;
+
+typedef struct {
+  byte          Width;                // width in pix
+  byte          Height;               // height in pix
+  byte          PixLeft;              // first left pix position
+  byte          MaxLines;             // max. line count
+  tFontSettings L1;                   // settings for 1 line
+  tFontSettings L2;                   // settings for 2 lines
+  tFontSettings L3;                   // settings for 3 lines
+  tFontSettings L4;                   // settings for 4 lines
+  byte          WiFiIndicatorWidth;   // width of WiFi indicator
+} tSizeSettings;
+
+ const tSizeSettings SizeSettings[P36_MaxSizesCount] = {
+   { P36_MaxDisplayWidth, 64, 0,               // 128x64
+     4,
+     { 20, ArialMT_Plain_24,  0},  //  Width: 24 Height: 28
+     { 15, ArialMT_Plain_16, 19},  //  Width: 16 Height: 19
+     { 13, Dialog_plain_12,  12},  //  Width: 13 Height: 15
+     { 12, ArialMT_Plain_10, 10},  //  Width: 10 Height: 13
+     15
+   },
+   { P36_MaxDisplayWidth, 32, 0,               // 128x32
+     2,
+     { 14, Dialog_plain_12,   0},  //  Width: 13 Height: 15
+     { 12, ArialMT_Plain_10, 10},  //  Width: 10 Height: 13
+     {  0, ArialMT_Plain_10,  0},  //  Width: 10 Height: 13 not used!
+     {  0, ArialMT_Plain_10,  0},  //  Width: 10 Height: 13 not used!
+     10
+   },
+   { 64, 48, 32,               // 64x48
+     3,
+     { 20, ArialMT_Plain_24,  0},  //  Width: 24 Height: 28
+     { 14, Dialog_plain_12,  16},  //  Width: 13 Height: 15
+     { 13, ArialMT_Plain_10, 11},  //  Width: 10 Height: 13
+     {  0, ArialMT_Plain_10,  0},  //  Width: 10 Height: 13 not used!
+     10
+   }
+ };
 
 // Instantiate display here - does not work to do this within the INIT call
 
@@ -93,6 +166,7 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
       {
         // Use number 5 to remain compatible with existing configurations,
         // but the item should be one of the first choices.
+        addFormSubHeader(F("Display"));
         byte choice5 = PCONFIG(5);
         String options5[2];
         options5[0] = F("SSD1306");
@@ -111,6 +185,10 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
         optionValues0[1] = 0x3D;
         addFormSelectorI2C(F("p036_adr"), 2, optionValues0, choice0);
 
+        String options8[P36_MaxSizesCount] = { F("128x64"), F("128x32"), F("64x48") };
+        int optionValues8[P36_MaxSizesCount] = { 0, 1, 2 };
+        addFormSelector(F("Size"),F("p036_size"), P36_MaxSizesCount, options8, optionValues8, NULL, PCONFIG(7), true);
+
         byte choice1 = PCONFIG(1);
         String options1[2];
         options1[0] = F("Normal");
@@ -118,14 +196,8 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
         int optionValues1[2] = { 1, 2 };
         addFormSelector(F("Rotation"), F("p036_rotate"), 2, options1, optionValues1, choice1);
 
-        byte choice2 = PCONFIG(2);
-        String options2[4];
-        int optionValues2[4];
-        for (int i = 0; i < 4; ++i) {
-          options2[i] = String(i + 1);
-          optionValues2[i] = i + 1;
-        }
-        addFormSelector(F("Lines per Frame"), F("p036_nlines"), 4, options2, optionValues2, choice2);
+        OLEDIndex=PCONFIG(7);
+        addFormNumericBox(F("Lines per Frame"), F("p036_nlines"), PCONFIG(2), 1, SizeSettings[OLEDIndex].MaxLines);
 
         byte choice3 = PCONFIG(3);
         String options3[5];
@@ -142,13 +214,11 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
         optionValues3[4] = 32;
         addFormSelector(F("Scroll"), F("p036_scroll"), 5, options3, optionValues3, choice3);
         Plugin_036_loadDisplayLines(event->TaskIndex);
-        for (byte varNr = 0; varNr < P36_Nlines; varNr++)
-        {
-          addFormTextBox(String(F("Line ")) + (varNr + 1), getPluginCustomArgName(varNr), P036_displayLines[varNr], P36_Nchars);
-        }
 
         // FIXME TD-er: Why is this using pin3 and not pin1? And why isn't this using the normal pin selection functions?
         addFormPinSelect(F("Display button"), F("taskdevicepin3"), CONFIG_PIN3);
+        Pin3Invers = ((Settings.TaskDevicePluginConfigLong[event->TaskIndex][0] & 0x10000) == 0x10000);  // Bit 16
+        addFormCheckBox(F("Inversed Logic"), F("p036_pin3invers"), Pin3Invers);
 
         addFormNumericBox(F("Display Timeout"), F("p036_timer"), PCONFIG(4));
 
@@ -163,6 +233,33 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
         optionValues6[1] = P36_CONTRAST_MED;
         optionValues6[2] = P36_CONTRAST_HIGH;
         addFormSelector(F("Contrast"), F("p036_contrast"), 3, options6, optionValues6, choice6);
+
+        addFormSubHeader(F("Content"));
+
+        byte choice9 = (Settings.TaskDevicePluginConfigLong[event->TaskIndex][0] & 0xff00) >> 8;    // Bit15-8
+        byte choice10 = Settings.TaskDevicePluginConfigLong[event->TaskIndex][0] & 0xff; // Bit7-0
+        byte MaxHeaderOption;
+        String options9[13] = { F("SSID"), F("SysName"), F("IP"), F("MAC"), F("RSSI"), F("BSSID"), F("WiFi channel"), F("Unit"), F("SysLoad"), F("SysHeap"), F("SysStack"), F("Date"), F("Time") };
+        int optionValues9[13] = { eSSID, eSysName, eIP, eMAC, eRSSI, eBSSID, eWiFiCh, eUnit, eSysLoad, eSysHeap, eSysStack, eDate, eTime };
+        if (SizeSettings[OLEDIndex].Width == P36_MaxDisplayWidth) {
+          MaxHeaderOption = 12;
+//          String options9a[12] = { F("Date"), F("SSID"), F("SysName"), F("IP"), F("MAC"), F("RSSI"), F("BSSID"), F("WiFi channel"), F("Unit"), F("SysLoad"), F("SysHeap"), F("SysStack") };
+          //int optionValues9a[12] = { eDate, eSSID, eSysName, eIP, eMAC, eRSSI, eBSSID, eWiFiCh, eUnit, eSysLoad, eSysHeap, eSysStack};
+//          addFormSelector(F("Header"),F("p036_header"), 12, options9a, optionValues9a, choice9);
+//          addFormSelector(F("Header (alternating)"),F("p036_headerAlternate"), 12, options9a, optionValues9a, choice10);
+        }
+        else {
+          MaxHeaderOption = 13;
+//          String options9b[13] = { F("Time"), F("Date"), F("SSID"), F("SysName"), F("IP"), F("MAC"), F("RSSI"), F("BSSID"), F("WiFi channel"), F("Unit"), F("SysLoad"), F("SysHeap"), F("SysStack") };
+//          int optionValues9b[13] = { eTime, eDate, eSSID, eSysName, eIP, eMAC, eRSSI, eBSSID, eWiFiCh, eUnit, eSysLoad, eSysHeap, eSysStack};
+        }
+        addFormSelector(F("Header"),F("p036_header"), MaxHeaderOption, options9, optionValues9, choice9);
+        addFormSelector(F("Header (alternating)"),F("p036_headerAlternate"), MaxHeaderOption, options9, optionValues9, choice10);
+
+        for (byte varNr = 0; varNr < P36_Nlines; varNr++)
+        {
+          addFormTextBox(String(F("Line ")) + (varNr + 1), getPluginCustomArgName(varNr), P036_displayLines[varNr], P36_Nchars);
+        }
 
         success = true;
         break;
@@ -182,6 +279,11 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
         PCONFIG(4) = getFormItemInt(F("p036_timer"));
         PCONFIG(5) = getFormItemInt(F("p036_controller"));
         PCONFIG(6) = getFormItemInt(F("p036_contrast"));
+        PCONFIG(7) = getFormItemInt(F("p036_size"));
+        Settings.TaskDevicePluginConfigLong[event->TaskIndex][0] = getFormItemInt(F("p036_header"))*0x100;     // Bit 15-8
+        Settings.TaskDevicePluginConfigLong[event->TaskIndex][0] += getFormItemInt(F("p036_headerAlternate")); // Bit 7-0
+        if (isFormItemChecked(F("p036_pin3invers")))
+          Settings.TaskDevicePluginConfigLong[event->TaskIndex][0] += 0x10000;           // Bit 16
 
         String error;
         char P036_deviceTemplate[P36_Nlines][P36_Nchars];
@@ -273,7 +375,8 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
       {
         if (CONFIG_PIN3 != -1)
         {
-          if (!digitalRead(CONFIG_PIN3))
+          Pin3Invers = ((Settings.TaskDevicePluginConfigLong[event->TaskIndex][0] & 0x10000) == 0x10000);  // Bit 16
+          if ((!Pin3Invers && digitalRead(CONFIG_PIN3)) || (Pin3Invers && !digitalRead(CONFIG_PIN3)))
           {
             display->displayOn();
             UserVar[event->BaseVarIndex] = 1;      //  Save the fact that the display is now ON
@@ -298,6 +401,10 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
         }
         if (UserVar[event->BaseVarIndex] == 1) {
           // Display is on.
+          OLEDIndex = PCONFIG(7);
+          HeaderContent = eHeaderContent((Settings.TaskDevicePluginConfigLong[event->TaskIndex][0] & 0xff00) >> 8);     // Bit15-8
+          HeaderContentAlternative = eHeaderContent(Settings.TaskDevicePluginConfigLong[event->TaskIndex][0] & 0xff);   // Bit7-0
+	        display_header();	// Update Header
           if (display && display_wifibars()) {
             // WiFi symbol was updated.
             display->display();
@@ -318,68 +425,73 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
         // }
 
         //      Define Scroll area layout
-        linesPerFrame = PCONFIG(2);
-        NFrames = P36_Nlines / linesPerFrame;
+        if (UserVar[event->BaseVarIndex] == 1) {
+          // Display is on.
+          linesPerFrame = PCONFIG(2);
+          NFrames = P36_Nlines / linesPerFrame;
+          OLEDIndex = PCONFIG(7);
+          HeaderContent = eHeaderContent((Settings.TaskDevicePluginConfigLong[event->TaskIndex][0] & 0xff00) >> 8);     // Bit15-8
+          HeaderContentAlternative = eHeaderContent(Settings.TaskDevicePluginConfigLong[event->TaskIndex][0] & 0xff);   // Bit7-0
 
-        //      Now create the string for the outgoing and incoming frames
-        String tmpString;
-        tmpString.reserve(P36_Nchars);
-        String newString[4];
-        String oldString[4];
+          //      Now create the string for the outgoing and incoming frames
+          String tmpString;
+          tmpString.reserve(P36_Nchars);
+          String newString[4];
+          String oldString[4];
 
-        //      Construct the outgoing string
-        for (byte i = 0; i < linesPerFrame; i++)
-        {
-          tmpString = P036_displayLines[(linesPerFrame * frameCounter) + i];
-          oldString[i] = P36_parseTemplate(tmpString, 20);
-          oldString[i].trim();
-        }
-
-        // now loop round looking for the next frame with some content
-        //   skip this frame if all lines in frame are blank
-        // - we exit the while loop if any line is not empty
-        boolean foundText = false;
-        int ntries = 0;
-        while (!foundText) {
-
-          //        Stop after framecount loops if no data found
-          ntries += 1;
-          if (ntries > NFrames) break;
-
-          //        Increment the frame counter
-          frameCounter = frameCounter + 1;
-          if ( frameCounter > NFrames - 1) {
-            frameCounter = 0;
-            currentFrameToDisplay = 0;
-          }
-
-          //        Contruct incoming strings
+          //      Construct the outgoing string
           for (byte i = 0; i < linesPerFrame; i++)
           {
             tmpString = P036_displayLines[(linesPerFrame * frameCounter) + i];
-            newString[i] = P36_parseTemplate(tmpString, 20);
-            newString[i].trim();
-            if (newString[i].length() > 0) foundText = true;
+            oldString[i] = P36_parseTemplate(tmpString, 20);
+            oldString[i].trim();
           }
-          if (foundText) {
-            if (frameCounter != 0) {
-              ++currentFrameToDisplay;
+
+          // now loop round looking for the next frame with some content
+          //   skip this frame if all lines in frame are blank
+          // - we exit the while loop if any line is not empty
+          boolean foundText = false;
+          int ntries = 0;
+          while (!foundText) {
+
+            //        Stop after framecount loops if no data found
+            ntries += 1;
+            if (ntries > NFrames) break;
+
+            //        Increment the frame counter
+            frameCounter = frameCounter + 1;
+            if ( frameCounter > NFrames - 1) {
+              frameCounter = 0;
+              currentFrameToDisplay = 0;
+            }
+
+            //        Contruct incoming strings
+            for (byte i = 0; i < linesPerFrame; i++)
+            {
+              tmpString = P036_displayLines[(linesPerFrame * frameCounter) + i];
+              newString[i] = P36_parseTemplate(tmpString, 20);
+              newString[i].trim();
+              if (newString[i].length() > 0) foundText = true;
+            }
+            if (foundText) {
+              if (frameCounter != 0) {
+                ++currentFrameToDisplay;
+              }
             }
           }
-        }
-        if ((currentFrameToDisplay + 1) > nrFramesToDisplay) {
-          nrFramesToDisplay = currentFrameToDisplay + 1;
-        }
+          if ((currentFrameToDisplay + 1) > nrFramesToDisplay) {
+            nrFramesToDisplay = currentFrameToDisplay + 1;
+          }
 
-        //      Update display
-        display_header();
-        display_indicator(currentFrameToDisplay, nrFramesToDisplay);
-//        display_indicator(frameCounter, NFrames);
-        display->display();
+          //      Update display
+          display_header();
+          if (SizeSettings[OLEDIndex].Width == P36_MaxDisplayWidth) display_indicator(currentFrameToDisplay, nrFramesToDisplay);
+  //        display_indicator(frameCounter, NFrames);
+          display->display();
 
-        int scrollspeed = PCONFIG(3);
-        display_scroll(oldString, newString, linesPerFrame, scrollspeed);
-
+          int scrollspeed = PCONFIG(3);
+          display_scroll(oldString, newString, linesPerFrame, scrollspeed);
+				}
         success = true;
         break;
       }
@@ -478,20 +590,78 @@ String P36_parseTemplate(String &tmpString, byte lineSize) {
 // The screen is set up as 10 rows at the top for the header, 10 rows at the bottom for the footer and 44 rows in the middle for the scroll region
 
 void display_header() {
-  static boolean showWiFiName = true;
-  if (showWiFiName && (WiFiConnected()) ) {
-    String newString = WiFi.SSID();
-    newString.trim();
-    display_title(newString);
-  } else {
-    String dtime = F("%sysname%");
-    String newString = parseTemplate(dtime, 10);
-    newString.trim();
-    display_title(newString);
+  static boolean Alternative = true;
+  eHeaderContent _HeaderContent;
+  String newString, strHeader;
+  if ((HeaderContentAlternative==HeaderContent) || Alternative) {
+    _HeaderContent=HeaderContent;
   }
-  showWiFiName = !showWiFiName;
+  else _HeaderContent=HeaderContentAlternative;
+  switch (_HeaderContent) {
+    case eSSID:
+      if (WiFiConnected()) strHeader = WiFi.SSID();
+      else {
+        newString=F("%sysname%");
+        strHeader = parseTemplate(newString, 10);
+      }
+    break;
+    case eSysName:
+      newString=F("%sysname%");
+      strHeader = parseTemplate(newString, 10);
+    break;
+    case eTime:
+      newString=F("%systime%");
+      strHeader = parseTemplate(newString, 10);
+    break;
+    case eDate:
+      newString = F("%sysday_0%.%sysmonth_0%.%sysyear%");
+      strHeader = parseTemplate(newString, 10);
+    break;
+    case eIP:
+      newString=F("%ip%");
+      strHeader = parseTemplate(newString, 10);
+    break;
+    case eMAC:
+      newString=F("%mac%");
+      strHeader = parseTemplate(newString, 10);
+    break;
+    case eRSSI:
+      newString=F("%rssi%dB");
+      strHeader = parseTemplate(newString, 10);
+    break;
+    case eBSSID:
+      newString=F("%bssid%");
+      strHeader = parseTemplate(newString, 10);
+    break;
+    case eWiFiCh:
+      newString=F("Channel: %wi_ch%");
+      strHeader = parseTemplate(newString, 10);
+    break;
+    case eUnit:
+      newString=F("Unit: %unit%");
+      strHeader = parseTemplate(newString, 10);
+    break;
+    case eSysLoad:
+      newString=F("Load: %sysload%%");
+      strHeader = parseTemplate(newString, 10);
+    break;
+    case eSysHeap:
+      newString=F("Mem: %sysheap%");
+      strHeader = parseTemplate(newString, 10);
+    break;
+    case eSysStack:
+      newString=F("Stack: %sysstack%");
+      strHeader = parseTemplate(newString, 10);
+    break;
+    default:
+      return;
+  }
+  Alternative = !Alternative;
+
+  strHeader.trim();
+  display_title(strHeader);
   // Display time and wifibars both clear area below, so paint them after the title.
-  display_time();
+  if (SizeSettings[OLEDIndex].Width == P36_MaxDisplayWidth) display_time(); // only for 128pix wide displays
   display_wifibars();
 }
 
@@ -507,23 +677,32 @@ void display_time() {
 }
 
 void display_title(String& title) {
-  display->setTextAlignment(TEXT_ALIGN_CENTER);
   display->setFont(ArialMT_Plain_10);
   display->setColor(BLACK);
-  display->fillRect(0, 0, 128, 13); // Underscores use a extra lines, clear also.
+//  display->fillRect(0, 0, 128, 13); // Underscores use a extra lines, clear also.
+  display->fillRect(0, 0, 128, 12);   // don't clean line under title.
   display->setColor(WHITE);
-  display->drawString(64, 0, title);
+  if (SizeSettings[OLEDIndex].Width == P36_MaxDisplayWidth) {
+    display->setTextAlignment(TEXT_ALIGN_CENTER);
+    display->drawString(64, 0, title);
+  }
+  else {
+    display->setTextAlignment(TEXT_ALIGN_LEFT);  // Display right of WiFi bars
+    display->drawString(SizeSettings[OLEDIndex].PixLeft + SizeSettings[OLEDIndex].WiFiIndicatorWidth + 1, 0, title);
+  }
 }
 
 void display_logo() {
+int left = 24;
   display->setTextAlignment(TEXT_ALIGN_LEFT);
   display->setFont(ArialMT_Plain_16);
   display->setColor(BLACK);
-  display->fillRect(0, 14, 128, 64);
+  display->fillRect(0, 13, 128, 64);
   display->setColor(WHITE);
   display->drawString(65, 15, F("ESP"));
   display->drawString(65, 34, F("Easy"));
-  display->drawXbm(24, 14, espeasy_logo_width, espeasy_logo_height, espeasy_logo_bits);
+  if (SizeSettings[OLEDIndex].PixLeft<left) left = SizeSettings[OLEDIndex].PixLeft;
+  display->drawXbm(left, 13, espeasy_logo_width, espeasy_logo_height, espeasy_logo_bits); // espeasy_logo_width=espeasy_logo_height=36
 }
 
 // Draw the frame position
@@ -582,32 +761,32 @@ void display_scroll(String outString[], String inString[], int nlines, int scrol
 
   if (nlines == 1)
   {
-    display->setFont(ArialMT_Plain_24);
-    ypos[0] = 20;
+    display->setFont(SizeSettings[OLEDIndex].L1.fontData);
+    ypos[0] = SizeSettings[OLEDIndex].L1.Top;
   }
 
   if (nlines == 2)
   {
-    display->setFont(ArialMT_Plain_16);
-    ypos[0] = 15;
-    ypos[1] = 34;
+    display->setFont(SizeSettings[OLEDIndex].L2.fontData);
+    ypos[0] = SizeSettings[OLEDIndex].L2.Top;
+    ypos[1] = ypos[0]+SizeSettings[OLEDIndex].L2.Space;
   }
 
   if (nlines == 3)
   {
-    display->setFont(Dialog_plain_12);
-    ypos[0] = 13;
-    ypos[1] = 25;
-    ypos[2] = 37;
+    display->setFont(SizeSettings[OLEDIndex].L3.fontData);
+    ypos[0] = SizeSettings[OLEDIndex].L3.Top;
+    ypos[1] = ypos[0]+SizeSettings[OLEDIndex].L3.Space;
+    ypos[2] = ypos[1]+SizeSettings[OLEDIndex].L3.Space;
   }
 
   if (nlines == 4)
   {
-    display->setFont(ArialMT_Plain_10);
-    ypos[0] = 12;
-    ypos[1] = 22;
-    ypos[2] = 32;
-    ypos[3] = 42;
+    display->setFont(SizeSettings[OLEDIndex].L4.fontData);
+    ypos[0] = SizeSettings[OLEDIndex].L4.Top;
+    ypos[1] = ypos[0]+SizeSettings[OLEDIndex].L4.Space;
+    ypos[2] = ypos[1]+SizeSettings[OLEDIndex].L4.Space;
+    ypos[3] = ypos[2]+SizeSettings[OLEDIndex].L4.Space;
   }
 
   display->setTextAlignment(TEXT_ALIGN_CENTER);
@@ -621,6 +800,7 @@ void display_scroll(String outString[], String inString[], int nlines, int scrol
     // We allow 12 pixels at the top because otherwise the wifi indicator gets too squashed!!
     display->fillRect(0, 12, 128, 42);   // scrolling window is 44 pixels high - ie 64 less margin of 10 at top and bottom
     display->setColor(WHITE);
+    display->drawLine(0, 12, 128, 12);   // line below title
 
     // Now draw the strings
 
@@ -643,14 +823,14 @@ void display_scroll(String outString[], String inString[], int nlines, int scrol
 //Draw Signal Strength Bars, return true when there was an update.
 bool display_wifibars() {
   const bool connected = WiFiConnected();
-  const int nbars_filled = (WiFi.RSSI() + 100) / 8;
-  const int newState = connected ? nbars_filled : P36_WIFI_STATE_UNSET;
+  const int nbars_filled = (WiFi.RSSI() + 100) / 12;  // all bars filled if RSSI better than -46dB
+  const int newState = connected ? nbars_filled : P36_WIFI_STATE_NOT_CONNECTED;
   if (newState == lastWiFiState)
     return false; // nothing to do.
 
-  int x = 105;
+  int x = SizeSettings[OLEDIndex].PixLeft;
   int y = 0;
-  int size_x = 15;
+  int size_x = SizeSettings[OLEDIndex].WiFiIndicatorWidth;
   int size_y = 10;
   int nbars = 5;
   int16_t width = (size_x / nbars);
@@ -679,7 +859,8 @@ bool display_wifibars() {
       }
     }
   } else {
-    // Draw a not connected sign.
+    // Draw a not connected sign (empty rectangle)
+  	display->drawRect(x , y, size_x, size_y-1);
   }
   return true;
 }
