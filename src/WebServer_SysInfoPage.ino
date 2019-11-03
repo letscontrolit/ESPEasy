@@ -521,15 +521,15 @@ void handle_sysinfo_Storage() {
   TXBuffer += RTC.flashCounter;
   TXBuffer += F(" boot");
 
-  addRowLabel(getLabel(LabelType::SKETCH_SIZE));
   # if defined(ESP8266)
-  TXBuffer += ESP.getSketchSize() / 1024;
-  TXBuffer += F(" kB (");
-  TXBuffer += ESP.getFreeSketchSpace() / 1024;
-  TXBuffer += F(" kB free)");
-  # endif // if defined(ESP8266)
-
   {
+    // FIXME TD-er: Must also add this for ESP32.
+    addRowLabel(getLabel(LabelType::SKETCH_SIZE));
+    TXBuffer += ESP.getSketchSize() / 1024;
+    TXBuffer += F(" kB (");
+    TXBuffer += ESP.getFreeSketchSpace() / 1024;
+    TXBuffer += F(" kB free)");
+
     uint32_t maxSketchSize;
     bool     use2step;
     bool     otaEnabled = OTA_possible(maxSketchSize, use2step);
@@ -546,6 +546,7 @@ void handle_sysinfo_Storage() {
     addRowLabel(getLabel(LabelType::OTA_2STEP));
     TXBuffer += boolToString(use2step);
   }
+  # endif // if defined(ESP8266)
 
   addRowLabel(getLabel(LabelType::SPIFFS_SIZE));
   TXBuffer += SpiffsTotalBytes() / 1024;
