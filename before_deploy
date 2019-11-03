@@ -74,12 +74,12 @@ for ENV in \
 do
   MAX_FILESIZE=1044464
   if [[ ${ENV} == *"_1M"* ]]; then
-    # max 871 kiB
+    # max 872 kiB - 16 bytes
     MAX_FILESIZE=892912
   fi
   if [[ ${ENV} == *"_1M_OTA"* ]]; then
-    # max 602 kiB
-    MAX_FILESIZE=616448
+    # max 600 kiB - 16 bytes
+    MAX_FILESIZE=614384
   fi
   if [[ ${ENV} == *"esp32"* ]]; then
     MAX_FILESIZE=1310720

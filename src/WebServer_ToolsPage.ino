@@ -136,7 +136,9 @@ void handle_tools() {
       }
       TXBuffer += F(" Max sketch size: ");
       TXBuffer += maxSketchSize / 1024;
-      TXBuffer += F(" kB");
+      TXBuffer += F(" kB (");
+      TXBuffer += maxSketchSize;
+      TXBuffer += F(" bytes)");
     }
     #  endif // ifndef NO_HTTP_UPDATER
   }

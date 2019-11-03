@@ -91,6 +91,9 @@ String getLabel(LabelType::Enum label) {
     case LabelType::SKETCH_FREE:            return F("Sketch Free");
     case LabelType::SPIFFS_SIZE:            return F("SPIFFS Size");
     case LabelType::SPIFFS_FREE:            return F("SPIFFS Free");
+    case LabelType::MAX_OTA_SKETCH_SIZE:    return F("Max. OTA Sketch Size");
+    case LabelType::OTA_2STEP:              return F("OTA 2-step Needed");
+    case LabelType::OTA_POSSIBLE:           return F("OTA possible");
 
   }
   return F("MissingString");
@@ -189,6 +192,9 @@ String getValue(LabelType::Enum label) {
     case LabelType::SKETCH_FREE:            break;
     case LabelType::SPIFFS_SIZE:            break;
     case LabelType::SPIFFS_FREE:            break;
+    case LabelType::MAX_OTA_SKETCH_SIZE:    break;
+    case LabelType::OTA_2STEP:              break;
+    case LabelType::OTA_POSSIBLE:           break;
 
   }
   return F("MissingString");
