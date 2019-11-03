@@ -452,6 +452,7 @@ void processMatchedRule(String& action, String& event,
         }
         else {
           String check = lcAction.substring(split + 7);
+          check.trim();
           condition[ifBlock - 1] = conditionMatchExtended(check);
 #ifndef BUILD_NO_DEBUG
 
@@ -476,6 +477,7 @@ void processMatchedRule(String& action, String& event,
         if (isCommand) {
           ifBlock++;
           String check = lcAction.substring(split + 3);
+          check.trim();
           condition[ifBlock - 1] = conditionMatchExtended(check);
           ifBranche[ifBlock - 1] = true;
 #ifndef BUILD_NO_DEBUG
@@ -752,56 +754,57 @@ bool findCompareCondition(const String& check, char& compare, int& posStart, int
   posStart = check.length();
   posEnd   = posStart;
   int comparePos = 0;
+  bool found = false;
 
   if (((comparePos = check.indexOf("!=")) > 0) && (comparePos < posStart)) {
     posStart = comparePos;
     posEnd   = posStart + 2;
     compare  = '!' + '=';
-    return true;
+    found = true;
   }
 
   if (((comparePos = check.indexOf("<>")) > 0) && (comparePos < posStart)) {
     posStart = comparePos;
     posEnd   = posStart + 2;
     compare  = '!' + '=';
-    return true;
+    found = true;
   }
 
   if (((comparePos = check.indexOf(">=")) > 0) && (comparePos < posStart)) {
     posStart = comparePos;
     posEnd   = posStart + 2;
     compare  = '>' + '=';
-    return true;
+    found = true;
   }
 
   if (((comparePos = check.indexOf("<=")) > 0) && (comparePos < posStart)) {
     posStart = comparePos;
     posEnd   = posStart + 2;
     compare  = '<' + '=';
-    return true;
+    found = true;
   }
 
   if (((comparePos = check.indexOf("<")) > 0) && (comparePos < posStart)) {
     posStart = comparePos;
     posEnd   = posStart + 1;
     compare  = '<';
-    return true;
+    found = true;
   }
 
   if (((comparePos = check.indexOf(">")) > 0) && (comparePos < posStart)) {
     posStart = comparePos;
     posEnd   = posStart + 1;
     compare  = '>';
-    return true;
+    found = true;
   }
 
   if (((comparePos = check.indexOf("=")) > 0) && (comparePos < posStart)) {
     posStart = comparePos;
     posEnd   = posStart + 1;
     compare  = '=';
-    return true;
+    found = true;
   }
-  return false;
+  return found;
 }
 
 bool compareValues(char compare, float Value1, float Value2)
@@ -849,7 +852,21 @@ bool conditionMatch(const String& check) {
     }
   }
 
-  return compareValues(compare, Value1, Value2);
+  bool result = compareValues(compare, Value1, Value2);
+  #ifndef BUILD_NO_DEBUG
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+    String log = F("compareValues: _");
+    log += check;
+    log += F("_ val1: ");
+    log += Value1;
+    log += F(" val2: ");
+    log += Value2;
+    log += F(" = ");
+    log += boolToString(result);
+    addLog(LOG_LEVEL_DEBUG, log);
+  }
+  #endif
+  return result;
 }
 
 /********************************************************************************************\
