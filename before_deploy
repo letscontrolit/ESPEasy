@@ -88,6 +88,10 @@ do
     # ESP32 with 1800k of sketch space.
     MAX_FILESIZE=1900544
   fi
+  if [[ ${ENV} == *"ebug_custom"* ]]; then
+    # Debug env, used for analysis, not to be run on a node.
+    MAX_FILESIZE=0
+  fi
 
   FIRMWARE_BIN=`echo "${BINARY_PATH}/${ENV}/firmware.bin"`
 
