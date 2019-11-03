@@ -91,6 +91,9 @@ enum Enum : short {
   SKETCH_FREE,
   SPIFFS_SIZE,
   SPIFFS_FREE,
+  MAX_OTA_SKETCH_SIZE,
+  OTA_2STEP,
+  OTA_POSSIBLE,
 
 
 };

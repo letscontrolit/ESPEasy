@@ -161,7 +161,7 @@ extern NotificationStruct Notification[NPLUGIN_MAX];
     #include <ESP8266mDNS.h>
   #endif
   #define SMALLEST_OTA_IMAGE 276848 // smallest known 2-step OTA image
-  #define MAX_SKETCH_SIZE 1044464
+  #define MAX_SKETCH_SIZE 1044464   // 1020 kB - 16 bytes
   #define PIN_D_MAX        16
 #endif
 #if defined(ESP32)

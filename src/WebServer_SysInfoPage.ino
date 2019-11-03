@@ -529,6 +529,24 @@ void handle_sysinfo_Storage() {
   TXBuffer += F(" kB free)");
   # endif // if defined(ESP8266)
 
+  {
+    uint32_t maxSketchSize;
+    bool     use2step;
+    bool     otaEnabled = OTA_possible(maxSketchSize, use2step);
+
+    addRowLabel(getLabel(LabelType::MAX_OTA_SKETCH_SIZE));
+    TXBuffer += maxSketchSize / 1024;
+    TXBuffer += F(" kB (");
+    TXBuffer += maxSketchSize;
+    TXBuffer += F(" bytes)");
+
+    addRowLabel(getLabel(LabelType::OTA_POSSIBLE));
+    TXBuffer += boolToString(otaEnabled);
+
+    addRowLabel(getLabel(LabelType::OTA_2STEP));
+    TXBuffer += boolToString(use2step);
+  }
+
   addRowLabel(getLabel(LabelType::SPIFFS_SIZE));
   TXBuffer += SpiffsTotalBytes() / 1024;
   TXBuffer += F(" kB (");
@@ -597,4 +615,4 @@ void handle_sysinfo_Storage() {
   # endif // ifdef ESP32
 }
 
-#endif // ifdef WEBSERVER_SYSINFO
+#endif    // ifdef WEBSERVER_SYSINFO
