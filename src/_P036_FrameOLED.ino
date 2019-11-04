@@ -59,10 +59,14 @@ enum eHeaderContent {
     eSysHeap = 10,
     eSysStack = 11,
     eTime = 12,
-    eDate = 13
+    eDate = 13,
+    ePageNo = 14,
 };
+
 static eHeaderContent HeaderContent=eSysName;
 static eHeaderContent HeaderContentAlternative=eSysName;
+static byte MaxFramesToDisplay = 0xFF;
+static byte currentFrameToDisplay = 0;
 
 typedef struct {
   byte          Top;                  // top in pix for this line setting
@@ -82,7 +86,7 @@ typedef struct {
   byte          WiFiIndicatorWidth;   // width of WiFi indicator
 } tSizeSettings;
 
- const tSizeSettings SizeSettings[P36_MaxSizesCount] = {
+const tSizeSettings SizeSettings[P36_MaxSizesCount] = {
    { P36_MaxDisplayWidth, 64, 0,               // 128x64
      4,
      { 20, ArialMT_Plain_24,  0},  //  Width: 24 Height: 28
@@ -127,7 +131,6 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
   static byte frameCounter = 0;       // need to keep track of framecounter from call to call
   // static boolean firstcall = true;      // This is used to clear the init graphic on the first call to read
   static byte nrFramesToDisplay = 0;
-  static byte currentFrameToDisplay = 0;
 
   int linesPerFrame;            // the number of lines in each frame
   int NFrames;                // the number of frames
@@ -238,23 +241,10 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
 
         byte choice9 = (Settings.TaskDevicePluginConfigLong[event->TaskIndex][0] & 0xff00) >> 8;    // Bit15-8
         byte choice10 = Settings.TaskDevicePluginConfigLong[event->TaskIndex][0] & 0xff; // Bit7-0
-        byte MaxHeaderOption;
-        String options9[13] = { F("SSID"), F("SysName"), F("IP"), F("MAC"), F("RSSI"), F("BSSID"), F("WiFi channel"), F("Unit"), F("SysLoad"), F("SysHeap"), F("SysStack"), F("Date"), F("Time") };
-        int optionValues9[13] = { eSSID, eSysName, eIP, eMAC, eRSSI, eBSSID, eWiFiCh, eUnit, eSysLoad, eSysHeap, eSysStack, eDate, eTime };
-        if (SizeSettings[OLEDIndex].Width == P36_MaxDisplayWidth) {
-          MaxHeaderOption = 12;
-//          String options9a[12] = { F("Date"), F("SSID"), F("SysName"), F("IP"), F("MAC"), F("RSSI"), F("BSSID"), F("WiFi channel"), F("Unit"), F("SysLoad"), F("SysHeap"), F("SysStack") };
-          //int optionValues9a[12] = { eDate, eSSID, eSysName, eIP, eMAC, eRSSI, eBSSID, eWiFiCh, eUnit, eSysLoad, eSysHeap, eSysStack};
-//          addFormSelector(F("Header"),F("p036_header"), 12, options9a, optionValues9a, choice9);
-//          addFormSelector(F("Header (alternating)"),F("p036_headerAlternate"), 12, options9a, optionValues9a, choice10);
-        }
-        else {
-          MaxHeaderOption = 13;
-//          String options9b[13] = { F("Time"), F("Date"), F("SSID"), F("SysName"), F("IP"), F("MAC"), F("RSSI"), F("BSSID"), F("WiFi channel"), F("Unit"), F("SysLoad"), F("SysHeap"), F("SysStack") };
-//          int optionValues9b[13] = { eTime, eDate, eSSID, eSysName, eIP, eMAC, eRSSI, eBSSID, eWiFiCh, eUnit, eSysLoad, eSysHeap, eSysStack};
-        }
-        addFormSelector(F("Header"),F("p036_header"), MaxHeaderOption, options9, optionValues9, choice9);
-        addFormSelector(F("Header (alternating)"),F("p036_headerAlternate"), MaxHeaderOption, options9, optionValues9, choice10);
+        String options9[14] = { F("SSID"), F("SysName"), F("IP"), F("MAC"), F("RSSI"), F("BSSID"), F("WiFi channel"), F("Unit"), F("SysLoad"), F("SysHeap"), F("SysStack"), F("Date"), F("Time"), F("PageNumbers") };
+        int optionValues9[14] = { eSSID, eSysName, eIP, eMAC, eRSSI, eBSSID, eWiFiCh, eUnit, eSysLoad, eSysHeap, eSysStack, eDate, eTime , ePageNo};
+        addFormSelector(F("Header"),F("p036_header"), 14, options9, optionValues9, choice9);
+        addFormSelector(F("Header (alternating)"),F("p036_headerAlternate"), 14, options9, optionValues9, choice10);
 
         for (byte varNr = 0; varNr < P36_Nlines; varNr++)
         {
@@ -272,6 +262,7 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
            millis() + (Settings.TaskDeviceTimer[event->TaskIndex] * 1000));
         frameCounter=0;
 
+        MaxFramesToDisplay = 0xFF;
         PCONFIG(0) = getFormItemInt(F("p036_adr"));
         PCONFIG(1) = getFormItemInt(F("p036_rotate"));
         PCONFIG(2) = getFormItemInt(F("p036_nlines"));
@@ -483,6 +474,23 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
             nrFramesToDisplay = currentFrameToDisplay + 1;
           }
 
+          // Update max page count
+          if (MaxFramesToDisplay == 0xFF) {
+            // not updated yet
+            for (byte i = 0; i < NFrames; i++) {
+              for (byte k = 0; k < linesPerFrame; k++)
+              {
+                tmpString = P036_displayLines[(linesPerFrame * i) + k];
+                tmpString = P36_parseTemplate(tmpString, 20);
+                tmpString.trim();
+                if (tmpString.length() > 0) {
+                  // page not empty
+                  MaxFramesToDisplay ++;
+                  break;
+                }
+              }
+            }
+          }
           //      Update display
           display_header();
           if (SizeSettings[OLEDIndex].Width == P36_MaxDisplayWidth) display_indicator(currentFrameToDisplay, nrFramesToDisplay);
@@ -652,6 +660,14 @@ void display_header() {
     case eSysStack:
       newString=F("Stack: %sysstack%");
       strHeader = parseTemplate(newString, 10);
+    break;
+    case ePageNo:
+      strHeader = F("page ");
+      strHeader += (currentFrameToDisplay+1);
+      if (MaxFramesToDisplay != 0xFF) {
+        strHeader += F("/");
+        strHeader += (MaxFramesToDisplay+1);
+      }
     break;
     default:
       return;
