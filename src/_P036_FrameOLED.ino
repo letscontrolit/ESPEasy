@@ -85,6 +85,7 @@ typedef struct {
   tFontSettings L2;                   // settings for 2 lines
   tFontSettings L3;                   // settings for 3 lines
   tFontSettings L4;                   // settings for 4 lines
+  byte          WiFiIndicatorLeft;    // left of WiFi indicator
   byte          WiFiIndicatorWidth;   // width of WiFi indicator
 } tSizeSettings;
 
@@ -95,6 +96,7 @@ const tSizeSettings SizeSettings[P36_MaxSizesCount] = {
      { 15, ArialMT_Plain_16, 19},  //  Width: 16 Height: 19
      { 13, Dialog_plain_12,  12},  //  Width: 13 Height: 15
      { 12, ArialMT_Plain_10, 10},  //  Width: 10 Height: 13
+     105,
      15
    },
    { P36_MaxDisplayWidth, 32, 0,               // 128x32
@@ -103,6 +105,7 @@ const tSizeSettings SizeSettings[P36_MaxSizesCount] = {
      { 12, ArialMT_Plain_10, 10},  //  Width: 10 Height: 13
      {  0, ArialMT_Plain_10,  0},  //  Width: 10 Height: 13 not used!
      {  0, ArialMT_Plain_10,  0},  //  Width: 10 Height: 13 not used!
+     105,
      10
    },
    { 64, 48, 32,               // 64x48
@@ -111,6 +114,7 @@ const tSizeSettings SizeSettings[P36_MaxSizesCount] = {
      { 14, Dialog_plain_12,  16},  //  Width: 13 Height: 15
      { 13, ArialMT_Plain_10, 11},  //  Width: 10 Height: 13
      {  0, ArialMT_Plain_10,  0},  //  Width: 10 Height: 13 not used!
+     32,
      10
    }
  };
@@ -851,7 +855,7 @@ bool display_wifibars() {
   if (newState == lastWiFiState)
     return false; // nothing to do.
 
-  int x = SizeSettings[OLEDIndex].PixLeft;
+  int x = SizeSettings[OLEDIndex].WiFiIndicatorLeft;
   int y = TopLineOffset;
   int size_x = SizeSettings[OLEDIndex].WiFiIndicatorWidth;
   int size_y = 10;
