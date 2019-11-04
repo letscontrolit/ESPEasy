@@ -1,4 +1,17 @@
 -------------------------------------------------
+Changes in release mega-20191104 (since mega-20191103)
+-------------------------------------------------
+
+Release date: Mon Nov  4 04:00:18 CET 2019
+
+Gijs Noorlander (4):
+      [OTA] Fix minimal OTA size computations (#2707)
+      [Rules] Fix (serious) bug in matching compares (#2704)
+      [Build] ESP32 does not yet provide Web based OTA
+      [Build] Exclude debug_custom builds from nightly build
+
+
+-------------------------------------------------
 Changes in release mega-20191103 (since mega-20191028)
 -------------------------------------------------
 
