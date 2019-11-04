@@ -27,6 +27,7 @@
 #define P36_Nchars 32
 #define P36_MaxSizesCount 3   // number of different OLED sizes
 #define P36_MaxDisplayWidth 128
+#define P36_MaxDisplayHeight 64
 
 #define P36_CONTRAST_OFF    1
 #define P36_CONTRAST_LOW    64
@@ -45,6 +46,7 @@
 static int8_t lastWiFiState = P36_WIFI_STATE_UNSET;
 static int OLEDIndex = 0;
 static boolean Pin3Invers;
+static int TopLineOffset = 0;   // Offset for top line, used for rotated image while using displays < P36_MaxDisplayHeight lines
 
 enum eHeaderContent {
     eSSID = 1,
@@ -87,7 +89,7 @@ typedef struct {
 } tSizeSettings;
 
 const tSizeSettings SizeSettings[P36_MaxSizesCount] = {
-   { P36_MaxDisplayWidth, 64, 0,               // 128x64
+   { P36_MaxDisplayWidth, P36_MaxDisplayHeight, 0,   // 128x64
      4,
      { 20, ArialMT_Plain_24,  0},  //  Width: 24 Height: 28
      { 15, ArialMT_Plain_16, 19},  //  Width: 16 Height: 19
@@ -172,8 +174,8 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
         addFormSubHeader(F("Display"));
         byte choice5 = PCONFIG(5);
         String options5[2];
-        options5[0] = F("SSD1306");
-        options5[1] = F("SH1106");
+        options5[0] = F("SSD1306 (128x64 dot controller)");
+        options5[1] = F("SH1106 (132x64 dot controller)");
         int optionValues5[2] = { 1, 2 };
         addFormSelector(F("Controller"), F("p036_controller"), 2, options5, optionValues5, choice5);
 
@@ -323,7 +325,12 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
         UserVar[event->BaseVarIndex] = 1;
 
         //      flip screen if required
-        if (PCONFIG(1) == 2)display->flipScreenVertically();
+        OLEDIndex = PCONFIG(7);
+        if (PCONFIG(1) == 2) {
+          display->flipScreenVertically();
+          TopLineOffset = P36_MaxDisplayHeight - SizeSettings[OLEDIndex].Height;
+        }
+        else TopLineOffset = 0;
 
         //      Display the device name, logo, time and wifi
         display_header();
@@ -687,24 +694,24 @@ void display_time() {
   display->setTextAlignment(TEXT_ALIGN_LEFT);
   display->setFont(ArialMT_Plain_10);
   display->setColor(BLACK);
-  display->fillRect(0, 0, 28, 10);
+  display->fillRect(0, TopLineOffset, 28, 10);
   display->setColor(WHITE);
-  display->drawString(0, 0, newString.substring(0, 5));
+  display->drawString(0, TopLineOffset, newString.substring(0, 5));
 }
 
 void display_title(String& title) {
   display->setFont(ArialMT_Plain_10);
   display->setColor(BLACK);
 //  display->fillRect(0, 0, 128, 13); // Underscores use a extra lines, clear also.
-  display->fillRect(0, 0, 128, 12);   // don't clean line under title.
+  display->fillRect(0, TopLineOffset, 128, 12);   // don't clean line under title.
   display->setColor(WHITE);
   if (SizeSettings[OLEDIndex].Width == P36_MaxDisplayWidth) {
     display->setTextAlignment(TEXT_ALIGN_CENTER);
-    display->drawString(64, 0, title);
+    display->drawString(64, TopLineOffset, title);
   }
   else {
     display->setTextAlignment(TEXT_ALIGN_LEFT);  // Display right of WiFi bars
-    display->drawString(SizeSettings[OLEDIndex].PixLeft + SizeSettings[OLEDIndex].WiFiIndicatorWidth + 1, 0, title);
+    display->drawString(SizeSettings[OLEDIndex].PixLeft + SizeSettings[OLEDIndex].WiFiIndicatorWidth + 1, TopLineOffset, title);
   }
 }
 
@@ -713,12 +720,12 @@ int left = 24;
   display->setTextAlignment(TEXT_ALIGN_LEFT);
   display->setFont(ArialMT_Plain_16);
   display->setColor(BLACK);
-  display->fillRect(0, 13, 128, 64);
+  display->fillRect(0, 13+TopLineOffset, 128, 64);
   display->setColor(WHITE);
-  display->drawString(65, 15, F("ESP"));
-  display->drawString(65, 34, F("Easy"));
+  display->drawString(65, 15+TopLineOffset, F("ESP"));
+  display->drawString(65, 34+TopLineOffset, F("Easy"));
   if (SizeSettings[OLEDIndex].PixLeft<left) left = SizeSettings[OLEDIndex].PixLeft;
-  display->drawXbm(left, 13, espeasy_logo_width, espeasy_logo_height, espeasy_logo_bits); // espeasy_logo_width=espeasy_logo_height=36
+  display->drawXbm(left, 13+TopLineOffset, espeasy_logo_width, espeasy_logo_height, espeasy_logo_bits); // espeasy_logo_width=espeasy_logo_height=36
 }
 
 // Draw the frame position
@@ -728,7 +735,7 @@ void display_indicator(int iframe, int frameCount) {
   //  Erase Indicator Area
 
   display->setColor(BLACK);
-  display->fillRect(0, 54, 128, 10);
+  display->fillRect(0, 54+TopLineOffset, 128, 10);
   display->setColor(WHITE);
 
   // Only display when there is something to display.
@@ -745,7 +752,7 @@ void display_indicator(int iframe, int frameCount) {
 
     int x, y;
 
-    y = 56;
+    y = 56+TopLineOffset;
 
     // I would like a margin of 20 pixels on each side of the indicator.
     // Therefore the width of the indicator should be 128-40=88 and so space between indicator dots is 88/(framecount-1)
@@ -814,18 +821,18 @@ void display_scroll(String outString[], String inString[], int nlines, int scrol
 
     display->setColor(BLACK);
     // We allow 12 pixels at the top because otherwise the wifi indicator gets too squashed!!
-    display->fillRect(0, 12, 128, 42);   // scrolling window is 44 pixels high - ie 64 less margin of 10 at top and bottom
+    display->fillRect(0, 12+TopLineOffset, 128, 42);   // scrolling window is 44 pixels high - ie 64 less margin of 10 at top and bottom
     display->setColor(WHITE);
-    display->drawLine(0, 12, 128, 12);   // line below title
+    display->drawLine(0, 12+TopLineOffset, 128, 12+TopLineOffset);   // line below title
 
     // Now draw the strings
 
     for (byte j = 0; j < nlines; j++)
     {
 
-      display->drawString(64 + (4 * i), ypos[j], outString[j]);
+      display->drawString(64 + (4 * i), ypos[j]+TopLineOffset, outString[j]);
 
-      display->drawString(-64 + (4 * i), ypos[j], inString[j]);
+      display->drawString(-64 + (4 * i), ypos[j]+TopLineOffset, inString[j]);
     }
 
     display->display();
@@ -845,7 +852,7 @@ bool display_wifibars() {
     return false; // nothing to do.
 
   int x = SizeSettings[OLEDIndex].PixLeft;
-  int y = 0;
+  int y = TopLineOffset;
   int size_x = SizeSettings[OLEDIndex].WiFiIndicatorWidth;
   int size_y = 10;
   int nbars = 5;
