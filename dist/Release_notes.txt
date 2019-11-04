@@ -1,4 +1,59 @@
 -------------------------------------------------
+Changes in release mega-20191104 (since mega-20191103)
+-------------------------------------------------
+
+Release date: Mon Nov  4 04:00:18 CET 2019
+
+Gijs Noorlander (4):
+      [OTA] Fix minimal OTA size computations (#2707)
+      [Rules] Fix (serious) bug in matching compares (#2704)
+      [Build] ESP32 does not yet provide Web based OTA
+      [Build] Exclude debug_custom builds from nightly build
+
+
+-------------------------------------------------
+Changes in release mega-20191103 (since mega-20191028)
+-------------------------------------------------
+
+Release date: Sun Nov  3 04:00:14 CET 2019
+
+Gijs Noorlander (30):
+      [Minimal OTA] Exclude web pages from minimal OTA build
+      [Modbus RTU] Move strings to flash
+      [Build] Fix uninitialized warning in Scheduler
+      [Minimal OTA] Exclude Github Copy button on minimal build
+      [WiFi] Fix WiFi reissue when gotIp event is delayed
+      [Minimal OTA] Add defines to enable/disable any web page
+      [Minimal OTA]  Disable buttons for not included pages
+      [FEATURE_SD] Fix build issues when FEATURE_SD is defined (not finished)
+      Fix JSON service stopped working (#2697)
+      [Cleanup] Fix issue ControllerSettings & extra checks TaskIndex
+      [clangtidy] Use sizeof(*this) instead of sizeof(this)
+      [clangtidy] Clean up Commands/*
+      [clangtidy] Clean up DataStructs/*
+      [clangtidy] Missing header guard defines
+      [clangtidy] Const reference function parameters
+      [clangtidy] Missing forward declaration of toString(float,int)
+      [Build] Fix build issue ESP32
+      [Custom Build] Add WEBSERVER_CUSTOM_BUILD_DEFINED to strip out web pages
+      [Custom build] Strip out MQTT commands when no MQTT used.
+      [MQTT] Fix Publish command (#2662)
+      [Build] Fix build issue with core 2.4.1 (F() macro)
+      [Minimize OTA] Allow to define USES_SSDP from Custom.h
+      [Cleanup] Split remaining .h files in Commands dir into .h and .cpp
+      [Rules] Add some debug logs for checking conditionMatchExtended
+      [clangtidy] Address some warnings reported by CLangTidy
+      [Cleanup] Change toString(bool) into boolToString(bool)
+      [Cleanup] Extra boundary checks for deviceIndex
+      [Cleanup] Add boundary checks for accessing UserVar
+      [Cleanup] Include define_plugin_sets.h in ESPEasy_common.h and only include common
+      [Build] Fix build error in P086_Homie
+
+Plebs (1):
+      fixed serious bug for MONITOR command for offline PCF or MCP
+
+
+-------------------------------------------------
 Changes in release mega-20191028 (since mega-20191016)
 -------------------------------------------------
 

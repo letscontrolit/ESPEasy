@@ -2676,13 +2676,20 @@ void play_rtttl(uint8_t _pin, const char *p )
 
 bool OTA_possible(uint32_t& maxSketchSize, bool& use2step) {
 #if defined(ESP8266)
-  maxSketchSize = (ESP.getFreeSketchSpace() - 0x1000) & 0xFFFFF000;
-  const bool otaPossible = maxSketchSize > SMALLEST_OTA_IMAGE;
-  use2step = maxSketchSize < ESP.getSketchSize();
+  // Compute the current free space and sketch size, rounded to 4k blocks.
+  // These block bounaries are needed for erasing a full block on flash.
+  const uint32_t freeSketchSpace = (ESP.getFreeSketchSpace() - 0x1000) & 0xFFFFF000;
+  const uint32_t currentSketchSize = (ESP.getSketchSize() + 0x1000) & 0xFFFFF000;
+  const uint32_t smallestOtaImageSizeNeeded = (((SMALLEST_OTA_IMAGE + 16) + 0x1000) & 0xFFFFF000);
+  const bool otaPossible = freeSketchSpace >= smallestOtaImageSizeNeeded;
+  use2step = freeSketchSpace < currentSketchSize; // Assume the new image has the same size.
   if (use2step) {
-    const uint32_t totalSketchSpace = ESP.getFreeSketchSpace() + ESP.getSketchSize();
-    maxSketchSize = totalSketchSpace - SMALLEST_OTA_IMAGE;
+    const uint32_t totalSketchSpace = freeSketchSpace + currentSketchSize;
+    maxSketchSize = totalSketchSpace - smallestOtaImageSizeNeeded;
+  } else {
+    maxSketchSize = freeSketchSpace;
   }
+  maxSketchSize -= 16; // Must leave 16 bytes at the end.
   if (maxSketchSize > MAX_SKETCH_SIZE) maxSketchSize = MAX_SKETCH_SIZE;
   return otaPossible;
 #else

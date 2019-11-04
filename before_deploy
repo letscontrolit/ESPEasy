@@ -74,12 +74,12 @@ for ENV in \
 do
   MAX_FILESIZE=1044464
   if [[ ${ENV} == *"_1M"* ]]; then
-    # max 871 kiB
+    # max 872 kiB - 16 bytes
     MAX_FILESIZE=892912
   fi
   if [[ ${ENV} == *"_1M_OTA"* ]]; then
-    # max 602 kiB
-    MAX_FILESIZE=616448
+    # max 600 kiB - 16 bytes
+    MAX_FILESIZE=614384
   fi
   if [[ ${ENV} == *"esp32"* ]]; then
     MAX_FILESIZE=1310720
@@ -87,6 +87,10 @@ do
   if [[ ${ENV} == *"4M316k"* ]]; then
     # ESP32 with 1800k of sketch space.
     MAX_FILESIZE=1900544
+  fi
+  if [[ ${ENV} == *"ebug_custom"* ]]; then
+    # Debug env, used for analysis, not to be run on a node.
+    MAX_FILESIZE=0
   fi
 
   FIRMWARE_BIN=`echo "${BINARY_PATH}/${ENV}/firmware.bin"`
