@@ -1,3 +1,6 @@
+#include "src/DataStructs/PinMode.h"
+#include "src/Globals/ResetFactoryDefaultPref.h"
+
 /********************************************************************************************\
  * Initialize specific hardware settings (only global ones, others are set through devices)
  \*********************************************************************************************/
@@ -219,7 +222,7 @@ void setFactoryDefault(DeviceModel model) {
 /********************************************************************************************\
    Add pre defined plugins and rules.
  \*********************************************************************************************/
-void addSwitchPlugin(byte taskIndex, byte gpio, const String& name, bool activeLow) {
+void addSwitchPlugin(taskIndex_t taskIndex, byte gpio, const String& name, bool activeLow) {
   setTaskDevice_to_TaskIndex(1, taskIndex);
   setBasicTaskValues(
     taskIndex,
@@ -238,7 +241,7 @@ void addSwitchPlugin(byte taskIndex, byte gpio, const String& name, bool activeL
 }
 
 void addPredefinedPlugins(const GpioFactorySettingsStruct& gpio_settings) {
-  byte taskIndex = 0;
+  taskIndex_t taskIndex = 0;
 
   for (int i = 0; i < 4; ++i) {
     if (gpio_settings.button[i] >= 0) {

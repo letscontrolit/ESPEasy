@@ -1,4 +1,282 @@
 -------------------------------------------------
+Changes in release mega-20191104 (since mega-20191103)
+-------------------------------------------------
+
+Release date: Mon Nov  4 04:00:18 CET 2019
+
+Gijs Noorlander (4):
+      [OTA] Fix minimal OTA size computations (#2707)
+      [Rules] Fix (serious) bug in matching compares (#2704)
+      [Build] ESP32 does not yet provide Web based OTA
+      [Build] Exclude debug_custom builds from nightly build
+
+
+-------------------------------------------------
+Changes in release mega-20191103 (since mega-20191028)
+-------------------------------------------------
+
+Release date: Sun Nov  3 04:00:14 CET 2019
+
+Gijs Noorlander (30):
+      [Minimal OTA] Exclude web pages from minimal OTA build
+      [Modbus RTU] Move strings to flash
+      [Build] Fix uninitialized warning in Scheduler
+      [Minimal OTA] Exclude Github Copy button on minimal build
+      [WiFi] Fix WiFi reissue when gotIp event is delayed
+      [Minimal OTA] Add defines to enable/disable any web page
+      [Minimal OTA]  Disable buttons for not included pages
+      [FEATURE_SD] Fix build issues when FEATURE_SD is defined (not finished)
+      Fix JSON service stopped working (#2697)
+      [Cleanup] Fix issue ControllerSettings & extra checks TaskIndex
+      [clangtidy] Use sizeof(*this) instead of sizeof(this)
+      [clangtidy] Clean up Commands/*
+      [clangtidy] Clean up DataStructs/*
+      [clangtidy] Missing header guard defines
+      [clangtidy] Const reference function parameters
+      [clangtidy] Missing forward declaration of toString(float,int)
+      [Build] Fix build issue ESP32
+      [Custom Build] Add WEBSERVER_CUSTOM_BUILD_DEFINED to strip out web pages
+      [Custom build] Strip out MQTT commands when no MQTT used.
+      [MQTT] Fix Publish command (#2662)
+      [Build] Fix build issue with core 2.4.1 (F() macro)
+      [Minimize OTA] Allow to define USES_SSDP from Custom.h
+      [Cleanup] Split remaining .h files in Commands dir into .h and .cpp
+      [Rules] Add some debug logs for checking conditionMatchExtended
+      [clangtidy] Address some warnings reported by CLangTidy
+      [Cleanup] Change toString(bool) into boolToString(bool)
+      [Cleanup] Extra boundary checks for deviceIndex
+      [Cleanup] Add boundary checks for accessing UserVar
+      [Cleanup] Include define_plugin_sets.h in ESPEasy_common.h and only include common
+      [Build] Fix build error in P086_Homie
+
+Plebs (1):
+      fixed serious bug for MONITOR command for offline PCF or MCP
+
+
+-------------------------------------------------
+Changes in release mega-20191028 (since mega-20191016)
+-------------------------------------------------
+
+Release date: Mon Oct 28 12:11:41 CET 2019
+
+Gijs Noorlander (25):
+      [Rules] Improve rules matching (#2660)
+      [PIO] Fix build issue using Python 3
+      [PIO] Fix build issue due to duplicate env in platformio.ini
+      [Rules] Make handling compare condition more deterministic.
+      [Cleanup] Make use of consistent names for DeviceIndex (#2676)
+      [Cleanup] Proper handling of tasks not supported in current build
+      [ESPEasy p2p] Allow changing remote unit on receiving plugin (#2679)
+      [Cleanup] Use of taskIndex_t & reduce memory usage in structs
+      [Cleanup] Use taskIndex_t everywhere where a task index is used.
+      [sendToHttp] Trim spaces from path (#2681, #2660)
+      [WDT reboot] Fix SW watchdog reboot when saving rules
+      [ADC] Perform first read of ADC at init, before starting WiFi (#2646)
+      [ArduinoIDE] Fix include errors for ArduinoIDE
+      [WiFi AP]  No automatic attempt to reconnect with connected client (#2650)
+      [WiFi] Only reset wifi connect attempt on stable connection (#2650)
+      [MQTT] Use parseString functions to disect publish command (#2657)
+      [Rules] Fix grammar in parsing parameters (#2686)
+      [Commands] Mark commands not using standard parse functions (#2686)
+      [PIO] Cleanup old environments and add debug definitions
+      Remove redundant Wire.beginTransmission (#1417)
+      [Build] Add custom 4M2M build
+      [Build] Rename ESP32 env 1M8_partition to 4M316k
+      [Docs] Describe PlatformIO installation
+      [NTP] Sign of time offset reported in log was wrong
+      [Cleanup] rename deepSleep functions and parameters (#1803)
+
+
+-------------------------------------------------
+Changes in release mega-20191016 (since mega-20191003)
+-------------------------------------------------
+
+Release date: Wed Oct 16 04:00:07 CEST 2019
+
+Denys-ThreadPC (6):
+      ICMP ping plugin
+      Updated code
+      Additional checks for nullptr and moving ICMP PCB to constructor/destructor
+      Merging suggested fixes
+      Adding as testing, renaming from 088 to 089
+      Build only on ESP8266
+
+Grovkillen (2):
+      Benchmark tests (rules1.txt rules2.txt)
+      Benchmark test (added test number to starttest1)
+
+hennPi (1):
+      7segment display doesn't display lower case letter
+
+jimmys01 (3):
+      [IR] Update IR lib
+      [IR] Show the name of AC submodel instad of its number.
+      [IR TX] Set JSON default model to be -1
+
+stefan (1):
+      [ADC] Improve ADC handling
+
+
+-------------------------------------------------
+Changes in release mega-20191003 (since mega-20190928)
+-------------------------------------------------
+
+Release date: Thu Oct  3 04:00:10 CEST 2019
+
+Gijs Noorlander (13):
+      [PIO] Describe core 2.6.0 branches/repositories
+      [SenseAir] Fix incorrect handling of Modbus error codes
+      [Uncrustify] Format SenseAir, AcuDC24x and Modbus RTU file
+      Fix cached search for task value name may return wrong index (#2639)
+      [Rules] Optimize rules parsing
+      [INT#n] isn't doing transformations properly (#2642)
+      Add system variable %sysstack%
+      Disable firmware upload button when NO_HTTP_UPDATER is defined
+      [Rules] Optimize ruleMatch function
+      [Rules] Remove duplicate code to replace %eventvalue%
+      [Rules] Split conditionMatch to share with event match
+      [Rules] Allow extra inequality checks for rule event matching
+      [Build] Fix forward declaration build error
+
+TD-er (3):
+      [Build] Add NO_HTTP_UPDATER to exclude http updates
+      [ADC] Fix oversampling offset during WiFi connect
+      [ADC] Build fix ESP32 & Uncrustify
+
+jimmys01 (3):
+      [IR] Update lib to 2.6.6
+      [IR] Further granulate the selection of IR capabilities
+      Add the RAW RAW2 define also in the custom.h file as well
+
+
+-------------------------------------------------
+Changes in release mega-20190928 (since mega-20190926)
+-------------------------------------------------
+
+Release date: Sat Sep 28 04:00:07 CEST 2019
+
+Gijs Noorlander (3):
+      [Build] Fix binary size check for xxx_1M builds
+      [Build] Build log file does not interpret /t
+      [Build] Fix use of flag BUILD_NO_DEBUG
+
+Saverio Cisternino (1):
+      Update ccronexpr library to v20190415
+
+jimmys01 (1):
+      Add to PLUGIN_SET_ONLY_TEMP_HUM left over sensors
+
+
+-------------------------------------------------
+Changes in release mega-20190926 (since mega-20190925)
+-------------------------------------------------
+
+Release date: Thu Sep 26 04:00:05 CEST 2019
+
+Gijs Noorlander (58):
+      [Rules] Reduce memory usage when parsing rules templates
+      [Modbus RTU] Add "timeout" and "no data" as error
+      [Build] No longer ignore IR libraries to allow IR builds from Vagrant
+      [Travis] Do not remove old builds to reduce build time
+      [Travis] Add .pio dir as cache directory
+      [Build] Remove some build types from the nightly build
+      [Travis] Change Ubuntu 14.04 to 18.04 for builds
+      [Rules] Allow transformations on [var#n] and add [int#n]
+      [Cache] Add cache to help find task value name.
+      [Rules] Some minor code improvements (suggests from @uzi18 )
+      [C014 Homie] Use cached functions to find task value by name
+      [Rules] Compatibility Replace %eventvalue% by using the 1st argument
+      [Build] Remove debug logs from 1M builds
+      [Rules] Only match task value names which can be set
+      Only include HttpClient when Settings Archive is being used
+      [cleanup] make it compile again on ArduinoIDE
+      [Custom.h] Storage layout parameters moved and wrapped in #ifndef
+      [Storage layout] Add suggestions for 24 tasks layout
+      [Custom.h] Allow for other defines to be set by the user.
+      [Build] Fix include path to make ArduinoIDE able to build again
+      [Travis CI] Reduce Travis test build duration
+      [PIO] Use original platform for core 2.6.0, not Tasmota's one
+      [Travis] Disable Travis cache
+      [Build] Make sure Custom.h is leading during compilation.
+      [ESP32] Fix build when SettingsArchive is set in Custom.h
+      Fix using includes to get defines right during compile
+      Move all header files in Commands/*.h to src/Commands/ for ArduinoIDE
+      [Build] Fix path change in include
+      Initial step for proper declaring global variables in .h files
+      [Build] Another forgotten path update in moved .h file
+      Move defines out of ESPEasy-Globals.h
+      Move Plugin administration from ESPEasy-Globals.h to Globals/Plugin.h
+      Move Logging from ESPEasy-Globals.h to Globals/Logging.h
+      Move Cache from ESPEasy-Globals.h to Globals/Cache.h
+      Move RTC from ESPEasy-Globals.h to Globals/RTC.h
+      Move Nodes from ESPEasy-Globals.h to Globals/Nodes.h
+      Move FactDefPrefs & CRCValues from ESPEasy-Globals.h to Globals/...h
+      Move Device array from ESPEasy-Globals.h to Globals/Device.h
+      Move SecuritySettings from ESPEasy-Globals.h to Globals/SecuritySettings.h
+      Move ExtraTaskSettings from ESPEasy-Globals.h to Globals/...h
+      Move Settings from ESPEasy-Globals.h to Globals/Settings.h
+      Split Diagnostic.h & ESPEasyWiFiEvent.h into .h/.cpp
+      [Arduino IDE] Make include paths relative to file location
+      [Build] Forgotten include of MQTT related global variable.
+      [Cleanup] Remove FIXME/TODO remarks which are now done.
+      [Arduino IDE] Fix path in includes.
+      [ESP32] Fix storage layout on ESP32 settings file.
+      Uncrustify P022_PCA9685
+      [PCA9685] Add range checks and memory optimization
+      [PIO] Switch to core_stage for core 2.6.0 builds
+      [Build] Fix pre_extra_script.py  build Cpp defines
+      [Build] Add Custom ESP32 and disable plugins to reduce binary size
+      Define build info from ESPEasy_common.h
+      [Docs] Describe project directory structure
+      Turn SettingsStruct into templated variable
+      Create build log txt file to track missing files
+      Show the build log text at the end of the build
+      Small fix in creating build log file
+
+TD-er (1):
+      [PIO] Update core 2.5.2 to espressif8266@2.2.3
+
+
+-------------------------------------------------
+Changes in release mega-20190925 (since mega-20190910)
+-------------------------------------------------
+
+Release date: Wed Sep 25 04:00:14 CEST 2019
+
+Bartlomiej Zimon (1):
+      [Dummy] small fix for save action fix for #2600
+
+Bartłomiej Zimoń (4):
+      [Settings Archive] disable chunked encoding in download file
+      [Settings Archive] move timeout if get some data
+      [Settings Archive] remove http 1.0 request, 1.1 works ok
+      [Settings Archive] clean up
+
+Hans-Rune Bue (1):
+      Support for MITSUBISHI KJ heatpumps (SG 161 0927 remote)
+
+Maxim Prokhorov (3):
+      [Gratuitous ARP] thread-safe etharp_gratuitous for esp32
+      [Gratuitous ARP] Check that IF has both LINK_UP and UP flags
+      [Gratuitous ARP] use public non-blocking API
+
+Toni (2):
+      Add plugin sets PLUGIN_SET_ONLY_SWITCH and PLUGIN_SET_ONLY_TEMP_HUM to the minimal_IRext_ESP8266_1M image
+      Add 'Output - Domoticz MQTT Helper' into PLUGIN_BUILD_IR_EXTENDED
+
+Victor Antonovich (1):
+      Fix duplicated "DNS 1" value in JSON output
+
+jimmys01 (6):
+      Dallas improvments
+      Remove reduntand conversion call
+      Add a define in custom-sample.h for the Extended IR capability
+      Make the reading of the sensor not blocking.
+      Add compile time and date to differentiate between custom builds
+      Fix IR TX RX instructions
+
+
+-------------------------------------------------
 Changes in release mega-20190910 (since mega-20190903)
 -------------------------------------------------
 

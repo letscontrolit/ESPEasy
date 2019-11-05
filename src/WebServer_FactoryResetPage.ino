@@ -1,3 +1,6 @@
+#ifdef WEBSERVER_FACTORY_RESET
+
+#include "src/Globals/ResetFactoryDefaultPref.h"
 
 // ********************************************************************************
 // Web Interface Factory Reset
@@ -160,3 +163,5 @@ void handle_factoryreset_json() {
 }
 
 #endif // WEBSERVER_NEW_UI
+
+#endif // ifdef WEBSERVER_FACTORY_RESET

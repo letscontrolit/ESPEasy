@@ -1,3 +1,6 @@
+#ifdef WEBSERVER_ROOT
+
+#include "src/Globals/Nodes.h"
 
 // ********************************************************************************
 // Web Interface root page
@@ -210,3 +213,5 @@ void handle_root() {
     TXBuffer.endStream();
   }
 }
+
+#endif // ifdef WEBSERVER_ROOT

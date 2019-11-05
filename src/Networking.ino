@@ -1,3 +1,6 @@
+#include "src/Globals/Nodes.h"
+#include "src/Globals/ESPEasyWiFiEvent.h"
+
 // Generic Networking routines
 
 // Syslog
@@ -17,19 +20,39 @@
 #endif    // ifdef ESP8266
 
 #ifdef ESP32
-#define SUPPORT_ARP
-#endif
+# define SUPPORT_ARP
+#endif // ifdef ESP32
 
 #ifdef SUPPORT_ARP
 # include <lwip/etharp.h>
-#endif // ifdef SUPPORT_ARP
 
-#ifdef ESP8266
-# include <ESP8266HTTPClient.h>
-#endif // ifdef ESP8266
-#ifdef ESP32
-# include "HTTPClient.h"
-#endif // ifdef ESP32
+# ifdef ESP32
+#  include <lwip/etharp.h>
+#  include <lwip/tcpip.h>
+
+void _etharp_gratuitous_func(struct netif *netif) {
+  etharp_gratuitous(netif);
+}
+
+void etharp_gratuitous_r(struct netif *netif) {
+  tcpip_callback_with_block((tcpip_callback_fn)_etharp_gratuitous_func, netif, 0);
+}
+
+# endif // ifdef ESP32
+
+#endif  // ifdef SUPPORT_ARP
+
+#ifdef USE_SETTINGS_ARCHIVE
+# ifdef ESP8266
+#  include <ESP8266HTTPClient.h>
+# endif // ifdef ESP8266
+# ifdef ESP32
+#  include "HTTPClient.h"
+# endif // ifdef ESP32
+#endif  // USE_SETTINGS_ARCHIVE
+
+
+#include "src/DataStructs/EventValueSource.h"
 
 /*********************************************************************************************\
    Syslog client
@@ -209,7 +232,7 @@ void checkUDP()
 /*********************************************************************************************\
    Send event using UDP message
 \*********************************************************************************************/
-void SendUDPCommand(byte destUnit, char *data, byte dataLength)
+void SendUDPCommand(byte destUnit, const char *data, byte dataLength)
 {
   if (!WiFiConnected(10)) {
     return;
@@ -217,12 +240,12 @@ void SendUDPCommand(byte destUnit, char *data, byte dataLength)
 
   if (destUnit != 0)
   {
-    sendUDP(destUnit, (byte *)data, dataLength);
+    sendUDP(destUnit, (const byte *)data, dataLength);
     delay(10);
   } else {
     for (NodesMap::iterator it = Nodes.begin(); it != Nodes.end(); ++it) {
       if (it->first != Settings.Unit) {
-        sendUDP(it->first, (byte *)data, dataLength);
+        sendUDP(it->first, (const byte *)data, dataLength);
         delay(10);
       }
     }
@@ -233,7 +256,7 @@ void SendUDPCommand(byte destUnit, char *data, byte dataLength)
 /*********************************************************************************************\
    Send UDP message (unit 255=broadcast)
 \*********************************************************************************************/
-void sendUDP(byte unit, byte *data, byte size)
+void sendUDP(byte unit, const byte *data, byte size)
 {
   if (!WiFiConnected(10)) {
     return;
@@ -381,6 +404,8 @@ void sendSysInfoUDP(byte repeats)
 
 #if defined(ESP8266)
 
+# ifdef USES_SSDP
+
 /********************************************************************************************\
    Respond to HTTP XML requests for SSDP information
  \*********************************************************************************************/
@@ -456,12 +481,12 @@ unsigned short _delay;
 unsigned long  _process_time;
 unsigned long  _notify_time;
 
-# define SSDP_INTERVAL     1200
-# define SSDP_PORT         1900
-# define SSDP_METHOD_SIZE  10
-# define SSDP_URI_SIZE     2
-# define SSDP_BUFFER_SIZE  64
-# define SSDP_MULTICAST_TTL 2
+#  define SSDP_INTERVAL     1200
+#  define SSDP_PORT         1900
+#  define SSDP_METHOD_SIZE  10
+#  define SSDP_URI_SIZE     2
+#  define SSDP_BUFFER_SIZE  64
+#  define SSDP_MULTICAST_TTL 2
 
 static const IPAddress SSDP_MULTICAST_ADDR(239, 255, 255, 250);
 
@@ -489,7 +514,7 @@ bool SSDP_begin() {
     return false;
   }
 
-# ifdef CORE_POST_2_5_0
+#  ifdef CORE_POST_2_5_0
 
   // Core 2.5.0 changed the signature of some UdpContext function.
   if (!_server->listen(IP_ADDR_ANY, SSDP_PORT)) {
@@ -503,7 +528,7 @@ bool SSDP_begin() {
   if (!_server->connect(&multicast_addr, SSDP_PORT)) {
     return false;
   }
-# else // ifdef CORE_POST_2_5_0
+#  else // ifdef CORE_POST_2_5_0
 
   if (!_server->listen(*IP_ADDR_ANY, SSDP_PORT)) {
     return false;
@@ -516,7 +541,7 @@ bool SSDP_begin() {
   if (!_server->connect(multicast_addr, SSDP_PORT)) {
     return false;
   }
-# endif // ifdef CORE_POST_2_5_0
+#  endif // ifdef CORE_POST_2_5_0
 
   SSDP_update();
 
@@ -724,6 +749,7 @@ void SSDP_update() {
   }
 }
 
+# endif // ifdef USES_SSDP
 #endif // if defined(ESP8266)
 
 
@@ -929,10 +955,14 @@ void sendGratuitousARP() {
   netif *n = netif_list;
 
   while (n) {
-    if ((n->hwaddr_len == ETH_HWADDR_LEN) && 
-        (n->flags & NETIF_FLAG_ETHARP) && 
-        ((n->flags & NETIF_FLAG_LINK_UP) || (n->flags & NETIF_FLAG_UP))) {
+    if ((n->hwaddr_len == ETH_HWADDR_LEN) &&
+        (n->flags & NETIF_FLAG_ETHARP) &&
+        ((n->flags & NETIF_FLAG_LINK_UP) && (n->flags & NETIF_FLAG_UP))) {
+      # ifdef ESP32
+      etharp_gratuitous_r(n);
+      # else // ifdef ESP32
       etharp_gratuitous(n);
+      # endif // ifdef ESP32
     }
     n = n->next;
   }
@@ -981,7 +1011,7 @@ String splitURL(const String& fullURL, String& host, uint16_t& port, String& fil
   return fullURL.substring(endhost);
 }
 
-#ifdef CORE_POST_2_5_0
+#ifdef USE_SETTINGS_ARCHIVE
 
 // Download a file from a given URL and save to a local file named "file_save"
 // If the URL ends with a /, the file part will be assumed the same as file_save.
@@ -1069,6 +1099,8 @@ bool downloadFile(const String& url, String file_save, const String& user, const
       size_t c = stream->readBytes(buff, std::min((size_t)len, sizeof(buff)));
 
       if (c > 0) {
+        timeout = millis() + 2000;
+
         if (f.write(buff, c) != c) {
           error  = F("Error saving file, ");
           error += bytesWritten;
@@ -1101,4 +1133,4 @@ bool downloadFile(const String& url, String file_save, const String& user, const
   return false;
 }
 
-#endif // ifdef CORE_POST_2_5_0
+#endif // USE_SETTINGS_ARCHIVE

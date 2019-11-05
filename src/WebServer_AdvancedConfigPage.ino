@@ -1,3 +1,4 @@
+#ifdef WEBSERVER_ADVANCED
 
 // ********************************************************************************
 // Web Interface config page
@@ -50,7 +51,9 @@ void handle_advanced() {
     Settings.UseNTP                      = isFormItemChecked(F("usentp"));
     Settings.DST                         = isFormItemChecked(F("dst"));
     Settings.WDI2CAddress                = getFormItemInt(F("wdi2caddress"));
+    #ifdef USES_SSDP
     Settings.UseSSDP                     = isFormItemChecked(F("usessdp"));
+    #endif // USES_SSDP
     Settings.WireClockStretchLimit       = getFormItemInt(F("wireclockstretchlimit"));
     Settings.UseRules                    = isFormItemChecked(F("userules"));
     Settings.ConnectionFailuresThreshold = getFormItemInt(F("cft"));
@@ -155,7 +158,9 @@ void handle_advanced() {
   addFormCheckBox_disabled(F("Enable RTOS Multitasking"), F("usertosmultitasking"), Settings.UseRTOSMultitasking);
   #endif // if defined(ESP32)
 
+  #ifdef USES_SSDP
   addFormCheckBox_disabled(F("Use SSDP"),                 F("usessdp"),             Settings.UseSSDP);
+  #endif
 
   addFormNumericBox(getLabel(LabelType::CONNECTION_FAIL_THRESH), F("cft"), Settings.ConnectionFailuresThreshold, 0, 100);
 #ifdef ESP8266
@@ -252,9 +257,12 @@ void addFormLogFacilitySelect(const String& label, const String& id, int choice)
 
 void addLogFacilitySelect(const String& name, int choice)
 {
-  String options[12] = { F("Kernel"), F("User"),   F("Daemon"), F("Message"), F("Local0"), F("Local1"), F("Local2"), F("Local3"), F(
-                           "Local4"),                      F("Local5"), F("Local6"), F("Local7") };
-  int    optionValues[12] = { 0, 1, 3, 5, 16, 17, 18, 19, 20, 21, 22, 23 };
+  String options[12] =
+  { F("Kernel"), F("User"),   F("Daemon"), F("Message"), F("Local0"), F("Local1"),
+    F("Local2"), F("Local3"), F("Local4"), F("Local5"),  F("Local6"), F("Local7") };
+  int optionValues[12] = { 0, 1, 3, 5, 16, 17, 18, 19, 20, 21, 22, 23 };
 
   addSelector(name, 12, options, optionValues, NULL, choice, false);
 }
+
+#endif // ifdef WEBSERVER_ADVANCED

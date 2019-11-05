@@ -1,6 +1,12 @@
+// FIXME TD-er: No idea why, but in this file you cannot use the F() macro. (core 2.4.1)
+
 #ifdef USES_MODBUS
 #include <Arduino.h>
+#include <WString.h>
+#include <pgmspace.h>
 #include <ESPeasySerial.h>
+#include "ESPEasy_fdwdecl.h"
+#include "ESPEasy_common.h"
 
 #define MODBUS_RECEIVE_BUFFER 256
 #define MODBUS_BROADCAST_ADDRESS 0xFE
@@ -35,6 +41,8 @@
 #define MODBUS_UNKEXC   (MODBUS_EXCEPTION_GATEWAY_TARGET + 4)
 #define MODBUS_MDATA    (MODBUS_EXCEPTION_GATEWAY_TARGET + 5)
 #define MODBUS_BADSLAVE (MODBUS_EXCEPTION_GATEWAY_TARGET + 6)
+#define MODBUS_TIMEOUT  (MODBUS_EXCEPTION_GATEWAY_TARGET + 7)
+#define MODBUS_NODATA   (MODBUS_EXCEPTION_GATEWAY_TARGET + 8)
 
 
 struct ModbusRTU_struct  {
@@ -63,6 +71,7 @@ struct ModbusRTU_struct  {
     _modbus_address   = MODBUS_BROADCAST_ADDRESS;
     _reads_pass       = 0;
     _reads_crc_failed = 0;
+    _reads_nodata     = 0;
   }
 
   bool init(const int16_t serial_rx, const int16_t serial_tx, int16_t baudrate, byte address) {
@@ -100,9 +109,10 @@ struct ModbusRTU_struct  {
     return easySerial != nullptr;
   }
 
-  void getStatistics(uint32_t& pass, uint32_t& fail) {
-    pass = _reads_pass;
-    fail = _reads_crc_failed;
+  void getStatistics(uint32_t& pass, uint32_t& fail, uint32_t& nodata) {
+    pass   = _reads_pass;
+    fail   = _reads_crc_failed;
+    nodata = _reads_nodata;
   }
 
   void setModbusTimeout(uint16_t timeout) {
@@ -259,8 +269,8 @@ struct ModbusRTU_struct  {
       case 0x82: result = "Sensor S/N";          break;
       case 0x83: result = "Sensor type";         break;
       default:
-        result  = "0x";
-        result += String(object_id, HEX);
+        result = formatToHex(object_id);
+        break;
     }
     return result;
   }
@@ -312,15 +322,12 @@ struct ModbusRTU_struct  {
               object_value_int =
                 object_value_int << 8 | _recv_buf[pos++];
             }
-            object_value = "0x";
-            String hexvalue(object_value_int, HEX);
-            hexvalue.toUpperCase();
-            object_value += hexvalue;
+            object_value += formatToHex(object_value_int);
           }
 
           if (i != 0) {
             // Append to existing description
-            result += String(", ");
+            result += ", ";
           }
           result += object_value;
         }
@@ -408,6 +415,12 @@ struct ModbusRTU_struct  {
        case MODBUS_BADSLAVE:
         log += F("Response not from requested slave");
         break;
+       case MODBUS_TIMEOUT:
+        log += F("Modbus Timeout");
+        break;
+       case MODBUS_NODATA:
+        log += F("Modbus No Data");
+        break;
        default:
         log += String(F("Unknown Exception code: ")) + value;
         break;
@@ -458,36 +471,53 @@ struct ModbusRTU_struct  {
       // Send the byte array
       startWrite();
       easySerial->write(_sendframe, _sendframe_used);
+
       // sent all data from buffer
       easySerial->flush();
       startRead();
 
       // Read answer from sensor
       _recv_buf_used = 0;
-      unsigned long timeout = millis() + _modbus_timeout;
-      bool validPacket      = false;
+      unsigned long timeout    = millis() + _modbus_timeout;
+      bool validPacket         = false;
+      bool invalidDueToTimeout = false;
 
       //  idx:    0,   1,   2,   3,   4,   5,   6,   7
       // send: 0x02,0x03,0x00,0x00,0x00,0x01,0x39,0x84
       // recv: 0x02,0x03,0x02,0x01,0x57,0xBC,0x2A
 
-      while (!validPacket && _recv_buf_used < MODBUS_RECEIVE_BUFFER && !timeOutReached(timeout)) {
-        while (easySerial->available() && _recv_buf_used < MODBUS_RECEIVE_BUFFER && !timeOutReached(timeout)) {
+      while (!validPacket && !invalidDueToTimeout && _recv_buf_used < MODBUS_RECEIVE_BUFFER) {
+        if (timeOutReached(timeout)) {
+          invalidDueToTimeout = true;
+        }
+
+        while (!invalidDueToTimeout && easySerial->available() && _recv_buf_used < MODBUS_RECEIVE_BUFFER) {
+          if (timeOutReached(timeout)) {
+            invalidDueToTimeout = true;
+          }
           _recv_buf[_recv_buf_used++] = easySerial->read();
         }
 
-        if (_recv_buf_used > 2) { // got length
-          if (_recv_buf_used >= (3+_recv_buf[2]+2)) { // got whole pkt
-            crc = ModRTU_CRC(_recv_buf, _recv_buf_used); // crc16 is 0 for whole valid pkt
-            validPacket = crc == 0 && _recv_buf[0] == _sendframe[0]; // check crc and address
-            return_value = 0; // reset return value
+        if (_recv_buf_used > 2) {                                         // got length
+          if (_recv_buf_used >= (3 + _recv_buf[2] + 2)) {                 // got whole pkt
+            crc          = ModRTU_CRC(_recv_buf, _recv_buf_used);         // crc16 is 0 for whole valid pkt
+            validPacket  = (crc == 0) && (_recv_buf[0] == _sendframe[0]); // check crc and address
+            return_value = 0;                                             // reset return value
           }
         }
         delay(0);
       }
 
       // Check for MODBUS exception
-      if (!validPacket) {
+      if (invalidDueToTimeout) {
+        ++_reads_nodata;
+
+        if (_recv_buf_used == 0) {
+          return_value = MODBUS_NODATA;
+        } else {
+          return_value = MODBUS_TIMEOUT;
+        }
+      } else if (!validPacket) {
         ++_reads_crc_failed;
         return_value = MODBUS_BADCRC;
       } else {
@@ -497,12 +527,14 @@ struct ModbusRTU_struct  {
           return_value = _recv_buf[2];
         }
         ++_reads_pass;
+        _reads_nodata = 0;
       }
 
       switch (return_value) {
         case MODBUS_EXCEPTION_ACKNOWLEDGE:
         case MODBUS_EXCEPTION_SLAVE_OR_SERVER_BUSY:
         case MODBUS_BADCRC:
+        case MODBUS_TIMEOUT:
 
           // Bad communication, makes sense to retry.
           break;
@@ -512,15 +544,19 @@ struct ModbusRTU_struct  {
       }
       --nrRetriesLeft;
     }
+    _last_error = return_value;
     return return_value;
   }
 
   uint32_t read_32b_InputRegister(short address) {
     uint32_t result = 0;
-    int idHigh      = readInputRegister(address);
-    int idLow       = readInputRegister(address + 1);
+    byte     errorcode;
+    int idHigh = readInputRegister(address, errorcode);
 
-    if ((idHigh >= 0) && (idLow >= 0)) {
+    if (errorcode != 0) { return result; }
+    int idLow = readInputRegister(address + 1, errorcode);
+
+    if (errorcode == 0) {
       result  = idHigh;
       result  = result << 16;
       result += idLow;
@@ -549,22 +585,29 @@ struct ModbusRTU_struct  {
     //    return fval;
   }
 
-  int readInputRegister(short address) {
+  int readInputRegister(short address, byte& errorcode) {
     // Only read 1 register
-    return process_16b_register(_modbus_address, MODBUS_READ_INPUT_REGISTERS, address, 1);
+    return process_16b_register(_modbus_address, MODBUS_READ_INPUT_REGISTERS, address, 1, errorcode);
   }
 
-  int readHoldingRegister(short address) {
+  int readHoldingRegister(short address, byte& errorcode) {
     // Only read 1 register
     return process_16b_register(
-      _modbus_address, MODBUS_READ_HOLDING_REGISTERS, address, 1);
+      _modbus_address, MODBUS_READ_HOLDING_REGISTERS, address, 1, errorcode);
   }
 
   // Write to holding register.
   int writeSingleRegister(short address, short value) {
+    // No check for the specific error code.
+    byte errorcode = 0;
+
+    return writeSingleRegister(address, value, errorcode);
+  }
+
+  int writeSingleRegister(short address, short value, byte& errorcode) {
     // GN: Untested, will probably not work
     return process_16b_register(
-      _modbus_address, MODBUS_WRITE_SINGLE_REGISTER, address, value);
+      _modbus_address, MODBUS_WRITE_SINGLE_REGISTER, address, value, errorcode);
   }
 
   // Function 16 (0x10) "Write Multiple Registers" to write to a single holding register
@@ -645,14 +688,15 @@ struct ModbusRTU_struct  {
   }
 
   int process_16b_register(byte slaveAddress, byte functionCode,
-                           short startAddress, short parameter) {
+                           short startAddress, short parameter,
+                           byte& errorcode) {
     buildFrame(slaveAddress, functionCode, startAddress, parameter);
-    const byte process_result = processCommand();
+    errorcode = processCommand();
 
-    if (process_result == 0) {
+    if (errorcode == 0) {
       return (_recv_buf[3] << 8) | (_recv_buf[4]);
     }
-    logModbusException(process_result);
+    logModbusException(errorcode);
     return -1;
   }
 
@@ -665,7 +709,7 @@ struct ModbusRTU_struct  {
       return (_recv_buf[4] << 8) | (_recv_buf[5]);
     }
     logModbusException(process_result);
-    return -1;
+    return -1 * process_result;
   }
 
   bool process_32b_register(byte slaveAddress, byte functionCode,
@@ -694,16 +738,17 @@ struct ModbusRTU_struct  {
       return 0;
     }
     logModbusException(process_result);
-    return -1;
+    return -1 * process_result;
   }
 
   unsigned int read_RAM_EEPROM(byte command, byte startAddress,
-                               byte nrBytes) {
+                               byte nrBytes,
+                               byte& errorcode) {
     buildRead_RAM_EEPROM(_modbus_address, command,
                          startAddress, nrBytes);
-    const byte process_result = processCommand();
+    errorcode = processCommand();
 
-    if (process_result == 0) {
+    if (errorcode == 0) {
       unsigned int result = 0;
 
       for (int i = 0; i < _recv_buf[2]; ++i) {
@@ -712,8 +757,8 @@ struct ModbusRTU_struct  {
       }
       return result;
     }
-    logModbusException(process_result);
-    return -1;
+    logModbusException(errorcode);
+    return 0;
   }
 
   // Compute the MODBUS RTU CRC
@@ -741,6 +786,14 @@ struct ModbusRTU_struct  {
 
   uint32_t readSensorId() {
     return read_32b_InputRegister(29);
+  }
+
+  uint8_t getLastError() {
+    return _last_error;
+  }
+
+  uint32_t getFailedReadsSinceLastValid() {
+    return _reads_nodata;
   }
 
   String detected_device_description;
@@ -772,8 +825,10 @@ private:
   int8_t   _dere_pin                        = -1;
   uint32_t _reads_pass                      = 0;
   uint32_t _reads_crc_failed                = 0;
+  uint32_t _reads_nodata                    = 0; // This will be reset as soon as a valid packet has been received.
   uint16_t _modbus_timeout                  = 180;
+  uint8_t  _last_error                      = 0;
 
   ESPeasySerial *easySerial;
 };
-#endif //USES_MODBUS
+#endif // USES_MODBUS

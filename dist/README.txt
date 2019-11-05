@@ -49,13 +49,14 @@ If these speed issues will be fixed, it is very likely the SPIFFS must then be r
 
 Special memory partitioning:
 - 2M256  => 2 MB flash modules (e.g. Shelly1/WROOM02) with 256k SPIFFS (only core 2.5.0 or newer)
-- 1M8_partition => For ESP32 with 4MB flash, sketch size is set to 1.8 MByte (default: 1.4 MByte)
+- 4M316k => For ESP32 with 4MB flash, sketch size is set to 1.8 MByte (default: 1.4 MByte)
+- 4M1M   => 4MB flash, 1 MB SPIFFS. Default layout for 4MB flash.
+- 4M2M   => 4MB flash, 2 MB SPIFFS. Introduced in October 2019. Only possible with core 2.5.2 or newer.
 
 
 ESP32 now has 3 builds:
-- esp32dev   Using the default partition layout (1.4 MB for the sketch)
-- esp32test_1M8_partition   Larger sketch partition (1.8MB) smaller SPIFFS (316 kB)
-- esp-wrover-kit_test_1M8_partition  A build for ESP32 including build flags for the official WRover test kit.
+- esp32test_4M316k   Larger sketch partition (1.8MB) smaller SPIFFS (316 kB)
+- esp-wrover-kit_test_4M316k  A build for ESP32 including build flags for the official WRover test kit.
 
 Please note that changing between those versions will destroy the settings!
 The SPIFFS partition will be lost and that contains all settings.

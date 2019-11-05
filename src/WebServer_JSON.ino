@@ -1,11 +1,15 @@
+#include "src/Globals/Nodes.h"
+#include "src/Globals/Device.h"
+#include "src/Globals/Plugins.h"
+
 
 // ********************************************************************************
 // Web Interface JSON page (no password!)
 // ********************************************************************************
 void handle_json()
 {
-  const int  taskNr           = getFormItemInt(F("tasknr"), -1);
-  const bool showSpecificTask = taskNr > 0;
+  const taskIndex_t  taskNr   = getFormItemInt(F("tasknr"), INVALID_TASK_INDEX);
+  const bool showSpecificTask = validTaskIndex(taskNr);
   bool showSystem             = true;
   bool showWifi               = true;
   bool showDataAcquisition    = true;
@@ -71,7 +75,7 @@ void handle_json()
       stream_next_json_object_value(LabelType::GATEWAY);
       stream_next_json_object_value(LabelType::STA_MAC);
       stream_next_json_object_value(LabelType::DNS_1);
-      stream_next_json_object_value(LabelType::DNS_1);
+      stream_next_json_object_value(LabelType::DNS_2);
       stream_next_json_object_value(LabelType::SSID);
       stream_next_json_object_value(LabelType::BSSID);
       stream_next_json_object_value(LabelType::CHANNEL);
@@ -133,18 +137,18 @@ void handle_json()
     }
   }
 
-  byte firstTaskIndex = 0;
-  byte lastTaskIndex  = TASKS_MAX - 1;
+  taskIndex_t firstTaskIndex = 0;
+  taskIndex_t lastTaskIndex  = TASKS_MAX - 1;
 
   if (showSpecificTask)
   {
     firstTaskIndex = taskNr - 1;
     lastTaskIndex  = taskNr - 1;
   }
-  byte lastActiveTaskIndex = 0;
+  taskIndex_t lastActiveTaskIndex = 0;
 
-  for (byte TaskIndex = firstTaskIndex; TaskIndex <= lastTaskIndex; TaskIndex++) {
-    if (Settings.TaskDeviceNumber[TaskIndex]) {
+  for (taskIndex_t TaskIndex = firstTaskIndex; TaskIndex <= lastTaskIndex; TaskIndex++) {
+    if (validPluginID(Settings.TaskDeviceNumber[TaskIndex])) {
       lastActiveTaskIndex = TaskIndex;
     }
   }
@@ -152,11 +156,11 @@ void handle_json()
   if (!showSpecificTask) { TXBuffer += F("\"Sensors\":[\n"); }
   unsigned long ttl_json = 60; // The shortest interval per enabled task (with output values) in seconds
 
-  for (byte TaskIndex = firstTaskIndex; TaskIndex <= lastActiveTaskIndex; TaskIndex++)
+  for (taskIndex_t TaskIndex = firstTaskIndex; TaskIndex <= lastActiveTaskIndex && validTaskIndex(TaskIndex); TaskIndex++)
   {
-    if (Settings.TaskDeviceNumber[TaskIndex])
-    {
-      byte DeviceIndex                 = getDeviceIndex(Settings.TaskDeviceNumber[TaskIndex]);
+    const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(TaskIndex);
+    if (validDeviceIndex(DeviceIndex))
+    {      
       const unsigned long taskInterval = Settings.TaskDeviceTimer[TaskIndex];
       LoadTaskSettings(TaskIndex);
       TXBuffer += F("{\n");
@@ -250,11 +254,8 @@ void stream_plugin_function_timing_stats_json(
 }
 
 void stream_plugin_timing_stats_json(int pluginId) {
-  String P_name = "";
-
-  Plugin_ptr[pluginId](PLUGIN_GET_DEVICENAME, NULL, P_name);
   TXBuffer += '{';
-  stream_next_json_object_value(F("name"), P_name);
+  stream_next_json_object_value(F("name"), getPluginNameFromDeviceIndex(pluginId));
   stream_next_json_object_value(F("id"),   String(pluginId));
   stream_json_start_array(F("function"));
 }
@@ -349,7 +350,7 @@ void stream_to_json_object_value(const String& object, const String& value) {
 }
 
 String jsonBool(bool value) {
-  return toString(value);
+  return boolToString(value);
 }
 
 // Add JSON formatted data directly to the TXbuffer, including a trailing comma.

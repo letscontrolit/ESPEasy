@@ -1,6 +1,10 @@
 #define RULE_FILE_SEPARAROR '/'
 #define RULE_MAX_FILENAME_LENGTH 24
 
+#include "src/DataStructs/EventValueSource.h"
+#include "src/Globals/Device.h"
+#include "src/Globals/Plugins.h"
+
 String EventToFileName(String& eventName) {
   int size  = eventName.length();
   int index = eventName.indexOf('=');
@@ -156,42 +160,101 @@ String rulesProcessingFile(const String& fileName, String& event) {
   fs::File f = tryOpenFile(fileName, "r+");
   SPIFFS_CHECK(f, fileName.c_str());
 
-  String line      = "";
-  bool   match     = false;
-  bool   codeBlock = false;
-  bool   isCommand = false;
-  bool   condition[RULES_IF_MAX_NESTING_LEVEL];
-  bool   ifBranche[RULES_IF_MAX_NESTING_LEVEL];
-  byte   ifBlock     = 0;
-  byte   fakeIfBlock = 0;
+  // Try to get the best possible estimate on line length based on earlier parsing of the rules.
+  static size_t longestLineSize = RULES_BUFFER_SIZE;
+  String line;
+  line.reserve(longestLineSize);
+  bool match     = false;
+  bool codeBlock = false;
+  bool isCommand = false;
+  bool condition[RULES_IF_MAX_NESTING_LEVEL];
+  bool ifBranche[RULES_IF_MAX_NESTING_LEVEL];
+  byte ifBlock     = 0;
+  byte fakeIfBlock = 0;
 
-  byte *buf = new byte[RULES_BUFFER_SIZE]();
+  std::vector<byte> buf;
+  buf.resize(RULES_BUFFER_SIZE);
+
+  bool firstNonSpaceRead = false;
+  bool commentFound      = false;
 
   while (f.available()) {
-    int len = f.read((byte *)buf, RULES_BUFFER_SIZE);
+    int len = f.read(&buf[0], RULES_BUFFER_SIZE);
 
     for (int x = 0; x < len; x++) {
       int data = buf[x];
 
       SPIFFS_CHECK(data >= 0, fileName.c_str());
 
-      if (data != 10) {
-        line += char(data);
-      } else { // if line complete, parse this rule
-        line.replace("\r", "");
+      switch (static_cast<char>(data))
+      {
+        case '\n':
+        {
+          // Line end, parse rule
+          const size_t lineLength = line.length();
 
-        if ((line.substring(0, 2) != F("//")) && (line.length() > 0)) {
-          parseCompleteNonCommentLine(line, event, log, match, codeBlock,
-                                      isCommand, condition, ifBranche, ifBlock,
-                                      fakeIfBlock);
-          backgroundtasks();
+          if (lineLength > longestLineSize) {
+            longestLineSize = lineLength;
+          }
+
+          if ((lineLength > 0) && !line.startsWith(F("//"))) {
+            // Parse the line and extract the action (if there is any)
+            String action;
+            parseCompleteNonCommentLine(line, event, log, action, match, codeBlock,
+                                        isCommand, condition, ifBranche, ifBlock,
+                                        fakeIfBlock);
+
+            if (match) // rule matched for one action or a block of actions
+            {
+              processMatchedRule(action, event, log, match, codeBlock,
+                                 isCommand, condition, ifBranche, ifBlock, fakeIfBlock);
+            }
+
+            backgroundtasks();
+          }
+
+          // Prepare for new line
+          line = "";
+          line.reserve(longestLineSize);
+          firstNonSpaceRead = false;
+          commentFound      = false;
+          break;
         }
+        case '\r': // Just skip this character
+          break;
+        case '\t': // tab
+        case ' ':  // space
+        {
+          // Strip leading spaces.
+          if (firstNonSpaceRead) {
+            line += ' ';
+          }
+          break;
+        }
+        case '/':
+        {
+          if (!commentFound) {
+            line += '/';
 
-        line = "";
+            if (line.endsWith("//")) {
+              // consider the rest of the line a comment
+              commentFound = true;
+            }
+          }
+          break;
+        }
+        default: // Any other character
+        {
+          firstNonSpaceRead = true;
+
+          if (!commentFound) {
+            line += char(data);
+          }
+          break;
+        }
       }
     }
   }
-  delete[] buf;
 
   if (f) {
     f.close();
@@ -202,84 +265,105 @@ String rulesProcessingFile(const String& fileName, String& event) {
   return "";
 }
 
+void replace_EventValueN_Argv(String& line, const String& argString, unsigned int argc)
+{
+  String eventvalue;
+
+  eventvalue.reserve(16);
+  eventvalue = F("%eventvalue");
+
+  if (argc == 0) {
+    // Used for compatibility reasons
+    // it still needs to call the "1st" argument
+    argc = 1;
+  } else {
+    eventvalue += argc;
+  }
+  eventvalue += '%';
+  String tmpParam;
+
+  if (GetArgv(argString.c_str(), tmpParam, argc)) {
+    line.replace(eventvalue, tmpParam);
+  }
+}
+
+void substitute_eventvalue(String& line, const String& event) {
+  if (line.indexOf(F("%eventvalue")) == -1) {
+    return; // Nothing to replace.
+  }
+
+  if (event.charAt(0) == '!') {
+    line.replace(F("%eventvalue%"), event); // substitute %eventvalue% with
+                                            // literal event string if
+                                            // starting with '!'
+  } else {
+    int equalsPos = event.indexOf("=");
+
+    if (equalsPos > 0) {
+      // Replace %eventvalueX% with the actual value of the event.
+      // For compatibility reasons also replace %eventvalue%  (argc = 0)
+      String argString = event.substring(equalsPos + 1);
+
+      for (unsigned int argc = 0; argc <= 4; ++argc) {
+        replace_EventValueN_Argv(line, argString, argc);
+      }
+    }
+  }
+}
+
 void parseCompleteNonCommentLine(String& line, String& event, String& log,
-                                 bool& match, bool& codeBlock, bool& isCommand,
+                                 String& action, bool& match,
+                                 bool& codeBlock, bool& isCommand,
                                  bool condition[], bool ifBranche[],
                                  byte& ifBlock, byte& fakeIfBlock) {
+  const bool lineStartsWith_on = line.substring(0, 3).equalsIgnoreCase(F("on "));
+
+  if (!codeBlock && !match) {
+    // We're looking for a new code block.
+    // Continue with next line if none was found on current line.
+    if (!lineStartsWith_on) {
+      return;
+    }
+  }
+
   isCommand = true;
 
-  // Strip comments
+  // Strip trailing comments
   int comment = line.indexOf(F("//"));
 
-  if (comment > 0) {
+  if (comment >= 0) {
     line = line.substring(0, comment);
   }
+  line.trim();
 
   if (match || !codeBlock) {
     // only parse [xxx#yyy] if we have a matching ruleblock or need to eval the
     // "on" (no codeBlock)
-    // This to avoid waisting CPU time...
-
+    // This to avoid wasting CPU time...
     if (match && !fakeIfBlock) {
       // substitution of %eventvalue% is made here so it can be used on if
       // statement too
-      if (event.charAt(0) == '!') {
-        line.replace(F("%eventvalue%"), event); // substitute %eventvalue% with
-                                                // literal event string if
-                                                // starting with '!'
-      } else {
-        int equalsPos = event.indexOf("=");
-
-        if (equalsPos > 0) {
-          String tmpString = event.substring(equalsPos + 1);
-
-          // line.replace(F("%eventvalue%"), tmpString); // substitute
-          // %eventvalue% with the actual value from the event
-          String tmpParam;
-
-          if (GetArgv(tmpString.c_str(), tmpParam, 1)) {
-            line.replace(F("%eventvalue%"),
-                         tmpParam); // for compatibility issues
-            line.replace(F("%eventvalue1%"),
-                         tmpParam); // substitute %eventvalue1% in actions with
-                                    // the actual value from the event
-          }
-
-          if (GetArgv(tmpString.c_str(), tmpParam, 2)) {
-            line.replace(F("%eventvalue2%"),
-                         tmpParam); // substitute %eventvalue2% in actions with
-          }
-
-          // the actual value from the event
-          if (GetArgv(tmpString.c_str(), tmpParam, 3)) {
-            line.replace(F("%eventvalue3%"),
-                         tmpParam); // substitute %eventvalue3% in actions with
-          }
-
-          // the actual value from the event
-          if (GetArgv(tmpString.c_str(), tmpParam, 4)) {
-            line.replace(F("%eventvalue4%"),
-                         tmpParam); // substitute %eventvalue4% in actions with
-          }
-
-          // the actual value from the event
-        }
-      }
+      substitute_eventvalue(line, event);
     }
-    line = parseTemplate(line, line.length());
+
+    if (match || lineStartsWith_on) {
+      // Only parseTemplate when we are actually doing something with the line.
+      // When still looking for the "on ... do" part, do not change it before we found the block.
+      line = parseTemplate(line, line.length());
+    }
   }
-  line.trim();
+
 
   String lineOrg = line; // store original line for future use
   line.toLowerCase();    // convert all to lower case to make checks easier
 
   String eventTrigger = "";
-  String action       = "";
+  action = "";
 
   if (!codeBlock) // do not check "on" rules if a block of actions is to be
                   // processed
   {
-    if (line.startsWith(F("on "))) {
+    if (lineStartsWith_on) {
       ifBlock     = 0;
       fakeIfBlock = 0;
       line        = line.substring(3);
@@ -288,6 +372,9 @@ void parseCompleteNonCommentLine(String& line, String& event, String& log,
       if (split != -1) {
         eventTrigger = line.substring(0, split);
         action       = lineOrg.substring(split + 7);
+
+        // Remove trailing and leadin spaces on the eventTrigger and action.
+        eventTrigger.trim();
         action.trim();
       }
 
@@ -311,11 +398,8 @@ void parseCompleteNonCommentLine(String& line, String& event, String& log,
     action = lineOrg;
   }
 
-  String lcAction = action;
-  lcAction.toLowerCase();
-
-  if (lcAction == F("endon")) // Check if action block has ended, then we will
-                              // wait for a new "on" rule
+  if (action.equalsIgnoreCase(F("endon"))) // Check if action block has ended, then we will
+                                           // wait for a new "on" rule
   {
     isCommand   = false;
     codeBlock   = false;
@@ -336,18 +420,16 @@ void parseCompleteNonCommentLine(String& line, String& event, String& log,
     addLog(LOG_LEVEL_DEBUG_DEV, log);
   }
 #endif // ifndef BUILD_NO_DEBUG
-
-  if (match) // rule matched for one action or a block of actions
-  {
-    processMatchedRule(lcAction, action, event, log, match, codeBlock,
-                       isCommand, condition, ifBranche, ifBlock, fakeIfBlock);
-  }
 }
 
-void processMatchedRule(String& lcAction, String& action, String& event,
+void processMatchedRule(String& action, String& event,
                         String& log, bool& match, bool& codeBlock,
                         bool& isCommand, bool condition[], bool ifBranche[],
                         byte& ifBlock, byte& fakeIfBlock) {
+  String lcAction = action;
+
+  lcAction.toLowerCase();
+
   if (fakeIfBlock) {
     isCommand = false;
   }
@@ -360,6 +442,7 @@ void processMatchedRule(String& lcAction, String& action, String& event,
     lcAction.indexOf(F("elseif ")); // check for optional "elseif" condition
 
   if (split != -1) {
+    // Found "elseif" condition
     isCommand = false;
 
     if (ifBlock && !fakeIfBlock) {
@@ -369,6 +452,7 @@ void processMatchedRule(String& lcAction, String& action, String& event,
         }
         else {
           String check = lcAction.substring(split + 7);
+          check.trim();
           condition[ifBlock - 1] = conditionMatchExtended(check);
 #ifndef BUILD_NO_DEBUG
 
@@ -378,7 +462,7 @@ void processMatchedRule(String& lcAction, String& action, String& event,
             log += F(": [elseif ");
             log += check;
             log += F("]=");
-            log += toString(condition[ifBlock - 1]);
+            log += boolToString(condition[ifBlock - 1]);
             addLog(LOG_LEVEL_DEBUG, log);
           }
 #endif // ifndef BUILD_NO_DEBUG
@@ -393,6 +477,7 @@ void processMatchedRule(String& lcAction, String& action, String& event,
         if (isCommand) {
           ifBlock++;
           String check = lcAction.substring(split + 3);
+          check.trim();
           condition[ifBlock - 1] = conditionMatchExtended(check);
           ifBranche[ifBlock - 1] = true;
 #ifndef BUILD_NO_DEBUG
@@ -403,7 +488,7 @@ void processMatchedRule(String& lcAction, String& action, String& event,
             log += F(": [if ");
             log += check;
             log += F("]=");
-            log += toString(condition[ifBlock - 1]);
+            log += boolToString(condition[ifBlock - 1]);
             addLog(LOG_LEVEL_DEBUG, log);
           }
 #endif // ifndef BUILD_NO_DEBUG
@@ -436,7 +521,7 @@ void processMatchedRule(String& lcAction, String& action, String& event,
       log  = F("Lev.");
       log += String(ifBlock);
       log += F(": [else]=");
-      log += toString(condition[ifBlock - 1] == ifBranche[ifBlock - 1]);
+      log += boolToString(condition[ifBlock - 1] == ifBranche[ifBlock - 1]);
       addLog(LOG_LEVEL_DEBUG, log);
     }
 #endif // ifndef BUILD_NO_DEBUG
@@ -456,46 +541,7 @@ void processMatchedRule(String& lcAction, String& action, String& event,
   // process the action if it's a command and unconditional, or conditional and
   // the condition matches the if or else block.
   if (isCommand) {
-    if (event.charAt(0) == '!') {
-      action.replace(F("%eventvalue%"), event); // substitute %eventvalue% with
-                                                // literal event string if
-                                                // starting with '!'
-    } else {
-      int equalsPos = event.indexOf("=");
-
-      if (equalsPos > 0) {
-        String tmpString = event.substring(equalsPos + 1);
-
-        String tmpParam;
-
-        if (GetArgv(tmpString.c_str(), tmpParam, 1)) {
-          action.replace(F("%eventvalue%"),
-                         tmpParam); // for compatibility issues
-          action.replace(F("%eventvalue1%"),
-                         tmpParam); // substitute %eventvalue1% in actions with
-                                    // the actual value from the event
-        }
-
-        if (GetArgv(tmpString.c_str(), tmpParam, 2)) {
-          action.replace(F("%eventvalue2%"),
-                         tmpParam); // substitute %eventvalue2% in actions with
-        }
-
-        // the actual value from the event
-        if (GetArgv(tmpString.c_str(), tmpParam, 3)) {
-          action.replace(F("%eventvalue3%"),
-                         tmpParam); // substitute %eventvalue3% in actions with
-        }
-
-        // the actual value from the event
-        if (GetArgv(tmpString.c_str(), tmpParam, 4)) {
-          action.replace(F("%eventvalue4%"),
-                         tmpParam); // substitute %eventvalue4% in actions with
-        }
-
-        // the actual value from the event
-      }
-    }
+    substitute_eventvalue(action, event);
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log = F("ACT  : ");
@@ -536,41 +582,40 @@ void processMatchedRule(String& lcAction, String& action, String& event,
 /********************************************************************************************\
    Check if an event matches to a given rule
  \*********************************************************************************************/
-boolean ruleMatch(String& event, String& rule) {
+bool ruleMatch(const String& event, const String& rule) {
   checkRAM(F("ruleMatch"));
-  boolean match    = false;
-  String  tmpEvent = event;
-  String  tmpRule  = rule;
+
+  String tmpEvent = event;
+  String tmpRule  = rule;
+  tmpEvent.trim();
+  tmpRule.trim();
 
   // Ignore escape char
   tmpRule.replace("[", "");
   tmpRule.replace("]", "");
 
+  if (tmpEvent.equalsIgnoreCase(tmpRule)) {
+    return true;
+  }
+
+
   // Special handling of literal string events, they should start with '!'
   if (event.charAt(0) == '!') {
-    int pos = rule.indexOf('*');
+    const int pos = rule.indexOf('*');
 
     if (pos != -1) // a * sign in rule, so use a'wildcard' match on message
     {
-      tmpEvent = event.substring(0, pos - 1);
-      tmpRule  = rule.substring(0, pos - 1);
+      return event.substring(0, pos - 1).equalsIgnoreCase(rule.substring(0, pos - 1));
     } else {
-      pos = rule.indexOf('#');
+      const bool pound_char_found = rule.indexOf('#') != -1;
 
-      if (pos ==
-          -1) // no # sign in rule, use 'wildcard' match on event 'source'
+      if (!pound_char_found)
       {
-        tmpEvent = event.substring(0, rule.length());
-        tmpRule  = rule;
+        // no # sign in rule, use 'wildcard' match on event 'source'
+        return event.substring(0, rule.length()).equalsIgnoreCase(rule);
       }
     }
-
-    if (tmpEvent.equalsIgnoreCase(tmpRule)) {
-      return true;
-    }
-    else {
-      return false;
-    }
+    return tmpEvent.equalsIgnoreCase(tmpRule);
   }
 
   if (event.startsWith(
@@ -580,23 +625,16 @@ boolean ruleMatch(String& event, String& rule) {
     int pos2 = rule.indexOf("=");
 
     if ((pos1 > 0) && (pos2 > 0)) {
-      tmpEvent = event.substring(0, pos1);
-      tmpRule  = rule.substring(0, pos2);
-
-      if (tmpRule.equalsIgnoreCase(tmpEvent)) // if this is a clock rule
+      if (event.substring(0, pos1).equalsIgnoreCase(rule.substring(0, pos2))) // if this is a clock rule
       {
-        tmpEvent = event.substring(pos1 + 1);
-        tmpRule  = rule.substring(pos2 + 1);
-        unsigned long clockEvent = string2TimeLong(tmpEvent);
-        unsigned long clockSet   = string2TimeLong(tmpRule);
+        unsigned long clockEvent = string2TimeLong(event.substring(pos1 + 1));
+        unsigned long clockSet   = string2TimeLong(rule.substring(pos2 + 1));
 
-        if (matchClockEvent(clockEvent, clockSet)) {
-          return true;
-        }
-        else {
-          return false;
-        }
+        return matchClockEvent(clockEvent, clockSet);
       }
+    } else {
+      // Not supported yet, see: https://github.com/letscontrolit/ESPEasy/issues/2640
+      return false;
     }
   }
 
@@ -604,69 +642,37 @@ boolean ruleMatch(String& event, String& rule) {
   float value = 0;
   int   pos   = event.indexOf("=");
 
-  if (pos) {
-    tmpEvent = event.substring(pos + 1);
-    value    = tmpEvent.toFloat();
+  if (pos >= 0) {
+    if (!validFloatFromString(event.substring(pos + 1), value)) {
+      return false;
+
+      // FIXME TD-er: What to do when trying to match NaN values?
+    }
     tmpEvent = event.substring(0, pos);
   }
 
   // parse rule
-  int  comparePos = 0;
-  char compare    = ' ';
-  comparePos = rule.indexOf(">");
+  int  posStart, posEnd;
+  char compare;
 
-  if (comparePos > 0) {
-    compare = '>';
-  } else {
-    comparePos = rule.indexOf("<");
-
-    if (comparePos > 0) {
-      compare = '<';
-    } else {
-      comparePos = rule.indexOf("=");
-
-      if (comparePos > 0) {
-        compare = '=';
-      }
-    }
+  if (!findCompareCondition(rule, compare, posStart, posEnd)) {
+    // No compare condition found, so just check if the event- and rule string match.
+    return tmpEvent.equalsIgnoreCase(rule);
   }
 
-  float ruleValue = 0;
+  const bool stringMatch = tmpEvent.equalsIgnoreCase(rule.substring(0, posStart));
+  float ruleValue        = 0;
 
-  if (comparePos > 0) {
-    tmpRule   = rule.substring(comparePos + 1);
-    ruleValue = tmpRule.toFloat();
-    tmpRule   = rule.substring(0, comparePos);
+  if (!validFloatFromString(rule.substring(posEnd), ruleValue)) {
+    return false;
+
+    // FIXME TD-er: What to do when trying to match NaN values?
   }
 
-  switch (compare) {
-    case '>':
+  bool match = false;
 
-      if (tmpRule.equalsIgnoreCase(tmpEvent) && (value > ruleValue)) {
-        match = true;
-      }
-      break;
-
-    case '<':
-
-      if (tmpRule.equalsIgnoreCase(tmpEvent) && (value < ruleValue)) {
-        match = true;
-      }
-      break;
-
-    case '=':
-
-      if (tmpRule.equalsIgnoreCase(tmpEvent) && (value == ruleValue)) {
-        match = true;
-      }
-      break;
-
-    case ' ':
-
-      if (tmpRule.equalsIgnoreCase(tmpEvent)) {
-        match = true;
-      }
-      break;
+  if (stringMatch) {
+    match = compareValues(compare, value, ruleValue);
   }
   checkRAM(F("ruleMatch2"));
   return match;
@@ -675,13 +681,28 @@ boolean ruleMatch(String& event, String& rule) {
 /********************************************************************************************\
    Check expression
  \*********************************************************************************************/
-boolean conditionMatchExtended(String& check) {
-  int condAnd       = -1;
-  int condOr        = -1;
-  boolean rightcond = false;
-  boolean leftcond  = conditionMatch(check); // initial check
+bool conditionMatchExtended(String& check) {
+  int    condAnd   = -1;
+  int    condOr    = -1;
+  bool   rightcond = false;
+  bool   leftcond  = conditionMatch(check); // initial check
+  #ifndef BUILD_NO_DEBUG
+  String debugstr;
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+    debugstr += boolToString(leftcond);
+  }
+  #endif
 
   do {
+    #ifndef BUILD_NO_DEBUG
+    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+      String log = F("conditionMatchExtended: ");
+      log += debugstr;
+      log += '_';
+      log += check;
+      addLog(LOG_LEVEL_DEBUG, log);
+    }
+    #endif
     condAnd = check.indexOf(F(" and "));
     condOr  = check.indexOf(F(" or "));
 
@@ -691,129 +712,161 @@ boolean conditionMatchExtended(String& check) {
         check     = check.substring(condAnd + 5);
         rightcond = conditionMatch(check);
         leftcond  = (leftcond && rightcond);
+
+        #ifndef BUILD_NO_DEBUG
+        if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+          debugstr += F(" && ");
+        }
+        #endif
       } else { // OR is first
         check     = check.substring(condOr + 4);
         rightcond = conditionMatch(check);
         leftcond  = (leftcond || rightcond);
+
+        #ifndef BUILD_NO_DEBUG
+        if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+          debugstr += F(" || ");
+        }
+        #endif
       }
+      
+      #ifndef BUILD_NO_DEBUG
+      if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+        debugstr += boolToString(rightcond);
+      }
+      #endif
     }
   } while (condAnd > 0 || condOr > 0);
+
+  #ifndef BUILD_NO_DEBUG
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+    check = debugstr;
+  }
+  #endif
   return leftcond;
 }
 
-boolean conditionMatch(const String& check) {
-  boolean match = false;
-
-  char compare = ' ';
-
-  int posStart   = check.length();
-  int posEnd     = posStart;
+// Find the compare condition.
+// @param posStart = first position of the compare condition in the string
+// @param posEnd   = first position rest of the string, right after the compare condition.
+bool findCompareCondition(const String& check, char& compare, int& posStart, int& posEnd)
+{
+  posStart = check.length();
+  posEnd   = posStart;
   int comparePos = 0;
+  bool found = false;
 
   if (((comparePos = check.indexOf("!=")) > 0) && (comparePos < posStart)) {
     posStart = comparePos;
     posEnd   = posStart + 2;
     compare  = '!' + '=';
+    found = true;
   }
 
   if (((comparePos = check.indexOf("<>")) > 0) && (comparePos < posStart)) {
     posStart = comparePos;
     posEnd   = posStart + 2;
     compare  = '!' + '=';
+    found = true;
   }
 
   if (((comparePos = check.indexOf(">=")) > 0) && (comparePos < posStart)) {
     posStart = comparePos;
     posEnd   = posStart + 2;
     compare  = '>' + '=';
+    found = true;
   }
 
   if (((comparePos = check.indexOf("<=")) > 0) && (comparePos < posStart)) {
     posStart = comparePos;
     posEnd   = posStart + 2;
     compare  = '<' + '=';
+    found = true;
   }
 
   if (((comparePos = check.indexOf("<")) > 0) && (comparePos < posStart)) {
     posStart = comparePos;
     posEnd   = posStart + 1;
     compare  = '<';
+    found = true;
   }
 
   if (((comparePos = check.indexOf(">")) > 0) && (comparePos < posStart)) {
     posStart = comparePos;
     posEnd   = posStart + 1;
     compare  = '>';
+    found = true;
   }
 
   if (((comparePos = check.indexOf("=")) > 0) && (comparePos < posStart)) {
     posStart = comparePos;
     posEnd   = posStart + 1;
     compare  = '=';
+    found = true;
   }
+  return found;
+}
 
-  float Value1 = 0;
-  float Value2 = 0;
+bool compareValues(char compare, float Value1, float Value2)
+{
+  switch (compare) {
+    case '>' + '=': return Value1 >= Value2;
+    case '<' + '=': return Value1 <= Value2;
+    case '!' + '=': return Value1 != Value2;
+    case '>':       return Value1 > Value2;
+    case '<':       return Value1 < Value2;
+    case '=':       return Value1 == Value2;
+  }
+  return false;
+}
 
-  if (compare > ' ') {
-    String tmpCheck1 = check.substring(0, posStart);
-    String tmpCheck2 = check.substring(posEnd);
+bool conditionMatch(const String& check) {
+  int  posStart, posEnd;
+  char compare;
 
-    if (!isFloat(tmpCheck1) || !isFloat(tmpCheck2)) {
-      Value1 = timeStringToSeconds(tmpCheck1);
-      Value2 = timeStringToSeconds(tmpCheck2);
-    } else {
-      Value1 = tmpCheck1.toFloat();
-      Value2 = tmpCheck2.toFloat();
-    }
-  } else {
+  if (!findCompareCondition(check, compare, posStart, posEnd)) {
     return false;
   }
 
-  switch (compare) {
-    case '>' + '=':
+  String tmpCheck1 = check.substring(0, posStart);
+  String tmpCheck2 = check.substring(posEnd);
+  float  Value1    = 0;
+  float  Value2    = 0;
 
-      if (Value1 >= Value2) {
-        match = true;
-      }
-      break;
+  int  timeInSec1 = 0;
+  int  timeInSec2 = 0;
+  bool validTime1 = timeStringToSeconds(tmpCheck1, timeInSec1);
+  bool validTime2 = timeStringToSeconds(tmpCheck2, timeInSec2);
 
-    case '<' + '=':
-
-      if (Value1 <= Value2) {
-        match = true;
-      }
-      break;
-
-    case '!' + '=':
-
-      if (Value1 != Value2) {
-        match = true;
-      }
-      break;
-
-    case '>':
-
-      if (Value1 > Value2) {
-        match = true;
-      }
-      break;
-
-    case '<':
-
-      if (Value1 < Value2) {
-        match = true;
-      }
-      break;
-
-    case '=':
-
-      if (Value1 == Value2) {
-        match = true;
-      }
-      break;
+  if ((validTime1 || validTime2) && (timeInSec1 != -1) && (timeInSec2 != -1))
+  {
+    // At least one is a time containing ':' separator
+    // AND both can be considered a time, so use it as a time and compare seconds.
+    Value1 = timeInSec1;
+    Value2 = timeInSec2;
+  } else {
+    if (!validFloatFromString(tmpCheck1, Value1) ||
+        !validFloatFromString(tmpCheck2, Value2))
+    {
+      return false;
+    }
   }
-  return match;
+
+  bool result = compareValues(compare, Value1, Value2);
+  #ifndef BUILD_NO_DEBUG
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+    String log = F("compareValues: _");
+    log += check;
+    log += F("_ val1: ");
+    log += Value1;
+    log += F(" val2: ");
+    log += Value2;
+    log += F(" = ");
+    log += boolToString(result);
+    addLog(LOG_LEVEL_DEBUG, log);
+  }
+  #endif
+  return result;
 }
 
 /********************************************************************************************\
@@ -845,15 +898,18 @@ void createRuleEvents(struct EventStruct *event) {
   if (!Settings.UseRules) {
     return;
   }
+  const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(event->TaskIndex);
+
+  if (!validDeviceIndex(DeviceIndex)) { return; }
+
   LoadTaskSettings(event->TaskIndex);
   byte BaseVarIndex = event->TaskIndex * VARS_PER_TASK;
-  byte DeviceIndex  = getDeviceIndex(Settings.TaskDeviceNumber[event->TaskIndex]);
   byte sensorType   = Device[DeviceIndex].VType;
 
   for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++) {
     String eventString;
     eventString.reserve(32); // Enough for most use cases, prevent lots of memory allocations.
-    eventString = getTaskDeviceName(event->TaskIndex);
+    eventString  = getTaskDeviceName(event->TaskIndex);
     eventString += F("#");
     eventString += ExtraTaskSettings.TaskDeviceValueNames[varNr];
     eventString += F("=");
@@ -865,7 +921,7 @@ void createRuleEvents(struct EventStruct *event) {
         break;
       case SENSOR_TYPE_STRING:
 
-        // FIXME TD-er: What to add here? length of string?        
+        // FIXME TD-er: What to add here? length of string?
         break;
       default:
 

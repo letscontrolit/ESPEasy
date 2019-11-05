@@ -1,3 +1,4 @@
+#ifdef WEBSERVER_I2C_SCANNER
 
 #ifdef WEBSERVER_NEW_UI
 
@@ -174,3 +175,5 @@ void handle_i2cscanner() {
   sendHeadandTail_stdtemplate(_TAIL);
   TXBuffer.endStream();
 }
+
+#endif // WEBSERVER_I2C_SCANNER

@@ -1,5 +1,7 @@
 #ifdef USES_P001
 
+#include "src/DataStructs/PinMode.h"
+
 // #######################################################################################################
 // #################################### Plugin 001: Input Switch #########################################
 // #######################################################################################################
@@ -937,7 +939,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
           unsigned long timer = time_in_msec ? event->Par3 : event->Par3 * 1000;
 
           // Create a future system timer call to set the GPIO pin back to its normal value.
-          setPluginTaskTimer(timer, PLUGIN_ID_001, event->TaskIndex, event->Par1, inversePinStateValue);
+          setPluginTaskTimer(timer, event->TaskIndex, event->Par1, inversePinStateValue);
           log = String(F("SW   : GPIO ")) + String(event->Par1) +
                 String(F(" Pulse set for ")) + String(event->Par3) + String(time_in_msec ? F(" msec") : F(" sec"));
           addLog(LOG_LEVEL_INFO, log);

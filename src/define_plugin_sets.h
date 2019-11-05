@@ -1,3 +1,8 @@
+#ifndef DEFINE_PLUGIN_SETS_H
+#define DEFINE_PLUGIN_SETS_H
+
+#include "ESPEasy_common.h"
+
 /*
 #################################################
  This is the place where plugins are registered
@@ -19,48 +24,95 @@ To create/register a plugin, you have to :
  When found stable enought, the maintainer (and only him) will choose to move it to TESTING or STABLE
 */
 
-
+//#define FEATURE_SD
 
 /******************************************************************************\
- * Detect core versions *******************************************************
+ * WebServer pages   **********************************************************
 \******************************************************************************/
+// FIXME TD-er: Make useful selections for these pages to be included. (e.g. view only)
 
-#ifndef ESP32
-  #if defined(ARDUINO_ESP8266_RELEASE_2_4_0) || defined(ARDUINO_ESP8266_RELEASE_2_4_1)  || defined(ARDUINO_ESP8266_RELEASE_2_4_2)
-    #ifndef CORE_2_4_X
-      #define CORE_2_4_X
+#ifndef WEBSERVER_CUSTOM_BUILD_DEFINED
+    #ifndef WEBSERVER_TIMINGSTATS
+        #define WEBSERVER_TIMINGSTATS
     #endif
-  #endif
-
-  #if defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(ARDUINO_ESP8266_RELEASE_2_4_0) || defined(ARDUINO_ESP8266_RELEASE_2_4_1)
-    #ifndef CORE_PRE_2_4_2
-      #define CORE_PRE_2_4_2
+    #ifndef WEBSERVER_SYSVARS
+        #define WEBSERVER_SYSVARS
     #endif
-  #endif
-
-  #if defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(CORE_2_4_X)
-    #ifndef CORE_PRE_2_5_0
-      #define CORE_PRE_2_5_0
+    #ifndef WEBSERVER_NEW_UI
+    //    #define WEBSERVER_NEW_UI
     #endif
-  #else
-    #ifndef CORE_POST_2_5_0
-      #define CORE_POST_2_5_0
+    #ifndef WEBSERVER_I2C_SCANNER
+        #define WEBSERVER_I2C_SCANNER
     #endif
-  #endif
-
-
-  #ifdef FORCE_PRE_2_5_0
-    #ifdef CORE_POST_2_5_0
-      #undef CORE_POST_2_5_0
+    #ifndef WEBSERVER_FAVICON
+        #define WEBSERVER_FAVICON
     #endif
-  #endif
-#endif // ESP32
+    #ifndef WEBSERVER_LOG
+        #define WEBSERVER_LOG
+    #endif
+    #ifndef WEBSERVER_GITHUB_COPY
+        #define WEBSERVER_GITHUB_COPY
+    #endif
+    #ifndef WEBSERVER_ROOT
+        #define WEBSERVER_ROOT
+    #endif
+    #ifndef WEBSERVER_ADVANCED
+        #define WEBSERVER_ADVANCED
+    #endif
+    #ifndef WEBSERVER_CONFIG
+        #define WEBSERVER_CONFIG
+    #endif
+    #ifndef WEBSERVER_CONTROL
+        #define WEBSERVER_CONTROL
+    #endif
+    #ifndef WEBSERVER_CONTROLLERS
+        #define WEBSERVER_CONTROLLERS
+    #endif
+    #ifndef WEBSERVER_DEVICES
+        #define WEBSERVER_DEVICES
+    #endif
+    #ifndef WEBSERVER_DOWNLOAD
+        #define WEBSERVER_DOWNLOAD
+    #endif
+    #ifndef WEBSERVER_FACTORY_RESET
+        #define WEBSERVER_FACTORY_RESET
+    #endif
+    #ifndef WEBSERVER_FILELIST
+        #define WEBSERVER_FILELIST
+    #endif
+    #ifndef WEBSERVER_HARDWARE
+        #define WEBSERVER_HARDWARE
+    #endif
+    #ifndef WEBSERVER_PINSTATES
+        #define WEBSERVER_PINSTATES
+    #endif
+    #ifndef WEBSERVER_RULES
+        #define WEBSERVER_RULES
+    #endif
+    #ifndef WEBSERVER_SETUP
+        #define WEBSERVER_SETUP
+    #endif
+    #ifndef WEBSERVER_SYSINFO
+        #define WEBSERVER_SYSINFO
+    #endif
+    #ifndef WEBSERVER_TOOLS
+        #define WEBSERVER_TOOLS
+    #endif
+    #ifndef WEBSERVER_UPLOAD
+        #define WEBSERVER_UPLOAD
+    #endif
+    #ifndef WEBSERVER_WIFI_SCANNER
+        #define WEBSERVER_WIFI_SCANNER
+    #endif
+#endif 
 
+#ifndef USE_CUSTOM_H
+    #ifndef USES_SSDP
+        #define USES_SSDP
+    #endif
+#endif
 
 #ifdef MEMORY_ANALYSIS
-  #ifndef WEBSERVER_RULES_DEBUG
-    #define WEBSERVER_RULES_DEBUG 0
-  #endif
   #ifdef MQTT_ONLY
     #define USES_C002   // Domoticz MQTT
     #define USES_C005   // Home Assistant (openHAB) MQTT
@@ -76,9 +128,15 @@ To create/register a plugin, you have to :
 \******************************************************************************/
 #if defined(CORE_POST_2_5_0) && !defined(MEMORY_ANALYSIS) && !defined(USE_CUSTOM_H)
     #ifndef USE_SETTINGS_ARCHIVE
-        #define USE_SETTINGS_ARCHIVE
+    // FIXME TD-er: Disabled for now, to reduce binary size
+//        #define USE_SETTINGS_ARCHIVE
     #endif // USE_SETTINGS_ARCHIVE
 #endif
+
+#if defined(USE_SETTINGS_ARCHIVE) && defined(FORCE_PRE_2_5_0)
+  #undef USE_SETTINGS_ARCHIVE
+#endif
+
 
 /******************************************************************************\
  * BUILD Configs **************************************************************
@@ -147,10 +205,6 @@ To create/register a plugin, you have to :
     #ifndef BUILD_NO_DEBUG
       #define BUILD_NO_DEBUG
     #endif
-    #ifdef WEBSERVER_RULES_DEBUG
-      #undef WEBSERVER_RULES_DEBUG
-    #endif
-    #define WEBSERVER_RULES_DEBUG 0
 #endif
 
 #ifdef PLUGIN_BUILD_MINIMAL_OTA
@@ -164,10 +218,6 @@ To create/register a plugin, you have to :
     #ifndef BUILD_NO_DEBUG
       #define BUILD_NO_DEBUG
     #endif
-    #ifdef WEBSERVER_RULES_DEBUG
-      #undef WEBSERVER_RULES_DEBUG
-    #endif
-    #define WEBSERVER_RULES_DEBUG 0
 
     #define USES_C001   // Domoticz HTTP
     #define USES_C002   // Domoticz MQTT
@@ -214,18 +264,49 @@ To create/register a plugin, you have to :
 #endif
 
 
-#if !defined(BUILD_MINIMAL_OTA) && !defined(MEMORY_ANALYSIS)
-  #ifndef WEBSERVER_TIMINGSTATS
-    #define WEBSERVER_TIMINGSTATS
-  #endif
-  #ifndef WEBSERVER_SYSVARS
-    #define WEBSERVER_SYSVARS
-  #endif
-  #ifndef WEBSERVER_NEW_UI
-    #define WEBSERVER_NEW_UI
-  #endif
+// Strip out parts not needed for either MINIMAL_OTA and MEMORY_ANALYSIS
+#if defined(BUILD_MINIMAL_OTA) || defined(MEMORY_ANALYSIS)
+    #ifndef WEBSERVER_CUSTOM_BUILD_DEFINED
+        #ifdef WEBSERVER_TIMINGSTATS
+            #undef WEBSERVER_TIMINGSTATS
+        #endif
+        #ifdef WEBSERVER_SYSVARS
+            #undef WEBSERVER_SYSVARS
+        #endif
+        #ifdef WEBSERVER_NEW_UI
+            #undef WEBSERVER_NEW_UI
+        #endif
+        #ifdef WEBSERVER_I2C_SCANNER
+            #undef WEBSERVER_I2C_SCANNER
+        #endif
+        #ifdef WEBSERVER_FAVICON
+            #undef WEBSERVER_FAVICON
+        #endif
+        #ifdef WEBSERVER_LOG
+            #undef WEBSERVER_LOG
+        #endif
+        #ifdef WEBSERVER_GITHUB_COPY
+            #undef WEBSERVER_GITHUB_COPY
+        #endif
+        #ifdef WEBSERVER_PINSTATES
+            #undef WEBSERVER_PINSTATES
+        #endif
+        #ifdef WEBSERVER_WIFI_SCANNER
+            #undef WEBSERVER_WIFI_SCANNER
+        #endif
+        #ifdef USES_SSDP
+            #undef USES_SSDP
+        #endif
+    #endif // WEBSERVER_CUSTOM_BUILD_DEFINED
 #endif
 
+
+
+#ifdef BUILD_NO_DEBUG
+    #ifdef WEBSERVER_RULES_DEBUG
+        #undef WEBSERVER_RULES_DEBUG
+    #endif
+#endif
 
 
 /******************************************************************************\
@@ -239,26 +320,32 @@ To create/register a plugin, you have to :
     #define PLUGIN_DESCR  "IR"
     #define USES_P016      // IR
     #define USES_P035      // IRTX
+    #define P016_P035_USE_RAW_RAW2 //Use the RAW and RAW2 encodings, disabling it saves 3.7Kb
 #endif
 
 #ifdef PLUGIN_BUILD_IR_EXTENDED
     #ifndef PLUGIN_DESCR
-        #define PLUGIN_DESCR  "IR_Extended"
+        #define PLUGIN_DESCR  "IR Extended"
     #endif // PLUGIN_DESCR
     #define USES_P016      // IR
     #define USES_P035      // IRTX
     // The following define is needed for extended decoding of A/C Messages and or using standardised common arguments for controlling all deeply supported A/C units
     #define P016_P035_Extended_AC
-    #define USES_P088      //ToniA IR plugin
+    #define P016_P035_USE_RAW_RAW2 //Use the RAW and RAW2 encodings, disabling it saves 3.7Kb
+    #define USES_P088      // ToniA IR plugin
+    #define PLUGIN_SET_ONLY_SWITCH
+    #define USES_P029      // Output - Domoticz MQTT Helper
+    #define PLUGIN_SET_ONLY_TEMP_HUM
 #endif
 
 #ifdef PLUGIN_BUILD_IR_EXTENDED_NO_RX
     #ifndef PLUGIN_DESCR
-        #define PLUGIN_DESCR  "IR_Extended, no IR RX"
+        #define PLUGIN_DESCR  "IR Extended, no IR RX"
     #endif // PLUGIN_DESCR
     #define USES_P035      // IRTX
     // The following define is needed for extended decoding of A/C Messages and or using standardised common arguments for controlling all deeply supported A/C units
     #define P016_P035_Extended_AC
+    #define P016_P035_USE_RAW_RAW2 //Use the RAW and RAW2 encodings, disabling it saves 3.7Kb
     #define USES_P088      //ToniA IR plugin
 #endif
 
@@ -449,8 +536,14 @@ To create/register a plugin, you have to :
     #ifndef USES_P005
         #define USES_P005   // DHT
     #endif
+    #ifndef USES_P014
+        #define USES_P014   // SI7021
+    #endif
     #ifndef USES_P028
         #define USES_P028   // BME280
+    #endif
+    #ifndef USES_P034
+        #define USES_P034   // DHT12
     #endif
 #endif
 
@@ -604,8 +697,9 @@ To create/register a plugin, you have to :
     #define USES_P039   // Environment - Thermocouple
 
     #define USES_P040   // RFID - ID12LA/RDM6300
-    #define USES_P041   // NeoClock
-    #define USES_P042   // Candle
+    // FIXME TD-er: Disabled NeoClock and Candle plugin to make builds fit in max bin size.
+//    #define USES_P041   // NeoClock
+//    #define USES_P042   // Candle
     #define USES_P043   // ClkOutput
     #define USES_P044   // P1WifiGateway
 
@@ -689,6 +783,7 @@ To create/register a plugin, you have to :
     #define USES_P085   // AcuDC24x
     #define USES_P086   // Receiving values according Homie convention. Works together with C014 Homie controller
     //#define USES_P087   // Serial Proxy
+    #define USES_P089   // Serial Proxy
 #endif
 
 
@@ -885,3 +980,5 @@ To create/register a plugin, you have to :
     #undef USES_C003
   #endif
 #endif
+
+#endif // DEFINE_PLUGIN_SETS_H

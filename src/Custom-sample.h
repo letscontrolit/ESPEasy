@@ -10,9 +10,6 @@
  */
 
 
-// make the compiler show a warning to confirm that this file is inlcuded
-#warning "**** Using Settings from Custom.h File ***"
-
 /*
 
  #######################################################################################################
@@ -30,7 +27,7 @@
 # undef BUILD_GIT
 #endif // ifdef BUILD_GIT
 
-#define BUILD_GIT           "MyBuildNum"
+#define BUILD_GIT           "My Build: "  __DATE__ " "  __TIME__
 
 
 #define DEFAULT_NAME        "MyEspEasyDevice"                        // Enter your device friendly name
@@ -90,7 +87,7 @@
 #define DEFAULT_PIN_I2C_SDA                     4
 #define DEFAULT_PIN_I2C_SCL                     5
 
-#define DEFAULT_PIN_STATUS_LED                  -1
+#define DEFAULT_PIN_STATUS_LED                  (-1)
 #define DEFAULT_PIN_STATUS_LED_INVERSED         true
 
 
@@ -123,7 +120,19 @@
 
 #define BUILD_NO_DEBUG
 
+
+#define USES_SSDP
+
+
 // #define USE_SETTINGS_ARCHIVE
+
+/*
+ #######################################################################################################
+   Special settings  (rendering settings incompatible with other builds)
+ #######################################################################################################
+ */
+
+// #define USE_NON_STANDARD_24_TASKS
 
 /*
  #######################################################################################################
@@ -242,6 +251,9 @@
 // Special plugins needing IR library
 // #define USES_P016   // IR
 // #define USES_P035   // IRTX
+// #define P016_P035_Extended_AC // The following define is needed for extended decoding of A/C Messages and or using standardised 
+                                 //common arguments for controlling all deeply supported A/C units
+//#define P016_P035_USE_RAW_RAW2 //Use the RAW and RAW2 encodings, disabling it saves 3.7Kb
 // #define USES_P088   // Heatpump IR
 
 

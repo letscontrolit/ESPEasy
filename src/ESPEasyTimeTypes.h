@@ -5,6 +5,8 @@
 #include <list>
 #include <time.h>
 
+#include "src/Globals/Plugins.h"
+
 #define MAX_SCHEDULER_WAIT_TIME 5 // Max delay used in the scheduler for passing idle time.
 
 // convenient constants for TimeChangeRules
@@ -72,8 +74,7 @@ boolean  timeOutReached(unsigned long timer) ICACHE_RAM_ATTR;
 long     usecPassedSince(unsigned long timestamp) ICACHE_RAM_ATTR;
 boolean  usecTimeOutReached(unsigned long timer) ICACHE_RAM_ATTR;
 void     setPluginTaskTimer(unsigned long msecFromNow,
-                            byte          plugin,
-                            short         taskIndex,
+                            taskIndex_t   taskIndex,
                             int           Par1,
                             int           Par2 = 0,
                             int           Par3 = 0,

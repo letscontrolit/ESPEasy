@@ -89,18 +89,47 @@
 #include "_Plugin_Helper.h"
 // Plugin helper needs the defined controller sets, thus include after 'define_plugin_sets.h'
 #include "_CPlugin_Helper.h"
-#include "ControllerQueue/DelayQueueElements.h"
+#include "src/ControllerQueue/DelayQueueElements.h"
 
+#include "src/DataStructs/ControllerSettingsStruct.h"
+#include "src/DataStructs/DeviceModel.h"
+#include "src/DataStructs/ESPEasy_EventStruct.h"
+#include "src/DataStructs/PortStatusStruct.h"
+#include "src/DataStructs/ProtocolStruct.h"
+#include "src/DataStructs/RTCStruct.h"
+#include "src/DataStructs/SchedulerTimers.h"
+#include "src/DataStructs/SettingsType.h"
+#include "src/DataStructs/SystemTimerStruct.h"
+#include "src/DataStructs/TimingStats.h"
+
+#include "src/Globals/Device.h"
+#include "src/Globals/ESPEasyWiFiEvent.h"
+#include "src/Globals/ExtraTaskSettings.h"
+#include "src/Globals/GlobalMapPortStatus.h"
+#include "src/Globals/MQTT.h"
+#include "src/Globals/Plugins.h"
+#include "src/Globals/RTC.h"
+#include "src/Globals/SecuritySettings.h"
+#include "src/Globals/Services.h"
+#include "src/Globals/Settings.h"
+#include "src/Globals/Statistics.h"
+
+#if FEATURE_ADC_VCC
+ADC_MODE(ADC_VCC);
+#endif
+
+
+// FIXME TD-er: This must be moves to src/Globals/Services
+// But right now, it seems hard to define WevServer in a .h/.cpp file
+// error: 'WebServer' does not name a type
+#ifdef ESP32
+  #include <WiFi.h>
+  #include <WebServer.h>
+  WebServer WebServer(80);
+#endif
 
 // Get functions to give access to global defined variables.
 // These are needed to get direct access to global defined variables, since they cannot be defined in .h files and included more than once.
-SettingsStruct& getSettings() { return Settings; }
-SecurityStruct& getSecuritySettings() { return SecuritySettings; }
-CRCStruct& getCRCValues() { return CRCValues; }
-
-unsigned long& getConnectionFailures() { return connectionFailures; }
-byte& getHighestActiveLogLevel() { return highest_active_log_level; }
-int getPluginId_from_TaskIndex(byte taskIndex) { return Task_id_to_Plugin_id[taskIndex]; }
 
 float& getUserVar(unsigned int varIndex) {return UserVar[varIndex]; }
 
@@ -162,8 +191,6 @@ void setup()
 #endif
 
   resetPluginTaskData();
-  Plugin_id.resize(PLUGIN_MAX);
-  Task_id_to_Plugin_id.resize(TASKS_MAX);
 
   checkRAM(F("setup"));
   #if defined(ESP32)
@@ -302,16 +329,9 @@ void setup()
 
   timermqtt_interval = 250; // Interval for checking MQTT
   timerAwakeFromDeepSleep = millis();
-  if (Settings.UseRules && isDeepSleepEnabled())
-  {
-    String event = F("System#NoSleep=");
-    event += Settings.deepSleep;
-    rulesProcessing(event);
-  }
-
-  PluginInit();
   CPluginInit();
   NPluginInit();
+  PluginInit();
   log = F("INFO : Plugins: ");
   log += deviceCount + 1;
   log += getPluginDescriptionString();
@@ -322,6 +342,13 @@ void setup()
 
   if (deviceCount + 1 >= PLUGIN_MAX) {
     addLog(LOG_LEVEL_ERROR, F("Programming error! - Increase PLUGIN_MAX"));
+  }
+
+  if (Settings.UseRules && isDeepSleepEnabled())
+  {
+    String event = F("System#NoSleep=");
+    event += Settings.deepSleep_wakeTime;
+    rulesProcessing(event);
   }
 
   if (Settings.UseRules)
@@ -483,12 +510,9 @@ void updateLoopStats_30sec(byte loglevel) {
     log += loopCounterMax;
     log += F(" loopCounterLast: ");
     log += loopCounterLast;
-    log += F(" countFindPluginId: ");
-    log += countFindPluginId;
     addLog(loglevel, log);
   }
 #endif
-  countFindPluginId = 0;
   loop_usec_duration_total = 0;
   loopCounter_full = 1;
 }
@@ -529,7 +553,7 @@ void loop()
      if (Settings.UseRules && isDeepSleepEnabled())
      {
         String event = F("System#NoSleep=");
-        event += Settings.deepSleep;
+        event += Settings.deepSleep_wakeTime;
         rulesProcessing(event);
      }
 
@@ -569,7 +593,7 @@ void loop()
   backgroundtasks();
 
   if (readyForSleep()){
-    deepSleep(Settings.Delay);
+    prepare_deepSleep(Settings.Delay);
     //deepsleep will never return, its a special kind of reboot
   }
 }
@@ -666,6 +690,22 @@ int firstEnabledMQTTController() {
 }
 
 #endif //USES_MQTT
+
+#ifdef USES_BLYNK
+// Blynk_get prototype
+//boolean Blynk_get(const String& command, byte controllerIndex,float *data = NULL );
+
+int firstEnabledBlynkController() {
+  for (byte i = 0; i < CONTROLLER_MAX; ++i) {
+    byte ProtocolIndex = getProtocolIndex(Settings.Protocol[i]);
+    if (Protocol[ProtocolIndex].Number == 12 && Settings.ControllerEnabled[i]) {
+      return i;
+    }
+  }
+  return -1;
+}
+#endif
+
 
 /*********************************************************************************************\
  * Tasks that run 50 times per second
@@ -775,23 +815,6 @@ void runOncePerSecond()
     Wire.endTransmission();
   }
 
-/*
-  if (Settings.SerialLogLevel == LOG_LEVEL_DEBUG_DEV)
-  {
-    serialPrint(F("Plugin calls: 50 ps:"));
-    serialPrint(elapsed50ps);
-    serialPrint(F(" uS, 10 ps:"));
-    serialPrint(elapsed10ps);
-    serialPrint(F(" uS, 10 psU:"));
-    serialPrint(elapsed10psU);
-    serialPrint(F(" uS, 1 ps:"));
-    serialPrint(elapsed);
-    serialPrintln(F(" uS"));
-    elapsed50ps=0;
-    elapsed10ps=0;
-    elapsed10psU=0;
-  }
-  */
   checkResetFactoryPin();
   STOP_TIMER(PLUGIN_CALL_1PS);
 }
@@ -839,8 +862,11 @@ void runEach30Seconds()
   CPluginCall(CPLUGIN_INTERVAL, 0);
 
   #if defined(ESP8266)
+  #ifdef USES_SSDP
   if (Settings.UseSSDP)
     SSDP_update();
+
+  #endif // USES_SSDP
   #endif
 #if FEATURE_ADC_VCC
   if (!wifiConnectInProgress) {
@@ -860,7 +886,7 @@ void runEach30Seconds()
 \*********************************************************************************************/
 // void SensorSendAll()
 // {
-//   for (byte x = 0; x < TASKS_MAX; x++)
+//   for (taskIndex_t x = 0; x < TASKS_MAX; x++)
 //   {
 //     SensorSendTask(x);
 //   }
@@ -870,15 +896,18 @@ void runEach30Seconds()
 /*********************************************************************************************\
  * send specific sensor task data
 \*********************************************************************************************/
-void SensorSendTask(byte TaskIndex)
+void SensorSendTask(taskIndex_t TaskIndex)
 {
+  if (!validTaskIndex(TaskIndex)) return;
   checkRAM(F("SensorSendTask"));
   if (Settings.TaskDeviceEnabled[TaskIndex])
   {
     byte varIndex = TaskIndex * VARS_PER_TASK;
 
     bool success = false;
-    byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[TaskIndex]);
+    const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(TaskIndex);
+    if (!validDeviceIndex(DeviceIndex)) return;
+
     LoadTaskSettings(TaskIndex);
 
     struct EventStruct TempEvent;

@@ -57,7 +57,9 @@ Timezones
 This implementation does not support explicit timezones handling. By default all dates are
 processed as UTC (GMT) dates without timezone infomation. 
 
-To use local dates (current system timezone) instead of GMT compile with `-DCRON_USE_LOCAL_TIME`.
+To use local dates (current system timezone) instead of GMT compile with `-DCRON_USE_LOCAL_TIME`, example:
+
+    gcc -DCRON_USE_LOCAL_TIME ccronexpr.c ccronexpr_test.c -I. -Wall -Wextra -std=c89 -DCRON_TEST_MALLOC -o a.out && TZ="America/Toronto" ./a.out
 
 License information
 -------------------
@@ -66,6 +68,10 @@ This project is released under the [Apache License 2.0](http://www.apache.org/li
 
 Changelog
 ---------
+
+**2019-03-27**
+
+ * `CRON_USE_LOCAL_TIME` usage fixes
 
 **2018-05-23**
 

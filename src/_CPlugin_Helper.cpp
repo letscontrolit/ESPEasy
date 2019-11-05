@@ -2,15 +2,20 @@
 
 #include "ESPEasy_fdwdecl.h"
 #include "ESPEasy_Log.h"
-#include "ESPEasy_buildinfo.h"
+#include "ESPEasy_common.h"
 
-#include "DataStructs/SecurityStruct.h"
-#include "DataStructs/CRCStruct.h"
-#include "DataStructs/SettingsStruct.h"
+#include "src/DataStructs/SecurityStruct.h"
+#include "src/DataStructs/CRCStruct.h"
+#include "src/DataStructs/SettingsStruct.h"
 
-#include "DataStructs/ControllerSettingsStruct.h"
-#include "DataStructs/ESPEasyLimits.h"
-#include "DataStructs/TimingStats.h"
+#include "src/DataStructs/ControllerSettingsStruct.h"
+#include "src/DataStructs/ESPEasyLimits.h"
+#include "src/DataStructs/TimingStats.h"
+
+#include "src/Globals/CRCValues.h"
+#include "src/Globals/Settings.h"
+#include "src/Globals/SecuritySettings.h"
+#include "src/Globals/ESPEasyWiFiEvent.h"
 
 #include <WiFiClient.h>
 #include <WiFiUdp.h>
@@ -41,14 +46,12 @@ bool safeReadStringUntil(Stream     & input,
         }
 
         // found character, add to string
-        else {
-          str += char(c);
+        str += char(c);
 
-          // string at max size?
-          if (str.length() >= maxSize) {
-            addLog(LOG_LEVEL_ERROR, F("Not enough bufferspace to read all input data!"));
-            return false;
-          }
+        // string at max size?
+        if (str.length() >= maxSize) {
+          addLog(LOG_LEVEL_ERROR, F("Not enough bufferspace to read all input data!"));
+          return false;
         }
       }
 
@@ -88,18 +91,16 @@ String get_formatted_Controller_number(int controller_number) {
   return result;
 }
 
-
 String get_auth_header(const String& user, const String& pass) {
   String authHeader = "";
 
-  if (user.length() != 0 && pass.length() != 0) {
-      base64 encoder;
-      String auth = user;
-      auth       += ":";
-      auth       += pass;
-      authHeader  = F("Authorization: Basic ");
-      authHeader += encoder.encode(auth);
-      authHeader += F(" \r\n");
+  if ((user.length() != 0) && (pass.length() != 0)) {
+    String auth = user;
+    auth       += ":";
+    auth       += pass;
+    authHeader  = F("Authorization: Basic ");
+    authHeader += base64::encode(auth);
+    authHeader += F(" \r\n");
   }
   return authHeader;
 }
@@ -108,12 +109,12 @@ String get_auth_header(int controller_index) {
   String authHeader = "";
 
   if (controller_index < CONTROLLER_MAX) {
-    if ((getSecuritySettings().ControllerUser[controller_index][0] != 0) &&
-        (getSecuritySettings().ControllerPassword[controller_index][0] != 0))
+    if ((SecuritySettings.ControllerUser[controller_index][0] != 0) &&
+        (SecuritySettings.ControllerPassword[controller_index][0] != 0))
     {
       authHeader = get_auth_header(
-        String(getSecuritySettings().ControllerUser[controller_index]), 
-        String(getSecuritySettings().ControllerPassword[controller_index]));
+        String(SecuritySettings.ControllerUser[controller_index]),
+        String(SecuritySettings.ControllerPassword[controller_index]));
     }
   } else {
     addLog(LOG_LEVEL_ERROR, F("Invalid controller index"));
@@ -130,9 +131,9 @@ String get_user_agent_request_header_field() {
   request   += F("ESP Easy/");
   request   += BUILD;
   request   += '/';
-  request   += String(getCRCValues().compileDate);
+  request   += String(CRCValues.compileDate);
   request   += ' ';
-  request   += String(getCRCValues().compileTime);
+  request   += String(CRCValues.compileTime);
   request   += "\r\n";
   agent_size = request.length();
   return request;
@@ -246,9 +247,9 @@ void log_connecting_fail(const String& prefix, int controller_number, Controller
     String log = prefix;
     log += get_formatted_Controller_number(controller_number);
     log += F(" connection failed (");
-    log += getConnectionFailures();
+    log += connectionFailures;
     log += F("/");
-    log += getSettings().ConnectionFailuresThreshold;
+    log += Settings.ConnectionFailuresThreshold;
     log += F(")");
     addLog(LOG_LEVEL_ERROR, log);
   }
@@ -257,21 +258,22 @@ void log_connecting_fail(const String& prefix, int controller_number, Controller
 bool count_connection_results(bool success, const String& prefix, int controller_number, ControllerSettingsStruct& ControllerSettings) {
   if (!success)
   {
-    getConnectionFailures()++;
+    connectionFailures++;
     log_connecting_fail(prefix, controller_number, ControllerSettings);
     return false;
   }
   statusLED(true);
 
-  if (getConnectionFailures()) {
-    getConnectionFailures()--;
+  if (connectionFailures) {
+    connectionFailures--;
   }
   return true;
 }
 
 bool try_connect_host(int controller_number, WiFiUDP& client, ControllerSettingsStruct& ControllerSettings) {
-  //START_TIMER; // FIXME TD-er Timingstats macros currently not callable from .cpp file
-  if (!WiFiConnected()) return false;
+  START_TIMER;
+
+  if (!WiFiConnected()) { return false; }
   client.setTimeout(ControllerSettings.ClientTimeout);
 #ifndef BUILD_NO_DEBUG
   log_connecting_to(F("UDP  : "), controller_number, ControllerSettings);
@@ -280,13 +282,14 @@ bool try_connect_host(int controller_number, WiFiUDP& client, ControllerSettings
   const bool result = count_connection_results(
     success,
     F("UDP  : "), controller_number, ControllerSettings);
-  //STOP_TIMER(TRY_CONNECT_HOST_UDP);
+  STOP_TIMER(TRY_CONNECT_HOST_UDP);
   return result;
 }
 
 bool try_connect_host(int controller_number, WiFiClient& client, ControllerSettingsStruct& ControllerSettings) {
-  //START_TIMER; // FIXME TD-er Timingstats macros currently not callable from .cpp file
-  if (!WiFiConnected()) return false;
+  START_TIMER;
+
+  if (!WiFiConnected()) { return false; }
 
   // Use WiFiClient class to create TCP connections
   client.setTimeout(ControllerSettings.ClientTimeout);
@@ -297,7 +300,7 @@ bool try_connect_host(int controller_number, WiFiClient& client, ControllerSetti
   const bool result = count_connection_results(
     success,
     F("HTTP : "), controller_number, ControllerSettings);
-  //STOP_TIMER(TRY_CONNECT_HOST_TCP);
+  STOP_TIMER(TRY_CONNECT_HOST_TCP);
   return result;
 }
 
@@ -306,7 +309,7 @@ bool try_connect_host(int controller_number, WiFiClient& client, ControllerSetti
 //      https://github.com/esp8266/Arduino/pull/1829
 bool client_available(WiFiClient& client) {
   delay(0);
-  return client.available() || client.connected();
+  return (client.available() != 0) || (client.connected() != 0);
 }
 
 bool send_via_http(const String& logIdentifier, WiFiClient& client, const String& postStr, bool must_check_reply) {

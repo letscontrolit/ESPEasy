@@ -53,8 +53,8 @@ TEST(TestArgoACClass, MessageConstructon) {
       0xAC, 0xF5, 0x00, 0x24, 0x02, 0x00, 0x00, 0x00, 0x00, 0xAC, 0xD6, 0x01};
   EXPECT_STATE_EQ(expected, ac.getRaw(), kArgoBits);
   EXPECT_EQ(
-      "Power: On, Mode: 0 (COOL), Fan: 0 (AUTO), Temp: 20C, Room Temp: 21C, "
-      "Max: On, iFeel: On, Night: On",
+      "Power: On, Mode: 0 (Cool), Fan: 0 (Auto), Temp: 20C, Room Temp: 21C, "
+      "Max: On, IFeel: On, Night: On",
       ac.toString());
 }
 
@@ -128,12 +128,12 @@ TEST(TestArgoACClass, SetAndGetRoomTemp) {
 
   ac.setRoomTemp(25);
   EXPECT_EQ(25, ac.getRoomTemp());
-  ac.setRoomTemp(kArgoTempOffset);
-  EXPECT_EQ(kArgoTempOffset, ac.getRoomTemp());
+  ac.setRoomTemp(kArgoTempDelta);
+  EXPECT_EQ(kArgoTempDelta, ac.getRoomTemp());
   ac.setRoomTemp(kArgoMaxRoomTemp);
   EXPECT_EQ(kArgoMaxRoomTemp, ac.getRoomTemp());
-  ac.setRoomTemp(kArgoTempOffset - 1);
-  EXPECT_EQ(kArgoTempOffset, ac.getRoomTemp());
+  ac.setRoomTemp(kArgoTempDelta - 1);
+  EXPECT_EQ(kArgoTempDelta, ac.getRoomTemp());
   ac.setRoomTemp(kArgoMaxRoomTemp + 1);
   EXPECT_EQ(kArgoMaxRoomTemp, ac.getRoomTemp());
 }

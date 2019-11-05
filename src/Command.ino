@@ -1,28 +1,30 @@
 
-#include "Commands/Common.h"
+#include "src/Commands/Common.h"
 #ifdef USES_BLYNK
-#include "Commands/Blynk.h"
-#include "Commands/Blynk_c015.h"
+#include "src/Commands/Blynk.h"
+#include "src/Commands/Blynk_c015.h"
 #endif
-#include "Commands/Diagnostic.h"
-#include "Commands/HTTP.h"
-#include "Commands/i2c.h"
+#include "src/Commands/Diagnostic.h"
+#include "src/Commands/HTTP.h"
+#include "src/Commands/i2c.h"
 #ifdef USES_MQTT
-#include "Commands/MQTT.h"
+#include "src/Commands/MQTT.h"
 #endif //USES_MQTT
-#include "Commands/Networks.h"
-#include "Commands/Notifications.h"
-#include "Commands/RTC.h"
-#include "Commands/Rules.h"
-#include "Commands/SDCARD.h"
-#include "Commands/Settings.h"
-#include "Commands/System.h"
-#include "Commands/Tasks.h"
-#include "Commands/Time.h"
-#include "Commands/Timer.h"
-#include "Commands/UPD.h"
-#include "Commands/wd.h"
-#include "Commands/WiFi.h"
+#include "src/Commands/Networks.h"
+#include "src/Commands/Notifications.h"
+#include "src/Commands/RTC.h"
+#include "src/Commands/Rules.h"
+#include "src/Commands/SDCARD.h"
+#include "src/Commands/Settings.h"
+#include "src/Commands/System.h"
+#include "src/Commands/Tasks.h"
+#include "src/Commands/Time.h"
+#include "src/Commands/Timer.h"
+#include "src/Commands/UPD.h"
+#include "src/Commands/wd.h"
+#include "src/Commands/WiFi.h"
+
+#include "ESPEasy_common.h"
 
 
 /*********************************************************************************************\
@@ -41,6 +43,19 @@ String doExecuteCommand(const char *cmd, struct EventStruct *event, const char *
     addLog(LOG_LEVEL_INFO,  log);
 #ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_DEBUG, line); // for debug purposes add the whole line.
+    String parameters;
+    parameters.reserve(64);
+    parameters += F("Par1: ");
+    parameters += event->Par1;
+    parameters += F(" Par2: ");
+    parameters += event->Par2;
+    parameters += F(" Par3: ");
+    parameters += event->Par3;
+    parameters += F(" Par4: ");
+    parameters += event->Par4;
+    parameters += F(" Par5: ");
+    parameters += event->Par5;
+    addLog(LOG_LEVEL_DEBUG, parameters);
 #endif // ifndef BUILD_NO_DEBUG
   }
 
@@ -201,39 +216,6 @@ String doExecuteCommand(const char *cmd, struct EventStruct *event, const char *
   #undef COMMAND_CASE
 }
 
-// Simple function to return "Ok", to avoid flash string duplication in the firmware.
-String return_command_success()
-{
-  return F("\nOk");
-}
-
-String return_command_failed()
-{
-  return F("\nFailed");
-}
-
-String return_not_connected()
-{
-  return F("Not connected to WiFi");
-}
-
-String return_result(struct EventStruct *event, const String& result)
-{
-  serialPrintln(result);
-
-  if (event->Source == VALUE_SOURCE_SERIAL) {
-    return return_command_success();
-  }
-  return result;
-}
-
-String return_see_serial(struct EventStruct *event)
-{
-  if (event->Source == VALUE_SOURCE_SERIAL) {
-    return return_command_success();
-  }
-  return F("Output sent to serial");
-}
 
 void ExecuteCommand(byte source, const char *Line)
 {
@@ -248,20 +230,10 @@ void ExecuteCommand(byte source, const char *Line)
   // FIXME TD-er: Not sure what happens now, but TaskIndex cannot be set here
   // since commands can originate from anywhere.
   TempEvent.Source = source;
-  {
-    // Use extra scope to delete the TmpStr1 before executing command.
-    String TmpStr1;
-
-    if (GetArgv(Line, TmpStr1, 2)) { TempEvent.Par1 = CalculateParam(TmpStr1.c_str()); }
-
-    if (GetArgv(Line, TmpStr1, 3)) { TempEvent.Par2 = CalculateParam(TmpStr1.c_str()); }
-
-    if (GetArgv(Line, TmpStr1, 4)) { TempEvent.Par3 = CalculateParam(TmpStr1.c_str()); }
-
-    if (GetArgv(Line, TmpStr1, 5)) { TempEvent.Par4 = CalculateParam(TmpStr1.c_str()); }
-
-    if (GetArgv(Line, TmpStr1, 6)) { TempEvent.Par5 = CalculateParam(TmpStr1.c_str()); }
-  }
+  // Split the arguments into Par1...5 of the event.
+  // Do not split it in doExecuteCommand, since that one will be called from the scheduler with pre-set events.
+  // FIXME TD-er: Why call this for all commands? The CalculateParam function is quite heavy.
+  parseCommandString(&TempEvent, Line);
 
   String status = doExecuteCommand(cmd.c_str(), &TempEvent, Line);
   delay(0);

@@ -16,7 +16,7 @@
 //
 // IF the IR code is an Air Condition protocol that the  IR library can decode, then there will be a human-readable description of that IR message.
 // If the IR library can encode those kind of messages then a JSON formated command will be given, that can be replayed by P035 as well.
-// That commands format is: IRSENDAC,{"Protocol":"COOLIX","Power":"on","Opmode":"dry","Fanspeed":"auto","Degrees":22,"swingv":"max","swingh":"off"}
+// That commands format is: IRSENDAC,{"protocol":"COOLIX","power":"on","mode":"dry","fanspeed":"auto","temp":22,"swingv":"max","swingh":"off"}
 #include <IRremoteESP8266.h>
 #include <IRutils.h>
 #include <IRrecv.h>
@@ -237,7 +237,7 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
         //Checks if a particular state is something else than the default and only then it adds it to the JSON document
         doc[F("protocol")] = typeToString(state.protocol);
         if (state.model >= 0)
-          doc[F("model")] = IRac::strToModel(String(state.model).c_str()); //The specific model of A/C if applicable.
+          doc[F("model")] = irutils::modelToStr(state.protocol,state.model); //The specific model of A/C if applicable.
         doc[F("power")] = IRac::boolToString(state.power);                 //POWER ON or OFF
         doc[F("mode")] = IRac::opmodeToString(state.mode);                 //What operating mode should the unit perform? e.g. Cool = doc[""]; Heat etc.
         doc[F("temp")] = state.degrees;                                    //What temperature should the unit be set to?
@@ -430,5 +430,6 @@ unsigned int storeB32Hex(char out[], unsigned int iOut, unsigned int val)
   out[iOut++] = to_32hex(val);
   return iOut;
 }
+#endif //P016_P035_RAW_RAW2
 
 #endif // USES_P016

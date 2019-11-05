@@ -109,7 +109,6 @@ bool CPlugin_005(byte function, struct EventStruct *event, String& string)
         parseControllerVariables(pubname, event, false);
 
         String value = "";
-        // byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[event->TaskIndex]);
         byte valueCount = getValueCountFromSensorType(event->sensorType);
         for (byte x = 0; x < valueCount; x++)
         {

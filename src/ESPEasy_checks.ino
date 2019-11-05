@@ -1,3 +1,23 @@
+#include "src/DataStructs/NodeStruct.h"
+#include "src/DataStructs/CRCStruct.h"
+#include "src/DataStructs/SettingsStruct.h"
+
+// ********************************************************************************
+// Check struct sizes at compile time
+// Usage:
+//   struct foo
+//   {
+//     char bla[16];
+//   };
+//
+//   check_size<foo, 8>();
+// ********************************************************************************
+template <typename ToCheck, std::size_t ExpectedSize, std::size_t RealSize = sizeof(ToCheck)>
+void check_size() {
+  static_assert(ExpectedSize == RealSize, "");
+}
+
+
 void run_compiletime_checks() {
   check_size<CRCStruct,                             168u>();
   check_size<SecurityStruct,                        593u>();
@@ -22,6 +42,9 @@ void run_compiletime_checks() {
   check_size<portStatusStruct,                      4u>();
   check_size<ResetFactoryDefaultPreference_struct,  4u>();
   check_size<GpioFactorySettingsStruct,             11u>();
+  #if defined(USE_NON_STANDARD_24_TASKS) && defined(ESP8266)
+    static_assert(TASKS_MAX == 24, "TASKS_MAX invalid size");
+  #endif
 }
 
 String ReportOffsetErrorInStruct(const String& structname, size_t offset) {
