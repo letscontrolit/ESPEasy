@@ -194,7 +194,11 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
         event->String2 = output;
       }
       //Check if a solution for RAW2 is found and if not give the user the option to access the timings info.
+      #ifdef P016_P035_USE_RAW_RAW2
       if (results.decode_type == decode_type_t::UNKNOWN && !displayRawToReadableB32Hex(event->String2))
+      #else
+      if (results.decode_type == decode_type_t::UNKNOWN)
+      #endif
       {
         addLog(LOG_LEVEL_INFO, F("IR: No replay solutions found! Press button again or try RAW encoding (timmings are in the serial output)"));
         serialPrint(String(F("IR: RAW TIMINGS: ")) + resultToSourceCode(&results));
@@ -286,6 +290,7 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
   return success;
 }
 
+#ifdef P016_P035_USE_RAW_RAW2
 #define PCT_TOLERANCE 8u                                //Percent tolerance
 #define pct_tolerance(v) ((v) / (100u / PCT_TOLERANCE)) //Tolerance % is calculated as the delta between any original timing, and the result after encoding and decoding
 //#define MIN_TOLERANCE       10u
