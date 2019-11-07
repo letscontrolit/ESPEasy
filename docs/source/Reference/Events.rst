@@ -9,8 +9,8 @@ Internal (core) events
 
 .. include:: ../Plugin/P000_events.repl
 
-Plugin based commands
-~~~~~~~~~~~~~~~~~~~~~
+Plugin based events
+~~~~~~~~~~~~~~~~~~~
 
 Besides the internal events there's also plugin specific events. These are listed here below.
 
