@@ -190,6 +190,7 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
       if (results.decode_type != decode_type_t::UNKNOWN)
       {
         addLog(LOG_LEVEL_INFO, String(F("IRSEND,")) + typeToString(results.decode_type, results.repeat) + ',' + resultToHexidecimal(&results) + ',' + uint64ToString(results.bits)); //Show the appropriate command to the user, so he can replay the message via P035
+        addLog(LOG_LEVEL_INFO, String(F("IRSEND,{\"protocol\":\"")) + typeToString(results.decode_type, results.repeat) + String(F("\",\"data\":\"")) + resultToHexidecimal(&results) + String(F("\",\"bits\":")) + uint64ToString(results.bits)+ '}'); //JSON representation of the command
       }
       //Check if a solution for RAW2 is found and if not give the user the option to access the timings info.
       if (results.decode_type == decode_type_t::UNKNOWN 
@@ -266,7 +267,7 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
           doc[F("beep")] = IRac::boolToString(state.beep); //Beep setting ON or OFF
         if (state.sleep > 0)
           doc[F("sleep")] = state.sleep; //Nr. of mins of sleep mode, or use sleep mode. (<= 0 means off.)
-        if (state.clock > 0)
+        if (state.clock >= 0)
           doc[F("clock")] = state.clock; //Nr. of mins past midnight to set the clock to. (< 0 means off.)
         String output = F("IRSENDAC,");
         serializeJson(doc, output);
@@ -286,6 +287,7 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
   return success;
 }
 
+#ifdef P016_P035_USE_RAW_RAW2
 #define PCT_TOLERANCE 8u                                //Percent tolerance
 #define pct_tolerance(v) ((v) / (100u / PCT_TOLERANCE)) //Tolerance % is calculated as the delta between any original timing, and the result after encoding and decoding
 //#define MIN_TOLERANCE       10u
@@ -302,7 +304,6 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
 // by GusPS is that it allows easy inspections and modifications after the code is constructed.
 //
 // Author: Gilad Raz (jazzgil)  23sep2018
-#ifdef P016_P035_USE_RAW_RAW2
 boolean displayRawToReadableB32Hex()
 {
   String line;

@@ -161,7 +161,7 @@ class RawIRMessage():
         "                k%sBitMark, k%sZeroSpace," % (name, name),
         "                %s, %s," % (lastmark, lastspace),
         "                data + pos, %d,  // Bytes" % nbytes,
-        "                k%sFreq);" % name,
+        "                k%sFreq, true, kNoRepeat, kDutyDefault);" % name,
         "    pos += %d;  // Adjust by how many bytes of data we sent" % nbytes])
     return code
 
@@ -391,7 +391,7 @@ def decode_data(message, defines, code, name="", output=sys.stdout):
       "// Status: ALPHA / Untested.",
       "void IRsend::send%s(const uint8_t data[], const uint16_t nbytes,"
       " const uint16_t repeat) {" % def_name,
-      "  for (uint16_t r = 0; r < repeat; r++) {",
+      "  for (uint16_t r = 0; r <= repeat; r++) {",
       "    uint16_t pos = 0;"])
   code["recv"].extend([
       "#if DECODE_%s" % def_name.upper(),
