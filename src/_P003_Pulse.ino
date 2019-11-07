@@ -179,6 +179,18 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
         success = true;
         break;
       }
+
+      case PLUGIN_WRITE:
+      {
+        String command = parseString(string, 1);
+        if (command == F("resetpulsecounter"))
+        {
+          Plugin_003_pulseCounter[event->TaskIndex] = 0;
+          Plugin_003_pulseTotalCounter[event->TaskIndex] = 0;
+          success = true; // Command is handled.
+        }
+        break;
+      }
   }
   return success;
 }

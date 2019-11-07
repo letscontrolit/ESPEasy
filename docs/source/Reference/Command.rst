@@ -89,10 +89,10 @@ Besides the internal commands there's also plugin specific commands. These are l
 .. .. include:: ../Plugin/P002_commands.repl
 
 
-.. P003 :ref:`P003_page`
-.. ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+P003 :ref:`P003_page`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. .. include:: ../Plugin/P003_commands.repl
+.. include:: ../Plugin/P003_commands.repl
 
 
 .. P004 :ref:`P004_page`
