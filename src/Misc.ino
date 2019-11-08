@@ -2722,8 +2722,8 @@ void ArduinoOTAInit()
       //"dangerous": if you reset during flash you have to reflash via serial
       //so dont touch device until restart is complete
       serialPrintln(F("\nOTA  : DO NOT RESET OR POWER OFF UNTIL BOOT+FLASH IS COMPLETE."));
-      delay(100);
-      reboot();
+      //delay(100);
+      //reboot(); //Not needed, node reboots automaticall after calling onEnd and succesfully flashing
   });
   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
     if (Settings.UseSerial)
