@@ -333,7 +333,7 @@ bool stringWrappedWithChar(const String& text, char wrappingChar) {
 }
 
 bool isQuoteChar(char c) {
-  return c == '\'' || c == '"';
+  return c == '\'' || c == '"' || c == '`';
 }
 
 bool isParameterSeparatorChar(char c) {

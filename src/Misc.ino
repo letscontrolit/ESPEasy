@@ -934,7 +934,7 @@ bool GetArgvBeginEnd(const char *string, const unsigned int argc, int& pos_begin
     else if  (!parenthesis && (c == ',') && (d >= 33) && (d <= 126)) {}
     else
     {
-      if (!parenthesis && ((c == '"') || (c == '\'') || (c == '['))) {
+      if (!parenthesis && (isQuoteChar(c) || (c == '['))) {
         parenthesis          = true;
         matching_parenthesis = c;
 
@@ -951,7 +951,7 @@ bool GetArgvBeginEnd(const char *string, const unsigned int argc, int& pos_begin
       }
       ++pos_end;
 
-      if ((!parenthesis && ((d == ' ') || (d == ',') || (d == 0)))) // end of word
+      if (!parenthesis && (isParameterSeparatorChar(d) || (d == 0))) // end of word
       {
         argc_pos++;
 
