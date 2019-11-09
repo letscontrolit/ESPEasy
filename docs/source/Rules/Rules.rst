@@ -285,6 +285,49 @@ Please observe that task names are case insensitive meaning that VAR, var, and V
 are all treated the same.
 
 
+Parameter parsing
+-----------------
+
+A command used in rules can have several parameters.
+A parameter is typically separated by a comma, but for convenience the separator can also 
+be accompanied by a space or be a single space.
+
+So these can be used to separate a parameter:
+
+* comma
+* comma space
+* space comma
+* space
+* space space
+
+This does impose some restrictions on the use of a comma or a space in a parameter.
+Especially sending JSON to a MQTT controller can become next to impossible with these limitations.
+
+In order to allow the comma or space in a parameter, you can wrap the parameter in quotes.
+
+* Single quote (')
+* Double quote (")
+* Back quote  (added to builds after 2019/11/10)
+
+There are multiple quotes available for this, to be able to use "the other quote" in your parameter.
+For example in JSON, you need the double quote for string like values or keys.
+
+.. code-block:: html
+ 
+ Publish domoticz/in,{"idx":26,"nvalue":0,"svalue":"[AQ#TVOC]"}
+
+This can be fixed by wrapping the last parameter with single quotes like this:
+
+.. code-block:: html
+ 
+ Publish domoticz/in,'{"idx":26,"nvalue":0,"svalue":"[AQ#TVOC]"}'
+
+Just make sure to use the same quote as start and end of your parameter and don't use that character in the parameter itself.
+N.B. these extra quotes are removed from the parameter when used, as well as trailing or leading spaces.
+
+The reason this behavior was changed from before 2019/11 was that the old implementation could lead to unpredictable results.
+
+
 Formatting refered values
 -------------------------
 
