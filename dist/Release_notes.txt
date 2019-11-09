@@ -1,4 +1,26 @@
 -------------------------------------------------
+Changes in release mega-20191108 (since mega-20191104)
+-------------------------------------------------
+
+Release date: Fri Nov  8 04:00:15 CET 2019
+
+Bartlomiej Zimon (1):
+      P003 Pulse: add resetpulsecounter command for setting counters to 0
+
+TD-er (1):
+      [Docs] Document new resetpulsecounter command
+
+jimmys01 (7):
+      Update IR library
+      [IR TX RX] Add IRSEND JSON formated command
+      [IR TX] Pretify and show to the log the supported Protocols, make JSON keys not case sensitive
+      [IR TX] Fix travis issues
+      Refactor P035
+      Refactor P035
+      Another refactor of P035
+
+
+-------------------------------------------------
 Changes in release mega-20191104 (since mega-20191103)
 -------------------------------------------------
 

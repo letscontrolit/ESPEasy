@@ -54,7 +54,7 @@ PROTOCOLS = ir_NEC.o ir_Sony.o ir_Samsung.o ir_JVC.o ir_RCMM.o ir_RC5_RC6.o \
 						ir_Trotec.o ir_Neoclima.o ir_Amcor.o
 
 # Common object files
-COMMON_OBJ = IRutils.o IRtimer.o IRsend.o IRrecv.o IRtext.o $(PROTOCOLS)
+COMMON_OBJ = IRutils.o IRtimer.o IRsend.o IRrecv.o IRtext.o IRac.o $(PROTOCOLS)
 
 # Common dependencies
 COMMON_DEPS = $(USER_DIR)/IRrecv.h $(USER_DIR)/IRsend.h $(USER_DIR)/IRtimer.h \
@@ -75,7 +75,7 @@ mode2_decode.o : mode2_decode.cpp $(COMMON_TEST_DEPS) $(GTEST_HEADERS)
 mode2_decode : $(COMMON_OBJ) mode2_decode.o
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@
 
-IRtext.o : $(USER_DIR)/IRtext.cpp $(USER_DIR)/IRtext.h $(USER_DIR)/IRremoteESP8266.h $(USER_DIR)/i18n.h
+IRtext.o : $(USER_DIR)/IRtext.cpp $(USER_DIR)/IRtext.h $(USER_DIR)/IRremoteESP8266.h $(USER_DIR)/i18n.h $(USER_DIR)/locale/*.h
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c $(USER_DIR)/IRtext.cpp
 
 IRutils.o : $(USER_DIR)/IRutils.cpp $(USER_DIR)/IRutils.h $(USER_DIR)/IRremoteESP8266.h
@@ -233,3 +233,6 @@ ir_Neoclima.o : $(USER_DIR)/ir_Neoclima.cpp $(USER_DIR)/ir_Neoclima.h $(COMMON_D
 
 ir_Amcor.o : $(USER_DIR)/ir_Amcor.cpp $(USER_DIR)/ir_Amcor.h $(GTEST_HEADERS)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c $(USER_DIR)/ir_Amcor.cpp
+
+IRac.o : $(USER_DIR)/IRac.cpp $(USER_DIR)/IRac.h $(COMMON_DEPS) $(GTEST_HEADERS)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES)  -c $(USER_DIR)/IRac.cpp
