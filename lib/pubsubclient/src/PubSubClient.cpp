@@ -398,8 +398,7 @@ boolean PubSubClient::publish(const char* topic, const uint8_t* payload, unsigne
             return false;
         }
         // Leave room in the buffer for header and variable length field
-        uint16_t length = MQTT_MAX_HEADER_SIZE;
-        length = writeString(topic,buffer,length);
+        uint16_t length = writeString(topic,buffer,length);
         uint16_t i;
         for (i=0;i<plength;i++) {
             buffer[length++] = payload[i];
@@ -637,22 +636,19 @@ uint16_t PubSubClient::writeString(const char* string, uint8_t* buf, uint16_t po
 
 
 boolean PubSubClient::connected() {
-    boolean rc;
     if (_client == NULL ) {
-        rc = false;
-    } else {
-        rc = (int)_client->connected();
-        if (!rc) {
-            if (this->_state == MQTT_CONNECTED) {
-                this->_state = MQTT_CONNECTION_LOST;
-                _client->flush();
-                _client->stop();
-            }
-        } else {
-            return this->_state == MQTT_CONNECTED;
-        }
+        this->_state = MQTT_DISCONNECTED;
+        return false;
     }
-    return rc;
+    if (_client->connected() == 0) {
+        bool lastStateConnected = this->_state == MQTT_CONNECTED;
+        this->disconnect();
+        if (lastStateConnected) {
+            this->_state = MQTT_CONNECTION_LOST;
+        }
+        return false;
+    }
+    return this->_state == MQTT_CONNECTED;
 }
 
 PubSubClient& PubSubClient::setServer(uint8_t * ip, uint16_t port) {
