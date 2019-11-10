@@ -321,9 +321,10 @@ boolean PubSubClient::loop() {
             } else {
                 buffer[0] = MQTTPINGREQ;
                 buffer[1] = 0;
-                _client->write(buffer,2);
-                lastOutActivity = t;
-                lastInActivity = t;
+                if (_client->write(buffer,2) != 0) {
+                  lastOutActivity = t;
+                  lastInActivity = t;
+                }
                 pingOutstanding = true;
             }
         }
@@ -351,9 +352,9 @@ boolean PubSubClient::loop() {
                             buffer[1] = 2;
                             buffer[2] = (msgId >> 8);
                             buffer[3] = (msgId & 0xFF);
-                            _client->write(buffer,4);
-                            lastOutActivity = t;
-
+                            if (_client->write(buffer,4) != 0) {
+                              lastOutActivity = t;
+                            }
                         } else {
                             payload = buffer+llen+3+tl;
                             callback(topic,payload,len-llen-3-tl);
@@ -456,8 +457,9 @@ boolean PubSubClient::publish_P(const char* topic, const uint8_t* payload, unsig
     for (i=0;i<plength;i++) {
         rc += _client->write((char)pgm_read_byte_near(payload + i));
     }
-
-    lastOutActivity = millis();
+    if (rc > 0) {
+      lastOutActivity = millis();
+    }
 
     // Header (1 byte) + llen + identifier (2 bytes)  + topic len + payload len
     const int expectedLength = 1 + llen + 2 + tlen + plength;
@@ -475,7 +477,9 @@ boolean PubSubClient::beginPublish(const char* topic, unsigned int plength, bool
         }
         size_t hlen = buildHeader(header, buffer, plength+length-MQTT_MAX_HEADER_SIZE);
         uint16_t rc = _client->write(buffer+(MQTT_MAX_HEADER_SIZE-hlen),length-(MQTT_MAX_HEADER_SIZE-hlen));
-        lastOutActivity = millis();
+        if (rc > 0) {
+           lastOutActivity = millis();
+        }
         return (rc == (length-(MQTT_MAX_HEADER_SIZE-hlen)));
     }
     return false;
@@ -486,19 +490,27 @@ int PubSubClient::endPublish() {
 }
 
 size_t PubSubClient::write(uint8_t data) {
-    lastOutActivity = millis();
     if (_client == nullptr) {
-      return 0;
+        lastOutActivity = millis();
+        return 0;
     }
-    return _client->write(data);
+    size_t rc = _client->write(data);
+    if (rc != 0) {
+        lastOutActivity = millis();
+    }
+    return rc;
 }
 
 size_t PubSubClient::write(const uint8_t *buffer, size_t size) {
-    lastOutActivity = millis();
     if (_client == nullptr) {
-      return 0;
+        lastOutActivity = millis();
+        return 0;
     }
-    return _client->write(buffer,size);
+    size_t rc = _client->write(buffer,size);
+    if (rc != 0) {
+        lastOutActivity = millis();
+    }
+    return rc;
 }
 
 size_t PubSubClient::buildHeader(uint8_t header, uint8_t* buf, uint16_t length) {
@@ -544,7 +556,9 @@ boolean PubSubClient::write(uint8_t header, uint8_t* buf, uint16_t length) {
     return result;
 #else
     rc = _client->write(buf+(MQTT_MAX_HEADER_SIZE-hlen),length+hlen);
-    lastOutActivity = millis();
+    if (rc != 0) {
+        lastOutActivity = millis();
+    }
     return (rc == hlen+length);
 #endif
 }
