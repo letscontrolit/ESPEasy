@@ -127,7 +127,7 @@ boolean PubSubClient::connect(const char *id, const char *user, const char *pass
         if (_client->connected()) {
             result = 1;
         } else {
-            if (domain != NULL) {
+            if (domain.length() != 0) {
                 result = _client->connect(this->domain.c_str(), this->port);
             } else {
                 result = _client->connect(this->ip, this->port);
