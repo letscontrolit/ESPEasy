@@ -1,6 +1,6 @@
 On StartTest1 Do
 //Let,4,1 will stop the test
- LogEntry,Test started!
+ LogEntry,'Test started!'
  Monitor,GPIO,2  //Set to trigger GPIO#2 events
  Let,1,0     //Zero out (to be sure)
  Let,2,0
@@ -22,8 +22,8 @@ On StartTest1 Do
 EndOn
 
 On StartTimer Do
- LogEntry,Timer %eventvalue1% will start in %eventvalue2% seconds
- TimerSet,%eventvalue1%,%eventvalue2%
+ LogEntry,'Timer %eventvalue1% will start in %eventvalue2% seconds'
+ TimerSet,'%eventvalue1%,%eventvalue2%'
 EndOn
 
 On StopTimer Do
@@ -69,14 +69,14 @@ On Rules#Timer=3 Do
   GPIO,2,1
   GPIO,14,0
  EndIf
- LogEntry,v7:[VAR#7] i7:[INT#7] v8:[VAR#8] i8:[INT#8]
- LogEntry,i1:[INT#1] i2:[INT#2] i3:[INT#3] i4:[INT#4]
+ LogEntry,'v7:[VAR#7] i7:[INT#7] v8:[VAR#8] i8:[INT#8]'
+ LogEntry,'i1:[INT#1] i2:[INT#2] i3:[INT#3] i4:[INT#4]'
 EndOn
 
 On Rules#Timer=4 Do
   GPIO,2,0
   GPIO,14,0
-  LogEntry,LED fading....
+  LogEntry,'LED fading....'
   PWM,2,1024,[INT#6]
   PWM,2,0,[VAR#6]
   GPIO,2,0 //monitor GPIO again
@@ -85,10 +85,10 @@ EndOn
 
 On GPIO#2 Do
  Let,5,%eventvalue% //Capture GPIO state
- LogEntry,LED turned "[VAR#5#!O]" "[INT#5#!O]" ([Plugin#GPIO#Pinstate#2])
+ LogEntry,'LED turned "[VAR#5#!O]" "[INT#5#!O]" ([Plugin#GPIO#Pinstate#2])'
  If [INT#3]=-1
-  LogEntry,Test ended (min mem: [INT#9] min stack: [INT#10])!
+  LogEntry,'Test ended (min mem: [INT#9] min stack: [INT#10])!'
  Else
-  LogEntry,step: [INT#3]..[INT#16]
+  LogEntry,'step: [INT#3]..[INT#16]'
  EndIf
 EndOn
