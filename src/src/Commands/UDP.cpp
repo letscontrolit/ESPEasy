@@ -29,7 +29,7 @@ String Command_UDP_Port(struct EventStruct *event, const char *Line)
 String Command_UPD_SendTo(struct EventStruct *event, const char *Line)
 {
   int destUnit = parseCommandArgumentInt(Line, 1);
-  if (destUnit > 0 & destUnit < 255)
+  if ((destUnit > 0) && (destUnit < 255))
   {
     String eventName = parseStringKeepCase(Line, 3);
     SendUDPCommand(destUnit, eventName.c_str(), eventName.length());
