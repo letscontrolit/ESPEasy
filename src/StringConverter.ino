@@ -386,6 +386,8 @@ String to_internal_string(const String& input) {
 
 /*********************************************************************************************\
    Parse a string and get the xth command or parameter
+   IndexFind = 1 => command.
+    // FIXME TD-er: parseString* should use index starting at 0.
 \*********************************************************************************************/
 String parseString(const String& string, byte indexFind) {
   String result = parseStringKeepCase(string, indexFind);

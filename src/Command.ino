@@ -35,7 +35,8 @@ bool checkNrArguments(const char *cmd, const char *Line, int nrArguments) {
       String log;
       log.reserve(64);
       log = cmd;
-      log += F(": Too many arguments, try using quotes");
+      log += F(": ");
+      log += return_incorrect_nr_arguments();
       addLog(LOG_LEVEL_ERROR, log);
     }
     return false;
@@ -78,7 +79,7 @@ String doExecuteCommand(const char *cmd, struct EventStruct *event, const char *
 
   // Simple macro to match command to function call.
   #define COMMAND_CASE(S, C, NARGS) \
-  if (strcmp_P(cmd_lc.c_str(), PSTR(S)) == 0) { checkNrArguments(cmd, line, NARGS); return C(event, line); }
+  if (strcmp_P(cmd_lc.c_str(), PSTR(S)) == 0) { if (!checkNrArguments(cmd, line, NARGS)) { return return_incorrect_nr_arguments(); } else  return C(event, line); }
   // FIXME TD-er: Should we execute command when number of arguments is wrong?
 
   // FIXME TD-er: must determine nr arguments where NARGS is set to -1
@@ -152,7 +153,7 @@ String doExecuteCommand(const char *cmd, struct EventStruct *event, const char *
     case 'n': {
       COMMAND_CASE("name",    Command_Settings_Name, 1);        // Settings.h
       COMMAND_CASE("nosleep", Command_System_NoSleep, 1);       // System.h
-      COMMAND_CASE("notify",  Command_Notifications_Notify, 1); // Notifications.h
+      COMMAND_CASE("notify",  Command_Notifications_Notify, 2); // Notifications.h
       COMMAND_CASE("ntphost", Command_NTPHost, 1);              // Time.h
       break;
     }
@@ -187,9 +188,9 @@ String doExecuteCommand(const char *cmd, struct EventStruct *event, const char *
       break;
     }
     case 't': {
-      COMMAND_CASE("taskclear",          Command_Task_Clear, 2);          // Tasks.h
+      COMMAND_CASE("taskclear",          Command_Task_Clear, 1);          // Tasks.h
       COMMAND_CASE("taskclearall",       Command_Task_ClearAll, 0);       // Tasks.h
-      COMMAND_CASE("taskrun",            Command_Task_Run, 2);            // Tasks.h
+      COMMAND_CASE("taskrun",            Command_Task_Run, 1);            // Tasks.h
       COMMAND_CASE("taskvalueset",       Command_Task_ValueSet, 3);       // Tasks.h
       COMMAND_CASE("taskvaluetoggle",    Command_Task_ValueToggle, 2);    // Tasks.h
       COMMAND_CASE("taskvaluesetandrun", Command_Task_ValueSetAndRun, 3); // Tasks.h

@@ -19,6 +19,11 @@ String return_command_failed()
   return F("\nFailed");
 }
 
+String return_incorrect_nr_arguments()
+{
+  return F("Too many arguments, try using quotes");
+}
+
 String return_not_connected()
 {
   return F("Not connected to WiFi");

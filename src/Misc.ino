@@ -789,23 +789,47 @@ void delayBackground(unsigned long dsdelay)
 
 
 /********************************************************************************************\
+  Check to see if a given argument is a valid taskIndex (argc = 0 => command)
+  \*********************************************************************************************/
+taskIndex_t parseCommandArgumentTaskIndex(const String& string, unsigned int argc)
+{
+  taskIndex_t taskIndex = INVALID_TASK_INDEX;
+  const int ti = parseCommandArgumentInt(string, argc);
+  if (ti > 0) {
+    // Task Index used as argument in commands start at 1.
+    taskIndex = static_cast<taskIndex_t>(ti - 1);
+  }
+  return taskIndex;
+}
+
+
+/********************************************************************************************\
+  Get int from command argument (argc = 0 => command)
+  \*********************************************************************************************/
+int parseCommandArgumentInt(const String& string, unsigned int argc)
+{
+  int value = 0;
+  if (argc > 0) {
+    // No need to check for the command (argc == 0)
+    String TmpStr;
+    if (GetArgv(string.c_str(), TmpStr, argc + 1)) { 
+      value = CalculateParam(TmpStr.c_str()); 
+    }
+  }
+  return value;
+}
+
+/********************************************************************************************\
   Parse a command string to event struct
   \*********************************************************************************************/
 void parseCommandString(struct EventStruct *event, const String& string)
 {
   checkRAM(F("parseCommandString"));
-  String TmpStr1;
-  event->Par1 = 0;
-  event->Par2 = 0;
-  event->Par3 = 0;
-  event->Par4 = 0;
-  event->Par5 = 0;
-
-  if (GetArgv(string.c_str(), TmpStr1, 2)) { event->Par1 = CalculateParam(TmpStr1.c_str()); }
-  if (GetArgv(string.c_str(), TmpStr1, 3)) { event->Par2 = CalculateParam(TmpStr1.c_str()); }
-  if (GetArgv(string.c_str(), TmpStr1, 4)) { event->Par3 = CalculateParam(TmpStr1.c_str()); }
-  if (GetArgv(string.c_str(), TmpStr1, 5)) { event->Par4 = CalculateParam(TmpStr1.c_str()); }
-  if (GetArgv(string.c_str(), TmpStr1, 6)) { event->Par5 = CalculateParam(TmpStr1.c_str()); }
+  event->Par1 = parseCommandArgumentInt(string, 1);
+  event->Par2 = parseCommandArgumentInt(string, 2);
+  event->Par3 = parseCommandArgumentInt(string, 3);
+  event->Par4 = parseCommandArgumentInt(string, 4);
+  event->Par5 = parseCommandArgumentInt(string, 5);
 }
 
 /********************************************************************************************\
