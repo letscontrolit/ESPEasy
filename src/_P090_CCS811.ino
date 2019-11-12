@@ -245,7 +245,7 @@ boolean Plugin_090(byte function, struct EventStruct *event, String& string)
         addRowLabel(F("Temperature"));
         addTaskSelect(F("p090_temperature_task"), P090_TEMPERATURE_TASK_INDEX);
         LoadTaskSettings(P090_TEMPERATURE_TASK_INDEX); // we need to load the values from another task for selection!
-        addRowLabel(F("Temperature Value:<TD>"));
+        addRowLabel(F("Temperature Value:"));
         addTaskValueSelect(F("p090_temperature_value"), P090_TEMPERATURE_TASK_VALUE, P090_TEMPERATURE_TASK_INDEX);
 
         // temperature scale
