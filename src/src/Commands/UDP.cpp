@@ -44,7 +44,7 @@ String Command_UDP_SendToUPD(struct EventStruct *event, const char *Line)
     String ip      = parseString(strLine, 2);
     int port    = parseCommandArgumentInt(strLine, 2);
 
-    if (!port < 0 || port > 65535) return return_command_failed();
+    if (port < 0 || port > 65535) return return_command_failed();
     String message = parseStringToEndKeepCase(strLine, 4);
     IPAddress UDP_IP;
 
