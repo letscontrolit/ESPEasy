@@ -132,15 +132,15 @@ uint32_t IRCoolixAC::getRaw() { return remote_state; }
 
 void IRCoolixAC::setRaw(const uint32_t new_code) {
   if (!handleSpecialState(new_code)) {
-    // it isn`t special so might afect Temp|mode|Fan
+    // it isn`t special so might affect Temp|mode|Fan
     if (new_code == kCoolixCmdFan) {
       setMode(kCoolixFan);
-    } else {
-      // must be a command changing Temp|Mode|Fan
-      // it is safe to just copy to remote var
-      remote_state = new_code;
+      return;
     }
   }
+  // must be a command changing Temp|Mode|Fan
+  // it is safe to just copy to remote var
+  remote_state = new_code;
 }
 
 // Return true if the current state is a special state.
@@ -243,17 +243,13 @@ bool IRCoolixAC::getPower() {
 }
 
 void IRCoolixAC::setPower(const bool on) {
-  if (powerFlag) {
-    if (!on) {
-      updateSavedState();
-      remote_state = kCoolixOff;
-    }
-  } else {
-    if (on) {
-      // at this point remote_state must be ready
-      // to be transmitted
-      recoverSavedState();
-    }
+  if (!on) {
+    updateSavedState();
+    remote_state = kCoolixOff;
+  } else if (!powerFlag) {
+    // at this point remote_state must be ready
+    // to be transmitted
+    recoverSavedState();
   }
   powerFlag = on;
 }
@@ -500,23 +496,38 @@ String IRCoolixAC::toString(void) {
   if (!getPower()) return result;  // If it's off, there is no other info.
   // Special modes.
   if (getSwing()) {
-    result += kCommaSpaceStr + kSwingStr + kColonSpaceStr + kToggleStr;
+    result += kCommaSpaceStr;
+    result += kSwingStr;
+    result += kColonSpaceStr;
+    result += kToggleStr;
     return result;
   }
   if (getSleep()) {
-    result += kCommaSpaceStr + kSleepStr + kColonSpaceStr + kToggleStr;
+    result += kCommaSpaceStr;
+    result += kSleepStr;
+    result += kColonSpaceStr;
+    result += kToggleStr;
     return result;
   }
   if (getTurbo()) {
-    result += kCommaSpaceStr + kTurboStr + kColonSpaceStr + kToggleStr;
+    result += kCommaSpaceStr;
+    result += kTurboStr;
+    result += kColonSpaceStr;
+    result += kToggleStr;
     return result;
   }
   if (getLed()) {
-    result += kCommaSpaceStr + kLightStr + kColonSpaceStr + kToggleStr;
+    result += kCommaSpaceStr;
+    result += kLightStr;
+    result += kColonSpaceStr;
+    result += kToggleStr;
     return result;
   }
   if (getClean()) {
-    result += kCommaSpaceStr + kCleanStr + kColonSpaceStr + kToggleStr;
+    result += kCommaSpaceStr;
+    result += kCleanStr;
+    result += kColonSpaceStr;
+    result += kToggleStr;
     return result;
   }
   result += addModeToString(getMode(), kCoolixAuto, kCoolixCool, kCoolixHeat,
@@ -528,7 +539,8 @@ String IRCoolixAC::toString(void) {
       result += kAutoStr;
       break;
     case kCoolixFanAuto0:
-      result += kAutoStr + '0';
+      result += kAutoStr;
+      result += '0';
       break;
     case kCoolixFanMax:
       result += kMaxStr;
@@ -554,8 +566,7 @@ String IRCoolixAC::toString(void) {
   result += addBoolToString(getZoneFollow(), kZoneFollowStr);
   result += addLabeledString(
       (getSensorTemp() > kCoolixSensorTempMax)
-          ? kOffStr : uint64ToString(getSensorTemp()) + F("C"),
-      kSensorStr + ' ' + kTempStr);
+          ? kOffStr : uint64ToString(getSensorTemp()) + 'C', kSensorTempStr);
   return result;
 }
 
