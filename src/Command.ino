@@ -34,20 +34,31 @@ bool checkNrArguments(const char *cmd, const char *Line, int nrArguments) {
   if (HasArgv(Line, nrArguments + 2)) {
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
       String log;
-      log.reserve(64);
+      log.reserve(128);
       log += F("Too many arguments: cmd=");
       log += cmd;
 
       if (nrArguments < 1) {
         log += Line;
       } else {
-        for (int i = 0; i < nrArguments; ++i) {
-          log += F(" arg");
+        // Check for one more argument than allowed, since we apparently have one.
+        for (int i = 0; i <= nrArguments; ++i) {
+          if (i < nrArguments) {
+            log += F(" arg");
+          } else {
+            log += F(" extraArg");
+          }
           log += String(i + 1);
           log += '=';
           log += parseString(Line, i + 2);
         }
       }
+      log += F(" lineLength=");
+      log += strlen(Line);
+      addLog(LOG_LEVEL_ERROR, log);
+      log = F("Line: _");
+      log += Line;
+      log += '_';
       addLog(LOG_LEVEL_ERROR, log);
     }
     return false;

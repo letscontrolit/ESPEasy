@@ -914,14 +914,15 @@ byte getNotificationProtocolIndex(byte Number)
   \*********************************************************************************************/
 
 bool HasArgv(const char *string, unsigned int argc) {
-  int pos_begin, pos_end;
-  return GetArgvBeginEnd(string, argc, pos_begin, pos_end);
+  String argvString;
+  return GetArgv(string, argvString, argc);
 }
 
 bool GetArgv(const char *string, String& argvString, unsigned int argc) {
   int pos_begin, pos_end;
   bool hasArgument = GetArgvBeginEnd(string, argc, pos_begin, pos_end);
   argvString = "";
+  if (!hasArgument) return false;
   if (pos_begin >= 0 && pos_end >= 0 && pos_end > pos_begin) {
     argvString.reserve(pos_end - pos_begin);
     for (int i = pos_begin; i < pos_end; ++i) {
@@ -930,7 +931,7 @@ bool GetArgv(const char *string, String& argvString, unsigned int argc) {
   }
   argvString.trim();
   argvString = stripQuotes(argvString);
-  return hasArgument;
+  return argvString.length() > 0;
 }
 
 bool GetArgvBeginEnd(const char *string, const unsigned int argc, int& pos_begin, int& pos_end) {
