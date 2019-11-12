@@ -15,7 +15,7 @@ String Command_HTTP_SendToHTTP(struct EventStruct *event, const char* Line)
 	if (WiFiConnected()) {
 		String strLine = Line;
 		String host = parseString(strLine, 2);
-		String port = parseString(strLine, 3);
+		const int port = parseCommandArgumentInt(strLine, 2);
 		if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
 			String log = F("SendToHTTP: Host: ");
 			log += host;
@@ -23,7 +23,7 @@ String Command_HTTP_SendToHTTP(struct EventStruct *event, const char* Line)
 			log += port;
 			addLog(LOG_LEVEL_DEBUG, log);
 		}
-		if (!isInt(port)) return return_command_failed();
+		if (!port < 0 || port > 65535) return return_command_failed();
 		String path = parseStringToEndKeepCase(strLine, 4);
 #ifndef BUILD_NO_DEBUG
 		if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
@@ -34,13 +34,12 @@ String Command_HTTP_SendToHTTP(struct EventStruct *event, const char* Line)
 #endif
 		WiFiClient client;
 		client.setTimeout(CONTROLLER_CLIENTTIMEOUT_DFLT);
-		const int port_int = port.toInt();
-		const bool connected = connectClient(client, host.c_str(), port_int);
+		const bool connected = connectClient(client, host.c_str(), port);
 		if (connected) {
 			String hostportString = host;
-			if (port_int != 0 && port_int != 80) {
+			if (port != 0 && port != 80) {
 				hostportString += ':';
-				hostportString += port_int;
+				hostportString += port;
 			}
 			String request = do_create_http_request(hostportString, F("GET"), path);
 #ifndef BUILD_NO_DEBUG

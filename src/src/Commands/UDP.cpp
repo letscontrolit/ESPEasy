@@ -28,16 +28,11 @@ String Command_UDP_Port(struct EventStruct *event, const char *Line)
 
 String Command_UPD_SendTo(struct EventStruct *event, const char *Line)
 {
-  // FIXME TD-er: This one is not using parseString* function
-  String eventName = Line;
-
-  eventName = eventName.substring(7);
-  int index = eventName.indexOf(',');
-
-  if (index > 0)
+  int destUnit = parseCommandArgumentInt(Line, 1);
+  if ((destUnit > 0) && (destUnit < 255))
   {
-    eventName = eventName.substring(index + 1);
-    SendUDPCommand(event->Par1, eventName.c_str(), eventName.length());
+    String eventName = parseStringKeepCase(Line, 3);
+    SendUDPCommand(destUnit, eventName.c_str(), eventName.length());
   }
   return return_command_success();
 }
@@ -47,14 +42,14 @@ String Command_UDP_SendToUPD(struct EventStruct *event, const char *Line)
   if (WiFiConnected()) {
     String strLine = Line;
     String ip      = parseString(strLine, 2);
-    String port    = parseString(strLine, 3);
+    int port    = parseCommandArgumentInt(strLine, 2);
 
-    if (!isInt(port)) { return return_command_failed(); }
+    if (port < 0 || port > 65535) return return_command_failed();
     String message = parseStringToEndKeepCase(strLine, 4);
     IPAddress UDP_IP;
 
     if (UDP_IP.fromString(ip)) {
-      portUDP.beginPacket(UDP_IP, port.toInt());
+      portUDP.beginPacket(UDP_IP, port);
       #if defined(ESP8266)
       portUDP.write(message.c_str(),            message.length());
       #endif // if defined(ESP8266)

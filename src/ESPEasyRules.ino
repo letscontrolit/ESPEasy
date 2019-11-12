@@ -191,6 +191,7 @@ String rulesProcessingFile(const String& fileName, String& event) {
         case '\n':
         {
           // Line end, parse rule
+          line.trim();
           const size_t lineLength = line.length();
 
           if (lineLength > longestLineSize) {

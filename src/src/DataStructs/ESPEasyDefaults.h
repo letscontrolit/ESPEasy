@@ -209,11 +209,14 @@
 #define DEFAULT_SYSLOG_FACILITY               	0 	    // kern
 #endif
 
+#ifndef DEFAULT_SYNC_UDP_PORT
+#define DEFAULT_SYNC_UDP_PORT                   0                       // Used for ESPEasy p2p. (IANA registered port: 8266)
+#endif
+
 /*
 // --- Experimental Advanced Settings (NOT ACTIVES at this time) ------------------------------------
 
 #define DEFAULT_USE_GLOBAL_SYNC                 false           // (true|false)
-#define DEFAULT_SYNC_UDP_PORT                   0                       //
 
 #define DEFAULT_IP_OCTET                        0                       //
 #define DEFAULT_WD_IC2_ADDRESS                  0                       //
