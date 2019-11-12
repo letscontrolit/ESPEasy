@@ -398,7 +398,8 @@ boolean PubSubClient::publish(const char* topic, const uint8_t* payload, unsigne
             return false;
         }
         // Leave room in the buffer for header and variable length field
-        uint16_t length = writeString(topic,buffer,length);
+        uint16_t length = MQTT_MAX_HEADER_SIZE;
+        length = writeString(topic,buffer,length);
         uint16_t i;
         for (i=0;i<plength;i++) {
             buffer[length++] = payload[i];
