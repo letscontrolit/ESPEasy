@@ -1169,7 +1169,7 @@ void ResetFactory()
     Settings.clearUnitNameSettings();
     Settings.Unit           = UNIT;
     strcpy_P(Settings.Name, PSTR(DEFAULT_NAME));
-    Settings.UDPPort				= 0; //DEFAULT_SYNC_UDP_PORT;
+    Settings.UDPPort				= DEFAULT_SYNC_UDP_PORT;
   }
   if (!ResetFactoryDefaultPreference.keepWiFi()) {
     strcpy_P(SecuritySettings.WifiSSID, PSTR(DEFAULT_SSID));
