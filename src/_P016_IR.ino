@@ -16,7 +16,7 @@
 //
 // IF the IR code is an Air Condition protocol that the  IR library can decode, then there will be a human-readable description of that IR message.
 // If the IR library can encode those kind of messages then a JSON formated command will be given, that can be replayed by P035 as well.
-// That commands format is: IRSENDAC,{"protocol":"COOLIX","power":"on","mode":"dry","fanspeed":"auto","temp":22,"swingv":"max","swingh":"off"}
+// That commands format is: IRSENDAC,'{"protocol":"COOLIX","power":"on","mode":"dry","fanspeed":"auto","temp":22,"swingv":"max","swingh":"off"}'
 #include <IRremoteESP8266.h>
 #include <IRutils.h>
 #include <IRrecv.h>
@@ -190,8 +190,8 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
       if (results.decode_type != decode_type_t::UNKNOWN)
       {
         String output = String(F("IRSEND,")) + typeToString(results.decode_type, results.repeat) + ',' + resultToHexidecimal(&results) + ',' + uint64ToString(results.bits);
-        //addLog(LOG_LEVEL_INFO, output); //Show the appropriate command to the user, so he can replay the message via P035
-        addLog(LOG_LEVEL_INFO, String(F("IRSEND,{\"protocol\":\"")) + typeToString(results.decode_type, results.repeat) + String(F("\",\"data\":\"")) + resultToHexidecimal(&results) + String(F("\",\"bits\":")) + uint64ToString(results.bits)+ '}'); //JSON representation of the command
+        //addLog(LOG_LEVEL_INFO, output); //Show the appropriate command to the user, so he can replay the message via P035 // Old style command
+        addLog(LOG_LEVEL_INFO, String(F("IRSEND,\'{\"protocol\":\"")) + typeToString(results.decode_type, results.repeat) + String(F("\",\"data\":\"")) + resultToHexidecimal(&results) + String(F("\",\"bits\":")) + uint64ToString(results.bits)+ '}'+'\''); //JSON representation of the command
         event->String2 = output;
       }
       //Check if a solution for RAW2 is found and if not give the user the option to access the timings info.
@@ -272,8 +272,9 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
           doc[F("sleep")] = state.sleep; //Nr. of mins of sleep mode, or use sleep mode. (<= 0 means off.)
         if (state.clock >= 0)
           doc[F("clock")] = state.clock; //Nr. of mins past midnight to set the clock to. (< 0 means off.)
-        String output = F("IRSENDAC,");
+        String output = F("IRSENDAC,'");
         serializeJson(doc, output);
+        output += '\'';
         event->String2 = output;
         addLog(LOG_LEVEL_INFO, output); //Show the command that the user can put to replay the AC state with P035
       }
