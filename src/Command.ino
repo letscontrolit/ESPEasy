@@ -198,6 +198,7 @@ String doExecuteCommand(const char *cmd, struct EventStruct *event, const char *
     }
     case 's': {
       COMMAND_CASE(       "save", Command_Settings_Save,   0); // Settings.h
+	  COMMAND_CASE(  "subscribe", Command_MQTT_Subscribe,  1);  // MQTT.h  //MFD: adding subscrie command
         #ifdef FEATURE_SD
       COMMAND_CASE(     "sdcard", Command_SD_LS,           0); // SDCARDS.h
       COMMAND_CASE(   "sdremove", Command_SD_Remove,       1); // SDCARDS.h
