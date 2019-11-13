@@ -36,6 +36,7 @@
  * Carrier & Haier AC code by crankyoldgit
  * Vestel AC code by Erdem U. Altınyurt
  * Teco AC code by Fabien Valthier (hcoohb)
+ * Mitsubishi 112 AC Code by kuchel77
  *
  *  GPL license, all text above must be included in any redistribution
  ****************************************************/
@@ -51,7 +52,7 @@
 #endif  // UNIT_TEST
 
 // Library Version
-#define _IRREMOTEESP8266_VERSION_ "2.6.6"
+#define _IRREMOTEESP8266_VERSION_ "2.7.0"
 
 // Set the language & locale for the library. See the `locale` dir for options.
 #ifndef _IR_LOCALE_
@@ -138,6 +139,9 @@
 
 #define DECODE_MITSUBISHI136   true
 #define SEND_MITSUBISHI136     true
+
+#define DECODE_MITSUBISHI112   true
+#define SEND_MITSUBISHI112     true
 
 #define DECODE_FUJITSU_AC      true
 #define SEND_FUJITSU_AC        true
@@ -262,6 +266,9 @@
 #define DECODE_DAIKIN152       true
 #define SEND_DAIKIN152         true
 
+#define DECODE_HITACHI_AC424   true
+#define SEND_HITACHI_AC424     true
+
 #if (DECODE_ARGO || DECODE_DAIKIN || DECODE_FUJITSU_AC || DECODE_GREE || \
      DECODE_KELVINATOR || DECODE_MITSUBISHI_AC || DECODE_TOSHIBA_AC || \
      DECODE_TROTEC || DECODE_HAIER_AC || DECODE_HITACHI_AC || \
@@ -271,7 +278,8 @@
      DECODE_VESTEL_AC || DECODE_TCL112AC || DECODE_MITSUBISHIHEAVY || \
      DECODE_DAIKIN216 || DECODE_SHARP_AC || DECODE_DAIKIN160 || \
      DECODE_NEOCLIMA || DECODE_DAIKIN176 || DECODE_DAIKIN128 || \
-     DECODE_AMCOR || DECODE_DAIKIN152 || DECODE_MITSUBISHI136)
+     DECODE_AMCOR || DECODE_DAIKIN152 || DECODE_MITSUBISHI136 || \
+     DECODE_MITSUBISHI112 || DECODE_HITACHI_AC424)
 #define DECODE_AC true  // We need some common infrastructure for decoding A/Cs.
 #else
 #define DECODE_AC false   // We don't need that infrastructure.
@@ -362,8 +370,10 @@ enum decode_type_t {
   AMCOR,
   DAIKIN152,  // 70
   MITSUBISHI136,
+  MITSUBISHI112,
+  HITACHI_AC424,
   // Add new entries before this one, and update it to point to the last entry.
-  kLastDecodeType = MITSUBISHI136,
+  kLastDecodeType = HITACHI_AC424,
 };
 
 // Message lengths & required repeat values
@@ -438,6 +448,8 @@ const uint16_t kHitachiAc1StateLength = 13;
 const uint16_t kHitachiAc1Bits = kHitachiAc1StateLength * 8;
 const uint16_t kHitachiAc2StateLength = 53;
 const uint16_t kHitachiAc2Bits = kHitachiAc2StateLength * 8;
+const uint16_t kHitachiAc424StateLength = 53;
+const uint16_t kHitachiAc424Bits = kHitachiAc424StateLength * 8;
 const uint16_t kInaxBits = 24;
 const uint16_t kInaxMinRepeat = kSingleRepeat;
 const uint16_t kJvcBits = 16;
@@ -464,6 +476,9 @@ const uint16_t kMitsubishiACMinRepeat = kSingleRepeat;
 const uint16_t kMitsubishi136StateLength = 17;
 const uint16_t kMitsubishi136Bits = kMitsubishi136StateLength * 8;
 const uint16_t kMitsubishi136MinRepeat = kNoRepeat;
+const uint16_t kMitsubishi112StateLength = 14;
+const uint16_t kMitsubishi112Bits = kMitsubishi112StateLength * 8;
+const uint16_t kMitsubishi112MinRepeat = kNoRepeat;
 const uint16_t kMitsubishiHeavy88StateLength = 11;
 const uint16_t kMitsubishiHeavy88Bits = kMitsubishiHeavy88StateLength * 8;
 const uint16_t kMitsubishiHeavy88MinRepeat = kNoRepeat;

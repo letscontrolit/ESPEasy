@@ -69,6 +69,8 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
 
       	addFormNumericBox(F("Stop bits"), F("p020_stop"), ExtraTaskSettings.TaskDevicePluginConfigLong[4]);
 
+        addFormPinSelect(F("TX Enable Pin"), F("taskdevicepin2"), Settings.TaskDevicePin2[event->TaskIndex]);
+
       	addFormPinSelect(F("Reset target after boot"), F("taskdevicepin1"), Settings.TaskDevicePin1[event->TaskIndex]);
 
       	addFormNumericBox(F("RX Receive Timeout (mSec)"), F("p020_rxwait"), Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
@@ -131,6 +133,13 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
             pinMode(Settings.TaskDevicePin1[event->TaskIndex], INPUT_PULLUP);
           }
 
+          // set the TX Enable Pin to LOW
+          if (Settings.TaskDevicePin2[event->TaskIndex] != -1)
+          {
+            pinMode(Settings.TaskDevicePin2[event->TaskIndex], OUTPUT);
+            digitalWrite(Settings.TaskDevicePin2[event->TaskIndex], LOW);
+          }
+
           Plugin_020_init = true;
         }
         Plugin_020_SerialProcessing = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
@@ -160,8 +169,17 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
               if (count > P020_BUFFER_SIZE)
                 count = P020_BUFFER_SIZE;
               bytes_read = ser2netClient.read(net_buf, count);
+
+              if (Settings.TaskDevicePin2[event->TaskIndex] != -1)
+              {
+                digitalWrite(Settings.TaskDevicePin2[event->TaskIndex], HIGH);  // Activate the TX Enable
+              }
               Serial.write(net_buf, bytes_read);
               Serial.flush(); // Waits for the transmission of outgoing serial data to complete
+              if (Settings.TaskDevicePin2[event->TaskIndex] != -1)
+              {
+                digitalWrite(Settings.TaskDevicePin2[event->TaskIndex], LOW); // Deactivate the TX Enable
+              }
 
               if (count == P020_BUFFER_SIZE) // if we have a full buffer, drop the last position to stuff with string end marker
               {

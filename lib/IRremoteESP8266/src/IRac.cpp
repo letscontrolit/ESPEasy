@@ -95,7 +95,7 @@ bool IRac::isProtocolSupported(const decode_type_t protocol) {
 #if SEND_AMCOR
     case decode_type_t::AMCOR:
 #endif
-#if SEND_AMCOR
+#if SEND_ARGO
     case decode_type_t::ARGO:
 #endif
 #if SEND_COOLIX
@@ -106,6 +106,9 @@ bool IRac::isProtocolSupported(const decode_type_t protocol) {
 #endif
 #if SEND_DAIKIN128
     case decode_type_t::DAIKIN128:
+#endif
+#if SEND_DAIKIN152
+    case decode_type_t::DAIKIN152:
 #endif
 #if SEND_DAIKIN160
     case decode_type_t::DAIKIN160:
@@ -140,6 +143,9 @@ bool IRac::isProtocolSupported(const decode_type_t protocol) {
 #if SEND_HITACHI_AC
     case decode_type_t::HITACHI_AC:
 #endif
+#if SEND_HITACHI_AC424
+    case decode_type_t::HITACHI_AC424:
+#endif
 #if SEND_KELVINATOR
     case decode_type_t::KELVINATOR:
 #endif
@@ -148,6 +154,9 @@ bool IRac::isProtocolSupported(const decode_type_t protocol) {
 #endif
 #if SEND_MITSUBISHI_AC
     case decode_type_t::MITSUBISHI_AC:
+#endif
+#if SEND_MITSUBISHI112
+    case decode_type_t::MITSUBISHI112:
 #endif
 #if SEND_MITSUBISHI136
     case decode_type_t::MITSUBISHI136:
@@ -245,6 +254,13 @@ void IRac::coolix(IRCoolixAC *ac,
                   const bool turbo, const bool light, const bool clean,
                   const int16_t sleep) {
   ac->begin();
+  ac->setPower(on);
+  if (!on) {
+      // after turn off AC no more commands should
+      // be accepted
+      ac->send();
+      return;
+  }
   ac->setMode(ac->convertMode(mode));
   ac->setTemp(degrees);
   ac->setFan(ac->convertFan(fan));
@@ -278,8 +294,6 @@ void IRac::coolix(IRCoolixAC *ac,
     ac->setClean();
     ac->send();
   }
-  // Power gets done last, as off has a special command.
-  ac->setPower(on);
   ac->send();
 }
 #endif  // SEND_COOLIX
@@ -337,6 +351,32 @@ void IRac::daikin128(IRDaikin128 *ac,
   ac->send();
 }
 #endif  // SEND_DAIKIN128
+
+#if SEND_DAIKIN152
+void IRac::daikin152(IRDaikin152 *ac,
+                  const bool on, const stdAc::opmode_t mode,
+                  const float degrees, const stdAc::fanspeed_t fan,
+                  const stdAc::swingv_t swingv,
+                  const bool quiet, const bool turbo, const bool econo) {
+  ac->begin();
+  ac->setPower(on);
+  ac->setMode(ac->convertMode(mode));
+  ac->setTemp(degrees);
+  ac->setFan(ac->convertFan(fan));
+  ac->setSwingV((int8_t)swingv >= 0);
+  // No Horizontal Swing setting avaliable.
+  ac->setQuiet(quiet);
+  // No Light setting available.
+  // No Filter setting available.
+  ac->setPowerful(turbo);
+  ac->setEcono(econo);
+  // No Clean setting available.
+  // No Beep setting available.
+  // No Sleep setting available.
+  // No Clock setting available.
+  ac->send();
+}
+#endif  // SEND_DAIKIN152
 
 #if SEND_DAIKIN160
 void IRac::daikin160(IRDaikin160 *ac,
@@ -627,6 +667,31 @@ void IRac::hitachi(IRHitachiAc *ac,
 }
 #endif  // SEND_HITACHI_AC
 
+#if SEND_HITACHI_AC424
+void IRac::hitachi424(IRHitachiAc424 *ac,
+                      const bool on, const stdAc::opmode_t mode,
+                      const float degrees, const stdAc::fanspeed_t fan,
+                      const stdAc::swingv_t swingv) {
+  ac->begin();
+  ac->setMode(ac->convertMode(mode));
+  ac->setTemp(degrees);
+  ac->setFan(ac->convertFan(fan));
+  ac->setPower(on);
+  // SwingVToggle is special. Needs to be last method called.
+  ac->setSwingVToggle(swingv != stdAc::swingv_t::kOff);
+  // No Swing(H) setting available.
+  // No Quiet setting available.
+  // No Turbo setting available.
+  // No Light setting available.
+  // No Filter setting available.
+  // No Clean setting available.
+  // No Beep setting available.
+  // No Sleep setting available.
+  // No Clock setting available.
+  ac->send();
+}
+#endif  // SEND_HITACHI_AC424
+
 #if SEND_KELVINATOR
 void IRac::kelvinator(IRKelvinatorAC *ac,
                       const bool on, const stdAc::opmode_t mode,
@@ -704,6 +769,34 @@ void IRac::mitsubishi(IRMitsubishiAC *ac,
   ac->send();
 }
 #endif  // SEND_MITSUBISHI_AC
+
+#if SEND_MITSUBISHI112
+void IRac::mitsubishi112(IRMitsubishi112 *ac,
+                         const bool on, const stdAc::opmode_t mode,
+                         const float degrees, const stdAc::fanspeed_t fan,
+                         const stdAc::swingv_t swingv,
+                         const stdAc::swingh_t swingh,
+                         const bool quiet) {
+  ac->begin();
+  ac->setPower(on);
+  ac->setMode(ac->convertMode(mode));
+  ac->setTemp(degrees);
+  ac->setFan(ac->convertFan(fan));
+  ac->setSwingV(ac->convertSwingV(swingv));
+  ac->setSwingH(ac->convertSwingH(swingh));
+  ac->setQuiet(quiet);
+  // FIXME - Econo
+  // ac->setEcono(econo);
+  // No Turbo setting available.
+  // No Light setting available.
+  // No Filter setting available.
+  // No Clean setting available.
+  // No Beep setting available.
+  // No Sleep setting available.
+  // No Clock setting available.
+  ac->send();
+}
+#endif  // SEND_MITSUBISHI112
 
 #if SEND_MITSUBISHI136
 void IRac::mitsubishi136(IRMitsubishi136 *ac,
@@ -1083,6 +1176,7 @@ stdAc::state_t IRac::handleToggles(const stdAc::state_t desired,
         result.light = desired.light ^ prev->light;
         break;
       case decode_type_t::MIDEA:
+      case decode_type_t::HITACHI_AC424:
         if ((desired.swingv == stdAc::swingv_t::kOff) ^
             (prev->swingv == stdAc::swingv_t::kOff))  // It changed, so toggle.
           result.swingv = stdAc::swingv_t::kAuto;
@@ -1207,6 +1301,15 @@ bool IRac::sendAc(const stdAc::state_t desired, const stdAc::state_t *prev) {
       break;
     }
 #endif  // SEND_DAIKIN2
+#if SEND_DAIKIN152
+    case DAIKIN152:
+    {
+      IRDaikin152 ac(_pin, _inverted, _modulation);
+      daikin152(&ac, on, send.mode, degC, send.fanspeed, send.swingv,
+                send.quiet, send.turbo, send.econo);
+      break;
+    }
+#endif  // SEND_DAIKIN152
 #if SEND_DAIKIN160
     case DAIKIN160:
     {
@@ -1309,6 +1412,14 @@ bool IRac::sendAc(const stdAc::state_t desired, const stdAc::state_t *prev) {
       break;
     }
 #endif  // SEND_HITACHI_AC
+#if SEND_HITACHI_AC424
+    case HITACHI_AC424:
+    {
+      IRHitachiAc424 ac(_pin, _inverted, _modulation);
+      hitachi424(&ac, on, send.mode, degC, send.fanspeed, send.swingv);
+      break;
+    }
+#endif  // SEND_HITACHI_AC424
 #if SEND_KELVINATOR
     case KELVINATOR:
     {
@@ -1337,6 +1448,15 @@ bool IRac::sendAc(const stdAc::state_t desired, const stdAc::state_t *prev) {
       break;
     }
 #endif  // SEND_MITSUBISHI_AC
+#if SEND_MITSUBISHI112
+    case MITSUBISHI112:
+    {
+      IRMitsubishi112 ac(_pin, _inverted, _modulation);
+      mitsubishi112(&ac, on, send.mode, degC, send.fanspeed, send.swingv,
+                    send.swingh, send.quiet);
+      break;
+    }
+#endif  // SEND_MITSUBISHI112
 #if SEND_MITSUBISHI136
     case MITSUBISHI136:
     {
@@ -1484,25 +1604,25 @@ bool IRac::hasStateChanged(void) { return cmpStates(next, _prev); }
 
 stdAc::opmode_t IRac::strToOpmode(const char *str,
                                 const stdAc::opmode_t def) {
-  if (!strcasecmp(str, kAutoStr.c_str()) ||
-      !strcasecmp(str, kAutomaticStr.c_str()))
+  if (!strcasecmp(str, kAutoStr) ||
+      !strcasecmp(str, kAutomaticStr))
     return stdAc::opmode_t::kAuto;
-  else if (!strcasecmp(str, kOffStr.c_str()) ||
-           !strcasecmp(str, kStopStr.c_str()))
+  else if (!strcasecmp(str, kOffStr) ||
+           !strcasecmp(str, kStopStr))
     return stdAc::opmode_t::kOff;
-  else if (!strcasecmp(str, kCoolStr.c_str()) ||
+  else if (!strcasecmp(str, kCoolStr) ||
            !strcasecmp(str, "COOLING"))
     return stdAc::opmode_t::kCool;
-  else if (!strcasecmp(str, kHeatStr.c_str()) ||
+  else if (!strcasecmp(str, kHeatStr) ||
            !strcasecmp(str, "HEATING"))
     return stdAc::opmode_t::kHeat;
-  else if (!strcasecmp(str, kDryStr.c_str()) ||
+  else if (!strcasecmp(str, kDryStr) ||
            !strcasecmp(str, "DRYING") ||
            !strcasecmp(str, "DEHUMIDIFY"))
     return stdAc::opmode_t::kDry;
-  else if (!strcasecmp(str, kFanStr.c_str()) ||
+  else if (!strcasecmp(str, kFanStr) ||
            !strcasecmp(str, "FANONLY") ||
-           !strcasecmp(str, kFanOnlyStr.c_str()))
+           !strcasecmp(str, kFanOnlyStr))
     return stdAc::opmode_t::kFan;
   else
     return def;
@@ -1510,26 +1630,26 @@ stdAc::opmode_t IRac::strToOpmode(const char *str,
 
 stdAc::fanspeed_t IRac::strToFanspeed(const char *str,
                                       const stdAc::fanspeed_t def) {
-  if (!strcasecmp(str, kAutoStr.c_str()) ||
-      !strcasecmp(str, kAutomaticStr.c_str()))
+  if (!strcasecmp(str, kAutoStr) ||
+      !strcasecmp(str, kAutomaticStr))
     return stdAc::fanspeed_t::kAuto;
-  else if (!strcasecmp(str, kMinStr.c_str()) ||
-           !strcasecmp(str, kMinimumStr.c_str()) ||
-           !strcasecmp(str, kLowestStr.c_str()))
+  else if (!strcasecmp(str, kMinStr) ||
+           !strcasecmp(str, kMinimumStr) ||
+           !strcasecmp(str, kLowestStr))
     return stdAc::fanspeed_t::kMin;
-  else if (!strcasecmp(str, kLowStr.c_str()) ||
-           !strcasecmp(str, kLoStr.c_str()))
+  else if (!strcasecmp(str, kLowStr) ||
+           !strcasecmp(str, kLoStr))
     return stdAc::fanspeed_t::kLow;
-  else if (!strcasecmp(str, kMedStr.c_str()) ||
-           !strcasecmp(str, kMediumStr.c_str()) ||
-           !strcasecmp(str, kMidStr.c_str()))
+  else if (!strcasecmp(str, kMedStr) ||
+           !strcasecmp(str, kMediumStr) ||
+           !strcasecmp(str, kMidStr))
     return stdAc::fanspeed_t::kMedium;
-  else if (!strcasecmp(str, kHighStr.c_str()) ||
-           !strcasecmp(str, kHiStr.c_str()))
+  else if (!strcasecmp(str, kHighStr) ||
+           !strcasecmp(str, kHiStr))
     return stdAc::fanspeed_t::kHigh;
-  else if (!strcasecmp(str, kMaxStr.c_str()) ||
-           !strcasecmp(str, kMaximumStr.c_str()) ||
-           !strcasecmp(str, kHighestStr.c_str()))
+  else if (!strcasecmp(str, kMaxStr) ||
+           !strcasecmp(str, kMaximumStr) ||
+           !strcasecmp(str, kHighestStr))
     return stdAc::fanspeed_t::kMax;
   else
     return def;
@@ -1537,36 +1657,36 @@ stdAc::fanspeed_t IRac::strToFanspeed(const char *str,
 
 stdAc::swingv_t IRac::strToSwingV(const char *str,
                                   const stdAc::swingv_t def) {
-  if (!strcasecmp(str, kAutoStr.c_str()) ||
-      !strcasecmp(str, kAutomaticStr.c_str()) ||
-      !strcasecmp(str, kOnStr.c_str()) ||
-      !strcasecmp(str, kSwingStr.c_str()))
+  if (!strcasecmp(str, kAutoStr) ||
+      !strcasecmp(str, kAutomaticStr) ||
+      !strcasecmp(str, kOnStr) ||
+      !strcasecmp(str, kSwingStr))
     return stdAc::swingv_t::kAuto;
-  else if (!strcasecmp(str, kOffStr.c_str()) ||
-           !strcasecmp(str, kStopStr.c_str()))
+  else if (!strcasecmp(str, kOffStr) ||
+           !strcasecmp(str, kStopStr))
     return stdAc::swingv_t::kOff;
-  else if (!strcasecmp(str, kMinStr.c_str()) ||
-           !strcasecmp(str, kMinimumStr.c_str()) ||
-           !strcasecmp(str, kLowestStr.c_str()) ||
-           !strcasecmp(str, kBottomStr.c_str()) ||
-           !strcasecmp(str, kDownStr.c_str()))
+  else if (!strcasecmp(str, kMinStr) ||
+           !strcasecmp(str, kMinimumStr) ||
+           !strcasecmp(str, kLowestStr) ||
+           !strcasecmp(str, kBottomStr) ||
+           !strcasecmp(str, kDownStr))
     return stdAc::swingv_t::kLowest;
-  else if (!strcasecmp(str, kLowStr.c_str()))
+  else if (!strcasecmp(str, kLowStr))
     return stdAc::swingv_t::kLow;
-  else if (!strcasecmp(str, kMidStr.c_str()) ||
-           !strcasecmp(str, kMiddleStr.c_str()) ||
-           !strcasecmp(str, kMedStr.c_str()) ||
-           !strcasecmp(str, kMediumStr.c_str()) ||
-           !strcasecmp(str, kCentreStr.c_str()))
+  else if (!strcasecmp(str, kMidStr) ||
+           !strcasecmp(str, kMiddleStr) ||
+           !strcasecmp(str, kMedStr) ||
+           !strcasecmp(str, kMediumStr) ||
+           !strcasecmp(str, kCentreStr))
     return stdAc::swingv_t::kMiddle;
-  else if (!strcasecmp(str, kHighStr.c_str()) ||
-           !strcasecmp(str, kHiStr.c_str()))
+  else if (!strcasecmp(str, kHighStr) ||
+           !strcasecmp(str, kHiStr))
     return stdAc::swingv_t::kHigh;
-  else if (!strcasecmp(str, kHighestStr.c_str()) ||
-           !strcasecmp(str, kMaxStr.c_str()) ||
-           !strcasecmp(str, kMaximumStr.c_str()) ||
-           !strcasecmp(str, kTopStr.c_str()) ||
-           !strcasecmp(str, kUpStr.c_str()))
+  else if (!strcasecmp(str, kHighestStr) ||
+           !strcasecmp(str, kMaxStr) ||
+           !strcasecmp(str, kMaximumStr) ||
+           !strcasecmp(str, kTopStr) ||
+           !strcasecmp(str, kUpStr))
     return stdAc::swingv_t::kHighest;
   else
     return def;
@@ -1574,34 +1694,34 @@ stdAc::swingv_t IRac::strToSwingV(const char *str,
 
 stdAc::swingh_t IRac::strToSwingH(const char *str,
                                   const stdAc::swingh_t def) {
-  if (!strcasecmp(str, kAutoStr.c_str()) ||
-      !strcasecmp(str, kAutomaticStr.c_str()) ||
-      !strcasecmp(str, kOnStr.c_str()) || !strcasecmp(str, kSwingStr.c_str()))
+  if (!strcasecmp(str, kAutoStr) ||
+      !strcasecmp(str, kAutomaticStr) ||
+      !strcasecmp(str, kOnStr) || !strcasecmp(str, kSwingStr))
     return stdAc::swingh_t::kAuto;
-  else if (!strcasecmp(str, kOffStr.c_str()) ||
-           !strcasecmp(str, kStopStr.c_str()))
+  else if (!strcasecmp(str, kOffStr) ||
+           !strcasecmp(str, kStopStr))
     return stdAc::swingh_t::kOff;
-  else if (!strcasecmp(str, kLeftMaxStr.c_str()) ||
+  else if (!strcasecmp(str, kLeftMaxStr) ||
            !strcasecmp(str, D_STR_LEFT " " D_STR_MAX) ||
            !strcasecmp(str, D_STR_MAX D_STR_LEFT) ||
-           !strcasecmp(str, kMaxLeftStr.c_str()))
+           !strcasecmp(str, kMaxLeftStr))
     return stdAc::swingh_t::kLeftMax;
-  else if (!strcasecmp(str, kLeftStr.c_str()))
+  else if (!strcasecmp(str, kLeftStr))
     return stdAc::swingh_t::kLeft;
-  else if (!strcasecmp(str, kMidStr.c_str()) ||
-           !strcasecmp(str, kMiddleStr.c_str()) ||
-           !strcasecmp(str, kMedStr.c_str()) ||
-           !strcasecmp(str, kMediumStr.c_str()) ||
-           !strcasecmp(str, kCentreStr.c_str()))
+  else if (!strcasecmp(str, kMidStr) ||
+           !strcasecmp(str, kMiddleStr) ||
+           !strcasecmp(str, kMedStr) ||
+           !strcasecmp(str, kMediumStr) ||
+           !strcasecmp(str, kCentreStr))
     return stdAc::swingh_t::kMiddle;
-  else if (!strcasecmp(str, kRightStr.c_str()))
+  else if (!strcasecmp(str, kRightStr))
     return stdAc::swingh_t::kRight;
-  else if (!strcasecmp(str, kRightMaxStr.c_str()) ||
+  else if (!strcasecmp(str, kRightMaxStr) ||
            !strcasecmp(str, D_STR_MAX " " D_STR_RIGHT) ||
            !strcasecmp(str, D_STR_MAX D_STR_RIGHT) ||
-           !strcasecmp(str, kMaxRightStr.c_str()))
+           !strcasecmp(str, kMaxRightStr))
     return stdAc::swingh_t::kRightMax;
-  else if (!strcasecmp(str, kWideStr.c_str()))
+  else if (!strcasecmp(str, kWideStr))
     return stdAc::swingh_t::kWide;
   else
     return def;
@@ -1654,15 +1774,15 @@ int16_t IRac::strToModel(const char *str, const int16_t def) {
 }
 
 bool IRac::strToBool(const char *str, const bool def) {
-  if (!strcasecmp(str, kOnStr.c_str()) ||
+  if (!strcasecmp(str, kOnStr) ||
       !strcasecmp(str, "1") ||
-      !strcasecmp(str, kYesStr.c_str()) ||
-      !strcasecmp(str, kTrueStr.c_str()))
+      !strcasecmp(str, kYesStr) ||
+      !strcasecmp(str, kTrueStr))
     return true;
-  else if (!strcasecmp(str, kOffStr.c_str()) ||
+  else if (!strcasecmp(str, kOffStr) ||
            !strcasecmp(str, "0") ||
-           !strcasecmp(str, kNoStr.c_str()) ||
-           !strcasecmp(str, kFalseStr.c_str()))
+           !strcasecmp(str, kNoStr) ||
+           !strcasecmp(str, kFalseStr))
     return false;
   else
     return def;
@@ -1790,6 +1910,13 @@ namespace IRAcUtils {
         return ac.toString();
       }
 #endif  // DECODE_DAIKIN128
+#if DECODE_DAIKIN152
+      case decode_type_t::DAIKIN152: {
+        IRDaikin152 ac(0);
+        ac.setRaw(result->state);
+        return ac.toString();
+      }
+#endif  // DECODE_DAIKIN152
 #if DECODE_DAIKIN160
       case decode_type_t::DAIKIN160: {
         IRDaikin160 ac(0);
@@ -1846,6 +1973,13 @@ namespace IRAcUtils {
         return ac.toString();
       }
 #endif  // DECODE_MITSUBISHI_AC
+#if DECODE_MITSUBISHI112
+      case decode_type_t::MITSUBISHI112: {
+        IRMitsubishi112 ac(0);
+        ac.setRaw(result->state);
+        return ac.toString();
+      }
+#endif  // DECODE_MITSUBISHI112
 #if DECODE_MITSUBISHI136
       case decode_type_t::MITSUBISHI136: {
         IRMitsubishi136 ac(0);
@@ -1938,6 +2072,7 @@ namespace IRAcUtils {
 #if DECODE_COOLIX
       case decode_type_t::COOLIX: {
         IRCoolixAC ac(0);
+        ac.on();
         ac.setRaw(result->value);  // Coolix uses value instead of state.
         return ac.toString();
       }
@@ -1959,6 +2094,13 @@ namespace IRAcUtils {
         return ac.toString();
       }
 #endif  // DECODE_HITACHI_AC
+#if DECODE_HITACHI_AC424
+      case decode_type_t::HITACHI_AC424: {
+        IRHitachiAc424 ac(0);
+        ac.setRaw(result->state);
+        return ac.toString();
+      }
+#endif  // DECODE_HITACHI_AC424
 #if DECODE_WHIRLPOOL_AC
       case decode_type_t::WHIRLPOOL_AC: {
         IRWhirlpoolAc ac(0);
@@ -2037,6 +2179,22 @@ namespace IRAcUtils {
         break;
       }
 #endif  // DECODE_DAIKIN
+#if DECODE_DAIKIN128
+      case decode_type_t::DAIKIN128: {
+        IRDaikin128 ac(0);
+        ac.setRaw(decode->state);
+        *result = ac.toCommon();
+        break;
+      }
+#endif  // DECODE_DAIKIN128
+#if DECODE_DAIKIN152
+      case decode_type_t::DAIKIN152: {
+        IRDaikin152 ac(0);
+        ac.setRaw(decode->state);
+        *result = ac.toCommon();
+        break;
+      }
+#endif  // DECODE_DAIKIN152
 #if DECODE_DAIKIN160
       case decode_type_t::DAIKIN160: {
         IRDaikin160 ac(kGpioUnused);
@@ -2125,6 +2283,14 @@ namespace IRAcUtils {
         break;
       }
 #endif  // (DECODE_HITACHI_AC || DECODE_HITACHI_AC2)
+#if DECODE_HITACHI_AC424
+      case decode_type_t::HITACHI_AC424: {
+        IRHitachiAc424 ac(kGpioUnused);
+        ac.setRaw(decode->state);
+        *result = ac.toCommon();
+        break;
+      }
+#endif  // DECODE_HITACHI_AC424
 #if DECODE_KELVINATOR
       case decode_type_t::KELVINATOR: {
         IRKelvinatorAC ac(kGpioUnused);
@@ -2149,6 +2315,14 @@ namespace IRAcUtils {
         break;
       }
 #endif  // DECODE_MITSUBISHI_AC
+#if DECODE_MITSUBISHI112
+      case decode_type_t::MITSUBISHI112: {
+        IRMitsubishi112 ac(kGpioUnused);
+        ac.setRaw(decode->state);
+        *result = ac.toCommon();
+        break;
+      }
+#endif  // DECODE_MITSUBISHI112
 #if DECODE_MITSUBISHI136
       case decode_type_t::MITSUBISHI136: {
         IRMitsubishi136 ac(kGpioUnused);

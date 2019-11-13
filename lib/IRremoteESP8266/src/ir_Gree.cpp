@@ -9,6 +9,7 @@
 
 #include "ir_Gree.h"
 #include <algorithm>
+#include <cstring>
 #ifndef ARDUINO
 #include <string>
 #endif
@@ -155,9 +156,7 @@ uint8_t* IRGreeAC::getRaw(void) {
 }
 
 void IRGreeAC::setRaw(const uint8_t new_code[]) {
-  for (uint8_t i = 0; i < kGreeStateLength; i++) {
-    remote_state[i] = new_code[i];
-  }
+  memcpy(remote_state, new_code, kGreeStateLength);
   // We can only detect the difference between models when the power is on.
   if (getPower()) {
     if (GETBIT8(remote_state[2], kGreePower2Offset))
@@ -491,7 +490,7 @@ String IRGreeAC::toString(void) {
   result += addBoolToString(getLight(), kLightStr);
   result += addBoolToString(getSleep(), kSleepStr);
   result += addLabeledString(getSwingVerticalAuto() ? kAutoStr : kManualStr,
-                             kSwingVStr + ' ' + kModeStr);
+                             kSwingVModeStr);
   result += addIntToString(getSwingVerticalPosition(), kSwingVStr);
   result += kSpaceLBraceStr;
   switch (getSwingVerticalPosition()) {

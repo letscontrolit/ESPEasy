@@ -789,23 +789,47 @@ void delayBackground(unsigned long dsdelay)
 
 
 /********************************************************************************************\
+  Check to see if a given argument is a valid taskIndex (argc = 0 => command)
+  \*********************************************************************************************/
+taskIndex_t parseCommandArgumentTaskIndex(const String& string, unsigned int argc)
+{
+  taskIndex_t taskIndex = INVALID_TASK_INDEX;
+  const int ti = parseCommandArgumentInt(string, argc);
+  if (ti > 0) {
+    // Task Index used as argument in commands start at 1.
+    taskIndex = static_cast<taskIndex_t>(ti - 1);
+  }
+  return taskIndex;
+}
+
+
+/********************************************************************************************\
+  Get int from command argument (argc = 0 => command)
+  \*********************************************************************************************/
+int parseCommandArgumentInt(const String& string, unsigned int argc)
+{
+  int value = 0;
+  if (argc > 0) {
+    // No need to check for the command (argc == 0)
+    String TmpStr;
+    if (GetArgv(string.c_str(), TmpStr, argc + 1)) { 
+      value = CalculateParam(TmpStr.c_str()); 
+    }
+  }
+  return value;
+}
+
+/********************************************************************************************\
   Parse a command string to event struct
   \*********************************************************************************************/
 void parseCommandString(struct EventStruct *event, const String& string)
 {
   checkRAM(F("parseCommandString"));
-  String TmpStr1;
-  event->Par1 = 0;
-  event->Par2 = 0;
-  event->Par3 = 0;
-  event->Par4 = 0;
-  event->Par5 = 0;
-
-  if (GetArgv(string.c_str(), TmpStr1, 2)) { event->Par1 = CalculateParam(TmpStr1.c_str()); }
-  if (GetArgv(string.c_str(), TmpStr1, 3)) { event->Par2 = CalculateParam(TmpStr1.c_str()); }
-  if (GetArgv(string.c_str(), TmpStr1, 4)) { event->Par3 = CalculateParam(TmpStr1.c_str()); }
-  if (GetArgv(string.c_str(), TmpStr1, 5)) { event->Par4 = CalculateParam(TmpStr1.c_str()); }
-  if (GetArgv(string.c_str(), TmpStr1, 6)) { event->Par5 = CalculateParam(TmpStr1.c_str()); }
+  event->Par1 = parseCommandArgumentInt(string, 1);
+  event->Par2 = parseCommandArgumentInt(string, 2);
+  event->Par3 = parseCommandArgumentInt(string, 3);
+  event->Par4 = parseCommandArgumentInt(string, 4);
+  event->Par5 = parseCommandArgumentInt(string, 5);
 }
 
 /********************************************************************************************\
@@ -890,15 +914,16 @@ byte getNotificationProtocolIndex(byte Number)
   \*********************************************************************************************/
 
 bool HasArgv(const char *string, unsigned int argc) {
-  int pos_begin, pos_end;
-  return GetArgvBeginEnd(string, argc, pos_begin, pos_end);
+  String argvString;
+  return GetArgv(string, argvString, argc);
 }
 
 bool GetArgv(const char *string, String& argvString, unsigned int argc) {
   int pos_begin, pos_end;
   bool hasArgument = GetArgvBeginEnd(string, argc, pos_begin, pos_end);
   argvString = "";
-  if (pos_begin >= 0 && pos_end >= 0) {
+  if (!hasArgument) return false;
+  if (pos_begin >= 0 && pos_end >= 0 && pos_end > pos_begin) {
     argvString.reserve(pos_end - pos_begin);
     for (int i = pos_begin; i < pos_end; ++i) {
       argvString += string[i];
@@ -906,7 +931,7 @@ bool GetArgv(const char *string, String& argvString, unsigned int argc) {
   }
   argvString.trim();
   argvString = stripQuotes(argvString);
-  return hasArgument;
+  return argvString.length() > 0;
 }
 
 bool GetArgvBeginEnd(const char *string, const unsigned int argc, int& pos_begin, int& pos_end) {
@@ -934,7 +959,7 @@ bool GetArgvBeginEnd(const char *string, const unsigned int argc, int& pos_begin
     else if  (!parenthesis && (c == ',') && (d >= 33) && (d <= 126)) {}
     else
     {
-      if (!parenthesis && ((c == '"') || (c == '\'') || (c == '['))) {
+      if (!parenthesis && (isQuoteChar(c) || (c == '['))) {
         parenthesis          = true;
         matching_parenthesis = c;
 
@@ -951,13 +976,12 @@ bool GetArgvBeginEnd(const char *string, const unsigned int argc, int& pos_begin
       }
       ++pos_end;
 
-      if ((!parenthesis && ((d == ' ') || (d == ',') || (d == 0)))) // end of word
+      if (!parenthesis && (isParameterSeparatorChar(d) || (d == 0))) // end of word
       {
         argc_pos++;
 
         if (argc_pos == argc)
         {
-
           return true;
         }
         pos_begin = -1;
@@ -1146,7 +1170,7 @@ void ResetFactory()
     Settings.clearUnitNameSettings();
     Settings.Unit           = UNIT;
     strcpy_P(Settings.Name, PSTR(DEFAULT_NAME));
-    Settings.UDPPort				= 0; //DEFAULT_SYNC_UDP_PORT;
+    Settings.UDPPort				= DEFAULT_SYNC_UDP_PORT;
   }
   if (!ResetFactoryDefaultPreference.keepWiFi()) {
     strcpy_P(SecuritySettings.WifiSSID, PSTR(DEFAULT_SSID));
@@ -2722,8 +2746,8 @@ void ArduinoOTAInit()
       //"dangerous": if you reset during flash you have to reflash via serial
       //so dont touch device until restart is complete
       serialPrintln(F("\nOTA  : DO NOT RESET OR POWER OFF UNTIL BOOT+FLASH IS COMPLETE."));
-      delay(100);
-      reboot();
+      //delay(100);
+      //reboot(); //Not needed, node reboots automaticall after calling onEnd and succesfully flashing
   });
   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
     if (Settings.UseSerial)

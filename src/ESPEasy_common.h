@@ -12,12 +12,13 @@ namespace std
 #include <Arduino.h>
 
 // User configuration
-#include "src/DataStructs/ESPEasyDefaults.h"
-
-
+// Include Custom.h before ESPEasyDefaults.h. 
 #ifdef USE_CUSTOM_H
 #include "Custom.h"
 #endif
+
+#include "src/DataStructs/ESPEasyDefaults.h"
+
 
 // Include custom first, then build info. (one may want to set BUILD_GIT for example)
 #include "ESPEasy_buildinfo.h"

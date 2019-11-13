@@ -44,8 +44,9 @@ String Command_Lowmem(struct EventStruct *event, const char *Line)
 String Command_Malloc(struct EventStruct *event, const char *Line)
 {
   char *ramtest;
+  int size = parseCommandArgumentInt(Line, 1);
 
-  ramtest = (char *)malloc(event->Par1);
+  ramtest = (char *)malloc(size);
 
   if (ramtest == nullptr) { return return_command_failed(); }
   free(ramtest);
@@ -118,7 +119,7 @@ String Command_MemInfo_detail(struct EventStruct *event, const char *Line)
 
 String Command_Background(struct EventStruct *event, const char *Line)
 {
-  unsigned long timer = millis() + event->Par1;
+  unsigned long timer = millis() + parseCommandArgumentInt(Line, 1);
 
   serialPrintln(F("start"));
 
@@ -132,7 +133,7 @@ String Command_Background(struct EventStruct *event, const char *Line)
 String Command_Debug(struct EventStruct *event, const char *Line)
 {
   if (HasArgv(Line, 2)) {
-    setLogLevelFor(LOG_TO_SERIAL, event->Par1);
+    setLogLevelFor(LOG_TO_SERIAL, parseCommandArgumentInt(Line, 1));
   } else  {
     serialPrintln();
     serialPrint(F("Serial debug level: "));

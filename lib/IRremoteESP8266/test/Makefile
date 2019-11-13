@@ -150,16 +150,16 @@ gtest_main.a : gtest-all.o gtest_main.o
 # gtest_main.a, depending on whether it defines its own main()
 # function.
 
-IRtext.o : $(USER_DIR)/IRtext.cpp $(USER_DIR)/IRtext.h $(USER_DIR)/IRremoteESP8266.h $(USER_DIR)/i18n.h
+IRtext.o : $(USER_DIR)/IRtext.cpp $(USER_DIR)/IRtext.h $(USER_DIR)/IRremoteESP8266.h $(USER_DIR)/i18n.h $(USER_DIR)/locale/*.h
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c $(USER_DIR)/IRtext.cpp
 
-IRutils.o : $(USER_DIR)/IRutils.cpp $(USER_DIR)/IRutils.h $(USER_DIR)/IRremoteESP8266.h $(USER_DIR)/i18n.h
+IRutils.o : $(USER_DIR)/IRutils.cpp $(USER_DIR)/IRutils.h $(USER_DIR)/IRremoteESP8266.h $(USER_DIR)/i18n.h $(USER_DIR)/IRtext.cpp $(USER_DIR)/IRtext.h $(USER_DIR)/locale/*.h
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c $(USER_DIR)/IRutils.cpp
 
 IRutils_test.o : IRutils_test.cpp $(COMMON_TEST_DEPS) $(GTEST_HEADERS)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c IRutils_test.cpp
 
-IRutils_test : IRutils_test.o ir_NEC.o ir_Nikai.o ir_Toshiba.o $(COMMON_OBJ) gtest_main.a
+IRutils_test : IRutils_test.o ir_NEC.o ir_Nikai.o ir_Toshiba.o IRtext.o $(COMMON_OBJ) gtest_main.a
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@
 
 IRtimer.o : $(USER_DIR)/IRtimer.cpp $(USER_DIR)/IRtimer.h
@@ -390,7 +390,7 @@ ir_Daikin_test.o : ir_Daikin_test.cpp $(USER_DIR)/ir_Daikin.h $(COMMON_TEST_DEPS
 ir_Daikin_test : $(COMMON_OBJ) ir_Daikin_test.o
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@
 
-ir_Gree.o : $(USER_DIR)/ir_Gree.cpp $(GTEST_HEADERS)
+ir_Gree.o : $(USER_DIR)/ir_Gree.cpp $(GTEST_HEADERS) $(COMMON_DEPS)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c $(USER_DIR)/ir_Gree.cpp
 
 ir_Gree_test.o : ir_Gree_test.cpp $(COMMON_TEST_DEPS) $(GTEST_HEADERS)
@@ -417,7 +417,7 @@ ir_Nikai_test.o : ir_Nikai_test.cpp $(COMMON_TEST_DEPS) $(GTEST_HEADERS)
 ir_Nikai_test : $(COMMON_OBJ) ir_Nikai_test.o
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@
 
-ir_Toshiba.o : $(USER_DIR)/ir_Toshiba.cpp $(USER_DIR)/ir_Toshiba.h $(GTEST_HEADERS)
+ir_Toshiba.o : $(USER_DIR)/ir_Toshiba.cpp $(USER_DIR)/ir_Toshiba.h $(COMMON_DEPS) $(GTEST_HEADERS)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c $(USER_DIR)/ir_Toshiba.cpp
 
 ir_Toshiba_test.o : ir_Toshiba_test.cpp $(USER_DIR)/ir_Toshiba.h $(COMMON_TEST_DEPS) $(GTEST_HEADERS)
@@ -426,7 +426,7 @@ ir_Toshiba_test.o : ir_Toshiba_test.cpp $(USER_DIR)/ir_Toshiba.h $(COMMON_TEST_D
 ir_Toshiba_test : $(COMMON_OBJ) ir_Toshiba_test.o
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@
 
-ir_Midea.o : $(USER_DIR)/ir_Midea.cpp $(GTEST_HEADERS)
+ir_Midea.o : $(USER_DIR)/ir_Midea.cpp $(COMMON_TEST_DEPS) $(GTEST_HEADERS)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c $(USER_DIR)/ir_Midea.cpp
 
 ir_Midea_test.o : ir_Midea_test.cpp $(COMMON_TEST_DEPS) $(GTEST_HEADERS)
@@ -435,7 +435,7 @@ ir_Midea_test.o : ir_Midea_test.cpp $(COMMON_TEST_DEPS) $(GTEST_HEADERS)
 ir_Midea_test : $(COMMON_OBJ) ir_Midea_test.o
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@
 
-ir_Magiquest.o : $(USER_DIR)/ir_Magiquest.cpp $(GTEST_HEADERS)
+ir_Magiquest.o : $(USER_DIR)/ir_Magiquest.cpp $(COMMON_TEST_DEPS) $(GTEST_HEADERS)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/ir_Magiquest.cpp
 
 ir_Magiquest_test.o : ir_Magiquest_test.cpp $(COMMON_TEST_DEPS) $(GTEST_HEADERS)

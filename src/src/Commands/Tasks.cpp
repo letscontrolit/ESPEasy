@@ -11,9 +11,11 @@
 bool validTaskVars(struct EventStruct *event, taskIndex_t& taskIndex, unsigned int& varNr)
 {
 	if (event->Par1 <= 0) return false; 
-	if (event->Par2 <= 0) return false;
 	taskIndex = static_cast<taskIndex_t>(event->Par1 - 1);
-	varNr = event->Par2 - 1;
+	varNr = 0;
+	if (event->Par2 > 0) {
+	  varNr = event->Par2 - 1;
+	}
 	if (!validTaskIndex(taskIndex)) return false;
 	if (varNr >= VARS_PER_TASK) return false;
 

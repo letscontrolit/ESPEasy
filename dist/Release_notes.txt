@@ -1,4 +1,68 @@
 -------------------------------------------------
+Changes in release mega-20191113 (since mega-20191108)
+-------------------------------------------------
+
+Release date: Wed Nov 13 04:00:15 CET 2019
+
+BrainHunter (1):
+      Added TX-Enable Pin to ser2net for RS485 support.
+
+Gijs Noorlander (12):
+      [Docs] Document changed rules parameter parsing
+      [Rules] Allow back quote as parameter separator wrapper
+      [Rules] Check nr arguments on commands and log when too many arguments
+      [Log] Show loglevel on serial log output
+      [Rules] Fix incorrect reject of commands handling tasks (#2726)
+      [Rules] Improve parse argument as int
+      [Pulse Counter] Add taskIndex parameter to resetPulseCounter command
+      [Rules] Proper error log with incorrect number of arguments
+      [PIO] patch for core 2.6.0 build env.
+      [PIO] Use Jason2866 version of core 2.6.0
+      [Custom Build] Fix order of Custom.h and ESPEasyDefaults.h
+      [Rules] Fix parse issue where bogus parameter is found due to extra spaces
+
+Yannick (2):
+      Fix bug when read SHT20
+      Update reading process (no blocking)
+
+jimmys01 (1):
+      [IR] Updated library reduces memory consumption
+
+stefan (1):
+      [OTA] Fix ESP8266 OTA update
+
+uwekaditz (6):
+      Update _P036_FrameOLED.ino
+      Update _P036_FrameOLED
+      [P036] Added pagination to customized header
+      Update _P036_FrameOLED.ino
+      [P036] BUG Wifi bars for 128x64 and 128x32 displays must be on right side
+      [P036] Time for PLUGIN_READ reduced
+
+
+-------------------------------------------------
+Changes in release mega-20191108 (since mega-20191104)
+-------------------------------------------------
+
+Release date: Fri Nov  8 04:00:15 CET 2019
+
+Bartlomiej Zimon (1):
+      P003 Pulse: add resetpulsecounter command for setting counters to 0
+
+TD-er (1):
+      [Docs] Document new resetpulsecounter command
+
+jimmys01 (7):
+      Update IR library
+      [IR TX RX] Add IRSEND JSON formated command
+      [IR TX] Pretify and show to the log the supported Protocols, make JSON keys not case sensitive
+      [IR TX] Fix travis issues
+      Refactor P035
+      Refactor P035
+      Another refactor of P035
+
+
+-------------------------------------------------
 Changes in release mega-20191104 (since mega-20191103)
 -------------------------------------------------
 
