@@ -2,6 +2,7 @@
 #define _TAIL true
 #define CHUNKED_BUFFER_SIZE          400
 
+#include <WString.h>
 
 #include "src/Globals/Device.h"
 #include "src/Static/WebStaticData.h"
@@ -696,6 +697,48 @@ void getErrorNotifications() {
 #define MENU_INDEX_TOOLS         7
 static byte navMenuIndex = MENU_INDEX_MAIN;
 
+// See https://github.com/letscontrolit/ESPEasy/issues/1650
+String getGpMenuIcon(byte index) {
+  switch (index) {
+    case MENU_INDEX_MAIN          : return F("&#8962;");  
+    case MENU_INDEX_CONFIG        : return F("&#9881;");  
+    case MENU_INDEX_CONTROLLERS   : return F("&#128172;");
+    case MENU_INDEX_HARDWARE      : return F("&#128204;");
+    case MENU_INDEX_DEVICES       : return F("&#128268;");
+    case MENU_INDEX_RULES         : return F("&#10740;"); 
+    case MENU_INDEX_NOTIFICATIONS : return F("&#9993;");  
+    case MENU_INDEX_TOOLS         : return F("&#128295;");
+  }
+  return "";
+}
+
+String getGpMenuLabel(byte index) {
+  switch (index) {
+    case MENU_INDEX_MAIN          : return F("Main");         
+    case MENU_INDEX_CONFIG        : return F("Config");       
+    case MENU_INDEX_CONTROLLERS   : return F("Controllers");  
+    case MENU_INDEX_HARDWARE      : return F("Hardware");     
+    case MENU_INDEX_DEVICES       : return F("Devices");      
+    case MENU_INDEX_RULES         : return F("Rules");        
+    case MENU_INDEX_NOTIFICATIONS : return F("Notifications");
+    case MENU_INDEX_TOOLS         : return F("Tools");        
+  }
+  return "";
+}
+
+String getGpMenuURL(byte index) {
+  switch (index) {
+    case MENU_INDEX_MAIN          : return F("/");             
+    case MENU_INDEX_CONFIG        : return F("/config");       
+    case MENU_INDEX_CONTROLLERS   : return F("/controllers");  
+    case MENU_INDEX_HARDWARE      : return F("/hardware");     
+    case MENU_INDEX_DEVICES       : return F("/devices");      
+    case MENU_INDEX_RULES         : return F("/rules");        
+    case MENU_INDEX_NOTIFICATIONS : return F("/notifications");
+    case MENU_INDEX_TOOLS         : return F("/tools");        
+  }
+  return "";
+}
 
 void getWebPageTemplateVar(const String& varName)
 {
@@ -715,19 +758,6 @@ void getWebPageTemplateVar(const String& varName)
 
   else if (varName == F("menu"))
   {
-    static const __FlashStringHelper *gpMenu[8][3] = {
-      // See https://github.com/letscontrolit/ESPEasy/issues/1650
-      // Icon,        Full width label,   URL
-      F("&#8962;"),   F("Main"),          F("/"),              // 0
-      F("&#9881;"),   F("Config"),        F("/config"),        // 1
-      F("&#128172;"), F("Controllers"),   F("/controllers"),   // 2
-      F("&#128204;"), F("Hardware"),      F("/hardware"),      // 3
-      F("&#128268;"), F("Devices"),       F("/devices"),       // 4
-      F("&#10740;"),  F("Rules"),         F("/rules"),         // 5
-      F("&#9993;"),   F("Notifications"), F("/notifications"), // 6
-      F("&#128295;"), F("Tools"),         F("/tools"),         // 7
-    };
-
     TXBuffer += F("<div class='menubar'>");
 
     for (byte i = 0; i < 8; i++)
@@ -748,11 +778,11 @@ void getWebPageTemplateVar(const String& varName)
         TXBuffer += F(" active");
       }
       TXBuffer += F("' href='");
-      TXBuffer += gpMenu[i][2];
+      TXBuffer += getGpMenuURL(i);
       TXBuffer += "'>";
-      TXBuffer += gpMenu[i][0];
+      TXBuffer += getGpMenuIcon(i);
       TXBuffer += F("<span class='showmenulabel'>");
-      TXBuffer += gpMenu[i][1];
+      TXBuffer += getGpMenuLabel(i);
       TXBuffer += F("</span>");
       TXBuffer += F("</a>");
     }
