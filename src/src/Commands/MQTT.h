@@ -19,4 +19,8 @@ String Command_MQTT_Publish(struct EventStruct *event,
 #endif // ifdef USES_MQTT
 
 
+//MFD: adding subscribe command
+extern boolean MQTTsubscribe(int controller_idx, const char* topic, boolean retained);
+String Command_MQTT_Subscribe(struct EventStruct *event, const char* Line);
+
 #endif // COMMAND_MQTT_H

@@ -74,4 +74,27 @@ String Command_MQTT_Publish(struct EventStruct *event, const char *Line)
   return return_not_connected();
 }
 
+//MFD: adding subscribe command
+String Command_MQTT_Subscribe(struct EventStruct *event, const char* Line)
+{
+  if (wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED ) {
+    // ToDo TD-er: Not sure about this function, but at least it sends to an existing MQTTclient
+    int enabledMqttController = firstEnabledMQTTController();
+    if (enabledMqttController >= 0) {
+      String eventName = Line;
+      String topic = eventName.substring(10);
+      if (MQTTsubscribe(enabledMqttController, topic.c_str(), Settings.MQTTRetainFlag))
+      {
+        return return_command_success();
+      }
+      else
+        return return_command_failed();
+
+    }
+    return F("No MQTT controller enabled");
+  }
+  return return_not_connected();
+}
+
+
 #endif // ifdef USES_MQTT
