@@ -462,7 +462,7 @@ boolean PubSubClient::publish_P(const char* topic, const uint8_t* payload, unsig
     }
 
     // Header (1 byte) + llen + identifier (2 bytes)  + topic len + payload len
-    const int expectedLength = 1 + llen + 2 + tlen + plength;
+    const unsigned int expectedLength = 1 + llen + 2 + tlen + plength;
     return (rc == expectedLength);
 }
 
