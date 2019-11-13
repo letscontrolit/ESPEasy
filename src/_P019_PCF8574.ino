@@ -643,6 +643,7 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
             tempStatus.mode = PIN_MODE_OUTPUT;
             tempStatus.state = event->Par2;
             tempStatus.command=1; //set to 1 in order to display the status in the PinStatus page
+            (tempStatus.monitor) ? tempStatus.forceMonitor = 1 : tempStatus.forceMonitor = 0;
             savePortStatus(key,tempStatus);
             Plugin_019_Write(event->Par1, event->Par2);
             setPluginTaskTimer(event->Par3 * 1000, event->TaskIndex, event->Par1, !event->Par2); //Calls PLUGIN_TIMER_IN
@@ -705,6 +706,7 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
 
         tempStatus.state = event->Par2;
         tempStatus.mode = PIN_MODE_OUTPUT;
+        (tempStatus.monitor) ? tempStatus.forceMonitor = 1 : tempStatus.forceMonitor = 0; //added to send event for longpulse command
         savePortStatus(key,tempStatus);
         Plugin_019_Write(event->Par1, event->Par2);
 
