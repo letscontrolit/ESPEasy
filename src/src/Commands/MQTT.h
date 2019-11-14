@@ -16,13 +16,8 @@ String Command_MQTT_messageDelay(struct EventStruct *event,
 String Command_MQTT_Publish(struct EventStruct *event,
                             const char         *Line);
 
-
-
-
-//MFD: adding subscribe command
-extern void setIntervalTimerOverride(unsigned long id, unsigned long msecFromNow); //defined in Scheduler.ino
-boolean MQTTsubscribe(int controller_idx, const char* topic, boolean retained);
-String Command_MQTT_Subscribe(struct EventStruct *event, const char* Line);
+String Command_MQTT_Subscribe(struct EventStruct *event,
+                              const char* Line);
 
 #endif // ifdef USES_MQTT
 
