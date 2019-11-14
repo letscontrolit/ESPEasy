@@ -10,6 +10,7 @@
 #define PLUGIN_TASK_TIMER    2
 #define TASK_DEVICE_TIMER    3
 #define GPIO_TIMER           4
+#define PLUGIN_TIMER         5
 
 
 #include <list>
@@ -66,6 +67,9 @@ String decodeSchedulerId(unsigned long mixed_id) {
     case PLUGIN_TASK_TIMER:
       result = F("Plugin Task");
       break;
+    case PLUGIN_TIMER:
+      result = F("Plugin");
+      break;
     case TASK_DEVICE_TIMER:
       result = F("Task Device");
       break;
@@ -118,6 +122,9 @@ void handle_schedule() {
       break;
     case PLUGIN_TASK_TIMER:
       process_plugin_task_timer(id);
+      break;
+    case PLUGIN_TIMER:
+      process_plugin_timer(id);
       break;
     case TASK_DEVICE_TIMER:
       process_task_device_timer(id, timer);
@@ -222,7 +229,7 @@ void process_interval_timer(unsigned long id, unsigned long lasttimer) {
     case TIMER_30SEC:            runEach30Seconds();      break;
 #ifdef USES_MQTT
     case TIMER_MQTT:             runPeriodicalMQTT();     break;
-#endif //USES_MQTT    
+#endif //USES_MQTT
     case TIMER_STATISTICS:       logTimerStatistics();    break;
     case TIMER_GRATUITOUS_ARP:
 
@@ -237,7 +244,7 @@ void process_interval_timer(unsigned long id, unsigned long lasttimer) {
         sendGratuitousARP();
       }
       break;
-#ifdef USES_MQTT      
+#ifdef USES_MQTT
     case TIMER_MQTT_DELAY_QUEUE: processMQTTdelayQueue(); break;
 #endif //USES_MQTT
   #ifdef USES_C001
@@ -416,6 +423,80 @@ void process_plugin_task_timer(unsigned long id) {
 }
 
 /*********************************************************************************************\
+* Plugin Timer
+\*********************************************************************************************/
+unsigned long createPluginTimerId(deviceIndex_t deviceIndex, int Par1) {
+  const unsigned long mask  = (1 << TIMER_ID_SHIFT) - 1;
+  const unsigned long mixed = (Par1 << 8) + deviceIndex;
+
+  return mixed & mask;
+}
+
+/* // Not (yet) used
+   void splitPluginTaskTimerId(const unsigned long mixed_id, byte& plugin, int& Par1) {
+   const unsigned long mask = (1 << TIMER_ID_SHIFT) -1;
+   plugin = mixed_id & 0xFF;
+   Par1 = (mixed_id & mask) >> 8;
+   }
+ */
+void setPluginTimer(unsigned long msecFromNow, pluginID_t pluginID, int Par1, int Par2, int Par3, int Par4, int Par5)
+{
+  // plugin number and par1 form a unique key that can be used to restart a timer
+  // Use deviceIndex instead of pluginID, since the deviceIndex uses less bits.
+  const deviceIndex_t deviceIndex = getDeviceIndex(pluginID);
+  if (!validDeviceIndex(deviceIndex)) return;
+
+  const unsigned long systemTimerId = createPluginTimerId(deviceIndex, Par1);
+  systemTimerStruct   timer_data;
+
+//timer_data.TaskIndex        = deviceIndex;
+  timer_data.Par1             = Par1;
+  timer_data.Par2             = Par2;
+  timer_data.Par3             = Par3;
+  timer_data.Par4             = Par4;
+  timer_data.Par5             = Par5;
+  systemTimers[systemTimerId] = timer_data;
+  setTimer(PLUGIN_TIMER, systemTimerId, msecFromNow);
+}
+
+void process_plugin_timer(unsigned long id) {
+  START_TIMER;
+  const systemTimerStruct timer_data = systemTimers[id];
+  struct EventStruct TempEvent;
+//  TempEvent.TaskIndex = timer_data.TaskIndex;
+
+// extract deviceID from timer id:
+  const deviceIndex_t deviceIndex = ((1 << 8) -1) & id;
+
+  TempEvent.Par1      = timer_data.Par1;
+  TempEvent.Par2      = timer_data.Par2;
+  TempEvent.Par3      = timer_data.Par3;
+  TempEvent.Par4      = timer_data.Par4;
+  TempEvent.Par5      = timer_data.Par5;
+
+  // TD-er: Not sure if we have to keep original source for notifications.
+  TempEvent.Source = VALUE_SOURCE_SYSTEM;
+//  const deviceIndex_t deviceIndex = getDeviceIndex_from_TaskIndex(timer_data.TaskIndex);
+
+  /*
+     String log = F("proc_system_timer: Pluginid: ");
+     log += deviceIndex;
+     log += F(" taskIndex: ");
+     log += timer_data.TaskIndex;
+     log += F(" sysTimerID: ");
+     log += id;
+     addLog(LOG_LEVEL_INFO, log);
+   */
+  systemTimers.erase(id);
+
+  if (validDeviceIndex(deviceIndex)) {
+    String dummy;
+    Plugin_ptr[deviceIndex](PLUGIN_ONLY_TIMER_IN, &TempEvent, dummy);
+  }
+  STOP_TIMER(PROC_SYS_TIMER);
+}
+
+/*********************************************************************************************\
 * GPIO Timer
 * Special timer to handle timed GPIO actions
 \*********************************************************************************************/
@@ -500,7 +581,7 @@ void schedule_task_device_timer(unsigned long task_index, unsigned long runAt) {
    */
 
   if (!validTaskIndex(task_index)) { return; }
-  
+
   const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(task_index);
   if (!validDeviceIndex(DeviceIndex)) { return; }
 
