@@ -112,6 +112,10 @@ bool CPlugin_005(byte function, struct EventStruct *event, String& string)
         byte valueCount = getValueCountFromSensorType(event->sensorType);
         for (byte x = 0; x < valueCount; x++)
         {
+          //MFD: skip publishing for values with empty labels (removes unnecessary publishing of unwanted values)
+          if (ExtraTaskSettings.TaskDeviceValueNames[x][0]==0)
+             continue; //we skip values with empty labels
+             
           String tmppubname = pubname;
           tmppubname.replace(F("%valname%"), ExtraTaskSettings.TaskDeviceValueNames[x]);
           value = formatUserVarNoCheck(event, x);
