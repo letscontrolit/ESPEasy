@@ -75,7 +75,7 @@ String Command_MQTT_Publish(struct EventStruct *event, const char *Line)
   return return_not_connected();
 }
 
-//MFD: adding subscribe command
+
 boolean MQTTsubscribe(int controller_idx, const char* topic, boolean retained)
 {
   if (MQTTclient.subscribe(topic)) {
