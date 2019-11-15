@@ -935,11 +935,13 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
           tempStatus.state   = event->Par2;
           tempStatus.output  = event->Par2;
           tempStatus.command = 1; // set to 1 in order to display the status in the PinStatus page
+          (tempStatus.monitor) ? tempStatus.forceMonitor = 1 : tempStatus.forceMonitor = 0;
           savePortStatus(key, tempStatus);
           unsigned long timer = time_in_msec ? event->Par3 : event->Par3 * 1000;
 
           // Create a future system timer call to set the GPIO pin back to its normal value.
-          setPluginTaskTimer(timer, event->TaskIndex, event->Par1, inversePinStateValue);
+//          setPluginTaskTimer(timer, event->TaskIndex, event->Par1, inversePinStateValue);
+          setPluginTimer(timer, PLUGIN_ID_001, event->Par1, inversePinStateValue);
           log = String(F("SW   : GPIO ")) + String(event->Par1) +
                 String(F(" Pulse set for ")) + String(event->Par3) + String(time_in_msec ? F(" msec") : F(" sec"));
           addLog(LOG_LEVEL_INFO, log);
@@ -1135,6 +1137,25 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
 
       tempStatus.state = event->Par2;
       tempStatus.mode  = PIN_MODE_OUTPUT;
+      (tempStatus.monitor) ? tempStatus.forceMonitor = 1 : tempStatus.forceMonitor = 0; //added to send event for longpulse command
+      savePortStatus(key, tempStatus);
+      break;
+    }
+
+    case PLUGIN_ONLY_TIMER_IN:
+    {
+      digitalWrite(event->Par1, event->Par2);
+
+      // setPinState(PLUGIN_ID_001, event->Par1, PIN_MODE_OUTPUT, event->Par2);
+      portStatusStruct tempStatus;
+
+      // WARNING: operator [] creates an entry in the map if key does not exist
+      const uint32_t key = createKey(PLUGIN_ID_001, event->Par1);
+      tempStatus = globalMapPortStatus[key];
+
+      tempStatus.state = event->Par2;
+      tempStatus.mode  = PIN_MODE_OUTPUT;
+      (tempStatus.monitor) ? tempStatus.forceMonitor = 1 : tempStatus.forceMonitor = 0; //added to send event for longpulse command
       savePortStatus(key, tempStatus);
       break;
     }

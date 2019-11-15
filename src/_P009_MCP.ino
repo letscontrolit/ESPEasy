@@ -634,9 +634,12 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
             tempStatus.mode = PIN_MODE_OUTPUT;
             tempStatus.state = event->Par2;
             tempStatus.command=1; //set to 1 in order to display the status in the PinStatus page
+            (tempStatus.monitor) ? tempStatus.forceMonitor = 1 : tempStatus.forceMonitor = 0;
             savePortStatus(key,tempStatus);
 
-            setPluginTaskTimer(event->Par3 * 1000, event->TaskIndex, event->Par1, !event->Par2);
+            //setPluginTaskTimer(event->Par3 * 1000, event->TaskIndex, event->Par1, !event->Par2);
+            setPluginTimer(event->Par3 * 1000, PLUGIN_ID_009, event->Par1, !event->Par2);
+
             log = String(F("MCP  : GPIO ")) + String(event->Par1) + String(F(" Pulse set for ")) + String(event->Par3) + String(F(" S"));
             addLog(LOG_LEVEL_INFO, log);
             //SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_019, event->Par1, log, 0));
@@ -697,9 +700,26 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
 
         tempStatus.state = event->Par2;
         tempStatus.mode = PIN_MODE_OUTPUT;
+        (tempStatus.monitor) ? tempStatus.forceMonitor = 1 : tempStatus.forceMonitor = 0; //added to send event for longpulse command
         savePortStatus(key,tempStatus);
         break;
       }
+
+      case PLUGIN_ONLY_TIMER_IN:
+        {
+          Plugin_009_Write(event->Par1, event->Par2);
+          //setPinState(PLUGIN_ID_009, event->Par1, PIN_MODE_OUTPUT, event->Par2);
+          portStatusStruct tempStatus;
+          // WARNING: operator [] creates an entry in the map if key does not exist
+          const uint32_t key = createKey(PLUGIN_ID_009,event->Par1);
+          tempStatus = globalMapPortStatus[key];
+
+          tempStatus.state = event->Par2;
+          tempStatus.mode = PIN_MODE_OUTPUT;
+          (tempStatus.monitor) ? tempStatus.forceMonitor = 1 : tempStatus.forceMonitor = 0; //added to send event for longpulse command
+          savePortStatus(key,tempStatus);
+          break;
+        }
   }
   return success;
 }

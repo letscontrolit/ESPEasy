@@ -1119,7 +1119,7 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
         for (auto it=globalMapPortStatus.begin(); it!=globalMapPortStatus.end(); ++it) {
           //only call monitor function if there the need to
           if (it->second.monitor || it->second.command || it->second.init) {
-            TempEvent.Par1 = getPortFromKey(it->first);;
+            TempEvent.Par1 = getPortFromKey(it->first);
             //initialize the "x" variable to synch with the pluginNumber if second.x == -1
             if (!validDeviceIndex(it->second.x)) it->second.x = getDeviceIndex(getPluginFromKey(it->first));
 
