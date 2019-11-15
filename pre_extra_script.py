@@ -13,7 +13,6 @@ import os
 # - frameworks
 # - dependent libraries
 env.Append(CPPDEFINES=[
-  "PIO_FRAMEWORK_ARDUINO_ESPRESSIF_SDK22y"
   # ,"NO_HTTP_UPDATER"
   # ,("WEBSERVER_RULES_DEBUG", "0")
 ])
