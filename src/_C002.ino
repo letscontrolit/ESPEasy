@@ -134,14 +134,15 @@ bool CPlugin_002(byte function, struct EventStruct *event, String& string)
                   }
                   break;
                 }
-#ifdef USES_P115
+#if defined(USES_P088) || defined(USES_P115)
+                case 88: // Send heatpump IR (P088) if IDX matches
                 case 115: // Send heatpump IR (P115) if IDX matches
                 {
                   action = F("heatpumpir,");
                   action += svalue1; // svalue1 is like 'gree,1,1,0,22,0,0'
                   break;
                 }
-#endif // USES_P115
+#endif // USES_P088 || USES_P115
                 default:
                   break;
               }
