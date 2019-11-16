@@ -172,15 +172,12 @@ bool P005_do_plugin_read(struct EventStruct *event) {
       delayMicroseconds(20);
       break;
   }
-  
-  if(!P005_waitState(0)) {P005_log(event, P005_error_no_reading); return false; }
-  if(!P005_waitState(1)) {P005_log(event, P005_error_no_reading); return false; }
+
   noInterrupts();
-  if(!P005_waitState(0)) {
-    interrupts();
-    P005_log(event, P005_error_no_reading);
-    return false;
-  }
+  if(!P005_waitState(0)) {interrupts(); P005_log(event, P005_error_no_reading); return false; }
+  if(!P005_waitState(1)) {interrupts(); P005_log(event, P005_error_no_reading); return false; }
+  if(!P005_waitState(0)) {interrupts(); P005_log(event, P005_error_no_reading); return false; }
+
   bool readingAborted = false;
   byte dht_dat[5];
   for (i = 0; i < 5 && !readingAborted; i++)
