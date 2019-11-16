@@ -159,8 +159,8 @@ void MQTTDisconnect()
   if (MQTTclient.connected()) {
     MQTTclient.disconnect();
     addLog(LOG_LEVEL_INFO, F("MQTT : Disconnected from broker"));
-    updateMQTTclient_connected();
   }
+  updateMQTTclient_connected();
 }
 
 /*********************************************************************************************\
@@ -178,8 +178,8 @@ bool MQTTConnect(int controller_idx)
 
   if (MQTTclient.connected()) {
     MQTTclient.disconnect();
-    updateMQTTclient_connected();
   }
+  updateMQTTclient_connected();
   mqtt = WiFiClient(); // workaround see: https://github.com/esp8266/Arduino/issues/4497#issuecomment-373023864
   mqtt.setTimeout(ControllerSettings.ClientTimeout);
   MQTTclient.setClient(mqtt);

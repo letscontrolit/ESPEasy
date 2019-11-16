@@ -21,7 +21,7 @@ To create/register a plugin, you have to :
  adding "#define PLUGIN_BUILD_DEV" at the top of the ESPEasy.ino file
  - You will then have to push a PR including your plugin + the corret line (#define USES_P777) added to this file
 
- When found stable enought, the maintainer (and only him) will choose to move it to TESTING or STABLE
+ When found stable enough, the maintainer (and only him) will choose to move it to TESTING or STABLE
 */
 
 //#define FEATURE_SD
