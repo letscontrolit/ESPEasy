@@ -787,7 +787,7 @@ void display_time() {
 void display_title(String& title) {
   display->setFont(ArialMT_Plain_10);
   display->setColor(BLACK);
-  display->fillRect(0, TopLineOffset, 128, 12);   // don't clear line under title.
+  display->fillRect(0, TopLineOffset, P36_MaxDisplayWidth, 12);   // don't clear line under title.
   display->setColor(WHITE);
   if (SizeSettings[OLEDIndex].Width == P36_MaxDisplayWidth) {
     display->setTextAlignment(TEXT_ALIGN_CENTER);
@@ -804,7 +804,7 @@ int left = 24;
   display->setTextAlignment(TEXT_ALIGN_LEFT);
   display->setFont(ArialMT_Plain_16);
   display->setColor(BLACK);
-  display->fillRect(0, 13+TopLineOffset, 128, P36_MaxDisplayHeight);
+  display->fillRect(0, 13+TopLineOffset, P36_MaxDisplayWidth, P36_MaxDisplayHeight);
   display->setColor(WHITE);
   display->drawString(65, 15+TopLineOffset, F("ESP"));
   display->drawString(65, 34+TopLineOffset, F("Easy"));
@@ -819,7 +819,7 @@ void display_indicator(int iframe, int frameCount) {
   //  Erase Indicator Area
 
   display->setColor(BLACK);
-  display->fillRect(0, 54+TopLineOffset, 128, 10);
+  display->fillRect(0, 54+TopLineOffset, P36_MaxDisplayWidth, 10);
   display->setColor(WHITE);
 
   // Only display when there is something to display.
@@ -952,9 +952,9 @@ byte display_scroll(int lscrollspeed, int lTaskTimer)
 
   display->setColor(BLACK);
    // We allow 12 pixels at the top because otherwise the wifi indicator gets too squashed!!
-  display->fillRect(0, 12+TopLineOffset, 128, 42);   // scrolling window is 44 pixels high - ie 64 less margin of 10 at top and bottom
+  display->fillRect(0, 12+TopLineOffset, P36_MaxDisplayWidth, 42);   // scrolling window is 44 pixels high - ie 64 less margin of 10 at top and bottom
   display->setColor(WHITE);
-  display->drawLine(0, 12+TopLineOffset, 128, 12+TopLineOffset);   // line below title
+  display->drawLine(0, 12+TopLineOffset, P36_MaxDisplayWidth, 12+TopLineOffset);   // line below title
 
   for (byte j = 0; j < ScrollingPages.linesPerFrame; j++)
   {
@@ -1003,7 +1003,7 @@ byte display_scroll_timer() {
   // page scrolling (using PLUGIN_TIMER_IN)
   display->setColor(BLACK);
    // We allow 13 pixels (including underline) at the top because otherwise the wifi indicator gets too squashed!!
-  display->fillRect(0, 13+TopLineOffset, 128, 42);   // scrolling window is 44 pixels high - ie 64 less margin of 10 at top and bottom
+  display->fillRect(0, 13+TopLineOffset, P36_MaxDisplayWidth, 42);   // scrolling window is 44 pixels high - ie 64 less margin of 10 at top and bottom
   display->setColor(WHITE);
   display->setFont(ScrollingPages.Font);
 
@@ -1078,7 +1078,7 @@ void display_scrolling_lines(int nlines) {
           ScrollingLines.Line[i].CurrentLeft = iCurrentLeft;
           updateDisplay = true;
           display->setColor(BLACK);
-          display->fillRect(0 , ScrollingLines.Line[i].ypos, 128, ScrollingLines.Space);
+          display->fillRect(0 , ScrollingLines.Line[i].ypos, P36_MaxDisplayWidth, ScrollingLines.Space);
           display->setColor(WHITE);
           if (((ScrollingLines.Line[i].CurrentLeft-SizeSettings[OLEDIndex].PixLeft)+ScrollingLines.Line[i].Width) >= SizeSettings[OLEDIndex].Width) {
             display->setTextAlignment(TEXT_ALIGN_LEFT);
