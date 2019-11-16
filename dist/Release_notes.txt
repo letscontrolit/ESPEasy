@@ -1,4 +1,30 @@
 -------------------------------------------------
+Changes in release mega-20191116 (since mega-20191113)
+-------------------------------------------------
+
+Release date: Sat Nov 16 04:00:14 CET 2019
+
+Florin (1):
+      skip publishing of values with empty labels
+
+Gijs Noorlander (4):
+      [pubSubClient]  Fix signed/unsigned compare warning
+      [SD] Allow to compile with FEATURE_SD defined (#2700)
+      [PIO] Ignore SD/SDFS libraries to reduce build size
+      [C002] Allow heatpump commands for new plugin P088
+
+Plebs (2):
+      fix for #2730 (longpulse command)
+      fixed longpress with a new timer type
+
+TD-er (4):
+      [PubSubClient] Fix check for domain string
+      [PubSubClient] Only update lastOutActivity when write is successful
+      [MQTT] Improve update MQTT client connected status
+      [pubsubclient]  Fix bug in publish
+
+
+-------------------------------------------------
 Changes in release mega-20191113 (since mega-20191108)
 -------------------------------------------------
 
