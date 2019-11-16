@@ -287,7 +287,9 @@ void stream_json_end_object_element(bool isLast) {
 void handle_timingstats_json() {
   TXBuffer.startJsonStream();
   TXBuffer += '{';
+  #ifdef USES_TIMING_STATS
   jsonStatistics(false);
+  #endif
   TXBuffer += '}';
   TXBuffer.endStream();
 }

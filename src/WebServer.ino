@@ -317,10 +317,12 @@ void sendHeadandTail(const String& tmplName, boolean Tail = false, boolean reboo
   // This function is called twice per serving a web page.
   // So it must keep track of the timer longer than the scope of this function.
   // Therefore use a local static variable.
+  #ifdef USES_TIMING_STATS
   static unsigned statisticsTimerStart = 0;
   if (!Tail) {
     statisticsTimerStart = micros();
   }
+  #endif
 
   String pageTemplate = "";
   String fileName     = tmplName;

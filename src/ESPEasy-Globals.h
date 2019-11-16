@@ -356,36 +356,6 @@ extern boolean UseRTOSMultitasking;
 // void (*MainLoopCall_ptr)(void); //FIXME TD-er: No idea what this does.
 
 
-/*
-String getLogLine(const TimingStats& stats) {
-    unsigned long minVal, maxVal;
-    unsigned int c = stats.getMinMax(minVal, maxVal);
-    String log;
-    log.reserve(64);
-    log += F("Count: ");
-    log += c;
-    log += F(" Avg/min/max ");
-    log += stats.getAvg();
-    log += '/';
-    log += minVal;
-    log += '/';
-    log += maxVal;
-    log += F(" usec");
-    return log;
-}
-*/
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 #include "src/DataStructs/DeviceModel.h"

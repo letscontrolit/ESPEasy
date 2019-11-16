@@ -3,6 +3,7 @@
 #include "../../ESPEasy_plugindefs.h"
 #include "../../_CPlugin_Helper.h"
 
+#ifdef USES_TIMING_STATS
 
 
 std::map<int, TimingStats> pluginStats;
@@ -225,3 +226,5 @@ String getMiscStatsName(int stat) {
   }
   return getUnknownString();
 }
+
+#endif

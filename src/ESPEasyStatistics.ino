@@ -1,3 +1,7 @@
+#include "define_plugin_sets.h"
+
+#ifdef USES_TIMING_STATS
+
 /*
    void logStatistics(byte loglevel, bool clearStats) {
    if (loglevelActiveFor(loglevel)) {
@@ -91,3 +95,6 @@ void jsonStatistics(bool clearStats) {
   stream_json_end_object_element(true); // end "plugin" object
   stream_json_end_array_element(true);  // end "plugin" array
 }
+
+
+#endif
