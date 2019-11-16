@@ -166,6 +166,12 @@
 
     ``Publish,<topic>,<value>``"
     "
+    Subscribe","
+    :green:`Rules`","
+    Subscribes to a specific topic using MQTT broker service
+
+    ``Subscribe,<topic>``"
+    "
     SendTo","
     :green:`Rules`","
     Send command to other ESP (using UDP)
