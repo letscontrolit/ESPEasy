@@ -12,6 +12,15 @@
 // Added to the main repository with some optimizations and some limitations.
 // Al long as the device is not selected, no RAM is waisted.
 //
+// @uwekaditz: 2019-11-17
+// CHG: commands for P036
+// 1. Display commands: oledframedcmd display [on, off, low, med, high]
+//    turns display on or off or changes contrast (low, med or high)
+// 2. Content commands: oledframedcmd <line> <text> <mode>
+//    displays <text> in line (1-12), next frame is showing the changed line, mode not implemented yet
+// @uwekaditz: 2019-11-16
+// CHG: Header content only changed once within display interval. before every second
+// CHG: more predefined constants to understand the meaning of the values
 // @uwekaditz: 2019-11-11
 // CHG: PageScrolling based on Timer (PLUGIN_TIMER_IN) to reduce time for PLUGIN_READ (blocking) from 700ms to 80ms
 // @uwekaditz: 2019-11-05
@@ -88,6 +97,7 @@ static eHeaderContent HeaderContent=eSysName;
 static eHeaderContent HeaderContentAlternative=eSysName;
 static byte MaxFramesToDisplay = 0xFF;
 static byte currentFrameToDisplay = 0;
+static byte nextFrameToDisplay = 0xFF;  // next frame because content changed in PLUGIN_WRITE
 
 typedef struct {
   byte          Top;                  // top in pix for this line setting
@@ -536,11 +546,17 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
             ntries += 1;
             if (ntries > NFrames) break;
 
-            //        Increment the frame counter
-            frameCounter = frameCounter + 1;
-            if ( frameCounter > NFrames - 1) {
-              frameCounter = 0;
-              currentFrameToDisplay = 0;
+            if (nextFrameToDisplay == 0xff) {
+              // Increment the frame counter
+              frameCounter = frameCounter + 1;
+              if ( frameCounter > NFrames - 1) {
+                frameCounter = 0;
+                currentFrameToDisplay = 0;
+              }
+            }
+            else {
+              // next frame because content changed in PLUGIN_WRITE
+              frameCounter = nextFrameToDisplay;
             }
 
             //        Contruct incoming strings
@@ -552,11 +568,16 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
               if (ScrollingPages.newString[i].length() > 0) foundText = true;
             }
             if (foundText) {
-              if (frameCounter != 0) {
-                ++currentFrameToDisplay;
+              if (nextFrameToDisplay == 0xff) {
+                if (frameCounter != 0) {
+                  ++currentFrameToDisplay;
+                }
               }
+              else currentFrameToDisplay = nextFrameToDisplay;
             }
           }
+          nextFrameToDisplay = 0xFF;
+
           if ((currentFrameToDisplay + 1) > nrFramesToDisplay) {
             nrFramesToDisplay = currentFrameToDisplay + 1;
           }
@@ -600,30 +621,74 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WRITE:
       {
-        // FIXME TD-er: This one is not using parseString* function
-        String tmpString  = string;
-        int argIndex = tmpString.indexOf(',');
-        if (argIndex)
-          tmpString = tmpString.substring(0, argIndex);
-        if (tmpString.equalsIgnoreCase(F("OLEDFRAMEDCMD")) && display)
-        {
-          success = true;
-          argIndex = string.lastIndexOf(',');
-          tmpString = string.substring(argIndex + 1);
-          if (tmpString.equalsIgnoreCase(F("Off")))
-            P36_setContrast(P36_CONTRAST_OFF);
-          else if (tmpString.equalsIgnoreCase(F("On")))
-            display->displayOn();
-          else if (tmpString.equalsIgnoreCase(F("Low")))
-            P36_setContrast(P36_CONTRAST_LOW);
-          else if (tmpString.equalsIgnoreCase(F("Med")))
-            P36_setContrast(P36_CONTRAST_MED);
-          else if (tmpString.equalsIgnoreCase(F("High")))
-            P36_setContrast(P36_CONTRAST_HIGH);
-        }
-        break;
-      }
+        String log     = "";
+        String command = parseString(string, 1);
+        String subcommand = parseString(string, 2);
+        int LineNo = event->Par1;
 
+        if ((command == F("oledframedcmd")) && display) {
+          if (subcommand == F("display"))
+          {
+            // display functions
+            String para1 = parseString(string, 3);
+            if (para1 == F("on")) {
+              success = true;
+              displayTimer = PCONFIG(4);
+              display->displayOn();
+              UserVar[event->BaseVarIndex] = 1;      //  Save the fact that the display is now ON
+            }
+            if (para1 == F("off")) {
+              success = true;
+              displayTimer = 0;
+              display->displayOff();
+              UserVar[event->BaseVarIndex] = 0;      //  Save the fact that the display is now OFF
+            }
+            if (para1 == F("low")) {
+              success = true;
+              P36_setContrast(P36_CONTRAST_LOW);
+            }
+            if (para1 == F("med")) {
+              success = true;
+              P36_setContrast(P36_CONTRAST_MED);
+            }
+            if (para1 == F("high")) {
+              success = true;
+              P36_setContrast(P36_CONTRAST_HIGH);
+            }
+            // log += String(F("[P36] Display: ")) + String(para1) + String(F(" Success:")) + String(success);
+            // addLog(LOG_LEVEL_INFO, log);
+        }
+        else if ((LineNo >= 1) && (LineNo <= (P36_Nlines+1)))
+          {
+            // content functions
+            success = true;
+            String NewContent = parseStringKeepCase(string, 3);
+            P036_displayLines[LineNo-1] = NewContent;
+            nextFrameToDisplay = LineNo / ScrollingPages.linesPerFrame; // next frame shows the new content
+
+            int LineMode = event->Par3; // not implemented yet
+
+            displayTimer = PCONFIG(4);
+            if (UserVar[event->BaseVarIndex] == 0) {
+              // display was OFF, turn it ON
+              display->displayOn();
+              UserVar[event->BaseVarIndex] = 1;      //  Save the fact that the display is now ON
+            }
+
+            // log += String(F("[P36] Line: ")) + String(LineNo);
+            // log += String(F(" Content:")) + String(NewContent);
+            // log += String(F(" Height:")) + String(LineMode);
+            // addLog(LOG_LEVEL_INFO, log);
+          }
+      }
+      // if (!success) {
+      //   log += String(F("[P36] Cmd: ")) + String(command);
+      //   log += String(F(" SubCmd:")) + String(subcommand);
+      //   log += String(F(" Success:")) + String(success);
+      //   addLog(LOG_LEVEL_INFO, log);
+      // }
+      break;
+    }
   }
   return success;
 }
