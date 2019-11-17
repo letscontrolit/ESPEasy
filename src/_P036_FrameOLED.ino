@@ -621,7 +621,7 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WRITE:
       {
-        String log     = "";
+        // String log     = "";
         String command = parseString(string, 1);
         String subcommand = parseString(string, 2);
         int LineNo = event->Par1;
@@ -658,7 +658,7 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
             // log += String(F("[P36] Display: ")) + String(para1) + String(F(" Success:")) + String(success);
             // addLog(LOG_LEVEL_INFO, log);
         }
-        else if ((LineNo >= 1) && (LineNo <= (P36_Nlines+1)))
+        else if ((LineNo > 0) && (LineNo <= P36_Nlines))
           {
             // content functions
             success = true;
@@ -666,7 +666,7 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
             P036_displayLines[LineNo-1] = NewContent;
             nextFrameToDisplay = LineNo / ScrollingPages.linesPerFrame; // next frame shows the new content
 
-            int LineMode = event->Par3; // not implemented yet
+//            int LineMode = event->Par3; // not implemented yet
 
             displayTimer = PCONFIG(4);
             if (UserVar[event->BaseVarIndex] == 0) {
