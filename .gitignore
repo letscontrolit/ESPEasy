@@ -41,3 +41,5 @@ tools/vagrant/.vagrant/
 tools/vagrant/build/
 
 tools/vagrant/Custom.h
+
+.buildcache/
