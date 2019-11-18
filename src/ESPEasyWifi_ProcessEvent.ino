@@ -65,7 +65,6 @@ void handle_unprocessedWiFiEvents()
     if ((wifiStatus & ESPEASY_WIFI_GOT_IP) && (wifiStatus & ESPEASY_WIFI_CONNECTED) && WiFi.isConnected()) {
       wifiStatus            = ESPEASY_WIFI_SERVICES_INITIALIZED;
       wifiConnectInProgress = false;
-      resetAPdisableTimer();
     }
   } else if (!WiFiConnected()) {
     // Somehow the WiFi has entered a limbo state.
@@ -315,7 +314,6 @@ void processGotIP() {
 void processDisconnectAPmode() {
   if (processedDisconnectAPmode) { return; }
   processedDisconnectAPmode = true;
-  resetAPdisableTimer();
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     const int nrStationsConnected = WiFi.softAPgetStationNum();
@@ -331,7 +329,8 @@ void processDisconnectAPmode() {
 void processConnectAPmode() {
   if (processedConnectAPmode) { return; }
   processedConnectAPmode = true;
-  resetAPdisableTimer();
+  // Extend timer to switch off AP.
+  timerAPoff = millis() + WIFI_AP_OFF_TIMER_DURATION;
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("AP Mode: Client connected: ");
@@ -354,17 +353,15 @@ void processConnectAPmode() {
 // Switch of AP mode when timeout reached and no client connected anymore.
 void processDisableAPmode() {
   if (timerAPoff == 0) { return; }
-  bool APmodeActive = WifiIsAP(WiFi.getMode());
 
-  if (APmodeActive) {
+  if (WifiIsAP(WiFi.getMode())) {
     // disable AP after timeout and no clients connected.
     if (timeOutReached(timerAPoff) && (WiFi.softAPgetStationNum() == 0)) {
       setAP(false);
-      APmodeActive = false;
     }
   }
 
-  if (!APmodeActive) {
+  if (!WifiIsAP(WiFi.getMode())) {
     timerAPoff = 0;
   }
 }

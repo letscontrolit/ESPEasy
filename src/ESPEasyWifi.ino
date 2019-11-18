@@ -1,6 +1,7 @@
 #define WIFI_RECONNECT_WAIT                20000  // in milliSeconds
 #define WIFI_AP_OFF_TIMER_DURATION         60000  // in milliSeconds
 #define WIFI_CONNECTION_CONSIDERED_STABLE  300000 // in milliSeconds
+#define WIFI_ALLOW_AP_AFTERBOOT_PERIOD     5      // in minutes
 
 #include "src/Globals/ESPEasyWiFiEvent.h"
 
@@ -85,7 +86,6 @@ bool WiFiConnected() {
       // Set internal wifiStatus and reset timer to disable AP mode
       wifiStatus            = ESPEASY_WIFI_SERVICES_INITIALIZED;
       wifiConnectInProgress = false;
-      resetAPdisableTimer();
     }
   }
 
@@ -107,7 +107,11 @@ bool WiFiConnected() {
   // When made this far in the code, we apparently do not have valid WiFi connection.
   if (timerAPstart == 0) {
     // First run we do not have WiFi connection any more, set timer to start AP mode
-    timerAPstart = millis() + WIFI_RECONNECT_WAIT;
+    // Only allow the automatic AP mode in the first N minutes after boot.
+    if ((wdcounter / 2) < WIFI_ALLOW_AP_AFTERBOOT_PERIOD) {
+      timerAPstart = millis() + WIFI_RECONNECT_WAIT;
+      timerAPoff = timerAPstart + WIFI_AP_OFF_TIMER_DURATION;
+    }
   }
 
   if (wifiConnectTimeoutReached() && !wifiSetup) {
@@ -207,18 +211,6 @@ bool prepareWiFi() {
   return true;
 }
 
-// Set timer to disable AP mode
-void resetAPdisableTimer() {
-  bool APmodeActive = WifiIsAP(WiFi.getMode());
-
-  if (APmodeActive) {
-    if (WiFi.softAPgetStationNum() != 0) {
-      timerAPoff = millis() + WIFI_AP_OFF_TIMER_DURATION;
-    }
-  } else {
-    timerAPoff = 0;
-  }
-}
 
 void resetWiFi() {
   addLog(LOG_LEVEL_INFO, F("Reset WiFi."));
@@ -405,13 +397,13 @@ void setAPinternal(bool enable)
       }
     }
     #endif // ifdef ESP32
+    timerAPoff = millis() + WIFI_AP_OFF_TIMER_DURATION;
   } else {
     if (dnsServerActive) {
       dnsServerActive = false;
       dnsServer.stop();
     }
   }
-  resetAPdisableTimer();
 }
 
 String getWifiModeString(WiFiMode_t wifimode)
@@ -445,8 +437,11 @@ void setWifiMode(WiFiMode_t wifimode) {
 
   addLog(LOG_LEVEL_INFO, String(F("WIFI : Set WiFi to ")) + getWifiModeString(wifimode));
 
-  if (!WiFi.mode(wifimode)) {
+  int retry = 2;
+  while (!WiFi.mode(wifimode) && retry > 0) {
     addLog(LOG_LEVEL_INFO, F("WIFI : Cannot set mode!!!!!"));
+    delay(100);
+    --retry;
   }
 
   if (wifimode == WIFI_OFF) {
