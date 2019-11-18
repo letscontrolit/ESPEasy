@@ -166,7 +166,7 @@ void C013_SendUDPTaskData(byte destUnit, byte sourceTaskIndex, byte destTaskInde
     const userVarIndex_t userVarIndex = dataReply.sourceTaskIndex * VARS_PER_TASK + x;
 
     if (validUserVarIndex(userVarIndex)) {
-      dataReply.Values[x] = UserVar[dataReply.sourceTaskIndex * VARS_PER_TASK + x];
+      dataReply.Values[x] = UserVar[userVarIndex];
     }
   }
 

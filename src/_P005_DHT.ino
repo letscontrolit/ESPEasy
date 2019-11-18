@@ -151,7 +151,7 @@ bool P005_do_plugin_read(struct EventStruct *event) {
   digitalWrite(Plugin_005_DHT_Pin, LOW);              // Pull low
   
   switch (Par3) {
-    case P005_DHT11:  delay(18); break;  // minimum 18ms
+    case P005_DHT11:  delay(19); break;  // minimum 18ms
     case P005_DHT22:  delay(2);  break;  // minimum 1ms
     case P005_DHT12:  delay(200); break; // minimum 200ms
     case P005_AM2301: delayMicroseconds(900); break;
@@ -172,15 +172,12 @@ bool P005_do_plugin_read(struct EventStruct *event) {
       delayMicroseconds(20);
       break;
   }
-  
-  if(!P005_waitState(0)) {P005_log(event, P005_error_no_reading); return false; }
-  if(!P005_waitState(1)) {P005_log(event, P005_error_no_reading); return false; }
+
   noInterrupts();
-  if(!P005_waitState(0)) {
-    interrupts();
-    P005_log(event, P005_error_no_reading);
-    return false;
-  }
+  if(!P005_waitState(0)) {interrupts(); P005_log(event, P005_error_no_reading); return false; }
+  if(!P005_waitState(1)) {interrupts(); P005_log(event, P005_error_no_reading); return false; }
+  if(!P005_waitState(0)) {interrupts(); P005_log(event, P005_error_no_reading); return false; }
+
   bool readingAborted = false;
   byte dht_dat[5];
   for (i = 0; i < 5 && !readingAborted; i++)
@@ -196,7 +193,7 @@ bool P005_do_plugin_read(struct EventStruct *event) {
   if (readingAborted)
     return false;
 
-        // Checksum calculation is a Rollover Checksum by design!
+  // Checksum calculation is a Rollover Checksum by design!
   byte dht_check_sum = (dht_dat[0] + dht_dat[1] + dht_dat[2] + dht_dat[3]) & 0xFF; // check check_sum
   if (dht_dat[4] != dht_check_sum)
   {
