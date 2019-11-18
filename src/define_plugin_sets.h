@@ -378,6 +378,7 @@ To create/register a plugin, you have to :
 #ifdef PLUGIN_SET_SONOFF_POW
     #define PLUGIN_DESCR  "Sonoff POW R1/R2"
 
+    #define CONTROLLER_SET_STABLE
     #define PLUGIN_SET_ONLY_SWITCH
     #define USES_P076   // HWL8012   in POW r1
     // Needs CSE7766 Energy sensor, via Serial RXD 4800 baud 8E1 (GPIO1), TXD (GPIO3)
