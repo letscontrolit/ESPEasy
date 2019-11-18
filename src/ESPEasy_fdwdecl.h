@@ -190,4 +190,6 @@ void printDirectory(File dir, int numTabs);
 
 void delayBackground(unsigned long dsdelay);
 
+void setIntervalTimerOverride(unsigned long id, unsigned long msecFromNow); //implemented in Scheduler.ino
+
 #endif // ESPEASY_FWD_DECL_H

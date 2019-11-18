@@ -16,7 +16,9 @@ String Command_MQTT_messageDelay(struct EventStruct *event,
 String Command_MQTT_Publish(struct EventStruct *event,
                             const char         *Line);
 
-#endif // ifdef USES_MQTT
+String Command_MQTT_Subscribe(struct EventStruct *event,
+                              const char* Line);
 
+#endif // ifdef USES_MQTT
 
 #endif // COMMAND_MQTT_H

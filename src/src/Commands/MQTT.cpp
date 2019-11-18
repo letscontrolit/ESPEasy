@@ -1,5 +1,6 @@
 #include "../../define_plugin_sets.h"
-
+#include "../Globals/MQTT.h"
+#include "../DataStructs/SchedulerTimers.h"
 #ifdef USES_MQTT
 
 #include "../Commands/MQTT.h"
@@ -73,5 +74,36 @@ String Command_MQTT_Publish(struct EventStruct *event, const char *Line)
   }
   return return_not_connected();
 }
+
+
+boolean MQTTsubscribe(int controller_idx, const char* topic, boolean retained)
+{
+  if (MQTTclient.subscribe(topic)) {
+    setIntervalTimerOverride(TIMER_MQTT, 10); // Make sure the MQTT is being processed as soon as possible.
+    String log = F("Subscribed to: ");  log += topic;
+    addLog(LOG_LEVEL_INFO, log);
+    return true;
+  }
+  addLog(LOG_LEVEL_ERROR, F("MQTT : subscribe failed"));
+  return false;
+}
+
+String Command_MQTT_Subscribe(struct EventStruct *event, const char* Line)
+{
+  if (MQTTclient.connected() ) {
+    // ToDo TD-er: Not sure about this function, but at least it sends to an existing MQTTclient
+    int enabledMqttController = firstEnabledMQTTController();
+    if (enabledMqttController >= 0) {
+      String eventName = Line;
+      String topic = eventName.substring(10);
+      if (!MQTTsubscribe(enabledMqttController, topic.c_str(), Settings.MQTTRetainFlag))
+         return_command_failed();
+      return_command_success();
+    }
+    return F("No MQTT controller enabled");
+  }
+  return return_not_connected();
+}
+
 
 #endif // ifdef USES_MQTT
