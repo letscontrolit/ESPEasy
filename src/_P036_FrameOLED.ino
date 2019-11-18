@@ -12,6 +12,15 @@
 // Added to the main repository with some optimizations and some limitations.
 // Al long as the device is not selected, no RAM is waisted.
 //
+// @uwekaditz: 2019-11-17
+// CHG: commands for P036
+// 1. Display commands: oledframedcmd display [on, off, low, med, high]
+//    turns display on or off or changes contrast (low, med or high)
+// 2. Content commands: oledframedcmd <line> <text> <mode>
+//    displays <text> in line (1-12), next frame is showing the changed line, mode not implemented yet
+// @uwekaditz: 2019-11-16
+// CHG: Header content only changed once within display interval. before every second
+// CHG: more predefined constants to understand the meaning of the values
 // @uwekaditz: 2019-11-11
 // CHG: PageScrolling based on Timer (PLUGIN_TIMER_IN) to reduce time for PLUGIN_READ (blocking) from 700ms to 80ms
 // @uwekaditz: 2019-11-05
@@ -37,6 +46,7 @@
 #define P36_MaxSizesCount 3   // number of different OLED sizes
 #define P36_MaxDisplayWidth 128
 #define P36_MaxDisplayHeight 64
+#define P36_DisplayCentre 64
 
 #define P36_CONTRAST_OFF    1
 #define P36_CONTRAST_LOW    64
@@ -58,11 +68,13 @@
 #define P36_PageScrollPix             4  // min pixel change while page scrolling
 
 static int8_t lastWiFiState = P36_WIFI_STATE_UNSET;
-static int OLEDIndex = 0;
+static byte OLEDIndex = 0;
 static boolean bPin3Invers;
 static boolean bScrollLines;
+static boolean bAlternativHeader = false;
+static word HeaderCount = 0;
 static boolean bPageScrollDisabled = true;   // first page after INIT without scrolling
-static int TopLineOffset = 0;   // Offset for top line, used for rotated image while using displays < P36_MaxDisplayHeight lines
+static byte TopLineOffset = 0;   // Offset for top line, used for rotated image while using displays < P36_MaxDisplayHeight lines
 
 enum eHeaderContent {
     eSSID = 1,
@@ -85,6 +97,7 @@ static eHeaderContent HeaderContent=eSysName;
 static eHeaderContent HeaderContentAlternative=eSysName;
 static byte MaxFramesToDisplay = 0xFF;
 static byte currentFrameToDisplay = 0;
+static byte nextFrameToDisplay = 0xFF;  // next frame because content changed in PLUGIN_WRITE
 
 typedef struct {
   byte          Top;                  // top in pix for this line setting
@@ -388,6 +401,8 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
         else TopLineOffset = 0;
 
         //      Display the device name, logo, time and wifi
+        bAlternativHeader = false;  // start with first header content
+        HeaderCount = 0;            // reset header count
         display_header();
         display_logo();
         display->display();
@@ -437,6 +452,8 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
     // Check frequently to see if we have a pin signal to switch on display
     case PLUGIN_TEN_PER_SECOND:
       {
+        int lTaskTimer = Settings.TaskDeviceTimer[event->TaskIndex];
+        bAlternativHeader = (++HeaderCount > (lTaskTimer*5)); // change header after half of display time
         if (CONFIG_PIN3 != -1)
         {
           bPin3Invers = ((Settings.TaskDevicePluginConfigLong[event->TaskIndex][0] & 0x10000) == 0x10000);  // Bit 16
@@ -529,11 +546,17 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
             ntries += 1;
             if (ntries > NFrames) break;
 
-            //        Increment the frame counter
-            frameCounter = frameCounter + 1;
-            if ( frameCounter > NFrames - 1) {
-              frameCounter = 0;
-              currentFrameToDisplay = 0;
+            if (nextFrameToDisplay == 0xff) {
+              // Increment the frame counter
+              frameCounter = frameCounter + 1;
+              if ( frameCounter > NFrames - 1) {
+                frameCounter = 0;
+                currentFrameToDisplay = 0;
+              }
+            }
+            else {
+              // next frame because content changed in PLUGIN_WRITE
+              frameCounter = nextFrameToDisplay;
             }
 
             //        Contruct incoming strings
@@ -545,11 +568,16 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
               if (ScrollingPages.newString[i].length() > 0) foundText = true;
             }
             if (foundText) {
-              if (frameCounter != 0) {
-                ++currentFrameToDisplay;
+              if (nextFrameToDisplay == 0xff) {
+                if (frameCounter != 0) {
+                  ++currentFrameToDisplay;
+                }
               }
+              else currentFrameToDisplay = nextFrameToDisplay;
             }
           }
+          nextFrameToDisplay = 0xFF;
+
           if ((currentFrameToDisplay + 1) > nrFramesToDisplay) {
             nrFramesToDisplay = currentFrameToDisplay + 1;
           }
@@ -572,6 +600,8 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
             }
           }
           //      Update display
+          bAlternativHeader = false;  // start with first header content
+          HeaderCount = 0;            // reset header count
           display_header();
           if (SizeSettings[OLEDIndex].Width == P36_MaxDisplayWidth) display_indicator(currentFrameToDisplay, nrFramesToDisplay);
 
@@ -591,30 +621,74 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WRITE:
       {
-        // FIXME TD-er: This one is not using parseString* function
-        String tmpString  = string;
-        int argIndex = tmpString.indexOf(',');
-        if (argIndex)
-          tmpString = tmpString.substring(0, argIndex);
-        if (tmpString.equalsIgnoreCase(F("OLEDFRAMEDCMD")) && display)
-        {
-          success = true;
-          argIndex = string.lastIndexOf(',');
-          tmpString = string.substring(argIndex + 1);
-          if (tmpString.equalsIgnoreCase(F("Off")))
-            P36_setContrast(P36_CONTRAST_OFF);
-          else if (tmpString.equalsIgnoreCase(F("On")))
-            display->displayOn();
-          else if (tmpString.equalsIgnoreCase(F("Low")))
-            P36_setContrast(P36_CONTRAST_LOW);
-          else if (tmpString.equalsIgnoreCase(F("Med")))
-            P36_setContrast(P36_CONTRAST_MED);
-          else if (tmpString.equalsIgnoreCase(F("High")))
-            P36_setContrast(P36_CONTRAST_HIGH);
-        }
-        break;
-      }
+        // String log     = "";
+        String command = parseString(string, 1);
+        String subcommand = parseString(string, 2);
+        int LineNo = event->Par1;
 
+        if ((command == F("oledframedcmd")) && display) {
+          if (subcommand == F("display"))
+          {
+            // display functions
+            String para1 = parseString(string, 3);
+            if (para1 == F("on")) {
+              success = true;
+              displayTimer = PCONFIG(4);
+              display->displayOn();
+              UserVar[event->BaseVarIndex] = 1;      //  Save the fact that the display is now ON
+            }
+            if (para1 == F("off")) {
+              success = true;
+              displayTimer = 0;
+              display->displayOff();
+              UserVar[event->BaseVarIndex] = 0;      //  Save the fact that the display is now OFF
+            }
+            if (para1 == F("low")) {
+              success = true;
+              P36_setContrast(P36_CONTRAST_LOW);
+            }
+            if (para1 == F("med")) {
+              success = true;
+              P36_setContrast(P36_CONTRAST_MED);
+            }
+            if (para1 == F("high")) {
+              success = true;
+              P36_setContrast(P36_CONTRAST_HIGH);
+            }
+            // log += String(F("[P36] Display: ")) + String(para1) + String(F(" Success:")) + String(success);
+            // addLog(LOG_LEVEL_INFO, log);
+        }
+        else if ((LineNo > 0) && (LineNo <= P36_Nlines))
+          {
+            // content functions
+            success = true;
+            String NewContent = parseStringKeepCase(string, 3);
+            P036_displayLines[LineNo-1] = NewContent;
+            nextFrameToDisplay = LineNo / ScrollingPages.linesPerFrame; // next frame shows the new content
+
+//            int LineMode = event->Par3; // not implemented yet
+
+            displayTimer = PCONFIG(4);
+            if (UserVar[event->BaseVarIndex] == 0) {
+              // display was OFF, turn it ON
+              display->displayOn();
+              UserVar[event->BaseVarIndex] = 1;      //  Save the fact that the display is now ON
+            }
+
+            // log += String(F("[P36] Line: ")) + String(LineNo);
+            // log += String(F(" Content:")) + String(NewContent);
+            // log += String(F(" Height:")) + String(LineMode);
+            // addLog(LOG_LEVEL_INFO, log);
+          }
+      }
+      // if (!success) {
+      //   log += String(F("[P36] Cmd: ")) + String(command);
+      //   log += String(F(" SubCmd:")) + String(subcommand);
+      //   log += String(F(" Success:")) + String(success);
+      //   addLog(LOG_LEVEL_INFO, log);
+      // }
+      break;
+    }
   }
   return success;
 }
@@ -683,10 +757,9 @@ String P36_parseTemplate(String &tmpString, byte lineSize) {
 // The screen is set up as 10 rows at the top for the header, 10 rows at the bottom for the footer and 44 rows in the middle for the scroll region
 
 void display_header() {
-  static boolean Alternative = true;
   eHeaderContent _HeaderContent;
   String newString, strHeader;
-  if ((HeaderContentAlternative==HeaderContent) || Alternative) {
+  if ((HeaderContentAlternative==HeaderContent) || !bAlternativHeader) {
     _HeaderContent=HeaderContent;
   }
   else _HeaderContent=HeaderContentAlternative;
@@ -757,7 +830,6 @@ void display_header() {
     default:
       return;
   }
-  Alternative = !Alternative;
 
   strHeader.trim();
   display_title(strHeader);
@@ -780,16 +852,15 @@ void display_time() {
 void display_title(String& title) {
   display->setFont(ArialMT_Plain_10);
   display->setColor(BLACK);
-//  display->fillRect(0, 0, 128, 13); // Underscores use a extra lines, clear also.
-  display->fillRect(0, TopLineOffset, 128, 12);   // don't clean line under title.
+  display->fillRect(0, TopLineOffset, P36_MaxDisplayWidth, 12);   // don't clear line under title.
   display->setColor(WHITE);
   if (SizeSettings[OLEDIndex].Width == P36_MaxDisplayWidth) {
     display->setTextAlignment(TEXT_ALIGN_CENTER);
-    display->drawString(64, TopLineOffset, title);
+    display->drawString(P36_DisplayCentre, TopLineOffset, title);
   }
   else {
     display->setTextAlignment(TEXT_ALIGN_LEFT);  // Display right of WiFi bars
-    display->drawString(SizeSettings[OLEDIndex].PixLeft + SizeSettings[OLEDIndex].WiFiIndicatorWidth + 1, TopLineOffset, title);
+    display->drawString(SizeSettings[OLEDIndex].PixLeft + SizeSettings[OLEDIndex].WiFiIndicatorWidth + 3, TopLineOffset, title);
   }
 }
 
@@ -798,7 +869,7 @@ int left = 24;
   display->setTextAlignment(TEXT_ALIGN_LEFT);
   display->setFont(ArialMT_Plain_16);
   display->setColor(BLACK);
-  display->fillRect(0, 13+TopLineOffset, 128, 64);
+  display->fillRect(0, 13+TopLineOffset, P36_MaxDisplayWidth, P36_MaxDisplayHeight);
   display->setColor(WHITE);
   display->drawString(65, 15+TopLineOffset, F("ESP"));
   display->drawString(65, 34+TopLineOffset, F("Easy"));
@@ -813,7 +884,7 @@ void display_indicator(int iframe, int frameCount) {
   //  Erase Indicator Area
 
   display->setColor(BLACK);
-  display->fillRect(0, 54+TopLineOffset, 128, 10);
+  display->fillRect(0, 54+TopLineOffset, P36_MaxDisplayWidth, 10);
   display->setColor(WHITE);
 
   // Only display when there is something to display.
@@ -839,11 +910,11 @@ void display_indicator(int iframe, int frameCount) {
     if (number_spaces <= 0)
       return;
     int margin = 20;
-    int spacing = (128 - 2 * margin) / number_spaces;
+    int spacing = (P36_MaxDisplayWidth - 2 * margin) / number_spaces;
     // Now apply some max of 30 pixels between the indicators and center the row of indicators.
     if (spacing > 30) {
       spacing = 30;
-      margin = (128 - number_spaces * spacing) / 2;
+      margin = (P36_MaxDisplayWidth - number_spaces * spacing) / 2;
     }
 
     x = margin + (spacing * i);
@@ -946,9 +1017,9 @@ byte display_scroll(int lscrollspeed, int lTaskTimer)
 
   display->setColor(BLACK);
    // We allow 12 pixels at the top because otherwise the wifi indicator gets too squashed!!
-  display->fillRect(0, 12+TopLineOffset, 128, 42);   // scrolling window is 44 pixels high - ie 64 less margin of 10 at top and bottom
+  display->fillRect(0, 12+TopLineOffset, P36_MaxDisplayWidth, 42);   // scrolling window is 44 pixels high - ie 64 less margin of 10 at top and bottom
   display->setColor(WHITE);
-  display->drawLine(0, 12+TopLineOffset, 128, 12+TopLineOffset);   // line below title
+  display->drawLine(0, 12+TopLineOffset, P36_MaxDisplayWidth, 12+TopLineOffset);   // line below title
 
   for (byte j = 0; j < ScrollingPages.linesPerFrame; j++)
   {
@@ -956,24 +1027,24 @@ byte display_scroll(int lscrollspeed, int lTaskTimer)
       if (ScrollingLines.Line[j].LastWidth > 0 ) {
         // width of oldString[j] > display width -> line at beginning of scrolling page is right aligned
         display->setTextAlignment(TEXT_ALIGN_RIGHT);
-        display->drawString(128 - SizeSettings[OLEDIndex].PixLeft + ScrollingPages.dPixSum, ScrollingPages.ypos[j], ScrollingPages.oldString[j]);
+        display->drawString(P36_MaxDisplayWidth - SizeSettings[OLEDIndex].PixLeft + ScrollingPages.dPixSum, ScrollingPages.ypos[j], ScrollingPages.oldString[j]);
       }
       else {
         // line at beginning of scrolling page is centered
         display->setTextAlignment(TEXT_ALIGN_CENTER);
-        display->drawString(64 + ScrollingPages.dPixSum, ScrollingPages.ypos[j], ScrollingPages.oldString[j]);
+        display->drawString(P36_DisplayCentre + ScrollingPages.dPixSum, ScrollingPages.ypos[j], ScrollingPages.oldString[j]);
       }
     }
 
     if (ScrollingLines.Line[j].Width > 0 ) {
       // width of newString[j] > display width -> line at end of scrolling page should be left aligned
       display->setTextAlignment(TEXT_ALIGN_LEFT);
-      display->drawString(-128 + SizeSettings[OLEDIndex].PixLeft + ScrollingPages.dPixSum, ScrollingPages.ypos[j], ScrollingPages.newString[j]);
+      display->drawString(-P36_MaxDisplayWidth + SizeSettings[OLEDIndex].PixLeft + ScrollingPages.dPixSum, ScrollingPages.ypos[j], ScrollingPages.newString[j]);
     }
     else {
       // line at end of scrolling page should be centered
       display->setTextAlignment(TEXT_ALIGN_CENTER);
-      display->drawString(-64 + ScrollingPages.dPixSum, ScrollingPages.ypos[j], ScrollingPages.newString[j]);
+      display->drawString(-P36_DisplayCentre + ScrollingPages.dPixSum, ScrollingPages.ypos[j], ScrollingPages.newString[j]);
     }
   }
 
@@ -997,7 +1068,7 @@ byte display_scroll_timer() {
   // page scrolling (using PLUGIN_TIMER_IN)
   display->setColor(BLACK);
    // We allow 13 pixels (including underline) at the top because otherwise the wifi indicator gets too squashed!!
-  display->fillRect(0, 13+TopLineOffset, 128, 42);   // scrolling window is 44 pixels high - ie 64 less margin of 10 at top and bottom
+  display->fillRect(0, 13+TopLineOffset, P36_MaxDisplayWidth, 42);   // scrolling window is 44 pixels high - ie 64 less margin of 10 at top and bottom
   display->setColor(WHITE);
   display->setFont(ScrollingPages.Font);
 
@@ -1006,29 +1077,29 @@ byte display_scroll_timer() {
     if (ScrollingLines.Line[j].LastWidth > 0 ) {
       // width of oldString[j] > display width -> line is right aligned while scrolling page
       display->setTextAlignment(TEXT_ALIGN_RIGHT);
-      display->drawString(128 - SizeSettings[OLEDIndex].PixLeft + ScrollingPages.dPixSum, ScrollingPages.ypos[j], ScrollingPages.oldString[j]);
+      display->drawString(P36_MaxDisplayWidth - SizeSettings[OLEDIndex].PixLeft + ScrollingPages.dPixSum, ScrollingPages.ypos[j], ScrollingPages.oldString[j]);
     }
     else {
       // line is centered while scrolling page
       display->setTextAlignment(TEXT_ALIGN_CENTER);
-      display->drawString(64 + ScrollingPages.dPixSum, ScrollingPages.ypos[j], ScrollingPages.oldString[j]);
+      display->drawString(P36_DisplayCentre + ScrollingPages.dPixSum, ScrollingPages.ypos[j], ScrollingPages.oldString[j]);
     }
 
     if (ScrollingLines.Line[j].Width > 0 ) {
       // width of newString[j] > display width -> line is left aligned while scrolling page
       display->setTextAlignment(TEXT_ALIGN_LEFT);
-      display->drawString(-128 + SizeSettings[OLEDIndex].PixLeft + ScrollingPages.dPixSum, ScrollingPages.ypos[j], ScrollingPages.newString[j]);
+      display->drawString(-P36_MaxDisplayWidth + SizeSettings[OLEDIndex].PixLeft + ScrollingPages.dPixSum, ScrollingPages.ypos[j], ScrollingPages.newString[j]);
     }
     else {
       // line is centered while scrolling page
       display->setTextAlignment(TEXT_ALIGN_CENTER);
-      display->drawString(-64 + ScrollingPages.dPixSum, ScrollingPages.ypos[j], ScrollingPages.newString[j]);
+      display->drawString(-P36_DisplayCentre + ScrollingPages.dPixSum, ScrollingPages.ypos[j], ScrollingPages.newString[j]);
     }
   }
 
   display->display();
 
-  if (ScrollingPages.dPixSum < 128 ) { // scrolling
+  if (ScrollingPages.dPixSum < P36_MaxDisplayWidth ) { // scrolling
     // page still scrolling
     ScrollingPages.dPixSum += ScrollingPages.dPix;
   }
@@ -1072,7 +1143,7 @@ void display_scrolling_lines(int nlines) {
           ScrollingLines.Line[i].CurrentLeft = iCurrentLeft;
           updateDisplay = true;
           display->setColor(BLACK);
-          display->fillRect(0 , ScrollingLines.Line[i].ypos, 128, ScrollingLines.Space);
+          display->fillRect(0 , ScrollingLines.Line[i].ypos, P36_MaxDisplayWidth, ScrollingLines.Space);
           display->setColor(WHITE);
           if (((ScrollingLines.Line[i].CurrentLeft-SizeSettings[OLEDIndex].PixLeft)+ScrollingLines.Line[i].Width) >= SizeSettings[OLEDIndex].Width) {
             display->setTextAlignment(TEXT_ALIGN_LEFT);
@@ -1081,7 +1152,7 @@ void display_scrolling_lines(int nlines) {
           else {
             // line scrolling finished -> line is shown as aligned right
             display->setTextAlignment(TEXT_ALIGN_RIGHT);
-            display->drawString(128 - SizeSettings[OLEDIndex].PixLeft, ScrollingPages.ypos[i], ScrollingLines.Line[i].Content);
+            display->drawString(P36_MaxDisplayWidth - SizeSettings[OLEDIndex].PixLeft, ScrollingPages.ypos[i], ScrollingLines.Line[i].Content);
             ScrollingLines.Line[i].Width = 0; // Stop scrolling
           }
         }
