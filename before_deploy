@@ -39,6 +39,7 @@ fi
 
 mkdir -p ${TMP_DIST}/memstats
 
+# Same list in .travis.yml and tools/build_ESPeasy.sh
 for ENV in \
   custom_ESP32_4M316k\
   custom_ESP8266_4M1M\

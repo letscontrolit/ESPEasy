@@ -33,6 +33,7 @@ script:
   # - cppcheck --enable=warning src/*.ino -q --force -I src --include=src/ESPEasy.ino --error-exitcode=1
   # - ./memanalyzer.py ~/.platformio/packages/toolchain-xtensa/bin/xtensa-lx106-elf-objdump
   # - PLATFORMIO_BUILD_FLAGS="-D CONTINUOUS_INTEGRATION" platformio run --target clean
+  # Same list as in tools/build_ESPeasy.sh  and before_deploy
   - PLATFORMIO_BUILD_FLAGS="-D CONTINUOUS_INTEGRATION" platformio run -e custom_ESP32_4M316k
   - PLATFORMIO_BUILD_FLAGS="-D CONTINUOUS_INTEGRATION" platformio run -e custom_ESP8266_4M1M
   - PLATFORMIO_BUILD_FLAGS="-D CONTINUOUS_INTEGRATION" platformio run -e custom_ESP8266_4M2M

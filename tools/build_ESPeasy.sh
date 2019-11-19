@@ -75,8 +75,40 @@ platformio run --target clean
 cd ${SRC}/patches; ./check_puya_patch;
 cd ${SRC}
 
-# Build all targets in the platformio.ini file.
-PLATFORMIO_BUILD_FLAGS="-D CONTINUOUS_INTEGRATION" platformio run
+# Build all targets in the platformio.ini file.  (same as in .travis.yml  and before_deploy)
+for ENV in \
+  custom_ESP32_4M316k\
+  custom_ESP8266_4M1M\
+  custom_ESP8266_4M2M\
+  dev_ESP8266_4M1M\
+  esp-wrover-kit_test_4M316k\
+  esp32test_4M316k\
+  hard_SONOFF_POW_4M1M\
+  hard_Shelly_1_2M256\
+  hard_Ventus_W266\
+  hard_other_POW_ESP8285_1M\
+  minimal_IRext_ESP8266_1M\
+  minimal_IRext_ESP8266_4M1M\
+  minimal_IRext_ESP8266_4M2M\
+  minimal_core_242_ESP8266_1M_OTA\
+  minimal_core_242_ESP8285_1M_OTA\
+  minimal_core_261_ESP8266_1M_OTA\
+  minimal_core_261_ESP8285_1M_OTA\
+  normal_ESP8266_16M\
+  normal_ESP8266_1M\
+  normal_ESP8266_1M_VCC\
+  normal_ESP8266_4M1M\
+  normal_ESP8285_1M\
+  normal_IRext_no_rx_ESP8266_4M2M\
+  normal_WROOM02_2M256\
+  normal_WROOM02_2M\
+  test_ESP8266_4M_VCC\
+  test_beta_ESP8266_16M\
+  test_beta_ESP8266_4M1M;\
+do
+  PLATFORMIO_BUILD_FLAGS="-D CONTINUOUS_INTEGRATION" platformio run -e ${ENV}
+done
+
 
 #for ENV in `grep "^\[env:" platformio.ini |cut -d':' -f2|cut -d']' -f1`;
 #do
