@@ -81,8 +81,6 @@ for ENV in \
   custom_ESP8266_4M1M\
   custom_ESP8266_4M2M\
   dev_ESP8266_4M1M\
-  esp-wrover-kit_test_4M316k\
-  esp32test_4M316k\
   hard_SONOFF_POW_4M1M\
   hard_Shelly_1_2M256\
   hard_Ventus_W266\
@@ -104,7 +102,9 @@ for ENV in \
   normal_WROOM02_2M\
   test_ESP8266_4M_VCC\
   test_beta_ESP8266_16M\
-  test_beta_ESP8266_4M1M;\
+  test_beta_ESP8266_4M1M\
+  test_ESP32_4M316k\
+  test_ESP32-wrover-kit_4M316k;\
 do
   PLATFORMIO_BUILD_FLAGS="-D CONTINUOUS_INTEGRATION" platformio run -e ${ENV}
 done

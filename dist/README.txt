@@ -53,7 +53,7 @@ Special memory partitioning:
 
 ESP32 now has 3 builds:
 - esp32test_4M316k   Larger sketch partition (1.8MB) smaller SPIFFS (316 kB)
-- esp-wrover-kit_test_4M316k  A build for ESP32 including build flags for the official WRover test kit.
+- test_ESP32-wrover-kit_4M316k  A build for ESP32 including build flags for the official WRover test kit.
 
 Please note that changing between those versions will destroy the settings!
 The SPIFFS partition will be lost and that contains all settings.
