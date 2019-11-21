@@ -100,7 +100,7 @@ enum Enum : short {
 };
 
 
-String getInternalLabel(LabelType::Enum label);
+String getInternalLabel(LabelType::Enum label, char replaceSpace = '_');
 String getLabel(LabelType::Enum label);
 String getValue(LabelType::Enum label);
 String getExtendedValue(LabelType::Enum label);

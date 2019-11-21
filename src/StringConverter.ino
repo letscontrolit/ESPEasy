@@ -375,12 +375,12 @@ bool safe_strncpy(char *dest, const char *source, size_t max_size) {
 }
 
 // Convert a string to lower case and replace spaces with underscores.
-String to_internal_string(const String& input) {
+String to_internal_string(const String& input, char replaceSpace) {
   String result = input;
 
   result.trim();
   result.toLowerCase();
-  result.replace(' ', '_');
+  result.replace(' ', replaceSpace);
   return result;
 }
 

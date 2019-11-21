@@ -884,32 +884,6 @@ String checkTaskSettings(taskIndex_t taskIndex) {
 
 
 /********************************************************************************************\
-   Find protocol index corresponding to protocol setting
- \*********************************************************************************************/
-byte getProtocolIndex(byte Number)
-{
-  for (byte x = 0; x <= protocolCount; x++) {
-    if (Protocol[x].Number == Number) {
-      return x;
-    }
-  }
-  return 0;
-}
-
-/********************************************************************************************\
-  Get notificatoin protocol index (plugin index), by NPlugin_id
-  \*********************************************************************************************/
-byte getNotificationProtocolIndex(byte Number)
-{
-  for (byte x = 0; x <= notificationCount ; x++) {
-    if (Notification[x].Number == Number) {
-      return(x);
-    }
-  }
-  return(NPLUGIN_NOT_FOUND);
-}
-
-/********************************************************************************************\
   Find positional parameter in a char string
   \*********************************************************************************************/
 

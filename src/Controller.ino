@@ -63,9 +63,7 @@ void sendData(struct EventStruct *event)
       else {
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
           String log = F("Invalid value detected for controller ");
-          String controllerName;
-          CPluginCall(event->ProtocolIndex, CPLUGIN_GET_DEVICENAME, event, controllerName);
-          log += controllerName;
+          log += getCPluginNameFromProtocolIndex(event->ProtocolIndex);
           addLog(LOG_LEVEL_DEBUG, log);
         }
       }
