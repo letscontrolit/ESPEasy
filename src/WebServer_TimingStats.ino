@@ -94,19 +94,16 @@ long stream_timing_statistics(bool clearStats) {
 
   for (auto& x: controllerStats) {
     if (!x.second.isEmpty()) {
-      const int deviceIndex = x.first / 256;
-      String    C_name   = "";
-      CPluginCall(deviceIndex, CPLUGIN_GET_DEVICENAME, NULL, C_name);
-
+      const int ProtocolIndex = x.first / 256;
       if (x.second.thresholdExceeded(TIMING_STATS_THRESHOLD)) {
         html_TR_TD_highlight();
       } else {
         html_TR_TD();
       }
       TXBuffer += F("C_");
-      TXBuffer += Protocol[deviceIndex].Number;
+      TXBuffer += Protocol[ProtocolIndex].Number;
       TXBuffer += '_';
-      TXBuffer += C_name;
+      TXBuffer += getCPluginNameFromProtocolIndex(ProtocolIndex);
       html_TD();
       TXBuffer += getCPluginCFunctionName(x.first % 256);
       stream_html_timing_stats(x.second, timeSinceLastReset);

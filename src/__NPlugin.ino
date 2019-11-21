@@ -1,19 +1,21 @@
-//********************************************************************************
+// ********************************************************************************
+
 // Initialize all Controller NPlugins that where defined earlier
 // and initialize the function call pointer into the CNPlugin array
-//********************************************************************************
+// ********************************************************************************
 
 static const char ADDNPLUGIN_ERROR[] PROGMEM = "System: Error - Too many N-Plugins";
 
 
 // Because of compiler-bug (multiline defines gives an error if file ending is CRLF) the define is striped to a single line
+
 /*
-#define ADDNPLUGIN(NNN) \
-  if (x < NPLUGIN_MAX) \
-  { \
+ #define ADDNPLUGIN(NNN) \
+   if (x < NPLUGIN_MAX) \
+   { \
     NPlugin_id[x] = NPLUGIN_ID_##NNN; \
     NPlugin_ptr[x++] = &NPlugin_##NNN; \
-  } \
+   } \
   else \
     addLog(LOG_LEVEL_ERROR, FPSTR(ADDNPLUGIN_ERROR));
 */
@@ -141,21 +143,46 @@ byte NPluginCall(byte Function, struct EventStruct *event)
   int x;
   struct EventStruct TempEvent;
 
- if (event == 0)
-    event=&TempEvent;
+  if (event == 0) {
+    event = &TempEvent;
+  }
 
   switch (Function)
   {
     // Unconditional calls to all plugins
     case NPLUGIN_PROTOCOL_ADD:
-      for (x = 0; x < NPLUGIN_MAX; x++)
+
+      for (x = 0; x < NPLUGIN_MAX; x++) {
         if (NPlugin_id[x] != 0) {
           String dummy;
           NPlugin_ptr[x](Function, event, dummy);
         }
+      }
       return true;
       break;
   }
 
   return false;
+}
+
+String getNPluginNameFromNotifierIndex(byte NotifierIndex) {
+  String name;
+
+  if (NPlugin_id[NotifierIndex] != 0) {
+    NPlugin_ptr[NotifierIndex](NPLUGIN_GET_DEVICENAME, nullptr, name);
+  }
+  return name;
+}
+
+/********************************************************************************************\
+   Get notificatoin protocol index (plugin index), by NPlugin_id
+ \*********************************************************************************************/
+byte getNotificationProtocolIndex(byte Number)
+{
+  for (byte x = 0; x <= notificationCount; x++) {
+    if (Notification[x].Number == Number) {
+      return x;
+    }
+  }
+  return NPLUGIN_NOT_FOUND;
 }

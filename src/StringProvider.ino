@@ -1,7 +1,7 @@
 #include "StringProviderTypes.h"
 
-String getInternalLabel(LabelType::Enum label) {
-  return to_internal_string(getLabel(label));
+String getInternalLabel(LabelType::Enum label, char replaceSpace) {
+  return to_internal_string(getLabel(label), replaceSpace);
 }
 
 String getLabel(LabelType::Enum label) {

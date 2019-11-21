@@ -317,10 +317,13 @@ void sendHeadandTail(const String& tmplName, boolean Tail = false, boolean reboo
   // This function is called twice per serving a web page.
   // So it must keep track of the timer longer than the scope of this function.
   // Therefore use a local static variable.
+  #ifdef USES_TIMING_STATS
   static unsigned statisticsTimerStart = 0;
+
   if (!Tail) {
     statisticsTimerStart = micros();
   }
+  #endif // ifdef USES_TIMING_STATS
 
   String pageTemplate = "";
   String fileName     = tmplName;
@@ -415,7 +418,7 @@ void sendHeadandTail_stdtemplate(boolean Tail = false, boolean rebooting = false
 #define HTML_SYMBOL_I_O     "&#8660;"
 
 
-# define TASKS_PER_PAGE TASKS_MAX
+#define TASKS_PER_PAGE TASKS_MAX
 
 #define strncpy_webserver_arg(D, N) safe_strncpy(D, WebServer.arg(N).c_str(), sizeof(D));
 #define update_whenset_FormItemInt(K, V) { int tmpVal; \
@@ -519,6 +522,7 @@ void WebServerInit()
 #endif
 
 #ifdef WEBSERVER_NEW_UI
+  WebServer.on(F("/buildinfo"),     handle_buildinfo);     // Also part of WEBSERVER_NEW_UI
   WebServer.on(F("/factoryreset_json"), handle_factoryreset_json);
   WebServer.on(F("/filelist_json"),     handle_filelist_json);
   WebServer.on(F("/i2cscanner_json"),   handle_i2cscanner_json);
@@ -534,19 +538,20 @@ void WebServerInit()
 
   #if defined(ESP8266)
   {
-    #ifndef NO_HTTP_UPDATER
+    # ifndef NO_HTTP_UPDATER
     uint32_t maxSketchSize;
     bool     use2step;
+
     if (OTA_possible(maxSketchSize, use2step)) {
       httpUpdater.setup(&WebServer);
     }
-    #endif
+    # endif // ifndef NO_HTTP_UPDATER
   }
   #endif // if defined(ESP8266)
 
   #if defined(ESP8266)
 
-  #ifdef USES_SSDP
+  # ifdef USES_SSDP
 
   if (Settings.UseSSDP)
   {
@@ -557,8 +562,8 @@ void WebServerInit()
     });
     SSDP_begin();
   }
-  #endif // USES_SSDP
-  #endif // if defined(ESP8266)
+  # endif // USES_SSDP
+  #endif  // if defined(ESP8266)
 }
 
 void setWebserverRunning(bool state) {
@@ -869,6 +874,12 @@ void writeDefaultCSS(void)
   }
 }
 
+// ********************************************************************************
+// Functions to stream JSON directly to TXBuffer
+// FIXME TD-er: replace stream_xxx_json_object* into this code.
+// N.B. handling of numerical values differs (string vs. no string)
+// ********************************************************************************
+
 int8_t level     = 0;
 int8_t lastLevel = -1;
 
@@ -891,7 +902,7 @@ void json_quote_val(const String& val) {
 
 void json_open(bool arr = false, const String& name = String()) {
   json_quote_name(name);
-  TXBuffer += arr ? "[" : "{";
+  TXBuffer += arr ? '[' : '{';
   lastLevel = level;
   level++;
 }
@@ -902,7 +913,7 @@ void json_init() {
 }
 
 void json_close(bool arr = false) {
-  TXBuffer += arr ? "]" : "}";
+  TXBuffer += arr ? ']' : '}';
   level--;
   lastLevel = level;
 }
@@ -917,6 +928,10 @@ void json_prop(const String& name, const String& value) {
   json_quote_name(name);
   json_quote_val(value);
   lastLevel = level;
+}
+
+void json_prop(LabelType::Enum label) {
+  json_prop(getInternalLabel(label, '-'), getValue(label));
 }
 
 // ********************************************************************************
@@ -934,6 +949,7 @@ void addTaskSelect(const String& name,  taskIndex_t choice)
   {
     deviceName = "";
     const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(x);
+
     if (validDeviceIndex(DeviceIndex))
     {
       if (validPluginID(DeviceIndex_to_Plugin_id[DeviceIndex])) {
@@ -967,15 +983,17 @@ void addTaskSelect(const String& name,  taskIndex_t choice)
 // ********************************************************************************
 void addTaskValueSelect(const String& name, int choice, taskIndex_t TaskIndex)
 {
-  if (!validTaskIndex(TaskIndex)) return;
+  if (!validTaskIndex(TaskIndex)) { return; }
   const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(TaskIndex);
-  if (!validDeviceIndex(DeviceIndex)) return;
+
+  if (!validDeviceIndex(DeviceIndex)) { return; }
 
   TXBuffer += F("<select id='selectwidth' name='");
   TXBuffer += name;
   TXBuffer += "'>";
 
   LoadTaskSettings(TaskIndex);
+
   for (byte x = 0; x < Device[DeviceIndex].ValueCount; x++)
   {
     TXBuffer += F("<option value='");
@@ -1046,9 +1064,9 @@ String getControllerSymbol(byte index)
    return ret;
    }
  */
-
 void addSVG_param(const String& key, float value) {
   String value_str = String(value, 2);
+
   addSVG_param(key, value_str);
 }
 
@@ -1065,19 +1083,28 @@ void createSvgRect_noStroke(unsigned int fillColor, float xoffset, float yoffset
   createSvgRect(fillColor, fillColor, xoffset, yoffset, width, height, 0, rx, ry);
 }
 
-void createSvgRect(unsigned int fillColor, unsigned int strokeColor, float xoffset, float yoffset, float width, float height, float strokeWidth, float rx, float ry) {
+void createSvgRect(unsigned int fillColor,
+                   unsigned int strokeColor,
+                   float        xoffset,
+                   float        yoffset,
+                   float        width,
+                   float        height,
+                   float        strokeWidth,
+                   float        rx,
+                   float        ry) {
   TXBuffer += F("<rect");
   addSVG_param(F("fill"), formatToHex(fillColor, F("#")));
+
   if (strokeWidth != 0) {
-    addSVG_param(F("stroke"), formatToHex(strokeColor, F("#")));
+    addSVG_param(F("stroke"),       formatToHex(strokeColor, F("#")));
     addSVG_param(F("stroke-width"), strokeWidth);
   }
-  addSVG_param("x", xoffset);
-  addSVG_param("y", yoffset);
-  addSVG_param(F("width"), width);
+  addSVG_param("x",         xoffset);
+  addSVG_param("y",         yoffset);
+  addSVG_param(F("width"),  width);
   addSVG_param(F("height"), height);
-  addSVG_param(F("rx"), rx);
-  addSVG_param(F("ry"), ry);
+  addSVG_param(F("rx"),     rx);
+  addSVG_param(F("ry"),     ry);
   TXBuffer += F("/>");
 }
 
@@ -1155,36 +1182,38 @@ void write_SVG_image_header(int width, int height, bool useViewbox) {
 }
 
 /*
-void getESPeasyLogo(int width_pixels) {
-  write_SVG_image_header(width_pixels, width_pixels, true);
-  TXBuffer += F("<g transform=\"translate(-33.686 -7.8142)\">");
-  TXBuffer += F("<rect x=\"49\" y=\"23.1\" width=\"69.3\" height=\"69.3\" fill=\"#2c72da\" stroke=\"#2c72da\" stroke-linecap=\"round\"stroke-linejoin=\"round\" stroke-width=\"30.7\"/>");
-  TXBuffer += F("<g transform=\"matrix(3.3092 0 0 3.3092 -77.788 -248.96)\">");
-  TXBuffer += F("<path d=\"m37.4 89 7.5-7.5M37.4 96.5l15-15M37.4 96.5l15-15M37.4 104l22.5-22.5M44.9 104l15-15\" fill=\"none\"stroke=\"#fff\" stroke-linecap=\"round\" stroke-width=\"2.6\"/>");
-  TXBuffer += F("<circle cx=\"58\" cy=\"102.1\" r=\"3\" fill=\"#fff\"/>");
-  TXBuffer += F("</g></g></svg>");
-}
-*/
-
+   void getESPeasyLogo(int width_pixels) {
+   write_SVG_image_header(width_pixels, width_pixels, true);
+   TXBuffer += F("<g transform=\"translate(-33.686 -7.8142)\">");
+   TXBuffer += F("<rect x=\"49\" y=\"23.1\" width=\"69.3\" height=\"69.3\" fill=\"#2c72da\" stroke=\"#2c72da\"
+      stroke-linecap=\"round\"stroke-linejoin=\"round\" stroke-width=\"30.7\"/>");
+   TXBuffer += F("<g transform=\"matrix(3.3092 0 0 3.3092 -77.788 -248.96)\">");
+   TXBuffer += F("<path d=\"m37.4 89 7.5-7.5M37.4 96.5l15-15M37.4 96.5l15-15M37.4 104l22.5-22.5M44.9 104l15-15\"
+      fill=\"none\"stroke=\"#fff\" stroke-linecap=\"round\" stroke-width=\"2.6\"/>");
+   TXBuffer += F("<circle cx=\"58\" cy=\"102.1\" r=\"3\" fill=\"#fff\"/>");
+   TXBuffer += F("</g></g></svg>");
+   }
+ */
 void getWiFi_RSSI_icon(int rssi, int width_pixels)
 {
   const int nbars_filled = (rssi + 100) / 8;
-  int nbars = 5;
-  int white_between_bar = (static_cast<float>(width_pixels) / nbars) * 0.2;
+  int nbars              = 5;
+  int white_between_bar  = (static_cast<float>(width_pixels) / nbars) * 0.2;
+
   if (white_between_bar < 1) { white_between_bar = 1; }
-  const int barWidth = (width_pixels - (nbars - 1) * white_between_bar) / nbars;
+  const int barWidth   = (width_pixels - (nbars - 1) * white_between_bar) / nbars;
   int svg_width_pixels = nbars * barWidth + (nbars - 1) * white_between_bar;
   write_SVG_image_header(svg_width_pixels, svg_width_pixels, true);
-  float scale = 100 / svg_width_pixels;
+  float scale               = 100 / svg_width_pixels;
   const int bar_height_step = 100 / nbars;
+
   for (int i = 0; i < nbars; ++i) {
-    unsigned int color = i < nbars_filled ? 0x0 : 0xa1a1a1;  // Black/Grey
-    int barHeight = (i + 1) * bar_height_step;
+    unsigned int color = i < nbars_filled ? 0x0 : 0xa1a1a1; // Black/Grey
+    int barHeight      = (i + 1) * bar_height_step;
     createSvgRect_noStroke(color, i * (barWidth + white_between_bar) * scale, 100 - barHeight, barWidth, barHeight, 0, 0);
   }
   TXBuffer += F("</svg>\n");
 }
-
 
 #ifndef BUILD_MINIMAL_OTA
 void getConfig_dat_file_layout() {

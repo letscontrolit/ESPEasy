@@ -39,39 +39,10 @@ fi
 
 mkdir -p ${TMP_DIST}/memstats
 
-for ENV in \
-  custom_ESP8266_4M1M\
-  esp-wrover-kit_test_4M316k\
-  esp32test_4M316k\
-  normal_ESP8266_1M\
-  normal_ESP8266_1M_VCC\
-  normal_ESP8285_1M\
-  normal_core_241_ESP8266_1M\
-  normal_WROOM02_2M\
-  normal_core_252_WROOM02_2M256\
-  normal_ESP8266_4M1M\
-  normal_core_241_ESP8266_4M1M\
-  normal_core_252_ESP8266_16M\
-  normal_core_260_sdk222_alpha_ESP8266_4M1M\
-  normal_core_260_sdk222_alpha_ESP8266_16M\
-  minimal_core_242_ESP8266_1M_OTA\
-  minimal_core_242_ESP8285_1M_OTA\
-  minimal_core_252_ESP8266_1M_OTA\
-  minimal_core_252_ESP8285_1M_OTA\
-  minimal_IRext_ESP8266_1M\
-  minimal_IRext_ESP8266_4M1M\
-  minimal_IRext_ESP8266_4M2M\
-  normal_IRext_no_rx_ESP8266_4M2M\
-  test_core_260_sdk222_alpha_ESP8266_4M1M\
-  test_core_260_sdk3_alpha_ESP8266_4M1M\
-  test_core_260_sdk222_alpha_ESP8266_16M\
-  test_ESP8266_4M_VCC\
-  dev_ESP8266_4M1M\
-  hard_SONOFF_POW_4M1M\
-  hard_other_POW_ESP8285_1M\
-  hard_Shelly_1_2M256\
-  hard_Ventus_W266;\
-do
+# Must look into all possible env definitions.
+# Exclude so called "spec_" (special) builds
+for ENV in `grep "^\[env:" platformio*.ini |cut -d'[' -f2|cut -d']' -f1|cut -d':' -f2|sort -n|grep -v spec_`;
+do 
   MAX_FILESIZE=1044464
   if [[ ${ENV} == *"_1M"* ]]; then
     # max 872 kiB - 16 bytes
@@ -81,14 +52,11 @@ do
     # max 600 kiB - 16 bytes
     MAX_FILESIZE=614384
   fi
-  if [[ ${ENV} == *"esp32"* ]]; then
-    MAX_FILESIZE=1310720
-  fi
   if [[ ${ENV} == *"4M316k"* ]]; then
     # ESP32 with 1800k of sketch space.
     MAX_FILESIZE=1900544
   fi
-  if [[ ${ENV} == *"ebug_custom"* ]]; then
+  if [[ ${ENV} == *"debug_"* ]]; then
     # Debug env, used for analysis, not to be run on a node.
     MAX_FILESIZE=0
   fi

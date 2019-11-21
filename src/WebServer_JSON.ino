@@ -1,6 +1,7 @@
 #include "src/Globals/Nodes.h"
 #include "src/Globals/Device.h"
 #include "src/Globals/Plugins.h"
+#include "StringProviderTypes.h"
 
 
 // ********************************************************************************
@@ -8,7 +9,7 @@
 // ********************************************************************************
 void handle_json()
 {
-  const taskIndex_t  taskNr   = getFormItemInt(F("tasknr"), INVALID_TASK_INDEX);
+  const taskIndex_t taskNr    = getFormItemInt(F("tasknr"), INVALID_TASK_INDEX);
   const bool showSpecificTask = validTaskIndex(taskNr);
   bool showSystem             = true;
   bool showWifi               = true;
@@ -159,8 +160,9 @@ void handle_json()
   for (taskIndex_t TaskIndex = firstTaskIndex; TaskIndex <= lastActiveTaskIndex && validTaskIndex(TaskIndex); TaskIndex++)
   {
     const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(TaskIndex);
+
     if (validDeviceIndex(DeviceIndex))
-    {      
+    {
       const unsigned long taskInterval = Settings.TaskDeviceTimer[TaskIndex];
       LoadTaskSettings(TaskIndex);
       TXBuffer += F("{\n");
@@ -287,7 +289,9 @@ void stream_json_end_object_element(bool isLast) {
 void handle_timingstats_json() {
   TXBuffer.startJsonStream();
   TXBuffer += '{';
+  # ifdef USES_TIMING_STATS
   jsonStatistics(false);
+  # endif // ifdef USES_TIMING_STATS
   TXBuffer += '}';
   TXBuffer.endStream();
 }
@@ -323,6 +327,59 @@ void handle_nodes_list_json() {
     }
   }
   json_close(true);
+  TXBuffer.endStream();
+}
+
+void handle_buildinfo() {
+  if (!isLoggedIn()) { return; }
+  TXBuffer.startJsonStream();
+  json_init();
+  json_open();
+  {
+    json_open(true, F("plugins"));
+
+    for (deviceIndex_t x = 0; x <= deviceCount; x++) {
+      if (validPluginID(DeviceIndex_to_Plugin_id[x])) {
+        json_open();
+        json_number(F("id"), String(DeviceIndex_to_Plugin_id[x]));
+        json_prop(F("name"), getPluginNameFromDeviceIndex(x));
+        json_close();
+      }
+    }
+    json_close(true);
+  }
+  {
+    json_open(true, F("controllers"));
+
+    for (byte x = 0; x < CPLUGIN_MAX; x++) {
+      if (CPlugin_id[x] != 0) {
+        json_open();
+        json_number(F("id"), String(x + 1));
+        json_prop(F("name"), getCPluginNameFromProtocolIndex(x));
+        json_close();
+      }
+    }
+    json_close(true);
+  }
+  {
+    json_open(true, F("notifications"));
+
+    for (byte x = 0; x < NPLUGIN_MAX; x++) {
+      if (NPlugin_id[x] != 0) {
+        json_open();
+        json_number(F("id"), String(x + 1));
+        json_prop(F("name"), getNPluginNameFromNotifierIndex(x));
+        json_close();
+      }
+    }
+    json_close(true);
+  }
+  json_prop(LabelType::BUILD_DESC);
+  json_prop(LabelType::GIT_BUILD);
+  json_prop(LabelType::SYSTEM_LIBRARIES);
+  json_prop(LabelType::PLUGINS);
+  json_prop(LabelType::PLUGIN_DESCRIPTION);
+  json_close();
   TXBuffer.endStream();
 }
 
