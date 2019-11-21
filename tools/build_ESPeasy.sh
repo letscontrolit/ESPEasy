@@ -75,45 +75,12 @@ platformio run --target clean
 cd ${SRC}/patches; ./check_puya_patch;
 cd ${SRC}
 
-# Build all targets in the platformio.ini file.  (same as in .travis.yml  and before_deploy)
-for ENV in \
-  custom_ESP32_4M316k\
-  custom_ESP8266_4M1M\
-  custom_ESP8266_4M2M\
-  dev_ESP8266_4M1M\
-  hard_SONOFF_POW_4M1M\
-  hard_Shelly_1_2M256\
-  hard_Ventus_W266\
-  hard_other_POW_ESP8285_1M\
-  minimal_IRext_ESP8266_1M\
-  minimal_IRext_ESP8266_4M1M\
-  minimal_IRext_ESP8266_4M2M\
-  minimal_core_242_ESP8266_1M_OTA\
-  minimal_core_242_ESP8285_1M_OTA\
-  minimal_core_261_ESP8266_1M_OTA\
-  minimal_core_261_ESP8285_1M_OTA\
-  normal_ESP8266_16M\
-  normal_ESP8266_1M\
-  normal_ESP8266_1M_VCC\
-  normal_ESP8266_4M1M\
-  normal_ESP8285_1M\
-  normal_IRext_no_rx_ESP8266_4M2M\
-  normal_WROOM02_2M256\
-  normal_WROOM02_2M\
-  test_ESP8266_4M_VCC\
-  test_beta_ESP8266_16M\
-  test_beta_ESP8266_4M1M\
-  test_ESP32_4M316k\
-  test_ESP32-wrover-kit_4M316k;\
-do
+# Must look into all possible env definitions.
+# Exclude so called "spec_" (special) builds
+for ENV in `grep "^\[env:" platformio*.ini |cut -d'[' -f2|cut -d']' -f1|cut -d':' -f2|sort -n|grep -v spec_`;
+do 
   PLATFORMIO_BUILD_FLAGS="-D CONTINUOUS_INTEGRATION" platformio run -e ${ENV}
 done
-
-
-#for ENV in `grep "^\[env:" platformio.ini |cut -d':' -f2|cut -d']' -f1`;
-#do
-#  platformio run -e ${ENV}
-#done
 
 # Rename all built files, compute CRC and insert binaryFilename
 # Collect all in a zip file.
