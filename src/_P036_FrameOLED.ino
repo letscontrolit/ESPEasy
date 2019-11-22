@@ -603,7 +603,6 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           {
             tmpString = String(P036_DisplayLinesV1[(ScrollingPages.linesPerFrame * frameCounter) + i].Content);
             ScrollingPages.oldString[i] = P36_parseTemplate(tmpString, 20);
-            ScrollingPages.oldString[i].trim();
           }
 
           // now loop round looking for the next frame with some content
@@ -635,7 +634,6 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
             {
               tmpString = String(P036_DisplayLinesV1[(ScrollingPages.linesPerFrame * frameCounter) + i].Content);
               ScrollingPages.newString[i] = P36_parseTemplate(tmpString, 20);
-              ScrollingPages.newString[i].trim();
               if (ScrollingPages.newString[i].length() > 0) foundText = true;
             }
             if (foundText) {
@@ -661,7 +659,6 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
               {
                 tmpString = String(P036_DisplayLinesV1[(ScrollingPages.linesPerFrame * i) + k].Content);
                 tmpString = P36_parseTemplate(tmpString, 20);
-                tmpString.trim();
                 if (tmpString.length() > 0) {
                   // page not empty
                   MaxFramesToDisplay ++;
@@ -733,6 +730,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
             // content functions
             success = true;
             String NewContent = parseStringKeepCase(string, 3);
+            NewContent = P36_parseTemplate(NewContent, 20);
             if (!safe_strncpy(P036_DisplayLinesV1[LineNo-1].Content, NewContent, P36_NcharsV1)) {
               addHtmlError(getCustomTaskSettingsError(LineNo-1));
             }
@@ -839,6 +837,7 @@ String P36_parseTemplate(String &tmpString, uint8_t lineSize) {
     addLog(LOG_LEVEL_INFO, log);
   }
 */
+  result.trim();
   return result;
 }
 
