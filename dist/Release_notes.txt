@@ -1,4 +1,37 @@
 -------------------------------------------------
+Changes in release mega-20191122 (since mega-20191119)
+-------------------------------------------------
+
+Release date: Fri Nov 22 04:00:11 CET 2019
+
+Florent Kilchoer (1):
+      Add options in custom.h to enable first controller at startup
+
+Florin (1):
+      Clean Warning messages inside external libraries: AS_BH1750 & Adafruit
+
+Gijs Noorlander (14):
+      [PIO] Cleanup platformio.ini and move to core 2.6.1 as default (#2742)
+      [PIO] Update .travis.yml with new env names
+      [Cleanup] Make timing stats optional to reduce size
+      [PIO] Fix using wrong name for regular_platform
+      [PIO] Cleanup ESP32 environments by using extends
+      [PIO] Fix building hardware specific builds
+      [PIO] Fix empty build_flags
+      [PIO] Only build needed environments
+      [PIO] Split platformio.ini into separate files + cleanup.
+      [PIO] Add core 2.6.1 SDK3 builds and PIO env list for Vagrant
+      [New UI] Add /buildinfo JSON to give list of included plugins/controllers
+      [PIO] Use same build_flags def for _debug_ envs
+      [PIO] Update .travis.yml to include core 2.6.1 SDK3 builds
+      [Vagrant] Sample pio_envlist.txt file
+
+TD-er (2):
+      [PIO] Reduce platformio.ini complexity by using extends
+      [PIO] Disable build cache dir (Windows/Unix slash in path)
+
+
+-------------------------------------------------
 Changes in release mega-20191119 (since mega-20191116)
 -------------------------------------------------
 
