@@ -820,6 +820,15 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
           pinMode(event->Par1, OUTPUT);
             #endif // if defined(ESP8266)
 
+          if (event->Par4 > 0 && event->Par4 <= 40000 ){
+            #if defined(ESP8266)
+            analogWriteFreq(event->Par4);
+            #endif // if defined(ESP8266)
+            #if defined(ESP32)
+            //TODO: ESP32 not supported in core, but we can try https://github.com/ERROPiX/ESP32_AnalogWrite
+            #endif // if defined(ESP32)
+          }
+
           if (event->Par3 != 0)
           {
             const byte prev_mode = tempStatus.mode;
