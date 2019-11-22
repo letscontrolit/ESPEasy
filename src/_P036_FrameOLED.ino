@@ -561,8 +561,8 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         if (UserVar[event->BaseVarIndex] == 1) {
           // Display is on.
           OLEDIndex = PCONFIG(7);
-          HeaderContent = (eHeaderContent) get8BitFromUL(PCONFIG_LONG(0), 8);             // Bit15-8 HeaderContent
-          HeaderContentAlternative = (eHeaderContent) get8BitFromUL(PCONFIG_LONG(0), 0);  // Bit 7-0 HeaderContentAlternative
+          HeaderContent = static_cast<eHeaderContent>(get8BitFromUL(PCONFIG_LONG(0), 8));             // Bit15-8 HeaderContent
+          HeaderContentAlternative = static_cast<eHeaderContent>(get8BitFromUL(PCONFIG_LONG(0), 0));  // Bit 7-0 HeaderContentAlternative
 	        display_header();	// Update Header
           if (display && display_wifibars()) {
             // WiFi symbol was updated.
@@ -591,8 +591,8 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           ScrollingPages.Scrolling = 1; // page scrolling running -> no line scrolling allowed
           NFrames = P36_Nlines / ScrollingPages.linesPerFrame;
           OLEDIndex = PCONFIG(7);
-          HeaderContent = (eHeaderContent) get8BitFromUL(PCONFIG_LONG(0), 8);             // Bit15-8 HeaderContent
-          HeaderContentAlternative = (eHeaderContent) get8BitFromUL(PCONFIG_LONG(0), 0);  // Bit 7-0 HeaderContentAlternative
+          HeaderContent = static_cast<eHeaderContent>(get8BitFromUL(PCONFIG_LONG(0), 8));             // Bit15-8 HeaderContent
+          HeaderContentAlternative = static_cast<eHeaderContent>(get8BitFromUL(PCONFIG_LONG(0), 0));  // Bit 7-0 HeaderContentAlternative
 
           //      Now create the string for the outgoing and incoming frames
           String tmpString;
@@ -692,7 +692,6 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WRITE:
       {
-        String log     = "";
         String command = parseString(string, 1);
         String subcommand = parseString(string, 2);
         int LineNo = event->Par1;
@@ -737,13 +736,11 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
             if (!safe_strncpy(P036_DisplayLinesV1[LineNo-1].Content, NewContent, P36_NcharsV1)) {
               addHtmlError(getCustomTaskSettingsError(LineNo-1));
             }
-            display->setFont(ScrollingPages.Font);
-            P036_DisplayLinesV1[LineNo-1].Content[P36_NcharsV1-1] = 0; // Terminate in case of uninitalized data
-            nextFrameToDisplay = LineNo / ScrollingPages.linesPerFrame; // next frame shows the new content
-
-            P036_DisplayLinesV1[LineNo-1].reserved = (event->Par3 & 0xFF); // not implemented yet
+            P036_DisplayLinesV1[LineNo-1].Content[P36_NcharsV1-1] = 0;      // Terminate in case of uninitalized data
+            P036_DisplayLinesV1[LineNo-1].reserved = (event->Par3 & 0xFF);  // not implemented yet
 
             // calculate Pix length of new Content
+            display->setFont(ScrollingPages.Font);
             uint16_t PixLength = display->getStringWidth(String(P036_DisplayLinesV1[LineNo-1].Content));
             if (PixLength > 255) {
               addHtmlError(String(F("Pixel length of ")) + String(PixLength) + String(F(" too long for line! Max. 255 pix!")));
@@ -752,9 +749,10 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
               float fAvgPixPerChar = ((float) PixLength)/strlen;
               int iCharToRemove = ceil(((float) (PixLength-255))/fAvgPixPerChar);
               // shorten string because OLED controller can not handle such long strings
-              safe_strncpy(P036_DisplayLinesV1[LineNo-1].Content, String(P036_DisplayLinesV1[LineNo-1].Content), strlen-iCharToRemove);
+              P036_DisplayLinesV1[LineNo-1].Content[strlen-iCharToRemove] = 0;
             }
 
+            nextFrameToDisplay = LineNo / ScrollingPages.linesPerFrame; // next frame shows the new content
             displayTimer = PCONFIG(4);
             if (UserVar[event->BaseVarIndex] == 0) {
               // display was OFF, turn it ON
@@ -762,9 +760,11 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
               UserVar[event->BaseVarIndex] = 1;      //  Save the fact that the display is now ON
             }
 
-            // log += String(F("[P36] Line: ")) + String(LineNo);
+            // String log = String(F("[P36] Line: ")) + String(LineNo);
             // log += String(F(" NewContent:")) + String(NewContent);
             // log += String(F(" Content:")) + String(P036_DisplayLinesV1[LineNo-1].Content);
+            // log += String(F(" Length:")) + String(String(P036_DisplayLinesV1[LineNo-1].Content).length());
+            // log += String(F(" Pix: ")) + String(display->getStringWidth(String(P036_DisplayLinesV1[LineNo-1].Content)));
             // log += String(F(" Reserved:")) + String(P036_DisplayLinesV1[LineNo-1].reserved);
             // addLog(LOG_LEVEL_INFO, log);
           }
