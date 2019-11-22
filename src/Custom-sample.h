@@ -71,6 +71,9 @@
 #define DEFAULT_PUB         "sensors/espeasy/%sysname%/%tskname%/%valname%" // Enter your pub
 #define DEFAULT_SUB         "sensors/espeasy/%sysname%/#"                   // Enter your sub
 #define DEFAULT_SERVER      "192.168.0.8"                                   // Enter your Server IP address
+#define DEFAULT_SERVER_HOST ""                                              // Server hostname
+#define DEFAULT_SERVER_USEDNS false                                         // true: Use hostname.  false: use IP
+
 #define DEFAULT_PORT        8080                                            // Enter your Server port value
 
 #define DEFAULT_PROTOCOL    0                                               // Protocol used for controller communications
