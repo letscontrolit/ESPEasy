@@ -1219,13 +1219,14 @@ void ResetFactory()
 
 #if DEFAULT_CONTROLLER
   MakeControllerSettings(ControllerSettings);
-  strcpy_P(ControllerSettings.Subscribe, PSTR(DEFAULT_SUB));
-  strcpy_P(ControllerSettings.Publish, PSTR(DEFAULT_PUB));
-  strcpy_P(ControllerSettings.MQTTLwtTopic, PSTR(DEFAULT_MQTT_LWT_TOPIC));
-  strcpy_P(ControllerSettings.LWTMessageConnect, PSTR(DEFAULT_MQTT_LWT_CONNECT_MESSAGE));
-  strcpy_P(ControllerSettings.LWTMessageDisconnect, PSTR(DEFAULT_MQTT_LWT_DISCONNECT_MESSAGE));
+  safe_strncpy(ControllerSettings.Subscribe, F(DEFAULT_SUB), sizeof(ControllerSettings.Subscribe));
+  safe_strncpy(ControllerSettings.Publish, F(DEFAULT_PUB), sizeof(ControllerSettings.Publish));
+  safe_strncpy(ControllerSettings.MQTTLwtTopic, F(DEFAULT_MQTT_LWT_TOPIC), sizeof(ControllerSettings.MQTTLwtTopic));
+  safe_strncpy(ControllerSettings.LWTMessageConnect, F(DEFAULT_MQTT_LWT_CONNECT_MESSAGE), sizeof(ControllerSettings.LWTMessageConnect));
+  safe_strncpy(ControllerSettings.LWTMessageDisconnect, F(DEFAULT_MQTT_LWT_DISCONNECT_MESSAGE), sizeof(ControllerSettings.LWTMessageDisconnect));
   str2ip((char*)DEFAULT_SERVER, ControllerSettings.IP);
-  ControllerSettings.HostName[0]=0;
+  ControllerSettings.setHostname(F(DEFAULT_SERVER_HOST));
+  ControllerSettings.UseDNS = DEFAULT_SERVER_USEDNS;
   ControllerSettings.Port = DEFAULT_PORT;
   SaveControllerSettings(0, ControllerSettings);
 #endif
