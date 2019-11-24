@@ -418,35 +418,19 @@ boolean Plugin_076(byte function, struct EventStruct *event, String &string) {
 
   case PLUGIN_WRITE:
     if (Plugin_076_hlw) {
-      // FIXME TD-er: This one is not using parseString* function
-      String tmpString = string;
-      int argIndex = tmpString.indexOf(',');
-      if (argIndex){
-        tmpString = tmpString.substring(0, argIndex);
-      }
-      if (tmpString.equalsIgnoreCase(F("hlwreset"))) {
+      String command = parseString(string, 1);
+      if (command.equalsIgnoreCase(F("hlwreset"))) {
         Plugin076_ResetMultipliers();
         success = true;
       }
 
-      if (tmpString.equalsIgnoreCase(F("hlwcalibrate"))) {
-        String tmpStr = string;
+      if (command.equalsIgnoreCase(F("hlwcalibrate"))) {
         unsigned int CalibVolt = 0;
         double CalibCurr = 0;
         unsigned int CalibAcPwr = 0;
-        int comma1 = tmpStr.indexOf(',');
-        int comma2 = tmpStr.indexOf(',', comma1 + 1);
-        int comma3 = tmpStr.indexOf(',', comma2 + 1);
-        if (comma1 != 0) {
-          if (comma2 == 0) {
-            CalibVolt = tmpStr.substring(comma1 + 1).toInt();
-          } else if (comma3 == 0) {
-            CalibVolt = tmpStr.substring(comma1 + 1, comma2).toInt();
-            CalibCurr = atof(tmpStr.substring(comma2 + 1).c_str());
-          } else {
-            CalibVolt = tmpStr.substring(comma1 + 1, comma2).toInt();
-            CalibCurr = atof(tmpStr.substring(comma2 + 1, comma3).c_str());
-            CalibAcPwr = tmpStr.substring(comma3 + 1).toInt();
+        if (validUIntFromString(parseString(string, 2), CalibVolt)) {
+          if (validDoubleFromString(parseString(string, 3), CalibCurr)) {
+            validUIntFromString(parseString(string, 4), CalibAcPwr);
           }
         }
         if (PLUGIN_076_DEBUG) {

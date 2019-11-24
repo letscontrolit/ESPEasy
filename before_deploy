@@ -95,7 +95,7 @@ done
 mkdir -p ${TMP_DIST}/source
 cp -r lib ${TMP_DIST}/source/
 cp -r src ${TMP_DIST}/source/
-cp platformio.ini ${TMP_DIST}/source/
+cp platformio*.ini ${TMP_DIST}/source/
 
 cd ${TMP_DIST}
 
