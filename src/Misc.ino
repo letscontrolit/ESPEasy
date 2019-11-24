@@ -1330,6 +1330,9 @@ bool validUIntFromString(const String& tBuf, unsigned int& result) {
 
 
 bool validFloatFromString(const String& tBuf, float& result) {
+  // DO not call validDoubleFromString and then cast to float.
+  // Working with double values is quite CPU intensive as it must be done in software 
+  // since the ESP does not have large enough registers for handling double values in hardware.
   const String numerical = getNumerical(tBuf, false);
   const bool isvalid = numerical.length() > 0;
   if (isvalid) {
@@ -1339,12 +1342,20 @@ bool validFloatFromString(const String& tBuf, float& result) {
 }
 
 bool validDoubleFromString(const String& tBuf, double& result) {
+  #ifdef CORE_POST_2_5_0
+  // String.toDouble() is introduced in core 2.5.0
   const String numerical = getNumerical(tBuf, false);
   const bool isvalid = numerical.length() > 0;
   if (isvalid) {
     result = numerical.toDouble();
   }
   return isvalid;
+  #else
+  float tmp = static_cast<float>(result);
+  bool res = validFloatFromString(tBuf, tmp);
+  result = static_cast<double>(tmp);
+  return res;
+  #endif
 }
 
 
