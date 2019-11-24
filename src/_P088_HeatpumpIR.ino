@@ -185,25 +185,18 @@ boolean Plugin_088(byte function, struct EventStruct *event, String& string)
         unsigned int temperature = 22;
         unsigned int vDir = VDIR_UP;
         unsigned int hDir = HDIR_AUTO;
-        char command[80];
-        command[0] = 0;
-        String TmpStr1 = "";
-        string.toCharArray(command, 80);
 
-        // FIXME TD-er: This one is not using parseString* function
-        String tmpString = string;
-        int argIndex = tmpString.indexOf(',');
-        if (argIndex) tmpString = tmpString.substring(0, argIndex);
-
-        if (tmpString.equalsIgnoreCase(F("HEATPUMPIR")) && Plugin_088_irSender != NULL)
+        String cmd = parseString(string, 1);
+        if (cmd.equalsIgnoreCase(F("HEATPUMPIR")) && Plugin_088_irSender != NULL)
         {
-          if (GetArgv(command, TmpStr1, 2)) heatpumpModel = TmpStr1;
-          if (GetArgv(command, TmpStr1, 3)) powerMode = str2int(TmpStr1.c_str());
-          if (GetArgv(command, TmpStr1, 4)) operatingMode = str2int(TmpStr1.c_str());
-          if (GetArgv(command, TmpStr1, 5)) fanSpeed = str2int(TmpStr1.c_str());
-          if (GetArgv(command, TmpStr1, 6)) temperature = str2int(TmpStr1.c_str());
-          if (GetArgv(command, TmpStr1, 7)) vDir = str2int(TmpStr1.c_str());
-          if (GetArgv(command, TmpStr1, 8)) hDir = str2int(TmpStr1.c_str());
+          String TmpStr1;
+          if (GetArgv(string.c_str(), TmpStr1, 2)) heatpumpModel = TmpStr1;
+          if (GetArgv(string.c_str(), TmpStr1, 3)) powerMode = str2int(TmpStr1.c_str());
+          if (GetArgv(string.c_str(), TmpStr1, 4)) operatingMode = str2int(TmpStr1.c_str());
+          if (GetArgv(string.c_str(), TmpStr1, 5)) fanSpeed = str2int(TmpStr1.c_str());
+          if (GetArgv(string.c_str(), TmpStr1, 6)) temperature = str2int(TmpStr1.c_str());
+          if (GetArgv(string.c_str(), TmpStr1, 7)) vDir = str2int(TmpStr1.c_str());
+          if (GetArgv(string.c_str(), TmpStr1, 8)) hDir = str2int(TmpStr1.c_str());
 #ifdef IR_SEND_TIME
           sendHour = hour();
           sendMinute = minute();

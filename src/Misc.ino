@@ -1320,11 +1320,29 @@ bool validIntFromString(const String& tBuf, int& result) {
   return isvalid;
 }
 
+bool validUIntFromString(const String& tBuf, unsigned int& result) {
+  int tmp;
+  if (!validIntFromString(tBuf, tmp)) return false;
+  if (tmp < 0) return false;
+  result = static_cast<unsigned int>(tmp);
+  return true;
+}
+
+
 bool validFloatFromString(const String& tBuf, float& result) {
   const String numerical = getNumerical(tBuf, false);
   const bool isvalid = numerical.length() > 0;
   if (isvalid) {
     result = numerical.toFloat();
+  }
+  return isvalid;
+}
+
+bool validDoubleFromString(const String& tBuf, double& result) {
+  const String numerical = getNumerical(tBuf, false);
+  const bool isvalid = numerical.length() > 0;
+  if (isvalid) {
+    result = numerical.toDouble();
   }
   return isvalid;
 }
