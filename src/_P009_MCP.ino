@@ -2,6 +2,7 @@
 
 #include "_Plugin_Helper.h"
 #include "src/DataStructs/PinMode.h"
+#include "src/Commands/GPIO.h"
 
 // #######################################################################################################
 // #################################### Plugin 009: MCP23017 input #######################################
@@ -185,21 +186,18 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
       // apply INIT only if PIN is in range. Do not start INIT if pin not set in the device page.
       if (CONFIG_PORT >= 0)
       {
-        portStatusStruct newStatus;
-        const uint32_t   key = createKey(PLUGIN_ID_009, CONFIG_PORT);
+        // Turn on Pullup resistor
+        GPIO_MCP_Config(CONFIG_PORT, 1);
 
         // Read current status or create empty if it does not exist
         newStatus = globalMapPortStatus[key];
 
-        // read and store current state to prevent switching at boot time
-        // "state" could be -1, 0 or 1
-        newStatus.state                          = Plugin_009_Read(CONFIG_PORT);
-        newStatus.output                         = newStatus.state;
-        (newStatus.state == -1) ? newStatus.mode = PIN_MODE_OFFLINE : newStatus.mode = PIN_MODE_INPUT_PULLUP; // @giig1967g: if it is in the
-                                                                                                              // device list we assume it's
-                                                                                                              // an input pin
-        newStatus.task++;                                                                                     // add this GPIO/port as a
-                                                                                                              // task
+          // read and store current state to prevent switching at boot time
+          // "state" could be -1, 0 or 1
+          newStatus.state = GPIO_MCP_Read(CONFIG_PORT);
+          newStatus.output = newStatus.state;
+          (newStatus.state == -1) ? newStatus.mode = PIN_MODE_OFFLINE : newStatus.mode = PIN_MODE_INPUT_PULLUP; // @giig1967g: if it is in the device list we assume it's an input pin
+          newStatus.task++; // add this GPIO/port as a task
 
         // @giig1967g-20181022: set initial UserVar of the switch
         if ((newStatus.state != -1) && Settings.TaskDevicePin1Inversed[event->TaskIndex]) {
@@ -269,39 +267,49 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
               }
               break;
             }
-     */
-    case PLUGIN_MONITOR:
-    {
-      // port monitoring, generates an event by rule command 'monitor,gpio,port#'
-      const uint32_t key                   = createKey(PLUGIN_ID_009, event->Par1);
-      const portStatusStruct currentStatus = globalMapPortStatus[key];
+          }
+          break;
+        }
+*/
+/*
+      case PLUGIN_MONITOR:
+        {
+          // port monitoring, generates an event by rule command 'monitor,gpio,port#'
+          const uint32_t key = createKey(PLUGIN_ID_009,event->Par1);
+          const portStatusStruct currentStatus = globalMapPortStatus[key];
 
-      // if (currentStatus.monitor || currentStatus.command || currentStatus.init) {
-      const int8_t state = Plugin_009_Read(event->Par1);
+          //if (currentStatus.monitor || currentStatus.command || currentStatus.init) {
+            const int8_t state = Plugin_009_Read(event->Par1);
+            if (currentStatus.state != state || currentStatus.forceMonitor) {
+              if (!currentStatus.task) globalMapPortStatus[key].state = state; //do not update state if task flag=1 otherwise it will not be picked up by 10xSEC function
+              if (currentStatus.monitor) {
+                globalMapPortStatus[key].forceMonitor=0; //reset flag
+                String eventString = F("MCP#");
+                eventString += event->Par1;
+                eventString += '=';
+                eventString += state;
+                rulesProcessing(eventString);
+              }
+            }
+          //}
 
       if ((currentStatus.state != state) || currentStatus.forceMonitor) {
         if (!currentStatus.task) { globalMapPortStatus[key].state = state; // do not update state if task flag=1 otherwise it will not be
                                                                            // picked up by 10xSEC function
         }
-
-        if (currentStatus.monitor) {
-          globalMapPortStatus[key].forceMonitor = 0; // reset flag
-          String eventString = F("MCP#");
-          eventString += event->Par1;
-          eventString += '=';
-          eventString += state;
-          rulesProcessing(eventString);
-        }
-      }
-
-      // }
-
-      break;
-    }
-
+*/
     case PLUGIN_TEN_PER_SECOND:
-    {
-      const int8_t state = Plugin_009_Read(CONFIG_PORT);
+      {
+        const int8_t state = GPIO_MCP_Read(CONFIG_PORT);
+        /**************************************************************************\
+        20181022 - @giig1967g: new doubleclick logic is:
+        if there is a 'state' change, check debounce period.
+        Then if doubleclick interval exceeded, reset PCONFIG(7) to 0
+        PCONFIG(7) contains the current status for doubleclick:
+        0: start counting
+        1: 1st click
+        2: 2nd click
+        3: 3rd click = doubleclick event if inside interval (calculated as: '3rd click time' minus '1st click time')
 
       /**************************************************************************\
          20181022 - @giig1967g: new doubleclick logic is:
@@ -546,8 +554,14 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
       {
         int par1;
 
-        if (validIntFromString(parseString(string, 3), par1)) {
-          string = Plugin_009_Read(par1);
+        // returns pin value using syntax: [plugin#mcpgpio#pinstate#xx]
+        if (string.length()>=16 && string.substring(0,16).equalsIgnoreCase(F("mcpgpio,pinstate")))
+        {
+          int par1;
+          if (validIntFromString(parseString(string, 3), par1)) {
+            string = GPIO_MCP_Read(par1);
+          }
+          success = true;
         }
         success = true;
       }
@@ -558,21 +572,40 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
     {
       String log     = "";
       String command = parseString(string, 1);
-
+/*
       if (command == F("mcpgpio"))
       {
-        success = true;
+        String log = "";
+        String command = parseString(string, 1);
 
-        if ((event->Par1 > 0) && (event->Par1 <= 128))
+        if (command == F("mcpgpio"))
         {
           portStatusStruct tempStatus;
           const uint32_t key = createKey(PLUGIN_ID_009, event->Par1);
 
-          // WARNING: operator [] creates an entry in the map if key does not exist
-          // So the next command should be part of each command:
-          tempStatus = globalMapPortStatus[key];
+            const int8_t currentState = Plugin_009_Read(event->Par1);
 
-          const int8_t currentState = Plugin_009_Read(event->Par1);
+            if (currentState == -1) {
+              tempStatus.mode=PIN_MODE_OFFLINE;
+              tempStatus.state=-1;
+              log = String(F("MCP  : GPIO ")) + String(event->Par1) + String(F(" is offline (-1). Cannot set value."));
+            } else if (event->Par2 == 2) { //INPUT
+          	  // PCF8574 specific: only can read 0/low state, so we must send 1
+          	  //setPinState(PLUGIN_ID_019, event->Par1, PIN_MODE_INPUT, 1);
+              tempStatus.mode=PIN_MODE_INPUT_PULLUP;
+              tempStatus.state = currentState;
+          	  Plugin_009_Write(event->Par1,1);
+          	  log = String(F("MCP  : GPIO INPUT ")) + String(event->Par1) + String(F(" Set to 1"));
+            } else { // OUTPUT
+          	  //setPinState(PLUGIN_ID_019, event->Par1, PIN_MODE_OUTPUT, event->Par2);
+          	  Plugin_009_Write(event->Par1, event->Par2);
+              tempStatus.mode=PIN_MODE_OUTPUT;
+              tempStatus.state=event->Par2;
+          	  log = String(F("MCP  : GPIO OUTPUT ")) + String(event->Par1) + String(F(" Set to ")) + String(event->Par2);
+            }
+            tempStatus.command=1; //set to 1 in order to display the status in the PinStatus page
+            tempStatus.forceEvent=1;
+            if (tempStatus.monitor) tempStatus.forceMonitor=1; //set to 1 in order to force an EVENT in case monitor is requested
 
           if (currentState == -1) {
             tempStatus.mode  = PIN_MODE_OFFLINE;
@@ -592,14 +625,34 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
             tempStatus.state = event->Par2;
             log              = String(F("MCP  : GPIO OUTPUT ")) + String(event->Par1) + String(F(" Set to ")) + String(event->Par2);
           }
-          tempStatus.command    = 1;                             // set to 1 in order to display the status in the PinStatus page
-          tempStatus.forceEvent = 1;
+        }  else if (command == F("mcpgpiotoggle")) {
+          success = true;
+          if (event->Par1 > 0 && event->Par1 <= 128)
+          {
+            portStatusStruct tempStatus;
+            const uint32_t key = createKey(PLUGIN_ID_009,event->Par1);
+            // WARNING: operator [] creates an entry in the map if key does not exist
+            // So the next command should be part of each command:
+            tempStatus = globalMapPortStatus[key];
+            const int8_t currentState = Plugin_009_Read(event->Par1);
+            bool needToSave = false;
 
-          if (tempStatus.monitor) { tempStatus.forceMonitor = 1; // set to 1 in order to force an EVENT in case monitor is requested
-          }
-          savePortStatus(key, tempStatus);
-          addLog(LOG_LEVEL_INFO, log);
-          SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, log, 0);
+            if (currentState == -1) {
+              tempStatus.mode=PIN_MODE_OFFLINE;
+              tempStatus.state=-1;
+              log = String(F("MCP  : GPIO ")) + String(event->Par1) + String(F(" is offline (-1). Cannot set value."));
+              needToSave = true;
+            } else if (tempStatus.mode == PIN_MODE_OUTPUT || tempStatus.mode == PIN_MODE_UNDEFINED) { //toggle only output pins
+              tempStatus.state = !currentState; //toggle current state value
+              tempStatus.mode = PIN_MODE_OUTPUT;
+              Plugin_009_Write(event->Par1, tempStatus.state);
+              log = String(F("MCP  : Toggle GPIO ")) + String(event->Par1) + String(F(" Set to ")) + String(tempStatus.state);
+              needToSave = true;
+            }
+            if (needToSave) {
+              tempStatus.command=1; //set to 1 in order to display the status in the PinStatus page
+              tempStatus.forceEvent=1;
+              if (tempStatus.monitor) tempStatus.forceMonitor=1; //set to 1 in order to force an EVENT in case monitor is requested
 
           // SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_019, event->Par1, log, 0));
         }
@@ -629,10 +682,21 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
             log        = String(F("MCP  : Toggle GPIO ")) + String(event->Par1) + String(F(" Set to ")) + String(tempStatus.state);
             needToSave = true;
           }
+        }  else if (command == F("mcppulse")) {
+          success = true;
+          if (event->Par1 > 0 && event->Par1 <= 128)
+          {
+            portStatusStruct tempStatus;
+            const uint32_t key = createKey(PLUGIN_ID_009,event->Par1);
+            // WARNING: operator [] creates an entry in the map if key does not exist
+            // So the next command should be part of each command:
+            tempStatus = globalMapPortStatus[key];
 
-          if (needToSave) {
-            tempStatus.command    = 1;                             // set to 1 in order to display the status in the PinStatus page
-            tempStatus.forceEvent = 1;
+            //setPinState(PLUGIN_ID_019, event->Par1, PIN_MODE_OUTPUT, event->Par2);
+            Plugin_009_Write(event->Par1, event->Par2);
+            delay(event->Par3);
+            Plugin_009_Write(event->Par1, !event->Par2);
+            //setPinState(PLUGIN_ID_019, event->Par1, PIN_MODE_OUTPUT, !event->Par2);
 
             if (tempStatus.monitor) { tempStatus.forceMonitor = 1; // set to 1 in order to force an EVENT in case monitor is requested
             }
@@ -644,33 +708,57 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
             // SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_019, event->Par1, log, 0));
             SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, log, 0);
           }
-        }
-      }  else if (command == F("mcppulse")) {
-        success = true;
+        }  else if (command == F("mcplongpulse")) {
+          success = true;
+          if (event->Par1 > 0 && event->Par1 <= 128)
+          {
+            portStatusStruct tempStatus;
+            const uint32_t key = createKey(PLUGIN_ID_009,event->Par1);
+            // WARNING: operator [] creates an entry in the map if key does not exist
+            // So the next command should be part of each command:
+            tempStatus = globalMapPortStatus[key];
 
-        if ((event->Par1 > 0) && (event->Par1 <= 128))
-        {
-          portStatusStruct tempStatus;
-          const uint32_t key = createKey(PLUGIN_ID_009, event->Par1);
+            //setPinState(PLUGIN_ID_019, event->Par1, PIN_MODE_OUTPUT, event->Par2);
+            Plugin_009_Write(event->Par1, event->Par2);
 
-          // WARNING: operator [] creates an entry in the map if key does not exist
-          // So the next command should be part of each command:
-          tempStatus = globalMapPortStatus[key];
+            tempStatus.mode = PIN_MODE_OUTPUT;
+            tempStatus.state = event->Par2;
+            tempStatus.command=1; //set to 1 in order to display the status in the PinStatus page
+            (tempStatus.monitor) ? tempStatus.forceMonitor = 1 : tempStatus.forceMonitor = 0;
+            savePortStatus(key,tempStatus);
 
-          // setPinState(PLUGIN_ID_019, event->Par1, PIN_MODE_OUTPUT, event->Par2);
-          Plugin_009_Write(event->Par1, event->Par2);
-          delay(event->Par3);
-          Plugin_009_Write(event->Par1, !event->Par2);
+            //setPluginTaskTimer(event->Par3 * 1000, event->TaskIndex, event->Par1, !event->Par2);
+            setPluginTimer(event->Par3 * 1000, PLUGIN_ID_009, event->Par1, !event->Par2);
 
-          // setPinState(PLUGIN_ID_019, event->Par1, PIN_MODE_OUTPUT, !event->Par2);
+            log = String(F("MCP  : GPIO ")) + String(event->Par1) + String(F(" Pulse set for ")) + String(event->Par3) + String(F(" S"));
+            addLog(LOG_LEVEL_INFO, log);
+            //SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_019, event->Par1, log, 0));
+            SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, log, 0);
+          }
+        }  else if (command == F("status")) {
+          if (parseString(string, 2) == F("mcp"))
+          {
+            success = true;
+            const uint32_t key = createKey(PLUGIN_ID_009,event->Par2); //WARNING: 'status' uses Par2 instead of Par1
 
-          tempStatus.mode    = PIN_MODE_OUTPUT;
-          tempStatus.state   = event->Par2;
-          tempStatus.command = 1; // set to 1 in order to display the status in the PinStatus page
-          savePortStatus(key, tempStatus);
+            if (existPortStatus(key))
+              SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, dummyString, 0);
+            else
+           {
+             const int8_t state = Plugin_009_Read(event->Par2); // report as input
+             if (state != -1)
+               SendStatusOnlyIfNeeded(event->Source, NO_SEARCH_PIN_STATE, key, dummyString, state);
+             }
+           }
+        }  else if (command == F("monitor")) {
+          if (parseString(string, 2) == F("mcp"))
+          {
+            success = true;
+            const uint32_t key = createKey(PLUGIN_ID_009,event->Par2); //WARNING: 'monitor' uses Par2 instead of Par1
 
-          log = String(F("MCP  : GPIO ")) + String(event->Par1) + String(F(" Pulsed for ")) + String(event->Par3) + String(F(" mS"));
-          addLog(LOG_LEVEL_INFO, log);
+            addMonitorToPort(key);
+            //giig1967g: Comment next line to receive an EVENT just after calling the monitor command
+            globalMapPortStatus[key].state = Plugin_009_Read(event->Par2); //set initial value to avoid an event just after calling the command
 
           // SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_019, event->Par1, log, 0));
           SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, log, 0);
@@ -723,77 +811,49 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
             }
           }
         }
-      }  else if (command == F("monitor")) {
-        if (parseString(string, 2) == F("mcp"))
-        {
-          success = true;
-          const uint32_t key = createKey(PLUGIN_ID_009, event->Par2); // WARNING: 'monitor' uses Par2 instead of Par1
-
-          addMonitorToPort(key);
-
-          // giig1967g: Comment next line to receive an EVENT just after calling the monitor command
-          globalMapPortStatus[key].state = Plugin_009_Read(event->Par2); // set initial value to avoid an event just after calling the
-                                                                         // command
-
-          log = String(F("MCP  : GPIO ")) + String(event->Par2) + String(F(" added to monitor list."));
-          addLog(LOG_LEVEL_INFO, log);
-          SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, dummyString, 0);
-        }
-      }  else if (command == F("unmonitor")) {
-        if (parseString(string, 2) == F("mcp"))
-        {
-          success = true;
-          const uint32_t key = createKey(PLUGIN_ID_009, event->Par2); // WARNING: 'monitor' uses Par2 instead of Par1
-          SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, dummyString, 0);
-
-          removeMonitorFromPort(key);
-          log = String(F("MCP  : GPIO ")) + String(event->Par2) + String(F(" removed from monitor list."));
-          addLog(LOG_LEVEL_INFO, log);
-        }
+        break;
       }
+      */
       break;
     }
 
     case PLUGIN_TIMER_IN:
-    {
-      Plugin_009_Write(event->Par1, event->Par2);
+      {
+        Plugin_009_Write(event->Par1, event->Par2);
+        //setPinState(PLUGIN_ID_009, event->Par1, PIN_MODE_OUTPUT, event->Par2);
+        portStatusStruct tempStatus;
+        // WARNING: operator [] creates an entry in the map if key does not exist
+        const uint32_t key = createKey(PLUGIN_ID_009,event->Par1);
+        tempStatus = globalMapPortStatus[key];
 
-      // setPinState(PLUGIN_ID_009, event->Par1, PIN_MODE_OUTPUT, event->Par2);
-      portStatusStruct tempStatus;
+        tempStatus.state = event->Par2;
+        tempStatus.mode = PIN_MODE_OUTPUT;
+        (tempStatus.monitor) ? tempStatus.forceMonitor = 1 : tempStatus.forceMonitor = 0; //added to send event for longpulse command
+        savePortStatus(key,tempStatus);
+        break;
+      }
 
-      // WARNING: operator [] creates an entry in the map if key does not exist
-      const uint32_t key = createKey(PLUGIN_ID_009, event->Par1);
-      tempStatus = globalMapPortStatus[key];
+      case PLUGIN_ONLY_TIMER_IN:
+        {
+          Plugin_009_Write(event->Par1, event->Par2);
+          //setPinState(PLUGIN_ID_009, event->Par1, PIN_MODE_OUTPUT, event->Par2);
+          portStatusStruct tempStatus;
+          // WARNING: operator [] creates an entry in the map if key does not exist
+          const uint32_t key = createKey(PLUGIN_ID_009,event->Par1);
+          tempStatus = globalMapPortStatus[key];
 
-      tempStatus.state                               = event->Par2;
-      tempStatus.mode                                = PIN_MODE_OUTPUT;
-      (tempStatus.monitor) ? tempStatus.forceMonitor = 1 : tempStatus.forceMonitor = 0; // added to send event for longpulse command
-      savePortStatus(key, tempStatus);
-      break;
-    }
-
-    case PLUGIN_ONLY_TIMER_IN:
-    {
-      Plugin_009_Write(event->Par1, event->Par2);
-
-      // setPinState(PLUGIN_ID_009, event->Par1, PIN_MODE_OUTPUT, event->Par2);
-      portStatusStruct tempStatus;
-
-      // WARNING: operator [] creates an entry in the map if key does not exist
-      const uint32_t key = createKey(PLUGIN_ID_009, event->Par1);
-      tempStatus = globalMapPortStatus[key];
-
-      tempStatus.state                               = event->Par2;
-      tempStatus.mode                                = PIN_MODE_OUTPUT;
-      (tempStatus.monitor) ? tempStatus.forceMonitor = 1 : tempStatus.forceMonitor = 0; // added to send event for longpulse command
-      savePortStatus(key, tempStatus);
-      break;
-    }
+          tempStatus.state = event->Par2;
+          tempStatus.mode = PIN_MODE_OUTPUT;
+          (tempStatus.monitor) ? tempStatus.forceMonitor = 1 : tempStatus.forceMonitor = 0; //added to send event for longpulse command
+          savePortStatus(key,tempStatus);
+          break;
+        }
   }
   return success;
 }
 
-// ********************************************************************************
+/*
+//********************************************************************************
 // MCP23017 read
 // ********************************************************************************
 int8_t Plugin_009_Read(byte Par1)
@@ -930,5 +990,5 @@ void Plugin_009_Config(byte Par1, byte Par2)
     Wire.endTransmission();
   }
 }
-
+*/
 #endif // USES_P009
