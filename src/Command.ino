@@ -6,6 +6,7 @@
 #endif // ifdef USES_BLYNK
 #include "src/Commands/Diagnostic.h"
 #include "src/Commands/HTTP.h"
+#include "src/Commands/GPIO.h"
 #include "src/Commands/i2c.h"
 #ifdef USES_MQTT
 # include "src/Commands/MQTT.h"
@@ -145,7 +146,9 @@ String doExecuteCommand(const char *cmd, struct EventStruct *event, const char *
       break;
     }
     case 'g': {
-      COMMAND_CASE("gateway", Command_Gateway, 1); // Network Command
+      COMMAND_CASE(   "gateway", Command_Gateway,     1); // Network Command
+      COMMAND_CASE(      "gpio", Command_GPIO,        2); // Gpio.h
+      COMMAND_CASE("gpiotoggle", Command_GPIO_Toggle, 1); // Gpio.h
       break;
     }
     case 'i': {
@@ -161,17 +164,34 @@ String doExecuteCommand(const char *cmd, struct EventStruct *event, const char *
       COMMAND_CASE(         "load", Command_Settings_Load, 0);    // Settings.h
       COMMAND_CASE(     "logentry", Command_logentry,      2);    // Diagnostic.h
       COMMAND_CASE("logportstatus", Command_logPortStatus, 0);    // Diagnostic.h
+      COMMAND_CASE(    "longpulse", Command_GPIO_LongPulse,3);    // GPIO.h
+      COMMAND_CASE( "longpulse_ms", Command_GPIO_LongPulse_Ms,3);    // GPIO.h
+      COMMAND_CASE("logportstatus", Command_logPortStatus, 0);    // Diagnostic.h
       COMMAND_CASE(       "lowmem", Command_Lowmem,        0);    // Diagnostic.h
       break;
     }
     case 'm': {
-      COMMAND_CASE(        "malloc", Command_Malloc,            1); // Diagnostic.h
-      COMMAND_CASE(       "meminfo", Command_MemInfo,           0); // Diagnostic.h
-      COMMAND_CASE( "meminfodetail", Command_MemInfo_detail,    0); // Diagnostic.h
+      switch (cmd_lc[1]) {
+        case 'c':{
+          COMMAND_CASE(        "mcpgpio", Command_GPIO,              2); // Gpio.h
+          COMMAND_CASE(  "mcpgpiotoggle", Command_GPIO_Toggle,       1); // Gpio.h
+          COMMAND_CASE(   "mcplongpulse", Command_GPIO_LongPulse,    3); // GPIO.h
+          COMMAND_CASE("mcplongpulse_ms", Command_GPIO_LongPulse_Ms, 3); // GPIO.h
+          COMMAND_CASE(       "mcppulse", Command_GPIO_Pulse,        3); // GPIO.h
+          break;
+        }
+        default: {
+          COMMAND_CASE(         "malloc", Command_Malloc,            1); // Diagnostic.h
+          COMMAND_CASE(        "meminfo", Command_MemInfo,           0); // Diagnostic.h
+          COMMAND_CASE(  "meminfodetail", Command_MemInfo_detail,    0); // Diagnostic.h
 #ifdef USES_MQTT
-      COMMAND_CASE(  "messagedelay", Command_MQTT_messageDelay, 1); // MQTT.h
-      COMMAND_CASE("mqttretainflag", Command_MQTT_Retain,       1); // MQTT.h
+          COMMAND_CASE(  "messagedelay", Command_MQTT_messageDelay, 1); // MQTT.h
+          COMMAND_CASE("mqttretainflag", Command_MQTT_Retain,       1); // MQTT.h
+          COMMAND_CASE(       "monitor", Command_GPIO_Monitor,      2); // GPIO.h
 #endif // USES_MQTT
+          break;
+        }
+      }
       break;
     }
     case 'n': {
@@ -182,10 +202,24 @@ String doExecuteCommand(const char *cmd, struct EventStruct *event, const char *
       break;
     }
     case 'p': {
-      COMMAND_CASE("password", Command_Settings_Password, 1); // Settings.h
+      switch (cmd_lc[1]) {
+        case 'c':{
+          COMMAND_CASE(        "pcfgpio", Command_GPIO,              2); // Gpio.h
+          COMMAND_CASE(  "pcfgpiotoggle", Command_GPIO_Toggle,       1); // Gpio.h
+          COMMAND_CASE(   "pcflongpulse", Command_GPIO_LongPulse,    3); // GPIO.h
+          COMMAND_CASE("pcflongpulse_ms", Command_GPIO_LongPulse_Ms, 3); // GPIO.h
+          COMMAND_CASE(       "pcfpulse", Command_GPIO_Pulse,        3); // GPIO.h
+          break;
+        }
+        default: {
+          COMMAND_CASE(       "password", Command_Settings_Password, 1); // Settings.h
 #ifdef USES_MQTT
-      COMMAND_CASE( "publish", Command_MQTT_Publish,      2); // MQTT.h
+          COMMAND_CASE(        "publish", Command_MQTT_Publish,      2); // MQTT.h
 #endif // USES_MQTT
+          COMMAND_CASE(          "pulse", Command_GPIO_Pulse,        2); // GPIO.h
+          break;
+        }
+      }
       break;
     }
     case 'r': {
@@ -205,12 +239,14 @@ String doExecuteCommand(const char *cmd, struct EventStruct *event, const char *
       COMMAND_CASE(     "sdcard", Command_SD_LS,           0); // SDCARDS.h
       COMMAND_CASE(   "sdremove", Command_SD_Remove,       1); // SDCARDS.h
         #endif // ifdef FEATURE_SD
+    if (cmd_lc[1] == 'e') {
       COMMAND_CASE(     "sendto", Command_UPD_SendTo,      2); // UDP.h    // FIXME TD-er: These send commands, can we determine the nr of
                                                                // arguments?
       COMMAND_CASE( "sendtohttp", Command_HTTP_SendToHTTP, 3); // HTTP.h
       COMMAND_CASE(  "sendtoudp", Command_UDP_SendToUPD,   3); // UDP.h
       COMMAND_CASE("serialfloat", Command_SerialFloat,     0); // Diagnostic.h
       COMMAND_CASE(   "settings", Command_Settings_Print,  0); // Settings.h
+    }
       COMMAND_CASE(     "subnet", Command_Subnet,          1); // Network Command
       COMMAND_CASE(    "sysload", Command_SysLoad,         0); // Diagnostic.h
       break;
@@ -229,10 +265,11 @@ String doExecuteCommand(const char *cmd, struct EventStruct *event, const char *
       break;
     }
     case 'u': {
-      COMMAND_CASE("udpport", Command_UDP_Port,      1); // UDP.h
-      COMMAND_CASE("udptest", Command_UDP_Test,      2); // UDP.h
-      COMMAND_CASE(   "unit", Command_Settings_Unit, 1); // Settings.h
-      COMMAND_CASE( "usentp", Command_useNTP,        1); // Time.h
+      COMMAND_CASE(  "udpport", Command_UDP_Port,      1); // UDP.h
+      COMMAND_CASE(  "udptest", Command_UDP_Test,      2); // UDP.h
+      COMMAND_CASE(     "unit", Command_Settings_Unit, 1); // Settings.h
+      COMMAND_CASE("unmonitor", Command_GPIO_UnMonitor,2); // GPIO.h
+      COMMAND_CASE(   "usentp", Command_useNTP,        1); // Time.h
       break;
     }
     case 'w': {
