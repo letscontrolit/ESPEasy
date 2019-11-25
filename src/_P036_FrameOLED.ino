@@ -12,6 +12,13 @@
 // Added to the main repository with some optimizations and some limitations.
 // Al long as the device is not selected, no RAM is waisted.
 //
+// @uwekaditz: 2019-11-22
+// CHG: Each line can now have 64 characters (version is saved as Bit23-20 in PCONFIG_LONG(0)))
+// FIX: Overlapping while page scrolling (size of line content for scrolling pages limited to 128 pixel)
+// CHG: Using a calculation to reduce line content for scrolling pages instead of a while loop
+// CHG: Using SetBit and GetBit functions to change the content of PCONFIG_LONG(0)
+// CHG: Memory usage reduced (only P036_DisplayLinesV1 is now used)
+// CHG: using uint8_t and uint16_t instead of byte and word
 // @uwekaditz: 2019-11-17
 // CHG: commands for P036
 // 1. Display commands: oledframedcmd display [on, off, low, med, high]
@@ -26,14 +33,14 @@
 // @uwekaditz: 2019-11-05
 // NEW: Optional scrolling for long lines (wider than display width)
 // @uwekaditz: 2019-11-04
-// BUG: Wifi bars for 128x64 and 128x32 displays must be on right side
-// BUG: Rotated image did not work for displays with height less then 64 pix
+// FIX: Wifi bars for 128x64 and 128x32 displays must be on right side
+// FIX: Rotated image did not work for displays with height less then 64 pix
 // NEW: Added pagination to customized header
 // CHG: Time can be always selected in customized header, even if the time is diplayed by default for 128x68
 // @uwekaditz: 2019-11-02
 // NEW: more OLED sizes (128x32, 64x48) added to the original 128x64 size
-// NEW: Display button can be inverted (saved as Bit16 in Settings.TaskDevicePluginConfigLong[event->TaskIndex][0])
-// NEW: Content of header is adjustable, also the alternating function (saved as Bit 15-0 in Settings.TaskDevicePluginConfigLong[event->TaskIndex][0])
+// NEW: Display button can be inverted (saved as Bit16 in PCONFIG_LONG(0))
+// NEW: Content of header is adjustable, also the alternating function (saved as Bit 15-0 in PCONFIG_LONG(0))
 // CHG: Parameters sorted
 
 #define PLUGIN_036
@@ -41,9 +48,11 @@
 #define PLUGIN_NAME_036       "Display - OLED SSD1306/SH1106 Framed"
 #define PLUGIN_VALUENAME1_036 "OLED"
 
-#define P36_Nlines 12        // The number of different lines which can be displayed - each line is 32 chars max
-#define P36_Nchars 32
+#define P36_Nlines 12         // The number of different lines which can be displayed - each line is 64 chars max
+#define P36_NcharsV0 32       // max chars per line up to 22.11.2019 (V0)
+#define P36_NcharsV1 64       // max chars per line from 22.11.2019 (V1)
 #define P36_MaxSizesCount 3   // number of different OLED sizes
+
 #define P36_MaxDisplayWidth 128
 #define P36_MaxDisplayHeight 64
 #define P36_DisplayCentre 64
@@ -68,13 +77,13 @@
 #define P36_PageScrollPix             4  // min pixel change while page scrolling
 
 static int8_t lastWiFiState = P36_WIFI_STATE_UNSET;
-static byte OLEDIndex = 0;
+static uint8_t OLEDIndex = 0;
 static boolean bPin3Invers;
 static boolean bScrollLines;
 static boolean bAlternativHeader = false;
-static word HeaderCount = 0;
+static uint16_t HeaderCount = 0;
 static boolean bPageScrollDisabled = true;   // first page after INIT without scrolling
-static byte TopLineOffset = 0;   // Offset for top line, used for rotated image while using displays < P36_MaxDisplayHeight lines
+static uint8_t TopLineOffset = 0;   // Offset for top line, used for rotated image while using displays < P36_MaxDisplayHeight lines
 
 enum eHeaderContent {
     eSSID = 1,
@@ -95,27 +104,27 @@ enum eHeaderContent {
 
 static eHeaderContent HeaderContent=eSysName;
 static eHeaderContent HeaderContentAlternative=eSysName;
-static byte MaxFramesToDisplay = 0xFF;
-static byte currentFrameToDisplay = 0;
-static byte nextFrameToDisplay = 0xFF;  // next frame because content changed in PLUGIN_WRITE
+static uint8_t MaxFramesToDisplay = 0xFF;
+static uint8_t currentFrameToDisplay = 0;
+static uint8_t nextFrameToDisplay = 0xFF;  // next frame because content changed in PLUGIN_WRITE
 
 typedef struct {
-  byte          Top;                  // top in pix for this line setting
+  uint8_t       Top;                  // top in pix for this line setting
   const char    *fontData;            // font for this line setting
-  byte          Space;                // space in pix between lines for this line setting
+  uint8_t       Space;                // space in pix between lines for this line setting
 } tFontSettings;
 
 typedef struct {
-  byte          Width;                // width in pix
-  byte          Height;               // height in pix
-  byte          PixLeft;              // first left pix position
-  byte          MaxLines;             // max. line count
+  uint8_t       Width;                // width in pix
+  uint8_t       Height;               // height in pix
+  uint8_t       PixLeft;              // first left pix position
+  uint8_t       MaxLines;             // max. line count
   tFontSettings L1;                   // settings for 1 line
   tFontSettings L2;                   // settings for 2 lines
   tFontSettings L3;                   // settings for 3 lines
   tFontSettings L4;                   // settings for 4 lines
-  byte          WiFiIndicatorLeft;    // left of WiFi indicator
-  byte          WiFiIndicatorWidth;   // width of WiFi indicator
+  uint8_t       WiFiIndicatorLeft;    // left of WiFi indicator
+  uint8_t       WiFiIndicatorWidth;   // width of WiFi indicator
 } tSizeSettings;
 
 const tSizeSettings SizeSettings[P36_MaxSizesCount] = {
@@ -158,50 +167,101 @@ const tSizeSettings SizeSettings[P36_MaxSizesCount] = {
 
 typedef struct {
    String        Content;              // content
-   word          LastWidth;            // width of last line in pix
-   word          Width;                // width in pix
-   byte          Height;               // Height in Pix
-   byte          ypos;                 // y position in pix
+   uint16_t      LastWidth;            // width of last line in pix
+   uint16_t      Width;                // width in pix
+   uint8_t       Height;               // Height in Pix
+   uint8_t       ypos;                 // y position in pix
    int           CurrentLeft;          // current left pix position
    float         dPix;                 // pix change per scroll time (100ms)
    float         fPixSum;              // pix sum while scrolling (100ms)
 } tScrollLine;
 typedef struct {
   const char    *Font;                 // font for this line setting
-  byte          Space;                 // space in pix between lines for this line setting
-  word          wait;                  // waiting time before scrolling
+  uint8_t       Space;                 // space in pix between lines for this line setting
+  uint16_t      wait;                  // waiting time before scrolling
   tScrollLine   Line[P36_MAX_LinesPerPage];
 } tScrollingLines;
 static tScrollingLines ScrollingLines;
 
 typedef struct {
-  byte          Scrolling;                    // 0=Ready, 1=Scrolling
+  uint8_t       Scrolling;                    // 0=Ready, 1=Scrolling
   const char    *Font;                        // font for this line setting
-  byte          dPix;                         // pix change per scroll time (25ms)
+  uint8_t       dPix;                         // pix change per scroll time (25ms)
   int           dPixSum;                      // act pix change
-  byte          linesPerFrame;                // the number of lines in each frame
+  uint8_t       linesPerFrame;                // the number of lines in each frame
   int           ypos[P36_MAX_LinesPerPage];   // ypos contains the heights of the various lines - this depends on the font and the number of lines
   String        newString[P36_MAX_LinesPerPage];
   String        oldString[P36_MAX_LinesPerPage];
 } tScrollingPages;
 static tScrollingPages ScrollingPages;
 
+typedef struct {
+  char         Content[P36_NcharsV1];
+  uint8_t      FontType;
+  uint8_t      FontHeight;
+  uint8_t      FontSpace;
+  uint8_t      reserved;
+} tDisplayLines;
+
+// CustomTaskSettings
+tDisplayLines P036_DisplayLinesV1[P36_Nlines];    // holds the CustomTaskSettings for V1
+String DisplayLinesV0[P36_Nlines];                // used to load the CustomTaskSettings for V0
+
 // Instantiate display here - does not work to do this within the INIT call
 OLEDDisplay *display=NULL;
 
-String P036_displayLines[P36_Nlines];
-
-void Plugin_036_loadDisplayLines(taskIndex_t taskIndex) {
-  LoadCustomTaskSettings(taskIndex, P036_displayLines, P36_Nlines, P36_Nchars);
+void P036_setBitToUL(uint32_t& number, byte bitnr, bool value) {
+  uint32_t mask = (0x01UL << bitnr);
+  uint32_t newbit = (value ? 1UL : 0UL) << bitnr;
+  number = (number & ~mask) | newbit;
+}
+uint8_t get8BitFromUL(uint32_t number, byte bitnr) {
+  return (number >> bitnr) & 0xFF;
+}
+void set8BitToUL(uint32_t& number, byte bitnr, uint8_t value) {
+  uint32_t mask = (0xFFUL << bitnr);
+  uint32_t newvalue = ((value << bitnr) & mask);
+  number = (number & ~mask) | newvalue;
+}
+uint8_t get4BitFromUL(uint32_t number, byte bitnr) {
+  return (number >> bitnr) &  0x0F;
+}
+void set4BitToUL(uint32_t& number, byte bitnr, uint8_t value) {
+  uint32_t mask = (0x0FUL << bitnr);
+  uint32_t newvalue = ((value << bitnr) & mask);
+  number = (number & ~mask) | newvalue;
 }
 
-boolean Plugin_036(byte function, struct EventStruct *event, String& string)
+void Plugin_036_loadDisplayLines(taskIndex_t taskIndex, uint8_t LoadVersion) {
+
+  if (LoadVersion == 0) {
+      // read data of version 0 (up to 22.11.2019)
+      LoadCustomTaskSettings(taskIndex, DisplayLinesV0, P36_Nlines, P36_NcharsV0); // max. length 1024 Byte  (DAT_TASKS_CUSTOM_SIZE)
+      for (int i = 0; i < P36_Nlines; ++i) {
+        safe_strncpy(P036_DisplayLinesV1[i].Content, DisplayLinesV0[i], P36_NcharsV1);
+        P036_DisplayLinesV1[i].Content[P36_NcharsV1-1] = 0; // Terminate in case of uninitalized data
+        P036_DisplayLinesV1[i].FontType = 0xff;
+        P036_DisplayLinesV1[i].FontHeight = 0xff;
+        P036_DisplayLinesV1[i].FontSpace = 0xff;
+        P036_DisplayLinesV1[i].reserved = 0xff;
+      }
+    }
+    else {
+      // read data of version 1 (beginning from 22.11.2019)
+      LoadCustomTaskSettings(taskIndex, (uint8_t*)&P036_DisplayLinesV1, sizeof(P036_DisplayLinesV1));
+      for (int i = 0; i < P36_Nlines; ++i) {
+        P036_DisplayLinesV1[i].Content[P36_NcharsV1-1] = 0; // Terminate in case of uninitalized data
+      }
+  }
+}
+
+boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
-  static byte displayTimer = 0;
-  static byte frameCounter = 0;       // need to keep track of framecounter from call to call
-  static byte nrFramesToDisplay = 0;
+  static uint8_t displayTimer = 0;
+  static uint8_t frameCounter = 0;       // need to keep track of framecounter from call to call
+  static uint8_t nrFramesToDisplay = 0;
 
   int NFrames;                // the number of frames
 
@@ -240,14 +300,14 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
         // Use number 5 to remain compatible with existing configurations,
         // but the item should be one of the first choices.
         addFormSubHeader(F("Display"));
-        byte choice5 = PCONFIG(5);
+        uint8_t choice5 = PCONFIG(5);
         String options5[2];
         options5[0] = F("SSD1306 (128x64 dot controller)");
         options5[1] = F("SH1106 (132x64 dot controller)");
         int optionValues5[2] = { 1, 2 };
         addFormSelector(F("Controller"), F("p036_controller"), 2, options5, optionValues5, choice5);
 
-        byte choice0 = PCONFIG(0);
+        uint8_t choice0 = PCONFIG(0);
         /*
         String options0[2];
         options0[0] = F("3C");
@@ -262,7 +322,7 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
         int optionValues8[P36_MaxSizesCount] = { 0, 1, 2 };
         addFormSelector(F("Size"),F("p036_size"), P36_MaxSizesCount, options8, optionValues8, NULL, PCONFIG(7), true);
 
-        byte choice1 = PCONFIG(1);
+        uint8_t choice1 = PCONFIG(1);
         String options1[2];
         options1[0] = F("Normal");
         options1[1] = F("Rotated");
@@ -272,7 +332,7 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
         OLEDIndex=PCONFIG(7);
         addFormNumericBox(F("Lines per Frame"), F("p036_nlines"), PCONFIG(2), 1, SizeSettings[OLEDIndex].MaxLines);
 
-        byte choice3 = PCONFIG(3);
+        uint8_t choice3 = PCONFIG(3);
         String options3[5];
         options3[0] = F("Very Slow");
         options3[1] = F("Slow");
@@ -281,16 +341,18 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
         options3[4] = F("Instant");
         int optionValues3[5] = {ePSS_VerySlow, ePSS_Slow, ePSS_Fast, ePSS_VeryFast, ePSS_Instant};
         addFormSelector(F("Scroll"), F("p036_scroll"), 5, options3, optionValues3, choice3);
-        Plugin_036_loadDisplayLines(event->TaskIndex);
+        uint8_t version = get4BitFromUL(PCONFIG_LONG(0), 20);    // Bit23-20 Version CustomTaskSettings
+
+        Plugin_036_loadDisplayLines(event->TaskIndex, version);
 
         // FIXME TD-er: Why is this using pin3 and not pin1? And why isn't this using the normal pin selection functions?
         addFormPinSelect(F("Display button"), F("taskdevicepin3"), CONFIG_PIN3);
-        bPin3Invers = ((Settings.TaskDevicePluginConfigLong[event->TaskIndex][0] & 0x10000) == 0x10000);  // Bit 16
+        bPin3Invers = getBitFromUL(PCONFIG_LONG(0), 16);  // Bit 16
         addFormCheckBox(F("Inversed Logic"), F("p036_pin3invers"), bPin3Invers);
 
         addFormNumericBox(F("Display Timeout"), F("p036_timer"), PCONFIG(4));
 
-        byte choice6 = PCONFIG(6);
+        uint8_t choice6 = PCONFIG(6);
         if (choice6 == 0) choice6 = P36_CONTRAST_HIGH;
         String options6[3];
         options6[0] = F("Low");
@@ -304,19 +366,19 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
 
         addFormSubHeader(F("Content"));
 
-        byte choice9 = (Settings.TaskDevicePluginConfigLong[event->TaskIndex][0] & 0xff00) >> 8;    // Bit15-8
-        byte choice10 = Settings.TaskDevicePluginConfigLong[event->TaskIndex][0] & 0xff; // Bit7-0
+        uint8_t choice9 = get8BitFromUL(PCONFIG_LONG(0), 8);    // Bit15-8 HeaderContent
+        uint8_t choice10 = get8BitFromUL(PCONFIG_LONG(0), 0);   // Bit7-0 HeaderContentAlternative
         String options9[14] = { F("SSID"), F("SysName"), F("IP"), F("MAC"), F("RSSI"), F("BSSID"), F("WiFi channel"), F("Unit"), F("SysLoad"), F("SysHeap"), F("SysStack"), F("Date"), F("Time"), F("PageNumbers") };
         int optionValues9[14] = { eSSID, eSysName, eIP, eMAC, eRSSI, eBSSID, eWiFiCh, eUnit, eSysLoad, eSysHeap, eSysStack, eDate, eTime , ePageNo};
         addFormSelector(F("Header"),F("p036_header"), 14, options9, optionValues9, choice9);
         addFormSelector(F("Header (alternating)"),F("p036_headerAlternate"), 14, options9, optionValues9, choice10);
 
-        bScrollLines = ((Settings.TaskDevicePluginConfigLong[event->TaskIndex][0] & 0x20000) == 0x20000);  // Bit 17
+        bScrollLines = getBitFromUL(PCONFIG_LONG(0), 17);  // Bit 17
         addFormCheckBox(F("Scroll long lines"), F("p036_ScrollLines"), bScrollLines);
 
-        for (byte varNr = 0; varNr < P36_Nlines; varNr++)
+        for (uint8_t varNr = 0; varNr < P36_Nlines; varNr++)
         {
-          addFormTextBox(String(F("Line ")) + (varNr + 1), getPluginCustomArgName(varNr), P036_displayLines[varNr], P36_Nchars);
+          addFormTextBox(String(F("Line ")) + (varNr + 1), getPluginCustomArgName(varNr), String(P036_DisplayLinesV1[varNr].Content), P36_NcharsV1-1);
         }
 
         success = true;
@@ -339,27 +401,35 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
         PCONFIG(5) = getFormItemInt(F("p036_controller"));
         PCONFIG(6) = getFormItemInt(F("p036_contrast"));
         PCONFIG(7) = getFormItemInt(F("p036_size"));
-        Settings.TaskDevicePluginConfigLong[event->TaskIndex][0] = getFormItemInt(F("p036_header"))*0x100;     // Bit 15-8
-        Settings.TaskDevicePluginConfigLong[event->TaskIndex][0] += getFormItemInt(F("p036_headerAlternate")); // Bit 7-0
-        if (isFormItemChecked(F("p036_pin3invers")))
-          Settings.TaskDevicePluginConfigLong[event->TaskIndex][0] += 0x10000;          // Bit 16
-        if (isFormItemChecked(F("p036_ScrollLines")))
-          Settings.TaskDevicePluginConfigLong[event->TaskIndex][0] += 0x20000;          // Bit 17
+
+        uint32_t lSettings = 0;
+        set8BitToUL(lSettings, 8, uint8_t(getFormItemInt(F("p036_header")) & 0xff));            // Bit15-8 HeaderContent
+        set8BitToUL(lSettings, 0, uint8_t(getFormItemInt(F("p036_headerAlternate")) & 0xff));   // Bit 7-0 HeaderContentAlternative
+        P036_setBitToUL(lSettings, 16, isFormItemChecked(F("p036_pin3invers")));                // Bit 16 Pin3Invers
+        P036_setBitToUL(lSettings, 17, isFormItemChecked(F("p036_ScrollLines")));               // Bit 17 ScrollLines
+        // save CustomTaskSettings always in version V1
+        set4BitToUL(lSettings, 20, 0x01);                                                       // Bit23-20 Version CustomTaskSettings -> version V1
+
+        PCONFIG_LONG(0) = lSettings;
 
         String error;
-        char P036_deviceTemplate[P36_Nlines][P36_Nchars];
-        for (byte varNr = 0; varNr < P36_Nlines; varNr++)
+        for (uint8_t varNr = 0; varNr < P36_Nlines; varNr++)
         {
-          if (!safe_strncpy(P036_deviceTemplate[varNr], WebServer.arg(getPluginCustomArgName(varNr)), P36_Nchars)) {
+          if (!safe_strncpy(P036_DisplayLinesV1[varNr].Content, WebServer.arg(getPluginCustomArgName(varNr)), P36_NcharsV1)) {
             error += getCustomTaskSettingsError(varNr);
           }
+          P036_DisplayLinesV1[varNr].Content[P36_NcharsV1-1] = 0; // Terminate in case of uninitalized data
+          P036_DisplayLinesV1[varNr].FontType = 0xff;
+          P036_DisplayLinesV1[varNr].FontHeight = 0xff;
+          P036_DisplayLinesV1[varNr].FontSpace = 0xff;
+          P036_DisplayLinesV1[varNr].reserved = 0xff;
         }
         if (error.length() > 0) {
           addHtmlError(error);
         }
-        SaveCustomTaskSettings(event->TaskIndex, (byte*)&P036_deviceTemplate, sizeof(P036_deviceTemplate));
+        SaveCustomTaskSettings(event->TaskIndex, (uint8_t*)&P036_DisplayLinesV1, sizeof(P036_DisplayLinesV1));
         // After saving, make sure the active lines are updated.
-        Plugin_036_loadDisplayLines(event->TaskIndex);
+        Plugin_036_loadDisplayLines(event->TaskIndex, 1);
         success = true;
         break;
       }
@@ -368,7 +438,8 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
       {
         lastWiFiState = P36_WIFI_STATE_UNSET;
         // Load the custom settings from flash
-        Plugin_036_loadDisplayLines(event->TaskIndex);
+        uint8_t version = get4BitFromUL(PCONFIG_LONG(0), 20);    // Bit23-20 Version CustomTaskSettings
+        Plugin_036_loadDisplayLines(event->TaskIndex, version);
 
         //      Init the display and turn it on
         if (display)
@@ -423,7 +494,7 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
         ScrollingPages.linesPerFrame = PCONFIG(2);
 
         //    Clear scrolling line data
-        for (byte i=0; i<P36_MAX_LinesPerPage ; i++) {
+        for (uint8_t i=0; i<P36_MAX_LinesPerPage ; i++) {
           ScrollingLines.Line[i].Width = 0;
           ScrollingLines.Line[i].LastWidth = 0;
         }
@@ -443,8 +514,8 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
             delete display;
             display=NULL;
           }
-          for (byte varNr = 0; varNr < P36_Nlines; varNr++) {
-            P036_displayLines[varNr] = "";
+          for (uint8_t varNr = 0; varNr < P36_Nlines; varNr++) {
+            P036_DisplayLinesV1[varNr].Content[0] = 0;
           }
           break;
       }
@@ -456,7 +527,7 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
         bAlternativHeader = (++HeaderCount > (lTaskTimer*5)); // change header after half of display time
         if (CONFIG_PIN3 != -1)
         {
-          bPin3Invers = ((Settings.TaskDevicePluginConfigLong[event->TaskIndex][0] & 0x10000) == 0x10000);  // Bit 16
+          bPin3Invers = getBitFromUL(PCONFIG_LONG(0), 16);  // Bit 16
           if ((!bPin3Invers && digitalRead(CONFIG_PIN3)) || (bPin3Invers && !digitalRead(CONFIG_PIN3)))
           {
             display->displayOn();
@@ -464,7 +535,7 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
             displayTimer = PCONFIG(4);
           }
         }
-        bScrollLines = ((Settings.TaskDevicePluginConfigLong[event->TaskIndex][0] & 0x20000) == 0x20000);  // Bit 17
+        bScrollLines = getBitFromUL(PCONFIG_LONG(0), 17);  // Bit 17
         if ((UserVar[event->BaseVarIndex] == 1) && bScrollLines && (ScrollingPages.Scrolling == 0)) {
           // Display is on.
           OLEDIndex = PCONFIG(7);
@@ -490,8 +561,8 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
         if (UserVar[event->BaseVarIndex] == 1) {
           // Display is on.
           OLEDIndex = PCONFIG(7);
-          HeaderContent = eHeaderContent((Settings.TaskDevicePluginConfigLong[event->TaskIndex][0] & 0xff00) >> 8);     // Bit15-8
-          HeaderContentAlternative = eHeaderContent(Settings.TaskDevicePluginConfigLong[event->TaskIndex][0] & 0xff);   // Bit7-0
+          HeaderContent = static_cast<eHeaderContent>(get8BitFromUL(PCONFIG_LONG(0), 8));             // Bit15-8 HeaderContent
+          HeaderContentAlternative = static_cast<eHeaderContent>(get8BitFromUL(PCONFIG_LONG(0), 0));  // Bit 7-0 HeaderContentAlternative
 	        display_header();	// Update Header
           if (display && display_wifibars()) {
             // WiFi symbol was updated.
@@ -520,19 +591,18 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
           ScrollingPages.Scrolling = 1; // page scrolling running -> no line scrolling allowed
           NFrames = P36_Nlines / ScrollingPages.linesPerFrame;
           OLEDIndex = PCONFIG(7);
-          HeaderContent = eHeaderContent((Settings.TaskDevicePluginConfigLong[event->TaskIndex][0] & 0xff00) >> 8);     // Bit15-8
-          HeaderContentAlternative = eHeaderContent(Settings.TaskDevicePluginConfigLong[event->TaskIndex][0] & 0xff);   // Bit7-0
+          HeaderContent = static_cast<eHeaderContent>(get8BitFromUL(PCONFIG_LONG(0), 8));             // Bit15-8 HeaderContent
+          HeaderContentAlternative = static_cast<eHeaderContent>(get8BitFromUL(PCONFIG_LONG(0), 0));  // Bit 7-0 HeaderContentAlternative
 
           //      Now create the string for the outgoing and incoming frames
           String tmpString;
-          tmpString.reserve(P36_Nchars);
+          tmpString.reserve(P36_NcharsV1);
 
           //      Construct the outgoing string
-          for (byte i = 0; i < ScrollingPages.linesPerFrame; i++)
+          for (uint8_t i = 0; i < ScrollingPages.linesPerFrame; i++)
           {
-            tmpString = P036_displayLines[(ScrollingPages.linesPerFrame * frameCounter) + i];
+            tmpString = String(P036_DisplayLinesV1[(ScrollingPages.linesPerFrame * frameCounter) + i].Content);
             ScrollingPages.oldString[i] = P36_parseTemplate(tmpString, 20);
-            ScrollingPages.oldString[i].trim();
           }
 
           // now loop round looking for the next frame with some content
@@ -560,11 +630,10 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
             }
 
             //        Contruct incoming strings
-            for (byte i = 0; i < ScrollingPages.linesPerFrame; i++)
+            for (uint8_t i = 0; i < ScrollingPages.linesPerFrame; i++)
             {
-              tmpString = P036_displayLines[(ScrollingPages.linesPerFrame * frameCounter) + i];
+              tmpString = String(P036_DisplayLinesV1[(ScrollingPages.linesPerFrame * frameCounter) + i].Content);
               ScrollingPages.newString[i] = P36_parseTemplate(tmpString, 20);
-              ScrollingPages.newString[i].trim();
               if (ScrollingPages.newString[i].length() > 0) foundText = true;
             }
             if (foundText) {
@@ -585,12 +654,11 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
           // Update max page count
           if (MaxFramesToDisplay == 0xFF) {
             // not updated yet
-            for (byte i = 0; i < NFrames; i++) {
-              for (byte k = 0; k < ScrollingPages.linesPerFrame; k++)
+            for (uint8_t i = 0; i < NFrames; i++) {
+              for (uint8_t k = 0; k < ScrollingPages.linesPerFrame; k++)
               {
-                tmpString = P036_displayLines[(ScrollingPages.linesPerFrame * i) + k];
+                tmpString = String(P036_DisplayLinesV1[(ScrollingPages.linesPerFrame * i) + k].Content);
                 tmpString = P36_parseTemplate(tmpString, 20);
-                tmpString.trim();
                 if (tmpString.length() > 0) {
                   // page not empty
                   MaxFramesToDisplay ++;
@@ -621,7 +689,6 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WRITE:
       {
-        // String log     = "";
         String command = parseString(string, 1);
         String subcommand = parseString(string, 2);
         int LineNo = event->Par1;
@@ -663,11 +730,27 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
             // content functions
             success = true;
             String NewContent = parseStringKeepCase(string, 3);
-            P036_displayLines[LineNo-1] = NewContent;
+            NewContent = P36_parseTemplate(NewContent, 20);
+            if (!safe_strncpy(P036_DisplayLinesV1[LineNo-1].Content, NewContent, P36_NcharsV1)) {
+              addHtmlError(getCustomTaskSettingsError(LineNo-1));
+            }
+            P036_DisplayLinesV1[LineNo-1].Content[P36_NcharsV1-1] = 0;      // Terminate in case of uninitalized data
+            P036_DisplayLinesV1[LineNo-1].reserved = (event->Par3 & 0xFF);  // not implemented yet
+
+            // calculate Pix length of new Content
+            display->setFont(ScrollingPages.Font);
+            uint16_t PixLength = display->getStringWidth(String(P036_DisplayLinesV1[LineNo-1].Content));
+            if (PixLength > 255) {
+              addHtmlError(String(F("Pixel length of ")) + String(PixLength) + String(F(" too long for line! Max. 255 pix!")));
+
+              int strlen = String(P036_DisplayLinesV1[LineNo-1].Content).length();
+              float fAvgPixPerChar = ((float) PixLength)/strlen;
+              int iCharToRemove = ceil(((float) (PixLength-255))/fAvgPixPerChar);
+              // shorten string because OLED controller can not handle such long strings
+              P036_DisplayLinesV1[LineNo-1].Content[strlen-iCharToRemove] = 0;
+            }
+
             nextFrameToDisplay = LineNo / ScrollingPages.linesPerFrame; // next frame shows the new content
-
-//            int LineMode = event->Par3; // not implemented yet
-
             displayTimer = PCONFIG(4);
             if (UserVar[event->BaseVarIndex] == 0) {
               // display was OFF, turn it ON
@@ -675,9 +758,12 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
               UserVar[event->BaseVarIndex] = 1;      //  Save the fact that the display is now ON
             }
 
-            // log += String(F("[P36] Line: ")) + String(LineNo);
-            // log += String(F(" Content:")) + String(NewContent);
-            // log += String(F(" Height:")) + String(LineMode);
+            // String log = String(F("[P36] Line: ")) + String(LineNo);
+            // log += String(F(" NewContent:")) + String(NewContent);
+            // log += String(F(" Content:")) + String(P036_DisplayLinesV1[LineNo-1].Content);
+            // log += String(F(" Length:")) + String(String(P036_DisplayLinesV1[LineNo-1].Content).length());
+            // log += String(F(" Pix: ")) + String(display->getStringWidth(String(P036_DisplayLinesV1[LineNo-1].Content)));
+            // log += String(F(" Reserved:")) + String(P036_DisplayLinesV1[LineNo-1].reserved);
             // addLog(LOG_LEVEL_INFO, log);
           }
       }
@@ -724,7 +810,7 @@ void P36_setContrast(uint8_t OLED_contrast) {
 }
 
 // Perform some specific changes for OLED display
-String P36_parseTemplate(String &tmpString, byte lineSize) {
+String P36_parseTemplate(String &tmpString, uint8_t lineSize) {
   String result = parseTemplate(tmpString, lineSize);
   // OLED lib uses this routine to convert UTF8 to extended ASCII
   // http://playground.arduino.cc/Main/Utf8ascii
@@ -751,6 +837,7 @@ String P36_parseTemplate(String &tmpString, byte lineSize) {
     addLog(LOG_LEVEL_INFO, log);
   }
 */
+  result.trim();
   return result;
 }
 
@@ -891,7 +978,7 @@ void display_indicator(int iframe, int frameCount) {
   if (frameCount <= 1) return;
 
   // Display chars as required
-  for (byte i = 0; i < frameCount; i++) {
+  for (uint8_t i = 0; i < frameCount; i++) {
     const char *image;
     if (iframe == i) {
       image = activeSymbole;
@@ -953,13 +1040,13 @@ void prepare_pagescrolling()
     ScrollingLines.Space = SizeSettings[OLEDIndex].L4.Space+1;
   }
   ScrollingLines.Font = ScrollingPages.Font;
-  for (byte i=0; i<P36_MAX_LinesPerPage ; i++) {
+  for (uint8_t i=0; i<P36_MAX_LinesPerPage ; i++) {
     ScrollingLines.Line[i].ypos = ScrollingPages.ypos[i];
   }
 
 }
 
-byte display_scroll(int lscrollspeed, int lTaskTimer)
+uint8_t display_scroll(int lscrollspeed, int lTaskTimer)
 {
 
   // outString contains the outgoing strings in this frame
@@ -970,8 +1057,8 @@ byte display_scroll(int lscrollspeed, int lTaskTimer)
 
   display->setFont(ScrollingPages.Font);
 
-// String log = F("Start Scrolling: Speed: ");
-// log += lscrollspeed;
+  // String log = F("Start Scrolling: Speed: ");
+  // log += lscrollspeed;
 
   ScrollingLines.wait = 0;
 
@@ -980,37 +1067,121 @@ byte display_scroll(int lscrollspeed, int lTaskTimer)
   else iPageScrollTime = (P36_MaxDisplayWidth /(P36_PageScrollPix * lscrollspeed)) * P36_PageScrollTick;
   float fScrollTime = (float)(lTaskTimer*1000 - iPageScrollTime - 2*P36_WaitScrollLines*100)/100.0;
 
-// log += F(" PageScrollTime: ");
-// log += iPageScrollTime;
+  // log += F(" PageScrollTime: ");
+  // log += iPageScrollTime;
 
-  for (byte j = 0; j < ScrollingPages.linesPerFrame; j++)
-  {
-    // settings for following line scrolling
-    ScrollingLines.Line[j].LastWidth = ScrollingLines.Line[j].Width;  // save last line width
-    word PixLength = display->getStringWidth(ScrollingPages.newString[j]);
-    if ((PixLength > SizeSettings[OLEDIndex].Width) && (fScrollTime > 0.0))
+    uint16_t MaxPixWidthForPageScrolling = P36_MaxDisplayWidth;
+    if (bScrollLines) {
+      // Reduced scrolling width because line is displayed left or right aligned
+      MaxPixWidthForPageScrolling -= SizeSettings[OLEDIndex].PixLeft;
+    }
+
+    for (uint8_t j = 0; j < ScrollingPages.linesPerFrame; j++)
     {
-      // width of the line > display width -> scroll line
-      ScrollingLines.Line[j].Content = ScrollingPages.newString[j];
-      ScrollingLines.Line[j].Width = PixLength;
-      ScrollingLines.Line[j].CurrentLeft = SizeSettings[OLEDIndex].PixLeft;
-      ScrollingLines.Line[j].fPixSum = (float) SizeSettings[OLEDIndex].PixLeft;
-      ScrollingLines.Line[j].dPix = ((float)(PixLength-SizeSettings[OLEDIndex].Width))/fScrollTime; // pix change per scrolling line tick
+      // default no line scrolling and strings are centered
+      ScrollingLines.Line[j].LastWidth = 0;
+      ScrollingLines.Line[j].Width = 0;
 
-// log += F(" line: ");
-// log += j+1;
-// log += F(" width: ");
-// log += ScrollingLines.Line[j].Width;
-// log += F(" dPix: ");
-// log += ScrollingLines.Line[j].dPix;
-    }
-    else {
-      ScrollingLines.Line[j].Width = 0; // do not scroll line
-    }
+      // get last and new line width
+      uint16_t LastPixLength = display->getStringWidth(ScrollingPages.oldString[j]);
+      uint16_t NewPixLength = display->getStringWidth(ScrollingPages.newString[j]);
+
+      if (bScrollLines) {
+        // settings for following line scrolling
+        if (LastPixLength > SizeSettings[OLEDIndex].Width)
+          ScrollingLines.Line[j].LastWidth = LastPixLength;   // while page scrolling this line is right aligned
+
+        if ((NewPixLength > SizeSettings[OLEDIndex].Width) && (fScrollTime > 0.0))
+        {
+          // width of the line > display width -> scroll line
+          ScrollingLines.Line[j].Content = ScrollingPages.newString[j];
+          ScrollingLines.Line[j].Width = NewPixLength;   // while page scrolling this line is left aligned
+          ScrollingLines.Line[j].CurrentLeft = SizeSettings[OLEDIndex].PixLeft;
+          ScrollingLines.Line[j].fPixSum = (float) SizeSettings[OLEDIndex].PixLeft;
+          ScrollingLines.Line[j].dPix = ((float)(NewPixLength-SizeSettings[OLEDIndex].Width))/fScrollTime; // pix change per scrolling line tick
+
+          // log += F(" line: ");
+          // log += j+1;
+          // log += F(" width: ");
+          // log += ScrollingLines.Line[j].Width;
+          // log += F(" dPix: ");
+          // log += ScrollingLines.Line[j].dPix;
+        }
+      }
+
+      if (NewPixLength > 255) {
+        // shorten string because OLED controller can not handle such long strings
+        int strlen = ScrollingPages.newString[j].length();
+        float fAvgPixPerChar = ((float) NewPixLength)/strlen;
+        int iCharToRemove = ceil(((float) (NewPixLength-255))/fAvgPixPerChar);
+        ScrollingLines.Line[j].Content = ScrollingLines.Line[j].Content.substring(0, strlen-iCharToRemove);
+      }
+      // reduce line content for page scrolling to max width
+      if (NewPixLength > MaxPixWidthForPageScrolling) {
+        int strlen = ScrollingPages.newString[j].length();
+        float fAvgPixPerChar = ((float) NewPixLength)/strlen;
+        int iCharToRemove = ceil(((float) (NewPixLength-MaxPixWidthForPageScrolling))/(2*fAvgPixPerChar));
+        if (bScrollLines) {
+          // shorten string on right side because line is displayed left aligned while scrolling
+          ScrollingPages.newString[j] = ScrollingPages.newString[j].substring(0, strlen-(2*iCharToRemove));
+        }
+        else {
+          // shorten string on both sides because line is displayed centered
+          ScrollingPages.newString[j] = ScrollingPages.newString[j].substring(0, strlen-iCharToRemove);
+          ScrollingPages.newString[j] = ScrollingPages.newString[j].substring(iCharToRemove);
+        }
+        // String log = String(F("Line: ")) + String(j+1);
+        // log += String(F(" New: ")) + String(ScrollingPages.newString[j]);
+        // log += String(F(" Reduced: ")) + String(NewPixLength);
+        // log += String(F(" (")) + String(strlen) + String(F(") -> "));
+        // log += String(display->getStringWidth(ScrollingPages.newString[j])) + String(F(" (")) + String(ScrollingPages.newString[j].length()) + String(F(")"));
+        // addLog(LOG_LEVEL_INFO, log);
+      }
+      if (LastPixLength > MaxPixWidthForPageScrolling) {
+        int strlen = ScrollingPages.oldString[j].length();
+        float fAvgPixPerChar = ((float) LastPixLength)/strlen;
+        int iCharToRemove = round(((float) (LastPixLength-MaxPixWidthForPageScrolling))/(2*fAvgPixPerChar));
+        if (bScrollLines) {
+          // shorten string on left side because line is displayed right aligned while scrolling
+          ScrollingPages.oldString[j] = ScrollingPages.oldString[j].substring(2*iCharToRemove);
+        }
+        else {
+          // shorten string on both sides because line is displayed centered
+          ScrollingPages.oldString[j] = ScrollingPages.oldString[j].substring(0, strlen-iCharToRemove);
+          ScrollingPages.oldString[j] = ScrollingPages.oldString[j].substring(iCharToRemove);
+        }
+        // String log = String(F("Line: ")) + String(j+1);
+        // log += String(F(" Old: ")) + String(ScrollingPages.oldString[j]);
+        // log += String(F(" Reduced: ")) + String(LastPixLength);
+        // log += String(F(" (")) + String(strlen) + String(F(") -> "));
+        // log += String(display->getStringWidth(ScrollingPages.oldString[j])) + String(F(" (")) + String(ScrollingPages.oldString[j].length()) + String(F(")"));
+        // addLog(LOG_LEVEL_INFO, log);
+      }
+
+      // while (NewPixLength > MaxPixWidthForPageScrolling) {
+      //   // shorten string on right side because line is displayed left aligned while scrolling
+      //   ScrollingPages.newString[j] = ScrollingPages.newString[j].substring(0, ScrollingPages.newString[j].length()-1);
+      //   if (bScrollLines == false) {
+      //     // shorten string on both sides because line is displayed centered
+      //     ScrollingPages.newString[j] = ScrollingPages.newString[j].substring(1);
+      //   }
+      //   NewPixLength = display->getStringWidth(ScrollingPages.newString[j]);
+      // }
+      // while (LastPixLength > MaxPixWidthForPageScrolling) {
+      //   // shorten string on left side because line is displayed right aligned while scrolling
+      //   ScrollingPages.oldString[j] = ScrollingPages.oldString[j].substring(1);
+      //   if (bScrollLines == false) {
+      //     // shorten string on both sides because line is displayed centered
+      //     ScrollingPages.oldString[j] = ScrollingPages.oldString[j].substring(0, ScrollingPages.oldString[j].length()-1);
+      //   }
+      //   LastPixLength = display->getStringWidth(ScrollingPages.oldString[j]);
+      // }
+
+     // addLog(LOG_LEVEL_INFO, log);
   }
 
-// log = F("Start Scrolling...");
-// addLog(LOG_LEVEL_INFO, log);
+  // log = F("Start Scrolling...");
+  // addLog(LOG_LEVEL_INFO, log);
 
   ScrollingPages.dPix = P36_PageScrollPix * lscrollspeed; // pix change per scrolling page tick
   ScrollingPages.dPixSum = ScrollingPages.dPix;
@@ -1021,7 +1192,7 @@ byte display_scroll(int lscrollspeed, int lTaskTimer)
   display->setColor(WHITE);
   display->drawLine(0, 12+TopLineOffset, P36_MaxDisplayWidth, 12+TopLineOffset);   // line below title
 
-  for (byte j = 0; j < ScrollingPages.linesPerFrame; j++)
+  for (uint8_t j = 0; j < ScrollingPages.linesPerFrame; j++)
   {
     if (lscrollspeed < ePSS_Instant ) { // scrolling
       if (ScrollingLines.Line[j].LastWidth > 0 ) {
@@ -1063,7 +1234,7 @@ byte display_scroll(int lscrollspeed, int lTaskTimer)
   return (ScrollingPages.Scrolling);
 }
 
-byte display_scroll_timer() {
+uint8_t display_scroll_timer() {
 
   // page scrolling (using PLUGIN_TIMER_IN)
   display->setColor(BLACK);
@@ -1072,7 +1243,7 @@ byte display_scroll_timer() {
   display->setColor(WHITE);
   display->setFont(ScrollingPages.Font);
 
-  for (byte j = 0; j < ScrollingPages.linesPerFrame; j++)
+  for (uint8_t j = 0; j < ScrollingPages.linesPerFrame; j++)
   {
     if (ScrollingLines.Line[j].LastWidth > 0 ) {
       // width of oldString[j] > display width -> line is right aligned while scrolling page
@@ -1187,7 +1358,7 @@ bool display_wifibars() {
   display->fillRect(x , y, size_x, size_y);
   display->setColor(WHITE);
   if (WiFiConnected()) {
-    for (byte ibar = 0; ibar < nbars; ibar++) {
+    for (uint8_t ibar = 0; ibar < nbars; ibar++) {
       int16_t height = size_y * (ibar + 1) / nbars;
       int16_t xpos = x + ibar * width;
       int16_t ypos = y + size_y - height;
