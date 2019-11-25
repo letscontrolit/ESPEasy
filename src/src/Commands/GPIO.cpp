@@ -11,8 +11,8 @@
 
 //predeclaration of functions used in this module
 void createAndSetPortStatus_Mode_State(uint32_t key, byte newMode, int8_t newState);
-bool getPluginIDAndPrefix(char selection, byte *pluginID, String* logPrefix);
-bool getPluginIDAndPrefixAndType(char selection, byte *pluginID, String* logPrefix, byte *gpioTimerType);
+bool getPluginIDAndPrefix(char selection, byte &pluginID, String &logPrefix);
+bool getPluginIDAndPrefixAndType(char selection, byte &pluginID, String &logPrefix, byte &gpioTimerType);
 void logErrorGpioOffline(String prefix, byte port);
 void logErrorGpioOutOfRange(String prefix, byte port);
 void logErrorGpioNotOutput(String prefix, byte port);
@@ -22,7 +22,7 @@ String Command_GPIO_Monitor(struct EventStruct *event, const char* Line)
   String logPrefix;
   byte pluginID;
   //parseString(Line, 2).charAt(0)='g':gpio; ='p':pcf; ='m':mcp
-  bool success = getPluginIDAndPrefix(parseString(Line, 2).charAt(0), &pluginID, &logPrefix);
+  bool success = getPluginIDAndPrefix(parseString(Line, 2).charAt(0), pluginID, logPrefix);
   if (success && checkValidPortRange(pluginID, event->Par2))
   {
     const uint32_t key = createKey(pluginID, event->Par2); // WARNING: 'monitor' uses Par2 instead of Par1
@@ -31,7 +31,7 @@ String Command_GPIO_Monitor(struct EventStruct *event, const char* Line)
 
     int8_t state;
     //giig1967g: Comment next 3 lines to receive an EVENT just after calling the monitor command
-    GPIO_Read(pluginID, event->Par2, &state);
+    GPIO_Read(pluginID, event->Par2, state);
     globalMapPortStatus[key].state = state;
     if (state == -1) globalMapPortStatus[key].mode=PIN_MODE_OFFLINE;
 
@@ -52,7 +52,7 @@ String Command_GPIO_UnMonitor(struct EventStruct *event, const char* Line)
   String logPrefix;
   byte pluginID;
   //parseString(Line, 2).charAt(0)='g':gpio; ='p':pcf; ='m':mcp
-  bool success = getPluginIDAndPrefix(parseString(Line, 2).charAt(0), &pluginID, &logPrefix);
+  bool success = getPluginIDAndPrefix(parseString(Line, 2).charAt(0), pluginID, logPrefix);
 
   if (success && checkValidPortRange(pluginID, event->Par2))
   {
@@ -83,7 +83,7 @@ String Command_GPIO_LongPulse_Ms(struct EventStruct *event, const char* Line)
   byte pluginID;
   byte gpioTimerType;
   //Line[0]='l':longpulse; ='p':pcflongpulse; ='m':mcplongpulse
-  bool success = getPluginIDAndPrefixAndType(Line[0], &pluginID, &logPrefix, &gpioTimerType);
+  bool success = getPluginIDAndPrefixAndType(Line[0], pluginID, logPrefix, gpioTimerType);
   if (success && checkValidPortRange(pluginID, event->Par1))
   {
     const uint32_t key = createKey(pluginID,event->Par1);
@@ -192,7 +192,7 @@ String Command_GPIO_Toggle(struct EventStruct *event, const char* Line)
   String logPrefix;
   byte pluginID;
   //Line[0]='g':gpiotoggle; ='p':pcfgpiotoggle; ='m':mcpgpiotoggle
-  bool success = getPluginIDAndPrefix(Line[0], &pluginID, &logPrefix);
+  bool success = getPluginIDAndPrefix(Line[0], pluginID, logPrefix);
   if (success && checkValidPortRange(pluginID, event->Par1))
   {
     const uint32_t key = createKey(pluginID,event->Par1);
@@ -206,7 +206,7 @@ String Command_GPIO_Toggle(struct EventStruct *event, const char* Line)
       mode=globalMapPortStatus.at(key).mode;
       state=globalMapPortStatus.at(key).state;
     } else {
-      GPIO_Read(pluginID, event->Par1, &state);
+      GPIO_Read(pluginID, event->Par1, state);
       mode = (state==-1)?PIN_MODE_OFFLINE:PIN_MODE_OUTPUT;
     }
 
@@ -244,7 +244,7 @@ String Command_GPIO(struct EventStruct *event, const char* Line)
   String logPrefix = new char;
   byte pluginID;
   //Line[0]='g':gpio; ='p':pcfgpio; ='m':mcpgpio
-  bool success = getPluginIDAndPrefix(Line[0], &pluginID, &logPrefix);
+  bool success = getPluginIDAndPrefix(Line[0], pluginID, logPrefix);
   if (success && checkValidPortRange(pluginID, event->Par1))
   {
 	  int8_t state=0;
@@ -273,25 +273,15 @@ String Command_GPIO(struct EventStruct *event, const char* Line)
     if (globalMapPortStatus[key].mode != PIN_MODE_OFFLINE)
     {
       int8_t currentState;
-      GPIO_Read(pluginID, event->Par1, &currentState);
+      GPIO_Read(pluginID, event->Par1, currentState);
       if (currentState==-1) {
         mode=PIN_MODE_OFFLINE;
         state = -1;
       }
 
       createAndSetPortStatus_Mode_State(key,mode,state);
+      GPIO_Write(pluginID,event->Par1,state,mode);
 
-      switch (pluginID) {
-        case PLUGIN_GPIO:
-          if (mode==PIN_MODE_OUTPUT) GPIO_Internal_Write(event->Par1, state);
-  				break;
-  			case PLUGIN_MCP:
-  				GPIO_MCP_Write(event->Par1, state);
-  				break;
-  			case PLUGIN_PCF:
-  				GPIO_PCF_Write(event->Par1, state);
-  				break;
-      }
   		String log = logPrefix + String(F(" : port#")) + String(event->Par1) + String(F(": set to ")) + String(state);
   		addLog(LOG_LEVEL_INFO, log);
   		SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, log, 0);
@@ -342,22 +332,22 @@ void createAndSetPortStatus_Mode_State(uint32_t key, byte newMode, int8_t newSta
   }
 }
 
-bool getPluginIDAndPrefix(char selection, byte* pluginID, String* logPrefix)
+bool getPluginIDAndPrefix(char selection, byte &pluginID, String &logPrefix)
 {
   bool success = true;
   switch(selection)
   {
     case 'g': //gpio
-      *pluginID=PLUGIN_GPIO;
-      *logPrefix=F("GPIO");
+      pluginID=PLUGIN_GPIO;
+      logPrefix=F("GPIO");
       break;
     case 'm': //mcp
-      *pluginID=PLUGIN_MCP;
-      *logPrefix=F("MCP");
+      pluginID=PLUGIN_MCP;
+      logPrefix=F("MCP");
       break;
     case 'p': //pcf
-      *pluginID=PLUGIN_PCF;
-      *logPrefix=F("PCF");
+      pluginID=PLUGIN_PCF;
+      logPrefix=F("PCF");
       break;
     default:
       success=false;
@@ -365,25 +355,25 @@ bool getPluginIDAndPrefix(char selection, byte* pluginID, String* logPrefix)
   return success;
 }
 
-bool getPluginIDAndPrefixAndType(char selection, byte* pluginID, String* logPrefix, byte* gpioTimerType)
+bool getPluginIDAndPrefixAndType(char selection, byte &pluginID, String &logPrefix, byte &gpioTimerType)
 {
   bool success = true;
   switch(selection)
   {
     case 'l': //longpulse (gpio)
-      *pluginID =PLUGIN_GPIO;
-      *logPrefix=F("MCP");
-      *gpioTimerType = GPIO_TYPE_INTERNAL;
+      pluginID =PLUGIN_GPIO;
+      logPrefix=F("MCP");
+      gpioTimerType = GPIO_TYPE_INTERNAL;
       break;
     case 'm': //mcplongpulse (mcp)
-      *pluginID =PLUGIN_MCP;
-      *logPrefix=F("MCP");
-      *gpioTimerType = GPIO_TYPE_MCP;
+      pluginID =PLUGIN_MCP;
+      logPrefix=F("MCP");
+      gpioTimerType = GPIO_TYPE_MCP;
       break;
     case 'p': //pcflongpulse (pcf)
-      *pluginID =PLUGIN_PCF;
-      *logPrefix=F("PCF");
-      *gpioTimerType = GPIO_TYPE_PCF;
+      pluginID =PLUGIN_PCF;
+      logPrefix=F("PCF");
+      gpioTimerType = GPIO_TYPE_PCF;
       break;
     default:
       success=false;

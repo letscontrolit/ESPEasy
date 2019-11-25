@@ -352,13 +352,16 @@ void setGPIOPullupMode(byte port)
 #endif // if defined(ESP8266)
 }
 
-bool GPIO_Write(byte pluginID, byte port, byte value)
+bool GPIO_Write(byte pluginID, byte port, byte value, byte pinMode)
 {
   bool success=true;
   switch (pluginID)
   {
     case PLUGIN_GPIO:
-      GPIO_Internal_Write(port, value);
+      if (pinMode==PIN_MODE_OUTPUT)
+        GPIO_Internal_Write(port, value);
+      else
+        success=false;
       break;
     case PLUGIN_MCP:
       GPIO_MCP_Write(port, value);
@@ -372,19 +375,19 @@ bool GPIO_Write(byte pluginID, byte port, byte value)
   return success;
 }
 
-bool GPIO_Read(byte pluginID, byte port, int8_t* value)
+bool GPIO_Read(byte pluginID, byte port, int8_t &value)
 {
   bool success=true;
   switch (pluginID)
   {
     case PLUGIN_GPIO:
-      *value = GPIO_Internal_Read(port);
+      value = GPIO_Internal_Read(port);
       break;
     case PLUGIN_MCP:
-      *value = GPIO_MCP_Read(port);
+      value = GPIO_MCP_Read(port);
       break;
     case PLUGIN_PCF:
-      *value = GPIO_PCF_Read(port);
+      value = GPIO_PCF_Read(port);
       break;
     default:
       success=false;
