@@ -327,6 +327,7 @@ void createAndSetPortStatus_Mode_State(uint32_t key, byte newMode, int8_t newSta
   //only force events if state has changed
   if (globalMapPortStatus[key].state != newState) {
     globalMapPortStatus[key].state        = newState;
+    globalMapPortStatus[key].output       = newState;
     globalMapPortStatus[key].forceEvent   = 1;
     globalMapPortStatus[key].forceMonitor = 1;
   }

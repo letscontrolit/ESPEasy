@@ -1096,7 +1096,11 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
 */
       if (command == F("inputswitchstate")) {
         success = true;
-        portStatusStruct tempStatus;
+        //@giig1967g deprecated since 2019-11-26
+        log = String(F("inputswitchstate is deprecated")) + string;
+        addLog(LOG_LEVEL_ERROR, log);
+
+/*        portStatusStruct tempStatus;
         const uint32_t key = createKey(PLUGIN_ID_001, Settings.TaskDevicePin1[event->Par1]);
 
         // WARNING: operator [] creates an entry in the map if key does not exist
@@ -1106,7 +1110,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         UserVar[event->Par1 * VARS_PER_TASK] = event->Par2;
         tempStatus.output                    = event->Par2;
         tempStatus.command                   = 1;
-        savePortStatus(key, tempStatus);
+        savePortStatus(key, tempStatus); */
       } else if (command == F("rtttl")) {
         // FIXME: Absolutely no error checking in play_rtttl, until then keep it only in testing
         // play a tune via a RTTTL string, look at https://www.letscontrolit.com/forum/viewtopic.php?f=4&t=343&hilit=speaker&start=10 for
