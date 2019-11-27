@@ -207,7 +207,7 @@ boolean handleIRremote(const String &cmd) {
 
 boolean handle_AC_IRremote(const String &cmd) {
   String irData = "";
-  StaticJsonDocument<300> doc;
+  StaticJsonDocument<JSON_OBJECT_SIZE(18) + 190> doc;
 
   int argIndex = cmd.indexOf(',') + 1;
   if (argIndex)
