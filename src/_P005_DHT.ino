@@ -205,9 +205,6 @@ bool P005_do_plugin_read(struct EventStruct *event) {
   float humidity = NAN;
   switch (Par3) {
     case P005_DHT11:
-      temperature = float(dht_dat[2]); // Temperature
-      humidity = float(dht_dat[0]); // Humidity
-      break;
     case P005_DHT12:
       temperature = float(dht_dat[2]*10 + (dht_dat[3] & 0x7f)) / 10.0; // Temperature
       if (dht_dat[3] & 0x80) { temperature = -temperature; } // Negative temperature
