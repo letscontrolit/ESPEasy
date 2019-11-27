@@ -1,5 +1,7 @@
-#define WIFI_RECONNECT_WAIT         20000 // in milliSeconds
-#define WIFI_AP_OFF_TIMER_DURATION  60000 // in milliSeconds
+#define WIFI_RECONNECT_WAIT                20000  // in milliSeconds
+#define WIFI_AP_OFF_TIMER_DURATION         60000  // in milliSeconds
+#define WIFI_CONNECTION_CONSIDERED_STABLE  300000 // in milliSeconds
+#define WIFI_ALLOW_AP_AFTERBOOT_PERIOD     5      // in minutes
 
 #include "src/Globals/ESPEasyWiFiEvent.h"
 
@@ -15,10 +17,13 @@
    4 STA got IP              => ESPEASY_WIFI_GOT_IP
    5 STA connected && got IP => ESPEASY_WIFI_SERVICES_INITIALIZED
 
+   N.B. the states are flags, meaning both "connected" and "got IP" must be set
+        to be considered ESPEASY_WIFI_SERVICES_INITIALIZED
+
    The flag wifiConnectAttemptNeeded indicates whether a new connect attempt is needed.
    This is set to true when:
    - Security settings have been saved with AP mode enabled. FIXME TD-er, this may not be the best check.
-   - WiFi connect timeout reached
+   - WiFi connect timeout reached  &  No client is connected to the AP mode of the node.
    - Wifi is reset
    - WiFi setup page has been loaded with SSID/pass values.
 
@@ -39,6 +44,19 @@
    Start AP timer is set or cleared at:
    - Set timerAPstart when "valid WiFi connection" state is observed.
    - Disable timerAPstart when ESPEASY_WIFI_SERVICES_INITIALIZED wifi state is reached.
+
+
+   Quick reconnect (using BSSID/channel of last connection) when both apply:
+   - If wifi_connect_attempt < 3
+   - lastBSSID is known
+
+   Change of wifi settings when both apply:
+   - "other" settings valid
+   - (wifi_connect_attempt % 2) == 0
+
+   Reset of wifi_connect_attempt to 0 when both apply:
+   - connection successful
+   - Connection stable (connected for > 5 minutes)
 
  */
 
@@ -66,9 +84,8 @@ bool WiFiConnected() {
   if (wifiStatus != ESPEASY_WIFI_SERVICES_INITIALIZED) {
     if (validWiFi) {
       // Set internal wifiStatus and reset timer to disable AP mode
-      wifiStatus = ESPEASY_WIFI_SERVICES_INITIALIZED;
+      wifiStatus            = ESPEASY_WIFI_SERVICES_INITIALIZED;
       wifiConnectInProgress = false;
-      resetAPdisableTimer();
     }
   }
 
@@ -90,12 +107,18 @@ bool WiFiConnected() {
   // When made this far in the code, we apparently do not have valid WiFi connection.
   if (timerAPstart == 0) {
     // First run we do not have WiFi connection any more, set timer to start AP mode
-    timerAPstart = millis() + WIFI_RECONNECT_WAIT;
+    // Only allow the automatic AP mode in the first N minutes after boot.
+    if ((wdcounter / 2) < WIFI_ALLOW_AP_AFTERBOOT_PERIOD) {
+      timerAPstart = millis() + WIFI_RECONNECT_WAIT;
+      timerAPoff = timerAPstart + WIFI_AP_OFF_TIMER_DURATION;
+    }
   }
 
   if (wifiConnectTimeoutReached() && !wifiSetup) {
     // It took too long to make a connection, set flag we need to try again
-    wifiConnectAttemptNeeded = true;
+    if (!wifiAPmodeActivelyUsed()) {
+      wifiConnectAttemptNeeded = true;
+    }
     wifiConnectInProgress = false;
   }
   delay(1);
@@ -145,10 +168,11 @@ void WiFiConnectRelaxed() {
   setupStaticIPconfig();
   setConnectionSpeed();
   last_wifi_connect_attempt_moment = millis();
-  wifiConnectInProgress = true;
+  wifiConnectInProgress            = true;
 
   // First try quick reconnect using last known BSSID and channel.
   bool useQuickConnect = lastBSSID[0] != 0 && wifi_connect_attempt < 3;
+
   if (useQuickConnect) {
     WiFi.begin(ssid, passphrase, last_channel, &lastBSSID[0]);
   } else {
@@ -187,16 +211,6 @@ bool prepareWiFi() {
   return true;
 }
 
-// Set timer to disable AP mode
-void resetAPdisableTimer() {
-  bool APmodeActive = WifiIsAP(WiFi.getMode());
-
-  if (APmodeActive) {
-    timerAPoff = millis() + WIFI_AP_OFF_TIMER_DURATION;
-  } else {
-    timerAPoff = 0;
-  }
-}
 
 void resetWiFi() {
   addLog(LOG_LEVEL_INFO, F("Reset WiFi."));
@@ -383,13 +397,26 @@ void setAPinternal(bool enable)
       }
     }
     #endif // ifdef ESP32
+    timerAPoff = millis() + WIFI_AP_OFF_TIMER_DURATION;
   } else {
     if (dnsServerActive) {
       dnsServerActive = false;
       dnsServer.stop();
     }
   }
-  resetAPdisableTimer();
+}
+
+String getWifiModeString(WiFiMode_t wifimode)
+{
+  switch (wifimode) {
+    case WIFI_OFF:   return F("OFF");
+    case WIFI_STA:   return F("STA");
+    case WIFI_AP:    return F("AP");
+    case WIFI_AP_STA: return F("AP+STA");
+    default:
+      break;
+  }
+  return F("Unknown");
 }
 
 void setWifiMode(WiFiMode_t wifimode) {
@@ -408,26 +435,13 @@ void setWifiMode(WiFiMode_t wifimode) {
     delay(100);
   }
 
-  switch (wifimode) {
-    case WIFI_OFF:
-      addLog(LOG_LEVEL_INFO, F("WIFI : Switch off WiFi"));
-      break;
-    case WIFI_STA:
-      addLog(LOG_LEVEL_INFO, F("WIFI : Set WiFi to STA"));
-      break;
-    case WIFI_AP:
-      addLog(LOG_LEVEL_INFO, F("WIFI : Set WiFi to AP"));
-      break;
-    case WIFI_AP_STA:
-      addLog(LOG_LEVEL_INFO, F("WIFI : Set WiFi to AP+STA"));
-      break;
-    default:
-      addLog(LOG_LEVEL_INFO, F("WIFI : Unknown mode"));
-      break;
-  }
+  addLog(LOG_LEVEL_INFO, String(F("WIFI : Set WiFi to ")) + getWifiModeString(wifimode));
 
-  if (!WiFi.mode(wifimode)) {
+  int retry = 2;
+  while (!WiFi.mode(wifimode) && retry > 0) {
     addLog(LOG_LEVEL_INFO, F("WIFI : Cannot set mode!!!!!"));
+    delay(100);
+    --retry;
   }
 
   if (wifimode == WIFI_OFF) {
@@ -523,6 +537,18 @@ bool wifiConnectTimeoutReached() {
   const unsigned int randomOffset_in_msec = (wifi_connect_attempt == 1) ? 0 : 1000 * ((ESP.getEfuseMac() & 0xF));
   #endif // if defined(ESP32)
   return timeOutReached(last_wifi_connect_attempt_moment + DEFAULT_WIFI_CONNECTION_TIMEOUT + randomOffset_in_msec);
+}
+
+bool wifiAPmodeActivelyUsed()
+{
+  if (!WifiIsAP(WiFi.getMode()) || (timerAPoff == 0)) {
+    // AP not active or soon to be disabled in processDisableAPmode()
+    return false;
+  }
+  return WiFi.softAPgetStationNum() != 0;
+
+  // FIXME TD-er: is effectively checking for AP active enough or must really check for connected clients to prevent automatic wifi
+  // reconnect?
 }
 
 void setConnectionSpeed() {

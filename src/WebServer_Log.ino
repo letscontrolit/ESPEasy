@@ -7,10 +7,12 @@
 void handle_log() {
   if (!isLoggedIn()) { return; }
   navMenuIndex = MENU_INDEX_TOOLS;
+
   TXBuffer.startStream();
   sendHeadandTail_stdtemplate(_HEAD);
-
   html_table_class_normal();
+
+  #ifdef WEBSERVER_LOG
   TXBuffer += F("<TR><TH id=\"headline\" align=\"left\">Log");
   addCopyButton(F("copyText"), "", F("Copy log to clipboard"));
   TXBuffer += F(
@@ -23,6 +25,9 @@ void handle_log() {
   TXBuffer += DATA_FETCH_AND_PARSE_LOG_JS;
   html_add_script_end();
 
+  #else
+  TXBuffer += F("Not included in build");
+  #endif
   sendHeadandTail_stdtemplate(_TAIL);
   TXBuffer.endStream();
 }
@@ -32,6 +37,7 @@ void handle_log() {
 // ********************************************************************************
 void handle_log_JSON() {
   if (!isLoggedIn()) { return; }
+  #ifdef WEBSERVER_LOG
   TXBuffer.startJsonStream();
   String webrequest = WebServer.arg(F("view"));
   TXBuffer += F("{\"Log\": {");
@@ -96,4 +102,8 @@ void handle_log_JSON() {
   TXBuffer += F("}\n");
   TXBuffer.endStream();
   updateLogLevelCache();
+
+  #else 
+  handleNotFound();
+  #endif
 }

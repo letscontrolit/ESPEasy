@@ -13,11 +13,14 @@ WiFi STA states
 #. STA got IP              -> ESPEASY_WIFI_GOT_IP
 #. STA connected && got IP -> ESPEASY_WIFI_SERVICES_INITIALIZED
 
+N.B. the states are flags, meaning both "connected" and "got IP" must be set
+to be considered ESPEASY_WIFI_SERVICES_INITIALIZED
+
 The flag wifiConnectAttemptNeeded indicates whether a new connect attempt is needed.
 This is set to true when:
 
 - Security settings have been saved with AP mode enabled. FIXME TD-er, this may not be the best check.
-- WiFi connect timeout reached
+- WiFi connect timeout reached  &  No client is connected to the AP mode of the node.
 - Wifi is reset
 - WiFi setup page has been loaded with SSID/pass values.
 
@@ -44,6 +47,20 @@ Start AP timer is set or cleared at:
 - Set timerAPstart when "valid WiFi connection" state is observed.
 - Disable timerAPstart when ESPEASY_WIFI_SERVICES_INITIALIZED wifi state is reached.
 
+Quick reconnect (using BSSID/channel of last connection) when both apply:
+
+- If wifi_connect_attempt < 3
+- lastBSSID is known
+
+Change of wifi settings when both apply:
+
+- "other" settings valid
+- (wifi_connect_attempt % 2) == 0
+
+Reset of wifi_connect_attempt to 0 when both apply:
+
+- connection successful
+- Connection stable (connected for > 5 minutes)
 
 
 WiFi disconnect reasons

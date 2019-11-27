@@ -179,6 +179,25 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
         success = true;
         break;
       }
+
+      case PLUGIN_WRITE:
+      {
+        String command = parseString(string, 1);
+        if (command == F("resetpulsecounter"))
+        {
+          // Allow for an optional taskIndex parameter. When not given it will take the first task with this plugin.
+          const taskIndex_t taskIndex = parseCommandArgumentTaskIndex(string, 2);
+          if (validTaskIndex(taskIndex)) {
+            if (event->TaskIndex != taskIndex) {
+              break;
+            }
+          }
+          Plugin_003_pulseCounter[event->TaskIndex] = 0;
+          Plugin_003_pulseTotalCounter[event->TaskIndex] = 0;
+          success = true; // Command is handled.
+        }
+        break;
+      }
   }
   return success;
 }

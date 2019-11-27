@@ -1,4 +1,5 @@
 #include "src/Globals/Device.h"
+#include "src/Globals/Plugins.h"
 
 // ********************************************************************************
 
@@ -62,9 +63,7 @@ void sendData(struct EventStruct *event)
       else {
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
           String log = F("Invalid value detected for controller ");
-          String controllerName;
-          CPluginCall(event->ProtocolIndex, CPLUGIN_GET_DEVICENAME, event, controllerName);
-          log += controllerName;
+          log += getCPluginNameFromProtocolIndex(event->ProtocolIndex);
           addLog(LOG_LEVEL_DEBUG, log);
         }
       }
@@ -82,7 +81,8 @@ void sendData(struct EventStruct *event)
 }
 
 bool validUserVar(struct EventStruct *event) {
-  const byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[event->TaskIndex]);
+  const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(event->TaskIndex);
+  if (!validDeviceIndex(DeviceIndex)) return false;
 
   switch (Device[DeviceIndex].VType) {
     case SENSOR_TYPE_LONG:    return true;
@@ -157,8 +157,8 @@ void MQTTDisconnect()
   if (MQTTclient.connected()) {
     MQTTclient.disconnect();
     addLog(LOG_LEVEL_INFO, F("MQTT : Disconnected from broker"));
-    updateMQTTclient_connected();
   }
+  updateMQTTclient_connected();
 }
 
 /*********************************************************************************************\
@@ -176,8 +176,8 @@ bool MQTTConnect(int controller_idx)
 
   if (MQTTclient.connected()) {
     MQTTclient.disconnect();
-    updateMQTTclient_connected();
   }
+  updateMQTTclient_connected();
   mqtt = WiFiClient(); // workaround see: https://github.com/esp8266/Arduino/issues/4497#issuecomment-373023864
   mqtt.setTimeout(ControllerSettings.ClientTimeout);
   MQTTclient.setClient(mqtt);
@@ -363,7 +363,7 @@ void SendStatus(byte source, const String& status)
 }
 
 #ifdef USES_MQTT
-boolean MQTTpublish(int controller_idx, const char *topic, const char *payload, boolean retained)
+bool MQTTpublish(int controller_idx, const char *topic, const char *payload, boolean retained)
 {
   const bool success = MQTTDelayHandler.addToQueue(MQTT_queue_element(controller_idx, topic, payload, retained));
 
@@ -417,3 +417,74 @@ void MQTTStatus(const String& status)
   }
 }
 #endif //USES_MQTT
+
+
+
+/*********************************************************************************************\
+ * send all sensordata
+\*********************************************************************************************/
+// void SensorSendAll()
+// {
+//   for (taskIndex_t x = 0; x < TASKS_MAX; x++)
+//   {
+//     SensorSendTask(x);
+//   }
+// }
+
+
+/*********************************************************************************************\
+ * send specific sensor task data
+\*********************************************************************************************/
+void SensorSendTask(taskIndex_t TaskIndex)
+{
+  if (!validTaskIndex(TaskIndex)) return;
+  checkRAM(F("SensorSendTask"));
+  if (Settings.TaskDeviceEnabled[TaskIndex])
+  {
+    byte varIndex = TaskIndex * VARS_PER_TASK;
+
+    bool success = false;
+    const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(TaskIndex);
+    if (!validDeviceIndex(DeviceIndex)) return;
+
+    LoadTaskSettings(TaskIndex);
+
+    struct EventStruct TempEvent;
+    TempEvent.TaskIndex = TaskIndex;
+    TempEvent.BaseVarIndex = varIndex;
+    // TempEvent.idx = Settings.TaskDeviceID[TaskIndex]; todo check
+    TempEvent.sensorType = Device[DeviceIndex].VType;
+
+    float preValue[VARS_PER_TASK]; // store values before change, in case we need it in the formula
+    for (byte varNr = 0; varNr < VARS_PER_TASK; varNr++)
+      preValue[varNr] = UserVar[varIndex + varNr];
+
+    if(Settings.TaskDeviceDataFeed[TaskIndex] == 0)  // only read local connected sensorsfeeds
+    {
+      String dummy;
+      success = PluginCall(PLUGIN_READ, &TempEvent, dummy);
+    }
+    else
+      success = true;
+
+    if (success)
+    {
+      START_TIMER;
+      for (byte varNr = 0; varNr < VARS_PER_TASK; varNr++)
+      {
+        if (ExtraTaskSettings.TaskDeviceFormula[varNr][0] != 0)
+        {
+          String formula = ExtraTaskSettings.TaskDeviceFormula[varNr];
+          formula.replace(F("%pvalue%"), String(preValue[varNr]));
+          formula.replace(F("%value%"), String(UserVar[varIndex + varNr]));
+          float result = 0;
+          byte error = Calculate(formula.c_str(), &result);
+          if (error == 0)
+            UserVar[varIndex + varNr] = result;
+        }
+      }
+      STOP_TIMER(COMPUTE_FORMULA_STATS);
+      sendData(&TempEvent);
+    }
+  }
+}

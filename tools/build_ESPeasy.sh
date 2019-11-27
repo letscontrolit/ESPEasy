@@ -75,13 +75,12 @@ platformio run --target clean
 cd ${SRC}/patches; ./check_puya_patch;
 cd ${SRC}
 
-# Build all targets in the platformio.ini file.
-PLATFORMIO_BUILD_FLAGS="-D CONTINUOUS_INTEGRATION" platformio run
-
-#for ENV in `grep "^\[env:" platformio.ini |cut -d':' -f2|cut -d']' -f1`;
-#do
-#  platformio run -e ${ENV}
-#done
+# Must look into all possible env definitions.
+# Exclude so called "spec_" (special) builds
+for ENV in `grep "^\[env:" platformio*.ini |cut -d'[' -f2|cut -d']' -f1|cut -d':' -f2|sort -n|grep -v spec_`;
+do 
+  PLATFORMIO_BUILD_FLAGS="-D CONTINUOUS_INTEGRATION" platformio run -e ${ENV}
+done
 
 # Rename all built files, compute CRC and insert binaryFilename
 # Collect all in a zip file.

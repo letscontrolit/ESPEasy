@@ -179,6 +179,8 @@ void handle_sysinfo_json() {
 
 #endif // WEBSERVER_NEW_UI
 
+#ifdef WEBSERVER_SYSINFO
+
 void handle_sysinfo() {
   checkRAM(F("handle_sysinfo"));
 
@@ -194,6 +196,9 @@ void handle_sysinfo() {
   // the table header
   html_table_class_normal();
 
+
+  # ifdef WEBSERVER_GITHUB_COPY
+
   // Not using addFormHeader() to get the copy button on the same header line as 2nd column
   html_TR();
   html_table_header(F("System Info"), 225);
@@ -204,6 +209,10 @@ void handle_sysinfo() {
   html_add_script(false);
   TXBuffer += DATA_GITHUB_CLIPBOARD_JS;
   html_add_script_end();
+  # else // ifdef WEBSERVER_GITHUB_COPY
+  addFormHeader(F("System Info"));
+
+  # endif // ifdef WEBSERVER_GITHUB_COPY
 
   handle_sysinfo_basicInfo();
 
@@ -265,11 +274,11 @@ void handle_sysinfo_basicInfo() {
   TXBuffer += F(" - ");
   TXBuffer += lowestFreeStackfunction;
   TXBuffer += ')';
-#ifdef CORE_POST_2_5_0
+# ifdef CORE_POST_2_5_0
   addRowLabelValue(LabelType::HEAP_MAX_FREE_BLOCK);
   addRowLabelValue(LabelType::HEAP_FRAGMENTATION);
   TXBuffer += '%';
-#endif // ifdef CORE_POST_2_5_0
+# endif // ifdef CORE_POST_2_5_0
 
 
   addRowLabel(F("Boot"));
@@ -288,12 +297,12 @@ void handle_sysinfo_Network() {
   if (WiFiConnected())
   {
     addRowLabel(F("Wifi"));
-    #if defined(ESP8266)
+    # if defined(ESP8266)
     byte PHYmode = wifi_get_phy_mode();
-    #endif // if defined(ESP8266)
-    #if defined(ESP32)
+    # endif // if defined(ESP8266)
+    # if defined(ESP32)
     byte PHYmode = 3; // wifi_get_phy_mode();
-    #endif // if defined(ESP32)
+    # endif // if defined(ESP32)
 
     switch (PHYmode)
     {
@@ -349,12 +358,12 @@ void handle_sysinfo_WiFiSettings() {
   addTableSeparator(F("WiFi Settings"), 2, 3);
   addRowLabelValue(LabelType::FORCE_WIFI_BG);
   addRowLabelValue(LabelType::RESTART_WIFI_LOST_CONN);
-#ifdef ESP8266
+# ifdef ESP8266
   addRowLabelValue(LabelType::FORCE_WIFI_NOSLEEP);
-#endif // ifdef ESP8266
-#ifdef SUPPORT_ARP
+# endif // ifdef ESP8266
+# ifdef SUPPORT_ARP
   addRowLabelValue(LabelType::PERIODICAL_GRAT_ARP);
-#endif // ifdef SUPPORT_ARP
+# endif // ifdef SUPPORT_ARP
   addRowLabelValue(LabelType::CONNECTION_FAIL_THRESH);
 }
 
@@ -405,16 +414,16 @@ void handle_sysinfo_SystemStatus() {
   addRowLabelValue(LabelType::SYSLOG_LOG_LEVEL);
   addRowLabelValue(LabelType::SERIAL_LOG_LEVEL);
   addRowLabelValue(LabelType::WEB_LOG_LEVEL);
-    #ifdef FEATURE_SD
+    # ifdef FEATURE_SD
   addRowLabelValue(LabelType::SD_LOG_LEVEL);
-    #endif // ifdef FEATURE_SD
+    # endif // ifdef FEATURE_SD
 }
 
 void handle_sysinfo_ESP_Board() {
   addTableSeparator(F("ESP Board"), 2, 3);
 
   addRowLabel(getLabel(LabelType::ESP_CHIP_ID));
-  #if defined(ESP8266)
+  # if defined(ESP8266)
   TXBuffer += ESP.getChipId();
   TXBuffer += F(" (0x");
   String espChipId(ESP.getChipId(), HEX);
@@ -425,8 +434,8 @@ void handle_sysinfo_ESP_Board() {
   addRowLabel(getLabel(LabelType::ESP_CHIP_FREQ));
   TXBuffer += ESP.getCpuFreqMHz();
   TXBuffer += F(" MHz");
-  #endif // if defined(ESP8266)
-  #if defined(ESP32)
+  # endif // if defined(ESP8266)
+  # if defined(ESP32)
   TXBuffer += F(" (0x");
   uint64_t chipid  = ESP.getEfuseMac(); // The chip ID is essentially its MAC address(length: 6 bytes).
   uint32_t ChipId1 = (uint16_t)(chipid >> 32);
@@ -442,18 +451,18 @@ void handle_sysinfo_ESP_Board() {
   addRowLabel(getLabel(LabelType::ESP_CHIP_FREQ));
   TXBuffer += ESP.getCpuFreqMHz();
   TXBuffer += F(" MHz");
-  #endif // if defined(ESP32)
-  #ifdef ARDUINO_BOARD
+  # endif // if defined(ESP32)
+  # ifdef ARDUINO_BOARD
   addRowLabel(getLabel(LabelType::ESP_BOARD_NAME));
   TXBuffer += ARDUINO_BOARD;
-  #endif // ifdef ARDUINO_BOARD
+  # endif // ifdef ARDUINO_BOARD
 }
 
 void handle_sysinfo_Storage() {
   addTableSeparator(F("Storage"), 2, 3);
 
   addRowLabel(getLabel(LabelType::FLASH_CHIP_ID));
-  #if defined(ESP8266)
+  # if defined(ESP8266)
   uint32_t flashChipId = ESP.getFlashChipId();
 
   // Set to HEX may be something like 0x1640E0.
@@ -475,7 +484,7 @@ void handle_sysinfo_Storage() {
   TXBuffer += F(" Device: ");
   uint32_t flashDevice = (flashChipId & 0xFF00) | ((flashChipId >> 16) & 0xFF);
   TXBuffer += formatToHex(flashDevice);
-  #endif // if defined(ESP8266)
+  # endif // if defined(ESP8266)
   uint32_t realSize = getFlashRealSizeInBytes();
   uint32_t ideSize  = ESP.getFlashChipSize();
 
@@ -488,7 +497,7 @@ void handle_sysinfo_Storage() {
   TXBuffer += F(" kB");
 
   // Please check what is supported for the ESP32
-  #if defined(ESP8266)
+  # if defined(ESP8266)
   addRowLabel(getLabel(LabelType::FLASH_IDE_SPEED));
   TXBuffer += ESP.getFlashChipSpeed() / 1000000;
   TXBuffer += F(" MHz");
@@ -504,7 +513,7 @@ void handle_sysinfo_Storage() {
     default:
       TXBuffer += getUnknownString(); break;
   }
-  #endif // if defined(ESP8266)
+  # endif // if defined(ESP8266)
 
   addRowLabel(getLabel(LabelType::FLASH_WRITE_COUNT));
   TXBuffer += RTC.flashDayCounter;
@@ -512,13 +521,32 @@ void handle_sysinfo_Storage() {
   TXBuffer += RTC.flashCounter;
   TXBuffer += F(" boot");
 
-  addRowLabel(getLabel(LabelType::SKETCH_SIZE));
-  #if defined(ESP8266)
-  TXBuffer += ESP.getSketchSize() / 1024;
-  TXBuffer += F(" kB (");
-  TXBuffer += ESP.getFreeSketchSpace() / 1024;
-  TXBuffer += F(" kB free)");
-  #endif // if defined(ESP8266)
+  # if defined(ESP8266)
+  {
+    // FIXME TD-er: Must also add this for ESP32.
+    addRowLabel(getLabel(LabelType::SKETCH_SIZE));
+    TXBuffer += ESP.getSketchSize() / 1024;
+    TXBuffer += F(" kB (");
+    TXBuffer += ESP.getFreeSketchSpace() / 1024;
+    TXBuffer += F(" kB free)");
+
+    uint32_t maxSketchSize;
+    bool     use2step;
+    bool     otaEnabled = OTA_possible(maxSketchSize, use2step);
+
+    addRowLabel(getLabel(LabelType::MAX_OTA_SKETCH_SIZE));
+    TXBuffer += maxSketchSize / 1024;
+    TXBuffer += F(" kB (");
+    TXBuffer += maxSketchSize;
+    TXBuffer += F(" bytes)");
+
+    addRowLabel(getLabel(LabelType::OTA_POSSIBLE));
+    TXBuffer += boolToString(otaEnabled);
+
+    addRowLabel(getLabel(LabelType::OTA_2STEP));
+    TXBuffer += boolToString(use2step);
+  }
+  # endif // if defined(ESP8266)
 
   addRowLabel(getLabel(LabelType::SPIFFS_SIZE));
   TXBuffer += SpiffsTotalBytes() / 1024;
@@ -536,7 +564,7 @@ void handle_sysinfo_Storage() {
   TXBuffer += String(SpiffsTotalBytes() / SpiffsBlocksize());
 
   {
-  #if defined(ESP8266)
+  # if defined(ESP8266)
     fs::FSInfo fs_info;
     SPIFFS.info(fs_info);
     addRowLabel(F("Maximum open files"));
@@ -545,10 +573,10 @@ void handle_sysinfo_Storage() {
     addRowLabel(F("Maximum path length"));
     TXBuffer += String(fs_info.maxPathLength);
 
-  #endif // if defined(ESP8266)
+  # endif // if defined(ESP8266)
   }
 
-#ifndef BUILD_MINIMAL_OTA
+# ifndef BUILD_MINIMAL_OTA
 
   if (showSettingsFileLayout) {
     addTableSeparator(F("Settings Files"), 2, 3);
@@ -568,9 +596,9 @@ void handle_sysinfo_Storage() {
       getStorageTableSVG(settingsType);
     }
   }
-#endif // ifndef BUILD_MINIMAL_OTA
+# endif // ifndef BUILD_MINIMAL_OTA
 
-  #ifdef ESP32
+  # ifdef ESP32
   addTableSeparator(F("Partitions"), 2, 3,
                     F("https://dl.espressif.com/doc/esp-idf/latest/api-guides/partition-tables.html"));
 
@@ -585,5 +613,7 @@ void handle_sysinfo_Storage() {
   //   TXBuffer += getPartitionTableHeader(F(" - "), F("<BR>"));
   //   TXBuffer += getPartitionTable(ESP_PARTITION_TYPE_APP , F(" - "), F("<BR>"));
   getPartitionTableSVG(ESP_PARTITION_TYPE_APP, 0xab56e6);
-  #endif // ifdef ESP32
+  # endif // ifdef ESP32
 }
+
+#endif    // ifdef WEBSERVER_SYSINFO

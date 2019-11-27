@@ -46,14 +46,12 @@ bool safeReadStringUntil(Stream     & input,
         }
 
         // found character, add to string
-        else {
-          str += char(c);
+        str += char(c);
 
-          // string at max size?
-          if (str.length() >= maxSize) {
-            addLog(LOG_LEVEL_ERROR, F("Not enough bufferspace to read all input data!"));
-            return false;
-          }
+        // string at max size?
+        if (str.length() >= maxSize) {
+          addLog(LOG_LEVEL_ERROR, F("Not enough bufferspace to read all input data!"));
+          return false;
         }
       }
 
@@ -93,18 +91,16 @@ String get_formatted_Controller_number(int controller_number) {
   return result;
 }
 
-
 String get_auth_header(const String& user, const String& pass) {
   String authHeader = "";
 
-  if (user.length() != 0 && pass.length() != 0) {
-      base64 encoder;
-      String auth = user;
-      auth       += ":";
-      auth       += pass;
-      authHeader  = F("Authorization: Basic ");
-      authHeader += encoder.encode(auth);
-      authHeader += F(" \r\n");
+  if ((user.length() != 0) && (pass.length() != 0)) {
+    String auth = user;
+    auth       += ":";
+    auth       += pass;
+    authHeader  = F("Authorization: Basic ");
+    authHeader += base64::encode(auth);
+    authHeader += F(" \r\n");
   }
   return authHeader;
 }
@@ -117,7 +113,7 @@ String get_auth_header(int controller_index) {
         (SecuritySettings.ControllerPassword[controller_index][0] != 0))
     {
       authHeader = get_auth_header(
-        String(SecuritySettings.ControllerUser[controller_index]), 
+        String(SecuritySettings.ControllerUser[controller_index]),
         String(SecuritySettings.ControllerPassword[controller_index]));
     }
   } else {
@@ -276,7 +272,8 @@ bool count_connection_results(bool success, const String& prefix, int controller
 
 bool try_connect_host(int controller_number, WiFiUDP& client, ControllerSettingsStruct& ControllerSettings) {
   START_TIMER;
-  if (!WiFiConnected()) return false;
+
+  if (!WiFiConnected()) { return false; }
   client.setTimeout(ControllerSettings.ClientTimeout);
 #ifndef BUILD_NO_DEBUG
   log_connecting_to(F("UDP  : "), controller_number, ControllerSettings);
@@ -291,7 +288,8 @@ bool try_connect_host(int controller_number, WiFiUDP& client, ControllerSettings
 
 bool try_connect_host(int controller_number, WiFiClient& client, ControllerSettingsStruct& ControllerSettings) {
   START_TIMER;
-  if (!WiFiConnected()) return false;
+
+  if (!WiFiConnected()) { return false; }
 
   // Use WiFiClient class to create TCP connections
   client.setTimeout(ControllerSettings.ClientTimeout);
@@ -311,7 +309,7 @@ bool try_connect_host(int controller_number, WiFiClient& client, ControllerSetti
 //      https://github.com/esp8266/Arduino/pull/1829
 bool client_available(WiFiClient& client) {
   delay(0);
-  return client.available() || client.connected();
+  return (client.available() != 0) || (client.connected() != 0);
 }
 
 bool send_via_http(const String& logIdentifier, WiFiClient& client, const String& postStr, bool must_check_reply) {

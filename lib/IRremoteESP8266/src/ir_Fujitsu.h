@@ -9,7 +9,13 @@
 //   Brand: Fujitsu,  Model: AR-REB1E remote
 //   Brand: Fujitsu,  Model: ASYG7LMCA A/C
 //   Brand: Fujitsu,  Model: AR-RAE1E remote
+//   Brand: Fujitsu,  Model: AGTV14LAC A/C
+//   Brand: Fujitsu,  Model: AR-RAC1E remote
+//   Brand: Fujitsu,  Model: ASTB09LBC A/C
+//   Brand: Fujitsu,  Model: AR-RY4 remote
 //   Brand: Fujitsu General,  Model: AR-JW2 remote
+//   Brand: Fujitsu,  Model: AR-DL10 remote
+//   Brand: Fujitsu,  Model: ASU30C1 A/C
 
 #ifndef IR_FUJITSU_H_
 #define IR_FUJITSU_H_
@@ -50,14 +56,20 @@ const uint8_t kFujitsuAcFanHigh = 0x01;
 const uint8_t kFujitsuAcFanMed = 0x02;
 const uint8_t kFujitsuAcFanLow = 0x03;
 const uint8_t kFujitsuAcFanQuiet = 0x04;
+const uint8_t kFujitsuAcFanSize = 3;  // Bits
 
 const uint8_t kFujitsuAcMinTemp = 16;  // 16C
 const uint8_t kFujitsuAcMaxTemp = 30;  // 30C
 
+const uint8_t kFujitsuAcSwingSize = 2;
 const uint8_t kFujitsuAcSwingOff = 0x00;
 const uint8_t kFujitsuAcSwingVert = 0x01;
 const uint8_t kFujitsuAcSwingHoriz = 0x02;
 const uint8_t kFujitsuAcSwingBoth = 0x03;
+
+const uint8_t kFujitsuAcOutsideQuietOffset = 7;
+const uint8_t kFujitsuAcCleanOffset = 3;
+const uint8_t kFujitsuAcFilterOffset = 3;
 
 // Legacy defines.
 #define FUJITSU_AC_MODE_AUTO kFujitsuAcModeAuto
@@ -82,12 +94,6 @@ const uint8_t kFujitsuAcSwingBoth = 0x03;
 #define FUJITSU_AC_SWING_HORIZ kFujitsuAcSwingHoriz
 #define FUJITSU_AC_SWING_BOTH kFujitsuAcSwingBoth
 
-enum fujitsu_ac_remote_model_t {
-  ARRAH2E = 1,  // (1) AR-RAH2E, AR-RAE1E (Default)
-  ARDB1,        // (2) AR-DB1
-  ARREB1E,      // (3) AR-REB1E
-  ARJW2,        // (4) AR-JW2  (Same as ARDB1 but with horiz control)
-};
 
 class IRFujitsuAC {
  public:
@@ -126,6 +132,10 @@ class IRFujitsuAC {
   void off(void);
   void on(void);
   bool getPower(void);
+  void setClean(const bool on);
+  bool getClean(const bool raw = false);
+  void setFilter(const bool on);
+  bool getFilter(const bool raw = false);
   void setOutsideQuiet(const bool on);
 
   bool getOutsideQuiet(const bool raw = false);
@@ -153,6 +163,8 @@ class IRFujitsuAC {
   uint8_t _state_length;
   uint8_t _state_length_short;
   bool _outsideQuiet;
+  bool _clean;
+  bool _filter;
   void buildState(void);
   void buildFromState(const uint16_t length);
 };

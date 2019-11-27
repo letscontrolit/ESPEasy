@@ -338,7 +338,7 @@ void addHelpButton(const String& url, bool isRTD)
     isRTD ? F("&#8505;") : F("&#10068;"));
 }
 
-void addRTDPluginButton(int taskDeviceNumber) {
+void addRTDPluginButton(pluginID_t taskDeviceNumber) {
   String url;
 
   url.reserve(16);

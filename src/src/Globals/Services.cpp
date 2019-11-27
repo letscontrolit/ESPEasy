@@ -7,7 +7,9 @@
 
 #ifdef ESP8266  
   ESP8266WebServer WebServer(80);
+  #ifndef NO_HTTP_UPDATER
   ESP8266HTTPUpdateServer httpUpdater(true);
+  #endif
 #endif
 
 /*

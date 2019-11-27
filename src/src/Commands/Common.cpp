@@ -1,4 +1,4 @@
-#include "Common.h"
+#include "../Commands/Common.h"
 
 #include <ctype.h>
 #include <IPAddress.h>
@@ -17,6 +17,11 @@ String return_command_success()
 String return_command_failed()
 {
   return F("\nFailed");
+}
+
+String return_incorrect_nr_arguments()
+{
+  return F("Too many arguments, try using quotes");
 }
 
 String return_not_connected()
@@ -42,29 +47,12 @@ String return_see_serial(struct EventStruct *event)
   return F("Output sent to serial");
 }
 
-bool IsNumeric(const char *source)
-{
-  bool result = false;
-
-  if (source) {
-    int len = strlen(source);
-
-    if (len != 0) {
-      int i;
-
-      for (i = 0; i < len && isdigit(source[i]); i++) {}
-      result = i == len;
-    }
-  }
-  return result;
-}
-
-String Command_GetORSetIP(struct EventStruct        *event,
-                          const __FlashStringHelper *targetDescription,
-                          const char                *Line,
-                          byte                      *IP,
-                          IPAddress                  dhcpIP,
-                          int                        arg)
+String Command_GetORSetIP(struct EventStruct *event,
+                          const String      & targetDescription,
+                          const char         *Line,
+                          byte               *IP,
+                          const IPAddress   & dhcpIP,
+                          int                 arg)
 {
   bool hasArgument = false;
   {
@@ -97,12 +85,12 @@ String Command_GetORSetIP(struct EventStruct        *event,
   return return_command_success();
 }
 
-String Command_GetORSetString(struct EventStruct        *event,
-                              const __FlashStringHelper *targetDescription,
-                              const char                *Line,
-                              char                      *target,
-                              size_t                     len,
-                              int                        arg
+String Command_GetORSetString(struct EventStruct *event,
+                              const String      & targetDescription,
+                              const char         *Line,
+                              char               *target,
+                              size_t              len,
+                              int                 arg
                               )
 {
   bool hasArgument = false;
@@ -119,9 +107,8 @@ String Command_GetORSetString(struct EventStruct        *event,
         result += len;
         serialPrintln();
         return return_result(event, result);
-      } else {
-        strcpy(target, TmpStr1.c_str());
       }
+      strcpy(target, TmpStr1.c_str());
     }
   }
 
@@ -134,11 +121,11 @@ String Command_GetORSetString(struct EventStruct        *event,
   return return_command_success();
 }
 
-String Command_GetORSetBool(struct EventStruct        *event,
-                            const __FlashStringHelper *targetDescription,
-                            const char                *Line,
-                            bool                      *value,
-                            int                        arg)
+String Command_GetORSetBool(struct EventStruct *event,
+                            const String      & targetDescription,
+                            const char         *Line,
+                            bool               *value,
+                            int                 arg)
 {
   bool hasArgument = false;
   {
@@ -149,7 +136,7 @@ String Command_GetORSetBool(struct EventStruct        *event,
       hasArgument = true;
       TmpStr1.toLowerCase();
 
-      if (IsNumeric(TmpStr1.c_str())) {
+      if (isInt(TmpStr1)) {
         *value = atoi(TmpStr1.c_str()) > 0;
       }
       else if (strcmp_P(PSTR("on"), TmpStr1.c_str()) == 0) { *value = true; }
@@ -161,7 +148,7 @@ String Command_GetORSetBool(struct EventStruct        *event,
 
   if (hasArgument) {
     String result = targetDescription;
-    result += toString(*value);
+    result += boolToString(*value);
     return return_result(event, result);
   }
   return return_command_success();

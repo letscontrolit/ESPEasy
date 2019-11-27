@@ -10,8 +10,6 @@
 #define PLUGIN_VALUENAME1_014 "Temperature"
 #define PLUGIN_VALUENAME2_014 "Humidity"
 
-boolean Plugin_014_init = false;
-
 // ======================================
 // SI7021 sensor
 // ======================================
@@ -33,6 +31,16 @@ boolean Plugin_014_init = false;
 #define SI7021_RESOLUTION_11T_11RH 0x81 // 11 bits RH / 11 bits Temp
 #define SI7021_RESOLUTION_MASK 0B01111110
 
+enum SI7021_state {
+  SI7021_Uninitialized = 0,
+  SI7021_Initialized,
+  SI7021_Wait_for_temperature_samples,
+  SI7021_Wait_for_humidity_samples,
+  SI7021_New_values,
+  SI7021_Values_read
+};
+
+SI7021_state state = SI7021_Uninitialized;
 uint16_t si7021_humidity;    // latest humidity value read
 int16_t  si7021_temperature; // latest temperature value read (*100)
 
@@ -96,35 +104,102 @@ boolean Plugin_014(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE:
       {
         PCONFIG(0) = getFormItemInt(F("p014_res"));
-        Plugin_014_init = false; // Force device setup next time
+        state = SI7021_Uninitialized; // Force device setup next time
         success = true;
+        break;
+      }
+
+      
+    case PLUGIN_INIT:
+      {
+        // Get sensor resolution configuration
+        uint8_t res = PCONFIG(0);
+
+        // Init sensor
+        if (state == SI7021_Uninitialized) {
+          success = Plugin_014_si7021_begin(res);
+          if (success) {
+            state = SI7021_Initialized;
+          }
+        }
+        break;
+      }
+
+    case PLUGIN_TEN_PER_SECOND:
+      {
+        // Get sensor resolution configuration
+        uint8_t res = PCONFIG(0);
+
+        switch (state)
+        {
+          case SI7021_Initialized:
+            {
+              // Start conversion for humidity
+              Plugin_014_si7021_startConv(SI7021_MEASURE_HUM);
+              // change state of sensor
+              state = SI7021_Wait_for_temperature_samples;
+              success = true;
+            }
+          break;
+
+          case SI7021_Wait_for_temperature_samples:
+            {
+              // Check if conversion is finished
+              if (Plugin_014_si7021_readValues(SI7021_MEASURE_HUM, res) == 0) {
+                // Start conversion for temperature
+                Plugin_014_si7021_startConv(SI7021_MEASURE_TEMP);
+                // change state of sensor
+                state = SI7021_Wait_for_humidity_samples;
+                success = true;
+              }
+            }
+          break;
+
+          case SI7021_Wait_for_humidity_samples:
+            {
+              // Check if conversion is finished
+              if (Plugin_014_si7021_readValues(SI7021_MEASURE_TEMP, res) == 0) {
+                // Update was succesfull, schedule a read.
+                schedule_task_device_timer(event->TaskIndex, millis() + 10);
+                // change state of sensor
+                state = SI7021_New_values;
+                success = true;
+              }
+            }
+          break;
+        
+          default:
+          break;
+        }
+
         break;
       }
 
     case PLUGIN_READ:
       {
-        // Get sensor resolution configuration
-        uint8_t res = PCONFIG(0);
-
-        if (!Plugin_014_init) {
-          Plugin_014_init = Plugin_014_si7021_begin(res);
+        // Change state of sensor for non bloking reading 
+        if (state == SI7021_Values_read) {
+          state = SI7021_Initialized;
         }
-
-        // Read values only if init has been done okay
-        if (Plugin_014_init && Plugin_014_si7021_readValues(res) == 0) {
-          UserVar[event->BaseVarIndex] = si7021_temperature/100.0;
+        // New value
+        else if (state == SI7021_New_values) {
+          UserVar[event->BaseVarIndex] = si7021_temperature / 100.0;
           UserVar[event->BaseVarIndex + 1] = si7021_humidity / 10.0;
+          state = SI7021_Values_read;
           success = true;
-          /*
-          String log = F("SI7021 : Temperature: ");
-          log += UserVar[event->BaseVarIndex];
-          addLog(LOG_LEVEL_INFO,log);
-          log = F("SI7021 : Humidity: ");
-          log += UserVar[event->BaseVarIndex + 1];
-          addLog(LOG_LEVEL_INFO,log);
-          */
-        } else {
-          addLog(LOG_LEVEL_INFO,F("SI7021 : Read Error!"));
+          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+            String log = F("SI7021 : Temperature: ");
+            log += UserVar[event->BaseVarIndex];
+            addLog(LOG_LEVEL_INFO,log);
+            log = F("SI7021 : Humidity: ");
+            log += UserVar[event->BaseVarIndex + 1];
+            addLog(LOG_LEVEL_INFO,log);
+          }
+        } else if (state == SI7021_Uninitialized) {
+          addLog(LOG_LEVEL_INFO,F("SI7021 : sensor not initialized !"));
+        }
+        else {
+          addLog(LOG_LEVEL_INFO,F("SI7021 : Read Error !"));
         }
 
         break;
@@ -225,68 +300,34 @@ int8_t Plugin_014_si7021_readRegister(uint8_t * value)
 Function: Plugin_014_si7021_startConv
 Purpose : return temperature or humidity measured
 Input   : data type SI7021_READ_HUM or SI7021_READ_TEMP
-          current config resolution
 Output  : 0 if okay
-Comments: internal values of temp and rh are set
+Comments: -
 ====================================================================== */
-int8_t Plugin_014_si7021_startConv(uint8_t datatype, uint8_t resolution)
+uint8_t Plugin_014_si7021_startConv(uint8_t datatype)
 {
-  long data;
-  uint16_t raw ;
-  uint8_t checksum,tmp;
-
   //Request a reading
   Wire.beginTransmission(SI7021_I2C_ADDRESS);
   Wire.write(datatype);
   Wire.endTransmission();
 
-  // Tried clock streching and looping until no NACK from SI7021 to know
-  // when conversion's done. None have worked so far !!!
-  // I fade up, I'm waiting maximum conversion time + 1ms, this works !!
-  // I increased these value to add HTU21D compatibility
-  // Max for SI7021 is 3/5/7/12 ms
-  // max for HTU21D is 7/13/25/50 ms
+  return 0;
+}
 
-  // Martinus modification 2016-01-07:
-  // My test sample was still not working with 11 bit
-  // So to be more safe, we add 5 ms to each and use 8,10,13,21 ms
-  // But for ESP Easy, I think it does not matter at all...
 
-  // Martinus is correct there was a bug Mesasure HUM need
-  // hum+temp delay because it also measure temp
+/* ======================================================================
+Function: Plugin_014_si7021_readValues
+Purpose : read temperature and humidity from SI7021 sensor
+Input   : current config resolution
+Output  : 0 if okay
+Comments: -
+====================================================================== */
+int8_t Plugin_014_si7021_readValues(uint8_t datatype, uint8_t resolution)
+{
+  long data;
+  uint16_t raw ;
+  uint8_t checksum;
 
-  if (resolution == SI7021_RESOLUTION_11T_11RH)
-    tmp = 7;
-  else if (resolution == SI7021_RESOLUTION_12T_08RH)
-    tmp = 13;
-  else if (resolution == SI7021_RESOLUTION_13T_10RH)
-    tmp = 25;
-  else
-    tmp = 50;
-
-  // Humidity fire also temp measurment so delay
-  // need to be increased by 2 if no Hold Master
-  if (datatype == SI7021_MEASURE_HUM)
-    tmp *=2;
-
-  delay(tmp);
-
-  /*
-  // Wait for data to become available, device will NACK during conversion
-  tmp = 0;
-  do
-  {
-    // Request device
-    Wire.beginTransmission(SI7021_I2C_ADDRESS);
-    //Wire.write(SI7021_READ_REG);
-    error = Wire.endTransmission(true);
-    delay(1);
-  }
-  // always use time out in loop to avoid potential lockup (here 12ms max)
-  // https://www.silabs.com/Support%20Documents/TechnicalDocs/Si7021-A20.pdf page 5
-  while(error!=0 && tmp++<=12 );
-  */
-  if ( Wire.requestFrom(SI7021_I2C_ADDRESS, 3) < 3 ) {
+  if (Wire.requestFrom(SI7021_I2C_ADDRESS, 3) != 3) {
     return -1;
   }
 
@@ -342,27 +383,6 @@ int8_t Plugin_014_si7021_startConv(uint8_t datatype, uint8_t resolution)
   }
 
   return 0;
-}
-
-
-/* ======================================================================
-Function: Plugin_014_si7021_readValues
-Purpose : read temperature and humidity from SI7021 sensor
-Input   : current config resolution
-Output  : 0 if okay
-Comments: -
-====================================================================== */
-int8_t Plugin_014_si7021_readValues(uint8_t resolution)
-{
-  int8_t error = 0;
-
-  // start humidity conversion
-  error |= Plugin_014_si7021_startConv(SI7021_MEASURE_HUM, resolution);
-
-  // start temperature conversion
-  error |= Plugin_014_si7021_startConv(SI7021_MEASURE_TEMP, resolution);
-
-  return error;
 }
 
 /* ======================================================================

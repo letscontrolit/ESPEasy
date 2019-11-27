@@ -37,7 +37,7 @@ struct C018_data_struct {
     autobaud_success = false;
   }
 
-  bool init(const int8_t serial_rx, const int8_t serial_tx, unsigned long baudrate, bool joinIsOTAA, uint8_t sampleSet_Initiator) {
+  bool init(const int8_t serial_rx, const int8_t serial_tx, unsigned long baudrate, bool joinIsOTAA, taskIndex_t sampleSet_Initiator) {
     if ((serial_rx < 0) || (serial_tx < 0)) {
       // Both pins are needed, or else no serial possible
       return false;
@@ -186,7 +186,7 @@ struct C018_data_struct {
 
   uint8_t getSampleSetCount() const { return sampleSetCounter; }
 
-  uint8_t getSampleSetCount(uint8_t taskIndex) {
+  uint8_t getSampleSetCount(taskIndex_t taskIndex) {
     if (sampleSetInitiator == taskIndex)
     {
       ++sampleSetCounter;
@@ -232,7 +232,7 @@ private:
   String         cacheHWEUI;
   String         cacheSysVer;
   uint8_t        sampleSetCounter = 0;
-  uint8_t        sampleSetInitiator = 0;
+  taskIndex_t    sampleSetInitiator = INVALID_TASK_INDEX;
   bool           autobaud_success = false;
 } C018_data;
 

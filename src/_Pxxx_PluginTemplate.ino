@@ -189,6 +189,7 @@ boolean Plugin_xxx(byte function, struct EventStruct *event, String& string)
       if (plugin_not_initialised)
         break;
 
+      // FIXME TD-er: This one is not using parseString* function
       //parse string to extract the command
       String tmpString  = string;
       int argIndex = tmpString.indexOf(',');

@@ -8,6 +8,7 @@
 #include <memory> // For std::shared_ptr
 
 #include "../../ESPEasy_common.h"
+#include "../Globals/Plugins.h"
 
 class IPAddress;
 class WiFiClient;
@@ -109,7 +110,7 @@ struct ControllerSettingsStruct
   boolean      DeleteOldest;       // Action to perform when buffer full, delete oldest, or ignore newest.
   unsigned int ClientTimeout;
   boolean      MustCheckReply;     // When set to false, a sent message is considered always successful.
-  uint8_t      SampleSetInitiator; // The first plugin to start a sample set.
+  taskIndex_t  SampleSetInitiator; // The first task to start a sample set.
 
 private:
 
@@ -120,6 +121,6 @@ private:
 
 typedef std::shared_ptr<ControllerSettingsStruct> ControllerSettingsStruct_ptr_type;
 #define MakeControllerSettings(T) ControllerSettingsStruct_ptr_type ControllerSettingsStruct_ptr(new ControllerSettingsStruct()); \
-  ControllerSettingsStruct& T = *ControllerSettingsStruct_ptr;
+  ControllerSettingsStruct& (T) = *ControllerSettingsStruct_ptr;
 
 #endif // DATASTRUCTS_CONTROLLERSETTINGSSTRUCT_H

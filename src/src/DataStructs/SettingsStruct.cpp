@@ -1,7 +1,7 @@
 #include "../../ESPEasy_common.h"
 #include "../DataStructs/SettingsStruct.h"
 #include "../DataStructs/ESPEasyLimits.h"
-#include "../DataStructs/ESPEasyDefaults.h"
+#include "../Globals/Plugins.h"
 
 template<unsigned int N_TASKS>
 SettingsStruct_tmpl<N_TASKS>::SettingsStruct_tmpl() : ResetFactoryDefaultPreference(0) {
@@ -149,7 +149,7 @@ void SettingsStruct_tmpl<N_TASKS>::clearControllers() {
 
 template<unsigned int N_TASKS>
 void SettingsStruct_tmpl<N_TASKS>::clearTasks() {
-  for (byte task = 0; task < N_TASKS; ++task) {
+  for (taskIndex_t task = 0; task < N_TASKS; ++task) {
     clearTask(task);
   }
 }
@@ -187,7 +187,7 @@ void SettingsStruct_tmpl<N_TASKS>::clearMisc() {
   for (byte i = 0; i < 17; ++i) { PinBootStates[i] = 0; }
   BaudRate                    = 0;
   MessageDelay                = 0;
-  deepSleep                   = 0;
+  deepSleep_wakeTime                   = 0;
   CustomCSS                   = false;
   WDI2CAddress                = 0;
   UseRules                    = false;
@@ -228,7 +228,7 @@ void SettingsStruct_tmpl<N_TASKS>::clearAll() {
 }
 
 template<unsigned int N_TASKS>
-void SettingsStruct_tmpl<N_TASKS>::clearTask(byte task) {
+void SettingsStruct_tmpl<N_TASKS>::clearTask(taskIndex_t task) {
   if (task >= N_TASKS) { return; }
 
   for (byte i = 0; i < CONTROLLER_MAX; ++i) {
