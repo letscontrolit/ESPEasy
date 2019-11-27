@@ -32,14 +32,7 @@ void handle_tools() {
 
   if (webrequest.length() > 0)
   {
-    struct EventStruct TempEvent;
-    webrequest = parseTemplate(webrequest, webrequest.length()); // @giig1967g: parseTemplate before executing the command
-    parseCommandString(&TempEvent, webrequest);
-    TempEvent.Source = VALUE_SOURCE_WEB_FRONTEND;
-
-    if (!PluginCall(PLUGIN_WRITE, &TempEvent, webrequest)) {
-      ExecuteCommand(VALUE_SOURCE_WEB_FRONTEND, webrequest.c_str());
-    }
+    ExecuteCommand_all(VALUE_SOURCE_WEB_FRONTEND, webrequest.c_str());
   }
 
   if (printWebString.length() > 0)

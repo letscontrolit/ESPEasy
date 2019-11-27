@@ -658,6 +658,7 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
               if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                 log=F("C014 : PluginCall:");
               }
+              // FIXME TD-er: Command is not parsed, should we call ExecuteCommand here?
               if (!PluginCall(PLUGIN_WRITE, &TempEvent, cmd)) {
                 remoteConfig(&TempEvent, cmd);
                 if (loglevelActiveFor(LOG_LEVEL_INFO)) {

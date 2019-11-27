@@ -198,34 +198,39 @@ String doExecuteCommand(const char *cmd, struct EventStruct *event, const char *
     }
     case 's': {
       COMMAND_CASE(       "save", Command_Settings_Save,   0); // Settings.h
-    #ifdef USES_MQTT
-	    COMMAND_CASE(  "subscribe", Command_MQTT_Subscribe,  1);  // MQTT.h  
-    #endif // USES_MQTT
-        #ifdef FEATURE_SD
+    #ifdef FEATURE_SD
       COMMAND_CASE(     "sdcard", Command_SD_LS,           0); // SDCARDS.h
       COMMAND_CASE(   "sdremove", Command_SD_Remove,       1); // SDCARDS.h
-        #endif // ifdef FEATURE_SD
+    #endif // ifdef FEATURE_SD
+    if (cmd_lc[1] == 'e') {
       COMMAND_CASE(     "sendto", Command_UPD_SendTo,      2); // UDP.h    // FIXME TD-er: These send commands, can we determine the nr of
                                                                // arguments?
       COMMAND_CASE( "sendtohttp", Command_HTTP_SendToHTTP, 3); // HTTP.h
       COMMAND_CASE(  "sendtoudp", Command_UDP_SendToUPD,   3); // UDP.h
       COMMAND_CASE("serialfloat", Command_SerialFloat,     0); // Diagnostic.h
       COMMAND_CASE(   "settings", Command_Settings_Print,  0); // Settings.h
+    }
       COMMAND_CASE(     "subnet", Command_Subnet,          1); // Network Command
+    #ifdef USES_MQTT
+	    COMMAND_CASE(  "subscribe", Command_MQTT_Subscribe,  1);  // MQTT.h  
+    #endif // USES_MQTT
       COMMAND_CASE(    "sysload", Command_SysLoad,         0); // Diagnostic.h
       break;
     }
     case 't': {
+    if (cmd_lc[1] == 'a') {
       COMMAND_CASE(         "taskclear", Command_Task_Clear,          1); // Tasks.h
       COMMAND_CASE(      "taskclearall", Command_Task_ClearAll,       0); // Tasks.h
       COMMAND_CASE(           "taskrun", Command_Task_Run,            1); // Tasks.h
       COMMAND_CASE(      "taskvalueset", Command_Task_ValueSet,       3); // Tasks.h
       COMMAND_CASE(   "taskvaluetoggle", Command_Task_ValueToggle,    2); // Tasks.h
       COMMAND_CASE("taskvaluesetandrun", Command_Task_ValueSetAndRun, 3); // Tasks.h
+    } else if (cmd_lc[1] == 'i') {
       COMMAND_CASE(        "timerpause", Command_Timer_Pause,         1); // Timers.h
       COMMAND_CASE(       "timerresume", Command_Timer_Resume,        1); // Timers.h
       COMMAND_CASE(          "timerset", Command_Timer_Set,           2); // Timers.h
       COMMAND_CASE(          "timezone", Command_TimeZone,            1); // Time.h
+    }
       break;
     }
     case 'u': {
@@ -238,6 +243,7 @@ String doExecuteCommand(const char *cmd, struct EventStruct *event, const char *
     case 'w': {
       COMMAND_CASE(      "wdconfig", Command_WD_Config,       3); // WD.h
       COMMAND_CASE(        "wdread", Command_WD_Read,         2); // WD.h
+    if (cmd_lc[1] == 'i') {
       COMMAND_CASE(    "wifiapmode", Command_Wifi_APMode,     0); // WiFi.h
       COMMAND_CASE(   "wificonnect", Command_Wifi_Connect,    0); // WiFi.h
       COMMAND_CASE("wifidisconnect", Command_Wifi_Disconnect, 0); // WiFi.h
@@ -248,6 +254,7 @@ String doExecuteCommand(const char *cmd, struct EventStruct *event, const char *
       COMMAND_CASE(      "wifissid", Command_Wifi_SSID,       1); // WiFi.h
       COMMAND_CASE(     "wifissid2", Command_Wifi_SSID2,      1); // WiFi.h
       COMMAND_CASE(   "wifistamode", Command_Wifi_STAMode,    0); // WiFi.h
+    }
       break;
     }
     default:
@@ -265,36 +272,116 @@ String doExecuteCommand(const char *cmd, struct EventStruct *event, const char *
   #undef COMMAND_CASE
 }
 
-void ExecuteCommand(byte source, const char *Line)
+// Execute command which may be plugin or internal commands
+bool ExecuteCommand_all(byte source, const char *Line)
+{
+  return ExecuteCommand(INVALID_TASK_INDEX, source, Line, true, true, false);
+}
+
+bool ExecuteCommand_all_config(byte source, const char *Line)
+{
+  return ExecuteCommand(INVALID_TASK_INDEX, source, Line, true, true, true);
+}
+
+bool ExecuteCommand_plugin_config(byte source, const char *Line)
+{
+  return ExecuteCommand(INVALID_TASK_INDEX, source, Line, true, false, true);
+}
+
+bool ExecuteCommand_all_config_eventOnly(byte source, const char *Line)
+{
+  bool tryInternal = false;
+  {
+    String cmd;
+    if (GetArgv(Line, cmd, 1)) {
+      tryInternal = cmd.equalsIgnoreCase(F("event"));
+    }
+  }
+  return ExecuteCommand(INVALID_TASK_INDEX, source, Line, true, tryInternal, true);
+}
+
+bool ExecuteCommand_internal(byte source, const char *Line)
+{
+  return ExecuteCommand(INVALID_TASK_INDEX, source, Line, false, true, false);
+}
+
+bool ExecuteCommand_plugin(byte source, const char *Line)
+{
+  return ExecuteCommand(INVALID_TASK_INDEX, source, Line, true, false, false);
+}
+
+bool ExecuteCommand_plugin(taskIndex_t taskIndex, byte source, const char *Line)
+{
+  return ExecuteCommand(taskIndex, source, Line, true, false, false);
+}
+
+bool ExecuteCommand(taskIndex_t taskIndex, byte source, const char *Line, bool tryPlugin, bool tryInternal, bool tryRemoteConfig)
 {
   checkRAM(F("ExecuteCommand"));
   String cmd;
 
   if (!GetArgv(Line, cmd, 1)) {
-    return;
+    return false;
   }
+
+  if (tryInternal) {
+    // Small optimization for events, which happen frequently
+    // FIXME TD-er: Make quick check to see if a command is an internal command, so we don't need to try all
+    if (cmd.equalsIgnoreCase(F("event"))) {
+      tryPlugin = false;
+      tryRemoteConfig = false;      
+    }
+  }
+
   struct EventStruct TempEvent;
 
-  // FIXME TD-er: Not sure what happens now, but TaskIndex cannot be set here
+  // FIXME TD-er: Not sure what happens now, but TaskIndex cannot always be set here
   // since commands can originate from anywhere.
+  TempEvent.TaskIndex = taskIndex;
   TempEvent.Source = source;
+
+  String action(Line);
+  action = parseTemplate(action, action.length()); // parseTemplate before executing the command
 
   // Split the arguments into Par1...5 of the event.
   // Do not split it in doExecuteCommand, since that one will be called from the scheduler with pre-set events.
   // FIXME TD-er: Why call this for all commands? The CalculateParam function is quite heavy.
-  parseCommandString(&TempEvent, Line);
+  parseCommandString(&TempEvent, action);
 
-  String status = doExecuteCommand(cmd.c_str(), &TempEvent, Line);
-  delay(0);
-  SendStatus(source, status);
+  // FIXME TD-er: This part seems a bit strange.
+  // It can't schedule a call to PLUGIN_WRITE.
+  // Maybe ExecuteCommand can be scheduled?
   delay(0);
 
-  /*
-     } else {
-      // Schedule to run async
-      schedule_command_timer(cmd.c_str(), &TempEvent, Line);
-     }
-   */
+  if (tryPlugin) {
+    // Use a tmp string to call PLUGIN_WRITE, since PluginCall may inadvertenly
+    // alter the string.
+    String tmpAction(action);
+    bool handled = PluginCall(PLUGIN_WRITE, &TempEvent, tmpAction);
+    if (!tmpAction.equals(action)) {
+      if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+        String log = F("PLUGIN_WRITE altered the string: ");
+        log += action;
+        log += F(" to: ");
+        log += tmpAction;
+        addLog(LOG_LEVEL_ERROR, log);
+      }
+    }
+    if (handled) return true;
+  }
+  if (tryRemoteConfig) {
+    if (remoteConfig(&TempEvent, action)) {
+      return true;
+    }
+  }
+  if (tryInternal) {
+    String status = doExecuteCommand(cmd.c_str(), &TempEvent, Line);
+    delay(0);
+    SendStatus(source, status);
+    delay(0);
+    // FIXME TD-er: We don't know here if the command was successful
+  }
+  return false;
 }
 
 #ifdef FEATURE_SD

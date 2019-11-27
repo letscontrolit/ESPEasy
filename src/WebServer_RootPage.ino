@@ -42,7 +42,7 @@ void handle_root() {
     printWebString = "";
 
     if (sCommand.length() > 0) {
-      ExecuteCommand(VALUE_SOURCE_HTTP, sCommand.c_str());
+      ExecuteCommand_internal(VALUE_SOURCE_HTTP, sCommand.c_str());
     }
 
     // IPAddress ip = WiFi.localIP();
@@ -205,7 +205,7 @@ void handle_root() {
       TXBuffer           += F(
         "OK. Please wait > 1 min and connect to Acces point.<BR><BR>PW=configesp<BR>URL=<a href='http://192.168.4.1'>192.168.4.1</a>");
       TXBuffer.endStream();
-      ExecuteCommand(VALUE_SOURCE_HTTP, sCommand.c_str());
+      ExecuteCommand_internal(VALUE_SOURCE_HTTP, sCommand.c_str());
     }
 
     TXBuffer += "OK";

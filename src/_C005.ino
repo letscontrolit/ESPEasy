@@ -53,6 +53,7 @@ bool CPlugin_005(byte function, struct EventStruct *event, String& string)
           // Controller is not enabled.
           break;
         } else {
+          // FIXME TD-er: Command is not parsed for template arguments.
           String cmd;
           struct EventStruct TempEvent;
           TempEvent.TaskIndex = event->TaskIndex;
