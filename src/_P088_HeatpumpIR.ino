@@ -282,19 +282,4 @@ boolean Plugin_088(byte function, struct EventStruct *event, String& string)
 
   return success;
 }
-
-#ifndef PLUGIN_035
-void enableIR_RX(boolean enable)
-{
-#ifdef PLUGIN_016
-  if (irReceiver == 0) return;
-  if (enable) {
-    irReceiver->enableIRIn(); // Start the receiver
-  } else {
-    irReceiver->disableIRIn(); // Stop the receiver
-  }
-#endif //PLUGIN_016
-}
-#endif //PLUGIN_035
-
 #endif // USES_P088

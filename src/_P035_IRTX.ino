@@ -483,18 +483,6 @@ boolean addErrorTrue()
   return true;
 }
 
-void enableIR_RX(boolean enable)
-{
-#ifdef PLUGIN_016
-  if (irReceiver == 0) return;
-  if (enable) {
-    irReceiver->enableIRIn(); // Start the receiver
-  } else {
-    irReceiver->disableIRIn(); // Stop the receiver
-  }
-#endif
-}
-
 // A lot of the following code has been taken directly (with permission) from the IRMQTTServer.ino example code
 // of the IRremoteESP8266 library. (https://github.com/markszabo/IRremoteESP8266)
 

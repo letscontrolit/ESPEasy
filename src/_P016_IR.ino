@@ -448,3 +448,15 @@ unsigned int storeB32Hex(char out[], unsigned int iOut, unsigned int val)
 #endif //P016_P035_RAW_RAW2
 
 #endif // USES_P016
+
+void enableIR_RX(boolean enable)
+{
+#ifdef PLUGIN_016
+  if (irReceiver == 0) return;
+  if (enable) {
+    irReceiver->enableIRIn(); // Start the receiver
+  } else {
+    irReceiver->disableIRIn(); // Stop the receiver
+  }
+#endif //PLUGIN_016
+}
