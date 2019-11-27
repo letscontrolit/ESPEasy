@@ -1,4 +1,32 @@
 -------------------------------------------------
+Changes in release mega-20191127 (since mega-20191126)
+-------------------------------------------------
+
+Release date: Wed Nov 27 09:17:00 CET 2019
+
+Gijs Noorlander (1):
+      Disable 16M and some custom builds from Travis
+
+
+-------------------------------------------------
+Changes in release mega-20191126 (since mega-20191123)
+-------------------------------------------------
+
+Release date: Tue Nov 26 21:38:44 CET 2019
+
+Gijs Noorlander (3):
+      [Nextion] Fix parsing rules for Nextion plugin (#2772)
+      [Commands] Adapt all plugins to use parseString for parsing commands
+      [Travis] Fix build error String.toDouble() is core 2.5.0 or newer.
+
+uwekaditz (4):
+      P[036] chars per line changed to 64, fixed overlapping while page scrolling
+      [P036] chars per line changed to 64, fixed overlapping while page scrolling
+      Update _P036_FrameOLED.ino
+      Update _P036_FrameOLED.ino
+
+
+-------------------------------------------------
 Changes in release mega-20191123 (since mega-20191122)
 -------------------------------------------------
 
