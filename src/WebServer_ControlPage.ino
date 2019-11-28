@@ -25,7 +25,7 @@ void handle_control() {
 
   if (command == F("event"))
   {
-    eventBuffer = webrequest.substring(6);
+    eventQueue.add(webrequest.substring(6));
     handledCmd  = true;
   }
   else if (command.equalsIgnoreCase(F("taskrun")) ||

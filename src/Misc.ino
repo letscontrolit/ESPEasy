@@ -409,8 +409,10 @@ void prepare_deepSleep(int dsdelay)
 
     if (Settings.UseRules && isDeepSleepEnabled())
     {
-      String event = F("System#NoSleep=30");
-      rulesProcessing(event);
+      eventQueue.add(F("System#NoSleep=30"));
+      while (processNextEvent()) {
+        delay(1);
+      }
     }
     delayBackground(30000);
 
@@ -429,8 +431,10 @@ void deepSleepStart(int dsdelay)
   // separate function that is called from above function or directly from rules, usign deepSleep_wakeTime as a one-shot
   if (Settings.UseRules)
   {
-    String event = F("System#Sleep");
-    rulesProcessing(event);
+    eventQueue.add(F("System#Sleep"));
+    while (processNextEvent()) {
+      delay(1);
+    }
   }
 
   addLog(LOG_LEVEL_INFO, F("SLEEP: Powering down to deepsleep..."));

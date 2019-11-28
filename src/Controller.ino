@@ -329,15 +329,22 @@ bool MQTTCheck(int controller_idx)
 /*********************************************************************************************\
 * Send status info to request source
 \*********************************************************************************************/
-void SendStatusOnlyIfNeeded(int eventSource, bool param1, uint32_t key, const String& param2, int16_t param3) {
+void SendStatusOnlyIfNeeded(byte eventSource, bool param1, uint32_t key, const String& param2, int16_t param3) {
+  if (SourceNeedsStatusUpdate(eventSource)) {
+    SendStatus(eventSource, getPinStateJSON(param1, key, param2, param3));
+  }
+}
+
+bool SourceNeedsStatusUpdate(byte eventSource)
+{
   switch (eventSource) {
     case VALUE_SOURCE_HTTP:
     case VALUE_SOURCE_SERIAL:
     case VALUE_SOURCE_MQTT:
     case VALUE_SOURCE_WEB_FRONTEND:
-      SendStatus(eventSource, getPinStateJSON(param1, key, param2, param3));
-      break;
+      return true;
   }
+  return false;
 }
 
 void SendStatus(byte source, const String& status)

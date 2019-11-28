@@ -165,7 +165,7 @@ String describeAllowedIPrange();
 void clearAccessBlock();
 String rulesProcessingFile(const String& fileName, String& event);
 int Calculate(const char *input, float* result);
-
+bool SourceNeedsStatusUpdate(byte eventSource);
 
 void WifiScan(bool async, bool quick = false);
 void WifiScan();

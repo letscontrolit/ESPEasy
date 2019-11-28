@@ -132,8 +132,7 @@ void processDisconnect() {
   delay(100); // FIXME TD-er: See https://github.com/letscontrolit/ESPEasy/issues/1987#issuecomment-451644424
 
   if (Settings.UseRules) {
-    String event = F("WiFi#Disconnected");
-    rulesProcessing(event);
+    eventQueue.add(F("WiFi#Disconnected"));
   }
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -182,15 +181,15 @@ void processConnect() {
     addLog(LOG_LEVEL_INFO, log);
   }
 
-  if (Settings.UseRules && bssid_changed) {
-    String event = F("WiFi#ChangedAccesspoint");
-    rulesProcessing(event);
-  }
+  if (Settings.UseRules) {
+    if (bssid_changed) {
+      eventQueue.add(F("WiFi#ChangedAccesspoint"));
+    }
 
-  if (Settings.UseRules && channel_changed) {
-    String event = F("WiFi#ChangedWiFichannel");
-    rulesProcessing(event);
-  }
+    if (channel_changed) {
+      eventQueue.add(F("WiFi#ChangedWiFichannel"));
+    }
+  } 
 
   if (useStaticIP()) {
     markGotIP(); // in static IP config the got IP event is never fired.
@@ -270,8 +269,7 @@ void processGotIP() {
 
   if (Settings.UseRules)
   {
-    String event = F("WiFi#Connected");
-    rulesProcessing(event);
+    eventQueue.add(F("WiFi#Connected"));
   }
   statusLED(true);
 

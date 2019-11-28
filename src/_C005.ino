@@ -82,7 +82,7 @@ bool CPlugin_005(byte function, struct EventStruct *event, String& string)
             // in case of event, store to buffer and return...
             String command = parseString(cmd, 1);
             if (command == F("event")) {
-            eventBuffer = cmd.substring(6);
+            eventQueue.add(cmd.substring(6));
             } else if (!PluginCall(PLUGIN_WRITE, &TempEvent, cmd)) {
               remoteConfig(&TempEvent, cmd);
             }

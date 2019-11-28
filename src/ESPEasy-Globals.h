@@ -28,6 +28,7 @@
 #include "ESPEasy_fdwdecl.h"
 
 #include "src/DataStructs/ESPEasyLimits.h"
+#include "src/DataStructs/EventQueue.h"
 #include "ESPEasy_plugindefs.h"
 
 
@@ -342,7 +343,7 @@ extern bool webserverRunning;
 extern bool webserver_init;
 
 
-extern String eventBuffer;
+extern EventQueueStruct eventQueue;
 
 
 extern bool shouldReboot;

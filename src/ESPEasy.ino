@@ -359,13 +359,13 @@ void setup()
   {
     String event = F("System#NoSleep=");
     event += Settings.deepSleep_wakeTime;
-    rulesProcessing(event);
+    rulesProcessing(event); // TD-er: Process events in the setup() now.
   }
 
   if (Settings.UseRules)
   {
     String event = F("System#Wake");
-    rulesProcessing(event);
+    rulesProcessing(event); // TD-er: Process events in the setup() now.
   }
 
   WiFiConnectRelaxed();
@@ -394,7 +394,7 @@ void setup()
   if (Settings.UseRules)
   {
     String event = F("System#Boot");
-    rulesProcessing(event);
+    rulesProcessing(event); // TD-er: Process events in the setup() now.
   }
 
   writeDefaultCSS();
@@ -556,7 +556,7 @@ void loop()
      {
         String event = F("System#NoSleep=");
         event += Settings.deepSleep_wakeTime;
-        rulesProcessing(event);
+        eventQueue.add(event);
      }
 
 
@@ -643,8 +643,11 @@ void updateMQTTclient_connected() {
       schedule_all_tasks_using_MQTT_controller();
     }
     if (Settings.UseRules) {
-      String event = MQTTclient_connected ? F("MQTT#Connected") : F("MQTT#Disconnected");
-      rulesProcessing(event);
+      if (MQTTclient_connected) {
+        eventQueue.add(F("MQTT#Connected"));
+      } else {
+        eventQueue.add(F("MQTT#Disconnected"));
+      }
     }
   }
   if (!MQTTclient_connected) {
@@ -736,10 +739,9 @@ void run10TimesPerSecond() {
     PluginCall(PLUGIN_MONITOR, 0, dummy);
     STOP_TIMER(PLUGIN_CALL_10PSU);
   }
-  if (Settings.UseRules && eventBuffer.length() > 0)
+  if (Settings.UseRules)
   {
-    rulesProcessing(eventBuffer);
-    eventBuffer = "";
+    processNextEvent();
   }
   #ifdef USES_C015
   if (WiFiConnected())

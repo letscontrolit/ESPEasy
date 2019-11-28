@@ -5,7 +5,7 @@
 #include "src/Globals/Device.h"
 #include "src/Globals/Plugins.h"
 
-String EventToFileName(String& eventName) {
+String EventToFileName(const String& eventName) {
   int size  = eventName.length();
   int index = eventName.indexOf('=');
 
@@ -24,7 +24,7 @@ String EventToFileName(String& eventName) {
   return fileName;
 }
 
-String FileNameToEvent(String& fileName) {
+String FileNameToEvent(const String& fileName) {
 #if defined(ESP8266)
   String eventName = fileName.substring(6);
 #endif // if defined(ESP8266)
@@ -63,6 +63,22 @@ void checkRuleSets() {
 #endif // ifndef BUILD_NO_DEBUG
   }
 }
+
+/********************************************************************************************\
+   Process next event from event queue
+ \*********************************************************************************************/
+bool processNextEvent() {
+  if (Settings.UseRules)
+  {
+    String nextEvent;
+    if (eventQueue.getNext(nextEvent)) {
+      rulesProcessing(nextEvent);
+      return true;
+    }
+  }
+  return false;
+}
+
 
 /********************************************************************************************\
    Rules processing
@@ -852,6 +868,7 @@ void rulesTimers() {
   if (!Settings.UseRules) {
     return;
   }
+  // FIXME TD-er:  Maybe not use the timer struct, but add the timers to the scheduler?
 
   for (byte x = 0; x < RULES_TIMER_MAX; x++) {
     if (!RulesTimer[x].paused && (RulesTimer[x].timestamp != 0L)) // timer active?
@@ -861,7 +878,7 @@ void rulesTimers() {
         RulesTimer[x].timestamp = 0L;                             // turn off this timer
         String event = F("Rules#Timer=");
         event += x + 1;
-        rulesProcessing(event);
+        rulesProcessing(event); // TD-er: Do not add to the eventQueue, but execute right now.
       }
     }
   }
@@ -905,7 +922,6 @@ void createRuleEvents(struct EventStruct *event) {
         eventString += UserVar[BaseVarIndex + varNr];
         break;
     }
-
-    rulesProcessing(eventString);
+    eventQueue.add(eventString);
   }
 }

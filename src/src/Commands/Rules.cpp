@@ -36,7 +36,11 @@ String Command_Rules_Events(struct EventStruct *event, const char *Line)
   eventName.replace('$', '#');
 
   if (Settings.UseRules) {
-    rulesProcessing(eventName);
+    if (SourceNeedsStatusUpdate(event->Source)) {
+      rulesProcessing(eventName); // TD-er: Process right now 
+    } else {
+      eventQueue.add(eventName);
+    }
   }
   return return_command_success();
 }
