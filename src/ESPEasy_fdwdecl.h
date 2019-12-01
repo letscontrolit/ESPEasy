@@ -167,6 +167,7 @@ String rulesProcessingFile(const String& fileName, String& event);
 int Calculate(const char *input, float* result);
 
 
+void WifiScan(bool async, bool quick = false);
 void WifiScan();
 void WiFiConnectRelaxed();
 void WifiDisconnect();

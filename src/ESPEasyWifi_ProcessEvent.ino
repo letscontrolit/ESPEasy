@@ -171,7 +171,7 @@ void processConnect() {
     log += " (";
     log += WiFi.BSSIDstr();
     log += F(") Ch: ");
-    log += last_channel;
+    log += RTC.lastWiFiChannel;
 
     if ((connect_duration > 0) && (connect_duration < 30000)) {
       // Just log times when they make sense.
@@ -195,6 +195,7 @@ void processConnect() {
   if (useStaticIP()) {
     markGotIP(); // in static IP config the got IP event is never fired.
   }
+  saveToRTC();
 
   logConnectionStatus();
 }
@@ -368,36 +369,61 @@ void processDisableAPmode() {
 
 void processScanDone() {
   if (processedScanDone) { return; }
+
+  // Better act on the scan done event, as it may get triggered for normal wifi begin calls.
+  int8_t scanCompleteStatus = WiFi.scanComplete();
+  switch (scanCompleteStatus) {
+    case 0: // Nothing (yet) found
+      if (timePassedSince(lastGetScanMoment) > 5000) {
+        processedScanDone = true;
+      }
+      return;
+    case -1: // WIFI_SCAN_RUNNING
+      return;
+    case -2: // WIFI_SCAN_FAILED
+      addLog(LOG_LEVEL_ERROR, F("WiFi  : Scan failed"));
+      processedScanDone = true;
+      return;
+  }
+
+  lastGetScanMoment = millis();
   processedScanDone = true;
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("WIFI  : Scan finished, found: ");
-    log += scan_done_number;
+    log += scanCompleteStatus;
     addLog(LOG_LEVEL_INFO, log);
   }
 
   int bestScanID           = -1;
   int32_t bestRssi         = -1000;
-  uint8_t bestWiFiSettings = lastWiFiSettings;
+  uint8_t bestWiFiSettings = RTC.lastWiFiSettingsIndex;
 
-  if (selectValidWiFiSettings()) {
-    bool   done                 = false;
-    String lastWiFiSettingsSSID = getLastWiFiSettingsSSID();
-
-    for (int settingNr = 0; !done && settingNr < 2; ++settingNr) {
-      for (int i = 0; i < scan_done_number; ++i) {
-        if (WiFi.SSID(i) == lastWiFiSettingsSSID) {
+  if (selectValidWiFiSettings() && scanCompleteStatus > 0) {
+    const uint8_t startWiFiSettings = RTC.lastWiFiSettingsIndex;
+    bool done = false;
+    while (!done) {
+      String ssid_to_check = getLastWiFiSettingsSSID(); 
+      for (int i = 0; i < scanCompleteStatus; ++i) {
+        if (WiFi.SSID(i) == ssid_to_check) {
           int32_t rssi = WiFi.RSSI(i);
 
           if (bestRssi < rssi) {
             bestRssi         = rssi;
             bestScanID       = i;
-            bestWiFiSettings = lastWiFiSettings;
+            bestWiFiSettings = RTC.lastWiFiSettingsIndex;
           }
         }
       }
 
-      if (!selectNextWiFiSettings()) { done = true; }
+      // Select the next WiFi settings.
+      // RTC.lastWiFiSettingsIndex may be updated.
+      if (!selectNextWiFiSettings()) {
+        done = true; 
+      }
+      if (startWiFiSettings == RTC.lastWiFiSettingsIndex) {
+        done = true; 
+      }
     }
 
     if (bestScanID >= 0) {
@@ -406,12 +432,12 @@ void processScanDone() {
         log += formatScanResult(bestScanID, " ");
         addLog(LOG_LEVEL_INFO, log);
       }
-      lastWiFiSettings = bestWiFiSettings;
+      RTC.lastWiFiSettingsIndex = bestWiFiSettings;
       uint8_t *scanbssid = WiFi.BSSID(bestScanID);
 
       if (scanbssid) {
         for (int i = 0; i < 6; ++i) {
-          lastBSSID[i] = *(scanbssid + i);
+          RTC.lastBSSID[i] = *(scanbssid + i);
         }
       }
     }

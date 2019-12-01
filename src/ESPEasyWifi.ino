@@ -45,10 +45,14 @@
    - Set timerAPstart when "valid WiFi connection" state is observed.
    - Disable timerAPstart when ESPEASY_WIFI_SERVICES_INITIALIZED wifi state is reached.
 
-
+   For the first attempt to connect after a cold boot (RTC values are 0), a WiFi scan will be 
+   performed to find the strongest known SSID.
+   This will set RTC.lastBSSID and RTC.lastWiFiChannel
+   
    Quick reconnect (using BSSID/channel of last connection) when both apply:
    - If wifi_connect_attempt < 3
-   - lastBSSID is known
+   - RTC.lastBSSID is known
+   - RTC.lastWiFiChannel != 0
 
    Change of wifi settings when both apply:
    - "other" settings valid
@@ -130,6 +134,10 @@ void WiFiConnectRelaxed() {
   if (!wifiConnectAttemptNeeded) {
     return; // already connected or connect attempt in progress need to disconnect first
   }
+  if (!processedScanDone) {
+    // Scan is still active, so do not yet connect.
+    return;
+  }
 
   // Start connect attempt now, so no longer needed to attempt new connection.
   wifiConnectAttemptNeeded = false;
@@ -143,7 +151,8 @@ void WiFiConnectRelaxed() {
 
   if (wifiSetupConnect) {
     // wifiSetupConnect is when run from the setup page.
-    lastWiFiSettings     = 0; // Force to load the first settings.
+    RTC.lastWiFiSettingsIndex     = 0; // Force to load the first settings.
+    RTC.lastWiFiChannel = 0; // Force slow connect
     wifi_connect_attempt = 0;
     wifiSetupConnect     = false;
   }
@@ -152,7 +161,7 @@ void WiFiConnectRelaxed() {
   if ((wifi_connect_attempt != 0) && ((wifi_connect_attempt % 2) == 0)) {
     if (selectNextWiFiSettings()) {
       // Switch WiFi settings, so the last known BSSID cannot be used for a quick reconnect.
-      lastBSSID[0] = 0;
+      RTC.lastBSSID[0] = 0;
     }
   }
   const char *ssid       = getLastWiFiSettingsSSID();
@@ -171,10 +180,10 @@ void WiFiConnectRelaxed() {
   wifiConnectInProgress            = true;
 
   // First try quick reconnect using last known BSSID and channel.
-  bool useQuickConnect = lastBSSID[0] != 0 && wifi_connect_attempt < 3;
+  bool useQuickConnect = RTC.lastBSSID[0] != 0 && RTC.lastWiFiChannel != 0 && wifi_connect_attempt < 3;
 
   if (useQuickConnect) {
-    WiFi.begin(ssid, passphrase, last_channel, &lastBSSID[0]);
+    WiFi.begin(ssid, passphrase, RTC.lastWiFiChannel, &RTC.lastBSSID[0]);
   } else {
     WiFi.begin(ssid, passphrase);
   }
@@ -204,10 +213,16 @@ bool prepareWiFi() {
     // Reset to default power mode requires a reboot since setting it to WIFI_LIGHT_SLEEP will cause a crash.
     WiFi.setSleepMode(WIFI_NONE_SLEEP);
   }
+
   #endif // if defined(ESP8266)
   #if defined(ESP32)
   WiFi.setHostname(hostname);
   #endif // if defined(ESP32)
+
+  if (RTC.lastWiFiChannel == 0 && wifi_connect_attempt <= 1) {
+    WifiScan(true);
+  }
+
   return true;
 }
 
@@ -257,19 +272,25 @@ void WifiDisconnect()
 // ********************************************************************************
 // Scan WiFi network
 // ********************************************************************************
-void WifiScanAsync() {
+void WifiScan(bool async, bool quick) {
+  if (WiFi.scanComplete() == -1) { 
+    // Scan still busy
+    return;
+  }
   addLog(LOG_LEVEL_INFO, F("WIFI  : Start network scan"));
-  #ifdef ESP32
-  bool async               = true;
-  bool show_hidden         = false;
-  bool passive             = false;
-  uint32_t max_ms_per_chan = 300;
-  WiFi.scanNetworks(async, show_hidden, passive, max_ms_per_chan);
-  #else // ifdef ESP32
-
-  // 2.4.x only and it doesn't work like expected.
-  //    WiFi.scanNetworksAsync(onScanFinished);
-  #endif // ifdef ESP32
+  bool show_hidden         = true;
+  processedScanDone = false;
+  lastGetScanMoment = millis();
+  if (quick) {
+    #ifdef ESP8266
+    // Only scan a single channel if the RTC.lastWiFiChannel is known to speed up connection time.
+    WiFi.scanNetworks(async, show_hidden, RTC.lastWiFiChannel);
+    #else
+    WiFi.scanNetworks(async, show_hidden);
+    #endif
+  } else {
+    WiFi.scanNetworks(async, show_hidden);
+  }
 }
 
 // ********************************************************************************
@@ -279,18 +300,18 @@ void WifiScan()
 {
   // Direct Serial is allowed here, since this function will only be called from serial input.
   serialPrintln(F("WIFI : SSID Scan start"));
-  int n = WiFi.scanNetworks(false, true);
-
-  if (n == 0) {
+  WifiScan(false);
+  const int8_t scanCompleteStatus = WiFi.scanComplete();
+  if (scanCompleteStatus <= 0) {
     serialPrintln(F("WIFI : No networks found"));
   }
   else
   {
     serialPrint(F("WIFI : "));
-    serialPrint(String(n));
+    serialPrint(String(scanCompleteStatus));
     serialPrintln(F(" networks found"));
 
-    for (int i = 0; i < n; ++i)
+    for (int i = 0; i < scanCompleteStatus; ++i)
     {
       // Print SSID and RSSI for each network found
       serialPrint(F("WIFI : "));

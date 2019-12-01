@@ -2,21 +2,21 @@
 // Manage WiFi credentials
 // ********************************************************************************
 const char* getLastWiFiSettingsSSID() {
-  return lastWiFiSettings == 0 ? SecuritySettings.WifiSSID : SecuritySettings.WifiSSID2;
+  return RTC.lastWiFiSettingsIndex == 0 ? SecuritySettings.WifiSSID : SecuritySettings.WifiSSID2;
 }
 
 const char* getLastWiFiSettingsPassphrase() {
-  return lastWiFiSettings == 0 ? SecuritySettings.WifiKey : SecuritySettings.WifiKey2;
+  return RTC.lastWiFiSettingsIndex == 0 ? SecuritySettings.WifiKey : SecuritySettings.WifiKey2;
 }
 
 bool selectNextWiFiSettings() {
-  uint8_t tmp = lastWiFiSettings;
+  uint8_t tmp = RTC.lastWiFiSettingsIndex;
 
-  lastWiFiSettings = (lastWiFiSettings + 1) % 2;
+  RTC.lastWiFiSettingsIndex = (RTC.lastWiFiSettingsIndex + 1) % 2;
 
   if (!wifiSettingsValid(getLastWiFiSettingsSSID(), getLastWiFiSettingsPassphrase())) {
     // other settings are not correct, switch back.
-    lastWiFiSettings = tmp;
+    RTC.lastWiFiSettingsIndex = tmp;
     return false; // Nothing changed.
   }
   return true;

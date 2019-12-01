@@ -46,33 +46,35 @@ String Command_MQTT_messageDelay(struct EventStruct *event, const char *Line)
 
 String Command_MQTT_Publish(struct EventStruct *event, const char *Line)
 {
-  if (WiFiConnected()) {
-    // ToDo TD-er: Not sure about this function, but at least it sends to an existing MQTTclient
-    int enabledMqttController = firstEnabledMQTTController();
+  // ToDo TD-er: Not sure about this function, but at least it sends to an existing MQTTclient
+  int enabledMqttController = firstEnabledMQTTController();
 
-    if (enabledMqttController >= 0) {
-      // Command structure:  Publish,<topic>,<value>
-      String topic = parseStringKeepCase(Line, 2);
-      String value = parseStringKeepCase(Line, 3);
-      addLog(LOG_LEVEL_DEBUG, String(F("Publish: ")) + topic + value);
+  if (enabledMqttController >= 0) {
+    // Command structure:  Publish,<topic>,<value>
+    String topic = parseStringKeepCase(Line, 2);
+    String value = parseStringKeepCase(Line, 3);
+    addLog(LOG_LEVEL_DEBUG, String(F("Publish: ")) + topic + value);
 
-      if ((topic.length() > 0) && (value.length() > 0)) {
-        // @giig1967g: if payload starts with '=' then treat it as a Formula and evaluate accordingly
-        // The evaluated value is already present in event->Par2
-        // FIXME TD-er: Is the evaluated value always present in event->Par2 ?
-        // Should it already be evaluated, or should we evaluate it now?
-        if (value[0] != '=') {
-          MQTTpublish(enabledMqttController, topic.c_str(), value.c_str(), Settings.MQTTRetainFlag);
-        }
-        else {
-          MQTTpublish(enabledMqttController, topic.c_str(), String(event->Par2).c_str(), Settings.MQTTRetainFlag);
-        }
+    if ((topic.length() > 0) && (value.length() > 0)) {
+      // @giig1967g: if payload starts with '=' then treat it as a Formula and evaluate accordingly
+      // The evaluated value is already present in event->Par2
+      // FIXME TD-er: Is the evaluated value always present in event->Par2 ?
+      // Should it already be evaluated, or should we evaluate it now?
+
+      bool success = false;
+      if (value[0] != '=') {
+        success = MQTTpublish(enabledMqttController, topic.c_str(), value.c_str(), Settings.MQTTRetainFlag);
       }
-      return return_command_success();
+      else {
+        success = MQTTpublish(enabledMqttController, topic.c_str(), String(event->Par2).c_str(), Settings.MQTTRetainFlag);
+      }
+      if (success) {
+        return return_command_success();
+      }
     }
-    return F("No MQTT controller enabled");
+    return return_command_failed();
   }
-  return return_not_connected();
+  return F("No MQTT controller enabled");
 }
 
 

@@ -365,6 +365,14 @@ void SendStatus(byte source, const String& status)
 #ifdef USES_MQTT
 bool MQTTpublish(int controller_idx, const char *topic, const char *payload, boolean retained)
 {
+  {
+    MQTT_queue_element dummy_element(MQTT_queue_element(controller_idx, "", "", retained));
+    if (MQTTDelayHandler.queueFull(dummy_element)) {
+      // The queue is full, try to make some room first.
+      addLog(LOG_LEVEL_DEBUG, F("MQTT : Extra processMQTTdelayQueue()"));
+      processMQTTdelayQueue();
+    }
+  }
   const bool success = MQTTDelayHandler.addToQueue(MQTT_queue_element(controller_idx, topic, payload, retained));
 
   scheduleNextMQTTdelayQueue();
@@ -382,7 +390,6 @@ void processMQTTdelayQueue() {
   if (element == NULL) { return; }
 
   if (MQTTclient.publish(element->_topic.c_str(), element->_payload.c_str(), element->_retained)) {
-    setIntervalTimerOverride(TIMER_MQTT, 10); // Make sure the MQTT is being processed as soon as possible.
     MQTTDelayHandler.markProcessed(true);
   } else {
     MQTTDelayHandler.markProcessed(false);
@@ -396,6 +403,7 @@ void processMQTTdelayQueue() {
     }
 #endif // ifndef BUILD_NO_DEBUG
   }
+  setIntervalTimerOverride(TIMER_MQTT, 10); // Make sure the MQTT is being processed as soon as possible.
   scheduleNextMQTTdelayQueue();
   STOP_TIMER(MQTT_DELAY_QUEUE);
 }

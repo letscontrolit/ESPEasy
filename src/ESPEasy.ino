@@ -287,6 +287,13 @@ void setup()
       toDisable = disableNotification(toDisable);
     }
   }
+  if (!selectValidWiFiSettings()) {
+    wifiSetup = true;
+    RTC.lastWiFiChannel = 0; // Must scan all channels
+    // Wait until scan has finished to make sure as many as possible are found
+    // We're still in the setup phase, so nothing else is taking resources of the ESP.
+    WifiScan(false); 
+  }
 
 //  setWifiMode(WIFI_STA);
   checkRuleSets();
@@ -357,17 +364,6 @@ void setup()
     rulesProcessing(event);
   }
 
-  if (!selectValidWiFiSettings()) {
-    wifiSetup = true;
-  }
-/*
-  // FIXME TD-er:
-  // Async scanning for wifi doesn't work yet like it should.
-  // So no selection of strongest network yet.
-  if (selectValidWiFiSettings()) {
-    WifiScanAsync();
-  }
-*/
   WiFiConnectRelaxed();
 
   #ifdef FEATURE_REPORTING
