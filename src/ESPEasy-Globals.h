@@ -326,8 +326,7 @@ extern String dummyString;  // FIXME @TD-er  This may take a lot of memory over 
 enum PluginPtrType {
   TaskPluginEnum,
   ControllerPluginEnum,
-  NotificationPluginEnum,
-  CommandTimerEnum
+  NotificationPluginEnum
 };
 void schedule_event_timer(PluginPtrType ptr_type, byte Index, byte Function, struct EventStruct* event);
 unsigned long createSystemEventMixedId(PluginPtrType ptr_type, byte Index, byte Function);

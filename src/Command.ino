@@ -69,40 +69,19 @@ bool checkNrArguments(const char *cmd, const char *Line, int nrArguments) {
 /*********************************************************************************************\
 * Registers command
 \*********************************************************************************************/
-String doExecuteCommand(const char *cmd, struct EventStruct *event, const char *line)
+bool executeInternalCommand(const char *cmd, struct EventStruct *event, const char *line, String& status)
 {
   String cmd_lc;
 
   cmd_lc = cmd;
   cmd_lc.toLowerCase();
-
-  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = F("Command: ");
-    log += cmd_lc;
-    addLog( LOG_LEVEL_INFO, log);
-#ifndef BUILD_NO_DEBUG
-    addLog(LOG_LEVEL_DEBUG, line); // for debug purposes add the whole line.
-    String parameters;
-    parameters.reserve(64);
-    parameters += F("Par1: ");
-    parameters += event->Par1;
-    parameters += F(" Par2: ");
-    parameters += event->Par2;
-    parameters += F(" Par3: ");
-    parameters += event->Par3;
-    parameters += F(" Par4: ");
-    parameters += event->Par4;
-    parameters += F(" Par5: ");
-    parameters += event->Par5;
-    addLog(LOG_LEVEL_DEBUG, parameters);
-#endif // ifndef BUILD_NO_DEBUG
-  }
-
   // Simple macro to match command to function call.
   #define COMMAND_CASE(S, C, NARGS) \
   if (strcmp_P(cmd_lc.c_str(),      \
-               PSTR(S)) ==          \
-      0) { if (!checkNrArguments(cmd, line, NARGS)) { return return_incorrect_nr_arguments(); } else  return C (event, line); }
+               PSTR(S)) == 0)       \
+    { if (!checkNrArguments(cmd, line, NARGS)) { \
+      status = return_incorrect_nr_arguments(); return false;} \
+      else  status = C (event, line); return true;}
 
   // FIXME TD-er: Should we execute command when number of arguments is wrong?
 
@@ -261,15 +240,8 @@ String doExecuteCommand(const char *cmd, struct EventStruct *event, const char *
       break;
   }
 
-  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String errorUnknown = F("Command unknown: \"");
-    errorUnknown += cmd_lc;
-    errorUnknown += '\"';
-    addLog(LOG_LEVEL_INFO, errorUnknown);
-  }
-  return F("\nUnknown command!");
-
   #undef COMMAND_CASE
+  return false;
 }
 
 // Execute command which may be plugin or internal commands
@@ -321,6 +293,7 @@ bool ExecuteCommand(taskIndex_t taskIndex, byte source, const char *Line, bool t
   String cmd;
 
   if (!GetArgv(Line, cmd, 1)) {
+    SendStatus(source, return_command_failed());
     return false;
   }
 
@@ -344,7 +317,7 @@ bool ExecuteCommand(taskIndex_t taskIndex, byte source, const char *Line, bool t
   action = parseTemplate(action, action.length()); // parseTemplate before executing the command
 
   // Split the arguments into Par1...5 of the event.
-  // Do not split it in doExecuteCommand, since that one will be called from the scheduler with pre-set events.
+  // Do not split it in executeInternalCommand, since that one will be called from the scheduler with pre-set events.
   // FIXME TD-er: Why call this for all commands? The CalculateParam function is quite heavy.
   parseCommandString(&TempEvent, action);
 
@@ -353,6 +326,41 @@ bool ExecuteCommand(taskIndex_t taskIndex, byte source, const char *Line, bool t
   // Maybe ExecuteCommand can be scheduled?
   delay(0);
 
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    String log = F("Command: ");
+    log += cmd;
+    addLog( LOG_LEVEL_INFO, log);
+#ifndef BUILD_NO_DEBUG
+    addLog(LOG_LEVEL_DEBUG, Line); // for debug purposes add the whole line.
+    String parameters;
+    parameters.reserve(64);
+    parameters += F("Par1: ");
+    parameters += TempEvent.Par1;
+    parameters += F(" Par2: ");
+    parameters += TempEvent.Par2;
+    parameters += F(" Par3: ");
+    parameters += TempEvent.Par3;
+    parameters += F(" Par4: ");
+    parameters += TempEvent.Par4;
+    parameters += F(" Par5: ");
+    parameters += TempEvent.Par5;
+    addLog(LOG_LEVEL_DEBUG, parameters);
+#endif // ifndef BUILD_NO_DEBUG
+  }
+
+
+  if (tryInternal) {
+    String status;
+    bool handled = executeInternalCommand(cmd.c_str(), &TempEvent, action.c_str(), status);
+    if (status.length() > 0) {
+      delay(0);
+      SendStatus(source, status);
+      delay(0);
+    }
+    if (handled) {
+      return true;
+    }
+  }
   if (tryPlugin) {
     // Use a tmp string to call PLUGIN_WRITE, since PluginCall may inadvertenly
     // alter the string.
@@ -367,20 +375,23 @@ bool ExecuteCommand(taskIndex_t taskIndex, byte source, const char *Line, bool t
         addLog(LOG_LEVEL_ERROR, log);
       }
     }
-    if (handled) return true;
-  }
-  if (tryRemoteConfig) {
-    if (remoteConfig(&TempEvent, action)) {
+    if (handled) {
+      SendStatus(source, return_command_success());
       return true;
     }
   }
-  if (tryInternal) {
-    String status = doExecuteCommand(cmd.c_str(), &TempEvent, Line);
-    delay(0);
-    SendStatus(source, status);
-    delay(0);
-    // FIXME TD-er: We don't know here if the command was successful
+  if (tryRemoteConfig) {
+    if (remoteConfig(&TempEvent, action)) {
+      SendStatus(source, return_command_success());
+      return true;
+    }
   }
+  String errorUnknown = F("Command unknown: \"");
+  errorUnknown += action;
+  errorUnknown += '\"';
+  addLog(LOG_LEVEL_INFO, errorUnknown);
+  SendStatus(source, errorUnknown);
+  delay(0);
   return false;
 }
 

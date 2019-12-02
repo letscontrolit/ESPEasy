@@ -626,23 +626,6 @@ void schedule_notification_event_timer(byte NotificationProtocolIndex, byte Func
   schedule_event_timer(NotificationPluginEnum, NotificationProtocolIndex, Function, event);
 }
 
-void schedule_command_timer(const char *cmd, struct EventStruct *event, const char *line) {
-  String cmdStr;
-
-  cmdStr += cmd;
-  String lineStr;
-  lineStr += line;
-
-  // Using CRC here based on the cmd AND line, to make sure other commands are
-  // not removed from the queue,  since the ID used in the queue must be unique.
-  const int crc               = calc_CRC16(cmdStr) ^ calc_CRC16(lineStr);
-  const unsigned long mixedId = createSystemEventMixedId(CommandTimerEnum, static_cast<uint16_t>(crc));
-  EventStructCommandWrapper eventWrapper(mixedId, *event);
-  eventWrapper.cmd  = cmdStr;
-  eventWrapper.line = lineStr;
-  EventQueue.push_back(eventWrapper);
-}
-
 void schedule_event_timer(PluginPtrType ptr_type, byte Index, byte Function, struct EventStruct *event) {
   const unsigned long mixedId = createSystemEventMixedId(ptr_type, Index, Function);
 
@@ -690,17 +673,6 @@ void process_system_event_queue() {
     case NotificationPluginEnum:
       NPlugin_ptr[Index](Function, &EventQueue.front().event, tmpString);
       break;
-    case CommandTimerEnum:
-    {
-      String status = doExecuteCommand(
-        EventQueue.front().cmd.c_str(),
-        &EventQueue.front().event,
-        EventQueue.front().line.c_str());
-      delay(0);
-      SendStatus(EventQueue.front().event.Source, status);
-      delay(0);
-      break;
-    }
   }
   EventQueue.pop_front();
 }
