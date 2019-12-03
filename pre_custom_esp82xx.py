@@ -44,4 +44,22 @@ else:
     "USE_SETTINGS_ARCHIVE"
   ])
 
-print(env['CPPDEFINES'])
+
+
+my_flags = env.ParseFlags(env['BUILD_FLAGS'])
+my_defines = my_flags.get("CPPDEFINES")
+#defines = {k: v for (k, v) in my_defines}
+
+print("\u001b[32m Custom PIO configuration check \u001b[0m", flush=True)
+# print the defines
+print("\u001b[33m CPPDEFINES: \u001b[0m  {}".format(my_defines), flush=True)
+print("\u001b[33m Custom CPPDEFINES: \u001b[0m  {}".format(env['CPPDEFINES']), flush=True)
+print("\u001b[32m ------------------------------- \u001b[0m", flush=True)
+
+
+if (len(my_defines) == 0):
+  print("\u001b[31m No defines are set, probably configuration error. \u001b[0m", flush=True)
+  raise ValueError
+
+
+
