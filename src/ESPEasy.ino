@@ -182,7 +182,11 @@ void setup()
 #endif
   WiFi.persistent(false); // Do not use SDK storage of SSID/WPA parameters
   WiFi.setAutoReconnect(false);
+  // The WiFi.disconnect() ensures that the WiFi is working correctly. If this is not done before receiving WiFi connections,
+  // those WiFi connections will take a long time to make or sometimes will not work at all.
+  WiFi.disconnect();
   setWifiMode(WIFI_OFF);
+  
   run_compiletime_checks();
   lowestFreeStack = getFreeStackWatermark();
   lowestRAM = FreeMem();
