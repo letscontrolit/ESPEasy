@@ -61,6 +61,11 @@ void handle_wifiscanner() {
   checkRAM(F("handle_wifiscanner"));
 
   if (!isLoggedIn()) { return; }
+
+  WiFiMode_t cur_wifimode = WiFi.getMode();
+  WifiScan(false); 
+  setWifiMode(cur_wifimode);
+
   navMenuIndex = MENU_INDEX_TOOLS;
   TXBuffer.startStream();
   sendHeadandTail_stdtemplate(_HEAD);
@@ -68,19 +73,22 @@ void handle_wifiscanner() {
   html_TR();
   html_table_header(getLabel(LabelType::SSID));
   html_table_header(getLabel(LabelType::BSSID));
-  html_table_header("info");
+  html_table_header(F("Network info"));
+  html_table_header(F("RSSI"), 50);
 
-  int n = WiFi.scanNetworks(false, true);
-
-  if (n == 0) {
+  const int8_t scanCompleteStatus = WiFi.scanComplete();
+  if (scanCompleteStatus <= 0) {
     TXBuffer += F("No Access Points found");
   }
   else
   {
-    for (int i = 0; i < n; ++i)
+    for (int i = 0; i < scanCompleteStatus; ++i)
     {
       html_TR_TD();
-      TXBuffer += formatScanResult(i, "<TD>");
+      int32_t rssi = 0;
+      TXBuffer += formatScanResult(i, "<TD>", rssi);
+      html_TD();
+      getWiFi_RSSI_icon(rssi, 45);
     }
   }
 

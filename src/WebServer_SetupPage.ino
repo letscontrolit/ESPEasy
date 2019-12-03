@@ -76,16 +76,14 @@ void handle_setup() {
 }
 
 void handle_setup_scan_and_show(const String& ssid, const String& other, const String& password) {
-  static int n            = 0;
-  WiFiMode_t cur_wifimode = WiFi.getMode();
-
-  if (n == 0) {
-    addLog(LOG_LEVEL_INFO, F("Start scan for WiFi APs"));
-    n = WiFi.scanNetworks(false, true);
+  if (WiFi.scanComplete() <= 0) {
+    WiFiMode_t cur_wifimode = WiFi.getMode();
+    WifiScan(false); 
+    setWifiMode(cur_wifimode);
   }
-  setWifiMode(cur_wifimode);
 
-  if (n == 0) {
+  const int8_t scanCompleteStatus = WiFi.scanComplete();
+  if (scanCompleteStatus <= 0) {
     TXBuffer += F("No Access Points found");
   }
   else
@@ -96,7 +94,7 @@ void handle_setup_scan_and_show(const String& ssid, const String& other, const S
     html_table_header(F("Network info"));
     html_table_header(F("RSSI"), 50);
 
-    for (int i = 0; i < n; ++i)
+    for (int i = 0; i < scanCompleteStatus; ++i)
     {
       html_TR_TD(); TXBuffer += F("<label class='container2'>");
       TXBuffer               += F("<input type='radio' name='ssid' value='");

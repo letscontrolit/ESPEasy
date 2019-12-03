@@ -50,7 +50,7 @@ Start AP timer is set or cleared at:
 Quick reconnect (using BSSID/channel of last connection) when both apply:
 
 - If wifi_connect_attempt < 3
-- lastBSSID is known
+- RTC.lastBSSID is known
 
 Change of wifi settings when both apply:
 

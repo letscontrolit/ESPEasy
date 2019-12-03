@@ -16,9 +16,9 @@ env.Append(CPPDEFINES=[
 #  ("WEBSERVER_RULES_DEBUG", "1")
 ])
 if os.path.isfile('src/Custom.h'):
-  env['CPPDEFINES'].append("USE_CUSTOM_H")
+  env.Append(CPPDEFINES=["USE_CUSTOM_H"])
 else:
-  env['CPPDEFINES'].extend([
+  env.Append(CPPDEFINES=[
     "CONTROLLER_SET_ALL",
     "NOTIFIER_SET_NONE",
     "PLUGIN_SET_ONLY_SWITCH",
