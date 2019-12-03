@@ -70,6 +70,9 @@ void handle_json()
       #if defined(ESP8266)
       stream_next_json_object_value(LabelType::HOST_NAME);
       #endif // if defined(ESP8266)
+      #ifdef FEATURE_MDNS
+      stream_next_json_object_value(LabelType::M_DNS);
+      #endif
       stream_next_json_object_value(LabelType::IP_CONFIG);
       stream_next_json_object_value(LabelType::IP_ADDRESS);
       stream_next_json_object_value(LabelType::IP_SUBNET);

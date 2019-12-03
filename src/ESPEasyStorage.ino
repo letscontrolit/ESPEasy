@@ -297,6 +297,7 @@ void afterloadSettings() {
     ResetFactoryDefaultPreference = Settings.ResetFactoryDefaultPreference;
   }
   msecTimerHandler.setEcoMode(Settings.EcoPowerMode());
+  set_mDNS(); // To update changes in hostname.
 }
 
 /********************************************************************************************\

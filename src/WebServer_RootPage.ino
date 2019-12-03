@@ -106,13 +106,12 @@ void handle_root() {
     }
 
     #ifdef FEATURE_MDNS
-    html_TR_TD();
-    TXBuffer += F("mDNS:<TD><a href='http://");
-    TXBuffer += WifiGetHostname();
-    TXBuffer += F(".local'>");
-    TXBuffer += WifiGetHostname();
-    TXBuffer += F(".local</a>");
-    html_TD(3);
+    addRowLabel(getLabel(LabelType::M_DNS));
+    TXBuffer += F("<a href='http://");
+    TXBuffer += getValue(LabelType::M_DNS);
+    TXBuffer += F("'>");
+    TXBuffer += getValue(LabelType::M_DNS);
+    TXBuffer += F("</a>");
     #endif // ifdef FEATURE_MDNS
     html_TR_TD();
     html_TD();

@@ -39,6 +39,8 @@ else:
     "USES_C016",  # Cache Controller
     "USES_C018",  # TTN/RN2483
 
+    "FEATURE_MDNS",
+
     "USE_SETTINGS_ARCHIVE"
   ])
 

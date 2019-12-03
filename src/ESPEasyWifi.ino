@@ -88,8 +88,7 @@ bool WiFiConnected() {
   if (wifiStatus != ESPEASY_WIFI_SERVICES_INITIALIZED) {
     if (validWiFi) {
       // Set internal wifiStatus and reset timer to disable AP mode
-      wifiStatus            = ESPEASY_WIFI_SERVICES_INITIALIZED;
-      wifiConnectInProgress = false;
+      markWiFi_services_initialized();
     }
   }
 
@@ -217,6 +216,7 @@ bool prepareWiFi() {
   #endif // if defined(ESP8266)
   #if defined(ESP32)
   WiFi.setHostname(hostname);
+  WiFi.config(INADDR_NONE, INADDR_NONE, INADDR_NONE);
   #endif // if defined(ESP32)
 
   if (RTC.lastWiFiChannel == 0 && wifi_connect_attempt <= 1) {
@@ -485,6 +485,9 @@ void setWifiMode(WiFiMode_t wifimode) {
     // Mode has changed
     setAPinternal(new_mode_AP_enabled);
   }
+  #ifdef FEATURE_MDNS
+  MDNS.notifyAPChange();
+  #endif
 }
 
 bool WifiIsAP(WiFiMode_t wifimode)
@@ -584,6 +587,7 @@ void setConnectionSpeed() {
 
   // Does not (yet) work, so commented out.
   #ifdef ESP32
+  /*
   uint8_t protocol = WIFI_PROTOCOL_11B | WIFI_PROTOCOL_11G; // Default to BG
 
   if (!Settings.ForceWiFi_bg_mode() || (wifi_connect_attempt > 10)) {
@@ -598,6 +602,7 @@ void setConnectionSpeed() {
   if (WifiIsAP(WiFi.getMode())) {
     esp_wifi_set_protocol(WIFI_IF_AP, protocol);
   }
+  */
   #endif // ifdef ESP32
 }
 

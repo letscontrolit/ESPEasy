@@ -63,8 +63,7 @@ void handle_unprocessedWiFiEvents()
     }
 
     if ((wifiStatus & ESPEASY_WIFI_GOT_IP) && (wifiStatus & ESPEASY_WIFI_CONNECTED) && WiFi.isConnected()) {
-      wifiStatus            = ESPEASY_WIFI_SERVICES_INITIALIZED;
-      wifiConnectInProgress = false;
+      markWiFi_services_initialized();
     }
   } else if (!WiFiConnected()) {
     // Somehow the WiFi has entered a limbo state.
@@ -129,6 +128,7 @@ void processDisconnect() {
   if (processedDisconnect) { return; }
   processedDisconnect = true;
   wifiStatus          = ESPEASY_WIFI_DISCONNECTED;
+  setWebserverRunning(false);
   delay(100); // FIXME TD-er: See https://github.com/letscontrolit/ESPEasy/issues/1987#issuecomment-451644424
 
   if (Settings.UseRules) {
@@ -256,25 +256,6 @@ void processGotIP() {
     WiFi.config(ip, gw, subnet);
   }
 
-  #ifdef FEATURE_MDNS
-  addLog(LOG_LEVEL_INFO, F("WIFI : Starting mDNS..."));
-  bool mdns_started = MDNS.begin(WifiGetHostname().c_str());
-
-  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = F("WIFI : ");
-
-    if (mdns_started) {
-      log += F("mDNS started, with name: ");
-      log += WifiGetHostname();
-      log += F(".local");
-    }
-    else {
-      log += F("mDNS failed");
-    }
-    addLog(LOG_LEVEL_INFO, log);
-  }
-  #endif // ifdef FEATURE_MDNS
-
   // First try to get the time, since that may be used in logs
   if (systemTimePresent()) {
     initTime();
@@ -295,13 +276,6 @@ void processGotIP() {
   statusLED(true);
 
   //  WiFi.scanDelete();
-  setWebserverRunning(true);
-  #ifdef FEATURE_MDNS
-
-  if (mdns_started) {
-    MDNS.addService("http", "tcp", 80);
-  }
-  #endif // ifdef FEATURE_MDNS
 
   if (wifiSetup) {
     // Wifi setup was active, Apparently these settings work.
@@ -442,4 +416,11 @@ void processScanDone() {
       }
     }
   }
+}
+
+
+void markWiFi_services_initialized() {
+  wifiStatus            = ESPEASY_WIFI_SERVICES_INITIALIZED;
+  wifiConnectInProgress = false;
+  setWebserverRunning(true);
 }

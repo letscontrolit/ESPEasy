@@ -790,7 +790,7 @@ bool hasIPaddr() {
   bool configured = false;
 
   for (auto addr : addrList) {
-    if ((configured = !addr.isLocal() && (addr.ifnumber() == STATION_IF))) {
+    if ((configured = (!addr.isLocal() && (addr.ifnumber() == STATION_IF)))) {
       /*
          Serial.printf("STA: IF='%s' hostname='%s' addr= %s\n",
                     addr.ifname().c_str(),

@@ -36,6 +36,10 @@ void markGotIP() {
 // Make sure not to call anything in these functions that result in delay() or yield()
 // ********************************************************************************
 #ifdef ESP32
+#include <WiFi.h>
+
+static bool ignoreDisconnectEvent = false;
+
 void WiFiEvent(system_event_id_t event, system_event_info_t info) {
   switch (event) {
     case SYSTEM_EVENT_STA_CONNECTED:
@@ -57,19 +61,25 @@ void WiFiEvent(system_event_id_t event, system_event_info_t info) {
       break;
     }
     case SYSTEM_EVENT_STA_DISCONNECTED:
-      lastDisconnectMoment = millis();
+      if (!ignoreDisconnectEvent) {
+        ignoreDisconnectEvent = true;
+        lastDisconnectMoment = millis();
+        WiFi.persistent(false);
+        WiFi.disconnect(true);
 
-      if (timeDiff(lastConnectMoment, last_wifi_connect_attempt_moment) > 0) {
-        // There was an unsuccessful connection attempt
-        lastConnectedDuration = timeDiff(last_wifi_connect_attempt_moment, lastDisconnectMoment);
-      } else {
-        lastConnectedDuration = timeDiff(lastConnectMoment, lastDisconnectMoment);
+        if (timeDiff(lastConnectMoment, last_wifi_connect_attempt_moment) > 0) {
+          // There was an unsuccessful connection attempt
+          lastConnectedDuration = timeDiff(last_wifi_connect_attempt_moment, lastDisconnectMoment);
+        } else {
+          lastConnectedDuration = timeDiff(lastConnectMoment, lastDisconnectMoment);
+        }
+        processedDisconnect  = false;
+        lastDisconnectReason = static_cast<WiFiDisconnectReason>(info.disconnected.reason);
+        wifiStatus          |= ESPEASY_WIFI_DISCONNECTED;
       }
-      processedDisconnect  = false;
-      lastDisconnectReason = static_cast<WiFiDisconnectReason>(info.disconnected.reason);
-      wifiStatus          |= ESPEASY_WIFI_DISCONNECTED;
       break;
     case SYSTEM_EVENT_STA_GOT_IP:
+      ignoreDisconnectEvent = false;
       markGotIP();
       break;
     case SYSTEM_EVENT_AP_STACONNECTED:
@@ -129,7 +139,8 @@ void onDisconnect(const WiFiEventStationModeDisconnected& event) {
 
   if (WiFi.status() == WL_CONNECTED) {
     // See https://github.com/esp8266/Arduino/issues/5912
-    WiFi.disconnect();
+    WiFi.persistent(false);
+    WiFi.disconnect(true);
   }
   processedDisconnect = false;
 }
