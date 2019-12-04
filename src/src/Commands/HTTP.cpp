@@ -13,9 +13,8 @@
 String Command_HTTP_SendToHTTP(struct EventStruct *event, const char* Line)
 {
 	if (WiFiConnected()) {
-		String strLine = Line;
-		String host = parseString(strLine, 2);
-		const int port = parseCommandArgumentInt(strLine, 2);
+		String host = parseString(Line, 2);
+		const int port = parseCommandArgumentInt(Line, 2);
 		if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
 			String log = F("SendToHTTP: Host: ");
 			log += host;
@@ -24,7 +23,9 @@ String Command_HTTP_SendToHTTP(struct EventStruct *event, const char* Line)
 			addLog(LOG_LEVEL_DEBUG, log);
 		}
 		if (!port < 0 || port > 65535) return return_command_failed();
-		String path = parseStringToEndKeepCase(strLine, 4);
+		// FIXME TD-er: This is not using the tolerant settings option.
+    // String path = tolerantParseStringKeepCase(Line, 4);
+		String path = parseStringToEndKeepCase(Line, 4);
 #ifndef BUILD_NO_DEBUG
 		if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
 			String log = F("SendToHTTP: Path: ");

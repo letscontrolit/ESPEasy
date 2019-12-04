@@ -52,7 +52,7 @@ String Command_MQTT_Publish(struct EventStruct *event, const char *Line)
   if (enabledMqttController >= 0) {
     // Command structure:  Publish,<topic>,<value>
     String topic = parseStringKeepCase(Line, 2);
-    String value = parseStringKeepCase(Line, 3);
+    String value = tolerantParseStringKeepCase(Line, 3);
     addLog(LOG_LEVEL_DEBUG, String(F("Publish: ")) + topic + value);
 
     if ((topic.length() > 0) && (value.length() > 0)) {

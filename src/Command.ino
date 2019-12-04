@@ -42,15 +42,31 @@ bool checkNrArguments(const char *cmd, const char *Line, int nrArguments) {
         log += Line;
       } else {
         // Check for one more argument than allowed, since we apparently have one.
-        for (int i = 0; i <= nrArguments; ++i) {
-          if (i < nrArguments) {
-            log += F(" arg");
+        bool done = false;
+        int i = 1;
+        while (!done) {
+          String parameter;
+          if (i == nrArguments) {
+            parameter = tolerantParseStringKeepCase(Line, i+ 1);
+            done = true;
           } else {
-            log += F(" extraArg");
+            parameter = parseStringKeepCase(Line, i + 1);
           }
-          log += String(i + 1);
-          log += '=';
-          log += parseString(Line, i + 2);
+          done = parameter.length() == 0;
+          if (!done) {
+            if (i <= nrArguments) {
+              if (Settings.TolerantLastArgParse() && i == nrArguments) {
+                log += F(" (fixed)");
+              }
+              log += F(" Arg");
+            } else {
+              log += F(" ExtraArg");
+            }
+            log += String(i);
+            log += '=';
+            log += parameter;
+          }
+          ++i;
         }
       }
       log += F(" lineLength=");
@@ -60,6 +76,17 @@ bool checkNrArguments(const char *cmd, const char *Line, int nrArguments) {
       log += Line;
       log += '_';
       addLog(LOG_LEVEL_ERROR, log);
+
+      if (!Settings.TolerantLastArgParse()) {
+        log = F("Command not executed!");
+      } else {
+        log = F("Command executed, but may fail.");
+      }
+      log += F(" See: https://github.com/letscontrolit/ESPEasy/issues/2724");
+      addLog(LOG_LEVEL_ERROR, log);
+    }
+    if (Settings.TolerantLastArgParse()) {
+      return true;
     }
     return false;
   }
@@ -138,7 +165,7 @@ bool executeInternalCommand(const char *cmd, struct EventStruct *event, const ch
     case 'l': {
       COMMAND_CASE(          "let", Command_Rules_Let,     2);    // Rules.h
       COMMAND_CASE(         "load", Command_Settings_Load, 0);    // Settings.h
-      COMMAND_CASE(     "logentry", Command_logentry,      2);    // Diagnostic.h
+      COMMAND_CASE(     "logentry", Command_logentry,      1);    // Diagnostic.h
       COMMAND_CASE("logportstatus", Command_logPortStatus, 0);    // Diagnostic.h
       COMMAND_CASE(       "lowmem", Command_Lowmem,        0);    // Diagnostic.h
       break;

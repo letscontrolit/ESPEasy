@@ -476,6 +476,8 @@ bool remoteConfig(struct EventStruct *event, const String& string)
     if (parseString(string, 2) == F("task"))
     {
       String configTaskName = parseStringKeepCase(string, 3);
+      // FIXME TD-er: This command is not using the tolerance setting
+      // tolerantParseStringKeepCase(Line, 4);
       String configCommand  = parseStringToEndKeepCase(string, 4);
 
       if ((configTaskName.length() == 0) || (configCommand.length() == 0)) {
