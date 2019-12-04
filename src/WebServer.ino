@@ -566,6 +566,32 @@ void WebServerInit()
   #endif  // if defined(ESP8266)
 }
 
+void set_mDNS() {
+  #ifdef FEATURE_MDNS
+  if (webserverRunning) {
+    addLog(LOG_LEVEL_INFO, F("WIFI : Starting mDNS..."));
+    bool mdns_started = MDNS.begin(WifiGetHostname().c_str());
+    MDNS.setInstanceName(WifiGetHostname()); // Needed for when the hostname has changed.
+
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      String log = F("WIFI : ");
+
+      if (mdns_started) {
+        log += F("mDNS started, with name: ");
+        log += getValue(LabelType::M_DNS);
+      }
+      else {
+        log += F("mDNS failed");
+      }
+      addLog(LOG_LEVEL_INFO, log);
+    }
+    if (mdns_started) {
+      MDNS.addService("http", "tcp", 80);
+    }
+  }
+  #endif // ifdef FEATURE_MDNS
+}
+
 void setWebserverRunning(bool state) {
   if (webserverRunning == state) {
     return;
@@ -580,6 +606,7 @@ void setWebserverRunning(bool state) {
     addLog(LOG_LEVEL_INFO, F("Webserver: stop"));
   }
   webserverRunning = state;
+  set_mDNS(); // Uses webserverRunning state.
 }
 
 void getWebPageTemplateDefault(const String& tmplName, String& tmpl)

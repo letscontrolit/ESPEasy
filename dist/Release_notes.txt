@@ -1,4 +1,22 @@
 -------------------------------------------------
+Changes in release mega-20191130 (since mega-20191127)
+-------------------------------------------------
+
+Release date: Sat Nov 30 00:31:17 CET 2019
+
+Baubau-Lab (1):
+      [DHT]New DHT11 support decimal and negative values.
+
+jimmys01 (6):
+      [IR] Sent decoded values back to the controller
+      Comment out interfering code
+      Force rebuild
+      Resolve code conflicts
+      [IR RX] Add the extra ' needed for the parsing of the JSON command
+      [IR RX] Option to Send IR events to MQTT broker
+
+
+-------------------------------------------------
 Changes in release mega-20191127 (since mega-20191126)
 -------------------------------------------------
 

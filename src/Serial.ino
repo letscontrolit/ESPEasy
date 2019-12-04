@@ -35,15 +35,7 @@ void serial()
       InputBuffer_Serial[SerialInByteCounter] = 0; // serial data completed
       Serial.write('>');
       serialPrintln(InputBuffer_Serial);
-      String action = InputBuffer_Serial;
-      struct EventStruct TempEvent;
-      action = parseTemplate(action, action.length()); // @giig1967g: parseTemplate before executing the command bug#1977
-      parseCommandString(&TempEvent, action);
-      TempEvent.Source = VALUE_SOURCE_SERIAL;
-
-      if (!PluginCall(PLUGIN_WRITE, &TempEvent, action)) {
-        ExecuteCommand(VALUE_SOURCE_SERIAL, action.c_str());
-      }
+      ExecuteCommand_all(VALUE_SOURCE_SERIAL, InputBuffer_Serial);
       SerialInByteCounter   = 0;
       InputBuffer_Serial[0] = 0; // serial data processed, clear buffer
     }

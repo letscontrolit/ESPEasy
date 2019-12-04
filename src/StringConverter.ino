@@ -436,6 +436,14 @@ String parseStringToEndKeepCase(const String& string, byte indexFind) {
   return stripQuotes(result);
 }
 
+String tolerantParseStringKeepCase(const String& string, byte indexFind)
+{
+  if (Settings.TolerantLastArgParse()) {
+    return parseStringToEndKeepCase(string, indexFind);
+  } 
+  return parseStringKeepCase(string, indexFind);
+}
+
 // escapes special characters in strings for use in html-forms
 void htmlEscape(String& html)
 {

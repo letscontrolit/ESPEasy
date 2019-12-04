@@ -42,7 +42,7 @@ void handle_root() {
     printWebString = "";
 
     if (sCommand.length() > 0) {
-      ExecuteCommand(VALUE_SOURCE_HTTP, sCommand.c_str());
+      ExecuteCommand_internal(VALUE_SOURCE_HTTP, sCommand.c_str());
     }
 
     // IPAddress ip = WiFi.localIP();
@@ -106,13 +106,12 @@ void handle_root() {
     }
 
     #ifdef FEATURE_MDNS
-    html_TR_TD();
-    TXBuffer += F("mDNS:<TD><a href='http://");
-    TXBuffer += WifiGetHostname();
-    TXBuffer += F(".local'>");
-    TXBuffer += WifiGetHostname();
-    TXBuffer += F(".local</a>");
-    html_TD(3);
+    addRowLabel(getLabel(LabelType::M_DNS));
+    TXBuffer += F("<a href='http://");
+    TXBuffer += getValue(LabelType::M_DNS);
+    TXBuffer += F("'>");
+    TXBuffer += getValue(LabelType::M_DNS);
+    TXBuffer += F("</a>");
     #endif // ifdef FEATURE_MDNS
     html_TR_TD();
     html_TD();
@@ -206,7 +205,7 @@ void handle_root() {
       TXBuffer           += F(
         "OK. Please wait > 1 min and connect to Acces point.<BR><BR>PW=configesp<BR>URL=<a href='http://192.168.4.1'>192.168.4.1</a>");
       TXBuffer.endStream();
-      ExecuteCommand(VALUE_SOURCE_HTTP, sCommand.c_str());
+      ExecuteCommand_internal(VALUE_SOURCE_HTTP, sCommand.c_str());
     }
 
     TXBuffer += "OK";
