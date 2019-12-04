@@ -300,7 +300,7 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
           } // switch
 
           if (eventString.length() > 0)
-            rulesProcessing(eventString);
+            eventQueue.add(eventString);
 
         } // if rules
         success = true;

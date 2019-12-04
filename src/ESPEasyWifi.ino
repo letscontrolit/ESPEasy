@@ -391,8 +391,7 @@ void setAPinternal(bool enable)
 
     if (WiFi.softAP(softAPSSID.c_str(), pwd.c_str())) {
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        String event = F("WiFi#APmodeEnabled");
-        rulesProcessing(event);
+        eventQueue.add(F("WiFi#APmodeEnabled"));
         String log(F("WIFI : AP Mode ssid will be "));
         log += softAPSSID;
         log += F(" with address ");
@@ -477,8 +476,7 @@ void setWifiMode(WiFiMode_t wifimode) {
   bool new_mode_AP_enabled = WifiIsAP(wifimode);
 
   if (WifiIsAP(cur_mode) && !new_mode_AP_enabled) {
-    String event = F("WiFi#APmodeDisabled");
-    rulesProcessing(event);
+    eventQueue.add(F("WiFi#APmodeDisabled"));
   }
 
   if (WifiIsAP(cur_mode) != new_mode_AP_enabled) {

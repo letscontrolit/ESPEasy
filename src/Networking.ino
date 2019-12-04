@@ -138,17 +138,8 @@ void checkUDP()
         if (packetBuffer[0] != 255)
         {
           packetBuffer[len] = 0;
-          String request = &packetBuffer[0];
-#ifndef BUILD_NO_DEBUG
-          addLog(LOG_LEVEL_DEBUG, request);
-#endif // ifndef BUILD_NO_DEBUG
-          struct EventStruct TempEvent;
-          parseCommandString(&TempEvent, request);
-          TempEvent.Source = VALUE_SOURCE_SYSTEM;
-
-          if (!PluginCall(PLUGIN_WRITE, &TempEvent, request)) {
-            ExecuteCommand(VALUE_SOURCE_SYSTEM, &packetBuffer[0]);
-          }
+          addLog(LOG_LEVEL_DEBUG, &packetBuffer[0]);
+          ExecuteCommand_all(VALUE_SOURCE_SYSTEM, &packetBuffer[0]);
         }
         else
         {

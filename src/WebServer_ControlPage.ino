@@ -25,7 +25,7 @@ void handle_control() {
 
   if (command == F("event"))
   {
-    eventBuffer = webrequest.substring(6);
+    eventQueue.add(webrequest.substring(6));
     handledCmd  = true;
   }
   else if (command.equalsIgnoreCase(F("taskrun")) ||
@@ -35,7 +35,7 @@ void handle_control() {
            command.equalsIgnoreCase(F("logPortStatus")) ||
            command.equalsIgnoreCase(F("jsonportstatus")) ||
            command.equalsIgnoreCase(F("rules"))) {
-    ExecuteCommand(VALUE_SOURCE_HTTP, webrequest.c_str());
+    ExecuteCommand_internal(VALUE_SOURCE_HTTP, webrequest.c_str());
     handledCmd = true;
   }
 
@@ -45,19 +45,9 @@ void handle_control() {
     TXBuffer.endStream();
     return;
   }
-
-  struct EventStruct TempEvent;
-  parseCommandString(&TempEvent, webrequest);
-  TempEvent.Source = VALUE_SOURCE_HTTP;
-
   printToWeb     = true;
   printWebString = "";
-
-  bool unknownCmd = false;
-
-  if (PluginCall(PLUGIN_WRITE, &TempEvent, webrequest)) {}
-  else if (remoteConfig(&TempEvent, webrequest)) {}
-  else { unknownCmd = true; }
+  bool unknownCmd = !ExecuteCommand_plugin_config(VALUE_SOURCE_HTTP, webrequest.c_str());
 
   if (printToWebJSON) { // it is setted in PLUGIN_WRITE (SendStatus)
     TXBuffer.startJsonStream();

@@ -360,38 +360,48 @@ boolean Blynk_send_c015(const String& value, int vPin )
 BLYNK_WRITE_DEFAULT() {
   byte vPin = request.pin;
   float pinValue = param.asFloat();
-  String log = F(C015_LOG_PREFIX "server set v");
-  log += vPin;
-  log += F(" to ");
-  log += pinValue;
-  addLog(LOG_LEVEL_INFO, log);
-  String eventCommand = F("blynkv");
-  eventCommand += vPin;
-  eventCommand += F("=");
-  eventCommand += pinValue;
-  rulesProcessing(eventCommand);
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    String log = F(C015_LOG_PREFIX "server set v");
+    log += vPin;
+    log += F(" to ");
+    log += pinValue;
+    addLog(LOG_LEVEL_INFO, log);
+  }
+  if (Settings.UseRules) {
+    String eventCommand = F("blynkv");
+    eventCommand += vPin;
+    eventCommand += F("=");
+    eventCommand += pinValue;
+    eventQueue.add(eventCommand);
+  }
 }
 
 BLYNK_CONNECTED() {
-// Your code here when hardware connects to Blynk Cloud or private server.
-// It’s common to call sync functions inside of this function.
-// Requests all stored on the server latest values for all widgets.
-  String eventCommand = F("blynk_connected");
-  rulesProcessing(eventCommand);
+  // Your code here when hardware connects to Blynk Cloud or private server.
+  // It’s common to call sync functions inside of this function.
+  // Requests all stored on the server latest values for all widgets.
+  if (Settings.UseRules) {
+    String eventCommand = F("blynk_connected");
+    eventQueue.add(eventCommand);
+  }
   // addLog(LOG_LEVEL_INFO, F(C015_LOG_PREFIX "connected handler"));
 }
 
 // This is called when Smartphone App is opened
 BLYNK_APP_CONNECTED() {
-  String eventCommand = F("blynk_app_connected");
-  rulesProcessing(eventCommand);
+  if (Settings.UseRules) {
+    String eventCommand = F("blynk_app_connected");
+    eventQueue.add(eventCommand);
+  }
   // addLog(LOG_LEVEL_INFO, F(C015_LOG_PREFIX "app connected handler"));
 }
 
 // This is called when Smartphone App is closed
 BLYNK_APP_DISCONNECTED() {
-  String eventCommand = F("blynk_app_disconnected");
-  rulesProcessing(eventCommand);
+  if (Settings.UseRules) {
+    String eventCommand = F("blynk_app_disconnected");
+    eventQueue.add(eventCommand);
+  }
   // addLog(LOG_LEVEL_INFO, F(C015_LOG_PREFIX "app disconnected handler"));
 }
 

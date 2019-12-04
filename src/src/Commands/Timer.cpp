@@ -48,7 +48,7 @@ String Command_Timer_Pause(struct EventStruct *event, const char *Line)
       {
         String eventName = F("Rules#TimerPause=");
         eventName += event->Par1;
-        rulesProcessing(eventName);
+        rulesProcessing(eventName); // TD-er: Process right now
         RulesTimer[timerId].paused   = true;
         RulesTimer[timerId].interval = -delta; // set remaind time
       }
@@ -75,7 +75,7 @@ String Command_Timer_Resume(struct EventStruct *event, const char *Line)
       {
         String eventName = F("Rules#TimerResume=");
         eventName += event->Par1;
-        rulesProcessing(eventName);
+        rulesProcessing(eventName); // TD-er: Process right now
         RulesTimer[timerId].timestamp = millis() + (RulesTimer[timerId].interval);
         RulesTimer[timerId].paused    = false;
       }

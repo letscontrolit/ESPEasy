@@ -21,7 +21,7 @@ String return_command_failed()
 
 String return_incorrect_nr_arguments()
 {
-  return F("Too many arguments, try using quotes");
+  return F("Too many arguments, try using quotes!");
 }
 
 String return_not_connected()

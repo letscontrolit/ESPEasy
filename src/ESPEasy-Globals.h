@@ -28,6 +28,7 @@
 #include "ESPEasy_fdwdecl.h"
 
 #include "src/DataStructs/ESPEasyLimits.h"
+#include "src/DataStructs/EventQueue.h"
 #include "ESPEasy_plugindefs.h"
 
 
@@ -325,8 +326,7 @@ extern String dummyString;  // FIXME @TD-er  This may take a lot of memory over 
 enum PluginPtrType {
   TaskPluginEnum,
   ControllerPluginEnum,
-  NotificationPluginEnum,
-  CommandTimerEnum
+  NotificationPluginEnum
 };
 void schedule_event_timer(PluginPtrType ptr_type, byte Index, byte Function, struct EventStruct* event);
 unsigned long createSystemEventMixedId(PluginPtrType ptr_type, byte Index, byte Function);
@@ -342,7 +342,7 @@ extern bool webserverRunning;
 extern bool webserver_init;
 
 
-extern String eventBuffer;
+extern EventQueueStruct eventQueue;
 
 
 extern bool shouldReboot;

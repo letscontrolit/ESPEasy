@@ -334,7 +334,7 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
                   LoadTaskSettings(event->TaskIndex);
                   String eventString = getTaskDeviceName(event->TaskIndex);
                   eventString += F("#Data");
-                  rulesProcessing(eventString);
+                  eventQueue.add(eventString);
                 }
 
               } else {

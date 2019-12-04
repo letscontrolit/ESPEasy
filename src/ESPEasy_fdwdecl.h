@@ -158,6 +158,7 @@ String parseString(const String& string, byte indexFind);
 String parseStringKeepCase(const String& string, byte indexFind);
 String parseStringToEnd(const String& string, byte indexFind);
 String parseStringToEndKeepCase(const String& string, byte indexFind);
+String tolerantParseStringKeepCase(const String& string, byte indexFind);
 
 int parseCommandArgumentInt(const String& string, unsigned int argc);
 
@@ -165,7 +166,7 @@ String describeAllowedIPrange();
 void clearAccessBlock();
 String rulesProcessingFile(const String& fileName, String& event);
 int Calculate(const char *input, float* result);
-
+bool SourceNeedsStatusUpdate(byte eventSource);
 
 void WifiScan(bool async, bool quick = false);
 void WifiScan();
