@@ -566,7 +566,7 @@ void processMatchedRule(String& action, String& event,
       addLog(LOG_LEVEL_INFO, log);
     }
 
-    ExecuteCommand_all(VALUE_SOURCE_SYSTEM, action.c_str());
+    ExecuteCommand_all(VALUE_SOURCE_RULES, action.c_str());
     delay(0);
   }
 }

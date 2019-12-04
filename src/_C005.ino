@@ -81,8 +81,8 @@ bool CPlugin_005(byte function, struct EventStruct *event, String& string)
           if (validTopic) {
             // in case of event, store to buffer and return...
             String command = parseString(cmd, 1);
-            if (command == F("event")) {
-            eventQueue.add(cmd.substring(6));
+            if (command == F("event") || command == F("asyncevent")) {
+              eventQueue.add(parseStringToEnd(cmd, 2));
             } else if (!PluginCall(PLUGIN_WRITE, &TempEvent, cmd)) {
               remoteConfig(&TempEvent, cmd);
             }
