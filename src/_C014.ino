@@ -636,10 +636,10 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
           if (validTopic) {
             // in case of event, store to buffer and return...
             String command = parseString(cmd, 1);
-            if (command == F("event"))
+            if (command == F("event") || command == F("asyncevent"))
             {
               if (Settings.UseRules) {
-                String newEvent = cmd.substring(6); 
+                String newEvent = parseStringToEnd(cmd, 2); 
                 eventQueue.add(newEvent);
                 if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                   log=F("C014 : taskIndex:");

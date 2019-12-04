@@ -117,6 +117,7 @@ bool executeInternalCommand(const char *cmd, struct EventStruct *event, const ch
   switch (cmd_lc[0]) {
     case 'a': {
       COMMAND_CASE("accessinfo", Command_AccessInfo_Ls, 0); // Network Command
+      COMMAND_CASE("asyncevent", Command_Rules_Async_Events,  -1); // Rule.h
       break;
     }
     case 'b': {
