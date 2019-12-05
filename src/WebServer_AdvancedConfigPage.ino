@@ -65,6 +65,7 @@ void handle_advanced() {
     Settings.Latitude  = getFormItemFloat(F("latitude"));
     Settings.Longitude = getFormItemFloat(F("longitude"));
     Settings.OldRulesEngine(isFormItemChecked(F("oldrulesengine")));
+    Settings.TolerantLastArgParse(isFormItemChecked(F("tolerantargparse")));
     Settings.ForceWiFi_bg_mode(isFormItemChecked(getInternalLabel(LabelType::FORCE_WIFI_BG)));
     Settings.WiFiRestart_connection_lost(isFormItemChecked(getInternalLabel(LabelType::RESTART_WIFI_LOST_CONN)));
     Settings.EcoPowerMode(isFormItemChecked(getInternalLabel(LabelType::CPU_ECO_MODE)));
@@ -89,6 +90,8 @@ void handle_advanced() {
 
   addFormCheckBox(F("Rules"),      F("userules"),       Settings.UseRules);
   addFormCheckBox(F("Old Engine"), F("oldrulesengine"), Settings.OldRulesEngine());
+  addFormCheckBox(F("Tolerant last parameter"), F("tolerantargparse"), Settings.TolerantLastArgParse());
+  addFormNote(F("Perform less strict parsing on last argument of some commands (e.g. publish and sendToHttp)"));
 
   addFormSubHeader(F("Controller Settings"));
 

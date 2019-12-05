@@ -329,15 +329,22 @@ bool MQTTCheck(int controller_idx)
 /*********************************************************************************************\
 * Send status info to request source
 \*********************************************************************************************/
-void SendStatusOnlyIfNeeded(int eventSource, bool param1, uint32_t key, const String& param2, int16_t param3) {
+void SendStatusOnlyIfNeeded(byte eventSource, bool param1, uint32_t key, const String& param2, int16_t param3) {
+  if (SourceNeedsStatusUpdate(eventSource)) {
+    SendStatus(eventSource, getPinStateJSON(param1, key, param2, param3));
+  }
+}
+
+bool SourceNeedsStatusUpdate(byte eventSource)
+{
   switch (eventSource) {
     case VALUE_SOURCE_HTTP:
     case VALUE_SOURCE_SERIAL:
     case VALUE_SOURCE_MQTT:
     case VALUE_SOURCE_WEB_FRONTEND:
-      SendStatus(eventSource, getPinStateJSON(param1, key, param2, param3));
-      break;
+      return true;
   }
+  return false;
 }
 
 void SendStatus(byte source, const String& status)
@@ -365,6 +372,14 @@ void SendStatus(byte source, const String& status)
 #ifdef USES_MQTT
 bool MQTTpublish(int controller_idx, const char *topic, const char *payload, boolean retained)
 {
+  {
+    MQTT_queue_element dummy_element(MQTT_queue_element(controller_idx, "", "", retained));
+    if (MQTTDelayHandler.queueFull(dummy_element)) {
+      // The queue is full, try to make some room first.
+      addLog(LOG_LEVEL_DEBUG, F("MQTT : Extra processMQTTdelayQueue()"));
+      processMQTTdelayQueue();
+    }
+  }
   const bool success = MQTTDelayHandler.addToQueue(MQTT_queue_element(controller_idx, topic, payload, retained));
 
   scheduleNextMQTTdelayQueue();
@@ -382,7 +397,6 @@ void processMQTTdelayQueue() {
   if (element == NULL) { return; }
 
   if (MQTTclient.publish(element->_topic.c_str(), element->_payload.c_str(), element->_retained)) {
-    setIntervalTimerOverride(TIMER_MQTT, 10); // Make sure the MQTT is being processed as soon as possible.
     MQTTDelayHandler.markProcessed(true);
   } else {
     MQTTDelayHandler.markProcessed(false);
@@ -396,6 +410,7 @@ void processMQTTdelayQueue() {
     }
 #endif // ifndef BUILD_NO_DEBUG
   }
+  setIntervalTimerOverride(TIMER_MQTT, 10); // Make sure the MQTT is being processed as soon as possible.
   scheduleNextMQTTdelayQueue();
   STOP_TIMER(MQTT_DELAY_QUEUE);
 }

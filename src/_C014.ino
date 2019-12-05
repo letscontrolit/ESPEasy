@@ -636,28 +636,32 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
           if (validTopic) {
             // in case of event, store to buffer and return...
             String command = parseString(cmd, 1);
-            if (command == F("event"))
+            if (command == F("event") || command == F("asyncevent"))
             {
-              eventBuffer = cmd.substring(6);
-              if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-                log=F("C014 : taskIndex:");
-                if (!validTaskIndex(taskIndex)) {
-                  log += F("Invalid");
-                } else {
-                  log+=taskIndex;
-                  log+=F(" valueNr:");
-                  log+=valueNr;
-                  log+=F(" valueType:");                
-                  log+=Settings.TaskDevicePluginConfig[taskIndex][valueNr];
+              if (Settings.UseRules) {
+                String newEvent = parseStringToEnd(cmd, 2); 
+                eventQueue.add(newEvent);
+                if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+                  log=F("C014 : taskIndex:");
+                  if (!validTaskIndex(taskIndex)) {
+                    log += F("Invalid");
+                  } else {
+                    log+=taskIndex;
+                    log+=F(" valueNr:");
+                    log+=valueNr;
+                    log+=F(" valueType:");                
+                    log+=Settings.TaskDevicePluginConfig[taskIndex][valueNr];
+                  }
+                  log+=F(" Event: ");
+                  log+=newEvent;
+                  addLog(LOG_LEVEL_INFO, log);
                 }
-                log+=F(" Event: ");
-                log+=eventBuffer;
-                addLog(LOG_LEVEL_INFO, log);
               }
             } else { // not an event
               if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                 log=F("C014 : PluginCall:");
               }
+              // FIXME TD-er: Command is not parsed, should we call ExecuteCommand here?
               if (!PluginCall(PLUGIN_WRITE, &TempEvent, cmd)) {
                 remoteConfig(&TempEvent, cmd);
                 if (loglevelActiveFor(LOG_LEVEL_INFO)) {

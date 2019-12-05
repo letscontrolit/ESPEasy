@@ -2,6 +2,7 @@
 
 #include "ESPEasy-Globals.h"
 
+
 NotificationStruct Notification[NPLUGIN_MAX];
 
 #if defined(ESP32)
@@ -76,7 +77,7 @@ bool webserverRunning(false);
 bool webserver_init(false);
 
 
-String eventBuffer;
+EventQueueStruct eventQueue;
 
 
 

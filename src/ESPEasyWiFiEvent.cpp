@@ -1,6 +1,9 @@
 #include "ESPEasyWiFiEvent.h"
 #include "src/Globals/ESPEasyWiFiEvent.h"
+#include "src/Globals/RTC.h"
 #include "ESPEasyTimeTypes.h"
+
+#include "src/DataStructs/RTCStruct.h"
 
 #ifdef ESP32
 void WiFi_Access_Static_IP::set_use_static_ip(bool enabled) {
@@ -33,27 +36,50 @@ void markGotIP() {
 // Make sure not to call anything in these functions that result in delay() or yield()
 // ********************************************************************************
 #ifdef ESP32
+#include <WiFi.h>
+
+static bool ignoreDisconnectEvent = false;
+
 void WiFiEvent(system_event_id_t event, system_event_info_t info) {
   switch (event) {
     case SYSTEM_EVENT_STA_CONNECTED:
+    {
+      RTC.lastWiFiChannel = info.connected.channel;
+      for (byte i = 0; i < 6; ++i) {
+        if (RTC.lastBSSID[i] != info.connected.bssid[i]) {
+          bssid_changed = true;
+          RTC.lastBSSID[i]  = info.connected.bssid[i];
+        }
+      }
+      char ssid_copy[33] = { 0 }; // Ensure space for maximum len SSID (32) plus trailing 0
+      memcpy(ssid_copy, info.connected.ssid, info.connected.ssid_len);
+      ssid_copy[32] = 0; // Potentially add 0-termination if none present earlier
+      last_ssid = (const char*) ssid_copy;
       lastConnectMoment = millis();
       processedConnect  = false;
       wifiStatus       |= ESPEASY_WIFI_CONNECTED;
       break;
+    }
     case SYSTEM_EVENT_STA_DISCONNECTED:
-      lastDisconnectMoment = millis();
+      if (!ignoreDisconnectEvent) {
+        ignoreDisconnectEvent = true;
+        lastDisconnectMoment = millis();
+        WiFi.persistent(false);
+        WiFi.disconnect(true);
 
-      if (timeDiff(lastConnectMoment, last_wifi_connect_attempt_moment) > 0) {
-        // There was an unsuccessful connection attempt
-        lastConnectedDuration = timeDiff(last_wifi_connect_attempt_moment, lastDisconnectMoment);
-      } else {
-        lastConnectedDuration = timeDiff(lastConnectMoment, lastDisconnectMoment);
+        if (timeDiff(lastConnectMoment, last_wifi_connect_attempt_moment) > 0) {
+          // There was an unsuccessful connection attempt
+          lastConnectedDuration = timeDiff(last_wifi_connect_attempt_moment, lastDisconnectMoment);
+        } else {
+          lastConnectedDuration = timeDiff(lastConnectMoment, lastDisconnectMoment);
+        }
+        processedDisconnect  = false;
+        lastDisconnectReason = static_cast<WiFiDisconnectReason>(info.disconnected.reason);
+        wifiStatus          |= ESPEASY_WIFI_DISCONNECTED;
       }
-      processedDisconnect  = false;
-      lastDisconnectReason = static_cast<WiFiDisconnectReason>(info.disconnected.reason);
-      wifiStatus          |= ESPEASY_WIFI_DISCONNECTED;
       break;
     case SYSTEM_EVENT_STA_GOT_IP:
+      ignoreDisconnectEvent = false;
       markGotIP();
       break;
     case SYSTEM_EVENT_AP_STACONNECTED:
@@ -71,12 +97,6 @@ void WiFiEvent(system_event_id_t event, system_event_info_t info) {
       processedDisconnectAPmode = false;
       break;
     case SYSTEM_EVENT_SCAN_DONE:
-      lastGetScanMoment = millis();
-
-      //      scan_done_status = info.scan_done.status;
-      scan_done_number = info.scan_done.number;
-
-      //      scan_done_scan_id = info.scan_done.scan_id;
       processedScanDone = false;
       break;
     default:
@@ -92,15 +112,15 @@ void onConnected(const WiFiEventStationModeConnected& event) {
   lastConnectMoment = millis();
   processedConnect  = false;
   wifiStatus       |= ESPEASY_WIFI_CONNECTED;
-  channel_changed   = last_channel != event.channel;
-  last_channel      = event.channel;
+  channel_changed   = RTC.lastWiFiChannel != event.channel;
+  RTC.lastWiFiChannel      = event.channel;
   last_ssid         = event.ssid;
   bssid_changed     = false;
 
   for (byte i = 0; i < 6; ++i) {
-    if (lastBSSID[i] != event.bssid[i]) {
+    if (RTC.lastBSSID[i] != event.bssid[i]) {
       bssid_changed = true;
-      lastBSSID[i]  = event.bssid[i];
+      RTC.lastBSSID[i]  = event.bssid[i];
     }
   }
 }
@@ -119,7 +139,8 @@ void onDisconnect(const WiFiEventStationModeDisconnected& event) {
 
   if (WiFi.status() == WL_CONNECTED) {
     // See https://github.com/esp8266/Arduino/issues/5912
-    WiFi.disconnect();
+    WiFi.persistent(false);
+    WiFi.disconnect(true);
   }
   processedDisconnect = false;
 }
@@ -144,12 +165,6 @@ void onDisonnectedAPmode(const WiFiEventSoftAPModeStationDisconnected& event) {
     lastMacDisconnectedAPmode[i] = event.mac[i];
   }
   processedDisconnectAPmode = false;
-}
-
-void onScanFinished(int networksFound) {
-  lastGetScanMoment = millis();
-  scan_done_number  = networksFound;
-  processedScanDone = false;
 }
 
 #endif // ifdef ESP8266

@@ -73,8 +73,11 @@ void Plugin_037_update_connect_status() {
     P037_MQTTImport_connected  = MQTTclient_037_connected;
 
     if (Settings.UseRules) {
-      String event = connected ? F("MQTTimport#Connected") : F("MQTTimport#Disconnected");
-      rulesProcessing(event);
+      if (connected) {
+        eventQueue.add(F("MQTTimport#Connected"));
+      } else {
+        eventQueue.add(F("MQTTimport#Disconnected"));
+      }
     }
     if (!connected) {
       // workaround see: https://github.com/esp8266/Arduino/issues/4497#issuecomment-373023864
@@ -230,6 +233,7 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
         //      Get the payload and check it out
         LoadTaskSettings(event->TaskIndex);
 
+        // FIXME TD-er: It may be useful to generate events with string values.
         String Payload = event->String2;
         float floatPayload;
         if (!string2float(Payload, floatPayload)) {
@@ -264,14 +268,15 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
             UserVar[event->BaseVarIndex + x] = floatPayload;							// Save the new value
 
             // Log the event
-
-            String log = F("IMPT : [");
-            log += getTaskDeviceName(event->TaskIndex);
-            log += F("#");
-            log += ExtraTaskSettings.TaskDeviceValueNames[x];
-            log += F("] : ");
-            log += floatPayload;
-            addLog(LOG_LEVEL_INFO, log);
+            if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+              String log = F("IMPT : [");
+              log += getTaskDeviceName(event->TaskIndex);
+              log += F("#");
+              log += ExtraTaskSettings.TaskDeviceValueNames[x];
+              log += F("] : ");
+              log += floatPayload;
+              addLog(LOG_LEVEL_INFO, log);
+            }
 
             // Generate event for rules processing - proposed by TridentTD
 
@@ -283,7 +288,7 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
               RuleEvent += ExtraTaskSettings.TaskDeviceValueNames[x];
               RuleEvent += F("=");
               RuleEvent += floatPayload;
-              rulesProcessing(RuleEvent);
+              eventQueue.add(RuleEvent);
             }
 
             success = true;

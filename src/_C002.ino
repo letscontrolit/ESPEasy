@@ -148,13 +148,13 @@ bool CPlugin_002(byte function, struct EventStruct *event, String& string)
               }
 
               if (action.length() > 0) {
-                struct EventStruct TempEvent;
-                TempEvent.TaskIndex = x;
-                parseCommandString(&TempEvent, action);
-                PluginCall(PLUGIN_WRITE, &TempEvent, action);
+                ExecuteCommand_plugin(x, VALUE_SOURCE_MQTT, action.c_str());
 
                 // trigger rulesprocessing
                 if (Settings.UseRules) {
+                  struct EventStruct TempEvent;
+                  TempEvent.TaskIndex = x;
+                  parseCommandString(&TempEvent, action);
                   createRuleEvents(&TempEvent);
                 }
               }

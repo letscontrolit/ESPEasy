@@ -17,19 +17,24 @@
 //max 40 bytes: ( 74 - 64 ) * 4
 struct RTCStruct
 {
-  RTCStruct() : ID1(0), ID2(0), unused1(false), factoryResetCounter(0),
+  RTCStruct() : ID1(0), ID2(0), lastWiFiChannel(0), factoryResetCounter(0),
                 deepSleepState(0), bootFailedCount(0), flashDayCounter(0),
+                lastWiFiSettingsIndex(0),
                 flashCounter(0), bootCounter(0), lastMixedSchedulerId(0) {}
   byte ID1;
   byte ID2;
-  boolean unused1;
+  byte lastWiFiChannel;
   byte factoryResetCounter;
   byte deepSleepState;
   byte bootFailedCount;
   byte flashDayCounter;
+  byte lastWiFiSettingsIndex;
   unsigned long flashCounter;
   unsigned long bootCounter;
   unsigned long lastMixedSchedulerId;
+  uint8_t lastBSSID[6] = { 0 };
+  byte unused1;  // Force alignment to 4 bytes
+  byte unused2;
 };
 
 
