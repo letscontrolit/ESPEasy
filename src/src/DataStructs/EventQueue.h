@@ -5,7 +5,7 @@
 #include <list>
 #include "../../ESPEasy_common.h"
 
-#include "src/Globals/Plugins.h"
+#include "../Globals/Plugins.h"
 
 
 struct EventQueueStruct {
