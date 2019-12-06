@@ -405,8 +405,46 @@ void sendHeadandTail_stdtemplate(boolean Tail = false, boolean rebooting = false
     if (!clientIPinSubnet() && WifiIsAP(WiFi.getMode()) && (WiFi.softAPgetStationNum() > 0)) {
       addHtmlError(F("Warning: Connected via AP"));
     }
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      const int nrArgs = WebServer.args();
+      if (nrArgs > 0) {
+        String log = F(" Webserver args:");
+
+        for (int i = 0; i < nrArgs; ++i) {
+          log += ' ';
+          log += i;
+          log += F(": '");
+          log += WebServer.argName(i);
+          log += F("' length: ");
+          log += WebServer.arg(i).length();
+        }
+        addLog(LOG_LEVEL_INFO, log);
+      }
+    }
   }
 }
+
+size_t streamFile_htmlEscape(const String& fileName)
+{
+  fs::File f = tryOpenFile(fileName, "r");
+  size_t size = 0;
+  if (f)
+  {
+    String escaped;
+    while (f.available())
+    {
+      char c = (char)f.read();
+      if (htmlEscapeChar(c, escaped)) {
+        TXBuffer += escaped;
+      } else {
+        TXBuffer += c;
+      }
+    }
+    f.close();
+  }
+  return size;
+}
+
 
 // ********************************************************************************
 // Web Interface init
