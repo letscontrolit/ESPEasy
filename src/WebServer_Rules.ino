@@ -33,8 +33,17 @@ void handle_rules() {
     if (currentSet == rulesSet) {
       if (WebServer.hasArg(F("rules"))) {
         size_t rulesLength = WebServer.arg(F("rules")).length();
+        // Reported length is with CRLF counted as a single byte.
+        // So rulesLength > reported_length is a valid situation.
+        size_t reported_length = getFormItemInt(F("rules_len"), 0);
         if (rulesLength > RULES_MAX_SIZE) {
           error = F("Error: Data was not saved, exceeds web editor limit!");
+        } if (reported_length > rulesLength) {
+          error = F("Error: Data was not saved, not received all. (");
+          error += rulesLength;
+          error += '/';
+          error += reported_length;
+          error += ')';
         } else {
           // Save as soon as possible, as the webserver may already overwrite the args.
           const byte *memAddress = reinterpret_cast<const byte *>(WebServer.arg(F("rules")).c_str());
@@ -65,7 +74,7 @@ void handle_rules() {
     currentSet = rulesSet;
   }
 
-  TXBuffer += F("<form name = 'frmselect' method = 'post'>");
+  TXBuffer += F("<form name = 'frmselect' method = 'post' onsubmit='addRulesLength()'>");
   html_table_class_normal();
   html_TR();
   html_table_header(F("Rules"));
@@ -94,6 +103,7 @@ void handle_rules() {
   addButton(fileName, F("Download to file"));
   html_end_table();
   html_end_form();
+  html_add_script(F("function addRulesLength() {    var r_len = document.getElementById('rules').value.length;	document.getElementById('rules_len').setAttribute('value', r_len);  };"), true);
   sendHeadandTail_stdtemplate(true);
   TXBuffer.endStream();
 
@@ -514,7 +524,7 @@ void Rule_showRuleTextArea(const String& fileName) {
   // Read rules from file and stream directly into the textarea
   
   size_t size = 0;
-  TXBuffer += F("<textarea name='rules' rows='30' wrap='off'>");
+  TXBuffer += F("<textarea id='rules' name='rules' rows='30' wrap='off'>");
   size = streamFile_htmlEscape(fileName);
   TXBuffer += F("</textarea>");
   TXBuffer += F("<TR><TD colspan='2'>");
@@ -527,6 +537,7 @@ void Rule_showRuleTextArea(const String& fileName) {
   if (size > RULES_MAX_SIZE) {
     TXBuffer += F("<span style=\"color:red\">Filesize exceeds web editor limit!</span>");
   }
+  TXBuffer += F("<p><input type='text' id='rules_len' name='rules_len' value='0'></p>");
 }
 
 

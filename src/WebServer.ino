@@ -439,6 +439,7 @@ size_t streamFile_htmlEscape(const String& fileName)
       } else {
         TXBuffer += c;
       }
+      ++size;
     }
     f.close();
   }
