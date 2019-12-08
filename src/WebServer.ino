@@ -966,7 +966,15 @@ void json_quote_val(const String& val) {
   TXBuffer += '\"';
 }
 
-void json_open(bool arr = false, const String& name = String()) {
+void json_open() {
+  json_open(false, String());
+}
+
+void json_open(bool arr) {
+  json_open(arr, String());
+}
+
+void json_open(bool arr, const String& name) {
   json_quote_name(name);
   TXBuffer += arr ? '[' : '{';
   lastLevel = level;
@@ -978,7 +986,11 @@ void json_init() {
   lastLevel = -1;
 }
 
-void json_close(bool arr = false) {
+void json_close() {
+  json_close(false);
+}
+
+void json_close(bool arr) {
   TXBuffer += arr ? ']' : '}';
   level--;
   lastLevel = level;

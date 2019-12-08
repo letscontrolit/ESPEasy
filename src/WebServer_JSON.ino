@@ -241,61 +241,15 @@ void handle_json()
 // JSON formatted timing statistics
 // ********************************************************************************
 
-void stream_timing_stats_json(unsigned long count, unsigned long minVal, unsigned long maxVal, float avg) {
-  stream_next_json_object_value(F("count"), String(count));
-  stream_next_json_object_value(F("min"),   String(minVal));
-  stream_next_json_object_value(F("max"),   String(maxVal));
-  stream_next_json_object_value(F("avg"),   String(avg));
-}
-
-void stream_plugin_function_timing_stats_json(
-  const String& object,
-  unsigned long count, unsigned long minVal, unsigned long maxVal, float avg) {
-  TXBuffer += "{\"";
-  TXBuffer += object;
-  TXBuffer += "\":{";
-  stream_timing_stats_json(count, minVal, maxVal, avg);
-  stream_last_json_object_value(F("unit"), F("usec"));
-}
-
-void stream_plugin_timing_stats_json(int pluginId) {
-  TXBuffer += '{';
-  stream_next_json_object_value(F("name"), getPluginNameFromDeviceIndex(pluginId));
-  stream_next_json_object_value(F("id"),   String(pluginId));
-  stream_json_start_array(F("function"));
-}
-
-void stream_json_start_array(const String& label) {
-  TXBuffer += '\"';
-  TXBuffer += label;
-  TXBuffer += F("\": [\n");
-}
-
-void stream_json_end_array_element(bool isLast) {
-  if (isLast) {
-    TXBuffer += "]\n";
-  } else {
-    TXBuffer += ",\n";
-  }
-}
-
-void stream_json_end_object_element(bool isLast) {
-  TXBuffer += '}';
-
-  if (!isLast) {
-    TXBuffer += ',';
-  }
-  TXBuffer += '\n';
-}
-
 #ifdef WEBSERVER_NEW_UI
 void handle_timingstats_json() {
   TXBuffer.startJsonStream();
-  TXBuffer += '{';
+  json_init();
+  json_open();
   # ifdef USES_TIMING_STATS
   jsonStatistics(false);
   # endif // ifdef USES_TIMING_STATS
-  TXBuffer += '}';
+  json_close();
   TXBuffer.endStream();
 }
 
