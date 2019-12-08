@@ -1,4 +1,33 @@
 -------------------------------------------------
+Changes in release mega-20191208 (since mega-20191130)
+-------------------------------------------------
+
+Release date: zo  8 dec 2019 18:35:06 CET
+
+Gijs Noorlander (17):
+      [WiFi] Use last known BSSID & channel from RTC + MQTT fixes
+      [PIO] Update to core 2.6.2
+      [WiFi] Improve ESP32 WiFi connect + fix mDNS updates
+      [PIO] Fix build failure due to incorrect flags.
+      [PIO] Don't use Python 3 specific since Travis still uses Python 2.7
+      [WiFi] Call WiFi disconnect in setup() (#2757)
+      [Rules] Parse template for all command calls
+      [Rules] Execute some events asynchronous
+      [Commands] Proper error logs when processing commands.
+      [Commands] Add flag to be a bit more tolerant in last argument parsing
+      [Events] Run events from rules immediately + add AsyncEvent command
+      [FEATURE_SD] Add build in Platformio.ini with SD enabled (#2700 )
+      [Rules] Add some checks for rules consistency before saving
+      [Rules] Add check for correct received POST data when saving rules
+      [JSON] Fix issues with generated JSON
+      [JSON] Fix non valid timing stats json when no plugins defined (#2767)
+      [JSON] Extend timing stats JSON end point with controller and misc stats
+
+stefan (1):
+      Fix Arduino IDE include path
+
+
+-------------------------------------------------
 Changes in release mega-20191130 (since mega-20191127)
 -------------------------------------------------
 
