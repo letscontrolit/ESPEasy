@@ -46,10 +46,9 @@
  */
 void jsonStatistics(bool clearStats) {
   bool firstPlugin     = true;
-  bool firstFunction   = true;
   int  currentPluginId = -1;
 
-  stream_json_start_array(F("plugin"));
+  json_open(true, F("plugin"));
 
   for (auto& x: pluginStats) {
     if (!x.second.isEmpty()) {
@@ -58,42 +57,42 @@ void jsonStatistics(bool clearStats) {
       if (currentPluginId != deviceIndex) {
         // new plugin
         currentPluginId = deviceIndex;
-
-        if (!firstFunction) {
-          // close previous function
-          stream_json_end_object_element(true); // close open function object
-        }
-
         if (!firstPlugin) {
-          // close previous plugin
-          stream_json_end_array_element(true); // Close open function array
-          stream_json_end_object_element(false);
+          json_close();
+          json_close(true); // close previous function list
+          json_close();     // close previous plugin
         }
-
         // Start new plugin stream
-        stream_plugin_timing_stats_json(deviceIndex);
-        firstFunction = true;
-      } else {
-        if (!firstFunction) {
-          // add comma to start new function
-          stream_json_end_object_element(false);
-        }
+        json_open(); // open new plugin
+        json_prop(F("name"), getPluginNameFromDeviceIndex(deviceIndex));
+        json_prop(F("id"),   String(DeviceIndex_to_Plugin_id[deviceIndex]));
+        json_open(true, F("function")); // open function
+        json_open(); // open first function element
       }
 
+      // Stream function timing stats
       unsigned long minVal, maxVal;
-      unsigned int  c = x.second.getMinMax(minVal, maxVal);
-      stream_plugin_function_timing_stats_json(getPluginFunctionName(x.first % 256),
-                                               c, minVal, maxVal, x.second.getAvg());
-
+      unsigned int  count = x.second.getMinMax(minVal, maxVal);
+      json_open(false, getPluginFunctionName(x.first % 256));
+      {
+        json_number(F("count"), String(count));
+        json_number(F("min"),   String(minVal));
+        json_number(F("max"),   String(maxVal));
+        json_number(F("avg"),   String(x.second.getAvg()));
+        json_prop(F("unit"), F("usec"));
+      }
+      json_close(false);
       if (clearStats) { x.second.reset(); }
-      firstFunction = false;
-      firstPlugin   = false;
+      firstPlugin = false;
     }
   }
-  stream_json_end_object_element(true); // end "function" object
-  stream_json_end_array_element(true);  // end "function" array
-  stream_json_end_object_element(true); // end "plugin" object
-  stream_json_end_array_element(true);  // end "plugin" array
+  if (!firstPlugin) {
+    // We added some, so we must make sure to close the last entry
+    json_close();     // close first function element
+    json_close(true); // close previous function
+    json_close();     // close previous plugin
+  }
+  json_close(true);   // Close plugin list
 }
 
 
