@@ -44,9 +44,25 @@
    }
    }
  */
+
+void stream_json_timing_stats(const TimingStats& stats, long timeSinceLastReset) {
+  unsigned long minVal, maxVal;
+  unsigned int  count = stats.getMinMax(minVal, maxVal);
+  float call_per_sec = static_cast<float>(count) / static_cast<float>(timeSinceLastReset) * 1000.0;
+
+  json_number(F("count"), String(count));
+  json_number(F("call-per-sec"),   String(call_per_sec));
+  json_number(F("min"),   String(minVal));
+  json_number(F("max"),   String(maxVal));
+  json_number(F("avg"),   String(stats.getAvg()));
+  json_prop(F("unit"), F("usec"));
+}
+
 void jsonStatistics(bool clearStats) {
   bool firstPlugin     = true;
   int  currentPluginId = -1;
+  long timeSinceLastReset = timePassedSince(timingstats_last_reset);
+
 
   json_open(true, F("plugin"));
 
@@ -71,15 +87,9 @@ void jsonStatistics(bool clearStats) {
       }
 
       // Stream function timing stats
-      unsigned long minVal, maxVal;
-      unsigned int  count = x.second.getMinMax(minVal, maxVal);
       json_open(false, getPluginFunctionName(x.first % 256));
       {
-        json_number(F("count"), String(count));
-        json_number(F("min"),   String(minVal));
-        json_number(F("max"),   String(maxVal));
-        json_number(F("avg"),   String(x.second.getAvg()));
-        json_prop(F("unit"), F("usec"));
+        stream_json_timing_stats(x.second, timeSinceLastReset);
       }
       json_close(false);
       if (clearStats) { x.second.reset(); }
@@ -93,6 +103,76 @@ void jsonStatistics(bool clearStats) {
     json_close();     // close previous plugin
   }
   json_close(true);   // Close plugin list
+
+
+  json_open(true, F("controller"));
+  bool firstController = true;
+  int  currentProtocolIndex = -1;
+  for (auto& x: controllerStats) {
+    if (!x.second.isEmpty()) {      
+      const int ProtocolIndex = x.first / 256;
+      if (currentProtocolIndex != ProtocolIndex) {
+        // new protocol
+        currentProtocolIndex = ProtocolIndex;
+        if (!firstController) {
+          json_close();
+          json_close(true); // close previous function list
+          json_close();     // close previous protocol
+        }
+        // Start new protocol stream
+        json_open(); // open new plugin
+        json_prop(F("name"), getCPluginNameFromProtocolIndex(ProtocolIndex));
+        json_prop(F("id"),   String(Protocol[ProtocolIndex].Number));
+        json_open(true, F("function")); // open function
+        json_open(); // open first function element
+
+      }
+      // Stream function timing stats
+      json_open(false, getCPluginCFunctionName(x.first % 256));
+      {
+        stream_json_timing_stats(x.second, timeSinceLastReset);
+      }
+      json_close(false);
+      if (clearStats) { x.second.reset(); }
+      firstController = false;
+    }
+  }
+  if (!firstController) {
+    // We added some, so we must make sure to close the last entry
+    json_close();     // close first function element
+    json_close(true); // close previous function
+    json_close();     // close previous plugin
+  }
+
+  json_close(true);   // Close controller list
+
+
+  json_open(true, F("misc"));
+  for (auto& x: miscStats) {
+    if (!x.second.isEmpty()) {
+      json_open(); // open new misc item
+      json_prop(F("name"), getMiscStatsName(x.first));
+      json_prop(F("id"),   String(x.first));
+      json_open(true, F("function")); // open function
+      json_open(); // open first function element
+      // Stream function timing stats
+      json_open(false, to_internal_string(getMiscStatsName(x.first), '-'));
+      {
+        stream_json_timing_stats(x.second, timeSinceLastReset);
+      }
+      json_close(false);
+      json_close();     // close first function element
+      json_close(true); // close function
+      json_close();     // close misc item
+      if (clearStats) { x.second.reset(); }
+    }
+  }
+
+  json_close(true);   // Close misc list
+
+  if (clearStats) {
+    timingstats_last_reset = millis();
+  }
 }
 
 
