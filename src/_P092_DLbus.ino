@@ -29,59 +29,59 @@
 #define P092_DLbus_DeviceCount 5
 
 void P092_Pin_changed() ICACHE_RAM_ATTR;
-volatile byte P092_DLB_Pin;
+volatile uint8_t P092_DLB_Pin;
 volatile boolean P092_receiving = false;    // receiving flag
 boolean P092_init = false;
 boolean P092_ReceivedOK = false;
-unsigned long P092_LastReceived = 0;
-byte P092_MaxIdx[P092_DLbus_OptionCount];
+uint32_t P092_LastReceived = 0;
+uint8_t P092_MaxIdx[P092_DLbus_OptionCount];
 int P092_ValueType[P092_DLbus_ValueCount];
 int P092_ValueIdx[P092_DLbus_ValueCount];
 struct DataStruct
 {
-  byte          DataBytes;
-  byte          DeviceByte0;
-  byte          DeviceByte1;
-  byte          DeviceBytes;
-  byte          DontCareBytes;
-  byte          TimeStampBytes;
-  byte          MaxSensors;
-  byte          MaxExtSensors;
-  byte          OutputBytes;
-  byte          SpeedBytes;
-  byte          AnalogBytes;
-  byte          VolumeBytes;
-  byte          MaxHeatMeters;
-  byte          CurrentHmBytes;
-  byte          MWhBytes;
+  uint8_t				Datauint8_ts;
+  uint8_t       Deviceuint8_t0;
+  uint8_t       Deviceuint8_t1;
+  uint8_t       Deviceuint8_ts;
+  uint8_t       DontCareuint8_ts;
+  uint8_t       TimeStampuint8_ts;
+  uint8_t       MaxSensors;
+  uint8_t       MaxExtSensors;
+  uint8_t       Outputuint8_ts;
+  uint8_t       Speeduint8_ts;
+  uint8_t       Analoguint8_ts;
+  uint8_t       Volumeuint8_ts;
+  uint8_t       MaxHeatMeters;
+  uint8_t       CurrentHmuint8_ts;
+  uint8_t       MWhuint8_ts;
 
   uint16_t      MinPulseWidth;
   uint16_t      MaxPulseWidth;
   uint16_t      MinDoublePulseWidth;
   uint16_t      MaxDoublePulseWidth;
-  byte          IdxSensor;
-  byte          IdxExtSensor;
-  byte          IdxOutput;
-  byte          IdxDrehzahl;
-  byte          IdxAnalog;
-  byte          IdxHmRegister;
-  byte          IdxVolume;
-  byte          IdxHeatMeter1;
-  byte          IdxkWh1;
-  byte          IdxMWh1;
-  byte          IdxHeatMeter2;
-  byte          IdxkWh2;
-  byte          IdxMWh2;
-  byte          IdxHeatMeter3;
-  byte          IdxkWh3;
-  byte          IdxMWh3;
-  byte          IdxCRC;
+  uint8_t       IdxSensor;
+  uint8_t       IdxExtSensor;
+  uint8_t       IdxOutput;
+  uint8_t       IdxDrehzahl;
+  uint8_t       IdxAnalog;
+  uint8_t       IdxHmRegister;
+  uint8_t       IdxVolume;
+  uint8_t       IdxHeatMeter1;
+  uint8_t       IdxkWh1;
+  uint8_t       IdxMWh1;
+  uint8_t       IdxHeatMeter2;
+  uint8_t       IdxkWh2;
+  uint8_t       IdxMWh2;
+  uint8_t       IdxHeatMeter3;
+  uint8_t       IdxkWh3;
+  uint8_t       IdxMWh3;
+  uint8_t       IdxCRC;
 } DataSettings;
 
 typedef struct {
-  byte Idx;
-  byte mode;
-  float value;
+  uint8_t Idx;
+  uint8_t mode;
+  float   value;
 } data_t;
 data_t ReadData;
 
@@ -133,7 +133,7 @@ int P092_OptionValueDecimals[P092_DLbus_OptionCount] = {
 #define P092_double_min_width_50    (P092_double_pulse_width_50 - (P092_pulse_width_50 * P092_percentage_variance / 100))
 #define P092_double_max_width_50    (P092_double_pulse_width_50 + (P092_pulse_width_50 * P092_percentage_variance / 100))
 
-boolean Plugin_092(byte function, struct EventStruct *event, String& string)
+boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
   int OptionIdx, CurIdx;
@@ -312,11 +312,11 @@ boolean Plugin_092(byte function, struct EventStruct *event, String& string)
 	        log += DataSettings.IdxExtSensor;
 	        log += F(" IdxOutput:");
 	        log += DataSettings.IdxOutput;
-	        if (DataSettings.SpeedBytes > 0) {
+	        if (DataSettings.Speeduint8_ts > 0) {
 	          log += F(" IdxDrehzahl:");
 	          log += DataSettings.IdxDrehzahl;
 	        }
-	        if (DataSettings.AnalogBytes > 0) {
+	        if (DataSettings.Analoguint8_ts > 0) {
 	          log += F(" IdxAnalog:");
 	          log += DataSettings.IdxAnalog;
 	        }
@@ -324,7 +324,7 @@ boolean Plugin_092(byte function, struct EventStruct *event, String& string)
 	          log += F(" IdxHmRegister:");
 	          log += DataSettings.IdxHmRegister;
 	        }
-	        if (DataSettings.VolumeBytes > 0) {
+	        if (DataSettings.Volumeuint8_ts > 0) {
 	          log += F(" IdxVolume:");
 	          log += DataSettings.IdxVolume;
 	        }
@@ -443,169 +443,169 @@ void Plugin_092_SetIndices(int DeviceIndex) {
   // Set the indices for the DL bus packet
   switch (DeviceIndex) {
     case 21:  //ESR21
-      DataSettings.DataBytes = 31;
+      DataSettings.Datauint8_ts = 31;
       DataSettings.MinPulseWidth = P092_min_width_488;
       DataSettings.MaxPulseWidth = P092_max_width_488;
       DataSettings.MinDoublePulseWidth = P092_double_min_width_488;
       DataSettings.MaxDoublePulseWidth = P092_double_max_width_488;
 
-      DataSettings.DeviceByte0 = 0x70;
-      DataSettings.DeviceByte1 = 0x8F;
-      DataSettings.DeviceBytes = 2;
-      DataSettings.DontCareBytes = 0;
-      DataSettings.TimeStampBytes = 0;
+      DataSettings.Deviceuint8_t0 = 0x70;
+      DataSettings.Deviceuint8_t1 = 0x8F;
+      DataSettings.Deviceuint8_ts = 2;
+      DataSettings.DontCareuint8_ts = 0;
+      DataSettings.TimeStampuint8_ts = 0;
       DataSettings.MaxSensors = 3;
       DataSettings.MaxExtSensors = 6;
-      DataSettings.OutputBytes = 1;
-      DataSettings.SpeedBytes = 1;
-      DataSettings.AnalogBytes = 1;
-      DataSettings.VolumeBytes = 0;
+      DataSettings.Outputuint8_ts = 1;
+      DataSettings.Speeduint8_ts = 1;
+      DataSettings.Analoguint8_ts = 1;
+      DataSettings.Volumeuint8_ts = 0;
       DataSettings.MaxHeatMeters = 1;
-      DataSettings.CurrentHmBytes = 2;
-      DataSettings.MWhBytes = 2;
+      DataSettings.CurrentHmuint8_ts = 2;
+      DataSettings.MWhuint8_ts = 2;
       DataSettings.IdxCRC = 30;
 
       P092_OptionValueDecimals[6] = 1; //[0,1kW]     F("Heat power (kW)")
       break;
     case 31:  //UVR31
-      DataSettings.DataBytes = 8;
+      DataSettings.Datauint8_ts = 8;
       DataSettings.MinPulseWidth = P092_min_width_50;
       DataSettings.MaxPulseWidth = P092_max_width_50;
       DataSettings.MinDoublePulseWidth = P092_double_min_width_50;
       DataSettings.MaxDoublePulseWidth = P092_double_max_width_50;
 
-      DataSettings.DeviceByte0 = 0x30;
-      DataSettings.DeviceByte1 = 0;
-      DataSettings.DeviceBytes = 1;
-      DataSettings.DontCareBytes = 0;
-      DataSettings.TimeStampBytes = 0;
+      DataSettings.Deviceuint8_t0 = 0x30;
+      DataSettings.Deviceuint8_t1 = 0;
+      DataSettings.Deviceuint8_ts = 1;
+      DataSettings.DontCareuint8_ts = 0;
+      DataSettings.TimeStampuint8_ts = 0;
       DataSettings.MaxSensors = 3;
       DataSettings.MaxExtSensors = 0;
-      DataSettings.OutputBytes = 1;
-      DataSettings.SpeedBytes = 0;
-      DataSettings.AnalogBytes = 0;
-      DataSettings.VolumeBytes = 0;
+      DataSettings.Outputuint8_ts = 1;
+      DataSettings.Speeduint8_ts = 0;
+      DataSettings.Analoguint8_ts = 0;
+      DataSettings.Volumeuint8_ts = 0;
       DataSettings.MaxHeatMeters = 0;
-      DataSettings.CurrentHmBytes = 0;
-      DataSettings.MWhBytes = 0;
+      DataSettings.CurrentHmuint8_ts = 0;
+      DataSettings.MWhuint8_ts = 0;
       DataSettings.IdxCRC = 0;
       break;
     case 1611:  //UVR1611
-      DataSettings.DataBytes = 64;
+      DataSettings.Datauint8_ts = 64;
       DataSettings.MinPulseWidth = P092_min_width_488;
       DataSettings.MaxPulseWidth = P092_max_width_488;
       DataSettings.MinDoublePulseWidth = P092_double_min_width_488;
       DataSettings.MaxDoublePulseWidth = P092_double_max_width_488;
 
-      DataSettings.DeviceByte0 = 0x80;
-      DataSettings.DeviceByte1 = 0x7F;
-      DataSettings.DeviceBytes = 2;
-      DataSettings.DontCareBytes = 1;
-      DataSettings.TimeStampBytes = 5;
+      DataSettings.Deviceuint8_t0 = 0x80;
+      DataSettings.Deviceuint8_t1 = 0x7F;
+      DataSettings.Deviceuint8_ts = 2;
+      DataSettings.DontCareuint8_ts = 1;
+      DataSettings.TimeStampuint8_ts = 5;
       DataSettings.MaxSensors = 16;
       DataSettings.MaxExtSensors = 0;
-      DataSettings.OutputBytes = 2;
-      DataSettings.SpeedBytes = 4;
-      DataSettings.AnalogBytes = 0;
-      DataSettings.VolumeBytes = 0;
+      DataSettings.Outputuint8_ts = 2;
+      DataSettings.Speeduint8_ts = 4;
+      DataSettings.Analoguint8_ts = 0;
+      DataSettings.Volumeuint8_ts = 0;
       DataSettings.MaxHeatMeters = 2;
-      DataSettings.CurrentHmBytes = 4;
-      DataSettings.MWhBytes = 2;
+      DataSettings.CurrentHmuint8_ts = 4;
+      DataSettings.MWhuint8_ts = 2;
       DataSettings.IdxCRC = 63;
 
       P092_OptionValueDecimals[6] = 2; //[0,01kW]     F("Heat power (kW)")
       break;
     case 6132:  //UVR 61-3 (up to V8.2)
-      DataSettings.DataBytes = 35;
+      DataSettings.Datauint8_ts = 35;
       DataSettings.MinPulseWidth = P092_min_width_488;
       DataSettings.MaxPulseWidth = P092_max_width_488;
       DataSettings.MinDoublePulseWidth = P092_double_min_width_488;
       DataSettings.MaxDoublePulseWidth = P092_double_max_width_488;
 
-      DataSettings.DeviceByte0 = 0x90;
-      DataSettings.DeviceByte1 = 0x6F;
-      DataSettings.DeviceBytes = 2;
-      DataSettings.DontCareBytes = 1;
-      DataSettings.TimeStampBytes = 5;
+      DataSettings.Deviceuint8_t0 = 0x90;
+      DataSettings.Deviceuint8_t1 = 0x6F;
+      DataSettings.Deviceuint8_ts = 2;
+      DataSettings.DontCareuint8_ts = 1;
+      DataSettings.TimeStampuint8_ts = 5;
       DataSettings.MaxSensors = 6;
       DataSettings.MaxExtSensors = 0;
-      DataSettings.OutputBytes = 1;
-      DataSettings.SpeedBytes = 1;
-      DataSettings.AnalogBytes = 1;
-      DataSettings.VolumeBytes = 2;
+      DataSettings.Outputuint8_ts = 1;
+      DataSettings.Speeduint8_ts = 1;
+      DataSettings.Analoguint8_ts = 1;
+      DataSettings.Volumeuint8_ts = 2;
       DataSettings.MaxHeatMeters = 1;
-      DataSettings.CurrentHmBytes = 2;
-      DataSettings.MWhBytes = 4;
+      DataSettings.CurrentHmuint8_ts = 2;
+      DataSettings.MWhuint8_ts = 4;
       DataSettings.IdxCRC = 34;
 
       P092_OptionValueDecimals[6] = 1; //[0,1kW]     F("Heat power (kW)")
       break;
     case 6133:  //UVR 61-3 (from V8.3)
-      DataSettings.DataBytes = 62;
+      DataSettings.Datauint8_ts = 62;
       DataSettings.MinPulseWidth = P092_min_width_488;
       DataSettings.MaxPulseWidth = P092_max_width_488;
       DataSettings.MinDoublePulseWidth = P092_double_min_width_488;
       DataSettings.MaxDoublePulseWidth = P092_double_max_width_488;
 
-      DataSettings.DeviceByte0 = 0x90;
-      DataSettings.DeviceByte1 = 0x9F;
-      DataSettings.DeviceBytes = 2;
-      DataSettings.DontCareBytes = 1;
-      DataSettings.TimeStampBytes = 5;
+      DataSettings.Deviceuint8_t0 = 0x90;
+      DataSettings.Deviceuint8_t1 = 0x9F;
+      DataSettings.Deviceuint8_ts = 2;
+      DataSettings.DontCareuint8_ts = 1;
+      DataSettings.TimeStampuint8_ts = 5;
       DataSettings.MaxSensors = 6;
       DataSettings.MaxExtSensors = 9;
-      DataSettings.OutputBytes = 1;
-      DataSettings.SpeedBytes = 1;
-      DataSettings.AnalogBytes = 2;
-      DataSettings.VolumeBytes = 0;
+      DataSettings.Outputuint8_ts = 1;
+      DataSettings.Speeduint8_ts = 1;
+      DataSettings.Analoguint8_ts = 2;
+      DataSettings.Volumeuint8_ts = 0;
       DataSettings.MaxHeatMeters = 3;
-      DataSettings.CurrentHmBytes = 2;
-      DataSettings.MWhBytes = 2;
+      DataSettings.CurrentHmuint8_ts = 2;
+      DataSettings.MWhuint8_ts = 2;
       DataSettings.IdxCRC = 61;
 
       P092_OptionValueDecimals[6] = 1; //[0,1kW]     F("Heat power (kW)")
       break;
   }
-  DataSettings.IdxSensor               = DataSettings.DeviceBytes + DataSettings.DontCareBytes + DataSettings.TimeStampBytes;
+  DataSettings.IdxSensor               = DataSettings.Deviceuint8_ts + DataSettings.DontCareuint8_ts + DataSettings.TimeStampuint8_ts;
   DataSettings.IdxExtSensor            = DataSettings.IdxSensor + 2 * DataSettings.MaxSensors;
   DataSettings.IdxOutput               = DataSettings.IdxExtSensor + 2 * DataSettings.MaxExtSensors;
-  DataSettings.IdxDrehzahl             = DataSettings.IdxOutput + DataSettings.OutputBytes;
-  DataSettings.IdxAnalog               = DataSettings.IdxDrehzahl + DataSettings.SpeedBytes;
-  DataSettings.IdxHmRegister           = DataSettings.IdxAnalog + DataSettings.AnalogBytes;
+  DataSettings.IdxDrehzahl             = DataSettings.IdxOutput + DataSettings.Outputuint8_ts;
+  DataSettings.IdxAnalog               = DataSettings.IdxDrehzahl + DataSettings.Speeduint8_ts;
+  DataSettings.IdxHmRegister           = DataSettings.IdxAnalog + DataSettings.Analoguint8_ts;
   DataSettings.IdxVolume               = DataSettings.IdxHmRegister + 1;
-  DataSettings.IdxHeatMeter1           = DataSettings.IdxVolume + DataSettings.VolumeBytes;
-  DataSettings.IdxkWh1                 = DataSettings.IdxHeatMeter1 + DataSettings.CurrentHmBytes;
+  DataSettings.IdxHeatMeter1           = DataSettings.IdxVolume + DataSettings.Volumeuint8_ts;
+  DataSettings.IdxkWh1                 = DataSettings.IdxHeatMeter1 + DataSettings.CurrentHmuint8_ts;
   DataSettings.IdxMWh1                 = DataSettings.IdxkWh1 + 2;
-  DataSettings.IdxHeatMeter2           = DataSettings.IdxMWh1 + DataSettings.MWhBytes;
-  DataSettings.IdxkWh2                 = DataSettings.IdxHeatMeter2 + DataSettings.CurrentHmBytes;
+  DataSettings.IdxHeatMeter2           = DataSettings.IdxMWh1 + DataSettings.MWhuint8_ts;
+  DataSettings.IdxkWh2                 = DataSettings.IdxHeatMeter2 + DataSettings.CurrentHmuint8_ts;
   DataSettings.IdxMWh2                 = DataSettings.IdxkWh2 + 2;
-  DataSettings.IdxHeatMeter3           = DataSettings.IdxMWh2 + DataSettings.MWhBytes;
-  DataSettings.IdxkWh3                 = DataSettings.IdxHeatMeter3 + DataSettings.CurrentHmBytes;
+  DataSettings.IdxHeatMeter3           = DataSettings.IdxMWh2 + DataSettings.MWhuint8_ts;
+  DataSettings.IdxkWh3                 = DataSettings.IdxHeatMeter3 + DataSettings.CurrentHmuint8_ts;
   DataSettings.IdxMWh3                 = DataSettings.IdxkWh3 + 2;
 }
 /*********************************************************************************************\
   DLBus subs to get values from the P092_receiving bitstream
 \*********************************************************************************************/
-// one data frame has <DataSettings.DataBytes> data bytes + SYNC, e.g. 64 * (8+1+1) + 16 = 656
+// one data frame has <DataSettings.Datauint8_ts> data uint8_ts + SYNC, e.g. 64 * (8+1+1) + 16 = 656
 // 656 * 2 = 1312 (twice as much as a data frame is saved
 // so there's one complete data frame
 
-#define MaxDataBytes 64
-#define AdditionalRecBytes 2
-#define MaxDataBits (((MaxDataBytes + AdditionalRecBytes) * (8 + 1 + 1) + 16) * 4)
-volatile byte BitStream[MaxDataBits];           // received bit stream
+#define MaxDatauint8_ts 64
+#define AdditionalRecuint8_ts 2
+#define MaxDataBits (((MaxDatauint8_ts + AdditionalRecuint8_ts) * (8 + 1 + 1) + 16) * 4)
+volatile uint8_t BitStream[MaxDataBits];           // received bit stream
 volatile int pulse_count;                       // number of received pulses
 volatile int pulse_number;                      // max naumber of the received pulses
-volatile unsigned long last_bit_change = 0;     // remember the last transition
-volatile word MinPulseWidth, MaxPulseWidth, MinDoublePulseWidth, MaxDoublePulseWidth;
-volatile unsigned long TimeInMicros;            // current time in µs
-volatile unsigned long time_diff;               // time difference to previous pulse in µs
+volatile uint32_t last_bit_change = 0;     // remember the last transition
+volatile uint16_t MinPulseWidth, MaxPulseWidth, MinDoublePulseWidth, MaxDoublePulseWidth;
+volatile uint32_t TimeInMicros;            // current time in µs
+volatile uint32_t time_diff;               // time difference to previous pulse in µs
 
-byte ByteStream[MaxDataBits / 8 + 1];   // every bit gets sorted into a bitmap
+uint8_t uint8_tStream[MaxDataBits / 8 + 1];   // every bit gets sorted into a bitmap
 int bit_number;                         // bit size of the data frame
 
-byte WrongTimeCnt;
-word WrongTimings[5][6];
+uint8_t WrongTimeCnt;
+uint16_t WrongTimings[5][6];
 
 int start_bit;                          // first bit of data frame
 
@@ -641,11 +641,11 @@ int power_index, kwh_index, mwh_index;
 \****************/
 
 boolean Plugin_092_Receiving(void) {
-  byte rawval, val;
+  uint8_t rawval, val;
   int i;
   noInterrupts ();                              // make sure we don't get interrupted before we are ready
   pulse_count = 0;
-  pulse_number = (((DataSettings.DataBytes + AdditionalRecBytes) * (8 + 1 + 1) + 16) * 4);
+  pulse_number = (((DataSettings.Datauint8_ts + AdditionalRecuint8_ts) * (8 + 1 + 1) + 16) * 4);
   MinPulseWidth = DataSettings.MinPulseWidth;
   MaxPulseWidth = DataSettings.MaxPulseWidth;
   MinDoublePulseWidth = DataSettings.MinDoublePulseWidth;
@@ -653,7 +653,7 @@ boolean Plugin_092_Receiving(void) {
   addLog(LOG_LEVEL_INFO, F("P092_receiving ..."));
   P092_receiving = true;
   interrupts ();                                // interrupts allowed now, next instruction WILL be executed
-  unsigned long start=millis();
+  uint32_t start=millis();
   while ((millis()-start)<100) {
     // wait 100 ms
     yield();
@@ -673,7 +673,7 @@ boolean Plugin_092_Receiving(void) {
   WrongTimeCnt = 0;
   pulse_count = 0;
   for (i = 0; i <= pulse_number; i++) {
-    // store BitStream into ByteStream
+    // store BitStream into uint8_tStream
     rawval = BitStream[i];
     if ((rawval & 0xF0) != 0) {
       // wrong time_diff
@@ -753,7 +753,7 @@ void P092_Pin_changed(void) {
   time_diff = TimeInMicros - last_bit_change;
   last_bit_change = TimeInMicros;
   if (P092_receiving) {
-    byte val = digitalRead(P092_DLB_Pin); // read state
+    uint8_t val = digitalRead(P092_DLB_Pin); // read state
     // check pulse width
     if (time_diff >= 2*MinDoublePulseWidth)     val |= 0x80; // longer then 2x double pulse width
     else if (time_diff > MaxDoublePulseWidth)   val |= 0x40; // longer then double pulse width
@@ -771,16 +771,16 @@ void P092_Pin_changed(void) {
   DLBus processing
 \*****************/
 
-void P092_process_bit(byte b) {
+void P092_process_bit(uint8_t b) {
   // ignore first pulse
   pulse_count++;
   if (pulse_count % 2)
     return;
   bit_number = (pulse_count / 2);
   if (b)
-    ByteStream[bit_number / 8] |= (1 << (bit_number % 8)); // set bit
+    uint8_tStream[bit_number / 8] |= (1 << (bit_number % 8)); // set bit
   else
-    ByteStream[bit_number / 8] &= ~(1 << (bit_number % 8)); // clear bit
+    uint8_tStream[bit_number / 8] &= ~(1 << (bit_number % 8)); // clear bit
 }
 
 boolean P092_Processing(void) {
@@ -833,7 +833,7 @@ String log;
 }
 
 int P092_Analyze() {
-  byte sync=0;
+  uint8_t sync=0;
   // find SYNC (16 * sequential 1)
   for (int i = 0; i < bit_number; i++) {
     if (P092_ReadBit(i))
@@ -854,18 +854,18 @@ void P092_Invert() {
   for (int i = 0; i < bit_number; i++)
     P092_WriteBit(i, P092_ReadBit(i) ? 0 : 1); // invert every bit
 }
-byte P092_ReadBit(int pos) {
+uint8_t P092_ReadBit(int pos) {
   int row = pos / 8; // detect position in bitmap
   int col = pos % 8;
-  return (((ByteStream[row]) >> (col)) & 0x01); // return bit
+  return (((uint8_tStream[row]) >> (col)) & 0x01); // return bit
 }
-void P092_WriteBit(int pos, byte set) {
+void P092_WriteBit(int pos, uint8_t set) {
   int row = pos / 8; // detect position in bitmap
   int col = pos % 8;
   if (set)
-    ByteStream[row] |= 1 << col; // set bit
+    uint8_tStream[row] |= 1 << col; // set bit
   else
-    ByteStream[row] &= ~(1 << col); // clear bit
+    uint8_tStream[row] &= ~(1 << col); // clear bit
 }
 void P092_Trim() {
   for (int i = start_bit, bit = 0; i < bit_number; i++) {
@@ -886,19 +886,19 @@ void P092_Trim() {
 
 boolean P092_CheckDevice() {
   // Data frame of a device?
-  if (ByteStream[0] == DataSettings.DeviceByte0) {
-    if ((DataSettings.DeviceBytes == 1) || (ByteStream[1] == DataSettings.DeviceByte1))
+  if (uint8_tStream[0] == DataSettings.Deviceuint8_t0) {
+    if ((DataSettings.Deviceuint8_ts == 1) || (uint8_tStream[1] == DataSettings.Deviceuint8_t1))
       return true;
   }
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-	  String log = F("# Received DeviceByte(s): 0x");
-	  log += String(ByteStream[0], HEX);
-	  if (DataSettings.DeviceBytes > 1)
-	    log += String(ByteStream[1], HEX);
+	  String log = F("# Received Deviceuint8_t(s): 0x");
+	  log += String(uint8_tStream[0], HEX);
+	  if (DataSettings.Deviceuint8_ts > 1)
+	    log += String(uint8_tStream[1], HEX);
 	  log += F(" Requested: 0x");
-	  log += String(DataSettings.DeviceByte0, HEX);
-	  if (DataSettings.DeviceBytes > 1)
-	    log += String(DataSettings.DeviceByte1, HEX);
+	  log += String(DataSettings.Deviceuint8_t0, HEX);
+	  if (DataSettings.Deviceuint8_ts > 1)
+	    log += String(DataSettings.Deviceuint8_t1, HEX);
 	  addLog(LOG_LEVEL_INFO, log);
 	}
   return false;
@@ -909,17 +909,17 @@ boolean P092_CheckCRC() {
   if (DataSettings.IdxCRC == 0)
     return true;
   addLog(LOG_LEVEL_INFO, F("Check CRC..."));
-  word dataSum = 0;
+  uint16_t dataSum = 0;
   for (int i = 0; i < DataSettings.IdxCRC; i++)
-    dataSum = dataSum + ByteStream[i];
+    dataSum = dataSum + uint8_tStream[i];
   dataSum = dataSum & 0xff;
-  if (dataSum == ByteStream[DataSettings.IdxCRC])
+  if (dataSum == uint8_tStream[DataSettings.IdxCRC])
     return true;
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
 	  String log = F("# Calculated CRC: 0x");
 	  log += String(dataSum, HEX);
 	  log += F(" Received: 0x");
-	  log += String(ByteStream[DataSettings.IdxCRC], HEX);
+	  log += String(uint8_tStream[DataSettings.IdxCRC], HEX);
 	  addLog(LOG_LEVEL_INFO, log);
 	}
   return false;
@@ -952,7 +952,7 @@ boolean P092_GetData(int OptionIdx, int CurIdx) {
     case 3:  //F("Digital output")
       log = F("Get DigitalOutput");
       log += CurIdx;
-      if (CurIdx > (8 * DataSettings.OutputBytes)) {
+      if (CurIdx > (8 * DataSettings.Outputuint8_ts)) {
         result=false;
         break;
       }
@@ -961,7 +961,7 @@ boolean P092_GetData(int OptionIdx, int CurIdx) {
     case 4:  //F("Speed step")
       log = F("Get SpeedStep");
       log += CurIdx;
-      if (CurIdx > DataSettings.SpeedBytes) {
+      if (CurIdx > DataSettings.Speeduint8_ts) {
         result=false;
         break;
       }
@@ -970,7 +970,7 @@ boolean P092_GetData(int OptionIdx, int CurIdx) {
     case 5:  //F("Analog output")
       log = F("Get AnalogOutput");
       log += CurIdx;
-      if (CurIdx > DataSettings.AnalogBytes) {
+      if (CurIdx > DataSettings.Analoguint8_ts) {
         result=false;
         break;
       }
@@ -1012,11 +1012,11 @@ boolean P092_fetch_sensor(int number) {
   float value;
   ReadData.mode = -1;
   number = ReadData.Idx + (number - 1) * 2;
-  int sensorvalue = (ByteStream[number + 1] << 8) | ByteStream[number];
+  int sensorvalue = (uint8_tStream[number + 1] << 8) | uint8_tStream[number];
   if (sensorvalue == 0) {
     return false;
   }
-  byte sensortype = (sensorvalue & 0x7000) >> 12;
+  uint8_t sensortype = (sensorvalue & 0x7000) >> 12;
   if (!(sensorvalue & 0x8000)) { // sign positive
     sensorvalue &= 0xfff;
     // calculations for different sensor types
@@ -1072,52 +1072,52 @@ boolean P092_fetch_sensor(int number) {
 boolean P092_fetch_output(int number) {
   int outputs;
 
-  if (DataSettings.OutputBytes > 1)
-    outputs = (ByteStream[DataSettings.IdxOutput + 1] << 8) | ByteStream[DataSettings.IdxOutput];
+  if (DataSettings.Outputuint8_ts > 1)
+    outputs = (uint8_tStream[DataSettings.IdxOutput + 1] << 8) | uint8_tStream[DataSettings.IdxOutput];
   else
-    outputs = ByteStream[DataSettings.IdxOutput];
+    outputs = uint8_tStream[DataSettings.IdxOutput];
   ReadData.value = (!!(outputs & (1 << (number - 1))));
   return true;
 }
 
 boolean P092_fetch_speed(int number) {
-  byte speedbyte;
+  uint8_t speeduint8_t;
 
-  speedbyte = ByteStream[DataSettings.IdxDrehzahl + (number - 1)];
-  if ((speedbyte & 0x80) == 0x80)
+  speeduint8_t = uint8_tStream[DataSettings.IdxDrehzahl + (number - 1)];
+  if ((speeduint8_t & 0x80) == 0x80)
     return false;
-  ReadData.value = (speedbyte & 0x1f);
+  ReadData.value = (speeduint8_t & 0x1f);
   return true;
 }
 
 boolean P092_fetch_analog(int number) {
-  byte analogbyte;
+  uint8_t analoguint8_t;
 
-  analogbyte = ByteStream[DataSettings.IdxAnalog + (number - 1)];
-  if ((analogbyte & 0x80) == 0x80)
+  analoguint8_t = uint8_tStream[DataSettings.IdxAnalog + (number - 1)];
+  if ((analoguint8_t & 0x80) == 0x80)
     return false;
-  ReadData.value = (analogbyte * 0.1);
+  ReadData.value = (analoguint8_t * 0.1);
   return true;
 }
 
 boolean P092_CheckHmRegister(int number) {
   switch (number) {
     case 1:
-      if ((ByteStream[DataSettings.IdxHmRegister] & 0x1) != 0x01)
+      if ((uint8_tStream[DataSettings.IdxHmRegister] & 0x1) != 0x01)
         return false;
       power_index = DataSettings.IdxHeatMeter1;
       kwh_index = DataSettings.IdxkWh1;
       mwh_index = DataSettings.IdxMWh1;
       break;
     case 2:
-      if ((ByteStream[DataSettings.IdxHmRegister] & 0x2) != 0x02)
+      if ((uint8_tStream[DataSettings.IdxHmRegister] & 0x2) != 0x02)
         return false;
       power_index = DataSettings.IdxHeatMeter2;
       kwh_index = DataSettings.IdxkWh2;
       mwh_index = DataSettings.IdxMWh2;
       break;
     case 3:
-      if ((ByteStream[DataSettings.IdxHmRegister] & 0x4) != 0x04)
+      if ((uint8_tStream[DataSettings.IdxHmRegister] & 0x4) != 0x04)
         return false;
       power_index = DataSettings.IdxHeatMeter3;
       kwh_index = DataSettings.IdxkWh3;
@@ -1131,15 +1131,15 @@ boolean P092_CheckHmRegister(int number) {
 
 boolean P092_fetch_heatpower(int number) {
   // current power
-  int high;
+  int32_t high;
 
   if (P092_CheckHmRegister(number) == false)
     return false;
-  byte b1 = ByteStream[power_index];
-  byte b2 = ByteStream[power_index + 1];
-  if (DataSettings.CurrentHmBytes > 2) {
-    byte b3 = ByteStream[power_index + 2];
-    byte b4 = ByteStream[power_index + 3];
+  uint8_t b1 = uint8_tStream[power_index];
+  uint8_t b2 = uint8_tStream[power_index + 1];
+  if (DataSettings.CurrentHmuint8_ts > 2) {
+    uint8_t b3 = uint8_tStream[power_index + 2];
+    uint8_t b4 = uint8_tStream[power_index + 3];
     high = 65536 * b4 + 256 * b3 + b2;
     int low = (b1 * 10) / 256;
     if (!(b4 & 0x80)) // sign positive
@@ -1164,7 +1164,7 @@ boolean P092_fetch_heatmeter(int number) {
 
   if (P092_CheckHmRegister(number) == false)
     return false;
-  heat_meter = (ByteStream[kwh_index + 1] << 8) | ByteStream[kwh_index];
+  heat_meter = (uint8_tStream[kwh_index + 1] << 8) | uint8_tStream[kwh_index];
   heat_meter_mwh = (heat_meter * 0.1) / 1000; // in MWh
   if (heat_meter_mwh > 1.0) {
     // in kWh
@@ -1172,7 +1172,7 @@ boolean P092_fetch_heatmeter(int number) {
     heat_meter_mwh -= heat_meter;
   }
   // MWh
-  heat_meter = (ByteStream[mwh_index + 1] << 8) | ByteStream[mwh_index];
+  heat_meter = (uint8_tStream[mwh_index + 1] << 8) | uint8_tStream[mwh_index];
   ReadData.value = heat_meter_mwh + heat_meter;
   return true;
 }
