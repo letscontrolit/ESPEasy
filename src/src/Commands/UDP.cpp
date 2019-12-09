@@ -31,7 +31,7 @@ String Command_UPD_SendTo(struct EventStruct *event, const char *Line)
   int destUnit = parseCommandArgumentInt(Line, 1);
   if ((destUnit > 0) && (destUnit < 255))
   {
-    String eventName = parseStringKeepCase(Line, 3);
+    String eventName = tolerantParseStringKeepCase(Line, 3);
     SendUDPCommand(destUnit, eventName.c_str(), eventName.length());
   }
   return return_command_success();
@@ -40,12 +40,13 @@ String Command_UPD_SendTo(struct EventStruct *event, const char *Line)
 String Command_UDP_SendToUPD(struct EventStruct *event, const char *Line)
 {
   if (WiFiConnected()) {
-    String strLine = Line;
-    String ip      = parseString(strLine, 2);
-    int port    = parseCommandArgumentInt(strLine, 2);
+    String ip      = parseString(Line, 2);
+    int port    = parseCommandArgumentInt(Line, 2);
 
     if (port < 0 || port > 65535) return return_command_failed();
-    String message = parseStringToEndKeepCase(strLine, 4);
+    // FIXME TD-er: This command is not using the tolerance setting
+    // tolerantParseStringKeepCase(Line, 4);
+    String message = parseStringToEndKeepCase(Line, 4);
     IPAddress UDP_IP;
 
     if (UDP_IP.fromString(ip)) {

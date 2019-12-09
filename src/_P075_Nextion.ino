@@ -336,41 +336,37 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
 // Nextion commands received from events (including http) get processed here. PLUGIN_WRITE
 // does NOT process publish commands that are sent.
     case PLUGIN_WRITE: {
-        // FIXME TD-er: This one is not using parseString* function
-        String tmpString = string;
-        int argIndex = tmpString.indexOf(',');
-        if (argIndex) tmpString = tmpString.substring(0, argIndex);
+      String command = parseString(string, 1);
+      // If device names match we have a command to write.
+      if (command.equalsIgnoreCase(getTaskDeviceName(event->TaskIndex))) {
+        success = true; // Set true only if plugin found a command to execute.
+        String nextionArguments = parseStringToEndKeepCase(string, 2);
+        P075_sendCommand(event->TaskIndex, nextionArguments.c_str());
+        {
+          String log;
+          log.reserve(24 + nextionArguments.length()); // Prevent re-allocation
+          log = F("NEXTION075 : WRITE = ");
+          log += nextionArguments;
+          addLog(LOG_LEVEL_DEBUG, log);
+          SendStatus(event->Source, log);              // Reply (echo) to sender. This will print message on browser.
+        }
 
 // Enable addLog() code below to help debug plugin write problems.
 /*
         String log;
         log.reserve(140);                               // Prevent re-allocation
         String log = F("Nextion arg0: ");
-        log += tmpString;
+        log += command;
         log += F(", TaskDeviceName: ");
         log += getTaskDeviceName(event->TaskIndex);
         log += F(", event->TaskIndex: ");
         log += String(event->TaskIndex);
-        log += F(", cmd str: ");
-        log += string;
+        log += F(", nextionArguments: ");
+        log += nextionArguments;
         addLog(LOG_LEVEL_INFO, log);
 */
-        if (tmpString.equalsIgnoreCase(getTaskDeviceName(event->TaskIndex)) == true) { // If device names match we have a command to write.
-            argIndex = string.indexOf(',');
-            tmpString = string.substring(argIndex + 1);
-            P075_sendCommand(event->TaskIndex, tmpString.c_str());
-
-            String log;
-            log.reserve(110);                           // Prevent re-allocation
-            log = F("NEXTION075 : WRITE = ");
-            log += tmpString;
-            #ifdef DEBUG_LOG
-              addLog(LOG_LEVEL_INFO, log);
-            #endif
-            SendStatus(event->Source, log);             // Reply (echo) to sender. This will print message on browser.
-            success = true;                             // Set true only if plugin found a command to execute.
-        }
-        break;
+      }
+      break;
     }
 
 

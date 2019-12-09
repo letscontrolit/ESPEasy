@@ -409,8 +409,10 @@ void prepare_deepSleep(int dsdelay)
 
     if (Settings.UseRules && isDeepSleepEnabled())
     {
-      String event = F("System#NoSleep=30");
-      rulesProcessing(event);
+      eventQueue.add(F("System#NoSleep=30"));
+      while (processNextEvent()) {
+        delay(1);
+      }
     }
     delayBackground(30000);
 
@@ -429,8 +431,10 @@ void deepSleepStart(int dsdelay)
   // separate function that is called from above function or directly from rules, usign deepSleep_wakeTime as a one-shot
   if (Settings.UseRules)
   {
-    String event = F("System#Sleep");
-    rulesProcessing(event);
+    eventQueue.add(F("System#Sleep"));
+    while (processNextEvent()) {
+      delay(1);
+    }
   }
 
   addLog(LOG_LEVEL_INFO, F("SLEEP: Powering down to deepsleep..."));
@@ -472,6 +476,8 @@ bool remoteConfig(struct EventStruct *event, const String& string)
     if (parseString(string, 2) == F("task"))
     {
       String configTaskName = parseStringKeepCase(string, 3);
+      // FIXME TD-er: This command is not using the tolerance setting
+      // tolerantParseStringKeepCase(Line, 4);
       String configCommand  = parseStringToEndKeepCase(string, 4);
 
       if ((configTaskName.length() == 0) || (configCommand.length() == 0)) {
@@ -1219,13 +1225,14 @@ void ResetFactory()
 
 #if DEFAULT_CONTROLLER
   MakeControllerSettings(ControllerSettings);
-  strcpy_P(ControllerSettings.Subscribe, PSTR(DEFAULT_SUB));
-  strcpy_P(ControllerSettings.Publish, PSTR(DEFAULT_PUB));
-  strcpy_P(ControllerSettings.MQTTLwtTopic, PSTR(DEFAULT_MQTT_LWT_TOPIC));
-  strcpy_P(ControllerSettings.LWTMessageConnect, PSTR(DEFAULT_MQTT_LWT_CONNECT_MESSAGE));
-  strcpy_P(ControllerSettings.LWTMessageDisconnect, PSTR(DEFAULT_MQTT_LWT_DISCONNECT_MESSAGE));
+  safe_strncpy(ControllerSettings.Subscribe, F(DEFAULT_SUB), sizeof(ControllerSettings.Subscribe));
+  safe_strncpy(ControllerSettings.Publish, F(DEFAULT_PUB), sizeof(ControllerSettings.Publish));
+  safe_strncpy(ControllerSettings.MQTTLwtTopic, F(DEFAULT_MQTT_LWT_TOPIC), sizeof(ControllerSettings.MQTTLwtTopic));
+  safe_strncpy(ControllerSettings.LWTMessageConnect, F(DEFAULT_MQTT_LWT_CONNECT_MESSAGE), sizeof(ControllerSettings.LWTMessageConnect));
+  safe_strncpy(ControllerSettings.LWTMessageDisconnect, F(DEFAULT_MQTT_LWT_DISCONNECT_MESSAGE), sizeof(ControllerSettings.LWTMessageDisconnect));
   str2ip((char*)DEFAULT_SERVER, ControllerSettings.IP);
-  ControllerSettings.HostName[0]=0;
+  ControllerSettings.setHostname(F(DEFAULT_SERVER_HOST));
+  ControllerSettings.UseDNS = DEFAULT_SERVER_USEDNS;
   ControllerSettings.Port = DEFAULT_PORT;
   SaveControllerSettings(0, ControllerSettings);
 #endif
@@ -1319,13 +1326,42 @@ bool validIntFromString(const String& tBuf, int& result) {
   return isvalid;
 }
 
+bool validUIntFromString(const String& tBuf, unsigned int& result) {
+  int tmp;
+  if (!validIntFromString(tBuf, tmp)) return false;
+  if (tmp < 0) return false;
+  result = static_cast<unsigned int>(tmp);
+  return true;
+}
+
+
 bool validFloatFromString(const String& tBuf, float& result) {
+  // DO not call validDoubleFromString and then cast to float.
+  // Working with double values is quite CPU intensive as it must be done in software 
+  // since the ESP does not have large enough registers for handling double values in hardware.
   const String numerical = getNumerical(tBuf, false);
   const bool isvalid = numerical.length() > 0;
   if (isvalid) {
     result = numerical.toFloat();
   }
   return isvalid;
+}
+
+bool validDoubleFromString(const String& tBuf, double& result) {
+  #ifdef CORE_POST_2_5_0
+  // String.toDouble() is introduced in core 2.5.0
+  const String numerical = getNumerical(tBuf, false);
+  const bool isvalid = numerical.length() > 0;
+  if (isvalid) {
+    result = numerical.toDouble();
+  }
+  return isvalid;
+  #else
+  float tmp = static_cast<float>(result);
+  bool res = validFloatFromString(tBuf, tmp);
+  result = static_cast<double>(tmp);
+  return res;
+  #endif
 }
 
 

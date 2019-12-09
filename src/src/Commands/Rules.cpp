@@ -2,10 +2,9 @@
 
 #include "../../ESPEasy_common.h"
 #include "../Commands/Common.h"
+#include "../DataStructs/EventValueSource.h"
 #include "../Globals/Settings.h"
 #include "../../ESPEasy-Globals.h"
-
-
 #include "../../ESPEasy_fdwdecl.h"
 
 
@@ -28,15 +27,32 @@ String Command_Rules_UseRules(struct EventStruct *event, const char *Line)
                               1);
 }
 
-String Command_Rules_Events(struct EventStruct *event, const char *Line)
+String Command_Rules_Async_Events(struct EventStruct *event, const char *Line)
 {
-  String eventName = Line;
-
-  eventName = eventName.substring(6);
+  String eventName = parseStringToEndKeepCase(Line, 2);
   eventName.replace('$', '#');
 
   if (Settings.UseRules) {
-    rulesProcessing(eventName);
+    eventQueue.add(eventName);
+  }
+  return return_command_success();
+}
+
+
+String Command_Rules_Events(struct EventStruct *event, const char *Line)
+{
+  String eventName = parseStringToEndKeepCase(Line, 2);
+  eventName.replace('$', '#');
+
+  if (Settings.UseRules) {
+    const bool executeImmediately = 
+        SourceNeedsStatusUpdate(event->Source) ||
+        event->Source == VALUE_SOURCE_RULES;
+    if (executeImmediately) {
+      rulesProcessing(eventName); // TD-er: Process right now 
+    } else {
+      eventQueue.add(eventName);
+    }
   }
   return return_command_success();
 }

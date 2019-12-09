@@ -60,7 +60,9 @@
 #define DEFAULT_WIFI_NONE_SLEEP              false // When set, the wifi will be set to no longer sleep (more power
 // used and need reboot to reset mode)
 #define DEFAULT_GRATUITOUS_ARP               false // When set, the node will send periodical gratuitous ARP
-// packets to announce itself.
+                                                   // packets to announce itself.
+#define DEFAULT_TOLERANT_LAST_ARG_PARSE      false // When set, the last argument of some commands will be parsed to the end of the line
+                                                   // See: https://github.com/letscontrolit/ESPEasy/issues/2724
 
 // --- Default Controller ------------------------------------------------------------------------------
 #define DEFAULT_CONTROLLER   false                                          // true or false enabled or disabled, set 1st controller
@@ -71,6 +73,9 @@
 #define DEFAULT_PUB         "sensors/espeasy/%sysname%/%tskname%/%valname%" // Enter your pub
 #define DEFAULT_SUB         "sensors/espeasy/%sysname%/#"                   // Enter your sub
 #define DEFAULT_SERVER      "192.168.0.8"                                   // Enter your Server IP address
+#define DEFAULT_SERVER_HOST ""                                              // Server hostname
+#define DEFAULT_SERVER_USEDNS false                                         // true: Use hostname.  false: use IP
+
 #define DEFAULT_PORT        8080                                            // Enter your Server port value
 
 #define DEFAULT_PROTOCOL    0                                               // Protocol used for controller communications
@@ -253,6 +258,7 @@
 
 // Special plugins needing IR library
 // #define USES_P016   // IR
+// #define P016_SEND_IR_TO_CONTROLLER false //IF true then the JSON replay solution is transmited back to the condroller.
 // #define USES_P035   // IRTX
 // #define P016_P035_Extended_AC // The following define is needed for extended decoding of A/C Messages and or using standardised 
                                  //common arguments for controlling all deeply supported A/C units

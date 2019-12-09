@@ -41,6 +41,9 @@ String getLabel(LabelType::Enum label) {
     case LabelType::IP_ADDRESS_SUBNET:      return F("IP / Subnet");
     case LabelType::GATEWAY:                return F("Gateway");
     case LabelType::CLIENT_IP:              return F("Client IP");
+    #ifdef FEATURE_MDNS
+    case LabelType::M_DNS:                  return F("mDNS");
+    #endif
     case LabelType::DNS:                    return F("DNS");
     case LabelType::DNS_1:                  return F("DNS 1");
     case LabelType::DNS_2:                  return F("DNS 2");
@@ -142,6 +145,9 @@ String getValue(LabelType::Enum label) {
     case LabelType::IP_ADDRESS_SUBNET:      return String(getValue(LabelType::IP_ADDRESS) + F(" / ") + getValue(LabelType::IP_SUBNET));
     case LabelType::GATEWAY:                return WiFi.gatewayIP().toString();
     case LabelType::CLIENT_IP:              return formatIP(WebServer.client().remoteIP());
+    #ifdef FEATURE_MDNS
+    case LabelType::M_DNS:                  return String(WifiGetHostname()) + F(".local");
+    #endif
     case LabelType::DNS:                    return String(getValue(LabelType::DNS_1) + F(" / ") + getValue(LabelType::DNS_2));
     case LabelType::DNS_1:                  return WiFi.dnsIP(0).toString();
     case LabelType::DNS_2:                  return WiFi.dnsIP(1).toString();

@@ -211,6 +211,19 @@
     Create an event, it's possible to send a float value along as well.
 
     See event syntax below..."
+    "
+    AsyncEvent","
+    :blue:`Special`","
+    Schedule an event, it's possible to send a float value along as well.
+
+    This is the same as a regular event, but it will not be executed immediately.
+    Instead it will be added to an event queue.
+    
+    Use this to keep rules execution times as short as possible.
+
+    N.B. New values sent by a task will also be of this type.
+
+    See event syntax below..."
 
 
 Event command
@@ -218,6 +231,12 @@ Event command
 
 The event command is a special command used to trigger an event. This event can then be acted upon from the rules.
 You can send 0..4 event values along with the event.
+
+An event will be executed immediately if its origin demands a state update.
+For events which do not need to be executed immediately, we have the AsyncEvent, which is added to an event queue.
+This queue is processed 10 times per second, one event at a time.
+
+Try to use AsyncEvents where possible, to keep rules processing times low.
 
 
 .. csv-table::

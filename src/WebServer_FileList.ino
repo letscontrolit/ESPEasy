@@ -97,6 +97,9 @@ void handle_filelist_json() {
       break;
     }
   }
+  if (firstentry) {
+    TXBuffer += "}";
+  }
 
   # endif // if defined(ESP8266)
   TXBuffer += "]";

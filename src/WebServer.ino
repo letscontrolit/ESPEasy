@@ -405,8 +405,47 @@ void sendHeadandTail_stdtemplate(boolean Tail = false, boolean rebooting = false
     if (!clientIPinSubnet() && WifiIsAP(WiFi.getMode()) && (WiFi.softAPgetStationNum() > 0)) {
       addHtmlError(F("Warning: Connected via AP"));
     }
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      const int nrArgs = WebServer.args();
+      if (nrArgs > 0) {
+        String log = F(" Webserver args:");
+
+        for (int i = 0; i < nrArgs; ++i) {
+          log += ' ';
+          log += i;
+          log += F(": '");
+          log += WebServer.argName(i);
+          log += F("' length: ");
+          log += WebServer.arg(i).length();
+        }
+        addLog(LOG_LEVEL_INFO, log);
+      }
+    }
   }
 }
+
+size_t streamFile_htmlEscape(const String& fileName)
+{
+  fs::File f = tryOpenFile(fileName, "r");
+  size_t size = 0;
+  if (f)
+  {
+    String escaped;
+    while (f.available())
+    {
+      char c = (char)f.read();
+      if (htmlEscapeChar(c, escaped)) {
+        TXBuffer += escaped;
+      } else {
+        TXBuffer += c;
+      }
+      ++size;
+    }
+    f.close();
+  }
+  return size;
+}
+
 
 // ********************************************************************************
 // Web Interface init
@@ -566,6 +605,32 @@ void WebServerInit()
   #endif  // if defined(ESP8266)
 }
 
+void set_mDNS() {
+  #ifdef FEATURE_MDNS
+  if (webserverRunning) {
+    addLog(LOG_LEVEL_INFO, F("WIFI : Starting mDNS..."));
+    bool mdns_started = MDNS.begin(WifiGetHostname().c_str());
+    MDNS.setInstanceName(WifiGetHostname()); // Needed for when the hostname has changed.
+
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      String log = F("WIFI : ");
+
+      if (mdns_started) {
+        log += F("mDNS started, with name: ");
+        log += getValue(LabelType::M_DNS);
+      }
+      else {
+        log += F("mDNS failed");
+      }
+      addLog(LOG_LEVEL_INFO, log);
+    }
+    if (mdns_started) {
+      MDNS.addService("http", "tcp", 80);
+    }
+  }
+  #endif // ifdef FEATURE_MDNS
+}
+
 void setWebserverRunning(bool state) {
   if (webserverRunning == state) {
     return;
@@ -580,6 +645,7 @@ void setWebserverRunning(bool state) {
     addLog(LOG_LEVEL_INFO, F("Webserver: stop"));
   }
   webserverRunning = state;
+  set_mDNS(); // Uses webserverRunning state.
 }
 
 void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
@@ -900,7 +966,15 @@ void json_quote_val(const String& val) {
   TXBuffer += '\"';
 }
 
-void json_open(bool arr = false, const String& name = String()) {
+void json_open() {
+  json_open(false, String());
+}
+
+void json_open(bool arr) {
+  json_open(arr, String());
+}
+
+void json_open(bool arr, const String& name) {
   json_quote_name(name);
   TXBuffer += arr ? '[' : '{';
   lastLevel = level;
@@ -912,7 +986,11 @@ void json_init() {
   lastLevel = -1;
 }
 
-void json_close(bool arr = false) {
+void json_close() {
+  json_close(false);
+}
+
+void json_close(bool arr) {
   TXBuffer += arr ? ']' : '}';
   level--;
   lastLevel = level;

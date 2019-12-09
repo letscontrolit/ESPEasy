@@ -16,7 +16,7 @@
 //
 // IF the IR code is an Air Condition protocol that the  IR library can decode, then there will be a human-readable description of that IR message.
 // If the IR library can encode those kind of messages then a JSON formated command will be given, that can be replayed by P035 as well.
-// That commands format is: IRSENDAC,{"protocol":"COOLIX","power":"on","mode":"dry","fanspeed":"auto","temp":22,"swingv":"max","swingh":"off"}
+// That commands format is: IRSENDAC,'{"protocol":"COOLIX","power":"on","mode":"dry","fanspeed":"auto","temp":22,"swingv":"max","swingh":"off"}'
 #include <IRremoteESP8266.h>
 #include <IRutils.h>
 #include <IRrecv.h>
@@ -30,8 +30,12 @@
 #define PLUGIN_NAME_016 "Communication - TSOP4838"
 #define PLUGIN_VALUENAME1_016 "IR"
 
+#ifndef P016_SEND_IR_TO_CONTROLLER
+#define P016_SEND_IR_TO_CONTROLLER false
+#endif
+
 // A lot of the following code has been taken directly (with permission) from the IRrecvDumpV2.ino example code
-// of the IRremoteESP8266 library. (https://github.com/markszabo/IRremoteESP8266)
+// of the IRremoteESP8266 library. (https://github.com/markszabo/IRremoteESP8266) 
 
 // ==================== start of TUNEABLE PARAMETERS ====================
 // As this program is a special purpose capture/decoder, let us use a larger
@@ -102,7 +106,8 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
   {
     Device[++deviceCount].Number = PLUGIN_ID_016;
     Device[deviceCount].Type = DEVICE_TYPE_SINGLE;
-    Device[deviceCount].VType = SENSOR_TYPE_LONG;
+    if (P016_SEND_IR_TO_CONTROLLER) Device[deviceCount].VType = SENSOR_TYPE_STRING;
+    else Device[deviceCount].VType = SENSOR_TYPE_LONG;
     Device[deviceCount].Ports = 0;
     Device[deviceCount].PullUpOption = true;
     Device[deviceCount].InverseLogicOption = true;
@@ -138,7 +143,7 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
     if (irReceiver == 0 && irPin != -1)
     {
       addLog(LOG_LEVEL_INFO, String(F("INIT: IR RX")));
-      addLog(LOG_LEVEL_INFO, String(F("IR lib Version: "))+_IRREMOTEESP8266_VERSION_);
+      addLog(LOG_LEVEL_INFO, String(F("IR lib Version: ")) + _IRREMOTEESP8266_VERSION_);
       irReceiver = new IRrecv(irPin, kCaptureBufferSize, P016_TIMEOUT, true);
       irReceiver->setUnknownThreshold(kMinUnknownSize); // Ignore messages with less than minimum on or off pulses.
       irReceiver->enableIRIn();                         // Start the receiver
@@ -185,22 +190,26 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
         success = false;
         break; //Do not continue and risk hanging the ESP
       }
-
+      String output="";
       // Display the basic output of what we found.
       if (results.decode_type != decode_type_t::UNKNOWN)
       {
-        addLog(LOG_LEVEL_INFO, String(F("IRSEND,")) + typeToString(results.decode_type, results.repeat) + ',' + resultToHexidecimal(&results) + ',' + uint64ToString(results.bits)); //Show the appropriate command to the user, so he can replay the message via P035
-        addLog(LOG_LEVEL_INFO, String(F("IRSEND,{\"protocol\":\"")) + typeToString(results.decode_type, results.repeat) + String(F("\",\"data\":\"")) + resultToHexidecimal(&results) + String(F("\",\"bits\":")) + uint64ToString(results.bits)+ '}'); //JSON representation of the command
+        //String output = String(F("IRSEND,")) + typeToString(results.decode_type, results.repeat) + ',' + resultToHexidecimal(&results) + ',' + uint64ToString(results.bits);
+        //addLog(LOG_LEVEL_INFO, output); //Show the appropriate command to the user, so he can replay the message via P035 // Old style command
+        output = String(F("{\"protocol\":\"")) + typeToString(results.decode_type, results.repeat) + String(F("\",\"data\":\"")) + resultToHexidecimal(&results) + String(F("\",\"bits\":")) + uint64ToString(results.bits)+ '}';
+        addLog(LOG_LEVEL_INFO, String(F("IRSEND,\'"))+output+'\''); //JSON representation of the command
+        event->String2 = output;
       }
       //Check if a solution for RAW2 is found and if not give the user the option to access the timings info.
-      if (results.decode_type == decode_type_t::UNKNOWN 
       #ifdef P016_P035_USE_RAW_RAW2
-       && !displayRawToReadableB32Hex()
+      if (results.decode_type == decode_type_t::UNKNOWN && !displayRawToReadableB32Hex(event->String2))
+      #else
+      if (results.decode_type == decode_type_t::UNKNOWN)
       #endif
-      )
       {
         addLog(LOG_LEVEL_INFO, F("IR: No replay solutions found! Press button again or try RAW encoding (timmings are in the serial output)"));
         serialPrint(String(F("IR: RAW TIMINGS: ")) + resultToSourceCode(&results));
+        event->String2 = F("NaN");
         yield(); // Feed the WDT as it can take a while to print.
                  //addLog(LOG_LEVEL_DEBUG,(String(F("IR: RAW TIMINGS: ")) + resultToSourceCode(&results))); // Output the results as RAW source code //not showing up nicely in the web log
       }
@@ -228,11 +237,11 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
       state.beep = false;
       state.sleep = -1;
       state.clock = -1;
-      
+
       String description = IRAcUtils::resultAcToString(&results);
       if (description != "")
         addLog(LOG_LEVEL_INFO, String(F("AC State: ")) + description); // If we got a human-readable description of the message, display it.
-      if (IRac::isProtocolSupported(results.decode_type))                   //Check If there is a replayable AC state and show the JSON command that can be send
+      if (IRac::isProtocolSupported(results.decode_type))              //Check If there is a replayable AC state and show the JSON command that can be send
       {
         IRAcUtils::decodeToState(&results, &state);
         StaticJsonDocument<300> doc;
@@ -269,16 +278,19 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
           doc[F("sleep")] = state.sleep; //Nr. of mins of sleep mode, or use sleep mode. (<= 0 means off.)
         if (state.clock >= 0)
           doc[F("clock")] = state.clock; //Nr. of mins past midnight to set the clock to. (< 0 means off.)
-        String output = F("IRSENDAC,");
+        output="";
         serializeJson(doc, output);
-        addLog(LOG_LEVEL_INFO, output); //Show the command that the user can put to replay the AC state with P035
+        event->String2 = output;
+        addLog(LOG_LEVEL_INFO, String(F("IRSENDAC,'")) + output+ '\''); //Show the command that the user can put to replay the AC state with P035
       }
 #endif // P016_P035_Extended_AC
-
+    if (P016_SEND_IR_TO_CONTROLLER)  sendData(event);
+    else {
       unsigned long IRcode = results.value;
       UserVar[event->BaseVarIndex] = (IRcode & 0xFFFF);
       UserVar[event->BaseVarIndex + 1] = ((IRcode >> 16) & 0xFFFF);
       sendData(event);
+      }
     }
     success = true;
     break;
@@ -304,7 +316,8 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
 // by GusPS is that it allows easy inspections and modifications after the code is constructed.
 //
 // Author: Gilad Raz (jazzgil)  23sep2018
-boolean displayRawToReadableB32Hex()
+
+boolean displayRawToReadableB32Hex(String &outputStr)
 {
   String line;
   uint16_t div[2];
@@ -416,6 +429,7 @@ boolean displayRawToReadableB32Hex()
   out[iOut] = 0;
   line = String(F("IRSEND,RAW2,")) + String(out) + String(F(",38,")) + uint64ToString(div[0], 10) + ',' + uint64ToString(div[1], 10);
   addLog(LOG_LEVEL_INFO, line);
+  outputStr = line;
   return true;
 }
 

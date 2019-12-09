@@ -1,4 +1,94 @@
 -------------------------------------------------
+Changes in release mega-20191208 (since mega-20191130)
+-------------------------------------------------
+
+Release date: zo  8 dec 2019 18:35:06 CET
+
+Gijs Noorlander (17):
+      [WiFi] Use last known BSSID & channel from RTC + MQTT fixes
+      [PIO] Update to core 2.6.2
+      [WiFi] Improve ESP32 WiFi connect + fix mDNS updates
+      [PIO] Fix build failure due to incorrect flags.
+      [PIO] Don't use Python 3 specific since Travis still uses Python 2.7
+      [WiFi] Call WiFi disconnect in setup() (#2757)
+      [Rules] Parse template for all command calls
+      [Rules] Execute some events asynchronous
+      [Commands] Proper error logs when processing commands.
+      [Commands] Add flag to be a bit more tolerant in last argument parsing
+      [Events] Run events from rules immediately + add AsyncEvent command
+      [FEATURE_SD] Add build in Platformio.ini with SD enabled (#2700 )
+      [Rules] Add some checks for rules consistency before saving
+      [Rules] Add check for correct received POST data when saving rules
+      [JSON] Fix issues with generated JSON
+      [JSON] Fix non valid timing stats json when no plugins defined (#2767)
+      [JSON] Extend timing stats JSON end point with controller and misc stats
+
+stefan (1):
+      Fix Arduino IDE include path
+
+
+-------------------------------------------------
+Changes in release mega-20191130 (since mega-20191127)
+-------------------------------------------------
+
+Release date: Sat Nov 30 00:31:17 CET 2019
+
+Baubau-Lab (1):
+      [DHT]New DHT11 support decimal and negative values.
+
+jimmys01 (6):
+      [IR] Sent decoded values back to the controller
+      Comment out interfering code
+      Force rebuild
+      Resolve code conflicts
+      [IR RX] Add the extra ' needed for the parsing of the JSON command
+      [IR RX] Option to Send IR events to MQTT broker
+
+
+-------------------------------------------------
+Changes in release mega-20191127 (since mega-20191126)
+-------------------------------------------------
+
+Release date: Wed Nov 27 09:17:00 CET 2019
+
+Gijs Noorlander (1):
+      Disable 16M and some custom builds from Travis
+
+
+-------------------------------------------------
+Changes in release mega-20191126 (since mega-20191123)
+-------------------------------------------------
+
+Release date: Tue Nov 26 21:38:44 CET 2019
+
+Gijs Noorlander (3):
+      [Nextion] Fix parsing rules for Nextion plugin (#2772)
+      [Commands] Adapt all plugins to use parseString for parsing commands
+      [Travis] Fix build error String.toDouble() is core 2.5.0 or newer.
+
+uwekaditz (4):
+      P[036] chars per line changed to 64, fixed overlapping while page scrolling
+      [P036] chars per line changed to 64, fixed overlapping while page scrolling
+      Update _P036_FrameOLED.ino
+      Update _P036_FrameOLED.ino
+
+
+-------------------------------------------------
+Changes in release mega-20191123 (since mega-20191122)
+-------------------------------------------------
+
+Release date: Sat Nov 23 04:00:15 CET 2019
+
+Bartlomiej Zimon (1):
+      [switch] add support for pwm frequency change for ESP8266 #2653
+
+Gijs Noorlander (3):
+      [Defaults] Add Hostname option for default controller (#2758)
+      [Build] Add normal_sdk3_ESP8266_1M
+      [Build] Change to SDK 20190703 to improve WiFi
+
+
+-------------------------------------------------
 Changes in release mega-20191122 (since mega-20191119)
 -------------------------------------------------
 

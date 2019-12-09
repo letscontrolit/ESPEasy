@@ -84,10 +84,14 @@
 #ifndef DEFAULT_GRATUITOUS_ARP
 #define DEFAULT_GRATUITOUS_ARP           false  // When set, the node will send periodical gratuitous ARP packets to announce itself.
 #endif
+#ifndef DEFAULT_TOLERANT_LAST_ARG_PARSE
+#define DEFAULT_TOLERANT_LAST_ARG_PARSE  false  // When set, the last argument of some commands will be parsed to the end of the line
+                                                // See: https://github.com/letscontrolit/ESPEasy/issues/2724
+#endif
 
 // --- Default Controller ------------------------------------------------------------------------------
 #ifndef DEFAULT_CONTROLLER
-#define DEFAULT_CONTROLLER   false              // true or false enabled or disabled, set 1st controller defaults
+#define DEFAULT_CONTROLLER   true              // true or false enabled or disabled, set 1st controller defaults
 #endif
 
 #ifndef DEFAULT_CONTROLLER_ENABLED
@@ -103,9 +107,17 @@
 #ifndef DEFAULT_SERVER
 #define DEFAULT_SERVER      "192.168.0.8"       // Enter your Server IP address
 #endif
+#ifndef DEFAULT_SERVER_HOST
+#define DEFAULT_SERVER_HOST ""                  // Server hostname
+#endif
+#ifndef DEFAULT_SERVER_USEDNS
+#define DEFAULT_SERVER_USEDNS false             // true: Use hostname.  false: use IP
+#endif
 #ifndef DEFAULT_PORT
 #define DEFAULT_PORT        8080                // Enter your Server port value
 #endif
+
+
 
 #ifndef DEFAULT_PROTOCOL
 #define DEFAULT_PROTOCOL    0                   // Protocol used for controller communications

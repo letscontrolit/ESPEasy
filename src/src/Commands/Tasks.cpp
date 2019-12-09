@@ -105,6 +105,7 @@ String Command_Task_RemoteConfig(struct EventStruct *event, const char* Line)
 	struct EventStruct TempEvent;
 	TempEvent.TaskIndex = event->TaskIndex;
 	String request = Line;
+	// FIXME TD-er: Should we call ExecuteCommand here? The command is not parsed like any other call.
 	remoteConfig(&TempEvent, request);
 	return return_command_success();
 }
