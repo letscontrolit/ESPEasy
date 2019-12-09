@@ -16,6 +16,15 @@
 
    The selected input needs a voltage divider as follows because the DL-Bus runs on 12 volts.
    DLbus@12V - 8k6 - input@3.3V - 3k3 - ground
+
+	@uwekaditz: 2019-12-09
+	FIX: ReInit if device pin has changed
+	CHG: Unique names vor variables and defines
+	CHG: using usecPassedSince() and timePassedSince()
+	CHG: reduce waiting time in Plugin_092_Receiving(), it is just a timeout
+	CHG: added comments about looping time
+	CHG: check for the range of the index in the array in P092_fetch_speed() and P092_fetch_analog()
+
 \**************************************************/
 
 #define PLUGIN_092
@@ -29,36 +38,37 @@
 #define P092_DLbus_DeviceCount 5
 
 void P092_Pin_changed() ICACHE_RAM_ATTR;
-volatile uint8_t P092_DLB_Pin;
+volatile uint8_t P092_DLB_Pin = 0xFF;
 volatile boolean P092_receiving = false;    // receiving flag
+uint8_t P092_Last_DLB_Pin;
 boolean P092_init = false;
 boolean P092_ReceivedOK = false;
 uint32_t P092_LastReceived = 0;
 uint8_t P092_MaxIdx[P092_DLbus_OptionCount];
 int P092_ValueType[P092_DLbus_ValueCount];
 int P092_ValueIdx[P092_DLbus_ValueCount];
-struct DataStruct
+struct _P092_DataStruct
 {
-  uint8_t				Datauint8_ts;
-  uint8_t       Deviceuint8_t0;
-  uint8_t       Deviceuint8_t1;
-  uint8_t       Deviceuint8_ts;
-  uint8_t       DontCareuint8_ts;
-  uint8_t       TimeStampuint8_ts;
+  uint8_t				DataBytes;
+  uint8_t       DeviceByte0;
+  uint8_t       DeviceByte1;
+  uint8_t       DeviceBytes;
+  uint8_t       DontCareBytes;
+  uint8_t       TimeStampBytes;
   uint8_t       MaxSensors;
   uint8_t       MaxExtSensors;
-  uint8_t       Outputuint8_ts;
-  uint8_t       Speeduint8_ts;
-  uint8_t       Analoguint8_ts;
-  uint8_t       Volumeuint8_ts;
+  uint8_t       OutputBytes;
+  uint8_t       SpeedBytes;
+  uint8_t       AnalogBytes;
+  uint8_t       VolumeBytes;
   uint8_t       MaxHeatMeters;
-  uint8_t       CurrentHmuint8_ts;
-  uint8_t       MWhuint8_ts;
+  uint8_t       CurrentHmBytes;
+  uint8_t       MWhBytes;
 
-  uint16_t      MinPulseWidth;
-  uint16_t      MaxPulseWidth;
-  uint16_t      MinDoublePulseWidth;
-  uint16_t      MaxDoublePulseWidth;
+  uint16_t      DLbus_MinPulseWidth;
+  uint16_t      DLbus_MaxPulseWidth;
+  uint16_t      DLbus_MinDoublePulseWidth;
+  uint16_t      DLbus_MaxDoublePulseWidth;
   uint8_t       IdxSensor;
   uint8_t       IdxExtSensor;
   uint8_t       IdxOutput;
@@ -76,14 +86,14 @@ struct DataStruct
   uint8_t       IdxkWh3;
   uint8_t       IdxMWh3;
   uint8_t       IdxCRC;
-} DataSettings;
+} P092_DataSettings;
 
 typedef struct {
   uint8_t Idx;
   uint8_t mode;
   float   value;
-} data_t;
-data_t ReadData;
+} sP092_ReadData;
+sP092_ReadData P092_ReadData;
 
 int P092_OptionTypes[P092_DLbus_OptionCount] = {
   // Index der Variablen
@@ -137,6 +147,7 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
   int OptionIdx, CurIdx;
+
   const String plugin_092_Values[P092_DLbus_ValueCount] = {
     F("p092_Value")
   };
@@ -178,6 +189,8 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
+        P092_Last_DLB_Pin = CONFIG_PIN1;
+
         const String plugin_092_ValueNames[P092_DLbus_ValueCount] = {
           F(PLUGIN_VALUENAME1_092)
         };
@@ -291,6 +304,16 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
           ExtraTaskSettings.TaskDeviceValueDecimals[event->BaseVarIndex + i] = P092_OptionValueDecimals[OptionIdx];
         }
 
+        if (P092_Last_DLB_Pin != CONFIG_PIN1) {
+          // pin number is changed -> run a new init
+          P092_init = false;
+          if (P092_DLB_Pin != 0xFF) {
+            // interrupt was already attached to P092_DLB_Pin
+            detachInterrupt(digitalPinToInterrupt(P092_DLB_Pin));
+            addLog(LOG_LEVEL_INFO, F("P092_save: detachInterrupt"));
+          }
+        }
+
 #ifdef PLUGIN_092_DEBUG
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
 	        P092_DLB_Pin = CONFIG_PIN1;
@@ -298,62 +321,62 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
 	        String log = F("PLUGIN_WEBFORM_SAVE :");
 	        log += F(" DLB_Pin:");
 	        log += P092_DLB_Pin;
-	        log += F(" MinPulseWidth:");
-	        log += DataSettings.MinPulseWidth;
-	        log += F(" MaxPulseWidth:");
-	        log += DataSettings.MaxPulseWidth;
-	        log += F(" MinDoublePulseWidth:");
-	        log += DataSettings.MinDoublePulseWidth;
-	        log += F(" MaxDoublePulseWidth:");
-	        log += DataSettings.MaxDoublePulseWidth;
+	        log += F(" DLbus_MinPulseWidth:");
+	        log += P092_DataSettings.DLbus_MinPulseWidth;
+	        log += F(" DLbus_MaxPulseWidth:");
+	        log += P092_DataSettings.DLbus_MaxPulseWidth;
+	        log += F(" DLbus_MinDoublePulseWidth:");
+	        log += P092_DataSettings.DLbus_MinDoublePulseWidth;
+	        log += F(" DLbus_MaxDoublePulseWidth:");
+	        log += P092_DataSettings.DLbus_MaxDoublePulseWidth;
 	        log += F(" IdxSensor:");
-	        log += DataSettings.IdxSensor;
+	        log += P092_DataSettings.IdxSensor;
 	        log += F(" IdxExtSensor:");
-	        log += DataSettings.IdxExtSensor;
+	        log += P092_DataSettings.IdxExtSensor;
 	        log += F(" IdxOutput:");
-	        log += DataSettings.IdxOutput;
-	        if (DataSettings.Speeduint8_ts > 0) {
+	        log += P092_DataSettings.IdxOutput;
+	        if (P092_DataSettings.SpeedBytes > 0) {
 	          log += F(" IdxDrehzahl:");
-	          log += DataSettings.IdxDrehzahl;
+	          log += P092_DataSettings.IdxDrehzahl;
 	        }
-	        if (DataSettings.Analoguint8_ts > 0) {
+	        if (P092_DataSettings.AnalogBytes > 0) {
 	          log += F(" IdxAnalog:");
-	          log += DataSettings.IdxAnalog;
+	          log += P092_DataSettings.IdxAnalog;
 	        }
-	        if (DataSettings.MaxHeatMeters > 0) {
+	        if (P092_DataSettings.MaxHeatMeters > 0) {
 	          log += F(" IdxHmRegister:");
-	          log += DataSettings.IdxHmRegister;
+	          log += P092_DataSettings.IdxHmRegister;
 	        }
-	        if (DataSettings.Volumeuint8_ts > 0) {
+	        if (P092_DataSettings.VolumeBytes > 0) {
 	          log += F(" IdxVolume:");
-	          log += DataSettings.IdxVolume;
+	          log += P092_DataSettings.IdxVolume;
 	        }
-	        if (DataSettings.MaxHeatMeters > 0) {
+	        if (P092_DataSettings.MaxHeatMeters > 0) {
 	          log += F(" IdxHM1:");
-	          log += DataSettings.IdxHeatMeter1;
+	          log += P092_DataSettings.IdxHeatMeter1;
 	          log += F(" IdxkWh1:");
-	          log += DataSettings.IdxkWh1;
+	          log += P092_DataSettings.IdxkWh1;
 	          log += F(" IdxMWh1:");
-	          log += DataSettings.IdxMWh1;
+	          log += P092_DataSettings.IdxMWh1;
 	        }
-	        if (DataSettings.MaxHeatMeters > 1) {
+	        if (P092_DataSettings.MaxHeatMeters > 1) {
 	          log += F(" IdxHM2:");
-	          log += DataSettings.IdxHeatMeter2;
+	          log += P092_DataSettings.IdxHeatMeter2;
 	          log += F(" IdxkWh2:");
-	          log += DataSettings.IdxkWh2;
+	          log += P092_DataSettings.IdxkWh2;
 	          log += F(" IdxMWh2:");
-	          log += DataSettings.IdxMWh2;
+	          log += P092_DataSettings.IdxMWh2;
 	        }
-	        if (DataSettings.MaxHeatMeters > 2) {
+	        if (P092_DataSettings.MaxHeatMeters > 2) {
 	          log += F(" IdxHM3:");
-	          log += DataSettings.IdxHeatMeter3;
+	          log += P092_DataSettings.IdxHeatMeter3;
 	          log += F(" IdxkWh3:");
-	          log += DataSettings.IdxkWh3;
+	          log += P092_DataSettings.IdxkWh3;
 	          log += F(" IdxMWh3:");
-	          log += DataSettings.IdxMWh3;
+	          log += P092_DataSettings.IdxMWh3;
 	        }
 	        log += F(" IdxCRC:");
-	        log += DataSettings.IdxCRC;
+	        log += P092_DataSettings.IdxCRC;
 	        addLog(LOG_LEVEL_INFO, log);
 				}
 #endif  // PLUGIN_092_DEBUG
@@ -369,7 +392,7 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
           return true;
         }
         P092_init = true;
-        addLog(LOG_LEVEL_ERROR, F("P092_init: attachInterrupt"));
+        addLog(LOG_LEVEL_INFO, F("P092_init: attachInterrupt"));
         P092_DLB_Pin = CONFIG_PIN1;
         pinMode(P092_DLB_Pin, INPUT_PULLUP);
         P092_receiving = false;
@@ -397,7 +420,7 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
           return false;
         }
         if (P092_receiving) {
-          addLog(LOG_LEVEL_ERROR, F("## Error DL-Bus: Still P092_receiving!"));
+          addLog(LOG_LEVEL_ERROR, F("## Error DL-Bus: Still receiving bits!"));
           return false;
         }
         if (P092_init == false) {
@@ -406,7 +429,7 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
         }
         Plugin_092_SetIndices(PCONFIG(0));
 
-        if ((P092_ReceivedOK == false) || ((millis()-P092_LastReceived)>(Settings.TaskDeviceTimer[event->TaskIndex] * 1000/2))) {
+        if ((P092_ReceivedOK == false) || (timePassedSince(P092_LastReceived)>(static_cast<long>(Settings.TaskDeviceTimer[event->TaskIndex] * 1000/2)))) {
           success = Plugin_092_Receiving();
           if (success)
             success = P092_Processing();
@@ -424,15 +447,15 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
             OptionIdx = PCONFIG(i + 1) >> 8;
             CurIdx = PCONFIG(i + 1) & 0x00FF;
             if (P092_GetData(OptionIdx, CurIdx)) {
-              UserVar[event->BaseVarIndex + i] = ReadData.value;
+              UserVar[event->BaseVarIndex + i] = P092_ReadData.value;
             }
             else {
-              addLog(LOG_LEVEL_ERROR, F("Error: No reading!"));
+              addLog(LOG_LEVEL_ERROR, F("Error: No readings!"));
             }
           }
         }
         else
-          addLog(LOG_LEVEL_ERROR, F("## Error DL-Bus: No reading!"));
+          addLog(LOG_LEVEL_ERROR, F("## Error DL-Bus: No readings!"));
         break;
       }
   }
@@ -443,198 +466,203 @@ void Plugin_092_SetIndices(int DeviceIndex) {
   // Set the indices for the DL bus packet
   switch (DeviceIndex) {
     case 21:  //ESR21
-      DataSettings.Datauint8_ts = 31;
-      DataSettings.MinPulseWidth = P092_min_width_488;
-      DataSettings.MaxPulseWidth = P092_max_width_488;
-      DataSettings.MinDoublePulseWidth = P092_double_min_width_488;
-      DataSettings.MaxDoublePulseWidth = P092_double_max_width_488;
+      P092_DataSettings.DataBytes = 31;
+      P092_DataSettings.DLbus_MinPulseWidth = P092_min_width_488;
+      P092_DataSettings.DLbus_MaxPulseWidth = P092_max_width_488;
+      P092_DataSettings.DLbus_MinDoublePulseWidth = P092_double_min_width_488;
+      P092_DataSettings.DLbus_MaxDoublePulseWidth = P092_double_max_width_488;
 
-      DataSettings.Deviceuint8_t0 = 0x70;
-      DataSettings.Deviceuint8_t1 = 0x8F;
-      DataSettings.Deviceuint8_ts = 2;
-      DataSettings.DontCareuint8_ts = 0;
-      DataSettings.TimeStampuint8_ts = 0;
-      DataSettings.MaxSensors = 3;
-      DataSettings.MaxExtSensors = 6;
-      DataSettings.Outputuint8_ts = 1;
-      DataSettings.Speeduint8_ts = 1;
-      DataSettings.Analoguint8_ts = 1;
-      DataSettings.Volumeuint8_ts = 0;
-      DataSettings.MaxHeatMeters = 1;
-      DataSettings.CurrentHmuint8_ts = 2;
-      DataSettings.MWhuint8_ts = 2;
-      DataSettings.IdxCRC = 30;
+      P092_DataSettings.DeviceByte0 = 0x70;
+      P092_DataSettings.DeviceByte1 = 0x8F;
+      P092_DataSettings.DeviceBytes = 2;
+      P092_DataSettings.DontCareBytes = 0;
+      P092_DataSettings.TimeStampBytes = 0;
+      P092_DataSettings.MaxSensors = 3;
+      P092_DataSettings.MaxExtSensors = 6;
+      P092_DataSettings.OutputBytes = 1;
+      P092_DataSettings.SpeedBytes = 1;
+      P092_DataSettings.AnalogBytes = 1;
+      P092_DataSettings.VolumeBytes = 0;
+      P092_DataSettings.MaxHeatMeters = 1;
+      P092_DataSettings.CurrentHmBytes = 2;
+      P092_DataSettings.MWhBytes = 2;
+      P092_DataSettings.IdxCRC = 30;
 
       P092_OptionValueDecimals[6] = 1; //[0,1kW]     F("Heat power (kW)")
       break;
     case 31:  //UVR31
-      DataSettings.Datauint8_ts = 8;
-      DataSettings.MinPulseWidth = P092_min_width_50;
-      DataSettings.MaxPulseWidth = P092_max_width_50;
-      DataSettings.MinDoublePulseWidth = P092_double_min_width_50;
-      DataSettings.MaxDoublePulseWidth = P092_double_max_width_50;
+      P092_DataSettings.DataBytes = 8;
+      P092_DataSettings.DLbus_MinPulseWidth = P092_min_width_50;
+      P092_DataSettings.DLbus_MaxPulseWidth = P092_max_width_50;
+      P092_DataSettings.DLbus_MinDoublePulseWidth = P092_double_min_width_50;
+      P092_DataSettings.DLbus_MaxDoublePulseWidth = P092_double_max_width_50;
 
-      DataSettings.Deviceuint8_t0 = 0x30;
-      DataSettings.Deviceuint8_t1 = 0;
-      DataSettings.Deviceuint8_ts = 1;
-      DataSettings.DontCareuint8_ts = 0;
-      DataSettings.TimeStampuint8_ts = 0;
-      DataSettings.MaxSensors = 3;
-      DataSettings.MaxExtSensors = 0;
-      DataSettings.Outputuint8_ts = 1;
-      DataSettings.Speeduint8_ts = 0;
-      DataSettings.Analoguint8_ts = 0;
-      DataSettings.Volumeuint8_ts = 0;
-      DataSettings.MaxHeatMeters = 0;
-      DataSettings.CurrentHmuint8_ts = 0;
-      DataSettings.MWhuint8_ts = 0;
-      DataSettings.IdxCRC = 0;
+      P092_DataSettings.DeviceByte0 = 0x30;
+      P092_DataSettings.DeviceByte1 = 0;
+      P092_DataSettings.DeviceBytes = 1;
+      P092_DataSettings.DontCareBytes = 0;
+      P092_DataSettings.TimeStampBytes = 0;
+      P092_DataSettings.MaxSensors = 3;
+      P092_DataSettings.MaxExtSensors = 0;
+      P092_DataSettings.OutputBytes = 1;
+      P092_DataSettings.SpeedBytes = 0;
+      P092_DataSettings.AnalogBytes = 0;
+      P092_DataSettings.VolumeBytes = 0;
+      P092_DataSettings.MaxHeatMeters = 0;
+      P092_DataSettings.CurrentHmBytes = 0;
+      P092_DataSettings.MWhBytes = 0;
+      P092_DataSettings.IdxCRC = 0;
       break;
     case 1611:  //UVR1611
-      DataSettings.Datauint8_ts = 64;
-      DataSettings.MinPulseWidth = P092_min_width_488;
-      DataSettings.MaxPulseWidth = P092_max_width_488;
-      DataSettings.MinDoublePulseWidth = P092_double_min_width_488;
-      DataSettings.MaxDoublePulseWidth = P092_double_max_width_488;
+      P092_DataSettings.DataBytes = 64;
+      P092_DataSettings.DLbus_MinPulseWidth = P092_min_width_488;
+      P092_DataSettings.DLbus_MaxPulseWidth = P092_max_width_488;
+      P092_DataSettings.DLbus_MinDoublePulseWidth = P092_double_min_width_488;
+      P092_DataSettings.DLbus_MaxDoublePulseWidth = P092_double_max_width_488;
 
-      DataSettings.Deviceuint8_t0 = 0x80;
-      DataSettings.Deviceuint8_t1 = 0x7F;
-      DataSettings.Deviceuint8_ts = 2;
-      DataSettings.DontCareuint8_ts = 1;
-      DataSettings.TimeStampuint8_ts = 5;
-      DataSettings.MaxSensors = 16;
-      DataSettings.MaxExtSensors = 0;
-      DataSettings.Outputuint8_ts = 2;
-      DataSettings.Speeduint8_ts = 4;
-      DataSettings.Analoguint8_ts = 0;
-      DataSettings.Volumeuint8_ts = 0;
-      DataSettings.MaxHeatMeters = 2;
-      DataSettings.CurrentHmuint8_ts = 4;
-      DataSettings.MWhuint8_ts = 2;
-      DataSettings.IdxCRC = 63;
+      P092_DataSettings.DeviceByte0 = 0x80;
+      P092_DataSettings.DeviceByte1 = 0x7F;
+      P092_DataSettings.DeviceBytes = 2;
+      P092_DataSettings.DontCareBytes = 1;
+      P092_DataSettings.TimeStampBytes = 5;
+      P092_DataSettings.MaxSensors = 16;
+      P092_DataSettings.MaxExtSensors = 0;
+      P092_DataSettings.OutputBytes = 2;
+      P092_DataSettings.SpeedBytes = 4;
+      P092_DataSettings.AnalogBytes = 0;
+      P092_DataSettings.VolumeBytes = 0;
+      P092_DataSettings.MaxHeatMeters = 2;
+      P092_DataSettings.CurrentHmBytes = 4;
+      P092_DataSettings.MWhBytes = 2;
+      P092_DataSettings.IdxCRC = 63;
 
       P092_OptionValueDecimals[6] = 2; //[0,01kW]     F("Heat power (kW)")
       break;
     case 6132:  //UVR 61-3 (up to V8.2)
-      DataSettings.Datauint8_ts = 35;
-      DataSettings.MinPulseWidth = P092_min_width_488;
-      DataSettings.MaxPulseWidth = P092_max_width_488;
-      DataSettings.MinDoublePulseWidth = P092_double_min_width_488;
-      DataSettings.MaxDoublePulseWidth = P092_double_max_width_488;
+      P092_DataSettings.DataBytes = 35;
+      P092_DataSettings.DLbus_MinPulseWidth = P092_min_width_488;
+      P092_DataSettings.DLbus_MaxPulseWidth = P092_max_width_488;
+      P092_DataSettings.DLbus_MinDoublePulseWidth = P092_double_min_width_488;
+      P092_DataSettings.DLbus_MaxDoublePulseWidth = P092_double_max_width_488;
 
-      DataSettings.Deviceuint8_t0 = 0x90;
-      DataSettings.Deviceuint8_t1 = 0x6F;
-      DataSettings.Deviceuint8_ts = 2;
-      DataSettings.DontCareuint8_ts = 1;
-      DataSettings.TimeStampuint8_ts = 5;
-      DataSettings.MaxSensors = 6;
-      DataSettings.MaxExtSensors = 0;
-      DataSettings.Outputuint8_ts = 1;
-      DataSettings.Speeduint8_ts = 1;
-      DataSettings.Analoguint8_ts = 1;
-      DataSettings.Volumeuint8_ts = 2;
-      DataSettings.MaxHeatMeters = 1;
-      DataSettings.CurrentHmuint8_ts = 2;
-      DataSettings.MWhuint8_ts = 4;
-      DataSettings.IdxCRC = 34;
+      P092_DataSettings.DeviceByte0 = 0x90;
+      P092_DataSettings.DeviceByte1 = 0x6F;
+      P092_DataSettings.DeviceBytes = 2;
+      P092_DataSettings.DontCareBytes = 1;
+      P092_DataSettings.TimeStampBytes = 5;
+      P092_DataSettings.MaxSensors = 6;
+      P092_DataSettings.MaxExtSensors = 0;
+      P092_DataSettings.OutputBytes = 1;
+      P092_DataSettings.SpeedBytes = 1;
+      P092_DataSettings.AnalogBytes = 1;
+      P092_DataSettings.VolumeBytes = 2;
+      P092_DataSettings.MaxHeatMeters = 1;
+      P092_DataSettings.CurrentHmBytes = 2;
+      P092_DataSettings.MWhBytes = 4;
+      P092_DataSettings.IdxCRC = 34;
 
       P092_OptionValueDecimals[6] = 1; //[0,1kW]     F("Heat power (kW)")
       break;
     case 6133:  //UVR 61-3 (from V8.3)
-      DataSettings.Datauint8_ts = 62;
-      DataSettings.MinPulseWidth = P092_min_width_488;
-      DataSettings.MaxPulseWidth = P092_max_width_488;
-      DataSettings.MinDoublePulseWidth = P092_double_min_width_488;
-      DataSettings.MaxDoublePulseWidth = P092_double_max_width_488;
+      P092_DataSettings.DataBytes = 62;
+      P092_DataSettings.DLbus_MinPulseWidth = P092_min_width_488;
+      P092_DataSettings.DLbus_MaxPulseWidth = P092_max_width_488;
+      P092_DataSettings.DLbus_MinDoublePulseWidth = P092_double_min_width_488;
+      P092_DataSettings.DLbus_MaxDoublePulseWidth = P092_double_max_width_488;
 
-      DataSettings.Deviceuint8_t0 = 0x90;
-      DataSettings.Deviceuint8_t1 = 0x9F;
-      DataSettings.Deviceuint8_ts = 2;
-      DataSettings.DontCareuint8_ts = 1;
-      DataSettings.TimeStampuint8_ts = 5;
-      DataSettings.MaxSensors = 6;
-      DataSettings.MaxExtSensors = 9;
-      DataSettings.Outputuint8_ts = 1;
-      DataSettings.Speeduint8_ts = 1;
-      DataSettings.Analoguint8_ts = 2;
-      DataSettings.Volumeuint8_ts = 0;
-      DataSettings.MaxHeatMeters = 3;
-      DataSettings.CurrentHmuint8_ts = 2;
-      DataSettings.MWhuint8_ts = 2;
-      DataSettings.IdxCRC = 61;
+      P092_DataSettings.DeviceByte0 = 0x90;
+      P092_DataSettings.DeviceByte1 = 0x9F;
+      P092_DataSettings.DeviceBytes = 2;
+      P092_DataSettings.DontCareBytes = 1;
+      P092_DataSettings.TimeStampBytes = 5;
+      P092_DataSettings.MaxSensors = 6;
+      P092_DataSettings.MaxExtSensors = 9;
+      P092_DataSettings.OutputBytes = 1;
+      P092_DataSettings.SpeedBytes = 1;
+      P092_DataSettings.AnalogBytes = 2;
+      P092_DataSettings.VolumeBytes = 0;
+      P092_DataSettings.MaxHeatMeters = 3;
+      P092_DataSettings.CurrentHmBytes = 2;
+      P092_DataSettings.MWhBytes = 2;
+      P092_DataSettings.IdxCRC = 61;
 
       P092_OptionValueDecimals[6] = 1; //[0,1kW]     F("Heat power (kW)")
       break;
   }
-  DataSettings.IdxSensor               = DataSettings.Deviceuint8_ts + DataSettings.DontCareuint8_ts + DataSettings.TimeStampuint8_ts;
-  DataSettings.IdxExtSensor            = DataSettings.IdxSensor + 2 * DataSettings.MaxSensors;
-  DataSettings.IdxOutput               = DataSettings.IdxExtSensor + 2 * DataSettings.MaxExtSensors;
-  DataSettings.IdxDrehzahl             = DataSettings.IdxOutput + DataSettings.Outputuint8_ts;
-  DataSettings.IdxAnalog               = DataSettings.IdxDrehzahl + DataSettings.Speeduint8_ts;
-  DataSettings.IdxHmRegister           = DataSettings.IdxAnalog + DataSettings.Analoguint8_ts;
-  DataSettings.IdxVolume               = DataSettings.IdxHmRegister + 1;
-  DataSettings.IdxHeatMeter1           = DataSettings.IdxVolume + DataSettings.Volumeuint8_ts;
-  DataSettings.IdxkWh1                 = DataSettings.IdxHeatMeter1 + DataSettings.CurrentHmuint8_ts;
-  DataSettings.IdxMWh1                 = DataSettings.IdxkWh1 + 2;
-  DataSettings.IdxHeatMeter2           = DataSettings.IdxMWh1 + DataSettings.MWhuint8_ts;
-  DataSettings.IdxkWh2                 = DataSettings.IdxHeatMeter2 + DataSettings.CurrentHmuint8_ts;
-  DataSettings.IdxMWh2                 = DataSettings.IdxkWh2 + 2;
-  DataSettings.IdxHeatMeter3           = DataSettings.IdxMWh2 + DataSettings.MWhuint8_ts;
-  DataSettings.IdxkWh3                 = DataSettings.IdxHeatMeter3 + DataSettings.CurrentHmuint8_ts;
-  DataSettings.IdxMWh3                 = DataSettings.IdxkWh3 + 2;
+  P092_DataSettings.IdxSensor               = P092_DataSettings.DeviceBytes + P092_DataSettings.DontCareBytes + P092_DataSettings.TimeStampBytes;
+  P092_DataSettings.IdxExtSensor            = P092_DataSettings.IdxSensor + 2 * P092_DataSettings.MaxSensors;
+  P092_DataSettings.IdxOutput               = P092_DataSettings.IdxExtSensor + 2 * P092_DataSettings.MaxExtSensors;
+  P092_DataSettings.IdxDrehzahl             = P092_DataSettings.IdxOutput + P092_DataSettings.OutputBytes;
+  P092_DataSettings.IdxAnalog               = P092_DataSettings.IdxDrehzahl + P092_DataSettings.SpeedBytes;
+  P092_DataSettings.IdxHmRegister           = P092_DataSettings.IdxAnalog + P092_DataSettings.AnalogBytes;
+  P092_DataSettings.IdxVolume               = P092_DataSettings.IdxHmRegister + 1;
+  P092_DataSettings.IdxHeatMeter1           = P092_DataSettings.IdxVolume + P092_DataSettings.VolumeBytes;
+  P092_DataSettings.IdxkWh1                 = P092_DataSettings.IdxHeatMeter1 + P092_DataSettings.CurrentHmBytes;
+  P092_DataSettings.IdxMWh1                 = P092_DataSettings.IdxkWh1 + 2;
+  P092_DataSettings.IdxHeatMeter2           = P092_DataSettings.IdxMWh1 + P092_DataSettings.MWhBytes;
+  P092_DataSettings.IdxkWh2                 = P092_DataSettings.IdxHeatMeter2 + P092_DataSettings.CurrentHmBytes;
+  P092_DataSettings.IdxMWh2                 = P092_DataSettings.IdxkWh2 + 2;
+  P092_DataSettings.IdxHeatMeter3           = P092_DataSettings.IdxMWh2 + P092_DataSettings.MWhBytes;
+  P092_DataSettings.IdxkWh3                 = P092_DataSettings.IdxHeatMeter3 + P092_DataSettings.CurrentHmBytes;
+  P092_DataSettings.IdxMWh3                 = P092_DataSettings.IdxkWh3 + 2;
 }
 /*********************************************************************************************\
   DLBus subs to get values from the P092_receiving bitstream
 \*********************************************************************************************/
-// one data frame has <DataSettings.Datauint8_ts> data uint8_ts + SYNC, e.g. 64 * (8+1+1) + 16 = 656
+// one data frame has <P092_DataSettings.DataBytes> data bytes + SYNC, e.g. 64 * (8+1+1) + 16 = 656
 // 656 * 2 = 1312 (twice as much as a data frame is saved
 // so there's one complete data frame
 
-#define MaxDatauint8_ts 64
-#define AdditionalRecuint8_ts 2
-#define MaxDataBits (((MaxDatauint8_ts + AdditionalRecuint8_ts) * (8 + 1 + 1) + 16) * 4)
-volatile uint8_t BitStream[MaxDataBits];           // received bit stream
-volatile int pulse_count;                       // number of received pulses
-volatile int pulse_number;                      // max naumber of the received pulses
-volatile uint32_t last_bit_change = 0;     // remember the last transition
-volatile uint16_t MinPulseWidth, MaxPulseWidth, MinDoublePulseWidth, MaxDoublePulseWidth;
-volatile uint32_t TimeInMicros;            // current time in µs
-volatile uint32_t time_diff;               // time difference to previous pulse in µs
+#define DLbus_MaxDataBytes 64
+#define DLbus_AdditionalRecBytes 2
+#define DLbus_MaxDataBits (((DLbus_MaxDataBytes + DLbus_AdditionalRecBytes) * (8 + 1 + 1) + 16) * 3)  // ((64+2) * (8+1+1) + 16) * 3 = 2028 bytes
 
-uint8_t uint8_tStream[MaxDataBits / 8 + 1];   // every bit gets sorted into a bitmap
-int bit_number;                         // bit size of the data frame
+// variables used in interrupt function
+volatile uint8_t DLbus_BitStream[DLbus_MaxDataBits];  // received bit stream (each bit is extended to uint8_t, containing the timing flags)
+volatile int DLbus_pulse_count;                       // number of received pulses
+volatile int DLbus_pulse_number;                      // max naumber of the received pulses
+volatile uint32_t DLbus_last_bit_change = 0;     			// remember the last transition
+volatile uint16_t DLbus_MinPulseWidth, DLbus_MaxPulseWidth, DLbus_MinDoublePulseWidth, DLbus_MaxDoublePulseWidth;
 
-uint8_t WrongTimeCnt;
-uint16_t WrongTimings[5][6];
+uint8_t DLbus_ByteStream[DLbus_MaxDataBits / 8 + 1];  // every bit gets sorted into a bitmap
+int DLbus_bit_number;                                 // bit size of the data frame
 
-int start_bit;                          // first bit of data frame
+uint8_t DLbus_WrongTimeCnt;
+uint16_t DLbus_WrongTimings[5][6];
+
+int DLbus_start_bit;                                  // first bit of data frame
 
 // sensor types
-#define UNUSED      0b000
-#define DIGITAL     0b001
-#define TEMP        0b010
-#define VOLUME_FLOW 0b011
-#define RAYS        0b110
-#define ROOM        0b111
+#define DLbus_UNUSED              0b000
+#define DLbus_Sensor_DIGITAL      0b001
+#define DLbus_Sensor_TEMP         0b010
+#define DLbus_Sensor_VOLUME_FLOW  0b011
+#define DLbus_Sensor_RAYS         0b110
+#define DLbus_Sensor_ROOM         0b111
 
 // room sensor modes
-#define AUTO        0b00
-#define NORMAL      0b01
-#define LOWER       0b10
-#define STANDBY     0b11
+#define DLbus_RSM_AUTO            0b00
+#define DLbus_RSM_NORMAL          0b01
+#define DLbus_RSM_LOWER           0b10
+#define DLbus_RSM_STANDBY         0b11
 
-// Flags for pulse width
-#define flgSingleWidth	0x02
-#define flgDoubleWidth	0x04
-
-// Types for guessing
-#define GuessTrueAndDouble	0x01
-#define GuessFalseAndDouble	0x02
-#define GuessTrueAndSingle	0x03
-#define GuessFalseAndSingle	0x04
+// Flags for pulse width (bit 0 is the content!)
+#define DLbus_FlagSingleWidth	                0x02
+#define DLbus_FlagDoubleWidth	                0x04
+#define DLbus_FlagShorterThanSingleWidth      0x10
+#define DLbus_FlagBetweenDoubleSingleWidth    0x20
+#define DLbus_FlagLongerThanDoubleWidth       0x40
+#define DLbus_FlagLongerThanTwiceDoubleWidth  0x80
+#define DLbus_FlagsWrongTiming                (DLbus_FlagLongerThanTwiceDoubleWidth | DLbus_FlagLongerThanDoubleWidth | DLbus_FlagBetweenDoubleSingleWidth | DLbus_FlagShorterThanSingleWidth)
 
 // heat meter
-int power_index, kwh_index, mwh_index;
+typedef struct {
+  uint8_t IndexIsValid;
+  int32_t power_index;
+  int32_t kwh_index;
+  int32_t	mwh_index;
+} sDLbus_HMindex;
+sDLbus_HMindex P092_CheckHmRegister(int number);
 
 /****************\
   DLBus P092_receiving
@@ -644,21 +672,21 @@ boolean Plugin_092_Receiving(void) {
   uint8_t rawval, val;
   int i;
   noInterrupts ();                              // make sure we don't get interrupted before we are ready
-  pulse_count = 0;
-  pulse_number = (((DataSettings.Datauint8_ts + AdditionalRecuint8_ts) * (8 + 1 + 1) + 16) * 4);
-  MinPulseWidth = DataSettings.MinPulseWidth;
-  MaxPulseWidth = DataSettings.MaxPulseWidth;
-  MinDoublePulseWidth = DataSettings.MinDoublePulseWidth;
-  MaxDoublePulseWidth = DataSettings.MaxDoublePulseWidth;
-  addLog(LOG_LEVEL_INFO, F("P092_receiving ..."));
+  DLbus_pulse_count = 0;
+  DLbus_pulse_number = (((P092_DataSettings.DataBytes + DLbus_AdditionalRecBytes) * (8 + 1 + 1) + 16) * 3);
+  DLbus_MinPulseWidth = P092_DataSettings.DLbus_MinPulseWidth;
+  DLbus_MaxPulseWidth = P092_DataSettings.DLbus_MaxPulseWidth;
+  DLbus_MinDoublePulseWidth = P092_DataSettings.DLbus_MinDoublePulseWidth;
+  DLbus_MaxDoublePulseWidth = P092_DataSettings.DLbus_MaxDoublePulseWidth;
   P092_receiving = true;
   interrupts ();                                // interrupts allowed now, next instruction WILL be executed
   uint32_t start=millis();
-  while ((millis()-start)<100) {
-    // wait 100 ms
+  addLog(LOG_LEVEL_INFO, F("P092_receiving ..."));
+  while ((timePassedSince(start)<100) && (DLbus_pulse_count == 0)) {
+    // wait for first pulse received (timeout 100ms)
     yield();
   }
-  if (pulse_count == 0) {
+  if (DLbus_pulse_count == 0) {
     // nothing received
     P092_receiving = false;
     addLog(LOG_LEVEL_ERROR, F("Error: Nothing received! No DL bus connected!"));
@@ -666,39 +694,44 @@ boolean Plugin_092_Receiving(void) {
   }
   while (P092_receiving) {
     // wait for end of P092_receiving
+    // loop time depends on the device (bytes in protocol and clock frequency)
+    // ESR21:     (((31 + 2) * (8 + 1 + 1) + 16) * 3) = 1038 bits @ 488Hz = 2,13s
+    // UVR31:     ((( 8 + 2) * (8 + 1 + 1) + 16) * 3) =  348 bits @  50Hz = 6,96s
+    // UVR1611:   (((64 + 2) * (8 + 1 + 1) + 16) * 3) = 2028 bits @ 488Hz = 4,16s
+    // UVR 61-3:  (((62 + 2) * (8 + 1 + 1) + 16) * 3) = 2028 bits @ 488Hz = 4,03s
     yield();
   }
   addLog(LOG_LEVEL_INFO, F("Receive stopped."));
 
-  WrongTimeCnt = 0;
-  pulse_count = 0;
-  for (i = 0; i <= pulse_number; i++) {
-    // store BitStream into uint8_tStream
-    rawval = BitStream[i];
-    if ((rawval & 0xF0) != 0) {
-      // wrong time_diff
-      if ((pulse_count > 0) && (WrongTimeCnt < 5)) {
-        WrongTimings[WrongTimeCnt][0] = i;
-        WrongTimings[WrongTimeCnt][1] = pulse_count;
-        WrongTimings[WrongTimeCnt][2] = bit_number;
-        WrongTimings[WrongTimeCnt][3] = rawval;
-        if ((rawval==0x80) && (BitStream[i-1]==0x05)) {
-          // Add two additional short pulses
+  DLbus_WrongTimeCnt = 0;
+  DLbus_pulse_count = 0;
+  for (i = 0; i <= DLbus_pulse_number; i++) {
+    // store DLbus_BitStream into DLbus_ByteStream
+    rawval = DLbus_BitStream[i];
+    if (rawval & DLbus_FlagsWrongTiming) {
+      // wrong DLbus_time_diff
+      if ((DLbus_pulse_count > 0) && (DLbus_WrongTimeCnt < 5)) {
+        DLbus_WrongTimings[DLbus_WrongTimeCnt][0] = i;
+        DLbus_WrongTimings[DLbus_WrongTimeCnt][1] = DLbus_pulse_count;
+        DLbus_WrongTimings[DLbus_WrongTimeCnt][2] = DLbus_bit_number;
+        DLbus_WrongTimings[DLbus_WrongTimeCnt][3] = rawval;
+        if ((rawval == DLbus_FlagLongerThanTwiceDoubleWidth) && (DLbus_BitStream[i-1] == (DLbus_FlagDoubleWidth | 0x01))) {
+          // Add two additional short pulses (low and high), previous bit is High and contains DLbus_FlagDoubleWidth
           P092_process_bit(0);
           P092_process_bit(1);
-          WrongTimings[WrongTimeCnt][4] = flgSingleWidth;
-          WrongTimings[WrongTimeCnt][5] = flgSingleWidth+1;
+          DLbus_WrongTimings[DLbus_WrongTimeCnt][4] = DLbus_FlagSingleWidth;
+          DLbus_WrongTimings[DLbus_WrongTimeCnt][5] = DLbus_FlagSingleWidth+1;
         }
         else {
-          WrongTimings[WrongTimeCnt][4] = 0xff;
-          WrongTimings[WrongTimeCnt][5] = 0xff;
+          DLbus_WrongTimings[DLbus_WrongTimeCnt][4] = 0xff;
+          DLbus_WrongTimings[DLbus_WrongTimeCnt][5] = 0xff;
         }
-        WrongTimeCnt++;
+        DLbus_WrongTimeCnt++;
       }
     }
     else {
       val = rawval & 0x01;
-      if ((rawval & flgDoubleWidth) == flgDoubleWidth) {
+      if ((rawval & DLbus_FlagDoubleWidth) == DLbus_FlagDoubleWidth) {
         // double pulse width
         P092_process_bit(!val);
         P092_process_bit(val);
@@ -709,32 +742,32 @@ boolean Plugin_092_Receiving(void) {
       }
     }
   }
-  addLog(LOG_LEVEL_INFO, F("BitStream copied."));
+  addLog(LOG_LEVEL_INFO, F("DLbus_BitStream copied."));
 
 #ifdef PLUGIN_092_DEBUG
-  if (WrongTimeCnt > 0) {
+  if (DLbus_WrongTimeCnt > 0) {
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
 	    String log = F("Wrong Timings: ");
 	    addLog(LOG_LEVEL_INFO, log);
-	    for (i = 0; i < WrongTimeCnt; i++) {
+	    for (i = 0; i < DLbus_WrongTimeCnt; i++) {
 	      log = i + 1;
 	      log += F(": PulseCount:");
-	      log += WrongTimings[i][1];
+	      log += DLbus_WrongTimings[i][1];
 	      log += F(": BitCount:");
-	      log += WrongTimings[i][2];
+	      log += DLbus_WrongTimings[i][2];
 	      log += F(" Value:0x");
-	      log += String(WrongTimings[i][3], HEX);
+	      log += String(DLbus_WrongTimings[i][3], HEX);
 	      log += F(" ValueBefore:0x");
-	      log += String(BitStream[WrongTimings[i][0] - 1], HEX);
+	      log += String(DLbus_BitStream[DLbus_WrongTimings[i][0] - 1], HEX);
 	      log += F(" ValueAfter:0x");
-	      log += String(BitStream[WrongTimings[i][0] + 1], HEX);
-	      if (WrongTimings[i][4]!=0xff) {
+	      log += String(DLbus_BitStream[DLbus_WrongTimings[i][0] + 1], HEX);
+	      if (DLbus_WrongTimings[i][4]!=0xff) {
 	        log += F(" Added:0x");
-	        log += String(WrongTimings[i][4], HEX);
+	        log += String(DLbus_WrongTimings[i][4], HEX);
 	      }
-	      if (WrongTimings[i][5]!=0xff) {
+	      if (DLbus_WrongTimings[i][5]!=0xff) {
 	        log += F(" Added:0x");
-	        log += String(WrongTimings[i][5], HEX);
+	        log += String(DLbus_WrongTimings[i][5], HEX);
 	      }
 	      addLog(LOG_LEVEL_INFO, log);
 	    }
@@ -749,21 +782,20 @@ boolean Plugin_092_Receiving(void) {
 \*****************/
 
 void P092_Pin_changed(void) {
-  TimeInMicros = micros();
-  time_diff = TimeInMicros - last_bit_change;
-  last_bit_change = TimeInMicros;
+  uint32_t DLbus_time_diff = usecPassedSince(DLbus_last_bit_change);  // time difference to previous pulse in µs
+  DLbus_last_bit_change = micros();                                   // save last pin change time
   if (P092_receiving) {
-    uint8_t val = digitalRead(P092_DLB_Pin); // read state
+    uint8_t val = digitalRead(P092_DLB_Pin);  // read state
     // check pulse width
-    if (time_diff >= 2*MinDoublePulseWidth)     val |= 0x80; // longer then 2x double pulse width
-    else if (time_diff > MaxDoublePulseWidth)   val |= 0x40; // longer then double pulse width
-    else if (time_diff >= MinDoublePulseWidth)  val |= flgDoubleWidth; // double pulse width
-    else if (time_diff > MaxPulseWidth)         val |= 0x20; // between double and single pulse width
-    else if (time_diff < MinPulseWidth)         val |= 0x10; // shorter then single pulse width
-    else                                        val |= flgSingleWidth; // single pulse width
-    BitStream[pulse_count] = val;                            // set bit
-    pulse_count++;
-    P092_receiving = (pulse_count < pulse_number);     // stop P092_receiving when data frame is complete
+    if (DLbus_time_diff >= 2*DLbus_MinDoublePulseWidth)     val |= DLbus_FlagLongerThanTwiceDoubleWidth;  // longer then 2x double pulse width
+    else if (DLbus_time_diff > DLbus_MaxDoublePulseWidth)   val |= DLbus_FlagLongerThanDoubleWidth;       // longer then double pulse width
+    else if (DLbus_time_diff >= DLbus_MinDoublePulseWidth)  val |= DLbus_FlagDoubleWidth;                 // double pulse width
+    else if (DLbus_time_diff > DLbus_MaxPulseWidth)         val |= DLbus_FlagBetweenDoubleSingleWidth;    // between double and single pulse width
+    else if (DLbus_time_diff < DLbus_MinPulseWidth)         val |= DLbus_FlagShorterThanSingleWidth;      // shorter then single pulse width
+    else val |= DLbus_FlagSingleWidth;                                   // single pulse width
+    DLbus_BitStream[DLbus_pulse_count] = val;                            // set bit
+    DLbus_pulse_count++;
+    P092_receiving = (DLbus_pulse_count < DLbus_pulse_number);     // stop P092_receiving when data frame is complete
   }
 }
 
@@ -773,54 +805,54 @@ void P092_Pin_changed(void) {
 
 void P092_process_bit(uint8_t b) {
   // ignore first pulse
-  pulse_count++;
-  if (pulse_count % 2)
+  DLbus_pulse_count++;
+  if (DLbus_pulse_count % 2)
     return;
-  bit_number = (pulse_count / 2);
+  DLbus_bit_number = (DLbus_pulse_count / 2);
   if (b)
-    uint8_tStream[bit_number / 8] |= (1 << (bit_number % 8)); // set bit
+    DLbus_ByteStream[DLbus_bit_number / 8] |= (1 << (DLbus_bit_number % 8)); // set bit
   else
-    uint8_tStream[bit_number / 8] &= ~(1 << (bit_number % 8)); // clear bit
+    DLbus_ByteStream[DLbus_bit_number / 8] &= ~(1 << (DLbus_bit_number % 8)); // clear bit
 }
 
 boolean P092_Processing(void) {
 boolean inverted = false;
 String log;
   addLog(LOG_LEVEL_INFO, F("Processing..."));
-  start_bit = P092_Analyze(); // find the data frame's beginning
+  DLbus_start_bit = P092_Analyze(); // find the data frame's beginning
   // inverted signal?
-  while (start_bit == -1) {
+  while (DLbus_start_bit == -1) {
     if (inverted) {
       return false;
     }
     addLog(LOG_LEVEL_INFO, F("Invert bit stream..."));
     P092_Invert(); // invert again
     inverted = true;
-    start_bit = P092_Analyze();
-    if (start_bit == -1) {
+    DLbus_start_bit = P092_Analyze();
+    if (DLbus_start_bit == -1) {
       addLog(LOG_LEVEL_ERROR, F("Error: No data frame available!"));
       return false;
     }
-    if ((bit_number-start_bit)<(pulse_number/4)) {
+    if ((DLbus_bit_number-DLbus_start_bit)<(DLbus_pulse_number/4)) {
       // no complete data frame available
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
 	      addLog(LOG_LEVEL_INFO, F("Start bit too close to end of stream!"));
 	      log = F("# Required bits: ");
-	      log += pulse_number/4;
+	      log += DLbus_pulse_number/4;
 	      log += F(" StartBit: ");
-	      log += start_bit;
+	      log += DLbus_start_bit;
 	      log += F(" / EndBit: ");
-	      log += bit_number;
+	      log += DLbus_bit_number;
 	      addLog(LOG_LEVEL_INFO, log);
 			}
-      start_bit = -1;
+      DLbus_start_bit = -1;
     }
   }
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
 	  log = F("StartBit: ");
-	  log += start_bit;
+	  log += DLbus_start_bit;
 	  log += F(" / EndBit: ");
-	  log += bit_number;
+	  log += DLbus_bit_number;
 	  addLog(LOG_LEVEL_INFO, log);
 	}
   P092_Trim(); // remove start and stop bits
@@ -835,7 +867,7 @@ String log;
 int P092_Analyze() {
   uint8_t sync=0;
   // find SYNC (16 * sequential 1)
-  for (int i = 0; i < bit_number; i++) {
+  for (int i = 0; i < DLbus_bit_number; i++) {
     if (P092_ReadBit(i))
       sync++;
     else
@@ -851,25 +883,25 @@ int P092_Analyze() {
   return -1;
 }
 void P092_Invert() {
-  for (int i = 0; i < bit_number; i++)
+  for (int i = 0; i < DLbus_bit_number; i++)
     P092_WriteBit(i, P092_ReadBit(i) ? 0 : 1); // invert every bit
 }
 uint8_t P092_ReadBit(int pos) {
   int row = pos / 8; // detect position in bitmap
   int col = pos % 8;
-  return (((uint8_tStream[row]) >> (col)) & 0x01); // return bit
+  return (((DLbus_ByteStream[row]) >> (col)) & 0x01); // return bit
 }
 void P092_WriteBit(int pos, uint8_t set) {
   int row = pos / 8; // detect position in bitmap
   int col = pos % 8;
   if (set)
-    uint8_tStream[row] |= 1 << col; // set bit
+    DLbus_ByteStream[row] |= 1 << col; // set bit
   else
-    uint8_tStream[row] &= ~(1 << col); // clear bit
+    DLbus_ByteStream[row] &= ~(1 << col); // clear bit
 }
 void P092_Trim() {
-  for (int i = start_bit, bit = 0; i < bit_number; i++) {
-    int offset = i - start_bit;
+  for (int i = DLbus_start_bit, bit = 0; i < DLbus_bit_number; i++) {
+    int offset = i - DLbus_start_bit;
     // ignore start and stop bits:
     // start bits: 0 10 20 30, also  x    % 10 == 0
     // stop bits:  9 19 29 39, also (x+1) % 10 == 0
@@ -886,19 +918,19 @@ void P092_Trim() {
 
 boolean P092_CheckDevice() {
   // Data frame of a device?
-  if (uint8_tStream[0] == DataSettings.Deviceuint8_t0) {
-    if ((DataSettings.Deviceuint8_ts == 1) || (uint8_tStream[1] == DataSettings.Deviceuint8_t1))
+  if (DLbus_ByteStream[0] == P092_DataSettings.DeviceByte0) {
+    if ((P092_DataSettings.DeviceBytes == 1) || (DLbus_ByteStream[1] == P092_DataSettings.DeviceByte1))
       return true;
   }
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-	  String log = F("# Received Deviceuint8_t(s): 0x");
-	  log += String(uint8_tStream[0], HEX);
-	  if (DataSettings.Deviceuint8_ts > 1)
-	    log += String(uint8_tStream[1], HEX);
+	  String log = F("# Received DeviceByte(s): 0x");
+	  log += String(DLbus_ByteStream[0], HEX);
+	  if (P092_DataSettings.DeviceBytes > 1)
+	    log += String(DLbus_ByteStream[1], HEX);
 	  log += F(" Requested: 0x");
-	  log += String(DataSettings.Deviceuint8_t0, HEX);
-	  if (DataSettings.Deviceuint8_ts > 1)
-	    log += String(DataSettings.Deviceuint8_t1, HEX);
+	  log += String(P092_DataSettings.DeviceByte0, HEX);
+	  if (P092_DataSettings.DeviceBytes > 1)
+	    log += String(P092_DataSettings.DeviceByte1, HEX);
 	  addLog(LOG_LEVEL_INFO, log);
 	}
   return false;
@@ -906,20 +938,20 @@ boolean P092_CheckDevice() {
 
 boolean P092_CheckCRC() {
   // CRC check sum
-  if (DataSettings.IdxCRC == 0)
+  if (P092_DataSettings.IdxCRC == 0)
     return true;
   addLog(LOG_LEVEL_INFO, F("Check CRC..."));
   uint16_t dataSum = 0;
-  for (int i = 0; i < DataSettings.IdxCRC; i++)
-    dataSum = dataSum + uint8_tStream[i];
+  for (int i = 0; i < P092_DataSettings.IdxCRC; i++)
+    dataSum = dataSum + DLbus_ByteStream[i];
   dataSum = dataSum & 0xff;
-  if (dataSum == uint8_tStream[DataSettings.IdxCRC])
+  if (dataSum == DLbus_ByteStream[P092_DataSettings.IdxCRC])
     return true;
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
 	  String log = F("# Calculated CRC: 0x");
 	  log += String(dataSum, HEX);
 	  log += F(" Received: 0x");
-	  log += String(uint8_tStream[DataSettings.IdxCRC], HEX);
+	  log += String(DLbus_ByteStream[P092_DataSettings.IdxCRC], HEX);
 	  addLog(LOG_LEVEL_INFO, log);
 	}
   return false;
@@ -932,27 +964,27 @@ boolean P092_GetData(int OptionIdx, int CurIdx) {
     case 1:    //F("Sensor")
       log = F("Get Sensor");
       log += CurIdx;
-      if (CurIdx > DataSettings.MaxSensors) {
+      if (CurIdx > P092_DataSettings.MaxSensors) {
         result=false;
         break;
       }
-      ReadData.Idx = DataSettings.IdxSensor;
+      P092_ReadData.Idx = P092_DataSettings.IdxSensor;
       result = P092_fetch_sensor(CurIdx);
       break;
     case 2:    //F("Sensor")
       log = F("Get ExtSensor");
       log += CurIdx;
-      if (CurIdx > DataSettings.MaxExtSensors) {
+      if (CurIdx > P092_DataSettings.MaxExtSensors) {
         result=false;
         break;
       }
-      ReadData.Idx = DataSettings.IdxExtSensor;
+      P092_ReadData.Idx = P092_DataSettings.IdxExtSensor;
       result = P092_fetch_sensor(CurIdx);
       break;
     case 3:  //F("Digital output")
       log = F("Get DigitalOutput");
       log += CurIdx;
-      if (CurIdx > (8 * DataSettings.Outputuint8_ts)) {
+      if (CurIdx > (8 * P092_DataSettings.OutputBytes)) {
         result=false;
         break;
       }
@@ -961,7 +993,7 @@ boolean P092_GetData(int OptionIdx, int CurIdx) {
     case 4:  //F("Speed step")
       log = F("Get SpeedStep");
       log += CurIdx;
-      if (CurIdx > DataSettings.Speeduint8_ts) {
+      if (CurIdx > P092_DataSettings.SpeedBytes) {
         result=false;
         break;
       }
@@ -970,7 +1002,7 @@ boolean P092_GetData(int OptionIdx, int CurIdx) {
     case 5:  //F("Analog output")
       log = F("Get AnalogOutput");
       log += CurIdx;
-      if (CurIdx > DataSettings.Analoguint8_ts) {
+      if (CurIdx > P092_DataSettings.AnalogBytes) {
         result=false;
         break;
       }
@@ -979,7 +1011,7 @@ boolean P092_GetData(int OptionIdx, int CurIdx) {
     case 6:  //F("Heat power (kW)")
       log = F("Get HeatPower");
       log += CurIdx;
-      if (CurIdx > DataSettings.MaxHeatMeters) {
+      if (CurIdx > P092_DataSettings.MaxHeatMeters) {
         result=false;
         break;
       }
@@ -988,7 +1020,7 @@ boolean P092_GetData(int OptionIdx, int CurIdx) {
     case 7:  //F("Heat meter (MWh)"
       log = F("Get HeatMeter");
       log += CurIdx;
-      if (CurIdx > DataSettings.MaxHeatMeters) {
+      if (CurIdx > P092_DataSettings.MaxHeatMeters) {
         result=false;
         break;
       }
@@ -998,7 +1030,7 @@ boolean P092_GetData(int OptionIdx, int CurIdx) {
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
 	  log += F(": ");
 	  if (result) {
-	    log += String(ReadData.value, 1);
+	    log += String(P092_ReadData.value, 1);
 	  }
 	  else {
 	    log += F("nan");
@@ -1010,9 +1042,9 @@ boolean P092_GetData(int OptionIdx, int CurIdx) {
 
 boolean P092_fetch_sensor(int number) {
   float value;
-  ReadData.mode = -1;
-  number = ReadData.Idx + (number - 1) * 2;
-  int sensorvalue = (uint8_tStream[number + 1] << 8) | uint8_tStream[number];
+  P092_ReadData.mode = -1;
+  number = P092_ReadData.Idx + (number - 1) * 2;
+  int32_t sensorvalue = (DLbus_ByteStream[number + 1] << 8) | DLbus_ByteStream[number];
   if (sensorvalue == 0) {
     return false;
   }
@@ -1021,20 +1053,20 @@ boolean P092_fetch_sensor(int number) {
     sensorvalue &= 0xfff;
     // calculations for different sensor types
     switch (sensortype) {
-      case DIGITAL:
+      case DLbus_Sensor_DIGITAL:
         value = false;
         break;
-      case TEMP:
+      case DLbus_Sensor_TEMP:
         value = sensorvalue * 0.1;
         break;
-      case RAYS:
+      case DLbus_Sensor_RAYS:
         value = sensorvalue;
         break;
-      case VOLUME_FLOW:
+      case DLbus_Sensor_VOLUME_FLOW:
         value = sensorvalue * 4;
         break;
-      case ROOM:
-        ReadData.mode = (sensorvalue & 0x600) >> 9;
+      case DLbus_Sensor_ROOM:
+        P092_ReadData.mode = (sensorvalue & 0x600) >> 9;
         value = (sensorvalue & 0x1ff) * 0.1;
         break;
       default:
@@ -1045,126 +1077,142 @@ boolean P092_fetch_sensor(int number) {
     sensorvalue |= 0xf000;
     // calculations for different sensor types
     switch (sensortype) {
-      case DIGITAL:
+      case DLbus_Sensor_DIGITAL:
         value = true;
         break;
-      case TEMP:
-        value = (sensorvalue - 65536) * 0.1;
+      case DLbus_Sensor_TEMP:
+        value = (sensorvalue - 0x10000) * 0.1;
         break;
-      case RAYS:
-        value = sensorvalue - 65536;
+      case DLbus_Sensor_RAYS:
+        value = sensorvalue - 0x10000;
         break;
-      case VOLUME_FLOW:
-        value = (sensorvalue - 65536) * 4;
+      case DLbus_Sensor_VOLUME_FLOW:
+        value = (sensorvalue - 0x10000) * 4;
         break;
-      case ROOM:
-        ReadData.mode = (sensorvalue & 0x600) >> 9;
-        value = ((sensorvalue & 0x1ff) - 65536) * 0.1;
+      case DLbus_Sensor_ROOM:
+        P092_ReadData.mode = (sensorvalue & 0x600) >> 9;
+        value = ((sensorvalue & 0x1ff) - 0x10000) * 0.1;
         break;
       default:
         return false;
     }
   }
-  ReadData.value = value;
+  P092_ReadData.value = value;
   return true;
 }
 
 boolean P092_fetch_output(int number) {
-  int outputs;
+  int32_t outputs;
 
-  if (DataSettings.Outputuint8_ts > 1)
-    outputs = (uint8_tStream[DataSettings.IdxOutput + 1] << 8) | uint8_tStream[DataSettings.IdxOutput];
+  if (P092_DataSettings.OutputBytes > 1)
+    outputs = (DLbus_ByteStream[P092_DataSettings.IdxOutput + 1] << 8) | DLbus_ByteStream[P092_DataSettings.IdxOutput];
   else
-    outputs = uint8_tStream[DataSettings.IdxOutput];
-  ReadData.value = (!!(outputs & (1 << (number - 1))));
+    outputs = DLbus_ByteStream[P092_DataSettings.IdxOutput];
+	if (outputs & (1 << (number - 1)))
+  	P092_ReadData.value = 1;
+	else
+  	P092_ReadData.value = 0;
   return true;
 }
 
 boolean P092_fetch_speed(int number) {
-  uint8_t speeduint8_t;
+  uint8_t speedbyte;
 
-  speeduint8_t = uint8_tStream[DataSettings.IdxDrehzahl + (number - 1)];
-  if ((speeduint8_t & 0x80) == 0x80)
+  if ((P092_DataSettings.IdxDrehzahl + (number - 1)) >= P092_DataSettings.IdxAnalog) {
+    // wrong index for speed, overlapping next index (IdxAnalog)
     return false;
-  ReadData.value = (speeduint8_t & 0x1f);
+  }
+  speedbyte = DLbus_ByteStream[P092_DataSettings.IdxDrehzahl + (number - 1)];
+  if (speedbyte & 0x80)
+    return false;
+  P092_ReadData.value = (speedbyte & 0x1f);
   return true;
 }
 
 boolean P092_fetch_analog(int number) {
-  uint8_t analoguint8_t;
+  uint8_t analogbyte;
 
-  analoguint8_t = uint8_tStream[DataSettings.IdxAnalog + (number - 1)];
-  if ((analoguint8_t & 0x80) == 0x80)
+  if ((P092_DataSettings.IdxAnalog + (number - 1)) >= P092_DataSettings.IdxHmRegister) {
+    // wrong index for analog, overlapping next index (IdxHmRegister)
     return false;
-  ReadData.value = (analoguint8_t * 0.1);
+  }
+  analogbyte = DLbus_ByteStream[P092_DataSettings.IdxAnalog + (number - 1)];
+  if (analogbyte & 0x80)
+    return false;
+  P092_ReadData.value = (analogbyte * 0.1);
   return true;
 }
 
-boolean P092_CheckHmRegister(int number) {
+sDLbus_HMindex P092_CheckHmRegister(int number) {
+sDLbus_HMindex result;
+
+  result.IndexIsValid = 0;
   switch (number) {
     case 1:
-      if ((uint8_tStream[DataSettings.IdxHmRegister] & 0x1) != 0x01)
-        return false;
-      power_index = DataSettings.IdxHeatMeter1;
-      kwh_index = DataSettings.IdxkWh1;
-      mwh_index = DataSettings.IdxMWh1;
+      if ((DLbus_ByteStream[P092_DataSettings.IdxHmRegister] & 0x1) == 0)
+        return result;
+      result.power_index = P092_DataSettings.IdxHeatMeter1;
+      result.kwh_index = P092_DataSettings.IdxkWh1;
+      result.mwh_index = P092_DataSettings.IdxMWh1;
       break;
     case 2:
-      if ((uint8_tStream[DataSettings.IdxHmRegister] & 0x2) != 0x02)
-        return false;
-      power_index = DataSettings.IdxHeatMeter2;
-      kwh_index = DataSettings.IdxkWh2;
-      mwh_index = DataSettings.IdxMWh2;
+      if ((DLbus_ByteStream[P092_DataSettings.IdxHmRegister] & 0x2) == 0)
+        return result;
+      result.power_index = P092_DataSettings.IdxHeatMeter2;
+      result.kwh_index = P092_DataSettings.IdxkWh2;
+      result.mwh_index = P092_DataSettings.IdxMWh2;
       break;
     case 3:
-      if ((uint8_tStream[DataSettings.IdxHmRegister] & 0x4) != 0x04)
-        return false;
-      power_index = DataSettings.IdxHeatMeter3;
-      kwh_index = DataSettings.IdxkWh3;
-      mwh_index = DataSettings.IdxMWh3;
+      if ((DLbus_ByteStream[P092_DataSettings.IdxHmRegister] & 0x4) == 0)
+        return result;
+      result.power_index = P092_DataSettings.IdxHeatMeter3;
+      result.kwh_index = P092_DataSettings.IdxkWh3;
+      result.mwh_index = P092_DataSettings.IdxMWh3;
       break;
     default:
-      return false;
+      return result;
   }
-  return true;
+  result.IndexIsValid = 1;
+  return result;
 }
 
 boolean P092_fetch_heatpower(int number) {
   // current power
   int32_t high;
-
-  if (P092_CheckHmRegister(number) == false)
+  sDLbus_HMindex HMindex = P092_CheckHmRegister(number);
+  if (HMindex.IndexIsValid == 0)
     return false;
-  uint8_t b1 = uint8_tStream[power_index];
-  uint8_t b2 = uint8_tStream[power_index + 1];
-  if (DataSettings.CurrentHmuint8_ts > 2) {
-    uint8_t b3 = uint8_tStream[power_index + 2];
-    uint8_t b4 = uint8_tStream[power_index + 3];
-    high = 65536 * b4 + 256 * b3 + b2;
-    int low = (b1 * 10) / 256;
+  uint8_t b1 = DLbus_ByteStream[HMindex.power_index];
+  uint8_t b2 = DLbus_ByteStream[HMindex.power_index + 1];
+  if (P092_DataSettings.CurrentHmBytes > 2) {
+    uint8_t b3 = DLbus_ByteStream[HMindex.power_index + 2];
+    uint8_t b4 = DLbus_ByteStream[HMindex.power_index + 3];
+    high = 0x10000 * b4 + 0x100 * b3 + b2;
+    int low = (b1 * 10) / 0x100;
     if (!(b4 & 0x80)) // sign positive
-      ReadData.value = (10 * high + low) / 100;
+      P092_ReadData.value = (10 * high + low) / 100;
     else // sign negative
-      ReadData.value = (10 * (high - 65536) - low) / 100;
+      P092_ReadData.value = (10 * (high - 0x10000) - low) / 100;
   }
   else {
     high = (b2 << 8) | b1;
     if ((b2 & 0x80) == 0) // sign positive
-      ReadData.value = high / 10;
+      P092_ReadData.value = high / 10;
     else // sign negative
-      ReadData.value = (high - 65536) / 10;
+      P092_ReadData.value = (high - 0x10000) / 10;
   }
   return true;
 }
 
 boolean P092_fetch_heatmeter(int number) {
   // heat meter
-  int heat_meter;
+  int32_t heat_meter;
   float heat_meter_mwh;
 
-  if (P092_CheckHmRegister(number) == false)
+  sDLbus_HMindex HMindex = P092_CheckHmRegister(number);
+  if (HMindex.IndexIsValid == 0)
     return false;
-  heat_meter = (uint8_tStream[kwh_index + 1] << 8) | uint8_tStream[kwh_index];
+  heat_meter = (DLbus_ByteStream[HMindex.kwh_index + 1] << 8) | DLbus_ByteStream[HMindex.kwh_index];
   heat_meter_mwh = (heat_meter * 0.1) / 1000; // in MWh
   if (heat_meter_mwh > 1.0) {
     // in kWh
@@ -1172,8 +1220,8 @@ boolean P092_fetch_heatmeter(int number) {
     heat_meter_mwh -= heat_meter;
   }
   // MWh
-  heat_meter = (uint8_tStream[mwh_index + 1] << 8) | uint8_tStream[mwh_index];
-  ReadData.value = heat_meter_mwh + heat_meter;
+  heat_meter = (DLbus_ByteStream[HMindex.mwh_index + 1] << 8) | DLbus_ByteStream[HMindex.mwh_index];
+  P092_ReadData.value = heat_meter_mwh + heat_meter;
   return true;
 }
 
