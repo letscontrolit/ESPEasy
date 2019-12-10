@@ -26,28 +26,30 @@ Specifications:
 Wiring
 ------
 
-Circuit wiring (S11 seen from top, with the 5 vias left and the 4 vias right):
+Circuit wiring (S11 seen from top, with the 5 holes left and the 4 holes right):
 
 .. code-block:: html
 
     ESP               S11 (UART)
-    GPIO (14)  <-->   TX (5th via of the 5 vias)
-    GPIO (12)  <-->   RX (4th via [below TX])
+    GPIO (14)  <-->   TX (5th hole of the 5 holes)
+    GPIO (12)  <-->   RX (4th hole [below TX])
 
     Power
-    5.0V       <-->   VBB (2nd via of the 5 vias, 3.3V can also be used)
-    GND        <-->   GND (1st via)
+    5.0V       <-->   VBB (2nd hole of the 5 holes, 3.3V can also be used)
+    GND        <-->   GND (1st hole)
+    3.3V       <-->   VDDIO (3rd hole [middle])
 
 As you can see only pins on the "5 via side" are being used. But...
 
 Set up the S11 according to this simple schematics. For continuous use you should connect
 the EN (S11) to VBB (S11), EN is used to wake the sensor on demand. By using VBB this will
-make the EN go high = sensor is activated.
+make the EN go high = sensor is activated. But currently this feature of the S11 isn't
+supported by the plugin.
 
 The COMSEL pin is used if you want to use I2C communication, in that case you pull this
 low (0.4V or less). Leave open/floating if UART is used.
 
-VDDIO is supply voltage for TX/SCL/nRDY.
+VDDIO is supply voltage for TX/SCL/nRDY and thus need 3.3V.
 
 nRDY is an output signaling when the measurement is ready. The plugin does not use that pin.
 
@@ -71,12 +73,10 @@ Task settings
 Sensor
 ^^^^^^
 
-* **GPIO <-- TX**: TX is generally set to **GPIO 13 (D7)**.
-* **GPIO --> RX**: RX is generally set to **GPIO 15 (D8)**.
+* **GPIO <-- TX**: TX is generally set to **GPIO 14 (D5)**.
+* **GPIO --> RX**: RX is generally set to **GPIO 12 (D6)**.
 * **Sensor**: Only **Carbon Dioxide** is supported by the S11.
 
-.. note:: TX GPIO 1 (D10) and RX GPIO 3 (D9) is hardware serial and have been reported to work better for some users over time compared to the
-   bit-banging (soft) serial used over GPIO 13 and 15.
 
 Data acquisition
 ^^^^^^^^^^^^^^^^
