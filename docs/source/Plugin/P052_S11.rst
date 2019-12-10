@@ -43,8 +43,8 @@ As you can see only pins on the "5 via side" are being used. But...
 
 Set up the S11 according to this simple schematics. For continuous use you should connect
 the EN (S11) to VBB (S11), EN is used to wake the sensor on demand. By using VBB this will
-make the EN go high = sensor is activated. But currently this feature of the S11 isn't
-supported by the plugin.
+make the EN go high = sensor is activated. But currently the feature of putting the S11 to
+sleep isn't supported by the plugin, thus you need to have EN set to high using VBB.
 
 The COMSEL pin is used if you want to use I2C communication, in that case you pull this
 low (0.4V or less). Leave open/floating if UART is used.
