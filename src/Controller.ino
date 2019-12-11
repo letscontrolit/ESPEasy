@@ -267,8 +267,9 @@ bool MQTTConnect(int controller_idx)
   }
   delay(0);
 
+  byte controller_number = Settings.Protocol[controller_idx];
+  count_connection_results(MQTTresult, F("MQTT : Broker "), controller_number, ControllerSettings);
   if (!MQTTresult) {
-    addLog(LOG_LEVEL_ERROR, F("MQTT : Failed to connect to broker"));
     MQTTclient.disconnect();
     updateMQTTclient_connected();
     return false;
