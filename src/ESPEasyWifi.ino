@@ -74,7 +74,9 @@
 bool WiFiConnected() {
   START_TIMER;
 
-  if (unprocessedWifiEvents()) { return false; }
+  if (unprocessedWifiEvents()) {
+    return false; 
+  }
 
   if ((timerAPstart != 0) && timeOutReached(timerAPstart)) {
     // Timer reached, so enable AP mode.
@@ -88,6 +90,7 @@ bool WiFiConnected() {
   if (wifiStatus != ESPEASY_WIFI_SERVICES_INITIALIZED) {
     if (validWiFi) {
       // Set internal wifiStatus and reset timer to disable AP mode
+      addLog(LOG_LEVEL_INFO, F("Has IP address"));
       markWiFi_services_initialized();
     }
   }
@@ -267,6 +270,19 @@ void WifiDisconnect()
   #endif // if defined(ESP32)
   wifiStatus          = ESPEASY_WIFI_DISCONNECTED;
   processedDisconnect = false;
+  ++WifiDisconnectCounter;
+}
+
+
+void evaluateConnectionFailures()
+{
+  if (Settings.ConnectionFailuresThreshold) {
+    unsigned long threshold = WifiDisconnectCounter * Settings.ConnectionFailuresThreshold / 10;
+    if (connectionFailures > threshold && timePassedSince(lastConnectMoment) > WIFI_RECONNECT_WAIT)
+    {
+      cmd_within_mainloop = CMD_WIFI_DISCONNECT;
+    }
+  }
 }
 
 // ********************************************************************************
@@ -607,22 +623,28 @@ void setConnectionSpeed() {
 void setupStaticIPconfig() {
   setUseStaticIP(useStaticIP());
 
-  if (!useStaticIP()) { return; }
-  const IPAddress ip     = Settings.IP;
-  const IPAddress gw     = Settings.Gateway;
-  const IPAddress subnet = Settings.Subnet;
-  const IPAddress dns    = Settings.DNS;
+  IPAddress ip;
+  IPAddress gw;
+  IPAddress subnet;
+  IPAddress dns;
 
-  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = F("IP   : Static IP : ");
-    log += formatIP(ip);
-    log += F(" GW: ");
-    log += formatIP(gw);
-    log += F(" SN: ");
-    log += formatIP(subnet);
-    log += F(" DNS: ");
-    log += formatIP(dns);
-    addLog(LOG_LEVEL_INFO, log);
+
+  if (useStaticIP()) {
+    ip     = Settings.IP;
+    gw     = Settings.Gateway;
+    subnet = Settings.Subnet;
+    dns    = Settings.DNS;
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      String log = F("IP   : Static IP : ");
+      log += formatIP(ip);
+      log += F(" GW: ");
+      log += formatIP(gw);
+      log += F(" SN: ");
+      log += formatIP(subnet);
+      log += F(" DNS: ");
+      log += formatIP(dns);
+      addLog(LOG_LEVEL_INFO, log);
+    }
   }
   WiFi.config(ip, gw, subnet, dns);
 }

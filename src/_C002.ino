@@ -238,13 +238,7 @@ bool CPlugin_002(byte function, struct EventStruct *event, String& string)
         String pubname = ControllerSettings.Publish;
         parseControllerVariables(pubname, event, false);
 
-        if (!MQTTpublish(event->ControllerIndex, pubname.c_str(), json.c_str(), Settings.MQTTRetainFlag))
-        {
-          connectionFailures++;
-        }
-        else if (connectionFailures) {
-          connectionFailures--;
-        }
+        success = MQTTpublish(event->ControllerIndex, pubname.c_str(), json.c_str(), Settings.MQTTRetainFlag);
       } // if ixd !=0
       else
       {

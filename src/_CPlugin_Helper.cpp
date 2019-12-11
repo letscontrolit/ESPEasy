@@ -260,6 +260,7 @@ bool count_connection_results(bool success, const String& prefix, int controller
   {
     connectionFailures++;
     log_connecting_fail(prefix, controller_number, ControllerSettings);
+    evaluateConnectionFailures();
     return false;
   }
   statusLED(true);
@@ -287,6 +288,10 @@ bool try_connect_host(int controller_number, WiFiUDP& client, ControllerSettings
 }
 
 bool try_connect_host(int controller_number, WiFiClient& client, ControllerSettingsStruct& ControllerSettings) {
+  return try_connect_host(controller_number, client, ControllerSettings, F("HTTP : "));
+}
+
+bool try_connect_host(int controller_number, WiFiClient& client, ControllerSettingsStruct& ControllerSettings, const String& loglabel) {
   START_TIMER;
 
   if (!WiFiConnected()) { return false; }
@@ -294,12 +299,12 @@ bool try_connect_host(int controller_number, WiFiClient& client, ControllerSetti
   // Use WiFiClient class to create TCP connections
   client.setTimeout(ControllerSettings.ClientTimeout);
 #ifndef BUILD_NO_DEBUG
-  log_connecting_to(F("HTTP : "), controller_number, ControllerSettings);
+  log_connecting_to(loglabel, controller_number, ControllerSettings);
 #endif // ifndef BUILD_NO_DEBUG
-  bool success      = ControllerSettings.connectToHost(client);
-  const bool result = count_connection_results(
+  const bool success = ControllerSettings.connectToHost(client);
+  const bool result  = count_connection_results(
     success,
-    F("HTTP : "), controller_number, ControllerSettings);
+    loglabel, controller_number, ControllerSettings);
   STOP_TIMER(TRY_CONNECT_HOST_TCP);
   return result;
 }

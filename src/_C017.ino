@@ -83,15 +83,10 @@ bool do_process_c017_delay_queue(int controller_number, const C017_queue_element
   }
 
   WiFiClient client;
-  if (!ControllerSettings.connectToHost(client))
+  if (!try_connect_host(controller_number, client, ControllerSettings, F("ZBX  : ")))
   {
-    connectionFailures++;
-    addLog(LOG_LEVEL_ERROR, String(F("ZBX: Cannot connect")));
     return false;
   }
-  statusLED(true);
-  if (connectionFailures)
-    connectionFailures--;
 
   LoadTaskSettings(element.TaskIndex);
 

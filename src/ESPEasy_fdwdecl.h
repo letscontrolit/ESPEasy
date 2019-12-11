@@ -172,6 +172,7 @@ void WifiScan(bool async, bool quick = false);
 void WifiScan();
 void WiFiConnectRelaxed();
 void WifiDisconnect();
+void evaluateConnectionFailures();
 void setAP(bool enable);
 void setSTA(bool enable);
 
