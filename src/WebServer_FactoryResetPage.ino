@@ -138,28 +138,37 @@ void handle_factoryreset_json() {
   if (WebServer.hasArg("klog")) {
     ResetFactoryDefaultPreference.keepLogSettings(isFormItemChecked("klog"));
   }
-
+  String error;
+  bool performReset = false;
+  bool savePref = false;
   if (WebServer.hasArg(F("savepref"))) {
     // User choose a pre-defined config and wants to save it as the new default.
-    applyFactoryDefaultPref();
-    addHtmlError(SaveSettings());
-    stream_last_json_object_value(F("status"), F("ok"));
+    savePref = true;
   }
 
   if (WebServer.hasArg(F("performfactoryreset"))) {
     // User confirmed to really perform the reset.
-    applyFactoryDefaultPref();
-    stream_last_json_object_value(F("status"), F("ok"));
-    TXBuffer += "}";
-    TXBuffer.endStream();
-
-    // No need to call SaveSettings(); ResetFactory() will save the new settings.
-    ResetFactory();
+    performReset = true;
+    savePref = true;
   } else {
-    stream_last_json_object_value(F("status"), F("error"));
+    error = F("no reset");
   }
+  if (savePref) {
+    applyFactoryDefaultPref();
+    error = SaveSettings();
+  }
+
+  if (error.length() == 0) {
+    error = F("ok");
+  }
+
+  stream_last_json_object_value(F("status"), error);
   TXBuffer += "}";
   TXBuffer.endStream();
+
+  if (performReset) {
+    ResetFactory();
+  }
 }
 
 #endif // WEBSERVER_NEW_UI

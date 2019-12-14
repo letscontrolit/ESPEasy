@@ -19,11 +19,6 @@ void handle_wifiscanner_json() {
   {
     if (firstentry) { firstentry = false; }
     else { TXBuffer += ",{"; }
-
-    stream_next_json_object_value(getLabel(LabelType::SSID),      WiFi.SSID(i));
-    stream_next_json_object_value(getLabel(LabelType::BSSID),     WiFi.BSSIDstr(i));
-    stream_next_json_object_value(getLabel(LabelType::CHANNEL),   String(WiFi.channel(i)));
-    stream_next_json_object_value(getLabel(LabelType::WIFI_RSSI), String(WiFi.RSSI(i)));
     String authType;
 
     switch (WiFi.encryptionType(i)) {
@@ -46,8 +41,15 @@ void handle_wifiscanner_json() {
     }
 
     if (authType.length() > 0) {
-      stream_last_json_object_value(F("auth"), authType);
+      stream_next_json_object_value(F("auth"), authType);
     }
+    stream_next_json_object_value(getLabel(LabelType::SSID),      WiFi.SSID(i));
+    stream_next_json_object_value(getLabel(LabelType::BSSID),     WiFi.BSSIDstr(i));
+    stream_next_json_object_value(getLabel(LabelType::CHANNEL),   String(WiFi.channel(i)));
+    stream_last_json_object_value(getLabel(LabelType::WIFI_RSSI), String(WiFi.RSSI(i)));
+  }
+  if (firstentry) {
+    TXBuffer += "}";
   }
   TXBuffer += "]";
   TXBuffer.endStream();
