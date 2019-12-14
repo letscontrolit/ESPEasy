@@ -30,7 +30,8 @@
 
 void P092_Pin_changed() ICACHE_RAM_ATTR;
 volatile uint8_t P092_DLB_Pin = 0xFF;
-volatile boolean P092_receiving = false;    // receiving flag
+volatile boolean P092_receiving = false;            // receiving flag
+volatile boolean P092_AllBitsReceived = false;
 uint8_t P092_Last_DLB_Pin;
 boolean P092_init = false;
 boolean P092_ReceivedOK = false;
@@ -380,17 +381,54 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
       {
         if (P092_init) {
           addLog(LOG_LEVEL_ERROR, F("P092_init -> Already done!"));
-          return true;
         }
-        P092_init = true;
-        addLog(LOG_LEVEL_INFO, F("P092_init: attachInterrupt"));
-        P092_DLB_Pin = CONFIG_PIN1;
-        pinMode(P092_DLB_Pin, INPUT_PULLUP);
-        P092_receiving = false;
-        // on a CHANGE on the data pin P092_Pin_changed is called
-        attachInterrupt(digitalPinToInterrupt(P092_DLB_Pin), P092_Pin_changed, CHANGE);
-        UserVar[event->BaseVarIndex] = NAN;
+        else {
+          P092_init = true;
+          addLog(LOG_LEVEL_INFO, F("P092_init: attachInterrupt"));
+          P092_DLB_Pin = CONFIG_PIN1;
+          pinMode(P092_DLB_Pin, INPUT_PULLUP);
+          P092_receiving = false;
+          P092_ReceivedOK = false;
+          // on a CHANGE on the data pin P092_Pin_changed is called
+          attachInterrupt(digitalPinToInterrupt(P092_DLB_Pin), P092_Pin_changed, CHANGE);
+          UserVar[event->BaseVarIndex] = NAN;
+        }
+        Plugin_092_SetIndices(PCONFIG(0));
         success = true;
+        break;
+      }
+
+    case PLUGIN_ONCE_A_SECOND:
+      {
+        if (WiFi.status() != WL_CONNECTED) {
+          return false;
+        }
+        if (P092_init == false) {
+          return false;
+        }
+        if (P092_receiving) {
+          return false;
+        }
+        if (P092_AllBitsReceived) {
+          P092_AllBitsReceived = false;
+          success = Plugin_092_CheckTimings();
+          if (success)
+            success = P092_Processing();
+          if (success)
+            success = P092_CheckCRC();
+          if (success) {
+            addLog(LOG_LEVEL_INFO, F("Received data OK"));
+            P092_LastReceived = millis();
+          }
+          P092_ReceivedOK = success;
+        }
+        else
+          success = P092_ReceivedOK;
+
+        if ((P092_ReceivedOK == false) || (timePassedSince(P092_LastReceived)>(static_cast<long>(Settings.TaskDeviceTimer[event->TaskIndex] * 1000/2)))) {
+          Plugin_092_StartReceiving();
+          success = true;
+        }
         break;
       }
 
@@ -407,33 +445,19 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
           return false;
         }
         if (WiFi.status() != WL_CONNECTED) {
+          // too busy for DLbus while wifi connect is running
           addLog(LOG_LEVEL_ERROR, F("## Error DL-Bus: WiFi not connected!"));
-          return false;
-        }
-        if (P092_receiving) {
-          addLog(LOG_LEVEL_ERROR, F("## Error DL-Bus: Still receiving bits!"));
           return false;
         }
         if (P092_init == false) {
           addLog(LOG_LEVEL_ERROR, F("## Error DL-Bus: Not initialized!"));
           return false;
         }
-        Plugin_092_SetIndices(PCONFIG(0));
-
-        if ((P092_ReceivedOK == false) || (timePassedSince(P092_LastReceived)>(static_cast<long>(Settings.TaskDeviceTimer[event->TaskIndex] * 1000/2)))) {
-          success = Plugin_092_Receiving();
-          if (success)
-            success = P092_Processing();
-          if (success)
-            success = P092_CheckCRC();
-          if (success)
-            P092_LastReceived = millis();
-          P092_ReceivedOK = success;
+        success = P092_ReceivedOK;
+        if (P092_ReceivedOK == false) {
+          addLog(LOG_LEVEL_ERROR, F("## Error DL-Bus: Still receiving bits!"));
         }
-        else
-          success = true;
-        if (success)
-        {
+        else {
           for (int i = 0; i < P092_DLbus_ValueCount; i++) {
             OptionIdx = PCONFIG(i + 1) >> 8;
             CurIdx = PCONFIG(i + 1) & 0x00FF;
@@ -445,8 +469,6 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
             }
           }
         }
-        else
-          addLog(LOG_LEVEL_ERROR, F("## Error DL-Bus: No readings!"));
         break;
       }
   }
@@ -659,9 +681,7 @@ sDLbus_HMindex P092_CheckHmRegister(int number);
   DLBus P092_receiving
 \****************/
 
-boolean Plugin_092_Receiving(void) {
-  uint8_t rawval, val;
-  int i;
+void Plugin_092_StartReceiving(void) {
   noInterrupts ();                              // make sure we don't get interrupted before we are ready
   DLbus_pulse_count = 0;
   DLbus_pulse_number = (((P092_DataSettings.DataBytes + DLbus_AdditionalRecBytes) * (8 + 1 + 1) + 16) * 3);
@@ -670,6 +690,7 @@ boolean Plugin_092_Receiving(void) {
   DLbus_MinDoublePulseWidth = P092_DataSettings.DLbus_MinDoublePulseWidth;
   DLbus_MaxDoublePulseWidth = P092_DataSettings.DLbus_MaxDoublePulseWidth;
   P092_receiving = true;
+  P092_AllBitsReceived = false;
   interrupts ();                                // interrupts allowed now, next instruction WILL be executed
   uint32_t start=millis();
   addLog(LOG_LEVEL_INFO, F("P092_receiving ..."));
@@ -681,17 +702,21 @@ boolean Plugin_092_Receiving(void) {
     // nothing received
     P092_receiving = false;
     addLog(LOG_LEVEL_ERROR, F("Error: Nothing received! No DL bus connected!"));
-    return false;
   }
-  while (P092_receiving) {
-    // wait for end of P092_receiving
-    // loop time depends on the device (bytes in protocol and clock frequency)
-    // ESR21:     (((31 + 2) * (8 + 1 + 1) + 16) * 3) = 1038 bits @ 488Hz = 2,13s
-    // UVR31:     ((( 8 + 2) * (8 + 1 + 1) + 16) * 3) =  348 bits @  50Hz = 6,96s
-    // UVR1611:   (((64 + 2) * (8 + 1 + 1) + 16) * 3) = 2028 bits @ 488Hz = 4,16s
-    // UVR 61-3:  (((62 + 2) * (8 + 1 + 1) + 16) * 3) = 2028 bits @ 488Hz = 4,03s
-    yield();
-  }
+  // while (P092_receiving) {
+  //   // wait for end of P092_receiving
+  //   // loop time depends on the device (bytes in protocol and clock frequency)
+  //   // ESR21:     (((31 + 2) * (8 + 1 + 1) + 16) * 3) = 1038 bits @ 488Hz = 2,13s
+  //   // UVR31:     ((( 8 + 2) * (8 + 1 + 1) + 16) * 3) =  348 bits @  50Hz = 6,96s
+  //   // UVR1611:   (((64 + 2) * (8 + 1 + 1) + 16) * 3) = 2028 bits @ 488Hz = 4,16s
+  //   // UVR 61-3:  (((62 + 2) * (8 + 1 + 1) + 16) * 3) = 2028 bits @ 488Hz = 4,03s
+  //   yield();
+  // }
+}
+
+boolean Plugin_092_CheckTimings(void) {
+  uint8_t rawval, val;
+  int i;
   addLog(LOG_LEVEL_INFO, F("Receive stopped."));
 
   DLbus_WrongTimeCnt = 0;
@@ -787,6 +812,7 @@ void P092_Pin_changed(void) {
     DLbus_BitStream[DLbus_pulse_count] = val;                            // set bit
     DLbus_pulse_count++;
     P092_receiving = (DLbus_pulse_count < DLbus_pulse_number);     // stop P092_receiving when data frame is complete
+    P092_AllBitsReceived = !P092_receiving;
   }
 }
 
