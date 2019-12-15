@@ -149,7 +149,7 @@ String do_create_http_request(
                        + additional_options.length()
                        + 42;
 
-  if (content_length >= 0) { estimated_size += 25; }
+  if (content_length >= 0) { estimated_size += 45; }
   String request;
   request.reserve(estimated_size);
   request += method;
@@ -169,6 +169,12 @@ String do_create_http_request(
   request += hostportString;
   request += "\r\n";
   request += auth_header;
+
+  // Add request header as fall back.
+  // When adding another "accept" header, it may be interpreted as:
+  // "if you have XXX, send it; or failing that, just give me what you've got."
+  request += F("Accept: */*;q=0.1");
+  request += "\r\n";
   request += additional_options;
   request += get_user_agent_request_header_field();
   request += F("Connection: close\r\n");
