@@ -628,22 +628,30 @@ void Plugin_092_SetIndices(int DeviceIndex) {
 
 #define DLbus_MaxDataBytes 64
 #define DLbus_AdditionalRecBytes 2
-#define DLbus_MaxDataBits (((DLbus_MaxDataBytes + DLbus_AdditionalRecBytes) * (8 + 1 + 1) + 16) * 3)  // ((64+2) * (8+1+1) + 16) * 3 = 2028 bytes
+#define DLbus_StopBits 1
+#define DLbus_StartBits 1
+#define DLBus_SyncBits 16
+#define DLBus_ReserveBytes 20
+#define DLBus_BitChangeFactor 2
+#define DLbus_MaxDataBits (((DLbus_MaxDataBytes + DLbus_AdditionalRecBytes) * (DLbus_StartBits + 8 + DLbus_StopBits) + DLBus_SyncBits) * DLBus_BitChangeFactor) + DLBus_ReserveBytes
+        // MaxDataBits is double of the maximum bit length because each bit change is stored
+        // (((64+2) * (8+1+1) + 16) * 2) + 50 = 1402 bytes
 
 // variables used in interrupt function
-volatile uint8_t DLbus_BitStream[DLbus_MaxDataBits];  // received bit stream (each bit is extended to uint8_t, containing the timing flags)
-volatile int DLbus_pulse_count;                       // number of received pulses
-volatile int DLbus_pulse_number;                      // max naumber of the received pulses
-volatile uint32_t DLbus_last_bit_change = 0;     			// remember the last transition
+static uint8_t DLbus_ChangeBitStream[DLbus_MaxDataBits];    // received bit change stream (each bit change is extended to uint8_t, containing the timing flags)
+volatile static uint8_t* DLbus_PtrChangeBitStream;          // pointer to received bit change stream
+volatile uint16_t DLbus_pulse_count;                        // number of received pulses
+volatile uint16_t DLbus_pulse_number;                       // max naumber of the received pulses
+volatile uint32_t DLbus_TimeLastBitChange = 0;     			    // remember time of last transition
 volatile uint16_t DLbus_MinPulseWidth, DLbus_MaxPulseWidth, DLbus_MinDoublePulseWidth, DLbus_MaxDoublePulseWidth;
 
 uint8_t DLbus_ByteStream[DLbus_MaxDataBits / 8 + 1];  // every bit gets sorted into a bitmap
-int DLbus_bit_number;                                 // bit size of the data frame
+uint16_t DLbus_bit_number;                                  // bit number of the received DLbus_ChangeBitStream
 
 uint8_t DLbus_WrongTimeCnt;
 uint16_t DLbus_WrongTimings[5][6];
 
-int DLbus_start_bit;                                  // first bit of data frame
+int16_t DLbus_start_bit;                                    // first bit of data frame (-1 not recognized)
 
 // sensor types
 #define DLbus_UNUSED              0b000
@@ -684,11 +692,12 @@ sDLbus_HMindex P092_CheckHmRegister(int number);
 void Plugin_092_StartReceiving(void) {
   noInterrupts ();                              // make sure we don't get interrupted before we are ready
   DLbus_pulse_count = 0;
-  DLbus_pulse_number = (((P092_DataSettings.DataBytes + DLbus_AdditionalRecBytes) * (8 + 1 + 1) + 16) * 3);
+  DLbus_pulse_number = (((P092_DataSettings.DataBytes + DLbus_AdditionalRecBytes) * (DLbus_StartBits + 8 +  DLbus_StopBits) + DLBus_SyncBits) * DLBus_BitChangeFactor) + DLBus_ReserveBytes;
   DLbus_MinPulseWidth = P092_DataSettings.DLbus_MinPulseWidth;
   DLbus_MaxPulseWidth = P092_DataSettings.DLbus_MaxPulseWidth;
   DLbus_MinDoublePulseWidth = P092_DataSettings.DLbus_MinDoublePulseWidth;
   DLbus_MaxDoublePulseWidth = P092_DataSettings.DLbus_MaxDoublePulseWidth;
+  DLbus_PtrChangeBitStream = DLbus_ChangeBitStream;
   P092_receiving = true;
   P092_AllBitsReceived = false;
   interrupts ();                                // interrupts allowed now, next instruction WILL be executed
@@ -706,10 +715,10 @@ void Plugin_092_StartReceiving(void) {
   // while (P092_receiving) {
   //   // wait for end of P092_receiving
   //   // loop time depends on the device (bytes in protocol and clock frequency)
-  //   // ESR21:     (((31 + 2) * (8 + 1 + 1) + 16) * 3) = 1038 bits @ 488Hz = 2,13s
-  //   // UVR31:     ((( 8 + 2) * (8 + 1 + 1) + 16) * 3) =  348 bits @  50Hz = 6,96s
-  //   // UVR1611:   (((64 + 2) * (8 + 1 + 1) + 16) * 3) = 2028 bits @ 488Hz = 4,16s
-  //   // UVR 61-3:  (((62 + 2) * (8 + 1 + 1) + 16) * 3) = 2028 bits @ 488Hz = 4,03s
+  //   // ESR21:     (((31 + 2) * (8 + 1 + 1) + 16) * 2)+50 = (346*2+50)= 742 bits @ 488Hz = 1,52s
+  //   // UVR31:     ((( 8 + 2) * (8 + 1 + 1) + 16) * 2)+50 = (116*2+50)= 282 bits @  50Hz = 5,64s
+  //   // UVR1611:   (((64 + 2) * (8 + 1 + 1) + 16) * 2)+50 = (676*2+50)=1402 bits @ 488Hz = 2,87s
+  //   // UVR 61-3:  (((62 + 2) * (8 + 1 + 1) + 16) * 2)+50 = (676*2+50)=1402 bits @ 488Hz = 2,87s
   //   yield();
   // }
 }
@@ -722,8 +731,8 @@ boolean Plugin_092_CheckTimings(void) {
   DLbus_WrongTimeCnt = 0;
   DLbus_pulse_count = 0;
   for (i = 0; i <= DLbus_pulse_number; i++) {
-    // store DLbus_BitStream into DLbus_ByteStream
-    rawval = DLbus_BitStream[i];
+    // store DLbus_ChangeBitStream into DLbus_ByteStream
+    rawval = DLbus_ChangeBitStream[i];
     if (rawval & DLbus_FlagsWrongTiming) {
       // wrong DLbus_time_diff
       if ((DLbus_pulse_count > 0) && (DLbus_WrongTimeCnt < 5)) {
@@ -731,7 +740,7 @@ boolean Plugin_092_CheckTimings(void) {
         DLbus_WrongTimings[DLbus_WrongTimeCnt][1] = DLbus_pulse_count;
         DLbus_WrongTimings[DLbus_WrongTimeCnt][2] = DLbus_bit_number;
         DLbus_WrongTimings[DLbus_WrongTimeCnt][3] = rawval;
-        if ((rawval == DLbus_FlagLongerThanTwiceDoubleWidth) && (DLbus_BitStream[i-1] == (DLbus_FlagDoubleWidth | 0x01))) {
+        if ((rawval == DLbus_FlagLongerThanTwiceDoubleWidth) && (DLbus_ChangeBitStream[i-1] == (DLbus_FlagDoubleWidth | 0x01))) {
           // Add two additional short pulses (low and high), previous bit is High and contains DLbus_FlagDoubleWidth
           P092_process_bit(0);
           P092_process_bit(1);
@@ -758,7 +767,7 @@ boolean Plugin_092_CheckTimings(void) {
       }
     }
   }
-  addLog(LOG_LEVEL_INFO, F("DLbus_BitStream copied."));
+  addLog(LOG_LEVEL_INFO, F("DLbus_ChangeBitStream copied."));
 
 #ifdef PLUGIN_092_DEBUG
   if (DLbus_WrongTimeCnt > 0) {
@@ -774,9 +783,9 @@ boolean Plugin_092_CheckTimings(void) {
 	      log += F(" Value:0x");
 	      log += String(DLbus_WrongTimings[i][3], HEX);
 	      log += F(" ValueBefore:0x");
-	      log += String(DLbus_BitStream[DLbus_WrongTimings[i][0] - 1], HEX);
+	      log += String(DLbus_ChangeBitStream[DLbus_WrongTimings[i][0] - 1], HEX);
 	      log += F(" ValueAfter:0x");
-	      log += String(DLbus_BitStream[DLbus_WrongTimings[i][0] + 1], HEX);
+	      log += String(DLbus_ChangeBitStream[DLbus_WrongTimings[i][0] + 1], HEX);
 	      if (DLbus_WrongTimings[i][4]!=0xff) {
 	        log += F(" Added:0x");
 	        log += String(DLbus_WrongTimings[i][4], HEX);
@@ -798,8 +807,8 @@ boolean Plugin_092_CheckTimings(void) {
 \*****************/
 
 void P092_Pin_changed(void) {
-  uint32_t DLbus_time_diff = usecPassedSince(DLbus_last_bit_change);  // time difference to previous pulse in µs
-  DLbus_last_bit_change = micros();                                   // save last pin change time
+  uint32_t DLbus_time_diff = usecPassedSince(DLbus_TimeLastBitChange);  // time difference to previous pulse in µs
+  DLbus_TimeLastBitChange = micros();                                   // save last pin change time
   if (P092_receiving) {
     uint8_t val = digitalRead(P092_DLB_Pin);  // read state
     // check pulse width
@@ -809,10 +818,23 @@ void P092_Pin_changed(void) {
     else if (DLbus_time_diff > DLbus_MaxPulseWidth)         val |= DLbus_FlagBetweenDoubleSingleWidth;    // between double and single pulse width
     else if (DLbus_time_diff < DLbus_MinPulseWidth)         val |= DLbus_FlagShorterThanSingleWidth;      // shorter then single pulse width
     else val |= DLbus_FlagSingleWidth;                                   // single pulse width
-    DLbus_BitStream[DLbus_pulse_count] = val;                            // set bit
-    DLbus_pulse_count++;
-    P092_receiving = (DLbus_pulse_count < DLbus_pulse_number);     // stop P092_receiving when data frame is complete
-    P092_AllBitsReceived = !P092_receiving;
+    if (DLbus_pulse_count < 2) {
+      // check if sync is received
+      if (val & DLbus_FlagLongerThanTwiceDoubleWidth) {
+        // sync received
+        *DLbus_PtrChangeBitStream = !(val & 0x01);
+        *(DLbus_PtrChangeBitStream+1) = val;
+        DLbus_pulse_count = 2;
+      }
+      else
+        DLbus_pulse_count = 1;                                        // flag that interrupt is receiving
+    }
+    else {
+      *(DLbus_PtrChangeBitStream+DLbus_pulse_count) = val;                      // set bit
+      DLbus_pulse_count++;
+      P092_receiving = (DLbus_pulse_count < DLbus_pulse_number);     // stop P092_receiving when data frame is complete
+      P092_AllBitsReceived = !P092_receiving;
+    }
   }
 }
 
@@ -840,6 +862,7 @@ String log;
   // inverted signal?
   while (DLbus_start_bit == -1) {
     if (inverted) {
+      addLog(LOG_LEVEL_ERROR, F("Error: Already inverted!"));
       return false;
     }
     addLog(LOG_LEVEL_INFO, F("Invert bit stream..."));
@@ -850,21 +873,22 @@ String log;
       addLog(LOG_LEVEL_ERROR, F("Error: No data frame available!"));
       return false;
     }
-    if ((DLbus_bit_number-DLbus_start_bit)<(DLbus_pulse_number/4)) {
+    if ((DLbus_bit_number-DLbus_start_bit)<((DLbus_pulse_number - DLBus_ReserveBytes)/DLBus_BitChangeFactor)) {
       // no complete data frame available
+      addLog(LOG_LEVEL_ERROR, F("Start bit too close to end of stream!"));
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-	      addLog(LOG_LEVEL_INFO, F("Start bit too close to end of stream!"));
 	      log = F("# Required bits: ");
-	      log += DLbus_pulse_number/4;
+	      log += (DLbus_pulse_number - DLBus_ReserveBytes)/DLBus_BitChangeFactor;
 	      log += F(" StartBit: ");
 	      log += DLbus_start_bit;
 	      log += F(" / EndBit: ");
 	      log += DLbus_bit_number;
 	      addLog(LOG_LEVEL_INFO, log);
 			}
-      DLbus_start_bit = -1;
+      return false;
     }
   }
+
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
 	  log = F("StartBit: ");
 	  log += DLbus_start_bit;
@@ -873,6 +897,7 @@ String log;
 	  addLog(LOG_LEVEL_INFO, log);
 	}
   P092_Trim(); // remove start and stop bits
+
   if (P092_CheckDevice()) // check connected device
     return true;
   else {
@@ -889,7 +914,7 @@ int P092_Analyze() {
       sync++;
     else
       sync = 0;
-    if (sync == 16) {
+    if (sync == DLBus_SyncBits) {
       // finde erste 0 // find first 0
       while (P092_ReadBit(i) == 1)
         i++;
