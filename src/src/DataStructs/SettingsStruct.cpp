@@ -102,6 +102,16 @@ void SettingsStruct_tmpl<N_TASKS>::TolerantLastArgParse(bool value) {
 }
 
 template<unsigned int N_TASKS>
+bool SettingsStruct_tmpl<N_TASKS>::SendToHttp_ack() {
+  return getBitFromUL(VariousBits1, 10);
+}
+
+template<unsigned int N_TASKS>
+void SettingsStruct_tmpl<N_TASKS>::SendToHttp_ack(bool value) {
+  setBitToUL(VariousBits1, 10, value);
+}
+
+template<unsigned int N_TASKS>
 void SettingsStruct_tmpl<N_TASKS>::validate() {
   if (UDPPort > 65535) { UDPPort = 0; }
 
@@ -224,6 +234,7 @@ void SettingsStruct_tmpl<N_TASKS>::clearMisc() {
   WifiNoneSleep(DEFAULT_WIFI_NONE_SLEEP);
   gratuitousARP(DEFAULT_GRATUITOUS_ARP);
   TolerantLastArgParse(DEFAULT_TOLERANT_LAST_ARG_PARSE);
+  SendToHttp_ack(DEFAULT_SEND_TO_HTTP_ACK);
 }
 
 template<unsigned int N_TASKS>
