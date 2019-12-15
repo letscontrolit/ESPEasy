@@ -67,10 +67,9 @@ bool CPlugin_008(byte function, struct EventStruct *event, String& string)
           if (isvalid) {
             element.txt[x] = "/";
             element.txt[x] += ControllerSettings.Publish;
-            parseControllerVariables(element.txt[x], event, true);
-
-            element.txt[x].replace(F("%valname%"), URLEncode(ExtraTaskSettings.TaskDeviceValueNames[x]));
+            element.txt[x].replace(F("%valname%"), ExtraTaskSettings.TaskDeviceValueNames[x]);
             element.txt[x].replace(F("%value%"), formattedValue);
+            parseControllerVariables(element.txt[x], event, true);
 #ifndef BUILD_NO_DEBUG
             addLog(LOG_LEVEL_DEBUG_MORE, element.txt[x]);
 #endif
