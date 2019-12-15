@@ -638,13 +638,13 @@ void Plugin_092_SetIndices(int DeviceIndex) {
         // (((64+2) * (8+1+1) + 16) * 2) + 50 = 1402 bytes
 
 // variables used in interrupt function
-static uint8_t DLbus_ChangeBitStream[DLbus_MaxDataBits];    // received bit change stream (each bit change is extended to uint8_t, containing the timing flags)
 volatile static uint8_t* DLbus_PtrChangeBitStream;          // pointer to received bit change stream
 volatile uint16_t DLbus_pulse_count;                        // number of received pulses
 volatile uint16_t DLbus_pulse_number;                       // max naumber of the received pulses
 volatile uint32_t DLbus_TimeLastBitChange = 0;     			    // remember time of last transition
 volatile uint16_t DLbus_MinPulseWidth, DLbus_MaxPulseWidth, DLbus_MinDoublePulseWidth, DLbus_MaxDoublePulseWidth;
 
+static uint8_t DLbus_ChangeBitStream[DLbus_MaxDataBits];    // received bit change stream (each bit change is extended to uint8_t, containing the timing flags)
 uint8_t DLbus_ByteStream[DLbus_MaxDataBits / 8 + 1];  // every bit gets sorted into a bitmap
 uint16_t DLbus_bit_number;                                  // bit number of the received DLbus_ChangeBitStream
 
@@ -807,7 +807,7 @@ boolean Plugin_092_CheckTimings(void) {
 \*****************/
 
 void P092_Pin_changed(void) {
-  uint32_t DLbus_time_diff = usecPassedSince(DLbus_TimeLastBitChange);  // time difference to previous pulse in µs
+  long DLbus_time_diff = usecPassedSince(DLbus_TimeLastBitChange);  // time difference to previous pulse in µs
   DLbus_TimeLastBitChange = micros();                                   // save last pin change time
   if (P092_receiving) {
     uint8_t val = digitalRead(P092_DLB_Pin);  // read state
@@ -873,12 +873,13 @@ String log;
       addLog(LOG_LEVEL_ERROR, F("Error: No data frame available!"));
       return false;
     }
-    if ((DLbus_bit_number-DLbus_start_bit)<((DLbus_pulse_number - DLBus_ReserveBytes)/DLBus_BitChangeFactor)) {
-      // no complete data frame available
+    uint16_t RequiredBitStreamLength = (DLbus_pulse_number - DLBus_ReserveBytes)/DLBus_BitChangeFactor;
+    if ((DLbus_bit_number-DLbus_start_bit) < RequiredBitStreamLength) {
+      // no complete data frame available (difference between start_bit and received bits is < RequiredBitStreamLength)
       addLog(LOG_LEVEL_ERROR, F("Start bit too close to end of stream!"));
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
 	      log = F("# Required bits: ");
-	      log += (DLbus_pulse_number - DLBus_ReserveBytes)/DLBus_BitChangeFactor;
+	      log += RequiredBitStreamLength;
 	      log += F(" StartBit: ");
 	      log += DLbus_start_bit;
 	      log += F(" / EndBit: ");
@@ -989,6 +990,7 @@ boolean P092_CheckCRC() {
   dataSum = dataSum & 0xff;
   if (dataSum == DLbus_ByteStream[P092_DataSettings.IdxCRC])
     return true;
+  addLog(LOG_LEVEL_ERROR, F("Check CRC failed!"));
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
 	  String log = F("# Calculated CRC: 0x");
 	  log += String(dataSum, HEX);
