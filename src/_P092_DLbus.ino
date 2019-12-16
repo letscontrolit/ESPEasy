@@ -14,8 +14,24 @@
    The plug-in should be also able to decode the information from the
    UVR31, UVR1611 and UVR 61-3 devices.
 
-   The selected input needs a voltage divider as follows because the DL-Bus runs on 12 volts.
+   The selected input needs a voltage divider as follows because the DL-Bus runs on 12 volts for
+	 following devices: UVR31, UVR42, UVR64, HZR65, EEG30 and TFM66
    DLbus@12V - 8k6 - input@3.3V - 3k3 - ground
+
+   For following devices just a pull up resistor is needed if the device is used stand alone:
+	 UVR1611, UVR61-3 and ESR21
+
+	 @uwekaditz 2019-12-15 Memory usage optimized
+	 CHG: Moved the array for the received bit changes to stativ uint_8t, the ISR call uses only a volatile pointer to it
+	 CHG: some more defines and name changes for better explanation
+
+	 @uwekaditz 2019-12-14 Timing optimized
+	 CHG: Removed the while (P092_receiving) loop.
+	 CHG: Starting of the receiving and processing of the received bit stream are now done in the PLUGIN_ONCE_A_SECOND call
+			  PLUGIN_READ call just uses the already processed data
+
+	 @uwekaditz 2019-12-08 Inital commit to mega
+
 \**************************************************/
 
 #define PLUGIN_092

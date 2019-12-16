@@ -1,4 +1,4 @@
-.. include:: ../Plugin/_plugin_substitutions_p03x.repl
+.. include:: ../Plugin/_plugin_substitutions_p09x.repl
 .. _P092_page:
 
 |P092_typename|
@@ -26,11 +26,6 @@ Supported hardware
 
 |P092_usedby|
 
-.. Events
-.. ~~~~~~
-
-.. .. include:: P92_events.repl
-
 Change log
 ----------
 
@@ -39,7 +34,3 @@ Change log
 
   |added|
   Initial release version.
-
-
-
-
