@@ -175,5 +175,5 @@ uint32_t createKey(uint16_t pluginNumber, uint16_t portNumber);
 pluginID_t getPluginFromKey(uint32_t key);
 uint16_t getPortFromKey(uint32_t key);
 
-void SendStatusOnlyIfNeeded(int eventSource, bool param1, uint32_t key, const String& param2, int16_t param3);
+void SendStatusOnlyIfNeeded(byte eventSource, bool param1, uint32_t key, const String& param2, int16_t param3);
 #endif // ESPEASY_FWD_DECL_H
