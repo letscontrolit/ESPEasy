@@ -47,6 +47,10 @@ class SettingsStruct_tmpl
   bool TolerantLastArgParse();
   void TolerantLastArgParse(bool value);
 
+  // SendToHttp command does not wait for ack, with this flag it does wait.
+  bool SendToHttp_ack();
+  void SendToHttp_ack(bool value);
+
   void validate();
 
   bool networkSettingsEmpty() const;

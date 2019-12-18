@@ -507,8 +507,8 @@ void htmlStrongEscape(String& html)
 String URLEncode(const char *msg)
 {
   const char *hex   = "0123456789abcdef";
-  String encodedMsg = "";
-
+  String encodedMsg;
+  encodedMsg.reserve(strlen(msg));
   while (*msg != '\0') {
     if ((('a' <= *msg) && (*msg <= 'z'))
         || (('A' <= *msg) && (*msg <= 'Z'))
@@ -530,14 +530,18 @@ String URLEncode(const char *msg)
    replace other system variables like %sysname%, %systime%, %ip%
  \*********************************************************************************************/
 void parseControllerVariables(String& s, struct EventStruct *event, boolean useURLencode) {
-  parseSystemVariables(s, useURLencode);
-  parseEventVariables(s, event, useURLencode);
-  parseStandardConversions(s, useURLencode);
+  parseEventVariables(s, event, false); // Must only URLEncode once, so do it at the end of this conversion.
+  s = parseTemplate(s, s.length());
+  if (useURLencode) {
+    s = URLEncode(s.c_str());
+  }
 }
 
 void repl(const String& key, const String& val, String& s, boolean useURLencode)
 {
   if (useURLencode) {
+    // URLEncode does take resources, so check first if needed.
+    if (s.indexOf(key) == -1) return;
     s.replace(key, URLEncode(val.c_str()));
   } else {
     s.replace(key, val);
