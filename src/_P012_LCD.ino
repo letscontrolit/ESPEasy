@@ -226,7 +226,7 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
           success = true;
           int colPos = event->Par2 - 1;
           int rowPos = event->Par1 - 1;
-          String text = parseString(string, 4);
+          String text = parseStringKeepCase(string, 4);
           text = P012_parseTemplate(text, Plugin_012_cols);
 
           //clear line before writing new string
