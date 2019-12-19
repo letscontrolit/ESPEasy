@@ -150,7 +150,6 @@ String BuildFixes()
     Settings.OldRulesEngine(DEFAULT_RULES_OLDENGINE);
   }
 
-
   Settings.Build = BUILD;
   return SaveSettings();
 }
