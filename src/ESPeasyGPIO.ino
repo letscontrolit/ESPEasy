@@ -20,7 +20,7 @@ bool GPIO_Internal_Read(byte pin)
   return digitalRead(pin)==HIGH;
 }
 
-boolean GPIO_Read_Switch_State(struct EventStruct *event) {
+bool GPIO_Read_Switch_State(struct EventStruct *event) {
   const byte pinNumber     = CONFIG_PIN1;
   const uint32_t key = createKey(PLUGIN_GPIO, pinNumber);
 
@@ -30,7 +30,7 @@ boolean GPIO_Read_Switch_State(struct EventStruct *event) {
   return false;
 }
 
-boolean GPIO_Read_Switch_State(byte pinNumber, byte pinMode) {
+bool GPIO_Read_Switch_State(byte pinNumber, byte pinMode) {
   bool canRead = false;
 
   switch (pinMode)
@@ -89,7 +89,7 @@ int8_t GPIO_MCP_Read(byte Par1)
 //********************************************************************************
 // MCP23017 write
 //********************************************************************************
-boolean GPIO_MCP_Write(byte Par1, byte Par2)
+bool GPIO_MCP_Write(byte Par1, byte Par2)
 {
   boolean success = false;
   byte portvalue = 0;
@@ -217,7 +217,7 @@ uint8_t GPIO_PCF_ReadAllPins(uint8_t address)
 //********************************************************************************
 // PCF8574 write
 //********************************************************************************
-boolean GPIO_PCF_Write(byte Par1, byte Par2)
+bool GPIO_PCF_Write(byte Par1, byte Par2)
 {
   uint8_t unit = (Par1 - 1) / 8;
   uint8_t port = Par1 - (unit * 8);
