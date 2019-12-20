@@ -1,6 +1,6 @@
 #include <AUXHeatpumpIR.h>
 
-AUXHeatpumpIR::AUXHeatpumpIR() : HeatpumpIR()
+AUXHeatpumpIR::AUXHeatpumpIR(void) : HeatpumpIR(void)
 {
   static const char model[] PROGMEM = "AUX";
   static const char info[]  PROGMEM = "{\"mdl\":\"aux\",\"dn\":\"AUX\",\"mT\":16,\"xT\":30,\"fs\":5}";

@@ -50,7 +50,7 @@ class SH1106Wire : public OLEDDisplay {
       this->_scl = _scl;
     }
 
-    bool connect() {
+    bool connect(void) {
       Wire.begin(this->_sda, this->_scl);
       // Let's use ~700khz if ESP8266 is in 160Mhz mode
       // this will be limited to ~400khz if the ESP8266 in 80Mhz mode.
@@ -81,7 +81,7 @@ class SH1106Wire : public OLEDDisplay {
            }
            buffer_back[pos] = buffer[pos];
          }
-         yield();
+         yield(void);
         }
 
         // If the minBoundY wasn't updated
@@ -106,19 +106,19 @@ class SH1106Wire : public OLEDDisplay {
             Wire.write(buffer[x + y * DISPLAY_WIDTH]);
             k++;
             if (k == 16)  {
-              Wire.endTransmission();
+              Wire.endTransmission(void);
               k = 0;
             }
           }
           if (k != 0)  {
-            Wire.endTransmission();
+            Wire.endTransmission(void);
             k = 0;
           }
-          yield();
+          yield(void);
         }
 
         if (k != 0) {
-          Wire.endTransmission();
+          Wire.endTransmission(void);
         }
       #else
         uint8_t * p = &buffer[0];
@@ -132,7 +132,7 @@ class SH1106Wire : public OLEDDisplay {
             for (uint8_t k = 0; k < 16; k++) {
               Wire.write(*p++);
             }
-            Wire.endTransmission();
+            Wire.endTransmission(void);
           }
         }
       #endif
@@ -143,7 +143,7 @@ class SH1106Wire : public OLEDDisplay {
       Wire.beginTransmission(_address);
       Wire.write(0x80);
       Wire.write(command);
-      Wire.endTransmission();
+      Wire.endTransmission(void);
     }
 
 

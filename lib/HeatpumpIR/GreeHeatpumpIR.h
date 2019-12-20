@@ -64,7 +64,7 @@
 class GreeHeatpumpIR : public HeatpumpIR
 {
   protected:
-    GreeHeatpumpIR();
+    GreeHeatpumpIR(void);
     uint8_t greeModel;
 
   public:
@@ -78,13 +78,13 @@ class GreeHeatpumpIR : public HeatpumpIR
 class GreeGenericHeatpumpIR : public GreeHeatpumpIR
 {
   public:
-    GreeGenericHeatpumpIR();
+    GreeGenericHeatpumpIR(void);
 };
 
 class GreeYANHeatpumpIR : public GreeHeatpumpIR
 {
   public:
-    GreeYANHeatpumpIR();
+    GreeYANHeatpumpIR(void);
 
   public:
     void send(IRSender& IR, uint8_t powerModeCmd, uint8_t operatingModeCmd, uint8_t fanSpeedCmd, uint8_t temperatureCmd, uint8_t swingVCmd, uint8_t swingHCmd, bool turboMode);
@@ -93,7 +93,7 @@ class GreeYANHeatpumpIR : public GreeHeatpumpIR
 class GreeYAAHeatpumpIR : public GreeHeatpumpIR
 {
   public:
-    GreeYAAHeatpumpIR();
+    GreeYAAHeatpumpIR(void);
 
   public:
     void send(IRSender& IR, uint8_t powerModeCmd, uint8_t operatingModeCmd, uint8_t fanSpeedCmd, uint8_t temperatureCmd, uint8_t swingVCmd, uint8_t swingHCmd, bool turboMode);

@@ -108,7 +108,7 @@ QEIx4* QEIx4::__instance[4] = { 0 };
 
 ///////////////////////////////////////////////////////////////////////////////
 
-QEIx4::QEIx4()
+QEIx4::QEIx4(void)
 {
 	for (byte i=0; i<4; i++)
 		if (__instance[i] == 0)
@@ -128,7 +128,7 @@ QEIx4::QEIx4()
 
 ///////////////////////////////////////////////////////////////////////////////
 
-QEIx4::~QEIx4()
+QEIx4::~QEIx4(void)
 {
 	for (byte i=0; i<4; i++)
 		if (__instance[i] == this)
@@ -172,25 +172,25 @@ void QEIx4::begin(int16_t pinA, int16_t pinB, int16_t pinI, uint8_t mode)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-long QEIx4::read()
+long QEIx4::read(void)
 {
-	noInterrupts();
+	noInterrupts(void);
 	_bHasChanged = false;
 	long ret = _counter;
-	interrupts();
+	interrupts(void);
 	return ret;
 }
 
-void QEIx4::loop()
+void QEIx4::loop(void)
 {
-	noInterrupts();
-	processStateMachine();
-	interrupts();
+	noInterrupts(void);
+	processStateMachine(void);
+	interrupts(void);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void ICACHE_RAM_ATTR QEIx4::processStateMachine()
+void ICACHE_RAM_ATTR QEIx4::processStateMachine(void)
 {
 	DEB(".");
 
@@ -227,12 +227,12 @@ void ICACHE_RAM_ATTR QEIx4::processStateMachine()
 	}
 }
 
-void ICACHE_RAM_ATTR QEIx4::ISR()
+void ICACHE_RAM_ATTR QEIx4::ISR(void)
 {
 	for (byte i=0; i<4; i++)
 		if (__instance[i])
 		{
-			__instance[i]->processStateMachine();
+			__instance[i]->processStateMachine(void);
 		}
 }
 

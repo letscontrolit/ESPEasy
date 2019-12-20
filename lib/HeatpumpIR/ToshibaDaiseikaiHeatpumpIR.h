@@ -35,7 +35,7 @@
 class ToshibaDaiseikaiHeatpumpIR : public CarrierHeatpumpIR
 {
   public:
-    ToshibaDaiseikaiHeatpumpIR();
+    ToshibaDaiseikaiHeatpumpIR(void);
 
   public:
     void send(IRSender& IR, uint8_t powerModeCmd, uint8_t operatingModeCmd, uint8_t fanSpeedCmd, uint8_t temperatureCmd, uint8_t swingVCmd, uint8_t swingHCmd);

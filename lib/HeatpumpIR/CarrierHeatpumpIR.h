@@ -60,7 +60,7 @@
 class CarrierHeatpumpIR : public HeatpumpIR
 {
   protected:
-    CarrierHeatpumpIR();
+    CarrierHeatpumpIR(void);
     uint8_t _carrierModel;
 
   public:
@@ -70,7 +70,7 @@ class CarrierHeatpumpIR : public HeatpumpIR
 class CarrierNQVHeatpumpIR : public CarrierHeatpumpIR
 {
   public:
-    CarrierNQVHeatpumpIR();
+    CarrierNQVHeatpumpIR(void);
 
   public:
     void send(IRSender& IR, uint8_t powerModeCmd, uint8_t operatingModeCmd, uint8_t fanSpeedCmd, uint8_t temperatureCmd, uint8_t swingVCmd, uint8_t swingHCmd);
@@ -82,7 +82,7 @@ class CarrierNQVHeatpumpIR : public CarrierHeatpumpIR
 class CarrierMCAHeatpumpIR : public CarrierHeatpumpIR
 {
   public:
-    CarrierMCAHeatpumpIR();
+    CarrierMCAHeatpumpIR(void);
 
   public:
     void send(IRSender& IR, uint8_t powerModeCmd, uint8_t operatingModeCmd, uint8_t fanSpeedCmd, uint8_t temperatureCmd, uint8_t swingVCmd, uint8_t swingHCmd);
@@ -95,13 +95,13 @@ class CarrierMCAHeatpumpIR : public CarrierHeatpumpIR
 class Qlima1HeatpumpIR : public CarrierMCAHeatpumpIR
 {
   public:
-    Qlima1HeatpumpIR();
+    Qlima1HeatpumpIR(void);
 };
 
 class Qlima2HeatpumpIR : public CarrierMCAHeatpumpIR
 {
   public:
-    Qlima2HeatpumpIR();
+    Qlima2HeatpumpIR(void);
 };
 
 #endif

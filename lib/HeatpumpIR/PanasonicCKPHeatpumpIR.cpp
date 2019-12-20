@@ -1,7 +1,7 @@
 #include <PanasonicCKPHeatpumpIR.h>
 
 
-PanasonicCKPHeatpumpIR::PanasonicCKPHeatpumpIR()
+PanasonicCKPHeatpumpIR::PanasonicCKPHeatpumpIR(void)
 {
   static const char model[] PROGMEM = "panasonic_ckp";
   static const char info[]  PROGMEM = "{\"mdl\":\"panasonic_ckp\",\"dn\":\"Panasonic CKP\",\"mT\":16,\"xT\":30,\"fs\":6}";

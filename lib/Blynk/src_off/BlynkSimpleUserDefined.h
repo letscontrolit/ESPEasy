@@ -27,20 +27,20 @@ extern size_t BlynkStreamWrite(const void* buf, size_t len);
 class BlynkTransportUserDefined
 {
 public:
-    BlynkTransportUserDefined()
+    BlynkTransportUserDefined(void)
         : mConn (false)
     {}
 
     // IP redirect not available
     void begin(char BLYNK_UNUSED *h, uint16_t BLYNK_UNUSED p) {}
 
-    bool connect() {
+    bool connect(void) {
         return mConn = true;
     }
 
-    void disconnect() { mConn = false; }
+    void disconnect(void) { mConn = false; }
 
-    bool connected() {
+    bool connected(void) {
         return mConn;
     }
 
@@ -52,7 +52,7 @@ public:
         return BlynkStreamWrite(buf, len);
     }
 
-    size_t available() {
+    size_t available(void) {
         return 0;
     }
 

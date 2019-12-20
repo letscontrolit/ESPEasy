@@ -118,16 +118,16 @@ class OLEDDisplay : public Print {
 
   public:
     OLEDDisplay(const int width = DISPLAY_WIDTH, const int height = DISPLAY_HEIGHT) : _width(width), _height(height){ };
-    virtual ~OLEDDisplay();
+    virtual ~OLEDDisplay(void);
 
     const int width(void) const { return _width; };
     const int height(void) const { return _height; };
 
     // Initialize the display
-    bool init();
+    bool init(void);
 
     // Free the memory used by the display
-    void end();
+    void end(void);
 
     // Cycle through the initialization
     void resetDisplay(void);
@@ -219,7 +219,7 @@ class OLEDDisplay : public Print {
     void setContrast(char contrast, char precharge = 241, char comdetect = 64);
 
     // Turn the display upside down
-    void flipScreenVertically();
+    void flipScreenVertically(void);
 
     // Write the buffer to the display memory
     virtual void display(void) = 0;
@@ -265,10 +265,10 @@ class OLEDDisplay : public Print {
     virtual void sendCommand(uint8_t com) {(void)com;};
 
     // Connect to the display
-    virtual bool connect() { return false; };
+    virtual bool connect(void) { return false; };
 
     // Send all the init commands
-    void sendInitCommands();
+    void sendInitCommands(void);
 
     // converts utf8 characters to extended ascii
     static char* utf8ascii(String s);

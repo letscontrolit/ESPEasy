@@ -13,16 +13,16 @@ void CHT16K33::Init(uint8_t addr)
   // System Setup Register
   Wire.beginTransmission(_addr);
   Wire.write(0x21);  // oscillator on
-  Wire.endTransmission();
+  Wire.endTransmission(void);
 
   // Display Setup Register
   Wire.beginTransmission(_addr);
   Wire.write(0x81);  // blink off; display on
-  Wire.endTransmission();
+  Wire.endTransmission(void);
 
   SetBrightness(15);
-  ClearRowBuffer();
-  TransmitRowBuffer();
+  ClearRowBuffer(void);
+  TransmitRowBuffer(void);
 };
 
 void CHT16K33::SetBrightness(uint8_t b)
@@ -32,7 +32,7 @@ void CHT16K33::SetBrightness(uint8_t b)
   // Digital Dimming Data Input
   Wire.beginTransmission(_addr);
   Wire.write(0xE0 | b);  // brightness
-  Wire.endTransmission();
+  Wire.endTransmission(void);
 };
 
 void CHT16K33::TransmitRowBuffer(void)
@@ -45,7 +45,7 @@ void CHT16K33::TransmitRowBuffer(void)
     Wire.write(_rowBuffer[i] & 0xFF);
     Wire.write(_rowBuffer[i] >> 8);
   }
-  Wire.endTransmission();
+  Wire.endTransmission(void);
 };
 
 void CHT16K33::ClearRowBuffer(void)
@@ -124,16 +124,16 @@ uint8_t CHT16K33::ReadKeys(void)
   // Display Memory
   Wire.beginTransmission(_addr);
   Wire.write(0x40); // start data at address 0x40
-  Wire.endTransmission();
+  Wire.endTransmission(void);
 
   Wire.requestFrom(_addr, (uint8_t)6);
-  if (Wire.available() == 6)
+  if (Wire.available(void) == 6)
   {
     for (byte i=0; i<3; i++)
     {
-      _keyBuffer[i] = Wire.read() | (Wire.read() << 8);
+      _keyBuffer[i] = Wire.read(void) | (Wire.read(void) << 8);
     }
-    Wire.endTransmission();
+    Wire.endTransmission(void);
   }
 
   for (byte i=0; i<3; i++)

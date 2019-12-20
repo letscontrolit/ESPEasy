@@ -17,8 +17,8 @@ ESPeasySerial::ESPeasySerial(int receivePin, int transmitPin, bool inverse_logic
   }
 }
 
-ESPeasySerial::~ESPeasySerial() {
-  end();
+ESPeasySerial::~ESPeasySerial(void) {
+  end(void);
 }
 
 void ESPeasySerial::begin(unsigned long baud, uint32_t config
@@ -27,29 +27,29 @@ void ESPeasySerial::begin(unsigned long baud, uint32_t config
   if (rxPin != -1) _receivePin = rxPin;
   if (txPin != -1) _transmitPin = txPin;
   if (invert) _inverse_logic = true;
-  if (!isValid()) {
+  if (!isValid(void)) {
     _baud = 0;
     return;
   }
   // Make sure the extra bit is set for the config. The config differs between ESP32 and ESP82xx
   config = config | 0x8000000;
 
-  if (isValid()) {
+  if (isValid(void)) {
     // Timeout added for 1.0.1
     // See: https://github.com/espressif/arduino-esp32/commit/233d31bed22211e8c85f82bcf2492977604bbc78
-    //getHW()->begin(baud, config, _receivePin, _transmitPin, invert, timeout_ms);
-    getHW()->begin(baud, config, _receivePin, _transmitPin, _inverse_logic);
+    //getHW(void)->begin(baud, config, _receivePin, _transmitPin, invert, timeout_ms);
+    getHW(void)->begin(baud, config, _receivePin, _transmitPin, _inverse_logic);
   }
 }
 
-void ESPeasySerial::end() {
-  if (!isValid()) {
+void ESPeasySerial::end(void) {
+  if (!isValid(void)) {
     return;
   }
-  getHW()->end();
+  getHW(void)->end(void);
 }
 
-HardwareSerial* ESPeasySerial::getHW() {
+HardwareSerial* ESPeasySerial::getHW(void) {
   switch (_serialtype) {
     case ESPeasySerialType::serialtype::serial0: return &Serial;
     case ESPeasySerialType::serialtype::serial1: return &Serial1;
@@ -60,7 +60,7 @@ HardwareSerial* ESPeasySerial::getHW() {
   return nullptr;
 }
 
-const HardwareSerial* ESPeasySerial::getHW() const {
+const HardwareSerial* ESPeasySerial::getHW(void) const {
   switch (_serialtype) {
     case ESPeasySerialType::serialtype::serial0: return &Serial;
     case ESPeasySerialType::serialtype::serial1: return &Serial1;
@@ -70,7 +70,7 @@ const HardwareSerial* ESPeasySerial::getHW() const {
   return nullptr;
 }
 
-bool ESPeasySerial::isValid() const {
+bool ESPeasySerial::isValid(void) const {
   switch (_serialtype) {
     case ESPeasySerialType::serialtype::serial0:
     case ESPeasySerialType::serialtype::serial2:
@@ -87,24 +87,24 @@ bool ESPeasySerial::isValid() const {
 
 
 int ESPeasySerial::peek(void) {
-  if (!isValid()) {
+  if (!isValid(void)) {
     return -1;
   }
-  return getHW()->peek();
+  return getHW(void)->peek(void);
 }
 
 size_t ESPeasySerial::write(uint8_t byte) {
-  if (!isValid()) {
+  if (!isValid(void)) {
     return 0;
   }
-  return getHW()->write(byte);
+  return getHW(void)->write(byte);
 }
 
 size_t ESPeasySerial::write(const uint8_t *buffer, size_t size) {
-  if (!isValid() || !buffer) {
+  if (!isValid(void) || !buffer) {
     return 0;
   }
-  return getHW()->write(buffer, size);
+  return getHW(void)->write(buffer, size);
 }
 
 size_t ESPeasySerial::write(const char *buffer) {
@@ -113,37 +113,37 @@ size_t ESPeasySerial::write(const char *buffer) {
 }
 
 int ESPeasySerial::read(void) {
-  if (!isValid()) {
+  if (!isValid(void)) {
     return -1;
   }
-  return getHW()->read();
+  return getHW(void)->read(void);
 }
 
 int ESPeasySerial::available(void) {
-  if (!isValid()) {
+  if (!isValid(void)) {
     return 0;
   }
-  return getHW()->available();
+  return getHW(void)->available(void);
 }
 
 void ESPeasySerial::flush(void) {
-  if (!isValid()) {
+  if (!isValid(void)) {
     return;
   }
-  getHW()->flush();
+  getHW(void)->flush(void);
 }
 
 int ESPeasySerial::baudRate(void) {
-  if (!isValid()) {
+  if (!isValid(void)) {
     return 0;
   }
-  return getHW()->baudRate();
+  return getHW(void)->baudRate(void);
 }
 
 
 // Not supported in ESP32, since only HW serial is used.
 // Function included since it is used in some libraries.
-bool ESPeasySerial::listen() {
+bool ESPeasySerial::listen(void) {
   return true;
 }
 

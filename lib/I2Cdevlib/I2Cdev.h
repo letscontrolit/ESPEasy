@@ -98,7 +98,7 @@ THE SOFTWARE.
 
 class I2Cdev {
     public:
-        I2Cdev();
+        I2Cdev(void);
 
         static int8_t readBit(uint8_t devAddr, uint8_t regAddr, uint8_t bitNum, uint8_t *data, uint16_t timeout=I2Cdev::readTimeout);
         static int8_t readBitW(uint8_t devAddr, uint8_t regAddr, uint8_t bitNum, uint16_t *data, uint16_t timeout=I2Cdev::readTimeout);
@@ -152,7 +152,7 @@ class I2Cdev {
 
     class Fastwire {
         private:
-            static boolean waitInt();
+            static boolean waitInt(void);
 
         public:
             static void setup(int khz, boolean pullup);
@@ -160,8 +160,8 @@ class I2Cdev {
             static byte write(byte value);
             static byte writeBuf(byte device, byte address, byte *data, byte num);
             static byte readBuf(byte device, byte address, byte *data, byte num);
-            static void reset();
-            static byte stop();
+            static void reset(void);
+            static byte stop(void);
     };
 #endif
 
@@ -190,8 +190,8 @@ class I2Cdev {
             static void onReceiveService(uint8_t*, int);
 
         public:
-            TwoWire();
-            void begin();
+            TwoWire(void);
+            void begin(void);
             void begin(uint8_t);
             void begin(int);
             void beginTransmission(uint8_t);

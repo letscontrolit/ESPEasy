@@ -1,7 +1,7 @@
 #include <ToshibaHeatpumpIR.h>
 
 
-ToshibaHeatpumpIR::ToshibaHeatpumpIR()
+ToshibaHeatpumpIR::ToshibaHeatpumpIR(void)
 {
   static const char model[] PROGMEM = "toshiba";
   static const char info[]  PROGMEM = "{\"mdl\":\"toshiba\",\"dn\":\"Toshiba\",\"mT\":17,\"xT\":30,\"fs\":5}";

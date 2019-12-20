@@ -1,14 +1,14 @@
 #include <MitsubishiHeavyHeatpumpIR.h>
 
 // These are protected methods, i.e. generic MitsubishiHeavy instances cannot be created directly
-MitsubishiHeavyHeatpumpIR::MitsubishiHeavyHeatpumpIR() : HeatpumpIR()
+MitsubishiHeavyHeatpumpIR::MitsubishiHeavyHeatpumpIR(void) : HeatpumpIR(void)
 {
 }
 
 
 // The different models just set the model accordingly
 
-MitsubishiHeavyZJHeatpumpIR::MitsubishiHeavyZJHeatpumpIR() : MitsubishiHeavyHeatpumpIR()
+MitsubishiHeavyZJHeatpumpIR::MitsubishiHeavyZJHeatpumpIR(void) : MitsubishiHeavyHeatpumpIR(void)
 {
   static const char model[] PROGMEM = "mitsubishi_heavy_zj";
   static const char info[]  PROGMEM = "{\"mdl\":\"mitsubishi_heavy_zj\",\"dn\":\"Mitsubishi Heavy ZJ\",\"mT\":18,\"xT\":30,\"fs\":3}";
@@ -19,7 +19,7 @@ MitsubishiHeavyZJHeatpumpIR::MitsubishiHeavyZJHeatpumpIR() : MitsubishiHeavyHeat
   _mitsubishiModel = MITSUBISHIHEAVY_ZJ;
 }
 
-MitsubishiHeavyZMHeatpumpIR::MitsubishiHeavyZMHeatpumpIR() : MitsubishiHeavyHeatpumpIR()
+MitsubishiHeavyZMHeatpumpIR::MitsubishiHeavyZMHeatpumpIR(void) : MitsubishiHeavyHeatpumpIR(void)
 {
   static const char model[] PROGMEM = "mitsubishi_heavy_zm";
   static const char info[]  PROGMEM = "{\"mdl\":\"mitsubishi_heavy_zm\",\"dn\":\"Mitsubishi Heavy ZM\",\"mT\":18,\"xT\":30,\"fs\":4}";
@@ -30,7 +30,7 @@ MitsubishiHeavyZMHeatpumpIR::MitsubishiHeavyZMHeatpumpIR() : MitsubishiHeavyHeat
   _mitsubishiModel = MITSUBISHIHEAVY_ZM;
 }
 
-MitsubishiHeavyZMPHeatpumpIR::MitsubishiHeavyZMPHeatpumpIR() : MitsubishiHeavyHeatpumpIR()
+MitsubishiHeavyZMPHeatpumpIR::MitsubishiHeavyZMPHeatpumpIR(void) : MitsubishiHeavyHeatpumpIR(void)
 {
   static const char model[] PROGMEM = "mitsubishi_heavy_zmp";
   static const char info[]  PROGMEM = "{\"mdl\":\"mitsubishi_heavy_zmp\",\"dn\":\"Mitsubishi Heavy ZMP\",\"mT\":18,\"xT\":30,\"fs\":3}";

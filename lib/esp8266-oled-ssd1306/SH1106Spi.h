@@ -43,11 +43,11 @@ class SH1106Spi : public OLEDDisplay {
       this->_dc  = _dc;
     }
 
-    bool connect(){
+    bool connect(void){
       pinMode(_dc, OUTPUT);
       pinMode(_rst, OUTPUT);
 
-      SPI.begin ();
+      SPI.begin (void);
       SPI.setClockDivider (SPI_CLOCK_DIV2);
 
       // Pulse Reset low for 10ms
@@ -82,7 +82,7 @@ class SH1106Spi : public OLEDDisplay {
           }
           buffer_back[pos] = buffer[pos];
         }
-        yield();
+        yield(void);
        }
 
        // If the minBoundY wasn't updated
@@ -102,7 +102,7 @@ class SH1106Spi : public OLEDDisplay {
          for (x = minBoundX; x <= maxBoundX; x++) {
            SPI.transfer(buffer[x + y * DISPLAY_WIDTH]);
          }
-         yield();
+         yield(void);
        }
      #else
       for (uint8_t y=0; y<DISPLAY_HEIGHT/8; y++) {
@@ -113,7 +113,7 @@ class SH1106Spi : public OLEDDisplay {
         for( uint8_t x=0; x < DISPLAY_WIDTH; x++) {
           SPI.transfer(buffer[x + y * DISPLAY_WIDTH]);
         }
-        yield();
+        yield(void);
       }
      #endif
     }

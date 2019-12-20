@@ -37,25 +37,25 @@ public:
         , mOutQty(0)
     {}
 
-    //virtual ~WidgetTerminal() {}
+    //virtual ~WidgetTerminal(void) {}
 
     virtual size_t write(uint8_t byte) {
         mOutBuf[mOutQty++] = byte;
         if (mOutQty >= sizeof(mOutBuf)) {
-            flush();
+            flush(void);
         }
         return 1;
     }
 
-    virtual void flush() {
+    virtual void flush(void) {
         if (mOutQty) {
             Blynk.virtualWriteBinary(mPin, mOutBuf, mOutQty);
             mOutQty = 0;
         }
     }
     
-    void clear() {
-        flush();
+    void clear(void) {
+        flush(void);
         Blynk.virtualWrite(mPin, "clr");
     }
 

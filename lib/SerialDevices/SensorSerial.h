@@ -38,15 +38,15 @@ public:
 
   void begin(long speed);
 
-  int peek();
+  int peek(void);
 
   virtual size_t write(uint8_t byte);
 
-  virtual int read();
+  virtual int read(void);
 
-  virtual int available();
+  virtual int available(void);
 
-  virtual void flush();
+  virtual void flush(void);
 
 };
 

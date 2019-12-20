@@ -18,7 +18,7 @@ class WidgetMap
 public:
     WidgetMap(uint8_t vPin) : BlynkWidgetBase(vPin) {}
 
-    void clear() {
+    void clear(void) {
         Blynk.virtualWrite(mPin, "clr");
     }
 

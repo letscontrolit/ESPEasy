@@ -18,7 +18,7 @@ class WidgetLCD
 public:
     WidgetLCD(uint8_t vPin) : BlynkWidgetBase(vPin) {}
 
-    void clear() {
+    void clear(void) {
         Blynk.virtualWrite(mPin, "clr");
     }
 

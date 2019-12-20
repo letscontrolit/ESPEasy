@@ -4,7 +4,7 @@
 
 IRSenderIRremoteESP8266::IRSenderIRremoteESP8266(uint8_t pin) : IRSender(pin), _ir(pin) 
 {
-  _ir.begin();
+  _ir.begin(void);
 }
 
 void IRSenderIRremoteESP8266::setFrequency(int frequency)

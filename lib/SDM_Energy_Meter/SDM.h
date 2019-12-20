@@ -161,16 +161,16 @@ class SDM {
 #else
     SDM(ESPeasySerial& serial, long baud = SDM_UART_BAUD, int dere_pin = DERE_PIN);
 #endif
-    virtual ~SDM();
+    virtual ~SDM(void);
 
     void begin(void);
     float readVal(uint16_t reg, uint8_t node = SDM_B_01);                       //read value from register = reg and from deviceId = node
     uint16_t getErrCode(bool _clear = false);                                   //return last errorcode (optional clear this value, default false)
     uint16_t getErrCount(bool _clear = false);                                  //return total errors count (optional clear this value, default false)
     uint16_t getSuccCount(bool _clear = false);                                 //return total success count (optional clear this value, default false)
-    void clearErrCode();                                                        //clear last errorcode
-    void clearErrCount();                                                       //clear total errors count
-    void clearSuccCount();                                                      //clear total success count
+    void clearErrCode(void);                                                        //clear last errorcode
+    void clearErrCount(void);                                                       //clear total errors count
+    void clearSuccCount(void);                                                      //clear total success count
 
   private:
 #ifdef USE_HARDWARESERIAL

@@ -1,6 +1,6 @@
 #include <FujitsuHeatpumpIR.h>
 
-FujitsuHeatpumpIR::FujitsuHeatpumpIR() : HeatpumpIR()
+FujitsuHeatpumpIR::FujitsuHeatpumpIR(void) : HeatpumpIR(void)
 {
   static const char model[] PROGMEM = "fujitsu_awyz";
   static const char info[]  PROGMEM = "{\"mdl\":\"fujitsu_awyz\",\"dn\":\"Fujitsu AWYZ\",\"mT\":16,\"xT\":30,\"fs\":5}";

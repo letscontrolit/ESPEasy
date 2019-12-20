@@ -55,14 +55,14 @@
 class HeatpumpIR
 {
   protected:
-    HeatpumpIR(); // Cannot create generic heatpump instances
+    HeatpumpIR(void); // Cannot create generic heatpump instances
     const char * _model;
     const char * _info;
 
   public:
     virtual void send(IRSender& IR, uint8_t powerModeCmd, uint8_t operatingModeCmd, uint8_t fanSpeedCmd, uint8_t temperatureCmd, uint8_t swingVCmd, uint8_t swingHCmd);
-    const char PROGMEM* model();
-    const char PROGMEM* info();
+    const char PROGMEM* model(void);
+    const char PROGMEM* info(void);
 };
 
 #endif

@@ -21,7 +21,7 @@ public:
         , mValue(0)
     {}
 
-    uint8_t getValue() const {
+    uint8_t getValue(void) const {
         return mValue;
     }
 
@@ -30,11 +30,11 @@ public:
         Blynk.virtualWrite(mPin, value);
     }
 
-    void on() {
+    void on(void) {
         setValue(255);
     }
 
-    void off() {
+    void off(void) {
         setValue(0);
     }
 

@@ -21,17 +21,17 @@ unsigned int CRC16(byte *ptr, byte length)
       return crc;
 }
 
-AM2320::AM2320()
+AM2320::AM2320(void)
 {
 }
 
-int AM2320::Read()
+int AM2320::Read(void)
 {
 	byte buf[8];
 	for(int s = 0; s < 8; s++) buf[s] = 0x00;
 
 	Wire.beginTransmission(AM2320_address);
-	Wire.endTransmission();
+	Wire.endTransmission(void);
 	// запрос 4 байт (температуры и влажности)
 	Wire.beginTransmission(AM2320_address);
 	Wire.write(0x03);// запрос
@@ -41,7 +41,7 @@ int AM2320::Read()
 	delayMicroseconds(1600); //>1.5ms
 	// считываем результаты запроса
 	Wire.requestFrom(AM2320_address, 0x08);
-	for (int i = 0; i < 0x08; i++) buf[i] = Wire.read();
+	for (int i = 0; i < 0x08; i++) buf[i] = Wire.read(void);
 
 	// CRC check
 	unsigned int Rcrc = buf[7] << 8;

@@ -84,7 +84,7 @@
 class MitsubishiHeatpumpIR : public HeatpumpIR
 {
   protected: // Cannot create generic Mitsubishi heatpump instances
-    MitsubishiHeatpumpIR();
+    MitsubishiHeatpumpIR(void);
     uint8_t _mitsubishiModel;  // Tells whether this is FD or EF (or other supported model...)
 
   public:
@@ -97,31 +97,31 @@ class MitsubishiHeatpumpIR : public HeatpumpIR
 class MitsubishiFDHeatpumpIR : public MitsubishiHeatpumpIR
 {
   public:
-    MitsubishiFDHeatpumpIR();
+    MitsubishiFDHeatpumpIR(void);
 };
 
 class MitsubishiFEHeatpumpIR : public MitsubishiHeatpumpIR
 {
   public:
-    MitsubishiFEHeatpumpIR();
+    MitsubishiFEHeatpumpIR(void);
 };
 
 class MitsubishiMSYHeatpumpIR : public MitsubishiHeatpumpIR
 {
 public:
-	MitsubishiMSYHeatpumpIR();
+	MitsubishiMSYHeatpumpIR(void);
 };
 
 class MitsubishiFAHeatpumpIR : public MitsubishiHeatpumpIR
 {
   public:
-    MitsubishiFAHeatpumpIR();
+    MitsubishiFAHeatpumpIR(void);
 };
 
 class MitsubishiKJHeatpumpIR : public MitsubishiHeatpumpIR
 {
   public:
-    MitsubishiKJHeatpumpIR();
+    MitsubishiKJHeatpumpIR(void);
 };
 
 #ifdef IR_SEND_TIME

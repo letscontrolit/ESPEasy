@@ -38,7 +38,7 @@
 class HitachiHeatpumpIR : public HeatpumpIR
 {
   public:
-    HitachiHeatpumpIR();
+    HitachiHeatpumpIR(void);
     void send(IRSender& IR, uint8_t powerModeCmd, uint8_t operatingModeCmd, uint8_t fanSpeedCmd, uint8_t temperatureCmd, uint8_t swingVcmd, uint8_t swingHcmd);
 
   private:

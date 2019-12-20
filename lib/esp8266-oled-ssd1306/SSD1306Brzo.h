@@ -50,7 +50,7 @@ class SSD1306Brzo : public OLEDDisplay {
       this->_scl = _scl;
     }
 
-    bool connect(){
+    bool connect(void){
       brzo_i2c_setup(_sda, _scl, 0);
       return true;
     }
@@ -78,7 +78,7 @@ class SSD1306Brzo : public OLEDDisplay {
           }
           buffer_back[pos] = buffer[pos];
         }
-        yield();
+        yield(void);
        }
 
        // If the minBoundY wasn't updated
@@ -107,10 +107,10 @@ class SSD1306Brzo : public OLEDDisplay {
                  k = 0;
                }
            }
-           yield();
+           yield(void);
        }
        brzo_i2c_write(sendBuffer, k + 1, true);
-       brzo_i2c_end_transaction();
+       brzo_i2c_end_transaction(void);
      #else
        // No double buffering
        sendCommand(COLUMNADDR);
@@ -131,9 +131,9 @@ class SSD1306Brzo : public OLEDDisplay {
          }
          i--;
          brzo_i2c_write(sendBuffer,  17,  true);
-         yield();
+         yield(void);
        }
-       brzo_i2c_end_transaction();
+       brzo_i2c_end_transaction(void);
      #endif
     }
 
@@ -142,7 +142,7 @@ class SSD1306Brzo : public OLEDDisplay {
       uint8_t command[2] = {0x80 /* command mode */, com};
       brzo_i2c_start_transaction(_address, BRZO_I2C_SPEED);
       brzo_i2c_write(command, 2, true);
-      brzo_i2c_end_transaction();
+      brzo_i2c_end_transaction(void);
     }
 };
 

@@ -38,7 +38,7 @@ class BlynkTransportEsp32_BLE :
 {
 
 public:
-    BlynkTransportEsp32_BLE()
+    BlynkTransportEsp32_BLE(void)
         : mConn (false)
         , mName ("Blynk")
     {}
@@ -50,12 +50,12 @@ public:
     // IP redirect not available
     void begin(char BLYNK_UNUSED *h, uint16_t BLYNK_UNUSED p) {}
 
-    void begin() {
+    void begin(void) {
         // Create the BLE Device
         BLEDevice::init(mName);
 
         // Create the BLE Server
-        pServer = BLEDevice::createServer();
+        pServer = BLEDevice::createServer(void);
         pServer->setCallbacks(this);
 
         // Create the BLE Service
@@ -67,7 +67,7 @@ public:
                             BLECharacteristic::PROPERTY_NOTIFY
                           );
 
-        pCharacteristicTX->addDescriptor(new BLE2902());
+        pCharacteristicTX->addDescriptor(new BLE2902(void));
 
         pCharacteristicRX = pService->createCharacteristic(
                                               CHARACTERISTIC_UUID_RX,
@@ -77,30 +77,30 @@ public:
         pCharacteristicRX->setCallbacks(this);
 
         // Start the service
-        pService->start();
+        pService->start(void);
 
         // Start advertising
-        pServer->getAdvertising()->addServiceUUID(pService->getUUID());
-        pServer->getAdvertising()->start();
+        pServer->getAdvertising(void)->addServiceUUID(pService->getUUID(void));
+        pServer->getAdvertising(void)->start(void);
     }
 
-    bool connect() {
-        mBuffRX.clear();
+    bool connect(void) {
+        mBuffRX.clear(void);
         return mConn = true;
     }
 
-    void disconnect() {
+    void disconnect(void) {
         mConn = false;
     }
 
-    bool connected() {
+    bool connected(void) {
         return mConn;
     }
 
     size_t read(void* buf, size_t len) {
-        millis_time_t start = BlynkMillis();
-        while (BlynkMillis() - start < BLYNK_TIMEOUT_MS) {
-            if (available() < len) {
+        millis_time_t start = BlynkMillis(void);
+        while (BlynkMillis(void) - start < BLYNK_TIMEOUT_MS) {
+            if (available(void) < len) {
                 delay(1);
             } else {
                 break;
@@ -112,12 +112,12 @@ public:
 
     size_t write(const void* buf, size_t len) {
         pCharacteristicTX->setValue((uint8_t*)buf, len);
-        pCharacteristicTX->notify();
+        pCharacteristicTX->notify(void);
         return len;
     }
 
-    size_t available() {
-        size_t rxSize = mBuffRX.size();
+    size_t available(void) {
+        size_t rxSize = mBuffRX.size(void);
         return rxSize;
     }
 
@@ -127,11 +127,11 @@ private:
     void onDisconnect(BLEServer* pServer);
 
     void onWrite(BLECharacteristic *pCharacteristic) {
-      std::string rxValue = pCharacteristic->getValue();
+      std::string rxValue = pCharacteristic->getValue(void);
 
-      if (rxValue.length() > 0) {
-        uint8_t* data = (uint8_t*)rxValue.data();
-        size_t len = rxValue.length();
+      if (rxValue.length(void) > 0) {
+        uint8_t* data = (uint8_t*)rxValue.data(void);
+        size_t len = rxValue.length(void);
 
         BLYNK_DBG_DUMP(">> ", data, len);
         mBuffRX.put(data, len);
@@ -164,7 +164,7 @@ public:
     {
         Base::begin(auth);
         state = DISCONNECTED;
-        conn.begin();
+        conn.begin(void);
     }
 
     void setDeviceName(const char* name) {
@@ -180,15 +180,15 @@ BlynkEsp32_BLE Blynk(_blynkTransportBLE);
 inline
 void BlynkTransportEsp32_BLE::onConnect(BLEServer* pServer) {
   BLYNK_LOG1(BLYNK_F("BLE connect"));
-  connect();
-  Blynk.startSession();
+  connect(void);
+  Blynk.startSession(void);
 };
 
 inline
 void BlynkTransportEsp32_BLE::onDisconnect(BLEServer* pServer) {
   BLYNK_LOG1(BLYNK_F("BLE disconnect"));
-  Blynk.disconnect();
-  disconnect();
+  Blynk.disconnect(void);
+  disconnect(void);
 }
 
 

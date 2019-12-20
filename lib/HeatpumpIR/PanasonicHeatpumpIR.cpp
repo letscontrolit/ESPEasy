@@ -1,13 +1,13 @@
 #include <PanasonicHeatpumpIR.h>
 
 // This is a protected method, i.e. generic Panasonic instances cannot be created
-PanasonicHeatpumpIR::PanasonicHeatpumpIR() : HeatpumpIR()
+PanasonicHeatpumpIR::PanasonicHeatpumpIR(void) : HeatpumpIR(void)
 {
 }
 
 
 // The different models just set the model accordingly
-PanasonicDKEHeatpumpIR::PanasonicDKEHeatpumpIR() : PanasonicHeatpumpIR()
+PanasonicDKEHeatpumpIR::PanasonicDKEHeatpumpIR(void) : PanasonicHeatpumpIR(void)
 {
   static const char model[] PROGMEM = "panasonic_dke";
   static const char info[]  PROGMEM = "{\"mdl\":\"panasonic_dke\",\"dn\":\"Panasonic DKE\",\"mT\":16,\"xT\":30,\"fs\":6}";
@@ -18,7 +18,7 @@ PanasonicDKEHeatpumpIR::PanasonicDKEHeatpumpIR() : PanasonicHeatpumpIR()
   _panasonicModel = PANASONIC_DKE;
 }
 
-PanasonicJKEHeatpumpIR::PanasonicJKEHeatpumpIR() : PanasonicHeatpumpIR()
+PanasonicJKEHeatpumpIR::PanasonicJKEHeatpumpIR(void) : PanasonicHeatpumpIR(void)
 {
   static const char model[] PROGMEM = "panasonic_jke";
   static const char info[]  PROGMEM = "{\"mdl\":\"panasonic_jke\",\"dn\":\"Panasonic JKE\",\"mT\":16,\"xT\":30,\"fs\":6}";
@@ -29,7 +29,7 @@ PanasonicJKEHeatpumpIR::PanasonicJKEHeatpumpIR() : PanasonicHeatpumpIR()
   _panasonicModel = PANASONIC_JKE;
 }
 
-PanasonicNKEHeatpumpIR::PanasonicNKEHeatpumpIR() : PanasonicHeatpumpIR()
+PanasonicNKEHeatpumpIR::PanasonicNKEHeatpumpIR(void) : PanasonicHeatpumpIR(void)
 {
   static const char model[] PROGMEM = "panasonic_nke";
   static const char info[]  PROGMEM = "{\"mdl\":\"panasonic_nke\",\"dn\":\"Panasonic NKE\",\"mT\":16,\"xT\":30,\"fs\":6,\"maint\":[8,10]}";
@@ -40,7 +40,7 @@ PanasonicNKEHeatpumpIR::PanasonicNKEHeatpumpIR() : PanasonicHeatpumpIR()
   _panasonicModel = PANASONIC_NKE;
 }
 
-PanasonicLKEHeatpumpIR::PanasonicLKEHeatpumpIR() : PanasonicHeatpumpIR()
+PanasonicLKEHeatpumpIR::PanasonicLKEHeatpumpIR(void) : PanasonicHeatpumpIR(void)
 {
   static const char model[] PROGMEM = "panasonic_lke";
   static const char info[]  PROGMEM = "{\"mdl\":\"panasonic_lke\",\"dn\":\"Panasonic LKE\",\"mT\":16,\"xT\":30,\"fs\":6,\"maint\":[8,10]}";

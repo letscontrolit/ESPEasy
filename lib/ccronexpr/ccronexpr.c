@@ -81,21 +81,21 @@ time_t cron_mktime_gm(struct tm* tm) {
 #elif (defined(ESP8266) || defined(ESP32))
     /* https://linux.die.net/man/3/timegm */
     /* http://www.catb.org/esr/time-programming/ */
-    /* portable version of timegm() */
+    /* portable version of timegm(void) */
     time_t ret;
     char *tz;
     tz = getenv("TZ");
     if (tz)
         tz = strdup(tz);
     setenv("TZ", "UTC+0", 1);
-    tzset();
+    tzset(void);
     ret = mktime(tm);
     if (tz) {
         setenv("TZ", tz, 1);
         free(tz);
     } else
         unsetenv("TZ");
-    tzset();
+    tzset(void);
     return ret;
 #elif defined(ANDROID)
     /* https://github.com/adobe/chromium/blob/cfe5bf0b51b1f6b9fe239c2a3c2f2364da9967d7/base/os_compat_android.cc#L20 */

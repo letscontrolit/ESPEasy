@@ -133,7 +133,7 @@ struct ESPeasySerialType {
     }
     // ESP8266
     if (receivePin == 13 && transmitPin == 15) {
-      return serialtype::serial0_swap; // UART0 remapped using Serial.swap()
+      return serialtype::serial0_swap; // UART0 remapped using Serial.swap(void)
     }
     if (receivePin == -1 && transmitPin == 2) {
       // Serial1 uses UART1, TX pin is GPIO2.
@@ -162,7 +162,7 @@ public:
   // Serial0 swapped  RX: 13 TX: 15
   // Serial1:         RX: -- TX: 2   (TX only)
   ESPeasySerial(int receivePin, int transmitPin, bool inverse_logic = false, unsigned int buffSize = 64);
-  virtual ~ESPeasySerial();
+  virtual ~ESPeasySerial(void);
 
   // If baud rate is set to 0, it will perform an auto-detect on the baudrate
   void begin(unsigned long baud, SerialConfig config=SERIAL_8N1, SerialMode mode=SERIAL_FULL);
@@ -174,18 +174,18 @@ public:
   // Serial0: RX: 3  TX: 1
   // Serial1: RX: 9  TX: 10  Defaults will never work, share pins with flash
   // Serial2: RX: 16 TX: 17
-  // Pins set in the constructor will be used as override when not given when calling begin()
+  // Pins set in the constructor will be used as override when not given when calling begin(void)
   // @param  inverse_logic can be used to set the logic in the constructor which will then be used in the call to begin.
   //         This makes the call to the constructor more in line with the constructor of SoftwareSerial.
   // @param  serialPort can be a helper to suggest the set serial port. (is needed to define Serial1)
   ESPeasySerial(int receivePin, int transmitPin, bool inverse_logic = false, int serialPort = -1);
-  virtual ~ESPeasySerial();
+  virtual ~ESPeasySerial(void);
 
   // If baud rate is set to 0, it will perform an auto-detect on the baudrate
   void begin(unsigned long baud, uint32_t config=SERIAL_8N1, int8_t rxPin=-1, int8_t txPin=-1, bool invert=false, unsigned long timeout_ms = 20000UL);
 #endif
 
-  void end();
+  void end(void);
   int peek(void);
   size_t write(uint8_t byte) override;
   int read(void) override;
@@ -193,20 +193,20 @@ public:
   void flush(void) override;
 
 #if defined(ESP8266)
-  bool overflow();        // SoftwareSerial ESP8266
+  bool overflow(void);        // SoftwareSerial ESP8266
   bool hasOverrun(void);  // HardwareSerial ESP8266
 #endif
 
 /*
   // FIXME TD-er: See https://www.artima.com/cppsource/safebool.html
-  operator bool() {
-    if (!isValid()) {
+  operator bool(void) {
+    if (!isValid(void)) {
       return false;
     }
-    if (isSWserial()) {
-      return _swserial->bool();
+    if (isSWserial(void)) {
+      return _swserial->bool(void);
     } else {
-      return getHW()->bool();
+      return getHW(void)->bool(void);
     }
   }
   */
@@ -217,7 +217,7 @@ public:
   int baudRate(void);
 
 #if defined(ESP8266)
-  void swap() { swap(_transmitPin); }
+  void swap(void) { swap(_transmitPin); }
   void swap(uint8_t tx_pin);
   size_t readBytes(char* buffer, size_t size) override;
   size_t readBytes(uint8_t* buffer, size_t size) override;
@@ -227,46 +227,46 @@ public:
   bool isRxEnabled(void);
   bool hasRxError(void);
 
-  void startDetectBaudrate();
-  unsigned long testBaudrate();
+  void startDetectBaudrate(void);
+  unsigned long testBaudrate(void);
   unsigned long detectBaudrate(time_t timeoutMillis);
 
   // SoftwareSerial specific
   void setTransmitEnablePin(uint8_t transmitEnablePin);
   // AVR compatibility methods
-  bool isListening();
-  bool stopListening();
+  bool isListening(void);
+  bool stopListening(void);
 
-  bool serial0_swap_active() const { return _serial0_swap_active; }
+  bool serial0_swap_active(void) const { return _serial0_swap_active; }
 #endif
-  bool listen();
+  bool listen(void);
 
-  String getLogString() const;
+  String getLogString(void) const;
 
 
   using Print::write;
 
-  int getRxPin() const { return _receivePin; }
-  int getTxPin() const { return _transmitPin; }
-  unsigned long getBaudRate() const { return _baud; }
+  int getRxPin(void) const { return _receivePin; }
+  int getTxPin(void) const { return _transmitPin; }
+  unsigned long getBaudRate(void) const { return _baud; }
 
 private:
 
-  const HardwareSerial* getHW() const;
-  HardwareSerial* getHW();
+  const HardwareSerial* getHW(void) const;
+  HardwareSerial* getHW(void);
 
-  bool isValid() const;
+  bool isValid(void) const;
 
 #ifdef ESP8266
   bool doHWbegin(unsigned long baud, SerialConfig config, SerialMode mode);
 #endif
 
 #if !defined(DISABLE_SOFTWARE_SERIAL) && defined(ESP8266)
-  bool isSWserial() const { return _serialtype == ESPeasySerialType::serialtype::software; }
+  bool isSWserial(void) const { return _serialtype == ESPeasySerialType::serialtype::software; }
 
   ESPeasySoftwareSerial* _swserial = nullptr;
 #else
-  bool isSWserial() const { return false; }
+  bool isSWserial(void) const { return false; }
 #endif
 #ifdef ESP8266
   static bool _serial0_swap_active;

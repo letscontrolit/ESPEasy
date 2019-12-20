@@ -10,50 +10,50 @@ ESPeasySerial::ESPeasySerial(int receivePin, int transmitPin, bool inverse_logic
     : _receivePin(receivePin), _transmitPin(transmitPin)
 {
   _serialtype = ESPeasySerialType::getSerialType(receivePin, transmitPin);
-  if (isValid()) {
-    getHW()->pins(transmitPin, receivePin);
+  if (isValid(void)) {
+    getHW(void)->pins(transmitPin, receivePin);
   }
 }
 
-ESPeasySerial::~ESPeasySerial() {
-  end();
+ESPeasySerial::~ESPeasySerial(void) {
+  end(void);
 }
 
 void ESPeasySerial::begin(unsigned long baud, SerialConfig config, SerialMode mode) {
   _baud = baud;
   if (_serialtype == ESPeasySerialType::serialtype::serial0_swap) {
-    // Serial.swap() should only be called here and only once.
+    // Serial.swap(void) should only be called here and only once.
     if (!_serial0_swap_active) {
       Serial.begin(baud, config, mode, _transmitPin);
-      Serial.swap();
+      Serial.swap(void);
       _serial0_swap_active = true;
       return;
     }
   }
-  if (!isValid()) {
+  if (!isValid(void)) {
     _baud = 0;
     return;
   }
   doHWbegin(baud, config, mode);
 }
 
-void ESPeasySerial::end() {
-  if (!isValid()) {
+void ESPeasySerial::end(void) {
+  if (!isValid(void)) {
     return;
   }
   if (_serialtype == ESPeasySerialType::serialtype::serial0_swap) {
     if (_serial0_swap_active) {
-      Serial.end();
-      Serial.swap();
+      Serial.end(void);
+      Serial.swap(void);
       _serial0_swap_active = false;
       return;
     }
   }
-  getHW()->end();
+  getHW(void)->end(void);
 }
 
 
-HardwareSerial* ESPeasySerial::getHW() {
+HardwareSerial* ESPeasySerial::getHW(void) {
   switch (_serialtype) {
     case ESPeasySerialType::serialtype::serial0:
     case ESPeasySerialType::serialtype::serial0_swap: return &Serial;
@@ -64,7 +64,7 @@ HardwareSerial* ESPeasySerial::getHW() {
   return nullptr;
 }
 
-const HardwareSerial* ESPeasySerial::getHW() const {
+const HardwareSerial* ESPeasySerial::getHW(void) const {
   switch (_serialtype) {
     case ESPeasySerialType::serialtype::serial0:
     case ESPeasySerialType::serialtype::serial0_swap: return &Serial;
@@ -75,7 +75,7 @@ const HardwareSerial* ESPeasySerial::getHW() const {
   return nullptr;
 }
 
-bool ESPeasySerial::isValid() const {
+bool ESPeasySerial::isValid(void) const {
   switch (_serialtype) {
     case ESPeasySerialType::serialtype::serial0:      return !_serial0_swap_active;
     case ESPeasySerialType::serialtype::serial0_swap: return _serial0_swap_active;
@@ -89,24 +89,24 @@ bool ESPeasySerial::isValid() const {
 
 
 int ESPeasySerial::peek(void) {
-  if (!isValid()) {
+  if (!isValid(void)) {
     return -1;
   }
-  return getHW()->peek();
+  return getHW(void)->peek(void);
 }
 
 size_t ESPeasySerial::write(uint8_t byte) {
-  if (!isValid()) {
+  if (!isValid(void)) {
     return 0;
   }
-  return getHW()->write(byte);
+  return getHW(void)->write(byte);
 }
 
 size_t ESPeasySerial::write(const uint8_t *buffer, size_t size) {
-  if (!isValid() || !buffer) {
+  if (!isValid(void) || !buffer) {
     return 0;
   }
-  return getHW()->write(buffer, size);
+  return getHW(void)->write(buffer, size);
 }
 
 size_t ESPeasySerial::write(const char *buffer) {
@@ -115,17 +115,17 @@ size_t ESPeasySerial::write(const char *buffer) {
 }
 
 int ESPeasySerial::read(void) {
-  if (!isValid()) {
+  if (!isValid(void)) {
     return -1;
   }
-  return getHW()->read();
+  return getHW(void)->read(void);
 }
 
 size_t ESPeasySerial::readBytes(char* buffer, size_t size)  {
-  if (!isValid() || !buffer) {
+  if (!isValid(void) || !buffer) {
     return 0;
   }
-  return getHW()->readBytes(buffer, size);
+  return getHW(void)->readBytes(buffer, size);
 }
 
 size_t ESPeasySerial::readBytes(uint8_t* buffer, size_t size)  {
@@ -133,21 +133,21 @@ size_t ESPeasySerial::readBytes(uint8_t* buffer, size_t size)  {
 }
 
 int ESPeasySerial::available(void) {
-  if (!isValid()) {
+  if (!isValid(void)) {
     return 0;
   }
-  return getHW()->available();
+  return getHW(void)->available(void);
 }
 
 void ESPeasySerial::flush(void) {
-  if (!isValid()) {
+  if (!isValid(void)) {
     return;
   }
-  getHW()->flush();
+  getHW(void)->flush(void);
 }
 
 
-bool ESPeasySerial::overflow() { return hasOverrun(); }
+bool ESPeasySerial::overflow(void) { return hasOverrun(void); }
 bool ESPeasySerial::hasOverrun(void) {
   return false;
 }
@@ -159,13 +159,13 @@ bool ESPeasySerial::hasOverrun(void) {
 // *****************************
 
 void ESPeasySerial::swap(uint8_t tx_pin) {
-  if (isValid()) {
+  if (isValid(void)) {
     switch (_serialtype) {
       case ESPeasySerialType::serialtype::serial0:
       case ESPeasySerialType::serialtype::serial0_swap:
-        // isValid() also checks for correct swap active state.
+        // isValid(void) also checks for correct swap active state.
         _serial0_swap_active = !_serial0_swap_active;
-        getHW()->swap(tx_pin);
+        getHW(void)->swap(tx_pin);
         if (_serialtype == ESPeasySerialType::serialtype::serial0) {
           _serialtype = ESPeasySerialType::serialtype::serial0_swap;
         } else {
@@ -179,70 +179,70 @@ void ESPeasySerial::swap(uint8_t tx_pin) {
 }
 
 int ESPeasySerial::baudRate(void) {
-  if (!isValid()) {
+  if (!isValid(void)) {
     return _baud;
   }
-  return getHW()->baudRate();
+  return getHW(void)->baudRate(void);
 }
 
 void ESPeasySerial::setDebugOutput(bool enable) {
-  if (!isValid()) {
+  if (!isValid(void)) {
     return;
   }
-  getHW()->setDebugOutput(enable);
+  getHW(void)->setDebugOutput(enable);
 }
 
 bool ESPeasySerial::isTxEnabled(void) {
-  if (!isValid()) {
+  if (!isValid(void)) {
     return false;
   }
-  return getHW()->isTxEnabled();
+  return getHW(void)->isTxEnabled(void);
 }
 
  bool ESPeasySerial::isRxEnabled(void) {
-   if (!isValid()) {
+   if (!isValid(void)) {
      return false;
    }
-   return getHW()->isRxEnabled();
+   return getHW(void)->isRxEnabled(void);
  }
 
 bool ESPeasySerial::hasRxError(void) {
 #ifdef CORE_POST_2_5_0
-  if (!isValid()) {
+  if (!isValid(void)) {
     return false;
   }
-  return getHW()->hasRxError();
+  return getHW(void)->hasRxError(void);
 #else
   return false;
 #endif
 }
 
-void ESPeasySerial::startDetectBaudrate() {
-  if (!isValid()) {
+void ESPeasySerial::startDetectBaudrate(void) {
+  if (!isValid(void)) {
     return;
   }
 #ifndef ARDUINO_ESP8266_RELEASE_2_3_0
-  getHW()->startDetectBaudrate();
+  getHW(void)->startDetectBaudrate(void);
 #endif
 }
 
-unsigned long ESPeasySerial::testBaudrate() {
-  if (!isValid()) {
+unsigned long ESPeasySerial::testBaudrate(void) {
+  if (!isValid(void)) {
     return 0;
   }
 #ifndef ARDUINO_ESP8266_RELEASE_2_3_0
-  return getHW()->testBaudrate();
+  return getHW(void)->testBaudrate(void);
 #else
   return 0;
 #endif
 }
 
 unsigned long ESPeasySerial::detectBaudrate(time_t timeoutMillis) {
-  if (!isValid()) {
+  if (!isValid(void)) {
     return 0;
   }
 #ifndef ARDUINO_ESP8266_RELEASE_2_3_0
-  return getHW()->detectBaudrate(timeoutMillis);
+  return getHW(void)->detectBaudrate(timeoutMillis);
 #else
   return 0;
 #endif
@@ -254,10 +254,10 @@ unsigned long ESPeasySerial::detectBaudrate(time_t timeoutMillis) {
 // *****************************
 
 
-bool ESPeasySerial::listen() {
-  if (isValid()) {
+bool ESPeasySerial::listen(void) {
+  if (isValid(void)) {
 #ifndef ARDUINO_ESP8266_RELEASE_2_3_0
-    return _swserial->listen();
+    return _swserial->listen(void);
 #endif
   }
   return false;

@@ -51,7 +51,7 @@
 class SamsungHeatpumpIR : public HeatpumpIR
 {
   protected:
-    SamsungHeatpumpIR();
+    SamsungHeatpumpIR(void);
   
   public:
     virtual void send(IRSender& IR, uint8_t powerModeCmd, uint8_t operatingModeCmd, uint8_t fanSpeedCmd, uint8_t temperatureCmd, uint8_t swingVCmd, uint8_t swingHCmd);
@@ -64,7 +64,7 @@ class SamsungHeatpumpIR : public HeatpumpIR
 class SamsungAQVHeatpumpIR : public SamsungHeatpumpIR
 {
   public:
-    SamsungAQVHeatpumpIR();
+    SamsungAQVHeatpumpIR(void);
     void send(IRSender& IR, uint8_t powerModeCmd, uint8_t operatingModeCmd, uint8_t fanSpeedCmd, uint8_t temperatureCmd, uint8_t swingVCmd, uint8_t swingHCmd);
     
   private:
@@ -74,7 +74,7 @@ class SamsungAQVHeatpumpIR : public SamsungHeatpumpIR
 class SamsungFJMHeatpumpIR : public SamsungHeatpumpIR
 {
   public:
-    SamsungFJMHeatpumpIR();
+    SamsungFJMHeatpumpIR(void);
     void send(IRSender& IR, uint8_t powerModeCmd, uint8_t operatingModeCmd, uint8_t fanSpeedCmd, uint8_t temperatureCmd, uint8_t swingVCmd, uint8_t swingHCmd);
     void send(IRSender& IR, uint8_t powerModeCmd, uint8_t operatingModeCmd, uint8_t fanSpeedCmd, uint8_t temperatureCmd, uint8_t swingVCmd, uint8_t swingHCmd, bool turboModeCmd);
     

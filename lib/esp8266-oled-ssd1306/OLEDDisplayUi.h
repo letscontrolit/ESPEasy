@@ -91,7 +91,7 @@ struct OLEDDisplayUiState {
 
 struct LoadingStage {
   const char* process;
-  void (*callback)();
+  void (*callback)(void);
 };
 
 typedef void (*FrameCallback)(OLEDDisplay *display,  OLEDDisplayUiState* state, int16_t x, int16_t y);
@@ -152,12 +152,12 @@ class OLEDDisplayUi {
     // Bookeeping for update
     uint8_t             updateInterval            = 33;
 
-    uint8_t             getNextFrameNumber();
-    void                drawIndicator();
-    void                drawFrame();
-    void                drawOverlays();
-    void                tick();
-    void                resetState();
+    uint8_t             getNextFrameNumber(void);
+    void                drawIndicator(void);
+    void                drawFrame(void);
+    void                drawOverlays(void);
+    void                tick(void);
+    void                resetState(void);
 
   public:
 
@@ -166,7 +166,7 @@ class OLEDDisplayUi {
     /**
      * Initialise the display
      */
-    void init();
+    void init(void);
 
     /**
      * Configure the internal used target FPS
@@ -177,18 +177,18 @@ class OLEDDisplayUi {
     /**
      * Enable automatic transition to next frame after the some time can be configured with `setTimePerFrame` and `setTimePerTransition`.
      */
-    void enableAutoTransition();
+    void enableAutoTransition(void);
 
     /**
      * Disable automatic transition to next frame.
      */
-    void disableAutoTransition();
+    void disableAutoTransition(void);
 
     /**
      * Set the direction if the automatic transitioning
      */
-    void setAutoTransitionForwards();
-    void setAutoTransitionBackwards();
+    void setAutoTransitionForwards(void);
+    void setAutoTransitionBackwards(void);
 
     /**
      *  Set the approx. time a frame is displayed
@@ -208,24 +208,24 @@ class OLEDDisplayUi {
      * the indicator was hidden on the previous frame
      * it will be slided in.
      */
-    void enableIndicator();
+    void enableIndicator(void);
 
     /**
      * Don't draw the indicator.
      * This will slide out the indicator
      * when transitioning to the next frame.
      */
-    void disableIndicator();
+    void disableIndicator(void);
 
     /**
      * Enable drawing of indicators
      */
-    void enableAllIndicators();
+    void enableAllIndicators(void);
 
     /**
      * Disable draw of indicators.
      */
-    void disableAllIndicators();
+    void disableAllIndicators(void);
 
     /**
      * Set the position of the indicator bar.
@@ -283,8 +283,8 @@ class OLEDDisplayUi {
 
 
     // Manual Control
-    void nextFrame();
-    void previousFrame();
+    void nextFrame(void);
+    void previousFrame(void);
 
     /**
      * Switch without transition to frame `frame`.
@@ -298,8 +298,8 @@ class OLEDDisplayUi {
     void transitionToFrame(uint8_t frame);
 
     // State Info
-    OLEDDisplayUiState* getUiState();
+    OLEDDisplayUiState* getUiState(void);
 
-    int8_t update();
+    int8_t update(void);
 };
 #endif

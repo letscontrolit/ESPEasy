@@ -36,29 +36,29 @@ class ESPeasySoftwareSerial : public Stream
 {
 public:
    ESPeasySoftwareSerial(uint8_t receivePin, uint8_t transmitPin, bool inverse_logic = false, uint16_t buffSize = 64);
-   virtual ~ESPeasySoftwareSerial();
+   virtual ~ESPeasySoftwareSerial(void);
 
    void begin(long speed);
    void setTransmitEnablePin(uint8_t transmitEnablePin);
 
-   int peek();
+   int peek(void);
 
    virtual size_t write(uint8_t byte);
-   virtual int read();
-   virtual int available();
-   virtual void flush();
-   operator bool() {return m_rxValid || m_txValid;}
+   virtual int read(void);
+   virtual int available(void);
+   virtual void flush(void);
+   operator bool(void) {return m_rxValid || m_txValid;}
 
    // Disable or enable interrupts on the rx pin
    void enableRx(bool on);
 
-   void rxRead();
+   void rxRead(void);
 
    // AVR compatibility methods
-   bool listen() { enableRx(true); return true; }
-   void end() { stopListening(); }
-   bool isListening() { return m_rxEnabled; }
-   bool stopListening() { enableRx(false); return true; }
+   bool listen(void) { enableRx(true); return true; }
+   void end(void) { stopListening(void); }
+   bool isListening(void) { return m_rxEnabled; }
+   bool stopListening(void) { enableRx(false); return true; }
 
    using Print::write;
 

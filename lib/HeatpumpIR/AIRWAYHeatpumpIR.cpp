@@ -1,7 +1,7 @@
 #include <AIRWAYHeatpumpIR.h>
 
 
-AIRWAYHeatpumpIR::AIRWAYHeatpumpIR()
+AIRWAYHeatpumpIR::AIRWAYHeatpumpIR(void)
 {
   static const char model[] PROGMEM = "AIRWAY";
   static const char info[]  PROGMEM = "{\"mdl\":\"AIRWAY\",\"dn\":\"AIRWAY\",\"mT\":18,\"xT\":31,\"fs\":3}";

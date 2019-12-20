@@ -1,7 +1,7 @@
 #include <CarrierHeatpumpIR.h>
 
 // This is a protected method, i.e. generic Carrier instances cannot be created
-CarrierHeatpumpIR::CarrierHeatpumpIR() : HeatpumpIR()
+CarrierHeatpumpIR::CarrierHeatpumpIR(void) : HeatpumpIR(void)
 {
 }
 
@@ -10,7 +10,7 @@ void CarrierHeatpumpIR::send(IRSender& IR, uint8_t powerModeCmd, uint8_t operati
 }
 
 // The different models just set the model accordingly
-CarrierNQVHeatpumpIR::CarrierNQVHeatpumpIR() : CarrierHeatpumpIR()
+CarrierNQVHeatpumpIR::CarrierNQVHeatpumpIR(void) : CarrierHeatpumpIR(void)
 {
   static const char model[] PROGMEM = "carrier_nqv";
   static const char info[]  PROGMEM = "{\"mdl\":\"carrier_nqv\",\"dn\":\"Carrier NQV\",\"mT\":17,\"xT\":30,\"fs\":6}";
@@ -19,7 +19,7 @@ CarrierNQVHeatpumpIR::CarrierNQVHeatpumpIR() : CarrierHeatpumpIR()
   _info = info;
 }
 
-CarrierMCAHeatpumpIR::CarrierMCAHeatpumpIR() : CarrierHeatpumpIR()
+CarrierMCAHeatpumpIR::CarrierMCAHeatpumpIR(void) : CarrierHeatpumpIR(void)
 {
   static const char model[] PROGMEM = "carrier_mca";
   static const char info[]  PROGMEM = "{\"mdl\":\"carrier_mca\",\"dn\":\"Carrier MCA\",\"mT\":17,\"xT\":30,\"fs\":4}";
@@ -29,7 +29,7 @@ CarrierMCAHeatpumpIR::CarrierMCAHeatpumpIR() : CarrierHeatpumpIR()
   _carrierModel = MODEL_CARRIER_MCA;
 }
 
-Qlima1HeatpumpIR::Qlima1HeatpumpIR() : CarrierMCAHeatpumpIR()
+Qlima1HeatpumpIR::Qlima1HeatpumpIR(void) : CarrierMCAHeatpumpIR(void)
 {
   static const char model[] PROGMEM = "qlima_1";
   static const char info[]  PROGMEM = "{\"mdl\":\"qlima_1\",\"dn\":\"Qlima #1\",\"mT\":17,\"xT\":30,\"fs\":4, \"maint\":[10]}";
@@ -40,7 +40,7 @@ Qlima1HeatpumpIR::Qlima1HeatpumpIR() : CarrierMCAHeatpumpIR()
   _carrierModel = MODEL_QLIMA_1;
 }
 
-Qlima2HeatpumpIR::Qlima2HeatpumpIR() : CarrierMCAHeatpumpIR()
+Qlima2HeatpumpIR::Qlima2HeatpumpIR(void) : CarrierMCAHeatpumpIR(void)
 {
   static const char model[] PROGMEM = "qlima_2";
   static const char info[]  PROGMEM = "{\"mdl\":\"qlima_2\",\"dn\":\"Qlima #2\",\"mT\":17,\"xT\":30,\"fs\":4, \"maint\":[10]}";

@@ -36,14 +36,14 @@ class CjkSDS011
 {
 public:
   CjkSDS011(int16_t pinRX, int16_t pinTX);
-  virtual ~CjkSDS011();
+  virtual ~CjkSDS011(void);
 
-  void Process();
+  void Process(void);
 
-  boolean available();
+  boolean available(void);
 
-  float GetPM2_5() { return _pm2_5; };
-  float GetPM10_() { return _pm10_; };
+  float GetPM2_5(void) { return _pm2_5; };
+  float GetPM10_(void) { return _pm10_; };
 
   // Return true when there are valid samples.
   boolean ReadAverage(float &pm25, float &pm10);
@@ -57,11 +57,11 @@ public:
 
   // Get the working period in minutes (0 = continuous reading)
   // Negative return value indicates error during communication.
-  int GetWorkingPeriod();
+  int GetWorkingPeriod(void);
 
 private:
   void SendCommand(byte byte1, byte byte2, byte byte3);
-  void ParseCommandReply();
+  void ParseCommandReply(void);
 
 //  SensorSerial _serial;
   ESPeasySerial *_serial;

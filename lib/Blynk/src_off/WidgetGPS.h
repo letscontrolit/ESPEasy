@@ -25,33 +25,33 @@ public:
         , mAlt (0)
         , mSpeed (0)
     {
-        BlynkParam::iterator it = param.begin();
-        if (it >= param.end())
+        BlynkParam::iterator it = param.begin(void);
+        if (it >= param.end(void))
             return;
 
-        mLat = it.asDouble();
+        mLat = it.asDouble(void);
 
-        if (++it >= param.end())
+        if (++it >= param.end(void))
             return;
 
-        mLon = it.asDouble();
+        mLon = it.asDouble(void);
 
-        if (++it >= param.end())
+        if (++it >= param.end(void))
             return;
 
-        mAlt = it.asDouble();
+        mAlt = it.asDouble(void);
 
-        if (++it >= param.end())
+        if (++it >= param.end(void))
             return;
 
-        mSpeed = it.asDouble();
+        mSpeed = it.asDouble(void);
     }
 
 
-    double getLat() const { return mLat; }
-    double getLon() const { return mLon; }
-    double getAltitude() const { return mAlt; }
-    double getSpeed() const { return mSpeed; }
+    double getLat(void) const { return mLat; }
+    double getLon(void) const { return mLon; }
+    double getAltitude(void) const { return mAlt; }
+    double getSpeed(void) const { return mSpeed; }
 
 private:
     double mLat;

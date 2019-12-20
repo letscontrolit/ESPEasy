@@ -28,19 +28,19 @@ public:
     {}
 
     void onWrite(BlynkReq BLYNK_UNUSED &request, const BlynkParam& param) {
-        if (mOnOrderChange && 0 == strcmp(param[0].asStr(), "order")) {
-            mOnOrderChange(param[1].asInt(), param[2].asInt());
-        } else if (mOnSelectChange && 0 == strcmp(param[0].asStr(), "select")) {
-            mOnSelectChange(param[1].asInt(), true);
-        } else if (mOnSelectChange && 0 == strcmp(param[0].asStr(), "deselect")) {
-            mOnSelectChange(param[1].asInt(), false);
+        if (mOnOrderChange && 0 == strcmp(param[0].asStr(void), "order")) {
+            mOnOrderChange(param[1].asInt(void), param[2].asInt(void));
+        } else if (mOnSelectChange && 0 == strcmp(param[0].asStr(void), "select")) {
+            mOnSelectChange(param[1].asInt(void), true);
+        } else if (mOnSelectChange && 0 == strcmp(param[0].asStr(void), "deselect")) {
+            mOnSelectChange(param[1].asInt(void), false);
         }
     }
 
     void onOrderChange(ItemOrderChange cbk)   { mOnOrderChange = cbk; }
     void onSelectChange(ItemSelectChange cbk) { mOnSelectChange = cbk; }
 
-    void clear() {
+    void clear(void) {
         Blynk.virtualWrite(mPin, "clr");
     }
 

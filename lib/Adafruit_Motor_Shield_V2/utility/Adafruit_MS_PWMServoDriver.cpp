@@ -29,8 +29,8 @@ Adafruit_MS_PWMServoDriver::Adafruit_MS_PWMServoDriver(uint8_t addr) {
 }
 
 void Adafruit_MS_PWMServoDriver::begin(void) {
- //Wire.begin();   called in ESPEasy framework
- reset();
+ //Wire.begin(void);   called in ESPEasy framework
+ reset(void);
 }
 
 
@@ -80,7 +80,7 @@ void Adafruit_MS_PWMServoDriver::setPWM(uint8_t num, uint16_t on, uint16_t off) 
   WIRE.send((uint8_t)off);
   WIRE.send((uint8_t)(off>>8));
 #endif
-  WIRE.endTransmission();
+  WIRE.endTransmission(void);
 }
 
 uint8_t Adafruit_MS_PWMServoDriver::read8(uint8_t addr) {
@@ -90,13 +90,13 @@ uint8_t Adafruit_MS_PWMServoDriver::read8(uint8_t addr) {
 #else
   WIRE.send(addr);
 #endif
-  WIRE.endTransmission();
+  WIRE.endTransmission(void);
 
   WIRE.requestFrom((uint8_t)_i2caddr, (uint8_t)1);
 #if ARDUINO >= 100
-  return WIRE.read();
+  return WIRE.read(void);
 #else
-  return WIRE.receive();
+  return WIRE.receive(void);
 #endif
 }
 
@@ -109,5 +109,5 @@ void Adafruit_MS_PWMServoDriver::write8(uint8_t addr, uint8_t d) {
   WIRE.send(addr);
   WIRE.send(d);
 #endif
-  WIRE.endTransmission();
+  WIRE.endTransmission(void);
 }

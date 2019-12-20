@@ -27,12 +27,12 @@
 
 #include "OLEDDisplay.h"
 
-OLEDDisplay::~OLEDDisplay() {
-  end();
+OLEDDisplay::~OLEDDisplay(void) {
+  end(void);
 }
 
-bool OLEDDisplay::init() {
-  if (!this->connect()) {
+bool OLEDDisplay::init(void) {
+  if (!this->connect(void)) {
     DEBUG_OLEDDISPLAY("[OLEDDISPLAY][init] Can't establish connection to display\n");
     return false;
   }
@@ -55,13 +55,13 @@ bool OLEDDisplay::init() {
   }
   #endif
 
-  sendInitCommands();
-  resetDisplay();
+  sendInitCommands(void);
+  resetDisplay(void);
 
   return true;
 }
 
-void OLEDDisplay::end() {
+void OLEDDisplay::end(void) {
   if (this->buffer) { free(this->buffer); this->buffer = NULL; }
   #ifdef OLEDDISPLAY_DOUBLE_BUFFER
   if (this->buffer_back) { free(this->buffer_back); this->buffer_back = NULL; }
@@ -70,11 +70,11 @@ void OLEDDisplay::end() {
 }
 
 void OLEDDisplay::resetDisplay(void) {
-  clear();
+  clear(void);
   #ifdef OLEDDISPLAY_DOUBLE_BUFFER
   memset(buffer_back, 1, DISPLAY_BUFFER_SIZE);
   #endif
-  display();
+  display(void);
 }
 
 void OLEDDisplay::setColor(OLEDDISPLAY_COLOR color) {
@@ -82,11 +82,11 @@ void OLEDDisplay::setColor(OLEDDISPLAY_COLOR color) {
 }
 
 void OLEDDisplay::setPixel(int16_t x, int16_t y) {
-  if (x >= 0 && x < this->width() && y >= 0 && y < this->height()) {
+  if (x >= 0 && x < this->width(void) && y >= 0 && y < this->height(void)) {
     switch (color) {
-      case WHITE:   buffer[x + (y / 8) * this->width()] |=  (1 << (y & 7)); break;
-      case BLACK:   buffer[x + (y / 8) * this->width()] &= ~(1 << (y & 7)); break;
-      case INVERSE: buffer[x + (y / 8) * this->width()] ^=  (1 << (y & 7)); break;
+      case WHITE:   buffer[x + (y / 8) * this->width(void)] |=  (1 << (y & 7)); break;
+      case BLACK:   buffer[x + (y / 8) * this->width(void)] &= ~(1 << (y & 7)); break;
+      case INVERSE: buffer[x + (y / 8) * this->width(void)] ^=  (1 << (y & 7)); break;
     }
   }
 }
@@ -231,21 +231,21 @@ void OLEDDisplay::fillCircle(int16_t x0, int16_t y0, int16_t radius) {
 }
 
 void OLEDDisplay::drawHorizontalLine(int16_t x, int16_t y, int16_t length) {
-  if (y < 0 || y >= this->height()) { return; }
+  if (y < 0 || y >= this->height(void)) { return; }
 
   if (x < 0) {
     length += x;
     x = 0;
   }
 
-  if ( (x + length) > this->width()) {
-    length = (this->width() - x);
+  if ( (x + length) > this->width(void)) {
+    length = (this->width(void) - x);
   }
 
   if (length <= 0) { return; }
 
   uint8_t * bufferPtr = buffer;
-  bufferPtr += (y >> 3) * this->width();
+  bufferPtr += (y >> 3) * this->width(void);
   bufferPtr += x;
 
   uint8_t drawBit = 1 << (y & 7);
@@ -264,15 +264,15 @@ void OLEDDisplay::drawHorizontalLine(int16_t x, int16_t y, int16_t length) {
 }
 
 void OLEDDisplay::drawVerticalLine(int16_t x, int16_t y, int16_t length) {
-  if (x < 0 || x >= this->width()) return;
+  if (x < 0 || x >= this->width(void)) return;
 
   if (y < 0) {
     length += y;
     y = 0;
   }
 
-  if ( (y + length) > this->height()) {
-    length = (this->height() - y);
+  if ( (y + length) > this->height(void)) {
+    length = (this->height(void) - y);
   }
 
   if (length <= 0) return;
@@ -282,7 +282,7 @@ void OLEDDisplay::drawVerticalLine(int16_t x, int16_t y, int16_t length) {
   uint8_t drawBit;
   uint8_t *bufferPtr = buffer;
 
-  bufferPtr += (y >> 3) * this->width();
+  bufferPtr += (y >> 3) * this->width(void);
   bufferPtr += x;
 
   if (yOffset) {
@@ -302,7 +302,7 @@ void OLEDDisplay::drawVerticalLine(int16_t x, int16_t y, int16_t length) {
     if (length < yOffset) return;
 
     length -= yOffset;
-    bufferPtr += this->width();
+    bufferPtr += this->width(void);
   }
 
   if (length >= 8) {
@@ -312,14 +312,14 @@ void OLEDDisplay::drawVerticalLine(int16_t x, int16_t y, int16_t length) {
         drawBit = (color == WHITE) ? 0xFF : 0x00;
         do {
           *bufferPtr = drawBit;
-          bufferPtr += this->width();
+          bufferPtr += this->width(void);
           length -= 8;
         } while (length >= 8);
         break;
       case INVERSE:
         do {
           *bufferPtr = ~(*bufferPtr);
-          bufferPtr += this->width();
+          bufferPtr += this->width(void);
           length -= 8;
         } while (length >= 8);
         break;
@@ -402,8 +402,8 @@ void OLEDDisplay::drawStringInternal(int16_t xMove, int16_t yMove, char* text, u
   }
 
   // Don't draw anything if it is not on the screen.
-  if (xMove + textWidth  < 0 || xMove > this->width() ) {return;}
-  if (yMove + textHeight < 0 || yMove > this->width() ) {return;}
+  if (xMove + textWidth  < 0 || xMove > this->width(void) ) {return;}
+  if (yMove + textHeight < 0 || yMove > this->width(void) ) {return;}
 
   for (uint16_t j = 0; j < textLength; j++) {
     int16_t xPos = xMove + cursorX;
@@ -568,7 +568,7 @@ void OLEDDisplay::setContrast(char contrast, char precharge, char comdetect) {
   sendCommand(DISPLAYON);
 }
 
-void OLEDDisplay::flipScreenVertically() {
+void OLEDDisplay::flipScreenVertically(void) {
   sendCommand(SEGREMAP | 0x01);
   sendCommand(COMSCANDEC);           //Rotate screen 180 Deg
 }
@@ -689,7 +689,7 @@ void OLEDDisplay::sendInitCommands(void) {
   sendCommand(SETDISPLAYCLOCKDIV);
   sendCommand(0xF0); // Increase speed of the display max ~96Hz
   sendCommand(SETMULTIPLEX);
-  sendCommand(this->height() - 1);
+  sendCommand(this->height(void) - 1);
   sendCommand(SETDISPLAYOFFSET);
   sendCommand(0x00);
   sendCommand(SETSTARTLINE);
@@ -715,8 +715,8 @@ void OLEDDisplay::sendInitCommands(void) {
 
 void inline OLEDDisplay::drawInternal(int16_t xMove, int16_t yMove, int16_t width, int16_t height, const char *data, uint16_t offset, uint16_t bytesInData) {
   if (width < 0 || height < 0) return;
-  if (yMove + height < 0 || yMove > this->height())  return;
-  if (xMove + width  < 0 || xMove > this->width())   return;
+  if (yMove + height < 0 || yMove > this->height(void))  return;
+  if (xMove + width  < 0 || xMove > this->width(void))   return;
 
   uint8_t  rasterHeight = 1 + ((height - 1) >> 3); // fast ceil(height / 8.0)
   int8_t   yOffset      = yMove & 7;
@@ -738,13 +738,13 @@ void inline OLEDDisplay::drawInternal(int16_t xMove, int16_t yMove, int16_t widt
     byte currentByte = pgm_read_byte(data + offset + i);
 
     int16_t xPos = xMove + (i / rasterHeight);
-    int16_t yPos = ((yMove >> 3) + (i % rasterHeight)) * this->width();
+    int16_t yPos = ((yMove >> 3) + (i % rasterHeight)) * this->width(void);
 
 //    int16_t yScreenPos = yMove + yOffset;
     int16_t dataPos    = xPos  + yPos;
 
     if (dataPos >=  0  && dataPos < DISPLAY_BUFFER_SIZE &&
-        xPos    >=  0  && xPos    < this->width() ) {
+        xPos    >=  0  && xPos    < this->width(void) ) {
 
       if (yOffset >= 0) {
         switch (this->color) {
@@ -752,11 +752,11 @@ void inline OLEDDisplay::drawInternal(int16_t xMove, int16_t yMove, int16_t widt
           case BLACK:   buffer[dataPos] &= ~(currentByte << yOffset); break;
           case INVERSE: buffer[dataPos] ^= currentByte << yOffset; break;
         }
-        if (dataPos < (DISPLAY_BUFFER_SIZE - this->width())) {
+        if (dataPos < (DISPLAY_BUFFER_SIZE - this->width(void))) {
           switch (this->color) {
-            case WHITE:   buffer[dataPos + this->width()] |= currentByte >> (8 - yOffset); break;
-            case BLACK:   buffer[dataPos + this->width()] &= ~(currentByte >> (8 - yOffset)); break;
-            case INVERSE: buffer[dataPos + this->width()] ^= currentByte >> (8 - yOffset); break;
+            case WHITE:   buffer[dataPos + this->width(void)] |= currentByte >> (8 - yOffset); break;
+            case BLACK:   buffer[dataPos + this->width(void)] &= ~(currentByte >> (8 - yOffset)); break;
+            case INVERSE: buffer[dataPos + this->width(void)] ^= currentByte >> (8 - yOffset); break;
           }
         }
       } else {
@@ -776,7 +776,7 @@ void inline OLEDDisplay::drawInternal(int16_t xMove, int16_t yMove, int16_t widt
         yOffset = 8 - yOffset;
       }
 
-      yield();
+      yield(void);
     }
   }
 }
@@ -805,13 +805,13 @@ uint8_t OLEDDisplay::utf8ascii(byte ascii) {
 // You need to free the char!
 char* OLEDDisplay::utf8ascii(String str) {
   uint16_t k = 0;
-  uint16_t length = str.length() + 1;
+  uint16_t length = str.length(void) + 1;
 
   // Copy the string into a char array
   char* s = (char*) malloc(length * sizeof(char));
   if(!s) {
     DEBUG_OLEDDISPLAY("[OLEDDISPLAY][utf8ascii] Can't allocate another char array. Drop support for UTF-8.\n");
-    return (char*) str.c_str();
+    return (char*) str.c_str(void);
   }
   str.toCharArray(s, length);
 

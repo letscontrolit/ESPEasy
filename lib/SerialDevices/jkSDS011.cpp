@@ -42,7 +42,7 @@ CjkSDS011::CjkSDS011(int16_t pinRX, int16_t pinTX)
   _serial->begin(9600);
 }
 
-CjkSDS011::~CjkSDS011() {
+CjkSDS011::~CjkSDS011(void) {
   delete _serial;
 }
 
@@ -90,23 +90,23 @@ void CjkSDS011::SetWorkingPeriod(int minutes) {
   //              1-30minute：work 30 seconds and sleep n*60-30 seconds
   if (minutes < 0 || minutes > 30) return;
   // Working period is stored in the flash of the sensor. Only write to change.
-  const int currentWorkingPeriod = GetWorkingPeriod();
+  const int currentWorkingPeriod = GetWorkingPeriod(void);
   if (minutes != currentWorkingPeriod)
     SendCommand(8, 1, minutes);
 }
 
-int CjkSDS011::GetWorkingPeriod() {
+int CjkSDS011::GetWorkingPeriod(void) {
   // Data byte 1: 8
   // Data byte 2: 0: query the current mode
   //              1: set mode
   // Data byte 3: 0：continuous(default)
   //              1-30minute：work 30 seconds and sleep n*60-30 seconds
   SendCommand(8, 0, 0);
-  Process();
+  Process(void);
   return _working_period;
 }
 
-void CjkSDS011::ParseCommandReply() {
+void CjkSDS011::ParseCommandReply(void) {
   switch(_data[2]) {
     case 6: // Enable/Disable sleep mode.
       if (_data[3] == 0)
@@ -122,11 +122,11 @@ void CjkSDS011::ParseCommandReply() {
   }
 }
 
-void CjkSDS011::Process()
+void CjkSDS011::Process(void)
 {
-  while (_serial->available())
+  while (_serial->available(void))
   {
-  	_data.AddData(_serial->read());
+  	_data.AddData(_serial->read(void));
 
     if (_data[0] == 0xAA && _data[9] == 0xAB)   // correct packet frame?
     {
@@ -148,7 +148,7 @@ void CjkSDS011::Process()
           _available = true;
           break;
         case 0xC5:   // Reply on command ID 0xB4
-          ParseCommandReply();
+          ParseCommandReply(void);
           break;
         default:
           break;
@@ -157,14 +157,14 @@ void CjkSDS011::Process()
         _pm2_5avr += _pm2_5;
         _pm10_avr += _pm10_;
         _avr++;
-        _data.Clear();
+        _data.Clear(void);
         return;
       }
     }
   }
 }
 
-boolean CjkSDS011::available()
+boolean CjkSDS011::available(void)
 {
   boolean ret = _available;
   _available = false;

@@ -17,7 +17,7 @@
 class BlynkTransportParticle
 {
 public:
-    BlynkTransportParticle()
+    BlynkTransportParticle(void)
         : domain(NULL), port(0)
     {}
 
@@ -32,7 +32,7 @@ public:
         port = p;
     }
 
-    bool connect() {
+    bool connect(void) {
         if (domain) {
             BLYNK_LOG4(BLYNK_F("Connecting to "), domain, ':', port);
             return (1 == client.connect(domain, port));
@@ -43,7 +43,7 @@ public:
         return 0;
     }
 
-    void disconnect() { client.stop(); }
+    void disconnect(void) { client.stop(void); }
 
     size_t read(void* buf, size_t len) {
         return client.readBytes((char*)buf, len);
@@ -53,9 +53,9 @@ public:
         return client.write((const uint8_t*)buf, len);
     }
 
-    void flush() { client.flush(); }
-    bool connected() { return client.connected(); }
-    int available() { return client.available(); }
+    void flush(void) { client.flush(void); }
+    bool connected(void) { return client.connected(void); }
+    int available(void) { return client.available(void); }
 
 private:
     TCPClient   client;
@@ -95,7 +95,7 @@ public:
     {
         BlynkDelay(3000); // Give the board time to settle
         config(auth, domain, port);
-        while(this->connect() != true) {}
+        while(this->connect(void) != true) {}
     }
 
     void begin( const char* auth,
@@ -104,7 +104,7 @@ public:
     {
         BlynkDelay(3000); // Give the board time to settle
         config(auth, addr, port);
-        while(this->connect() != true) {}
+        while(this->connect(void) != true) {}
     }
 private:
 

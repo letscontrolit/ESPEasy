@@ -23,15 +23,15 @@ class WidgetRTC
     : public BlynkSingleton<WidgetRTC>
 {
 public:
-    WidgetRTC() {}
-    void begin();
+    WidgetRTC(void) {}
+    void begin(void);
 
 private:
-    static time_t requestTimeSync();
+    static time_t requestTimeSync(void);
 };
 
 // This is called by Time library when it needs time sync
-time_t WidgetRTC::requestTimeSync()
+time_t WidgetRTC::requestTimeSync(void)
 {
     // Request RTC widget update from the server
     Blynk.sendInternal("rtc", "sync");
@@ -40,14 +40,14 @@ time_t WidgetRTC::requestTimeSync()
 }
 
 inline
-void WidgetRTC::begin()
+void WidgetRTC::begin(void)
 {
     setSyncProvider(requestTimeSync);
 }
 
 BLYNK_WRITE(InternalPinRTC) {
     const unsigned long DEFAULT_TIME = 1357041600; // Jan 1 2013
-    unsigned long blynkTime = param.asLong();
+    unsigned long blynkTime = param.asLong(void);
 
     if (blynkTime >= DEFAULT_TIME) {    // Check the integer is a valid time (greater than Jan 1 2013)
         setTime(blynkTime);             // Sync Time library clock to the value received from Blynk

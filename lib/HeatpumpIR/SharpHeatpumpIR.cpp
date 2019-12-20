@@ -1,7 +1,7 @@
 #include <SharpHeatpumpIR.h>
 
 
-SharpHeatpumpIR::SharpHeatpumpIR() : HeatpumpIR()
+SharpHeatpumpIR::SharpHeatpumpIR(void) : HeatpumpIR(void)
 {
   static const char model[] PROGMEM = "sharp";
   static const char info[]  PROGMEM = "{\"mdl\":\"sharp\",\"dn\":\"Sharp AY-ZP40KR\",\"mT\":18,\"xT\":32,\"fs\":3,\"maint\":[10]}}";

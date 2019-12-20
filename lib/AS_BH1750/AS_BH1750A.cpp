@@ -74,7 +74,7 @@ bool AS_BH1750A::begin(sensors_resolution_t mode, bool autoPowerDown) {
   _virtualMode = mode;
   _autoPowerDown = autoPowerDown;
   
-  Wire.begin();
+  Wire.begin(void);
 
   defineMTReg(BH1750_MTREG_DEFAULT); // eigentlich normalerweise unnötig, da standard
 
@@ -128,15 +128,15 @@ bool AS_BH1750A::begin(sensors_resolution_t mode, bool autoPowerDown) {
 /**
  * Erlaub eine Prüfung, ob ein (ansprechbarer) BH1750-Sensor vorhanden ist.
  */
-bool AS_BH1750A::isPresent() {
+bool AS_BH1750A::isPresent(void) {
   // Check I2C Adresse
   Wire.beginTransmission(_address);
-  if(Wire.endTransmission()!=0) {
+  if(Wire.endTransmission(void)!=0) {
     return false; 
   }
 
   // Check device: ist es ein BH1750
-  if(!isInitialized()) {
+  if(!isInitialized(void)) {
     // zuvor inaktiv, daher zu Testen schnelltes einmal-Mode aktivieren
     //write8(BH1750_POWER_ON);
     selectResolutionMode(BH1750_ONE_TIME_LOW_RES_MODE);
@@ -145,21 +145,21 @@ bool AS_BH1750A::isPresent() {
   } 
   else {
     // falls einmal-modus aktiv war, muss der Sensor geweckt werden
-    powerOn(); 
-    unsigned long dd = getModeDelay(); if(dd>0) {delay(dd);}
-    //delay(getModeDelay()); // s.o.
+    powerOn(void); 
+    unsigned long dd = getModeDelay(void); if(dd>0) {delay(dd);}
+    //delay(getModeDelay(void)); // s.o.
   }
 
   // Prüfen, ob Werte auch wirklich geliefert werden (letztes Modus, ggf. wird auto-PowerDown ausgeführt)
-  return (readLightLevel()>=0);
+  return (readLightLevel(void)>=0);
 }
 
 /**
  * Weckt ein im PowerDown-Modus befindlichen Sensor auf (schadet auch dem 'wachen' Sensor nicht).
  * Funktionier nur, wenn der Sensor bereits initialisiert wurde.
  */
-void AS_BH1750A::powerOn() {
-  if(!isInitialized()) {
+void AS_BH1750A::powerOn(void) {
+  if(!isInitialized(void)) {
 #if BH1750_DEBUG == 1
     Serial.println("sensor not initialized");
 #endif
@@ -177,8 +177,8 @@ void AS_BH1750A::powerOn() {
  * Schickt den Sensor in Stromsparmodus.
  * Funktionier nur, wenn der Sensor bereits initialisiert wurde.
  */
-void AS_BH1750A::powerDown() {
-  if(!isInitialized()) {
+void AS_BH1750A::powerDown(void) {
+  if(!isInitialized(void)) {
 #if BH1750_DEBUG == 1
     Serial.println("sensor not initialized");
 #endif
@@ -195,7 +195,7 @@ void AS_BH1750A::powerDown() {
  * - mode: s.o. 
  * - DelayFuncPtr: delay(n) Möglichkeit, eigene Delay-Funktion mitzugeben (z.B. um sleep-Modus zu verwenden).
  * 
- * Defaultwerte: delay()
+ * Defaultwerte: delay(void)
  *
  */
 bool AS_BH1750A::selectResolutionMode(uint8_t mode) {
@@ -203,7 +203,7 @@ bool AS_BH1750A::selectResolutionMode(uint8_t mode) {
     Serial.print("selectResolutionMode: ");
     Serial.println(mode, DEC);
 #endif
-  if(!isInitialized()) {
+  if(!isInitialized(void)) {
     return false;
 #if BH1750_DEBUG == 1
     Serial.println("sensor not initialized");
@@ -252,7 +252,7 @@ bool AS_BH1750A::selectResolutionMode(uint8_t mode) {
     Serial.println(_virtualMode, DEC);
 #endif
 
-  if(!isInitialized()) {
+  if(!isInitialized(void)) {
 #if BH1750_DEBUG == 1
     Serial.println("sensor not initialized");
 #endif
@@ -261,8 +261,8 @@ bool AS_BH1750A::selectResolutionMode(uint8_t mode) {
 
   // ggf. PowerOn  
   if(_autoPowerDown && _valueReaded){
-    powerOn();
-    unsigned long dd = getModeDelay(); if(dd>0) {delay(dd);}
+    powerOn(void);
+    unsigned long dd = getModeDelay(void); if(dd>0) {delay(dd);}
   }
 
   // Das Automatische Modus benötigt eine Sonderbehandlung.
@@ -278,8 +278,8 @@ bool AS_BH1750A::selectResolutionMode(uint8_t mode) {
     defineMTReg(BH1750_MTREG_DEFAULT);
     selectResolutionMode(BH1750_CONTINUOUS_LOW_RES_MODE);
     //fDelayPtr(16+5); // Lesezeit in LowResMode
-    fDelayPtr(getModeDelay());
-    uint16_t level = readRawLevel();
+    fDelayPtr(getModeDelay(void));
+    uint16_t level = readRawLevel(void);
 #if BH1750_DEBUG == 1
     Serial.print("AutoHighMode: check level read: ");
     Serial.println(level, DEC);
@@ -294,7 +294,7 @@ bool AS_BH1750A::selectResolutionMode(uint8_t mode) {
       defineMTReg(BH1750_MTREG_MAX);
       selectResolutionMode(_autoPowerDown?BH1750_ONE_TIME_HIGH_RES_MODE_2:BH1750_CONTINUOUS_HIGH_RES_MODE_2);
       //fDelayPtr(120*3.68+5); // TODO: Wert prüfen
-      fDelayPtr(getModeDelay());
+      fDelayPtr(getModeDelay(void));
       //fDelayPtr(122);
     }
     else if(level<32767) {
@@ -305,7 +305,7 @@ bool AS_BH1750A::selectResolutionMode(uint8_t mode) {
       defineMTReg(BH1750_MTREG_DEFAULT);
       selectResolutionMode(_autoPowerDown?BH1750_ONE_TIME_HIGH_RES_MODE_2:BH1750_CONTINUOUS_HIGH_RES_MODE_2);
       //fDelayPtr(120+5); // TODO: Wert prüfen
-      fDelayPtr(getModeDelay());
+      fDelayPtr(getModeDelay(void));
     } 
     else if(level<60000) {
 #if BH1750_DEBUG == 1
@@ -315,7 +315,7 @@ bool AS_BH1750A::selectResolutionMode(uint8_t mode) {
       defineMTReg(BH1750_MTREG_DEFAULT);
       selectResolutionMode(_autoPowerDown?BH1750_ONE_TIME_HIGH_RES_MODE:BH1750_CONTINUOUS_HIGH_RES_MODE);
       //fDelayPtr(120+5); // TODO: Wert prüfen
-      fDelayPtr(getModeDelay());
+      fDelayPtr(getModeDelay(void));
     }
     else {
 #if BH1750_DEBUG == 1
@@ -325,17 +325,17 @@ bool AS_BH1750A::selectResolutionMode(uint8_t mode) {
       defineMTReg(32); // Min+1, bei dem Minimum aus Doku spielt der Sensor (zumindest meiner) verrückt: Die Werte sind ca. 1/10 von den Erwarteten.
       selectResolutionMode(_autoPowerDown?BH1750_ONE_TIME_HIGH_RES_MODE:BH1750_CONTINUOUS_HIGH_RES_MODE);
       //fDelayPtr(120+5); // TODO: Wert prüfen
-      fDelayPtr(getModeDelay());
+      fDelayPtr(getModeDelay(void));
     }
   } 
 
   // Hardware Wert lesen und in Lux umrechnen.
-  uint16_t raw = readRawLevel();
+  uint16_t raw = readRawLevel(void);
   if(raw==65535) {
     // Wert verdächtig hoch. Sensor prüfen. 
     // Check I2C Adresse
     Wire.beginTransmission(_address);
-    if(Wire.endTransmission()!=0) {
+    if(Wire.endTransmission(void)!=0) {
       return -1; 
     }
   }
@@ -351,15 +351,15 @@ uint16_t AS_BH1750A::readRawLevel(void) {
   Wire.beginTransmission(_address);
   Wire.requestFrom(_address, 2);
 #if (ARDUINO >= 100)
-  level = Wire.read();
+  level = Wire.read(void);
   level <<= 8;
-  level |= Wire.read();
+  level |= Wire.read(void);
 #else
-  level = Wire.receive();
+  level = Wire.receive(void);
   level <<= 8;
-  level |= Wire.receive();
+  level |= Wire.receive(void);
 #endif
-  if(Wire.endTransmission()!=0) {
+  if(Wire.endTransmission(void)!=0) {
 #if BH1750_DEBUG == 1
     Serial.println("I2C read error");
 #endif
@@ -465,7 +465,7 @@ void AS_BH1750A::defineMTReg(uint8_t val) {
 /**
  * Gibt an, ob der Sensor initialisiert ist.
  */
-bool AS_BH1750A::isInitialized() {
+bool AS_BH1750A::isInitialized(void) {
   return _hardwareMode!=255; 
 }
 
@@ -479,16 +479,16 @@ bool AS_BH1750A::write8(uint8_t d) {
 #else
   Wire.send(d);
 #endif
-  return (Wire.endTransmission()==0);
+  return (Wire.endTransmission(void)==0);
 }
 
 
 float AS_BH1750A::readLightLevel(DelayFuncPtr fDelayPtr, TimeFuncPtr fTimePtr) {
   startMeasurementAsync(fTimePtr);
-  while(!isMeasurementReady()) {
+  while(!isMeasurementReady(void)) {
     fDelayPtr(_nextDelay);
   }
-  return readLightLevelAsync();
+  return readLightLevelAsync(void);
 }
 
 /*float AS_BH1750A::checkAndReadLightLevelAsync(TimeFuncPtr fTimePtr) {
@@ -499,9 +499,9 @@ float AS_BH1750A::readLightLevel(DelayFuncPtr fDelayPtr, TimeFuncPtr fTimePtr) {
     return -1; // Marker "nicht vorhanden"
   } else if(_stage==99) {
     _stage=100;
-    return readLightLevelAsync();
+    return readLightLevelAsync(void);
   }
-  return readLightLevelAsync();
+  return readLightLevelAsync(void);
 }*/
 
 unsigned long AS_BH1750A::nextDelay(void) {
@@ -516,16 +516,16 @@ bool AS_BH1750A::startMeasurementAsync(TimeFuncPtr fTimePtr) {
   _stage = 0;
   _nextDelay = 0;
   //int _lastResult = -1;
-  _lastTimestamp=fTimePtr();
-  return readLightLevelAsync()!=-1;
+  _lastTimestamp=fTimePtr(void);
+  return readLightLevelAsync(void)!=-1;
 }
 
 bool AS_BH1750A::isMeasurementReady(void) {
-  return readLightLevelAsync() >= -1; // -1 ist 'not initialized'-Marker (prevent hangs)
+  return readLightLevelAsync(void) >= -1; // -1 ist 'not initialized'-Marker (prevent hangs)
 }
 
-bool AS_BH1750A::delayExpired() {
-  unsigned long timestamp = _fTimePtr();
+bool AS_BH1750A::delayExpired(void) {
+  unsigned long timestamp = _fTimePtr(void);
 
   // Zeitdifferenz
   unsigned long delayTime = 0;
@@ -542,7 +542,7 @@ bool AS_BH1750A::delayExpired() {
   return (delayTime >= _nextDelay);
 }
 
-float AS_BH1750A::readLightLevelAsync() {
+float AS_BH1750A::readLightLevelAsync(void) {
   if(_stage>=99) return _lastResult;
   
   if(_stage==0) {
@@ -551,7 +551,7 @@ float AS_BH1750A::readLightLevelAsync() {
       Serial.println(_virtualMode, DEC);
     #endif
 
-    if(!isInitialized()) {
+    if(!isInitialized(void)) {
     #if BH1750_DEBUG == 1
       Serial.println("sensor not initialized");
     #endif
@@ -560,9 +560,9 @@ float AS_BH1750A::readLightLevelAsync() {
 
     // ggf. PowerOn  
     if(_autoPowerDown && _valueReaded){
-      powerOn();
-      _nextDelay = getModeDelay();
-      // TEST delay(getModeDelay());_stage=99;
+      powerOn(void);
+      _nextDelay = getModeDelay(void);
+      // TEST delay(getModeDelay(void));_stage=99;
       return -100;
     } else {
       _nextDelay = 0;
@@ -581,19 +581,19 @@ float AS_BH1750A::readLightLevelAsync() {
    Für meine Zwecke ist das jedoch ohne Bedeutung.
    */
   if(_virtualMode==RESOLUTION_AUTO_HIGH) {
-    selectAutoMode();
+    selectAutoMode(void);
   } else {
-    if(delayExpired()) {_stage=99;} // Fertig
+    if(delayExpired(void)) {_stage=99;} // Fertig
   }
   if(_stage<99) return -100; // Marker: wait for next step
 
   // Hardware Wert lesen und in Lux umrechnen.
-  uint16_t raw = readRawLevel();
+  uint16_t raw = readRawLevel(void);
   if(raw==65535) {
     // Wert verdächtig hoch. Sensor prüfen. 
     // Check I2C Adresse
     Wire.beginTransmission(_address);
-    if(Wire.endTransmission()!=0) {
+    if(Wire.endTransmission(void)!=0) {
       return -1; 
     }
   }
@@ -602,24 +602,24 @@ float AS_BH1750A::readLightLevelAsync() {
   return _lastResult;
 }
 
-void AS_BH1750A::selectAutoMode() {
+void AS_BH1750A::selectAutoMode(void) {
 
-  //if(!delayExpired()) return;
+  //if(!delayExpired(void)) return;
    
   if(_stage==1) {   
     defineMTReg(BH1750_MTREG_DEFAULT);
     selectResolutionMode(BH1750_CONTINUOUS_LOW_RES_MODE);
     //fDelayPtr(16+5); // Lesezeit in LowResMode
-    //fDelayPtr(getModeDelay());
-    _nextDelay=getModeDelay();
+    //fDelayPtr(getModeDelay(void));
+    _nextDelay=getModeDelay(void);
     _stage++;
     return;
   }
   
-  if(!delayExpired()) return;
+  if(!delayExpired(void)) return;
 
   if(_stage==2) {
-    uint16_t level = readRawLevel();
+    uint16_t level = readRawLevel(void);
     #if BH1750_DEBUG == 1
     Serial.print("AutoHighMode: check level read: ");
     Serial.println(level, DEC);
@@ -634,8 +634,8 @@ void AS_BH1750A::selectAutoMode() {
       defineMTReg(BH1750_MTREG_MAX);
       selectResolutionMode(_autoPowerDown?BH1750_ONE_TIME_HIGH_RES_MODE_2:BH1750_CONTINUOUS_HIGH_RES_MODE_2);
       //fDelayPtr(120*3.68+5); // TODO: Wert prüfen
-      //fDelayPtr(getModeDelay());
-      _nextDelay=getModeDelay();
+      //fDelayPtr(getModeDelay(void));
+      _nextDelay=getModeDelay(void);
       //fDelayPtr(122);
     } else if(level<32767) {
     #if BH1750_DEBUG == 1
@@ -645,8 +645,8 @@ void AS_BH1750A::selectAutoMode() {
       defineMTReg(BH1750_MTREG_DEFAULT);
       selectResolutionMode(_autoPowerDown?BH1750_ONE_TIME_HIGH_RES_MODE_2:BH1750_CONTINUOUS_HIGH_RES_MODE_2);
       //fDelayPtr(120+5); // TODO: Wert prüfen
-      //fDelayPtr(getModeDelay());
-      _nextDelay=getModeDelay();
+      //fDelayPtr(getModeDelay(void));
+      _nextDelay=getModeDelay(void);
     } else if(level<60000) {
     #if BH1750_DEBUG == 1
     Serial.println("level 2: bright");
@@ -655,8 +655,8 @@ void AS_BH1750A::selectAutoMode() {
       defineMTReg(BH1750_MTREG_DEFAULT);
       selectResolutionMode(_autoPowerDown?BH1750_ONE_TIME_HIGH_RES_MODE:BH1750_CONTINUOUS_HIGH_RES_MODE);
       //fDelayPtr(120+5); // TODO: Wert prüfen
-      //fDelayPtr(getModeDelay());
-      _nextDelay=getModeDelay();
+      //fDelayPtr(getModeDelay(void));
+      _nextDelay=getModeDelay(void);
     } else {
     #if BH1750_DEBUG == 1
     Serial.println("level 3: very bright");
@@ -665,8 +665,8 @@ void AS_BH1750A::selectAutoMode() {
       defineMTReg(32); // Min+1, bei dem Minimum aus Doku spielt der Sensor (zumindest meiner) verrückt: Die Werte sind ca. 1/10 von den Erwarteten.
       selectResolutionMode(_autoPowerDown?BH1750_ONE_TIME_HIGH_RES_MODE:BH1750_CONTINUOUS_HIGH_RES_MODE);
       //fDelayPtr(120+5); // TODO: Wert prüfen
-      //fDelayPtr(getModeDelay());
-      _nextDelay=getModeDelay();
+      //fDelayPtr(getModeDelay(void));
+      _nextDelay=getModeDelay(void);
     }
     
     _stage++;
@@ -677,7 +677,7 @@ void AS_BH1750A::selectAutoMode() {
 
 }
 
-unsigned long AS_BH1750A::getModeDelay() {
+unsigned long AS_BH1750A::getModeDelay(void) {
 
   float ml;
   

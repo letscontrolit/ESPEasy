@@ -127,7 +127,7 @@ public:
    * - AutoPowerDown: true = Der Sensor wird nach der Messung in den Stromsparmodus versetzt. 
    *   Das spätere Aufwecken wird ggf. automatisch vorgenommen, braucht jedoch geringfügig mehr Zeit.
    *
-   * Defaultwerte: RESOLUTION_AUTO_HIGH, true, delay()
+   * Defaultwerte: RESOLUTION_AUTO_HIGH, true, delay(void)
    *
    */
   bool begin(sensors_resolution_t mode = RESOLUTION_AUTO_HIGH, bool autoPowerDown = true);
@@ -147,14 +147,14 @@ public:
    *
    * - DelayFuncPtr: delay(n) Möglichkeit, eigene Delay-Funktion mitzugeben (z.B. um sleep-Modus zu verwenden).
    * 
-   * Defaultwerte: delay()
+   * Defaultwerte: delay(void)
    *
    */
   float readLightLevel(DelayFuncPtr fDelayPtr = &delay, TimeFuncPtr fTimePtr = &millis);
 
   bool startMeasurementAsync(TimeFuncPtr fTimePtr = &millis);
   bool isMeasurementReady(void);
-  float readLightLevelAsync();
+  float readLightLevelAsync(void);
   
   //float checkAndReadLightLevelAsync(TimeFuncPtr fTimePtr);
 
@@ -167,7 +167,7 @@ public:
    */
   void powerDown(void);
 
-//bool delayExpired(); // TEST
+//bool delayExpired(void); // TEST
 
 private:
   int _address;
@@ -183,11 +183,11 @@ private:
 
   bool selectResolutionMode(uint8_t mode);
   void defineMTReg(uint8_t val);
-  void powerOn();
+  void powerOn(void);
   //void reset(void);
   uint16_t readRawLevel(void);
   float convertRawValue(uint16_t raw);
-  bool isInitialized();
+  bool isInitialized(void);
   bool write8(uint8_t data);
   
   TimeFuncPtr _fTimePtr;
@@ -195,12 +195,12 @@ private:
   unsigned long _nextDelay = 0;
   unsigned long _lastTimestamp = 0;
   float _lastResult = -100;
-  bool delayExpired();
-  void selectAutoMode();
+  bool delayExpired(void);
+  void selectAutoMode(void);
   
   // TEST
   //float readLightLevel_alt(DelayFuncPtr fDelayPtr = &delay);
-  unsigned long getModeDelay();
+  unsigned long getModeDelay(void);
   
 };
 

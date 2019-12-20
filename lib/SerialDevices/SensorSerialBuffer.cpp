@@ -25,14 +25,14 @@
 
 #include "SensorSerialBuffer.h"
 
-CSensorSerialBuffer::CSensorSerialBuffer()
+CSensorSerialBuffer::CSensorSerialBuffer(void)
 {
   _writeIndex = 0;
   _packetLength = 0;
-  Clear();
+  Clear(void);
 }
 
-void CSensorSerialBuffer::Clear ()
+void CSensorSerialBuffer::Clear (void)
 {
   for (byte i=0; i<SERIALBUFFER_SIZE; i++)
     _buffer[i] = 0;

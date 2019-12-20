@@ -1,6 +1,6 @@
 #include <BGHHeatpumpIR.h>
 
-BGHHeatpumpIR::BGHHeatpumpIR() : HeatpumpIR()
+BGHHeatpumpIR::BGHHeatpumpIR(void) : HeatpumpIR(void)
 {
   static const char model[] PROGMEM = "BGH_aud";
   static const char info[]  PROGMEM = "{\"mdl\":\"BGH_aud\",\"dn\":\"BGH AUD\",\"mT\":18,\"xT\":32,\"fs\":3}";

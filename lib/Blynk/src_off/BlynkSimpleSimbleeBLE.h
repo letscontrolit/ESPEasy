@@ -27,42 +27,42 @@
 class BlynkTransportSimbleeBLE
 {
 public:
-    BlynkTransportSimbleeBLE()
+    BlynkTransportSimbleeBLE(void)
         : mConn (false)
     {}
 
     // IP redirect not available
     void begin(char BLYNK_UNUSED *h, uint16_t BLYNK_UNUSED p) {}
 
-    void begin() {
+    void begin(void) {
         instance = this;
     }
 
-    bool connect() {
-        mBuffRX.clear();
+    bool connect(void) {
+        mBuffRX.clear(void);
         return mConn = true;
     }
 
-    void disconnect() {
+    void disconnect(void) {
         mConn = false;
     }
 
-    bool connected() {
+    bool connected(void) {
         return mConn;
     }
 
     size_t read(void* buf, size_t len) {
-        millis_time_t start = BlynkMillis();
-        while (BlynkMillis() - start < BLYNK_TIMEOUT_MS) {
-            if (available() < len) {
+        millis_time_t start = BlynkMillis(void);
+        while (BlynkMillis(void) - start < BLYNK_TIMEOUT_MS) {
+            if (available(void) < len) {
                 BlynkDelay(1);
             } else {
                 break;
             }
         }
-        noInterrupts();
+        noInterrupts(void);
         size_t res = mBuffRX.get((uint8_t*)buf, len);
-        interrupts();
+        interrupts(void);
         return res;
     }
 
@@ -71,10 +71,10 @@ public:
         return len;
     }
 
-    size_t available() {
-        noInterrupts();
-        size_t rxSize = mBuffRX.size();
-        interrupts();
+    size_t available(void) {
+        noInterrupts(void);
+        size_t rxSize = mBuffRX.size(void);
+        interrupts(void);
         return rxSize;
     }
 
@@ -82,10 +82,10 @@ public:
     int putData(uint8_t* data, uint16_t len) {
         if (!instance)
             return 0;
-        noInterrupts();
+        noInterrupts(void);
         //BLYNK_DBG_DUMP(">> ", data, len);
         instance->mBuffRX.put(data, len);
-        interrupts();
+        interrupts(void);
         return 0;
     }
 
@@ -111,7 +111,7 @@ public:
     {
         Base::begin(auth);
         state = DISCONNECTED;
-        conn.begin();
+        conn.begin(void);
     }
 };
 
@@ -121,16 +121,16 @@ static BlynkTransportSimbleeBLE _blynkTransport;
 BlynkSimpleSimbleeBLE Blynk(_blynkTransport);
 
 
-void SimbleeBLE_onConnect()
+void SimbleeBLE_onConnect(void)
 {
   BLYNK_LOG1("Device connected");
-  Blynk.startSession();
+  Blynk.startSession(void);
 }
 
-void SimbleeBLE_onDisconnect()
+void SimbleeBLE_onDisconnect(void)
 {
   BLYNK_LOG1("Device disconnected");
-  Blynk.disconnect();
+  Blynk.disconnect(void);
 }
 
 void SimbleeBLE_onReceive(char* data, int len)

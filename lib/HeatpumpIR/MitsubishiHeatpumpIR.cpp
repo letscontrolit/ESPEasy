@@ -15,14 +15,14 @@ char IRPacket[180];
 
 
 // These are protected methods, i.e. generic Mitsubishi instances cannot be created directly
-MitsubishiHeatpumpIR::MitsubishiHeatpumpIR() : HeatpumpIR()
+MitsubishiHeatpumpIR::MitsubishiHeatpumpIR(void) : HeatpumpIR(void)
 {
 }
 
 
 // The different models just set the model accordingly
 
-MitsubishiFDHeatpumpIR::MitsubishiFDHeatpumpIR() : MitsubishiHeatpumpIR()
+MitsubishiFDHeatpumpIR::MitsubishiFDHeatpumpIR(void) : MitsubishiHeatpumpIR(void)
 {
   static const char model[] PROGMEM = "mitsubishi_fd";
   static const char info[]  PROGMEM = "{\"mdl\":\"mitsubishi_fd\",\"dn\":\"Mitsubishi FD\",\"mT\":16,\"xT\":31,\"fs\":5}";
@@ -33,7 +33,7 @@ MitsubishiFDHeatpumpIR::MitsubishiFDHeatpumpIR() : MitsubishiHeatpumpIR()
   _mitsubishiModel = MITSUBISHI_FD;
 }
 
-MitsubishiFEHeatpumpIR::MitsubishiFEHeatpumpIR() : MitsubishiHeatpumpIR()
+MitsubishiFEHeatpumpIR::MitsubishiFEHeatpumpIR(void) : MitsubishiHeatpumpIR(void)
 {
   static const char model[] PROGMEM = "mitsubishi_fe";
   static const char info[]  PROGMEM = "{\"mdl\":\"mitsubishi_fe\",\"dn\":\"Mitsubishi FE\",\"mT\":16,\"xT\":31,\"fs\":5,\"maint\":[10]}";
@@ -44,7 +44,7 @@ MitsubishiFEHeatpumpIR::MitsubishiFEHeatpumpIR() : MitsubishiHeatpumpIR()
   _mitsubishiModel = MITSUBISHI_FE;
 }
 
-MitsubishiMSYHeatpumpIR::MitsubishiMSYHeatpumpIR() : MitsubishiHeatpumpIR()
+MitsubishiMSYHeatpumpIR::MitsubishiMSYHeatpumpIR(void) : MitsubishiHeatpumpIR(void)
 {
   static const char model[] PROGMEM = "mitsubishi_msy";
   static const char info[]  PROGMEM = "{\"mdl\":\"mitsubishi_msy\",\"dn\":\"Mitsubishi MSY\",\"mT\":16,\"xT\":31,\"fs\":5,\"maint\":[10]}";
@@ -55,7 +55,7 @@ MitsubishiMSYHeatpumpIR::MitsubishiMSYHeatpumpIR() : MitsubishiHeatpumpIR()
   _mitsubishiModel = MITSUBISHI_MSY;
 }
 
-MitsubishiFAHeatpumpIR::MitsubishiFAHeatpumpIR() : MitsubishiHeatpumpIR()
+MitsubishiFAHeatpumpIR::MitsubishiFAHeatpumpIR(void) : MitsubishiHeatpumpIR(void)
 {
 	static const char model[] PROGMEM = "mitsubishi_fa";
 	static const char info[]  PROGMEM = "{\"mdl\":\"mitsubishi_fa\",\"dn\":\"Mitsubishi FA\",\"mT\":16,\"xT\":31,\"fs\":5}"; //TODO: What should be here?
@@ -66,7 +66,7 @@ MitsubishiFAHeatpumpIR::MitsubishiFAHeatpumpIR() : MitsubishiHeatpumpIR()
 	_mitsubishiModel = MITSUBISHI_FA;
 }
 
-MitsubishiKJHeatpumpIR::MitsubishiKJHeatpumpIR() : MitsubishiHeatpumpIR()
+MitsubishiKJHeatpumpIR::MitsubishiKJHeatpumpIR(void) : MitsubishiHeatpumpIR(void)
 {
 	static const char model[] PROGMEM = "mitsubishi_kj";
 	static const char info[]  PROGMEM = "{\"mdl\":\"mitsubishi_kj\",\"dn\":\"Mitsubishi KJ\",\"mT\":16,\"xT\":31,\"fs\":5,\"maint\":[10]}";

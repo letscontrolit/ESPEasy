@@ -1,6 +1,6 @@
 #include <HisenseHeatpumpIR.h>
 
-HisenseHeatpumpIR::HisenseHeatpumpIR() : HeatpumpIR()
+HisenseHeatpumpIR::HisenseHeatpumpIR(void) : HeatpumpIR(void)
 {
   static const char model[] PROGMEM = "hisense_aud";
   static const char info[]  PROGMEM = "{\"mdl\":\"hisense_aud\",\"dn\":\"Hisense AUD\",\"mT\":18,\"xT\":32,\"fs\":3}";

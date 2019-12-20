@@ -39,11 +39,11 @@ public:
 
 	/** constructor of QEIx4 object
 	*/
-	QEIx4();
+	QEIx4(void);
 
 	/** destructor of QEIx4 object
 	*/
-	~QEIx4();
+	~QEIx4(void);
 
 	void begin(int16_t pinA, int16_t pinB, int16_t pinI=-1, uint8_t mode=4);
 
@@ -51,14 +51,14 @@ public:
 	*
 	* @return        Actual counter value
 	*/
-	long read();
+	long read(void);
 
 	/** Gets the actual counter value as long operator.
 	*
 	* @return        Actual counter value as long operator
 	*/
-	operator long() {   // int-Operator
-		return read();
+	operator long(void) {   // int-Operator
+		return read(void);
 	}
 
 	/** Sets the counter value at actual encoder position to given value.
@@ -94,21 +94,21 @@ public:
 		_bIndexTrigger = bIndexTrigger;
 	}
 
-  bool hasChanged(){
+  bool hasChanged(void){
     return _bHasChanged;
   }
 
-  void loop();
+  void loop(void);
 
 protected:
 
   /** Polls the state machine and updates the counter value.
 	*/
-	void processStateMachine();
+	void processStateMachine(void);
 
   /** Entry point for arduino interrupts - route to class instances
   */
-  static void ISR();
+  static void ISR(void);
 
 protected:
 

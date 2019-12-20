@@ -34,9 +34,9 @@
 class CSensorSerialBuffer
 {
 public:
-  CSensorSerialBuffer();
+  CSensorSerialBuffer(void);
 
-  void Clear ();
+  void Clear (void);
 
   void AddData (byte b);
 

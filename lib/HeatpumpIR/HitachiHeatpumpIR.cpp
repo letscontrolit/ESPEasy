@@ -1,6 +1,6 @@
 #include <HitachiHeatpumpIR.h>
 
-HitachiHeatpumpIR::HitachiHeatpumpIR() : HeatpumpIR()
+HitachiHeatpumpIR::HitachiHeatpumpIR(void) : HeatpumpIR(void)
 {
   static const char model[] PROGMEM = "hitachi";
   static const char info[]  PROGMEM = "{\"mdl\":\"hitachi\",\"dn\":\"Hitachi\",\"mT\":16,\"xT\":32,\"fs\":4}";

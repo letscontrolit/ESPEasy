@@ -69,7 +69,7 @@ public:
         return res;
     }
 
-    bool connect() {
+    bool connect(void) {
         // Synchronize time useing SNTP. This is necessary to verify that
         // the TLS certificates offered by the server are currently valid.
         configTime(0, 0, "pool.ntp.org", "time.nist.gov");
@@ -81,11 +81,11 @@ public:
         struct tm timeinfo;
         gmtime_r(&now, &timeinfo);
         String ntpTime = asctime(&timeinfo);
-        ntpTime.trim();
+        ntpTime.trim(void);
         BLYNK_LOG2("NTP time: ", ntpTime);
 
         // Now try connecting
-        if (BlynkArduinoClientGen<Client>::connect()) {
+        if (BlynkArduinoClientGen<Client>::connect(void)) {
           if (fingerprint && this->client->verify(fingerprint, this->domain)) {
               BLYNK_LOG1(BLYNK_F("Fingerprint OK"));
               return true;
@@ -117,19 +117,19 @@ public:
     {
         BLYNK_LOG2(BLYNK_F("Connecting to "), ssid);
         WiFi.mode(WIFI_STA);
-        if (WiFi.status() != WL_CONNECTED) {
+        if (WiFi.status(void) != WL_CONNECTED) {
             if (pass && strlen(pass)) {
                 WiFi.begin(ssid, pass);
             } else {
                 WiFi.begin(ssid);
             }
         }
-        while (WiFi.status() != WL_CONNECTED) {
+        while (WiFi.status(void) != WL_CONNECTED) {
             BlynkDelay(500);
         }
         BLYNK_LOG1(BLYNK_F("Connected to WiFi"));
 
-        IPAddress myip = WiFi.localIP();
+        IPAddress myip = WiFi.localIP(void);
         BLYNK_LOG_IP("IP: ", myip);
     }
 
@@ -172,7 +172,7 @@ public:
     {
         connectWiFi(ssid, pass);
         config(auth, domain, port, fingerprint);
-        while(this->connect() != true) {}
+        while(this->connect(void) != true) {}
     }
 
     void begin(const char* auth,
@@ -184,7 +184,7 @@ public:
     {
         connectWiFi(ssid, pass);
         config(auth, ip, port, fingerprint);
-        while(this->connect() != true) {}
+        while(this->connect(void) != true) {}
     }
 
 };

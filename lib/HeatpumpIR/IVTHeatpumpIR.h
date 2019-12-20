@@ -12,7 +12,7 @@
 class IVTHeatpumpIR : public SharpHeatpumpIR
 {
   public:
-    IVTHeatpumpIR();
+    IVTHeatpumpIR(void);
 };
 
 #endif

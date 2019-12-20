@@ -120,7 +120,7 @@
 class MitsubishiHeavyHeatpumpIR : public HeatpumpIR
 {
   protected: // Cannot create generic MitsubishiHeavy heatpump instances
-    MitsubishiHeavyHeatpumpIR();
+    MitsubishiHeavyHeatpumpIR(void);
     uint8_t _mitsubishiModel;  // Tells whether this is ZJ or ZM (or other supported model...)
 
   public:
@@ -131,7 +131,7 @@ class MitsubishiHeavyHeatpumpIR : public HeatpumpIR
 class MitsubishiHeavyZJHeatpumpIR : public MitsubishiHeavyHeatpumpIR
 {
   public:
-    MitsubishiHeavyZJHeatpumpIR();
+    MitsubishiHeavyZJHeatpumpIR(void);
     void send(IRSender& IR, uint8_t powerModeCmd, uint8_t operatingModeCmd, uint8_t fanSpeedCmd, uint8_t temperatureCmd, uint8_t swingVCmd, uint8_t swingHCmd, bool cleanModeCmd, bool silentModeCmd, bool _3DAutoCmd);
 
   private:
@@ -141,7 +141,7 @@ class MitsubishiHeavyZJHeatpumpIR : public MitsubishiHeavyHeatpumpIR
 class MitsubishiHeavyZMHeatpumpIR : public MitsubishiHeavyHeatpumpIR
 {
   public:
-    MitsubishiHeavyZMHeatpumpIR();
+    MitsubishiHeavyZMHeatpumpIR(void);
     void send(IRSender& IR, uint8_t powerModeCmd, uint8_t operatingModeCmd, uint8_t fanSpeedCmd, uint8_t temperatureCmd, uint8_t swingVCmd, uint8_t swingHCmd, bool cleanModeCmd, bool silentModeCmd, bool _3DAutoCmd);
 
   private:
@@ -151,7 +151,7 @@ class MitsubishiHeavyZMHeatpumpIR : public MitsubishiHeavyHeatpumpIR
 class MitsubishiHeavyZMPHeatpumpIR : public MitsubishiHeavyHeatpumpIR
 {
   public:
-    MitsubishiHeavyZMPHeatpumpIR();
+    MitsubishiHeavyZMPHeatpumpIR(void);
     void send(IRSender& IR, uint8_t powerModeCmd, uint8_t operatingModeCmd, uint8_t fanSpeedCmd, uint8_t temperatureCmd, uint8_t swingVCmd, uint8_t swingHCmd, bool cleanModeCmd, bool silentModeCmd, bool _3DAutoCmd);
 
   private:

@@ -53,66 +53,66 @@ BLE  ble;
 class BlynkTransportRedBearLab_BLE_Nano
 {
 public:
-    BlynkTransportRedBearLab_BLE_Nano()
+    BlynkTransportRedBearLab_BLE_Nano(void)
         : mConn (false)
     {}
 
     // IP redirect not available
     void begin(char* h, uint16_t p) {}
 
-    void begin() {
+    void begin(void) {
         instance = this;
 
-        ble.gap().onConnection(connectCallback);
-        ble.gap().onDisconnection(disconnectCallback);
+        ble.gap(void).onConnection(connectCallback);
+        ble.gap(void).onDisconnection(disconnectCallback);
 
-        ble.gattServer().addService(uartService);
-        ble.gattServer().onDataWritten(writeCallback);
-        ble.gattServer().onDataSent(sentCallback);
+        ble.gattServer(void).addService(uartService);
+        ble.gattServer(void).onDataWritten(writeCallback);
+        ble.gattServer(void).onDataSent(sentCallback);
 
         // Setup advertising
-        ble.gap().accumulateAdvertisingPayload(GapAdvertisingData::COMPLETE_LIST_128BIT_SERVICE_IDS,
+        ble.gap(void).accumulateAdvertisingPayload(GapAdvertisingData::COMPLETE_LIST_128BIT_SERVICE_IDS,
                                               uart_base_uuid_rev, sizeof(uart_base_uuid));
 
     }
 
-    bool connect() {
-        mBuffRX.clear();
+    bool connect(void) {
+        mBuffRX.clear(void);
         return mConn = true;
     }
 
-    void disconnect() {
+    void disconnect(void) {
         mConn = false;
     }
 
-    bool connected() {
+    bool connected(void) {
         return mConn;
     }
 
     size_t read(void* buf, size_t len) {
-        millis_time_t start = BlynkMillis();
-        while (BlynkMillis() - start < BLYNK_TIMEOUT_MS) {
-            if (available() < len) {
-                ble.waitForEvent();
+        millis_time_t start = BlynkMillis(void);
+        while (BlynkMillis(void) - start < BLYNK_TIMEOUT_MS) {
+            if (available(void) < len) {
+                ble.waitForEvent(void);
             } else {
                 break;
             }
         }
-        noInterrupts();
+        noInterrupts(void);
         size_t res = mBuffRX.get((uint8_t*)buf, len);
-        interrupts();
+        interrupts(void);
         return res;
     }
 
     size_t write(const void* buf, size_t len) {
-        ble.updateCharacteristicValue(rxCharacteristic.getValueAttribute().getHandle(), (uint8_t*)buf, len);
+        ble.updateCharacteristicValue(rxCharacteristic.getValueAttribute(void).getHandle(void), (uint8_t*)buf, len);
         return len;
     }
 
-    size_t available() {
-        noInterrupts();
-        size_t rxSize = mBuffRX.size();
-        interrupts();
+    size_t available(void) {
+        noInterrupts(void);
+        size_t rxSize = mBuffRX.size(void);
+        interrupts(void);
         return rxSize;
     }
 
@@ -124,10 +124,10 @@ private:
     {
         if (!instance)
             return;
-      noInterrupts();
+      noInterrupts(void);
       //BLYNK_DBG_DUMP(">> ", params->data, params->len);
       instance->mBuffRX.put(params->data, params->len);
-      interrupts();
+      interrupts(void);
     }
 
     static
@@ -162,7 +162,7 @@ public:
     {
         Base::begin(auth);
         state = DISCONNECTED;
-        conn.begin();
+        conn.begin(void);
     }
 };
 
@@ -174,16 +174,16 @@ BlynkRedBearLab_BLE_Nano Blynk(_blynkTransport);
 void BlynkTransportRedBearLab_BLE_Nano::connectCallback(const Gap::ConnectionCallbackParams_t *params)
 {
   BLYNK_LOG1("Device connected");
-  Blynk.startSession();
+  Blynk.startSession(void);
 }
 
 void BlynkTransportRedBearLab_BLE_Nano::disconnectCallback(const Gap::DisconnectionCallbackParams_t *params)
 {
   BLYNK_LOG1("Device disconnected");
-  //__disable_irq();
-  Blynk.disconnect();
-  //__enable_irq();
-  ble.startAdvertising();
+  //__disable_irq(void);
+  Blynk.disconnect(void);
+  //__enable_irq(void);
+  ble.startAdvertising(void);
 }
 
 #include <BlynkWidgets.h>

@@ -28,26 +28,26 @@ public:
 #include <SD.h>
 void WidgetSD::onWrite(BlynkReq BLYNK_UNUSED &request, const BlynkParam& param)
 {
-    const char* cmd = param[0].asStr();
+    const char* cmd = param[0].asStr(void);
     if (!strcmp(cmd, "ls")) {
-        if (File dir = SD.open(param[1].asStr())) {
-            while (File entry = dir.openNextFile()) {
+        if (File dir = SD.open(param[1].asStr(void))) {
+            while (File entry = dir.openNextFile(void)) {
                 char mem[32];
                 BlynkParam result(mem, 0, sizeof(mem));
-                result.add(entry.name());
-                if (entry.isDirectory()) {
+                result.add(entry.name(void));
+                if (entry.isDirectory(void)) {
                     result.add("/");
                 } else {
-                    result.add(entry.size());
+                    result.add(entry.size(void));
                 }
                 Blynk.virtualWrite(request.pin, result);
-                entry.close();
+                entry.close(void);
             }
-            dir.close();
+            dir.close(void);
         }
     }  else if (!strcmp(cmd, "get")) { // dc dc dc dc d[l|e]
-        if (File f = SD.open(param[1].asStr())) {
-            if (!f.isDirectory()) {
+        if (File f = SD.open(param[1].asStr(void))) {
+            if (!f.isDirectory(void)) {
                 char mem[32] = "dc";
                 const int maxlen = sizeof(mem)-3;
                 int len;
@@ -65,7 +65,7 @@ void WidgetSD::onWrite(BlynkReq BLYNK_UNUSED &request, const BlynkParam& param)
 
             }
 
-            f.close();
+            f.close(void);
         }
     } else {
         //BLYNK_LOG2(BLYNK_F("Invalid SD command: "), cmd);

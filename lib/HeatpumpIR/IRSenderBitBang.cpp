@@ -21,9 +21,9 @@ void IRSenderBitBang::setFrequency(int frequency)
 // Send an IR 'mark' symbol, i.e. transmitter ON
 void IRSenderBitBang::mark(int markLength)
 {
-  long beginning = micros();
+  long beginning = micros(void);
 
-  while((int)(micros() - beginning) < markLength){
+  while((int)(micros(void) - beginning) < markLength){
     digitalWrite(_pin, HIGH);
     delayMicroseconds(_halfPeriodicTime);
     digitalWrite(_pin, LOW);

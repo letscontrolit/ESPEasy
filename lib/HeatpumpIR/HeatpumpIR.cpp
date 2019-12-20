@@ -1,6 +1,6 @@
 #include <HeatpumpIR.h>
 
-HeatpumpIR::HeatpumpIR()
+HeatpumpIR::HeatpumpIR(void)
 {
 }
 
@@ -10,12 +10,12 @@ void HeatpumpIR::send(IRSender&, uint8_t, uint8_t, uint8_t, uint8_t, uint8_t, ui
 }
 
 // Heatpump model and info getters
-const char PROGMEM* HeatpumpIR::model()
+const char PROGMEM* HeatpumpIR::model(void)
 {
   return _model;
 }
 
-const char PROGMEM* HeatpumpIR::info()
+const char PROGMEM* HeatpumpIR::info(void)
 {
   return _info;
 }

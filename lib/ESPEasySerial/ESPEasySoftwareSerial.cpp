@@ -38,20 +38,20 @@ extern "C" {
 static ESPeasySoftwareSerial *ObjList[NR_CONCURRENT_SOFT_SERIALS];
 static uint8_t PinControllerMap[NR_CONCURRENT_SOFT_SERIALS]={}; // Zero all elements
 
-void ICACHE_RAM_ATTR espeasy_sws_isr_0() { ObjList[0]->rxRead(); };
-void ICACHE_RAM_ATTR espeasy_sws_isr_1() { ObjList[1]->rxRead(); };
-void ICACHE_RAM_ATTR espeasy_sws_isr_2() { ObjList[2]->rxRead(); };
-/*void ICACHE_RAM_ATTR espeasy_sws_isr_3() { ObjList[3]->rxRead(); };
-void ICACHE_RAM_ATTR espeasy_sws_isr_4() { ObjList[4]->rxRead(); };
-void ICACHE_RAM_ATTR espeasy_sws_isr_5() { ObjList[5]->rxRead(); };
+void ICACHE_RAM_ATTR espeasy_sws_isr_0(void) { ObjList[0]->rxRead(void); };
+void ICACHE_RAM_ATTR espeasy_sws_isr_1(void) { ObjList[1]->rxRead(void); };
+void ICACHE_RAM_ATTR espeasy_sws_isr_2(void) { ObjList[2]->rxRead(void); };
+/*void ICACHE_RAM_ATTR espeasy_sws_isr_3(void) { ObjList[3]->rxRead(void); };
+void ICACHE_RAM_ATTR espeasy_sws_isr_4(void) { ObjList[4]->rxRead(void); };
+void ICACHE_RAM_ATTR espeasy_sws_isr_5(void) { ObjList[5]->rxRead(void); };
 // Pin 6 to 11 can not be used
-void ICACHE_RAM_ATTR espeasy_sws_isr_12() { ObjList[6]->rxRead(); };
-void ICACHE_RAM_ATTR espeasy_sws_isr_13() { ObjList[7]->rxRead(); };
-void ICACHE_RAM_ATTR espeasy_sws_isr_14() { ObjList[8]->rxRead(); };
-void ICACHE_RAM_ATTR espeasy_sws_isr_15() { ObjList[9]->rxRead(); };
+void ICACHE_RAM_ATTR espeasy_sws_isr_12(void) { ObjList[6]->rxRead(void); };
+void ICACHE_RAM_ATTR espeasy_sws_isr_13(void) { ObjList[7]->rxRead(void); };
+void ICACHE_RAM_ATTR espeasy_sws_isr_14(void) { ObjList[8]->rxRead(void); };
+void ICACHE_RAM_ATTR espeasy_sws_isr_15(void) { ObjList[9]->rxRead(void); };
 */
 
-static void (*ISRList[NR_CONCURRENT_SOFT_SERIALS])() = {
+static void (*ISRList[NR_CONCURRENT_SOFT_SERIALS])(void) = {
       espeasy_sws_isr_0,
       espeasy_sws_isr_1,
       espeasy_sws_isr_2 /*,
@@ -97,7 +97,7 @@ ESPeasySoftwareSerial::ESPeasySoftwareSerial(uint8_t receivePin, uint8_t transmi
    begin(9600);
 }
 
-ESPeasySoftwareSerial::~ESPeasySoftwareSerial() {
+ESPeasySoftwareSerial::~ESPeasySoftwareSerial(void) {
    enableRx(false);
    if (m_rxValid) {
      const uint8_t index = pinToIndex(m_rxPin);
@@ -139,8 +139,8 @@ uint8_t ESPeasySoftwareSerial::pinToIndex(uint8_t pin) {
 }
 
 void ESPeasySoftwareSerial::begin(long speed) {
-   // Use getCycleCount() loop to get as exact timing as possible
-   m_bitTime = ESP.getCpuFreqMHz()*1000000/speed;
+   // Use getCycleCount(void) loop to get as exact timing as possible
+   m_bitTime = ESP.getCpuFreqMHz(void)*1000000/speed;
    if (!m_rxEnabled)
      enableRx(true);
 }
@@ -167,32 +167,32 @@ void ESPeasySoftwareSerial::enableRx(bool on) {
    }
 }
 
-int ESPeasySoftwareSerial::read() {
+int ESPeasySoftwareSerial::read(void) {
    if (!m_rxValid || (m_inPos == m_outPos)) return -1;
    uint8_t ch = m_buffer[m_outPos];
    m_outPos = (m_outPos+1) % m_buffSize;
    return ch;
 }
 
-int ESPeasySoftwareSerial::available() {
+int ESPeasySoftwareSerial::available(void) {
    if (!m_rxValid) return 0;
    int avail = m_inPos - m_outPos;
    if (avail < 0) avail += m_buffSize;
    return avail;
 }
 
-#define WAIT { while (ESP.getCycleCount()-start < wait); wait += m_bitTime; }
+#define WAIT { while (ESP.getCycleCount(void)-start < wait); wait += m_bitTime; }
 
 size_t ESPeasySoftwareSerial::write(uint8_t b) {
    if (!m_txValid) return 0;
 
    if (m_invert) b = ~b;
    // Disable interrupts in order to get a clean transmit
-   cli();
+   cli(void);
    if (m_txEnableValid) digitalWrite(m_txEnablePin, HIGH);
    unsigned long wait = m_bitTime;
    digitalWrite(m_txPin, HIGH);
-   unsigned long start = ESP.getCycleCount();
+   unsigned long start = ESP.getCycleCount(void);
     // Start bit;
    digitalWrite(m_txPin, LOW);
    WAIT;
@@ -205,24 +205,24 @@ size_t ESPeasySoftwareSerial::write(uint8_t b) {
    digitalWrite(m_txPin, HIGH);
    WAIT;
    if (m_txEnableValid) digitalWrite(m_txEnablePin, LOW);
-   sei();
+   sei(void);
    return 1;
 }
 
-void ESPeasySoftwareSerial::flush() {
+void ESPeasySoftwareSerial::flush(void) {
    m_inPos = m_outPos = 0;
 }
 
-int ESPeasySoftwareSerial::peek() {
+int ESPeasySoftwareSerial::peek(void) {
    if (!m_rxValid || (m_inPos == m_outPos)) return -1;
    return m_buffer[m_outPos];
 }
 
-void ICACHE_RAM_ATTR ESPeasySoftwareSerial::rxRead() {
+void ICACHE_RAM_ATTR ESPeasySoftwareSerial::rxRead(void) {
    // Advance the starting point for the samples but compensate for the
    // initial delay which occurs before the interrupt is delivered
    unsigned long wait = m_bitTime + m_bitTime/3 - 500;
-   unsigned long start = ESP.getCycleCount();
+   unsigned long start = ESP.getCycleCount(void);
    uint8_t rec = 0;
    for (uint8_t i = 0; i < 8; i++) {
      WAIT;

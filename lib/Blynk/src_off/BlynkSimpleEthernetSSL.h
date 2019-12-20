@@ -33,7 +33,7 @@ BlynkEthernet Blynk(_blynkTransport);
 
 #include <BlynkWidgets.h>
 
-unsigned long ntpGetTime() {
+unsigned long ntpGetTime(void) {
   static const char timeServer[] = "time.nist.gov";
 
   const int NTP_PACKET_SIZE = 48; // NTP time stamp is in the first 48 bytes of the message  
@@ -62,13 +62,13 @@ unsigned long ntpGetTime() {
     // you can send a packet requesting a timestamp:
     Udp.beginPacket(timeServer, 123); // NTP requests are to port 123
     Udp.write(packetBuffer, NTP_PACKET_SIZE);
-    Udp.endPacket();
+    Udp.endPacket(void);
   
-    millis_time_t started = BlynkMillis();
-    while (BlynkMillis() - started < 1000)
+    millis_time_t started = BlynkMillis(void);
+    while (BlynkMillis(void) - started < 1000)
     {
       delay(100);
-      if (Udp.parsePacket()) {
+      if (Udp.parsePacket(void)) {
         // We've received a packet, read the data from it
         Udp.read(packetBuffer, NTP_PACKET_SIZE); // read the packet into the buffer
 

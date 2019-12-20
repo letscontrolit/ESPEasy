@@ -13,7 +13,7 @@
 const char ssid[] = "TP-LINK_C20B";  //  your network SSID (name)
 const char password[] = "paolo-48";       // your network password
 
-void setup() {
+void setup(void) {
 
 	Serial.begin(115200);
 	Serial.print("Connecting t ");
@@ -23,7 +23,7 @@ void setup() {
 	WiFi.begin(ssid, password);
 
 
-	while (WiFi.status() != WL_CONNECTED) {
+	while (WiFi.status(void) != WL_CONNECTED) {
 		delay(500);
 		Serial.print(".");
 
@@ -33,19 +33,19 @@ void setup() {
 }
 
 // the loop function runs over and over again until power down or reset
-void loop() {
+void loop(void) {
 	int ia[4] = { 192,168,1,1 };
 	int  i = 0;
-	while (Serial.available()) {
+	while (Serial.available(void)) {
 
-		char c = Serial.read();
+		char c = Serial.read(void);
 		delay(100);
    	int  val = 0;
 		while (c != '.' &&  c != 10 && c!=255) {
 			if (c >= '0'&& c<='9') {
 				val = val*10+(c-'0');
 			}
-			c = Serial.read();
+			c = Serial.read(void);
 		}
 
 			ia[i++] =val ;
@@ -60,13 +60,13 @@ void loop() {
 
 }
 int readnu(char s) {
-	char c = Serial.read();
+	char c = Serial.read(void);
 	Serial.print(c);
 	int digit = 1,val=0;
 	while (c != s &&  c != 10&&c>0) {
 		if(c>'0') val += digit*(c - '0');
 		digit *= 10;
-		c=Serial.read();
+		c=Serial.read(void);
 		Serial.print(int(c));
 	}
 	Serial.println(digit);

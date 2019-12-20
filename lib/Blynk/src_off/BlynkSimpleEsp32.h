@@ -40,12 +40,12 @@ public:
         } else {
             WiFi.begin(ssid);
         }
-        while (WiFi.status() != WL_CONNECTED) {
+        while (WiFi.status(void) != WL_CONNECTED) {
             BlynkDelay(500);
         }
         BLYNK_LOG1(BLYNK_F("Connected to WiFi"));
 
-        IPAddress myip = WiFi.localIP();
+        IPAddress myip = WiFi.localIP(void);
         BLYNK_LOG_IP("IP: ", myip);
     }
 
@@ -73,7 +73,7 @@ public:
     {
         connectWiFi(ssid, pass);
         config(auth, domain, port);
-        while(this->connect() != true) {}
+        while(this->connect(void) != true) {}
     }
 
     void begin(const char* auth,
@@ -84,7 +84,7 @@ public:
     {
         connectWiFi(ssid, pass);
         config(auth, ip, port);
-        while(this->connect() != true) {}
+        while(this->connect(void) != true) {}
     }
 
 };

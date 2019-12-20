@@ -54,7 +54,7 @@ void Adafruit_TCS34725::write8 (uint8_t reg, uint32_t value)
   Wire.send(TCS34725_COMMAND_BIT | reg);
   Wire.send(value & 0xFF);
   #endif
-  Wire.endTransmission();
+  Wire.endTransmission(void);
 }
 
 /**************************************************************************/
@@ -70,13 +70,13 @@ uint8_t Adafruit_TCS34725::read8(uint8_t reg)
   #else
   Wire.send(TCS34725_COMMAND_BIT | reg);
   #endif
-  Wire.endTransmission();
+  Wire.endTransmission(void);
 
   Wire.requestFrom(TCS34725_ADDRESS, 1);
   #if ARDUINO >= 100
-  return Wire.read();
+  return Wire.read(void);
   #else
-  return Wire.receive();
+  return Wire.receive(void);
   #endif
 }
 
@@ -95,15 +95,15 @@ uint16_t Adafruit_TCS34725::read16(uint8_t reg)
   #else
   Wire.send(TCS34725_COMMAND_BIT | reg);
   #endif
-  Wire.endTransmission();
+  Wire.endTransmission(void);
 
   Wire.requestFrom(TCS34725_ADDRESS, 2);
   #if ARDUINO >= 100
-  t = Wire.read();
-  x = Wire.read();
+  t = Wire.read(void);
+  x = Wire.read(void);
   #else
-  t = Wire.receive();
-  x = Wire.receive();
+  t = Wire.receive(void);
+  x = Wire.receive(void);
   #endif
   x <<= 8;
   x |= t;
@@ -163,7 +163,7 @@ Adafruit_TCS34725::Adafruit_TCS34725(tcs34725IntegrationTime_t it, tcs34725Gain_
 /**************************************************************************/
 boolean Adafruit_TCS34725::begin(void)
 {
-  //Wire.begin();   called in ESPEasy framework
+  //Wire.begin(void);   called in ESPEasy framework
 
   /* Make sure we're actually connected */
   uint8_t x = read8(TCS34725_ID);
@@ -178,7 +178,7 @@ boolean Adafruit_TCS34725::begin(void)
   setGain(_tcs34725Gain);
 
   /* Note: by default, the device is in power down mode on bootup */
-  enable();
+  enable(void);
 
   return true;
 }
@@ -190,7 +190,7 @@ boolean Adafruit_TCS34725::begin(void)
 /**************************************************************************/
 void Adafruit_TCS34725::setIntegrationTime(tcs34725IntegrationTime_t it)
 {
-  if (!_tcs34725Initialised) begin();
+  if (!_tcs34725Initialised) begin(void);
 
   /* Update the timing register */
   write8(TCS34725_ATIME, it);
@@ -206,7 +206,7 @@ void Adafruit_TCS34725::setIntegrationTime(tcs34725IntegrationTime_t it)
 /**************************************************************************/
 void Adafruit_TCS34725::setGain(tcs34725Gain_t gain)
 {
-  if (!_tcs34725Initialised) begin();
+  if (!_tcs34725Initialised) begin(void);
 
   /* Update the timing register */
   write8(TCS34725_CONTROL, gain);
@@ -222,7 +222,7 @@ void Adafruit_TCS34725::setGain(tcs34725Gain_t gain)
 /**************************************************************************/
 void Adafruit_TCS34725::getRawData (uint16_t *r, uint16_t *g, uint16_t *b, uint16_t *c)
 {
-  if (!_tcs34725Initialised) begin();
+  if (!_tcs34725Initialised) begin(void);
 
   *c = read16(TCS34725_CDATAL);
   *r = read16(TCS34725_RDATAL);
@@ -322,7 +322,7 @@ void Adafruit_TCS34725::clearInterrupt(void) {
   #else
   Wire.send(TCS34725_COMMAND_BIT | 0x66);
   #endif
-  Wire.endTransmission();
+  Wire.endTransmission(void);
 }
 
 

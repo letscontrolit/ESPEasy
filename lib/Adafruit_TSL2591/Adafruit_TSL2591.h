@@ -164,14 +164,14 @@ class Adafruit_TSL2591 : public Adafruit_Sensor
   uint16_t  getLuminosity (uint8_t channel );
   uint32_t  getFullLuminosity ( );
 
-  tsl2591IntegrationTime_t getTiming();
-  tsl2591Gain_t            getGain();
+  tsl2591IntegrationTime_t getTiming(void);
+  tsl2591Gain_t            getGain(void);
 
   // Interrupt
   void    clearInterrupt(void);
   void    registerInterrupt(uint16_t lowerThreshold, uint16_t upperThreshold);
   void    registerInterrupt(uint16_t lowerThreshold, uint16_t upperThreshold, tsl2591Persist_t persist);
-  uint8_t getStatus();
+  uint8_t getStatus(void);
   
   /* Unified Sensor API Functions */  
   bool getEvent  ( sensors_event_t* );

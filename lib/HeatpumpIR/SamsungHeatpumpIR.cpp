@@ -1,7 +1,7 @@
 #include <SamsungHeatpumpIR.h>
 
 // These are protected methods, i.e. generic Samsung instances cannot be created directly
-SamsungHeatpumpIR::SamsungHeatpumpIR() : HeatpumpIR()
+SamsungHeatpumpIR::SamsungHeatpumpIR(void) : HeatpumpIR(void)
 {
 }
 
@@ -11,7 +11,7 @@ void SamsungHeatpumpIR::send(IRSender& IR, uint8_t powerModeCmd, uint8_t operati
 
 // Samsung models
 
-SamsungAQVHeatpumpIR::SamsungAQVHeatpumpIR() : SamsungHeatpumpIR()
+SamsungAQVHeatpumpIR::SamsungAQVHeatpumpIR(void) : SamsungHeatpumpIR(void)
 {
   static const char model[] PROGMEM = "samsung_aqv";
   static const char info[]  PROGMEM = "{\"mdl\":\"samsung_aqv\",\"dn\":\"Samsung AQV\",\"mT\":16,\"xT\":27,\"fs\":4}";
@@ -20,7 +20,7 @@ SamsungAQVHeatpumpIR::SamsungAQVHeatpumpIR() : SamsungHeatpumpIR()
   _info = info;
 }
 
-SamsungFJMHeatpumpIR::SamsungFJMHeatpumpIR() : SamsungHeatpumpIR()
+SamsungFJMHeatpumpIR::SamsungFJMHeatpumpIR(void) : SamsungHeatpumpIR(void)
 {
   static const char model[] PROGMEM = "samsung_fjm";
   static const char info[]  PROGMEM = "{\"mdl\":\"samsung_fjm\",\"dn\":\"Samsung FJM\",\"mT\":16,\"xT\":27,\"fs\":4}";

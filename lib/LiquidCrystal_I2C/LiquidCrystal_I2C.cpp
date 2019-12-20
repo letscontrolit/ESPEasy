@@ -52,18 +52,18 @@ LiquidCrystal_I2C::LiquidCrystal_I2C(uint8_t lcd_Addr,uint8_t lcd_cols,uint8_t l
   _backlightval = LCD_NOBACKLIGHT;
 }
 
-void LiquidCrystal_I2C::oled_init(){
+void LiquidCrystal_I2C::oled_init(void){
   _oled = true;
-	init_priv();
+	init_priv(void);
 }
 
-void LiquidCrystal_I2C::init(){
-	init_priv();
+void LiquidCrystal_I2C::init(void){
+	init_priv(void);
 }
 
-void LiquidCrystal_I2C::init_priv()
+void LiquidCrystal_I2C::init_priv(void)
 {
-	//Wire.begin();   called in ESPEasy framework
+	//Wire.begin(void);   called in ESPEasy framework
 	_displayfunction = LCD_4BITMODE | LCD_1LINE | LCD_5x8DOTS;
 	begin(_cols, _rows);
 }
@@ -113,10 +113,10 @@ void LiquidCrystal_I2C::begin(uint8_t cols, uint8_t lines, uint8_t dotsize) {
 
 	// turn the display on with no cursor or blinking default
 	_displaycontrol = LCD_DISPLAYON | LCD_CURSOROFF | LCD_BLINKOFF;
-	display();
+	display(void);
 
 	// clear it off
-	clear();
+	clear(void);
 
 	// Initialize to default text direction (for roman languages)
 	_displaymode = LCD_ENTRYLEFT | LCD_ENTRYSHIFTDECREMENT;
@@ -124,18 +124,18 @@ void LiquidCrystal_I2C::begin(uint8_t cols, uint8_t lines, uint8_t dotsize) {
 	// set the entry mode
 	command(LCD_ENTRYMODESET | _displaymode);
 
-	home();
+	home(void);
 
 }
 
 /********** high level commands, for the user! */
-void LiquidCrystal_I2C::clear(){
+void LiquidCrystal_I2C::clear(void){
 	command(LCD_CLEARDISPLAY);// clear display, set cursor position to zero
 	delayMicroseconds(2000);  // this command takes a long time!
   if (_oled) setCursor(0,0);
 }
 
-void LiquidCrystal_I2C::home(){
+void LiquidCrystal_I2C::home(void){
 	command(LCD_RETURNHOME);  // set cursor position to zero
 	delayMicroseconds(2000);  // this command takes a long time!
 }
@@ -149,31 +149,31 @@ void LiquidCrystal_I2C::setCursor(uint8_t col, uint8_t row){
 }
 
 // Turn the display on/off (quickly)
-void LiquidCrystal_I2C::noDisplay() {
+void LiquidCrystal_I2C::noDisplay(void) {
 	_displaycontrol &= ~LCD_DISPLAYON;
 	command(LCD_DISPLAYCONTROL | _displaycontrol);
 }
-void LiquidCrystal_I2C::display() {
+void LiquidCrystal_I2C::display(void) {
 	_displaycontrol |= LCD_DISPLAYON;
 	command(LCD_DISPLAYCONTROL | _displaycontrol);
 }
 
 // Turns the underline cursor on/off
-void LiquidCrystal_I2C::noCursor() {
+void LiquidCrystal_I2C::noCursor(void) {
 	_displaycontrol &= ~LCD_CURSORON;
 	command(LCD_DISPLAYCONTROL | _displaycontrol);
 }
-void LiquidCrystal_I2C::cursor() {
+void LiquidCrystal_I2C::cursor(void) {
 	_displaycontrol |= LCD_CURSORON;
 	command(LCD_DISPLAYCONTROL | _displaycontrol);
 }
 
 // Turn on and off the blinking cursor
-void LiquidCrystal_I2C::noBlink() {
+void LiquidCrystal_I2C::noBlink(void) {
 	_displaycontrol &= ~LCD_BLINKON;
 	command(LCD_DISPLAYCONTROL | _displaycontrol);
 }
-void LiquidCrystal_I2C::blink() {
+void LiquidCrystal_I2C::blink(void) {
 	_displaycontrol |= LCD_BLINKON;
 	command(LCD_DISPLAYCONTROL | _displaycontrol);
 }
@@ -267,7 +267,7 @@ void LiquidCrystal_I2C::write4bits(uint8_t value) {
 void LiquidCrystal_I2C::expanderWrite(uint8_t _data){
 	Wire.beginTransmission(_Addr);
 	printIIC((int)(_data) | _backlightval);
-	Wire.endTransmission();
+	Wire.endTransmission(void);
 }
 
 void LiquidCrystal_I2C::pulseEnable(uint8_t _data){
@@ -281,20 +281,20 @@ void LiquidCrystal_I2C::pulseEnable(uint8_t _data){
 
 // Alias functions
 
-void LiquidCrystal_I2C::cursor_on(){
-	cursor();
+void LiquidCrystal_I2C::cursor_on(void){
+	cursor(void);
 }
 
-void LiquidCrystal_I2C::cursor_off(){
-	noCursor();
+void LiquidCrystal_I2C::cursor_off(void){
+	noCursor(void);
 }
 
-void LiquidCrystal_I2C::blink_on(){
-	blink();
+void LiquidCrystal_I2C::blink_on(void){
+	blink(void);
 }
 
-void LiquidCrystal_I2C::blink_off(){
-	noBlink();
+void LiquidCrystal_I2C::blink_off(void){
+	noBlink(void);
 }
 
 void LiquidCrystal_I2C::load_custom_character(uint8_t char_num, uint8_t *rows){
@@ -303,9 +303,9 @@ void LiquidCrystal_I2C::load_custom_character(uint8_t char_num, uint8_t *rows){
 
 void LiquidCrystal_I2C::setBacklight(uint8_t new_val){
 	if(new_val){
-		backlight();		// turn backlight on
+		backlight(void);		// turn backlight on
 	}else{
-		noBacklight();		// turn backlight off
+		noBacklight(void);		// turn backlight off
 	}
 }
 
@@ -319,11 +319,11 @@ void LiquidCrystal_I2C::printstr(const char c[]){
 // unsupported API functions
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
-void LiquidCrystal_I2C::off(){}
-void LiquidCrystal_I2C::on(){}
+void LiquidCrystal_I2C::off(void){}
+void LiquidCrystal_I2C::on(void){}
 void LiquidCrystal_I2C::setDelay (int cmdDelay,int charDelay) {}
-uint8_t LiquidCrystal_I2C::status(){return 0;}
-uint8_t LiquidCrystal_I2C::keypad (){return 0;}
+uint8_t LiquidCrystal_I2C::status(void){return 0;}
+uint8_t LiquidCrystal_I2C::keypad (void){return 0;}
 uint8_t LiquidCrystal_I2C::init_bargraph(uint8_t graphtype){return 0;}
 void LiquidCrystal_I2C::draw_horizontal_graph(uint8_t row, uint8_t column, uint8_t len,  uint8_t pixel_col_end){}
 void LiquidCrystal_I2C::draw_vertical_graph(uint8_t row, uint8_t column, uint8_t len,  uint8_t pixel_row_end){}

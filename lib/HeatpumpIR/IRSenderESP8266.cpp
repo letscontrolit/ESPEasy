@@ -21,10 +21,10 @@ void IRSenderESP8266::setFrequency(int frequency)
 // Send an IR 'mark' symbol, i.e. transmitter ON
 void IRSenderESP8266::mark(int markLength)
 {
-  long beginning = micros();
+  long beginning = micros(void);
 
   startWaveform(_pin, _halfPeriodicTime, _halfPeriodicTime, markLength);
-  while((int)(micros() - beginning) < markLength);
+  while((int)(micros(void) - beginning) < markLength);
 
   stopWaveform(_pin);
   digitalWrite(_pin, LOW);

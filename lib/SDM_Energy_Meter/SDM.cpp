@@ -20,7 +20,7 @@ SDM::SDM(ESPeasySerial& serial, long baud, int dere_pin) : sdmSer(serial) {
 }
 #endif
 
-SDM::~SDM() {
+SDM::~SDM(void) {
 }
 
 void SDM::begin(void) {
@@ -36,7 +36,7 @@ void SDM::begin(void) {
 #ifdef USE_HARDWARESERIAL
   #ifdef ESP8266
     if (_swapuart)
-      sdmSer.swap();
+      sdmSer.swap(void);
   #endif
 #endif
   if (_dere_pin != NOT_A_PIN)	                                                  //set output pin mode for DE/RE pin when used (for control MAX485)
@@ -59,11 +59,11 @@ float SDM::readVal(uint16_t reg, uint8_t node) {
   sdmarr[7] = highByte(temp);
 
 #ifndef USE_HARDWARESERIAL
-  sdmSer.listen();                                                              //enable softserial rx interrupt
+  sdmSer.listen(void);                                                              //enable softserial rx interrupt
 #endif
 
-  while (sdmSer.available() > 0)  {                                             //read serial if any old data is available
-    sdmSer.read();
+  while (sdmSer.available(void) > 0)  {                                             //read serial if any old data is available
+    sdmSer.read(void);
   }
 
   if (_dere_pin != NOT_A_PIN)                                                   //transmit to SDM  -> DE Enable, /RE Disable (for control MAX485)
@@ -73,27 +73,27 @@ float SDM::readVal(uint16_t reg, uint8_t node) {
 
   sdmSer.write(sdmarr, FRAMESIZE - 1);                                          //send 8 bytes
 
-  sdmSer.flush();                                                               //clear out tx buffer
+  sdmSer.flush(void);                                                               //clear out tx buffer
 
   if (_dere_pin != NOT_A_PIN)                                                   //receive from SDM -> DE Disable, /RE Enable (for control MAX485)
     digitalWrite(_dere_pin, LOW);
 
-  resptime = millis() + MAX_MILLIS_TO_WAIT;
+  resptime = millis(void) + MAX_MILLIS_TO_WAIT;
 
-  while (sdmSer.available() < FRAMESIZE) {
-    if (resptime < millis()) {
+  while (sdmSer.available(void) < FRAMESIZE) {
+    if (resptime < millis(void)) {
       readErr = SDM_ERR_TIMEOUT;                                                //err debug (4)
       break;
     }
-    yield();
+    yield(void);
   }
 
   if (readErr == SDM_ERR_NO_ERROR) {                                            //if no timeout...
 
-    if(sdmSer.available() >= FRAMESIZE) {
+    if(sdmSer.available(void) >= FRAMESIZE) {
 
       for(int n=0; n<FRAMESIZE; n++) {
-        sdmarr[n] = sdmSer.read();
+        sdmarr[n] = sdmSer.read(void);
       }
 
       if (sdmarr[0] == node && sdmarr[1] == SDM_B_02 && sdmarr[2] == SDM_REPLY_BYTE_COUNT) {
@@ -124,12 +124,12 @@ float SDM::readVal(uint16_t reg, uint8_t node) {
     ++readingsuccesscount;
   }
 
-  while (sdmSer.available() > 0)  {                                             //read redundant serial bytes, if any
-    sdmSer.read();
+  while (sdmSer.available(void) > 0)  {                                             //read redundant serial bytes, if any
+    sdmSer.read(void);
   }
 
 #ifndef USE_HARDWARESERIAL
-  sdmSer.end();                                                                 //disable softserial rx interrupt
+  sdmSer.end(void);                                                                 //disable softserial rx interrupt
 #endif
 
   return (res);
@@ -138,33 +138,33 @@ float SDM::readVal(uint16_t reg, uint8_t node) {
 uint16_t SDM::getErrCode(bool _clear) {
   uint16_t _tmp = readingerrcode;
   if (_clear == true)
-    clearErrCode();
+    clearErrCode(void);
   return (_tmp);
 }
 
 uint16_t SDM::getErrCount(bool _clear) {
   uint16_t _tmp = readingerrcount;
   if (_clear == true)
-    clearErrCount();
+    clearErrCount(void);
   return (_tmp);
 }
 
 uint16_t SDM::getSuccCount(bool _clear) {
   uint16_t _tmp = readingsuccesscount;
   if (_clear == true)
-    clearSuccCount();
+    clearSuccCount(void);
   return (_tmp);
 }
 
-void SDM::clearErrCode() {
+void SDM::clearErrCode(void) {
   readingerrcode = SDM_ERR_NO_ERROR;
 }
 
-void SDM::clearErrCount() {
+void SDM::clearErrCount(void) {
   readingerrcount = 0;
 }
 
-void SDM::clearSuccCount() {
+void SDM::clearSuccCount(void) {
   readingsuccesscount = 0;
 }
 

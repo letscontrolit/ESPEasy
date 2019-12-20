@@ -56,26 +56,26 @@ class LiquidCrystal_I2C : public Print {
 public:
   LiquidCrystal_I2C(uint8_t lcd_Addr,uint8_t lcd_cols,uint8_t lcd_rows);
   void begin(uint8_t cols, uint8_t rows, uint8_t charsize = LCD_5x8DOTS );
-  void clear();
-  void home();
-  void noDisplay();
-  void display();
-  void noBlink();
-  void blink();
-  void noCursor();
-  void cursor();
-  void scrollDisplayLeft();
-  void scrollDisplayRight();
-  void printLeft();
-  void printRight();
-  void leftToRight();
-  void rightToLeft();
-  void shiftIncrement();
-  void shiftDecrement();
-  void noBacklight();
-  void backlight();
-  void autoscroll();
-  void noAutoscroll(); 
+  void clear(void);
+  void home(void);
+  void noDisplay(void);
+  void display(void);
+  void noBlink(void);
+  void blink(void);
+  void noCursor(void);
+  void cursor(void);
+  void scrollDisplayLeft(void);
+  void scrollDisplayRight(void);
+  void printLeft(void);
+  void printRight(void);
+  void leftToRight(void);
+  void rightToLeft(void);
+  void shiftIncrement(void);
+  void shiftDecrement(void);
+  void noBacklight(void);
+  void backlight(void);
+  void autoscroll(void);
+  void noAutoscroll(void); 
   void createChar(uint8_t, uint8_t[]);
   void createChar(uint8_t location, const char *charmap);
   // Example: 	const char bell[8] PROGMEM = {B00100,B01110,B01110,B01110,B11111,B00000,B00100,B00000};
@@ -87,32 +87,32 @@ public:
   virtual void write(uint8_t);
 #endif
   void command(uint8_t);
-  void init();
-  void oled_init();
+  void init(void);
+  void oled_init(void);
 
 ////compatibility API function aliases
-void blink_on();						// alias for blink()
-void blink_off();       					// alias for noBlink()
-void cursor_on();      	 					// alias for cursor()
-void cursor_off();      					// alias for noCursor()
-void setBacklight(uint8_t new_val);				// alias for backlight() and nobacklight()
-void load_custom_character(uint8_t char_num, uint8_t *rows);	// alias for createChar()
+void blink_on(void);						// alias for blink(void)
+void blink_off(void);       					// alias for noBlink(void)
+void cursor_on(void);      	 					// alias for cursor(void)
+void cursor_off(void);      					// alias for noCursor(void)
+void setBacklight(uint8_t new_val);				// alias for backlight(void) and nobacklight(void)
+void load_custom_character(uint8_t char_num, uint8_t *rows);	// alias for createChar(void)
 void printstr(const char[]);
 
 ////Unsupported API functions (not implemented in this library)
-uint8_t status();
+uint8_t status(void);
 void setContrast(uint8_t new_val);
-uint8_t keypad();
+uint8_t keypad(void);
 void setDelay(int,int);
-void on();
-void off();
+void on(void);
+void off(void);
 uint8_t init_bargraph(uint8_t graphtype);
 void draw_horizontal_graph(uint8_t row, uint8_t column, uint8_t len,  uint8_t pixel_col_end);
 void draw_vertical_graph(uint8_t row, uint8_t column, uint8_t len,  uint8_t pixel_col_end);
 	 
 
 private:
-  void init_priv();
+  void init_priv(void);
   void send(uint8_t, uint8_t);
   void write4bits(uint8_t);
   void expanderWrite(uint8_t);

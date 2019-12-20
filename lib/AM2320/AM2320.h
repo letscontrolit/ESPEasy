@@ -8,7 +8,7 @@
 class AM2320
 {
 	public:
-		AM2320();
+		AM2320(void);
 		float t;
 		float h;
 		int Read(void); 

@@ -74,7 +74,7 @@ bool AS_BH1750::begin(sensors_resolution_t mode, bool autoPowerDown) {
   _virtualMode = mode;
   _autoPowerDown = autoPowerDown;
 
-  //Wire.begin();   called in ESPEasy framework
+  //Wire.begin(void);   called in ESPEasy framework
 
   defineMTReg(BH1750_MTREG_DEFAULT); // eigentlich normalerweise unnötig, da standard
 
@@ -128,15 +128,15 @@ bool AS_BH1750::begin(sensors_resolution_t mode, bool autoPowerDown) {
 /**
  * Erlaub eine Prüfung, ob ein (ansprechbarer) BH1750-Sensor vorhanden ist.
  */
-bool AS_BH1750::isPresent() {
+bool AS_BH1750::isPresent(void) {
   // Check I2C Adresse
   Wire.beginTransmission(_address);
-  if(Wire.endTransmission()!=0) {
+  if(Wire.endTransmission(void)!=0) {
     return false;
   }
 
   // Check device: ist es ein BH1750
-  if(!isInitialized()) {
+  if(!isInitialized(void)) {
     // zuvor inaktiv, daher zu Testen schnelltes einmal-Mode aktivieren
     //write8(BH1750_POWER_ON);
     selectResolutionMode(BH1750_ONE_TIME_LOW_RES_MODE);
@@ -144,19 +144,19 @@ bool AS_BH1750::isPresent() {
   }
   else {
     // falls einmal-modus aktiv war, muss der Sensor geweckt werden
-    powerOn();
+    powerOn(void);
   }
 
   // Prüfen, ob Werte auch wirklich geliefert werden (letztes Modus, ggf. wird auto-PowerDown ausgeführt)
-  return (readLightLevel()>=0);
+  return (readLightLevel(void)>=0);
 }
 
 /**
  * Weckt ein im PowerDown-Modus befindlichen Sensor auf (schadet auch dem 'wachen' Sensor nicht).
  * Funktionier nur, wenn der Sensor bereits initialisiert wurde.
  */
-void AS_BH1750::powerOn() {
-  if(!isInitialized()) {
+void AS_BH1750::powerOn(void) {
+  if(!isInitialized(void)) {
 #if BH1750_DEBUG == 1
     Serial.println("sensor not initialized");
 #endif
@@ -174,8 +174,8 @@ void AS_BH1750::powerOn() {
  * Schickt den Sensor in Stromsparmodus.
  * Funktionier nur, wenn der Sensor bereits initialisiert wurde.
  */
-void AS_BH1750::powerDown() {
-  if(!isInitialized()) {
+void AS_BH1750::powerDown(void) {
+  if(!isInitialized(void)) {
 #if BH1750_DEBUG == 1
     Serial.println("sensor not initialized");
 #endif
@@ -192,7 +192,7 @@ void AS_BH1750::powerDown() {
  * - mode: s.o.
  * - DelayFuncPtr: delay(n) Möglichkeit, eigene Delay-Funktion mitzugeben (z.B. um sleep-Modus zu verwenden).
  *
- * Defaultwerte: delay()
+ * Defaultwerte: delay(void)
  *
  */
 bool AS_BH1750::selectResolutionMode(uint8_t mode, DelayFuncPtr fDelayPtr) {
@@ -200,7 +200,7 @@ bool AS_BH1750::selectResolutionMode(uint8_t mode, DelayFuncPtr fDelayPtr) {
     Serial.print("selectResolutionMode: ");
     Serial.println(mode, DEC);
 #endif
-  if(!isInitialized()) {
+  if(!isInitialized(void)) {
     return false;
 #if BH1750_DEBUG == 1
     Serial.println("sensor not initialized");
@@ -249,7 +249,7 @@ float AS_BH1750::readLightLevel(DelayFuncPtr fDelayPtr) {
     Serial.println(_virtualMode, DEC);
 #endif
 
-  if(!isInitialized()) {
+  if(!isInitialized(void)) {
 #if BH1750_DEBUG == 1
     Serial.println("sensor not initialized");
 #endif
@@ -258,7 +258,7 @@ float AS_BH1750::readLightLevel(DelayFuncPtr fDelayPtr) {
 
   // ggf. PowerOn
   if(_autoPowerDown && _valueReaded){
-    powerOn();
+    powerOn(void);
   }
 
   // Das Automatische Modus benötigt eine Sonderbehandlung.
@@ -274,7 +274,7 @@ float AS_BH1750::readLightLevel(DelayFuncPtr fDelayPtr) {
     defineMTReg(BH1750_MTREG_DEFAULT);
     selectResolutionMode(BH1750_CONTINUOUS_LOW_RES_MODE, fDelayPtr);
     fDelayPtr(16); // Lesezeit in LowResMode
-    uint16_t level = readRawLevel();
+    uint16_t level = readRawLevel(void);
 #if BH1750_DEBUG == 1
     Serial.print("AutoHighMode: check level read: ");
     Serial.println(level, DEC);
@@ -321,12 +321,12 @@ float AS_BH1750::readLightLevel(DelayFuncPtr fDelayPtr) {
   }
 
   // Hardware Wert lesen und in Lux umrechnen.
-  uint16_t raw = readRawLevel();
+  uint16_t raw = readRawLevel(void);
   if(raw==65535) {
     // Wert verdächtig hoch. Sensor prüfen.
     // Check I2C Adresse
     Wire.beginTransmission(_address);
-    if(Wire.endTransmission()!=0) {
+    if(Wire.endTransmission(void)!=0) {
       return -1;
     }
   }
@@ -342,15 +342,15 @@ uint16_t AS_BH1750::readRawLevel(void) {
   Wire.beginTransmission(_address);
   Wire.requestFrom(_address, 2);
 #if (ARDUINO >= 100)
-  level = Wire.read();
+  level = Wire.read(void);
   level <<= 8;
-  level |= Wire.read();
+  level |= Wire.read(void);
 #else
-  level = Wire.receive();
+  level = Wire.receive(void);
   level <<= 8;
-  level |= Wire.receive();
+  level |= Wire.receive(void);
 #endif
-  if(Wire.endTransmission()!=0) {
+  if(Wire.endTransmission(void)!=0) {
 #if BH1750_DEBUG == 1
     Serial.println("I2C read error");
 #endif
@@ -456,7 +456,7 @@ void AS_BH1750::defineMTReg(uint8_t val) {
 /**
  * Gibt an, ob der Sensor initialisiert ist.
  */
-bool AS_BH1750::isInitialized() {
+bool AS_BH1750::isInitialized(void) {
   return _hardwareMode!=255;
 }
 
@@ -470,7 +470,7 @@ bool AS_BH1750::write8(uint8_t d) {
 #else
   Wire.send(d);
 #endif
-  return (Wire.endTransmission()==0);
+  return (Wire.endTransmission(void)==0);
 }
 
 

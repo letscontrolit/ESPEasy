@@ -30,8 +30,8 @@ OLEDDisplayUi::OLEDDisplayUi(OLEDDisplay *display) {
   this->display = display;
 }
 
-void OLEDDisplayUi::init() {
-  this->display->init();
+void OLEDDisplayUi::init(void) {
+  this->display->init(void);
 }
 
 void OLEDDisplayUi::setTargetFPS(uint8_t fps){
@@ -46,17 +46,17 @@ void OLEDDisplayUi::setTargetFPS(uint8_t fps){
 
 // -/------ Automatic controll ------\-
 
-void OLEDDisplayUi::enableAutoTransition(){
+void OLEDDisplayUi::enableAutoTransition(void){
   this->autoTransition = true;
 }
-void OLEDDisplayUi::disableAutoTransition(){
+void OLEDDisplayUi::disableAutoTransition(void){
   this->autoTransition = false;
 }
-void OLEDDisplayUi::setAutoTransitionForwards(){
+void OLEDDisplayUi::setAutoTransitionForwards(void){
   this->state.frameTransitionDirection = 1;
   this->lastTransitionDirection = 1;
 }
-void OLEDDisplayUi::setAutoTransitionBackwards(){
+void OLEDDisplayUi::setAutoTransitionBackwards(void){
   this->state.frameTransitionDirection = -1;
   this->lastTransitionDirection = -1;
 }
@@ -68,19 +68,19 @@ void OLEDDisplayUi::setTimePerTransition(uint16_t time){
 }
 
 // -/------ Customize indicator position and style -------\-
-void OLEDDisplayUi::enableIndicator(){
+void OLEDDisplayUi::enableIndicator(void){
   this->state.isIndicatorDrawen = true;
 }
 
-void OLEDDisplayUi::disableIndicator(){
+void OLEDDisplayUi::disableIndicator(void){
   this->state.isIndicatorDrawen = false;
 }
 
-void OLEDDisplayUi::enableAllIndicators(){
+void OLEDDisplayUi::enableAllIndicators(void){
   this->shouldDrawIndicators = true;
 }
 
-void OLEDDisplayUi::disableAllIndicators(){
+void OLEDDisplayUi::disableAllIndicators(void){
   this->shouldDrawIndicators = false;
 }
 
@@ -105,7 +105,7 @@ void OLEDDisplayUi::setFrameAnimation(AnimationDirection dir) {
 void OLEDDisplayUi::setFrames(FrameCallback* frameFunctions, uint8_t frameCount) {
   this->frameFunctions = frameFunctions;
   this->frameCount     = frameCount;
-  this->resetState();
+  this->resetState(void);
 }
 
 // -/----- Overlays ------\-
@@ -125,25 +125,25 @@ void OLEDDisplayUi::runLoadingProcess(LoadingStage* stages, uint8_t stagesCount)
   uint8_t increment = 100 / stagesCount;
 
   for (uint8_t i = 0; i < stagesCount; i++) {
-    display->clear();
+    display->clear(void);
     this->loadingDrawFunction(this->display, &stages[i], progress);
-    display->display();
+    display->display(void);
 
-    stages[i].callback();
+    stages[i].callback(void);
 
     progress += increment;
-    yield();
+    yield(void);
   }
 
-  display->clear();
+  display->clear(void);
   this->loadingDrawFunction(this->display, &stages[stagesCount-1], progress);
-  display->display();
+  display->display(void);
 
   delay(150);
 }
 
 // -/----- Manuel control -----\-
-void OLEDDisplayUi::nextFrame() {
+void OLEDDisplayUi::nextFrame(void) {
   if (this->state.frameState != IN_TRANSITION) {
     this->state.manuelControll = true;
     this->state.frameState = IN_TRANSITION;
@@ -152,7 +152,7 @@ void OLEDDisplayUi::nextFrame() {
     this->state.frameTransitionDirection = 1;
   }
 }
-void OLEDDisplayUi::previousFrame() {
+void OLEDDisplayUi::previousFrame(void) {
   if (this->state.frameState != IN_TRANSITION) {
     this->state.manuelControll = true;
     this->state.frameState = IN_TRANSITION;
@@ -184,33 +184,33 @@ void OLEDDisplayUi::transitionToFrame(uint8_t frame) {
 
 
 // -/----- State information -----\-
-OLEDDisplayUiState* OLEDDisplayUi::getUiState(){
+OLEDDisplayUiState* OLEDDisplayUi::getUiState(void){
   return &this->state;
 }
 
 
-int8_t OLEDDisplayUi::update(){
-  long frameStart = millis();
+int8_t OLEDDisplayUi::update(void){
+  long frameStart = millis(void);
   int8_t timeBudget = this->updateInterval - (frameStart - this->state.lastUpdate);
   if ( timeBudget <= 0) {
     // Implement frame skipping to ensure time budget is keept
     if (this->autoTransition && this->state.lastUpdate != 0) this->state.ticksSinceLastStateSwitch += ceil(-timeBudget / this->updateInterval);
 
     this->state.lastUpdate = frameStart;
-    this->tick();
+    this->tick(void);
   }
-  return this->updateInterval - (millis() - frameStart);
+  return this->updateInterval - (millis(void) - frameStart);
 }
 
 
-void OLEDDisplayUi::tick() {
+void OLEDDisplayUi::tick(void) {
   this->state.ticksSinceLastStateSwitch++;
 
   switch (this->state.frameState) {
     case IN_TRANSITION:
         if (this->state.ticksSinceLastStateSwitch >= this->ticksPerTransition){
           this->state.frameState = FIXED;
-          this->state.currentFrame = getNextFrameNumber();
+          this->state.currentFrame = getNextFrameNumber(void);
           this->state.ticksSinceLastStateSwitch = 0;
           this->nextFrameNumber = -1;
         }
@@ -230,16 +230,16 @@ void OLEDDisplayUi::tick() {
       break;
   }
 
-  this->display->clear();
-  this->drawFrame();
+  this->display->clear(void);
+  this->drawFrame(void);
   if (shouldDrawIndicators) {
-    this->drawIndicator();
+    this->drawIndicator(void);
   }
-  this->drawOverlays();
-  this->display->display();
+  this->drawOverlays(void);
+  this->display->display(void);
 }
 
-void OLEDDisplayUi::resetState() {
+void OLEDDisplayUi::resetState(void) {
   this->state.lastUpdate = 0;
   this->state.ticksSinceLastStateSwitch = 0;
   this->state.frameState = FIXED;
@@ -247,35 +247,35 @@ void OLEDDisplayUi::resetState() {
   this->state.isIndicatorDrawen = true;
 }
 
-void OLEDDisplayUi::drawFrame(){
+void OLEDDisplayUi::drawFrame(void){
   switch (this->state.frameState){
      case IN_TRANSITION: {
        float progress = (float) this->state.ticksSinceLastStateSwitch / (float) this->ticksPerTransition;
        int16_t x = 0, y = 0, x1 = 0, y1 = 0; 
        switch(this->frameAnimationDirection){
         case SLIDE_LEFT:
-          x = -this->display->width() * progress;
+          x = -this->display->width(void) * progress;
           y = 0;
-          x1 = x + this->display->width();
+          x1 = x + this->display->width(void);
           y1 = 0;
           break;
         case SLIDE_RIGHT:
-          x = this->display->width() * progress;
+          x = this->display->width(void) * progress;
           y = 0;
-          x1 = x - this->display->width();
+          x1 = x - this->display->width(void);
           y1 = 0;
           break;
         case SLIDE_UP:
           x = 0;
-          y = -this->display->height() * progress;
+          y = -this->display->height(void) * progress;
           x1 = 0;
-          y1 = y + this->display->height();
+          y1 = y + this->display->height(void);
           break;
         case SLIDE_DOWN:
           x = 0;
-          y = this->display->height() * progress;
+          y = this->display->height(void) * progress;
           x1 = 0;
-          y1 = y - this->display->height();
+          y1 = y - this->display->height(void);
           break;
        }
 
@@ -287,12 +287,12 @@ void OLEDDisplayUi::drawFrame(){
 
 
        // Prope each frameFunction for the indicator Drawen state
-       this->enableIndicator();
+       this->enableIndicator(void);
        (this->frameFunctions[this->state.currentFrame])(this->display, &this->state, x, y);
        drawenCurrentFrame = this->state.isIndicatorDrawen;
 
-       this->enableIndicator();
-       (this->frameFunctions[this->getNextFrameNumber()])(this->display, &this->state, x1, y1);
+       this->enableIndicator(void);
+       (this->frameFunctions[this->getNextFrameNumber(void)])(this->display, &this->state, x1, y1);
 
        // Build up the indicatorDrawState
        if (drawenCurrentFrame && !this->state.isIndicatorDrawen) {
@@ -316,13 +316,13 @@ void OLEDDisplayUi::drawFrame(){
       // Always assume that the indicator is drawn!
       // And set indicatorDrawState to "not known yet"
       this->indicatorDrawState = 0;
-      this->enableIndicator();
+      this->enableIndicator(void);
       (this->frameFunctions[this->state.currentFrame])(this->display, &this->state, 0, 0);
       break;
   }
 }
 
-void OLEDDisplayUi::drawIndicator() {
+void OLEDDisplayUi::drawIndicator(void) {
 
     // Only draw if the indicator is invisible
     // for both frames or
@@ -336,7 +336,7 @@ void OLEDDisplayUi::drawIndicator() {
 
     // if the indicator needs to be slided in we want to
     // highlight the next frame in the transition
-    uint8_t frameToHighlight = this->indicatorDrawState == 1 ? this->getNextFrameNumber() : this->state.currentFrame;
+    uint8_t frameToHighlight = this->indicatorDrawState == 1 ? this->getNextFrameNumber(void) : this->state.currentFrame;
 
     // Calculate the frame that needs to be highlighted
     // based on the Direction the indiactor is drawn
@@ -368,19 +368,19 @@ void OLEDDisplayUi::drawIndicator() {
       switch (this->indicatorPosition){
         case TOP:
           y = 0 - (8 * indicatorFadeProgress);
-          x = (this->display->width() / 2) - frameStartPos + 12 * i;
+          x = (this->display->width(void) / 2) - frameStartPos + 12 * i;
           break;
         case BOTTOM:
-          y = (this->display->height() - 8) + (8 * indicatorFadeProgress);
-          x = (this->display->width() / 2) - frameStartPos + 12 * i;
+          y = (this->display->height(void) - 8) + (8 * indicatorFadeProgress);
+          x = (this->display->width(void) / 2) - frameStartPos + 12 * i;
           break;
         case RIGHT:
-          x = (this->display->width() - 8) + (8 * indicatorFadeProgress);
-          y = (this->display->height() / 2) - frameStartPos + 2 + 12 * i;
+          x = (this->display->width(void) - 8) + (8 * indicatorFadeProgress);
+          y = (this->display->height(void) / 2) - frameStartPos + 2 + 12 * i;
           break;
         case LEFT:
           x = 0 - (8 * indicatorFadeProgress);
-          y = (this->display->height() / 2) - frameStartPos + 2 + 12 * i;
+          y = (this->display->height(void) / 2) - frameStartPos + 2 + 12 * i;
           break;
       }
 
@@ -394,13 +394,13 @@ void OLEDDisplayUi::drawIndicator() {
     }
 }
 
-void OLEDDisplayUi::drawOverlays() {
+void OLEDDisplayUi::drawOverlays(void) {
  for (uint8_t i=0;i<this->overlayCount;i++){
     (this->overlayFunctions[i])(this->display, &this->state);
  }
 }
 
-uint8_t OLEDDisplayUi::getNextFrameNumber(){
+uint8_t OLEDDisplayUi::getNextFrameNumber(void){
   if (this->nextFrameNumber != -1) return this->nextFrameNumber;
   return (this->state.currentFrame + this->frameCount + this->state.frameTransitionDirection) % this->frameCount;
 }

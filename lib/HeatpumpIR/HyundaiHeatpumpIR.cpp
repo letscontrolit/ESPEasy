@@ -1,6 +1,6 @@
 #include <HyundaiHeatpumpIR.h>
 
-HyundaiHeatpumpIR::HyundaiHeatpumpIR() : HeatpumpIR()
+HyundaiHeatpumpIR::HyundaiHeatpumpIR(void) : HeatpumpIR(void)
 {
   static const char model[] PROGMEM = "hyundai";
   static const char info[]  PROGMEM = "{\"mdl\":\"hyundai\",\"dn\":\"Hyundai\",\"mT\":16,\"xT\":30,\"fs\":3}";
