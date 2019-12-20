@@ -97,14 +97,14 @@ boolean Plugin_047(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE:
       {
         String plugin1 = WebServer.arg(F("p047_i2cSoilMoisture_i2cAddress"));
-        PCONFIG(0) = (int) strtol(plugin1.c_str(), 0, 16);
+        PCONFIG(0) = (int) strtol(plugin1.c_str(void), 0, 16);
 
         PCONFIG(1) = isFormItemChecked(F("p047_sleep"));
 
         PCONFIG(2) = isFormItemChecked(F("p047_version"));
 
         String plugin4 = WebServer.arg(F("p047_i2cSoilMoisture_changeAddr"));
-        PCONFIG(3) = (int) strtol(plugin4.c_str(), 0, 16);
+        PCONFIG(3) = (int) strtol(plugin4.c_str(void), 0, 16);
 
         PCONFIG(4) = isFormItemChecked(F("p047_changeAddr"));
         success = true;
@@ -117,7 +117,7 @@ boolean Plugin_047(byte function, struct EventStruct *event, String& string)
 
         if (PCONFIG(1)) {
           // wake sensor
-        	Plugin_047_getVersion();
+        	Plugin_047_getVersion(void);
           delayBackground(20);
           addLog(LOG_LEVEL_DEBUG, F("SoilMoisture->wake"));
         }
@@ -125,7 +125,7 @@ boolean Plugin_047(byte function, struct EventStruct *event, String& string)
         uint8_t sensorVersion = 0;
         if (PCONFIG(2)) {
           // get sensor version to check if sensor is present
-          sensorVersion = Plugin_047_getVersion();
+          sensorVersion = Plugin_047_getVersion(void);
           if (sensorVersion==0x22 || sensorVersion==0x23) {
             //valid sensor
           }
@@ -152,9 +152,9 @@ boolean Plugin_047(byte function, struct EventStruct *event, String& string)
         // 2 s delay ...we need this delay, otherwise we get only the last reading...
         delayBackground(2000);
 
-        float temperature = ((float)Plugin_047_readTemperature()) / 10;
-        float moisture = ((float)Plugin_047_readMoisture());
-        float light = ((float)Plugin_047_readLight());
+        float temperature = ((float)Plugin_047_readTemperature(void)) / 10;
+        float moisture = ((float)Plugin_047_readMoisture(void));
+        float light = ((float)Plugin_047_readLight(void));
 
         if (temperature>100 || temperature < -40 || moisture > 800 || moisture < 1 || light > 65535 || light < 0) {
             addLog(LOG_LEVEL_INFO, F("SoilMoisture: Bad Reading, resetting Sensor..."));
@@ -204,7 +204,7 @@ boolean Plugin_047(byte function, struct EventStruct *event, String& string)
 //**************************************************************************/
 // Read temperature
 //**************************************************************************/
-float Plugin_047_readTemperature()
+float Plugin_047_readTemperature(void)
 {
   return I2C_readS16_reg(_i2caddrP47, SOILMOISTURESENSOR_GET_TEMPERATURE);
 }
@@ -212,19 +212,19 @@ float Plugin_047_readTemperature()
 //**************************************************************************/
 // Read light
 //**************************************************************************/
-float Plugin_047_readLight() {
+float Plugin_047_readLight(void) {
   return I2C_read16_reg(_i2caddrP47, SOILMOISTURESENSOR_GET_LIGHT);
 }
 
 //**************************************************************************/
 // Read moisture
 //**************************************************************************/
-unsigned int Plugin_047_readMoisture() {
+unsigned int Plugin_047_readMoisture(void) {
   return I2C_read16_reg(_i2caddrP47, SOILMOISTURESENSOR_GET_CAPACITANCE);
 }
 
 // Read Sensor Version
-uint8_t Plugin_047_getVersion() {
+uint8_t Plugin_047_getVersion(void) {
   return I2C_read8_reg(_i2caddrP47, SOILMOISTURESENSOR_GET_VERSION);
 }
 

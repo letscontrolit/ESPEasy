@@ -96,7 +96,7 @@ bool CPlugin_013(byte function, struct EventStruct *event, String& string)
       /*
           case CPLUGIN_FLUSH:
             {
-              process_c013_delay_queue();
+              process_c013_delay_queue(void);
               delay(0);
               break;
             }
@@ -129,7 +129,7 @@ void C013_SendUDPTaskInfo(byte destUnit, byte sourceTaskIndex, byte destTaskInde
   infoReply.destTaskIndex   = destTaskIndex;
   infoReply.deviceNumber    = pluginID;
   LoadTaskSettings(infoReply.sourceTaskIndex);
-  strcpy(infoReply.taskName, getTaskDeviceName(infoReply.sourceTaskIndex).c_str());
+  strcpy(infoReply.taskName, getTaskDeviceName(infoReply.sourceTaskIndex).c_str(void));
 
   for (byte x = 0; x < VARS_PER_TASK; x++) {
     strcpy(infoReply.ValueNames[x], ExtraTaskSettings.TaskDeviceValueNames[x]);
@@ -141,7 +141,7 @@ void C013_SendUDPTaskInfo(byte destUnit, byte sourceTaskIndex, byte destTaskInde
     C013_sendUDP(destUnit, (byte *)&infoReply, sizeof(C013_SensorInfoStruct));
     delay(10);
   } else {
-    for (NodesMap::iterator it = Nodes.begin(); it != Nodes.end(); ++it) {
+    for (NodesMap::iterator it = Nodes.begin(void); it != Nodes.end(void); ++it) {
       if (it->first != Settings.Unit) {
         infoReply.destUnit = it->first;
         C013_sendUDP(it->first, (byte *)&infoReply, sizeof(C013_SensorInfoStruct));
@@ -176,7 +176,7 @@ void C013_SendUDPTaskData(byte destUnit, byte sourceTaskIndex, byte destTaskInde
     C013_sendUDP(destUnit, (byte *)&dataReply, sizeof(C013_SensorDataStruct));
     delay(10);
   } else {
-    for (NodesMap::iterator it = Nodes.begin(); it != Nodes.end(); ++it) {
+    for (NodesMap::iterator it = Nodes.begin(void); it != Nodes.end(void); ++it) {
       if (it->first != Settings.Unit) {
         dataReply.destUnit = it->first;
         C013_sendUDP(it->first, (byte *)&dataReply, sizeof(C013_SensorDataStruct));
@@ -200,7 +200,7 @@ void C013_sendUDP(byte unit, byte *data, byte size)
   if (unit != 255) {
     it = Nodes.find(unit);
 
-    if (it == Nodes.end()) {
+    if (it == Nodes.end(void)) {
       return;
     }
 
@@ -232,8 +232,8 @@ void C013_sendUDP(byte unit, byte *data, byte size)
 
   if (C013_portUDP.beginPacket(remoteNodeIP, Settings.UDPPort) == 0) { return; }
   C013_portUDP.write(data, size);
-  C013_portUDP.endPacket();
-  C013_portUDP.stop();
+  C013_portUDP.endPacket(void);
+  C013_portUDP.stop(void);
 }
 
 void C013_Receive(struct EventStruct *event) {
@@ -293,7 +293,7 @@ void C013_Receive(struct EventStruct *event) {
           }
           ExtraTaskSettings.TaskIndex = infoReply.destTaskIndex;
           SaveTaskSettings(infoReply.destTaskIndex);
-          SaveSettings();
+          SaveSettings(void);
         }
       }
       break;

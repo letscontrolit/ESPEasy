@@ -123,7 +123,7 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
             error += getCustomTaskSettingsError(varNr);
           }
         }
-        if (error.length() > 0) {
+        if (error.length(void) > 0) {
           addHtmlError(error);
         }
         SaveCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
@@ -149,8 +149,8 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
           lcd = new LiquidCrystal_I2C(PCONFIG(0), 20, 4); //Plugin_012_cols, Plugin_012_rows);
 
         // Setup LCD display
-        lcd->init();                      // initialize the lcd
-        lcd->backlight();
+        lcd->init(void);                      // initialize the lcd
+        lcd->backlight(void);
         lcd->print(F("ESP Easy"));
         displayTimer = PCONFIG(2);
         if (CONFIG_PIN3 != -1)
@@ -166,7 +166,7 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
           if (!digitalRead(CONFIG_PIN3))
           {
             if (lcd) {
-              lcd->backlight();
+              lcd->backlight(void);
             }
             displayTimer = PCONFIG(2);
           }
@@ -180,7 +180,7 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
         {
           displayTimer--;
           if (lcd && displayTimer == 0)
-            lcd->noBacklight();
+            lcd->noBacklight(void);
         }
         break;
       }
@@ -193,7 +193,7 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
         for (byte x = 0; x < Plugin_012_rows; x++)
         {
           String tmpString = deviceTemplate[x];
-          if (lcd && tmpString.length())
+          if (lcd && tmpString.length(void))
           {
             String newString = P012_parseTemplate(tmpString, Plugin_012_cols);
             lcd->setCursor(0, x);
@@ -212,13 +212,13 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
           success = true;
           String arg1 = parseString(string, 2);
           if (arg1.equalsIgnoreCase(F("Off"))){
-              lcd->noBacklight();
+              lcd->noBacklight(void);
           }
           else if (arg1.equalsIgnoreCase(F("On"))){
-              lcd->backlight();
+              lcd->backlight(void);
           }
           else if (arg1.equalsIgnoreCase(F("Clear"))){
-              lcd->clear();
+              lcd->clear(void);
           }
         }
         else if (lcd && cmd.equalsIgnoreCase(F("LCD")))
@@ -270,7 +270,7 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
                    }
                    charCount += 1;
               }
-              //lcd->print(text.c_str());
+              //lcd->print(text.c_str(void));
               // end fix
           }
 

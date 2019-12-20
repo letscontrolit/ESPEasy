@@ -7,16 +7,16 @@ byte SerialInByte;
 int  SerialInByteCounter = 0;
 char InputBuffer_Serial[INPUT_BUFFER_SIZE + 2];
 
-void serial()
+void serial(void)
 {
-  while (Serial.available())
+  while (Serial.available(void))
   {
     delay(0);
-    SerialInByte = Serial.read();
+    SerialInByte = Serial.read(void);
 
     if (SerialInByte == 255) // binary data...
     {
-      Serial.flush();
+      Serial.flush(void);
       return;
     }
 
@@ -43,14 +43,14 @@ void serial()
 }
 
 void addToSerialBuffer(const char *line) {
-  process_serialWriteBuffer(); // Try to make some room first.
+  process_serialWriteBuffer(void); // Try to make some room first.
   const size_t line_length = strlen(line);
-  int roomLeft             = getMaxFreeBlock();
+  int roomLeft             = getMaxFreeBlock(void);
 
   if (roomLeft < 500) {
     roomLeft = 0;                              // Do not append to buffer.
   } else if (roomLeft < 3000) {
-    roomLeft = 128 - serialWriteBuffer.size(); // 1 buffer.
+    roomLeft = 128 - serialWriteBuffer.size(void); // 1 buffer.
   } else {
     roomLeft -= 3000;                          // leave some free for normal use.
   }
@@ -65,28 +65,28 @@ void addToSerialBuffer(const char *line) {
   }
 }
 
-void addNewlineToSerialBuffer() {
-  process_serialWriteBuffer(); // Try to make some room first.
+void addNewlineToSerialBuffer(void) {
+  process_serialWriteBuffer(void); // Try to make some room first.
   serialWriteBuffer.push_back('\r');
   serialWriteBuffer.push_back('\n');
 }
 
-void process_serialWriteBuffer() {
-  if (serialWriteBuffer.size() == 0) { return; }
+void process_serialWriteBuffer(void) {
+  if (serialWriteBuffer.size(void) == 0) { return; }
   size_t snip = 128; // Some default, ESP32 doesn't have the availableForWrite function yet.
 #if defined(ESP8266)
-  snip = Serial.availableForWrite();
+  snip = Serial.availableForWrite(void);
 #endif // if defined(ESP8266)
 
   if (snip > 0) {
-    size_t bytes_to_write = serialWriteBuffer.size();
+    size_t bytes_to_write = serialWriteBuffer.size(void);
 
     if (snip < bytes_to_write) { bytes_to_write = snip; }
 
     for (size_t i = 0; i < bytes_to_write; ++i) {
-      const char c = serialWriteBuffer.front();
+      const char c = serialWriteBuffer.front(void);
       Serial.write(c);
-      serialWriteBuffer.pop_front();
+      serialWriteBuffer.pop_front(void);
     }
   }
 }
@@ -94,19 +94,19 @@ void process_serialWriteBuffer() {
 // For now, only send it to the serial buffer and try to process it.
 // Later we may want to wrap it into a log.
 void serialPrint(const String& text) {
-  addToSerialBuffer(text.c_str());
-  process_serialWriteBuffer();
+  addToSerialBuffer(text.c_str(void));
+  process_serialWriteBuffer(void);
 }
 
 void serialPrintln(const String& text) {
-  addToSerialBuffer(text.c_str());
-  addNewlineToSerialBuffer();
-  process_serialWriteBuffer();
+  addToSerialBuffer(text.c_str(void));
+  addNewlineToSerialBuffer(void);
+  process_serialWriteBuffer(void);
 }
 
-void serialPrintln() {
-  addNewlineToSerialBuffer();
-  process_serialWriteBuffer();
+void serialPrintln(void) {
+  addNewlineToSerialBuffer(void);
+  process_serialWriteBuffer(void);
 }
 
 // Do not add helper functions for other types, since those types can only be

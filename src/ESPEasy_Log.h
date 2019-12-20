@@ -10,7 +10,7 @@
 #define LOG_LEVEL_DEBUG                     3
 #define LOG_LEVEL_DEBUG_MORE                4
 #define LOG_LEVEL_DEBUG_DEV                 9 // use for testing/debugging only, not for regular use
-#define LOG_LEVEL_NRELEMENTS                5 // Update this and getLogLevelDisplayString() when new log levels are added
+#define LOG_LEVEL_NRELEMENTS                5 // Update this and getLogLevelDisplayString(void) when new log levels are added
 
 #define LOG_TO_SERIAL         1
 #define LOG_TO_SYSLOG         2
@@ -28,17 +28,17 @@ String getLogLevelDisplayStringFromIndex(byte index, int& logLevel);
 void addToLog(byte loglevel, const String& string);
 void addToLog(byte logLevel, const __FlashStringHelper* flashString);
 
-void disableSerialLog();
+void disableSerialLog(void);
 
 void setLogLevelFor(byte destination, byte logLevel);
 
-void updateLogLevelCache();
+void updateLogLevelCache(void);
 
 bool loglevelActiveFor(byte logLevel);
 
-byte getSerialLogLevel();
+byte getSerialLogLevel(void);
 
-byte getWebLogLevel();
+byte getWebLogLevel(void);
 
 bool loglevelActiveFor(byte destination, byte logLevel);
 

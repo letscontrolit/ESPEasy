@@ -4,15 +4,15 @@
 // ********************************************************************************
 // Web Interface download page
 // ********************************************************************************
-void handle_download()
+void handle_download(void)
 {
   checkRAM(F("handle_download"));
 
-  if (!isLoggedIn()) { return; }
+  if (!isLoggedIn(void)) { return; }
   navMenuIndex = MENU_INDEX_TOOLS;
 
-  //  TXBuffer.startStream();
-  //  sendHeadandTail_stdtemplate();
+  //  TXBuffer.startStream(void);
+  //  sendHeadandTail_stdtemplate(void);
 
 
   fs::File dataFile = tryOpenFile(F(FILE_CONFIG), "r");
@@ -29,7 +29,7 @@ void handle_download()
   str += BUILD;
   str += '_';
 
-  if (systemTimePresent())
+  if (systemTimePresent(void))
   {
     str += getDateTimeString('\0', '\0', '\0');
   }
@@ -37,7 +37,7 @@ void handle_download()
 
   WebServer.sendHeader(F("Content-Disposition"), str);
   WebServer.streamFile(dataFile, F("application/octet-stream"));
-  dataFile.close();
+  dataFile.close(void);
 }
 
 #endif // ifdef WEBSERVER_DOWNLOAD

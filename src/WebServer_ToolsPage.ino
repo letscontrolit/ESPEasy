@@ -3,39 +3,39 @@
 // ********************************************************************************
 // Web Interface Tools page
 // ********************************************************************************
-void handle_tools() {
-  if (!isLoggedIn()) { return; }
+void handle_tools(void) {
+  if (!isLoggedIn(void)) { return; }
   navMenuIndex = MENU_INDEX_TOOLS;
-  TXBuffer.startStream();
+  TXBuffer.startStream(void);
   sendHeadandTail_stdtemplate(_HEAD);
 
   String webrequest = WebServer.arg(F("cmd"));
 
   TXBuffer += F("<form>");
-  html_table_class_normal();
+  html_table_class_normal(void);
 
   addFormHeader(F("Tools"));
 
   addFormSubHeader(F("Command"));
-  html_TR_TD();
+  html_TR_TD(void);
   TXBuffer += F("<TR><TD style='width: 180px'>");
   TXBuffer += F("<input class='wide' type='text' name='cmd' value='");
   TXBuffer += webrequest;
   TXBuffer += "'>";
-  html_TD();
-  addSubmitButton();
+  html_TD(void);
+  addSubmitButton(void);
   addHelpButton(F("ESPEasy_Command_Reference"));
-  html_TR_TD();
+  html_TR_TD(void);
 
   printToWeb     = true;
   printWebString = "";
 
-  if (webrequest.length() > 0)
+  if (webrequest.length(void) > 0)
   {
-    ExecuteCommand_all(VALUE_SOURCE_WEB_FRONTEND, webrequest.c_str());
+    ExecuteCommand_all(VALUE_SOURCE_WEB_FRONTEND, webrequest.c_str(void));
   }
 
-  if (printWebString.length() > 0)
+  if (printWebString.length(void) > 0)
   {
     TXBuffer += F("<TR><TD colspan='2'>Command Output<BR><textarea readonly rows='10' wrap='on'>");
     TXBuffer += printWebString;
@@ -96,11 +96,11 @@ void handle_tools() {
 # ifdef WEBSERVER_NEW_UI
   #  if defined(ESP8266)
 
-  if ((SpiffsFreeSpace() / 1024) > 50) {
+  if ((SpiffsFreeSpace(void) / 1024) > 50) {
     TXBuffer += F("<TR><TD>");
     TXBuffer += F(
-      "<script>function downloadUI() { fetch('https://raw.githubusercontent.com/letscontrolit/espeasy_ui/master/build/index.htm.gz').then(r=>r.arrayBuffer()).then(r => {var f=new FormData();f.append('file', new File([new Blob([new Uint8Array(r)])], 'index.htm.gz'));f.append('edit', 1);fetch('/upload',{method:'POST',body:f}).then(() => {window.location.href='/';});}); }</script>");
-    TXBuffer += F("<a class=\"button link wide\" onclick=\"downloadUI()\">Download new UI</a>");
+      "<script>function downloadUI(void) { fetch('https://raw.githubusercontent.com/letscontrolit/espeasy_ui/master/build/index.htm.gz').then(r=>r.arrayBuffer(void)).then(r => {var f=new FormData(void);f.append('file', new File([new Blob([new Uint8Array(r)])], 'index.htm.gz'));f.append('edit', 1);fetch('/upload',{method:'POST',body:f}).then((void) => {window.location.href='/';});}); }</script>");
+    TXBuffer += F("<a class=\"button link wide\" onclick=\"downloadUI(void)\">Download new UI</a>");
     TXBuffer += F("</TD><TD>Download new UI(alpha)</TD></TR>");
   }
   #  endif // if defined(ESP8266)
@@ -117,7 +117,7 @@ void handle_tools() {
       html_TR_TD_height(30);
       addWideButton(F("update"), F("Update Firmware"), "", otaEnabled);
       addHelpButton(F("EasyOTA"));
-      html_TD();
+      html_TD(void);
       TXBuffer += F("Load a new firmware");
 
       if (otaEnabled) {
@@ -148,10 +148,10 @@ void handle_tools() {
   addWideButtonPlusDescription(F("SDfilelist"),       F("SD Card"),          F("Show files on SD-Card"));
 # endif // ifdef FEATURE_SD
 
-  html_end_table();
-  html_end_form();
+  html_end_table(void);
+  html_end_form(void);
   sendHeadandTail_stdtemplate(_TAIL);
-  TXBuffer.endStream();
+  TXBuffer.endStream(void);
   printWebString = "";
   printToWeb     = false;
 }
@@ -164,7 +164,7 @@ void addWideButtonPlusDescription(const String& url, const String& buttonText, c
 {
   html_TR_TD_height(30);
   addWideButton(url, buttonText);
-  html_TD();
+  html_TD(void);
   TXBuffer += description;
 }
 

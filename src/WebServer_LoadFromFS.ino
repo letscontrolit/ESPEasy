@@ -6,7 +6,7 @@ bool loadFromFS(boolean spiffs, String path) {
   // path is a deepcopy, since it will be changed here.
   checkRAM(F("loadFromFS"));
 
-  if (!isLoggedIn()) { return false; }
+  if (!isLoggedIn(void)) { return false; }
 
   statusLED(true);
 
@@ -41,7 +41,7 @@ bool loadFromFS(boolean spiffs, String path) {
 
   if (spiffs)
   {
-    fs::File dataFile = tryOpenFile(path.c_str(), "r");
+    fs::File dataFile = tryOpenFile(path.c_str(void), "r");
 
     if (!dataFile) {
       return false;
@@ -57,12 +57,12 @@ bool loadFromFS(boolean spiffs, String path) {
     }
 
     WebServer.streamFile(dataFile, dataType);
-    dataFile.close();
+    dataFile.close(void);
   }
   else
   {
 #ifdef FEATURE_SD
-    File dataFile = SD.open(path.c_str());
+    File dataFile = SD.open(path.c_str(void));
 
     if (!dataFile) {
       return false;
@@ -72,7 +72,7 @@ bool loadFromFS(boolean spiffs, String path) {
       WebServer.sendHeader(F("Content-Disposition"), F("attachment;"));
     }
     WebServer.streamFile(dataFile, dataType);
-    dataFile.close();
+    dataFile.close(void);
 #else // ifdef FEATURE_SD
 
     // File from SD requested, but no SD support.

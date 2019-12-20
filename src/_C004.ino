@@ -58,14 +58,14 @@ bool CPlugin_004(byte function, struct EventStruct *event, String& string)
     case CPLUGIN_PROTOCOL_SEND:
       {
         success = C004_DelayHandler.addToQueue(C004_queue_element(event));
-        scheduleNextDelayQueue(TIMER_C004_DELAY_QUEUE, C004_DelayHandler.getNextScheduleTime());
+        scheduleNextDelayQueue(TIMER_C004_DELAY_QUEUE, C004_DelayHandler.getNextScheduleTime(void));
 
         break;
       }
 
     case CPLUGIN_FLUSH:
       {
-        process_c004_delay_queue();
+        process_c004_delay_queue(void);
         delay(0);
         break;
       }
@@ -107,7 +107,7 @@ bool do_process_c004_delay_queue(int controller_number, const C004_queue_element
     F("/update"), // uri
     "",           // auth_header
     F("Content-Type: application/x-www-form-urlencoded\r\n"),
-    postDataStr.length());
+    postDataStr.length(void));
   postStr += postDataStr;
 
   return send_via_http(controller_number, client, postStr, ControllerSettings.MustCheckReply);

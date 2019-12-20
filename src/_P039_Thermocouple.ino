@@ -100,7 +100,7 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
         pinMode(Plugin_039_SPI_CS_Pin, OUTPUT);
         // initialize SPI:
         SPI.setHwCs(false);
-        SPI.begin();
+        SPI.begin(void);
 
         addLog(LOG_LEVEL_INFO, F("P039 : SPI Init"));
 
@@ -144,10 +144,10 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
 
         switch (MaxType) {
           case 1:       // MAX6675
-            Plugin_039_Celsius = readMax6675();
+            Plugin_039_Celsius = readMax6675(void);
             break;
           case 2:       // MAX31855
-            Plugin_039_Celsius = readMax31855();
+            Plugin_039_Celsius = readMax31855(void);
             break;
           case 3:       // MAX31865 (not implemented yet)
             //do something when var equals 2
@@ -176,7 +176,7 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
   return success;
 }
 
-double readMax6675()
+double readMax6675(void)
 {
   uint16_t rawvalue = 0;
   // take the SS pin low to select the chip:
@@ -217,7 +217,7 @@ double readMax6675()
   }
 }
 
-double readMax31855()
+double readMax31855(void)
 {
   uint32_t rawvalue = 0;
   // take the SS pin low to select the chip:

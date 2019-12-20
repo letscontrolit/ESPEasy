@@ -30,7 +30,7 @@ public:
     SHT1X_CMD_SOFT_RESET    = B00011110
   };
 
-	P031_data_struct() {}
+	P031_data_struct(void) {}
 
   byte init(byte data_pin, byte clock_pin, bool pullUp, byte clockdelay) {
     _dataPin = data_pin;
@@ -44,11 +44,11 @@ public:
 
     pinMode(_dataPin, input_mode); /* Keep Hi-Z except when sending data */
     pinMode(_clockPin, OUTPUT);
-    resetSensor();
-    return readStatus();
+    resetSensor(void);
+    return readStatus(void);
   }
 
-  bool process() {
+  bool process(void) {
     switch (state) {
       case P031_IDLE: return false; // Nothing changed, nothing to do
       case P031_WAIT_TEMP: {
@@ -103,20 +103,20 @@ public:
     return false;
   }
 
-  void startMeasurement() {
+  void startMeasurement(void) {
     state = P031_WAIT_TEMP; // Wait for temperature
     sendCommand(SHT1X_CMD_MEASURE_TEMP);
   }
 
-  bool measurementReady() {
+  bool measurementReady(void) {
     return state == P031_MEAS_READY;
   }
 
-  bool hasError() {
+  bool hasError(void) {
     return state > P031_MEAS_READY;
   }
 
-  void resetSensor()
+  void resetSensor(void)
   {
     state = P031_IDLE;
     delay(11);
@@ -128,7 +128,7 @@ public:
     delay(11);
   }
 
-  byte readStatus()
+  byte readStatus(void)
   {
     sendCommand(SHT1X_CMD_READ_STATUS);
     return readData(8);
@@ -136,7 +136,7 @@ public:
 
   void sendCommand(const byte cmd)
   {
-    sendCommandTime = millis();
+    sendCommandTime = millis(void);
     pinMode(_dataPin, OUTPUT);
 
     // Transmission Start sequence
@@ -312,7 +312,7 @@ boolean Plugin_031(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
       {
-        initPluginTaskData(event->TaskIndex, new P031_data_struct());
+        initPluginTaskData(event->TaskIndex, new P031_data_struct(void));
         P031_data_struct *P031_data =
             static_cast<P031_data_struct *>(getPluginTaskData(event->TaskIndex));
         if (nullptr == P031_data) {
@@ -342,9 +342,9 @@ boolean Plugin_031(byte function, struct EventStruct *event, String& string)
       P031_data_struct *P031_data =
           static_cast<P031_data_struct *>(getPluginTaskData(event->TaskIndex));
       if (nullptr != P031_data) {
-        if (P031_data->process()) {
+        if (P031_data->process(void)) {
           // Measurement ready, schedule new read.
-          schedule_task_device_timer(event->TaskIndex, millis() + 10);
+          schedule_task_device_timer(event->TaskIndex, millis(void) + 10);
         }
       }
       success = true;
@@ -356,14 +356,14 @@ boolean Plugin_031(byte function, struct EventStruct *event, String& string)
         P031_data_struct *P031_data =
             static_cast<P031_data_struct *>(getPluginTaskData(event->TaskIndex));
         if (nullptr != P031_data) {
-          if (P031_data->measurementReady()) {
+          if (P031_data->measurementReady(void)) {
             UserVar[event->BaseVarIndex] = P031_data->tempC;
             UserVar[event->BaseVarIndex+1] = P031_data->rhTrue;
             success = true;
             P031_data->state = P031_IDLE;
           } else if (P031_data->state == P031_IDLE) {
-            P031_data->startMeasurement();
-          } else if (P031_data->hasError()) {
+            P031_data->startMeasurement(void);
+          } else if (P031_data->hasError(void)) {
             // Log error
             switch (P031_data->state) {
               case P031_COMMAND_NO_ACK:

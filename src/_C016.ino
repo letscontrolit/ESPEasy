@@ -63,7 +63,7 @@ bool CPlugin_016(byte function, struct EventStruct *event, String& string)
         MakeControllerSettings(ControllerSettings);
         LoadControllerSettings(event->ControllerIndex, ControllerSettings);
         C016_DelayHandler.configureControllerSettings(ControllerSettings);
-        ControllerCache.init();
+        ControllerCache.init(void);
         break;
       }
 
@@ -90,21 +90,21 @@ bool CPlugin_016(byte function, struct EventStruct *event, String& string)
       {
         // Collect the values at the same run, to make sure all are from the same sample
         byte valueCount = getValueCountFromSensorType(event->sensorType);
-        C016_queue_element element(event, valueCount, getUnixTime());
+        C016_queue_element element(event, valueCount, getUnixTime(void));
         success = ControllerCache.write((uint8_t*)&element, sizeof(element));
 
 /*
         MakeControllerSettings(ControllerSettings);
         LoadControllerSettings(event->ControllerIndex, ControllerSettings);
         success = C016_DelayHandler.addToQueue(element);
-        scheduleNextDelayQueue(TIMER_C016_DELAY_QUEUE, C016_DelayHandler.getNextScheduleTime());
+        scheduleNextDelayQueue(TIMER_C016_DELAY_QUEUE, C016_DelayHandler.getNextScheduleTime(void));
 */
         break;
       }
 
     case CPLUGIN_FLUSH:
       {
-        process_c016_delay_queue();
+        process_c016_delay_queue(void);
         delay(0);
         break;
       }
@@ -135,17 +135,17 @@ bool do_process_c016_delay_queue(int controller_number, const C016_queue_element
 // Helper functions used in the webserver to access the cache data
 //********************************************************************************
 
-bool C016_startCSVdump() {
-  ControllerCache.resetpeek();
-  return ControllerCache.isInitialized();
+bool C016_startCSVdump(void) {
+  ControllerCache.resetpeek(void);
+  return ControllerCache.isInitialized(void);
 }
 
 String C016_getCacheFileName(bool& islast) {
   return ControllerCache.getPeekCacheFileName(islast);
 }
 
-bool C016_deleteOldestCacheBlock() {
-  return ControllerCache.deleteOldestCacheBlock();
+bool C016_deleteOldestCacheBlock(void) {
+  return ControllerCache.deleteOldestCacheBlock(void);
 }
 
 bool C016_getCSVline(

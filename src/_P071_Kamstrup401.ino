@@ -117,8 +117,8 @@ boolean Plugin_071(byte function, struct EventStruct *event, String& string)
           kamSer.write(sendmsg1[x]);
         }
 
-        kamSer.flush();
-        //kamSer.end();
+        kamSer.flush(void);
+        //kamSer.end(void);
         kamSer.begin(1200);
 
         to = 0;
@@ -132,10 +132,10 @@ boolean Plugin_071(byte function, struct EventStruct *event, String& string)
 
         while(r != 0x0A)
         {
-          if (kamSer.available())
+          if (kamSer.available(void))
           {
             // receive byte
-            r = kamSer.read();
+            r = kamSer.read(void);
             //serialPrintln(r);
             if (parity_check(r))
             {

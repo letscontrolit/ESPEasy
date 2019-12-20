@@ -195,10 +195,10 @@ boolean Plugin_027(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
       {
-        // shuntvoltage = Plugin_027_getShuntVoltage_mV();
-        // busvoltage = Plugin_027_getBusVoltage_V();
-        // current_mA = Plugin_027_getCurrent_mA();
-        // loadvoltage = Plugin_027_getBusVoltage_V() + (Plugin_027_getShuntVoltage_mV() / 1000);
+        // shuntvoltage = Plugin_027_getShuntVoltage_mV(void);
+        // busvoltage = Plugin_027_getBusVoltage_V(void);
+        // current_mA = Plugin_027_getCurrent_mA(void);
+        // loadvoltage = Plugin_027_getBusVoltage_V(void) + (Plugin_027_getShuntVoltage_mV(void) / 1000);
         const uint8_t i2caddr =  Plugin_027_i2c_addr(event);
 
 				float voltage = Plugin_027_getBusVoltage_V(i2caddr) + (Plugin_027_getShuntVoltage_mV(i2caddr) / 1000);
@@ -273,7 +273,7 @@ void Plugin_027_wireWriteRegister (uint8_t i2caddr, uint8_t reg, uint16_t value)
   Wire.write(reg);                       // Register
   Wire.write((value >> 8) & 0xFF);       // Upper 8-bits
   Wire.write(value & 0xFF);              // Lower 8-bits
-  Wire.endTransmission();
+  Wire.endTransmission(void);
 }
 
 //**************************************************************************/
@@ -284,13 +284,13 @@ void Plugin_027_wireReadRegister(uint8_t i2caddr, uint8_t reg, uint16_t *value)
 
   Wire.beginTransmission(i2caddr);
   Wire.write(reg);                       // Register
-  Wire.endTransmission();
+  Wire.endTransmission(void);
 
   delay(1); // Max 12-bit conversion time is 586us per sample
 
   Wire.requestFrom(i2caddr, (uint8_t)2);
   // Shift values to create properly formed integer
-  *value = ((Wire.read() << 8) | Wire.read());
+  *value = ((Wire.read(void) << 8) | Wire.read(void));
 }
 
 //**************************************************************************/

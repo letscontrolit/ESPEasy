@@ -5,10 +5,10 @@
 // ********************************************************************************
 // Web Interface rules page
 // ********************************************************************************
-void handle_rules() {
+void handle_rules(void) {
   checkRAM(F("handle_rules"));
 
-  if (!isLoggedIn() || !Settings.UseRules) { return; }
+  if (!isLoggedIn(void) || !Settings.UseRules) { return; }
   navMenuIndex = MENU_INDEX_RULES;
   static byte currentSet = 1;
 
@@ -24,7 +24,7 @@ void handle_rules() {
   fileName += F(".txt");
 
   String error;
-  if (WebServer.args() > 0) {
+  if (WebServer.args(void) > 0) {
     String log = F("Rules : Save rulesSet: ");
     log += rulesSet;
     log += F(" currentSet: ");
@@ -32,7 +32,7 @@ void handle_rules() {
 
     if (currentSet == rulesSet) {
       if (WebServer.hasArg(F("rules"))) {
-        size_t rulesLength = WebServer.arg(F("rules")).length();
+        size_t rulesLength = WebServer.arg(F("rules")).length(void);
         // Reported length is with CRLF counted as a single byte.
         // So rulesLength > reported_length is a valid situation.
         size_t reported_length = getFormItemInt(F("rules_len"), 0);
@@ -46,8 +46,8 @@ void handle_rules() {
           error += ')';
         } else {
           // Save as soon as possible, as the webserver may already overwrite the args.
-          const byte *memAddress = reinterpret_cast<const byte *>(WebServer.arg(F("rules")).c_str());
-          error = SaveToFile(fileName.c_str(), 0, memAddress, rulesLength, "w");
+          const byte *memAddress = reinterpret_cast<const byte *>(WebServer.arg(F("rules")).c_str(void));
+          error = SaveToFile(fileName.c_str(void), 0, memAddress, rulesLength, "w");
         }
       } else {
         error = F("Error: Data was not saved, rules argument missing or corrupted");
@@ -61,22 +61,22 @@ void handle_rules() {
         log += fileName;
         fs::File f = tryOpenFile(fileName, "w");
 
-        if (f) { f.close(); }
+        if (f) { f.close(void); }
       }
     }
     addLog(LOG_LEVEL_INFO, log);
   }
-  TXBuffer.startStream();
-  sendHeadandTail_stdtemplate();
+  TXBuffer.startStream(void);
+  sendHeadandTail_stdtemplate(void);
   addHtmlError(error);
 
   if (rulesSet != currentSet) {
     currentSet = rulesSet;
   }
 
-  TXBuffer += F("<form name = 'frmselect' method = 'post' onsubmit='addRulesLength()'>");
-  html_table_class_normal();
-  html_TR();
+  TXBuffer += F("<form name = 'frmselect' method = 'post' onsubmit='addRulesLength(void)'>");
+  html_table_class_normal(void);
+  html_TR(void);
   html_table_header(F("Rules"));
 
   byte   choice = rulesSet;
@@ -90,7 +90,7 @@ void handle_rules() {
     optionValues[x] = x + 1;
   }
 
-  html_TR_TD();
+  html_TR_TD(void);
   addSelector(F("set"), RULESETS_MAX, options, optionValues, NULL, choice, true);
   addHelpButton(F("Tutorial_Rules"));
 
@@ -98,34 +98,34 @@ void handle_rules() {
 
   addFormSeparator(2);
 
-  html_TR_TD();
-  addSubmitButton();
+  html_TR_TD(void);
+  addSubmitButton(void);
   addButton(fileName, F("Download to file"));
-  html_end_table();
-  html_end_form();
-  html_add_script(F("function addRulesLength() {    var r_len = document.getElementById('rules').value.length;	document.getElementById('rules_len').setAttribute('value', r_len);  };"), true);
+  html_end_table(void);
+  html_end_form(void);
+  html_add_script(F("function addRulesLength(void) {    var r_len = document.getElementById('rules').value.length;	document.getElementById('rules_len').setAttribute('value', r_len);  };"), true);
   sendHeadandTail_stdtemplate(true);
-  TXBuffer.endStream();
+  TXBuffer.endStream(void);
 
-  checkRuleSets();
+  checkRuleSets(void);
 }
 
 // ********************************************************************************
 // Web Interface rules page  (NEW)
 // ********************************************************************************
-void handle_rules_new() {
-  if (!isLoggedIn() || !Settings.UseRules) { return; }
+void handle_rules_new(void) {
+  if (!isLoggedIn(void) || !Settings.UseRules) { return; }
 
-  if (!clientIPallowed()) { return; }
+  if (!clientIPallowed(void)) { return; }
 
-  if (Settings.OldRulesEngine())
+  if (Settings.OldRulesEngine(void))
   {
-    handle_rules();
+    handle_rules(void);
     return;
   }
   checkRAM(F("handle_rules"));
   navMenuIndex = 5;
-  TXBuffer.startStream();
+  TXBuffer.startStream(void);
   sendHeadandTail(F("TmplStd"), _HEAD);
 
   // define macro
@@ -143,15 +143,15 @@ void handle_rules_new() {
 
   String fstart = WebServer.arg(F("start"));
 
-  if (fstart.length() > 0)
+  if (fstart.length(void) > 0)
   {
-    startIdx = atoi(fstart.c_str());
+    startIdx = atoi(fstart.c_str(void));
   }
   int endIdx = startIdx + rulesListPageSize - 1;
 
   // Build table header
-  html_table_class_multirow();
-  html_TR();
+  html_table_class_multirow(void);
+  html_TR(void);
   html_table_header(F("Event Name"));
   html_table_header(F("Filename"));
   html_table_header(F("Size"));
@@ -186,13 +186,13 @@ void handle_rules_new() {
                                    {
                                      TXBuffer += F("</TD><TD></TD><TD></TD><TD>");
                                      addSaveButton(TXBuffer
-                                                   , String(F("/rules/backup?directory=")) + URLEncode(fi.Name.c_str())
+                                                   , String(F("/rules/backup?directory=")) + URLEncode(fi.Name.c_str(void))
                                                    , F("Backup")
                                                    );
                                    }
                                    else
                                    {
-                                     String encodedPath =  URLEncode((fi.Name + F(".txt")).c_str());
+                                     String encodedPath =  URLEncode((fi.Name + F(".txt")).c_str(void));
 
                                      // File Name
                                      TXBuffer += F("</TD><TD><a href='");
@@ -257,29 +257,29 @@ void handle_rules_new() {
 
   // TXBuffer += F("<BR><BR>");
   sendHeadandTail(F("TmplStd"), _TAIL);
-  TXBuffer.endStream();
+  TXBuffer.endStream(void);
   checkRAM(F("handle_rules"));
 }
 
-void handle_rules_backup() {
-  if (Settings.OldRulesEngine())
+void handle_rules_backup(void) {
+  if (Settings.OldRulesEngine(void))
   {
-    Goto_Rules_Root();
+    Goto_Rules_Root(void);
     return;
   }
   #ifdef WEBSERVER_RULES_DEBUG
   Serial.println(F("handle rules backup"));
   #endif // ifdef WEBSERVER_RULES_DEBUG
 
-  if (!isLoggedIn() || !Settings.UseRules) { return; }
+  if (!isLoggedIn(void) || !Settings.UseRules) { return; }
 
-  if (!clientIPallowed()) { return; }
+  if (!clientIPallowed(void)) { return; }
   checkRAM(F("handle_rules_backup"));
   String directory = WebServer.arg(F("directory"));
   String fileName  = WebServer.arg(F("fileName"));
   String error;
 
-  if (directory.length() > 0)
+  if (directory.length(void) > 0)
   {
     HandlerFileInfo downloadHandler = [&error](fileInfo fi) {
                                         if (!fi.isDirectory)
@@ -295,8 +295,8 @@ void handle_rules_backup() {
                               , 0
                               , downloadHandler);
   }
-  else if (fileName.length() > 0) {
-    fileName = fileName.substring(0, fileName.length() - 4);
+  else if (fileName.length(void) > 0) {
+    fileName = fileName.substring(0, fileName.length(void) - 4);
 
     if (!Rule_Download(fileName))
     {
@@ -308,29 +308,29 @@ void handle_rules_backup() {
     error = F("Invalid parameters");
   }
 
-  if (error.length() > 0) {
-    TXBuffer.startStream();
+  if (error.length(void) > 0) {
+    TXBuffer.startStream(void);
     sendHeadandTail(F("TmplMsg"), _HEAD);
     addHtmlError(error);
-    TXBuffer.endStream();
+    TXBuffer.endStream(void);
   }
 
   checkRAM(F("handle_rules_backup"));
 }
 
-void handle_rules_delete() {
-  if (!isLoggedIn() || !Settings.UseRules) { return; }
+void handle_rules_delete(void) {
+  if (!isLoggedIn(void) || !Settings.UseRules) { return; }
 
-  if (!clientIPallowed()) { return; }
+  if (!clientIPallowed(void)) { return; }
 
-  if (Settings.OldRulesEngine())
+  if (Settings.OldRulesEngine(void))
   {
-    Goto_Rules_Root();
+    Goto_Rules_Root(void);
     return;
   }
   checkRAM(F("handle_rules_delete"));
   String fileName = WebServer.arg(F("fileName"));
-  fileName = fileName.substring(0, fileName.length() - 4);
+  fileName = fileName.substring(0, fileName.length(void) - 4);
   bool removed = false;
   #ifdef WEBSERVER_RULES_DEBUG
   Serial.println(F("handle_rules_delete"));
@@ -338,7 +338,7 @@ void handle_rules_delete() {
   Serial.println(fileName);
   #endif // ifdef WEBSERVER_RULES_DEBUG
 
-  if (fileName.length() > 0)
+  if (fileName.length(void) > 0)
   {
     removed = SPIFFS.remove(fileName);
   }
@@ -352,11 +352,11 @@ void handle_rules_delete() {
   {
     String error = String(F("Delete rule Invalid path: ")) + fileName;
     addLog(LOG_LEVEL_ERROR, error);
-    TXBuffer.startStream();
+    TXBuffer.startStream(void);
     sendHeadandTail(F("TmplMsg"), _HEAD);
     addHtmlError(error);
     sendHeadandTail(F("TmplMsg"), _TAIL);
-    TXBuffer.endStream();
+    TXBuffer.endStream(void);
   }
   checkRAM(F("handle_rules_delete"));
 }
@@ -368,8 +368,8 @@ bool handle_rules_edit(const String& originalUri)
 
 bool handle_rules_edit(String originalUri, bool isAddNew) {
   // originalUri is passed via deepcopy, since it will be converted to lower case.
-  if (!isLoggedIn() || !Settings.UseRules) { return false; }
-  originalUri.toLowerCase();
+  if (!isLoggedIn(void) || !Settings.UseRules) { return false; }
+  originalUri.toLowerCase(void);
   checkRAM(F("handle_rules"));
   bool handle = false;
 
@@ -380,9 +380,9 @@ bool handle_rules_edit(String originalUri, bool isAddNew) {
 
   if (isAddNew || (originalUri.startsWith(F("/rules/"))
                    && originalUri.endsWith(F(".txt")))) {
-    if (Settings.OldRulesEngine())
+    if (Settings.OldRulesEngine(void))
     {
-      Goto_Rules_Root();
+      Goto_Rules_Root(void);
       return true;
     }
 
@@ -406,7 +406,7 @@ bool handle_rules_edit(String originalUri, bool isAddNew) {
         #if defined(ESP32)
       fileName = F("/rules/");
         #endif // if defined(ESP32)
-      fileName += originalUri.substring(7, originalUri.length() - 4);
+      fileName += originalUri.substring(7, originalUri.length(void) - 4);
       eventName = FileNameToEvent(fileName);
     }
       #ifdef WEBSERVER_RULES_DEBUG
@@ -415,7 +415,7 @@ bool handle_rules_edit(String originalUri, bool isAddNew) {
       #endif // ifdef WEBSERVER_RULES_DEBUG
     bool isEdit = SPIFFS.exists(fileName);
 
-    if (WebServer.args() > 0)
+    if (WebServer.args(void) > 0)
     {
       const String& rules = WebServer.arg(F("rules"));
       isNew = WebServer.arg(F("IsNew")) == F("yes");
@@ -435,7 +435,7 @@ bool handle_rules_edit(String originalUri, bool isAddNew) {
       }
 
       // Check rules size
-      else if (rules.length() > RULES_MAX_SIZE)
+      else if (rules.length(void) > RULES_MAX_SIZE)
       {
         error = String(F("Data was not saved, exceeds web editor limit! "))
                 + fileName;
@@ -451,7 +451,7 @@ bool handle_rules_edit(String originalUri, bool isAddNew) {
         {
           addLog(LOG_LEVEL_INFO, String(F(" Write to file: ")) + fileName);
           f.print(rules);
-          f.close();
+          f.close(void);
         }
 
         if (isAddNew) {
@@ -462,10 +462,10 @@ bool handle_rules_edit(String originalUri, bool isAddNew) {
       }
     }
     navMenuIndex = 5;
-    TXBuffer.startStream();
+    TXBuffer.startStream(void);
     sendHeadandTail(F("TmplStd"));
 
-    if (error.length() > 0) {
+    if (error.length(void) > 0) {
       addHtmlError(error);
     }
     TXBuffer += F("<form name = 'editRule' method = 'post'><table class='normal'><TR><TH align='left' colspan='2'>Edit Rule");
@@ -507,13 +507,13 @@ bool handle_rules_edit(String originalUri, bool isAddNew) {
     Rule_showRuleTextArea(fileName);
 
     addFormSeparator(2);
-    html_TR_TD();
-    addSubmitButton();
+    html_TR_TD(void);
+    addSubmitButton(void);
 
     TXBuffer += F("</table></form>");
 
     sendHeadandTail(F("TmplStd"), true);
-    TXBuffer.endStream();
+    TXBuffer.endStream(void);
   }
 
   checkRAM(F("handle_rules"));
@@ -529,7 +529,7 @@ void Rule_showRuleTextArea(const String& fileName) {
   TXBuffer += F("</textarea>");
   TXBuffer += F("<TR><TD colspan='2'>");
 
-  html_TR_TD(); TXBuffer += F("Current size: ");
+  html_TR_TD(void); TXBuffer += F("Current size: ");
   TXBuffer               += size;
   TXBuffer               += F(" characters (Max ");
   TXBuffer               += RULES_MAX_SIZE;
@@ -563,11 +563,11 @@ bool Rule_Download(const String& path)
   WebServer.sendHeader(F("ETag"),                F("\"2.0.0\""));
 
   WebServer.streamFile(dataFile, F("application/octet-stream"));
-  dataFile.close();
+  dataFile.close(void);
   return true;
 }
 
-void Goto_Rules_Root() {
+void Goto_Rules_Root(void) {
   WebServer.sendHeader(F("Location"), F("/rules"), true);
   WebServer.send(302, F("text/plain"), F(""));
 }
@@ -585,45 +585,45 @@ bool EnumerateFileAndDirectory(String          & rootPath
   Serial.print(F("Enumerate files of "));
   Serial.println(rootPath);
 
-  while (next && dir.next()) {
+  while (next && dir.next(void)) {
     // Skip files
     if (count++ < skip) {
       continue;
     }
 
     // Workaround for skipped unwanted files
-    if (!dir.fileName().startsWith(rootPath + "/")) {
+    if (!dir.fileName(void).startsWith(rootPath + "/")) {
       continue;
     }
     fileInfo fi;
-    fi.Name = dir.fileName() /*.substring(rootPath.length())*/;
+    fi.Name = dir.fileName(void) /*.substring(rootPath.length(void))*/;
     fs::File f = dir.openFile("r");
-    fi.Size = f.size();
-    f.close();
+    fi.Size = f.size(void);
+    f.close(void);
     next = handler(fi);
   }
-  hasMore = dir.next();
+  hasMore = dir.next(void);
   #endif // ifdef ESP8266
   #ifdef ESP32
   File root = SPIFFS.open(rootPath);
 
   if (root)
   {
-    File file = root.openNextFile();
+    File file = root.openNextFile(void);
 
     while (next && file) {
       if (count > skip) {
         fileInfo fi;
-        fi.Name        = file.name();
-        fi.Size        = file.size();
-        fi.isDirectory = file.isDirectory();
+        fi.Name        = file.name(void);
+        fi.Size        = file.size(void);
+        fi.isDirectory = file.isDirectory(void);
         next           = handler(fi);
       }
 
-      if (!file.isDirectory()) {
+      if (!file.isDirectory(void)) {
         ++count;
       }
-      file = root.openNextFile();
+      file = root.openNextFile(void);
     }
   }
   else

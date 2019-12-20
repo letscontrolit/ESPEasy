@@ -111,7 +111,7 @@ boolean Plugin_010(byte function, struct EventStruct *event, String& string)
       bool autoPowerDown = PCONFIG(2);
       sensor.begin(mode, autoPowerDown);
 
-      float lux = sensor.readLightLevel();
+      float lux = sensor.readLightLevel(void);
       if (lux != -1) {
       	UserVar[event->BaseVarIndex] = lux;
   			String log = F("BH1750 Address: 0x");

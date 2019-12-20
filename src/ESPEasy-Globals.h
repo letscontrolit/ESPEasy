@@ -247,7 +247,7 @@ enum gpio_direction {
 /*
 struct pinStatesStruct
 {
-  pinStatesStruct() : value(0), plugin(0), index(0), mode(0) {}
+  pinStatesStruct(void) : value(0), plugin(0), index(0), mode(0) {}
   uint16_t value;
   byte plugin;
   byte index;
@@ -285,7 +285,7 @@ struct RTC_cache_handler_struct;
 \*********************************************************************************************/
 struct rulesTimerStatus
 {
-  rulesTimerStatus() : timestamp(0), interval(0), paused(false) {}
+  rulesTimerStatus(void) : timestamp(0), interval(0), paused(false) {}
 
   unsigned long timestamp;
   unsigned int interval; //interval in milliseconds

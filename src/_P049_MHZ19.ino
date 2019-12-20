@@ -112,14 +112,14 @@ enum
 
 
 struct P049_data_struct : public PluginTaskData_base {
-  P049_data_struct() {
-    reset();
+  P049_data_struct(void) {
+    reset(void);
     sensorResets = 0;
   }
 
-  ~P049_data_struct() { reset(); }
+  ~P049_data_struct(void) { reset(void); }
 
-  void reset() {
+  void reset(void) {
     if (easySerial != nullptr) {
       delete easySerial;
       easySerial = nullptr;
@@ -138,7 +138,7 @@ struct P049_data_struct : public PluginTaskData_base {
   bool init(const int16_t serial_rx, const int16_t serial_tx, bool setABCdisabled) {
     if (serial_rx < 0 || serial_tx < 0)
       return false;
-    reset();
+    reset(void);
     easySerial = new ESPeasySerial(serial_rx, serial_tx);
     easySerial->begin(9600);
     ABC_Disable = setABCdisabled;
@@ -146,12 +146,12 @@ struct P049_data_struct : public PluginTaskData_base {
       // No guarantee the correct state is active on the sensor after reboot.
       ABC_MustApply = true;
     }
-    lastInitTimestamp = millis();
+    lastInitTimestamp = millis(void);
     initTimePassed = false;
-    return isInitialized();
+    return isInitialized(void);
   }
 
-  bool isInitialized() const {
+  bool isInitialized(void) const {
     return easySerial != nullptr;
   }
 
@@ -164,7 +164,7 @@ struct P049_data_struct : public PluginTaskData_base {
     }
   }
 
-  byte calculateChecksum() const {
+  byte calculateChecksum(void) const {
     byte checksum = 0;
     for (byte i = 1; i < 8; i++)
       checksum += mhzResp[i];
@@ -174,14 +174,14 @@ struct P049_data_struct : public PluginTaskData_base {
 
   size_t send_mhzCmd(byte CommandId)
   {
-    if (!isInitialized()) return 0;
+    if (!isInitialized(void)) return 0;
     // The receive buffer "mhzResp" is re-used to send a command here:
     mhzResp[0] = 0xFF; // Start byte, fixed
     mhzResp[1] = 0x01; // Sensor number, 0x01 by default
     memcpy_P(&mhzResp[2], mhzCmdData[CommandId], sizeof(mhzCmdData[0]));
     mhzResp[6] = mhzResp[3]; mhzResp[7] = mhzResp[4];
     mhzResp[3] = mhzResp[4] = mhzResp[5] = 0x00;
-    mhzResp[8] = calculateChecksum();
+    mhzResp[8] = calculateChecksum(void);
 
     if (!initTimePassed) {
       // Allow for 3 minutes of init time.
@@ -192,7 +192,7 @@ struct P049_data_struct : public PluginTaskData_base {
   }
 
   bool read_ppm(unsigned int &ppm, signed int &temp, unsigned int &s, float &u) {
-    if (!isInitialized()) return false;
+    if (!isInitialized(void)) return false;
     //send read PPM command
     byte nbBytesSent = send_mhzCmd(mhzCmdReadPPM);
     if (nbBytesSent != 9) {
@@ -201,11 +201,11 @@ struct P049_data_struct : public PluginTaskData_base {
     // get response
     memset(mhzResp, 0, sizeof(mhzResp));
 
-    long timer = millis() + PLUGIN_READ_TIMEOUT;
+    long timer = millis(void) + PLUGIN_READ_TIMEOUT;
     int counter = 0;
     while (!timeOutReached(timer) && (counter < 9)) {
-      if (easySerial->available() > 0) {
-        byte value = easySerial->read();
+      if (easySerial->available(void) > 0) {
+        byte value = easySerial->read(void);
         if ((counter == 0 && value == 0xFF) || counter > 0) {
           mhzResp[counter++] = value;
         }
@@ -218,7 +218,7 @@ struct P049_data_struct : public PluginTaskData_base {
       return false;
     }
     ++linesHandled;
-    if ( !(mhzResp[8] == calculateChecksum()) ) {
+    if ( !(mhzResp[8] == calculateChecksum(void)) ) {
       ++checksumFailed;
       return false;
     }
@@ -259,14 +259,14 @@ struct P049_data_struct : public PluginTaskData_base {
           ++nrUnknownResponses;
           return false;
       }
-      byte checksum = calculateChecksum();
+      byte checksum = calculateChecksum(void);
       return mhzResp[8] == checksum;
     }
     ++nrUnknownResponses;
     return false;
   }
 
-  String getBufferHexDump() {
+  String getBufferHexDump(void) {
     String result;
     result.reserve(27);
     for (int i = 0; i < 9; ++i) {
@@ -276,7 +276,7 @@ struct P049_data_struct : public PluginTaskData_base {
     return result;
   }
 
-  MHZ19Types getDetectedDevice() {
+  MHZ19Types getDetectedDevice(void) {
     if (linesHandled > checksumFailed) {
       return modelA_detected ? MHZ19_A : MHZ19_B;
     }
@@ -442,7 +442,7 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
       {
-        initPluginTaskData(event->TaskIndex, new P049_data_struct());
+        initPluginTaskData(event->TaskIndex, new P049_data_struct(void));
         success = P049_performInit(event);
         break;
       }
@@ -600,7 +600,7 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
         } else {
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
             String log = F("MHZ19: Unknown response:");
-            log += P049_data->getBufferHexDump();
+            log += P049_data->getBufferHexDump(void);
             addLog(LOG_LEVEL_INFO, log);
           }
           // Check for stable reads and allow unstable reads the first 3 minutes after reset.
@@ -631,7 +631,7 @@ bool P049_performInit(struct EventStruct *event) {
 
     //delay first read, because hardware needs to initialize on cold boot
     //otherwise we get a weird value or read error
-    schedule_task_device_timer(event->TaskIndex, millis() + 15000);
+    schedule_task_device_timer(event->TaskIndex, millis(void) + 15000);
   }
   return success;
 }
@@ -652,7 +652,7 @@ void P049_html_show_stats(struct EventStruct *event) {
   chksumStats += P049_data->sensorResets;
   addHtml(chksumStats);
   addRowLabel(F("Detected"));
-  switch (P049_data->getDetectedDevice()) {
+  switch (P049_data->getDetectedDevice(void)) {
     case MHZ19_A: addHtml(F("MH-Z19A")); break;
     case MHZ19_B: addHtml(F("MH-Z19B")); break;
     default: addHtml("---"); break;

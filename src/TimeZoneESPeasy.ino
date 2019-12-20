@@ -63,8 +63,8 @@ void getDefaultDst_flash_values(uint16_t& start, uint16_t& end) {
   TimeChangeRule CEST(Last, Sun, Mar, 2, Settings.TimeZone); // Summer Time
   TimeChangeRule CET(Last, Sun, Oct, 3, Settings.TimeZone);  // Standard Time
 
-  start = CEST.toFlashStoredValue();
-  end   = CET.toFlashStoredValue();
+  start = CEST.toFlashStoredValue(void);
+  end   = CET.toFlashStoredValue(void);
 }
 
 void applyTimeZone(uint32_t curTime) {
@@ -76,7 +76,7 @@ void applyTimeZone(uint32_t curTime) {
     TimeChangeRule start(tmpStart, Settings.TimeZone + dst_offset); // Summer Time
     TimeChangeRule end(tmpEnd, Settings.TimeZone);                  // Standard Time
 
-    if (start.isValid() && end.isValid()) {
+    if (start.isValid(void) && end.isValid(void)) {
       setTimeZone(start, end, curTime);
       return;
     }
@@ -89,11 +89,11 @@ void setTimeZone(const TimeChangeRule& dstStart, const TimeChangeRule& stdStart,
   m_std = stdStart;
 
   if (calcTimeChanges(year(curTime))) {
-    logTimeZoneInfo();
+    logTimeZoneInfo(void);
   }
 }
 
-void logTimeZoneInfo() {
+void logTimeZoneInfo(void) {
   String log = F("Current Time Zone: ");
 
   if (m_std.offset != m_dst.offset) {

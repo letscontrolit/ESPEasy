@@ -103,7 +103,7 @@ boolean Plugin_079(byte function, struct EventStruct *event, String& string)
 
 	case PLUGIN_WEBFORM_SAVE: {
 		String i2c_address = WebServer.arg(F("p079_adr"));
-		PCONFIG(0) = (int)strtol(i2c_address.c_str(), 0, 16);
+		PCONFIG(0) = (int)strtol(i2c_address.c_str(void), 0, 16);
 
 		success = true;
 		break;
@@ -134,15 +134,15 @@ boolean Plugin_079(byte function, struct EventStruct *event, String& string)
 			String paramDirection = parseString(tmpString, 3); // Direction
 			String paramSpeed = parseString(tmpString, 4); // Speed
 
-			WemosMotor WMS(Plugin_079_MotorShield_address, paramMotor.toInt(), 1000);
+			WemosMotor WMS(Plugin_079_MotorShield_address, paramMotor.toInt(void), 1000);
 			addLog(LOG_LEVEL_DEBUG, String(F("WemosMotorShield: Address = ")) + Plugin_079_MotorShield_address + String(F(" Motor = ")) + paramMotor);
 
 			if (paramDirection.equalsIgnoreCase(F("Forward"))) {
-				WMS.setmotor(_CW, paramSpeed.toInt());
+				WMS.setmotor(_CW, paramSpeed.toInt(void));
 				addLog(LOG_LEVEL_INFO, String(F("WemosMotor: Motor = ")) + paramMotor + String(F(" Direction = ")) + paramDirection + String(F(" Speed = ")) + paramSpeed);
 			}
 			if (paramDirection.equalsIgnoreCase(F("Backward"))) {
-				WMS.setmotor(_CCW, paramSpeed.toInt());
+				WMS.setmotor(_CCW, paramSpeed.toInt(void));
 				addLog(LOG_LEVEL_INFO, String(F("WemosMotor: Motor = ")) + paramMotor + String(F(" Direction = ")) + paramDirection + String(F(" Speed = ")) + paramSpeed);
 			}
 			if (paramDirection.equalsIgnoreCase(F("Stop"))) {
@@ -171,7 +171,7 @@ WemosMotor::WemosMotor(uint8_t address, uint8_t motor, uint32_t freq)
 	else
 		_motor = _MOTOR_B;
 
-	//Wire.begin();   called in ESPEasy framework
+	//Wire.begin(void);   called in ESPEasy framework
 
 	_address = address;
 
@@ -189,7 +189,7 @@ WemosMotor::WemosMotor(uint8_t address, uint8_t motor, uint32_t freq, uint8_t ST
 	else
 		_motor = _MOTOR_B;
 
-	//Wire.begin();   called in ESPEasy framework
+	//Wire.begin(void);   called in ESPEasy framework
 
 	_address = address;
 
@@ -200,7 +200,7 @@ WemosMotor::WemosMotor(uint8_t address, uint8_t motor, uint32_t freq, uint8_t ST
 }
 
 
-/* setfreq() -- set PWM's frequency
+/* setfreq(void) -- set PWM's frequency
 
    freq:
         PWM's frequency
@@ -218,11 +218,11 @@ void WemosMotor::setfreq(uint32_t freq)
 	Wire.write((byte)(freq >> 16));
 	Wire.write((byte)(freq >> 8));
 	Wire.write((byte)freq);
-	Wire.endTransmission();     // stop transmitting
+	Wire.endTransmission(void);     // stop transmitting
 	delay(0);
 }
 
-/* setmotor() -- set motor
+/* setmotor(void) -- set motor
 
    motor:
         _MOTOR_A	0	Motor A
@@ -269,7 +269,7 @@ void WemosMotor::setmotor(uint8_t dir, float pwm_val)
 
 	Wire.write((byte)(_pwm_val >> 8));
 	Wire.write((byte)_pwm_val);
-	Wire.endTransmission();     // stop transmitting
+	Wire.endTransmission(void);     // stop transmitting
 
 	delay(0);
 }

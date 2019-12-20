@@ -28,7 +28,7 @@ bool safeReadStringUntil(Stream     & input,
                          unsigned int timeout)
 {
   int c;
-  const unsigned long start           = millis();
+  const unsigned long start           = millis(void);
   const unsigned long timer           = start + timeout;
   unsigned long backgroundtasks_timer = start + 10;
 
@@ -36,8 +36,8 @@ bool safeReadStringUntil(Stream     & input,
 
   do {
     // read character
-    if (input.available()) {
-      c = input.read();
+    if (input.available(void)) {
+      c = input.read(void);
 
       if (c >= 0) {
         // found terminator, we're ok
@@ -49,7 +49,7 @@ bool safeReadStringUntil(Stream     & input,
         str += char(c);
 
         // string at max size?
-        if (str.length() >= maxSize) {
+        if (str.length(void) >= maxSize) {
           addLog(LOG_LEVEL_ERROR, F("Not enough bufferspace to read all input data!"));
           return false;
         }
@@ -58,7 +58,7 @@ bool safeReadStringUntil(Stream     & input,
       // We must run the backgroundtasks every now and then.
       if (timeOutReached(backgroundtasks_timer)) {
         backgroundtasks_timer += 10;
-        backgroundtasks();
+        backgroundtasks(void);
       } else {
         delay(0);
       }
@@ -94,7 +94,7 @@ String get_formatted_Controller_number(int controller_number) {
 String get_auth_header(const String& user, const String& pass) {
   String authHeader = "";
 
-  if ((user.length() != 0) && (pass.length() != 0)) {
+  if ((user.length(void) != 0) && (pass.length(void) != 0)) {
     String auth = user;
     auth       += ":";
     auth       += pass;
@@ -122,7 +122,7 @@ String get_auth_header(int controller_index) {
   return authHeader;
 }
 
-String get_user_agent_request_header_field() {
+String get_user_agent_request_header_field(void) {
   static unsigned int agent_size = 20;
   String request;
 
@@ -135,7 +135,7 @@ String get_user_agent_request_header_field() {
   request   += ' ';
   request   += String(CRCValues.compileTime);
   request   += "\r\n";
-  agent_size = request.length();
+  agent_size = request.length(void);
   return request;
 }
 
@@ -144,9 +144,9 @@ String do_create_http_request(
   const String& method, const String& uri,
   const String& auth_header, const String& additional_options,
   int content_length) {
-  int estimated_size = hostportString.length() + method.length()
-                       + uri.length() + auth_header.length()
-                       + additional_options.length()
+  int estimated_size = hostportString.length(void) + method.length(void)
+                       + uri.length(void) + auth_header.length(void)
+                       + additional_options.length(void)
                        + 42;
 
   if (content_length >= 0) { estimated_size += 45; }
@@ -176,7 +176,7 @@ String do_create_http_request(
   request += F("Accept: */*;q=0.1");
   request += "\r\n";
   request += additional_options;
-  request += get_user_agent_request_header_field();
+  request += get_user_agent_request_header_field(void);
   request += F("Connection: close\r\n");
   request += "\r\n";
 #ifndef BUILD_NO_DEBUG
@@ -202,7 +202,7 @@ String do_create_http_request(
   const bool defaultport = ControllerSettings.Port == 0 || ControllerSettings.Port == 80;
 
   return do_create_http_request(
-    defaultport ? ControllerSettings.getHost() : ControllerSettings.getHostPortString(),
+    defaultport ? ControllerSettings.getHost(void) : ControllerSettings.getHostPortString(void),
     method,
     uri,
     "", // auth_header
@@ -217,7 +217,7 @@ String create_http_request_auth(
   const bool defaultport = ControllerSettings.Port == 0 || ControllerSettings.Port == 80;
 
   return do_create_http_request(
-    defaultport ? ControllerSettings.getHost() : ControllerSettings.getHostPortString(),
+    defaultport ? ControllerSettings.getHost(void) : ControllerSettings.getHostPortString(void),
     method,
     uri,
     get_auth_header(controller_index),
@@ -241,7 +241,7 @@ void log_connecting_to(const String& prefix, int controller_number, ControllerSe
     String log = prefix;
     log += get_formatted_Controller_number(controller_number);
     log += F(" connecting to ");
-    log += ControllerSettings.getHostPortString();
+    log += ControllerSettings.getHostPortString(void);
     addLog(LOG_LEVEL_DEBUG, log);
   }
 }
@@ -266,7 +266,7 @@ bool count_connection_results(bool success, const String& prefix, int controller
   {
     connectionFailures++;
     log_connecting_fail(prefix, controller_number, ControllerSettings);
-    evaluateConnectionFailures();
+    evaluateConnectionFailures(void);
     return false;
   }
   statusLED(true);
@@ -280,7 +280,7 @@ bool count_connection_results(bool success, const String& prefix, int controller
 bool try_connect_host(int controller_number, WiFiUDP& client, ControllerSettingsStruct& ControllerSettings) {
   START_TIMER;
 
-  if (!WiFiConnected()) { return false; }
+  if (!WiFiConnected(void)) { return false; }
   client.setTimeout(ControllerSettings.ClientTimeout);
 #ifndef BUILD_NO_DEBUG
   log_connecting_to(F("UDP  : "), controller_number, ControllerSettings);
@@ -300,7 +300,7 @@ bool try_connect_host(int controller_number, WiFiClient& client, ControllerSetti
 bool try_connect_host(int controller_number, WiFiClient& client, ControllerSettingsStruct& ControllerSettings, const String& loglabel) {
   START_TIMER;
 
-  if (!WiFiConnected()) { return false; }
+  if (!WiFiConnected(void)) { return false; }
 
   // Use WiFiClient class to create TCP connections
   client.setTimeout(ControllerSettings.ClientTimeout);
@@ -315,12 +315,12 @@ bool try_connect_host(int controller_number, WiFiClient& client, ControllerSetti
   return result;
 }
 
-// Use "client.available() || client.connected()" to read all lines from slow servers.
+// Use "client.available(void) || client.connected(void)" to read all lines from slow servers.
 // See: https://github.com/esp8266/Arduino/pull/5113
 //      https://github.com/esp8266/Arduino/pull/1829
 bool client_available(WiFiClient& client) {
   delay(0);
-  return (client.available() != 0) || (client.connected() != 0);
+  return (client.available(void) != 0) || (client.connected(void) != 0);
 }
 
 bool send_via_http(const String& logIdentifier, WiFiClient& client, const String& postStr, bool must_check_reply) {
@@ -335,14 +335,14 @@ bool send_via_http(const String& logIdentifier, WiFiClient& client, const String
   // and implementation here
   // https://github.com/esp8266/Arduino/blob/561426c0c77e9d05708f2c4bf2a956d3552a3706/libraries/ESP8266WiFi/src/include/ClientContext.h#L437-L467
   // this needs to be adjusted if the WiFiClient.print method changes.
-  if (written != (postStr.length() % 256)) {
+  if (written != (postStr.length(void) % 256)) {
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
       String log = F("HTTP : ");
       log += logIdentifier;
       log += F(" Error: could not write to client (");
       log += written;
       log += "/";
-      log += postStr.length();
+      log += postStr.length(void);
       log += ")";
       addLog(LOG_LEVEL_ERROR, log);
     }
@@ -356,7 +356,7 @@ bool send_via_http(const String& logIdentifier, WiFiClient& client, const String
       log += F(" written to client (");
       log += written;
       log += "/";
-      log += postStr.length();
+      log += postStr.length(void);
       log += ")";
       addLog(LOG_LEVEL_DEBUG, log);
     }
@@ -364,7 +364,7 @@ bool send_via_http(const String& logIdentifier, WiFiClient& client, const String
 #endif // ifndef BUILD_NO_DEBUG
 
   if (must_check_reply) {
-    unsigned long timer = millis() + 200;
+    unsigned long timer = millis(void) + 200;
 
     while (!client_available(client)) {
       if (timeOutReached(timer)) { return false; }
@@ -380,7 +380,7 @@ bool send_via_http(const String& logIdentifier, WiFiClient& client, const String
 #ifndef BUILD_NO_DEBUG
 
       if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
-        if (line.length() > 80) {
+        if (line.length(void) > 80) {
           addLog(LOG_LEVEL_DEBUG_MORE, line.substring(0, 80));
         } else {
           addLog(LOG_LEVEL_DEBUG_MORE, line);
@@ -426,8 +426,8 @@ bool send_via_http(const String& logIdentifier, WiFiClient& client, const String
   }
 #endif // ifndef BUILD_NO_DEBUG
 
-  client.flush();
-  client.stop();
+  client.flush(void);
+  client.stop(void);
   return success;
 }
 

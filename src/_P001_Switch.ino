@@ -271,7 +271,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
       // PCONFIG_LONG(2) = getFormItemInt(F("p001_elpmininterval"));
 
       // check if a task has been edited and remove 'task' bit from the previous pin
-      for (std::map<uint32_t, portStatusStruct>::iterator it = globalMapPortStatus.begin(); it != globalMapPortStatus.end(); ++it) {
+      for (std::map<uint32_t, portStatusStruct>::iterator it = globalMapPortStatus.begin(void); it != globalMapPortStatus.end(void); ++it) {
         if ((it->second.previousTask == event->TaskIndex) && (getPluginFromKey(it->first) == PLUGIN_ID_001)) {
           globalMapPortStatus[it->first].previousTask = -1;
           removeTaskFromPort(it->first);
@@ -341,9 +341,9 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         PCONFIG(6) = false;
 
         // store millis for debounce, doubleclick and long press
-        PCONFIG_LONG(0) = millis(); // debounce timer
-        PCONFIG_LONG(1) = millis(); // doubleclick timer
-        PCONFIG_LONG(2) = millis(); // longpress timer
+        PCONFIG_LONG(0) = millis(void); // debounce timer
+        PCONFIG_LONG(1) = millis(void); // doubleclick timer
+        PCONFIG_LONG(2) = millis(void); // longpress timer
 
         // set minimum value for doubleclick MIN interval speed
         if (PCONFIG_FLOAT(1) < PLUGIN_001_DOUBLECLICK_MIN_INTERVAL) {
@@ -368,7 +368,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
       // String strPar1 = parseString(string, 3);
 
       // returns pin value using syntax: [plugin#gpio#pinstate#xx]
-      if ((string.length() >= 13) && string.substring(0, 13).equalsIgnoreCase(F("gpio,pinstate")))
+      if ((string.length(void) >= 13) && string.substring(0, 13).equalsIgnoreCase(F("gpio,pinstate")))
       {
         int par1;
 
@@ -384,7 +384,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
           case PLUGIN_UNCONDITIONAL_POLL:
             {
               // port monitoring, generates an event by rule command 'monitor,gpio,port#'
-              for (std::map<uint32_t,portStatusStruct>::iterator it=globalMapPortStatus.begin(); it!=globalMapPortStatus.end(); ++it) {
+              for (std::map<uint32_t,portStatusStruct>::iterator it=globalMapPortStatus.begin(void); it!=globalMapPortStatus.end(void); ++it) {
                 if ((it->second.monitor || it->second.command || it->second.init) && getPluginFromKey(it->first)==PLUGIN_ID_001) {
                   const uint16_t port = getPortFromKey(it->first);
                   byte state = Plugin_001_read_switch_state(port, it->second.mode);
@@ -456,7 +456,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
 
       // long difftimer1 = 0;
       // long difftimer2 = 0;
-      // long timerstats = millis();
+      // long timerstats = millis(void);
 
       // Bug fixed: avoid 10xSEC in case of a non-fully configured device (no GPIO defined yet)
       if ((CONFIG_PIN1 >= 0) && (CONFIG_PIN1 <= PIN_D_MAX)) {
@@ -486,7 +486,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
           PCONFIG_LONG(3) = 0;
 
           // reset timer for long press
-          PCONFIG_LONG(2) = millis();
+          PCONFIG_LONG(2) = millis(void);
           PCONFIG(6)      = false;
 
           const unsigned long debounceTime = timePassedSince(PCONFIG_LONG(0));
@@ -500,7 +500,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
             {
               // reset timer for doubleclick
               PCONFIG(7) = 0;
-              PCONFIG_LONG(1) = millis();
+              PCONFIG_LONG(1) = millis(void);
             }
 
             // just to simplify the reading of the code
@@ -580,7 +580,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
               // reset Userdata so it displays the correct state value in the web page
               UserVar[event->BaseVarIndex] = sendState ? 1 : 0;
             }
-            PCONFIG_LONG(0) = millis();
+            PCONFIG_LONG(0) = millis(void);
           }
           savePortStatus(key, currentStatus);
         }
@@ -979,7 +979,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
 
               // SPECIAL CASE TO ALLOW SERVO TO BE DETATTCHED AND SAVE POWER.
               if (event->Par3 >= 9000) {
-                servo1.detach();
+                servo1.detach(void);
               } else {
                 servo1.attach(event->Par2);
                 servo1.write(event->Par3);
@@ -990,7 +990,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
                 #ifdef USE_SERVO
 
               if (event->Par3 >= 9000) {
-                servo2.detach();
+                servo2.detach(void);
               } else {
                 servo2.attach(event->Par2);
                 servo2.write(event->Par3);
@@ -1087,7 +1087,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
           tmpString.replace('-', '#');
 
           // tmpString.toCharArray(sng, 1024);
-          play_rtttl(event->Par1, tmpString.c_str());
+          play_rtttl(event->Par1, tmpString.c_str(void));
 
           // setPinState(PLUGIN_ID_001, event->Par1, PIN_MODE_OUTPUT, event->Par2);
           tempStatus.mode    = PIN_MODE_OUTPUT;

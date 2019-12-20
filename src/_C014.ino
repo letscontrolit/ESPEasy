@@ -40,7 +40,7 @@ byte msgCounter=0; // counter for send Messages (currently for information / log
 
 // send MQTT Message with complete Topic / Payload
 bool CPlugin_014_sendMQTTmsg(String& topic, const char* payload, int& errorCounter) {
-        bool mqttReturn = MQTTpublish(CPLUGIN_ID_014, topic.c_str(), payload, true);
+        bool mqttReturn = MQTTpublish(CPLUGIN_ID_014, topic.c_str(void), payload, true);
         if (mqttReturn) msgCounter++;
           else errorCounter++;
         if (loglevelActiveFor(LOG_LEVEL_INFO) && mqttReturn) {
@@ -63,7 +63,7 @@ bool CPlugin_014_sendMQTTmsg(String& topic, const char* payload, int& errorCount
 // send MQTT Message with CPLUGIN_014_BASE_TOPIC Topic scheme / Payload
 bool CPlugin_014_sendMQTTdevice(String tmppubname, const char* topic, const char* payload, int& errorCounter) {
         tmppubname.replace(F("#"), topic);
-        bool mqttReturn = MQTTpublish(CPLUGIN_ID_014, tmppubname.c_str(), payload, true);
+        bool mqttReturn = MQTTpublish(CPLUGIN_ID_014, tmppubname.c_str(void), payload, true);
         if (mqttReturn) msgCounter++;
           else errorCounter++;
         if (loglevelActiveFor(LOG_LEVEL_INFO) && mqttReturn) {
@@ -80,7 +80,7 @@ bool CPlugin_014_sendMQTTdevice(String tmppubname, const char* topic, const char
           log += payload;
           addLog(LOG_LEVEL_ERROR, log+" ERROR!");
         }
-        processMQTTdelayQueue();
+        processMQTTdelayQueue(void);
         return mqttReturn;
 
 }
@@ -90,7 +90,7 @@ bool CPlugin_014_sendMQTTnode(String tmppubname, const char* node, const char* v
         tmppubname.replace(F("%device%"), node);
         tmppubname.replace(F("%node%"), value);
         tmppubname.replace(F("/%property%"), topic); // leading forward slash required to send "homie/device/value" topics
-        bool mqttReturn = MQTTpublish(CPLUGIN_ID_014, tmppubname.c_str(), payload, true);
+        bool mqttReturn = MQTTpublish(CPLUGIN_ID_014, tmppubname.c_str(void), payload, true);
         if (mqttReturn) msgCounter++;
           else errorCounter++;
         if (loglevelActiveFor(LOG_LEVEL_INFO) && mqttReturn) {
@@ -111,7 +111,7 @@ bool CPlugin_014_sendMQTTnode(String tmppubname, const char* node, const char* v
           log += payload;
           addLog(LOG_LEVEL_ERROR, log+" ERROR!");
         }
-        processMQTTdelayQueue();
+        processMQTTdelayQueue(void);
         return mqttReturn;
 
 }
@@ -119,7 +119,7 @@ bool CPlugin_014_sendMQTTnode(String tmppubname, const char* node, const char* v
 // and String a comma seperated list
 void CPLUGIN_014_addToList(String& valuesList, const char* node)
 {
-  if (valuesList.length()>0) valuesList += F(",");
+  if (valuesList.length(void)>0) valuesList += F(",");
   valuesList += node;
 }
 
@@ -161,7 +161,7 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
 
     case CPLUGIN_INTERVAL:
       {
-        if (MQTTclient.connected())
+        if (MQTTclient.connected(void))
         {
           errorCounter = 0;
 
@@ -170,14 +170,14 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
 
 #ifdef CPLUGIN_014_V3
           // $stats/uptime	Device → Controller	Time elapsed in seconds since the boot of the device	Yes	Yes
-          CPlugin_014_sendMQTTdevice(pubname,"$stats/uptime",toString((wdcounter / 2)*60,0).c_str(),errorCounter);
+          CPlugin_014_sendMQTTdevice(pubname,"$stats/uptime",toString((wdcounter / 2)*60,0).c_str(void),errorCounter);
 
           // $stats/signal	Device → Controller	Signal strength in %	Yes	No
-          float RssI = WiFi.RSSI();
+          float RssI = WiFi.RSSI(void);
           RssI = isnan(RssI) ? -100.0 : RssI;
           RssI = min(max(2 * (RssI + 100.0), 0.0), 100.0);
 
-          CPlugin_014_sendMQTTdevice(pubname,"$stats/signal",toString(RssI,1).c_str(),errorCounter);
+          CPlugin_014_sendMQTTdevice(pubname,"$stats/signal",toString(RssI,1).c_str(void),errorCounter);
 #endif
 
           if (errorCounter>0)
@@ -242,10 +242,10 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
 
           // $localip	Device → Controller	IP of the device on the local network	Yes	Yes
 #ifdef CPLUGIN_014_V3
-          CPlugin_014_sendMQTTdevice(pubname,"$localip",formatIP(WiFi.localIP()).c_str(),errorCounter);
+          CPlugin_014_sendMQTTdevice(pubname,"$localip",formatIP(WiFi.localIP(void)).c_str(void),errorCounter);
 
           // $mac	Device → Controller	Mac address of the device network interface. The format MUST be of the type A1:B2:C3:D4:E5:F6	Yes	Yes
-          CPlugin_014_sendMQTTdevice(pubname,"$mac",WiFi.macAddress().c_str(),errorCounter);
+          CPlugin_014_sendMQTTdevice(pubname,"$mac",WiFi.macAddress(void).c_str(void),errorCounter);
 
           // $implementation	Device → Controller	An identifier for the Homie implementation (example esp8266)	Yes	Yes
           #if defined(ESP8266)
@@ -256,10 +256,10 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
           #endif
 
           // $fw/version	Device → Controller	Version of the firmware running on the device	Yes	Yes
-          CPlugin_014_sendMQTTdevice(pubname,"$fw/version",toString(Settings.Build,0).c_str(),errorCounter);
+          CPlugin_014_sendMQTTdevice(pubname,"$fw/version",toString(Settings.Build,0).c_str(void),errorCounter);
 
           // $fw/name	Device → Controller	Name of the firmware running on the device. Allowed characters are the same as the device ID	Yes	Yes
-          CPlugin_014_sendMQTTdevice(pubname,"$fw/name",getNodeTypeDisplayString(NODE_TYPE_ID).c_str(),errorCounter);
+          CPlugin_014_sendMQTTdevice(pubname,"$fw/name",getNodeTypeDisplayString(NODE_TYPE_ID).c_str(void),errorCounter);
 
           // $stats/interval	Device → Controller	Interval in seconds at which the device refreshes its $stats/+: See next section for details about statistical attributes	Yes	Yes
           CPlugin_014_sendMQTTdevice(pubname,"$stats/interval",CPLUGIN_014_INTERVAL,errorCounter);
@@ -291,23 +291,23 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
               nodeCount++;
               valueName = CPLUGIN_014_GPIO_VALUE;
               valueName += toString(gpio,0);
-              CPLUGIN_014_addToList(valuesList,valueName.c_str());
+              CPLUGIN_014_addToList(valuesList,valueName.c_str(void));
 
               //$name	Device → Controller	Friendly name of the property.	Any String	Yes	No ("")
-              CPlugin_014_sendMQTTnode(nodename, CPLUGIN_014_SYSTEM_DEVICE, valueName.c_str(), "/$name", valueName.c_str(), errorCounter);
+              CPlugin_014_sendMQTTnode(nodename, CPLUGIN_014_SYSTEM_DEVICE, valueName.c_str(void), "/$name", valueName.c_str(void), errorCounter);
               //$datatype	The data type. See Payloads.	Enum: [integer, float, boolean,string, enum, color]
-              CPlugin_014_sendMQTTnode(nodename, CPLUGIN_014_SYSTEM_DEVICE, valueName.c_str(), "/$datatype", "boolean", errorCounter);
+              CPlugin_014_sendMQTTnode(nodename, CPLUGIN_014_SYSTEM_DEVICE, valueName.c_str(void), "/$datatype", "boolean", errorCounter);
               if (Settings.PinBootStates[gpio]<3) // defined as default low or high so output
               {
                 //$settable	Device → Controller	Specifies whether the property is settable (true) or readonly (false)	true or false	Yes	No (false)
-                CPlugin_014_sendMQTTnode(nodename, CPLUGIN_014_SYSTEM_DEVICE, valueName.c_str(), "/$settable", "true", errorCounter);
+                CPlugin_014_sendMQTTnode(nodename, CPLUGIN_014_SYSTEM_DEVICE, valueName.c_str(void), "/$settable", "true", errorCounter);
               }
             }
             ++gpio;
           }
 
           // $properties	Device → Controller	Properties the node exposes, with format id separated by a , if there are multiple nodes.	Yes	Yes
-          CPlugin_014_sendMQTTnode(nodename, CPLUGIN_014_SYSTEM_DEVICE, "$properties", "", valuesList.c_str(), errorCounter);
+          CPlugin_014_sendMQTTnode(nodename, CPLUGIN_014_SYSTEM_DEVICE, "$properties", "", valuesList.c_str(void), errorCounter);
           valuesList = "";
           deviceCount++;
 
@@ -334,11 +334,11 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
                         if (ExtraTaskSettings.TaskDeviceValueNames[varNr][0]!=0) { // do not send if Value Name is empty!
                           CPLUGIN_014_addToList(valuesList,ExtraTaskSettings.TaskDeviceValueNames[varNr]);
                           //$settable	Device → Controller	Specifies whether the property is settable (true) or readonly (false)	true or false	Yes	No (false)
-                          CPlugin_014_sendMQTTnode(nodename, deviceName.c_str(), ExtraTaskSettings.TaskDeviceValueNames[varNr], "/$settable", "true", errorCounter);
+                          CPlugin_014_sendMQTTnode(nodename, deviceName.c_str(void), ExtraTaskSettings.TaskDeviceValueNames[varNr], "/$settable", "true", errorCounter);
                           //$name	Device → Controller	Friendly name of the property.	Any String	Yes	No ("")
                           valueName = F("Homie Receiver: ");
                           valueName += ExtraTaskSettings.TaskDeviceValueNames[varNr];
-                          CPlugin_014_sendMQTTnode(nodename, deviceName.c_str(), ExtraTaskSettings.TaskDeviceValueNames[varNr], "/$name",valueName.c_str(), errorCounter);
+                          CPlugin_014_sendMQTTnode(nodename, deviceName.c_str(void), ExtraTaskSettings.TaskDeviceValueNames[varNr], "/$name",valueName.c_str(void), errorCounter);
                           //$datatype	The data type. See Payloads.	Enum: [integer, float, boolean,string, enum, color]
                           unitName = "";
                           switch(Settings.TaskDevicePluginConfig[x][varNr]) {
@@ -368,8 +368,8 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
                                     unitName = F("hsv");
                                     break;
                           }
-                          CPlugin_014_sendMQTTnode(nodename, deviceName.c_str(), ExtraTaskSettings.TaskDeviceValueNames[varNr], "/$datatype", valueName.c_str(), errorCounter);
-                          if (unitName!="") CPlugin_014_sendMQTTnode(nodename, deviceName.c_str(), ExtraTaskSettings.TaskDeviceValueNames[varNr], "/$format", unitName.c_str(), errorCounter);
+                          CPlugin_014_sendMQTTnode(nodename, deviceName.c_str(void), ExtraTaskSettings.TaskDeviceValueNames[varNr], "/$datatype", valueName.c_str(void), errorCounter);
+                          if (unitName!="") CPlugin_014_sendMQTTnode(nodename, deviceName.c_str(void), ExtraTaskSettings.TaskDeviceValueNames[varNr], "/$format", unitName.c_str(void), errorCounter);
                           nodeCount++;
                         }
                       }
@@ -391,12 +391,12 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
                           CPLUGIN_014_addToList(valuesList,ExtraTaskSettings.TaskDeviceValueNames[varNr]);
 
                           //$name	Device → Controller	Friendly name of the property.	Any String	Yes	No ("")
-                          CPlugin_014_sendMQTTnode(nodename, deviceName.c_str(), ExtraTaskSettings.TaskDeviceValueNames[varNr], "/$name", ExtraTaskSettings.TaskDeviceValueNames[varNr], errorCounter);
+                          CPlugin_014_sendMQTTnode(nodename, deviceName.c_str(void), ExtraTaskSettings.TaskDeviceValueNames[varNr], "/$name", ExtraTaskSettings.TaskDeviceValueNames[varNr], errorCounter);
                           //$datatype	The data type. See Payloads.	Enum: [integer, float, boolean,string, enum, color]
-                          CPlugin_014_sendMQTTnode(nodename, deviceName.c_str(), ExtraTaskSettings.TaskDeviceValueNames[varNr], "/$datatype", "float", errorCounter);
+                          CPlugin_014_sendMQTTnode(nodename, deviceName.c_str(void), ExtraTaskSettings.TaskDeviceValueNames[varNr], "/$datatype", "float", errorCounter);
 
                           if (Device[DeviceIndex].Number==33) // Dummy Device can send AND receive Data
-                            CPlugin_014_sendMQTTnode(nodename, deviceName.c_str(), ExtraTaskSettings.TaskDeviceValueNames[varNr], "/$settable", "true", errorCounter);
+                            CPlugin_014_sendMQTTnode(nodename, deviceName.c_str(void), ExtraTaskSettings.TaskDeviceValueNames[varNr], "/$settable", "true", errorCounter);
 
                           nodeCount++;
 /*                          // because values in ESPEasy are unitless lets assueme some units by the value name (still case sensitive)
@@ -414,7 +414,7 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
                           if (unitName != "")  // found a unit match
                           {
                             // $unit	Device → Controller	A string containing the unit of this property. You are not limited to the recommended values, although they are the only well known ones that will have to be recognized by any Homie consumer.	Recommended: Yes	No ("")
-                            CPlugin_014_sendMQTTnode(nodename, deviceName.c_str(), ExtraTaskSettings.TaskDeviceValueNames[varNr], "/$unit", unitName.c_str(), errorCounter);
+                            CPlugin_014_sendMQTTnode(nodename, deviceName.c_str(void), ExtraTaskSettings.TaskDeviceValueNames[varNr], "/$unit", unitName.c_str(void), errorCounter);
                           }
                           unitName = "";
 */                      }
@@ -432,16 +432,16 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
                 {
                   // only add device to list if it has nodes!
                   // $name	Device → Controller	Friendly name of the Node	Yes	Yes
-                  CPlugin_014_sendMQTTnode(nodename, deviceName.c_str(), "$name", "",ExtraTaskSettings.TaskDeviceName, errorCounter);
+                  CPlugin_014_sendMQTTnode(nodename, deviceName.c_str(void), "$name", "",ExtraTaskSettings.TaskDeviceName, errorCounter);
 
                   // $type	Device → Controller	Type of the node	Yes	Yes
-                  CPlugin_014_sendMQTTnode(nodename, deviceName.c_str(), "$type", "", getPluginNameFromDeviceIndex(DeviceIndex).c_str(), errorCounter);
+                  CPlugin_014_sendMQTTnode(nodename, deviceName.c_str(void), "$type", "", getPluginNameFromDeviceIndex(DeviceIndex).c_str(void), errorCounter);
 
                   // add device to device list
-                  CPLUGIN_014_addToList(nodesList,deviceName.c_str());
+                  CPLUGIN_014_addToList(nodesList,deviceName.c_str(void));
                   deviceCount++;
                   // $properties	Device → Controller	Properties the node exposes, with format id separated by a , if there are multiple nodes.	Yes	Yes
-                  CPlugin_014_sendMQTTnode(nodename, deviceName.c_str(), "$properties", "", valuesList.c_str(), errorCounter);
+                  CPlugin_014_sendMQTTnode(nodename, deviceName.c_str(void), "$properties", "", valuesList.c_str(void), errorCounter);
                   valuesList="";
                 }
               } else { // device not enabeled
@@ -456,7 +456,7 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
 
           // and finally ...
           // $nodes	Device → Controller	Nodes the device exposes, with format id separated by a , if there are multiple nodes. To make a node an array, append [] to the ID.	Yes	Yes
-          CPlugin_014_sendMQTTdevice(pubname, "$nodes", nodesList.c_str(), errorCounter);
+          CPlugin_014_sendMQTTdevice(pubname, "$nodes", nodesList.c_str(void), errorCounter);
         }
 
         if (errorCounter>0)
@@ -555,7 +555,7 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
               if (valueName.substring(0,strlen(CPLUGIN_014_GPIO_VALUE)) == F(CPLUGIN_014_GPIO_VALUE)) // msg to to set gpio values
               {
                 cmd = ("GPIO,");
-                cmd += valueName.substring(strlen(CPLUGIN_014_GPIO_VALUE)).toInt(); // get the GPIO
+                cmd += valueName.substring(strlen(CPLUGIN_014_GPIO_VALUE)).toInt(void); // get the GPIO
                 if (event->String2=="true" || event->String2=="1") cmd += F(",1");
                   else cmd += F(",0");
                 validTopic = true;
@@ -709,7 +709,7 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
           tmppubname.replace(F("%valname%"), ExtraTaskSettings.TaskDeviceValueNames[x]);
           value = formatUserVarNoCheck(event, x);
 
-          MQTTpublish(event->ControllerIndex, tmppubname.c_str(), value.c_str(), Settings.MQTTRetainFlag);
+          MQTTpublish(event->ControllerIndex, tmppubname.c_str(void), value.c_str(void), Settings.MQTTRetainFlag);
           if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
             String log = F("C014 : Sent to ");
             log += tmppubname;
@@ -764,8 +764,8 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
           String commandName = parseString(string, 1); // could not find a way to get the command out of the event structure.
           if (commandName == F("gpio")) //!ToDo : As gpio is like any other plugin commands should be integrated below!
           {
-            int port = event->Par1; // parseString(string, 2).toInt();
-            int valueInt = event->Par2; //parseString(string, 3).toInt();
+            int port = event->Par1; // parseString(string, 2).toInt(void);
+            int valueInt = event->Par2; //parseString(string, 3).toInt(void);
             String valueBool = "false";
             if (valueInt==1) valueBool = "true";
 
@@ -774,7 +774,7 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
             topic.replace(F("%tskname%"), CPLUGIN_014_SYSTEM_DEVICE);
             topic.replace(F("%valname%"), CPLUGIN_014_GPIO_VALUE + toString(port,0));
 
-            success = MQTTpublish(CPLUGIN_ID_014, topic.c_str(), valueBool.c_str(), false);
+            success = MQTTpublish(CPLUGIN_ID_014, topic.c_str(void), valueBool.c_str(void), false);
             if (loglevelActiveFor(LOG_LEVEL_INFO) && success) {
               String log = F("C014 : Acknowledged GPIO");
               log += port;
@@ -802,11 +802,11 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
               userVarIndex_t userVarIndex = event->BaseVarIndex + taskVarIndex;
               String topic = CPLUGIN_014_PUBLISH;
               topic.replace(F("%sysname%"), Settings.Name);
-              int deviceIndex = event->Par1; //parseString(string, 2).toInt();
+              int deviceIndex = event->Par1; //parseString(string, 2).toInt(void);
               LoadTaskSettings(deviceIndex-1);
               String deviceName = ExtraTaskSettings.TaskDeviceName;
               topic.replace(F("%tskname%"), deviceName);
-              String valueName = ExtraTaskSettings.TaskDeviceValueNames[event->Par2-1]; //parseString(string, 3).toInt()-1];
+              String valueName = ExtraTaskSettings.TaskDeviceValueNames[event->Par2-1]; //parseString(string, 3).toInt(void)-1];
               topic.replace(F("%valname%"), valueName);
               String valueStr = "";
               int valueInt = 0;
@@ -814,7 +814,7 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
               if ((commandName == F("taskvalueset")) || (commandName == F("dummyvalueset"))) // should work for both
               {
                 valueStr = toString(UserVar[userVarIndex],ExtraTaskSettings.TaskDeviceValueDecimals[taskVarIndex]); //parseString(string, 4);
-                success = MQTTpublish(CPLUGIN_ID_014, topic.c_str(), valueStr.c_str(), false);
+                success = MQTTpublish(CPLUGIN_ID_014, topic.c_str(void), valueStr.c_str(void), false);
                 if (loglevelActiveFor(LOG_LEVEL_INFO) && success) {
                   String log = F("C014 : Acknowledged: ");
                   log += deviceName;
@@ -867,7 +867,7 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
                     valueStr = parseStringToEnd(string,4);
                     break;
                 }
-                success = MQTTpublish(CPLUGIN_ID_014, topic.c_str(), valueStr.c_str(), false);
+                success = MQTTpublish(CPLUGIN_ID_014, topic.c_str(void), valueStr.c_str(void), false);
                 if (loglevelActiveFor(LOG_LEVEL_INFO) && success) {
                   String log = F("C014 : homie acknowledge: ");
                   log += deviceName;

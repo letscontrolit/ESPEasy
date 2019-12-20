@@ -85,7 +85,7 @@ boolean Plugin_043(byte function, struct EventStruct *event, String& string)
           argc = F("p043_state");
           argc += x;
           String plugin2 = WebServer.arg(argc);
-          ExtraTaskSettings.TaskDevicePluginConfig[x] = plugin2.toInt();
+          ExtraTaskSettings.TaskDevicePluginConfig[x] = plugin2.toInt(void);
         }
         success = true;
         break;
@@ -102,7 +102,7 @@ boolean Plugin_043(byte function, struct EventStruct *event, String& string)
         LoadTaskSettings(event->TaskIndex);
         for (byte x = 0; x < PLUGIN_043_MAX_SETTINGS; x++)
         {
-          unsigned long clockEvent = (unsigned long)minute() % 10 | (unsigned long)(minute() / 10) << 4 | (unsigned long)(hour() % 10) << 8 | (unsigned long)(hour() / 10) << 12 | (unsigned long)weekday() << 16;
+          unsigned long clockEvent = (unsigned long)minute(void) % 10 | (unsigned long)(minute(void) / 10) << 4 | (unsigned long)(hour(void) % 10) << 8 | (unsigned long)(hour(void) / 10) << 12 | (unsigned long)weekday(void) << 16;
           unsigned long clockSet = ExtraTaskSettings.TaskDevicePluginConfigLong[x];
 
           if (matchClockEvent(clockEvent,clockSet))

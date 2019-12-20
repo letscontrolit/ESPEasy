@@ -29,7 +29,7 @@ namespace std
 #define ZERO_TERMINATE(S)  S[sizeof(S) - 1] = 0
 
 
-String getUnknownString();
+String getUnknownString(void);
 
 /*********************************************************************************************\
    Bitwise operators

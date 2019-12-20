@@ -14,8 +14,8 @@ extern "C"
 {
 #include <lwip/raw.h>
 #include <lwip/icmp.h> // needed for icmp packet definitions
-#include <lwip/inet_chksum.h> // needed for inet_chksum()
-#include <lwip/sys.h> // needed for sys_now()
+#include <lwip/inet_chksum.h> // needed for inet_chksum(void)
+#include <lwip/sys.h> // needed for sys_now(void)
 #include <lwip/netif.h>
 }
 
@@ -29,7 +29,7 @@ extern "C"
 #define ICMP_PAYLOAD_LEN          32
 
 struct P089_icmp_pcb {
-  P089_icmp_pcb() : m_IcmpPCB(nullptr), instances(1) {}
+  P089_icmp_pcb(void) : m_IcmpPCB(nullptr), instances(1) {}
   struct raw_pcb *m_IcmpPCB;
   uint8_t instances; /* Sort of refcount */
 };
@@ -38,11 +38,11 @@ struct P089_icmp_pcb *P089_data = nullptr;
 
 class P089_data_struct: public PluginTaskData_base {
 public:
-  P089_data_struct() {
+  P089_data_struct(void) {
     destIPAddress.addr = 0;
     idseq = 0;
     if (nullptr == P089_data) {
-      P089_data = new P089_icmp_pcb();
+      P089_data = new P089_icmp_pcb(void);
       P089_data->m_IcmpPCB = raw_new(IP_PROTO_ICMP);
       raw_recv(P089_data->m_IcmpPCB, PingReceiver, NULL);
       raw_bind(P089_data->m_IcmpPCB, IP_ADDR_ANY);
@@ -51,7 +51,7 @@ public:
     }
   }
 
-  ~P089_data_struct() {
+  ~P089_data_struct(void) {
       if (P089_data != nullptr) {
         P089_data->instances--;
         if (P089_data->instances == 0) {
@@ -74,7 +74,7 @@ public:
       is_failure = true;
 
     /* This ping lost for sure */
-    if (!WiFiConnected()) {
+    if (!WiFiConnected(void)) {
       return true;
     }
 
@@ -172,7 +172,7 @@ boolean Plugin_089(byte function, struct EventStruct *event, String& string)
     char hostname[PLUGIN_089_HOSTNAME_SIZE];
     // Reset "Fails" if settings updated
     UserVar[event->BaseVarIndex] = 0;
-    strncpy(hostname,  WebServer.arg(F("p089_ping_host")).c_str() , sizeof(hostname));
+    strncpy(hostname,  WebServer.arg(F("p089_ping_host")).c_str(void) , sizeof(hostname));
     SaveCustomTaskSettings(event->TaskIndex, (byte*)&hostname, PLUGIN_089_HOSTNAME_SIZE);
     success = true;
     break;
@@ -180,7 +180,7 @@ boolean Plugin_089(byte function, struct EventStruct *event, String& string)
 
   case PLUGIN_INIT:
   {
-    initPluginTaskData(event->TaskIndex, new P089_data_struct());
+    initPluginTaskData(event->TaskIndex, new P089_data_struct(void));
     UserVar[event->BaseVarIndex] = 0;
     success = true;
     break;

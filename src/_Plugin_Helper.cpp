@@ -22,7 +22,7 @@ String PCONFIG_LABEL(int n) {
 }
 
 
-void resetPluginTaskData() {
+void resetPluginTaskData(void) {
   for (taskIndex_t i = 0; i < TASKS_MAX; ++i) {
     Plugin_task_data[i] = nullptr;
   }
@@ -79,10 +79,10 @@ String getPluginCustomArgName(int varNr) {
 // Note that the varNr of the custom values should not conflict with the existing variable numbers (e.g. start at VARS_PER_TASK)
 String pluginWebformShowValue(taskIndex_t taskIndex, byte varNr, const String& label, const String& value, bool addTrailingBreak) {
   String result;
-  size_t length = 96 + label.length() + value.length();
+  size_t length = 96 + label.length(void) + value.length(void);
   String breakStr = F("<div class='div_br'></div>");
   if (addTrailingBreak) {
-    length += breakStr.length();
+    length += breakStr.length(void);
   }
   result.reserve(length);
   if (varNr > 0) {

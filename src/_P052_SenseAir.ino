@@ -98,22 +98,22 @@
 
 
 struct P052_data_struct : public PluginTaskData_base {
-  P052_data_struct() {}
+  P052_data_struct(void) {}
 
-  ~P052_data_struct() {
-    reset();
+  ~P052_data_struct(void) {
+    reset(void);
   }
 
-  void reset() {
-    modbus.reset();
+  void reset(void) {
+    modbus.reset(void);
   }
 
   bool init(const int16_t serial_rx, const int16_t serial_tx) {
     return modbus.init(serial_rx, serial_tx, 9600, P052_MODBUS_SLAVE_ADDRESS);
   }
 
-  bool isInitialized() const {
-    return modbus.isInitialized();
+  bool isInitialized(void) const {
+    return modbus.isInitialized(void);
   }
 
   ModbusRTU_struct modbus;
@@ -231,7 +231,7 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string) {
             P052_data_struct *P052_data =
               static_cast<P052_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-            if ((nullptr != P052_data) && P052_data->isInitialized()) {
+            if ((nullptr != P052_data) && P052_data->isInitialized(void)) {
               P052_data->modbus.writeSingleRegister(0x18, relaystatus);
               addLog(LOG_LEVEL_INFO, String(F("Senseair command: relay=")) + param1);
             }
@@ -245,8 +245,8 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string) {
          // See https://github.com/letscontrolit/ESPEasy/issues/759
          if (cmd.equalsIgnoreCase(F("senseair_setABCperiod")))
          {
-         if (param1.toInt() >= 0) {
-          Plugin_052_setABCperiod(param1.toInt());
+         if (param1.toInt(void) >= 0) {
+          Plugin_052_setABCperiod(param1.toInt(void));
           addLog(LOG_LEVEL_INFO, String(F("Senseair command: ABCperiod=")) +
          param1);
          }
@@ -263,12 +263,12 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string) {
       P052_data_struct *P052_data =
         static_cast<P052_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if ((nullptr != P052_data) && P052_data->isInitialized()) {
+      if ((nullptr != P052_data) && P052_data->isInitialized(void)) {
         addFormSubHeader(F("Device Information"));
         {
           String detectedString = P052_data->modbus.detected_device_description;
 
-          if (detectedString.length() > 0) {
+          if (detectedString.length(void) > 0) {
             addRowLabel(F("Detected Device"));
             addHtml(detectedString);
           }
@@ -380,7 +380,7 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string) {
       P052_data_struct *P052_data =
         static_cast<P052_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if ((nullptr != P052_data) && P052_data->isInitialized()) {
+      if ((nullptr != P052_data) && P052_data->isInitialized(void)) {
         bool changed  = false;
         uint16_t mode = getFormItemInt(F("p052_mode"), 65535);
 
@@ -442,7 +442,7 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string) {
     case PLUGIN_INIT: {
       const int16_t serial_rx = CONFIG_PIN1;
       const int16_t serial_tx = CONFIG_PIN2;
-      initPluginTaskData(event->TaskIndex, new P052_data_struct());
+      initPluginTaskData(event->TaskIndex, new P052_data_struct(void));
       P052_data_struct *P052_data =
         static_cast<P052_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -484,7 +484,7 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string) {
       P052_data_struct *P052_data =
         static_cast<P052_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if ((nullptr != P052_data) && P052_data->isInitialized()) {
+      if ((nullptr != P052_data) && P052_data->isInitialized(void)) {
         event->sensorType = PCONFIG(P052_SENSOR_TYPE_INDEX);
         String log = F("Senseair: ");
         String logPrefix;
@@ -561,7 +561,7 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string) {
             }
           }
 
-          if (P052_data->modbus.getLastError() == 0) {
+          if (P052_data->modbus.getLastError(void) == 0) {
             UserVar[event->BaseVarIndex + varnr] = value;
             log                                 += logPrefix;
             log                                 += value;
@@ -591,7 +591,7 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string) {
    return (result == 1);
    }
 
-   bool Plugin_052_check_error_status() {
+   bool Plugin_052_check_error_status(void) {
    byte error_status = P052_data->modbus.read_RAM_EEPROM(P052_CMD_READ_RAM,
                                                  P052_RAM_ADDR_ERROR_STATUS, 1);
    if (error_status == 0)
@@ -634,7 +634,7 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string) {
    }
 
    int Plugin_052_readCo2_from_RAM(void) {
-   bool valid_measurement = Plugin_052_prepare_single_measurement_from_RAM();
+   bool valid_measurement = Plugin_052_prepare_single_measurement_from_RAM(void);
    short co2 =
       P052_data->modbus.read_RAM_EEPROM(P052_CMD_READ_RAM, P052_RAM_ADDR_CO2, 2);
    short temperature = P052_data->modbus.read_RAM_EEPROM(
@@ -655,7 +655,7 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string) {
    return co2;
    }
 
-   bool Plugin_052_measurement_active() {
+   bool Plugin_052_measurement_active(void) {
    unsigned int meter_status = P052_data->modbus.read_RAM_EEPROM(
       P052_CMD_READ_RAM, P052_RAM_ADDR_METER_STATUS, 1);
    // Meter Status bit 5 indicates single cycle measurement active
@@ -664,8 +664,8 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string) {
 
    // Perform a single measurement.
    // return value indicates a successful measurement update.
-   bool Plugin_052_prepare_single_measurement_from_RAM() {
-   Plugin_052_check_error_status();
+   bool Plugin_052_prepare_single_measurement_from_RAM(void) {
+   Plugin_052_check_error_status(void);
    if (timeOutReached(_plugin_052_last_measurement +
                      P052_MEASUREMENT_INTERVAL)) {
     // Last measurement taken is still valid.
@@ -673,14 +673,14 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string) {
    }
    int retry_count = 2;
    addLog(LOG_LEVEL_INFO, F("P052: Start perform measurement"));
-   while (!Plugin_052_measurement_active() && retry_count > 0) {
+   while (!Plugin_052_measurement_active(void) && retry_count > 0) {
     // Trigger new measurement and make sure it is set active.
     --retry_count;
     addLog(LOG_LEVEL_INFO, F("P052: Write to SCR: perform measurement"));
     Plugin_052_writeSpecialCommandRegister(P052_SCR_SINGLE_MEASUREMENT);
     delay(50);
    }
-   if (!Plugin_052_measurement_active()) {
+   if (!Plugin_052_measurement_active(void)) {
     // Could not start measurement.
     addLog(LOG_LEVEL_INFO, F("P052: Could not start single measurement"));
     return false;
@@ -690,8 +690,8 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string) {
     --retry_count;
     if (retry_count < 14) {
       // Just wait for 16 seconds.
-      if (!Plugin_052_measurement_active()) {
-        _plugin_052_last_measurement = millis();
+      if (!Plugin_052_measurement_active(void)) {
+        _plugin_052_last_measurement = millis(void);
         String log = F("P052: Measurement complete after ");
         log += (30 - retry_count);
         addLog(LOG_LEVEL_INFO, log);

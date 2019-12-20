@@ -35,8 +35,8 @@ void SerialRead16(uint16_t* value, uint16_t* checksum)
 
   // If P053_easySerial is initialized, we are using soft serial
   if (P053_easySerial == nullptr) return;
-  data_high = P053_easySerial->read();
-  data_low = P053_easySerial->read();
+  data_high = P053_easySerial->read(void);
+  data_low = P053_easySerial->read(void);
 
   *value = data_low;
   *value |= (data_high << 8);
@@ -59,9 +59,9 @@ void SerialRead16(uint16_t* value, uint16_t* checksum)
 #endif
 }
 
-void SerialFlush() {
+void SerialFlush(void) {
   if (P053_easySerial != nullptr) {
-    P053_easySerial->flush();
+    P053_easySerial->flush(void);
   }
 }
 
@@ -71,11 +71,11 @@ boolean PacketAvailable(void)
   {
     // When there is enough data in the buffer, search through the buffer to
     // find header (buffer may be out of sync)
-    if (!P053_easySerial->available()) return false;
-    while ((P053_easySerial->peek() != PMSx003_SIG1) && P053_easySerial->available()) {
-      P053_easySerial->read(); // Read until the buffer starts with the first byte of a message, or buffer empty.
+    if (!P053_easySerial->available(void)) return false;
+    while ((P053_easySerial->peek(void) != PMSx003_SIG1) && P053_easySerial->available(void)) {
+      P053_easySerial->read(void); // Read until the buffer starts with the first byte of a message, or buffer empty.
     }
-    if (P053_easySerial->available() < PMSx003_SIZE) return false; // Not enough yet for a complete packet
+    if (P053_easySerial->available(void) < PMSx003_SIZE) return false; // Not enough yet for a complete packet
   }
   return true;
 }
@@ -139,7 +139,7 @@ boolean Plugin_053_process_data(struct EventStruct *event) {
 
   // Compare checksums
   SerialRead16(&checksum2, nullptr);
-  SerialFlush(); // Make sure no data is lost due to full buffer.
+  SerialFlush(void); // Make sure no data is lost due to full buffer.
   if (checksum == checksum2)
   {
     // Data is checked and good, fill in output
@@ -248,7 +248,7 @@ boolean Plugin_053(byte function, struct EventStruct *event, String& string)
         }
         P053_easySerial = new ESPeasySerial(rxPin, txPin, false, 96); // 96 Bytes buffer, enough for up to 3 packets.
         P053_easySerial->begin(9600);
-        P053_easySerial->flush();
+        P053_easySerial->flush(void);
 
         if (resetPin >= 0) // Reset if pin is configured
         {
@@ -285,7 +285,7 @@ boolean Plugin_053(byte function, struct EventStruct *event, String& string)
         if (Plugin_053_init)
         {
           // Check if a complete packet is available in the UART FIFO.
-          if (PacketAvailable())
+          if (PacketAvailable(void))
           {
             addLog(LOG_LEVEL_DEBUG_MORE, F("PMSx003 : Packet available"));
             success = Plugin_053_process_data(event);

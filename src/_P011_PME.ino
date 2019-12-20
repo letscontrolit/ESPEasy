@@ -107,7 +107,7 @@ boolean Plugin_011(byte function, struct EventStruct *event, String& string)
           Wire.write(event->Par1);
           Wire.write(event->Par2 & 0xff);
           Wire.write((event->Par2 >> 8));
-          Wire.endTransmission();
+          Wire.endTransmission(void);
 
           portStatusStruct tempStatus;
           const uint32_t key = createKey(PLUGIN_ID_011,event->Par1);
@@ -240,14 +240,14 @@ int Plugin_011_Read(byte Par1, byte Par2)
   Wire.write(Par2);
   Wire.write(0);
   Wire.write(0);
-  Wire.endTransmission();
+  Wire.endTransmission(void);
   delay(1);  // remote unit needs some time for conversion...
   Wire.requestFrom(address, (uint8_t)0x4);
   byte buffer[4];
-  if (Wire.available() == 4)
+  if (Wire.available(void) == 4)
   {
     for (byte x = 0; x < 4; x++)
-      buffer[x] = Wire.read();
+      buffer[x] = Wire.read(void);
     value = buffer[0] + 256 * buffer[1];
   }
   return value;
@@ -265,6 +265,6 @@ void Plugin_011_Write(byte Par1, byte Par2)
   Wire.write(Par1);
   Wire.write(Par2 & 0xff);
   Wire.write((Par2 >> 8));
-  Wire.endTransmission();
+  Wire.endTransmission(void);
 }
 #endif // USES_P011

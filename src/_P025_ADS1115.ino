@@ -13,10 +13,10 @@ boolean Plugin_025_init = false;
 uint16_t readRegister025(uint8_t i2cAddress, uint8_t reg) {
   Wire.beginTransmission(i2cAddress);
   Wire.write((0x00));
-  Wire.endTransmission();
+  Wire.endTransmission(void);
   if (Wire.requestFrom(i2cAddress, (uint8_t)2) != 2)
     return 0x8000;
-  return ((Wire.read() << 8) | Wire.read());
+  return ((Wire.read(void) << 8) | Wire.read(void));
 }
 
 boolean Plugin_025(byte function, struct EventStruct *event, String& string)
@@ -102,11 +102,11 @@ boolean Plugin_025(byte function, struct EventStruct *event, String& string)
         addFormCheckBox(F("Calibration Enabled"), F("p025_cal"), PCONFIG(3));
 
         addFormNumericBox(F("Point 1"), F("p025_adc1"), PCONFIG_LONG(0), -32768, 32767);
-        html_add_estimate_symbol();
+        html_add_estimate_symbol(void);
         addTextBox(F("p025_out1"), String(PCONFIG_FLOAT(0), 3), 10);
 
         addFormNumericBox(F("Point 2"), F("p025_adc2"), PCONFIG_LONG(1), -32768, 32767);
-        html_add_estimate_symbol();
+        html_add_estimate_symbol(void);
         addTextBox(F("p025_out2"), String(PCONFIG_FLOAT(1), 3), 10);
 
         success = true;
@@ -169,7 +169,7 @@ boolean Plugin_025(byte function, struct EventStruct *event, String& string)
         Wire.write((uint8_t)(0x01));
         Wire.write((uint8_t)(config >> 8));
         Wire.write((uint8_t)(config & 0xFF));
-        Wire.endTransmission();
+        Wire.endTransmission(void);
 
         String log = F("ADS1115 : Analog value: ");
 

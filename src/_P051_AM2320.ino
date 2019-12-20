@@ -73,7 +73,7 @@ boolean Plugin_051(byte function, struct EventStruct *event, String& string)
       {
       	AM2320 th;
 
-        switch(th.Read()) {
+        switch(th.Read(void)) {
           case 2:
           	addLog(LOG_LEVEL_ERROR, F("AM2320: CRC failed"));
             break;

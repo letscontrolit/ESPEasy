@@ -3,13 +3,13 @@
 // ********************************************************************************
 // Web Interface config page
 // ********************************************************************************
-void handle_advanced() {
+void handle_advanced(void) {
   checkRAM(F("handle_advanced"));
 
-  if (!isLoggedIn()) { return; }
+  if (!isLoggedIn(void)) { return; }
   navMenuIndex = MENU_INDEX_TOOLS;
-  TXBuffer.startStream();
-  sendHeadandTail_stdtemplate();
+  TXBuffer.startStream(void);
+  sendHeadandTail_stdtemplate(void);
 
   int timezone      = getFormItemInt(F("timezone"));
   int dststartweek  = getFormItemInt(F("dststartweek"));
@@ -23,19 +23,19 @@ void handle_advanced() {
   String edit       = WebServer.arg(F("edit"));
 
 
-  if (edit.length() != 0)
+  if (edit.length(void) != 0)
   {
     Settings.MessageDelay = getFormItemInt(F("messagedelay"));
-    Settings.IP_Octet     = WebServer.arg(F("ip")).toInt();
+    Settings.IP_Octet     = WebServer.arg(F("ip")).toInt(void);
     strncpy_webserver_arg(Settings.NTPHost, F("ntphost"));
     Settings.TimeZone = timezone;
     TimeChangeRule dst_start(dststartweek, dststartdow, dststartmonth, dststarthour, timezone);
 
-    if (dst_start.isValid()) { Settings.DST_Start = dst_start.toFlashStoredValue(); }
+    if (dst_start.isValid(void)) { Settings.DST_Start = dst_start.toFlashStoredValue(void); }
     TimeChangeRule dst_end(dstendweek, dstenddow, dstendmonth, dstendhour, timezone);
 
-    if (dst_end.isValid()) { Settings.DST_End = dst_end.toFlashStoredValue(); }
-    str2ip(WebServer.arg(F("syslogip")).c_str(), Settings.Syslog_IP);
+    if (dst_end.isValid(void)) { Settings.DST_End = dst_end.toFlashStoredValue(void); }
+    str2ip(WebServer.arg(F("syslogip")).c_str(void), Settings.Syslog_IP);
     Settings.UDPPort = getFormItemInt(F("udpport"));
 
     Settings.SyslogFacility = getFormItemInt(F("syslogfacility"));
@@ -75,25 +75,25 @@ void handle_advanced() {
     Settings.gratuitousARP(isFormItemChecked(getInternalLabel(LabelType::PERIODICAL_GRAT_ARP)));
 #endif // ifdef SUPPORT_ARP
 
-    addHtmlError(SaveSettings());
+    addHtmlError(SaveSettings(void));
 
-    if (systemTimePresent()) {
-      initTime();
+    if (systemTimePresent(void)) {
+      initTime(void);
     }
   }
 
   TXBuffer += F("<form  method='post'>");
-  html_table_class_normal();
+  html_table_class_normal(void);
 
   addFormHeader(F("Advanced Settings"), F("RTDTools/Tools.html#advanced"));
 
   addFormSubHeader(F("Rules Settings"));
 
   addFormCheckBox(F("Rules"),      F("userules"),       Settings.UseRules);
-  addFormCheckBox(F("Old Engine"), F("oldrulesengine"), Settings.OldRulesEngine());
-  addFormCheckBox(F("Tolerant last parameter"), F("tolerantargparse"), Settings.TolerantLastArgParse());
+  addFormCheckBox(F("Old Engine"), F("oldrulesengine"), Settings.OldRulesEngine(void));
+  addFormCheckBox(F("Tolerant last parameter"), F("tolerantargparse"), Settings.TolerantLastArgParse(void));
   addFormNote(F("Perform less strict parsing on last argument of some commands (e.g. publish and sendToHttp)"));
-  addFormCheckBox(F("SendToHTTP wait for ack"), F("sendtohttp_ack"), Settings.SendToHttp_ack());
+  addFormCheckBox(F("SendToHTTP wait for ack"), F("sendtohttp_ack"), Settings.SendToHttp_ack(void));
 
   addFormSubHeader(F("Controller Settings"));
 
@@ -101,7 +101,7 @@ void handle_advanced() {
   addFormNumericBox(F("Message Interval"), F("messagedelay"), Settings.MessageDelay, 0, INT_MAX);
   addUnit(F("ms"));
   addFormCheckBox(F("MQTT use unit name as ClientId"),    F("mqttuseunitnameasclientid"),   Settings.MQTTUseUnitNameAsClientId);
-  addFormCheckBox(F("MQTT change ClientId at reconnect"), F("uniquemqttclientidreconnect"), Settings.uniqueMQTTclientIdReconnect());
+  addFormCheckBox(F("MQTT change ClientId at reconnect"), F("uniquemqttclientidreconnect"), Settings.uniqueMQTTclientIdReconnect(void));
 
   addFormSubHeader(F("NTP Settings"));
 
@@ -169,34 +169,34 @@ void handle_advanced() {
 
   addFormNumericBox(getLabel(LabelType::CONNECTION_FAIL_THRESH), F("cft"), Settings.ConnectionFailuresThreshold, 0, 100);
 #ifdef ESP8266
-  addFormCheckBox(LabelType::FORCE_WIFI_BG, Settings.ForceWiFi_bg_mode());
+  addFormCheckBox(LabelType::FORCE_WIFI_BG, Settings.ForceWiFi_bg_mode(void));
 #endif // ifdef ESP8266
 #ifdef ESP32
 
   // Disabled for now, since it is not working properly.
-  addFormCheckBox_disabled(LabelType::FORCE_WIFI_BG, Settings.ForceWiFi_bg_mode());
+  addFormCheckBox_disabled(LabelType::FORCE_WIFI_BG, Settings.ForceWiFi_bg_mode(void));
 #endif // ifdef ESP32
 
-  addFormCheckBox(LabelType::RESTART_WIFI_LOST_CONN, Settings.WiFiRestart_connection_lost());
+  addFormCheckBox(LabelType::RESTART_WIFI_LOST_CONN, Settings.WiFiRestart_connection_lost(void));
 #ifdef ESP8266
-  addFormCheckBox(LabelType::FORCE_WIFI_NOSLEEP,     Settings.WifiNoneSleep());
+  addFormCheckBox(LabelType::FORCE_WIFI_NOSLEEP,     Settings.WifiNoneSleep(void));
 #endif // ifdef ESP8266
   addFormNote(F("Change WiFi sleep settings requires reboot to activate"));
 #ifdef SUPPORT_ARP
-  addFormCheckBox(LabelType::PERIODICAL_GRAT_ARP, Settings.gratuitousARP());
+  addFormCheckBox(LabelType::PERIODICAL_GRAT_ARP, Settings.gratuitousARP(void));
 #endif // ifdef SUPPORT_ARP
-  addFormCheckBox(LabelType::CPU_ECO_MODE,        Settings.EcoPowerMode());
+  addFormCheckBox(LabelType::CPU_ECO_MODE,        Settings.EcoPowerMode(void));
   addFormNote(F("Node may miss receiving packets with Eco mode enabled"));
   addFormSeparator(2);
 
-  html_TR_TD();
-  html_TD();
-  addSubmitButton();
+  html_TR_TD(void);
+  html_TD(void);
+  addSubmitButton(void);
   TXBuffer += F("<input type='hidden' name='edit' value='1'>");
-  html_end_table();
-  html_end_form();
+  html_end_table(void);
+  html_end_form(void);
   sendHeadandTail_stdtemplate(true);
-  TXBuffer.endStream();
+  TXBuffer.endStream(void);
 }
 
 void addFormDstSelect(bool isStart, uint16_t choice) {
@@ -219,7 +219,7 @@ void addFormDstSelect(bool isStart, uint16_t choice) {
   uint16_t tmpstart(choice);
   uint16_t tmpend(choice);
 
-  if (!TimeChangeRule(choice, 0).isValid()) {
+  if (!TimeChangeRule(choice, 0).isValid(void)) {
     getDefaultDst_flash_values(tmpstart, tmpend);
   }
   TimeChangeRule rule(isStart ? tmpstart : tmpend, 0);

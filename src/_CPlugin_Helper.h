@@ -24,7 +24,7 @@ String get_auth_header(const String& user, const String& pass);
 
 String get_auth_header(int controller_index);
 
-String get_user_agent_request_header_field();
+String get_user_agent_request_header_field(void);
 
 String do_create_http_request(
   const String& hostportString,
@@ -65,7 +65,7 @@ bool try_connect_host(int controller_number, WiFiUDP& client, ControllerSettings
 bool try_connect_host(int controller_number, WiFiClient& client, ControllerSettingsStruct& ControllerSettings);
 bool try_connect_host(int controller_number, WiFiClient& client, ControllerSettingsStruct& ControllerSettings, const String& loglabel);
 
-// Use "client.available() || client.connected()" to read all lines from slow servers.
+// Use "client.available(void) || client.connected(void)" to read all lines from slow servers.
 // See: https://github.com/esp8266/Arduino/pull/5113
 //      https://github.com/esp8266/Arduino/pull/1829
 bool client_available(WiFiClient& client);

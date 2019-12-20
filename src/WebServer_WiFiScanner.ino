@@ -5,12 +5,12 @@
 // ********************************************************************************
 // Web Interface Wifi scanner
 // ********************************************************************************
-void handle_wifiscanner_json() {
+void handle_wifiscanner_json(void) {
   checkRAM(F("handle_wifiscanner"));
 
-  if (!isLoggedIn()) { return; }
+  if (!isLoggedIn(void)) { return; }
   navMenuIndex = MENU_INDEX_TOOLS;
-  TXBuffer.startJsonStream();
+  TXBuffer.startJsonStream(void);
   TXBuffer += "[{";
   bool firstentry = true;
   int  n          = WiFi.scanNetworks(false, true);
@@ -40,7 +40,7 @@ void handle_wifiscanner_json() {
         break;
     }
 
-    if (authType.length() > 0) {
+    if (authType.length(void) > 0) {
       stream_next_json_object_value(F("auth"), authType);
     }
     stream_next_json_object_value(getLabel(LabelType::SSID),      WiFi.SSID(i));
@@ -52,33 +52,33 @@ void handle_wifiscanner_json() {
     TXBuffer += "}";
   }
   TXBuffer += "]";
-  TXBuffer.endStream();
+  TXBuffer.endStream(void);
 }
 
 #endif // WEBSERVER_NEW_UI
 
 #ifdef WEBSERVER_WIFI_SCANNER
 
-void handle_wifiscanner() {
+void handle_wifiscanner(void) {
   checkRAM(F("handle_wifiscanner"));
 
-  if (!isLoggedIn()) { return; }
+  if (!isLoggedIn(void)) { return; }
 
-  WiFiMode_t cur_wifimode = WiFi.getMode();
+  WiFiMode_t cur_wifimode = WiFi.getMode(void);
   WifiScan(false); 
   setWifiMode(cur_wifimode);
 
   navMenuIndex = MENU_INDEX_TOOLS;
-  TXBuffer.startStream();
+  TXBuffer.startStream(void);
   sendHeadandTail_stdtemplate(_HEAD);
-  html_table_class_multirow();
-  html_TR();
+  html_table_class_multirow(void);
+  html_TR(void);
   html_table_header(getLabel(LabelType::SSID));
   html_table_header(getLabel(LabelType::BSSID));
   html_table_header(F("Network info"));
   html_table_header(F("RSSI"), 50);
 
-  const int8_t scanCompleteStatus = WiFi.scanComplete();
+  const int8_t scanCompleteStatus = WiFi.scanComplete(void);
   if (scanCompleteStatus <= 0) {
     TXBuffer += F("No Access Points found");
   }
@@ -86,17 +86,17 @@ void handle_wifiscanner() {
   {
     for (int i = 0; i < scanCompleteStatus; ++i)
     {
-      html_TR_TD();
+      html_TR_TD(void);
       int32_t rssi = 0;
       TXBuffer += formatScanResult(i, "<TD>", rssi);
-      html_TD();
+      html_TD(void);
       getWiFi_RSSI_icon(rssi, 45);
     }
   }
 
-  html_end_table();
+  html_end_table(void);
   sendHeadandTail_stdtemplate(_TAIL);
-  TXBuffer.endStream();
+  TXBuffer.endStream(void);
 }
 
 #endif // ifdef WEBSERVER_WIFI_SCANNER

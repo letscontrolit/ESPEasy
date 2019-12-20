@@ -215,9 +215,9 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
         addHtml("}");
         addHtml(F("</script>"));
 
-        addHtml(F("<script type='text/javascript'>window.addEventListener('load', function(){"));
+        addHtml(F("<script type='text/javascript'>window.addEventListener('load', function(void){"));
         addHtml(F("var slider = document.getElementById('web_Bright_Slide');"));
-        addHtml(F("slider.addEventListener('change', function(){"));
+        addHtml(F("slider.addEventListener('change', function(void){"));
         addHtml(F("document.getElementById('web_Bright_Text').value = this.value;"));
         addHtml(F("});"));
         addHtml(F("});</script>"));
@@ -268,9 +268,9 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
             delete Candle_pixels;
           }
           Candle_pixels = new Adafruit_NeoPixel(NUM_PIXEL, CONFIG_PIN1, NEO_GRB + NEO_KHZ800);
-          SetPixelsBlack();
+          SetPixelsBlack(void);
           Candle_pixels->setBrightness(Candle_bright);
-          Candle_pixels->begin();
+          Candle_pixels->begin(void);
           String log = F("CAND : Init WS2812 Pin : ");
           log += CONFIG_PIN1;
           addLog(LOG_LEVEL_DEBUG, log);
@@ -283,7 +283,7 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
     case PLUGIN_ONCE_A_SECOND:
       {
         Candle_pixels->setBrightness(Candle_bright);
-        Candle_pixels->show(); // This sends the updated pixel color to the hardware.
+        Candle_pixels->show(void); // This sends the updated pixel color to the hardware.
         success = true;
         break;
       }
@@ -294,13 +294,13 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
         {
           case 0:   // "Update" for OFF
             {
-              type_Off();
+              type_Off(void);
               break;
             }
 
           case 1:   // Update for LIGHT
             {
-              type_Static_Light();
+              type_Static_Light(void);
               break;
             }
 
@@ -309,12 +309,12 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
             {
               if (timeOutReached(Candle_Update)) {
                 if (Candle_type == 2) {
-                  type_Simple_Candle();
+                  type_Simple_Candle(void);
                 }
                 if (Candle_type == 3) {
-                  type_Advanced_Candle();
+                  type_Advanced_Candle(void);
                 }
-                Candle_Update = millis() + random(25, 150);
+                Candle_Update = millis(void) + random(25, 150);
               }
               break;
             }
@@ -322,8 +322,8 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
           case 4:   // Update for Police
             {
               if (timeOutReached(Candle_Update)) {
-                type_Police();
-                Candle_Update = millis() + 150;
+                type_Police(void);
+                Candle_Update = millis(void) + 150;
               }
               break;
             }
@@ -331,28 +331,28 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
           case 5:   // Update for Blink
             {
               if (timeOutReached(Candle_Update)) {
-                type_BlinkStrobe();
-                Candle_Update = millis() + 100;
+                type_BlinkStrobe(void);
+                Candle_Update = millis(void) + 100;
               }
               break;
             }
 
           case 6:   // Update for Strobe
             {
-              type_BlinkStrobe();
+              type_BlinkStrobe(void);
               break;
             }
           case 7:   // Update for ColorFader
             {
               if (timeOutReached(Candle_Update)) {
-                type_ColorFader();
-                Candle_Update = millis() + 2000;
+                type_ColorFader(void);
+                Candle_Update = millis(void) + 2000;
               }
               break;
             }
         }
 
-        Candle_pixels->show();
+        Candle_pixels->show(void);
 
         success = true;
         break;
@@ -399,8 +399,8 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
           String val_Bright = tmpString.substring(idx3+1, idx4);
 
           if (val_Type != "") {
-             if (val_Type.toInt() > -1 && val_Type.toInt() < 8) {
-                PCONFIG(4) = val_Type.toInt();     // Type
+             if (val_Type.toInt(void) > -1 && val_Type.toInt(void) < 8) {
+                PCONFIG(4) = val_Type.toInt(void);     // Type
                 Candle_type = (SimType)PCONFIG(4);
                 String log = F("CAND : CMD - Type : ");
                 log += val_Type;
@@ -409,8 +409,8 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
           }
 
           if (val_Bright != "") {
-             if (val_Bright.toInt() > -1 && val_Bright.toInt() < 256) {
-                PCONFIG(3) = val_Bright.toInt();     // Brightness
+             if (val_Bright.toInt(void) > -1 && val_Bright.toInt(void) < 256) {
+                PCONFIG(3) = val_Bright.toInt(void);     // Brightness
                 Candle_bright = PCONFIG(3);
                 String log = F("CAND : CMD - Bright : ");
                 log += val_Bright;
@@ -448,7 +448,7 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
           }
 
           //SaveTaskSettings(event->TaskIndex);
-          //SaveSettings();
+          //SaveSettings(void);
 
           success = true;
         }
@@ -460,7 +460,7 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
   return success;
 }
 
-void SetPixelsBlack() {
+void SetPixelsBlack(void) {
   for (int i = 0; i < NUM_PIXEL; i++) {
     Candle_pixels->setPixelColor(i, Candle_pixels->Color(0, 0, 0));
   }
@@ -470,11 +470,11 @@ void SetPixelToColor(int PixelIdx) {
   Candle_pixels->setPixelColor(PixelIdx, Candle_pixels->Color(Candle_red, Candle_green, Candle_blue));
 }
 
-void type_Off() {
-  SetPixelsBlack();
+void type_Off(void) {
+  SetPixelsBlack(void);
 }
 
-void type_Static_Light() {
+void type_Static_Light(void) {
   for (int i = 0; i < NUM_PIXEL; i++) {
     if (Candle_color == ColorDefault) {
       Candle_pixels->setPixelColor(i, 255, 255, 255);     // Default is white
@@ -484,7 +484,7 @@ void type_Static_Light() {
   }
 }
 
-void type_Simple_Candle() {
+void type_Simple_Candle(void) {
   int r, g, b;
   if (Candle_color == ColorDefault) {
     r = 226, g = 042, b =  35;   // Regular (orange) flame
@@ -507,7 +507,7 @@ void type_Simple_Candle() {
   }
 }
 
-void type_Advanced_Candle() {
+void type_Advanced_Candle(void) {
   Candle_Temp[0] = random(1, 4); // 1..4  LEDs in RED
   Candle_Temp[1] = random(1, 4) + Candle_Temp[0]; // 1..3  LEDs in Yellow / Orange
   Candle_Temp[2] = random(0, 2); // 0..1  Choose Yellow = 0 / Orange = 1
@@ -556,7 +556,7 @@ void type_Advanced_Candle() {
   }
 }
 
-void type_Police() {
+void type_Police(void) {
   Candle_Temp[0]++;
   if (Candle_Temp[0] > 3) {
     Candle_Temp[0] = 0;
@@ -580,7 +580,7 @@ void type_Police() {
   }
 }
 
-void type_BlinkStrobe() {
+void type_BlinkStrobe(void) {
   Candle_Temp[0]++;
   if (Candle_Temp[0] > 1) {
     Candle_Temp[0] = 0;
@@ -599,7 +599,7 @@ void type_BlinkStrobe() {
   }
 }
 
-void type_ColorFader() {
+void type_ColorFader(void) {
   int colors[3];
   double hsv[3];
   if (Candle_color != ColorDefault) {

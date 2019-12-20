@@ -168,10 +168,10 @@ boolean Plugin_057(byte function, struct EventStruct *event, String& string)
         if (command == F("mprint"))
         {
           String text = parseStringToEnd(string, 2);
-          if (text.length() > 0) {
+          if (text.length(void) > 0) {
             byte seg = 0;
 
-            Plugin_057_M->ClearRowBuffer();
+            Plugin_057_M->ClearRowBuffer(void);
             while (text[seg] && seg < 8)
             {
               // uint16_t value = 0;
@@ -179,7 +179,7 @@ boolean Plugin_057(byte function, struct EventStruct *event, String& string)
               Plugin_057_M->SetDigit(seg, c);
               seg++;
             }
-            Plugin_057_M->TransmitRowBuffer();
+            Plugin_057_M->TransmitRowBuffer(void);
             success = true;
           }
         }
@@ -202,15 +202,15 @@ boolean Plugin_057(byte function, struct EventStruct *event, String& string)
           uint16_t value = 0;
 
           String lowerString=string;
-          lowerString.toLowerCase();
+          lowerString.toLowerCase(void);
           lowerString.replace(F("  "), " ");
           lowerString.replace(F(" ="), "=");
           lowerString.replace(F("= "), "=");
 
           param = parseString(lowerString, paramIdx++);
-          if (param.length())
+          if (param.length(void))
           {
-            while (param.length())
+            while (param.length(void))
             {
               addLog(LOG_LEVEL_DEBUG_MORE, param);
 
@@ -237,7 +237,7 @@ boolean Plugin_057(byte function, struct EventStruct *event, String& string)
 
               else if (param == F("clear"))
               {
-                Plugin_057_M->ClearRowBuffer();
+                Plugin_057_M->ClearRowBuffer(void);
                 success = true;
               }
 
@@ -248,7 +248,7 @@ boolean Plugin_057(byte function, struct EventStruct *event, String& string)
                 {
                   paramKey = param.substring(0, index);
                   paramVal = param.substring(index+1);
-                  seg = paramKey.toInt();
+                  seg = paramKey.toInt(void);
                 }
                 else   //syntax: "<value>"
                 {
@@ -257,7 +257,7 @@ boolean Plugin_057(byte function, struct EventStruct *event, String& string)
 
                 if (command == F("mnum"))
                 {
-                  value = paramVal.toInt();
+                  value = paramVal.toInt(void);
                   if (value < 16)
                     Plugin_057_M->SetDigit(seg, value);
                   else
@@ -266,12 +266,12 @@ boolean Plugin_057(byte function, struct EventStruct *event, String& string)
                 else if (command == F("mx"))
                 {
                   char* ep;
-                  value = strtol(paramVal.c_str(), &ep, 16);
+                  value = strtol(paramVal.c_str(void), &ep, 16);
                   Plugin_057_M->SetRow(seg, value);
                 }
                 else
                 {
-                  value = paramVal.toInt();
+                  value = paramVal.toInt(void);
                   Plugin_057_M->SetRow(seg, value);
                 }
 
@@ -288,7 +288,7 @@ boolean Plugin_057(byte function, struct EventStruct *event, String& string)
           }
 
           if (success)
-            Plugin_057_M->TransmitRowBuffer();
+            Plugin_057_M->TransmitRowBuffer(void);
           success = true;
         }
 
@@ -300,10 +300,10 @@ boolean Plugin_057(byte function, struct EventStruct *event, String& string)
         if (!Plugin_057_M || PCONFIG(1) == 0)
           break;
 
-        byte hours = hour();
-        byte minutes = minute();
+        byte hours = hour(void);
+        byte minutes = minute(void);
 
-        // Plugin_057_M->ClearRowBuffer();
+        // Plugin_057_M->ClearRowBuffer(void);
         Plugin_057_M->SetDigit(PCONFIG(5), minutes % 10);
         Plugin_057_M->SetDigit(PCONFIG(4), minutes / 10);
 
@@ -334,7 +334,7 @@ boolean Plugin_057(byte function, struct EventStruct *event, String& string)
 
         //if (PCONFIG(6) >= 0)
         //  Plugin_057_M->SetRow(PCONFIG(6), PCONFIG(7));
-        Plugin_057_M->TransmitRowBuffer();
+        Plugin_057_M->TransmitRowBuffer(void);
 
         success = true;
 
@@ -348,13 +348,13 @@ boolean Plugin_057(byte function, struct EventStruct *event, String& string)
 
         if (PCONFIG(6) >= 0)   //colon used?
         {
-          uint8_t act = ((uint16_t)millis() >> 9) & 1;   //blink with about 2 Hz
+          uint8_t act = ((uint16_t)millis(void) >> 9) & 1;   //blink with about 2 Hz
           static uint8_t last = 0;
           if (act != last)
           {
             last = act;
             Plugin_057_M->SetRow(PCONFIG(6), (act) ? PCONFIG(7) : 0);
-            Plugin_057_M->TransmitRowBuffer();
+            Plugin_057_M->TransmitRowBuffer(void);
           }
         }
       }

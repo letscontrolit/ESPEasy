@@ -18,7 +18,7 @@ boolean ipInRange(const IPAddress& ip, const IPAddress& low, const IPAddress& hi
   return ipLessEqual(low, ip) && ipLessEqual(ip, high);
 }
 
-String describeAllowedIPrange() {
+String describeAllowedIPrange(void) {
   String reply;
 
   switch (SecuritySettings.IPblockLevel) {
@@ -42,7 +42,7 @@ bool getIPallowedRange(IPAddress& low, IPAddress& high)
   switch (SecuritySettings.IPblockLevel) {
     case LOCAL_SUBNET_ALLOWED:
 
-      if (WifiIsAP(WiFi.getMode())) {
+      if (WifiIsAP(WiFi.getMode(void))) {
         // WiFi is active as accesspoint, do not check.
         return false;
       }
@@ -59,18 +59,18 @@ bool getIPallowedRange(IPAddress& low, IPAddress& high)
   return true;
 }
 
-bool clientIPinSubnet() {
+bool clientIPinSubnet(void) {
   IPAddress low, high;
 
   if (!getSubnetRange(low, high)) {
     // Could not determine subnet.
     return false;
   }
-  WiFiClient client(WebServer.client());
-  return ipInRange(client.remoteIP(), low, high);
+  WiFiClient client(WebServer.client(void));
+  return ipInRange(client.remoteIP(void), low, high);
 }
 
-boolean clientIPallowed()
+boolean clientIPallowed(void)
 {
   // TD-er Must implement "safe time after boot"
   IPAddress low, high;
@@ -80,18 +80,18 @@ boolean clientIPallowed()
     // No subnet range determined, cannot filter on IP
     return true;
   }
-  WiFiClient client(WebServer.client());
+  WiFiClient client(WebServer.client(void));
 
-  if (ipInRange(client.remoteIP(), low, high)) {
+  if (ipInRange(client.remoteIP(void), low, high)) {
     return true;
   }
 
-  if (WifiIsAP(WiFi.getMode())) {
+  if (WifiIsAP(WiFi.getMode(void))) {
     // @TD-er Fixme: Should match subnet of SoftAP.
     return true;
   }
   String response = F("IP blocked: ");
-  response += formatIP(client.remoteIP());
+  response += formatIP(client.remoteIP(void));
   WebServer.send(403, F("text/html"), response);
 
   if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
@@ -104,7 +104,7 @@ boolean clientIPallowed()
   return false;
 }
 
-void clearAccessBlock()
+void clearAccessBlock(void)
 {
   SecuritySettings.IPblockLevel = ALL_ALLOWED;
 }

@@ -5,7 +5,7 @@
 // ********************************************************************************
 // Web Interface root page
 // ********************************************************************************
-void handle_root() {
+void handle_root(void) {
   checkRAM(F("handle_root"));
 
   // if Wifi setup, launch setup wizard
@@ -15,7 +15,7 @@ void handle_root() {
     return;
   }
 
-  if (!isLoggedIn()) { return; }
+  if (!isLoggedIn(void)) { return; }
   navMenuIndex = 0;
 
   // if index.htm exists on SPIFFS serve that one (first check if gziped version exists)
@@ -27,37 +27,37 @@ void handle_root() {
 
   if (loadFromFS(false, F("/index.htm"))) { return; }
 
-  TXBuffer.startStream();
+  TXBuffer.startStream(void);
   String  sCommand  = WebServer.arg(F("cmd"));
-  boolean rebootCmd = strcasecmp_P(sCommand.c_str(), PSTR("reboot")) == 0;
+  boolean rebootCmd = strcasecmp_P(sCommand.c_str(void), PSTR("reboot")) == 0;
   sendHeadandTail_stdtemplate(_HEAD, rebootCmd);
 
-  int freeMem = ESP.getFreeHeap();
+  int freeMem = ESP.getFreeHeap(void);
 
 
-  if ((strcasecmp_P(sCommand.c_str(),
-                    PSTR("wifidisconnect")) != 0) && (rebootCmd == false) && (strcasecmp_P(sCommand.c_str(), PSTR("reset")) != 0))
+  if ((strcasecmp_P(sCommand.c_str(void),
+                    PSTR("wifidisconnect")) != 0) && (rebootCmd == false) && (strcasecmp_P(sCommand.c_str(void), PSTR("reset")) != 0))
   {
     printToWeb     = true;
     printWebString = "";
 
-    if (sCommand.length() > 0) {
-      ExecuteCommand_internal(VALUE_SOURCE_HTTP, sCommand.c_str());
+    if (sCommand.length(void) > 0) {
+      ExecuteCommand_internal(VALUE_SOURCE_HTTP, sCommand.c_str(void));
     }
 
-    // IPAddress ip = WiFi.localIP();
-    // IPAddress gw = WiFi.gatewayIP();
+    // IPAddress ip = WiFi.localIP(void);
+    // IPAddress gw = WiFi.gatewayIP(void);
 
     TXBuffer += printWebString;
     TXBuffer += F("<form>");
-    html_table_class_normal();
+    html_table_class_normal(void);
     addFormHeader(F("System Info"));
 
     addRowLabelValue(LabelType::UNIT_NR);
     addRowLabelValue(LabelType::GIT_BUILD);
     addRowLabel(getLabel(LabelType::LOCAL_TIME));
 
-    if (systemTimePresent())
+    if (systemTimePresent(void))
     {
       TXBuffer += getValue(LabelType::LOCAL_TIME);
     }
@@ -73,9 +73,9 @@ void handle_root() {
 
     if (wdcounter > 0)
     {
-      TXBuffer += String(getCPUload());
+      TXBuffer += String(getCPUload(void));
       TXBuffer += F("% (LC=");
-      TXBuffer += String(getLoopCountPerSec());
+      TXBuffer += String(getLoopCountPerSec(void));
       TXBuffer += ')';
     }
 
@@ -87,7 +87,7 @@ void handle_root() {
     TXBuffer += String(lowestRAMfunction);
     TXBuffer += ')';
     addRowLabel(F("Free Stack"));
-    TXBuffer += String(getCurrentFreeStack());
+    TXBuffer += String(getCurrentFreeStack(void));
     TXBuffer += " (";
     TXBuffer += String(lowestFreeStack);
     TXBuffer += F(" - ");
@@ -97,11 +97,11 @@ void handle_root() {
     addRowLabelValue(LabelType::IP_ADDRESS);
     addRowLabel(getLabel(LabelType::WIFI_RSSI));
 
-    if (WiFiConnected())
+    if (WiFiConnected(void))
     {
-      TXBuffer += String(WiFi.RSSI());
+      TXBuffer += String(WiFi.RSSI(void));
       TXBuffer += F(" dB (");
-      TXBuffer += WiFi.SSID();
+      TXBuffer += WiFi.SSID(void);
       TXBuffer += ')';
     }
 
@@ -113,15 +113,15 @@ void handle_root() {
     TXBuffer += getValue(LabelType::M_DNS);
     TXBuffer += F("</a>");
     #endif // ifdef FEATURE_MDNS
-    html_TR_TD();
-    html_TD();
+    html_TR_TD(void);
+    html_TD(void);
     addButton(F("sysinfo"), F("More info"));
 
-    html_end_table();
-    html_BR();
-    html_BR();
-    html_table_class_multirow_noborder();
-    html_TR();
+    html_end_table(void);
+    html_BR(void);
+    html_BR(void);
+    html_table_class_multirow_noborder(void);
+    html_TR(void);
     html_table_header(F("Node List"));
     html_table_header("Name");
     html_table_header(getLabel(LabelType::BUILD_DESC));
@@ -129,22 +129,22 @@ void handle_root() {
     html_table_header("IP", 160); // Should fit "255.255.255.255"
     html_table_header("Age");
 
-    for (NodesMap::iterator it = Nodes.begin(); it != Nodes.end(); ++it)
+    for (NodesMap::iterator it = Nodes.begin(void); it != Nodes.end(void); ++it)
     {
       if (it->second.ip[0] != 0)
       {
         bool isThisUnit = it->first == Settings.Unit;
 
         if (isThisUnit) {
-          html_TR_TD_highlight();
+          html_TR_TD_highlight(void);
         }
         else {
-          html_TR_TD();
+          html_TR_TD(void);
         }
 
         TXBuffer += F("Unit ");
         TXBuffer += String(it->first);
-        html_TD();
+        html_TD(void);
 
         if (isThisUnit) {
           TXBuffer += Settings.Name;
@@ -152,32 +152,32 @@ void handle_root() {
         else {
           TXBuffer += it->second.nodeName;
         }
-        html_TD();
+        html_TD(void);
 
         if (it->second.build) {
           TXBuffer += String(it->second.build);
         }
-        html_TD();
+        html_TD(void);
         TXBuffer += getNodeTypeDisplayString(it->second.nodeType);
-        html_TD();
-        html_add_wide_button_prefix();
+        html_TD(void);
+        html_add_wide_button_prefix(void);
         TXBuffer += F("http://");
-        TXBuffer += it->second.ip.toString();
+        TXBuffer += it->second.ip.toString(void);
         TXBuffer += "'>";
-        TXBuffer += it->second.ip.toString();
+        TXBuffer += it->second.ip.toString(void);
         TXBuffer += "</a>";
-        html_TD();
+        html_TD(void);
         TXBuffer += String(it->second.age);
       }
     }
 
-    html_end_table();
-    html_end_form();
+    html_end_table(void);
+    html_end_form(void);
 
     printWebString = "";
     printToWeb     = false;
     sendHeadandTail_stdtemplate(_TAIL);
-    TXBuffer.endStream();
+    TXBuffer.endStream(void);
   }
   else
   {
@@ -186,30 +186,30 @@ void handle_root() {
     // have to disconnect or reboot from within the main loop
     // because the webconnection is still active at this point
     // disconnect here could result into a crash/reboot...
-    if (strcasecmp_P(sCommand.c_str(), PSTR("wifidisconnect")) == 0)
+    if (strcasecmp_P(sCommand.c_str(void), PSTR("wifidisconnect")) == 0)
     {
       addLog(LOG_LEVEL_INFO, F("WIFI : Disconnecting..."));
       cmd_within_mainloop = CMD_WIFI_DISCONNECT;
     }
 
-    if (strcasecmp_P(sCommand.c_str(), PSTR("reboot")) == 0)
+    if (strcasecmp_P(sCommand.c_str(void), PSTR("reboot")) == 0)
     {
       addLog(LOG_LEVEL_INFO, F("     : Rebooting..."));
       cmd_within_mainloop = CMD_REBOOT;
     }
 
-    if (strcasecmp_P(sCommand.c_str(), PSTR("reset")) == 0)
+    if (strcasecmp_P(sCommand.c_str(void), PSTR("reset")) == 0)
     {
       addLog(LOG_LEVEL_INFO, F("     : factory reset..."));
       cmd_within_mainloop = CMD_REBOOT;
       TXBuffer           += F(
         "OK. Please wait > 1 min and connect to Acces point.<BR><BR>PW=configesp<BR>URL=<a href='http://192.168.4.1'>192.168.4.1</a>");
-      TXBuffer.endStream();
-      ExecuteCommand_internal(VALUE_SOURCE_HTTP, sCommand.c_str());
+      TXBuffer.endStream(void);
+      ExecuteCommand_internal(VALUE_SOURCE_HTTP, sCommand.c_str(void));
     }
 
     TXBuffer += "OK";
-    TXBuffer.endStream();
+    TXBuffer.endStream(void);
   }
 }
 

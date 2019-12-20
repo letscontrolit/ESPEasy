@@ -11,17 +11,17 @@
 #define PLUGIN_VALUENAME3_003 "Time"
 
 
-void Plugin_003_pulse_interrupt1() ICACHE_RAM_ATTR;
-void Plugin_003_pulse_interrupt2() ICACHE_RAM_ATTR;
-void Plugin_003_pulse_interrupt3() ICACHE_RAM_ATTR;
-void Plugin_003_pulse_interrupt4() ICACHE_RAM_ATTR;
+void Plugin_003_pulse_interrupt1(void) ICACHE_RAM_ATTR;
+void Plugin_003_pulse_interrupt2(void) ICACHE_RAM_ATTR;
+void Plugin_003_pulse_interrupt3(void) ICACHE_RAM_ATTR;
+void Plugin_003_pulse_interrupt4(void) ICACHE_RAM_ATTR;
 void Plugin_003_pulsecheck(byte Index) ICACHE_RAM_ATTR;
 
 //this takes 20 bytes of IRAM per handler
-// void Plugin_003_pulse_interrupt5() ICACHE_RAM_ATTR;
-// void Plugin_003_pulse_interrupt6() ICACHE_RAM_ATTR;
-// void Plugin_003_pulse_interrupt7() ICACHE_RAM_ATTR;
-// void Plugin_003_pulse_interrupt8() ICACHE_RAM_ATTR;
+// void Plugin_003_pulse_interrupt5(void) ICACHE_RAM_ATTR;
+// void Plugin_003_pulse_interrupt6(void) ICACHE_RAM_ATTR;
+// void Plugin_003_pulse_interrupt7(void) ICACHE_RAM_ATTR;
+// void Plugin_003_pulse_interrupt8(void) ICACHE_RAM_ATTR;
 
 volatile unsigned long Plugin_003_pulseCounter[TASKS_MAX];
 volatile unsigned long Plugin_003_pulseTotalCounter[TASKS_MAX];
@@ -208,55 +208,55 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
 \*********************************************************************************************/
 void Plugin_003_pulsecheck(byte Index)
 {
-  noInterrupts(); // s0170071: avoid nested interrups due to bouncing.
+  noInterrupts(void); // s0170071: avoid nested interrups due to bouncing.
   
-  //  s0170071: the following gives a glitch if millis() rolls over (every 50 days) and there is a bouncing to be avoided at the exact same time. Very rare.
+  //  s0170071: the following gives a glitch if millis(void) rolls over (every 50 days) and there is a bouncing to be avoided at the exact same time. Very rare.
   //  Alternatively there is timePassedSince(Plugin_003_pulseTimePrevious[Index]); but this is not in IRAM at this time, so do not use in a ISR!
-  const unsigned long PulseTime=millis() - Plugin_003_pulseTimePrevious[Index]; 
+  const unsigned long PulseTime=millis(void) - Plugin_003_pulseTimePrevious[Index]; 
   
   if(PulseTime > (unsigned long)Settings.TaskDevicePluginConfig[Index][0]) // check with debounce time for this task
     {
       Plugin_003_pulseCounter[Index]++;
       Plugin_003_pulseTotalCounter[Index]++;
       Plugin_003_pulseTime[Index] = PulseTime;
-      Plugin_003_pulseTimePrevious[Index]=millis();
+      Plugin_003_pulseTimePrevious[Index]=millis(void);
     }
-  interrupts();   // enable interrupts again.
+  interrupts(void);   // enable interrupts again.
 }
 
 
 /*********************************************************************************************\
  * Pulse Counter IRQ handlers
 \*********************************************************************************************/
-void Plugin_003_pulse_interrupt1()
+void Plugin_003_pulse_interrupt1(void)
 {
   Plugin_003_pulsecheck(0);
 }
-void Plugin_003_pulse_interrupt2()
+void Plugin_003_pulse_interrupt2(void)
 {
   Plugin_003_pulsecheck(1);
 }
-void Plugin_003_pulse_interrupt3()
+void Plugin_003_pulse_interrupt3(void)
 {
   Plugin_003_pulsecheck(2);
 }
-void Plugin_003_pulse_interrupt4()
+void Plugin_003_pulse_interrupt4(void)
 {
   Plugin_003_pulsecheck(3);
 }
-void Plugin_003_pulse_interrupt5()
+void Plugin_003_pulse_interrupt5(void)
 {
   Plugin_003_pulsecheck(4);
 }
-void Plugin_003_pulse_interrupt6()
+void Plugin_003_pulse_interrupt6(void)
 {
   Plugin_003_pulsecheck(5);
 }
-void Plugin_003_pulse_interrupt7()
+void Plugin_003_pulse_interrupt7(void)
 {
   Plugin_003_pulsecheck(6);
 }
-void Plugin_003_pulse_interrupt8()
+void Plugin_003_pulse_interrupt8(void)
 {
   Plugin_003_pulsecheck(7);
 }

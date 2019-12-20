@@ -44,7 +44,7 @@ String PCONFIG_LABEL(int n);
 // N.B. in order to use this, a data object must inherit from this base class.
 //      This is a compile time check.
 struct PluginTaskData_base {
-  virtual ~PluginTaskData_base() {}
+  virtual ~PluginTaskData_base(void) {}
 
   // We cannot use dynamic_cast, so we must keep track of the plugin ID to
   // perform checks on the casting.
@@ -55,7 +55,7 @@ struct PluginTaskData_base {
 
 
 
-void resetPluginTaskData();
+void resetPluginTaskData(void);
 
 void clearPluginTaskData(taskIndex_t taskIndex);
 

@@ -33,11 +33,11 @@ public:
 
 void setUseStaticIP(bool enabled);
 
-void markGotIP();
+void markGotIP(void);
 
 // ********************************************************************************
 // Functions called on events.
-// Make sure not to call anything in these functions that result in delay() or yield()
+// Make sure not to call anything in these functions that result in delay(void) or yield(void)
 // ********************************************************************************
 #ifdef ESP32
 void WiFiEvent(system_event_id_t event, system_event_info_t info);
@@ -52,7 +52,7 @@ void onDisconnect(const WiFiEventStationModeDisconnected& event);
 
 void onGotIP(const WiFiEventStationModeGotIP& event);
 
-void ICACHE_RAM_ATTR onDHCPTimeout();
+void ICACHE_RAM_ATTR onDHCPTimeout(void);
 
 void onConnectedAPmode(const WiFiEventSoftAPModeStationConnected& event);
 

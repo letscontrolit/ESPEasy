@@ -4,22 +4,22 @@
 // ********************************************************************************
 // Web Interface file list
 // ********************************************************************************
-void handle_filelist_json() {
+void handle_filelist_json(void) {
   checkRAM(F("handle_filelist"));
 
-  if (!clientIPallowed()) { return; }
+  if (!clientIPallowed(void)) { return; }
   navMenuIndex = MENU_INDEX_TOOLS;
-  TXBuffer.startJsonStream();
+  TXBuffer.startJsonStream(void);
 
   String fdelete = WebServer.arg(F("delete"));
 
   if (tryDeleteFile(fdelete)) {
     # if defined(ESP32)
 
-    // flashCount();
+    // flashCount(void);
     # endif // if defined(ESP32)
     # if defined(ESP8266)
-    checkRuleSets();
+    checkRuleSets(void);
     # endif // if defined(ESP8266)
   }
 
@@ -28,9 +28,9 @@ void handle_filelist_json() {
 
   String fstart = WebServer.arg(F("start"));
 
-  if (fstart.length() > 0)
+  if (fstart.length(void) > 0)
   {
-    startIdx = atoi(fstart.c_str());
+    startIdx = atoi(fstart.c_str(void));
   }
   int endIdx = startIdx + pageSize - 1;
 
@@ -38,12 +38,12 @@ void handle_filelist_json() {
   bool firstentry = true;
   # if defined(ESP32)
   File root  = SPIFFS.open("/");
-  File file  = root.openNextFile();
+  File file  = root.openNextFile(void);
   int  count = -1;
 
   while (file and count < endIdx)
   {
-    if (!file.isDirectory()) {
+    if (!file.isDirectory(void)) {
       ++count;
 
       if (count >= startIdx)
@@ -53,12 +53,12 @@ void handle_filelist_json() {
         } else {
           TXBuffer += ",{";
         }
-        stream_next_json_object_value(F("fileName"), String(file.name()));
+        stream_next_json_object_value(F("fileName"), String(file.name(void)));
         stream_next_json_object_value(F("index"),    String(startIdx));
-        stream_last_json_object_value(F("size"), String(file.size()));
+        stream_last_json_object_value(F("size"), String(file.size(void)));
       }
     }
-    file = root.openNextFile();
+    file = root.openNextFile(void);
   }
   # endif // if defined(ESP32)
   # if defined(ESP8266)
@@ -66,7 +66,7 @@ void handle_filelist_json() {
 
   int count = -1;
 
-  while (dir.next())
+  while (dir.next(void))
   {
     ++count;
 
@@ -81,13 +81,13 @@ void handle_filelist_json() {
       TXBuffer += ",{";
     }
 
-    stream_next_json_object_value(F("fileName"), String(dir.fileName()));
+    stream_next_json_object_value(F("fileName"), String(dir.fileName(void)));
 
     fs::File f = dir.openFile("r");
 
     if (f) {
-      stream_next_json_object_value(F("size"), String(f.size()));
-      f.close();
+      stream_next_json_object_value(F("size"), String(f.size(void)));
+      f.close(void);
     }
 
     stream_last_json_object_value(F("index"), String(startIdx));
@@ -103,34 +103,34 @@ void handle_filelist_json() {
 
   # endif // if defined(ESP8266)
   TXBuffer += "]";
-  TXBuffer.endStream();
+  TXBuffer.endStream(void);
 }
 
 #endif // WEBSERVER_NEW_UI
 
 #ifdef WEBSERVER_FILELIST
-void handle_filelist() {
+void handle_filelist(void) {
   checkRAM(F("handle_filelist"));
 
-  if (!clientIPallowed()) { return; }
+  if (!clientIPallowed(void)) { return; }
   navMenuIndex = MENU_INDEX_TOOLS;
-  TXBuffer.startStream();
-  sendHeadandTail_stdtemplate();
+  TXBuffer.startStream(void);
+  sendHeadandTail_stdtemplate(void);
 
   String fdelete = WebServer.arg(F("delete"));
 
   if (tryDeleteFile(fdelete))
   {
-    checkRuleSets();
+    checkRuleSets(void);
   }
   #ifdef USES_C016
 
   if (WebServer.hasArg(F("delcache"))) {
-    while (C016_deleteOldestCacheBlock()) {
+    while (C016_deleteOldestCacheBlock(void)) {
       delay(1);
     }
 
-    while (GarbageCollection()) {
+    while (GarbageCollection(void)) {
       delay(1);
     }
   }
@@ -139,12 +139,12 @@ void handle_filelist() {
   int startIdx       = 0;
   String fstart      = WebServer.arg(F("start"));
 
-  if (fstart.length() > 0)
+  if (fstart.length(void) > 0)
   {
-    startIdx = atoi(fstart.c_str());
+    startIdx = atoi(fstart.c_str(void));
   }
   int endIdx = startIdx + pageSize - 1;
-  html_table_class_multirow();
+  html_table_class_multirow(void);
   html_table_header("",        50);
   html_table_header(F("Filename"));
   html_table_header(F("Size"), 80);
@@ -157,7 +157,7 @@ void handle_filelist() {
 
   fs::Dir dir = SPIFFS.openDir("");
 
-  while (dir.next() && count < endIdx)
+  while (dir.next(void) && count < endIdx)
   {
     ++count;
 
@@ -167,37 +167,37 @@ void handle_filelist() {
       fs::File f   = dir.openFile("r");
 
       if (f) {
-        filesize = f.size();
+        filesize = f.size(void);
       }
 
-      if (!cacheFilesPresent && (getCacheFileCountFromFilename(dir.fileName()) != -1))
+      if (!cacheFilesPresent && (getCacheFileCountFromFilename(dir.fileName(void)) != -1))
       {
         cacheFilesPresent = true;
       }
-      handle_filelist_add_file(dir.fileName(), filesize, startIdx);
+      handle_filelist_add_file(dir.fileName(void), filesize, startIdx);
     }
   }
-  moreFilesPresent = dir.next();
+  moreFilesPresent = dir.next(void);
 #endif // if defined(ESP8266)
 #if defined(ESP32)
   File root = SPIFFS.open("/");
-  File file = root.openNextFile();
+  File file = root.openNextFile(void);
 
   while (file && count < endIdx)
   {
-    if (!file.isDirectory()) {
+    if (!file.isDirectory(void)) {
       ++count;
 
       if (count >= startIdx)
       {
-        if (!cacheFilesPresent && (getCacheFileCountFromFilename(file.name()) != -1))
+        if (!cacheFilesPresent && (getCacheFileCountFromFilename(file.name(void)) != -1))
         {
           cacheFilesPresent = true;
         }
-        handle_filelist_add_file(file.name(), file.size(), startIdx);
+        handle_filelist_add_file(file.name(void), file.size(void), startIdx);
       }
     }
-    file = root.openNextFile();
+    file = root.openNextFile(void);
   }
   moreFilesPresent = file;
 #endif // if defined(ESP32)
@@ -217,11 +217,11 @@ void handle_filelist() {
 }
 
 void handle_filelist_add_file(const String& filename, int filesize, int startIdx) {
-  html_TR_TD();
+  html_TR_TD(void);
 
   if ((filename != F(FILE_CONFIG)) && (filename != F(FILE_SECURITY)) && (filename != F(FILE_NOTIFICATION)))
   {
-    html_add_button_prefix();
+    html_add_button_prefix(void);
     TXBuffer += F("filelist?delete=");
     TXBuffer += filename;
 
@@ -238,7 +238,7 @@ void handle_filelist_add_file(const String& filename, int filesize, int startIdx
   TXBuffer += "\">";
   TXBuffer += filename;
   TXBuffer += F("</a>");
-  html_TD();
+  html_TD(void);
 
   if (filesize >= 0) {
     TXBuffer += String(filesize);
@@ -246,14 +246,14 @@ void handle_filelist_add_file(const String& filename, int filesize, int startIdx
 }
 
 void handle_filelist_buttons(int start_prev, int start_next, bool cacheFilesPresent) {
-  html_end_table();
-  html_end_form();
-  html_BR();
+  html_end_table(void);
+  html_end_form(void);
+  html_BR(void);
   addButton(F("/upload"), F("Upload"));
 
   if (start_prev >= 0)
   {
-    html_add_button_prefix();
+    html_add_button_prefix(void);
     TXBuffer += F("/filelist?start=");
     TXBuffer += start_prev;
     TXBuffer += F("'>Previous</a>");
@@ -261,7 +261,7 @@ void handle_filelist_buttons(int start_prev, int start_next, bool cacheFilesPres
 
   if (start_next >= 0)
   {
-    html_add_button_prefix();
+    html_add_button_prefix(void);
     TXBuffer += F("/filelist?start=");
     TXBuffer += start_next;
     TXBuffer += F("'>Next</a>");
@@ -274,7 +274,7 @@ void handle_filelist_buttons(int start_prev, int start_next, bool cacheFilesPres
   }
   TXBuffer += F("<BR><BR>");
   sendHeadandTail_stdtemplate(true);
-  TXBuffer.endStream();
+  TXBuffer.endStream(void);
 }
 #endif // ifdef WEBSERVER_FILELIST
 
@@ -282,13 +282,13 @@ void handle_filelist_buttons(int start_prev, int start_next, bool cacheFilesPres
 // Web Interface SD card file and directory list
 // ********************************************************************************
 #ifdef FEATURE_SD
-void handle_SDfilelist() {
+void handle_SDfilelist(void) {
   checkRAM(F("handle_SDfilelist"));
 
-  if (!clientIPallowed()) { return; }
+  if (!clientIPallowed(void)) { return; }
   navMenuIndex = MENU_INDEX_TOOLS;
-  TXBuffer.startStream();
-  sendHeadandTail_stdtemplate();
+  TXBuffer.startStream(void);
+  sendHeadandTail_stdtemplate(void);
 
 
   String fdelete       = "";
@@ -297,7 +297,7 @@ void handle_SDfilelist() {
   String current_dir   = "";
   String parent_dir    = "";
 
-  for (uint8_t i = 0; i < WebServer.args(); i++) {
+  for (uint8_t i = 0; i < WebServer.args(void); i++) {
     if (WebServer.argName(i) == F("delete"))
     {
       fdelete = WebServer.arg(i);
@@ -314,17 +314,17 @@ void handle_SDfilelist() {
     }
   }
 
-  if (fdelete.length() > 0)
+  if (fdelete.length(void) > 0)
   {
-    SD.remove((char *)fdelete.c_str());
+    SD.remove((char *)fdelete.c_str(void));
   }
 
-  if (ddelete.length() > 0)
+  if (ddelete.length(void) > 0)
   {
-    SD.rmdir((char *)ddelete.c_str());
+    SD.rmdir((char *)ddelete.c_str(void));
   }
 
-  if (change_to_dir.length() > 0)
+  if (change_to_dir.length(void) > 0)
   {
     current_dir = change_to_dir;
   }
@@ -333,9 +333,9 @@ void handle_SDfilelist() {
     current_dir = "/";
   }
 
-  File root = SD.open(current_dir.c_str());
-  root.rewindDirectory();
-  File entry = root.openNextFile();
+  File root = SD.open(current_dir.c_str(void));
+  root.rewindDirectory(void);
+  File entry = root.openNextFile(void);
   parent_dir = current_dir;
 
   if (!current_dir.equals("/"))
@@ -354,37 +354,37 @@ void handle_SDfilelist() {
 
   String subheader = "SD Card: " + current_dir;
   addFormSubHeader(subheader);
-  html_BR();
-  html_table_class_multirow();
+  html_BR(void);
+  html_table_class_multirow(void);
   html_table_header("", 50);
   html_table_header("Name");
   html_table_header("Size");
-  html_TR_TD();
+  html_TR_TD(void);
   TXBuffer += F("<TD><a href=\"SDfilelist?chgto=");
   TXBuffer += parent_dir;
   TXBuffer += F("\">..");
   TXBuffer += F("</a>");
-  html_TD();
+  html_TD(void);
 
   while (entry)
   {
-    if (entry.isDirectory())
+    if (entry.isDirectory(void))
     {
       char SDcardChildDir[80];
-      html_TR_TD();
+      html_TR_TD(void);
 
       // take a look in the directory for entries
-      String child_dir = current_dir + entry.name();
-      child_dir.toCharArray(SDcardChildDir, child_dir.length() + 1);
+      String child_dir = current_dir + entry.name(void);
+      child_dir.toCharArray(SDcardChildDir, child_dir.length(void) + 1);
       File child         = SD.open(SDcardChildDir);
-      File dir_has_entry = child.openNextFile();
+      File dir_has_entry = child.openNextFile(void);
 
       // when the directory is empty, display the button to delete them
       if (!dir_has_entry)
       {
         TXBuffer += F("<a class='button link' onclick=\"return confirm('Delete this directory?')\" href=\"SDfilelist?deletedir=");
         TXBuffer += current_dir;
-        TXBuffer += entry.name();
+        TXBuffer += entry.name(void);
         TXBuffer += '/';
         TXBuffer += F("&chgto=");
         TXBuffer += current_dir;
@@ -392,47 +392,47 @@ void handle_SDfilelist() {
       }
       TXBuffer += F("<TD><a href=\"SDfilelist?chgto=");
       TXBuffer += current_dir;
-      TXBuffer += entry.name();
+      TXBuffer += entry.name(void);
       TXBuffer += '/';
       TXBuffer += "\">";
-      TXBuffer += entry.name();
+      TXBuffer += entry.name(void);
       TXBuffer += F("</a>");
-      html_TD();
+      html_TD(void);
       TXBuffer += F("dir");
-      dir_has_entry.close();
+      dir_has_entry.close(void);
     }
     else
     {
-      html_TR_TD();
+      html_TR_TD(void);
 
-      if ((entry.name() != String(F(FILE_CONFIG)).c_str()) && (entry.name() != String(F(FILE_SECURITY)).c_str()))
+      if ((entry.name(void) != String(F(FILE_CONFIG)).c_str(void)) && (entry.name(void) != String(F(FILE_SECURITY)).c_str(void)))
       {
         TXBuffer += F("<a class='button link' onclick=\"return confirm('Delete this file?')\" href=\"SDfilelist?delete=");
         TXBuffer += current_dir;
-        TXBuffer += entry.name();
+        TXBuffer += entry.name(void);
         TXBuffer += F("&chgto=");
         TXBuffer += current_dir;
         TXBuffer += F("\">Del</a>");
       }
       TXBuffer += F("<TD><a href=\"");
       TXBuffer += current_dir;
-      TXBuffer += entry.name();
+      TXBuffer += entry.name(void);
       TXBuffer += "\">";
-      TXBuffer += entry.name();
+      TXBuffer += entry.name(void);
       TXBuffer += F("</a>");
-      html_TD();
-      TXBuffer += entry.size();
+      html_TD(void);
+      TXBuffer += entry.size(void);
     }
-    entry.close();
-    entry = root.openNextFile();
+    entry.close(void);
+    entry = root.openNextFile(void);
   }
-  root.close();
-  html_end_table();
-  html_end_form();
+  root.close(void);
+  html_end_table(void);
+  html_end_form(void);
 
   // TXBuffer += F("<BR><a class='button link' href=\"/upload\">Upload</a>");
   sendHeadandTail_stdtemplate(true);
-  TXBuffer.endStream();
+  TXBuffer.endStream(void);
 }
 
 #endif // ifdef FEATURE_SD

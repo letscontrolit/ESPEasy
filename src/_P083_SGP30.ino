@@ -63,9 +63,9 @@ boolean Plugin_083(byte function, struct EventStruct *event, String& string)
       case PLUGIN_READ:
         {
           Adafruit_SGP30 sgp;
-          if (sgp.begin()) 
+          if (sgp.begin(void)) 
           {
-              if (sgp.IAQmeasure()) 
+              if (sgp.IAQmeasure(void)) 
               {
                   UserVar[event->BaseVarIndex] = sgp.TVOC;
                   UserVar[event->BaseVarIndex + 1] = sgp.eCO2;

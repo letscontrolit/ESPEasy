@@ -112,7 +112,7 @@ enum BMx_state {
 };
 
 struct P028_sensordata {
-  P028_sensordata() :
+  P028_sensordata(void) :
     last_hum_val(0.0),
     last_press_val(0.0),
     last_temp_val(0.0),
@@ -122,7 +122,7 @@ struct P028_sensordata {
     i2cAddress(0),
     state(BMx_Uninitialized) {}
 
-    byte get_config_settings() const {
+    byte get_config_settings(void) const {
       switch (sensorID) {
         case BMP280_DEVICE_SAMPLE1:
         case BMP280_DEVICE_SAMPLE2:
@@ -132,7 +132,7 @@ struct P028_sensordata {
       }
     }
 
-    byte get_control_settings() const {
+    byte get_control_settings(void) const {
       switch (sensorID) {
         case BMP280_DEVICE_SAMPLE1:
         case BMP280_DEVICE_SAMPLE2:
@@ -142,8 +142,8 @@ struct P028_sensordata {
       }
     }
 
-    String getFullDeviceName() const {
-      String devicename = getDeviceName();
+    String getFullDeviceName(void) const {
+      String devicename = getDeviceName(void);
       if (sensorID == BMP280_DEVICE_SAMPLE1 ||
           sensorID == BMP280_DEVICE_SAMPLE2)
       {
@@ -152,7 +152,7 @@ struct P028_sensordata {
       return devicename;
     }
 
-    String getDeviceName() const {
+    String getDeviceName(void) const {
       switch (sensorID) {
         case BMP280_DEVICE_SAMPLE1:
         case BMP280_DEVICE_SAMPLE2:
@@ -162,7 +162,7 @@ struct P028_sensordata {
       }
     }
 
-    boolean hasHumidity() const {
+    boolean hasHumidity(void) const {
       switch (sensorID) {
         case BMP280_DEVICE_SAMPLE1:
         case BMP280_DEVICE_SAMPLE2:
@@ -172,11 +172,11 @@ struct P028_sensordata {
       }
     }
 
-    bool initialized() const {
+    bool initialized(void) const {
       return state != BMx_Uninitialized;
     }
 
-    void setUninitialized() {
+    void setUninitialized(void) {
       state = BMx_Uninitialized;
     }
 
@@ -204,7 +204,7 @@ uint8_t Plugin_028_i2c_addr(struct EventStruct *event) {
     i2cAddress = Plugin_28_i2c_addresses[0];
   }
   if (P028_sensors.count(i2cAddress) == 0) {
-    P028_sensors[i2cAddress] = P028_sensordata();
+    P028_sensors[i2cAddress] = P028_sensordata(void);
   }
   return i2cAddress;
 }
@@ -252,7 +252,7 @@ boolean Plugin_028(byte function, struct EventStruct *event, String& string)
         addFormSelectorI2C(F("p028_bme280_i2c"), 2, Plugin_28_i2c_addresses, i2cAddress);
         if (sensor.sensorID != Unknown_DEVICE) {
           String detectedString = F("Detected: ");
-          detectedString += sensor.getFullDeviceName();
+          detectedString += sensor.getFullDeviceName(void);
           addUnit(detectedString);
         }
         addFormNote(F("SDO Low=0x76, High=0x77"));
@@ -263,7 +263,7 @@ boolean Plugin_028(byte function, struct EventStruct *event, String& string)
         addFormNumericBox(F("Temperature offset"), F("p028_bme280_tempoffset"), PCONFIG(2));
         addUnit(F("x 0.1C"));
         String offsetNote = F("Offset in units of 0.1 degree Celcius");
-        if (sensor.hasHumidity()) {
+        if (sensor.hasHumidity(void)) {
           offsetNote += F(" (also correct humidity)");
         }
         addFormNote(offsetNote);
@@ -288,7 +288,7 @@ boolean Plugin_028(byte function, struct EventStruct *event, String& string)
         const float tempOffset = PCONFIG(2) / 10.0;
         if (Plugin_028_update_measurements(i2cAddress, tempOffset, event->TaskIndex)) {
           // Update was succesfull, schedule a read.
-          schedule_task_device_timer(event->TaskIndex, millis() + 10);
+          schedule_task_device_timer(event->TaskIndex, millis(void) + 10);
         }
         break;
       }
@@ -302,7 +302,7 @@ boolean Plugin_028(byte function, struct EventStruct *event, String& string)
           break;
         }
         sensor.state = BMx_Values_read;
-        if (!sensor.hasHumidity()) {
+        if (!sensor.hasHumidity(void)) {
           // Patch the sensor type to output only the measured values.
           event->sensorType = SENSOR_TYPE_TEMP_EMPTY_BARO;
         }
@@ -317,21 +317,21 @@ boolean Plugin_028(byte function, struct EventStruct *event, String& string)
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           String log;
           log.reserve(40); // Prevent re-allocation
-          log = sensor.getDeviceName();
+          log = sensor.getDeviceName(void);
           log += F(" : Address: 0x");
           log += String(i2cAddress,HEX);
           addLog(LOG_LEVEL_INFO, log);
-          log = sensor.getDeviceName();
+          log = sensor.getDeviceName(void);
           log += F(" : Temperature: ");
           log += UserVar[event->BaseVarIndex];
           addLog(LOG_LEVEL_INFO, log);
-          if (sensor.hasHumidity()) {
-            log = sensor.getDeviceName();
+          if (sensor.hasHumidity(void)) {
+            log = sensor.getDeviceName(void);
             log += F(" : Humidity: ");
             log += UserVar[event->BaseVarIndex + 1];
             addLog(LOG_LEVEL_INFO, log);
           }
-          log = sensor.getDeviceName();
+          log = sensor.getDeviceName(void);
           log += F(" : Barometric Pressure: ");
           log += UserVar[event->BaseVarIndex + 2];
           addLog(LOG_LEVEL_INFO, log);
@@ -353,9 +353,9 @@ boolean Plugin_028(byte function, struct EventStruct *event, String& string)
 // Only perform the measurements with big interval to prevent the sensor from warming up.
 bool Plugin_028_update_measurements(const uint8_t i2cAddress, float tempOffset, unsigned long task_index) {
   P028_sensordata& sensor = P028_sensors[i2cAddress];
-  const unsigned long current_time = millis();
+  const unsigned long current_time = millis(void);
   Plugin_028_check(i2cAddress); // Check id device is present
-  if (!sensor.initialized()) {
+  if (!sensor.initialized(void)) {
     if (!Plugin_028_begin(i2cAddress)) {
       return false;
     }
@@ -372,11 +372,11 @@ bool Plugin_028_update_measurements(const uint8_t i2cAddress, float tempOffset, 
     sensor.last_measurement = current_time;
     // Set the Sensor in sleep to be make sure that the following configs will be stored
     I2C_write8_reg(i2cAddress, BMx280_REGISTER_CONTROL, 0x00);
-    if (sensor.hasHumidity()) {
+    if (sensor.hasHumidity(void)) {
       I2C_write8_reg(i2cAddress, BMx280_REGISTER_CONTROLHUMID, BME280_CONTROL_SETTING_HUMIDITY);
     }
-    I2C_write8_reg(i2cAddress, BMx280_REGISTER_CONFIG, sensor.get_config_settings());
-    I2C_write8_reg(i2cAddress, BMx280_REGISTER_CONTROL, sensor.get_control_settings());
+    I2C_write8_reg(i2cAddress, BMx280_REGISTER_CONFIG, sensor.get_config_settings(void));
+    I2C_write8_reg(i2cAddress, BMx280_REGISTER_CONTROL, sensor.get_control_settings(void));
     sensor.state = BMx_Wait_for_samples;
     return false;
   }
@@ -403,11 +403,11 @@ bool Plugin_028_update_measurements(const uint8_t i2cAddress, float tempOffset, 
   String log;
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     log.reserve(120); // Prevent re-allocation
-    log = sensor.getDeviceName();
+    log = sensor.getDeviceName(void);
     log += F(":");
   }
   boolean logAdded = false;
-  if (sensor.hasHumidity()) {
+  if (sensor.hasHumidity(void)) {
     // Apply half of the temp offset, to correct the dew point offset.
     // The sensor is warmer than the surrounding air, which has effect on the perceived humidity.
     sensor.last_dew_temp_val = compute_dew_point_temp(sensor.last_temp_val + (tempOffset / 2.0), sensor.last_hum_val);
@@ -422,7 +422,7 @@ bool Plugin_028_update_measurements(const uint8_t i2cAddress, float tempOffset, 
       log += tempOffset;
       log += F("C");
     }
-    if (sensor.hasHumidity()) {
+    if (sensor.hasHumidity(void)) {
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         log += F(" humidity ");
         log += sensor.last_hum_val;
@@ -448,7 +448,7 @@ bool Plugin_028_update_measurements(const uint8_t i2cAddress, float tempOffset, 
       logAdded = true;
     }
   }
-  if (sensor.hasHumidity()) {
+  if (sensor.hasHumidity(void)) {
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       log += F(" dew point ");
       log += sensor.last_dew_temp_val;
@@ -469,7 +469,7 @@ bool Plugin_028_check(uint8_t i2cAddress) {
   bool wire_status = false;
   const uint8_t chip_id = I2C_read8_reg(i2cAddress, BMx280_REGISTER_CHIPID, &wire_status);
   P028_sensordata& sensor = P028_sensors[i2cAddress];
-  if (!wire_status) sensor.setUninitialized();
+  if (!wire_status) sensor.setUninitialized(void);
   switch (chip_id) {
     case BMP280_DEVICE_SAMPLE1:
     case BMP280_DEVICE_SAMPLE2:
@@ -479,9 +479,9 @@ bool Plugin_028_check(uint8_t i2cAddress) {
         // Store detected chip ID when chip found.
         if (sensor.sensorID != chip_id) {
           sensor.sensorID = static_cast<BMx_ChipId>(chip_id);
-          sensor.setUninitialized();
+          sensor.setUninitialized(void);
           String log = F("BMx280 : Detected ");
-          log += sensor.getFullDeviceName();
+          log += sensor.getFullDeviceName(void);
           addLog(LOG_LEVEL_INFO, log);
         }
       } else {
@@ -536,7 +536,7 @@ void Plugin_028_readCoefficients(uint8_t i2cAddress)
   sensor.calib.dig_P8 = I2C_readS16_LE_reg(i2cAddress, BMx280_REGISTER_DIG_P8);
   sensor.calib.dig_P9 = I2C_readS16_LE_reg(i2cAddress, BMx280_REGISTER_DIG_P9);
 
-  if (sensor.hasHumidity()) {
+  if (sensor.hasHumidity(void)) {
     sensor.calib.dig_H1 = I2C_read8_reg(i2cAddress, BMx280_REGISTER_DIG_H1);
     sensor.calib.dig_H2 = I2C_readS16_LE_reg(i2cAddress, BMx280_REGISTER_DIG_H2);
     sensor.calib.dig_H3 = I2C_read8_reg(i2cAddress, BMx280_REGISTER_DIG_H3);
@@ -639,7 +639,7 @@ float Plugin_028_readPressure(uint8_t i2cAddress)
 float Plugin_028_readHumidity(uint8_t i2cAddress)
 {
   P028_sensordata& sensor = P028_sensors[i2cAddress];
-  if (!sensor.hasHumidity()) {
+  if (!sensor.hasHumidity(void)) {
     // No support for humidity
     return 0.0;
   }

@@ -71,7 +71,7 @@ public:
   byte FIFO_IndexR;
   byte FIFO_IndexW;
 
-  void Plugin_055_Data()
+  void Plugin_055_Data(void)
   {
     millisStateEnd = 0;
     millisChimeTime = 60;
@@ -177,7 +177,7 @@ boolean Plugin_055(byte function, struct EventStruct *event, String& string)
     case PLUGIN_INIT:
       {
         if (!Plugin_055_Data)
-          Plugin_055_Data = new CPlugin_055_Data();
+          Plugin_055_Data = new CPlugin_055_Data(void);
 
         Plugin_055_Data->lowActive = Settings.TaskDevicePin1Inversed[event->TaskIndex];
         Plugin_055_Data->millisChimeTime = PCONFIG(0);
@@ -215,7 +215,7 @@ boolean Plugin_055(byte function, struct EventStruct *event, String& string)
         if (command == F("chime"))
         {
           String param = parseStringToEndKeepCase(string, 2);
-          if (param.length() > 0) {
+          if (param.length(void) > 0) {
             Plugin_055_AddStringFIFO(param);
           }
           success = true;
@@ -223,7 +223,7 @@ boolean Plugin_055(byte function, struct EventStruct *event, String& string)
         if (command == F("chimeplay"))
         {
           String name = parseString(string, 2);
-          if (name.length() > 0) {
+          if (name.length(void) > 0) {
             String param;
             Plugin_055_ReadChime(name, param);
             Plugin_055_AddStringFIFO(param);
@@ -234,7 +234,7 @@ boolean Plugin_055(byte function, struct EventStruct *event, String& string)
         {
           String name = parseString(string, 2);
           String param = parseStringToEndKeepCase(string, 3);
-          if (name.length() > 0 && param.length() > 0) {
+          if (name.length(void) > 0 && param.length(void) > 0) {
             Plugin_055_WriteChime(name, param);
             Plugin_055_AddStringFIFO("1");
           }
@@ -250,8 +250,8 @@ boolean Plugin_055(byte function, struct EventStruct *event, String& string)
             break;
 
           String tokens = "";
-          byte hours = hour();
-          byte minutes = minute();
+          byte hours = hour(void);
+          byte minutes = minute(void);
 
           if (Plugin_055_Data->chimeClock)
           {
@@ -289,7 +289,7 @@ boolean Plugin_055(byte function, struct EventStruct *event, String& string)
         if (!Plugin_055_Data)
           break;
 
-        long millisAct = millis();
+        long millisAct = millis(void);
 
         if (Plugin_055_Data->millisStateEnd > 0)   // just striking?
         {
@@ -306,9 +306,9 @@ boolean Plugin_055(byte function, struct EventStruct *event, String& string)
 
         if (Plugin_055_Data->millisStateEnd == 0)   // just finished?
         {
-          if (! Plugin_055_IsEmptyFIFO())
+          if (! Plugin_055_IsEmptyFIFO(void))
           {
-            char c = Plugin_055_ReadFIFO();
+            char c = Plugin_055_ReadFIFO(void);
 
             String log = F("Chime: Process '");
             log += c;
@@ -369,7 +369,7 @@ boolean Plugin_055(byte function, struct EventStruct *event, String& string)
                 Plugin_055_Data->millisStateEnd = millisAct + Plugin_055_Data->millisChimeTime/2;
                 break;
               case '#':   //comment -> eat till FIFO is empty
-                while (Plugin_055_ReadFIFO());
+                while (Plugin_055_ReadFIFO(void));
                 break;
               default:   //unknown char -> do nothing
                 break;
@@ -397,9 +397,9 @@ void Plugin_055_WriteFIFO(char c)
   Plugin_055_Data->FIFO_IndexW &= PLUGIN_055_FIFO_MASK;
 }
 
-char Plugin_055_ReadFIFO()
+char Plugin_055_ReadFIFO(void)
 {
-  if (Plugin_055_IsEmptyFIFO())
+  if (Plugin_055_IsEmptyFIFO(void))
     return '\0';
 
   char c = Plugin_055_Data->FIFO[Plugin_055_Data->FIFO_IndexR];
@@ -409,22 +409,22 @@ char Plugin_055_ReadFIFO()
   return c;
 }
 
-char Plugin_055_PeekFIFO()
+char Plugin_055_PeekFIFO(void)
 {
-  if (Plugin_055_IsEmptyFIFO())
+  if (Plugin_055_IsEmptyFIFO(void))
     return '\0';
 
   return Plugin_055_Data->FIFO[Plugin_055_Data->FIFO_IndexR];
 }
 
-boolean Plugin_055_IsEmptyFIFO()
+boolean Plugin_055_IsEmptyFIFO(void)
 {
   return (Plugin_055_Data->FIFO_IndexR == Plugin_055_Data->FIFO_IndexW);
 }
 
 void Plugin_055_AddStringFIFO(const String& param)
 {
-  if (param.length() == 0)
+  if (param.length(void) == 0)
     return;
 
   byte i = 0;
@@ -465,8 +465,8 @@ void Plugin_055_WriteChime(const String& name, const String& tokens)
   if (f)
   {
     f.print(tokens);
-    f.close();
-    //flashCount();
+    f.close(void);
+    //flashCount(void);
     log += tokens;
   }
 
@@ -487,21 +487,21 @@ byte Plugin_055_ReadChime(const String& name, String& tokens)
   fs::File f = tryOpenFile(fileName, "r");
   if (f)
   {
-    tokens.reserve(f.size());
+    tokens.reserve(f.size(void));
     char c;
-    while (f.available())
+    while (f.available(void))
     {
-      c = f.read();
+      c = f.read(void);
       tokens += c;
     }
-    f.close();
+    f.close(void);
 
     log += tokens;
   }
 
   addLog(LOG_LEVEL_INFO, log);
 
-  return tokens.length();
+  return tokens.length(void);
 }
 
 #endif // USES_P055

@@ -7,7 +7,7 @@
 // ********************************************************************************
 // Web Interface JSON page (no password!)
 // ********************************************************************************
-void handle_json()
+void handle_json(void)
 {
   const taskIndex_t taskNr    = getFormItemInt(F("tasknr"), INVALID_TASK_INDEX);
   const bool showSpecificTask = validTaskIndex(taskNr);
@@ -19,7 +19,7 @@ void handle_json()
   {
     String view = WebServer.arg("view");
 
-    if (view.length() != 0) {
+    if (view.length(void) != 0) {
       if (view == F("sensorupdate")) {
         showSystem          = false;
         showWifi            = false;
@@ -30,7 +30,7 @@ void handle_json()
     }
   }
 
-  TXBuffer.startJsonStream();
+  TXBuffer.startJsonStream(void);
 
   if (!showSpecificTask)
   {
@@ -103,7 +103,7 @@ void handle_json()
     if (showNodes) {
       bool comma_between = false;
 
-      for (NodesMap::iterator it = Nodes.begin(); it != Nodes.end(); ++it)
+      for (NodesMap::iterator it = Nodes.begin(void); it != Nodes.end(void); ++it)
       {
         if (it->second.ip[0] != 0)
         {
@@ -126,11 +126,11 @@ void handle_json()
           if (it->second.nodeType) {
             String platform = getNodeTypeDisplayString(it->second.nodeType);
 
-            if (platform.length() > 0) {
+            if (platform.length(void) > 0) {
               stream_next_json_object_value(F("platform"), platform);
             }
           }
-          stream_next_json_object_value(F("ip"), it->second.ip.toString());
+          stream_next_json_object_value(F("ip"), it->second.ip.toString(void));
           stream_last_json_object_value(F("age"), String(it->second.age));
         } // if node info exists
       }   // for loop
@@ -234,7 +234,7 @@ void handle_json()
     stream_last_json_object_value(F("TTL"), String(ttl_json * 1000));
   }
 
-  TXBuffer.endStream();
+  TXBuffer.endStream(void);
 }
 
 // ********************************************************************************
@@ -242,31 +242,31 @@ void handle_json()
 // ********************************************************************************
 
 #ifdef WEBSERVER_NEW_UI
-void handle_timingstats_json() {
-  TXBuffer.startJsonStream();
-  json_init();
-  json_open();
+void handle_timingstats_json(void) {
+  TXBuffer.startJsonStream(void);
+  json_init(void);
+  json_open(void);
   # ifdef USES_TIMING_STATS
   jsonStatistics(false);
   # endif // ifdef USES_TIMING_STATS
-  json_close();
-  TXBuffer.endStream();
+  json_close(void);
+  TXBuffer.endStream(void);
 }
 
 #endif // WEBSERVER_NEW_UI
 
 #ifdef WEBSERVER_NEW_UI
-void handle_nodes_list_json() {
-  if (!isLoggedIn()) { return; }
-  TXBuffer.startJsonStream();
-  json_init();
+void handle_nodes_list_json(void) {
+  if (!isLoggedIn(void)) { return; }
+  TXBuffer.startJsonStream(void);
+  json_init(void);
   json_open(true);
 
-  for (NodesMap::iterator it = Nodes.begin(); it != Nodes.end(); ++it)
+  for (NodesMap::iterator it = Nodes.begin(void); it != Nodes.end(void); ++it)
   {
     if (it->second.ip[0] != 0)
     {
-      json_open();
+      json_open(void);
       bool isThisUnit = it->first == Settings.Unit;
 
       if (isThisUnit) {
@@ -278,29 +278,29 @@ void handle_nodes_list_json() {
 
       if (it->second.build) { json_prop(F("build"), String(it->second.build)); }
       json_prop(F("type"), getNodeTypeDisplayString(it->second.nodeType));
-      json_prop(F("ip"),   it->second.ip.toString());
+      json_prop(F("ip"),   it->second.ip.toString(void));
       json_number(F("age"), String(it->second.age));
-      json_close();
+      json_close(void);
     }
   }
   json_close(true);
-  TXBuffer.endStream();
+  TXBuffer.endStream(void);
 }
 
-void handle_buildinfo() {
-  if (!isLoggedIn()) { return; }
-  TXBuffer.startJsonStream();
-  json_init();
-  json_open();
+void handle_buildinfo(void) {
+  if (!isLoggedIn(void)) { return; }
+  TXBuffer.startJsonStream(void);
+  json_init(void);
+  json_open(void);
   {
     json_open(true, F("plugins"));
 
     for (deviceIndex_t x = 0; x <= deviceCount; x++) {
       if (validPluginID(DeviceIndex_to_Plugin_id[x])) {
-        json_open();
+        json_open(void);
         json_number(F("id"), String(DeviceIndex_to_Plugin_id[x]));
         json_prop(F("name"), getPluginNameFromDeviceIndex(x));
-        json_close();
+        json_close(void);
       }
     }
     json_close(true);
@@ -310,10 +310,10 @@ void handle_buildinfo() {
 
     for (byte x = 0; x < CPLUGIN_MAX; x++) {
       if (CPlugin_id[x] != 0) {
-        json_open();
+        json_open(void);
         json_number(F("id"), String(x + 1));
         json_prop(F("name"), getCPluginNameFromProtocolIndex(x));
-        json_close();
+        json_close(void);
       }
     }
     json_close(true);
@@ -323,10 +323,10 @@ void handle_buildinfo() {
 
     for (byte x = 0; x < NPLUGIN_MAX; x++) {
       if (NPlugin_id[x] != 0) {
-        json_open();
+        json_open(void);
         json_number(F("id"), String(x + 1));
         json_prop(F("name"), getNPluginNameFromNotifierIndex(x));
-        json_close();
+        json_close(void);
       }
     }
     json_close(true);
@@ -336,8 +336,8 @@ void handle_buildinfo() {
   json_prop(LabelType::SYSTEM_LIBRARIES);
   json_prop(LabelType::PLUGINS);
   json_prop(LabelType::PLUGIN_DESCRIPTION);
-  json_close();
-  TXBuffer.endStream();
+  json_close(void);
+  TXBuffer.endStream(void);
 }
 
 #endif // WEBSERVER_NEW_UI
@@ -347,7 +347,7 @@ void handle_buildinfo() {
    Streaming versions directly to TXBuffer
 \*********************************************************************************************/
 void stream_to_json_value(const String& value) {
-  if ((value.length() == 0) || !isFloat(value)) {
+  if ((value.length(void) == 0) || !isFloat(value)) {
     TXBuffer += '\"';
     TXBuffer += value;
     TXBuffer += '\"';

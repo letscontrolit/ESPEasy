@@ -15,7 +15,7 @@
 
 #include <list>
 struct EventStructCommandWrapper {
-  EventStructCommandWrapper() : id(0) {}
+  EventStructCommandWrapper(void) : id(0) {}
 
   EventStructCommandWrapper(unsigned long i, const struct EventStruct& e) : id(i), event(e) {}
 
@@ -31,7 +31,7 @@ std::list<EventStructCommandWrapper> EventQueue;
 * Generic Timer functions.
 \*********************************************************************************************/
 void setTimer(unsigned long timerType, unsigned long id, unsigned long msecFromNow) {
-  setNewTimerAt(getMixedId(timerType, id), millis() + msecFromNow);
+  setNewTimerAt(getMixedId(timerType, id), millis(void) + msecFromNow);
 }
 
 void setNewTimerAt(unsigned long id, unsigned long timer) {
@@ -85,7 +85,7 @@ String decodeSchedulerId(unsigned long mixed_id) {
 /*********************************************************************************************\
 * Handle scheduled timers.
 \*********************************************************************************************/
-void handle_schedule() {
+void handle_schedule(void) {
   START_TIMER
   unsigned long timer = 0;
   unsigned long mixed_id = 0;
@@ -97,16 +97,16 @@ void handle_schedule() {
 
   if (RTC.lastMixedSchedulerId != mixed_id) {
     RTC.lastMixedSchedulerId = mixed_id;
-    saveToRTC();
+    saveToRTC(void);
   }
 
   if (mixed_id == 0) {
     // No id ready to run right now.
     // Events are not that important to run immediately.
     // Make sure normal scheduled jobs run at higher priority.
-    backgroundtasks();
-    process_system_event_queue();
-    last_system_event_run = millis();
+    backgroundtasks(void);
+    process_system_event_queue(void);
+    last_system_event_run = millis(void);
     STOP_TIMER(HANDLE_SCHEDULER_IDLE);
     return;
   }
@@ -142,7 +142,7 @@ void handle_schedule() {
 * This will make their interval as constant as possible.
 \*********************************************************************************************/
 void setIntervalTimer(unsigned long id) {
-  setIntervalTimer(id, millis());
+  setIntervalTimer(id, millis(void));
 }
 
 void setIntervalTimerAt(unsigned long id, unsigned long newtimer) {
@@ -150,7 +150,7 @@ void setIntervalTimerAt(unsigned long id, unsigned long newtimer) {
 }
 
 void setIntervalTimerOverride(unsigned long id, unsigned long msecFromNow) {
-  unsigned long timer = millis();
+  unsigned long timer = millis(void);
 
   setNextTimeInterval(timer, msecFromNow);
   setNewTimerAt(getMixedId(CONST_INTERVAL_TIMER, id), timer);
@@ -203,10 +203,10 @@ void setIntervalTimer(unsigned long id, unsigned long lasttimer) {
   setNewTimerAt(getMixedId(CONST_INTERVAL_TIMER, id), timer);
 }
 
-void sendGratuitousARP_now() {
-  sendGratuitousARP();
+void sendGratuitousARP_now(void) {
+  sendGratuitousARP(void);
 
-  if (Settings.gratuitousARP()) {
+  if (Settings.gratuitousARP(void)) {
     timer_gratuitous_arp_interval = 100;
     setIntervalTimer(TIMER_GRATUITOUS_ARP);
   }
@@ -218,19 +218,19 @@ void process_interval_timer(unsigned long id, unsigned long lasttimer) {
   setIntervalTimer(id, lasttimer);
 
   switch (id) {
-    case TIMER_20MSEC:         run50TimesPerSecond(); break;
+    case TIMER_20MSEC:         run50TimesPerSecond(void); break;
     case TIMER_100MSEC:
 
       if (!UseRTOSMultitasking) {
-        run10TimesPerSecond();
+        run10TimesPerSecond(void);
       }
       break;
-    case TIMER_1SEC:             runOncePerSecond();      break;
-    case TIMER_30SEC:            runEach30Seconds();      break;
+    case TIMER_1SEC:             runOncePerSecond(void);      break;
+    case TIMER_30SEC:            runEach30Seconds(void);      break;
 #ifdef USES_MQTT
-    case TIMER_MQTT:             runPeriodicalMQTT();     break;
+    case TIMER_MQTT:             runPeriodicalMQTT(void);     break;
 #endif //USES_MQTT
-    case TIMER_STATISTICS:       logTimerStatistics();    break;
+    case TIMER_STATISTICS:       logTimerStatistics(void);    break;
     case TIMER_GRATUITOUS_ARP:
 
       // Slowly increase the interval timer.
@@ -240,63 +240,63 @@ void process_interval_timer(unsigned long id, unsigned long lasttimer) {
         timer_gratuitous_arp_interval = TIMER_GRATUITOUS_ARP_MAX;
       }
 
-      if (Settings.gratuitousARP()) {
-        sendGratuitousARP();
+      if (Settings.gratuitousARP(void)) {
+        sendGratuitousARP(void);
       }
       break;
 #ifdef USES_MQTT
-    case TIMER_MQTT_DELAY_QUEUE: processMQTTdelayQueue(); break;
+    case TIMER_MQTT_DELAY_QUEUE: processMQTTdelayQueue(void); break;
 #endif //USES_MQTT
   #ifdef USES_C001
     case TIMER_C001_DELAY_QUEUE:
-      process_c001_delay_queue();
+      process_c001_delay_queue(void);
       break;
   #endif // ifdef USES_C001
   #ifdef USES_C003
     case TIMER_C003_DELAY_QUEUE:
-      process_c003_delay_queue();
+      process_c003_delay_queue(void);
       break;
   #endif // ifdef USES_C003
   #ifdef USES_C004
     case TIMER_C004_DELAY_QUEUE:
-      process_c004_delay_queue();
+      process_c004_delay_queue(void);
       break;
   #endif // ifdef USES_C004
   #ifdef USES_C007
     case TIMER_C007_DELAY_QUEUE:
-      process_c007_delay_queue();
+      process_c007_delay_queue(void);
       break;
   #endif // ifdef USES_C007
   #ifdef USES_C008
     case TIMER_C008_DELAY_QUEUE:
-      process_c008_delay_queue();
+      process_c008_delay_queue(void);
       break;
   #endif // ifdef USES_C008
   #ifdef USES_C009
     case TIMER_C009_DELAY_QUEUE:
-      process_c009_delay_queue();
+      process_c009_delay_queue(void);
       break;
   #endif // ifdef USES_C009
   #ifdef USES_C010
     case TIMER_C010_DELAY_QUEUE:
-      process_c010_delay_queue();
+      process_c010_delay_queue(void);
       break;
   #endif // ifdef USES_C010
   #ifdef USES_C011
     case TIMER_C011_DELAY_QUEUE:
-      process_c011_delay_queue();
+      process_c011_delay_queue(void);
       break;
   #endif // ifdef USES_C011
   #ifdef USES_C012
     case TIMER_C012_DELAY_QUEUE:
-      process_c012_delay_queue();
+      process_c012_delay_queue(void);
       break;
   #endif // ifdef USES_C012
 
       /*
        #ifdef USES_C013
           case TIMER_C013_DELAY_QUEUE:
-            process_c013_delay_queue();
+            process_c013_delay_queue(void);
             break;
        #endif
        */
@@ -304,37 +304,37 @@ void process_interval_timer(unsigned long id, unsigned long lasttimer) {
       /*
        #ifdef USES_C014
           case TIMER_C014_DELAY_QUEUE:
-            process_c014_delay_queue();
+            process_c014_delay_queue(void);
             break;
        #endif
        */
   #ifdef USES_C015
     case TIMER_C015_DELAY_QUEUE:
-      process_c015_delay_queue();
+      process_c015_delay_queue(void);
       break;
   #endif // ifdef USES_C015
   #ifdef USES_C016
     case TIMER_C016_DELAY_QUEUE:
-      process_c016_delay_queue();
+      process_c016_delay_queue(void);
       break;
   #endif // ifdef USES_C016
 
   #ifdef USES_C017
     case TIMER_C017_DELAY_QUEUE:
-      process_c017_delay_queue();
+      process_c017_delay_queue(void);
       break;
   #endif // ifdef USES_C017
 
   #ifdef USES_C018
     case TIMER_C018_DELAY_QUEUE:
-      process_c018_delay_queue();
+      process_c018_delay_queue(void);
       break;
   #endif
 
       /*
        #ifdef USES_C019
           case TIMER_C019_DELAY_QUEUE:
-            process_c019_delay_queue();
+            process_c019_delay_queue(void);
             break;
        #endif
        */
@@ -342,7 +342,7 @@ void process_interval_timer(unsigned long id, unsigned long lasttimer) {
       /*
        #ifdef USES_C020
           case TIMER_C020_DELAY_QUEUE:
-            process_c020_delay_queue();
+            process_c020_delay_queue(void);
             break;
        #endif
        */
@@ -531,9 +531,9 @@ void process_gpio_timer(unsigned long id) {
 * will bootstrap this sequence.
 \*********************************************************************************************/
 void schedule_task_device_timer_at_init(unsigned long task_index) {
-  unsigned long runAt = millis();
+  unsigned long runAt = millis(void);
 
-  if (!isDeepSleepEnabled()) {
+  if (!isDeepSleepEnabled(void)) {
     // Deepsleep is not enabled, add some offset based on the task index
     // to make sure not all are run at the same time.
     // This scheduled time may be overriden by the plugin's own init.
@@ -545,15 +545,15 @@ void schedule_task_device_timer_at_init(unsigned long task_index) {
 }
 
 // Typical use case is to run this when all needed connections are made.
-void schedule_all_task_device_timers() {
+void schedule_all_task_device_timers(void) {
   for (taskIndex_t task = 0; task < TASKS_MAX; task++) {
     schedule_task_device_timer_at_init(task);
   }
 }
 
 #ifdef USES_MQTT
-void schedule_all_tasks_using_MQTT_controller() {
-  int ControllerIndex = firstEnabledMQTTController();
+void schedule_all_tasks_using_MQTT_controller(void) {
+  int ControllerIndex = firstEnabledMQTTController(void);
 
   if (ControllerIndex < 0) { return; }
 
@@ -610,9 +610,9 @@ void process_task_device_timer(unsigned long task_index, unsigned long lasttimer
 
 /*********************************************************************************************\
 * System Event Timer
-* Handling of these events will be asynchronous and being called from the loop().
+* Handling of these events will be asynchronous and being called from the loop(void).
 * Thus only use these when the result is not needed immediately.
-* Proper use case is calling from a callback function, since those cannot use yield() or delay()
+* Proper use case is calling from a callback function, since those cannot use yield(void) or delay(void)
 \*********************************************************************************************/
 void schedule_plugin_task_event_timer(byte DeviceIndex, byte Function, struct EventStruct *event) {
   schedule_event_timer(TaskPluginEnum, DeviceIndex, Function, event);
@@ -649,9 +649,9 @@ unsigned long createSystemEventMixedId(PluginPtrType ptr_type, byte Index, byte 
   return getMixedId(SYSTEM_EVENT_QUEUE, subId);
 }
 
-void process_system_event_queue() {
-  if (EventQueue.size() == 0) { return; }
-  unsigned long id       = EventQueue.front().id;
+void process_system_event_queue(void) {
+  if (EventQueue.size(void) == 0) { return; }
+  unsigned long id       = EventQueue.front(void).id;
   byte Function          = id & 0xFF;
   byte Index             = (id >> 8) & 0xFF;
   PluginPtrType ptr_type = static_cast<PluginPtrType>((id >> 16) & 0xFF);
@@ -664,15 +664,15 @@ void process_system_event_queue() {
 
   switch (ptr_type) {
     case TaskPluginEnum:
-      LoadTaskSettings(EventQueue.front().event.TaskIndex);
-      Plugin_ptr[Index](Function, &EventQueue.front().event, tmpString);
+      LoadTaskSettings(EventQueue.front(void).event.TaskIndex);
+      Plugin_ptr[Index](Function, &EventQueue.front(void).event, tmpString);
       break;
     case ControllerPluginEnum:
-      CPluginCall(Index, Function, &EventQueue.front().event, tmpString);
+      CPluginCall(Index, Function, &EventQueue.front(void).event, tmpString);
       break;
     case NotificationPluginEnum:
-      NPlugin_ptr[Index](Function, &EventQueue.front().event, tmpString);
+      NPlugin_ptr[Index](Function, &EventQueue.front(void).event, tmpString);
       break;
   }
-  EventQueue.pop_front();
+  EventQueue.pop_front(void);
 }

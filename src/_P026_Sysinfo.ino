@@ -187,12 +187,12 @@ float P026_get_value(int type)
     }
     case 1:
     {
-      value = ESP.getFreeHeap();
+      value = ESP.getFreeHeap(void);
       break;
     }
     case 2:
     {
-      value = WiFi.RSSI();
+      value = WiFi.RSSI(void);
       break;
     }
     case 3:
@@ -206,27 +206,27 @@ float P026_get_value(int type)
     }
     case 4:
     {
-      value = getCPUload();
+      value = getCPUload(void);
       break;
     }
     case 5:
     {
-      value = WiFi.localIP()[0];
+      value = WiFi.localIP(void)[0];
       break;
     }
     case 6:
     {
-      value = WiFi.localIP()[1];
+      value = WiFi.localIP(void)[1];
       break;
     }
     case 7:
     {
-      value = WiFi.localIP()[2];
+      value = WiFi.localIP(void)[2];
       break;
     }
     case 8:
     {
-      value = WiFi.localIP()[3];
+      value = WiFi.localIP(void)[3];
       break;
     }
     case 9:
@@ -236,7 +236,7 @@ float P026_get_value(int type)
     }
     case 10:
     {
-      value = getCurrentFreeStack();
+      value = getCurrentFreeStack(void);
       break;
     }
   }

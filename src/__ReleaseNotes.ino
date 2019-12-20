@@ -257,7 +257,7 @@
 // Added Name, Unit number, Build and datestamp to the config file name, sample: Config_DemoESP_U12_R93_2016_3_27.txt
 
 // R92 26-03-2016
-// Fixed rounding bug, it seems that String() has a bug with 0 decimals, adding a leading white space. Fixed with toString wrapper.
+// Fixed rounding bug, it seems that String(void) has a bug with 0 decimals, adding a leading white space. Fixed with toString wrapper.
 
 // R91 20-03-2016
 // Added globalsync option to Dallas plugin config
@@ -385,7 +385,7 @@
 // Removed interrupt blocking from DHT sensor to avoid Wifi/Network handling issues in the ESP core
 // Removed interrupt blocking from Dallas sensor to avoid Wifi/Network handling issues in the ESP core
 // Moved UDP check from main loop to background routine
-// Webgui now reports ESP.getFlashChipRealSize()
+// Webgui now reports ESP.getFlashChipRealSize(void)
 // Added detection of missing BMP085 sensor during init
 // Added option to reset target device when the Ser2Net plugin has initialized.
 
@@ -438,7 +438,7 @@
 // Added support for ADS1115 ADC (contributed by lindeger)
 
 // R59 02-01-2016
-// Replaced delay(10) with yield in backgroundtasks()
+// Replaced delay(10) with yield in backgroundtasks(void)
 // Changed PN532 plugin init stage en reduced sample frequency
 // Restored original I2C Watchdog feed for further development
 // Fixed bug in HCSR04 and other plugins where buffersize was too short
@@ -451,7 +451,7 @@
 // Fixed bug with levelcontrol for other values in taskvalue dropdown list
 
 // R57 23-12-2015
-// Moved display template handling to generic function parseTemplate() to avoid a lot of similar code in both plugins.
+// Moved display template handling to generic function parseTemplate(void) to avoid a lot of similar code in both plugins.
 // Added some variable features to LCD/OLED template, you can use %sysname%, %systime% and %ip%
 // NTP time can be enabled through advanced settings and defaults to disabled
 // Added clear command to LCD/OLED plugins
@@ -486,7 +486,7 @@
 // Added feature "Send data" enable/disable to all tasks
 // Removed "send data" setting from Level Control plugin since this is now standard
 // Check on build changes to fix some changes in tasks
-// Removed all urlDecode() since this is handled in the ESP Core as of stable 2.0.0
+// Removed all urlDecode(void) since this is handled in the ESP Core as of stable 2.0.0
 
 // R51 13-12-2015
 // Changed UDP handling back to a single socket for RX/TX
@@ -563,7 +563,7 @@
 
 // R31 08-10-2015
 // Added more information on dallas plugin and set value to NaN on read errors.
-// Changed all serial.print() commands to addlog() where they could conflict with future serial plugins
+// Changed all serial.print(void) commands to addlog(void) where they could conflict with future serial plugins
 
 // R30 06-10-2015
 // Moved all controller specific code to CPlugin mechanism (similar to device plugins)
@@ -721,16 +721,16 @@
 // Added Domotics lightswitch option, input on GPIO-0 pin.
 
 // R007 01-06-2015
-// use custom counter for WD instead of millis() (millis does not reset on ESP.Reset)
+// use custom counter for WD instead of millis(void) (millis does not reset on ESP.Reset)
 // Changed BAUDrate to 9600
 // DomoticzGet <type>, <idx> test command (via serial)
 
 // R006 23-05-2015
 // Stored many constant strings to progmem
 // delay(1) into http 'while' client check
-// delay(10) in main loop instead of yield()
+// delay(10) in main loop instead of yield(void)
 // DomoticzSend <type>,<idx>,<value> test command (via serial)
-// Disabled analogRead, seems broken in g8cd3697 (use millis()/1000 as demo value!)
+// Disabled analogRead, seems broken in g8cd3697 (use millis(void)/1000 as demo value!)
 
 // R005 21-05-2015
 // Some fixes to be compabtible with Arduino 1.6.4 using ESP board addon 1.6.4.-628-g545ffde

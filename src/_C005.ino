@@ -71,8 +71,8 @@ bool CPlugin_005(byte function, struct EventStruct *event, String& string)
               if (isFloat(event->String2) && isInt(lastPartTopic)) {
                 int prevLastindex = event->String1.lastIndexOf('/', lastindex - 1);
                 cmd = event->String1.substring(prevLastindex + 1, lastindex);
-                TempEvent.Par1 = lastPartTopic.toInt();
-                TempEvent.Par2 = event->String2.toFloat();
+                TempEvent.Par1 = lastPartTopic.toInt(void);
+                TempEvent.Par2 = event->String2.toFloat(void);
                 TempEvent.Par3 = 0;
                 validTopic = true;
               }
@@ -121,7 +121,7 @@ bool CPlugin_005(byte function, struct EventStruct *event, String& string)
           tmppubname.replace(F("%valname%"), ExtraTaskSettings.TaskDeviceValueNames[x]);
           value = formatUserVarNoCheck(event, x);
 
-          MQTTpublish(event->ControllerIndex, tmppubname.c_str(), value.c_str(), Settings.MQTTRetainFlag);
+          MQTTpublish(event->ControllerIndex, tmppubname.c_str(void), value.c_str(void), Settings.MQTTRetainFlag);
 #ifndef BUILD_NO_DEBUG
           String log = F("MQTT : ");
           log += tmppubname;
@@ -135,7 +135,7 @@ bool CPlugin_005(byte function, struct EventStruct *event, String& string)
 
     case CPLUGIN_FLUSH:
       {
-        processMQTTdelayQueue();
+        processMQTTdelayQueue(void);
         delay(0);
         break;
       }

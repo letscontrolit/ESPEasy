@@ -169,10 +169,10 @@ boolean Plugin_017_Init(int8_t resetPin)
   }
 
   Wire.beginTransmission(PN532_I2C_ADDRESS);
-  Wire.endTransmission();
+  Wire.endTransmission(void);
   delay(5);
 
-  uint32_t versiondata = getFirmwareVersion();
+  uint32_t versiondata = getFirmwareVersion(void);
   if (versiondata) {
     String log = F("PN532: Found chip PN5");
     log += String((versiondata >> 24) & 0xFF, HEX);
@@ -195,7 +195,7 @@ boolean Plugin_017_Init(int8_t resetPin)
 
   // to prevent nack on next read
   Wire.beginTransmission(PN532_I2C_ADDRESS);
-  Wire.endTransmission();
+  Wire.endTransmission(void);
   delay(5);
 
   return true;
@@ -275,7 +275,7 @@ byte Plugin_017_readPassiveTargetID(uint8_t cardbaudrate, uint8_t *uid, uint8_t 
 
     // to prevent nack on next read
     Wire.beginTransmission(PN532_I2C_ADDRESS);
-    Wire.endTransmission();
+    Wire.endTransmission(void);
     return 0x2;
   }
 
@@ -294,7 +294,7 @@ byte Plugin_017_readPassiveTargetID(uint8_t cardbaudrate, uint8_t *uid, uint8_t 
   }
 
   // Plugin_017_Init(-1);
-  Plugin_017_powerDown();
+  Plugin_017_powerDown(void);
 
 
   return 0;
@@ -332,12 +332,12 @@ int8_t Plugin_017_writeCommand(const uint8_t *header, uint8_t hlen)
   uint8_t checksum = ~sum + 1;            // checksum of TFI + DATA
   Wire.write(checksum);
   Wire.write(PN532_POSTAMBLE);
-  byte status = Wire.endTransmission();
+  byte status = Wire.endTransmission(void);
 
   if (status != 0)
     return PN532_INVALID_FRAME;
 
-  return Plugin_017_readAckFrame();
+  return Plugin_017_readAckFrame(void);
 }
 
 
@@ -350,24 +350,24 @@ int16_t Plugin_017_readResponse(uint8_t buf[], uint8_t len)
     return -1;
 
 
-  if (!(Wire.read() & 1))
+  if (!(Wire.read(void) & 1))
     return -1;
 
-  if (0x00 != Wire.read()      ||       // PREAMBLE
-      0x00 != Wire.read()  ||       // STARTCODE1
-      0xFF != Wire.read()           // STARTCODE2
+  if (0x00 != Wire.read(void)      ||       // PREAMBLE
+      0x00 != Wire.read(void)  ||       // STARTCODE1
+      0xFF != Wire.read(void)           // STARTCODE2
      ) {
 
     return PN532_INVALID_FRAME;
   }
 
-  uint8_t length = Wire.read();
-  if (0 != (uint8_t)(length + Wire.read())) {   // checksum of length
+  uint8_t length = Wire.read(void);
+  if (0 != (uint8_t)(length + Wire.read(void))) {   // checksum of length
     return PN532_INVALID_FRAME;
   }
 
   uint8_t cmd = Plugin_017_command + 1;               // response command
-  if (PN532_PN532TOHOST != Wire.read() || (cmd) != Wire.read()) {
+  if (PN532_PN532TOHOST != Wire.read(void) || (cmd) != Wire.read(void)) {
     return PN532_INVALID_FRAME;
   }
 
@@ -378,16 +378,16 @@ int16_t Plugin_017_readResponse(uint8_t buf[], uint8_t len)
 
   uint8_t sum = PN532_PN532TOHOST + cmd;
   for (uint8_t i = 0; i < length; i++) {
-    buf[i] = Wire.read();
+    buf[i] = Wire.read(void);
     sum += buf[i];
 
   }
 
-  uint8_t checksum = Wire.read();
+  uint8_t checksum = Wire.read(void);
   if (0 != (uint8_t)(sum + checksum)) {
     return PN532_INVALID_FRAME;
   }
-  Wire.read();         // POSTAMBLE
+  Wire.read(void);         // POSTAMBLE
 
   return length;
 }
@@ -396,7 +396,7 @@ int16_t Plugin_017_readResponse(uint8_t buf[], uint8_t len)
 /*********************************************************************************************\
  * PN532 read ack
 \*********************************************************************************************/
-int8_t Plugin_017_readAckFrame()
+int8_t Plugin_017_readAckFrame(void)
 {
   const uint8_t PN532_ACK[] = {0, 0, 0xFF, 0, 0xFF, 0};
   uint8_t ackBuf[sizeof(PN532_ACK)];
@@ -404,7 +404,7 @@ int8_t Plugin_017_readAckFrame()
   uint16_t time = 0;
   do {
     if (Wire.requestFrom(PN532_I2C_ADDRESS,  sizeof(PN532_ACK) + 1)) {
-      if (Wire.read() & 1) {  // check first byte --- status
+      if (Wire.read(void) & 1) {  // check first byte --- status
         break;         // PN532 is ready
       }
     }
@@ -418,7 +418,7 @@ int8_t Plugin_017_readAckFrame()
 
 
   for (uint8_t i = 0; i < sizeof(PN532_ACK); i++) {
-    ackBuf[i] = Wire.read();
+    ackBuf[i] = Wire.read(void);
   }
 
   if (memcmp(ackBuf, PN532_ACK, sizeof(PN532_ACK))) {

@@ -20,12 +20,12 @@ struct I2Cdata {
   T operator[](uint8_t n) const {
     if (n < start_reg) { return 0; }
 
-    if (n >= (data.size() + start_reg)) { return 0; }
+    if (n >= (data.size(void) + start_reg)) { return 0; }
     return data[(n - start_reg)];
   }
 
   bool addAtIndex(uint8_t index, T value) {
-    if (index >= data.size()) { return false; }
+    if (index >= data.size(void)) { return false; }
     data[index] = value;
     return true;
   }
@@ -35,15 +35,15 @@ struct I2Cdata {
     return addAtIndex(reg - start_reg, value);
   }
 
-  uint8_t getSize() const {
-    return data.size();
+  uint8_t getSize(void) const {
+    return data.size(void);
   }
 
-  T* get() {
+  T* get(void) {
     return &(data[0]);
   }
 
-  uint8_t getRegister() const {
+  uint8_t getRegister(void) const {
     return start_reg;
   }
 

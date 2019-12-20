@@ -1,7 +1,7 @@
 #include "ESPEasy_common.h"
 
 
-String getUnknownString() { return F("Unknown"); }
+String getUnknownString(void) { return F("Unknown"); }
 
 /*********************************************************************************************\
    Bitwise operators

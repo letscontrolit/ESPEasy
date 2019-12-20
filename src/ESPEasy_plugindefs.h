@@ -61,7 +61,7 @@
 #define CPLUGIN_GOT_CONNECTED              53 // call after connected to mqtt server to publich device autodicover features
 #define CPLUGIN_GOT_INVALID                54 // should be called before major changes i.e. changing the device name to clean up data on the controller. !ToDo
 #define CPLUGIN_INTERVAL                   55 // call every interval loop
-#define CPLUGIN_ACKNOWLEDGE                56 // call for sending acknowledges !ToDo done by direct function call in PluginCall() for now.
+#define CPLUGIN_ACKNOWLEDGE                56 // call for sending acknowledges !ToDo done by direct function call in PluginCall(void) for now.
 
 #define CPLUGIN_WEBFORM_SHOW_HOST_CONFIG   57 // Used for showing host information for the controller.
 

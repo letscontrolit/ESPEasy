@@ -97,8 +97,8 @@ boolean Plugin_032(byte function, struct EventStruct *event, String& string)
         }
 
         if (Plugin_032_init) {
-          Plugin_032_read_prom();
-          Plugin_032_readout();
+          Plugin_032_read_prom(void);
+          Plugin_032_readout(void);
 
           UserVar[event->BaseVarIndex] = ms5611_temperature / 100;
           int elev = PCONFIG(1);
@@ -143,7 +143,7 @@ bool Plugin_032_begin(uint8_t a) {
 // The command sequence is 8 bits long with a 16 bit result which is
 // clocked with the MSB first.
 //**************************************************************************/
-void Plugin_032_read_prom() {
+void Plugin_032_read_prom(void) {
   I2C_write8(ms5611_i2caddr, MS5xxx_CMD_RESET);
   delay(3);
 
@@ -180,7 +180,7 @@ unsigned long Plugin_032_read_adc(unsigned char aCMD)
 //**************************************************************************/
 // Readout
 //**************************************************************************/
-void Plugin_032_readout() {
+void Plugin_032_readout(void) {
 
   unsigned long D1=0, D2=0;
 

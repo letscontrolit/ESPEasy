@@ -1072,7 +1072,7 @@ void PluginInit(void)
   }
 
   PluginCall(PLUGIN_INIT_ALL, nullptr, dummy);
-  sortDeviceIndexArray(); // Used in device selector dropdown.
+  sortDeviceIndexArray(void); // Used in device selector dropdown.
 }
 
 /*********************************************************************************************\
@@ -1101,9 +1101,9 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
       for (byte x = 0; x < PLUGIN_MAX; x++) {
         if (validPluginID(DeviceIndex_to_Plugin_id[x])) {
           if (Function == PLUGIN_DEVICE_ADD) {
-            if ((deviceCount + 2) > static_cast<int>(Device.size())) {
+            if ((deviceCount + 2) > static_cast<int>(Device.size(void))) {
               // Increase with 16 to get some compromise between number of resizes and wasted space
-              unsigned int newSize = Device.size();
+              unsigned int newSize = Device.size(void);
               newSize = newSize + 16 - (newSize % 16);
               Device.resize(newSize);
 
@@ -1120,7 +1120,7 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
 
     case PLUGIN_MONITOR:
 
-      for (auto it = globalMapPortStatus.begin(); it != globalMapPortStatus.end(); ++it) {
+      for (auto it = globalMapPortStatus.begin(void); it != globalMapPortStatus.end(void); ++it) {
         // only call monitor function if there the need to
         if (it->second.monitor || it->second.command || it->second.init) {
           TempEvent.Par1 = getPortFromKey(it->first);
@@ -1304,7 +1304,7 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
           bool retval =  Plugin_ptr[DeviceIndex](Function, event, str);
 
           if (retval && (Function == PLUGIN_READ)) {
-            saveUserVarToRTC();
+            saveUserVarToRTC(void);
           }
 
           if (Function == PLUGIN_GET_DEVICEVALUENAMES) {

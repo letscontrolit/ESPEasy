@@ -4,7 +4,7 @@
 /********************************************************************************************\
  * Initialize specific hardware settings (only global ones, others are set through devices)
  \*********************************************************************************************/
-void hardwareInit()
+void hardwareInit(void)
 {
   // set GPIO pins state if not set to default
   for (byte gpio = 0; gpio < PIN_D_MAX; ++gpio) {
@@ -74,13 +74,13 @@ void hardwareInit()
     Wire.beginTransmission(Settings.WDI2CAddress);
     Wire.write(0x83); // command to set pointer
     Wire.write(17);   // pointer value to status byte
-    Wire.endTransmission();
+    Wire.endTransmission(void);
 
     Wire.requestFrom(Settings.WDI2CAddress, (uint8_t)1);
 
-    if (Wire.available())
+    if (Wire.available(void))
     {
-      byte status = Wire.read();
+      byte status = Wire.read(void);
 
       if (status & 0x1)
       {
@@ -95,7 +95,7 @@ void hardwareInit()
   if (Settings.InitSPI)
   {
     SPI.setHwCs(false);
-    SPI.begin();
+    SPI.begin(void);
     String log = F("INIT : SPI Init (without CS)");
     addLog(LOG_LEVEL_INFO, log);
   }
@@ -123,7 +123,7 @@ void hardwareInit()
 #endif // ifdef FEATURE_SD
 }
 
-void checkResetFactoryPin() {
+void checkResetFactoryPin(void) {
   static byte factoryResetCounter = 0;
 
   if (Settings.Pin_Reset == -1) {
@@ -137,12 +137,12 @@ void checkResetFactoryPin() {
   {                                           // reset pin released
     if (factoryResetCounter > 9) {
       // factory reset and reboot
-      ResetFactory();
+      ResetFactory(void);
     }
 
     if (factoryResetCounter > 3) {
       // normal reboot
-      reboot();
+      reboot(void);
     }
     factoryResetCounter = 0; // count was < 3, reset counter
   }
@@ -194,7 +194,7 @@ String getDeviceModelString(DeviceModel model) {
 }
 
 bool modelMatchingFlashSize(DeviceModel model) {
-  uint32_t size_MB = getFlashRealSizeInBytes() >> 20;
+  uint32_t size_MB = getFlashRealSizeInBytes(void) >> 20;
 
   // TODO TD-er: Add checks for ESP8266/ESP8285/ESP32
   switch (model) {
@@ -272,7 +272,7 @@ void addButtonRelayRule(byte buttonNumber, byte relay_gpio) {
   rule.replace(F("GNR"), String(relay_gpio));
   String result = appendLineToFile(fileName, rule);
 
-  if (result.length() > 0) {
+  if (result.length(void) > 0) {
     addLog(LOG_LEVEL_ERROR, result);
   }
 }

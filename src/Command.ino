@@ -52,10 +52,10 @@ bool checkNrArguments(const char *cmd, const char *Line, int nrArguments) {
           } else {
             parameter = parseStringKeepCase(Line, i + 1);
           }
-          done = parameter.length() == 0;
+          done = parameter.length(void) == 0;
           if (!done) {
             if (i <= nrArguments) {
-              if (Settings.TolerantLastArgParse() && i == nrArguments) {
+              if (Settings.TolerantLastArgParse(void) && i == nrArguments) {
                 log += F(" (fixed)");
               }
               log += F(" Arg");
@@ -77,7 +77,7 @@ bool checkNrArguments(const char *cmd, const char *Line, int nrArguments) {
       log += '_';
       addLog(LOG_LEVEL_ERROR, log);
 
-      if (!Settings.TolerantLastArgParse()) {
+      if (!Settings.TolerantLastArgParse(void)) {
         log = F("Command not executed!");
       } else {
         log = F("Command executed, but may fail.");
@@ -85,7 +85,7 @@ bool checkNrArguments(const char *cmd, const char *Line, int nrArguments) {
       log += F(" See: https://github.com/letscontrolit/ESPEasy/issues/2724");
       addLog(LOG_LEVEL_ERROR, log);
     }
-    if (Settings.TolerantLastArgParse()) {
+    if (Settings.TolerantLastArgParse(void)) {
       return true;
     }
     return false;
@@ -101,13 +101,13 @@ bool executeInternalCommand(const char *cmd, struct EventStruct *event, const ch
   String cmd_lc;
 
   cmd_lc = cmd;
-  cmd_lc.toLowerCase();
+  cmd_lc.toLowerCase(void);
   // Simple macro to match command to function call.
   #define COMMAND_CASE(S, C, NARGS) \
-  if (strcmp_P(cmd_lc.c_str(),      \
+  if (strcmp_P(cmd_lc.c_str(void),      \
                PSTR(S)) == 0)       \
     { if (!checkNrArguments(cmd, line, NARGS)) { \
-      status = return_incorrect_nr_arguments(); return false;} \
+      status = return_incorrect_nr_arguments(void); return false;} \
       else  status = C (event, line); return true;}
 
   // FIXME TD-er: Should we execute command when number of arguments is wrong?
@@ -321,7 +321,7 @@ bool ExecuteCommand(taskIndex_t taskIndex, byte source, const char *Line, bool t
   String cmd;
 
   if (!GetArgv(Line, cmd, 1)) {
-    SendStatus(source, return_command_failed());
+    SendStatus(source, return_command_failed(void));
     return false;
   }
 
@@ -342,7 +342,7 @@ bool ExecuteCommand(taskIndex_t taskIndex, byte source, const char *Line, bool t
   TempEvent.Source = source;
 
   String action(Line);
-  action = parseTemplate(action, action.length()); // parseTemplate before executing the command
+  action = parseTemplate(action, action.length(void)); // parseTemplate before executing the command
 
   // Split the arguments into Par1...5 of the event.
   // Do not split it in executeInternalCommand, since that one will be called from the scheduler with pre-set events.
@@ -379,8 +379,8 @@ bool ExecuteCommand(taskIndex_t taskIndex, byte source, const char *Line, bool t
 
   if (tryInternal) {
     String status;
-    bool handled = executeInternalCommand(cmd.c_str(), &TempEvent, action.c_str(), status);
-    if (status.length() > 0) {
+    bool handled = executeInternalCommand(cmd.c_str(void), &TempEvent, action.c_str(void), status);
+    if (status.length(void) > 0) {
       delay(0);
       SendStatus(source, status);
       delay(0);
@@ -404,13 +404,13 @@ bool ExecuteCommand(taskIndex_t taskIndex, byte source, const char *Line, bool t
       }
     }
     if (handled) {
-      SendStatus(source, return_command_success());
+      SendStatus(source, return_command_success(void));
       return true;
     }
   }
   if (tryRemoteConfig) {
     if (remoteConfig(&TempEvent, action)) {
-      SendStatus(source, return_command_success());
+      SendStatus(source, return_command_success(void));
       return true;
     }
   }
@@ -427,7 +427,7 @@ bool ExecuteCommand(taskIndex_t taskIndex, byte source, const char *Line, bool t
 void printDirectory(File dir, int numTabs)
 {
   while (true) {
-    File entry = dir.openNextFile();
+    File entry = dir.openNextFile(void);
 
     if (!entry) {
       // no more files
@@ -437,17 +437,17 @@ void printDirectory(File dir, int numTabs)
     for (uint8_t i = 0; i < numTabs; i++) {
       serialPrint("\t");
     }
-    serialPrint(entry.name());
+    serialPrint(entry.name(void));
 
-    if (entry.isDirectory()) {
+    if (entry.isDirectory(void)) {
       serialPrintln("/");
       printDirectory(entry, numTabs + 1);
     } else {
       // files have sizes, directories do not
       serialPrint("\t\t");
-      serialPrintln(String(entry.size(), DEC));
+      serialPrintln(String(entry.size(void), DEC));
     }
-    entry.close();
+    entry.close(void);
   }
 }
 

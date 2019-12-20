@@ -219,11 +219,11 @@ boolean Plugin_067(byte function, struct EventStruct *event, String& string)
         addFormCheckBox(F("Calibration Enabled"), F("p067_cal_chanA"), PCONFIG(0) & (1 << BIT_POS_CALIB_CHAN_A));
 
         addFormNumericBox(F("Point 1"), F("p067_adc1_chanA"), PCONFIG_LONG(0));
-        html_add_estimate_symbol();
+        html_add_estimate_symbol(void);
         addTextBox(F("p067_out1_chanA"), String(PCONFIG_FLOAT(0), 3), 10);
 
         addFormNumericBox(F("Point 2"), F("p067_adc2_chanA"), PCONFIG_LONG(1));
-        html_add_estimate_symbol();
+        html_add_estimate_symbol(void);
         addTextBox(F("p067_out2_chanA"), String(PCONFIG_FLOAT(1), 3), 10);
 
         //------------
@@ -232,11 +232,11 @@ boolean Plugin_067(byte function, struct EventStruct *event, String& string)
         addFormCheckBox(F("Calibration Enabled"), F("p067_cal_chanB"), PCONFIG(0) & (1 << BIT_POS_CALIB_CHAN_B));
 
         addFormNumericBox(F("Point 1"), F("p067_adc1_chanB"), PCONFIG_LONG(2));
-        html_add_estimate_symbol();
+        html_add_estimate_symbol(void);
         addTextBox(F("p067_out1_chanB"), String(PCONFIG_FLOAT(2), 3), 10);
 
         addFormNumericBox(F("Point 2"), F("p067_adc2_chanB"), PCONFIG_LONG(3));
-        html_add_estimate_symbol();
+        html_add_estimate_symbol(void);
         addTextBox(F("p067_out2_chanB"), String(PCONFIG_FLOAT(3), 3), 10);
 
         success = true;

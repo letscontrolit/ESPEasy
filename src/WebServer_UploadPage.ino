@@ -5,16 +5,16 @@
 // Web Interface upload page
 // ********************************************************************************
 byte uploadResult = 0;
-void handle_upload() {
-  if (!isLoggedIn()) { return; }
+void handle_upload(void) {
+  if (!isLoggedIn(void)) { return; }
   navMenuIndex = MENU_INDEX_TOOLS;
-  TXBuffer.startStream();
-  sendHeadandTail_stdtemplate();
+  TXBuffer.startStream(void);
+  sendHeadandTail_stdtemplate(void);
 
   TXBuffer += F(
     "<form enctype='multipart/form-data' method='post'><p>Upload settings file:<br><input type='file' name='datafile' size='40'></p><div><input class='button link' type='submit' value='Upload'></div><input type='hidden' name='edit' value='1'></form>");
   sendHeadandTail_stdtemplate(true);
-  TXBuffer.endStream();
+  TXBuffer.endStream(void);
   printWebString = "";
   printToWeb     = false;
 }
@@ -22,20 +22,20 @@ void handle_upload() {
 // ********************************************************************************
 // Web Interface upload page
 // ********************************************************************************
-void handle_upload_post() {
+void handle_upload_post(void) {
   checkRAM(F("handle_upload_post"));
 
-  if (!isLoggedIn()) { return; }
+  if (!isLoggedIn(void)) { return; }
 
   navMenuIndex = MENU_INDEX_TOOLS;
-  TXBuffer.startStream();
-  sendHeadandTail_stdtemplate();
+  TXBuffer.startStream(void);
+  sendHeadandTail_stdtemplate(void);
 
 
   if (uploadResult == 1)
   {
     TXBuffer += F("Upload OK!<BR>You may need to reboot to apply all settings...");
-    LoadSettings();
+    LoadSettings(void);
   }
 
   if (uploadResult == 2) {
@@ -49,24 +49,24 @@ void handle_upload_post() {
 
   TXBuffer += F("Upload finished");
   sendHeadandTail_stdtemplate(true);
-  TXBuffer.endStream();
+  TXBuffer.endStream(void);
   printWebString = "";
   printToWeb     = false;
 }
 
 #ifdef WEBSERVER_NEW_UI
-void handle_upload_json() {
+void handle_upload_json(void) {
   checkRAM(F("handle_upload_post"));
   uint8_t result = uploadResult;
 
-  if (!isLoggedIn()) { result = 255; }
+  if (!isLoggedIn(void)) { result = 255; }
 
-  TXBuffer.startJsonStream();
+  TXBuffer.startJsonStream(void);
   TXBuffer += "{";
   stream_next_json_object_value(F("status"), String(result));
   TXBuffer += "}";
 
-  TXBuffer.endStream();
+  TXBuffer.endStream(void);
 }
 
 #endif // WEBSERVER_NEW_UI
@@ -75,16 +75,16 @@ void handle_upload_json() {
 // Web Interface upload handler
 // ********************************************************************************
 fs::File uploadFile;
-void handleFileUpload() {
+void handleFileUpload(void) {
   checkRAM(F("handleFileUpload"));
 
-  if (!isLoggedIn()) { return; }
+  if (!isLoggedIn(void)) { return; }
 
   static boolean valid = false;
 
-  HTTPUpload& upload = WebServer.upload();
+  HTTPUpload& upload = WebServer.upload(void);
 
-  if (upload.filename.c_str()[0] == 0)
+  if (upload.filename.c_str(void)[0] == 0)
   {
     uploadResult = 3;
     return;
@@ -105,7 +105,7 @@ void handleFileUpload() {
     // first data block, if this is the config file, check PID/Version
     if (upload.totalSize == 0)
     {
-      if (strcasecmp(upload.filename.c_str(), FILE_CONFIG) == 0)
+      if (strcasecmp(upload.filename.c_str(void), FILE_CONFIG) == 0)
       {
         struct TempStruct {
           unsigned long PID;
@@ -138,9 +138,9 @@ void handleFileUpload() {
 
         // once we're safe, remove file and create empty one...
         tryDeleteFile(filename);
-        uploadFile = tryOpenFile(filename.c_str(), "w");
+        uploadFile = tryOpenFile(filename.c_str(void), "w");
 
-        // dont count manual uploads: flashCount();
+        // dont count manual uploads: flashCount(void);
       }
     }
 
@@ -154,7 +154,7 @@ void handleFileUpload() {
   }
   else if (upload.status == UPLOAD_FILE_END)
   {
-    if (uploadFile) { uploadFile.close(); }
+    if (uploadFile) { uploadFile.close(void); }
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log = F("Upload: END, Size: ");

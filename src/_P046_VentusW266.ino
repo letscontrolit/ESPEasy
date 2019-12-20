@@ -124,8 +124,8 @@ volatile int Plugin_046_strikesph = 0;
 
 
 // TODO TD-er: These call-back functions are quite long and will take a lot of iRAM.
-void Plugin_046_ISR_nSEL() ICACHE_RAM_ATTR;                     // Interrupt routines
-void Plugin_046_ISR_SCLK() ICACHE_RAM_ATTR;
+void Plugin_046_ISR_nSEL(void) ICACHE_RAM_ATTR;                     // Interrupt routines
+void Plugin_046_ISR_SCLK(void) ICACHE_RAM_ATTR;
 
 boolean Plugin_046(byte function, struct EventStruct *event, String& string)
 {
@@ -278,7 +278,7 @@ boolean Plugin_046(byte function, struct EventStruct *event, String& string)
     case PLUGIN_INIT:
       {
         if (!P046_data) {
-          P046_data = new P046_data_struct();
+          P046_data = new P046_data_struct(void);
         }
 
         byte choice = PCONFIG(0);
@@ -479,7 +479,7 @@ boolean Plugin_046(byte function, struct EventStruct *event, String& string)
     return success;
 }
 
-void Plugin_046_ISR_nSEL()                                      // Interrupt on nSEL change
+void Plugin_046_ISR_nSEL(void)                                      // Interrupt on nSEL change
   {
     if (!P046_data) return;
     if (digitalRead(P046_data->Plugin_046_nSELpin)) {
@@ -499,7 +499,7 @@ void Plugin_046_ISR_nSEL()                                      // Interrupt on 
     }
   }
 
-void Plugin_046_ISR_SCLK()                                      // Interrupt on SCLK rising
+void Plugin_046_ISR_SCLK(void)                                      // Interrupt on SCLK rising
   {
     if (!P046_data) return;
 

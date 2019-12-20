@@ -152,7 +152,7 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
         PCONFIG_FLOAT(3) = isFormItemChecked(F("p019_sb"));
 
         //check if a task has been edited and remove task flag from the previous pin
-        for (std::map<uint32_t,portStatusStruct>::iterator it=globalMapPortStatus.begin(); it!=globalMapPortStatus.end(); ++it) {
+        for (std::map<uint32_t,portStatusStruct>::iterator it=globalMapPortStatus.begin(void); it!=globalMapPortStatus.end(void); ++it) {
           if (it->second.previousTask == event->TaskIndex && getPluginFromKey(it->first)==PLUGIN_ID_019) {
             globalMapPortStatus[it->first].previousTask = -1;
             removeTaskFromPort(it->first);
@@ -200,9 +200,9 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
           PCONFIG(6)=false;
 
           // @giig1967g-20181022: store millis for debounce, doubleclick and long press
-          PCONFIG_LONG(0)=millis(); //debounce timer
-          PCONFIG_LONG(1)=millis(); //doubleclick timer
-          PCONFIG_LONG(2)=millis(); //longpress timer
+          PCONFIG_LONG(0)=millis(void); //debounce timer
+          PCONFIG_LONG(1)=millis(void); //doubleclick timer
+          PCONFIG_LONG(2)=millis(void); //longpress timer
 
           // @giig1967g-20181022: set minimum value for doubleclick MIN max speed
           if (PCONFIG_FLOAT(1) < PLUGIN_019_DOUBLECLICK_MIN_INTERVAL)
@@ -223,7 +223,7 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
       case PLUGIN_UNCONDITIONAL_POLL:
         {
           // port monitoring, generates an event by rule command 'monitor,pcf,port#'
-          for (std::map<uint32_t,portStatusStruct>::iterator it=globalMapPortStatus.begin(); it!=globalMapPortStatus.end(); ++it) {
+          for (std::map<uint32_t,portStatusStruct>::iterator it=globalMapPortStatus.begin(void); it!=globalMapPortStatus.end(void); ++it) {
             if (getPluginFromKey(it->first)==PLUGIN_ID_019 && (it->second.monitor || it->second.command || it->second.init)) {
               const uint16_t port = getPortFromKey(it->first);
               int8_t state = Plugin_019_Read(port);
@@ -311,7 +311,7 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
             PCONFIG_LONG(3) = 0;
 
             //@giig1967g20181022: reset timer for long press
-            PCONFIG_LONG(2)=millis();
+            PCONFIG_LONG(2)=millis(void);
             PCONFIG(6) = false;
 
             const unsigned long debounceTime = timePassedSince(PCONFIG_LONG(0));
@@ -323,7 +323,7 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
               {
                 //reset timer for doubleclick
                 PCONFIG(7)=0;
-                PCONFIG_LONG(1)=millis();
+                PCONFIG_LONG(1)=millis(void);
               }
 
 //just to simplify the reading of the code
@@ -371,7 +371,7 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
               //reset Userdata so it displays the correct state value in the web page
               UserVar[event->BaseVarIndex] = sendState ? 1 : 0;
 
-              PCONFIG_LONG(0) = millis();
+              PCONFIG_LONG(0) = millis(void);
             }
             savePortStatus(key,currentStatus);
           }
@@ -498,7 +498,7 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
         //parseString(string, 3) = gpio number
 
         // returns pin value using syntax: [plugin#pcfgpio#pinstate#xx]
-        if (string.length()>=16 && string.substring(0,16).equalsIgnoreCase(F("pcfgpio,pinstate")))
+        if (string.length(void)>=16 && string.substring(0,16).equalsIgnoreCase(F("pcfgpio,pinstate")))
         {
           int par1;
           if (validIntFromString(parseString(string, 3), par1)) {
@@ -749,9 +749,9 @@ int8_t Plugin_019_Read(byte Par1)
 
   // get the current pin status
   Wire.requestFrom(address, (uint8_t)0x1);
-  if (Wire.available())
+  if (Wire.available(void))
   {
-    state = ((Wire.read() & _BV(port - 1)) >> (port - 1));
+    state = ((Wire.read(void) & _BV(port - 1)) >> (port - 1));
   }
   return state;
 }
@@ -761,9 +761,9 @@ uint8_t Plugin_019_ReadAllPins(uint8_t address)
   uint8_t rawState = 0;
 
   Wire.requestFrom(address, (uint8_t)0x1);
-  if (Wire.available())
+  if (Wire.available(void))
   {
-    rawState =Wire.read();
+    rawState =Wire.read(void);
   }
   return rawState;
 }
@@ -801,7 +801,7 @@ boolean Plugin_019_Write(byte Par1, byte Par2)
 
   Wire.beginTransmission(address);
   Wire.write(portmask);
-  Wire.endTransmission();
+  Wire.endTransmission(void);
 
   return true;
 }

@@ -59,9 +59,9 @@ bool CPlugin_002(byte function, struct EventStruct *event, String& string)
 
       if (ControllerID < CONTROLLER_MAX) {
         DynamicJsonDocument root(512);
-        deserializeJson(root, event->String2.c_str());
+        deserializeJson(root, event->String2.c_str(void));
 
-        if (!root.isNull())
+        if (!root.isNull(void))
         {
           unsigned int idx = root[F("idx")];
           float nvalue     = root[F("nvalue")];
@@ -147,8 +147,8 @@ bool CPlugin_002(byte function, struct EventStruct *event, String& string)
                   break;
               }
 
-              if (action.length() > 0) {
-                ExecuteCommand_plugin(x, VALUE_SOURCE_MQTT, action.c_str());
+              if (action.length(void) > 0) {
+                ExecuteCommand_plugin(x, VALUE_SOURCE_MQTT, action.c_str(void));
 
                 // trigger rulesprocessing
                 if (Settings.UseRules) {
@@ -182,9 +182,9 @@ bool CPlugin_002(byte function, struct EventStruct *event, String& string)
 
         DynamicJsonDocument root(200);
         root[F("idx")]  = event->idx;
-        root[F("RSSI")] = mapRSSItoDomoticz();
+        root[F("RSSI")] = mapRSSItoDomoticz(void);
           #if FEATURE_ADC_VCC
-        root[F("Battery")] = mapVccToDomoticz();
+        root[F("Battery")] = mapVccToDomoticz(void);
           #endif // if FEATURE_ADC_VCC
 
         switch (event->sensorType)
@@ -238,7 +238,7 @@ bool CPlugin_002(byte function, struct EventStruct *event, String& string)
         String pubname = ControllerSettings.Publish;
         parseControllerVariables(pubname, event, false);
 
-        success = MQTTpublish(event->ControllerIndex, pubname.c_str(), json.c_str(), Settings.MQTTRetainFlag);
+        success = MQTTpublish(event->ControllerIndex, pubname.c_str(void), json.c_str(void), Settings.MQTTRetainFlag);
       } // if ixd !=0
       else
       {
@@ -250,7 +250,7 @@ bool CPlugin_002(byte function, struct EventStruct *event, String& string)
 
     case CPLUGIN_FLUSH:
     {
-      processMQTTdelayQueue();
+      processMQTTdelayQueue(void);
       delay(0);
       break;
     }

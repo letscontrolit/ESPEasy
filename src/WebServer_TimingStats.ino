@@ -3,13 +3,13 @@
 #include "src/Globals/Device.h"
 
 
-void handle_timingstats() {
+void handle_timingstats(void) {
   checkRAM(F("handle_timingstats"));
   navMenuIndex = MENU_INDEX_TOOLS;
-  TXBuffer.startStream();
+  TXBuffer.startStream(void);
   sendHeadandTail_stdtemplate(_HEAD);
-  html_table_class_multirow();
-  html_TR();
+  html_table_class_multirow(void);
+  html_TR(void);
   html_table_header(F("Description"));
   html_table_header(F("Function"));
   html_table_header(F("#calls"));
@@ -19,9 +19,9 @@ void handle_timingstats() {
   html_table_header(F("max (ms)"));
 
   long timeSinceLastReset = stream_timing_statistics(true);
-  html_end_table();
+  html_end_table(void);
 
-  html_table_class_normal();
+  html_table_class_normal(void);
   const float timespan = timeSinceLastReset / 1000.0;
   addFormHeader(F("Statistics"));
   addRowLabel(F("Start Period"));
@@ -31,10 +31,10 @@ void handle_timingstats() {
   addRowLabel(F("Time span"));
   TXBuffer += String(timespan);
   TXBuffer += " sec";
-  html_end_table();
+  html_end_table(void);
 
   sendHeadandTail_stdtemplate(_TAIL);
-  TXBuffer.endStream();
+  TXBuffer.endStream(void);
 }
 
 // ********************************************************************************
@@ -54,16 +54,16 @@ void stream_html_timing_stats(const TimingStats& stats, long timeSinceLastReset)
   unsigned long minVal, maxVal;
   unsigned int  c = stats.getMinMax(minVal, maxVal);
 
-  html_TD();
+  html_TD(void);
   TXBuffer += c;
-  html_TD();
+  html_TD(void);
   float call_per_sec = static_cast<float>(c) / static_cast<float>(timeSinceLastReset) * 1000.0;
   TXBuffer += call_per_sec;
-  html_TD();
+  html_TD(void);
   format_using_threshhold(minVal);
-  html_TD();
-  format_using_threshhold(stats.getAvg());
-  html_TD();
+  html_TD(void);
+  format_using_threshhold(stats.getAvg(void));
+  html_TD(void);
   format_using_threshhold(maxVal);
 }
 
@@ -71,64 +71,64 @@ long stream_timing_statistics(bool clearStats) {
   long timeSinceLastReset = timePassedSince(timingstats_last_reset);
 
   for (auto& x: pluginStats) {
-    if (!x.second.isEmpty()) {
+    if (!x.second.isEmpty(void)) {
       const deviceIndex_t deviceIndex = static_cast<deviceIndex_t>(x.first / 256);
       if (validDeviceIndex(deviceIndex)) {
         if (x.second.thresholdExceeded(TIMING_STATS_THRESHOLD)) {
-          html_TR_TD_highlight();
+          html_TR_TD_highlight(void);
         } else {
-          html_TR_TD();
+          html_TR_TD(void);
         }
         TXBuffer += F("P_");
         TXBuffer += Device[deviceIndex].Number;
         TXBuffer += '_';
         TXBuffer += getPluginNameFromDeviceIndex(deviceIndex);
-        html_TD();
+        html_TD(void);
         TXBuffer += getPluginFunctionName(x.first % 256);
         stream_html_timing_stats(x.second, timeSinceLastReset);
       }
 
-      if (clearStats) { x.second.reset(); }
+      if (clearStats) { x.second.reset(void); }
     }
   }
 
   for (auto& x: controllerStats) {
-    if (!x.second.isEmpty()) {
+    if (!x.second.isEmpty(void)) {
       const int ProtocolIndex = x.first / 256;
       if (x.second.thresholdExceeded(TIMING_STATS_THRESHOLD)) {
-        html_TR_TD_highlight();
+        html_TR_TD_highlight(void);
       } else {
-        html_TR_TD();
+        html_TR_TD(void);
       }
       TXBuffer += F("C_");
       TXBuffer += Protocol[ProtocolIndex].Number;
       TXBuffer += '_';
       TXBuffer += getCPluginNameFromProtocolIndex(ProtocolIndex);
-      html_TD();
+      html_TD(void);
       TXBuffer += getCPluginCFunctionName(x.first % 256);
       stream_html_timing_stats(x.second, timeSinceLastReset);
 
-      if (clearStats) { x.second.reset(); }
+      if (clearStats) { x.second.reset(void); }
     }
   }
 
   for (auto& x: miscStats) {
-    if (!x.second.isEmpty()) {
+    if (!x.second.isEmpty(void)) {
       if (x.second.thresholdExceeded(TIMING_STATS_THRESHOLD)) {
-        html_TR_TD_highlight();
+        html_TR_TD_highlight(void);
       } else {
-        html_TR_TD();
+        html_TR_TD(void);
       }
       TXBuffer += getMiscStatsName(x.first);
-      html_TD();
+      html_TD(void);
       stream_html_timing_stats(x.second, timeSinceLastReset);
 
-      if (clearStats) { x.second.reset(); }
+      if (clearStats) { x.second.reset(void); }
     }
   }
 
   if (clearStats) {
-    timingstats_last_reset = millis();
+    timingstats_last_reset = millis(void);
   }
   return timeSinceLastReset;
 }

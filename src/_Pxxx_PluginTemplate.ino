@@ -134,7 +134,7 @@ boolean Plugin_xxx(byte function, struct EventStruct *event, String& string)
       addHtml(F("<TR><TD>Analog Pin:<TD>"));
 
 
-      For strings, always use the F() macro, which stores the string in flash, not in memory.
+      For strings, always use the F(void) macro, which stores the string in flash, not in memory.
 
       //String dropdown[5] = { F("option1"), F("option2"), F("option3"), F("option4")};
       //addFormSelector(string, F("drop-down menu"), F("plugin_xxx_displtype"), 4, dropdown, NULL, PCONFIG(0));
@@ -236,7 +236,7 @@ boolean Plugin_xxx(byte function, struct EventStruct *event, String& string)
 }     //function
 
 //implement plugin specific procedures and functions here
-void pxxx_do_sth_useful()
+void pxxx_do_sth_useful(void)
 {
   //code
 

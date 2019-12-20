@@ -111,75 +111,75 @@ String getValue(LabelType::Enum label) {
     case LabelType::UNIT_NAME:              return String(Settings.Name);
     case LabelType::HOST_NAME:
     #ifdef ESP32
-      return WiFi.getHostname();
+      return WiFi.getHostname(void);
     #else
-      return WiFi.hostname();
+      return WiFi.hostname(void);
     #endif
 
     case LabelType::LOCAL_TIME:             return getDateTimeString('-',':',' ');
     case LabelType::UPTIME:                 return String(wdcounter / 2);
-    case LabelType::LOAD_PCT:               return String(getCPUload());
-    case LabelType::LOOP_COUNT:             return String(getLoopCountPerSec());
-    case LabelType::CPU_ECO_MODE:           return jsonBool(Settings.EcoPowerMode());
+    case LabelType::LOAD_PCT:               return String(getCPUload(void));
+    case LabelType::LOOP_COUNT:             return String(getLoopCountPerSec(void));
+    case LabelType::CPU_ECO_MODE:           return jsonBool(Settings.EcoPowerMode(void));
 
-    case LabelType::FREE_MEM:               return String(ESP.getFreeHeap());
+    case LabelType::FREE_MEM:               return String(ESP.getFreeHeap(void));
     case LabelType::FREE_STACK:             break;
 #ifdef CORE_POST_2_5_0
-    case LabelType::HEAP_MAX_FREE_BLOCK:    return String(ESP.getMaxFreeBlockSize());
-    case LabelType::HEAP_FRAGMENTATION:     return String(ESP.getHeapFragmentation());
+    case LabelType::HEAP_MAX_FREE_BLOCK:    return String(ESP.getMaxFreeBlockSize(void));
+    case LabelType::HEAP_FRAGMENTATION:     return String(ESP.getHeapFragmentation(void));
 #endif
 
-    case LabelType::BOOT_TYPE:              return getLastBootCauseString();
+    case LabelType::BOOT_TYPE:              return getLastBootCauseString(void);
     case LabelType::BOOT_COUNT:             break;
-    case LabelType::RESET_REASON:           return getResetReasonString();
+    case LabelType::RESET_REASON:           return getResetReasonString(void);
     case LabelType::LAST_TASK_BEFORE_REBOOT: return decodeSchedulerId(lastMixedSchedulerId_beforereboot);
     case LabelType::SW_WD_COUNT:            return String(sw_watchdog_callback_count);
 
     case LabelType::WIFI_CONNECTION:        break;
-    case LabelType::WIFI_RSSI:              return String(WiFi.RSSI());
-    case LabelType::IP_CONFIG:              return useStaticIP() ? getLabel(LabelType::IP_CONFIG_STATIC) : getLabel(LabelType::IP_CONFIG_DYNAMIC);
+    case LabelType::WIFI_RSSI:              return String(WiFi.RSSI(void));
+    case LabelType::IP_CONFIG:              return useStaticIP(void) ? getLabel(LabelType::IP_CONFIG_STATIC) : getLabel(LabelType::IP_CONFIG_DYNAMIC);
     case LabelType::IP_CONFIG_STATIC:       break;
     case LabelType::IP_CONFIG_DYNAMIC:      break;
-    case LabelType::IP_ADDRESS:             return WiFi.localIP().toString();
-    case LabelType::IP_SUBNET:              return WiFi.subnetMask().toString();
+    case LabelType::IP_ADDRESS:             return WiFi.localIP(void).toString(void);
+    case LabelType::IP_SUBNET:              return WiFi.subnetMask(void).toString(void);
     case LabelType::IP_ADDRESS_SUBNET:      return String(getValue(LabelType::IP_ADDRESS) + F(" / ") + getValue(LabelType::IP_SUBNET));
-    case LabelType::GATEWAY:                return WiFi.gatewayIP().toString();
-    case LabelType::CLIENT_IP:              return formatIP(WebServer.client().remoteIP());
+    case LabelType::GATEWAY:                return WiFi.gatewayIP(void).toString(void);
+    case LabelType::CLIENT_IP:              return formatIP(WebServer.client(void).remoteIP(void));
     #ifdef FEATURE_MDNS
-    case LabelType::M_DNS:                  return String(WifiGetHostname()) + F(".local");
+    case LabelType::M_DNS:                  return String(WifiGetHostname(void)) + F(".local");
     #endif
     case LabelType::DNS:                    return String(getValue(LabelType::DNS_1) + F(" / ") + getValue(LabelType::DNS_2));
-    case LabelType::DNS_1:                  return WiFi.dnsIP(0).toString();
-    case LabelType::DNS_2:                  return WiFi.dnsIP(1).toString();
-    case LabelType::ALLOWED_IP_RANGE:       return describeAllowedIPrange();
-    case LabelType::STA_MAC:                return WiFi.macAddress();
+    case LabelType::DNS_1:                  return WiFi.dnsIP(0).toString(void);
+    case LabelType::DNS_2:                  return WiFi.dnsIP(1).toString(void);
+    case LabelType::ALLOWED_IP_RANGE:       return describeAllowedIPrange(void);
+    case LabelType::STA_MAC:                return WiFi.macAddress(void);
     case LabelType::AP_MAC:                 break;
-    case LabelType::SSID:                   return WiFi.SSID();
-    case LabelType::BSSID:                  return WiFi.BSSIDstr();
-    case LabelType::CHANNEL:                return String(WiFi.channel());
-    case LabelType::CONNECTED:              return format_msec_duration(timeDiff(lastConnectMoment, millis()));
-    case LabelType::CONNECTED_MSEC:         return String(timeDiff(lastConnectMoment, millis()));
+    case LabelType::SSID:                   return WiFi.SSID(void);
+    case LabelType::BSSID:                  return WiFi.BSSIDstr(void);
+    case LabelType::CHANNEL:                return String(WiFi.channel(void));
+    case LabelType::CONNECTED:              return format_msec_duration(timeDiff(lastConnectMoment, millis(void)));
+    case LabelType::CONNECTED_MSEC:         return String(timeDiff(lastConnectMoment, millis(void)));
     case LabelType::LAST_DISCONNECT_REASON: return String(lastDisconnectReason);
-    case LabelType::LAST_DISC_REASON_STR:   return getLastDisconnectReason();
+    case LabelType::LAST_DISC_REASON_STR:   return getLastDisconnectReason(void);
     case LabelType::NUMBER_RECONNECTS:      return String(wifi_reconnects);
 
-    case LabelType::FORCE_WIFI_BG:          return jsonBool(Settings.ForceWiFi_bg_mode());
-    case LabelType::RESTART_WIFI_LOST_CONN: return jsonBool(Settings.WiFiRestart_connection_lost());
-    case LabelType::FORCE_WIFI_NOSLEEP:     return jsonBool(Settings.WifiNoneSleep());
-    case LabelType::PERIODICAL_GRAT_ARP:    return jsonBool(Settings.gratuitousARP());
+    case LabelType::FORCE_WIFI_BG:          return jsonBool(Settings.ForceWiFi_bg_mode(void));
+    case LabelType::RESTART_WIFI_LOST_CONN: return jsonBool(Settings.WiFiRestart_connection_lost(void));
+    case LabelType::FORCE_WIFI_NOSLEEP:     return jsonBool(Settings.WifiNoneSleep(void));
+    case LabelType::PERIODICAL_GRAT_ARP:    return jsonBool(Settings.gratuitousARP(void));
     case LabelType::CONNECTION_FAIL_THRESH: return String(Settings.ConnectionFailuresThreshold);
 
     case LabelType::BUILD_DESC:             return String(BUILD);
     case LabelType::GIT_BUILD:              return String(F(BUILD_GIT));
-    case LabelType::SYSTEM_LIBRARIES:       return getSystemLibraryString();
+    case LabelType::SYSTEM_LIBRARIES:       return getSystemLibraryString(void);
     case LabelType::PLUGINS:                return String(deviceCount + 1);
-    case LabelType::PLUGIN_DESCRIPTION:     return getPluginDescriptionString();
+    case LabelType::PLUGIN_DESCRIPTION:     return getPluginDescriptionString(void);
     case LabelType::BUILD_TIME:             break;
     case LabelType::BINARY_FILENAME:        break;
 
     case LabelType::SYSLOG_LOG_LEVEL:       return getLogLevelDisplayString(Settings.SyslogLevel);
-    case LabelType::SERIAL_LOG_LEVEL:       return getLogLevelDisplayString(getSerialLogLevel());
-    case LabelType::WEB_LOG_LEVEL:          return getLogLevelDisplayString(getWebLogLevel());
+    case LabelType::SERIAL_LOG_LEVEL:       return getLogLevelDisplayString(getSerialLogLevel(void));
+    case LabelType::WEB_LOG_LEVEL:          return getLogLevelDisplayString(getWebLogLevel(void));
   #ifdef FEATURE_SD
     case LabelType::SD_LOG_LEVEL:           return getLogLevelDisplayString(Settings.SDLogLevel);
   #endif

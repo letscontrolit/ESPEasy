@@ -160,7 +160,7 @@ boolean Plugin_014(byte function, struct EventStruct *event, String& string)
               // Check if conversion is finished
               if (Plugin_014_si7021_readValues(SI7021_MEASURE_TEMP, res) == 0) {
                 // Update was succesfull, schedule a read.
-                schedule_task_device_timer(event->TaskIndex, millis() + 10);
+                schedule_task_device_timer(event->TaskIndex, millis(void) + 10);
                 // change state of sensor
                 state = SI7021_New_values;
                 success = true;
@@ -284,12 +284,12 @@ int8_t Plugin_014_si7021_readRegister(uint8_t * value)
   // Request user register
   Wire.beginTransmission(SI7021_I2C_ADDRESS);
   Wire.write(SI7021_READ_REG);
-  Wire.endTransmission();
+  Wire.endTransmission(void);
 
   // request 1 byte result
   Wire.requestFrom(SI7021_I2C_ADDRESS, 1);
-  if (Wire.available()>=1) {
-      *value = Wire.read();
+  if (Wire.available(void)>=1) {
+      *value = Wire.read(void);
       return 0;
   }
 
@@ -308,7 +308,7 @@ uint8_t Plugin_014_si7021_startConv(uint8_t datatype)
   //Request a reading
   Wire.beginTransmission(SI7021_I2C_ADDRESS);
   Wire.write(datatype);
-  Wire.endTransmission();
+  Wire.endTransmission(void);
 
   return 0;
 }
@@ -332,9 +332,9 @@ int8_t Plugin_014_si7021_readValues(uint8_t datatype, uint8_t resolution)
   }
 
   // Comes back in three bytes, data(MSB) / data(LSB) / Checksum
-  raw  = ((uint16_t) Wire.read()) << 8;
-  raw |= Wire.read();
-  checksum = Wire.read();
+  raw  = ((uint16_t) Wire.read(void)) << 8;
+  raw |= Wire.read(void);
+  checksum = Wire.read(void);
 
   // Check CRC of data received
   if(Plugin_014_si7021_checkCRC(raw, checksum) != 0) {
@@ -409,7 +409,7 @@ int8_t Plugin_014_si7021_setResolution(uint8_t res)
 
     // Write the new resolution bits but clear unused before
     Wire.write(reg | ( res &= ~SI7021_RESOLUTION_MASK) );
-    return (int8_t) Wire.endTransmission();
+    return (int8_t) Wire.endTransmission(void);
   }
 
   return error;

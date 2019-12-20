@@ -70,11 +70,11 @@ boolean Plugin_002(byte function, struct EventStruct *event, String& string)
       addFormCheckBox(F("Calibration Enabled"), F("p002_cal"), PCONFIG(3));
 
       addFormNumericBox(F("Point 1"), F("p002_adc1"), PCONFIG_LONG(0), 0, P002_MAX_ADC_VALUE);
-      html_add_estimate_symbol();
+      html_add_estimate_symbol(void);
       addTextBox(F("p002_out1"), String(PCONFIG_FLOAT(0), 3), 10);
 
       addFormNumericBox(F("Point 2"), F("p002_adc2"), PCONFIG_LONG(1), 0, P002_MAX_ADC_VALUE);
-      html_add_estimate_symbol();
+      html_add_estimate_symbol(void);
       addTextBox(F("p002_out2"), String(PCONFIG_FLOAT(1), 3), 10);
 
       {
@@ -253,7 +253,7 @@ bool P002_performRead(struct EventStruct *event, uint16_t& value) {
 void P002_formatStatistics(const String& label, int16_t raw, float float_value) {
   addRowLabel(label);
   addHtml(String(raw));
-  html_add_estimate_symbol();
+  html_add_estimate_symbol(void);
   addHtml(String(float_value, 3));
 }
 

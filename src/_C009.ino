@@ -68,13 +68,13 @@ bool CPlugin_009(byte function, struct EventStruct *event, String& string)
           element.txt[x] = formatUserVarNoCheck(event, x);
         }
         success = C009_DelayHandler.addToQueue(element);
-        scheduleNextDelayQueue(TIMER_C009_DELAY_QUEUE, C009_DelayHandler.getNextScheduleTime());
+        scheduleNextDelayQueue(TIMER_C009_DELAY_QUEUE, C009_DelayHandler.getNextScheduleTime(void));
         break;
       }
 
     case CPLUGIN_FLUSH:
       {
-        process_c009_delay_queue();
+        process_c009_delay_queue(void);
         delay(0);
         break;
       }
@@ -115,9 +115,9 @@ bool do_process_c009_delay_queue(int controller_number, const C009_queue_element
 
     // embed IP, important if there is NAT/PAT
     // char ipStr[20];
-    // IPAddress ip = WiFi.localIP();
+    // IPAddress ip = WiFi.localIP(void);
     // sprintf_P(ipStr, PSTR("%u.%u.%u.%u"), ip[0], ip[1], ip[2], ip[3]);
-    ESP[F("ip")] = WiFi.localIP().toString();
+    ESP[F("ip")] = WiFi.localIP(void).toString(void);
 
     // Create nested SENSOR json object
     JsonObject SENSOR = data.createNestedObject(String(F("SENSOR")));
@@ -141,7 +141,7 @@ bool do_process_c009_delay_queue(int controller_number, const C009_queue_element
   // We now create a URI for the request
   String request = create_http_request_auth(
       controller_number, element.controller_idx, ControllerSettings,
-      F("POST"), F("/ESPEasy"), jsonString.length());
+      F("POST"), F("/ESPEasy"), jsonString.length(void));
   request += jsonString;
 
   return send_via_http(controller_number, client, request, ControllerSettings.MustCheckReply);

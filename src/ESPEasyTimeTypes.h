@@ -20,7 +20,7 @@ enum month_t { Jan = 1, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec };
 // - https://www.timeanddate.com/time/dst/2018.html
 // - https://en.wikipedia.org/wiki/Daylight_saving_time_by_country
 struct TimeChangeRule {
-  TimeChangeRule() :  week(0), dow(1), month(1), hour(0), offset(0) {}
+  TimeChangeRule(void) :  week(0), dow(1), month(1), hour(0), offset(0) {}
 
   TimeChangeRule(uint8_t weeknr, uint8_t downr, uint8_t m, uint8_t h, uint16_t minutesoffset) :
     week(weeknr), dow(downr), month(m), hour(h), offset(minutesoffset) {}
@@ -33,7 +33,7 @@ struct TimeChangeRule {
     week  = (flash_stored_value >> 12) & 0x0007;
   }
 
-  uint16_t toFlashStoredValue() const {
+  uint16_t toFlashStoredValue(void) const {
     uint16_t value = hour;
 
     value = value | (month << 5);
@@ -42,7 +42,7 @@ struct TimeChangeRule {
     return value;
   }
 
-  bool isValid() const {
+  bool isValid(void) const {
     return (week <= 4) && (dow != 0) && (dow <= 7) &&
            (month != 0) && (month <= 12) && (hour <= 23) &&
            (offset > -720) && (offset < 900); // UTC-12h ... UTC+14h + 1h DSToffset
@@ -103,11 +103,11 @@ struct timer_id_couple {
   timer_id_couple(unsigned long id, unsigned long newtimer) : _id(id), _timer(newtimer) {}
 
   timer_id_couple(unsigned long id) : _id(id) {
-    _timer = millis();
+    _timer = millis(void);
   }
 
   bool operator<(const timer_id_couple& other) {
-    const unsigned long now(millis());
+    const unsigned long now(millis(void));
 
     // timediff > 0, means timer has already passed
     return timeDiff(_timer, now) > timeDiff(other._timer, now);
@@ -118,10 +118,10 @@ struct timer_id_couple {
 };
 
 struct msecTimerHandlerStruct {
-  msecTimerHandlerStruct() : get_called(0), get_called_ret_id(0), max_queue_length(0),
+  msecTimerHandlerStruct(void) : get_called(0), get_called_ret_id(0), max_queue_length(0),
     last_exec_time_usec(0), total_idle_time_usec(0),  idle_time_pct(0.0), is_idle(false), eco_mode(true)
   {
-    last_log_start_time = millis();
+    last_log_start_time = millis(void);
   }
 
   void setEcoMode(bool enabled) {
@@ -139,20 +139,20 @@ struct msecTimerHandlerStruct {
   unsigned long getNextId(unsigned long& timer) {
     ++get_called;
 
-    if (_timer_ids.empty()) {
-      recordIdle();
+    if (_timer_ids.empty(void)) {
+      recordIdle(void);
 
       if (eco_mode) {
         delay(MAX_SCHEDULER_WAIT_TIME); // Nothing to do, try save some power.
       }
       return 0;
     }
-    timer_id_couple item = _timer_ids.front();
+    timer_id_couple item = _timer_ids.front(void);
     const long passed    = timePassedSince(item._timer);
 
     if (passed < 0) {
       // No timeOutReached
-      recordIdle();
+      recordIdle(void);
 
       if (eco_mode) {
         long waitTime = (-1 * passed) - 1; // will be non negative
@@ -167,17 +167,17 @@ struct msecTimerHandlerStruct {
       }
       return 0;
     }
-    recordRunning();
-    unsigned long size = _timer_ids.size();
+    recordRunning(void);
+    unsigned long size = _timer_ids.size(void);
 
     if (size > max_queue_length) { max_queue_length = size; }
-    _timer_ids.pop_front();
+    _timer_ids.pop_front(void);
     timer = item._timer;
     ++get_called_ret_id;
     return item._id;
   }
 
-  String getQueueStats() {
+  String getQueueStats(void) {
     String result;
 
     result           += get_called;
@@ -194,15 +194,15 @@ struct msecTimerHandlerStruct {
     return result;
   }
 
-  void updateIdleTimeStats() {
+  void updateIdleTimeStats(void) {
     const long duration = timePassedSince(last_log_start_time);
 
-    last_log_start_time  = millis();
+    last_log_start_time  = millis(void);
     idle_time_pct        = total_idle_time_usec / duration / 10.0;
     total_idle_time_usec = 0;
   }
 
-  float getIdleTimePct() {
+  float getIdleTimePct(void) {
     return idle_time_pct;
   }
 
@@ -211,7 +211,7 @@ private:
   struct match_id {
     match_id(unsigned long id) : _id(id) {}
 
-    bool operator()(const timer_id_couple& item) {
+    bool operator(void)(const timer_id_couple& item) {
       return _id == item._id;
     }
 
@@ -223,11 +223,11 @@ private:
 
     // Make sure only one is present with the same id.
     _timer_ids.remove_if(match_id(item._id));
-    const bool mustSort = !_timer_ids.empty();
+    const bool mustSort = !_timer_ids.empty(void);
     _timer_ids.push_front(item);
 
     if (mustSort) {
-      _timer_ids.sort(); // TD-er: Must check if this is an expensive operation.
+      _timer_ids.sort(void); // TD-er: Must check if this is an expensive operation.
     }
 
     // It should be a relative light operation, to insert into a sorted list.
@@ -235,14 +235,14 @@ private:
     // Keep in mind: order is based on timer, uniqueness is based on id.
   }
 
-  void recordIdle() {
+  void recordIdle(void) {
     if (is_idle) { return; }
-    last_exec_time_usec = micros();
+    last_exec_time_usec = micros(void);
     is_idle             = true;
     delay(0); // Nothing to do, so leave time for backgroundtasks
   }
 
-  void recordRunning() {
+  void recordRunning(void) {
     if (!is_idle) { return; }
     is_idle               = false;
     total_idle_time_usec += usecPassedSince(last_exec_time_usec);

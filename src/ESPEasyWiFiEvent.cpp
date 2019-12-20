@@ -25,15 +25,15 @@ void setUseStaticIP(bool enabled) {
   tmp_wifi.set_use_static_ip(enabled);
 }
 
-void markGotIP() {
-  lastGetIPmoment = millis();
+void markGotIP(void) {
+  lastGetIPmoment = millis(void);
   wifiStatus      |= ESPEASY_WIFI_GOT_IP;
   processedGotIP = false;
 }
 
 // ********************************************************************************
 // Functions called on events.
-// Make sure not to call anything in these functions that result in delay() or yield()
+// Make sure not to call anything in these functions that result in delay(void) or yield(void)
 // ********************************************************************************
 #ifdef ESP32
 #include <WiFi.h>
@@ -55,7 +55,7 @@ void WiFiEvent(system_event_id_t event, system_event_info_t info) {
       memcpy(ssid_copy, info.connected.ssid, info.connected.ssid_len);
       ssid_copy[32] = 0; // Potentially add 0-termination if none present earlier
       last_ssid = (const char*) ssid_copy;
-      lastConnectMoment = millis();
+      lastConnectMoment = millis(void);
       processedConnect  = false;
       wifiStatus       |= ESPEASY_WIFI_CONNECTED;
       break;
@@ -63,7 +63,7 @@ void WiFiEvent(system_event_id_t event, system_event_info_t info) {
     case SYSTEM_EVENT_STA_DISCONNECTED:
       if (!ignoreDisconnectEvent) {
         ignoreDisconnectEvent = true;
-        lastDisconnectMoment = millis();
+        lastDisconnectMoment = millis(void);
         WiFi.persistent(false);
         WiFi.disconnect(true);
 
@@ -80,7 +80,7 @@ void WiFiEvent(system_event_id_t event, system_event_info_t info) {
       break;
     case SYSTEM_EVENT_STA_GOT_IP:
       ignoreDisconnectEvent = false;
-      markGotIP();
+      markGotIP(void);
       break;
     case SYSTEM_EVENT_AP_STACONNECTED:
 
@@ -109,7 +109,7 @@ void WiFiEvent(system_event_id_t event, system_event_info_t info) {
 #ifdef ESP8266
 
 void onConnected(const WiFiEventStationModeConnected& event) {
-  lastConnectMoment = millis();
+  lastConnectMoment = millis(void);
   processedConnect  = false;
   wifiStatus       |= ESPEASY_WIFI_CONNECTED;
   channel_changed   = RTC.lastWiFiChannel != event.channel;
@@ -126,7 +126,7 @@ void onConnected(const WiFiEventStationModeConnected& event) {
 }
 
 void onDisconnect(const WiFiEventStationModeDisconnected& event) {
-  lastDisconnectMoment = millis();
+  lastDisconnectMoment = millis(void);
 
   if (timeDiff(lastConnectMoment, last_wifi_connect_attempt_moment) > 0) {
     // There was an unsuccessful connection attempt
@@ -137,7 +137,7 @@ void onDisconnect(const WiFiEventStationModeDisconnected& event) {
   lastDisconnectReason = event.reason;
   wifiStatus           = ESPEASY_WIFI_DISCONNECTED;
 
-  if (WiFi.status() == WL_CONNECTED) {
+  if (WiFi.status(void) == WL_CONNECTED) {
     // See https://github.com/esp8266/Arduino/issues/5912
     WiFi.persistent(false);
     WiFi.disconnect(true);
@@ -146,10 +146,10 @@ void onDisconnect(const WiFiEventStationModeDisconnected& event) {
 }
 
 void onGotIP(const WiFiEventStationModeGotIP& event) {
-  markGotIP();
+  markGotIP(void);
 }
 
-void ICACHE_RAM_ATTR onDHCPTimeout() {
+void ICACHE_RAM_ATTR onDHCPTimeout(void) {
   processedDHCPTimeout = false;
 }
 

@@ -57,14 +57,14 @@
 #include <ESPeasySerial.h>
 
 struct P085_data_struct : public PluginTaskData_base {
-  P085_data_struct() {}
+  P085_data_struct(void) {}
 
-  ~P085_data_struct() {
-    reset();
+  ~P085_data_struct(void) {
+    reset(void);
   }
 
-  void reset() {
-    modbus.reset();
+  void reset(void) {
+    modbus.reset(void);
   }
 
   bool init(const int16_t serial_rx, const int16_t serial_tx, int8_t dere_pin,
@@ -72,8 +72,8 @@ struct P085_data_struct : public PluginTaskData_base {
     return modbus.init(serial_rx, serial_tx, baudrate, modbusAddress, dere_pin);
   }
 
-  bool isInitialized() const {
-    return modbus.isInitialized();
+  bool isInitialized(void) const {
+    return modbus.isInitialized(void);
   }
 
   ModbusRTU_struct modbus;
@@ -170,10 +170,10 @@ boolean Plugin_085(byte function, struct EventStruct *event, String& string) {
       P085_data_struct *P085_data =
         static_cast<P085_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if ((nullptr != P085_data) && P085_data->isInitialized()) {
+      if ((nullptr != P085_data) && P085_data->isInitialized(void)) {
         String detectedString = P085_data->modbus.detected_device_description;
 
-        if (detectedString.length() > 0) {
+        if (detectedString.length(void) > 0) {
           addFormNote(detectedString);
         }
         addRowLabel(F("Checksum (pass/fail/nodata)"));
@@ -248,7 +248,7 @@ boolean Plugin_085(byte function, struct EventStruct *event, String& string) {
 
       {
         // In a separate scope to free memory of String array as soon as possible
-        sensorTypeHelper_webformLoad_header();
+        sensorTypeHelper_webformLoad_header(void);
         String options[P085_NR_OUTPUT_OPTIONS];
 
         for (int i = 0; i < P085_NR_OUTPUT_OPTIONS; ++i) {
@@ -281,7 +281,7 @@ boolean Plugin_085(byte function, struct EventStruct *event, String& string) {
       P085_data_struct *P085_data =
         static_cast<P085_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if ((nullptr != P085_data) && P085_data->isInitialized()) {
+      if ((nullptr != P085_data) && P085_data->isInitialized(void)) {
         uint16_t log_enabled = isFormItemChecked(F("p085_en_log")) ? 1 : 0;
         P085_data->modbus.writeMultipleRegisters(0x500, log_enabled);
         delay(1);
@@ -321,7 +321,7 @@ boolean Plugin_085(byte function, struct EventStruct *event, String& string) {
     case PLUGIN_INIT: {
       const int16_t serial_rx = CONFIG_PIN1;
       const int16_t serial_tx = CONFIG_PIN2;
-      initPluginTaskData(event->TaskIndex, new P085_data_struct());
+      initPluginTaskData(event->TaskIndex, new P085_data_struct(void));
       P085_data_struct *P085_data =
         static_cast<P085_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -349,7 +349,7 @@ boolean Plugin_085(byte function, struct EventStruct *event, String& string) {
       P085_data_struct *P085_data =
         static_cast<P085_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if ((nullptr != P085_data) && P085_data->isInitialized()) {
+      if ((nullptr != P085_data) && P085_data->isInitialized(void)) {
         for (int i = 0; i < P085_NR_OUTPUT_VALUES; ++i) {
           UserVar[event->BaseVarIndex + i] = p085_readValue(PCONFIG(i + P085_QUERY1_CONFIG_POS), event);
           delay(1);
@@ -400,7 +400,7 @@ float p085_readValue(byte query, struct EventStruct *event) {
   P085_data_struct *P085_data =
     static_cast<P085_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-  if ((nullptr != P085_data) && P085_data->isInitialized()) {
+  if ((nullptr != P085_data) && P085_data->isInitialized(void)) {
     switch (query) {
       case P085_QUERY_V:
         return P085_data->modbus.read_float_HoldingRegister(0x200);

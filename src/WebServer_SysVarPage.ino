@@ -4,20 +4,20 @@
 // ********************************************************************************
 // Web Interface sysvars showing all system vars and their value.
 // ********************************************************************************
-void handle_sysvars() {
+void handle_sysvars(void) {
   checkRAM(F("handle_sysvars"));
 
-  if (!isLoggedIn()) { return; }
-  TXBuffer.startStream();
-  sendHeadandTail_stdtemplate();
+  if (!isLoggedIn(void)) { return; }
+  TXBuffer.startStream(void);
+  sendHeadandTail_stdtemplate(void);
 
-  html_BR();
+  html_BR(void);
   TXBuffer += F("<p>This page may load slow.<BR>Do not load too often, since it may affect performance of the node.</p>");
-  html_BR();
+  html_BR(void);
 
   // the table header
-  html_table_class_normal();
-  html_TR();
+  html_table_class_normal(void);
+  html_TR(void);
   html_table_header(F("System Variables"));
   html_table_header(F("Normal"));
   html_table_header(F("URL encoded"), F("ESPEasy_System_Variables"), 0);
@@ -166,25 +166,25 @@ void handle_sysvars() {
   addSysVar_html(F("Mins to dhm:  %c_m2dhm%(1900)"));
   addSysVar_html(F("Secs to dhms: %c_s2dhms%(100000)"));
 
-  html_end_table();
-  html_end_form();
+  html_end_table(void);
+  html_end_form(void);
   sendHeadandTail_stdtemplate(true);
-  TXBuffer.endStream();
+  TXBuffer.endStream(void);
 }
 
 void addSysVar_html(const String& input) {
-  html_TR_TD();
+  html_TR_TD(void);
   TXBuffer += F("<pre>"); // Make monospaced (<tt> tag?)
   TXBuffer += F("<xmp>"); // Make sure HTML code is escaped. Tag depricated??
   TXBuffer += input;
   TXBuffer += F("</xmp>");
   TXBuffer += F("</pre>");
-  html_TD();
+  html_TD(void);
   String replacement(input);                // Make deepcopy for replacement
   parseSystemVariables(replacement, false); // Not URL encoded
   parseStandardConversions(replacement, false);
   TXBuffer += replacement;
-  html_TD();
+  html_TD(void);
   replacement = input;
   parseSystemVariables(replacement, true); // URL encoded
   parseStandardConversions(replacement, true);

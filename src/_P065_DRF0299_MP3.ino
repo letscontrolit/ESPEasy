@@ -146,7 +146,7 @@ boolean Plugin_065(byte function, struct EventStruct *event, String& string)
         {
           String log = F("MP3  : vol=");
 
-          int8_t vol = param.toInt();
+          int8_t vol = param.toInt(void);
           if (vol == 0) vol = 30;
           PCONFIG(0) = vol;
           Plugin_065_SetVol(vol);
@@ -160,7 +160,7 @@ boolean Plugin_065(byte function, struct EventStruct *event, String& string)
         {
           String log = F("MP3  : eq=");
 
-          int8_t eq = param.toInt();
+          int8_t eq = param.toInt(void);
           Plugin_065_SetEQ(eq);
           log += eq;
 

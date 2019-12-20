@@ -102,7 +102,7 @@ boolean Plugin_038(byte function, struct EventStruct *event, String& string)
           else
             Plugin_038_pixels = new Adafruit_NeoPixel(PCONFIG(0), CONFIG_PIN1, NEO_GRB + NEO_KHZ800);
 
-          Plugin_038_pixels->begin(); // This initializes the NeoPixel library.
+          Plugin_038_pixels->begin(void); // This initializes the NeoPixel library.
         }
         MaxPixels = PCONFIG(0);
         success = true;
@@ -129,7 +129,7 @@ boolean Plugin_038(byte function, struct EventStruct *event, String& string)
             // int Par4 = 0;
             // if (GetArgv(Line, TmpStr1, 5)) Par4 = str2int(TmpStr1);
             Plugin_038_pixels->setPixelColor(event->Par1 - 1, Plugin_038_pixels->Color(event->Par2, event->Par3, event->Par4, event->Par5));
-            Plugin_038_pixels->show(); // This sends the updated pixel color to the hardware.
+            Plugin_038_pixels->show(void); // This sends the updated pixel color to the hardware.
             success = true;
           }
 
@@ -155,7 +155,7 @@ boolean Plugin_038(byte function, struct EventStruct *event, String& string)
               addLog(LOG_LEVEL_INFO,log);
             }
             Plugin_038_pixels->setPixelColor(event->Par1 - 1, Plugin_038_pixels->Color(rgbw[0], rgbw[1], rgbw[2], rgbw[3]));
-            Plugin_038_pixels->show(); // This sends the updated pixel color to the hardware.
+            Plugin_038_pixels->show(void); // This sends the updated pixel color to the hardware.
             success = true;
           }
 
@@ -169,7 +169,7 @@ boolean Plugin_038(byte function, struct EventStruct *event, String& string)
 					  {
                 Plugin_038_pixels->setPixelColor(i, Plugin_038_pixels->Color(event->Par1, event->Par2, event->Par3, event->Par4));
 					  }
-					  Plugin_038_pixels->show();
+					  Plugin_038_pixels->show(void);
 					  success = true;
           }
 
@@ -198,7 +198,7 @@ boolean Plugin_038(byte function, struct EventStruct *event, String& string)
           	 {
                 Plugin_038_pixels->setPixelColor(i, Plugin_038_pixels->Color(rgbw[0], rgbw[1], rgbw[2], rgbw[3]));
           	 }
-           Plugin_038_pixels->show();
+           Plugin_038_pixels->show(void);
            success = true;
           }
 
@@ -216,7 +216,7 @@ boolean Plugin_038(byte function, struct EventStruct *event, String& string)
 	  				{
 		  				Plugin_038_pixels->setPixelColor(i, Plugin_038_pixels->Color(event->Par3, event->Par4, event->Par5));
 			  		}
-				  	Plugin_038_pixels->show();
+				  	Plugin_038_pixels->show(void);
 					  success = true;
           }
 
@@ -245,7 +245,7 @@ boolean Plugin_038(byte function, struct EventStruct *event, String& string)
 	  				{
 		  				Plugin_038_pixels->setPixelColor(i, Plugin_038_pixels->Color(rgbw[0], rgbw[1], rgbw[2], rgbw[3]));
 			  		}
-				  	Plugin_038_pixels->show();
+				  	Plugin_038_pixels->show(void);
 					  success = true;
           }
 

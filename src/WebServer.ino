@@ -47,11 +47,11 @@ public:
   }
 
   StreamingBuffer operator=(String& a)                 {
-    flush(); return addString(a);
+    flush(void); return addString(a);
   }
 
   StreamingBuffer operator=(const String& a)           {
-    flush(); return addString(a);
+    flush(void); return addString(a);
   }
 
   StreamingBuffer operator+=(char a)                   {
@@ -85,7 +85,7 @@ public:
     }
 
     if (lowMemorySkip) { return *this; }
-    int flush_step = CHUNKED_BUFFER_SIZE - this->buf.length();
+    int flush_step = CHUNKED_BUFFER_SIZE - this->buf.length(void);
 
     if (flush_step < 1) { flush_step = 0; }
     unsigned int pos          = 0;
@@ -103,17 +103,17 @@ public:
       ++pos;
       --flush_step;
     }
-    checkFull();
+    checkFull(void);
     return *this;
   }
 
   StreamingBuffer addString(const String& a) {
     if (lowMemorySkip) { return *this; }
-    int flush_step = CHUNKED_BUFFER_SIZE - this->buf.length();
+    int flush_step = CHUNKED_BUFFER_SIZE - this->buf.length(void);
 
     if (flush_step < 1) { flush_step = 0; }
     int pos          = 0;
-    const int length = a.length();
+    const int length = a.length(void);
 
     while (pos < length) {
       if (flush_step == 0) {
@@ -124,11 +124,11 @@ public:
       ++pos;
       --flush_step;
     }
-    checkFull();
+    checkFull(void);
     return *this;
   }
 
-  void flush() {
+  void flush(void) {
     if (lowMemorySkip) {
       this->buf = "";
     } else {
@@ -139,13 +139,13 @@ public:
   void checkFull(void) {
     if (lowMemorySkip) { this->buf = ""; }
 
-    if (this->buf.length() > CHUNKED_BUFFER_SIZE) {
-      trackTotalMem();
+    if (this->buf.length(void) > CHUNKED_BUFFER_SIZE) {
+      trackTotalMem(void);
       sendContentBlocking(this->buf);
     }
   }
 
-  void startStream() {
+  void startStream(void) {
     startStream(false, "");
   }
 
@@ -153,7 +153,7 @@ public:
     startStream(false, origin);
   }
 
-  void startJsonStream() {
+  void startJsonStream(void) {
     startStream(true, "*");
   }
 
@@ -161,7 +161,7 @@ private:
 
   void startStream(bool json, const String& origin) {
     maxCoreUsage = maxServerUsage = 0;
-    initialRam   = ESP.getFreeHeap();
+    initialRam   = ESP.getFreeHeap(void);
     beforeTXRam  = initialRam;
     sentBytes    = 0;
     buf          = "";
@@ -170,7 +170,7 @@ private:
       lowMemorySkip = true;
       WebServer.send(200, "text/plain", "Low memory. Cannot display webpage :-(");
        #if defined(ESP8266)
-      tcpCleanup();
+      tcpCleanup(void);
        #endif // if defined(ESP8266)
       return;
     } else {
@@ -178,8 +178,8 @@ private:
     }
   }
 
-  void trackTotalMem() {
-    beforeTXRam = ESP.getFreeHeap();
+  void trackTotalMem(void) {
+    beforeTXRam = ESP.getFreeHeap(void);
 
     if ((initialRam - beforeTXRam) > maxServerUsage) {
       maxServerUsage = initialRam - beforeTXRam;
@@ -188,8 +188,8 @@ private:
 
 public:
 
-  void trackCoreMem() {
-    duringTXRam = ESP.getFreeHeap();
+  void trackCoreMem(void) {
+    duringTXRam = ESP.getFreeHeap(void);
 
     if ((initialRam - duringTXRam) > maxCoreUsage) {
       maxCoreUsage = (initialRam - duringTXRam);
@@ -198,10 +198,10 @@ public:
 
   void endStream(void) {
     if (!lowMemorySkip) {
-      if (buf.length() > 0) { sendContentBlocking(buf); }
+      if (buf.length(void) > 0) { sendContentBlocking(buf); }
       buf = "";
       sendContentBlocking(buf);
-      finalRam = ESP.getFreeHeap();
+      finalRam = ESP.getFreeHeap(void);
 
       /*
          if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
@@ -221,12 +221,12 @@ public:
 
 void sendContentBlocking(String& data) {
   checkRAM(F("sendContentBlocking"));
-  uint32_t freeBeforeSend = ESP.getFreeHeap();
-  const uint32_t length   = data.length();
+  uint32_t freeBeforeSend = ESP.getFreeHeap(void);
+  const uint32_t length   = data.length(void);
 #ifndef BUILD_NO_DEBUG
   addLog(LOG_LEVEL_DEBUG_DEV, String("sendcontent free: ") + freeBeforeSend + " chunk size:" + length);
 #endif // ifndef BUILD_NO_DEBUG
-  freeBeforeSend = ESP.getFreeHeap();
+  freeBeforeSend = ESP.getFreeHeap(void);
 
   if (TXBuffer.beforeTXRam > freeBeforeSend) {
     TXBuffer.beforeTXRam = freeBeforeSend;
@@ -246,15 +246,15 @@ void sendContentBlocking(String& data) {
   if (freeBeforeSend < 5000) { timeout = 100; }
 
   if (freeBeforeSend < 4000) { timeout = 1000; }
-  const uint32_t beginWait = millis();
+  const uint32_t beginWait = millis(void);
   WebServer.sendContent(data);
 
-  while ((ESP.getFreeHeap() < freeBeforeSend) &&
+  while ((ESP.getFreeHeap(void) < freeBeforeSend) &&
          !timeOutReached(beginWait + timeout)) {
-    if (ESP.getFreeHeap() < TXBuffer.duringTXRam) {
-      TXBuffer.duringTXRam = ESP.getFreeHeap();
+    if (ESP.getFreeHeap(void) < TXBuffer.duringTXRam) {
+      TXBuffer.duringTXRam = ESP.getFreeHeap(void);
     }
-    TXBuffer.trackCoreMem();
+    TXBuffer.trackCoreMem(void);
     checkRAM(F("duringDataTX"));
     delay(1);
   }
@@ -267,7 +267,7 @@ void sendContentBlocking(String& data) {
 
 void sendHeaderBlocking(bool json, const String& origin) {
   checkRAM(F("sendHeaderBlocking"));
-  WebServer.client().flush();
+  WebServer.client(void).flush(void);
   String contenttype;
 
   if (json) {
@@ -289,22 +289,22 @@ void sendHeaderBlocking(bool json, const String& origin) {
   WebServer.send(200, contenttype, "");
 #else // if defined(ESP8266) && defined(ARDUINO_ESP8266_RELEASE_2_3_0)
   unsigned int timeout        = 0;
-  uint32_t     freeBeforeSend = ESP.getFreeHeap();
+  uint32_t     freeBeforeSend = ESP.getFreeHeap(void);
 
   if (freeBeforeSend < 5000) { timeout = 100; }
 
   if (freeBeforeSend < 4000) { timeout = 1000; }
-  const uint32_t beginWait = millis();
+  const uint32_t beginWait = millis(void);
   WebServer.setContentLength(CONTENT_LENGTH_UNKNOWN);
   WebServer.sendHeader(F("Cache-Control"), F("no-cache"));
 
-  if (origin.length() > 0) {
+  if (origin.length(void) > 0) {
     WebServer.sendHeader(F("Access-Control-Allow-Origin"), origin);
   }
   WebServer.send(200, contenttype, "");
 
   // dont wait on 2.3.0. Memory returns just too slow.
-  while ((ESP.getFreeHeap() < freeBeforeSend) &&
+  while ((ESP.getFreeHeap(void) < freeBeforeSend) &&
          !timeOutReached(beginWait + timeout)) {
     checkRAM(F("duringHeaderTX"));
     delay(1);
@@ -321,7 +321,7 @@ void sendHeadandTail(const String& tmplName, boolean Tail = false, boolean reboo
   static unsigned statisticsTimerStart = 0;
 
   if (!Tail) {
-    statisticsTimerStart = micros();
+    statisticsTimerStart = micros(void);
   }
   #endif // ifdef USES_TIMING_STATS
 
@@ -332,10 +332,10 @@ void sendHeadandTail(const String& tmplName, boolean Tail = false, boolean reboo
   fs::File f = tryOpenFile(fileName, "r");
 
   if (f) {
-    pageTemplate.reserve(f.size());
+    pageTemplate.reserve(f.size(void));
 
-    while (f.available()) { pageTemplate += (char)f.read(); }
-    f.close();
+    while (f.available(void)) { pageTemplate += (char)f.read(void); }
+    f.close(void);
   } else {
     // TODO TD-er: Should send data directly to TXBuffer instead of using large strings.
     getWebPageTemplateDefault(tmplName, pageTemplate);
@@ -343,7 +343,7 @@ void sendHeadandTail(const String& tmplName, boolean Tail = false, boolean reboo
   checkRAM(F("sendWebPage"));
 
   // web activity timer
-  lastWeb = millis();
+  lastWeb = millis(void);
 
   if (Tail) {
     TXBuffer += pageTemplate.substring(
@@ -368,12 +368,12 @@ void sendHeadandTail(const String& tmplName, boolean Tail = false, boolean reboo
         varName    = pageTemplate.substring(indexStart + 2, indexEnd);
         indexStart = indexEnd + 2;
         readPos    = indexEnd + 2;
-        varName.toLowerCase();
+        varName.toLowerCase(void);
 
         if (varName == F("content")) { // is var == page content?
           break;                       // send first part of result only
         } else if (varName == F("error")) {
-          getErrorNotifications();
+          getErrorNotifications(void);
         }
         else if (varName == F("meta")) {
           TXBuffer += meta;
@@ -393,7 +393,7 @@ void sendHeadandTail(const String& tmplName, boolean Tail = false, boolean reboo
     // we only add this here as a seperate chunk to prevent using too much memory at once
     html_add_script(false);
     TXBuffer += DATA_REBOOT_JS;
-    html_add_script_end();
+    html_add_script_end(void);
   }
   STOP_TIMER(HANDLE_SERVING_WEBPAGE);
 }
@@ -402,11 +402,11 @@ void sendHeadandTail_stdtemplate(boolean Tail = false, boolean rebooting = false
   sendHeadandTail(F("TmplStd"), Tail, rebooting);
 
   if (!Tail) {
-    if (!clientIPinSubnet() && WifiIsAP(WiFi.getMode()) && (WiFi.softAPgetStationNum() > 0)) {
+    if (!clientIPinSubnet(void) && WifiIsAP(WiFi.getMode(void)) && (WiFi.softAPgetStationNum(void) > 0)) {
       addHtmlError(F("Warning: Connected via AP"));
     }
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      const int nrArgs = WebServer.args();
+      const int nrArgs = WebServer.args(void);
       if (nrArgs > 0) {
         String log = F(" Webserver args:");
 
@@ -416,7 +416,7 @@ void sendHeadandTail_stdtemplate(boolean Tail = false, boolean rebooting = false
           log += F(": '");
           log += WebServer.argName(i);
           log += F("' length: ");
-          log += WebServer.arg(i).length();
+          log += WebServer.arg(i).length(void);
         }
         addLog(LOG_LEVEL_INFO, log);
       }
@@ -431,9 +431,9 @@ size_t streamFile_htmlEscape(const String& fileName)
   if (f)
   {
     String escaped;
-    while (f.available())
+    while (f.available(void))
     {
-      char c = (char)f.read();
+      char c = (char)f.read(void);
       if (htmlEscapeChar(c, escaped)) {
         TXBuffer += escaped;
       } else {
@@ -441,7 +441,7 @@ size_t streamFile_htmlEscape(const String& fileName)
       }
       ++size;
     }
-    f.close();
+    f.close(void);
   }
   return size;
 }
@@ -459,12 +459,12 @@ size_t streamFile_htmlEscape(const String& fileName)
 
 #define TASKS_PER_PAGE TASKS_MAX
 
-#define strncpy_webserver_arg(D, N) safe_strncpy(D, WebServer.arg(N).c_str(), sizeof(D));
+#define strncpy_webserver_arg(D, N) safe_strncpy(D, WebServer.arg(N).c_str(void), sizeof(D));
 #define update_whenset_FormItemInt(K, V) { int tmpVal; \
                                            if (getCheckWebserverArg_int(K, tmpVal)) V = tmpVal; }
 
 
-void WebServerInit()
+void WebServerInit(void)
 {
   if (webserver_init) { return; }
   webserver_init = true;
@@ -527,9 +527,9 @@ void WebServerInit()
   #ifdef WEBSERVER_RULES
   WebServer.on(F("/rules"),         handle_rules_new);
   WebServer.on(F("/rules/"),        Goto_Rules_Root);
-  WebServer.on(F("/rules/add"),     []()
+  WebServer.on(F("/rules/add"),     [](void)
   {
-    handle_rules_edit(WebServer.uri(), true);
+    handle_rules_edit(WebServer.uri(void), true);
   });
   WebServer.on(F("/rules/backup"),      handle_rules_backup);
   WebServer.on(F("/rules/delete"),      handle_rules_delete);
@@ -594,23 +594,23 @@ void WebServerInit()
 
   if (Settings.UseSSDP)
   {
-    WebServer.on(F("/ssdp.xml"), HTTP_GET, []() {
-      WiFiClient client(WebServer.client());
+    WebServer.on(F("/ssdp.xml"), HTTP_GET, [](void) {
+      WiFiClient client(WebServer.client(void));
       client.setTimeout(CONTROLLER_CLIENTTIMEOUT_DFLT);
       SSDP_schema(client);
     });
-    SSDP_begin();
+    SSDP_begin(void);
   }
   # endif // USES_SSDP
   #endif  // if defined(ESP8266)
 }
 
-void set_mDNS() {
+void set_mDNS(void) {
   #ifdef FEATURE_MDNS
   if (webserverRunning) {
     addLog(LOG_LEVEL_INFO, F("WIFI : Starting mDNS..."));
-    bool mdns_started = MDNS.begin(WifiGetHostname().c_str());
-    MDNS.setInstanceName(WifiGetHostname()); // Needed for when the hostname has changed.
+    bool mdns_started = MDNS.begin(WifiGetHostname(void).c_str(void));
+    MDNS.setInstanceName(WifiGetHostname(void)); // Needed for when the hostname has changed.
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log = F("WIFI : ");
@@ -637,15 +637,15 @@ void setWebserverRunning(bool state) {
   }
 
   if (state) {
-    WebServerInit();
-    WebServer.begin();
+    WebServerInit(void);
+    WebServer.begin(void);
     addLog(LOG_LEVEL_INFO, F("Webserver: start"));
   } else {
-    WebServer.stop();
+    WebServer.stop(void);
     addLog(LOG_LEVEL_INFO, F("Webserver: stop"));
   }
   webserverRunning = state;
-  set_mDNS(); // Uses webserverRunning state.
+  set_mDNS(void); // Uses webserverRunning state.
 }
 
 void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
@@ -736,7 +736,7 @@ void getWebPageTemplateDefaultFooter(String& tmpl) {
             );
 }
 
-void getErrorNotifications() {
+void getErrorNotifications(void) {
   // Check number of MQTT controllers active.
   int nrMQTTenabled = 0;
 
@@ -813,8 +813,8 @@ String getGpMenuURL(byte index) {
 
 void getWebPageTemplateVar(const String& varName)
 {
-  // serialPrint(varName); serialPrint(" : free: "); serialPrint(ESP.getFreeHeap());   serialPrint("var len before:  "); serialPrint
-  // (varValue.length()) ;serialPrint("after:  ");
+  // serialPrint(varName); serialPrint(" : free: "); serialPrint(ESP.getFreeHeap(void));   serialPrint("var len before:  "); serialPrint
+  // (varValue.length(void)) ;serialPrint("after:  ");
   // varValue = "";
 
   if (varName == F("name"))
@@ -871,7 +871,7 @@ void getWebPageTemplateVar(const String& varName)
 
   else if (varName == F("css"))
   {
-    if (SPIFFS.exists(F("esp.css"))) // now css is written in writeDefaultCSS() to SPIFFS and always present
+    if (SPIFFS.exists(F("esp.css"))) // now css is written in writeDefaultCSS(void) to SPIFFS and always present
     // if (0) //TODO
     {
       TXBuffer = F("<link rel=\"stylesheet\" type=\"text/css\" href=\"esp.css\">");
@@ -889,7 +889,7 @@ void getWebPageTemplateVar(const String& varName)
 
   else if (varName == F("js"))
   {
-    html_add_autosubmit_form();
+    html_add_autosubmit_form(void);
   }
 
   else if (varName == F("error"))
@@ -928,14 +928,14 @@ void writeDefaultCSS(void)
     {
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         String log = F("CSS  : Writing default CSS file to SPIFFS (");
-        log += defaultCSS.length();
+        log += defaultCSS.length(void);
         log += F(" bytes)");
         addLog(LOG_LEVEL_INFO, log);
       }
       defaultCSS = PGMT(DATA_ESPEASY_DEFAULT_MIN_CSS);
-      f.write((const unsigned char *)defaultCSS.c_str(), defaultCSS.length()); // note: content must be in RAM - a write of F("XXX") does
+      f.write((const unsigned char *)defaultCSS.c_str(void), defaultCSS.length(void)); // note: content must be in RAM - a write of F("XXX") does
                                                                                // not work
-      f.close();
+      f.close(void);
     }
   }
 }
@@ -952,7 +952,7 @@ int8_t lastLevel = -1;
 void json_quote_name(const String& val) {
   if (lastLevel == level) { TXBuffer += ","; }
 
-  if (val.length() > 0) {
+  if (val.length(void) > 0) {
     TXBuffer += '\"';
     TXBuffer += val;
     TXBuffer += '\"';
@@ -966,12 +966,12 @@ void json_quote_val(const String& val) {
   TXBuffer += '\"';
 }
 
-void json_open() {
-  json_open(false, String());
+void json_open(void) {
+  json_open(false, String(void));
 }
 
 void json_open(bool arr) {
-  json_open(arr, String());
+  json_open(arr, String(void));
 }
 
 void json_open(bool arr, const String& name) {
@@ -981,12 +981,12 @@ void json_open(bool arr, const String& name) {
   level++;
 }
 
-void json_init() {
+void json_init(void) {
   level     = 0;
   lastLevel = -1;
 }
 
-void json_close() {
+void json_close(void) {
   json_close(false);
 }
 
@@ -1044,7 +1044,7 @@ void addTaskSelect(const String& name,  taskIndex_t choice)
     }
 
     if (!validPluginID(Settings.TaskDeviceNumber[x])) {
-      addDisabled();
+      addDisabled(void);
     }
     TXBuffer += '>';
     TXBuffer += x + 1;
@@ -1090,15 +1090,15 @@ void addTaskValueSelect(const String& name, int choice, taskIndex_t TaskIndex)
 // ********************************************************************************
 // Login state check
 // ********************************************************************************
-boolean isLoggedIn()
+boolean isLoggedIn(void)
 {
   String www_username = F(DEFAULT_ADMIN_USERNAME);
 
-  if (!clientIPallowed()) { return false; }
+  if (!clientIPallowed(void)) { return false; }
 
   if (SecuritySettings.Password[0] == 0) { return true; }
 
-  if (!WebServer.authenticate(www_username.c_str(), SecuritySettings.Password))
+  if (!WebServer.authenticate(www_username.c_str(void), SecuritySettings.Password))
 
   // Basic Auth Method with Custom realm and Failure Response
   // return server.requestAuthentication(BASIC_AUTH, www_realm, authFailResponse);
@@ -1118,7 +1118,7 @@ boolean isLoggedIn()
     String message = F("Login Required (default user: ");
     message += www_username;
     message += ')';
-    WebServer.requestAuthentication(mode, message.c_str());
+    WebServer.requestAuthentication(mode, message.c_str(void));
     return false;
   }
   return true;
@@ -1294,7 +1294,7 @@ void getWiFi_RSSI_icon(int rssi, int width_pixels)
 }
 
 #ifndef BUILD_MINIMAL_OTA
-void getConfig_dat_file_layout() {
+void getConfig_dat_file_layout(void) {
   const int shiftY  = 2;
   float     yOffset = shiftY;
 
@@ -1415,7 +1415,7 @@ void getPartitionTableSVG(byte pType, unsigned int partitionColor) {
   if (nrPartitions == 0) { return; }
   const int shiftY = 2;
 
-  uint32_t realSize                      = getFlashRealSizeInBytes();
+  uint32_t realSize                      = getFlashRealSizeInBytes(void);
   esp_partition_type_t     partitionType = static_cast<esp_partition_type_t>(pType);
   const esp_partition_t   *_mypart;
   esp_partition_iterator_t _mypartiterator = esp_partition_find(partitionType, ESP_PARTITION_SUBTYPE_ANY, NULL);

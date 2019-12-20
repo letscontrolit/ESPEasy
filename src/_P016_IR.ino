@@ -146,11 +146,11 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
       addLog(LOG_LEVEL_INFO, String(F("IR lib Version: ")) + _IRREMOTEESP8266_VERSION_);
       irReceiver = new IRrecv(irPin, kCaptureBufferSize, P016_TIMEOUT, true);
       irReceiver->setUnknownThreshold(kMinUnknownSize); // Ignore messages with less than minimum on or off pulses.
-      irReceiver->enableIRIn();                         // Start the receiver
+      irReceiver->enableIRIn(void);                         // Start the receiver
     }
     if (irReceiver != 0 && irPin == -1)
     {
-      irReceiver->disableIRIn();
+      irReceiver->disableIRIn(void);
       delete irReceiver;
       irReceiver = 0;
     }
@@ -162,7 +162,7 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
     {
       if (irReceiver != 0)
       {
-        irReceiver->disableIRIn(); // Stop the receiver
+        irReceiver->disableIRIn(void); // Stop the receiver
         delete irReceiver;
         irReceiver = 0;
       }
@@ -183,7 +183,7 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
   {
     if (irReceiver->decode(&results))
     {
-      yield(); // Feed the WDT after a time expensive decoding procedure
+      yield(void); // Feed the WDT after a time expensive decoding procedure
       if (results.overflow)
       {
         addLog(LOG_LEVEL_INFO, F("IR: WARNING, IR code is too big for buffer. Try pressing the transmiter button only momenteraly"));
@@ -210,7 +210,7 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
         addLog(LOG_LEVEL_INFO, F("IR: No replay solutions found! Press button again or try RAW encoding (timmings are in the serial output)"));
         serialPrint(String(F("IR: RAW TIMINGS: ")) + resultToSourceCode(&results));
         event->String2 = F("NaN");
-        yield(); // Feed the WDT as it can take a while to print.
+        yield(void); // Feed the WDT as it can take a while to print.
                  //addLog(LOG_LEVEL_DEBUG,(String(F("IR: RAW TIMINGS: ")) + resultToSourceCode(&results))); // Output the results as RAW source code //not showing up nicely in the web log
       }
 
@@ -342,7 +342,7 @@ boolean displayRawToReadableB32Hex(String &outputStr)
     uint16_t bstDiv = -1, bstAvg = 0xFFFFU;
     float bstMul = 5000;
     cd += get_tolerance(cd) + 1;
-    //serialPrintln(String("p="+ uint64ToString(p, 10) + " start cd=" + uint64ToString(cd, 10)).c_str());
+    //serialPrintln(String("p="+ uint64ToString(p, 10) + " start cd=" + uint64ToString(cd, 10)).c_str(void));
     // find the best divisor based on lowest avg err, within allowed tolerance.
     while (--cd >= MIN_VIABLE_DIV)
     {
@@ -370,7 +370,7 @@ boolean displayRawToReadableB32Hex(String &outputStr)
         bstMul = avgTms;
         bstAvg = avg;
         bstDiv = cd;
-        //serialPrintln(String("p="+ uint64ToString(p, 10) + " cd=" + uint64ToString(cd, 10) +"  avgErr=" + uint64ToString(avg, 10) + " totTms="+ uint64ToString(totTms, 10) + " avgTms="+ uint64ToString((uint16_t)(avgTms*10), 10) ).c_str());
+        //serialPrintln(String("p="+ uint64ToString(p, 10) + " cd=" + uint64ToString(cd, 10) +"  avgErr=" + uint64ToString(avg, 10) + " totTms="+ uint64ToString(totTms, 10) + " avgTms="+ uint64ToString((uint16_t)(avgTms*10), 10) ).c_str(void));
       }
     }
     if (bstDiv == 0xFFFFU)

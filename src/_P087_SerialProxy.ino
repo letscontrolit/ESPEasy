@@ -34,13 +34,13 @@
 
 
 struct P087_data_struct : public PluginTaskData_base {
-  P087_data_struct() :  P087_easySerial(nullptr) {}
+  P087_data_struct(void) :  P087_easySerial(nullptr) {}
 
-  ~P087_data_struct() {
-    reset();
+  ~P087_data_struct(void) {
+    reset(void);
   }
 
-  void reset() {
+  void reset(void) {
     if (P087_easySerial != nullptr) {
       delete P087_easySerial;
       P087_easySerial = nullptr;
@@ -51,24 +51,24 @@ struct P087_data_struct : public PluginTaskData_base {
     if ((serial_rx < 0) && (serial_tx < 0)) {
       return false;
     }
-    reset();
+    reset(void);
     P087_easySerial = new ESPeasySerial(serial_rx, serial_tx);
 
-    if (isInitialized()) {
+    if (isInitialized(void)) {
       P087_easySerial->begin(baudrate);
       return true;
     }
     return false;
   }
 
-  bool isInitialized() const {
+  bool isInitialized(void) const {
     return P087_easySerial != nullptr;
   }
 
   void sendString(const String& data) {
-    if (isInitialized()) {
-      if (data.length() > 0) {
-        P087_easySerial->write(data.c_str());
+    if (isInitialized(void)) {
+      if (data.length(void) > 0) {
+        P087_easySerial->write(data.c_str(void));
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           String log = F("Proxy: Sending: ");
@@ -79,21 +79,21 @@ struct P087_data_struct : public PluginTaskData_base {
     }
   }
 
-  bool loop() {
-    if (!isInitialized()) {
+  bool loop(void) {
+    if (!isInitialized(void)) {
       return false;
     }
     bool fullSentenceReceived = false;
 
     if (P087_easySerial != nullptr) {
-      while (P087_easySerial->available() > 0 && !fullSentenceReceived) {
+      while (P087_easySerial->available(void) > 0 && !fullSentenceReceived) {
         // Look for end marker
-        char c = P087_easySerial->read();
+        char c = P087_easySerial->read(void);
 
         switch (c) {
           case 13:
           {
-            const size_t length = sentence_part.length();
+            const size_t length = sentence_part.length(void);
             bool valid          = length > 0;
 
             for (size_t i = 0; i < length && valid; ++i) {
@@ -118,13 +118,13 @@ struct P087_data_struct : public PluginTaskData_base {
             break;
         }
 
-        if (max_length_reached()) { fullSentenceReceived = true; }
+        if (max_length_reached(void)) { fullSentenceReceived = true; }
       }
     }
 
     if (fullSentenceReceived) {
       ++sentences_received;
-      length_last_received = sentence_part.length();
+      length_last_received = sentence_part.length(void);
     }
     return fullSentenceReceived;
   }
@@ -146,9 +146,9 @@ struct P087_data_struct : public PluginTaskData_base {
 
 private:
 
-  bool max_length_reached() const {
+  bool max_length_reached(void) const {
     if (max_length == 0) { return false; }
-    return sentence_part.length() >= max_length;
+    return sentence_part.length(void) >= max_length;
   }
 
   ESPeasySerial *P087_easySerial = nullptr;
@@ -228,7 +228,7 @@ boolean Plugin_087(byte function, struct EventStruct *event, String& string) {
       P087_data_struct *P087_data =
         static_cast<P087_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if ((nullptr != P087_data) && P087_data->isInitialized()) {
+      if ((nullptr != P087_data) && P087_data->isInitialized(void)) {
         uint32_t success, error, length_last;
         P087_data->getSentencesReceived(success, error, length_last);
         byte varNr = VARS_PER_TASK;
@@ -262,9 +262,9 @@ boolean Plugin_087(byte function, struct EventStruct *event, String& string) {
       /*
          P087_data_struct *P087_data =
             static_cast<P087_data_struct *>(getPluginTaskData(event->TaskIndex));
-         if (nullptr != P087_data && P087_data->isInitialized()) {
+         if (nullptr != P087_data && P087_data->isInitialized(void)) {
             String detectedString = F("Detected: ");
-            detectedString += String(P087_data->P087_easySerial->baudRate());
+            detectedString += String(P087_data->P087_easySerial->baudRate(void));
             addUnit(detectedString);
        */
 
@@ -274,7 +274,7 @@ boolean Plugin_087(byte function, struct EventStruct *event, String& string) {
       /*
          {
          // In a separate scope to free memory of String array as soon as possible
-         sensorTypeHelper_webformLoad_header();
+         sensorTypeHelper_webformLoad_header(void);
          String options[P087_NR_OUTPUT_OPTIONS];
 
          for (int i = 0; i < P087_NR_OUTPUT_OPTIONS; ++i) {
@@ -321,7 +321,7 @@ boolean Plugin_087(byte function, struct EventStruct *event, String& string) {
         }
       }
 
-      if (error.length() > 0) {
+      if (error.length(void) > 0) {
         addHtmlError(error);
       }
       SaveCustomTaskSettings(event->TaskIndex, (byte *)&P087_deviceTemplate, sizeof(P087_deviceTemplate));
@@ -333,7 +333,7 @@ boolean Plugin_087(byte function, struct EventStruct *event, String& string) {
     case PLUGIN_INIT: {
       const int16_t serial_rx = CONFIG_PIN1;
       const int16_t serial_tx = CONFIG_PIN2;
-      initPluginTaskData(event->TaskIndex, new P087_data_struct());
+      initPluginTaskData(event->TaskIndex, new P087_data_struct(void));
       P087_data_struct *P087_data =
         static_cast<P087_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -368,8 +368,8 @@ boolean Plugin_087(byte function, struct EventStruct *event, String& string) {
         P087_data_struct *P087_data =
           static_cast<P087_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-        if ((nullptr != P087_data) && P087_data->loop()) {
-          // schedule_task_device_timer(event->TaskIndex, millis() + 10);
+        if ((nullptr != P087_data) && P087_data->loop(void)) {
+          // schedule_task_device_timer(event->TaskIndex, millis(void) + 10);
           delay(0); // Processing a full sentence may take a while, run some
                     // background tasks.
           P087_data->getSentence(event->String2);
@@ -407,7 +407,7 @@ void P087_html_show_stats(struct EventStruct *event) {
   P087_data_struct *P087_data =
     static_cast<P087_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-  if ((nullptr == P087_data) || !P087_data->isInitialized()) {
+  if ((nullptr == P087_data) || !P087_data->isInitialized(void)) {
     return;
   }
   {

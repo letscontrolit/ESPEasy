@@ -4,17 +4,17 @@
 // ********************************************************************************
 // Web Interface pin state list
 // ********************************************************************************
-void handle_pinstates_json() {
+void handle_pinstates_json(void) {
   checkRAM(F("handle_pinstates"));
 
-  if (!isLoggedIn()) { return; }
+  if (!isLoggedIn(void)) { return; }
   navMenuIndex = MENU_INDEX_TOOLS;
-  TXBuffer.startJsonStream();
+  TXBuffer.startJsonStream(void);
 
   bool comma_between = false;
   TXBuffer += F("[{");
 
-  for (std::map<uint32_t, portStatusStruct>::iterator it = globalMapPortStatus.begin(); it != globalMapPortStatus.end(); ++it)
+  for (std::map<uint32_t, portStatusStruct>::iterator it = globalMapPortStatus.begin(void); it != globalMapPortStatus.end(void); ++it)
   {
     if (comma_between) {
       TXBuffer += ",{";
@@ -45,7 +45,7 @@ void handle_pinstates_json() {
      for (byte x = 0; x < PINSTATE_TABLE_MAX; x++)
       if (pinStates[x].plugin != 0)
       {
-        html_TR_TD(); TXBuffer += "P";
+        html_TR_TD(void); TXBuffer += "P";
         if (pinStates[x].plugin < 100)
         {
           TXBuffer += '0';
@@ -55,35 +55,35 @@ void handle_pinstates_json() {
           TXBuffer += '0';
         }
         TXBuffer += pinStates[x].plugin;
-        html_TD();
+        html_TD(void);
         TXBuffer += pinStates[x].index;
-        html_TD();
+        html_TD(void);
         byte mode = pinStates[x].mode;
         TXBuffer += getPinModeString(mode);
-        html_TD();
+        html_TD(void);
         TXBuffer += pinStates[x].value;
       }
    */
 
-  TXBuffer.endStream();
+  TXBuffer.endStream(void);
 }
 
 #endif // WEBSERVER_NEW_UI
 
 #ifdef WEBSERVER_PINSTATES
 
-void handle_pinstates() {
+void handle_pinstates(void) {
   checkRAM(F("handle_pinstates"));
 
-  if (!isLoggedIn()) { return; }
+  if (!isLoggedIn(void)) { return; }
   navMenuIndex = MENU_INDEX_TOOLS;
-  TXBuffer.startStream();
+  TXBuffer.startStream(void);
   sendHeadandTail_stdtemplate(_HEAD);
 
   // addFormSubHeader(F("Pin state table<TR>"));
 
-  html_table_class_multirow();
-  html_TR();
+  html_table_class_multirow(void);
+  html_TR(void);
   html_table_header(F("Plugin"), F("Official_plugin_list"), 0);
   html_table_header("GPIO");
   html_table_header("Mode");
@@ -93,9 +93,9 @@ void handle_pinstates() {
   html_table_header(F("Command"));
   html_table_header("Init");
 
-  for (std::map<uint32_t, portStatusStruct>::iterator it = globalMapPortStatus.begin(); it != globalMapPortStatus.end(); ++it)
+  for (std::map<uint32_t, portStatusStruct>::iterator it = globalMapPortStatus.begin(void); it != globalMapPortStatus.end(void); ++it)
   {
-    html_TR_TD(); TXBuffer += "P";
+    html_TR_TD(void); TXBuffer += "P";
     const uint16_t plugin = getPluginFromKey(it->first);
     const uint16_t port   = getPortFromKey(it->first);
 
@@ -109,19 +109,19 @@ void handle_pinstates() {
       TXBuffer += '0';
     }
     TXBuffer += plugin;
-    html_TD();
+    html_TD(void);
     TXBuffer += port;
-    html_TD();
+    html_TD(void);
     TXBuffer += getPinModeString(it->second.mode);
-    html_TD();
+    html_TD(void);
     TXBuffer += it->second.state;
-    html_TD();
+    html_TD(void);
     TXBuffer += it->second.task;
-    html_TD();
+    html_TD(void);
     TXBuffer += it->second.monitor;
-    html_TD();
+    html_TD(void);
     TXBuffer += it->second.command;
-    html_TD();
+    html_TD(void);
     TXBuffer += it->second.init;
   }
 
@@ -134,7 +134,7 @@ void handle_pinstates() {
      for (byte x = 0; x < PINSTATE_TABLE_MAX; x++)
       if (pinStates[x].plugin != 0)
       {
-        html_TR_TD(); TXBuffer += "P";
+        html_TR_TD(void); TXBuffer += "P";
         if (pinStates[x].plugin < 100)
         {
           TXBuffer += '0';
@@ -144,18 +144,18 @@ void handle_pinstates() {
           TXBuffer += '0';
         }
         TXBuffer += pinStates[x].plugin;
-        html_TD();
+        html_TD(void);
         TXBuffer += pinStates[x].index;
-        html_TD();
+        html_TD(void);
         byte mode = pinStates[x].mode;
         TXBuffer += getPinModeString(mode);
-        html_TD();
+        html_TD(void);
         TXBuffer += pinStates[x].value;
       }
    */
-  html_end_table();
+  html_end_table(void);
   sendHeadandTail_stdtemplate(_TAIL);
-  TXBuffer.endStream();
+  TXBuffer.endStream(void);
 }
 
 #endif // ifdef WEBSERVER_PINSTATES

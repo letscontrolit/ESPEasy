@@ -16,13 +16,13 @@
 #include <ESPeasySerial.h>
 
 struct C018_data_struct {
-  C018_data_struct() : C018_easySerial(nullptr), myLora(nullptr) {}
+  C018_data_struct(void) : C018_easySerial(nullptr), myLora(nullptr) {}
 
-  ~C018_data_struct() {
-    reset();
+  ~C018_data_struct(void) {
+    reset(void);
   }
 
-  void reset() {
+  void reset(void) {
     if (myLora != nullptr) {
       delete myLora;
       myLora = nullptr;
@@ -44,147 +44,147 @@ struct C018_data_struct {
     }
     sampleSetInitiator = sampleSet_Initiator;
 
-    if (isInitialized()) {
+    if (isInitialized(void)) {
       // Check to see if serial parameters have changed.
       bool notChanged = true;
-      notChanged &= C018_easySerial->getRxPin() == serial_rx;
-      notChanged &= C018_easySerial->getTxPin() == serial_tx;
-      notChanged &= C018_easySerial->getBaudRate() == baudrate;
+      notChanged &= C018_easySerial->getRxPin(void) == serial_rx;
+      notChanged &= C018_easySerial->getTxPin(void) == serial_tx;
+      notChanged &= C018_easySerial->getBaudRate(void) == baudrate;
 
       if (notChanged) { return true; }
     }
 
-    reset();
+    reset(void);
     C018_easySerial = new ESPeasySerial(serial_rx, serial_tx);
 
     if (C018_easySerial != nullptr) {
       C018_easySerial->begin(baudrate);
       myLora           = new rn2xx3(*C018_easySerial);
-      autobaud_success = myLora->autobaud();
-      cacheHWEUI       = myLora->hweui();
-      cacheSysVer      = myLora->sysver();
+      autobaud_success = myLora->autobaud(void);
+      cacheHWEUI       = myLora->hweui(void);
+      cacheSysVer      = myLora->sysver(void);
       myLora->setLastUsedJoinMode(joinIsOTAA);
     }
-    return isInitialized();
+    return isInitialized(void);
   }
 
-  bool isInitialized() const {
+  bool isInitialized(void) const {
     return (C018_easySerial != nullptr) && (myLora != nullptr) /* && autobaud_success */;
   }
 
-  bool hasJoined() const {
-    if (!isInitialized()) { return false; }
-    return myLora->hasJoined();
+  bool hasJoined(void) const {
+    if (!isInitialized(void)) { return false; }
+    return myLora->hasJoined(void);
   }
 
-  bool useOTAA() const {
-    if (!isInitialized()) { return true; }
-    return myLora->useOTAA();
+  bool useOTAA(void) const {
+    if (!isInitialized(void)) { return true; }
+    return myLora->useOTAA(void);
   }
 
   bool txUncnfBytes(const byte *data, uint8_t size, uint8_t port) {
-    if (!hasJoined()) { return false; }
+    if (!hasJoined(void)) { return false; }
     return myLora->txBytes(data, size, port) != TX_FAIL;
   }
 
   bool txHexBytes(const String& data, uint8_t port) {
-    if (!hasJoined()) { return false; }
+    if (!hasJoined(void)) { return false; }
     return myLora->txHexBytes(data, port) != TX_FAIL;
   }
 
   bool txUncnf(const String& data, uint8_t port) {
-    if (!hasJoined()) { return false; }
+    if (!hasJoined(void)) { return false; }
     return myLora->tx(data, port) != TX_FAIL;
   }
 
   bool setFrequencyPlan(FREQ_PLAN plan) {
-    if (!isInitialized()) { return false; }
+    if (!isInitialized(void)) { return false; }
     return myLora->setFrequencyPlan(plan);
   }
 
   bool setSF(uint8_t sf) {
-    if (!isInitialized()) { return false; }
+    if (!isInitialized(void)) { return false; }
     return myLora->setSF(sf);
   }
 
   bool initOTAA(const String& AppEUI = "", const String& AppKey = "", const String& DevEUI = "") {
-    if (!isInitialized()) { return false; }
+    if (!isInitialized(void)) { return false; }
     bool success = myLora->initOTAA(AppEUI, AppKey, DevEUI);
-    updateCacheOnInit();
+    updateCacheOnInit(void);
     return success;
   }
 
   bool initABP(const String& addr, const String& AppSKey, const String& NwkSKey) {
-    if (!isInitialized()) { return false; }
+    if (!isInitialized(void)) { return false; }
     bool success = myLora->initABP(addr, AppSKey, NwkSKey);
-    updateCacheOnInit();
+    updateCacheOnInit(void);
     return success;
   }
 
   String sendRawCommand(const String& command) {
-    if (!isInitialized()) { return ""; }
+    if (!isInitialized(void)) { return ""; }
     return myLora->sendRawCommand(command);
   }
 
-  int getVbat() {
-    if (!isInitialized()) { return -1; }
-    return myLora->getVbat();
+  int getVbat(void) {
+    if (!isInitialized(void)) { return -1; }
+    return myLora->getVbat(void);
   }
 
-  String peekLastErrorInvalidParam() {
-    if (!isInitialized()) { return ""; }
-    return myLora->peekLastErrorInvalidParam();
+  String peekLastErrorInvalidParam(void) {
+    if (!isInitialized(void)) { return ""; }
+    return myLora->peekLastErrorInvalidParam(void);
   }
 
-  String getLastErrorInvalidParam() {
-    if (!isInitialized()) { return ""; }
-    return myLora->getLastErrorInvalidParam();
+  String getLastErrorInvalidParam(void) {
+    if (!isInitialized(void)) { return ""; }
+    return myLora->getLastErrorInvalidParam(void);
   }
 
-  String getDataRate() {
-    if (!isInitialized()) { return ""; }
-    return myLora->getDataRate();
+  String getDataRate(void) {
+    if (!isInitialized(void)) { return ""; }
+    return myLora->getDataRate(void);
   }
 
-  int getRSSI() {
-    if (!isInitialized()) { return 0; }
-    return myLora->getRSSI();
+  int getRSSI(void) {
+    if (!isInitialized(void)) { return 0; }
+    return myLora->getRSSI(void);
   }
 
-  uint32_t getRawStatus() {
-    if (!isInitialized()) { return 0; }
-    return myLora->Status.getRawStatus();
+  uint32_t getRawStatus(void) {
+    if (!isInitialized(void)) { return 0; }
+    return myLora->Status.getRawStatus(void);
   }
 
   bool getFrameCounters(uint32_t& dnctr, uint32_t& upctr) {
-    if (!isInitialized()) { return false; }
+    if (!isInitialized(void)) { return false; }
     return myLora->getFrameCounters(dnctr, upctr);
   }
 
   bool setFrameCounters(uint32_t dnctr, uint32_t upctr) {
-    if (!isInitialized()) { return false; }
+    if (!isInitialized(void)) { return false; }
     return myLora->setFrameCounters(dnctr, upctr);
   }
 
   // Cached data, only changing occasionally.
 
-  String getDevaddr() {
-    if (cacheDevAddr.length() == 0)
+  String getDevaddr(void) {
+    if (cacheDevAddr.length(void) == 0)
     {
-      updateCacheOnInit();
+      updateCacheOnInit(void);
     }
     return cacheDevAddr;
   }
 
-  String hweui() {
+  String hweui(void) {
     return cacheHWEUI;
   }
 
-  String sysver() {
+  String sysver(void) {
     return cacheSysVer;
   }
 
-  uint8_t getSampleSetCount() const { return sampleSetCounter; }
+  uint8_t getSampleSetCount(void) const { return sampleSetCounter; }
 
   uint8_t getSampleSetCount(taskIndex_t taskIndex) {
     if (sampleSetInitiator == taskIndex)
@@ -198,9 +198,9 @@ struct C018_data_struct {
 private:
 
   void C018_logError(const String& command) {
-    String error = myLora->peekLastErrorInvalidParam();
+    String error = myLora->peekLastErrorInvalidParam(void);
 
-    if (error.length() > 0) {
+    if (error.length(void) > 0) {
       String log = F("RN2384: ");
       log += command;
       log += ": ";
@@ -209,10 +209,10 @@ private:
     }
   }
 
-  void updateCacheOnInit() {
+  void updateCacheOnInit(void) {
     cacheDevAddr = "";
 
-    if (!isInitialized()) {
+    if (!isInitialized(void)) {
       return;
     }
 
@@ -245,22 +245,22 @@ private:
 #define C018_USE_ABP                 1
 struct C018_ConfigStruct
 {
-  C018_ConfigStruct() {
-    reset();
+  C018_ConfigStruct(void) {
+    reset(void);
   }
 
-  void validate() {
+  void validate(void) {
     ZERO_TERMINATE(DeviceEUI);
     ZERO_TERMINATE(DeviceAddr);
     ZERO_TERMINATE(NetworkSessionKey);
     ZERO_TERMINATE(AppSessionKey);
 
     if ((baudrate < 2400) || (baudrate > 115200)) {
-      reset();
+      reset(void);
     }
   }
 
-  void reset() {
+  void reset(void) {
     ZERO_FILL(DeviceEUI);
     ZERO_FILL(DeviceAddr);
     ZERO_FILL(NetworkSessionKey);
@@ -315,10 +315,10 @@ bool CPlugin_018(byte function, struct EventStruct *event, String& string)
 
     case CPLUGIN_WEBFORM_SHOW_HOST_CONFIG:
     {
-      if (C018_data.isInitialized()) {
+      if (C018_data.isInitialized(void)) {
         string  = F("Dev addr: ");
-        string += C018_data.getDevaddr();
-        string += C018_data.useOTAA() ? F(" (OTAA)") : F(" (ABP)");
+        string += C018_data.getDevaddr(void);
+        string += C018_data.useOTAA(void) ? F(" (OTAA)") : F(" (ABP)");
       } else {
         string = F("-");
       }
@@ -333,7 +333,7 @@ bool CPlugin_018(byte function, struct EventStruct *event, String& string)
 
       C018_ConfigStruct customConfig;
       LoadCustomControllerSettings(event->ControllerIndex, (byte *)&customConfig, sizeof(customConfig));
-      customConfig.validate();
+      customConfig.validate(void);
 
       C018_data.init(customConfig.rxpin, customConfig.txpin, customConfig.baudrate, 
                      customConfig.joinmethod == C018_USE_OTAA,
@@ -360,7 +360,7 @@ bool CPlugin_018(byte function, struct EventStruct *event, String& string)
       C018_ConfigStruct customConfig;
 
       LoadCustomControllerSettings(event->ControllerIndex, (byte *)&customConfig, sizeof(customConfig));
-      customConfig.validate();
+      customConfig.validate(void);
 
       {
         // Script to toggle visibility of OTAA/ABP field, based on the activation method selector.
@@ -376,13 +376,13 @@ bool CPlugin_018(byte function, struct EventStruct *event, String& string)
         addHtml(c018_add_joinChanged_script_element_line(F("nskey"), false));
         addHtml(c018_add_joinChanged_script_element_line(F("appskey"), false));
         addHtml("}");
-        html_add_script_end();
+        html_add_script_end(void);
       }
 
       {
         addFormTextBox(F("Device EUI"), F("deveui"), customConfig.DeviceEUI, C018_DEVICE_EUI_LEN - 1);
         String deveui_note = F("Leave empty to use HW DevEUI: ");
-        deveui_note += C018_data.hweui();
+        deveui_note += C018_data.hweui(void);
         addFormNote(deveui_note, F("deveui_note"));
       }
 
@@ -398,7 +398,7 @@ bool CPlugin_018(byte function, struct EventStruct *event, String& string)
                                options, values, NULL, choice,
                                F("joinChanged(this)")); // Script to toggle OTAA/ABP fields visibility when changing selection.
       }
-      html_add_script(F("document.getElementById('joinmethod').onchange();"), false);
+      html_add_script(F("document.getElementById('joinmethod').onchange(void);"), false);
 
       addTableSeparator(F("Connection Configuration"), 2, 3);
       {
@@ -428,15 +428,15 @@ bool CPlugin_018(byte function, struct EventStruct *event, String& string)
 
       // Some information on detected device
       addRowLabel(F("Hardware DevEUI"));
-      addHtml(String(C018_data.hweui()));
+      addHtml(String(C018_data.hweui(void)));
       addRowLabel(F("Version Number"));
-      addHtml(String(C018_data.sysver()));
+      addHtml(String(C018_data.sysver(void)));
 
       addRowLabel(F("Voltage"));
-      addHtml(String(static_cast<float>(C018_data.getVbat()) / 1000.0, 3));
+      addHtml(String(static_cast<float>(C018_data.getVbat(void)) / 1000.0, 3));
 
       addRowLabel(F("Dev Addr"));
-      addHtml(C018_data.getDevaddr());
+      addHtml(C018_data.getDevaddr(void));
 
       uint32_t dnctr, upctr;
 
@@ -449,13 +449,13 @@ bool CPlugin_018(byte function, struct EventStruct *event, String& string)
       }
 
       addRowLabel(F("Last Command Error"));
-      addHtml(C018_data.getLastErrorInvalidParam());
+      addHtml(C018_data.getLastErrorInvalidParam(void));
 
       addRowLabel(F("Sample Set Counter"));
-      addHtml(String(C018_data.getSampleSetCount()));
+      addHtml(String(C018_data.getSampleSetCount(void)));
 
       addRowLabel(F("Status"));
-      addHtml(String(C018_data.getRawStatus()));
+      addHtml(String(C018_data.getRawStatus(void)));
 
 
       break;
@@ -463,16 +463,16 @@ bool CPlugin_018(byte function, struct EventStruct *event, String& string)
     case CPLUGIN_WEBFORM_SAVE:
     {
       C018_ConfigStruct customConfig;
-      customConfig.reset();
+      customConfig.reset(void);
       String deveui  = WebServer.arg(F("deveui"));
       String devaddr = WebServer.arg(F("devaddr"));
       String nskey   = WebServer.arg(F("nskey"));
       String appskey = WebServer.arg(F("appskey"));
 
-      strlcpy(customConfig.DeviceEUI,         deveui.c_str(),  sizeof(customConfig.DeviceEUI));
-      strlcpy(customConfig.DeviceAddr,        devaddr.c_str(), sizeof(customConfig.DeviceAddr));
-      strlcpy(customConfig.NetworkSessionKey, nskey.c_str(),   sizeof(customConfig.NetworkSessionKey));
-      strlcpy(customConfig.AppSessionKey,     appskey.c_str(), sizeof(customConfig.AppSessionKey));
+      strlcpy(customConfig.DeviceEUI,         deveui.c_str(void),  sizeof(customConfig.DeviceEUI));
+      strlcpy(customConfig.DeviceAddr,        devaddr.c_str(void), sizeof(customConfig.DeviceAddr));
+      strlcpy(customConfig.NetworkSessionKey, nskey.c_str(void),   sizeof(customConfig.NetworkSessionKey));
+      strlcpy(customConfig.AppSessionKey,     appskey.c_str(void), sizeof(customConfig.AppSessionKey));
       customConfig.baudrate      = getFormItemInt(F(C018_BAUDRATE_LABEL), customConfig.baudrate);
       customConfig.rxpin         = getFormItemInt(F("taskdevicepin1"), customConfig.rxpin);
       customConfig.txpin         = getFormItemInt(F("taskdevicepin2"), customConfig.txpin);
@@ -512,14 +512,14 @@ bool CPlugin_018(byte function, struct EventStruct *event, String& string)
     {
       success = C018_DelayHandler.addToQueue(
         C018_queue_element(event, C018_data.getSampleSetCount(event->TaskIndex)));
-      scheduleNextDelayQueue(TIMER_C018_DELAY_QUEUE, C018_DelayHandler.getNextScheduleTime());
+      scheduleNextDelayQueue(TIMER_C018_DELAY_QUEUE, C018_DelayHandler.getNextScheduleTime(void));
 
       break;
     }
 
     case CPLUGIN_FLUSH:
     {
-      process_c018_delay_queue();
+      process_c018_delay_queue(void);
       delay(0);
       break;
     }

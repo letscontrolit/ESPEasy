@@ -389,7 +389,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       {
         //update now
         schedule_task_device_timer(event->TaskIndex,
-           millis() + (Settings.TaskDeviceTimer[event->TaskIndex] * 1000));
+           millis(void) + (Settings.TaskDeviceTimer[event->TaskIndex] * 1000));
         frameCounter=0;
 
         MaxFramesToDisplay = 0xFF;
@@ -424,7 +424,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           P036_DisplayLinesV1[varNr].FontSpace = 0xff;
           P036_DisplayLinesV1[varNr].reserved = 0xff;
         }
-        if (error.length() > 0) {
+        if (error.length(void) > 0) {
           addHtmlError(error);
         }
         SaveCustomTaskSettings(event->TaskIndex, (uint8_t*)&P036_DisplayLinesV1, sizeof(P036_DisplayLinesV1));
@@ -444,7 +444,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         //      Init the display and turn it on
         if (display)
         {
-          display->end();
+          display->end(void);
           delete display;
         }
 
@@ -454,8 +454,8 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         } else {
           display = new SH1106Wire(OLED_address, Settings.Pin_i2c_sda, Settings.Pin_i2c_scl);
         }
-        display->init();		// call to local override of init function
-        display->displayOn();
+        display->init(void);		// call to local override of init function
+        display->displayOn(void);
 
         uint8_t OLED_contrast = PCONFIG(6);
         P36_setContrast(OLED_contrast);
@@ -466,7 +466,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         //      flip screen if required
         OLEDIndex = PCONFIG(7);
         if (PCONFIG(1) == 2) {
-          display->flipScreenVertically();
+          display->flipScreenVertically(void);
           TopLineOffset = P36_MaxDisplayHeight - SizeSettings[OLEDIndex].Height;
         }
         else TopLineOffset = 0;
@@ -474,9 +474,9 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         //      Display the device name, logo, time and wifi
         bAlternativHeader = false;  // start with first header content
         HeaderCount = 0;            // reset header count
-        display_header();
-        display_logo();
-        display->display();
+        display_header(void);
+        display_logo(void);
+        display->display(void);
 
         //      Set up the display timer
         displayTimer = PCONFIG(4);
@@ -500,7 +500,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         }
 
         //    prepare font and positions for page and line scrolling
-        prepare_pagescrolling();
+        prepare_pagescrolling(void);
 
         success = true;
         break;
@@ -510,7 +510,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       {
           if (display)
           {
-            display->end();
+            display->end(void);
             delete display;
             display=NULL;
           }
@@ -530,7 +530,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           bPin3Invers = getBitFromUL(PCONFIG_LONG(0), 16);  // Bit 16
           if ((!bPin3Invers && digitalRead(CONFIG_PIN3)) || (bPin3Invers && !digitalRead(CONFIG_PIN3)))
           {
-            display->displayOn();
+            display->displayOn(void);
             UserVar[event->BaseVarIndex] = 1;      //  Save the fact that the display is now ON
             displayTimer = PCONFIG(4);
           }
@@ -554,7 +554,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           displayTimer--;
           if (displayTimer == 0)
           {
-            display->displayOff();
+            display->displayOff(void);
             UserVar[event->BaseVarIndex] = 0;      //  Save the fact that the display is now OFF
           }
         }
@@ -563,10 +563,10 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           OLEDIndex = PCONFIG(7);
           HeaderContent = static_cast<eHeaderContent>(get8BitFromUL(PCONFIG_LONG(0), 8));             // Bit15-8 HeaderContent
           HeaderContentAlternative = static_cast<eHeaderContent>(get8BitFromUL(PCONFIG_LONG(0), 0));  // Bit 7-0 HeaderContentAlternative
-	        display_header();	// Update Header
-          if (display && display_wifibars()) {
+	        display_header(void);	// Update Header
+          if (display && display_wifibars(void)) {
             // WiFi symbol was updated.
-            display->display();
+            display->display(void);
           }
         }
 
@@ -577,7 +577,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_TIMER_IN:
     {
       OLEDIndex = PCONFIG(7);
-      if (display_scroll_timer()) // page scrolling
+      if (display_scroll_timer(void)) // page scrolling
         setPluginTaskTimer(P36_PageScrollTimer, event->TaskIndex, event->Par1);  // calls next page scrollng tick
 
       return success;
@@ -634,7 +634,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
             {
               tmpString = String(P036_DisplayLinesV1[(ScrollingPages.linesPerFrame * frameCounter) + i].Content);
               ScrollingPages.newString[i] = P36_parseTemplate(tmpString, 20);
-              if (ScrollingPages.newString[i].length() > 0) foundText = true;
+              if (ScrollingPages.newString[i].length(void) > 0) foundText = true;
             }
             if (foundText) {
               if (nextFrameToDisplay == 0xff) {
@@ -659,7 +659,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
               {
                 tmpString = String(P036_DisplayLinesV1[(ScrollingPages.linesPerFrame * i) + k].Content);
                 tmpString = P36_parseTemplate(tmpString, 20);
-                if (tmpString.length() > 0) {
+                if (tmpString.length(void) > 0) {
                   // page not empty
                   MaxFramesToDisplay ++;
                   break;
@@ -670,10 +670,10 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           //      Update display
           bAlternativHeader = false;  // start with first header content
           HeaderCount = 0;            // reset header count
-          display_header();
+          display_header(void);
           if (SizeSettings[OLEDIndex].Width == P36_MaxDisplayWidth) display_indicator(currentFrameToDisplay, nrFramesToDisplay);
 
-          display->display();
+          display->display(void);
 
           int lscrollspeed = PCONFIG(3);
           if (bPageScrollDisabled) lscrollspeed = ePSS_Instant; // first page after INIT without scrolling
@@ -701,13 +701,13 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
             if (para1 == F("on")) {
               success = true;
               displayTimer = PCONFIG(4);
-              display->displayOn();
+              display->displayOn(void);
               UserVar[event->BaseVarIndex] = 1;      //  Save the fact that the display is now ON
             }
             if (para1 == F("off")) {
               success = true;
               displayTimer = 0;
-              display->displayOff();
+              display->displayOff(void);
               UserVar[event->BaseVarIndex] = 0;      //  Save the fact that the display is now OFF
             }
             if (para1 == F("low")) {
@@ -743,7 +743,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
             if (PixLength > 255) {
               addHtmlError(String(F("Pixel length of ")) + String(PixLength) + String(F(" too long for line! Max. 255 pix!")));
 
-              int strlen = String(P036_DisplayLinesV1[LineNo-1].Content).length();
+              int strlen = String(P036_DisplayLinesV1[LineNo-1].Content).length(void);
               float fAvgPixPerChar = ((float) PixLength)/strlen;
               int iCharToRemove = ceil(((float) (PixLength-255))/fAvgPixPerChar);
               // shorten string because OLED controller can not handle such long strings
@@ -754,14 +754,14 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
             displayTimer = PCONFIG(4);
             if (UserVar[event->BaseVarIndex] == 0) {
               // display was OFF, turn it ON
-              display->displayOn();
+              display->displayOn(void);
               UserVar[event->BaseVarIndex] = 1;      //  Save the fact that the display is now ON
             }
 
             // String log = String(F("[P36] Line: ")) + String(LineNo);
             // log += String(F(" NewContent:")) + String(NewContent);
             // log += String(F(" Content:")) + String(P036_DisplayLinesV1[LineNo-1].Content);
-            // log += String(F(" Length:")) + String(String(P036_DisplayLinesV1[LineNo-1].Content).length());
+            // log += String(F(" Length:")) + String(String(P036_DisplayLinesV1[LineNo-1].Content).length(void));
             // log += String(F(" Pix: ")) + String(display->getStringWidth(String(P036_DisplayLinesV1[LineNo-1].Content)));
             // log += String(F(" Reserved:")) + String(P036_DisplayLinesV1[LineNo-1].reserved);
             // addLog(LOG_LEVEL_INFO, log);
@@ -789,7 +789,7 @@ void P36_setContrast(uint8_t OLED_contrast) {
   switch (OLED_contrast) {
     case P36_CONTRAST_OFF:
       if (display) {
-        display->displayOff();
+        display->displayOff(void);
       }
       return;
     case P36_CONTRAST_LOW:
@@ -804,7 +804,7 @@ void P36_setContrast(uint8_t OLED_contrast) {
       break;
   }
   if (display) {
-    display->displayOn();
+    display->displayOn(void);
     display->setContrast(contrast, precharge, comdetect);
   }
 }
@@ -825,25 +825,25 @@ String P36_parseTemplate(String &tmpString, uint8_t lineSize) {
     String log = F("Gijs: '");
     log += tmpString;
     log += F("'  hex:");
-    for (int i = 0; i < tmpString.length(); ++i) {
+    for (int i = 0; i < tmpString.length(void); ++i) {
       log += ' ';
       log += String(tmpString[i], HEX);
     }
     log += F(" out hex:");
-    for (int i = 0; i < result.length(); ++i) {
+    for (int i = 0; i < result.length(void); ++i) {
       log += ' ';
       log += String(result[i], HEX);
     }
     addLog(LOG_LEVEL_INFO, log);
   }
 */
-  result.trim();
+  result.trim(void);
   return result;
 }
 
 // The screen is set up as 10 rows at the top for the header, 10 rows at the bottom for the footer and 44 rows in the middle for the scroll region
 
-void display_header() {
+void display_header(void) {
   eHeaderContent _HeaderContent;
   String newString, strHeader;
   if ((HeaderContentAlternative==HeaderContent) || !bAlternativHeader) {
@@ -855,8 +855,8 @@ void display_header() {
   }
   switch (_HeaderContent) {
     case eSSID:
-      if (WiFiConnected()) {
-        strHeader = WiFi.SSID();
+      if (WiFiConnected(void)) {
+        strHeader = WiFi.SSID(void);
       }
       else {
         newString=F("%sysname%");
@@ -909,20 +909,20 @@ void display_header() {
     default:
       return;
   }
-  if (newString.length() > 0) {
+  if (newString.length(void) > 0) {
     // Right now only systemvariables have been used, so we don't have to call the parseTemplate.
     parseSystemVariables(newString, false);
     strHeader = newString;
   }
 
-  strHeader.trim();
+  strHeader.trim(void);
   display_title(strHeader);
   // Display time and wifibars both clear area below, so paint them after the title.
-  if (SizeSettings[OLEDIndex].Width == P36_MaxDisplayWidth) display_time(); // only for 128pix wide displays
-  display_wifibars();
+  if (SizeSettings[OLEDIndex].Width == P36_MaxDisplayWidth) display_time(void); // only for 128pix wide displays
+  display_wifibars(void);
 }
 
-void display_time() {
+void display_time(void) {
   String dtime = F("%systime%");
   parseSystemVariables(dtime, false);
   display->setTextAlignment(TEXT_ALIGN_LEFT);
@@ -948,7 +948,7 @@ void display_title(String& title) {
   }
 }
 
-void display_logo() {
+void display_logo(void) {
 int left = 24;
   display->setTextAlignment(TEXT_ALIGN_LEFT);
   display->setFont(ArialMT_Plain_16);
@@ -1006,7 +1006,7 @@ void display_indicator(int iframe, int frameCount) {
   }
 }
 
-void prepare_pagescrolling()
+void prepare_pagescrolling(void)
 {
   switch (ScrollingPages.linesPerFrame) {
   case 1:
@@ -1108,14 +1108,14 @@ uint8_t display_scroll(int lscrollspeed, int lTaskTimer)
 
       if (NewPixLength > 255) {
         // shorten string because OLED controller can not handle such long strings
-        int strlen = ScrollingPages.newString[j].length();
+        int strlen = ScrollingPages.newString[j].length(void);
         float fAvgPixPerChar = ((float) NewPixLength)/strlen;
         int iCharToRemove = ceil(((float) (NewPixLength-255))/fAvgPixPerChar);
         ScrollingLines.Line[j].Content = ScrollingLines.Line[j].Content.substring(0, strlen-iCharToRemove);
       }
       // reduce line content for page scrolling to max width
       if (NewPixLength > MaxPixWidthForPageScrolling) {
-        int strlen = ScrollingPages.newString[j].length();
+        int strlen = ScrollingPages.newString[j].length(void);
         float fAvgPixPerChar = ((float) NewPixLength)/strlen;
         int iCharToRemove = ceil(((float) (NewPixLength-MaxPixWidthForPageScrolling))/(2*fAvgPixPerChar));
         if (bScrollLines) {
@@ -1131,11 +1131,11 @@ uint8_t display_scroll(int lscrollspeed, int lTaskTimer)
         // log += String(F(" New: ")) + String(ScrollingPages.newString[j]);
         // log += String(F(" Reduced: ")) + String(NewPixLength);
         // log += String(F(" (")) + String(strlen) + String(F(") -> "));
-        // log += String(display->getStringWidth(ScrollingPages.newString[j])) + String(F(" (")) + String(ScrollingPages.newString[j].length()) + String(F(")"));
+        // log += String(display->getStringWidth(ScrollingPages.newString[j])) + String(F(" (")) + String(ScrollingPages.newString[j].length(void)) + String(F(")"));
         // addLog(LOG_LEVEL_INFO, log);
       }
       if (LastPixLength > MaxPixWidthForPageScrolling) {
-        int strlen = ScrollingPages.oldString[j].length();
+        int strlen = ScrollingPages.oldString[j].length(void);
         float fAvgPixPerChar = ((float) LastPixLength)/strlen;
         int iCharToRemove = round(((float) (LastPixLength-MaxPixWidthForPageScrolling))/(2*fAvgPixPerChar));
         if (bScrollLines) {
@@ -1151,13 +1151,13 @@ uint8_t display_scroll(int lscrollspeed, int lTaskTimer)
         // log += String(F(" Old: ")) + String(ScrollingPages.oldString[j]);
         // log += String(F(" Reduced: ")) + String(LastPixLength);
         // log += String(F(" (")) + String(strlen) + String(F(") -> "));
-        // log += String(display->getStringWidth(ScrollingPages.oldString[j])) + String(F(" (")) + String(ScrollingPages.oldString[j].length()) + String(F(")"));
+        // log += String(display->getStringWidth(ScrollingPages.oldString[j])) + String(F(" (")) + String(ScrollingPages.oldString[j].length(void)) + String(F(")"));
         // addLog(LOG_LEVEL_INFO, log);
       }
 
       // while (NewPixLength > MaxPixWidthForPageScrolling) {
       //   // shorten string on right side because line is displayed left aligned while scrolling
-      //   ScrollingPages.newString[j] = ScrollingPages.newString[j].substring(0, ScrollingPages.newString[j].length()-1);
+      //   ScrollingPages.newString[j] = ScrollingPages.newString[j].substring(0, ScrollingPages.newString[j].length(void)-1);
       //   if (bScrollLines == false) {
       //     // shorten string on both sides because line is displayed centered
       //     ScrollingPages.newString[j] = ScrollingPages.newString[j].substring(1);
@@ -1169,7 +1169,7 @@ uint8_t display_scroll(int lscrollspeed, int lTaskTimer)
       //   ScrollingPages.oldString[j] = ScrollingPages.oldString[j].substring(1);
       //   if (bScrollLines == false) {
       //     // shorten string on both sides because line is displayed centered
-      //     ScrollingPages.oldString[j] = ScrollingPages.oldString[j].substring(0, ScrollingPages.oldString[j].length()-1);
+      //     ScrollingPages.oldString[j] = ScrollingPages.oldString[j].substring(0, ScrollingPages.oldString[j].length(void)-1);
       //   }
       //   LastPixLength = display->getStringWidth(ScrollingPages.oldString[j]);
       // }
@@ -1216,7 +1216,7 @@ uint8_t display_scroll(int lscrollspeed, int lTaskTimer)
     }
   }
 
-  display->display();
+  display->display(void);
 
   if (lscrollspeed < ePSS_Instant ) {
     // page scrolling (using PLUGIN_TIMER_IN)
@@ -1231,7 +1231,7 @@ uint8_t display_scroll(int lscrollspeed, int lTaskTimer)
   return (ScrollingPages.Scrolling);
 }
 
-uint8_t display_scroll_timer() {
+uint8_t display_scroll_timer(void) {
 
   // page scrolling (using PLUGIN_TIMER_IN)
   display->setColor(BLACK);
@@ -1265,7 +1265,7 @@ uint8_t display_scroll_timer() {
     }
   }
 
-  display->display();
+  display->display(void);
 
   if (ScrollingPages.dPixSum < P36_MaxDisplayWidth ) { // scrolling
     // page still scrolling
@@ -1326,14 +1326,14 @@ void display_scrolling_lines(int nlines) {
         }
       }
     }
-    if (updateDisplay && (ScrollingPages.Scrolling == 0)) display->display();
+    if (updateDisplay && (ScrollingPages.Scrolling == 0)) display->display(void);
   }
 }
 
 //Draw Signal Strength Bars, return true when there was an update.
-bool display_wifibars() {
-  const bool connected = WiFiConnected();
-  const int nbars_filled = (WiFi.RSSI() + 100) / 12;  // all bars filled if RSSI better than -46dB
+bool display_wifibars(void) {
+  const bool connected = WiFiConnected(void);
+  const int nbars_filled = (WiFi.RSSI(void) + 100) / 12;  // all bars filled if RSSI better than -46dB
   const int newState = connected ? nbars_filled : P36_WIFI_STATE_NOT_CONNECTED;
   if (newState == lastWiFiState)
     return false; // nothing to do.
@@ -1354,7 +1354,7 @@ bool display_wifibars() {
   display->setColor(BLACK);
   display->fillRect(x , y, size_x, size_y);
   display->setColor(WHITE);
-  if (WiFiConnected()) {
+  if (WiFiConnected(void)) {
     for (uint8_t ibar = 0; ibar < nbars; ibar++) {
       int16_t height = size_y * (ibar + 1) / nbars;
       int16_t xpos = x + ibar * width;

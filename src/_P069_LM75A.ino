@@ -50,13 +50,13 @@ public:
       _i2c_device_address += 4;
     }
 
-    //Wire.begin();   called in ESPEasy framework
+    //Wire.begin(void);   called in ESPEasy framework
   }
 
   LM75A(uint8_t addr)
   {
     _i2c_device_address = addr;
-    //Wire.begin();   called in ESPEasy framework
+    //Wire.begin(void);   called in ESPEasy framework
   }
 
   void setAddress(uint8_t addr)
@@ -64,7 +64,7 @@ public:
     _i2c_device_address = addr;
   }
 
-  float getTemperatureInDegrees() const
+  float getTemperatureInDegrees(void) const
   {
     float real_result = INVALID_LM75A_TEMPERATURE;
     int16_t value = 0;
@@ -72,7 +72,7 @@ public:
     // Go to temperature data register
     Wire.beginTransmission(_i2c_device_address);
     Wire.write(LM75A_REG_ADDR_TEMP);
-    if (Wire.endTransmission())
+    if (Wire.endTransmission(void))
     {
       // Transmission error
       return real_result;
@@ -80,9 +80,9 @@ public:
 
     // Get content
     Wire.requestFrom(_i2c_device_address, (uint8_t)2);
-    if (Wire.available() == 2)
+    if (Wire.available(void) == 2)
     {
-      value = (Wire.read() << 8) | Wire.read();
+      value = (Wire.read(void) << 8) | Wire.read(void);
     }
     else
     {
@@ -183,7 +183,7 @@ boolean Plugin_069(byte function, struct EventStruct *event, String& string)
 
       PLUGIN_069_LM75A->setAddress((uint8_t)PCONFIG(0));
 
-      float tempC = PLUGIN_069_LM75A->getTemperatureInDegrees();
+      float tempC = PLUGIN_069_LM75A->getTemperatureInDegrees(void);
 
       if (tempC == INVALID_LM75A_TEMPERATURE)
       {

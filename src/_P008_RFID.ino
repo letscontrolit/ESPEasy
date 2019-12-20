@@ -8,8 +8,8 @@
 #define PLUGIN_NAME_008       "RFID - Wiegand"
 #define PLUGIN_VALUENAME1_008 "Tag"
 
-void Plugin_008_interrupt1() ICACHE_RAM_ATTR;
-void Plugin_008_interrupt2() ICACHE_RAM_ATTR;
+void Plugin_008_interrupt1(void) ICACHE_RAM_ATTR;
+void Plugin_008_interrupt2(void) ICACHE_RAM_ATTR;
 
 volatile byte Plugin_008_bitCount = 0;     // Count the number of bits received.
 uint64_t Plugin_008_keyBuffer = 0;    // A 64-bit-long keyBuffer into which the number is stored.
@@ -145,7 +145,7 @@ boolean Plugin_008(byte function, struct EventStruct *event, String& string)
       case PLUGIN_WEBFORM_SAVE:
         {
           String plugin1 = WebServer.arg(F("p008_type"));
-          PCONFIG(0) = plugin1.toInt();
+          PCONFIG(0) = plugin1.toInt(void);
           success = true;
           break;
         }
@@ -154,7 +154,7 @@ boolean Plugin_008(byte function, struct EventStruct *event, String& string)
 }
 
 /*********************************************************************/
-void Plugin_008_interrupt1()
+void Plugin_008_interrupt1(void)
 /*********************************************************************/
 {
   // We've received a 1 bit. (bit 0 = high, bit 1 = low)
@@ -164,7 +164,7 @@ void Plugin_008_interrupt1()
 }
 
 /*********************************************************************/
-void Plugin_008_interrupt2()
+void Plugin_008_interrupt2(void)
 /*********************************************************************/
 {
   // We've received a 0 bit. (bit 0 = low, bit 1 = high)

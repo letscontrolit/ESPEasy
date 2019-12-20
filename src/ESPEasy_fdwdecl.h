@@ -32,17 +32,17 @@ float         & getUserVar(unsigned int varIndex);
 
 
 struct ControllerSettingsStruct;
-String   getUnknownString();
+String   getUnknownString(void);
 void     scheduleNextDelayQueue(unsigned long id,
                                 unsigned long nextTime);
 String   LoadControllerSettings(int                       ControllerIndex,
                                 ControllerSettingsStruct& controller_settings);
 String   get_formatted_Controller_number(int controller_index);
 void     statusLED(bool traffic);
-void     backgroundtasks();
-uint32_t getCurrentFreeStack();
-uint32_t getFreeStackWatermark();
-bool     canYield();
+void     backgroundtasks(void);
+uint32_t getCurrentFreeStack(void);
+uint32_t getFreeStackWatermark(void);
+bool     canYield(void);
 
 
 boolean  timeOutReached(unsigned long timer);
@@ -68,8 +68,8 @@ bool     connectClient(WiFiClient& client,
 
 String getWifiModeString(WiFiMode_t wifimode);
 bool   WiFiConnected(uint32_t timeout_ms);
-bool   WiFiConnected();
-bool   useStaticIP();
+bool   WiFiConnected(void);
+bool   useStaticIP(void);
 bool   hostReachable(const IPAddress& ip);
 bool   hostReachable(const String& hostname);
 void formatMAC(const uint8_t * mac, char (& strMAC)[20]);
@@ -113,28 +113,28 @@ void schedule_notification_event_timer(byte NotificationProtocolIndex, byte Func
 
 #ifdef USES_MQTT
 
-// void runPeriodicalMQTT();
-// void updateMQTTclient_connected();
-int firstEnabledMQTTController();
-// String getMQTT_state();
+// void runPeriodicalMQTT(void);
+// void updateMQTTclient_connected(void);
+int firstEnabledMQTTController(void);
+// String getMQTT_state(void);
 void callback(char        *c_topic,
               byte        *b_payload,
               unsigned int length);
-void MQTTDisconnect();
+void MQTTDisconnect(void);
 bool MQTTConnect(int controller_idx);
 bool MQTTCheck(int controller_idx);
-void schedule_all_tasks_using_MQTT_controller();
+void schedule_all_tasks_using_MQTT_controller(void);
 bool MQTTpublish(int controller_idx, const char *topic, const char *payload, boolean retained);
 #endif // ifdef USES_MQTT
 
 
 // Used in src/Commands/*
 void serialPrintln(const String& text);
-void serialPrintln();
+void serialPrintln(void);
 bool GetArgv(const char *string, String& argvString, unsigned int argc);
 bool HasArgv(const char *string, unsigned int argc);
 boolean str2ip(const String& string, byte *IP);
-bool useStaticIP();
+bool useStaticIP(void);
 String formatIP(const IPAddress& ip);
 String toString(float value, byte decimals);
 String boolToString(bool value);
@@ -142,13 +142,13 @@ bool isInt(const String& tBuf);
 String formatToHex(unsigned long value, const String& prefix);
 String formatToHex(unsigned long value);
 
-float getCPUload();
-int getLoopCountPerSec();
+float getCPUload(void);
+int getLoopCountPerSec(void);
 void serialPrint(const String& text);
 void setLogLevelFor(byte destination, byte logLevel);
 uint16_t getPortFromKey(uint32_t key);
 
-void initRTC();
+void initRTC(void);
 void deepSleepStart(int dsdelay);
 void taskClear(taskIndex_t taskIndex, bool save);
 void SensorSendTask(taskIndex_t TaskIndex);
@@ -162,17 +162,17 @@ String tolerantParseStringKeepCase(const String& string, byte indexFind);
 
 int parseCommandArgumentInt(const String& string, unsigned int argc);
 
-String describeAllowedIPrange();
-void clearAccessBlock();
+String describeAllowedIPrange(void);
+void clearAccessBlock(void);
 String rulesProcessingFile(const String& fileName, String& event);
 int Calculate(const char *input, float* result);
 bool SourceNeedsStatusUpdate(byte eventSource);
 
 void WifiScan(bool async, bool quick = false);
-void WifiScan();
-void WiFiConnectRelaxed();
-void WifiDisconnect();
-void evaluateConnectionFailures();
+void WifiScan(void);
+void WiFiConnectRelaxed(void);
+void WifiDisconnect(void);
+void evaluateConnectionFailures(void);
 void setAP(bool enable);
 void setSTA(bool enable);
 
@@ -182,10 +182,10 @@ void setWifiMode(WiFiMode_t wifimode);
 
 
 String SaveSettings(void);
-String LoadSettings();
+String LoadSettings(void);
 unsigned long FreeMem(void);
-void ResetFactory();
-void reboot();
+void ResetFactory(void);
+void reboot(void);
 void SendUDPCommand(byte destUnit, const char *data, byte dataLength);
 
 #include <FS.h>

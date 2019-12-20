@@ -8,42 +8,42 @@
 // ********************************************************************************
 // Web Interface sysinfo page
 // ********************************************************************************
-void handle_sysinfo_json() {
+void handle_sysinfo_json(void) {
   checkRAM(F("handle_sysinfo"));
 
-  if (!isLoggedIn()) { return; }
-  TXBuffer.startJsonStream();
-  json_init();
-  json_open();
+  if (!isLoggedIn(void)) { return; }
+  TXBuffer.startJsonStream(void);
+  json_init(void);
+  json_open(void);
   json_open(false, F("general"));
   json_number(F("unit"), String(Settings.Unit));
   json_prop(F("time"),   getDateTimeString('-', ':', ' '));
   json_prop(F("uptime"), getExtendedValue(LabelType::UPTIME));
-  json_number(F("cpu_load"),   String(getCPUload()));
-  json_number(F("loop_count"), String(getLoopCountPerSec()));
-  json_close();
+  json_number(F("cpu_load"),   String(getCPUload(void)));
+  json_number(F("loop_count"), String(getLoopCountPerSec(void)));
+  json_close(void);
 
-  int freeMem = ESP.getFreeHeap();
+  int freeMem = ESP.getFreeHeap(void);
   json_open(false, F("mem"));
   json_number(F("free"),    String(freeMem));
   json_number(F("low_ram"), String(lowestRAM));
   json_prop(F("low_ram_fn"), String(lowestRAMfunction));
-  json_number(F("stack"),     String(getCurrentFreeStack()));
+  json_number(F("stack"),     String(getCurrentFreeStack(void)));
   json_number(F("low_stack"), String(lowestFreeStack));
   json_prop(F("low_stack_fn"), lowestFreeStackfunction);
-  json_close();
+  json_close(void);
   json_open(false, F("boot"));
-  json_prop(F("last_cause"), getLastBootCauseString());
+  json_prop(F("last_cause"), getLastBootCauseString(void));
   json_number(F("counter"), String(RTC.bootCounter));
-  json_prop(F("reset_reason"), getResetReasonString());
-  json_close();
+  json_prop(F("reset_reason"), getResetReasonString(void));
+  json_close(void);
   json_open(false, F("wifi"));
 
   # if defined(ESP8266)
-  byte PHYmode = wifi_get_phy_mode();
+  byte PHYmode = wifi_get_phy_mode(void);
   # endif // if defined(ESP8266)
   # if defined(ESP32)
-  byte PHYmode = 3; // wifi_get_phy_mode();
+  byte PHYmode = 3; // wifi_get_phy_mode(void);
   # endif // if defined(ESP32)
 
   switch (PHYmode)
@@ -58,14 +58,14 @@ void handle_sysinfo_json() {
       json_prop(F("type"), F("802.11N"));
       break;
   }
-  json_number(F("rssi"), String(WiFi.RSSI()));
-  json_prop(F("dhcp"),          useStaticIP() ? getLabel(LabelType::IP_CONFIG_STATIC) : getLabel(LabelType::IP_CONFIG_DYNAMIC));
-  json_prop(F("ip"),            formatIP(WiFi.localIP()));
-  json_prop(F("subnet"),        formatIP(WiFi.subnetMask()));
-  json_prop(F("gw"),            formatIP(WiFi.gatewayIP()));
+  json_number(F("rssi"), String(WiFi.RSSI(void)));
+  json_prop(F("dhcp"),          useStaticIP(void) ? getLabel(LabelType::IP_CONFIG_STATIC) : getLabel(LabelType::IP_CONFIG_DYNAMIC));
+  json_prop(F("ip"),            formatIP(WiFi.localIP(void)));
+  json_prop(F("subnet"),        formatIP(WiFi.subnetMask(void)));
+  json_prop(F("gw"),            formatIP(WiFi.gatewayIP(void)));
   json_prop(F("dns1"),          formatIP(WiFi.dnsIP(0)));
   json_prop(F("dns2"),          formatIP(WiFi.dnsIP(1)));
-  json_prop(F("allowed_range"), describeAllowedIPrange());
+  json_prop(F("allowed_range"), describeAllowedIPrange(void));
 
 
   uint8_t  mac[]   = { 0, 0, 0, 0, 0, 0 };
@@ -79,64 +79,64 @@ void handle_sysinfo_json() {
   formatMAC(macread, macaddress);
 
   json_prop(F("ap_mac"), macaddress);
-  json_prop(F("ssid"),   WiFi.SSID());
-  json_prop(F("bssid"),  WiFi.BSSIDstr());
-  json_number(F("channel"), String(WiFi.channel()));
-  json_prop(F("connected"), format_msec_duration(timeDiff(lastConnectMoment, millis())));
-  json_prop(F("ldr"),       getLastDisconnectReason());
+  json_prop(F("ssid"),   WiFi.SSID(void));
+  json_prop(F("bssid"),  WiFi.BSSIDstr(void));
+  json_number(F("channel"), String(WiFi.channel(void)));
+  json_prop(F("connected"), format_msec_duration(timeDiff(lastConnectMoment, millis(void))));
+  json_prop(F("ldr"),       getLastDisconnectReason(void));
   json_number(F("reconnects"), String(wifi_reconnects));
-  json_close();
+  json_close(void);
 
   json_open(false, F("firmware"));
   json_prop(F("build"),       String(BUILD));
   json_prop(F("notes"),       F(BUILD_NOTES));
-  json_prop(F("libraries"),   getSystemLibraryString());
+  json_prop(F("libraries"),   getSystemLibraryString(void));
   json_prop(F("git_version"), F(BUILD_GIT));
-  json_prop(F("plugins"),     getPluginDescriptionString());
+  json_prop(F("plugins"),     getPluginDescriptionString(void));
   json_prop(F("md5"),         String(CRCValues.compileTimeMD5[0], HEX));
-  json_number(F("md5_check"), String(CRCValues.checkPassed()));
+  json_number(F("md5_check"), String(CRCValues.checkPassed(void)));
   json_prop(F("build_time"), String(CRCValues.compileTime));
   json_prop(F("filename"),   String(CRCValues.binaryFilename));
-  json_close();
+  json_close(void);
 
   json_open(false, F("esp"));
 
   # if defined(ESP8266)
-  json_prop(F("chip_id"), String(ESP.getChipId(), HEX));
-  json_number(F("cpu"), String(ESP.getCpuFreqMHz()));
+  json_prop(F("chip_id"), String(ESP.getChipId(void), HEX));
+  json_number(F("cpu"), String(ESP.getCpuFreqMHz(void)));
   # endif // if defined(ESP8266)
   # if defined(ESP32)
 
 
-  uint64_t chipid  = ESP.getEfuseMac(); // The chip ID is essentially its MAC address(length: 6 bytes).
+  uint64_t chipid  = ESP.getEfuseMac(void); // The chip ID is essentially its MAC address(length: 6 bytes).
   uint32_t ChipId1 = (uint16_t)(chipid >> 32);
   String   espChipIdS(ChipId1, HEX);
-  espChipIdS.toUpperCase();
+  espChipIdS.toUpperCase(void);
 
   json_prop(F("chip_id"), espChipIdS);
-  json_prop(F("cpu"),     String(ESP.getCpuFreqMHz()));
+  json_prop(F("cpu"),     String(ESP.getCpuFreqMHz(void)));
 
   String espChipIdS1(ChipId1, HEX);
-  espChipIdS1.toUpperCase();
+  espChipIdS1.toUpperCase(void);
   json_prop(F("chip_id1"), espChipIdS1);
 
   # endif // if defined(ESP32)
   # ifdef ARDUINO_BOARD
   json_prop(F("board"), ARDUINO_BOARD);
   # endif // ifdef ARDUINO_BOARD
-  json_close();
+  json_close(void);
   json_open(false, F("storage"));
 
   # if defined(ESP8266)
-  uint32_t flashChipId = ESP.getFlashChipId();
+  uint32_t flashChipId = ESP.getFlashChipId(void);
 
   // Set to HEX may be something like 0x1640E0.
   // Where manufacturer is 0xE0 and device is 0x4016.
   json_number(F("chip_id"), String(flashChipId));
 
-  if (flashChipVendorPuya())
+  if (flashChipVendorPuya(void))
   {
-    if (puyaSupport()) {
+    if (puyaSupport(void)) {
       json_prop(F("vendor"), F("puya, supported"));
     } else {
       json_prop(F("vendor"), F("puya, error"));
@@ -145,14 +145,14 @@ void handle_sysinfo_json() {
   uint32_t flashDevice = (flashChipId & 0xFF00) | ((flashChipId >> 16) & 0xFF);
   json_number(F("device"),    String(flashDevice));
   # endif // if defined(ESP8266)
-  json_number(F("real_size"), String(getFlashRealSizeInBytes() / 1024));
-  json_number(F("ide_size"),  String(ESP.getFlashChipSize() / 1024));
+  json_number(F("real_size"), String(getFlashRealSizeInBytes(void) / 1024));
+  json_number(F("ide_size"),  String(ESP.getFlashChipSize(void) / 1024));
 
   // Please check what is supported for the ESP32
   # if defined(ESP8266)
-  json_number(F("flash_speed"), String(ESP.getFlashChipSpeed() / 1000000));
+  json_number(F("flash_speed"), String(ESP.getFlashChipSpeed(void) / 1000000));
 
-  FlashMode_t ideMode = ESP.getFlashChipMode();
+  FlashMode_t ideMode = ESP.getFlashChipMode(void);
 
   switch (ideMode) {
     case FM_QIO:   json_prop(F("mode"), F("QIO"));  break;
@@ -160,47 +160,47 @@ void handle_sysinfo_json() {
     case FM_DIO:   json_prop(F("mode"), F("DIO"));  break;
     case FM_DOUT:  json_prop(F("mode"), F("DOUT")); break;
     default:
-      json_prop(F("mode"), getUnknownString()); break;
+      json_prop(F("mode"), getUnknownString(void)); break;
   }
   # endif // if defined(ESP8266)
 
   json_number(F("writes"),        String(RTC.flashDayCounter));
   json_number(F("flash_counter"), String(RTC.flashCounter));
-  json_number(F("sketch_size"),   String(ESP.getSketchSize() / 1024));
-  json_number(F("sketch_free"),   String(ESP.getFreeSketchSpace() / 1024));
+  json_number(F("sketch_size"),   String(ESP.getSketchSize(void) / 1024));
+  json_number(F("sketch_free"),   String(ESP.getFreeSketchSpace(void) / 1024));
 
-  json_number(F("spiffs_size"),   String(SpiffsTotalBytes() / 1024));
-  json_number(F("spiffs_free"),   String(SpiffsFreeSpace() / 1024));
-  json_close();
-  json_close();
+  json_number(F("spiffs_size"),   String(SpiffsTotalBytes(void) / 1024));
+  json_number(F("spiffs_free"),   String(SpiffsFreeSpace(void) / 1024));
+  json_close(void);
+  json_close(void);
 
-  TXBuffer.endStream();
+  TXBuffer.endStream(void);
 }
 
 #endif // WEBSERVER_NEW_UI
 
 #ifdef WEBSERVER_SYSINFO
 
-void handle_sysinfo() {
+void handle_sysinfo(void) {
   checkRAM(F("handle_sysinfo"));
 
-  if (!isLoggedIn()) { return; }
+  if (!isLoggedIn(void)) { return; }
   navMenuIndex = MENU_INDEX_TOOLS;
-  html_reset_copyTextCounter();
-  TXBuffer.startStream();
-  sendHeadandTail_stdtemplate();
+  html_reset_copyTextCounter(void);
+  TXBuffer.startStream(void);
+  sendHeadandTail_stdtemplate(void);
 
   TXBuffer += printWebString;
   TXBuffer += F("<form>");
 
   // the table header
-  html_table_class_normal();
+  html_table_class_normal(void);
 
 
   # ifdef WEBSERVER_GITHUB_COPY
 
-  // Not using addFormHeader() to get the copy button on the same header line as 2nd column
-  html_TR();
+  // Not using addFormHeader(void) to get the copy button on the same header line as 2nd column
+  html_TR(void);
   html_table_header(F("System Info"), 225);
   TXBuffer += "<TH>"; // Needed to get the copy button on the same header line.
   addCopyButton(F("copyText"), F("\\n"), F("Copy info to clipboard"));
@@ -208,37 +208,37 @@ void handle_sysinfo() {
   TXBuffer += githublogo;
   html_add_script(false);
   TXBuffer += DATA_GITHUB_CLIPBOARD_JS;
-  html_add_script_end();
+  html_add_script_end(void);
   # else // ifdef WEBSERVER_GITHUB_COPY
   addFormHeader(F("System Info"));
 
   # endif // ifdef WEBSERVER_GITHUB_COPY
 
-  handle_sysinfo_basicInfo();
+  handle_sysinfo_basicInfo(void);
 
-  handle_sysinfo_Network();
+  handle_sysinfo_Network(void);
 
-  handle_sysinfo_WiFiSettings();
+  handle_sysinfo_WiFiSettings(void);
 
-  handle_sysinfo_Firmware();
+  handle_sysinfo_Firmware(void);
 
-  handle_sysinfo_SystemStatus();
+  handle_sysinfo_SystemStatus(void);
 
-  handle_sysinfo_ESP_Board();
+  handle_sysinfo_ESP_Board(void);
 
-  handle_sysinfo_Storage();
+  handle_sysinfo_Storage(void);
 
 
-  html_end_table();
-  html_end_form();
+  html_end_table(void);
+  html_end_form(void);
   sendHeadandTail_stdtemplate(true);
-  TXBuffer.endStream();
+  TXBuffer.endStream(void);
 }
 
-void handle_sysinfo_basicInfo() {
+void handle_sysinfo_basicInfo(void) {
   addRowLabelValue(LabelType::UNIT_NR);
 
-  if (systemTimePresent())
+  if (systemTimePresent(void))
   {
     addRowLabelValue(LabelType::LOCAL_TIME);
   }
@@ -252,14 +252,14 @@ void handle_sysinfo_basicInfo() {
 
   if (wdcounter > 0)
   {
-    TXBuffer += getCPUload();
+    TXBuffer += getCPUload(void);
     TXBuffer += F("% (LC=");
-    TXBuffer += getLoopCountPerSec();
+    TXBuffer += getLoopCountPerSec(void);
     TXBuffer += ')';
   }
   addRowLabelValue(LabelType::CPU_ECO_MODE);
 
-  int freeMem = ESP.getFreeHeap();
+  int freeMem = ESP.getFreeHeap(void);
   addRowLabel(F("Free Mem"));
   TXBuffer += freeMem;
   TXBuffer += " (";
@@ -268,7 +268,7 @@ void handle_sysinfo_basicInfo() {
   TXBuffer += lowestRAMfunction;
   TXBuffer += ')';
   addRowLabel(F("Free Stack"));
-  TXBuffer += getCurrentFreeStack();
+  TXBuffer += getCurrentFreeStack(void);
   TXBuffer += " (";
   TXBuffer += lowestFreeStack;
   TXBuffer += F(" - ");
@@ -282,7 +282,7 @@ void handle_sysinfo_basicInfo() {
 
 
   addRowLabel(F("Boot"));
-  TXBuffer += getLastBootCauseString();
+  TXBuffer += getLastBootCauseString(void);
   TXBuffer += " (";
   TXBuffer += RTC.bootCounter;
   TXBuffer += ')';
@@ -291,17 +291,17 @@ void handle_sysinfo_basicInfo() {
   addRowLabelValue(LabelType::SW_WD_COUNT);
 }
 
-void handle_sysinfo_Network() {
+void handle_sysinfo_Network(void) {
   addTableSeparator(F("Network"), 2, 3, F("Wifi"));
 
-  if (WiFiConnected())
+  if (WiFiConnected(void))
   {
     addRowLabel(F("Wifi"));
     # if defined(ESP8266)
-    byte PHYmode = wifi_get_phy_mode();
+    byte PHYmode = wifi_get_phy_mode(void);
     # endif // if defined(ESP8266)
     # if defined(ESP32)
-    byte PHYmode = 3; // wifi_get_phy_mode();
+    byte PHYmode = 3; // wifi_get_phy_mode(void);
     # endif // if defined(ESP32)
 
     switch (PHYmode)
@@ -317,7 +317,7 @@ void handle_sysinfo_Network() {
         break;
     }
     TXBuffer += F(" (RSSI ");
-    TXBuffer += WiFi.RSSI();
+    TXBuffer += WiFi.RSSI(void);
     TXBuffer += F(" dB)");
   }
   addRowLabelValue(LabelType::IP_CONFIG);
@@ -342,9 +342,9 @@ void handle_sysinfo_Network() {
   }
 
   addRowLabel(getLabel(LabelType::SSID));
-  TXBuffer += WiFi.SSID();
+  TXBuffer += WiFi.SSID(void);
   TXBuffer += " (";
-  TXBuffer += WiFi.BSSIDstr();
+  TXBuffer += WiFi.BSSIDstr(void);
   TXBuffer += ')';
 
   addRowLabelValue(LabelType::CHANNEL);
@@ -354,7 +354,7 @@ void handle_sysinfo_Network() {
   addRowLabelValue(LabelType::NUMBER_RECONNECTS);
 }
 
-void handle_sysinfo_WiFiSettings() {
+void handle_sysinfo_WiFiSettings(void) {
   addTableSeparator(F("WiFi Settings"), 2, 3);
   addRowLabelValue(LabelType::FORCE_WIFI_BG);
   addRowLabelValue(LabelType::RESTART_WIFI_LOST_CONN);
@@ -367,7 +367,7 @@ void handle_sysinfo_WiFiSettings() {
   addRowLabelValue(LabelType::CONNECTION_FAIL_THRESH);
 }
 
-void handle_sysinfo_Firmware() {
+void handle_sysinfo_Firmware(void) {
   addTableSeparator(F("Firmware"), 2, 3);
 
   addRowLabelValue_copy(LabelType::BUILD_DESC);
@@ -377,7 +377,7 @@ void handle_sysinfo_Firmware() {
   addRowLabelValue_copy(LabelType::SYSTEM_LIBRARIES);
   addRowLabelValue_copy(LabelType::GIT_BUILD);
   addRowLabelValue_copy(LabelType::PLUGINS);
-  TXBuffer += getPluginDescriptionString();
+  TXBuffer += getPluginDescriptionString(void);
 
   bool filenameDummy = String(CRCValues.binaryFilename).startsWith(F("ThisIsTheDummy"));
 
@@ -388,7 +388,7 @@ void handle_sysinfo_Firmware() {
 
     addRowLabel(F("Md5 check"));
 
-    if (!CRCValues.checkPassed()) {
+    if (!CRCValues.checkPassed(void)) {
       TXBuffer += F("<font color = 'red'>fail !</font>");
     }
     else { TXBuffer += F("passed."); }
@@ -407,7 +407,7 @@ void handle_sysinfo_Firmware() {
   }
 }
 
-void handle_sysinfo_SystemStatus() {
+void handle_sysinfo_SystemStatus(void) {
   addTableSeparator(F("System Status"), 2, 3);
 
   // Actual Loglevel
@@ -419,37 +419,37 @@ void handle_sysinfo_SystemStatus() {
     # endif // ifdef FEATURE_SD
 }
 
-void handle_sysinfo_ESP_Board() {
+void handle_sysinfo_ESP_Board(void) {
   addTableSeparator(F("ESP Board"), 2, 3);
 
   addRowLabel(getLabel(LabelType::ESP_CHIP_ID));
   # if defined(ESP8266)
-  TXBuffer += ESP.getChipId();
+  TXBuffer += ESP.getChipId(void);
   TXBuffer += F(" (0x");
-  String espChipId(ESP.getChipId(), HEX);
-  espChipId.toUpperCase();
+  String espChipId(ESP.getChipId(void), HEX);
+  espChipId.toUpperCase(void);
   TXBuffer += espChipId;
   TXBuffer += ')';
 
   addRowLabel(getLabel(LabelType::ESP_CHIP_FREQ));
-  TXBuffer += ESP.getCpuFreqMHz();
+  TXBuffer += ESP.getCpuFreqMHz(void);
   TXBuffer += F(" MHz");
   # endif // if defined(ESP8266)
   # if defined(ESP32)
   TXBuffer += F(" (0x");
-  uint64_t chipid  = ESP.getEfuseMac(); // The chip ID is essentially its MAC address(length: 6 bytes).
+  uint64_t chipid  = ESP.getEfuseMac(void); // The chip ID is essentially its MAC address(length: 6 bytes).
   uint32_t ChipId1 = (uint16_t)(chipid >> 32);
   String   espChipIdS(ChipId1, HEX);
-  espChipIdS.toUpperCase();
+  espChipIdS.toUpperCase(void);
   TXBuffer += espChipIdS;
   ChipId1   = (uint32_t)chipid;
   String espChipIdS1(ChipId1, HEX);
-  espChipIdS1.toUpperCase();
+  espChipIdS1.toUpperCase(void);
   TXBuffer += espChipIdS1;
   TXBuffer += ')';
 
   addRowLabel(getLabel(LabelType::ESP_CHIP_FREQ));
-  TXBuffer += ESP.getCpuFreqMHz();
+  TXBuffer += ESP.getCpuFreqMHz(void);
   TXBuffer += F(" MHz");
   # endif // if defined(ESP32)
   # ifdef ARDUINO_BOARD
@@ -458,23 +458,23 @@ void handle_sysinfo_ESP_Board() {
   # endif // ifdef ARDUINO_BOARD
 }
 
-void handle_sysinfo_Storage() {
+void handle_sysinfo_Storage(void) {
   addTableSeparator(F("Storage"), 2, 3);
 
   addRowLabel(getLabel(LabelType::FLASH_CHIP_ID));
   # if defined(ESP8266)
-  uint32_t flashChipId = ESP.getFlashChipId();
+  uint32_t flashChipId = ESP.getFlashChipId(void);
 
   // Set to HEX may be something like 0x1640E0.
   // Where manufacturer is 0xE0 and device is 0x4016.
   TXBuffer += F("Vendor: ");
   TXBuffer += formatToHex(flashChipId & 0xFF);
 
-  if (flashChipVendorPuya())
+  if (flashChipVendorPuya(void))
   {
     TXBuffer += F(" (PUYA");
 
-    if (puyaSupport()) {
+    if (puyaSupport(void)) {
       TXBuffer += F(", supported");
     } else {
       TXBuffer += F(HTML_SYMBOL_WARNING);
@@ -485,8 +485,8 @@ void handle_sysinfo_Storage() {
   uint32_t flashDevice = (flashChipId & 0xFF00) | ((flashChipId >> 16) & 0xFF);
   TXBuffer += formatToHex(flashDevice);
   # endif // if defined(ESP8266)
-  uint32_t realSize = getFlashRealSizeInBytes();
-  uint32_t ideSize  = ESP.getFlashChipSize();
+  uint32_t realSize = getFlashRealSizeInBytes(void);
+  uint32_t ideSize  = ESP.getFlashChipSize(void);
 
   addRowLabel(getLabel(LabelType::FLASH_CHIP_REAL_SIZE));
   TXBuffer += realSize / 1024;
@@ -499,10 +499,10 @@ void handle_sysinfo_Storage() {
   // Please check what is supported for the ESP32
   # if defined(ESP8266)
   addRowLabel(getLabel(LabelType::FLASH_IDE_SPEED));
-  TXBuffer += ESP.getFlashChipSpeed() / 1000000;
+  TXBuffer += ESP.getFlashChipSpeed(void) / 1000000;
   TXBuffer += F(" MHz");
 
-  FlashMode_t ideMode = ESP.getFlashChipMode();
+  FlashMode_t ideMode = ESP.getFlashChipMode(void);
   addRowLabel(getLabel(LabelType::FLASH_IDE_MODE));
 
   switch (ideMode) {
@@ -511,7 +511,7 @@ void handle_sysinfo_Storage() {
     case FM_DIO:   TXBuffer += F("DIO");  break;
     case FM_DOUT:  TXBuffer += F("DOUT"); break;
     default:
-      TXBuffer += getUnknownString(); break;
+      TXBuffer += getUnknownString(void); break;
   }
   # endif // if defined(ESP8266)
 
@@ -525,9 +525,9 @@ void handle_sysinfo_Storage() {
   {
     // FIXME TD-er: Must also add this for ESP32.
     addRowLabel(getLabel(LabelType::SKETCH_SIZE));
-    TXBuffer += ESP.getSketchSize() / 1024;
+    TXBuffer += ESP.getSketchSize(void) / 1024;
     TXBuffer += F(" kB (");
-    TXBuffer += ESP.getFreeSketchSpace() / 1024;
+    TXBuffer += ESP.getFreeSketchSpace(void) / 1024;
     TXBuffer += F(" kB free)");
 
     uint32_t maxSketchSize;
@@ -549,19 +549,19 @@ void handle_sysinfo_Storage() {
   # endif // if defined(ESP8266)
 
   addRowLabel(getLabel(LabelType::SPIFFS_SIZE));
-  TXBuffer += SpiffsTotalBytes() / 1024;
+  TXBuffer += SpiffsTotalBytes(void) / 1024;
   TXBuffer += F(" kB (");
-  TXBuffer += SpiffsFreeSpace() / 1024;
+  TXBuffer += SpiffsFreeSpace(void) / 1024;
   TXBuffer += F(" kB free)");
 
   addRowLabel(F("Page size"));
-  TXBuffer += String(SpiffsPagesize());
+  TXBuffer += String(SpiffsPagesize(void));
 
   addRowLabel(F("Block size"));
-  TXBuffer += String(SpiffsBlocksize());
+  TXBuffer += String(SpiffsBlocksize(void));
 
   addRowLabel(F("Number of blocks"));
-  TXBuffer += String(SpiffsTotalBytes() / SpiffsBlocksize());
+  TXBuffer += String(SpiffsTotalBytes(void) / SpiffsBlocksize(void));
 
   {
   # if defined(ESP8266)
@@ -580,19 +580,19 @@ void handle_sysinfo_Storage() {
 
   if (showSettingsFileLayout) {
     addTableSeparator(F("Settings Files"), 2, 3);
-    html_TR_TD();
+    html_TR_TD(void);
     TXBuffer += F("Layout Settings File");
-    html_TD();
-    getConfig_dat_file_layout();
-    html_TR_TD();
-    html_TD();
+    html_TD(void);
+    getConfig_dat_file_layout(void);
+    html_TR_TD(void);
+    html_TD(void);
     TXBuffer += F("(offset / size per item / index)");
 
     for (int st = 0; st < SettingsType_MAX; ++st) {
       SettingsType settingsType = static_cast<SettingsType>(st);
-      html_TR_TD();
+      html_TR_TD(void);
       TXBuffer += getSettingsTypeString(settingsType);
-      html_TD();
+      html_TD(void);
       getStorageTableSVG(settingsType);
     }
   }

@@ -1,8 +1,8 @@
 
 struct ControllerCache_struct {
-  ControllerCache_struct() {}
+  ControllerCache_struct(void) {}
 
-  ~ControllerCache_struct() {
+  ~ControllerCache_struct(void) {
     if (_RTC_cache_handler != nullptr) {
       delete _RTC_cache_handler;
       _RTC_cache_handler = nullptr;
@@ -24,36 +24,36 @@ struct ControllerCache_struct {
   }
 
   // Dump whatever is in the buffer to the filesystem
-  bool flush() {
+  bool flush(void) {
     if (_RTC_cache_handler == nullptr) {
       return false;
     }
-    return _RTC_cache_handler->flush();
+    return _RTC_cache_handler->flush(void);
   }
 
-  void init() {
+  void init(void) {
     if (_RTC_cache_handler == nullptr) {
       _RTC_cache_handler = new RTC_cache_handler_struct;
     }
   }
 
-  bool isInitialized() {
+  bool isInitialized(void) {
     return _RTC_cache_handler != nullptr;
   }
 
   // Clear all caches
-  void clearCache() {}
+  void clearCache(void) {}
 
-  bool deleteOldestCacheBlock() {
+  bool deleteOldestCacheBlock(void) {
     if (_RTC_cache_handler != nullptr) {
-      return _RTC_cache_handler->deleteOldestCacheBlock();
+      return _RTC_cache_handler->deleteOldestCacheBlock(void);
     }
     return false;
   }
 
-  void resetpeek() {
+  void resetpeek(void) {
     if (_RTC_cache_handler != nullptr) {
-      _RTC_cache_handler->resetpeek();
+      _RTC_cache_handler->resetpeek(void);
     }
   }
 

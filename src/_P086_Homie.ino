@@ -272,7 +272,7 @@ boolean Plugin_086(byte function, struct EventStruct *event, String& string)
 
               case PLUGIN_086_VALUE_STRING:
                 //String values not stored to conserve flash memory
-                //safe_strncpy(ExtraTaskSettings.TaskDeviceFormula[taskVarIndex], parameter.c_str(), sizeof(ExtraTaskSettings.TaskDeviceFormula[taskVarIndex]));
+                //safe_strncpy(ExtraTaskSettings.TaskDeviceFormula[taskVarIndex], parameter.c_str(void), sizeof(ExtraTaskSettings.TaskDeviceFormula[taskVarIndex]));
                 if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                   log += F(" string set to ");
                   log += parameter;
@@ -303,7 +303,7 @@ boolean Plugin_086(byte function, struct EventStruct *event, String& string)
 
               case PLUGIN_086_VALUE_RGB:
                 //String values not stored to conserve flash memory
-                //safe_strncpy(ExtraTaskSettings.TaskDeviceFormula[taskVarIndex], parameter.c_str(), sizeof(ExtraTaskSettings.TaskDeviceFormula[taskVarIndex]));
+                //safe_strncpy(ExtraTaskSettings.TaskDeviceFormula[taskVarIndex], parameter.c_str(void), sizeof(ExtraTaskSettings.TaskDeviceFormula[taskVarIndex]));
                 if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                   log += F(" RGB received ");
                   log += parameter;
@@ -313,7 +313,7 @@ boolean Plugin_086(byte function, struct EventStruct *event, String& string)
 
               case PLUGIN_086_VALUE_HSV:
                 //String values not stored to conserve flash memory
-                //safe_strncpy(ExtraTaskSettings.TaskDeviceFormula[taskVarIndex], parameter.c_str(), sizeof(ExtraTaskSettings.TaskDeviceFormula[taskVarIndex]));
+                //safe_strncpy(ExtraTaskSettings.TaskDeviceFormula[taskVarIndex], parameter.c_str(void), sizeof(ExtraTaskSettings.TaskDeviceFormula[taskVarIndex]));
                 if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                   log += F(" HSV received ");
                   log += parameter;

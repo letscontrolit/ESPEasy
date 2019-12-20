@@ -136,12 +136,12 @@ boolean Plugin_056(byte function, struct EventStruct *event, String& string)
         if (!Plugin_056_SDS)
           break;
 
-        Plugin_056_SDS->Process();
+        Plugin_056_SDS->Process(void);
 
-        if (Plugin_056_SDS->available())
+        if (Plugin_056_SDS->available(void))
         {
-          const float pm2_5 = Plugin_056_SDS->GetPM2_5();
-          const float pm10 = Plugin_056_SDS->GetPM10_();
+          const float pm2_5 = Plugin_056_SDS->GetPM2_5(void);
+          const float pm10 = Plugin_056_SDS->GetPM10_(void);
           String log = F("SDS  : act ");
           log += pm2_5;
           log += ' ';

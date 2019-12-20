@@ -22,7 +22,7 @@ void addButton(class StreamingBuffer& buffer, const String& url, const String& l
 }
 
 void addButtonWithSvg(class StreamingBuffer& buffer, const String& url, const String& label, const String& svgPath, bool needConfirm) {
-  bool hasSVG = svgPath.length() > 0;
+  bool hasSVG = svgPath.length(void) > 0;
 
   buffer += F("<a class='button link' href='");
   buffer += url;
@@ -110,7 +110,7 @@ void addWideButton(const String& url, const String& label, const String& classes
   TXBuffer += F("</a>");
 }
 
-void addSubmitButton()
+void addSubmitButton(void)
 {
   addSubmitButton(F("Submit"), "");
 }
@@ -124,18 +124,18 @@ void addSubmitButton(const String& value, const String& name, const String& clas
 {
   TXBuffer += F("<input class='button link");
 
-  if (classes.length() > 0) {
+  if (classes.length(void) > 0) {
     TXBuffer += ' ';
     TXBuffer += classes;
   }
   TXBuffer += F("' type='submit' value='");
   TXBuffer += value;
 
-  if (name.length() > 0) {
+  if (name.length(void) > 0) {
     TXBuffer += F("' name='");
     TXBuffer += name;
   }
-  TXBuffer += F("'><div id='toastmessage'></div><script type='text/javascript'>toasting();</script>");
+  TXBuffer += F("'><div id='toastmessage'></div><script type='text/javascript'>toasting(void);</script>");
 }
 
 // add copy to clipboard button
@@ -148,10 +148,10 @@ void addCopyButton(const String& value, const String& delimiter, const String& n
   TXBuffer += jsClipboardCopyPart3;
 
   // Fix HTML
-  TXBuffer += F("<button class='button link' onclick='setClipboard()'>");
+  TXBuffer += F("<button class='button link' onclick='setClipboard(void)'>");
   TXBuffer += name;
   TXBuffer += " (";
-  html_copyText_marker();
+  html_copyText_marker(void);
   TXBuffer += ')';
   TXBuffer += F("</button>");
 }

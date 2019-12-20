@@ -166,9 +166,9 @@ bool CPluginCall(byte Function, struct EventStruct *event, String& str)
         if (CPlugin_id[x] != 0) {
           const unsigned int next_ProtocolIndex = protocolCount + 2;
 
-          if (next_ProtocolIndex > Protocol.size()) {
+          if (next_ProtocolIndex > Protocol.size(void)) {
             // Increase with 8 to get some compromise between number of resizes and wasted space
-            unsigned int newSize = Protocol.size();
+            unsigned int newSize = Protocol.size(void);
             newSize = newSize + 8 - (newSize % 8);
             Protocol.resize(newSize);
           }
@@ -215,7 +215,7 @@ bool CPluginCall(byte Function, struct EventStruct *event, String& str)
 }
 
 // Check if there is any controller enabled.
-bool anyControllerEnabled() {
+bool anyControllerEnabled(void) {
   for (byte i = 0; i < CONTROLLER_MAX; i++) {
     if ((Settings.Protocol[i] != 0) && Settings.ControllerEnabled[i]) {
       return true;

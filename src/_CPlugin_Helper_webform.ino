@@ -50,7 +50,7 @@ String getControllerParameterName(byte ProtocolIndex, byte parameterIdx, bool di
 
   if (!displayName) {
     // Change name to lower case and remove spaces to make it an internal name.
-    name.toLowerCase();
+    name.toLowerCase(void);
     name.replace(" ", "");
   }
   return name;

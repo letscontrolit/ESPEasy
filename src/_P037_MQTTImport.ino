@@ -31,42 +31,42 @@ bool MQTTclient_037_connected = false;
 #endif //USES_MQTT
 int reconnectCount = 0;
 
-String getClientName() {
+String getClientName(void) {
   //
   // Generate the MQTT import client name from the system name and a suffix
   //
   String tmpClientName = F("%sysname%-Import");
   String ClientName = parseTemplate(tmpClientName, 20);
-  ClientName.trim(); // Avoid spaced in the name.
+  ClientName.trim(void); // Avoid spaced in the name.
   ClientName.replace(' ', '_');
   if (reconnectCount != 0) ClientName += reconnectCount;
   return ClientName;
 }
 
-void Plugin_037_try_connect() {
-  Plugin_037_update_connect_status();
+void Plugin_037_try_connect(void) {
+  Plugin_037_update_connect_status(void);
   if (MQTTclient_037_connected) return;
   // workaround see: https://github.com/esp8266/Arduino/issues/4497#issuecomment-373023864
-  espclient_037 = WiFiClient();
+  espclient_037 = WiFiClient(void);
   espclient_037.setTimeout(CONTROLLER_CLIENTTIMEOUT_DFLT);
 
   if (MQTTclient_037 == NULL) {
     MQTTclient_037 = new PubSubClient(espclient_037);
   }
-  if (MQTTConnect_037())
+  if (MQTTConnect_037(void))
   {
     //		Subscribe to ALL the topics from ALL instance of this import module
-    MQTTSubscribe_037();
+    MQTTSubscribe_037(void);
   } else {
-    MQTTclient_037->disconnect();
+    MQTTclient_037->disconnect(void);
   }
-  Plugin_037_update_connect_status();
+  Plugin_037_update_connect_status(void);
 }
 
-void Plugin_037_update_connect_status() {
+void Plugin_037_update_connect_status(void) {
   bool connected = false;
   if (MQTTclient_037 != NULL) {
-    connected = MQTTclient_037->connected();
+    connected = MQTTclient_037->connected(void);
   }
   if (MQTTclient_037_connected != connected) {
     MQTTclient_037_connected = !MQTTclient_037_connected;
@@ -82,7 +82,7 @@ void Plugin_037_update_connect_status() {
     if (!connected) {
       // workaround see: https://github.com/esp8266/Arduino/issues/4497#issuecomment-373023864
       if (MQTTclient_037 != NULL) {
-        espclient_037 = WiFiClient();
+        espclient_037 = WiFiClient(void);
         espclient_037.setTimeout(CONTROLLER_CLIENTTIMEOUT_DFLT);
         MQTTclient_037->setClient(espclient_037);
       }
@@ -152,11 +152,11 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
         {
           String argName = F("p037_template");
           argName += varNr + 1;
-          if (!safe_strncpy(deviceTemplate[varNr], WebServer.arg(argName).c_str(), sizeof(deviceTemplate[varNr]))) {
+          if (!safe_strncpy(deviceTemplate[varNr], WebServer.arg(argName).c_str(void), sizeof(deviceTemplate[varNr]))) {
             error += getCustomTaskSettingsError(varNr);
           }
         }
-        if (error.length() > 0) {
+        if (error.length(void) > 0) {
           addHtmlError(error);
         }
 
@@ -172,11 +172,11 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
         //    When we edit the subscription data from the webserver, the plugin is called again with init.
         //    In order to resubscribe we have to disconnect and reconnect in order to get rid of any obsolete subscriptions
         if (MQTTclient_037 != NULL) {
-          MQTTclient_037->disconnect();
-          if (MQTTConnect_037())
+          MQTTclient_037->disconnect(void);
+          if (MQTTConnect_037(void))
           {
             //		Subscribe to ALL the topics from ALL instance of this import module
-            MQTTSubscribe_037();
+            MQTTSubscribe_037(void);
             success = true;
           }
         }
@@ -185,8 +185,8 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_TEN_PER_SECOND:
       {
-        if (MQTTclient_037 != NULL && !MQTTclient_037->loop()) {		// Listen out for callbacks
-          Plugin_037_update_connect_status();
+        if (MQTTclient_037 != NULL && !MQTTclient_037->loop(void)) {		// Listen out for callbacks
+          Plugin_037_update_connect_status(void);
         }
         success = true;
         break;
@@ -195,23 +195,23 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
     case PLUGIN_ONCE_A_SECOND:
       {
         //  Here we check that the MQTT client is alive.
-        Plugin_037_try_connect();
+        Plugin_037_try_connect(void);
         if (MQTTclient_037 != NULL) {
-          if (!MQTTclient_037->connected() || MQTTclient_should_reconnect) {
+          if (!MQTTclient_037->connected(void) || MQTTclient_should_reconnect) {
             if (MQTTclient_should_reconnect) {
               addLog(LOG_LEVEL_ERROR, F("IMPT : MQTT 037 Intentional reconnect"));
             }
 
-            MQTTclient_037->disconnect();
-            Plugin_037_update_connect_status();
+            MQTTclient_037->disconnect(void);
+            Plugin_037_update_connect_status(void);
             delay(250);
 
-            if (! MQTTConnect_037()) {
+            if (! MQTTConnect_037(void)) {
               success = false;
               break;
             }
 
-            MQTTSubscribe_037();
+            MQTTSubscribe_037(void);
           }
           success = true;
         }
@@ -258,8 +258,8 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
         for (byte x = 0; x < 4; x++)
         {
           String subscriptionTopic = deviceTemplate[x];
-          subscriptionTopic.trim();
-          if (subscriptionTopic.length() == 0) continue;							// skip blank subscriptions
+          subscriptionTopic.trim(void);
+          if (subscriptionTopic.length(void) == 0) continue;							// skip blank subscriptions
 
           // Now check if the incoming topic matches one of our subscriptions
           parseSystemVariables(subscriptionTopic, false);
@@ -302,7 +302,7 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
 
   return success;
 }
-boolean MQTTSubscribe_037()
+boolean MQTTSubscribe_037(void)
 {
   if (!MQTTclient_037_connected) return false;
 
@@ -325,10 +325,10 @@ boolean MQTTSubscribe_037()
       {
         String subscribeTo = deviceTemplate[x];
 
-        if (subscribeTo.length() > 0)
+        if (subscribeTo.length(void) > 0)
         {
           parseSystemVariables(subscribeTo, false);
-          if (MQTTclient_037 != NULL && MQTTclient_037->subscribe(subscribeTo.c_str()))
+          if (MQTTclient_037 != NULL && MQTTclient_037->subscribe(subscribeTo.c_str(void)))
           {
             String log = F("IMPT : [");
             LoadTaskSettings(y);
@@ -365,7 +365,7 @@ void mqttcallback_037(char* c_topic, byte* b_payload, unsigned int length)
   strncpy(cpayload, (char*)b_payload, length);
   cpayload[length] = 0;
   String payload = cpayload;		// convert byte to char string
-  payload.trim();
+  payload.trim(void);
 
   deviceIndex_t DeviceIndex = getDeviceIndex(PLUGIN_ID_037);   // This is the device index of 037 modules -there should be one!
   if (!validDeviceIndex(DeviceIndex)) {
@@ -400,31 +400,31 @@ void mqttcallback_037(char* c_topic, byte* b_payload, unsigned int length)
 // For some reason this seems to failduring the call in INIT- however it succeeds later during recovery
 // It would be nice to understand this....
 
-boolean MQTTConnect_037()
+boolean MQTTConnect_037(void)
 {
   boolean result = false;
   if (MQTTclient_037 == NULL) return false;
-  String clientid = getClientName();
+  String clientid = getClientName(void);
   // @ToDo TD-er: Plugin allows for more than one MQTT controller, but we're now using only the first enabled one.
-  int enabledMqttController = firstEnabledMQTTController();
+  int enabledMqttController = firstEnabledMQTTController(void);
   if (enabledMqttController < 0) {
     // No enabled MQTT controller
     return false;
   }
   // Do nothing if already connected
-  if (MQTTclient_037->connected()) return true;
+  if (MQTTclient_037->connected(void)) return true;
 
   // define stuff for the client - this could also be done in the intial declaration of MQTTclient_037
   if (!WiFiConnected(100)) {
-    Plugin_037_update_connect_status();
+    Plugin_037_update_connect_status(void);
     return false; // Not connected, so no use in wasting time to connect to a host.
   }
   MakeControllerSettings(ControllerSettings);
   LoadControllerSettings(enabledMqttController, ControllerSettings);
   if (ControllerSettings.UseDNS) {
-    MQTTclient_037->setServer(ControllerSettings.getHost().c_str(), ControllerSettings.Port);
+    MQTTclient_037->setServer(ControllerSettings.getHost(void).c_str(void), ControllerSettings.Port);
   } else {
-    MQTTclient_037->setServer(ControllerSettings.getIP(), ControllerSettings.Port);
+    MQTTclient_037->setServer(ControllerSettings.getIP(void), ControllerSettings.Port);
   }
   MQTTclient_037->setCallback(mqttcallback_037);
 
@@ -435,9 +435,9 @@ boolean MQTTConnect_037()
     String log = "";
 
     if ((SecuritySettings.ControllerUser[enabledMqttController][0] != 0) && (SecuritySettings.ControllerPassword[enabledMqttController][0] != 0))
-      result = MQTTclient_037->connect(clientid.c_str(), SecuritySettings.ControllerUser[enabledMqttController], SecuritySettings.ControllerPassword[enabledMqttController]);
+      result = MQTTclient_037->connect(clientid.c_str(void), SecuritySettings.ControllerUser[enabledMqttController], SecuritySettings.ControllerPassword[enabledMqttController]);
     else
-      result = MQTTclient_037->connect(clientid.c_str());
+      result = MQTTclient_037->connect(clientid.c_str(void));
 
 
     if (result)
@@ -457,8 +457,8 @@ boolean MQTTConnect_037()
 
     delay(500);
   }
-  Plugin_037_update_connect_status();
-  return MQTTclient_037->connected();
+  Plugin_037_update_connect_status(void);
+  return MQTTclient_037->connected(void);
 }
 
 //
@@ -469,8 +469,8 @@ boolean MQTTCheckSubscription_037(const String& Topic, const String& Subscriptio
   String tmpTopic = Topic;
   String tmpSub = Subscription;
 
-  tmpTopic.trim();
-  tmpSub.trim();
+  tmpTopic.trim(void);
+  tmpSub.trim(void);
 
   // Get rid of any initial /
 
@@ -479,10 +479,10 @@ boolean MQTTCheckSubscription_037(const String& Topic, const String& Subscriptio
 
   // Add trailing / if required
 
-  int lenTopic = tmpTopic.length();
+  int lenTopic = tmpTopic.length(void);
   if (tmpTopic.substring(lenTopic - 1, lenTopic) != "/")tmpTopic += '/';
 
-  int lenSub = tmpSub.length();
+  int lenSub = tmpSub.length(void);
   if (tmpSub.substring(lenSub - 1, lenSub) != "/")tmpSub += '/';
 
   // Now get first part

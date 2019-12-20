@@ -27,7 +27,7 @@
 
 struct P074_data_struct : public PluginTaskData_base {
 
-  P074_data_struct() {
+  P074_data_struct(void) {
     tsl = Adafruit_TSL2591(2591); // pass in a number for the sensor identifier
                                   // (for your use later)
   }
@@ -142,25 +142,25 @@ boolean Plugin_074(byte function, struct EventStruct *event, String &string) {
     }
 
     case PLUGIN_INIT: {
-      initPluginTaskData(event->TaskIndex, new P074_data_struct());
+      initPluginTaskData(event->TaskIndex, new P074_data_struct(void));
       P074_data_struct *P074_data =
           static_cast<P074_data_struct *>(getPluginTaskData(event->TaskIndex));
       if (nullptr == P074_data) {
         return success;
       }
-      if (P074_data->tsl.begin()) {
+      if (P074_data->tsl.begin(void)) {
         P074_data->setIntegrationTime(PCONFIG(1));
         P074_data->setGain(PCONFIG(2));
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           String log = F("TSL2591: Address: 0x");
           log += String(TSL2591_ADDR, HEX);
           log += F(": Integration Time: ");
-          log += String((P074_data->tsl.getTiming() + 1) * 100, DEC);
+          log += String((P074_data->tsl.getTiming(void) + 1) * 100, DEC);
           log += F(" ms");
 
           /* Display the gain and integration time for reference sake */
           log += (F(" Gain: "));
-          switch (P074_data->tsl.getGain()) {
+          switch (P074_data->tsl.getGain(void)) {
             default:
             case TSL2591_GAIN_LOW:  log += F("1x (Low)");     break; // 1x gain (bright light)
             case TSL2591_GAIN_MED:  log += F("25x (Medium)"); break;

@@ -19,8 +19,8 @@ String humStatDomoticz(struct EventStruct *event, byte rel_index) {
   return formatUserVarDomoticz(3);
 }
 
-int mapRSSItoDomoticz() {
-  long rssi = WiFi.RSSI();
+int mapRSSItoDomoticz(void) {
+  long rssi = WiFi.RSSI(void);
 
   if (-50 < rssi) { return 10; }
 
@@ -29,7 +29,7 @@ int mapRSSItoDomoticz() {
   return (rssi / 5) + 1;
 }
 
-int mapVccToDomoticz() {
+int mapVccToDomoticz(void) {
   #if FEATURE_ADC_VCC
 
   // Voltage range from 2.6V .. 3.6V => 0..100%
@@ -52,7 +52,7 @@ String formatUserVarDomoticz(int value) {
   String text;
 
   text += value;
-  text.trim();
+  text.trim(void);
   text += ';';
   return text;
 }
@@ -154,12 +154,12 @@ String formatDomoticzSensorType(struct EventStruct *event) {
   }
 
   // Now strip trailing semi colon.
-  int index_last_char = values.length() - 1;
+  int index_last_char = values.length(void) - 1;
 
   if ((index_last_char > 0) && (values.charAt(index_last_char) == ';')) {
     values.setCharAt(index_last_char, ' ');
   }
-  values.trim();
+  values.trim(void);
   {
     String log = F(" Domoticz: Sensortype: ");
     log += event->sensorType;

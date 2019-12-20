@@ -1,20 +1,20 @@
 // ********************************************************************************
 // Manage WiFi credentials
 // ********************************************************************************
-const char* getLastWiFiSettingsSSID() {
+const char* getLastWiFiSettingsSSID(void) {
   return RTC.lastWiFiSettingsIndex == 0 ? SecuritySettings.WifiSSID : SecuritySettings.WifiSSID2;
 }
 
-const char* getLastWiFiSettingsPassphrase() {
+const char* getLastWiFiSettingsPassphrase(void) {
   return RTC.lastWiFiSettingsIndex == 0 ? SecuritySettings.WifiKey : SecuritySettings.WifiKey2;
 }
 
-bool selectNextWiFiSettings() {
+bool selectNextWiFiSettings(void) {
   uint8_t tmp = RTC.lastWiFiSettingsIndex;
 
   RTC.lastWiFiSettingsIndex = (RTC.lastWiFiSettingsIndex + 1) % 2;
 
-  if (!wifiSettingsValid(getLastWiFiSettingsSSID(), getLastWiFiSettingsPassphrase())) {
+  if (!wifiSettingsValid(getLastWiFiSettingsSSID(void), getLastWiFiSettingsPassphrase(void))) {
     // other settings are not correct, switch back.
     RTC.lastWiFiSettingsIndex = tmp;
     return false; // Nothing changed.
@@ -22,11 +22,11 @@ bool selectNextWiFiSettings() {
   return true;
 }
 
-bool selectValidWiFiSettings() {
-  if (wifiSettingsValid(getLastWiFiSettingsSSID(), getLastWiFiSettingsPassphrase())) {
+bool selectValidWiFiSettings(void) {
+  if (wifiSettingsValid(getLastWiFiSettingsSSID(void), getLastWiFiSettingsPassphrase(void))) {
     return true;
   }
-  return selectNextWiFiSettings();
+  return selectNextWiFiSettings(void);
 }
 
 bool wifiSettingsValid(const char *ssid, const char *pass) {

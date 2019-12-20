@@ -96,7 +96,7 @@ void serialHelper_webformLoad(int rxPinDef, int txPinDef, bool allowSoftwareSeri
                          options, ids, NULL,
                          static_cast<int>(ESPeasySerialType::getSerialType(rxPinDef, txPinDef)),
                          F("serialPortChanged(this)")); // Script to toggle GPIO visibility when changing selection.
-  html_add_script(F("document.getElementById('serPort').onchange();"), false);
+  html_add_script(F("document.getElementById('serPort').onchange(void);"), false);
 
   if (Settings.UseSerial) {
     addFormNote(F("Do <b>NOT</b> combine HW Serial0 and log to serial on Tools->Advanced->Serial Port."));
@@ -188,7 +188,7 @@ void serialHelper_serialconfig_webformLoad(struct EventStruct *event, byte curre
                   options, values, currentSelection);
 }
 
-byte serialHelper_serialconfig_webformSave() {
+byte serialHelper_serialconfig_webformSave(void) {
   int serialConfSelected = getFormItemInt(F("serConf"), 0);
 
   if (serialHelper_isValid_serialconfig(serialConfSelected)) {

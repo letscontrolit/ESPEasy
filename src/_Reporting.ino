@@ -10,7 +10,7 @@
 #define REPORT_HOST "espeasy.datux.nl"
 #define FEATURE_REPORTING
 
-void ReportStatus()
+void ReportStatus(void)
 {
   String log;
   String host = F(REPORT_HOST);
@@ -23,17 +23,17 @@ void ReportStatus()
   WiFiClient client;
   client.setTimeout(CONTROLLER_CLIENTTIMEOUT_DFLT);
 
-  if (!connectClient(client, host.c_str(), 80))
+  if (!connectClient(client, host.c_str(void), 80))
   {
     addLog(LOG_LEVEL_ERROR, F("REP  : connection failed"));
     return;
   }
 
   StaticJsonBuffer<256> jsonBuffer;
-  JsonObject& root = jsonBuffer.createObject();
+  JsonObject& root = jsonBuffer.createObject(void);
 
-  root[F("chipId")]  = ESP.getChipId();
-  root[F("flashId")] = ESP.getFlashChipId();
+  root[F("chipId")]  = ESP.getChipId(void);
+  root[F("flashId")] = ESP.getFlashChipId(void);
   root[F("uptime")]  = wdcounter / 2;
 
 
@@ -48,7 +48,7 @@ void ReportStatus()
   payload += F("Connection: close");
   addNewLine(payload);
   payload += F("Content-Length: ");
-  payload += String(body.length());
+  payload += String(body.length(void));
   addNewLine(payload);
   addNewLine(payload); // Add CRLF twice between header and body.
   payload += body;
@@ -67,7 +67,7 @@ void ReportStatus()
    plugin                        |cache IRAM |init RAM   |r.o. RAM   |uninit RAM |Flash ROM
    src/_Reporting.ino            |0          |0          |156        |-8         |4000
 
-   void ReportStatus()
+   void ReportStatus(void)
    {
    String log;
    String url=F(REPORT_URL);

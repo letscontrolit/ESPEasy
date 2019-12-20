@@ -8,8 +8,8 @@
 //
 // Updated: Oct-03-2018, ThomasB.
 // Added DEBUG_LOG define to reduce info log messages and prevent serial log flooding.
-// Added SendStatus() to post log message on browser to acknowledge HTTP write.
-// Added reserve() to minimize string memory allocations.
+// Added SendStatus(void) to post log message on browser to acknowledge HTTP write.
+// Added reserve(void) to minimize string memory allocations.
 //
 
 #ifdef USES_P075
@@ -60,13 +60,13 @@ struct P075_data_struct : public PluginTaskData_base {
     easySerial = new ESPeasySerial(rx, tx, false, RXBUFFSZ);
     if (easySerial != nullptr) {
       easySerial->begin(baudrate);
-      easySerial->flush();
+      easySerial->flush(void);
     }
   }
 
-  ~P075_data_struct() {
+  ~P075_data_struct(void) {
     if (easySerial != nullptr) {
-      easySerial->flush();
+      easySerial->flush(void);
       delete easySerial;
       easySerial = nullptr;
     }
@@ -76,10 +76,10 @@ struct P075_data_struct : public PluginTaskData_base {
     LoadCustomTaskSettings(taskIndex, displayLines, P75_Nlines, P75_Nchars);
   }
 
-  String getLogString() const {
+  String getLogString(void) const {
     String result;
     if (easySerial != nullptr) {
-      result = easySerial->getLogString();
+      result = easySerial->getLogString(void);
     }
     return result;
   }
@@ -208,7 +208,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
             error += getCustomTaskSettingsError(varNr);
           }
         }
-        if (error.length() > 0) {
+        if (error.length(void) > 0) {
           addHtmlError(error);
         }
         if(getTaskDeviceName(event->TaskIndex) == "") {         // Check to see if user entered device name.
@@ -237,7 +237,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
       P075_data_struct* P075_data = static_cast<P075_data_struct*>(getPluginTaskData(event->TaskIndex));
       if (nullptr != P075_data) {
         P075_data->loadDisplayLines(event->TaskIndex);
-        addLog(LOG_LEVEL_INFO, P075_data->getLogString());
+        addLog(LOG_LEVEL_INFO, P075_data->getLogString(void));
         serialHelper_plugin_init(event);
         success = true;
       }
@@ -254,16 +254,16 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
 
         // Get optional LINE command statements. Special RSSIBAR bargraph keyword is supported.
         for (byte x = 0; x < P75_Nlines; x++) {
-          if (P075_data->displayLines[x].length()) {
+          if (P075_data->displayLines[x].length(void)) {
             String tmpString = P075_data->displayLines[x];
             UcTmpString = P075_data->displayLines[x];
-            UcTmpString.toUpperCase();
+            UcTmpString.toUpperCase(void);
             RssiIndex = UcTmpString.indexOf(F("RSSIBAR"));  // RSSI bargraph Keyword found, wifi value in dBm.
             if(RssiIndex >= 0) {
               int barVal;
               newString.reserve(P75_Nchars+10);               // Prevent re-allocation
               newString = P075_data->displayLines[x].substring(0, RssiIndex);
-              int nbars = WiFi.RSSI();
+              int nbars = WiFi.RSSI(void);
               if (nbars < -100 || nbars >= 0)
                  barVal=0;
               else if (nbars >= -100 && nbars < -95)
@@ -293,7 +293,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
               newString = parseTemplate(tmpString, 0);
             }
 
-            P075_sendCommand(event->TaskIndex, newString.c_str());
+            P075_sendCommand(event->TaskIndex, newString.c_str(void));
             #ifdef DEBUG_LOG
               String log;
               log.reserve(P75_Nchars+50);                 // Prevent re-allocation
@@ -341,17 +341,17 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
       if (command.equalsIgnoreCase(getTaskDeviceName(event->TaskIndex))) {
         success = true; // Set true only if plugin found a command to execute.
         String nextionArguments = parseStringToEndKeepCase(string, 2);
-        P075_sendCommand(event->TaskIndex, nextionArguments.c_str());
+        P075_sendCommand(event->TaskIndex, nextionArguments.c_str(void));
         {
           String log;
-          log.reserve(24 + nextionArguments.length()); // Prevent re-allocation
+          log.reserve(24 + nextionArguments.length(void)); // Prevent re-allocation
           log = F("NEXTION075 : WRITE = ");
           log += nextionArguments;
           addLog(LOG_LEVEL_DEBUG, log);
           SendStatus(event->Source, log);              // Reply (echo) to sender. This will print message on browser.
         }
 
-// Enable addLog() code below to help debug plugin write problems.
+// Enable addLog(void) code below to help debug plugin write problems.
 /*
         String log;
         log.reserve(140);                               // Prevent re-allocation
@@ -403,7 +403,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
       }
 
       if(P075_data->easySerial == nullptr) break;                   // P075_data->easySerial missing, exit.
-      charCount = P075_data->easySerial->available();            // Prime the Soft Serial engine.
+      charCount = P075_data->easySerial->available(void);            // Prime the Soft Serial engine.
       if(charCount >= RXBUFFWARN) {
           String log;
           log.reserve(70);                           // Prevent re-allocation
@@ -418,16 +418,16 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
       }
 
       while (charCount) {                               // This is the serial engine. It processes the serial Rx stream.
-        c = P075_data->easySerial->read();
+        c = P075_data->easySerial->read(void);
 
         if (c == 0x65) {
           if (charCount < 6) delay((5/(baudrate_delay_unit))+1); // Let's wait for a few more chars to arrive.
 
-          charCount = P075_data->easySerial->available();
+          charCount = P075_data->easySerial->available(void);
           if (charCount >= 6) {
             __buffer[0] = c;                            // Store in staging buffer.
             for (i = 1; i < 7; i++) {
-                __buffer[i] = P075_data->easySerial->read();
+                __buffer[i] = P075_data->easySerial->read(void);
             }
 
             __buffer[i] = 0x00;
@@ -457,11 +457,11 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
 
             if (charCount < 8) delay((9/(baudrate_delay_unit))+1); // Let's wait for more chars to arrive.
             else delay((3/(baudrate_delay_unit))+1);               // Short wait for tardy chars.
-            charCount = P075_data->easySerial->available();
+            charCount = P075_data->easySerial->available(void);
 
             i = 1;
-            while (P075_data->easySerial->available() > 0 && i<RXBUFFSZ) { // Copy global serial buffer to local buffer.
-              __buffer[i] = P075_data->easySerial->read();
+            while (P075_data->easySerial->available(void) > 0 && i<RXBUFFSZ) { // Copy global serial buffer to local buffer.
+              __buffer[i] = P075_data->easySerial->read(void);
               if (__buffer[i]==0x0a || __buffer[i]==0x0d) break;
               i++;
             }
@@ -504,8 +504,8 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
             }
 
             if (GotPipeCmd) {
-                UserVar[event->BaseVarIndex] = Vidx.toFloat();
-                UserVar[event->BaseVarIndex+1] = Svalue.toFloat();
+                UserVar[event->BaseVarIndex] = Vidx.toFloat(void);
+                UserVar[event->BaseVarIndex+1] = Svalue.toFloat(void);
                 sendData(event);
 
                 #ifdef DEBUG_LOG
@@ -525,7 +525,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
             }
           }
         }
-        charCount = P075_data->easySerial->available();
+        charCount = P075_data->easySerial->available(void);
       }
 
       success = true;

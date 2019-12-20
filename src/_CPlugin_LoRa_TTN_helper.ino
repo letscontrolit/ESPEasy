@@ -22,7 +22,7 @@ String getPackedFromPlugin(struct EventStruct *event, uint8_t sampleSetCount)
   packed += LoRa_addInt(sampleSetCount, PackedData_uint8);
   packed += LoRa_addInt(value_count, PackedData_uint8);
 
-  if (raw_packed.length() > 0) {
+  if (raw_packed.length(void) > 0) {
     packed += raw_packed;
   } else {
     const byte BaseVarIndex = event->TaskIndex * VARS_PER_TASK;

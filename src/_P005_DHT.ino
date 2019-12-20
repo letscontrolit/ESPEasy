@@ -129,7 +129,7 @@ void P005_log(struct EventStruct *event, int logNr)
 \*********************************************************************************************/
 boolean P005_waitState(int state)
 {
-  unsigned long timeout = micros() + 100;
+  unsigned long timeout = micros(void) + 100;
   while (digitalRead(Plugin_005_DHT_Pin) != state)
   {
     if (usecTimeOutReached(timeout)) return false;
@@ -173,23 +173,23 @@ bool P005_do_plugin_read(struct EventStruct *event) {
       break;
   }
 
-  noInterrupts();
-  if(!P005_waitState(0)) {interrupts(); P005_log(event, P005_error_no_reading); return false; }
-  if(!P005_waitState(1)) {interrupts(); P005_log(event, P005_error_no_reading); return false; }
-  if(!P005_waitState(0)) {interrupts(); P005_log(event, P005_error_no_reading); return false; }
+  noInterrupts(void);
+  if(!P005_waitState(0)) {interrupts(void); P005_log(event, P005_error_no_reading); return false; }
+  if(!P005_waitState(1)) {interrupts(void); P005_log(event, P005_error_no_reading); return false; }
+  if(!P005_waitState(0)) {interrupts(void); P005_log(event, P005_error_no_reading); return false; }
 
   bool readingAborted = false;
   byte dht_dat[5];
   for (i = 0; i < 5 && !readingAborted; i++)
   {
-      int data = Plugin_005_read_dht_dat();
+      int data = Plugin_005_read_dht_dat(void);
       if(data == -1)
       {   P005_log(event, P005_error_protocol_timeout);
           readingAborted = true;
       }
       dht_dat[i] = data;
   }
-  interrupts();
+  interrupts(void);
   if (readingAborted)
     return false;
 

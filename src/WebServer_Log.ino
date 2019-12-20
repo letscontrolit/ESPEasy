@@ -4,13 +4,13 @@
 // ********************************************************************************
 // Web Interface log page
 // ********************************************************************************
-void handle_log() {
-  if (!isLoggedIn()) { return; }
+void handle_log(void) {
+  if (!isLoggedIn(void)) { return; }
   navMenuIndex = MENU_INDEX_TOOLS;
 
-  TXBuffer.startStream();
+  TXBuffer.startStream(void);
   sendHeadandTail_stdtemplate(_HEAD);
-  html_table_class_normal();
+  html_table_class_normal(void);
 
   #ifdef WEBSERVER_LOG
   TXBuffer += F("<TR><TH id=\"headline\" align=\"left\">Log");
@@ -23,22 +23,22 @@ void handle_log() {
 
   html_add_script(true);
   TXBuffer += DATA_FETCH_AND_PARSE_LOG_JS;
-  html_add_script_end();
+  html_add_script_end(void);
 
   #else
   TXBuffer += F("Not included in build");
   #endif
   sendHeadandTail_stdtemplate(_TAIL);
-  TXBuffer.endStream();
+  TXBuffer.endStream(void);
 }
 
 // ********************************************************************************
 // Web Interface JSON log page
 // ********************************************************************************
-void handle_log_JSON() {
-  if (!isLoggedIn()) { return; }
+void handle_log_JSON(void) {
+  if (!isLoggedIn(void)) { return; }
   #ifdef WEBSERVER_LOG
-  TXBuffer.startJsonStream();
+  TXBuffer.startJsonStream(void);
   String webrequest = WebServer.arg(F("view"));
   TXBuffer += F("{\"Log\": {");
 
@@ -65,7 +65,7 @@ void handle_log_JSON() {
   while (logLinesAvailable) {
     String reply = Logging.get_logjson_formatted(logLinesAvailable, lastTimeStamp);
 
-    if (reply.length() > 0) {
+    if (reply.length(void) > 0) {
       TXBuffer += reply;
 
       if (nrEntries == 0) {
@@ -100,10 +100,10 @@ void handle_log_JSON() {
   stream_next_json_object_value(F("SettingsWebLogLevel"), String(Settings.WebLogLevel));
   stream_last_json_object_value(F("logTimeSpan"), String(logTimeSpan));
   TXBuffer += F("}\n");
-  TXBuffer.endStream();
-  updateLogLevelCache();
+  TXBuffer.endStream(void);
+  updateLogLevelCache(void);
 
   #else 
-  handleNotFound();
+  handleNotFound(void);
   #endif
 }

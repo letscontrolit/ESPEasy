@@ -55,13 +55,13 @@ bool CPlugin_017(byte function, struct EventStruct *event, String &string)
       element.txt[x] = formatUserVarNoCheck(event, x);
     }
     success = C017_DelayHandler.addToQueue(element);
-    scheduleNextDelayQueue(TIMER_C017_DELAY_QUEUE, C017_DelayHandler.getNextScheduleTime());
+    scheduleNextDelayQueue(TIMER_C017_DELAY_QUEUE, C017_DelayHandler.getNextScheduleTime(void));
     break;
   }
 
   case CPLUGIN_FLUSH:
   {
-    process_c017_delay_queue();
+    process_c017_delay_queue(void);
     delay(0);
     break;
   }
@@ -101,10 +101,10 @@ bool do_process_c017_delay_queue(int controller_number, const C017_queue_element
   {
     if (ExtraTaskSettings.TaskDeviceValueNames[i][0] == 0)
       continue; //Zabbix will ignore an empty key anyway
-    JsonObject block = data.createNestedObject();
+    JsonObject block = data.createNestedObject(void);
     block[F("host")] = Settings.Name;                            // Zabbix hostname, Unit Name for the ESP easy
     block[F("key")] = ExtraTaskSettings.TaskDeviceValueNames[i]; // Zabbix item key // Value Name for the ESP easy
-    block[F("value")] = atof(element.txt[i].c_str());            // ESPeasy supports only floats
+    block[F("value")] = atof(element.txt[i].c_str(void));            // ESPeasy supports only floats
   }
 
   // Assemble packet
@@ -112,15 +112,15 @@ bool do_process_c017_delay_queue(int controller_number, const C017_queue_element
   String JSON_packet_content="";
 
   serializeJson(root, JSON_packet_content);
-  uint64_t payload_len = JSON_packet_content.length();
+  uint64_t payload_len = JSON_packet_content.length(void);
   
   // addLog(LOG_LEVEL_INFO, String(F("ZBX: ")) + JSON_packet_content);
   // Send the packet
   client.write(packet_header, sizeof(packet_header) - 1);
   client.write((char *)&payload_len, sizeof(payload_len));
-  client.write(JSON_packet_content.c_str(), payload_len);
+  client.write(JSON_packet_content.c_str(void), payload_len);
 
-  client.stop();
+  client.stop(void);
   return true;
 }
 #endif

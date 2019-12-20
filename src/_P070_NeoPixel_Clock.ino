@@ -19,11 +19,11 @@
 
 struct P070_data_struct : public PluginTaskData_base {
 
-  P070_data_struct() {}
+  P070_data_struct(void) {}
 
-  ~P070_data_struct() { reset(); }
+  ~P070_data_struct(void) { reset(void); }
 
-  void reset() {
+  void reset(void) {
     if (Plugin_070_pixels != nullptr) {
       delete Plugin_070_pixels;
       Plugin_070_pixels = nullptr;
@@ -34,7 +34,7 @@ struct P070_data_struct : public PluginTaskData_base {
     if (!Plugin_070_pixels)
     {
       Plugin_070_pixels = new Adafruit_NeoPixel(NUMBER_LEDS, CONFIG_PIN1, NEO_GRB + NEO_KHZ800);
-      Plugin_070_pixels->begin(); // This initializes the NeoPixel library.
+      Plugin_070_pixels->begin(void); // This initializes the NeoPixel library.
     }
     set(event);
   }
@@ -49,19 +49,19 @@ struct P070_data_struct : public PluginTaskData_base {
 
 
 
-  void Clock_update()
+  void Clock_update(void)
   {
-    clearClock();			//turn off the LEDs
+    clearClock(void);			//turn off the LEDs
     if (display_enabled > 0) {		//if the display is enabled, calculate the LEDs to turn on
-      int Hours = hour();
-      int Minutes = minute();
-      int Seconds = second();
+      int Hours = hour(void);
+      int Minutes = minute(void);
+      int Seconds = second(void);
       timeToStrip(Hours, Minutes, Seconds);
     }
-    Plugin_070_pixels->show(); // This sends the updated pixel color to the hardware.
+    Plugin_070_pixels->show(void); // This sends the updated pixel color to the hardware.
   }
 
-  void calculateMarks()
+  void calculateMarks(void)
   { //generate a list of the LEDs that have hour marks
     for (int i = 0; i < 12; i++) {
       marks[i] = 5 * i + (offset_12h_mark % 5);
@@ -86,7 +86,7 @@ struct P070_data_struct : public PluginTaskData_base {
     }
   }
 
-  void clearClock() {
+  void clearClock(void) {
     for (int i = 0; i < NUMBER_LEDS; i++) {
       Plugin_070_pixels->setPixelColor(i, Plugin_070_pixels->Color(0, 0, 0));
     }
@@ -218,7 +218,7 @@ boolean Plugin_070(byte function, struct EventStruct *event, String& string)
           P070_data->brightness_hour_marks = PCONFIG(2);
           P070_data->offset_12h_mark = PCONFIG(3);
           P070_data->thick_12_mark = PCONFIG(4);
-          P070_data->calculateMarks();
+          P070_data->calculateMarks(void);
         }
 
         success = true;
@@ -235,13 +235,13 @@ boolean Plugin_070(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
       {
-        initPluginTaskData(event->TaskIndex, new P070_data_struct());
+        initPluginTaskData(event->TaskIndex, new P070_data_struct(void));
         P070_data_struct* P070_data = static_cast<P070_data_struct*>(getPluginTaskData(event->TaskIndex));
         if (nullptr == P070_data) {
           return success;
         }
         P070_data->init(event);
-        P070_data->calculateMarks();
+        P070_data->calculateMarks(void);
 
         success = true;
         break;
@@ -249,7 +249,7 @@ boolean Plugin_070(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_ONCE_A_SECOND:
       {
-        Clock_update();
+        Clock_update(void);
         success = true;
         break;
       }
@@ -257,7 +257,7 @@ boolean Plugin_070(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WRITE:
       {
         String lowerString=string;
-        lowerString.toLowerCase();
+        lowerString.toLowerCase(void);
         String command = parseString(lowerString, 1);
         String param1 = parseString(lowerString, 2);
         String param2 = parseString(lowerString, 3);

@@ -5,16 +5,16 @@
 // ********************************************************************************
 // Web Interface Factory Reset
 // ********************************************************************************
-void handle_factoryreset() {
+void handle_factoryreset(void) {
   checkRAM(F("handle_factoryreset"));
 
-  if (!isLoggedIn()) { return; }
+  if (!isLoggedIn(void)) { return; }
   navMenuIndex = MENU_INDEX_TOOLS;
-  TXBuffer.startStream();
+  TXBuffer.startStream(void);
   sendHeadandTail_stdtemplate(_HEAD);
-  html_add_form();
-  html_table_class_normal();
-  html_TR();
+  html_add_form(void);
+  html_table_class_normal(void);
+  html_TR(void);
   addFormHeader(F("Factory Reset"));
 
   if (WebServer.hasArg("fdm")) {
@@ -32,42 +32,42 @@ void handle_factoryreset() {
     ResetFactoryDefaultPreference.keepNetwork(isFormItemChecked("knet"));
     ResetFactoryDefaultPreference.keepNTP(isFormItemChecked("kntp"));
     ResetFactoryDefaultPreference.keepLogSettings(isFormItemChecked("klog"));
-    applyFactoryDefaultPref();
-    addHtmlError(SaveSettings());
+    applyFactoryDefaultPref(void);
+    addHtmlError(SaveSettings(void));
   }
 
   if (WebServer.hasArg(F("performfactoryreset"))) {
     // User confirmed to really perform the reset.
-    applyFactoryDefaultPref();
+    applyFactoryDefaultPref(void);
 
-    // No need to call SaveSettings(); ResetFactory() will save the new settings.
-    ResetFactory();
+    // No need to call SaveSettings(void); ResetFactory(void) will save the new settings.
+    ResetFactory(void);
   } else {
     // Nothing chosen yet, show options.
     addTableSeparator(F("Settings to keep"), 2, 3);
 
     addRowLabel(F("Keep Unit/Name"));
-    addCheckBox("kun", ResetFactoryDefaultPreference.keepUnitName());
+    addCheckBox("kun", ResetFactoryDefaultPreference.keepUnitName(void));
 
     addRowLabel(F("Keep WiFi config"));
-    addCheckBox("kw", ResetFactoryDefaultPreference.keepWiFi());
+    addCheckBox("kw", ResetFactoryDefaultPreference.keepWiFi(void));
 
     addRowLabel(F("Keep Network config"));
-    addCheckBox("knet", ResetFactoryDefaultPreference.keepNetwork());
+    addCheckBox("knet", ResetFactoryDefaultPreference.keepNetwork(void));
 
     addRowLabel(F("Keep NTP/DST config"));
-    addCheckBox("kntp", ResetFactoryDefaultPreference.keepNTP());
+    addCheckBox("kntp", ResetFactoryDefaultPreference.keepNTP(void));
 
     addRowLabel(F("Keep log config"));
-    addCheckBox("klog", ResetFactoryDefaultPreference.keepLogSettings());
+    addCheckBox("klog", ResetFactoryDefaultPreference.keepLogSettings(void));
 
     addTableSeparator(F("Pre-defined configurations"), 2, 3);
     addRowLabel(F("Pre-defined config"));
-    addPreDefinedConfigSelector();
+    addPreDefinedConfigSelector(void);
 
 
-    html_TR_TD();
-    html_TD();
+    html_TR_TD(void);
+    html_TD(void);
     addSubmitButton(F("Save Preferences"), F("savepref"));
 
 
@@ -78,17 +78,17 @@ void handle_factoryreset() {
     addSubmitButton(F("Factory Reset"), F("performfactoryreset"), F("red"));
   }
 
-  html_end_table();
-  html_end_form();
+  html_end_table(void);
+  html_end_form(void);
   sendHeadandTail_stdtemplate(_TAIL);
-  TXBuffer.endStream();
+  TXBuffer.endStream(void);
 }
 
 // ********************************************************************************
 // Create pre-defined config selector
 // ********************************************************************************
-void addPreDefinedConfigSelector() {
-  DeviceModel active_model = ResetFactoryDefaultPreference.getDeviceModel();
+void addPreDefinedConfigSelector(void) {
+  DeviceModel active_model = ResetFactoryDefaultPreference.getDeviceModel(void);
 
   addSelector_Head("fdm", true);
 
@@ -102,13 +102,13 @@ void addPreDefinedConfigSelector() {
       ""
       );
   }
-  addSelector_Foot();
+  addSelector_Foot(void);
 }
 
 #ifdef WEBSERVER_NEW_UI
-void handle_factoryreset_json() {
-  if (!isLoggedIn()) { return; }
-  TXBuffer.startJsonStream();
+void handle_factoryreset_json(void) {
+  if (!isLoggedIn(void)) { return; }
+  TXBuffer.startJsonStream(void);
   TXBuffer += "{";
 
   if (WebServer.hasArg("fdm")) {
@@ -154,20 +154,20 @@ void handle_factoryreset_json() {
     error = F("no reset");
   }
   if (savePref) {
-    applyFactoryDefaultPref();
-    error = SaveSettings();
+    applyFactoryDefaultPref(void);
+    error = SaveSettings(void);
   }
 
-  if (error.length() == 0) {
+  if (error.length(void) == 0) {
     error = F("ok");
   }
 
   stream_last_json_object_value(F("status"), error);
   TXBuffer += "}";
-  TXBuffer.endStream();
+  TXBuffer.endStream(void);
 
   if (performReset) {
-    ResetFactory();
+    ResetFactory(void);
   }
 }
 

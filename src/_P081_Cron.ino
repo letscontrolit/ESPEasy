@@ -95,7 +95,7 @@ boolean Plugin_081(byte function, struct EventStruct *event, String& string)
     {
       String log;
       char expression[PLUGIN_081_EXPRESSION_SIZE];
-      strncpy(expression,  WebServer.arg(F("p081_cron_exp")).c_str() , sizeof(expression));
+      strncpy(expression,  WebServer.arg(F("p081_cron_exp")).c_str(void) , sizeof(expression));
       if(/*strcmp(expression, state.Expression)*/1 != 0)
       {
         cron_expr expr;
@@ -104,7 +104,7 @@ boolean Plugin_081(byte function, struct EventStruct *event, String& string)
         cron_parse_expr(expression, &expr, &err);
         if (!err)
         {
-          unsigned long time __attribute__((unused)) = now();
+          unsigned long time __attribute__((unused)) = now(void);
           time_t last   = mktime((struct tm *)&tm);
           time_t next   = cron_next((cron_expr *)&expr, last);
           converter.time = last;
@@ -198,7 +198,7 @@ boolean Plugin_081(byte function, struct EventStruct *event, String& string)
       time_t last = converter.time;
       converter.value = NEXTEXECUTION;
       time_t next = converter.time;
-      unsigned long time __attribute__((unused)) = now();
+      unsigned long time __attribute__((unused)) = now(void);
       struct tm current = tm;
       time_t  current_t = mktime((struct tm *)&current);
       #if PLUGIN_081_DEBUG
@@ -298,42 +298,42 @@ void PrintCronExp(struct cron_expr_t e) {
     serialPrint(e.seconds[i]);
     serialPrint(",");
   }
-  serialPrintln();
+  serialPrintln(void);
   serialPrint(F("Minutes:"));
   for (int i = 0; i < 8; i++)
   {
     serialPrint(e.minutes[i]);
     serialPrint(",");
   }
-  serialPrintln();
+  serialPrintln(void);
   serialPrint(F("hours:"));
   for (int i = 0; i < 3; i++)
   {
     serialPrint(e.hours[i]);
     serialPrint(",");
   }
-  serialPrintln();
+  serialPrintln(void);
   serialPrint(F("months:"));
   for (int i = 0; i < 2; i++)
   {
     serialPrint(e.months[i]);
     serialPrint(",");
   }
-  serialPrintln();
+  serialPrintln(void);
   serialPrint(F("days_of_week:"));
   for (int i = 0; i < 1; i++)
   {
     serialPrint(e.days_of_week[i]);
     serialPrint(",");
   }
-  serialPrintln();
+  serialPrintln(void);
   serialPrint(F("days_of_month:"));
   for (int i = 0; i < 4; i++)
   {
     serialPrint(e.days_of_month[i]);
     serialPrint(",");
   }
-  serialPrintln();
+  serialPrintln(void);
   serialPrintln(F("END=DUMP Cron Expression==="));
 
 }

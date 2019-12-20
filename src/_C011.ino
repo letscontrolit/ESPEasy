@@ -16,7 +16,7 @@
 
 struct C011_ConfigStruct
 {
-  void zero_last() {
+  void zero_last(void) {
     HttpMethod[C011_HTTP_METHOD_MAX_LEN - 1] = 0;
     HttpUri[C011_HTTP_URI_MAX_LEN - 1] = 0;
     HttpHeader[C011_HTTP_HEADER_MAX_LEN - 1] = 0;
@@ -59,7 +59,7 @@ bool CPlugin_011(byte function, struct EventStruct *event, String& string)
         C011_ConfigStruct customConfig;
 
         LoadCustomControllerSettings(event->ControllerIndex,(byte*)&customConfig, sizeof(customConfig));
-        customConfig.zero_last();
+        customConfig.zero_last(void);
         {
           byte choice = 0;
           String methods[] = { F("GET"), F("POST"), F("PUT"), F("HEAD"), F("PATCH") };
@@ -102,11 +102,11 @@ bool CPlugin_011(byte function, struct EventStruct *event, String& string)
         String httpheader = WebServer.arg(F("P011httpheader"));
         String httpbody = WebServer.arg(F("P011httpbody"));
 
-        strlcpy(customConfig.HttpMethod, methods[httpmethod].c_str(), sizeof(customConfig.HttpMethod));
-        strlcpy(customConfig.HttpUri, httpuri.c_str(), sizeof(customConfig.HttpUri));
-        strlcpy(customConfig.HttpHeader, httpheader.c_str(), sizeof(customConfig.HttpHeader));
-        strlcpy(customConfig.HttpBody, httpbody.c_str(), sizeof(customConfig.HttpBody));
-        customConfig.zero_last();
+        strlcpy(customConfig.HttpMethod, methods[httpmethod].c_str(void), sizeof(customConfig.HttpMethod));
+        strlcpy(customConfig.HttpUri, httpuri.c_str(void), sizeof(customConfig.HttpUri));
+        strlcpy(customConfig.HttpHeader, httpheader.c_str(void), sizeof(customConfig.HttpHeader));
+        strlcpy(customConfig.HttpBody, httpbody.c_str(void), sizeof(customConfig.HttpBody));
+        customConfig.zero_last(void);
         SaveCustomControllerSettings(event->ControllerIndex,(byte*)&customConfig, sizeof(customConfig));
         break;
       }
@@ -119,7 +119,7 @@ bool CPlugin_011(byte function, struct EventStruct *event, String& string)
 
     case CPLUGIN_FLUSH:
       {
-        process_c011_delay_queue();
+        process_c011_delay_queue(void);
         delay(0);
         break;
       }
@@ -155,7 +155,7 @@ boolean Create_schedule_HTTP_C011(struct EventStruct *event)
 
   C011_ConfigStruct customConfig;
   LoadCustomControllerSettings(event->ControllerIndex,(byte*)&customConfig, sizeof(customConfig));
-  customConfig.zero_last();
+  customConfig.zero_last(void);
 
   WiFiClient client;
   if (!try_connect_host(controller_number, client, ControllerSettings))
@@ -183,7 +183,7 @@ boolean Create_schedule_HTTP_C011(struct EventStruct *event)
     String body = String(customConfig.HttpBody);
     ReplaceTokenByValue(body, event);
     payload += F("Content-Length: ");
-    payload += String(body.length());
+    payload += String(body.length(void));
     addNewLine(payload);
     addNewLine(payload); // Need 2 CRLF between header and body.
     payload += body;
@@ -191,7 +191,7 @@ boolean Create_schedule_HTTP_C011(struct EventStruct *event)
   addNewLine(payload);
 
   bool success = C011_DelayHandler.addToQueue(C011_queue_element(event->ControllerIndex, payload));
-  scheduleNextDelayQueue(TIMER_C011_DELAY_QUEUE, C011_DelayHandler.getNextScheduleTime());
+  scheduleNextDelayQueue(TIMER_C011_DELAY_QUEUE, C011_DelayHandler.getNextScheduleTime(void));
   return success;
 }
 

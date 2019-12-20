@@ -6,7 +6,7 @@
 /********************************************************************************************\
   Init critical variables for logging (important during initial factory reset stuff )
   \*********************************************************************************************/
-void initLog()
+void initLog(void)
 {
   //make sure addLog doesnt do any stuff before initalisation of Settings is complete.
   Settings.UseSerial=true;
@@ -50,17 +50,17 @@ String getLogLevelDisplayStringFromIndex(byte index, int& logLevel) {
 
 void addToLog(byte loglevel, const String& string)
 {
-  addToLog(loglevel, string.c_str());
+  addToLog(loglevel, string.c_str(void));
 }
 
 void addToLog(byte logLevel, const __FlashStringHelper* flashString)
 {
     checkRAM(F("addToLog"));
     String s(flashString);
-    addToLog(logLevel, s.c_str());
+    addToLog(logLevel, s.c_str(void));
 }
 
-void disableSerialLog() {
+void disableSerialLog(void) {
   log_to_serial_disabled = true;
   setLogLevelFor(LOG_TO_SERIAL, 0);
 }
@@ -76,10 +76,10 @@ void setLogLevelFor(byte destination, byte logLevel) {
     default:
       break;
   }
-  updateLogLevelCache();
+  updateLogLevelCache(void);
 }
 
-void updateLogLevelCache() {
+void updateLogLevelCache(void) {
   byte max_lvl = 0;
   if (log_to_serial_disabled) {
     if (Settings.UseSerial) {
@@ -94,7 +94,7 @@ void updateLogLevelCache() {
 #endif
   }
   max_lvl = _max(max_lvl, Settings.SyslogLevel);
-  if (Logging.logActiveRead()) {
+  if (Logging.logActiveRead(void)) {
     max_lvl = _max(max_lvl, Settings.WebLogLevel);
   }
 #ifdef FEATURE_SD
@@ -107,7 +107,7 @@ bool loglevelActiveFor(byte logLevel) {
   return loglevelActive(logLevel, highest_active_log_level);
 }
 
-byte getSerialLogLevel() {
+byte getSerialLogLevel(void) {
   if (log_to_serial_disabled || !Settings.UseSerial) return 0;
   if (wifiStatus != ESPEASY_WIFI_SERVICES_INITIALIZED){
     if (Settings.SerialLogLevel < LOG_LEVEL_INFO) {
@@ -117,13 +117,13 @@ byte getSerialLogLevel() {
   return Settings.SerialLogLevel;
 }
 
-byte getWebLogLevel() {
+byte getWebLogLevel(void) {
   byte logLevelSettings = 0;
-  if (Logging.logActiveRead()) {
+  if (Logging.logActiveRead(void)) {
     logLevelSettings = Settings.WebLogLevel;
   } else {
     if (Settings.WebLogLevel != 0) {
-      updateLogLevelCache();
+      updateLogLevelCache(void);
     }
   }
   return logLevelSettings;
@@ -133,7 +133,7 @@ bool loglevelActiveFor(byte destination, byte logLevel) {
   byte logLevelSettings = 0;
   switch (destination) {
     case LOG_TO_SERIAL: {
-      logLevelSettings = getSerialLogLevel();
+      logLevelSettings = getSerialLogLevel(void);
       break;
     }
     case LOG_TO_SYSLOG: {
@@ -141,7 +141,7 @@ bool loglevelActiveFor(byte destination, byte logLevel) {
       break;
     }
     case LOG_TO_WEBLOG: {
-      logLevelSettings = getWebLogLevel();
+      logLevelSettings = getWebLogLevel(void);
       break;
     }
     case LOG_TO_SDCARD: {
@@ -164,16 +164,16 @@ bool loglevelActive(byte logLevel, byte logLevelSettings) {
 void addToLog(byte logLevel, const char *line)
 {
   if (loglevelActiveFor(LOG_TO_SERIAL, logLevel)) {
-    addToSerialBuffer(String(millis()).c_str());
+    addToSerialBuffer(String(millis(void)).c_str(void));
     addToSerialBuffer(" : ");
     String loglevelDisplayString = getLogLevelDisplayString(logLevel);
-    while (loglevelDisplayString.length() < 6) {
+    while (loglevelDisplayString.length(void) < 6) {
       loglevelDisplayString += ' ';
     }
-    addToSerialBuffer(loglevelDisplayString.c_str());
+    addToSerialBuffer(loglevelDisplayString.c_str(void));
     addToSerialBuffer(": ");
     addToSerialBuffer(line);
-    addNewlineToSerialBuffer();
+    addNewlineToSerialBuffer(void);
   }
   if (loglevelActiveFor(LOG_TO_SYSLOG, logLevel)) {
     syslog(logLevel, line);
@@ -187,7 +187,7 @@ void addToLog(byte logLevel, const char *line)
     File logFile = SD.open("log.dat", FILE_WRITE);
     if (logFile)
       logFile.println(line);
-    logFile.close();
+    logFile.close(void);
   }
 #endif
 }

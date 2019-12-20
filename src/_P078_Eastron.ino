@@ -158,15 +158,15 @@ boolean Plugin_078(byte function, struct EventStruct *event, String& string)
         if (Plugin_078_SDM != nullptr) {
           addRowLabel(F("Checksum (pass/fail)"));
           String chksumStats;
-          chksumStats = Plugin_078_SDM->getSuccCount();
+          chksumStats = Plugin_078_SDM->getSuccCount(void);
           chksumStats += '/';
-          chksumStats += Plugin_078_SDM->getErrCount();
+          chksumStats += Plugin_078_SDM->getErrCount(void);
           addHtml(chksumStats);
         }
 
         {
           // In a separate scope to free memory of String array as soon as possible
-          sensorTypeHelper_webformLoad_header();
+          sensorTypeHelper_webformLoad_header(void);
           String options[P078_NR_OUTPUT_OPTIONS];
           for (int i = 0; i < P078_NR_OUTPUT_OPTIONS; ++i) {
             options[i] = p078_getQueryString(i);
@@ -217,7 +217,7 @@ boolean Plugin_078(byte function, struct EventStruct *event, String& string)
           Plugin_078_SDM=NULL;
         }
         Plugin_078_SDM = new SDM(*Plugin_078_SoftSerial, baudrate, P078_DEPIN);
-        Plugin_078_SDM->begin();
+        Plugin_078_SDM->begin(void);
         success = true;
         break;
       }
@@ -262,10 +262,10 @@ float p078_readVal(byte query, byte node, unsigned int model) {
   bool success = false;
   float _tempvar = NAN;
   while (retry_count > 0 && !success) {
-    Plugin_078_SDM->clearErrCode();
+    Plugin_078_SDM->clearErrCode(void);
     _tempvar = Plugin_078_SDM->readVal(p078_getRegister(query, model), node);
     --retry_count;
-    if (Plugin_078_SDM->getErrCode() == SDM_ERR_NO_ERROR) {
+    if (Plugin_078_SDM->getErrCode(void) == SDM_ERR_NO_ERROR) {
       success = true;
     }
   }

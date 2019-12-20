@@ -6,7 +6,7 @@
 #include "src/Globals/Plugins.h"
 
 String EventToFileName(const String& eventName) {
-  int size  = eventName.length();
+  int size  = eventName.length(void);
   int index = eventName.indexOf('=');
 
   if (index > -1) {
@@ -20,7 +20,7 @@ String EventToFileName(const String& eventName) {
 #endif // if defined(ESP32)
   fileName += eventName.substring(0, size);
   fileName.replace('#', RULE_FILE_SEPARAROR);
-  fileName.toLowerCase();
+  fileName.toLowerCase(void);
   return fileName;
 }
 
@@ -35,7 +35,7 @@ String FileNameToEvent(const String& fileName) {
   return eventName;
 }
 
-void checkRuleSets() {
+void checkRuleSets(void) {
   for (byte x = 0; x < RULESETS_MAX; x++) {
 #if defined(ESP8266)
     String fileName = F("rules");
@@ -67,7 +67,7 @@ void checkRuleSets() {
 /********************************************************************************************\
    Process next event from event queue
  \*********************************************************************************************/
-bool processNextEvent() {
+bool processNextEvent(void) {
   if (Settings.UseRules)
   {
     String nextEvent;
@@ -90,7 +90,7 @@ void rulesProcessing(String& event) {
   START_TIMER
     checkRAM(F("rulesProcessing"));
 #ifndef BUILD_NO_DEBUG
-  unsigned long timer = millis();
+  unsigned long timer = millis(void);
 #endif // ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -99,7 +99,7 @@ void rulesProcessing(String& event) {
     addLog(LOG_LEVEL_INFO, log);
   }
 
-  if (Settings.OldRulesEngine()) {
+  if (Settings.OldRulesEngine(void)) {
     for (byte x = 0; x < RULESETS_MAX; x++) {
 #if defined(ESP8266)
       String fileName = F("rules");
@@ -142,7 +142,7 @@ void rulesProcessing(String& event) {
   }
 #endif // ifndef BUILD_NO_DEBUG
   STOP_TIMER(RULES_PROCESSING);
-  backgroundtasks();
+  backgroundtasks(void);
 }
 
 /********************************************************************************************\
@@ -174,7 +174,7 @@ String rulesProcessingFile(const String& fileName, String& event) {
   }
 
   fs::File f = tryOpenFile(fileName, "r+");
-  SPIFFS_CHECK(f, fileName.c_str());
+  SPIFFS_CHECK(f, fileName.c_str(void));
 
   // Try to get the best possible estimate on line length based on earlier parsing of the rules.
   static size_t longestLineSize = RULES_BUFFER_SIZE;
@@ -194,21 +194,21 @@ String rulesProcessingFile(const String& fileName, String& event) {
   bool firstNonSpaceRead = false;
   bool commentFound      = false;
 
-  while (f.available()) {
+  while (f.available(void)) {
     int len = f.read(&buf[0], RULES_BUFFER_SIZE);
 
     for (int x = 0; x < len; x++) {
       int data = buf[x];
 
-      SPIFFS_CHECK(data >= 0, fileName.c_str());
+      SPIFFS_CHECK(data >= 0, fileName.c_str(void));
 
       switch (static_cast<char>(data))
       {
         case '\n':
         {
           // Line end, parse rule
-          line.trim();
-          const size_t lineLength = line.length();
+          line.trim(void);
+          const size_t lineLength = line.length(void);
 
           if (lineLength > longestLineSize) {
             longestLineSize = lineLength;
@@ -227,7 +227,7 @@ String rulesProcessingFile(const String& fileName, String& event) {
                                  isCommand, condition, ifBranche, ifBlock, fakeIfBlock);
             }
 
-            backgroundtasks();
+            backgroundtasks(void);
           }
 
           // Prepare for new line
@@ -274,7 +274,7 @@ String rulesProcessingFile(const String& fileName, String& event) {
   }
 
   if (f) {
-    f.close();
+    f.close(void);
   }
 
   nestingLevel--;
@@ -299,7 +299,7 @@ void replace_EventValueN_Argv(String& line, const String& argString, unsigned in
   eventvalue += '%';
   String tmpParam;
 
-  if (GetArgv(argString.c_str(), tmpParam, argc)) {
+  if (GetArgv(argString.c_str(void), tmpParam, argc)) {
     line.replace(eventvalue, tmpParam);
   }
 }
@@ -351,7 +351,7 @@ void parseCompleteNonCommentLine(String& line, String& event, String& log,
   if (comment >= 0) {
     line = line.substring(0, comment);
   }
-  line.trim();
+  line.trim(void);
 
   if (match || !codeBlock) {
     // only parse [xxx#yyy] if we have a matching ruleblock or need to eval the
@@ -366,13 +366,13 @@ void parseCompleteNonCommentLine(String& line, String& event, String& log,
     if (match || lineStartsWith_on) {
       // Only parseTemplate when we are actually doing something with the line.
       // When still looking for the "on ... do" part, do not change it before we found the block.
-      line = parseTemplate(line, line.length());
+      line = parseTemplate(line, line.length(void));
     }
   }
 
 
   String lineOrg = line; // store original line for future use
-  line.toLowerCase();    // convert all to lower case to make checks easier
+  line.toLowerCase(void);    // convert all to lower case to make checks easier
 
   String eventTrigger = "";
   action = "";
@@ -391,8 +391,8 @@ void parseCompleteNonCommentLine(String& line, String& event, String& log,
         action       = lineOrg.substring(split + 7);
 
         // Remove trailing and leadin spaces on the eventTrigger and action.
-        eventTrigger.trim();
-        action.trim();
+        eventTrigger.trim(void);
+        action.trim(void);
       }
 
       if (eventTrigger == "*") { // wildcard, always process
@@ -402,7 +402,7 @@ void parseCompleteNonCommentLine(String& line, String& event, String& log,
         match = ruleMatch(event, eventTrigger);
       }
 
-      if (action.length() > 0) // single on/do/action line, no block
+      if (action.length(void) > 0) // single on/do/action line, no block
       {
         isCommand = true;
         codeBlock = false;
@@ -445,7 +445,7 @@ void processMatchedRule(String& action, String& event,
                         byte& ifBlock, byte& fakeIfBlock) {
   String lcAction = action;
 
-  lcAction.toLowerCase();
+  lcAction.toLowerCase(void);
 
   if (fakeIfBlock) {
     isCommand = false;
@@ -469,7 +469,7 @@ void processMatchedRule(String& action, String& event,
         }
         else {
           String check = lcAction.substring(split + 7);
-          check.trim();
+          check.trim(void);
           condition[ifBlock - 1] = conditionMatchExtended(check);
 #ifndef BUILD_NO_DEBUG
 
@@ -494,7 +494,7 @@ void processMatchedRule(String& action, String& event,
         if (isCommand) {
           ifBlock++;
           String check = lcAction.substring(split + 3);
-          check.trim();
+          check.trim(void);
           condition[ifBlock - 1] = conditionMatchExtended(check);
           ifBranche[ifBlock - 1] = true;
 #ifndef BUILD_NO_DEBUG
@@ -566,7 +566,7 @@ void processMatchedRule(String& action, String& event,
       addLog(LOG_LEVEL_INFO, log);
     }
 
-    ExecuteCommand_all(VALUE_SOURCE_RULES, action.c_str());
+    ExecuteCommand_all(VALUE_SOURCE_RULES, action.c_str(void));
     delay(0);
   }
 }
@@ -579,8 +579,8 @@ bool ruleMatch(const String& event, const String& rule) {
 
   String tmpEvent = event;
   String tmpRule  = rule;
-  tmpEvent.trim();
-  tmpRule.trim();
+  tmpEvent.trim(void);
+  tmpRule.trim(void);
 
   // Ignore escape char
   tmpRule.replace("[", "");
@@ -604,7 +604,7 @@ bool ruleMatch(const String& event, const String& rule) {
       if (!pound_char_found)
       {
         // no # sign in rule, use 'wildcard' match on event 'source'
-        return event.substring(0, rule.length()).equalsIgnoreCase(rule);
+        return event.substring(0, rule.length(void)).equalsIgnoreCase(rule);
       }
     }
     return tmpEvent.equalsIgnoreCase(tmpRule);
@@ -743,7 +743,7 @@ bool conditionMatchExtended(String& check) {
 // @param posEnd   = first position rest of the string, right after the compare condition.
 bool findCompareCondition(const String& check, char& compare, int& posStart, int& posEnd)
 {
-  posStart = check.length();
+  posStart = check.length(void);
   posEnd   = posStart;
   int comparePos = 0;
   bool found = false;
@@ -864,7 +864,7 @@ bool conditionMatch(const String& check) {
 /********************************************************************************************\
    Check rule timers
  \*********************************************************************************************/
-void rulesTimers() {
+void rulesTimers(void) {
   if (!Settings.UseRules) {
     return;
   }

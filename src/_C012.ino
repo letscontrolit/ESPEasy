@@ -58,13 +58,13 @@ bool CPlugin_012(byte function, struct EventStruct *event, String& string)
           }
         }
         success = C012_DelayHandler.addToQueue(element);
-        scheduleNextDelayQueue(TIMER_C012_DELAY_QUEUE, C012_DelayHandler.getNextScheduleTime());
+        scheduleNextDelayQueue(TIMER_C012_DELAY_QUEUE, C012_DelayHandler.getNextScheduleTime(void));
         break;
       }
 
     case CPLUGIN_FLUSH:
       {
-        process_c012_delay_queue();
+        process_c012_delay_queue(void);
         delay(0);
         break;
       }
@@ -85,7 +85,7 @@ bool do_process_c012_delay_queue(int controller_number, const C012_queue_element
     if (element.checkDone(true))
       return true;
   }
-  if (!WiFiConnected()) {
+  if (!WiFiConnected(void)) {
     return false;
   }
   return element.checkDone(Blynk_get(element.txt[element.valuesSent], element.controller_idx));
@@ -111,18 +111,18 @@ boolean Blynk_get(const String& command, byte controllerIndex, float *data )
   sprintf_P(request,
             PSTR("GET /%s/%s HTTP/1.1\r\n Host: %s \r\n Connection: close\r\n\r\n"),
             SecuritySettings.ControllerPassword[controllerIndex],
-            command.c_str(),
-            ControllerSettings.getHost().c_str());
+            command.c_str(void),
+            ControllerSettings.getHost(void).c_str(void));
   addLog(LOG_LEVEL_DEBUG, request);
   client.print(request);
   bool success = !ControllerSettings.MustCheckReply;
   if (ControllerSettings.MustCheckReply || data) {
-    unsigned long timer = millis() + 200;
+    unsigned long timer = millis(void) + 200;
     while (!client_available(client) && !timeOutReached(timer))
       delay(1);
 
     char log[80] = {0};
-    timer = millis() + 1500;
+    timer = millis(void) + 1500;
     // Read all the lines of the reply from server and log them
     while (client_available(client) && !success && !timeOutReached(timer)) {
       String line;
@@ -147,14 +147,14 @@ boolean Blynk_get(const String& command, byte controllerIndex, float *data )
         String strValue = line;
         byte pos = strValue.indexOf('"',2);
         strValue = strValue.substring(2, pos);
-        strValue.trim();
-        float value = strValue.toFloat();
+        strValue.trim(void);
+        float value = strValue.toFloat(void);
         *data = value;
         success = true;
 
         char value_char[5] = {0};
         strValue.toCharArray(value_char, 5);
-        sprintf_P(log, PSTR("Blynk get - %s => %s"),command.c_str(), value_char   );
+        sprintf_P(log, PSTR("Blynk get - %s => %s"),command.c_str(void), value_char   );
         addLog(LOG_LEVEL_DEBUG, log);
       }
       delay(0);
@@ -162,13 +162,13 @@ boolean Blynk_get(const String& command, byte controllerIndex, float *data )
   }
   addLog(LOG_LEVEL_DEBUG, F("HTTP : closing connection (012)"));
 
-  client.flush();
-  client.stop();
+  client.flush(void);
+  client.stop(void);
 
   // important - backgroundtasks - free mem
-  unsigned long timer = millis() + Settings.MessageDelay;
+  unsigned long timer = millis(void) + Settings.MessageDelay;
   while (!timeOutReached(timer))
-              backgroundtasks();
+              backgroundtasks(void);
 
   return success;
 }

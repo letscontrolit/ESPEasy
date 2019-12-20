@@ -102,9 +102,9 @@ boolean Plugin_035(byte function, struct EventStruct *event, String &command)
         {
           addLog(LOG_LEVEL_INFO, F("INIT: IR TX"));
           addLog(LOG_LEVEL_INFO, String(F("IR lib Version: ")) + _IRREMOTEESP8266_VERSION_);
-          addLog(LOG_LEVEL_INFO, String(F("Supported Protocols by IRSEND: ")) + listProtocols());
+          addLog(LOG_LEVEL_INFO, String(F("Supported Protocols by IRSEND: ")) + listProtocols(void));
           Plugin_035_irSender = new IRsend(irPin);
-          Plugin_035_irSender->begin(); // Start the sender
+          Plugin_035_irSender->begin(void); // Start the sender
         }
         if (Plugin_035_irSender != 0 && irPin == -1)
         {
@@ -117,7 +117,7 @@ boolean Plugin_035(byte function, struct EventStruct *event, String &command)
         if (Plugin_035_commonAc == 0 && irPin != -1)
         {
           addLog(LOG_LEVEL_INFO, F("INIT AC: IR TX"));
-          addLog(LOG_LEVEL_INFO, String(F("Supported Protocols by IRSENDAC: ")) + listACProtocols());
+          addLog(LOG_LEVEL_INFO, String(F("Supported Protocols by IRSENDAC: ")) + listACProtocols(void));
           Plugin_035_commonAc = new IRac(irPin);
         }
         if (Plugin_035_commonAc != 0 && irPin == -1)
@@ -174,33 +174,33 @@ boolean handleIRremote(const String &cmd) {
   String ircodestr = "";
 
   StaticJsonDocument<200> docTemp;
-  DeserializationError error = deserializeJson(docTemp, cmd.substring(cmd.indexOf(',') + 1, cmd.length()));
+  DeserializationError error = deserializeJson(docTemp, cmd.substring(cmd.indexOf(',') + 1, cmd.length(void)));
   if (!error) // If the command is in JSON format
   {
-    IrType =  docTemp[F("protocol")].as<String>();
-    ircodestr = docTemp[F("data")].as<String>(); //JSON does not support hex values, thus we use command representation
-    IrCode = strtoull(ircodestr.c_str(), NULL, 16);
+    IrType =  docTemp[F("protocol")].as<String>(void);
+    ircodestr = docTemp[F("data")].as<String>(void); //JSON does not support hex values, thus we use command representation
+    IrCode = strtoull(ircodestr.c_str(void), NULL, 16);
     IrBits  = docTemp[F("bits")] | 0;
     IrRepeat = docTemp[F("repeats")] | 0;
   }
   else { // If the command is NOT in JSON format (legacy)
-    if (GetArgv(cmd.c_str(), TmpStr1, 2))
+    if (GetArgv(cmd.c_str(void), TmpStr1, 2))
     {
       IrType = TmpStr1;
 
-      if (GetArgv(cmd.c_str(), ircodestr, 3))
+      if (GetArgv(cmd.c_str(void), ircodestr, 3))
       {
-        IrCode = strtoull(ircodestr.c_str(), NULL, 16);
+        IrCode = strtoull(ircodestr.c_str(void), NULL, 16);
       }
       IrBits = 0; //Leave it to 0 for default protocol bits
-      if (GetArgv(cmd.c_str(), TmpStr1, 4))
-        IrBits = str2int(TmpStr1.c_str()); // Number of bits to be sent. USE 0 for default protocol bits
-      if (GetArgv(cmd.c_str(), TmpStr1, 5))
-        IrRepeat = str2int(TmpStr1.c_str());  // Nr. of times the message is to be repeated
+      if (GetArgv(cmd.c_str(void), TmpStr1, 4))
+        IrBits = str2int(TmpStr1.c_str(void)); // Number of bits to be sent. USE 0 for default protocol bits
+      if (GetArgv(cmd.c_str(void), TmpStr1, 5))
+        IrRepeat = str2int(TmpStr1.c_str(void));  // Nr. of times the message is to be repeated
     }
   }
 
-  bool IRsent = sendIRCode(strToDecodeType(IrType.c_str()), IrCode, ircodestr.c_str(), IrBits, IrRepeat); //Send the IR command
+  bool IRsent = sendIRCode(strToDecodeType(IrType.c_str(void)), IrCode, ircodestr.c_str(void), IrBits, IrRepeat); //Send the IR command
   if (IRsent) printToLog(IrType, ircodestr, IrBits, IrRepeat);
   return IRsent;
 }
@@ -211,18 +211,18 @@ boolean handle_AC_IRremote(const String &cmd) {
 
   int argIndex = cmd.indexOf(',') + 1;
   if (argIndex)
-    irData = cmd.substring(argIndex, cmd.length());
+    irData = cmd.substring(argIndex, cmd.length(void));
   //addLog(LOG_LEVEL_INFO, String(F("IRTX: JSON received: ")) + irData);
-  irData.toLowerCase(); // Circumvent the need to have case sensitive JSON keys
+  irData.toLowerCase(void); // Circumvent the need to have case sensitive JSON keys
 
   DeserializationError error = deserializeJson(doc, irData);         // Deserialize the JSON document
   if (error)         // Test if parsing succeeds.
   {
-    addLog(LOG_LEVEL_INFO, String(F("IRTX: Deserialize Json failed: ")) + error.c_str());
+    addLog(LOG_LEVEL_INFO, String(F("IRTX: Deserialize Json failed: ")) + error.c_str(void));
     return false; //do not continue with sending the signal.
   }
   String sprotocol = doc[F("protocol")];
-  st.protocol = strToDecodeType(sprotocol.c_str());
+  st.protocol = strToDecodeType(sprotocol.c_str(void));
   if (!IRac::isProtocolSupported(st.protocol)) //Check if we support the protocol
   {
     addLog(LOG_LEVEL_INFO, String(F("IRTX: Protocol not supported:")) + sprotocol);
@@ -230,35 +230,35 @@ boolean handle_AC_IRremote(const String &cmd) {
   }
 
   String tempstr = "";
-  tempstr = doc[F("model")].as<String>();
-  st.model = IRac::strToModel(tempstr.c_str(), -1); //The specific model of A/C if applicable. //strToModel();. Defaults to -1 (unknown) if missing from JSON
-  tempstr = doc[F("power")].as<String>();
-  st.power = IRac::strToBool(tempstr.c_str(), false); //POWER ON or OFF. Defaults to false if missing from JSON
+  tempstr = doc[F("model")].as<String>(void);
+  st.model = IRac::strToModel(tempstr.c_str(void), -1); //The specific model of A/C if applicable. //strToModel(void);. Defaults to -1 (unknown) if missing from JSON
+  tempstr = doc[F("power")].as<String>(void);
+  st.power = IRac::strToBool(tempstr.c_str(void), false); //POWER ON or OFF. Defaults to false if missing from JSON
   st.degrees = doc[F("temp")] | 22.0;                //What temperature should the unit be set to?. Defaults to 22c if missing from JSON
-  tempstr = doc[F("use_celsius")].as<String>();
-  st.celsius = IRac::strToBool(tempstr.c_str(), true); //Use degreees Celsius, otherwise Fahrenheit. Defaults to true if missing from JSON
-  tempstr = doc[F("mode")].as<String>();
-  st.mode = IRac::strToOpmode(tempstr.c_str(), stdAc::opmode_t::kAuto); //What operating mode should the unit perform? e.g. Cool. Defaults to auto if missing from JSON
-  tempstr = doc[F("fanspeed")].as<String>();
-  st.fanspeed = IRac::strToFanspeed(tempstr.c_str(), stdAc::fanspeed_t::kAuto); //Fan Speed setting. Defaults to auto if missing from JSON
-  tempstr = doc[F("swingv")].as<String>();
-  st.swingv = IRac::strToSwingV(tempstr.c_str(), stdAc::swingv_t::kAuto); //Vertical swing setting. Defaults to auto if missing from JSON
-  tempstr = doc[F("swingh")].as<String>();
-  st.swingh = IRac::strToSwingH(tempstr.c_str(), stdAc::swingh_t::kAuto); //Horizontal Swing setting. Defaults to auto if missing from JSON
-  tempstr = doc[F("quiet")].as<String>();
-  st.quiet = IRac::strToBool(tempstr.c_str(), false); //Quiet setting ON or OFF. Defaults to false if missing from JSON
-  tempstr = doc[F("turbo")].as<String>();
-  st.turbo = IRac::strToBool(tempstr.c_str(), false); //Turbo setting ON or OFF. Defaults to false if missing from JSON
-  tempstr = doc[F("econo")].as<String>();
-  st.econo = IRac::strToBool(tempstr.c_str(), false); //Economy setting ON or OFF. Defaults to false if missing from JSON
-  tempstr = doc[F("light")].as<String>();
-  st.light = IRac::strToBool(tempstr.c_str(), false); //Light setting ON or OFF. Defaults to false if missing from JSON
-  tempstr = doc[F("filter")].as<String>();
-  st.filter = IRac::strToBool(tempstr.c_str(), false); //Filter setting ON or OFF. Defaults to false if missing from JSON
-  tempstr = doc[F("clean")].as<String>();
-  st.clean = IRac::strToBool(tempstr.c_str(), false); //Clean setting ON or OFF. Defaults to false if missing from JSON
-  tempstr = doc[F("beep")].as<String>();
-  st.beep = IRac::strToBool(tempstr.c_str(), false); //Beep setting ON or OFF. Defaults to false if missing from JSON
+  tempstr = doc[F("use_celsius")].as<String>(void);
+  st.celsius = IRac::strToBool(tempstr.c_str(void), true); //Use degreees Celsius, otherwise Fahrenheit. Defaults to true if missing from JSON
+  tempstr = doc[F("mode")].as<String>(void);
+  st.mode = IRac::strToOpmode(tempstr.c_str(void), stdAc::opmode_t::kAuto); //What operating mode should the unit perform? e.g. Cool. Defaults to auto if missing from JSON
+  tempstr = doc[F("fanspeed")].as<String>(void);
+  st.fanspeed = IRac::strToFanspeed(tempstr.c_str(void), stdAc::fanspeed_t::kAuto); //Fan Speed setting. Defaults to auto if missing from JSON
+  tempstr = doc[F("swingv")].as<String>(void);
+  st.swingv = IRac::strToSwingV(tempstr.c_str(void), stdAc::swingv_t::kAuto); //Vertical swing setting. Defaults to auto if missing from JSON
+  tempstr = doc[F("swingh")].as<String>(void);
+  st.swingh = IRac::strToSwingH(tempstr.c_str(void), stdAc::swingh_t::kAuto); //Horizontal Swing setting. Defaults to auto if missing from JSON
+  tempstr = doc[F("quiet")].as<String>(void);
+  st.quiet = IRac::strToBool(tempstr.c_str(void), false); //Quiet setting ON or OFF. Defaults to false if missing from JSON
+  tempstr = doc[F("turbo")].as<String>(void);
+  st.turbo = IRac::strToBool(tempstr.c_str(void), false); //Turbo setting ON or OFF. Defaults to false if missing from JSON
+  tempstr = doc[F("econo")].as<String>(void);
+  st.econo = IRac::strToBool(tempstr.c_str(void), false); //Economy setting ON or OFF. Defaults to false if missing from JSON
+  tempstr = doc[F("light")].as<String>(void);
+  st.light = IRac::strToBool(tempstr.c_str(void), false); //Light setting ON or OFF. Defaults to false if missing from JSON
+  tempstr = doc[F("filter")].as<String>(void);
+  st.filter = IRac::strToBool(tempstr.c_str(void), false); //Filter setting ON or OFF. Defaults to false if missing from JSON
+  tempstr = doc[F("clean")].as<String>(void);
+  st.clean = IRac::strToBool(tempstr.c_str(void), false); //Clean setting ON or OFF. Defaults to false if missing from JSON
+  tempstr = doc[F("beep")].as<String>(void);
+  st.beep = IRac::strToBool(tempstr.c_str(void), false); //Beep setting ON or OFF. Defaults to false if missing from JSON
   st.sleep = doc[F("sleep")] | -1; //Nr. of mins of sleep mode, or use sleep mode. (<= 0 means off.). Defaults to -1 if missing from JSON
   st.clock = doc[F("clock")] | -1; //Nr. of mins past midnight to set the clock to. (< 0 means off.). Defaults to -1 if missing from JSON
 
@@ -272,7 +272,7 @@ boolean handle_AC_IRremote(const String &cmd) {
 boolean handleRawRaw2Encoding(const String &cmd) {
   boolean raw=true;
   String IrType = "";
-  if (!GetArgv(cmd.c_str(), IrType, 2)) return false;
+  if (!GetArgv(cmd.c_str(void), IrType, 2)) return false;
 
   if (IrType.equalsIgnoreCase(F("RAW"))) raw = true;
   else if (IrType.equalsIgnoreCase(F("RAW2")))  raw = false;
@@ -283,14 +283,14 @@ boolean handleRawRaw2Encoding(const String &cmd) {
   unsigned int IrPLen = 0;
   unsigned int IrBLen = 0;
 
-  if (GetArgv(cmd.c_str(), TmpStr1, 3))
+  if (GetArgv(cmd.c_str(void), TmpStr1, 3))
     IrRaw = TmpStr1; //Get the "Base32" encoded/compressed Ir signal
-  if (GetArgv(cmd.c_str(), TmpStr1, 4))
-    IrHz = str2int(TmpStr1.c_str()); //Get the base freguency of the signal (allways 38)
-  if (GetArgv(cmd.c_str(), TmpStr1, 5))
-    IrPLen = str2int(TmpStr1.c_str()); //Get the Pulse Length in ms
-  if (GetArgv(cmd.c_str(), TmpStr1, 6))
-    IrBLen = str2int(TmpStr1.c_str()); //Get the Blank Pulse Length in ms
+  if (GetArgv(cmd.c_str(void), TmpStr1, 4))
+    IrHz = str2int(TmpStr1.c_str(void)); //Get the base freguency of the signal (allways 38)
+  if (GetArgv(cmd.c_str(void), TmpStr1, 5))
+    IrPLen = str2int(TmpStr1.c_str(void)); //Get the Pulse Length in ms
+  if (GetArgv(cmd.c_str(void), TmpStr1, 6))
+    IrBLen = str2int(TmpStr1.c_str(void)); //Get the Blank Pulse Length in ms
 
   uint16_t idx = 0; //If this goes above the buf.size then the esp will throw a 28 EXCCAUSE
   uint16_t *buf;
@@ -307,7 +307,7 @@ boolean handleRawRaw2Encoding(const String &cmd) {
 
     //printWebString += F("Interpreted RAW Code: ");  //print the number of 1s and 0s just for debugging/info purposes
     //Loop throught every char in RAW string
-    for (unsigned int i = 0; i < IrRaw.length(); i++)
+    for (unsigned int i = 0; i < IrRaw.length(void); i++)
     {
       //Get the decimal value from base32 table
       //See: https://en.wikipedia.org/wiki/Base32#base32hex
@@ -392,7 +392,7 @@ boolean handleRawRaw2Encoding(const String &cmd) {
 
   if (!raw) { // RAW2
 
-    for (unsigned int i = 0, total = IrRaw.length(), gotRep = 0, rep = 0; i < total;)
+    for (unsigned int i = 0, total = IrRaw.length(void), gotRep = 0, rep = 0; i < total;)
     {
       char c = IrRaw[i++];
       if (c == '*')
@@ -401,7 +401,7 @@ boolean handleRawRaw2Encoding(const String &cmd) {
         {
           delete[] buf;
           buf = nullptr;
-          return addErrorTrue();
+          return addErrorTrue(void);
         }
         gotRep = 2;
       }
@@ -411,7 +411,7 @@ boolean handleRawRaw2Encoding(const String &cmd) {
         {
           delete[] buf;
           buf = nullptr;
-          return addErrorTrue();
+          return addErrorTrue(void);
         }
 
         uint16_t irLen = (idx & 1) ? IrBLen : IrPLen;
@@ -457,7 +457,7 @@ void printToLog(String protocol, String data, int bits, int repeats) {
   }
 }
 
-String listProtocols() {
+String listProtocols(void) {
   String temp;
   for (uint32_t i = 0; i <= kLastDecodeType; i++) {
     if (IRsend::defaultBits((decode_type_t)i) > 0 )
@@ -467,7 +467,7 @@ String listProtocols() {
 }
 
 #ifdef P016_P035_Extended_AC
-String listACProtocols() {
+String listACProtocols(void) {
   String temp;
   for (uint32_t i = 0; i <= kLastDecodeType; i++) {
     if (hasACState((decode_type_t)i))
@@ -477,7 +477,7 @@ String listACProtocols() {
 }
 #endif
 
-boolean addErrorTrue()
+boolean addErrorTrue(void)
 {
   addLog(LOG_LEVEL_ERROR, F("RAW2: Invalid encoding!"));
   return true;
@@ -488,9 +488,9 @@ void enableIR_RX(boolean enable)
 #ifdef PLUGIN_016
   if (irReceiver == 0) return;
   if (enable) {
-    irReceiver->enableIRIn(); // Start the receiver
+    irReceiver->enableIRIn(void); // Start the receiver
   } else {
-    irReceiver->disableIRIn(); // Stop the receiver
+    irReceiver->disableIRIn(void); // Stop the receiver
   }
 #endif
 }
@@ -542,7 +542,7 @@ bool parseStringAndSendAirCon(const int irtype, const String str)
   if (str.startsWith("0x") || str.startsWith("0X"))
     strOffset = 2;
   // Calculate how many hexadecimal characters there are.
-  uint16_t inputLength = str.length() - strOffset;
+  uint16_t inputLength = str.length(void) - strOffset;
   if (inputLength == 0)
   {
     // debug("Zero length AirCon code encountered. Ignored.");
@@ -644,7 +644,7 @@ bool parseStringAndSendAirCon(const int irtype, const String str)
     else
     {
       // debug("Aborting! Non-hexadecimal char found in AirCon state:");
-      // debug(str.c_str());
+      // debug(str.c_str(void));
       return false;
     }
     if (i % 2 == 1)

@@ -4,10 +4,10 @@
 // URLs needed for C016_CacheController 
 // to help dump the content of the binary log files
 // ********************************************************************************
-void handle_dumpcache() {
-  if (!isLoggedIn()) { return; }
+void handle_dumpcache(void) {
+  if (!isLoggedIn(void)) { return; }
 
-  C016_startCSVdump();
+  C016_startCSVdump(void);
   unsigned long timestamp;
   byte  controller_idx;
   byte  TaskIndex;
@@ -18,7 +18,7 @@ void handle_dumpcache() {
   float val3;
   float val4;
 
-  TXBuffer.startStream();
+  TXBuffer.startStream(void);
   TXBuffer += F("UNIX timestamp;contr. idx;sensortype;taskindex;value count");
 
   for (taskIndex_t i = 0; i < TASKS_MAX; ++i) {
@@ -67,14 +67,14 @@ void handle_dumpcache() {
     TXBuffer += F("<BR>");
     delay(0);
   }
-  TXBuffer.endStream();
+  TXBuffer.endStream(void);
 
 }
 
-void handle_cache_json() {
-  if (!isLoggedIn()) { return; }
+void handle_cache_json(void) {
+  if (!isLoggedIn(void)) { return; }
 
-  TXBuffer.startJsonStream();
+  TXBuffer.startJsonStream(void);
   TXBuffer += F("{\"columns\": [");
 
   //     TXBuffer += F("UNIX timestamp;contr. idx;sensortype;taskindex;value count");
@@ -96,7 +96,7 @@ void handle_cache_json() {
     }
   }
   TXBuffer += F("],\n");
-  C016_startCSVdump();
+  C016_startCSVdump(void);
   TXBuffer += F("\"files\": [");
   bool islast = false;
   int  filenr = 0;
@@ -104,7 +104,7 @@ void handle_cache_json() {
   while (!islast) {
     String currentFile = C016_getCacheFileName(islast);
 
-    if (currentFile.length() > 0) {
+    if (currentFile.length(void) > 0) {
       if (filenr != 0) {
         TXBuffer += ',';
       }
@@ -115,11 +115,11 @@ void handle_cache_json() {
   TXBuffer += F("],\n");
   stream_last_json_object_value(F("nrfiles"), String(filenr));
   TXBuffer += F("\n");
-  TXBuffer.endStream();
+  TXBuffer.endStream(void);
 }
 
-void handle_cache_csv() {
-  if (!isLoggedIn()) { return; }
+void handle_cache_csv(void) {
+  if (!isLoggedIn(void)) { return; }
 }
 
 #endif // ifdef USES_C016

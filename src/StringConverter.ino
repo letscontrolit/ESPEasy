@@ -8,7 +8,7 @@
    Convert a char string to integer
  \*********************************************************************************************/
 
-// FIXME: change original code so it uses String and String.toInt()
+// FIXME: change original code so it uses String and String.toInt(void)
 unsigned long str2int(const char *string)
 {
   unsigned long temp = atof(string);
@@ -27,7 +27,7 @@ bool string2float(const String& string, float& floatvalue) {
    Convert a char string to IP byte array
  \*********************************************************************************************/
 boolean str2ip(const String& string, byte *IP) {
-  return str2ip(string.c_str(), IP);
+  return str2ip(string.c_str(void), IP);
 }
 
 boolean str2ip(const char *string, byte *IP)
@@ -47,9 +47,9 @@ boolean str2ip(const char *string, byte *IP)
 String formatIP(const IPAddress& ip) {
 #if defined(ARDUINO_ESP8266_RELEASE_2_3_0)
   IPAddress tmp(ip);
-  return tmp.toString();
+  return tmp.toString(void);
 #else // if defined(ARDUINO_ESP8266_RELEASE_2_3_0)
-  return ip.toString();
+  return ip.toString(void);
 #endif // if defined(ARDUINO_ESP8266_RELEASE_2_3_0)
 }
 
@@ -69,7 +69,7 @@ String formatToHex(unsigned long value, const String& prefix) {
   String result = prefix;
   String hex(value, HEX);
 
-  hex.toUpperCase();
+  hex.toUpperCase(void);
   result += hex;
   return result;
 }
@@ -131,13 +131,13 @@ String formatToHex_decimal(unsigned long value, unsigned long factor) {
 }
 
 /*********************************************************************************************\
-   Workaround for removing trailing white space when String() converts a float with 0 decimals
+   Workaround for removing trailing white space when String(void) converts a float with 0 decimals
 \*********************************************************************************************/
 String toString(float value, byte decimals)
 {
   String sValue = String(value, decimals);
 
-  sValue.trim();
+  sValue.trim(void);
   return sValue;
 }
 
@@ -174,7 +174,7 @@ String boolToString(bool value) {
 \*********************************************************************************************/
 void removeExtraNewLine(String& line) {
   while (line.endsWith("\r\n\r\n")) {
-    line.remove(line.length() - 2);
+    line.remove(line.length(void) - 2);
   }
 }
 
@@ -236,7 +236,7 @@ String doFormatUserVar(struct EventStruct *event, byte rel_index, bool mustCheck
   }
   LoadTaskSettings(event->TaskIndex);
   String result = toString(f, ExtraTaskSettings.TaskDeviceValueDecimals[rel_index]);
-  result.trim();
+  result.trim(void);
   return result;
 }
 
@@ -285,11 +285,11 @@ void wrap_String(const String& string, const String& wrap, String& result) {
 String to_json_object_value(const String& object, const String& value) {
   String result;
 
-  result.reserve(object.length() + value.length() + 6);
+  result.reserve(object.length(void) + value.length(void) + 6);
   wrap_String(object, "\"", result);
   result += F(":");
 
-  if (value.length() == 0) {
+  if (value.length(void) == 0) {
     // Empty string
     result += F("\"\"");
   } else if (!isFloat(value)) {
@@ -315,7 +315,7 @@ String to_json_object_value(const String& object, const String& value) {
    Strip wrapping chars (e.g. quotes)
 \*********************************************************************************************/
 String stripWrappingChar(const String& text, char wrappingChar) {
-  unsigned int length = text.length();
+  unsigned int length = text.length(void);
 
   if ((length >= 2) && stringWrappedWithChar(text, wrappingChar)) {
     return text.substring(1, length - 1);
@@ -324,7 +324,7 @@ String stripWrappingChar(const String& text, char wrappingChar) {
 }
 
 bool stringWrappedWithChar(const String& text, char wrappingChar) {
-  unsigned int length = text.length();
+  unsigned int length = text.length(void);
 
   if (length < 2) { return false; }
 
@@ -341,7 +341,7 @@ bool isParameterSeparatorChar(char c) {
 }
 
 String stripQuotes(const String& text) {
-  if (text.length() >= 2) {
+  if (text.length(void) >= 2) {
     char c = text.charAt(0);
 
     if (isQuoteChar(c)) {
@@ -352,7 +352,7 @@ String stripQuotes(const String& text) {
 }
 
 bool safe_strncpy(char *dest, const String& source, size_t max_size) {
-  return safe_strncpy(dest, source.c_str(), max_size);
+  return safe_strncpy(dest, source.c_str(void), max_size);
 }
 
 bool safe_strncpy(char *dest, const char *source, size_t max_size) {
@@ -378,8 +378,8 @@ bool safe_strncpy(char *dest, const char *source, size_t max_size) {
 String to_internal_string(const String& input, char replaceSpace) {
   String result = input;
 
-  result.trim();
-  result.toLowerCase();
+  result.trim(void);
+  result.toLowerCase(void);
   result.replace(' ', replaceSpace);
   return result;
 }
@@ -391,33 +391,33 @@ String to_internal_string(const String& input, char replaceSpace) {
 \*********************************************************************************************/
 String parseString(const String& string, byte indexFind) {
   String result = parseStringKeepCase(string, indexFind);
-  result.toLowerCase();
+  result.toLowerCase(void);
   return result;
 }
 
 String parseStringKeepCase(const String& string, byte indexFind) {
   String result;
-  if (!GetArgv(string.c_str(), result, indexFind)) {
+  if (!GetArgv(string.c_str(void), result, indexFind)) {
     return "";
   }
-  result.trim();
+  result.trim(void);
   return stripQuotes(result);
 }
 
 String parseStringToEnd(const String& string, byte indexFind) {
   String result = parseStringToEndKeepCase(string, indexFind);
-  result.toLowerCase();
+  result.toLowerCase(void);
   return result;
 }
 
 String parseStringToEndKeepCase(const String& string, byte indexFind) {
   // Loop over the arguments to find the first and last pos of the arguments.
-  int pos_begin = string.length();
+  int pos_begin = string.length(void);
   int pos_end = pos_begin;
   int tmppos_begin, tmppos_end = -1;
   byte nextArgument = indexFind;
   bool hasArgument = false;
-  while (GetArgvBeginEnd(string.c_str(), nextArgument, tmppos_begin, tmppos_end))
+  while (GetArgvBeginEnd(string.c_str(void), nextArgument, tmppos_begin, tmppos_end))
   {
     hasArgument = true;
     if ((tmppos_begin < pos_begin) && (tmppos_begin >= 0)) { 
@@ -432,13 +432,13 @@ String parseStringToEndKeepCase(const String& string, byte indexFind) {
     return "";
   }
   String result = string.substring(pos_begin, pos_end);
-  result.trim();
+  result.trim(void);
   return stripQuotes(result);
 }
 
 String tolerantParseStringKeepCase(const String& string, byte indexFind)
 {
-  if (Settings.TolerantLastArgParse()) {
+  if (Settings.TolerantLastArgParse(void)) {
     return parseStringToEndKeepCase(string, indexFind);
   } 
   return parseStringKeepCase(string, indexFind);
@@ -481,9 +481,9 @@ void htmlStrongEscape(String& html)
 {
   String escaped;
 
-  escaped.reserve(html.length());
+  escaped.reserve(html.length(void));
 
-  for (unsigned i = 0; i < html.length(); ++i)
+  for (unsigned i = 0; i < html.length(void); ++i)
   {
     if (((html[i] >= 'a') && (html[i] <= 'z')) || ((html[i] >= 'A') && (html[i] <= 'Z')) || ((html[i] >= '0') && (html[i] <= '9')))
     {
@@ -531,9 +531,9 @@ String URLEncode(const char *msg)
  \*********************************************************************************************/
 void parseControllerVariables(String& s, struct EventStruct *event, boolean useURLencode) {
   parseEventVariables(s, event, false); // Must only URLEncode once, so do it at the end of this conversion.
-  s = parseTemplate(s, s.length());
+  s = parseTemplate(s, s.length(void));
   if (useURLencode) {
-    s = URLEncode(s.c_str());
+    s = URLEncode(s.c_str(void));
   }
 }
 
@@ -542,7 +542,7 @@ void repl(const String& key, const String& val, String& s, boolean useURLencode)
   if (useURLencode) {
     // URLEncode does take resources, so check first if needed.
     if (s.indexOf(key) == -1) return;
-    s.replace(key, URLEncode(val.c_str()));
+    s.replace(key, URLEncode(val.c_str(void)));
   } else {
     s.replace(key, val);
   }
@@ -649,22 +649,22 @@ void parseSystemVariables(String& s, boolean useURLencode)
   repl(F("%SP%"),  " ",         s, useURLencode);                                                                 // space
   repl(F("%R%"),   F("\\r"),    s, useURLencode);
   repl(F("%N%"),   F("\\n"),    s, useURLencode);
-  SMART_REPL(F("%ip4%"),     WiFi.localIP().toString().substring(WiFi.localIP().toString().lastIndexOf('.') + 1)) // 4th IP octet
-  SMART_REPL(F("%ip%"),      WiFi.localIP().toString())
-  SMART_REPL(F("%rssi%"),    String((wifiStatus == ESPEASY_WIFI_DISCONNECTED) ? 0 : WiFi.RSSI()))
-  SMART_REPL(F("%ssid%"),    (wifiStatus == ESPEASY_WIFI_DISCONNECTED) ? F("--") : WiFi.SSID())
-  SMART_REPL(F("%bssid%"),   (wifiStatus == ESPEASY_WIFI_DISCONNECTED) ? F("00:00:00:00:00:00") : WiFi.BSSIDstr())
-  SMART_REPL(F("%wi_ch%"),   String((wifiStatus == ESPEASY_WIFI_DISCONNECTED) ? 0 : WiFi.channel()))
+  SMART_REPL(F("%ip4%"),     WiFi.localIP(void).toString(void).substring(WiFi.localIP(void).toString(void).lastIndexOf('.') + 1)) // 4th IP octet
+  SMART_REPL(F("%ip%"),      WiFi.localIP(void).toString(void))
+  SMART_REPL(F("%rssi%"),    String((wifiStatus == ESPEASY_WIFI_DISCONNECTED) ? 0 : WiFi.RSSI(void)))
+  SMART_REPL(F("%ssid%"),    (wifiStatus == ESPEASY_WIFI_DISCONNECTED) ? F("--") : WiFi.SSID(void))
+  SMART_REPL(F("%bssid%"),   (wifiStatus == ESPEASY_WIFI_DISCONNECTED) ? F("00:00:00:00:00:00") : WiFi.BSSIDstr(void))
+  SMART_REPL(F("%wi_ch%"),   String((wifiStatus == ESPEASY_WIFI_DISCONNECTED) ? 0 : WiFi.channel(void)))
   SMART_REPL(F("%unit%"),    String(Settings.Unit))
-  SMART_REPL(F("%mac%"),     String(WiFi.macAddress()))
+  SMART_REPL(F("%mac%"),     String(WiFi.macAddress(void)))
   #if defined(ESP8266)
-  SMART_REPL(F("%mac_int%"), String(ESP.getChipId())) // Last 24 bit of MAC address as integer, to be used in rules.
+  SMART_REPL(F("%mac_int%"), String(ESP.getChipId(void))) // Last 24 bit of MAC address as integer, to be used in rules.
   #endif // if defined(ESP8266)
 
   if (s.indexOf(F("%sys")) != -1) {
-    SMART_REPL(F("%sysload%"),       String(getCPUload()))
-    SMART_REPL(F("%sysheap%"),       String(ESP.getFreeHeap()));
-    SMART_REPL(F("%sysstack%"),      String(getCurrentFreeStack()));
+    SMART_REPL(F("%sysload%"),       String(getCPUload(void)))
+    SMART_REPL(F("%sysheap%"),       String(ESP.getFreeHeap(void)));
+    SMART_REPL(F("%sysstack%"),      String(getCurrentFreeStack(void)));
     SMART_REPL(F("%systm_hm%"),      getTimeString(':', false))
     SMART_REPL(F("%systm_hm_am%"),   getTimeString_ampm(':', false))
     SMART_REPL(F("%systime%"),       getTimeString(':'))
@@ -677,33 +677,33 @@ void parseSystemVariables(String& s, boolean useURLencode)
     char valueString[5] = { 0 };
     #define SMART_REPL_TIME(T, F, V) \
   if (s.indexOf(T) != -1) { sprintf_P(valueString, (F), (V)); repl((T), valueString, s, useURLencode); }
-    SMART_REPL_TIME(F("%sysyear%"),  PSTR("%d"), year())
-    SMART_REPL_TIME(F("%sysmonth%"), PSTR("%d"), month())
-    SMART_REPL_TIME(F("%sysday%"),   PSTR("%d"), day())
-    SMART_REPL_TIME(F("%syshour%"),  PSTR("%d"), hour())
-    SMART_REPL_TIME(F("%sysmin%"),   PSTR("%d"), minute())
-    SMART_REPL_TIME(F("%syssec%"),   PSTR("%d"), second())
-    SMART_REPL_TIME(F("%syssec_d%"), PSTR("%d"), ((hour() * 60) + minute()) * 60 + second());
-    SMART_REPL(F("%sysweekday%"),   String(weekday()))
-    SMART_REPL(F("%sysweekday_s%"), weekday_str())
+    SMART_REPL_TIME(F("%sysyear%"),  PSTR("%d"), year(void))
+    SMART_REPL_TIME(F("%sysmonth%"), PSTR("%d"), month(void))
+    SMART_REPL_TIME(F("%sysday%"),   PSTR("%d"), day(void))
+    SMART_REPL_TIME(F("%syshour%"),  PSTR("%d"), hour(void))
+    SMART_REPL_TIME(F("%sysmin%"),   PSTR("%d"), minute(void))
+    SMART_REPL_TIME(F("%syssec%"),   PSTR("%d"), second(void))
+    SMART_REPL_TIME(F("%syssec_d%"), PSTR("%d"), ((hour(void) * 60) + minute(void)) * 60 + second(void));
+    SMART_REPL(F("%sysweekday%"),   String(weekday(void)))
+    SMART_REPL(F("%sysweekday_s%"), weekday_str(void))
 
     // With leading zero
-    SMART_REPL_TIME(F("%sysyears%"),   PSTR("%02d"), year() % 100)
-    SMART_REPL_TIME(F("%sysyear_0%"),  PSTR("%04d"), year())
-    SMART_REPL_TIME(F("%syshour_0%"),  PSTR("%02d"), hour())
-    SMART_REPL_TIME(F("%sysday_0%"),   PSTR("%02d"), day())
-    SMART_REPL_TIME(F("%sysmin_0%"),   PSTR("%02d"), minute())
-    SMART_REPL_TIME(F("%syssec_0%"),   PSTR("%02d"), second())
-    SMART_REPL_TIME(F("%sysmonth_0%"), PSTR("%02d"), month())
+    SMART_REPL_TIME(F("%sysyears%"),   PSTR("%02d"), year(void) % 100)
+    SMART_REPL_TIME(F("%sysyear_0%"),  PSTR("%04d"), year(void))
+    SMART_REPL_TIME(F("%syshour_0%"),  PSTR("%02d"), hour(void))
+    SMART_REPL_TIME(F("%sysday_0%"),   PSTR("%02d"), day(void))
+    SMART_REPL_TIME(F("%sysmin_0%"),   PSTR("%02d"), minute(void))
+    SMART_REPL_TIME(F("%syssec_0%"),   PSTR("%02d"), second(void))
+    SMART_REPL_TIME(F("%sysmonth_0%"), PSTR("%02d"), month(void))
 
     #undef SMART_REPL_TIME
   }
   SMART_REPL(F("%lcltime%"),     getDateTimeString('-', ':', ' '))
   SMART_REPL(F("%lcltime_am%"),  getDateTimeString_ampm('-', ':', ' '))
   SMART_REPL(F("%uptime%"),      String(wdcounter / 2))
-  SMART_REPL(F("%unixtime%"),    String(getUnixTime()))
-  SMART_REPL(F("%unixday%"),     String(getUnixTime() / 86400))
-  SMART_REPL(F("%unixday_sec%"), String(getUnixTime() % 86400))
+  SMART_REPL(F("%unixtime%"),    String(getUnixTime(void)))
+  SMART_REPL(F("%unixday%"),     String(getUnixTime(void) / 86400))
+  SMART_REPL(F("%unixday_sec%"), String(getUnixTime(void) % 86400))
   SMART_REPL_T(F("%sunset"),  replSunSetTimeString)
   SMART_REPL_T(F("%sunrise"), replSunRiseTimeString)
 
@@ -792,7 +792,7 @@ bool getConvertArgument(const String& marker, const String& s, float& argument, 
 
   if (getConvertArgumentString(marker, s, argumentString, startIndex, endIndex)) {
     if (!isFloat(argumentString)) { return false; }
-    argument = argumentString.toFloat();
+    argument = argumentString.toFloat(void);
     return true;
   }
   return false;
@@ -811,8 +811,8 @@ bool getConvertArgument2(const String& marker, const String& s, float& arg1, flo
     String arg2_s = argumentString.substring(pos_comma + 1);
 
     if (!isFloat(arg2_s)) { return false; }
-    arg1 = arg1_s.toFloat();
-    arg2 = arg2_s.toFloat();
+    arg1 = arg1_s.toFloat(void);
+    arg2 = arg2_s.toFloat(void);
     return true;
   }
   return false;
@@ -823,7 +823,7 @@ bool getConvertArgumentString(const String& marker, const String& s, String& arg
 
   if (startIndex == -1) { return false; }
 
-  int startIndexArgument = startIndex + marker.length();
+  int startIndexArgument = startIndex + marker.length(void);
 
   if (s.charAt(startIndexArgument) != '(') {
     return false;
@@ -835,7 +835,7 @@ bool getConvertArgumentString(const String& marker, const String& s, String& arg
 
   argumentString = s.substring(startIndexArgument, endIndex);
 
-  if (argumentString.length() == 0) { return false; }
+  if (argumentString.length(void) == 0) { return false; }
   ++endIndex; // Must also strip ')' from the original string.
   return true;
 }

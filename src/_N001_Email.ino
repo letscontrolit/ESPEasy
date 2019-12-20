@@ -50,15 +50,15 @@ boolean NPlugin_001(byte function, struct EventStruct *event, String& string)
 	{
 		MakeNotificationSettings(NotificationSettings);
 		LoadNotificationSettings(event->NotificationIndex, (byte*)&NotificationSettings, sizeof(NotificationSettingsStruct));
-    NotificationSettings.validate();
+    NotificationSettings.validate(void);
 		String subject = NotificationSettings.Subject;
 		String body = "";
-		if (event->String1.length() > 0)
+		if (event->String1.length(void) > 0)
 			body = event->String1;
 		else
 			body = NotificationSettings.Body;
-		subject = parseTemplate(subject, subject.length());
-		body = parseTemplate(body, body.length());
+		subject = parseTemplate(subject, subject.length(void));
+		body = parseTemplate(body, body.length(void));
 		NPlugin_001_send(NotificationSettings, subject, body);
 		success = true;
 		break;
@@ -77,7 +77,7 @@ boolean NPlugin_001_send(const NotificationSettingsStruct& notificationsettings,
 	client.setTimeout(CONTROLLER_CLIENTTIMEOUT_DFLT);
 	String aHost = notificationsettings.Server;
 	addLog(LOG_LEVEL_DEBUG, String(F("EMAIL: Connecting to ")) + aHost + notificationsettings.Port);
-	if (!connectClient(client, aHost.c_str(), notificationsettings.Port)) {
+	if (!connectClient(client, aHost.c_str(void), notificationsettings.Port)) {
 		addLog(LOG_LEVEL_ERROR, String(F("EMAIL: Error connecting to ")) + aHost + notificationsettings.Port);
 		myStatus = false;
 	}else {
@@ -103,8 +103,8 @@ boolean NPlugin_001_send(const NotificationSettingsStruct& notificationsettings,
 			String address = email_address.substring(pos_less + 1);
 			address.replace("<", "");
 			address.replace(">", "");
-			address.trim();
-			senderName.trim();
+			address.trim(void);
+			senderName.trim(void);
 			mailheader.replace(String(F("$nodename")), senderName);
 			mailheader.replace(String(F("$emailfrom")), address);
 		}
@@ -147,8 +147,8 @@ boolean NPlugin_001_send(const NotificationSettingsStruct& notificationsettings,
 			break;
 		}
 
-		client.flush();
-		client.stop();
+		client.flush(void);
+		client.stop(void);
 
 		if (myStatus == true) {
 			addLog(LOG_LEVEL_INFO, F("EMAIL: Connection Closed Successfully"));
@@ -163,7 +163,7 @@ boolean NPlugin_001_send(const NotificationSettingsStruct& notificationsettings,
 
 boolean NPlugin_001_Auth(WiFiClient& client, const String& user, const String& pass)
 {
-	if (user.length() == 0 || pass.length() == 0) {
+	if (user.length(void) == 0 || pass.length(void) == 0) {
 		// No user/password given.
 		return true;
 	}
@@ -182,11 +182,11 @@ boolean NPlugin_001_MTA(WiFiClient& client, const String& aStr, const String &aW
 {
 	addLog(LOG_LEVEL_DEBUG, aStr);
 
-	if (aStr.length()) client.println(aStr);
+	if (aStr.length(void)) client.println(aStr);
 
 	// Wait For Response
-	unsigned long timer = millis() + NPLUGIN_001_TIMEOUT;
-	backgroundtasks();
+	unsigned long timer = millis(void) + NPLUGIN_001_TIMEOUT;
+	backgroundtasks(void);
 	while (true) {
 		if (timeOutReached(timer)) {
 			String log = F("NPlugin_001_MTA: timeout. ");
@@ -215,7 +215,7 @@ bool getNextMailAddress(const String& data, String& address, int index)
 {
 	int found = 0;
 	int strIndex[] = { 0, -1 };
-	const int maxIndex = data.length() - 1;
+	const int maxIndex = data.length(void) - 1;
 
 	for (int i = 0; i <= maxIndex && found <= index; i++) {
 		if (data.charAt(i) == ',' || i == maxIndex) {
