@@ -1,0 +1,11 @@
+.. |P092_name| replace:: :cyan:`DL-Bus (Technische Alternative)`
+.. |P092_type| replace:: :cyan:`Heating`
+.. |P092_typename| replace:: :cyan:`Heating - DL-Bus (Technische Alternative)`
+.. |P092_status| replace:: :yellow:`TESTING`
+.. |P092_github| replace:: P092_DLbus.ino
+.. _P092_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P092_DLbus.ino
+.. |P092_usedby| replace:: `.`
+.. |P092_shortinfo| replace:: `.`
+.. |P092_maintainer| replace:: `.`
+.. |P092_compileinfo| replace:: `.`
+.. |P092_usedlibraries| replace:: `.`
