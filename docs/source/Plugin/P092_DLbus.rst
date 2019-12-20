@@ -10,7 +10,7 @@ DL bus
 Introduction
 ------------
 
-The DL-Bus is used in control units e.g. sold by Technische Alternative (www.ta.co.at).
+The DL-Bus is used in control units e.g. sold by `Technische Alternative <http://www.ta.co.at/>`_.
 The DL-Bus serves as a bus line for various external sensors and modules.
 The DL-Bus is a bidirectional data line and only compatible with products of Technische Alternative.
 
@@ -31,7 +31,7 @@ The DL-Bus consists of 2 wires: DL and GND (sensor ground).
 The power supply for the DL-Bus sensors is supplied via the DL-Bus itself.
 Some DL-Bus devices can/must be powered via a 12V source, e.g. that of the CAN bus (this is explicitly noted in the operating manual of that sensor).
 The cable routing can be star-shaped or serial (from one device to the next).
-Any cable with a cross-section of 0.75 sqmm up to a maximum length of 30 m can be used as a data cable.
+Any cable with a cross-section of 0.75 mm2 up to a maximum length of 30 m can be used as a data cable.
 Over 30 m, the use of shielded cables is recommended, which increases the permissible length of the cable to 100 m.
 
 Protocol
