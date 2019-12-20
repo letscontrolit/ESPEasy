@@ -305,30 +305,86 @@ void replace_EventValueN_Argv(String& line, const String& argString, unsigned in
   }
 }
 
+void process_substring(String& line) {
+  // Syntax like 12345[substring:8:12:ANOTHER HELLO WORLD]67890
+  int startIndex;
+  while ((startIndex = line.indexOf(F("[substring:"))) != -1) {  
+    String substCmd = line.substring(startIndex, line.indexOf("]", startIndex) + 1);
+    int idxStart = substCmd.indexOf(":") + 1;
+    int idxEnd = substCmd.indexOf(":", idxStart);
+    String substStart = substCmd.substring(idxStart, idxEnd);
+    idxStart = idxEnd + 1;
+    idxEnd = substCmd.indexOf(":", idxStart);
+    String substEnd = substCmd.substring(idxStart , idxEnd);
+    idxStart = idxEnd + 1;
+    idxEnd = substCmd.indexOf("]", idxStart);
+    String stringValue = substCmd.substring(idxStart, idxEnd);
+  
+    line.replace(substCmd, stringValue.substring(substStart.toInt(), substEnd.toInt()));
+  }
+}
+
+void process_strtol(String& line) {
+  // Syntax like 1234[strtol:16:38]7890
+  int startIndex;
+  while ((startIndex = line.indexOf(F("[strtol:"))) != -1) {    
+    String strolCmd = line.substring(startIndex, line.indexOf("]", startIndex) + 1);
+    int idxStart = strolCmd.indexOf(":") + 1;
+    int idxEnd = strolCmd.indexOf(":", idxStart);
+    String base = strolCmd.substring(idxStart, idxEnd);
+    idxStart = idxEnd + 1;
+    idxEnd = strolCmd.indexOf("]", idxStart);
+    String stringValue = strolCmd.substring(idxStart, idxEnd);
+       
+    line.replace(strolCmd, String(strtol(stringValue.c_str(), NULL, base.toInt())));   
+  }
+}
+
+void process_div100ths(String& line) {
+  // Syntax like XXX[div100ths:24:256]XXX
+  int startIndex;
+  while ((startIndex = line.indexOf(F("[div100ths:"))) != -1) {
+    String divCmd = line.substring(startIndex, line.indexOf("]", startIndex) + 1);
+    int idxStart = divCmd.indexOf(":") + 1;
+    int idxEnd = divCmd.indexOf(":", idxStart);
+    String dividend = divCmd.substring(idxStart, idxEnd);
+    idxStart = idxEnd + 1;
+    idxEnd = divCmd.indexOf("]", idxStart);
+    String divisor = divCmd.substring(idxStart, idxEnd);
+    float val = (100.0 * dividend.toInt()) / (1.0 * divisor.toInt());
+    char sval[10];
+    sprintf(sval, "%02d", (int)val);
+    line.replace(divCmd, String(sval));
+  }
+}
+
 void substitute_eventvalue(String& line, const String& event) {
   if (substitute_eventvalue_CallBack_ptr != nullptr)
     substitute_eventvalue_CallBack_ptr(line, event);
-  if (line.indexOf(F("%eventvalue")) == -1) {
-    return; // Nothing to replace.
-  }
+  if (line.indexOf(F("%eventvalue")) != -1) {
+    if (event.charAt(0) == '!') {
+      line.replace(F("%eventvalue%"), event); // substitute %eventvalue% with
+                                              // literal event string if
+                                              // starting with '!'
+    } else {
+      int equalsPos = event.indexOf("=");
 
-  if (event.charAt(0) == '!') {
-    line.replace(F("%eventvalue%"), event); // substitute %eventvalue% with
-                                            // literal event string if
-                                            // starting with '!'
-  } else {
-    int equalsPos = event.indexOf("=");
+      if (equalsPos > 0) {
+        // Replace %eventvalueX% with the actual value of the event.
+        // For compatibility reasons also replace %eventvalue%  (argc = 0)
+        String argString = event.substring(equalsPos + 1);
 
-    if (equalsPos > 0) {
-      // Replace %eventvalueX% with the actual value of the event.
-      // For compatibility reasons also replace %eventvalue%  (argc = 0)
-      String argString = event.substring(equalsPos + 1);
-
-      for (unsigned int argc = 0; argc <= 4; ++argc) {
-        replace_EventValueN_Argv(line, argString, argc);
+        for (unsigned int argc = 0; argc <= 4; ++argc) {
+          replace_EventValueN_Argv(line, argString, argc);
+        }
       }
     }
   }
+
+  // process other markups as well
+  process_substring(line);
+  process_strtol(line);
+  process_div100ths(line);
 }
 
 void parseCompleteNonCommentLine(String& line, String& event, String& log,
