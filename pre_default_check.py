@@ -9,6 +9,8 @@ import os
 # Dump construction environment (for debug purpose)
 #print(env.Dump())
 
+env.Append(CFLAGS=["-Wstrict-prototypes"])  # General options that are passed to the C compiler (C only; not C++).
+
 
 my_flags = env.ParseFlags(env['BUILD_FLAGS'])
 my_defines = my_flags.get("CPPDEFINES")

@@ -7,6 +7,8 @@ import os
 # Dump construction environment (for debug purpose)
 #print env.Dump()
 
+env.Append(CFLAGS=["-Wstrict-prototypes"])  # General options that are passed to the C compiler (C only; not C++).
+
 # append extra flags to global build environment
 # which later will be used to build:
 # - project source code
