@@ -305,58 +305,57 @@ void replace_EventValueN_Argv(String& line, const String& argString, unsigned in
   }
 }
 
-void process_substring(String& line) {
-  // Syntax like 12345[substring:8:12:ANOTHER HELLO WORLD]67890
-  int startIndex;
-  while ((startIndex = line.indexOf(F("[substring:"))) != -1) {  
-    String substCmd = line.substring(startIndex, line.indexOf("]", startIndex) + 1);
-    int idxStart = substCmd.indexOf(":") + 1;
-    int idxEnd = substCmd.indexOf(":", idxStart);
-    String substStart = substCmd.substring(idxStart, idxEnd);
-    idxStart = idxEnd + 1;
-    idxEnd = substCmd.indexOf(":", idxStart);
-    String substEnd = substCmd.substring(idxStart , idxEnd);
-    idxStart = idxEnd + 1;
-    idxEnd = substCmd.indexOf("]", idxStart);
-    String stringValue = substCmd.substring(idxStart, idxEnd);
-  
-    line.replace(substCmd, stringValue.substring(substStart.toInt(), substEnd.toInt()));
-  }
-}
 
-void process_strtol(String& line) {
-  // Syntax like 1234[strtol:16:38]7890
+void process_internal(String &line, String cmd_s) {
   int startIndex;
-  while ((startIndex = line.indexOf(F("[strtol:"))) != -1) {    
-    String strolCmd = line.substring(startIndex, line.indexOf("]", startIndex) + 1);
-    int idxStart = strolCmd.indexOf(":") + 1;
-    int idxEnd = strolCmd.indexOf(":", idxStart);
-    String base = strolCmd.substring(idxStart, idxEnd);
-    idxStart = idxEnd + 1;
-    idxEnd = strolCmd.indexOf("]", idxStart);
-    String stringValue = strolCmd.substring(idxStart, idxEnd);
-       
-    line.replace(strolCmd, String(strtol(stringValue.c_str(), NULL, base.toInt())));   
-  }
-}
-
-void process_div100ths(String& line) {
-  // Syntax like XXX[div100ths:24:256]XXX
-  int startIndex;
-  while ((startIndex = line.indexOf(F("[div100ths:"))) != -1) {
-    String divCmd = line.substring(startIndex, line.indexOf("]", startIndex) + 1);
-    int idxStart = divCmd.indexOf(":") + 1;
-    int idxEnd = divCmd.indexOf(":", idxStart);
-    String dividend = divCmd.substring(idxStart, idxEnd);
-    idxStart = idxEnd + 1;
-    idxEnd = divCmd.indexOf("]", idxStart);
-    String divisor = divCmd.substring(idxStart, idxEnd);
-    float val = (100.0 * dividend.toInt()) / (1.0 * divisor.toInt());
+  int iarg1, iarg2;
+  while ((startIndex = line.indexOf(cmd_s)) != -1) {
+    String fullCommand = line.substring(startIndex, line.indexOf("]", startIndex) + 1);
+    String arg1, arg2, arg3;
+    String replacement = ""; // maybe just replace with empty to avoid looping?
     char sval[10];
-    sprintf(sval, "%02d", (int)val);
-    line.replace(divCmd, String(sval));
+
+    iarg1 = fullCommand.indexOf(":") + 1;
+    iarg2 = fullCommand.indexOf(":", iarg1);
+    arg1 = fullCommand.substring(iarg1, iarg2);
+    iarg1 = iarg2 + 1;
+    iarg2 = fullCommand.indexOf(":", iarg1) > 0 ? fullCommand.indexOf(":", iarg1) : fullCommand.indexOf("]", iarg1);
+    if (iarg2 > iarg1) {
+      arg2 = fullCommand.substring(iarg1, iarg2);
+      iarg1 = iarg2 + 1;
+      iarg2 = fullCommand.indexOf(":", iarg1) > 0 ? fullCommand.indexOf(":", iarg1) : fullCommand.indexOf("]", iarg1);
+      if (iarg2 > iarg1) {
+        arg3 = fullCommand.substring(iarg1, iarg2);
+      }
+    }
+
+    if (cmd_s.equalsIgnoreCase(F("[substring:"))) {
+      // Syntax like 12345[substring:8:12:ANOTHER HELLO WORLD]67890
+      if (validIntFromString(arg1, iarg1)
+          && validIntFromString(arg2, iarg2)) {
+        replacement = arg3.substring(iarg1, iarg2);
+      }
+    }
+    if (cmd_s.equalsIgnoreCase(F("[strtol:"))) {
+      // Syntax like 1234[strtol:16:38]7890
+      if (validIntFromString(arg1, iarg1)
+          && validIntFromString(arg2, iarg2)) {
+        replacement = String(strtol(arg2.c_str(), NULL, iarg1));
+      }
+    }
+    if (cmd_s.equalsIgnoreCase(F("[div100ths:"))) {
+      // Syntax like XXX[div100ths:24:256]XXX
+      if (validIntFromString(arg1, iarg1)
+          && validIntFromString(arg2, iarg2)) {
+        float val = (100.0 * iarg1) / (1.0 * iarg2);
+        sprintf(sval, "%02d", (int)val);
+        replacement = String(sval);
+      }
+    }
+    line.replace(fullCommand, replacement);
   }
 }
+
 
 void substitute_eventvalue(String& line, const String& event) {
   if (substitute_eventvalue_CallBack_ptr != nullptr)
@@ -382,9 +381,9 @@ void substitute_eventvalue(String& line, const String& event) {
   }
 
   // process other markups as well
-  process_substring(line);
-  process_strtol(line);
-  process_div100ths(line);
+  process_internal(line, F("[substring:")); 
+  process_internal(line, F("[strtol:"));  
+  process_internal(line, F("[div100ths:"));  
 }
 
 void parseCompleteNonCommentLine(String& line, String& event, String& log,
