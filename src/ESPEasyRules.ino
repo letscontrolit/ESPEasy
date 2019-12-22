@@ -656,7 +656,7 @@ bool ruleMatch(const String& event, const String& rule) {
 
     if (pos != -1) // a * sign in rule, so use a'wildcard' match on message
     {
-      return event.substring(0, pos - 1).equalsIgnoreCase(rule.substring(0, pos - 1));
+      return event.substring(0, pos).equalsIgnoreCase(rule.substring(0, pos));
     } else {
       const bool pound_char_found = rule.indexOf('#') != -1;
 
