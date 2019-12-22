@@ -42,7 +42,7 @@ bool getIPallowedRange(IPAddress& low, IPAddress& high)
   switch (SecuritySettings.IPblockLevel) {
     case LOCAL_SUBNET_ALLOWED:
 
-      if (WifiIsAP(WiFi.getMode(void))) {
+      if (WifiIsAP(WiFi.getMode())) {
         // WiFi is active as accesspoint, do not check.
         return false;
       }
@@ -66,8 +66,8 @@ bool clientIPinSubnet(void) {
     // Could not determine subnet.
     return false;
   }
-  WiFiClient client(WebServer.client(void));
-  return ipInRange(client.remoteIP(void), low, high);
+  WiFiClient client(WebServer.client());
+  return ipInRange(client.remoteIP(), low, high);
 }
 
 boolean clientIPallowed(void)
@@ -80,18 +80,18 @@ boolean clientIPallowed(void)
     // No subnet range determined, cannot filter on IP
     return true;
   }
-  WiFiClient client(WebServer.client(void));
+  WiFiClient client(WebServer.client());
 
-  if (ipInRange(client.remoteIP(void), low, high)) {
+  if (ipInRange(client.remoteIP(), low, high)) {
     return true;
   }
 
-  if (WifiIsAP(WiFi.getMode(void))) {
+  if (WifiIsAP(WiFi.getMode())) {
     // @TD-er Fixme: Should match subnet of SoftAP.
     return true;
   }
   String response = F("IP blocked: ");
-  response += formatIP(client.remoteIP(void));
+  response += formatIP(client.remoteIP());
   WebServer.send(403, F("text/html"), response);
 
   if (loglevelActiveFor(LOG_LEVEL_ERROR)) {

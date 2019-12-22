@@ -146,7 +146,7 @@ class Adafruit_NeoPixel {
   uint32_t
     getPixelColor(uint16_t n) const;
   inline bool
-    canShow(void) { return (micros(void) - endTime) >= 50L; }
+    canShow(void) { return (micros() - endTime) >= 50L; }
 
  private:
 
@@ -154,7 +154,7 @@ class Adafruit_NeoPixel {
 #ifdef NEO_KHZ400  // If 400 KHz NeoPixel support enabled...
     is800KHz,      // ...true if 800 KHz pixels
 #endif
-    begun;         // true if begin(void) previously called
+    begun;         // true if begin() previously called
   uint16_t
     numLEDs,       // Number of RGB LEDs in strip
     numBytes;      // Size of 'pixels' buffer below (3 or 4 bytes/pixel)

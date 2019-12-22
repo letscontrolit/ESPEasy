@@ -125,7 +125,7 @@ public:
    * - AutoPowerDown: true = Der Sensor wird nach der Messung in den Stromsparmodus versetzt. 
    *   Das spätere Aufwecken wird ggf. automatisch vorgenommen, braucht jedoch geringfügig mehr Zeit.
    *
-   * Defaultwerte: RESOLUTION_AUTO_HIGH, true, delay(void)
+   * Defaultwerte: RESOLUTION_AUTO_HIGH, true, delay()
    *
    */
   bool begin(sensors_resolution_t mode = RESOLUTION_AUTO_HIGH, bool autoPowerDown = true);
@@ -145,7 +145,7 @@ public:
    *
    * - DelayFuncPtr: delay(n) Möglichkeit, eigene Delay-Funktion mitzugeben (z.B. um sleep-Modus zu verwenden).
    * 
-   * Defaultwerte: delay(void)
+   * Defaultwerte: delay()
    *
    */
   float readLightLevel(DelayFuncPtr fDelayPtr = &delay);

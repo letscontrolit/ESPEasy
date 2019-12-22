@@ -55,7 +55,7 @@ class SSD1306Spi : public OLEDDisplay {
       pinMode(_cs, OUTPUT);
       pinMode(_rst, OUTPUT);
 
-      SPI.begin (void);
+      SPI.begin();
       SPI.setClockDivider (SPI_CLOCK_DIV2);
 
       // Pulse Reset low for 10ms
@@ -90,7 +90,7 @@ class SSD1306Spi : public OLEDDisplay {
           }
           buffer_back[pos] = buffer[pos];
         }
-        yield(void);
+        yield();
        }
 
        // If the minBoundY wasn't updated
@@ -113,7 +113,7 @@ class SSD1306Spi : public OLEDDisplay {
          for (x = minBoundX; x <= maxBoundX; x++) {
            SPI.transfer(buffer[x + y * DISPLAY_WIDTH]);
          }
-         yield(void);
+         yield();
        }
        digitalWrite(_cs, HIGH);
      #else
@@ -131,7 +131,7 @@ class SSD1306Spi : public OLEDDisplay {
         digitalWrite(_cs, LOW);
         for (uint16_t i=0; i<DISPLAY_BUFFER_SIZE; i++) {
           SPI.transfer(buffer[i]);
-          yield(void);
+          yield();
         }
         digitalWrite(_cs, HIGH);
      #endif

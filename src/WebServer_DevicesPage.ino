@@ -9,9 +9,9 @@
 void handle_devices(void) {
   checkRAM(F("handle_devices"));
 
-  if (!isLoggedIn(void)) { return; }
+  if (!isLoggedIn()) { return; }
   navMenuIndex = MENU_INDEX_DEVICES;
-  TXBuffer.startStream(void);
+  TXBuffer.startStream();
   sendHeadandTail_stdtemplate(_HEAD);
 
 
@@ -124,7 +124,7 @@ void handle_devices(void) {
       // Task index has a task device number, so it makes sense to save.
       // N.B. When calling delete, the settings were already saved.
       addHtmlError(SaveTaskSettings(taskIndex));
-      addHtmlError(SaveSettings(void));
+      addHtmlError(SaveSettings());
 
       if (Settings.TaskDeviceEnabled[taskIndex]) {
         struct EventStruct TempEvent;
@@ -157,7 +157,7 @@ void handle_devices(void) {
   }
 #endif // ifndef BUILD_NO_DEBUG
   sendHeadandTail_stdtemplate(_TAIL);
-  TXBuffer.endStream(void);
+  TXBuffer.endStream();
 }
 
 // ********************************************************************************
@@ -202,7 +202,7 @@ void addDeviceSelect(const String& name,  int choice)
       }
     }
   }
-  addSelector_Foot(void);
+  addSelector_Foot();
 }
 
 
@@ -254,7 +254,7 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
 
     // taskdeviceformula[varNr].toCharArray(tmpString, 41);
     // strcpy(ExtraTaskSettings.TaskDeviceFormula[varNr], tmpString);
-    // ExtraTaskSettings.TaskDeviceValueDecimals[varNr] = taskdevicevaluedecimals[varNr].toInt(void);
+    // ExtraTaskSettings.TaskDeviceValueDecimals[varNr] = taskdevicevaluedecimals[varNr].toInt();
     // taskdevicevaluename[varNr].toCharArray(tmpString, 41);
   }
 
@@ -301,14 +301,14 @@ void handle_devicess_ShowAllTasksTable(byte page)
 {
   html_add_script(true);
   TXBuffer += DATA_UPDATE_SENSOR_VALUES_DEVICE_PAGE_JS;
-  html_add_script_end(void);
-  html_table_class_multirow(void);
-  html_TR(void);
+  html_add_script_end();
+  html_table_class_multirow();
+  html_TR();
   html_table_header("", 70);
 
   if (TASKS_MAX != TASKS_PER_PAGE)
   {
-    html_add_button_prefix(void);
+    html_add_button_prefix();
     TXBuffer += F("devices?setpage=");
 
     if (page > 1) {
@@ -318,7 +318,7 @@ void handle_devicess_ShowAllTasksTable(byte page)
       TXBuffer += page;
     }
     TXBuffer += F("'>&lt;</a>");
-    html_add_button_prefix(void);
+    html_add_button_prefix();
     TXBuffer += F("devices?setpage=");
 
     if (page < (TASKS_MAX / TASKS_PER_PAGE)) {
@@ -347,12 +347,12 @@ void handle_devicess_ShowAllTasksTable(byte page)
     const bool pluginID_set              = validPluginID(Settings.TaskDeviceNumber[x]);
     const bool pluginID_set_notsupported = pluginID_set && !validDeviceIndex(DeviceIndex);
 
-    html_TR_TD(void);
+    html_TR_TD();
 
     if (pluginID_set_notsupported) {
       html_add_button_prefix(F("red"), true);
     } else {
-      html_add_button_prefix(void);
+      html_add_button_prefix();
     }
     TXBuffer += F("devices?index=");
     TXBuffer += x + 1;
@@ -366,9 +366,9 @@ void handle_devicess_ShowAllTasksTable(byte page)
       TXBuffer += F("Add");
     }
     TXBuffer += F("</a>");
-    html_TD(void);
+    html_TD();
     TXBuffer += x + 1;
-    html_TD(void);
+    html_TD();
 
     // Show table of all configured tasks
     // A task may also refer to a non supported plugin.
@@ -381,11 +381,11 @@ void handle_devicess_ShowAllTasksTable(byte page)
       TempEvent.TaskIndex = x;
       addEnabled(Settings.TaskDeviceEnabled[x]  && validDeviceIndex(DeviceIndex));
 
-      html_TD(void);
+      html_TD();
       TXBuffer += getPluginNameFromPluginID(Settings.TaskDeviceNumber[x]);
-      html_TD(void);
+      html_TD();
       TXBuffer += ExtraTaskSettings.TaskDeviceName;
-      html_TD(void);
+      html_TD();
 
       if (validDeviceIndex(DeviceIndex)) {
         if (Settings.TaskDeviceDataFeed[x] != 0) {
@@ -397,7 +397,7 @@ void handle_devicess_ShowAllTasksTable(byte page)
           if (remoteUnit != 255) {
             NodesMap::iterator it = Nodes.find(remoteUnit);
 
-            if (it != Nodes.end(void)) {
+            if (it != Nodes.end()) {
               TXBuffer += F(" - ");
               TXBuffer += it->second.nodeName;
             } else {
@@ -419,7 +419,7 @@ void handle_devicess_ShowAllTasksTable(byte page)
         }
       }
 
-      html_TD(void);
+      html_TD();
 
       if (validDeviceIndex(DeviceIndex)) {
         if (Device[DeviceIndex].SendDataOption)
@@ -453,7 +453,7 @@ void handle_devicess_ShowAllTasksTable(byte page)
         }
       }
 
-      html_TD(void);
+      html_TD();
 
       if (validDeviceIndex(DeviceIndex)) {
         if (Settings.TaskDeviceDataFeed[x] == 0)
@@ -490,7 +490,7 @@ void handle_devicess_ShowAllTasksTable(byte page)
         }
       }
 
-      html_TD(void);
+      html_TD();
 
       if (validDeviceIndex(DeviceIndex)) {
         byte   customValues = false;
@@ -513,8 +513,8 @@ void handle_devicess_ShowAllTasksTable(byte page)
       html_TD(6);
     }
   } // next
-  html_end_table(void);
-  html_end_form(void);
+  html_end_table();
+  html_end_form();
 }
 
 // ********************************************************************************
@@ -529,8 +529,8 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, byte page)
   struct EventStruct TempEvent;
   TempEvent.TaskIndex = taskIndex;
 
-  html_add_form(void);
-  html_table_class_normal(void);
+  html_add_form();
+  html_table_class_normal();
   addFormHeader(F("Task Settings"));
 
 
@@ -572,7 +572,7 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, byte page)
         ((Device[DeviceIndex].Ports != 0) ||
          (Device[DeviceIndex].PullUpOption) ||
          (Device[DeviceIndex].InverseLogicOption) ||
-         (Device[DeviceIndex].connectedToGPIOpins(void))))
+         (Device[DeviceIndex].connectedToGPIOpins())))
     {
       addFormSubHeader((Device[DeviceIndex].SendDataOption) ? F("Sensor") : F("Actuator"));
 
@@ -605,7 +605,7 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, byte page)
       String dummy;
       PluginCall(PLUGIN_GET_DEVICEGPIONAMES, &TempEvent, dummy);
 
-      if (Device[DeviceIndex].connectedToGPIOpins(void)) {
+      if (Device[DeviceIndex].connectedToGPIOpins()) {
         if (Device[DeviceIndex].Type >= DEVICE_TYPE_SINGLE) {
           addFormPinSelect(TempEvent.String1, F("taskdevicepin1"), Settings.TaskDevicePin1[taskIndex]);
         }
@@ -625,10 +625,10 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, byte page)
       String webformLoadString;
       PluginCall(PLUGIN_WEBFORM_LOAD, &TempEvent, webformLoadString);
 
-      if (webformLoadString.length(void) > 0) {
+      if (webformLoadString.length() > 0) {
         String errorMessage;
         PluginCall(PLUGIN_GET_DEVICENAME, &TempEvent, errorMessage);
-        errorMessage += F(": Bug in PLUGIN_WEBFORM_LOAD, should not append to string, use addHtml(void) instead");
+        errorMessage += F(": Bug in PLUGIN_WEBFORM_LOAD, should not append to string, use addHtml() instead");
         addHtmlError(errorMessage);
       }
     }
@@ -641,7 +641,7 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, byte page)
       if (remoteUnit != 255) {
         NodesMap::iterator it = Nodes.find(remoteUnit);
 
-        if (it != Nodes.end(void)) {
+        if (it != Nodes.end()) {
           addUnit(it->second.nodeName);
         } else {
           addUnit(F("Unknown Unit Name"));
@@ -663,9 +663,9 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, byte page)
           String id = F("TDSD"); // ="taskdevicesenddata"
           id += controllerNr + 1;
 
-          html_TR_TD(void); TXBuffer += F("Send to Controller ");
+          html_TR_TD(); TXBuffer += F("Send to Controller ");
           TXBuffer               += getControllerSymbol(controllerNr);
-          html_TD(void);
+          html_TD();
           addCheckBox(id, Settings.TaskDeviceSendData[controllerNr][taskIndex]);
 
           byte ProtocolIndex = getProtocolIndex(Settings.Protocol[controllerNr]);
@@ -699,8 +699,8 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, byte page)
     if (!Device[DeviceIndex].Custom && (Device[DeviceIndex].ValueCount > 0))
     {
       addFormSubHeader(F("Values"));
-      html_end_table(void);
-      html_table_class_normal(void);
+      html_end_table();
+      html_table_class_normal();
 
       // table header
       TXBuffer += F("<TR><TH style='width:30px;' align='center'>#");
@@ -719,16 +719,16 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, byte page)
       // table body
       for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++)
       {
-        html_TR_TD(void);
+        html_TR_TD();
         TXBuffer += varNr + 1;
-        html_TD(void);
+        html_TD();
         String id = F("TDVN"); // ="taskdevicevaluename"
         id += (varNr + 1);
         addTextBox(id, ExtraTaskSettings.TaskDeviceValueNames[varNr], NAME_FORMULA_LENGTH_MAX);
 
         if (Device[DeviceIndex].FormulaOption)
         {
-          html_TD(void);
+          html_TD();
           String id = F("TDF"); // ="taskdeviceformula"
           id += (varNr + 1);
           addTextBox(id, ExtraTaskSettings.TaskDeviceFormula[varNr], NAME_FORMULA_LENGTH_MAX);
@@ -736,7 +736,7 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, byte page)
 
         if (Device[DeviceIndex].FormulaOption || Device[DeviceIndex].DecimalsOnly)
         {
-          html_TD(void);
+          html_TD();
           String id = F("TDVD"); // ="taskdevicevaluedecimals"
           id += (varNr + 1);
           addNumericBox(id, ExtraTaskSettings.TaskDeviceValueDecimals[varNr], 0, 6);
@@ -747,13 +747,13 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, byte page)
 
   addFormSeparator(4);
 
-  html_TR_TD(void);
+  html_TR_TD();
   TXBuffer += F("<TD colspan='3'>");
-  html_add_button_prefix(void);
+  html_add_button_prefix();
   TXBuffer += F("devices?setpage=");
   TXBuffer += page;
   TXBuffer += F("'>Close</a>");
-  addSubmitButton(void);
+  addSubmitButton();
   TXBuffer += F("<input type='hidden' name='edit' value='1'>");
   TXBuffer += F("<input type='hidden' name='page' value='1'>");
 
@@ -762,8 +762,8 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, byte page)
     addSubmitButton(F("Delete"), F("del"));
   }
 
-  html_end_table(void);
-  html_end_form(void);
+  html_end_table();
+  html_end_form();
 }
 
 #endif // ifdef WEBSERVER_DEVICES
@@ -820,7 +820,7 @@ void setBasicTaskValues(taskIndex_t taskIndex, unsigned long taskdevicetimer,
     }
   }
   Settings.TaskDeviceEnabled[taskIndex] = enabled;
-  safe_strncpy(ExtraTaskSettings.TaskDeviceName, name.c_str(void), sizeof(ExtraTaskSettings.TaskDeviceName));
+  safe_strncpy(ExtraTaskSettings.TaskDeviceName, name.c_str(), sizeof(ExtraTaskSettings.TaskDeviceName));
 
   if (pin1 >= 0) { Settings.TaskDevicePin1[taskIndex] = pin1; }
 

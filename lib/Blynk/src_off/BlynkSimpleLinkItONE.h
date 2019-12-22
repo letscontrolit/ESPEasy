@@ -36,7 +36,7 @@ public:
     void connectWiFi(const char* ssid, const char* pass, int wifi_auth)
     {
         BLYNK_LOG2(BLYNK_F("Connecting to "), ssid);
-        LWiFi.begin(void);
+        LWiFi.begin();
         while(!LWiFi.connect(ssid, LWiFiLoginInfo((LWiFiEncryption)wifi_auth, pass))){
             BlynkDelay(1000);
         }
@@ -67,7 +67,7 @@ public:
     {
         connectWiFi(ssid, pass, wifi_auth);
         config(auth, domain, port);
-        while(this->connect(void) != true) {}
+        while(this->connect() != true) {}
     }
 
     void begin(const char* auth,
@@ -79,7 +79,7 @@ public:
     {
         connectWiFi(ssid, pass, wifi_auth);
         config(auth, ip, port);
-        while(this->connect(void) != true) {}
+        while(this->connect() != true) {}
     }
 
 };

@@ -6,25 +6,25 @@
 void handle_login(void) {
   checkRAM(F("handle_login"));
 
-  if (!clientIPallowed(void)) { return; }
-  TXBuffer.startStream(void);
+  if (!clientIPallowed()) { return; }
+  TXBuffer.startStream();
   sendHeadandTail_stdtemplate(_HEAD);
 
   String webrequest = WebServer.arg(F("password"));
   TXBuffer += F("<form method='post'>");
-  html_table_class_normal(void);
+  html_table_class_normal();
   TXBuffer += F("<TR><TD>Password<TD>");
   TXBuffer += F("<input class='wide' type='password' name='password' value='");
   TXBuffer += webrequest;
   TXBuffer += "'>";
-  html_TR_TD(void);
-  html_TD(void);
-  addSubmitButton(void);
-  html_TR_TD(void);
-  html_end_table(void);
-  html_end_form(void);
+  html_TR_TD();
+  html_TD();
+  addSubmitButton();
+  html_TR_TD();
+  html_end_table();
+  html_end_form();
 
-  if (webrequest.length(void) != 0)
+  if (webrequest.length() != 0)
   {
     char command[80];
     command[0] = 0;
@@ -51,7 +51,7 @@ void handle_login(void) {
   }
 
   sendHeadandTail_stdtemplate(_TAIL);
-  TXBuffer.endStream(void);
+  TXBuffer.endStream();
   printWebString = "";
   printToWeb     = false;
 }

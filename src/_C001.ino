@@ -91,14 +91,14 @@ bool CPlugin_001(byte function, struct EventStruct *event, String& string)
 
           // Add WiFi reception quality
           url += F("&rssi=");
-          url += mapRSSItoDomoticz(void);
+          url += mapRSSItoDomoticz();
           #if FEATURE_ADC_VCC
             url += F("&battery=");
-            url += mapVccToDomoticz(void);
+            url += mapVccToDomoticz();
           #endif
 
           success = C001_DelayHandler.addToQueue(C001_queue_element(event->ControllerIndex, url));
-          scheduleNextDelayQueue(TIMER_C001_DELAY_QUEUE, C001_DelayHandler.getNextScheduleTime(void));
+          scheduleNextDelayQueue(TIMER_C001_DELAY_QUEUE, C001_DelayHandler.getNextScheduleTime());
         } // if ixd !=0
         else
         {
@@ -109,7 +109,7 @@ bool CPlugin_001(byte function, struct EventStruct *event, String& string)
 
     case CPLUGIN_FLUSH:
       {
-        process_c001_delay_queue(void);
+        process_c001_delay_queue();
         delay(0);
         break;
       }

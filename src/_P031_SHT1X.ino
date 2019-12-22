@@ -44,8 +44,8 @@ public:
 
     pinMode(_dataPin, input_mode); /* Keep Hi-Z except when sending data */
     pinMode(_clockPin, OUTPUT);
-    resetSensor(void);
-    return readStatus(void);
+    resetSensor();
+    return readStatus();
   }
 
   bool process(void) {
@@ -136,7 +136,7 @@ public:
 
   void sendCommand(const byte cmd)
   {
-    sendCommandTime = millis(void);
+    sendCommandTime = millis();
     pinMode(_dataPin, OUTPUT);
 
     // Transmission Start sequence
@@ -312,7 +312,7 @@ boolean Plugin_031(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
       {
-        initPluginTaskData(event->TaskIndex, new P031_data_struct(void));
+        initPluginTaskData(event->TaskIndex, new P031_data_struct());
         P031_data_struct *P031_data =
             static_cast<P031_data_struct *>(getPluginTaskData(event->TaskIndex));
         if (nullptr == P031_data) {
@@ -342,9 +342,9 @@ boolean Plugin_031(byte function, struct EventStruct *event, String& string)
       P031_data_struct *P031_data =
           static_cast<P031_data_struct *>(getPluginTaskData(event->TaskIndex));
       if (nullptr != P031_data) {
-        if (P031_data->process(void)) {
+        if (P031_data->process()) {
           // Measurement ready, schedule new read.
-          schedule_task_device_timer(event->TaskIndex, millis(void) + 10);
+          schedule_task_device_timer(event->TaskIndex, millis() + 10);
         }
       }
       success = true;
@@ -356,14 +356,14 @@ boolean Plugin_031(byte function, struct EventStruct *event, String& string)
         P031_data_struct *P031_data =
             static_cast<P031_data_struct *>(getPluginTaskData(event->TaskIndex));
         if (nullptr != P031_data) {
-          if (P031_data->measurementReady(void)) {
+          if (P031_data->measurementReady()) {
             UserVar[event->BaseVarIndex] = P031_data->tempC;
             UserVar[event->BaseVarIndex+1] = P031_data->rhTrue;
             success = true;
             P031_data->state = P031_IDLE;
           } else if (P031_data->state == P031_IDLE) {
-            P031_data->startMeasurement(void);
-          } else if (P031_data->hasError(void)) {
+            P031_data->startMeasurement();
+          } else if (P031_data->hasError()) {
             // Log error
             switch (P031_data->state) {
               case P031_COMMAND_NO_ACK:

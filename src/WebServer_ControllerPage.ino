@@ -6,9 +6,9 @@
 void handle_controllers(void) {
   checkRAM(F("handle_controllers"));
 
-  if (!isLoggedIn(void)) { return; }
+  if (!isLoggedIn()) { return; }
   navMenuIndex = MENU_INDEX_CONTROLLERS;
-  TXBuffer.startStream(void);
+  TXBuffer.startStream();
   sendHeadandTail_stdtemplate(_HEAD);
 
   byte controllerindex     = getFormItemInt(F("index"), 0);
@@ -47,7 +47,7 @@ void handle_controllers(void) {
       }
     }
     addHtmlError(SaveControllerSettings(controllerindex, ControllerSettings));
-    addHtmlError(SaveSettings(void));
+    addHtmlError(SaveSettings());
 
     if (mustInit) {
       // Init controller plugin using the new settings.
@@ -60,11 +60,11 @@ void handle_controllers(void) {
     }
   }
 
-  html_add_form(void);
+  html_add_form();
 
   if (controllerNotSet)
   {
-    handle_controllers_ShowAllControllersTable(void);
+    handle_controllers_ShowAllControllersTable();
   }
   else
   {
@@ -72,7 +72,7 @@ void handle_controllers(void) {
   }
 
   sendHeadandTail_stdtemplate(_TAIL);
-  TXBuffer.endStream(void);
+  TXBuffer.endStream();
 }
 
 // ********************************************************************************
@@ -85,7 +85,7 @@ void handle_controllers_clearLoadDefaults(byte controllerindex, ControllerSettin
   // reset (some) default-settings
   byte ProtocolIndex = getProtocolIndex(Settings.Protocol[controllerindex]);
 
-  ControllerSettings.reset(void);
+  ControllerSettings.reset();
   ControllerSettings.Port = Protocol[ProtocolIndex].defaultPort;
 
   // Load some templates from the controller.
@@ -95,11 +95,11 @@ void handle_controllers_clearLoadDefaults(byte controllerindex, ControllerSettin
     String dummy;
     CPluginCall(ProtocolIndex, CPLUGIN_PROTOCOL_TEMPLATE, &TempEvent, dummy);
   }
-  safe_strncpy(ControllerSettings.Subscribe,            TempEvent.String1.c_str(void), sizeof(ControllerSettings.Subscribe));
-  safe_strncpy(ControllerSettings.Publish,              TempEvent.String2.c_str(void), sizeof(ControllerSettings.Publish));
-  safe_strncpy(ControllerSettings.MQTTLwtTopic,         TempEvent.String3.c_str(void), sizeof(ControllerSettings.MQTTLwtTopic));
-  safe_strncpy(ControllerSettings.LWTMessageConnect,    TempEvent.String4.c_str(void), sizeof(ControllerSettings.LWTMessageConnect));
-  safe_strncpy(ControllerSettings.LWTMessageDisconnect, TempEvent.String5.c_str(void), sizeof(ControllerSettings.LWTMessageDisconnect));
+  safe_strncpy(ControllerSettings.Subscribe,            TempEvent.String1.c_str(), sizeof(ControllerSettings.Subscribe));
+  safe_strncpy(ControllerSettings.Publish,              TempEvent.String2.c_str(), sizeof(ControllerSettings.Publish));
+  safe_strncpy(ControllerSettings.MQTTLwtTopic,         TempEvent.String3.c_str(), sizeof(ControllerSettings.MQTTLwtTopic));
+  safe_strncpy(ControllerSettings.LWTMessageConnect,    TempEvent.String4.c_str(), sizeof(ControllerSettings.LWTMessageConnect));
+  safe_strncpy(ControllerSettings.LWTMessageDisconnect, TempEvent.String5.c_str(), sizeof(ControllerSettings.LWTMessageDisconnect));
 
   // NOTE: do not enable controller by default, give user a change to enter sensible values first
   Settings.ControllerEnabled[controllerindex] = false;
@@ -136,8 +136,8 @@ void handle_controllers_CopySubmittedSettings(byte controllerindex, ControllerSe
 // ********************************************************************************
 void handle_controllers_ShowAllControllersTable(void)
 {
-  html_table_class_multirow(void);
-  html_TR(void);
+  html_table_class_multirow();
+  html_TR();
   html_table_header("",           70);
   html_table_header("Nr",         50);
   html_table_header(F("Enabled"), 100);
@@ -150,43 +150,43 @@ void handle_controllers_ShowAllControllersTable(void)
   for (byte x = 0; x < CONTROLLER_MAX; x++)
   {
     LoadControllerSettings(x, ControllerSettings);
-    html_TR_TD(void);
-    html_add_button_prefix(void);
+    html_TR_TD();
+    html_add_button_prefix();
     TXBuffer += F("controllers?index=");
     TXBuffer += x + 1;
     TXBuffer += F("'>Edit</a>");
-    html_TD(void);
+    html_TD();
     TXBuffer += getControllerSymbol(x);
-    html_TD(void);
+    html_TD();
 
     if (Settings.Protocol[x] != 0)
     {
       addEnabled(Settings.ControllerEnabled[x]);
 
-      html_TD(void);
+      html_TD();
       byte ProtocolIndex = getProtocolIndex(Settings.Protocol[x]);
       TXBuffer += getCPluginNameFromProtocolIndex(ProtocolIndex);
-      html_TD(void);
+      html_TD();
       {
         String hostDescription;
         CPluginCall(ProtocolIndex, CPLUGIN_WEBFORM_SHOW_HOST_CONFIG, 0, hostDescription);
 
-        if (hostDescription.length(void) != 0) {
+        if (hostDescription.length() != 0) {
           TXBuffer += hostDescription;
         } else {
-          TXBuffer += ControllerSettings.getHost(void);
+          TXBuffer += ControllerSettings.getHost();
         }
       }
 
-      html_TD(void);
+      html_TD();
       TXBuffer += ControllerSettings.Port;
     }
     else {
       html_TD(3);
     }
   }
-  html_end_table(void);
-  html_end_form(void);
+  html_end_table();
+  html_end_form();
 }
 
 // ********************************************************************************
@@ -195,7 +195,7 @@ void handle_controllers_ShowAllControllersTable(void)
 void handle_controllers_ControllerSettingsPage(byte controllerindex)
 {
   // Show controller settings page
-  html_table_class_normal(void);
+  html_table_class_normal();
   addFormHeader(F("Controller Settings"));
   addRowLabel(F("Protocol"));
   byte choice = Settings.Protocol[controllerindex];
@@ -211,7 +211,7 @@ void handle_controllers_ControllerSettingsPage(byte controllerindex)
                      disabled,
                      "");
   }
-  addSelector_Foot(void);
+  addSelector_Foot();
 
   addHelpButton(F("EasyProtocols"));
 
@@ -292,20 +292,20 @@ void handle_controllers_ControllerSettingsPage(byte controllerindex)
       String webformLoadString;
       CPluginCall(ProtocolIndex, CPLUGIN_WEBFORM_LOAD, &TempEvent, webformLoadString);
 
-      if (webformLoadString.length(void) > 0) {
-        addHtmlError(F("Bug in CPLUGIN_WEBFORM_LOAD, should not append to string, use addHtml(void) instead"));
+      if (webformLoadString.length() > 0) {
+        addHtmlError(F("Bug in CPLUGIN_WEBFORM_LOAD, should not append to string, use addHtml() instead"));
       }
     }
     addControllerParameterForm(ControllerSettings, controllerindex, CONTROLLER_ENABLED);
   }
 
   addFormSeparator(2);
-  html_TR_TD(void);
-  html_TD(void);
+  html_TR_TD();
+  html_TD();
   addButton(F("controllers"), F("Close"));
-  addSubmitButton(void);
-  html_end_table(void);
-  html_end_form(void);
+  addSubmitButton();
+  html_end_table();
+  html_end_form();
 }
 
 #endif // ifdef WEBSERVER_CONTROLLERS

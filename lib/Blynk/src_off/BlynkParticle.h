@@ -43,7 +43,7 @@ public:
         return 0;
     }
 
-    void disconnect(void) { client.stop(void); }
+    void disconnect(void) { client.stop(); }
 
     size_t read(void* buf, size_t len) {
         return client.readBytes((char*)buf, len);
@@ -53,9 +53,9 @@ public:
         return client.write((const uint8_t*)buf, len);
     }
 
-    void flush(void) { client.flush(void); }
-    bool connected(void) { return client.connected(void); }
-    int available(void) { return client.available(void); }
+    void flush(void) { client.flush(); }
+    bool connected(void) { return client.connected(); }
+    int available(void) { return client.available(); }
 
 private:
     TCPClient   client;
@@ -95,7 +95,7 @@ public:
     {
         BlynkDelay(3000); // Give the board time to settle
         config(auth, domain, port);
-        while(this->connect(void) != true) {}
+        while(this->connect() != true) {}
     }
 
     void begin( const char* auth,
@@ -104,7 +104,7 @@ public:
     {
         BlynkDelay(3000); // Give the board time to settle
         config(auth, addr, port);
-        while(this->connect(void) != true) {}
+        while(this->connect() != true) {}
     }
 private:
 

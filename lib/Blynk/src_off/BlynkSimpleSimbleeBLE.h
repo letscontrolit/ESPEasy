@@ -39,7 +39,7 @@ public:
     }
 
     bool connect(void) {
-        mBuffRX.clear(void);
+        mBuffRX.clear();
         return mConn = true;
     }
 
@@ -52,17 +52,17 @@ public:
     }
 
     size_t read(void* buf, size_t len) {
-        millis_time_t start = BlynkMillis(void);
-        while (BlynkMillis(void) - start < BLYNK_TIMEOUT_MS) {
-            if (available(void) < len) {
+        millis_time_t start = BlynkMillis();
+        while (BlynkMillis() - start < BLYNK_TIMEOUT_MS) {
+            if (available() < len) {
                 BlynkDelay(1);
             } else {
                 break;
             }
         }
-        noInterrupts(void);
+        noInterrupts();
         size_t res = mBuffRX.get((uint8_t*)buf, len);
-        interrupts(void);
+        interrupts();
         return res;
     }
 
@@ -72,9 +72,9 @@ public:
     }
 
     size_t available(void) {
-        noInterrupts(void);
-        size_t rxSize = mBuffRX.size(void);
-        interrupts(void);
+        noInterrupts();
+        size_t rxSize = mBuffRX.size();
+        interrupts();
         return rxSize;
     }
 
@@ -82,10 +82,10 @@ public:
     int putData(uint8_t* data, uint16_t len) {
         if (!instance)
             return 0;
-        noInterrupts(void);
+        noInterrupts();
         //BLYNK_DBG_DUMP(">> ", data, len);
         instance->mBuffRX.put(data, len);
-        interrupts(void);
+        interrupts();
         return 0;
     }
 
@@ -111,7 +111,7 @@ public:
     {
         Base::begin(auth);
         state = DISCONNECTED;
-        conn.begin(void);
+        conn.begin();
     }
 };
 
@@ -124,13 +124,13 @@ BlynkSimpleSimbleeBLE Blynk(_blynkTransport);
 void SimbleeBLE_onConnect(void)
 {
   BLYNK_LOG1("Device connected");
-  Blynk.startSession(void);
+  Blynk.startSession();
 }
 
 void SimbleeBLE_onDisconnect(void)
 {
   BLYNK_LOG1("Device disconnected");
-  Blynk.disconnect(void);
+  Blynk.disconnect();
 }
 
 void SimbleeBLE_onReceive(char* data, int len)

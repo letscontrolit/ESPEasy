@@ -153,7 +153,7 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
         PCONFIG_FLOAT(3) = isFormItemChecked(F("p009_sb"));
 
         //check if a task has been edited and remove task flag from the previous pin
-        for (std::map<uint32_t,portStatusStruct>::iterator it=globalMapPortStatus.begin(void); it!=globalMapPortStatus.end(void); ++it) {
+        for (std::map<uint32_t,portStatusStruct>::iterator it=globalMapPortStatus.begin(); it!=globalMapPortStatus.end(); ++it) {
           if (it->second.previousTask == event->TaskIndex && getPluginFromKey(it->first)==PLUGIN_ID_009) {
             globalMapPortStatus[it->first].previousTask = -1;
             removeTaskFromPort(it->first);
@@ -204,9 +204,9 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
           PCONFIG(6)=false;
 
           // @giig1967g-20181022: store millis for debounce, doubleclick and long press
-          PCONFIG_LONG(0)=millis(void); //debounce timer
-          PCONFIG_LONG(1)=millis(void); //doubleclick timer
-          PCONFIG_LONG(2)=millis(void); //longpress timer
+          PCONFIG_LONG(0)=millis(); //debounce timer
+          PCONFIG_LONG(1)=millis(); //doubleclick timer
+          PCONFIG_LONG(2)=millis(); //longpress timer
 
           // @giig1967g-20181022: set minimum value for doubleclick MIN max speed
           if (PCONFIG_FLOAT(1) < PLUGIN_009_DOUBLECLICK_MIN_INTERVAL)
@@ -226,7 +226,7 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
       case PLUGIN_UNCONDITIONAL_POLL:
         {
           // port monitoring, generates an event by rule command 'monitor,pcf,port#'
-          for (std::map<uint32_t,portStatusStruct>::iterator it=globalMapPortStatus.begin(void); it!=globalMapPortStatus.end(void); ++it) {
+          for (std::map<uint32_t,portStatusStruct>::iterator it=globalMapPortStatus.begin(); it!=globalMapPortStatus.end(); ++it) {
             if ((it->second.monitor || it->second.command || it->second.init) && getPluginFromKey(it->first)==PLUGIN_ID_009) {
               const uint16_t port = getPortFromKey(it->first);
               int8_t state = Plugin_009_Read(port);
@@ -313,7 +313,7 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
             PCONFIG_LONG(3) = 0;
 
             //@giig1967g20181022: reset timer for long press
-            PCONFIG_LONG(2)=millis(void);
+            PCONFIG_LONG(2)=millis();
             PCONFIG(6) = false;
 
             const unsigned long debounceTime = timePassedSince(PCONFIG_LONG(0));
@@ -325,7 +325,7 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
               {
                 //reset timer for doubleclick
                 PCONFIG(7)=0;
-                PCONFIG_LONG(1)=millis(void);
+                PCONFIG_LONG(1)=millis();
               }
 
 //just to simplify the reading of the code
@@ -373,7 +373,7 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
               //reset Userdata so it displays the correct state value in the web page
               UserVar[event->BaseVarIndex] = sendState ? 1 : 0;
 
-              PCONFIG_LONG(0) = millis(void);
+              PCONFIG_LONG(0) = millis();
             }
             savePortStatus(key,currentStatus);
           }
@@ -500,7 +500,7 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
         //parseString(string, 3) = gpio number
 
         // returns pin value using syntax: [plugin#mcpgpio#pinstate#xx]
-        if (string.length(void)>=16 && string.substring(0,16).equalsIgnoreCase(F("mcpgpio,pinstate")))
+        if (string.length()>=16 && string.substring(0,16).equalsIgnoreCase(F("mcpgpio,pinstate")))
         {
           int par1;
           if (validIntFromString(parseString(string, 3), par1)) {
@@ -743,11 +743,11 @@ int8_t Plugin_009_Read(byte Par1)
   // get the current pin status
   Wire.beginTransmission(address);
   Wire.write(IOBankValueReg); // IO data register
-  Wire.endTransmission(void);
+  Wire.endTransmission();
   Wire.requestFrom(address, (uint8_t)0x1);
-  if (Wire.available(void))
+  if (Wire.available())
   {
-    state = ((Wire.read(void) & _BV(port - 1)) >> (port - 1));
+    state = ((Wire.read() & _BV(port - 1)) >> (port - 1));
   }
   return state;
 }
@@ -774,27 +774,27 @@ boolean Plugin_009_Write(byte Par1, byte Par2)
   // turn this port into output, first read current config
   Wire.beginTransmission(address);
   Wire.write(IOBankConfigReg); // IO config register
-  Wire.endTransmission(void);
+  Wire.endTransmission();
   Wire.requestFrom(address, (uint8_t)0x1);
-  if (Wire.available(void))
+  if (Wire.available())
   {
-    portvalue = Wire.read(void);
+    portvalue = Wire.read();
     portvalue &= ~(1 << (port - 1)); // change pin from (default) input to output
 
     // write new IO config
     Wire.beginTransmission(address);
     Wire.write(IOBankConfigReg); // IO config register
     Wire.write(portvalue);
-    Wire.endTransmission(void);
+    Wire.endTransmission();
   }
   // get the current pin status
   Wire.beginTransmission(address);
   Wire.write(IOBankValueReg); // IO data register
-  Wire.endTransmission(void);
+  Wire.endTransmission();
   Wire.requestFrom(address, (uint8_t)0x1);
-  if (Wire.available(void))
+  if (Wire.available())
   {
-    portvalue = Wire.read(void);
+    portvalue = Wire.read();
     if (Par2 == 1)
       portvalue |= (1 << (port - 1));
     else
@@ -804,7 +804,7 @@ boolean Plugin_009_Write(byte Par1, byte Par2)
     Wire.beginTransmission(address);
     Wire.write(IOBankValueReg);
     Wire.write(portvalue);
-    Wire.endTransmission(void);
+    Wire.endTransmission();
     success = true;
   }
   return(success);
@@ -830,11 +830,11 @@ void Plugin_009_Config(byte Par1, byte Par2)
   // turn this port pullup on
   Wire.beginTransmission(address);
   Wire.write(IOBankConfigReg);
-  Wire.endTransmission(void);
+  Wire.endTransmission();
   Wire.requestFrom(address, (uint8_t)0x1);
-  if (Wire.available(void))
+  if (Wire.available())
   {
-    portvalue = Wire.read(void);
+    portvalue = Wire.read();
     if (Par2 == 1)
       portvalue |= (1 << (port - 1));
     else
@@ -844,7 +844,7 @@ void Plugin_009_Config(byte Par1, byte Par2)
     Wire.beginTransmission(address);
     Wire.write(IOBankConfigReg); // IO config register
     Wire.write(portvalue);
-    Wire.endTransmission(void);
+    Wire.endTransmission();
   }
 }
 #endif // USES_P009

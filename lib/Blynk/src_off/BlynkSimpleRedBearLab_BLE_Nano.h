@@ -63,21 +63,21 @@ public:
     void begin(void) {
         instance = this;
 
-        ble.gap(void).onConnection(connectCallback);
-        ble.gap(void).onDisconnection(disconnectCallback);
+        ble.gap().onConnection(connectCallback);
+        ble.gap().onDisconnection(disconnectCallback);
 
-        ble.gattServer(void).addService(uartService);
-        ble.gattServer(void).onDataWritten(writeCallback);
-        ble.gattServer(void).onDataSent(sentCallback);
+        ble.gattServer().addService(uartService);
+        ble.gattServer().onDataWritten(writeCallback);
+        ble.gattServer().onDataSent(sentCallback);
 
         // Setup advertising
-        ble.gap(void).accumulateAdvertisingPayload(GapAdvertisingData::COMPLETE_LIST_128BIT_SERVICE_IDS,
+        ble.gap().accumulateAdvertisingPayload(GapAdvertisingData::COMPLETE_LIST_128BIT_SERVICE_IDS,
                                               uart_base_uuid_rev, sizeof(uart_base_uuid));
 
     }
 
     bool connect(void) {
-        mBuffRX.clear(void);
+        mBuffRX.clear();
         return mConn = true;
     }
 
@@ -90,29 +90,29 @@ public:
     }
 
     size_t read(void* buf, size_t len) {
-        millis_time_t start = BlynkMillis(void);
-        while (BlynkMillis(void) - start < BLYNK_TIMEOUT_MS) {
-            if (available(void) < len) {
-                ble.waitForEvent(void);
+        millis_time_t start = BlynkMillis();
+        while (BlynkMillis() - start < BLYNK_TIMEOUT_MS) {
+            if (available() < len) {
+                ble.waitForEvent();
             } else {
                 break;
             }
         }
-        noInterrupts(void);
+        noInterrupts();
         size_t res = mBuffRX.get((uint8_t*)buf, len);
-        interrupts(void);
+        interrupts();
         return res;
     }
 
     size_t write(const void* buf, size_t len) {
-        ble.updateCharacteristicValue(rxCharacteristic.getValueAttribute(void).getHandle(void), (uint8_t*)buf, len);
+        ble.updateCharacteristicValue(rxCharacteristic.getValueAttribute().getHandle(), (uint8_t*)buf, len);
         return len;
     }
 
     size_t available(void) {
-        noInterrupts(void);
-        size_t rxSize = mBuffRX.size(void);
-        interrupts(void);
+        noInterrupts();
+        size_t rxSize = mBuffRX.size();
+        interrupts();
         return rxSize;
     }
 
@@ -124,10 +124,10 @@ private:
     {
         if (!instance)
             return;
-      noInterrupts(void);
+      noInterrupts();
       //BLYNK_DBG_DUMP(">> ", params->data, params->len);
       instance->mBuffRX.put(params->data, params->len);
-      interrupts(void);
+      interrupts();
     }
 
     static
@@ -162,7 +162,7 @@ public:
     {
         Base::begin(auth);
         state = DISCONNECTED;
-        conn.begin(void);
+        conn.begin();
     }
 };
 
@@ -174,16 +174,16 @@ BlynkRedBearLab_BLE_Nano Blynk(_blynkTransport);
 void BlynkTransportRedBearLab_BLE_Nano::connectCallback(const Gap::ConnectionCallbackParams_t *params)
 {
   BLYNK_LOG1("Device connected");
-  Blynk.startSession(void);
+  Blynk.startSession();
 }
 
 void BlynkTransportRedBearLab_BLE_Nano::disconnectCallback(const Gap::DisconnectionCallbackParams_t *params)
 {
   BLYNK_LOG1("Device disconnected");
-  //__disable_irq(void);
-  Blynk.disconnect(void);
-  //__enable_irq(void);
-  ble.startAdvertising(void);
+  //__disable_irq();
+  Blynk.disconnect();
+  //__enable_irq();
+  ble.startAdvertising();
 }
 
 #include <BlynkWidgets.h>

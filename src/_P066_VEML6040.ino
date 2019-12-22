@@ -180,7 +180,7 @@ void VEML6040_setControlReg(byte data)
   Wire.write(0);   //command 0=control register
 	Wire.write(data);   //lsb
   Wire.write(0);   //msb
-	Wire.endTransmission(void);
+	Wire.endTransmission();
 }
 
 float VEML6040_GetValue(byte reg)
@@ -189,10 +189,10 @@ float VEML6040_GetValue(byte reg)
 	Wire.write(reg);
 	Wire.endTransmission(false);
 	Wire.requestFrom((uint8_t)VEML6040_ADDR, (uint8_t)0x2);
-	if (Wire.available(void) == 2)
+	if (Wire.available() == 2)
 	{
-    uint16_t lsb = Wire.read(void);
-    uint16_t msb = Wire.read(void);
+    uint16_t lsb = Wire.read();
+    uint16_t msb = Wire.read();
 		return (float)((msb << 8) | lsb);
 	}
 	return -1.0;

@@ -6,9 +6,9 @@
 void handle_notifications(void) {
   checkRAM(F("handle_notifications"));
 
-  if (!isLoggedIn(void)) { return; }
+  if (!isLoggedIn()) { return; }
   navMenuIndex = MENU_INDEX_NOTIFICATIONS;
-  TXBuffer.startStream(void);
+  TXBuffer.startStream();
   sendHeadandTail_stdtemplate(_HEAD);
 
   struct EventStruct TempEvent;
@@ -56,7 +56,7 @@ void handle_notifications(void) {
 
     // Save the settings.
     addHtmlError(SaveNotificationSettings(notificationindex, (byte *)&NotificationSettings, sizeof(NotificationSettingsStruct)));
-    addHtmlError(SaveSettings(void));
+    addHtmlError(SaveSettings());
 
     if (WebServer.hasArg(F("test"))) {
       // Perform tests with the settings in the form.
@@ -71,12 +71,12 @@ void handle_notifications(void) {
     }
   }
 
-  html_add_form(void);
+  html_add_form();
 
   if (notificationindexNotSet)
   {
-    html_table_class_multirow(void);
-    html_TR(void);
+    html_table_class_multirow();
+    html_TR();
     html_table_header("",           70);
     html_table_header("Nr",         50);
     html_table_header(F("Enabled"), 100);
@@ -89,21 +89,21 @@ void handle_notifications(void) {
     for (byte x = 0; x < NOTIFICATION_MAX; x++)
     {
       LoadNotificationSettings(x, (byte *)&NotificationSettings, sizeof(NotificationSettingsStruct));
-      NotificationSettings.validate(void);
-      html_TR_TD(void);
-      html_add_button_prefix(void);
+      NotificationSettings.validate();
+      html_TR_TD();
+      html_add_button_prefix();
       TXBuffer += F("notifications?index=");
       TXBuffer += x + 1;
       TXBuffer += F("'>Edit</a>");
-      html_TD(void);
+      html_TD();
       TXBuffer += x + 1;
-      html_TD(void);
+      html_TD();
 
       if (Settings.Notification[x] != 0)
       {
         addEnabled(Settings.NotificationEnabled[x]);
 
-        html_TD(void);
+        html_TD();
         byte   NotificationProtocolIndex = getNotificationProtocolIndex(Settings.Notification[x]);
         String NotificationName          = F("(plugin not found?)");
 
@@ -112,21 +112,21 @@ void handle_notifications(void) {
           NPlugin_ptr[NotificationProtocolIndex](NPLUGIN_GET_DEVICENAME, 0, NotificationName);
         }
         TXBuffer += NotificationName;
-        html_TD(void);
+        html_TD();
         TXBuffer += NotificationSettings.Server;
-        html_TD(void);
+        html_TD();
         TXBuffer += NotificationSettings.Port;
       }
       else {
         html_TD(3);
       }
     }
-    html_end_table(void);
-    html_end_form(void);
+    html_end_table();
+    html_end_form();
   }
   else
   {
-    html_table_class_normal(void);
+    html_table_class_normal();
     addFormHeader(F("Notification Settings"));
     addRowLabel(F("Notification"));
     byte choice = Settings.Notification[notificationindex];
@@ -143,7 +143,7 @@ void handle_notifications(void) {
                        false,
                        "");
     }
-    addSelector_Foot(void);
+    addSelector_Foot();
 
     addHelpButton(F("EasyNotifications"));
 
@@ -151,7 +151,7 @@ void handle_notifications(void) {
     {
       MakeNotificationSettings(NotificationSettings);
       LoadNotificationSettings(notificationindex, (byte *)&NotificationSettings, sizeof(NotificationSettingsStruct));
-      NotificationSettings.validate(void);
+      NotificationSettings.validate();
 
       byte NotificationProtocolIndex = getNotificationProtocolIndex(Settings.Notification[notificationindex]);
 
@@ -189,24 +189,24 @@ void handle_notifications(void) {
         String webformLoadString;
         NPlugin_ptr[NotificationProtocolIndex](NPLUGIN_WEBFORM_LOAD, &TempEvent, webformLoadString);
 
-        if (webformLoadString.length(void) > 0) {
-          addHtmlError(F("Bug in NPLUGIN_WEBFORM_LOAD, should not append to string, use addHtml(void) instead"));
+        if (webformLoadString.length() > 0) {
+          addHtmlError(F("Bug in NPLUGIN_WEBFORM_LOAD, should not append to string, use addHtml() instead"));
         }
       }
     }
 
     addFormSeparator(2);
 
-    html_TR_TD(void);
-    html_TD(void);
+    html_TR_TD();
+    html_TD();
     addButton(F("notifications"), F("Close"));
-    addSubmitButton(void);
+    addSubmitButton();
     addSubmitButton(F("Test"), F("test"));
-    html_end_table(void);
-    html_end_form(void);
+    html_end_table();
+    html_end_form();
   }
   sendHeadandTail_stdtemplate(_TAIL);
-  TXBuffer.endStream(void);
+  TXBuffer.endStream();
 }
 
 #endif // NOTIFIER_SET_NONE

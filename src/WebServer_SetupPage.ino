@@ -12,9 +12,9 @@ void handle_setup(void) {
   checkRAM(F("handle_setup"));
 
   // Do not check client IP range allowed.
-  TXBuffer.startStream(void);
+  TXBuffer.startStream();
 
-  if (!WiFiConnected(void))
+  if (!WiFiConnected())
   {
     sendHeadandTail(F("TmplAP"));
     static byte status       = 0;
@@ -23,16 +23,16 @@ void handle_setup(void) {
     String other             = WebServer.arg(F("other"));
     String password          = WebServer.arg(F("pass"));
 
-    if (other.length(void) != 0)
+    if (other.length() != 0)
     {
       ssid = other;
     }
 
     // if ssid config not set and params are both provided
-    if ((status == 0) && (ssid.length(void) != 0) /*&& strcasecmp(SecuritySettings.WifiSSID, "ssid") == 0 */)
+    if ((status == 0) && (ssid.length() != 0) /*&& strcasecmp(SecuritySettings.WifiSSID, "ssid") == 0 */)
     {
-      safe_strncpy(SecuritySettings.WifiKey,  password.c_str(void), sizeof(SecuritySettings.WifiKey));
-      safe_strncpy(SecuritySettings.WifiSSID, ssid.c_str(void),     sizeof(SecuritySettings.WifiSSID));
+      safe_strncpy(SecuritySettings.WifiKey,  password.c_str(), sizeof(SecuritySettings.WifiKey));
+      safe_strncpy(SecuritySettings.WifiSSID, ssid.c_str(),     sizeof(SecuritySettings.WifiSSID));
       wifiSetupConnect         = true;
       wifiConnectAttemptNeeded = true;
 
@@ -44,9 +44,9 @@ void handle_setup(void) {
       status       = HANDLE_SETUP_CONNECTING_STAGE;
       refreshCount = 0;
     }
-    html_BR(void);
+    html_BR();
     wrap_html_tag(F("h1"), F("Wifi Setup wizard"));
-    html_add_form(void);
+    html_add_form();
 
     switch (status) {
       case HANDLE_SETUP_SCAN_STAGE:
@@ -64,39 +64,39 @@ void handle_setup(void) {
         break;
       }
     }
-    html_end_form(void);
+    html_end_form();
     sendHeadandTail(F("TmplAP"), true);
   } else {
     // Connect Success
-    handle_setup_finish(void);
+    handle_setup_finish();
   }
 
-  TXBuffer.endStream(void);
+  TXBuffer.endStream();
   delay(10);
 }
 
 void handle_setup_scan_and_show(const String& ssid, const String& other, const String& password) {
-  if (WiFi.scanComplete(void) <= 0) {
-    WiFiMode_t cur_wifimode = WiFi.getMode(void);
+  if (WiFi.scanComplete() <= 0) {
+    WiFiMode_t cur_wifimode = WiFi.getMode();
     WifiScan(false); 
     setWifiMode(cur_wifimode);
   }
 
-  const int8_t scanCompleteStatus = WiFi.scanComplete(void);
+  const int8_t scanCompleteStatus = WiFi.scanComplete();
   if (scanCompleteStatus <= 0) {
     TXBuffer += F("No Access Points found");
   }
   else
   {
-    html_table_class_multirow(void);
-    html_TR(void);
+    html_table_class_multirow();
+    html_TR();
     html_table_header(F("Pick"), 50);
     html_table_header(F("Network info"));
     html_table_header(F("RSSI"), 50);
 
     for (int i = 0; i < scanCompleteStatus; ++i)
     {
-      html_TR_TD(void); TXBuffer += F("<label class='container2'>");
+      html_TR_TD(); TXBuffer += F("<label class='container2'>");
       TXBuffer               += F("<input type='radio' name='ssid' value='");
       {
         String escapeBuffer = WiFi.SSID(i);
@@ -111,10 +111,10 @@ void handle_setup_scan_and_show(const String& ssid, const String& other, const S
       TXBuffer += F("><span class='dotmark'></span></label><TD>");
       int32_t rssi = 0;
       TXBuffer +=  formatScanResult(i, "<BR>", rssi);
-      html_TD(void);
+      html_TD();
       getWiFi_RSSI_icon(rssi, 45);
     }
-    html_end_table(void);
+    html_end_table();
   }
 
   TXBuffer += F(
@@ -138,7 +138,7 @@ bool handle_setup_connectingStage(byte& refreshCount) {
     //      safe_strncpy(SecuritySettings.WifiSSID, "ssid", sizeof(SecuritySettings.WifiSSID));
     //      SecuritySettings.WifiKey[0] = 0;
     addButton(F("/setup"), F("Back to Setup"));
-    html_BR(void);
+    html_BR();
     wifiSetupConnect = false;
     return false;
   }
@@ -150,7 +150,7 @@ bool handle_setup_connectingStage(byte& refreshCount) {
   TXBuffer += F("Please wait for <h1 id='countdown'>20..</h1>");
   TXBuffer += F("<script type='text/JavaScript'>");
   TXBuffer += F("function timedRefresh(timeoutPeriod) {");
-  TXBuffer += F("var timer = setInterval(function(void) {");
+  TXBuffer += F("var timer = setInterval(function() {");
   TXBuffer += F("if (timeoutPeriod > 0) {");
   TXBuffer += F("timeoutPeriod -= 1;");
   TXBuffer += F("document.getElementById('countdown').innerHTML = timeoutPeriod + '..' + '<br />';");
@@ -163,7 +163,7 @@ bool handle_setup_connectingStage(byte& refreshCount) {
   TXBuffer += F("timedRefresh(");
   TXBuffer += wait;
   TXBuffer += F(");");
-  html_add_script_end(void);
+  html_add_script_end();
   TXBuffer += F("seconds while trying to connect");
   return true;
 }
@@ -171,29 +171,29 @@ bool handle_setup_connectingStage(byte& refreshCount) {
 void handle_setup_finish(void) {
   navMenuIndex = MENU_INDEX_TOOLS;
   sendHeadandTail_stdtemplate(_HEAD);
-  addHtmlError(SaveSettings(void));
-  html_add_form(void);
-  html_table_class_normal(void);
-  html_TR(void);
+  addHtmlError(SaveSettings());
+  html_add_form();
+  html_table_class_normal();
+  html_TR();
 
   addFormHeader(F("WiFi Setup Complete"));
 
-  handle_sysinfo_Network(void);
+  handle_sysinfo_Network();
 
   addFormSeparator(2);
 
-  html_TR_TD(void);
-  html_TD(void);
+  html_TR_TD();
+  html_TD();
 
-  if (!clientIPinSubnet(void)) {
-    String host = formatIP(WiFi.localIP(void));
+  if (!clientIPinSubnet()) {
+    String host = formatIP(WiFi.localIP());
     String url  = F("http://");
     url += host;
     url += F("/config");
     addButton(url, host);
   }
-  html_end_table(void);
-  html_end_form(void);
+  html_end_table();
+  html_end_form();
 
   wifiSetup = false;
   sendHeadandTail_stdtemplate(_TAIL);

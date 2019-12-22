@@ -50,14 +50,14 @@ String getLogLevelDisplayStringFromIndex(byte index, int& logLevel) {
 
 void addToLog(byte loglevel, const String& string)
 {
-  addToLog(loglevel, string.c_str(void));
+  addToLog(loglevel, string.c_str());
 }
 
 void addToLog(byte logLevel, const __FlashStringHelper* flashString)
 {
     checkRAM(F("addToLog"));
     String s(flashString);
-    addToLog(logLevel, s.c_str(void));
+    addToLog(logLevel, s.c_str());
 }
 
 void disableSerialLog(void) {
@@ -76,7 +76,7 @@ void setLogLevelFor(byte destination, byte logLevel) {
     default:
       break;
   }
-  updateLogLevelCache(void);
+  updateLogLevelCache();
 }
 
 void updateLogLevelCache(void) {
@@ -94,7 +94,7 @@ void updateLogLevelCache(void) {
 #endif
   }
   max_lvl = _max(max_lvl, Settings.SyslogLevel);
-  if (Logging.logActiveRead(void)) {
+  if (Logging.logActiveRead()) {
     max_lvl = _max(max_lvl, Settings.WebLogLevel);
   }
 #ifdef FEATURE_SD
@@ -119,11 +119,11 @@ byte getSerialLogLevel(void) {
 
 byte getWebLogLevel(void) {
   byte logLevelSettings = 0;
-  if (Logging.logActiveRead(void)) {
+  if (Logging.logActiveRead()) {
     logLevelSettings = Settings.WebLogLevel;
   } else {
     if (Settings.WebLogLevel != 0) {
-      updateLogLevelCache(void);
+      updateLogLevelCache();
     }
   }
   return logLevelSettings;
@@ -133,7 +133,7 @@ bool loglevelActiveFor(byte destination, byte logLevel) {
   byte logLevelSettings = 0;
   switch (destination) {
     case LOG_TO_SERIAL: {
-      logLevelSettings = getSerialLogLevel(void);
+      logLevelSettings = getSerialLogLevel();
       break;
     }
     case LOG_TO_SYSLOG: {
@@ -141,7 +141,7 @@ bool loglevelActiveFor(byte destination, byte logLevel) {
       break;
     }
     case LOG_TO_WEBLOG: {
-      logLevelSettings = getWebLogLevel(void);
+      logLevelSettings = getWebLogLevel();
       break;
     }
     case LOG_TO_SDCARD: {
@@ -164,16 +164,16 @@ bool loglevelActive(byte logLevel, byte logLevelSettings) {
 void addToLog(byte logLevel, const char *line)
 {
   if (loglevelActiveFor(LOG_TO_SERIAL, logLevel)) {
-    addToSerialBuffer(String(millis(void)).c_str(void));
+    addToSerialBuffer(String(millis()).c_str());
     addToSerialBuffer(" : ");
     String loglevelDisplayString = getLogLevelDisplayString(logLevel);
-    while (loglevelDisplayString.length(void) < 6) {
+    while (loglevelDisplayString.length() < 6) {
       loglevelDisplayString += ' ';
     }
-    addToSerialBuffer(loglevelDisplayString.c_str(void));
+    addToSerialBuffer(loglevelDisplayString.c_str());
     addToSerialBuffer(": ");
     addToSerialBuffer(line);
-    addNewlineToSerialBuffer(void);
+    addNewlineToSerialBuffer();
   }
   if (loglevelActiveFor(LOG_TO_SYSLOG, logLevel)) {
     syslog(logLevel, line);
@@ -187,7 +187,7 @@ void addToLog(byte logLevel, const char *line)
     File logFile = SD.open("log.dat", FILE_WRITE);
     if (logFile)
       logFile.println(line);
-    logFile.close(void);
+    logFile.close();
   }
 #endif
 }

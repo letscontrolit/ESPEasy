@@ -1,11 +1,11 @@
 #include "GreeHeatpumpIR.h"
 
 // This is a protected method, i.e. generic Gree instances cannot be created
-GreeHeatpumpIR::GreeHeatpumpIR(void) : HeatpumpIR(void)
+GreeHeatpumpIR::GreeHeatpumpIR(void) : HeatpumpIR()
 {
 }
 
-GreeGenericHeatpumpIR::GreeGenericHeatpumpIR(void) : GreeHeatpumpIR(void)
+GreeGenericHeatpumpIR::GreeGenericHeatpumpIR(void) : GreeHeatpumpIR()
 {
   static const char model[] PROGMEM = "gree";
   static const char info[]  PROGMEM = "{\"mdl\":\"gree\",\"dn\":\"Gree\",\"mT\":16,\"xT\":30,\"fs\":3}";
@@ -15,7 +15,7 @@ GreeGenericHeatpumpIR::GreeGenericHeatpumpIR(void) : GreeHeatpumpIR(void)
   greeModel = GREE_GENERIC;
 }
 
-GreeYANHeatpumpIR::GreeYANHeatpumpIR(void) : GreeHeatpumpIR(void)
+GreeYANHeatpumpIR::GreeYANHeatpumpIR(void) : GreeHeatpumpIR()
 {
   static const char model[] PROGMEM = "greeyan";
   static const char info[]  PROGMEM = "{\"mdl\":\"greeyan\",\"dn\":\"Gree YAN\",\"mT\":16,\"xT\":30,\"fs\":3}";
@@ -26,7 +26,7 @@ GreeYANHeatpumpIR::GreeYANHeatpumpIR(void) : GreeHeatpumpIR(void)
 }
 
 // Support for YAA1FB, FAA1FB1, YB1F2 remotes
-GreeYAAHeatpumpIR::GreeYAAHeatpumpIR(void) : GreeHeatpumpIR(void)
+GreeYAAHeatpumpIR::GreeYAAHeatpumpIR(void) : GreeHeatpumpIR()
 {
   static const char model[] PROGMEM = "greeyaa";
   static const char info[]  PROGMEM = "{\"mdl\":\"greeyaa\",\"dn\":\"Gree YAA\",\"mT\":16,\"xT\":30,\"fs\":3}";

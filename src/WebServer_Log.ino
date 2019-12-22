@@ -5,12 +5,12 @@
 // Web Interface log page
 // ********************************************************************************
 void handle_log(void) {
-  if (!isLoggedIn(void)) { return; }
+  if (!isLoggedIn()) { return; }
   navMenuIndex = MENU_INDEX_TOOLS;
 
-  TXBuffer.startStream(void);
+  TXBuffer.startStream();
   sendHeadandTail_stdtemplate(_HEAD);
-  html_table_class_normal(void);
+  html_table_class_normal();
 
   #ifdef WEBSERVER_LOG
   TXBuffer += F("<TR><TH id=\"headline\" align=\"left\">Log");
@@ -23,22 +23,22 @@ void handle_log(void) {
 
   html_add_script(true);
   TXBuffer += DATA_FETCH_AND_PARSE_LOG_JS;
-  html_add_script_end(void);
+  html_add_script_end();
 
   #else
   TXBuffer += F("Not included in build");
   #endif
   sendHeadandTail_stdtemplate(_TAIL);
-  TXBuffer.endStream(void);
+  TXBuffer.endStream();
 }
 
 // ********************************************************************************
 // Web Interface JSON log page
 // ********************************************************************************
 void handle_log_JSON(void) {
-  if (!isLoggedIn(void)) { return; }
+  if (!isLoggedIn()) { return; }
   #ifdef WEBSERVER_LOG
-  TXBuffer.startJsonStream(void);
+  TXBuffer.startJsonStream();
   String webrequest = WebServer.arg(F("view"));
   TXBuffer += F("{\"Log\": {");
 
@@ -65,7 +65,7 @@ void handle_log_JSON(void) {
   while (logLinesAvailable) {
     String reply = Logging.get_logjson_formatted(logLinesAvailable, lastTimeStamp);
 
-    if (reply.length(void) > 0) {
+    if (reply.length() > 0) {
       TXBuffer += reply;
 
       if (nrEntries == 0) {
@@ -100,10 +100,10 @@ void handle_log_JSON(void) {
   stream_next_json_object_value(F("SettingsWebLogLevel"), String(Settings.WebLogLevel));
   stream_last_json_object_value(F("logTimeSpan"), String(logTimeSpan));
   TXBuffer += F("}\n");
-  TXBuffer.endStream(void);
-  updateLogLevelCache(void);
+  TXBuffer.endStream();
+  updateLogLevelCache();
 
   #else 
-  handleNotFound(void);
+  handleNotFound();
   #endif
 }

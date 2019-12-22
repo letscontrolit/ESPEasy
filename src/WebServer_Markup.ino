@@ -13,7 +13,7 @@ void addSelector(const String& id,
   // FIXME TD-er Change boolean to disabled
   addSelector_Head(id, reloadonchange, !enabled);
   addSelector_options(optionCount, options, indices, attr, selectedIndex);
-  addSelector_Foot(void);
+  addSelector_Foot();
 }
 
 void addSelector_options(int optionCount, const String options[], const int indices[], const String attr[], int selectedIndex)
@@ -68,10 +68,10 @@ void addSelector_Head(const String& id, const String& onChangeCall, bool disable
   TXBuffer += '\'';
 
   if (disabled) {
-    addDisabled(void);
+    addDisabled();
   }
 
-  if (onChangeCall.length(void) > 0) {
+  if (onChangeCall.length() > 0) {
     TXBuffer += F(" onchange='");
     TXBuffer += onChangeCall;
     TXBuffer += '\'';
@@ -89,10 +89,10 @@ void addSelector_Item(const String& option, int index, boolean selected, boolean
   }
 
   if (disabled) {
-    addDisabled(void);
+    addDisabled();
   }
 
-  if (attr && (attr.length(void) > 0))
+  if (attr && (attr.length() > 0))
   {
     TXBuffer += ' ';
     TXBuffer += attr;
@@ -123,28 +123,28 @@ void addRowLabel_tr_id(const String& label, const String& id)
 
 void addRowLabel(const String& label, const String& id)
 {
-  if (id.length(void) > 0) {
+  if (id.length() > 0) {
     TXBuffer += F("<TR id='");
     TXBuffer += id;
     TXBuffer += F("'><TD>");
   } else {
-    html_TR_TD(void);
+    html_TR_TD();
   }
-  if (label.length(void) != 0) {
+  if (label.length() != 0) {
     TXBuffer += label;
     TXBuffer += ':';
   }
-  html_TD(void);
+  html_TD();
 }
 
 // Add a row label and mark it with copy markers to copy it to clipboard.
 void addRowLabel_copy(const String& label) {
   TXBuffer += F("<TR>");
-  html_copyText_TD(void);
+  html_copyText_TD();
   TXBuffer += label;
   TXBuffer += ':';
-  html_copyText_marker(void);
-  html_copyText_TD(void);
+  html_copyText_marker();
+  html_copyText_TD();
 }
 
 void addRowLabelValue(LabelType::Enum label) {
@@ -168,7 +168,7 @@ void addTableSeparator(const String& label, int colspan, int h_size, const Strin
   TXBuffer += '>';
   TXBuffer += label;
 
-  if (helpButton.length(void) > 0) {
+  if (helpButton.length() > 0) {
     addHelpButton(helpButton);
   }
   TXBuffer += "</H";
@@ -178,7 +178,7 @@ void addTableSeparator(const String& label, int colspan, int h_size, const Strin
 
 void addFormHeader(const String& header, const String& helpButton)
 {
-  html_TR(void);
+  html_TR();
   html_table_header(header, helpButton, 225);
   html_table_header("");
 }
@@ -208,10 +208,10 @@ void addCheckBox(const String& id, boolean checked, bool disabled)
     TXBuffer += F(" checked");
   }
 
-  if (disabled) { addDisabled(void); }
+  if (disabled) { addDisabled(); }
   TXBuffer += F("><span class='checkmark");
 
-  if (disabled) { addDisabled(void); }
+  if (disabled) { addDisabled(); }
   TXBuffer += F("'></span></label>");
 }
 
@@ -276,7 +276,7 @@ void addTextBox(const String& id, const String&  value, int maxlength, bool read
     TXBuffer += F(" required ");
   }
 
-  if (pattern.length(void) > 0) {
+  if (pattern.length() > 0) {
     TXBuffer += F("pattern = '");
     TXBuffer += pattern;
     TXBuffer += '\'';
@@ -444,7 +444,7 @@ void addPinSelect(boolean forI2C, String id,  int choice)
 }
 
 // ********************************************************************************
-// Helper function actually rendering dropdown list for addPinSelect(void)
+// Helper function actually rendering dropdown list for addPinSelect()
 // ********************************************************************************
 void renderHTMLForPinSelect(String options[], int optionValues[], boolean forI2C, const String& id,  int choice, int count) {
   addSelector_Head(id, false);
@@ -469,5 +469,5 @@ void renderHTMLForPinSelect(String options[], int optionValues[], boolean forI2C
                      disabled,
                      "");
   }
-  addSelector_Foot(void);
+  addSelector_Foot();
 }

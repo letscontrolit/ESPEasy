@@ -1,6 +1,6 @@
 #include <MitsubishiSEZKDXXHeatpumpIR.h>
 
-MitsubishiSEZKDXXHeatpumpIR::MitsubishiSEZKDXXHeatpumpIR(void) : HeatpumpIR(void)
+MitsubishiSEZKDXXHeatpumpIR::MitsubishiSEZKDXXHeatpumpIR(void) : HeatpumpIR()
 {
   static const char model[]  PROGMEM = "mitsubishi_sez";
   static const char info[]   PROGMEM = "{\"mdl\":\"mitsubishi_sez\",\"dn\":\"Mitsubishi SEZ\",\"mT\":17,\"xT\":30,\"fs\":3}";

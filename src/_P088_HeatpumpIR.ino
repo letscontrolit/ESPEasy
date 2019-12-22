@@ -66,20 +66,20 @@
  #include <AUXHeatpumpIR.h>
 
 // Array with all supported heatpumps
-HeatpumpIR *heatpumpIR[] = {new PanasonicCKPHeatpumpIR(void), new PanasonicDKEHeatpumpIR(void), new PanasonicJKEHeatpumpIR(void),
-                            new PanasonicNKEHeatpumpIR(void), new PanasonicLKEHeatpumpIR(void),
-                            new CarrierNQVHeatpumpIR(void), new CarrierMCAHeatpumpIR(void),
-                            new MideaHeatpumpIR(void), new FujitsuHeatpumpIR(void),
-                            new MitsubishiFDHeatpumpIR(void), new MitsubishiFEHeatpumpIR(void), new MitsubishiMSYHeatpumpIR(void), new MitsubishiFAHeatpumpIR(void),
-							new MitsubishiKJHeatpumpIR(void),
-                            new SamsungAQVHeatpumpIR(void), new SamsungFJMHeatpumpIR(void),new SharpHeatpumpIR(void), new DaikinHeatpumpIR(void),
-                            new MitsubishiHeavyZJHeatpumpIR(void), new MitsubishiHeavyZMHeatpumpIR(void),
-                            new MitsubishiSEZKDXXHeatpumpIR(void),
-                            new HyundaiHeatpumpIR(void), new HisenseHeatpumpIR(void),
-                            new GreeGenericHeatpumpIR(void), new GreeYANHeatpumpIR(void), new GreeYAAHeatpumpIR(void),
-                            new FuegoHeatpumpIR(void), new ToshibaHeatpumpIR(void), new ToshibaDaiseikaiHeatpumpIR(void),
-                            new IVTHeatpumpIR(void), new HitachiHeatpumpIR(void),
-                            new BalluHeatpumpIR(void), new AUXHeatpumpIR(void),
+HeatpumpIR *heatpumpIR[] = {new PanasonicCKPHeatpumpIR(), new PanasonicDKEHeatpumpIR(), new PanasonicJKEHeatpumpIR(),
+                            new PanasonicNKEHeatpumpIR(), new PanasonicLKEHeatpumpIR(),
+                            new CarrierNQVHeatpumpIR(), new CarrierMCAHeatpumpIR(),
+                            new MideaHeatpumpIR(), new FujitsuHeatpumpIR(),
+                            new MitsubishiFDHeatpumpIR(), new MitsubishiFEHeatpumpIR(), new MitsubishiMSYHeatpumpIR(), new MitsubishiFAHeatpumpIR(),
+							new MitsubishiKJHeatpumpIR(),
+                            new SamsungAQVHeatpumpIR(), new SamsungFJMHeatpumpIR(),new SharpHeatpumpIR(), new DaikinHeatpumpIR(),
+                            new MitsubishiHeavyZJHeatpumpIR(), new MitsubishiHeavyZMHeatpumpIR(),
+                            new MitsubishiSEZKDXXHeatpumpIR(),
+                            new HyundaiHeatpumpIR(), new HisenseHeatpumpIR(),
+                            new GreeGenericHeatpumpIR(), new GreeYANHeatpumpIR(), new GreeYAAHeatpumpIR(),
+                            new FuegoHeatpumpIR(), new ToshibaHeatpumpIR(), new ToshibaDaiseikaiHeatpumpIR(),
+                            new IVTHeatpumpIR(), new HitachiHeatpumpIR(),
+                            new BalluHeatpumpIR(), new AUXHeatpumpIR(),
                             NULL};
 
 IRSenderIRremoteESP8266 *Plugin_088_irSender;
@@ -190,33 +190,33 @@ boolean Plugin_088(byte function, struct EventStruct *event, String& string)
         if (cmd.equalsIgnoreCase(F("HEATPUMPIR")) && Plugin_088_irSender != NULL)
         {
           String TmpStr1;
-          if (GetArgv(string.c_str(void), TmpStr1, 2)) heatpumpModel = TmpStr1;
-          if (GetArgv(string.c_str(void), TmpStr1, 3)) powerMode = str2int(TmpStr1.c_str(void));
-          if (GetArgv(string.c_str(void), TmpStr1, 4)) operatingMode = str2int(TmpStr1.c_str(void));
-          if (GetArgv(string.c_str(void), TmpStr1, 5)) fanSpeed = str2int(TmpStr1.c_str(void));
-          if (GetArgv(string.c_str(void), TmpStr1, 6)) temperature = str2int(TmpStr1.c_str(void));
-          if (GetArgv(string.c_str(void), TmpStr1, 7)) vDir = str2int(TmpStr1.c_str(void));
-          if (GetArgv(string.c_str(void), TmpStr1, 8)) hDir = str2int(TmpStr1.c_str(void));
+          if (GetArgv(string.c_str(), TmpStr1, 2)) heatpumpModel = TmpStr1;
+          if (GetArgv(string.c_str(), TmpStr1, 3)) powerMode = str2int(TmpStr1.c_str());
+          if (GetArgv(string.c_str(), TmpStr1, 4)) operatingMode = str2int(TmpStr1.c_str());
+          if (GetArgv(string.c_str(), TmpStr1, 5)) fanSpeed = str2int(TmpStr1.c_str());
+          if (GetArgv(string.c_str(), TmpStr1, 6)) temperature = str2int(TmpStr1.c_str());
+          if (GetArgv(string.c_str(), TmpStr1, 7)) vDir = str2int(TmpStr1.c_str());
+          if (GetArgv(string.c_str(), TmpStr1, 8)) hDir = str2int(TmpStr1.c_str());
 #ifdef IR_SEND_TIME
-          sendHour = hour(void);
-          sendMinute = minute(void);
-          sendWeekday = weekday(void);
+          sendHour = hour();
+          sendMinute = minute();
+          sendWeekday = weekday();
 #endif
           int i = 0;
           do
           {
-            const char* shortName = heatpumpIR[i]->model(void);
+            const char* shortName = heatpumpIR[i]->model();
 
-            if (strcmp_P(heatpumpModel.c_str(void), shortName) == 0)
+            if (strcmp_P(heatpumpModel.c_str(), shortName) == 0)
             {
               #ifdef PLUGIN_016
               if (irReceiver != 0)
-              irReceiver->disableIRIn(void); // Stop the receiver
+              irReceiver->disableIRIn(); // Stop the receiver
               #endif
               heatpumpIR[i]->send(*Plugin_088_irSender, powerMode, operatingMode, fanSpeed, temperature, vDir, hDir);
               #ifdef PLUGIN_016
               if (irReceiver != 0)
-              irReceiver->enableIRIn(void); // Start the receiver
+              irReceiver->enableIRIn(); // Start the receiver
               #endif
               addLog(LOG_LEVEL_INFO, F("P088: Heatpump IR code transmitted"));
 #ifdef IR_DEBUG_PACKET
@@ -234,7 +234,7 @@ boolean Plugin_088(byte function, struct EventStruct *event, String& string)
 
               // Panasonic CKP can only be turned ON/OFF by using the timer,
               // so cancel the timer in 2 minutes, after the heatpump has turned on or off
-              if (strcmp(heatpumpModel.c_str(void), "panasonic_ckp") == 0)
+              if (strcmp(heatpumpModel.c_str(), "panasonic_ckp") == 0)
               {
                 panasonicCKPTimer = 120;
               }
@@ -267,16 +267,16 @@ boolean Plugin_088(byte function, struct EventStruct *event, String& string)
           panasonicCKPTimer--;
           if (panasonicCKPTimer == 0)
           {
-            PanasonicCKPHeatpumpIR *panasonicHeatpumpIR = new PanasonicCKPHeatpumpIR(void);
+            PanasonicCKPHeatpumpIR *panasonicHeatpumpIR = new PanasonicCKPHeatpumpIR();
 
             #ifdef PLUGIN_016
             if (irReceiver != 0)
-            irReceiver->disableIRIn(void); // Stop the receiver
+            irReceiver->disableIRIn(); // Stop the receiver
             #endif
             panasonicHeatpumpIR->sendPanasonicCKPCancelTimer(*Plugin_088_irSender);
              #ifdef PLUGIN_016
             if (irReceiver != 0)
-            irReceiver->enableIRIn(void); // Start the receiver
+            irReceiver->enableIRIn(); // Start the receiver
             #endif
             addLog(LOG_LEVEL_INFO, F("P088: The TIMER led on Panasonic CKP should now be OFF"));
           }

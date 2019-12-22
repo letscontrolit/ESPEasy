@@ -54,16 +54,16 @@ LiquidCrystal_I2C::LiquidCrystal_I2C(uint8_t lcd_Addr,uint8_t lcd_cols,uint8_t l
 
 void LiquidCrystal_I2C::oled_init(void){
   _oled = true;
-	init_priv(void);
+	init_priv();
 }
 
 void LiquidCrystal_I2C::init(void){
-	init_priv(void);
+	init_priv();
 }
 
 void LiquidCrystal_I2C::init_priv(void)
 {
-	//Wire.begin(void);   called in ESPEasy framework
+	//Wire.begin();   called in ESPEasy framework
 	_displayfunction = LCD_4BITMODE | LCD_1LINE | LCD_5x8DOTS;
 	begin(_cols, _rows);
 }
@@ -113,10 +113,10 @@ void LiquidCrystal_I2C::begin(uint8_t cols, uint8_t lines, uint8_t dotsize) {
 
 	// turn the display on with no cursor or blinking default
 	_displaycontrol = LCD_DISPLAYON | LCD_CURSOROFF | LCD_BLINKOFF;
-	display(void);
+	display();
 
 	// clear it off
-	clear(void);
+	clear();
 
 	// Initialize to default text direction (for roman languages)
 	_displaymode = LCD_ENTRYLEFT | LCD_ENTRYSHIFTDECREMENT;
@@ -124,7 +124,7 @@ void LiquidCrystal_I2C::begin(uint8_t cols, uint8_t lines, uint8_t dotsize) {
 	// set the entry mode
 	command(LCD_ENTRYMODESET | _displaymode);
 
-	home(void);
+	home();
 
 }
 
@@ -267,7 +267,7 @@ void LiquidCrystal_I2C::write4bits(uint8_t value) {
 void LiquidCrystal_I2C::expanderWrite(uint8_t _data){
 	Wire.beginTransmission(_Addr);
 	printIIC((int)(_data) | _backlightval);
-	Wire.endTransmission(void);
+	Wire.endTransmission();
 }
 
 void LiquidCrystal_I2C::pulseEnable(uint8_t _data){
@@ -282,19 +282,19 @@ void LiquidCrystal_I2C::pulseEnable(uint8_t _data){
 // Alias functions
 
 void LiquidCrystal_I2C::cursor_on(void){
-	cursor(void);
+	cursor();
 }
 
 void LiquidCrystal_I2C::cursor_off(void){
-	noCursor(void);
+	noCursor();
 }
 
 void LiquidCrystal_I2C::blink_on(void){
-	blink(void);
+	blink();
 }
 
 void LiquidCrystal_I2C::blink_off(void){
-	noBlink(void);
+	noBlink();
 }
 
 void LiquidCrystal_I2C::load_custom_character(uint8_t char_num, uint8_t *rows){
@@ -303,9 +303,9 @@ void LiquidCrystal_I2C::load_custom_character(uint8_t char_num, uint8_t *rows){
 
 void LiquidCrystal_I2C::setBacklight(uint8_t new_val){
 	if(new_val){
-		backlight(void);		// turn backlight on
+		backlight();		// turn backlight on
 	}else{
-		noBacklight(void);		// turn backlight off
+		noBacklight();		// turn backlight off
 	}
 }
 

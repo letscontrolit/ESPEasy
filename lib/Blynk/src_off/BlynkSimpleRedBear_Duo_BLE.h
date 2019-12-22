@@ -142,7 +142,7 @@ public:
 
         //ble.debugLogger(true);
         // Initialize ble_stack.
-        ble.init(void);
+        ble.init();
 
         // Register BLE callback functions
         ble.onConnectedCallback(deviceConnectedCallback);
@@ -171,12 +171,12 @@ public:
         ble.setAdvertisementData(sizeof(adv_data), adv_data);
 
         // BLE peripheral starts advertising now.
-        ble.startAdvertising(void);
+        ble.startAdvertising();
 
     }
 
     bool connect(void) {
-        mBuffRX.clear(void);
+        mBuffRX.clear();
         return mConn = true;
     }
 
@@ -189,18 +189,18 @@ public:
     }
 
     size_t read(void* buf, size_t len) {
-        millis_time_t start = BlynkMillis(void);
-        while (BlynkMillis(void) - start < BLYNK_TIMEOUT_MS) {
-            if (available(void) < len) {
+        millis_time_t start = BlynkMillis();
+        while (BlynkMillis() - start < BLYNK_TIMEOUT_MS) {
+            if (available() < len) {
                 BlynkDelay(1);
-                //blePeripheral->poll(void);
+                //blePeripheral->poll();
             } else {
                 break;
             }
         }
-        noInterrupts(void);
+        noInterrupts();
         size_t res = mBuffRX.get((uint8_t*)buf, len);
-        interrupts(void);
+        interrupts();
         return res;
     }
 
@@ -210,9 +210,9 @@ public:
     }
 
     size_t available(void) {
-        noInterrupts(void);
-        size_t rxSize = mBuffRX.size(void);
-        interrupts(void);
+        noInterrupts();
+        size_t rxSize = mBuffRX.size();
+        interrupts();
         return rxSize;
     }
 
@@ -223,10 +223,10 @@ private:
     int gattWriteCallback(uint16_t value_handle, uint8_t* data, uint16_t len) {
         if (!instance)
             return 0;
-        noInterrupts(void);
+        noInterrupts();
         //BLYNK_DBG_DUMP(">> ", data, len);
         instance->mBuffRX.put(data, len);
-        interrupts(void);
+        interrupts();
         return 0;
     }
 
@@ -255,7 +255,7 @@ public:
     {
         Base::begin(auth);
         state = DISCONNECTED;
-        conn.begin(void);
+        conn.begin();
     }
 };
 
@@ -268,7 +268,7 @@ void BlynkTransportRedBearDuoBLE::deviceConnectedCallback(BLEStatus_t status, ui
   switch (status) {
   case BLE_STATUS_OK:
     BLYNK_LOG1("Device connected");
-    Blynk.startSession(void);
+    Blynk.startSession();
     break;
   default:
     break;
@@ -277,7 +277,7 @@ void BlynkTransportRedBearDuoBLE::deviceConnectedCallback(BLEStatus_t status, ui
 
 void BlynkTransportRedBearDuoBLE::deviceDisconnectedCallback(uint16_t handle){
     BLYNK_LOG1("Device disconnected");
-    Blynk.disconnect(void);
+    Blynk.disconnect();
 }
 
 #include <BlynkWidgets.h>

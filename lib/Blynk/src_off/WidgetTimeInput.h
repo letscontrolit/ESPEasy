@@ -33,46 +33,46 @@ public:
         mWeekdays = -1; // All set
         mTZ_Offset = 0;
 
-        BlynkParam::iterator it = param.begin(void);
-        if (it >= param.end(void))
+        BlynkParam::iterator it = param.begin();
+        if (it >= param.end())
             return;
 
-        if (0 == strcmp(it.asStr(void), "sr")) {
+        if (0 == strcmp(it.asStr(), "sr")) {
             mStartMode = TIME_SUNRISE;
-        } else if (0 == strcmp(it.asStr(void), "ss")) {
+        } else if (0 == strcmp(it.asStr(), "ss")) {
             mStartMode = TIME_SUNSET;
-        } else if (!it.isEmpty(void)) {
-            mStart = BlynkTime(it.asLong(void));
-            if (mStart.isValid(void)) {
+        } else if (!it.isEmpty()) {
+            mStart = BlynkTime(it.asLong());
+            if (mStart.isValid()) {
                 mStartMode = TIME_SPECIFIED;
             }
         }
 
-        if (++it >= param.end(void))
+        if (++it >= param.end())
             return;
 
-        if (0 == strcmp(it.asStr(void), "sr")) {
+        if (0 == strcmp(it.asStr(), "sr")) {
             mStopMode = TIME_SUNRISE;
-        } else if (0 == strcmp(it.asStr(void), "ss")) {
+        } else if (0 == strcmp(it.asStr(), "ss")) {
             mStopMode = TIME_SUNSET;
-        } else if (!it.isEmpty(void)) {
-            mStop = BlynkTime(it.asLong(void));
-            if (mStop.isValid(void)) {
+        } else if (!it.isEmpty()) {
+            mStop = BlynkTime(it.asLong());
+            if (mStop.isValid()) {
                 mStopMode = TIME_SPECIFIED;
             }
         }
 
-        if (++it >= param.end(void))
+        if (++it >= param.end())
             return;
 
-        strncpy(mTZ, it.asStr(void), sizeof(mTZ));
+        strncpy(mTZ, it.asStr(), sizeof(mTZ));
 
-        if (++it >= param.end(void))
+        if (++it >= param.end())
             return;
 
-        if (!it.isEmpty(void)) {
+        if (!it.isEmpty()) {
             mWeekdays = 0;
-            const char* p = it.asStr(void);
+            const char* p = it.asStr();
 
             while (int c = *p++) {
                 if (c >= '1' && c <= '7') {
@@ -81,10 +81,10 @@ public:
             }
         }
 
-        if (++it >= param.end(void))
+        if (++it >= param.end())
             return;
 
-        mTZ_Offset = it.asLong(void);
+        mTZ_Offset = it.asLong();
     }
 
     BlynkTime& getStart(void) { return mStart; }
@@ -96,16 +96,16 @@ public:
     bool hasStartTime(void)   const { return mStartMode == TIME_SPECIFIED; }
     bool isStartSunrise(void) const { return mStartMode == TIME_SUNRISE; }
     bool isStartSunset(void)  const { return mStartMode == TIME_SUNSET; }
-    int getStartHour(void)    const { return mStart.hour(void); }
-    int getStartMinute(void)  const { return mStart.minute(void); }
-    int getStartSecond(void)  const { return mStart.second(void); }
+    int getStartHour(void)    const { return mStart.hour(); }
+    int getStartMinute(void)  const { return mStart.minute(); }
+    int getStartSecond(void)  const { return mStart.second(); }
 
     bool hasStopTime(void)    const { return mStopMode == TIME_SPECIFIED; }
     bool isStopSunrise(void)  const { return mStopMode == TIME_SUNRISE; }
     bool isStopSunset(void)   const { return mStopMode == TIME_SUNSET; }
-    int getStopHour(void)     const { return mStop.hour(void); }
-    int getStopMinute(void)   const { return mStop.minute(void); }
-    int getStopSecond(void)   const { return mStop.second(void); }
+    int getStopHour(void)     const { return mStop.hour(); }
+    int getStopMinute(void)   const { return mStop.minute(); }
+    int getStopSecond(void)   const { return mStop.second(); }
 
     const char* getTZ(void)   const { return mTZ; }
     int32_t getTZ_Offset(void) const { return mTZ_Offset; }

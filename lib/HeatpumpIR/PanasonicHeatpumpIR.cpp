@@ -1,13 +1,13 @@
 #include <PanasonicHeatpumpIR.h>
 
 // This is a protected method, i.e. generic Panasonic instances cannot be created
-PanasonicHeatpumpIR::PanasonicHeatpumpIR(void) : HeatpumpIR(void)
+PanasonicHeatpumpIR::PanasonicHeatpumpIR(void) : HeatpumpIR()
 {
 }
 
 
 // The different models just set the model accordingly
-PanasonicDKEHeatpumpIR::PanasonicDKEHeatpumpIR(void) : PanasonicHeatpumpIR(void)
+PanasonicDKEHeatpumpIR::PanasonicDKEHeatpumpIR(void) : PanasonicHeatpumpIR()
 {
   static const char model[] PROGMEM = "panasonic_dke";
   static const char info[]  PROGMEM = "{\"mdl\":\"panasonic_dke\",\"dn\":\"Panasonic DKE\",\"mT\":16,\"xT\":30,\"fs\":6}";
@@ -18,7 +18,7 @@ PanasonicDKEHeatpumpIR::PanasonicDKEHeatpumpIR(void) : PanasonicHeatpumpIR(void)
   _panasonicModel = PANASONIC_DKE;
 }
 
-PanasonicJKEHeatpumpIR::PanasonicJKEHeatpumpIR(void) : PanasonicHeatpumpIR(void)
+PanasonicJKEHeatpumpIR::PanasonicJKEHeatpumpIR(void) : PanasonicHeatpumpIR()
 {
   static const char model[] PROGMEM = "panasonic_jke";
   static const char info[]  PROGMEM = "{\"mdl\":\"panasonic_jke\",\"dn\":\"Panasonic JKE\",\"mT\":16,\"xT\":30,\"fs\":6}";
@@ -29,7 +29,7 @@ PanasonicJKEHeatpumpIR::PanasonicJKEHeatpumpIR(void) : PanasonicHeatpumpIR(void)
   _panasonicModel = PANASONIC_JKE;
 }
 
-PanasonicNKEHeatpumpIR::PanasonicNKEHeatpumpIR(void) : PanasonicHeatpumpIR(void)
+PanasonicNKEHeatpumpIR::PanasonicNKEHeatpumpIR(void) : PanasonicHeatpumpIR()
 {
   static const char model[] PROGMEM = "panasonic_nke";
   static const char info[]  PROGMEM = "{\"mdl\":\"panasonic_nke\",\"dn\":\"Panasonic NKE\",\"mT\":16,\"xT\":30,\"fs\":6,\"maint\":[8,10]}";
@@ -40,7 +40,7 @@ PanasonicNKEHeatpumpIR::PanasonicNKEHeatpumpIR(void) : PanasonicHeatpumpIR(void)
   _panasonicModel = PANASONIC_NKE;
 }
 
-PanasonicLKEHeatpumpIR::PanasonicLKEHeatpumpIR(void) : PanasonicHeatpumpIR(void)
+PanasonicLKEHeatpumpIR::PanasonicLKEHeatpumpIR(void) : PanasonicHeatpumpIR()
 {
   static const char model[] PROGMEM = "panasonic_lke";
   static const char info[]  PROGMEM = "{\"mdl\":\"panasonic_lke\",\"dn\":\"Panasonic LKE\",\"mT\":16,\"xT\":30,\"fs\":6,\"maint\":[8,10]}";

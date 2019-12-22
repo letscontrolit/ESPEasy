@@ -22,9 +22,9 @@ void IRSenderESP32::mark(int markLength)
 {
   ledcSetup(_pwmChannel, _frequency, 8);
   ledcAttachPin(_pin, _pwmChannel);
-  long beginning = micros(void);
+  long beginning = micros();
   ledcWrite(_pwmChannel, 127);
-  while((int)(micros(void) - beginning) < markLength);
+  while((int)(micros() - beginning) < markLength);
   gpio_reset_pin(static_cast<gpio_num_t>(_pin));
   digitalWrite(_pin, LOW);
 }

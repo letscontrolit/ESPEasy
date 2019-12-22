@@ -47,7 +47,7 @@ public:
    virtual int read(void);
    virtual int available(void);
    virtual void flush(void);
-   operator bool(void) {return m_rxValid || m_txValid;}
+   operator bool() {return m_rxValid || m_txValid;}
 
    // Disable or enable interrupts on the rx pin
    void enableRx(bool on);
@@ -56,7 +56,7 @@ public:
 
    // AVR compatibility methods
    bool listen(void) { enableRx(true); return true; }
-   void end(void) { stopListening(void); }
+   void end(void) { stopListening(); }
    bool isListening(void) { return m_rxEnabled; }
    bool stopListening(void) { enableRx(false); return true; }
 

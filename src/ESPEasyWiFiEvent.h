@@ -37,7 +37,7 @@ void markGotIP(void);
 
 // ********************************************************************************
 // Functions called on events.
-// Make sure not to call anything in these functions that result in delay(void) or yield(void)
+// Make sure not to call anything in these functions that result in delay() or yield()
 // ********************************************************************************
 #ifdef ESP32
 void WiFiEvent(system_event_id_t event, system_event_info_t info);

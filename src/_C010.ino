@@ -64,13 +64,13 @@ bool CPlugin_010(byte function, struct EventStruct *event, String& string)
           }
         }
         success = C010_DelayHandler.addToQueue(element);
-        scheduleNextDelayQueue(TIMER_C010_DELAY_QUEUE, C010_DelayHandler.getNextScheduleTime(void));
+        scheduleNextDelayQueue(TIMER_C010_DELAY_QUEUE, C010_DelayHandler.getNextScheduleTime());
         break;
       }
 
     case CPLUGIN_FLUSH:
       {
-        process_c010_delay_queue(void);
+        process_c010_delay_queue();
         delay(0);
         break;
       }
@@ -99,10 +99,10 @@ bool do_process_c010_delay_queue(int controller_number, const C010_queue_element
     return false;
 
   C010_portUDP.write(
-    (uint8_t*)element.txt[element.valuesSent].c_str(void),
-              element.txt[element.valuesSent].length(void));
-  bool reply = C010_portUDP.endPacket(void);
-  C010_portUDP.stop(void);
+    (uint8_t*)element.txt[element.valuesSent].c_str(),
+              element.txt[element.valuesSent].length());
+  bool reply = C010_portUDP.endPacket();
+  C010_portUDP.stop();
   if (ControllerSettings.MustCheckReply)
     return element.checkDone(reply);
   return element.checkDone(true);

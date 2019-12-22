@@ -213,18 +213,18 @@ void MCP23017_setReg(byte addr, byte reg, byte data)
 	Wire.beginTransmission(addr);
 	Wire.write(reg);
 	Wire.write(data);
-	Wire.endTransmission(void);
+	Wire.endTransmission();
 }
 
 byte MCP23017_getReg(byte addr, byte reg)
 {
 	Wire.beginTransmission(addr);
 	Wire.write(reg);
-	Wire.endTransmission(void);
+	Wire.endTransmission();
 	Wire.requestFrom(addr, (uint8_t)0x1);
-	if (Wire.available(void))
+	if (Wire.available())
 	{
-		return Wire.read(void);
+		return Wire.read();
 	}
 	return 0xFF;
 }
@@ -283,15 +283,15 @@ void PCF8574_setReg(byte addr, byte data)
 {
 	Wire.beginTransmission(addr);
 	Wire.write(data);
-	Wire.endTransmission(void);
+	Wire.endTransmission();
 }
 
 byte PCF8574_getReg(byte addr)
 {
 	Wire.requestFrom(addr, (uint8_t)0x1);
-	if (Wire.available(void))
+	if (Wire.available())
 	{
-		return Wire.read(void);
+		return Wire.read();
 	}
 	return 0xFF;
 }

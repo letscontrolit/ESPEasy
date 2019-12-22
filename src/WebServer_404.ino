@@ -12,24 +12,24 @@ void handleNotFound(void) {
     return;
   }
 
-  if (!isLoggedIn(void)) { return; }
+  if (!isLoggedIn()) { return; }
 
 #ifdef WEBSERVER_RULES
-  if (handle_rules_edit(WebServer.uri(void))) { return; }
+  if (handle_rules_edit(WebServer.uri())) { return; }
 #endif
 
-  if (loadFromFS(true, WebServer.uri(void))) { return; }
+  if (loadFromFS(true, WebServer.uri())) { return; }
 
-  if (loadFromFS(false, WebServer.uri(void))) { return; }
+  if (loadFromFS(false, WebServer.uri())) { return; }
   String message = F("URI: ");
-  message += WebServer.uri(void);
+  message += WebServer.uri();
   message += F("\nMethod: ");
-  message += (WebServer.method(void) == HTTP_GET) ? F("GET") : F("POST");
+  message += (WebServer.method() == HTTP_GET) ? F("GET") : F("POST");
   message += F("\nArguments: ");
-  message += WebServer.args(void);
+  message += WebServer.args();
   message += "\n";
 
-  for (uint8_t i = 0; i < WebServer.args(void); i++) {
+  for (uint8_t i = 0; i < WebServer.args(); i++) {
     message += F(" NAME:");
     message += WebServer.argName(i);
     message += F("\n VALUE:");

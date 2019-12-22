@@ -1,6 +1,6 @@
 #include <R51MHeatpumpIR.h>
 
-R51MHeatpumpIR::R51MHeatpumpIR(void) : HeatpumpIR(void)
+R51MHeatpumpIR::R51MHeatpumpIR(void) : HeatpumpIR()
 {
   static const char model[] PROGMEM = "R51M";
   static const char info[]  PROGMEM = "{}";

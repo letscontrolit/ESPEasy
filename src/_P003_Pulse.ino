@@ -208,20 +208,20 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
 \*********************************************************************************************/
 void Plugin_003_pulsecheck(byte Index)
 {
-  noInterrupts(void); // s0170071: avoid nested interrups due to bouncing.
+  noInterrupts(); // s0170071: avoid nested interrups due to bouncing.
   
-  //  s0170071: the following gives a glitch if millis(void) rolls over (every 50 days) and there is a bouncing to be avoided at the exact same time. Very rare.
+  //  s0170071: the following gives a glitch if millis() rolls over (every 50 days) and there is a bouncing to be avoided at the exact same time. Very rare.
   //  Alternatively there is timePassedSince(Plugin_003_pulseTimePrevious[Index]); but this is not in IRAM at this time, so do not use in a ISR!
-  const unsigned long PulseTime=millis(void) - Plugin_003_pulseTimePrevious[Index]; 
+  const unsigned long PulseTime=millis() - Plugin_003_pulseTimePrevious[Index]; 
   
   if(PulseTime > (unsigned long)Settings.TaskDevicePluginConfig[Index][0]) // check with debounce time for this task
     {
       Plugin_003_pulseCounter[Index]++;
       Plugin_003_pulseTotalCounter[Index]++;
       Plugin_003_pulseTime[Index] = PulseTime;
-      Plugin_003_pulseTimePrevious[Index]=millis(void);
+      Plugin_003_pulseTimePrevious[Index]=millis();
     }
-  interrupts(void);   // enable interrupts again.
+  interrupts();   // enable interrupts again.
 }
 
 

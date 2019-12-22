@@ -27,7 +27,7 @@
 // * Doesn't lag for a full second if no ping/echo is received.
 // * Ping sensors consistently and reliably at up to 30 times per second.
 // * Timer interrupt method for event-driven sketches.
-// * Built-in digital filter method ping_median(void) for easy error correction.
+// * Built-in digital filter method ping_median() for easy error correction.
 // * Uses port registers for a faster pin interface and smaller code size.
 // * Allows you to set a maximum distance where pings beyond that distance are read as no ping "clear".
 // * Ease of using multiple sensors (example sketch with 15 sensors).
@@ -49,20 +49,20 @@
 //   NewPingESP8266::convert_in(echoTime) - Convert echoTime from microseconds to inches (rounds to nearest inch).
 //   NewPingESP8266::convert_cm(echoTime) - Convert echoTime from microseconds to centimeters (rounds to nearest cm).
 //   sonar.ping_timer(function [, max_cm_distance]) - Send a ping and call function to test if ping is complete. [max_cm_distance] allows you to optionally set a new max distance.
-//   sonar.check_timer(void) - Check if ping has returned within the set distance limit.
+//   sonar.check_timer() - Check if ping has returned within the set distance limit.
 //   NewPingESP8266::timer_us(frequency, function) - Call function every frequency microseconds.
 //   NewPingESP8266::timer_ms(frequency, function) - Call function every frequency milliseconds.
-//   NewPingESP8266::timer_stop(void) - Stop the timer.
+//   NewPingESP8266::timer_stop() - Stop the timer.
 //
 // HISTORY:
 // 07/30/2016 v1.8 - Added support for non-AVR microcontrollers. For non-AVR
-//   microcontrollers, advanced ping_timer(void) timer methods are disabled due to
+//   microcontrollers, advanced ping_timer() timer methods are disabled due to
 //   inconsistencies or no support at all between platforms. However, standard
-//   ping methods are all supported. Added new optional variable to ping(void),
-//   ping_in(void), ping_cm(void), ping_median(void), and ping_timer(void) methods which allows
+//   ping methods are all supported. Added new optional variable to ping(),
+//   ping_in(), ping_cm(), ping_median(), and ping_timer() methods which allows
 //   you to set a new maximum distance for each ping. Added support for the
-//   ATmega16, ATmega32 and ATmega8535 microcontrollers. Changed convert_cm(void)
-//   and convert_in(void) methods to static members. You can now call them without
+//   ATmega16, ATmega32 and ATmega8535 microcontrollers. Changed convert_cm()
+//   and convert_in() methods to static members. You can now call them without
 //   an object. For example: cm = NewPingESP8266::convert_cm(distance);
 //
 // 09/29/2015 v1.7 - Removed support for the Arduino Due and Zero because
@@ -70,7 +70,7 @@
 //   is a 5 volt sensor.  Also, the Due and Zero don't support pin manipulation
 //   compatibility via port registers which can be done (see the Teensy 3.2).
 //
-// 06/17/2014 v1.6 - Corrected delay between pings when using ping_median(void)
+// 06/17/2014 v1.6 - Corrected delay between pings when using ping_median()
 //   method. Added support for the URM37 sensor (must change URM37_ENABLED from
 //   false to true). Added support for Arduino microcontrollers like the $20
 //   32 bit ARM Cortex-M4 based Teensy 3.2. Added automatic support for the
@@ -82,7 +82,7 @@
 //   TimerFreeTone libraries: https://bitbucket.org/teckel12/arduino-toneac/
 //   Other speed and compiled size optimizations.
 //
-// 08/15/2012 v1.5 - Added ping_median(void) method which does a user specified
+// 08/15/2012 v1.5 - Added ping_median() method which does a user specified
 //   number of pings (default=5) and returns the median ping in microseconds
 //   (out of range pings ignored). This is a very effective digital filter.
 //   Optimized for smaller compiled size (even smaller than sketches that

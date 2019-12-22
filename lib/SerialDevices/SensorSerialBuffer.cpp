@@ -29,7 +29,7 @@ CSensorSerialBuffer::CSensorSerialBuffer(void)
 {
   _writeIndex = 0;
   _packetLength = 0;
-  Clear(void);
+  Clear();
 }
 
 void CSensorSerialBuffer::Clear (void)

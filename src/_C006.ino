@@ -67,7 +67,7 @@ bool CPlugin_006(byte function, struct EventStruct *event, String& string)
         String cmd = topicSplit[5];
         struct EventStruct TempEvent;
         TempEvent.TaskIndex = event->TaskIndex;
-        TempEvent.Par1 = topicSplit[6].toInt(void);
+        TempEvent.Par1 = topicSplit[6].toInt();
         TempEvent.Par2 = 0;
         TempEvent.Par3 = 0;
         if (event->String2 == F("false") || event->String2 == F("true"))
@@ -76,7 +76,7 @@ bool CPlugin_006(byte function, struct EventStruct *event, String& string)
             TempEvent.Par2 = 1;
         }
         else
-          TempEvent.Par2 = event->String2.toFloat(void);
+          TempEvent.Par2 = event->String2.toFloat();
         if (name == Settings.Name)
         {
           PluginCall(PLUGIN_WRITE, &TempEvent, cmd);
@@ -110,14 +110,14 @@ bool CPlugin_006(byte function, struct EventStruct *event, String& string)
           String tmppubname = pubname;
           tmppubname.replace(F("%valname%"), ExtraTaskSettings.TaskDeviceValueNames[x]);
           value = formatUserVarNoCheck(event, x);
-          MQTTpublish(event->ControllerIndex, tmppubname.c_str(void), value.c_str(void), Settings.MQTTRetainFlag);
+          MQTTpublish(event->ControllerIndex, tmppubname.c_str(), value.c_str(), Settings.MQTTRetainFlag);
         }
         break;
       }
 
     case CPLUGIN_FLUSH:
       {
-        processMQTTdelayQueue(void);
+        processMQTTdelayQueue();
         delay(0);
         break;
       }

@@ -47,14 +47,14 @@ bool CPlugin_003(byte function, struct EventStruct *event, String& string)
         url += formatUserVarNoCheck(event, 0);
         url += "\n";
         success = C003_DelayHandler.addToQueue(C003_queue_element(event->ControllerIndex, url));
-        scheduleNextDelayQueue(TIMER_C003_DELAY_QUEUE, C003_DelayHandler.getNextScheduleTime(void));
+        scheduleNextDelayQueue(TIMER_C003_DELAY_QUEUE, C003_DelayHandler.getNextScheduleTime());
 
         break;
       }
 
     case CPLUGIN_FLUSH:
       {
-        process_c003_delay_queue(void);
+        process_c003_delay_queue();
         delay(0);
         break;
       }
@@ -78,11 +78,11 @@ bool do_process_c003_delay_queue(int controller_number, const C003_queue_element
   // addLog(LOG_LEVEL_ERROR, log);
   client.print(" \n");
 
-  unsigned long timer = millis(void) + 200;
+  unsigned long timer = millis() + 200;
   while (!client_available(client) && !timeOutReached(timer))
     delay(1);
 
-  timer = millis(void) + 1000;
+  timer = millis() + 1000;
   while (client_available(client) && !timeOutReached(timer) && !success)
   {
 
@@ -102,17 +102,17 @@ bool do_process_c003_delay_queue(int controller_number, const C003_queue_element
   client.println(SecuritySettings.ControllerPassword[element.controller_idx]);
   delay(100);
   while (client_available(client))
-    client.read(void);
+    client.read();
 
   addLog(LOG_LEVEL_DEBUG, F("TELNT: Sending cmd"));
   client.print(element.txt);
   delay(10);
   while (client_available(client))
-    client.read(void);
+    client.read();
 
   addLog(LOG_LEVEL_DEBUG, F("TELNT: closing connection"));
 
-  client.stop(void);
+  client.stop();
   return success;
 }
 #endif

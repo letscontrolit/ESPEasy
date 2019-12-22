@@ -68,7 +68,7 @@ Adafruit_TSL2591::Adafruit_TSL2591(int32_t sensorID)
 
 boolean Adafruit_TSL2591::begin(void)
 {
-  //Wire.begin(void);   called in ESPEasy framework
+  //Wire.begin();   called in ESPEasy framework
 
   /*
   for (uint8_t i=0; i<0x20; i++)
@@ -96,7 +96,7 @@ boolean Adafruit_TSL2591::begin(void)
   setGain(_gain);
 
   // Note: by default, the device is in power down mode on bootup
-  disable(void);
+  disable();
 
   return true;
 }
@@ -105,7 +105,7 @@ void Adafruit_TSL2591::enable(void)
 {
   if (!_initialized)
   {
-    if (!begin(void))
+    if (!begin())
     {
       return;
     }
@@ -119,7 +119,7 @@ void Adafruit_TSL2591::disable(void)
 {
   if (!_initialized)
   {
-    if (!begin(void))
+    if (!begin())
     {
       return;
     }
@@ -133,16 +133,16 @@ void Adafruit_TSL2591::setGain(tsl2591Gain_t gain)
 {
   if (!_initialized)
   {
-    if (!begin(void))
+    if (!begin())
     {
       return;
     }
   }
 
-  enable(void);
+  enable();
   _gain = gain;
   write8(TSL2591_COMMAND_BIT | TSL2591_REGISTER_CONTROL, _integration | _gain);
-  disable(void);
+  disable();
 }
 
 tsl2591Gain_t Adafruit_TSL2591::getGain(void)
@@ -154,16 +154,16 @@ void Adafruit_TSL2591::setTiming(tsl2591IntegrationTime_t integration)
 {
   if (!_initialized)
   {
-    if (!begin(void))
+    if (!begin())
     {
       return;
     }
   }
 
-  enable(void);
+  enable();
   _integration = integration;
   write8(TSL2591_COMMAND_BIT | TSL2591_REGISTER_CONTROL, _integration | _gain);
-  disable(void);
+  disable();
 }
 
 tsl2591IntegrationTime_t Adafruit_TSL2591::getTiming(void)
@@ -254,14 +254,14 @@ uint32_t Adafruit_TSL2591::getFullLuminosity (void)
 {
   if (!_initialized)
   {
-    if (!begin(void))
+    if (!begin())
     {
       return 0;
     }
   }
 
   // Enable the device
-  enable(void);
+  enable();
 
   // Wait x ms for ADC to complete
   for (uint8_t d=0; d<=_integration; d++)
@@ -276,14 +276,14 @@ uint32_t Adafruit_TSL2591::getFullLuminosity (void)
   x <<= 16;
   x |= y;
 
-  disable(void);
+  disable();
 
   return x;
 }
 
 uint16_t Adafruit_TSL2591::getLuminosity (uint8_t channel)
 {
-  uint32_t x = getFullLuminosity(void);
+  uint32_t x = getFullLuminosity();
 
   if (channel == TSL2591_FULLSPECTRUM)
   {
@@ -309,52 +309,52 @@ void Adafruit_TSL2591::registerInterrupt(uint16_t lowerThreshold, uint16_t upper
 {
   if (!_initialized)
   {
-    if (!begin(void))
+    if (!begin())
     {
       return;
     }
   }
 
-  enable(void);
+  enable();
   write8(TSL2591_COMMAND_BIT | TSL2591_REGISTER_THRESHOLD_NPAILTL, lowerThreshold);
   write8(TSL2591_COMMAND_BIT | TSL2591_REGISTER_THRESHOLD_NPAILTH, lowerThreshold >> 8);
   write8(TSL2591_COMMAND_BIT | TSL2591_REGISTER_THRESHOLD_NPAIHTL, upperThreshold);
   write8(TSL2591_COMMAND_BIT | TSL2591_REGISTER_THRESHOLD_NPAIHTH, upperThreshold >> 8);
-  disable(void);
+  disable();
 }
 
 void Adafruit_TSL2591::registerInterrupt(uint16_t lowerThreshold, uint16_t upperThreshold, tsl2591Persist_t persist)
 {
   if (!_initialized)
   {
-    if (!begin(void))
+    if (!begin())
     {
       return;
     }
   }
 
-  enable(void);
+  enable();
   write8(TSL2591_COMMAND_BIT | TSL2591_REGISTER_PERSIST_FILTER,  persist);
   write8(TSL2591_COMMAND_BIT | TSL2591_REGISTER_THRESHOLD_AILTL, lowerThreshold);
   write8(TSL2591_COMMAND_BIT | TSL2591_REGISTER_THRESHOLD_AILTH, lowerThreshold >> 8);
   write8(TSL2591_COMMAND_BIT | TSL2591_REGISTER_THRESHOLD_AIHTL, upperThreshold);
   write8(TSL2591_COMMAND_BIT | TSL2591_REGISTER_THRESHOLD_AIHTH, upperThreshold >> 8);
-  disable(void);
+  disable();
 }
 
 void Adafruit_TSL2591::clearInterrupt(void)
 {
   if (!_initialized)
   {
-    if (!begin(void))
+    if (!begin())
     {
       return;
     }
   }
 
-  enable(void);
+  enable();
   write8(TSL2591_CLEAR_INT);
-  disable(void);
+  disable();
 }
 
 
@@ -362,17 +362,17 @@ uint8_t Adafruit_TSL2591::getStatus(void)
 {
   if (!_initialized)
   {
-    if (!begin(void))
+    if (!begin())
     {
       return 0;
     }
   }
 
   // Enable the device
-  enable(void);
+  enable();
   uint8_t x;
   x = read8(TSL2591_COMMAND_BIT | TSL2591_REGISTER_DEVICE_STATUS);
-  disable(void);
+  disable();
   return x;
 }
 
@@ -387,16 +387,16 @@ uint8_t Adafruit_TSL2591::read8(uint8_t reg)
 #else
   Wire.send(reg);
 #endif
-  Wire.endTransmission(void);
+  Wire.endTransmission();
 
   Wire.requestFrom(TSL2591_ADDR, 1);
 #if ARDUINO >= 100
-  x = Wire.read(void);
+  x = Wire.read();
 #else
-  x = Wire.receive(void);
+  x = Wire.receive();
 #endif
-  // while (! Wire.available(void));
-  // return Wire.read(void);
+  // while (! Wire.available());
+  // return Wire.read();
   return x;
 }
 
@@ -411,15 +411,15 @@ uint16_t Adafruit_TSL2591::read16(uint8_t reg)
 #else
   Wire.send(reg);
 #endif
-  Wire.endTransmission(void);
+  Wire.endTransmission();
 
   Wire.requestFrom(TSL2591_ADDR, 2);
 #if ARDUINO >= 100
-  t = Wire.read(void);
-  x = Wire.read(void);
+  t = Wire.read();
+  x = Wire.read();
 #else
-  t = Wire.receive(void);
-  x = Wire.receive(void);
+  t = Wire.receive();
+  x = Wire.receive();
 #endif
   x <<= 8;
   x |= t;
@@ -436,7 +436,7 @@ void Adafruit_TSL2591::write8 (uint8_t reg, uint8_t value)
   Wire.send(reg);
   Wire.send(value);
 #endif
-  Wire.endTransmission(void);
+  Wire.endTransmission();
 }
 
 
@@ -448,7 +448,7 @@ void Adafruit_TSL2591::write8 (uint8_t reg)
 #else
   Wire.send(reg);
 #endif
-  Wire.endTransmission(void);
+  Wire.endTransmission();
 }
 
 /**************************************************************************/
@@ -459,10 +459,10 @@ void Adafruit_TSL2591::write8 (uint8_t reg)
 bool Adafruit_TSL2591::getEvent(sensors_event_t *event)
 {
   uint16_t ir, full;
-  uint32_t lum = getFullLuminosity(void);
+  uint32_t lum = getFullLuminosity();
   /* Early silicon seems to have issues when there is a sudden jump in */
   /* light levels. :( To work around this for now sample the sensor 2x */
-  lum = getFullLuminosity(void);
+  lum = getFullLuminosity();
   ir = lum >> 16;
   full = lum & 0xFFFF;
 
@@ -472,7 +472,7 @@ bool Adafruit_TSL2591::getEvent(sensors_event_t *event)
   event->version   = sizeof(sensors_event_t);
   event->sensor_id = _sensorID;
   event->type      = SENSOR_TYPE_LIGHT;
-  event->timestamp = millis(void);
+  event->timestamp = millis();
 
   /* Calculate the actual lux value */
   /* 0 = sensor overflow (too much light) */

@@ -23,17 +23,17 @@ void ReportStatus(void)
   WiFiClient client;
   client.setTimeout(CONTROLLER_CLIENTTIMEOUT_DFLT);
 
-  if (!connectClient(client, host.c_str(void), 80))
+  if (!connectClient(client, host.c_str(), 80))
   {
     addLog(LOG_LEVEL_ERROR, F("REP  : connection failed"));
     return;
   }
 
   StaticJsonBuffer<256> jsonBuffer;
-  JsonObject& root = jsonBuffer.createObject(void);
+  JsonObject& root = jsonBuffer.createObject();
 
-  root[F("chipId")]  = ESP.getChipId(void);
-  root[F("flashId")] = ESP.getFlashChipId(void);
+  root[F("chipId")]  = ESP.getChipId();
+  root[F("flashId")] = ESP.getFlashChipId();
   root[F("uptime")]  = wdcounter / 2;
 
 
@@ -48,7 +48,7 @@ void ReportStatus(void)
   payload += F("Connection: close");
   addNewLine(payload);
   payload += F("Content-Length: ");
-  payload += String(body.length(void));
+  payload += String(body.length());
   addNewLine(payload);
   addNewLine(payload); // Add CRLF twice between header and body.
   payload += body;

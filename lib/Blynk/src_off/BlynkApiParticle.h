@@ -56,9 +56,9 @@ void BlynkApi<Proto>::sendInfo(void)
 #ifdef BLYNK_HAS_PROGMEM
     char mem[profile_len];
     memcpy_P(mem, profile+8, profile_len);
-    static_cast<Proto*>(this)->sendCmd(BLYNK_CMD_INTERNAL, 0, mem, profile_len, profile_dyn.getBuffer(void), profile_dyn.getLength(void));
+    static_cast<Proto*>(this)->sendCmd(BLYNK_CMD_INTERNAL, 0, mem, profile_len, profile_dyn.getBuffer(), profile_dyn.getLength());
 #else
-    static_cast<Proto*>(this)->sendCmd(BLYNK_CMD_INTERNAL, 0, profile+8, profile_len, profile_dyn.getBuffer(void), profile_dyn.getLength(void));
+    static_cast<Proto*>(this)->sendCmd(BLYNK_CMD_INTERNAL, 0, profile+8, profile_len, profile_dyn.getBuffer(), profile_dyn.getLength());
 #endif
     return;
 }
@@ -68,9 +68,9 @@ void BlynkApi<Proto>::sendInfo(void)
 
 // Check if analog pins can be referenced by name on this device
 #if defined(analogInputToDigitalPin)
-    #define BLYNK_DECODE_PIN(it) (((it).asStr(void)[0] == 'A') ? analogInputToDigitalPin(atoi((it).asStr(void)+1)) : (it).asInt(void))
+    #define BLYNK_DECODE_PIN(it) (((it).asStr()[0] == 'A') ? analogInputToDigitalPin(atoi((it).asStr()+1)) : (it).asInt())
 #else
-    #define BLYNK_DECODE_PIN(it) ((it).asInt(void))
+    #define BLYNK_DECODE_PIN(it) ((it).asInt())
 
     #if defined(BLYNK_DEBUG_ALL)
         #pragma message "analogInputToDigitalPin not defined"
@@ -82,13 +82,13 @@ BLYNK_FORCE_INLINE
 void BlynkApi<Proto>::processCmd(const void* buff, size_t len)
 {
     BlynkParam param((void*)buff, len);
-    BlynkParam::iterator it = param.begin(void);
-    if (it >= param.end(void))
+    BlynkParam::iterator it = param.begin();
+    if (it >= param.end())
         return;
-    const char* cmd = it.asStr(void);
+    const char* cmd = it.asStr();
     uint16_t cmd16;
     memcpy(&cmd16, cmd, sizeof(cmd16));
-    if (++it >= param.end(void))
+    if (++it >= param.end())
         return;
 
     uint8_t pin = BLYNK_DECODE_PIN(it);
@@ -98,24 +98,24 @@ void BlynkApi<Proto>::processCmd(const void* buff, size_t len)
 #ifndef BLYNK_NO_BUILTIN
 
     case BLYNK_HW_PM: {
-        while (it < param.end(void)) {
+        while (it < param.end()) {
             pin = BLYNK_DECODE_PIN(it);
             ++it;
-            if (!strcmp(it.asStr(void), "in")) {
+            if (!strcmp(it.asStr(), "in")) {
                 pinMode(pin, INPUT);
-            } else if (!strcmp(it.asStr(void), "out") || !strcmp(it.asStr(void), "pwm")) {
+            } else if (!strcmp(it.asStr(), "out") || !strcmp(it.asStr(), "pwm")) {
                 pinMode(pin, OUTPUT);
 #ifdef INPUT_PULLUP
-            } else if (!strcmp(it.asStr(void), "pu")) {
+            } else if (!strcmp(it.asStr(), "pu")) {
                 pinMode(pin, INPUT_PULLUP);
 #endif
 #ifdef INPUT_PULLDOWN
-            } else if (!strcmp(it.asStr(void), "pd")) {
+            } else if (!strcmp(it.asStr(), "pd")) {
                 pinMode(pin, INPUT_PULLDOWN);
 #endif
             } else {
 #ifdef BLYNK_DEBUG
-                BLYNK_LOG4(BLYNK_F("Invalid pin "), pin, BLYNK_F(" mode "), it.asStr(void));
+                BLYNK_LOG4(BLYNK_F("Invalid pin "), pin, BLYNK_F(" mode "), it.asStr());
 #endif
             }
             ++it;
@@ -127,11 +127,11 @@ void BlynkApi<Proto>::processCmd(const void* buff, size_t len)
         rsp.add("dw");
         rsp.add(pin);
         rsp.add(digitalRead(pin));
-        static_cast<Proto*>(this)->sendCmd(BLYNK_CMD_HARDWARE, 0, rsp.getBuffer(void), rsp.getLength(void)-1);
+        static_cast<Proto*>(this)->sendCmd(BLYNK_CMD_HARDWARE, 0, rsp.getBuffer(), rsp.getLength()-1);
     } break;
     case BLYNK_HW_DW: {
         // Should be 1 parameter (value)
-        if (++it >= param.end(void))
+        if (++it >= param.end())
             return;
 
 #ifdef ESP8266
@@ -141,7 +141,7 @@ void BlynkApi<Proto>::processCmd(const void* buff, size_t len)
 #ifndef BLYNK_MINIMIZE_PINMODE_USAGE
         pinMode(pin, OUTPUT);
 #endif
-        digitalWrite(pin, it.asInt(void) ? HIGH : LOW);
+        digitalWrite(pin, it.asInt() ? HIGH : LOW);
     } break;
     case BLYNK_HW_AR: {
         char mem[16];
@@ -149,17 +149,17 @@ void BlynkApi<Proto>::processCmd(const void* buff, size_t len)
         rsp.add("aw");
         rsp.add(pin);
         rsp.add(analogRead(pin));
-        static_cast<Proto*>(this)->sendCmd(BLYNK_CMD_HARDWARE, 0, rsp.getBuffer(void), rsp.getLength(void)-1);
+        static_cast<Proto*>(this)->sendCmd(BLYNK_CMD_HARDWARE, 0, rsp.getBuffer(), rsp.getLength()-1);
     } break;
     case BLYNK_HW_AW: {
         // Should be 1 parameter (value)
-        if (++it >= param.end(void))
+        if (++it >= param.end())
             return;
 
 #ifndef BLYNK_MINIMIZE_PINMODE_USAGE
         pinMode(pin, OUTPUT);
 #endif
-        analogWrite(pin, it.asInt(void));
+        analogWrite(pin, it.asInt());
     } break;
 
 #endif
@@ -175,7 +175,7 @@ void BlynkApi<Proto>::processCmd(const void* buff, size_t len)
     } break;
     case BLYNK_HW_VW: {
         ++it;
-        char* start = (char*)it.asStr(void);
+        char* start = (char*)it.asStr();
         BlynkParam param2(start, len - (start - (char*)buff));
         BlynkReq req = { pin };
         WidgetWriteHandler handler = GetWriteHandler(pin);

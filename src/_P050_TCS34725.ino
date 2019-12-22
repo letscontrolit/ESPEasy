@@ -100,9 +100,9 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE:
       {
         String plugin1 = WebServer.arg(F("p050_integrationTime"));
-        PCONFIG(0) = plugin1.toInt(void);
+        PCONFIG(0) = plugin1.toInt();
         String plugin2 = WebServer.arg(F("p050_gain"));
-        PCONFIG(1) = plugin2.toInt(void);
+        PCONFIG(1) = plugin2.toInt();
 
         success = true;
         break;
@@ -136,7 +136,7 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
 
       	/* Initialise with specific int time and gain values */
       	Adafruit_TCS34725 tcs = Adafruit_TCS34725(integrationTime, gain);
-        if (tcs.begin(void)) {
+        if (tcs.begin()) {
 
         	addLog(LOG_LEVEL_DEBUG, F("Found TCS34725 sensor"));
 

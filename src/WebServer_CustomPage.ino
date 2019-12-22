@@ -9,14 +9,14 @@ boolean handle_custom(String path) {
   // path is a deepcopy, since it will be changed.
   checkRAM(F("handle_custom"));
 
-  if (!clientIPallowed(void)) { return false; }
+  if (!clientIPallowed()) { return false; }
 
 #if !defined(ESP32)
   path = path.substring(1);
 #endif // if !defined(ESP32)
 
   // create a dynamic custom page, parsing task values into [<taskname>#<taskvalue>] placeholders and parsing %xx% system variables
-  fs::File   dataFile      = tryOpenFile(path.c_str(void), "r");
+  fs::File   dataFile      = tryOpenFile(path.c_str(), "r");
   const bool dashboardPage = path.startsWith(F("dashboard"));
 
   if (!dataFile && !dashboardPage) {
@@ -36,28 +36,28 @@ boolean handle_custom(String path) {
     {
       NodesMap::iterator it = Nodes.find(unit);
 
-      if (it != Nodes.end(void)) {
-        TXBuffer.startStream(void);
+      if (it != Nodes.end()) {
+        TXBuffer.startStream();
         sendHeadandTail(F("TmplDsh"), _HEAD);
         TXBuffer += F("<meta http-equiv=\"refresh\" content=\"0; URL=http://");
-        TXBuffer += it->second.ip.toString(void);
+        TXBuffer += it->second.ip.toString();
         TXBuffer += F("/dashboard.esp\">");
         sendHeadandTail(F("TmplDsh"), _TAIL);
-        TXBuffer.endStream(void);
+        TXBuffer.endStream();
         return true;
       }
     }
 
-    TXBuffer.startStream(void);
+    TXBuffer.startStream();
     sendHeadandTail(F("TmplDsh"), _HEAD);
-    html_add_autosubmit_form(void);
-    html_add_form(void);
+    html_add_autosubmit_form();
+    html_add_form();
 
     // create unit selector dropdown
     addSelector_Head(F("unit"), true);
     byte choice = Settings.Unit;
 
-    for (NodesMap::iterator it = Nodes.begin(void); it != Nodes.end(void); ++it)
+    for (NodesMap::iterator it = Nodes.begin(); it != Nodes.end(); ++it)
     {
       if ((it->second.ip[0] != 0) || (it->first == Settings.Unit))
       {
@@ -72,7 +72,7 @@ boolean handle_custom(String path) {
         addSelector_Item(name, it->first, choice == it->first, false, "");
       }
     }
-    addSelector_Foot(void);
+    addSelector_Foot();
 
     // create <> navigation buttons
     byte prev = Settings.Unit;
@@ -82,7 +82,7 @@ boolean handle_custom(String path) {
     for (byte x = Settings.Unit - 1; x > 0; x--) {
       it = Nodes.find(x);
 
-      if (it != Nodes.end(void)) {
+      if (it != Nodes.end()) {
         if (it->second.ip[0] != 0) { prev = x; break; }
       }
     }
@@ -90,17 +90,17 @@ boolean handle_custom(String path) {
     for (byte x = Settings.Unit + 1; x < UNIT_NUMBER_MAX; x++) {
       it = Nodes.find(x);
 
-      if (it != Nodes.end(void)) {
+      if (it != Nodes.end()) {
         if (it->second.ip[0] != 0) { next = x; break; }
       }
     }
 
-    html_add_button_prefix(void);
+    html_add_button_prefix();
     TXBuffer += path;
     TXBuffer += F("?btnunit=");
     TXBuffer += prev;
     TXBuffer += F("'>&lt;</a>");
-    html_add_button_prefix(void);
+    html_add_button_prefix();
     TXBuffer += path;
     TXBuffer += F("?btnunit=");
     TXBuffer += next;
@@ -110,8 +110,8 @@ boolean handle_custom(String path) {
   // handle commands from a custom page
   String webrequest = WebServer.arg(F("cmd"));
 
-  if (webrequest.length(void) > 0) {
-    ExecuteCommand_all_config_eventOnly(VALUE_SOURCE_HTTP, webrequest.c_str(void));
+  if (webrequest.length() > 0) {
+    ExecuteCommand_all_config_eventOnly(VALUE_SOURCE_HTTP, webrequest.c_str());
 
     // handle some update processes first, before returning page update...
     String dummy;
@@ -122,14 +122,14 @@ boolean handle_custom(String path) {
   if (dataFile)
   {
     String page = "";
-    page.reserve(dataFile.size(void));
+    page.reserve(dataFile.size());
 
-    while (dataFile.available(void)) {
-      page += ((char)dataFile.read(void));
+    while (dataFile.available()) {
+      page += ((char)dataFile.read());
     }
 
     TXBuffer += parseTemplate(page, 0);
-    dataFile.close(void);
+    dataFile.close();
   }
   else // if the requestef file does not exist, create a default action in case the page is named "dashboard*"
   {
@@ -138,7 +138,7 @@ boolean handle_custom(String path) {
       // if the custom page does not exist, create a basic task value overview page in case of dashboard request...
       TXBuffer += F(
         "<meta name='viewport' content='width=width=device-width, initial-scale=1'><STYLE>* {font-family:sans-serif; font-size:16pt;}.button {margin:4px; padding:4px 16px; background-color:#07D; color:#FFF; text-decoration:none; border-radius:4px}</STYLE>");
-      html_table_class_normal(void);
+      html_table_class_normal();
 
       for (taskIndex_t x = 0; x < TASKS_MAX; x++)
       {
@@ -147,7 +147,7 @@ boolean handle_custom(String path) {
           const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(x);
           if (validDeviceIndex(DeviceIndex)) {
             LoadTaskSettings(x);
-            html_TR_TD(void);
+            html_TR_TD();
             TXBuffer += ExtraTaskSettings.TaskDeviceName;
 
             for (byte varNr = 0; varNr < VARS_PER_TASK; varNr++)
@@ -156,11 +156,11 @@ boolean handle_custom(String path) {
                   (ExtraTaskSettings.TaskDeviceValueNames[varNr][0] != 0))
               {
                 if (varNr > 0) {
-                  html_TR_TD(void);
+                  html_TR_TD();
                 }
-                html_TD(void);
+                html_TD();
                 TXBuffer += ExtraTaskSettings.TaskDeviceValueNames[varNr];
-                html_TD(void);
+                html_TD();
                 TXBuffer += String(UserVar[x * VARS_PER_TASK + varNr], ExtraTaskSettings.TaskDeviceValueDecimals[varNr]);
               }
             }
@@ -170,6 +170,6 @@ boolean handle_custom(String path) {
     }
   }
   sendHeadandTail(F("TmplDsh"), _TAIL);
-  TXBuffer.endStream(void);
+  TXBuffer.endStream();
   return true;
 }

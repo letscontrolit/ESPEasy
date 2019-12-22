@@ -3,15 +3,15 @@
 // Central functions for I2C data transfers
 // **************************************************************************/
 bool I2C_read_bytes(uint8_t i2caddr, I2Cdata_bytes& data) {
-  const uint8_t size = data.getSize(void);
+  const uint8_t size = data.getSize();
 
-  return size == i2cdev.readBytes(i2caddr, data.getRegister(void), size, data.get(void));
+  return size == i2cdev.readBytes(i2caddr, data.getRegister(), size, data.get());
 }
 
 bool I2C_read_words(uint8_t i2caddr, I2Cdata_words& data) {
-  const uint8_t size = data.getSize(void);
+  const uint8_t size = data.getSize();
 
-  return size == i2cdev.readWords(i2caddr, data.getRegister(void), size, data.get(void));
+  return size == i2cdev.readWords(i2caddr, data.getRegister(), size, data.get());
 }
 
 // See https://github.com/platformio/platform-espressif32/issues/126
@@ -26,7 +26,7 @@ bool I2C_read_words(uint8_t i2caddr, I2Cdata_words& data) {
 // **************************************************************************/
 void I2C_wakeup(uint8_t i2caddr) {
   Wire.beginTransmission(i2caddr);
-  Wire.endTransmission(void);
+  Wire.endTransmission();
 }
 
 // **************************************************************************/
@@ -35,7 +35,7 @@ void I2C_wakeup(uint8_t i2caddr) {
 bool I2C_write8(uint8_t i2caddr, byte value) {
   Wire.beginTransmission(i2caddr);
   Wire.write((uint8_t)value);
-  return Wire.endTransmission(void) == 0;
+  return Wire.endTransmission() == 0;
 }
 
 // **************************************************************************/
@@ -45,7 +45,7 @@ bool I2C_write8_reg(uint8_t i2caddr, byte reg, byte value) {
   Wire.beginTransmission(i2caddr);
   Wire.write((uint8_t)reg);
   Wire.write((uint8_t)value);
-  return Wire.endTransmission(void) == 0;
+  return Wire.endTransmission() == 0;
 }
 
 // **************************************************************************/
@@ -56,7 +56,7 @@ bool I2C_write16_reg(uint8_t i2caddr, byte reg, uint16_t value) {
   Wire.write((uint8_t)reg);
   Wire.write((uint8_t)(value >> 8));
   Wire.write((uint8_t)value);
-  return Wire.endTransmission(void) == 0;
+  return Wire.endTransmission() == 0;
 }
 
 // **************************************************************************/
@@ -78,7 +78,7 @@ uint8_t I2C_read8(uint8_t i2caddr, bool *is_ok) {
     *is_ok = (count == 1);
   }
 
-  value = Wire.read(void);
+  value = Wire.read();
 
 
   return value;
@@ -111,7 +111,7 @@ uint8_t I2C_read8_reg(uint8_t i2caddr, byte reg, bool *is_ok) {
   if (is_ok != NULL) {
     *is_ok = (count == 1);
   }
-  value = Wire.read(void);
+  value = Wire.read();
 
   return value;
 }
@@ -126,7 +126,7 @@ uint16_t I2C_read16_reg(uint8_t i2caddr, byte reg) {
   Wire.write((uint8_t)reg);
   Wire.endTransmission(END_TRANSMISSION_FLAG);
   Wire.requestFrom(i2caddr, (byte)2);
-  value = (Wire.read(void) << 8) | Wire.read(void);
+  value = (Wire.read() << 8) | Wire.read();
 
   return value;
 }
@@ -141,7 +141,7 @@ int32_t I2C_read24_reg(uint8_t i2caddr, byte reg) {
   Wire.write((uint8_t)reg);
   Wire.endTransmission(END_TRANSMISSION_FLAG);
   Wire.requestFrom(i2caddr, (byte)3);
-  value = (((int32_t)Wire.read(void)) << 16) | (Wire.read(void) << 8) | Wire.read(void);
+  value = (((int32_t)Wire.read()) << 16) | (Wire.read() << 8) | Wire.read();
 
   return value;
 }
@@ -156,7 +156,7 @@ int32_t I2C_read32_reg(uint8_t i2caddr, byte reg) {
   Wire.write((uint8_t)reg);
   Wire.endTransmission(END_TRANSMISSION_FLAG);
   Wire.requestFrom(i2caddr, (byte)4);
-  value = (((int32_t)Wire.read(void)) << 24) | (((uint32_t)Wire.read(void)) << 16) | (Wire.read(void) << 8) | Wire.read(void);
+  value = (((int32_t)Wire.read()) << 24) | (((uint32_t)Wire.read()) << 16) | (Wire.read() << 8) | Wire.read();
 
   return value;
 }

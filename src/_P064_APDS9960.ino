@@ -98,14 +98,14 @@ boolean Plugin_064(byte function, struct EventStruct *event, String& string)
       {
         if (PLUGIN_064_pds)
           delete PLUGIN_064_pds;
-        PLUGIN_064_pds = new SparkFun_APDS9960(void);
+        PLUGIN_064_pds = new SparkFun_APDS9960();
 
         String log = F("APDS : ");
-        if ( PLUGIN_064_pds->init(void) )
+        if ( PLUGIN_064_pds->init() )
         {
           log += F("Init");
 
-          PLUGIN_064_pds->enablePower(void);
+          PLUGIN_064_pds->enablePower();
 
           if (! PLUGIN_064_pds->enableLightSensor(false))
             log += F(" - Error during light sensor init!");
@@ -130,18 +130,18 @@ boolean Plugin_064(byte function, struct EventStruct *event, String& string)
         if (!PLUGIN_064_pds)
           break;
 
-        if ( !PLUGIN_064_pds->isGestureAvailable(void) )
+        if ( !PLUGIN_064_pds->isGestureAvailable() )
           break;
 
-        int gesture = PLUGIN_064_pds->readGesture(void);
+        int gesture = PLUGIN_064_pds->readGesture();
 
-        //int gesture = PLUGIN_064_pds->readGestureNonBlocking(void);
+        //int gesture = PLUGIN_064_pds->readGestureNonBlocking();
 
         //if (gesture == -1) serialPrint(".");
         //if (gesture == -2) serialPrint(":");
         //if (gesture == -3) serialPrint("|");
 
-        //if ( 0 && PLUGIN_064_pds->isGestureAvailable(void) )
+        //if ( 0 && PLUGIN_064_pds->isGestureAvailable() )
         if (gesture >= 0)
         {
           String log = F("APDS : Gesture=");

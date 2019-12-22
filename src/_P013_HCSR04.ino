@@ -168,7 +168,7 @@ boolean Plugin_013(byte function, struct EventStruct *event, String& string)
         log += (measuringUnit == UNIT_CM) ? F("[cm]: ") : F("[inch]: ");
         log += max_distance;
         log += F(" max echo: ");
-        log += P_013_sensordefs[event->TaskIndex]->getMaxEchoTime(void);
+        log += P_013_sensordefs[event->TaskIndex]->getMaxEchoTime();
         log += F(" Filter: ");
         if (filterType == FILTER_NONE)
           log += F("none");
@@ -180,16 +180,16 @@ boolean Plugin_013(byte function, struct EventStruct *event, String& string)
           else
             log += F("invalid!");
         log += F(" nr_tasks: ");
-        log += P_013_sensordefs.size(void);
+        log += P_013_sensordefs.size();
         addLog(LOG_LEVEL_INFO, log);
 
-        unsigned long tmpmillis = millis(void);
-        unsigned long tmpmicros = micros(void);
+        unsigned long tmpmillis = millis();
+        unsigned long tmpmicros = micros();
         delay(100);
         long millispassed = timePassedSince(tmpmillis);
         long microspassed = usecPassedSince(tmpmicros);
 
-        log = F("ULTRASONIC : micros(void) test: ");
+        log = F("ULTRASONIC : micros() test: ");
         log += millispassed;
         log += F(" msec, ");
         log += microspassed;
@@ -291,7 +291,7 @@ float Plugin_013_read(taskIndex_t taskIndex)
 
   switch  (filterType) {
     case FILTER_NONE:
-      echoTime = (P_013_sensordefs[taskIndex])->ping(void);
+      echoTime = (P_013_sensordefs[taskIndex])->ping();
       break;
     case FILTER_MEDIAN:
       echoTime = (P_013_sensordefs[taskIndex])->ping_median(filterSize, max_distance_cm);
@@ -313,7 +313,7 @@ String Plugin_013_getErrorStatusString(taskIndex_t taskIndex)
   if (P_013_sensordefs.count(taskIndex) == 0)
     return String(F("invalid taskindex"));
 
-  switch ((P_013_sensordefs[taskIndex])->getErrorState(void)) {
+  switch ((P_013_sensordefs[taskIndex])->getErrorState()) {
     case NewPingESP8266::STATUS_SENSOR_READY: {
       return String(F("Sensor ready"));
     }

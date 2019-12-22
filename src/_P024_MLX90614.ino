@@ -18,9 +18,9 @@ uint16_t readRegister024(uint8_t i2cAddress, uint8_t reg) {
   Wire.write(reg);
   Wire.endTransmission(false);
   Wire.requestFrom(i2cAddress, (uint8_t)3);
-  ret = Wire.read(void); // receive DATA
-  ret |= Wire.read(void) << 8; // receive DATA
-  Wire.read(void);
+  ret = Wire.read(); // receive DATA
+  ret |= Wire.read() << 8; // receive DATA
+  Wire.read();
   return ret;
 }
 
@@ -106,7 +106,7 @@ boolean Plugin_024(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
       {
-  //      noInterrupts(void);
+  //      noInterrupts();
         // int value;
         // value = 0;
         byte unit = CONFIG_PORT;
@@ -117,7 +117,7 @@ boolean Plugin_024(byte function, struct EventStruct *event, String& string)
 //        send(msgObjTemp024->set(UserVar[event->BaseVarIndex], 1)); // Mysensors
         addLog(LOG_LEVEL_INFO,log);
         success = true;
-   //     interrupts(void);
+   //     interrupts();
         break;
       }
   }

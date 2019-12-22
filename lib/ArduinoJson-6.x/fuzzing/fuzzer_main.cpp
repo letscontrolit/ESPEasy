@@ -25,7 +25,7 @@ std::vector<uint8_t> read(const char* path) {
   fseek(f, 0, SEEK_SET);
 
   std::vector<uint8_t> buffer(size);
-  if (fread(buffer.data(void), 1, size, f) != size) {
+  if (fread(buffer.data(), 1, size, f) != size) {
     fclose(f);
     std::cerr << "Failed to read " << path << std::endl;
     exit(1);
@@ -44,7 +44,7 @@ int main(int argc, const char* argv[]) {
   for (int i = 1; i < argc; i++) {
     std::cout << "Loading " << argv[i] << std::endl;
     std::vector<uint8_t> buffer = read(argv[i]);
-    LLVMFuzzerTestOneInput(buffer.data(void), buffer.size(void));
+    LLVMFuzzerTestOneInput(buffer.data(), buffer.size());
   }
   return 0;
 }

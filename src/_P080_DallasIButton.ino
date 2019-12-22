@@ -6,8 +6,8 @@
 // Maxim Integrated
 
 #if defined(ESP32)
-  #define ESP32noInterrupts(void) {portMUX_TYPE mux = portMUX_INITIALIZER_UNLOCKED;portENTER_CRITICAL(&mux)
-  #define ESP32interrupts(void) portEXIT_CRITICAL(&mux);}
+  #define ESP32noInterrupts() {portMUX_TYPE mux = portMUX_INITIALIZER_UNLOCKED;portENTER_CRITICAL(&mux)
+  #define ESP32interrupts() portEXIT_CRITICAL(&mux);}
 #endif
 
 #define PLUGIN_080
@@ -74,8 +74,8 @@ boolean Plugin_080(byte function, struct EventStruct * event, String& string)
               addSelector_Item("", -1, false, false, "");
               uint8_t tmpAddress[8];
               byte count = 0;
-              Plugin_080_DS_reset(void);
-              Plugin_080_DS_reset_search(void);
+              Plugin_080_DS_reset();
+              Plugin_080_DS_reset_search();
               while (Plugin_080_DS_search(tmpAddress))
               {
                   String option = "";
@@ -93,7 +93,7 @@ boolean Plugin_080(byte function, struct EventStruct * event, String& string)
 
                   count ++;
               }
-              addSelector_Foot(void);
+              addSelector_Foot();
             }
             success = true;
             break;
@@ -188,9 +188,9 @@ byte Plugin_080_DS_scan(byte getDeviceROM, uint8_t* ROM)
 {
     byte tmpaddr[8];
     byte devCount = 0;
-    Plugin_080_DS_reset(void);
+    Plugin_080_DS_reset();
 
-    Plugin_080_DS_reset_search(void);
+    Plugin_080_DS_reset_search();
     while (Plugin_080_DS_search(tmpaddr))
     {
         if (getDeviceROM == devCount)
@@ -210,7 +210,7 @@ byte Plugin_080_DS_scan(byte getDeviceROM, uint8_t* ROM)
 \*********************************************************************************************/
 void Plugin_080_DS_startConvertion(uint8_t ROM[8])
 {
-    Plugin_080_DS_reset(void);
+    Plugin_080_DS_reset();
     Plugin_080_DS_write(0x55); // Choose ROM
     for (byte i = 0; i < 8; i++)
         Plugin_080_DS_write(ROM[i]);
@@ -227,7 +227,7 @@ uint8_t Plugin_080_DS_reset(void)
     uint8_t r;
     uint8_t retries = 125;
     #if defined(ESP32)
-      ESP32noInterrupts(void);
+      ESP32noInterrupts();
     #endif
     pinMode(Plugin_080_DallasPin, INPUT);
     do // wait until the wire is high... just in case
@@ -245,7 +245,7 @@ uint8_t Plugin_080_DS_reset(void)
     r = !digitalRead(Plugin_080_DallasPin);
     delayMicroseconds(420);
     #if defined(ESP32)
-      ESP32interrupts(void);
+      ESP32interrupts();
     #endif
     return r;
 }
@@ -294,7 +294,7 @@ uint8_t Plugin_080_DS_search(uint8_t * newAddr)
     if (!LastDeviceFlg)
     {
         // 1-Wire reset
-        if (!Plugin_080_DS_reset(void))
+        if (!Plugin_080_DS_reset())
         {
             // reset the search
             LastDiscrep       = 0;
@@ -310,8 +310,8 @@ uint8_t Plugin_080_DS_search(uint8_t * newAddr)
         do
         {
             // read a bit and its complement
-            id_bit     = Plugin_080_DS_read_bit(void);
-            cmp_id_bit = Plugin_080_DS_read_bit(void);
+            id_bit     = Plugin_080_DS_read_bit();
+            cmp_id_bit = Plugin_080_DS_read_bit();
 
             // check for no devices on 1-wire
             if ((id_bit == 1) && (cmp_id_bit == 1))
@@ -405,7 +405,7 @@ uint8_t Plugin_080_DS_read(void)
     uint8_t r = 0;
 
     for (bitMask = 0x01; bitMask; bitMask <<= 1)
-        if (Plugin_080_DS_read_bit(void))
+        if (Plugin_080_DS_read_bit())
             r |= bitMask;
 
     return r;
@@ -429,7 +429,7 @@ uint8_t Plugin_080_DS_read_bit(void)
     uint8_t r;
 
     #if defined(ESP32)
-       ESP32noInterrupts(void);
+       ESP32noInterrupts();
     #endif
     pinMode(Plugin_080_DallasPin, OUTPUT);
     digitalWrite(Plugin_080_DallasPin, LOW);
@@ -438,7 +438,7 @@ uint8_t Plugin_080_DS_read_bit(void)
     delayMicroseconds(10);
     r = digitalRead(Plugin_080_DallasPin);
     #if defined(ESP32)
-       ESP32interrupts(void);
+       ESP32interrupts();
     #endif
     delayMicroseconds(53);
     return r;
@@ -450,7 +450,7 @@ boolean Plugin_080_DS_readiButton(byte addr[8])
     // maybe this is needed to trigger the reading
 //    byte ScratchPad[12];
 
-    Plugin_080_DS_reset(void);
+    Plugin_080_DS_reset();
     Plugin_080_DS_write(0x55); // Choose ROM
     for (byte i = 0; i < 8; i++)
         Plugin_080_DS_write(addr[i]);
@@ -458,12 +458,12 @@ boolean Plugin_080_DS_readiButton(byte addr[8])
     Plugin_080_DS_write(0xBE); // Read scratchpad
 
 //    for (byte i = 0; i < 9; i++) // read 9 bytes
-//        ScratchPad[i] = Plugin_080_DS_read(void);
+//        ScratchPad[i] = Plugin_080_DS_read();
     // end maybe this is needed to trigger the reading
 
     byte tmpaddr[8];
     bool found = false;
-    Plugin_080_DS_reset(void);
+    Plugin_080_DS_reset();
     String log  = F("DS   : iButton searching for address: ");
     for (byte j = 0; j < 8; j++)
     {
@@ -471,7 +471,7 @@ boolean Plugin_080_DS_readiButton(byte addr[8])
       if (j < 7) log += '-';
     }
     log += F(" found: ");
-    Plugin_080_DS_reset_search(void);
+    Plugin_080_DS_reset_search();
     while (Plugin_080_DS_search(tmpaddr))
     {
        for (byte j = 0; j < 8; j++)
@@ -497,28 +497,28 @@ void Plugin_080_DS_write_bit(uint8_t v)
     if (v & 1)
     {
         #if defined(ESP32)
-          ESP32noInterrupts(void);
+          ESP32noInterrupts();
         #endif
         digitalWrite(Plugin_080_DallasPin, LOW);
         pinMode(Plugin_080_DallasPin, OUTPUT);
         delayMicroseconds(10);
         digitalWrite(Plugin_080_DallasPin, HIGH);
         #if defined(ESP32)
-          ESP32interrupts(void);
+          ESP32interrupts();
         #endif
         delayMicroseconds(55);
     }
     else
     {
         #if defined(ESP32)
-          ESP32noInterrupts(void);
+          ESP32noInterrupts();
         #endif
         digitalWrite(Plugin_080_DallasPin, LOW);
         pinMode(Plugin_080_DallasPin, OUTPUT);
         delayMicroseconds(65);
         digitalWrite(Plugin_080_DallasPin, HIGH);
         #if defined(ESP32)
-           ESP32interrupts(void);
+           ESP32interrupts();
         #endif
         delayMicroseconds(5);
     }

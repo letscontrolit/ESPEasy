@@ -1,4 +1,4 @@
-// FIXME TD-er: No idea why, but in this file you cannot use the F(void) macro. (core 2.4.1)
+// FIXME TD-er: No idea why, but in this file you cannot use the F() macro. (core 2.4.1)
 
 #ifdef USES_MODBUS
 #include <Arduino.h>
@@ -49,7 +49,7 @@ struct ModbusRTU_struct  {
   ModbusRTU_struct(void) : easySerial(nullptr) {}
 
   ~ModbusRTU_struct(void) {
-    reset(void);
+    reset();
   }
 
   void reset(void) {
@@ -82,11 +82,11 @@ struct ModbusRTU_struct  {
     if ((serial_rx < 0) || (serial_tx < 0)) {
       return false;
     }
-    reset(void);
+    reset();
     easySerial = new ESPeasySerial(serial_rx, serial_tx);
     easySerial->begin(baudrate);
 
-    if (!isInitialized(void)) { return false; }
+    if (!isInitialized()) { return false; }
     _modbus_address = address;
     _dere_pin       = dere_pin;
 
@@ -152,7 +152,7 @@ struct ModbusRTU_struct  {
         case 0x82:
         {
           if (result != 0) {
-            uint32_t sensorId = readSensorId(void);
+            uint32_t sensorId = readSensorId();
             obj_text = String(sensorId, HEX);
             result   = 0;
           }
@@ -163,7 +163,7 @@ struct ModbusRTU_struct  {
         case 0x83:
         {
           if (result != 0) {
-            uint32_t sensorId = readTypeId(void);
+            uint32_t sensorId = readTypeId();
             obj_text = String(sensorId, HEX);
             result   = 0;
           }
@@ -176,13 +176,13 @@ struct ModbusRTU_struct  {
       }
 
       if (result == 0) {
-        if (label.length(void) > 0) {
+        if (label.length() > 0) {
           // description += MEI_objectid_to_name(object_id);
           description += label;
           description += ": ";
         }
 
-        if (obj_text.length(void) > 0) {
+        if (obj_text.length() > 0) {
           description += obj_text;
           description += " - ";
         }
@@ -439,7 +439,7 @@ struct ModbusRTU_struct  {
       log.reserve(3 * length + 5);
       for (int i = 0; i < length; ++i) {
         String hexvalue(buffer[i], HEX);
-        hexvalue.toUpperCase(void);
+        hexvalue.toUpperCase();
         log += hexvalue;
         log += F(" ");
       }
@@ -469,16 +469,16 @@ struct ModbusRTU_struct  {
       return_value = 0;
 
       // Send the byte array
-      startWrite(void);
+      startWrite();
       easySerial->write(_sendframe, _sendframe_used);
 
       // sent all data from buffer
-      easySerial->flush(void);
-      startRead(void);
+      easySerial->flush();
+      startRead();
 
       // Read answer from sensor
       _recv_buf_used = 0;
-      unsigned long timeout    = millis(void) + _modbus_timeout;
+      unsigned long timeout    = millis() + _modbus_timeout;
       bool validPacket         = false;
       bool invalidDueToTimeout = false;
 
@@ -491,11 +491,11 @@ struct ModbusRTU_struct  {
           invalidDueToTimeout = true;
         }
 
-        while (!invalidDueToTimeout && easySerial->available(void) && _recv_buf_used < MODBUS_RECEIVE_BUFFER) {
+        while (!invalidDueToTimeout && easySerial->available() && _recv_buf_used < MODBUS_RECEIVE_BUFFER) {
           if (timeOutReached(timeout)) {
             invalidDueToTimeout = true;
           }
-          _recv_buf[_recv_buf_used++] = easySerial->read(void);
+          _recv_buf[_recv_buf_used++] = easySerial->read();
         }
 
         if (_recv_buf_used > 2) {                                         // got length
@@ -622,7 +622,7 @@ struct ModbusRTU_struct  {
                       byte& conformity_level) {
     // Force device_id to 4 = individual access (reading one ID object per call)
     build_modbus_MEI_frame(slaveAddress, 4, object_id);
-    const byte process_result = processCommand(void);
+    const byte process_result = processCommand();
 
     if (process_result == 0) {
       result = parse_modbus_MEI_response(object_value_int,
@@ -651,7 +651,7 @@ struct ModbusRTU_struct  {
         more_follows, conformity_level);
 
       if (process_result == 0) {
-        if (result.length(void) > 0) {
+        if (result.length() > 0) {
           String log = MEI_objectid_to_name(object_id);
           log += ": ";
           log += result;
@@ -691,7 +691,7 @@ struct ModbusRTU_struct  {
                            short startAddress, short parameter,
                            byte& errorcode) {
     buildFrame(slaveAddress, functionCode, startAddress, parameter);
-    errorcode = processCommand(void);
+    errorcode = processCommand();
 
     if (errorcode == 0) {
       return (_recv_buf[3] << 8) | (_recv_buf[4]);
@@ -703,7 +703,7 @@ struct ModbusRTU_struct  {
   // Still writing single register, but calling it using "Preset Multiple Registers" function (FC=16)
   int preset_mult16b_register(byte slaveAddress, uint16_t startAddress, uint16_t value) {
     buildWriteMult16bRegister(slaveAddress, startAddress, value);
-    const byte process_result = processCommand(void);
+    const byte process_result = processCommand();
 
     if (process_result == 0) {
       return (_recv_buf[4] << 8) | (_recv_buf[5]);
@@ -715,7 +715,7 @@ struct ModbusRTU_struct  {
   bool process_32b_register(byte slaveAddress, byte functionCode,
                             short startAddress, uint32_t& result) {
     buildFrame(slaveAddress, functionCode, startAddress, 2);
-    const byte process_result = processCommand(void);
+    const byte process_result = processCommand();
 
     if (process_result == 0) {
       result = 0;
@@ -732,7 +732,7 @@ struct ModbusRTU_struct  {
 
   int writeSpecialCommandRegister(byte command) {
     buildWriteCommandRegister(_modbus_address, command);
-    const byte process_result = processCommand(void);
+    const byte process_result = processCommand();
 
     if (process_result == 0) {
       return 0;
@@ -746,7 +746,7 @@ struct ModbusRTU_struct  {
                                byte& errorcode) {
     buildRead_RAM_EEPROM(_modbus_address, command,
                          startAddress, nrBytes);
-    errorcode = processCommand(void);
+    errorcode = processCommand();
 
     if (errorcode == 0) {
       unsigned int result = 0;
@@ -802,14 +802,14 @@ private:
 
   void startWrite(void) {
     // transmit to device  -> DE Enable, /RE Disable (for control MAX485)
-    if ((_dere_pin == -1) || !isInitialized(void)) { return; }
+    if ((_dere_pin == -1) || !isInitialized()) { return; }
     digitalWrite(_dere_pin, HIGH);
     delay(2); // Switching may take some time
   }
 
   void startRead(void) {
-    if (!isInitialized(void)) { return; }
-    easySerial->flush(void); // clear out tx buffer
+    if (!isInitialized()) { return; }
+    easySerial->flush(); // clear out tx buffer
 
     // receive from device -> DE Disable, /RE Enable (for control MAX485)
     if (_dere_pin != -1) {

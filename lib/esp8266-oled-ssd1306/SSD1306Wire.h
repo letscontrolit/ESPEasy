@@ -54,7 +54,7 @@ class SSD1306Wire : public OLEDDisplay {
     }
 
     void display(void) {
-      const int x_offset = (128 - this->width(void)) / 2;
+      const int x_offset = (128 - this->width()) / 2;
       #ifdef OLEDDISPLAY_DOUBLE_BUFFER
         uint8_t minBoundY = ~0;
         uint8_t maxBoundY = 0;
@@ -65,9 +65,9 @@ class SSD1306Wire : public OLEDDisplay {
 
         // Calculate the Y bounding box of changes
         // and copy buffer[pos] to buffer_back[pos];
-        for (y = 0; y < (this->height(void) / 8); y++) {
-          for (x = 0; x < this->width(void); x++) {
-           uint16_t pos = x + y * this->width(void);
+        for (y = 0; y < (this->height() / 8); y++) {
+          for (x = 0; x < this->width(); x++) {
+           uint16_t pos = x + y * this->width();
            if (buffer[pos] != buffer_back[pos]) {
              minBoundY = _min(minBoundY, y);
              maxBoundY = _max(maxBoundY, y);
@@ -76,7 +76,7 @@ class SSD1306Wire : public OLEDDisplay {
            }
            buffer_back[pos] = buffer[pos];
          }
-         yield(void);
+         yield();
         }
 
         // If the minBoundY wasn't updated
@@ -99,28 +99,28 @@ class SSD1306Wire : public OLEDDisplay {
               Wire.beginTransmission(_address);
               Wire.write(0x40);
             }
-            Wire.write(buffer[x + y * this->width(void)]);
+            Wire.write(buffer[x + y * this->width()]);
             k++;
             if (k == 16)  {
-              Wire.endTransmission(void);
+              Wire.endTransmission();
               k = 0;
             }
           }
-          yield(void);
+          yield();
         }
 
         if (k != 0) {
-          Wire.endTransmission(void);
+          Wire.endTransmission();
         }
       #else
 
         sendCommand(COLUMNADDR);
         sendCommand(x_offset);
-        sendCommand(x_offset + (this->width(void) - 1));
+        sendCommand(x_offset + (this->width() - 1));
 
         sendCommand(PAGEADDR);
         sendCommand(0x0);
-        sendCommand((this->height(void) / 8) - 1);
+        sendCommand((this->height() / 8) - 1);
 
         for (uint16_t i=0; i < DISPLAY_BUFFER_SIZE; i++) {
           Wire.beginTransmission(this->_address);
@@ -130,7 +130,7 @@ class SSD1306Wire : public OLEDDisplay {
             i++;
           }
           i--;
-          Wire.endTransmission(void);
+          Wire.endTransmission();
         }
       #endif
     }
@@ -140,7 +140,7 @@ class SSD1306Wire : public OLEDDisplay {
       Wire.beginTransmission(_address);
       Wire.write(0x80);
       Wire.write(command);
-      Wire.endTransmission(void);
+      Wire.endTransmission();
     }
 
 

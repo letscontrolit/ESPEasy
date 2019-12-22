@@ -144,9 +144,9 @@ boolean Plugin_059(byte function, struct EventStruct *event, String& string)
       {
         if (P_059_sensordefs.count(event->TaskIndex) != 0)
         {
-          if (P_059_sensordefs[event->TaskIndex]->hasChanged(void))
+          if (P_059_sensordefs[event->TaskIndex]->hasChanged())
           {
-            long c = P_059_sensordefs[event->TaskIndex]->read(void);
+            long c = P_059_sensordefs[event->TaskIndex]->read();
             UserVar[event->BaseVarIndex] = (float)c;
             event->sensorType = SENSOR_TYPE_SWITCH;
 
@@ -166,7 +166,7 @@ boolean Plugin_059(byte function, struct EventStruct *event, String& string)
       {
         if (P_059_sensordefs.count(event->TaskIndex) != 0)
         {
-          UserVar[event->BaseVarIndex] = (float)P_059_sensordefs[event->TaskIndex]->read(void);
+          UserVar[event->BaseVarIndex] = (float)P_059_sensordefs[event->TaskIndex]->read();
         }
         success = true;
         break;

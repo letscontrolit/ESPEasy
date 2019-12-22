@@ -103,7 +103,7 @@ boolean Plugin_062(byte function, struct EventStruct *event, String& string)
         {
           static uint16_t keyLast = 0;
 
-          uint16_t key = Plugin_062_K->touched(void);
+          uint16_t key = Plugin_062_K->touched();
 
           if (key && PCONFIG(1))
           {

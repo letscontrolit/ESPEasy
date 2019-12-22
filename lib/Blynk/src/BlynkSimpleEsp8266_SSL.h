@@ -81,11 +81,11 @@ public:
     //     struct tm timeinfo;
     //     gmtime_r(&now, &timeinfo);
     //     String ntpTime = asctime(&timeinfo);
-    //     ntpTime.trim(void);
+    //     ntpTime.trim();
     //     BLYNK_LOG2("NTP time: ", ntpTime);
 
         // Now try connecting
-        if (BlynkArduinoClientGen<Client>::connect(void)) {
+        if (BlynkArduinoClientGen<Client>::connect()) {
           if (fingerprint && this->client->verify(fingerprint, this->domain)) {
               BLYNK_LOG1(BLYNK_F("Fingerprint OK"));
               return true;
@@ -117,19 +117,19 @@ public:
     // {
     //     BLYNK_LOG2(BLYNK_F("Connecting to "), ssid);
     //     WiFi.mode(WIFI_STA);
-    //     if (WiFi.status(void) != WL_CONNECTED) {
+    //     if (WiFi.status() != WL_CONNECTED) {
     //         if (pass && strlen(pass)) {
     //             WiFi.begin(ssid, pass);
     //         } else {
     //             WiFi.begin(ssid);
     //         }
     //     }
-    //     while (WiFi.status(void) != WL_CONNECTED) {
+    //     while (WiFi.status() != WL_CONNECTED) {
     //         BlynkDelay(500);
     //     }
     //     BLYNK_LOG1(BLYNK_F("Connected to WiFi"));
 
-    //     IPAddress myip = WiFi.localIP(void);
+    //     IPAddress myip = WiFi.localIP();
     //     BLYNK_LOG_IP("IP: ", myip);
     // }
 
@@ -174,7 +174,7 @@ public:
     // {
     //     connectWiFi(ssid, pass);
     //     config(auth, domain, port, fingerprint);
-    //     while(this->connect(void) != true) {}
+    //     while(this->connect() != true) {}
     // }
 
     // void begin(const char* auth,
@@ -186,7 +186,7 @@ public:
     // {
     //     connectWiFi(ssid, pass);
     //     config(auth, ip, port, fingerprint);
-    //     while(this->connect(void) != true) {}
+    //     while(this->connect() != true) {}
     // }
 
 };

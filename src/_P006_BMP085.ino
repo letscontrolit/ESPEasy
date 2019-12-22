@@ -66,19 +66,19 @@ boolean Plugin_006(byte function, struct EventStruct *event, String& string)
       {
         if (!Plugin_006_init)
         {
-          if (Plugin_006_bmp085_begin(void))
+          if (Plugin_006_bmp085_begin())
             Plugin_006_init = true;
         }
 
         if (Plugin_006_init)
         {
-          UserVar[event->BaseVarIndex] = Plugin_006_bmp085_readTemperature(void);
+          UserVar[event->BaseVarIndex] = Plugin_006_bmp085_readTemperature();
           int elev = PCONFIG(1);
           if (elev)
           {
-             UserVar[event->BaseVarIndex + 1] = Plugin_006_pressureElevation((float)Plugin_006_bmp085_readPressure(void) / 100, elev);
+             UserVar[event->BaseVarIndex + 1] = Plugin_006_pressureElevation((float)Plugin_006_bmp085_readPressure() / 100, elev);
           } else {
-             UserVar[event->BaseVarIndex + 1] = ((float)Plugin_006_bmp085_readPressure(void)) / 100;
+             UserVar[event->BaseVarIndex + 1] = ((float)Plugin_006_bmp085_readPressure()) / 100;
           }
           String log = F("BMP  : Temperature: ");
           log += UserVar[event->BaseVarIndex];
@@ -176,8 +176,8 @@ int32_t Plugin_006_bmp085_readPressure(void)
   int32_t UT, UP, B3, B5, B6, X1, X2, X3, p;
   uint32_t B4, B7;
 
-  UT = Plugin_006_bmp085_readRawTemperature(void);
-  UP = Plugin_006_bmp085_readRawPressure(void);
+  UT = Plugin_006_bmp085_readRawTemperature();
+  UP = Plugin_006_bmp085_readRawPressure();
 
   // do temperature calculations
   X1 = (UT - (int32_t)(ac6)) * ((int32_t)(ac5)) / pow(2, 15);
@@ -220,7 +220,7 @@ float Plugin_006_bmp085_readTemperature(void)
   int32_t UT, X1, X2, B5;     // following ds convention
   float temp;
 
-  UT = Plugin_006_bmp085_readRawTemperature(void);
+  UT = Plugin_006_bmp085_readRawTemperature();
 
   // step 1
   X1 = (UT - (int32_t)ac6) * ((int32_t)ac5) / pow(2, 15);

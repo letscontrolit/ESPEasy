@@ -67,12 +67,12 @@ boolean Plugin_040(byte function, struct EventStruct *event, String& string)
           byte bytesread = 0;
           byte tempbyte = 0;
 
-          if ((val = Serial.read(void)) == 2)
+          if ((val = Serial.read()) == 2)
           { // check for header
             bytesread = 0;
             while (bytesread < 12) {                        // read 10 digit code + 2 digit checksum
-              if ( Serial.available(void) > 0) {
-                val = Serial.read(void);
+              if ( Serial.available() > 0) {
+                val = Serial.read();
                 if ((val == 0x0D) || (val == 0x0A) || (val == 0x03) || (val == 0x02)) {
                   // if header or stop bytes before the 10 digit reading
                   break;

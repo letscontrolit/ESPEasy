@@ -133,11 +133,11 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
           #endif
           if (P1GatewayServer)
           {
-            P1GatewayServer->close(void);
+            P1GatewayServer->close();
             delete P1GatewayServer;
           }
           P1GatewayServer = new WiFiServer(ExtraTaskSettings.TaskDevicePluginConfigLong[0]);
-          P1GatewayServer->begin(void);
+          P1GatewayServer->begin();
 
           if (!Plugin_044_serial_buf)
             Plugin_044_serial_buf = new char[P044_BUFFER_SIZE];
@@ -154,7 +154,7 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
           Plugin_044_init = true;
         }
 
-        blinkLED(void);
+        blinkLED();
 
         if (ExtraTaskSettings.TaskDevicePluginConfigLong[1] == 115200) {
           addLog(LOG_LEVEL_DEBUG, F("P1   : DSMR version 4 meter, CRC on"));
@@ -173,7 +173,7 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
     case PLUGIN_EXIT:
       {
         if (P1GatewayServer) {
-          P1GatewayServer->close(void);
+          P1GatewayServer->close();
           delete P1GatewayServer;
           P1GatewayServer = NULL;
         }
@@ -188,19 +188,19 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
       {
         if (Plugin_044_init)
         {
-          if (P1GatewayServer->hasClient(void))
+          if (P1GatewayServer->hasClient())
           {
-            if (P1GatewayClient) P1GatewayClient.stop(void);
-            P1GatewayClient = P1GatewayServer->available(void);
+            if (P1GatewayClient) P1GatewayClient.stop();
+            P1GatewayClient = P1GatewayServer->available();
             P1GatewayClient.setTimeout(CONTROLLER_CLIENTTIMEOUT_DFLT);
             addLog(LOG_LEVEL_ERROR, F("P1   : Client connected!"));
           }
 
-          if (P1GatewayClient.connected(void))
+          if (P1GatewayClient.connected())
           {
             connectionState = 1;
             uint8_t net_buf[P044_NETBUF_SIZE];
-            int count = P1GatewayClient.available(void);
+            int count = P1GatewayClient.available();
             if (count > 0)
             {
               size_t net_bytes_read;
@@ -208,7 +208,7 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
                 count = P044_NETBUF_SIZE;
               net_bytes_read = P1GatewayClient.read(net_buf, count);
               Serial.write(net_buf, net_bytes_read);
-              Serial.flush(void); // Waits for the transmission of outgoing serial data to complete
+              Serial.flush(); // Waits for the transmission of outgoing serial data to complete
 
               if (count == P044_NETBUF_SIZE) // if we have a full buffer, drop the last position to stuff with string end marker
               {
@@ -231,8 +231,8 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
               addLog(LOG_LEVEL_ERROR, F("P1   : Client disconnected!"));
             }
 
-            while (Serial.available(void))
-              Serial.read(void);
+            while (Serial.available())
+              Serial.read();
           }
 
           success = true;
@@ -244,7 +244,7 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
       {
         if (Plugin_044_init)
         {
-          if (P1GatewayClient.connected(void))
+          if (P1GatewayClient.connected())
           {
             int RXWait = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
             if (RXWait == 0)
@@ -252,9 +252,9 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
             int timeOut = RXWait;
             while (timeOut > 0)
             {
-              while (Serial.available(void) && state != P044_DONE) {
+              while (Serial.available() && state != P044_DONE) {
                 if (bytes_read < P044_BUFFER_SIZE - 5) {
-                  char  ch = Serial.read(void);
+                  char  ch = Serial.read();
                   digitalWrite(P044_STATUS_LED, 1);
                   switch (state) {
                     case P044_DISABLED: //ignore incoming data
@@ -283,7 +283,7 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
                         bytes_read = 1;
                       } else {              // input is non-ascii
                         addLog(LOG_LEVEL_DEBUG, F("P1   : Error: DATA corrupt, discarded input."));
-                        Serial.flush(void);
+                        Serial.flush();
                         bytes_read = 0;
                         state = P044_WAITING;
                       }
@@ -306,7 +306,7 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
                 }
                 else
                 {
-                  Serial.read(void);      // when the buffer is full, just read remaining input, but do not store...
+                  Serial.read();      // when the buffer is full, just read remaining input, but do not store...
                   bytes_read = 0;
                   state = P044_WAITING;    // reset
                 }
@@ -325,9 +325,9 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
                 bytes_read++;
                 Plugin_044_serial_buf[bytes_read] = 0;
                 P1GatewayClient.write((const uint8_t*)Plugin_044_serial_buf, bytes_read);
-                P1GatewayClient.flush(void);
+                P1GatewayClient.flush();
                 addLog(LOG_LEVEL_DEBUG, F("P1   : data send!"));
-                blinkLED(void);
+                blinkLED();
 
                 if (Settings.UseRules)
                 {

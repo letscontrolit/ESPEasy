@@ -8,11 +8,11 @@ void handle_download(void)
 {
   checkRAM(F("handle_download"));
 
-  if (!isLoggedIn(void)) { return; }
+  if (!isLoggedIn()) { return; }
   navMenuIndex = MENU_INDEX_TOOLS;
 
-  //  TXBuffer.startStream(void);
-  //  sendHeadandTail_stdtemplate(void);
+  //  TXBuffer.startStream();
+  //  sendHeadandTail_stdtemplate();
 
 
   fs::File dataFile = tryOpenFile(F(FILE_CONFIG), "r");
@@ -29,7 +29,7 @@ void handle_download(void)
   str += BUILD;
   str += '_';
 
-  if (systemTimePresent(void))
+  if (systemTimePresent())
   {
     str += getDateTimeString('\0', '\0', '\0');
   }
@@ -37,7 +37,7 @@ void handle_download(void)
 
   WebServer.sendHeader(F("Content-Disposition"), str);
   WebServer.streamFile(dataFile, F("application/octet-stream"));
-  dataFile.close(void);
+  dataFile.close();
 }
 
 #endif // ifdef WEBSERVER_DOWNLOAD

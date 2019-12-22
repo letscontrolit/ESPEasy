@@ -58,7 +58,7 @@ public:
 	* @return        Actual counter value as long operator
 	*/
 	operator long(void) {   // int-Operator
-		return read(void);
+		return read();
 	}
 
 	/** Sets the counter value at actual encoder position to given value.

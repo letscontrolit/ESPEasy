@@ -7,16 +7,16 @@
 void handle_config(void) {
   checkRAM(F("handle_config"));
 
-  if (!isLoggedIn(void)) { return; }
+  if (!isLoggedIn()) { return; }
 
   navMenuIndex = MENU_INDEX_CONFIG;
-  TXBuffer.startStream(void);
+  TXBuffer.startStream();
   sendHeadandTail_stdtemplate(_HEAD);
 
-  if (WebServer.args(void) != 0)
+  if (WebServer.args() != 0)
   {
     String name = WebServer.arg(F("name"));
-    name.trim(void);
+    name.trim();
 
     // String password = WebServer.arg(F("password"));
     String iprangelow  = WebServer.arg(F("iprangelow"));
@@ -33,12 +33,12 @@ void handle_config(void) {
     // String apkey = WebServer.arg(F("apkey"));
     String ssid = WebServer.arg(F("ssid"));
 
-    if (strcmp(Settings.Name, name.c_str(void)) != 0) {
+    if (strcmp(Settings.Name, name.c_str()) != 0) {
       addLog(LOG_LEVEL_INFO, F("Unit Name changed."));
 
       if (CPluginCall(CPLUGIN_GOT_INVALID, 0)) { // inform controllers that the old name will be invalid from now on.
 #ifdef USES_MQTT
-        MQTTDisconnect(void);                        // disconnect form MQTT Server if invalid message was sent succesfull.
+        MQTTDisconnect();                        // disconnect form MQTT Server if invalid message was sent succesfull.
 #endif // USES_MQTT
       }
 #ifdef USES_MQTT
@@ -47,14 +47,14 @@ void handle_config(void) {
     }
 
     // Unit name
-    safe_strncpy(Settings.Name, name.c_str(void), sizeof(Settings.Name));
+    safe_strncpy(Settings.Name, name.c_str(), sizeof(Settings.Name));
     Settings.appendUnitToHostname(isFormItemChecked(F("appendunittohostname")));
 
     // Password
     copyFormPassword(F("password"), SecuritySettings.Password, sizeof(SecuritySettings.Password));
 
     // SSID 1
-    safe_strncpy(SecuritySettings.WifiSSID, ssid.c_str(void), sizeof(SecuritySettings.WifiSSID));
+    safe_strncpy(SecuritySettings.WifiSSID, ssid.c_str(), sizeof(SecuritySettings.WifiSSID));
     copyFormPassword(F("key"), SecuritySettings.WifiKey, sizeof(SecuritySettings.WifiKey));
 
     // SSID 2
@@ -96,11 +96,11 @@ void handle_config(void) {
     str2ip(espgateway, Settings.Gateway);
     str2ip(espsubnet,  Settings.Subnet);
     str2ip(espdns,     Settings.DNS);
-    addHtmlError(SaveSettings(void));
+    addHtmlError(SaveSettings());
   }
 
-  html_add_form(void);
-  html_table_class_normal(void);
+  html_add_form();
+  html_table_class_normal();
 
   addFormHeader(F("Main Settings"));
 
@@ -108,7 +108,7 @@ void handle_config(void) {
   SecuritySettings.Password[25] = 0;
   addFormTextBox(F("Unit Name"), F("name"), Settings.Name, 25);
   addFormNumericBox(F("Unit Number"), F("unit"), Settings.Unit, 0, UNIT_NUMBER_MAX);
-  addFormCheckBox(F("Append Unit Number to hostname"), F("appendunittohostname"), Settings.appendUnitToHostname(void));
+  addFormCheckBox(F("Append Unit Number to hostname"), F("appendunittohostname"), Settings.appendUnitToHostname());
   addFormPasswordBox(F("Admin Password"), F("password"), SecuritySettings.Password, 25);
 
   addFormSubHeader(F("Wifi Settings"));
@@ -153,7 +153,7 @@ void handle_config(void) {
   addHelpButton(F("SleepMode"));
   addFormNote(F("0 = Sleep Disabled, else time awake from sleep"));
 
-  int dsmax = getDeepSleepMax(void);
+  int dsmax = getDeepSleepMax();
   addFormNumericBox(F("Sleep time"), F("delay"), Settings.Delay, 0, dsmax); // limited by hardware
   {
     String maxSleeptimeUnit = F("sec (max: ");
@@ -166,14 +166,14 @@ void handle_config(void) {
 
   addFormSeparator(2);
 
-  html_TR_TD(void);
-  html_TD(void);
-  addSubmitButton(void);
-  html_end_table(void);
-  html_end_form(void);
+  html_TR_TD();
+  html_TD();
+  addSubmitButton();
+  html_end_table();
+  html_end_form();
 
   sendHeadandTail_stdtemplate(_TAIL);
-  TXBuffer.endStream(void);
+  TXBuffer.endStream();
 }
 
 #endif // ifdef WEBSERVER_CONFIG

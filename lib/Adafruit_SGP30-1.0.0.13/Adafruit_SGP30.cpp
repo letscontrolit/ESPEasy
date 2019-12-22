@@ -60,7 +60,7 @@ boolean Adafruit_SGP30::begin(TwoWire *theWire) {
     _i2c = theWire;
   }
 
-  _i2c->begin(void);
+  _i2c->begin();
 
   
   uint8_t command[2];
@@ -77,7 +77,7 @@ boolean Adafruit_SGP30::begin(TwoWire *theWire) {
   //Serial.print("Featureset 0x"); Serial.println(featureset, HEX);
   if (featureset != SGP30_FEATURESET) 
     return false;
-  if (! IAQinit(void)) 
+  if (! IAQinit()) 
     return false;
 
   return true;
@@ -180,9 +180,9 @@ boolean Adafruit_SGP30::readWordFromCommand(uint8_t command[], uint8_t commandLe
 #endif
   }
 #ifdef I2C_DEBUG
-  Serial.println(void);
+  Serial.println();
 #endif
-  _i2c->endTransmission(void);
+  _i2c->endTransmission();
 
   delay(delayms);
 
@@ -197,14 +197,14 @@ boolean Adafruit_SGP30::readWordFromCommand(uint8_t command[], uint8_t commandLe
   Serial.print("\t\t<- ");
 #endif  
   for (uint8_t i=0; i<replylen; i++) {
-    replybuffer[i] = _i2c->read(void);
+    replybuffer[i] = _i2c->read();
 #ifdef I2C_DEBUG
     Serial.print("0x"); Serial.print(replybuffer[i], HEX); Serial.print(", ");
 #endif
   }
 
 #ifdef I2C_DEBUG
-  Serial.println(void);
+  Serial.println();
 #endif
 
   for (uint8_t i=0; i<readlen; i++) {

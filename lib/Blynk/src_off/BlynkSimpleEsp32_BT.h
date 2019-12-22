@@ -44,21 +44,21 @@ class BlynkTransportEsp32_BT
     void begin(void) {
       instance = this;
 
-      if (!btStarted(void) && !btStart(void)) {
+      if (!btStarted() && !btStart()) {
         BLYNK_LOG1(BLYNK_F("btStart failed"));
         return;
       }
 
-      esp_bluedroid_status_t bt_state = esp_bluedroid_get_status(void);
+      esp_bluedroid_status_t bt_state = esp_bluedroid_get_status();
       if (bt_state == ESP_BLUEDROID_STATUS_UNINITIALIZED) {
-        if (esp_bluedroid_init(void)) {
+        if (esp_bluedroid_init()) {
           BLYNK_LOG1(BLYNK_F("esp_bluedroid_init failed"));
           return;
         }
       }
 
       if (bt_state != ESP_BLUEDROID_STATUS_ENABLED) {
-        if (esp_bluedroid_enable(void)) {
+        if (esp_bluedroid_enable()) {
           BLYNK_LOG1(BLYNK_F("esp_bluedroid_enable failed"));
           return;
         }
@@ -86,7 +86,7 @@ class BlynkTransportEsp32_BT
     }
 
     bool connect(void) {
-      mBuffRX.clear(void);
+      mBuffRX.clear();
       return mConn = true;
     }
 
@@ -99,9 +99,9 @@ class BlynkTransportEsp32_BT
     }
 
     size_t read(void* buf, size_t len) {
-      millis_time_t start = BlynkMillis(void);
-      while (BlynkMillis(void) - start < BLYNK_TIMEOUT_MS) {
-        if (available(void) < len) {
+      millis_time_t start = BlynkMillis();
+      while (BlynkMillis() - start < BLYNK_TIMEOUT_MS) {
+        if (available() < len) {
           delay(1);
         } else {
           break;
@@ -121,7 +121,7 @@ class BlynkTransportEsp32_BT
     }
 
     size_t available(void) {
-      size_t rxSize = mBuffRX.size(void);
+      size_t rxSize = mBuffRX.size();
       return rxSize;
     }
 
@@ -158,7 +158,7 @@ class BlynkTransportEsp32_BT
 
         case ESP_SPP_CLOSE_EVT:// After the SPP disconnection, ESP_SPP_CLOSE_EVT is triggered.
           spp_handle = 0;
-          onDisconnect(void);
+          onDisconnect();
           break;
 
         case ESP_SPP_DATA_IND_EVT:// Data received
@@ -178,7 +178,7 @@ class BlynkTransportEsp32_BT
 
         case ESP_SPP_SRV_OPEN_EVT://Server connection open
           spp_handle = param->open.handle;
-          onConnect(void);
+          onConnect();
           break;
 
         default:
@@ -200,7 +200,7 @@ class BlynkEsp32_BT
     {
       Base::begin(auth);
       state = DISCONNECTED;
-      conn.begin(void);
+      conn.begin();
     }
 
     void setDeviceName(const char* name) {
@@ -217,12 +217,12 @@ BlynkEsp32_BT Blynk(_blynkTransport);
 
 void BlynkTransportEsp32_BT::onConnect(void) {
   BLYNK_LOG1(BLYNK_F("BT connect"));
-  Blynk.startSession(void);
+  Blynk.startSession();
 };
 
 void BlynkTransportEsp32_BT::onDisconnect(void) {
   BLYNK_LOG1(BLYNK_F("BT disconnect"));
-  Blynk.disconnect(void);
+  Blynk.disconnect();
 }
 
 #include <BlynkWidgets.h>

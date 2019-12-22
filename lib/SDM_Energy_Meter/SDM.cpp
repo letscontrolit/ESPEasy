@@ -36,7 +36,7 @@ void SDM::begin(void) {
 #ifdef USE_HARDWARESERIAL
   #ifdef ESP8266
     if (_swapuart)
-      sdmSer.swap(void);
+      sdmSer.swap();
   #endif
 #endif
   if (_dere_pin != NOT_A_PIN)	                                                  //set output pin mode for DE/RE pin when used (for control MAX485)
@@ -59,11 +59,11 @@ float SDM::readVal(uint16_t reg, uint8_t node) {
   sdmarr[7] = highByte(temp);
 
 #ifndef USE_HARDWARESERIAL
-  sdmSer.listen(void);                                                              //enable softserial rx interrupt
+  sdmSer.listen();                                                              //enable softserial rx interrupt
 #endif
 
-  while (sdmSer.available(void) > 0)  {                                             //read serial if any old data is available
-    sdmSer.read(void);
+  while (sdmSer.available() > 0)  {                                             //read serial if any old data is available
+    sdmSer.read();
   }
 
   if (_dere_pin != NOT_A_PIN)                                                   //transmit to SDM  -> DE Enable, /RE Disable (for control MAX485)
@@ -73,27 +73,27 @@ float SDM::readVal(uint16_t reg, uint8_t node) {
 
   sdmSer.write(sdmarr, FRAMESIZE - 1);                                          //send 8 bytes
 
-  sdmSer.flush(void);                                                               //clear out tx buffer
+  sdmSer.flush();                                                               //clear out tx buffer
 
   if (_dere_pin != NOT_A_PIN)                                                   //receive from SDM -> DE Disable, /RE Enable (for control MAX485)
     digitalWrite(_dere_pin, LOW);
 
-  resptime = millis(void) + MAX_MILLIS_TO_WAIT;
+  resptime = millis() + MAX_MILLIS_TO_WAIT;
 
-  while (sdmSer.available(void) < FRAMESIZE) {
-    if (resptime < millis(void)) {
+  while (sdmSer.available() < FRAMESIZE) {
+    if (resptime < millis()) {
       readErr = SDM_ERR_TIMEOUT;                                                //err debug (4)
       break;
     }
-    yield(void);
+    yield();
   }
 
   if (readErr == SDM_ERR_NO_ERROR) {                                            //if no timeout...
 
-    if(sdmSer.available(void) >= FRAMESIZE) {
+    if(sdmSer.available() >= FRAMESIZE) {
 
       for(int n=0; n<FRAMESIZE; n++) {
-        sdmarr[n] = sdmSer.read(void);
+        sdmarr[n] = sdmSer.read();
       }
 
       if (sdmarr[0] == node && sdmarr[1] == SDM_B_02 && sdmarr[2] == SDM_REPLY_BYTE_COUNT) {
@@ -124,12 +124,12 @@ float SDM::readVal(uint16_t reg, uint8_t node) {
     ++readingsuccesscount;
   }
 
-  while (sdmSer.available(void) > 0)  {                                             //read redundant serial bytes, if any
-    sdmSer.read(void);
+  while (sdmSer.available() > 0)  {                                             //read redundant serial bytes, if any
+    sdmSer.read();
   }
 
 #ifndef USE_HARDWARESERIAL
-  sdmSer.end(void);                                                                 //disable softserial rx interrupt
+  sdmSer.end();                                                                 //disable softserial rx interrupt
 #endif
 
   return (res);
@@ -138,21 +138,21 @@ float SDM::readVal(uint16_t reg, uint8_t node) {
 uint16_t SDM::getErrCode(bool _clear) {
   uint16_t _tmp = readingerrcode;
   if (_clear == true)
-    clearErrCode(void);
+    clearErrCode();
   return (_tmp);
 }
 
 uint16_t SDM::getErrCount(bool _clear) {
   uint16_t _tmp = readingerrcount;
   if (_clear == true)
-    clearErrCount(void);
+    clearErrCount();
   return (_tmp);
 }
 
 uint16_t SDM::getSuccCount(bool _clear) {
   uint16_t _tmp = readingsuccesscount;
   if (_clear == true)
-    clearSuccCount(void);
+    clearSuccCount();
   return (_tmp);
 }
 

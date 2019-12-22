@@ -7,8 +7,8 @@
 // Maxim Integrated (ex Dallas) DS18B20 datasheet : https://datasheets.maximintegrated.com/en/ds/DS18B20.pdf
 
 #if defined(ESP32)
-  # define ESP32noInterrupts(void) { portMUX_TYPE mux = portMUX_INITIALIZER_UNLOCKED; portENTER_CRITICAL(&mux)
-  # define ESP32interrupts(void) portEXIT_CRITICAL(&mux); }
+  # define ESP32noInterrupts() { portMUX_TYPE mux = portMUX_INITIALIZER_UNLOCKED; portENTER_CRITICAL(&mux)
+  # define ESP32interrupts() portEXIT_CRITICAL(&mux); }
 #endif // if defined(ESP32)
 
 #define PLUGIN_004
@@ -88,7 +88,7 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
         uint8_t tmpAddress[8];
         byte    count = 0;
         Plugin_004_DS_reset(Plugin_004_DallasPin);
-        Plugin_004_DS_reset_search(void);
+        Plugin_004_DS_reset_search();
 
         while (Plugin_004_DS_search(tmpAddress, Plugin_004_DallasPin))
         {
@@ -104,7 +104,7 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
           addSelector_Item(option, count, selected, false, "");
           count++;
         }
-        addSelector_Foot(void);
+        addSelector_Foot();
 
         {
           // Device Resolution select
@@ -171,7 +171,7 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
       int8_t Plugin_004_DallasPin = CONFIG_PIN1;
 
       if (Plugin_004_DallasPin != -1) {
-        Plugin_004_timeoutGPIO[Plugin_004_DallasPin] = millis(void);
+        Plugin_004_timeoutGPIO[Plugin_004_DallasPin] = millis();
         Plugin_004_newValue[event->TaskIndex] = false;
       }
       success = true;
@@ -257,7 +257,7 @@ void Plugin_004_get_addr(uint8_t addr[], taskIndex_t TaskIndex)
 void Plugin_004_set_timeout(int res, int8_t Plugin_004_DallasPin)
 {
   if (res < 9 || res >12)  res = 12;
-  Plugin_004_timeoutGPIO[Plugin_004_DallasPin] = millis(void)+(800/(1<<(12-res)));
+  Plugin_004_timeoutGPIO[Plugin_004_DallasPin] = millis()+(800/(1<<(12-res)));
 }
 
 /*********************************************************************************************\
@@ -270,7 +270,7 @@ byte Plugin_004_DS_scan(byte getDeviceROM, uint8_t *ROM, int8_t Plugin_004_Dalla
 
   Plugin_004_DS_reset(Plugin_004_DallasPin);
 
-  Plugin_004_DS_reset_search(void);
+  Plugin_004_DS_reset_search();
 
   while (Plugin_004_DS_search(tmpaddr, Plugin_004_DallasPin))
   {
@@ -484,7 +484,7 @@ uint8_t Plugin_004_DS_reset(int8_t Plugin_004_DallasPin)
   uint8_t retries = 125;
 
     #if defined(ESP32)
-  ESP32noInterrupts(void);
+  ESP32noInterrupts();
     #endif // if defined(ESP32)
   pinMode(Plugin_004_DallasPin, INPUT);
 
@@ -512,7 +512,7 @@ uint8_t Plugin_004_DS_reset(int8_t Plugin_004_DallasPin)
     }
   }
     #if defined(ESP32)
-  ESP32interrupts(void);
+  ESP32interrupts();
     #endif // if defined(ESP32)
   return r;
 }
@@ -711,7 +711,7 @@ uint8_t Plugin_004_DS_read_bit(int8_t Plugin_004_DallasPin)
   uint8_t r;
 
     #if defined(ESP32)
-  ESP32noInterrupts(void);
+  ESP32noInterrupts();
     #endif // if defined(ESP32)
   digitalWrite(Plugin_004_DallasPin, LOW);
   pinMode(Plugin_004_DallasPin, OUTPUT);
@@ -720,7 +720,7 @@ uint8_t Plugin_004_DS_read_bit(int8_t Plugin_004_DallasPin)
   delayMicroseconds(8);
   r = digitalRead(Plugin_004_DallasPin);
     #if defined(ESP32)
-  ESP32interrupts(void);
+  ESP32interrupts();
     #endif // if defined(ESP32)
   delayMicroseconds(60);
   return r;
@@ -736,28 +736,28 @@ void Plugin_004_DS_write_bit(uint8_t v, int8_t Plugin_004_DallasPin)
   if (v & 1)
   {
         #if defined(ESP32)
-    ESP32noInterrupts(void);
+    ESP32noInterrupts();
         #endif // if defined(ESP32)
     digitalWrite(Plugin_004_DallasPin, LOW);
     pinMode(Plugin_004_DallasPin, OUTPUT);
     delayMicroseconds(2);
     digitalWrite(Plugin_004_DallasPin, HIGH);
         #if defined(ESP32)
-    ESP32interrupts(void);
+    ESP32interrupts();
         #endif // if defined(ESP32)
     delayMicroseconds(70);
   }
   else
   {
         #if defined(ESP32)
-    ESP32noInterrupts(void);
+    ESP32noInterrupts();
         #endif // if defined(ESP32)
     digitalWrite(Plugin_004_DallasPin, LOW);
     pinMode(Plugin_004_DallasPin, OUTPUT);
     delayMicroseconds(90);
     digitalWrite(Plugin_004_DallasPin, HIGH);
         #if defined(ESP32)
-    ESP32interrupts(void);
+    ESP32interrupts();
         #endif // if defined(ESP32)
     delayMicroseconds(10);
   }

@@ -111,7 +111,7 @@ boolean Plugin_058(byte function, struct EventStruct *event, String& string)
         {
           static uint8_t keyLast = 0;
 
-          uint8_t key = Plugin_058_K->ReadKeys(void);
+          uint8_t key = Plugin_058_K->ReadKeys();
 
           if (keyLast != key)
           {

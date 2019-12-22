@@ -81,7 +81,7 @@ class SH1106Wire : public OLEDDisplay {
            }
            buffer_back[pos] = buffer[pos];
          }
-         yield(void);
+         yield();
         }
 
         // If the minBoundY wasn't updated
@@ -106,19 +106,19 @@ class SH1106Wire : public OLEDDisplay {
             Wire.write(buffer[x + y * DISPLAY_WIDTH]);
             k++;
             if (k == 16)  {
-              Wire.endTransmission(void);
+              Wire.endTransmission();
               k = 0;
             }
           }
           if (k != 0)  {
-            Wire.endTransmission(void);
+            Wire.endTransmission();
             k = 0;
           }
-          yield(void);
+          yield();
         }
 
         if (k != 0) {
-          Wire.endTransmission(void);
+          Wire.endTransmission();
         }
       #else
         uint8_t * p = &buffer[0];
@@ -132,7 +132,7 @@ class SH1106Wire : public OLEDDisplay {
             for (uint8_t k = 0; k < 16; k++) {
               Wire.write(*p++);
             }
-            Wire.endTransmission(void);
+            Wire.endTransmission();
           }
         }
       #endif
@@ -143,7 +143,7 @@ class SH1106Wire : public OLEDDisplay {
       Wire.beginTransmission(_address);
       Wire.write(0x80);
       Wire.write(command);
-      Wire.endTransmission(void);
+      Wire.endTransmission();
     }
 
 

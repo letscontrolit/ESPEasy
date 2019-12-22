@@ -208,7 +208,7 @@ class I2Cdev {
             uint8_t available(void);
             uint8_t receive(void);
             void onReceive(void (*)(int));
-            void onRequest(void (*)(void));
+            void onRequest(void (*)());
     };
 
     #define TWI_READY   0

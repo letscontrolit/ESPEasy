@@ -122,7 +122,7 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
             Serial.begin(ExtraTaskSettings.TaskDevicePluginConfigLong[1], serialconfig);
           #endif
           ser2netServer = new WiFiServer(ExtraTaskSettings.TaskDevicePluginConfigLong[0]);
-          ser2netServer->begin(void);
+          ser2netServer->begin();
 
           if (Settings.TaskDevicePin1[event->TaskIndex] != -1)
           {
@@ -152,18 +152,18 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
         if (Plugin_020_init)
         {
           size_t bytes_read;
-          if (ser2netServer->hasClient(void))
+          if (ser2netServer->hasClient())
           {
-            if (ser2netClient) ser2netClient.stop(void);
-            ser2netClient = ser2netServer->available(void);
+            if (ser2netClient) ser2netClient.stop();
+            ser2netClient = ser2netServer->available();
             addLog(LOG_LEVEL_ERROR, F("Ser2N: Client connected!"));
           }
 
-          if (ser2netClient.connected(void))
+          if (ser2netClient.connected())
           {
             connectionState = 1;
             uint8_t net_buf[P020_BUFFER_SIZE];
-            int count = ser2netClient.available(void);
+            int count = ser2netClient.available();
             if (count > 0)
             {
               if (count > P020_BUFFER_SIZE)
@@ -175,7 +175,7 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
                 digitalWrite(Settings.TaskDevicePin2[event->TaskIndex], HIGH);  // Activate the TX Enable
               }
               Serial.write(net_buf, bytes_read);
-              Serial.flush(void); // Waits for the transmission of outgoing serial data to complete
+              Serial.flush(); // Waits for the transmission of outgoing serial data to complete
               if (Settings.TaskDevicePin2[event->TaskIndex] != -1)
               {
                 digitalWrite(Settings.TaskDevicePin2[event->TaskIndex], LOW); // Deactivate the TX Enable
@@ -198,13 +198,13 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
             {
               connectionState = 0;
               // workaround see: https://github.com/esp8266/Arduino/issues/4497#issuecomment-373023864
-              ser2netClient = WiFiClient(void);
+              ser2netClient = WiFiClient();
               ser2netClient.setTimeout(CONTROLLER_CLIENTTIMEOUT_DFLT);
               addLog(LOG_LEVEL_ERROR, F("Ser2N: Client disconnected!"));
             }
 
-            while (Serial.available(void))
-              Serial.read(void);
+            while (Serial.available())
+              Serial.read();
           }
 
           success = true;
@@ -224,13 +224,13 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
         size_t bytes_read = 0;
         while (timeOut > 0)
         {
-          while (Serial.available(void)) {
+          while (Serial.available()) {
             if (bytes_read < P020_BUFFER_SIZE) {
-              serial_buf[bytes_read] = Serial.read(void);
+              serial_buf[bytes_read] = Serial.read();
               bytes_read++;
             }
             else
-              Serial.read(void);  // when the buffer is full, just read remaining input, but do not store...
+              Serial.read();  // when the buffer is full, just read remaining input, but do not store...
 
             timeOut = RXWait; // if serial received, reset timeout counter
           }
@@ -241,17 +241,17 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
         if (bytes_read != P020_BUFFER_SIZE)
         {
           if (bytes_read > 0) {
-            if (Plugin_020_init && ser2netClient.connected(void))
+            if (Plugin_020_init && ser2netClient.connected())
             {
               ser2netClient.write((const uint8_t*)serial_buf, bytes_read);
-              ser2netClient.flush(void);
+              ser2netClient.flush();
             }
           }
         }
         else // if we have a full buffer, drop the last position to stuff with string end marker
         {
-          while (Serial.available(void)) // read possible remaining data to avoid sending rubbish...
-            Serial.read(void);
+          while (Serial.available()) // read possible remaining data to avoid sending rubbish...
+            Serial.read();
           bytes_read--;
           // and log buffer full situation
           addLog(LOG_LEVEL_ERROR, F("Ser2N: serial buffer full!"));
@@ -299,7 +299,7 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
               }
           } // switch
 
-          if (eventString.length(void) > 0)
+          if (eventString.length() > 0)
             eventQueue.add(eventString);
 
         } // if rules

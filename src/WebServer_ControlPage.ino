@@ -7,13 +7,13 @@
 void handle_control(void) {
   checkRAM(F("handle_control"));
 
-  if (!clientIPallowed(void)) { return; }
+  if (!clientIPallowed()) { return; }
 
   // TXBuffer.startStream(true); // true= json
   // sendHeadandTail_stdtemplate(_HEAD);
   String webrequest = WebServer.arg(F("cmd"));
   addLog(LOG_LEVEL_INFO,  String(F("HTTP: ")) + webrequest);
-  webrequest = parseTemplate(webrequest, webrequest.length(void));
+  webrequest = parseTemplate(webrequest, webrequest.length());
 #ifndef BUILD_NO_DEBUG
   addLog(LOG_LEVEL_DEBUG, String(F("HTTP after parseTemplate: ")) + webrequest);
 #endif // ifndef BUILD_NO_DEBUG
@@ -33,25 +33,25 @@ void handle_control(void) {
            command.equalsIgnoreCase(F("logPortStatus")) ||
            command.equalsIgnoreCase(F("jsonportstatus")) ||
            command.equalsIgnoreCase(F("rules"))) {
-    ExecuteCommand_internal(VALUE_SOURCE_HTTP, webrequest.c_str(void));
+    ExecuteCommand_internal(VALUE_SOURCE_HTTP, webrequest.c_str());
     handledCmd = true;
   }
 
   if (handledCmd) {
     TXBuffer.startStream("*");
     TXBuffer += "OK";
-    TXBuffer.endStream(void);
+    TXBuffer.endStream();
     return;
   }
   printToWeb     = true;
   printWebString = "";
-  bool unknownCmd = !ExecuteCommand_plugin_config(VALUE_SOURCE_HTTP, webrequest.c_str(void));
+  bool unknownCmd = !ExecuteCommand_plugin_config(VALUE_SOURCE_HTTP, webrequest.c_str());
 
   if (printToWebJSON) { // it is setted in PLUGIN_WRITE (SendStatus)
-    TXBuffer.startJsonStream(void);
+    TXBuffer.startJsonStream();
   }
   else {
-    TXBuffer.startStream(void);
+    TXBuffer.startStream();
   }
 
   if (unknownCmd) {
@@ -61,7 +61,7 @@ void handle_control(void) {
     TXBuffer += printWebString;
   }
 
-  TXBuffer.endStream(void);
+  TXBuffer.endStream();
 
   printWebString = "";
   printToWeb     = false;

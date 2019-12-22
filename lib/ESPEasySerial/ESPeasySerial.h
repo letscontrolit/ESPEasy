@@ -133,7 +133,7 @@ struct ESPeasySerialType {
     }
     // ESP8266
     if (receivePin == 13 && transmitPin == 15) {
-      return serialtype::serial0_swap; // UART0 remapped using Serial.swap(void)
+      return serialtype::serial0_swap; // UART0 remapped using Serial.swap()
     }
     if (receivePin == -1 && transmitPin == 2) {
       // Serial1 uses UART1, TX pin is GPIO2.
@@ -174,7 +174,7 @@ public:
   // Serial0: RX: 3  TX: 1
   // Serial1: RX: 9  TX: 10  Defaults will never work, share pins with flash
   // Serial2: RX: 16 TX: 17
-  // Pins set in the constructor will be used as override when not given when calling begin(void)
+  // Pins set in the constructor will be used as override when not given when calling begin()
   // @param  inverse_logic can be used to set the logic in the constructor which will then be used in the call to begin.
   //         This makes the call to the constructor more in line with the constructor of SoftwareSerial.
   // @param  serialPort can be a helper to suggest the set serial port. (is needed to define Serial1)
@@ -199,14 +199,14 @@ public:
 
 /*
   // FIXME TD-er: See https://www.artima.com/cppsource/safebool.html
-  operator bool(void) {
-    if (!isValid(void)) {
+  operator bool() {
+    if (!isValid()) {
       return false;
     }
-    if (isSWserial(void)) {
-      return _swserial->bool(void);
+    if (isSWserial()) {
+      return _swserial->bool();
     } else {
-      return getHW(void)->bool(void);
+      return getHW()->bool();
     }
   }
   */

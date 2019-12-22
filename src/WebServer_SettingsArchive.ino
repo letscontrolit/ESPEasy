@@ -8,13 +8,13 @@
 void handle_settingsarchive(void) {
   checkRAM(F("handle_settingsarchive"));
 
-  if (!isLoggedIn(void)) { return; }
+  if (!isLoggedIn()) { return; }
   navMenuIndex = MENU_INDEX_TOOLS;
-  TXBuffer.startStream(void);
+  TXBuffer.startStream();
   sendHeadandTail_stdtemplate(_HEAD);
-  html_add_form(void);
-  html_table_class_normal(void);
-  html_TR(void);
+  html_add_form();
+  html_table_class_normal();
+  html_TR();
   addFormHeader(F("Settings Archive"));
 
   if (WebServer.hasArg(F("savepref")) || WebServer.hasArg(F("download"))) {
@@ -29,8 +29,8 @@ void handle_settingsarchive(void) {
 
     ResetFactoryDefaultPreference.deleteFirst(isFormItemChecked("del"));
 
-    applyFactoryDefaultPref(void);
-    addHtmlError(SaveSettings(void));
+    applyFactoryDefaultPref();
+    addHtmlError(SaveSettings());
   }
 
   bool showOptions = true;
@@ -56,14 +56,14 @@ void handle_settingsarchive(void) {
 
     if (somethingDownloaded) {
       showOptions = false;
-      html_TR_TD(void);
-      html_TD(void);
+      html_TR_TD();
+      html_TD();
       addSubmitButton(F("Reboot"), F("reboot"), F("red"));
       addFormNote(F("If settings files are updated you MUST reboot first!"));
     }
   } else if (WebServer.hasArg(F("reboot"))) {
     showOptions = false;
-    reboot(void);
+    reboot();
   }
 
   if (showOptions) {
@@ -81,12 +81,12 @@ void handle_settingsarchive(void) {
     addTableSeparator(F("Download Settings"), 2, 3);
 
     addRowLabel(F("Delete First"));
-    addCheckBox("del", ResetFactoryDefaultPreference.deleteFirst(void));
+    addCheckBox("del", ResetFactoryDefaultPreference.deleteFirst());
     addFormNote(F("Needed on filesystem with not enough free space. Use with care!"));
 
 
-    html_TR_TD(void);
-    html_TD(void);
+    html_TR_TD();
+    html_TD();
     addSubmitButton(F("Save Preferences"), F("savepref"));
 
     addTableSeparator(F("Archive Location"), 2, 3);
@@ -101,10 +101,10 @@ void handle_settingsarchive(void) {
     addSubmitButton(F("Download"), F("download"), F("red"));
   }
 
-  html_end_table(void);
-  html_end_form(void);
+  html_end_table();
+  html_end_form();
   sendHeadandTail_stdtemplate(_TAIL);
-  TXBuffer.endStream(void);
+  TXBuffer.endStream();
 }
 
 // ********************************************************************************
@@ -114,9 +114,9 @@ bool getDownloadFiletypeChecked(FileType::Enum filetype, unsigned int filenr) {
   bool isChecked = false;
 
   switch (filetype) {
-    case FileType::CONFIG_DAT: isChecked       = ResetFactoryDefaultPreference.fetchConfigDat(void); break;
-    case FileType::SECURITY_DAT: isChecked     = ResetFactoryDefaultPreference.fetchSecurityDat(void); break;
-    case FileType::NOTIFICATION_DAT: isChecked = ResetFactoryDefaultPreference.fetchNotificationDat(void); break;
+    case FileType::CONFIG_DAT: isChecked       = ResetFactoryDefaultPreference.fetchConfigDat(); break;
+    case FileType::SECURITY_DAT: isChecked     = ResetFactoryDefaultPreference.fetchSecurityDat(); break;
+    case FileType::NOTIFICATION_DAT: isChecked = ResetFactoryDefaultPreference.fetchNotificationDat(); break;
     case FileType::RULES_TXT: isChecked        = ResetFactoryDefaultPreference.fetchRulesTXT(filenr); break;
   }
   return isChecked;
@@ -154,7 +154,7 @@ bool tryDownloadFileType(const String& url, const String& user, const String& pa
 
   addRowLabel(filename);
 
-  if (ResetFactoryDefaultPreference.deleteFirst(void)) {
+  if (ResetFactoryDefaultPreference.deleteFirst()) {
     if (!fileExists(filename) || tryDeleteFile(filename)) {
       res = downloadFile(url + filename, filename, user, pass, error);
     } else {

@@ -90,7 +90,7 @@ void CjkSDS011::SetWorkingPeriod(int minutes) {
   //              1-30minute：work 30 seconds and sleep n*60-30 seconds
   if (minutes < 0 || minutes > 30) return;
   // Working period is stored in the flash of the sensor. Only write to change.
-  const int currentWorkingPeriod = GetWorkingPeriod(void);
+  const int currentWorkingPeriod = GetWorkingPeriod();
   if (minutes != currentWorkingPeriod)
     SendCommand(8, 1, minutes);
 }
@@ -102,7 +102,7 @@ int CjkSDS011::GetWorkingPeriod(void) {
   // Data byte 3: 0：continuous(default)
   //              1-30minute：work 30 seconds and sleep n*60-30 seconds
   SendCommand(8, 0, 0);
-  Process(void);
+  Process();
   return _working_period;
 }
 
@@ -124,9 +124,9 @@ void CjkSDS011::ParseCommandReply(void) {
 
 void CjkSDS011::Process(void)
 {
-  while (_serial->available(void))
+  while (_serial->available())
   {
-  	_data.AddData(_serial->read(void));
+  	_data.AddData(_serial->read());
 
     if (_data[0] == 0xAA && _data[9] == 0xAB)   // correct packet frame?
     {
@@ -148,7 +148,7 @@ void CjkSDS011::Process(void)
           _available = true;
           break;
         case 0xC5:   // Reply on command ID 0xB4
-          ParseCommandReply(void);
+          ParseCommandReply();
           break;
         default:
           break;
@@ -157,7 +157,7 @@ void CjkSDS011::Process(void)
         _pm2_5avr += _pm2_5;
         _pm10_avr += _pm10_;
         _avr++;
-        _data.Clear(void);
+        _data.Clear();
         return;
       }
     }

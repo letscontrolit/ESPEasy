@@ -174,18 +174,18 @@ void QEIx4::begin(int16_t pinA, int16_t pinB, int16_t pinI, uint8_t mode)
 
 long QEIx4::read(void)
 {
-	noInterrupts(void);
+	noInterrupts();
 	_bHasChanged = false;
 	long ret = _counter;
-	interrupts(void);
+	interrupts();
 	return ret;
 }
 
 void QEIx4::loop(void)
 {
-	noInterrupts(void);
-	processStateMachine(void);
-	interrupts(void);
+	noInterrupts();
+	processStateMachine();
+	interrupts();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -232,7 +232,7 @@ void ICACHE_RAM_ATTR QEIx4::ISR(void)
 	for (byte i=0; i<4; i++)
 		if (__instance[i])
 		{
-			__instance[i]->processStateMachine(void);
+			__instance[i]->processStateMachine();
 		}
 }
 

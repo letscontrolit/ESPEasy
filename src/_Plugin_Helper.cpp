@@ -79,10 +79,10 @@ String getPluginCustomArgName(int varNr) {
 // Note that the varNr of the custom values should not conflict with the existing variable numbers (e.g. start at VARS_PER_TASK)
 String pluginWebformShowValue(taskIndex_t taskIndex, byte varNr, const String& label, const String& value, bool addTrailingBreak) {
   String result;
-  size_t length = 96 + label.length(void) + value.length(void);
+  size_t length = 96 + label.length() + value.length();
   String breakStr = F("<div class='div_br'></div>");
   if (addTrailingBreak) {
-    length += breakStr.length(void);
+    length += breakStr.length();
   }
   result.reserve(length);
   if (varNr > 0) {

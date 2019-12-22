@@ -47,7 +47,7 @@ void WidgetRTC::begin(void)
 
 BLYNK_WRITE(InternalPinRTC) {
     const unsigned long DEFAULT_TIME = 1357041600; // Jan 1 2013
-    unsigned long blynkTime = param.asLong(void);
+    unsigned long blynkTime = param.asLong();
 
     if (blynkTime >= DEFAULT_TIME) {    // Check the integer is a valid time (greater than Jan 1 2013)
         setTime(blynkTime);             // Sync Time library clock to the value received from Blynk

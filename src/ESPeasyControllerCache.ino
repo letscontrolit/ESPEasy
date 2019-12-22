@@ -28,7 +28,7 @@ struct ControllerCache_struct {
     if (_RTC_cache_handler == nullptr) {
       return false;
     }
-    return _RTC_cache_handler->flush(void);
+    return _RTC_cache_handler->flush();
   }
 
   void init(void) {
@@ -46,14 +46,14 @@ struct ControllerCache_struct {
 
   bool deleteOldestCacheBlock(void) {
     if (_RTC_cache_handler != nullptr) {
-      return _RTC_cache_handler->deleteOldestCacheBlock(void);
+      return _RTC_cache_handler->deleteOldestCacheBlock();
     }
     return false;
   }
 
   void resetpeek(void) {
     if (_RTC_cache_handler != nullptr) {
-      _RTC_cache_handler->resetpeek(void);
+      _RTC_cache_handler->resetpeek();
     }
   }
 

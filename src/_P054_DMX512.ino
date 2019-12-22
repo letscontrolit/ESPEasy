@@ -135,7 +135,7 @@ boolean Plugin_054(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WRITE:
       {
         String lowerString=string;
-        lowerString.toLowerCase(void);
+        lowerString.toLowerCase();
         String command = parseString(lowerString, 1);
 
         if (command == F("dmx"))
@@ -152,9 +152,9 @@ boolean Plugin_054(byte function, struct EventStruct *event, String& string)
           lowerString.replace(F("= "), "=");
 
           param = parseString(lowerString, paramIdx++);
-          if (param.length(void))
+          if (param.length())
           {
-            while (param.length(void))
+            while (param.length())
             {
               addLog(LOG_LEVEL_DEBUG_MORE, param);
 
@@ -176,7 +176,7 @@ boolean Plugin_054(byte function, struct EventStruct *event, String& string)
               {
                 for (int16_t i = 0; i < Plugin_054_DMXSize; i++)
                   //Plugin_054_DMXBuffer[i] = i+1;
-                  Plugin_054_DMXBuffer[i] = rand(void)&255;
+                  Plugin_054_DMXBuffer[i] = rand()&255;
                 success = true;
               }
 
@@ -199,14 +199,14 @@ boolean Plugin_054(byte function, struct EventStruct *event, String& string)
                 {
                   paramKey = param.substring(0, index);
                   paramVal = param.substring(index+1);
-                  channel = paramKey.toInt(void);
+                  channel = paramKey.toInt();
                 }
                 else   //syntax: "<value>"
                 {
                   paramVal = param;
                 }
 
-                value = paramVal.toInt(void);
+                value = paramVal.toInt();
                 PLUGIN_054_Limit (value, 0, 255);
 
                 if (channel > 0 && channel <= Plugin_054_DMXSize)
@@ -235,10 +235,10 @@ boolean Plugin_054(byte function, struct EventStruct *event, String& string)
           int16_t sendPin = 2;   //TX1 fix to GPIO2 (D4) == onboard LED
 
           //empty serial from prev. transmit
-          Serial1.flush(void);
+          Serial1.flush();
 
           //send break
-          Serial1.end(void);
+          Serial1.end();
           pinMode(sendPin, OUTPUT);
           digitalWrite(sendPin, LOW);
           delayMicroseconds(120);   //88µs ... inf

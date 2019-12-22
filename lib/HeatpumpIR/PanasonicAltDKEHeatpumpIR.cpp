@@ -1,6 +1,6 @@
 #include <PanasonicAltDKEHeatpumpIR.h>
 
-PanasonicAltDKEHeatpumpIR::PanasonicAltDKEHeatpumpIR(void) : HeatpumpIR(void)
+PanasonicAltDKEHeatpumpIR::PanasonicAltDKEHeatpumpIR(void) : HeatpumpIR()
 {
   static const char model[] PROGMEM = "panasonic_altdke";
   static const char info[]  PROGMEM = "{\"mdl\":\"panasonic_altdke\",\"dn\":\"Panasonic DKE\",\"mT\":16,\"xT\":30,\"fs\":6}";

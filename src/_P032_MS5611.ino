@@ -97,8 +97,8 @@ boolean Plugin_032(byte function, struct EventStruct *event, String& string)
         }
 
         if (Plugin_032_init) {
-          Plugin_032_read_prom(void);
-          Plugin_032_readout(void);
+          Plugin_032_read_prom();
+          Plugin_032_readout();
 
           UserVar[event->BaseVarIndex] = ms5611_temperature / 100;
           int elev = PCONFIG(1);

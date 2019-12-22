@@ -10,8 +10,8 @@ enum MODBUS_registerTypes_t { signed16, unsigned16, signed32, unsigned32, signed
 class Modbus {
 public:
 
-  Modbus(void);
-  bool handle(void);
+  Modbus();
+  bool handle();
   bool begin(uint8_t                function,
              uint8_t                ModbusID,
              uint16_t               ModbusRegister,
@@ -41,7 +41,7 @@ public:
 
   void stop(void) {
     TXRXstate = MODBUS_IDLE;
-    handle(void);
+    handle();
   }
 
   bool tryRead(uint8_t                ModbusID,
@@ -57,10 +57,10 @@ private:
   char sendBuffer[12] =  { 0, 1, 0, 0, 0, 6, 0x7e, 4, 0x9d, 7, 0, 1 };
   String LogString    = "";             // for debug logging
   unsigned long timeout;                // send and read timeout
-  MODBUS_states_t TXRXstate;            // state for handle(void) state machine
+  MODBUS_states_t TXRXstate;            // state for handle() state machine
   unsigned int RXavailable;
   unsigned int payLoad;                 // number of bytes to receive as payload. Payload may come as seperate frame.
-  bool hasTimeout(void);
+  bool hasTimeout();
   MODBUS_registerTypes_t incomingValue; // how to interpret the incoming value
   double result;                        // incoming value, converted to double
   bool resultReceived;                  // incoming value is valid ?
@@ -83,13 +83,13 @@ bool Modbus::begin(uint8_t function, uint8_t ModbusID, uint16_t ModbusRegister, 
   currentFunction = function;
   incomingValue   = type;
   resultReceived  = false;
-  ModbusClient    = new WiFiClient(void);
+  ModbusClient    = new WiFiClient();
   ModbusClient->setNoDelay(true);
   ModbusClient->setTimeout(CONTROLLER_CLIENTTIMEOUT_DFLT);
-  timeout = millis(void);
-  ModbusClient->flush(void);
+  timeout = millis();
+  ModbusClient->flush();
 
-  if (ModbusClient->connected(void)) {
+  if (ModbusClient->connected()) {
     LogString += F(" already connected. ");
   } else {
     LogString += F("connect: ");      LogString += IPaddress;
@@ -99,7 +99,7 @@ bool Modbus::begin(uint8_t function, uint8_t ModbusID, uint16_t ModbusRegister, 
       TXRXstate  = MODBUS_IDLE;
       errcnt++;
 
-      if (LogString.length(void) > 1) { addLog(LOG_LEVEL_DEBUG, LogString); }
+      if (LogString.length() > 1) { addLog(LOG_LEVEL_DEBUG, LogString); }
       return false;
     }
   }
@@ -121,7 +121,7 @@ bool Modbus::begin(uint8_t function, uint8_t ModbusID, uint16_t ModbusRegister, 
   if ((incomingValue == signed16) || (incomingValue == unsigned16)) {
     sendBuffer[11] = 1;
   }
-  ModbusClient->flush(void);
+  ModbusClient->flush();
   ModbusClient->write(&sendBuffer[0], sizeof(sendBuffer));
 
   for (unsigned int i = 0; i < sizeof(sendBuffer); i++) {
@@ -130,7 +130,7 @@ bool Modbus::begin(uint8_t function, uint8_t ModbusID, uint16_t ModbusRegister, 
   }
   TXRXstate = MODBUS_RECEIVE;
 
-  if (LogString.length(void) > 1) { addLog(LOG_LEVEL_DEBUG, LogString); }
+  if (LogString.length() > 1) { addLog(LOG_LEVEL_DEBUG, LogString); }
   return true;
 }
 
@@ -145,8 +145,8 @@ bool Modbus::handle(void) {
 
       // clean up;
       if (ModbusClient) {
-        ModbusClient->flush(void);
-        ModbusClient->stop(void);
+        ModbusClient->flush();
+        ModbusClient->stop();
         delete (ModbusClient);
         delay(1);
         ModbusClient = nullptr;
@@ -155,14 +155,14 @@ bool Modbus::handle(void) {
 
     case MODBUS_RECEIVE:
 
-      if  (hasTimeout(void)) { break; }
+      if  (hasTimeout()) { break; }
 
-      if  (ModbusClient->available(void) < 9) { break; }
+      if  (ModbusClient->available() < 9) { break; }
 
       LogString += F("reading bytes: ");
 
       for (int a = 0; a < 9; a++) {
-        payLoad    = ModbusClient->read(void);
+        payLoad    = ModbusClient->read();
         LogString += (payLoad);  LogString += ' ';
       }
       LogString += F("> ");
@@ -175,8 +175,8 @@ bool Modbus::handle(void) {
 
     case MODBUS_RECEIVE_PAYLOAD:
 
-      if  (hasTimeout(void)) { break; }
-      RXavailable = ModbusClient->available(void);
+      if  (hasTimeout()) { break; }
+      RXavailable = ModbusClient->available();
 
       if (payLoad != RXavailable) {
         TXRXstate = MODBUS_RECEIVE_PAYLOAD;
@@ -185,7 +185,7 @@ bool Modbus::handle(void) {
 
       for (unsigned int i = 0; i < RXavailable; i++) {
         rxValue = rxValue << 8;
-        char a = ModbusClient->read(void);
+        char a = ModbusClient->read();
         rxValue    = rxValue | a;
         LogString += ((int)a);  LogString += (" ");
       }
@@ -213,7 +213,7 @@ bool Modbus::handle(void) {
 
       LogString += "value: "; LogString += result;
 
-      // if ((systemTimePresent(void)) && (hour(void) == 0)) errcnt = 0;
+      // if ((systemTimePresent()) && (hour() == 0)) errcnt = 0;
 
       TXRXstate = MODBUS_IDLE;
 
@@ -226,14 +226,14 @@ bool Modbus::handle(void) {
       break;
   }
 
-  if (LogString.length(void) > 1) { addLog(LOG_LEVEL_DEBUG, LogString); }
+  if (LogString.length() > 1) { addLog(LOG_LEVEL_DEBUG, LogString); }
   return true;
 }
 
 bool Modbus::hasTimeout(void)
 {
-  if   ((millis(void) - timeout) > 10000) { // too many bytes or timeout
-    LogString += F("Modbus RX timeout. "); LogString += String(ModbusClient->available(void));
+  if   ((millis() - timeout) > 10000) { // too many bytes or timeout
+    LogString += F("Modbus RX timeout. "); LogString += String(ModbusClient->available());
     errcnt++;
     TXRXstate = MODBUS_IDLE;
     return true;
@@ -245,12 +245,12 @@ bool Modbus::hasTimeout(void)
 // subsequent calls (if Modbus is busy etc. ) will return false and not update the result.
 // Use to read multiple values non blocking in an re-entrant function. Not tested yet.
 bool Modbus::tryRead(uint8_t ModbusID, uint16_t M_register,  MODBUS_registerTypes_t type, char *IPaddress, double& result) {
-  if (isBusy(void)) { return false; // not done yet
+  if (isBusy()) { return false; // not done yet
   }
 
-  if (available(void)) {
+  if (available()) {
     if ((currentFunction == MODBUS_FUNCTION_READ) && (currentRegister == M_register)) {
-      result = read(void); // result belongs to this request.
+      result = read(); // result belongs to this request.
       return true;
     }
   } else {

@@ -59,26 +59,26 @@ boolean Plugin_072(byte function, struct EventStruct *event, String& string)
         Wire.write(0x02);                            // sends HDC1080_CONFIGURATION
         Wire.write(0b00000000);                      // set resolution to 14bits both for T and H
         Wire.write(0x00);                            // **reserved**
-        Wire.endTransmission(void);                      // end transmission
+        Wire.endTransmission();                      // end transmission
         delay(10);
 
         Wire.beginTransmission(HDC1080_I2C_ADDRESS); // start transmission to device
         Wire.write(0x00);                            // sends HDC1080_TEMPERATURE
-        Wire.endTransmission(void);                      // end transmission
+        Wire.endTransmission();                      // end transmission
         delay(9);
         Wire.requestFrom(HDC1080_I2C_ADDRESS, 2);    // read 2 bytes for temperature
-        hdc1080_msb = Wire.read(void);
-        hdc1080_lsb = Wire.read(void);
+        hdc1080_msb = Wire.read();
+        hdc1080_lsb = Wire.read();
         hdc1080_rawtemp = hdc1080_msb << 8 | hdc1080_lsb;
         hdc1080_temp = (hdc1080_rawtemp / pow(2,16)) * 165 -40;
 
         Wire.beginTransmission(HDC1080_I2C_ADDRESS); // start transmission to device
         Wire.write(0x01);                            // sends HDC1080_HUMIDITY
-        Wire.endTransmission(void);                      // end transmission
+        Wire.endTransmission();                      // end transmission
         delay(9);
         Wire.requestFrom(HDC1080_I2C_ADDRESS, 2);    // read 2 bytes for humidity
-        hdc1080_msb = Wire.read(void);
-        hdc1080_lsb = Wire.read(void);
+        hdc1080_msb = Wire.read();
+        hdc1080_lsb = Wire.read();
         hdc1080_rawhum = hdc1080_msb << 8 | hdc1080_lsb;
         hdc1080_hum = (hdc1080_rawhum / pow(2,16)) * 100;
 

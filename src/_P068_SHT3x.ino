@@ -46,7 +46,7 @@ private:
 SHT3X::SHT3X(uint8_t addr)
 {
 	_i2c_device_address = addr;
-	//Wire.begin(void);   called in ESPEasy framework
+	//Wire.begin();   called in ESPEasy framework
 
 	// Set to periodic mode
 	I2C_write8_reg(
@@ -68,14 +68,14 @@ void SHT3X::readFromSensor(void)
 
 	// FIXME TD-er: Currently the I2Cdev::readBytes does not support writing 2 bytes before reading.
 	Wire.requestFrom(_i2c_device_address, (uint8_t)6);
-	if (Wire.available(void) == 6)
+	if (Wire.available() == 6)
 	{
-		data[0] = Wire.read(void);
-		data[1] = Wire.read(void);
-		data[2] = Wire.read(void);
-		data[3] = Wire.read(void);
-		data[4] = Wire.read(void);
-		data[5] = Wire.read(void);
+		data[0] = Wire.read();
+		data[1] = Wire.read();
+		data[2] = Wire.read();
+		data[3] = Wire.read();
+		data[4] = Wire.read();
+		data[5] = Wire.read();
 
 		//TODO: check CRC (data[2] and data[5])
 		if (CRC8(data[0], data[1], data[2]) &&
@@ -94,7 +94,7 @@ void SHT3X::readFromSensor(void)
 		Wire.beginTransmission(_i2c_device_address);
 		Wire.write(0x20);   // periodic 0.5mps
 		Wire.write(0x32);   // repeatability high
-		Wire.endTransmission(void);
+		Wire.endTransmission();
 	}
 }
 
@@ -193,7 +193,7 @@ boolean Plugin_068(byte function, struct EventStruct *event, String& string)
 			  return success;
 			}
 
-			sht3x->readFromSensor(void);
+			sht3x->readFromSensor();
 			UserVar[event->BaseVarIndex + 0] = sht3x->tmp;
 			UserVar[event->BaseVarIndex + 1] = sht3x->hum;
 			String log = F("SHT3x: Temperature: ");

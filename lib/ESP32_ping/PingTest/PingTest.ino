@@ -23,7 +23,7 @@ void setup(void) {
 	WiFi.begin(ssid, password);
 
 
-	while (WiFi.status(void) != WL_CONNECTED) {
+	while (WiFi.status() != WL_CONNECTED) {
 		delay(500);
 		Serial.print(".");
 
@@ -36,16 +36,16 @@ void setup(void) {
 void loop(void) {
 	int ia[4] = { 192,168,1,1 };
 	int  i = 0;
-	while (Serial.available(void)) {
+	while (Serial.available()) {
 
-		char c = Serial.read(void);
+		char c = Serial.read();
 		delay(100);
    	int  val = 0;
 		while (c != '.' &&  c != 10 && c!=255) {
 			if (c >= '0'&& c<='9') {
 				val = val*10+(c-'0');
 			}
-			c = Serial.read(void);
+			c = Serial.read();
 		}
 
 			ia[i++] =val ;
@@ -60,13 +60,13 @@ void loop(void) {
 
 }
 int readnu(char s) {
-	char c = Serial.read(void);
+	char c = Serial.read();
 	Serial.print(c);
 	int digit = 1,val=0;
 	while (c != s &&  c != 10&&c>0) {
 		if(c>'0') val += digit*(c - '0');
 		digit *= 10;
-		c=Serial.read(void);
+		c=Serial.read();
 		Serial.print(int(c));
 	}
 	Serial.println(digit);

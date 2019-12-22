@@ -107,7 +107,7 @@ private:
     uint16_t getNextMsgId();
 
 protected:
-    void begin(const char* auth,void(*handleInterruptCb)(void)) {
+    void begin(const char* auth,void(*handleInterruptCb)()) {
         this->handleInterruptCallback = handleInterruptCb;
         this->authkey = auth;
         lastHeartbeat = lastActivityIn = lastActivityOut = (BlynkMillis() - 5000UL);
@@ -119,7 +119,7 @@ protected:
 
 private:
     const char* authkey;
-    void(*handleInterruptCallback)(void) = NULL;
+    void(*handleInterruptCallback)() = NULL;
     char*       redir_serv;
     millis_time_t lastActivityIn;
     millis_time_t lastActivityOut;

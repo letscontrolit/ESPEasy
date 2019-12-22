@@ -78,7 +78,7 @@ void sensorTypeHelper_webformLoad_header(void)
 
 void sensorTypeHelper_webformLoad_simple(struct EventStruct *event, byte pconfigIndex)
 {
-  sensorTypeHelper_webformLoad_header(void);
+  sensorTypeHelper_webformLoad_header();
 
   byte optionValues[4];
   optionValues[0] = SENSOR_TYPE_SINGLE;
@@ -113,7 +113,7 @@ void sensorTypeHelper_webformLoad(struct EventStruct *event, byte pconfigIndex, 
                      disabled,
                      "");
   }
-  addSelector_Foot(void);
+  addSelector_Foot();
   addFormNote(F("Changing 'Output Data Type' may affect behavior of some controllers (e.g. Domoticz)"));
 
   // addFormSelector(F("Output Data Type"), PCONFIG_LABEL(pconfigIndex), 11, options, optionValues, choice);

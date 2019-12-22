@@ -81,7 +81,7 @@ boolean Plugin_041(byte function, struct EventStruct *event, String& string)
         if (!Plugin_041_pixels)
         {
           Plugin_041_pixels = new Adafruit_NeoPixel(NUM_LEDS, CONFIG_PIN1, NEO_GRB + NEO_KHZ800);
-          Plugin_041_pixels->begin(void); // This initializes the NeoPixel library.
+          Plugin_041_pixels->begin(); // This initializes the NeoPixel library.
         }
         Plugin_041_red = PCONFIG(0);
         Plugin_041_green = PCONFIG(1);
@@ -92,7 +92,7 @@ boolean Plugin_041(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_CLOCK_IN:
       {
-        Plugin_041_update(void);
+        Plugin_041_update();
         success = true;
         break;
       }
@@ -103,7 +103,7 @@ boolean Plugin_041(byte function, struct EventStruct *event, String& string)
         //serialPrint("LDR value: ");
         //serialPrintln(ldrVal);
         //Plugin_041_pixels->setBrightness(255-ldrVal);
-        //Plugin_041_pixels->show(void); // This sends the updated pixel color to the hardware.
+        //Plugin_041_pixels->show(); // This sends the updated pixel color to the hardware.
         success = true;
         break;
       }
@@ -116,7 +116,7 @@ boolean Plugin_041(byte function, struct EventStruct *event, String& string)
           Plugin_041_red = event->Par1;
           Plugin_041_green = event->Par2;
           Plugin_041_blue = event->Par3;
-          Plugin_041_update(void);
+          Plugin_041_update();
           success = true;
         }
 
@@ -124,7 +124,7 @@ boolean Plugin_041(byte function, struct EventStruct *event, String& string)
         {
           for (int i = 0; i < NUM_LEDS; i++)
             Plugin_041_pixels->setPixelColor(i, Plugin_041_pixels->Color(event->Par1, event->Par2, event->Par3));
-          Plugin_041_pixels->show(void); // This sends the updated pixel color to the hardware.
+          Plugin_041_pixels->show(); // This sends the updated pixel color to the hardware.
           success = true;
         }
 
@@ -132,9 +132,9 @@ boolean Plugin_041(byte function, struct EventStruct *event, String& string)
         {
           for (int i = 0; i < NUM_LEDS; i++)
           {
-            resetAndBlack(void);
+            resetAndBlack();
             Plugin_041_pixels->setPixelColor(i, Plugin_041_pixels->Color(event->Par1, event->Par2, event->Par3));
-            Plugin_041_pixels->show(void); // This sends the updated pixel color to the hardware.
+            Plugin_041_pixels->show(); // This sends the updated pixel color to the hardware.
             delay(200);
           }
           success = true;
@@ -149,11 +149,11 @@ boolean Plugin_041(byte function, struct EventStruct *event, String& string)
 
 void Plugin_041_update(void)
 {
-  byte Hours = hour(void);
-  byte Minutes = minute(void);
-  resetAndBlack(void);
+  byte Hours = hour();
+  byte Minutes = minute();
+  resetAndBlack();
   timeToStrip(Hours, Minutes);
-  Plugin_041_pixels->show(void); // This sends the updated pixel color to the hardware.
+  Plugin_041_pixels->show(); // This sends the updated pixel color to the hardware.
 }
 
 
@@ -169,65 +169,65 @@ void pushToStrip(int ledId) {
 
 void timeToStrip(uint8_t hours, uint8_t minutes)
 {
-  pushIT_IS(void);
+  pushIT_IS();
   //show minutes
   if (minutes >= 5 && minutes < 10) {
-    pushFIVE1(void);
-    pushAFTER(void);
+    pushFIVE1();
+    pushAFTER();
   } else if (minutes >= 10 && minutes < 15) {
-    pushTEN1(void);
-    pushAFTER(void);
+    pushTEN1();
+    pushAFTER();
   } else if (minutes >= 15 && minutes < 20) {
-    pushQUATER(void);
-    pushAFTER(void);
+    pushQUATER();
+    pushAFTER();
   } else if (minutes >= 20 && minutes < 25) {
-    pushTEN1(void);
-    pushFOR(void);
-    pushHALF(void);
+    pushTEN1();
+    pushFOR();
+    pushHALF();
   } else if (minutes >= 25 && minutes < 30) {
-    pushFIVE1(void);
-    pushFOR(void);
-    pushHALF(void);
+    pushFIVE1();
+    pushFOR();
+    pushHALF();
   } else if (minutes >= 30 && minutes < 35) {
-    pushHALF(void);
+    pushHALF();
   } else if (minutes >= 35 && minutes < 40) {
-    pushFIVE1(void);
-    pushAFTER(void);
-    pushHALF(void);
+    pushFIVE1();
+    pushAFTER();
+    pushHALF();
   } else if (minutes >= 40 && minutes < 45) {
-    pushTEN1(void);
-    pushAFTER(void);
-    pushHALF(void);
+    pushTEN1();
+    pushAFTER();
+    pushHALF();
   } else if (minutes >= 45 && minutes < 50) {
-    pushQUATER(void);
-    pushFOR(void);
+    pushQUATER();
+    pushFOR();
   } else if (minutes >= 50 && minutes < 55) {
-    pushTEN1(void);
-    pushFOR(void);
+    pushTEN1();
+    pushFOR();
   } else if (minutes >= 55 && minutes < 60) {
-    pushFIVE1(void);
-    pushFOR(void);
+    pushFIVE1();
+    pushFOR();
   }
 
   int singleMinutes = minutes % 5;
   switch (singleMinutes) {
     case 1:
-      pushM_ONE(void);
+      pushM_ONE();
       break;
     case 2:
-      pushM_ONE(void);
-      pushM_TWO(void);
+      pushM_ONE();
+      pushM_TWO();
       break;
     case 3:
-      pushM_ONE(void);
-      pushM_TWO(void);
-      pushM_THREE(void);
+      pushM_ONE();
+      pushM_TWO();
+      pushM_THREE();
       break;
     case 4:
-      pushM_ONE(void);
-      pushM_TWO(void);
-      pushM_THREE(void);
-      pushM_FOUR(void);
+      pushM_ONE();
+      pushM_TWO();
+      pushM_THREE();
+      pushM_FOUR();
       break;
   }
   if (hours >= 12) {
@@ -243,48 +243,48 @@ void timeToStrip(uint8_t hours, uint8_t minutes)
   //show hours
   switch (hours) {
     case 0:
-      pushTWELVE(void);
+      pushTWELVE();
       break;
     case 1:
-      pushONE(void);
+      pushONE();
       break;
     case 2:
-      pushTWO(void);
+      pushTWO();
       break;
     case 3:
-      pushTHREE(void);
+      pushTHREE();
       break;
     case 4:
-      pushFOUR(void);
+      pushFOUR();
       break;
     case 5:
-      pushFIVE2(void);
+      pushFIVE2();
       break;
     case 6:
-      pushSIX(void);
+      pushSIX();
       break;
     case 7:
-      pushSEVEN(void);
+      pushSEVEN();
       break;
     case 8:
-      pushEIGHT(void);
+      pushEIGHT();
       break;
     case 9:
-      pushNINE(void);
+      pushNINE();
       break;
     case 10:
-      pushTEN(void);
+      pushTEN();
       break;
     case 11:
-      pushELEVEN(void);
+      pushELEVEN();
       break;
     case 12:
-      pushTWELVE(void);
+      pushTWELVE();
       break;
   }
   //show HOUR
   if (minutes < 5) {
-    pushHOURE(void);
+    pushHOURE();
   }
 }
 

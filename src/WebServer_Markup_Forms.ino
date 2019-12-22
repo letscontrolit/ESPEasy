@@ -221,7 +221,7 @@ void addFormSelector_script(const String& label,
   addRowLabel_tr_id(label, id);
   addSelector_Head(id, onChangeCall, false);
   addSelector_options(optionCount, options, indices, attr, selectedIndex);
-  addSelector_Foot(void);
+  addSelector_Foot();
 }
 
 // ********************************************************************************
@@ -250,7 +250,7 @@ bool getCheckWebserverArg_int(const String& key, int& value) {
   String valueStr = WebServer.arg(key);
 
   if (!isInt(valueStr)) { return false; }
-  value = valueStr.toInt(void);
+  value = valueStr.toInt();
   return true;
 }
 
@@ -271,12 +271,12 @@ float getFormItemFloat(const String& id)
   String val = WebServer.arg(id);
 
   if (!isFloat(val)) { return 0.0; }
-  return val.toFloat(void);
+  return val.toFloat();
 }
 
 bool isFormItem(const String& id)
 {
-  return WebServer.arg(id).length(void) != 0;
+  return WebServer.arg(id).length() != 0;
 }
 
 void copyFormPassword(const String& id, char *pPassword, int maxlength)
@@ -286,5 +286,5 @@ void copyFormPassword(const String& id, char *pPassword, int maxlength)
   if (password == F("*****")) { // no change?
     return;
   }
-  safe_strncpy(pPassword, password.c_str(void), maxlength);
+  safe_strncpy(pPassword, password.c_str(), maxlength);
 }

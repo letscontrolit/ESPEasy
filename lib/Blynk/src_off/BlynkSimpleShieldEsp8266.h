@@ -41,14 +41,14 @@ class BlynkTransportShieldEsp8266
         if (mux_id != BLYNK_ESP8266_MUX) {
             return;
         }
-        //BLYNK_LOG4("Got: ", len, ", Free: ", buffer.free(void));
-        if (buffer.free(void) < len) {
+        //BLYNK_LOG4("Got: ", len, ", Free: ", buffer.free());
+        if (buffer.free() < len) {
           BLYNK_LOG1(BLYNK_F("Buffer overflow"));
           return;
         }
         while (len) {
-            if (client->getUart(void)->available(void)) {
-                uint8_t b = client->getUart(void)->read(void);
+            if (client->getUart()->available()) {
+                uint8_t b = client->getUart()->read();
                 buffer.put(b);
                 len--;
             }
@@ -84,15 +84,15 @@ public:
 
     void disconnect(void) {
         status = false;
-        buffer.clear(void);
+        buffer.clear();
         client->releaseTCP(BLYNK_ESP8266_MUX);
     }
 
     size_t read(void* buf, size_t len) {
-        millis_time_t start = BlynkMillis(void);
-        //BLYNK_LOG4("Waiting: ", len, " Buffer: ", buffer.size(void));
-        while ((buffer.size(void) < len) && (BlynkMillis(void) - start < 1500)) {
-            client->run(void);
+        millis_time_t start = BlynkMillis();
+        //BLYNK_LOG4("Waiting: ", len, " Buffer: ", buffer.size());
+        while ((buffer.size() < len) && (BlynkMillis() - start < 1500)) {
+            client->run();
         }
         return buffer.get((uint8_t*)buf, len);
     }
@@ -106,9 +106,9 @@ public:
     bool connected(void) { return status; }
 
     int available(void) {
-        client->run(void);
-        //BLYNK_LOG2("Still: ", buffer.size(void));
-        return buffer.size(void);
+        client->run();
+        //BLYNK_LOG2("Still: ", buffer.size());
+        return buffer.size();
     }
 
 private:
@@ -133,11 +133,11 @@ public:
     {
         BlynkDelay(500);
         BLYNK_LOG2(BLYNK_F("Connecting to "), ssid);
-        /*if (!wifi->restart(void)) {
+        /*if (!wifi->restart()) {
             BLYNK_LOG1(BLYNK_F("Failed to restart"));
             return false;
         }*/
-        if (!wifi->kick(void)) {
+        if (!wifi->kick()) {
              BLYNK_LOG1(BLYNK_F("ESP is not responding"));
              //TODO: BLYNK_LOG_TROUBLE(BLYNK_F("esp8266-not-responding"));
              return false;
@@ -146,17 +146,17 @@ public:
             BLYNK_LOG1(BLYNK_F("Failed to disable Echo"));
             return false;
         }
-        String ver = wifi->ESP8266::getVersion(void);
+        String ver = wifi->ESP8266::getVersion();
         BLYNK_LOG1(ver);
-        if (!wifi->enableMUX(void)) {
+        if (!wifi->enableMUX()) {
             BLYNK_LOG1(BLYNK_F("Failed to enable MUX"));
         }
-        if (!wifi->setOprToStation(void)) {
+        if (!wifi->setOprToStation()) {
             BLYNK_LOG1(BLYNK_F("Failed to set STA mode"));
             return false;
         }
         if (wifi->joinAP(ssid, pass)) {
-            String my_ip = wifi->getLocalIP(void);
+            String my_ip = wifi->getLocalIP();
             BLYNK_LOG1(my_ip);
         } else {
             BLYNK_LOG1(BLYNK_F("Failed to connect WiFi"));
@@ -186,7 +186,7 @@ public:
     {
         config(esp8266, auth, domain, port);
         connectWiFi(ssid, pass);
-        while(this->connect(void) != true) {}
+        while(this->connect() != true) {}
     }
 
 private:

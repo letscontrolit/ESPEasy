@@ -76,13 +76,13 @@ bool CPlugin_008(byte function, struct EventStruct *event, String& string)
           }
         }
         success = C008_DelayHandler.addToQueue(element);
-        scheduleNextDelayQueue(TIMER_C008_DELAY_QUEUE, C008_DelayHandler.getNextScheduleTime(void));
+        scheduleNextDelayQueue(TIMER_C008_DELAY_QUEUE, C008_DelayHandler.getNextScheduleTime());
         break;
       }
 
     case CPLUGIN_FLUSH:
       {
-        process_c008_delay_queue(void);
+        process_c008_delay_queue();
         delay(0);
         break;
       }

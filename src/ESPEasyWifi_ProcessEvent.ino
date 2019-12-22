@@ -9,52 +9,52 @@ bool unprocessedWifiEvents(void) {
 }
 
 // ********************************************************************************
-// Called from the loop(void) to make sure events are processed as soon as possible.
-// These functions are called from Setup(void) or Loop(void) and thus may call delay(void) or yield(void)
+// Called from the loop() to make sure events are processed as soon as possible.
+// These functions are called from Setup() or Loop() and thus may call delay() or yield()
 // ********************************************************************************
 void handle_unprocessedWiFiEvents(void)
 {
-  if (WiFi.status(void) == WL_DISCONNECTED) {
+  if (WiFi.status() == WL_DISCONNECTED) {
     delay(100);
   }
 
-  if ((wifiStatus != ESPEASY_WIFI_SERVICES_INITIALIZED) || unprocessedWifiEvents(void)) {
+  if ((wifiStatus != ESPEASY_WIFI_SERVICES_INITIALIZED) || unprocessedWifiEvents()) {
     // WiFi connection is not yet available, so introduce some extra delays to
     // help the background tasks managing wifi connections
     delay(1);
 
     if (wifiConnectAttemptNeeded) {
-      WiFiConnectRelaxed(void);
+      WiFiConnectRelaxed();
     }
 
     // Process disconnect events before connect events.
     if (!processedDisconnect) {
       #ifndef BUILD_NO_DEBUG
-      addLog(LOG_LEVEL_DEBUG, F("WIFI : Entering processDisconnect(void)"));
+      addLog(LOG_LEVEL_DEBUG, F("WIFI : Entering processDisconnect()"));
       #endif // ifndef BUILD_NO_DEBUG
-      processDisconnect(void);
+      processDisconnect();
     }
 
     if (!processedConnect) {
       #ifndef BUILD_NO_DEBUG
-      addLog(LOG_LEVEL_DEBUG, F("WIFI : Entering processConnect(void)"));
+      addLog(LOG_LEVEL_DEBUG, F("WIFI : Entering processConnect()"));
       #endif // ifndef BUILD_NO_DEBUG
-      processConnect(void);
+      processConnect();
     }
 
     if (!processedGotIP) {
       #ifndef BUILD_NO_DEBUG
-      addLog(LOG_LEVEL_DEBUG, F("WIFI : Entering processGotIP(void)"));
+      addLog(LOG_LEVEL_DEBUG, F("WIFI : Entering processGotIP()"));
       #endif // ifndef BUILD_NO_DEBUG
-      processGotIP(void);
+      processGotIP();
     }
 
     if (!processedDHCPTimeout) {
       #ifndef BUILD_NO_DEBUG
-      addLog(LOG_LEVEL_DEBUG, F("WIFI : DHCP timeout, Calling disconnect(void)"));
+      addLog(LOG_LEVEL_DEBUG, F("WIFI : DHCP timeout, Calling disconnect()"));
       #endif // ifndef BUILD_NO_DEBUG
       processedDHCPTimeout = true;
-      processDisconnect(void);
+      processDisconnect();
     }
 
     if (wifiStatus & ESPEASY_WIFI_CONNECTED) {
@@ -62,17 +62,17 @@ void handle_unprocessedWiFiEvents(void)
       wifiConnectInProgress = false;
     }
 
-    if ((wifiStatus & ESPEASY_WIFI_GOT_IP) && (wifiStatus & ESPEASY_WIFI_CONNECTED) && WiFi.isConnected(void)) {
-      markWiFi_services_initialized(void);
+    if ((wifiStatus & ESPEASY_WIFI_GOT_IP) && (wifiStatus & ESPEASY_WIFI_CONNECTED) && WiFi.isConnected()) {
+      markWiFi_services_initialized();
     }
-  } else if (!WiFiConnected(void)) {
+  } else if (!WiFiConnected()) {
     // Somehow the WiFi has entered a limbo state.
     // FIXME TD-er: This may happen on WiFi config with AP_STA mode active.
     //    addLog(LOG_LEVEL_ERROR, F("Wifi status out sync"));
-    //    resetWiFi(void);
+    //    resetWiFi();
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-      String wifilog = F("WIFI : Wifi status out sync WiFi.status(void) = ");
-      wifilog += String(WiFi.status(void));
+      String wifilog = F("WIFI : Wifi status out sync WiFi.status() = ");
+      wifilog += String(WiFi.status());
 
       addLog(LOG_LEVEL_ERROR, wifilog);
     }
@@ -82,8 +82,8 @@ void handle_unprocessedWiFiEvents(void)
     #ifndef BUILD_NO_DEBUG
 
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-      String wifilog = F("WIFI : Disconnected: WiFi.status(void) = ");
-      wifilog += String(WiFi.status(void));
+      String wifilog = F("WIFI : Disconnected: WiFi.status() = ");
+      wifilog += String(WiFi.status());
 
       addLog(LOG_LEVEL_DEBUG, wifilog);
     }
@@ -93,13 +93,13 @@ void handle_unprocessedWiFiEvents(void)
     delay(10);
   }
 
-  if (!processedDisconnectAPmode) { processDisconnectAPmode(void); }
+  if (!processedDisconnectAPmode) { processDisconnectAPmode(); }
 
-  if (!processedConnectAPmode) { processConnectAPmode(void); }
+  if (!processedConnectAPmode) { processConnectAPmode(); }
 
-  if (timerAPoff != 0) { processDisableAPmode(void); }
+  if (timerAPoff != 0) { processDisableAPmode(); }
 
-  if (!processedScanDone) { processScanDone(void); }
+  if (!processedScanDone) { processScanDone(); }
 
   if (wifi_connect_attempt > 0) {
     // We only want to clear this counter if the connection is currently stable.
@@ -108,11 +108,11 @@ void handle_unprocessedWiFiEvents(void)
         // Connection considered stable
         wifi_connect_attempt = 0;
 
-        if (!WiFi.getAutoConnect(void)) {
+        if (!WiFi.getAutoConnect()) {
           WiFi.setAutoConnect(true);
         }
       } else {
-        if (WiFi.getAutoConnect(void)) {
+        if (WiFi.getAutoConnect()) {
           WiFi.setAutoConnect(false);
         }
       }
@@ -122,7 +122,7 @@ void handle_unprocessedWiFiEvents(void)
 
 // ********************************************************************************
 // Functions to process the data gathered from the events.
-// These functions are called from Setup(void) or Loop(void) and thus may call delay(void) or yield(void)
+// These functions are called from Setup() or Loop() and thus may call delay() or yield()
 // ********************************************************************************
 void processDisconnect(void) {
   if (processedDisconnect) { return; }
@@ -137,7 +137,7 @@ void processDisconnect(void) {
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("WIFI : Disconnected! Reason: '");
-    log += getLastDisconnectReason(void);
+    log += getLastDisconnectReason();
     log += '\'';
 
     if (lastConnectedDuration > 0) {
@@ -147,11 +147,11 @@ void processDisconnect(void) {
     addLog(LOG_LEVEL_INFO, log);
   }
 
-  if (Settings.WiFiRestart_connection_lost(void)) {
+  if (Settings.WiFiRestart_connection_lost()) {
     setWifiMode(WIFI_OFF);
     delay(100);
   }
-  logConnectionStatus(void);
+  logConnectionStatus();
 }
 
 void processConnect(void) {
@@ -166,9 +166,9 @@ void processConnect(void) {
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     const long connect_duration = timeDiff(last_wifi_connect_attempt_moment, lastConnectMoment);
     String     log              = F("WIFI : Connected! AP: ");
-    log += WiFi.SSID(void);
+    log += WiFi.SSID();
     log += " (";
-    log += WiFi.BSSIDstr(void);
+    log += WiFi.BSSIDstr();
     log += F(") Ch: ");
     log += RTC.lastWiFiChannel;
 
@@ -191,42 +191,42 @@ void processConnect(void) {
     }
   } 
 
-  if (useStaticIP(void)) {
-    markGotIP(void); // in static IP config the got IP event is never fired.
+  if (useStaticIP()) {
+    markGotIP(); // in static IP config the got IP event is never fired.
   }
-  saveToRTC(void);
+  saveToRTC();
 
-  logConnectionStatus(void);
+  logConnectionStatus();
 }
 
 void processGotIP(void) {
   if (processedGotIP) {
     return;
   }
-  IPAddress ip = WiFi.localIP(void);
+  IPAddress ip = WiFi.localIP();
 
-  if (!useStaticIP(void)) {
+  if (!useStaticIP()) {
     if ((ip[0] == 0) && (ip[1] == 0) && (ip[2] == 0) && (ip[3] == 0)) {
       return;
     }
   }
   processedGotIP = true;
   wifiStatus    |= ESPEASY_WIFI_GOT_IP;
-  const IPAddress gw       = WiFi.gatewayIP(void);
-  const IPAddress subnet   = WiFi.subnetMask(void);
+  const IPAddress gw       = WiFi.gatewayIP();
+  const IPAddress subnet   = WiFi.subnetMask();
   const long dhcp_duration = timeDiff(lastConnectMoment, lastGetIPmoment);
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("WIFI : ");
 
-    if (useStaticIP(void)) {
+    if (useStaticIP()) {
       log += F("Static IP: ");
     } else {
       log += F("DHCP IP: ");
     }
     log += formatIP(ip);
     log += " (";
-    log += WifiGetHostname(void);
+    log += WifiGetHostname();
     log += F(") GW: ");
     log += formatIP(gw);
     log += F(" SN: ");
@@ -256,8 +256,8 @@ void processGotIP(void) {
   }
 
   // First try to get the time, since that may be used in logs
-  if (systemTimePresent(void)) {
-    initTime(void);
+  if (systemTimePresent()) {
+    initTime();
   }
 #ifdef USES_MQTT
   mqtt_reconnect_count        = 0;
@@ -265,7 +265,7 @@ void processGotIP(void) {
   timermqtt_interval          = 100;
   setIntervalTimer(TIMER_MQTT);
 #endif // USES_MQTT
-  sendGratuitousARP_now(void);
+  sendGratuitousARP_now();
 
   if (Settings.UseRules)
   {
@@ -273,14 +273,14 @@ void processGotIP(void) {
   }
   statusLED(true);
 
-  //  WiFi.scanDelete(void);
+  //  WiFi.scanDelete();
 
   if (wifiSetup) {
     // Wifi setup was active, Apparently these settings work.
     wifiSetup = false;
-    SaveSettings(void);
+    SaveSettings();
   }
-  logConnectionStatus(void);
+  logConnectionStatus();
 }
 
 // A client disconnected from the AP on this node.
@@ -289,7 +289,7 @@ void processDisconnectAPmode(void) {
   processedDisconnectAPmode = true;
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    const int nrStationsConnected = WiFi.softAPgetStationNum(void);
+    const int nrStationsConnected = WiFi.softAPgetStationNum();
     String    log                 = F("AP Mode: Client disconnected: ");
     log += formatMAC(lastMacDisconnectedAPmode);
     log += F(" Connected devices: ");
@@ -303,13 +303,13 @@ void processConnectAPmode(void) {
   if (processedConnectAPmode) { return; }
   processedConnectAPmode = true;
   // Extend timer to switch off AP.
-  timerAPoff = millis(void) + WIFI_AP_OFF_TIMER_DURATION;
+  timerAPoff = millis() + WIFI_AP_OFF_TIMER_DURATION;
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("AP Mode: Client connected: ");
     log += formatMAC(lastMacConnectedAPmode);
     log += F(" Connected devices: ");
-    log += WiFi.softAPgetStationNum(void);
+    log += WiFi.softAPgetStationNum();
     addLog(LOG_LEVEL_INFO, log);
   }
   setWebserverRunning(true);
@@ -327,14 +327,14 @@ void processConnectAPmode(void) {
 void processDisableAPmode(void) {
   if (timerAPoff == 0) { return; }
 
-  if (WifiIsAP(WiFi.getMode(void))) {
+  if (WifiIsAP(WiFi.getMode())) {
     // disable AP after timeout and no clients connected.
-    if (timeOutReached(timerAPoff) && (WiFi.softAPgetStationNum(void) == 0)) {
+    if (timeOutReached(timerAPoff) && (WiFi.softAPgetStationNum() == 0)) {
       setAP(false);
     }
   }
 
-  if (!WifiIsAP(WiFi.getMode(void))) {
+  if (!WifiIsAP(WiFi.getMode())) {
     timerAPoff = 0;
   }
 }
@@ -343,7 +343,7 @@ void processScanDone(void) {
   if (processedScanDone) { return; }
 
   // Better act on the scan done event, as it may get triggered for normal wifi begin calls.
-  int8_t scanCompleteStatus = WiFi.scanComplete(void);
+  int8_t scanCompleteStatus = WiFi.scanComplete();
   switch (scanCompleteStatus) {
     case 0: // Nothing (yet) found
       if (timePassedSince(lastGetScanMoment) > 5000) {
@@ -358,7 +358,7 @@ void processScanDone(void) {
       return;
   }
 
-  lastGetScanMoment = millis(void);
+  lastGetScanMoment = millis();
   processedScanDone = true;
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -371,11 +371,11 @@ void processScanDone(void) {
   int32_t bestRssi         = -1000;
   uint8_t bestWiFiSettings = RTC.lastWiFiSettingsIndex;
 
-  if (selectValidWiFiSettings(void) && scanCompleteStatus > 0) {
+  if (selectValidWiFiSettings() && scanCompleteStatus > 0) {
     const uint8_t startWiFiSettings = RTC.lastWiFiSettingsIndex;
     bool done = false;
     while (!done) {
-      String ssid_to_check = getLastWiFiSettingsSSID(void); 
+      String ssid_to_check = getLastWiFiSettingsSSID(); 
       for (int i = 0; i < scanCompleteStatus; ++i) {
         if (WiFi.SSID(i) == ssid_to_check) {
           int32_t rssi = WiFi.RSSI(i);
@@ -390,7 +390,7 @@ void processScanDone(void) {
 
       // Select the next WiFi settings.
       // RTC.lastWiFiSettingsIndex may be updated.
-      if (!selectNextWiFiSettings(void)) {
+      if (!selectNextWiFiSettings()) {
         done = true; 
       }
       if (startWiFiSettings == RTC.lastWiFiSettingsIndex) {

@@ -27,7 +27,7 @@ void flashCount(void)
     RTC.flashDayCounter++;
   }
   RTC.flashCounter++;
-  saveToRTC(void);
+  saveToRTC();
 }
 
 String flashGuard(void)
@@ -40,25 +40,25 @@ String flashGuard(void)
     addLog(LOG_LEVEL_ERROR, log);
     return log;
   }
-  flashCount(void);
-  return String(void);
+  flashCount();
+  return String();
 }
 
 // use this in function that can return an error string. it automaticly returns with an error string if there where too many flash writes.
-#define FLASH_GUARD(void) { String flashErr = flashGuard(void); \
-                        if (flashErr.length(void)) return (flashErr); }
+#define FLASH_GUARD() { String flashErr = flashGuard(); \
+                        if (flashErr.length()) return (flashErr); }
 
 
 String appendLineToFile(const String& fname, const String& line) {
-  return appendToFile(fname, reinterpret_cast<const uint8_t *>(line.c_str(void)), line.length(void));
+  return appendToFile(fname, reinterpret_cast<const uint8_t *>(line.c_str()), line.length());
 }
 
 String appendToFile(const String& fname, const uint8_t *data, unsigned int size) {
   fs::File f = tryOpenFile(fname, "a+");
 
-  SPIFFS_CHECK(f,                   fname.c_str(void));
-  SPIFFS_CHECK(f.write(data, size), fname.c_str(void));
-  f.close(void);
+  SPIFFS_CHECK(f,                   fname.c_str());
+  SPIFFS_CHECK(f.write(data, size), fname.c_str());
+  f.close();
   return "";
 }
 
@@ -73,7 +73,7 @@ fs::File tryOpenFile(const String& fname, const String& mode) {
   if ((mode == "r") && !fileExists(fname)) {
     return f;
   }
-  f = SPIFFS.open(fname, mode.c_str(void));
+  f = SPIFFS.open(fname, mode.c_str());
   STOP_TIMER(TRY_OPEN_FILE);
   return f;
 }
@@ -86,15 +86,15 @@ bool tryRenameFile(const String& fname_old, const String& fname_new) {
 }
 
 bool tryDeleteFile(const String& fname) {
-  if (fname.length(void) > 0)
+  if (fname.length() > 0)
   {
     bool res = SPIFFS.remove(fname);
 
-    // A call to GarbageCollection(void) will at most erase a single block. (e.g. 8k block size)
+    // A call to GarbageCollection() will at most erase a single block. (e.g. 8k block size)
     // A deleted file may have covered more than a single block, so try to clear multiple blocks.
     uint8_t retries = 3;
 
-    while (retries > 0 && GarbageCollection(void)) {
+    while (retries > 0 && GarbageCollection()) {
       --retries;
     }
     return res;
@@ -114,7 +114,7 @@ String BuildFixes(void)
   {
     String   fname = F(FILE_NOTIFICATION);
     fs::File f     = tryOpenFile(fname, "w");
-    SPIFFS_CHECK(f, fname.c_str(void));
+    SPIFFS_CHECK(f, fname.c_str());
 
     if (f)
     {
@@ -122,9 +122,9 @@ String BuildFixes(void)
       {
         // See https://github.com/esp8266/Arduino/commit/b1da9eda467cc935307d553692fdde2e670db258#r32622483
         uint8_t zero_value = 0;
-        SPIFFS_CHECK(f.write(&zero_value, 1), fname.c_str(void));
+        SPIFFS_CHECK(f.write(&zero_value, 1), fname.c_str());
       }
-      f.close(void);
+      f.close();
     }
   }
 
@@ -152,7 +152,7 @@ String BuildFixes(void)
 
 
   Settings.Build = BUILD;
-  return SaveSettings(void);
+  return SaveSettings();
 }
 
 /********************************************************************************************\
@@ -163,7 +163,7 @@ void fileSystemCheck(void)
   checkRAM(F("fileSystemCheck"));
   addLog(LOG_LEVEL_INFO, F("FS   : Mounting..."));
 
-  if (SPIFFS.begin(void))
+  if (SPIFFS.begin())
   {
     #if defined(ESP8266)
     fs::FSInfo fs_info;
@@ -180,7 +180,7 @@ void fileSystemCheck(void)
     // Run garbage collection before any file is open.
     uint8_t retries = 3;
 
-    while (retries > 0 && GarbageCollection(void)) {
+    while (retries > 0 && GarbageCollection()) {
       --retries;
     }
     #endif // if defined(ESP8266)
@@ -189,17 +189,17 @@ void fileSystemCheck(void)
 
     if (!f)
     {
-      ResetFactory(void);
+      ResetFactory();
     }
 
-    if (f) { f.close(void); }
+    if (f) { f.close(); }
   }
   else
   {
     String log = F("FS   : Mount failed");
     serialPrintln(log);
     addLog(LOG_LEVEL_ERROR, log);
-    ResetFactory(void);
+    ResetFactory();
   }
 }
 
@@ -212,7 +212,7 @@ bool GarbageCollection(void) {
   // Perform garbage collection
   START_TIMER;
 
-  if (SPIFFS.gc(void)) {
+  if (SPIFFS.gc()) {
     addLog(LOG_LEVEL_INFO, F("FS   : Success garbage collection"));
     STOP_TIMER(SPIFFS_GC_SUCCESS);
     return true;
@@ -242,18 +242,18 @@ String SaveSettings(void)
 
   /*
      memcpy( Settings.ProgmemMd5, CRCValues.runTimeMD5, 16);
-     md5.begin(void);
+     md5.begin();
      md5.add((uint8_t *)&Settings, sizeof(Settings)-16);
-     md5.calculate(void);
+     md5.calculate();
      md5.getBytes(tmp_md5);
      if (memcmp(tmp_md5, Settings.md5, 16) != 0) {
       // Settings have changed, save to file.
       memcpy(Settings.md5, tmp_md5, 16);
    */
-  Settings.validate(void);
+  Settings.validate();
   err = SaveToFile((char *)FILE_CONFIG, 0, (byte *)&Settings, sizeof(Settings));
 
-  if (err.length(void)) {
+  if (err.length()) {
     return err;
   }
 
@@ -263,11 +263,11 @@ String SaveSettings(void)
 
   //  }
 
-  SecuritySettings.validate(void);
+  SecuritySettings.validate();
   memcpy(SecuritySettings.ProgmemMd5, CRCValues.runTimeMD5, 16);
-  md5.begin(void);
+  md5.begin();
   md5.add((uint8_t *)&SecuritySettings, sizeof(SecuritySettings) - 16);
-  md5.calculate(void);
+  md5.calculate();
   md5.getBytes(tmp_md5);
 
   if (memcmp(tmp_md5, SecuritySettings.md5, 16) != 0) {
@@ -275,20 +275,20 @@ String SaveSettings(void)
     memcpy(SecuritySettings.md5, tmp_md5, 16);
     err = SaveToFile((char *)FILE_SECURITY, 0, (byte *)&SecuritySettings, sizeof(SecuritySettings));
 
-    if (WifiIsAP(WiFi.getMode(void))) {
+    if (WifiIsAP(WiFi.getMode())) {
       // Security settings are saved, may be update of WiFi settings or hostname.
       wifiSetupConnect         = true;
       wifiConnectAttemptNeeded = true;
     }
   }
-  afterloadSettings(void);
+  afterloadSettings();
   return err;
 }
 
 void afterloadSettings(void) {
-  ExtraTaskSettings.clear(void); // make sure these will not contain old settings.
+  ExtraTaskSettings.clear(); // make sure these will not contain old settings.
   ResetFactoryDefaultPreference_struct pref(Settings.ResetFactoryDefaultPreference);
-  DeviceModel model = pref.getDeviceModel(void);
+  DeviceModel model = pref.getDeviceModel();
 
   // TODO TD-er: Try to get the information from more locations to make it more persistent
   // Maybe EEPROM location?
@@ -296,11 +296,11 @@ void afterloadSettings(void) {
   if (modelMatchingFlashSize(model)) {
     ResetFactoryDefaultPreference = Settings.ResetFactoryDefaultPreference;
   }
-  msecTimerHandler.setEcoMode(Settings.EcoPowerMode(void));
+  msecTimerHandler.setEcoMode(Settings.EcoPowerMode());
   if (!Settings.UseRules) {
-    eventQueue.clear(void);
+    eventQueue.clear();
   }
-  set_mDNS(void); // To update changes in hostname.
+  set_mDNS(); // To update changes in hostname.
 }
 
 /********************************************************************************************\
@@ -315,18 +315,18 @@ String LoadSettings(void)
 
   err = LoadFromFile((char *)FILE_CONFIG, 0, (byte *)&Settings, sizeof(SettingsStruct));
 
-  if (err.length(void)) {
+  if (err.length()) {
     return err;
   }
-  Settings.validate(void);
+  Settings.validate();
 
   // FIXME @TD-er: As discussed in #1292, the CRC for the settings is now disabled.
 
   /*
      if (Settings.StructSize > 16) {
-      md5.begin(void);
+      md5.begin();
       md5.add((uint8_t *)&Settings, Settings.StructSize -16);
-      md5.calculate(void);
+      md5.calculate();
       md5.getBytes(calculatedMd5);
      }
      if (memcmp (calculatedMd5, Settings.md5,16)==0){
@@ -340,9 +340,9 @@ String LoadSettings(void)
    */
 
   err = LoadFromFile((char *)FILE_SECURITY, 0, (byte *)&SecuritySettings, sizeof(SecurityStruct));
-  md5.begin(void);
+  md5.begin();
   md5.add((uint8_t *)&SecuritySettings, sizeof(SecuritySettings) - 16);
-  md5.calculate(void);
+  md5.calculate();
   md5.getBytes(calculatedMd5);
 
   if (memcmp(calculatedMd5, SecuritySettings.md5, 16) == 0) {
@@ -356,10 +356,10 @@ String LoadSettings(void)
     addLog(LOG_LEVEL_ERROR, F("CRC  : SecuritySettings CRC   ...FAIL"));
   }
 
-  //  setupStaticIPconfig(void);
+  //  setupStaticIPconfig();
   // FIXME TD-er: Must check if static/dynamic IP was changed and trigger a reconnect? Or is a reboot better when changing those settings?
-  afterloadSettings(void);
-  SecuritySettings.validate(void);
+  afterloadSettings();
+  SecuritySettings.validate();
   return err;
 }
 
@@ -417,7 +417,7 @@ byte disableNotification(byte bootFailedCount) {
    Offsets in settings files
  \*********************************************************************************************/
 bool getSettingsParameters(SettingsType settingsType, int index, int& max_index, int& offset, int& max_size, int& struct_size) {
-  // The defined offsets should be used with (void) just in case they are the result of a formula in the defines.
+  // The defined offsets should be used with () just in case they are the result of a formula in the defines.
   struct_size = 0;
 
   switch (settingsType) {
@@ -550,7 +550,7 @@ String SaveTaskSettings(taskIndex_t TaskIndex)
                           (byte *)&ExtraTaskSettings,
                           sizeof(struct ExtraTaskSettingsStruct));
 
-  if (err.length(void) == 0) {
+  if (err.length() == 0) {
     err = checkTaskSettings(TaskIndex);
   }
   return err;
@@ -562,15 +562,15 @@ String SaveTaskSettings(taskIndex_t TaskIndex)
 String LoadTaskSettings(taskIndex_t TaskIndex)
 {
   if (ExtraTaskSettings.TaskIndex == TaskIndex) {
-    return String(void); // already loaded
+    return String(); // already loaded
   }
   if (!validTaskIndex(TaskIndex)) {
-    return String(void); // Un-initialized task index.
+    return String(); // Un-initialized task index.
   }
   checkRAM(F("LoadTaskSettings"));
 
   START_TIMER
-  ExtraTaskSettings.clear(void);
+  ExtraTaskSettings.clear();
   String result = "";
   result =
     LoadFromFile(TaskSettings_Type, TaskIndex, (char *)FILE_CONFIG, (byte *)&ExtraTaskSettings, sizeof(struct ExtraTaskSettingsStruct));
@@ -587,7 +587,7 @@ String LoadTaskSettings(taskIndex_t TaskIndex)
     // the plugin call should populate ExtraTaskSettings with its default values.
     PluginCall(PLUGIN_GET_DEVICEVALUENAMES, &TempEvent, tmp);
   }
-  ExtraTaskSettings.validate(void);
+  ExtraTaskSettings.validate();
   STOP_TIMER(LOAD_TASK_SETTINGS);
 
   return result;
@@ -664,7 +664,7 @@ String LoadCustomTaskSettings(taskIndex_t TaskIndex, String strings[], uint16_t 
 String SaveControllerSettings(int ControllerIndex, ControllerSettingsStruct& controller_settings)
 {
   checkRAM(F("SaveControllerSettings"));
-  controller_settings.validate(void); // Make sure the saved controller settings have proper values.
+  controller_settings.validate(); // Make sure the saved controller settings have proper values.
   return SaveToFile(ControllerSettings_Type, ControllerIndex,
                     (char *)FILE_CONFIG, (byte *)&controller_settings, sizeof(controller_settings));
 }
@@ -677,7 +677,7 @@ String LoadControllerSettings(int ControllerIndex, ControllerSettingsStruct& con
   String result =
     LoadFromFile(ControllerSettings_Type, ControllerIndex,
                  (char *)FILE_CONFIG, (byte *)&controller_settings, sizeof(controller_settings));
-  controller_settings.validate(void); // Make sure the loaded controller settings have proper values.
+  controller_settings.validate(); // Make sure the loaded controller settings have proper values.
   return result;
 }
 
@@ -734,7 +734,7 @@ String LoadNotificationSettings(int NotificationIndex, byte *memAddress, int dat
 String InitFile(const char *fname, int datasize)
 {
   checkRAM(F("InitFile"));
-  FLASH_GUARD(void);
+  FLASH_GUARD();
 
   fs::File f = tryOpenFile(fname, "w");
 
@@ -747,11 +747,11 @@ String InitFile(const char *fname, int datasize)
       uint8_t zero_value = 0;
       SPIFFS_CHECK(f.write(&zero_value, 1), fname);
     }
-    f.close(void);
+    f.close();
   }
 
   // OK
-  return String(void);
+  return String();
 }
 
 /********************************************************************************************\
@@ -786,18 +786,18 @@ String SaveToFile(const char *fname, int index, const byte *memAddress, int data
   }
   START_TIMER;
   checkRAM(F("SaveToFile"));
-  FLASH_GUARD(void);
+  FLASH_GUARD();
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("SaveToFile: free stack: ");
-    log += getCurrentFreeStack(void);
+    log += getCurrentFreeStack();
     addLog(LOG_LEVEL_INFO, log);
   }
   delay(1);
-  unsigned long timer = millis(void) + 50;
+  unsigned long timer = millis() + 50;
   fs::File f          = tryOpenFile(fname, mode);
 
   if (f) {
-    clearAllCaches(void);
+    clearAllCaches();
     SPIFFS_CHECK(f,                          fname);
     SPIFFS_CHECK(f.seek(index, fs::SeekSet), fname);
     const byte *pointerToByteToSave = memAddress;
@@ -811,7 +811,7 @@ String SaveToFile(const char *fname, int index, const byte *memAddress, int data
 
       if (x % 256 == 0) {
         // one page written, do some background tasks
-        timer = millis(void) + 50;
+        timer = millis() + 50;
         delay(0);
       }
 
@@ -820,7 +820,7 @@ String SaveToFile(const char *fname, int index, const byte *memAddress, int data
         delay(0);
       }
     }
-    f.close(void);
+    f.close();
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log = F("FILE : Saved ");
       log = log + fname;
@@ -836,12 +836,12 @@ String SaveToFile(const char *fname, int index, const byte *memAddress, int data
   STOP_TIMER(SAVEFILE_STATS);
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("SaveToFile: free stack after: ");
-    log += getCurrentFreeStack(void);
+    log += getCurrentFreeStack();
     addLog(LOG_LEVEL_INFO, log);
   }
 
   // OK
-  return String(void);
+  return String();
 }
 
 /********************************************************************************************\
@@ -858,7 +858,7 @@ String ClearInFile(char *fname, int index, int datasize)
   }
 
   checkRAM(F("ClearInFile"));
-  FLASH_GUARD(void);
+  FLASH_GUARD();
 
   fs::File f = tryOpenFile(fname, "r+");
 
@@ -873,7 +873,7 @@ String ClearInFile(char *fname, int index, int datasize)
       uint8_t zero_value = 0;
       SPIFFS_CHECK(f.write(&zero_value, 1), fname);
     }
-    f.close(void);
+    f.close();
   } else {
     String log = F("ClearInFile: ");
     log += fname;
@@ -883,7 +883,7 @@ String ClearInFile(char *fname, int index, int datasize)
   }
 
   // OK
-  return String(void);
+  return String();
 }
 
 /********************************************************************************************\
@@ -906,12 +906,12 @@ String LoadFromFile(char *fname, int offset, byte *memAddress, int datasize)
   SPIFFS_CHECK(f,                            fname);
   SPIFFS_CHECK(f.seek(offset, fs::SeekSet),  fname);
   SPIFFS_CHECK(f.read(memAddress, datasize), fname);
-  f.close(void);
+  f.close();
 
   STOP_TIMER(LOADFILE_STATS);
   delay(1);
 
-  return String(void);
+  return String();
 }
 
 /********************************************************************************************\
@@ -1012,7 +1012,7 @@ size_t SpiffsUsedBytes(void) {
   size_t result = 1; // Do not output 0, this may be used in divisions.
 
   #ifdef ESP32
-  result = SPIFFS.usedBytes(void);
+  result = SPIFFS.usedBytes();
   #endif // ifdef ESP32
   #ifdef ESP8266
   fs::FSInfo fs_info;
@@ -1026,7 +1026,7 @@ size_t SpiffsTotalBytes(void) {
   size_t result = 1; // Do not output 0, this may be used in divisions.
 
   #ifdef ESP32
-  result = SPIFFS.totalBytes(void);
+  result = SPIFFS.totalBytes();
   #endif // ifdef ESP32
   #ifdef ESP8266
   fs::FSInfo fs_info;
@@ -1065,18 +1065,18 @@ size_t SpiffsPagesize(void) {
 }
 
 size_t SpiffsFreeSpace(void) {
-  int freeSpace = SpiffsTotalBytes(void) - SpiffsUsedBytes(void);
+  int freeSpace = SpiffsTotalBytes() - SpiffsUsedBytes();
 
-  if (freeSpace < static_cast<int>(2 * SpiffsBlocksize(void))) {
+  if (freeSpace < static_cast<int>(2 * SpiffsBlocksize())) {
     // Not enough free space left to store anything
     // There needs to be minimum of 2 free blocks.
     return 0;
   }
-  return freeSpace - 2 * SpiffsBlocksize(void);
+  return freeSpace - 2 * SpiffsBlocksize();
 }
 
 bool SpiffsFull(void) {
-  return SpiffsFreeSpace(void) == 0;
+  return SpiffsFreeSpace() == 0;
 }
 
 /********************************************************************************************\
@@ -1122,8 +1122,8 @@ bool getCacheFileCounters(uint16_t& lowest, uint16_t& highest, size_t& filesizeH
 #ifdef ESP8266
   Dir dir = SPIFFS.openDir("cache");
 
-  while (dir.next(void)) {
-    String filename = dir.fileName(void);
+  while (dir.next()) {
+    String filename = dir.fileName();
     int    count    = getCacheFileCountFromFilename(filename);
 
     if (count >= 0) {
@@ -1133,19 +1133,19 @@ bool getCacheFileCounters(uint16_t& lowest, uint16_t& highest, size_t& filesizeH
 
       if (highest < count) {
         highest         = count;
-        filesizeHighest = dir.fileSize(void);
+        filesizeHighest = dir.fileSize();
       }
     }
   }
 #endif // ESP8266
 #ifdef ESP32
   File root = SPIFFS.open("/cache");
-  File file = root.openNextFile(void);
+  File file = root.openNextFile();
 
   while (file)
   {
-    if (!file.isDirectory(void)) {
-      int count = getCacheFileCountFromFilename(file.name(void));
+    if (!file.isDirectory()) {
+      int count = getCacheFileCountFromFilename(file.name());
 
       if (count >= 0) {
         if (lowest > count) {
@@ -1154,11 +1154,11 @@ bool getCacheFileCounters(uint16_t& lowest, uint16_t& highest, size_t& filesizeH
 
         if (highest < count) {
           highest         = count;
-          filesizeHighest = file.size(void);
+          filesizeHighest = file.size();
         }
       }
     }
-    file = root.openNextFile(void);
+    file = root.openNextFile();
   }
 #endif // ESP32
 

@@ -1,6 +1,6 @@
 #include <DaikinHeatpumpARC417IR.h>
 
-DaikinHeatpumpARC417IR::DaikinHeatpumpARC417IR(void) : HeatpumpIR(void)
+DaikinHeatpumpARC417IR::DaikinHeatpumpARC417IR(void) : HeatpumpIR()
 {
   static const char model[] PROGMEM = "daikin_arc417";
   static const char info[]  PROGMEM = "{\"mdl\":\"daikin_arc417\",\"dn\":\"Daikin ARC417\",\"mT\":18,\"xT\":30,\"fs\":6,\"maint\":[10,11,12,13,14,15,16,17]}}}";

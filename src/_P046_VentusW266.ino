@@ -278,7 +278,7 @@ boolean Plugin_046(byte function, struct EventStruct *event, String& string)
     case PLUGIN_INIT:
       {
         if (!P046_data) {
-          P046_data = new P046_data_struct(void);
+          P046_data = new P046_data_struct();
         }
 
         byte choice = PCONFIG(0);

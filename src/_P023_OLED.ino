@@ -135,7 +135,7 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
             error += getCustomTaskSettingsError(varNr);
           }
         }
-        if (error.length(void) > 0) {
+        if (error.length() > 0) {
           addHtmlError(error);
         }
         SaveCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
@@ -222,10 +222,10 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
 
         for (byte x = 0; x < 8; x++)
         {
-          if (strings[x].length(void))
+          if (strings[x].length())
           {
             String newString = P023_parseTemplate(strings[x], 16);
-            Plugin_023_sendStrXY(OLED_Settings[index],newString.c_str(void), x, 0);
+            Plugin_023_sendStrXY(OLED_Settings[index],newString.c_str(), x, 0);
           }
         }
         success = false;
@@ -279,7 +279,7 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
           success = true;
           String text = parseStringToEndKeepCase(arguments, 4);
           text = P023_parseTemplate(text, 16);
-          Plugin_023_sendStrXY(OLED_Settings[index], text.c_str(void), event->Par1 - 1, event->Par2 - 1);
+          Plugin_023_sendStrXY(OLED_Settings[index], text.c_str(), event->Par1 - 1, event->Par2 - 1);
         }
         break;
       }
@@ -549,7 +549,7 @@ void Plugin_023_SendChar(struct Plugin_023_OLED_SettingStruct &oled, unsigned ch
   Wire.beginTransmission(oled.address);  // begin transmitting
   Wire.write(0x40);                      //data mode
   Wire.write(data);
-  Wire.endTransmission(void);              // stop transmitting
+  Wire.endTransmission();              // stop transmitting
 }
 
 
@@ -565,7 +565,7 @@ void Plugin_023_SendChar(struct Plugin_023_OLED_SettingStruct &oled, unsigned ch
 //   for (int i = 0; i < 8; i++)
 //     Wire.write(pgm_read_byte(Plugin_023_myFont[data - 0x20] + i));
 //
-//   Wire.endTransmission(void);    // stop transmitting
+//   Wire.endTransmission();    // stop transmitting
 // }
 
 
@@ -574,7 +574,7 @@ void Plugin_023_sendcommand(byte address, unsigned char com)
   Wire.beginTransmission(address);     //begin transmitting
   Wire.write(0x80);                          //command mode
   Wire.write(com);
-  Wire.endTransmission(void);                    // stop transmitting
+  Wire.endTransmission();                    // stop transmitting
 }
 
 

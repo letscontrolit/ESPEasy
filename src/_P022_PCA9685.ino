@@ -532,7 +532,7 @@ void Plugin_022_writeRegister(int i2cAddress, int regAddress, byte data) {
   Wire.beginTransmission(i2cAddress);
   Wire.write(regAddress);
   Wire.write(data);
-  Wire.endTransmission(void);
+  Wire.endTransmission();
 }
 
 uint8_t Plugin_022_readRegister(int i2cAddress, int regAddress) {
@@ -540,8 +540,8 @@ uint8_t Plugin_022_readRegister(int i2cAddress, int regAddress) {
 
   Wire.requestFrom(i2cAddress, 1, 1);
 
-  while (Wire.available(void)) {
-    res = Wire.read(void);
+  while (Wire.available()) {
+    res = Wire.read();
   }
   return res;
 }
@@ -576,7 +576,7 @@ void Plugin_022_Write(int address, int Par1, int Par2)
   Wire.write(highByte(LED_ON));
   Wire.write(lowByte(LED_OFF));
   Wire.write(highByte(LED_OFF));
-  Wire.endTransmission(void);
+  Wire.endTransmission();
 }
 
 void Plugin_022_Frequency(int address, uint16_t freq)

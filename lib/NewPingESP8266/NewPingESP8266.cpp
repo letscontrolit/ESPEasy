@@ -28,8 +28,8 @@ NewPingESP8266::NewPingESP8266(uint32_t trigger_pin, uint32_t echo_pin, unsigned
 	set_max_distance(max_cm_distance); // Call function to set the max sensor distance.
 
 #if (defined (__arm__) && defined (TEENSYDUINO)) || DO_BITWISE != true
-	pinMode(echo_pin, INPUT);     // Set echo pin to input (on Teensy 3.x (ARM), pins default to disabled, at least one pinMode(void) is needed for GPIO mode).
-	pinMode(trigger_pin, OUTPUT); // Set trigger pin to output (on Teensy 3.x (ARM), pins default to disabled, at least one pinMode(void) is needed for GPIO mode).
+	pinMode(echo_pin, INPUT);     // Set echo pin to input (on Teensy 3.x (ARM), pins default to disabled, at least one pinMode() is needed for GPIO mode).
+	pinMode(trigger_pin, OUTPUT); // Set trigger pin to output (on Teensy 3.x (ARM), pins default to disabled, at least one pinMode() is needed for GPIO mode).
 #endif
 
 #if defined (ARDUINO_AVR_YUN)
@@ -49,7 +49,7 @@ NewPingESP8266::NewPingESP8266(uint32_t trigger_pin, uint32_t echo_pin, unsigned
 unsigned int NewPingESP8266::ping(unsigned int max_cm_distance) {
 	if (max_cm_distance > 0) set_max_distance(max_cm_distance); // Call function to set a new max sensor distance.
 
-	if (!ping_trigger(void)) return NO_ECHO; // Trigger a ping, if it returns false, return NO_ECHO to the calling function.
+	if (!ping_trigger()) return NO_ECHO; // Trigger a ping, if it returns false, return NO_ECHO to the calling function.
 
 #if URM37_ENABLED == true
 	#if DO_BITWISE == true
@@ -58,7 +58,7 @@ unsigned int NewPingESP8266::ping(unsigned int max_cm_distance) {
 		while (!digitalRead(_echoPin))                // Wait for the ping echo.
 	#endif
 	  {
-			if ((_max_cm_distance > 0) && (micros(void) > _max_time)) {
+			if ((_max_cm_distance > 0) && (micros() > _max_time)) {
 				_errorState = STATUS_MAX_DISTANCE_EXCEEDED;
 				return NO_ECHO; // Stop the loop and return NO_ECHO (false) if we're beyond the set maximum distance.
 			}
@@ -70,7 +70,7 @@ unsigned int NewPingESP8266::ping(unsigned int max_cm_distance) {
 		while (digitalRead(_echoPin))                 // Wait for the ping echo.
 	#endif
 		{
-			if ((_max_cm_distance > 0) && (micros(void) > _max_time)) {
+			if ((_max_cm_distance > 0) && (micros() > _max_time)) {
 				_errorState = STATUS_MAX_DISTANCE_EXCEEDED;
 				return NO_ECHO; // Stop the loop and return NO_ECHO (false) if we're beyond the set maximum distance.
 			}
@@ -78,7 +78,7 @@ unsigned int NewPingESP8266::ping(unsigned int max_cm_distance) {
 #endif
 
 	_errorState = STATUS_MEASUREMENT_VALID;
-	return (micros(void) - (_max_time - _maxEchoTime) - PING_OVERHEAD); // Calculate ping time, include overhead.
+	return (micros() - (_max_time - _maxEchoTime) - PING_OVERHEAD); // Calculate ping time, include overhead.
 }
 
 
@@ -109,7 +109,7 @@ unsigned long NewPingESP8266::ping_median(uint32_t it, unsigned int max_cm_dista
 	uS[0] = NO_ECHO;
 
 	while (i < it) {
-		t = micros(void);                  // Start ping timestamp.
+		t = micros();                  // Start ping timestamp.
 		last = ping(max_cm_distance);  // Send ping.
 
 		if (last != NO_ECHO) {         // Ping in range, include as part of median.
@@ -121,8 +121,8 @@ unsigned long NewPingESP8266::ping_median(uint32_t it, unsigned int max_cm_dista
 			i++;                       // Move to next ping.
 		} else it--;                   // Ping out of range, skip and don't include as part of median.
 
-		if (i < it && micros(void) - t < PING_MEDIAN_DELAY)
-			delay((PING_MEDIAN_DELAY + t - micros(void)) / 1000); // Millisecond delay between pings.
+		if (i < it && micros() - t < PING_MEDIAN_DELAY)
+			delay((PING_MEDIAN_DELAY + t - micros()) / 1000); // Millisecond delay between pings.
 
 	}
 	return (uS[it >> 1]); // Return the ping distance median.
@@ -134,7 +134,7 @@ unsigned long NewPingESP8266::ping_median(uint32_t it, unsigned int max_cm_dista
 // ---------------------------------------------------------------------------
 
 boolean NewPingESP8266::ping_trigger(void) {
-	unsigned long start = millis(void);
+	unsigned long start = millis();
 #if DO_BITWISE == true
 	#if ONE_PIN_ENABLED == true
 		*_triggerMode |= _triggerBit;  // Set trigger pin to output.
@@ -155,14 +155,14 @@ boolean NewPingESP8266::ping_trigger(void) {
 			_errorState = STATUS_ECHO_STATE_ERROR;
 			return false;
 		}
-		_max_time = micros(void) + _maxEchoTime + MAX_SENSOR_DELAY; // Maximum time we'll wait for ping to start (most sensors are <450uS, the SRF06 can take up to 34,300uS!)
+		_max_time = micros() + _maxEchoTime + MAX_SENSOR_DELAY; // Maximum time we'll wait for ping to start (most sensors are <450uS, the SRF06 can take up to 34,300uS!)
 		while (*_echoInput & _echoBit)                          // Wait for ping to start.
 		{
-			if (millis(void) > (start + 50)) {
+			if (millis() > (start + 50)) {
 				_errorState = STATUS_ECHO_START_TIMEOUT_50ms;
 				return false;
 			}
-			if ((_max_cm_distance > 0) && (micros(void) > _max_time)) {	// check max. distance if != 0 cm
+			if ((_max_cm_distance > 0) && (micros() > _max_time)) {	// check max. distance if != 0 cm
 				_errorState = STATUS_ECHO_START_TIMEOUT_DISTANCE;
 				return false;             													// echo too late, max distance exceeded
 			}
@@ -172,14 +172,14 @@ boolean NewPingESP8266::ping_trigger(void) {
 			_errorState = STATUS_ECHO_STATE_ERROR;
 			return false;
 		}
-		_max_time = micros(void) + _maxEchoTime + MAX_SENSOR_DELAY; // Maximum time we'll wait for ping to start (most sensors are <450uS, the SRF06 can take up to 34,300uS!)
+		_max_time = micros() + _maxEchoTime + MAX_SENSOR_DELAY; // Maximum time we'll wait for ping to start (most sensors are <450uS, the SRF06 can take up to 34,300uS!)
 		while (!(*_echoInput & _echoBit))                       // Wait for ping to start.
 		{
-			if (millis(void) > (start + 50)) {
+			if (millis() > (start + 50)) {
 				_errorState = STATUS_ECHO_START_TIMEOUT_50ms;
 				return false;
 			}
-			if ((_max_cm_distance > 0) && (micros(void) > _max_time)) {	// check max. distance if != 0 cm
+			if ((_max_cm_distance > 0) && (micros() > _max_time)) {	// check max. distance if != 0 cm
 				_errorState = STATUS_ECHO_START_TIMEOUT_DISTANCE;
 				return false;             													// echo too late, max distance exceeded
 			}
@@ -205,14 +205,14 @@ boolean NewPingESP8266::ping_trigger(void) {
 			_errorState = STATUS_ECHO_STATE_ERROR;
 			return false;                // Previous ping hasn't finished, abort.
 		}
-		_max_time = micros(void) + _maxEchoTime + MAX_SENSOR_DELAY; // Maximum time we'll wait for ping to start (most sensors are <450uS, the SRF06 can take up to 34,300uS!)
+		_max_time = micros() + _maxEchoTime + MAX_SENSOR_DELAY; // Maximum time we'll wait for ping to start (most sensors are <450uS, the SRF06 can take up to 34,300uS!)
 		while (digitalRead(_echoPin))                           // Wait for ping to start.
 		{
-			if (millis(void) > (start + 50)) {
+			if (millis() > (start + 50)) {
 				_errorState = STATUS_ECHO_START_TIMEOUT_50ms;
 				return false;
 			}
-			if ((_max_cm_distance > 0) && (micros(void) > _max_time)) {	// check max. distance if != 0 cm
+			if ((_max_cm_distance > 0) && (micros() > _max_time)) {	// check max. distance if != 0 cm
 				_errorState = STATUS_ECHO_START_TIMEOUT_DISTANCE;
 				return false;             													// echo too late, max distance exceeded
 			}
@@ -222,14 +222,14 @@ boolean NewPingESP8266::ping_trigger(void) {
 			_errorState = STATUS_ECHO_STATE_ERROR;
 			return false;                // Previous ping hasn't finished, abort.
 		}
-		_max_time = micros(void) + _maxEchoTime + MAX_SENSOR_DELAY; // Maximum time we'll wait for ping to start (most sensors are <450uS, the SRF06 can take up to 34,300uS!)
+		_max_time = micros() + _maxEchoTime + MAX_SENSOR_DELAY; // Maximum time we'll wait for ping to start (most sensors are <450uS, the SRF06 can take up to 34,300uS!)
 		while (!digitalRead(_echoPin))                          // Wait for ping to start.
 		{
-			if (millis(void) > (start + 50)) {
+			if (millis() > (start + 50)) {
 				_errorState = STATUS_ECHO_START_TIMEOUT_50ms;
 				return false;
 			}
-			if ((_max_cm_distance > 0) && (micros(void) > _max_time)) {	// check max. distance if != 0 cm
+			if ((_max_cm_distance > 0) && (micros() > _max_time)) {	// check max. distance if != 0 cm
 				_errorState = STATUS_ECHO_START_TIMEOUT_DISTANCE;
 				return false;             													// echo too late, max distance exceeded
 			}
@@ -237,7 +237,7 @@ boolean NewPingESP8266::ping_trigger(void) {
 	#endif
 #endif
 
-	_max_time = micros(void) + _maxEchoTime; // Ping started, set the time-out.
+	_max_time = micros() + _maxEchoTime; // Ping started, set the time-out.
 	_errorState = STATUS_ECHO_TRIGGERED;
 
 	return true;                         // Ping started successfully.

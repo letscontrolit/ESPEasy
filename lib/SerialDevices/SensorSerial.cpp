@@ -43,7 +43,7 @@ void SensorSerial::begin(long speed) {
 
 int SensorSerial::peek(void)
 {
-  return ESPeasySerial::peek(void);
+  return ESPeasySerial::peek();
 }
 
 size_t SensorSerial::write(uint8_t byte)
@@ -53,15 +53,15 @@ size_t SensorSerial::write(uint8_t byte)
 
 int SensorSerial::read(void)
 {
-  return ESPeasySerial::read(void);
+  return ESPeasySerial::read();
 }
 
 int SensorSerial::available(void)
 {
-  return ESPeasySerial::available(void);
+  return ESPeasySerial::available();
 }
 
 void SensorSerial::flush(void)
 {
-  ESPeasySerial::flush(void);
+  ESPeasySerial::flush();
 }

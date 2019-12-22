@@ -180,7 +180,7 @@ int getSecOffset(const String& format) {
   String valueStr = getNumerical(format.substring(sign_position, position_percent), true);
 
   if (!isInt(valueStr)) { return 0; }
-  int value = valueStr.toInt(void);
+  int value = valueStr.toInt();
 
   switch (format.charAt(position_percent - 1)) {
     case 'm':
@@ -216,7 +216,7 @@ String getSunsetTimeString(char delimiter, int secOffset) {
 }
 
 unsigned long now(void) {
-  // calculate number of seconds passed since last call to now(void)
+  // calculate number of seconds passed since last call to now()
   bool timeSynced        = false;
   const long msec_passed = timePassedSince(prevMillis);
 
@@ -233,7 +233,7 @@ unsigned long now(void) {
     }
 
     if ((unixTime_d > 0.0) || getNtpTime(unixTime_d)) {
-      prevMillis = millis(void); // restart counting from now (thanks to Korman for this fix)
+      prevMillis = millis(); // restart counting from now (thanks to Korman for this fix)
       timeSynced = true;
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -256,7 +256,7 @@ unsigned long now(void) {
   breakTime(localSystime, tm);
 
   if (timeSynced) {
-    calcSunRiseAndSet(void);
+    calcSunRiseAndSet();
 
     if (Settings.UseRules) {
       if (statusNTPInitialized) {
@@ -322,7 +322,7 @@ int weekday(void)
 
 String weekday_str(void)
 {
-	return weekday_str(weekday(void)-1);
+	return weekday_str(weekday()-1);
 }
 
 String weekday_str(int wday)
@@ -334,7 +334,7 @@ String weekday_str(int wday)
 void initTime(void)
 {
   nextSyncTime = 0;
-  now(void);
+  now();
 }
 
 bool systemTimePresent(void) {
@@ -343,7 +343,7 @@ bool systemTimePresent(void) {
 
 void checkTime(void)
 {
-  now(void);
+  now();
 
   if (tm.tm_min != PrevMinutes)
   {
@@ -356,19 +356,19 @@ void checkTime(void)
       String event;
       event.reserve(21);
       event  = F("Clock#Time=");
-      event += weekday_str(void);
+      event += weekday_str();
       event += ",";
 
-      if (hour(void) < 10) {
+      if (hour() < 10) {
         event += '0';
       }
-      event += hour(void);
+      event += hour();
       event += ":";
 
-      if (minute(void) < 10) {
+      if (minute() < 10) {
         event += '0';
       }
-      event += minute(void);
+      event += minute();
       // TD-er: Do not add to the eventQueue, but execute right now.
       rulesProcessing(event);
     }
@@ -393,7 +393,7 @@ bool getNtpTime(double& unixTime_d)
     // Have to do a lookup eacht time, since the NTP pool always returns another IP
     String ntpServerName = String(random(0, 3));
     ntpServerName += F(".pool.ntp.org");
-    resolveHostByName(ntpServerName.c_str(void), timeServerIP);
+    resolveHostByName(ntpServerName.c_str(), timeServerIP);
     log += ntpServerName;
 
     // When pool host fails, retry can be much sooner
@@ -401,7 +401,7 @@ bool getNtpTime(double& unixTime_d)
   }
 
   log += " (";
-  log += timeServerIP.toString(void);
+  log += timeServerIP.toString();
   log += ')';
 
   if (!hostReachable(timeServerIP)) {
@@ -424,7 +424,7 @@ bool getNtpTime(double& unixTime_d)
   addLog(LOG_LEVEL_DEBUG_MORE, log);
 #endif // ifndef BUILD_NO_DEBUG
 
-  while (udp.parsePacket(void) > 0) { // discard any previously received packets
+  while (udp.parsePacket() > 0) { // discard any previously received packets
   }
   memset(packetBuffer, 0, NTP_PACKET_SIZE);
   packetBuffer[0]  = 0b11100011;  // LI, Version, Mode
@@ -437,18 +437,18 @@ bool getNtpTime(double& unixTime_d)
   packetBuffer[15] = 52;
 
   if (udp.beginPacket(timeServerIP, 123) == 0) { // NTP requests are to port 123
-    udp.stop(void);
+    udp.stop();
     return 0;
   }
   udp.write(packetBuffer, NTP_PACKET_SIZE);
-  udp.endPacket(void);
+  udp.endPacket();
 
 
-  uint32_t beginWait = millis(void);
+  uint32_t beginWait = millis();
 
   while (!timeOutReached(beginWait + 1000)) {
-    int size       = udp.parsePacket(void);
-    int remotePort = udp.remotePort(void);
+    int size       = udp.parsePacket();
+    int remotePort = udp.remotePort();
 
     if ((size >= NTP_PACKET_SIZE) && (remotePort == 123)) {
       udp.read(packetBuffer, NTP_PACKET_SIZE); // read packet into the buffer
@@ -502,7 +502,7 @@ bool getNtpTime(double& unixTime_d)
         log += F(" seconds");
         addLog(LOG_LEVEL_INFO, log);
       }
-      udp.stop(void);
+      udp.stop();
 
       return true;
     }
@@ -511,7 +511,7 @@ bool getNtpTime(double& unixTime_d)
 #ifndef BUILD_NO_DEBUG
   addLog(LOG_LEVEL_DEBUG_MORE, F("NTP  : No reply"));
 #endif // ifndef BUILD_NO_DEBUG
-  udp.stop(void);
+  udp.stop();
   return false;
 }
 
@@ -560,11 +560,11 @@ long ICACHE_RAM_ATTR timeDiff(const unsigned long prev, const unsigned long next
 // Compute the number of milliSeconds passed since timestamp given.
 // N.B. value can be negative if the timestamp has not yet been reached.
 long timePassedSince(unsigned long timestamp) {
-  return timeDiff(timestamp, millis(void));
+  return timeDiff(timestamp, millis());
 }
 
 long usecPassedSince(unsigned long timestamp) {
-  return timeDiff(timestamp, micros(void));
+  return timeDiff(timestamp, micros());
 }
 
 // Check if a certain timeout has been reached.
@@ -591,12 +591,12 @@ void setNextTimeInterval(unsigned long& timer, const unsigned long step) {
 
   if (static_cast<unsigned long>(passed) > step) {
     // No need to keep running behind, start again.
-    timer = millis(void) + step;
+    timer = millis() + step;
     return;
   }
 
   // Try to get in sync again.
-  timer = millis(void) + (step - passed);
+  timer = millis() + (step - passed);
 }
 
 /********************************************************************************************\
@@ -790,7 +790,7 @@ unsigned long string2TimeLong(const String& str)
   {
     // Within a scope so the tmpString is only used for copy.
     String tmpString(str);
-    tmpString.toLowerCase(void);
+    tmpString.toLowerCase();
     tmpString.toCharArray(command, 20);
   }
   unsigned long lngTime = 0;
@@ -812,7 +812,7 @@ unsigned long string2TimeLong(const String& str)
   {
     y = 0;
 
-    for (x = TmpStr1.length(void) - 1; x >= 0; x--)
+    for (x = TmpStr1.length() - 1; x >= 0; x--)
     {
       w = TmpStr1[x];
 
@@ -859,7 +859,7 @@ boolean matchClockEvent(unsigned long clockEvent, unsigned long clockSet)
   }
 
   if (((clockSet >> (16)) & 0xf) == 0x8) {         // if weekday nibble has the wildcard value 0x8 (workdays)
-    if (weekday(void) >= 2 and weekday(void) <= 6)         // and we have a working day today...
+    if (weekday() >= 2 and weekday() <= 6)         // and we have a working day today...
     {
       Mask        = 0xffffffff  ^ (0xFUL << (16)); // Mask to wipe nibble position.
       clockEvent &= Mask;                          // clear nibble
@@ -868,7 +868,7 @@ boolean matchClockEvent(unsigned long clockEvent, unsigned long clockSet)
   }
 
   if (((clockSet >> (16)) & 0xf) == 0x9) {         // if weekday nibble has the wildcard value 0x9 (weekends)
-    if (weekday(void) == 1 or weekday(void) == 7)          // and we have a weekend day today...
+    if (weekday() == 1 or weekday() == 7)          // and we have a weekend day today...
     {
       Mask        = 0xffffffff  ^ (0xFUL << (16)); // Mask to wipe nibble position.
       clockEvent &= Mask;                          // clear nibble

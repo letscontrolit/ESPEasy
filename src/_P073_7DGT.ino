@@ -50,18 +50,18 @@ struct P073_data_struct : public PluginTaskData_base {
   P073_data_struct(void)
     : dotpos(-1), pin1(-1), pin2(-1), pin3(-1), displayModel(0), output(0),
     brightness(0), timesep(false), shift(false) {
-    ClearBuffer(void);
+    ClearBuffer();
   }
 
   void FillBufferWithTime(boolean sevendgt_now, byte sevendgt_hours,
                           byte sevendgt_minutes, byte sevendgt_seconds,
                           boolean flag12h) {
-    ClearBuffer(void);
+    ClearBuffer();
 
     if (sevendgt_now) {
-      sevendgt_hours   = hour(void);
-      sevendgt_minutes = minute(void);
-      sevendgt_seconds = second(void);
+      sevendgt_hours   = hour();
+      sevendgt_minutes = minute();
+      sevendgt_seconds = second();
     }
 
     if (flag12h && (sevendgt_hours > 12)) {
@@ -81,13 +81,13 @@ struct P073_data_struct : public PluginTaskData_base {
 
   void FillBufferWithDate(boolean sevendgt_now, byte sevendgt_day,
                           byte sevendgt_month, int sevendgt_year) {
-    ClearBuffer(void);
+    ClearBuffer();
     int sevendgt_year0 = sevendgt_year;
 
     if (sevendgt_now) {
-      sevendgt_day   = day(void);
-      sevendgt_month = month(void);
-      sevendgt_year0 = year(void);
+      sevendgt_day   = day();
+      sevendgt_month = month();
+      sevendgt_year0 = year();
     } else {
       if (sevendgt_year0 < 100) {
         sevendgt_year0 += 2000;
@@ -107,8 +107,8 @@ struct P073_data_struct : public PluginTaskData_base {
   }
 
   void FillBufferWithNumber(const String& number) {
-    ClearBuffer(void);
-    byte p073_numlenght = number.length(void);
+    ClearBuffer();
+    byte p073_numlenght = number.length();
     byte p073_index     = 7;
     dotpos = -1; // -1 means no dot to display
 
@@ -125,7 +125,7 @@ struct P073_data_struct : public PluginTaskData_base {
   }
 
   void FillBufferWithTemp(long temperature) {
-    ClearBuffer(void);
+    ClearBuffer();
     char p073_digit[8];
     sprintf(p073_digit, "%7d", static_cast<int>(temperature));
     int p073_numlenght = strlen(p073_digit);
@@ -137,9 +137,9 @@ struct P073_data_struct : public PluginTaskData_base {
   }
 
   void FillBufferWithString(const String& textToShow) {
-    ClearBuffer(void);
+    ClearBuffer();
     String tmpText;
-    int    p073_txtlength = textToShow.length(void);
+    int    p073_txtlength = textToShow.length();
 
     if (p073_txtlength > 8) {
       p073_txtlength = 8;
@@ -326,7 +326,7 @@ boolean Plugin_073(byte function, struct EventStruct *event, String& string) {
     }
 
     case PLUGIN_INIT: {
-      initPluginTaskData(event->TaskIndex, new P073_data_struct(void));
+      initPluginTaskData(event->TaskIndex, new P073_data_struct());
       P073_data_struct *P073_data =
         static_cast<P073_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -436,7 +436,7 @@ bool p073_plugin_write(struct EventStruct *event, const String& string) {
   }
 
   String cmd = parseString(string, 1);
-  cmd.toLowerCase(void);
+  cmd.toLowerCase();
   String text = parseStringToEndKeepCase(string, 2);
   if (cmd.equals("7dn")) {
     return p073_plugin_write_7dn(event, text);
@@ -520,38 +520,38 @@ bool p073_plugin_write_7dn(struct EventStruct *event, const String& text) {
         P073_data->FillBufferWithNumber(String(int(event->Par1)));
       }
       else {
-        P073_data->FillBufferWithDash(void);
+        P073_data->FillBufferWithDash();
       }
       tm1637_ShowBuffer(event, TM1637_4DIGIT, 8);
       break;
     }
     case P073_TM1637_4DGTDOTS: {
       if ((event->Par1 > -1000) && (event->Par1 < 10000)) {
-        P073_data->FillBufferWithNumber(text.c_str(void));
+        P073_data->FillBufferWithNumber(text.c_str());
       }
       else {
-        P073_data->FillBufferWithDash(void);
+        P073_data->FillBufferWithDash();
       }
       tm1637_ShowBuffer(event, TM1637_4DIGIT, 8);
       break;
     }
     case P073_TM1637_6DGT: {
       if ((event->Par1 > -100000) && (event->Par1 < 1000000)) {
-        P073_data->FillBufferWithNumber(text.c_str(void));
+        P073_data->FillBufferWithNumber(text.c_str());
       }
       else {
-        P073_data->FillBufferWithDash(void);
+        P073_data->FillBufferWithDash();
       }
       tm1637_SwapDigitInBuffer(event, 2); // only needed for 6-digits displays
       tm1637_ShowBuffer(event, TM1637_6DIGIT, 8);
       break;
     }
     case P073_MAX7219_8DGT: {
-      if (text.length(void) > 0) {
+      if (text.length() > 0) {
         if ((event->Par1 > -10000000) && (event->Par1 < 100000000)) {
-          P073_data->FillBufferWithNumber(text.c_str(void));
+          P073_data->FillBufferWithNumber(text.c_str());
         } else {
-          P073_data->FillBufferWithDash(void);
+          P073_data->FillBufferWithDash();
         }
         max7219_ShowBuffer(event, P073_data->pin1, P073_data->pin2,
                            P073_data->pin3);
@@ -575,7 +575,7 @@ bool p073_plugin_write_7dt(struct EventStruct *event, const String& text) {
   }
   double p073_temptemp    = 0;
   bool   p073_tempflagdot = false;
-  if (text.length(void) > 0) {
+  if (text.length() > 0) {
     validDoubleFromString(text, p073_temptemp);
   }
 
@@ -589,7 +589,7 @@ bool p073_plugin_write_7dt(struct EventStruct *event, const String& text) {
     case P073_TM1637_4DGTCOLON:
     case P073_TM1637_4DGTDOTS: {
       if ((p073_temptemp > 999) || (p073_temptemp < -99.9)) {
-        P073_data->FillBufferWithDash(void);
+        P073_data->FillBufferWithDash();
       }
       else {
         if ((p073_temptemp < 100) && (p073_temptemp > -10)) {
@@ -607,7 +607,7 @@ bool p073_plugin_write_7dt(struct EventStruct *event, const String& text) {
     }
     case P073_TM1637_6DGT: {
       if ((p073_temptemp > 999) || (p073_temptemp < -99.9)) {
-        P073_data->FillBufferWithDash(void);
+        P073_data->FillBufferWithDash();
       }
       else {
         if ((p073_temptemp < 100) && (p073_temptemp > -10)) {
@@ -774,10 +774,10 @@ void tm1637_i2cStart(uint8_t clk_pin, uint8_t dio_pin) {
     String log = F("7DGT : Comm Start");
     addLog(LOG_LEVEL_INFO, log);
   }
-  DIO_HIGH(void);
-  CLK_HIGH(void);
+  DIO_HIGH();
+  CLK_HIGH();
   delayMicroseconds(TM1637_CLOCKDELAY);
-  DIO_LOW(void);
+  DIO_LOW();
 }
 
 void tm1637_i2cStop(uint8_t clk_pin, uint8_t dio_pin) {
@@ -785,22 +785,22 @@ void tm1637_i2cStop(uint8_t clk_pin, uint8_t dio_pin) {
     String log = F("7DGT : Comm Stop");
     addLog(LOG_LEVEL_INFO, log);
   }
-  CLK_LOW(void);
+  CLK_LOW();
   delayMicroseconds(TM1637_CLOCKDELAY);
-  DIO_LOW(void);
+  DIO_LOW();
   delayMicroseconds(TM1637_CLOCKDELAY);
-  CLK_HIGH(void);
+  CLK_HIGH();
   delayMicroseconds(TM1637_CLOCKDELAY);
-  DIO_HIGH(void);
+  DIO_HIGH();
 }
 
 void tm1637_i2cAck(uint8_t clk_pin, uint8_t dio_pin) {
   bool dummyAck = false;
 
-  CLK_LOW(void);
+  CLK_LOW();
   pinMode(dio_pin, INPUT_PULLUP);
 
-  // DIO_HIGH(void);
+  // DIO_HIGH();
   delayMicroseconds(TM1637_CLOCKDELAY);
 
   // while(digitalRead(dio_pin));
@@ -816,9 +816,9 @@ void tm1637_i2cAck(uint8_t clk_pin, uint8_t dio_pin) {
     }
     addLog(LOG_LEVEL_INFO, log);
   }
-  CLK_HIGH(void);
+  CLK_HIGH();
   delayMicroseconds(TM1637_CLOCKDELAY);
-  CLK_LOW(void);
+  CLK_LOW();
   pinMode(dio_pin, OUTPUT);
 }
 
@@ -846,16 +846,16 @@ void tm1637_i2cWrite(uint8_t clk_pin, uint8_t dio_pin, uint8_t bytetoprint) {
   uint8_t i;
 
   for (i = 0; i < 8; i++) {
-    CLK_LOW(void);
+    CLK_LOW();
 
     if (bytetoprint & B00000001) {
-      DIO_HIGH(void);
+      DIO_HIGH();
     } else {
-      DIO_LOW(void);
+      DIO_LOW();
     }
     delayMicroseconds(TM1637_CLOCKDELAY);
     bytetoprint = bytetoprint >> 1;
-    CLK_HIGH(void);
+    CLK_HIGH();
     delayMicroseconds(TM1637_CLOCKDELAY);
   }
 }
@@ -889,8 +889,8 @@ void tm1637_SetPowerBrightness(uint8_t clk_pin, uint8_t dio_pin,
 void tm1637_InitDisplay(uint8_t clk_pin, uint8_t dio_pin) {
   pinMode(clk_pin, OUTPUT);
   pinMode(dio_pin, OUTPUT);
-  CLK_HIGH(void);
-  DIO_HIGH(void);
+  CLK_HIGH();
+  DIO_HIGH();
 
   //  pinMode(dio_pin, INPUT_PULLUP);
   //  pinMode(clk_pin, OUTPUT);

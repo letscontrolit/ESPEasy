@@ -45,8 +45,8 @@ Adafruit_NeoPixel::Adafruit_NeoPixel(uint16_t n, uint8_t p, neoPixelType t) :
 // via Michael Vogt/neophob: empty constructor is used when strand length
 // isn't known at compile-time; situations where program config might be
 // read from internal flash memory or an SD card, or arrive via serial
-// command.  If using this constructor, MUST follow up with updateType(void),
-// updateLength(void), etc. to establish the strand type, length and pin number!
+// command.  If using this constructor, MUST follow up with updateType(),
+// updateLength(), etc. to establish the strand type, length and pin number!
 Adafruit_NeoPixel::Adafruit_NeoPixel(void) :
 #ifdef NEO_KHZ400
   is800KHz(true),
@@ -102,7 +102,7 @@ void Adafruit_NeoPixel::updateType(neoPixelType t) {
 }
 
 #ifdef ESP8266
-// ESP8266 show(void) is external to enforce ICACHE_RAM_ATTR execution
+// ESP8266 show() is external to enforce ICACHE_RAM_ATTR execution
 extern "C" void ICACHE_RAM_ATTR espShow(
   uint8_t pin, uint8_t *pixels, uint32_t numBytes, uint8_t type);
 #endif // ESP8266
@@ -117,7 +117,7 @@ void Adafruit_NeoPixel::show(void) {
   // subsequent round of data until the latch time has elapsed.  This
   // allows the mainline code to start generating the next frame of data
   // rather than stalling for the latch.
-  while(!canShow(void));
+  while(!canShow());
   // endTime is a private member (rather than global var) so that mutliple
   // instances on different pins can be quickly issued in succession (each
   // instance doesn't delay the next).
@@ -132,7 +132,7 @@ void Adafruit_NeoPixel::show(void) {
   // state, computes 'pin high' and 'pin low' values, and writes these back
   // to the PORT register as needed.
 
-  noInterrupts(void); // Need 100% focus on instruction timing
+  noInterrupts(); // Need 100% focus on instruction timing
 
 #ifdef __AVR__
 // AVR MCUs -- ATmega & ATtiny (no XMEGA) ---------------------------------
@@ -1416,17 +1416,17 @@ void Adafruit_NeoPixel::show(void) {
 
 // ESP8266 ----------------------------------------------------------------
 
-  // ESP8266 show(void) is external to enforce ICACHE_RAM_ATTR execution
+  // ESP8266 show() is external to enforce ICACHE_RAM_ATTR execution
   espShow(pin, pixels, numBytes, is800KHz);
 
 #elif defined(__ARDUINO_ARC__)
 
 // Arduino 101  -----------------------------------------------------------
 
-#define NOPx7 { __builtin_arc_nop(void); \
-  __builtin_arc_nop(void); __builtin_arc_nop(void); \
-  __builtin_arc_nop(void); __builtin_arc_nop(void); \
-  __builtin_arc_nop(void); __builtin_arc_nop(void); }
+#define NOPx7 { __builtin_arc_nop(); \
+  __builtin_arc_nop(); __builtin_arc_nop(); \
+  __builtin_arc_nop(); __builtin_arc_nop(); \
+  __builtin_arc_nop(); __builtin_arc_nop(); }
 
   PinDescription *pindesc = &g_APinDescription[pin];
   register uint32_t loop = 8 * numBytes; // one loop to handle all bytes and all bits
@@ -1462,7 +1462,7 @@ void Adafruit_NeoPixel::show(void) {
       }
       // ~340ns HIGH
       NOPx7
-     __builtin_arc_nop(void);
+     __builtin_arc_nop();
 
       // 820ns LOW; per spec, max allowed low here is 5000ns */
       __builtin_arc_sr(reg_bit_low, (volatile uint32_t)reg);
@@ -1493,7 +1493,7 @@ void Adafruit_NeoPixel::show(void) {
       if(currBit) { // ~430ns HIGH (740ns overall)
         NOPx7
         NOPx7
-        __builtin_arc_nop(void);
+        __builtin_arc_nop();
       }
       // ~310ns HIGH
       NOPx7
@@ -1519,8 +1519,8 @@ void Adafruit_NeoPixel::show(void) {
 // END ARCHITECTURE SELECT ------------------------------------------------
 
 
-  interrupts(void);
-  endTime = micros(void); // Save EOD time for latch on next call
+  interrupts();
+  endTime = micros(); // Save EOD time for latch on next call
 }
 
 // Set the output pin number
@@ -1542,7 +1542,7 @@ void Adafruit_NeoPixel::setPixelColor(
  uint16_t n, uint8_t r, uint8_t g, uint8_t b) {
 
   if(n < numLEDs) {
-    if(brightness) { // See notes in setBrightness(void)
+    if(brightness) { // See notes in setBrightness()
       r = (r * brightness) >> 8;
       g = (g * brightness) >> 8;
       b = (b * brightness) >> 8;
@@ -1564,7 +1564,7 @@ void Adafruit_NeoPixel::setPixelColor(
  uint16_t n, uint8_t r, uint8_t g, uint8_t b, uint8_t w) {
 
   if(n < numLEDs) {
-    if(brightness) { // See notes in setBrightness(void)
+    if(brightness) { // See notes in setBrightness()
       r = (r * brightness) >> 8;
       g = (g * brightness) >> 8;
       b = (b * brightness) >> 8;
@@ -1590,7 +1590,7 @@ void Adafruit_NeoPixel::setPixelColor(uint16_t n, uint32_t c) {
       r = (uint8_t)(c >> 16),
       g = (uint8_t)(c >>  8),
       b = (uint8_t)c;
-    if(brightness) { // See notes in setBrightness(void)
+    if(brightness) { // See notes in setBrightness()
       r = (r * brightness) >> 8;
       g = (g * brightness) >> 8;
       b = (b * brightness) >> 8;
@@ -1629,7 +1629,7 @@ uint32_t Adafruit_NeoPixel::getPixelColor(uint16_t n) const {
   if(wOffset == rOffset) { // Is RGB-type device
     p = &pixels[n * 3];
     if(brightness) {
-      // Stored color was decimated by setBrightness(void).  Returned value
+      // Stored color was decimated by setBrightness().  Returned value
       // attempts to scale back to an approximation of the original 24-bit
       // value used when setting the pixel color, but there will always be
       // some error -- those bits are simply gone.  Issue is most
@@ -1672,7 +1672,7 @@ uint16_t Adafruit_NeoPixel::numPixels(void) const {
 
 // Adjust output brightness; 0=darkest (off), 255=brightest.  This does
 // NOT immediately affect what's currently displayed on the LEDs.  The
-// next call to show(void) will refresh the LEDs at this level.  However,
+// next call to show() will refresh the LEDs at this level.  However,
 // this process is potentially "lossy," especially when increasing
 // brightness.  The tight timing in the WS2811/WS2812 code means there
 // aren't enough free cycles to perform this scaling on the fly as data

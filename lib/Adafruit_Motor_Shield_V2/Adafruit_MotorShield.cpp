@@ -44,8 +44,8 @@ Adafruit_MotorShield::Adafruit_MotorShield(uint8_t addr) {
 
 void Adafruit_MotorShield::begin(uint16_t freq) {
   // init PWM w/_freq
-  //Wire.begin(void);   called in ESPEasy framework
-  _pwm.begin(void);
+  //Wire.begin();   called in ESPEasy framework
+  _pwm.begin();
   _freq = freq;
   _pwm.setPWMFreq(_freq);  // This is the maximum PWM frequency
   for (uint8_t i=0; i<16; i++)
@@ -234,7 +234,7 @@ void Adafruit_StepperMotor::step(uint16_t steps, uint8_t dir,  uint8_t style) {
     //Serial.println("step!"); Serial.println(uspers);
     onestep(dir, style);
     delayMicroseconds(uspers);
-    yield(void); // required for ESP8266
+    yield(); // required for ESP8266
   }
 }
 

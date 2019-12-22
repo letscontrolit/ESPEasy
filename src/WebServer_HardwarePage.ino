@@ -6,9 +6,9 @@
 void handle_hardware(void) {
   checkRAM(F("handle_hardware"));
 
-  if (!isLoggedIn(void)) { return; }
+  if (!isLoggedIn()) { return; }
   navMenuIndex = MENU_INDEX_HARDWARE;
-  TXBuffer.startStream(void);
+  TXBuffer.startStream();
   sendHeadandTail_stdtemplate(_HEAD);
 
   if (isFormItem(F("psda")))
@@ -38,11 +38,11 @@ void handle_hardware(void) {
       }
       ++gpio;
     }
-    addHtmlError(SaveSettings(void));
+    addHtmlError(SaveSettings());
   }
 
   TXBuffer += F("<form  method='post'>");
-  html_table_class_normal(void);
+  html_table_class_normal();
   addFormHeader(F("Hardware Settings"), F("ESPEasy#Hardware_page"));
 
   addFormSubHeader(F("Wifi Status LED"));
@@ -94,15 +94,15 @@ void handle_hardware(void) {
   }
   addFormSeparator(2);
 
-  html_TR_TD(void);
-  html_TD(void);
-  addSubmitButton(void);
-  html_TR_TD(void);
-  html_end_table(void);
-  html_end_form(void);
+  html_TR_TD();
+  html_TD();
+  addSubmitButton();
+  html_TR_TD();
+  html_end_table();
+  html_end_form();
 
   sendHeadandTail_stdtemplate(_TAIL);
-  TXBuffer.endStream(void);
+  TXBuffer.endStream();
 }
 
 #endif // ifdef WEBSERVER_HARDWARE

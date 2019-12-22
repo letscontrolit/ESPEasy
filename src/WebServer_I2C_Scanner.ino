@@ -8,10 +8,10 @@
 void handle_i2cscanner_json(void) {
   checkRAM(F("handle_i2cscanner"));
 
-  if (!isLoggedIn(void)) { return; }
+  if (!isLoggedIn()) { return; }
   navMenuIndex = MENU_INDEX_TOOLS;
-  TXBuffer.startJsonStream(void);
-  json_init(void);
+  TXBuffer.startJsonStream();
+  json_init();
   json_open(true);
 
   byte error, address;
@@ -19,17 +19,17 @@ void handle_i2cscanner_json(void) {
   for (address = 1; address <= 127; address++)
   {
     Wire.beginTransmission(address);
-    error = Wire.endTransmission(void);
+    error = Wire.endTransmission();
     if (error == 0 || error == 4)
     {
-      json_open(void);
+      json_open();
       json_prop(F("addr"), String(formatToHex(address)));
       json_number(F("status"), String(error));
       if (error == 4) {
         json_prop(F("error"), F("Unknown error at address "));
       } else {
         String description = getKnownI2Cdevice(address);
-        if (description.length(void) > 0) {
+        if (description.length() > 0) {
           json_open(true, F("known devices"));
           int pos = 0;
           while (pos >= 0) {
@@ -52,11 +52,11 @@ void handle_i2cscanner_json(void) {
         }
         nDevices++;
       }
-      json_close(void);
+      json_close();
     }
   }
   json_close(true);
-  TXBuffer.endStream(void);
+  TXBuffer.endStream();
 }
 
 #endif // WEBSERVER_NEW_UI
@@ -167,12 +167,12 @@ String getKnownI2Cdevice(byte address) {
 void handle_i2cscanner(void) {
   checkRAM(F("handle_i2cscanner"));
 
-  if (!isLoggedIn(void)) { return; }
+  if (!isLoggedIn()) { return; }
   navMenuIndex = MENU_INDEX_TOOLS;
-  TXBuffer.startStream(void);
+  TXBuffer.startStream();
   sendHeadandTail_stdtemplate(_HEAD);
 
-  html_table_class_multirow(void);
+  html_table_class_multirow();
   html_table_header(F("I2C Addresses in use"));
   html_table_header(F("Supported devices"));
 
@@ -182,7 +182,7 @@ void handle_i2cscanner(void) {
   for (address = 1; address <= 127; address++)
   {
     Wire.beginTransmission(address);
-    error = Wire.endTransmission(void);
+    error = Wire.endTransmission();
 
     if (error == 0)
     {
@@ -190,7 +190,7 @@ void handle_i2cscanner(void) {
       TXBuffer += formatToHex(address);
       TXBuffer += "<TD>";
       String description = getKnownI2Cdevice(address);
-      if (description.length(void) > 0) {
+      if (description.length() > 0) {
         description.replace(",", "<BR>");
         TXBuffer += description;
       }
@@ -198,7 +198,7 @@ void handle_i2cscanner(void) {
     }
     else if (error == 4)
     {
-      html_TR_TD(void); TXBuffer += F("Unknown error at address ");
+      html_TR_TD(); TXBuffer += F("Unknown error at address ");
       TXBuffer               += formatToHex(address);
     }
   }
@@ -207,9 +207,9 @@ void handle_i2cscanner(void) {
     TXBuffer += F("<TR>No I2C devices found");
   }
 
-  html_end_table(void);
+  html_end_table();
   sendHeadandTail_stdtemplate(_TAIL);
-  TXBuffer.endStream(void);
+  TXBuffer.endStream();
 }
 
 #endif // WEBSERVER_I2C_SCANNER

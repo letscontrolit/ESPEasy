@@ -44,17 +44,17 @@ class Adafruit_SGP30 {
   boolean setIAQBaseline(uint16_t eco2_base, uint16_t tvoc_base);
 
   /**
-   * The last measurement of the IAQ-calculated Total Volatile Organic Compounds in ppb. This value is set when you call {@link IAQmeasure(void)}
+   * The last measurement of the IAQ-calculated Total Volatile Organic Compounds in ppb. This value is set when you call {@link IAQmeasure()}
    */
   uint16_t TVOC;
 
   /**
-   * The last measurement of the IAQ-calculated equivalent CO2 in ppm. This value is set when you call {@link IAQmeasure(void)}
+   * The last measurement of the IAQ-calculated equivalent CO2 in ppm. This value is set when you call {@link IAQmeasure()}
    */
   uint16_t eCO2;
 
   /**
-   * The 48-bit serial number, this value is set when you call {@link begin(void)}
+   * The 48-bit serial number, this value is set when you call {@link begin()}
    */
   uint16_t serialnumber[3];
  private:

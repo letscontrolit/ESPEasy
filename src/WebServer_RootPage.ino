@@ -15,7 +15,7 @@ void handle_root(void) {
     return;
   }
 
-  if (!isLoggedIn(void)) { return; }
+  if (!isLoggedIn()) { return; }
   navMenuIndex = 0;
 
   // if index.htm exists on SPIFFS serve that one (first check if gziped version exists)
@@ -27,37 +27,37 @@ void handle_root(void) {
 
   if (loadFromFS(false, F("/index.htm"))) { return; }
 
-  TXBuffer.startStream(void);
+  TXBuffer.startStream();
   String  sCommand  = WebServer.arg(F("cmd"));
-  boolean rebootCmd = strcasecmp_P(sCommand.c_str(void), PSTR("reboot")) == 0;
+  boolean rebootCmd = strcasecmp_P(sCommand.c_str(), PSTR("reboot")) == 0;
   sendHeadandTail_stdtemplate(_HEAD, rebootCmd);
 
-  int freeMem = ESP.getFreeHeap(void);
+  int freeMem = ESP.getFreeHeap();
 
 
-  if ((strcasecmp_P(sCommand.c_str(void),
-                    PSTR("wifidisconnect")) != 0) && (rebootCmd == false) && (strcasecmp_P(sCommand.c_str(void), PSTR("reset")) != 0))
+  if ((strcasecmp_P(sCommand.c_str(),
+                    PSTR("wifidisconnect")) != 0) && (rebootCmd == false) && (strcasecmp_P(sCommand.c_str(), PSTR("reset")) != 0))
   {
     printToWeb     = true;
     printWebString = "";
 
-    if (sCommand.length(void) > 0) {
-      ExecuteCommand_internal(VALUE_SOURCE_HTTP, sCommand.c_str(void));
+    if (sCommand.length() > 0) {
+      ExecuteCommand_internal(VALUE_SOURCE_HTTP, sCommand.c_str());
     }
 
-    // IPAddress ip = WiFi.localIP(void);
-    // IPAddress gw = WiFi.gatewayIP(void);
+    // IPAddress ip = WiFi.localIP();
+    // IPAddress gw = WiFi.gatewayIP();
 
     TXBuffer += printWebString;
     TXBuffer += F("<form>");
-    html_table_class_normal(void);
+    html_table_class_normal();
     addFormHeader(F("System Info"));
 
     addRowLabelValue(LabelType::UNIT_NR);
     addRowLabelValue(LabelType::GIT_BUILD);
     addRowLabel(getLabel(LabelType::LOCAL_TIME));
 
-    if (systemTimePresent(void))
+    if (systemTimePresent())
     {
       TXBuffer += getValue(LabelType::LOCAL_TIME);
     }
@@ -73,9 +73,9 @@ void handle_root(void) {
 
     if (wdcounter > 0)
     {
-      TXBuffer += String(getCPUload(void));
+      TXBuffer += String(getCPUload());
       TXBuffer += F("% (LC=");
-      TXBuffer += String(getLoopCountPerSec(void));
+      TXBuffer += String(getLoopCountPerSec());
       TXBuffer += ')';
     }
 
@@ -87,7 +87,7 @@ void handle_root(void) {
     TXBuffer += String(lowestRAMfunction);
     TXBuffer += ')';
     addRowLabel(F("Free Stack"));
-    TXBuffer += String(getCurrentFreeStack(void));
+    TXBuffer += String(getCurrentFreeStack());
     TXBuffer += " (";
     TXBuffer += String(lowestFreeStack);
     TXBuffer += F(" - ");
@@ -97,11 +97,11 @@ void handle_root(void) {
     addRowLabelValue(LabelType::IP_ADDRESS);
     addRowLabel(getLabel(LabelType::WIFI_RSSI));
 
-    if (WiFiConnected(void))
+    if (WiFiConnected())
     {
-      TXBuffer += String(WiFi.RSSI(void));
+      TXBuffer += String(WiFi.RSSI());
       TXBuffer += F(" dB (");
-      TXBuffer += WiFi.SSID(void);
+      TXBuffer += WiFi.SSID();
       TXBuffer += ')';
     }
 
@@ -113,15 +113,15 @@ void handle_root(void) {
     TXBuffer += getValue(LabelType::M_DNS);
     TXBuffer += F("</a>");
     #endif // ifdef FEATURE_MDNS
-    html_TR_TD(void);
-    html_TD(void);
+    html_TR_TD();
+    html_TD();
     addButton(F("sysinfo"), F("More info"));
 
-    html_end_table(void);
-    html_BR(void);
-    html_BR(void);
-    html_table_class_multirow_noborder(void);
-    html_TR(void);
+    html_end_table();
+    html_BR();
+    html_BR();
+    html_table_class_multirow_noborder();
+    html_TR();
     html_table_header(F("Node List"));
     html_table_header("Name");
     html_table_header(getLabel(LabelType::BUILD_DESC));
@@ -129,22 +129,22 @@ void handle_root(void) {
     html_table_header("IP", 160); // Should fit "255.255.255.255"
     html_table_header("Age");
 
-    for (NodesMap::iterator it = Nodes.begin(void); it != Nodes.end(void); ++it)
+    for (NodesMap::iterator it = Nodes.begin(); it != Nodes.end(); ++it)
     {
       if (it->second.ip[0] != 0)
       {
         bool isThisUnit = it->first == Settings.Unit;
 
         if (isThisUnit) {
-          html_TR_TD_highlight(void);
+          html_TR_TD_highlight();
         }
         else {
-          html_TR_TD(void);
+          html_TR_TD();
         }
 
         TXBuffer += F("Unit ");
         TXBuffer += String(it->first);
-        html_TD(void);
+        html_TD();
 
         if (isThisUnit) {
           TXBuffer += Settings.Name;
@@ -152,32 +152,32 @@ void handle_root(void) {
         else {
           TXBuffer += it->second.nodeName;
         }
-        html_TD(void);
+        html_TD();
 
         if (it->second.build) {
           TXBuffer += String(it->second.build);
         }
-        html_TD(void);
+        html_TD();
         TXBuffer += getNodeTypeDisplayString(it->second.nodeType);
-        html_TD(void);
-        html_add_wide_button_prefix(void);
+        html_TD();
+        html_add_wide_button_prefix();
         TXBuffer += F("http://");
-        TXBuffer += it->second.ip.toString(void);
+        TXBuffer += it->second.ip.toString();
         TXBuffer += "'>";
-        TXBuffer += it->second.ip.toString(void);
+        TXBuffer += it->second.ip.toString();
         TXBuffer += "</a>";
-        html_TD(void);
+        html_TD();
         TXBuffer += String(it->second.age);
       }
     }
 
-    html_end_table(void);
-    html_end_form(void);
+    html_end_table();
+    html_end_form();
 
     printWebString = "";
     printToWeb     = false;
     sendHeadandTail_stdtemplate(_TAIL);
-    TXBuffer.endStream(void);
+    TXBuffer.endStream();
   }
   else
   {
@@ -186,30 +186,30 @@ void handle_root(void) {
     // have to disconnect or reboot from within the main loop
     // because the webconnection is still active at this point
     // disconnect here could result into a crash/reboot...
-    if (strcasecmp_P(sCommand.c_str(void), PSTR("wifidisconnect")) == 0)
+    if (strcasecmp_P(sCommand.c_str(), PSTR("wifidisconnect")) == 0)
     {
       addLog(LOG_LEVEL_INFO, F("WIFI : Disconnecting..."));
       cmd_within_mainloop = CMD_WIFI_DISCONNECT;
     }
 
-    if (strcasecmp_P(sCommand.c_str(void), PSTR("reboot")) == 0)
+    if (strcasecmp_P(sCommand.c_str(), PSTR("reboot")) == 0)
     {
       addLog(LOG_LEVEL_INFO, F("     : Rebooting..."));
       cmd_within_mainloop = CMD_REBOOT;
     }
 
-    if (strcasecmp_P(sCommand.c_str(void), PSTR("reset")) == 0)
+    if (strcasecmp_P(sCommand.c_str(), PSTR("reset")) == 0)
     {
       addLog(LOG_LEVEL_INFO, F("     : factory reset..."));
       cmd_within_mainloop = CMD_REBOOT;
       TXBuffer           += F(
         "OK. Please wait > 1 min and connect to Acces point.<BR><BR>PW=configesp<BR>URL=<a href='http://192.168.4.1'>192.168.4.1</a>");
-      TXBuffer.endStream(void);
-      ExecuteCommand_internal(VALUE_SOURCE_HTTP, sCommand.c_str(void));
+      TXBuffer.endStream();
+      ExecuteCommand_internal(VALUE_SOURCE_HTTP, sCommand.c_str());
     }
 
     TXBuffer += "OK";
-    TXBuffer.endStream(void);
+    TXBuffer.endStream();
   }
 }
 

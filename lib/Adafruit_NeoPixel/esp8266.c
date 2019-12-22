@@ -1,4 +1,4 @@
-// This is a mash-up of the Due show(void) code + insights from Michael Miller's
+// This is a mash-up of the Due show() code + insights from Michael Miller's
 // ESP8266 work for the NeoPixelBus library: github.com/Makuna/NeoPixelBus
 // Needs to be a separate .c file to enforce ICACHE_RAM_ATTR execution.
 
@@ -50,10 +50,10 @@ void ICACHE_RAM_ATTR espShow(
 
   for(t = time0;; t = time0) {
     if(pix & mask) t = time1;                             // Bit high duration
-    while(((c = _getCycleCount(void)) - startTime) < period); // Wait for bit start
+    while(((c = _getCycleCount()) - startTime) < period); // Wait for bit start
     GPIO_REG_WRITE(GPIO_OUT_W1TS_ADDRESS, pinMask);       // Set high
     startTime = c;                                        // Save start time
-    while(((c = _getCycleCount(void)) - startTime) < t);      // Wait high duration
+    while(((c = _getCycleCount()) - startTime) < t);      // Wait high duration
     GPIO_REG_WRITE(GPIO_OUT_W1TC_ADDRESS, pinMask);       // Set low
     if(!(mask >>= 1)) {                                   // Next bit/byte
       if(p >= end) break;
@@ -61,7 +61,7 @@ void ICACHE_RAM_ATTR espShow(
       mask = 0x80;
     }
   }
-  while((_getCycleCount(void) - startTime) < period); // Wait for last bit
+  while((_getCycleCount() - startTime) < period); // Wait for last bit
 }
 
 #endif // ESP8266

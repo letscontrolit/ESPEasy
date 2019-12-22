@@ -42,7 +42,7 @@ public:
     virtual size_t write(uint8_t byte) {
         mOutBuf[mOutQty++] = byte;
         if (mOutQty >= sizeof(mOutBuf)) {
-            flush(void);
+            flush();
         }
         return 1;
     }
@@ -55,7 +55,7 @@ public:
     }
     
     void clear(void) {
-        flush(void);
+        flush();
         Blynk.virtualWrite(mPin, "clr");
     }
 

@@ -39,7 +39,7 @@ public:
 
         blePeripheral = &per;
         // Add service and characteristic
-        blePeripheral->setAdvertisedServiceUuid(bleService.uuid(void));
+        blePeripheral->setAdvertisedServiceUuid(bleService.uuid());
         blePeripheral->addAttribute(bleService);
         blePeripheral->addAttribute(rxChar);
         blePeripheral->addAttribute(txChar);
@@ -55,7 +55,7 @@ public:
     }
 
     bool connect(void) {
-        mBuffRX.clear(void);
+        mBuffRX.clear();
         return mConn = true;
     }
 
@@ -68,15 +68,15 @@ public:
     }
 
     size_t read(void* buf, size_t len) {
-        uint32_t start = millis(void);
-        while (millis(void) - start < BLYNK_TIMEOUT_MS) {
-            if (available(void) < len) {
-                blePeripheral->poll(void);
+        uint32_t start = millis();
+        while (millis() - start < BLYNK_TIMEOUT_MS) {
+            if (available() < len) {
+                blePeripheral->poll();
             } else {
                 break;
             }
         }
-        uint32_t key = interrupt_lock(void);
+        uint32_t key = interrupt_lock();
         size_t res = mBuffRX.get((uint8_t*)buf, len);
         interrupt_unlock(key);
         return res;
@@ -88,8 +88,8 @@ public:
     }
 
     size_t available(void) {
-        uint32_t key = interrupt_lock(void);
-        size_t rxSize = mBuffRX.size(void);
+        uint32_t key = interrupt_lock();
+        size_t rxSize = mBuffRX.size();
         interrupt_unlock(key);
         return rxSize;
     }
@@ -101,9 +101,9 @@ private:
     void rxCharWritten(BLECentral& central, BLECharacteristic& ch) {
         if (!instance)
             return;
-        uint32_t key = interrupt_lock(void);
-        const uint8_t* data = ch.value(void);
-        uint32_t len = ch.valueLength(void);
+        uint32_t key = interrupt_lock();
+        const uint8_t* data = ch.value();
+        uint32_t len = ch.valueLength();
         //BLYNK_DBG_DUMP(">> ", data, len);
         instance->mBuffRX.put(data, len);
         interrupt_unlock(key);
@@ -158,12 +158,12 @@ BlynkCurieBLE Blynk(_blynkTransport);
 
 inline
 void BlynkTransportCurieBLE::txCharSubscribed(BLECentral& central, BLECharacteristic& ch) {
-    Blynk.startSession(void);
+    Blynk.startSession();
 }
 
 inline
 void BlynkTransportCurieBLE::blePeripheralDisconnectHandler(BLECentral& central) {
-    Blynk.disconnect(void);
+    Blynk.disconnect();
 }
 
 #include <BlynkWidgets.h>

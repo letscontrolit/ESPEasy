@@ -45,14 +45,14 @@ void CPlugin_015_handleInterrupt(void) {
   // This cplugin uses modified blynk library.
   // It includes support of calling this during time-wait operations
   // like blynk connection process to keep espeasy stability.
-  backgroundtasks(void);
+  backgroundtasks();
 }
 
 
 void Blynk_Run_c015(void){
     // user callbacks processing. Called from run10TimesPerSecond.
-    if (Blynk.connected(void))
-      Blynk.run(void);
+    if (Blynk.connected())
+      Blynk.run();
 }
 
 
@@ -82,9 +82,9 @@ bool CPlugin_015(byte function, struct EventStruct *event, String& string)
     case CPLUGIN_INIT:
       {
        // when connected to another server and user has changed settings
-       if (Blynk.connected(void)){
+       if (Blynk.connected()){
           addLog(LOG_LEVEL_INFO, F(C015_LOG_PREFIX "disconnect from server"));
-          Blynk.disconnect(void);
+          Blynk.disconnect();
        }
        break;
       }
@@ -157,9 +157,9 @@ bool CPlugin_015(byte function, struct EventStruct *event, String& string)
           valueFullName += F(".");
           valueFullName += valueName;
           String vPinNumberStr = valueName.substring(1, 4);
-          int vPinNumber = vPinNumberStr.toInt(void);
+          int vPinNumber = vPinNumberStr.toInt();
           String log = F(C015_LOG_PREFIX);
-          log += Blynk.connected(void)? F("(online): ") : F("(offline): ");
+          log += Blynk.connected()? F("(online): ") : F("(offline): ");
           if (vPinNumber > 0 && vPinNumber < 256){
             log += F("send ");
             log += valueFullName;
@@ -180,7 +180,7 @@ bool CPlugin_015(byte function, struct EventStruct *event, String& string)
           element.txt[x] = formattedValue;
         }
         success = C015_DelayHandler.addToQueue(element);
-        scheduleNextDelayQueue(TIMER_C015_DELAY_QUEUE, C015_DelayHandler.getNextScheduleTime(void));
+        scheduleNextDelayQueue(TIMER_C015_DELAY_QUEUE, C015_DelayHandler.getNextScheduleTime());
         break;
       }
   }
@@ -198,7 +198,7 @@ bool do_process_c015_delay_queue(int controller_plugin_number, const C015_queue_
     // controller has been disabled. Answer true to flush queue.
     return true;
 
-  if (!WiFiConnected(void)) {
+  if (!WiFiConnected()) {
     return false;
   }
 
@@ -217,10 +217,10 @@ bool do_process_c015_delay_queue(int controller_plugin_number, const C015_queue_
 
 
 boolean Blynk_keep_connection_c015(int controllerIndex, ControllerSettingsStruct& ControllerSettings){
-  if (!WiFiConnected(void))
+  if (!WiFiConnected())
     return false;
 
-  if (!Blynk.connected(void)){
+  if (!Blynk.connected()){
     String auth = SecuritySettings.ControllerPassword[controllerIndex];
     boolean connectDefault = false;
 
@@ -228,7 +228,7 @@ boolean Blynk_keep_connection_c015(int controllerIndex, ControllerSettingsStruct
       //"skip connect to blynk server too often. Wait a little...";
       return false;
     }
-    _C015_LastConnectAttempt[controllerIndex] = millis(void);
+    _C015_LastConnectAttempt[controllerIndex] = millis();
 
     #ifdef CPLUGIN_015_SSL
       char thumbprint[60];
@@ -245,13 +245,13 @@ boolean Blynk_keep_connection_c015(int controllerIndex, ControllerSettingsStruct
     String log = F(C015_LOG_PREFIX);
 
     if (ControllerSettings.UseDNS){
-      String hostName = ControllerSettings.getHost(void);
-      if (hostName.length(void) != 0){
+      String hostName = ControllerSettings.getHost();
+      if (hostName.length() != 0){
         log += F("Connecting to custom blynk server ");
-        log += ControllerSettings.getHostPortString(void);
-        Blynk.config(auth.c_str(void),
+        log += ControllerSettings.getHostPortString();
+        Blynk.config(auth.c_str(),
                      CPlugin_015_handleInterrupt,
-                     hostName.c_str(void),
+                     hostName.c_str(),
                      ControllerSettings.Port
                      #ifdef CPLUGIN_015_SSL
                         ,thumbprint
@@ -264,11 +264,11 @@ boolean Blynk_keep_connection_c015(int controllerIndex, ControllerSettingsStruct
       }
     }
     else{
-      IPAddress ip = ControllerSettings.getIP(void);
+      IPAddress ip = ControllerSettings.getIP();
       if ((ip[0] + ip[1] + ip[2] + ip[3]) > 0){
         log += F("Connecting to custom blynk server ");
-        log += ControllerSettings.getHostPortString(void);
-        Blynk.config(auth.c_str(void),
+        log += ControllerSettings.getHostPortString();
+        Blynk.config(auth.c_str(),
                      CPlugin_015_handleInterrupt,
                      ip,
                      ControllerSettings.Port
@@ -286,7 +286,7 @@ boolean Blynk_keep_connection_c015(int controllerIndex, ControllerSettingsStruct
 
     if (connectDefault){
       addLog(LOG_LEVEL_INFO, F(C015_LOG_PREFIX "Connecting to default server"));
-      Blynk.config(auth.c_str(void),
+      Blynk.config(auth.c_str(),
                    CPlugin_015_handleInterrupt,
                    BLYNK_DEFAULT_DOMAIN
                    #ifdef CPLUGIN_015_SSL
@@ -299,25 +299,25 @@ boolean Blynk_keep_connection_c015(int controllerIndex, ControllerSettingsStruct
     }
 
     #ifdef CPLUGIN_015_SSL
-      if (!Blynk.connect(void)){
+      if (!Blynk.connect()){
         if (!_blynkWifiClient.verify(thumbprint, BLYNK_DEFAULT_DOMAIN)){
           addLog(LOG_LEVEL_INFO, F(C015_LOG_PREFIX "thumbprint check FAILED! Check thumbprint in device settings and server thumbprint"));
           addLog(LOG_LEVEL_INFO, thumbprint);
         }
       }
     #else
-      Blynk.connect(void);
+      Blynk.connect();
     #endif
   }
 
-  return Blynk.connected(void);
+  return Blynk.connected();
 }
 
 
 String Command_Blynk_Set_c015(struct EventStruct *event, const char* Line){
 
   // todo add multicontroller support and chek it is connected and enabled
-  if (!Blynk.connected(void))
+  if (!Blynk.connected())
       return F("Not connected to blynk server");
 
   int vPin = event->Par1;
@@ -330,7 +330,7 @@ String Command_Blynk_Set_c015(struct EventStruct *event, const char* Line){
 
   String data = parseString(Line, 3, true, false);
 
-  if (data.length(void) == 0){
+  if (data.length() == 0){
     String err = F("Skip sending empty data to blynk vPin ");
     err += vPin;
     return err;
@@ -343,23 +343,23 @@ String Command_Blynk_Set_c015(struct EventStruct *event, const char* Line){
   addLog(LOG_LEVEL_INFO, log);
 
   Blynk.virtualWrite(vPin, data);
-  return return_command_success(void);
+  return return_command_success();
 }
 
 
 boolean Blynk_send_c015(const String& value, int vPin )
 {
   Blynk.virtualWrite(vPin, value);
-  unsigned long timer = millis(void) + Settings.MessageDelay;
+  unsigned long timer = millis() + Settings.MessageDelay;
   while (!timeOutReached(timer))
-              backgroundtasks(void);
+              backgroundtasks();
   return true;
 }
 
 // This is called for all virtual pins, that don't have BLYNK_WRITE handler
 BLYNK_WRITE_DEFAULT(void) {
   byte vPin = request.pin;
-  float pinValue = param.asFloat(void);
+  float pinValue = param.asFloat();
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F(C015_LOG_PREFIX "server set v");
     log += vPin;

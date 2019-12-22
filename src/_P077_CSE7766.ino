@@ -120,10 +120,10 @@ struct P077_data_struct : public PluginTaskData_base {
   }
 
   bool processSerialData(void) {
-    long t_start = millis(void);
+    long t_start = millis();
     bool found = false;
-    while (Serial.available(void) > 0 && !found) {
-      uint8_t serial_in_byte = Serial.read(void);
+    while (Serial.available() > 0 && !found) {
+      uint8_t serial_in_byte = Serial.read();
       count_bytes++;
       checksum -= serial_in_buffer[2]; // substract from checksum data to be removed
       memmove(serial_in_buffer, serial_in_buffer + 1,
@@ -242,16 +242,16 @@ boolean Plugin_077(byte function, struct EventStruct *event, String &string) {
   }
 
   case PLUGIN_INIT: {
-    initPluginTaskData(event->TaskIndex, new P077_data_struct(void));
+    initPluginTaskData(event->TaskIndex, new P077_data_struct());
     if (PCONFIG(0) == 0) PCONFIG(0) = HLW_UREF_PULSE;
     if (PCONFIG(1) == 0) PCONFIG(1) = HLW_IREF_PULSE;
     if (PCONFIG(2) == 0) PCONFIG(2) = HLW_PREF_PULSE;
 
     Settings.UseSerial = true; // Enable Serial port
-    disableSerialLog(void); // disable logging on serial port (used for CSE7766
+    disableSerialLog(); // disable logging on serial port (used for CSE7766
                         // communication)
     Settings.BaudRate = 4800; // set BaudRate for CSE7766
-    Serial.flush(void);
+    Serial.flush();
     Serial.begin(Settings.BaudRate, SERIAL_8E1);
     success = true;
     break;
@@ -276,7 +276,7 @@ boolean Plugin_077(byte function, struct EventStruct *event, String &string) {
               cf_pulses_last_time = cf_pulses;
      //           energy_kWhtoday_delta += (cf_frequency *
      energy_power_calibration) / 36;
-     //           EnergyUpdateToday(void);
+     //           EnergyUpdateToday();
             }
           }
           success = true;
@@ -301,7 +301,7 @@ boolean Plugin_077(byte function, struct EventStruct *event, String &string) {
     if (nullptr != P077_data) {
       success = true;
       /* ONLINE CHECKSUMMING by Bartłomiej Zimoń */
-      if (P077_data->processSerialData(void)) {
+      if (P077_data->processSerialData()) {
         addLog(LOG_LEVEL_DEBUG, F("CSE: packet found"));
         if (CseReceived(event)) {
           if (loglevelActiveFor(LOG_LEVEL_DEBUG_DEV)) {
@@ -358,7 +358,7 @@ boolean Plugin_077(byte function, struct EventStruct *event, String &string) {
           log += '/';
           log += P077_data->count_max;
           log += '/';
-          log += Serial.available(void);
+          log += Serial.available();
           addLog(LOG_LEVEL_DEBUG, log);
           log = F("CSE: nr ");
           log += P077_data->count_pkt;

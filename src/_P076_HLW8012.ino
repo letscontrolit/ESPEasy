@@ -291,25 +291,25 @@ boolean Plugin_076(byte function, struct EventStruct *event, String &string) {
         break;
       case 1: // Set mode to read current
         Plugin_076_hlw->setMode(MODE_CURRENT);
-        p076_timer = millis(void) + HLW_DELAYREADING;
+        p076_timer = millis() + HLW_DELAYREADING;
         ++p076_read_stage;
         break;
       case 2: // Read current + set mode to read voltage
         if (timeOutReached(p076_timer)) {
-          p076_hcurrent = Plugin_076_hlw->getCurrent(void);
+          p076_hcurrent = Plugin_076_hlw->getCurrent();
           Plugin_076_hlw->setMode(MODE_VOLTAGE);
-          p076_timer = millis(void) + HLW_DELAYREADING;
+          p076_timer = millis() + HLW_DELAYREADING;
           ++p076_read_stage;
         }
         break;
       case 3: // Read voltage + active power + power factor
         if (timeOutReached(p076_timer)) {
-          p076_hvoltage = Plugin_076_hlw->getVoltage(void);
-          p076_hpower = Plugin_076_hlw->getActivePower(void);
-          p076_hpowfact = (int)(100 * Plugin_076_hlw->getPowerFactor(void));
+          p076_hvoltage = Plugin_076_hlw->getVoltage();
+          p076_hpower = Plugin_076_hlw->getActivePower();
+          p076_hpowfact = (int)(100 * Plugin_076_hlw->getPowerFactor());
           ++p076_read_stage;
           // Measurement is done, schedule a new PLUGIN_READ call
-          schedule_task_device_timer(event->TaskIndex, millis(void) + 10);
+          schedule_task_device_timer(event->TaskIndex, millis() + 10);
         }
         break;
       default:
@@ -326,10 +326,10 @@ boolean Plugin_076(byte function, struct EventStruct *event, String &string) {
         // Force a measurement start.
 //        ++p076_read_stage;
 //      } else if (p076_read_stage > 3) {
-          p076_hpower = Plugin_076_hlw->getActivePower(void);
-          p076_hvoltage = Plugin_076_hlw->getVoltage(void);
-          p076_hcurrent = Plugin_076_hlw->getCurrent(void);
-          p076_hpowfact = (int)(100 * Plugin_076_hlw->getPowerFactor(void));
+          p076_hpower = Plugin_076_hlw->getActivePower();
+          p076_hvoltage = Plugin_076_hlw->getVoltage();
+          p076_hcurrent = Plugin_076_hlw->getCurrent();
+          p076_hpowfact = (int)(100 * Plugin_076_hlw->getPowerFactor());
         
         // Measurement is complete.
         p076_read_stage = 0;
@@ -349,7 +349,7 @@ boolean Plugin_076(byte function, struct EventStruct *event, String &string) {
         UserVar[event->BaseVarIndex + 1] = p076_hcurrent;
         UserVar[event->BaseVarIndex + 2] = p076_hpower;
         UserVar[event->BaseVarIndex + 3] = p076_hpowfact;
-        // Plugin_076_hlw->toggleMode(void);
+        // Plugin_076_hlw->toggleMode();
         success = true;
       }
     }
@@ -398,7 +398,7 @@ boolean Plugin_076(byte function, struct EventStruct *event, String &string) {
           Plugin_076_hlw->setVoltageMultiplier(voltage);
           Plugin_076_hlw->setPowerMultiplier(power);
         } else {
-          Plugin076_ResetMultipliers(void);
+          Plugin076_ResetMultipliers();
         }
 
         if (PLUGIN_076_DEBUG){
@@ -420,7 +420,7 @@ boolean Plugin_076(byte function, struct EventStruct *event, String &string) {
     if (Plugin_076_hlw) {
       String command = parseString(string, 1);
       if (command.equalsIgnoreCase(F("hlwreset"))) {
-        Plugin076_ResetMultipliers(void);
+        Plugin076_ResetMultipliers();
         success = true;
       }
 
@@ -459,7 +459,7 @@ boolean Plugin_076(byte function, struct EventStruct *event, String &string) {
         // if at least one calibration value has been provided then save the new
         // multipliers //
         if (changed) {
-          Plugin076_SaveMultipliers(void);
+          Plugin076_SaveMultipliers();
         }
         success = true;
       }
@@ -472,8 +472,8 @@ boolean Plugin_076(byte function, struct EventStruct *event, String &string) {
 
 void Plugin076_ResetMultipliers(void) {
   if (Plugin_076_hlw) {
-    Plugin_076_hlw->resetMultipliers(void);
-    Plugin076_SaveMultipliers(void);
+    Plugin_076_hlw->resetMultipliers();
+    Plugin076_SaveMultipliers();
     if (PLUGIN_076_DEBUG){
       addLog(LOG_LEVEL_INFO, F("P076: Reset Multipliers to DEFAULT"));
     }
@@ -494,9 +494,9 @@ bool Plugin076_ReadMultipliers(double& current, double& voltage, double& power) 
   voltage = 0.0;
   power   = 0.0;
   if (Plugin_076_hlw) {
-    current = Plugin_076_hlw->getCurrentMultiplier(void);
-    voltage = Plugin_076_hlw->getVoltageMultiplier(void);
-    power   = Plugin_076_hlw->getPowerMultiplier(void);
+    current = Plugin_076_hlw->getCurrentMultiplier();
+    voltage = Plugin_076_hlw->getVoltageMultiplier();
+    power   = Plugin_076_hlw->getPowerMultiplier();
     return true;
   }
   return false;
@@ -547,13 +547,13 @@ void Plugin076_Reset(taskIndex_t TaskIndex) {
 // whenever an interrupt is triggered
 void ICACHE_RAM_ATTR p076_hlw8012_cf1_interrupt(void) {
   if (Plugin_076_hlw) {
-    Plugin_076_hlw->cf1_interrupt(void);
+    Plugin_076_hlw->cf1_interrupt();
   }
 }
 
 void ICACHE_RAM_ATTR p076_hlw8012_cf_interrupt(void) {
   if (Plugin_076_hlw) {
-    Plugin_076_hlw->cf_interrupt(void);
+    Plugin_076_hlw->cf_interrupt();
   }
 }
 

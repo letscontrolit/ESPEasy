@@ -41,7 +41,7 @@ byte _error;
 
 bool plugin_015_begin(void)
 {
-  // Wire.begin(void);   called in ESPEasy framework
+  // Wire.begin();   called in ESPEasy framework
   return true;
 }
 
@@ -55,16 +55,16 @@ bool plugin_015_readByte(unsigned char address, unsigned char& value)
   // Set up command byte for read
   Wire.beginTransmission(plugin_015_i2caddr);
   Wire.write((address & 0x0F) | TSL2561_CMD);
-  _error = Wire.endTransmission(void);
+  _error = Wire.endTransmission();
 
   // Read requested byte
   if (_error == 0)
   {
     Wire.requestFrom(plugin_015_i2caddr, (byte)1);
 
-    if (Wire.available(void) == 1)
+    if (Wire.available() == 1)
     {
-      value = Wire.read(void);
+      value = Wire.read();
       return true;
     }
   }
@@ -77,7 +77,7 @@ bool plugin_015_writeByte(unsigned char address, unsigned char value)
 // Address: TSL2561 address (0 to 15)
 // Value: byte to write to address
 // Returns true (1) if successful, false (0) if there was an I2C error
-// (Also see getError(void) above)
+// (Also see getError() above)
 {
   // Set up command byte for write
   Wire.beginTransmission(plugin_015_i2caddr);
@@ -85,7 +85,7 @@ bool plugin_015_writeByte(unsigned char address, unsigned char value)
 
   // Write byte
   Wire.write(value);
-  _error = Wire.endTransmission(void);
+  _error = Wire.endTransmission();
 
   if (_error == 0) {
     return true;
@@ -100,23 +100,23 @@ bool plugin_015_readUInt(unsigned char address, unsigned int& value)
 // Address: TSL2561 address (0 to 15), low byte first
 // Value will be set to stored unsigned integer
 // Returns true (1) if successful, false (0) if there was an I2C error
-// (Also see getError(void) above)
+// (Also see getError() above)
 {
   // Set up command byte for read
   Wire.beginTransmission(plugin_015_i2caddr);
   Wire.write((address & 0x0F) | TSL2561_CMD);
-  _error = Wire.endTransmission(void);
+  _error = Wire.endTransmission();
 
   // Read two bytes (low and high)
   if (_error == 0)
   {
     Wire.requestFrom(plugin_015_i2caddr, (byte)2);
 
-    if (Wire.available(void) == 2)
+    if (Wire.available() == 2)
     {
       char high, low;
-      low  = Wire.read(void);
-      high = Wire.read(void);
+      low  = Wire.read();
+      high = Wire.read();
 
       // Combine bytes into unsigned int
       value = word(high, low);
@@ -132,7 +132,7 @@ bool plugin_015_writeUInt(unsigned char address, unsigned int value)
 // Address: TSL2561 address (0 to 15), low byte first
 // Value: unsigned int to write to address
 // Returns true (1) if successful, false (0) if there was an I2C error
-// (Also see getError(void) above)
+// (Also see getError() above)
 {
   // Split int into lower and upper bytes, write each byte
   if (plugin_015_writeByte(address, lowByte(value))
@@ -152,7 +152,7 @@ bool plugin_015_setTiming(bool gain, unsigned char time)
 // If time = 2, integration will be 402ms
 // If time = 3, use manual start / stop
 // Returns true (1) if successful, false (0) if there was an I2C error
-// (Also see getError(void) below)
+// (Also see getError() below)
 {
   unsigned char timing;
 
@@ -189,7 +189,7 @@ bool plugin_015_setTiming(bool gain, unsigned char time, float& ms)
 // If time = 3, use manual start / stop (ms = 0)
 // ms will be set to integration time
 // Returns true (1) if successful, false (0) if there was an I2C error
-// (Also see getError(void) below)
+// (Also see getError() below)
 {
   // Calculate ms for user
   switch (time)
@@ -223,7 +223,7 @@ bool plugin_015_setPowerUp(void)
 
 // Turn on TSL2561, begin integrations
 // Returns true (1) if successful, false (0) if there was an I2C error
-// (Also see getError(void) below)
+// (Also see getError() below)
 {
   // Write 0x03 to command byte (power on)
   return plugin_015_writeByte(TSL2561_REG_CONTROL, 0x03);
@@ -233,7 +233,7 @@ bool plugin_015_setPowerDown(void)
 
 // Turn off TSL2561
 // Returns true (1) if successful, false (0) if there was an I2C error
-// (Also see getError(void) below)
+// (Also see getError() below)
 {
   // Clear command byte (power off)
   return plugin_015_writeByte(TSL2561_REG_CONTROL, 0x00);
@@ -244,7 +244,7 @@ bool plugin_015_getData(unsigned int& data0, unsigned int& data1)
 // Retrieve raw integration results
 // data0 and data1 will be set to integration results
 // Returns true (1) if successful, false (0) if there was an I2C error
-// (Also see getError(void) below)
+// (Also see getError() below)
 {
   // Get data0 and data1 out of result registers
   if (plugin_015_readUInt(TSL2561_REG_DATA_0, data0) && plugin_015_readUInt(TSL2561_REG_DATA_1, data1)) {
@@ -263,9 +263,9 @@ void plugin_015_getLux(unsigned char gain,
                        double      & broadband)
 
 // Convert raw data to lux
-// gain: 0 (1X) or 1 (16X), see setTiming(void)
-// ms: integration time in ms, from setTiming(void) or from manual integration
-// CH0, CH1: results from getData(void)
+// gain: 0 (1X) or 1 (16X), see setTiming()
+// ms: integration time in ms, from setTiming() or from manual integration
+// CH0, CH1: results from getData()
 // lux will be set to resulting lux calculation
 // returns true (1) if calculation was successful
 // RETURNS false (0) AND lux = 0.0 IF EITHER SENSOR WAS SATURATED (0XFFFF)
@@ -419,7 +419,7 @@ boolean Plugin_015(byte function, struct EventStruct *event, String& string)
       unsigned int gain; // Gain setting, 0 = X1, 1 = X16, 2 = auto, 3 = extended auto;
       float ms;          // Integration ("shutter") time in milliseconds
 
-      plugin_015_begin(void);
+      plugin_015_begin();
 
       // If gain = false (0), device is set to low gain (1X)
       // If gain = high (1), device is set to high gain (16X)
@@ -441,7 +441,7 @@ boolean Plugin_015(byte function, struct EventStruct *event, String& string)
         // If time = 2, integration will be 402ms
         unsigned char time = PCONFIG(1);
         plugin_015_setTiming(gain16xActive, time, ms);
-        plugin_015_setPowerUp(void);
+        plugin_015_setPowerUp();
         delayBackground(ms); // FIXME TD-er: Do not use delayBackground but collect data later.
         unsigned int data0, data1;
 
@@ -520,7 +520,7 @@ boolean Plugin_015(byte function, struct EventStruct *event, String& string)
         }
         else
         {
-          // getData(void) returned false because of an I2C error, inform the user.
+          // getData() returned false because of an I2C error, inform the user.
           addLog(LOG_LEVEL_ERROR, F("TSL2561: i2c error"));
           success = false;
           attempt = 0;
@@ -529,7 +529,7 @@ boolean Plugin_015(byte function, struct EventStruct *event, String& string)
 
       if (PCONFIG(2)) {
         addLog(LOG_LEVEL_DEBUG_MORE, F("TSL2561: sleeping..."));
-        plugin_015_setPowerDown(void);
+        plugin_015_setPowerDown();
       }
 
       break;

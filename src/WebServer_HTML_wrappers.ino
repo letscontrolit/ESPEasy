@@ -29,12 +29,12 @@ void html_U(const String& text) {
 
 void html_TR_TD_highlight(void) {
   TXBuffer += F("<TR class=\"highlight\">");
-  html_TD(void);
+  html_TD();
 }
 
 void html_TR_TD(void) {
-  html_TR(void);
-  html_TD(void);
+  html_TR();
+  html_TD();
 }
 
 void html_BR(void) {
@@ -46,7 +46,7 @@ void html_TR(void) {
 }
 
 void html_TR_TD_height(int height) {
-  html_TR(void);
+  html_TR();
   TXBuffer += F("<TD HEIGHT=\"");
   TXBuffer += height;
   TXBuffer += "\">";
@@ -130,7 +130,7 @@ void html_table_header(const String& label, const String& helpButton, int width)
   TXBuffer += '>';
   TXBuffer += label;
 
-  if (helpButton.length(void) > 0) {
+  if (helpButton.length() > 0) {
     addHelpButton(helpButton);
   }
   TXBuffer += F("</TH>");
@@ -151,18 +151,18 @@ void html_add_button_prefix(void) {
 void html_add_button_prefix(const String& classes, bool enabled) {
   TXBuffer += F(" <a class='button link");
 
-  if (classes.length(void) > 0) {
+  if (classes.length() > 0) {
     TXBuffer += ' ';
     TXBuffer += classes;
   }
 
   if (!enabled) {
-    addDisabled(void);
+    addDisabled();
   }
   TXBuffer += '\'';
 
   if (!enabled) {
-    addDisabled(void);
+    addDisabled();
   }
   TXBuffer += F(" href='");
 }
@@ -174,7 +174,7 @@ void html_add_wide_button_prefix(void) {
 void html_add_wide_button_prefix(const String& classes, bool enabled) {
   String wide_classes;
 
-  wide_classes.reserve(classes.length(void) + 5);
+  wide_classes.reserve(classes.length() + 5);
   wide_classes  = F("wide ");
   wide_classes += classes;
   html_add_button_prefix(wide_classes, enabled);
@@ -186,14 +186,14 @@ void html_add_form(void) {
 
 void html_add_autosubmit_form(void) {
   TXBuffer += F("<script><!--\n"
-                "function dept_onchange(frmselect) {frmselect.submit(void);}"
+                "function dept_onchange(frmselect) {frmselect.submit();}"
                 "\n//--></script>");
 }
 
 void html_add_script(const String& script, bool defer) {
   html_add_script(defer);
   addHtml(script);
-  html_add_script_end(void);
+  html_add_script_end();
 }
 
 void html_add_script(bool defer) {
@@ -211,7 +211,7 @@ void html_add_script_end(void) {
 
 // if there is an error-string, add it to the html code with correct formatting
 void addHtmlError(const String& error) {
-  if (error.length(void) > 0)
+  if (error.length() > 0)
   {
     TXBuffer += F("<div class=\"");
 

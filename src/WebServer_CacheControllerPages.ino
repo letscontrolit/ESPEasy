@@ -5,9 +5,9 @@
 // to help dump the content of the binary log files
 // ********************************************************************************
 void handle_dumpcache(void) {
-  if (!isLoggedIn(void)) { return; }
+  if (!isLoggedIn()) { return; }
 
-  C016_startCSVdump(void);
+  C016_startCSVdump();
   unsigned long timestamp;
   byte  controller_idx;
   byte  TaskIndex;
@@ -18,7 +18,7 @@ void handle_dumpcache(void) {
   float val3;
   float val4;
 
-  TXBuffer.startStream(void);
+  TXBuffer.startStream();
   TXBuffer += F("UNIX timestamp;contr. idx;sensortype;taskindex;value count");
 
   for (taskIndex_t i = 0; i < TASKS_MAX; ++i) {
@@ -67,14 +67,14 @@ void handle_dumpcache(void) {
     TXBuffer += F("<BR>");
     delay(0);
   }
-  TXBuffer.endStream(void);
+  TXBuffer.endStream();
 
 }
 
 void handle_cache_json(void) {
-  if (!isLoggedIn(void)) { return; }
+  if (!isLoggedIn()) { return; }
 
-  TXBuffer.startJsonStream(void);
+  TXBuffer.startJsonStream();
   TXBuffer += F("{\"columns\": [");
 
   //     TXBuffer += F("UNIX timestamp;contr. idx;sensortype;taskindex;value count");
@@ -96,7 +96,7 @@ void handle_cache_json(void) {
     }
   }
   TXBuffer += F("],\n");
-  C016_startCSVdump(void);
+  C016_startCSVdump();
   TXBuffer += F("\"files\": [");
   bool islast = false;
   int  filenr = 0;
@@ -104,7 +104,7 @@ void handle_cache_json(void) {
   while (!islast) {
     String currentFile = C016_getCacheFileName(islast);
 
-    if (currentFile.length(void) > 0) {
+    if (currentFile.length() > 0) {
       if (filenr != 0) {
         TXBuffer += ',';
       }
@@ -115,11 +115,11 @@ void handle_cache_json(void) {
   TXBuffer += F("],\n");
   stream_last_json_object_value(F("nrfiles"), String(filenr));
   TXBuffer += F("\n");
-  TXBuffer.endStream(void);
+  TXBuffer.endStream();
 }
 
 void handle_cache_csv(void) {
-  if (!isLoggedIn(void)) { return; }
+  if (!isLoggedIn()) { return; }
 }
 
 #endif // ifdef USES_C016

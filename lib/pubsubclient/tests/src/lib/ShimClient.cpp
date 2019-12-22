@@ -5,7 +5,7 @@
 #include <ctime>
 
 extern "C" {
-    uint32_t millis(void) {
+    uint32_t millis() {
        return time(0)*1000;
     }
 }

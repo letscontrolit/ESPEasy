@@ -2,9 +2,9 @@
 #ifdef ESP8266
 #include <IRSender.h>
 
-// Send IR using the 'bit banging' on ESP8266 using alternative ESP.getCycleCount(void) method
+// Send IR using the 'bit banging' on ESP8266 using alternative ESP.getCycleCount() method
 
-// Cycles compensation due to while cycles and polling ESP.getCycleCount(void)
+// Cycles compensation due to while cycles and polling ESP.getCycleCount()
 #define ESP8266_CYCLES_COMPENSATION 33
 
 IRSenderESP8266Alt::IRSenderESP8266Alt(uint8_t pin) : IRSender(pin)
@@ -23,16 +23,16 @@ void IRSenderESP8266Alt::setFrequency(int frequency)
 // Send an IR 'mark' symbol, i.e. transmitter ON
 void IRSenderESP8266Alt::mark(int markLength)
 {
-  long beginning = micros(void);
+  long beginning = micros();
 
-  while((int)(micros(void) - beginning) < markLength){
-    uint32_t periodStart = ESP.getCycleCount(void);
+  while((int)(micros() - beginning) < markLength){
+    uint32_t periodStart = ESP.getCycleCount();
     digitalWrite(_pin, HIGH);
-    while (ESP.getCycleCount(void) - periodStart < _halfPeriodicTime - ESP8266_CYCLES_COMPENSATION);
+    while (ESP.getCycleCount() - periodStart < _halfPeriodicTime - ESP8266_CYCLES_COMPENSATION);
 
-    periodStart = ESP.getCycleCount(void);
+    periodStart = ESP.getCycleCount();
     digitalWrite(_pin, LOW);
-    while (ESP.getCycleCount(void) - periodStart < _halfPeriodicTime - ESP8266_CYCLES_COMPENSATION);
+    while (ESP.getCycleCount() - periodStart < _halfPeriodicTime - ESP8266_CYCLES_COMPENSATION);
   }
 }
 

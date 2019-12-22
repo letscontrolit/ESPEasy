@@ -38,20 +38,20 @@ extern "C" {
 static ESPeasySoftwareSerial *ObjList[NR_CONCURRENT_SOFT_SERIALS];
 static uint8_t PinControllerMap[NR_CONCURRENT_SOFT_SERIALS]={}; // Zero all elements
 
-void ICACHE_RAM_ATTR espeasy_sws_isr_0(void) { ObjList[0]->rxRead(void); };
-void ICACHE_RAM_ATTR espeasy_sws_isr_1(void) { ObjList[1]->rxRead(void); };
-void ICACHE_RAM_ATTR espeasy_sws_isr_2(void) { ObjList[2]->rxRead(void); };
-/*void ICACHE_RAM_ATTR espeasy_sws_isr_3(void) { ObjList[3]->rxRead(void); };
-void ICACHE_RAM_ATTR espeasy_sws_isr_4(void) { ObjList[4]->rxRead(void); };
-void ICACHE_RAM_ATTR espeasy_sws_isr_5(void) { ObjList[5]->rxRead(void); };
+void ICACHE_RAM_ATTR espeasy_sws_isr_0(void) { ObjList[0]->rxRead(); };
+void ICACHE_RAM_ATTR espeasy_sws_isr_1(void) { ObjList[1]->rxRead(); };
+void ICACHE_RAM_ATTR espeasy_sws_isr_2(void) { ObjList[2]->rxRead(); };
+/*void ICACHE_RAM_ATTR espeasy_sws_isr_3(void) { ObjList[3]->rxRead(); };
+void ICACHE_RAM_ATTR espeasy_sws_isr_4(void) { ObjList[4]->rxRead(); };
+void ICACHE_RAM_ATTR espeasy_sws_isr_5(void) { ObjList[5]->rxRead(); };
 // Pin 6 to 11 can not be used
-void ICACHE_RAM_ATTR espeasy_sws_isr_12(void) { ObjList[6]->rxRead(void); };
-void ICACHE_RAM_ATTR espeasy_sws_isr_13(void) { ObjList[7]->rxRead(void); };
-void ICACHE_RAM_ATTR espeasy_sws_isr_14(void) { ObjList[8]->rxRead(void); };
-void ICACHE_RAM_ATTR espeasy_sws_isr_15(void) { ObjList[9]->rxRead(void); };
+void ICACHE_RAM_ATTR espeasy_sws_isr_12(void) { ObjList[6]->rxRead(); };
+void ICACHE_RAM_ATTR espeasy_sws_isr_13(void) { ObjList[7]->rxRead(); };
+void ICACHE_RAM_ATTR espeasy_sws_isr_14(void) { ObjList[8]->rxRead(); };
+void ICACHE_RAM_ATTR espeasy_sws_isr_15(void) { ObjList[9]->rxRead(); };
 */
 
-static void (*ISRList[NR_CONCURRENT_SOFT_SERIALS])(void) = {
+static void (*ISRList[NR_CONCURRENT_SOFT_SERIALS])() = {
       espeasy_sws_isr_0,
       espeasy_sws_isr_1,
       espeasy_sws_isr_2 /*,
@@ -139,8 +139,8 @@ uint8_t ESPeasySoftwareSerial::pinToIndex(uint8_t pin) {
 }
 
 void ESPeasySoftwareSerial::begin(long speed) {
-   // Use getCycleCount(void) loop to get as exact timing as possible
-   m_bitTime = ESP.getCpuFreqMHz(void)*1000000/speed;
+   // Use getCycleCount() loop to get as exact timing as possible
+   m_bitTime = ESP.getCpuFreqMHz()*1000000/speed;
    if (!m_rxEnabled)
      enableRx(true);
 }
@@ -181,18 +181,18 @@ int ESPeasySoftwareSerial::available(void) {
    return avail;
 }
 
-#define WAIT { while (ESP.getCycleCount(void)-start < wait); wait += m_bitTime; }
+#define WAIT { while (ESP.getCycleCount()-start < wait); wait += m_bitTime; }
 
 size_t ESPeasySoftwareSerial::write(uint8_t b) {
    if (!m_txValid) return 0;
 
    if (m_invert) b = ~b;
    // Disable interrupts in order to get a clean transmit
-   cli(void);
+   cli();
    if (m_txEnableValid) digitalWrite(m_txEnablePin, HIGH);
    unsigned long wait = m_bitTime;
    digitalWrite(m_txPin, HIGH);
-   unsigned long start = ESP.getCycleCount(void);
+   unsigned long start = ESP.getCycleCount();
     // Start bit;
    digitalWrite(m_txPin, LOW);
    WAIT;
@@ -205,7 +205,7 @@ size_t ESPeasySoftwareSerial::write(uint8_t b) {
    digitalWrite(m_txPin, HIGH);
    WAIT;
    if (m_txEnableValid) digitalWrite(m_txEnablePin, LOW);
-   sei(void);
+   sei();
    return 1;
 }
 
@@ -222,7 +222,7 @@ void ICACHE_RAM_ATTR ESPeasySoftwareSerial::rxRead(void) {
    // Advance the starting point for the samples but compensate for the
    // initial delay which occurs before the interrupt is delivered
    unsigned long wait = m_bitTime + m_bitTime/3 - 500;
-   unsigned long start = ESP.getCycleCount(void);
+   unsigned long start = ESP.getCycleCount();
    uint8_t rec = 0;
    for (uint8_t i = 0; i < 8; i++) {
      WAIT;

@@ -58,12 +58,12 @@ boolean Plugin_034(byte function, struct EventStruct *event, String& string)
 
         Wire.beginTransmission(DHT12_I2C_ADDRESS); // start transmission to device
         Wire.write(0); // sends register address to read from
-        Wire.endTransmission(void); // end transmission
+        Wire.endTransmission(); // end transmission
 
         if (Wire.requestFrom(DHT12_I2C_ADDRESS, 5) == 5) { // send data n-bytes read
           for (i = 0; i < 5; i++)
           {
-            dht_dat[i] = Wire.read(void); // receive DATA
+            dht_dat[i] = Wire.read(); // receive DATA
           }
         } else {
           error = true;

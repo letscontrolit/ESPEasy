@@ -14,7 +14,7 @@ bool selectNextWiFiSettings(void) {
 
   RTC.lastWiFiSettingsIndex = (RTC.lastWiFiSettingsIndex + 1) % 2;
 
-  if (!wifiSettingsValid(getLastWiFiSettingsSSID(void), getLastWiFiSettingsPassphrase(void))) {
+  if (!wifiSettingsValid(getLastWiFiSettingsSSID(), getLastWiFiSettingsPassphrase())) {
     // other settings are not correct, switch back.
     RTC.lastWiFiSettingsIndex = tmp;
     return false; // Nothing changed.
@@ -23,10 +23,10 @@ bool selectNextWiFiSettings(void) {
 }
 
 bool selectValidWiFiSettings(void) {
-  if (wifiSettingsValid(getLastWiFiSettingsSSID(void), getLastWiFiSettingsPassphrase(void))) {
+  if (wifiSettingsValid(getLastWiFiSettingsSSID(), getLastWiFiSettingsPassphrase())) {
     return true;
   }
-  return selectNextWiFiSettings(void);
+  return selectNextWiFiSettings();
 }
 
 bool wifiSettingsValid(const char *ssid, const char *pass) {

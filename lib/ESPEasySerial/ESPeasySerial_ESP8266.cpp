@@ -8,7 +8,7 @@ String ESPeasySerial::getLogString(void) const {
   String log;
   log.reserve(48);
   log = "ESPEasy serial: ";
-  if (isSWserial(void)) {
+  if (isSWserial()) {
     log += "SW";
   } else {
     log += "HW";
@@ -35,15 +35,15 @@ ESPeasySerial::ESPeasySerial(int receivePin, int transmitPin, bool inverse_logic
     : _swserial(nullptr), _receivePin(receivePin), _transmitPin(transmitPin)
 {
   _serialtype = ESPeasySerialType::getSerialType(receivePin, transmitPin);
-  if (isSWserial(void)) {
+  if (isSWserial()) {
     _swserial = new ESPeasySoftwareSerial(receivePin, transmitPin, inverse_logic, buffSize);
-  } else if (isValid(void)) {
-    getHW(void)->pins(transmitPin, receivePin);
+  } else if (isValid()) {
+    getHW()->pins(transmitPin, receivePin);
   }
 }
 
 ESPeasySerial::~ESPeasySerial(void) {
-  end(void);
+  end();
   if (_swserial != nullptr) {
     delete _swserial;
   }
@@ -51,7 +51,7 @@ ESPeasySerial::~ESPeasySerial(void) {
 
 void ESPeasySerial::begin(unsigned long baud, SerialConfig config, SerialMode mode) {
   _baud = baud;
-  if (isSWserial(void)) {
+  if (isSWserial()) {
     if (_swserial != nullptr) {
       _swserial->begin(baud);
     }
@@ -61,17 +61,17 @@ void ESPeasySerial::begin(unsigned long baud, SerialConfig config, SerialMode mo
 }
 
 void ESPeasySerial::end(void) {
-  if (!isValid(void)) {
+  if (!isValid()) {
     return;
   }
-  flush(void);
-  if (isSWserial(void)) {
+  flush();
+  if (isSWserial()) {
 #ifndef ARDUINO_ESP8266_RELEASE_2_3_0
-    _swserial->end(void);
+    _swserial->end();
 #endif
     return;
   } else {
-  //  getHW(void)->end(void);
+  //  getHW()->end();
   }
 }
 
@@ -112,32 +112,32 @@ bool ESPeasySerial::isValid(void) const {
 
 
 int ESPeasySerial::peek(void) {
-  if (!isValid(void)) {
+  if (!isValid()) {
     return -1;
   }
-  if (isSWserial(void)) {
-    return _swserial->peek(void);
+  if (isSWserial()) {
+    return _swserial->peek();
   } else {
-    return getHW(void)->peek(void);
+    return getHW()->peek();
   }
 }
 
 size_t ESPeasySerial::write(uint8_t byte) {
-  if (!isValid(void)) {
+  if (!isValid()) {
     return 0;
   }
-  if (isSWserial(void)) {
+  if (isSWserial()) {
     return _swserial->write(byte);
   } else {
-    return getHW(void)->write(byte);
+    return getHW()->write(byte);
   }
 }
 
 size_t ESPeasySerial::write(const uint8_t *buffer, size_t size) {
-  if (!isValid(void) || !buffer) {
+  if (!isValid() || !buffer) {
     return 0;
   }
-  if (isSWserial(void)) {
+  if (isSWserial()) {
     // Not implemented in SoftwareSerial
     size_t count = 0;
     for (size_t i = 0; i < size; ++i) {
@@ -147,7 +147,7 @@ size_t ESPeasySerial::write(const uint8_t *buffer, size_t size) {
     }
     return count;
   } else {
-    return getHW(void)->write(buffer, size);
+    return getHW()->write(buffer, size);
   }
 }
 
@@ -157,32 +157,32 @@ size_t ESPeasySerial::write(const char *buffer) {
 }
 
 int ESPeasySerial::read(void) {
-  if (!isValid(void)) {
+  if (!isValid()) {
     return -1;
   }
-  if (isSWserial(void)) {
-    return _swserial->read(void);
+  if (isSWserial()) {
+    return _swserial->read();
   } else {
-    return getHW(void)->read(void);
+    return getHW()->read();
   }
 }
 
 size_t ESPeasySerial::readBytes(char* buffer, size_t size)  {
-  if (!isValid(void) || !buffer) {
+  if (!isValid() || !buffer) {
     return 0;
   }
-  if (isSWserial(void)) {
+  if (isSWserial()) {
     // Not implemented in SoftwareSerial
     size_t count = 0;
     for (size_t i = 0; i < size; ++i) {
-      int read = _swserial->read(void);
+      int read = _swserial->read();
       if (read < 0) return count;
       buffer[i] = static_cast<char>(read & 0xFF);
       ++count;
     }
     return count;
   } else {
-    return getHW(void)->readBytes(buffer, size);
+    return getHW()->readBytes(buffer, size);
   }
 }
 
@@ -191,41 +191,41 @@ size_t ESPeasySerial::readBytes(uint8_t* buffer, size_t size)  {
 }
 
 int ESPeasySerial::available(void) {
-  if (!isValid(void)) {
+  if (!isValid()) {
     return 0;
   }
-  if (isSWserial(void)) {
-    return _swserial->available(void);
+  if (isSWserial()) {
+    return _swserial->available();
   } else {
-    return getHW(void)->available(void);
+    return getHW()->available();
   }
 }
 
 void ESPeasySerial::flush(void) {
-  if (!isValid(void)) {
+  if (!isValid()) {
     return;
   }
-  if (isSWserial(void)) {
-    _swserial->flush(void);
+  if (isSWserial()) {
+    _swserial->flush();
   } else {
-    getHW(void)->flush(void);
+    getHW()->flush();
   }
 }
 
 
-bool ESPeasySerial::overflow(void) { return hasOverrun(void); }
+bool ESPeasySerial::overflow(void) { return hasOverrun(); }
 bool ESPeasySerial::hasOverrun(void) {
-  if (!isValid(void)) {
+  if (!isValid()) {
     return false;
   }
 #ifdef CORE_PRE_2_4_2
   return false;
 #else
-  if (isSWserial(void)) {
+  if (isSWserial()) {
     return false;
-    //return _swserial->overflow(void);
+    //return _swserial->overflow();
   } else {
-    return getHW(void)->hasOverrun(void);
+    return getHW()->hasOverrun();
   }
 #endif
 }
@@ -237,79 +237,79 @@ bool ESPeasySerial::hasOverrun(void) {
 // *****************************
 
 void ESPeasySerial::swap(uint8_t tx_pin) {
-  if (getHW(void) == nullptr) return;
-  getHW(void)->swap(tx_pin);
+  if (getHW() == nullptr) return;
+  getHW()->swap(tx_pin);
 }
 
 int ESPeasySerial::baudRate(void) {
-  if (!isValid(void) || isSWserial(void)) {
+  if (!isValid() || isSWserial()) {
     return _baud;
   }
-  return getHW(void)->baudRate(void);
+  return getHW()->baudRate();
 }
 
 void ESPeasySerial::setDebugOutput(bool enable) {
-  if (!isValid(void) || isSWserial(void)) {
+  if (!isValid() || isSWserial()) {
     return;
   }
-  getHW(void)->setDebugOutput(enable);
+  getHW()->setDebugOutput(enable);
 }
 
 bool ESPeasySerial::isTxEnabled(void) {
-  if (!isValid(void) || isSWserial(void)) {
+  if (!isValid() || isSWserial()) {
     return false;
   }
-  return getHW(void)->isTxEnabled(void);
+  return getHW()->isTxEnabled();
 }
 
  bool ESPeasySerial::isRxEnabled(void) {
-   if (!isValid(void) || isSWserial(void)) {
+   if (!isValid() || isSWserial()) {
      return false;
    }
-   return getHW(void)->isRxEnabled(void);
+   return getHW()->isRxEnabled();
  }
 
 bool ESPeasySerial::hasRxError(void) {
 #ifdef CORE_POST_2_5_0
-  if (!isValid(void) || isSWserial(void)) {
+  if (!isValid() || isSWserial()) {
     return false;
   }
-  return getHW(void)->hasRxError(void);
+  return getHW()->hasRxError();
 #else
   return false;
 #endif
 }
 
 void ESPeasySerial::startDetectBaudrate(void) {
-  if (!isValid(void) || isSWserial(void)) {
+  if (!isValid() || isSWserial()) {
     return;
   }
 #ifdef CORE_PRE_2_4_2
   return;
 #else
-  getHW(void)->startDetectBaudrate(void);
+  getHW()->startDetectBaudrate();
 #endif
 }
 
 unsigned long ESPeasySerial::testBaudrate(void) {
-  if (!isValid(void) || isSWserial(void)) {
+  if (!isValid() || isSWserial()) {
     return 0;
   }
 #ifdef CORE_PRE_2_4_2
   return 0;
 #else
-  return getHW(void)->testBaudrate(void);
+  return getHW()->testBaudrate();
 #endif
 }
 
 unsigned long ESPeasySerial::detectBaudrate(time_t timeoutMillis) {
-  if (!isValid(void) || isSWserial(void)) {
+  if (!isValid() || isSWserial()) {
     return 0;
   }
 #ifdef CORE_PRE_2_4_2
   return 0;
 #else
-  return getHW(void)->detectBaudrate(timeoutMillis);
+  return getHW()->detectBaudrate(timeoutMillis);
 #endif
 }
 
@@ -320,27 +320,27 @@ unsigned long ESPeasySerial::detectBaudrate(time_t timeoutMillis) {
 
 
 bool ESPeasySerial::listen(void) {
-  if (isValid(void) && isSWserial(void)) {
+  if (isValid() && isSWserial()) {
 #ifndef ARDUINO_ESP8266_RELEASE_2_3_0
-    return _swserial->listen(void);
+    return _swserial->listen();
 #endif
   }
   return false;
 }
 
 bool ESPeasySerial::isListening(void) {
-  if (isValid(void) && isSWserial(void)) {
+  if (isValid() && isSWserial()) {
 #ifndef ARDUINO_ESP8266_RELEASE_2_3_0
-    return _swserial->isListening(void);
+    return _swserial->isListening();
 #endif
   }
   return false;
 }
 
 bool ESPeasySerial::stopListening(void) {
-  if (isValid(void) && isSWserial(void)) {
+  if (isValid() && isSWserial()) {
 #ifndef ARDUINO_ESP8266_RELEASE_2_3_0
-    return _swserial->stopListening(void);
+    return _swserial->stopListening();
 #endif
   }
   return false;
@@ -354,16 +354,16 @@ bool ESPeasySerial::stopListening(void) {
   // Shared functions for HW serial
   // ****************************************
   bool ESPeasySerial::doHWbegin(unsigned long baud, SerialConfig config, SerialMode mode) {
-    if (getHW(void) == nullptr) return false;
-    getHW(void)->begin(baud > 0 ? baud : 9600, config, mode, _transmitPin);
-    getHW(void)->pins(_transmitPin, _receivePin);
-    return isValid(void);
+    if (getHW() == nullptr) return false;
+    getHW()->begin(baud > 0 ? baud : 9600, config, mode, _transmitPin);
+    getHW()->pins(_transmitPin, _receivePin);
+    return isValid();
 /*  // Detect baudrate gives crashes, so disabled for now.
-    startDetectBaudrate(void);
+    startDetectBaudrate();
     unsigned long detectedBaudRate = detectBaudrate(DETECT_BAUDATE_TIMEOUT);
     if(detectedBaudRate > 0) {
         delay(100); // Give some time...
-        getHW(void)->begin(detectedBaudRate, config, mode, _transmitPin);
+        getHW()->begin(detectedBaudRate, config, mode, _transmitPin);
         _baud = detectedBaudRate;
         return true;
     } else {

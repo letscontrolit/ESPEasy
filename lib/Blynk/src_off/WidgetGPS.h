@@ -25,26 +25,26 @@ public:
         , mAlt (0)
         , mSpeed (0)
     {
-        BlynkParam::iterator it = param.begin(void);
-        if (it >= param.end(void))
+        BlynkParam::iterator it = param.begin();
+        if (it >= param.end())
             return;
 
-        mLat = it.asDouble(void);
+        mLat = it.asDouble();
 
-        if (++it >= param.end(void))
+        if (++it >= param.end())
             return;
 
-        mLon = it.asDouble(void);
+        mLon = it.asDouble();
 
-        if (++it >= param.end(void))
+        if (++it >= param.end())
             return;
 
-        mAlt = it.asDouble(void);
+        mAlt = it.asDouble();
 
-        if (++it >= param.end(void))
+        if (++it >= param.end())
             return;
 
-        mSpeed = it.asDouble(void);
+        mSpeed = it.asDouble();
     }
 
 

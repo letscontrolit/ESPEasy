@@ -103,11 +103,11 @@ struct timer_id_couple {
   timer_id_couple(unsigned long id, unsigned long newtimer) : _id(id), _timer(newtimer) {}
 
   timer_id_couple(unsigned long id) : _id(id) {
-    _timer = millis(void);
+    _timer = millis();
   }
 
   bool operator<(const timer_id_couple& other) {
-    const unsigned long now(millis(void));
+    const unsigned long now(millis());
 
     // timediff > 0, means timer has already passed
     return timeDiff(_timer, now) > timeDiff(other._timer, now);
@@ -118,10 +118,10 @@ struct timer_id_couple {
 };
 
 struct msecTimerHandlerStruct {
-  msecTimerHandlerStruct(void) : get_called(0), get_called_ret_id(0), max_queue_length(0),
+  msecTimerHandlerStruct() : get_called(0), get_called_ret_id(0), max_queue_length(0),
     last_exec_time_usec(0), total_idle_time_usec(0),  idle_time_pct(0.0), is_idle(false), eco_mode(true)
   {
-    last_log_start_time = millis(void);
+    last_log_start_time = millis();
   }
 
   void setEcoMode(bool enabled) {
@@ -139,20 +139,20 @@ struct msecTimerHandlerStruct {
   unsigned long getNextId(unsigned long& timer) {
     ++get_called;
 
-    if (_timer_ids.empty(void)) {
-      recordIdle(void);
+    if (_timer_ids.empty()) {
+      recordIdle();
 
       if (eco_mode) {
         delay(MAX_SCHEDULER_WAIT_TIME); // Nothing to do, try save some power.
       }
       return 0;
     }
-    timer_id_couple item = _timer_ids.front(void);
+    timer_id_couple item = _timer_ids.front();
     const long passed    = timePassedSince(item._timer);
 
     if (passed < 0) {
       // No timeOutReached
-      recordIdle(void);
+      recordIdle();
 
       if (eco_mode) {
         long waitTime = (-1 * passed) - 1; // will be non negative
@@ -167,11 +167,11 @@ struct msecTimerHandlerStruct {
       }
       return 0;
     }
-    recordRunning(void);
-    unsigned long size = _timer_ids.size(void);
+    recordRunning();
+    unsigned long size = _timer_ids.size();
 
     if (size > max_queue_length) { max_queue_length = size; }
-    _timer_ids.pop_front(void);
+    _timer_ids.pop_front();
     timer = item._timer;
     ++get_called_ret_id;
     return item._id;
@@ -197,7 +197,7 @@ struct msecTimerHandlerStruct {
   void updateIdleTimeStats(void) {
     const long duration = timePassedSince(last_log_start_time);
 
-    last_log_start_time  = millis(void);
+    last_log_start_time  = millis();
     idle_time_pct        = total_idle_time_usec / duration / 10.0;
     total_idle_time_usec = 0;
   }
@@ -211,7 +211,7 @@ private:
   struct match_id {
     match_id(unsigned long id) : _id(id) {}
 
-    bool operator(void)(const timer_id_couple& item) {
+    bool operator()(const timer_id_couple& item) {
       return _id == item._id;
     }
 
@@ -223,11 +223,11 @@ private:
 
     // Make sure only one is present with the same id.
     _timer_ids.remove_if(match_id(item._id));
-    const bool mustSort = !_timer_ids.empty(void);
+    const bool mustSort = !_timer_ids.empty();
     _timer_ids.push_front(item);
 
     if (mustSort) {
-      _timer_ids.sort(void); // TD-er: Must check if this is an expensive operation.
+      _timer_ids.sort(); // TD-er: Must check if this is an expensive operation.
     }
 
     // It should be a relative light operation, to insert into a sorted list.
@@ -237,7 +237,7 @@ private:
 
   void recordIdle(void) {
     if (is_idle) { return; }
-    last_exec_time_usec = micros(void);
+    last_exec_time_usec = micros();
     is_idle             = true;
     delay(0); // Nothing to do, so leave time for backgroundtasks
   }

@@ -31,7 +31,7 @@ OLEDDisplayUi::OLEDDisplayUi(OLEDDisplay *display) {
 }
 
 void OLEDDisplayUi::init(void) {
-  this->display->init(void);
+  this->display->init();
 }
 
 void OLEDDisplayUi::setTargetFPS(uint8_t fps){
@@ -105,7 +105,7 @@ void OLEDDisplayUi::setFrameAnimation(AnimationDirection dir) {
 void OLEDDisplayUi::setFrames(FrameCallback* frameFunctions, uint8_t frameCount) {
   this->frameFunctions = frameFunctions;
   this->frameCount     = frameCount;
-  this->resetState(void);
+  this->resetState();
 }
 
 // -/----- Overlays ------\-
@@ -125,19 +125,19 @@ void OLEDDisplayUi::runLoadingProcess(LoadingStage* stages, uint8_t stagesCount)
   uint8_t increment = 100 / stagesCount;
 
   for (uint8_t i = 0; i < stagesCount; i++) {
-    display->clear(void);
+    display->clear();
     this->loadingDrawFunction(this->display, &stages[i], progress);
-    display->display(void);
+    display->display();
 
-    stages[i].callback(void);
+    stages[i].callback();
 
     progress += increment;
-    yield(void);
+    yield();
   }
 
-  display->clear(void);
+  display->clear();
   this->loadingDrawFunction(this->display, &stages[stagesCount-1], progress);
-  display->display(void);
+  display->display();
 
   delay(150);
 }
@@ -190,16 +190,16 @@ OLEDDisplayUiState* OLEDDisplayUi::getUiState(void){
 
 
 int8_t OLEDDisplayUi::update(void){
-  long frameStart = millis(void);
+  long frameStart = millis();
   int8_t timeBudget = this->updateInterval - (frameStart - this->state.lastUpdate);
   if ( timeBudget <= 0) {
     // Implement frame skipping to ensure time budget is keept
     if (this->autoTransition && this->state.lastUpdate != 0) this->state.ticksSinceLastStateSwitch += ceil(-timeBudget / this->updateInterval);
 
     this->state.lastUpdate = frameStart;
-    this->tick(void);
+    this->tick();
   }
-  return this->updateInterval - (millis(void) - frameStart);
+  return this->updateInterval - (millis() - frameStart);
 }
 
 
@@ -210,7 +210,7 @@ void OLEDDisplayUi::tick(void) {
     case IN_TRANSITION:
         if (this->state.ticksSinceLastStateSwitch >= this->ticksPerTransition){
           this->state.frameState = FIXED;
-          this->state.currentFrame = getNextFrameNumber(void);
+          this->state.currentFrame = getNextFrameNumber();
           this->state.ticksSinceLastStateSwitch = 0;
           this->nextFrameNumber = -1;
         }
@@ -230,13 +230,13 @@ void OLEDDisplayUi::tick(void) {
       break;
   }
 
-  this->display->clear(void);
-  this->drawFrame(void);
+  this->display->clear();
+  this->drawFrame();
   if (shouldDrawIndicators) {
-    this->drawIndicator(void);
+    this->drawIndicator();
   }
-  this->drawOverlays(void);
-  this->display->display(void);
+  this->drawOverlays();
+  this->display->display();
 }
 
 void OLEDDisplayUi::resetState(void) {
@@ -254,28 +254,28 @@ void OLEDDisplayUi::drawFrame(void){
        int16_t x = 0, y = 0, x1 = 0, y1 = 0; 
        switch(this->frameAnimationDirection){
         case SLIDE_LEFT:
-          x = -this->display->width(void) * progress;
+          x = -this->display->width() * progress;
           y = 0;
-          x1 = x + this->display->width(void);
+          x1 = x + this->display->width();
           y1 = 0;
           break;
         case SLIDE_RIGHT:
-          x = this->display->width(void) * progress;
+          x = this->display->width() * progress;
           y = 0;
-          x1 = x - this->display->width(void);
+          x1 = x - this->display->width();
           y1 = 0;
           break;
         case SLIDE_UP:
           x = 0;
-          y = -this->display->height(void) * progress;
+          y = -this->display->height() * progress;
           x1 = 0;
-          y1 = y + this->display->height(void);
+          y1 = y + this->display->height();
           break;
         case SLIDE_DOWN:
           x = 0;
-          y = this->display->height(void) * progress;
+          y = this->display->height() * progress;
           x1 = 0;
-          y1 = y - this->display->height(void);
+          y1 = y - this->display->height();
           break;
        }
 
@@ -287,12 +287,12 @@ void OLEDDisplayUi::drawFrame(void){
 
 
        // Prope each frameFunction for the indicator Drawen state
-       this->enableIndicator(void);
+       this->enableIndicator();
        (this->frameFunctions[this->state.currentFrame])(this->display, &this->state, x, y);
        drawenCurrentFrame = this->state.isIndicatorDrawen;
 
-       this->enableIndicator(void);
-       (this->frameFunctions[this->getNextFrameNumber(void)])(this->display, &this->state, x1, y1);
+       this->enableIndicator();
+       (this->frameFunctions[this->getNextFrameNumber()])(this->display, &this->state, x1, y1);
 
        // Build up the indicatorDrawState
        if (drawenCurrentFrame && !this->state.isIndicatorDrawen) {
@@ -316,7 +316,7 @@ void OLEDDisplayUi::drawFrame(void){
       // Always assume that the indicator is drawn!
       // And set indicatorDrawState to "not known yet"
       this->indicatorDrawState = 0;
-      this->enableIndicator(void);
+      this->enableIndicator();
       (this->frameFunctions[this->state.currentFrame])(this->display, &this->state, 0, 0);
       break;
   }
@@ -336,7 +336,7 @@ void OLEDDisplayUi::drawIndicator(void) {
 
     // if the indicator needs to be slided in we want to
     // highlight the next frame in the transition
-    uint8_t frameToHighlight = this->indicatorDrawState == 1 ? this->getNextFrameNumber(void) : this->state.currentFrame;
+    uint8_t frameToHighlight = this->indicatorDrawState == 1 ? this->getNextFrameNumber() : this->state.currentFrame;
 
     // Calculate the frame that needs to be highlighted
     // based on the Direction the indiactor is drawn
@@ -368,19 +368,19 @@ void OLEDDisplayUi::drawIndicator(void) {
       switch (this->indicatorPosition){
         case TOP:
           y = 0 - (8 * indicatorFadeProgress);
-          x = (this->display->width(void) / 2) - frameStartPos + 12 * i;
+          x = (this->display->width() / 2) - frameStartPos + 12 * i;
           break;
         case BOTTOM:
-          y = (this->display->height(void) - 8) + (8 * indicatorFadeProgress);
-          x = (this->display->width(void) / 2) - frameStartPos + 12 * i;
+          y = (this->display->height() - 8) + (8 * indicatorFadeProgress);
+          x = (this->display->width() / 2) - frameStartPos + 12 * i;
           break;
         case RIGHT:
-          x = (this->display->width(void) - 8) + (8 * indicatorFadeProgress);
-          y = (this->display->height(void) / 2) - frameStartPos + 2 + 12 * i;
+          x = (this->display->width() - 8) + (8 * indicatorFadeProgress);
+          y = (this->display->height() / 2) - frameStartPos + 2 + 12 * i;
           break;
         case LEFT:
           x = 0 - (8 * indicatorFadeProgress);
-          y = (this->display->height(void) / 2) - frameStartPos + 2 + 12 * i;
+          y = (this->display->height() / 2) - frameStartPos + 2 + 12 * i;
           break;
       }
 

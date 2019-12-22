@@ -42,7 +42,7 @@ public:
 
     bool connect(void) {
         this->client->setCACert(caCert);
-        if (BlynkArduinoClientGen<Client>::connect(void)) {
+        if (BlynkArduinoClientGen<Client>::connect()) {
           BLYNK_LOG1(BLYNK_F("Certificate OK"));
           return true;
         } else {
@@ -74,12 +74,12 @@ public:
         } else {
             WiFi.begin(ssid);
         }
-        while (WiFi.status(void) != WL_CONNECTED) {
+        while (WiFi.status() != WL_CONNECTED) {
             BlynkDelay(500);
         }
         BLYNK_LOG1(BLYNK_F("Connected to WiFi"));
 
-        IPAddress myip = WiFi.localIP(void);
+        IPAddress myip = WiFi.localIP();
         BLYNK_LOG_IP("IP: ", myip);
     }
 
@@ -112,7 +112,7 @@ public:
     {
         connectWiFi(ssid, pass);
         config(auth, domain, port, root_ca);
-        while(this->connect(void) != true) {}
+        while(this->connect() != true) {}
     }
 
     void begin(const char* auth,
@@ -124,7 +124,7 @@ public:
     {
         connectWiFi(ssid, pass);
         config(auth, ip, port, root_ca);
-        while(this->connect(void) != true) {}
+        while(this->connect() != true) {}
     }
 
 };

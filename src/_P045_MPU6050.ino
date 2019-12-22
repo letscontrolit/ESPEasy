@@ -248,7 +248,7 @@ boolean Plugin_045(byte function, struct EventStruct *event, String& string)
         // Run this bit every 5 seconds per deviceaddress (not per instance)
         if (timeOutReached(_P045_time[dev] + 5000))
         {
-          _P045_time[dev] = millis(void);
+          _P045_time[dev] = millis();
 
           // Determine the maximum measured range of each axis
           for (uint8_t i=0; i<3; i++) {
@@ -359,8 +359,8 @@ void _P045_getMotion6(uint8_t devAddr, int16_t* ax, int16_t* ay, int16_t* az, in
     uint8_t count = 0;
     I2C_write8(devAddr, MPU6050_RA_ACCEL_XOUT_H);
     Wire.requestFrom(devAddr, (uint8_t)14);
-    for (; Wire.available(void); count++) {
-        buffer[count] = Wire.read(void);
+    for (; Wire.available(); count++) {
+        buffer[count] = Wire.read();
     }
     *ax = (((int16_t)buffer[0]) << 8) | buffer[1];
     *ay = (((int16_t)buffer[2]) << 8) | buffer[3];

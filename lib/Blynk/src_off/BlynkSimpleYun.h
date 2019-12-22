@@ -47,9 +47,9 @@ public:
                uint16_t    port   = BLYNK_DEFAULT_PORT)
     {
         BLYNK_LOG1(BLYNK_F("Bridge init..."));
-        Bridge.begin(void);
+        Bridge.begin();
         config(auth, domain, port);
-        while(this->connect(void) != true) {}
+        while(this->connect() != true) {}
     }
 
     void begin(const char* auth,
@@ -57,9 +57,9 @@ public:
                uint16_t    port = BLYNK_DEFAULT_PORT)
     {
         BLYNK_LOG1(BLYNK_F("Bridge init..."));
-        Bridge.begin(void);
+        Bridge.begin();
         config(auth, ip, port);
-        while(this->connect(void) != true) {}
+        while(this->connect() != true) {}
     }
 
 };

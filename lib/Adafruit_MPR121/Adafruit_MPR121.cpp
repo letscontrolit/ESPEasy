@@ -20,7 +20,7 @@ Adafruit_MPR121::Adafruit_MPR121(void) {
 }
 
 boolean Adafruit_MPR121::begin(uint8_t i2caddr) {
-  //Wire.begin(void);   called in ESPEasy framework
+  //Wire.begin();   called in ESPEasy framework
 
   _i2caddr = i2caddr;
 
@@ -106,7 +106,7 @@ uint8_t Adafruit_MPR121::readRegister8(uint8_t reg) {
     Wire.write(reg);
     Wire.endTransmission(false);
     while (Wire.requestFrom(_i2caddr, 1) != 1);
-    return ( Wire.read(void));
+    return ( Wire.read());
 }
 
 uint16_t Adafruit_MPR121::readRegister16(uint8_t reg) {
@@ -114,8 +114,8 @@ uint16_t Adafruit_MPR121::readRegister16(uint8_t reg) {
     Wire.write(reg);
     Wire.endTransmission(false);
     while (Wire.requestFrom(_i2caddr, 2) != 2);
-    uint16_t v = Wire.read(void);
-    v |=  ((uint16_t) Wire.read(void)) << 8;
+    uint16_t v = Wire.read();
+    v |=  ((uint16_t) Wire.read()) << 8;
     return v;
 }
 
@@ -128,5 +128,5 @@ void Adafruit_MPR121::writeRegister(uint8_t reg, uint8_t value) {
     Wire.beginTransmission(_i2caddr);
     Wire.write((uint8_t)reg);
     Wire.write((uint8_t)(value));
-    Wire.endTransmission(void);
+    Wire.endTransmission();
 }

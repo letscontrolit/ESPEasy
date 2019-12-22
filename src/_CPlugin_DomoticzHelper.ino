@@ -20,7 +20,7 @@ String humStatDomoticz(struct EventStruct *event, byte rel_index) {
 }
 
 int mapRSSItoDomoticz(void) {
-  long rssi = WiFi.RSSI(void);
+  long rssi = WiFi.RSSI();
 
   if (-50 < rssi) { return 10; }
 
@@ -52,7 +52,7 @@ String formatUserVarDomoticz(int value) {
   String text;
 
   text += value;
-  text.trim(void);
+  text.trim();
   text += ';';
   return text;
 }
@@ -154,12 +154,12 @@ String formatDomoticzSensorType(struct EventStruct *event) {
   }
 
   // Now strip trailing semi colon.
-  int index_last_char = values.length(void) - 1;
+  int index_last_char = values.length() - 1;
 
   if ((index_last_char > 0) && (values.charAt(index_last_char) == ';')) {
     values.setCharAt(index_last_char, ' ');
   }
-  values.trim(void);
+  values.trim();
   {
     String log = F(" Domoticz: Sensortype: ");
     log += event->sensorType;

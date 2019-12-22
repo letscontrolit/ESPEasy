@@ -62,13 +62,13 @@ unsigned long ntpGetTime(void) {
     // you can send a packet requesting a timestamp:
     Udp.beginPacket(timeServer, 123); // NTP requests are to port 123
     Udp.write(packetBuffer, NTP_PACKET_SIZE);
-    Udp.endPacket(void);
+    Udp.endPacket();
   
-    millis_time_t started = BlynkMillis(void);
-    while (BlynkMillis(void) - started < 1000)
+    millis_time_t started = BlynkMillis();
+    while (BlynkMillis() - started < 1000)
     {
       delay(100);
-      if (Udp.parsePacket(void)) {
+      if (Udp.parsePacket()) {
         // We've received a packet, read the data from it
         Udp.read(packetBuffer, NTP_PACKET_SIZE); // read the packet into the buffer
 
