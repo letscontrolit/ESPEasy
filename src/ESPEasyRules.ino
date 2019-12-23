@@ -305,6 +305,8 @@ void replace_EventValueN_Argv(String& line, const String& argString, unsigned in
 }
 
 
+
+
 void process_internal(String &line, String cmd_s) {
   int startIndex;
   int iarg1, iarg2;
@@ -329,6 +331,7 @@ void process_internal(String &line, String cmd_s) {
     }
 
     if (cmd_s.equalsIgnoreCase(F("[substring:"))) {
+      // substring arduino style (first char included, last char excluded)
       // Syntax like 12345[substring:8:12:ANOTHER HELLO WORLD]67890
       if (validIntFromString(arg1, iarg1)
           && validIntFromString(arg2, iarg2)) {
@@ -336,6 +339,7 @@ void process_internal(String &line, String cmd_s) {
       }
     }
     if (cmd_s.equalsIgnoreCase(F("[strtol:"))) {
+      // string to long integer (from cstdlib)
       // Syntax like 1234[strtol:16:38]7890
       if (validIntFromString(arg1, iarg1)
           && validIntFromString(arg2, iarg2)) {
@@ -343,6 +347,10 @@ void process_internal(String &line, String cmd_s) {
       }
     }
     if (cmd_s.equalsIgnoreCase(F("[div100ths:"))) {
+      // division and giving the 100ths as integer
+      // 5 / 100 would yield 5
+      // useful for fractions that use a full byte gaining a 
+      // precision/granularity of 1/256 instead of only 1/100
       // Syntax like XXX[div100ths:24:256]XXX
       if (validIntFromString(arg1, iarg1)
           && validIntFromString(arg2, iarg2)) {
@@ -351,9 +359,16 @@ void process_internal(String &line, String cmd_s) {
         replacement = String(sval);
       }
     }
+    if (cmd_s.equalsIgnoreCase(F("[ord:"))) {
+      // Give the ordinal/integer value of the first character of a string
+      // Syntax like let 1,[ord:B]      
+      uint8_t uval = arg1.c_str()[0];
+      replacement = String(uval);
+    }
     line.replace(fullCommand, replacement);
   }
 }
+
 
 
 void substitute_eventvalue(String& line, const String& event) {
@@ -381,6 +396,7 @@ void substitute_eventvalue(String& line, const String& event) {
   process_internal(line, F("[substring:")); 
   process_internal(line, F("[strtol:"));  
   process_internal(line, F("[div100ths:"));  
+  process_internal(line, F("[ord:"));
 }
 
 void parseCompleteNonCommentLine(String& line, String& event, String& log,
