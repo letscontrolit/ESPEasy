@@ -53,6 +53,7 @@ bool CPlugin_005(byte function, struct EventStruct *event, String& string)
           // Controller is not enabled.
           break;
         } else {
+          // FIXME TD-er: Command is not parsed for template arguments.
           String cmd;
           struct EventStruct TempEvent;
           TempEvent.TaskIndex = event->TaskIndex;
@@ -80,8 +81,8 @@ bool CPlugin_005(byte function, struct EventStruct *event, String& string)
           if (validTopic) {
             // in case of event, store to buffer and return...
             String command = parseString(cmd, 1);
-            if (command == F("event")) {
-            eventBuffer = cmd.substring(6);
+            if (command == F("event") || command == F("asyncevent")) {
+              eventQueue.add(parseStringToEnd(cmd, 2));
             } else if (!PluginCall(PLUGIN_WRITE, &TempEvent, cmd)) {
               remoteConfig(&TempEvent, cmd);
             }
@@ -109,10 +110,13 @@ bool CPlugin_005(byte function, struct EventStruct *event, String& string)
         parseControllerVariables(pubname, event, false);
 
         String value = "";
-        // byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[event->TaskIndex]);
         byte valueCount = getValueCountFromSensorType(event->sensorType);
         for (byte x = 0; x < valueCount; x++)
         {
+          //MFD: skip publishing for values with empty labels (removes unnecessary publishing of unwanted values)
+          if (ExtraTaskSettings.TaskDeviceValueNames[x][0]==0)
+             continue; //we skip values with empty labels
+             
           String tmppubname = pubname;
           tmppubname.replace(F("%valname%"), ExtraTaskSettings.TaskDeviceValueNames[x]);
           value = formatUserVarNoCheck(event, x);

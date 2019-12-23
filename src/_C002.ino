@@ -83,7 +83,7 @@ bool CPlugin_002(byte function, struct EventStruct *event, String& string)
             switchtype = "?";
           }
 
-          for (byte x = 0; x < TASKS_MAX; x++) {
+          for (taskIndex_t x = 0; x < TASKS_MAX; x++) {
             // We need the index of the controller we are: 0...CONTROLLER_MAX
             if (Settings.TaskDeviceEnabled[x] && (Settings.TaskDeviceID[ControllerID][x] == idx)) // get idx for our controller index
             {
@@ -134,26 +134,27 @@ bool CPlugin_002(byte function, struct EventStruct *event, String& string)
                   }
                   break;
                 }
-#ifdef USES_P115
+#if defined(USES_P088) || defined(USES_P115)
+                case 88: // Send heatpump IR (P088) if IDX matches
                 case 115: // Send heatpump IR (P115) if IDX matches
                 {
                   action = F("heatpumpir,");
                   action += svalue1; // svalue1 is like 'gree,1,1,0,22,0,0'
                   break;
                 }
-#endif // USES_P115
+#endif // USES_P088 || USES_P115
                 default:
                   break;
               }
 
               if (action.length() > 0) {
-                struct EventStruct TempEvent;
-                TempEvent.TaskIndex = x;
-                parseCommandString(&TempEvent, action);
-                PluginCall(PLUGIN_WRITE, &TempEvent, action);
+                ExecuteCommand_plugin(x, VALUE_SOURCE_MQTT, action.c_str());
 
                 // trigger rulesprocessing
                 if (Settings.UseRules) {
+                  struct EventStruct TempEvent;
+                  TempEvent.TaskIndex = x;
+                  parseCommandString(&TempEvent, action);
                   createRuleEvents(&TempEvent);
                 }
               }
@@ -237,13 +238,7 @@ bool CPlugin_002(byte function, struct EventStruct *event, String& string)
         String pubname = ControllerSettings.Publish;
         parseControllerVariables(pubname, event, false);
 
-        if (!MQTTpublish(event->ControllerIndex, pubname.c_str(), json.c_str(), Settings.MQTTRetainFlag))
-        {
-          connectionFailures++;
-        }
-        else if (connectionFailures) {
-          connectionFailures--;
-        }
+        success = MQTTpublish(event->ControllerIndex, pubname.c_str(), json.c_str(), Settings.MQTTRetainFlag);
       } // if ixd !=0
       else
       {

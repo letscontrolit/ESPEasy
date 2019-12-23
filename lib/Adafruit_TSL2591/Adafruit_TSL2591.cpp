@@ -175,7 +175,7 @@ float Adafruit_TSL2591::calculateLuxf(uint16_t ch0, uint16_t ch1)
 {
   float    atime, again;
   float    cpl, lux1, lux2, lux;
-  uint32_t chan0, chan1;
+  //uint32_t chan0, chan1;
 
   // Check for overflow conditions first
   if ((ch0 == 0xFFFF) | (ch1 == 0xFFFF))

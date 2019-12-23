@@ -3,23 +3,23 @@
 
 #include "../../ESPEasy_common.h"
 #include <map>
+#include "../Globals/Plugins.h"
 
 /*********************************************************************************************\
  * systemTimerStruct
 \*********************************************************************************************/
 struct systemTimerStruct
 {
-  systemTimerStruct() :
-    timer(0), Par1(0), Par2(0), Par3(0), Par4(0), Par5(0), TaskIndex(-1), plugin(0) {}
+  systemTimerStruct() {}
 
-  unsigned long timer;
-  int Par1;
-  int Par2;
-  int Par3;
-  int Par4;
-  int Par5;
-  int16_t TaskIndex;
-  byte plugin;
+  unsigned long timer = 0;
+  int Par1 = 0;
+  int Par2 = 0;
+  int Par3 = 0;
+  int Par4 = 0;
+  int Par5 = 0;
+  taskIndex_t TaskIndex = INVALID_TASK_INDEX;
+  byte plugin = 0;
 };
 std::map<unsigned long, systemTimerStruct> systemTimers;
 

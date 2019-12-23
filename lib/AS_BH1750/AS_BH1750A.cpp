@@ -515,7 +515,7 @@ bool AS_BH1750A::startMeasurementAsync(TimeFuncPtr fTimePtr) {
   _fTimePtr = fTimePtr;
   _stage = 0;
   _nextDelay = 0;
-  int _lastResult = -1;
+  //int _lastResult = -1;
   _lastTimestamp=fTimePtr();
   return readLightLevelAsync()!=-1;
 }

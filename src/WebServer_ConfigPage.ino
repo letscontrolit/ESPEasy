@@ -1,4 +1,6 @@
 
+#ifdef WEBSERVER_CONFIG
+
 // ********************************************************************************
 // Web Interface config page
 // ********************************************************************************
@@ -20,8 +22,8 @@ void handle_config() {
     String iprangelow  = WebServer.arg(F("iprangelow"));
     String iprangehigh = WebServer.arg(F("iprangehigh"));
 
-    Settings.Delay     = getFormItemInt(F("delay"), Settings.Delay);
-    Settings.deepSleep = getFormItemInt(F("deepsleep"), Settings.deepSleep);
+    Settings.Delay              = getFormItemInt(F("delay"), Settings.Delay);
+    Settings.deepSleep_wakeTime = getFormItemInt(F("awaketime"), Settings.deepSleep_wakeTime);
     String espip      = WebServer.arg(F("espip"));
     String espgateway = WebServer.arg(F("espgateway"));
     String espsubnet  = WebServer.arg(F("espsubnet"));
@@ -37,11 +39,11 @@ void handle_config() {
       if (CPluginCall(CPLUGIN_GOT_INVALID, 0)) { // inform controllers that the old name will be invalid from now on.
 #ifdef USES_MQTT
         MQTTDisconnect();                        // disconnect form MQTT Server if invalid message was sent succesfull.
-#endif //USES_MQTT
+#endif // USES_MQTT
       }
 #ifdef USES_MQTT
       MQTTclient_should_reconnect = true;
-#endif //USES_MQTT
+#endif // USES_MQTT
     }
 
     // Unit name
@@ -146,7 +148,7 @@ void handle_config() {
 
   addFormSubHeader(F("Sleep Mode"));
 
-  addFormNumericBox(F("Sleep awake time"), F("deepsleep"), Settings.deepSleep, 0, 255);
+  addFormNumericBox(F("Sleep awake time"), F("awaketime"), Settings.deepSleep_wakeTime, 0, 255);
   addUnit(F("sec"));
   addHelpButton(F("SleepMode"));
   addFormNote(F("0 = Sleep Disabled, else time awake from sleep"));
@@ -173,3 +175,5 @@ void handle_config() {
   sendHeadandTail_stdtemplate(_TAIL);
   TXBuffer.endStream();
 }
+
+#endif // ifdef WEBSERVER_CONFIG

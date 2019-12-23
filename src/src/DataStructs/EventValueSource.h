@@ -7,5 +7,6 @@
 #define VALUE_SOURCE_MQTT                   4
 #define VALUE_SOURCE_UDP                    5
 #define VALUE_SOURCE_WEB_FRONTEND           6
+#define VALUE_SOURCE_RULES                  7
 
 #endif // DATASTRUCTS_EVENT_VALUE_SOURCE_H

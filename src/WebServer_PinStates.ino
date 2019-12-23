@@ -70,6 +70,8 @@ void handle_pinstates_json() {
 
 #endif // WEBSERVER_NEW_UI
 
+#ifdef WEBSERVER_PINSTATES
+
 void handle_pinstates() {
   checkRAM(F("handle_pinstates"));
 
@@ -155,3 +157,5 @@ void handle_pinstates() {
   sendHeadandTail_stdtemplate(_TAIL);
   TXBuffer.endStream();
 }
+
+#endif // ifdef WEBSERVER_PINSTATES

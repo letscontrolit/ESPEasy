@@ -1,3 +1,6 @@
+#ifndef DEFINE_PLUGIN_SETS_H
+#define DEFINE_PLUGIN_SETS_H
+
 #include "ESPEasy_common.h"
 
 /*
@@ -18,11 +21,99 @@ To create/register a plugin, you have to :
  adding "#define PLUGIN_BUILD_DEV" at the top of the ESPEasy.ino file
  - You will then have to push a PR including your plugin + the corret line (#define USES_P777) added to this file
 
- When found stable enought, the maintainer (and only him) will choose to move it to TESTING or STABLE
+ When found stable enough, the maintainer (and only him) will choose to move it to TESTING or STABLE
 */
 
+//#define FEATURE_SD
 
+/******************************************************************************\
+ * WebServer pages   **********************************************************
+\******************************************************************************/
+// FIXME TD-er: Make useful selections for these pages to be included. (e.g. view only)
 
+#ifndef WEBSERVER_CUSTOM_BUILD_DEFINED
+    #ifndef WEBSERVER_TIMINGSTATS
+        #define WEBSERVER_TIMINGSTATS
+    #endif
+    #ifndef WEBSERVER_SYSVARS
+        #define WEBSERVER_SYSVARS
+    #endif
+    #ifndef WEBSERVER_NEW_UI
+    //    #define WEBSERVER_NEW_UI
+    #endif
+    #ifndef WEBSERVER_I2C_SCANNER
+        #define WEBSERVER_I2C_SCANNER
+    #endif
+    #ifndef WEBSERVER_FAVICON
+        #define WEBSERVER_FAVICON
+    #endif
+    #ifndef WEBSERVER_LOG
+        #define WEBSERVER_LOG
+    #endif
+    #ifndef WEBSERVER_GITHUB_COPY
+        #define WEBSERVER_GITHUB_COPY
+    #endif
+    #ifndef WEBSERVER_ROOT
+        #define WEBSERVER_ROOT
+    #endif
+    #ifndef WEBSERVER_ADVANCED
+        #define WEBSERVER_ADVANCED
+    #endif
+    #ifndef WEBSERVER_CONFIG
+        #define WEBSERVER_CONFIG
+    #endif
+    #ifndef WEBSERVER_CONTROL
+        #define WEBSERVER_CONTROL
+    #endif
+    #ifndef WEBSERVER_CONTROLLERS
+        #define WEBSERVER_CONTROLLERS
+    #endif
+    #ifndef WEBSERVER_DEVICES
+        #define WEBSERVER_DEVICES
+    #endif
+    #ifndef WEBSERVER_DOWNLOAD
+        #define WEBSERVER_DOWNLOAD
+    #endif
+    #ifndef WEBSERVER_FACTORY_RESET
+        #define WEBSERVER_FACTORY_RESET
+    #endif
+    #ifndef WEBSERVER_FILELIST
+        #define WEBSERVER_FILELIST
+    #endif
+    #ifndef WEBSERVER_HARDWARE
+        #define WEBSERVER_HARDWARE
+    #endif
+    #ifndef WEBSERVER_PINSTATES
+        #define WEBSERVER_PINSTATES
+    #endif
+    #ifndef WEBSERVER_RULES
+        #define WEBSERVER_RULES
+    #endif
+    #ifndef WEBSERVER_SETUP
+        #define WEBSERVER_SETUP
+    #endif
+    #ifndef WEBSERVER_SYSINFO
+        #define WEBSERVER_SYSINFO
+    #endif
+    #ifndef WEBSERVER_TOOLS
+        #define WEBSERVER_TOOLS
+    #endif
+    #ifndef WEBSERVER_UPLOAD
+        #define WEBSERVER_UPLOAD
+    #endif
+    #ifndef WEBSERVER_WIFI_SCANNER
+        #define WEBSERVER_WIFI_SCANNER
+    #endif
+#endif 
+
+#ifndef USE_CUSTOM_H
+    #ifndef USES_SSDP
+        #define USES_SSDP
+    #endif
+    #ifndef USES_TIMING_STATS
+        #define USES_TIMING_STATS
+    #endif
+#endif
 
 
 
@@ -151,6 +242,9 @@ To create/register a plugin, you have to :
         #undef USE_SETTINGS_ARCHIVE
     #endif // USE_SETTINGS_ARCHIVE
 
+    #ifdef USES_TIMING_STATS
+        #undef USES_TIMING_STATS
+    #endif
 
     #ifndef USES_P001
         #define USES_P001   // switch
@@ -178,16 +272,40 @@ To create/register a plugin, you have to :
 #endif
 
 
-#if !defined(BUILD_MINIMAL_OTA) && !defined(MEMORY_ANALYSIS)
-  #ifndef WEBSERVER_TIMINGSTATS
-    #define WEBSERVER_TIMINGSTATS
-  #endif
-  #ifndef WEBSERVER_SYSVARS
-    #define WEBSERVER_SYSVARS
-  #endif
-  #ifndef WEBSERVER_NEW_UI
-//    #define WEBSERVER_NEW_UI
-  #endif
+// Strip out parts not needed for either MINIMAL_OTA and MEMORY_ANALYSIS
+#if defined(BUILD_MINIMAL_OTA) || defined(MEMORY_ANALYSIS)
+    #ifndef WEBSERVER_CUSTOM_BUILD_DEFINED
+        #ifdef WEBSERVER_TIMINGSTATS
+            #undef WEBSERVER_TIMINGSTATS
+        #endif
+        #ifdef WEBSERVER_SYSVARS
+            #undef WEBSERVER_SYSVARS
+        #endif
+        #ifdef WEBSERVER_NEW_UI
+            #undef WEBSERVER_NEW_UI
+        #endif
+        #ifdef WEBSERVER_I2C_SCANNER
+            #undef WEBSERVER_I2C_SCANNER
+        #endif
+        #ifdef WEBSERVER_FAVICON
+            #undef WEBSERVER_FAVICON
+        #endif
+        #ifdef WEBSERVER_LOG
+            #undef WEBSERVER_LOG
+        #endif
+        #ifdef WEBSERVER_GITHUB_COPY
+            #undef WEBSERVER_GITHUB_COPY
+        #endif
+        #ifdef WEBSERVER_PINSTATES
+            #undef WEBSERVER_PINSTATES
+        #endif
+        #ifdef WEBSERVER_WIFI_SCANNER
+            #undef WEBSERVER_WIFI_SCANNER
+        #endif
+        #ifdef USES_SSDP
+            #undef USES_SSDP
+        #endif
+    #endif // WEBSERVER_CUSTOM_BUILD_DEFINED
 #endif
 
 
@@ -209,6 +327,7 @@ To create/register a plugin, you have to :
 #ifdef PLUGIN_BUILD_IR
     #define PLUGIN_DESCR  "IR"
     #define USES_P016      // IR
+    #define P016_SEND_IR_TO_CONTROLLER false //IF true then the JSON replay solution is transmited back to the condroller.
     #define USES_P035      // IRTX
     #define P016_P035_USE_RAW_RAW2 //Use the RAW and RAW2 encodings, disabling it saves 3.7Kb
 #endif
@@ -218,6 +337,7 @@ To create/register a plugin, you have to :
         #define PLUGIN_DESCR  "IR Extended"
     #endif // PLUGIN_DESCR
     #define USES_P016      // IR
+    #define P016_SEND_IR_TO_CONTROLLER false //IF true then the JSON replay solution is transmited back to the condroller.
     #define USES_P035      // IRTX
     // The following define is needed for extended decoding of A/C Messages and or using standardised common arguments for controlling all deeply supported A/C units
     #define P016_P035_Extended_AC
@@ -260,6 +380,7 @@ To create/register a plugin, you have to :
 #ifdef PLUGIN_SET_SONOFF_POW
     #define PLUGIN_DESCR  "Sonoff POW R1/R2"
 
+    #define CONTROLLER_SET_STABLE
     #define PLUGIN_SET_ONLY_SWITCH
     #define USES_P076   // HWL8012   in POW r1
     // Needs CSE7766 Energy sensor, via Serial RXD 4800 baud 8E1 (GPIO1), TXD (GPIO3)
@@ -673,6 +794,7 @@ To create/register a plugin, you have to :
     #define USES_P085   // AcuDC24x
     #define USES_P086   // Receiving values according Homie convention. Works together with C014 Homie controller
     //#define USES_P087   // Serial Proxy
+    #define USES_P089   // Serial Proxy
 #endif
 
 
@@ -869,3 +991,18 @@ To create/register a plugin, you have to :
     #undef USES_C003
   #endif
 #endif
+
+
+
+// Timing stats page needs timing stats
+#if defined(WEBSERVER_TIMINGSTATS) && !defined(USES_TIMING_STATS)
+  #define USES_TIMING_STATS
+#endif
+
+// If timing stats page is not included, there is no need in collecting the stats
+#if !defined(WEBSERVER_TIMINGSTATS) && defined(USES_TIMING_STATS)
+  #undef USES_TIMING_STATS
+#endif
+
+
+#endif // DEFINE_PLUGIN_SETS_H

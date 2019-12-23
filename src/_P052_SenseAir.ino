@@ -63,7 +63,7 @@
 #define P052_EEPROM_ADDR_HEARTBEATPERIOD 0xA2            // U8 Period in seconds
 #define P052_EEPROM_ADDR_PUMPPERIOD 0xA3                 // U8 Period in seconds
 #define P052_EEPROM_ADDR_MEASUREMENT_SLEEP_PERIOD  0xB0  // U24 Measurement period (unit = seconds)
-#define P052_EEPROM_ADDR_LOGGER_STRUCTURE_ADDRESS  0x200 // 16b Described in “BLG_ELG Logger Structure”
+#define P052_EEPROM_ADDR_LOGGER_STRUCTURE_ADDRESS  0x200 // 16b Described in "BLG_ELG Logger Structure"
 
 // SCR (Special Control Register) commands
 #define P052_SCR_FORCE_START_MEASUREMENT 0x30

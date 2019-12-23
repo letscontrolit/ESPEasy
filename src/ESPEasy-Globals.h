@@ -28,6 +28,7 @@
 #include "ESPEasy_fdwdecl.h"
 
 #include "src/DataStructs/ESPEasyLimits.h"
+#include "src/DataStructs/EventQueue.h"
 #include "ESPEasy_plugindefs.h"
 
 
@@ -64,11 +65,6 @@
 //#define FEATURE_SD
 
 
-// User configuration
-#include "src/DataStructs/ESPEasyDefaults.h"
-
-// Make sure to have this as early as possible in the build process.
-#include "define_plugin_sets.h"
 
 
 // ********************************************************************************
@@ -166,7 +162,7 @@ extern NotificationStruct Notification[NPLUGIN_MAX];
     #include <ESP8266mDNS.h>
   #endif
   #define SMALLEST_OTA_IMAGE 276848 // smallest known 2-step OTA image
-  #define MAX_SKETCH_SIZE 1044464
+  #define MAX_SKETCH_SIZE 1044464   // 1020 kB - 16 bytes
   #define PIN_D_MAX        16
 #endif
 #if defined(ESP32)
@@ -224,17 +220,6 @@ extern bool statusNTPInitialized;
 extern WiFiUDP portUDP;
 
 
-/*********************************************************************************************\
- * Custom Variables for usage in rules and http.
- * Syntax: %vX%
- * usage:
- * let,1,10
- * if %v1%=10 do ...
-\*********************************************************************************************/
-extern float customFloatVar[CUSTOM_VARS_MAX];
-
-extern float UserVar[VARS_PER_TASK * TASKS_MAX];
-
 
 
 
@@ -271,7 +256,7 @@ struct pinStatesStruct
 */
 
 
-extern int deviceCount;
+
 extern int protocolCount;
 extern int notificationCount;
 
@@ -304,7 +289,7 @@ struct rulesTimerStatus
 
   unsigned long timestamp;
   unsigned int interval; //interval in milliseconds
-  boolean paused;
+  bool paused;
 };
 
 extern rulesTimerStatus RulesTimer[RULES_TIMER_MAX];
@@ -341,8 +326,7 @@ extern String dummyString;  // FIXME @TD-er  This may take a lot of memory over 
 enum PluginPtrType {
   TaskPluginEnum,
   ControllerPluginEnum,
-  NotificationPluginEnum,
-  CommandTimerEnum
+  NotificationPluginEnum
 };
 void schedule_event_timer(PluginPtrType ptr_type, byte Index, byte Function, struct EventStruct* event);
 unsigned long createSystemEventMixedId(PluginPtrType ptr_type, byte Index, byte Function);
@@ -358,7 +342,7 @@ extern bool webserverRunning;
 extern bool webserver_init;
 
 
-extern String eventBuffer;
+extern EventQueueStruct eventQueue;
 
 
 extern bool shouldReboot;
@@ -370,36 +354,6 @@ extern boolean UseRTOSMultitasking;
 
 
 // void (*MainLoopCall_ptr)(void); //FIXME TD-er: No idea what this does.
-
-
-/*
-String getLogLine(const TimingStats& stats) {
-    unsigned long minVal, maxVal;
-    unsigned int c = stats.getMinMax(minVal, maxVal);
-    String log;
-    log.reserve(64);
-    log += F("Count: ");
-    log += c;
-    log += F(" Avg/min/max ");
-    log += stats.getAvg();
-    log += '/';
-    log += minVal;
-    log += '/';
-    log += maxVal;
-    log += F(" usec");
-    return log;
-}
-*/
-
-
-
-
-
-
-
-
-
-
 
 
 

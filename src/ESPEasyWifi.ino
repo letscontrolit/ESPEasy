@@ -1,5 +1,7 @@
-#define WIFI_RECONNECT_WAIT         20000 // in milliSeconds
-#define WIFI_AP_OFF_TIMER_DURATION  60000 // in milliSeconds
+#define WIFI_RECONNECT_WAIT                20000  // in milliSeconds
+#define WIFI_AP_OFF_TIMER_DURATION         60000  // in milliSeconds
+#define WIFI_CONNECTION_CONSIDERED_STABLE  300000 // in milliSeconds
+#define WIFI_ALLOW_AP_AFTERBOOT_PERIOD     5      // in minutes
 
 #include "src/Globals/ESPEasyWiFiEvent.h"
 
@@ -15,10 +17,13 @@
    4 STA got IP              => ESPEASY_WIFI_GOT_IP
    5 STA connected && got IP => ESPEASY_WIFI_SERVICES_INITIALIZED
 
+   N.B. the states are flags, meaning both "connected" and "got IP" must be set
+        to be considered ESPEASY_WIFI_SERVICES_INITIALIZED
+
    The flag wifiConnectAttemptNeeded indicates whether a new connect attempt is needed.
    This is set to true when:
    - Security settings have been saved with AP mode enabled. FIXME TD-er, this may not be the best check.
-   - WiFi connect timeout reached
+   - WiFi connect timeout reached  &  No client is connected to the AP mode of the node.
    - Wifi is reset
    - WiFi setup page has been loaded with SSID/pass values.
 
@@ -40,6 +45,23 @@
    - Set timerAPstart when "valid WiFi connection" state is observed.
    - Disable timerAPstart when ESPEASY_WIFI_SERVICES_INITIALIZED wifi state is reached.
 
+   For the first attempt to connect after a cold boot (RTC values are 0), a WiFi scan will be 
+   performed to find the strongest known SSID.
+   This will set RTC.lastBSSID and RTC.lastWiFiChannel
+   
+   Quick reconnect (using BSSID/channel of last connection) when both apply:
+   - If wifi_connect_attempt < 3
+   - RTC.lastBSSID is known
+   - RTC.lastWiFiChannel != 0
+
+   Change of wifi settings when both apply:
+   - "other" settings valid
+   - (wifi_connect_attempt % 2) == 0
+
+   Reset of wifi_connect_attempt to 0 when both apply:
+   - connection successful
+   - Connection stable (connected for > 5 minutes)
+
  */
 
 
@@ -52,7 +74,9 @@
 bool WiFiConnected() {
   START_TIMER;
 
-  if (unprocessedWifiEvents()) { return false; }
+  if (unprocessedWifiEvents()) {
+    return false; 
+  }
 
   if ((timerAPstart != 0) && timeOutReached(timerAPstart)) {
     // Timer reached, so enable AP mode.
@@ -66,9 +90,8 @@ bool WiFiConnected() {
   if (wifiStatus != ESPEASY_WIFI_SERVICES_INITIALIZED) {
     if (validWiFi) {
       // Set internal wifiStatus and reset timer to disable AP mode
-      wifiStatus = ESPEASY_WIFI_SERVICES_INITIALIZED;
-      wifiConnectInProgress = false;
-      resetAPdisableTimer();
+      addLog(LOG_LEVEL_INFO, F("Has IP address"));
+      markWiFi_services_initialized();
     }
   }
 
@@ -90,12 +113,18 @@ bool WiFiConnected() {
   // When made this far in the code, we apparently do not have valid WiFi connection.
   if (timerAPstart == 0) {
     // First run we do not have WiFi connection any more, set timer to start AP mode
-    timerAPstart = millis() + WIFI_RECONNECT_WAIT;
+    // Only allow the automatic AP mode in the first N minutes after boot.
+    if ((wdcounter / 2) < WIFI_ALLOW_AP_AFTERBOOT_PERIOD) {
+      timerAPstart = millis() + WIFI_RECONNECT_WAIT;
+      timerAPoff = timerAPstart + WIFI_AP_OFF_TIMER_DURATION;
+    }
   }
 
   if (wifiConnectTimeoutReached() && !wifiSetup) {
     // It took too long to make a connection, set flag we need to try again
-    wifiConnectAttemptNeeded = true;
+    if (!wifiAPmodeActivelyUsed()) {
+      wifiConnectAttemptNeeded = true;
+    }
     wifiConnectInProgress = false;
   }
   delay(1);
@@ -106,6 +135,10 @@ bool WiFiConnected() {
 void WiFiConnectRelaxed() {
   if (!wifiConnectAttemptNeeded) {
     return; // already connected or connect attempt in progress need to disconnect first
+  }
+  if (!processedScanDone) {
+    // Scan is still active, so do not yet connect.
+    return;
   }
 
   // Start connect attempt now, so no longer needed to attempt new connection.
@@ -120,7 +153,8 @@ void WiFiConnectRelaxed() {
 
   if (wifiSetupConnect) {
     // wifiSetupConnect is when run from the setup page.
-    lastWiFiSettings     = 0; // Force to load the first settings.
+    RTC.lastWiFiSettingsIndex     = 0; // Force to load the first settings.
+    RTC.lastWiFiChannel = 0; // Force slow connect
     wifi_connect_attempt = 0;
     wifiSetupConnect     = false;
   }
@@ -129,7 +163,7 @@ void WiFiConnectRelaxed() {
   if ((wifi_connect_attempt != 0) && ((wifi_connect_attempt % 2) == 0)) {
     if (selectNextWiFiSettings()) {
       // Switch WiFi settings, so the last known BSSID cannot be used for a quick reconnect.
-      lastBSSID[0] = 0;
+      RTC.lastBSSID[0] = 0;
     }
   }
   const char *ssid       = getLastWiFiSettingsSSID();
@@ -145,12 +179,13 @@ void WiFiConnectRelaxed() {
   setupStaticIPconfig();
   setConnectionSpeed();
   last_wifi_connect_attempt_moment = millis();
-  wifiConnectInProgress = true;
+  wifiConnectInProgress            = true;
 
   // First try quick reconnect using last known BSSID and channel.
-  bool useQuickConnect = lastBSSID[0] != 0 && wifi_connect_attempt < 3;
+  bool useQuickConnect = RTC.lastBSSID[0] != 0 && RTC.lastWiFiChannel != 0 && wifi_connect_attempt < 3;
+
   if (useQuickConnect) {
-    WiFi.begin(ssid, passphrase, last_channel, &lastBSSID[0]);
+    WiFi.begin(ssid, passphrase, RTC.lastWiFiChannel, &RTC.lastBSSID[0]);
   } else {
     WiFi.begin(ssid, passphrase);
   }
@@ -180,23 +215,20 @@ bool prepareWiFi() {
     // Reset to default power mode requires a reboot since setting it to WIFI_LIGHT_SLEEP will cause a crash.
     WiFi.setSleepMode(WIFI_NONE_SLEEP);
   }
+
   #endif // if defined(ESP8266)
   #if defined(ESP32)
   WiFi.setHostname(hostname);
+  WiFi.config(INADDR_NONE, INADDR_NONE, INADDR_NONE);
   #endif // if defined(ESP32)
+
+  if (RTC.lastWiFiChannel == 0 && wifi_connect_attempt <= 1) {
+    WifiScan(true);
+  }
+
   return true;
 }
 
-// Set timer to disable AP mode
-void resetAPdisableTimer() {
-  bool APmodeActive = WifiIsAP(WiFi.getMode());
-
-  if (APmodeActive) {
-    timerAPoff = millis() + WIFI_AP_OFF_TIMER_DURATION;
-  } else {
-    timerAPoff = 0;
-  }
-}
 
 void resetWiFi() {
   addLog(LOG_LEVEL_INFO, F("Reset WiFi."));
@@ -238,24 +270,43 @@ void WifiDisconnect()
   #endif // if defined(ESP32)
   wifiStatus          = ESPEASY_WIFI_DISCONNECTED;
   processedDisconnect = false;
+  ++WifiDisconnectCounter;
+}
+
+
+void evaluateConnectionFailures()
+{
+  if (Settings.ConnectionFailuresThreshold) {
+    unsigned long threshold = WifiDisconnectCounter * Settings.ConnectionFailuresThreshold / 10;
+    if (connectionFailures > threshold && timePassedSince(lastConnectMoment) > WIFI_RECONNECT_WAIT)
+    {
+      cmd_within_mainloop = CMD_WIFI_DISCONNECT;
+    }
+  }
 }
 
 // ********************************************************************************
 // Scan WiFi network
 // ********************************************************************************
-void WifiScanAsync() {
+void WifiScan(bool async, bool quick) {
+  if (WiFi.scanComplete() == -1) { 
+    // Scan still busy
+    return;
+  }
   addLog(LOG_LEVEL_INFO, F("WIFI  : Start network scan"));
-  #ifdef ESP32
-  bool async               = true;
-  bool show_hidden         = false;
-  bool passive             = false;
-  uint32_t max_ms_per_chan = 300;
-  WiFi.scanNetworks(async, show_hidden, passive, max_ms_per_chan);
-  #else // ifdef ESP32
-
-  // 2.4.x only and it doesn't work like expected.
-  //    WiFi.scanNetworksAsync(onScanFinished);
-  #endif // ifdef ESP32
+  bool show_hidden         = true;
+  processedScanDone = false;
+  lastGetScanMoment = millis();
+  if (quick) {
+    #ifdef ESP8266
+    // Only scan a single channel if the RTC.lastWiFiChannel is known to speed up connection time.
+    WiFi.scanNetworks(async, show_hidden, RTC.lastWiFiChannel);
+    #else
+    WiFi.scanNetworks(async, show_hidden);
+    #endif
+  } else {
+    WiFi.scanNetworks(async, show_hidden);
+  }
 }
 
 // ********************************************************************************
@@ -265,18 +316,18 @@ void WifiScan()
 {
   // Direct Serial is allowed here, since this function will only be called from serial input.
   serialPrintln(F("WIFI : SSID Scan start"));
-  int n = WiFi.scanNetworks(false, true);
-
-  if (n == 0) {
+  WifiScan(false);
+  const int8_t scanCompleteStatus = WiFi.scanComplete();
+  if (scanCompleteStatus <= 0) {
     serialPrintln(F("WIFI : No networks found"));
   }
   else
   {
     serialPrint(F("WIFI : "));
-    serialPrint(String(n));
+    serialPrint(String(scanCompleteStatus));
     serialPrintln(F(" networks found"));
 
-    for (int i = 0; i < n; ++i)
+    for (int i = 0; i < scanCompleteStatus; ++i)
     {
       // Print SSID and RSSI for each network found
       serialPrint(F("WIFI : "));
@@ -356,8 +407,7 @@ void setAPinternal(bool enable)
 
     if (WiFi.softAP(softAPSSID.c_str(), pwd.c_str())) {
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        String event = F("WiFi#APmodeEnabled");
-        rulesProcessing(event);
+        eventQueue.add(F("WiFi#APmodeEnabled"));
         String log(F("WIFI : AP Mode ssid will be "));
         log += softAPSSID;
         log += F(" with address ");
@@ -383,13 +433,26 @@ void setAPinternal(bool enable)
       }
     }
     #endif // ifdef ESP32
+    timerAPoff = millis() + WIFI_AP_OFF_TIMER_DURATION;
   } else {
     if (dnsServerActive) {
       dnsServerActive = false;
       dnsServer.stop();
     }
   }
-  resetAPdisableTimer();
+}
+
+String getWifiModeString(WiFiMode_t wifimode)
+{
+  switch (wifimode) {
+    case WIFI_OFF:   return F("OFF");
+    case WIFI_STA:   return F("STA");
+    case WIFI_AP:    return F("AP");
+    case WIFI_AP_STA: return F("AP+STA");
+    default:
+      break;
+  }
+  return F("Unknown");
 }
 
 void setWifiMode(WiFiMode_t wifimode) {
@@ -408,26 +471,13 @@ void setWifiMode(WiFiMode_t wifimode) {
     delay(100);
   }
 
-  switch (wifimode) {
-    case WIFI_OFF:
-      addLog(LOG_LEVEL_INFO, F("WIFI : Switch off WiFi"));
-      break;
-    case WIFI_STA:
-      addLog(LOG_LEVEL_INFO, F("WIFI : Set WiFi to STA"));
-      break;
-    case WIFI_AP:
-      addLog(LOG_LEVEL_INFO, F("WIFI : Set WiFi to AP"));
-      break;
-    case WIFI_AP_STA:
-      addLog(LOG_LEVEL_INFO, F("WIFI : Set WiFi to AP+STA"));
-      break;
-    default:
-      addLog(LOG_LEVEL_INFO, F("WIFI : Unknown mode"));
-      break;
-  }
+  addLog(LOG_LEVEL_INFO, String(F("WIFI : Set WiFi to ")) + getWifiModeString(wifimode));
 
-  if (!WiFi.mode(wifimode)) {
+  int retry = 2;
+  while (!WiFi.mode(wifimode) && retry > 0) {
     addLog(LOG_LEVEL_INFO, F("WIFI : Cannot set mode!!!!!"));
+    delay(100);
+    --retry;
   }
 
   if (wifimode == WIFI_OFF) {
@@ -442,14 +492,16 @@ void setWifiMode(WiFiMode_t wifimode) {
   bool new_mode_AP_enabled = WifiIsAP(wifimode);
 
   if (WifiIsAP(cur_mode) && !new_mode_AP_enabled) {
-    String event = F("WiFi#APmodeDisabled");
-    rulesProcessing(event);
+    eventQueue.add(F("WiFi#APmodeDisabled"));
   }
 
   if (WifiIsAP(cur_mode) != new_mode_AP_enabled) {
     // Mode has changed
     setAPinternal(new_mode_AP_enabled);
   }
+  #ifdef FEATURE_MDNS
+  MDNS.notifyAPChange();
+  #endif
 }
 
 bool WifiIsAP(WiFiMode_t wifimode)
@@ -525,6 +577,18 @@ bool wifiConnectTimeoutReached() {
   return timeOutReached(last_wifi_connect_attempt_moment + DEFAULT_WIFI_CONNECTION_TIMEOUT + randomOffset_in_msec);
 }
 
+bool wifiAPmodeActivelyUsed()
+{
+  if (!WifiIsAP(WiFi.getMode()) || (timerAPoff == 0)) {
+    // AP not active or soon to be disabled in processDisableAPmode()
+    return false;
+  }
+  return WiFi.softAPgetStationNum() != 0;
+
+  // FIXME TD-er: is effectively checking for AP active enough or must really check for connected clients to prevent automatic wifi
+  // reconnect?
+}
+
 void setConnectionSpeed() {
   #ifdef ESP8266
 
@@ -537,6 +601,7 @@ void setConnectionSpeed() {
 
   // Does not (yet) work, so commented out.
   #ifdef ESP32
+  /*
   uint8_t protocol = WIFI_PROTOCOL_11B | WIFI_PROTOCOL_11G; // Default to BG
 
   if (!Settings.ForceWiFi_bg_mode() || (wifi_connect_attempt > 10)) {
@@ -551,28 +616,35 @@ void setConnectionSpeed() {
   if (WifiIsAP(WiFi.getMode())) {
     esp_wifi_set_protocol(WIFI_IF_AP, protocol);
   }
+  */
   #endif // ifdef ESP32
 }
 
 void setupStaticIPconfig() {
   setUseStaticIP(useStaticIP());
 
-  if (!useStaticIP()) { return; }
-  const IPAddress ip     = Settings.IP;
-  const IPAddress gw     = Settings.Gateway;
-  const IPAddress subnet = Settings.Subnet;
-  const IPAddress dns    = Settings.DNS;
+  IPAddress ip;
+  IPAddress gw;
+  IPAddress subnet;
+  IPAddress dns;
 
-  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = F("IP   : Static IP : ");
-    log += formatIP(ip);
-    log += F(" GW: ");
-    log += formatIP(gw);
-    log += F(" SN: ");
-    log += formatIP(subnet);
-    log += F(" DNS: ");
-    log += formatIP(dns);
-    addLog(LOG_LEVEL_INFO, log);
+
+  if (useStaticIP()) {
+    ip     = Settings.IP;
+    gw     = Settings.Gateway;
+    subnet = Settings.Subnet;
+    dns    = Settings.DNS;
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      String log = F("IP   : Static IP : ");
+      log += formatIP(ip);
+      log += F(" GW: ");
+      log += formatIP(gw);
+      log += F(" SN: ");
+      log += formatIP(subnet);
+      log += F(" DNS: ");
+      log += formatIP(dns);
+      addLog(LOG_LEVEL_INFO, log);
+    }
   }
   WiFi.config(ip, gw, subnet, dns);
 }

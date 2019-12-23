@@ -2,12 +2,13 @@
 
 #include "../DataStructs/ESPEasy_EventStruct.h"
 
-queue_element_single_value_base::queue_element_single_value_base() : controller_idx(0), TaskIndex(0), idx(0), valuesSent(0) {}
+queue_element_single_value_base::queue_element_single_value_base() : controller_idx(0),  idx(0), TaskIndex(INVALID_TASK_INDEX),
+  valuesSent(0) {}
 
 queue_element_single_value_base::queue_element_single_value_base(const struct EventStruct *event, byte value_count) :
   controller_idx(event->ControllerIndex),
-  TaskIndex(event->TaskIndex),
   idx(event->idx),
+  TaskIndex(event->TaskIndex),
   valuesSent(0),
   valueCount(value_count) {}
 
@@ -17,7 +18,7 @@ bool queue_element_single_value_base::checkDone(bool succesfull) const {
 }
 
 size_t queue_element_single_value_base::getSize() const {
-  size_t total = sizeof(this);
+  size_t total = sizeof(*this);
 
   for (int i = 0; i < VARS_PER_TASK; ++i) {
     total += txt[i].length();

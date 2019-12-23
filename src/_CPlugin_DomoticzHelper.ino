@@ -6,13 +6,16 @@
 // 2=Dry
 // 3=Wet
 String humStatDomoticz(struct EventStruct *event, byte rel_index) {
-  const int hum = UserVar[event->BaseVarIndex + rel_index];
+  userVarIndex_t userVarIndex = event->BaseVarIndex + rel_index;
+  if (validTaskVarIndex(rel_index) && validUserVarIndex(userVarIndex)) {
+    const int hum = UserVar[userVarIndex];
 
-  if (hum < 30) { return formatUserVarDomoticz(2); }
+    if (hum < 30) { return formatUserVarDomoticz(2); }
 
-  if (hum < 40) { return formatUserVarDomoticz(0); }
+    if (hum < 40) { return formatUserVarDomoticz(0); }
 
-  if (hum < 59) { return formatUserVarDomoticz(1); }
+    if (hum < 59) { return formatUserVarDomoticz(1); }
+  }
   return formatUserVarDomoticz(3);
 }
 

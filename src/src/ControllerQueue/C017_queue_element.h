@@ -3,6 +3,7 @@
 
 #include "../../ESPEasy_common.h"
 #include "../DataStructs/ESPEasyLimits.h"
+#include "../Globals/Plugins.h"
 
 struct EventStruct;
 
@@ -23,8 +24,8 @@ public:
 
   String txt[VARS_PER_TASK];
   int controller_idx = 0;
-  byte TaskIndex     = 0;
   int idx            = 0;
+  taskIndex_t TaskIndex = INVALID_TASK_INDEX;
   byte sensorType    = 0;
 };
 

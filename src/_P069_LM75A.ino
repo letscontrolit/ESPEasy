@@ -59,6 +59,11 @@ public:
     //Wire.begin();   called in ESPEasy framework
   }
 
+  void setAddress(uint8_t addr)
+  {
+    _i2c_device_address = addr;
+  }
+
   float getTemperatureInDegrees() const
   {
     float real_result = INVALID_LM75A_TEMPERATURE;
@@ -175,6 +180,8 @@ boolean Plugin_069(byte function, struct EventStruct *event, String& string)
     {
       if (!PLUGIN_069_LM75A)
         return success;
+
+      PLUGIN_069_LM75A->setAddress((uint8_t)PCONFIG(0));
 
       float tempC = PLUGIN_069_LM75A->getTemperatureInDegrees();
 

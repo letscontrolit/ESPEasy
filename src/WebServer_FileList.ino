@@ -1,5 +1,4 @@
 
-
 #ifdef WEBSERVER_NEW_UI
 
 // ********************************************************************************
@@ -98,6 +97,9 @@ void handle_filelist_json() {
       break;
     }
   }
+  if (firstentry) {
+    TXBuffer += "}";
+  }
 
   # endif // if defined(ESP8266)
   TXBuffer += "]";
@@ -106,6 +108,7 @@ void handle_filelist_json() {
 
 #endif // WEBSERVER_NEW_UI
 
+#ifdef WEBSERVER_FILELIST
 void handle_filelist() {
   checkRAM(F("handle_filelist"));
 
@@ -273,6 +276,7 @@ void handle_filelist_buttons(int start_prev, int start_next, bool cacheFilesPres
   sendHeadandTail_stdtemplate(true);
   TXBuffer.endStream();
 }
+#endif // ifdef WEBSERVER_FILELIST
 
 // ********************************************************************************
 // Web Interface SD card file and directory list
@@ -432,3 +436,4 @@ void handle_SDfilelist() {
 }
 
 #endif // ifdef FEATURE_SD
+

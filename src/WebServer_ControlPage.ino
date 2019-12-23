@@ -1,4 +1,6 @@
 
+#ifdef WEBSERVER_CONTROL
+
 // ********************************************************************************
 // Web Interface control page (no password!)
 // ********************************************************************************
@@ -10,9 +12,6 @@ void handle_control() {
   // TXBuffer.startStream(true); // true= json
   // sendHeadandTail_stdtemplate(_HEAD);
   String webrequest = WebServer.arg(F("cmd"));
-
-  // in case of event, store to buffer and return...
-  String command = parseString(webrequest, 1);
   addLog(LOG_LEVEL_INFO,  String(F("HTTP: ")) + webrequest);
   webrequest = parseTemplate(webrequest, webrequest.length());
 #ifndef BUILD_NO_DEBUG
@@ -20,10 +19,11 @@ void handle_control() {
 #endif // ifndef BUILD_NO_DEBUG
 
   bool handledCmd = false;
-
-  if (command == F("event"))
+  // in case of event, store to buffer and return...
+  String command = parseString(webrequest, 1);
+  if (command == F("event") || command == F("asyncevent")) 
   {
-    eventBuffer = webrequest.substring(6);
+    eventQueue.add(parseStringToEnd(webrequest, 2));
     handledCmd  = true;
   }
   else if (command.equalsIgnoreCase(F("taskrun")) ||
@@ -33,7 +33,7 @@ void handle_control() {
            command.equalsIgnoreCase(F("logPortStatus")) ||
            command.equalsIgnoreCase(F("jsonportstatus")) ||
            command.equalsIgnoreCase(F("rules"))) {
-    ExecuteCommand(VALUE_SOURCE_HTTP, webrequest.c_str());
+    ExecuteCommand_internal(VALUE_SOURCE_HTTP, webrequest.c_str());
     handledCmd = true;
   }
 
@@ -43,19 +43,9 @@ void handle_control() {
     TXBuffer.endStream();
     return;
   }
-
-  struct EventStruct TempEvent;
-  parseCommandString(&TempEvent, webrequest);
-  TempEvent.Source = VALUE_SOURCE_HTTP;
-
   printToWeb     = true;
   printWebString = "";
-
-  bool unknownCmd = false;
-
-  if (PluginCall(PLUGIN_WRITE, &TempEvent, webrequest)) {}
-  else if (remoteConfig(&TempEvent, webrequest)) {}
-  else { unknownCmd = true; }
+  bool unknownCmd = !ExecuteCommand_plugin_config(VALUE_SOURCE_HTTP, webrequest.c_str());
 
   if (printToWebJSON) { // it is setted in PLUGIN_WRITE (SendStatus)
     TXBuffer.startJsonStream();
@@ -77,3 +67,5 @@ void handle_control() {
   printToWeb     = false;
   printToWebJSON = false;
 }
+
+#endif // ifdef WEBSERVER_CONTROL

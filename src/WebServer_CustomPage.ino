@@ -1,5 +1,6 @@
 #include "src/Globals/Nodes.h"
 #include "src/Globals/Device.h"
+#include "src/Globals/Plugins.h"
 
 // ********************************************************************************
 // Web Interface custom page handler
@@ -110,15 +111,7 @@ boolean handle_custom(String path) {
   String webrequest = WebServer.arg(F("cmd"));
 
   if (webrequest.length() > 0) {
-    struct EventStruct TempEvent;
-    parseCommandString(&TempEvent, webrequest);
-    TempEvent.Source = VALUE_SOURCE_HTTP;
-
-    if (PluginCall(PLUGIN_WRITE, &TempEvent, webrequest)) {}
-    else if (remoteConfig(&TempEvent, webrequest)) {}
-    else if (webrequest.startsWith(F("event"))) {
-      ExecuteCommand(VALUE_SOURCE_HTTP, webrequest.c_str());
-    }
+    ExecuteCommand_all_config_eventOnly(VALUE_SOURCE_HTTP, webrequest.c_str());
 
     // handle some update processes first, before returning page update...
     String dummy;
@@ -147,27 +140,29 @@ boolean handle_custom(String path) {
         "<meta name='viewport' content='width=width=device-width, initial-scale=1'><STYLE>* {font-family:sans-serif; font-size:16pt;}.button {margin:4px; padding:4px 16px; background-color:#07D; color:#FFF; text-decoration:none; border-radius:4px}</STYLE>");
       html_table_class_normal();
 
-      for (byte x = 0; x < TASKS_MAX; x++)
+      for (taskIndex_t x = 0; x < TASKS_MAX; x++)
       {
-        if (Settings.TaskDeviceNumber[x] != 0)
+        if (validPluginID(Settings.TaskDeviceNumber[x]))
         {
-          LoadTaskSettings(x);
-          byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[x]);
-          html_TR_TD();
-          TXBuffer += ExtraTaskSettings.TaskDeviceName;
+          const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(x);
+          if (validDeviceIndex(DeviceIndex)) {
+            LoadTaskSettings(x);
+            html_TR_TD();
+            TXBuffer += ExtraTaskSettings.TaskDeviceName;
 
-          for (byte varNr = 0; varNr < VARS_PER_TASK; varNr++)
-          {
-            if ((Settings.TaskDeviceNumber[x] != 0) && (varNr < Device[DeviceIndex].ValueCount) &&
-                (ExtraTaskSettings.TaskDeviceValueNames[varNr][0] != 0))
+            for (byte varNr = 0; varNr < VARS_PER_TASK; varNr++)
             {
-              if (varNr > 0) {
-                html_TR_TD();
+              if ((varNr < Device[DeviceIndex].ValueCount) &&
+                  (ExtraTaskSettings.TaskDeviceValueNames[varNr][0] != 0))
+              {
+                if (varNr > 0) {
+                  html_TR_TD();
+                }
+                html_TD();
+                TXBuffer += ExtraTaskSettings.TaskDeviceValueNames[varNr];
+                html_TD();
+                TXBuffer += String(UserVar[x * VARS_PER_TASK + varNr], ExtraTaskSettings.TaskDeviceValueDecimals[varNr]);
               }
-              html_TD();
-              TXBuffer += ExtraTaskSettings.TaskDeviceValueNames[varNr];
-              html_TD();
-              TXBuffer += String(UserVar[x * VARS_PER_TASK + varNr], ExtraTaskSettings.TaskDeviceValueDecimals[varNr]);
             }
           }
         }

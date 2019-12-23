@@ -166,6 +166,12 @@ void addToLog(byte logLevel, const char *line)
   if (loglevelActiveFor(LOG_TO_SERIAL, logLevel)) {
     addToSerialBuffer(String(millis()).c_str());
     addToSerialBuffer(" : ");
+    String loglevelDisplayString = getLogLevelDisplayString(logLevel);
+    while (loglevelDisplayString.length() < 6) {
+      loglevelDisplayString += ' ';
+    }
+    addToSerialBuffer(loglevelDisplayString.c_str());
+    addToSerialBuffer(": ");
     addToSerialBuffer(line);
     addNewlineToSerialBuffer();
   }

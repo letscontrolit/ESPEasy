@@ -1,13 +1,16 @@
 #include "src/Globals/Nodes.h"
 #include "src/Globals/Device.h"
+#include "src/Globals/Plugins.h"
+#include "StringProviderTypes.h"
+
 
 // ********************************************************************************
 // Web Interface JSON page (no password!)
 // ********************************************************************************
 void handle_json()
 {
-  const int  taskNr           = getFormItemInt(F("tasknr"), -1);
-  const bool showSpecificTask = taskNr > 0;
+  const taskIndex_t taskNr    = getFormItemInt(F("tasknr"), INVALID_TASK_INDEX);
+  const bool showSpecificTask = validTaskIndex(taskNr);
   bool showSystem             = true;
   bool showWifi               = true;
   bool showDataAcquisition    = true;
@@ -67,6 +70,9 @@ void handle_json()
       #if defined(ESP8266)
       stream_next_json_object_value(LabelType::HOST_NAME);
       #endif // if defined(ESP8266)
+      #ifdef FEATURE_MDNS
+      stream_next_json_object_value(LabelType::M_DNS);
+      #endif
       stream_next_json_object_value(LabelType::IP_CONFIG);
       stream_next_json_object_value(LabelType::IP_ADDRESS);
       stream_next_json_object_value(LabelType::IP_SUBNET);
@@ -135,18 +141,18 @@ void handle_json()
     }
   }
 
-  byte firstTaskIndex = 0;
-  byte lastTaskIndex  = TASKS_MAX - 1;
+  taskIndex_t firstTaskIndex = 0;
+  taskIndex_t lastTaskIndex  = TASKS_MAX - 1;
 
   if (showSpecificTask)
   {
     firstTaskIndex = taskNr - 1;
     lastTaskIndex  = taskNr - 1;
   }
-  byte lastActiveTaskIndex = 0;
+  taskIndex_t lastActiveTaskIndex = 0;
 
-  for (byte TaskIndex = firstTaskIndex; TaskIndex <= lastTaskIndex; TaskIndex++) {
-    if (Settings.TaskDeviceNumber[TaskIndex]) {
+  for (taskIndex_t TaskIndex = firstTaskIndex; TaskIndex <= lastTaskIndex; TaskIndex++) {
+    if (validPluginID(Settings.TaskDeviceNumber[TaskIndex])) {
       lastActiveTaskIndex = TaskIndex;
     }
   }
@@ -154,11 +160,12 @@ void handle_json()
   if (!showSpecificTask) { TXBuffer += F("\"Sensors\":[\n"); }
   unsigned long ttl_json = 60; // The shortest interval per enabled task (with output values) in seconds
 
-  for (byte TaskIndex = firstTaskIndex; TaskIndex <= lastActiveTaskIndex; TaskIndex++)
+  for (taskIndex_t TaskIndex = firstTaskIndex; TaskIndex <= lastActiveTaskIndex && validTaskIndex(TaskIndex); TaskIndex++)
   {
-    if (Settings.TaskDeviceNumber[TaskIndex])
+    const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(TaskIndex);
+
+    if (validDeviceIndex(DeviceIndex))
     {
-      byte DeviceIndex                 = getDeviceIndex(Settings.TaskDeviceNumber[TaskIndex]);
       const unsigned long taskInterval = Settings.TaskDeviceTimer[TaskIndex];
       LoadTaskSettings(TaskIndex);
       TXBuffer += F("{\n");
@@ -234,59 +241,15 @@ void handle_json()
 // JSON formatted timing statistics
 // ********************************************************************************
 
-void stream_timing_stats_json(unsigned long count, unsigned long minVal, unsigned long maxVal, float avg) {
-  stream_next_json_object_value(F("count"), String(count));
-  stream_next_json_object_value(F("min"),   String(minVal));
-  stream_next_json_object_value(F("max"),   String(maxVal));
-  stream_next_json_object_value(F("avg"),   String(avg));
-}
-
-void stream_plugin_function_timing_stats_json(
-  const String& object,
-  unsigned long count, unsigned long minVal, unsigned long maxVal, float avg) {
-  TXBuffer += "{\"";
-  TXBuffer += object;
-  TXBuffer += "\":{";
-  stream_timing_stats_json(count, minVal, maxVal, avg);
-  stream_last_json_object_value(F("unit"), F("usec"));
-}
-
-void stream_plugin_timing_stats_json(int pluginId) {
-  TXBuffer += '{';
-  stream_next_json_object_value(F("name"), getPluginNameFromDeviceIndex(pluginId));
-  stream_next_json_object_value(F("id"),   String(pluginId));
-  stream_json_start_array(F("function"));
-}
-
-void stream_json_start_array(const String& label) {
-  TXBuffer += '\"';
-  TXBuffer += label;
-  TXBuffer += F("\": [\n");
-}
-
-void stream_json_end_array_element(bool isLast) {
-  if (isLast) {
-    TXBuffer += "]\n";
-  } else {
-    TXBuffer += ",\n";
-  }
-}
-
-void stream_json_end_object_element(bool isLast) {
-  TXBuffer += '}';
-
-  if (!isLast) {
-    TXBuffer += ',';
-  }
-  TXBuffer += '\n';
-}
-
 #ifdef WEBSERVER_NEW_UI
 void handle_timingstats_json() {
   TXBuffer.startJsonStream();
-  TXBuffer += '{';
+  json_init();
+  json_open();
+  # ifdef USES_TIMING_STATS
   jsonStatistics(false);
-  TXBuffer += '}';
+  # endif // ifdef USES_TIMING_STATS
+  json_close();
   TXBuffer.endStream();
 }
 
@@ -324,6 +287,59 @@ void handle_nodes_list_json() {
   TXBuffer.endStream();
 }
 
+void handle_buildinfo() {
+  if (!isLoggedIn()) { return; }
+  TXBuffer.startJsonStream();
+  json_init();
+  json_open();
+  {
+    json_open(true, F("plugins"));
+
+    for (deviceIndex_t x = 0; x <= deviceCount; x++) {
+      if (validPluginID(DeviceIndex_to_Plugin_id[x])) {
+        json_open();
+        json_number(F("id"), String(DeviceIndex_to_Plugin_id[x]));
+        json_prop(F("name"), getPluginNameFromDeviceIndex(x));
+        json_close();
+      }
+    }
+    json_close(true);
+  }
+  {
+    json_open(true, F("controllers"));
+
+    for (byte x = 0; x < CPLUGIN_MAX; x++) {
+      if (CPlugin_id[x] != 0) {
+        json_open();
+        json_number(F("id"), String(x + 1));
+        json_prop(F("name"), getCPluginNameFromProtocolIndex(x));
+        json_close();
+      }
+    }
+    json_close(true);
+  }
+  {
+    json_open(true, F("notifications"));
+
+    for (byte x = 0; x < NPLUGIN_MAX; x++) {
+      if (NPlugin_id[x] != 0) {
+        json_open();
+        json_number(F("id"), String(x + 1));
+        json_prop(F("name"), getNPluginNameFromNotifierIndex(x));
+        json_close();
+      }
+    }
+    json_close(true);
+  }
+  json_prop(LabelType::BUILD_DESC);
+  json_prop(LabelType::GIT_BUILD);
+  json_prop(LabelType::SYSTEM_LIBRARIES);
+  json_prop(LabelType::PLUGINS);
+  json_prop(LabelType::PLUGIN_DESCRIPTION);
+  json_close();
+  TXBuffer.endStream();
+}
+
 #endif // WEBSERVER_NEW_UI
 
 
@@ -348,7 +364,7 @@ void stream_to_json_object_value(const String& object, const String& value) {
 }
 
 String jsonBool(bool value) {
-  return toString(value);
+  return boolToString(value);
 }
 
 // Add JSON formatted data directly to the TXbuffer, including a trailing comma.
