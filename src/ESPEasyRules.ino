@@ -308,11 +308,13 @@ void replace_EventValueN_Argv(String& line, const String& argString, unsigned in
 
 
 
-void process_internal(String &line, String cmd_s) {
-  int startIndex;
+void process_internal(String &line, const String& cmd_s) {
+  int startIndex, closingIndex;
   int iarg1, iarg2;
-  while ((startIndex = line.indexOf(cmd_s)) != -1) {
-    String fullCommand = line.substring(startIndex, line.indexOf("]", startIndex) + 1);
+  String cmd_s_lower = cmd_s;
+  cmd_s_lower.toLowerCase();
+  while ((startIndex = line.indexOf(cmd_s)) != -1 && (closingIndex = line.indexOf("]", startIndex)) != -1) {
+    String fullCommand = line.substring(startIndex, closingIndex + 1);
     String arg1, arg2, arg3;
     String replacement = ""; // maybe just replace with empty to avoid looping?
     char sval[10];
@@ -331,26 +333,24 @@ void process_internal(String &line, String cmd_s) {
       }
     }
 
-    if (cmd_s.equalsIgnoreCase(F("[substring:"))) {
+    if (cmd_s_lower.equals(F("[substring:"))) {
       // substring arduino style (first char included, last char excluded)
       // Syntax like 12345[substring:8:12:ANOTHER HELLO WORLD]67890
       if (validIntFromString(arg1, iarg1)
           && validIntFromString(arg2, iarg2)) {
         replacement = arg3.substring(iarg1, iarg2);
       }
-    }
-    if (cmd_s.equalsIgnoreCase(F("[strtol:"))) {
+    } else if (cmd_s_lower.equals(F("[strtol:"))) {
       // string to long integer (from cstdlib)
       // Syntax like 1234[strtol:16:38]7890
       if (validIntFromString(arg1, iarg1)
           && validIntFromString(arg2, iarg2)) {
         replacement = String(strtol(arg2.c_str(), NULL, iarg1));
       }
-    }
-    if (cmd_s.equalsIgnoreCase(F("[div100ths:"))) {
+    } else if (cmd_s_lower.equals(F("[div100ths:"))) {
       // division and giving the 100ths as integer
       // 5 / 100 would yield 5
-      // useful for fractions that use a full byte gaining a 
+      // useful for fractions that use a full byte gaining a
       // precision/granularity of 1/256 instead of only 1/100
       // Syntax like XXX[div100ths:24:256]XXX
       if (validIntFromString(arg1, iarg1)
@@ -359,10 +359,9 @@ void process_internal(String &line, String cmd_s) {
         sprintf(sval, "%02d", (int)val);
         replacement = String(sval);
       }
-    }
-    if (cmd_s.equalsIgnoreCase(F("[ord:"))) {
+    } else  if (cmd_s_lower.equals(F("[ord:"))) {
       // Give the ordinal/integer value of the first character of a string
-      // Syntax like let 1,[ord:B]      
+      // Syntax like let 1,[ord:B]
       uint8_t uval = arg1.c_str()[0];
       replacement = String(uval);
     }
