@@ -42,6 +42,15 @@ class SettingsStruct_tmpl
   bool gratuitousARP();
   void gratuitousARP(bool value);
 
+  // Be a bit more tolerant when parsing the last argument of a command.
+  // See: https://github.com/letscontrolit/ESPEasy/issues/2724
+  bool TolerantLastArgParse();
+  void TolerantLastArgParse(bool value);
+
+  // SendToHttp command does not wait for ack, with this flag it does wait.
+  bool SendToHttp_ack();
+  void SendToHttp_ack(bool value);
+
   void validate();
 
   bool networkSettingsEmpty() const;

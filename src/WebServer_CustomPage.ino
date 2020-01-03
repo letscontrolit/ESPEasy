@@ -111,15 +111,7 @@ boolean handle_custom(String path) {
   String webrequest = WebServer.arg(F("cmd"));
 
   if (webrequest.length() > 0) {
-    struct EventStruct TempEvent;
-    parseCommandString(&TempEvent, webrequest);
-    TempEvent.Source = VALUE_SOURCE_HTTP;
-
-    if (PluginCall(PLUGIN_WRITE, &TempEvent, webrequest)) {}
-    else if (remoteConfig(&TempEvent, webrequest)) {}
-    else if (webrequest.startsWith(F("event"))) {
-      ExecuteCommand(VALUE_SOURCE_HTTP, webrequest.c_str());
-    }
+    ExecuteCommand_all_config_eventOnly(VALUE_SOURCE_HTTP, webrequest.c_str());
 
     // handle some update processes first, before returning page update...
     String dummy;
@@ -152,7 +144,7 @@ boolean handle_custom(String path) {
       {
         if (validPluginID(Settings.TaskDeviceNumber[x]))
         {
-          deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(x);
+          const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(x);
           if (validDeviceIndex(DeviceIndex)) {
             LoadTaskSettings(x);
             html_TR_TD();

@@ -1,3 +1,4 @@
+#ifdef WEBSERVER_CONTROLLERS
 
 // ********************************************************************************
 // Web Interface controller page
@@ -164,11 +165,7 @@ void handle_controllers_ShowAllControllersTable()
 
       html_TD();
       byte ProtocolIndex = getProtocolIndex(Settings.Protocol[x]);
-      {
-        String ProtocolName = "";
-        CPluginCall(ProtocolIndex, CPLUGIN_GET_DEVICENAME, 0, ProtocolName);
-        TXBuffer += ProtocolName;
-      }
+      TXBuffer += getCPluginNameFromProtocolIndex(ProtocolIndex);
       html_TD();
       {
         String hostDescription;
@@ -207,10 +204,8 @@ void handle_controllers_ControllerSettingsPage(byte controllerindex)
 
   for (byte x = 0; x <= protocolCount; x++)
   {
-    String ProtocolName = "";
-    CPluginCall(x, CPLUGIN_GET_DEVICENAME, 0, ProtocolName);
     boolean disabled = false; // !((controllerindex == 0) || !Protocol[x].usesMQTT);
-    addSelector_Item(ProtocolName,
+    addSelector_Item(getCPluginNameFromProtocolIndex(x),
                      Protocol[x].Number,
                      choice == Protocol[x].Number,
                      disabled,
@@ -252,6 +247,7 @@ void handle_controllers_ControllerSettingsPage(byte controllerindex)
       }
       addControllerParameterForm(ControllerSettings, controllerindex, CONTROLLER_CHECK_REPLY);
       addControllerParameterForm(ControllerSettings, controllerindex, CONTROLLER_TIMEOUT);
+
       if (Protocol[ProtocolIndex].usesSampleSets) {
         addControllerParameterForm(ControllerSettings, controllerindex, CONTROLLER_SAMPLE_SET_INITIATOR);
       }
@@ -311,3 +307,5 @@ void handle_controllers_ControllerSettingsPage(byte controllerindex)
   html_end_table();
   html_end_form();
 }
+
+#endif // ifdef WEBSERVER_CONTROLLERS

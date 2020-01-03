@@ -259,8 +259,11 @@ unsigned long now() {
     calcSunRiseAndSet();
 
     if (Settings.UseRules) {
-      String event = statusNTPInitialized ? F("Time#Set") : F("Time#Initialized");
-      rulesProcessing(event);
+      if (statusNTPInitialized) {
+        eventQueue.add(F("Time#Set"));
+      } else {
+        eventQueue.add(F("Time#Initialized"));
+      }
     }
     statusNTPInitialized = true; // @giig1967g: setting system variable %isntp%
   }
@@ -366,6 +369,7 @@ void checkTime()
         event += '0';
       }
       event += minute();
+      // TD-er: Do not add to the eventQueue, but execute right now.
       rulesProcessing(event);
     }
   }

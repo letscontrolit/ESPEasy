@@ -85,7 +85,10 @@ struct ControllerDelayHandlerStruct {
 #ifndef BUILD_NO_DEBUG
 
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-      String log = get_formatted_Controller_number(element.controller_idx);
+      // FIXME TD-er: Must convert it to controller number, but need Settings for that.
+      // int controllernummer = Settings.Protocol[element.controller_idx];
+      int controllernummer = element.controller_idx + 1;
+      String log = get_formatted_Controller_number(controllernummer);
       log += " : queue full";
       addLog(LOG_LEVEL_DEBUG, log);
     }
@@ -116,10 +119,10 @@ struct ControllerDelayHandlerStruct {
     if (remove_from_queue) {
       sendQueue.pop_front();
       attempt = 0;
+      lastSend = millis();
     } else {
       ++attempt;
     }
-    lastSend = millis();
     return getNextScheduleTime();
   }
 

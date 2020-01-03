@@ -1,3 +1,4 @@
+#ifdef WEBSERVER_TOOLS
 
 // ********************************************************************************
 // Web Interface Tools page
@@ -31,14 +32,7 @@ void handle_tools() {
 
   if (webrequest.length() > 0)
   {
-    struct EventStruct TempEvent;
-    webrequest = parseTemplate(webrequest, webrequest.length()); // @giig1967g: parseTemplate before executing the command
-    parseCommandString(&TempEvent, webrequest);
-    TempEvent.Source = VALUE_SOURCE_WEB_FRONTEND;
-
-    if (!PluginCall(PLUGIN_WRITE, &TempEvent, webrequest)) {
-      ExecuteCommand(VALUE_SOURCE_WEB_FRONTEND, webrequest.c_str());
-    }
+    ExecuteCommand_all(VALUE_SOURCE_WEB_FRONTEND, webrequest.c_str());
   }
 
   if (printWebString.length() > 0)
@@ -51,25 +45,47 @@ void handle_tools() {
   addFormSubHeader(F("System"));
 
   addWideButtonPlusDescription(F("/?cmd=reboot"), F("Reboot"),           F("Reboots ESP"));
+
+  # ifdef WEBSERVER_LOG
   addWideButtonPlusDescription(F("log"),          F("Log"),              F("Open log output"));
+  # endif // ifdef WEBSERVER_LOG
+
+  #ifdef WEBSERVER_SYSINFO
   addWideButtonPlusDescription(F("sysinfo"),      F("Info"),             F("Open system info page"));
+  #endif
+
+  #ifdef WEBSERVER_ADVANCED
   addWideButtonPlusDescription(F("advanced"),     F("Advanced"),         F("Open advanced settings"));
+  #endif
+
   addWideButtonPlusDescription(F("json"),         F("Show JSON"),        F("Open JSON output"));
-  #ifdef WEBSERVER_TIMINGSTATS
+
+  # ifdef WEBSERVER_TIMINGSTATS
   addWideButtonPlusDescription(F("timingstats"),  F("Timing stats"),     F("Open timing statistics of system"));
-  #endif // WEBSERVER_TIMINGSTATS
+  # endif // WEBSERVER_TIMINGSTATS
+
+  #ifdef WEBSERVER_PINSTATES
   addWideButtonPlusDescription(F("pinstates"),    F("Pin state buffer"), F("Show Pin state buffer"));
+  #endif
+
+  # ifdef WEBSERVER_SYSVARS
   addWideButtonPlusDescription(F("sysvars"),      F("System Variables"), F("Show all system variables and conversions"));
+  # endif // ifdef WEBSERVER_SYSVARS
 
   addFormSubHeader(F("Wifi"));
 
   addWideButtonPlusDescription(F("/?cmd=wificonnect"),    F("Connect"),    F("Connects to known Wifi network"));
   addWideButtonPlusDescription(F("/?cmd=wifidisconnect"), F("Disconnect"), F("Disconnect from wifi network"));
-  addWideButtonPlusDescription(F("wifiscanner"),          F("Scan"),       F("Scan for wifi networks"));
 
+  #ifdef WEBSERVER_WIFI_SCANNER
+  addWideButtonPlusDescription(F("wifiscanner"),          F("Scan"),       F("Scan for wifi networks"));
+  #endif
+
+  # ifdef WEBSERVER_I2C_SCANNER
   addFormSubHeader(F("Interfaces"));
 
   addWideButtonPlusDescription(F("i2cscanner"), F("I2C Scan"), F("Scan for I2C devices"));
+  # endif // ifdef WEBSERVER_I2C_SCANNER
 
   addFormSubHeader(F("Settings"));
 
@@ -77,8 +93,8 @@ void handle_tools() {
   addFormNote(F("(File MUST be renamed to \"config.dat\" before upload!)"));
   addWideButtonPlusDescription(F("download"), F("Save"), F("Saves a settings file"));
 
-#ifdef WEBSERVER_NEW_UI
-  # if defined(ESP8266)
+# ifdef WEBSERVER_NEW_UI
+  #  if defined(ESP8266)
 
   if ((SpiffsFreeSpace() / 1024) > 50) {
     TXBuffer += F("<TR><TD>");
@@ -87,12 +103,12 @@ void handle_tools() {
     TXBuffer += F("<a class=\"button link wide\" onclick=\"downloadUI()\">Download new UI</a>");
     TXBuffer += F("</TD><TD>Download new UI(alpha)</TD></TR>");
   }
-  # endif // if defined(ESP8266)
-#endif // WEBSERVER_NEW_UI
+  #  endif // if defined(ESP8266)
+# endif    // WEBSERVER_NEW_UI
 
-#if defined(ESP8266)
+# if defined(ESP8266)
   {
-    #ifndef NO_HTTP_UPDATER
+    #  ifndef NO_HTTP_UPDATER
     {
       uint32_t maxSketchSize;
       bool     use2step;
@@ -113,20 +129,24 @@ void handle_tools() {
       }
       TXBuffer += F(" Max sketch size: ");
       TXBuffer += maxSketchSize / 1024;
-      TXBuffer += F(" kB");
+      TXBuffer += F(" kB (");
+      TXBuffer += maxSketchSize;
+      TXBuffer += F(" bytes)");
     }
-    #endif
+    #  endif // ifndef NO_HTTP_UPDATER
   }
-#endif // if defined(ESP8266)
+# endif // if defined(ESP8266)
 
   addFormSubHeader(F("Filesystem"));
 
-  addWideButtonPlusDescription(F("filelist"),      F("File browser"),  F("Show files on internal flash file system"));
-  addWideButtonPlusDescription(F("/factoryreset"), F("Factory Reset"), F("Select pre-defined configuration or full erase of settings"));
+  addWideButtonPlusDescription(F("filelist"),         F("File browser"),     F("Show files on internal flash file system"));
+  addWideButtonPlusDescription(F("/factoryreset"),    F("Factory Reset"),    F("Select pre-defined configuration or full erase of settings"));
+  # ifdef USE_SETTINGS_ARCHIVE
   addWideButtonPlusDescription(F("/settingsarchive"), F("Settings Archive"), F("Download settings from some archive"));
-#ifdef FEATURE_SD
-  addWideButtonPlusDescription(F("SDfilelist"),    F("SD Card"),       F("Show files on SD-Card"));
-#endif // ifdef FEATURE_SD
+  # endif // ifdef USE_SETTINGS_ARCHIVE
+# ifdef FEATURE_SD
+  addWideButtonPlusDescription(F("SDfilelist"),       F("SD Card"),          F("Show files on SD-Card"));
+# endif // ifdef FEATURE_SD
 
   html_end_table();
   html_end_form();
@@ -135,6 +155,7 @@ void handle_tools() {
   printWebString = "";
   printToWeb     = false;
 }
+
 
 // ********************************************************************************
 // Web Interface debug page
@@ -146,3 +167,5 @@ void addWideButtonPlusDescription(const String& url, const String& buttonText, c
   html_TD();
   TXBuffer += description;
 }
+
+#endif // ifdef WEBSERVER_TOOLS

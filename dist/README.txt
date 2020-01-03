@@ -23,11 +23,8 @@ There is also a number of special builds:
 - normal_IR => "Normal" + IR receiver/transmitter plugins and library
 - hard_xxxxx => Special builds for some off-the-shelf hardware.
 - minimal_ESP82xx_1M_OTA => Minimum number of plugins and a limited set of controllers included to be able to perform a 2-step OTA on 1 MB flash nodes.
-- normal_core_241 => "Normal" using core 2.4.1, since 2.4.2 has issues with PWM
-- xxx_core_260_sdk2_alpha -> core 2.6.0 alpha version (under development) using SDK 2.2.1
-- xxx_core_260_sdk222_alpha -> core 2.6.0 alpha version (under development) using SDK 2.2.2
-- xxx_core_260_sdk3_alpha -> core 2.6.0 alpha version (under development) using SDK 3.0.0-dev (under development too)
-
+- normal_core_xxx => "Normal" using core xxx (e.g. 2.4.1)
+- normal_beta => "Normal" using the staged (beta) branch of the esp8266/Arduino repository.
 
 Chip can be:
 - ESP8266      => Most likely option
@@ -56,7 +53,7 @@ Special memory partitioning:
 
 ESP32 now has 3 builds:
 - esp32test_4M316k   Larger sketch partition (1.8MB) smaller SPIFFS (316 kB)
-- esp-wrover-kit_test_4M316k  A build for ESP32 including build flags for the official WRover test kit.
+- test_ESP32-wrover-kit_4M316k  A build for ESP32 including build flags for the official WRover test kit.
 
 Please note that changing between those versions will destroy the settings!
 The SPIFFS partition will be lost and that contains all settings.

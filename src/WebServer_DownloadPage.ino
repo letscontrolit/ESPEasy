@@ -1,4 +1,6 @@
 
+#ifdef WEBSERVER_DOWNLOAD
+
 // ********************************************************************************
 // Web Interface download page
 // ********************************************************************************
@@ -37,3 +39,5 @@ void handle_download()
   WebServer.streamFile(dataFile, F("application/octet-stream"));
   dataFile.close();
 }
+
+#endif // ifdef WEBSERVER_DOWNLOAD

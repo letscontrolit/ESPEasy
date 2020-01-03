@@ -110,7 +110,7 @@ boolean Plugin_033(byte function, struct EventStruct *event, String& string)
                 log += F(" value ");
                 log += event->Par2;
                 log += F(" parameter3: ");
-                log += parseString(string, 4);
+                log += parseStringKeepCase(string, 4);
                 log += F(" not a float value!");
                 addLog(LOG_LEVEL_ERROR,log);
               }

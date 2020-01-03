@@ -119,13 +119,8 @@ boolean Plugin_038(byte function, struct EventStruct *event, String& string)
             log += string;
           }
 
-          // FIXME TD-er: This one is not using parseString* function
-          String tmpString  = string;
-          int argIndex = tmpString.indexOf(',');
-          if (argIndex)
-            tmpString = tmpString.substring(0, argIndex);
-
-          if (tmpString.equalsIgnoreCase(F("NeoPixel")))
+          String cmd = parseString(string, 1);
+          if (cmd.equalsIgnoreCase(F("NeoPixel")))
           {
             // char Line[80];
             // char TmpStr1[80];
@@ -139,7 +134,7 @@ boolean Plugin_038(byte function, struct EventStruct *event, String& string)
           }
 
           // extra function to receive HSV values (i.e. homie controler)
-          if (tmpString.equalsIgnoreCase(F("NeoPixelHSV")))
+          if (cmd.equalsIgnoreCase(F("NeoPixelHSV")))
           {
             int rgbw[4];
             rgbw[3]=0;
@@ -164,7 +159,7 @@ boolean Plugin_038(byte function, struct EventStruct *event, String& string)
             success = true;
           }
 
-          if (tmpString.equalsIgnoreCase(F("NeoPixelAll")))
+          if (cmd.equalsIgnoreCase(F("NeoPixelAll")))
 				  {
 					  // char Line[80];
 					  // char TmpStr1[80];
@@ -179,7 +174,7 @@ boolean Plugin_038(byte function, struct EventStruct *event, String& string)
           }
 
 
-          if (tmpString.equalsIgnoreCase(F("NeoPixelAllHSV"))) {
+          if (cmd.equalsIgnoreCase(F("NeoPixelAllHSV"))) {
             int rgbw[4];
             rgbw[3]=0;
             if (PCONFIG(1)==1) { // RGB
@@ -207,7 +202,7 @@ boolean Plugin_038(byte function, struct EventStruct *event, String& string)
            success = true;
           }
 
-          if (tmpString.equalsIgnoreCase(F("NeoPixelLine")))
+          if (cmd.equalsIgnoreCase(F("NeoPixelLine")))
 				  {
 					  // char Line[80];
 					  // char TmpStr1[80];
@@ -225,7 +220,7 @@ boolean Plugin_038(byte function, struct EventStruct *event, String& string)
 					  success = true;
           }
 
-          if (tmpString.equalsIgnoreCase(F("NeoPixelLineHSV")))
+          if (cmd.equalsIgnoreCase(F("NeoPixelLineHSV")))
 				  {
             int rgbw[4];
             rgbw[3]=0;

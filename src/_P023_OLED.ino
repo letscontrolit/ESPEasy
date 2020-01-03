@@ -240,6 +240,9 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
         String arguments = String(string);
 
         //Fixed bug #1864
+        // this was to manage multiple instances of the plug-in.
+        // You can also call it this way:
+        // [TaskName].OLED, 1,1, Temp. is 19.9
         int dotPos = arguments.indexOf('.');
         if(dotPos > -1 && arguments.substring(dotPos,dotPos+4).equalsIgnoreCase(F("oled")))
         {
@@ -257,29 +260,26 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
           }
         }
 
-        // FIXME TD-er: This one is not using parseString* function
-        int argIndex = arguments.indexOf(',');
-        if (argIndex)
-          arguments = arguments.substring(0, argIndex);
-        if (arguments.equalsIgnoreCase(F("OLEDCMD")))
+        // We now continue using 'arguments' and not 'string' as full command line.
+        // If there was any prefix to address a specific task, it is now removed from 'arguments'
+        String cmd = parseString(arguments, 1);
+        if (cmd.equalsIgnoreCase(F("OLEDCMD")))
         {
           success = true;
-          argIndex = string.lastIndexOf(',');
-          arguments = string.substring(argIndex + 1);
-          if (arguments.equalsIgnoreCase(F("Off")))
+          String param = parseString(arguments, 2);
+          if (param.equalsIgnoreCase(F("Off")))
             Plugin_023_displayOff(OLED_Settings[index]);
-          else if (arguments.equalsIgnoreCase(F("On")))
+          else if (param.equalsIgnoreCase(F("On")))
             Plugin_023_displayOn(OLED_Settings[index]);
-          else if (arguments.equalsIgnoreCase(F("Clear")))
+          else if (param.equalsIgnoreCase(F("Clear")))
             Plugin_023_clear_display(OLED_Settings[index]);
         }
-        else if (arguments.equalsIgnoreCase(F("OLED")))
+        else if (cmd.equalsIgnoreCase(F("OLED")))
         {
           success = true;
-          argIndex = string.lastIndexOf(',');
-          arguments = string.substring(argIndex + 1);
-          String newString = P023_parseTemplate(arguments, 16);
-          Plugin_023_sendStrXY(OLED_Settings[index], newString.c_str(), event->Par1 - 1, event->Par2 - 1);
+          String text = parseStringToEndKeepCase(arguments, 4);
+          text = P023_parseTemplate(text, 16);
+          Plugin_023_sendStrXY(OLED_Settings[index], text.c_str(), event->Par1 - 1, event->Par2 - 1);
         }
         break;
       }

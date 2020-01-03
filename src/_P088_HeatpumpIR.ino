@@ -185,25 +185,18 @@ boolean Plugin_088(byte function, struct EventStruct *event, String& string)
         unsigned int temperature = 22;
         unsigned int vDir = VDIR_UP;
         unsigned int hDir = HDIR_AUTO;
-        char command[80];
-        command[0] = 0;
-        String TmpStr1 = "";
-        string.toCharArray(command, 80);
 
-        // FIXME TD-er: This one is not using parseString* function
-        String tmpString = string;
-        int argIndex = tmpString.indexOf(',');
-        if (argIndex) tmpString = tmpString.substring(0, argIndex);
-
-        if (tmpString.equalsIgnoreCase(F("HEATPUMPIR")) && Plugin_088_irSender != NULL)
+        String cmd = parseString(string, 1);
+        if (cmd.equalsIgnoreCase(F("HEATPUMPIR")) && Plugin_088_irSender != NULL)
         {
-          if (GetArgv(command, TmpStr1, 2)) heatpumpModel = TmpStr1;
-          if (GetArgv(command, TmpStr1, 3)) powerMode = str2int(TmpStr1.c_str());
-          if (GetArgv(command, TmpStr1, 4)) operatingMode = str2int(TmpStr1.c_str());
-          if (GetArgv(command, TmpStr1, 5)) fanSpeed = str2int(TmpStr1.c_str());
-          if (GetArgv(command, TmpStr1, 6)) temperature = str2int(TmpStr1.c_str());
-          if (GetArgv(command, TmpStr1, 7)) vDir = str2int(TmpStr1.c_str());
-          if (GetArgv(command, TmpStr1, 8)) hDir = str2int(TmpStr1.c_str());
+          String TmpStr1;
+          if (GetArgv(string.c_str(), TmpStr1, 2)) heatpumpModel = TmpStr1;
+          if (GetArgv(string.c_str(), TmpStr1, 3)) powerMode = str2int(TmpStr1.c_str());
+          if (GetArgv(string.c_str(), TmpStr1, 4)) operatingMode = str2int(TmpStr1.c_str());
+          if (GetArgv(string.c_str(), TmpStr1, 5)) fanSpeed = str2int(TmpStr1.c_str());
+          if (GetArgv(string.c_str(), TmpStr1, 6)) temperature = str2int(TmpStr1.c_str());
+          if (GetArgv(string.c_str(), TmpStr1, 7)) vDir = str2int(TmpStr1.c_str());
+          if (GetArgv(string.c_str(), TmpStr1, 8)) hDir = str2int(TmpStr1.c_str());
 #ifdef IR_SEND_TIME
           sendHour = hour();
           sendMinute = minute();
@@ -216,15 +209,9 @@ boolean Plugin_088(byte function, struct EventStruct *event, String& string)
 
             if (strcmp_P(heatpumpModel.c_str(), shortName) == 0)
             {
-              #ifdef PLUGIN_016
-              if (irReceiver != 0)
-              irReceiver->disableIRIn(); // Stop the receiver
-              #endif
+              enableIR_RX(false);
               heatpumpIR[i]->send(*Plugin_088_irSender, powerMode, operatingMode, fanSpeed, temperature, vDir, hDir);
-              #ifdef PLUGIN_016
-              if (irReceiver != 0)
-              irReceiver->enableIRIn(); // Start the receiver
-              #endif
+              enableIR_RX(true);
               addLog(LOG_LEVEL_INFO, F("P088: Heatpump IR code transmitted"));
 #ifdef IR_DEBUG_PACKET
               addLog(LOG_LEVEL_DEBUG, IRPacket);
@@ -276,15 +263,9 @@ boolean Plugin_088(byte function, struct EventStruct *event, String& string)
           {
             PanasonicCKPHeatpumpIR *panasonicHeatpumpIR = new PanasonicCKPHeatpumpIR();
 
-            #ifdef PLUGIN_016
-            if (irReceiver != 0)
-            irReceiver->disableIRIn(); // Stop the receiver
-            #endif
+            enableIR_RX(false);
             panasonicHeatpumpIR->sendPanasonicCKPCancelTimer(*Plugin_088_irSender);
-             #ifdef PLUGIN_016
-            if (irReceiver != 0)
-            irReceiver->enableIRIn(); // Start the receiver
-            #endif
+            enableIR_RX(true);
             addLog(LOG_LEVEL_INFO, F("P088: The TIMER led on Panasonic CKP should now be OFF"));
           }
         }
@@ -301,5 +282,4 @@ boolean Plugin_088(byte function, struct EventStruct *event, String& string)
 
   return success;
 }
-
 #endif // USES_P088

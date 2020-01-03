@@ -165,7 +165,7 @@ boolean Adafruit_SGP30::setIAQBaseline(uint16_t eco2_base, uint16_t tvoc_base) {
 
 boolean Adafruit_SGP30::readWordFromCommand(uint8_t command[], uint8_t commandLength, uint16_t delayms, uint16_t *readdata, uint8_t readlen)
 {
-  uint8_t data;
+  //uint8_t data;
 
   _i2c->beginTransmission(_i2caddr);
 

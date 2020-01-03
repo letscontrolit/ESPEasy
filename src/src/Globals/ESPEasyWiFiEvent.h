@@ -73,16 +73,14 @@ extern WiFiEventHandler APModeStationDisconnectedHandler;
 // WiFi related data
 extern bool wifiSetup;
 extern bool wifiSetupConnect;
-extern uint8_t lastBSSID[6];
 extern uint8_t wifiStatus;
 extern unsigned long last_wifi_connect_attempt_moment;
 extern unsigned int  wifi_connect_attempt;
 extern int wifi_reconnects; // First connection attempt is not a reconnect.
-extern uint8_t lastWiFiSettings;
 extern String  last_ssid;
 extern bool    bssid_changed;
 extern bool    channel_changed;
-extern uint8_t last_channel;
+
 extern WiFiDisconnectReason lastDisconnectReason;
 extern unsigned long lastConnectMoment;
 extern unsigned long lastDisconnectMoment;
@@ -93,10 +91,6 @@ extern bool intent_to_reboot;
 extern uint8_t lastMacConnectedAPmode[6];
 extern uint8_t lastMacDisconnectedAPmode[6];
 
-// uint32_t scan_done_status = 0;
-extern uint8_t scan_done_number;
-
-// uint8_t  scan_done_scan_id = 0;
 
 // Semaphore like bools for processing data gathered from WiFi events.
 extern volatile bool processedConnect;

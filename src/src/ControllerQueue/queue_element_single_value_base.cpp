@@ -18,7 +18,7 @@ bool queue_element_single_value_base::checkDone(bool succesfull) const {
 }
 
 size_t queue_element_single_value_base::getSize() const {
-  size_t total = sizeof(this);
+  size_t total = sizeof(*this);
 
   for (int i = 0; i < VARS_PER_TASK; ++i) {
     total += txt[i].length();

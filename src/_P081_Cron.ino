@@ -260,8 +260,9 @@ boolean Plugin_081(byte function, struct EventStruct *event, String& string)
 #endif
             addLog(LOG_LEVEL_DEBUG, String(F("Next execution:")) + getDateTimeString(*gmtime(&next)));
             LoadTaskSettings(event->TaskIndex);
-            if(function != PLUGIN_TIME_CHANGE)
-              rulesProcessing(String(F("Cron#")) + String(ExtraTaskSettings.TaskDeviceName));
+            if(function != PLUGIN_TIME_CHANGE) {
+              eventQueue.add(String(F("Cron#")) + String(ExtraTaskSettings.TaskDeviceName));
+            }
           }
           else
           {

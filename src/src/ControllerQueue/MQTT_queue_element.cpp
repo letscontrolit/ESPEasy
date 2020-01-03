@@ -10,5 +10,5 @@ MQTT_queue_element::MQTT_queue_element(int ctrl_idx,
 {}
 
 size_t MQTT_queue_element::getSize() const {
-  return sizeof(this) + _topic.length() + _payload.length();
+  return sizeof(*this) + _topic.length() + _payload.length();
 }

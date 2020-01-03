@@ -1,7 +1,6 @@
 #include "../../ESPEasy_common.h"
 #include "../DataStructs/SettingsStruct.h"
 #include "../DataStructs/ESPEasyLimits.h"
-#include "../DataStructs/ESPEasyDefaults.h"
 #include "../Globals/Plugins.h"
 
 template<unsigned int N_TASKS>
@@ -90,6 +89,26 @@ bool SettingsStruct_tmpl<N_TASKS>::gratuitousARP() {
 template<unsigned int N_TASKS>
 void SettingsStruct_tmpl<N_TASKS>::gratuitousARP(bool value) {
   setBitToUL(VariousBits1, 8, !value);
+}
+
+template<unsigned int N_TASKS>
+bool SettingsStruct_tmpl<N_TASKS>::TolerantLastArgParse() {
+  return getBitFromUL(VariousBits1, 9);
+}
+
+template<unsigned int N_TASKS>
+void SettingsStruct_tmpl<N_TASKS>::TolerantLastArgParse(bool value) {
+  setBitToUL(VariousBits1, 9, value);
+}
+
+template<unsigned int N_TASKS>
+bool SettingsStruct_tmpl<N_TASKS>::SendToHttp_ack() {
+  return getBitFromUL(VariousBits1, 10);
+}
+
+template<unsigned int N_TASKS>
+void SettingsStruct_tmpl<N_TASKS>::SendToHttp_ack(bool value) {
+  setBitToUL(VariousBits1, 10, value);
 }
 
 template<unsigned int N_TASKS>
@@ -214,6 +233,8 @@ void SettingsStruct_tmpl<N_TASKS>::clearMisc() {
   EcoPowerMode(DEFAULT_ECO_MODE);
   WifiNoneSleep(DEFAULT_WIFI_NONE_SLEEP);
   gratuitousARP(DEFAULT_GRATUITOUS_ARP);
+  TolerantLastArgParse(DEFAULT_TOLERANT_LAST_ARG_PARSE);
+  SendToHttp_ack(DEFAULT_SEND_TO_HTTP_ACK);
 }
 
 template<unsigned int N_TASKS>

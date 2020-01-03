@@ -23,7 +23,7 @@ import os
 TOTAL_IRAM = 32786;
 TOTAL_DRAM = 81920;
 
-env="memanalyze_ESP8266"
+env="spec_memanalyze_ESP8266"
 
 sections = OrderedDict([
     ("data", "Initialized Data (RAM)"),

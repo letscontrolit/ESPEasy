@@ -24,5 +24,5 @@ C016_queue_element::C016_queue_element(const struct EventStruct *event, byte val
 }
 
 size_t C016_queue_element::getSize() const {
-  return sizeof(this);
+  return sizeof(*this);
 }

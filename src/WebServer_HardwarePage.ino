@@ -1,3 +1,4 @@
+#ifdef WEBSERVER_HARDWARE
 
 // ********************************************************************************
 // Web Interface hardware page
@@ -103,3 +104,5 @@ void handle_hardware() {
   sendHeadandTail_stdtemplate(_TAIL);
   TXBuffer.endStream();
 }
+
+#endif // ifdef WEBSERVER_HARDWARE

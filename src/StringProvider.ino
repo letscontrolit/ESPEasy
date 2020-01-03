@@ -1,7 +1,7 @@
 #include "StringProviderTypes.h"
 
-String getInternalLabel(LabelType::Enum label) {
-  return to_internal_string(getLabel(label));
+String getInternalLabel(LabelType::Enum label, char replaceSpace) {
+  return to_internal_string(getLabel(label), replaceSpace);
 }
 
 String getLabel(LabelType::Enum label) {
@@ -41,6 +41,9 @@ String getLabel(LabelType::Enum label) {
     case LabelType::IP_ADDRESS_SUBNET:      return F("IP / Subnet");
     case LabelType::GATEWAY:                return F("Gateway");
     case LabelType::CLIENT_IP:              return F("Client IP");
+    #ifdef FEATURE_MDNS
+    case LabelType::M_DNS:                  return F("mDNS");
+    #endif
     case LabelType::DNS:                    return F("DNS");
     case LabelType::DNS_1:                  return F("DNS 1");
     case LabelType::DNS_2:                  return F("DNS 2");
@@ -91,6 +94,9 @@ String getLabel(LabelType::Enum label) {
     case LabelType::SKETCH_FREE:            return F("Sketch Free");
     case LabelType::SPIFFS_SIZE:            return F("SPIFFS Size");
     case LabelType::SPIFFS_FREE:            return F("SPIFFS Free");
+    case LabelType::MAX_OTA_SKETCH_SIZE:    return F("Max. OTA Sketch Size");
+    case LabelType::OTA_2STEP:              return F("OTA 2-step Needed");
+    case LabelType::OTA_POSSIBLE:           return F("OTA possible");
 
   }
   return F("MissingString");
@@ -139,6 +145,9 @@ String getValue(LabelType::Enum label) {
     case LabelType::IP_ADDRESS_SUBNET:      return String(getValue(LabelType::IP_ADDRESS) + F(" / ") + getValue(LabelType::IP_SUBNET));
     case LabelType::GATEWAY:                return WiFi.gatewayIP().toString();
     case LabelType::CLIENT_IP:              return formatIP(WebServer.client().remoteIP());
+    #ifdef FEATURE_MDNS
+    case LabelType::M_DNS:                  return String(WifiGetHostname()) + F(".local");
+    #endif
     case LabelType::DNS:                    return String(getValue(LabelType::DNS_1) + F(" / ") + getValue(LabelType::DNS_2));
     case LabelType::DNS_1:                  return WiFi.dnsIP(0).toString();
     case LabelType::DNS_2:                  return WiFi.dnsIP(1).toString();
@@ -189,6 +198,9 @@ String getValue(LabelType::Enum label) {
     case LabelType::SKETCH_FREE:            break;
     case LabelType::SPIFFS_SIZE:            break;
     case LabelType::SPIFFS_FREE:            break;
+    case LabelType::MAX_OTA_SKETCH_SIZE:    break;
+    case LabelType::OTA_2STEP:              break;
+    case LabelType::OTA_POSSIBLE:           break;
 
   }
   return F("MissingString");

@@ -165,7 +165,7 @@ String toString(WiFiMode_t mode)
   return result;
 }
 
-String toString(bool value) {
+String boolToString(bool value) {
   return value ? F("true") : F("false");
 }
 
@@ -188,12 +188,7 @@ void addNewLine(String& line) {
 String doFormatUserVar(struct EventStruct *event, byte rel_index, bool mustCheck, bool& isvalid) {
   isvalid = true;
 
-  if (!validTaskIndex(event->TaskIndex)) {
-    isvalid = false;
-    return "0";
-  }
   const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(event->TaskIndex);
-
   if (!validDeviceIndex(DeviceIndex)) {
     isvalid = false;
     return "0";
@@ -338,7 +333,7 @@ bool stringWrappedWithChar(const String& text, char wrappingChar) {
 }
 
 bool isQuoteChar(char c) {
-  return c == '\'' || c == '"';
+  return c == '\'' || c == '"' || c == '`';
 }
 
 bool isParameterSeparatorChar(char c) {
@@ -380,17 +375,19 @@ bool safe_strncpy(char *dest, const char *source, size_t max_size) {
 }
 
 // Convert a string to lower case and replace spaces with underscores.
-String to_internal_string(const String& input) {
+String to_internal_string(const String& input, char replaceSpace) {
   String result = input;
 
   result.trim();
   result.toLowerCase();
-  result.replace(' ', '_');
+  result.replace(' ', replaceSpace);
   return result;
 }
 
 /*********************************************************************************************\
    Parse a string and get the xth command or parameter
+   IndexFind = 1 => command.
+    // FIXME TD-er: parseString* should use index starting at 0.
 \*********************************************************************************************/
 String parseString(const String& string, byte indexFind) {
   String result = parseStringKeepCase(string, indexFind);
@@ -439,15 +436,45 @@ String parseStringToEndKeepCase(const String& string, byte indexFind) {
   return stripQuotes(result);
 }
 
+String tolerantParseStringKeepCase(const String& string, byte indexFind)
+{
+  if (Settings.TolerantLastArgParse()) {
+    return parseStringToEndKeepCase(string, indexFind);
+  } 
+  return parseStringKeepCase(string, indexFind);
+}
+
 // escapes special characters in strings for use in html-forms
+bool htmlEscapeChar(char c, String& escaped)
+{
+  switch (c)
+  {
+    case '&':  escaped = F("&amp;");  return true;
+    case '\"': escaped = F("&quot;"); return true;
+    case '\'': escaped = F("&#039;"); return true;
+    case '<':  escaped = F("&lt;");   return true;
+    case '>':  escaped = F("&gt;");   return true;
+    case '/':  escaped = F("&#047;"); return true;
+  }
+  return false;
+}
+
+void htmlEscape(String& html, char c)
+{
+  String repl;
+  if (htmlEscapeChar(c, repl)) {
+    html.replace(String(c), repl);
+  }
+}
+
 void htmlEscape(String& html)
 {
-  html.replace("&",  F("&amp;"));
-  html.replace("\"", F("&quot;"));
-  html.replace("'",  F("&#039;"));
-  html.replace("<",  F("&lt;"));
-  html.replace(">",  F("&gt;"));
-  html.replace("/",  F("&#047;"));
+  htmlEscape(html, '&');
+  htmlEscape(html, '\"');
+  htmlEscape(html, '\'');
+  htmlEscape(html, '<');
+  htmlEscape(html, '>');
+  htmlEscape(html, '/');
 }
 
 void htmlStrongEscape(String& html)
@@ -480,8 +507,8 @@ void htmlStrongEscape(String& html)
 String URLEncode(const char *msg)
 {
   const char *hex   = "0123456789abcdef";
-  String encodedMsg = "";
-
+  String encodedMsg;
+  encodedMsg.reserve(strlen(msg));
   while (*msg != '\0') {
     if ((('a' <= *msg) && (*msg <= 'z'))
         || (('A' <= *msg) && (*msg <= 'Z'))
@@ -503,14 +530,18 @@ String URLEncode(const char *msg)
    replace other system variables like %sysname%, %systime%, %ip%
  \*********************************************************************************************/
 void parseControllerVariables(String& s, struct EventStruct *event, boolean useURLencode) {
-  parseSystemVariables(s, useURLencode);
-  parseEventVariables(s, event, useURLencode);
-  parseStandardConversions(s, useURLencode);
+  parseEventVariables(s, event, false); // Must only URLEncode once, so do it at the end of this conversion.
+  s = parseTemplate(s, s.length());
+  if (useURLencode) {
+    s = URLEncode(s.c_str());
+  }
 }
 
 void repl(const String& key, const String& val, String& s, boolean useURLencode)
 {
   if (useURLencode) {
+    // URLEncode does take resources, so check first if needed.
+    if (s.indexOf(key) == -1) return;
     s.replace(key, URLEncode(val.c_str()));
   } else {
     s.replace(key, val);

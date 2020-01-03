@@ -63,9 +63,7 @@ void sendData(struct EventStruct *event)
       else {
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
           String log = F("Invalid value detected for controller ");
-          String controllerName;
-          CPluginCall(event->ProtocolIndex, CPLUGIN_GET_DEVICENAME, event, controllerName);
-          log += controllerName;
+          log += getCPluginNameFromProtocolIndex(event->ProtocolIndex);
           addLog(LOG_LEVEL_DEBUG, log);
         }
       }
@@ -159,8 +157,8 @@ void MQTTDisconnect()
   if (MQTTclient.connected()) {
     MQTTclient.disconnect();
     addLog(LOG_LEVEL_INFO, F("MQTT : Disconnected from broker"));
-    updateMQTTclient_connected();
   }
+  updateMQTTclient_connected();
 }
 
 /*********************************************************************************************\
@@ -178,8 +176,8 @@ bool MQTTConnect(int controller_idx)
 
   if (MQTTclient.connected()) {
     MQTTclient.disconnect();
-    updateMQTTclient_connected();
   }
+  updateMQTTclient_connected();
   mqtt = WiFiClient(); // workaround see: https://github.com/esp8266/Arduino/issues/4497#issuecomment-373023864
   mqtt.setTimeout(ControllerSettings.ClientTimeout);
   MQTTclient.setClient(mqtt);
@@ -269,8 +267,9 @@ bool MQTTConnect(int controller_idx)
   }
   delay(0);
 
+  byte controller_number = Settings.Protocol[controller_idx];
+  count_connection_results(MQTTresult, F("MQTT : Broker "), controller_number, ControllerSettings);
   if (!MQTTresult) {
-    addLog(LOG_LEVEL_ERROR, F("MQTT : Failed to connect to broker"));
     MQTTclient.disconnect();
     updateMQTTclient_connected();
     return false;
@@ -331,15 +330,22 @@ bool MQTTCheck(int controller_idx)
 /*********************************************************************************************\
 * Send status info to request source
 \*********************************************************************************************/
-void SendStatusOnlyIfNeeded(int eventSource, bool param1, uint32_t key, const String& param2, int16_t param3) {
+void SendStatusOnlyIfNeeded(byte eventSource, bool param1, uint32_t key, const String& param2, int16_t param3) {
+  if (SourceNeedsStatusUpdate(eventSource)) {
+    SendStatus(eventSource, getPinStateJSON(param1, key, param2, param3));
+  }
+}
+
+bool SourceNeedsStatusUpdate(byte eventSource)
+{
   switch (eventSource) {
     case VALUE_SOURCE_HTTP:
     case VALUE_SOURCE_SERIAL:
     case VALUE_SOURCE_MQTT:
     case VALUE_SOURCE_WEB_FRONTEND:
-      SendStatus(eventSource, getPinStateJSON(param1, key, param2, param3));
-      break;
+      return true;
   }
+  return false;
 }
 
 void SendStatus(byte source, const String& status)
@@ -365,8 +371,16 @@ void SendStatus(byte source, const String& status)
 }
 
 #ifdef USES_MQTT
-boolean MQTTpublish(int controller_idx, const char *topic, const char *payload, boolean retained)
+bool MQTTpublish(int controller_idx, const char *topic, const char *payload, boolean retained)
 {
+  {
+    MQTT_queue_element dummy_element(MQTT_queue_element(controller_idx, "", "", retained));
+    if (MQTTDelayHandler.queueFull(dummy_element)) {
+      // The queue is full, try to make some room first.
+      addLog(LOG_LEVEL_DEBUG, F("MQTT : Extra processMQTTdelayQueue()"));
+      processMQTTdelayQueue();
+    }
+  }
   const bool success = MQTTDelayHandler.addToQueue(MQTT_queue_element(controller_idx, topic, payload, retained));
 
   scheduleNextMQTTdelayQueue();
@@ -384,7 +398,6 @@ void processMQTTdelayQueue() {
   if (element == NULL) { return; }
 
   if (MQTTclient.publish(element->_topic.c_str(), element->_payload.c_str(), element->_retained)) {
-    setIntervalTimerOverride(TIMER_MQTT, 10); // Make sure the MQTT is being processed as soon as possible.
     MQTTDelayHandler.markProcessed(true);
   } else {
     MQTTDelayHandler.markProcessed(false);
@@ -398,6 +411,7 @@ void processMQTTdelayQueue() {
     }
 #endif // ifndef BUILD_NO_DEBUG
   }
+  setIntervalTimerOverride(TIMER_MQTT, 10); // Make sure the MQTT is being processed as soon as possible.
   scheduleNextMQTTdelayQueue();
   STOP_TIMER(MQTT_DELAY_QUEUE);
 }
@@ -419,3 +433,74 @@ void MQTTStatus(const String& status)
   }
 }
 #endif //USES_MQTT
+
+
+
+/*********************************************************************************************\
+ * send all sensordata
+\*********************************************************************************************/
+// void SensorSendAll()
+// {
+//   for (taskIndex_t x = 0; x < TASKS_MAX; x++)
+//   {
+//     SensorSendTask(x);
+//   }
+// }
+
+
+/*********************************************************************************************\
+ * send specific sensor task data
+\*********************************************************************************************/
+void SensorSendTask(taskIndex_t TaskIndex)
+{
+  if (!validTaskIndex(TaskIndex)) return;
+  checkRAM(F("SensorSendTask"));
+  if (Settings.TaskDeviceEnabled[TaskIndex])
+  {
+    byte varIndex = TaskIndex * VARS_PER_TASK;
+
+    bool success = false;
+    const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(TaskIndex);
+    if (!validDeviceIndex(DeviceIndex)) return;
+
+    LoadTaskSettings(TaskIndex);
+
+    struct EventStruct TempEvent;
+    TempEvent.TaskIndex = TaskIndex;
+    TempEvent.BaseVarIndex = varIndex;
+    // TempEvent.idx = Settings.TaskDeviceID[TaskIndex]; todo check
+    TempEvent.sensorType = Device[DeviceIndex].VType;
+
+    float preValue[VARS_PER_TASK]; // store values before change, in case we need it in the formula
+    for (byte varNr = 0; varNr < VARS_PER_TASK; varNr++)
+      preValue[varNr] = UserVar[varIndex + varNr];
+
+    if(Settings.TaskDeviceDataFeed[TaskIndex] == 0)  // only read local connected sensorsfeeds
+    {
+      String dummy;
+      success = PluginCall(PLUGIN_READ, &TempEvent, dummy);
+    }
+    else
+      success = true;
+
+    if (success)
+    {
+      START_TIMER;
+      for (byte varNr = 0; varNr < VARS_PER_TASK; varNr++)
+      {
+        if (ExtraTaskSettings.TaskDeviceFormula[varNr][0] != 0)
+        {
+          String formula = ExtraTaskSettings.TaskDeviceFormula[varNr];
+          formula.replace(F("%pvalue%"), String(preValue[varNr]));
+          formula.replace(F("%value%"), String(UserVar[varIndex + varNr]));
+          float result = 0;
+          byte error = Calculate(formula.c_str(), &result);
+          if (error == 0)
+            UserVar[varIndex + varNr] = result;
+        }
+      }
+      STOP_TIMER(COMPUTE_FORMULA_STATS);
+      sendData(&TempEvent);
+    }
+  }
+}

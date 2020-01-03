@@ -63,9 +63,7 @@ void handle_unprocessedWiFiEvents()
     }
 
     if ((wifiStatus & ESPEASY_WIFI_GOT_IP) && (wifiStatus & ESPEASY_WIFI_CONNECTED) && WiFi.isConnected()) {
-      wifiStatus            = ESPEASY_WIFI_SERVICES_INITIALIZED;
-      wifiConnectInProgress = false;
-      resetAPdisableTimer();
+      markWiFi_services_initialized();
     }
   } else if (!WiFiConnected()) {
     // Somehow the WiFi has entered a limbo state.
@@ -130,11 +128,11 @@ void processDisconnect() {
   if (processedDisconnect) { return; }
   processedDisconnect = true;
   wifiStatus          = ESPEASY_WIFI_DISCONNECTED;
+  setWebserverRunning(false);
   delay(100); // FIXME TD-er: See https://github.com/letscontrolit/ESPEasy/issues/1987#issuecomment-451644424
 
   if (Settings.UseRules) {
-    String event = F("WiFi#Disconnected");
-    rulesProcessing(event);
+    eventQueue.add(F("WiFi#Disconnected"));
   }
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -172,7 +170,7 @@ void processConnect() {
     log += " (";
     log += WiFi.BSSIDstr();
     log += F(") Ch: ");
-    log += last_channel;
+    log += RTC.lastWiFiChannel;
 
     if ((connect_duration > 0) && (connect_duration < 30000)) {
       // Just log times when they make sense.
@@ -183,19 +181,20 @@ void processConnect() {
     addLog(LOG_LEVEL_INFO, log);
   }
 
-  if (Settings.UseRules && bssid_changed) {
-    String event = F("WiFi#ChangedAccesspoint");
-    rulesProcessing(event);
-  }
+  if (Settings.UseRules) {
+    if (bssid_changed) {
+      eventQueue.add(F("WiFi#ChangedAccesspoint"));
+    }
 
-  if (Settings.UseRules && channel_changed) {
-    String event = F("WiFi#ChangedWiFichannel");
-    rulesProcessing(event);
-  }
+    if (channel_changed) {
+      eventQueue.add(F("WiFi#ChangedWiFichannel"));
+    }
+  } 
 
   if (useStaticIP()) {
     markGotIP(); // in static IP config the got IP event is never fired.
   }
+  saveToRTC();
 
   logConnectionStatus();
 }
@@ -256,25 +255,6 @@ void processGotIP() {
     WiFi.config(ip, gw, subnet);
   }
 
-  #ifdef FEATURE_MDNS
-  addLog(LOG_LEVEL_INFO, F("WIFI : Starting mDNS..."));
-  bool mdns_started = MDNS.begin(WifiGetHostname().c_str());
-
-  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = F("WIFI : ");
-
-    if (mdns_started) {
-      log += F("mDNS started, with name: ");
-      log += WifiGetHostname();
-      log += F(".local");
-    }
-    else {
-      log += F("mDNS failed");
-    }
-    addLog(LOG_LEVEL_INFO, log);
-  }
-  #endif // ifdef FEATURE_MDNS
-
   // First try to get the time, since that may be used in logs
   if (systemTimePresent()) {
     initTime();
@@ -289,19 +269,11 @@ void processGotIP() {
 
   if (Settings.UseRules)
   {
-    String event = F("WiFi#Connected");
-    rulesProcessing(event);
+    eventQueue.add(F("WiFi#Connected"));
   }
   statusLED(true);
 
   //  WiFi.scanDelete();
-  setWebserverRunning(true);
-  #ifdef FEATURE_MDNS
-
-  if (mdns_started) {
-    MDNS.addService("http", "tcp", 80);
-  }
-  #endif // ifdef FEATURE_MDNS
 
   if (wifiSetup) {
     // Wifi setup was active, Apparently these settings work.
@@ -315,7 +287,6 @@ void processGotIP() {
 void processDisconnectAPmode() {
   if (processedDisconnectAPmode) { return; }
   processedDisconnectAPmode = true;
-  resetAPdisableTimer();
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     const int nrStationsConnected = WiFi.softAPgetStationNum();
@@ -331,7 +302,8 @@ void processDisconnectAPmode() {
 void processConnectAPmode() {
   if (processedConnectAPmode) { return; }
   processedConnectAPmode = true;
-  resetAPdisableTimer();
+  // Extend timer to switch off AP.
+  timerAPoff = millis() + WIFI_AP_OFF_TIMER_DURATION;
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("AP Mode: Client connected: ");
@@ -354,53 +326,76 @@ void processConnectAPmode() {
 // Switch of AP mode when timeout reached and no client connected anymore.
 void processDisableAPmode() {
   if (timerAPoff == 0) { return; }
-  bool APmodeActive = WifiIsAP(WiFi.getMode());
 
-  if (APmodeActive) {
+  if (WifiIsAP(WiFi.getMode())) {
     // disable AP after timeout and no clients connected.
     if (timeOutReached(timerAPoff) && (WiFi.softAPgetStationNum() == 0)) {
       setAP(false);
-      APmodeActive = false;
     }
   }
 
-  if (!APmodeActive) {
+  if (!WifiIsAP(WiFi.getMode())) {
     timerAPoff = 0;
   }
 }
 
 void processScanDone() {
   if (processedScanDone) { return; }
+
+  // Better act on the scan done event, as it may get triggered for normal wifi begin calls.
+  int8_t scanCompleteStatus = WiFi.scanComplete();
+  switch (scanCompleteStatus) {
+    case 0: // Nothing (yet) found
+      if (timePassedSince(lastGetScanMoment) > 5000) {
+        processedScanDone = true;
+      }
+      return;
+    case -1: // WIFI_SCAN_RUNNING
+      return;
+    case -2: // WIFI_SCAN_FAILED
+      addLog(LOG_LEVEL_ERROR, F("WiFi  : Scan failed"));
+      processedScanDone = true;
+      return;
+  }
+
+  lastGetScanMoment = millis();
   processedScanDone = true;
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("WIFI  : Scan finished, found: ");
-    log += scan_done_number;
+    log += scanCompleteStatus;
     addLog(LOG_LEVEL_INFO, log);
   }
 
   int bestScanID           = -1;
   int32_t bestRssi         = -1000;
-  uint8_t bestWiFiSettings = lastWiFiSettings;
+  uint8_t bestWiFiSettings = RTC.lastWiFiSettingsIndex;
 
-  if (selectValidWiFiSettings()) {
-    bool   done                 = false;
-    String lastWiFiSettingsSSID = getLastWiFiSettingsSSID();
-
-    for (int settingNr = 0; !done && settingNr < 2; ++settingNr) {
-      for (int i = 0; i < scan_done_number; ++i) {
-        if (WiFi.SSID(i) == lastWiFiSettingsSSID) {
+  if (selectValidWiFiSettings() && scanCompleteStatus > 0) {
+    const uint8_t startWiFiSettings = RTC.lastWiFiSettingsIndex;
+    bool done = false;
+    while (!done) {
+      String ssid_to_check = getLastWiFiSettingsSSID(); 
+      for (int i = 0; i < scanCompleteStatus; ++i) {
+        if (WiFi.SSID(i) == ssid_to_check) {
           int32_t rssi = WiFi.RSSI(i);
 
           if (bestRssi < rssi) {
             bestRssi         = rssi;
             bestScanID       = i;
-            bestWiFiSettings = lastWiFiSettings;
+            bestWiFiSettings = RTC.lastWiFiSettingsIndex;
           }
         }
       }
 
-      if (!selectNextWiFiSettings()) { done = true; }
+      // Select the next WiFi settings.
+      // RTC.lastWiFiSettingsIndex may be updated.
+      if (!selectNextWiFiSettings()) {
+        done = true; 
+      }
+      if (startWiFiSettings == RTC.lastWiFiSettingsIndex) {
+        done = true; 
+      }
     }
 
     if (bestScanID >= 0) {
@@ -409,14 +404,21 @@ void processScanDone() {
         log += formatScanResult(bestScanID, " ");
         addLog(LOG_LEVEL_INFO, log);
       }
-      lastWiFiSettings = bestWiFiSettings;
+      RTC.lastWiFiSettingsIndex = bestWiFiSettings;
       uint8_t *scanbssid = WiFi.BSSID(bestScanID);
 
       if (scanbssid) {
         for (int i = 0; i < 6; ++i) {
-          lastBSSID[i] = *(scanbssid + i);
+          RTC.lastBSSID[i] = *(scanbssid + i);
         }
       }
     }
   }
+}
+
+
+void markWiFi_services_initialized() {
+  wifiStatus            = ESPEASY_WIFI_SERVICES_INITIALIZED;
+  wifiConnectInProgress = false;
+  setWebserverRunning(true);
 }

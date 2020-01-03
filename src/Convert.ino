@@ -1,39 +1,35 @@
-
 /*********************************************************************************************\
    Convert bearing in degree to bearing string
 \*********************************************************************************************/
 String getBearing(int degrees)
 {
-  const __FlashStringHelper *bearing[] = {
-    F("N"),
-    F("NNE"),
-    F("NE"),
-    F("ENE"),
-    F("E"),
-    F("ESE"),
-    F("SE"),
-    F("SSE"),
-    F("S"),
-    F("SSW"),
-    F("SW"),
-    F("WSW"),
-    F("W"),
-    F("WNW"),
-    F("NW"),
-    F("NNW")
-  };
-  int   nr_directions = (int)(sizeof(bearing) / sizeof(bearing[0]));
+  const int nr_directions = 16;
   float stepsize      = (360.0 / nr_directions);
 
   if (degrees < 0) { degrees += 360; } // Allow for bearing -360 .. 359
   int bearing_idx = int((degrees + (stepsize / 2.0)) / stepsize) % nr_directions;
 
-  if (bearing_idx < 0) {
-    return "";
+  if (bearing_idx >= 0) {
+    switch (bearing_idx) {
+      case 0: return F("N");
+      case 1: return F("NNE");
+      case 2: return F("NE");
+      case 3: return F("ENE");
+      case 4: return F("E");
+      case 5: return F("ESE");
+      case 6: return F("SE");
+      case 7: return F("SSE");
+      case 8: return F("S");
+      case 9: return F("SSW");
+      case 10: return F("SW");
+      case 11: return F("WSW");
+      case 12: return F("W");
+      case 13: return F("WNW");
+      case 14: return F("NW");
+      case 15: return F("NNW");
+    }
   }
-  else {
-    return bearing[bearing_idx];
-  }
+  return "";
 }
 
 float CelsiusToFahrenheit(float celsius) {

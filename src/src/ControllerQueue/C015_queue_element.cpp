@@ -17,7 +17,7 @@ bool C015_queue_element::checkDone(bool succesfull) const {
 }
 
 size_t C015_queue_element::getSize() const {
-  size_t total = sizeof(this);
+  size_t total = sizeof(*this);
 
   for (int i = 0; i < VARS_PER_TASK; ++i) {
     total += txt[i].length();

@@ -5,7 +5,7 @@
 #include "src/Globals/Device.h"
 #include "src/Globals/Plugins.h"
 
-String EventToFileName(String& eventName) {
+String EventToFileName(const String& eventName) {
   int size  = eventName.length();
   int index = eventName.indexOf('=');
 
@@ -24,7 +24,7 @@ String EventToFileName(String& eventName) {
   return fileName;
 }
 
-String FileNameToEvent(String& fileName) {
+String FileNameToEvent(const String& fileName) {
 #if defined(ESP8266)
   String eventName = fileName.substring(6);
 #endif // if defined(ESP8266)
@@ -63,6 +63,22 @@ void checkRuleSets() {
 #endif // ifndef BUILD_NO_DEBUG
   }
 }
+
+/********************************************************************************************\
+   Process next event from event queue
+ \*********************************************************************************************/
+bool processNextEvent() {
+  if (Settings.UseRules)
+  {
+    String nextEvent;
+    if (eventQueue.getNext(nextEvent)) {
+      rulesProcessing(nextEvent);
+      return true;
+    }
+  }
+  return false;
+}
+
 
 /********************************************************************************************\
    Rules processing
@@ -191,6 +207,7 @@ String rulesProcessingFile(const String& fileName, String& event) {
         case '\n':
         {
           // Line end, parse rule
+          line.trim();
           const size_t lineLength = line.length();
 
           if (lineLength > longestLineSize) {
@@ -452,6 +469,7 @@ void processMatchedRule(String& action, String& event,
         }
         else {
           String check = lcAction.substring(split + 7);
+          check.trim();
           condition[ifBlock - 1] = conditionMatchExtended(check);
 #ifndef BUILD_NO_DEBUG
 
@@ -461,7 +479,7 @@ void processMatchedRule(String& action, String& event,
             log += F(": [elseif ");
             log += check;
             log += F("]=");
-            log += toString(condition[ifBlock - 1]);
+            log += boolToString(condition[ifBlock - 1]);
             addLog(LOG_LEVEL_DEBUG, log);
           }
 #endif // ifndef BUILD_NO_DEBUG
@@ -476,6 +494,7 @@ void processMatchedRule(String& action, String& event,
         if (isCommand) {
           ifBlock++;
           String check = lcAction.substring(split + 3);
+          check.trim();
           condition[ifBlock - 1] = conditionMatchExtended(check);
           ifBranche[ifBlock - 1] = true;
 #ifndef BUILD_NO_DEBUG
@@ -486,7 +505,7 @@ void processMatchedRule(String& action, String& event,
             log += F(": [if ");
             log += check;
             log += F("]=");
-            log += toString(condition[ifBlock - 1]);
+            log += boolToString(condition[ifBlock - 1]);
             addLog(LOG_LEVEL_DEBUG, log);
           }
 #endif // ifndef BUILD_NO_DEBUG
@@ -519,7 +538,7 @@ void processMatchedRule(String& action, String& event,
       log  = F("Lev.");
       log += String(ifBlock);
       log += F(": [else]=");
-      log += toString(condition[ifBlock - 1] == ifBranche[ifBlock - 1]);
+      log += boolToString(condition[ifBlock - 1] == ifBranche[ifBlock - 1]);
       addLog(LOG_LEVEL_DEBUG, log);
     }
 #endif // ifndef BUILD_NO_DEBUG
@@ -547,32 +566,7 @@ void processMatchedRule(String& action, String& event,
       addLog(LOG_LEVEL_INFO, log);
     }
 
-    struct EventStruct TempEvent;
-    parseCommandString(&TempEvent, action);
-
-    // FIXME TD-er: This part seems a bit strange.
-    // It can't schedule a call to PLUGIN_WRITE.
-    // Maybe ExecuteCommand can be scheduled?
-    delay(0);
-
-    // Use a tmp string to call PLUGIN_WRITE, since PluginCall may inadvertenly
-    // alter the string.
-    String tmpAction(action);
-
-    if (!PluginCall(PLUGIN_WRITE, &TempEvent, tmpAction)) {
-      if (!tmpAction.equals(action)) {
-        if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-          String log = F("PLUGIN_WRITE altered the string: ");
-          log += action;
-          log += F(" to: ");
-          log += tmpAction;
-          addLog(LOG_LEVEL_ERROR, log);
-        }
-
-        // TODO: assign here modified action???
-      }
-      ExecuteCommand(VALUE_SOURCE_SYSTEM, action.c_str());
-    }
+    ExecuteCommand_all(VALUE_SOURCE_RULES, action.c_str());
     delay(0);
   }
 }
@@ -652,13 +646,14 @@ bool ruleMatch(const String& event, const String& rule) {
   // parse rule
   int  posStart, posEnd;
   char compare;
+
   if (!findCompareCondition(rule, compare, posStart, posEnd)) {
     // No compare condition found, so just check if the event- and rule string match.
     return tmpEvent.equalsIgnoreCase(rule);
   }
 
   const bool stringMatch = tmpEvent.equalsIgnoreCase(rule.substring(0, posStart));
-  float ruleValue = 0;
+  float ruleValue        = 0;
 
   if (!validFloatFromString(rule.substring(posEnd), ruleValue)) {
     return false;
@@ -678,13 +673,28 @@ bool ruleMatch(const String& event, const String& rule) {
 /********************************************************************************************\
    Check expression
  \*********************************************************************************************/
-boolean conditionMatchExtended(String& check) {
-  int condAnd       = -1;
-  int condOr        = -1;
-  boolean rightcond = false;
-  boolean leftcond  = conditionMatch(check); // initial check
+bool conditionMatchExtended(String& check) {
+  int    condAnd   = -1;
+  int    condOr    = -1;
+  bool   rightcond = false;
+  bool   leftcond  = conditionMatch(check); // initial check
+  #ifndef BUILD_NO_DEBUG
+  String debugstr;
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+    debugstr += boolToString(leftcond);
+  }
+  #endif
 
   do {
+    #ifndef BUILD_NO_DEBUG
+    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+      String log = F("conditionMatchExtended: ");
+      log += debugstr;
+      log += '_';
+      log += check;
+      addLog(LOG_LEVEL_DEBUG, log);
+    }
+    #endif
     condAnd = check.indexOf(F(" and "));
     condOr  = check.indexOf(F(" or "));
 
@@ -694,13 +704,37 @@ boolean conditionMatchExtended(String& check) {
         check     = check.substring(condAnd + 5);
         rightcond = conditionMatch(check);
         leftcond  = (leftcond && rightcond);
+
+        #ifndef BUILD_NO_DEBUG
+        if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+          debugstr += F(" && ");
+        }
+        #endif
       } else { // OR is first
         check     = check.substring(condOr + 4);
         rightcond = conditionMatch(check);
         leftcond  = (leftcond || rightcond);
+
+        #ifndef BUILD_NO_DEBUG
+        if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+          debugstr += F(" || ");
+        }
+        #endif
       }
+      
+      #ifndef BUILD_NO_DEBUG
+      if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+        debugstr += boolToString(rightcond);
+      }
+      #endif
     }
   } while (condAnd > 0 || condOr > 0);
+
+  #ifndef BUILD_NO_DEBUG
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+    check = debugstr;
+  }
+  #endif
   return leftcond;
 }
 
@@ -712,67 +746,68 @@ bool findCompareCondition(const String& check, char& compare, int& posStart, int
   posStart = check.length();
   posEnd   = posStart;
   int comparePos = 0;
+  bool found = false;
 
   if (((comparePos = check.indexOf("!=")) > 0) && (comparePos < posStart)) {
     posStart = comparePos;
     posEnd   = posStart + 2;
     compare  = '!' + '=';
-    return true;
+    found = true;
   }
 
   if (((comparePos = check.indexOf("<>")) > 0) && (comparePos < posStart)) {
     posStart = comparePos;
     posEnd   = posStart + 2;
     compare  = '!' + '=';
-    return true;
+    found = true;
   }
 
   if (((comparePos = check.indexOf(">=")) > 0) && (comparePos < posStart)) {
     posStart = comparePos;
     posEnd   = posStart + 2;
     compare  = '>' + '=';
-    return true;
+    found = true;
   }
 
   if (((comparePos = check.indexOf("<=")) > 0) && (comparePos < posStart)) {
     posStart = comparePos;
     posEnd   = posStart + 2;
     compare  = '<' + '=';
-    return true;
+    found = true;
   }
 
   if (((comparePos = check.indexOf("<")) > 0) && (comparePos < posStart)) {
     posStart = comparePos;
     posEnd   = posStart + 1;
     compare  = '<';
-    return true;
+    found = true;
   }
 
   if (((comparePos = check.indexOf(">")) > 0) && (comparePos < posStart)) {
     posStart = comparePos;
     posEnd   = posStart + 1;
     compare  = '>';
-    return true;
+    found = true;
   }
 
   if (((comparePos = check.indexOf("=")) > 0) && (comparePos < posStart)) {
     posStart = comparePos;
     posEnd   = posStart + 1;
     compare  = '=';
-    return true;
+    found = true;
   }
-  return false;
+  return found;
 }
 
 bool compareValues(char compare, float Value1, float Value2)
 {
   switch (compare) {
-    case '>' + '=': return  (Value1 >= Value2);
-    case '<' + '=': return  (Value1 <= Value2);
-    case '!' + '=': return  (Value1 != Value2);
-    case '>':       return  (Value1 > Value2);
-    case '<':       return  (Value1 < Value2);
-    case '=':       return  (Value1 == Value2);
+    case '>' + '=': return Value1 >= Value2;
+    case '<' + '=': return Value1 <= Value2;
+    case '!' + '=': return Value1 != Value2;
+    case '>':       return Value1 > Value2;
+    case '<':       return Value1 < Value2;
+    case '=':       return Value1 == Value2;
   }
   return false;
 }
@@ -780,20 +815,22 @@ bool compareValues(char compare, float Value1, float Value2)
 bool conditionMatch(const String& check) {
   int  posStart, posEnd;
   char compare;
+
   if (!findCompareCondition(check, compare, posStart, posEnd)) {
     return false;
   }
 
   String tmpCheck1 = check.substring(0, posStart);
   String tmpCheck2 = check.substring(posEnd);
-  float Value1 = 0;
-  float Value2 = 0;
+  float  Value1    = 0;
+  float  Value2    = 0;
 
-  int timeInSec1 = 0;
-  int timeInSec2 = 0;
+  int  timeInSec1 = 0;
+  int  timeInSec2 = 0;
   bool validTime1 = timeStringToSeconds(tmpCheck1, timeInSec1);
   bool validTime2 = timeStringToSeconds(tmpCheck2, timeInSec2);
-  if ((validTime1 || validTime2) && timeInSec1 != -1 && timeInSec2 != -1) 
+
+  if ((validTime1 || validTime2) && (timeInSec1 != -1) && (timeInSec2 != -1))
   {
     // At least one is a time containing ':' separator
     // AND both can be considered a time, so use it as a time and compare seconds.
@@ -801,13 +838,27 @@ bool conditionMatch(const String& check) {
     Value2 = timeInSec2;
   } else {
     if (!validFloatFromString(tmpCheck1, Value1) ||
-        !validFloatFromString(tmpCheck2, Value2)) 
+        !validFloatFromString(tmpCheck2, Value2))
     {
       return false;
     }
   }
 
-  return compareValues(compare, Value1, Value2);
+  bool result = compareValues(compare, Value1, Value2);
+  #ifndef BUILD_NO_DEBUG
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+    String log = F("compareValues: _");
+    log += check;
+    log += F("_ val1: ");
+    log += Value1;
+    log += F(" val2: ");
+    log += Value2;
+    log += F(" = ");
+    log += boolToString(result);
+    addLog(LOG_LEVEL_DEBUG, log);
+  }
+  #endif
+  return result;
 }
 
 /********************************************************************************************\
@@ -817,6 +868,7 @@ void rulesTimers() {
   if (!Settings.UseRules) {
     return;
   }
+  // FIXME TD-er:  Maybe not use the timer struct, but add the timers to the scheduler?
 
   for (byte x = 0; x < RULES_TIMER_MAX; x++) {
     if (!RulesTimer[x].paused && (RulesTimer[x].timestamp != 0L)) // timer active?
@@ -826,7 +878,7 @@ void rulesTimers() {
         RulesTimer[x].timestamp = 0L;                             // turn off this timer
         String event = F("Rules#Timer=");
         event += x + 1;
-        rulesProcessing(event);
+        rulesProcessing(event); // TD-er: Do not add to the eventQueue, but execute right now.
       }
     }
   }
@@ -839,11 +891,12 @@ void createRuleEvents(struct EventStruct *event) {
   if (!Settings.UseRules) {
     return;
   }
-  deviceIndex_t DeviceIndex  = getDeviceIndex_from_TaskIndex(event->TaskIndex);
-  if (!validDeviceIndex(DeviceIndex)) return;
+  const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(event->TaskIndex);
+
+  if (!validDeviceIndex(DeviceIndex)) { return; }
 
   LoadTaskSettings(event->TaskIndex);
-  byte BaseVarIndex = event->TaskIndex * VARS_PER_TASK;  
+  byte BaseVarIndex = event->TaskIndex * VARS_PER_TASK;
   byte sensorType   = Device[DeviceIndex].VType;
 
   for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++) {
@@ -869,7 +922,6 @@ void createRuleEvents(struct EventStruct *event) {
         eventString += UserVar[BaseVarIndex + varNr];
         break;
     }
-
-    rulesProcessing(eventString);
+    eventQueue.add(eventString);
   }
 }
