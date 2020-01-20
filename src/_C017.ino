@@ -9,9 +9,11 @@
 // The "Host name" should match exactly the EspEasy name (Config -> Unit Name)
 // Add a group (mandatory) and hit add. No need to set up IP address or agent.
 // Go to the newly created host ->Items ->Create Item
-// Nane the item something descriptive
+// Name the item something descriptive
 // For Key add the EspEasy task Value name (case sensitive)
-// Type of information select "Numeric (float)" and press add. Thats it.
+// Type of information select "Numeric (float)" and press add.
+// Aslo make sure that you enable send to controller (under Data Acquisition in tasks)
+// and set an interval because you need to actively send the data to Zabbix
 
 #define CPLUGIN_017
 #define CPLUGIN_ID_017 17
