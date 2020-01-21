@@ -84,6 +84,15 @@ bool CPlugin_005(CPlugin::Function function, struct EventStruct *event, String& 
                 TempEvent.Par2 = event->String2.toFloat();
                 TempEvent.Par3 = 0;
                 validTopic = true;
+
+String log = F("SP_C005b: string=");
+log += string;
+log += F(" ;cmd=");
+log += cmd;
+log += F(" ;taskIndex=");
+log += event->TaskIndex;
+addLog(LOG_LEVEL_INFO, log);
+
               }
             }
           }
@@ -114,7 +123,7 @@ bool CPlugin_005(CPlugin::Function function, struct EventStruct *event, String& 
           //MFD: skip publishing for values with empty labels (removes unnecessary publishing of unwanted values)
           if (ExtraTaskSettings.TaskDeviceValueNames[x][0]==0)
              continue; //we skip values with empty labels
-             
+
           String tmppubname = pubname;
           tmppubname.replace(F("%valname%"), ExtraTaskSettings.TaskDeviceValueNames[x]);
           String value = "";
