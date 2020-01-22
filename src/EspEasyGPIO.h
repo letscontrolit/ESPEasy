@@ -24,4 +24,4 @@ bool GPIO_PCF_Write(byte Par1, byte Par2);
 void GPIO_Monitor10xSec();
 void sendMonitorEvent(const char* prefix, byte port, int8_t state);
 bool checkValidPortRange(byte pluginID, byte port);
-void setGPIOPullupMode(byte port);
+void setInternalGPIOPullupMode(byte port);

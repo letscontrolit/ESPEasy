@@ -338,7 +338,7 @@ bool checkValidPortRange(byte pluginID, byte port)
   return returnValue;
 }
 
-void setGPIOPullupMode(byte port)
+void setInternalGPIOPullupMode(byte port)
 {
 #if defined(ESP8266)
   if (port == 16) {

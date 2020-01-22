@@ -72,6 +72,7 @@ bool CPlugin_005(CPlugin::Function function, struct EventStruct *event, String& 
           if (lastPartTopic == F("cmd")) {
             cmd = event->String2;
             parseCommandString(&TempEvent, cmd);
+//SP_C005a: string= ;cmd=gpio,12,0 ;taskIndex=12 ;string1=ESPT12/cmd ;string2=gpio,12,0
             TempEvent.Source = EventValueSource::Enum::VALUE_SOURCE_MQTT;
             validTopic = true;
           } else {
@@ -84,25 +85,19 @@ bool CPlugin_005(CPlugin::Function function, struct EventStruct *event, String& 
                 TempEvent.Par2 = event->String2.toFloat();
                 TempEvent.Par3 = 0;
                 validTopic = true;
-
-String log = F("SP_C005b: string=");
-log += string;
-log += F(" ;cmd=");
-log += cmd;
-log += F(" ;taskIndex=");
-log += event->TaskIndex;
-addLog(LOG_LEVEL_INFO, log);
-
               }
             }
           }
           if (validTopic) {
             // in case of event, store to buffer and return...
             String command = parseString(cmd, 1);
+//SP_C005c: command=gpio
             if (command == F("event") || command == F("asyncevent")) {
               eventQueue.add(parseStringToEnd(cmd, 2));
-            } else if (!PluginCall(PLUGIN_WRITE, &TempEvent, cmd)) {
-              remoteConfig(&TempEvent, cmd);
+            } else if (ExecuteCommand_internal(VALUE_SOURCE_MQTT, cmd.c_str())) {
+            } else if (PluginCall(PLUGIN_WRITE, &TempEvent, cmd)) {
+            } else if (remoteConfig(&TempEvent, cmd)) {//SP: cosa fa???
+            } else {
             }
           }
         }

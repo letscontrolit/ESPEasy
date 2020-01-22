@@ -94,6 +94,15 @@ bool checkNrArguments(const char *cmd, const char *Line, int nrArguments) {
   return true;
 }
 
+bool checkSourceFlags(byte flags, byte source) {
+  if (flags & source) {
+    return true;
+  } else {
+    addLog(LOG_LEVEL_ERROR, return_incorrect_source());
+    return false;
+  }
+}
+
 /*********************************************************************************************\
 * Registers command
 \*********************************************************************************************/
@@ -104,12 +113,19 @@ bool executeInternalCommand(const char *cmd, struct EventStruct *event, const ch
   cmd_lc = cmd;
   cmd_lc.toLowerCase();
   // Simple macro to match command to function call.
-  #define COMMAND_CASE(S, C, NARGS) \
-  if (strcmp_P(cmd_lc.c_str(),      \
-               PSTR(S)) == 0)       \
-    { if (!checkNrArguments(cmd, line, NARGS)) { \
-      status = return_incorrect_nr_arguments(); return false;} \
-      else  status = C (event, line); return true;}
+  #define COMMAND_CASE(S, C, NARGS, FLAGS) \
+    if (strcmp_P(cmd_lc.c_str(),PSTR(S)) == 0) { \
+      if (!checkSourceFlags((FLAGS),event->Source)) {\
+        status = return_incorrect_source();\
+        return false;\
+      } else if (!checkNrArguments(cmd, line, NARGS)) { \
+          status = return_incorrect_nr_arguments(); \
+          return false;\
+      } else {\
+        status = C (event, line); \
+        return true;\
+      }\
+    }
 
   // FIXME TD-er: Should we execute command when number of arguments is wrong?
 
@@ -117,189 +133,186 @@ bool executeInternalCommand(const char *cmd, struct EventStruct *event, const ch
 
   switch (cmd_lc[0]) {
     case 'a': {
-      COMMAND_CASE("accessinfo", Command_AccessInfo_Ls, 0); // Network Command
-      COMMAND_CASE("asyncevent", Command_Rules_Async_Events,  -1); // Rule.h
+      COMMAND_CASE("accessinfo", Command_AccessInfo_Ls, 0, VALUE_SOURCE_RESTRICTED); // Network Command
+      COMMAND_CASE("asyncevent", Command_Rules_Async_Events,  -1, VALUE_SOURCE_RESTRICTED); // Rule.h
       break;
     }
     case 'b': {
-      COMMAND_CASE("background", Command_Background,     1); // Diagnostic.h
+      COMMAND_CASE("background", Command_Background,     1, VALUE_SOURCE_RESTRICTED); // Diagnostic.h
     #ifdef USES_C012
-      COMMAND_CASE(  "blynkget", Command_Blynk_Get,     -1);
+      COMMAND_CASE(  "blynkget", Command_Blynk_Get,     -1, VALUE_SOURCE_RESTRICTED);
     #endif // ifdef USES_C012
     #ifdef USES_C015
-      COMMAND_CASE(  "blynkset", Command_Blynk_Set,     -1);
+      COMMAND_CASE(  "blynkset", Command_Blynk_Set,     -1, VALUE_SOURCE_RESTRICTED);
     #endif // ifdef USES_C015
-      COMMAND_CASE(     "build", Command_Settings_Build, 1); // Settings.h
+      COMMAND_CASE(     "build", Command_Settings_Build, 1, VALUE_SOURCE_RESTRICTED); // Settings.h
       break;
     }
     case 'c': {
-      COMMAND_CASE("clearaccessblock", Command_AccessInfo_Clear,   0); // Network Command
-      COMMAND_CASE(     "clearrtcram", Command_RTC_Clear,          0); // RTC.h
-      COMMAND_CASE(          "config", Command_Task_RemoteConfig, -1); // Tasks.h
+      COMMAND_CASE("clearaccessblock", Command_AccessInfo_Clear,   0, VALUE_SOURCE_RESTRICTED); // Network Command
+      COMMAND_CASE(     "clearrtcram", Command_RTC_Clear,          0, VALUE_SOURCE_RESTRICTED); // RTC.h
+      COMMAND_CASE(          "config", Command_Task_RemoteConfig, -1, VALUE_SOURCE_RESTRICTED); // Tasks.h
       break;
     }
     case 'd': {
-      COMMAND_CASE(    "debug", Command_Debug,            1); // Diagnostic.h
-      COMMAND_CASE("deepsleep", Command_System_deepSleep, 1); // System.h
-      COMMAND_CASE(    "delay", Command_Delay,            1); // Timers.h
-      COMMAND_CASE(      "dns", Command_DNS,              1); // Network Command
-      COMMAND_CASE(      "dst", Command_DST,              1); // Time.h
+      COMMAND_CASE(    "debug", Command_Debug,            1, VALUE_SOURCE_RESTRICTED); // Diagnostic.h
+      COMMAND_CASE("deepsleep", Command_System_deepSleep, 1, VALUE_SOURCE_RESTRICTED); // System.h
+      COMMAND_CASE(    "delay", Command_Delay,            1, VALUE_SOURCE_RESTRICTED); // Timers.h
+      COMMAND_CASE(      "dns", Command_DNS,              1, VALUE_SOURCE_RESTRICTED); // Network Command
+      COMMAND_CASE(      "dst", Command_DST,              1, VALUE_SOURCE_RESTRICTED); // Time.h
       break;
     }
     case 'e': {
-      COMMAND_CASE(       "erase", Command_WiFi_Erase,     0); // WiFi.h
-      COMMAND_CASE(       "event", Command_Rules_Events,  -1); // Rule.h
-      COMMAND_CASE("executerules", Command_Rules_Execute, -1); // Rule.h
+      COMMAND_CASE(       "erase", Command_WiFi_Erase,     0, VALUE_SOURCE_RESTRICTED); // WiFi.h
+      COMMAND_CASE(       "event", Command_Rules_Events,  -1, VALUE_SOURCE_ALL); // Rule.h
+      COMMAND_CASE("executerules", Command_Rules_Execute, -1, VALUE_SOURCE_ALL); // Rule.h
       break;
     }
     case 'g': {
-      COMMAND_CASE(   "gateway", Command_Gateway,     1); // Network Command
-      COMMAND_CASE(      "gpio", Command_GPIO,        2); // Gpio.h
-      COMMAND_CASE("gpiotoggle", Command_GPIO_Toggle, 1); // Gpio.h
+      COMMAND_CASE(   "gateway", Command_Gateway,     1, VALUE_SOURCE_RESTRICTED); // Network Command
+      COMMAND_CASE(      "gpio", Command_GPIO,        2, VALUE_SOURCE_ALL); // Gpio.h
+      COMMAND_CASE("gpiotoggle", Command_GPIO_Toggle, 1, VALUE_SOURCE_ALL); // Gpio.h
       break;
     }
     case 'i': {
-      COMMAND_CASE("i2cscanner", Command_i2c_Scanner, -1); // i2c.h
-      COMMAND_CASE(        "ip", Command_IP,           1); // Network Command
+      COMMAND_CASE("i2cscanner", Command_i2c_Scanner, -1, VALUE_SOURCE_RESTRICTED); // i2c.h
+      COMMAND_CASE(        "ip", Command_IP,           1, VALUE_SOURCE_RESTRICTED); // Network Command
       break;
     }
     case 'j': {
-      COMMAND_CASE("jsonportstatus", Command_JSONPortStatus, -1); // Diagnostic.h
+      COMMAND_CASE("jsonportstatus", Command_JSONPortStatus, -1, VALUE_SOURCE_RESTRICTED); // Diagnostic.h
     }
     case 'l': {
-      COMMAND_CASE(          "let", Command_Rules_Let,     2);    // Rules.h
-      COMMAND_CASE(         "load", Command_Settings_Load, 0);    // Settings.h
-      COMMAND_CASE(     "logentry", Command_logentry,      1);    // Diagnostic.h
-      COMMAND_CASE("logportstatus", Command_logPortStatus, 0);    // Diagnostic.h
-      COMMAND_CASE(    "longpulse", Command_GPIO_LongPulse,3);    // GPIO.h
-      COMMAND_CASE( "longpulse_ms", Command_GPIO_LongPulse_Ms,3);    // GPIO.h
-      COMMAND_CASE("logportstatus", Command_logPortStatus, 0);    // Diagnostic.h
-      COMMAND_CASE(    "longpulse", Command_GPIO_LongPulse,3);    // GPIO.h
-      COMMAND_CASE( "longpulse_ms", Command_GPIO_LongPulse_Ms,3);    // GPIO.h
-      COMMAND_CASE("logportstatus", Command_logPortStatus, 0);    // Diagnostic.h
-      COMMAND_CASE(       "lowmem", Command_Lowmem,        0);    // Diagnostic.h
+      COMMAND_CASE(          "let", Command_Rules_Let,     2, VALUE_SOURCE_ALL);    // Rules.h
+      COMMAND_CASE(         "load", Command_Settings_Load, 0, VALUE_SOURCE_ALL);    // Settings.h
+      COMMAND_CASE(     "logentry", Command_logentry,      1, VALUE_SOURCE_ALL);    // Diagnostic.h
+      COMMAND_CASE("logportstatus", Command_logPortStatus, 0, VALUE_SOURCE_ALL);    // Diagnostic.h
+      COMMAND_CASE(    "longpulse", Command_GPIO_LongPulse,3, VALUE_SOURCE_ALL);    // GPIO.h
+      COMMAND_CASE( "longpulse_ms", Command_GPIO_LongPulse_Ms,3, VALUE_SOURCE_ALL);    // GPIO.h
+      COMMAND_CASE("logportstatus", Command_logPortStatus, 0, VALUE_SOURCE_ALL);    // Diagnostic.h
+      COMMAND_CASE(       "lowmem", Command_Lowmem,        0, VALUE_SOURCE_RESTRICTED);    // Diagnostic.h
       break;
     }
     case 'm': {
       switch (cmd_lc[1]) {
         case 'c':{
-          COMMAND_CASE(        "mcpgpio", Command_GPIO,              2); // Gpio.h
-          COMMAND_CASE(  "mcpgpiotoggle", Command_GPIO_Toggle,       1); // Gpio.h
-          COMMAND_CASE(   "mcplongpulse", Command_GPIO_LongPulse,    3); // GPIO.h
-          COMMAND_CASE("mcplongpulse_ms", Command_GPIO_LongPulse_Ms, 3); // GPIO.h
-          COMMAND_CASE(       "mcppulse", Command_GPIO_Pulse,        3); // GPIO.h
+          COMMAND_CASE(        "mcpgpio", Command_GPIO,              2, VALUE_SOURCE_ALL); // Gpio.h
+          COMMAND_CASE(  "mcpgpiotoggle", Command_GPIO_Toggle,       1, VALUE_SOURCE_ALL); // Gpio.h
+          COMMAND_CASE(   "mcplongpulse", Command_GPIO_LongPulse,    3, VALUE_SOURCE_ALL); // GPIO.h
+          COMMAND_CASE("mcplongpulse_ms", Command_GPIO_LongPulse_Ms, 3, VALUE_SOURCE_ALL); // GPIO.h
+          COMMAND_CASE(       "mcppulse", Command_GPIO_Pulse,        3, VALUE_SOURCE_ALL); // GPIO.h
           break;
         }
         default: {
-          COMMAND_CASE(         "malloc", Command_Malloc,            1); // Diagnostic.h
-          COMMAND_CASE(        "meminfo", Command_MemInfo,           0); // Diagnostic.h
-          COMMAND_CASE(  "meminfodetail", Command_MemInfo_detail,    0); // Diagnostic.h
+          COMMAND_CASE(         "malloc", Command_Malloc,            1, VALUE_SOURCE_RESTRICTED); // Diagnostic.h
+          COMMAND_CASE(        "meminfo", Command_MemInfo,           0, VALUE_SOURCE_RESTRICTED); // Diagnostic.h
+          COMMAND_CASE(  "meminfodetail", Command_MemInfo_detail,    0, VALUE_SOURCE_RESTRICTED); // Diagnostic.h
 #ifdef USES_MQTT
-          COMMAND_CASE(  "messagedelay", Command_MQTT_messageDelay, 1); // MQTT.h
-          COMMAND_CASE("mqttretainflag", Command_MQTT_Retain,       1); // MQTT.h
+          COMMAND_CASE(  "messagedelay", Command_MQTT_messageDelay, 1, VALUE_SOURCE_RESTRICTED); // MQTT.h
+          COMMAND_CASE("mqttretainflag", Command_MQTT_Retain,       1, VALUE_SOURCE_RESTRICTED); // MQTT.h
 #endif // USES_MQTT
-          COMMAND_CASE(       "monitor", Command_GPIO_Monitor,      2); // GPIO.h
+          COMMAND_CASE(       "monitor", Command_GPIO_Monitor,      2, VALUE_SOURCE_ALL); // GPIO.h
           break;
         }
       }
       break;
     }
     case 'n': {
-      COMMAND_CASE(   "name", Command_Settings_Name,        1); // Settings.h
-      COMMAND_CASE("nosleep", Command_System_NoSleep,       1); // System.h
-      COMMAND_CASE( "notify", Command_Notifications_Notify, 2); // Notifications.h
-      COMMAND_CASE("ntphost", Command_NTPHost,              1); // Time.h
+      COMMAND_CASE(   "name", Command_Settings_Name,        1, VALUE_SOURCE_RESTRICTED); // Settings.h
+      COMMAND_CASE("nosleep", Command_System_NoSleep,       1, VALUE_SOURCE_RESTRICTED); // System.h
+      COMMAND_CASE( "notify", Command_Notifications_Notify, 2, VALUE_SOURCE_RESTRICTED); // Notifications.h
+      COMMAND_CASE("ntphost", Command_NTPHost,              1, VALUE_SOURCE_RESTRICTED); // Time.h
       break;
     }
     case 'p': {
       switch (cmd_lc[1]) {
         case 'c':{
-          COMMAND_CASE(        "pcfgpio", Command_GPIO,              2); // Gpio.h
-          COMMAND_CASE(  "pcfgpiotoggle", Command_GPIO_Toggle,       1); // Gpio.h
-          COMMAND_CASE(   "pcflongpulse", Command_GPIO_LongPulse,    3); // GPIO.h
-          COMMAND_CASE("pcflongpulse_ms", Command_GPIO_LongPulse_Ms, 3); // GPIO.h
-          COMMAND_CASE(       "pcfpulse", Command_GPIO_Pulse,        3); // GPIO.h
+          COMMAND_CASE(        "pcfgpio", Command_GPIO,              2, VALUE_SOURCE_ALL); // Gpio.h
+          COMMAND_CASE(  "pcfgpiotoggle", Command_GPIO_Toggle,       1, VALUE_SOURCE_ALL); // Gpio.h
+          COMMAND_CASE(   "pcflongpulse", Command_GPIO_LongPulse,    3, VALUE_SOURCE_ALL); // GPIO.h
+          COMMAND_CASE("pcflongpulse_ms", Command_GPIO_LongPulse_Ms, 3, VALUE_SOURCE_ALL); // GPIO.h
+          COMMAND_CASE(       "pcfpulse", Command_GPIO_Pulse,        3, VALUE_SOURCE_ALL); // GPIO.h
           break;
         }
         default: {
-          COMMAND_CASE(       "password", Command_Settings_Password, 1); // Settings.h
+          COMMAND_CASE(       "password", Command_Settings_Password, 1, VALUE_SOURCE_RESTRICTED); // Settings.h
 #ifdef USES_MQTT
-          COMMAND_CASE(        "publish", Command_MQTT_Publish,      2); // MQTT.h
+          COMMAND_CASE(        "publish", Command_MQTT_Publish,      2, VALUE_SOURCE_ALL); // MQTT.h
 #endif // USES_MQTT
-          COMMAND_CASE(          "pulse", Command_GPIO_Pulse,        3); // GPIO.h
+          COMMAND_CASE(          "pulse", Command_GPIO_Pulse,        3, VALUE_SOURCE_ALL); // GPIO.h
           break;
         }
       }
       break;
     }
     case 'r': {
-      COMMAND_CASE(                "reboot", Command_System_Reboot,              0); // System.h
-      COMMAND_CASE(                 "reset", Command_Settings_Reset,             0); // Settings.h
-      COMMAND_CASE("resetflashwritecounter", Command_RTC_resetFlashWriteCounter, 0); // RTC.h
-      COMMAND_CASE(               "restart", Command_System_Restart,             0); // System.h
-      COMMAND_CASE(                 "rules", Command_Rules_UseRules,             1); // Rule.h
+      COMMAND_CASE(                "reboot", Command_System_Reboot,              0, VALUE_SOURCE_ALL); // System.h
+      COMMAND_CASE(                 "reset", Command_Settings_Reset,             0, VALUE_SOURCE_RESTRICTED); // Settings.h
+      COMMAND_CASE("resetflashwritecounter", Command_RTC_resetFlashWriteCounter, 0, VALUE_SOURCE_RESTRICTED); // RTC.h
+      COMMAND_CASE(               "restart", Command_System_Restart,             0, VALUE_SOURCE_ALL); // System.h
+      COMMAND_CASE(                 "rules", Command_Rules_UseRules,             1, VALUE_SOURCE_ALL); // Rule.h
       break;
     }
     case 's': {
-      COMMAND_CASE(       "save", Command_Settings_Save,   0); // Settings.h
+      COMMAND_CASE(       "save", Command_Settings_Save,   0, VALUE_SOURCE_RESTRICTED); // Settings.h
     #ifdef FEATURE_SD
-      COMMAND_CASE(     "sdcard", Command_SD_LS,           0); // SDCARDS.h
-      COMMAND_CASE(   "sdremove", Command_SD_Remove,       1); // SDCARDS.h
-        #endif // ifdef FEATURE_SD
+      COMMAND_CASE(     "sdcard", Command_SD_LS,           0, VALUE_SOURCE_RESTRICTED); // SDCARDS.h
+      COMMAND_CASE(   "sdremove", Command_SD_Remove,       1, VALUE_SOURCE_RESTRICTED); // SDCARDS.h
+    #endif // ifdef FEATURE_SD
     if (cmd_lc[1] == 'e') {
-      COMMAND_CASE(     "sendto", Command_UPD_SendTo,      2); // UDP.h    // FIXME TD-er: These send commands, can we determine the nr of
+      COMMAND_CASE(     "sendto", Command_UPD_SendTo,      2, VALUE_SOURCE_ALL); // UDP.h    // FIXME TD-er: These send commands, can we determine the nr of
                                                                // arguments?
-      COMMAND_CASE( "sendtohttp", Command_HTTP_SendToHTTP, 3); // HTTP.h
-      COMMAND_CASE(  "sendtoudp", Command_UDP_SendToUPD,   3); // UDP.h
-      COMMAND_CASE("serialfloat", Command_SerialFloat,     0); // Diagnostic.h
-      COMMAND_CASE(   "settings", Command_Settings_Print,  0); // Settings.h
-    }
-      COMMAND_CASE(     "subnet", Command_Subnet,          1); // Network Command
+      COMMAND_CASE( "sendtohttp", Command_HTTP_SendToHTTP, 3, VALUE_SOURCE_ALL); // HTTP.h
+      COMMAND_CASE(  "sendtoudp", Command_UDP_SendToUPD,   3, VALUE_SOURCE_ALL); // UDP.h
+      COMMAND_CASE("serialfloat", Command_SerialFloat,     0, VALUE_SOURCE_RESTRICTED); // Diagnostic.h
+      COMMAND_CASE(   "settings", Command_Settings_Print,  0, VALUE_SOURCE_RESTRICTED); // Settings.h
+      COMMAND_CASE(     "status", Command_GPIO_Status,          2, VALUE_SOURCE_ALL); // GPIO.h
+      COMMAND_CASE(     "subnet", Command_Subnet,          1, VALUE_SOURCE_RESTRICTED); // Network Command
     #ifdef USES_MQTT
-	    COMMAND_CASE(  "subscribe", Command_MQTT_Subscribe,  1);  // MQTT.h
+	    COMMAND_CASE(  "subscribe", Command_MQTT_Subscribe,  1, VALUE_SOURCE_ALL);  // MQTT.h
     #endif // USES_MQTT
-      COMMAND_CASE(    "sysload", Command_SysLoad,         0); // Diagnostic.h
+      COMMAND_CASE(    "sysload", Command_SysLoad,         0, VALUE_SOURCE_RESTRICTED); // Diagnostic.h
     }
       break;
     }
     case 't': {
     if (cmd_lc[1] == 'a') {
-      COMMAND_CASE(         "taskclear", Command_Task_Clear,          1); // Tasks.h
-      COMMAND_CASE(      "taskclearall", Command_Task_ClearAll,       0); // Tasks.h
-      COMMAND_CASE(           "taskrun", Command_Task_Run,            1); // Tasks.h
-      COMMAND_CASE(      "taskvalueset", Command_Task_ValueSet,       3); // Tasks.h
-      COMMAND_CASE(   "taskvaluetoggle", Command_Task_ValueToggle,    2); // Tasks.h
-      COMMAND_CASE("taskvaluesetandrun", Command_Task_ValueSetAndRun, 3); // Tasks.h
+      COMMAND_CASE(         "taskclear", Command_Task_Clear,          1, VALUE_SOURCE_RESTRICTED); // Tasks.h
+      COMMAND_CASE(      "taskclearall", Command_Task_ClearAll,       0, VALUE_SOURCE_RESTRICTED); // Tasks.h
+      COMMAND_CASE(           "taskrun", Command_Task_Run,            1, VALUE_SOURCE_ALL); // Tasks.h
+      COMMAND_CASE(      "taskvalueset", Command_Task_ValueSet,       3, VALUE_SOURCE_ALL); // Tasks.h
+      COMMAND_CASE(   "taskvaluetoggle", Command_Task_ValueToggle,    2, VALUE_SOURCE_ALL); // Tasks.h
+      COMMAND_CASE("taskvaluesetandrun", Command_Task_ValueSetAndRun, 3, VALUE_SOURCE_ALL); // Tasks.h
     } else if (cmd_lc[1] == 'i') {
-      COMMAND_CASE(        "timerpause", Command_Timer_Pause,         1); // Timers.h
-      COMMAND_CASE(       "timerresume", Command_Timer_Resume,        1); // Timers.h
-      COMMAND_CASE(          "timerset", Command_Timer_Set,           2); // Timers.h
-      COMMAND_CASE(          "timezone", Command_TimeZone,            1); // Time.h
+      COMMAND_CASE(        "timerpause", Command_Timer_Pause,         1, VALUE_SOURCE_ALL); // Timers.h
+      COMMAND_CASE(       "timerresume", Command_Timer_Resume,        1, VALUE_SOURCE_ALL); // Timers.h
+      COMMAND_CASE(          "timerset", Command_Timer_Set,           2, VALUE_SOURCE_ALL); // Timers.h
+      COMMAND_CASE(          "timezone", Command_TimeZone,            1, VALUE_SOURCE_RESTRICTED); // Time.h
     }
       break;
     }
     case 'u': {
-      COMMAND_CASE(  "udpport", Command_UDP_Port,      1); // UDP.h
-      COMMAND_CASE(  "udptest", Command_UDP_Test,      2); // UDP.h
-      COMMAND_CASE(     "unit", Command_Settings_Unit, 1); // Settings.h
-      COMMAND_CASE("unmonitor", Command_GPIO_UnMonitor,2); // GPIO.h
-      COMMAND_CASE(   "usentp", Command_useNTP,        1); // Time.h
+      COMMAND_CASE(  "udpport", Command_UDP_Port,      1, VALUE_SOURCE_RESTRICTED); // UDP.h
+      COMMAND_CASE(  "udptest", Command_UDP_Test,      2, VALUE_SOURCE_RESTRICTED); // UDP.h
+      COMMAND_CASE(     "unit", Command_Settings_Unit, 1, VALUE_SOURCE_RESTRICTED); // Settings.h
+      COMMAND_CASE("unmonitor", Command_GPIO_UnMonitor,2, VALUE_SOURCE_ALL); // GPIO.h
+      COMMAND_CASE(   "usentp", Command_useNTP,        1, VALUE_SOURCE_RESTRICTED); // Time.h
       break;
     }
     case 'w': {
-      COMMAND_CASE(      "wdconfig", Command_WD_Config,       3); // WD.h
-      COMMAND_CASE(        "wdread", Command_WD_Read,         2); // WD.h
+      COMMAND_CASE(      "wdconfig", Command_WD_Config,       3, VALUE_SOURCE_RESTRICTED); // WD.h
+      COMMAND_CASE(        "wdread", Command_WD_Read,         2, VALUE_SOURCE_RESTRICTED); // WD.h
     if (cmd_lc[1] == 'i') {
-      COMMAND_CASE(    "wifiapmode", Command_Wifi_APMode,     0); // WiFi.h
-      COMMAND_CASE(   "wificonnect", Command_Wifi_Connect,    0); // WiFi.h
-      COMMAND_CASE("wifidisconnect", Command_Wifi_Disconnect, 0); // WiFi.h
-      COMMAND_CASE(       "wifikey", Command_Wifi_Key,        1); // WiFi.h
-      COMMAND_CASE(      "wifikey2", Command_Wifi_Key2,       1); // WiFi.h
-      COMMAND_CASE(      "wifimode", Command_Wifi_Mode,       1); // WiFi.h
-      COMMAND_CASE(      "wifiscan", Command_Wifi_Scan,       0); // WiFi.h
-      COMMAND_CASE(      "wifissid", Command_Wifi_SSID,       1); // WiFi.h
-      COMMAND_CASE(     "wifissid2", Command_Wifi_SSID2,      1); // WiFi.h
-      COMMAND_CASE(   "wifistamode", Command_Wifi_STAMode,    0); // WiFi.h
+      COMMAND_CASE(    "wifiapmode", Command_Wifi_APMode,     0, VALUE_SOURCE_RESTRICTED); // WiFi.h
+      COMMAND_CASE(   "wificonnect", Command_Wifi_Connect,    0, VALUE_SOURCE_RESTRICTED); // WiFi.h
+      COMMAND_CASE("wifidisconnect", Command_Wifi_Disconnect, 0, VALUE_SOURCE_RESTRICTED); // WiFi.h
+      COMMAND_CASE(       "wifikey", Command_Wifi_Key,        1, VALUE_SOURCE_RESTRICTED); // WiFi.h
+      COMMAND_CASE(      "wifikey2", Command_Wifi_Key2,       1, VALUE_SOURCE_RESTRICTED); // WiFi.h
+      COMMAND_CASE(      "wifimode", Command_Wifi_Mode,       1, VALUE_SOURCE_RESTRICTED); // WiFi.h
+      COMMAND_CASE(      "wifiscan", Command_Wifi_Scan,       0, VALUE_SOURCE_RESTRICTED); // WiFi.h
+      COMMAND_CASE(      "wifissid", Command_Wifi_SSID,       1, VALUE_SOURCE_RESTRICTED); // WiFi.h
+      COMMAND_CASE(     "wifissid2", Command_Wifi_SSID2,      1, VALUE_SOURCE_RESTRICTED); // WiFi.h
+      COMMAND_CASE(   "wifistamode", Command_Wifi_STAMode,    0, VALUE_SOURCE_RESTRICTED); // WiFi.h
     }
       break;
     }

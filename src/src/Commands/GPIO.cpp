@@ -254,7 +254,7 @@ String Command_GPIO(struct EventStruct *event, const char* Line)
 		  mode = PIN_MODE_INPUT_PULLUP;
       switch (pluginID) {
         case PLUGIN_GPIO:
-          setGPIOPullupMode(event->Par1);
+          setInternalGPIOPullupMode(event->Par1);
           state = GPIO_Read_Switch_State(event->Par1, PIN_MODE_INPUT_PULLUP);
           break;
         case PLUGIN_MCP:
