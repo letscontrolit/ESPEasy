@@ -13,8 +13,12 @@
 #define PLUGIN_090
 #define PLUGIN_ID_090         90
 #define PLUGIN_NAME_090       "Mitsubishi Heat Pump"
-#define PLUGIN_VALUENAME1_090 "tx"
-#define PLUGIN_VALUENAME2_090 "rx"
+#define PLUGIN_VALUENAME1_090 "Power"
+#define PLUGIN_VALUENAME2_090 "Fan"
+#define PLUGIN_VALUENAME3_090 "Mode"
+#define PLUGIN_VALUENAME4_090 "Temperature"
+#define PLUGIN_VALUENAME5_090 "Air direction (vertical)"
+#define PLUGIN_VALUENAME6_090 "Air direction (horizontal)"
 
 //#define PLUGIN_xxx_DEBUG  false             //set to true for extra log info in the debug
 
@@ -103,7 +107,7 @@ boolean Plugin_090(byte function, struct EventStruct *event, String& string)
         //Device[deviceCount].PullUpOption = false;
         //Device[deviceCount].InverseLogicOption = false;
         //Device[deviceCount].FormulaOption = false;
-        Device[deviceCount].ValueCount = 2;
+        Device[deviceCount].ValueCount = 6;
         //Device[deviceCount].SendDataOption = false;
         //Device[deviceCount].TimerOption = false;
         //Device[deviceCount].TimerOptional = false;
@@ -125,6 +129,10 @@ boolean Plugin_090(byte function, struct EventStruct *event, String& string)
       //it allows to add a new row for each output variable of the plugin
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_090));
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], PSTR(PLUGIN_VALUENAME2_090));
+      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[2], PSTR(PLUGIN_VALUENAME3_090));
+      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[3], PSTR(PLUGIN_VALUENAME4_090));
+      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[4], PSTR(PLUGIN_VALUENAME5_090));
+      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[5], PSTR(PLUGIN_VALUENAME6_090));
       break;
     }
 
@@ -222,17 +230,16 @@ boolean Plugin_090(byte function, struct EventStruct *event, String& string)
 
 	case PLUGIN_EXIT:
 	{
-	  //perform cleanup tasks here. For example, free memory
-
+    clearPluginTaskData(event->TaskIndex);
+    success = true;
 	  break;
-
 	}
 
     case PLUGIN_ONCE_A_SECOND:
     {
       //code to be executed once a second. Tasks which do not require fast response can be added here
 
-      success = true;
+      //success = true;
 
     }
 
@@ -241,7 +248,7 @@ boolean Plugin_090(byte function, struct EventStruct *event, String& string)
       //code to be executed 10 times per second. Tasks which require fast response can be added here
       //be careful on what is added here. Heavy processing will result in slowing the module down!
 
-      success = true;
+      //success = true;
 
     }
   }   // switch
