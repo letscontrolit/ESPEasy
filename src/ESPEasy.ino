@@ -739,6 +739,12 @@ void run10TimesPerSecond() {
     PluginCall(PLUGIN_MONITOR, 0, dummy);
     STOP_TIMER(PLUGIN_CALL_10PSU);
   }
+  {
+    START_TIMER;
+    CPluginCall(CPLUGIN_TEN_PER_SECOND, 0, dummy);
+    STOP_TIMER(CPLUGIN_CALL_10PS);
+  }
+
   if (Settings.UseRules)
   {
     processNextEvent();
