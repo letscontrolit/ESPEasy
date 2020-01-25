@@ -14,6 +14,12 @@
    and how to address this plugin.
    The data structures containing the available plugins are addressed via a DeviceIndex.
 
+   We have:
+   - Plugin, like _P001_Switch.ino.
+   - Task   -> A selected instance of a Plugin (Tasks are shown in the web interface)
+   - Device -> A Plugin included in the build.
+   
+
    We have the following one-to-one relations:
    - Plugin_id_to_DeviceIndex  - Map from Plugin ID to Device Index.
    - DeviceIndex_to_Plugin_id  - Vector from DeviceIndex to Plugin ID.

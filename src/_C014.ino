@@ -521,9 +521,9 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
 
     case CPLUGIN_PROTOCOL_RECV:
       {
-        byte ControllerID = findFirstEnabledControllerWithId(CPLUGIN_ID_014);
+        controllerIndex_t ControllerID = findFirstEnabledControllerWithId(CPLUGIN_ID_014);
         bool validTopic = false;
-        if (ControllerID == CONTROLLER_MAX) {
+        if (!validControllerIndex(ControllerID)) {
           // Controller is not enabled.
           break;
         } else {

@@ -1,5 +1,7 @@
 #ifdef WEBSERVER_CONTROLLERS
 
+#include "src/Globals/CPlugins.h"
+
 // ********************************************************************************
 // Web Interface controller page
 // ********************************************************************************
@@ -51,12 +53,14 @@ void handle_controllers() {
 
     if (mustInit) {
       // Init controller plugin using the new settings.
-      byte ProtocolIndex = getProtocolIndex(Settings.Protocol[controllerindex]);
-      struct EventStruct TempEvent;
-      TempEvent.ControllerIndex = controllerindex;
-      TempEvent.ProtocolIndex   = ProtocolIndex;
-      String dummy;
-      CPluginCall(ProtocolIndex, CPLUGIN_INIT, &TempEvent, dummy);
+      protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(controllerindex);
+      if (validProtocolIndex(ProtocolIndex)) {
+        struct EventStruct TempEvent;
+        TempEvent.ControllerIndex = controllerindex;
+        TempEvent.ProtocolIndex   = ProtocolIndex;
+        String dummy;
+        CPluginCall(ProtocolIndex, CPLUGIN_INIT, &TempEvent, dummy);
+      }
     }
   }
 
@@ -83,7 +87,10 @@ void handle_controllers_clearLoadDefaults(byte controllerindex, ControllerSettin
 {
   // Protocol has changed and it was not an empty one.
   // reset (some) default-settings
-  byte ProtocolIndex = getProtocolIndex(Settings.Protocol[controllerindex]);
+  protocolIndex_t ProtocolIndex = getProtocolIndex(Settings.Protocol[controllerindex]);
+  if (!validProtocolIndex(ProtocolIndex)) {
+    return;
+  }
 
   ControllerSettings.reset();
   ControllerSettings.Port = Protocol[ProtocolIndex].defaultPort;
@@ -121,14 +128,16 @@ void handle_controllers_CopySubmittedSettings(byte controllerindex, ControllerSe
     saveControllerParameterForm(ControllerSettings, controllerindex, parameterIdx);
   }
 
-  byte ProtocolIndex = getProtocolIndex(Settings.Protocol[controllerindex]);
-  struct EventStruct TempEvent;
-  TempEvent.ControllerIndex = controllerindex;
-  TempEvent.ProtocolIndex   = ProtocolIndex;
+  protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(controllerindex);
+  if (validProtocolIndex(ProtocolIndex)) {
+    struct EventStruct TempEvent;
+    TempEvent.ControllerIndex = controllerindex;
+    TempEvent.ProtocolIndex   = ProtocolIndex;
 
-  // Call controller plugin to save CustomControllerSettings
-  String dummy;
-  CPluginCall(ProtocolIndex, CPLUGIN_WEBFORM_SAVE, &TempEvent, dummy);
+    // Call controller plugin to save CustomControllerSettings
+    String dummy;
+    CPluginCall(ProtocolIndex, CPLUGIN_WEBFORM_SAVE, &TempEvent, dummy);
+  }
 }
 
 // ********************************************************************************
@@ -147,27 +156,41 @@ void handle_controllers_ShowAllControllersTable()
 
   MakeControllerSettings(ControllerSettings);
 
-  for (byte x = 0; x < CONTROLLER_MAX; x++)
+  for (controllerIndex_t x = 0; x < CONTROLLER_MAX; x++)
   {
+    const bool cplugin_set = Settings.Protocol[x] != INVALID_C_PLUGIN_ID;
+
+
+
     LoadControllerSettings(x, ControllerSettings);
     html_TR_TD();
-    html_add_button_prefix();
+    if (cplugin_set && !supportedCPluginID(Settings.Protocol[x])) {
+      html_add_button_prefix(F("red"), true);
+    } else {
+      html_add_button_prefix();
+    }    
     TXBuffer += F("controllers?index=");
     TXBuffer += x + 1;
-    TXBuffer += F("'>Edit</a>");
+    TXBuffer += F("'>");
+    if (cplugin_set) {
+      TXBuffer += F("Edit");
+    } else {
+      TXBuffer += F("Add");
+    }
+    TXBuffer += F("</a>");
     html_TD();
     TXBuffer += getControllerSymbol(x);
     html_TD();
 
-    if (Settings.Protocol[x] != 0)
+    if (cplugin_set)
     {
       addEnabled(Settings.ControllerEnabled[x]);
 
       html_TD();
-      byte ProtocolIndex = getProtocolIndex(Settings.Protocol[x]);
-      TXBuffer += getCPluginNameFromProtocolIndex(ProtocolIndex);
+      TXBuffer += getCPluginNameFromCPluginID(Settings.Protocol[x]);
       html_TD();
       {
+        const protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(x);
         String hostDescription;
         CPluginCall(ProtocolIndex, CPLUGIN_WEBFORM_SHOW_HOST_CONFIG, 0, hostDescription);
 
@@ -192,8 +215,12 @@ void handle_controllers_ShowAllControllersTable()
 // ********************************************************************************
 // Show the controller settings page
 // ********************************************************************************
-void handle_controllers_ControllerSettingsPage(byte controllerindex)
+void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex)
 {
+  if (!validControllerIndex(controllerindex)) {
+    return;
+  }
+
   // Show controller settings page
   html_table_class_normal();
   addFormHeader(F("Controller Settings"));
@@ -215,12 +242,12 @@ void handle_controllers_ControllerSettingsPage(byte controllerindex)
 
   addHelpButton(F("EasyProtocols"));
 
+  const protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(controllerindex);
+
   if (Settings.Protocol[controllerindex])
   {
     MakeControllerSettings(ControllerSettings);
     LoadControllerSettings(controllerindex, ControllerSettings);
-
-    byte ProtocolIndex = getProtocolIndex(Settings.Protocol[controllerindex]);
 
     if (!Protocol[ProtocolIndex].Custom)
     {

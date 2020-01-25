@@ -71,23 +71,16 @@ bool safeReadStringUntil(Stream     & input,
   return false;
 }
 
-bool valid_controller_number(int controller_number) {
-  if (controller_number < 0) { return false; }
-  return true;
-
-  //  return getProtocolIndex(controller_number) <= protocolCount;
-}
-
-String get_formatted_Controller_number(int controller_number) {
-  if (!valid_controller_number(controller_number)) {
+String get_formatted_Controller_number(cpluginID_t cpluginID) {
+  if (!validCPluginID(cpluginID)) {
     return F("C---");
   }
   String result = F("C");
 
-  if (controller_number < 100) { result += '0'; }
+  if (cpluginID < 100) { result += '0'; }
 
-  if (controller_number < 10) { result += '0'; }
-  result += controller_number;
+  if (cpluginID < 10) { result += '0'; }
+  result += cpluginID;
   return result;
 }
 
@@ -108,7 +101,7 @@ String get_auth_header(const String& user, const String& pass) {
 String get_auth_header(int controller_index) {
   String authHeader = "";
 
-  if (controller_index < CONTROLLER_MAX) {
+  if (validControllerIndex(controller_index)) {
     if ((SecuritySettings.ControllerUser[controller_index][0] != 0) &&
         (SecuritySettings.ControllerPassword[controller_index][0] != 0))
     {

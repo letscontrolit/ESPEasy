@@ -125,8 +125,9 @@ boolean Plugin_088(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
       {
         // We need the index of the controller we are: 0-CONTROLLER_MAX
-        byte controllerNr = 0;
-          for (byte i=0; i < CONTROLLER_MAX; i++)
+        // FIXME TD-er: Why looking for Domoticz MQTT? Other plugins also support IDX values.
+        controllerIndex_t controllerNr = 0;
+          for (controllerIndex_t i=0; i < CONTROLLER_MAX; i++)
           {
             if (Settings.Protocol[i] == 2) { controllerNr = i; }
           }

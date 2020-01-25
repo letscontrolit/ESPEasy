@@ -383,7 +383,7 @@ byte disablePlugin(byte bootFailedCount) {
    Disable Controller, based on bootFailedCount
  \*********************************************************************************************/
 byte disableController(byte bootFailedCount) {
-  for (byte i = 0; i < CONTROLLER_MAX && bootFailedCount > 0; ++i) {
+  for (controllerIndex_t i = 0; i < CONTROLLER_MAX && bootFailedCount > 0; ++i) {
     if (Settings.ControllerEnabled[i]) {
       --bootFailedCount;
 

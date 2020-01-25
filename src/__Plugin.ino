@@ -1,9 +1,13 @@
 #include "src/Globals/Device.h"
+#include "src/Globals/GlobalMapPortStatus.h"
 #include "src/Globals/Plugins.h"
+#include "src/Globals/Settings.h"
 
+#include "src/DataStructs/ESPEasy_EventStruct.h"
 #include "src/DataStructs/TimingStats.h"
 
 #include "ESPEasy_common.h"
+#include "ESPEasy_plugindefs.h"
 
 
 // ********************************************************************************
@@ -38,7 +42,7 @@ void PluginInit(void)
   {
     Plugin_ptr[x] = nullptr;
     DeviceIndex_to_Plugin_id[x] = INVALID_PLUGIN_ID;
-    Plugin_id_to_DeviceIndex[x] = INVALID_DEVICE_INDEX;
+    // Do not initialize Plugin_id_to_DeviceIndex[x] to an invalid value. (it is map)
   }
   int x = 0; // Used in ADDPLUGIN macro
 

@@ -30,7 +30,11 @@ boolean (*Plugin_ptr[PLUGIN_MAX])(byte,
 
 
 bool validDeviceIndex(deviceIndex_t index) {
-  return index < PLUGIN_MAX;
+  if (index < PLUGIN_MAX) {
+    const pluginID_t pluginID = DeviceIndex_to_Plugin_id[index];
+    return pluginID != INVALID_PLUGIN_ID;
+  }
+  return false;
 }
 
 bool validTaskIndex(taskIndex_t index) {
@@ -38,7 +42,11 @@ bool validTaskIndex(taskIndex_t index) {
 }
 
 bool validPluginID(pluginID_t pluginID) {
-  return pluginID != 0;
+  if (pluginID == INVALID_PLUGIN_ID) {
+    return false;
+  }
+  auto it = Plugin_id_to_DeviceIndex.find(pluginID);
+  return (it != Plugin_id_to_DeviceIndex.end());
 }
 
 bool validUserVarIndex(userVarIndex_t index) {

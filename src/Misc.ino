@@ -1188,7 +1188,7 @@ void ResetFactory()
     Settings.TaskDevicePin3[x] = -1;
     Settings.TaskDevicePin1PullUp[x] = true;
     Settings.TaskDevicePin1Inversed[x] = false;
-    for (byte y = 0; y < CONTROLLER_MAX; y++)
+    for (controllerIndex_t y = 0; y < CONTROLLER_MAX; y++)
       Settings.TaskDeviceSendData[y][x] = true;
     Settings.TaskDeviceTimer[x] = Settings.Delay;
   }

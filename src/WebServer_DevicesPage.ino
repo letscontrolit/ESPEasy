@@ -2,6 +2,7 @@
 
 #include "src/Globals/Nodes.h"
 #include "src/Globals/Device.h"
+#include "src/Globals/CPlugins.h"
 #include "src/Globals/Plugins.h"
 #include "src/Static/WebStaticData.h"
 
@@ -65,7 +66,7 @@ void handle_devices() {
   //   taskdevicevaluedecimals[varNr] = WebServer.arg(argc);
   // }
 
-  // for (byte controllerNr = 0; controllerNr < CONTROLLER_MAX; controllerNr++)
+  // for (controllerIndex_t controllerNr = 0; controllerNr < CONTROLLER_MAX; controllerNr++)
   // {
   //   char argc[25];
   //   String arg = F("TDID");
@@ -232,7 +233,7 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
   Settings.TaskDevicePort[taskIndex] = getFormItemInt(F("TDP"), 0);
   update_whenset_FormItemInt(F("remoteFeed"), Settings.TaskDeviceDataFeed[taskIndex]);
 
-  for (byte controllerNr = 0; controllerNr < CONTROLLER_MAX; controllerNr++)
+  for (controllerIndex_t controllerNr = 0; controllerNr < CONTROLLER_MAX; controllerNr++)
   {
     Settings.TaskDeviceID[controllerNr][taskIndex]       = getFormItemInt(String(F("TDID")) + (controllerNr + 1));
     Settings.TaskDeviceSendData[controllerNr][taskIndex] = isFormItemChecked(String(F("TDSD")) + (controllerNr + 1));
@@ -280,14 +281,14 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
   }
 
   // notify controllers: CPLUGIN_TASK_CHANGE_NOTIFICATION
-  for (byte x = 0; x < CONTROLLER_MAX; x++)
+  for (controllerIndex_t x = 0; x < CONTROLLER_MAX; x++)
   {
     TempEvent.ControllerIndex = x;
 
     if (Settings.TaskDeviceSendData[TempEvent.ControllerIndex][TempEvent.TaskIndex] &&
         Settings.ControllerEnabled[TempEvent.ControllerIndex] && Settings.Protocol[TempEvent.ControllerIndex])
     {
-      TempEvent.ProtocolIndex = getProtocolIndex(Settings.Protocol[TempEvent.ControllerIndex]);
+      TempEvent.ProtocolIndex = getProtocolIndex_from_ControllerIndex(TempEvent.ControllerIndex);
       String dummy;
       CPluginCall(TempEvent.ProtocolIndex, CPLUGIN_TASK_CHANGE_NOTIFICATION, &TempEvent, dummy);
     }
@@ -344,12 +345,11 @@ void handle_devicess_ShowAllTasksTable(byte page)
   for (byte x = (page - 1) * TASKS_PER_PAGE; x < ((page) * TASKS_PER_PAGE) && validTaskIndex(x); x++)
   {
     const deviceIndex_t DeviceIndex      = getDeviceIndex_from_TaskIndex(x);
-    const bool pluginID_set              = validPluginID(Settings.TaskDeviceNumber[x]);
-    const bool pluginID_set_notsupported = pluginID_set && !validDeviceIndex(DeviceIndex);
+    const bool pluginID_set              = INVALID_PLUGIN_ID != Settings.TaskDeviceNumber[x];
 
     html_TR_TD();
 
-    if (pluginID_set_notsupported) {
+    if (pluginID_set && !supportedPluginID(Settings.TaskDeviceNumber[x])) {
       html_add_button_prefix(F("red"), true);
     } else {
       html_add_button_prefix();
@@ -426,28 +426,28 @@ void handle_devicess_ShowAllTasksTable(byte page)
         {
           boolean doBR = false;
 
-          for (byte controllerNr = 0; controllerNr < CONTROLLER_MAX; controllerNr++)
+          for (controllerIndex_t controllerNr = 0; controllerNr < CONTROLLER_MAX; controllerNr++)
           {
-            byte ProtocolIndex = getProtocolIndex(Settings.Protocol[controllerNr]);
-
             if (Settings.TaskDeviceSendData[controllerNr][x])
             {
               if (doBR) {
                 TXBuffer += F("<BR>");
               }
               TXBuffer += getControllerSymbol(controllerNr);
+              protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(controllerNr);
+              if (validProtocolIndex(ProtocolIndex)) {
+                if (Protocol[ProtocolIndex].usesID && (Settings.Protocol[controllerNr] != 0))
+                {
+                  TXBuffer += " (";
+                  TXBuffer += Settings.TaskDeviceID[controllerNr][x];
+                  TXBuffer += ')';
 
-              if (Protocol[ProtocolIndex].usesID && (Settings.Protocol[controllerNr] != 0))
-              {
-                TXBuffer += " (";
-                TXBuffer += Settings.TaskDeviceID[controllerNr][x];
-                TXBuffer += ')';
-
-                if (Settings.TaskDeviceID[controllerNr][x] == 0) {
-                  TXBuffer += F(" " HTML_SYMBOL_WARNING);
+                  if (Settings.TaskDeviceID[controllerNr][x] == 0) {
+                    TXBuffer += F(" " HTML_SYMBOL_WARNING);
+                  }
                 }
+                doBR = true;
               }
-              doBR = true;
             }
           }
         }
@@ -656,7 +656,7 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, byte page)
     {
       addFormSubHeader(F("Data Acquisition"));
 
-      for (byte controllerNr = 0; controllerNr < CONTROLLER_MAX; controllerNr++)
+      for (controllerIndex_t controllerNr = 0; controllerNr < CONTROLLER_MAX; controllerNr++)
       {
         if (Settings.Protocol[controllerNr] != 0)
         {
@@ -668,14 +668,15 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, byte page)
           html_TD();
           addCheckBox(id, Settings.TaskDeviceSendData[controllerNr][taskIndex]);
 
-          byte ProtocolIndex = getProtocolIndex(Settings.Protocol[controllerNr]);
-
-          if (Protocol[ProtocolIndex].usesID && (Settings.Protocol[controllerNr] != 0))
-          {
-            addRowLabel(F("IDX"));
-            id  = F("TDID"); // ="taskdeviceid"
-            id += controllerNr + 1;
-            addNumericBox(id, Settings.TaskDeviceID[controllerNr][taskIndex], 0, DOMOTICZ_MAX_IDX);
+          protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(controllerNr);
+          if (validProtocolIndex(ProtocolIndex)) {
+            if (Protocol[ProtocolIndex].usesID && (Settings.Protocol[controllerNr] != 0))
+            {
+              addRowLabel(F("IDX"));
+              id  = F("TDID"); // ="taskdeviceid"
+              id += controllerNr + 1;
+              addNumericBox(id, Settings.TaskDeviceID[controllerNr][taskIndex], 0, DOMOTICZ_MAX_IDX);
+            }
           }
         }
       }

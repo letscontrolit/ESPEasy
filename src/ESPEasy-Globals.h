@@ -257,7 +257,6 @@ struct pinStatesStruct
 
 
 
-extern int protocolCount;
 extern int notificationCount;
 
 extern boolean printToWeb;
@@ -314,9 +313,6 @@ extern float vcc;
 extern boolean WebLoggedIn;
 extern int WebLoggedInTimer;
 
-
-extern bool (*CPlugin_ptr[CPLUGIN_MAX])(byte, struct EventStruct*, String&);
-extern byte CPlugin_id[CPLUGIN_MAX];
 
 extern boolean (*NPlugin_ptr[NPLUGIN_MAX])(byte, struct EventStruct*, String&);
 extern byte NPlugin_id[NPLUGIN_MAX];

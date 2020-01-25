@@ -199,7 +199,7 @@ void handle_json()
       if (showDataAcquisition) {
         TXBuffer += F("\"DataAcquisition\": [\n");
 
-        for (byte x = 0; x < CONTROLLER_MAX; x++)
+        for (controllerIndex_t x = 0; x < CONTROLLER_MAX; x++)
         {
           TXBuffer += '{';
           stream_next_json_object_value(F("Controller"), String(x + 1));
@@ -309,7 +309,7 @@ void handle_buildinfo() {
     json_open(true, F("controllers"));
 
     for (byte x = 0; x < CPLUGIN_MAX; x++) {
-      if (CPlugin_id[x] != 0) {
+      if (ProtocolIndex_to_CPlugin_id[x] != 0) {
         json_open();
         json_number(F("id"), String(x + 1));
         json_prop(F("name"), getCPluginNameFromProtocolIndex(x));

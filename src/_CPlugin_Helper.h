@@ -2,6 +2,7 @@
 #define CPLUGIN_HELPER_H CPLUGIN_HELPER_H
 
 #include <Arduino.h>
+#include "src/Globals/CPlugins.h"
 
 struct ControllerSettingsStruct;
 class WiFiUDP;
@@ -16,9 +17,7 @@ bool safeReadStringUntil(Stream     & input,
                          unsigned int maxSize = 1024,
                          unsigned int timeout = 1000);
 
-bool valid_controller_number(int controller_number);
-
-String get_formatted_Controller_number(int controller_number);
+String get_formatted_Controller_number(cpluginID_t cpluginID);
 
 String get_auth_header(const String& user, const String& pass);
 

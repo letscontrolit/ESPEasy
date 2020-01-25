@@ -57,14 +57,17 @@
 #define CPLUGIN_UDP_IN                     51
 #define CPLUGIN_FLUSH                      52 // Force offloading data stored in buffers, called before sleep/reboot
 #define CPLUGIN_TEN_PER_SECOND             53 // Called 10x per second (typical for checking new data instead of waiting)
+#define CPLUGIN_INIT_ALL                   54
+#define CPLUGIN_EXIT                       55
+
 
 // new messages for autodiscover controller plugins (experimental) i.e. C014
-#define CPLUGIN_GOT_CONNECTED              54 // call after connected to mqtt server to publich device autodicover features
-#define CPLUGIN_GOT_INVALID                55 // should be called before major changes i.e. changing the device name to clean up data on the controller. !ToDo
-#define CPLUGIN_INTERVAL                   56 // call every interval loop
-#define CPLUGIN_ACKNOWLEDGE                57 // call for sending acknowledges !ToDo done by direct function call in PluginCall() for now.
+#define CPLUGIN_GOT_CONNECTED              56 // call after connected to mqtt server to publich device autodicover features
+#define CPLUGIN_GOT_INVALID                57 // should be called before major changes i.e. changing the device name to clean up data on the controller. !ToDo
+#define CPLUGIN_INTERVAL                   58 // call every interval loop
+#define CPLUGIN_ACKNOWLEDGE                59 // call for sending acknowledges !ToDo done by direct function call in PluginCall() for now.
 
-#define CPLUGIN_WEBFORM_SHOW_HOST_CONFIG   58 // Used for showing host information for the controller.
+#define CPLUGIN_WEBFORM_SHOW_HOST_CONFIG   60 // Used for showing host information for the controller.
 
 
 

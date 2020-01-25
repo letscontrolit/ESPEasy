@@ -283,7 +283,7 @@ void C013_Receive(struct EventStruct *event) {
           Settings.TaskDeviceNumber[infoReply.destTaskIndex]   = infoReply.deviceNumber;
           Settings.TaskDeviceDataFeed[infoReply.destTaskIndex] = infoReply.sourcelUnit; // remote feed store unit nr sending the data
 
-          for (byte x = 0; x < CONTROLLER_MAX; x++) {
+          for (controllerIndex_t x = 0; x < CONTROLLER_MAX; x++) {
             Settings.TaskDeviceSendData[x][infoReply.destTaskIndex] = false;
           }
           strcpy(ExtraTaskSettings.TaskDeviceName, infoReply.taskName);

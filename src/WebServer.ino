@@ -4,6 +4,7 @@
 
 #include <WString.h>
 
+#include "src/Globals/CPlugins.h"
 #include "src/Globals/Device.h"
 #include "src/Static/WebStaticData.h"
 
@@ -740,11 +741,10 @@ void getErrorNotifications() {
   // Check number of MQTT controllers active.
   int nrMQTTenabled = 0;
 
-  for (byte x = 0; x < CONTROLLER_MAX; x++) {
+  for (controllerIndex_t x = 0; x < CONTROLLER_MAX; x++) {
     if (Settings.Protocol[x] != 0) {
-      byte ProtocolIndex = getProtocolIndex(Settings.Protocol[x]);
-
-      if (Settings.ControllerEnabled[x] && Protocol[ProtocolIndex].usesMQTT) {
+      protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(x);
+      if (validProtocolIndex(ProtocolIndex) && Settings.ControllerEnabled[x] && Protocol[ProtocolIndex].usesMQTT) {
         ++nrMQTTenabled;
       }
     }
