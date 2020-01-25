@@ -99,7 +99,7 @@ bool HeatPump::connect(ESPeasySerial *serial, bool retry) {
   }
 
   // settle before we start sending packets
-  delay(2000);
+  //delay(2000);
 
   // send the CONNECT packet twice - need to copy the CONNECT packet locally
   byte packet[CONNECT_LEN];
@@ -174,7 +174,7 @@ heatpumpSettings HeatPump::getSettings() {
   return currentSettings;
 }
 
-bool HeatPump::isConnected() {
+bool HeatPump::isConnected() const {
   return connected;
 }
 
@@ -187,7 +187,7 @@ void HeatPump::setSettings(heatpumpSettings settings) {
   setWideVaneSetting(settings.wideVane);
 }
 
-bool HeatPump::getPowerSettingBool() {
+bool HeatPump::getPowerSettingBool() const {
   return currentSettings.power == POWER_MAP[1] ? true : false;
 }
 
@@ -221,7 +221,7 @@ void HeatPump::setModeSetting(const char* setting) {
   }
 }
 
-float HeatPump::getTemperature() {
+float HeatPump::getTemperature() const {
   return currentSettings.temperature;
 }
 
@@ -315,7 +315,7 @@ heatpumpStatus HeatPump::getStatus() {
   return currentStatus;
 }
 
-float HeatPump::getRoomTemperature() {
+float HeatPump::getRoomTemperature() const {
   return currentStatus.roomTemperature;
 }
 

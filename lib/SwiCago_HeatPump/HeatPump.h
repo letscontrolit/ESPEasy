@@ -201,12 +201,12 @@ class HeatPump
     heatpumpSettings getSettings();
     void setSettings(heatpumpSettings settings);
     void setPowerSetting(bool setting);
-    bool getPowerSettingBool();
+    bool getPowerSettingBool() const;
     const char* getPowerSetting();
     void setPowerSetting(const char* setting);
     const char* getModeSetting();
     void setModeSetting(const char* setting);
-    float getTemperature();
+    float getTemperature() const;
     void setTemperature(float setting);
     void setRemoteTemperature(float setting);
     const char* getFanSpeed();
@@ -219,9 +219,9 @@ class HeatPump
 
     // status
     heatpumpStatus getStatus();
-    float getRoomTemperature();
+    float getRoomTemperature() const;
     bool getOperating();
-    bool isConnected();
+    bool isConnected() const;
 
     // helpers
     float FahrenheitToCelsius(int tempF);

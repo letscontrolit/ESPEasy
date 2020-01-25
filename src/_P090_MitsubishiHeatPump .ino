@@ -13,196 +13,141 @@
 #define PLUGIN_090
 #define PLUGIN_ID_090         90
 #define PLUGIN_NAME_090       "Mitsubishi Heat Pump"
-#define PLUGIN_VALUENAME1_090 "Power"
-#define PLUGIN_VALUENAME2_090 "Fan"
-#define PLUGIN_VALUENAME3_090 "Mode"
-#define PLUGIN_VALUENAME4_090 "Temperature"
-#define PLUGIN_VALUENAME5_090 "Air direction (vertical)"
-#define PLUGIN_VALUENAME6_090 "Air direction (horizontal)"
+#define PLUGIN_VALUENAME1_090 "Room-Temperature"
+#define PLUGIN_VALUENAME2_090 "Power"
+#define PLUGIN_VALUENAME3_090 "Temperature"
+#define PLUGIN_VALUENAME4_090 "Fan"
+//#define PLUGIN_VALUENAME3_090 "Fan"
+//#define PLUGIN_VALUENAME4_090 "Mode"
+//#define PLUGIN_VALUENAME5_090 "Vane-Vertical"
+//#define PLUGIN_VALUENAME6_090 "Vane-Horizontal"
+//#define PLUGIN_VALUENAME7_090 "Set-Temperature"
 
 //#define PLUGIN_xxx_DEBUG  false             //set to true for extra log info in the debug
 
-/*
-PIN/port configuration is stored in the following:
-CONFIG_PIN1 - The first GPIO pin selected within the task
-CONFIG_PIN2 - The second GPIO pin selected within the task
-CONFIG_PIN3 - The third GPIO pin selected within the task
-CONFIG_PORT - The port in case the device has multiple in/out pins
-
-Custom configuration is stored in the following:
-PCONFIG(x)
-x can be between 1 - 8 and can store values between -32767 - 32768 (16 bit)
-
-N.B. these are aliases for a longer less readable amount of code. See _Plugin_Helper.h
-
-*/
-
 struct P090_data_struct : public PluginTaskData_base {
-  P090_data_struct() : _heatPump(nullptr), _serial(nullptr) {}
+  P090_data_struct(const int16_t serialRx, const int16_t serialTx);
 
-  ~P090_data_struct() {
-    reset();
-  }
+  void init();
+  void sync();
 
-  void reset() {
-    delete _heatPump;
-    delete _serial;
-    _heatPump = nullptr;
-    _serial = nullptr;
-  }
-
-  bool init(const int16_t serial_rx, const int16_t serial_tx) {
-    if ((serial_rx < 0) && (serial_tx < 0)) {
-      return false;
-    }
-
-    reset();
-
-    _serial = new ESPeasySerial(serial_rx, serial_tx);
-    if (_serial == nullptr) {
-      return false;
-    }
-
-    _heatPump = new HeatPump();
-    if (_heatPump == nullptr || _heatPump->connect(_serial) == false) {
-      reset();
-      return false;
-    }
-
-    return true;
-  }
-
-  bool isInitialized() const {
-    return _heatPump != nullptr;
-  }
+  float roomTemperature() const;
+  float powerSetting() const;
+  float temperature() const;
+  bool isConnected() const;
 
 private:
-  HeatPump *_heatPump;
-  ESPeasySerial *_serial;
-  /*String         sentence_part;
-  uint16_t       max_length               = 550;
-  uint32_t       sentences_received       = 0;
-  uint32_t       sentences_received_error = 0;
-  uint32_t       length_last_received     = 0;*/
+  ESPeasySerial _serial;
+  HeatPump _heatPump;
 };
 
-boolean Plugin_090(byte function, struct EventStruct *event, String& string)
-{
-  //function: reason the plugin was called
-  //event: ??add description here??
-  // string: ??add description here??
-
+boolean Plugin_090(byte function, struct EventStruct *event, String& string) {
   boolean success = false;
 
-  switch (function)
-  {
-    case PLUGIN_DEVICE_ADD:
-    {
-        //This case defines the device characteristics, edit appropriately
+  switch (function) {
+
+    case PLUGIN_DEVICE_ADD: {
+
+      addLog(LOG_LEVEL_INFO, F("MHP - ADD"));
+
 
         Device[++deviceCount].Number = PLUGIN_ID_090;
-        Device[deviceCount].Type = DEVICE_TYPE_SINGLE;  //how the device is connected
+        Device[deviceCount].Type = DEVICE_TYPE_DUAL;
         //Device[deviceCount].VType = SENSOR_TYPE_SWITCH; //type of value the plugin will return, used only for Domoticz
         //Device[deviceCount].Ports = 0;
         //Device[deviceCount].PullUpOption = false;
         //Device[deviceCount].InverseLogicOption = false;
-        //Device[deviceCount].FormulaOption = false;
-        Device[deviceCount].ValueCount = 6;
-        //Device[deviceCount].SendDataOption = false;
-        //Device[deviceCount].TimerOption = false;
+        Device[deviceCount].FormulaOption = true;
+        Device[deviceCount].ValueCount = 4;
+        Device[deviceCount].SendDataOption = true;
+        Device[deviceCount].TimerOption = true;
         //Device[deviceCount].TimerOptional = false;
-        //Device[deviceCount].GlobalSyncOption = true;
-        //Device[deviceCount].DecimalsOnly = true;
+        Device[deviceCount].GlobalSyncOption = true;
+        Device[deviceCount].DecimalsOnly = true;
         break;
     }
 
-    case PLUGIN_GET_DEVICENAME:
-    {
-      //return the device name
+    case PLUGIN_GET_DEVICENAME: {
       string = F(PLUGIN_NAME_090);
       break;
     }
 
-    case PLUGIN_GET_DEVICEVALUENAMES:
-    {
-      //called when the user opens the module configuration page
-      //it allows to add a new row for each output variable of the plugin
+    case PLUGIN_GET_DEVICEVALUENAMES: {
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_090));
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], PSTR(PLUGIN_VALUENAME2_090));
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[2], PSTR(PLUGIN_VALUENAME3_090));
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[3], PSTR(PLUGIN_VALUENAME4_090));
-      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[4], PSTR(PLUGIN_VALUENAME5_090));
-      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[5], PSTR(PLUGIN_VALUENAME6_090));
       break;
     }
 
-    case PLUGIN_GET_DEVICEGPIONAMES:
-    {
+    case PLUGIN_GET_DEVICEGPIONAMES: {
       serialHelper_getGpioNames(event);
       break;
     }
 
-    case PLUGIN_WEBFORM_SHOW_CONFIG:
-    {
+    case PLUGIN_WEBFORM_SHOW_CONFIG: {
       string += serialHelper_getSerialTypeLabel(event);
       success = true;
       break;
     }
 
-    case PLUGIN_WEBFORM_LOAD:
-    {
+    case PLUGIN_WEBFORM_LOAD: {
       serialHelper_webformLoad(event);
       success = true;
       break;
     }
 
-    case PLUGIN_WEBFORM_SAVE:
-    {
+    case PLUGIN_WEBFORM_SAVE: {
       serialHelper_webformSave(event);
       success = true;
       break;
-
     }
-    case PLUGIN_INIT:
-    {
-      const int16_t serial_rx = CONFIG_PIN1;
-      const int16_t serial_tx = CONFIG_PIN2;
 
-      initPluginTaskData(event->TaskIndex, new P090_data_struct());
-      P090_data_struct *P090_data = static_cast<P090_data_struct *>(getPluginTaskData(event->TaskIndex));
+    case PLUGIN_INIT: {
+      const int16_t serialRx = CONFIG_PIN1;
+      const int16_t serialTx = CONFIG_PIN2;
 
-      if (nullptr == P090_data) {
+      addLog(LOG_LEVEL_INFO, F("MHP - init"));
+
+      P090_data_struct* heatPump = new P090_data_struct(serialRx, serialTx);
+      if (heatPump == nullptr) {
         return success;
       }
 
-      if (P090_data->init(serial_rx, serial_tx)) {
-        success = true;
-        if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-          String log = F("Mitsubishi HP: Init OK ESP GPIO-pin RX:");
-          log += serial_rx;
-          log += F(" TX:");
-          log += serial_tx;
-          addLog(LOG_LEVEL_DEBUG, log);
-        }
-      } else {
-        clearPluginTaskData(event->TaskIndex);
-      }
+      addLog(LOG_LEVEL_INFO, F("MHP - init 1"));
+
+      initPluginTaskData(event->TaskIndex, heatPump);
+      heatPump->init();
+      success = true;
+
       break;
     }
 
-    case PLUGIN_READ:
-    {
-      //code to be executed to read data
-      //It is executed according to the delay configured on the device configuration page, only once
+    case PLUGIN_READ: {
+      addLog(LOG_LEVEL_INFO, F("MHP - plugin read"));
 
-      //after the plugin has read data successfuly, set success and break
+      P090_data_struct* heatPump = static_cast<P090_data_struct *>(getPluginTaskData(event->TaskIndex));
+      if (heatPump == nullptr) {
+        return success;
+      }
+
+      if (heatPump->isConnected()) {
+        UserVar[event->BaseVarIndex] = heatPump->roomTemperature();
+        UserVar[event->BaseVarIndex + 1] = heatPump->powerSetting();
+        UserVar[event->BaseVarIndex + 2] = heatPump->temperature();
+        UserVar[event->BaseVarIndex + 3] = heatPump->isConnected() ? 1 : 0;  // TODO: remove
+      } else {
+        UserVar[event->BaseVarIndex] = NAN;
+        UserVar[event->BaseVarIndex + 1] = NAN;
+        UserVar[event->BaseVarIndex + 2] = NAN;
+        UserVar[event->BaseVarIndex + 3] = NAN;
+      }
+
       success = true;
       break;
-
     }
 
-    case PLUGIN_WRITE:
-    {
+    case PLUGIN_WRITE: {
       //this case defines code to be executed when the plugin executes an action (command).
       //Commands can be accessed via rules or via http.
       //As an example, http://192.168.1.12//control?cmd=dothis
@@ -228,39 +173,65 @@ boolean Plugin_090(byte function, struct EventStruct *event, String& string)
        break;
     }
 
-	case PLUGIN_EXIT:
-	{
-    clearPluginTaskData(event->TaskIndex);
-    success = true;
-	  break;
-	}
-
-    case PLUGIN_ONCE_A_SECOND:
-    {
-      //code to be executed once a second. Tasks which do not require fast response can be added here
-
-      //success = true;
-
+    case PLUGIN_EXIT: {
+      clearPluginTaskData(event->TaskIndex);
+      success = true;
+      break;
     }
 
-    case PLUGIN_TEN_PER_SECOND:
-    {
-      //code to be executed 10 times per second. Tasks which require fast response can be added here
-      //be careful on what is added here. Heavy processing will result in slowing the module down!
+    case PLUGIN_ONCE_A_SECOND: {
 
-      //success = true;
+      //addLog(LOG_LEVEL_INFO, F("MHP - PLUGIN_ONCE_A_SECOND"));
 
+      P090_data_struct* heatPump = static_cast<P090_data_struct*>(getPluginTaskData(event->TaskIndex));
+      if (heatPump != nullptr) {
+        heatPump->sync();
+        success = true;
+      }
+      break;
     }
-  }   // switch
+  }
+
   return success;
+}
 
-}     //function
+static void hpPacketDebug(byte* packet, unsigned int length, char* packetDirection) {
+  String message = "MHP - ";
+  for (unsigned int idx = 0; idx < length; idx++) {
+    if (packet[idx] < 16) {
+      message += "0"; // pad single hex digits with a 0
+    }
+    message += String(packet[idx], HEX) + " ";
+  }
+  addLog(LOG_LEVEL_INFO, message);
+}
 
-//implement plugin specific procedures and functions here
-void pxxx_do_sth_useful()
-{
-  //code
+P090_data_struct::P090_data_struct(const int16_t serialRx, const int16_t serialTx) : _serial(serialRx, serialTx) {
+  _heatPump.setPacketCallback(hpPacketDebug);
+}
 
+void P090_data_struct::init() {
+  _heatPump.connect(&_serial);
+}
+
+void P090_data_struct::sync() {
+  _heatPump.sync();
+}
+
+float P090_data_struct::roomTemperature() const {
+  return _heatPump.getRoomTemperature();
+}
+
+float P090_data_struct::powerSetting() const {
+  return _heatPump.getPowerSettingBool() ? 1 : 0;
+}
+
+float P090_data_struct::temperature() const {
+  return _heatPump.getTemperature();
+}
+
+bool P090_data_struct::isConnected() const {
+  return _heatPump.isConnected();
 }
 
 #endif  // USES_P090
