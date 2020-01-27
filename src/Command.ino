@@ -180,7 +180,7 @@ bool executeInternalCommand(const char *cmd, struct EventStruct *event, const ch
       break;
     }
     case 'j': {
-      COMMAND_CASE("jsonportstatus", Command_JSONPortStatus, -1, VALUE_SOURCE_RESTRICTED); // Diagnostic.h
+      COMMAND_CASE("jsonportstatus", Command_JSONPortStatus, -1, VALUE_SOURCE_ALL); // Diagnostic.h
     }
     case 'l': {
       COMMAND_CASE(          "let", Command_Rules_Let,     2, VALUE_SOURCE_ALL);    // Rules.h
@@ -266,13 +266,13 @@ bool executeInternalCommand(const char *cmd, struct EventStruct *event, const ch
       COMMAND_CASE(  "sendtoudp", Command_UDP_SendToUPD,   3, VALUE_SOURCE_ALL); // UDP.h
       COMMAND_CASE("serialfloat", Command_SerialFloat,     0, VALUE_SOURCE_RESTRICTED); // Diagnostic.h
       COMMAND_CASE(   "settings", Command_Settings_Print,  0, VALUE_SOURCE_RESTRICTED); // Settings.h
+    }
       COMMAND_CASE(     "status", Command_GPIO_Status,          2, VALUE_SOURCE_ALL); // GPIO.h
       COMMAND_CASE(     "subnet", Command_Subnet,          1, VALUE_SOURCE_RESTRICTED); // Network Command
     #ifdef USES_MQTT
 	    COMMAND_CASE(  "subscribe", Command_MQTT_Subscribe,  1, VALUE_SOURCE_ALL);  // MQTT.h
     #endif // USES_MQTT
       COMMAND_CASE(    "sysload", Command_SysLoad,         0, VALUE_SOURCE_RESTRICTED); // Diagnostic.h
-    }
       break;
     }
     case 't': {
@@ -300,9 +300,10 @@ bool executeInternalCommand(const char *cmd, struct EventStruct *event, const ch
       break;
     }
     case 'w': {
+    if (cmd_lc[1] == 'd') {
       COMMAND_CASE(      "wdconfig", Command_WD_Config,       3, VALUE_SOURCE_RESTRICTED); // WD.h
       COMMAND_CASE(        "wdread", Command_WD_Read,         2, VALUE_SOURCE_RESTRICTED); // WD.h
-    if (cmd_lc[1] == 'i') {
+    } else if (cmd_lc[1] == 'i') {
       COMMAND_CASE(    "wifiapmode", Command_Wifi_APMode,     0, VALUE_SOURCE_RESTRICTED); // WiFi.h
       COMMAND_CASE(   "wificonnect", Command_Wifi_Connect,    0, VALUE_SOURCE_RESTRICTED); // WiFi.h
       COMMAND_CASE("wifidisconnect", Command_Wifi_Disconnect, 0, VALUE_SOURCE_RESTRICTED); // WiFi.h

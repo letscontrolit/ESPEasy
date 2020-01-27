@@ -32,13 +32,14 @@ void handle_control() {
     eventQueue.add(parseStringToEnd(webrequest, 2));
     handledCmd = true;
   }
-  else if (command.equalsIgnoreCase(F("taskrun")) ||
-           command.equalsIgnoreCase(F("taskvalueset")) ||
-           command.equalsIgnoreCase(F("taskvaluetoggle")) ||
-           command.equalsIgnoreCase(F("let")) ||
-           command.equalsIgnoreCase(F("logPortStatus")) ||
-           command.equalsIgnoreCase(F("jsonportstatus")) ||
-           command.equalsIgnoreCase(F("rules"))) {
+  else {
+//  else if (command.equalsIgnoreCase(F("taskrun")) ||
+//           command.equalsIgnoreCase(F("taskvalueset")) ||
+//           command.equalsIgnoreCase(F("taskvaluetoggle")) ||
+//           command.equalsIgnoreCase(F("let")) ||
+//           command.equalsIgnoreCase(F("logPortStatus")) ||
+//           command.equalsIgnoreCase(F("jsonportstatus")) ||
+//           command.equalsIgnoreCase(F("rules"))) {
     ExecuteCommand_internal(EventValueSource::Enum::VALUE_SOURCE_HTTP, webrequest.c_str());
     handledCmd = true;
   }

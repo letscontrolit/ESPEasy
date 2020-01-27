@@ -88,7 +88,9 @@ bool CPlugin_006(CPlugin::Function function, struct EventStruct *event, String& 
           TempEvent.Par2 = event->String2.toFloat();
         if (name == Settings.Name)
         {
-          PluginCall(PLUGIN_WRITE, &TempEvent, cmd);
+          if (ExecuteCommand_internal(VALUE_SOURCE_MQTT, cmd.c_str())) {
+          } else if (PluginCall(PLUGIN_WRITE, &TempEvent, cmd)) {
+          }
         }
         break;
       }
