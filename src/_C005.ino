@@ -96,8 +96,7 @@ bool CPlugin_005(CPlugin::Function function, struct EventStruct *event, String& 
               eventQueue.add(parseStringToEnd(cmd, 2));
             } else if (ExecuteCommand_internal(VALUE_SOURCE_MQTT, cmd.c_str())) {
             } else if (PluginCall(PLUGIN_WRITE, &TempEvent, cmd)) {
-            } else if (remoteConfig(&TempEvent, cmd)) {//SP: cosa fa???
-            } else {
+            } else { remoteConfig(&TempEvent, cmd);
             }
           }
         }
