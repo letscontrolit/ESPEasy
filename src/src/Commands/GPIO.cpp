@@ -110,7 +110,7 @@ String Command_GPIO_Status(struct EventStruct *event, const char* Line)
   bool sendStatusFlag;
   byte pluginID;
 
-  switch (parseString(Line, 2).charAt(0))
+  switch (tolower(parseString(Line, 2).charAt(0)))
   {
     case 'g': //gpio
       pluginID=PLUGIN_GPIO;
@@ -144,13 +144,13 @@ String Command_GPIO_Pulse(struct EventStruct *event, const char* Line)
   String logPrefix;
   bool caseFound = true;
   byte pluginID=0;
-  switch (Line[0])
+  switch (tolower(Line[0]))
   {
     case 'p': // pulse or pcfpulse
-      if (Line[1]=='u') { //pulse
+      if (tolower(Line[1])=='u') { //pulse
         pluginID=PLUGIN_GPIO;
         logPrefix=String(F("GPIO"));
-      } else if (Line[1]=='c'){ //pcfpulse
+      } else if (tolower(Line[1])=='c'){ //pcfpulse
         pluginID=PLUGIN_PCF;
         logPrefix=String(F("PCF"));
       }
@@ -336,7 +336,7 @@ void createAndSetPortStatus_Mode_State(uint32_t key, byte newMode, int8_t newSta
 bool getPluginIDAndPrefix(char selection, byte &pluginID, String &logPrefix)
 {
   bool success = true;
-  switch(selection)
+  switch(tolower(selection))
   {
     case 'g': //gpio
       pluginID=PLUGIN_GPIO;
@@ -359,7 +359,7 @@ bool getPluginIDAndPrefix(char selection, byte &pluginID, String &logPrefix)
 bool getPluginIDAndPrefixAndType(char selection, byte &pluginID, String &logPrefix, byte &gpioTimerType)
 {
   bool success = true;
-  switch(selection)
+  switch(tolower(selection))
   {
     case 'l': //longpulse (gpio)
       pluginID =PLUGIN_GPIO;
