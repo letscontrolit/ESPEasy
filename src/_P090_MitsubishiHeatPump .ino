@@ -31,10 +31,9 @@ struct P090_data_struct : public PluginTaskData_base {
   void init();
   void sync();
 
-  float roomTemperature() const;
-  float powerSetting() const;
-  float temperature() const;
   bool isConnected() const;
+  heatpumpSettings settings() const;
+  heatpumpStatus status() const;
 
 private:
   ESPeasySerial _serial;
@@ -53,16 +52,16 @@ boolean Plugin_090(byte function, struct EventStruct *event, String& string) {
 
         Device[++deviceCount].Number = PLUGIN_ID_090;
         Device[deviceCount].Type = DEVICE_TYPE_DUAL;
-        //Device[deviceCount].VType = SENSOR_TYPE_SWITCH; //type of value the plugin will return, used only for Domoticz
+        Device[deviceCount].VType = SENSOR_TYPE_QUAD;
         //Device[deviceCount].Ports = 0;
         //Device[deviceCount].PullUpOption = false;
         //Device[deviceCount].InverseLogicOption = false;
-        Device[deviceCount].FormulaOption = true;
+        //Device[deviceCount].FormulaOption = true;
         Device[deviceCount].ValueCount = 4;
         Device[deviceCount].SendDataOption = true;
         Device[deviceCount].TimerOption = true;
-        //Device[deviceCount].TimerOptional = false;
-        Device[deviceCount].GlobalSyncOption = true;
+        Device[deviceCount].TimerOptional = true;
+        //Device[deviceCount].GlobalSyncOption = true;
         Device[deviceCount].DecimalsOnly = true;
         break;
     }
@@ -124,7 +123,7 @@ boolean Plugin_090(byte function, struct EventStruct *event, String& string) {
     }
 
     case PLUGIN_READ: {
-      addLog(LOG_LEVEL_INFO, F("MHP - plugin read"));
+      /*addLog(LOG_LEVEL_INFO, F("MHP - plugin read"));
 
       P090_data_struct* heatPump = static_cast<P090_data_struct *>(getPluginTaskData(event->TaskIndex));
       if (heatPump == nullptr) {
@@ -141,7 +140,7 @@ boolean Plugin_090(byte function, struct EventStruct *event, String& string) {
         UserVar[event->BaseVarIndex + 1] = NAN;
         UserVar[event->BaseVarIndex + 2] = NAN;
         UserVar[event->BaseVarIndex + 3] = NAN;
-      }
+      }*/
 
       success = true;
       break;
@@ -184,10 +183,35 @@ boolean Plugin_090(byte function, struct EventStruct *event, String& string) {
       //addLog(LOG_LEVEL_INFO, F("MHP - PLUGIN_ONCE_A_SECOND"));
 
       P090_data_struct* heatPump = static_cast<P090_data_struct*>(getPluginTaskData(event->TaskIndex));
-      if (heatPump != nullptr) {
-        heatPump->sync();
-        success = true;
+      if (heatPump == nullptr) {
+        return success;
       }
+
+      heatPump->sync();
+
+      if (!heatPump->isConnected()) {
+        return success;
+      }
+
+      static heatpumpSettings lastHeatpumpSettings;
+      static heatpumpStatus lastHeatpumpStatus;
+
+      heatpumpSettings settings = heatPump->settings();
+      heatpumpStatus status = heatPump->status();
+
+      if (settings != lastHeatpumpSettings || status.roomTemperature != lastHeatpumpStatus.roomTemperature) {
+        lastHeatpumpSettings = settings;
+        lastHeatpumpStatus = status;
+
+        UserVar[event->BaseVarIndex] = status.roomTemperature;
+        //UserVar[event->BaseVarIndex + 1] = settings.powerSetting;
+        UserVar[event->BaseVarIndex + 2] = settings.temperature;
+        //UserVar[event->BaseVarIndex + 3] = settings.isConnected() ? 1 : 0;  // TODO: remove
+
+        sendData(event);
+      }
+
+      success = true;
       break;
     }
   }
@@ -218,16 +242,12 @@ void P090_data_struct::sync() {
   _heatPump.sync();
 }
 
-float P090_data_struct::roomTemperature() const {
-  return _heatPump.getRoomTemperature();
+heatpumpSettings P090_data_struct::settings() const {
+  return _heatPump.getSettings();
 }
 
-float P090_data_struct::powerSetting() const {
-  return _heatPump.getPowerSettingBool() ? 1 : 0;
-}
-
-float P090_data_struct::temperature() const {
-  return _heatPump.getTemperature();
+heatpumpStatus P090_data_struct::status() const {
+  return _heatPump.getStatus();
 }
 
 bool P090_data_struct::isConnected() const {

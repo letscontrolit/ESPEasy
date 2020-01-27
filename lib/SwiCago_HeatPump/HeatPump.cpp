@@ -170,7 +170,7 @@ void HeatPump::disableAutoUpdate() {
   autoUpdate = false;
 }
 
-heatpumpSettings HeatPump::getSettings() {
+heatpumpSettings HeatPump::getSettings() const {
   return currentSettings;
 }
 
@@ -311,7 +311,7 @@ bool HeatPump::getIseeBool() { //no setter yet
   return currentSettings.iSee;
 }
 
-heatpumpStatus HeatPump::getStatus() {
+heatpumpStatus HeatPump::getStatus() const {
   return currentStatus;
 }
 

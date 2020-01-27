@@ -198,7 +198,7 @@ class HeatPump
     void disableAutoUpdate();
 
     // settings
-    heatpumpSettings getSettings();
+    heatpumpSettings getSettings() const;
     void setSettings(heatpumpSettings settings);
     void setPowerSetting(bool setting);
     bool getPowerSettingBool() const;
@@ -218,7 +218,7 @@ class HeatPump
     bool getIseeBool();
 
     // status
-    heatpumpStatus getStatus();
+    heatpumpStatus getStatus() const;
     float getRoomTemperature() const;
     bool getOperating();
     bool isConnected() const;
