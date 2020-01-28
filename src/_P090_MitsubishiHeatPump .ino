@@ -38,6 +38,9 @@ struct P090_data_struct : public PluginTaskData_base {
 
   bool read(String& result, bool force);
 
+  heatpumpSettings settings() const;
+  bool setSettings(const heatpumpSettings& settings);
+
 private:
   void connect(bool retry);
 
@@ -51,12 +54,11 @@ private:
   bool canSend(bool isInfo) const;
 
   void sync(byte packetType);
-  bool update();
+  bool update(const heatpumpSettings& settings);
 
 private:
   ESPeasySerial _serial;
   heatpumpSettings _currentSettings;
-  heatpumpSettings _wantedSettings;
   heatpumpStatus _currentStatus;
   bool _isConnected;
   int _bitrate;
@@ -65,9 +67,6 @@ private:
   unsigned long _lastRecv;
   bool _tempMode;
   bool _wideVaneAdj;
-  bool _firstRun;
-  bool _autoUpdate;
-  bool _externalUpdate;
   int _infoMode;
 };
 
@@ -135,29 +134,26 @@ boolean Plugin_090(byte function, struct EventStruct *event, String& string) {
     }
 
     case PLUGIN_WRITE: {
-      //this case defines code to be executed when the plugin executes an action (command).
-      //Commands can be accessed via rules or via http.
-      //As an example, http://192.168.1.12//control?cmd=dothis
-      //implies that there exists the comamnd "dothis"
+      P090_data_struct* heatPump = static_cast<P090_data_struct*>(getPluginTaskData(event->TaskIndex));
+      if (heatPump == nullptr) {
+        return success;
+      }
 
-      /*if (plugin_not_initialised)
-        break;
+      String command = parseString(string, 1);
+      String value = parseString(string, 2);
+      heatpumpSettings settings = heatPump->settings();
 
-      // FIXME TD-er: This one is not using parseString* function
-      //parse string to extract the command
-      String tmpString  = string;
-      int argIndex = tmpString.indexOf(',');
-      if (argIndex)
-        tmpString = tmpString.substring(0, argIndex);
+      if (command == F("temperature")) {
+        success = string2float(value, settings.temperature);
+      } else if (command == F("power")) {
 
-      String tmpStr = string;
-      int comma1 = tmpStr.indexOf(',');
-      if (tmpString.equalsIgnoreCase(F("dothis"))) {
-        //do something
-        success = true;     //set to true only if plugin has executed a command successfully
-      }*/
+      }
 
-       break;
+      if (success) {
+        success = heatPump->setSettings(settings);
+      }
+
+      break;
     }
 
     case PLUGIN_EXIT: {
@@ -314,7 +310,6 @@ static bool operator!=(const heatpumpSettings& lhs, const heatpumpSettings& rhs)
 P090_data_struct::P090_data_struct(const int16_t serialRx, const int16_t serialTx) :
   _serial(serialRx, serialTx),
   _currentSettings({}),
-  _wantedSettings({}),
   _currentStatus({}),
   _isConnected(false),
   _bitrate(2400),
@@ -323,11 +318,16 @@ P090_data_struct::P090_data_struct(const int16_t serialRx, const int16_t serialT
   _lastRecv(millis() - (PACKET_SENT_INTERVAL_MS * 10)),
   _tempMode(false),
   _wideVaneAdj(false),
-  _firstRun(true),
-  _autoUpdate(false),
-  _externalUpdate(false),
   _infoMode(0) {
 
+}
+
+heatpumpSettings P090_data_struct::settings() const {
+  return _currentSettings;
+}
+
+bool P090_data_struct::setSettings(const heatpumpSettings& settings) {
+  return update(settings);
 }
 
 void P090_data_struct::connect(bool retry) {
@@ -388,9 +388,6 @@ void P090_data_struct::sync(byte packetType) {
   }
   else if(canRead()) {
     readPacket();
-  }
-  else if(_autoUpdate && !_firstRun && _wantedSettings != _currentSettings && packetType == PACKET_TYPE_DEFAULT) {
-    update();
   }
   else if(canSend(true)) {
     byte packet[PACKET_LEN] = {};
@@ -507,12 +504,6 @@ int P090_data_struct::readPacket() {
               _currentSettings.vane        = lookupByteMapValue(VANE_MAP, VANE, 7, data[7]);
               _currentSettings.wideVane    = lookupByteMapValue(WIDEVANE_MAP, WIDEVANE, 7, data[10] & 0x0F);
               _wideVaneAdj = (data[10] & 0xF0) == 0x80 ? true : false;
-
-              // if this is the first time we have synced with the heatpump, set wantedSettings to receivedSettings
-              if(_firstRun || (_autoUpdate && _externalUpdate)) {
-                _wantedSettings = _currentSettings;
-                _firstRun = false;
-              }
 
               return RCVD_PKT_SETTINGS;
             }
@@ -650,29 +641,17 @@ void P090_data_struct::createPacket(byte *packet, const heatpumpSettings& settin
   packet[21] = chkSum;
 }
 
-bool P090_data_struct::update() {
+bool P090_data_struct::update(const heatpumpSettings& settings) {
   while(!canSend(false)) { delay(10); }
 
   byte packet[PACKET_LEN] = {};
-  createPacket(packet, _wantedSettings);
+  createPacket(packet, settings);
   writePacket(packet, PACKET_LEN);
 
   while(!canRead()) { delay(10); }
   int packetType = readPacket();
 
-  if(packetType == RCVD_PKT_UPDATE_SUCCESS) {
-    // call sync() to get the latest settings from the heatpump for autoUpdate, which should now have the updated settings
-    if(_autoUpdate) { //this sync will happen regardless, but autoUpdate needs it sooner than later.
-	    while(!canSend(true)) {
-		    delay(10);
-	    }
-	    sync(RQST_PKT_SETTINGS);
-    }
-
-    return true;
-  } else {
-    return false;
-  }
+  return packetType == RCVD_PKT_UPDATE_SUCCESS;
 }
 
 #endif  // USES_P090
