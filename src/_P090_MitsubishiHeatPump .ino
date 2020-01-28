@@ -33,16 +33,10 @@ struct heatpumpStatus {
   int compressorFrequency;
 };
 
-static bool operator!=(const heatpumpSettings& lhs, const heatpumpSettings& rhs);
-
 struct P090_data_struct : public PluginTaskData_base {
   P090_data_struct(const int16_t serialRx, const int16_t serialTx);
 
-  void sync();
-
-  bool isConnected() const;
-  heatpumpSettings settings() const;
-  heatpumpStatus status() const;
+  bool read(String& result, bool force);
 
 private:
   void connect(bool retry);
@@ -97,7 +91,7 @@ boolean Plugin_090(byte function, struct EventStruct *event, String& string) {
         Device[deviceCount].TimerOption = true;
         Device[deviceCount].TimerOptional = true;
         //Device[deviceCount].GlobalSyncOption = true;
-        Device[deviceCount].DecimalsOnly = true;
+        //Device[deviceCount].DecimalsOnly = true;
         break;
     }
 
@@ -135,38 +129,16 @@ boolean Plugin_090(byte function, struct EventStruct *event, String& string) {
     }
 
     case PLUGIN_INIT: {
-      P090_data_struct* heatPump = new P090_data_struct(CONFIG_PIN1, CONFIG_PIN2);
-      if (heatPump == nullptr) {
-        return success;
-      }
-
-      initPluginTaskData(event->TaskIndex, heatPump);
-      success = true;
-
+      initPluginTaskData(event->TaskIndex, new P090_data_struct(CONFIG_PIN1, CONFIG_PIN2));
+      success = getPluginTaskData(event->TaskIndex) != nullptr;
       break;
     }
 
     case PLUGIN_READ: {
-      /*addLog(LOG_LEVEL_INFO, F("MHP - plugin read"));
-
-      P090_data_struct* heatPump = static_cast<P090_data_struct *>(getPluginTaskData(event->TaskIndex));
-      if (heatPump == nullptr) {
-        return success;
+      P090_data_struct* heatPump = static_cast<P090_data_struct*>(getPluginTaskData(event->TaskIndex));
+      if (heatPump != nullptr) {
+        success = heatPump->read(event->String2, true);
       }
-
-      if (heatPump->isConnected()) {
-        UserVar[event->BaseVarIndex] = heatPump->roomTemperature();
-        UserVar[event->BaseVarIndex + 1] = heatPump->powerSetting();
-        UserVar[event->BaseVarIndex + 2] = heatPump->temperature();
-        UserVar[event->BaseVarIndex + 3] = heatPump->isConnected() ? 1 : 0;  // TODO: remove
-      } else {
-        UserVar[event->BaseVarIndex] = NAN;
-        UserVar[event->BaseVarIndex + 1] = NAN;
-        UserVar[event->BaseVarIndex + 2] = NAN;
-        UserVar[event->BaseVarIndex + 3] = NAN;
-      }*/
-
-      success = true;
       break;
     }
 
@@ -204,38 +176,12 @@ boolean Plugin_090(byte function, struct EventStruct *event, String& string) {
 
     case PLUGIN_ONCE_A_SECOND: {
       P090_data_struct* heatPump = static_cast<P090_data_struct*>(getPluginTaskData(event->TaskIndex));
-      if (heatPump == nullptr) {
-        return success;
+      if (heatPump != nullptr) {
+        success = heatPump->read(event->String2, false);
+        if (success) {
+          sendData(event);
+        }
       }
-
-      heatpumpSettings lastHeatpumpSettings = heatPump->settings();
-      heatpumpStatus lastHeatpumpStatus = heatPump->status();
-
-      heatPump->sync();
-
-      if (!heatPump->isConnected()) {
-        return success;
-      }
-
-      heatpumpSettings settings = heatPump->settings();
-      heatpumpStatus status = heatPump->status();
-
-      if (settings != lastHeatpumpSettings || status.roomTemperature != lastHeatpumpStatus.roomTemperature) {
-        event->String2 =
-          String(F("{\"roomTemperature\":")) + toString(status.roomTemperature, 1) +
-          String(F(",\"wideVane\":\"")) + settings.wideVane +
-          String(F("\",\"power\":\"")) + settings.power +
-          String(F("\",\"mode\":\"")) + settings.mode +
-          String(F("\",\"fan\":\"")) + settings.fan +
-          String(F("\",\"vane\":\"")) + settings.vane +
-          String(F("\",\"temperature\":")) + toString(settings.temperature, 1) + '}';
-
-        //addLog(LOG_LEVEL_INFO, String(F("IRSEND,\'"))+output+'\''); //JSON representation of the command
-
-        sendData(event);
-      }
-
-      success = true;
       break;
     }
   }
@@ -253,28 +199,6 @@ boolean Plugin_090(byte function, struct EventStruct *event, String& string) {
   }
   addLog(LOG_LEVEL_INFO, message);
 }*/
-
-static bool operator!=(const heatpumpSettings& lhs, const heatpumpSettings& rhs) {
-  return lhs.power != rhs.power ||
-         lhs.mode != rhs.mode ||
-         lhs.temperature != rhs.temperature ||
-         lhs.fan != rhs.fan ||
-         lhs.vane != rhs.vane ||
-         lhs.wideVane != rhs.wideVane ||
-         lhs.iSee != rhs.iSee;
-}
-
-heatpumpSettings P090_data_struct::settings() const {
-  return _currentSettings;
-}
-
-heatpumpStatus P090_data_struct::status() const {
-  return _currentStatus;
-}
-
-bool P090_data_struct::isConnected() const {
-  return _isConnected;
-}
 
 // HeatPump.h
 static const int PACKET_LEN = 22;
@@ -359,6 +283,16 @@ static byte checkSum(byte bytes[], int len) {
   return (0xfc - sum) & 0xff;
 }
 
+static bool operator!=(const heatpumpSettings& lhs, const heatpumpSettings& rhs) {
+  return lhs.power != rhs.power ||
+         lhs.mode != rhs.mode ||
+         lhs.temperature != rhs.temperature ||
+         lhs.fan != rhs.fan ||
+         lhs.vane != rhs.vane ||
+         lhs.wideVane != rhs.wideVane ||
+         lhs.iSee != rhs.iSee;
+}
+
 P090_data_struct::P090_data_struct(const int16_t serialRx, const int16_t serialTx) :
   _serial(serialRx, serialTx),
   _isConnected(false),
@@ -392,8 +326,30 @@ void P090_data_struct::connect(bool retry) {
   }
 }
 
-void P090_data_struct::sync() {
+bool P090_data_struct::read(String& result, bool force) {
+  const heatpumpSettings lastSettings = _currentSettings;
+  const heatpumpStatus lastStatus = _currentStatus;
+
   sync(PACKET_TYPE_DEFAULT);
+
+  if (!_isConnected) {
+    return false;
+  }
+
+  if (force || _currentSettings != lastSettings || _currentStatus.roomTemperature != lastStatus.roomTemperature) {
+    result =
+      String(F("{\"roomTemperature\":")) + toString(_currentStatus.roomTemperature, 1) +
+      String(F(",\"wideVane\":\"")) + _currentSettings.wideVane +
+      String(F("\",\"power\":\"")) + _currentSettings.power +
+      String(F("\",\"mode\":\"")) + _currentSettings.mode +
+      String(F("\",\"fan\":\"")) + _currentSettings.fan +
+      String(F("\",\"vane\":\"")) + _currentSettings.vane +
+      String(F("\",\"temperature\":")) + toString(_currentSettings.temperature, 1) + '}';
+
+      return true;
+  }
+
+  return false;
 }
 
 void P090_data_struct::sync(byte packetType) {
