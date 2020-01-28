@@ -23,7 +23,7 @@ struct heatpumpSettings {
   const char* vane; //vertical vane, up/down
   const char* wideVane; //horizontal vane, left/right
   bool iSee;   //iSee sensor, at the moment can only detect it, not set it
-  bool connected;
+  //bool connected;
 };
 
 struct heatpumpStatus {
@@ -42,6 +42,7 @@ private:
   void connect(bool retry);
 
   void createInfoPacket(byte *packet, byte packetType);
+  void createPacket(byte *packet, const heatpumpSettings& settings);
 
   int readPacket();
   void writePacket(const byte *packet, int length);
@@ -50,6 +51,7 @@ private:
   bool canSend(bool isInfo) const;
 
   void sync(byte packetType);
+  bool update();
 
 private:
   ESPeasySerial _serial;
@@ -75,24 +77,14 @@ boolean Plugin_090(byte function, struct EventStruct *event, String& string) {
   switch (function) {
 
     case PLUGIN_DEVICE_ADD: {
-
-      addLog(LOG_LEVEL_INFO, F("MHP - ADD"));
-
-
-        Device[++deviceCount].Number = PLUGIN_ID_090;
-        Device[deviceCount].Type = DEVICE_TYPE_DUAL;
-        Device[deviceCount].VType = SENSOR_TYPE_STRING;
-        //Device[deviceCount].Ports = 0;
-        //Device[deviceCount].PullUpOption = false;
-        //Device[deviceCount].InverseLogicOption = false;
-        //Device[deviceCount].FormulaOption = true;
-        Device[deviceCount].ValueCount = 1;
-        Device[deviceCount].SendDataOption = true;
-        Device[deviceCount].TimerOption = true;
-        Device[deviceCount].TimerOptional = true;
-        //Device[deviceCount].GlobalSyncOption = true;
-        //Device[deviceCount].DecimalsOnly = true;
-        break;
+      Device[++deviceCount].Number = PLUGIN_ID_090;
+      Device[deviceCount].Type = DEVICE_TYPE_DUAL;
+      Device[deviceCount].VType = SENSOR_TYPE_STRING;
+      Device[deviceCount].ValueCount = 1;
+      Device[deviceCount].SendDataOption = true;
+      Device[deviceCount].TimerOption = true;
+      Device[deviceCount].TimerOptional = true;
+      break;
     }
 
     case PLUGIN_GET_DEVICENAME: {
@@ -201,6 +193,14 @@ boolean Plugin_090(byte function, struct EventStruct *event, String& string) {
 }*/
 
 // HeatPump.h
+
+// indexes for INFOMODE array (public so they can be optionally passed to sync())
+static const int RQST_PKT_SETTINGS  = 0;
+//static const int RQST_PKT_ROOM_TEMP = 1;
+//static const int RQST_PKT_TIMERS    = 3;
+//static const int RQST_PKT_STATUS    = 4;
+//static const int RQST_PKT_STANDBY   = 5;
+
 static const int PACKET_LEN = 22;
 static const int PACKET_SENT_INTERVAL_MS = 1000;
 static const int PACKET_INFO_INTERVAL_MS = 2000;
@@ -275,6 +275,24 @@ static int lookupByteMapValue(const int valuesMap[], const byte byteMap[], int l
   return valuesMap[0];
 }
 
+static int lookupByteMapIndex(const int valuesMap[], int len, int lookupValue) {
+  for (int i = 0; i < len; i++) {
+    if (valuesMap[i] == lookupValue) {
+      return i;
+    }
+  }
+  return -1;
+}
+
+static int lookupByteMapIndex(const char* valuesMap[], int len, const char* lookupValue) {
+  for (int i = 0; i < len; i++) {
+    if (strcmp(valuesMap[i], lookupValue) == 0) {
+      return i;
+    }
+  }
+  return -1;
+}
+
 static byte checkSum(byte bytes[], int len) {
   byte sum = 0;
   for (int i = 0; i < len; i++) {
@@ -295,6 +313,9 @@ static bool operator!=(const heatpumpSettings& lhs, const heatpumpSettings& rhs)
 
 P090_data_struct::P090_data_struct(const int16_t serialRx, const int16_t serialTx) :
   _serial(serialRx, serialTx),
+  _currentSettings({}),
+  _wantedSettings({}),
+  _currentStatus({}),
   _isConnected(false),
   _bitrate(2400),
   _waitForRead(false),
@@ -337,16 +358,25 @@ bool P090_data_struct::read(String& result, bool force) {
   }
 
   if (force || _currentSettings != lastSettings || _currentStatus.roomTemperature != lastStatus.roomTemperature) {
-    result =
-      String(F("{\"roomTemperature\":")) + toString(_currentStatus.roomTemperature, 1) +
-      String(F(",\"wideVane\":\"")) + _currentSettings.wideVane +
-      String(F("\",\"power\":\"")) + _currentSettings.power +
-      String(F("\",\"mode\":\"")) + _currentSettings.mode +
-      String(F("\",\"fan\":\"")) + _currentSettings.fan +
-      String(F("\",\"vane\":\"")) + _currentSettings.vane +
-      String(F("\",\"temperature\":")) + toString(_currentSettings.temperature, 1) + '}';
+    //result.reserve(); // TODO:
+    result = F("{\"roomTemperature\":");
+    result += toString(_currentStatus.roomTemperature, 1);
+    result += F(",\"wideVane\":\"");
+    result += _currentSettings.wideVane;
+    result += F("\",\"power\":\"");
+    result += _currentSettings.power;
+    result += F("\",\"mode\":\"");
+    result += _currentSettings.mode;
+    result += F("\",\"fan\":\"");
+    result += _currentSettings.fan;
+    result += F("\",\"vane\":\"");
+    result += _currentSettings.vane;
+    result += F("\",\"iSee\":");
+    result += boolToString(_currentSettings.iSee);
+    result += F(",\"temperature\":");
+    result += toString(_currentSettings.temperature, 1) + '}';
 
-      return true;
+    return true;
   }
 
   return false;
@@ -359,9 +389,9 @@ void P090_data_struct::sync(byte packetType) {
   else if(canRead()) {
     readPacket();
   }
-  /*else if(_autoUpdate && !_firstRun && wantedSettings != currentSettings && packetType == PACKET_TYPE_DEFAULT) {
+  else if(_autoUpdate && !_firstRun && _wantedSettings != _currentSettings && packetType == PACKET_TYPE_DEFAULT) {
     update();
-  }*/
+  }
   else if(canSend(true)) {
     byte packet[PACKET_LEN] = {};
     createInfoPacket(packet, packetType);
@@ -576,6 +606,73 @@ void P090_data_struct::createInfoPacket(byte *packet, byte packetType) {
   // add the checksum
   byte chkSum = checkSum(packet, 21);
   packet[21] = chkSum;
+}
+
+void P090_data_struct::createPacket(byte *packet, const heatpumpSettings& settings) {
+  //preset all bytes to 0x00
+  for (int i = 0; i < 21; i++) {
+    packet[i] = 0x00;
+  }
+  for (int i = 0; i < HEADER_LEN; i++) {
+    packet[i] = HEADER[i];
+  }
+  if(settings.power != _currentSettings.power) {
+    packet[8]  = POWER[lookupByteMapIndex(POWER_MAP, 2, settings.power)];
+    packet[6] += CONTROL_PACKET_1[0];
+  }
+  if(settings.mode!= _currentSettings.mode) {
+    packet[9]  = MODE[lookupByteMapIndex(MODE_MAP, 5, settings.mode)];
+    packet[6] += CONTROL_PACKET_1[1];
+  }
+  if(!_tempMode && settings.temperature!= _currentSettings.temperature) {
+    packet[10] = TEMP[lookupByteMapIndex(TEMP_MAP, 16, settings.temperature)];
+    packet[6] += CONTROL_PACKET_1[2];
+  }
+  else if(_tempMode && settings.temperature!= _currentSettings.temperature) {
+    float temp = (settings.temperature * 2) + 128;
+    packet[19] = (int)temp;
+    packet[6] += CONTROL_PACKET_1[2];
+  }
+  if(settings.fan!= _currentSettings.fan) {
+    packet[11] = FAN[lookupByteMapIndex(FAN_MAP, 6, settings.fan)];
+    packet[6] += CONTROL_PACKET_1[3];
+  }
+  if(settings.vane!= _currentSettings.vane) {
+    packet[12] = VANE[lookupByteMapIndex(VANE_MAP, 7, settings.vane)] | (_wideVaneAdj ? 0x80 : 0x00);
+    packet[6] += CONTROL_PACKET_1[4];
+  }
+  if(settings.wideVane!= _currentSettings.wideVane) {
+    packet[18] = WIDEVANE[lookupByteMapIndex(WIDEVANE_MAP, 7, settings.wideVane)];
+    packet[7] += CONTROL_PACKET_2[0];
+  }
+  // add the checksum
+  byte chkSum = checkSum(packet, 21);
+  packet[21] = chkSum;
+}
+
+bool P090_data_struct::update() {
+  while(!canSend(false)) { delay(10); }
+
+  byte packet[PACKET_LEN] = {};
+  createPacket(packet, _wantedSettings);
+  writePacket(packet, PACKET_LEN);
+
+  while(!canRead()) { delay(10); }
+  int packetType = readPacket();
+
+  if(packetType == RCVD_PKT_UPDATE_SUCCESS) {
+    // call sync() to get the latest settings from the heatpump for autoUpdate, which should now have the updated settings
+    if(_autoUpdate) { //this sync will happen regardless, but autoUpdate needs it sooner than later.
+	    while(!canSend(true)) {
+		    delay(10);
+	    }
+	    sync(RQST_PKT_SETTINGS);
+    }
+
+    return true;
+  } else {
+    return false;
+  }
 }
 
 #endif  // USES_P090
