@@ -37,9 +37,7 @@ struct P090_data_struct : public PluginTaskData_base {
   P090_data_struct(const int16_t serialRx, const int16_t serialTx);
 
   bool read(String& result, bool force);
-
-  heatpumpSettings settings() const;
-  bool setSettings(const heatpumpSettings& settings);
+  bool write(const String& command, const String& value);
 
 private:
   void connect(bool retry);
@@ -135,24 +133,9 @@ boolean Plugin_090(byte function, struct EventStruct *event, String& string) {
 
     case PLUGIN_WRITE: {
       P090_data_struct* heatPump = static_cast<P090_data_struct*>(getPluginTaskData(event->TaskIndex));
-      if (heatPump == nullptr) {
-        return success;
+      if (heatPump != nullptr) {
+        success = heatPump->write(parseString(string, 1), parseString(string, 2));
       }
-
-      String command = parseString(string, 1);
-      String value = parseString(string, 2);
-      heatpumpSettings settings = heatPump->settings();
-
-      if (command == F("temperature")) {
-        success = string2float(value, settings.temperature);
-      } else if (command == F("power")) {
-
-      }
-
-      if (success) {
-        success = heatPump->setSettings(settings);
-      }
-
       break;
     }
 
@@ -233,17 +216,17 @@ static const byte CONTROL_PACKET_1[5] = {0x01,    0x02,  0x04,  0x08, 0x10};
 static const byte CONTROL_PACKET_2[1] = {0x01};
                                //{"WIDEVANE"};
 static const byte POWER[2]            = {0x00, 0x01};
-static const char* POWER_MAP[2]       = {"OFF", "ON"};
+static const char* POWER_MAP[2]       = {"off", "on"};
 static const byte MODE[5]             = {0x01,   0x02,  0x03, 0x07, 0x08};
-static const char* MODE_MAP[5]        = {"HEAT", "DRY", "COOL", "FAN", "AUTO"};
+static const char* MODE_MAP[5]        = {"heat", "dry", "cool", "fan", "auto"};
 static const byte TEMP[16]            = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f};
 static const int TEMP_MAP[16]         = {31, 30, 29, 28, 27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16};
 static const byte FAN[6]              = {0x00,  0x01,   0x02, 0x03, 0x05, 0x06};
-static const char* FAN_MAP[6]         = {"AUTO", "QUIET", "1", "2", "3", "4"};
+static const char* FAN_MAP[6]         = {"auto", "quiet", "1", "2", "3", "4"};
 static const byte VANE[7]             = {0x00,  0x01, 0x02, 0x03, 0x04, 0x05, 0x07};
-static const char* VANE_MAP[7]        = {"AUTO", "1", "2", "3", "4", "5", "SWING"};
+static const char* VANE_MAP[7]        = {"auto", "1", "2", "3", "4", "5", "swing"};
 static const byte WIDEVANE[7]         = {0x01, 0x02, 0x03, 0x04, 0x05, 0x08, 0x0c};
-static const char* WIDEVANE_MAP[7]    = {"<<", "<",  "|",  ">",  ">>", "<>", "SWING"};
+static const char* WIDEVANE_MAP[7]    = {"<<", "<",  "|",  ">",  ">>", "<>", "swing"};
 static const byte ROOM_TEMP[32]       = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
                                   0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f};
 static const int ROOM_TEMP_MAP[32]    = {10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25,
@@ -289,6 +272,15 @@ static int lookupByteMapIndex(const char* valuesMap[], int len, const char* look
   return -1;
 }
 
+static bool lookupValue(const char* valuesMap[], int len, const char* lookupValue, const char*& destination) {
+  int index = lookupByteMapIndex(valuesMap, len, lookupValue);
+  if (index == -1) {
+    return false;
+  }
+  destination = valuesMap[index];
+  return true;
+}
+
 static byte checkSum(byte bytes[], int len) {
   byte sum = 0;
   for (int i = 0; i < len; i++) {
@@ -322,12 +314,25 @@ P090_data_struct::P090_data_struct(const int16_t serialRx, const int16_t serialT
 
 }
 
-heatpumpSettings P090_data_struct::settings() const {
-  return _currentSettings;
-}
+bool P090_data_struct::write(const String& command, const String& value) {
+  bool success = false;
+  heatpumpSettings settings = _currentSettings;
 
-bool P090_data_struct::setSettings(const heatpumpSettings& settings) {
-  return update(settings);
+  if (command == F("temperature")) {
+    success = string2float(value, settings.temperature);
+  } else if (command == F("power")) {
+    success = lookupValue(POWER_MAP, 2, value.c_str(), settings.power);
+  } else if (command == F("mode")) {
+    success = lookupValue(MODE_MAP, 5, value.c_str(), settings.mode);
+  } else if (command == F("fan")) {
+    success = lookupValue(FAN_MAP, 6, value.c_str(), settings.fan);
+  } else if (command == F("vane")) {
+    success = lookupValue(VANE_MAP, 7, value.c_str(), settings.vane);
+  } else if (command == F("widevane")) {
+    success = lookupValue(WIDEVANE_MAP, 7, value.c_str(), settings.wideVane);
+  }
+
+  return success && update(settings);
 }
 
 void P090_data_struct::connect(bool retry) {
@@ -542,6 +547,7 @@ int P090_data_struct::readPacket() {
               }
 
               return RCVD_PKT_TIMER;*/
+              break;
             }
 
             case 0x06: { // status
