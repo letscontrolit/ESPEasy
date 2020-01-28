@@ -13,7 +13,7 @@
 #define PLUGIN_NAME_090       "Mitsubishi Heat Pump"
 #define PLUGIN_VALUENAME1_090 "MitsubishiHeatPump"
 
-//#define PLUGIN_xxx_DEBUG  false             //set to true for extra log info in the debug
+#define PLUGIN_090_DEBUG
 
 struct heatpumpSettings {
   const char* power;
@@ -23,13 +23,12 @@ struct heatpumpSettings {
   const char* vane; //vertical vane, up/down
   const char* wideVane; //horizontal vane, left/right
   bool iSee;   //iSee sensor, at the moment can only detect it, not set it
-  //bool connected;
 };
 
 struct heatpumpStatus {
   float roomTemperature;
   bool operating; // if true, the heatpump is operating to reach the desired temperature
-  //heatpumpTimers timers;
+  //heatpumpTimers timers;  // not supported by the plugin currently
   int compressorFrequency;
 };
 
@@ -160,18 +159,38 @@ boolean Plugin_090(byte function, struct EventStruct *event, String& string) {
   return success;
 }
 
-/*static void hpPacketDebug(byte* packet, unsigned int length, char* packetDirection) {
-  String message = "MHP - ";
-  for (unsigned int idx = 0; idx < length; idx++) {
-    if (packet[idx] < 16) {
-      message += "0"; // pad single hex digits with a 0
-    }
-    message += String(packet[idx], HEX) + " ";
-  }
-  addLog(LOG_LEVEL_INFO, message);
-}*/
 
-// HeatPump.h
+#ifdef PLUGIN_090_DEBUG
+static void dumpPacket(const byte* packet, int length, String& result) {
+  for (int idx = 0; idx < length; ++idx) {
+    result += formatToHex(packet[idx]);
+    result += F(" ");
+  }
+}
+
+static String dumpOutgoingPacket(const byte* packet, int length) {
+  String message = F("MHP - OUT: ");
+  dumpPacket(packet, length, message);
+  return message;
+}
+
+static String dumpIncomingPacket(const byte* header, int headerLength, const byte* data, int length) {
+  String message = F("MHP -  IN: ");
+  dumpPacket(header, headerLength, message);
+  message += F("- ");
+  dumpPacket(data, length, message);
+  return message;
+}
+#endif
+
+///
+/// Code below is taken from https://github.com/SwiCago/HeatPump
+///
+/// Modifications were made in order to embed it into a single file
+///
+///
+/// HeatPump.h
+///
 
 // indexes for INFOMODE array (public so they can be optionally passed to sync())
 static const int RQST_PKT_SETTINGS  = 0;
@@ -339,10 +358,6 @@ void P090_data_struct::connect(bool retry) {
   _isConnected = false;
   _serial.begin(_bitrate, SERIAL_8E1);
 
-//  if(onConnectCallback) {
-    //onConnectCallback();
-  //}
-
   writePacket(CONNECT, CONNECT_LEN);
   while(!canRead()) { delay(10); }
   int packetType = readPacket();
@@ -414,9 +429,11 @@ void P090_data_struct::writePacket(const byte *packet, int length) {
      _serial.write(packet[i]);
   }
 
-  //if(packetCallback) {
-  //  packetCallback(packet, length, (char*)"packetSent");
-  //}
+#ifdef PLUGIN_090_DEBUG
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
+    dumpOutgoingPacket(packet, length);
+  }
+#endif
 
   _waitForRead = true;
   _lastSend = millis();
@@ -478,16 +495,12 @@ int P090_data_struct::readPacket() {
       if(data[dataLength] == checksum) {
         _lastRecv = millis();
 
-        /*if(packetCallback) {
-          byte packet[37]; // we are going to put header[5] and data[32] into this, so the whole packet is sent to the callback
-          for(int i=0; i<INFOHEADER_LEN; i++) {
-            packet[i] = header[i];
-          }
-          for(int i=0; i<(dataLength+1); i++) { //must be dataLength+1 to pick up checksum byte
-            packet[(i+5)] = data[i];
-          }
-          packetCallback(packet, PACKET_LEN, (char*)"packetRecv");
-        }*/
+#ifdef PLUGIN_090_DEBUG
+        if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
+          //must be dataLength+1 to pick up checksum byte
+          dumpIncomingPacket(header, INFOHEADER_LEN, data, dataLength + 1);
+        }
+#endif
 
         if(header[1] == 0x62) {
           switch(data[0]) {
