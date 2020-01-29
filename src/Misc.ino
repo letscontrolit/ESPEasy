@@ -496,7 +496,7 @@ bool remoteConfig(struct EventStruct *event, const String& string)
 }
 
 /*********************************************************************************************\
-   Collect the stored preference for factory default 
+   Collect the stored preference for factory default
 \*********************************************************************************************/
 void applyFactoryDefaultPref() {
   // TODO TD-er: Store it in more places to make it more persistent
@@ -818,8 +818,8 @@ int parseCommandArgumentInt(const String& string, unsigned int argc)
   if (argc > 0) {
     // No need to check for the command (argc == 0)
     String TmpStr;
-    if (GetArgv(string.c_str(), TmpStr, argc + 1)) { 
-      value = CalculateParam(TmpStr.c_str()); 
+    if (GetArgv(string.c_str(), TmpStr, argc + 1)) {
+      value = CalculateParam(TmpStr.c_str());
     }
   }
   return value;
@@ -1337,7 +1337,7 @@ bool validUIntFromString(const String& tBuf, unsigned int& result) {
 
 bool validFloatFromString(const String& tBuf, float& result) {
   // DO not call validDoubleFromString and then cast to float.
-  // Working with double values is quite CPU intensive as it must be done in software 
+  // Working with double values is quite CPU intensive as it must be done in software
   // since the ESP does not have large enough registers for handling double values in hardware.
   const String numerical = getNumerical(tBuf, false);
   const bool isvalid = numerical.length() > 0;
@@ -1375,7 +1375,7 @@ String getNumerical(const String& tBuf, bool mustBeInteger) {
   if (firstDec >= bufLength) return result;
 
   bool decPt = false;
-  
+
   char c = tBuf.charAt(firstDec);
   if(c == '+' || c == '-') {
     result += c;
@@ -1468,7 +1468,7 @@ bool timeStringToSeconds(const String& tBuf, int& time_seconds) {
     // Old format, only HH:MM
     if (!validIntFromString(tBuf.substring(hour_sep_pos + 1), minutes)) {
       logtimeStringToSeconds(tBuf, hours, minutes, seconds);
-      return false;    
+      return false;
     }
   } else {
     // New format, only HH:MM:SS
@@ -1546,7 +1546,7 @@ String parseTemplate(String& tmpString, byte lineSize)
   newString.reserve(lineSize); // Our best guess of the new size.
 
   parseSystemVariables(tmpString, false);
-  
+
 
   int startpos = 0;
   int lastStartpos = 0;
@@ -1556,7 +1556,7 @@ String parseTemplate(String& tmpString, byte lineSize)
   while (findNextDevValNameInString(tmpString, startpos, endpos, deviceName, valueName, format)) {
     // First copy all upto the start of the [...#...] part to be replaced.
     newString += tmpString.substring(lastStartpos, startpos);
-    
+
     // deviceName is lower case, so we can compare literal string (no need for equalsIgnoreCase)
     if (deviceName.equals(F("plugin")))
     {
@@ -1577,7 +1577,7 @@ String parseTemplate(String& tmpString, byte lineSize)
         newString += command;
       }
     }
-    else if (deviceName.equals(F("var")) || deviceName.equals(F("int"))) 
+    else if (deviceName.equals(F("var")) || deviceName.equals(F("int")))
     {
       // Address an internal variable either as float or as int
       // For example: Let,10,[VAR#9]
@@ -1599,7 +1599,7 @@ String parseTemplate(String& tmpString, byte lineSize)
         }
       }
     }
-    else 
+    else
     {
       // Address a value from a plugin.
       // For example: "[bme#temp]"
@@ -1628,11 +1628,11 @@ String parseTemplate(String& tmpString, byte lineSize)
           if (PluginCall(PLUGIN_GET_CONFIG, &TempEvent, tmpName))
           {
             transformValue(newString, lineSize, tmpName, format, tmpString);
-          }                  
+          }
         }
       }
     }
-    
+
 
     // Conversion is done (or impossible) for the found "[...#...]"
     // Continue with the next one.
@@ -1660,6 +1660,8 @@ String parseTemplate(String& tmpString, byte lineSize)
   while (newString.length() < lineSize) {
     newString += ' ';
   }
+  // fixing bug #2866
+  newString.trim();
   STOP_TIMER(PARSE_TEMPLATE);
   checkRAM(F("parseTemplate3"));
   return newString;
@@ -1694,7 +1696,7 @@ taskIndex_t findTaskIndexByName(const String& deviceName)
 
 // Find the first device value index of a taskIndex.
 // Return VARS_PER_TASK if none found.
-byte findDeviceValueIndexByName(const String& valueName, taskIndex_t taskIndex) 
+byte findDeviceValueIndexByName(const String& valueName, taskIndex_t taskIndex)
 {
   const deviceIndex_t deviceIndex = getDeviceIndex_from_TaskIndex(taskIndex);
   if (!validDeviceIndex(deviceIndex)) return VARS_PER_TASK;
@@ -1788,7 +1790,7 @@ void transformValue(
 {
   // FIXME TD-er: This function does append to newString and uses its length to perform right aling.
   // Is this the way it is intended to use?
-  
+
   checkRAM(F("transformValue"));
 
   // start changes by giig1967g - 2018-04-20
@@ -1814,11 +1816,11 @@ void transformValue(
       if (validFloatFromString(value, valFloat))
       {
         //to be used for binary values (0 or 1)
-        logicVal = static_cast<int>(roundf(valFloat)) == 0 ? 0 : 1; 
+        logicVal = static_cast<int>(roundf(valFloat)) == 0 ? 0 : 1;
       } else {
         if (value.length() > 0) {
           logicVal = 1;
-        }        
+        }
       }
       String tempValueFormat = valueFormat;
       {
@@ -1917,7 +1919,7 @@ void transformValue(
               int indexDot = value.indexOf('.');
               if (indexDot == -1) {
                 indexDot = value.length();
-              }              
+              }
               for (byte f = 0; f < (x - indexDot); f++) {
                 value = "0" + value;
               }
@@ -2410,7 +2412,7 @@ void SendValueLogger(taskIndex_t TaskIndex)
   #ifdef FEATURE_SD
     featureSD = true;
   #endif
-  
+
   if (featureSD || loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(TaskIndex);
     if (validDeviceIndex(DeviceIndex)) {
@@ -2542,7 +2544,7 @@ void checkRAM(const String &flashString, const String &a ) {
 
 void checkRAM( const String &descr ) {
   myRamTracker.registerRamState(descr);
-  
+
   uint32_t freeRAM = FreeMem();
   if (freeRAM <= lowestRAM)
   {
