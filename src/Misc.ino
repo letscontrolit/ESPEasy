@@ -1660,8 +1660,6 @@ String parseTemplate(String& tmpString, byte lineSize)
   while (newString.length() < lineSize) {
     newString += ' ';
   }
-  // fixing bug #2866
-  newString.trim();
   STOP_TIMER(PARSE_TEMPLATE);
   checkRAM(F("parseTemplate3"));
   return newString;
