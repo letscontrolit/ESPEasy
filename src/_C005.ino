@@ -91,7 +91,6 @@ bool CPlugin_005(CPlugin::Function function, struct EventStruct *event, String& 
           if (validTopic) {
             // in case of event, store to buffer and return...
             String command = parseString(cmd, 1);
-//SP_C005c: command=gpio
             if (command == F("event") || command == F("asyncevent")) {
               eventQueue.add(parseStringToEnd(cmd, 2));
             } else if (ExecuteCommand_internal(VALUE_SOURCE_MQTT, cmd.c_str())) {

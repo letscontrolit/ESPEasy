@@ -351,6 +351,7 @@ bool getPluginIDAndPrefix(char selection, byte &pluginID, String &logPrefix)
       logPrefix=F("PCF");
       break;
     default:
+      logPrefix=F("PluginID out of range. Error");
       success=false;
   }
   return success;
@@ -363,7 +364,7 @@ bool getPluginIDAndPrefixAndType(char selection, byte &pluginID, String &logPref
   {
     case 'l': //longpulse (gpio)
       pluginID =PLUGIN_GPIO;
-      logPrefix=F("MCP");
+      logPrefix=F("GPIO");
       gpioTimerType = GPIO_TYPE_INTERNAL;
       break;
     case 'm': //mcplongpulse (mcp)
@@ -377,6 +378,7 @@ bool getPluginIDAndPrefixAndType(char selection, byte &pluginID, String &logPref
       gpioTimerType = GPIO_TYPE_PCF;
       break;
     default:
+      logPrefix=F("PluginID out of range. Error");
       success=false;
   }
   return success;
