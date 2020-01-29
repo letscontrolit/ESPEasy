@@ -381,7 +381,7 @@ bool ExecuteCommand(taskIndex_t taskIndex, byte source, const char *Line, bool t
   if (tryInternal) {
     // Small optimization for events, which happen frequently
     // FIXME TD-er: Make quick check to see if a command is an internal command, so we don't need to try all
-    if (cmd.equalsIgnoreCase(F("event"))) {
+    if (cmd.equalsIgnoreCase(F("event")) || cmd.equalsIgnoreCase(F("asyncevent"))) {
       tryPlugin = false;
       tryRemoteConfig = false;
     }
