@@ -134,7 +134,7 @@ bool executeInternalCommand(const char *cmd, struct EventStruct *event, const ch
   switch (cmd_lc[0]) {
     case 'a': {
       COMMAND_CASE("accessinfo", Command_AccessInfo_Ls, 0, VALUE_SOURCE_RESTRICTED); // Network Command
-      COMMAND_CASE("asyncevent", Command_Rules_Async_Events,  -1, VALUE_SOURCE_RESTRICTED); // Rule.h
+      COMMAND_CASE("asyncevent", Command_Rules_Async_Events,  -1, VALUE_SOURCE_ALL); // Rule.h
       break;
     }
     case 'b': {
@@ -184,7 +184,7 @@ bool executeInternalCommand(const char *cmd, struct EventStruct *event, const ch
     }
     case 'l': {
       COMMAND_CASE(          "let", Command_Rules_Let,     2, VALUE_SOURCE_ALL);    // Rules.h
-      COMMAND_CASE(         "load", Command_Settings_Load, 0, VALUE_SOURCE_ALL);    // Settings.h
+      COMMAND_CASE(         "load", Command_Settings_Load, 0, VALUE_SOURCE_RESTRICTED);    // Settings.h
       COMMAND_CASE(     "logentry", Command_logentry,      1, VALUE_SOURCE_ALL);    // Diagnostic.h
       COMMAND_CASE("logportstatus", Command_logPortStatus, 0, VALUE_SOURCE_ALL);    // Diagnostic.h
       COMMAND_CASE(    "longpulse", Command_GPIO_LongPulse,3, VALUE_SOURCE_ALL);    // GPIO.h
