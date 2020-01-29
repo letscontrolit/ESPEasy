@@ -159,7 +159,6 @@ boolean Plugin_090(byte function, struct EventStruct *event, String& string) {
   return success;
 }
 
-
 #ifdef PLUGIN_090_DEBUG
 static void dumpPacket(const byte* packet, int length, String& result) {
   for (int idx = 0; idx < length; ++idx) {
@@ -252,7 +251,6 @@ static const int ROOM_TEMP_MAP[32]    = {10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
                                   26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41};
 //static const byte TIMER_MODE[4]       = {0x00,  0x01,  0x02, 0x03};
 //static const char* TIMER_MODE_MAP[4]  = {"NONE", "OFF", "ON", "BOTH"};
-
 
 // HeatPump.cpp
 static const char* lookupByteMapValue(const char* valuesMap[], const byte byteMap[], int len, byte byteValue) {
@@ -351,7 +349,12 @@ bool P090_data_struct::write(const String& command, const String& value) {
     success = lookupValue(WIDEVANE_MAP, 7, value.c_str(), settings.wideVane);
   }
 
-  return success && update(settings);
+  if (success && update(settings)) {
+    _currentSettings = settings;
+    return true;
+  }
+
+  return false;
 }
 
 void P090_data_struct::connect(bool retry) {
