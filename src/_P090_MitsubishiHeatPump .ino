@@ -65,6 +65,7 @@ private:
   bool _tempMode;
   bool _wideVaneAdj;
   int _infoMode;
+  bool _isUpdatingSettings;
 };
 
 boolean Plugin_090(byte function, struct EventStruct *event, String& string) {
@@ -211,14 +212,14 @@ static const byte HEADER[HEADER_LEN]  = {0xfc, 0x41, 0x01, 0x30, 0x10, 0x01, 0x0
 static const int INFOHEADER_LEN  = 5;
 static const byte INFOHEADER[INFOHEADER_LEN]  = {0xfc, 0x42, 0x01, 0x30, 0x10};
 
-static const int INFOMODE_LEN = 6;
+static const int INFOMODE_LEN = 3;
 static const byte INFOMODE[INFOMODE_LEN] = {
   0x02, // request a settings packet - RQST_PKT_SETTINGS
   0x03, // request the current room temp - RQST_PKT_ROOM_TEMP
-  0x04, // unknown
-  0x05, // request the timers - RQST_PKT_TIMERS
-  0x06, // request status - RQST_PKT_STATUS
-  0x09  // request standby mode (maybe?) RQST_PKT_STANDBY
+//  0x04, // unknown
+//  0x05, // request the timers - RQST_PKT_TIMERS
+  0x06 // request status - RQST_PKT_STATUS
+//  0x09  // request standby mode (maybe?) RQST_PKT_STANDBY
 };
 
 static const int RCVD_PKT_FAIL            = 0;
@@ -327,11 +328,18 @@ P090_data_struct::P090_data_struct(const int16_t serialRx, const int16_t serialT
   _lastRecv(millis() - (PACKET_SENT_INTERVAL_MS * 10)),
   _tempMode(false),
   _wideVaneAdj(false),
-  _infoMode(0) {
+  _infoMode(0),
+  _isUpdatingSettings(false) {
 
 }
 
 bool P090_data_struct::write(const String& command, const String& value) {
+  if (_isUpdatingSettings) {
+    return false;
+  }
+
+  _isUpdatingSettings = true;
+
   bool success = false;
   heatpumpSettings settings = _currentSettings;
 
@@ -351,10 +359,13 @@ bool P090_data_struct::write(const String& command, const String& value) {
 
   if (success && update(settings)) {
     _currentSettings = settings;
-    return true;
+  } else {
+    success = false;
   }
 
-  return false;
+  _isUpdatingSettings = false;
+
+  return success;
 }
 
 void P090_data_struct::connect(bool retry) {
@@ -371,6 +382,10 @@ void P090_data_struct::connect(bool retry) {
 }
 
 bool P090_data_struct::read(String& result, bool force) {
+  if (_isUpdatingSettings) {
+    return false;
+  }
+
   const heatpumpSettings lastSettings = _currentSettings;
   const heatpumpStatus lastStatus = _currentStatus;
 
@@ -381,7 +396,8 @@ bool P090_data_struct::read(String& result, bool force) {
   }
 
   if (force || _currentSettings != lastSettings || _currentStatus.roomTemperature != lastStatus.roomTemperature) {
-    //result.reserve(); // TODO:
+    result.reserve(150);
+    
     result = F("{\"roomTemperature\":");
     result += toString(_currentStatus.roomTemperature, 1);
     result += F(",\"wideVane\":\"");
