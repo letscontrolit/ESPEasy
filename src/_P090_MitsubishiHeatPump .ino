@@ -133,7 +133,7 @@ boolean Plugin_090(byte function, struct EventStruct *event, String& string) {
     case PLUGIN_WRITE: {
       P090_data_struct* heatPump = static_cast<P090_data_struct*>(getPluginTaskData(event->TaskIndex));
       if (heatPump != nullptr) {
-        success = heatPump->write(parseString(string, 1), parseString(string, 2));
+        success = heatPump->write(parseString(string, 1), parseStringKeepCase(string, 2));
       }
       break;
     }
@@ -163,7 +163,7 @@ boolean Plugin_090(byte function, struct EventStruct *event, String& string) {
 #ifdef PLUGIN_090_DEBUG
 static void dumpPacket(const byte* packet, int length, String& result) {
   for (int idx = 0; idx < length; ++idx) {
-    result += formatToHex(packet[idx]);
+    result += formatToHex(packet[idx], F(""));
     result += F(" ");
   }
 }
@@ -175,7 +175,7 @@ static String dumpOutgoingPacket(const byte* packet, int length) {
 }
 
 static String dumpIncomingPacket(const byte* header, int headerLength, const byte* data, int length) {
-  String message = F("MHP -  IN: ");
+  String message = F("MHP - IN: ");
   dumpPacket(header, headerLength, message);
   message += F("- ");
   dumpPacket(data, length, message);
@@ -235,17 +235,17 @@ static const byte CONTROL_PACKET_1[5] = {0x01,    0x02,  0x04,  0x08, 0x10};
 static const byte CONTROL_PACKET_2[1] = {0x01};
                                //{"WIDEVANE"};
 static const byte POWER[2]            = {0x00, 0x01};
-static const char* POWER_MAP[2]       = {"off", "on"};
+static const char* POWER_MAP[2]       = {"OFF", "ON"};
 static const byte MODE[5]             = {0x01,   0x02,  0x03, 0x07, 0x08};
-static const char* MODE_MAP[5]        = {"heat", "dry", "cool", "fan", "auto"};
+static const char* MODE_MAP[5]        = {"HEAT", "DRY", "COOL", "FAN", "AUTO"};
 static const byte TEMP[16]            = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f};
 static const int TEMP_MAP[16]         = {31, 30, 29, 28, 27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16};
 static const byte FAN[6]              = {0x00,  0x01,   0x02, 0x03, 0x05, 0x06};
-static const char* FAN_MAP[6]         = {"auto", "quiet", "1", "2", "3", "4"};
+static const char* FAN_MAP[6]         = {"AUTO", "QUIET", "1", "2", "3", "4"};
 static const byte VANE[7]             = {0x00,  0x01, 0x02, 0x03, 0x04, 0x05, 0x07};
-static const char* VANE_MAP[7]        = {"auto", "1", "2", "3", "4", "5", "swing"};
+static const char* VANE_MAP[7]        = {"AUTO", "1", "2", "3", "4", "5", "SWING"};
 static const byte WIDEVANE[7]         = {0x01, 0x02, 0x03, 0x04, 0x05, 0x08, 0x0c};
-static const char* WIDEVANE_MAP[7]    = {"<<", "<",  "|",  ">",  ">>", "<>", "swing"};
+static const char* WIDEVANE_MAP[7]    = {"<<", "<",  "|",  ">",  ">>", "<>", "SWING"};
 static const byte ROOM_TEMP[32]       = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
                                   0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f};
 static const int ROOM_TEMP_MAP[32]    = {10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25,
@@ -284,7 +284,7 @@ static int lookupByteMapIndex(const int valuesMap[], int len, int lookupValue) {
 
 static int lookupByteMapIndex(const char* valuesMap[], int len, const char* lookupValue) {
   for (int i = 0; i < len; i++) {
-    if (strcmp(valuesMap[i], lookupValue) == 0) {
+    if (strcasecmp(valuesMap[i], lookupValue) == 0) {
       return i;
     }
   }
@@ -431,7 +431,7 @@ void P090_data_struct::writePacket(const byte *packet, int length) {
 
 #ifdef PLUGIN_090_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
-    dumpOutgoingPacket(packet, length);
+    addLog(LOG_LEVEL_DEBUG_MORE, dumpOutgoingPacket(packet, length));
   }
 #endif
 
@@ -498,7 +498,7 @@ int P090_data_struct::readPacket() {
 #ifdef PLUGIN_090_DEBUG
         if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
           //must be dataLength+1 to pick up checksum byte
-          dumpIncomingPacket(header, INFOHEADER_LEN, data, dataLength + 1);
+          addLog(LOG_LEVEL_DEBUG_MORE, dumpIncomingPacket(header, INFOHEADER_LEN, data, dataLength + 1));
         }
 #endif
 
@@ -543,6 +543,7 @@ int P090_data_struct::readPacket() {
             }
 
             case 0x05: { // timer packet
+              // not supported currently
               /*heatpumpTimers receivedTimers;
 
               receivedTimers.mode                = lookupByteMapValue(TIMER_MODE_MAP, TIMER_MODE, 4, data[3]);
