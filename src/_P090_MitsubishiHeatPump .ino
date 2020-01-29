@@ -11,7 +11,7 @@
 #define PLUGIN_090
 #define PLUGIN_ID_090         90
 #define PLUGIN_NAME_090       "Mitsubishi Heat Pump"
-#define PLUGIN_VALUENAME1_090 "MitsubishiHeatPump"
+#define PLUGIN_VALUENAME1_090 "settings"
 
 #define PLUGIN_090_DEBUG
 
