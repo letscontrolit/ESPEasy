@@ -42,7 +42,11 @@ bool validTaskIndex(taskIndex_t index) {
 }
 
 bool validPluginID(pluginID_t pluginID) {
-  if (pluginID == INVALID_PLUGIN_ID) {
+  return (pluginID != INVALID_PLUGIN_ID);
+}
+
+bool validPluginID_fullcheck(pluginID_t pluginID) {
+  if (!validPluginID(pluginID)) {
     return false;
   }
   auto it = Plugin_id_to_DeviceIndex.find(pluginID);
@@ -70,7 +74,7 @@ deviceIndex_t getDeviceIndex_from_TaskIndex(taskIndex_t taskIndex) {
 
 deviceIndex_t getDeviceIndex(pluginID_t pluginID)
 {
-  if (validPluginID(pluginID)) {
+  if (pluginID != INVALID_PLUGIN_ID) {
     auto it = Plugin_id_to_DeviceIndex.find(pluginID);
 
     if (it != Plugin_id_to_DeviceIndex.end())

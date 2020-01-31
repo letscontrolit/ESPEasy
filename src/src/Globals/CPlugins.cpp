@@ -10,6 +10,7 @@ protocolIndex_t   INVALID_PROTOCOL_INDEX   = CPLUGIN_MAX;
 controllerIndex_t INVALID_CONTROLLER_INDEX = CONTROLLER_MAX;
 cpluginID_t INVALID_C_PLUGIN_ID          = 0;
 
+// FIXME TD-er: Make these private and add functions to access its content.
 std::map<cpluginID_t, protocolIndex_t> CPlugin_id_to_ProtocolIndex;
 std::vector<cpluginID_t> ProtocolIndex_to_CPlugin_id;
 
@@ -63,7 +64,7 @@ cpluginID_t getCPluginID_from_ControllerIndex(controllerIndex_t index) {
 
 protocolIndex_t getProtocolIndex(cpluginID_t cpluginID)
 {
-  if (validCPluginID(cpluginID)) {
+  if (cpluginID != INVALID_C_PLUGIN_ID) {
     auto it = CPlugin_id_to_ProtocolIndex.find(cpluginID);
 
     if (it != CPlugin_id_to_ProtocolIndex.end())

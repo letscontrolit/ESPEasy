@@ -152,7 +152,7 @@ void handle_json()
   taskIndex_t lastActiveTaskIndex = 0;
 
   for (taskIndex_t TaskIndex = firstTaskIndex; TaskIndex <= lastTaskIndex; TaskIndex++) {
-    if (validPluginID(Settings.TaskDeviceNumber[TaskIndex])) {
+    if (validPluginID_fullcheck(Settings.TaskDeviceNumber[TaskIndex])) {
       lastActiveTaskIndex = TaskIndex;
     }
   }
@@ -308,8 +308,8 @@ void handle_buildinfo() {
   {
     json_open(true, F("controllers"));
 
-    for (byte x = 0; x < CPLUGIN_MAX; x++) {
-      if (ProtocolIndex_to_CPlugin_id[x] != 0) {
+    for (protocolIndex_t x = 0; x < CPLUGIN_MAX; x++) {
+      if (getCPluginID_from_ProtocolIndex(x) != INVALID_C_PLUGIN_ID) {
         json_open();
         json_number(F("id"), String(x + 1));
         json_prop(F("name"), getCPluginNameFromProtocolIndex(x));

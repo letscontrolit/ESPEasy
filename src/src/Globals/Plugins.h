@@ -79,6 +79,7 @@ extern std::vector<deviceIndex_t> DeviceIndex_sorted;
 bool validDeviceIndex(deviceIndex_t index);
 bool validTaskIndex(taskIndex_t index);
 bool validPluginID(pluginID_t pluginID);
+bool validPluginID_fullcheck(pluginID_t pluginID);
 bool validUserVarIndex(userVarIndex_t index);
 bool validTaskVarIndex(taskVarIndex_t index);
 

@@ -184,13 +184,12 @@ void addDeviceSelect(const String& name,  int choice)
 
 
   #ifdef PLUGIN_BUILD_DEV
-        pluginID_t num    = DeviceIndex_to_Plugin_id[deviceIndex];
         String     plugin = "P";
 
-        if (num < 10) { plugin += '0'; }
+        if (pluginID < 10) { plugin += '0'; }
 
-        if (num < 100) { plugin += '0'; }
-        plugin    += num;
+        if (pluginID < 100) { plugin += '0'; }
+        plugin    += pluginID;
         plugin    += F(" - ");
         deviceName = plugin + deviceName;
   #endif // ifdef PLUGIN_BUILD_DEV
@@ -501,7 +500,7 @@ void handle_devicess_ShowAllTasksTable(byte page)
         {
           for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++)
           {
-            if (validPluginID(Settings.TaskDeviceNumber[x]))
+            if (validPluginID_fullcheck(Settings.TaskDeviceNumber[x]))
             {
               TXBuffer += pluginWebformShowValue(x, varNr, ExtraTaskSettings.TaskDeviceValueNames[varNr], formatUserVarNoCheck(x, varNr));
             }
@@ -759,7 +758,7 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, byte page)
   TXBuffer += F("<input type='hidden' name='page' value='1'>");
 
   // if user selected a device, add the delete button
-  if (validPluginID(Settings.TaskDeviceNumber[taskIndex])) {
+  if (validPluginID_fullcheck(Settings.TaskDeviceNumber[taskIndex])) {
     addSubmitButton(F("Delete"), F("del"));
   }
 
@@ -787,7 +786,7 @@ void setTaskDevice_to_TaskIndex(pluginID_t taskdevicenumber, taskIndex_t taskInd
 
   Settings.TaskDeviceNumber[taskIndex] = taskdevicenumber;
 
-  if (validPluginID(taskdevicenumber)) // set default values if a new device has been selected
+  if (validPluginID_fullcheck(taskdevicenumber)) // set default values if a new device has been selected
   {
     // NOTE: do not enable task by default. allow user to enter sensible valus first and let him enable it when ready.
     PluginCall(PLUGIN_SET_DEFAULTS,         &TempEvent, dummy);

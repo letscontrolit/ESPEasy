@@ -142,7 +142,7 @@ boolean handle_custom(String path) {
 
       for (taskIndex_t x = 0; x < TASKS_MAX; x++)
       {
-        if (validPluginID(Settings.TaskDeviceNumber[x]))
+        if (validPluginID_fullcheck(Settings.TaskDeviceNumber[x]))
         {
           const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(x);
           if (validDeviceIndex(DeviceIndex)) {
