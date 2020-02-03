@@ -186,6 +186,8 @@ static String dumpIncomingPacket(const byte* header, int headerLength, const byt
 ///
 /// Code below is taken from https://github.com/SwiCago/HeatPump
 ///
+/// Commit: 7e185ab
+///
 /// Modifications were made in order to embed it into a single file
 ///
 ///
