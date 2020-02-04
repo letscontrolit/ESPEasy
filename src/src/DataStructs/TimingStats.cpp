@@ -201,7 +201,7 @@ String getMiscStatsName(int stat) {
     case BACKGROUND_TASKS:        return F("backgroundtasks()");
     case HANDLE_SCHEDULER_IDLE:   return F("handle_schedule() idle");
     case HANDLE_SCHEDULER_TASK:   return F("handle_schedule() task");
-    case PARSE_TEMPLATE:          return F("parseTemplate()");
+    case PARSE_TEMPLATE_PADDED:   return F("parseTemplate_padded()");
     case PARSE_SYSVAR:            return F("parseSystemVariables()");
     case PARSE_SYSVAR_NOCHANGE:   return F("parseSystemVariables() No change");
     case HANDLE_SERVING_WEBPAGE:  return F("handle webpage");

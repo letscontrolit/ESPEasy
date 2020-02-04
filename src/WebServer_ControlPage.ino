@@ -13,7 +13,7 @@ void handle_control() {
   // sendHeadandTail_stdtemplate(_HEAD);
   String webrequest = WebServer.arg(F("cmd"));
   addLog(LOG_LEVEL_INFO,  String(F("HTTP: ")) + webrequest);
-  webrequest = parseTemplate(webrequest, webrequest.length());
+  webrequest = parseTemplate(webrequest);
 #ifndef BUILD_NO_DEBUG
   addLog(LOG_LEVEL_DEBUG, String(F("HTTP after parseTemplate: ")) + webrequest);
 #endif // ifndef BUILD_NO_DEBUG
