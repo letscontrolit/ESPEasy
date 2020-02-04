@@ -2,6 +2,7 @@
 #include "../../ESPEasy_common.h"
 #include "../../ESPEasy_plugindefs.h"
 #include "../../_CPlugin_Helper.h"
+#include "../Globals/CPlugins.h"
 
 #ifdef USES_TIMING_STATS
 
@@ -139,6 +140,10 @@ String getCPluginCFunctionName(int function) {
     case CPLUGIN_TASK_CHANGE_NOTIFICATION:  return F("CPLUGIN_TASK_CHANGE_NOTIFICATION");
     case CPLUGIN_INIT:                      return F("CPLUGIN_INIT");
     case CPLUGIN_UDP_IN:                    return F("CPLUGIN_UDP_IN");
+    case CPLUGIN_FLUSH:                     return F("CPLUGIN_FLUSH");
+    case CPLUGIN_TEN_PER_SECOND:            return F("CPLUGIN_TEN_PER_SECOND");
+    case CPLUGIN_INIT_ALL:                  return F("CPLUGIN_INIT_ALL");
+    case CPLUGIN_EXIT:                      return F("CPLUGIN_EXIT");
   }
   return getUnknownString();
 }
@@ -156,6 +161,10 @@ bool mustLogCFunction(int function) {
     case CPLUGIN_TASK_CHANGE_NOTIFICATION:  return false;
     case CPLUGIN_INIT:                      return false;
     case CPLUGIN_UDP_IN:                    return true;
+    case CPLUGIN_FLUSH:                     return false;
+    case CPLUGIN_TEN_PER_SECOND:            return true;
+    case CPLUGIN_INIT_ALL:                  return false;
+    case CPLUGIN_EXIT:                      return false;
   }
   return false;
 }
@@ -192,7 +201,7 @@ String getMiscStatsName(int stat) {
     case BACKGROUND_TASKS:        return F("backgroundtasks()");
     case HANDLE_SCHEDULER_IDLE:   return F("handle_schedule() idle");
     case HANDLE_SCHEDULER_TASK:   return F("handle_schedule() task");
-    case PARSE_TEMPLATE:          return F("parseTemplate()");
+    case PARSE_TEMPLATE_PADDED:   return F("parseTemplate_padded()");
     case PARSE_SYSVAR:            return F("parseSystemVariables()");
     case PARSE_SYSVAR_NOCHANGE:   return F("parseSystemVariables() No change");
     case HANDLE_SERVING_WEBPAGE:  return F("handle webpage");
@@ -220,7 +229,7 @@ String getMiscStatsName(int stat) {
       String result;
       result.reserve(16);
       result  = F("Delay queue ");
-      result += get_formatted_Controller_number(static_cast<int>(stat - C001_DELAY_QUEUE + 1));
+      result += get_formatted_Controller_number(static_cast<cpluginID_t>(stat - C001_DELAY_QUEUE + 1));
       return result;
     }
   }

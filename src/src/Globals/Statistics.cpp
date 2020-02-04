@@ -25,5 +25,4 @@ float loop_usec_duration_total  = 0.0;
 
 
 unsigned long dailyResetCounter                   = 0;
-unsigned long WifiDisconnectCounter               = 0;
 volatile unsigned long sw_watchdog_callback_count = 0;

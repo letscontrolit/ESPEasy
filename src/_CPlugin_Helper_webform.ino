@@ -1,7 +1,10 @@
+#include "src/Globals/CPlugins.h"
+
+
 /*********************************************************************************************\
 * Functions to load and store controller settings on the web page.
 \*********************************************************************************************/
-String getControllerParameterName(byte ProtocolIndex, byte parameterIdx, bool displayName, bool& isAlternative) {
+String getControllerParameterName(protocolIndex_t ProtocolIndex, byte parameterIdx, bool displayName, bool& isAlternative) {
   String name;
 
   if (displayName) {
@@ -56,21 +59,25 @@ String getControllerParameterName(byte ProtocolIndex, byte parameterIdx, bool di
   return name;
 }
 
-String getControllerParameterInternalName(byte ProtocolIndex, byte parameterIdx) {
+String getControllerParameterInternalName(protocolIndex_t ProtocolIndex, byte parameterIdx) {
   bool isAlternative; // Dummy, not needed for internal name
   bool displayName = false;
 
   return getControllerParameterName(ProtocolIndex, parameterIdx, displayName, isAlternative);
 }
 
-String getControllerParameterDisplayName(byte ProtocolIndex, byte parameterIdx, bool& isAlternative) {
+String getControllerParameterDisplayName(protocolIndex_t ProtocolIndex, byte parameterIdx, bool& isAlternative) {
   bool displayName = true;
 
   return getControllerParameterName(ProtocolIndex, parameterIdx, displayName, isAlternative);
 }
 
-void addControllerParameterForm(const ControllerSettingsStruct& ControllerSettings, byte controllerindex, byte parameterIdx) {
-  byte   ProtocolIndex            = getProtocolIndex(Settings.Protocol[controllerindex]);
+void addControllerParameterForm(const ControllerSettingsStruct& ControllerSettings, controllerIndex_t controllerindex, byte parameterIdx) {
+  protocolIndex_t  ProtocolIndex  = getProtocolIndex_from_ControllerIndex(controllerindex);
+  if (!validProtocolIndex(ProtocolIndex)) {
+    return;
+  }
+
   bool   isAlternativeDisplayName = false;
   String displayName              = getControllerParameterDisplayName(ProtocolIndex, parameterIdx, isAlternativeDisplayName);
   String internalName             = getControllerParameterInternalName(ProtocolIndex, parameterIdx);
@@ -181,7 +188,10 @@ void addControllerParameterForm(const ControllerSettingsStruct& ControllerSettin
 }
 
 void saveControllerParameterForm(ControllerSettingsStruct& ControllerSettings, byte controllerindex, byte parameterIdx) {
-  byte   ProtocolIndex = getProtocolIndex(Settings.Protocol[controllerindex]);
+  byte   ProtocolIndex = getProtocolIndex_from_ControllerIndex(controllerindex);
+  if (!validProtocolIndex(ProtocolIndex)) {
+    return;
+  }
   String internalName  = getControllerParameterInternalName(ProtocolIndex, parameterIdx);
 
   switch (parameterIdx) {

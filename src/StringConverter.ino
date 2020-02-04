@@ -531,7 +531,7 @@ String URLEncode(const char *msg)
  \*********************************************************************************************/
 void parseControllerVariables(String& s, struct EventStruct *event, boolean useURLencode) {
   parseEventVariables(s, event, false); // Must only URLEncode once, so do it at the end of this conversion.
-  s = parseTemplate(s, s.length());
+  s = parseTemplate(s);
   if (useURLencode) {
     s = URLEncode(s.c_str());
   }

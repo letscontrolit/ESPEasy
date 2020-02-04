@@ -388,7 +388,7 @@ const char Plugin_023_myFont_Size[] PROGMEM = {
 
 // Perform some specific changes for OLED display
 String P023_parseTemplate(String &tmpString, byte lineSize) {
-  String result = parseTemplate(tmpString, lineSize);
+  String result = parseTemplate_padded(tmpString, lineSize);
   const char degree[3] = {0xc2, 0xb0, 0};  // Unicode degree symbol
   const char degree_oled[2] = {0x7F, 0};  // P023_OLED degree symbol
   result.replace(degree, degree_oled);

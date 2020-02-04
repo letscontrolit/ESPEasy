@@ -1,4 +1,7 @@
 #ifdef USES_C015
+
+#include "src/Globals/CPlugins.h"
+
 //#######################################################################################################
 //########################### Controller Plugin 015: Blynk  #############################################
 //#######################################################################################################
@@ -106,14 +109,16 @@ bool CPlugin_015(byte function, struct EventStruct *event, String& string)
       {
         success = true;
         if (isFormItemChecked(F("controllerenabled"))){
-          for (byte i = 0; i < CONTROLLER_MAX; ++i) {
-            byte ProtocolIndex = getProtocolIndex(Settings.Protocol[i]);
-            if (i != event->ControllerIndex && Protocol[ProtocolIndex].Number == 15 && Settings.ControllerEnabled[i]) {
-              success = false;
-              // FIXME:  this will only show a warning message and not uncheck "enabled" in webform.
-              // Webserver object is not checking result of "success" var :(
-              addHtmlError(F("Only one enabled instance of blynk controller is supported"));
-              break;
+          for (controllerIndex_t i = 0; i < CONTROLLER_MAX; ++i) {
+            protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(i);
+            if (validProtocolIndex(ProtocolIndex)) {
+              if (i != event->ControllerIndex && Protocol[ProtocolIndex].Number == 15 && Settings.ControllerEnabled[i]) {
+                success = false;
+                // FIXME:  this will only show a warning message and not uncheck "enabled" in webform.
+                // Webserver object is not checking result of "success" var :(
+                addHtmlError(F("Only one enabled instance of blynk controller is supported"));
+                break;
+              }
             }
           }
           // force to connect without delay when webform saved

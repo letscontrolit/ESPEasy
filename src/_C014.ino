@@ -314,7 +314,7 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
           // SECOND Plugins
           for (taskIndex_t x = 0; x < TASKS_MAX; x++)
           {
-            if (validPluginID((Settings.TaskDeviceNumber[x])))
+            if (validPluginID_fullcheck((Settings.TaskDeviceNumber[x])))
             {
               LoadTaskSettings(x);
               deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(x);
@@ -330,7 +330,7 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
                   if (Device[DeviceIndex].Number==86) // Homie receiver
                   {
                     for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++) {
-                      if (validPluginID(Settings.TaskDeviceNumber[x])) {
+                      if (validPluginID_fullcheck(Settings.TaskDeviceNumber[x])) {
                         if (ExtraTaskSettings.TaskDeviceValueNames[varNr][0]!=0) { // do not send if Value Name is empty!
                           CPLUGIN_014_addToList(valuesList,ExtraTaskSettings.TaskDeviceValueNames[varNr]);
                           //$settable	Device → Controller	Specifies whether the property is settable (true) or readonly (false)	true or false	Yes	No (false)
@@ -384,7 +384,7 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
                   { // standard Values
                     for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++)
                     {
-                      if (validPluginID(Settings.TaskDeviceNumber[x]))
+                      if (validPluginID_fullcheck(Settings.TaskDeviceNumber[x]))
                       {
                         if (ExtraTaskSettings.TaskDeviceValueNames[varNr][0]!=0) // do not send if Value Name is empty!
                         {
@@ -521,9 +521,9 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
 
     case CPLUGIN_PROTOCOL_RECV:
       {
-        byte ControllerID = findFirstEnabledControllerWithId(CPLUGIN_ID_014);
+        controllerIndex_t ControllerID = findFirstEnabledControllerWithId(CPLUGIN_ID_014);
         bool validTopic = false;
-        if (ControllerID == CONTROLLER_MAX) {
+        if (!validControllerIndex(ControllerID)) {
           // Controller is not enabled.
           break;
         } else {

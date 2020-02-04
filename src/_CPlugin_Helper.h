@@ -2,6 +2,7 @@
 #define CPLUGIN_HELPER_H CPLUGIN_HELPER_H
 
 #include <Arduino.h>
+#include "src/Globals/CPlugins.h"
 
 struct ControllerSettingsStruct;
 class WiFiUDP;
@@ -16,9 +17,7 @@ bool safeReadStringUntil(Stream     & input,
                          unsigned int maxSize = 1024,
                          unsigned int timeout = 1000);
 
-bool valid_controller_number(int controller_number);
-
-String get_formatted_Controller_number(int controller_number);
+String get_formatted_Controller_number(cpluginID_t cpluginID);
 
 String get_auth_header(const String& user, const String& pass);
 
@@ -63,7 +62,6 @@ bool count_connection_results(bool success, const String& prefix, int controller
 bool try_connect_host(int controller_number, WiFiUDP& client, ControllerSettingsStruct& ControllerSettings);
 
 bool try_connect_host(int controller_number, WiFiClient& client, ControllerSettingsStruct& ControllerSettings);
-bool try_connect_host(int controller_number, WiFiClient& client, ControllerSettingsStruct& ControllerSettings, const String& loglabel);
 
 // Use "client.available() || client.connected()" to read all lines from slow servers.
 // See: https://github.com/esp8266/Arduino/pull/5113

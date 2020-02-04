@@ -30,7 +30,11 @@ boolean (*Plugin_ptr[PLUGIN_MAX])(byte,
 
 
 bool validDeviceIndex(deviceIndex_t index) {
-  return index < PLUGIN_MAX;
+  if (index < PLUGIN_MAX) {
+    const pluginID_t pluginID = DeviceIndex_to_Plugin_id[index];
+    return pluginID != INVALID_PLUGIN_ID;
+  }
+  return false;
 }
 
 bool validTaskIndex(taskIndex_t index) {
@@ -38,7 +42,15 @@ bool validTaskIndex(taskIndex_t index) {
 }
 
 bool validPluginID(pluginID_t pluginID) {
-  return pluginID != 0;
+  return (pluginID != INVALID_PLUGIN_ID);
+}
+
+bool validPluginID_fullcheck(pluginID_t pluginID) {
+  if (!validPluginID(pluginID)) {
+    return false;
+  }
+  auto it = Plugin_id_to_DeviceIndex.find(pluginID);
+  return (it != Plugin_id_to_DeviceIndex.end());
 }
 
 bool validUserVarIndex(userVarIndex_t index) {
@@ -62,7 +74,7 @@ deviceIndex_t getDeviceIndex_from_TaskIndex(taskIndex_t taskIndex) {
 
 deviceIndex_t getDeviceIndex(pluginID_t pluginID)
 {
-  if (validPluginID(pluginID)) {
+  if (pluginID != INVALID_PLUGIN_ID) {
     auto it = Plugin_id_to_DeviceIndex.find(pluginID);
 
     if (it != Plugin_id_to_DeviceIndex.end())
