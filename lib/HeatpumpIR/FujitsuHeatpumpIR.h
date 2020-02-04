@@ -49,6 +49,8 @@ class FujitsuHeatpumpIR : public HeatpumpIR
     void sendFujitsuSwingOn(IRSender& IR);
     void sendFujitsuFilterClean(IRSender& IR);
     void sendFujitsuSuperQuiet(IRSender& IR);
+    void sendNextVerticalPosition(IRSender& IR);
+    void sendNextHorizontalPosition(IRSender& IR);
     void sendFujitsuTestRun(IRSender& IR);
 
   private:
