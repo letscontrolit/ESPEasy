@@ -159,7 +159,7 @@ bool CPluginCall(byte Function, struct EventStruct *event, String& str)
 
   switch (Function)
   {
-    // Unconditional calls to all plugins
+    // Unconditional calls to all controllers
     case CPLUGIN_PROTOCOL_ADD:
 
       for (byte x = 0; x < CPLUGIN_MAX; x++) {
@@ -181,13 +181,14 @@ bool CPluginCall(byte Function, struct EventStruct *event, String& str)
       break;
 
 
-    // calls to active plugins
+    // calls to all active controllers
     case CPLUGIN_INIT:
     case CPLUGIN_UDP_IN:
     case CPLUGIN_INTERVAL:      // calls to send stats information
     case CPLUGIN_GOT_CONNECTED: // calls to send autodetect information
     case CPLUGIN_GOT_INVALID:   // calls to mark unit as invalid
     case CPLUGIN_FLUSH:
+    case CPLUGIN_TEN_PER_SECOND:
 
       for (byte x = 0; x < CONTROLLER_MAX; x++) {
         if ((Settings.Protocol[x] != 0) && Settings.ControllerEnabled[x]) {
@@ -199,7 +200,7 @@ bool CPluginCall(byte Function, struct EventStruct *event, String& str)
       return true;
       break;
 
-    case CPLUGIN_ACKNOWLEDGE: // calls to send acknolages back to controller
+    case CPLUGIN_ACKNOWLEDGE: // calls to send acknowledge back to controller
 
       for (byte x = 0; x < CONTROLLER_MAX; x++) {
         if ((Settings.Protocol[x] != 0) && Settings.ControllerEnabled[x]) {
