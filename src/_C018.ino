@@ -83,7 +83,7 @@ struct C018_data_struct {
   }
 
   bool isInitialized() const {
-    return (C018_easySerial != nullptr) && (myLora != nullptr) /* && autobaud_success */;
+    return (C018_easySerial != nullptr) && (myLora != nullptr)  && autobaud_success;
   }
 
   bool hasJoined() const {
@@ -347,6 +347,12 @@ bool CPlugin_018(byte function, struct EventStruct *event, String& string)
       } else {
         string = F("-");
       }
+      break;
+    }
+
+    case CPLUGIN_EXIT:
+    {
+      C018_data.reset();
       break;
     }
 

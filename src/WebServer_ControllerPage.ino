@@ -59,7 +59,8 @@ void handle_controllers() {
         TempEvent.ControllerIndex = controllerindex;
         TempEvent.ProtocolIndex   = ProtocolIndex;
         String dummy;
-        CPluginCall(ProtocolIndex, CPLUGIN_INIT, &TempEvent, dummy);
+        byte cfunction = Settings.ControllerEnabled[controllerindex] ? CPLUGIN_INIT : CPLUGIN_EXIT;
+        CPluginCall(ProtocolIndex, cfunction, &TempEvent, dummy);
       }
     }
   }
