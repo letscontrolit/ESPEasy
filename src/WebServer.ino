@@ -4,6 +4,7 @@
 
 #include <WString.h>
 
+#include "src/Globals/CPlugins.h"
 #include "src/Globals/Device.h"
 #include "src/Static/WebStaticData.h"
 
@@ -740,11 +741,10 @@ void getErrorNotifications() {
   // Check number of MQTT controllers active.
   int nrMQTTenabled = 0;
 
-  for (byte x = 0; x < CONTROLLER_MAX; x++) {
+  for (controllerIndex_t x = 0; x < CONTROLLER_MAX; x++) {
     if (Settings.Protocol[x] != 0) {
-      byte ProtocolIndex = getProtocolIndex(Settings.Protocol[x]);
-
-      if (Settings.ControllerEnabled[x] && Protocol[ProtocolIndex].usesMQTT) {
+      protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(x);
+      if (validProtocolIndex(ProtocolIndex) && Settings.ControllerEnabled[x] && Protocol[ProtocolIndex].usesMQTT) {
         ++nrMQTTenabled;
       }
     }
@@ -1025,15 +1025,8 @@ void addTaskSelect(const String& name,  taskIndex_t choice)
 
   for (taskIndex_t x = 0; x < TASKS_MAX; x++)
   {
-    deviceName = "";
     const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(x);
-
-    if (validDeviceIndex(DeviceIndex))
-    {
-      if (validPluginID(DeviceIndex_to_Plugin_id[DeviceIndex])) {
-        deviceName = getPluginNameFromDeviceIndex(DeviceIndex);
-      }
-    }
+    deviceName = getPluginNameFromDeviceIndex(DeviceIndex);
     LoadTaskSettings(x);
     TXBuffer += F("<option value='");
     TXBuffer += x;
@@ -1043,7 +1036,7 @@ void addTaskSelect(const String& name,  taskIndex_t choice)
       TXBuffer += F(" selected");
     }
 
-    if (!validPluginID(Settings.TaskDeviceNumber[x])) {
+    if (!validPluginID_fullcheck(Settings.TaskDeviceNumber[x])) {
       addDisabled();
     }
     TXBuffer += '>';

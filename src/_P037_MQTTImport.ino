@@ -36,7 +36,7 @@ String getClientName() {
   // Generate the MQTT import client name from the system name and a suffix
   //
   String tmpClientName = F("%sysname%-Import");
-  String ClientName = parseTemplate(tmpClientName, 20);
+  String ClientName = parseTemplate(tmpClientName);
   ClientName.trim(); // Avoid spaced in the name.
   ClientName.replace(' ', '_');
   if (reconnectCount != 0) ClientName += reconnectCount;

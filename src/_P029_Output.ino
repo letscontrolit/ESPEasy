@@ -44,7 +44,7 @@ boolean Plugin_029(byte function, struct EventStruct *event, String& string)
       {
         // We need the index of the controller we are: 0-CONTROLLER_MAX
         byte controllerNr = 0;
-          for (byte i=0; i < CONTROLLER_MAX; i++)
+          for (controllerIndex_t i=0; i < CONTROLLER_MAX; i++)
           {
 //            if (Settings.Protocol[i] == CPLUGIN_ID_002) { controllerNr = i; }   -> error: 'CPLUGIN_ID_002' was not declared in this scope
             if (Settings.Protocol[i] == 2) { controllerNr = i; }

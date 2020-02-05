@@ -948,3 +948,35 @@ button in less than a second or press it for more than a second:
    //Action if button is still pressed
   endif
  endon
+
+Calculating water consumption
+-----------------------------
+
+Using the pulse counter you can calculate and act on waterflow and changes like this:
+
+.. code-block:: html
+
+ On System#Boot do // When the ESP boots, do
+  TaskValueSet,3,1,0 // TaskValueSet TASKnr,VARnr,Value, Reset the Liters counter to 0
+  TaskValueSet,3,2,0 // TaskValueSet TASKnr,VARnr,Value, Reset the PreviousLiters counter to 0
+  TaskValueSet,3,3,0 // TaskValueSet TASKnr,VARnr,Value, Reset the Flow counter to 0
+  TaskValueSet,3,4,0 // TaskValueSet TASKnr,VARnr,Value, Reset the PreviousFlow counter to 0
+  TimerSet,1,30 // Set Timer 1 for the next event in 30 seconds
+ EndOn
+
+ On Watermeter#Count do // When Pulse is detected
+  if [Watermeter#Count] > 0
+    SendToHTTP,192.168.1.50,8084,/json.htm?type=command&param=udevice&idx=337&nvalue=0&svalue=1
+    TaskValueSet,3,3,60000/[Watermeter#Time]
+    SendToHTTP,192.168.1.50,8084,/json.htm?type=command&param=udevice&idx=338&nvalue=0&svalue=[Liters#Flow]
+  endif
+ EndOn
+
+ On Rules#Timer=1 do // When Timer 1 expires, do
+  if [Liters#Flow] > 0 or [Liters#PreviousFlow] > 0 // Only send value if amount of Liters > 0
+    SendToHTTP,192.168.1.50,8084,/json.htm?type=command&param=udevice&idx=338&nvalue=0&svalue=[Liters#Flow]
+    TaskValueSet,3,4,[Liters#Flow] // set flow to previous counter
+    TaskValueSet,3,3,0
+  endif
+    TimerSet,1,30 // Set Timer 1 for the next event in 30 seconds
+ Endon

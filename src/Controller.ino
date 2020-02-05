@@ -1,5 +1,11 @@
+#include "src/DataStructs/ESPEasy_EventStruct.h"
 #include "src/Globals/Device.h"
 #include "src/Globals/Plugins.h"
+#include "src/Globals/Protocol.h"
+#include "src/Globals/CPlugins.h"
+#include "ESPEasy_common.h"
+#include "ESPEasy_fdwdecl.h"
+#include "ESPEasy_plugindefs.h"
 
 // ********************************************************************************
 
@@ -44,7 +50,7 @@ void sendData(struct EventStruct *event)
 
   LoadTaskSettings(event->TaskIndex); // could have changed during background tasks.
 
-  for (byte x = 0; x < CONTROLLER_MAX; x++)
+  for (controllerIndex_t x = 0; x < CONTROLLER_MAX; x++)
   {
     event->ControllerIndex = x;
     event->idx             = Settings.TaskDeviceID[x][event->TaskIndex];
@@ -145,7 +151,7 @@ void callback(char *c_topic, byte *b_payload, unsigned int length) {
      }
    */
 
-  byte ProtocolIndex = getProtocolIndex(Settings.Protocol[enabledMqttController]);
+  protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(enabledMqttController);
   schedule_controller_event_timer(ProtocolIndex, CPLUGIN_PROTOCOL_RECV, &TempEvent);
 }
 
@@ -164,7 +170,7 @@ void MQTTDisconnect()
 /*********************************************************************************************\
 * Connect to MQTT message broker
 \*********************************************************************************************/
-bool MQTTConnect(int controller_idx)
+bool MQTTConnect(controllerIndex_t controller_idx)
 {
   ++mqtt_reconnect_count;
   MakeControllerSettings(ControllerSettings);
@@ -267,9 +273,8 @@ bool MQTTConnect(int controller_idx)
   }
   delay(0);
 
-  byte controller_number = Settings.Protocol[controller_idx];
-  count_connection_results(MQTTresult, F("MQTT : Broker "), controller_number, ControllerSettings);
   if (!MQTTresult) {
+    addLog(LOG_LEVEL_ERROR, F("MQTT : Failed to connect to broker"));
     MQTTclient.disconnect();
     updateMQTTclient_connected();
     return false;
@@ -300,12 +305,15 @@ bool MQTTConnect(int controller_idx)
 /*********************************************************************************************\
 * Check connection MQTT message broker
 \*********************************************************************************************/
-bool MQTTCheck(int controller_idx)
+bool MQTTCheck(controllerIndex_t controller_idx)
 {
   if (!WiFiConnected(10)) {
     return false;
   }
-  byte ProtocolIndex = getProtocolIndex(Settings.Protocol[controller_idx]);
+  protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(controller_idx);
+  if (!validProtocolIndex(ProtocolIndex)) {
+    return false;
+  }
 
   if (Protocol[ProtocolIndex].usesMQTT)
   {
@@ -371,7 +379,7 @@ void SendStatus(byte source, const String& status)
 }
 
 #ifdef USES_MQTT
-bool MQTTpublish(int controller_idx, const char *topic, const char *payload, boolean retained)
+bool MQTTpublish(controllerIndex_t controller_idx, const char *topic, const char *payload, boolean retained)
 {
   {
     MQTT_queue_element dummy_element(MQTT_queue_element(controller_idx, "", "", retained));

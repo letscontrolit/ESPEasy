@@ -14,6 +14,7 @@
 
 #include <rn2xx3.h>
 #include <ESPeasySerial.h>
+#include "src/Globals/CPlugins.h"
 
 struct C018_data_struct {
   C018_data_struct() : C018_easySerial(nullptr), myLora(nullptr) {}
@@ -35,9 +36,16 @@ struct C018_data_struct {
     cacheHWEUI       = "";
     cacheSysVer      = "";
     autobaud_success = false;
+    if (resetPin != -1) {
+      pinMode(resetPin, OUTPUT); 
+      digitalWrite(resetPin, LOW);
+      delay(500);
+      digitalWrite(resetPin, HIGH);
+      delay(500);
+    }
   }
 
-  bool init(const int8_t serial_rx, const int8_t serial_tx, unsigned long baudrate, bool joinIsOTAA, taskIndex_t sampleSet_Initiator) {
+  bool init(const int8_t serial_rx, const int8_t serial_tx, unsigned long baudrate, bool joinIsOTAA, taskIndex_t sampleSet_Initiator, int8_t reset_pin) {
     if ((serial_rx < 0) || (serial_tx < 0)) {
       // Both pins are needed, or else no serial possible
       return false;
@@ -53,6 +61,7 @@ struct C018_data_struct {
 
       if (notChanged) { return true; }
     }
+    resetPin = reset_pin;
 
     reset();
     C018_easySerial = new ESPeasySerial(serial_rx, serial_tx);
@@ -60,9 +69,14 @@ struct C018_data_struct {
     if (C018_easySerial != nullptr) {
       C018_easySerial->begin(baudrate);
       myLora           = new rn2xx3(*C018_easySerial);
+      // wakeUP_RN2483 and set data rate
+      // Delay must be longer than specified in the datasheet for firmware 1.0.3
+      // See: https://www.thethingsnetwork.org/forum/t/rn2483a-problems-no-serial-communication/7866/36?u=td-er
+      pinMode(serial_tx, OUTPUT); 
+      digitalWrite(serial_tx, LOW); // Send a break to the RN2483
+      delay(26);
+      digitalWrite(serial_tx, HIGH);
       autobaud_success = myLora->autobaud();
-      cacheHWEUI       = myLora->hweui();
-      cacheSysVer      = myLora->sysver();
       myLora->setLastUsedJoinMode(joinIsOTAA);
     }
     return isInitialized();
@@ -177,10 +191,20 @@ struct C018_data_struct {
   }
 
   String hweui() {
+    if (cacheHWEUI.length() == 0) {
+      if (isInitialized()) {
+        cacheHWEUI = myLora->hweui();
+      }
+    }
     return cacheHWEUI;
   }
 
   String sysver() {
+    if (cacheSysVer.length() == 0) {
+      if (isInitialized()) {
+        cacheSysVer = myLora->sysver();
+      }
+    }
     return cacheSysVer;
   }
 
@@ -233,6 +257,7 @@ private:
   String         cacheSysVer;
   uint8_t        sampleSetCounter = 0;
   taskIndex_t    sampleSetInitiator = INVALID_TASK_INDEX;
+  int8_t         resetPin = -1;
   bool           autobaud_success = false;
 } C018_data;
 
@@ -337,7 +362,7 @@ bool CPlugin_018(byte function, struct EventStruct *event, String& string)
 
       C018_data.init(customConfig.rxpin, customConfig.txpin, customConfig.baudrate, 
                      customConfig.joinmethod == C018_USE_OTAA,
-                     ControllerSettings.SampleSetInitiator);
+                     ControllerSettings.SampleSetInitiator, customConfig.resetpin);
 
       C018_data.setFrequencyPlan(static_cast<FREQ_PLAN>(customConfig.frequencyplan));
 
@@ -364,7 +389,7 @@ bool CPlugin_018(byte function, struct EventStruct *event, String& string)
 
       {
         // Script to toggle visibility of OTAA/ABP field, based on the activation method selector.
-        byte ProtocolIndex = getProtocolIndex(Settings.Protocol[event->ControllerIndex]);
+        protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(event->ControllerIndex);
         html_add_script(false);
         addHtml(F("function joinChanged(elem){ var styleOTAA = elem.value == 0 ? '' : 'none'; var styleABP = elem.value == 1 ? '' : 'none';"));
         addHtml(c018_add_joinChanged_script_element_line(getControllerParameterInternalName(ProtocolIndex, CONTROLLER_USER), true));
@@ -517,6 +542,21 @@ bool CPlugin_018(byte function, struct EventStruct *event, String& string)
       break;
     }
 
+    case CPLUGIN_PROTOCOL_RECV:
+    {
+
+
+      // FIXME TD-er: WHen should this be scheduled?
+      //schedule_controller_event_timer(event->ProtocolIndex, CPLUGIN_PROTOCOL_RECV, event);
+      break;
+    }
+
+    case CPLUGIN_TEN_PER_SECOND:
+    {
+      // FIXME TD-er: Handle reading error state or return values.
+      break;
+    }
+
     case CPLUGIN_FLUSH:
     {
       process_c018_delay_queue();
@@ -531,6 +571,16 @@ bool do_process_c018_delay_queue(int controller_number, const C018_queue_element
 
 bool do_process_c018_delay_queue(int controller_number, const C018_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
   bool  success = C018_data.txHexBytes(element.packed, ControllerSettings.Port);
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+    String log = F("C018 : Sent: ");
+    log += element.packed;
+    log += F(" length: ");
+    log += String(element.packed.length());
+    if (success) {
+      log += F(" (success)");
+    }
+    addLog(LOG_LEVEL_DEBUG, log);
+  }
   return success;
 }
 

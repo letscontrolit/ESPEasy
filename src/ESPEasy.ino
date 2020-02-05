@@ -108,6 +108,7 @@
 #include "src/Globals/GlobalMapPortStatus.h"
 #include "src/Globals/MQTT.h"
 #include "src/Globals/Plugins.h"
+#include "src/Globals/Protocol.h"
 #include "src/Globals/RTC.h"
 #include "src/Globals/SecuritySettings.h"
 #include "src/Globals/Services.h"
@@ -685,12 +686,15 @@ void runPeriodicalMQTT() {
 }
 
 int firstEnabledMQTTController() {
-  for (byte i = 0; i < CONTROLLER_MAX; ++i) {
-    byte ProtocolIndex = getProtocolIndex(Settings.Protocol[i]);
-    if (Protocol[ProtocolIndex].usesMQTT && Settings.ControllerEnabled[i]) {
-      return i;
+  for (controllerIndex_t i = 0; i < CONTROLLER_MAX; ++i) {
+    protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(i);
+    if (validProtocolIndex(ProtocolIndex)) {
+      if (Protocol[ProtocolIndex].usesMQTT && Settings.ControllerEnabled[i]) {
+        return i;
+      }
     }
   }
+  // FIXME TD-er: Must return INVALID_CONTROLLER_INDEX
   return -1;
 }
 
@@ -701,12 +705,15 @@ int firstEnabledMQTTController() {
 //boolean Blynk_get(const String& command, byte controllerIndex,float *data = NULL );
 
 int firstEnabledBlynkController() {
-  for (byte i = 0; i < CONTROLLER_MAX; ++i) {
-    byte ProtocolIndex = getProtocolIndex(Settings.Protocol[i]);
-    if (Protocol[ProtocolIndex].Number == 12 && Settings.ControllerEnabled[i]) {
-      return i;
+  for (controllerIndex_t i = 0; i < CONTROLLER_MAX; ++i) {
+    protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(i);
+    if (validProtocolIndex(ProtocolIndex)) {
+      if (Protocol[ProtocolIndex].Number == 12 && Settings.ControllerEnabled[i]) {
+        return i;
+      }
     }
   }
+  // FIXME TD-er: Must return INVALID_CONTROLLER_INDEX
   return -1;
 }
 #endif

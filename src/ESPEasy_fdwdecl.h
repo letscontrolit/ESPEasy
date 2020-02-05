@@ -4,6 +4,8 @@
 #include "ESPEasy_common.h"
 #include "src/DataStructs/ESPEasy_EventStruct.h"
 
+#include "src/Globals/CPlugins.h"
+
 // FIXME TD-er: This header file should only be included from .ino or .cpp files
 // This is only needed until the classes that need these can include the appropriate .h files to have these forward declared.
 
@@ -37,7 +39,6 @@ void     scheduleNextDelayQueue(unsigned long id,
                                 unsigned long nextTime);
 String   LoadControllerSettings(int                       ControllerIndex,
                                 ControllerSettingsStruct& controller_settings);
-String   get_formatted_Controller_number(int controller_index);
 void     statusLED(bool traffic);
 void     backgroundtasks();
 uint32_t getCurrentFreeStack();
@@ -107,7 +108,6 @@ bool safe_strncpy(char       *dest,
 
 void rulesProcessing(String& event);
 void setIntervalTimer(unsigned long id);
-byte getProtocolIndex(byte Number);
 byte getNotificationProtocolIndex(byte Number);
 void schedule_notification_event_timer(byte NotificationProtocolIndex, byte Function, struct EventStruct *event);
 
@@ -121,10 +121,10 @@ void callback(char        *c_topic,
               byte        *b_payload,
               unsigned int length);
 void MQTTDisconnect();
-bool MQTTConnect(int controller_idx);
-bool MQTTCheck(int controller_idx);
+bool MQTTConnect(controllerIndex_t controller_idx);
+bool MQTTCheck(controllerIndex_t controller_idx);
 void schedule_all_tasks_using_MQTT_controller();
-bool MQTTpublish(int controller_idx, const char *topic, const char *payload, boolean retained);
+bool MQTTpublish(controllerIndex_t controller_idx, const char *topic, const char *payload, boolean retained);
 #endif // ifdef USES_MQTT
 
 
@@ -134,7 +134,6 @@ void serialPrintln();
 bool GetArgv(const char *string, String& argvString, unsigned int argc);
 bool HasArgv(const char *string, unsigned int argc);
 boolean str2ip(const String& string, byte *IP);
-bool useStaticIP();
 String formatIP(const IPAddress& ip);
 String toString(float value, byte decimals);
 String boolToString(bool value);
@@ -172,7 +171,6 @@ void WifiScan(bool async, bool quick = false);
 void WifiScan();
 void WiFiConnectRelaxed();
 void WifiDisconnect();
-void evaluateConnectionFailures();
 void setAP(bool enable);
 void setSTA(bool enable);
 

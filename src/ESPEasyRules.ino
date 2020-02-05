@@ -366,7 +366,7 @@ void parseCompleteNonCommentLine(String& line, String& event, String& log,
     if (match || lineStartsWith_on) {
       // Only parseTemplate when we are actually doing something with the line.
       // When still looking for the "on ... do" part, do not change it before we found the block.
-      line = parseTemplate(line, line.length());
+      line = parseTemplate(line);
     }
   }
 
