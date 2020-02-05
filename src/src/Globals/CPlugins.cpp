@@ -97,7 +97,7 @@ String getCPluginNameFromProtocolIndex(protocolIndex_t ProtocolIndex) {
 String getCPluginNameFromCPluginID(cpluginID_t cpluginID) {
   protocolIndex_t protocolIndex = getProtocolIndex(cpluginID);
 
-  if (!validDeviceIndex(protocolIndex)) {
+  if (!validProtocolIndex(protocolIndex)) {
     String name = F("CPlugin ");
     name += String(static_cast<int>(cpluginID));
     name += F(" not included in build");
