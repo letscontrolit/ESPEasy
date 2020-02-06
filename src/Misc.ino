@@ -1159,7 +1159,7 @@ void ResetFactory()
     SecuritySettings.WifiSSID2[0] = 0;
     SecuritySettings.WifiKey2[0] = 0;
   }
-  SecuritySettings.Password[0] = 0;
+  strcpy_P(SecuritySettings.Password, PSTR(DEFAULT_ADMIN_PASS));
 
   Settings.ResetFactoryDefaultPreference = ResetFactoryDefaultPreference.getPreference();
 
@@ -1221,8 +1221,6 @@ void ResetFactory()
   addPredefinedPlugins(gpio_settings);
   addPredefinedRules(gpio_settings);
 
-  SaveSettings();
-
 #if DEFAULT_CONTROLLER
   MakeControllerSettings(ControllerSettings);
   safe_strncpy(ControllerSettings.Subscribe, F(DEFAULT_SUB), sizeof(ControllerSettings.Subscribe));
@@ -1235,7 +1233,12 @@ void ResetFactory()
   ControllerSettings.UseDNS = DEFAULT_SERVER_USEDNS;
   ControllerSettings.Port = DEFAULT_PORT;
   SaveControllerSettings(0, ControllerSettings);
+  strcpy_P(SecuritySettings.ControllerUser[0], PSTR(DEFAULT_CONTROLLER_USER));
+  strcpy_P(SecuritySettings.ControllerPassword[0], PSTR(DEFAULT_CONTROLLER_PASS));
 #endif
+
+  SaveSettings();
+
   checkRAM(F("ResetFactory2"));
   serialPrintln(F("RESET: Succesful, rebooting. (you might need to press the reset button if you've justed flashed the firmware)"));
   //NOTE: this is a known ESP8266 bug, not our fault. :)
