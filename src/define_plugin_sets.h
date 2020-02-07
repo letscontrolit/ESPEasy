@@ -104,7 +104,7 @@ To create/register a plugin, you have to :
     #ifndef WEBSERVER_WIFI_SCANNER
         #define WEBSERVER_WIFI_SCANNER
     #endif
-#endif
+#endif 
 
 #ifndef USE_CUSTOM_H
     #ifndef USES_SSDP
