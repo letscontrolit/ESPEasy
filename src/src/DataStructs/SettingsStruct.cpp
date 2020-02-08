@@ -2,6 +2,7 @@
 #include "../DataStructs/SettingsStruct.h"
 #include "../DataStructs/ESPEasyLimits.h"
 #include "../Globals/Plugins.h"
+#include "../Globals/CPlugins.h"
 
 template<unsigned int N_TASKS>
 SettingsStruct_tmpl<N_TASKS>::SettingsStruct_tmpl() : ResetFactoryDefaultPreference(0) {
@@ -102,6 +103,16 @@ void SettingsStruct_tmpl<N_TASKS>::TolerantLastArgParse(bool value) {
 }
 
 template<unsigned int N_TASKS>
+bool SettingsStruct_tmpl<N_TASKS>::SendToHttp_ack() {
+  return getBitFromUL(VariousBits1, 10);
+}
+
+template<unsigned int N_TASKS>
+void SettingsStruct_tmpl<N_TASKS>::SendToHttp_ack(bool value) {
+  setBitToUL(VariousBits1, 10, value);
+}
+
+template<unsigned int N_TASKS>
 void SettingsStruct_tmpl<N_TASKS>::validate() {
   if (UDPPort > 65535) { UDPPort = 0; }
 
@@ -151,7 +162,7 @@ void SettingsStruct_tmpl<N_TASKS>::clearNotifications() {
 
 template<unsigned int N_TASKS>
 void SettingsStruct_tmpl<N_TASKS>::clearControllers() {
-  for (byte i = 0; i < CONTROLLER_MAX; ++i) {
+  for (controllerIndex_t i = 0; i < CONTROLLER_MAX; ++i) {
     Protocol[i]          = 0;
     ControllerEnabled[i] = false;
   }
@@ -224,6 +235,7 @@ void SettingsStruct_tmpl<N_TASKS>::clearMisc() {
   WifiNoneSleep(DEFAULT_WIFI_NONE_SLEEP);
   gratuitousARP(DEFAULT_GRATUITOUS_ARP);
   TolerantLastArgParse(DEFAULT_TOLERANT_LAST_ARG_PARSE);
+  SendToHttp_ack(DEFAULT_SEND_TO_HTTP_ACK);
 }
 
 template<unsigned int N_TASKS>
@@ -242,7 +254,7 @@ template<unsigned int N_TASKS>
 void SettingsStruct_tmpl<N_TASKS>::clearTask(taskIndex_t task) {
   if (task >= N_TASKS) { return; }
 
-  for (byte i = 0; i < CONTROLLER_MAX; ++i) {
+  for (controllerIndex_t i = 0; i < CONTROLLER_MAX; ++i) {
     TaskDeviceID[i][task]       = 0;
     TaskDeviceSendData[i][task] = false;
   }

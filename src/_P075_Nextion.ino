@@ -290,7 +290,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
               newString += String(barVal,DEC);
             }
             else {
-              newString = parseTemplate(tmpString, 0);
+              newString = parseTemplate(tmpString);
             }
 
             P075_sendCommand(event->TaskIndex, newString.c_str());

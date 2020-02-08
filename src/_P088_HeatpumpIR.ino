@@ -125,8 +125,9 @@ boolean Plugin_088(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
       {
         // We need the index of the controller we are: 0-CONTROLLER_MAX
-        byte controllerNr = 0;
-          for (byte i=0; i < CONTROLLER_MAX; i++)
+        // FIXME TD-er: Why looking for Domoticz MQTT? Other plugins also support IDX values.
+        controllerIndex_t controllerNr = 0;
+          for (controllerIndex_t i=0; i < CONTROLLER_MAX; i++)
           {
             if (Settings.Protocol[i] == 2) { controllerNr = i; }
           }
@@ -209,15 +210,9 @@ boolean Plugin_088(byte function, struct EventStruct *event, String& string)
 
             if (strcmp_P(heatpumpModel.c_str(), shortName) == 0)
             {
-              #ifdef PLUGIN_016
-              if (irReceiver != 0)
-              irReceiver->disableIRIn(); // Stop the receiver
-              #endif
+              enableIR_RX(false);
               heatpumpIR[i]->send(*Plugin_088_irSender, powerMode, operatingMode, fanSpeed, temperature, vDir, hDir);
-              #ifdef PLUGIN_016
-              if (irReceiver != 0)
-              irReceiver->enableIRIn(); // Start the receiver
-              #endif
+              enableIR_RX(true);
               addLog(LOG_LEVEL_INFO, F("P088: Heatpump IR code transmitted"));
 #ifdef IR_DEBUG_PACKET
               addLog(LOG_LEVEL_DEBUG, IRPacket);
@@ -269,15 +264,9 @@ boolean Plugin_088(byte function, struct EventStruct *event, String& string)
           {
             PanasonicCKPHeatpumpIR *panasonicHeatpumpIR = new PanasonicCKPHeatpumpIR();
 
-            #ifdef PLUGIN_016
-            if (irReceiver != 0)
-            irReceiver->disableIRIn(); // Stop the receiver
-            #endif
+            enableIR_RX(false);
             panasonicHeatpumpIR->sendPanasonicCKPCancelTimer(*Plugin_088_irSender);
-             #ifdef PLUGIN_016
-            if (irReceiver != 0)
-            irReceiver->enableIRIn(); // Start the receiver
-            #endif
+            enableIR_RX(true);
             addLog(LOG_LEVEL_INFO, F("P088: The TIMER led on Panasonic CKP should now be OFF"));
           }
         }
@@ -294,5 +283,4 @@ boolean Plugin_088(byte function, struct EventStruct *event, String& string)
 
   return success;
 }
-
 #endif // USES_P088

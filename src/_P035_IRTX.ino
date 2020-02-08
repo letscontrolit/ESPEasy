@@ -31,7 +31,7 @@
 // - "sleep" Nr. of mins of sleep mode, or use sleep mode. (<= 0 means off.)
 // - "clock" Nr. of mins past midnight to set the clock to. (< 0 means off.)
 // - "model" . Nr or string representation of the model. Better to find it throught P016 - IR RX (0 means default.)
-
+#include <ArduinoJson.h>
 #include <IRremoteESP8266.h>
 #include <IRac.h>
 #include <IRutils.h>
@@ -207,7 +207,7 @@ boolean handleIRremote(const String &cmd) {
 
 boolean handle_AC_IRremote(const String &cmd) {
   String irData = "";
-  StaticJsonDocument<300> doc;
+  StaticJsonDocument<JSON_OBJECT_SIZE(18) + 190> doc;
 
   int argIndex = cmd.indexOf(',') + 1;
   if (argIndex)
@@ -252,7 +252,7 @@ boolean handle_AC_IRremote(const String &cmd) {
   tempstr = doc[F("econo")].as<String>();
   st.econo = IRac::strToBool(tempstr.c_str(), false); //Economy setting ON or OFF. Defaults to false if missing from JSON
   tempstr = doc[F("light")].as<String>();
-  st.light = IRac::strToBool(tempstr.c_str(), false); //Light setting ON or OFF. Defaults to false if missing from JSON
+  st.light = IRac::strToBool(tempstr.c_str(), true); //Light setting ON or OFF. Defaults to true if missing from JSON
   tempstr = doc[F("filter")].as<String>();
   st.filter = IRac::strToBool(tempstr.c_str(), false); //Filter setting ON or OFF. Defaults to false if missing from JSON
   tempstr = doc[F("clean")].as<String>();
@@ -481,18 +481,6 @@ boolean addErrorTrue()
 {
   addLog(LOG_LEVEL_ERROR, F("RAW2: Invalid encoding!"));
   return true;
-}
-
-void enableIR_RX(boolean enable)
-{
-#ifdef PLUGIN_016
-  if (irReceiver == 0) return;
-  if (enable) {
-    irReceiver->enableIRIn(); // Start the receiver
-  } else {
-    irReceiver->disableIRIn(); // Stop the receiver
-  }
-#endif
 }
 
 // A lot of the following code has been taken directly (with permission) from the IRMQTTServer.ino example code

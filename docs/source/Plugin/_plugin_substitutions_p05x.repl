@@ -28,8 +28,8 @@
 .. |P052_status| replace:: :green:`NORMAL`
 .. |P052_github| replace:: P052_SenseAir.ino
 .. _P052_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P052_SenseAir.ino
-.. |P052_usedby| replace:: :ref:`P052_S8_page`, :ref:`P052_tSense_K70_page`
-.. |P052_shortinfo| replace:: The Senseair plugin can be used for multiple gas sensors from the company Senseair. The mostly used sensor is the S8 but other sensor units that work is tSense (K70), K30, K33, S8 (and soon LP8).
+.. |P052_usedby| replace:: :ref:`P052_S8_page`, :ref:`P052_S11_page`, :ref:`P052_tSense_K70_page`
+.. |P052_shortinfo| replace:: The Senseair plugin can be used for multiple gas sensors from the company Senseair. The mostly used sensor is the S8 but other sensor units that work is tSense (K70), K30, K33, S8, S11. (LP8 soon)
 .. |P052_maintainer| replace:: `.`
 .. |P052_compileinfo| replace:: `.`
 .. |P052_usedlibraries| replace:: `.`

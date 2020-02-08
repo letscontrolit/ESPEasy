@@ -71,23 +71,16 @@ bool safeReadStringUntil(Stream     & input,
   return false;
 }
 
-bool valid_controller_number(int controller_number) {
-  if (controller_number < 0) { return false; }
-  return true;
-
-  //  return getProtocolIndex(controller_number) <= protocolCount;
-}
-
-String get_formatted_Controller_number(int controller_number) {
-  if (!valid_controller_number(controller_number)) {
+String get_formatted_Controller_number(cpluginID_t cpluginID) {
+  if (!validCPluginID(cpluginID)) {
     return F("C---");
   }
   String result = F("C");
 
-  if (controller_number < 100) { result += '0'; }
+  if (cpluginID < 100) { result += '0'; }
 
-  if (controller_number < 10) { result += '0'; }
-  result += controller_number;
+  if (cpluginID < 10) { result += '0'; }
+  result += cpluginID;
   return result;
 }
 
@@ -108,7 +101,7 @@ String get_auth_header(const String& user, const String& pass) {
 String get_auth_header(int controller_index) {
   String authHeader = "";
 
-  if (controller_index < CONTROLLER_MAX) {
+  if (validControllerIndex(controller_index)) {
     if ((SecuritySettings.ControllerUser[controller_index][0] != 0) &&
         (SecuritySettings.ControllerPassword[controller_index][0] != 0))
     {
@@ -149,7 +142,7 @@ String do_create_http_request(
                        + additional_options.length()
                        + 42;
 
-  if (content_length >= 0) { estimated_size += 25; }
+  if (content_length >= 0) { estimated_size += 45; }
   String request;
   request.reserve(estimated_size);
   request += method;
@@ -169,6 +162,12 @@ String do_create_http_request(
   request += hostportString;
   request += "\r\n";
   request += auth_header;
+
+  // Add request header as fall back.
+  // When adding another "accept" header, it may be interpreted as:
+  // "if you have XXX, send it; or failing that, just give me what you've got."
+  request += F("Accept: */*;q=0.1");
+  request += "\r\n";
   request += additional_options;
   request += get_user_agent_request_header_field();
   request += F("Connection: close\r\n");

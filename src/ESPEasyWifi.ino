@@ -173,8 +173,6 @@ void WiFiConnectRelaxed() {
     log += wifi_connect_attempt;
     addLog(LOG_LEVEL_INFO, log);
   }
-  setupStaticIPconfig();
-  setConnectionSpeed();
   last_wifi_connect_attempt_moment = millis();
   wifiConnectInProgress            = true;
 
@@ -222,7 +220,8 @@ bool prepareWiFi() {
   if (RTC.lastWiFiChannel == 0 && wifi_connect_attempt <= 1) {
     WifiScan(true);
   }
-
+  setConnectionSpeed();
+  setupStaticIPconfig();
   return true;
 }
 

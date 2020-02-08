@@ -5,6 +5,7 @@
 #include "../DataStructs/ControllerSettingsStruct.h"
 #include "../DataStructs/SchedulerTimers.h"
 #include "../DataStructs/TimingStats.h"
+#include "../Globals/CPlugins.h"
 
 
 /*********************************************************************************************\
@@ -85,10 +86,8 @@ struct ControllerDelayHandlerStruct {
 #ifndef BUILD_NO_DEBUG
 
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-      // FIXME TD-er: Must convert it to controller number, but need Settings for that.
-      // int controllernummer = Settings.Protocol[element.controller_idx];
-      int controllernummer = element.controller_idx + 1;
-      String log = get_formatted_Controller_number(controllernummer);
+      const cpluginID_t cpluginID = getCPluginID_from_ControllerIndex(element.controller_idx);
+      String log = get_formatted_Controller_number(cpluginID);
       log += " : queue full";
       addLog(LOG_LEVEL_DEBUG, log);
     }

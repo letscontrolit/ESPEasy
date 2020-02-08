@@ -8,6 +8,7 @@
 #include "../../ESPEasy_common.h"
 #include "../Commands/Common.h"
 #include "../Globals/Settings.h"
+#include "../Globals/CPlugins.h"
 
 #include "../../ESPEasy_fdwdecl.h"
 #include "../../ESPEasy_Log.h"
@@ -78,7 +79,7 @@ String Command_MQTT_Publish(struct EventStruct *event, const char *Line)
 }
 
 
-boolean MQTTsubscribe(int controller_idx, const char* topic, boolean retained)
+boolean MQTTsubscribe(controllerIndex_t controller_idx, const char* topic, boolean retained)
 {
   if (MQTTclient.subscribe(topic)) {
     setIntervalTimerOverride(TIMER_MQTT, 10); // Make sure the MQTT is being processed as soon as possible.

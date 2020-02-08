@@ -57,8 +57,8 @@ boolean NPlugin_001(byte function, struct EventStruct *event, String& string)
 			body = event->String1;
 		else
 			body = NotificationSettings.Body;
-		subject = parseTemplate(subject, subject.length());
-		body = parseTemplate(body, body.length());
+		subject = parseTemplate(subject);
+		body = parseTemplate(body);
 		NPlugin_001_send(NotificationSettings, subject, body);
 		success = true;
 		break;

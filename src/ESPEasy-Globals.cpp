@@ -31,7 +31,7 @@ WiFiUDP portUDP;
 
 
 
-int protocolCount = -1;
+
 int notificationCount = -1;
 
 boolean printToWeb = false;
@@ -59,10 +59,6 @@ float vcc = -1.0;
 
 boolean WebLoggedIn = false;
 int WebLoggedInTimer = 300;
-
-
-bool (*CPlugin_ptr[CPLUGIN_MAX])(byte, struct EventStruct*, String&);
-byte CPlugin_id[CPLUGIN_MAX];
 
 boolean (*NPlugin_ptr[NPLUGIN_MAX])(byte, struct EventStruct*, String&);
 byte NPlugin_id[NPLUGIN_MAX];
