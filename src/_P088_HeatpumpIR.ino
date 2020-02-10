@@ -43,27 +43,29 @@
  *
  */
 
- #include <FujitsuHeatpumpIR.h>
- #include <PanasonicCKPHeatpumpIR.h>
- #include <PanasonicHeatpumpIR.h>
- #include <CarrierHeatpumpIR.h>
- #include <MideaHeatpumpIR.h>
- #include <MitsubishiHeatpumpIR.h>
- #include <SamsungHeatpumpIR.h>
- #include <SharpHeatpumpIR.h>
- #include <DaikinHeatpumpIR.h>
- #include <MitsubishiHeavyHeatpumpIR.h>
- #include <MitsubishiSEZKDXXHeatpumpIR.h>
- #include <HyundaiHeatpumpIR.h>
- #include <HisenseHeatpumpIR.h>
- #include <GreeHeatpumpIR.h>
- #include <FuegoHeatpumpIR.h>
- #include <ToshibaHeatpumpIR.h>
- #include <ToshibaDaiseikaiHeatpumpIR.h>
- #include <IVTHeatpumpIR.h>
- #include <HitachiHeatpumpIR.h>
- #include <BalluHeatpumpIR.h>
- #include <AUXHeatpumpIR.h>
+#include <AUXHeatpumpIR.h>
+#include <BalluHeatpumpIR.h>
+#include <CarrierHeatpumpIR.h>
+#include <DaikinHeatpumpIR.h>
+#include <FuegoHeatpumpIR.h>
+#include <FujitsuHeatpumpIR.h>
+#include <GreeHeatpumpIR.h>
+#include <HisenseHeatpumpIR.h>
+#include <HitachiHeatpumpIR.h>
+#include <HyundaiHeatpumpIR.h>
+#include <IVTHeatpumpIR.h>
+#include <MideaHeatpumpIR.h>
+#include <MitsubishiHeatpumpIR.h>
+#include <MitsubishiHeavyFDTCHeatpumpIR.h>
+#include <MitsubishiHeavyHeatpumpIR.h>
+#include <MitsubishiMSCHeatpumpIR.h>
+#include <MitsubishiSEZKDXXHeatpumpIR.h>
+#include <PanasonicCKPHeatpumpIR.h>
+#include <PanasonicHeatpumpIR.h>
+#include <SamsungHeatpumpIR.h>
+#include <SharpHeatpumpIR.h>
+#include <ToshibaDaiseikaiHeatpumpIR.h>
+#include <ToshibaHeatpumpIR.h>
 
 // Array with all supported heatpumps
 HeatpumpIR *heatpumpIR[] = {new PanasonicCKPHeatpumpIR(), new PanasonicDKEHeatpumpIR(), new PanasonicJKEHeatpumpIR(),
@@ -71,10 +73,10 @@ HeatpumpIR *heatpumpIR[] = {new PanasonicCKPHeatpumpIR(), new PanasonicDKEHeatpu
                             new CarrierNQVHeatpumpIR(), new CarrierMCAHeatpumpIR(),
                             new MideaHeatpumpIR(), new FujitsuHeatpumpIR(),
                             new MitsubishiFDHeatpumpIR(), new MitsubishiFEHeatpumpIR(), new MitsubishiMSYHeatpumpIR(), new MitsubishiFAHeatpumpIR(),
-							new MitsubishiKJHeatpumpIR(),
+                            new MitsubishiKJHeatpumpIR(), new MitsubishiHeavyFDTCHeatpumpIR(),
                             new SamsungAQVHeatpumpIR(), new SamsungFJMHeatpumpIR(),new SharpHeatpumpIR(), new DaikinHeatpumpIR(),
                             new MitsubishiHeavyZJHeatpumpIR(), new MitsubishiHeavyZMHeatpumpIR(),
-                            new MitsubishiSEZKDXXHeatpumpIR(),
+                            new MitsubishiSEZKDXXHeatpumpIR(), new MitsubishiMSCHeatpumpIR(),
                             new HyundaiHeatpumpIR(), new HisenseHeatpumpIR(),
                             new GreeGenericHeatpumpIR(), new GreeYANHeatpumpIR(), new GreeYAAHeatpumpIR(),
                             new FuegoHeatpumpIR(), new ToshibaHeatpumpIR(), new ToshibaDaiseikaiHeatpumpIR(),
@@ -223,7 +225,7 @@ boolean Plugin_088(byte function, struct EventStruct *event, String& string)
 #ifdef IR_DEBUG_PACKET
                 printWebString += F(" <BR>\n"); // do both <BR> and \n to break line both in browser and curl -s
                 printWebString += IRPacket;
-                printWebString += F("\n"); 
+                printWebString += F("\n");
 #endif
               }
 

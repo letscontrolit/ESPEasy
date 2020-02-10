@@ -12,10 +12,13 @@
 // https://github.com/ToniA/arduino-heatpumpir/issues/23
 #define DAISEIKAI_AIRCON1_HDR_MARK   4320
 #define DAISEIKAI_AIRCON1_HDR_SPACE  4350
-#define DAISEIKAI_AIRCON1_BIT_MARK   500
+//#define DAISEIKAI_AIRCON1_BIT_MARK   500 // Adjusted for compatibility - remote WH-H05JE
+#define DAISEIKAI_AIRCON1_BIT_MARK   550 // Adjusted for compatibility - remote WH-H05JE
 #define DAISEIKAI_AIRCON1_ONE_SPACE  1650
-#define DAISEIKAI_AIRCON1_ZERO_SPACE 550
-#define DAISEIKAI_AIRCON1_MSG_SPACE  7400
+//#define DAISEIKAI_AIRCON1_ZERO_SPACE 550 // Adjusted for compatibility - remote WH-H05JE
+#define DAISEIKAI_AIRCON1_ZERO_SPACE 485 // Adjusted for compatibility - remote WH-H05JE
+//#define DAISEIKAI_AIRCON1_MSG_SPACE  7400 // Adjusted so that MSG_SPACE would be always inserted
+#define DAISEIKAI_AIRCON1_MSG_SPACE  7900 // Adjusted so that MSG_SPACE would be always inserted
 
 // Toshiba Daiseikai (Carrier) codes. Same as CarrierNQV ?
 #define DAISEIKAI_AIRCON1_MODE_AUTO  0x00 // Operating mode
