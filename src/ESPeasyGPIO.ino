@@ -8,8 +8,10 @@
 //********************************************************************************
 void GPIO_Internal_Write(byte pin, byte value)
 {
-  pinMode(pin, OUTPUT);
-  digitalWrite(pin, value);
+  if (checkValidPortRange(PLUGIN_GPIO, pin)) {
+    pinMode(pin, OUTPUT);
+    digitalWrite(pin, value);
+  }
 }
 
 //********************************************************************************
@@ -17,7 +19,10 @@ void GPIO_Internal_Write(byte pin, byte value)
 //********************************************************************************
 bool GPIO_Internal_Read(byte pin)
 {
-  return digitalRead(pin)==HIGH;
+  if (checkValidPortRange(PLUGIN_GPIO, pin))
+    return digitalRead(pin)==HIGH;
+  else
+    return false;
 }
 
 bool GPIO_Read_Switch_State(struct EventStruct *event) {
@@ -322,14 +327,21 @@ void sendMonitorEvent(const char* prefix, byte port, int8_t state)
   rulesProcessing(eventString);
 }
 
-bool checkValidPortRange(byte pluginID, byte port)
+bool checkValidPortRange(pluginID_t pluginID, byte port)
 {
   bool returnValue = false;
   switch (pluginID)
   {
     case PLUGIN_GPIO:
-      returnValue=(port>=0 && port<=PIN_D_MAX);
+    #if defined(ESP8266)
+      returnValue=((port>=0 && port<=5) || (port>=12 && port<=PIN_D_MAX));
+    #elif defined(ESP32)
+      returnValue=((port>=0 && port<=19) || (port>=21 && port<=23) || (port>=25 && port <= 27) || (port>=32 && port<=PIN_D_MAX));
+    #else
+      returnValue=false;
+    #endif //#if defined(ESP8266)
     break;
+
     case PLUGIN_MCP:
     case PLUGIN_PCF:
       returnValue=(port>=1 && port<=128);
@@ -352,7 +364,7 @@ void setInternalGPIOPullupMode(byte port)
 #endif // if defined(ESP8266)
 }
 
-bool GPIO_Write(byte pluginID, byte port, byte value, byte pinMode)
+bool GPIO_Write(pluginID_t pluginID, byte port, byte value, byte pinMode)
 {
   bool success=true;
   switch (pluginID)
@@ -375,7 +387,7 @@ bool GPIO_Write(byte pluginID, byte port, byte value, byte pinMode)
   return success;
 }
 
-bool GPIO_Read(byte pluginID, byte port, int8_t &value)
+bool GPIO_Read(pluginID_t pluginID, byte port, int8_t &value)
 {
   bool success=true;
   switch (pluginID)

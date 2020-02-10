@@ -11,8 +11,7 @@
 
 //predeclaration of functions used in this module
 void createAndSetPortStatus_Mode_State(uint32_t key, byte newMode, int8_t newState);
-bool getPluginIDAndPrefix(char selection, byte &pluginID, String &logPrefix);
-bool getPluginIDAndPrefixAndType(char selection, byte &pluginID, String &logPrefix, byte &gpioTimerType);
+bool getPluginIDAndPrefix(char selection, pluginID_t &pluginID, String &logPrefix);
 void logErrorGpioOffline(String prefix, byte port);
 void logErrorGpioOutOfRange(String prefix, byte port);
 void logErrorGpioNotOutput(String prefix, byte port);
@@ -20,7 +19,7 @@ void logErrorGpioNotOutput(String prefix, byte port);
 String Command_GPIO_Monitor(struct EventStruct *event, const char* Line)
 {
   String logPrefix;
-  byte pluginID;
+  pluginID_t pluginID = INVALID_PLUGIN_ID;
   //parseString(Line, 2).charAt(0)='g':gpio; ='p':pcf; ='m':mcp
   bool success = getPluginIDAndPrefix(parseString(Line, 2).charAt(0), pluginID, logPrefix);
   if (success && checkValidPortRange(pluginID, event->Par2))
@@ -50,7 +49,7 @@ String Command_GPIO_Monitor(struct EventStruct *event, const char* Line)
 String Command_GPIO_UnMonitor(struct EventStruct *event, const char* Line)
 {
   String logPrefix;
-  byte pluginID;
+  pluginID_t pluginID = INVALID_PLUGIN_ID;
   //parseString(Line, 2).charAt(0)='g':gpio; ='p':pcf; ='m':mcp
   bool success = getPluginIDAndPrefix(parseString(Line, 2).charAt(0), pluginID, logPrefix);
 
@@ -79,18 +78,17 @@ String Command_GPIO_LongPulse(struct EventStruct *event, const char* Line)
 
 String Command_GPIO_LongPulse_Ms(struct EventStruct *event, const char* Line)
 {
-  String logPrefix = new char;
-  byte pluginID;
-  byte gpioTimerType;
+  String logPrefix;// = ;
+  pluginID_t pluginID=INVALID_PLUGIN_ID;
   //Line[0]='l':longpulse; ='p':pcflongpulse; ='m':mcplongpulse
-  bool success = getPluginIDAndPrefixAndType(Line[0], pluginID, logPrefix, gpioTimerType);
+  bool success = getPluginIDAndPrefix(Line[0], pluginID, logPrefix);
   if (success && checkValidPortRange(pluginID, event->Par1))
   {
     const uint32_t key = createKey(pluginID,event->Par1);
     createAndSetPortStatus_Mode_State(key,PIN_MODE_OUTPUT,event->Par2);
     GPIO_Write(pluginID, event->Par1, event->Par2);
 
-    setGPIOTimer(event->Par3, gpioTimerType, event->Par1, !event->Par2);
+    setGPIOTimer(event->Par3, pluginID, event->Par1, !event->Par2);
 
     String log = logPrefix + String(F(" : port ")) + String(event->Par1);
     log += String(F(". Pulse set for ")) + String(event->Par3)+String(F(" ms"));
@@ -142,28 +140,29 @@ String Command_GPIO_Status(struct EventStruct *event, const char* Line)
 String Command_GPIO_Pulse(struct EventStruct *event, const char* Line)
 {
   String logPrefix;
-  bool caseFound = true;
-  byte pluginID=0;
+  bool success = false;
+  byte pluginID=INVALID_PLUGIN_ID;
   switch (tolower(Line[0]))
   {
     case 'p': // pulse or pcfpulse
       if (tolower(Line[1])=='u') { //pulse
         pluginID=PLUGIN_GPIO;
         logPrefix=String(F("GPIO"));
+        success=true;
       } else if (tolower(Line[1])=='c'){ //pcfpulse
         pluginID=PLUGIN_PCF;
         logPrefix=String(F("PCF"));
+        success=true;
       }
       break;
     case 'm': //mcp
       pluginID=PLUGIN_MCP;
       logPrefix=String(F("MCP"));
+      success=true;
       break;
-    default:
-      caseFound=false;
   }
 
-  if (caseFound && checkValidPortRange(pluginID, event->Par1))
+  if (success && checkValidPortRange(pluginID, event->Par1))
   {
     const uint32_t key = createKey(pluginID,event->Par1);
 
@@ -190,7 +189,7 @@ String Command_GPIO_Pulse(struct EventStruct *event, const char* Line)
 String Command_GPIO_Toggle(struct EventStruct *event, const char* Line)
 {
   String logPrefix;
-  byte pluginID;
+  pluginID_t pluginID=INVALID_PLUGIN_ID;
   //Line[0]='g':gpiotoggle; ='p':pcfgpiotoggle; ='m':mcpgpiotoggle
   bool success = getPluginIDAndPrefix(Line[0], pluginID, logPrefix);
   if (success && checkValidPortRange(pluginID, event->Par1))
@@ -241,8 +240,8 @@ String Command_GPIO_Toggle(struct EventStruct *event, const char* Line)
 
 String Command_GPIO(struct EventStruct *event, const char* Line)
 {
-  String logPrefix = new char;
-  byte pluginID;
+  String logPrefix;// = new char;
+  pluginID_t pluginID=INVALID_PLUGIN_ID;
   //Line[0]='g':gpio; ='p':pcfgpio; ='m':mcpgpio
   bool success = getPluginIDAndPrefix(Line[0], pluginID, logPrefix);
   if (success && checkValidPortRange(pluginID, event->Par1))
@@ -333,20 +332,21 @@ void createAndSetPortStatus_Mode_State(uint32_t key, byte newMode, int8_t newSta
   }
 }
 
-bool getPluginIDAndPrefix(char selection, byte &pluginID, String &logPrefix)
+bool getPluginIDAndPrefix(char selection, pluginID_t &pluginID, String &logPrefix)
 {
   bool success = true;
   switch(tolower(selection))
   {
     case 'g': //gpio
+    case 'l': //longpulse (gpio)
       pluginID=PLUGIN_GPIO;
       logPrefix=F("GPIO");
       break;
-    case 'm': //mcp
+    case 'm': //mcp & mcplongpulse
       pluginID=PLUGIN_MCP;
       logPrefix=F("MCP");
       break;
-    case 'p': //pcf
+    case 'p': //pcf & pcflongpulse
       pluginID=PLUGIN_PCF;
       logPrefix=F("PCF");
       break;
@@ -357,7 +357,8 @@ bool getPluginIDAndPrefix(char selection, byte &pluginID, String &logPrefix)
   return success;
 }
 
-bool getPluginIDAndPrefixAndType(char selection, byte &pluginID, String &logPrefix, byte &gpioTimerType)
+/*
+bool getPluginIDAndPrefixAndType(char selection, pluginID_t &pluginID, String &logPrefix, byte &gpioTimerType)
 {
   bool success = true;
   switch(tolower(selection))
@@ -383,3 +384,4 @@ bool getPluginIDAndPrefixAndType(char selection, byte &pluginID, String &logPref
   }
   return success;
 }
+*/
