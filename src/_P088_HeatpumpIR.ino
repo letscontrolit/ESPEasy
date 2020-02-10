@@ -43,29 +43,29 @@
  *
  */
 
-#include <FujitsuHeatpumpIR.h>
-#include <PanasonicCKPHeatpumpIR.h>
-#include <PanasonicHeatpumpIR.h>
+#include <AUXHeatpumpIR.h>
+#include <BalluHeatpumpIR.h>
 #include <CarrierHeatpumpIR.h>
+#include <DaikinHeatpumpIR.h>
+#include <FuegoHeatpumpIR.h>
+#include <FujitsuHeatpumpIR.h>
+#include <GreeHeatpumpIR.h>
+#include <HisenseHeatpumpIR.h>
+#include <HitachiHeatpumpIR.h>
+#include <HyundaiHeatpumpIR.h>
+#include <IVTHeatpumpIR.h>
 #include <MideaHeatpumpIR.h>
 #include <MitsubishiHeatpumpIR.h>
+#include <MitsubishiHeavyFDTCHeatpumpIR.h>
+#include <MitsubishiHeavyHeatpumpIR.h>
+#include <MitsubishiMSCHeatpumpIR.h>
+#include <MitsubishiSEZKDXXHeatpumpIR.h>
+#include <PanasonicCKPHeatpumpIR.h>
+#include <PanasonicHeatpumpIR.h>
 #include <SamsungHeatpumpIR.h>
 #include <SharpHeatpumpIR.h>
-#include <DaikinHeatpumpIR.h>
-#include <MitsubishiHeavyHeatpumpIR.h>
-#include <MitsubishiSEZKDXXHeatpumpIR.h>
-#include <MitsubishiMSCHeatpumpIR.h>
-#include <MitsubishiHeavyFDTCHeatpumpIR.h>
-#include <HyundaiHeatpumpIR.h>
-#include <HisenseHeatpumpIR.h>
-#include <GreeHeatpumpIR.h>
-#include <FuegoHeatpumpIR.h>
-#include <ToshibaHeatpumpIR.h>
 #include <ToshibaDaiseikaiHeatpumpIR.h>
-#include <IVTHeatpumpIR.h>
-#include <HitachiHeatpumpIR.h>
-#include <BalluHeatpumpIR.h>
-#include <AUXHeatpumpIR.h>
+#include <ToshibaHeatpumpIR.h>
 
 // Array with all supported heatpumps
 HeatpumpIR *heatpumpIR[] = {new PanasonicCKPHeatpumpIR(), new PanasonicDKEHeatpumpIR(), new PanasonicJKEHeatpumpIR(),
