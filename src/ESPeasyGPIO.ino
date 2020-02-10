@@ -330,16 +330,12 @@ void sendMonitorEvent(const char* prefix, byte port, int8_t state)
 bool checkValidPortRange(pluginID_t pluginID, byte port)
 {
   bool returnValue = false;
+  int  pinnr = -1;
+  bool input, output, warning;
   switch (pluginID)
   {
     case PLUGIN_GPIO:
-    #if defined(ESP8266)
-      returnValue=((port>=0 && port<=5) || (port>=12 && port<=PIN_D_MAX));
-    #elif defined(ESP32)
-      returnValue=((port>=0 && port<=19) || (port>=21 && port<=23) || (port>=25 && port <= 27) || (port>=32 && port<=PIN_D_MAX));
-    #else
-      returnValue=false;
-    #endif //#if defined(ESP8266)
+      returnValue=getGpioInfo(port, pinnr, input, output, warning);
     break;
 
     case PLUGIN_MCP:
