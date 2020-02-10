@@ -330,12 +330,14 @@ void sendMonitorEvent(const char* prefix, byte port, int8_t state)
 bool checkValidPortRange(pluginID_t pluginID, byte port)
 {
   bool returnValue = false;
-  int  pinnr = -1;
-  bool input, output, warning;
   switch (pluginID)
   {
     case PLUGIN_GPIO:
+    {
+      int  pinnr = -1;
+      bool input, output, warning;
       returnValue=getGpioInfo(port, pinnr, input, output, warning);
+    }
     break;
 
     case PLUGIN_MCP:
