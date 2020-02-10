@@ -72,11 +72,22 @@ struct C018_data_struct {
       // wakeUP_RN2483 and set data rate
       // Delay must be longer than specified in the datasheet for firmware 1.0.3
       // See: https://www.thethingsnetwork.org/forum/t/rn2483a-problems-no-serial-communication/7866/36?u=td-er
-      pinMode(serial_tx, OUTPUT); 
-      digitalWrite(serial_tx, LOW); // Send a break to the RN2483
+//      pinMode(serial_tx, OUTPUT); 
+//      digitalWrite(serial_tx, LOW); // Send a break to the RN2483
       delay(26);
-      digitalWrite(serial_tx, HIGH);
-      autobaud_success = myLora->autobaud();
+      C018_easySerial->write(0x55);
+      C018_easySerial->println();
+      // we could use sendRawCommand(F("sys get ver")); here
+      C018_easySerial->println(F("sys get ver"));
+      String response = C018_easySerial->readStringUntil('\n');
+      autobaud_success = response.length() > 10;
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        String log = F("C018 AutoBaud: ");
+        log += response;
+        addLog(LOG_LEVEL_INFO, log);
+      }
+//      digitalWrite(serial_tx, HIGH);
+//      autobaud_success = myLora->autobaud(); 
       myLora->setLastUsedJoinMode(joinIsOTAA);
     }
     return isInitialized();

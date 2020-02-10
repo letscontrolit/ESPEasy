@@ -37,7 +37,7 @@ bool rn2xx3::autobaud()
     _serial.write((byte)0x00);
     _serial.write(0x55);
     _serial.println();
-    clearSerialBuffer();
+//    clearSerialBuffer();
     
     // we could use sendRawCommand(F("sys get ver")); here
     _serial.println(F("sys get ver"));
