@@ -161,20 +161,20 @@ boolean Plugin_090(byte function, struct EventStruct *event, String& string) {
 }
 
 #ifdef PLUGIN_090_DEBUG
-static void dumpPacket(const byte* packet, int length, String& result) {
+void dumpPacket(const byte* packet, int length, String& result) {
   for (int idx = 0; idx < length; ++idx) {
     result += formatToHex(packet[idx], F(""));
     result += F(" ");
   }
 }
 
-static String dumpOutgoingPacket(const byte* packet, int length) {
+String dumpOutgoingPacket(const byte* packet, int length) {
   String message = F("MHP - OUT: ");
   dumpPacket(packet, length, message);
   return message;
 }
 
-static String dumpIncomingPacket(const byte* header, int headerLength, const byte* data, int length) {
+String dumpIncomingPacket(const byte* header, int headerLength, const byte* data, int length) {
   String message = F("MHP - IN: ");
   dumpPacket(header, headerLength, message);
   message += F("- ");
@@ -256,7 +256,7 @@ static const int ROOM_TEMP_MAP[32]    = {10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
 //static const char* TIMER_MODE_MAP[4]  = {"NONE", "OFF", "ON", "BOTH"};
 
 // HeatPump.cpp
-static const char* lookupByteMapValue(const char* valuesMap[], const byte byteMap[], int len, byte byteValue) {
+const char* lookupByteMapValue(const char* valuesMap[], const byte byteMap[], int len, byte byteValue) {
   for (int i = 0; i < len; i++) {
     if (byteMap[i] == byteValue) {
       return valuesMap[i];
@@ -265,7 +265,7 @@ static const char* lookupByteMapValue(const char* valuesMap[], const byte byteMa
   return valuesMap[0];
 }
 
-static int lookupByteMapValue(const int valuesMap[], const byte byteMap[], int len, byte byteValue) {
+int lookupByteMapValue(const int valuesMap[], const byte byteMap[], int len, byte byteValue) {
   for (int i = 0; i < len; i++) {
     if (byteMap[i] == byteValue) {
       return valuesMap[i];
@@ -274,7 +274,7 @@ static int lookupByteMapValue(const int valuesMap[], const byte byteMap[], int l
   return valuesMap[0];
 }
 
-static int lookupByteMapIndex(const int valuesMap[], int len, int lookupValue) {
+int lookupByteMapIndex(const int valuesMap[], int len, int lookupValue) {
   for (int i = 0; i < len; i++) {
     if (valuesMap[i] == lookupValue) {
       return i;
@@ -283,7 +283,7 @@ static int lookupByteMapIndex(const int valuesMap[], int len, int lookupValue) {
   return -1;
 }
 
-static int lookupByteMapIndex(const char* valuesMap[], int len, const char* lookupValue) {
+int lookupByteMapIndex(const char* valuesMap[], int len, const char* lookupValue) {
   for (int i = 0; i < len; i++) {
     if (strcasecmp(valuesMap[i], lookupValue) == 0) {
       return i;
@@ -292,7 +292,7 @@ static int lookupByteMapIndex(const char* valuesMap[], int len, const char* look
   return -1;
 }
 
-static bool lookupValue(const char* valuesMap[], int len, const char* lookupValue, const char*& destination) {
+bool lookupValue(const char* valuesMap[], int len, const char* lookupValue, const char*& destination) {
   int index = lookupByteMapIndex(valuesMap, len, lookupValue);
   if (index == -1) {
     return false;
@@ -301,7 +301,7 @@ static bool lookupValue(const char* valuesMap[], int len, const char* lookupValu
   return true;
 }
 
-static byte checkSum(byte bytes[], int len) {
+byte checkSum(byte bytes[], int len) {
   byte sum = 0;
   for (int i = 0; i < len; i++) {
     sum += bytes[i];
@@ -399,7 +399,7 @@ bool P090_data_struct::read(String& result, bool force) {
 
   if (force || _currentSettings != lastSettings || _currentStatus.roomTemperature != lastStatus.roomTemperature) {
     result.reserve(150);
-    
+
     result = F("{\"roomTemperature\":");
     result += toString(_currentStatus.roomTemperature, 1);
     result += F(",\"wideVane\":\"");
