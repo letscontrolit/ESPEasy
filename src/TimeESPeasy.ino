@@ -238,11 +238,17 @@ unsigned long now() {
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         double time_offset = unixTime_d - sysTime;
-        String log         = F("Time adjusted by ");
-        log += String(time_offset * 1000.0);
-        log += F(" msec. Wander: ");
-        log += String((time_offset * 1000.0) / syncInterval);
-        log += F(" msec/second");
+        String log = F("Time set to ");
+        log += String(unixTime_d,3);
+
+        if (-86400 < time_offset && time_offset < 86400) {
+          // Only useful to show adjustment if it is less than a day.
+          log += F(" Time adjusted by ");
+          log += String(time_offset * 1000.0);
+          log += F(" msec. Wander: ");
+          log += String((time_offset * 1000.0) / syncInterval);
+          log += F(" msec/second");
+        }
         addLog(LOG_LEVEL_INFO, log)
       }
       sysTime = unixTime_d;

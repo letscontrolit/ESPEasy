@@ -67,27 +67,35 @@ struct C018_data_struct {
     C018_easySerial = new ESPeasySerial(serial_rx, serial_tx);
 
     if (C018_easySerial != nullptr) {
+      if (resetPin == -1) {
+        pinMode(serial_tx, OUTPUT); 
+        digitalWrite(serial_tx, LOW);
+      }
+
       C018_easySerial->begin(baudrate);
-      myLora           = new rn2xx3(*C018_easySerial);
       // wakeUP_RN2483 and set data rate
       // Delay must be longer than specified in the datasheet for firmware 1.0.3
       // See: https://www.thethingsnetwork.org/forum/t/rn2483a-problems-no-serial-communication/7866/36?u=td-er
-//      pinMode(serial_tx, OUTPUT); 
-//      digitalWrite(serial_tx, LOW); // Send a break to the RN2483
       delay(26);
       C018_easySerial->write(0x55);
       C018_easySerial->println();
+      delay(100);
+
+      myLora           = new rn2xx3(*C018_easySerial);
+
+      String response = myLora->sysver();
       // we could use sendRawCommand(F("sys get ver")); here
-      C018_easySerial->println(F("sys get ver"));
-      String response = C018_easySerial->readStringUntil('\n');
+//      C018_easySerial->println(F("sys get ver"));
+//      String response = C018_easySerial->readStringUntil('\n');
       autobaud_success = response.length() > 10;
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         String log = F("C018 AutoBaud: ");
         log += response;
+        log += F(" status: ");
+        log += myLora->sendRawCommand(F("mac get status"));
         addLog(LOG_LEVEL_INFO, log);
+        C018_logError(F("autobaud check"));
       }
-//      digitalWrite(serial_tx, HIGH);
-//      autobaud_success = myLora->autobaud(); 
       myLora->setLastUsedJoinMode(joinIsOTAA);
     }
     return isInitialized();
@@ -99,42 +107,65 @@ struct C018_data_struct {
 
   bool hasJoined() const {
     if (!isInitialized()) { return false; }
-    return myLora->hasJoined();
+    bool res = myLora->hasJoined();
+    C018_logError(F("hasJoined()"));
+    return res;
   }
 
   bool useOTAA() const {
     if (!isInitialized()) { return true; }
-    return myLora->useOTAA();
+    bool res = myLora->useOTAA();
+    C018_logError(F("useOTA()"));
+    return res;
   }
 
   bool txUncnfBytes(const byte *data, uint8_t size, uint8_t port) {
     if (!hasJoined()) { return false; }
-    return myLora->txBytes(data, size, port) != TX_FAIL;
+    bool res = myLora->txBytes(data, size, port) != TX_FAIL;
+    C018_logError(F("txUncnfBytes()"));
+    return res;
   }
 
   bool txHexBytes(const String& data, uint8_t port) {
     if (!hasJoined()) { return false; }
-    return myLora->txHexBytes(data, port) != TX_FAIL;
+    bool res = myLora->txHexBytes(data, port, true) != TX_FAIL;
+    C018_logError(F("txHexBytes()"));
+    return res;
   }
+/*
+  bool txHexBytes_async(const String& data, uint8_t port) {
+    if (!hasJoined()) { return false; }
+    bool res = myLora->tx  txHexBytes(data, port) != TX_FAIL;
+    C018_logError(F("txHexBytes()"));
+    return res;
+  }
+*/
 
   bool txUncnf(const String& data, uint8_t port) {
     if (!hasJoined()) { return false; }
-    return myLora->tx(data, port) != TX_FAIL;
+    bool res = myLora->tx(data, port) != TX_FAIL;
+    C018_logError(F("txUncnf()"));
+    return res;
   }
 
   bool setFrequencyPlan(FREQ_PLAN plan) {
     if (!isInitialized()) { return false; }
-    return myLora->setFrequencyPlan(plan);
+    bool res = myLora->setFrequencyPlan(plan);
+    C018_logError(F("setFrequencyPlan()"));
+    return res;
   }
 
   bool setSF(uint8_t sf) {
     if (!isInitialized()) { return false; }
-    return myLora->setSF(sf);
+    bool res = myLora->setSF(sf);
+    C018_logError(F("setSF()"));
+    return res;
   }
 
   bool initOTAA(const String& AppEUI = "", const String& AppKey = "", const String& DevEUI = "") {
     if (!isInitialized()) { return false; }
     bool success = myLora->initOTAA(AppEUI, AppKey, DevEUI);
+    C018_logError(F("initOTAA()"));
     updateCacheOnInit();
     return success;
   }
@@ -142,13 +173,21 @@ struct C018_data_struct {
   bool initABP(const String& addr, const String& AppSKey, const String& NwkSKey) {
     if (!isInitialized()) { return false; }
     bool success = myLora->initABP(addr, AppSKey, NwkSKey);
+    C018_logError(F("initABP()"));
     updateCacheOnInit();
     return success;
   }
 
   String sendRawCommand(const String& command) {
     if (!isInitialized()) { return ""; }
-    return myLora->sendRawCommand(command);
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      String log = F("sendRawCommand: ");
+      log += command;
+      addLog(LOG_LEVEL_INFO, log);    
+    }
+    String res = myLora->sendRawCommand(command);
+    C018_logError(F("sendRawCommand()"));
+    return res;
   }
 
   int getVbat() {
@@ -156,19 +195,21 @@ struct C018_data_struct {
     return myLora->getVbat();
   }
 
-  String peekLastErrorInvalidParam() {
+  String peekLastError() {
     if (!isInitialized()) { return ""; }
-    return myLora->peekLastErrorInvalidParam();
+    return myLora->peekLastError();
   }
 
-  String getLastErrorInvalidParam() {
+  String getLastError() {
     if (!isInitialized()) { return ""; }
-    return myLora->getLastErrorInvalidParam();
+    return myLora->getLastError();
   }
 
   String getDataRate() {
     if (!isInitialized()) { return ""; }
-    return myLora->getDataRate();
+    String res = myLora->getDataRate();
+    C018_logError(F("getDataRate()"));
+    return res;
   }
 
   int getRSSI() {
@@ -178,17 +219,21 @@ struct C018_data_struct {
 
   uint32_t getRawStatus() {
     if (!isInitialized()) { return 0; }
-    return myLora->Status.getRawStatus();
+    return myLora->getStatus().getRawStatus();
   }
 
   bool getFrameCounters(uint32_t& dnctr, uint32_t& upctr) {
     if (!isInitialized()) { return false; }
-    return myLora->getFrameCounters(dnctr, upctr);
+    bool res = myLora->getFrameCounters(dnctr, upctr);
+    C018_logError(F("getFrameCounters()"));
+    return res;
   }
 
   bool setFrameCounters(uint32_t dnctr, uint32_t upctr) {
     if (!isInitialized()) { return false; }
-    return myLora->setFrameCounters(dnctr, upctr);
+    bool res = myLora->setFrameCounters(dnctr, upctr);
+    C018_logError(F("setFrameCounters()"));
+    return res;
   }
 
   // Cached data, only changing occasionally.
@@ -229,11 +274,17 @@ struct C018_data_struct {
     return sampleSetCounter;
   }
 
+  void async_loop() {
+    if (isInitialized()) {
+      myLora->async_loop();
+    }
+  }
 
 private:
 
-  void C018_logError(const String& command) {
-    String error = myLora->peekLastErrorInvalidParam();
+  void C018_logError(const String& command) const {
+//    String error = myLora->peekLastError();
+    String error = myLora->getLastError();
 
     if (error.length() > 0) {
       String log = F("RN2384: ");
@@ -251,7 +302,7 @@ private:
       return;
     }
 
-    if (myLora->Status.Joined)
+    if (myLora->getStatus().Joined)
     {
       cacheDevAddr = myLora->sendRawCommand(F("mac get devaddr"));
 
@@ -491,7 +542,7 @@ bool CPlugin_018(byte function, struct EventStruct *event, String& string)
       }
 
       addRowLabel(F("Last Command Error"));
-      addHtml(C018_data.getLastErrorInvalidParam());
+      addHtml(C018_data.getLastError());
 
       addRowLabel(F("Sample Set Counter"));
       addHtml(String(C018_data.getSampleSetCount()));
@@ -570,6 +621,7 @@ bool CPlugin_018(byte function, struct EventStruct *event, String& string)
 
     case CPLUGIN_TEN_PER_SECOND:
     {
+      C018_data.async_loop();
       // FIXME TD-er: Handle reading error state or return values.
       break;
     }
