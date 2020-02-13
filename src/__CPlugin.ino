@@ -207,6 +207,7 @@ bool CPluginCall(byte Function, struct EventStruct *event, String& str)
     case CPLUGIN_GOT_INVALID:   // calls to mark unit as invalid
     case CPLUGIN_FLUSH:
     case CPLUGIN_TEN_PER_SECOND:
+    case CPLUGIN_FIFTY_PER_SECOND:
 
       if (Function == CPLUGIN_INIT_ALL) {
         Function = CPLUGIN_INIT;

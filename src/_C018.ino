@@ -619,8 +619,9 @@ bool CPlugin_018(byte function, struct EventStruct *event, String& string)
       break;
     }
 
-    case CPLUGIN_TEN_PER_SECOND:
+    case CPLUGIN_FIFTY_PER_SECOND:
     {
+
       C018_data.async_loop();
       // FIXME TD-er: Handle reading error state or return values.
       break;

@@ -142,6 +142,7 @@ String getCPluginCFunctionName(int function) {
     case CPLUGIN_UDP_IN:                    return F("CPLUGIN_UDP_IN");
     case CPLUGIN_FLUSH:                     return F("CPLUGIN_FLUSH");
     case CPLUGIN_TEN_PER_SECOND:            return F("CPLUGIN_TEN_PER_SECOND");
+    case CPLUGIN_FIFTY_PER_SECOND:          return F("CPLUGIN_FIFTY_PER_SECOND");
     case CPLUGIN_INIT_ALL:                  return F("CPLUGIN_INIT_ALL");
     case CPLUGIN_EXIT:                      return F("CPLUGIN_EXIT");
   }
@@ -163,6 +164,7 @@ bool mustLogCFunction(int function) {
     case CPLUGIN_UDP_IN:                    return true;
     case CPLUGIN_FLUSH:                     return false;
     case CPLUGIN_TEN_PER_SECOND:            return true;
+    case CPLUGIN_FIFTY_PER_SECOND:          return true;
     case CPLUGIN_INIT_ALL:                  return false;
     case CPLUGIN_EXIT:                      return false;
   }

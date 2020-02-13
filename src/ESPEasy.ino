@@ -724,10 +724,17 @@ int firstEnabledBlynkController() {
 \*********************************************************************************************/
 
 void run50TimesPerSecond() {
-  START_TIMER;
   String dummy;
-  PluginCall(PLUGIN_FIFTY_PER_SECOND, 0, dummy);
-  STOP_TIMER(PLUGIN_CALL_50PS);
+  {
+    START_TIMER;
+    PluginCall(PLUGIN_FIFTY_PER_SECOND, 0, dummy);
+    STOP_TIMER(PLUGIN_CALL_50PS);
+  }
+  {
+    START_TIMER;
+    CPluginCall(CPLUGIN_FIFTY_PER_SECOND, 0, dummy);
+    STOP_TIMER(CPLUGIN_CALL_50PS);
+  }
 }
 
 /*********************************************************************************************\
