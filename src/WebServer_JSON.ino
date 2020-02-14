@@ -322,7 +322,7 @@ void handle_buildinfo() {
     json_open(true, F("notifications"));
 
     for (byte x = 0; x < NPLUGIN_MAX; x++) {
-      if (NPlugin_id[x] != 0) {
+      if (validNPluginID(NPlugin_id[x])) {
         json_open();
         json_number(F("id"), String(x + 1));
         json_prop(F("name"), getNPluginNameFromNotifierIndex(x));

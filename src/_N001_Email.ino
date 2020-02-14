@@ -11,58 +11,61 @@
 
 // The message body is included in event->String1
 
-boolean NPlugin_001(byte function, struct EventStruct *event, String& string)
+boolean NPlugin_001(NPlugin::Function function, struct EventStruct *event, String& string)
 {
 	boolean success = false;
 
 	switch (function) {
-	case NPLUGIN_PROTOCOL_ADD:
-	{
-		Notification[++notificationCount].Number = NPLUGIN_ID_001;
-		Notification[notificationCount].usesMessaging = true;
-		Notification[notificationCount].usesGPIO = 0;
-		break;
-	}
+		case NPlugin::Function::NPLUGIN_PROTOCOL_ADD:
+		{
+			Notification[++notificationCount].Number = NPLUGIN_ID_001;
+			Notification[notificationCount].usesMessaging = true;
+			Notification[notificationCount].usesGPIO = 0;
+			break;
+		}
 
-	case NPLUGIN_GET_DEVICENAME:
-	{
-		string = F(NPLUGIN_NAME_001);
-		break;
-	}
+		case NPlugin::Function::NPLUGIN_GET_DEVICENAME:
+		{
+			string = F(NPLUGIN_NAME_001);
+			break;
+		}
 
-	// Edwin: NPLUGIN_WRITE seems to be not implemented/not used yet? Disabled because its confusing now.
-	// case NPLUGIN_WRITE:
-	//   {
-	//     String log = "";
-	//     String command = parseString(string, 1);
-	//
-	//     if (command == F("email"))
-	//     {
-	//       MakeNotificationSettings(NotificationSettings);
-	//       LoadNotificationSettings(event->NotificationIndex, (byte*)&NotificationSettings, sizeof(NotificationSettingsStruct));
-	//       NPlugin_001_send(NotificationSettings.Domain, NotificationSettings.Receiver, NotificationSettings.Sender, NotificationSettings.Subject, NotificationSettings.Body, NotificationSettings.Server, NotificationSettings.Port);
-	//       success = true;
-	//     }
-	//     break;
-	//   }
+		// Edwin: NPlugin::Function::NPLUGIN_WRITE seems to be not implemented/not used yet? Disabled because its confusing now.
+		// case NPlugin::Function::NPLUGIN_WRITE:
+		//   {
+		//     String log = "";
+		//     String command = parseString(string, 1);
+		//
+		//     if (command == F("email"))
+		//     {
+		//       MakeNotificationSettings(NotificationSettings);
+		//       LoadNotificationSettings(event->NotificationIndex, (byte*)&NotificationSettings, sizeof(NotificationSettingsStruct));
+		//       NPlugin_001_send(NotificationSettings.Domain, NotificationSettings.Receiver, NotificationSettings.Sender, NotificationSettings.Subject, NotificationSettings.Body, NotificationSettings.Server, NotificationSettings.Port);
+		//       success = true;
+		//     }
+		//     break;
+		//   }
 
-	case NPLUGIN_NOTIFY:
-	{
-		MakeNotificationSettings(NotificationSettings);
-		LoadNotificationSettings(event->NotificationIndex, (byte*)&NotificationSettings, sizeof(NotificationSettingsStruct));
-    NotificationSettings.validate();
-		String subject = NotificationSettings.Subject;
-		String body = "";
-		if (event->String1.length() > 0)
-			body = event->String1;
-		else
-			body = NotificationSettings.Body;
-		subject = parseTemplate(subject);
-		body = parseTemplate(body);
-		NPlugin_001_send(NotificationSettings, subject, body);
-		success = true;
+		case NPlugin::Function::NPLUGIN_NOTIFY:
+		{
+			MakeNotificationSettings(NotificationSettings);
+			LoadNotificationSettings(event->NotificationIndex, (byte*)&NotificationSettings, sizeof(NotificationSettingsStruct));
+			NotificationSettings.validate();
+			String subject = NotificationSettings.Subject;
+			String body = "";
+			if (event->String1.length() > 0)
+				body = event->String1;
+			else
+				body = NotificationSettings.Body;
+			subject = parseTemplate(subject);
+			body = parseTemplate(body);
+			NPlugin_001_send(NotificationSettings, subject, body);
+			success = true;
+			break;
+		}
+
+		default:
 		break;
-	}
 	}
 	return success;
 }

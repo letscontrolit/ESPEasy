@@ -3,7 +3,9 @@
 #include "src/DataStructs/EventValueSource.h"
 #include "src/Globals/Device.h"
 #include "src/Globals/CPlugins.h"
+#include "src/Globals/NPlugins.h"
 #include "src/Globals/Plugins.h"
+#include "ESPEasy_plugindefs.h"
 
 #define TIMER_ID_SHIFT    28
 
@@ -677,7 +679,7 @@ void process_system_event_queue() {
       CPluginCall(Index, Function, &EventQueue.front().event, tmpString);
       break;
     case NotificationPluginEnum:
-      NPlugin_ptr[Index](Function, &EventQueue.front().event, tmpString);
+      NPlugin_ptr[Index](static_cast<NPlugin::Function>(Function), &EventQueue.front().event, tmpString);
       break;
   }
   EventQueue.pop_front();

@@ -31,7 +31,7 @@ struct EventStruct
   controllerIndex_t ControllerIndex;   // index position in Settings.Controller, 0-3
   protocolIndex_t   ProtocolIndex;     // index position in protocol array, depending on which controller plugins are loaded.
   byte              NotificationIndex; // index position in Settings.Notification, 0-3
-  // Edwin: Not needed, and wasnt used. We can determine the protocol index with getNotificationProtocolIndex(NotificationIndex)
+  // Edwin: Not needed, and wasnt used. We can determine the protocol index with getNProtocolIndex(NotificationIndex)
   // byte NotificationProtocolIndex; // index position in notification array, depending on which controller plugins are loaded.
   byte BaseVarIndex;
   byte sensorType;

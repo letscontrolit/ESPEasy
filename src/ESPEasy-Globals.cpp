@@ -1,9 +1,8 @@
 #include <Arduino.h>
 
 #include "ESPEasy-Globals.h"
+#include "ESPEasy_plugindefs.h"
 
-
-NotificationStruct Notification[NPLUGIN_MAX];
 
 #if defined(ESP32)
   int8_t ledChannelPin[16];
@@ -27,12 +26,6 @@ bool statusNTPInitialized = false;
 // udp protocol stuff (syslog, global sync, node info list, ntp time)
 WiFiUDP portUDP;
 
-
-
-
-
-
-int notificationCount = -1;
 
 boolean printToWeb = false;
 String printWebString;
@@ -60,8 +53,6 @@ float vcc = -1.0;
 boolean WebLoggedIn = false;
 int WebLoggedInTimer = 300;
 
-boolean (*NPlugin_ptr[NPLUGIN_MAX])(byte, struct EventStruct*, String&);
-byte NPlugin_id[NPLUGIN_MAX];
 
 String dummyString = "";  // FIXME @TD-er  This may take a lot of memory over time, since long-lived Strings only tend to grow.
 

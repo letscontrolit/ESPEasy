@@ -76,13 +76,18 @@
 // ********************************************************************************
 //   NPlugin (Notification) function calls
 // ********************************************************************************
-#define NPLUGIN_PROTOCOL_ADD                1
-#define NPLUGIN_GET_DEVICENAME              2
-#define NPLUGIN_WEBFORM_SAVE                3
-#define NPLUGIN_WEBFORM_LOAD                4
-#define NPLUGIN_WRITE                       5
-#define NPLUGIN_NOTIFY                      6
-#define NPLUGIN_NOT_FOUND                 255
+class NPlugin {
+  public:
+  enum Function {
+    NPLUGIN_PROTOCOL_ADD = 1,
+    NPLUGIN_GET_DEVICENAME,
+    NPLUGIN_WEBFORM_SAVE,
+    NPLUGIN_WEBFORM_LOAD,
+    NPLUGIN_WRITE,
+    NPLUGIN_NOTIFY
+  };
+
+};
 
 
 #endif // ESPEASY_PLUGIN_DEFS_H
