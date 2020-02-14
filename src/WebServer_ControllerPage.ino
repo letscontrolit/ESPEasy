@@ -59,8 +59,8 @@ void handle_controllers() {
         TempEvent.ControllerIndex = controllerindex;
         TempEvent.ProtocolIndex   = ProtocolIndex;
         String dummy;
-        byte cfunction = Settings.ControllerEnabled[controllerindex] ? CPLUGIN_INIT : CPLUGIN_EXIT;
-        CPluginCall(ProtocolIndex, cfunction, &TempEvent, dummy);
+        byte cfunction = Settings.ControllerEnabled[controllerindex] ? CPlugin::Function::CPLUGIN_INIT : CPlugin::Function::CPLUGIN_EXIT;
+        CPluginCall(ProtocolIndex, static_cast<CPlugin::Function>(cfunction), &TempEvent, dummy);
       }
     }
   }
@@ -101,7 +101,7 @@ void handle_controllers_clearLoadDefaults(byte controllerindex, ControllerSettin
 
   if (Protocol[ProtocolIndex].usesTemplate) {
     String dummy;
-    CPluginCall(ProtocolIndex, CPLUGIN_PROTOCOL_TEMPLATE, &TempEvent, dummy);
+    CPluginCall(ProtocolIndex, CPlugin::Function::CPLUGIN_PROTOCOL_TEMPLATE, &TempEvent, dummy);
   }
   safe_strncpy(ControllerSettings.Subscribe,            TempEvent.String1.c_str(), sizeof(ControllerSettings.Subscribe));
   safe_strncpy(ControllerSettings.Publish,              TempEvent.String2.c_str(), sizeof(ControllerSettings.Publish));
@@ -137,7 +137,7 @@ void handle_controllers_CopySubmittedSettings(byte controllerindex, ControllerSe
 
     // Call controller plugin to save CustomControllerSettings
     String dummy;
-    CPluginCall(ProtocolIndex, CPLUGIN_WEBFORM_SAVE, &TempEvent, dummy);
+    CPluginCall(ProtocolIndex, CPlugin::Function::CPLUGIN_WEBFORM_SAVE, &TempEvent, dummy);
   }
 }
 
@@ -193,7 +193,7 @@ void handle_controllers_ShowAllControllersTable()
       {
         const protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(x);
         String hostDescription;
-        CPluginCall(ProtocolIndex, CPLUGIN_WEBFORM_SHOW_HOST_CONFIG, 0, hostDescription);
+        CPluginCall(ProtocolIndex, CPlugin::Function::CPLUGIN_WEBFORM_SHOW_HOST_CONFIG, 0, hostDescription);
 
         if (hostDescription.length() != 0) {
           TXBuffer += hostDescription;
@@ -322,10 +322,10 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
       TempEvent.ProtocolIndex   = ProtocolIndex;
 
       String webformLoadString;
-      CPluginCall(ProtocolIndex, CPLUGIN_WEBFORM_LOAD, &TempEvent, webformLoadString);
+      CPluginCall(ProtocolIndex, CPlugin::Function::CPLUGIN_WEBFORM_LOAD, &TempEvent, webformLoadString);
 
       if (webformLoadString.length() > 0) {
-        addHtmlError(F("Bug in CPLUGIN_WEBFORM_LOAD, should not append to string, use addHtml() instead"));
+        addHtmlError(F("Bug in CPlugin::Function::CPLUGIN_WEBFORM_LOAD, should not append to string, use addHtml() instead"));
       }
     }
     addControllerParameterForm(ControllerSettings, controllerindex, CONTROLLER_ENABLED);

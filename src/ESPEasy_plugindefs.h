@@ -43,41 +43,46 @@
 //   CPlugin (Controller) function calls
 // ********************************************************************************
 
-// Make sure the CPLUGIN_* does not overlap PLUGIN_*
-#define CPLUGIN_PROTOCOL_ADD               41 // Called at boot for letting a controller adding itself to list of available controllers
-#define CPLUGIN_PROTOCOL_TEMPLATE          42
-#define CPLUGIN_PROTOCOL_SEND              43
-#define CPLUGIN_PROTOCOL_RECV              44
-#define CPLUGIN_GET_DEVICENAME             45
-#define CPLUGIN_WEBFORM_SAVE               46
-#define CPLUGIN_WEBFORM_LOAD               47
-#define CPLUGIN_GET_PROTOCOL_DISPLAY_NAME  48
-#define CPLUGIN_TASK_CHANGE_NOTIFICATION   49
-#define CPLUGIN_INIT                       50
-#define CPLUGIN_UDP_IN                     51
-#define CPLUGIN_FLUSH                      52 // Force offloading data stored in buffers, called before sleep/reboot
-#define CPLUGIN_TEN_PER_SECOND             53 // Called 10x per second (typical for checking new data instead of waiting)
-#define CPLUGIN_FIFTY_PER_SECOND           54 // Called 50x per second (typical for checking new data instead of waiting)
-#define CPLUGIN_INIT_ALL                   55
-#define CPLUGIN_EXIT                       56
+class CPlugin {
+public:
+
+  enum Function {
+    CPLUGIN_PROTOCOL_ADD = 1, // Called at boot for letting a controller adding itself to list of available controllers
+    CPLUGIN_PROTOCOL_TEMPLATE,
+    CPLUGIN_PROTOCOL_SEND,
+    CPLUGIN_PROTOCOL_RECV,
+    CPLUGIN_GET_DEVICENAME,
+    CPLUGIN_WEBFORM_SAVE,
+    CPLUGIN_WEBFORM_LOAD,
+    CPLUGIN_GET_PROTOCOL_DISPLAY_NAME,
+    CPLUGIN_TASK_CHANGE_NOTIFICATION,
+    CPLUGIN_INIT,
+    CPLUGIN_UDP_IN,
+    CPLUGIN_FLUSH,            // Force offloading data stored in buffers, called before sleep/reboot
+    CPLUGIN_TEN_PER_SECOND,   // Called 10x per second (typical for checking new data instead of waiting)
+    CPLUGIN_FIFTY_PER_SECOND, // Called 50x per second (typical for checking new data instead of waiting)
+    CPLUGIN_INIT_ALL,
+    CPLUGIN_EXIT,
 
 
-// new messages for autodiscover controller plugins (experimental) i.e. C014
-#define CPLUGIN_GOT_CONNECTED              57 // call after connected to mqtt server to publich device autodicover features
-#define CPLUGIN_GOT_INVALID                58 // should be called before major changes i.e. changing the device name to clean up data on the controller. !ToDo
-#define CPLUGIN_INTERVAL                   59 // call every interval loop
-#define CPLUGIN_ACKNOWLEDGE                60 // call for sending acknowledges !ToDo done by direct function call in PluginCall() for now.
+    // new messages for autodiscover controller plugins (experimental) i.e. C014
+    CPLUGIN_GOT_CONNECTED,           // call after connected to mqtt server to publich device autodicover features
+    CPLUGIN_GOT_INVALID,             // should be called before major changes i.e. changing the device name to clean up data on the
+                                     // controller. !ToDo
+    CPLUGIN_INTERVAL,                // call every interval loop
+    CPLUGIN_ACKNOWLEDGE,             // call for sending acknowledges !ToDo done by direct function call in PluginCall() for now.
 
-#define CPLUGIN_WEBFORM_SHOW_HOST_CONFIG   61 // Used for showing host information for the controller.
-
-
+    CPLUGIN_WEBFORM_SHOW_HOST_CONFIG // Used for showing host information for the controller.
+  };
+};
 
 
 // ********************************************************************************
 //   NPlugin (Notification) function calls
 // ********************************************************************************
 class NPlugin {
-  public:
+public:
+
   enum Function {
     NPLUGIN_PROTOCOL_ADD = 1,
     NPLUGIN_GET_DEVICENAME,
@@ -86,7 +91,6 @@ class NPlugin {
     NPLUGIN_WRITE,
     NPLUGIN_NOTIFY
   };
-
 };
 
 

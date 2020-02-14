@@ -20,53 +20,57 @@
 #define CPLUGIN_NAME_017 "Zabbix"
 #include <ArduinoJson.h>
 
-bool CPlugin_017(byte function, struct EventStruct *event, String &string)
+bool CPlugin_017(CPlugin::Function function, struct EventStruct *event, String &string)
 {
   bool success = false;
 
   switch (function)
   {
-  case CPLUGIN_PROTOCOL_ADD:
-  {
-    Protocol[++protocolCount].Number = CPLUGIN_ID_017;
-    Protocol[protocolCount].usesMQTT = false;
-    Protocol[protocolCount].usesTemplate = false;
-    Protocol[protocolCount].usesAccount = false;
-    Protocol[protocolCount].usesPassword = false;
-    Protocol[protocolCount].usesID = false;
-    Protocol[protocolCount].defaultPort = 10051;
-    break;
-  }
-
-  case CPLUGIN_GET_DEVICENAME:
-  {
-    string = F(CPLUGIN_NAME_017);
-    break;
-  }
-
-  case CPLUGIN_PROTOCOL_SEND:
-  {
-    byte valueCount = getValueCountFromSensorType(event->sensorType);
-    C017_queue_element element(event);
-
-    MakeControllerSettings(ControllerSettings);
-    LoadControllerSettings(event->ControllerIndex, ControllerSettings);
-
-    for (byte x = 0; x < valueCount; x++)
+    case CPlugin::Function::CPLUGIN_PROTOCOL_ADD:
     {
-      element.txt[x] = formatUserVarNoCheck(event, x);
+      Protocol[++protocolCount].Number = CPLUGIN_ID_017;
+      Protocol[protocolCount].usesMQTT = false;
+      Protocol[protocolCount].usesTemplate = false;
+      Protocol[protocolCount].usesAccount = false;
+      Protocol[protocolCount].usesPassword = false;
+      Protocol[protocolCount].usesID = false;
+      Protocol[protocolCount].defaultPort = 10051;
+      break;
     }
-    success = C017_DelayHandler.addToQueue(element);
-    scheduleNextDelayQueue(TIMER_C017_DELAY_QUEUE, C017_DelayHandler.getNextScheduleTime());
-    break;
-  }
 
-  case CPLUGIN_FLUSH:
-  {
-    process_c017_delay_queue();
-    delay(0);
-    break;
-  }
+    case CPlugin::Function::CPLUGIN_GET_DEVICENAME:
+    {
+      string = F(CPLUGIN_NAME_017);
+      break;
+    }
+
+    case CPlugin::Function::CPLUGIN_PROTOCOL_SEND:
+    {
+      byte valueCount = getValueCountFromSensorType(event->sensorType);
+      C017_queue_element element(event);
+
+      MakeControllerSettings(ControllerSettings);
+      LoadControllerSettings(event->ControllerIndex, ControllerSettings);
+
+      for (byte x = 0; x < valueCount; x++)
+      {
+        element.txt[x] = formatUserVarNoCheck(event, x);
+      }
+      success = C017_DelayHandler.addToQueue(element);
+      scheduleNextDelayQueue(TIMER_C017_DELAY_QUEUE, C017_DelayHandler.getNextScheduleTime());
+      break;
+    }
+
+    case CPlugin::Function::CPLUGIN_FLUSH:
+    {
+      process_c017_delay_queue();
+      delay(0);
+      break;
+    }
+    
+    default:
+      break;
+
   }
   return success;
 }

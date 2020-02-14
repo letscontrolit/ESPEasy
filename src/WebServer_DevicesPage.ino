@@ -279,7 +279,7 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
     PluginCall(PLUGIN_WEBFORM_SAVE, &TempEvent, dummy);
   }
 
-  // notify controllers: CPLUGIN_TASK_CHANGE_NOTIFICATION
+  // notify controllers: CPlugin::Function::CPLUGIN_TASK_CHANGE_NOTIFICATION
   for (controllerIndex_t x = 0; x < CONTROLLER_MAX; x++)
   {
     TempEvent.ControllerIndex = x;
@@ -289,7 +289,7 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
     {
       TempEvent.ProtocolIndex = getProtocolIndex_from_ControllerIndex(TempEvent.ControllerIndex);
       String dummy;
-      CPluginCall(TempEvent.ProtocolIndex, CPLUGIN_TASK_CHANGE_NOTIFICATION, &TempEvent, dummy);
+      CPluginCall(TempEvent.ProtocolIndex, CPlugin::Function::CPLUGIN_TASK_CHANGE_NOTIFICATION, &TempEvent, dummy);
     }
   }
 }

@@ -2,6 +2,8 @@
 #define DATASTRUCTS_TIMINGSTATS_H
 
 #include "../../define_plugin_sets.h"
+#include "../../ESPEasy_plugindefs.h"
+#include "../../ESPEasy_fdwdecl.h"
 
 #ifdef USES_TIMING_STATS
 
@@ -95,8 +97,8 @@ private:
 
 String getPluginFunctionName(int function);
 bool   mustLogFunction(int function);
-String getCPluginCFunctionName(int function);
-bool   mustLogCFunction(int function);
+String getCPluginCFunctionName(CPlugin::Function function);
+bool   mustLogCFunction(CPlugin::Function function);
 String getMiscStatsName(int stat);
 
 

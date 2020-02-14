@@ -63,7 +63,7 @@ void sendData(struct EventStruct *event)
 
       if (validUserVar(event)) {
         String dummy;
-        CPluginCall(event->ProtocolIndex, CPLUGIN_PROTOCOL_SEND, event, dummy);
+        CPluginCall(event->ProtocolIndex, CPlugin::Function::CPLUGIN_PROTOCOL_SEND, event, dummy);
       }
 #ifndef BUILD_NO_DEBUG
       else {
@@ -152,7 +152,7 @@ void callback(char *c_topic, byte *b_payload, unsigned int length) {
    */
 
   protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(enabledMqttController);
-  schedule_controller_event_timer(ProtocolIndex, CPLUGIN_PROTOCOL_RECV, &TempEvent);
+  schedule_controller_event_timer(ProtocolIndex, CPlugin::Function::CPLUGIN_PROTOCOL_RECV, &TempEvent);
 }
 
 /*********************************************************************************************\
@@ -295,7 +295,7 @@ bool MQTTConnect(controllerIndex_t controller_idx)
     mqtt_reconnect_count = 0;
 
     // call all installed controller to publish autodiscover data
-    if (MQTTclient_should_reconnect) { CPluginCall(CPLUGIN_GOT_CONNECTED, 0); }
+    if (MQTTclient_should_reconnect) { CPluginCall(CPlugin::Function::CPLUGIN_GOT_CONNECTED, 0); }
     MQTTclient_should_reconnect = false;
     return true; // end loop if succesfull
   }

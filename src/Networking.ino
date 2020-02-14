@@ -206,7 +206,7 @@ void checkUDP()
               TempEvent.Par2 = len;
               String dummy;
               PluginCall(PLUGIN_UDP_IN, &TempEvent, dummy);
-              CPluginCall(CPLUGIN_UDP_IN, &TempEvent);
+              CPluginCall(CPlugin::Function::CPLUGIN_UDP_IN, &TempEvent);
               break;
             }
           }

@@ -8,13 +8,13 @@
 #define CPLUGIN_NAME_001       "Domoticz HTTP"
 
 
-bool CPlugin_001(byte function, struct EventStruct *event, String& string)
+bool CPlugin_001(CPlugin::Function function, struct EventStruct *event, String& string)
 {
   bool success = false;
 
   switch (function)
   {
-    case CPLUGIN_PROTOCOL_ADD:
+    case CPlugin::Function::CPLUGIN_PROTOCOL_ADD:
       {
         Protocol[++protocolCount].Number = CPLUGIN_ID_001;
         Protocol[protocolCount].usesMQTT = false;
@@ -25,13 +25,13 @@ bool CPlugin_001(byte function, struct EventStruct *event, String& string)
         break;
       }
 
-    case CPLUGIN_GET_DEVICENAME:
+    case CPlugin::Function::CPLUGIN_GET_DEVICENAME:
       {
         string = F(CPLUGIN_NAME_001);
         break;
       }
 
-    case CPLUGIN_INIT:
+    case CPlugin::Function::CPLUGIN_INIT:
       {
         MakeControllerSettings(ControllerSettings);
         LoadControllerSettings(event->ControllerIndex, ControllerSettings);
@@ -39,7 +39,7 @@ bool CPlugin_001(byte function, struct EventStruct *event, String& string)
         break;
       }
 
-    case CPLUGIN_PROTOCOL_SEND:
+    case CPlugin::Function::CPLUGIN_PROTOCOL_SEND:
       {
         if (event->idx != 0)
         {
@@ -107,12 +107,15 @@ bool CPlugin_001(byte function, struct EventStruct *event, String& string)
         break;
       }
 
-    case CPLUGIN_FLUSH:
+    case CPlugin::Function::CPLUGIN_FLUSH:
       {
         process_c001_delay_queue();
         delay(0);
         break;
       }
+
+    default:
+      break;
   }
   return success;
 }

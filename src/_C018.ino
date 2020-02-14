@@ -380,13 +380,13 @@ struct C018_ConfigStruct
 };
 
 
-bool CPlugin_018(byte function, struct EventStruct *event, String& string)
+bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& string)
 {
   bool success = false;
 
   switch (function)
   {
-    case CPLUGIN_PROTOCOL_ADD:
+    case CPlugin::Function::CPLUGIN_PROTOCOL_ADD:
     {
       Protocol[++protocolCount].Number       = CPLUGIN_ID_018;
       Protocol[protocolCount].usesMQTT       = false;
@@ -401,13 +401,13 @@ bool CPlugin_018(byte function, struct EventStruct *event, String& string)
       break;
     }
 
-    case CPLUGIN_GET_DEVICENAME:
+    case CPlugin::Function::CPLUGIN_GET_DEVICENAME:
     {
       string = F(CPLUGIN_NAME_018);
       break;
     }
 
-    case CPLUGIN_WEBFORM_SHOW_HOST_CONFIG:
+    case CPlugin::Function::CPLUGIN_WEBFORM_SHOW_HOST_CONFIG:
     {
       if (C018_data.isInitialized()) {
         string  = F("Dev addr: ");
@@ -419,13 +419,13 @@ bool CPlugin_018(byte function, struct EventStruct *event, String& string)
       break;
     }
 
-    case CPLUGIN_EXIT:
+    case CPlugin::Function::CPLUGIN_EXIT:
     {
       C018_data.reset();
       break;
     }
 
-    case CPLUGIN_INIT:
+    case CPlugin::Function::CPLUGIN_INIT:
     {
       MakeControllerSettings(ControllerSettings);
       LoadControllerSettings(event->ControllerIndex, ControllerSettings);
@@ -455,7 +455,7 @@ bool CPlugin_018(byte function, struct EventStruct *event, String& string)
       break;
     }
 
-    case CPLUGIN_WEBFORM_LOAD:
+    case CPlugin::Function::CPLUGIN_WEBFORM_LOAD:
     {
       C018_ConfigStruct customConfig;
 
@@ -560,7 +560,7 @@ bool CPlugin_018(byte function, struct EventStruct *event, String& string)
 
       break;
     }
-    case CPLUGIN_WEBFORM_SAVE:
+    case CPlugin::Function::CPLUGIN_WEBFORM_SAVE:
     {
       C018_ConfigStruct customConfig;
       customConfig.reset();
@@ -585,7 +585,7 @@ bool CPlugin_018(byte function, struct EventStruct *event, String& string)
       break;
     }
 
-    case CPLUGIN_GET_PROTOCOL_DISPLAY_NAME:
+    case CPlugin::Function::CPLUGIN_GET_PROTOCOL_DISPLAY_NAME:
     {
       success = true;
 
@@ -608,7 +608,7 @@ bool CPlugin_018(byte function, struct EventStruct *event, String& string)
       break;
     }
 
-    case CPLUGIN_PROTOCOL_SEND:
+    case CPlugin::Function::CPLUGIN_PROTOCOL_SEND:
     {
       success = C018_DelayHandler.addToQueue(
         C018_queue_element(event, C018_data.getSampleSetCount(event->TaskIndex)));
@@ -617,16 +617,16 @@ bool CPlugin_018(byte function, struct EventStruct *event, String& string)
       break;
     }
 
-    case CPLUGIN_PROTOCOL_RECV:
+    case CPlugin::Function::CPLUGIN_PROTOCOL_RECV:
     {
 
 
       // FIXME TD-er: WHen should this be scheduled?
-      //schedule_controller_event_timer(event->ProtocolIndex, CPLUGIN_PROTOCOL_RECV, event);
+      //schedule_controller_event_timer(event->ProtocolIndex, CPlugin::Function::CPLUGIN_PROTOCOL_RECV, event);
       break;
     }
 
-    case CPLUGIN_FIFTY_PER_SECOND:
+    case CPlugin::Function::CPLUGIN_FIFTY_PER_SECOND:
     {
 
       C018_data.async_loop();
@@ -634,12 +634,16 @@ bool CPlugin_018(byte function, struct EventStruct *event, String& string)
       break;
     }
 
-    case CPLUGIN_FLUSH:
+    case CPlugin::Function::CPLUGIN_FLUSH:
     {
       process_c018_delay_queue();
       delay(0);
       break;
     }
+
+    default:
+      break;
+
   }
   return success;
 }

@@ -609,7 +609,7 @@ void flushAndDisconnectAllClients() {
     unsigned long timer = millis() + 1000;
     while (!timeOutReached(timer)) {
       // call to all controllers (delay queue) to flush all data.
-      CPluginCall(CPLUGIN_FLUSH, 0);
+      CPluginCall(CPlugin::Function::CPLUGIN_FLUSH, 0);
 #ifdef USES_MQTT      
       if (mqttControllerEnabled && MQTTclient.connected()) {
         MQTTclient.loop();
@@ -732,7 +732,7 @@ void run50TimesPerSecond() {
   }
   {
     START_TIMER;
-    CPluginCall(CPLUGIN_FIFTY_PER_SECOND, 0, dummy);
+    CPluginCall(CPlugin::Function::CPLUGIN_FIFTY_PER_SECOND, 0, dummy);
     STOP_TIMER(CPLUGIN_CALL_50PS);
   }
 }
@@ -755,7 +755,7 @@ void run10TimesPerSecond() {
   }
   {
     START_TIMER;
-    CPluginCall(CPLUGIN_TEN_PER_SECOND, 0, dummy);
+    CPluginCall(CPlugin::Function::CPLUGIN_TEN_PER_SECOND, 0, dummy);
     STOP_TIMER(CPLUGIN_CALL_10PS);
   }
 
@@ -883,7 +883,7 @@ void runEach30Seconds()
   refreshNodeList();
 
   // sending $stats to homie controller
-  CPluginCall(CPLUGIN_INTERVAL, 0);
+  CPluginCall(CPlugin::Function::CPLUGIN_INTERVAL, 0);
 
   #if defined(ESP8266)
   #ifdef USES_SSDP
