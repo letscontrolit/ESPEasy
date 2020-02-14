@@ -273,8 +273,12 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
         addControllerParameterForm(ControllerSettings, controllerindex, CONTROLLER_MAX_RETRIES);
         addControllerParameterForm(ControllerSettings, controllerindex, CONTROLLER_FULL_QUEUE_ACTION);
       }
-      addControllerParameterForm(ControllerSettings, controllerindex, CONTROLLER_CHECK_REPLY);
-      addControllerParameterForm(ControllerSettings, controllerindex, CONTROLLER_TIMEOUT);
+      if (Protocol[ProtocolIndex].usesCheckReply) {
+        addControllerParameterForm(ControllerSettings, controllerindex, CONTROLLER_CHECK_REPLY);
+      }
+      if (Protocol[ProtocolIndex].usesTimeout) {
+        addControllerParameterForm(ControllerSettings, controllerindex, CONTROLLER_TIMEOUT);
+      }
 
       if (Protocol[ProtocolIndex].usesSampleSets) {
         addControllerParameterForm(ControllerSettings, controllerindex, CONTROLLER_SAMPLE_SET_INITIATOR);

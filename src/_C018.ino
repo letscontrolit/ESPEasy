@@ -15,6 +15,11 @@
 #include <rn2xx3.h>
 #include <ESPeasySerial.h>
 #include "src/Globals/CPlugins.h"
+#include "src/Globals/Protocol.h"
+#include "src/ControllerQueue/C018_queue_element.h"
+#include "ESPEasy_plugindefs.h"
+#include "ESPEasy_fdwdecl.h"
+#include "_CPlugin_Helper.h"
 
 struct C018_data_struct {
   C018_data_struct() : C018_easySerial(nullptr), myLora(nullptr) {}
@@ -390,6 +395,8 @@ bool CPlugin_018(byte function, struct EventStruct *event, String& string)
       Protocol[protocolCount].defaultPort    = 1;
       Protocol[protocolCount].usesID         = true;
       Protocol[protocolCount].usesHost       = false;
+      Protocol[protocolCount].usesCheckReply = false;
+      Protocol[protocolCount].usesTimeout    = false;
       Protocol[protocolCount].usesSampleSets = true;
       break;
     }
@@ -590,7 +597,7 @@ bool CPlugin_018(byte function, struct EventStruct *event, String& string)
           string = F("AppKey");
           break;
         case CONTROLLER_TIMEOUT:
-          string = F("Gateway Timeout");
+          string = F("Module Timeout");
           break;
         case CONTROLLER_PORT:
           string = F("Port");

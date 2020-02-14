@@ -163,7 +163,7 @@ bool mustLogCFunction(int function) {
     case CPLUGIN_INIT:                      return false;
     case CPLUGIN_UDP_IN:                    return true;
     case CPLUGIN_FLUSH:                     return false;
-    case CPLUGIN_TEN_PER_SECOND:            return true;
+    case CPLUGIN_TEN_PER_SECOND:            return false;
     case CPLUGIN_FIFTY_PER_SECOND:          return true;
     case CPLUGIN_INIT_ALL:                  return false;
     case CPLUGIN_EXIT:                      return false;
