@@ -40,24 +40,23 @@ enum TX_RETURN_TYPE {
                   // This also implies that a confirmed message is acked.
 };
 
-class rn2xx3
-{
-  public:
+class rn2xx3 {
+public:
 
-    /*
+  /*
    * A simplified constructor taking only a Stream ({Software/Hardware}Serial) object.
    * The serial port should already be initialised when initialising this library.
    */
   rn2xx3(Stream& serial);
 
   /*
-     * Transmit the correct sequence to the rn2xx3 to trigger its autobauding feature.
-     * After this operation the rn2xx3 should communicate at the same baud rate than us.
-     */
-    bool autobaud();
+   * Transmit the correct sequence to the rn2xx3 to trigger its autobauding feature.
+   * After this operation the rn2xx3 should communicate at the same baud rate than us.
+   */
+  bool   autobaud();
 
-    /*
-     * Get the hardware EUI of the radio, so that we can register it on The Things Network
+  /*
+   * Get the hardware EUI of the radio, so that we can register it on The Things Network
    * and obtain the correct AppKey.
    * You have to have a working serial connection to the radio before calling this function.
    * In other words you have to at least call autobaud() some time before this function.
@@ -87,35 +86,37 @@ class rn2xx3
   /*
    * Get the RN2xx3's hardware and firmware version number. This is also used
    * to detect if the module is either an RN2483 or an RN2903.
-     */
-    String sysver();
+   */
+  String sysver();
 
-    bool setSF(uint8_t sf);
+  bool   setSF(uint8_t sf);
 
-    /*
-     * Initialise the RN2xx3 and join the LoRa network (if applicable).
+  /*
+   * Initialise the RN2xx3 and join the LoRa network (if applicable).
    * This function can only be called after calling initABP() or initOTAA().
-     * The sole purpose of this function is to re-initialise the radio if it
-     * is in an unknown state.
-     */
-    bool init();
+   * The sole purpose of this function is to re-initialise the radio if it
+   * is in an unknown state.
+   */
+  bool   init();
 
-    /*
-     * Initialise the RN2xx3 and join a network using personalization.
+  /*
+   * Initialise the RN2xx3 and join a network using personalization.
    *
    * addr: The device address as a HEX string.
    *       Example "0203FFEE"
    * AppSKey: Application Session Key as a HEX string.
    *          Example "8D7FFEF938589D95AAD928C2E2E7E48F"
-     * NwkSKey: Network Session Key as a HEX string.
-     *          Example "AE17E567AECC8787F749A62F5541D522"
-     */
-    bool initABP(const String& addr, const String& AppSKey, const String& NwkSKey);
+   * NwkSKey: Network Session Key as a HEX string.
+   *          Example "AE17E567AECC8787F749A62F5541D522"
+   */
+  bool   initABP(const String& addr,
+                 const String& AppSKey,
+                 const String& NwkSKey);
 
-    //TODO: initABP(uint8_t * addr, uint8_t * AppSKey, uint8_t * NwkSKey)
+  // TODO: initABP(uint8_t * addr, uint8_t * AppSKey, uint8_t * NwkSKey)
 
-    /*
-     * Initialise the RN2xx3 and join a network using over the air activation.
+  /*
+   * Initialise the RN2xx3 and join a network using over the air activation.
    *
    * AppEUI: Application EUI as a HEX string.
    *         Example "70B3D57ED00001A6"
@@ -126,106 +127,125 @@ class rn2xx3
    * If the DevEUI parameter is omitted, the Hardware EUI from module will be used
    * If no keys, or invalid length keys, are provided, no keys
    * will be configured. If the module is already configured with some keys
-     * they will be used. Otherwise the join will fail and this function
-     * will return false.
-     */
-    bool initOTAA(const String& AppEUI="", const String& AppKey="", const String& DevEUI="");
+   * they will be used. Otherwise the join will fail and this function
+   * will return false.
+   */
+  bool initOTAA(const String& AppEUI = "",
+                const String& AppKey = "",
+                const String& DevEUI = "");
 
-    /*
-     * Initialise the RN2xx3 and join a network using over the air activation,
+  /*
+   * Initialise the RN2xx3 and join a network using over the air activation,
    * using byte arrays. This is useful when storing the keys in eeprom or flash
    * and reading them out in runtime.
    *
    * AppEUI: Application EUI as a uint8_t buffer
-     * AppKey: Application key as a uint8_t buffer
-     * DevEui: Device EUI as a uint8_t buffer (optional - set to 0 to use Hardware EUI)
-     */
-     bool initOTAA(uint8_t * AppEUI, uint8_t * AppKey, uint8_t * DevEui);
+   * AppKey: Application key as a uint8_t buffer
+   * DevEui: Device EUI as a uint8_t buffer (optional - set to 0 to use Hardware EUI)
+   */
+  bool initOTAA(uint8_t *AppEUI,
+                uint8_t *AppKey,
+                uint8_t *DevEui);
 
-    /*
-     * Transmit the provided data. The data is hex-encoded by this library,
+  /*
+   * Transmit the provided data. The data is hex-encoded by this library,
    * so plain text can be provided.
    * This function is an alias for txUncnf().
-     *
-     * Parameter is an ascii text string.
-     */
-    TX_RETURN_TYPE tx(const String& , uint8_t port = 1, bool async = false);
+   *
+   * Parameter is an ascii text string.
+   */
+  TX_RETURN_TYPE tx(const String&,
+                    uint8_t port = 1,
+                    bool    async = false);
 
-    /*
-     * Transmit raw byte encoded data via LoRa WAN.
-     * This method expects a raw byte array as first parameter.
-     * The second parameter is the count of the bytes to send.
-     */
-    TX_RETURN_TYPE txBytes(const byte*, uint8_t size, uint8_t port = 1, bool async = false);
+  /*
+   * Transmit raw byte encoded data via LoRa WAN.
+   * This method expects a raw byte array as first parameter.
+   * The second parameter is the count of the bytes to send.
+   */
+  TX_RETURN_TYPE txBytes(const byte *,
+                         uint8_t size,
+                         uint8_t port = 1,
+                         bool    async = false);
 
-    TX_RETURN_TYPE txHexBytes(const String&, uint8_t port = 1, bool async = false);
+  TX_RETURN_TYPE txHexBytes(const String&,
+                            uint8_t port = 1,
+                            bool    async = false);
 
-    /*
-     * Do a confirmed transmission via LoRa WAN.
-     *
-     * Parameter is an ascii text string.
-     */
-    TX_RETURN_TYPE txCnf(const String&, uint8_t port = 1, bool async = false);
+  /*
+   * Do a confirmed transmission via LoRa WAN.
+   *
+   * Parameter is an ascii text string.
+   */
+  TX_RETURN_TYPE txCnf(const String&,
+                       uint8_t port = 1,
+                       bool    async = false);
 
-    /*
-     * Do an unconfirmed transmission via LoRa WAN.
-     *
-     * Parameter is an ascii text string.
-     */
-    TX_RETURN_TYPE txUncnf(const String&, uint8_t port = 1, bool async = false);
+  /*
+   * Do an unconfirmed transmission via LoRa WAN.
+   *
+   * Parameter is an ascii text string.
+   */
+  TX_RETURN_TYPE txUncnf(const String&,
+                         uint8_t port = 1,
+                         bool    async = false);
 
-    /*
-     * Transmit the provided data using the provided command.
+  /*
+   * Transmit the provided data using the provided command.
    * Will return after the command has been processed and replies were received
    *
    * String - the tx command to send
-              can only be one of "mac tx cnf 1 " or "mac tx uncnf 1 "
-     * String - an ascii text string if bool is true. A HEX string if bool is false.
-     * bool - should the data string be hex encoded or not
-     */
-    TX_RETURN_TYPE txCommand(const String&, const String&, bool, uint8_t port = 1, bool async = false);
+            can only be one of "mac tx cnf 1 " or "mac tx uncnf 1 "
+   * String - an ascii text string if bool is true. A HEX string if bool is false.
+   * bool - should the data string be hex encoded or not
+   */
+  TX_RETURN_TYPE txCommand(const String&,
+                           const String&,
+                           bool,
+                           uint8_t port = 1,
+                           bool    async = false);
 
 
-    /*
-     * Call this frequently to process TX commmands when running 
+  /*
+   * Call this frequently to process TX commmands when running
    * txCommand with async set
    * This is also called from txCommand, so no need to call it when not in async mode.
    *
    * Return value is the internal state of the TX processing.
    */
-    rn2xx3_handler::RN_state async_loop();
+  rn2xx3_handler::RN_state async_loop();
 
-    rn2xx3_handler::RN_state wait_command_finished(unsigned long timeout = 10000);
+  rn2xx3_handler::RN_state wait_command_finished(unsigned long timeout = 10000);
 
-    rn2xx3_handler::RN_state wait_command_accepted(unsigned long timeout = 10000);
+  rn2xx3_handler::RN_state wait_command_accepted(unsigned long timeout = 10000);
 
-    /*
-     * Change the datarate at which the RN2xx3 transmits.
-     * A value of between 0 and 5 can be specified,
+  /*
+   * Change the datarate at which the RN2xx3 transmits.
+   * A value of between 0 and 5 can be specified,
    * as is defined in the LoRaWan specs.
-     * This can be overwritten by the network when using OTAA.
-     * So to force a datarate, call this function after initOTAA().
-     */
-    bool setDR(int dr);
-
-    /*
-     * Put the RN2xx3 to sleep for a specified timeframe.
-     * The RN2xx3 accepts values from 100 to 4294967296.
-     * Rumour has it that you need to do a autobaud() after the module wakes up again.
-     */
-    void sleep(long msec);
-
-    /*
-     * Send a raw command to the RN2xx3 module.
-     * Returns the raw string as received back from the RN2xx3.
-     * If the RN2xx3 replies with multiple line, only the first line will be returned.
-     */
-    String sendRawCommand(const String& command);
-
-    /*
-     * Returns the module type either RN2903 or RN2483, or NA.
+   * This can be overwritten by the network when using OTAA.
+   * So to force a datarate, call this function after initOTAA().
    */
-  RN2xx3_t moduleType();
+  bool                     setDR(int dr);
+
+  /*
+   * Put the RN2xx3 to sleep for a specified timeframe.
+   * The RN2xx3 accepts values from 100 to 4294967296.
+   * Rumour has it that you need to do a autobaud() after the module wakes up again.
+   */
+  void                     sleep(long msec);
+
+  /*
+   * Send a raw command to the RN2xx3 module.
+   * Returns the raw string as received back from the RN2xx3.
+   * If the RN2xx3 replies with multiple line, only the first line will be returned.
+   */
+  String                   sendRawCommand(const String& command);
+
+  /*
+   * Returns the module type either RN2903 or RN2483, or NA.
+   */
+  RN2xx3_t                 moduleType();
 
   /*
    * Set the active channels to use.
@@ -239,36 +259,29 @@ class rn2xx3
    */
   String getRx();
 
-    /*
-     * Get the RN2xx3's SNR of the last received packet. Helpful to debug link quality.
-     */
-    int getSNR();
+  /*
+   * Get the RN2xx3's SNR of the last received packet. Helpful to debug link quality.
+   */
+  int    getSNR();
 
-    /*
-     * Get the RN2xx3's voltage measurement on the Vdd in mVolt
-     * 0–3600 (decimal value from 0 to 3600)
-     */
-    int getVbat();
+  /*
+   * Get the RN2xx3's voltage measurement on the Vdd in mVolt
+   * 0–3600 (decimal value from 0 to 3600)
+   */
+  int    getVbat();
 
-    /*
-     * Return the current data rate formatted like sf7bw125
+  /*
+   * Return the current data rate formatted like sf7bw125
    * Firmware 1.0.1 returns always "sf9"
    */
   String getDataRate();
 
   /*
    * Return radio Received Signal Strength Indication (rssi) value
-     * for the last received frame.
-     * Supported since firmware 1.0.5
-     */
-    int getRSSI();
-
-
-    /*
-   * Decode a HEX string to an ASCII string. Useful to decode a
-   * string received from the RN2xx3.
+   * for the last received frame.
+   * Supported since firmware 1.0.5
    */
-  String base16decode(const String&);
+  int    getRSSI();
 
   /*
    * Almost all commands can return "invalid_param"
@@ -277,101 +290,110 @@ class rn2xx3
    */
   String getLastError();
 
-    String peekLastError() const;
+  String peekLastError() const;
 
-    bool hasJoined() const { return _rn2xx3_handler.Status.Joined; }
+  bool   hasJoined() const {
+    return _rn2xx3_handler.Status.Joined;
+  }
 
-    bool useOTAA() const { return _otaa; }
+  bool useOTAA() const {
+    return _otaa;
+  }
 
-    // Get the current frame counter values for downlink and uplink
-    bool getFrameCounters(uint32_t &dnctr, uint32_t &upctr);
+  // Get the current frame counter values for downlink and uplink
+  bool getFrameCounters(uint32_t& dnctr,
+                        uint32_t& upctr);
 
-    // Set frame counter values for downlink and uplink
-    // E.g. to restore them after a reboot or reset of the module.
-    bool setFrameCounters(uint32_t dnctr, uint32_t upctr);
+  // Set frame counter values for downlink and uplink
+  // E.g. to restore them after a reboot or reset of the module.
+  bool setFrameCounters(uint32_t dnctr,
+                        uint32_t upctr);
 
-    // At init() the module is assumed to be joined, which is also checked against the 
-    // _otaa flag.
-    // Allow to set the last used join mode to help prevent unneeded join requests.
-    void setLastUsedJoinMode(bool isOTAA) { _otaa = isOTAA; }
+  // delay from last moment of sending to receive RX1 and RX2 window
+  bool getRxDelayValues(uint32_t& rxdelay1,
+                        uint32_t& rxdelay2);
 
-    const RN2xx3_status& getStatus() const;
 
-  private:
- 
+  // At init() the module is assumed to be joined, which is also checked against the
+  // _otaa flag.
+  // Allow to set the last used join mode to help prevent unneeded join requests.
+  void setLastUsedJoinMode(bool isOTAA) {
+    if (_otaa != isOTAA) {
+      _rn2xx3_handler.Status.Joined = false;
+      _otaa                         = isOTAA;
+    }
+  }
 
-    RN2xx3_t _moduleType = RN_NA;
+  const RN2xx3_status& getStatus() const;
 
-    rn2xx3_handler _rn2xx3_handler;
+private:
 
-    //Flags to switch code paths. Default is to use OTAA.
-    bool _otaa = true;
+  RN2xx3_t _moduleType = RN_NA;
 
-    FREQ_PLAN _fp = TTN_EU;
-    uint8_t _sf = 7;
+  rn2xx3_handler _rn2xx3_handler;
 
-    //The default address to use on TTN if no address is defined.
-    //This one falls in the "testing" address space.
-    String _devAddr = "03FFBEEF";
+  // Flags to switch code paths. Default is to use OTAA.
+  bool _otaa = true;
 
-    // if you want to use another DevEUI than the hardware one
-    // use this deveui for LoRa WAN
-    String _deveui = "0011223344556677";
+  FREQ_PLAN _fp = TTN_EU;
+  uint8_t _sf   = 7;
 
-    //the appeui to use for LoRa WAN
-    String _appeui = "0";
 
-    //the nwkskey to use for LoRa WAN
-    String _nwkskey = "0";
+  // OTAA values:
+  String _deveui;
+  String _appeui;
+  String _appkey;
 
-    //the appskey/appkey to use for LoRa WAN
-    String _appskey = "0";
+  // ABP values:
+  String _nwkskey;
+  String _appskey;
+  String _devaddr;
 
-    /*
+  /*
    * Auto configure for either RN2903 or RN2483 module
-     */
-    RN2xx3_t configureModuleType();
+   */
+  RN2xx3_t configureModuleType();
 
-    bool resetModule();
-
-
-  
-
-    int readIntValue(const String& command);
-
-    bool readUIntMacGet(const String& param, uint32_t &value);
+  bool     resetModule();
 
 
-    // All "mac set ..." commands return either "ok" or "invalid_param"
-    bool sendMacSet(const String& param, const String& value);
-    bool sendMacSetEnabled(const String& param, bool enabled);
-    bool sendMacSetCh(const String& param, unsigned int channel, const String& value);
-    bool sendMacSetCh(const String& param, unsigned int channel, uint32_t value);
-    bool setChannelDutyCycle(unsigned int channel, unsigned int dutyCycle);
-    bool setChannelFrequency(unsigned int channel, uint32_t frequency);
-    bool setChannelDataRateRange(unsigned int channel, unsigned int minRange, unsigned int maxRange);
+  int      readIntValue(const String& command);
 
-    // Set channel enabled/disabled.
-    // Frequency, data range, duty cycle must be issued prior to enabling the status of that channel
-    bool setChannelEnabled(unsigned int channel, bool enabled);
-    
-    bool set2ndRecvWindow(unsigned int dataRate, uint32_t frequency);
-    bool setAdaptiveDataRate(bool enabled);
-    bool setAutomaticReply(bool enabled);
-    bool setTXoutputPower(int pwridx);
+  bool     readUIntMacGet(const String& param,
+                          uint32_t    & value);
 
-    // Read the internal status of the module
-    // @retval true when update was successful
-    bool updateStatus();
-    bool saveUpdatedStatus();
 
-    // Set the serial timeout for standard transactions. (not waiting for a packet acknowledgement)
-    void setSerialTimeout();
+  // All "mac set ..." commands return either "ok" or "invalid_param"
+  bool sendMacSet(const String& param,
+                  const String& value);
+  bool sendMacSetEnabled(const String& param,
+                         bool          enabled);
+  bool sendMacSetCh(const String& param,
+                    unsigned int  channel,
+                    const String& value);
+  bool sendMacSetCh(const String& param,
+                    unsigned int  channel,
+                    uint32_t      value);
+  bool setChannelDutyCycle(unsigned int channel,
+                           unsigned int dutyCycle);
+  bool setChannelFrequency(unsigned int channel,
+                           uint32_t     frequency);
+  bool setChannelDataRateRange(unsigned int channel,
+                               unsigned int minRange,
+                               unsigned int maxRange);
 
-    void clearSerialBuffer();
+  // Set channel enabled/disabled.
+  // Frequency, data range, duty cycle must be issued prior to enabling the status of that channel
+  bool setChannelEnabled(unsigned int channel,
+                         bool         enabled);
 
-    static bool isHexStr(const String& string);
+  bool set2ndRecvWindow(unsigned int dataRate,
+                        uint32_t     frequency);
+  bool setAdaptiveDataRate(bool enabled);
+  bool setAutomaticReply(bool enabled);
+  bool setTXoutputPower(int pwridx);
 
+  bool check_set_keys();
 };
 
-#endif
+#endif // ifndef rn2xx3_h

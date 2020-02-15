@@ -38,6 +38,7 @@ struct C018_data_struct {
       delete C018_easySerial;
       C018_easySerial = nullptr;
     }
+    cacheDevAddr     = "";
     cacheHWEUI       = "";
     cacheSysVer      = "";
     autobaud_success = false;
@@ -50,7 +51,8 @@ struct C018_data_struct {
     }
   }
 
-  bool init(const int8_t serial_rx, const int8_t serial_tx, unsigned long baudrate, bool joinIsOTAA, taskIndex_t sampleSet_Initiator, int8_t reset_pin) {
+  bool init(const int8_t serial_rx, const int8_t serial_tx, unsigned long baudrate,
+            bool joinIsOTAA, taskIndex_t sampleSet_Initiator, int8_t reset_pin) {
     if ((serial_rx < 0) || (serial_tx < 0)) {
       // Both pins are needed, or else no serial possible
       return false;
@@ -63,6 +65,7 @@ struct C018_data_struct {
       notChanged &= C018_easySerial->getRxPin() == serial_rx;
       notChanged &= C018_easySerial->getTxPin() == serial_tx;
       notChanged &= C018_easySerial->getBaudRate() == baudrate;
+      notChanged &= myLora->useOTAA() == joinIsOTAA;
 
       if (notChanged) { return true; }
     }
@@ -112,9 +115,7 @@ struct C018_data_struct {
 
   bool hasJoined() const {
     if (!isInitialized()) { return false; }
-    bool res = myLora->hasJoined();
-    C018_logError(F("hasJoined()"));
-    return res;
+    return myLora->hasJoined();
   }
 
   bool useOTAA() const {
@@ -125,29 +126,18 @@ struct C018_data_struct {
   }
 
   bool txUncnfBytes(const byte *data, uint8_t size, uint8_t port) {
-    if (!hasJoined()) { return false; }
     bool res = myLora->txBytes(data, size, port) != TX_FAIL;
     C018_logError(F("txUncnfBytes()"));
     return res;
   }
 
   bool txHexBytes(const String& data, uint8_t port) {
-    if (!hasJoined()) { return false; }
     bool res = myLora->txHexBytes(data, port, true) != TX_FAIL;
     C018_logError(F("txHexBytes()"));
     return res;
   }
-/*
-  bool txHexBytes_async(const String& data, uint8_t port) {
-    if (!hasJoined()) { return false; }
-    bool res = myLora->tx  txHexBytes(data, port) != TX_FAIL;
-    C018_logError(F("txHexBytes()"));
-    return res;
-  }
-*/
 
   bool txUncnf(const String& data, uint8_t port) {
-    if (!hasJoined()) { return false; }
     bool res = myLora->tx(data, port) != TX_FAIL;
     C018_logError(F("txUncnf()"));
     return res;
@@ -168,7 +158,7 @@ struct C018_data_struct {
   }
 
   bool initOTAA(const String& AppEUI = "", const String& AppKey = "", const String& DevEUI = "") {
-    if (!isInitialized()) { return false; }
+    if (myLora == nullptr) { return false; }
     bool success = myLora->initOTAA(AppEUI, AppKey, DevEUI);
     C018_logError(F("initOTAA()"));
     updateCacheOnInit();
@@ -176,7 +166,7 @@ struct C018_data_struct {
   }
 
   bool initABP(const String& addr, const String& AppSKey, const String& NwkSKey) {
-    if (!isInitialized()) { return false; }
+    if (myLora == nullptr) { return false; }
     bool success = myLora->initABP(addr, AppSKey, NwkSKey);
     C018_logError(F("initABP()"));
     updateCacheOnInit();
@@ -288,8 +278,8 @@ struct C018_data_struct {
 private:
 
   void C018_logError(const String& command) const {
-//    String error = myLora->peekLastError();
-    String error = myLora->getLastError();
+    String error = myLora->peekLastError();
+//    String error = myLora->getLastError();
 
     if (error.length() > 0) {
       String log = F("RN2384: ");
@@ -626,7 +616,7 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
       break;
     }
 
-    case CPlugin::Function::CPLUGIN_FIFTY_PER_SECOND:
+    case CPlugin::Function::CPLUGIN_TEN_PER_SECOND:
     {
 
       C018_data.async_loop();
@@ -652,15 +642,17 @@ bool do_process_c018_delay_queue(int controller_number, const C018_queue_element
 
 bool do_process_c018_delay_queue(int controller_number, const C018_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
   bool  success = C018_data.txHexBytes(element.packed, ControllerSettings.Port);
-  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+  String error = C018_data.getLastError(); // Clear the error string.
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("C018 : Sent: ");
     log += element.packed;
     log += F(" length: ");
     log += String(element.packed.length());
     if (success) {
-      log += F(" (success)");
+      log += F(" (success) ");
     }
-    addLog(LOG_LEVEL_DEBUG, log);
+    log += error;
+    addLog(LOG_LEVEL_INFO, log);
   }
   return success;
 }

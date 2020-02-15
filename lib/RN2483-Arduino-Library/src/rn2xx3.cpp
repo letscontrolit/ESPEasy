@@ -10,6 +10,7 @@
 #include "Arduino.h"
 #include "rn2xx3.h"
 #include "rn2xx3_received_types.h"
+#include "rn2xx3_helper.h"
 
 extern "C" {
 #include <string.h>
@@ -20,9 +21,7 @@ extern "C" {
    @param serial Needs to be an already opened Stream ({Software/Hardware}Serial) to write to and read from.
  */
 rn2xx3::rn2xx3(Stream& serial) : _rn2xx3_handler(serial)
-{
-  setSerialTimeout();
-}
+{}
 
 bool rn2xx3::autobaud()
 {
@@ -38,8 +37,6 @@ bool rn2xx3::autobaud()
     _rn2xx3_handler._serial.write(   (byte)0x00);
     _rn2xx3_handler._serial.write(0x55);
     _rn2xx3_handler._serial.println();
-
-    //    clearSerialBuffer();
 
     // we could use sendRawCommand(F("sys get ver")); here
     _rn2xx3_handler._serial.println(F("sys get ver"));
@@ -98,7 +95,8 @@ bool rn2xx3::resetModule()
       _rn2xx3_handler.setLastError(F("error in reset"));
       return false;
   }
-  _rn2xx3_handler.setLastError(F("success resetmodule"));
+
+  // _rn2xx3_handler.setLastError(F("success resetmodule"));
   return true;
 
   //  return RN2xx3_received_types::determineReceivedDataType(result) == ok;
@@ -167,83 +165,42 @@ bool rn2xx3::setSF(uint8_t sf)
 
 bool rn2xx3::init()
 {
-  if (_appskey == "0") // appskey variable is set by both OTAA and ABP
+  if (!check_set_keys())
   {
-    //FIXME TD-er: Do we need to set the state here to idle ???
+    // FIXME TD-er: Do we need to set the state here to idle ???
     // or maybe introduce a new "not_started" ???
+    _rn2xx3_handler.setLastError(F("Not all keys are set"));
     return false;
   }
-  else if (_otaa)
-  {
-    // FIXME TD-er: Must initABP and initOTAA also set the state?
-    return initOTAA(_appeui, _appskey);
-  }
-  else
-  {
-    return initABP(_devAddr, _appskey, _nwkskey);
-  }
-}
 
-bool rn2xx3::initOTAA(const String& AppEUI, const String& AppKey, const String& DevEUI)
-{
-  // If the Device EUI was given as a parameter, use it
-  // otherwise use the Hardware EUI.
-  if (DevEUI.length() == 16)
-  {
-    _deveui = DevEUI;
-  }
-  else
-  {
-    String addr = sendRawCommand(F("sys get hweui"));
+  bool mustInit =
+    _rn2xx3_handler.get_state() == rn2xx3_handler::RN_state::must_perform_init ||
+    !_rn2xx3_handler.Status.Joined;
 
-    if (addr.length() == 16)
-    {
-      _deveui = addr;
-    }
-    else
-    {
-      // The default address to use on TTN if no address is defined.
-      // This one falls in the "testing" address space.
-      _devAddr = "03FFBEEF";
-    }
-  }
-
-  if ((AppEUI.length() != 16) || (AppKey.length() != 32) || (_deveui.length() != 16))
-  {
-    // No valid config
-    _rn2xx3_handler.setLastError(F("InitOTAA: Not all keys are valid."));
+  if (!mustInit) {
+    // What should be returned? The joined state or whether there has been a join performed?
     return false;
   }
-  _appeui  = AppEUI;
-  _appskey = AppKey; // reuse the same variable as for ABP
-
-  if (_otaa && _rn2xx3_handler.Status.Joined) {
-    saveUpdatedStatus();
-
-    if (_rn2xx3_handler.Status.Joined && !_rn2xx3_handler.Status.RejoinNeeded) {
-      return true;
-    }
-  }
-
-  _otaa    = true;
-  _nwkskey = "0";
-
-  clearSerialBuffer();
 
   if (!resetModule()) { return false; }
 
-  sendMacSet(F("deveui"), _deveui);
-  sendMacSet(F("appeui"), _appeui);
-  sendMacSet(F("appkey"), _appskey);
+  // We set both sets of keys, as some reports on older firmware suggest the save
+  // may not be successful after a factory reset if not all fields are set.
 
-  if (_moduleType == RN2903)
-  {
-    setTXoutputPower(5);
-  }
-  else
-  {
-    setTXoutputPower(1);
-  }
+  // Set OTAA keys
+  sendMacSet(F("deveui"),  _deveui);
+  sendMacSet(F("appeui"),  _appeui);
+  sendMacSet(F("appkey"),  _appkey);
+
+  // Set ABP keys
+  sendMacSet(F("nwkskey"), _nwkskey);
+  sendMacSet(F("appskey"), _appskey);
+  sendMacSet(F("devaddr"), _devaddr);
+
+  // Set max. allowed power.
+  // 868 MHz EU   : 1 -> 14 dBm
+  // 900 MHz US/AU: 5 -> 20 dBm
+  setTXoutputPower(_moduleType == RN2903 ? 5 : 1);
   setSF(_sf);
 
   // TTN does not yet support Adaptive Data Rate.
@@ -254,7 +211,6 @@ bool rn2xx3::initOTAA(const String& AppEUI, const String& AppKey, const String& 
   // Switch off automatic replies, because this library can not
   // handle more than one mac_rx per tx. See RN2483 datasheet,
   // 2.4.8.14, page 27 and the scenario on page 19.
-
   setAutomaticReply(false);
 
   // Semtech and TTN both use a non default RX2 window freq and SF.
@@ -265,45 +221,51 @@ bool rn2xx3::initOTAA(const String& AppEUI, const String& AppKey, const String& 
   // }
   // Disabled for now because an OTAA join seems to work fine without.
 
-  // TODO this is a really long timeout. Will setSerialTimeoutRX2() do?
-  _rn2xx3_handler._serial.setTimeout(30000);
+  return _rn2xx3_handler.exec_join(_otaa);
+}
 
-  //  sendRawCommand(F("mac save"));
-
-  // Only try twice to join, then return and let the user handle it.
-  _rn2xx3_handler.Status.Joined = false;
-  updateStatus();
-
-  for (int i = 0; i < 2 && !_rn2xx3_handler.Status.Joined; i++)
+bool rn2xx3::initOTAA(const String& AppEUI, const String& AppKey, const String& DevEUI)
+{
+  // If the Device EUI was given as a parameter, use it
+  // otherwise use the Hardware EUI.
+  if (rn2xx3_helper::isHexStr_of_length(DevEUI, 16))
   {
-    if (_rn2xx3_handler.prepare_join_command(true)) {
-      while (!_rn2xx3_handler.command_finished()) {
-        async_loop();
-        delay(10);
-      }
-      if (_rn2xx3_handler.get_state() ==  rn2xx3_handler::RN_state::join_accepted)
-      {
-        _rn2xx3_handler.Status.Joined = true;
-      }
-    }
-    if (!_rn2xx3_handler.Status.Joined) {
-      delay(2000); // Needed to make sure even RX2 replies are processed.
-    }
-    updateStatus();
+    _deveui = DevEUI;
   }
-  setSerialTimeout();
-  saveUpdatedStatus();
-  return _rn2xx3_handler.Status.Joined;
+  else
+  {
+    String addr = sendRawCommand(F("sys get hweui"));
+
+    if (rn2xx3_helper::isHexStr_of_length(addr, 16))
+    {
+      _deveui = addr;
+    }
+  }
+
+  if (!rn2xx3_helper::isHexStr_of_length(AppEUI, 16) ||
+      !rn2xx3_helper::isHexStr_of_length(AppKey, 32) ||
+      !rn2xx3_helper::isHexStr_of_length(_deveui, 16))
+  {
+    // No valid config
+    _rn2xx3_handler.setLastError(F("InitOTAA: Not all keys are valid."));
+    return false;
+  }
+  _appeui = AppEUI;
+  _appkey = AppKey;
+  _otaa   = true;
+  return init();
 }
 
 bool rn2xx3::initOTAA(uint8_t *AppEUI, uint8_t *AppKey, uint8_t *DevEUI)
 {
+  if ((AppEUI == nullptr) || (AppKey == nullptr)) {
+    return false;
+  }
+
   String app_eui;
   String dev_eui;
   String app_key;
   char   buff[3];
-
-  app_eui = "";
 
   for (uint8_t i = 0; i < 8; i++)
   {
@@ -311,20 +273,16 @@ bool rn2xx3::initOTAA(uint8_t *AppEUI, uint8_t *AppKey, uint8_t *DevEUI)
     app_eui += String(buff);
   }
 
-  dev_eui = "0";
-
-  if (DevEUI) // ==0
+  if (DevEUI == nullptr)
   {
-    dev_eui = "";
-
+    dev_eui = "0";
+  } else {
     for (uint8_t i = 0; i < 8; i++)
     {
       sprintf(buff, "%02X", DevEUI[i]);
       dev_eui += String(buff);
     }
   }
-
-  app_key = "";
 
   for (uint8_t i = 0; i < 16; i++)
   {
@@ -337,62 +295,11 @@ bool rn2xx3::initOTAA(uint8_t *AppEUI, uint8_t *AppKey, uint8_t *DevEUI)
 
 bool rn2xx3::initABP(const String& devAddr, const String& AppSKey, const String& NwkSKey)
 {
-  updateStatus();
-
-  if (!_rn2xx3_handler.Status.Joined || _otaa) {
-    _otaa    = false;
-    _devAddr = devAddr;
-    _appskey = AppSKey;
-    _nwkskey = NwkSKey;
-    String receivedData;
-
-    if (!resetModule()) { return false; }
-
-    sendMacSet(F("nwkskey"), _nwkskey);
-    sendMacSet(F("appskey"), _appskey);
-    sendMacSet(F("devaddr"), _devAddr);
-    setAdaptiveDataRate(false);
-
-    // Switch off automatic replies, because this library can not
-    // handle more than one mac_rx per tx. See RN2483 datasheet,
-    // 2.4.8.14, page 27 and the scenario on page 19.
-    setAutomaticReply(false);
-
-    if (_moduleType == RN2903)
-    {
-      setTXoutputPower(5);
-    }
-    else
-    {
-      setTXoutputPower(1);
-    }
-    setSF(_sf);
-
-    _rn2xx3_handler.Status.Joined = false;
-    updateStatus();
-    if (!_rn2xx3_handler.Status.Joined && _rn2xx3_handler.prepare_join_command(false)) {
-      if (wait_command_finished() ==  rn2xx3_handler::RN_state::join_accepted)
-      {
-        _rn2xx3_handler.Status.Joined = true;
-      }
-    }
-
-    sendRawCommand(F("mac join abp"));
-
-    // Wait for the 2nd response.
-    receivedData = _rn2xx3_handler._serial.readStringUntil('\n');
-
-    setSerialTimeout();
-
-    // with abp we can always join successfully as long as the keys are valid
-    if (RN2xx3_received_types::determineReceivedDataType(receivedData) != RN2xx3_received_types::accepted) {
-      _rn2xx3_handler.setLastError(receivedData);
-      _rn2xx3_handler.Status.Joined = false;
-    }
-    delay(2000); // Needed to make sure even RX2 replies are processed.
-  }
-  saveUpdatedStatus();
-  return _rn2xx3_handler.Status.Joined;
+  _devaddr = devAddr;
+  _appskey = AppSKey;
+  _nwkskey = NwkSKey;
+  _otaa    = false;
+  return init();
 }
 
 TX_RETURN_TYPE rn2xx3::tx(const String& data, uint8_t port, bool async)
@@ -433,12 +340,14 @@ TX_RETURN_TYPE rn2xx3::txUncnf(const String& data, uint8_t port, bool async)
 
 TX_RETURN_TYPE rn2xx3::txCommand(const String& command, const String& data, bool shouldEncode, uint8_t port, bool async)
 {
-  updateStatus();
-  clearSerialBuffer();
+  if (_rn2xx3_handler.get_state() == rn2xx3_handler::RN_state::must_perform_init) {
+    init();
+  }
 
   if (!_rn2xx3_handler.prepare_tx_command(command, data, shouldEncode, port)) {
     return TX_FAIL;
   }
+
   if (async) {
     // Unlikely the state will be other than an error or wait_for_reply_rx2
     switch (wait_command_accepted()) {
@@ -446,6 +355,7 @@ TX_RETURN_TYPE rn2xx3::txCommand(const String& command, const String& data, bool
       case rn2xx3_handler::RN_state::tx_success:
       case rn2xx3_handler::RN_state::tx_success_with_rx:
         return TX_SUCCESS;
+        break;
 
       default:
         break;
@@ -456,6 +366,7 @@ TX_RETURN_TYPE rn2xx3::txCommand(const String& command, const String& data, bool
         return TX_SUCCESS;
       case rn2xx3_handler::RN_state::tx_success_with_rx:
         return TX_WITH_RX;
+        break;
 
       default:
         break;
@@ -465,11 +376,11 @@ TX_RETURN_TYPE rn2xx3::txCommand(const String& command, const String& data, bool
   return TX_FAIL;
 }
 
-
 // FIXME TD-er: Move this to the rn2xx3_handler class.
 rn2xx3_handler::RN_state rn2xx3::async_loop()
 {
   rn2xx3_handler::RN_state newState =  _rn2xx3_handler.async_loop();
+
   if (newState == rn2xx3_handler::RN_state::must_perform_init) {
     this->init();
   }
@@ -516,32 +427,6 @@ int rn2xx3::getRSSI()
   return readIntValue(F("radio get rssi"));
 }
 
-String rn2xx3::base16decode(const String& input_c)
-{
-  if (!isHexStr(input_c)) { return ""; }
-  String input(input_c); // Make a deep copy to be able to do trim()
-  input.trim();
-  const size_t inputLength  = input.length();
-  const size_t outputLength = inputLength / 2;
-  String output;
-  output.reserve(outputLength);
-
-  for (size_t i = 0; i < outputLength; ++i)
-  {
-    char toDo[3];
-    toDo[0] = input[i * 2];
-    toDo[1] = input[i * 2 + 1];
-    toDo[2] = '\0';
-    unsigned long out = strtoul(toDo, 0, 16);
-
-    if (out <= 0xFF)
-    {
-      output += char(out & 0xFF);
-    }
-  }
-  return output;
-}
-
 bool rn2xx3::setDR(int dr)
 {
   if ((dr >= 0) && (dr <= 7))
@@ -553,33 +438,14 @@ bool rn2xx3::setDR(int dr)
 
 void rn2xx3::sleep(long msec)
 {
+  // FIXME TD-er: Must make this a command that waits for other commands to be finished first.
   _rn2xx3_handler._serial.print("sys sleep ");
   _rn2xx3_handler._serial.println(msec);
 }
 
 String rn2xx3::sendRawCommand(const String& command)
 {
-  unsigned long timer = millis();
-  if (!_rn2xx3_handler.prepare_raw_command(command)) {
-    _rn2xx3_handler.setLastError(F("sendRawCommand: Prepare fail"));
-    return "";
-  }
-  if (wait_command_finished() == rn2xx3_handler::RN_state::timeout) {
-    String log = F("sendRawCommand timeout: ");
-    log += command;
-    _rn2xx3_handler.setLastError(log);
-  }
-  String ret = _rn2xx3_handler.get_received_data();
-  {
-    String log = command;
-    log += '(';
-    log += String(millis() - timer);
-    log += ')';
-    _rn2xx3_handler.setLastError(log);
-  }
-
-  ret.trim();
-  return ret;
+  return _rn2xx3_handler.sendRawCommand(command);
 }
 
 RN2xx3_t rn2xx3::moduleType()
@@ -735,19 +601,7 @@ int rn2xx3::readIntValue(const String& command)
 
 bool rn2xx3::readUIntMacGet(const String& param, uint32_t& value)
 {
-  String command;
-
-  command.reserve(8 + param.length());
-  command  = F("mac get ");
-  command += param;
-  String value_str = sendRawCommand(command);
-
-  if (value_str.length() == 0)
-  {
-    return false;
-  }
-  value = strtoul(value_str.c_str(), 0, 10);
-  return true;
+  return _rn2xx3_handler.readUIntMacGet(param, value);
 }
 
 String rn2xx3::peekLastError() const
@@ -774,6 +628,12 @@ bool rn2xx3::setFrameCounters(uint32_t dnctr, uint32_t upctr)
     sendMacSet(F("upctr"), String(upctr));
 }
 
+bool rn2xx3::getRxDelayValues(uint32_t& rxdelay1,
+                              uint32_t& rxdelay2)
+{
+  return _rn2xx3_handler.getRxDelayValues(rxdelay1, rxdelay2);
+}
+
 const RN2xx3_status& rn2xx3::getStatus() const
 {
   return _rn2xx3_handler.Status;
@@ -781,159 +641,123 @@ const RN2xx3_status& rn2xx3::getStatus() const
 
 bool rn2xx3::sendMacSet(const String& param, const String& value)
 {
-  String command;
-
-  command.reserve(10 + param.length() + value.length());
-  command  = F("mac set ");
-  command += param;
-  command += ' ';
-  command += value;
-
-  return RN2xx3_received_types::determineReceivedDataType(sendRawCommand(command)) == RN2xx3_received_types::ok;
+  return _rn2xx3_handler.sendMacSet(param, value);
 }
 
 bool rn2xx3::sendMacSetEnabled(const String& param, bool enabled)
 {
-  return sendMacSet(param, enabled ? F("on") : F("off"));
+  return _rn2xx3_handler.sendMacSetEnabled(param, enabled);
 }
 
 bool rn2xx3::sendMacSetCh(const String& param, unsigned int channel, const String& value)
 {
-  String command;
-
-  command.reserve(20);
-  command  = param;
-  command += ' ';
-  command += channel;
-  command += ' ';
-  command += value;
-  return sendMacSet(F("ch"), command);
+  return _rn2xx3_handler.sendMacSetCh(param, channel, value);
 }
 
 bool rn2xx3::sendMacSetCh(const String& param, unsigned int channel, uint32_t value)
 {
-  return sendMacSetCh(param, channel, String(value));
+  return _rn2xx3_handler.sendMacSetCh(param, channel, value);
 }
 
 bool rn2xx3::setChannelDutyCycle(unsigned int channel, unsigned int dutyCycle)
 {
-  return sendMacSetCh(F("dcycle"), channel, dutyCycle);
+  return _rn2xx3_handler.setChannelDutyCycle(channel, dutyCycle);
 }
 
 bool rn2xx3::setChannelFrequency(unsigned int channel, uint32_t frequency)
 {
-  return sendMacSetCh(F("freq"), channel, frequency);
+  return _rn2xx3_handler.setChannelFrequency(channel, frequency);
 }
 
 bool rn2xx3::setChannelDataRateRange(unsigned int channel, unsigned int minRange, unsigned int maxRange)
 {
-  String value;
-
-  value  = String(minRange);
-  value += ' ';
-  value += String(maxRange);
-  return sendMacSetCh(F("drrange"), channel, value);
+  return _rn2xx3_handler.setChannelDataRateRange(channel, minRange, maxRange);
 }
 
 bool rn2xx3::setChannelEnabled(unsigned int channel, bool enabled)
 {
-  return sendMacSetCh(F("status"), channel, enabled ? F("on") : F("off"));
+  return _rn2xx3_handler.setChannelEnabled(channel, enabled);
 }
 
 bool rn2xx3::set2ndRecvWindow(unsigned int dataRate, uint32_t frequency)
 {
-  String value;
-
-  value  = String(dataRate);
-  value += ' ';
-  value += String(frequency);
-  return sendMacSet(F("rx2"), value);
+  return _rn2xx3_handler.set2ndRecvWindow(dataRate, frequency);
 }
 
 bool rn2xx3::setAdaptiveDataRate(bool enabled)
 {
-  return sendMacSetEnabled(F("adr"), enabled);
+  return _rn2xx3_handler.setAdaptiveDataRate(enabled);
 }
 
 bool rn2xx3::setAutomaticReply(bool enabled)
 {
-  return sendMacSetEnabled(F("ar"), enabled);
+  return _rn2xx3_handler.setAutomaticReply(enabled);
 }
 
 bool rn2xx3::setTXoutputPower(int pwridx)
 {
-  return sendMacSet(F("pwridx"), String(pwridx));
+  return _rn2xx3_handler.setTXoutputPower(pwridx);
 }
 
-bool rn2xx3::updateStatus()
+bool rn2xx3::check_set_keys()
 {
-  const String status_str = sendRawCommand(F("mac get status"));
-  const size_t strlength  = status_str.length();
+  // Strings are in HEX, so 1 character per 4 bits.
+  // Identifiers:
+  // - DevEUI - 64 bit end-device identifier, EUI-64 (unique)
+  // - DevAddr - 32 bit device address (non-unique)
+  // - AppEUI - 64 bit application identifier, EUI-64 (unique)
+  //
+  // Security keys: NwkSKey, AppSKey and AppKey.
+  // All keys have a length of 128 bits.
 
-  if ((strlength != 8) || !isHexStr(status_str)) {
-    String error = F("mac get status  : No valid hex string \"");
-    error += status_str;
-    error += '\"';
-    _rn2xx3_handler.setLastError(error);
-    return false;
-  }
-  uint32_t status_value = strtoul(status_str.c_str(), 0, 16);
-  _rn2xx3_handler.Status.decode(status_value);
+  bool otaa_set =
+    rn2xx3_helper::isHexStr_of_length( _deveui, 16) &&
+    rn2xx3_helper::isHexStr_of_length( _appeui, 16) &&
+    rn2xx3_helper::isHexStr_of_length( _appkey, 32);
 
-  if ((_rn2xx3_handler.rxdelay1 == 0) || (_rn2xx3_handler.rxdelay2 == 0) || _rn2xx3_handler.Status.SecondReceiveWindowParamUpdated)
-  {
-    readUIntMacGet(F("rxdelay1"), _rn2xx3_handler.rxdelay1);
-    readUIntMacGet(F("rxdelay2"), _rn2xx3_handler.rxdelay2);
-    _rn2xx3_handler.Status.SecondReceiveWindowParamUpdated = false;
-  }
-  return true;
-}
+  bool abp_set =
+    rn2xx3_helper::isHexStr_of_length(_nwkskey, 32) &&
+    rn2xx3_helper::isHexStr_of_length(_appskey, 32) &&
+    rn2xx3_helper::isHexStr_of_length(_devaddr, 8);
 
-bool rn2xx3::saveUpdatedStatus()
-{
-  // Only save to the eeprom when really needed.
-  // No need to store the current config when there is no active connection.
-  // Todo: Must keep track of last saved counters and decide to update when current counter differs more than set threshold.
-  bool saved = false;
+  if (_otaa && otaa_set) {
+    if (!abp_set) {
+      if (!rn2xx3_helper::isHexStr_of_length(_nwkskey, 32)) {
+        _nwkskey = F("00000000000000000000000000000000");
+      }
 
-  if (updateStatus())
-  {
-    if (_rn2xx3_handler.Status.Joined && !_rn2xx3_handler.Status.RejoinNeeded && _rn2xx3_handler.Status.saveSettingsNeeded())
-    {
-      saved = RN2xx3_received_types::determineReceivedDataType(sendRawCommand(F("mac save"))) == RN2xx3_received_types::ok;
-      _rn2xx3_handler.Status.clearSaveSettingsNeeded();
-      updateStatus();
+      if (!rn2xx3_helper::isHexStr_of_length(_appskey, 32)) {
+        _appskey = F("00000000000000000000000000000000");
+      }
+
+      if (!rn2xx3_helper::isHexStr_of_length(_devaddr, 8))
+      {
+        // The default address to use on TTN if no address is defined.
+        // This one falls in the "testing" address space.
+        _devaddr = F("03FFBEEF");
+      }
     }
+    return true;
   }
-  return saved;
-}
 
-void rn2xx3::setSerialTimeout()
-{
-  // Enough time to wait for:
-  // sending the command module + reading reply
-  // TODO Determine correct delay based on baud rate + response time of module
-  _rn2xx3_handler._serial.setTimeout(2000);
-}
+  if (!_otaa && abp_set) {
+    if (!otaa_set) {
+      if (!rn2xx3_helper::isHexStr_of_length(_deveui, 16))
+      {
+        // if you want to use another DevEUI than the hardware one
+        // use this deveui for LoRa WAN
+        _deveui = F("0011223344556677");
+      }
 
+      if (!rn2xx3_helper::isHexStr_of_length(_appeui, 16)) {
+        _appeui = F("0000000000000000");
+      }
 
-void rn2xx3::clearSerialBuffer()
-{
-  _rn2xx3_handler.clearSerialBuffer();
-}
-
-bool rn2xx3::isHexStr(const String& str)
-{
-  const size_t strlength = str.length();
-
-  if (strlength != 8) { return false; }
-
-  for (size_t i = 0; i < strlength; ++i) {
-    const char ch = str[i];
-    if (!rn2xx3_handler::valid_hex_char(ch))
-    {
-      return false;
+      if (!rn2xx3_helper::isHexStr_of_length(_appkey, 32)) {
+        _appkey = F("00000000000000000000000000000000");
+      }
     }
+    return true;
   }
-  return true;
+  return false;
 }
