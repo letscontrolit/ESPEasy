@@ -26,6 +26,12 @@ public:
    * to the RN2xx3 module.
    */
   static String base16encode(const String& input_c);
+
+  /*
+   * Encode binary data to a HEX string as needed when passed
+   * to the RN2xx3 module.
+   */
+  static String base16encode(const byte *data, uint8_t size);
 };
 
 

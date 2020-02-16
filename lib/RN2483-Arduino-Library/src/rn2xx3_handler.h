@@ -52,6 +52,103 @@ public:
   // It will return when the state waiting for reply_received_rx2 has been reached, or the command has finished (due to error)
   RN_state wait_command_accepted(unsigned long timeout = 10000);
 
+  /*
+   * Initialise the RN2xx3 and join the LoRa network (if applicable).
+   * This function can only be called after calling initABP() or initOTAA().
+   * The sole purpose of this function is to re-initialise the radio if it
+   * is in an unknown state.
+   */
+  bool     init();
+
+  /*
+   * Initialise the RN2xx3 and join a network using personalization.
+   *
+   * addr: The device address as a HEX string.
+   *       Example "0203FFEE"
+   * AppSKey: Application Session Key as a HEX string.
+   *          Example "8D7FFEF938589D95AAD928C2E2E7E48F"
+   * NwkSKey: Network Session Key as a HEX string.
+   *          Example "AE17E567AECC8787F749A62F5541D522"
+   */
+  bool     initABP(const String& addr,
+                   const String& AppSKey,
+                   const String& NwkSKey);
+
+  // TODO: initABP(uint8_t * addr, uint8_t * AppSKey, uint8_t * NwkSKey)
+
+  /*
+   * Initialise the RN2xx3 and join a network using over the air activation.
+   *
+   * AppEUI: Application EUI as a HEX string.
+   *         Example "70B3D57ED00001A6"
+   * AppKey: Application key as a HEX string.
+   *         Example "A23C96EE13804963F8C2BD6285448198"
+   * DevEUI: Device EUI as a HEX string.
+   *         Example "0011223344556677"
+   * If the DevEUI parameter is omitted, the Hardware EUI from module will be used
+   * If no keys, or invalid length keys, are provided, no keys
+   * will be configured. If the module is already configured with some keys
+   * they will be used. Otherwise the join will fail and this function
+   * will return false.
+   */
+  bool initOTAA(const String& AppEUI = "",
+                const String& AppKey = "",
+                const String& DevEUI = "");
+
+  /*
+   * Initialise the RN2xx3 and join a network using over the air activation,
+   * using byte arrays. This is useful when storing the keys in eeprom or flash
+   * and reading them out in runtime.
+   *
+   * AppEUI: Application EUI as a uint8_t buffer
+   * AppKey: Application key as a uint8_t buffer
+   * DevEui: Device EUI as a uint8_t buffer (optional - set to 0 to use Hardware EUI)
+   */
+  bool initOTAA(uint8_t *AppEUI,
+                uint8_t *AppKey,
+                uint8_t *DevEui);
+
+
+  RN2xx3_datatypes::TX_return_type txCommand(const String&,
+                                             const String&,
+                                             bool,
+                                             uint8_t port = 1);
+
+  bool setSF(uint8_t sf);
+
+
+  /*
+   * Change the datarate at which the RN2xx3 transmits.
+   * A value of between 0 and 5 can be specified,
+   * as is defined in the LoRaWan specs.
+   * This can be overwritten by the network when using OTAA.
+   * So to force a datarate, call this function after initOTAA().
+   */
+  bool setDR(int dr);
+
+  void setAsyncMode(bool enabled);
+
+  bool useOTAA() const;
+
+  void setLastUsedJoinMode(bool isOTAA);
+
+  // We can't read back from module, we send the one
+  // we have memorized if it has been set
+  String appkey() const {
+    return _appkey;
+  }
+
+  String appskey() const {
+    return _appskey;
+  }
+
+  RN2xx3_datatypes::Model moduleType()
+  {
+    return _moduleType;
+  }
+
+  bool setFrequencyPlan(RN2xx3_datatypes::Freq_plan fp);
+
 private:
 
   bool          command_finished() const;
@@ -88,18 +185,26 @@ public:
 
 private:
 
-  void set_state(RN_state state);
+  RN2xx3_datatypes::Model configureModuleType();
+
+
+  bool                    resetModule();
+
+  // Check to see if the set activation values are of the right size and in HEX notation.
+  bool                    check_set_keys();
+
+  void                    set_state(RN_state state);
 
   // read all available data from serial until '\n'
-  bool read_line();
+  bool                    read_line();
 
-  void set_timeout(unsigned long timeout);
+  void                    set_timeout(unsigned long timeout);
 
-  bool time_out_reached() const;
+  bool                    time_out_reached() const;
 
-  void handle_reply_received();
+  void                    handle_reply_received();
 
-  void clearSerialBuffer();
+  void                    clearSerialBuffer();
 
   // Read the internal status of the module
   // @retval true when update was successful
@@ -114,6 +219,17 @@ private:
     join,
     other
   };
+
+
+  // OTAA values:
+  String _deveui;
+  String _appeui;
+  String _appkey;
+
+  // ABP values:
+  String _nwkskey;
+  String _appskey;
+  String _devaddr;
 
 
   String _receivedData;              // Used as a receive buffer to collect replies from the module
@@ -132,6 +248,14 @@ private:
   bool _invalid_char_read    = false;
   bool _extensive_debug      = false; // Set this to true to log all steps in _lastError
 
+
+  RN2xx3_datatypes::Model _moduleType = RN2xx3_datatypes::Model::RN_NA;
+  RN2xx3_datatypes::Freq_plan _fp     = RN2xx3_datatypes::Freq_plan::TTN_EU;
+  uint8_t _sf                         = 7;
+
+  bool _otaa      = true;  // Switch between OTAA or ABP activation (default OTAA)
+  bool _asyncMode = false; // When set, the user must call async_loop() frequently
+
 public:
 
   RN2xx3_status Status; // Cached result of "mac get status"
@@ -140,10 +264,10 @@ public:
 
   // Convenience functions
 
+  int  readIntValue(const String& command);
 
   bool readUIntMacGet(const String& param,
                       uint32_t    & value);
-
 
   // All "mac set ..." commands return either "ok" or "invalid_param"
   bool sendMacSet(const String& param,

@@ -54,11 +54,15 @@ public:
   String hweui();
 
   /*
-   * Returns the AppSKey or AppKey used when initializing the radio.
-   * In the case of ABP this function will return the App Session Key.
-   * In the case of OTAA this function will return the App Key.
+   * Returns the OTAA  AppKey used when initializing the radio.
    */
-  String appkey();
+  String appkey() const;
+
+  /*
+   * Returns the ABP AppSKey used when initializing the radio.
+   */
+  String appskey() const;
+
 
   /*
    * In the case of OTAA this function will return the Application EUI used
@@ -281,7 +285,7 @@ public:
   }
 
   bool useOTAA() const {
-    return _otaa;
+    return _rn2xx3_handler.useOTAA();
   }
 
   // Get the current frame counter values for downlink and uplink
@@ -302,84 +306,15 @@ public:
   // _otaa flag.
   // Allow to set the last used join mode to help prevent unneeded join requests.
   void setLastUsedJoinMode(bool isOTAA) {
-    if (_otaa != isOTAA) {
-      _rn2xx3_handler.Status.Joined = false;
-      _otaa                         = isOTAA;
-    }
+    _rn2xx3_handler.setLastUsedJoinMode(isOTAA);
   }
 
   const RN2xx3_status& getStatus() const;
 
 private:
 
-  RN2xx3_datatypes::Model _moduleType = RN2xx3_datatypes::Model::RN_NA;
-
+  // The actual interface to the module, handling the internal states.
   rn2xx3_handler _rn2xx3_handler;
-
-  // Flags to switch code paths. Default is to use OTAA.
-  bool _otaa = true;
-
-  bool _asyncMode = false;
-
-  RN2xx3_datatypes::Freq_plan _fp = RN2xx3_datatypes::Freq_plan::TTN_EU;
-  uint8_t _sf                     = 7;
-
-
-  // OTAA values:
-  String _deveui;
-  String _appeui;
-  String _appkey;
-
-  // ABP values:
-  String _nwkskey;
-  String _appskey;
-  String _devaddr;
-
-  /*
-   * Auto configure for either RN2903 or RN2483 module
-   */
-  RN2xx3_datatypes::Model configureModuleType();
-
-  bool                    resetModule();
-
-
-  int                     readIntValue(const String& command);
-
-  bool                    readUIntMacGet(const String& param,
-                                         uint32_t    & value);
-
-
-  // All "mac set ..." commands return either "ok" or "invalid_param"
-  bool sendMacSet(const String& param,
-                  const String& value);
-  bool sendMacSetEnabled(const String& param,
-                         bool          enabled);
-  bool sendMacSetCh(const String& param,
-                    unsigned int  channel,
-                    const String& value);
-  bool sendMacSetCh(const String& param,
-                    unsigned int  channel,
-                    uint32_t      value);
-  bool setChannelDutyCycle(unsigned int channel,
-                           unsigned int dutyCycle);
-  bool setChannelFrequency(unsigned int channel,
-                           uint32_t     frequency);
-  bool setChannelDataRateRange(unsigned int channel,
-                               unsigned int minRange,
-                               unsigned int maxRange);
-
-  // Set channel enabled/disabled.
-  // Frequency, data range, duty cycle must be issued prior to enabling the status of that channel
-  bool setChannelEnabled(unsigned int channel,
-                         bool         enabled);
-
-  bool set2ndRecvWindow(unsigned int dataRate,
-                        uint32_t     frequency);
-  bool setAdaptiveDataRate(bool enabled);
-  bool setAutomaticReply(bool enabled);
-  bool setTXoutputPower(int pwridx);
-
-  bool check_set_keys();
 };
 
 #endif // ifndef rn2xx3_h

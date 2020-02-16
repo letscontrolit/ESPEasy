@@ -85,3 +85,19 @@ String rn2xx3_helper::base16encode(const String& input_c)
   }
   return output;
 }
+
+String rn2xx3_helper::base16encode(const byte *data, uint8_t size)
+{
+  String dataToTx;
+
+  dataToTx.reserve(size * 2);
+  char buffer[3];
+
+  for (unsigned i = 0; i < size; i++)
+  {
+    sprintf(buffer, "%02X", data[i]);
+    dataToTx += buffer[0];
+    dataToTx += buffer[1];
+  }
+  return dataToTx;
+}

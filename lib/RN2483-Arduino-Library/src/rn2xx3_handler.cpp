@@ -18,7 +18,7 @@ String rn2xx3_handler::sendRawCommand(const String& command)
     return "";
   }
 
-  if (wait_command_finished() == rn2xx3_handler::RN_state::timeout) {
+  if (wait_command_finished() == RN_state::timeout) {
     String log = F("sendRawCommand timeout: ");
     log += command;
     setLastError(log);
@@ -165,10 +165,12 @@ rn2xx3_handler::RN_state rn2xx3_handler::async_loop()
       handle_reply_received();
       break;
     }
+    case RN_state::must_perform_init:
+      break;
+
     case RN_state::timeout:
     case RN_state::max_attempt_reached:
     case RN_state::error:
-    case RN_state::must_perform_init:
     case RN_state::duty_cycle_exceeded:
     case RN_state::invalid_char_read:
 
@@ -220,6 +222,405 @@ rn2xx3_handler::RN_state rn2xx3_handler::wait_command_accepted(unsigned long tim
 bool rn2xx3_handler::command_finished() const
 {
   return _processing_cmd == Active_cmd::none;
+}
+
+bool rn2xx3_handler::init()
+{
+  if (!check_set_keys())
+  {
+    // FIXME TD-er: Do we need to set the state here to idle ???
+    // or maybe introduce a new "not_started" ???
+    setLastError(F("Not all keys are set"));
+    return false;
+  }
+
+  bool mustInit =
+    get_state() == RN_state::must_perform_init ||
+    !Status.Joined;
+
+  if (!mustInit) {
+    // What should be returned? The joined state or whether there has been a join performed?
+    return false;
+  }
+
+  if (!resetModule()) { return false; }
+
+  // We set both sets of keys, as some reports on older firmware suggest the save
+  // may not be successful after a factory reset if not all fields are set.
+
+  // Set OTAA keys
+  sendMacSet(F("deveui"),  _deveui);
+  sendMacSet(F("appeui"),  _appeui);
+  sendMacSet(F("appkey"),  _appkey);
+
+  // Set ABP keys
+  sendMacSet(F("nwkskey"), _nwkskey);
+  sendMacSet(F("appskey"), _appskey);
+  sendMacSet(F("devaddr"), _devaddr);
+
+  // Set max. allowed power.
+  // 868 MHz EU   : 1 -> 14 dBm
+  // 900 MHz US/AU: 5 -> 20 dBm
+  setTXoutputPower(_moduleType == RN2xx3_datatypes::Model::RN2903 ? 5 : 1);
+  setSF(_sf);
+
+  // TTN does not yet support Adaptive Data Rate.
+  // Using it is also only necessary in limited situations.
+  // Therefore disable it by default.
+  setAdaptiveDataRate(false);
+
+  // Switch off automatic replies, because this library can not
+  // handle more than one mac_rx per tx. See RN2483 datasheet,
+  // 2.4.8.14, page 27 and the scenario on page 19.
+  setAutomaticReply(false);
+
+  // Semtech and TTN both use a non default RX2 window freq and SF.
+  // Maybe we should not specify this for other networks.
+  // if (_moduleType == RN2xx3_datatypes::Model::RN2483)
+  // {
+  //   set2ndRecvWindow(3, 869525000);
+  // }
+  // Disabled for now because an OTAA join seems to work fine without.
+
+  if (_asyncMode) {
+    return prepare_join(_otaa);
+  }
+  return wait_command_accepted() ==  RN_state::join_accepted;
+}
+
+bool rn2xx3_handler::initOTAA(const String& AppEUI, const String& AppKey, const String& DevEUI)
+{
+  // If the Device EUI was given as a parameter, use it
+  // otherwise use the Hardware EUI.
+  if (rn2xx3_helper::isHexStr_of_length(DevEUI, 16))
+  {
+    _deveui = DevEUI;
+  }
+  else
+  {
+    String addr = sendRawCommand(F("sys get hweui"));
+
+    if (rn2xx3_helper::isHexStr_of_length(addr, 16))
+    {
+      _deveui = addr;
+    }
+  }
+
+  if (!rn2xx3_helper::isHexStr_of_length(AppEUI, 16) ||
+      !rn2xx3_helper::isHexStr_of_length(AppKey, 32) ||
+      !rn2xx3_helper::isHexStr_of_length(_deveui, 16))
+  {
+    // No valid config
+    setLastError(F("InitOTAA: Not all keys are valid."));
+    return false;
+  }
+  _appeui = AppEUI;
+  _appkey = AppKey;
+  _otaa   = true;
+  return init();
+}
+
+bool rn2xx3_handler::initOTAA(uint8_t *AppEUI, uint8_t *AppKey, uint8_t *DevEUI)
+{
+  if ((AppEUI == nullptr) || (AppKey == nullptr)) {
+    return false;
+  }
+
+  String app_eui;
+  String dev_eui;
+  String app_key;
+  char   buff[3];
+
+  for (uint8_t i = 0; i < 8; i++)
+  {
+    sprintf(buff, "%02X", AppEUI[i]);
+    app_eui += String(buff);
+  }
+
+  if (DevEUI == nullptr)
+  {
+    dev_eui = "0";
+  } else {
+    for (uint8_t i = 0; i < 8; i++)
+    {
+      sprintf(buff, "%02X", DevEUI[i]);
+      dev_eui += String(buff);
+    }
+  }
+
+  for (uint8_t i = 0; i < 16; i++)
+  {
+    sprintf(buff, "%02X", AppKey[i]);
+    app_key += String(buff);
+  }
+
+  return initOTAA(app_eui, app_key, dev_eui);
+}
+
+bool rn2xx3_handler::initABP(const String& devAddr, const String& AppSKey, const String& NwkSKey)
+{
+  _devaddr = devAddr;
+  _appskey = AppSKey;
+  _nwkskey = NwkSKey;
+  _otaa    = false;
+  return init();
+}
+
+RN2xx3_datatypes::TX_return_type rn2xx3_handler::txCommand(const String& command, const String& data, bool shouldEncode, uint8_t port)
+{
+  if (get_state() == RN_state::must_perform_init) {
+    init();
+  }
+
+  if (!prepare_tx_command(command, data, shouldEncode, port)) {
+    return RN2xx3_datatypes::TX_return_type::TX_FAIL;
+  }
+
+  if (_asyncMode) {
+    // Unlikely the state will be other than an error or wait_for_reply_rx2
+    switch (wait_command_accepted()) {
+      case RN_state::wait_for_reply_rx2:
+      case RN_state::tx_success:
+      case RN_state::tx_success_with_rx:
+        return RN2xx3_datatypes::TX_return_type::TX_SUCCESS;
+        break;
+
+      default:
+        break;
+    }
+  } else {
+    switch (wait_command_finished()) {
+      case RN_state::tx_success:
+        return RN2xx3_datatypes::TX_return_type::TX_SUCCESS;
+      case RN_state::tx_success_with_rx:
+        return RN2xx3_datatypes::TX_return_type::TX_WITH_RX;
+        break;
+
+      default:
+        break;
+    }
+  }
+
+  return RN2xx3_datatypes::TX_return_type::TX_FAIL;
+}
+
+bool rn2xx3_handler::setSF(uint8_t sf)
+{
+  if ((sf >= 7) && (sf <= 12))
+  {
+    int dr = -1;
+
+    switch (_fp)
+    {
+      case RN2xx3_datatypes::Freq_plan::TTN_EU:
+      case RN2xx3_datatypes::Freq_plan::SINGLE_CHANNEL_EU:
+      case RN2xx3_datatypes::Freq_plan::DEFAULT_EU:
+
+        //  case TTN_FP_EU868:
+        //  case TTN_FP_IN865_867:
+        //  case TTN_FP_AS920_923:
+        //  case TTN_FP_AS923_925:
+        //  case TTN_FP_KR920_923:
+        dr = 12 - sf;
+        break;
+      case RN2xx3_datatypes::Freq_plan::TTN_US:
+
+        // case TTN_FP_US915:
+        // case TTN_FP_AU915:
+        dr = 10 - sf;
+        break;
+      default:
+        break;
+    }
+
+    if (dr >= 0)
+    {
+      _sf = sf;
+      return setDR(dr);
+    }
+  }
+  setLastError(F("error in setSF"));
+  return false;
+}
+
+bool rn2xx3_handler::setDR(int dr)
+{
+  if ((dr >= 0) && (dr <= 7))
+  {
+    return sendMacSet(F("dr"), String(dr));
+  }
+  return false;
+}
+
+void rn2xx3_handler::setAsyncMode(bool enabled) {
+  _asyncMode = enabled;
+}
+
+bool rn2xx3_handler::useOTAA() const {
+  return _otaa;
+}
+
+void rn2xx3_handler::setLastUsedJoinMode(bool isOTAA) {
+  if (_otaa != isOTAA) {
+    Status.Joined = false;
+    _otaa         = isOTAA;
+  }
+}
+
+bool rn2xx3_handler::setFrequencyPlan(RN2xx3_datatypes::Freq_plan fp)
+{
+  bool returnValue = false;
+
+  switch (fp)
+  {
+    case RN2xx3_datatypes::Freq_plan::SINGLE_CHANNEL_EU:
+    {
+      if (_moduleType == RN2xx3_datatypes::Model::RN2483)
+      {
+        // mac set rx2 <dataRate> <frequency>
+        // set2ndRecvWindow(5, 868100000); //use this for "strict" one channel gateways
+        set2ndRecvWindow(3, 869525000); // use for "non-strict" one channel gateways
+        setChannelDutyCycle(0, 99);     // 1% duty cycle for this channel
+        setChannelDutyCycle(1, 65535);  // almost never use this channel
+        setChannelDutyCycle(2, 65535);  // almost never use this channel
+
+        for (uint8_t ch = 3; ch < 8; ch++)
+        {
+          setChannelEnabled(ch, false);
+        }
+        returnValue = true;
+      }
+      break;
+    }
+
+    case RN2xx3_datatypes::Freq_plan::TTN_EU:
+    {
+      if (_moduleType == RN2xx3_datatypes::Model::RN2483)
+      {
+        /*
+         * The <dutyCycle> value that needs to be configured can be
+         * obtained from the actual duty cycle X (in percentage)
+         * using the following formula: <dutyCycle> = (100/X) – 1
+         *
+         *  10% -> 9
+         *  1% -> 99
+         *  0.33% -> 299
+         *  8 channels, total of 1% duty cycle:
+         *  0.125% per channel -> 799
+         *
+         * Most of the RN2xx3_datatypes::Freq_plan::TTN_EU frequency plan was copied from:
+         * https://github.com/TheThingsNetwork/arduino-device-lib
+         */
+
+        uint32_t freq = 867100000;
+
+        for (uint8_t ch = 0; ch < 8; ch++)
+        {
+          setChannelDutyCycle(ch, 799); // All channels
+
+          if (ch == 1)
+          {
+            setChannelDataRateRange(ch, 0, 6);
+          }
+          else if (ch > 2)
+          {
+            setChannelDataRateRange(ch, 0, 5);
+            setChannelFrequency(ch, freq);
+            freq = freq + 200000;
+          }
+          setChannelEnabled(ch, true); // frequency, data rate and duty cycle must be set first.
+        }
+
+        // RX window 2
+        set2ndRecvWindow(3, 869525000);
+
+        returnValue = true;
+      }
+
+      break;
+    }
+
+    case RN2xx3_datatypes::Freq_plan::TTN_US:
+    {
+      /*
+       * Most of the RN2xx3_datatypes::Freq_plan::TTN_US frequency plan was copied from:
+       * https://github.com/TheThingsNetwork/arduino-device-lib
+       */
+      if (_moduleType == RN2xx3_datatypes::Model::RN2903)
+      {
+        for (int channel = 0; channel < 72; channel++)
+        {
+          bool enabled = (channel >= 8 && channel < 16);
+          setChannelEnabled(channel, enabled);
+        }
+        returnValue = true;
+      }
+      break;
+    }
+
+    case RN2xx3_datatypes::Freq_plan::DEFAULT_EU:
+    {
+      if (_moduleType == RN2xx3_datatypes::Model::RN2483)
+      {
+        for (int channel = 0; channel < 8; channel++)
+        {
+          if (channel < 3) {
+            // fix duty cycle - 1% = 0.33% per channel
+            setChannelDutyCycle(channel, 799);
+            setChannelEnabled(channel, true);
+          } else {
+            // disable non-default channels
+            setChannelEnabled(channel, false);
+          }
+        }
+        returnValue = true;
+      }
+
+      break;
+    }
+    default:
+    {
+      // set default channels 868.1, 868.3 and 868.5?
+      returnValue = false; // well we didn't do anything, so yes, false
+      break;
+    }
+  }
+
+  return returnValue;
+}
+
+RN2xx3_datatypes::Model rn2xx3_handler::configureModuleType()
+{
+  RN2xx3_datatypes::Firmware firmware;
+
+  _moduleType = RN2xx3_datatypes::parseVersion(sysver(), firmware);
+  return _moduleType;
+}
+
+bool rn2xx3_handler::resetModule()
+{
+  // reset the module - this will clear all keys set previously
+  String result;
+
+  switch (configureModuleType())
+  {
+    case RN2xx3_datatypes::Model::RN2903:
+      result = sendRawCommand(F("mac reset"));
+      break;
+    case RN2xx3_datatypes::Model::RN2483:
+      result = sendRawCommand(F("mac reset 868"));
+      break;
+    default:
+
+      // we shouldn't go forward with the init
+      setLastError(F("error in reset"));
+      return false;
+  }
+
+  // setLastError(F("success resetmodule"));
+  return true;
+
+  //  return RN2xx3_received_types::determineReceivedDataType(result) == ok;
 }
 
 const String& rn2xx3_handler::get_send_data() const {
@@ -685,6 +1086,14 @@ void rn2xx3_handler::handle_reply_received() {
   }
 }
 
+int rn2xx3_handler::readIntValue(const String& command)
+{
+  String value = sendRawCommand(command);
+
+  value.trim();
+  return value.toInt();
+}
+
 bool rn2xx3_handler::readUIntMacGet(const String& param, uint32_t& value)
 {
   String command;
@@ -816,4 +1225,67 @@ bool rn2xx3_handler::setTXoutputPower(int pwridx)
      10: 10 dBm
    */
   return sendMacSet(F("pwridx"), String(pwridx));
+}
+
+bool rn2xx3_handler::check_set_keys()
+{
+  // Strings are in HEX, so 1 character per 4 bits.
+  // Identifiers:
+  // - DevEUI - 64 bit end-device identifier, EUI-64 (unique)
+  // - DevAddr - 32 bit device address (non-unique)
+  // - AppEUI - 64 bit application identifier, EUI-64 (unique)
+  //
+  // Security keys: NwkSKey, AppSKey and AppKey.
+  // All keys have a length of 128 bits.
+
+  bool otaa_set =
+    rn2xx3_helper::isHexStr_of_length(_deveui,  16) &&
+    rn2xx3_helper::isHexStr_of_length(_appeui,  16) &&
+    rn2xx3_helper::isHexStr_of_length(_appkey,  32);
+
+  bool abp_set =
+    rn2xx3_helper::isHexStr_of_length(_nwkskey, 32) &&
+    rn2xx3_helper::isHexStr_of_length(_appskey, 32) &&
+    rn2xx3_helper::isHexStr_of_length(_devaddr, 8);
+
+  if (_otaa && otaa_set) {
+    if (!abp_set) {
+      if (!rn2xx3_helper::isHexStr_of_length(_nwkskey, 32)) {
+        _nwkskey = F("00000000000000000000000000000000");
+      }
+
+      if (!rn2xx3_helper::isHexStr_of_length(_appskey, 32)) {
+        _appskey = F("00000000000000000000000000000000");
+      }
+
+      if (!rn2xx3_helper::isHexStr_of_length(_devaddr, 8))
+      {
+        // The default address to use on TTN if no address is defined.
+        // This one falls in the "testing" address space.
+        _devaddr = F("03FFBEEF");
+      }
+    }
+    return true;
+  }
+
+  if (!_otaa && abp_set) {
+    if (!otaa_set) {
+      if (!rn2xx3_helper::isHexStr_of_length(_deveui, 16))
+      {
+        // if you want to use another DevEUI than the hardware one
+        // use this deveui for LoRa WAN
+        _deveui = F("0011223344556677");
+      }
+
+      if (!rn2xx3_helper::isHexStr_of_length(_appeui, 16)) {
+        _appeui = F("0000000000000000");
+      }
+
+      if (!rn2xx3_helper::isHexStr_of_length(_appkey, 32)) {
+        _appkey = F("00000000000000000000000000000000");
+      }
+    }
+    return true;
+  }
+  return false;
 }
