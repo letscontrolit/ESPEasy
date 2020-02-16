@@ -46,8 +46,10 @@
 class CPlugin {
 public:
 
+  // As these function values are also used in the timing stats, make sure there is no overlap with the PLUGIN_xxx numbering.
+
   enum Function {
-    CPLUGIN_PROTOCOL_ADD = 1, // Called at boot for letting a controller adding itself to list of available controllers
+    CPLUGIN_PROTOCOL_ADD = 40, // Called at boot for letting a controller adding itself to list of available controllers
     CPLUGIN_PROTOCOL_TEMPLATE,
     CPLUGIN_PROTOCOL_SEND,
     CPLUGIN_PROTOCOL_RECV,

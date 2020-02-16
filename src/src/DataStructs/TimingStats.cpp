@@ -196,6 +196,8 @@ String getMiscStatsName(int stat) {
     case PLUGIN_CALL_10PS:        return F("Plugin call 10 p/s");
     case PLUGIN_CALL_10PSU:       return F("Plugin call 10 p/s U");
     case PLUGIN_CALL_1PS:         return F("Plugin call  1 p/s");
+    case CPLUGIN_CALL_50PS:       return F("CPlugin call 50 p/s");
+    case CPLUGIN_CALL_10PS:       return F("CPlugin call 10 p/s");
     case SENSOR_SEND_TASK:        return F("SensorSendTask()");
     case SEND_DATA_STATS:         return F("sendData()");
     case COMPUTE_FORMULA_STATS:   return F("Compute formula");
