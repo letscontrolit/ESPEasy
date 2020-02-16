@@ -666,9 +666,7 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
   return success;
 }
 
-bool do_process_c018_delay_queue(int                       controller_number,
-                                 const C018_queue_element& element,
-                                 ControllerSettingsStruct& ControllerSettings);
+bool do_process_c018_delay_queue(int controller_number, const C018_queue_element& element, ControllerSettingsStruct& ControllerSettings);
 
 bool do_process_c018_delay_queue(int controller_number, const C018_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
   bool   success = C018_data.txHexBytes(element.packed, ControllerSettings.Port);

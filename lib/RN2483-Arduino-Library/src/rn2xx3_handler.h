@@ -3,7 +3,7 @@
 
 #include "Arduino.h"
 
-#include "RN2xx3_status.h"
+#include "rn2xx3_status.h"
 
 // State machine for the RN2483/RN2903 modules
 class rn2xx3_handler {
