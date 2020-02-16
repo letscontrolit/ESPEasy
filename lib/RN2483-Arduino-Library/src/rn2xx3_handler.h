@@ -40,7 +40,7 @@ public:
                             bool          shouldEncode,
                             uint8_t       port);
 
-  bool     exec_join(bool useOTAA);
+  bool     prepare_join(bool useOTAA);
 
   RN_state async_loop();
 

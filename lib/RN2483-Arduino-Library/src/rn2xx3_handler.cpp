@@ -83,25 +83,14 @@ bool rn2xx3_handler::prepare_tx_command(const String& command, const String& dat
   return true;
 }
 
-bool rn2xx3_handler::exec_join(bool useOTAA) {
-  if (!command_finished()) {
-    // What to return here, whether a join is executed, or if the join was successful?
+bool rn2xx3_handler::prepare_join(bool useOTAA) {
+  updateStatus();
+  if (!prepare_raw_command(useOTAA ? F("mac join otaa") : F("mac join abp"))) {
     return false;
   }
-  updateStatus();
-
-  if (prepare_raw_command(useOTAA ? F("mac join otaa") : F("mac join abp"))) {
-    _processing_cmd = Active_cmd::join;
-    Status.Joined   = false;
-
-    if (wait_command_finished() ==  rn2xx3_handler::RN_state::join_accepted)
-    {
-      Status.Joined = true;
-      saveUpdatedStatus();
-    }
-  }
-
-  return Status.Joined;
+  _processing_cmd = Active_cmd::join;
+  Status.Joined   = false;
+  return true;
 }
 
 rn2xx3_handler::RN_state rn2xx3_handler::async_loop()
@@ -370,7 +359,12 @@ void rn2xx3_handler::set_state(rn2xx3_handler::RN_state state) {
     case RN_state::tx_success:
     case RN_state::tx_success_with_rx:
     case RN_state::reply_received_finished:
+      _processing_cmd = Active_cmd::none;
+      break;
+
     case RN_state::join_accepted:
+      Status.Joined = true;
+      saveUpdatedStatus();
       _processing_cmd = Active_cmd::none;
       break;
 

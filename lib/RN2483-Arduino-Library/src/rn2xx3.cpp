@@ -221,7 +221,7 @@ bool rn2xx3::init()
   // }
   // Disabled for now because an OTAA join seems to work fine without.
 
-  return _rn2xx3_handler.exec_join(_otaa);
+  return _rn2xx3_handler.prepare_join(_otaa);
 }
 
 bool rn2xx3::initOTAA(const String& AppEUI, const String& AppKey, const String& DevEUI)
