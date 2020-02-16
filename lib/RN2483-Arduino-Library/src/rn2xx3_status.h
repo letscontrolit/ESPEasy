@@ -3,8 +3,13 @@
 
 #include "Arduino.h"
 
+#include "rn2xx3_datatypes.h"
+
+
 // This class decodes the received data from the command:
 // mac get status
+// The implementation of these status bits has changed between firmware versions.
+// See: https://www.thethingsnetwork.org/forum/t/rn2483-how-to-handle-if-connection-to-ttn-is-lost/30956/13?u=td-er
 class RN2xx3_status {
 public:
 
@@ -43,12 +48,17 @@ public:
   bool RejoinNeeded;
   bool Multicast;
 
+  void     setModelVersion(const String& version);
+  bool     modelVersionSet() const;
   bool     decode(uint32_t value);
   bool     saveSettingsNeeded() const;
   bool     clearSaveSettingsNeeded();
   uint32_t getRawStatus() const;
 
 private:
+
+  RN2xx3_datatypes::Firmware _firmware = RN2xx3_datatypes::Firmware::unknown;
+  RN2xx3_datatypes::Model _model       = RN2xx3_datatypes::Model::RN_NA;
 
   uint32_t _rawstatus      = 0;
   bool _saveSettingsNeeded = false;

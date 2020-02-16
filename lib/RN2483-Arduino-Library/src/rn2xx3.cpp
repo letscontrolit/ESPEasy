@@ -23,6 +23,10 @@ extern "C" {
 rn2xx3::rn2xx3(Stream& serial) : _rn2xx3_handler(serial)
 {}
 
+void rn2xx3::setAsyncMode(bool enabled) {
+  _asyncMode = enabled;
+}
+
 bool rn2xx3::autobaud()
 {
   String response = "";
@@ -51,28 +55,14 @@ bool rn2xx3::autobaud()
 
 String rn2xx3::sysver()
 {
-  String ver = sendRawCommand(F("sys get ver"));
-
-  ver.trim();
-  return ver;
+  return _rn2xx3_handler.sysver();
 }
 
-RN2xx3_t rn2xx3::configureModuleType()
+RN2xx3_datatypes::Model rn2xx3::configureModuleType()
 {
-  String version = sysver();
-  String model   = version.substring(2, 6);
+  RN2xx3_datatypes::Firmware firmware;
 
-  switch (model.toInt()) {
-    case 2903:
-      _moduleType = RN2903;
-      break;
-    case 2483:
-      _moduleType = RN2483;
-      break;
-    default:
-      _moduleType = RN_NA;
-      break;
-  }
+  _moduleType = RN2xx3_datatypes::parseVersion(sysver(), firmware);
   return _moduleType;
 }
 
@@ -83,10 +73,10 @@ bool rn2xx3::resetModule()
 
   switch (configureModuleType())
   {
-    case RN2903:
+    case RN2xx3_datatypes::Model::RN2903:
       result = sendRawCommand(F("mac reset"));
       break;
-    case RN2483:
+    case RN2xx3_datatypes::Model::RN2483:
       result = sendRawCommand(F("mac reset 868"));
       break;
     default:
@@ -132,9 +122,9 @@ bool rn2xx3::setSF(uint8_t sf)
 
     switch (_fp)
     {
-      case TTN_EU:
-      case SINGLE_CHANNEL_EU:
-      case DEFAULT_EU:
+      case RN2xx3_datatypes::Freq_plan::TTN_EU:
+      case RN2xx3_datatypes::Freq_plan::SINGLE_CHANNEL_EU:
+      case RN2xx3_datatypes::Freq_plan::DEFAULT_EU:
 
         //  case TTN_FP_EU868:
         //  case TTN_FP_IN865_867:
@@ -143,7 +133,7 @@ bool rn2xx3::setSF(uint8_t sf)
         //  case TTN_FP_KR920_923:
         dr = 12 - sf;
         break;
-      case TTN_US:
+      case RN2xx3_datatypes::Freq_plan::TTN_US:
 
         // case TTN_FP_US915:
         // case TTN_FP_AU915:
@@ -200,7 +190,7 @@ bool rn2xx3::init()
   // Set max. allowed power.
   // 868 MHz EU   : 1 -> 14 dBm
   // 900 MHz US/AU: 5 -> 20 dBm
-  setTXoutputPower(_moduleType == RN2903 ? 5 : 1);
+  setTXoutputPower(_moduleType == RN2xx3_datatypes::Model::RN2903 ? 5 : 1);
   setSF(_sf);
 
   // TTN does not yet support Adaptive Data Rate.
@@ -215,13 +205,16 @@ bool rn2xx3::init()
 
   // Semtech and TTN both use a non default RX2 window freq and SF.
   // Maybe we should not specify this for other networks.
-  // if (_moduleType == RN2483)
+  // if (_moduleType == RN2xx3_datatypes::Model::RN2483)
   // {
   //   set2ndRecvWindow(3, 869525000);
   // }
   // Disabled for now because an OTAA join seems to work fine without.
 
-  return _rn2xx3_handler.prepare_join(_otaa);
+  if (_asyncMode) {
+    return _rn2xx3_handler.prepare_join(_otaa);
+  }
+  return wait_command_accepted() ==  rn2xx3_handler::RN_state::join_accepted;
 }
 
 bool rn2xx3::initOTAA(const String& AppEUI, const String& AppKey, const String& DevEUI)
@@ -302,12 +295,12 @@ bool rn2xx3::initABP(const String& devAddr, const String& AppSKey, const String&
   return init();
 }
 
-TX_RETURN_TYPE rn2xx3::tx(const String& data, uint8_t port, bool async)
+RN2xx3_datatypes::TX_return_type rn2xx3::tx(const String& data, uint8_t port)
 {
-  return txUncnf(data, port, async); // we are unsure which mode we're in. Better not to wait for acks.
+  return txUncnf(data, port); // we are unsure which mode we're in. Better not to wait for acks.
 }
 
-TX_RETURN_TYPE rn2xx3::txBytes(const byte *data, uint8_t size, uint8_t port, bool async)
+RN2xx3_datatypes::TX_return_type rn2xx3::txBytes(const byte *data, uint8_t size, uint8_t port)
 {
   String dataToTx;
 
@@ -320,41 +313,41 @@ TX_RETURN_TYPE rn2xx3::txBytes(const byte *data, uint8_t size, uint8_t port, boo
     dataToTx += buffer[0];
     dataToTx += buffer[1];
   }
-  return txCommand("mac tx uncnf ", dataToTx, false, port, async);
+  return txCommand("mac tx uncnf ", dataToTx, false, port);
 }
 
-TX_RETURN_TYPE rn2xx3::txHexBytes(const String& hexEncoded, uint8_t port, bool async)
+RN2xx3_datatypes::TX_return_type rn2xx3::txHexBytes(const String& hexEncoded, uint8_t port)
 {
-  return txCommand("mac tx uncnf ", hexEncoded, false, port, async);
+  return txCommand("mac tx uncnf ", hexEncoded, false, port);
 }
 
-TX_RETURN_TYPE rn2xx3::txCnf(const String& data, uint8_t port, bool async)
+RN2xx3_datatypes::TX_return_type rn2xx3::txCnf(const String& data, uint8_t port)
 {
-  return txCommand("mac tx cnf ", data, true, port, async);
+  return txCommand("mac tx cnf ", data, true, port);
 }
 
-TX_RETURN_TYPE rn2xx3::txUncnf(const String& data, uint8_t port, bool async)
+RN2xx3_datatypes::TX_return_type rn2xx3::txUncnf(const String& data, uint8_t port)
 {
-  return txCommand("mac tx uncnf ", data, true, port, async);
+  return txCommand("mac tx uncnf ", data, true, port);
 }
 
-TX_RETURN_TYPE rn2xx3::txCommand(const String& command, const String& data, bool shouldEncode, uint8_t port, bool async)
+RN2xx3_datatypes::TX_return_type rn2xx3::txCommand(const String& command, const String& data, bool shouldEncode, uint8_t port)
 {
   if (_rn2xx3_handler.get_state() == rn2xx3_handler::RN_state::must_perform_init) {
     init();
   }
 
   if (!_rn2xx3_handler.prepare_tx_command(command, data, shouldEncode, port)) {
-    return TX_FAIL;
+    return RN2xx3_datatypes::TX_return_type::TX_FAIL;
   }
 
-  if (async) {
+  if (_asyncMode) {
     // Unlikely the state will be other than an error or wait_for_reply_rx2
     switch (wait_command_accepted()) {
       case rn2xx3_handler::RN_state::wait_for_reply_rx2:
       case rn2xx3_handler::RN_state::tx_success:
       case rn2xx3_handler::RN_state::tx_success_with_rx:
-        return TX_SUCCESS;
+        return RN2xx3_datatypes::TX_return_type::TX_SUCCESS;
         break;
 
       default:
@@ -363,9 +356,9 @@ TX_RETURN_TYPE rn2xx3::txCommand(const String& command, const String& data, bool
   } else {
     switch (wait_command_finished()) {
       case rn2xx3_handler::RN_state::tx_success:
-        return TX_SUCCESS;
+        return RN2xx3_datatypes::TX_return_type::TX_SUCCESS;
       case rn2xx3_handler::RN_state::tx_success_with_rx:
-        return TX_WITH_RX;
+        return RN2xx3_datatypes::TX_return_type::TX_WITH_RX;
         break;
 
       default:
@@ -373,7 +366,7 @@ TX_RETURN_TYPE rn2xx3::txCommand(const String& command, const String& data, bool
     }
   }
 
-  return TX_FAIL;
+  return RN2xx3_datatypes::TX_return_type::TX_FAIL;
 }
 
 // FIXME TD-er: Move this to the rn2xx3_handler class.
@@ -448,20 +441,20 @@ String rn2xx3::sendRawCommand(const String& command)
   return _rn2xx3_handler.sendRawCommand(command);
 }
 
-RN2xx3_t rn2xx3::moduleType()
+RN2xx3_datatypes::Model rn2xx3::moduleType()
 {
   return _moduleType;
 }
 
-bool rn2xx3::setFrequencyPlan(FREQ_PLAN fp)
+bool rn2xx3::setFrequencyPlan(RN2xx3_datatypes::Freq_plan fp)
 {
   bool returnValue;
 
   switch (fp)
   {
-    case SINGLE_CHANNEL_EU:
+    case RN2xx3_datatypes::Freq_plan::SINGLE_CHANNEL_EU:
     {
-      if (_moduleType == RN2483)
+      if (_moduleType == RN2xx3_datatypes::Model::RN2483)
       {
         // mac set rx2 <dataRate> <frequency>
         // set2ndRecvWindow(5, 868100000); //use this for "strict" one channel gateways
@@ -483,9 +476,9 @@ bool rn2xx3::setFrequencyPlan(FREQ_PLAN fp)
       break;
     }
 
-    case TTN_EU:
+    case RN2xx3_datatypes::Freq_plan::TTN_EU:
     {
-      if (_moduleType == RN2483)
+      if (_moduleType == RN2xx3_datatypes::Model::RN2483)
       {
         /*
          * The <dutyCycle> value that needs to be configured can be
@@ -498,7 +491,7 @@ bool rn2xx3::setFrequencyPlan(FREQ_PLAN fp)
          *  8 channels, total of 1% duty cycle:
          *  0.125% per channel -> 799
          *
-         * Most of the TTN_EU frequency plan was copied from:
+         * Most of the RN2xx3_datatypes::Freq_plan::TTN_EU frequency plan was copied from:
          * https://github.com/TheThingsNetwork/arduino-device-lib
          */
 
@@ -534,13 +527,13 @@ bool rn2xx3::setFrequencyPlan(FREQ_PLAN fp)
       break;
     }
 
-    case TTN_US:
+    case RN2xx3_datatypes::Freq_plan::TTN_US:
     {
       /*
-       * Most of the TTN_US frequency plan was copied from:
+       * Most of the RN2xx3_datatypes::Freq_plan::TTN_US frequency plan was copied from:
        * https://github.com/TheThingsNetwork/arduino-device-lib
        */
-      if (_moduleType == RN2903)
+      if (_moduleType == RN2xx3_datatypes::Model::RN2903)
       {
         for (int channel = 0; channel < 72; channel++)
         {
@@ -556,9 +549,9 @@ bool rn2xx3::setFrequencyPlan(FREQ_PLAN fp)
       break;
     }
 
-    case DEFAULT_EU:
+    case RN2xx3_datatypes::Freq_plan::DEFAULT_EU:
     {
-      if (_moduleType == RN2483)
+      if (_moduleType == RN2xx3_datatypes::Model::RN2483)
       {
         for (int channel = 0; channel < 8; channel++)
         {

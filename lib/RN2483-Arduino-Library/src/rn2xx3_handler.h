@@ -80,6 +80,8 @@ public:
 
   RN_state      get_state() const;
 
+  String        sysver();
+
   // delay from last moment of sending to receive RX1 and RX2 window
   bool          getRxDelayValues(uint32_t& rxdelay1,
                                  uint32_t& rxdelay2);

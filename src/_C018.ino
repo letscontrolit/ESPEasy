@@ -42,8 +42,9 @@ struct C018_data_struct {
     cacheHWEUI       = "";
     cacheSysVer      = "";
     autobaud_success = false;
+
     if (resetPin != -1) {
-      pinMode(resetPin, OUTPUT); 
+      pinMode(resetPin, OUTPUT);
       digitalWrite(resetPin, LOW);
       delay(500);
       digitalWrite(resetPin, HIGH);
@@ -76,11 +77,12 @@ struct C018_data_struct {
 
     if (C018_easySerial != nullptr) {
       if (resetPin == -1) {
-        pinMode(serial_tx, OUTPUT); 
+        pinMode(serial_tx, OUTPUT);
         digitalWrite(serial_tx, LOW);
       }
 
       C018_easySerial->begin(baudrate);
+
       // wakeUP_RN2483 and set data rate
       // Delay must be longer than specified in the datasheet for firmware 1.0.3
       // See: https://www.thethingsnetwork.org/forum/t/rn2483a-problems-no-serial-communication/7866/36?u=td-er
@@ -89,13 +91,16 @@ struct C018_data_struct {
       C018_easySerial->println();
       delay(100);
 
-      myLora           = new rn2xx3(*C018_easySerial);
+      myLora = new rn2xx3(*C018_easySerial);
+      myLora->setAsyncMode(true);
 
       String response = myLora->sysver();
+
       // we could use sendRawCommand(F("sys get ver")); here
-//      C018_easySerial->println(F("sys get ver"));
-//      String response = C018_easySerial->readStringUntil('\n');
+      //      C018_easySerial->println(F("sys get ver"));
+      //      String response = C018_easySerial->readStringUntil('\n');
       autobaud_success = response.length() > 10;
+
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         String log = F("C018 AutoBaud: ");
         log += response;
@@ -126,24 +131,27 @@ struct C018_data_struct {
   }
 
   bool txUncnfBytes(const byte *data, uint8_t size, uint8_t port) {
-    bool res = myLora->txBytes(data, size, port) != TX_FAIL;
+    bool res = myLora->txBytes(data, size, port) != RN2xx3_datatypes::TX_return_type::TX_FAIL;
+
     C018_logError(F("txUncnfBytes()"));
     return res;
   }
 
   bool txHexBytes(const String& data, uint8_t port) {
-    bool res = myLora->txHexBytes(data, port, true) != TX_FAIL;
+    bool res = myLora->txHexBytes(data, port) != RN2xx3_datatypes::TX_return_type::TX_FAIL;
+
     C018_logError(F("txHexBytes()"));
     return res;
   }
 
   bool txUncnf(const String& data, uint8_t port) {
-    bool res = myLora->tx(data, port) != TX_FAIL;
+    bool res = myLora->tx(data, port) != RN2xx3_datatypes::TX_return_type::TX_FAIL;
+
     C018_logError(F("txUncnf()"));
     return res;
   }
 
-  bool setFrequencyPlan(FREQ_PLAN plan) {
+  bool setFrequencyPlan(RN2xx3_datatypes::Freq_plan plan) {
     if (!isInitialized()) { return false; }
     bool res = myLora->setFrequencyPlan(plan);
     C018_logError(F("setFrequencyPlan()"));
@@ -175,10 +183,11 @@ struct C018_data_struct {
 
   String sendRawCommand(const String& command) {
     if (!isInitialized()) { return ""; }
+
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log = F("sendRawCommand: ");
       log += command;
-      addLog(LOG_LEVEL_INFO, log);    
+      addLog(LOG_LEVEL_INFO, log);
     }
     String res = myLora->sendRawCommand(command);
     C018_logError(F("sendRawCommand()"));
@@ -215,6 +224,11 @@ struct C018_data_struct {
   uint32_t getRawStatus() {
     if (!isInitialized()) { return 0; }
     return myLora->getStatus().getRawStatus();
+  }
+
+  RN2xx3_status getStatus() const {
+    if (!isInitialized()) { return RN2xx3_status(); }
+    return myLora->getStatus();
   }
 
   bool getFrameCounters(uint32_t& dnctr, uint32_t& upctr) {
@@ -259,7 +273,9 @@ struct C018_data_struct {
     return cacheSysVer;
   }
 
-  uint8_t getSampleSetCount() const { return sampleSetCounter; }
+  uint8_t getSampleSetCount() const {
+    return sampleSetCounter;
+  }
 
   uint8_t getSampleSetCount(taskIndex_t taskIndex) {
     if (sampleSetInitiator == taskIndex)
@@ -279,7 +295,8 @@ private:
 
   void C018_logError(const String& command) const {
     String error = myLora->peekLastError();
-//    String error = myLora->getLastError();
+
+    //    String error = myLora->getLastError();
 
     if (error.length() > 0) {
       String log = F("RN2384: ");
@@ -312,10 +329,10 @@ private:
   String         cacheDevAddr;
   String         cacheHWEUI;
   String         cacheSysVer;
-  uint8_t        sampleSetCounter = 0;
+  uint8_t        sampleSetCounter   = 0;
   taskIndex_t    sampleSetInitiator = INVALID_TASK_INDEX;
-  int8_t         resetPin = -1;
-  bool           autobaud_success = false;
+  int8_t         resetPin           = -1;
+  bool           autobaud_success   = false;
 } C018_data;
 
 
@@ -352,7 +369,7 @@ struct C018_ConfigStruct
     txpin         = 14;
     resetpin      = -1;
     sf            = 7;
-    frequencyplan = TTN_EU;
+    frequencyplan = RN2xx3_datatypes::Freq_plan::TTN_EU;
     joinmethod    = C018_USE_OTAA;
   }
 
@@ -365,7 +382,7 @@ struct C018_ConfigStruct
   int8_t        txpin                                           = 14;
   int8_t        resetpin                                        = -1;
   uint8_t       sf                                              = 7;
-  uint8_t       frequencyplan                                   = TTN_EU;
+  uint8_t       frequencyplan                                   = RN2xx3_datatypes::Freq_plan::TTN_EU;
   uint8_t       joinmethod                                      = C018_USE_OTAA;
 };
 
@@ -425,11 +442,11 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
       LoadCustomControllerSettings(event->ControllerIndex, (byte *)&customConfig, sizeof(customConfig));
       customConfig.validate();
 
-      C018_data.init(customConfig.rxpin, customConfig.txpin, customConfig.baudrate, 
+      C018_data.init(customConfig.rxpin, customConfig.txpin, customConfig.baudrate,
                      customConfig.joinmethod == C018_USE_OTAA,
                      ControllerSettings.SampleSetInitiator, customConfig.resetpin);
 
-      C018_data.setFrequencyPlan(static_cast<FREQ_PLAN>(customConfig.frequencyplan));
+      C018_data.setFrequencyPlan(static_cast<RN2xx3_datatypes::Freq_plan>(customConfig.frequencyplan));
 
       if (customConfig.joinmethod == C018_USE_OTAA) {
         String AppEUI = SecuritySettings.ControllerUser[event->ControllerIndex];
@@ -493,8 +510,12 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
       addTableSeparator(F("Connection Configuration"), 2, 3);
       {
         byte   choice     = customConfig.frequencyplan;
-        String options[4] = { F("SINGLE_CHANNEL_EU"), F("TTN_EU"), F("TTN_US"), F("DEFAULT_EU") };
-        int    values[4]  = { SINGLE_CHANNEL_EU, TTN_EU, TTN_US, DEFAULT_EU };
+        String options[4] = { F("RN2xx3_datatypes::Freq_plan::SINGLE_CHANNEL_EU"), F("RN2xx3_datatypes::Freq_plan::TTN_EU"), F(
+                                "RN2xx3_datatypes::Freq_plan::TTN_US"),            F(
+                                "RN2xx3_datatypes::Freq_plan::DEFAULT_EU") };
+        int    values[4] =
+        { RN2xx3_datatypes::Freq_plan::SINGLE_CHANNEL_EU, RN2xx3_datatypes::Freq_plan::TTN_EU, RN2xx3_datatypes::Freq_plan::TTN_US,
+          RN2xx3_datatypes::Freq_plan::DEFAULT_EU };
 
         addFormSelector(F("Frequency Plan"), F("frequencyplan"), 4, options, values, NULL, choice, false);
       }
@@ -544,8 +565,18 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
       addRowLabel(F("Sample Set Counter"));
       addHtml(String(C018_data.getSampleSetCount()));
 
-      addRowLabel(F("Status"));
-      addHtml(String(C018_data.getRawStatus()));
+      {
+        RN2xx3_status status = C018_data.getStatus();
+
+        addRowLabel(F("Status RAW value"));
+        addHtml(String(status.getRawStatus()));
+
+        addRowLabel(F("Activation Status"));
+        addHtml(String(status.Joined));
+
+        addRowLabel(F("Silent Immediately"));
+        addHtml(String(status.SilentImmediately));
+      }
 
 
       break;
@@ -609,17 +640,15 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
 
     case CPlugin::Function::CPLUGIN_PROTOCOL_RECV:
     {
-
-
       // FIXME TD-er: WHen should this be scheduled?
-      //schedule_controller_event_timer(event->ProtocolIndex, CPlugin::Function::CPLUGIN_PROTOCOL_RECV, event);
+      // schedule_controller_event_timer(event->ProtocolIndex, CPlugin::Function::CPLUGIN_PROTOCOL_RECV, event);
       break;
     }
 
     case CPlugin::Function::CPLUGIN_TEN_PER_SECOND:
     {
-
       C018_data.async_loop();
+
       // FIXME TD-er: Handle reading error state or return values.
       break;
     }
@@ -633,21 +662,24 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
 
     default:
       break;
-
   }
   return success;
 }
 
-bool do_process_c018_delay_queue(int controller_number, const C018_queue_element& element, ControllerSettingsStruct& ControllerSettings);
+bool do_process_c018_delay_queue(int                       controller_number,
+                                 const C018_queue_element& element,
+                                 ControllerSettingsStruct& ControllerSettings);
 
 bool do_process_c018_delay_queue(int controller_number, const C018_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
-  bool  success = C018_data.txHexBytes(element.packed, ControllerSettings.Port);
-  String error = C018_data.getLastError(); // Clear the error string.
+  bool   success = C018_data.txHexBytes(element.packed, ControllerSettings.Port);
+  String error   = C018_data.getLastError(); // Clear the error string.
+
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("C018 : Sent: ");
     log += element.packed;
     log += F(" length: ");
     log += String(element.packed.length());
+
     if (success) {
       log += F(" (success) ");
     }

@@ -1,9 +1,14 @@
 /*
  * A library for controlling a Microchip RN2xx3 LoRa radio.
  *
+ * Original:
  * @Author JP Meijers
  * @Author Nicolas Schteinschraber
  * @Date 18/12/2015
+ *
+ * Rewrite to make it async (non blocking) in handling commands:
+ * @Author Gijs Noorlander
+ * @Date 16/02/2020
  *
  */
 
@@ -14,31 +19,8 @@
 
 #include "rn2xx3_status.h"
 #include "rn2xx3_handler.h"
+#include "rn2xx3_datatypes.h"
 
-enum RN2xx3_t {
-  RN_NA  = 0, // Not set
-  RN2903 = 2903,
-  RN2483 = 2483
-};
-
-enum FREQ_PLAN {
-  SINGLE_CHANNEL_EU = 0,
-  TTN_EU,
-  TTN_US,
-  DEFAULT_EU
-};
-
-enum TX_RETURN_TYPE {
-  TX_FAIL = 0,    // The transmission failed.
-                  // If you sent a confirmed message and it is not acked,
-                  // this will be the returned value.
-
-  TX_SUCCESS = 1, // The transmission was successful.
-                  // Also the case when a confirmed message was acked.
-
-  TX_WITH_RX = 2  // A downlink message was received after the transmission.
-                  // This also implies that a confirmed message is acked.
-};
 
 class rn2xx3 {
 public:
@@ -48,6 +30,14 @@ public:
    * The serial port should already be initialised when initialising this library.
    */
   rn2xx3(Stream& serial);
+
+  /*
+   * Set the mode to work in async mode.
+   * This requires the user of this library to call async_loop()
+   * When set in async mode, the calls to commands which may take a while (e.g. join or "mac tx")
+   * will not be blocking anymore.
+   */
+  void   setAsyncMode(bool enabled);
 
   /*
    * Transmit the correct sequence to the rn2xx3 to trigger its autobauding feature.
@@ -154,41 +144,36 @@ public:
    *
    * Parameter is an ascii text string.
    */
-  TX_RETURN_TYPE tx(const String&,
-                    uint8_t port = 1,
-                    bool    async = false);
+  RN2xx3_datatypes::TX_return_type tx(const String&,
+                                      uint8_t port = 1);
 
   /*
    * Transmit raw byte encoded data via LoRa WAN.
    * This method expects a raw byte array as first parameter.
    * The second parameter is the count of the bytes to send.
    */
-  TX_RETURN_TYPE txBytes(const byte *,
-                         uint8_t size,
-                         uint8_t port = 1,
-                         bool    async = false);
+  RN2xx3_datatypes::TX_return_type txBytes(const byte *,
+                                           uint8_t size,
+                                           uint8_t port = 1);
 
-  TX_RETURN_TYPE txHexBytes(const String&,
-                            uint8_t port = 1,
-                            bool    async = false);
+  RN2xx3_datatypes::TX_return_type txHexBytes(const String&,
+                                              uint8_t port = 1);
 
   /*
    * Do a confirmed transmission via LoRa WAN.
    *
    * Parameter is an ascii text string.
    */
-  TX_RETURN_TYPE txCnf(const String&,
-                       uint8_t port = 1,
-                       bool    async = false);
+  RN2xx3_datatypes::TX_return_type txCnf(const String&,
+                                         uint8_t port = 1);
 
   /*
    * Do an unconfirmed transmission via LoRa WAN.
    *
    * Parameter is an ascii text string.
    */
-  TX_RETURN_TYPE txUncnf(const String&,
-                         uint8_t port = 1,
-                         bool    async = false);
+  RN2xx3_datatypes::TX_return_type txUncnf(const String&,
+                                           uint8_t port = 1);
 
   /*
    * Transmit the provided data using the provided command.
@@ -199,11 +184,10 @@ public:
    * String - an ascii text string if bool is true. A HEX string if bool is false.
    * bool - should the data string be hex encoded or not
    */
-  TX_RETURN_TYPE txCommand(const String&,
-                           const String&,
-                           bool,
-                           uint8_t port = 1,
-                           bool    async = false);
+  RN2xx3_datatypes::TX_return_type txCommand(const String&,
+                                             const String&,
+                                             bool,
+                                             uint8_t port = 1);
 
 
   /*
@@ -245,54 +229,54 @@ public:
   /*
    * Returns the module type either RN2903 or RN2483, or NA.
    */
-  RN2xx3_t                 moduleType();
+  RN2xx3_datatypes::Model  moduleType();
 
   /*
    * Set the active channels to use.
    * Returns true if setting the channels is possible.
    * Returns false if you are trying to use the wrong channels on the wrong module type.
    */
-  bool setFrequencyPlan(FREQ_PLAN);
+  bool                     setFrequencyPlan(RN2xx3_datatypes::Freq_plan);
 
   /*
    * Returns the last downlink message HEX string.
    */
-  String getRx();
+  String                   getRx();
 
   /*
    * Get the RN2xx3's SNR of the last received packet. Helpful to debug link quality.
    */
-  int    getSNR();
+  int                      getSNR();
 
   /*
    * Get the RN2xx3's voltage measurement on the Vdd in mVolt
    * 0–3600 (decimal value from 0 to 3600)
    */
-  int    getVbat();
+  int                      getVbat();
 
   /*
    * Return the current data rate formatted like sf7bw125
    * Firmware 1.0.1 returns always "sf9"
    */
-  String getDataRate();
+  String                   getDataRate();
 
   /*
    * Return radio Received Signal Strength Indication (rssi) value
    * for the last received frame.
    * Supported since firmware 1.0.5
    */
-  int    getRSSI();
+  int                      getRSSI();
 
   /*
    * Almost all commands can return "invalid_param"
    * The last command resulting in such an error can be retrieved.
    * Reading this will clear the error.
    */
-  String getLastError();
+  String                   getLastError();
 
-  String peekLastError() const;
+  String                   peekLastError() const;
 
-  bool   hasJoined() const {
+  bool                     hasJoined() const {
     return _rn2xx3_handler.Status.Joined;
   }
 
@@ -328,15 +312,17 @@ public:
 
 private:
 
-  RN2xx3_t _moduleType = RN_NA;
+  RN2xx3_datatypes::Model _moduleType = RN2xx3_datatypes::Model::RN_NA;
 
   rn2xx3_handler _rn2xx3_handler;
 
   // Flags to switch code paths. Default is to use OTAA.
   bool _otaa = true;
 
-  FREQ_PLAN _fp = TTN_EU;
-  uint8_t _sf   = 7;
+  bool _asyncMode = false;
+
+  RN2xx3_datatypes::Freq_plan _fp = RN2xx3_datatypes::Freq_plan::TTN_EU;
+  uint8_t _sf                     = 7;
 
 
   // OTAA values:
@@ -352,15 +338,15 @@ private:
   /*
    * Auto configure for either RN2903 or RN2483 module
    */
-  RN2xx3_t configureModuleType();
+  RN2xx3_datatypes::Model configureModuleType();
 
-  bool     resetModule();
+  bool                    resetModule();
 
 
-  int      readIntValue(const String& command);
+  int                     readIntValue(const String& command);
 
-  bool     readUIntMacGet(const String& param,
-                          uint32_t    & value);
+  bool                    readUIntMacGet(const String& param,
+                                         uint32_t    & value);
 
 
   // All "mac set ..." commands return either "ok" or "invalid_param"

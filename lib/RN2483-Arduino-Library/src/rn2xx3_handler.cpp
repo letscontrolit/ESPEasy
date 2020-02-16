@@ -85,6 +85,7 @@ bool rn2xx3_handler::prepare_tx_command(const String& command, const String& dat
 
 bool rn2xx3_handler::prepare_join(bool useOTAA) {
   updateStatus();
+
   if (!prepare_raw_command(useOTAA ? F("mac join otaa") : F("mac join abp"))) {
     return false;
   }
@@ -267,6 +268,13 @@ rn2xx3_handler::RN_state rn2xx3_handler::get_state() const {
   return _state;
 }
 
+String rn2xx3_handler::sysver() {
+  String ver = sendRawCommand(F("sys get ver"));
+
+  ver.trim();
+  return ver;
+}
+
 bool rn2xx3_handler::getRxDelayValues(uint32_t& rxdelay1,
                                       uint32_t& rxdelay2)
 {
@@ -424,9 +432,16 @@ void rn2xx3_handler::clearSerialBuffer()
 
 bool rn2xx3_handler::updateStatus()
 {
+  if (!Status.modelVersionSet()) {
+    Status.setModelVersion(sysver());
+  }
+
   const String status_str = sendRawCommand(F("mac get status"));
 
-  if (!rn2xx3_helper::isHexStr_of_length(status_str, 8)) {
+  // pre 1.0.1 firmware revisions only used 16 bits.
+  // Newer firmware revisions use 32 bits.
+  if (!(rn2xx3_helper::isHexStr_of_length(status_str, 4) ||
+        rn2xx3_helper::isHexStr_of_length(status_str, 8))) {
     String error = F("mac get status  : No valid hex string \"");
     error += status_str;
     error += '\"';
