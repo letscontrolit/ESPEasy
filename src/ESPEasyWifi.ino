@@ -470,7 +470,7 @@ void setWifiMode(WiFiMode_t wifimode) {
     #endif // ifdef ESP8266
     delay(1);
   } else {
-    delay(30); // Must allow for some time to init.
+    delay(100); // Must allow for some time to init.
   }
   bool new_mode_AP_enabled = WifiIsAP(wifimode);
 
