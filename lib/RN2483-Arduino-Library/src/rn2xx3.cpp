@@ -27,6 +27,10 @@ void rn2xx3::setAsyncMode(bool enabled) {
   _rn2xx3_handler.setAsyncMode(enabled);
 }
 
+bool rn2xx3::getAsyncMode() const {
+  return _rn2xx3_handler.getAsyncMode();
+}
+
 bool rn2xx3::autobaud()
 {
   // FIXME TD-er: Must fix this, as it is not working well.
@@ -164,6 +168,11 @@ rn2xx3_handler::RN_state rn2xx3::wait_command_finished(unsigned long timeout)
 rn2xx3_handler::RN_state rn2xx3::wait_command_accepted(unsigned long timeout)
 {
   return _rn2xx3_handler.wait_command_accepted(timeout);
+}
+
+bool rn2xx3::command_finished() const
+{
+  return _rn2xx3_handler.command_finished();
 }
 
 String rn2xx3::getRx() {

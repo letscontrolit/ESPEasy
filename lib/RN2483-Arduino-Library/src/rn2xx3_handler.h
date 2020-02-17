@@ -52,13 +52,17 @@ public:
   // It will return when the state waiting for reply_received_rx2 has been reached, or the command has finished (due to error)
   RN_state wait_command_accepted(unsigned long timeout = 10000);
 
+  // Check whether a command has finished.
+  bool     command_finished() const;
+
+
   /*
    * Initialise the RN2xx3 and join the LoRa network (if applicable).
    * This function can only be called after calling initABP() or initOTAA().
    * The sole purpose of this function is to re-initialise the radio if it
    * is in an unknown state.
    */
-  bool     init();
+  bool init();
 
   /*
    * Initialise the RN2xx3 and join a network using personalization.
@@ -70,9 +74,9 @@ public:
    * NwkSKey: Network Session Key as a HEX string.
    *          Example "AE17E567AECC8787F749A62F5541D522"
    */
-  bool     initABP(const String& addr,
-                   const String& AppSKey,
-                   const String& NwkSKey);
+  bool initABP(const String& addr,
+               const String& AppSKey,
+               const String& NwkSKey);
 
   // TODO: initABP(uint8_t * addr, uint8_t * AppSKey, uint8_t * NwkSKey)
 
@@ -128,6 +132,8 @@ public:
 
   void setAsyncMode(bool enabled);
 
+  bool getAsyncMode() const;
+
   bool useOTAA() const;
 
   void setLastUsedJoinMode(bool isOTAA);
@@ -150,8 +156,6 @@ public:
   bool setFrequencyPlan(RN2xx3_datatypes::Freq_plan fp);
 
 private:
-
-  bool          command_finished() const;
 
   // Return the data to send
   const String& get_send_data() const;

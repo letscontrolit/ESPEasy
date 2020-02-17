@@ -40,6 +40,8 @@ public:
    */
   void   setAsyncMode(bool enabled);
 
+  bool   getAsyncMode() const;
+
   /*
    * Transmit the correct sequence to the rn2xx3 to trigger its autobauding feature.
    * After this operation the rn2xx3 should communicate at the same baud rate than us.
@@ -207,6 +209,8 @@ public:
   rn2xx3_handler::RN_state wait_command_finished(unsigned long timeout = 10000);
 
   rn2xx3_handler::RN_state wait_command_accepted(unsigned long timeout = 10000);
+
+  bool command_finished() const;
 
   /*
    * Change the datarate at which the RN2xx3 transmits.

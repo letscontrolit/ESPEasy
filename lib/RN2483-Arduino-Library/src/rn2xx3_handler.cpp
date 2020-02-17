@@ -456,6 +456,10 @@ void rn2xx3_handler::setAsyncMode(bool enabled) {
   _asyncMode = enabled;
 }
 
+bool rn2xx3_handler::getAsyncMode() const {
+  return _asyncMode;
+}
+
 bool rn2xx3_handler::useOTAA() const {
   return _otaa;
 }
