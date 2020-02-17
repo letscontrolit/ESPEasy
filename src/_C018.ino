@@ -42,14 +42,6 @@ struct C018_data_struct {
     cacheHWEUI       = "";
     cacheSysVer      = "";
     autobaud_success = false;
-
-    if (resetPin != -1) {
-      pinMode(resetPin, OUTPUT);
-      digitalWrite(resetPin, LOW);
-      delay(500);
-      digitalWrite(resetPin, HIGH);
-      delay(500);
-    }
   }
 
   bool init(const int8_t serial_rx, const int8_t serial_tx, unsigned long baudrate,
@@ -79,6 +71,11 @@ struct C018_data_struct {
       if (resetPin == -1) {
         pinMode(serial_tx, OUTPUT);
         digitalWrite(serial_tx, LOW);
+      } else {
+        pinMode(resetPin, OUTPUT);
+        digitalWrite(resetPin, LOW);
+        delay(50);
+        digitalWrite(resetPin, HIGH);
       }
 
       C018_easySerial->begin(baudrate);
