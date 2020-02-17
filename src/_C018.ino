@@ -510,9 +510,7 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
       addTableSeparator(F("Connection Configuration"), 2, 3);
       {
         byte   choice     = customConfig.frequencyplan;
-        String options[4] = { F("RN2xx3_datatypes::Freq_plan::SINGLE_CHANNEL_EU"), F("RN2xx3_datatypes::Freq_plan::TTN_EU"), F(
-                                "RN2xx3_datatypes::Freq_plan::TTN_US"),            F(
-                                "RN2xx3_datatypes::Freq_plan::DEFAULT_EU") };
+        String options[4] = { F("SINGLE_CHANNEL_EU"), F("TTN_EU"), F("TTN_US"), F("DEFAULT_EU") };
         int    values[4] =
         { RN2xx3_datatypes::Freq_plan::SINGLE_CHANNEL_EU, RN2xx3_datatypes::Freq_plan::TTN_EU, RN2xx3_datatypes::Freq_plan::TTN_US,
           RN2xx3_datatypes::Freq_plan::DEFAULT_EU };

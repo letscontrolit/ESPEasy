@@ -19,6 +19,7 @@
 
 #include "rn2xx3_status.h"
 #include "rn2xx3_handler.h"
+#include "rn2xx3_helper.h"
 #include "rn2xx3_datatypes.h"
 
 

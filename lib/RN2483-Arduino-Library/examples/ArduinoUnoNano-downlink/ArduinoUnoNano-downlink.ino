@@ -137,7 +137,7 @@ void loop()
       case RN2xx3_datatypes::TX_return_type::TX_WITH_RX:
       {
         String received = myLora.getRx();
-        received = myLora.base16decode(received);
+        received = rn2xx3_helper::base16decode(received);
         Serial.print("Received downlink: " + received);
         break;
       }
