@@ -822,10 +822,9 @@ void setBasicTaskValues(taskIndex_t taskIndex, unsigned long taskdevicetimer,
   Settings.TaskDeviceEnabled[taskIndex] = enabled;
   safe_strncpy(ExtraTaskSettings.TaskDeviceName, name.c_str(), sizeof(ExtraTaskSettings.TaskDeviceName));
 
-  if (pin1 >= 0) { Settings.TaskDevicePin1[taskIndex] = pin1; }
-
-  if (pin2 >= 0) { Settings.TaskDevicePin2[taskIndex] = pin2; }
-
-  if (pin3 >= 0) { Settings.TaskDevicePin3[taskIndex] = pin3; }
+  // FIXME TD-er: Check for valid GPIO pin (and  -1 for "not set")
+  Settings.TaskDevicePin1[taskIndex] = pin1;
+  Settings.TaskDevicePin2[taskIndex] = pin2;
+  Settings.TaskDevicePin3[taskIndex] = pin3; 
   SaveTaskSettings(taskIndex);
 }
