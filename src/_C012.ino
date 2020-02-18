@@ -79,7 +79,11 @@ bool CPlugin_012(CPlugin::Function function, struct EventStruct *event, String& 
 //********************************************************************************
 // Process Queued Blynk request, with data set to NULL
 //********************************************************************************
+
+// Uncrustify may change this into multi line, which will result in failed builds
+// *INDENT-OFF*
 bool do_process_c012_delay_queue(int controller_number, const C012_queue_element& element, ControllerSettingsStruct& ControllerSettings);
+// *INDENT-ON*
 
 bool do_process_c012_delay_queue(int controller_number, const C012_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
   while (element.txt[element.valuesSent] == "") {

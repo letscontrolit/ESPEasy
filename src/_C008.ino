@@ -97,7 +97,11 @@ bool CPlugin_008(CPlugin::Function function, struct EventStruct *event, String& 
 //********************************************************************************
 // Generic HTTP get request
 //********************************************************************************
+
+// Uncrustify may change this into multi line, which will result in failed builds
+// *INDENT-OFF*
 bool do_process_c008_delay_queue(int controller_number, const C008_queue_element& element, ControllerSettingsStruct& ControllerSettings);
+// *INDENT-ON*
 
 bool do_process_c008_delay_queue(int controller_number, const C008_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
   while (element.txt[element.valuesSent] == "") {

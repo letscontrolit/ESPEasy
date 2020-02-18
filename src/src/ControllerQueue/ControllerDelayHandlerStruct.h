@@ -158,6 +158,9 @@ struct ControllerDelayHandlerStruct {
 };
 
 // Uncrustify must not be used on macros, so turn it off.
+// Also make sure to wrap the forward declaration of this function in the same wrappers 
+// as it may not split the forward declaration into multiple lines.
+//
 // *INDENT-OFF*
 
 

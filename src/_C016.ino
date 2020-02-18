@@ -121,7 +121,10 @@ bool CPlugin_016(CPlugin::Function function, struct EventStruct *event, String& 
 //********************************************************************************
 // Process the data from the cache
 //********************************************************************************
+// Uncrustify may change this into multi line, which will result in failed builds
+// *INDENT-OFF*
 bool do_process_c016_delay_queue(int controller_number, const C016_queue_element& element, ControllerSettingsStruct& ControllerSettings);
+// *INDENT-ON*
 
 bool do_process_c016_delay_queue(int controller_number, const C016_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
   return true;
