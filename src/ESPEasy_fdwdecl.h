@@ -114,7 +114,7 @@ void schedule_notification_event_timer(byte NotificationProtocolIndex, byte Func
 
 // void runPeriodicalMQTT();
 // void updateMQTTclient_connected();
-int firstEnabledMQTTController();
+controllerIndex_t firstEnabledMQTT_ControllerIndex();
 // String getMQTT_state();
 void callback(char        *c_topic,
               byte        *b_payload,

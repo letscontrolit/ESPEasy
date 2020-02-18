@@ -257,14 +257,14 @@ void log_connecting_fail(const String& prefix, int controller_number, Controller
 bool count_connection_results(bool success, const String& prefix, int controller_number, ControllerSettingsStruct& ControllerSettings) {
   if (!success)
   {
-    connectionFailures++;
+    ++connectionFailures;
     log_connecting_fail(prefix, controller_number, ControllerSettings);
     return false;
   }
   statusLED(true);
 
-  if (connectionFailures) {
-    connectionFailures--;
+  if (connectionFailures > 0) {
+    --connectionFailures;
   }
   return true;
 }

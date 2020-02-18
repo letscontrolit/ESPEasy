@@ -557,9 +557,9 @@ void schedule_all_task_device_timers() {
 
 #ifdef USES_MQTT
 void schedule_all_tasks_using_MQTT_controller() {
-  int ControllerIndex = firstEnabledMQTTController();
+  controllerIndex_t ControllerIndex = firstEnabledMQTT_ControllerIndex();
 
-  if (ControllerIndex < 0) { return; }
+  if (!validControllerIndex(ControllerIndex)) { return; }
 
   for (taskIndex_t task = 0; task < TASKS_MAX; task++) {
     if (Settings.TaskDeviceSendData[ControllerIndex][task] &&

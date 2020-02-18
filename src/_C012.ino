@@ -94,7 +94,7 @@ bool do_process_c012_delay_queue(int controller_number, const C012_queue_element
   return element.checkDone(Blynk_get(element.txt[element.valuesSent], element.controller_idx));
 }
 
-boolean Blynk_get(const String& command, byte controllerIndex, float *data )
+boolean Blynk_get(const String& command, controllerIndex_t controllerIndex, float *data )
 {
   MakeControllerSettings(ControllerSettings);
   LoadControllerSettings(controllerIndex, ControllerSettings);

@@ -114,9 +114,9 @@ bool validUserVar(struct EventStruct *event) {
 // handle MQTT messages
 void callback(char *c_topic, byte *b_payload, unsigned int length) {
   statusLED(true);
-  int enabledMqttController = firstEnabledMQTTController();
+  controllerIndex_t enabledMqttController = firstEnabledMQTT_ControllerIndex();
 
-  if (enabledMqttController < 0) {
+  if (!validControllerIndex(enabledMqttController)) {
     addLog(LOG_LEVEL_ERROR, F("MQTT : No enabled MQTT controller"));
     return;
   }
@@ -325,8 +325,6 @@ bool MQTTCheck(controllerIndex_t controller_idx)
         addLog(LOG_LEVEL_ERROR, F("MQTT : Intentional reconnect"));
       } 
       return MQTTConnect(controller_idx);
-    } else if (connectionFailures) {
-      connectionFailures--;
     }
   }
 
@@ -390,7 +388,6 @@ bool MQTTpublish(controllerIndex_t controller_idx, const char *topic, const char
     }
   }
   const bool success = MQTTDelayHandler.addToQueue(MQTT_queue_element(controller_idx, topic, payload, retained));
-
   scheduleNextMQTTdelayQueue();
   return success;
 }
@@ -406,6 +403,9 @@ void processMQTTdelayQueue() {
   if (element == NULL) { return; }
 
   if (MQTTclient.publish(element->_topic.c_str(), element->_payload.c_str(), element->_retained)) {
+    if (connectionFailures > 0) {
+      --connectionFailures;
+    }
     MQTTDelayHandler.markProcessed(true);
   } else {
     MQTTDelayHandler.markProcessed(false);
@@ -429,9 +429,9 @@ void processMQTTdelayQueue() {
 \*********************************************************************************************/
 void MQTTStatus(const String& status)
 {
-  int enabledMqttController = firstEnabledMQTTController();
+  controllerIndex_t enabledMqttController = firstEnabledMQTT_ControllerIndex();
 
-  if (enabledMqttController >= 0) {
+  if (validControllerIndex(enabledMqttController)) {
     MakeControllerSettings(ControllerSettings);
     LoadControllerSettings(enabledMqttController, ControllerSettings);
     String pubname = ControllerSettings.Subscribe;

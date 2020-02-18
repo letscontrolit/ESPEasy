@@ -102,6 +102,7 @@
 #include "src/DataStructs/SystemTimerStruct.h"
 #include "src/DataStructs/TimingStats.h"
 
+#include "src/Globals/CPlugins.h"
 #include "src/Globals/Device.h"
 #include "src/Globals/ESPEasyWiFiEvent.h"
 #include "src/Globals/ExtraTaskSettings.h"
@@ -137,9 +138,9 @@ float& getUserVar(unsigned int varIndex) {return UserVar[varIndex]; }
 
 #ifdef USES_BLYNK
 // Blynk_get prototype
-boolean Blynk_get(const String& command, byte controllerIndex,float *data = NULL );
+boolean Blynk_get(const String& command, controllerIndex_t controllerIndex,float *data = NULL );
 
-int firstEnabledBlynkController();
+controllerIndex_t firstEnabledBlynk_ControllerIndex();
 #endif
 
 //void checkRAM( const __FlashStringHelper* flashString);
@@ -604,7 +605,7 @@ void loop()
 void flushAndDisconnectAllClients() {
   if (anyControllerEnabled()) {
 #ifdef USES_MQTT
-    bool mqttControllerEnabled = firstEnabledMQTTController() >= 0;
+    bool mqttControllerEnabled = validControllerIndex(firstEnabledMQTT_ControllerIndex());
 #endif //USES_MQTT
     unsigned long timer = millis() + 1000;
     while (!timeOutReached(timer)) {
@@ -669,8 +670,8 @@ void runPeriodicalMQTT() {
     return;
   }
   //dont do this in backgroundtasks(), otherwise causes crashes. (https://github.com/letscontrolit/ESPEasy/issues/683)
-  int enabledMqttController = firstEnabledMQTTController();
-  if (enabledMqttController >= 0) {
+  controllerIndex_t enabledMqttController = firstEnabledMQTT_ControllerIndex();
+  if (validControllerIndex(enabledMqttController)) {
     if (!MQTTclient.loop()) {
       updateMQTTclient_connected();
       if (MQTTCheck(enabledMqttController)) {
@@ -685,7 +686,7 @@ void runPeriodicalMQTT() {
   }
 }
 
-int firstEnabledMQTTController() {
+controllerIndex_t firstEnabledMQTT_ControllerIndex() {
   for (controllerIndex_t i = 0; i < CONTROLLER_MAX; ++i) {
     protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(i);
     if (validProtocolIndex(ProtocolIndex)) {
@@ -694,17 +695,16 @@ int firstEnabledMQTTController() {
       }
     }
   }
-  // FIXME TD-er: Must return INVALID_CONTROLLER_INDEX
-  return -1;
+  return INVALID_CONTROLLER_INDEX;
 }
 
 #endif //USES_MQTT
 
 #ifdef USES_BLYNK
 // Blynk_get prototype
-//boolean Blynk_get(const String& command, byte controllerIndex,float *data = NULL );
+//boolean Blynk_get(const String& command, controllerIndex_t controllerIndex,float *data = NULL );
 
-int firstEnabledBlynkController() {
+controllerIndex_t firstEnabledBlynk_ControllerIndex() {
   for (controllerIndex_t i = 0; i < CONTROLLER_MAX; ++i) {
     protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(i);
     if (validProtocolIndex(ProtocolIndex)) {
@@ -713,8 +713,7 @@ int firstEnabledBlynkController() {
       }
     }
   }
-  // FIXME TD-er: Must return INVALID_CONTROLLER_INDEX
-  return -1;
+  return INVALID_CONTROLLER_INDEX;
 }
 #endif
 
