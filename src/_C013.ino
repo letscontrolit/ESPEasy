@@ -119,7 +119,7 @@ void C013_SendUDPTaskInfo(byte destUnit, byte sourceTaskIndex, byte destTaskInde
   }
   pluginID_t pluginID = Settings.TaskDeviceNumber[sourceTaskIndex];
 
-  if (!validPluginID(pluginID)) {
+  if (!validPluginID_fullcheck(pluginID)) {
     return;
   }
 
@@ -276,14 +276,14 @@ void C013_Receive(struct EventStruct *event) {
         // to prevent flash wear out (bugs in communication?) we can only write to an empty task
         // so it will write only once and has to be cleared manually through webgui
         // Also check the receiving end does support the plugin ID.
-        if (!validPluginID(Settings.TaskDeviceNumber[infoReply.destTaskIndex]) &&
+        if (!validPluginID_fullcheck(Settings.TaskDeviceNumber[infoReply.destTaskIndex]) &&
             supportedPluginID(infoReply.deviceNumber))
         {
           taskClear(infoReply.destTaskIndex, false);
           Settings.TaskDeviceNumber[infoReply.destTaskIndex]   = infoReply.deviceNumber;
           Settings.TaskDeviceDataFeed[infoReply.destTaskIndex] = infoReply.sourcelUnit; // remote feed store unit nr sending the data
 
-          for (byte x = 0; x < CONTROLLER_MAX; x++) {
+          for (controllerIndex_t x = 0; x < CONTROLLER_MAX; x++) {
             Settings.TaskDeviceSendData[x][infoReply.destTaskIndex] = false;
           }
           strcpy(ExtraTaskSettings.TaskDeviceName, infoReply.taskName);

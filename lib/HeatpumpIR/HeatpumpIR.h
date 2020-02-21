@@ -30,6 +30,8 @@
 #define FAN_3       3
 #define FAN_4       4
 #define FAN_5       5
+#define FAN_SILENT  6  //SILENT/NIGHTMODE
+
 
 // Vertical air directions. Note that these cannot be set on all heat pumps
 #define VDIR_AUTO   0
@@ -63,6 +65,7 @@ class HeatpumpIR
     virtual void send(IRSender& IR, uint8_t powerModeCmd, uint8_t operatingModeCmd, uint8_t fanSpeedCmd, uint8_t temperatureCmd, uint8_t swingVCmd, uint8_t swingHCmd);
     const char PROGMEM* model();
     const char PROGMEM* info();
+    virtual ~HeatpumpIR();
 };
 
 #endif

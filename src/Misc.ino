@@ -1188,7 +1188,7 @@ void ResetFactory()
     Settings.TaskDevicePin3[x] = -1;
     Settings.TaskDevicePin1PullUp[x] = true;
     Settings.TaskDevicePin1Inversed[x] = false;
-    for (byte y = 0; y < CONTROLLER_MAX; y++)
+    for (controllerIndex_t y = 0; y < CONTROLLER_MAX; y++)
       Settings.TaskDeviceSendData[y][x] = true;
     Settings.TaskDeviceTimer[x] = Settings.Delay;
   }
@@ -1535,15 +1535,20 @@ void reboot() {
 /********************************************************************************************\
    Parse string template
  \*********************************************************************************************/
-String parseTemplate(String& tmpString, byte lineSize)
+String parseTemplate(String& tmpString)
 {
-  checkRAM(F("parseTemplate"));
+  return parseTemplate_padded(tmpString, 0);
+}
+
+String parseTemplate_padded(String& tmpString, byte minimal_lineSize)
+{
+  checkRAM(F("parseTemplate_padded"));
   START_TIMER
 
   // Keep current loaded taskSettings to restore at the end.
   byte   currentTaskIndex = ExtraTaskSettings.TaskIndex;
   String newString;
-  newString.reserve(lineSize); // Our best guess of the new size.
+  newString.reserve(minimal_lineSize); // Our best guess of the new size.
 
   parseSystemVariables(tmpString, false);
   
@@ -1595,7 +1600,7 @@ String parseTemplate(String& tmpString, byte lineSize)
           }
           String value = String(customFloatVar[varNum - 1], nr_decimals);
           value.trim();
-          transformValue(newString, lineSize, value, format, tmpString);
+          transformValue(newString, minimal_lineSize, value, format, tmpString);
         }
       }
     }
@@ -1617,7 +1622,7 @@ String parseTemplate(String& tmpString, byte lineSize)
           String value = formatUserVar(taskIndex, valueNr, isvalid);
 
           if (isvalid) {
-            transformValue(newString, lineSize, value, format, tmpString);
+            transformValue(newString, minimal_lineSize, value, format, tmpString);
           }
         } else {
           // try if this is a get config request
@@ -1627,7 +1632,7 @@ String parseTemplate(String& tmpString, byte lineSize)
 
           if (PluginCall(PLUGIN_GET_CONFIG, &TempEvent, tmpName))
           {
-            transformValue(newString, lineSize, tmpName, format, tmpString);
+            transformValue(newString, minimal_lineSize, tmpName, format, tmpString);
           }                  
         }
       }
@@ -1656,11 +1661,12 @@ String parseTemplate(String& tmpString, byte lineSize)
   // parseSystemVariables(newString, false);
   parseStandardConversions(newString, false);
 
-  // padding spaces
-  while (newString.length() < lineSize) {
+    // padding spaces
+  while (newString.length() < minimal_lineSize) {
     newString += ' ';
   }
-  STOP_TIMER(PARSE_TEMPLATE);
+
+  STOP_TIMER(PARSE_TEMPLATE_PADDED);
   checkRAM(F("parseTemplate3"));
   return newString;
 }

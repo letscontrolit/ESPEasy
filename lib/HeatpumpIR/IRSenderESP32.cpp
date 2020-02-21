@@ -14,7 +14,7 @@ IRSenderESP32::IRSenderESP32(uint8_t pin, uint8_t pwmChannel) : IRSender(pin)
 
 void IRSenderESP32::setFrequency(int frequency)
 {
-  _frequency = frequency;
+  _frequency = frequency * 1000;
 }
 
 // Send an IR 'mark' symbol, i.e. transmitter ON

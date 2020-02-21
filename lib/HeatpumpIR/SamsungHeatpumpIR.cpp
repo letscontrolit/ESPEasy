@@ -47,6 +47,11 @@ void SamsungAQVHeatpumpIR::send(IRSender& IR, uint8_t powerModeCmd, uint8_t oper
   if (powerModeCmd == POWER_OFF)
   {
     powerMode = SAMSUNG_AIRCON1_MODE_OFF;
+
+    if (operatingModeCmd == MODE_COOL) // Cooling-only models need to have COOL as the operating mode in power off
+    {
+      operatingMode = SAMSUNG_AIRCON1_MODE_COOL;
+    }
   }
   else
   {
@@ -294,7 +299,7 @@ void SamsungFJMHeatpumpIR::sendSamsung(IRSender& IR, uint8_t powerMode, uint8_t 
   static const uint8_t samsungHeader[] PROGMEM = { 0x02, 0x92, 0x0F, 0x00, 0x00, 0x00, 0xF0 };
 
 //  uint8_t samsungTemplate[] = { 0x01, 0x00, 0x0E, 0x01, 0x00, 0x00, 0xF0 }; //Orig
-  uint8_t samsungTemplate[] = { 0x01, 0x00, 0x0F, 0x01, 0x00, 0x00, 0xF0 };  
+  uint8_t samsungTemplate[] = { 0x01, 0x00, 0x0F, 0x01, 0x00, 0x00, 0xF0 };
   //                               0     1     2     3     4     5     6
   //                               7     8     9    10    11    12    13 <- byte in whole sequence
 
@@ -334,7 +339,7 @@ void SamsungFJMHeatpumpIR::sendSamsung(IRSender& IR, uint8_t powerMode, uint8_t 
     samsungTemplate[2] |= swingV;
     samsungTemplate[4] = (temperature - 16) << 4;
     samsungTemplate[5] = operatingMode | fanSpeed;
-    
+
     if (turboMode)
     {
       samsungTemplate[3] |= SAMSUNG_AIRCON2_TURBO;
@@ -374,5 +379,3 @@ void SamsungFJMHeatpumpIR::sendSamsung(IRSender& IR, uint8_t powerMode, uint8_t 
   IR.mark(SAMSUNG_AIRCON2_BIT_MARK);
   IR.space(0);
 }
-
-

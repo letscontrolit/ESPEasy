@@ -1,4 +1,51 @@
 -------------------------------------------------
+Changes in release mega-20200204 (since mega-20191208)
+-------------------------------------------------
+
+Release date: di  4 feb 2020 23:31:47 CET
+
+Bartlomiej Zimon (1):
+      LM75A - add multiple sensors support #2808
+
+Gijs Noorlander (13):
+      [MQTT] Fix change in client.connected() behavior for pubsubclient
+      [WiFi] Improve reconnect management
+      [LCD] Fix incorrect convert to lower case for LCD texts
+      [Controller] Add CPLUGIN_TEN_PER_SECOND call for controllers
+      [Build] Add 1M custom build to platformio.ini
+      [Controllers] Restructure protocolIndex / controllerIndex and cplugin_ID
+      [RN2483] Add option to reset LoRa module using reset pin
+      [Build] Add compile time checks to make sure offsets in settings are OK
+      Revert "[WiFi] Improve reconnect management"
+      [PIO] Update to core 2.6.3
+      [WIFi] Fix crashes with fixed IP
+      Fix unexpected string padding in parseTemplate (#2866)
+      [docs] Corrected supported SenseAir sensors in docs
+
+Grovkillen (6):
+      [README] updated with link to ICONS8
+      [DOCS] P052 Senseair S11 added
+      [DOCS] S11 fixed some incorrect data
+      [DOCS] S11 fixed PR after Gijs review
+      [DOCS] S11 re-phrased a sentance
+      [docs] added rules example + fixed S11 (P052) links
+
+TD-er (4):
+      [HTTP] Add HTTP Accept header
+      [Parse Templates] Allow to refer to variables in controllers (#2818)
+      [SendToHttp] Add setting for waiting for ack
+      [Controller] Optimization by reducing number of checks.
+
+jimmys01 (6):
+      [IR] Change default state of the lights if missing from JSON AC command
+      [IR AC] Make sure that the JSON deserialization has enought space
+      [P088] Optimize enabling and disabling of the RX while sending codes
+      [IR RX] Move enableIR_RX function to P016
+      Add the ' to the example command format
+      [Zabbix] Update usage info
+
+
+-------------------------------------------------
 Changes in release mega-20191208 (since mega-20191130)
 -------------------------------------------------
 

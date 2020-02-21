@@ -29,7 +29,6 @@ struct ProtocolStruct
 };
 
 typedef std::vector<ProtocolStruct> ProtocolVector;
-ProtocolVector Protocol;
 
 
 #endif // DATASTRUCTS_PROTOCOLSTRUCT_H

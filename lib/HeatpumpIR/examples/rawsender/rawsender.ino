@@ -62,13 +62,15 @@ void sendRaw(char *symbols)
         irSender.mark(IR_BIT_MARK);
         break;
       case 'W':
-        irSender.mark(IR_PAUSE_SPACE);
+        irSender.space(IR_PAUSE_SPACE);
+        irSender.mark(IR_BIT_MARK);
         break;
       case 'H':
         irSender.mark(IR_HEADER_MARK);
         break;
       case 'h':
-        irSender.mark(IR_HEADER_SPACE);
+        irSender.space(IR_HEADER_SPACE);
+        irSender.mark(IR_BIT_MARK);
         break;
     }
   }
