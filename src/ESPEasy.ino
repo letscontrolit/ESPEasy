@@ -347,6 +347,7 @@ void setup()
   PluginInit();
   log = F("INFO : Plugins: ");
   log += deviceCount + 1;
+  log += ' ';
   log += getPluginDescriptionString();
   log += " (";
   log += getSystemLibraryString();

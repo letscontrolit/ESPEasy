@@ -376,7 +376,8 @@ void handle_sysinfo_Firmware() {
 
   addRowLabelValue_copy(LabelType::SYSTEM_LIBRARIES);
   addRowLabelValue_copy(LabelType::GIT_BUILD);
-  addRowLabelValue_copy(LabelType::PLUGINS);
+  addRowLabelValue_copy(LabelType::PLUGIN_COUNT);
+  TXBuffer += ' ';
   TXBuffer += getPluginDescriptionString();
 
   bool filenameDummy = String(CRCValues.binaryFilename).startsWith(F("ThisIsTheDummy"));

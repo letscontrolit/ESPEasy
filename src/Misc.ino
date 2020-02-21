@@ -161,6 +161,7 @@ String getPluginDescriptionString() {
   #ifdef USE_NON_STANDARD_24_TASKS
   result += F(" 24tasks");
   #endif
+  result.trim();
   return result;
 }
 

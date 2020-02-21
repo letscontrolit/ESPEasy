@@ -41,7 +41,7 @@ void handle_json()
       stream_next_json_object_value(LabelType::BUILD_DESC);
       stream_next_json_object_value(LabelType::GIT_BUILD);
       stream_next_json_object_value(LabelType::SYSTEM_LIBRARIES);
-      stream_next_json_object_value(LabelType::PLUGINS);
+      stream_next_json_object_value(LabelType::PLUGIN_COUNT);
       stream_next_json_object_value(LabelType::PLUGIN_DESCRIPTION);
       stream_next_json_object_value(LabelType::LOCAL_TIME);
       stream_next_json_object_value(LabelType::UNIT_NR);
@@ -340,7 +340,7 @@ void handle_buildinfo() {
   json_prop(LabelType::BUILD_DESC);
   json_prop(LabelType::GIT_BUILD);
   json_prop(LabelType::SYSTEM_LIBRARIES);
-  json_prop(LabelType::PLUGINS);
+  json_prop(LabelType::PLUGIN_COUNT);
   json_prop(LabelType::PLUGIN_DESCRIPTION);
   json_close();
   TXBuffer.endStream();

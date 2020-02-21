@@ -563,7 +563,7 @@ void WebServerInit()
 #endif
 
 #ifdef WEBSERVER_NEW_UI
-  WebServer.on(F("/buildinfo"),     handle_buildinfo);     // Also part of WEBSERVER_NEW_UI
+  WebServer.on(F("/buildinfo"),         handle_buildinfo);     // Also part of WEBSERVER_NEW_UI
   WebServer.on(F("/factoryreset_json"), handle_factoryreset_json);
   WebServer.on(F("/filelist_json"),     handle_filelist_json);
   WebServer.on(F("/i2cscanner_json"),   handle_i2cscanner_json);
