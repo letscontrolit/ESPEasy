@@ -7,6 +7,7 @@
 #include "src/Globals/Cache.h"
 #include "src/Globals/Device.h"
 #include "src/Globals/Plugins.h"
+#include "src/Globals/Plugins_other.h"
 #include "src/Globals/RTC.h"
 #include "src/Globals/ResetFactoryDefaultPref.h"
 #include "src/Globals/Services.h"
@@ -160,6 +161,7 @@ String getPluginDescriptionString() {
   #ifdef USE_NON_STANDARD_24_TASKS
   result += F(" 24tasks");
   #endif
+  result.trim();
   return result;
 }
 
@@ -1159,7 +1161,7 @@ void ResetFactory()
     SecuritySettings.WifiSSID2[0] = 0;
     SecuritySettings.WifiKey2[0] = 0;
   }
-  SecuritySettings.Password[0] = 0;
+  strcpy_P(SecuritySettings.Password, PSTR(DEFAULT_ADMIN_PASS));
 
   Settings.ResetFactoryDefaultPreference = ResetFactoryDefaultPreference.getPreference();
 
@@ -1221,8 +1223,6 @@ void ResetFactory()
   addPredefinedPlugins(gpio_settings);
   addPredefinedRules(gpio_settings);
 
-  SaveSettings();
-
 #if DEFAULT_CONTROLLER
   MakeControllerSettings(ControllerSettings);
   safe_strncpy(ControllerSettings.Subscribe, F(DEFAULT_SUB), sizeof(ControllerSettings.Subscribe));
@@ -1235,7 +1235,12 @@ void ResetFactory()
   ControllerSettings.UseDNS = DEFAULT_SERVER_USEDNS;
   ControllerSettings.Port = DEFAULT_PORT;
   SaveControllerSettings(0, ControllerSettings);
+  strcpy_P(SecuritySettings.ControllerUser[0], PSTR(DEFAULT_CONTROLLER_USER));
+  strcpy_P(SecuritySettings.ControllerPassword[0], PSTR(DEFAULT_CONTROLLER_PASS));
 #endif
+
+  SaveSettings();
+
   checkRAM(F("ResetFactory2"));
   serialPrintln(F("RESET: Succesful, rebooting. (you might need to press the reset button if you've justed flashed the firmware)"));
   //NOTE: this is a known ESP8266 bug, not our fault. :)
@@ -1537,10 +1542,20 @@ void reboot() {
  \*********************************************************************************************/
 String parseTemplate(String& tmpString)
 {
-  return parseTemplate_padded(tmpString, 0);
+  return parseTemplate(tmpString, false);
+}
+
+String parseTemplate(String& tmpString, bool useURLencode)
+{
+  return parseTemplate_padded(tmpString, 0, useURLencode);
 }
 
 String parseTemplate_padded(String& tmpString, byte minimal_lineSize)
+{
+  return parseTemplate_padded(tmpString, minimal_lineSize, false);
+}
+
+String parseTemplate_padded(String& tmpString, byte minimal_lineSize, bool useURLencode)
 {
   checkRAM(F("parseTemplate_padded"));
   START_TIMER
@@ -1550,7 +1565,10 @@ String parseTemplate_padded(String& tmpString, byte minimal_lineSize)
   String newString;
   newString.reserve(minimal_lineSize); // Our best guess of the new size.
 
-  parseSystemVariables(tmpString, false);
+
+  if (parseTemplate_CallBack_ptr != nullptr)
+     parseTemplate_CallBack_ptr(tmpString, useURLencode);
+  parseSystemVariables(tmpString, useURLencode);
   
 
   int startpos = 0;
@@ -1658,8 +1676,7 @@ String parseTemplate_padded(String& tmpString, byte minimal_lineSize)
     LoadTaskSettings(currentTaskIndex);
   }
 
-  // parseSystemVariables(newString, false);
-  parseStandardConversions(newString, false);
+  parseStandardConversions(newString, useURLencode);
 
     // padding spaces
   while (newString.length() < minimal_lineSize) {
@@ -2452,115 +2469,6 @@ void SendValueLogger(taskIndex_t TaskIndex)
 }
 
 
-#define TRACES 3                                            // number of memory traces
-#define TRACEENTRIES 15                                      // entries per trace
-
-class RamTracker{
-  private:
-    String        traces[TRACES]  ;                         // trace of latest memory checks
-    unsigned int  tracesMemory[TRACES] ;                    // lowest memory for that  trace
-    unsigned int  readPtr, writePtr;                        // pointer to cyclic buffer
-    String        nextAction[TRACEENTRIES];                 // buffer to record the names of functions before they are transfered to a trace
-    unsigned int  nextActionStartMemory[TRACEENTRIES];      // memory levels for the functions.
-
-    unsigned int  bestCaseTrace (void){                     // find highest the trace with the largest minimum memory (gets replaced by worse one)
-       unsigned int lowestMemoryInTrace = 0;
-       unsigned int lowestMemoryInTraceIndex=0;
-       for (int i = 0; i<TRACES; i++) {
-          if (tracesMemory[i] > lowestMemoryInTrace){
-            lowestMemoryInTrace= tracesMemory[i];
-            lowestMemoryInTraceIndex=i;
-            }
-          }
-      //serialPrintln(lowestMemoryInTraceIndex);
-      return lowestMemoryInTraceIndex;
-      }
-
-  public:
-    RamTracker(void){                                       // constructor
-        readPtr=0;
-        writePtr=0;
-        for (int i = 0; i< TRACES; i++) {
-          traces[i]="";
-          tracesMemory[i]=0xffffffff;                           // init with best case memory values, so they get replaced if memory goes lower
-          }
-        for (int i = 0; i< TRACEENTRIES; i++) {
-          nextAction[i]="startup";
-          nextActionStartMemory[i] = ESP.getFreeHeap();     // init with best case memory values, so they get replaced if memory goes lower
-          }
-        };
-
-    void registerRamState(const String &s){    // store function
-       nextAction[writePtr]=s;                              // name and mem
-       nextActionStartMemory[writePtr]=ESP.getFreeHeap();   // in cyclic buffer.
-       int bestCase = bestCaseTrace();                      // find best case memory trace
-       if ( ESP.getFreeHeap() < tracesMemory[bestCase]){    // compare to current memory value
-            traces[bestCase]="";
-            readPtr = writePtr+1;                           // read out buffer, oldest value first
-            if (readPtr>=TRACEENTRIES) readPtr=0;           // read pointer wrap around
-            tracesMemory[bestCase] = ESP.getFreeHeap();     // store new lowest value of that trace
-
-            for (int i = 0; i<TRACEENTRIES; i++) {          // tranfer cyclic buffer strings and mem values to this trace
-              traces[bestCase]+= nextAction[readPtr];
-              traces[bestCase]+= "-> ";
-              traces[bestCase]+= String(nextActionStartMemory[readPtr]);
-              traces[bestCase]+= ' ';
-              readPtr++;
-              if (readPtr >=TRACEENTRIES) readPtr=0;      // wrap around read pointer
-            }
-       }
-       writePtr++;
-       if (writePtr >= TRACEENTRIES) writePtr=0;          // inc write pointer and wrap around too.
-    };
-   void getTraceBuffer(){                                // return giant strings, one line per trace. Add stremToWeb method to avoid large strings.
-#ifndef BUILD_NO_DEBUG
-      if (loglevelActiveFor(LOG_LEVEL_DEBUG_DEV)) {
-        String retval="Memtrace\n";
-        for (int i = 0; i< TRACES; i++){
-          retval += String(i);
-          retval += ": lowest: ";
-          retval += String(tracesMemory[i]);
-          retval += "  ";
-          retval += traces[i];
-          addLog(LOG_LEVEL_DEBUG_DEV, retval);
-          retval="";
-        }
-      }
-#endif
-    }
-}myRamTracker;                                              // instantiate class. (is global now)
-
-void checkRAMtoLog(void){
-  myRamTracker.getTraceBuffer();
-}
-
-void checkRAM(const String &flashString, int a ) {
-  checkRAM(flashString, String(a));
-}
-
-void checkRAM(const String &flashString, const String &a ) {
-  String s = flashString;
-  s += " (";
-  s += a;
-  s += ')';
-  checkRAM(s);
-}
-
-void checkRAM( const String &descr ) {
-  myRamTracker.registerRamState(descr);
-  
-  uint32_t freeRAM = FreeMem();
-  if (freeRAM <= lowestRAM)
-  {
-    lowestRAM = freeRAM;
-    lowestRAMfunction = descr;
-  }
-  uint32_t freeStack = getFreeStackWatermark();
-  if (freeStack <= lowestFreeStack) {
-    lowestFreeStack = freeStack;
-    lowestFreeStackfunction = descr;
-  }
-}
 
 
 //#ifdef PLUGIN_BUILD_TESTING

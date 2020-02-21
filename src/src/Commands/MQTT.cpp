@@ -48,34 +48,35 @@ String Command_MQTT_messageDelay(struct EventStruct *event, const char *Line)
 String Command_MQTT_Publish(struct EventStruct *event, const char *Line)
 {
   // ToDo TD-er: Not sure about this function, but at least it sends to an existing MQTTclient
-  int enabledMqttController = firstEnabledMQTTController();
+  controllerIndex_t enabledMqttController = firstEnabledMQTT_ControllerIndex();
 
-  if (enabledMqttController >= 0) {
-    // Command structure:  Publish,<topic>,<value>
-    String topic = parseStringKeepCase(Line, 2);
-    String value = tolerantParseStringKeepCase(Line, 3);
-    addLog(LOG_LEVEL_DEBUG, String(F("Publish: ")) + topic + value);
-
-    if ((topic.length() > 0) && (value.length() > 0)) {
-      // @giig1967g: if payload starts with '=' then treat it as a Formula and evaluate accordingly
-      // The evaluated value is already present in event->Par2
-      // FIXME TD-er: Is the evaluated value always present in event->Par2 ?
-      // Should it already be evaluated, or should we evaluate it now?
-
-      bool success = false;
-      if (value[0] != '=') {
-        success = MQTTpublish(enabledMqttController, topic.c_str(), value.c_str(), Settings.MQTTRetainFlag);
-      }
-      else {
-        success = MQTTpublish(enabledMqttController, topic.c_str(), String(event->Par2).c_str(), Settings.MQTTRetainFlag);
-      }
-      if (success) {
-        return return_command_success();
-      }
-    }
-    return return_command_failed();
+  if (!validControllerIndex(enabledMqttController)) {
+    return F("No MQTT controller enabled");
   }
-  return F("No MQTT controller enabled");
+
+  // Command structure:  Publish,<topic>,<value>
+  String topic = parseStringKeepCase(Line, 2);
+  String value = tolerantParseStringKeepCase(Line, 3);
+  addLog(LOG_LEVEL_DEBUG, String(F("Publish: ")) + topic + value);
+
+  if ((topic.length() > 0) && (value.length() > 0)) {
+    // @giig1967g: if payload starts with '=' then treat it as a Formula and evaluate accordingly
+    // The evaluated value is already present in event->Par2
+    // FIXME TD-er: Is the evaluated value always present in event->Par2 ?
+    // Should it already be evaluated, or should we evaluate it now?
+
+    bool success = false;
+    if (value[0] != '=') {
+      success = MQTTpublish(enabledMqttController, topic.c_str(), value.c_str(), Settings.MQTTRetainFlag);
+    }
+    else {
+      success = MQTTpublish(enabledMqttController, topic.c_str(), String(event->Par2).c_str(), Settings.MQTTRetainFlag);
+    }
+    if (success) {
+      return return_command_success();
+    }
+  }
+  return return_command_failed();
 }
 
 
@@ -95,8 +96,8 @@ String Command_MQTT_Subscribe(struct EventStruct *event, const char* Line)
 {
   if (MQTTclient.connected() ) {
     // ToDo TD-er: Not sure about this function, but at least it sends to an existing MQTTclient
-    int enabledMqttController = firstEnabledMQTTController();
-    if (enabledMqttController >= 0) {
+    controllerIndex_t enabledMqttController = firstEnabledMQTT_ControllerIndex();
+    if (validControllerIndex(enabledMqttController)) {
       String eventName = Line;
       String topic = eventName.substring(10);
       if (!MQTTsubscribe(enabledMqttController, topic.c_str(), Settings.MQTTRetainFlag))

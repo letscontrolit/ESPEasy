@@ -37,13 +37,13 @@ struct C013_SensorDataStruct
 };
 
 
-bool CPlugin_013(byte function, struct EventStruct *event, String& string)
+bool CPlugin_013(CPlugin::Function function, struct EventStruct *event, String& string)
 {
   bool success = false;
 
   switch (function)
   {
-    case CPLUGIN_PROTOCOL_ADD:
+    case CPlugin::Function::CPLUGIN_PROTOCOL_ADD:
     {
       Protocol[++protocolCount].Number     = CPLUGIN_ID_013;
       Protocol[protocolCount].usesMQTT     = false;
@@ -56,51 +56,55 @@ bool CPlugin_013(byte function, struct EventStruct *event, String& string)
       break;
     }
 
-    case CPLUGIN_GET_DEVICENAME:
+    case CPlugin::Function::CPLUGIN_GET_DEVICENAME:
     {
       string = F(CPLUGIN_NAME_013);
       break;
     }
 
-    case CPLUGIN_PROTOCOL_TEMPLATE:
+    case CPlugin::Function::CPLUGIN_PROTOCOL_TEMPLATE:
     {
       event->String1 = "";
       event->String2 = "";
       break;
     }
 
-    case CPLUGIN_INIT:
+    case CPlugin::Function::CPLUGIN_INIT:
     {
       // C013_portUDP.begin(Settings.UDPPort);
       break;
     }
 
-    case CPLUGIN_TASK_CHANGE_NOTIFICATION:
+    case CPlugin::Function::CPLUGIN_TASK_CHANGE_NOTIFICATION:
     {
       C013_SendUDPTaskInfo(0, event->TaskIndex, event->TaskIndex);
       break;
     }
 
-    case CPLUGIN_PROTOCOL_SEND:
+    case CPlugin::Function::CPLUGIN_PROTOCOL_SEND:
     {
       C013_SendUDPTaskData(0, event->TaskIndex, event->TaskIndex);
       break;
     }
 
-    case CPLUGIN_UDP_IN:
+    case CPlugin::Function::CPLUGIN_UDP_IN:
     {
       C013_Receive(event);
       break;
     }
 
       /*
-          case CPLUGIN_FLUSH:
+          case CPlugin::Function::CPLUGIN_FLUSH:
             {
               process_c013_delay_queue();
               delay(0);
               break;
             }
        */
+
+    default:
+      break;
+
   }
   return success;
 }

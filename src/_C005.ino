@@ -7,13 +7,13 @@
 #define CPLUGIN_ID_005         5
 #define CPLUGIN_NAME_005       "Home Assistant (openHAB) MQTT"
 
-bool CPlugin_005(byte function, struct EventStruct *event, String& string)
+bool CPlugin_005(CPlugin::Function function, struct EventStruct *event, String& string)
 {
   bool success = false;
 
   switch (function)
   {
-    case CPLUGIN_PROTOCOL_ADD:
+    case CPlugin::Function::CPLUGIN_PROTOCOL_ADD:
       {
         Protocol[++protocolCount].Number = CPLUGIN_ID_005;
         Protocol[protocolCount].usesMQTT = true;
@@ -25,13 +25,13 @@ bool CPlugin_005(byte function, struct EventStruct *event, String& string)
         break;
       }
 
-    case CPLUGIN_GET_DEVICENAME:
+    case CPlugin::Function::CPLUGIN_GET_DEVICENAME:
       {
         string = F(CPLUGIN_NAME_005);
         break;
       }
 
-    case CPLUGIN_INIT:
+    case CPlugin::Function::CPLUGIN_INIT:
       {
         MakeControllerSettings(ControllerSettings);
         LoadControllerSettings(event->ControllerIndex, ControllerSettings);
@@ -39,14 +39,14 @@ bool CPlugin_005(byte function, struct EventStruct *event, String& string)
         break;
       }
 
-    case CPLUGIN_PROTOCOL_TEMPLATE:
+    case CPlugin::Function::CPLUGIN_PROTOCOL_TEMPLATE:
       {
         event->String1 = F("%sysname%/#");
         event->String2 = F("%sysname%/%tskname%/%valname%");
         break;
       }
 
-    case CPLUGIN_PROTOCOL_RECV:
+    case CPlugin::Function::CPLUGIN_PROTOCOL_RECV:
       {
         controllerIndex_t ControllerID = findFirstEnabledControllerWithId(CPLUGIN_ID_005);
         if (!validControllerIndex(ControllerID)) {
@@ -91,7 +91,7 @@ bool CPlugin_005(byte function, struct EventStruct *event, String& string)
         break;
       }
 
-    case CPLUGIN_PROTOCOL_SEND:
+    case CPlugin::Function::CPLUGIN_PROTOCOL_SEND:
       {
         MakeControllerSettings(ControllerSettings);
         LoadControllerSettings(event->ControllerIndex, ControllerSettings);
@@ -133,12 +133,15 @@ bool CPlugin_005(byte function, struct EventStruct *event, String& string)
         break;
       }
 
-    case CPLUGIN_FLUSH:
+    case CPlugin::Function::CPLUGIN_FLUSH:
       {
         processMQTTdelayQueue();
         delay(0);
         break;
       }
+
+    default:
+      break;
 
   }
 

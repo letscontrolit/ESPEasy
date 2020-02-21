@@ -68,8 +68,8 @@ String getLabel(LabelType::Enum label) {
     case LabelType::BUILD_DESC:             return F("Build");
     case LabelType::GIT_BUILD:              return F("Git Build");
     case LabelType::SYSTEM_LIBRARIES:       return F("System Libraries");
-    case LabelType::PLUGINS:                return F("Plugins");
-    case LabelType::PLUGIN_DESCRIPTION:     return F("Plugin description");
+    case LabelType::PLUGIN_COUNT:           return F("Plugin Count");
+    case LabelType::PLUGIN_DESCRIPTION:     return F("Plugin Description");
     case LabelType::BUILD_TIME:             return F("Build Time");
     case LabelType::BINARY_FILENAME:        return F("Binary Filename");
 
@@ -172,7 +172,7 @@ String getValue(LabelType::Enum label) {
     case LabelType::BUILD_DESC:             return String(BUILD);
     case LabelType::GIT_BUILD:              return String(F(BUILD_GIT));
     case LabelType::SYSTEM_LIBRARIES:       return getSystemLibraryString();
-    case LabelType::PLUGINS:                return String(deviceCount + 1);
+    case LabelType::PLUGIN_COUNT:           return String(deviceCount + 1);
     case LabelType::PLUGIN_DESCRIPTION:     return getPluginDescriptionString();
     case LabelType::BUILD_TIME:             break;
     case LabelType::BINARY_FILENAME:        break;

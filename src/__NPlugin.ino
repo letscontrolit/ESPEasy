@@ -1,3 +1,5 @@
+#include "src/Globals/NPlugins.h"
+
 // ********************************************************************************
 
 // Initialize all Controller NPlugins that where defined earlier
@@ -29,8 +31,8 @@ void NPluginInit(void)
   // Clear pointer table for all plugins
   for (x = 0; x < NPLUGIN_MAX; x++)
   {
-    NPlugin_ptr[x] = 0;
-    NPlugin_id[x] = 0;
+    NPlugin_ptr[x] = nullptr;
+    NPlugin_id[x] = INVALID_N_PLUGIN_ID;
   }
 
   x = 0;
@@ -135,10 +137,10 @@ void NPluginInit(void)
   ADDNPLUGIN(025)
 #endif
 
-  NPluginCall(NPLUGIN_PROTOCOL_ADD, 0);
+  NPluginCall(NPlugin::Function::NPLUGIN_PROTOCOL_ADD, 0);
 }
 
-byte NPluginCall(byte Function, struct EventStruct *event)
+byte NPluginCall(NPlugin::Function Function, struct EventStruct *event)
 {
   int x;
   struct EventStruct TempEvent;
@@ -150,39 +152,24 @@ byte NPluginCall(byte Function, struct EventStruct *event)
   switch (Function)
   {
     // Unconditional calls to all plugins
-    case NPLUGIN_PROTOCOL_ADD:
+    case NPlugin::Function::NPLUGIN_PROTOCOL_ADD:
 
       for (x = 0; x < NPLUGIN_MAX; x++) {
-        if (NPlugin_id[x] != 0) {
+        if (validNPluginID(NPlugin_id[x])) {
           String dummy;
           NPlugin_ptr[x](Function, event, dummy);
         }
       }
       return true;
       break;
+
+    case NPlugin::Function::NPLUGIN_GET_DEVICENAME:
+    case NPlugin::Function::NPLUGIN_WEBFORM_SAVE:
+    case NPlugin::Function::NPLUGIN_WEBFORM_LOAD:
+    case NPlugin::Function::NPLUGIN_WRITE:
+    case NPlugin::Function::NPLUGIN_NOTIFY:
+      break;
   }
 
   return false;
-}
-
-String getNPluginNameFromNotifierIndex(byte NotifierIndex) {
-  String name;
-
-  if (NPlugin_id[NotifierIndex] != 0) {
-    NPlugin_ptr[NotifierIndex](NPLUGIN_GET_DEVICENAME, nullptr, name);
-  }
-  return name;
-}
-
-/********************************************************************************************\
-   Get notificatoin protocol index (plugin index), by NPlugin_id
- \*********************************************************************************************/
-byte getNotificationProtocolIndex(byte Number)
-{
-  for (byte x = 0; x <= notificationCount; x++) {
-    if (Notification[x].Number == Number) {
-      return x;
-    }
-  }
-  return NPLUGIN_NOT_FOUND;
 }

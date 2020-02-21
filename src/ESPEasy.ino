@@ -102,6 +102,7 @@
 #include "src/DataStructs/SystemTimerStruct.h"
 #include "src/DataStructs/TimingStats.h"
 
+#include "src/Globals/CPlugins.h"
 #include "src/Globals/Device.h"
 #include "src/Globals/ESPEasyWiFiEvent.h"
 #include "src/Globals/ExtraTaskSettings.h"
@@ -137,9 +138,9 @@ float& getUserVar(unsigned int varIndex) {return UserVar[varIndex]; }
 
 #ifdef USES_BLYNK
 // Blynk_get prototype
-boolean Blynk_get(const String& command, byte controllerIndex,float *data = NULL );
+boolean Blynk_get(const String& command, controllerIndex_t controllerIndex,float *data = NULL );
 
-int firstEnabledBlynkController();
+controllerIndex_t firstEnabledBlynk_ControllerIndex();
 #endif
 
 //void checkRAM( const __FlashStringHelper* flashString);
@@ -346,6 +347,7 @@ void setup()
   PluginInit();
   log = F("INFO : Plugins: ");
   log += deviceCount + 1;
+  log += ' ';
   log += getPluginDescriptionString();
   log += " (";
   log += getSystemLibraryString();
@@ -604,12 +606,12 @@ void loop()
 void flushAndDisconnectAllClients() {
   if (anyControllerEnabled()) {
 #ifdef USES_MQTT
-    bool mqttControllerEnabled = firstEnabledMQTTController() >= 0;
+    bool mqttControllerEnabled = validControllerIndex(firstEnabledMQTT_ControllerIndex());
 #endif //USES_MQTT
     unsigned long timer = millis() + 1000;
     while (!timeOutReached(timer)) {
       // call to all controllers (delay queue) to flush all data.
-      CPluginCall(CPLUGIN_FLUSH, 0);
+      CPluginCall(CPlugin::Function::CPLUGIN_FLUSH, 0);
 #ifdef USES_MQTT      
       if (mqttControllerEnabled && MQTTclient.connected()) {
         MQTTclient.loop();
@@ -669,8 +671,8 @@ void runPeriodicalMQTT() {
     return;
   }
   //dont do this in backgroundtasks(), otherwise causes crashes. (https://github.com/letscontrolit/ESPEasy/issues/683)
-  int enabledMqttController = firstEnabledMQTTController();
-  if (enabledMqttController >= 0) {
+  controllerIndex_t enabledMqttController = firstEnabledMQTT_ControllerIndex();
+  if (validControllerIndex(enabledMqttController)) {
     if (!MQTTclient.loop()) {
       updateMQTTclient_connected();
       if (MQTTCheck(enabledMqttController)) {
@@ -685,7 +687,7 @@ void runPeriodicalMQTT() {
   }
 }
 
-int firstEnabledMQTTController() {
+controllerIndex_t firstEnabledMQTT_ControllerIndex() {
   for (controllerIndex_t i = 0; i < CONTROLLER_MAX; ++i) {
     protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(i);
     if (validProtocolIndex(ProtocolIndex)) {
@@ -694,17 +696,16 @@ int firstEnabledMQTTController() {
       }
     }
   }
-  // FIXME TD-er: Must return INVALID_CONTROLLER_INDEX
-  return -1;
+  return INVALID_CONTROLLER_INDEX;
 }
 
 #endif //USES_MQTT
 
 #ifdef USES_BLYNK
 // Blynk_get prototype
-//boolean Blynk_get(const String& command, byte controllerIndex,float *data = NULL );
+//boolean Blynk_get(const String& command, controllerIndex_t controllerIndex,float *data = NULL );
 
-int firstEnabledBlynkController() {
+controllerIndex_t firstEnabledBlynk_ControllerIndex() {
   for (controllerIndex_t i = 0; i < CONTROLLER_MAX; ++i) {
     protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(i);
     if (validProtocolIndex(ProtocolIndex)) {
@@ -713,8 +714,7 @@ int firstEnabledBlynkController() {
       }
     }
   }
-  // FIXME TD-er: Must return INVALID_CONTROLLER_INDEX
-  return -1;
+  return INVALID_CONTROLLER_INDEX;
 }
 #endif
 
@@ -724,10 +724,17 @@ int firstEnabledBlynkController() {
 \*********************************************************************************************/
 
 void run50TimesPerSecond() {
-  START_TIMER;
   String dummy;
-  PluginCall(PLUGIN_FIFTY_PER_SECOND, 0, dummy);
-  STOP_TIMER(PLUGIN_CALL_50PS);
+  {
+    START_TIMER;
+    PluginCall(PLUGIN_FIFTY_PER_SECOND, 0, dummy);
+    STOP_TIMER(PLUGIN_CALL_50PS);
+  }
+  {
+    START_TIMER;
+    CPluginCall(CPlugin::Function::CPLUGIN_FIFTY_PER_SECOND, 0, dummy);
+    STOP_TIMER(CPLUGIN_CALL_50PS);
+  }
 }
 
 /*********************************************************************************************\
@@ -748,7 +755,7 @@ void run10TimesPerSecond() {
   }
   {
     START_TIMER;
-    CPluginCall(CPLUGIN_TEN_PER_SECOND, 0, dummy);
+    CPluginCall(CPlugin::Function::CPLUGIN_TEN_PER_SECOND, 0, dummy);
     STOP_TIMER(CPLUGIN_CALL_10PS);
   }
 
@@ -876,7 +883,7 @@ void runEach30Seconds()
   refreshNodeList();
 
   // sending $stats to homie controller
-  CPluginCall(CPLUGIN_INTERVAL, 0);
+  CPluginCall(CPlugin::Function::CPLUGIN_INTERVAL, 0);
 
   #if defined(ESP8266)
   #ifdef USES_SSDP

@@ -123,7 +123,7 @@ void CPLUGIN_014_addToList(String& valuesList, const char* node)
   valuesList += node;
 }
 
-bool CPlugin_014(byte function, struct EventStruct *event, String& string)
+bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& string)
 {
   bool success = false;
   int errorCounter = 0;
@@ -133,7 +133,7 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
 
   switch (function)
   {
-    case CPLUGIN_PROTOCOL_ADD:
+    case CPlugin::Function::CPLUGIN_PROTOCOL_ADD:
       {
         Protocol[++protocolCount].Number = CPLUGIN_ID_014;
         Protocol[protocolCount].usesMQTT = true;
@@ -145,13 +145,13 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
         break;
       }
 
-    case CPLUGIN_GET_DEVICENAME:
+    case CPlugin::Function::CPLUGIN_GET_DEVICENAME:
       {
         string = F(CPLUGIN_NAME_014);
         break;
       }
 
-    case CPLUGIN_INIT:
+    case CPlugin::Function::CPLUGIN_INIT:
       {
         MakeControllerSettings(ControllerSettings);
         LoadControllerSettings(event->ControllerIndex, ControllerSettings);
@@ -159,7 +159,7 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
         break;
       }
 
-    case CPLUGIN_INTERVAL:
+    case CPlugin::Function::CPLUGIN_INTERVAL:
       {
         if (MQTTclient.connected())
         {
@@ -204,7 +204,7 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
         break;
       }
 
-    case CPLUGIN_GOT_CONNECTED: //// call after connected to mqtt server to publich device autodicover features
+    case CPlugin::Function::CPLUGIN_GOT_CONNECTED: //// call after connected to mqtt server to publich device autodicover features
       {
         MakeControllerSettings(ControllerSettings);
         LoadControllerSettings(event->ControllerIndex, ControllerSettings);
@@ -487,14 +487,14 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
         break;
       }
 
-    case CPLUGIN_PROTOCOL_TEMPLATE:
+    case CPlugin::Function::CPLUGIN_PROTOCOL_TEMPLATE:
       {
         event->String1 = F(CPLUGIN_014_SUBSCRIBE);
         event->String2 = F(CPLUGIN_014_PUBLISH);
         break;
       }
 
-    case CPLUGIN_GOT_INVALID:
+    case CPlugin::Function::CPLUGIN_GOT_INVALID:
       {
         pubname = CPLUGIN_014_BASE_TOPIC; // Scheme to form device messages
         pubname.replace(F("%sysname%"), Settings.Name);
@@ -510,7 +510,7 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
         break;
       }
 
-    case CPLUGIN_FLUSH:
+    case CPlugin::Function::CPLUGIN_FLUSH:
       {
         pubname = CPLUGIN_014_BASE_TOPIC; // Scheme to form device messages
         pubname.replace(F("%sysname%"), Settings.Name);
@@ -519,7 +519,7 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
         break;
       }
 
-    case CPLUGIN_PROTOCOL_RECV:
+    case CPlugin::Function::CPLUGIN_PROTOCOL_RECV:
       {
         controllerIndex_t ControllerID = findFirstEnabledControllerWithId(CPLUGIN_ID_014);
         bool validTopic = false;
@@ -683,7 +683,7 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
         break;
       }
 
-    case CPLUGIN_PROTOCOL_SEND:
+    case CPlugin::Function::CPLUGIN_PROTOCOL_SEND:
       {
         MakeControllerSettings(ControllerSettings);
         LoadControllerSettings(event->ControllerIndex, ControllerSettings);
@@ -721,7 +721,7 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
         break;
       }
 
-      case CPLUGIN_ACKNOWLEDGE:
+      case CPlugin::Function::CPLUGIN_ACKNOWLEDGE:
       {
         LoadTaskSettings(event->Par1-1);
 /*        if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
@@ -917,6 +917,10 @@ bool CPlugin_014(byte function, struct EventStruct *event, String& string)
         }
         break;
       }
+
+    default:
+      break;
+
   }
 
   return success;

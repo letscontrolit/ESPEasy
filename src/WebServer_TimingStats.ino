@@ -105,7 +105,7 @@ long stream_timing_statistics(bool clearStats) {
       TXBuffer += '_';
       TXBuffer += getCPluginNameFromProtocolIndex(ProtocolIndex);
       html_TD();
-      TXBuffer += getCPluginCFunctionName(x.first % 256);
+      TXBuffer += getCPluginCFunctionName(static_cast<CPlugin::Function>(x.first % 256));
       stream_html_timing_stats(x.second, timeSinceLastReset);
 
       if (clearStats) { x.second.reset(); }

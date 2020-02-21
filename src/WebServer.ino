@@ -460,10 +460,11 @@ size_t streamFile_htmlEscape(const String& fileName)
 
 #define TASKS_PER_PAGE TASKS_MAX
 
+// Uncrustify must not be used on macros, so turn it off.
+// *INDENT-OFF*
 #define strncpy_webserver_arg(D, N) safe_strncpy(D, WebServer.arg(N).c_str(), sizeof(D));
-#define update_whenset_FormItemInt(K, V) { int tmpVal; \
-                                           if (getCheckWebserverArg_int(K, tmpVal)) V = tmpVal; }
-
+// Uncrustify must not be used on macros, but we're now done, so turn Uncrustify on again.
+// *INDENT-ON*
 
 void WebServerInit()
 {
@@ -562,7 +563,7 @@ void WebServerInit()
 #endif
 
 #ifdef WEBSERVER_NEW_UI
-  WebServer.on(F("/buildinfo"),     handle_buildinfo);     // Also part of WEBSERVER_NEW_UI
+  WebServer.on(F("/buildinfo"),         handle_buildinfo);     // Also part of WEBSERVER_NEW_UI
   WebServer.on(F("/factoryreset_json"), handle_factoryreset_json);
   WebServer.on(F("/filelist_json"),     handle_filelist_json);
   WebServer.on(F("/i2cscanner_json"),   handle_i2cscanner_json);

@@ -279,7 +279,7 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
     PluginCall(PLUGIN_WEBFORM_SAVE, &TempEvent, dummy);
   }
 
-  // notify controllers: CPLUGIN_TASK_CHANGE_NOTIFICATION
+  // notify controllers: CPlugin::Function::CPLUGIN_TASK_CHANGE_NOTIFICATION
   for (controllerIndex_t x = 0; x < CONTROLLER_MAX; x++)
   {
     TempEvent.ControllerIndex = x;
@@ -289,7 +289,7 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
     {
       TempEvent.ProtocolIndex = getProtocolIndex_from_ControllerIndex(TempEvent.ControllerIndex);
       String dummy;
-      CPluginCall(TempEvent.ProtocolIndex, CPLUGIN_TASK_CHANGE_NOTIFICATION, &TempEvent, dummy);
+      CPluginCall(TempEvent.ProtocolIndex, CPlugin::Function::CPLUGIN_TASK_CHANGE_NOTIFICATION, &TempEvent, dummy);
     }
   }
 }
@@ -822,10 +822,9 @@ void setBasicTaskValues(taskIndex_t taskIndex, unsigned long taskdevicetimer,
   Settings.TaskDeviceEnabled[taskIndex] = enabled;
   safe_strncpy(ExtraTaskSettings.TaskDeviceName, name.c_str(), sizeof(ExtraTaskSettings.TaskDeviceName));
 
-  if (pin1 >= 0) { Settings.TaskDevicePin1[taskIndex] = pin1; }
-
-  if (pin2 >= 0) { Settings.TaskDevicePin2[taskIndex] = pin2; }
-
-  if (pin3 >= 0) { Settings.TaskDevicePin3[taskIndex] = pin3; }
+  // FIXME TD-er: Check for valid GPIO pin (and  -1 for "not set")
+  Settings.TaskDevicePin1[taskIndex] = pin1;
+  Settings.TaskDevicePin2[taskIndex] = pin2;
+  Settings.TaskDevicePin3[taskIndex] = pin3; 
   SaveTaskSettings(taskIndex);
 }

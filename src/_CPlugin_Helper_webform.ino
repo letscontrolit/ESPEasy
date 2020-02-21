@@ -1,4 +1,5 @@
 #include "src/Globals/CPlugins.h"
+#include "ESPEasy_plugindefs.h"
 
 
 /*********************************************************************************************\
@@ -11,7 +12,7 @@ String getControllerParameterName(protocolIndex_t ProtocolIndex, byte parameterI
     EventStruct tmpEvent;
     tmpEvent.idx = parameterIdx;
 
-    if (CPluginCall(ProtocolIndex, CPLUGIN_GET_PROTOCOL_DISPLAY_NAME, &tmpEvent, name)) {
+    if (CPluginCall(ProtocolIndex, CPlugin::Function::CPLUGIN_GET_PROTOCOL_DISPLAY_NAME, &tmpEvent, name)) {
       // Found an alternative name for it.
       isAlternative = true;
       return name;

@@ -63,7 +63,7 @@ void sendData(struct EventStruct *event)
 
       if (validUserVar(event)) {
         String dummy;
-        CPluginCall(event->ProtocolIndex, CPLUGIN_PROTOCOL_SEND, event, dummy);
+        CPluginCall(event->ProtocolIndex, CPlugin::Function::CPLUGIN_PROTOCOL_SEND, event, dummy);
       }
 #ifndef BUILD_NO_DEBUG
       else {
@@ -114,9 +114,9 @@ bool validUserVar(struct EventStruct *event) {
 // handle MQTT messages
 void callback(char *c_topic, byte *b_payload, unsigned int length) {
   statusLED(true);
-  int enabledMqttController = firstEnabledMQTTController();
+  controllerIndex_t enabledMqttController = firstEnabledMQTT_ControllerIndex();
 
-  if (enabledMqttController < 0) {
+  if (!validControllerIndex(enabledMqttController)) {
     addLog(LOG_LEVEL_ERROR, F("MQTT : No enabled MQTT controller"));
     return;
   }
@@ -152,7 +152,7 @@ void callback(char *c_topic, byte *b_payload, unsigned int length) {
    */
 
   protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(enabledMqttController);
-  schedule_controller_event_timer(ProtocolIndex, CPLUGIN_PROTOCOL_RECV, &TempEvent);
+  schedule_controller_event_timer(ProtocolIndex, CPlugin::Function::CPLUGIN_PROTOCOL_RECV, &TempEvent);
 }
 
 /*********************************************************************************************\
@@ -273,8 +273,10 @@ bool MQTTConnect(controllerIndex_t controller_idx)
   }
   delay(0);
 
+
+  byte controller_number = Settings.Protocol[controller_idx];	
+  count_connection_results(MQTTresult, F("MQTT : Broker "), controller_number, ControllerSettings);
   if (!MQTTresult) {
-    addLog(LOG_LEVEL_ERROR, F("MQTT : Failed to connect to broker"));
     MQTTclient.disconnect();
     updateMQTTclient_connected();
     return false;
@@ -295,7 +297,7 @@ bool MQTTConnect(controllerIndex_t controller_idx)
     mqtt_reconnect_count = 0;
 
     // call all installed controller to publish autodiscover data
-    if (MQTTclient_should_reconnect) { CPluginCall(CPLUGIN_GOT_CONNECTED, 0); }
+    if (MQTTclient_should_reconnect) { CPluginCall(CPlugin::Function::CPLUGIN_GOT_CONNECTED, 0); }
     MQTTclient_should_reconnect = false;
     return true; // end loop if succesfull
   }
@@ -321,12 +323,8 @@ bool MQTTCheck(controllerIndex_t controller_idx)
     {
       if (MQTTclient_should_reconnect) {
         addLog(LOG_LEVEL_ERROR, F("MQTT : Intentional reconnect"));
-      } else {
-        connectionFailures += 2;
-      }
+      } 
       return MQTTConnect(controller_idx);
-    } else if (connectionFailures) {
-      connectionFailures--;
     }
   }
 
@@ -390,7 +388,6 @@ bool MQTTpublish(controllerIndex_t controller_idx, const char *topic, const char
     }
   }
   const bool success = MQTTDelayHandler.addToQueue(MQTT_queue_element(controller_idx, topic, payload, retained));
-
   scheduleNextMQTTdelayQueue();
   return success;
 }
@@ -406,6 +403,9 @@ void processMQTTdelayQueue() {
   if (element == NULL) { return; }
 
   if (MQTTclient.publish(element->_topic.c_str(), element->_payload.c_str(), element->_retained)) {
+    if (connectionFailures > 0) {
+      --connectionFailures;
+    }
     MQTTDelayHandler.markProcessed(true);
   } else {
     MQTTDelayHandler.markProcessed(false);
@@ -429,9 +429,9 @@ void processMQTTdelayQueue() {
 \*********************************************************************************************/
 void MQTTStatus(const String& status)
 {
-  int enabledMqttController = firstEnabledMQTTController();
+  controllerIndex_t enabledMqttController = firstEnabledMQTT_ControllerIndex();
 
-  if (enabledMqttController >= 0) {
+  if (validControllerIndex(enabledMqttController)) {
     MakeControllerSettings(ControllerSettings);
     LoadControllerSettings(enabledMqttController, ControllerSettings);
     String pubname = ControllerSettings.Subscribe;

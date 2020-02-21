@@ -4,6 +4,7 @@
 #include <map>
 #include <vector>
 #include "../DataStructs/ESPEasyLimits.h"
+#include "../../ESPEasy_plugindefs.h"
 
 
 /********************************************************************************************\
@@ -33,9 +34,22 @@ extern protocolIndex_t   INVALID_PROTOCOL_INDEX;
 extern controllerIndex_t INVALID_CONTROLLER_INDEX;
 extern cpluginID_t       INVALID_C_PLUGIN_ID;
 
-extern bool (*CPlugin_ptr[CPLUGIN_MAX])(byte,
+extern bool (*CPlugin_ptr[CPLUGIN_MAX])(CPlugin::Function,
                                         struct EventStruct *,
                                         String&);
+
+bool CPluginCall(CPlugin::Function   Function,
+                 struct EventStruct *event);
+bool CPluginCall(CPlugin::Function   Function,
+                 struct EventStruct *event,
+                 String            & str);
+bool CPluginCall(protocolIndex_t     protocolIndex,
+                 CPlugin::Function   Function,
+                 struct EventStruct *event,
+                 String            & str);
+
+bool              anyControllerEnabled();
+controllerIndex_t findFirstEnabledControllerWithId(cpluginID_t cpluginid);
 
 // Map to match a controller ID to a "ProtocolIndex"
 extern std::map<cpluginID_t, protocolIndex_t> CPlugin_id_to_ProtocolIndex;

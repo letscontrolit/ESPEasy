@@ -10,13 +10,13 @@
 
 #include <ArduinoJson.h>
 
-bool CPlugin_002(byte function, struct EventStruct *event, String& string)
+bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& string)
 {
   bool success = false;
 
   switch (function)
   {
-    case CPLUGIN_PROTOCOL_ADD:
+    case CPlugin::Function::CPLUGIN_PROTOCOL_ADD:
     {
       Protocol[++protocolCount].Number     = CPLUGIN_ID_002;
       Protocol[protocolCount].usesMQTT     = true;
@@ -28,13 +28,13 @@ bool CPlugin_002(byte function, struct EventStruct *event, String& string)
       break;
     }
 
-    case CPLUGIN_GET_DEVICENAME:
+    case CPlugin::Function::CPLUGIN_GET_DEVICENAME:
     {
       string = F(CPLUGIN_NAME_002);
       break;
     }
 
-    case CPLUGIN_INIT:
+    case CPlugin::Function::CPLUGIN_INIT:
     {
       MakeControllerSettings(ControllerSettings);
       LoadControllerSettings(event->ControllerIndex, ControllerSettings);
@@ -42,14 +42,14 @@ bool CPlugin_002(byte function, struct EventStruct *event, String& string)
       break;
     }
 
-    case CPLUGIN_PROTOCOL_TEMPLATE:
+    case CPlugin::Function::CPLUGIN_PROTOCOL_TEMPLATE:
     {
       event->String1 = F("domoticz/out");
       event->String2 = F("domoticz/in");
       break;
     }
 
-    case CPLUGIN_PROTOCOL_RECV:
+    case CPlugin::Function::CPLUGIN_PROTOCOL_RECV:
     {
       // char json[512];
       // json[0] = 0;
@@ -166,7 +166,7 @@ bool CPlugin_002(byte function, struct EventStruct *event, String& string)
       break;
     }
 
-    case CPLUGIN_PROTOCOL_SEND:
+    case CPlugin::Function::CPLUGIN_PROTOCOL_SEND:
     {
       if (event->idx != 0)
       {
@@ -238,13 +238,7 @@ bool CPlugin_002(byte function, struct EventStruct *event, String& string)
         String pubname = ControllerSettings.Publish;
         parseControllerVariables(pubname, event, false);
 
-        if (!MQTTpublish(event->ControllerIndex, pubname.c_str(), json.c_str(), Settings.MQTTRetainFlag))
-        {
-          connectionFailures++;
-        }
-        else if (connectionFailures) {
-          connectionFailures--;
-        }
+        success = MQTTpublish(event->ControllerIndex, pubname.c_str(), json.c_str(), Settings.MQTTRetainFlag);
       } // if ixd !=0
       else
       {
@@ -254,12 +248,16 @@ bool CPlugin_002(byte function, struct EventStruct *event, String& string)
       break;
     }
 
-    case CPLUGIN_FLUSH:
+    case CPlugin::Function::CPLUGIN_FLUSH:
     {
       processMQTTdelayQueue();
       delay(0);
       break;
     }
+
+    default:
+      break;
+
   }
   return success;
 }
