@@ -1540,10 +1540,20 @@ void reboot() {
  \*********************************************************************************************/
 String parseTemplate(String& tmpString)
 {
-  return parseTemplate_padded(tmpString, 0);
+  return parseTemplate(tmpString, false);
+}
+
+String parseTemplate(String& tmpString, bool useURLencode)
+{
+  return parseTemplate_padded(tmpString, 0, useURLencode);
 }
 
 String parseTemplate_padded(String& tmpString, byte minimal_lineSize)
+{
+  return parseTemplate_padded(tmpString, minimal_lineSize, false);
+}
+
+String parseTemplate_padded(String& tmpString, byte minimal_lineSize, bool useURLencode)
 {
   checkRAM(F("parseTemplate_padded"));
   START_TIMER
@@ -1553,7 +1563,7 @@ String parseTemplate_padded(String& tmpString, byte minimal_lineSize)
   String newString;
   newString.reserve(minimal_lineSize); // Our best guess of the new size.
 
-  parseSystemVariables(tmpString, false);
+  parseSystemVariables(tmpString, useURLencode);
   
 
   int startpos = 0;
@@ -1661,8 +1671,7 @@ String parseTemplate_padded(String& tmpString, byte minimal_lineSize)
     LoadTaskSettings(currentTaskIndex);
   }
 
-  // parseSystemVariables(newString, false);
-  parseStandardConversions(newString, false);
+  parseStandardConversions(newString, useURLencode);
 
     // padding spaces
   while (newString.length() < minimal_lineSize) {
