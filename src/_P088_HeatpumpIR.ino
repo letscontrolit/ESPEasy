@@ -43,49 +43,9 @@
  *
  */
 
-#include <AUXHeatpumpIR.h>
-#include <BalluHeatpumpIR.h>
-#include <CarrierHeatpumpIR.h>
-#include <DaikinHeatpumpIR.h>
-#include <FuegoHeatpumpIR.h>
-#include <FujitsuHeatpumpIR.h>
-#include <GreeHeatpumpIR.h>
-#include <HisenseHeatpumpIR.h>
-#include <HitachiHeatpumpIR.h>
-#include <HyundaiHeatpumpIR.h>
-#include <IVTHeatpumpIR.h>
-#include <MideaHeatpumpIR.h>
-#include <MitsubishiHeatpumpIR.h>
-#include <MitsubishiHeavyFDTCHeatpumpIR.h>
-#include <MitsubishiHeavyHeatpumpIR.h>
-#include <MitsubishiMSCHeatpumpIR.h>
-#include <MitsubishiSEZKDXXHeatpumpIR.h>
-#include <PanasonicCKPHeatpumpIR.h>
-#include <PanasonicHeatpumpIR.h>
-#include <SamsungHeatpumpIR.h>
-#include <SharpHeatpumpIR.h>
-#include <ToshibaDaiseikaiHeatpumpIR.h>
-#include <ToshibaHeatpumpIR.h>
+#include <HeatpumpIRFactory.h>
 
-// Array with all supported heatpumps
-HeatpumpIR *heatpumpIR[] = {new PanasonicCKPHeatpumpIR(), new PanasonicDKEHeatpumpIR(), new PanasonicJKEHeatpumpIR(),
-                            new PanasonicNKEHeatpumpIR(), new PanasonicLKEHeatpumpIR(),
-                            new CarrierNQVHeatpumpIR(), new CarrierMCAHeatpumpIR(),
-                            new MideaHeatpumpIR(), new FujitsuHeatpumpIR(),
-                            new MitsubishiFDHeatpumpIR(), new MitsubishiFEHeatpumpIR(), new MitsubishiMSYHeatpumpIR(), new MitsubishiFAHeatpumpIR(),
-                            new MitsubishiKJHeatpumpIR(), new MitsubishiHeavyFDTCHeatpumpIR(),
-                            new SamsungAQVHeatpumpIR(), new SamsungFJMHeatpumpIR(),new SharpHeatpumpIR(), new DaikinHeatpumpIR(),
-                            new MitsubishiHeavyZJHeatpumpIR(), new MitsubishiHeavyZMHeatpumpIR(),
-                            new MitsubishiSEZKDXXHeatpumpIR(), new MitsubishiMSCHeatpumpIR(),
-                            new HyundaiHeatpumpIR(), new HisenseHeatpumpIR(),
-                            new GreeGenericHeatpumpIR(), new GreeYANHeatpumpIR(), new GreeYAAHeatpumpIR(),
-                            new FuegoHeatpumpIR(), new ToshibaHeatpumpIR(), new ToshibaDaiseikaiHeatpumpIR(),
-                            new IVTHeatpumpIR(), new HitachiHeatpumpIR(),
-                            new BalluHeatpumpIR(), new AUXHeatpumpIR(),
-                            NULL};
-
-IRSenderIRremoteESP8266 *Plugin_088_irSender;
-
+IRSenderIRremoteESP8266 *Plugin_088_irSender = NULL;
 int panasonicCKPTimer = 0;
 
 boolean Plugin_088(byte function, struct EventStruct *event, String& string)
@@ -205,42 +165,39 @@ boolean Plugin_088(byte function, struct EventStruct *event, String& string)
           sendMinute = minute();
           sendWeekday = weekday();
 #endif
-          int i = 0;
-          do
-          {
-            const char* shortName = heatpumpIR[i]->model();
+          HeatpumpIR *heatpumpIR = HeatpumpIRFactory::create(heatpumpModel.c_str());
 
-            if (strcmp_P(heatpumpModel.c_str(), shortName) == 0)
+          if (heatpumpIR != NULL) {
+            enableIR_RX(false);
+            heatpumpIR->send(*Plugin_088_irSender, powerMode, operatingMode, fanSpeed, temperature, vDir, hDir);
+            enableIR_RX(true);
+
+            delete heatpumpIR;
+            heatpumpIR = NULL;
+
+            addLog(LOG_LEVEL_INFO, F("P088: Heatpump IR code transmitted"));
+#ifdef IR_DEBUG_PACKET
+            addLog(LOG_LEVEL_DEBUG, IRPacket);
+#endif
+            if (printToWeb)
             {
-              enableIR_RX(false);
-              heatpumpIR[i]->send(*Plugin_088_irSender, powerMode, operatingMode, fanSpeed, temperature, vDir, hDir);
-              enableIR_RX(true);
-              addLog(LOG_LEVEL_INFO, F("P088: Heatpump IR code transmitted"));
+              printWebString += F("P088: Heatpump IR code transmitted");
 #ifdef IR_DEBUG_PACKET
-              addLog(LOG_LEVEL_DEBUG, IRPacket);
+              printWebString += F(" <BR>\n"); // do both <BR> and \n to break line both in browser and curl -s
+              printWebString += IRPacket;
+              printWebString += F("\n");
 #endif
-              if (printToWeb)
-              {
-                printWebString += F("P088: Heatpump IR code transmitted");
-#ifdef IR_DEBUG_PACKET
-                printWebString += F(" <BR>\n"); // do both <BR> and \n to break line both in browser and curl -s
-                printWebString += IRPacket;
-                printWebString += F("\n");
-#endif
-              }
-
-              // Panasonic CKP can only be turned ON/OFF by using the timer,
-              // so cancel the timer in 2 minutes, after the heatpump has turned on or off
-              if (strcmp(heatpumpModel.c_str(), "panasonic_ckp") == 0)
-              {
-                panasonicCKPTimer = 120;
-              }
-
-              success = true;
-              break;
             }
+
+            // Panasonic CKP can only be turned ON/OFF by using the timer,
+            // so cancel the timer in 2 minutes, after the heatpump has turned on or off
+            if (strcmp_P(heatpumpModel.c_str(), PSTR("panasonic_ckp")) == 0)
+            {
+              panasonicCKPTimer = 120;
+            }
+
+            success = true;
           }
-          while (heatpumpIR[++i] != NULL);
         }
         break;
       }
@@ -269,6 +226,8 @@ boolean Plugin_088(byte function, struct EventStruct *event, String& string)
             enableIR_RX(false);
             panasonicHeatpumpIR->sendPanasonicCKPCancelTimer(*Plugin_088_irSender);
             enableIR_RX(true);
+
+            delete panasonicHeatpumpIR;
             addLog(LOG_LEVEL_INFO, F("P088: The TIMER led on Panasonic CKP should now be OFF"));
           }
         }
