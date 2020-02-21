@@ -70,8 +70,6 @@
 #define CPLUGIN_WEBFORM_SHOW_HOST_CONFIG   60 // Used for showing host information for the controller.
 
 
-
-
 // ********************************************************************************
 //   NPlugin (Notification) function calls
 // ********************************************************************************

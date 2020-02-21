@@ -165,7 +165,6 @@ boolean Plugin_088(byte function, struct EventStruct *event, String& string)
           sendMinute = minute();
           sendWeekday = weekday();
 #endif
-
           HeatpumpIR *heatpumpIR = HeatpumpIRFactory::create(heatpumpModel.c_str());
 
           if (heatpumpIR != NULL) {
@@ -229,7 +228,6 @@ boolean Plugin_088(byte function, struct EventStruct *event, String& string)
             enableIR_RX(true);
 
             delete panasonicHeatpumpIR;
-
             addLog(LOG_LEVEL_INFO, F("P088: The TIMER led on Panasonic CKP should now be OFF"));
           }
         }
