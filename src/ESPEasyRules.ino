@@ -4,6 +4,7 @@
 #include "src/DataStructs/EventValueSource.h"
 #include "src/Globals/Device.h"
 #include "src/Globals/Plugins.h"
+#include "src/Globals/Plugins_other.h"
 
 String EventToFileName(const String& eventName) {
   int size  = eventName.length();
@@ -305,6 +306,8 @@ void replace_EventValueN_Argv(String& line, const String& argString, unsigned in
 }
 
 void substitute_eventvalue(String& line, const String& event) {
+  if (substitute_eventvalue_CallBack_ptr != nullptr)
+    substitute_eventvalue_CallBack_ptr(line, event);
   if (line.indexOf(F("%eventvalue")) == -1) {
     return; // Nothing to replace.
   }

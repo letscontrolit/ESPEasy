@@ -7,6 +7,7 @@
 #include "src/Globals/Cache.h"
 #include "src/Globals/Device.h"
 #include "src/Globals/Plugins.h"
+#include "src/Globals/Plugins_other.h"
 #include "src/Globals/RTC.h"
 #include "src/Globals/ResetFactoryDefaultPref.h"
 #include "src/Globals/Services.h"
@@ -1563,6 +1564,9 @@ String parseTemplate_padded(String& tmpString, byte minimal_lineSize, bool useUR
   String newString;
   newString.reserve(minimal_lineSize); // Our best guess of the new size.
 
+
+  if (parseTemplate_CallBack_ptr != nullptr)
+     parseTemplate_CallBack_ptr(tmpString, useURLencode);
   parseSystemVariables(tmpString, useURLencode);
   
 
