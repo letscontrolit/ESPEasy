@@ -4,6 +4,10 @@ HeatpumpIR::HeatpumpIR()
 {
 }
 
+HeatpumpIR::~HeatpumpIR()
+{
+}
+
 // This is a virtual function, i.e. never called
 void HeatpumpIR::send(IRSender&, uint8_t, uint8_t, uint8_t, uint8_t, uint8_t, uint8_t)
 {
