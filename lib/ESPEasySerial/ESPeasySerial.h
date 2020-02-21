@@ -161,7 +161,7 @@ public:
   // Serial0:         RX: 3  TX: 1
   // Serial0 swapped  RX: 13 TX: 15
   // Serial1:         RX: -- TX: 2   (TX only)
-  ESPeasySerial(int receivePin, int transmitPin, bool inverse_logic = false, unsigned int buffSize = 64);
+  ESPeasySerial(int receivePin, int transmitPin, bool inverse_logic = false, unsigned int buffSize = 64, bool forceSWserial = false);
   virtual ~ESPeasySerial();
 
   // If baud rate is set to 0, it will perform an auto-detect on the baudrate

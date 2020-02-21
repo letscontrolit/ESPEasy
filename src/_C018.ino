@@ -65,7 +65,8 @@ struct C018_data_struct {
     resetPin = reset_pin;
 
     reset();
-    C018_easySerial = new ESPeasySerial(serial_rx, serial_tx);
+    // FIXME TD-er: Make force SW serial a proper setting.
+    C018_easySerial = new ESPeasySerial(serial_rx, serial_tx, false, 64, true);
 
     if (C018_easySerial != nullptr) {
       if (resetPin == -1) {

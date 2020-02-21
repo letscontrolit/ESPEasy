@@ -31,10 +31,14 @@ bool ESPeasySerial::_serial0_swap_active = false;
 
 #if !defined(DISABLE_SOFTWARE_SERIAL) && defined(ESP8266)
 
-ESPeasySerial::ESPeasySerial(int receivePin, int transmitPin, bool inverse_logic, unsigned int buffSize)
+ESPeasySerial::ESPeasySerial(int receivePin, int transmitPin, bool inverse_logic, unsigned int buffSize, bool forceSWserial)
     : _swserial(nullptr), _receivePin(receivePin), _transmitPin(transmitPin)
 {
-  _serialtype = ESPeasySerialType::getSerialType(receivePin, transmitPin);
+  if (forceSWserial) {
+    _serialtype = ESPeasySerialType::serialtype::software;
+  } else {
+    _serialtype = ESPeasySerialType::getSerialType(receivePin, transmitPin);
+  }
   if (isSWserial()) {
     _swserial = new ESPeasySoftwareSerial(receivePin, transmitPin, inverse_logic, buffSize);
   } else if (isValid()) {
