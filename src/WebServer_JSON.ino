@@ -158,7 +158,8 @@ void handle_json()
   }
 
   if (!showSpecificTask) { TXBuffer += F("\"Sensors\":[\n"); }
-  unsigned long ttl_json = 60; // The shortest interval per enabled task (with output values) in seconds
+  // Keep track of the lowest reported TTL and use that as refresh interval.
+  unsigned long lowest_ttl_json = 60;
 
   for (taskIndex_t TaskIndex = firstTaskIndex; TaskIndex <= lastActiveTaskIndex && validTaskIndex(TaskIndex); TaskIndex++)
   {
@@ -170,10 +171,15 @@ void handle_json()
       LoadTaskSettings(TaskIndex);
       TXBuffer += F("{\n");
 
+      unsigned long ttl_json = 60; // Default value
+
       // For simplicity, do the optional values first.
       if (Device[DeviceIndex].ValueCount != 0) {
-        if ((ttl_json > taskInterval) && (taskInterval > 0) && Settings.TaskDeviceEnabled[TaskIndex]) {
+        if ((taskInterval > 0) && Settings.TaskDeviceEnabled[TaskIndex]) {
           ttl_json = taskInterval;
+          if (ttl_json < lowest_ttl_json) {
+            lowest_ttl_json = ttl_json;
+          }
         }
         TXBuffer += F("\"TaskValues\": [\n");
 
@@ -231,8 +237,8 @@ void handle_json()
 
   if (!showSpecificTask) {
     TXBuffer += F("],\n");
-    stream_last_json_object_value(F("TTL"), String(ttl_json * 1000));
   }
+  stream_last_json_object_value(F("TTL"), String(lowest_ttl_json * 1000));
 
   TXBuffer.endStream();
 }
