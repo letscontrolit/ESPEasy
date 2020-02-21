@@ -11,16 +11,18 @@ void handle_pinstates_json() {
   navMenuIndex = MENU_INDEX_TOOLS;
   TXBuffer.startJsonStream();
 
-  bool comma_between = false;
-  TXBuffer += F("[{");
+  bool first = true;
+  TXBuffer += F("[");
 
   for (std::map<uint32_t, portStatusStruct>::iterator it = globalMapPortStatus.begin(); it != globalMapPortStatus.end(); ++it)
   {
-    if (comma_between) {
-      TXBuffer += ",{";
+    if (!first) {
+      TXBuffer += ',';
     } else {
-      comma_between = true;
+      first = false;
     }
+    TXBuffer += '{';
+
 
     const uint16_t plugin = getPluginFromKey(it->first);
     const uint16_t port   = getPortFromKey(it->first);
