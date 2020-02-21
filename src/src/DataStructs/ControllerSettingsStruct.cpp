@@ -25,6 +25,7 @@ void ControllerSettingsStruct::reset() {
   ClientTimeout              = CONTROLLER_CLIENTTIMEOUT_DFLT;
   MustCheckReply             = false;
   SampleSetInitiator         = INVALID_TASK_INDEX;
+  MQTT_flags                 = 0;
 
   for (byte i = 0; i < 4; ++i) {
     IP[i] = 0;
@@ -173,4 +174,35 @@ bool ControllerSettingsStruct::updateIPcache() {
     return true;
   }
   return false;
+}
+
+
+bool ControllerSettingsStruct::mqtt_cleanSession() const 
+{
+  return getBitFromUL(MQTT_flags, 1);
+}
+
+void ControllerSettingsStruct::mqtt_cleanSession(bool value)
+{
+  setBitToUL(MQTT_flags, 1, value);
+}
+
+bool ControllerSettingsStruct::mqtt_sendLWT() const
+{
+  return !getBitFromUL(MQTT_flags, 2);
+}
+
+void ControllerSettingsStruct::mqtt_sendLWT(bool value)
+{
+  setBitToUL(MQTT_flags, 2, !value);
+}
+
+bool ControllerSettingsStruct::mqtt_willRetain() const 
+{
+  return !getBitFromUL(MQTT_flags, 3);
+}
+
+void ControllerSettingsStruct::mqtt_willRetain(bool value)
+{
+  setBitToUL(MQTT_flags, 3, !value);
 }

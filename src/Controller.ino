@@ -246,29 +246,29 @@ bool MQTTConnect(controllerIndex_t controller_idx)
   }
   parseSystemVariables(LWTMessageDisconnect, false);
 
-  boolean MQTTresult   = false;
+  bool MQTTresult   = false;
   uint8_t willQos      = 0;
-  boolean willRetain   = true;
-  boolean cleanSession = false; // As suggested here: https://github.com/knolleary/pubsubclient/issues/458#issuecomment-493875150
+  bool willRetain   = ControllerSettings.mqtt_willRetain() && ControllerSettings.mqtt_sendLWT();
+  bool cleanSession = ControllerSettings.mqtt_cleanSession(); // As suggested here: https://github.com/knolleary/pubsubclient/issues/458#issuecomment-493875150
 
   if ((SecuritySettings.ControllerUser[controller_idx] != 0) && (SecuritySettings.ControllerPassword[controller_idx] != 0)) {
     MQTTresult =
       MQTTclient.connect(clientid.c_str(),
                          SecuritySettings.ControllerUser[controller_idx],
                          SecuritySettings.ControllerPassword[controller_idx],
-                         LWTTopic.c_str(),
+                         ControllerSettings.mqtt_sendLWT() ? LWTTopic.c_str() : nullptr,
                          willQos,
                          willRetain,
-                         LWTMessageDisconnect.c_str(),
+                         ControllerSettings.mqtt_sendLWT() ? LWTMessageDisconnect.c_str() : nullptr,
                          cleanSession);
   } else {
     MQTTresult = MQTTclient.connect(clientid.c_str(),
                                     nullptr,
                                     nullptr,
-                                    LWTTopic.c_str(),
+                                    ControllerSettings.mqtt_sendLWT() ? LWTTopic.c_str() : nullptr,
                                     willQos,
                                     willRetain,
-                                    LWTMessageDisconnect.c_str(),
+                                    ControllerSettings.mqtt_sendLWT() ? LWTMessageDisconnect.c_str() : nullptr,
                                     cleanSession);
   }
   delay(0);
@@ -377,7 +377,7 @@ void SendStatus(byte source, const String& status)
 }
 
 #ifdef USES_MQTT
-bool MQTTpublish(controllerIndex_t controller_idx, const char *topic, const char *payload, boolean retained)
+bool MQTTpublish(controllerIndex_t controller_idx, const char *topic, const char *payload, bool retained)
 {
   {
     MQTT_queue_element dummy_element(MQTT_queue_element(controller_idx, "", "", retained));

@@ -313,6 +313,9 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
         addControllerParameterForm(ControllerSettings, controllerindex, CONTROLLER_LWT_TOPIC);
         addControllerParameterForm(ControllerSettings, controllerindex, CONTROLLER_LWT_CONNECT_MESSAGE);
         addControllerParameterForm(ControllerSettings, controllerindex, CONTROLLER_LWT_DISCONNECT_MESSAGE);
+        addControllerParameterForm(ControllerSettings, controllerindex, CONTROLLER_SEND_LWT);
+        addControllerParameterForm(ControllerSettings, controllerindex, CONTROLLER_WILL_RETAIN);
+        addControllerParameterForm(ControllerSettings, controllerindex, CONTROLLER_CLEAN_SESSION);
       }
     }
     {
