@@ -113,6 +113,7 @@ There's three different released versions of ESP Easy:
    ":ref:`P087_page`","|P087_status|","P087"
    ":ref:`P088_page`","|P088_status|","P088"
    ":ref:`P089_page`","|P089_status|","P089"
+   ":ref:`P090_page`","|P090_status|","P090"
 
 
 Internal GPIO handling
@@ -126,11 +127,6 @@ Analog input
 ------------
 
 Plugins: |Plugin_Analog_input|
-
-Color
------
-
-Plugins: |Plugin_Color|
 
 Communication
 -------------
@@ -156,6 +152,11 @@ Energy (DC)
 -----------
 
 Plugins: |Plugin_Energy_DC|
+
+Energy (Heat)
+-----------
+
+Plugins: |Plugin_Energy_Heat|
 
 Environment
 -----------
@@ -205,12 +206,22 @@ Keypad
 
 Plugins: |Plugin_Keypad|
 
+Light/Color
+-----------
+
+Plugins: |Plugin_Light_Color|
+
 Light/Lux
 ---------
 
 Plugins: |Plugin_Light_Lux|
 
 Hardware: |P015_usedby|
+
+Light/UV
+-----------
+
+Plugins: |Plugin_Light_UV|
 
 Motor
 -----

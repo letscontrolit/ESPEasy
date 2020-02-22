@@ -35,8 +35,8 @@
 .. |P082_usedlibraries| replace:: https://github.com/mikalhart/TinyGPSPlus/tree/v1.0.2
 
 .. |P083_name| replace:: :cyan:`SGP30`
-.. |P083_type| replace:: :cyan:`Gas`
-.. |P083_typename| replace:: :cyan:`Gas - SGP30`
+.. |P083_type| replace:: :cyan:`Gasses`
+.. |P083_typename| replace:: :cyan:`Gasses - SGP30`
 .. |P083_status| replace:: :yellow:`TESTING`
 .. |P083_github| replace:: P083_SGP30.ino
 .. _P083_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P083_SGP30.ino
@@ -117,15 +117,3 @@
 .. |P089_maintainer| replace:: `TD-er`
 .. |P089_compileinfo| replace:: `.`
 .. |P089_usedlibraries| replace:: `.`
-
-.. |P090_name| replace:: :cyan:`CCS811 TVOC/eCO2`
-.. |P090_type| replace:: :cyan:`Gases`
-.. |P090_typename| replace:: :cyan:`Gases - CCS811 TVOC/eCO2`
-.. |P090_status| replace:: :yellow:`TESTING`
-.. |P090_github| replace:: P090_CCS811.ino
-.. _P090_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P090_CCS811.ino
-.. |P090_usedby| replace:: `.`
-.. |P090_shortinfo| replace:: `.`
-.. |P090_maintainer| replace:: `TD-er`
-.. |P090_compileinfo| replace:: `.`
-.. |P090_usedlibraries| replace:: `.`

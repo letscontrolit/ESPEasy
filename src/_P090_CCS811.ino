@@ -182,6 +182,8 @@ private:
 
 
 CCS811 myCCS811(0x5B); // start with default, but will update later on with user settings
+bool   P090_compensation_set    = false;
+bool   P090_newReadingAvailable = false;
 
 boolean Plugin_090(byte function, struct EventStruct *event, String& string)
 {
@@ -330,6 +332,39 @@ boolean Plugin_090(byte function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_ONCE_A_SECOND:
+    {
+      if (myCCS811.dataAvailable())
+      {
+        // Calling readAlgorithmResults() function updates the global tVOC and CO2 variables
+        CCS811Core::status readstatus = myCCS811.readAlgorithmResults();
+
+        if (readstatus == 0)
+        {
+          success = true;
+
+          if (P090_compensation_set) {
+            // Temp compensation was set, so we have to dump the first reading.
+            P090_compensation_set = false;
+          } else {
+            UserVar[event->BaseVarIndex]     = myCCS811.getTVOC();
+            UserVar[event->BaseVarIndex + 1] = myCCS811.getCO2();
+            P090_newReadingAvailable         = true;
+
+            if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+              String log = F("CCS811 : tVOC: ");
+              log += myCCS811.getTVOC();
+              log += F(", eCO2: ");
+              log += myCCS811.getCO2();
+              addLog(LOG_LEVEL_INFO, log);
+            }
+          }
+        }
+      }
+
+      break;
+    }
+
     case PLUGIN_READ:
     {
       // if CCS811 is compensated with temperature and humidity
@@ -364,37 +399,12 @@ boolean Plugin_090(byte function, struct EventStruct *event, String& string)
 
         myCCS811.setEnvironmentalData(humidity, temperature);
 
-        //  myCCS811.readAlgorithmResults(); //Dump a reading and wait
-        delay(100);
+        P090_compensation_set = true;
       }
 
-      if (myCCS811.dataAvailable())
-      {
-        // Calling readAlgorithmResults() function updates the global tVOC and CO2 variables
-        CCS811Core::status readstatus = myCCS811.readAlgorithmResults();
-
-        if (readstatus == 0)
-        {
-          UserVar[event->BaseVarIndex]     = myCCS811.getTVOC();
-          UserVar[event->BaseVarIndex + 1] = myCCS811.getCO2();
-          success                          = true;
-
-          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-            String log = F("CCS811 : tVOC: ");
-            log += myCCS811.getTVOC();
-            log += F(", eCO2: ");
-            log += myCCS811.getCO2();
-            addLog(LOG_LEVEL_INFO, log);
-          }
-        }
-        else
-        {
-          if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-            String log = F("CCS811 : Error reading values : ");
-            log += readstatus;
-            addLog(LOG_LEVEL_ERROR, log);
-          }
-        }
+      if (P090_newReadingAvailable) {
+        P090_newReadingAvailable = false;
+        success                  = true;
       }
       else if (myCCS811.checkForStatusError())
       {
@@ -405,10 +415,13 @@ boolean Plugin_090(byte function, struct EventStruct *event, String& string)
           addLog(LOG_LEVEL_ERROR, log);
         }
       }
-      else
-      {
-        addLog(LOG_LEVEL_ERROR, F("CCS811 : No values found."));
-      }
+
+      /*
+         else
+         {
+         addLog(LOG_LEVEL_ERROR, F("CCS811 : No values found."));
+         }
+       */
 
       break;
     }
@@ -662,7 +675,7 @@ bool CCS811::checkForStatusError(void)
 
   // return the status bit
   readRegister(CSS811_STATUS, &value);
-  return value & 1 << 0;
+  return value & (1 << 0);
 }
 
 // Checks to see if DATA_READ flag is set in the status register
@@ -674,11 +687,11 @@ bool CCS811::dataAvailable(void)
 
   if (returnError != SENSOR_SUCCESS)
   {
-    return 0;
+    return false;
   }
   else
   {
-    return value & 1 << 3;
+    return value & (1 << 3);
   }
 }
 
@@ -691,11 +704,11 @@ bool CCS811::appValid(void)
 
   if (returnError != SENSOR_SUCCESS)
   {
-    return 0;
+    return false;
   }
   else
   {
-    return value & 1 << 4;
+    return value & (1 << 4);
   }
 }
 
