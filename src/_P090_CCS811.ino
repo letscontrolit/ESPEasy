@@ -376,12 +376,12 @@ boolean Plugin_090(byte function, struct EventStruct *event, String& string)
         float temperature  = UserVar[BaseVarIndex]; // in degrees C
         // convert to celsius if required
         int temperature_in_fahrenheit = P090_TEMPERATURE_SCALE;
-        String temp                   = F("°C");
+        String temp                   = F("C");
 
         if (temperature_in_fahrenheit)
         {
           temperature = (temperature - 32) * 5 / 9;
-          temp        =  F("°F");
+          temp        =  F("F");
         }
 
         byte  TaskIndex2    = P090_HUMIDITY_TASK_INDEX;
