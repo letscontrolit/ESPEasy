@@ -554,7 +554,7 @@ void loop()
      addLog(LOG_LEVEL_INFO, F("firstLoopConnectionsEstablished"));
      firstLoop = false;
      timerAwakeFromDeepSleep = millis(); // Allow to run for "awake" number of seconds, now we have wifi.
-     // schedule_all_task_device_timers(); Disabled for now, since we are now using queues for controllers.
+     // schedule_all_task_device_timers(); // Disabled for now, since we are now using queues for controllers.
      if (Settings.UseRules && isDeepSleepEnabled())
      {
         String event = F("System#NoSleep=");

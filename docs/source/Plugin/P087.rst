@@ -31,10 +31,6 @@ Supported hardware
 
 .. .. include:: P087_commands.repl
 
-Events
-~~~~~~
-
-.. include:: P087_events.repl
 
 
 Change log

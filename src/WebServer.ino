@@ -1015,6 +1015,7 @@ void json_prop(LabelType::Enum label) {
 
 // ********************************************************************************
 // Add a task select dropdown list
+// This allows to select a task index based on the existing tasks.
 // ********************************************************************************
 void addTaskSelect(const String& name,  taskIndex_t choice)
 {
@@ -1052,6 +1053,7 @@ void addTaskSelect(const String& name,  taskIndex_t choice)
 
 // ********************************************************************************
 // Add a Value select dropdown list, based on TaskIndex
+// This allows to select a task value, based on the existing tasks.
 // ********************************************************************************
 void addTaskValueSelect(const String& name, int choice, taskIndex_t TaskIndex)
 {

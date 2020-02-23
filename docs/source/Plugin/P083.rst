@@ -31,11 +31,6 @@ Supported hardware
 
 .. .. include:: P083_commands.repl
 
-Events
-~~~~~~
-
-.. include:: P083_events.repl
-
 
 Change log
 ----------
