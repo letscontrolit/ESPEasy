@@ -283,6 +283,116 @@ String rulesProcessingFile(const String& fileName, String& event) {
   return "";
 }
 
+
+
+/********************************************************************************************\
+   Parse string commands
+ \*********************************************************************************************/
+
+bool get_next_inner_bracket(const String& line, int& startIndex, int& closingIndex, char closingBracket)
+{
+  char openingBracket = closingIndex;
+  switch (closingBracket) {
+    case ']': openingBracket = '['; break;
+    case ')': openingBracket = '('; break;
+    default:
+      // unknown bracket type
+      return false;
+  }
+  closingIndex = line.indexOf(closingBracket);
+  if (closingIndex == -1) return false;
+  
+  for (int i = closingIndex; i >= 0; --i) {
+    if (line[i] == openingBracket) {
+      startIndex = i;
+      return true;
+    }
+  }
+  return false;
+}
+
+bool get_next_argument(const String& fullCommand, int& index, String& argument, char separator)
+{
+  int newIndex = fullCommand.indexOf(separator, index);
+  if (newIndex == -1) {
+    argument = fullCommand.substring(index);
+  } else {
+    argument = fullCommand.substring(index, newIndex);
+  }
+  if (argument.startsWith(String(separator))) {
+    argument = argument.substring(1);
+  }
+//  addLog(LOG_LEVEL_INFO, String("get_next_argument: ") + String(index) + " " + fullCommand + " " + argument);
+  index = newIndex + 1;
+  return argument.length() > 0;
+}
+
+void parse_string_commands(String &line) {
+  int startIndex, closingIndex;
+
+  while (get_next_inner_bracket(line, startIndex, closingIndex, ']')) {
+    // Command without opening and closing brackets.
+    String fullCommand = line.substring(startIndex + 1, closingIndex);
+    int tmpIndex = 0;
+    String cmd_s_lower, arg1, arg2, arg3;
+    if (get_next_argument(fullCommand, tmpIndex, cmd_s_lower, ':')) {
+      if (get_next_argument(fullCommand, tmpIndex, arg1, ':')) {
+        if (get_next_argument(fullCommand, tmpIndex, arg2, ':')) {
+          get_next_argument(fullCommand, tmpIndex, arg3, ':');
+        }
+      }
+    }
+    if (cmd_s_lower.length() > 0) {
+      String replacement; // maybe just replace with empty to avoid looping?
+      cmd_s_lower.toLowerCase();
+//      addLog(LOG_LEVEL_INFO, String(F("parse_string_commands cmd: ")) + cmd_s_lower + " " + arg1 + " " + arg2 + " " + arg3);
+
+      int iarg1, iarg2;
+      if (cmd_s_lower.equals(F("substring"))) {
+        // substring arduino style (first char included, last char excluded)
+        // Syntax like 12345[substring:8:12:ANOTHER HELLO WORLD]67890
+        if (validIntFromString(arg1, iarg1)
+            && validIntFromString(arg2, iarg2)) {
+          replacement = arg3.substring(iarg1, iarg2);
+        }
+      } else if (cmd_s_lower.equals(F("strtol"))) {
+        // string to long integer (from cstdlib)
+        // Syntax like 1234[strtol:16:38]7890
+        if (validIntFromString(arg1, iarg1)
+            && validIntFromString(arg2, iarg2)) {
+          replacement = String(strtol(arg2.c_str(), NULL, iarg1));
+        }
+      } else if (cmd_s_lower.equals(F("div100ths"))) {
+        // division and giving the 100ths as integer
+        // 5 / 100 would yield 5
+        // useful for fractions that use a full byte gaining a
+        // precision/granularity of 1/256 instead of only 1/100
+        // Syntax like XXX[div100ths:24:256]XXX
+        if (validIntFromString(arg1, iarg1)
+            && validIntFromString(arg2, iarg2)) {
+          float val = (100.0 * iarg1) / (1.0 * iarg2);
+          char sval[10];
+          sprintf(sval, "%02d", (int)val);
+          replacement = String(sval);
+        }
+      } else  if (cmd_s_lower.equals(F("ord"))) {
+        // Give the ordinal/integer value of the first character of a string
+        // Syntax like let 1,[ord:B]
+        uint8_t uval = arg1.c_str()[0];
+        replacement = String(uval);
+      }
+      // Replace the full command including opening and closing brackets.
+      line.replace(line.substring(startIndex, closingIndex + 1), replacement);
+      /*
+      if (replacement.length() > 0) {
+        addLog(LOG_LEVEL_INFO, String(F("parse_string_commands cmd: ")) + fullCommand + String(F(" -> ")) + replacement);
+      }
+      */
+    }
+  }
+}
+
+
 void replace_EventValueN_Argv(String& line, const String& argString, unsigned int argc)
 {
   String eventvalue;
@@ -304,69 +414,6 @@ void replace_EventValueN_Argv(String& line, const String& argString, unsigned in
     line.replace(eventvalue, tmpParam);
   }
 }
-
-
-void process_internal(String &line, const String& cmd_s) {
-  int startIndex, closingIndex;
-  int iarg1, iarg2;
-  String cmd_s_lower = cmd_s;
-  cmd_s_lower.toLowerCase();
-  while ((startIndex = line.indexOf(cmd_s)) != -1 && (closingIndex = line.indexOf("]", startIndex)) != -1) {
-    String fullCommand = line.substring(startIndex, closingIndex + 1);
-    String arg1, arg2, arg3;
-    String replacement = ""; // maybe just replace with empty to avoid looping?
-    char sval[10];
-
-    iarg1 = fullCommand.indexOf(":") + 1;
-    iarg2 = fullCommand.indexOf(":", iarg1);
-    arg1 = fullCommand.substring(iarg1, iarg2);
-    iarg1 = iarg2 + 1;
-    iarg2 = fullCommand.indexOf(":", iarg1) > 0 ? fullCommand.indexOf(":", iarg1) : fullCommand.indexOf("]", iarg1);
-    if (iarg2 > iarg1) {
-      arg2 = fullCommand.substring(iarg1, iarg2);
-      iarg1 = iarg2 + 1;
-      iarg2 = fullCommand.indexOf(":", iarg1) > 0 ? fullCommand.indexOf(":", iarg1) : fullCommand.indexOf("]", iarg1);
-      if (iarg2 > iarg1) {
-        arg3 = fullCommand.substring(iarg1, iarg2);
-      }
-    }
-
-    if (cmd_s_lower.equals(F("[substring:"))) {
-      // substring arduino style (first char included, last char excluded)
-      // Syntax like 12345[substring:8:12:ANOTHER HELLO WORLD]67890
-      if (validIntFromString(arg1, iarg1)
-          && validIntFromString(arg2, iarg2)) {
-        replacement = arg3.substring(iarg1, iarg2);
-      }
-    } else if (cmd_s_lower.equals(F("[strtol:"))) {
-      // string to long integer (from cstdlib)
-      // Syntax like 1234[strtol:16:38]7890
-      if (validIntFromString(arg1, iarg1)
-          && validIntFromString(arg2, iarg2)) {
-        replacement = String(strtol(arg2.c_str(), NULL, iarg1));
-      }
-    } else if (cmd_s_lower.equals(F("[div100ths:"))) {
-      // division and giving the 100ths as integer
-      // 5 / 100 would yield 5
-      // useful for fractions that use a full byte gaining a
-      // precision/granularity of 1/256 instead of only 1/100
-      // Syntax like XXX[div100ths:24:256]XXX
-      if (validIntFromString(arg1, iarg1)
-          && validIntFromString(arg2, iarg2)) {
-        float val = (100.0 * iarg1) / (1.0 * iarg2);
-        sprintf(sval, "%02d", (int)val);
-        replacement = String(sval);
-      }
-    } else  if (cmd_s_lower.equals(F("[ord:"))) {
-      // Give the ordinal/integer value of the first character of a string
-      // Syntax like let 1,[ord:B]
-      uint8_t uval = arg1.c_str()[0];
-      replacement = String(uval);
-    }
-    line.replace(fullCommand, replacement);
-  }
-}
-
 
 
 void substitute_eventvalue(String& line, const String& event) {
@@ -391,14 +438,6 @@ void substitute_eventvalue(String& line, const String& event) {
       }
     }
   }
-
-  // FIXME TD-er: Maybe use enum here instead of strings?
-
-  // process other markups as well
-  process_internal(line, F("[substring:")); 
-  process_internal(line, F("[strtol:"));  
-  process_internal(line, F("[div100ths:"));  
-  process_internal(line, F("[ord:"));
 }
 
 void parseCompleteNonCommentLine(String& line, String& event, String& log,

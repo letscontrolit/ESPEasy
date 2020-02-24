@@ -1665,9 +1665,10 @@ String parseTemplate_padded(String& tmpString, byte minimal_lineSize, bool useUR
     // This may have taken some time, so call delay()
     delay(0);
   }
-
+  
   // Copy the rest of the string (or all if no replacements were done)
   newString += tmpString.substring(lastStartpos);
+
   checkRAM(F("parseTemplate2"));
 
   // Restore previous loaded taskSettings
@@ -1678,7 +1679,10 @@ String parseTemplate_padded(String& tmpString, byte minimal_lineSize, bool useUR
 
   parseStandardConversions(newString, useURLencode);
 
-    // padding spaces
+  // process other markups as well
+  parse_string_commands(newString); 
+
+  // padding spaces
   while (newString.length() < minimal_lineSize) {
     newString += ' ';
   }
@@ -1761,6 +1765,13 @@ bool findNextValMarkInString(const String& input, int& startpos, int& hashpos, i
   int tmpHashpos = input.indexOf('#', tmpStartpos);
 
   if (tmpHashpos == -1) { return false; }
+  // We found a hash position, check if there is another '[' inbetween.
+  for (int i = tmpStartpos; i < tmpHashpos; ++i) {
+    if (input[i] == '[') {
+      tmpStartpos = i;
+    }
+  }
+
   int tmpEndpos = input.indexOf(']', tmpStartpos);
 
   if (tmpEndpos == -1) { return false; }

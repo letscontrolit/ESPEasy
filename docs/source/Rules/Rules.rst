@@ -382,11 +382,11 @@ Justification
 String Formatting and Interpreting
 ----------------------------------
 
+(added 2020/02/24)
+
 
 Substring
 ^^^^^^^^^
-
-(added 2020/02/24)
 
 It is possible to process sub strings, for example when working with ``%eventvalue%`` in rules.
 
@@ -421,10 +421,29 @@ The output in the log will then be:
  1512415 : Info  : .
 
 
+N.B. it is also possible to concatenate these and refer to ``[taskname#varname]``.
+
+For example (bit useless example, just for illustrative purposes): 
+
+.. code-block:: html
+
+ on DS-1#Temperature do
+   logentry,[substring:0:2:[strtol:16:[substring:0:2:[DS-1#Temperature]][substring:3:5:[DS-1#Temperature]]]]
+ endon
+
+.. code-block:: html
+
+ 221313 : Info  : EVENT: DS-1#Temperature=22.13
+ 221346 : Info  : parse_string_commands cmd: substring:0:2:22.13 -> 22
+ 221347 : Info  : parse_string_commands cmd: substring:3:5:22.13 -> 13
+ 221348 : Info  : parse_string_commands cmd: strtol:16:2213 -> 8723
+ 221349 : Info  : parse_string_commands cmd: substring:0:2:8723 -> 87
+ 221350 : Info  : ACT  : logentry,87
+ 221351 : Info  : Command: logentry
+ 221353 : Info  : 87
+
 strtol
 ^^^^^^
-
-(added 2020/02/24)
 
 Strings or substrings can be converted from just about any base value (binary, octal, hexadecimal) into an integer value.
 
@@ -458,8 +477,6 @@ What we see here is the interpretation of "24.12":
 div100ths
 ^^^^^^^^^
 
-(added 2020/02/24)
-
 Some sensors output data as a fractional notation, but then the fractional part is then not using base 10.
 
 This can be useful for fractions that use a full byte gaining a precision/granularity of 1/256 instead of only 1/100.
@@ -481,10 +498,12 @@ As a use case, imagine the output of ser2net (P020) from an OpenTherm gateway.
 The room temperature in this sample is 19.75 C
 
 Get the last four bytes in packs of two bytes:
+
 * ``[substring:13:15:%eventvalue%]``
 * ``[substring:15:17:%eventvalue%]``
 
 Parsing them to decimal representation each (using a base 16 call to strtol):
+
 * ``[strtol:16:[substring:13:15:%eventvalue%]]``
 * ``[strtol:16:[substring:15:17:%eventvalue%]]``
 
