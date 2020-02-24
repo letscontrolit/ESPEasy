@@ -474,16 +474,6 @@ What we see here is the interpretation of "24.12":
 * 0x24 = 36
 * 0x12 = 18
 
-div100ths
-^^^^^^^^^
-
-Some sensors output data as a fractional notation, but then the fractional part is then not using base 10.
-
-This can be useful for fractions that use a full byte gaining a precision/granularity of 1/256 instead of only 1/100.
-
-Usage: ``[div100ths:<value>:<base>]`` to divide <value> by <base> and multiply by 100.
-
-
 Example use case:
 
 
@@ -507,8 +497,9 @@ Parsing them to decimal representation each (using a base 16 call to strtol):
 * ``[strtol:16:[substring:13:15:%eventvalue%]]``
 * ``[strtol:16:[substring:15:17:%eventvalue%]]``
 
-Last but not least the fraction is not correct, it needs to be divided by 256 (and multiplied by 100) with a call to div100ths:
-* ``[div100ths:[strtol:16:[substring:15:17:%eventvalue%]]:256]``
+Last but not least the fraction is not correct, it needs to be divided by 256 (and multiplied by 100)
+
+* ``[strtol:16:[substring:15:17:%eventvalue%]]*100/255``
 
 Complete rule used to parse this and set a variable in a dummy device:
 
@@ -516,7 +507,7 @@ Complete rule used to parse this and set a variable in a dummy device:
 
  // Room temperature
  on !Serial#T1018* do
-   TaskValueSet 2,1,[strtol:16:[substring:13:15:%eventvalue%]].[div100ths:[strtol:16:[substring:15:17:%eventvalue%]]:256]
+   TaskValueSet 2,1,[strtol:16:[substring:13:15:%eventvalue%]].[strtol:16:[substring:15:17:%eventvalue%]]*100/255
  endon
 
 

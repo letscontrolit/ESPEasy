@@ -362,6 +362,9 @@ void parse_string_commands(String &line) {
             && validIntFromString(arg2, iarg2)) {
           replacement = String(strtol(arg2.c_str(), NULL, iarg1));
         }
+        // FIXME TD-er: removed for now as it is too specific.
+        // Maybe introduce one using 2 or 3 parameters ([div:100:255:3] for *100/255 3 decimals)
+        /*
       } else if (cmd_s_lower.equals(F("div100ths"))) {
         // division and giving the 100ths as integer
         // 5 / 100 would yield 5
@@ -375,6 +378,7 @@ void parse_string_commands(String &line) {
           sprintf(sval, "%02d", (int)val);
           replacement = String(sval);
         }
+        */
       } else  if (cmd_s_lower.equals(F("ord"))) {
         // Give the ordinal/integer value of the first character of a string
         // Syntax like let 1,[ord:B]
