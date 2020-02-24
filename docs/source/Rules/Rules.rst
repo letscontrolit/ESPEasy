@@ -35,6 +35,17 @@ After rebooting the ESP, the LED will start blinking 10 seconds on then 10 secon
 
 Enjoy.
 
+
+Special Notations
+-----------------
+
+* ``[...#...]`` Referring to task variable
+* ``%...%`` Referring to system variable
+* ``{...:...}`` Referring to String conversions
+* Quotes (single, double or back quotes) Marking begin and end of a command parameter
+
+
+
 Syntax
 ------
 
@@ -384,13 +395,17 @@ String Formatting and Interpreting
 
 (added 2020/02/24)
 
+String operator commands described here can be recognized by their wrapping curly braces.
+
+This helps recognize task values (``[taskname#varname]``) in these commands.
+
 
 Substring
 ^^^^^^^^^
 
 It is possible to process sub strings, for example when working with ``%eventvalue%`` in rules.
 
-Usage: ``[substring:<startpos>:<endpos>:<string>]``
+Usage: ``{substring:<startpos>:<endpos>:<string>}``
 
 The position arguments are the same as in Arduino ``String::substring`` , meaning the endpos is 1 position further than the last character you need.
 
@@ -399,9 +414,9 @@ For example:
 .. code-block:: html
  
  on DS-1#Temperature do
-   logentry,[substring:0:1:%eventvalue%]
-   logentry,[substring:1:2:%eventvalue%]
-   logentry,[substring:2:3:%eventvalue%]
+   logentry,{substring:0:1:%eventvalue%}
+   logentry,{substring:1:2:%eventvalue%}
+   logentry,{substring:2:3:%eventvalue%}
  endon
 
 The ``%eventvalue%`` may contain the value "23.06"
@@ -421,14 +436,14 @@ The output in the log will then be:
  1512415 : Info  : .
 
 
-N.B. it is also possible to concatenate these and refer to ``[taskname#varname]``.
+N.B. it is also possible to concatenate these and refer to ``{taskname#varname}``.
 
 For example (bit useless example, just for illustrative purposes): 
 
 .. code-block:: html
 
  on DS-1#Temperature do
-   logentry,[substring:0:2:[strtol:16:[substring:0:2:[DS-1#Temperature]][substring:3:5:[DS-1#Temperature]]]]
+   logentry,{substring:0:2:{strtol:16:{substring:0:2:[DS-1#Temperature]}{substring:3:5:[DS-1#Temperature]}}}
  endon
 
 .. code-block:: html
@@ -447,7 +462,7 @@ strtol
 
 Strings or substrings can be converted from just about any base value (binary, octal, hexadecimal) into an integer value.
 
-Usage: ``[strtol:16:<string>]``  to convert HEX (base 16) into an integer value.
+Usage: ``{strtol:16:<string>}``  to convert HEX (base 16) into an integer value.
 
 
 Example of extracting sub strings from a value and interpreting as if they were HEX values:
@@ -455,8 +470,8 @@ Example of extracting sub strings from a value and interpreting as if they were 
 .. code-block:: html
 
  on DS-1#Temperature do
-   logentry,[strtol:16:%eventvalue%]
-   logentry,[strtol:16:[substring:3:5:%eventvalue%]]
+   logentry,{strtol:16:%eventvalue%}
+   logentry,{strtol:16:{substring:3:5:%eventvalue%}}
  endon
 
 .. code-block:: html
@@ -489,17 +504,17 @@ The room temperature in this sample is 19.75 C
 
 Get the last four bytes in packs of two bytes:
 
-* ``[substring:13:15:%eventvalue%]``
-* ``[substring:15:17:%eventvalue%]``
+* ``{substring:13:15:%eventvalue%}``
+* ``{substring:15:17:%eventvalue%}``
 
 Parsing them to decimal representation each (using a base 16 call to strtol):
 
-* ``[strtol:16:[substring:13:15:%eventvalue%]]``
-* ``[strtol:16:[substring:15:17:%eventvalue%]]``
+* ``{strtol:16:{substring:13:15:%eventvalue%}}``
+* ``{strtol:16:{substring:15:17:%eventvalue%}}``
 
 Last but not least the fraction is not correct, it needs to be divided by 256 (and multiplied by 100)
 
-* ``[strtol:16:[substring:15:17:%eventvalue%]]*100/255``
+* ``{strtol:16:{substring:15:17:%eventvalue%}}*100/255``
 
 Complete rule used to parse this and set a variable in a dummy device:
 
@@ -507,7 +522,7 @@ Complete rule used to parse this and set a variable in a dummy device:
 
  // Room temperature
  on !Serial#T1018* do
-   TaskValueSet 2,1,[strtol:16:[substring:13:15:%eventvalue%]].[strtol:16:[substring:15:17:%eventvalue%]]*100/255
+   TaskValueSet 2,1,{strtol:16:{substring:13:15:%eventvalue%}}.{strtol:16:{substring:15:17:%eventvalue%}}*100/255
  endon
 
 
@@ -516,15 +531,15 @@ ord
 
 Give the ordinal/integer value of the first character of a string.  (e.g. ASCII integer value)
 
-Usage: ``[ord:<string>]``
+Usage: ``{ord:<string>}``
 
 For example:
 
 .. code-block:: html
 
  on DS-1#Temperature do
-   logentry,[ord:A]   // ASCII value of 'A'
-   logentry,[ord:[substring:2:3:%eventvalue%]]  // ASCII value of 3rd character of %eventvalue%
+   logentry,{ord:A}   // ASCII value of 'A'
+   logentry,{ord:{substring:2:3:%eventvalue%}}  // ASCII value of 3rd character of %eventvalue%
  endon
 
 

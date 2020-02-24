@@ -294,6 +294,7 @@ bool get_next_inner_bracket(const String& line, int& startIndex, int& closingInd
   char openingBracket = closingIndex;
   switch (closingBracket) {
     case ']': openingBracket = '['; break;
+    case '}': openingBracket = '{'; break;
     case ')': openingBracket = '('; break;
     default:
       // unknown bracket type
@@ -330,7 +331,7 @@ bool get_next_argument(const String& fullCommand, int& index, String& argument, 
 void parse_string_commands(String &line) {
   int startIndex, closingIndex;
 
-  while (get_next_inner_bracket(line, startIndex, closingIndex, ']')) {
+  while (get_next_inner_bracket(line, startIndex, closingIndex, '}')) {
     // Command without opening and closing brackets.
     String fullCommand = line.substring(startIndex + 1, closingIndex);
     int tmpIndex = 0;
