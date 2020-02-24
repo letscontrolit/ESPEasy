@@ -1,4 +1,5 @@
 #include "src/Globals/CPlugins.h"
+#include "ESPEasy_plugindefs.h"
 
 
 /*********************************************************************************************\
@@ -11,7 +12,7 @@ String getControllerParameterName(protocolIndex_t ProtocolIndex, byte parameterI
     EventStruct tmpEvent;
     tmpEvent.idx = parameterIdx;
 
-    if (CPluginCall(ProtocolIndex, CPLUGIN_GET_PROTOCOL_DISPLAY_NAME, &tmpEvent, name)) {
+    if (CPluginCall(ProtocolIndex, CPlugin::Function::CPLUGIN_GET_PROTOCOL_DISPLAY_NAME, &tmpEvent, name)) {
       // Found an alternative name for it.
       isAlternative = true;
       return name;
@@ -38,8 +39,11 @@ String getControllerParameterName(protocolIndex_t ProtocolIndex, byte parameterI
     case CONTROLLER_LWT_TOPIC:                name = F("Controller LWT Topic");   break;
     case CONTROLLER_LWT_CONNECT_MESSAGE:      name = F("LWT Connect Message");    break;
     case CONTROLLER_LWT_DISCONNECT_MESSAGE:   name = F("LWT Disconnect Message"); break;
+    case CONTROLLER_SEND_LWT:                 name = F("Send LWT to broker");     break;
+    case CONTROLLER_WILL_RETAIN:              name = F("Will Retain");            break;
+    case CONTROLLER_CLEAN_SESSION:            name = F("Clean Session");          break;
     case CONTROLLER_TIMEOUT:                  name = F("Client Timeout");         break;
-    case CONTROLLER_SAMPLE_SET_INITIATOR:     name = F("Sample Set Initiator");     break;
+    case CONTROLLER_SAMPLE_SET_INITIATOR:     name = F("Sample Set Initiator");   break;
 
     case CONTROLLER_ENABLED:
 
@@ -174,6 +178,15 @@ void addControllerParameterForm(const ControllerSettingsStruct& ControllerSettin
     case CONTROLLER_LWT_DISCONNECT_MESSAGE:
       addFormTextBox(displayName, internalName, ControllerSettings.LWTMessageDisconnect, sizeof(ControllerSettings.LWTMessageDisconnect) - 1);
       break;
+    case CONTROLLER_SEND_LWT:
+      addFormCheckBox(displayName, internalName, ControllerSettings.mqtt_sendLWT());
+      break;
+    case CONTROLLER_WILL_RETAIN:
+      addFormCheckBox(displayName, internalName, ControllerSettings.mqtt_willRetain());
+      break;
+    case CONTROLLER_CLEAN_SESSION:
+      addFormCheckBox(displayName, internalName, ControllerSettings.mqtt_cleanSession());
+      break;
     case CONTROLLER_TIMEOUT:
       addFormNumericBox(displayName, internalName, ControllerSettings.ClientTimeout, 10, CONTROLLER_CLIENTTIMEOUT_MAX);
       addUnit(F("ms"));
@@ -257,6 +270,15 @@ void saveControllerParameterForm(ControllerSettingsStruct& ControllerSettings, b
       break;
     case CONTROLLER_LWT_DISCONNECT_MESSAGE:
       strncpy_webserver_arg(ControllerSettings.LWTMessageDisconnect, internalName);
+      break;
+    case CONTROLLER_SEND_LWT:
+      ControllerSettings.mqtt_sendLWT(isFormItemChecked(internalName));
+      break;
+    case CONTROLLER_WILL_RETAIN:
+      ControllerSettings.mqtt_willRetain(isFormItemChecked(internalName));
+      break;
+    case CONTROLLER_CLEAN_SESSION:
+      ControllerSettings.mqtt_cleanSession(isFormItemChecked(internalName));
       break;
     case CONTROLLER_TIMEOUT:
       ControllerSettings.ClientTimeout = getFormItemInt(internalName, ControllerSettings.ClientTimeout);

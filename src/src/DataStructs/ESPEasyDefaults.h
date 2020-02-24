@@ -65,6 +65,9 @@
 #ifndef DEFAULT_ADMIN_USERNAME
 #define DEFAULT_ADMIN_USERNAME  "admin"
 #endif
+#ifndef DEFAULT_ADMIN_PASS
+#define DEFAULT_ADMIN_PASS     ""
+#endif
 
 #ifndef DEFAULT_WIFI_CONNECTION_TIMEOUT
 #define DEFAULT_WIFI_CONNECTION_TIMEOUT  10000  // minimum timeout in ms for WiFi to be connected.
@@ -100,6 +103,14 @@
 #ifndef DEFAULT_CONTROLLER_ENABLED
 #define DEFAULT_CONTROLLER_ENABLED   false     // Enable default controller by default
 #endif
+
+#ifndef DEFAULT_CONTROLLER_USER
+#define DEFAULT_CONTROLLER_USER    ""                                       // Default controller user
+#endif
+#ifndef DEFAULT_CONTROLLER_PASS
+#define DEFAULT_CONTROLLER_PASS    ""                                       // Default controller Password
+#endif
+
 // using a default template, you also need to set a DEFAULT PROTOCOL to a suitable MQTT protocol !
 #ifndef DEFAULT_PUB
 #define DEFAULT_PUB         "sensors/espeasy/%sysname%/%tskname%/%valname%" // Enter your pub

@@ -8,6 +8,7 @@
 // This task reads data from the MQTT Import input stream and saves the value
 
 #include "src/Globals/MQTT.h"
+#include "src/Globals/CPlugins.h"
 #include "src/Globals/Plugins.h"
 
 #define PLUGIN_037
@@ -406,8 +407,8 @@ boolean MQTTConnect_037()
   if (MQTTclient_037 == NULL) return false;
   String clientid = getClientName();
   // @ToDo TD-er: Plugin allows for more than one MQTT controller, but we're now using only the first enabled one.
-  int enabledMqttController = firstEnabledMQTTController();
-  if (enabledMqttController < 0) {
+  controllerIndex_t enabledMqttController = firstEnabledMQTT_ControllerIndex();
+  if (!validControllerIndex(enabledMqttController)) {
     // No enabled MQTT controller
     return false;
   }

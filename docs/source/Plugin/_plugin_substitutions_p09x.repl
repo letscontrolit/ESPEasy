@@ -1,0 +1,11 @@
+.. |P090_name| replace:: :cyan:`CCS811 TVOC/eCO2`
+.. |P090_type| replace:: :cyan:`Gases`
+.. |P090_typename| replace:: :cyan:`Gases - CCS811 TVOC/eCO2`
+.. |P090_status| replace:: :yellow:`TESTING`
+.. |P090_github| replace:: P090_CCS811.ino
+.. _P090_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P090_CCS811.ino
+.. |P090_usedby| replace:: `.`
+.. |P090_shortinfo| replace:: `.`
+.. |P090_maintainer| replace:: `TD-er`
+.. |P090_compileinfo| replace:: `.`
+.. |P090_usedlibraries| replace:: `.`

@@ -36,7 +36,7 @@ void handle_config() {
     if (strcmp(Settings.Name, name.c_str()) != 0) {
       addLog(LOG_LEVEL_INFO, F("Unit Name changed."));
 
-      if (CPluginCall(CPLUGIN_GOT_INVALID, 0)) { // inform controllers that the old name will be invalid from now on.
+      if (CPluginCall(CPlugin::Function::CPLUGIN_GOT_INVALID, 0)) { // inform controllers that the old name will be invalid from now on.
 #ifdef USES_MQTT
         MQTTDisconnect();                        // disconnect form MQTT Server if invalid message was sent succesfull.
 #endif // USES_MQTT

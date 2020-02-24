@@ -108,14 +108,13 @@ bool safe_strncpy(char       *dest,
 
 void rulesProcessing(String& event);
 void setIntervalTimer(unsigned long id);
-byte getNotificationProtocolIndex(byte Number);
 void schedule_notification_event_timer(byte NotificationProtocolIndex, byte Function, struct EventStruct *event);
 
 #ifdef USES_MQTT
 
 // void runPeriodicalMQTT();
 // void updateMQTTclient_connected();
-int firstEnabledMQTTController();
+controllerIndex_t firstEnabledMQTT_ControllerIndex();
 // String getMQTT_state();
 void callback(char        *c_topic,
               byte        *b_payload,
@@ -124,7 +123,7 @@ void MQTTDisconnect();
 bool MQTTConnect(controllerIndex_t controller_idx);
 bool MQTTCheck(controllerIndex_t controller_idx);
 void schedule_all_tasks_using_MQTT_controller();
-bool MQTTpublish(controllerIndex_t controller_idx, const char *topic, const char *payload, boolean retained);
+bool MQTTpublish(controllerIndex_t controller_idx, const char *topic, const char *payload, bool retained);
 #endif // ifdef USES_MQTT
 
 

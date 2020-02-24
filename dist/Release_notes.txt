@@ -1,4 +1,58 @@
 -------------------------------------------------
+Changes in release mega-20200222 (since mega-20200204)
+-------------------------------------------------
+
+Release date: za 22 feb 2020  0:06:14 CET
+
+Gijs Noorlander (26):
+      [RN2483] Fix LoRa packed encoding
+      [Custom.h] Add some password defaults for factory default settings
+      [RN2483] Fix proper reset and autobaud of RN2483 LoRa module
+      [RN2483] Make calls non blocking using state machine
+      [Controller] Add CPLUGIN_FIFTY_PER_SECOND function
+      [Controller] Make more controller parameters optional for a controller
+      [Notifiers] Make NPlugin functions into enum-class
+      [Controllers] Make CPlugin functions in to enum class
+      [RN2483] Fix OTAA and ABP join issues
+      [RN2483] Make OTAA join work async
+      [Controllers] Add the new 10/s and 50/s calls for controllers time stats
+      [RN2483] Status bits depend on firmware rev. number
+      [RN2483] Move functions and members to helper class.
+      [RN2483] Add some example code for new RN2483 library
+      [Controller] Fix connection failure counts (#2893)
+      [MQTT controller] Add checks & --connectionFailures on publish success
+      [Controllers] Make sure forward declaration of do_process_xx_delay_queue is on single line
+      [GPIO settings] Allow to save changing GPIO pin to "not used"
+      [JSON] Add lowest TTL to highest level in JSON output
+      [RN2483] Quick work-around to force SW serial for LoRa module
+      [Generic HTTP] Fix URL encoding for variable replacement (#2878)
+      Add some function callbacks to allow parse plugins#2888
+      [JSON] endpoint "buildinfo" declares plugins twice #2836
+      Sync ESPEasySerial library + increase version to 1.0.14
+      [JSON] Fix pinstates_json for empty list
+      [MQTT] Make clean session and LWT optional for ThingSpeak MQTT
+
+Grovkillen (1):
+      [docs] added rules example + fixed S11 (P052) links
+
+TD-er (5):
+      [Controller] Fix controller name not found
+      [RN2483] Fix build issues
+      Fix compile issue in ArduinoUnoNano-downlink.ino example
+      [RN2483] Small fixes in display strings and library examples
+      [WiFi] Increase delay after turning on WiFi
+
+Toni (4):
+      HeatpumpIR 1.0.11 update, P088_HeatpumpIR support for Mitsubishi MSC and Mitsubishi Heavy FDTC
+      Update _P088_HeatpumpIR.ino, include files in alphabetical order
+      P088_HeatpumpIR to use HeatpumpIRFactory (#2884)
+      P088_HeatpumpIR review fixes (#2884)
+
+jimmys01 (1):
+      Ir-Update
+
+
+-------------------------------------------------
 Changes in release mega-20200204 (since mega-20191208)
 -------------------------------------------------
 

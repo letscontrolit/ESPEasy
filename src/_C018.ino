@@ -15,6 +15,11 @@
 #include <rn2xx3.h>
 #include <ESPeasySerial.h>
 #include "src/Globals/CPlugins.h"
+#include "src/Globals/Protocol.h"
+#include "src/ControllerQueue/C018_queue_element.h"
+#include "ESPEasy_plugindefs.h"
+#include "ESPEasy_fdwdecl.h"
+#include "_CPlugin_Helper.h"
 
 struct C018_data_struct {
   C018_data_struct() : C018_easySerial(nullptr), myLora(nullptr) {}
@@ -33,19 +38,14 @@ struct C018_data_struct {
       delete C018_easySerial;
       C018_easySerial = nullptr;
     }
+    cacheDevAddr     = "";
     cacheHWEUI       = "";
     cacheSysVer      = "";
     autobaud_success = false;
-    if (resetPin != -1) {
-      pinMode(resetPin, OUTPUT); 
-      digitalWrite(resetPin, LOW);
-      delay(500);
-      digitalWrite(resetPin, HIGH);
-      delay(500);
-    }
   }
 
-  bool init(const int8_t serial_rx, const int8_t serial_tx, unsigned long baudrate, bool joinIsOTAA, taskIndex_t sampleSet_Initiator, int8_t reset_pin) {
+  bool init(const int8_t serial_rx, const int8_t serial_tx, unsigned long baudrate,
+            bool joinIsOTAA, taskIndex_t sampleSet_Initiator, int8_t reset_pin) {
     if ((serial_rx < 0) || (serial_tx < 0)) {
       // Both pins are needed, or else no serial possible
       return false;
@@ -58,32 +58,62 @@ struct C018_data_struct {
       notChanged &= C018_easySerial->getRxPin() == serial_rx;
       notChanged &= C018_easySerial->getTxPin() == serial_tx;
       notChanged &= C018_easySerial->getBaudRate() == baudrate;
+      notChanged &= myLora->useOTAA() == joinIsOTAA;
 
       if (notChanged) { return true; }
     }
     resetPin = reset_pin;
 
     reset();
-    C018_easySerial = new ESPeasySerial(serial_rx, serial_tx);
+    // FIXME TD-er: Make force SW serial a proper setting.
+    C018_easySerial = new ESPeasySerial(serial_rx, serial_tx, false, 64, true);
 
     if (C018_easySerial != nullptr) {
+      if (resetPin == -1) {
+        pinMode(serial_tx, OUTPUT);
+        digitalWrite(serial_tx, LOW);
+      } else {
+        pinMode(resetPin, OUTPUT);
+        digitalWrite(resetPin, LOW);
+        delay(50);
+        digitalWrite(resetPin, HIGH);
+      }
+
       C018_easySerial->begin(baudrate);
-      myLora           = new rn2xx3(*C018_easySerial);
+
       // wakeUP_RN2483 and set data rate
       // Delay must be longer than specified in the datasheet for firmware 1.0.3
       // See: https://www.thethingsnetwork.org/forum/t/rn2483a-problems-no-serial-communication/7866/36?u=td-er
-      pinMode(serial_tx, OUTPUT); 
-      digitalWrite(serial_tx, LOW); // Send a break to the RN2483
       delay(26);
-      digitalWrite(serial_tx, HIGH);
-      autobaud_success = myLora->autobaud();
+      C018_easySerial->write(0x55);
+      C018_easySerial->println();
+      delay(100);
+
+      myLora = new rn2xx3(*C018_easySerial);
+      myLora->setAsyncMode(true);
+
+      String response = myLora->sysver();
+
+      // we could use sendRawCommand(F("sys get ver")); here
+      //      C018_easySerial->println(F("sys get ver"));
+      //      String response = C018_easySerial->readStringUntil('\n');
+      autobaud_success = response.length() > 10;
+
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        String log = F("C018 AutoBaud: ");
+        log += response;
+        log += F(" status: ");
+        log += myLora->sendRawCommand(F("mac get status"));
+        addLog(LOG_LEVEL_INFO, log);
+        C018_logError(F("autobaud check"));
+      }
       myLora->setLastUsedJoinMode(joinIsOTAA);
     }
     return isInitialized();
   }
 
   bool isInitialized() const {
-    return (C018_easySerial != nullptr) && (myLora != nullptr) /* && autobaud_success */;
+    return (C018_easySerial != nullptr) && (myLora != nullptr)  && autobaud_success;
   }
 
   bool hasJoined() const {
@@ -93,51 +123,73 @@ struct C018_data_struct {
 
   bool useOTAA() const {
     if (!isInitialized()) { return true; }
-    return myLora->useOTAA();
+    bool res = myLora->useOTAA();
+    C018_logError(F("useOTA()"));
+    return res;
   }
 
   bool txUncnfBytes(const byte *data, uint8_t size, uint8_t port) {
-    if (!hasJoined()) { return false; }
-    return myLora->txBytes(data, size, port) != TX_FAIL;
+    bool res = myLora->txBytes(data, size, port) != RN2xx3_datatypes::TX_return_type::TX_FAIL;
+
+    C018_logError(F("txUncnfBytes()"));
+    return res;
   }
 
   bool txHexBytes(const String& data, uint8_t port) {
-    if (!hasJoined()) { return false; }
-    return myLora->txHexBytes(data, port) != TX_FAIL;
+    bool res = myLora->txHexBytes(data, port) != RN2xx3_datatypes::TX_return_type::TX_FAIL;
+
+    C018_logError(F("txHexBytes()"));
+    return res;
   }
 
   bool txUncnf(const String& data, uint8_t port) {
-    if (!hasJoined()) { return false; }
-    return myLora->tx(data, port) != TX_FAIL;
+    bool res = myLora->tx(data, port) != RN2xx3_datatypes::TX_return_type::TX_FAIL;
+
+    C018_logError(F("txUncnf()"));
+    return res;
   }
 
-  bool setFrequencyPlan(FREQ_PLAN plan) {
+  bool setFrequencyPlan(RN2xx3_datatypes::Freq_plan plan) {
     if (!isInitialized()) { return false; }
-    return myLora->setFrequencyPlan(plan);
+    bool res = myLora->setFrequencyPlan(plan);
+    C018_logError(F("setFrequencyPlan()"));
+    return res;
   }
 
   bool setSF(uint8_t sf) {
     if (!isInitialized()) { return false; }
-    return myLora->setSF(sf);
+    bool res = myLora->setSF(sf);
+    C018_logError(F("setSF()"));
+    return res;
   }
 
   bool initOTAA(const String& AppEUI = "", const String& AppKey = "", const String& DevEUI = "") {
-    if (!isInitialized()) { return false; }
+    if (myLora == nullptr) { return false; }
     bool success = myLora->initOTAA(AppEUI, AppKey, DevEUI);
+    C018_logError(F("initOTAA()"));
     updateCacheOnInit();
     return success;
   }
 
   bool initABP(const String& addr, const String& AppSKey, const String& NwkSKey) {
-    if (!isInitialized()) { return false; }
+    if (myLora == nullptr) { return false; }
     bool success = myLora->initABP(addr, AppSKey, NwkSKey);
+    C018_logError(F("initABP()"));
     updateCacheOnInit();
     return success;
   }
 
   String sendRawCommand(const String& command) {
     if (!isInitialized()) { return ""; }
-    return myLora->sendRawCommand(command);
+
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      String log = F("sendRawCommand: ");
+      log += command;
+      addLog(LOG_LEVEL_INFO, log);
+    }
+    String res = myLora->sendRawCommand(command);
+    C018_logError(F("sendRawCommand()"));
+    return res;
   }
 
   int getVbat() {
@@ -145,19 +197,21 @@ struct C018_data_struct {
     return myLora->getVbat();
   }
 
-  String peekLastErrorInvalidParam() {
+  String peekLastError() {
     if (!isInitialized()) { return ""; }
-    return myLora->peekLastErrorInvalidParam();
+    return myLora->peekLastError();
   }
 
-  String getLastErrorInvalidParam() {
+  String getLastError() {
     if (!isInitialized()) { return ""; }
-    return myLora->getLastErrorInvalidParam();
+    return myLora->getLastError();
   }
 
   String getDataRate() {
     if (!isInitialized()) { return ""; }
-    return myLora->getDataRate();
+    String res = myLora->getDataRate();
+    C018_logError(F("getDataRate()"));
+    return res;
   }
 
   int getRSSI() {
@@ -167,17 +221,26 @@ struct C018_data_struct {
 
   uint32_t getRawStatus() {
     if (!isInitialized()) { return 0; }
-    return myLora->Status.getRawStatus();
+    return myLora->getStatus().getRawStatus();
+  }
+
+  RN2xx3_status getStatus() const {
+    if (!isInitialized()) { return RN2xx3_status(); }
+    return myLora->getStatus();
   }
 
   bool getFrameCounters(uint32_t& dnctr, uint32_t& upctr) {
     if (!isInitialized()) { return false; }
-    return myLora->getFrameCounters(dnctr, upctr);
+    bool res = myLora->getFrameCounters(dnctr, upctr);
+    C018_logError(F("getFrameCounters()"));
+    return res;
   }
 
   bool setFrameCounters(uint32_t dnctr, uint32_t upctr) {
     if (!isInitialized()) { return false; }
-    return myLora->setFrameCounters(dnctr, upctr);
+    bool res = myLora->setFrameCounters(dnctr, upctr);
+    C018_logError(F("setFrameCounters()"));
+    return res;
   }
 
   // Cached data, only changing occasionally.
@@ -208,7 +271,9 @@ struct C018_data_struct {
     return cacheSysVer;
   }
 
-  uint8_t getSampleSetCount() const { return sampleSetCounter; }
+  uint8_t getSampleSetCount() const {
+    return sampleSetCounter;
+  }
 
   uint8_t getSampleSetCount(taskIndex_t taskIndex) {
     if (sampleSetInitiator == taskIndex)
@@ -218,11 +283,18 @@ struct C018_data_struct {
     return sampleSetCounter;
   }
 
+  void async_loop() {
+    if (isInitialized()) {
+      myLora->async_loop();
+    }
+  }
 
 private:
 
-  void C018_logError(const String& command) {
-    String error = myLora->peekLastErrorInvalidParam();
+  void C018_logError(const String& command) const {
+    String error = myLora->peekLastError();
+
+    //    String error = myLora->getLastError();
 
     if (error.length() > 0) {
       String log = F("RN2384: ");
@@ -240,7 +312,7 @@ private:
       return;
     }
 
-    if (myLora->Status.Joined)
+    if (myLora->getStatus().Joined)
     {
       cacheDevAddr = myLora->sendRawCommand(F("mac get devaddr"));
 
@@ -255,10 +327,10 @@ private:
   String         cacheDevAddr;
   String         cacheHWEUI;
   String         cacheSysVer;
-  uint8_t        sampleSetCounter = 0;
+  uint8_t        sampleSetCounter   = 0;
   taskIndex_t    sampleSetInitiator = INVALID_TASK_INDEX;
-  int8_t         resetPin = -1;
-  bool           autobaud_success = false;
+  int8_t         resetPin           = -1;
+  bool           autobaud_success   = false;
 } C018_data;
 
 
@@ -295,7 +367,7 @@ struct C018_ConfigStruct
     txpin         = 14;
     resetpin      = -1;
     sf            = 7;
-    frequencyplan = TTN_EU;
+    frequencyplan = RN2xx3_datatypes::Freq_plan::TTN_EU;
     joinmethod    = C018_USE_OTAA;
   }
 
@@ -308,18 +380,18 @@ struct C018_ConfigStruct
   int8_t        txpin                                           = 14;
   int8_t        resetpin                                        = -1;
   uint8_t       sf                                              = 7;
-  uint8_t       frequencyplan                                   = TTN_EU;
+  uint8_t       frequencyplan                                   = RN2xx3_datatypes::Freq_plan::TTN_EU;
   uint8_t       joinmethod                                      = C018_USE_OTAA;
 };
 
 
-bool CPlugin_018(byte function, struct EventStruct *event, String& string)
+bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& string)
 {
   bool success = false;
 
   switch (function)
   {
-    case CPLUGIN_PROTOCOL_ADD:
+    case CPlugin::Function::CPLUGIN_PROTOCOL_ADD:
     {
       Protocol[++protocolCount].Number       = CPLUGIN_ID_018;
       Protocol[protocolCount].usesMQTT       = false;
@@ -328,17 +400,19 @@ bool CPlugin_018(byte function, struct EventStruct *event, String& string)
       Protocol[protocolCount].defaultPort    = 1;
       Protocol[protocolCount].usesID         = true;
       Protocol[protocolCount].usesHost       = false;
+      Protocol[protocolCount].usesCheckReply = false;
+      Protocol[protocolCount].usesTimeout    = false;
       Protocol[protocolCount].usesSampleSets = true;
       break;
     }
 
-    case CPLUGIN_GET_DEVICENAME:
+    case CPlugin::Function::CPLUGIN_GET_DEVICENAME:
     {
       string = F(CPLUGIN_NAME_018);
       break;
     }
 
-    case CPLUGIN_WEBFORM_SHOW_HOST_CONFIG:
+    case CPlugin::Function::CPLUGIN_WEBFORM_SHOW_HOST_CONFIG:
     {
       if (C018_data.isInitialized()) {
         string  = F("Dev addr: ");
@@ -350,7 +424,13 @@ bool CPlugin_018(byte function, struct EventStruct *event, String& string)
       break;
     }
 
-    case CPLUGIN_INIT:
+    case CPlugin::Function::CPLUGIN_EXIT:
+    {
+      C018_data.reset();
+      break;
+    }
+
+    case CPlugin::Function::CPLUGIN_INIT:
     {
       MakeControllerSettings(ControllerSettings);
       LoadControllerSettings(event->ControllerIndex, ControllerSettings);
@@ -360,11 +440,11 @@ bool CPlugin_018(byte function, struct EventStruct *event, String& string)
       LoadCustomControllerSettings(event->ControllerIndex, (byte *)&customConfig, sizeof(customConfig));
       customConfig.validate();
 
-      C018_data.init(customConfig.rxpin, customConfig.txpin, customConfig.baudrate, 
+      C018_data.init(customConfig.rxpin, customConfig.txpin, customConfig.baudrate,
                      customConfig.joinmethod == C018_USE_OTAA,
                      ControllerSettings.SampleSetInitiator, customConfig.resetpin);
 
-      C018_data.setFrequencyPlan(static_cast<FREQ_PLAN>(customConfig.frequencyplan));
+      C018_data.setFrequencyPlan(static_cast<RN2xx3_datatypes::Freq_plan>(customConfig.frequencyplan));
 
       if (customConfig.joinmethod == C018_USE_OTAA) {
         String AppEUI = SecuritySettings.ControllerUser[event->ControllerIndex];
@@ -380,7 +460,7 @@ bool CPlugin_018(byte function, struct EventStruct *event, String& string)
       break;
     }
 
-    case CPLUGIN_WEBFORM_LOAD:
+    case CPlugin::Function::CPLUGIN_WEBFORM_LOAD:
     {
       C018_ConfigStruct customConfig;
 
@@ -429,7 +509,9 @@ bool CPlugin_018(byte function, struct EventStruct *event, String& string)
       {
         byte   choice     = customConfig.frequencyplan;
         String options[4] = { F("SINGLE_CHANNEL_EU"), F("TTN_EU"), F("TTN_US"), F("DEFAULT_EU") };
-        int    values[4]  = { SINGLE_CHANNEL_EU, TTN_EU, TTN_US, DEFAULT_EU };
+        int    values[4] =
+        { RN2xx3_datatypes::Freq_plan::SINGLE_CHANNEL_EU, RN2xx3_datatypes::Freq_plan::TTN_EU, RN2xx3_datatypes::Freq_plan::TTN_US,
+          RN2xx3_datatypes::Freq_plan::DEFAULT_EU };
 
         addFormSelector(F("Frequency Plan"), F("frequencyplan"), 4, options, values, NULL, choice, false);
       }
@@ -474,18 +556,28 @@ bool CPlugin_018(byte function, struct EventStruct *event, String& string)
       }
 
       addRowLabel(F("Last Command Error"));
-      addHtml(C018_data.getLastErrorInvalidParam());
+      addHtml(C018_data.getLastError());
 
       addRowLabel(F("Sample Set Counter"));
       addHtml(String(C018_data.getSampleSetCount()));
 
-      addRowLabel(F("Status"));
-      addHtml(String(C018_data.getRawStatus()));
+      {
+        RN2xx3_status status = C018_data.getStatus();
+
+        addRowLabel(F("Status RAW value"));
+        addHtml(String(status.getRawStatus()));
+
+        addRowLabel(F("Activation Status"));
+        addHtml(String(status.Joined));
+
+        addRowLabel(F("Silent Immediately"));
+        addHtml(String(status.SilentImmediately));
+      }
 
 
       break;
     }
-    case CPLUGIN_WEBFORM_SAVE:
+    case CPlugin::Function::CPLUGIN_WEBFORM_SAVE:
     {
       C018_ConfigStruct customConfig;
       customConfig.reset();
@@ -510,7 +602,7 @@ bool CPlugin_018(byte function, struct EventStruct *event, String& string)
       break;
     }
 
-    case CPLUGIN_GET_PROTOCOL_DISPLAY_NAME:
+    case CPlugin::Function::CPLUGIN_GET_PROTOCOL_DISPLAY_NAME:
     {
       success = true;
 
@@ -522,7 +614,7 @@ bool CPlugin_018(byte function, struct EventStruct *event, String& string)
           string = F("AppKey");
           break;
         case CONTROLLER_TIMEOUT:
-          string = F("Gateway Timeout");
+          string = F("Module Timeout");
           break;
         case CONTROLLER_PORT:
           string = F("Port");
@@ -533,7 +625,7 @@ bool CPlugin_018(byte function, struct EventStruct *event, String& string)
       break;
     }
 
-    case CPLUGIN_PROTOCOL_SEND:
+    case CPlugin::Function::CPLUGIN_PROTOCOL_SEND:
     {
       success = C018_DelayHandler.addToQueue(
         C018_queue_element(event, C018_data.getSampleSetCount(event->TaskIndex)));
@@ -542,44 +634,54 @@ bool CPlugin_018(byte function, struct EventStruct *event, String& string)
       break;
     }
 
-    case CPLUGIN_PROTOCOL_RECV:
+    case CPlugin::Function::CPLUGIN_PROTOCOL_RECV:
     {
-
-
       // FIXME TD-er: WHen should this be scheduled?
-      //schedule_controller_event_timer(event->ProtocolIndex, CPLUGIN_PROTOCOL_RECV, event);
+      // schedule_controller_event_timer(event->ProtocolIndex, CPlugin::Function::CPLUGIN_PROTOCOL_RECV, event);
       break;
     }
 
-    case CPLUGIN_TEN_PER_SECOND:
+    case CPlugin::Function::CPLUGIN_TEN_PER_SECOND:
     {
+      C018_data.async_loop();
+
       // FIXME TD-er: Handle reading error state or return values.
       break;
     }
 
-    case CPLUGIN_FLUSH:
+    case CPlugin::Function::CPLUGIN_FLUSH:
     {
       process_c018_delay_queue();
       delay(0);
       break;
     }
+
+    default:
+      break;
   }
   return success;
 }
 
+// Uncrustify may change this into multi line, which will result in failed builds
+// *INDENT-OFF*
 bool do_process_c018_delay_queue(int controller_number, const C018_queue_element& element, ControllerSettingsStruct& ControllerSettings);
+// *INDENT-ON*
 
 bool do_process_c018_delay_queue(int controller_number, const C018_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
-  bool  success = C018_data.txHexBytes(element.packed, ControllerSettings.Port);
-  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+  bool   success = C018_data.txHexBytes(element.packed, ControllerSettings.Port);
+  String error   = C018_data.getLastError(); // Clear the error string.
+
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("C018 : Sent: ");
     log += element.packed;
     log += F(" length: ");
     log += String(element.packed.length());
+
     if (success) {
-      log += F(" (success)");
+      log += F(" (success) ");
     }
-    addLog(LOG_LEVEL_DEBUG, log);
+    log += error;
+    addLog(LOG_LEVEL_INFO, log);
   }
   return success;
 }

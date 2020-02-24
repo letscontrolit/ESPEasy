@@ -59,13 +59,13 @@ void Blynk_Run_c015(){
 }
 
 
-bool CPlugin_015(byte function, struct EventStruct *event, String& string)
+bool CPlugin_015(CPlugin::Function function, struct EventStruct *event, String& string)
 {
   bool success = false;
 
   switch (function)
   {
-    case CPLUGIN_PROTOCOL_ADD:
+    case CPlugin::Function::CPLUGIN_PROTOCOL_ADD:
       {
         Protocol[++protocolCount].Number = CPLUGIN_ID_015;
         Protocol[protocolCount].usesMQTT = false;
@@ -76,13 +76,13 @@ bool CPlugin_015(byte function, struct EventStruct *event, String& string)
         break;
       }
 
-    case CPLUGIN_GET_DEVICENAME:
+    case CPlugin::Function::CPLUGIN_GET_DEVICENAME:
       {
         string = F(CPLUGIN_NAME_015);
         break;
       }
 
-    case CPLUGIN_INIT:
+    case CPlugin::Function::CPLUGIN_INIT:
       {
        // when connected to another server and user has changed settings
        if (Blynk.connected()){
@@ -93,7 +93,7 @@ bool CPlugin_015(byte function, struct EventStruct *event, String& string)
       }
 
     #ifdef CPLUGIN_015_SSL
-      case CPLUGIN_WEBFORM_LOAD:
+      case CPlugin::Function::CPLUGIN_WEBFORM_LOAD:
         {
           char thumbprint[60];
           LoadCustomControllerSettings(event->ControllerIndex,(byte*)&thumbprint, sizeof(thumbprint));
@@ -105,7 +105,7 @@ bool CPlugin_015(byte function, struct EventStruct *event, String& string)
         }
     #endif
 
-    case CPLUGIN_WEBFORM_SAVE:
+    case CPlugin::Function::CPLUGIN_WEBFORM_SAVE:
       {
         success = true;
         if (isFormItemChecked(F("controllerenabled"))){
@@ -136,7 +136,7 @@ bool CPlugin_015(byte function, struct EventStruct *event, String& string)
         break;
       }
 
-     case CPLUGIN_PROTOCOL_SEND:
+     case CPlugin::Function::CPLUGIN_PROTOCOL_SEND:
       {
         if (!Settings.ControllerEnabled[event->ControllerIndex])
           break;
@@ -188,6 +188,10 @@ bool CPlugin_015(byte function, struct EventStruct *event, String& string)
         scheduleNextDelayQueue(TIMER_C015_DELAY_QUEUE, C015_DelayHandler.getNextScheduleTime());
         break;
       }
+
+    default:
+      break;
+
   }
   return success;
 }
@@ -196,7 +200,11 @@ bool CPlugin_015(byte function, struct EventStruct *event, String& string)
 // Process Queued Blynk request, with data set to NULL
 //********************************************************************************
 // controller_plugin_number = 015 because of C015
+
+// Uncrustify may change this into multi line, which will result in failed builds
+// *INDENT-OFF*
 bool do_process_c015_delay_queue(int controller_plugin_number, const C015_queue_element& element, ControllerSettingsStruct& ControllerSettings);
+// *INDENT-ON*
 
 bool do_process_c015_delay_queue(int controller_plugin_number, const C015_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
   if (!Settings.ControllerEnabled[element.controller_idx])
