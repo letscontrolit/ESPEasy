@@ -2,6 +2,7 @@
 
 #include "../../ESPEasy_common.h"
 #include "../DataStructs/ESPEasyLimits.h"
+#include "../Globals/CPlugins.h"
 
 SecurityStruct::SecurityStruct() {
   ZERO_FILL(WifiSSID);
@@ -10,7 +11,7 @@ SecurityStruct::SecurityStruct() {
   ZERO_FILL(WifiKey2);
   ZERO_FILL(WifiAPKey);
 
-  for (byte i = 0; i < CONTROLLER_MAX; ++i) {
+  for (controllerIndex_t i = 0; i < CONTROLLER_MAX; ++i) {
     ZERO_FILL(ControllerUser[i]);
     ZERO_FILL(ControllerPassword[i]);
   }
@@ -24,7 +25,7 @@ void SecurityStruct::validate() {
   ZERO_TERMINATE(WifiKey2);
   ZERO_TERMINATE(WifiAPKey);
 
-  for (byte i = 0; i < CONTROLLER_MAX; ++i) {
+  for (controllerIndex_t i = 0; i < CONTROLLER_MAX; ++i) {
     ZERO_TERMINATE(ControllerUser[i]);
     ZERO_TERMINATE(ControllerPassword[i]);
   }

@@ -115,6 +115,7 @@ class SettingsStruct_tmpl
   int16_t       TimeZone;
   boolean       MQTTRetainFlag;
   boolean       InitSPI;
+  // FIXME TD-er: Must change to cpluginID_t, but then also another check must be added since changing the pluginID_t will also render settings incompatible
   byte          Protocol[CONTROLLER_MAX];
   byte          Notification[NOTIFICATION_MAX]; //notifications, point to a NPLUGIN id
   // FIXME TD-er: Must change to pluginID_t, but then also another check must be added since changing the pluginID_t will also render settings incompatible

@@ -128,7 +128,7 @@ boolean handle_custom(String path) {
       page += ((char)dataFile.read());
     }
 
-    TXBuffer += parseTemplate(page, 0);
+    TXBuffer += parseTemplate(page);
     dataFile.close();
   }
   else // if the requestef file does not exist, create a default action in case the page is named "dashboard*"
@@ -142,7 +142,7 @@ boolean handle_custom(String path) {
 
       for (taskIndex_t x = 0; x < TASKS_MAX; x++)
       {
-        if (validPluginID(Settings.TaskDeviceNumber[x]))
+        if (validPluginID_fullcheck(Settings.TaskDeviceNumber[x]))
         {
           const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(x);
           if (validDeviceIndex(DeviceIndex)) {

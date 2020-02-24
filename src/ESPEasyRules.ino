@@ -4,6 +4,7 @@
 #include "src/DataStructs/EventValueSource.h"
 #include "src/Globals/Device.h"
 #include "src/Globals/Plugins.h"
+#include "src/Globals/Plugins_other.h"
 
 String EventToFileName(const String& eventName) {
   int size  = eventName.length();
@@ -305,8 +306,6 @@ void replace_EventValueN_Argv(String& line, const String& argString, unsigned in
 }
 
 
-
-
 void process_internal(String &line, const String& cmd_s) {
   int startIndex, closingIndex;
   int iarg1, iarg2;
@@ -371,6 +370,8 @@ void process_internal(String &line, const String& cmd_s) {
 
 
 void substitute_eventvalue(String& line, const String& event) {
+  if (substitute_eventvalue_CallBack_ptr != nullptr)
+    substitute_eventvalue_CallBack_ptr(line, event);
   if (line.indexOf(F("%eventvalue")) != -1) {
     if (event.charAt(0) == '!') {
       line.replace(F("%eventvalue%"), event); // substitute %eventvalue% with
@@ -436,7 +437,7 @@ void parseCompleteNonCommentLine(String& line, String& event, String& log,
     if (match || lineStartsWith_on) {
       // Only parseTemplate when we are actually doing something with the line.
       // When still looking for the "on ... do" part, do not change it before we found the block.
-      line = parseTemplate(line, line.length());
+      line = parseTemplate(line);
     }
   }
 

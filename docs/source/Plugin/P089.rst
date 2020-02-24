@@ -1,0 +1,42 @@
+.. include:: ../Plugin/_plugin_substitutions_p08x.repl
+.. _P089_page:
+
+|P089_typename|
+==================================================
+
+|P089_shortinfo|
+
+Plugin details
+--------------
+
+Type: |P089_type|
+
+Name: |P089_name|
+
+Status: |P089_status|
+
+GitHub: |P089_github|_
+
+Maintainer: |P089_maintainer|
+
+Used libraries: |P089_usedlibraries|
+
+Supported hardware
+------------------
+
+|P089_usedby|
+
+.. Commands available
+.. ^^^^^^^^^^^^^^^^^^
+
+.. .. include:: P089_commands.repl
+
+
+
+Change log
+----------
+
+.. versionchanged:: 2.0
+  ...
+
+  |added| 2020-02-22 

@@ -1,0 +1,42 @@
+.. include:: ../Plugin/_plugin_substitutions_p09x.repl
+.. _P090_page:
+
+|P090_typename|
+==================================================
+
+|P090_shortinfo|
+
+Plugin details
+--------------
+
+Type: |P090_type|
+
+Name: |P090_name|
+
+Status: |P090_status|
+
+GitHub: |P090_github|_
+
+Maintainer: |P090_maintainer|
+
+Used libraries: |P090_usedlibraries|
+
+Supported hardware
+------------------
+
+|P090_usedby|
+
+.. Commands available
+.. ^^^^^^^^^^^^^^^^^^
+
+.. .. include:: P090_commands.repl
+
+
+
+Change log
+----------
+
+.. versionchanged:: 2.0
+  ...
+
+  |added| 2020-02-22 

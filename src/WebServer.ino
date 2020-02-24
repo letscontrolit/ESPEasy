@@ -4,6 +4,7 @@
 
 #include <WString.h>
 
+#include "src/Globals/CPlugins.h"
 #include "src/Globals/Device.h"
 #include "src/Static/WebStaticData.h"
 
@@ -459,10 +460,11 @@ size_t streamFile_htmlEscape(const String& fileName)
 
 #define TASKS_PER_PAGE TASKS_MAX
 
+// Uncrustify must not be used on macros, so turn it off.
+// *INDENT-OFF*
 #define strncpy_webserver_arg(D, N) safe_strncpy(D, WebServer.arg(N).c_str(), sizeof(D));
-#define update_whenset_FormItemInt(K, V) { int tmpVal; \
-                                           if (getCheckWebserverArg_int(K, tmpVal)) V = tmpVal; }
-
+// Uncrustify must not be used on macros, but we're now done, so turn Uncrustify on again.
+// *INDENT-ON*
 
 void WebServerInit()
 {
@@ -561,7 +563,7 @@ void WebServerInit()
 #endif
 
 #ifdef WEBSERVER_NEW_UI
-  WebServer.on(F("/buildinfo"),     handle_buildinfo);     // Also part of WEBSERVER_NEW_UI
+  WebServer.on(F("/buildinfo"),         handle_buildinfo);     // Also part of WEBSERVER_NEW_UI
   WebServer.on(F("/factoryreset_json"), handle_factoryreset_json);
   WebServer.on(F("/filelist_json"),     handle_filelist_json);
   WebServer.on(F("/i2cscanner_json"),   handle_i2cscanner_json);
@@ -740,11 +742,10 @@ void getErrorNotifications() {
   // Check number of MQTT controllers active.
   int nrMQTTenabled = 0;
 
-  for (byte x = 0; x < CONTROLLER_MAX; x++) {
+  for (controllerIndex_t x = 0; x < CONTROLLER_MAX; x++) {
     if (Settings.Protocol[x] != 0) {
-      byte ProtocolIndex = getProtocolIndex(Settings.Protocol[x]);
-
-      if (Settings.ControllerEnabled[x] && Protocol[ProtocolIndex].usesMQTT) {
+      protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(x);
+      if (validProtocolIndex(ProtocolIndex) && Settings.ControllerEnabled[x] && Protocol[ProtocolIndex].usesMQTT) {
         ++nrMQTTenabled;
       }
     }
@@ -1014,6 +1015,7 @@ void json_prop(LabelType::Enum label) {
 
 // ********************************************************************************
 // Add a task select dropdown list
+// This allows to select a task index based on the existing tasks.
 // ********************************************************************************
 void addTaskSelect(const String& name,  taskIndex_t choice)
 {
@@ -1025,15 +1027,8 @@ void addTaskSelect(const String& name,  taskIndex_t choice)
 
   for (taskIndex_t x = 0; x < TASKS_MAX; x++)
   {
-    deviceName = "";
     const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(x);
-
-    if (validDeviceIndex(DeviceIndex))
-    {
-      if (validPluginID(DeviceIndex_to_Plugin_id[DeviceIndex])) {
-        deviceName = getPluginNameFromDeviceIndex(DeviceIndex);
-      }
-    }
+    deviceName = getPluginNameFromDeviceIndex(DeviceIndex);
     LoadTaskSettings(x);
     TXBuffer += F("<option value='");
     TXBuffer += x;
@@ -1043,7 +1038,7 @@ void addTaskSelect(const String& name,  taskIndex_t choice)
       TXBuffer += F(" selected");
     }
 
-    if (!validPluginID(Settings.TaskDeviceNumber[x])) {
+    if (!validPluginID_fullcheck(Settings.TaskDeviceNumber[x])) {
       addDisabled();
     }
     TXBuffer += '>';
@@ -1058,6 +1053,7 @@ void addTaskSelect(const String& name,  taskIndex_t choice)
 
 // ********************************************************************************
 // Add a Value select dropdown list, based on TaskIndex
+// This allows to select a task value, based on the existing tasks.
 // ********************************************************************************
 void addTaskValueSelect(const String& name, int choice, taskIndex_t TaskIndex)
 {

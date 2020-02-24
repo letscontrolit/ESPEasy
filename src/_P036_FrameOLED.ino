@@ -811,7 +811,7 @@ void P36_setContrast(uint8_t OLED_contrast) {
 
 // Perform some specific changes for OLED display
 String P36_parseTemplate(String &tmpString, uint8_t lineSize) {
-  String result = parseTemplate(tmpString, lineSize);
+  String result = parseTemplate_padded(tmpString, lineSize);
   // OLED lib uses this routine to convert UTF8 to extended ASCII
   // http://playground.arduino.cc/Main/Utf8ascii
   // Attempt to display euro sign (FIXME)

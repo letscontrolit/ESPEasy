@@ -1,5 +1,50 @@
 # Release Notes
 
+## _v2.7.3 (20200130)_
+
+**[Features]**
+- Allow protocols to be enabled or disabled with compiler flags. (#1013, #1012)
+- Panasonic AC: Add Ion Filter support for DKE models. (#1025, #1024)
+- Add support for sending Sony at 38Khz (#1029, #1018, #1019)
+- auto_analyse_raw_data.py: Handle analysing messages with no headers. (#1017)
+
+**[Misc]**
+- Fix Coolix unit test errors when using Apple c++ compiler. (#1030, #1028)
+- Fix Apple clang c++ compiler error in unit tests. (#1027, #1026)
+- Improve/fix scraping of supported devices (#1022)
+- Panasonic PKR series A/C uses DKE protocol. (#1020, #1021)
+- Update NEC supported devices. (#1018)
+- Add note to avoid GPIO16 on the ESP8266 for receiving. (#1016, #1015)
+
+
+## _v2.7.2 (20200106)_
+
+**[Bug Fixes]**
+- Common AC api: Better handle protocols with power toggles. (#1002)
+
+**[Features]**
+- Experimental detailed support for LG a/c. (#1008 #1009)
+
+**[Misc]**
+- Add remote codes for Aloka LED lamp. (#1005)
+- Improve Supported Devices scraping. (#1006)
+
+
+## _v2.7.1 (20191125)_
+
+**[Bug Fixes]**
+- Hitachi424Ac: Fix Incorrect Power Byte Values (#987)
+- Coolix: Fix setPower(false) issue. (#990)
+
+**[Features]**
+- Use `char*` instead of `String` for common text. Saves ~1-3k. (#992, #989)
+- Hitachi424Ac: Add Vertical Swing ability (#986)
+
+**[Misc]**
+- IRMQTTServer: Update HA example/discovery message. (#995)
+- Move newly added common text to a better location. (#993)
+
+
 ## _v2.7.0 (20191030)_
 
 **[Bug Fixes]**

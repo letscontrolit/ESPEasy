@@ -11,6 +11,8 @@ namespace std
 #include <stdint.h>
 #include <Arduino.h>
 
+#include "src/Globals/RamTracker.h"
+
 // User configuration
 // Include Custom.h before ESPEasyDefaults.h. 
 #ifdef USE_CUSTOM_H

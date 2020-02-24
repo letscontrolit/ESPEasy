@@ -2,6 +2,7 @@
 #include "../DataStructs/SettingsStruct.h"
 #include "../DataStructs/ESPEasyLimits.h"
 #include "../Globals/Plugins.h"
+#include "../Globals/CPlugins.h"
 
 template<unsigned int N_TASKS>
 SettingsStruct_tmpl<N_TASKS>::SettingsStruct_tmpl() : ResetFactoryDefaultPreference(0) {
@@ -161,7 +162,7 @@ void SettingsStruct_tmpl<N_TASKS>::clearNotifications() {
 
 template<unsigned int N_TASKS>
 void SettingsStruct_tmpl<N_TASKS>::clearControllers() {
-  for (byte i = 0; i < CONTROLLER_MAX; ++i) {
+  for (controllerIndex_t i = 0; i < CONTROLLER_MAX; ++i) {
     Protocol[i]          = 0;
     ControllerEnabled[i] = false;
   }
@@ -253,7 +254,7 @@ template<unsigned int N_TASKS>
 void SettingsStruct_tmpl<N_TASKS>::clearTask(taskIndex_t task) {
   if (task >= N_TASKS) { return; }
 
-  for (byte i = 0; i < CONTROLLER_MAX; ++i) {
+  for (controllerIndex_t i = 0; i < CONTROLLER_MAX; ++i) {
     TaskDeviceID[i][task]       = 0;
     TaskDeviceSendData[i][task] = false;
   }

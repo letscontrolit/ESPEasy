@@ -254,6 +254,24 @@ bool getCheckWebserverArg_int(const String& key, int& value) {
   return true;
 }
 
+bool update_whenset_FormItemInt(const String& key, int& value) {
+  int tmpVal; 
+  if (getCheckWebserverArg_int(key, tmpVal)) {
+    value = tmpVal; 
+    return true;
+  }
+  return false;
+}
+
+bool update_whenset_FormItemInt(const String& key, byte& value) {
+  int tmpVal; 
+  if (getCheckWebserverArg_int(key, tmpVal)) {
+    value = tmpVal; 
+    return true;
+  }
+  return false;
+}
+
 // Note: Checkbox values will not appear in POST Form data if unchecked.
 // So if webserver does not have an argument for a checkbox form, it means it should be considered unchecked.
 bool isFormItemChecked(const String& id)

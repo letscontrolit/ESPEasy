@@ -31,6 +31,8 @@
 
         ``mitsubishi_msy`` Mitsubishi MSY
 
+        ``mitsubishi_msc`` Mitsubishi MSC
+
         ``mitsubishi_fa`` Mitsubishi FA
 
         ``samsung_aqv``   Samsung AQV
@@ -46,6 +48,8 @@
         ``mitsubishi_heavy_zj`` Mitsubishi Heavy Electric ZJ
 
         ``mitsubishi_heavy_zm`` Mitsubishi Heavy Electric ZM
+
+        ``mitsubishi_heavy_fdtc`` Mitsubishi Heavy FDTC
 
         ``mitsubishi_sez`` Mitsubishi SEZ
 

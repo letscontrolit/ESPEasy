@@ -342,7 +342,7 @@ bool ExecuteCommand(taskIndex_t taskIndex, byte source, const char *Line, bool t
   TempEvent.Source = source;
 
   String action(Line);
-  action = parseTemplate(action, action.length()); // parseTemplate before executing the command
+  action = parseTemplate(action); // parseTemplate before executing the command
 
   // Split the arguments into Par1...5 of the event.
   // Do not split it in executeInternalCommand, since that one will be called from the scheduler with pre-set events.

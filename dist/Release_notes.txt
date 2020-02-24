@@ -1,4 +1,105 @@
 -------------------------------------------------
+Changes in release mega-20200222 (since mega-20200204)
+-------------------------------------------------
+
+Release date: za 22 feb 2020  0:06:14 CET
+
+Gijs Noorlander (26):
+      [RN2483] Fix LoRa packed encoding
+      [Custom.h] Add some password defaults for factory default settings
+      [RN2483] Fix proper reset and autobaud of RN2483 LoRa module
+      [RN2483] Make calls non blocking using state machine
+      [Controller] Add CPLUGIN_FIFTY_PER_SECOND function
+      [Controller] Make more controller parameters optional for a controller
+      [Notifiers] Make NPlugin functions into enum-class
+      [Controllers] Make CPlugin functions in to enum class
+      [RN2483] Fix OTAA and ABP join issues
+      [RN2483] Make OTAA join work async
+      [Controllers] Add the new 10/s and 50/s calls for controllers time stats
+      [RN2483] Status bits depend on firmware rev. number
+      [RN2483] Move functions and members to helper class.
+      [RN2483] Add some example code for new RN2483 library
+      [Controller] Fix connection failure counts (#2893)
+      [MQTT controller] Add checks & --connectionFailures on publish success
+      [Controllers] Make sure forward declaration of do_process_xx_delay_queue is on single line
+      [GPIO settings] Allow to save changing GPIO pin to "not used"
+      [JSON] Add lowest TTL to highest level in JSON output
+      [RN2483] Quick work-around to force SW serial for LoRa module
+      [Generic HTTP] Fix URL encoding for variable replacement (#2878)
+      Add some function callbacks to allow parse plugins#2888
+      [JSON] endpoint "buildinfo" declares plugins twice #2836
+      Sync ESPEasySerial library + increase version to 1.0.14
+      [JSON] Fix pinstates_json for empty list
+      [MQTT] Make clean session and LWT optional for ThingSpeak MQTT
+
+Grovkillen (1):
+      [docs] added rules example + fixed S11 (P052) links
+
+TD-er (5):
+      [Controller] Fix controller name not found
+      [RN2483] Fix build issues
+      Fix compile issue in ArduinoUnoNano-downlink.ino example
+      [RN2483] Small fixes in display strings and library examples
+      [WiFi] Increase delay after turning on WiFi
+
+Toni (4):
+      HeatpumpIR 1.0.11 update, P088_HeatpumpIR support for Mitsubishi MSC and Mitsubishi Heavy FDTC
+      Update _P088_HeatpumpIR.ino, include files in alphabetical order
+      P088_HeatpumpIR to use HeatpumpIRFactory (#2884)
+      P088_HeatpumpIR review fixes (#2884)
+
+jimmys01 (1):
+      Ir-Update
+
+
+-------------------------------------------------
+Changes in release mega-20200204 (since mega-20191208)
+-------------------------------------------------
+
+Release date: di  4 feb 2020 23:31:47 CET
+
+Bartlomiej Zimon (1):
+      LM75A - add multiple sensors support #2808
+
+Gijs Noorlander (13):
+      [MQTT] Fix change in client.connected() behavior for pubsubclient
+      [WiFi] Improve reconnect management
+      [LCD] Fix incorrect convert to lower case for LCD texts
+      [Controller] Add CPLUGIN_TEN_PER_SECOND call for controllers
+      [Build] Add 1M custom build to platformio.ini
+      [Controllers] Restructure protocolIndex / controllerIndex and cplugin_ID
+      [RN2483] Add option to reset LoRa module using reset pin
+      [Build] Add compile time checks to make sure offsets in settings are OK
+      Revert "[WiFi] Improve reconnect management"
+      [PIO] Update to core 2.6.3
+      [WIFi] Fix crashes with fixed IP
+      Fix unexpected string padding in parseTemplate (#2866)
+      [docs] Corrected supported SenseAir sensors in docs
+
+Grovkillen (6):
+      [README] updated with link to ICONS8
+      [DOCS] P052 Senseair S11 added
+      [DOCS] S11 fixed some incorrect data
+      [DOCS] S11 fixed PR after Gijs review
+      [DOCS] S11 re-phrased a sentance
+      [docs] added rules example + fixed S11 (P052) links
+
+TD-er (4):
+      [HTTP] Add HTTP Accept header
+      [Parse Templates] Allow to refer to variables in controllers (#2818)
+      [SendToHttp] Add setting for waiting for ack
+      [Controller] Optimization by reducing number of checks.
+
+jimmys01 (6):
+      [IR] Change default state of the lights if missing from JSON AC command
+      [IR AC] Make sure that the JSON deserialization has enought space
+      [P088] Optimize enabling and disabling of the RX while sending codes
+      [IR RX] Move enableIR_RX function to P016
+      Add the ' to the example command format
+      [Zabbix] Update usage info
+
+
+-------------------------------------------------
 Changes in release mega-20191208 (since mega-20191130)
 -------------------------------------------------
 

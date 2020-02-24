@@ -2,6 +2,10 @@
 #include "src/DataStructs/RTCStruct.h"
 #include "src/DataStructs/EventValueSource.h"
 #include "src/Globals/Device.h"
+#include "src/Globals/CPlugins.h"
+#include "src/Globals/NPlugins.h"
+#include "src/Globals/Plugins.h"
+#include "ESPEasy_plugindefs.h"
 
 #define TIMER_ID_SHIFT    28
 
@@ -553,9 +557,9 @@ void schedule_all_task_device_timers() {
 
 #ifdef USES_MQTT
 void schedule_all_tasks_using_MQTT_controller() {
-  int ControllerIndex = firstEnabledMQTTController();
+  controllerIndex_t ControllerIndex = firstEnabledMQTT_ControllerIndex();
 
-  if (ControllerIndex < 0) { return; }
+  if (!validControllerIndex(ControllerIndex)) { return; }
 
   for (taskIndex_t task = 0; task < TASKS_MAX; task++) {
     if (Settings.TaskDeviceSendData[ControllerIndex][task] &&
@@ -614,12 +618,16 @@ void process_task_device_timer(unsigned long task_index, unsigned long lasttimer
 * Thus only use these when the result is not needed immediately.
 * Proper use case is calling from a callback function, since those cannot use yield() or delay()
 \*********************************************************************************************/
-void schedule_plugin_task_event_timer(byte DeviceIndex, byte Function, struct EventStruct *event) {
-  schedule_event_timer(TaskPluginEnum, DeviceIndex, Function, event);
+void schedule_plugin_task_event_timer(deviceIndex_t DeviceIndex, byte Function, struct EventStruct *event) {
+  if (validDeviceIndex(DeviceIndex)) {
+    schedule_event_timer(TaskPluginEnum, DeviceIndex, Function, event);
+  }
 }
 
-void schedule_controller_event_timer(byte ProtocolIndex, byte Function, struct EventStruct *event) {
-  schedule_event_timer(ControllerPluginEnum, ProtocolIndex, Function, event);
+void schedule_controller_event_timer(protocolIndex_t ProtocolIndex, byte Function, struct EventStruct *event) {
+  if (validProtocolIndex(ProtocolIndex)) {
+    schedule_event_timer(ControllerPluginEnum, ProtocolIndex, Function, event);
+  }
 }
 
 void schedule_notification_event_timer(byte NotificationProtocolIndex, byte Function, struct EventStruct *event) {
@@ -668,10 +676,10 @@ void process_system_event_queue() {
       Plugin_ptr[Index](Function, &EventQueue.front().event, tmpString);
       break;
     case ControllerPluginEnum:
-      CPluginCall(Index, Function, &EventQueue.front().event, tmpString);
+      CPluginCall(Index, static_cast<CPlugin::Function>(Function), &EventQueue.front().event, tmpString);
       break;
     case NotificationPluginEnum:
-      NPlugin_ptr[Index](Function, &EventQueue.front().event, tmpString);
+      NPlugin_ptr[Index](static_cast<NPlugin::Function>(Function), &EventQueue.front().event, tmpString);
       break;
   }
   EventQueue.pop_front();
