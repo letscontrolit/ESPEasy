@@ -392,6 +392,8 @@ void substitute_eventvalue(String& line, const String& event) {
     }
   }
 
+  // FIXME TD-er: Maybe use enum here instead of strings?
+
   // process other markups as well
   process_internal(line, F("[substring:")); 
   process_internal(line, F("[strtol:"));  
