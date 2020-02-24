@@ -154,7 +154,7 @@ Energy (DC)
 Plugins: |Plugin_Energy_DC|
 
 Energy (Heat)
------------
+-------------
 
 Plugins: |Plugin_Energy_Heat|
 
