@@ -42,6 +42,9 @@ void handle_control() {
 //           command.equalsIgnoreCase(F("rules"))) {
     ExecuteCommand_internal(EventValueSource::Enum::VALUE_SOURCE_HTTP, webrequest.c_str());
     handledCmd = true;
+  } else {
+    ExecuteCommand_internal(VALUE_SOURCE_HTTP, webrequest.c_str());
+    handledCmd = false;
   }
 
   if (handledCmd) {
