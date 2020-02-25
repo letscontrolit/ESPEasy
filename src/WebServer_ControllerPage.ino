@@ -57,7 +57,6 @@ void handle_controllers() {
       if (validProtocolIndex(ProtocolIndex)) {
         struct EventStruct TempEvent;
         TempEvent.ControllerIndex = controllerindex;
-        TempEvent.ProtocolIndex   = ProtocolIndex;
         String dummy;
         byte cfunction = Settings.ControllerEnabled[controllerindex] ? CPlugin::Function::CPLUGIN_INIT : CPlugin::Function::CPLUGIN_EXIT;
         CPluginCall(ProtocolIndex, static_cast<CPlugin::Function>(cfunction), &TempEvent, dummy);
@@ -133,7 +132,6 @@ void handle_controllers_CopySubmittedSettings(byte controllerindex, ControllerSe
   if (validProtocolIndex(ProtocolIndex)) {
     struct EventStruct TempEvent;
     TempEvent.ControllerIndex = controllerindex;
-    TempEvent.ProtocolIndex   = ProtocolIndex;
 
     // Call controller plugin to save CustomControllerSettings
     String dummy;
@@ -322,7 +320,6 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
       // Load controller specific settings
       struct EventStruct TempEvent;
       TempEvent.ControllerIndex = controllerindex;
-      TempEvent.ProtocolIndex   = ProtocolIndex;
 
       String webformLoadString;
       CPluginCall(ProtocolIndex, CPlugin::Function::CPLUGIN_WEBFORM_LOAD, &TempEvent, webformLoadString);

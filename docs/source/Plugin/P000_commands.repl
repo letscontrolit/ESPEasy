@@ -1,20 +1,172 @@
 .. include:: ../Plugin/_plugin_substitutions_p00x.repl
 
+
+**TODO** : Check commands M..Z and check for all commands whether the "class" is still valid.
+
+
 .. csv-table::
     :header: "Command", "Class", "Purpose / Syntax"
     :widths: 8, 5, 30
 
-    "Debug","
+    "
+    AsyncEvent","
+    :blue:`Special`","
+    Schedule an event, it's possible to send a float value along as well.
+
+    This is the same as a regular event, but it will not be executed immediately.
+    Instead it will be added to an event queue.
+    
+    Use this to keep rules execution times as short as possible.
+
+    N.B. New values sent by a task will also be of this type.
+
+    See event syntax below..."
+    "
+    AccessInfo","
+    :red:`Internal`","
+    Show allowed IP range for the web interface.
+
+    ``AccessInfo``
+    
+    Example output: ``Allowed IP range : 192.168.10.0 - 192.168.10.255``"
+    "
+    Build","
+    :red:`Internal`","
+    Get or set build information.  This will not be stored, so only valid until reboot.
+
+    ``Build``
+
+    ``Build,12345``
+    
+    Example output: ``Build:20104``"
+    "
+    ClearAccessBlock","
+    :red:`Internal`","
+    Clear allowed IP range for the web interface for the current session.
+    See also ``AccessInfo``.
+
+    ``ClearAccessBlock``"
+    "
+    ClearRTCram","
+    :red:`Internal`","
+    Clear all (cached) data from the RTC memory. 
+    This data is persistent as long as the node is powered and thus survives a reboot or crash.
+
+    ``ClearRTCram``"
+    "
+    Config","
+    :red:`Internal`","
+    Remote config of a task.    TODO: Describe command syntax.
+
+    ``Config``"
+    "
+    ControllerDisable","
+    :red:`Internal`","
+    Disable a controller.
+    This will not save the settings, but if the settings get saved anyway the controller will remain disabled at reboot.
+
+    ``ControllerDisable,<controller nr>``"
+    "
+    ControllerEnable","
+    :red:`Internal`","
+    Enable a controller. (Only possible when a protocol is assigned to the controller index)
+    This will not save the settings, but if the settings get saved anyway the controller will remain enabled at reboot.
+
+    ``ControllerEnable,<controller nr>``"
+    "
+    Debug","
     :red:`Internal`","
     Change Serial port debug level
 
     ``Debug,<1-4>``"
     "
+    DeepSleep","
+    :red:`Internal`","
+    Switch the node to deep sleep.
+    Max sleep time depends on library version and differs from roughly 71 minutes to 3h46.
+
+    ``DeepSleep,<sleep time in seconds>``"
+    "
+    Delay","
+    :green:`Rules`","
+    Delay rule processing. Warning: Do not use this as it may cause all kinds of issues.
+
+    ``Delay,<delay in milliSeconds>``"
+    "
+    DNS","
+    :red:`Internal`","
+    Get or set DNS configuration.
+
+    ``DNS``
+
+    ``DNS,8.8.8.8``
+    
+    Example output: ``DNS:192.168.88.1(DHCP)``"
+    "
+    DST","
+    :red:`Internal`","
+    Get or set Daylight Saving Time.
+
+    ``DST``
+
+    ``DST,0`` to disable, ``DST,1`` to enable
+    
+    Example output: ``DST:true``"
+    "
+    EraseSDKwifi","
+    :red:`Internal`","
+    Erase WiFi settings that may have been stored in the SDK wifi settings area.
+
+    ``EraseSDKwifi``"
+    "
+    Event","
+    :blue:`Special`","
+    Create an event, it's possible to send a float value along as well.
+
+    See event syntax below..."
+    "
+    ExecuteRules","
+    :red:`Internal`","
+    Execute the rules in a specific file on the file system.    
+
+    ``ExecuteRules,<filename>``"
+    "
+    Gateway","
+    :red:`Internal`","
+    Get or set the gateway configuration
+
+    ``Gateway``
+
+    ``Gateway,192.168.1.1``
+    
+    Example output: ``Gateway:192.168.10.254(DHCP)``"
+    "
+    I2Cscanner","
+    :red:`Internal`","
+    Run I2C scanner to find connected I2C chips. Output will be sent to the serial port.
+
+    ``I2Cscanner``
+    
+    Example output:
+
+    .. code-block:: html
+
+     4500043 : Info  : Command: i2cscanner
+     I2C  : Found 0x3c
+     I2C  : Found 0x40
+     I2C  : Found 0x5a
+
+    "
+    "
     IP","
     :red:`Internal`","
-    Change IP address
+    Get or set IP address
 
-    ``IP,<IP address>``"
+    ``IP``
+
+    ``IP,<IP address>``
+    
+    Example output: ``IP:192.168.10.86(DHCP)``"
     "
     Let","
     :red:`Internal`","
@@ -22,11 +174,55 @@
 
     ``Let,<n>,<value>``"
     "
+    Load","
+    :red:`Internal`","
+    Load (reload) the stored settings.
+
+    ``Load``"
+    "
     LogEntry","
     :red:`Internal`","
     Add string to log
 
     ``LogEntry,<string>``"
+    "
+    meminfo","
+    :red:`Internal`","
+    Will send summary of struct sizes to the serial port.
+
+    ``meminfo``
+    
+    Example output:
+
+    .. code-block:: html
+
+     4306250 : Info  : Command: meminfo
+     SecurityStruct         | 593      
+     SettingsStruct         | 1228
+     ExtraTaskSettingsStruct| 472 
+     DeviceStruct           | 12
+
+    "
+    "
+    meminfoDetail","
+    :red:`Internal`","
+    Will enable extra detailed information on the internal structure of the settings file.
+    This is displayed graphically in the system info page.
+    This state is not stored, so only active until reboot.
+
+    A detailed summary is also sent to the serial port.
+
+    ``meminfoDetail``"
+    "
+    MessageDelay","
+    :red:`Internal`","
+    Get or set the MQTT message delay.
+
+    ``MessageDelay``
+
+    ``MessageDelay,<value in ms>``
+    
+    Example output: ``MQTT message delay:100``"
     "
     Name","
     :red:`Internal`","
@@ -39,6 +235,12 @@
     Set the password of the unit
 
     ``Password,<new password>``"
+    "
+    Publish","
+    :green:`Rules`","
+    Send command using MQTT broker service
+
+    ``Publish,<topic>,<value>``"
     "
     Reboot","
     :red:`Internal`","
@@ -70,17 +272,43 @@
 
     ``Save``"
     "
+    SendTo","
+    :green:`Rules`","
+    Send command to other ESP (using UDP)
+
+    ``SendTo,<unit nr>,<command>``"
+    "
+    SendToHTTP","
+    :green:`Rules`","
+    Send command to other network device using HTTP
+
+    ``SendToHTTP,<IP address>,<Portnumber>,<command>``
+
+    ``SendToHTTP,<domain>,<Portnumber>,</url>``"
+    "
+    SendToUDP","
+    :green:`Rules`","
+    Send command to other network device using UDP (non-ESP Easy units)
+
+    ``SendToUDP,<IP address>,<Portnumber>,<command>``"
+    "
     Settings","
     :red:`Internal`","
     Show settings on serial terminal
 
     ``Settings``"
     "
+    Subscribe","
+    :green:`Rules`","
+    Subscribes to a specific topic using MQTT broker service
+
+    ``Subscribe,<topic>``"
+    "
     TaskClear","
     :red:`Internal`","
     Delete the given task/device
 
-    ``TaskClear,<task/device nr>``"
+    ``TaskClear,<task nr>``"
     "
     TaskClearAll","
     :red:`Internal`","
@@ -88,11 +316,39 @@
 
     ``TaskClearAll``"
     "
+    TaskDisable","
+    :red:`Internal`","
+    Disable a task.
+    This will not save the settings, but if the settings get saved anyway the task will remain disabled at reboot.
+
+    ``TaskDisable,<task nr>``"
+    "
+    TaskEnable","
+    :red:`Internal`","
+    Enable a task. (only possible when a plugin is assigned to the task)
+    This will not save the settings, but if the settings get saved anyway the task will remain enabled at reboot.
+
+    ``TaskEnable,<task nr>``"
+    "
     TaskRun","
     :red:`Internal`","
     Run/excecute the given task/device, use to manually force an update/read of the task.
 
-    ``TaskRun,<task/device nr>``"
+    ``TaskRun,<task nr>``"
+    "
+    TaskValueSet","
+    :green:`Rules`","
+    Set values on a **Dummy Task** (device)
+
+    ``TaskValueSet,<task nr>,<value nr>,<value/formula>``"
+    "
+    TimerSet","
+    :green:`Rules`","
+    Start a timed event
+
+    ``TimerSet,<timernr>,<timeInSeconds>``
+
+    ``TimerSet,<timernr>,0`` disables the timer"
     "
     Unit","
     :red:`Internal`","
@@ -153,77 +409,7 @@
     Change SSID to connect as secondry WiFi
 
     ``WifiSSID2,<SSID>``"
-    "
-    Delay","
-    :green:`Rules`","
-    Delay rule processing
 
-    ``Delay,<delay in milliSeconds>``"
-    "
-    Publish","
-    :green:`Rules`","
-    Send command using MQTT broker service
-
-    ``Publish,<topic>,<value>``"
-    "
-    Subscribe","
-    :green:`Rules`","
-    Subscribes to a specific topic using MQTT broker service
-
-    ``Subscribe,<topic>``"
-    "
-    SendTo","
-    :green:`Rules`","
-    Send command to other ESP (using UDP)
-
-    ``SendTo,<unit nr>,<command>``"
-    "
-    SendToHTTP","
-    :green:`Rules`","
-    Send command to other network device using HTTP
-
-    ``SendToHTTP,<IP address>,<Portnumber>,<command>``
-
-    ``SendToHTTP,<domain>,<Portnumber>,</url>``"
-    "
-    SendToUDP","
-    :green:`Rules`","
-    Send command to other network device using UDP (non-ESP Easy units)
-
-    ``SendToUDP,<IP address>,<Portnumber>,<command>``"
-    "
-    TaskValueSet","
-    :green:`Rules`","
-    Set values on a **Dummy Task** (device)
-
-    ``TaskValueSet,<task/device nr>,<value nr>,<value/formula>``"
-    "
-    TimerSet","
-    :green:`Rules`","
-    Start a timed event
-
-    ``TimerSet,<timernr>,<timeInSeconds>``
-
-    ``TimerSet,<timernr>,0`` disables the timer"
-    "
-    Event","
-    :blue:`Special`","
-    Create an event, it's possible to send a float value along as well.
-
-    See event syntax below..."
-    "
-    AsyncEvent","
-    :blue:`Special`","
-    Schedule an event, it's possible to send a float value along as well.
-
-    This is the same as a regular event, but it will not be executed immediately.
-    Instead it will be added to an event queue.
-    
-    Use this to keep rules execution times as short as possible.
-
-    N.B. New values sent by a task will also be of this type.
-
-    See event syntax below..."
 
 
 Event command

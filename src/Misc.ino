@@ -6,6 +6,7 @@
 #include "src/Globals/CRCValues.h"
 #include "src/Globals/Cache.h"
 #include "src/Globals/Device.h"
+#include "src/Globals/CPlugins.h"
 #include "src/Globals/Plugins.h"
 #include "src/Globals/Plugins_other.h"
 #include "src/Globals/RTC.h"
@@ -839,6 +840,39 @@ void parseCommandString(struct EventStruct *event, const String& string)
   event->Par4 = parseCommandArgumentInt(string, 4);
   event->Par5 = parseCommandArgumentInt(string, 5);
 }
+
+
+
+/********************************************************************************************\
+  Toggle controller enabled state
+  \*********************************************************************************************/
+bool setControllerEnableStatus(controllerIndex_t controllerIndex, bool enabled)
+{
+  if (!validControllerIndex(controllerIndex)) return false;
+  checkRAM(F("setControllerEnableStatus"));
+  // Only enable controller if it has a protocol configured
+  if (Settings.Protocol[controllerIndex] != 0 || !enabled) {
+    Settings.ControllerEnabled[controllerIndex] = enabled;
+    return true;
+  }
+  return false;
+}
+
+/********************************************************************************************\
+  Toggle task enabled state
+  \*********************************************************************************************/
+bool setTaskEnableStatus(taskIndex_t taskIndex, bool enabled)
+{
+  if (!validTaskIndex(taskIndex)) return false;
+  checkRAM(F("setTaskEnableStatus"));
+  // Only enable task if it has a Plugin configured
+  if (validPluginID(Settings.TaskDeviceNumber[taskIndex]) || !enabled) {
+    Settings.TaskDeviceEnabled[taskIndex] = enabled;
+    return true;
+  }
+  return false;
+}
+
 
 /********************************************************************************************\
   Clear task settings for given task
