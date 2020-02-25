@@ -494,10 +494,10 @@ Besides the internal events there's also plugin specific events. These are liste
 .. .. include:: ../Plugin/P080_events.repl
 
 
-.. P081 :ref:`P081_page`
-.. ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+P081 :ref:`P081_page`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. .. include:: ../Plugin/P081_events.repl
+.. include:: ../Plugin/P081_events.repl
 
 
 P082 :ref:`P082_page`
