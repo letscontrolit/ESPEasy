@@ -37,7 +37,7 @@ struct ControllerSettingsStruct;
 String   getUnknownString();
 void     scheduleNextDelayQueue(unsigned long id,
                                 unsigned long nextTime);
-String   LoadControllerSettings(int                       ControllerIndex,
+String   LoadControllerSettings(controllerIndex_t ControllerIndex,
                                 ControllerSettingsStruct& controller_settings);
 void     statusLED(bool traffic);
 void     backgroundtasks();
@@ -148,6 +148,8 @@ uint16_t getPortFromKey(uint32_t key);
 
 void initRTC();
 void deepSleepStart(int dsdelay);
+bool setControllerEnableStatus(controllerIndex_t controllerIndex, bool enabled);
+bool setTaskEnableStatus(taskIndex_t taskIndex, bool enabled);
 void taskClear(taskIndex_t taskIndex, bool save);
 void SensorSendTask(taskIndex_t TaskIndex);
 bool remoteConfig(struct EventStruct *event, const String& string);

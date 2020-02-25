@@ -17,10 +17,10 @@
 .. |P081_github| replace:: P081_Cron.ino
 .. _P081_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P081_Cron.ino
 .. |P081_usedby| replace:: `.`
-.. |P081_shortinfo| replace:: `.`
+.. |P081_shortinfo| replace:: Schedule timed events by using cron expressions.
 .. |P081_maintainer| replace:: `.`
 .. |P081_compileinfo| replace:: `.`
-.. |P081_usedlibraries| replace:: `.`
+.. |P081_usedlibraries| replace:: https://github.com/staticlibs/ccronexpr
 
 .. |P082_name| replace:: :cyan:`GPS`
 .. |P082_type| replace:: :cyan:`Position`

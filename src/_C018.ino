@@ -637,7 +637,8 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
     case CPlugin::Function::CPLUGIN_PROTOCOL_RECV:
     {
       // FIXME TD-er: WHen should this be scheduled?
-      // schedule_controller_event_timer(event->ProtocolIndex, CPlugin::Function::CPLUGIN_PROTOCOL_RECV, event);
+      // protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(event->ControllerIndex);
+      // schedule_controller_event_timer(ProtocolIndex, CPlugin::Function::CPLUGIN_PROTOCOL_RECV, event);
       break;
     }
 

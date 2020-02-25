@@ -4,8 +4,9 @@
 
 EventStruct::EventStruct() :
   Data(nullptr), idx(0), Par1(0), Par2(0), Par3(0), Par4(0), Par5(0),
-  Source(0), TaskIndex(INVALID_TASK_INDEX), ControllerIndex(0), ProtocolIndex(0), NotificationIndex(0),
-  BaseVarIndex(0), sensorType(0), OriginTaskIndex(0) {}
+  Source(0), TaskIndex(INVALID_TASK_INDEX), ControllerIndex(INVALID_CONTROLLER_INDEX),
+  NotificationIndex(INVALID_NOTIFIER_INDEX), BaseVarIndex(0),
+  sensorType(0), OriginTaskIndex(0) {}
 
 EventStruct::EventStruct(const struct EventStruct& event) :
   String1(event.String1)
@@ -17,7 +18,7 @@ EventStruct::EventStruct(const struct EventStruct& event) :
   , idx(event.idx)
   , Par1(event.Par1), Par2(event.Par2), Par3(event.Par3), Par4(event.Par4), Par5(event.Par5)
   , Source(event.Source), TaskIndex(event.TaskIndex), ControllerIndex(event.ControllerIndex)
-  , ProtocolIndex(event.ProtocolIndex), NotificationIndex(event.NotificationIndex)
+  , NotificationIndex(event.NotificationIndex)
   , BaseVarIndex(event.BaseVarIndex), sensorType(event.sensorType)
   , OriginTaskIndex(event.OriginTaskIndex)
 {}
