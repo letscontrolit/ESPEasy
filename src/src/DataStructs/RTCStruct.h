@@ -20,7 +20,7 @@ struct RTCStruct
   RTCStruct() : ID1(0), ID2(0), lastWiFiChannel(0), factoryResetCounter(0),
                 deepSleepState(0), bootFailedCount(0), flashDayCounter(0),
                 lastWiFiSettingsIndex(0),
-                flashCounter(0), bootCounter(0), lastMixedSchedulerId(0) {}
+                flashCounter(0), bootCounter(0), lastMixedSchedulerId(0), lastSysTime(0) {}
   byte ID1;
   byte ID2;
   byte lastWiFiChannel;
@@ -35,6 +35,7 @@ struct RTCStruct
   uint8_t lastBSSID[6] = { 0 };
   byte unused1;  // Force alignment to 4 bytes
   byte unused2;
+  unsigned long lastSysTime;
 };
 
 

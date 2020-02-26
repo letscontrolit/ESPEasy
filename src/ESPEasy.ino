@@ -254,12 +254,16 @@ void setup()
       log = F("INIT : Rebooted from deepsleep #");
       lastBootCause=BOOT_CAUSE_DEEP_SLEEP;
     }
-    else
+    else {
+      restoreLastKnownUnixTime();
       log = F("INIT : Warm boot #");
+    }
 
     log += RTC.bootCounter;
     log += F(" Last Task: ");
     log += decodeSchedulerId(lastMixedSchedulerId_beforereboot);
+    log += F(" Last systime: ");
+    log += RTC.lastSysTime;
   }
   //cold boot (RTC memory empty)
   else
@@ -282,6 +286,7 @@ void setup()
   fileSystemCheck();
   progMemMD5check();
   LoadSettings();
+
   Settings.UseRTOSMultitasking = false; // For now, disable it, we experience heap corruption.
   if (RTC.bootFailedCount > 10 && RTC.bootCounter > 10) {
     byte toDisable = RTC.bootFailedCount - 10;

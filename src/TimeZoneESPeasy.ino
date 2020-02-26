@@ -107,7 +107,7 @@ void logTimeZoneInfo() {
     }
     log += F(" offset: ");
     log += m_dst.offset;
-    log += F(" min");
+    log += F(" min ");
   }
 
   // Standard/Winter time.
