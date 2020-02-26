@@ -1,4 +1,5 @@
 // #######################################################################################################
+
 // #################################### Plugin 081: CRON tasks Scheduler       ###########################
 // #######################################################################################################
 
@@ -230,7 +231,7 @@ boolean Plugin_081(byte function, struct EventStruct *event, String& string)
 
         // Must check if the values of LASTEXECUTION and NEXTEXECUTION make sense.
         // These can be invalid values from a reboot, or simply contain uninitialized values.
-        if ((last_exec_time > current_time) || (last_exec_time == CRON_INVALID_INSTANT)) {
+        if ((last_exec_time > current_time) || (last_exec_time == CRON_INVALID_INSTANT) || (next_exec_time == CRON_INVALID_INSTANT)) {
           // Last execution time cannot be correct.
           last_exec_time = CRON_INVALID_INSTANT;
           const time_t tmp_next = P081_computeNextCronTime(event->TaskIndex, current_time);
@@ -242,7 +243,9 @@ boolean Plugin_081(byte function, struct EventStruct *event, String& string)
         }
 
         if (next_exec_time != CRON_INVALID_INSTANT) {
-          if ((function == PLUGIN_TIME_CHANGE) || (next_exec_time <= current_time)) {
+          const bool cron_elapsed = (next_exec_time <= current_time);
+
+          if (cron_elapsed) {
             addLog(LOG_LEVEL_DEBUG, F("Cron Elapsed"));
             last_exec_time = next_exec_time;
             next_exec_time = P081_computeNextCronTime(event->TaskIndex, last_exec_time);
