@@ -214,19 +214,8 @@ boolean Plugin_081(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
     {
+      // Need to return true here, so the last and next exec times are stored in RTC.
       success = true;
-      break;
-    }
-
-    case PLUGIN_WRITE:
-    {
-      break;
-    }
-
-    case PLUGIN_EXIT:
-    {
-      // perform cleanup tasks here. For example, free memory
-
       break;
     }
 
@@ -234,7 +223,7 @@ boolean Plugin_081(byte function, struct EventStruct *event, String& string)
     case PLUGIN_ONCE_A_SECOND:
     {
       // code to be executed once a second. Tasks which do not require fast response can be added here
-      if (statusNTPInitialized) {
+      if (systemTimePresent()) {
         const time_t current_time = P081_getCurrentTime();
         time_t last_exec_time     = P081_getCronExecTime(LASTEXECUTION);
         time_t next_exec_time     = P081_getCronExecTime(NEXTEXECUTION);
@@ -273,15 +262,6 @@ boolean Plugin_081(byte function, struct EventStruct *event, String& string)
       } else {
         addLog(LOG_LEVEL_ERROR, F("CRON: Time not synced"));
       }
-      break;
-    }
-
-    case PLUGIN_TEN_PER_SECOND:
-    {
-      // code to be executed 10 times per second. Tasks which require fast response can be added here
-      // be careful on what is added here. Heavy processing will result in slowing the module down!
-
-      success = true;
       break;
     }
   } // switch
