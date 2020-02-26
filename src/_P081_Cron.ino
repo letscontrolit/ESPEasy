@@ -55,6 +55,7 @@ time_t P081_computeNextCronTime(const String& expression, time_t last, const cha
   {
     // TODO: Notify at ui de error
     addLog(LOG_LEVEL_ERROR, String(F("CRON Expression: ")) + String(error));
+    delete error;
     return CRON_INVALID_INSTANT;
   }
   return cron_next((cron_expr *)&expr, last);
@@ -64,8 +65,12 @@ time_t P081_computeNextCronTime(taskIndex_t taskIndex, time_t last)
 {
   const char *error = nullptr;
   String expression = P081_getCronExpr(taskIndex);
+  time_t res        = P081_computeNextCronTime(expression, last, error);
 
-  return P081_computeNextCronTime(expression, last, error);
+  if (error) {
+    delete error;
+  }
+  return res;
 }
 
 time_t P081_getCronExecTime(float execTime)
@@ -171,6 +176,7 @@ boolean Plugin_081(byte function, struct EventStruct *event, String& string)
         else
         {
           log = String(F("CRON Expression: Error ")) + String(err);
+          delete err;
           addHtmlError(log);
           addLog(LOG_LEVEL_ERROR, log);
         }
@@ -347,6 +353,7 @@ void P081_html_show_cron_expr(struct EventStruct *event, const String& expressio
   if (error) {
     addRowLabel(F("Error"));
     addHtml(String(error));
+    delete error;
   } else {
     addRowLabel(F("Last Exec Time"));
     addHtml(P081_formatExecTime(LASTEXECUTION));
