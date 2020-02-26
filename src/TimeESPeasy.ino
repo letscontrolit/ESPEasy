@@ -22,6 +22,7 @@ double    externalTimeSource = -1.0; // Used to set time from a source other tha
 struct tm tsRise, tsSet;
 struct tm sunRise;
 struct tm sunSet;
+timeSource_t timeSource = No_time_source;
 
 byte PrevMinutes = 0;
 
@@ -159,6 +160,27 @@ void breakTime(unsigned long timeInput, struct tm& tm) {
   tm.tm_mday = time + 1;  // day of month
 }
 
+// Restore the last known system time
+// This may be useful to get some idea of what time it is.
+// This way the unit can do things based on local time even when NTP servers may not respond.
+// Do not use this when booting from deep sleep.
+// Only call this once during boot.
+void restoreLastKnownUnixTime()
+{
+  static bool firstCall = true;
+  if (firstCall && RTC.lastSysTime != 0 && RTC.deepSleepState != 1) {
+    firstCall = false;
+    timeSource = Restore_RTC_time_source;
+    externalTimeSource = static_cast<double>(RTC.lastSysTime);
+    // Do not add the current uptime as offset. This will be done when calling now()
+  }
+}
+
+void setExternalTimeSource(double time, timeSource_t source) {
+  timeSource = source;
+  externalTimeSource = time;
+}
+
 uint32_t getUnixTime()
 {
   return static_cast<uint32_t>(sysTime);
@@ -258,6 +280,7 @@ unsigned long now() {
       nextSyncTime = (uint32_t)unixTime_d + syncInterval;
     }
   }
+  RTC.lastSysTime = static_cast<unsigned long>(sysTime);
   uint32_t localSystime = toLocal(sysTime);
   breakTime(localSystime, tm);
 
@@ -354,7 +377,15 @@ void initTime()
 }
 
 bool systemTimePresent() {
-  return nextSyncTime > 0 || Settings.UseNTP;
+  switch (timeSource) {
+    case No_time_source: 
+      break;
+    case NTP_time_source:  
+    case Restore_RTC_time_source: 
+    case GPS_time_source:
+      return true;
+  }
+  return nextSyncTime > 0 || Settings.UseNTP || externalTimeSource > 0.0;
 }
 
 void checkTime()
@@ -547,7 +578,7 @@ bool getNtpTime(double& unixTime_d)
         addLog(LOG_LEVEL_INFO, log);
       }
       udp.stop();
-
+      timeSource = NTP_time_source;
       return true;
     }
     delay(10);

@@ -50,7 +50,7 @@ void run_compiletime_checks() {
   check_size<NotificationStruct,                    3u>();
   check_size<NodeStruct,                            24u>();
   check_size<systemTimerStruct,                     28u>();
-  check_size<RTCStruct,                             28u>();
+  check_size<RTCStruct,                             32u>();
   check_size<rulesTimerStatus,                      12u>();
   check_size<portStatusStruct,                      4u>();
   check_size<ResetFactoryDefaultPreference_struct,  4u>();
