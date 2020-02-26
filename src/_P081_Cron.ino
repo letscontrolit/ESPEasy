@@ -3,7 +3,8 @@
 // #################################### Plugin 081: CRON tasks Scheduler       ###########################
 // #######################################################################################################
 
-// Maxim Integrated
+// FIXME TD-er: There is some kind of memory leak in this cron plugin.
+
 #ifdef USES_P081
 
 #include <ctype.h>
