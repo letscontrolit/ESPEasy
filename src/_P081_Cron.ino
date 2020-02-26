@@ -262,8 +262,8 @@ boolean Plugin_081(byte function, struct EventStruct *event, String& string)
             addLog(LOG_LEVEL_DEBUG, String(F("Next execution:")) + getDateTimeString(*gmtime(&next_exec_time)));
 
             if (function != PLUGIN_TIME_CHANGE) {
-              String pluginName = getPluginNameFromDeviceIndex(getDeviceIndex_from_TaskIndex(event->TaskIndex));
-              eventQueue.add(String(F("Cron#")) + pluginName);
+              LoadTaskSettings(event->TaskIndex);
+              eventQueue.add(String(F("Cron#")) + String(ExtraTaskSettings.TaskDeviceName));
               success = true;
             }
           }
