@@ -263,6 +263,16 @@ unsigned long now() {
 
   if (timeSynced) {
     calcSunRiseAndSet();
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      String log = F("Local time: ");
+      log += getDateTimeString('-', ':', ' ');
+      addLog(LOG_LEVEL_INFO, log);
+    }
+    {
+      // Notify plugins the time has been set.
+      String dummy;
+      PluginCall(PLUGIN_TIME_CHANGE, 0, dummy);
+    }
 
     if (Settings.UseRules) {
       if (statusNTPInitialized) {
@@ -389,14 +399,16 @@ bool getNtpTime(double& unixTime_d)
   IPAddress timeServerIP;
   String    log = F("NTP  : NTP host ");
 
+  bool useNTPpool = false;
+
   if (Settings.NTPHost[0] != 0) {
     resolveHostByName(Settings.NTPHost, timeServerIP);
     log += Settings.NTPHost;
 
-    // When single set host fails, retry again in a minute
+    // When single set host fails, retry again in 20 seconds
     nextSyncTime = sysTime + 20;
   } else  {
-    // Have to do a lookup eacht time, since the NTP pool always returns another IP
+    // Have to do a lookup each time, since the NTP pool always returns another IP
     String ntpServerName = String(random(0, 3));
     ntpServerName += F(".pool.ntp.org");
     resolveHostByName(ntpServerName.c_str(), timeServerIP);
@@ -404,6 +416,7 @@ bool getNtpTime(double& unixTime_d)
 
     // When pool host fails, retry can be much sooner
     nextSyncTime = sysTime + 5;
+    useNTPpool = true;
   }
 
   log += " (";
@@ -419,7 +432,7 @@ bool getNtpTime(double& unixTime_d)
   WiFiUDP udp;
 
   if (!beginWiFiUDP_randomPort(udp)) {
-    return 0;
+    return false;
   }
 
   const int NTP_PACKET_SIZE = 48;     // NTP time is in the first 48 bytes of message
@@ -444,7 +457,7 @@ bool getNtpTime(double& unixTime_d)
 
   if (udp.beginPacket(timeServerIP, 123) == 0) { // NTP requests are to port 123
     udp.stop();
-    return 0;
+    return false;
   }
   udp.write(packetBuffer, NTP_PACKET_SIZE);
   udp.endPacket();
@@ -459,6 +472,22 @@ bool getNtpTime(double& unixTime_d)
     if ((size >= NTP_PACKET_SIZE) && (remotePort == 123)) {
       udp.read(packetBuffer, NTP_PACKET_SIZE); // read packet into the buffer
 
+      if ((packetBuffer[0] & 0b11000000) == 0b11000000) {
+        // Leap-Indicator: unknown (clock unsynchronized) 
+        // See: https://github.com/letscontrolit/ESPEasy/issues/2886#issuecomment-586656384
+        if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+          String log = F("NTP  : NTP host (");
+          log += timeServerIP.toString();
+          log += ") unsynchronized";
+          addLog(LOG_LEVEL_ERROR, log);
+        }
+        if (!useNTPpool) {
+          // Does not make sense to try it very often if a single host is used which is not synchronized.
+          nextSyncTime = sysTime + 120;
+        }
+        return false;
+      } 
+
       // For more detailed info on improving accuracy, see:
       // https://github.com/lettier/ntpclient/issues/4#issuecomment-360703503
       // For now, we simply use half the reply time as delay compensation.
@@ -471,6 +500,15 @@ bool getNtpTime(double& unixTime_d)
       secsSince1900 |= (unsigned long)packetBuffer[41] << 16;
       secsSince1900 |= (unsigned long)packetBuffer[42] << 8;
       secsSince1900 |= (unsigned long)packetBuffer[43];
+      if (secsSince1900 == 0) {
+        // No time stamp received
+
+        if (!useNTPpool) {
+          // Retry again in a minute.
+          nextSyncTime = sysTime + 60;
+        }
+        return false;
+      }
       uint32_t txTm = secsSince1900 - 2208988800UL;
 
       unsigned long txTm_f;
@@ -514,6 +552,12 @@ bool getNtpTime(double& unixTime_d)
     }
     delay(10);
   }
+  // Timeout.
+  if (!useNTPpool) {
+    // Retry again in a minute.
+    nextSyncTime = sysTime + 60;
+  }
+
 #ifndef BUILD_NO_DEBUG
   addLog(LOG_LEVEL_DEBUG_MORE, F("NTP  : No reply"));
 #endif // ifndef BUILD_NO_DEBUG
