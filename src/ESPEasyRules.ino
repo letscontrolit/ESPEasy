@@ -77,6 +77,8 @@ bool processNextEvent() {
       return true;
     }
   }
+  // Just make sure any (accidentally) added or remaining events are not kept.
+  eventQueue.clear();
   return false;
 }
 

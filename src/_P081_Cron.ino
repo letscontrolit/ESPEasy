@@ -23,10 +23,55 @@ extern "C"
 #define PLUGIN_VALUENAME2_081 "NextExecution"
 #ifndef PLUGIN_081_DEBUG
   # define PLUGIN_081_DEBUG  false // set to true for extra log info in the debug
-#endif // ifndef PLUGIN_081_DEBUG
+#endif  // ifndef PLUGIN_081_DEBUG
 #define PLUGIN_081_EXPRESSION_SIZE 41
 #define LASTEXECUTION UserVar[event->BaseVarIndex]
 #define NEXTEXECUTION UserVar[event->BaseVarIndex + 1]
+
+
+struct P081_data_struct : public PluginTaskData_base {
+  P081_data_struct(const String& expression)
+  {
+    const char *error;
+
+    memset(&_expr, 0, sizeof(_expr));
+    cron_parse_expr(expression.c_str(), &_expr, &error);
+
+    if (!error) {
+      _initialized = true;
+    } else {
+      _error = String(error);
+    }
+  }
+
+  ~P081_data_struct() {}
+
+  bool isInitialized() {
+    return _initialized;
+  }
+
+  bool hasError(String& error) {
+    if (_initialized) { return false; }
+    error = _error;
+    return true;
+  }
+
+  time_t get_cron_next(time_t date) {
+    if (!_initialized) { return CRON_INVALID_INSTANT; }
+    return cron_next((cron_expr *)&_expr, date);
+  }
+
+  time_t get_cron_prev(time_t date) {
+    if (!_initialized) { return CRON_INVALID_INSTANT; }
+    return cron_prev((cron_expr *)&_expr, date);
+  }
+
+private:
+
+  String    _error;
+  cron_expr _expr;
+  bool      _initialized = false;
+};
 
 union timeToFloat
 {
@@ -41,37 +86,35 @@ String P081_getCronExpr(taskIndex_t taskIndex)
 
   ZERO_FILL(expression);
   LoadCustomTaskSettings(taskIndex, (byte *)&expression, PLUGIN_081_EXPRESSION_SIZE);
-  return String(expression);
-}
-
-time_t P081_computeNextCronTime(const String& expression, time_t last, const char *error)
-{
-  cron_expr expr;
-
-  memset(&expr, 0, sizeof(expr));
-  error = nullptr;
-  cron_parse_expr(expression.c_str(), &expr, &error);
-
-  if (error)
-  {
-    // TODO: Notify at ui de error
-    addLog(LOG_LEVEL_ERROR, String(F("CRON Expression: ")) + String(error));
-    delete error;
-    return CRON_INVALID_INSTANT;
-  }
-  return cron_next((cron_expr *)&expr, last);
+  String res(expression);
+  res.trim();
+  return res;
 }
 
 time_t P081_computeNextCronTime(taskIndex_t taskIndex, time_t last)
 {
-  const char *error = nullptr;
-  String expression = P081_getCronExpr(taskIndex);
-  time_t res        = P081_computeNextCronTime(expression, last, error);
+  P081_data_struct *P081_data =
+    static_cast<P081_data_struct *>(getPluginTaskData(taskIndex));
 
-  if (error) {
-    delete error;
+  if ((nullptr != P081_data) && P081_data->isInitialized()) {
+    int32_t freeHeapStart = ESP.getFreeHeap();
+
+    time_t res = P081_data->get_cron_next(last);
+
+    int32_t freeHeapEnd = ESP.getFreeHeap();
+
+    if (freeHeapEnd < freeHeapStart) {
+      String log = F("Cron: Free Heap Decreased: ");
+      log += String(freeHeapStart - freeHeapEnd);
+      log += F(" (");
+      log += freeHeapStart;
+      log += F(" -> ");
+      log += freeHeapEnd;
+      addLog(LOG_LEVEL_INFO, log);
+    }
+    return res;
   }
-  return res;
+  return CRON_INVALID_INSTANT;
 }
 
 time_t P081_getCronExecTime(float execTime)
@@ -147,15 +190,14 @@ boolean Plugin_081(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
     {
       addFormSubHeader(F("Schedule"));
-      String expression = P081_getCronExpr(event->TaskIndex);
       addFormTextBox(F("CRON Expression")
                      , F("p081_cron_exp")
-                     , expression
+                     , P081_getCronExpr(event->TaskIndex)
                      , 39);
 
       addFormNote(F("S  M  H  DoM  Month  DoW"));
 
-      P081_html_show_cron_expr(event, expression);
+      P081_html_show_cron_expr(event);
 
       success = true;
       break;
@@ -164,36 +206,22 @@ boolean Plugin_081(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE:
     {
       String expression = WebServer.arg(F("p081_cron_exp"));
+      String log;
       {
-        String log;
-        const char *err = NULL;
-        time_t last     = P081_getCurrentTime();
-        time_t next     = P081_computeNextCronTime(expression, last, err);
-
-        if (!err)
-        {
-          P081_setCronExecTimes(event, last, next);
-        }
-        else
-        {
-          log = String(F("CRON Expression: Error ")) + String(err);
-          delete err;
-          addHtmlError(log);
-          addLog(LOG_LEVEL_ERROR, log);
-        }
-        {
-          char expression_c[PLUGIN_081_EXPRESSION_SIZE];
-          ZERO_FILL(expression_c);
-          safe_strncpy(expression_c, expression, PLUGIN_081_EXPRESSION_SIZE);
-          log = SaveCustomTaskSettings(event->TaskIndex, (byte *)&expression_c, PLUGIN_081_EXPRESSION_SIZE);
-        }
-
-        if (log != "")
-        {
-          log = String(PSTR(PLUGIN_NAME_081)) + String(F(": Saving ")) + log;
-          addLog(LOG_LEVEL_ERROR, log);
-        }
+        char expression_c[PLUGIN_081_EXPRESSION_SIZE];
+        ZERO_FILL(expression_c);
+        safe_strncpy(expression_c, expression, PLUGIN_081_EXPRESSION_SIZE);
+        log = SaveCustomTaskSettings(event->TaskIndex, (byte *)&expression_c, PLUGIN_081_EXPRESSION_SIZE);
       }
+
+      if (log != "")
+      {
+        log = String(PSTR(PLUGIN_NAME_081)) + String(F(": Saving ")) + log;
+        addLog(LOG_LEVEL_ERROR, log);
+      }
+
+      clearPluginTaskData(event->TaskIndex);
+      P081_setCronExecTimes(event, CRON_INVALID_INSTANT, CRON_INVALID_INSTANT);
       success = true;
       break;
     }
@@ -214,11 +242,28 @@ boolean Plugin_081(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      // this case defines code to be executed when the plugin is initialised
-      // after the plugin has been initialised successfuly, set success and break
+      initPluginTaskData(event->TaskIndex, new P081_data_struct(P081_getCronExpr(event->TaskIndex)));
+      P081_data_struct *P081_data =
+        static_cast<P081_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (nullptr == P081_data) {
+        return success;
+      }
+
+      if (P081_data->isInitialized()) {
+        success = true;
+      } else {
+        clearPluginTaskData(event->TaskIndex);
+      }
+      break;
+    }
+
+    case PLUGIN_EXIT: {
+      clearPluginTaskData(event->TaskIndex);
       success = true;
       break;
     }
+
 
     case PLUGIN_READ:
     {
@@ -254,6 +299,7 @@ boolean Plugin_081(byte function, struct EventStruct *event, String& string)
 
           if (cron_elapsed) {
             addLog(LOG_LEVEL_DEBUG, F("Cron Elapsed"));
+
             last_exec_time = next_exec_time;
             next_exec_time = P081_computeNextCronTime(event->TaskIndex, last_exec_time);
             P081_setCronExecTimes(event, last_exec_time, next_exec_time);
@@ -272,9 +318,12 @@ boolean Plugin_081(byte function, struct EventStruct *event, String& string)
       } else {
         addLog(LOG_LEVEL_ERROR, F("CRON: Time not synced"));
       }
+
+
       break;
     }
   } // switch
+
   return success;
 }   // function
 
@@ -344,22 +393,22 @@ String P081_formatExecTime(float execTime_f) {
   return F("-");
 }
 
-void P081_html_show_cron_expr(struct EventStruct *event, const String& expression) {
-  cron_expr e;
+void P081_html_show_cron_expr(struct EventStruct *event) {
+  P081_data_struct *P081_data =
+    static_cast<P081_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-  memset(&e, 0, sizeof(e));
-  const char *error = nullptr;
-  cron_parse_expr(expression.c_str(), &e, &error);
+  if ((nullptr != P081_data) && P081_data->isInitialized()) {
+    String error;
 
-  if (error) {
-    addRowLabel(F("Error"));
-    addHtml(String(error));
-    delete error;
-  } else {
-    addRowLabel(F("Last Exec Time"));
-    addHtml(P081_formatExecTime(LASTEXECUTION));
-    addRowLabel(F("Next Exec Time"));
-    addHtml(P081_formatExecTime(NEXTEXECUTION));
+    if (P081_data->hasError(error)) {
+      addRowLabel(F("Error"));
+      addHtml(error);
+    } else {
+      addRowLabel(F("Last Exec Time"));
+      addHtml(P081_formatExecTime(LASTEXECUTION));
+      addRowLabel(F("Next Exec Time"));
+      addHtml(P081_formatExecTime(NEXTEXECUTION));
+    }
   }
 }
 
