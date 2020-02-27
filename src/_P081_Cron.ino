@@ -1,9 +1,7 @@
 // #######################################################################################################
-
 // #################################### Plugin 081: CRON tasks Scheduler       ###########################
 // #######################################################################################################
 
-// FIXME TD-er: There is some kind of memory leak in this cron plugin.
 
 #ifdef USES_P081
 
@@ -12,7 +10,7 @@
 
 extern "C"
 {
-#include "ccronexpr.h"
+  #include "ccronexpr.h"
 }
 
 
@@ -30,7 +28,7 @@ extern "C"
 
 
 struct P081_data_struct : public PluginTaskData_base {
-  P081_data_struct(const String& expression)
+  explicit P081_data_struct(const String& expression)
   {
     const char *error;
 
@@ -97,21 +95,23 @@ time_t P081_computeNextCronTime(taskIndex_t taskIndex, time_t last)
     static_cast<P081_data_struct *>(getPluginTaskData(taskIndex));
 
   if ((nullptr != P081_data) && P081_data->isInitialized()) {
-    int32_t freeHeapStart = ESP.getFreeHeap();
+    //    int32_t freeHeapStart = ESP.getFreeHeap();
 
     time_t res = P081_data->get_cron_next(last);
 
-    int32_t freeHeapEnd = ESP.getFreeHeap();
+    /*
+        int32_t freeHeapEnd = ESP.getFreeHeap();
 
-    if (freeHeapEnd < freeHeapStart) {
-      String log = F("Cron: Free Heap Decreased: ");
-      log += String(freeHeapStart - freeHeapEnd);
-      log += F(" (");
-      log += freeHeapStart;
-      log += F(" -> ");
-      log += freeHeapEnd;
-      addLog(LOG_LEVEL_INFO, log);
-    }
+        if (freeHeapEnd < freeHeapStart) {
+          String log = F("Cron: Free Heap Decreased: ");
+          log += String(freeHeapStart - freeHeapEnd);
+          log += F(" (");
+          log += freeHeapStart;
+          log += F(" -> ");
+          log += freeHeapEnd;
+          addLog(LOG_LEVEL_INFO, log);
+        }
+     */
     return res;
   }
   return CRON_INVALID_INSTANT;
@@ -142,6 +142,28 @@ time_t P081_getCurrentTime()
   // FIXME TD-er: Why work on a deepcopy of tm?
   struct tm current = tm;
   return mktime((struct tm *)&current);
+}
+
+void P081_check_or_init(struct EventStruct *event)
+{
+  if (systemTimePresent()) {
+    const time_t current_time = P081_getCurrentTime();
+    time_t last_exec_time     = P081_getCronExecTime(LASTEXECUTION);
+    time_t next_exec_time     = P081_getCronExecTime(NEXTEXECUTION);
+
+    // Must check if the values of LASTEXECUTION and NEXTEXECUTION make sense.
+    // These can be invalid values from a reboot, or simply contain uninitialized values.
+    if ((last_exec_time > current_time) || (last_exec_time == CRON_INVALID_INSTANT) || (next_exec_time == CRON_INVALID_INSTANT)) {
+      // Last execution time cannot be correct.
+      last_exec_time = CRON_INVALID_INSTANT;
+      const time_t tmp_next = P081_computeNextCronTime(event->TaskIndex, current_time);
+
+      if ((tmp_next < next_exec_time) || (next_exec_time == CRON_INVALID_INSTANT)) {
+        next_exec_time = tmp_next;
+      }
+      P081_setCronExecTimes(event, CRON_INVALID_INSTANT, next_exec_time);
+    }
+  }
 }
 
 boolean Plugin_081(byte function, struct EventStruct *event, String& string)
@@ -251,6 +273,7 @@ boolean Plugin_081(byte function, struct EventStruct *event, String& string)
       }
 
       if (P081_data->isInitialized()) {
+        P081_check_or_init(event);
         success = true;
       } else {
         clearPluginTaskData(event->TaskIndex);
@@ -277,31 +300,18 @@ boolean Plugin_081(byte function, struct EventStruct *event, String& string)
     {
       // code to be executed once a second. Tasks which do not require fast response can be added here
       if (systemTimePresent()) {
-        const time_t current_time = P081_getCurrentTime();
-        time_t last_exec_time     = P081_getCronExecTime(LASTEXECUTION);
-        time_t next_exec_time     = P081_getCronExecTime(NEXTEXECUTION);
-
-        // Must check if the values of LASTEXECUTION and NEXTEXECUTION make sense.
-        // These can be invalid values from a reboot, or simply contain uninitialized values.
-        if ((last_exec_time > current_time) || (last_exec_time == CRON_INVALID_INSTANT) || (next_exec_time == CRON_INVALID_INSTANT)) {
-          // Last execution time cannot be correct.
-          last_exec_time = CRON_INVALID_INSTANT;
-          const time_t tmp_next = P081_computeNextCronTime(event->TaskIndex, current_time);
-
-          if ((tmp_next < next_exec_time) || (next_exec_time == CRON_INVALID_INSTANT)) {
-            next_exec_time = tmp_next;
-          }
-          P081_setCronExecTimes(event, CRON_INVALID_INSTANT, next_exec_time);
-        }
+        P081_check_or_init(event);
+        time_t next_exec_time = P081_getCronExecTime(NEXTEXECUTION);
 
         if (next_exec_time != CRON_INVALID_INSTANT) {
-          const bool cron_elapsed = (next_exec_time <= current_time);
+          const time_t current_time = P081_getCurrentTime();
+          const bool   cron_elapsed = (next_exec_time <= current_time);
 
           if (cron_elapsed) {
             addLog(LOG_LEVEL_DEBUG, F("Cron Elapsed"));
 
-            last_exec_time = next_exec_time;
-            next_exec_time = P081_computeNextCronTime(event->TaskIndex, last_exec_time);
+            time_t last_exec_time = next_exec_time;
+            next_exec_time = P081_computeNextCronTime(event->TaskIndex, current_time);
             P081_setCronExecTimes(event, last_exec_time, next_exec_time);
 
             addLog(LOG_LEVEL_DEBUG, String(F("Next execution:")) + getDateTimeString(*gmtime(&next_exec_time)));
