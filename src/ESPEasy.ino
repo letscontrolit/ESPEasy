@@ -763,11 +763,8 @@ void run10TimesPerSecond() {
     CPluginCall(CPlugin::Function::CPLUGIN_TEN_PER_SECOND, 0, dummy);
     STOP_TIMER(CPLUGIN_CALL_10PS);
   }
-
-  if (Settings.UseRules)
-  {
-    processNextEvent();
-  }
+  processNextEvent();
+  
   #ifdef USES_C015
   if (WiFiConnected())
       Blynk_Run_c015();
