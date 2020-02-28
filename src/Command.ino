@@ -226,6 +226,7 @@ bool executeInternalCommand(const char *cmd, struct EventStruct *event, const ch
 	    COMMAND_CASE(  "subscribe", Command_MQTT_Subscribe,  1);  // MQTT.h  
     #endif // USES_MQTT
       COMMAND_CASE(    "sysload", Command_SysLoad,         0); // Diagnostic.h
+      COMMAND_CASE( "setdatetime", Command_SetDateTime,    2); // Time.h
       break;
     }
     case 't': {

@@ -5,6 +5,7 @@
 #include "../Globals/Settings.h"
 
 #include "../../ESPEasy_fdwdecl.h"
+#include "../../TimeESPeasy.h"
 
 
 String Command_NTPHost(struct EventStruct *event, const char* Line)
@@ -50,6 +51,39 @@ String Command_DST(struct EventStruct *event, const char* Line)
 		serialPrintln();
 		String result = F("DST:");
 		result += boolToString(Settings.DST);
+		return return_result(event, result);
+	}
+	return return_command_success();
+}
+
+String Command_SetDateTime(struct EventStruct *event, const char* Line)
+{
+	String TmpStr1;
+	if (GetArgv(Line, TmpStr1, 2)) {
+		struct tm tm;
+		int yr, mnth, d;
+		sscanf(TmpStr1.c_str(), "%4d-%2d-%2d", &yr, &mnth, &d);
+		tm.tm_year = yr - 1970;
+		tm.tm_mon = mnth;
+		tm.tm_mday = d;
+		if (GetArgv(Line, TmpStr1, 2)) {
+			int h, m, s;
+			sscanf(TmpStr1.c_str(), "%2d:%2d:%2d", &h, &m, &s);
+			tm.tm_hour = h;
+			tm.tm_min = m;
+			tm.tm_sec = s;
+		}else{
+			tm.tm_hour = 0;
+			tm.tm_min = 0;
+			tm.tm_sec = 0;
+		}
+
+		sysTime = makeTime(tm);
+		
+	}else  {
+		serialPrintln();
+		String result = F("Datetime:");
+		//result += getDateTimeString('-',':',' ');
 		return return_result(event, result);
 	}
 	return return_command_success();
