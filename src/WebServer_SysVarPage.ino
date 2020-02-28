@@ -12,7 +12,7 @@ void handle_sysvars() {
   sendHeadandTail_stdtemplate();
 
   html_BR();
-  TXBuffer += F("<p>This page may load slow.<BR>Do not load too often, since it may affect performance of the node.</p>");
+  addHtml(F("<p>This page may load slow.<BR>Do not load too often, since it may affect performance of the node.</p>"));
   html_BR();
 
   // the table header
@@ -174,21 +174,26 @@ void handle_sysvars() {
 
 void addSysVar_html(const String& input) {
   html_TR_TD();
-  TXBuffer += F("<pre>"); // Make monospaced (<tt> tag?)
-  TXBuffer += F("<xmp>"); // Make sure HTML code is escaped. Tag depricated??
-  TXBuffer += input;
-  TXBuffer += F("</xmp>");
-  TXBuffer += F("</pre>");
+  {
+    String html;
+    html.reserve(24 + input.length());
+    html += F("<pre>"); // Make monospaced (<tt> tag?)
+    html += F("<xmp>"); // Make sure HTML code is escaped. Tag depricated??
+    html += input;
+    html += F("</xmp>");
+    html += F("</pre>");
+    addHtml(html);
+  }
   html_TD();
   String replacement(input);                // Make deepcopy for replacement
   parseSystemVariables(replacement, false); // Not URL encoded
   parseStandardConversions(replacement, false);
-  TXBuffer += replacement;
+  addHtml(replacement);
   html_TD();
   replacement = input;
   parseSystemVariables(replacement, true); // URL encoded
   parseStandardConversions(replacement, true);
-  TXBuffer += replacement;
+  addHtml(replacement);
   delay(0);
 }
 

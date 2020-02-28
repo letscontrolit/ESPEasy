@@ -347,9 +347,9 @@ void sendHeadandTail(const String& tmplName, boolean Tail = false, boolean reboo
   lastWeb = millis();
 
   if (Tail) {
-    TXBuffer += pageTemplate.substring(
-      11 +                                     // Size of "{{content}}"
-      pageTemplate.indexOf(F("{{content}}"))); // advance beyond content key
+    addHtml(pageTemplate.substring(
+              11 +                                      // Size of "{{content}}"
+              pageTemplate.indexOf(F("{{content}}")))); // advance beyond content key
   } else {
     int indexStart = 0;
     int indexEnd   = 0;
@@ -362,8 +362,8 @@ void sendHeadandTail(const String& tmplName, boolean Tail = false, boolean reboo
     }
 
     while ((indexStart = pageTemplate.indexOf(F("{{"), indexStart)) >= 0) {
-      TXBuffer += pageTemplate.substring(readPos, indexStart);
-      readPos   = indexStart;
+      addHtml(pageTemplate.substring(readPos, indexStart));
+      readPos = indexStart;
 
       if ((indexEnd = pageTemplate.indexOf(F("}}"), indexStart)) > 0) {
         varName    = pageTemplate.substring(indexStart + 2, indexEnd);
@@ -377,7 +377,7 @@ void sendHeadandTail(const String& tmplName, boolean Tail = false, boolean reboo
           getErrorNotifications();
         }
         else if (varName == F("meta")) {
-          TXBuffer += meta;
+          addHtml(meta);
         }
         else {
           getWebPageTemplateVar(varName);
@@ -406,8 +406,10 @@ void sendHeadandTail_stdtemplate(boolean Tail = false, boolean rebooting = false
     if (!clientIPinSubnet() && WifiIsAP(WiFi.getMode()) && (WiFi.softAPgetStationNum() > 0)) {
       addHtmlError(F("Warning: Connected via AP"));
     }
+
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       const int nrArgs = WebServer.args();
+
       if (nrArgs > 0) {
         String log = F(" Webserver args:");
 
@@ -427,18 +429,21 @@ void sendHeadandTail_stdtemplate(boolean Tail = false, boolean rebooting = false
 
 size_t streamFile_htmlEscape(const String& fileName)
 {
-  fs::File f = tryOpenFile(fileName, "r");
-  size_t size = 0;
+  fs::File f    = tryOpenFile(fileName, "r");
+  size_t   size = 0;
+
   if (f)
   {
     String escaped;
+
     while (f.available())
     {
       char c = (char)f.read();
+
       if (htmlEscapeChar(c, escaped)) {
-        TXBuffer += escaped;
+        addHtml(escaped);
       } else {
-        TXBuffer += c;
+        addHtml(String(c));
       }
       ++size;
     }
@@ -446,7 +451,6 @@ size_t streamFile_htmlEscape(const String& fileName)
   }
   return size;
 }
-
 
 // ********************************************************************************
 // Web Interface init
@@ -588,7 +592,7 @@ void WebServerInit()
     }
     # endif // ifndef NO_HTTP_UPDATER
   }
-  #endif // if defined(ESP8266)
+  #endif    // if defined(ESP8266)
 
   #if defined(ESP8266)
 
@@ -609,6 +613,7 @@ void WebServerInit()
 
 void set_mDNS() {
   #ifdef FEATURE_MDNS
+
   if (webserverRunning) {
     addLog(LOG_LEVEL_INFO, F("WIFI : Starting mDNS..."));
     bool mdns_started = MDNS.begin(WifiGetHostname().c_str());
@@ -626,6 +631,7 @@ void set_mDNS() {
       }
       addLog(LOG_LEVEL_INFO, log);
     }
+
     if (mdns_started) {
       MDNS.addService("http", "tcp", 80);
     }
@@ -745,6 +751,7 @@ void getErrorNotifications() {
   for (controllerIndex_t x = 0; x < CONTROLLER_MAX; x++) {
     if (Settings.Protocol[x] != 0) {
       protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(x);
+
       if (validProtocolIndex(ProtocolIndex) && Settings.ControllerEnabled[x] && Protocol[ProtocolIndex].usesMQTT) {
         ++nrMQTTenabled;
       }
@@ -820,17 +827,17 @@ void getWebPageTemplateVar(const String& varName)
 
   if (varName == F("name"))
   {
-    TXBuffer += Settings.Name;
+    addHtml(Settings.Name);
   }
 
   else if (varName == F("unit"))
   {
-    TXBuffer += String(Settings.Unit);
+    addHtml(String(Settings.Unit));
   }
 
   else if (varName == F("menu"))
   {
-    TXBuffer += F("<div class='menubar'>");
+    addHtml(F("<div class='menubar'>"));
 
     for (byte i = 0; i < 8; i++)
     {
@@ -844,29 +851,28 @@ void getWebPageTemplateVar(const String& varName)
       }
 #endif // ifdef NOTIFIER_SET_NONE
 
-      TXBuffer += F("<a class='menu");
+      addHtml(F("<a class='menu"));
 
       if (i == navMenuIndex) {
-        TXBuffer += F(" active");
+        addHtml(F(" active"));
       }
-      TXBuffer += F("' href='");
-      TXBuffer += getGpMenuURL(i);
-      TXBuffer += "'>";
-      TXBuffer += getGpMenuIcon(i);
-      TXBuffer += F("<span class='showmenulabel'>");
-      TXBuffer += getGpMenuLabel(i);
-      TXBuffer += F("</span>");
-      TXBuffer += F("</a>");
+      addHtml(F("' href='"));
+      addHtml(getGpMenuURL(i));
+      addHtml("'>");
+      addHtml(getGpMenuIcon(i));
+      addHtml(F("<span class='showmenulabel'>"));
+      addHtml(getGpMenuLabel(i));
+      addHtml(F("</span></a>"));
     }
 
-    TXBuffer += F("</div>");
+    addHtml(F("</div>"));
   }
 
   else if (varName == F("logo"))
   {
     if (SPIFFS.exists(F("esp.png")))
     {
-      TXBuffer = F("<img src=\"esp.png\" width=48 height=48 align=right>");
+      addHtml(F("<img src=\"esp.png\" width=48 height=48 align=right>"));
     }
   }
 
@@ -875,15 +881,15 @@ void getWebPageTemplateVar(const String& varName)
     if (SPIFFS.exists(F("esp.css"))) // now css is written in writeDefaultCSS() to SPIFFS and always present
     // if (0) //TODO
     {
-      TXBuffer = F("<link rel=\"stylesheet\" type=\"text/css\" href=\"esp.css\">");
+      addHtml(F("<link rel=\"stylesheet\" type=\"text/css\" href=\"esp.css\">"));
     }
     else
     {
-      TXBuffer += F("<style>");
+      addHtml(F("<style>"));
 
       // Send CSS per chunk to avoid sending either too short or too large strings.
       TXBuffer += DATA_ESPEASY_DEFAULT_MIN_CSS;
-      TXBuffer += F("</style>");
+      addHtml(F("</style>"));
     }
   }
 
@@ -951,20 +957,31 @@ int8_t level     = 0;
 int8_t lastLevel = -1;
 
 void json_quote_name(const String& val) {
-  if (lastLevel == level) { TXBuffer += ","; }
+  String html;
+
+  html.reserve(4 + val.length());
+
+  if (lastLevel == level) {
+    html += ",";
+  }
 
   if (val.length() > 0) {
-    TXBuffer += '\"';
-    TXBuffer += val;
-    TXBuffer += '\"';
-    TXBuffer += ':';
+    html += '\"';
+    html += val;
+    html += '\"';
+    html += ':';
   }
+  addHtml(html);
 }
 
 void json_quote_val(const String& val) {
-  TXBuffer += '\"';
-  TXBuffer += val;
-  TXBuffer += '\"';
+  String html;
+
+  html.reserve(4 + val.length());
+  html += '\"';
+  html += val;
+  html += '\"';
+  addHtml(html);
 }
 
 void json_open() {
@@ -977,7 +994,7 @@ void json_open(bool arr) {
 
 void json_open(bool arr, const String& name) {
   json_quote_name(name);
-  TXBuffer += arr ? '[' : '{';
+  addHtml(arr ? "[" : "{");
   lastLevel = level;
   level++;
 }
@@ -992,7 +1009,7 @@ void json_close() {
 }
 
 void json_close(bool arr) {
-  TXBuffer += arr ? ']' : '}';
+  addHtml(arr ? "]" : "}");
   level--;
   lastLevel = level;
 }
@@ -1021,33 +1038,46 @@ void addTaskSelect(const String& name,  taskIndex_t choice)
 {
   String deviceName;
 
-  TXBuffer += F("<select id='selectwidth' name='");
-  TXBuffer += name;
-  TXBuffer += F("' onchange='return dept_onchange(frmselect)'>");
+  addHtml(F("<select id='selectwidth' name='"));
+  addHtml(name);
+  addHtml(F("' onchange='return dept_onchange(frmselect)'>"));
 
   for (taskIndex_t x = 0; x < TASKS_MAX; x++)
   {
     const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(x);
     deviceName = getPluginNameFromDeviceIndex(DeviceIndex);
     LoadTaskSettings(x);
-    TXBuffer += F("<option value='");
-    TXBuffer += x;
-    TXBuffer += '\'';
 
-    if (choice == x) {
-      TXBuffer += F(" selected");
+    {
+      String html;
+      html.reserve(32);
+
+      html += F("<option value='");
+      html += x;
+      html += '\'';
+
+      if (choice == x) {
+        html += F(" selected");
+      }
+      addHtml(html);
     }
 
     if (!validPluginID_fullcheck(Settings.TaskDeviceNumber[x])) {
       addDisabled();
     }
-    TXBuffer += '>';
-    TXBuffer += x + 1;
-    TXBuffer += F(" - ");
-    TXBuffer += deviceName;
-    TXBuffer += F(" - ");
-    TXBuffer += ExtraTaskSettings.TaskDeviceName;
-    TXBuffer += F("</option>");
+    {
+      String html;
+      html.reserve(96);
+
+      html += '>';
+      html += x + 1;
+      html += F(" - ");
+      html += deviceName;
+      html += F(" - ");
+      html += ExtraTaskSettings.TaskDeviceName;
+      html += F("</option>");
+      addHtml(html);
+    }
   }
 }
 
@@ -1062,24 +1092,33 @@ void addTaskValueSelect(const String& name, int choice, taskIndex_t TaskIndex)
 
   if (!validDeviceIndex(DeviceIndex)) { return; }
 
-  TXBuffer += F("<select id='selectwidth' name='");
-  TXBuffer += name;
-  TXBuffer += "'>";
+  {
+    String html;
+    html.reserve(34 + name.length());
+
+    html += F("<select id='selectwidth' name='");
+    html += name;
+    html += "'>";
+    addHtml(html);
+  }
 
   LoadTaskSettings(TaskIndex);
 
   for (byte x = 0; x < Device[DeviceIndex].ValueCount; x++)
   {
-    TXBuffer += F("<option value='");
-    TXBuffer += x;
-    TXBuffer += '\'';
+    String html;
+    html.reserve(96);
+    html += F("<option value='");
+    html += x;
+    html += '\'';
 
     if (choice == x) {
-      TXBuffer += F(" selected");
+      html += F(" selected");
     }
-    TXBuffer += '>';
-    TXBuffer += ExtraTaskSettings.TaskDeviceValueNames[x];
-    TXBuffer += F("</option>");
+    html += '>';
+    html += ExtraTaskSettings.TaskDeviceValueNames[x];
+    html += F("</option>");
+    addHtml(html);
   }
 }
 
@@ -1145,12 +1184,16 @@ void addSVG_param(const String& key, float value) {
 }
 
 void addSVG_param(const String& key, const String& value) {
-  TXBuffer += ' ';
-  TXBuffer += key;
-  TXBuffer += '=';
-  TXBuffer += '\"';
-  TXBuffer += value;
-  TXBuffer += '\"';
+  String html;
+
+  html.reserve(8 + key.length() + value.length());
+  html += ' ';
+  html += key;
+  html += '=';
+  html += '\"';
+  html += value;
+  html += '\"';
+  addHtml(html);
 }
 
 void createSvgRect_noStroke(unsigned int fillColor, float xoffset, float yoffset, float width, float height, float rx, float ry) {
@@ -1166,7 +1209,7 @@ void createSvgRect(unsigned int fillColor,
                    float        strokeWidth,
                    float        rx,
                    float        ry) {
-  TXBuffer += F("<rect");
+  addHtml(F("<rect"));
   addSVG_param(F("fill"), formatToHex(fillColor, F("#")));
 
   if (strokeWidth != 0) {
@@ -1179,40 +1222,43 @@ void createSvgRect(unsigned int fillColor,
   addSVG_param(F("height"), height);
   addSVG_param(F("rx"),     rx);
   addSVG_param(F("ry"),     ry);
-  TXBuffer += F("/>");
+  addHtml(F("/>"));
 }
 
 void createSvgHorRectPath(unsigned int color, int xoffset, int yoffset, int size, int height, int range, float SVG_BAR_WIDTH) {
   float width = SVG_BAR_WIDTH * size / range;
 
   if (width < 2) { width = 2; }
-  TXBuffer += formatToHex(color, F("<path fill=\"#"));
-  TXBuffer += F("\" d=\"M");
-  TXBuffer += toString(SVG_BAR_WIDTH * xoffset / range, 2);
-  TXBuffer += ' ';
-  TXBuffer += yoffset;
-  TXBuffer += 'h';
-  TXBuffer += toString(width, 2);
-  TXBuffer += 'v';
-  TXBuffer += height;
-  TXBuffer += 'H';
-  TXBuffer += toString(SVG_BAR_WIDTH * xoffset / range, 2);
-  TXBuffer += F("z\"/>\n");
+  String html;
+  html.reserve(96);
+  html += formatToHex(color, F("<path fill=\"#"));
+  html += F("\" d=\"M");
+  html += toString(SVG_BAR_WIDTH * xoffset / range, 2);
+  html += ' ';
+  html += yoffset;
+  html += 'h';
+  html += toString(width, 2);
+  html += 'v';
+  html += height;
+  html += 'H';
+  html += toString(SVG_BAR_WIDTH * xoffset / range, 2);
+  html += F("z\"/>\n");
+  addHtml(html);
 }
 
 void createSvgTextElement(const String& text, float textXoffset, float textYoffset) {
-  TXBuffer += F("<text style=\"line-height:1.25\" x=\"");
-  TXBuffer += toString(textXoffset, 2);
-  TXBuffer += F("\" y=\"");
-  TXBuffer += toString(textYoffset, 2);
-  TXBuffer += F("\" stroke-width=\".3\" font-family=\"sans-serif\" font-size=\"8\" letter-spacing=\"0\" word-spacing=\"0\">\n");
-  TXBuffer += F("<tspan x=\"");
-  TXBuffer += toString(textXoffset, 2);
-  TXBuffer += F("\" y=\"");
-  TXBuffer += toString(textYoffset, 2);
-  TXBuffer += "\">";
-  TXBuffer += text;
-  TXBuffer += F("</tspan>\n</text>");
+  addHtml(F("<text style=\"line-height:1.25\" x=\""));
+  addHtml(toString(textXoffset, 2));
+  addHtml(F("\" y=\""));
+  addHtml(toString(textYoffset, 2));
+  addHtml(F("\" stroke-width=\".3\" font-family=\"sans-serif\" font-size=\"8\" letter-spacing=\"0\" word-spacing=\"0\">\n"));
+  addHtml(F("<tspan x=\""));
+  addHtml(toString(textXoffset, 2));
+  addHtml(F("\" y=\""));
+  addHtml(toString(textYoffset, 2));
+  addHtml("\">");
+  addHtml(text);
+  addHtml(F("</tspan>\n</text>"));
 }
 
 unsigned int getSettingsTypeColor(SettingsType settingsType) {
@@ -1243,29 +1289,31 @@ void write_SVG_image_header(int width, int height) {
 }
 
 void write_SVG_image_header(int width, int height, bool useViewbox) {
-  TXBuffer += F("<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"");
-  TXBuffer += width;
-  TXBuffer += F("\" height=\"");
-  TXBuffer += height;
-  TXBuffer += F("\" version=\"1.1\"");
+  String html;
+
+  html.reserve(128);
+  html += F("<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"");
+  html += width;
+  html += F("\" height=\"");
+  html += height;
+  html += F("\" version=\"1.1\"");
 
   if (useViewbox) {
-    TXBuffer += F(" viewBox=\"0 0 100 100\"");
+    html += F(" viewBox=\"0 0 100 100\"");
   }
-  TXBuffer += '>';
+  html += '>';
+  addHtml(html);
 }
 
 /*
    void getESPeasyLogo(int width_pixels) {
    write_SVG_image_header(width_pixels, width_pixels, true);
-   TXBuffer += F("<g transform=\"translate(-33.686 -7.8142)\">");
-   TXBuffer += F("<rect x=\"49\" y=\"23.1\" width=\"69.3\" height=\"69.3\" fill=\"#2c72da\" stroke=\"#2c72da\"
-      stroke-linecap=\"round\"stroke-linejoin=\"round\" stroke-width=\"30.7\"/>");
-   TXBuffer += F("<g transform=\"matrix(3.3092 0 0 3.3092 -77.788 -248.96)\">");
-   TXBuffer += F("<path d=\"m37.4 89 7.5-7.5M37.4 96.5l15-15M37.4 96.5l15-15M37.4 104l22.5-22.5M44.9 104l15-15\"
-      fill=\"none\"stroke=\"#fff\" stroke-linecap=\"round\" stroke-width=\"2.6\"/>");
-   TXBuffer += F("<circle cx=\"58\" cy=\"102.1\" r=\"3\" fill=\"#fff\"/>");
-   TXBuffer += F("</g></g></svg>");
+   addHtml(F("<g transform=\"translate(-33.686 -7.8142)\"><rect x=\"49\" y=\"23.1\" width=\"69.3\" height=\"69.3\" fill=\"#2c72da\"
+      stroke=\"#2c72da\"
+      stroke-linecap=\"round\"stroke-linejoin=\"round\" stroke-width=\"30.7\"/><g transform=\"matrix(3.3092 0 0 3.3092 -77.788
+         -248.96)\"><path d=\"m37.4 89 7.5-7.5M37.4 96.5l15-15M37.4 96.5l15-15M37.4 104l22.5-22.5M44.9 104l15-15\"
+      fill=\"none\"stroke=\"#fff\" stroke-linecap=\"round\" stroke-width=\"2.6\"/><circle cx=\"58\" cy=\"102.1\" r=\"3\"
+         fill=\"#fff\"/></g></g></svg>");
    }
  */
 void getWiFi_RSSI_icon(int rssi, int width_pixels)
@@ -1286,7 +1334,7 @@ void getWiFi_RSSI_icon(int rssi, int width_pixels)
     int barHeight      = (i + 1) * bar_height_step;
     createSvgRect_noStroke(color, i * (barWidth + white_between_bar) * scale, 100 - barHeight, barWidth, barHeight, 0, 0);
   }
-  TXBuffer += F("</svg>\n");
+  addHtml(F("</svg>\n"));
 }
 
 #ifndef BUILD_MINIMAL_OTA
@@ -1323,7 +1371,7 @@ void getConfig_dat_file_layout() {
   float textXoffset = SVG_BAR_WIDTH + 2;
   float textYoffset = yOffset + 0.9 * SVG_BAR_HEIGHT;
   createSvgTextElement(F("Config.dat"), textXoffset, textYoffset);
-  TXBuffer += F("</svg>\n");
+  addHtml(F("</svg>\n"));
 }
 
 void getStorageTableSVG(SettingsType settingsType) {
@@ -1383,7 +1431,7 @@ void getStorageTableSVG(SettingsType settingsType) {
   } else {
     createSvgTextElement(F("Variable size"), textXoffset, textYoffset);
   }
-  TXBuffer += F("</svg>\n");
+  addHtml(F("</svg>\n"));
 }
 
 #endif // ifndef BUILD_MINIMAL_OTA
@@ -1433,7 +1481,7 @@ void getPartitionTableSVG(byte pType, unsigned int partitionColor) {
       yOffset += SVG_BAR_HEIGHT;
     } while ((_mypartiterator = esp_partition_next(_mypartiterator)) != NULL);
   }
-  TXBuffer += F("</svg>\n");
+  addHtml(F("</svg>\n"));
   esp_partition_iterator_release(_mypartiterator);
 }
 

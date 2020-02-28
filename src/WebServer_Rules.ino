@@ -24,6 +24,7 @@ void handle_rules() {
   fileName += F(".txt");
 
   String error;
+
   if (WebServer.args() > 0) {
     String log = F("Rules : Save rulesSet: ");
     log += rulesSet;
@@ -33,13 +34,17 @@ void handle_rules() {
     if (currentSet == rulesSet) {
       if (WebServer.hasArg(F("rules"))) {
         size_t rulesLength = WebServer.arg(F("rules")).length();
+
         // Reported length is with CRLF counted as a single byte.
         // So rulesLength > reported_length is a valid situation.
         size_t reported_length = getFormItemInt(F("rules_len"), 0);
+
         if (rulesLength > RULES_MAX_SIZE) {
           error = F("Error: Data was not saved, exceeds web editor limit!");
-        } if (reported_length > rulesLength) {
-          error = F("Error: Data was not saved, not received all. (");
+        }
+
+        if (reported_length > rulesLength) {
+          error  = F("Error: Data was not saved, not received all. (");
           error += rulesLength;
           error += '/';
           error += reported_length;
@@ -74,7 +79,7 @@ void handle_rules() {
     currentSet = rulesSet;
   }
 
-  TXBuffer += F("<form name = 'frmselect' method = 'post' onsubmit='addRulesLength()'>");
+  addHtml(F("<form name = 'frmselect' method = 'post' onsubmit='addRulesLength()'>"));
   html_table_class_normal();
   html_TR();
   html_table_header(F("Rules"));
@@ -103,7 +108,9 @@ void handle_rules() {
   addButton(fileName, F("Download to file"));
   html_end_table();
   html_end_form();
-  html_add_script(F("function addRulesLength() {    var r_len = document.getElementById('rules').value.length;	document.getElementById('rules_len').setAttribute('value', r_len);  };"), true);
+  html_add_script(F(
+                    "function addRulesLength() {    var r_len = document.getElementById('rules').value.length;	document.getElementById('rules_len').setAttribute('value', r_len);  };"),
+                  true);
   sendHeadandTail_stdtemplate(true);
   TXBuffer.endStream();
 
@@ -155,9 +162,9 @@ void handle_rules_new() {
   html_table_header(F("Event Name"));
   html_table_header(F("Filename"));
   html_table_header(F("Size"));
-  TXBuffer += F("<TH>Actions");
+  addHtml(F("<TH>Actions"));
   addSaveButton(TXBuffer, F("/rules/backup"), F("Backup"));
-  TXBuffer += F("</TH></TR>");
+  addHtml(F("</TH></TR>"));
 
   // class StreamingBuffer buffer = TXBuffer;
 
@@ -171,20 +178,20 @@ void handle_rules_new() {
 
                                    if (fi.isDirectory)
                                    {
-                                     TXBuffer += F("<TR><TD>");
+                                     html_TR_TD();
                                    }
                                    else
                                    {
                                      count++;
-                                     TXBuffer += F("<TR><TD style='text-align:right'>");
+                                     addHtml(F("<TR><TD style='text-align:right'>"));
                                    }
 
                                    // Event Name
-                                   TXBuffer += FileNameToEvent(fi.Name);
+                                   addHtml(FileNameToEvent(fi.Name));
 
                                    if (fi.isDirectory)
                                    {
-                                     TXBuffer += F("</TD><TD></TD><TD></TD><TD>");
+                                     addHtml(F("</TD><TD></TD><TD></TD><TD>"));
                                      addSaveButton(TXBuffer
                                                    , String(F("/rules/backup?directory=")) + URLEncode(fi.Name.c_str())
                                                    , F("Backup")
@@ -195,21 +202,27 @@ void handle_rules_new() {
                                      String encodedPath =  URLEncode((fi.Name + F(".txt")).c_str());
 
                                      // File Name
-                                     TXBuffer += F("</TD><TD><a href='");
-                                     TXBuffer += fi.Name;
-                                     TXBuffer += F(".txt");
-                                     TXBuffer += "'>";
-                                     TXBuffer += fi.Name;
-                                     TXBuffer += F(".txt");
-                                     TXBuffer += F("</a></TD>");
+                                     {
+                                       String html;
+                                       html.reserve(128);
 
-                                     // File size
-                                     TXBuffer += F("<TD>");
-                                     TXBuffer += fi.Size;
-                                     TXBuffer += F("</TD>");
+                                       html += F("</TD><TD><a href='");
+                                       html += fi.Name;
+                                       html += F(".txt");
+                                       html += "'>";
+                                       html += fi.Name;
+                                       html += F(".txt");
+                                       html += F("</a></TD>");
+
+                                       // File size
+                                       html += F("<TD>");
+                                       html += fi.Size;
+                                       html += F("</TD>");
+                                       addHtml(html);
+                                     }
 
                                      // Actions
-                                     TXBuffer += F("<TD>");
+                                     html_TD();
                                      addSaveButton(TXBuffer
                                                    , String(F("/rules/backup?fileName=")) + encodedPath
                                                    , F("Backup")
@@ -220,7 +233,7 @@ void handle_rules_new() {
                                                      , F("Delete")
                                                      );
                                    }
-                                   TXBuffer += F("</TD></TR>");
+                                   addHtml(F("</TD></TR>"));
     #ifdef WEBSERVER_RULES_DEBUG
                                    Serial.print(F("End generation of: "));
                                    Serial.println(fi.Name);
@@ -233,10 +246,10 @@ void handle_rules_new() {
   bool hasMore = EnumerateFileAndDirectory(rootPath
                                            , startIdx
                                            , renderDetail);
-  TXBuffer += F("<TR><TD>");
+  html_TR_TD();
   addButton(F("/rules/add"), F("Add"));
-  TXBuffer += F("</TD><TD></TD><TD></TD><TD></TD></TR>");
-  TXBuffer += F("</table>");
+  addHtml(F("</TD><TD></TD><TD></TD><TD></TD></TR>"));
+  addHtml(F("</table>"));
 
   if (startIdx > 0)
   {
@@ -468,14 +481,14 @@ bool handle_rules_edit(String originalUri, bool isAddNew) {
     if (error.length() > 0) {
       addHtmlError(error);
     }
-    TXBuffer += F("<form name = 'editRule' method = 'post'><table class='normal'><TR><TH align='left' colspan='2'>Edit Rule");
+    addHtml(F("<form name = 'editRule' method = 'post'><table class='normal'><TR><TH align='left' colspan='2'>Edit Rule"));
 
     // hidden field to check Overwrite
-    TXBuffer += F("<input type='hidden' id='IsNew' name='IsNew' value='");
-    TXBuffer += isAddNew
-                ? F("yes")
-                : F("no");
-    TXBuffer += F("'>");
+    addHtml(F("<input type='hidden' id='IsNew' name='IsNew' value='"));
+    addHtml(isAddNew
+            ? F("yes")
+            : F("no"));
+    addHtml(F("'>"));
 
     bool isReadOnly = !isOverwrite && ((isEdit && !isAddNew && !isNew) || (isAddNew && isNew));
       #ifdef WEBSERVER_RULES_DEBUG
@@ -502,7 +515,7 @@ bool handle_rules_edit(String originalUri, bool isAddNew) {
     addHelpButton(F("Tutorial_Rules"));
 
     // load form data from flash
-    TXBuffer += F("<TR><TD colspan='2'>");
+    addHtml(F("<TR><TD colspan='2'>"));
 
     Rule_showRuleTextArea(fileName);
 
@@ -510,7 +523,7 @@ bool handle_rules_edit(String originalUri, bool isAddNew) {
     html_TR_TD();
     addSubmitButton();
 
-    TXBuffer += F("</table></form>");
+    addHtml(F("</table></form>"));
 
     sendHeadandTail(F("TmplStd"), true);
     TXBuffer.endStream();
@@ -522,24 +535,32 @@ bool handle_rules_edit(String originalUri, bool isAddNew) {
 
 void Rule_showRuleTextArea(const String& fileName) {
   // Read rules from file and stream directly into the textarea
-  
+
   size_t size = 0;
-  TXBuffer += F("<textarea id='rules' name='rules' rows='30' wrap='off'>");
+
+  addHtml(F("<textarea id='rules' name='rules' rows='30' wrap='off'>"));
   size = streamFile_htmlEscape(fileName);
-  TXBuffer += F("</textarea>");
-  TXBuffer += F("<TR><TD colspan='2'>");
+  addHtml(F("</textarea>"));
+  addHtml(F("<TR><TD colspan='2'>"));
 
-  html_TR_TD(); TXBuffer += F("Current size: ");
-  TXBuffer               += size;
-  TXBuffer               += F(" characters (Max ");
-  TXBuffer               += RULES_MAX_SIZE;
-  TXBuffer               += F(")");
-  if (size > RULES_MAX_SIZE) {
-    TXBuffer += F("<span style=\"color:red\">Filesize exceeds web editor limit!</span>");
+  html_TR_TD();
+  {
+    String html;
+    html.reserve(64);
+
+    html += F("Current size: ");
+    html += size;
+    html += F(" characters (Max ");
+    html += RULES_MAX_SIZE;
+    html += F(")");
+    addHtml(html);
   }
-  TXBuffer += F("<p><input type='text' id='rules_len' name='rules_len' value='0'></p>");
-}
 
+  if (size > RULES_MAX_SIZE) {
+    addHtml(F("<span style=\"color:red\">Filesize exceeds web editor limit!</span>"));
+  }
+  addHtml(F("<p><input type='text' id='rules_len' name='rules_len' value='0'></p>"));
+}
 
 bool Rule_Download(const String& path)
 {

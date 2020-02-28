@@ -10,10 +10,13 @@ void addButton(const String& url, const String& label, const String& classes) {
 void addButton(const String& url, const String& label, const String& classes, bool enabled)
 {
   html_add_button_prefix(classes, enabled);
-  TXBuffer += url;
-  TXBuffer += "'>";
-  TXBuffer += label;
-  TXBuffer += F("</a>");
+  String html;
+  html.reserve(8 + url.length() + label.length());
+  html += url;
+  html += "'>";
+  html += label;
+  html += F("</a>");
+  addHtml(html);
 }
 
 void addButton(class StreamingBuffer& buffer, const String& url, const String& label)
@@ -104,10 +107,13 @@ void addWideButton(const String& url, const String& label, const String& classes
 void addWideButton(const String& url, const String& label, const String& classes, bool enabled)
 {
   html_add_wide_button_prefix(classes, enabled);
-  TXBuffer += url;
-  TXBuffer += "'>";
-  TXBuffer += label;
-  TXBuffer += F("</a>");
+  String html;
+  html.reserve(8 + url.length() + label.length());
+  html += url;
+  html += "'>";
+  html += label;
+  html += F("</a>");
+  addHtml(html);
 }
 
 void addSubmitButton()
@@ -122,36 +128,35 @@ void addSubmitButton(const String& value, const String& name) {
 
 void addSubmitButton(const String& value, const String& name, const String& classes)
 {
-  TXBuffer += F("<input class='button link");
+  addHtml(F("<input class='button link"));
 
   if (classes.length() > 0) {
-    TXBuffer += ' ';
-    TXBuffer += classes;
+    addHtml(" ");
+    addHtml(classes);
   }
-  TXBuffer += F("' type='submit' value='");
-  TXBuffer += value;
+  addHtml(F("' type='submit' value='"));
+  addHtml(value);
 
   if (name.length() > 0) {
-    TXBuffer += F("' name='");
-    TXBuffer += name;
+    addHtml(F("' name='"));
+    addHtml(name);
   }
-  TXBuffer += F("'><div id='toastmessage'></div><script type='text/javascript'>toasting();</script>");
+  addHtml(F("'><div id='toastmessage'></div><script type='text/javascript'>toasting();</script>"));
 }
 
 // add copy to clipboard button
 void addCopyButton(const String& value, const String& delimiter, const String& name)
 {
   TXBuffer += jsClipboardCopyPart1;
-  TXBuffer += value;
+  addHtml(value);
   TXBuffer += jsClipboardCopyPart2;
-  TXBuffer += delimiter;
+  addHtml(delimiter);
   TXBuffer += jsClipboardCopyPart3;
 
   // Fix HTML
-  TXBuffer += F("<button class='button link' onclick='setClipboard()'>");
-  TXBuffer += name;
-  TXBuffer += " (";
+  addHtml(F("<button class='button link' onclick='setClipboard()'>"));
+  addHtml(name);
+  addHtml(" (");
   html_copyText_marker();
-  TXBuffer += ')';
-  TXBuffer += F("</button>");
+  addHtml(F(")</button>"));
 }
