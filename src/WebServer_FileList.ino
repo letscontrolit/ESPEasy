@@ -384,10 +384,11 @@ void handle_SDfilelist() {
 
   while (entry)
   {
+    html_TR_TD();
+    size_t entrynameLength = strlen(entry.name());
     if (entry.isDirectory())
     {
       char SDcardChildDir[80];
-      html_TR_TD();
 
       // take a look in the directory for entries
       String child_dir = current_dir + entry.name();
@@ -400,7 +401,7 @@ void handle_SDfilelist() {
       {
         addHtml(F("<a class='button link' onclick=\"return confirm('Delete this directory?')\" href=\"SDfilelist?deletedir="));
         String html;
-        html.reserve(20 + 2 * current_dir.length() + entry.name().length());
+        html.reserve(20 + 2 * current_dir.length() + entrynameLength);
         html += current_dir;
         html += entry.name();
         html += '/';
@@ -411,7 +412,7 @@ void handle_SDfilelist() {
       }
       {
         String html;
-        html.reserve(48 + current_dir.length() + 2 * entry.name().length());
+        html.reserve(48 + current_dir.length() + 2 * entrynameLength);
 
         html += F("<TD><a href=\"SDfilelist?chgto=");
         html += current_dir;
@@ -427,13 +428,12 @@ void handle_SDfilelist() {
     }
     else
     {
-      html_TR_TD();
 
       if ((entry.name() != String(F(FILE_CONFIG)).c_str()) && (entry.name() != String(F(FILE_SECURITY)).c_str()))
       {
         addHtml(F("<a class='button link' onclick=\"return confirm('Delete this file?')\" href=\"SDfilelist?delete="));
         String html;
-        html.reserve(20 + 2 * current_dir.length() + entry.name().length());
+        html.reserve(20 + 2 * current_dir.length() + entrynameLength);
 
         html += current_dir;
         html += entry.name();
@@ -444,7 +444,7 @@ void handle_SDfilelist() {
       }
       {
         String html;
-        html.reserve(48 + current_dir.length() + 2 * entry.name().length());
+        html.reserve(48 + current_dir.length() + 2 * entrynameLength);
         html += F("<TD><a href=\"");
         html += current_dir;
         html += entry.name();
