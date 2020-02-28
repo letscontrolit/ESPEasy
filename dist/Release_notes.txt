@@ -1,4 +1,61 @@
 -------------------------------------------------
+Changes in release mega-20200228 (since mega-20200222)
+-------------------------------------------------
+
+Release date: vr 28 feb 2020  2:30:24 CET
+
+Claas Anders Rathje (5):
+      Adding support for * substring * strtol (useful for converting hex or binary numbers) * 100ths division in eventvalue parsing.
+      Fixed wildcard matching which only checked up to one character before the actual wildcard and not up to the wildcard.
+      Added checks for valid integers as suggested by TD-er Merged the functions as suggested by TD-er
+      Added [ord: to get integer value of a string/character.
+      Avoiding deepcopy on command pass. Checking for closing character ]. Switched to if else if. Copied command string to get a lowercase representation.
+
+Gijs Noorlander (31):
+      Update Adafruit library for SGP30 sensor
+      [P083 SGP30] Read SGP30 sensor according to specs
+      [SGP30] Quick update + Store baseline info for quick init
+      [Docs] Added doc stubs of recently added plugins
+      Work-around for breaking change in Arduino core lib
+      [CCS811] Plugin 089 CCS811 TVOC/eCO2
+      [CCS811] Fix compile error unused variable
+      [CC811] Rename file to _P090...
+      [CCS811] Rename P089 to P090
+      [CCS811] remove nonsense <TD>
+      [CCS811] Act on each reading, but only send to controller on PLUGIN_READ
+      Remove a inadvertently added change for schedule_all_task_device_timers
+      [Travis] Remove Unicode characters from source code
+      Revert "Work-around for breaking change in Arduino core lib"
+      [docs] Document string handling in rules (PR #2828 )
+      Add note to optimize code
+      [Rules] Make nested string modification commands possible
+      [Commands] Update docs + add task/controller enable/disable commands
+      [docs] Document P081_Cron
+      [docs] Document P036 Framed OLED
+      [Cron] Fix handling bogus last/next times + restructure code
+      [Cron] Fix mistake of generating incorrect event task name.
+      [NTP] Validate returned NTP packet before using + rate limit requests
+      [Time] Store system time in RTC and restore at warm boot (no deep sleep)
+      [Cron] Call systmTimePresent() function to check if we have any time set
+      [Cron] Only update last/next times if cron elapsed
+      [Cron] Memory leak in calling Cron lib code
+      [docs] Document RTC memory
+      [Cron] Add warning about the memory leak
+      [Cron] Use task data object to only parse expression when changed
+      [Cron] Fix memory leak
+
+Grovkillen (1):
+      [benchmark] fixed incorrect syntax
+
+TD-er (2):
+      [Rules] Remove [div100ths:...] as it is too specific
+      [Rules] Use curly braces for string conversion commands
+
+stefan (1):
+      Auto stash before merge of "mega" and "origin/mega"
+
+
+-------------------------------------------------
 Changes in release mega-20200222 (since mega-20200204)
 -------------------------------------------------
 
