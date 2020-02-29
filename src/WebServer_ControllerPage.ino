@@ -54,11 +54,12 @@ void handle_controllers() {
     if (mustInit) {
       // Init controller plugin using the new settings.
       protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(controllerindex);
+
       if (validProtocolIndex(ProtocolIndex)) {
         struct EventStruct TempEvent;
         TempEvent.ControllerIndex = controllerindex;
         String dummy;
-        byte cfunction = Settings.ControllerEnabled[controllerindex] ? CPlugin::Function::CPLUGIN_INIT : CPlugin::Function::CPLUGIN_EXIT;
+        byte   cfunction = Settings.ControllerEnabled[controllerindex] ? CPlugin::Function::CPLUGIN_INIT : CPlugin::Function::CPLUGIN_EXIT;
         CPluginCall(ProtocolIndex, static_cast<CPlugin::Function>(cfunction), &TempEvent, dummy);
       }
     }
@@ -88,6 +89,7 @@ void handle_controllers_clearLoadDefaults(byte controllerindex, ControllerSettin
   // Protocol has changed and it was not an empty one.
   // reset (some) default-settings
   protocolIndex_t ProtocolIndex = getProtocolIndex(Settings.Protocol[controllerindex]);
+
   if (!validProtocolIndex(ProtocolIndex)) {
     return;
   }
@@ -129,6 +131,7 @@ void handle_controllers_CopySubmittedSettings(byte controllerindex, ControllerSe
   }
 
   protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(controllerindex);
+
   if (validProtocolIndex(ProtocolIndex)) {
     struct EventStruct TempEvent;
     TempEvent.ControllerIndex = controllerindex;
@@ -160,25 +163,30 @@ void handle_controllers_ShowAllControllersTable()
     const bool cplugin_set = Settings.Protocol[x] != INVALID_C_PLUGIN_ID;
 
 
-
     LoadControllerSettings(x, ControllerSettings);
     html_TR_TD();
+
     if (cplugin_set && !supportedCPluginID(Settings.Protocol[x])) {
       html_add_button_prefix(F("red"), true);
     } else {
       html_add_button_prefix();
-    }    
-    TXBuffer += F("controllers?index=");
-    TXBuffer += x + 1;
-    TXBuffer += F("'>");
-    if (cplugin_set) {
-      TXBuffer += F("Edit");
-    } else {
-      TXBuffer += F("Add");
     }
-    TXBuffer += F("</a>");
-    html_TD();
-    TXBuffer += getControllerSymbol(x);
+    {
+      String html;
+      html.reserve(32);
+      html += F("controllers?index=");
+      html += x + 1;
+      html += F("'>");
+
+      if (cplugin_set) {
+        html += F("Edit");
+      } else {
+        html += F("Add");
+      }
+      html += F("</a><TD>");
+      html += getControllerSymbol(x);
+      addHtml(html);
+    }
     html_TD();
 
     if (cplugin_set)
@@ -186,7 +194,7 @@ void handle_controllers_ShowAllControllersTable()
       addEnabled(Settings.ControllerEnabled[x]);
 
       html_TD();
-      TXBuffer += getCPluginNameFromCPluginID(Settings.Protocol[x]);
+      addHtml(getCPluginNameFromCPluginID(Settings.Protocol[x]));
       html_TD();
       {
         const protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(x);
@@ -194,14 +202,14 @@ void handle_controllers_ShowAllControllersTable()
         CPluginCall(ProtocolIndex, CPlugin::Function::CPLUGIN_WEBFORM_SHOW_HOST_CONFIG, 0, hostDescription);
 
         if (hostDescription.length() != 0) {
-          TXBuffer += hostDescription;
+          addHtml(hostDescription);
         } else {
-          TXBuffer += ControllerSettings.getHost();
+          addHtml(ControllerSettings.getHost());
         }
       }
 
       html_TD();
-      TXBuffer += ControllerSettings.Port;
+      addHtml(String(ControllerSettings.Port));
     }
     else {
       html_TD(3);
@@ -271,9 +279,11 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
         addControllerParameterForm(ControllerSettings, controllerindex, CONTROLLER_MAX_RETRIES);
         addControllerParameterForm(ControllerSettings, controllerindex, CONTROLLER_FULL_QUEUE_ACTION);
       }
+
       if (Protocol[ProtocolIndex].usesCheckReply) {
         addControllerParameterForm(ControllerSettings, controllerindex, CONTROLLER_CHECK_REPLY);
       }
+
       if (Protocol[ProtocolIndex].usesTimeout) {
         addControllerParameterForm(ControllerSettings, controllerindex, CONTROLLER_TIMEOUT);
       }

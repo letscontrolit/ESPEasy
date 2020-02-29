@@ -38,7 +38,7 @@ void handle_config() {
 
       if (CPluginCall(CPlugin::Function::CPLUGIN_GOT_INVALID, 0)) { // inform controllers that the old name will be invalid from now on.
 #ifdef USES_MQTT
-        MQTTDisconnect();                        // disconnect form MQTT Server if invalid message was sent succesfull.
+        MQTTDisconnect();                                           // disconnect form MQTT Server if invalid message was sent succesfull.
 #endif // USES_MQTT
       }
 #ifdef USES_MQTT

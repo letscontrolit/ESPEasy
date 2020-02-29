@@ -109,7 +109,7 @@ void addPreDefinedConfigSelector() {
 void handle_factoryreset_json() {
   if (!isLoggedIn()) { return; }
   TXBuffer.startJsonStream();
-  TXBuffer += "{";
+  addHtml("{");
 
   if (WebServer.hasArg("fdm")) {
     DeviceModel model = static_cast<DeviceModel>(getFormItemInt("fdm"));
@@ -139,8 +139,9 @@ void handle_factoryreset_json() {
     ResetFactoryDefaultPreference.keepLogSettings(isFormItemChecked("klog"));
   }
   String error;
-  bool performReset = false;
-  bool savePref = false;
+  bool   performReset = false;
+  bool   savePref     = false;
+
   if (WebServer.hasArg(F("savepref"))) {
     // User choose a pre-defined config and wants to save it as the new default.
     savePref = true;
@@ -149,10 +150,11 @@ void handle_factoryreset_json() {
   if (WebServer.hasArg(F("performfactoryreset"))) {
     // User confirmed to really perform the reset.
     performReset = true;
-    savePref = true;
+    savePref     = true;
   } else {
     error = F("no reset");
   }
+
   if (savePref) {
     applyFactoryDefaultPref();
     error = SaveSettings();
@@ -163,7 +165,7 @@ void handle_factoryreset_json() {
   }
 
   stream_last_json_object_value(F("status"), error);
-  TXBuffer += "}";
+  addHtml("}");
   TXBuffer.endStream();
 
   if (performReset) {

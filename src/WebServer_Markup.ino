@@ -1,4 +1,5 @@
 // ********************************************************************************
+
 // Add Selector
 // ********************************************************************************
 void addSelector(const String& id,
@@ -28,21 +29,24 @@ void addSelector_options(int optionCount, const String options[], const int indi
     else {
       index = x;
     }
-    TXBuffer += F("<option value=");
-    TXBuffer += index;
+    String html;
+    html.reserve(64);
+    html += F("<option value=");
+    html += index;
 
     if (selectedIndex == index) {
-      TXBuffer += F(" selected");
+      html += F(" selected");
     }
 
     if (attr)
     {
-      TXBuffer += ' ';
-      TXBuffer += attr[x];
+      addHtml(" ");
+      html += attr[x];
     }
-    TXBuffer += '>';
-    TXBuffer += options[x];
-    TXBuffer += F("</option>");
+    html += '>';
+    html += options[x];
+    html += F("</option>");
+    addHtml(html);
   }
 }
 
@@ -61,62 +65,80 @@ void addSelector_Head(const String& id, boolean reloadonchange, bool disabled)
 
 void addSelector_Head(const String& id, const String& onChangeCall, bool disabled)
 {
-  TXBuffer += F("<select class='wide' name='");
-  TXBuffer += id;
-  TXBuffer += F("' id='");
-  TXBuffer += id;
-  TXBuffer += '\'';
+  {
+    String html;
+    html.reserve(32 + id.length());
+    html += F("<select class='wide' name='");
+    html += id;
+    html += F("' id='");
+    html += id;
+    html += '\'';
+    addHtml(html);
+  }
 
   if (disabled) {
     addDisabled();
   }
 
-  if (onChangeCall.length() > 0) {
-    TXBuffer += F(" onchange='");
-    TXBuffer += onChangeCall;
-    TXBuffer += '\'';
+  {
+    String html;
+    html.reserve(16 + onChangeCall.length());
+
+    if (onChangeCall.length() > 0) {
+      html += F(" onchange='");
+      html += onChangeCall;
+      html += '\'';
+    }
+    html += '>';
+    addHtml(html);
   }
-  TXBuffer += '>';
 }
 
 void addSelector_Item(const String& option, int index, boolean selected, boolean disabled, const String& attr)
 {
-  TXBuffer += F("<option value=");
-  TXBuffer += index;
+  addHtml(F("<option value="));
+  addHtml(String(index));
 
   if (selected) {
-    TXBuffer += F(" selected");
+    addHtml(F(" selected"));
   }
 
   if (disabled) {
     addDisabled();
   }
+  String html;
+  html.reserve(48 + option.length() + attr.length());
 
   if (attr && (attr.length() > 0))
   {
-    TXBuffer += ' ';
-    TXBuffer += attr;
+    html += ' ';
+    html += attr;
   }
-  TXBuffer += '>';
-  TXBuffer += option;
-  TXBuffer += F("</option>");
+  html += '>';
+  html += option;
+  html += F("</option>");
+  addHtml(html);
 }
 
 void addSelector_Foot()
 {
-  TXBuffer += F("</select>");
+  addHtml(F("</select>"));
 }
 
 void addUnit(const String& unit)
 {
-  TXBuffer += F(" [");
-  TXBuffer += unit;
-  TXBuffer += "]";
+  String html;
+
+  html += F(" [");
+  html += unit;
+  html += "]";
+  addHtml(html);
 }
 
 void addRowLabel_tr_id(const String& label, const String& id)
 {
   String tr_id = F("tr_");
+
   tr_id += id;
   addRowLabel(label, tr_id);
 }
@@ -124,56 +146,73 @@ void addRowLabel_tr_id(const String& label, const String& id)
 void addRowLabel(const String& label, const String& id)
 {
   if (id.length() > 0) {
-    TXBuffer += F("<TR id='");
-    TXBuffer += id;
-    TXBuffer += F("'><TD>");
+    String html;
+    html += F("<TR id='");
+    html += id;
+    html += F("'><TD>");
+    addHtml(html);
   } else {
     html_TR_TD();
   }
+
   if (label.length() != 0) {
-    TXBuffer += label;
-    TXBuffer += ':';
+    String html;
+    html += label;
+    html += ':';
+    addHtml(html);
   }
   html_TD();
 }
 
 // Add a row label and mark it with copy markers to copy it to clipboard.
 void addRowLabel_copy(const String& label) {
-  TXBuffer += F("<TR>");
+  addHtml(F("<TR>"));
   html_copyText_TD();
-  TXBuffer += label;
-  TXBuffer += ':';
+  String html;
+  html += label;
+  html += ':';
+  addHtml(html);
   html_copyText_marker();
   html_copyText_TD();
 }
 
 void addRowLabelValue(LabelType::Enum label) {
   addRowLabel(getLabel(label));
-  TXBuffer += getValue(label);
+  addHtml(getValue(label));
 }
 
 void addRowLabelValue_copy(LabelType::Enum label) {
   addRowLabel_copy(getLabel(label));
-  TXBuffer += getValue(label);
+  addHtml(getValue(label));
 }
 
 // ********************************************************************************
 // Add a header
 // ********************************************************************************
 void addTableSeparator(const String& label, int colspan, int h_size, const String& helpButton) {
-  TXBuffer += F("<TR><TD colspan=");
-  TXBuffer += colspan;
-  TXBuffer += "><H";
-  TXBuffer += h_size;
-  TXBuffer += '>';
-  TXBuffer += label;
+  {
+    String html;
+    html.reserve(32 + label.length());
+    html += F("<TR><TD colspan=");
+    html += colspan;
+    html += "><H";
+    html += h_size;
+    html += '>';
+    html += label;
+    addHtml(html);
+  }
 
   if (helpButton.length() > 0) {
     addHelpButton(helpButton);
   }
-  TXBuffer += "</H";
-  TXBuffer += h_size;
-  TXBuffer += F("></TD></TR>");
+  {
+    String html;
+    html.reserve(16);
+    html += "</H";
+    html += h_size;
+    html += F("></TD></TR>");
+    addHtml(html);
+  }
 }
 
 void addFormHeader(const String& header, const String& helpButton)
@@ -182,7 +221,6 @@ void addFormHeader(const String& header, const String& helpButton)
   html_table_header(header, helpButton, 225);
   html_table_header("");
 }
-
 
 // ********************************************************************************
 // Add a sub header
@@ -197,22 +235,27 @@ void addFormSubHeader(const String& header)
 // ********************************************************************************
 void addCheckBox(const String& id, boolean checked, bool disabled)
 {
-  TXBuffer += F("<label class='container'>&nbsp;");
-  TXBuffer += F("<input type='checkbox' id='");
-  TXBuffer += id;
-  TXBuffer += F("' name='");
-  TXBuffer += id;
-  TXBuffer += '\'';
+  addHtml(F("<label class='container'>&nbsp;"));
+  addHtml(F("<input type='checkbox' id='"));
+  {
+    String html;
+    html.reserve(16 + 2 * id.length());
+    html += id;
+    html += F("' name='");
+    html += id;
+    html += '\'';
 
-  if (checked) {
-    TXBuffer += F(" checked");
+    if (checked) {
+      html += F(" checked");
+    }
+    addHtml(html);
   }
 
   if (disabled) { addDisabled(); }
-  TXBuffer += F("><span class='checkmark");
+  addHtml(F("><span class='checkmark"));
 
   if (disabled) { addDisabled(); }
-  TXBuffer += F("'></span></label>");
+  addHtml(F("'></span></label>"));
 }
 
 // ********************************************************************************
@@ -220,39 +263,48 @@ void addCheckBox(const String& id, boolean checked, bool disabled)
 // ********************************************************************************
 void addNumericBox(const String& id, int value, int min, int max)
 {
-  TXBuffer += F("<input class='widenumber' type='number' name='");
-  TXBuffer += id;
-  TXBuffer += '\'';
+  addHtml(F("<input class='widenumber' type='number' name='"));
+  String html;
+  html.reserve(32 + id.length());
+  html += id;
+  html += '\'';
 
   if (min != INT_MIN)
   {
-    TXBuffer += F(" min=");
-    TXBuffer += min;
+    html += F(" min=");
+    html += min;
   }
 
   if (max != INT_MAX)
   {
-    TXBuffer += F(" max=");
-    TXBuffer += max;
+    html += F(" max=");
+    html += max;
   }
-  TXBuffer += F(" value=");
-  TXBuffer += value;
-  TXBuffer += '>';
+  html += F(" value=");
+  html += value;
+  html += '>';
+  addHtml(html);
 }
 
 void addFloatNumberBox(const String& id, float value, float min, float max)
 {
-  TXBuffer += F("<input type='number' name='");
-  TXBuffer += id;
-  TXBuffer += '\'';
-  TXBuffer += F(" min=");
-  TXBuffer += min;
-  TXBuffer += F(" max=");
-  TXBuffer += max;
-  TXBuffer += F(" step=0.01");
-  TXBuffer += F(" style='width:5em;' value=");
-  TXBuffer += value;
-  TXBuffer += '>';
+  String html;
+
+  html.reserve(64 + id.length());
+
+  html += F("<input type='number' name='");
+  html += id;
+  html += '\'';
+  html += F(" min=");
+  html += min;
+  html += F(" max=");
+  html += max;
+  html += F(" step=0.01");
+  html += F(" style='width:5em;' value=");
+  html += value;
+  html += '>';
+
+  addHtml(html);
 }
 
 // ********************************************************************************
@@ -260,28 +312,34 @@ void addFloatNumberBox(const String& id, float value, float min, float max)
 // ********************************************************************************
 void addTextBox(const String& id, const String&  value, int maxlength, bool readonly, bool required, const String& pattern)
 {
-  TXBuffer += F("<input class='wide' type='text' name='");
-  TXBuffer += id;
-  TXBuffer += F("' maxlength=");
-  TXBuffer += maxlength;
-  TXBuffer += F(" value='");
-  TXBuffer += value;
-  TXBuffer += '\'';
+  String html;
+
+  html.reserve(96 + id.length() + value.length() + pattern.length());
+
+  html += F("<input class='wide' type='text' name='");
+  html += id;
+  html += F("' maxlength=");
+  html += maxlength;
+  html += F(" value='");
+  html += value;
+  html += '\'';
 
   if (readonly) {
-    TXBuffer += F(" readonly ");
+    html += F(" readonly ");
   }
 
   if (required) {
-    TXBuffer += F(" required ");
+    html += F(" required ");
   }
 
   if (pattern.length() > 0) {
-    TXBuffer += F("pattern = '");
-    TXBuffer += pattern;
-    TXBuffer += '\'';
+    html += F("pattern = '");
+    html += pattern;
+    html += '\'';
   }
-  TXBuffer += '>';
+  html += '>';
+
+  addHtml(html);
 }
 
 // ********************************************************************************
@@ -289,26 +347,32 @@ void addTextBox(const String& id, const String&  value, int maxlength, bool read
 // ********************************************************************************
 void addTextArea(const String& id, const String& value, int maxlength, int rows, int columns, bool readonly, bool required)
 {
-  TXBuffer += F("<textarea class='wide' type='text' name='");
-  TXBuffer += id;
-  TXBuffer += F("' maxlength=");
-  TXBuffer += maxlength;
-  TXBuffer += F("' rows=");
-  TXBuffer += rows;
-  TXBuffer += F("' cols=");
-  TXBuffer += columns;
-  TXBuffer += '\'';
+  String html;
+
+  html.reserve(96 + id.length() + value.length());
+
+  html += F("<textarea class='wide' type='text' name='");
+  html += id;
+  html += F("' maxlength=");
+  html += maxlength;
+  html += F("' rows=");
+  html += rows;
+  html += F("' cols=");
+  html += columns;
+  html += '\'';
 
   if (readonly) {
-    TXBuffer += F(" readonly ");
+    html += F(" readonly ");
   }
 
   if (required) {
-    TXBuffer += F(" required ");
+    html += F(" required ");
   }
-  TXBuffer += '>';
-  TXBuffer += value;
-  TXBuffer += F("</textarea>");
+  html += '>';
+  html += value;
+  html += F("</textarea>");
+
+  addHtml(html);
 }
 
 // ********************************************************************************
