@@ -1,4 +1,18 @@
 -------------------------------------------------
+Changes in release mega-20200301 (since mega-20200228)
+-------------------------------------------------
+
+Release date: zo  1 mrt 2020 19:50:36 CET
+
+Artem (1):
+      Add more MIME types
+
+Gijs Noorlander (2):
+      [Build Size] Replace all TXBuffer += calls where possible
+      [Build Size] Fix build issue in WebServer_FileList for SD card support
+
+
+-------------------------------------------------
 Changes in release mega-20200228 (since mega-20200222)
 -------------------------------------------------
 
