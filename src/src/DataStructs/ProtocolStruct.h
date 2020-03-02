@@ -12,7 +12,7 @@ struct ProtocolStruct
   ProtocolStruct() :
     defaultPort(0), Number(0), usesMQTT(false), usesAccount(false), usesPassword(false),
     usesTemplate(false), usesID(false), Custom(false), usesHost(true), usesPort(true),
-    usesQueue(true), usesSampleSets(false) {}
+    usesQueue(true), usesCheckReply(true), usesTimeout(true), usesSampleSets(false) {}
 
   uint16_t defaultPort;
   byte     Number;
@@ -25,6 +25,8 @@ struct ProtocolStruct
   bool     usesHost       : 1;
   bool     usesPort       : 1;
   bool     usesQueue      : 1;
+  bool     usesCheckReply : 1;
+  bool     usesTimeout    : 1;
   bool     usesSampleSets : 1;
 };
 

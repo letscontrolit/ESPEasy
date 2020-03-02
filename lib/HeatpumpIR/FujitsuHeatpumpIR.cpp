@@ -104,15 +104,6 @@ void FujitsuHeatpumpIR::sendFujitsu(IRSender& IR, uint8_t operatingMode, uint8_t
   uint8_t OFF_msg[] = { 0x14, 0x63, 0x00, 0x10, 0x10, 0x02, 0xFD };
   uint8_t checksum = 0x00;
 
-/*
-
-  Fujitsu does not have codes to set the air direction to any specific position, but just go to the next position:
-
-  uint8_t nextVerticalPosition_msg[] = { 0x14, 0x63, 0x00, 0x10, 0x10, 0x6C, 0x93 };
-  uint8_t nextHorizontalPosition_msg[] = { 0x14, 0x63, 0x00, 0x10, 0x10, 0x79,0x86 };
-
-  These would need to be sent separately...
-*/
   // Set the operatingmode on the template message
   FujitsuTemplate[9] = operatingMode;
 
@@ -202,6 +193,20 @@ void FujitsuHeatpumpIR::sendFujitsuSuperQuiet(IRSender& IR)
   uint8_t SuperQuiet_msg[] = { 0x14, 0x63, 0x00, 0x10, 0x10, 0x02, 0xFD };
 
   sendFujitsuMsg(IR, sizeof(SuperQuiet_msg), SuperQuiet_msg);
+}
+
+void FujitsuHeatpumpIR::sendNextVerticalPosition(IRSender& IR)
+{
+  uint8_t NextVerticalPosition_msg[] = { 0x14, 0x63, 0x00, 0x10, 0x10, 0x6C, 0x93 };
+
+  sendFujitsuMsg(IR, sizeof(NextVerticalPosition_msg), NextVerticalPosition_msg);
+}
+
+void FujitsuHeatpumpIR::sendNextHorizontalPosition(IRSender& IR)
+{
+  uint8_t NextHorizontalPosition_msg[] = { 0x14, 0x63, 0x00, 0x10, 0x10, 0x79, 0x86 };
+
+  sendFujitsuMsg(IR, sizeof(NextHorizontalPosition_msg), NextHorizontalPosition_msg);
 }
 
 

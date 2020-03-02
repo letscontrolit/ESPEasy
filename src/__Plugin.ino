@@ -1166,7 +1166,7 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
               delay(0); // SMY: call delay(0) unconditionally
 
               if (retval) {
-                CPluginCall(CPLUGIN_ACKNOWLEDGE, &TempEvent, str);
+                CPluginCall(CPlugin::Function::CPLUGIN_ACKNOWLEDGE, &TempEvent, str);
                 return true;
               }
             }
@@ -1179,7 +1179,7 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
         if (validPluginID(DeviceIndex_to_Plugin_id[deviceIndex])) {
           if (Plugin_ptr[deviceIndex](Function, event, str)) {
             delay(0); // SMY: call delay(0) unconditionally
-            CPluginCall(CPLUGIN_ACKNOWLEDGE, event, str);
+            CPluginCall(CPlugin::Function::CPLUGIN_ACKNOWLEDGE, event, str);
             return true;
           }
         }

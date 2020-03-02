@@ -4,6 +4,7 @@
 #include "src/DataStructs/EventValueSource.h"
 #include "src/Globals/Device.h"
 #include "src/Globals/Plugins.h"
+#include "src/Globals/Plugins_other.h"
 
 String EventToFileName(const String& eventName) {
   int size  = eventName.length();
@@ -76,6 +77,8 @@ bool processNextEvent() {
       return true;
     }
   }
+  // Just make sure any (accidentally) added or remaining events are not kept.
+  eventQueue.clear();
   return false;
 }
 
@@ -282,6 +285,121 @@ String rulesProcessingFile(const String& fileName, String& event) {
   return "";
 }
 
+
+
+/********************************************************************************************\
+   Parse string commands
+ \*********************************************************************************************/
+
+bool get_next_inner_bracket(const String& line, int& startIndex, int& closingIndex, char closingBracket)
+{
+  char openingBracket = closingIndex;
+  switch (closingBracket) {
+    case ']': openingBracket = '['; break;
+    case '}': openingBracket = '{'; break;
+    case ')': openingBracket = '('; break;
+    default:
+      // unknown bracket type
+      return false;
+  }
+  closingIndex = line.indexOf(closingBracket);
+  if (closingIndex == -1) return false;
+  
+  for (int i = closingIndex; i >= 0; --i) {
+    if (line[i] == openingBracket) {
+      startIndex = i;
+      return true;
+    }
+  }
+  return false;
+}
+
+bool get_next_argument(const String& fullCommand, int& index, String& argument, char separator)
+{
+  int newIndex = fullCommand.indexOf(separator, index);
+  if (newIndex == -1) {
+    argument = fullCommand.substring(index);
+  } else {
+    argument = fullCommand.substring(index, newIndex);
+  }
+  if (argument.startsWith(String(separator))) {
+    argument = argument.substring(1);
+  }
+//  addLog(LOG_LEVEL_INFO, String("get_next_argument: ") + String(index) + " " + fullCommand + " " + argument);
+  index = newIndex + 1;
+  return argument.length() > 0;
+}
+
+void parse_string_commands(String &line) {
+  int startIndex, closingIndex;
+
+  while (get_next_inner_bracket(line, startIndex, closingIndex, '}')) {
+    // Command without opening and closing brackets.
+    String fullCommand = line.substring(startIndex + 1, closingIndex);
+    int tmpIndex = 0;
+    String cmd_s_lower, arg1, arg2, arg3;
+    if (get_next_argument(fullCommand, tmpIndex, cmd_s_lower, ':')) {
+      if (get_next_argument(fullCommand, tmpIndex, arg1, ':')) {
+        if (get_next_argument(fullCommand, tmpIndex, arg2, ':')) {
+          get_next_argument(fullCommand, tmpIndex, arg3, ':');
+        }
+      }
+    }
+    if (cmd_s_lower.length() > 0) {
+      String replacement; // maybe just replace with empty to avoid looping?
+      cmd_s_lower.toLowerCase();
+//      addLog(LOG_LEVEL_INFO, String(F("parse_string_commands cmd: ")) + cmd_s_lower + " " + arg1 + " " + arg2 + " " + arg3);
+
+      int iarg1, iarg2;
+      if (cmd_s_lower.equals(F("substring"))) {
+        // substring arduino style (first char included, last char excluded)
+        // Syntax like 12345[substring:8:12:ANOTHER HELLO WORLD]67890
+        if (validIntFromString(arg1, iarg1)
+            && validIntFromString(arg2, iarg2)) {
+          replacement = arg3.substring(iarg1, iarg2);
+        }
+      } else if (cmd_s_lower.equals(F("strtol"))) {
+        // string to long integer (from cstdlib)
+        // Syntax like 1234[strtol:16:38]7890
+        if (validIntFromString(arg1, iarg1)
+            && validIntFromString(arg2, iarg2)) {
+          replacement = String(strtol(arg2.c_str(), NULL, iarg1));
+        }
+        // FIXME TD-er: removed for now as it is too specific.
+        // Maybe introduce one using 2 or 3 parameters ([div:100:255:3] for *100/255 3 decimals)
+        /*
+      } else if (cmd_s_lower.equals(F("div100ths"))) {
+        // division and giving the 100ths as integer
+        // 5 / 100 would yield 5
+        // useful for fractions that use a full byte gaining a
+        // precision/granularity of 1/256 instead of only 1/100
+        // Syntax like XXX[div100ths:24:256]XXX
+        if (validIntFromString(arg1, iarg1)
+            && validIntFromString(arg2, iarg2)) {
+          float val = (100.0 * iarg1) / (1.0 * iarg2);
+          char sval[10];
+          sprintf(sval, "%02d", (int)val);
+          replacement = String(sval);
+        }
+        */
+      } else  if (cmd_s_lower.equals(F("ord"))) {
+        // Give the ordinal/integer value of the first character of a string
+        // Syntax like let 1,[ord:B]
+        uint8_t uval = arg1.c_str()[0];
+        replacement = String(uval);
+      }
+      // Replace the full command including opening and closing brackets.
+      line.replace(line.substring(startIndex, closingIndex + 1), replacement);
+      /*
+      if (replacement.length() > 0) {
+        addLog(LOG_LEVEL_INFO, String(F("parse_string_commands cmd: ")) + fullCommand + String(F(" -> ")) + replacement);
+      }
+      */
+    }
+  }
+}
+
+
 void replace_EventValueN_Argv(String& line, const String& argString, unsigned int argc)
 {
   String eventvalue;
@@ -304,25 +422,26 @@ void replace_EventValueN_Argv(String& line, const String& argString, unsigned in
   }
 }
 
+
 void substitute_eventvalue(String& line, const String& event) {
-  if (line.indexOf(F("%eventvalue")) == -1) {
-    return; // Nothing to replace.
-  }
+  if (substitute_eventvalue_CallBack_ptr != nullptr)
+    substitute_eventvalue_CallBack_ptr(line, event);
+  if (line.indexOf(F("%eventvalue")) != -1) {
+    if (event.charAt(0) == '!') {
+      line.replace(F("%eventvalue%"), event); // substitute %eventvalue% with
+                                              // literal event string if
+                                              // starting with '!'
+    } else {
+      int equalsPos = event.indexOf("=");
 
-  if (event.charAt(0) == '!') {
-    line.replace(F("%eventvalue%"), event); // substitute %eventvalue% with
-                                            // literal event string if
-                                            // starting with '!'
-  } else {
-    int equalsPos = event.indexOf("=");
+      if (equalsPos > 0) {
+        // Replace %eventvalueX% with the actual value of the event.
+        // For compatibility reasons also replace %eventvalue%  (argc = 0)
+        String argString = event.substring(equalsPos + 1);
 
-    if (equalsPos > 0) {
-      // Replace %eventvalueX% with the actual value of the event.
-      // For compatibility reasons also replace %eventvalue%  (argc = 0)
-      String argString = event.substring(equalsPos + 1);
-
-      for (unsigned int argc = 0; argc <= 4; ++argc) {
-        replace_EventValueN_Argv(line, argString, argc);
+        for (unsigned int argc = 0; argc <= 4; ++argc) {
+          replace_EventValueN_Argv(line, argString, argc);
+        }
       }
     }
   }
@@ -597,7 +716,7 @@ bool ruleMatch(const String& event, const String& rule) {
 
     if (pos != -1) // a * sign in rule, so use a'wildcard' match on message
     {
-      return event.substring(0, pos - 1).equalsIgnoreCase(rule.substring(0, pos - 1));
+      return event.substring(0, pos).equalsIgnoreCase(rule.substring(0, pos));
     } else {
       const bool pound_char_found = rule.indexOf('#') != -1;
 

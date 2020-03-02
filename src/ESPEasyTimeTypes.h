@@ -14,6 +14,13 @@ enum week_t { Last = 0, First, Second, Third, Fourth };
 enum dow_t { Sun = 1, Mon, Tue, Wed, Thu, Fri, Sat };
 enum month_t { Jan = 1, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec };
 
+enum timeSource_t {
+  No_time_source,
+  NTP_time_source,
+  Restore_RTC_time_source,
+  GPS_time_source
+};
+
 // structure to describe rules for when daylight/summer time begins,
 // or when standard time begins.
 // For Daylight Saving Time Around the World, see:
@@ -56,6 +63,7 @@ struct TimeChangeRule {
 };
 
 // Forward declartions
+void     setExternalTimeSource(double time, timeSource_t source);
 void     applyTimeZone(uint32_t curTime = 0);
 void     setTimeZone(const TimeChangeRule& dstStart,
                      const TimeChangeRule& stdStart,

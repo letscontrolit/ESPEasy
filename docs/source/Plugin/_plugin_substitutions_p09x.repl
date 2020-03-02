@@ -1,3 +1,14 @@
+.. |P090_name| replace:: :cyan:`CCS811 TVOC/eCO2`
+.. |P090_type| replace:: :cyan:`Gases`
+.. |P090_typename| replace:: :cyan:`Gases - CCS811 TVOC/eCO2`
+.. |P090_status| replace:: :yellow:`TESTING`
+.. |P090_github| replace:: P090_CCS811.ino
+.. _P090_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P090_CCS811.ino
+.. |P090_usedby| replace:: `.`
+.. |P090_shortinfo| replace:: `.`
+.. |P090_maintainer| replace:: `TD-er`
+.. |P090_compileinfo| replace:: `.`
+.. |P090_usedlibraries| replace:: `.`
 .. |P092_name| replace:: :cyan:`DL-Bus (Technische Alternative)`
 .. |P092_type| replace:: :cyan:`Heating`
 .. |P092_typename| replace:: :cyan:`Heating - DL-Bus (Technische Alternative)`
@@ -9,3 +20,4 @@
 .. |P092_maintainer| replace:: `.`
 .. |P092_compileinfo| replace:: `.`
 .. |P092_usedlibraries| replace:: `.`
+

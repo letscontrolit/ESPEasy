@@ -451,7 +451,7 @@ boolean Plugin_082(byte function, struct EventStruct *event, String& string) {
         }
         double distance = 0.0;
 
-        if (P082_data->hasFix(P082_TIMEOUT)) {
+        if (curFixStatus) {
           if (P082_data->gps->location.isUpdated()) {
             P082_setOutputValue(event, P082_QUERY_LONG, P082_data->gps->location.lng());
             P082_setOutputValue(event, P082_QUERY_LAT,  P082_data->gps->location.lat());
@@ -484,7 +484,9 @@ boolean Plugin_082(byte function, struct EventStruct *event, String& string) {
         P082_setOutputValue(event, P082_QUERY_DB_MAX,      P082_data->gps->satellitesStats.getBestSNR());
         P082_setOutputValue(event, P082_QUERY_CHKSUM_FAIL, P082_data->gps->failedChecksum());
 
-        P082_setSystemTime(event);
+        if (curFixStatus) {
+          P082_setSystemTime(event);
+        }
         P082_logStats(event);
 
         if (success) {
@@ -705,8 +707,10 @@ void P082_html_show_stats(struct EventStruct *event) {
 
   if (P082_data->getDateTime(dateTime, age, pps_sync)) {
     dateTime = addSeconds(dateTime, (age / 1000), false);
+    addHtml(getDateTimeString(dateTime));
+  } else {
+    addHtml(F("-"));
   }
-  addHtml(getDateTimeString(dateTime));
 
   addRowLabel(F("Checksum (pass/fail)"));
   String chksumStats;
@@ -738,8 +742,9 @@ void P082_setSystemTime(struct EventStruct *event) {
   if (P082_data->getDateTime(dateTime, age, pps_sync)) {
     // Use floating point precision to use the time since last update from GPS
     // and the given offset in centisecond.
-    externalTimeSource  = makeTime(dateTime);
-    externalTimeSource += static_cast<double>(age) / 1000.0;
+    double time = makeTime(dateTime);
+    time += static_cast<double>(age) / 1000.0;
+    setExternalTimeSource(time, GPS_time_source);
     initTime();
   }
   P082_pps_time = 0;

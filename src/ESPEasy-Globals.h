@@ -257,8 +257,6 @@ struct pinStatesStruct
 
 
 
-extern int notificationCount;
-
 extern boolean printToWeb;
 extern String printWebString;
 extern boolean printToWebJSON;
@@ -313,9 +311,6 @@ extern float vcc;
 extern boolean WebLoggedIn;
 extern int WebLoggedInTimer;
 
-
-extern boolean (*NPlugin_ptr[NPLUGIN_MAX])(byte, struct EventStruct*, String&);
-extern byte NPlugin_id[NPLUGIN_MAX];
 
 extern String dummyString;  // FIXME @TD-er  This may take a lot of memory over time, since long-lived Strings only tend to grow.
 

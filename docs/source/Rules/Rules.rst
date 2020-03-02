@@ -35,6 +35,17 @@ After rebooting the ESP, the LED will start blinking 10 seconds on then 10 secon
 
 Enjoy.
 
+
+Special Notations
+-----------------
+
+* ``[...#...]`` Referring to task variable
+* ``%...%`` Referring to system variable
+* ``{...:...}`` Referring to String conversions
+* Quotes (single, double or back quotes) Marking begin and end of a command parameter
+
+
+
 Syntax
 ------
 
@@ -377,6 +388,171 @@ Justification
 * ``Ln``: Left part of the string, n characters.
 * ``Rn``: Right part of the string, n characters.
 * ``Ux.y``: Substring Ux.y where x=firstChar and y=number of characters.
+
+
+String Formatting and Interpreting
+----------------------------------
+
+(added 2020/02/24)
+
+String operator commands described here can be recognized by their wrapping curly braces.
+
+This helps recognize task values (``[taskname#varname]``) in these commands.
+
+
+Substring
+^^^^^^^^^
+
+It is possible to process sub strings, for example when working with ``%eventvalue%`` in rules.
+
+Usage: ``{substring:<startpos>:<endpos>:<string>}``
+
+The position arguments are the same as in Arduino ``String::substring`` , meaning the endpos is 1 position further than the last character you need.
+
+For example:
+
+.. code-block:: html
+ 
+ on DS-1#Temperature do
+   logentry,{substring:0:1:%eventvalue%}
+   logentry,{substring:1:2:%eventvalue%}
+   logentry,{substring:2:3:%eventvalue%}
+ endon
+
+The ``%eventvalue%`` may contain the value "23.06"
+The output in the log will then be:
+
+.. code-block:: html
+
+ 1512372 : Info  : EVENT: DS-1#Temperature=23.06
+ 1512404 : Info  : ACT  : logentry,2
+ 1512405 : Info  : Command: logentry
+ 1512406 : Info  : 2
+ 1512409 : Info  : ACT  : logentry,3
+ 1512410 : Info  : Command: logentry
+ 1512410 : Info  : 3
+ 1512413 : Info  : ACT  : logentry,.
+ 1512414 : Info  : Command: logentry
+ 1512415 : Info  : .
+
+
+N.B. it is also possible to concatenate these and refer to ``{taskname#varname}``.
+
+For example (bit useless example, just for illustrative purposes): 
+
+.. code-block:: html
+
+ on DS-1#Temperature do
+   logentry,{substring:0:2:{strtol:16:{substring:0:2:[DS-1#Temperature]}{substring:3:5:[DS-1#Temperature]}}}
+ endon
+
+.. code-block:: html
+
+ 221313 : Info  : EVENT: DS-1#Temperature=22.13
+ 221346 : Info  : parse_string_commands cmd: substring:0:2:22.13 -> 22
+ 221347 : Info  : parse_string_commands cmd: substring:3:5:22.13 -> 13
+ 221348 : Info  : parse_string_commands cmd: strtol:16:2213 -> 8723
+ 221349 : Info  : parse_string_commands cmd: substring:0:2:8723 -> 87
+ 221350 : Info  : ACT  : logentry,87
+ 221351 : Info  : Command: logentry
+ 221353 : Info  : 87
+
+strtol
+^^^^^^
+
+Strings or substrings can be converted from just about any base value (binary, octal, hexadecimal) into an integer value.
+
+Usage: ``{strtol:16:<string>}``  to convert HEX (base 16) into an integer value.
+
+
+Example of extracting sub strings from a value and interpreting as if they were HEX values:
+
+.. code-block:: html
+
+ on DS-1#Temperature do
+   logentry,{strtol:16:%eventvalue%}
+   logentry,{strtol:16:{substring:3:5:%eventvalue%}}
+ endon
+
+.. code-block:: html
+
+ 1987550 : Info  : EVENT: DS-1#Temperature=24.12
+ 1987586 : Info  : ACT  : logentry,36
+ 1987587 : Info  : Command: logentry
+ 1987588 : Info  : 36
+ 1987591 : Info  : ACT  : logentry,18
+ 1987592 : Info  : Command: logentry
+ 1987593 : Info  : 18
+
+What we see here is the interpretation of "24.12":
+
+* 0x24 = 36
+* 0x12 = 18
+
+Example use case:
+
+
+As a use case, imagine the output of ser2net (P020) from an OpenTherm gateway.
+
+* Message coming from the serial interface: **T101813C0**
+  * The B denotes that the message is from the
+  * The next 4 bytes (actually 2bytes hex encoded) denote the status and type of the message.
+  * the last 4 bytes (actually 2bytes hex encoded) denote the payload.
+* Message that ends up in rules when using ser2net (P020) and Generic handling: ``!Serial#BT101813C0``
+
+The room temperature in this sample is 19.75 C
+
+Get the last four bytes in packs of two bytes:
+
+* ``{substring:13:15:%eventvalue%}``
+* ``{substring:15:17:%eventvalue%}``
+
+Parsing them to decimal representation each (using a base 16 call to strtol):
+
+* ``{strtol:16:{substring:13:15:%eventvalue%}}``
+* ``{strtol:16:{substring:15:17:%eventvalue%}}``
+
+Last but not least the fraction is not correct, it needs to be divided by 256 (and multiplied by 100)
+
+* ``{strtol:16:{substring:15:17:%eventvalue%}}*100/255``
+
+Complete rule used to parse this and set a variable in a dummy device:
+
+.. code-block:: html
+
+ // Room temperature
+ on !Serial#T1018* do
+   TaskValueSet 2,1,{strtol:16:{substring:13:15:%eventvalue%}}.{strtol:16:{substring:15:17:%eventvalue%}}*100/255
+ endon
+
+
+ord
+^^^
+
+Give the ordinal/integer value of the first character of a string.  (e.g. ASCII integer value)
+
+Usage: ``{ord:<string>}``
+
+For example:
+
+.. code-block:: html
+
+ on DS-1#Temperature do
+   logentry,{ord:A}   // ASCII value of 'A'
+   logentry,{ord:{substring:2:3:%eventvalue%}}  // ASCII value of 3rd character of %eventvalue%
+ endon
+
+
+.. code-block:: html
+
+ 2982455 : Info  : EVENT: DS-1#Temperature=23.12
+ 2982487 : Info  : ACT  : logentry,65
+ 2982488 : Info  : Command: logentry
+ 2982489 : Info  : 65
+ 2982492 : Info  : ACT  : logentry,46
+ 2982493 : Info  : Command: logentry
+ 2982494 : Info  : 46
+
 
 
 System variables

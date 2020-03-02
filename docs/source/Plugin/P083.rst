@@ -1,0 +1,41 @@
+.. include:: ../Plugin/_plugin_substitutions_p08x.repl
+.. _P083_page:
+
+|P083_typename|
+==================================================
+
+|P083_shortinfo|
+
+Plugin details
+--------------
+
+Type: |P083_type|
+
+Name: |P083_name|
+
+Status: |P083_status|
+
+GitHub: |P083_github|_
+
+Maintainer: |P083_maintainer|
+
+Used libraries: |P083_usedlibraries|
+
+Supported hardware
+------------------
+
+|P083_usedby|
+
+.. Commands available
+.. ^^^^^^^^^^^^^^^^^^
+
+.. .. include:: P083_commands.repl
+
+
+Change log
+----------
+
+.. versionchanged:: 2.0
+  ...
+
+  |added| 2020-02-22 

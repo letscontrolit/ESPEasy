@@ -11,6 +11,7 @@
 #include <IRremoteESP8266.h>
 #include <IRrecv.h>
 #include <IRsend.h>
+#include <IRtext.h>
 #include <IRtimer.h>
 #include <IRutils.h>
 #include <IRac.h>
@@ -46,6 +47,7 @@ const int8_t kDefaultIrLed = 4;  // <=- CHANGE_ME (optional)
 const bool kInvertTxOutput = false;
 
 // Default GPIO the IR demodulator is connected to/controlled by. GPIO 14 = D5.
+// Note: GPIO 16 won't work on the ESP8266 as it does not have interrupts.
 const int8_t kDefaultIrRx = 14;  // <=- CHANGE_ME (optional)
 
 // Enable/disable receiving/decoding IR messages entirely.
@@ -237,7 +239,7 @@ const uint16_t kJsonAcStateMaxSize = 1024;  // Bytes
 // ----------------- End of User Configuration Section -------------------------
 
 // Constants
-#define _MY_VERSION_ "v1.4.4"
+#define _MY_VERSION_ "v1.4.5"
 
 const uint8_t kRebootTime = 15;  // Seconds
 const uint8_t kQuickDisplayTime = 2;  // Seconds

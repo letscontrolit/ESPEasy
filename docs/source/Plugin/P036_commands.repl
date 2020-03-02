@@ -1,0 +1,39 @@
+.. csv-table::
+        :header: "Command", "Extra information"
+        :widths: 20, 30
+
+        "
+        ``oledframedcmd,<display>,<value>``
+
+        Value:
+
+        * ``on`` will turn the display ON.
+        * ``off`` will turn the display OFF.
+        * ``low`` will dim the display to low.
+        * ``med`` will dim the display to medium.
+        * ``high`` will set the brightness to maximum.
+
+        ","
+        OLED displays will age quite fast, so it is not adviced to run them continously at max brightness.
+
+        Some displays do not accept all brightness levels and some also make a quite high pitch coil whine noise when running on some brightness levels.
+        So different levels of brightness can also be of help on those displays.
+        
+        The display controller itself does support more brightness levels, but these are chosen to give noticable change in brightness levels and also to help in chosing the best values for the 2 brighness control registers.
+        As there are 2 brighness control registers, there is some overlap in their range, but some combinations may lead to issues like coil whining noise or sometimes not even working displays as not all of these displays are wired to support both controls to be used.        
+        "
+        "
+        ``oledframedcmd,<line>,<text>``
+        ","
+        The <line> parameter coresponds with the same lines as the plugin configuration has.
+
+        The <text> parameter must be a single command parameter. 
+        Meaning, it must be wrapped in quites when using a space or comma as text.
+
+        If double quote characters are needed, wrap the parameter in single quotes or back quotes.
+
+        The updated line text is not stored in the settings itself, but kept in memory.
+        After a reboot the stored plugin settings will be used.
+
+        All template notations can be used, like system variables, or reference to a task value.
+        "

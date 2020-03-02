@@ -530,11 +530,8 @@ String URLEncode(const char *msg)
    replace other system variables like %sysname%, %systime%, %ip%
  \*********************************************************************************************/
 void parseControllerVariables(String& s, struct EventStruct *event, boolean useURLencode) {
-  parseEventVariables(s, event, false); // Must only URLEncode once, so do it at the end of this conversion.
-  s = parseTemplate(s);
-  if (useURLencode) {
-    s = URLEncode(s.c_str());
-  }
+  s = parseTemplate(s, useURLencode);
+  parseEventVariables(s, event, useURLencode);
 }
 
 void repl(const String& key, const String& val, String& s, boolean useURLencode)

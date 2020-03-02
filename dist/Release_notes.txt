@@ -1,4 +1,129 @@
 -------------------------------------------------
+Changes in release mega-20200301 (since mega-20200228)
+-------------------------------------------------
+
+Release date: zo  1 mrt 2020 19:50:36 CET
+
+Artem (1):
+      Add more MIME types
+
+Gijs Noorlander (2):
+      [Build Size] Replace all TXBuffer += calls where possible
+      [Build Size] Fix build issue in WebServer_FileList for SD card support
+
+
+-------------------------------------------------
+Changes in release mega-20200228 (since mega-20200222)
+-------------------------------------------------
+
+Release date: vr 28 feb 2020  2:30:24 CET
+
+Claas Anders Rathje (5):
+      Adding support for * substring * strtol (useful for converting hex or binary numbers) * 100ths division in eventvalue parsing.
+      Fixed wildcard matching which only checked up to one character before the actual wildcard and not up to the wildcard.
+      Added checks for valid integers as suggested by TD-er Merged the functions as suggested by TD-er
+      Added [ord: to get integer value of a string/character.
+      Avoiding deepcopy on command pass. Checking for closing character ]. Switched to if else if. Copied command string to get a lowercase representation.
+
+Gijs Noorlander (31):
+      Update Adafruit library for SGP30 sensor
+      [P083 SGP30] Read SGP30 sensor according to specs
+      [SGP30] Quick update + Store baseline info for quick init
+      [Docs] Added doc stubs of recently added plugins
+      Work-around for breaking change in Arduino core lib
+      [CCS811] Plugin 089 CCS811 TVOC/eCO2
+      [CCS811] Fix compile error unused variable
+      [CC811] Rename file to _P090...
+      [CCS811] Rename P089 to P090
+      [CCS811] remove nonsense <TD>
+      [CCS811] Act on each reading, but only send to controller on PLUGIN_READ
+      Remove a inadvertently added change for schedule_all_task_device_timers
+      [Travis] Remove Unicode characters from source code
+      Revert "Work-around for breaking change in Arduino core lib"
+      [docs] Document string handling in rules (PR #2828 )
+      Add note to optimize code
+      [Rules] Make nested string modification commands possible
+      [Commands] Update docs + add task/controller enable/disable commands
+      [docs] Document P081_Cron
+      [docs] Document P036 Framed OLED
+      [Cron] Fix handling bogus last/next times + restructure code
+      [Cron] Fix mistake of generating incorrect event task name.
+      [NTP] Validate returned NTP packet before using + rate limit requests
+      [Time] Store system time in RTC and restore at warm boot (no deep sleep)
+      [Cron] Call systmTimePresent() function to check if we have any time set
+      [Cron] Only update last/next times if cron elapsed
+      [Cron] Memory leak in calling Cron lib code
+      [docs] Document RTC memory
+      [Cron] Add warning about the memory leak
+      [Cron] Use task data object to only parse expression when changed
+      [Cron] Fix memory leak
+
+Grovkillen (1):
+      [benchmark] fixed incorrect syntax
+
+TD-er (2):
+      [Rules] Remove [div100ths:...] as it is too specific
+      [Rules] Use curly braces for string conversion commands
+
+stefan (1):
+      Auto stash before merge of "mega" and "origin/mega"
+
+
+-------------------------------------------------
+Changes in release mega-20200222 (since mega-20200204)
+-------------------------------------------------
+
+Release date: za 22 feb 2020  0:06:14 CET
+
+Gijs Noorlander (26):
+      [RN2483] Fix LoRa packed encoding
+      [Custom.h] Add some password defaults for factory default settings
+      [RN2483] Fix proper reset and autobaud of RN2483 LoRa module
+      [RN2483] Make calls non blocking using state machine
+      [Controller] Add CPLUGIN_FIFTY_PER_SECOND function
+      [Controller] Make more controller parameters optional for a controller
+      [Notifiers] Make NPlugin functions into enum-class
+      [Controllers] Make CPlugin functions in to enum class
+      [RN2483] Fix OTAA and ABP join issues
+      [RN2483] Make OTAA join work async
+      [Controllers] Add the new 10/s and 50/s calls for controllers time stats
+      [RN2483] Status bits depend on firmware rev. number
+      [RN2483] Move functions and members to helper class.
+      [RN2483] Add some example code for new RN2483 library
+      [Controller] Fix connection failure counts (#2893)
+      [MQTT controller] Add checks & --connectionFailures on publish success
+      [Controllers] Make sure forward declaration of do_process_xx_delay_queue is on single line
+      [GPIO settings] Allow to save changing GPIO pin to "not used"
+      [JSON] Add lowest TTL to highest level in JSON output
+      [RN2483] Quick work-around to force SW serial for LoRa module
+      [Generic HTTP] Fix URL encoding for variable replacement (#2878)
+      Add some function callbacks to allow parse plugins#2888
+      [JSON] endpoint "buildinfo" declares plugins twice #2836
+      Sync ESPEasySerial library + increase version to 1.0.14
+      [JSON] Fix pinstates_json for empty list
+      [MQTT] Make clean session and LWT optional for ThingSpeak MQTT
+
+Grovkillen (1):
+      [docs] added rules example + fixed S11 (P052) links
+
+TD-er (5):
+      [Controller] Fix controller name not found
+      [RN2483] Fix build issues
+      Fix compile issue in ArduinoUnoNano-downlink.ino example
+      [RN2483] Small fixes in display strings and library examples
+      [WiFi] Increase delay after turning on WiFi
+
+Toni (4):
+      HeatpumpIR 1.0.11 update, P088_HeatpumpIR support for Mitsubishi MSC and Mitsubishi Heavy FDTC
+      Update _P088_HeatpumpIR.ino, include files in alphabetical order
+      P088_HeatpumpIR to use HeatpumpIRFactory (#2884)
+      P088_HeatpumpIR review fixes (#2884)
+
+jimmys01 (1):
+      Ir-Update
+
+
+-------------------------------------------------
 Changes in release mega-20200204 (since mega-20191208)
 -------------------------------------------------
 

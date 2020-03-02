@@ -147,7 +147,7 @@ void CPluginInit(void)
   ADDCPLUGIN(025)
 #endif
 
-  CPluginCall(CPLUGIN_PROTOCOL_ADD, 0);
+  CPluginCall(CPlugin::Function::CPLUGIN_PROTOCOL_ADD, 0);
 
   // Set all not supported cplugins to disabled.
   for (controllerIndex_t controller = 0; controller < CONTROLLER_MAX; ++controller) {
@@ -155,129 +155,5 @@ void CPluginInit(void)
       Settings.ControllerEnabled[controller] = false;
     }
   }
-  CPluginCall(CPLUGIN_INIT_ALL, 0);
-}
-
-bool CPluginCall(protocolIndex_t protocolIndex, byte Function, struct EventStruct *event, String& str) {
-  if (validProtocolIndex(protocolIndex)) {
-    START_TIMER;
-    bool ret = CPlugin_ptr[protocolIndex](Function, event, str);
-    STOP_TIMER_CONTROLLER(protocolIndex, Function);
-    return ret;
-  }
-  return false;
-}
-
-bool CPluginCall(byte Function, struct EventStruct *event, String& str)
-{
-  struct EventStruct TempEvent;
-
-  if (event == 0) {
-    event = &TempEvent;
-  }
-
-  switch (Function)
-  {
-    // Unconditional calls to all included controller in the build
-    case CPLUGIN_PROTOCOL_ADD:
-
-      for (protocolIndex_t x = 0; x < CPLUGIN_MAX; x++) {
-        if (validCPluginID(ProtocolIndex_to_CPlugin_id[x])) {
-          const unsigned int next_ProtocolIndex = protocolCount + 2;
-
-          if (next_ProtocolIndex > Protocol.size()) {
-            // Increase with 8 to get some compromise between number of resizes and wasted space
-            unsigned int newSize = Protocol.size();
-            newSize = newSize + 8 - (newSize % 8);
-            Protocol.resize(newSize);
-          }
-          checkRAM(F("CPluginCallADD"), x);
-          String dummy;
-          CPluginCall(x, Function, event, dummy);
-        }
-      }
-      return true;
-
-
-    // calls to all active controllers
-    case CPLUGIN_INIT_ALL:
-    case CPLUGIN_UDP_IN:
-    case CPLUGIN_INTERVAL:      // calls to send stats information
-    case CPLUGIN_GOT_CONNECTED: // calls to send autodetect information
-    case CPLUGIN_GOT_INVALID:   // calls to mark unit as invalid
-    case CPLUGIN_FLUSH:
-    case CPLUGIN_TEN_PER_SECOND:
-
-      if (Function == CPLUGIN_INIT_ALL) {
-        Function = CPLUGIN_INIT;
-      }
-
-      for (controllerIndex_t x = 0; x < CONTROLLER_MAX; x++) {
-        if ((Settings.Protocol[x] != 0) && Settings.ControllerEnabled[x]) {
-          event->ProtocolIndex = getProtocolIndex(Settings.Protocol[x]);
-          String dummy;
-          CPluginCall(event->ProtocolIndex, Function, event, dummy);
-        }
-      }
-      return true;
-
-    // calls to specific controller
-    case CPLUGIN_INIT:
-    case CPLUGIN_EXIT:
-    {
-      controllerIndex_t controllerindex = event->ControllerIndex;
-
-      if (Settings.ControllerEnabled[controllerindex] && supportedCPluginID(Settings.Protocol[controllerindex]))
-      {
-        if (!validProtocolIndex(event->ProtocolIndex))
-        {
-          event->ProtocolIndex = getProtocolIndex(Settings.Protocol[controllerindex]);
-        }
-        CPluginCall(event->ProtocolIndex, Function, event, str);
-      }
-      break;
-    }
-
-    case CPLUGIN_ACKNOWLEDGE: // calls to send acknowledge back to controller
-
-      for (controllerIndex_t x = 0; x < CONTROLLER_MAX; x++) {
-        if (Settings.ControllerEnabled[x] && supportedCPluginID(Settings.Protocol[x])) {
-          event->ProtocolIndex = getProtocolIndex(Settings.Protocol[x]);
-          CPluginCall(event->ProtocolIndex, Function, event, str);
-        }
-      }
-      return true;
-  }
-
-  return false;
-}
-
-// Check if there is any controller enabled.
-bool anyControllerEnabled() {
-  for (controllerIndex_t x = 0; x < CONTROLLER_MAX; x++) {
-    if (Settings.ControllerEnabled[x] && supportedCPluginID(Settings.Protocol[x])) {
-      return true;
-    }
-  }
-  return false;
-}
-
-// Find first enabled controller index with this protocol
-controllerIndex_t findFirstEnabledControllerWithId(cpluginID_t cpluginid) {
-  if (!supportedCPluginID(cpluginid)) {
-    return INVALID_CONTROLLER_INDEX;
-  }
-
-  for (controllerIndex_t i = 0; i < CONTROLLER_MAX; i++) {
-    if ((Settings.Protocol[i] == cpluginid) && Settings.ControllerEnabled[i]) {
-      return i;
-    }
-  }
-  return INVALID_CONTROLLER_INDEX;
-}
-
-bool CPluginCall(byte Function, struct EventStruct *event) {
-  String dummy;
-
-  return CPluginCall(Function, event, dummy);
+  CPluginCall(CPlugin::Function::CPLUGIN_INIT_ALL, 0);
 }

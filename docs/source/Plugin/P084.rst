@@ -1,0 +1,42 @@
+.. include:: ../Plugin/_plugin_substitutions_p08x.repl
+.. _P084_page:
+
+|P084_typename|
+==================================================
+
+|P084_shortinfo|
+
+Plugin details
+--------------
+
+Type: |P084_type|
+
+Name: |P084_name|
+
+Status: |P084_status|
+
+GitHub: |P084_github|_
+
+Maintainer: |P084_maintainer|
+
+Used libraries: |P084_usedlibraries|
+
+Supported hardware
+------------------
+
+|P084_usedby|
+
+.. Commands available
+.. ^^^^^^^^^^^^^^^^^^
+
+.. .. include:: P084_commands.repl
+
+
+
+Change log
+----------
+
+.. versionchanged:: 2.0
+  ...
+
+  |added| 2020-02-22 

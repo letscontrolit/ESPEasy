@@ -15,13 +15,15 @@ bool loadFromFS(boolean spiffs, String path) {
   if (path.endsWith("/")) { path += F("index.htm"); }
 
   if (path.endsWith(F(".src"))) { path = path.substring(0, path.lastIndexOf(".")); }
-  else if (path.endsWith(F(".htm")) || path.endsWith(F(".htm.gz"))) { dataType = F("text/html"); }
+  else if (path.endsWith(F(".htm")) || path.endsWith(F(".html")) || path.endsWith(F(".htm.gz")) || path.endsWith(F(".html.gz"))) { dataType = F("text/html"); }
   else if (path.endsWith(F(".css")) || path.endsWith(F(".css.gz"))) { dataType = F("text/css"); }
   else if (path.endsWith(F(".js")) || path.endsWith(F(".js.gz"))) { dataType = F("application/javascript"); }
   else if (path.endsWith(F(".png")) || path.endsWith(F(".png.gz"))) { dataType = F("image/png"); }
   else if (path.endsWith(F(".gif")) || path.endsWith(F(".gif.gz"))) { dataType = F("image/gif"); }
   else if (path.endsWith(F(".jpg")) || path.endsWith(F(".jpg.gz"))) { dataType = F("image/jpeg"); }
   else if (path.endsWith(F(".ico"))) { dataType = F("image/x-icon"); }
+  else if (path.endsWith(F(".svg"))) { dataType = F("image/svg+xml"); }
+  else if (path.endsWith(F(".json"))) { dataType = F("application/json"); }
   else if (path.endsWith(F(".txt")) ||
            path.endsWith(F(".dat"))) { dataType = F("application/octet-stream"); }
   else if (path.endsWith(F(".esp"))) { return handle_custom(path); }
