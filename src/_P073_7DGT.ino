@@ -59,9 +59,9 @@ struct P073_data_struct : public PluginTaskData_base {
     ClearBuffer();
 
     if (sevendgt_now) {
-      sevendgt_hours   = hour();
-      sevendgt_minutes = minute();
-      sevendgt_seconds = second();
+      sevendgt_hours   = node_time.hour();
+      sevendgt_minutes = node_time.minute();
+      sevendgt_seconds = node_time.second();
     }
 
     if (flag12h && (sevendgt_hours > 12)) {
@@ -85,9 +85,9 @@ struct P073_data_struct : public PluginTaskData_base {
     int sevendgt_year0 = sevendgt_year;
 
     if (sevendgt_now) {
-      sevendgt_day   = day();
-      sevendgt_month = month();
-      sevendgt_year0 = year();
+      sevendgt_day   = node_time.day();
+      sevendgt_month = node_time.month();
+      sevendgt_year0 = node_time.year();
     } else {
       if (sevendgt_year0 < 100) {
         sevendgt_year0 += 2000;

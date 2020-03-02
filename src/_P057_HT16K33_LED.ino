@@ -300,8 +300,8 @@ boolean Plugin_057(byte function, struct EventStruct *event, String& string)
         if (!Plugin_057_M || PCONFIG(1) == 0)
           break;
 
-        byte hours = hour();
-        byte minutes = minute();
+        byte hours = node_time.hour();
+        byte minutes = node_time.minute();
 
         // Plugin_057_M->ClearRowBuffer();
         Plugin_057_M->SetDigit(PCONFIG(5), minutes % 10);
