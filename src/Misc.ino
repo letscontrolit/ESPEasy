@@ -1518,7 +1518,7 @@ void prepareShutdown()
   saveUserVarToRTC();
   SPIFFS.end();
   delay(100); // give the node time to flush all before reboot or sleep
-  now();
+  node_time.now();
   saveToRTC();
 }
 
@@ -2461,9 +2461,9 @@ void SendValueLogger(taskIndex_t TaskIndex)
       LoadTaskSettings(TaskIndex);
       for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++)
       {
-        logger += getDateString('-');
+        logger += node_time.getDateString('-');
         logger += ' ';
-        logger += getTimeString(':');
+        logger += node_time.getTimeString(':');
         logger += ',';
         logger += Settings.Unit;
         logger += ',';

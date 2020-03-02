@@ -116,7 +116,7 @@ String getValue(LabelType::Enum label) {
       return WiFi.hostname();
     #endif
 
-    case LabelType::LOCAL_TIME:             return getDateTimeString('-',':',' ');
+    case LabelType::LOCAL_TIME:             return node_time.getDateTimeString('-',':',' ');
     case LabelType::UPTIME:                 return String(wdcounter / 2);
     case LabelType::LOAD_PCT:               return String(getCPUload());
     case LabelType::LOOP_COUNT:             return String(getLoopCountPerSec());

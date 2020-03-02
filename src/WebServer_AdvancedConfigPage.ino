@@ -1,5 +1,7 @@
 #ifdef WEBSERVER_ADVANCED
 
+#include "src/Globals/TimeZone.h"
+
 // ********************************************************************************
 // Web Interface config page
 // ********************************************************************************
@@ -77,8 +79,8 @@ void handle_advanced() {
 
     addHtmlError(SaveSettings());
 
-    if (systemTimePresent()) {
-      initTime();
+    if (node_time.systemTimePresent()) {
+      node_time.initTime();
     }
   }
 
@@ -220,7 +222,7 @@ void addFormDstSelect(bool isStart, uint16_t choice) {
   uint16_t tmpend(choice);
 
   if (!TimeChangeRule(choice, 0).isValid()) {
-    getDefaultDst_flash_values(tmpstart, tmpend);
+    time_zone.getDefaultDst_flash_values(tmpstart, tmpend);
   }
   TimeChangeRule rule(isStart ? tmpstart : tmpend, 0);
   addRowLabel(weeklabel);

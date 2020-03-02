@@ -257,7 +257,7 @@ void setup()
       lastBootCause=BOOT_CAUSE_DEEP_SLEEP;
     }
     else {
-      restoreLastKnownUnixTime();
+      node_time.restoreLastKnownUnixTime(RTC.lastSysTime, RTC.deepSleepState);
       log = F("INIT : Warm boot #");
     }
 
@@ -392,8 +392,8 @@ void setup()
   if (Settings.UDPPort != 0)
     portUDP.begin(Settings.UDPPort);
 
-  if (systemTimePresent())
-    initTime();
+  if (node_time.systemTimePresent())
+    node_time.initTime();
 
 #if FEATURE_ADC_VCC
   if (!wifiConnectInProgress) {
@@ -815,8 +815,31 @@ void runOncePerSecond()
     cmd_within_mainloop = 0;
   }
   // clock events
-  if (systemTimePresent())
-    checkTime();
+  if (node_time.reportNewMinute()) {
+    String dummy;
+    PluginCall(PLUGIN_CLOCK_IN, 0, dummy);
+    if (Settings.UseRules)
+    {
+      String event;
+      event.reserve(21);
+      event  = F("Clock#Time=");
+      event += node_time.weekday_str();
+      event += ",";
+
+      if (node_time.hour() < 10) {
+        event += '0';
+      }
+      event += node_time.hour();
+      event += ":";
+
+      if (node_time.minute() < 10) {
+        event += '0';
+      }
+      event += node_time.minute();
+      // TD-er: Do not add to the eventQueue, but execute right now.
+      rulesProcessing(event);
+    }
+  }
 
 //  unsigned long start = micros();
   String dummy;

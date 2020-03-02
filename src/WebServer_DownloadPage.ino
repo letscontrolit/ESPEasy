@@ -29,9 +29,9 @@ void handle_download()
   str += BUILD;
   str += '_';
 
-  if (systemTimePresent())
+  if (node_time.systemTimePresent())
   {
-    str += getDateTimeString('\0', '\0', '\0');
+    str += node_time.getDateTimeString('\0', '\0', '\0');
   }
   str += F(".dat");
 

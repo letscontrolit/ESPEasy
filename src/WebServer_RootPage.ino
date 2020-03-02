@@ -57,7 +57,7 @@ void handle_root() {
     addRowLabelValue(LabelType::GIT_BUILD);
     addRowLabel(getLabel(LabelType::LOCAL_TIME));
 
-    if (systemTimePresent())
+    if (node_time.systemTimePresent())
     {
       addHtml(getValue(LabelType::LOCAL_TIME));
     }
