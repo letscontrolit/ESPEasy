@@ -3,7 +3,7 @@
   ##########################################################################################
 
   Features :
-   - make it possible to control serial linked devices through ESP8266
+   - Control serial linked devices through ESP8266
    - exactly only ONE P091 plugin can be used one time on one device!
    - serial have to be ENABLED, and serial logging level set to 0 at ESPEasy settings!
 
@@ -23,18 +23,18 @@
   List of commands :
 	- relay,[relay_number],[status]                 Set specific relay (0-3) to status (0/1)
 	- relaypulse,[relay_number],[status],[delay]    Pulse specific relay for DELAY millisec with STATUS state,
-                                                        than return to inverse state
-        - ydim,[DIM_VALUE]                              Set DIM_VALUE to Tuya dimmer switch (value can be 0-255, no range check!)
-                                                        Of course, only the Tuya dimmer can do it... dim value can be read from plugin values.
-                                                        There are no checks for is it state on or off.
+                                                  then return to inverse state
+  - ydim,[DIM_VALUE]                              Set DIM_VALUE to Tuya dimmer switch (value can be 0-255, no range check!)
+                                                  Of course, only the Tuya dimmer can do it... dim value can be read from plugin values.
+                                                  There are no checks for is it state on or off.
 
   Command Examples :
 	-  /control?cmd=relay,0,1             Switch on first relay
 	-  /control?cmd=relay,0,0             Switch off first relay
 	-  /control?cmd=relay,1,1             Switch on second relay
 	-  /control?cmd=relay,1,0             Switch off second relay
-	-  /control?cmd=relaypulse,0,1,500    Set first relay to ON for 500ms, than stay OFF
-	-  /control?cmd=relaypulse,0,0,1000   Set first relay to OFF for 1s, than stay ON
+	-  /control?cmd=relaypulse,0,1,500    Set first relay to ON for 500ms, then stay OFF
+	-  /control?cmd=relaypulse,0,0,1000   Set first relay to OFF for 1s, then stay ON
 	-  /control?cmd=ydim,255              Set dimmer to MAX value
 	-  /control?cmd=ydim,25               Set dimmer to ~10%
 
@@ -50,7 +50,7 @@
 
 #define PLUGIN_091
 #define PLUGIN_ID_091         91
-#define PLUGIN_NAME_091       "Serial MCU controlled switch"
+#define PLUGIN_NAME_091       "Switch input - Serial MCU controlled switch"
 #define PLUGIN_VALUENAME1_091 "Relay0"
 #define PLUGIN_VALUENAME2_091 "Relay1"
 #define PLUGIN_VALUENAME3_091 "Relay2"
