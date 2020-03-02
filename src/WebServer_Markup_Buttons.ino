@@ -19,51 +19,52 @@ void addButton(const String& url, const String& label, const String& classes, bo
   addHtml(html);
 }
 
-void addButton(class StreamingBuffer& buffer, const String& url, const String& label)
+void addButtonWithSvg(const String& url, const String& label)
 {
-  addButtonWithSvg(buffer, url, label, "", false);
+  addButtonWithSvg(url, label, "", false);
 }
 
-void addButtonWithSvg(class StreamingBuffer& buffer, const String& url, const String& label, const String& svgPath, bool needConfirm) {
+void addButtonWithSvg(const String& url, const String& label, const String& svgPath, bool needConfirm) {
+  addHtml(F("<a class='button link' href='"));
+  addHtml(url);
+  #ifndef BUILD_MINIMAL_OTA
   bool hasSVG = svgPath.length() > 0;
-
-  buffer += F("<a class='button link' href='");
-  buffer += url;
-
-  if (hasSVG) {
-    buffer += F("' alt='");
-    buffer += label;
+  if (hasSVG) 
+  {
+    String altText;
+    altText.reserve(7 + label.length());
+    altText = F("' alt='");
+    altText += label;
+    addHtml(label);
   }
+  #endif 
 
   if (needConfirm) {
-    buffer += F("' onclick='return confirm(\"Are you sure?\")");
+    addHtml(F("' onclick='return confirm(\"Are you sure?\")"));
   }
-  buffer += F("'>");
+  addHtml(F("'>"));
 
+  #ifndef BUILD_MINIMAL_OTA
   if (hasSVG) {
-    buffer += F("<svg width='24' height='24' viewBox='-1 -1 26 26' style='position: relative; top: 5px;'>");
-    buffer += svgPath;
-    buffer += F("</svg>");
-  } else {
-    buffer += label;
+    addHtml(F("<svg width='24' height='24' viewBox='-1 -1 26 26' style='position: relative; top: 5px;'>"));
+    addHtml(svgPath);
+    addHtml(F("</svg>"));
+  } else 
+  #endif
+  {
+    addHtml(label);
   }
-  buffer += F("</a>");
+  addHtml(F("</a>"));
 }
 
 void addSaveButton(const String& url, const String& label)
 {
-  addSaveButton(TXBuffer, url, label);
-}
-
-void addSaveButton(class StreamingBuffer& buffer, const String& url, const String& label)
-{
 #ifdef BUILD_MINIMAL_OTA
-  addButtonWithSvg(buffer, url, label
+  addButtonWithSvg(url, label
                    , ""
                    , false);
 #else // ifdef BUILD_MINIMAL_OTA
-  addButtonWithSvg(buffer,
-                   url,
+  addButtonWithSvg(url,
                    label
                    ,
                    F(
@@ -75,18 +76,12 @@ void addSaveButton(class StreamingBuffer& buffer, const String& url, const Strin
 
 void addDeleteButton(const String& url, const String& label)
 {
-  addSaveButton(TXBuffer, url, label);
-}
-
-void addDeleteButton(class StreamingBuffer& buffer, const String& url, const String& label)
-{
 #ifdef BUILD_MINIMAL_OTA
-  addButtonWithSvg(buffer, url, label
+  addButtonWithSvg(url, label
                    , ""
                    , true);
 #else // ifdef BUILD_MINIMAL_OTA
-  addButtonWithSvg(buffer,
-                   url,
+  addButtonWithSvg(url,
                    label
                    ,
                    F(

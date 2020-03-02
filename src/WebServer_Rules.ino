@@ -163,7 +163,7 @@ void handle_rules_new() {
   html_table_header(F("Filename"));
   html_table_header(F("Size"));
   addHtml(F("<TH>Actions"));
-  addSaveButton(TXBuffer, F("/rules/backup"), F("Backup"));
+  addSaveButton(F("/rules/backup"), F("Backup"));
   addHtml(F("</TH></TR>"));
 
   // class StreamingBuffer buffer = TXBuffer;
@@ -192,8 +192,7 @@ void handle_rules_new() {
                                    if (fi.isDirectory)
                                    {
                                      addHtml(F("</TD><TD></TD><TD></TD><TD>"));
-                                     addSaveButton(TXBuffer
-                                                   , String(F("/rules/backup?directory=")) + URLEncode(fi.Name.c_str())
+                                     addSaveButton(String(F("/rules/backup?directory=")) + URLEncode(fi.Name.c_str())
                                                    , F("Backup")
                                                    );
                                    }
@@ -223,13 +222,11 @@ void handle_rules_new() {
 
                                      // Actions
                                      html_TD();
-                                     addSaveButton(TXBuffer
-                                                   , String(F("/rules/backup?fileName=")) + encodedPath
+                                     addSaveButton(String(F("/rules/backup?fileName=")) + encodedPath
                                                    , F("Backup")
                                                    );
 
-                                     addDeleteButton(TXBuffer
-                                                     , String(F("/rules/delete?fileName=")) + encodedPath
+                                     addDeleteButton(String(F("/rules/delete?fileName=")) + encodedPath
                                                      , F("Delete")
                                                      );
                                    }
@@ -256,15 +253,13 @@ void handle_rules_new() {
     int showIdx = startIdx - rulesListPageSize;
 
     if (showIdx < 0) { showIdx = 0; }
-    addButton(TXBuffer
-              , String(F("/rules?start=")) + String(showIdx)
+    addButton(String(F("/rules?start=")) + String(showIdx)
               , F("Previous"));
   }
 
   if (hasMore && (count >= endIdx))
   {
-    addButton(TXBuffer
-              , String(F("/rules?start=")) + String(endIdx + 1)
+    addButton(String(F("/rules?start=")) + String(endIdx + 1)
               , F("Next"));
   }
 
