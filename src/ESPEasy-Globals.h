@@ -30,6 +30,8 @@
 #include "src/DataStructs/ESPEasyLimits.h"
 #include "src/DataStructs/EventQueue.h"
 #include "ESPEasy_plugindefs.h"
+#include "src/Globals/Device.h"
+#include "src/Globals/Settings.h"
 
 
 
