@@ -1,4 +1,4 @@
-#ifdef USES_P090
+#ifdef USES_P092
 
 //#######################################################################################################
 //################################ Plugin 090: Mitsubishi Heat Pump #####################################
@@ -8,73 +8,661 @@
 //#ifdef PLUGIN_BUILD_DEVELOPMENT
 //#ifdef PLUGIN_BUILD_TESTING
 
-#define PLUGIN_090
-#define PLUGIN_ID_090         90
-#define PLUGIN_NAME_090       "Mitsubishi Heat Pump"
-#define PLUGIN_VALUENAME1_090 "settings"
+#define PLUGIN_092
+#define PLUGIN_ID_092         92
+#define PLUGIN_NAME_092       "Mitsubishi AC [TESTING]"
+#define PLUGIN_VALUENAME1_092 "settings"
 
-#define PLUGIN_090_DEBUG
+#define PLUGIN_092_DEBUG
 
-struct heatpumpSettings {
-  const char* power;
-  const char* mode;
-  float temperature;
-  const char* fan;
-  const char* vane; //vertical vane, up/down
-  const char* wideVane; //horizontal vane, left/right
-  bool iSee;   //iSee sensor, at the moment can only detect it, not set it
+static const uint8_t PACKET_LEN = 22;
+static const uint8_t READ_BUFFER_LEN = 32;
+
+static const uint8_t INFOMODE[] = {
+  0x02, // request a settings packet
+  0x03  // request the current room temp
 };
 
-struct heatpumpStatus {
-  float roomTemperature;
-  bool operating; // if true, the heatpump is operating to reach the desired temperature
-  //heatpumpTimers timers;  // not supported by the plugin currently
-  int compressorFrequency;
-};
+struct P092_data_struct : public PluginTaskData_base {
+  P092_data_struct(const int16_t serialRx, const int16_t serialTx) :
+    _serial(new ESPeasySerial(serialRx, serialTx)),
+    _state(NotConnected),
+    _fastBaudRate(false),
+    _readPos(0),
+    _writeTimeout(0),
+    _infoModeIndex(0),
+    _statusUpdateTimeout(0),
+    _tempMode(false),
+    _wideVaneAdj(false),
+    _valuesInitialized(false) {
 
-struct P090_data_struct : public PluginTaskData_base {
-  P090_data_struct(const int16_t serialRx, const int16_t serialTx);
+    setState(Connecting);
+  }
 
-  bool read(String& result, bool force);
-  bool write(const String& command, const String& value);
+  virtual ~P092_data_struct() {
+    delete _serial;
+  }
+
+  boolean sync() {
+    if (_statusUpdateTimeout != 0) {
+      if (_wantedSettings != _currentValues) {
+        cancelWaitingAndTransitTo(ApplyingSettings);
+        return false;
+      }
+
+      if (timeOutReached(_statusUpdateTimeout)) {
+        cancelWaitingAndTransitTo(UpdatingStatus);
+        return false;
+      }
+    }
+
+    return readIncommingBytes();
+  }
+
+  boolean read(String& result) const {
+    if (_valuesInitialized == false) {
+      return false;
+    }
+
+    #define map(x, list) findByValue(x, list, sizeof(list) / sizeof(Tuple))
+
+    result = F("{\"roomTemperature\":");
+    result += toString(_currentValues.roomTemperature, 1);
+    result += F(",\"wideVane\":\"");
+    result += map(_currentValues.wideVane, _mappings.wideVane);
+    result += F("\",\"power\":\"");
+    result += map(_currentValues.power, _mappings.power);
+    result += F("\",\"mode\":\"");
+    result += map(_currentValues.mode, _mappings.mode);
+    result += F("\",\"fan\":\"");
+    result += map(_currentValues.fan, _mappings.fan);
+    result += F("\",\"vane\":\"");
+    result += map(_currentValues.vane, _mappings.vane);
+    result += F("\",\"iSee\":");
+    result += boolToString(_currentValues.iSee);
+    result += F(",\"temperature\":");
+    result += toString(_currentValues.temperature, 1) + '}';
+
+    #undef map
+
+    return true;
+  }
+
+  bool write(const String& command, const String& value) {
+    bool success = false;
+
+    if (command.isEmpty() || _valuesInitialized == false) {
+      return success;
+    }
+
+    #define lookup(x, list, placeholder) findByMapping(x, list, sizeof(list) / sizeof(Tuple), placeholder);
+
+    switch (command[0]) {
+      case 't':
+        if (command == F("temperature")) {
+          success = string2float(value, _wantedSettings.temperature);
+        }
+        break;
+      case 'p':
+        if (command == F("power")) {
+          success = lookup(value, _mappings.power, _wantedSettings.power);
+        }
+        break;
+      case 'm':
+        if (command == F("mode")) {
+          success = lookup(value, _mappings.mode, _wantedSettings.mode);
+        }
+        break;
+      case 'f':
+        if (command == F("fan")) {
+          success = lookup(value, _mappings.fan, _wantedSettings.fan);
+        }
+        break;
+      case 'v':
+        if (command == F("vane")) {
+          success = lookup(value, _mappings.vane, _wantedSettings.vane);
+        }
+        break;
+      case 'w':
+        if (command == F("widevane")) {
+          success = lookup(value, _mappings.wideVane, _wantedSettings.wideVane);
+        }
+        break;
+    }
+
+    #undef lookup
+
+    return success;
+  }
 
 private:
-  void connect(bool retry);
+  struct Tuple {
+    uint8_t value;
+    String mapping;
+  };
 
-  void createInfoPacket(byte *packet, byte packetType);
-  void createPacket(byte *packet, const heatpumpSettings& settings);
+  struct Mappings {
+    Tuple power[2];
+    Tuple mode[5];
+    Tuple fan[6];
+    Tuple vane[7];
+    Tuple wideVane[7];
 
-  int readPacket();
-  void writePacket(const byte *packet, int length);
+    Mappings() :
+      power {
+        { 0x00, F("OFF") },
+        { 0x01, F("ON") }
+      },
+      mode {
+        { 0x01, F("HEAT") },
+        { 0x02, F("DRY") },
+        { 0x03, F("COOL") },
+        { 0x07, F("FAN") },
+        { 0x08, F("AUTO") }
+      },
+      fan {
+        { 0x00, F("AUTO") },
+        { 0x01, F("QUIET") },
+        { 0x02, F("1") },
+        { 0x03, F("2") },
+        { 0x05, F("3") },
+        { 0x06, F("4") }
+      },
+      vane {
+        { 0x00, F("AUTO") },
+        { 0x01, F("1") },
+        { 0x02, F("2") },
+        { 0x03, F("3") },
+        { 0x04, F("4") },
+        { 0x05, F("5") },
+        { 0x07, F("SWING") }
+      },
+      wideVane {
+        { 0x01, F("<<") },
+        { 0x02, F("<") },
+        { 0x03, F("|") },
+        { 0x04, F(">") },
+        { 0x05, F(">>") },
+        { 0x08, F("<>") },
+        { 0x0C, F("SWING") }
+      } {
+    }
+  };
 
-  bool canRead() const;
-  bool canSend(bool isInfo) const;
+  enum State {
+    Invalid = -1,
+    NotConnected = 0,
+    Connecting,
+    Connected,
+    UpdatingStatus,
+    StatusUpdated,
+    ScheduleNextStatusUpdate,
+    WaitingForScheduledStatusUpdate,
+    ApplyingSettings,
+    SettingsApplied,
+    ReadTimeout
+  };
 
-  void sync(byte packetType);
-  bool update(const heatpumpSettings& settings);
+  struct Values {
+    uint8_t power;
+    boolean iSee;
+    uint8_t mode;
+    float temperature;
+    uint8_t fan;
+    uint8_t vane;
+    uint8_t wideVane;
+    float roomTemperature;
+
+    Values() :
+      power(0),
+      iSee(false),
+      mode(0),
+      temperature(0),
+      fan(0),
+      vane(0),
+      wideVane(0),
+      roomTemperature(0) {
+    }
+
+    boolean operator!=(const Values& rhs) const {
+      return power != rhs.power ||
+        mode != rhs.mode ||
+        temperature != rhs.temperature ||
+        fan != rhs.fan ||
+        vane != rhs.vane ||
+        wideVane != rhs.wideVane ||
+        iSee != rhs.iSee ||
+        roomTemperature != rhs.roomTemperature;
+    }
+  };
 
 private:
-  ESPeasySerial _serial;
-  heatpumpSettings _currentSettings;
-  heatpumpStatus _currentStatus;
-  bool _isConnected;
-  int _bitrate;
-  bool _waitForRead;
-  unsigned long _lastSend;
-  unsigned long _lastRecv;
-  bool _tempMode;
-  bool _wideVaneAdj;
-  int _infoMode;
-  bool _isUpdatingSettings;
+  void setState(State newState) {
+    if (newState != _state && shouldTransition(_state, newState)) {
+      State currentState = _state;
+      _state = newState;
+      didTransition(currentState, newState);
+    } else {
+      addLog(LOG_LEVEL_DEBUG, String(F("M-AC: SS - ignoring ")) +
+        stateToString(_state) + F(" -> ") + stateToString(newState));
+    }
+  }
+
+  static boolean shouldTransition(State from, State to) {
+    switch (to) {
+      case Connecting:
+        return from == NotConnected || from == ReadTimeout;
+
+      case Connected:
+        return from == Connecting;
+
+      case UpdatingStatus:
+        return from == Connected || from == StatusUpdated || from == WaitingForScheduledStatusUpdate;
+
+      case StatusUpdated:
+        return from == UpdatingStatus;
+
+      case ScheduleNextStatusUpdate:
+        return from == StatusUpdated || from == SettingsApplied;
+
+      case WaitingForScheduledStatusUpdate:
+        return from == ScheduleNextStatusUpdate;
+
+      case ApplyingSettings:
+        return from == WaitingForScheduledStatusUpdate;
+
+      case SettingsApplied:
+        return from == ApplyingSettings;
+
+      case ReadTimeout:
+        return from == UpdatingStatus || from == Connecting;
+
+      default:
+        return false;
+    }
+  }
+
+  void didTransition(State from, State to) {
+    addLog(LOG_LEVEL_DEBUG, String(F("M-AC: didTransition: ")) +
+      stateToString(from) + " -> " + stateToString(to));
+
+    switch (to) {
+      case ReadTimeout:
+        // Try to connect using different boud rate if we don't get response while connecting.
+        if (from == Connecting) {
+          _fastBaudRate = !_fastBaudRate;
+        }
+        setState(Connecting);
+        break;
+
+      case Connecting:
+        connect();
+        break;
+
+      case Connected:
+        responseReceived();
+        _infoModeIndex = 0;
+        setState(UpdatingStatus);
+        break;
+
+      case UpdatingStatus:
+        updateStatus();
+        break;
+
+      case StatusUpdated:
+        responseReceived();
+        _infoModeIndex = (_infoModeIndex + 1) % sizeof(INFOMODE);
+        if (_infoModeIndex != 0) {
+          setState(UpdatingStatus);
+        } else {
+          if (_valuesInitialized == false) {
+            _wantedSettings = _currentValues;
+            _valuesInitialized = true;
+          }
+          setState(ScheduleNextStatusUpdate);
+        }
+        break;
+
+      case ScheduleNextStatusUpdate:
+        _statusUpdateTimeout = millis() + 1000;
+        setState(WaitingForScheduledStatusUpdate);
+        break;
+
+      case ApplyingSettings:
+        applySettings();
+        break;
+
+      case SettingsApplied:
+        responseReceived();
+        _currentValues = _wantedSettings;
+        setState(ScheduleNextStatusUpdate);
+        break;
+
+      default:
+        break;
+    }
+  }
+
+  void cancelWaitingAndTransitTo(State state) {
+    _statusUpdateTimeout = 0;
+    setState(state);
+  }
+
+  void responseReceived() {
+    _writeTimeout = 0;
+  }
+
+  void updateStatus() {
+    addLog(LOG_LEVEL_DEBUG, String(F("M-AC: US: ")) + _infoModeIndex);
+
+    uint8_t packet[PACKET_LEN] = { 0xfc, 0x42, 0x01, 0x30, 0x10 };
+
+    packet[5] = INFOMODE[_infoModeIndex];
+    memset(packet + 6, 0, 15);
+    packet[21] = checkSum(packet, 21);
+
+    sendPacket(packet, PACKET_LEN);
+  }
+
+  void applySettings() {
+    uint8_t packet[PACKET_LEN] = { 0xfc, 0x41, 0x01, 0x30, 0x10, 0x01 };
+    memset(packet + 6, 0, 15);
+
+    if (_wantedSettings.power != _currentValues.power) {
+      packet[8] = _wantedSettings.power;
+      packet[6] |= 0x01;
+    }
+
+    if (_wantedSettings.mode != _currentValues.mode) {
+      packet[9] = _wantedSettings.mode;
+      packet[6] |= 0x02;
+    }
+
+    if (_wantedSettings.temperature != _currentValues.temperature) {
+      packet[6] |= 0x04;
+      if (_tempMode) {
+        packet[19] = (uint8_t)(_wantedSettings.temperature * 2.0f + 128.0f);
+      } else {
+        //packet[10] = TEMP[lookupByteMapIndex(TEMP_MAP, 16, settings.temperature)];
+      }
+    }
+
+    if (_wantedSettings.fan != _currentValues.fan) {
+      packet[11] = _wantedSettings.fan;
+      packet[6] |= 0x08;
+    }
+
+    if (_wantedSettings.vane != _currentValues.vane) {
+      packet[12] = _wantedSettings.vane;
+      packet[6] |= 0x10;
+    }
+
+    if (_wantedSettings.wideVane!= _currentValues.wideVane) {
+      packet[18] = _wantedSettings.wideVane | (_wideVaneAdj ? 0x80 : 0x00);
+      packet[7] |= 0x01;
+    }
+
+    packet[21] = checkSum(packet, 21);
+
+    sendPacket(packet, PACKET_LEN);
+  }
+
+  void connect() {
+    addLog(LOG_LEVEL_DEBUG, String(F("M-AC: Connect ")) + getBaudRate());
+
+    _serial->begin(getBaudRate(), SERIAL_8E1);
+    const uint8_t buffer[] = { 0xfc, 0x5a, 0x01, 0x30, 0x02, 0xca, 0x01, 0xa8 };
+    sendPacket(buffer, sizeof(buffer));
+  }
+
+  unsigned long getBaudRate() const {
+    return _fastBaudRate ? 9600 : 2400;
+  }
+
+  void sendPacket(const uint8_t *packet, size_t size) {
+    addLog(LOG_LEVEL_DEBUG_MORE, dumpOutgoingPacket(packet, size));
+    _serial->write(packet, size);
+    _writeTimeout = millis() + 2000;
+  }
+
+  void addByteToReadBuffer(uint8_t value) {
+    if (_readPos < READ_BUFFER_LEN) {
+      _readBuffer[_readPos] = value;
+      ++_readPos;
+    } else {
+      addLog(LOG_LEVEL_DEBUG, F("M-AC: ABTRB(0)"));
+      _readPos = 0;
+    }
+  }
+
+  boolean readIncommingBytes() {
+    if (_writeTimeout != 0 && timeOutReached(_writeTimeout)) {
+      _writeTimeout = 0;
+      _readPos = 0;
+      setState(ReadTimeout);
+      return false;
+    }
+
+    static const uint8_t DATA_LEN_INDEX = 4;
+
+    while(_serial->available() > 0) {
+      uint8_t value = _serial->read();
+
+      if (_readPos == 0) {
+        // Wait for start byte.
+        if (value == 0xfc) {
+          addByteToReadBuffer(value);
+        } else {
+          addLog(LOG_LEVEL_DEBUG, String(F("M-AC: RIB(0) ")) + formatToHex(value));
+        }
+      } else if ((_readPos <= DATA_LEN_INDEX) || (_readPos <= DATA_LEN_INDEX + _readBuffer[DATA_LEN_INDEX])) {
+        // Read header + data part - data length is at index 4.
+        addByteToReadBuffer(value);
+      } else {
+        // Done, last byte is checksum.
+        uint8_t length = _readPos;
+        _readPos = 0;
+        return processIncomingPacket(_readBuffer, length, value);
+      }
+    }
+
+    return false;
+  }
+
+  boolean processIncomingPacket(const uint8_t* packet, uint8_t length, uint8_t checksum) {
+    State state = checkIncomingPacket(packet, length, checksum);
+    switch (state) {
+      case StatusUpdated: {
+        static const uint8_t dataPartOffset = 5;
+        if (length <= dataPartOffset) {
+          return false;
+        }
+
+        Values values = _currentValues;
+        if (parseValues(_readBuffer + dataPartOffset, length - dataPartOffset)) {
+          setState(StatusUpdated);
+          return values != _currentValues;
+        }
+
+        break;
+      }
+
+      case SettingsApplied: {
+        Values values = _currentValues;
+        setState(SettingsApplied);
+        return values != _currentValues;;
+      }
+
+      default:
+        if (state != Invalid) {
+          setState(state);
+        }
+        break;
+    }
+
+    return false;
+  }
+
+ boolean parseValues(const uint8_t* data, size_t length) {
+    if (length == 0) {
+      addLog(LOG_LEVEL_DEBUG, F("M-AC: PV(0)"));
+      return false;
+    }
+
+    switch(data[0]) {
+      case 0x02:
+        if (length > 11) {
+          _currentValues.power = data[3];
+          _currentValues.iSee  = data[4] > 0x08 ? true : false;
+          _currentValues.mode  = _currentValues.iSee ? (data[4] - 0x08) : data[4];
+
+          if (data[11] != 0x00) {
+            _currentValues.temperature = ((float)data[11] - 128.0f) / 2.0f;
+            _tempMode = true;
+          } else {
+            _currentValues.temperature = data[5];
+          }
+
+          _currentValues.fan         = data[6];
+          _currentValues.vane        = data[7];
+          _currentValues.wideVane    = data[10] & 0x0F;
+          _wideVaneAdj = (data[10] & 0xF0) == 0x80 ? true : false;
+
+          return true;
+        }
+
+      case 0x03:
+        if (length > 6) {
+          if(data[6] != 0x00) {
+            _currentValues.roomTemperature = ((float)data[6] - 128.0f) / 2.0f;
+          } else {
+            _currentValues.roomTemperature = data[3];
+          }
+          return true;
+        }
+    }
+
+    addLog(LOG_LEVEL_DEBUG, F("M-AC: PV(1)"));
+    return false;
+  }
+
+  static State checkIncomingPacket(const uint8_t* packet, uint8_t length, uint8_t checksum) {
+    addLog(LOG_LEVEL_DEBUG_MORE, dumpIncomingPacket(packet, length));
+
+    if (packet[2] != 0x01 || packet[3] != 0x30) {
+      addLog(LOG_LEVEL_DEBUG, F("M-AC: CIP(0)"));
+      return Invalid;
+    }
+
+    uint8_t calculatedChecksum = checkSum(packet, length);
+    if (calculatedChecksum != checksum) {
+      addLog(LOG_LEVEL_DEBUG, String(F("M-AC: CIP(1) ")) + calculatedChecksum);
+      return Invalid;
+    }
+
+    switch (packet[1]) {
+      case 0x61:
+        return SettingsApplied;
+      case 0x62:
+        return StatusUpdated;
+      case 0x7a:
+        return Connected;
+      default:
+        return Invalid;
+    }
+  }
+
+  static uint8_t checkSum(const uint8_t* bytes, size_t length) {
+    uint8_t sum = 0;
+    for (size_t i = 0; i < length; ++i) {
+      sum += bytes[i];
+    }
+    return (0xfc - sum) & 0xff;
+  }
+
+  static String findByValue(uint8_t value, const Tuple list[], size_t count) {
+    for (size_t index = 0; index < count; ++index) {
+      const Tuple& tuple = list[index];
+      if (value == tuple.value) {
+        return tuple.mapping;
+      }
+    }
+    return list[0].mapping;
+  }
+
+  static boolean findByMapping(const String& mapping, const Tuple list[], size_t count, uint8_t& value) {
+    for (size_t index = 0; index < count; ++index) {
+      const Tuple& tuple = list[index];
+      if (mapping == tuple.mapping) {
+        value = tuple.value;
+        return true;
+      }
+    }
+    return false;
+  }
+
+  #ifdef PLUGIN_092_DEBUG
+  static String stateToString(State state) {
+    switch (state) {
+      case Invalid: return F("Invalid");
+      case NotConnected: return F("NotConnected");
+      case Connecting: return F("Connecting");
+      case Connected: return F("Connected");
+      case UpdatingStatus: return F("UpdatingStatus");
+      case StatusUpdated: return F("StatusUpdated");
+      case ReadTimeout: return F("ReadTimeout");
+      case ScheduleNextStatusUpdate: return F("ScheduleNextStatusUpdate");
+      case WaitingForScheduledStatusUpdate: return F("WaitingForScheduledStatusUpdate");
+      case ApplyingSettings: return F("ApplyingSettings");
+      case SettingsApplied: return F("SettingsApplied");
+    }
+    return String(F("<unknown> ")) + state;
+  }
+
+  static void dumpPacket(const uint8_t* packet, size_t length, String& result) {
+    for (size_t idx = 0; idx < length; ++idx) {
+      result += formatToHex(packet[idx], F(""));
+      result += ' ';
+    }
+  }
+
+  static String dumpOutgoingPacket(const uint8_t* packet, size_t length) {
+    String message = F("M-AC - OUT: ");
+    dumpPacket(packet, length, message);
+    return message;
+  }
+
+  static String dumpIncomingPacket(const uint8_t* packet, int length) {
+    String message = F("M-AC - IN: ");
+    dumpPacket(packet, length, message);
+    return message;
+  }
+  #endif
+
+private:
+  ESPeasySerial* _serial;
+  State _state;
+  boolean _fastBaudRate;
+  uint8_t _readBuffer[READ_BUFFER_LEN];
+  uint8_t _readPos;
+  unsigned long _writeTimeout;
+  Values _currentValues;
+  Values _wantedSettings;
+  uint8_t _infoModeIndex;
+  unsigned long _statusUpdateTimeout;
+  boolean _tempMode;
+  boolean _wideVaneAdj;
+  boolean _valuesInitialized;
+  const Mappings _mappings;
 };
 
-boolean Plugin_090(byte function, struct EventStruct *event, String& string) {
+boolean Plugin_092(byte function, struct EventStruct *event, String& string) {
   boolean success = false;
 
   switch (function) {
 
     case PLUGIN_DEVICE_ADD: {
-      Device[++deviceCount].Number = PLUGIN_ID_090;
+      Device[++deviceCount].Number = PLUGIN_ID_092;
       Device[deviceCount].Type = DEVICE_TYPE_DUAL;
       Device[deviceCount].VType = SENSOR_TYPE_STRING;
       Device[deviceCount].ValueCount = 1;
@@ -85,12 +673,12 @@ boolean Plugin_090(byte function, struct EventStruct *event, String& string) {
     }
 
     case PLUGIN_GET_DEVICENAME: {
-      string = F(PLUGIN_NAME_090);
+      string = F(PLUGIN_NAME_092);
       break;
     }
 
     case PLUGIN_GET_DEVICEVALUENAMES: {
-      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_090));
+      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_092));
       break;
     }
 
@@ -118,24 +706,24 @@ boolean Plugin_090(byte function, struct EventStruct *event, String& string) {
     }
 
     case PLUGIN_INIT: {
-      initPluginTaskData(event->TaskIndex, new P090_data_struct(CONFIG_PIN1, CONFIG_PIN2));
+      initPluginTaskData(event->TaskIndex, new P092_data_struct(CONFIG_PIN1, CONFIG_PIN2));
       success = getPluginTaskData(event->TaskIndex) != nullptr;
       break;
     }
 
     case PLUGIN_READ: {
-      P090_data_struct* heatPump = static_cast<P090_data_struct*>(getPluginTaskData(event->TaskIndex));
+      P092_data_struct* heatPump = static_cast<P092_data_struct*>(getPluginTaskData(event->TaskIndex));
       if (heatPump != nullptr) {
-        success = heatPump->read(event->String2, true);
+        success = heatPump->read(event->String2);
       }
       break;
     }
 
     case PLUGIN_WRITE: {
-      P090_data_struct* heatPump = static_cast<P090_data_struct*>(getPluginTaskData(event->TaskIndex));
-      if (heatPump != nullptr) {
-        success = heatPump->write(parseString(string, 1), parseStringKeepCase(string, 2));
-      }
+      //P092_data_struct* heatPump = static_cast<P092_data_struct*>(getPluginTaskData(event->TaskIndex));
+      //if (heatPump != nullptr) {
+    //    success = heatPump->write(parseString(string, 1), parseStringKeepCase(string, 2));
+    //  }
       break;
     }
 
@@ -145,13 +733,10 @@ boolean Plugin_090(byte function, struct EventStruct *event, String& string) {
       break;
     }
 
-    case PLUGIN_ONCE_A_SECOND: {
-      P090_data_struct* heatPump = static_cast<P090_data_struct*>(getPluginTaskData(event->TaskIndex));
-      if (heatPump != nullptr) {
-        success = heatPump->read(event->String2, false);
-        if (success) {
-          sendData(event);
-        }
+    case PLUGIN_TEN_PER_SECOND: {
+      P092_data_struct* heatPump = static_cast<P092_data_struct*>(getPluginTaskData(event->TaskIndex));
+      if (heatPump != nullptr && heatPump->sync()) {
+        schedule_task_device_timer(event->TaskIndex, millis() + 10);
       }
       break;
     }
@@ -160,539 +745,4 @@ boolean Plugin_090(byte function, struct EventStruct *event, String& string) {
   return success;
 }
 
-#ifdef PLUGIN_090_DEBUG
-void dumpPacket(const byte* packet, int length, String& result) {
-  for (int idx = 0; idx < length; ++idx) {
-    result += formatToHex(packet[idx], F(""));
-    result += F(" ");
-  }
-}
-
-String dumpOutgoingPacket(const byte* packet, int length) {
-  String message = F("MHP - OUT: ");
-  dumpPacket(packet, length, message);
-  return message;
-}
-
-String dumpIncomingPacket(const byte* header, int headerLength, const byte* data, int length) {
-  String message = F("MHP - IN: ");
-  dumpPacket(header, headerLength, message);
-  message += F("- ");
-  dumpPacket(data, length, message);
-  return message;
-}
-#endif
-
-///
-/// Code below is taken from https://github.com/SwiCago/HeatPump
-///
-/// Commit: 7e185ab
-///
-/// Modifications were made in order to embed it into a single file
-///
-///
-/// HeatPump.h
-///
-
-// indexes for INFOMODE array (public so they can be optionally passed to sync())
-static const int RQST_PKT_SETTINGS  = 0;
-//static const int RQST_PKT_ROOM_TEMP = 1;
-//static const int RQST_PKT_TIMERS    = 3;
-//static const int RQST_PKT_STATUS    = 4;
-//static const int RQST_PKT_STANDBY   = 5;
-
-static const int PACKET_LEN = 22;
-static const int PACKET_SENT_INTERVAL_MS = 1000;
-static const int PACKET_INFO_INTERVAL_MS = 2000;
-static const int PACKET_TYPE_DEFAULT = 99;
-
-static const int CONNECT_LEN = 8;
-static const byte CONNECT[CONNECT_LEN] = {0xfc, 0x5a, 0x01, 0x30, 0x02, 0xca, 0x01, 0xa8};
-static const int HEADER_LEN  = 8;
-static const byte HEADER[HEADER_LEN]  = {0xfc, 0x41, 0x01, 0x30, 0x10, 0x01, 0x00, 0x00};
-
-static const int INFOHEADER_LEN  = 5;
-static const byte INFOHEADER[INFOHEADER_LEN]  = {0xfc, 0x42, 0x01, 0x30, 0x10};
-
-static const int INFOMODE_LEN = 3;
-static const byte INFOMODE[INFOMODE_LEN] = {
-  0x02, // request a settings packet - RQST_PKT_SETTINGS
-  0x03, // request the current room temp - RQST_PKT_ROOM_TEMP
-//  0x04, // unknown
-//  0x05, // request the timers - RQST_PKT_TIMERS
-  0x06 // request status - RQST_PKT_STATUS
-//  0x09  // request standby mode (maybe?) RQST_PKT_STANDBY
-};
-
-static const int RCVD_PKT_FAIL            = 0;
-static const int RCVD_PKT_CONNECT_SUCCESS = 1;
-static const int RCVD_PKT_SETTINGS        = 2;
-static const int RCVD_PKT_ROOM_TEMP       = 3;
-static const int RCVD_PKT_UPDATE_SUCCESS  = 4;
-static const int RCVD_PKT_STATUS          = 5;
-//static const int RCVD_PKT_TIMER           = 6;
-
-static const byte CONTROL_PACKET_1[5] = {0x01,    0x02,  0x04,  0x08, 0x10};
-                               //{"POWER","MODE","TEMP","FAN","VANE"};
-static const byte CONTROL_PACKET_2[1] = {0x01};
-                               //{"WIDEVANE"};
-static const byte POWER[2]            = {0x00, 0x01};
-static const char* POWER_MAP[2]       = {"OFF", "ON"};
-static const byte MODE[5]             = {0x01,   0x02,  0x03, 0x07, 0x08};
-static const char* MODE_MAP[5]        = {"HEAT", "DRY", "COOL", "FAN", "AUTO"};
-static const byte TEMP[16]            = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f};
-static const int TEMP_MAP[16]         = {31, 30, 29, 28, 27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16};
-static const byte FAN[6]              = {0x00,  0x01,   0x02, 0x03, 0x05, 0x06};
-static const char* FAN_MAP[6]         = {"AUTO", "QUIET", "1", "2", "3", "4"};
-static const byte VANE[7]             = {0x00,  0x01, 0x02, 0x03, 0x04, 0x05, 0x07};
-static const char* VANE_MAP[7]        = {"AUTO", "1", "2", "3", "4", "5", "SWING"};
-static const byte WIDEVANE[7]         = {0x01, 0x02, 0x03, 0x04, 0x05, 0x08, 0x0c};
-static const char* WIDEVANE_MAP[7]    = {"<<", "<",  "|",  ">",  ">>", "<>", "SWING"};
-static const byte ROOM_TEMP[32]       = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
-                                  0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f};
-static const int ROOM_TEMP_MAP[32]    = {10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25,
-                                  26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41};
-//static const byte TIMER_MODE[4]       = {0x00,  0x01,  0x02, 0x03};
-//static const char* TIMER_MODE_MAP[4]  = {"NONE", "OFF", "ON", "BOTH"};
-
-// HeatPump.cpp
-const char* lookupByteMapValue(const char* valuesMap[], const byte byteMap[], int len, byte byteValue) {
-  for (int i = 0; i < len; i++) {
-    if (byteMap[i] == byteValue) {
-      return valuesMap[i];
-    }
-  }
-  return valuesMap[0];
-}
-
-int lookupByteMapValue(const int valuesMap[], const byte byteMap[], int len, byte byteValue) {
-  for (int i = 0; i < len; i++) {
-    if (byteMap[i] == byteValue) {
-      return valuesMap[i];
-    }
-  }
-  return valuesMap[0];
-}
-
-int lookupByteMapIndex(const int valuesMap[], int len, int lookupValue) {
-  for (int i = 0; i < len; i++) {
-    if (valuesMap[i] == lookupValue) {
-      return i;
-    }
-  }
-  return -1;
-}
-
-int lookupByteMapIndex(const char* valuesMap[], int len, const char* lookupValue) {
-  for (int i = 0; i < len; i++) {
-    if (strcasecmp(valuesMap[i], lookupValue) == 0) {
-      return i;
-    }
-  }
-  return -1;
-}
-
-bool lookupValue(const char* valuesMap[], int len, const char* lookupValue, const char*& destination) {
-  int index = lookupByteMapIndex(valuesMap, len, lookupValue);
-  if (index == -1) {
-    return false;
-  }
-  destination = valuesMap[index];
-  return true;
-}
-
-byte checkSum(byte bytes[], int len) {
-  byte sum = 0;
-  for (int i = 0; i < len; i++) {
-    sum += bytes[i];
-  }
-  return (0xfc - sum) & 0xff;
-}
-
-static bool operator!=(const heatpumpSettings& lhs, const heatpumpSettings& rhs) {
-  return lhs.power != rhs.power ||
-         lhs.mode != rhs.mode ||
-         lhs.temperature != rhs.temperature ||
-         lhs.fan != rhs.fan ||
-         lhs.vane != rhs.vane ||
-         lhs.wideVane != rhs.wideVane ||
-         lhs.iSee != rhs.iSee;
-}
-
-P090_data_struct::P090_data_struct(const int16_t serialRx, const int16_t serialTx) :
-  _serial(serialRx, serialTx),
-  _currentSettings({}),
-  _currentStatus({}),
-  _isConnected(false),
-  _bitrate(2400),
-  _waitForRead(false),
-  _lastSend(0),
-  _lastRecv(millis() - (PACKET_SENT_INTERVAL_MS * 10)),
-  _tempMode(false),
-  _wideVaneAdj(false),
-  _infoMode(0),
-  _isUpdatingSettings(false) {
-
-}
-
-bool P090_data_struct::write(const String& command, const String& value) {
-  if (_isUpdatingSettings) {
-    return false;
-  }
-
-  _isUpdatingSettings = true;
-
-  bool success = false;
-  heatpumpSettings settings = _currentSettings;
-
-  if (command == F("temperature")) {
-    success = string2float(value, settings.temperature);
-  } else if (command == F("power")) {
-    success = lookupValue(POWER_MAP, 2, value.c_str(), settings.power);
-  } else if (command == F("mode")) {
-    success = lookupValue(MODE_MAP, 5, value.c_str(), settings.mode);
-  } else if (command == F("fan")) {
-    success = lookupValue(FAN_MAP, 6, value.c_str(), settings.fan);
-  } else if (command == F("vane")) {
-    success = lookupValue(VANE_MAP, 7, value.c_str(), settings.vane);
-  } else if (command == F("widevane")) {
-    success = lookupValue(WIDEVANE_MAP, 7, value.c_str(), settings.wideVane);
-  }
-
-  if (success && update(settings)) {
-    _currentSettings = settings;
-  } else {
-    success = false;
-  }
-
-  _isUpdatingSettings = false;
-
-  return success;
-}
-
-void P090_data_struct::connect(bool retry) {
-  _isConnected = false;
-  _serial.begin(_bitrate, SERIAL_8E1);
-
-  writePacket(CONNECT, CONNECT_LEN);
-  while(!canRead()) { delay(10); }
-  int packetType = readPacket();
-  if(packetType != RCVD_PKT_CONNECT_SUCCESS && retry){
-	  _bitrate = (_bitrate == 2400 ? 9600 : 2400);
-	  connect(false);
-  }
-}
-
-bool P090_data_struct::read(String& result, bool force) {
-  if (_isUpdatingSettings) {
-    return false;
-  }
-
-  const heatpumpSettings lastSettings = _currentSettings;
-  const heatpumpStatus lastStatus = _currentStatus;
-
-  sync(PACKET_TYPE_DEFAULT);
-
-  if (!_isConnected) {
-    return false;
-  }
-
-  if (force || _currentSettings != lastSettings || _currentStatus.roomTemperature != lastStatus.roomTemperature) {
-    result.reserve(150);
-
-    result = F("{\"roomTemperature\":");
-    result += toString(_currentStatus.roomTemperature, 1);
-    result += F(",\"wideVane\":\"");
-    result += _currentSettings.wideVane;
-    result += F("\",\"power\":\"");
-    result += _currentSettings.power;
-    result += F("\",\"mode\":\"");
-    result += _currentSettings.mode;
-    result += F("\",\"fan\":\"");
-    result += _currentSettings.fan;
-    result += F("\",\"vane\":\"");
-    result += _currentSettings.vane;
-    result += F("\",\"iSee\":");
-    result += boolToString(_currentSettings.iSee);
-    result += F(",\"temperature\":");
-    result += toString(_currentSettings.temperature, 1) + '}';
-
-    return true;
-  }
-
-  return false;
-}
-
-void P090_data_struct::sync(byte packetType) {
-  if((!_isConnected) || (millis() - _lastRecv > (PACKET_SENT_INTERVAL_MS * 10))) {
-    connect(true);
-  }
-  else if(canRead()) {
-    readPacket();
-  }
-  else if(canSend(true)) {
-    byte packet[PACKET_LEN] = {};
-    createInfoPacket(packet, packetType);
-    writePacket(packet, PACKET_LEN);
-  }
-}
-
-bool P090_data_struct::canRead() const {
-  return (_waitForRead && (millis() - PACKET_SENT_INTERVAL_MS) > _lastSend);
-}
-
-bool P090_data_struct::canSend(bool isInfo) const {
-  return (millis() - (isInfo ? PACKET_INFO_INTERVAL_MS : PACKET_SENT_INTERVAL_MS)) > _lastSend;
-}
-
-void P090_data_struct::writePacket(const byte *packet, int length) {
-  for (int i = 0; i < length; i++) {
-     _serial.write(packet[i]);
-  }
-
-#ifdef PLUGIN_090_DEBUG
-  if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
-    addLog(LOG_LEVEL_DEBUG_MORE, dumpOutgoingPacket(packet, length));
-  }
-#endif
-
-  _waitForRead = true;
-  _lastSend = millis();
-}
-
-int P090_data_struct::readPacket() {
-  byte header[INFOHEADER_LEN] = {};
-  byte data[PACKET_LEN] = {};
-  bool foundStart = false;
-  int dataSum = 0;
-  byte checksum = 0;
-  byte dataLength = 0;
-
-  _waitForRead = false;
-
-  if(_serial.available() > 0) {
-    // read until we get start byte 0xfc
-    while(_serial.available() > 0 && !foundStart) {
-      header[0] = _serial.read();
-      if(header[0] == HEADER[0]) {
-        foundStart = true;
-        delay(100); // found that this delay increases accuracy when reading, might not be needed though
-      }
-    }
-
-    if(!foundStart) {
-      return RCVD_PKT_FAIL;
-    }
-
-    //read header
-    for(int i=1;i<5;i++) {
-      header[i] = _serial.read();
-    }
-
-    //check header
-    if(header[0] == HEADER[0] && header[2] == HEADER[2] && header[3] == HEADER[3]) {
-      dataLength = header[4];
-
-      for(int i=0;i<dataLength;i++) {
-        data[i] = _serial.read();
-      }
-
-      // read checksum byte
-      data[dataLength] = _serial.read();
-
-      // sum up the header bytes...
-      for (int i = 0; i < INFOHEADER_LEN; i++) {
-        dataSum += header[i];
-      }
-
-      // ...and add to that the sum of the data bytes
-      for (int i = 0; i < dataLength; i++) {
-        dataSum += data[i];
-      }
-
-      // calculate checksum
-      checksum = (0xfc - dataSum) & 0xff;
-
-      if(data[dataLength] == checksum) {
-        _lastRecv = millis();
-
-#ifdef PLUGIN_090_DEBUG
-        if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
-          //must be dataLength+1 to pick up checksum byte
-          addLog(LOG_LEVEL_DEBUG_MORE, dumpIncomingPacket(header, INFOHEADER_LEN, data, dataLength + 1));
-        }
-#endif
-
-        if(header[1] == 0x62) {
-          switch(data[0]) {
-            case 0x02: { // setting information
-              _currentSettings.power = lookupByteMapValue(POWER_MAP, POWER, 2, data[3]);
-              _currentSettings.iSee = data[4] > 0x08 ? true : false;
-              _currentSettings.mode = lookupByteMapValue(MODE_MAP, MODE, 5, _currentSettings.iSee  ? (data[4] - 0x08) : data[4]);
-
-              if(data[11] != 0x00) {
-                int temp = data[11];
-                temp -= 128;
-                _currentSettings.temperature = (float)temp / 2;
-                _tempMode =  true;
-              } else {
-                _currentSettings.temperature = lookupByteMapValue(TEMP_MAP, TEMP, 16, data[5]);
-              }
-
-              _currentSettings.fan         = lookupByteMapValue(FAN_MAP, FAN, 6, data[6]);
-              _currentSettings.vane        = lookupByteMapValue(VANE_MAP, VANE, 7, data[7]);
-              _currentSettings.wideVane    = lookupByteMapValue(WIDEVANE_MAP, WIDEVANE, 7, data[10] & 0x0F);
-              _wideVaneAdj = (data[10] & 0xF0) == 0x80 ? true : false;
-
-              return RCVD_PKT_SETTINGS;
-            }
-
-            case 0x03: { //Room temperature reading
-              if(data[6] != 0x00) {
-                int temp = data[6];
-                temp -= 128;
-                _currentStatus.roomTemperature = (float)temp / 2;
-              } else {
-                _currentStatus.roomTemperature = lookupByteMapValue(ROOM_TEMP_MAP, ROOM_TEMP, 32, data[3]);
-              }
-
-              return RCVD_PKT_ROOM_TEMP;
-            }
-
-            case 0x04: { // unknown
-                break;
-            }
-
-            case 0x05: { // timer packet
-              // not supported currently
-              /*heatpumpTimers receivedTimers;
-
-              receivedTimers.mode                = lookupByteMapValue(TIMER_MODE_MAP, TIMER_MODE, 4, data[3]);
-              receivedTimers.onMinutesSet        = data[4] * TIMER_INCREMENT_MINUTES;
-              receivedTimers.onMinutesRemaining  = data[6] * TIMER_INCREMENT_MINUTES;
-              receivedTimers.offMinutesSet       = data[5] * TIMER_INCREMENT_MINUTES;
-              receivedTimers.offMinutesRemaining = data[7] * TIMER_INCREMENT_MINUTES;
-
-              // callback for status change
-              if(statusChangedCallback && currentStatus.timers != receivedTimers) {
-                currentStatus.timers = receivedTimers;
-                statusChangedCallback(currentStatus);
-              } else {
-                currentStatus.timers = receivedTimers;
-              }
-
-              return RCVD_PKT_TIMER;*/
-              break;
-            }
-
-            case 0x06: { // status
-              _currentStatus.operating = data[4];
-              _currentStatus.compressorFrequency = data[3];
-
-              return RCVD_PKT_STATUS;
-            }
-
-            case 0x09: { // standby mode maybe?
-              break;
-            }
-          }
-        }
-
-        if(header[1] == 0x61) { //Last update was successful
-          return RCVD_PKT_UPDATE_SUCCESS;
-        } else if(header[1] == 0x7a) { //Last update was successful
-          _isConnected = true;
-          return RCVD_PKT_CONNECT_SUCCESS;
-        }
-      }
-    }
-  }
-
-  return RCVD_PKT_FAIL;
-}
-
-void P090_data_struct::createInfoPacket(byte *packet, byte packetType) {
-  // add the header to the packet
-  for (int i = 0; i < INFOHEADER_LEN; i++) {
-    packet[i] = INFOHEADER[i];
-  }
-
-  // set the mode - settings or room temperature
-  if(packetType != PACKET_TYPE_DEFAULT) {
-    packet[5] = INFOMODE[packetType];
-  } else {
-    // request current infoMode, and increment for the next request
-    packet[5] = INFOMODE[_infoMode];
-    if(_infoMode == (INFOMODE_LEN - 1)) {
-      _infoMode = 0;
-    } else {
-      _infoMode++;
-    }
-  }
-
-  // pad the packet out
-  for (int i = 0; i < 15; i++) {
-    packet[i + 6] = 0x00;
-  }
-
-  // add the checksum
-  byte chkSum = checkSum(packet, 21);
-  packet[21] = chkSum;
-}
-
-void P090_data_struct::createPacket(byte *packet, const heatpumpSettings& settings) {
-  //preset all bytes to 0x00
-  for (int i = 0; i < 21; i++) {
-    packet[i] = 0x00;
-  }
-  for (int i = 0; i < HEADER_LEN; i++) {
-    packet[i] = HEADER[i];
-  }
-  if(settings.power != _currentSettings.power) {
-    packet[8]  = POWER[lookupByteMapIndex(POWER_MAP, 2, settings.power)];
-    packet[6] += CONTROL_PACKET_1[0];
-  }
-  if(settings.mode!= _currentSettings.mode) {
-    packet[9]  = MODE[lookupByteMapIndex(MODE_MAP, 5, settings.mode)];
-    packet[6] += CONTROL_PACKET_1[1];
-  }
-  if(!_tempMode && settings.temperature!= _currentSettings.temperature) {
-    packet[10] = TEMP[lookupByteMapIndex(TEMP_MAP, 16, settings.temperature)];
-    packet[6] += CONTROL_PACKET_1[2];
-  }
-  else if(_tempMode && settings.temperature!= _currentSettings.temperature) {
-    float temp = (settings.temperature * 2) + 128;
-    packet[19] = (int)temp;
-    packet[6] += CONTROL_PACKET_1[2];
-  }
-  if(settings.fan!= _currentSettings.fan) {
-    packet[11] = FAN[lookupByteMapIndex(FAN_MAP, 6, settings.fan)];
-    packet[6] += CONTROL_PACKET_1[3];
-  }
-  if(settings.vane!= _currentSettings.vane) {
-    packet[12] = VANE[lookupByteMapIndex(VANE_MAP, 7, settings.vane)] | (_wideVaneAdj ? 0x80 : 0x00);
-    packet[6] += CONTROL_PACKET_1[4];
-  }
-  if(settings.wideVane!= _currentSettings.wideVane) {
-    packet[18] = WIDEVANE[lookupByteMapIndex(WIDEVANE_MAP, 7, settings.wideVane)];
-    packet[7] += CONTROL_PACKET_2[0];
-  }
-  // add the checksum
-  byte chkSum = checkSum(packet, 21);
-  packet[21] = chkSum;
-}
-
-bool P090_data_struct::update(const heatpumpSettings& settings) {
-  while(!canSend(false)) { delay(10); }
-
-  byte packet[PACKET_LEN] = {};
-  createPacket(packet, settings);
-  writePacket(packet, PACKET_LEN);
-
-  while(!canRead()) { delay(10); }
-  int packetType = readPacket();
-
-  return packetType == RCVD_PKT_UPDATE_SUCCESS;
-}
-
-#endif  // USES_P090
+#endif  // USES_P092
