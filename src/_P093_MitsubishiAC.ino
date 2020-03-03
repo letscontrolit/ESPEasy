@@ -1,4 +1,4 @@
-#ifdef USES_P092
+#ifdef USES_P093
 
 //#######################################################################################################
 //################################ Plugin 090: Mitsubishi Heat Pump #####################################
@@ -8,12 +8,12 @@
 //#ifdef PLUGIN_BUILD_DEVELOPMENT
 //#ifdef PLUGIN_BUILD_TESTING
 
-#define PLUGIN_092
-#define PLUGIN_ID_092         92
-#define PLUGIN_NAME_092       "Mitsubishi AC [TESTING]"
-#define PLUGIN_VALUENAME1_092 "settings"
+#define PLUGIN_093
+#define PLUGIN_ID_093         93
+#define PLUGIN_NAME_093       "Mitsubishi AC [TESTING]"
+#define PLUGIN_VALUENAME1_093 "settings"
 
-#define PLUGIN_092_DEBUG
+#define PLUGIN_093_DEBUG
 
 static const uint8_t PACKET_LEN = 22;
 static const uint8_t READ_BUFFER_LEN = 32;
@@ -23,8 +23,8 @@ static const uint8_t INFOMODE[] = {
   0x03  // request the current room temp
 };
 
-struct P092_data_struct : public PluginTaskData_base {
-  P092_data_struct(const int16_t serialRx, const int16_t serialTx) :
+struct P093_data_struct : public PluginTaskData_base {
+  P093_data_struct(const int16_t serialRx, const int16_t serialTx) :
     _serial(new ESPeasySerial(serialRx, serialTx)),
     _state(NotConnected),
     _fastBaudRate(false),
@@ -39,7 +39,7 @@ struct P092_data_struct : public PluginTaskData_base {
     setState(Connecting);
   }
 
-  virtual ~P092_data_struct() {
+  virtual ~P093_data_struct() {
     delete _serial;
   }
 
@@ -100,7 +100,11 @@ struct P092_data_struct : public PluginTaskData_base {
     switch (command[0]) {
       case 't':
         if (command == F("temperature")) {
-          success = string2float(value, _wantedSettings.temperature);
+          float temperature = 0;
+          if (string2float(value, temperature) && temperature >= 16 && temperature <= 31) {
+            _wantedSettings.temperature = temperature;
+            success = true;
+          }
         }
         break;
       case 'p':
@@ -383,7 +387,7 @@ private:
       if (_tempMode) {
         packet[19] = (uint8_t)(_wantedSettings.temperature * 2.0f + 128.0f);
       } else {
-        //packet[10] = TEMP[lookupByteMapIndex(TEMP_MAP, 16, settings.temperature)];
+        packet[10] = 31 - _wantedSettings.temperature;
       }
     }
 
@@ -517,10 +521,10 @@ private:
           _currentValues.mode  = _currentValues.iSee ? (data[4] - 0x08) : data[4];
 
           if (data[11] != 0x00) {
-            _currentValues.temperature = ((float)data[11] - 128.0f) / 2.0f;
+            _currentValues.temperature = (static_cast<float>(data[11]) - 128.0f) / 2.0f;
             _tempMode = true;
           } else {
-            _currentValues.temperature = data[5];
+            _currentValues.temperature = 31 - data[5];
           }
 
           _currentValues.fan         = data[6];
@@ -534,9 +538,9 @@ private:
       case 0x03:
         if (length > 6) {
           if(data[6] != 0x00) {
-            _currentValues.roomTemperature = ((float)data[6] - 128.0f) / 2.0f;
+            _currentValues.roomTemperature = (static_cast<float>(data[6]) - 128.0f) / 2.0f;
           } else {
-            _currentValues.roomTemperature = data[3];
+            _currentValues.roomTemperature = data[3] + 10;
           }
           return true;
         }
@@ -601,7 +605,7 @@ private:
     return false;
   }
 
-  #ifdef PLUGIN_092_DEBUG
+  #ifdef PLUGIN_093_DEBUG
   static String stateToString(State state) {
     switch (state) {
       case Invalid: return F("Invalid");
@@ -656,13 +660,13 @@ private:
   const Mappings _mappings;
 };
 
-boolean Plugin_092(byte function, struct EventStruct *event, String& string) {
+boolean Plugin_093(byte function, struct EventStruct *event, String& string) {
   boolean success = false;
 
   switch (function) {
 
     case PLUGIN_DEVICE_ADD: {
-      Device[++deviceCount].Number = PLUGIN_ID_092;
+      Device[++deviceCount].Number = PLUGIN_ID_093;
       Device[deviceCount].Type = DEVICE_TYPE_DUAL;
       Device[deviceCount].VType = SENSOR_TYPE_STRING;
       Device[deviceCount].ValueCount = 1;
@@ -673,12 +677,12 @@ boolean Plugin_092(byte function, struct EventStruct *event, String& string) {
     }
 
     case PLUGIN_GET_DEVICENAME: {
-      string = F(PLUGIN_NAME_092);
+      string = F(PLUGIN_NAME_093);
       break;
     }
 
     case PLUGIN_GET_DEVICEVALUENAMES: {
-      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_092));
+      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_093));
       break;
     }
 
@@ -706,13 +710,13 @@ boolean Plugin_092(byte function, struct EventStruct *event, String& string) {
     }
 
     case PLUGIN_INIT: {
-      initPluginTaskData(event->TaskIndex, new P092_data_struct(CONFIG_PIN1, CONFIG_PIN2));
+      initPluginTaskData(event->TaskIndex, new P093_data_struct(CONFIG_PIN1, CONFIG_PIN2));
       success = getPluginTaskData(event->TaskIndex) != nullptr;
       break;
     }
 
     case PLUGIN_READ: {
-      P092_data_struct* heatPump = static_cast<P092_data_struct*>(getPluginTaskData(event->TaskIndex));
+      P093_data_struct* heatPump = static_cast<P093_data_struct*>(getPluginTaskData(event->TaskIndex));
       if (heatPump != nullptr) {
         success = heatPump->read(event->String2);
       }
@@ -720,7 +724,7 @@ boolean Plugin_092(byte function, struct EventStruct *event, String& string) {
     }
 
     case PLUGIN_WRITE: {
-      P092_data_struct* heatPump = static_cast<P092_data_struct*>(getPluginTaskData(event->TaskIndex));
+      P093_data_struct* heatPump = static_cast<P093_data_struct*>(getPluginTaskData(event->TaskIndex));
       if (heatPump != nullptr) {
         success = heatPump->write(parseString(string, 1), parseStringKeepCase(string, 2));
       }
@@ -734,7 +738,7 @@ boolean Plugin_092(byte function, struct EventStruct *event, String& string) {
     }
 
     case PLUGIN_TEN_PER_SECOND: {
-      P092_data_struct* heatPump = static_cast<P092_data_struct*>(getPluginTaskData(event->TaskIndex));
+      P093_data_struct* heatPump = static_cast<P093_data_struct*>(getPluginTaskData(event->TaskIndex));
       if (heatPump != nullptr && heatPump->sync()) {
         schedule_task_device_timer(event->TaskIndex, millis() + 10);
       }
