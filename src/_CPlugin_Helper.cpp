@@ -17,6 +17,8 @@
 #include "src/Globals/SecuritySettings.h"
 #include "src/Globals/ESPEasyWiFiEvent.h"
 
+#include "src/Helpers/ESPEasy_time_calc.h"
+
 #include <WiFiClient.h>
 #include <WiFiUdp.h>
 #include <base64.h>

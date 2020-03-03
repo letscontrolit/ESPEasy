@@ -47,11 +47,6 @@ uint32_t getCurrentFreeStack();
 uint32_t getFreeStackWatermark();
 bool     canYield();
 
-
-boolean  timeOutReached(unsigned long timer);
-long     timePassedSince(unsigned long timestamp);
-long     usecPassedSince(unsigned long timestamp);
-
 void     serialHelper_getGpioNames(struct EventStruct *event,
                                    bool                rxOptional = false,
                                    bool                txOptional = false);
