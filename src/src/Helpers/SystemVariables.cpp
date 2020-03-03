@@ -116,7 +116,7 @@ void SystemVariables::parseSystemVariables(String& s, boolean useURLencode)
       case SYSSEC:            value = String(node_time.second()); break;
       case SYSSEC_0:          value = timeReplacement_leadZero(node_time.second()); break;
       case SYSSEC_D:          value = String(((node_time.hour() * 60) + node_time.minute()) * 60 + node_time.second()); break;
-      case SYSSTACK:          value = String(getCurrentFreeStack()); break;
+      case SYSSTACK:          value = getValue(LabelType::FREE_STACK); break;
       case SYSTIME:           value = node_time.getTimeString(':'); break;
       case SYSTIME_AM:        value = node_time.getTimeString_ampm(':', false); break;
       case SYSTM_HM:          value = node_time.getTimeString(':', false); break;
@@ -180,6 +180,8 @@ void SystemVariables::parseSystemVariables(String& s, boolean useURLencode)
 
   STOP_TIMER(PARSE_SYSVAR);
 }
+
+#undef SMART_REPL_T
 
 
 SystemVariables::Enum SystemVariables::nextReplacementEnum(const String& str, SystemVariables::Enum last_tested)

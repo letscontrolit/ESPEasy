@@ -601,8 +601,6 @@ void parseControllerVariables(String& s, struct EventStruct *event, boolean useU
 // Simple macro to create the replacement string only when needed.
 #define SMART_REPL(T, S) \
   if (s.indexOf(T) != -1) { repl((T), (S), s, useURLencode); }
-#define SMART_REPL_T(T, S) \
-  if (s.indexOf(T) != -1) { (S((T), s, useURLencode)); }
 void parseSystemVariables(String& s, boolean useURLencode)
 {
   parseSpecialCharacters(s, useURLencode);
@@ -637,7 +635,6 @@ void parseEventVariables(String& s, struct EventStruct *event, boolean useURLenc
   }
 }
 
-#undef SMART_REPL_T
 #undef SMART_REPL
 
 bool getConvertArgument(const String& marker, const String& s, float& argument, int& startIndex, int& endIndex) {

@@ -123,7 +123,7 @@ String getValue(LabelType::Enum label) {
     case LabelType::CPU_ECO_MODE:           return jsonBool(Settings.EcoPowerMode());
 
     case LabelType::FREE_MEM:               return String(ESP.getFreeHeap());
-    case LabelType::FREE_STACK:             break;
+    case LabelType::FREE_STACK:             return String(getCurrentFreeStack());
 #ifdef CORE_POST_2_5_0
     case LabelType::HEAP_MAX_FREE_BLOCK:    return String(ESP.getMaxFreeBlockSize());
     case LabelType::HEAP_FRAGMENTATION:     return String(ESP.getHeapFragmentation());
