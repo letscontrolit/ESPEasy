@@ -275,7 +275,7 @@ private:
         return from == ApplyingSettings;
 
       case ReadTimeout:
-        return from == UpdatingStatus || from == Connecting;
+        return from == UpdatingStatus || from == ApplyingSettings || from == Connecting;
 
       default:
         return false;
@@ -720,10 +720,10 @@ boolean Plugin_092(byte function, struct EventStruct *event, String& string) {
     }
 
     case PLUGIN_WRITE: {
-      //P092_data_struct* heatPump = static_cast<P092_data_struct*>(getPluginTaskData(event->TaskIndex));
-      //if (heatPump != nullptr) {
-    //    success = heatPump->write(parseString(string, 1), parseStringKeepCase(string, 2));
-    //  }
+      P092_data_struct* heatPump = static_cast<P092_data_struct*>(getPluginTaskData(event->TaskIndex));
+      if (heatPump != nullptr) {
+        success = heatPump->write(parseString(string, 1), parseStringKeepCase(string, 2));
+      }
       break;
     }
 
