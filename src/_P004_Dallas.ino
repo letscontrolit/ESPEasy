@@ -11,6 +11,9 @@
   # define ESP32interrupts() portEXIT_CRITICAL(&mux); }
 #endif // if defined(ESP32)
 
+#include "_Plugin_Helper.h"
+
+
 #define PLUGIN_004
 #define PLUGIN_ID_004         4
 #define PLUGIN_NAME_004       "Environment - DS18b20"

@@ -1,5 +1,6 @@
 #ifdef USES_P019
 
+#include "_Plugin_Helper.h"
 #include "src/DataStructs/PinMode.h"
 
 //#######################################################################################################

@@ -3,6 +3,8 @@
 //######################## Plugin 034: Temperature and Humidity sensor DHT 12 (I2C) #####################
 //#######################################################################################################
 
+#include "_Plugin_Helper.h"
+
 #define PLUGIN_034
 #define PLUGIN_ID_034         34
 #define PLUGIN_NAME_034       "Environment - DHT12 (I2C)"

@@ -3,6 +3,8 @@
 //#################################### Plugin 023: OLED SSD1306 display #################################
 //#######################################################################################################
 
+#include "_Plugin_Helper.h"
+
 // Sample templates
 //  Temp: [DHT11#Temperature]   Hum:[DHT11#humidity]
 //  DS Temp:[Dallas1#Temperature#R]

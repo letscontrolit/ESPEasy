@@ -7,6 +7,7 @@
 
 #include <ctype.h>
 #include <time.h>
+#include "_Plugin_Helper.h"
 
 extern "C"
 {

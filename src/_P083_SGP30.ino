@@ -7,6 +7,7 @@
 * I2C Address: 0x58
 \*********************************************************************************************/
 #include "Adafruit_SGP30.h"
+#include "_Plugin_Helper.h"
 
 
 #define PLUGIN_083

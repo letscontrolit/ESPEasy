@@ -46,6 +46,7 @@
 #define P073_DISP_CLOCK12       4
 #define P073_DISP_DATE          5
 
+#include "_Plugin_Helper.h"
 struct P073_data_struct : public PluginTaskData_base {
   P073_data_struct()
     : dotpos(-1), pin1(-1), pin2(-1), pin3(-1), displayModel(0), output(0),

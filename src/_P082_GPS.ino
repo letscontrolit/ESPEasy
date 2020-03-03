@@ -12,6 +12,7 @@
 
 #include <ESPeasySerial.h>
 #include <TinyGPS++.h>
+#include "_Plugin_Helper.h"
 #include "ESPEasy_packed_raw_data.h"
 
 #include "src/Globals/ESPEasy_time.h"

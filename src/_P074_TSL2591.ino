@@ -24,6 +24,7 @@
 
 #include "Adafruit_TSL2591.h"
 #include <Adafruit_Sensor.h>
+#include "_Plugin_Helper.h"
 
 struct P074_data_struct : public PluginTaskData_base {
 

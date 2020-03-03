@@ -23,6 +23,7 @@
 #define PLUGIN_VALUENAME2_067   "WeightChanB"
 
 // #include <*.h>   no lib required
+#include "_Plugin_Helper.h"
 
 
 
