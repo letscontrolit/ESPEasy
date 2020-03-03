@@ -83,6 +83,7 @@ void ESPEasy_time_zone::logTimeZoneInfo() {
   addLog(LOG_LEVEL_INFO, log);
 }
 
+
 ///*----------------------------------------------------------------------*
 // * Convert the given time change rule to a uint32_t value                 *
 // * for the given year.                                                  *
