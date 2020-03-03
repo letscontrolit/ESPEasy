@@ -72,7 +72,6 @@ void setTimeZone(const TimeChangeRule& dstStart, const TimeChangeRule& stdStart,
 
 void logTimeZoneInfo();
 
-
 ///*----------------------------------------------------------------------*
 // * Convert the given time change rule to a uint32_t value               *
 // * for the given year.                                                  *
