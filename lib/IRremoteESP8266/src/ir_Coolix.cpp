@@ -27,16 +27,16 @@
 // Pulse parms are *50-100 for the Mark and *50+100 for the space
 // First MARK is the one after the long gap
 // pulse parameters in usec
-const uint16_t kCoolixTick = 560;  // Approximately 21 cycles at 38kHz
-const uint16_t kCoolixBitMarkTicks = 1;
+const uint16_t kCoolixTick = 276;  // Approximately 10.5 cycles at 38kHz
+const uint16_t kCoolixBitMarkTicks = 2;
 const uint16_t kCoolixBitMark = kCoolixBitMarkTicks * kCoolixTick;
-const uint16_t kCoolixOneSpaceTicks = 3;
+const uint16_t kCoolixOneSpaceTicks = 6;
 const uint16_t kCoolixOneSpace = kCoolixOneSpaceTicks * kCoolixTick;
-const uint16_t kCoolixZeroSpaceTicks = 1;
+const uint16_t kCoolixZeroSpaceTicks = 2;
 const uint16_t kCoolixZeroSpace = kCoolixZeroSpaceTicks * kCoolixTick;
-const uint16_t kCoolixHdrMarkTicks = 8;
+const uint16_t kCoolixHdrMarkTicks = 17;
 const uint16_t kCoolixHdrMark = kCoolixHdrMarkTicks * kCoolixTick;
-const uint16_t kCoolixHdrSpaceTicks = 8;
+const uint16_t kCoolixHdrSpaceTicks = 16;
 const uint16_t kCoolixHdrSpace = kCoolixHdrSpaceTicks * kCoolixTick;
 const uint16_t kCoolixMinGapTicks = kCoolixHdrMarkTicks + kCoolixZeroSpaceTicks;
 const uint16_t kCoolixMinGap = kCoolixMinGapTicks * kCoolixTick;
@@ -57,11 +57,10 @@ using irutils::setBits;
 //   nbits:  Nr. of bits of data to be sent. Typically kCoolixBits.
 //   repeat: Nr. of additional times the message is to be sent.
 //
-// Status: BETA / Probably works.
+// Status: STABLE / Confirmed Working.
 //
 // Ref:
 //   https://github.com/z3t0/Arduino-IRremote/blob/master/ir_COOLIX.cpp
-// TODO(anyone): Verify repeat functionality against a real unit.
 void IRsend::sendCOOLIX(uint64_t data, uint16_t nbits, uint16_t repeat) {
   if (nbits % 8 != 0) return;  // nbits is required to be a multiple of 8.
 
@@ -131,6 +130,7 @@ void IRCoolixAC::send(const uint16_t repeat) {
 uint32_t IRCoolixAC::getRaw() { return remote_state; }
 
 void IRCoolixAC::setRaw(const uint32_t new_code) {
+  powerFlag = true;  // Everything that is not the special power off mesg is On.
   if (!handleSpecialState(new_code)) {
     // it isn`t special so might affect Temp|mode|Fan
     if (new_code == kCoolixCmdFan) {
@@ -579,17 +579,19 @@ String IRCoolixAC::toString(void) {
 //
 // Args:
 //   results: Ptr to the data to decode and where to store the decode result.
+//   offset:  The starting index to use when attempting to decode the raw data.
+//            Typically/Defaults to kStartOffset.
 //   nbits:   The number of data bits to expect. Typically kCoolixBits.
 //   strict:  Flag indicating if we should perform strict matching.
 // Returns:
 //   boolean: True if it can decode it, false if it can't.
 //
 // Status: BETA / Probably working.
-bool IRrecv::decodeCOOLIX(decode_results *results, uint16_t nbits,
-                          bool strict) {
+bool IRrecv::decodeCOOLIX(decode_results *results, uint16_t offset,
+                          const uint16_t nbits, const bool strict) {
   // The protocol sends the data normal + inverted, alternating on
   // each byte. Hence twice the number of expected data bits.
-  if (results->rawlen < 2 * 2 * nbits + kHeader + kFooter - 1)
+  if (results->rawlen <= 2 * 2 * nbits + kHeader + kFooter - 1 + offset)
     return false;  // Can't possibly be a valid COOLIX message.
   if (strict && nbits != kCoolixBits)
     return false;      // Not strictly a COOLIX message.
@@ -598,7 +600,6 @@ bool IRrecv::decodeCOOLIX(decode_results *results, uint16_t nbits,
 
   uint64_t data = 0;
   uint64_t inverted = 0;
-  uint16_t offset = kStartOffset;
 
   if (nbits > sizeof(data) * 8)
     return false;  // We can't possibly capture a Coolix packet that big.

@@ -18,7 +18,9 @@
 
 // Supports:
 //   Brand: Samsung,  Model: UA55H6300 TV
+//   Brand: Samsung,  Model: DB63-03556X003 remote
 //   Brand: Samsung,  Model: IEC-R03 remote
+//   Brand: Samsung,  Model: AR09FSSDAWKNFA A/C
 //   Brand: Samsung,  Model: AR12KSFPEWQNET A/C
 //   Brand: Samsung,  Model: AR12HSSDBWKNEU A/C
 
@@ -58,6 +60,8 @@ const uint8_t kSamsungAcQuiet5Offset = 5;
 const uint8_t kSamsungAcPowerfulMask8 = 0b01010000;
 const uint8_t kSamsungAcPowerful10Offset = 1;  // Mask 0b00000110
 const uint8_t kSamsungAcPowerful10Size = 1;  // Mask 0b00000110
+const uint8_t kSamsungAcDisplayOffset = 4;  // Mask 0b00010000
+const uint8_t kSamsungAcIonOffset = 0;  // Mask 0b00000001
 
 const uint16_t kSamsungACSectionLength = 7;
 const uint64_t kSamsungAcPowerSection = 0x1D20F00000000;
@@ -99,6 +103,12 @@ class IRSamsungAc {
   bool getQuiet(void);
   void setPowerful(const bool on);
   bool getPowerful(void);
+
+  void setDisplay(const bool on);
+  bool getDisplay(void);
+  void setIon(const bool on);
+  bool getIon(void);
+
   uint8_t* getRaw(void);
   void setRaw(const uint8_t new_code[],
               const uint16_t length = kSamsungAcStateLength);
