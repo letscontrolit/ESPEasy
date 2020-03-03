@@ -131,7 +131,7 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
         String error;
         for (byte varNr = 0; varNr < P23_Nlines; varNr++)
         {
-          if (!safe_strncpy(deviceTemplate[varNr], WebServer.arg(getPluginCustomArgName(varNr)), P23_Nchars)) {
+          if (!safe_strncpy(deviceTemplate[varNr], web_server.arg(getPluginCustomArgName(varNr)), P23_Nchars)) {
             error += getCustomTaskSettingsError(varNr);
           }
         }

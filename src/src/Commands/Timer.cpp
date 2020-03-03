@@ -6,6 +6,7 @@
 #include "../../ESPEasy_common.h"
 
 #include "../../ESPEasy-Globals.h"
+#include "../Helpers/ESPEasy_time_calc.h"
 
 
 String Command_Timer_Set(struct EventStruct *event, const char *Line)

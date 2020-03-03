@@ -7,6 +7,8 @@
 
 #ifdef USES_TIMING_STATS
 
+#include "../Helpers/ESPEasy_time_calc.h"
+
 # include <Arduino.h>
 # include <map>
 

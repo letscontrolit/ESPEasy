@@ -137,16 +137,16 @@ void P081_setCronExecTimes(struct EventStruct *event, time_t lastExecTime, time_
 
 time_t P081_getCurrentTime()
 {
-  now();
+  node_time.now();
 
   // FIXME TD-er: Why work on a deepcopy of tm?
-  struct tm current = tm;
+  struct tm current = node_time.tm;
   return mktime((struct tm *)&current);
 }
 
 void P081_check_or_init(struct EventStruct *event)
 {
-  if (systemTimePresent()) {
+  if (node_time.systemTimePresent()) {
     const time_t current_time = P081_getCurrentTime();
     time_t last_exec_time     = P081_getCronExecTime(LASTEXECUTION);
     time_t next_exec_time     = P081_getCronExecTime(NEXTEXECUTION);
@@ -227,7 +227,7 @@ boolean Plugin_081(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      String expression = WebServer.arg(F("p081_cron_exp"));
+      String expression = web_server.arg(F("p081_cron_exp"));
       String log;
       {
         char expression_c[PLUGIN_081_EXPRESSION_SIZE];
@@ -299,7 +299,7 @@ boolean Plugin_081(byte function, struct EventStruct *event, String& string)
     case PLUGIN_ONCE_A_SECOND:
     {
       // code to be executed once a second. Tasks which do not require fast response can be added here
-      if (systemTimePresent()) {
+      if (node_time.systemTimePresent()) {
         P081_check_or_init(event);
         time_t next_exec_time = P081_getCronExecTime(NEXTEXECUTION);
 
@@ -314,7 +314,7 @@ boolean Plugin_081(byte function, struct EventStruct *event, String& string)
             next_exec_time = P081_computeNextCronTime(event->TaskIndex, current_time);
             P081_setCronExecTimes(event, last_exec_time, next_exec_time);
 
-            addLog(LOG_LEVEL_DEBUG, String(F("Next execution:")) + getDateTimeString(*gmtime(&next_exec_time)));
+            addLog(LOG_LEVEL_DEBUG, String(F("Next execution:")) + ESPEasy_time::getDateTimeString(*gmtime(&next_exec_time)));
 
             if (function != PLUGIN_TIME_CHANGE) {
               LoadTaskSettings(event->TaskIndex);
@@ -398,7 +398,7 @@ String P081_formatExecTime(float execTime_f) {
   time_t exec_time = P081_getCronExecTime(execTime_f);
 
   if (exec_time != CRON_INVALID_INSTANT) {
-    return getDateTimeString(*gmtime(&exec_time));
+    return ESPEasy_time::getDateTimeString(*gmtime(&exec_time));
   }
   return F("-");
 }
