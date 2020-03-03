@@ -5,7 +5,10 @@
 #include "../Globals/Settings.h"
 
 #include "../../ESPEasy_fdwdecl.h"
-#include "../../TimeESPeasy.h"
+
+#include "../../ESPEasy-Globals.h"
+#include "../Helpers/ESPEasy_time_calc.h"
+
 
 
 String Command_NTPHost(struct EventStruct *event, const char* Line)
@@ -78,12 +81,12 @@ String Command_SetDateTime(struct EventStruct *event, const char* Line)
 			tm.tm_sec = 0;
 		}
 
-		sysTime = makeTime(tm);
+		node_time.sysTime = makeTime(tm);
 		
 	}else  {
 		// serialPrintln();
 		String result = F("Datetime:");
-		result += getDateTimeString('-',':',' ');
+		result += node_time.getDateTimeString('-',':',' ');
 		return return_result(event, result);
 	}
 	return return_command_success();
