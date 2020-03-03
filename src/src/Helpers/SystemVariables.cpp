@@ -91,7 +91,11 @@ void SystemVariables::parseSystemVariables(String& s, boolean useURLencode)
       case LCLTIME_AM:        value = node_time.getDateTimeString_ampm('-', ':', ' '); break;
       case LF:                value = "\n"; break;
       case MAC:               value = getValue(LabelType::STA_MAC); break;
+    #ifdef ESP8266
       case MAC_INT:           value = String(ESP.getChipId()); break;   // Last 24 bit of MAC address as integer, to be used in rules.
+    #else
+      case MAC_INT:           value = ""; break;   // FIXME TD-er: Must find proper altrnative for ESP32.
+    #endif
       case RSSI:              value = getValue(LabelType::WIFI_RSSI); break;
       case SPACE:             value = " "; break;
       case SSID:              value = (wifiStatus == ESPEASY_WIFI_DISCONNECTED) ? F("--") : WiFi.SSID(); break;

@@ -79,12 +79,12 @@ boolean Plugin_043(byte function, struct EventStruct *event, String& string)
         {
           String argc = F("p043_clock");
           argc += x;
-          String plugin1 = WebServer.arg(argc);
+          String plugin1 = web_server.arg(argc);
           ExtraTaskSettings.TaskDevicePluginConfigLong[x] = string2TimeLong(plugin1);
 
           argc = F("p043_state");
           argc += x;
-          String plugin2 = WebServer.arg(argc);
+          String plugin2 = web_server.arg(argc);
           ExtraTaskSettings.TaskDevicePluginConfig[x] = plugin2.toInt();
         }
         success = true;

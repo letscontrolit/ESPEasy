@@ -122,16 +122,6 @@
 ADC_MODE(ADC_VCC);
 #endif
 
-
-// FIXME TD-er: This must be moves to src/Globals/Services
-// But right now, it seems hard to define WevServer in a .h/.cpp file
-// error: 'WebServer' does not name a type
-#ifdef ESP32
-  #include <WiFi.h>
-  #include <WebServer.h>
-  WebServer WebServer(80);
-#endif
-
 // Get functions to give access to global defined variables.
 // These are needed to get direct access to global defined variables, since they cannot be defined in .h files and included more than once.
 
@@ -444,7 +434,7 @@ void RTOS_TaskServers( void * parameter )
 {
  while (true){
   delay(100);
-  WebServer.handleClient();
+  web_server.handleClient();
   checkUDP();
  }
 }
@@ -772,7 +762,7 @@ void run10TimesPerSecond() {
       Blynk_Run_c015();
   #endif
   #ifndef USE_RTOS_MULTITASKING
-    WebServer.handleClient();
+    web_server.handleClient();
   #endif
 }
 
@@ -977,7 +967,7 @@ void backgroundtasks()
       }
     }
     if (webserverRunning) {
-      WebServer.handleClient();
+      web_server.handleClient();
     }
     if (WiFi.getMode() != WIFI_OFF) {
       checkUDP();

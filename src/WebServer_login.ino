@@ -10,7 +10,7 @@ void handle_login() {
   TXBuffer.startStream();
   sendHeadandTail_stdtemplate(_HEAD);
 
-  String webrequest = WebServer.arg(F("password"));
+  String webrequest = web_server.arg(F("password"));
   addHtml(F("<form method='post'>"));
   html_table_class_normal();
   addHtml(F("<TR><TD>Password<TD>"));

@@ -144,7 +144,7 @@ String getValue(LabelType::Enum label) {
     case LabelType::IP_SUBNET:              return WiFi.subnetMask().toString();
     case LabelType::IP_ADDRESS_SUBNET:      return String(getValue(LabelType::IP_ADDRESS) + F(" / ") + getValue(LabelType::IP_SUBNET));
     case LabelType::GATEWAY:                return WiFi.gatewayIP().toString();
-    case LabelType::CLIENT_IP:              return formatIP(WebServer.client().remoteIP());
+    case LabelType::CLIENT_IP:              return formatIP(web_server.client().remoteIP());
     #ifdef FEATURE_MDNS
     case LabelType::M_DNS:                  return String(WifiGetHostname()) + F(".local");
     #endif

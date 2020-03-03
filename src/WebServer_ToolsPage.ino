@@ -9,7 +9,7 @@ void handle_tools() {
   TXBuffer.startStream();
   sendHeadandTail_stdtemplate(_HEAD);
 
-  String webrequest = WebServer.arg(F("cmd"));
+  String webrequest = web_server.arg(F("cmd"));
 
   addHtml(F("<form>"));
   html_table_class_normal();

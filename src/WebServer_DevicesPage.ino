@@ -19,11 +19,11 @@ void handle_devices() {
   // char tmpString[41];
 
 
-  // String taskindex = WebServer.arg(F("index"));
+  // String taskindex = web_server.arg(F("index"));
 
   pluginID_t taskdevicenumber;
 
-  if (WebServer.hasArg(F("del"))) {
+  if (web_server.hasArg(F("del"))) {
     taskdevicenumber = 0;
   }
   else {
@@ -32,20 +32,20 @@ void handle_devices() {
 
 
   // String taskdeviceid[CONTROLLER_MAX];
-  // String taskdevicepin1 = WebServer.arg(F("taskdevicepin1"));   // "taskdevicepin*" should not be changed because it is uses by plugins
+  // String taskdevicepin1 = web_server.arg(F("taskdevicepin1"));   // "taskdevicepin*" should not be changed because it is uses by plugins
   // and expected to be saved by this code
-  // String taskdevicepin2 = WebServer.arg(F("taskdevicepin2"));
-  // String taskdevicepin3 = WebServer.arg(F("taskdevicepin3"));
-  // String taskdevicepin1pullup = WebServer.arg(F("TDPPU"));
-  // String taskdevicepin1inversed = WebServer.arg(F("TDPI"));
-  // String taskdevicename = WebServer.arg(F("TDN"));
-  // String taskdeviceport = WebServer.arg(F("TDP"));
+  // String taskdevicepin2 = web_server.arg(F("taskdevicepin2"));
+  // String taskdevicepin3 = web_server.arg(F("taskdevicepin3"));
+  // String taskdevicepin1pullup = web_server.arg(F("TDPPU"));
+  // String taskdevicepin1inversed = web_server.arg(F("TDPI"));
+  // String taskdevicename = web_server.arg(F("TDN"));
+  // String taskdeviceport = web_server.arg(F("TDP"));
   // String taskdeviceformula[VARS_PER_TASK];
   // String taskdevicevaluename[VARS_PER_TASK];
   // String taskdevicevaluedecimals[VARS_PER_TASK];
   // String taskdevicesenddata[CONTROLLER_MAX];
-  // String taskdeviceglobalsync = WebServer.arg(F("TDGS"));
-  // String taskdeviceenabled = WebServer.arg(F("TDE"));
+  // String taskdeviceglobalsync = web_server.arg(F("TDGS"));
+  // String taskdeviceenabled = web_server.arg(F("TDE"));
 
   // for (byte varNr = 0; varNr < VARS_PER_TASK; varNr++)
   // {
@@ -53,17 +53,17 @@ void handle_devices() {
   //   String arg = F("TDF");
   //   arg += varNr + 1;
   //   arg.toCharArray(argc, 25);
-  //   taskdeviceformula[varNr] = WebServer.arg(argc);
+  //   taskdeviceformula[varNr] = web_server.arg(argc);
   //
   //   arg = F("TDVN");
   //   arg += varNr + 1;
   //   arg.toCharArray(argc, 25);
-  //   taskdevicevaluename[varNr] = WebServer.arg(argc);
+  //   taskdevicevaluename[varNr] = web_server.arg(argc);
   //
   //   arg = F("TDVD");
   //   arg += varNr + 1;
   //   arg.toCharArray(argc, 25);
-  //   taskdevicevaluedecimals[varNr] = WebServer.arg(argc);
+  //   taskdevicevaluedecimals[varNr] = web_server.arg(argc);
   // }
 
   // for (controllerIndex_t controllerNr = 0; controllerNr < CONTROLLER_MAX; controllerNr++)
@@ -72,12 +72,12 @@ void handle_devices() {
   //   String arg = F("TDID");
   //   arg += controllerNr + 1;
   //   arg.toCharArray(argc, 25);
-  //   taskdeviceid[controllerNr] = WebServer.arg(argc);
+  //   taskdeviceid[controllerNr] = web_server.arg(argc);
   //
   //   arg = F("TDSD");
   //   arg += controllerNr + 1;
   //   arg.toCharArray(argc, 25);
-  //   taskdevicesenddata[controllerNr] = WebServer.arg(argc);
+  //   taskdevicesenddata[controllerNr] = web_server.arg(argc);
   // }
 
   byte page = getFormItemInt(F("page"), 0);
@@ -227,7 +227,7 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
   update_whenset_FormItemInt(F("taskdevicepin2"), pin2);
   update_whenset_FormItemInt(F("taskdevicepin3"), pin3);
   setBasicTaskValues(taskIndex, taskdevicetimer,
-                     isFormItemChecked(F("TDE")), WebServer.arg(F("TDN")),
+                     isFormItemChecked(F("TDE")), web_server.arg(F("TDN")),
                      pin1, pin2, pin3);
   Settings.TaskDevicePort[taskIndex] = getFormItemInt(F("TDP"), 0);
   update_whenset_FormItemInt(F("remoteFeed"), Settings.TaskDeviceDataFeed[taskIndex]);

@@ -140,7 +140,7 @@ void Web_StreamingBuffer::startStream(bool json, const String& origin) {
 
   if (beforeTXRam < 3000) {
     lowMemorySkip = true;
-    WebServer.send(200, "text/plain", "Low memory. Cannot display webpage :-(");
+    web_server.send(200, "text/plain", "Low memory. Cannot display webpage :-(");
       #if defined(ESP8266)
     tcpCleanup();
       #endif // if defined(ESP8266)
@@ -208,10 +208,10 @@ void Web_StreamingBuffer::sendContentBlocking(String& data) {
   String size = formatToHex(length) + "\r\n";
 
   // do chunked transfer encoding ourselves (WebServer doesn't support it)
-  WebServer.sendContent(size);
+  web_server.sendContent(size);
 
-  if (length > 0) { WebServer.sendContent(data); }
-  WebServer.sendContent("\r\n");
+  if (length > 0) { web_server.sendContent(data); }
+  web_server.sendContent("\r\n");
 #else // ESP8266 2.4.0rc2 and higher and the ESP32 webserver supports chunked http transfer
   unsigned int timeout = 0;
 
@@ -219,7 +219,7 @@ void Web_StreamingBuffer::sendContentBlocking(String& data) {
 
   if (freeBeforeSend < 4000) { timeout = 1000; }
   const uint32_t beginWait = millis();
-  WebServer.sendContent(data);
+  web_server.sendContent(data);
 
   while ((ESP.getFreeHeap() < freeBeforeSend) &&
          !timeOutReached(beginWait + timeout)) {
@@ -239,7 +239,7 @@ void Web_StreamingBuffer::sendContentBlocking(String& data) {
 
 void Web_StreamingBuffer::sendHeaderBlocking(bool json, const String& origin) {
   checkRAM(F("sendHeaderBlocking"));
-  WebServer.client().flush();
+  web_server.client().flush();
   String contenttype;
 
   if (json) {
@@ -250,15 +250,15 @@ void Web_StreamingBuffer::sendHeaderBlocking(bool json, const String& origin) {
   }
 
 #if defined(ESP8266) && defined(ARDUINO_ESP8266_RELEASE_2_3_0)
-  WebServer.setContentLength(CONTENT_LENGTH_UNKNOWN);
-  WebServer.sendHeader(F("Accept-Ranges"),     F("none"));
-  WebServer.sendHeader(F("Cache-Control"),     F("no-cache"));
-  WebServer.sendHeader(F("Transfer-Encoding"), F("chunked"));
+  web_server.setContentLength(CONTENT_LENGTH_UNKNOWN);
+  web_server.sendHeader(F("Accept-Ranges"),     F("none"));
+  web_server.sendHeader(F("Cache-Control"),     F("no-cache"));
+  web_server.sendHeader(F("Transfer-Encoding"), F("chunked"));
 
   if (json) {
-    WebServer.sendHeader(F("Access-Control-Allow-Origin"), "*");
+    web_server.sendHeader(F("Access-Control-Allow-Origin"), "*");
   }
-  WebServer.send(200, contenttype, "");
+  web_server.send(200, contenttype, "");
 #else // if defined(ESP8266) && defined(ARDUINO_ESP8266_RELEASE_2_3_0)
   unsigned int timeout        = 0;
   uint32_t     freeBeforeSend = ESP.getFreeHeap();
@@ -267,13 +267,13 @@ void Web_StreamingBuffer::sendHeaderBlocking(bool json, const String& origin) {
 
   if (freeBeforeSend < 4000) { timeout = 1000; }
   const uint32_t beginWait = millis();
-  WebServer.setContentLength(CONTENT_LENGTH_UNKNOWN);
-  WebServer.sendHeader(F("Cache-Control"), F("no-cache"));
+  web_server.setContentLength(CONTENT_LENGTH_UNKNOWN);
+  web_server.sendHeader(F("Cache-Control"), F("no-cache"));
 
   if (origin.length() > 0) {
-    WebServer.sendHeader(F("Access-Control-Allow-Origin"), origin);
+    web_server.sendHeader(F("Access-Control-Allow-Origin"), origin);
   }
-  WebServer.send(200, contenttype, "");
+  web_server.send(200, contenttype, "");
 
   // dont wait on 2.3.0. Memory returns just too slow.
   while ((ESP.getFreeHeap() < freeBeforeSend) &&

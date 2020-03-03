@@ -17,7 +17,7 @@ void handle_settingsarchive() {
   html_TR();
   addFormHeader(F("Settings Archive"));
 
-  if (WebServer.hasArg(F("savepref")) || WebServer.hasArg(F("download"))) {
+  if (web_server.hasArg(F("savepref")) || web_server.hasArg(F("download"))) {
     // User choose a pre-defined config and wants to save it as the new default.
     storeDownloadFiletypeCheckbox(FileType::CONFIG_DAT);
     storeDownloadFiletypeCheckbox(FileType::SECURITY_DAT);
@@ -35,11 +35,11 @@ void handle_settingsarchive() {
 
   bool showOptions = true;
 
-  if (WebServer.hasArg(F("download"))) {
+  if (web_server.hasArg(F("download"))) {
     // Try downloading files.
-    String url  = WebServer.arg(F("url"));
-    String user = WebServer.arg(F("user"));
-    String pass = WebServer.arg(F("pass"));
+    String url  = web_server.arg(F("url"));
+    String user = web_server.arg(F("user"));
+    String pass = web_server.arg(F("pass"));
 
     addTableSeparator(F("Download result"), 2, 3);
     bool somethingDownloaded = false;
@@ -61,7 +61,7 @@ void handle_settingsarchive() {
       addSubmitButton(F("Reboot"), F("reboot"), F("red"));
       addFormNote(F("If settings files are updated you MUST reboot first!"));
     }
-  } else if (WebServer.hasArg(F("reboot"))) {
+  } else if (web_server.hasArg(F("reboot"))) {
     showOptions = false;
     reboot();
   }
@@ -91,10 +91,10 @@ void handle_settingsarchive() {
 
     addTableSeparator(F("Archive Location"), 2, 3);
 
-    addFormTextBox(F("URL with settings"), F("url"), WebServer.arg(F("url")), 256);
+    addFormTextBox(F("URL with settings"), F("url"), web_server.arg(F("url")), 256);
     addFormNote(F("Only HTTP supported. Do not include filename"));
-    addFormTextBox(F("User"), F("user"), WebServer.arg(F("user")), 64);
-    addFormPasswordBox(F("Pass"), F("pass"), WebServer.arg(F("pass")), 64);
+    addFormTextBox(F("User"), F("user"), web_server.arg(F("user")), 64);
+    addFormPasswordBox(F("Pass"), F("pass"), web_server.arg(F("pass")), 64);
     addFormNote(F("URL, user and pass will not be stored"));
 
     addRowLabel(F("Try download files"));

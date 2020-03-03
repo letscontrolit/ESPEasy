@@ -581,10 +581,10 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
     {
       C018_ConfigStruct customConfig;
       customConfig.reset();
-      String deveui  = WebServer.arg(F("deveui"));
-      String devaddr = WebServer.arg(F("devaddr"));
-      String nskey   = WebServer.arg(F("nskey"));
-      String appskey = WebServer.arg(F("appskey"));
+      String deveui  = web_server.arg(F("deveui"));
+      String devaddr = web_server.arg(F("devaddr"));
+      String nskey   = web_server.arg(F("nskey"));
+      String appskey = web_server.arg(F("appskey"));
 
       strlcpy(customConfig.DeviceEUI,         deveui.c_str(),  sizeof(customConfig.DeviceEUI));
       strlcpy(customConfig.DeviceAddr,        devaddr.c_str(), sizeof(customConfig.DeviceAddr));

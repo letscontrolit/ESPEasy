@@ -22,13 +22,13 @@ void handle_advanced() {
   int dstenddow     = getFormItemInt(F("dstenddow"));
   int dstendmonth   = getFormItemInt(F("dstendmonth"));
   int dstendhour    = getFormItemInt(F("dstendhour"));
-  String edit       = WebServer.arg(F("edit"));
+  String edit       = web_server.arg(F("edit"));
 
 
   if (edit.length() != 0)
   {
     Settings.MessageDelay = getFormItemInt(F("messagedelay"));
-    Settings.IP_Octet     = WebServer.arg(F("ip")).toInt();
+    Settings.IP_Octet     = web_server.arg(F("ip")).toInt();
     strncpy_webserver_arg(Settings.NTPHost, F("ntphost"));
     Settings.TimeZone = timezone;
     TimeChangeRule dst_start(dststartweek, dststartdow, dststartmonth, dststarthour, timezone);
@@ -37,7 +37,7 @@ void handle_advanced() {
     TimeChangeRule dst_end(dstendweek, dstenddow, dstendmonth, dstendhour, timezone);
 
     if (dst_end.isValid()) { Settings.DST_End = dst_end.toFlashStoredValue(); }
-    str2ip(WebServer.arg(F("syslogip")).c_str(), Settings.Syslog_IP);
+    str2ip(web_server.arg(F("syslogip")).c_str(), Settings.Syslog_IP);
     Settings.UDPPort = getFormItemInt(F("udpport"));
 
     Settings.SyslogFacility = getFormItemInt(F("syslogfacility"));

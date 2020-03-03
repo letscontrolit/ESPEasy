@@ -25,15 +25,15 @@ void handle_rules() {
 
   String error;
 
-  if (WebServer.args() > 0) {
+  if (web_server.args() > 0) {
     String log = F("Rules : Save rulesSet: ");
     log += rulesSet;
     log += F(" currentSet: ");
     log += currentSet;
 
     if (currentSet == rulesSet) {
-      if (WebServer.hasArg(F("rules"))) {
-        size_t rulesLength = WebServer.arg(F("rules")).length();
+      if (web_server.hasArg(F("rules"))) {
+        size_t rulesLength = web_server.arg(F("rules")).length();
 
         // Reported length is with CRLF counted as a single byte.
         // So rulesLength > reported_length is a valid situation.
@@ -51,7 +51,7 @@ void handle_rules() {
           error += ')';
         } else {
           // Save as soon as possible, as the webserver may already overwrite the args.
-          const byte *memAddress = reinterpret_cast<const byte *>(WebServer.arg(F("rules")).c_str());
+          const byte *memAddress = reinterpret_cast<const byte *>(web_server.arg(F("rules")).c_str());
           error = SaveToFile(fileName.c_str(), 0, memAddress, rulesLength, "w");
         }
       } else {
@@ -148,7 +148,7 @@ void handle_rules_new() {
   const int rulesListPageSize = 25;
   int startIdx                = 0;
 
-  String fstart = WebServer.arg(F("start"));
+  String fstart = web_server.arg(F("start"));
 
   if (fstart.length() > 0)
   {
@@ -283,8 +283,8 @@ void handle_rules_backup() {
 
   if (!clientIPallowed()) { return; }
   checkRAM(F("handle_rules_backup"));
-  String directory = WebServer.arg(F("directory"));
-  String fileName  = WebServer.arg(F("fileName"));
+  String directory = web_server.arg(F("directory"));
+  String fileName  = web_server.arg(F("fileName"));
   String error;
 
   if (directory.length() > 0)
@@ -337,7 +337,7 @@ void handle_rules_delete() {
     return;
   }
   checkRAM(F("handle_rules_delete"));
-  String fileName = WebServer.arg(F("fileName"));
+  String fileName = web_server.arg(F("fileName"));
   fileName = fileName.substring(0, fileName.length() - 4);
   bool removed = false;
   #ifdef WEBSERVER_RULES_DEBUG
@@ -353,8 +353,8 @@ void handle_rules_delete() {
 
   if (removed)
   {
-    WebServer.sendHeader(F("Location"), F("/rules"), true);
-    WebServer.send(302, F("text/plain"), F(""));
+    web_server.sendHeader(F("Location"), F("/rules"), true);
+    web_server.send(302, F("text/plain"), F(""));
   }
   else
   {
@@ -403,7 +403,7 @@ bool handle_rules_edit(String originalUri, bool isAddNew) {
 
     if (isAddNew)
     {
-      eventName = WebServer.arg(F("eventName"));
+      eventName = web_server.arg(F("eventName"));
       fileName += EventToFileName(eventName);
     }
     else
@@ -423,10 +423,10 @@ bool handle_rules_edit(String originalUri, bool isAddNew) {
       #endif // ifdef WEBSERVER_RULES_DEBUG
     bool isEdit = SPIFFS.exists(fileName);
 
-    if (WebServer.args() > 0)
+    if (web_server.args() > 0)
     {
-      const String& rules = WebServer.arg(F("rules"));
-      isNew = WebServer.arg(F("IsNew")) == F("yes");
+      const String& rules = web_server.arg(F("rules"));
+      isNew = web_server.arg(F("IsNew")) == F("yes");
 
       // Overwrite verification
       if (isEdit && isNew) {
@@ -436,7 +436,7 @@ bool handle_rules_edit(String originalUri, bool isAddNew) {
         isAddNew    = true;
         isOverwrite = true;
       }
-      else if (!WebServer.hasArg(F("rules")))
+      else if (!web_server.hasArg(F("rules")))
       {
         error = F("Data was not saved, rules argument missing or corrupted");
         addLog(LOG_LEVEL_ERROR, error);
@@ -463,8 +463,8 @@ bool handle_rules_edit(String originalUri, bool isAddNew) {
         }
 
         if (isAddNew) {
-          WebServer.sendHeader(F("Location"), F("/rules"), true);
-          WebServer.send(302, F("text/plain"), F(""));
+          web_server.sendHeader(F("Location"), F("/rules"), true);
+          web_server.send(302, F("text/plain"), F(""));
           return true;
         }
       }
@@ -573,19 +573,19 @@ bool Rule_Download(const String& path)
   String filename = path + String(F(".txt"));
   filename.replace(RULE_FILE_SEPARAROR, '_');
   String str = String(F("attachment; filename=")) + filename;
-  WebServer.sendHeader(F("Content-Disposition"), str);
-  WebServer.sendHeader(F("Cache-Control"),       F("max-age=3600, public"));
-  WebServer.sendHeader(F("Vary"),                "*");
-  WebServer.sendHeader(F("ETag"),                F("\"2.0.0\""));
+  web_server.sendHeader(F("Content-Disposition"), str);
+  web_server.sendHeader(F("Cache-Control"),       F("max-age=3600, public"));
+  web_server.sendHeader(F("Vary"),                "*");
+  web_server.sendHeader(F("ETag"),                F("\"2.0.0\""));
 
-  WebServer.streamFile(dataFile, F("application/octet-stream"));
+  web_server.streamFile(dataFile, F("application/octet-stream"));
   dataFile.close();
   return true;
 }
 
 void Goto_Rules_Root() {
-  WebServer.sendHeader(F("Location"), F("/rules"), true);
-  WebServer.send(302, F("text/plain"), F(""));
+  web_server.sendHeader(F("Location"), F("/rules"), true);
+  web_server.send(302, F("text/plain"), F(""));
 }
 
 bool EnumerateFileAndDirectory(String          & rootPath
