@@ -3,6 +3,8 @@
 //################################## Plugin 086: Homie receiver##########################################
 //#######################################################################################################
 
+#include "_Plugin_Helper.h"
+
 #define PLUGIN_086
 #define PLUGIN_ID_086         86
 #define PLUGIN_NAME_086       "Generic - Homie receiver [TESTING]"

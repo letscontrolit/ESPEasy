@@ -3,6 +3,8 @@
 //######################## Plugin 006 BMP0685 I2C Barometric Pressure Sensor  ###########################
 //#######################################################################################################
 
+#include "_Plugin_Helper.h"
+
 #define PLUGIN_006
 #define PLUGIN_ID_006        6
 #define PLUGIN_NAME_006       "Environment - BMP085/180"

@@ -3,6 +3,8 @@
 //#################### Plugin 031: SHT10/SHT11/SHT15 Temp/Humidity Sensor ###############################
 //#######################################################################################################
 
+#include "_Plugin_Helper.h"
+
 #define PLUGIN_031
 #define PLUGIN_ID_031         31
 #define PLUGIN_NAME_031       "Environment - SHT1X"

@@ -18,6 +18,7 @@
 #define PLUGIN_VALUENAME2_056 "PM10"    // Dust <10µm in µg/m³
 
 #include <jkSDS011.h>
+#include "_Plugin_Helper.h"
 
 
 CjkSDS011 *Plugin_056_SDS = NULL;

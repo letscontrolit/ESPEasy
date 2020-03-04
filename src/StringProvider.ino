@@ -108,7 +108,7 @@ String getValue(LabelType::Enum label) {
   switch (label)
   {
     case LabelType::UNIT_NR:                return String(Settings.Unit);
-    case LabelType::UNIT_NAME:              return String(Settings.Name);
+    case LabelType::UNIT_NAME:              return String(Settings.Name);  // Only return the set name, no appended unit.
     case LabelType::HOST_NAME:
     #ifdef ESP32
       return WiFi.getHostname();

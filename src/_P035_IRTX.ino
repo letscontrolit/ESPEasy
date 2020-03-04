@@ -37,6 +37,8 @@
 #include <IRutils.h>
 #include <IRsend.h>
 
+#include "_Plugin_Helper.h"
+
 #ifdef P016_P035_Extended_AC
 #include <IRac.h>
 IRac *Plugin_035_commonAc = nullptr;

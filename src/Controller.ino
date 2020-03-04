@@ -199,12 +199,7 @@ bool MQTTConnect(controllerIndex_t controller_idx)
   String clientid;
 
   if (Settings.MQTTUseUnitNameAsClientId) {
-    clientid = Settings.Name;
-
-    if (Settings.Unit != 0) { // only append non-zero unit number
-      clientid += '_';
-      clientid += Settings.Unit;
-    }
+    clientid = Settings.getHostname();
   }
   else {
     clientid  = F("ESPClient_");

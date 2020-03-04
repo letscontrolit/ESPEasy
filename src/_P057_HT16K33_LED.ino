@@ -68,6 +68,7 @@
 #define PLUGIN_NAME_057       "Display - HT16K33 [TESTING]"
 
 #include <HT16K33.h>
+#include "_Plugin_Helper.h"
 
 CHT16K33* Plugin_057_M = NULL;
 

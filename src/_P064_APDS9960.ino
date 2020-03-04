@@ -29,6 +29,7 @@
 */
 
 #include <SparkFun_APDS9960.h>   //Lib is modified to work with ESP
+#include "_Plugin_Helper.h"
 
 SparkFun_APDS9960* PLUGIN_064_pds = NULL;
 

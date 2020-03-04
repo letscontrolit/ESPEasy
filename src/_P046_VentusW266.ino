@@ -76,6 +76,8 @@
 // CRC calculation is based on the works by Paul Stoffregen from the 1-Wire arduino library. Special
 // thanks to Greg Cook and the team behind reveng.sourceforge.net.
 
+#include "_Plugin_Helper.h"
+
 //edwin: Disabled for now: hardware is not generic enough and  uses lots of ram and iram,
 #ifdef PLUGIN_BUILD_DISABLED
 

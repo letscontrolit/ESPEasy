@@ -11,6 +11,7 @@
 
 
 #include <ESPeasySerial.h>
+#include "_Plugin_Helper.h"
 
 #define PLUGIN_053
 #define PLUGIN_ID_053 53
