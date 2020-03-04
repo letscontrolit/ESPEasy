@@ -11,7 +11,7 @@ void handle_control() {
 
   // TXBuffer.startStream(true); // true= json
   // sendHeadandTail_stdtemplate(_HEAD);
-  String webrequest = WebServer.arg(F("cmd"));
+  String webrequest = web_server.arg(F("cmd"));
   addLog(LOG_LEVEL_INFO,  String(F("HTTP: ")) + webrequest);
   webrequest = parseTemplate(webrequest);
 #ifndef BUILD_NO_DEBUG

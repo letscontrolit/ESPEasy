@@ -19,9 +19,9 @@ void handle_setup() {
     sendHeadandTail(F("TmplAP"));
     static byte status       = 0;
     static byte refreshCount = 0;
-    String ssid              = WebServer.arg(F("ssid"));
-    String other             = WebServer.arg(F("other"));
-    String password          = WebServer.arg(F("pass"));
+    String ssid              = web_server.arg(F("ssid"));
+    String other             = web_server.arg(F("other"));
+    String password          = web_server.arg(F("pass"));
 
     if (other.length() != 0)
     {

@@ -39,7 +39,7 @@ void handle_log_JSON() {
   if (!isLoggedIn()) { return; }
   #ifdef WEBSERVER_LOG
   TXBuffer.startJsonStream();
-  String webrequest = WebServer.arg(F("view"));
+  String webrequest = web_server.arg(F("view"));
   addHtml(F("{\"Log\": {"));
 
   if (webrequest == F("legend")) {

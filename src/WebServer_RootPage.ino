@@ -11,7 +11,7 @@ void handle_root() {
   // if Wifi setup, launch setup wizard
   if (wifiSetup)
   {
-    WebServer.send(200, F("text/html"), F("<meta HTTP-EQUIV='REFRESH' content='0; url=/setup'>"));
+    web_server.send(200, F("text/html"), F("<meta HTTP-EQUIV='REFRESH' content='0; url=/setup'>"));
     return;
   }
 
@@ -28,7 +28,7 @@ void handle_root() {
   if (loadFromFS(false, F("/index.htm"))) { return; }
 
   TXBuffer.startStream();
-  String  sCommand  = WebServer.arg(F("cmd"));
+  String  sCommand  = web_server.arg(F("cmd"));
   boolean rebootCmd = strcasecmp_P(sCommand.c_str(), PSTR("reboot")) == 0;
   sendHeadandTail_stdtemplate(_HEAD, rebootCmd);
 
@@ -57,7 +57,7 @@ void handle_root() {
     addRowLabelValue(LabelType::GIT_BUILD);
     addRowLabel(getLabel(LabelType::LOCAL_TIME));
 
-    if (systemTimePresent())
+    if (node_time.systemTimePresent())
     {
       addHtml(getValue(LabelType::LOCAL_TIME));
     }

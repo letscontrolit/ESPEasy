@@ -5,6 +5,7 @@
 #include "src/Globals/Device.h"
 #include "src/Globals/Plugins.h"
 #include "src/Globals/Plugins_other.h"
+#include "src/Helpers/ESPEasy_time_calc.h"
 
 String EventToFileName(const String& eventName) {
   int size  = eventName.length();

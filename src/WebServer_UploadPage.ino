@@ -82,7 +82,7 @@ void handleFileUpload() {
 
   static boolean valid = false;
 
-  HTTPUpload& upload = WebServer.upload();
+  HTTPUpload& upload = web_server.upload();
 
   if (upload.filename.c_str()[0] == 0)
   {

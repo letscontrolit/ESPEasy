@@ -415,7 +415,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         String error;
         for (uint8_t varNr = 0; varNr < P36_Nlines; varNr++)
         {
-          if (!safe_strncpy(P036_DisplayLinesV1[varNr].Content, WebServer.arg(getPluginCustomArgName(varNr)), P36_NcharsV1)) {
+          if (!safe_strncpy(P036_DisplayLinesV1[varNr].Content, web_server.arg(getPluginCustomArgName(varNr)), P36_NcharsV1)) {
             error += getCustomTaskSettingsError(varNr);
           }
           P036_DisplayLinesV1[varNr].Content[P36_NcharsV1-1] = 0; // Terminate in case of uninitalized data

@@ -17,7 +17,7 @@ void handle_sysinfo_json() {
   json_open();
   json_open(false, F("general"));
   json_number(F("unit"), String(Settings.Unit));
-  json_prop(F("time"),   getDateTimeString('-', ':', ' '));
+  json_prop(F("time"),   node_time.getDateTimeString('-', ':', ' '));
   json_prop(F("uptime"), getExtendedValue(LabelType::UPTIME));
   json_number(F("cpu_load"),   String(getCPUload()));
   json_number(F("loop_count"), String(getLoopCountPerSec()));
@@ -238,7 +238,7 @@ void handle_sysinfo() {
 void handle_sysinfo_basicInfo() {
   addRowLabelValue(LabelType::UNIT_NR);
 
-  if (systemTimePresent())
+  if (node_time.systemTimePresent())
   {
     addRowLabelValue(LabelType::LOCAL_TIME);
   }

@@ -17,7 +17,7 @@ void handle_json()
   bool showTaskDetails        = true;
   bool showNodes              = true;
   {
-    String view = WebServer.arg("view");
+    String view = web_server.arg("view");
 
     if (view.length() != 0) {
       if (view == F("sensorupdate")) {

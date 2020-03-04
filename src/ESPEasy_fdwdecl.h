@@ -28,6 +28,8 @@
 
 #include <FS.h>
 
+#include <WiFiUdp.h>
+
 
 // Forward declaration to give access to global member variables
 float         & getUserVar(unsigned int varIndex);
@@ -44,11 +46,6 @@ void     backgroundtasks();
 uint32_t getCurrentFreeStack();
 uint32_t getFreeStackWatermark();
 bool     canYield();
-
-
-boolean  timeOutReached(unsigned long timer);
-long     timePassedSince(unsigned long timestamp);
-long     usecPassedSince(unsigned long timestamp);
 
 void     serialHelper_getGpioNames(struct EventStruct *event,
                                    bool                rxOptional = false,
@@ -139,6 +136,7 @@ String boolToString(bool value);
 bool isInt(const String& tBuf);
 String formatToHex(unsigned long value, const String& prefix);
 String formatToHex(unsigned long value);
+String getNumerical(const String& tBuf, bool mustBeInteger);
 
 float getCPUload();
 int getLoopCountPerSec();
@@ -193,5 +191,10 @@ void printDirectory(File dir, int numTabs);
 void delayBackground(unsigned long dsdelay);
 
 void setIntervalTimerOverride(unsigned long id, unsigned long msecFromNow); //implemented in Scheduler.ino
+
+
+byte PluginCall(byte Function, struct EventStruct *event, String& str);
+bool beginWiFiUDP_randomPort(WiFiUDP& udp);
+String toString(float value, byte decimals);
 
 #endif // ESPEASY_FWD_DECL_H

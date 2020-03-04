@@ -50,15 +50,15 @@ bool loadFromFS(boolean spiffs, String path) {
     }
 
     // prevent reloading stuff on every click
-    WebServer.sendHeader(F("Cache-Control"), F("max-age=3600, public"));
-    WebServer.sendHeader(F("Vary"),          "*");
-    WebServer.sendHeader(F("ETag"),          F("\"2.0.0\""));
+    web_server.sendHeader(F("Cache-Control"), F("max-age=3600, public"));
+    web_server.sendHeader(F("Vary"),          "*");
+    web_server.sendHeader(F("ETag"),          F("\"2.0.0\""));
 
     if (path.endsWith(F(".dat"))) {
-      WebServer.sendHeader(F("Content-Disposition"), F("attachment;"));
+      web_server.sendHeader(F("Content-Disposition"), F("attachment;"));
     }
 
-    WebServer.streamFile(dataFile, dataType);
+    web_server.streamFile(dataFile, dataType);
     dataFile.close();
   }
   else
@@ -71,9 +71,9 @@ bool loadFromFS(boolean spiffs, String path) {
     }
 
     if (path.endsWith(F(".DAT"))) {
-      WebServer.sendHeader(F("Content-Disposition"), F("attachment;"));
+      web_server.sendHeader(F("Content-Disposition"), F("attachment;"));
     }
-    WebServer.streamFile(dataFile, dataType);
+    web_server.streamFile(dataFile, dataType);
     dataFile.close();
 #else // ifdef FEATURE_SD
 

@@ -8,33 +8,33 @@ void handleNotFound() {
 
   if (wifiSetup)
   {
-    WebServer.send(200, F("text/html"), F("<meta HTTP-EQUIV='REFRESH' content='0; url=/setup'>"));
+    web_server.send(200, F("text/html"), F("<meta HTTP-EQUIV='REFRESH' content='0; url=/setup'>"));
     return;
   }
 
   if (!isLoggedIn()) { return; }
 
 #ifdef WEBSERVER_RULES
-  if (handle_rules_edit(WebServer.uri())) { return; }
+  if (handle_rules_edit(web_server.uri())) { return; }
 #endif
 
-  if (loadFromFS(true, WebServer.uri())) { return; }
+  if (loadFromFS(true, web_server.uri())) { return; }
 
-  if (loadFromFS(false, WebServer.uri())) { return; }
+  if (loadFromFS(false, web_server.uri())) { return; }
   String message = F("URI: ");
-  message += WebServer.uri();
+  message += web_server.uri();
   message += F("\nMethod: ");
-  message += (WebServer.method() == HTTP_GET) ? F("GET") : F("POST");
+  message += (web_server.method() == HTTP_GET) ? F("GET") : F("POST");
   message += F("\nArguments: ");
-  message += WebServer.args();
+  message += web_server.args();
   message += "\n";
 
-  for (uint8_t i = 0; i < WebServer.args(); i++) {
+  for (uint8_t i = 0; i < web_server.args(); i++) {
     message += F(" NAME:");
-    message += WebServer.argName(i);
+    message += web_server.argName(i);
     message += F("\n VALUE:");
-    message += WebServer.arg(i);
+    message += web_server.arg(i);
     message += '\n';
   }
-  WebServer.send(404, F("text/plain"), message);
+  web_server.send(404, F("text/plain"), message);
 }

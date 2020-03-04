@@ -14,6 +14,9 @@
 #include <TinyGPS++.h>
 #include "ESPEasy_packed_raw_data.h"
 
+#include "src/Globals/ESPEasy_time.h"
+#include "src/Helpers/ESPEasy_time_calc.h"
+
 #define PLUGIN_082
 #define PLUGIN_ID_082          82
 #define PLUGIN_NAME_082       "Position - GPS [TESTING]"
@@ -706,8 +709,8 @@ void P082_html_show_stats(struct EventStruct *event) {
   bool pps_sync;
 
   if (P082_data->getDateTime(dateTime, age, pps_sync)) {
-    dateTime = addSeconds(dateTime, (age / 1000), false);
-    addHtml(getDateTimeString(dateTime));
+    dateTime = node_time.addSeconds(dateTime, (age / 1000), false);
+    addHtml(ESPEasy_time::getDateTimeString(dateTime));
   } else {
     addHtml(F("-"));
   }
@@ -730,7 +733,7 @@ void P082_setSystemTime(struct EventStruct *event) {
 
   // Set the externalTimesource 10 seconds earlier to make sure no call is made
   // to NTP (if set)
-  if (nextSyncTime > (sysTime + 10)) {
+  if (node_time.nextSyncTime > (node_time.sysTime + 10)) {
     return;
   }
 
@@ -744,8 +747,8 @@ void P082_setSystemTime(struct EventStruct *event) {
     // and the given offset in centisecond.
     double time = makeTime(dateTime);
     time += static_cast<double>(age) / 1000.0;
-    setExternalTimeSource(time, GPS_time_source);
-    initTime();
+    node_time.setExternalTimeSource(time, GPS_time_source);
+    node_time.initTime();
   }
   P082_pps_time = 0;
 }

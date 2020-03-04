@@ -250,8 +250,8 @@ boolean Plugin_055(byte function, struct EventStruct *event, String& string)
             break;
 
           String tokens = "";
-          byte hours = hour();
-          byte minutes = minute();
+          byte hours = node_time.hour();
+          byte minutes = node_time.minute();
 
           if (Plugin_055_Data->chimeClock)
           {

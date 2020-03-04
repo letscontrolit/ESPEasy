@@ -263,7 +263,7 @@ int getFormItemInt(const String& key, int defaultValue) {
 }
 
 bool getCheckWebserverArg_int(const String& key, int& value) {
-  String valueStr = WebServer.arg(key);
+  String valueStr = web_server.arg(key);
 
   if (!isInt(valueStr)) { return false; }
   value = valueStr.toInt();
@@ -294,7 +294,7 @@ bool update_whenset_FormItemInt(const String& key, byte& value) {
 // So if webserver does not have an argument for a checkbox form, it means it should be considered unchecked.
 bool isFormItemChecked(const String& id)
 {
-  return WebServer.arg(id) == F("on");
+  return web_server.arg(id) == F("on");
 }
 
 int getFormItemInt(const String& id)
@@ -304,7 +304,7 @@ int getFormItemInt(const String& id)
 
 float getFormItemFloat(const String& id)
 {
-  String val = WebServer.arg(id);
+  String val = web_server.arg(id);
 
   if (!isFloat(val)) { return 0.0; }
   return val.toFloat();
@@ -312,12 +312,12 @@ float getFormItemFloat(const String& id)
 
 bool isFormItem(const String& id)
 {
-  return WebServer.arg(id).length() != 0;
+  return web_server.arg(id).length() != 0;
 }
 
 void copyFormPassword(const String& id, char *pPassword, int maxlength)
 {
-  String password = WebServer.arg(id);
+  String password = web_server.arg(id);
 
   if (password == F("*****")) { // no change?
     return;
