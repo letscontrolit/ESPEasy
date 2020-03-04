@@ -128,7 +128,7 @@ void handle_rules() {
         html += "fetch(url).then(res => res.text()).then((ruleTextNewCheck) => {";
           html += "if (ruleTextNew === ruleTextNewCheck) {";
             html += "toasting();";
-            html += "size.innerHTML = size.innerHTML.replace(/(?<=:.)\\d*/, ruleTextNew.length);";
+            html += "size.innerHTML = ruleTextNew.length;";
           html += "} else {";
             html += "console.log('error when saving...');";
           html += "}";
@@ -571,11 +571,11 @@ void Rule_showRuleTextArea(const String& fileName) {
     String html;
     html.reserve(64);
 
-    html += F("<div id='size'>Current size: ");
+    html += F("Current size: <span id='size'>");
     html += size;
-    html += F(" characters (Max ");
+    html += F("</span> characters (Max ");
     html += RULES_MAX_SIZE;
-    html += F(")</div>");
+    html += F(")");
     addHtml(html);
   }
 
