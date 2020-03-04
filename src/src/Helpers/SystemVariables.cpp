@@ -112,7 +112,7 @@ void SystemVariables::parseSystemVariables(String& s, boolean useURLencode)
       case SYSMIN:            value = String(node_time.minute()); break;
       case SYSMIN_0:          value = timeReplacement_leadZero(node_time.minute()); break;
       case SYSMONTH:          value = String(node_time.month()); break;
-      case SYSNAME:           value = Settings.Name; break;
+      case SYSNAME:           value = Settings.getHostname(); break;
       case SYSSEC:            value = String(node_time.second()); break;
       case SYSSEC_0:          value = timeReplacement_leadZero(node_time.second()); break;
       case SYSSEC_D:          value = String(((node_time.hour() * 60) + node_time.minute()) * 60 + node_time.second()); break;

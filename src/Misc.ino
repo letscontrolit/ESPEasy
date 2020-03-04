@@ -2705,7 +2705,7 @@ void ArduinoOTAInit()
   checkRAM(F("ArduinoOTAInit"));
 
   ArduinoOTA.setPort(ARDUINO_OTA_PORT);
-  ArduinoOTA.setHostname(Settings.Name);
+  ArduinoOTA.setHostname(Settings.getHostname());
   if (SecuritySettings.Password[0]!=0)
     ArduinoOTA.setPassword(SecuritySettings.Password);
 
