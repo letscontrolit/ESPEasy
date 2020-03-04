@@ -79,7 +79,7 @@ void handle_rules() {
     currentSet = rulesSet;
   }
 
-  //addHtml(F("<form name = 'frmselect' method = 'post' onsubmit='addRulesLength()'>"));
+  addHtml(F("<form name = 'frmselect' method = 'post' onsubmit='addRulesLength()'>"));
   html_table_class_normal();
   html_TR();
   html_table_header(F("Rules"));
@@ -107,7 +107,7 @@ void handle_rules() {
   //addSubmitButton();
   addButton(fileName, F("Download to file"));
   html_end_table();
-  //html_end_form();
+  html_end_form();
   // html_add_script(F(
   //                   "function addRulesLength() {    var r_len = document.getElementById('rules').value.length;	document.getElementById('rules_len').setAttribute('value', r_len);  };"),
   //                 true);
