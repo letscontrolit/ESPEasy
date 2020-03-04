@@ -108,6 +108,7 @@ void handle_rules() {
   addHtml(F("<script>function saveRulesFile(){"));
   String html;
   html += "let button = document.getElementById('save_button');";
+  html += "let size = document.getElementById('size');";
   html += "let ruleTextNew = document.getElementById('rules').value;";
   html += "ruleTextNew = ruleTextNew.replace(/\\r?\\n/g, '\\r\\n');";
   html += "let ruleNumber = document.getElementById('set').value;";
@@ -127,6 +128,7 @@ void handle_rules() {
         html += "fetch(url).then(res => res.text()).then((ruleTextNewCheck) => {";
           html += "if (ruleTextNew === ruleTextNewCheck) {";
             html += "toasting();";
+            html += "size.innerHTML = size.innerHTML.replace(/(?<=:.)\\d*/, ruleTextNew.length);";
           html += "} else {";
             html += "console.log('error when saving...');";
           html += "}";
@@ -563,25 +565,23 @@ void Rule_showRuleTextArea(const String& fileName) {
   addHtml(F("<textarea id='rules' name='rules' rows='30' wrap='off'>"));
   size = streamFile_htmlEscape(fileName);
   addHtml(F("</textarea>"));
-  //addHtml(F("<TR><TD colspan='2'>"));
 
   html_TR_TD();
   {
     String html;
     html.reserve(64);
 
-    html += F("Current size: ");
+    html += F("<div id='size'>Current size: ");
     html += size;
     html += F(" characters (Max ");
     html += RULES_MAX_SIZE;
-    html += F(")");
+    html += F(")</div>");
     addHtml(html);
   }
 
   if (size > RULES_MAX_SIZE) {
     addHtml(F("<span style=\"color:red\">Filesize exceeds web editor limit!</span>"));
   }
-  //addHtml(F("<p><input type='text' id='rules_len' name='rules_len' value='0'></p>"));
 }
 
 bool Rule_Download(const String& path)
