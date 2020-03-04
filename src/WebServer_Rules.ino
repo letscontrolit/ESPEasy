@@ -79,7 +79,6 @@ void handle_rules() {
     currentSet = rulesSet;
   }
 
-  addHtml(F("<form name = 'frmselect'>"));
   html_table_class_normal();
   html_TR();
   html_table_header(F("Rules"));
@@ -96,6 +95,7 @@ void handle_rules() {
   }
 
   html_TR_TD();
+  addHtml(F("<form name = 'frmselect'>"));
   addSelector(F("set"), RULESETS_MAX, options, optionValues, NULL, choice, true);
   addHelpButton(F("Tutorial_Rules"));
 
@@ -105,9 +105,9 @@ void handle_rules() {
 
   html_TR_TD();
   //addSubmitButton();
+  html_end_form();
   addButton(fileName, F("Download to file"));
   html_end_table();
-  html_end_form();
   // html_add_script(F(
   //                   "function addRulesLength() {    var r_len = document.getElementById('rules').value.length;	document.getElementById('rules_len').setAttribute('value', r_len);  };"),
   //                 true);
