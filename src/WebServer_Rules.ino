@@ -79,7 +79,7 @@ void handle_rules() {
     currentSet = rulesSet;
   }
 
-  addHtml(F("<form name = 'frmselect' method = 'post' onsubmit='addRulesLength()'>"));
+  addHtml(F("<form name = 'frmselect'>"));
   html_table_class_normal();
   html_TR();
   html_table_header(F("Rules"));
