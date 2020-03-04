@@ -101,10 +101,7 @@ void handle_rules() {
 
   Rule_showRuleTextArea(fileName);
 
-  //addFormSeparator(2);
-
   html_TR_TD();
-  //addSubmitButton();
   html_end_form();
   addHtml(F("<button id='save_button' class='button' onClick='saveRulesFile()'>Save</button>"));
   addHtml(F("<div id='toastmessage'>Saved!</div>"));
@@ -141,9 +138,6 @@ void handle_rules() {
   addHtml(F("};</script>"));
   addButton(fileName, F("Download to file"));
   html_end_table();
-  // html_add_script(F(
-  //                   "function addRulesLength() {    var r_len = document.getElementById('rules').value.length;	document.getElementById('rules_len').setAttribute('value', r_len);  };"),
-  //                 true);
   sendHeadandTail_stdtemplate(true);
   TXBuffer.endStream();
 
