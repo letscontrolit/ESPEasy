@@ -4,10 +4,6 @@
 //################################ Plugin 090: Mitsubishi Heat Pump #####################################
 //#######################################################################################################
 
-//uncomment one of the following as needed
-//#ifdef PLUGIN_BUILD_DEVELOPMENT
-//#ifdef PLUGIN_BUILD_TESTING
-
 #include "_Plugin_Helper.h"
 
 #define PLUGIN_093
@@ -277,8 +273,10 @@ private:
       _state = newState;
       didTransition(currentState, newState);
     } else {
+#ifdef PLUGIN_093_DEBUG
       addLog(LOG_LEVEL_DEBUG, String(F("M-AC: SS - ignoring ")) +
         stateToString(_state) + F(" -> ") + stateToString(newState));
+#endif
     }
   }
 
@@ -317,8 +315,10 @@ private:
   }
 
   void didTransition(State from, State to) {
+#ifdef PLUGIN_093_DEBUG
     addLog(LOG_LEVEL_DEBUG, String(F("M-AC: didTransition: ")) +
       stateToString(from) + " -> " + stateToString(to));
+#endif
 
     switch (to) {
       case ReadTimeout:
@@ -482,7 +482,10 @@ private:
   }
 
   void sendPacket(const uint8_t *packet, size_t size) {
+#ifdef PLUGIN_093_DEBUG
     addLog(LOG_LEVEL_DEBUG_MORE, dumpOutgoingPacket(packet, size));
+#endif
+
     _serial->write(packet, size);
     _writeTimeout = millis() + 2000;
   }
@@ -596,7 +599,9 @@ private:
   }
 
   static State checkIncomingPacket(const uint8_t* packet, uint8_t length, uint8_t checksum) {
+#ifdef PLUGIN_093_DEBUG
     addLog(LOG_LEVEL_DEBUG_MORE, dumpIncomingPacket(packet, length));
+#endif
 
     if (packet[2] != 0x01 || packet[3] != 0x30) {
       addLog(LOG_LEVEL_DEBUG, F("M-AC: CIP(0)"));
