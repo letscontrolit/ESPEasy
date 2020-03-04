@@ -8,6 +8,8 @@
 //#ifdef PLUGIN_BUILD_DEVELOPMENT
 //#ifdef PLUGIN_BUILD_TESTING
 
+#include "_Plugin_Helper.h"
+
 #define PLUGIN_093
 #define PLUGIN_ID_093         93
 #define PLUGIN_NAME_093       "Mitsubishi AC [TESTING]"
@@ -45,7 +47,7 @@ struct P093_data_struct : public PluginTaskData_base {
 
   boolean sync() {
     if (_statusUpdateTimeout != 0) {
-      if (_wantedSettings != _currentValues) {
+      if (_writeStatus.isDirty()) {
         cancelWaitingAndTransitTo(ApplyingSettings);
         return false;
       }
@@ -63,6 +65,8 @@ struct P093_data_struct : public PluginTaskData_base {
     if (_valuesInitialized == false) {
       return false;
     }
+
+    result.reserve(150);
 
     #define map(x, list) findByValue(x, list, sizeof(list) / sizeof(Tuple))
 
@@ -91,11 +95,11 @@ struct P093_data_struct : public PluginTaskData_base {
   bool write(const String& command, const String& value) {
     bool success = false;
 
-    if (command.isEmpty() || _valuesInitialized == false) {
+    if (command.isEmpty()) {
       return success;
     }
 
-    #define lookup(x, list, placeholder) findByMapping(x, list, sizeof(list) / sizeof(Tuple), placeholder);
+    #define lookup(x, list, placeholder) findByMapping(x, list, sizeof(list) / sizeof(Tuple), placeholder)
 
     switch (command[0]) {
       case 't':
@@ -103,33 +107,39 @@ struct P093_data_struct : public PluginTaskData_base {
           float temperature = 0;
           if (string2float(value, temperature) && temperature >= 16 && temperature <= 31) {
             _wantedSettings.temperature = temperature;
+            _writeStatus.set(Temperature);
             success = true;
           }
         }
         break;
       case 'p':
-        if (command == F("power")) {
-          success = lookup(value, _mappings.power, _wantedSettings.power);
+        if (command == F("power") && lookup(value, _mappings.power, _wantedSettings.power)) {
+          _writeStatus.set(Power);
+          success = true;
         }
         break;
       case 'm':
-        if (command == F("mode")) {
-          success = lookup(value, _mappings.mode, _wantedSettings.mode);
+        if (command == F("mode") && lookup(value, _mappings.mode, _wantedSettings.mode)) {
+          _writeStatus.set(Mode);
+          success = true;
         }
         break;
       case 'f':
-        if (command == F("fan")) {
-          success = lookup(value, _mappings.fan, _wantedSettings.fan);
+        if (command == F("fan") && lookup(value, _mappings.fan, _wantedSettings.fan)) {
+          _writeStatus.set(Fan);
+          success = true;
         }
         break;
       case 'v':
-        if (command == F("vane")) {
-          success = lookup(value, _mappings.vane, _wantedSettings.vane);
+        if (command == F("vane") && lookup(value, _mappings.vane, _wantedSettings.vane)) {
+          _writeStatus.set(Vane);
+          success = true;
         }
         break;
       case 'w':
-        if (command == F("widevane")) {
-          success = lookup(value, _mappings.wideVane, _wantedSettings.wideVane);
+        if (command == F("widevane") && lookup(value, _mappings.wideVane, _wantedSettings.wideVane)) {
+          _writeStatus.set(WideVane);
+          success = true;
         }
         break;
     }
@@ -205,6 +215,26 @@ private:
     ApplyingSettings,
     SettingsApplied,
     ReadTimeout
+  };
+
+  static const uint8_t Temperature = 0x01;
+  static const uint8_t Power = 0x02;
+  static const uint8_t Mode = 0x04;
+  static const uint8_t Fan = 0x08;
+  static const uint8_t Vane = 0x10;
+  static const uint8_t WideVane = 0x20;
+
+  struct WriteStatus {
+    WriteStatus() : _flags(0) {}
+
+    void set(uint8_t flag) { _flags |= flag; }
+    void clear() { _flags = 0; }
+
+    boolean isDirty(uint8_t flag) const { return (_flags & flag) != 0; }
+    boolean isDirty() const { return _flags != 0; }
+
+    private:
+      uint8_t _flags;
   };
 
   struct Values {
@@ -319,10 +349,7 @@ private:
         if (_infoModeIndex != 0) {
           setState(UpdatingStatus);
         } else {
-          if (_valuesInitialized == false) {
-            _wantedSettings = _currentValues;
-            _valuesInitialized = true;
-          }
+          _valuesInitialized = true;
           setState(ScheduleNextStatusUpdate);
         }
         break;
@@ -333,17 +360,48 @@ private:
         break;
 
       case ApplyingSettings:
+        // Let's be optimistic and apply local changes immediately so potential
+        // read operation will fetch latest settings even if they are in the
+        // process of being applied. If settings will fail to apply for some reason
+        // then next status update will re-set correct values (values from AC unit).
+        applySettingsLocally();
         applySettings();
+        _writeStatus.clear();
         break;
 
       case SettingsApplied:
         responseReceived();
-        _currentValues = _wantedSettings;
         setState(ScheduleNextStatusUpdate);
         break;
 
       default:
         break;
+    }
+  }
+
+  void applySettingsLocally() {
+    if (_writeStatus.isDirty(Power)) {
+      _currentValues.power = _wantedSettings.power;
+    }
+
+    if (_writeStatus.isDirty(Mode)) {
+      _currentValues.mode = _wantedSettings.mode;
+    }
+
+    if (_writeStatus.isDirty(Temperature)) {
+        _currentValues.temperature = _wantedSettings.temperature;
+    }
+
+    if (_writeStatus.isDirty(Fan)) {
+      _currentValues.fan = _wantedSettings.fan;
+    }
+
+    if (_writeStatus.isDirty(Vane)) {
+      _currentValues.vane = _wantedSettings.vane;
+    }
+
+    if (_writeStatus.isDirty(WideVane)) {
+      _currentValues.wideVane = _wantedSettings.wideVane;
     }
   }
 
@@ -372,17 +430,17 @@ private:
     uint8_t packet[PACKET_LEN] = { 0xfc, 0x41, 0x01, 0x30, 0x10, 0x01 };
     memset(packet + 6, 0, 15);
 
-    if (_wantedSettings.power != _currentValues.power) {
+    if (_writeStatus.isDirty(Power)) {
       packet[8] = _wantedSettings.power;
       packet[6] |= 0x01;
     }
 
-    if (_wantedSettings.mode != _currentValues.mode) {
+    if (_writeStatus.isDirty(Mode)) {
       packet[9] = _wantedSettings.mode;
       packet[6] |= 0x02;
     }
 
-    if (_wantedSettings.temperature != _currentValues.temperature) {
+    if (_writeStatus.isDirty(Temperature)) {
       packet[6] |= 0x04;
       if (_tempMode) {
         packet[19] = (uint8_t)(_wantedSettings.temperature * 2.0f + 128.0f);
@@ -391,17 +449,17 @@ private:
       }
     }
 
-    if (_wantedSettings.fan != _currentValues.fan) {
+    if (_writeStatus.isDirty(Fan)) {
       packet[11] = _wantedSettings.fan;
       packet[6] |= 0x08;
     }
 
-    if (_wantedSettings.vane != _currentValues.vane) {
+    if (_writeStatus.isDirty(Vane)) {
       packet[12] = _wantedSettings.vane;
       packet[6] |= 0x10;
     }
 
-    if (_wantedSettings.wideVane!= _currentValues.wideVane) {
+    if (_writeStatus.isDirty(WideVane)) {
       packet[18] = _wantedSettings.wideVane | (_wideVaneAdj ? 0x80 : 0x00);
       packet[7] |= 0x01;
     }
@@ -475,33 +533,20 @@ private:
 
   boolean processIncomingPacket(const uint8_t* packet, uint8_t length, uint8_t checksum) {
     State state = checkIncomingPacket(packet, length, checksum);
-    switch (state) {
-      case StatusUpdated: {
-        static const uint8_t dataPartOffset = 5;
-        if (length <= dataPartOffset) {
-          return false;
-        }
-
-        Values values = _currentValues;
-        if (parseValues(_readBuffer + dataPartOffset, length - dataPartOffset)) {
-          setState(StatusUpdated);
-          return values != _currentValues;
-        }
-
-        break;
+    if (state == StatusUpdated) {
+      static const uint8_t dataPartOffset = 5;
+      if (length <= dataPartOffset) {
+        return false;
       }
 
-      case SettingsApplied: {
-        Values values = _currentValues;
-        setState(SettingsApplied);
-        return values != _currentValues;;
+      Values values = _currentValues;
+      if (parseValues(_readBuffer + dataPartOffset, length - dataPartOffset)) {
+        setState(StatusUpdated);
+        return values != _currentValues;
       }
 
-      default:
-        if (state != Invalid) {
-          setState(state);
-        }
-        break;
+    } else if (state != Invalid) {
+      setState(state);
     }
 
     return false;
@@ -657,6 +702,7 @@ private:
   boolean _tempMode;
   boolean _wideVaneAdj;
   boolean _valuesInitialized;
+  WriteStatus _writeStatus;
   const Mappings _mappings;
 };
 
