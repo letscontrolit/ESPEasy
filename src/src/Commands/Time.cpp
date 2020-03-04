@@ -59,7 +59,7 @@ String Command_DST(struct EventStruct *event, const char* Line)
 	return return_command_success();
 }
 
-String Command_SetDateTime(struct EventStruct *event, const char* Line)
+String Command_DateTime(struct EventStruct *event, const char* Line)
 {
 	String TmpStr1;
 	if (GetArgv(Line, TmpStr1, 2)) {
