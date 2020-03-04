@@ -90,7 +90,7 @@ bool CPlugin_016(CPlugin::Function function, struct EventStruct *event, String& 
       {
         // Collect the values at the same run, to make sure all are from the same sample
         byte valueCount = getValueCountFromSensorType(event->sensorType);
-        C016_queue_element element(event, valueCount, getUnixTime());
+        C016_queue_element element(event, valueCount, node_time.getUnixTime());
         success = ControllerCache.write((uint8_t*)&element, sizeof(element));
 
 /*

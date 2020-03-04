@@ -4,6 +4,7 @@
 #include "../../ESPEasy_common.h"
 #include "EventValueSource.h"
 #include "../Globals/CPlugins.h"
+#include "../Globals/NPlugins.h"
 #include "../Globals/Plugins.h"
 
 /*********************************************************************************************\
@@ -29,13 +30,10 @@ struct EventStruct
   byte              Source;            // The origin of the values in the event. See EventValueSource.h
   taskIndex_t       TaskIndex;         // index position in TaskSettings array, 0-11
   controllerIndex_t ControllerIndex;   // index position in Settings.Controller, 0-3
-  protocolIndex_t   ProtocolIndex;     // index position in protocol array, depending on which controller plugins are loaded.
-  byte              NotificationIndex; // index position in Settings.Notification, 0-3
-  // Edwin: Not needed, and wasnt used. We can determine the protocol index with getNProtocolIndex(NotificationIndex)
-  // byte NotificationProtocolIndex; // index position in notification array, depending on which controller plugins are loaded.
-  byte BaseVarIndex;
-  byte sensorType;
-  byte OriginTaskIndex;
+  notifierIndex_t   NotificationIndex; // index position in Settings.Notification, 0-3
+  byte              BaseVarIndex;
+  byte              sensorType;
+  byte              OriginTaskIndex;
 };
 
 #endif // ESPEASY_EVENTSTRUCT_H

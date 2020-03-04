@@ -29,7 +29,11 @@
 
 #include "src/DataStructs/ESPEasyLimits.h"
 #include "src/DataStructs/EventQueue.h"
+#include "src/Helpers/msecTimerHandlerStruct.h"
 #include "ESPEasy_plugindefs.h"
+#include "src/Globals/Device.h"
+#include "src/Globals/Settings.h"
+#include "src/Globals/ESPEasy_time.h"
 
 
 

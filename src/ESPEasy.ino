@@ -102,6 +102,8 @@
 #include "src/DataStructs/SystemTimerStruct.h"
 #include "src/DataStructs/TimingStats.h"
 
+#include "src/DataStructs/tcp_cleanup.h"
+
 #include "src/Globals/CPlugins.h"
 #include "src/Globals/Device.h"
 #include "src/Globals/ESPEasyWiFiEvent.h"
@@ -118,16 +120,6 @@
 
 #if FEATURE_ADC_VCC
 ADC_MODE(ADC_VCC);
-#endif
-
-
-// FIXME TD-er: This must be moves to src/Globals/Services
-// But right now, it seems hard to define WevServer in a .h/.cpp file
-// error: 'WebServer' does not name a type
-#ifdef ESP32
-  #include <WiFi.h>
-  #include <WebServer.h>
-  WebServer WebServer(80);
 #endif
 
 // Get functions to give access to global defined variables.
@@ -254,12 +246,16 @@ void setup()
       log = F("INIT : Rebooted from deepsleep #");
       lastBootCause=BOOT_CAUSE_DEEP_SLEEP;
     }
-    else
+    else {
+      node_time.restoreLastKnownUnixTime(RTC.lastSysTime, RTC.deepSleepState);
       log = F("INIT : Warm boot #");
+    }
 
     log += RTC.bootCounter;
     log += F(" Last Task: ");
     log += decodeSchedulerId(lastMixedSchedulerId_beforereboot);
+    log += F(" Last systime: ");
+    log += RTC.lastSysTime;
   }
   //cold boot (RTC memory empty)
   else
@@ -282,6 +278,7 @@ void setup()
   fileSystemCheck();
   progMemMD5check();
   LoadSettings();
+
   Settings.UseRTOSMultitasking = false; // For now, disable it, we experience heap corruption.
   if (RTC.bootFailedCount > 10 && RTC.bootCounter > 10) {
     byte toDisable = RTC.bootFailedCount - 10;
@@ -385,8 +382,8 @@ void setup()
   if (Settings.UDPPort != 0)
     portUDP.begin(Settings.UDPPort);
 
-  if (systemTimePresent())
-    initTime();
+  if (node_time.systemTimePresent())
+    node_time.initTime();
 
 #if FEATURE_ADC_VCC
   if (!wifiConnectInProgress) {
@@ -437,7 +434,7 @@ void RTOS_TaskServers( void * parameter )
 {
  while (true){
   delay(100);
-  WebServer.handleClient();
+  web_server.handleClient();
   checkUDP();
  }
 }
@@ -758,17 +755,14 @@ void run10TimesPerSecond() {
     CPluginCall(CPlugin::Function::CPLUGIN_TEN_PER_SECOND, 0, dummy);
     STOP_TIMER(CPLUGIN_CALL_10PS);
   }
-
-  if (Settings.UseRules)
-  {
-    processNextEvent();
-  }
+  processNextEvent();
+  
   #ifdef USES_C015
   if (WiFiConnected())
       Blynk_Run_c015();
   #endif
   #ifndef USE_RTOS_MULTITASKING
-    WebServer.handleClient();
+    web_server.handleClient();
   #endif
 }
 
@@ -811,8 +805,31 @@ void runOncePerSecond()
     cmd_within_mainloop = 0;
   }
   // clock events
-  if (systemTimePresent())
-    checkTime();
+  if (node_time.reportNewMinute()) {
+    String dummy;
+    PluginCall(PLUGIN_CLOCK_IN, 0, dummy);
+    if (Settings.UseRules)
+    {
+      String event;
+      event.reserve(21);
+      event  = F("Clock#Time=");
+      event += node_time.weekday_str();
+      event += ",";
+
+      if (node_time.hour() < 10) {
+        event += '0';
+      }
+      event += node_time.hour();
+      event += ":";
+
+      if (node_time.minute() < 10) {
+        event += '0';
+      }
+      event += node_time.minute();
+      // TD-er: Do not add to the eventQueue, but execute right now.
+      rulesProcessing(event);
+    }
+  }
 
 //  unsigned long start = micros();
   String dummy;
@@ -950,7 +967,7 @@ void backgroundtasks()
       }
     }
     if (webserverRunning) {
-      WebServer.handleClient();
+      web_server.handleClient();
     }
     if (WiFi.getMode() != WIFI_OFF) {
       checkUDP();

@@ -5,6 +5,8 @@
 #include "src/Globals/CPlugins.h"
 #include "src/Globals/NPlugins.h"
 #include "src/Globals/Plugins.h"
+#include "src/Helpers/ESPEasy_time_calc.h"
+
 #include "ESPEasy_plugindefs.h"
 
 #define TIMER_ID_SHIFT    28
@@ -145,6 +147,25 @@ void handle_schedule() {
 * These timers set a new scheduled timer, based on the old value.
 * This will make their interval as constant as possible.
 \*********************************************************************************************/
+void setNextTimeInterval(unsigned long& timer, const unsigned long step) {
+  timer += step;
+  const long passed = timePassedSince(timer);
+
+  if (passed < 0) {
+    // Event has not yet happened, which is fine.
+    return;
+  }
+
+  if (static_cast<unsigned long>(passed) > step) {
+    // No need to keep running behind, start again.
+    timer = millis() + step;
+    return;
+  }
+
+  // Try to get in sync again.
+  timer = millis() + (step - passed);
+}
+
 void setIntervalTimer(unsigned long id) {
   setIntervalTimer(id, millis());
 }

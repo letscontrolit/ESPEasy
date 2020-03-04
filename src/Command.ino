@@ -4,6 +4,7 @@
 # include "src/Commands/Blynk.h"
 # include "src/Commands/Blynk_c015.h"
 #endif // ifdef USES_BLYNK
+#include "src/Commands/Controller.h"
 #include "src/Commands/Diagnostic.h"
 #include "src/Commands/HTTP.h"
 #include "src/Commands/i2c.h"
@@ -132,9 +133,12 @@ bool executeInternalCommand(const char *cmd, struct EventStruct *event, const ch
       break;
     }
     case 'c': {
-      COMMAND_CASE("clearaccessblock", Command_AccessInfo_Clear,   0); // Network Command
-      COMMAND_CASE(     "clearrtcram", Command_RTC_Clear,          0); // RTC.h
-      COMMAND_CASE(          "config", Command_Task_RemoteConfig, -1); // Tasks.h
+      COMMAND_CASE( "clearaccessblock", Command_AccessInfo_Clear,   0); // Network Command
+      COMMAND_CASE(      "clearrtcram", Command_RTC_Clear,          0); // RTC.h
+      COMMAND_CASE(           "config", Command_Task_RemoteConfig, -1); // Tasks.h
+      COMMAND_CASE("controllerdisable", Command_Controller_Disable, 1); // Controller.h
+      COMMAND_CASE( "controllerenable", Command_Controller_Enable,  1); // Controller.h
+
       break;
     }
     case 'd': {
@@ -146,7 +150,7 @@ bool executeInternalCommand(const char *cmd, struct EventStruct *event, const ch
       break;
     }
     case 'e': {
-      COMMAND_CASE(       "erase", Command_WiFi_Erase,     0); // WiFi.h
+      COMMAND_CASE("erasesdkwifi", Command_WiFi_Erase,     0); // WiFi.h
       COMMAND_CASE(       "event", Command_Rules_Events,  -1); // Rule.h
       COMMAND_CASE("executerules", Command_Rules_Execute, -1); // Rule.h
       break;
@@ -228,6 +232,8 @@ bool executeInternalCommand(const char *cmd, struct EventStruct *event, const ch
     if (cmd_lc[1] == 'a') {
       COMMAND_CASE(         "taskclear", Command_Task_Clear,          1); // Tasks.h
       COMMAND_CASE(      "taskclearall", Command_Task_ClearAll,       0); // Tasks.h
+      COMMAND_CASE(       "taskdisable", Command_Task_Disable,        1); // Tasks.h
+      COMMAND_CASE(        "taskenable", Command_Task_Enable,         1); // Tasks.h
       COMMAND_CASE(           "taskrun", Command_Task_Run,            1); // Tasks.h
       COMMAND_CASE(      "taskvalueset", Command_Task_ValueSet,       3); // Tasks.h
       COMMAND_CASE(   "taskvaluetoggle", Command_Task_ValueToggle,    2); // Tasks.h

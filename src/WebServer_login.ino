@@ -10,13 +10,13 @@ void handle_login() {
   TXBuffer.startStream();
   sendHeadandTail_stdtemplate(_HEAD);
 
-  String webrequest = WebServer.arg(F("password"));
-  TXBuffer += F("<form method='post'>");
+  String webrequest = web_server.arg(F("password"));
+  addHtml(F("<form method='post'>"));
   html_table_class_normal();
-  TXBuffer += F("<TR><TD>Password<TD>");
-  TXBuffer += F("<input class='wide' type='password' name='password' value='");
-  TXBuffer += webrequest;
-  TXBuffer += "'>";
+  addHtml(F("<TR><TD>Password<TD>"));
+  addHtml(F("<input class='wide' type='password' name='password' value='"));
+  addHtml(webrequest);
+  addHtml("'>");
   html_TR_TD();
   html_TD();
   addSubmitButton();
@@ -35,15 +35,16 @@ void handle_login() {
     {
       WebLoggedIn      = true;
       WebLoggedInTimer = 0;
-      TXBuffer         = F("<script>window.location = '.'</script>");
+      addHtml(F("<script>window.location = '.'</script>"));
     }
     else
     {
-      TXBuffer += F("Invalid password!");
+      addHtml(F("Invalid password!"));
 
       if (Settings.UseRules)
       {
         String event = F("Login#Failed");
+
         // TD-er: Do not add to the eventQueue, but execute right now.
         rulesProcessing(event);
       }

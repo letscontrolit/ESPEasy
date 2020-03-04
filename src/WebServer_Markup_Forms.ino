@@ -4,9 +4,13 @@
 // ********************************************************************************
 void addFormSeparator(int clspan)
 {
-  TXBuffer += F("<TR><TD colspan='");
-  TXBuffer += clspan;
-  TXBuffer += F("'><hr>");
+  String html;
+
+  html.reserve(40);
+  html += F("<TR><TD colspan='");
+  html += clspan;
+  html += F("'><hr>");
+  addHtml(html);
 }
 
 // ********************************************************************************
@@ -15,9 +19,12 @@ void addFormSeparator(int clspan)
 void addFormNote(const String& text, const String& id)
 {
   addRowLabel_tr_id("", id);
-  TXBuffer += F("<div class='note'>Note: ");
-  TXBuffer += text;
-  TXBuffer += F("</div>");
+  String html;
+  html.reserve(40 + text.length());
+  html += F("<div class='note'>Note: ");
+  html += text;
+  html += F("</div>");
+  addHtml(html);
 }
 
 // ********************************************************************************
@@ -71,7 +78,6 @@ void addTaskSelectBox(const String& label, const String& id, taskIndex_t choice)
   addTaskSelect(id, choice);
 }
 
-
 // ********************************************************************************
 // Add a Text Box form
 // ********************************************************************************
@@ -88,13 +94,13 @@ void addFormTextBox(const String& label,
 }
 
 void addFormTextArea(const String& label,
-                    const String& id,
-                    const String& value,
-                    int           maxlength,
-                    int           rows, 
-                    int           columns,
-                    bool          readonly,
-                    bool          required)
+                     const String& id,
+                     const String& value,
+                     int           maxlength,
+                     int           rows,
+                     int           columns,
+                     bool          readonly,
+                     bool          required)
 {
   addRowLabel_tr_id(label, id);
   addTextArea(id, value, maxlength, rows, columns, readonly, required);
@@ -107,18 +113,23 @@ void addFormTextArea(const String& label,
 void addFormPasswordBox(const String& label, const String& id, const String& password, int maxlength)
 {
   addRowLabel_tr_id(label, id);
-  TXBuffer += F("<input class='wide' type='password' name='");
-  TXBuffer += id;
-  TXBuffer += F("' maxlength=");
-  TXBuffer += maxlength;
-  TXBuffer += F(" value='");
+
+  String html;
+  html.reserve(80 + id.length());
+
+  html += F("<input class='wide' type='password' name='");
+  html += id;
+  html += F("' maxlength=");
+  html += maxlength;
+  html += F(" value='");
 
   if (password != "") { // no password?
-    TXBuffer += F("*****");
+    html += F("*****");
   }
 
-  // TXBuffer += password;   //password will not published over HTTP
-  TXBuffer += "'>";
+  // html += password;   //password will not published over HTTP
+  html += "'>";
+  addHtml(html);
 }
 
 // ********************************************************************************
@@ -130,14 +141,19 @@ void addFormIPBox(const String& label, const String& id, const byte ip[4])
   bool empty_IP = (ip[0] == 0 && ip[1] == 0 && ip[2] == 0 && ip[3] == 0);
 
   addRowLabel_tr_id(label, id);
-  TXBuffer += F("<input class='wide' type='text' name='");
-  TXBuffer += id;
-  TXBuffer += F("' value='");
+
+  String html;
+  html.reserve(80 + id.length());
+
+  html += F("<input class='wide' type='text' name='");
+  html += id;
+  html += F("' value='");
 
   if (!empty_IP) {
-    TXBuffer += formatIP(ip);
+    html += formatIP(ip);
   }
-  TXBuffer += "'>";
+  html += "'>";
+  addHtml(html);
 }
 
 // ********************************************************************************
@@ -247,7 +263,7 @@ int getFormItemInt(const String& key, int defaultValue) {
 }
 
 bool getCheckWebserverArg_int(const String& key, int& value) {
-  String valueStr = WebServer.arg(key);
+  String valueStr = web_server.arg(key);
 
   if (!isInt(valueStr)) { return false; }
   value = valueStr.toInt();
@@ -255,18 +271,20 @@ bool getCheckWebserverArg_int(const String& key, int& value) {
 }
 
 bool update_whenset_FormItemInt(const String& key, int& value) {
-  int tmpVal; 
+  int tmpVal;
+
   if (getCheckWebserverArg_int(key, tmpVal)) {
-    value = tmpVal; 
+    value = tmpVal;
     return true;
   }
   return false;
 }
 
 bool update_whenset_FormItemInt(const String& key, byte& value) {
-  int tmpVal; 
+  int tmpVal;
+
   if (getCheckWebserverArg_int(key, tmpVal)) {
-    value = tmpVal; 
+    value = tmpVal;
     return true;
   }
   return false;
@@ -276,7 +294,7 @@ bool update_whenset_FormItemInt(const String& key, byte& value) {
 // So if webserver does not have an argument for a checkbox form, it means it should be considered unchecked.
 bool isFormItemChecked(const String& id)
 {
-  return WebServer.arg(id) == F("on");
+  return web_server.arg(id) == F("on");
 }
 
 int getFormItemInt(const String& id)
@@ -286,7 +304,7 @@ int getFormItemInt(const String& id)
 
 float getFormItemFloat(const String& id)
 {
-  String val = WebServer.arg(id);
+  String val = web_server.arg(id);
 
   if (!isFloat(val)) { return 0.0; }
   return val.toFloat();
@@ -294,12 +312,12 @@ float getFormItemFloat(const String& id)
 
 bool isFormItem(const String& id)
 {
-  return WebServer.arg(id).length() != 0;
+  return web_server.arg(id).length() != 0;
 }
 
 void copyFormPassword(const String& id, char *pPassword, int maxlength)
 {
-  String password = WebServer.arg(id);
+  String password = web_server.arg(id);
 
   if (password == F("*****")) { // no change?
     return;

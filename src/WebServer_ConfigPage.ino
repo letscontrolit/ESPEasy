@@ -13,32 +13,32 @@ void handle_config() {
   TXBuffer.startStream();
   sendHeadandTail_stdtemplate(_HEAD);
 
-  if (WebServer.args() != 0)
+  if (web_server.args() != 0)
   {
-    String name = WebServer.arg(F("name"));
+    String name = web_server.arg(F("name"));
     name.trim();
 
-    // String password = WebServer.arg(F("password"));
-    String iprangelow  = WebServer.arg(F("iprangelow"));
-    String iprangehigh = WebServer.arg(F("iprangehigh"));
+    // String password = web_server.arg(F("password"));
+    String iprangelow  = web_server.arg(F("iprangelow"));
+    String iprangehigh = web_server.arg(F("iprangehigh"));
 
     Settings.Delay              = getFormItemInt(F("delay"), Settings.Delay);
     Settings.deepSleep_wakeTime = getFormItemInt(F("awaketime"), Settings.deepSleep_wakeTime);
-    String espip      = WebServer.arg(F("espip"));
-    String espgateway = WebServer.arg(F("espgateway"));
-    String espsubnet  = WebServer.arg(F("espsubnet"));
-    String espdns     = WebServer.arg(F("espdns"));
+    String espip      = web_server.arg(F("espip"));
+    String espgateway = web_server.arg(F("espgateway"));
+    String espsubnet  = web_server.arg(F("espsubnet"));
+    String espdns     = web_server.arg(F("espdns"));
     Settings.Unit = getFormItemInt(F("unit"), Settings.Unit);
 
-    // String apkey = WebServer.arg(F("apkey"));
-    String ssid = WebServer.arg(F("ssid"));
+    // String apkey = web_server.arg(F("apkey"));
+    String ssid = web_server.arg(F("ssid"));
 
     if (strcmp(Settings.Name, name.c_str()) != 0) {
       addLog(LOG_LEVEL_INFO, F("Unit Name changed."));
 
       if (CPluginCall(CPlugin::Function::CPLUGIN_GOT_INVALID, 0)) { // inform controllers that the old name will be invalid from now on.
 #ifdef USES_MQTT
-        MQTTDisconnect();                        // disconnect form MQTT Server if invalid message was sent succesfull.
+        MQTTDisconnect();                                           // disconnect form MQTT Server if invalid message was sent succesfull.
 #endif // USES_MQTT
       }
 #ifdef USES_MQTT

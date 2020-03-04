@@ -98,9 +98,9 @@ bool CPlugin_011(CPlugin::Function function, struct EventStruct *event, String& 
           }
         }
         int httpmethod = getFormItemInt(F("P011httpmethod"), choice);
-        String httpuri = WebServer.arg(F("P011httpuri"));
-        String httpheader = WebServer.arg(F("P011httpheader"));
-        String httpbody = WebServer.arg(F("P011httpbody"));
+        String httpuri = web_server.arg(F("P011httpuri"));
+        String httpheader = web_server.arg(F("P011httpheader"));
+        String httpbody = web_server.arg(F("P011httpbody"));
 
         strlcpy(customConfig.HttpMethod, methods[httpmethod].c_str(), sizeof(customConfig.HttpMethod));
         strlcpy(customConfig.HttpUri, httpuri.c_str(), sizeof(customConfig.HttpUri));

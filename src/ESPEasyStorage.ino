@@ -483,7 +483,7 @@ int getMaxFilePos(SettingsType settingsType) {
   int max_index, offset, max_size;
   int struct_size = 0;
 
-  getSettingsParameters(settingsType, 0,          max_index, offset, max_size, struct_size);
+  getSettingsParameters(settingsType, 0, max_index, offset, max_size, struct_size);
   getSettingsParameters(settingsType, max_index - 1, offset, max_size);
   return offset + max_size - 1;
 }
@@ -660,8 +660,8 @@ String LoadCustomTaskSettings(taskIndex_t TaskIndex, String strings[], uint16_t 
 /********************************************************************************************\
    Save Controller settings to SPIFFS
  \*********************************************************************************************/
-String SaveControllerSettings(int ControllerIndex, ControllerSettingsStruct& controller_settings)
-{
+String SaveControllerSettings(controllerIndex_t ControllerIndex, ControllerSettingsStruct& controller_settings)
+{  
   checkRAM(F("SaveControllerSettings"));
   controller_settings.validate(); // Make sure the saved controller settings have proper values.
   return SaveToFile(ControllerSettings_Type, ControllerIndex,
@@ -671,7 +671,7 @@ String SaveControllerSettings(int ControllerIndex, ControllerSettingsStruct& con
 /********************************************************************************************\
    Load Controller settings to SPIFFS
  \*********************************************************************************************/
-String LoadControllerSettings(int ControllerIndex, ControllerSettingsStruct& controller_settings) {
+String LoadControllerSettings(controllerIndex_t ControllerIndex, ControllerSettingsStruct& controller_settings) {
   checkRAM(F("LoadControllerSettings"));
   String result =
     LoadFromFile(ControllerSettings_Type, ControllerIndex,
@@ -683,7 +683,7 @@ String LoadControllerSettings(int ControllerIndex, ControllerSettingsStruct& con
 /********************************************************************************************\
    Clear Custom Controller settings
  \*********************************************************************************************/
-String ClearCustomControllerSettings(int ControllerIndex)
+String ClearCustomControllerSettings(controllerIndex_t ControllerIndex)
 {
   checkRAM(F("ClearCustomControllerSettings"));
 
@@ -694,7 +694,7 @@ String ClearCustomControllerSettings(int ControllerIndex)
 /********************************************************************************************\
    Save Custom Controller settings to SPIFFS
  \*********************************************************************************************/
-String SaveCustomControllerSettings(int ControllerIndex, byte *memAddress, int datasize)
+String SaveCustomControllerSettings(controllerIndex_t ControllerIndex, byte *memAddress, int datasize)
 {
   checkRAM(F("SaveCustomControllerSettings"));
   return SaveToFile(CustomControllerSettings_Type, ControllerIndex, (char *)FILE_CONFIG, memAddress, datasize);
@@ -703,7 +703,7 @@ String SaveCustomControllerSettings(int ControllerIndex, byte *memAddress, int d
 /********************************************************************************************\
    Load Custom Controller settings to SPIFFS
  \*********************************************************************************************/
-String LoadCustomControllerSettings(int ControllerIndex, byte *memAddress, int datasize)
+String LoadCustomControllerSettings(controllerIndex_t ControllerIndex, byte *memAddress, int datasize)
 {
   checkRAM(F("LoadCustomControllerSettings"));
   return LoadFromFile(CustomControllerSettings_Type, ControllerIndex, (char *)FILE_CONFIG, memAddress, datasize);

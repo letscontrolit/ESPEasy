@@ -59,17 +59,17 @@ void sendData(struct EventStruct *event)
         Settings.ControllerEnabled[event->ControllerIndex] &&
         Settings.Protocol[event->ControllerIndex])
     {
-      event->ProtocolIndex = getProtocolIndex(Settings.Protocol[event->ControllerIndex]);
+      protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(event->ControllerIndex);
 
       if (validUserVar(event)) {
         String dummy;
-        CPluginCall(event->ProtocolIndex, CPlugin::Function::CPLUGIN_PROTOCOL_SEND, event, dummy);
+        CPluginCall(ProtocolIndex, CPlugin::Function::CPLUGIN_PROTOCOL_SEND, event, dummy);
       }
 #ifndef BUILD_NO_DEBUG
       else {
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
           String log = F("Invalid value detected for controller ");
-          log += getCPluginNameFromProtocolIndex(event->ProtocolIndex);
+          log += getCPluginNameFromProtocolIndex(ProtocolIndex);
           addLog(LOG_LEVEL_DEBUG, log);
         }
       }

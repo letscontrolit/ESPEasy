@@ -1,8 +1,12 @@
 #include "src/Globals/CRCValues.h"
 #include "src/Globals/Device.h"
+#include "src/Globals/ESPEasy_time.h"
 #include "src/Globals/ESPEasyWiFiEvent.h"
 #include "src/Globals/MQTT.h"
 #include "src/Globals/Plugins.h"
+
+#include "src/Helpers/StringConverter.h"
+#include "src/Helpers/SystemVariables.h"
 
 /********************************************************************************************\
    Convert a char string to integer
@@ -501,49 +505,9 @@ void htmlStrongEscape(String& html)
   html = escaped;
 }
 
-// ********************************************************************************
-// URNEncode char string to string object
-// ********************************************************************************
-String URLEncode(const char *msg)
-{
-  const char *hex   = "0123456789abcdef";
-  String encodedMsg;
-  encodedMsg.reserve(strlen(msg));
-  while (*msg != '\0') {
-    if ((('a' <= *msg) && (*msg <= 'z'))
-        || (('A' <= *msg) && (*msg <= 'Z'))
-        || (('0' <= *msg) && (*msg <= '9'))
-        || ('-' == *msg) || ('_' == *msg)
-        || ('.' == *msg) || ('~' == *msg)) {
-      encodedMsg += *msg;
-    } else {
-      encodedMsg += '%';
-      encodedMsg += hex[*msg >> 4];
-      encodedMsg += hex[*msg & 15];
-    }
-    msg++;
-  }
-  return encodedMsg;
-}
 
-/********************************************************************************************\
-   replace other system variables like %sysname%, %systime%, %ip%
- \*********************************************************************************************/
-void parseControllerVariables(String& s, struct EventStruct *event, boolean useURLencode) {
-  s = parseTemplate(s, useURLencode);
-  parseEventVariables(s, event, useURLencode);
-}
 
-void repl(const String& key, const String& val, String& s, boolean useURLencode)
-{
-  if (useURLencode) {
-    // URLEncode does take resources, so check first if needed.
-    if (s.indexOf(key) == -1) return;
-    s.replace(key, URLEncode(val.c_str()));
-  } else {
-    s.replace(key, val);
-  }
-}
+
 
 void parseSpecialCharacters(String& s, boolean useURLencode)
 {
@@ -624,134 +588,24 @@ void parseSpecialCharacters(String& s, boolean useURLencode)
   }
 }
 
+
+/********************************************************************************************\
+   replace other system variables like %sysname%, %systime%, %ip%
+ \*********************************************************************************************/
+void parseControllerVariables(String& s, struct EventStruct *event, boolean useURLencode) {
+  s = parseTemplate(s, useURLencode);
+  parseEventVariables(s, event, useURLencode);
+}
+
+
 // Simple macro to create the replacement string only when needed.
 #define SMART_REPL(T, S) \
   if (s.indexOf(T) != -1) { repl((T), (S), s, useURLencode); }
-#define SMART_REPL_T(T, S) \
-  if (s.indexOf(T) != -1) { (S((T), s, useURLencode)); }
 void parseSystemVariables(String& s, boolean useURLencode)
 {
-  START_TIMER
-    parseSpecialCharacters(s, useURLencode);
+  parseSpecialCharacters(s, useURLencode);
 
-  if (s.indexOf('%') == -1) {
-    STOP_TIMER(PARSE_SYSVAR_NOCHANGE);
-    return; // Nothing to replace
-  }
-  #if FEATURE_ADC_VCC
-  repl(F("%vcc%"), String(vcc), s, useURLencode);
-  #endif // if FEATURE_ADC_VCC
-  repl(F("%CR%"),  "\r",        s, useURLencode);
-  repl(F("%LF%"),  "\n",        s, useURLencode);
-  repl(F("%SP%"),  " ",         s, useURLencode);                                                                 // space
-  repl(F("%R%"),   F("\\r"),    s, useURLencode);
-  repl(F("%N%"),   F("\\n"),    s, useURLencode);
-  SMART_REPL(F("%ip4%"),     WiFi.localIP().toString().substring(WiFi.localIP().toString().lastIndexOf('.') + 1)) // 4th IP octet
-  SMART_REPL(F("%ip%"),      WiFi.localIP().toString())
-  SMART_REPL(F("%rssi%"),    String((wifiStatus == ESPEASY_WIFI_DISCONNECTED) ? 0 : WiFi.RSSI()))
-  SMART_REPL(F("%ssid%"),    (wifiStatus == ESPEASY_WIFI_DISCONNECTED) ? F("--") : WiFi.SSID())
-  SMART_REPL(F("%bssid%"),   (wifiStatus == ESPEASY_WIFI_DISCONNECTED) ? F("00:00:00:00:00:00") : WiFi.BSSIDstr())
-  SMART_REPL(F("%wi_ch%"),   String((wifiStatus == ESPEASY_WIFI_DISCONNECTED) ? 0 : WiFi.channel()))
-  SMART_REPL(F("%unit%"),    String(Settings.Unit))
-  SMART_REPL(F("%mac%"),     String(WiFi.macAddress()))
-  #if defined(ESP8266)
-  SMART_REPL(F("%mac_int%"), String(ESP.getChipId())) // Last 24 bit of MAC address as integer, to be used in rules.
-  #endif // if defined(ESP8266)
-
-  if (s.indexOf(F("%sys")) != -1) {
-    SMART_REPL(F("%sysload%"),       String(getCPUload()))
-    SMART_REPL(F("%sysheap%"),       String(ESP.getFreeHeap()));
-    SMART_REPL(F("%sysstack%"),      String(getCurrentFreeStack()));
-    SMART_REPL(F("%systm_hm%"),      getTimeString(':', false))
-    SMART_REPL(F("%systm_hm_am%"),   getTimeString_ampm(':', false))
-    SMART_REPL(F("%systime%"),       getTimeString(':'))
-    SMART_REPL(F("%systime_am%"),    getTimeString_ampm(':'))
-    SMART_REPL(F("%sysbuild_date%"), String(CRCValues.compileDate))
-    SMART_REPL(F("%sysbuild_time%"), String(CRCValues.compileTime))
-    repl(F("%sysname%"), Settings.Name, s, useURLencode);
-
-    // valueString is being used by the macro.
-    char valueString[5] = { 0 };
-    #define SMART_REPL_TIME(T, F, V) \
-  if (s.indexOf(T) != -1) { sprintf_P(valueString, (F), (V)); repl((T), valueString, s, useURLencode); }
-    SMART_REPL_TIME(F("%sysyear%"),  PSTR("%d"), year())
-    SMART_REPL_TIME(F("%sysmonth%"), PSTR("%d"), month())
-    SMART_REPL_TIME(F("%sysday%"),   PSTR("%d"), day())
-    SMART_REPL_TIME(F("%syshour%"),  PSTR("%d"), hour())
-    SMART_REPL_TIME(F("%sysmin%"),   PSTR("%d"), minute())
-    SMART_REPL_TIME(F("%syssec%"),   PSTR("%d"), second())
-    SMART_REPL_TIME(F("%syssec_d%"), PSTR("%d"), ((hour() * 60) + minute()) * 60 + second());
-    SMART_REPL(F("%sysweekday%"),   String(weekday()))
-    SMART_REPL(F("%sysweekday_s%"), weekday_str())
-
-    // With leading zero
-    SMART_REPL_TIME(F("%sysyears%"),   PSTR("%02d"), year() % 100)
-    SMART_REPL_TIME(F("%sysyear_0%"),  PSTR("%04d"), year())
-    SMART_REPL_TIME(F("%syshour_0%"),  PSTR("%02d"), hour())
-    SMART_REPL_TIME(F("%sysday_0%"),   PSTR("%02d"), day())
-    SMART_REPL_TIME(F("%sysmin_0%"),   PSTR("%02d"), minute())
-    SMART_REPL_TIME(F("%syssec_0%"),   PSTR("%02d"), second())
-    SMART_REPL_TIME(F("%sysmonth_0%"), PSTR("%02d"), month())
-
-    #undef SMART_REPL_TIME
-  }
-  SMART_REPL(F("%lcltime%"),     getDateTimeString('-', ':', ' '))
-  SMART_REPL(F("%lcltime_am%"),  getDateTimeString_ampm('-', ':', ' '))
-  SMART_REPL(F("%uptime%"),      String(wdcounter / 2))
-  SMART_REPL(F("%unixtime%"),    String(getUnixTime()))
-  SMART_REPL(F("%unixday%"),     String(getUnixTime() / 86400))
-  SMART_REPL(F("%unixday_sec%"), String(getUnixTime() % 86400))
-  SMART_REPL_T(F("%sunset"),  replSunSetTimeString)
-  SMART_REPL_T(F("%sunrise"), replSunRiseTimeString)
-
-  if (s.indexOf(F("%is")) != -1) {
-#ifdef USES_MQTT
-    SMART_REPL(F("%ismqtt%"),    String(MQTTclient_connected));
-#endif // ifdef USES_MQTT
-    SMART_REPL(F("%iswifi%"),    String(wifiStatus)); // 0=disconnected, 1=connected, 2=got ip, 3=services initialized
-    SMART_REPL(F("%isntp%"),     String(statusNTPInitialized));
-    #ifdef USES_P037
-    SMART_REPL(F("%ismqttimp%"), String(P037_MQTTImport_connected));
-    #endif // USES_P037
-  }
-  const int v_index = s.indexOf("%v");
-
-  if ((v_index != -1) && isDigit(s[v_index + 2])) {
-    for (byte i = 0; i < CUSTOM_VARS_MAX; ++i) {
-      SMART_REPL("%v" + toString(i + 1, 0) + '%', String(customFloatVar[i]))
-    }
-  }
-  STOP_TIMER(PARSE_SYSVAR);
-}
-
-String getReplacementString(const String& format, String& s) {
-  int startpos = s.indexOf(format);
-  int endpos   = s.indexOf('%', startpos + 1);
-  String R     = s.substring(startpos, endpos + 1);
-
-#ifndef BUILD_NO_DEBUG
-
-  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-    String log = F("ReplacementString SunTime: ");
-    log += R;
-    log += F(" offset: ");
-    log += getSecOffset(R);
-    addLog(LOG_LEVEL_DEBUG, log);
-  }
-#endif // ifndef BUILD_NO_DEBUG
-  return R;
-}
-
-void replSunRiseTimeString(const String& format, String& s, boolean useURLencode) {
-  String R = getReplacementString(format, s);
-
-  repl(R, getSunriseTimeString(':', getSecOffset(R)), s, useURLencode);
-}
-
-void replSunSetTimeString(const String& format, String& s, boolean useURLencode) {
-  String R = getReplacementString(format, s);
-
-  repl(R, getSunsetTimeString(':', getSecOffset(R)), s, useURLencode);
+  SystemVariables::parseSystemVariables(s, useURLencode);
 }
 
 void parseEventVariables(String& s, struct EventStruct *event, boolean useURLencode)
@@ -781,7 +635,6 @@ void parseEventVariables(String& s, struct EventStruct *event, boolean useURLenc
   }
 }
 
-#undef SMART_REPL_T
 #undef SMART_REPL
 
 bool getConvertArgument(const String& marker, const String& s, float& argument, int& startIndex, int& endIndex) {

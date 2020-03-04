@@ -39,9 +39,9 @@ boolean handle_custom(String path) {
       if (it != Nodes.end()) {
         TXBuffer.startStream();
         sendHeadandTail(F("TmplDsh"), _HEAD);
-        TXBuffer += F("<meta http-equiv=\"refresh\" content=\"0; URL=http://");
-        TXBuffer += it->second.ip.toString();
-        TXBuffer += F("/dashboard.esp\">");
+        addHtml(F("<meta http-equiv=\"refresh\" content=\"0; URL=http://"));
+        addHtml(it->second.ip.toString());
+        addHtml(F("/dashboard.esp\">"));
         sendHeadandTail(F("TmplDsh"), _TAIL);
         TXBuffer.endStream();
         return true;
@@ -96,19 +96,19 @@ boolean handle_custom(String path) {
     }
 
     html_add_button_prefix();
-    TXBuffer += path;
-    TXBuffer += F("?btnunit=");
-    TXBuffer += prev;
-    TXBuffer += F("'>&lt;</a>");
+    addHtml(path);
+    addHtml(F("?btnunit="));
+    addHtml(String(prev));
+    addHtml(F("'>&lt;</a>"));
     html_add_button_prefix();
-    TXBuffer += path;
-    TXBuffer += F("?btnunit=");
-    TXBuffer += next;
-    TXBuffer += F("'>&gt;</a>");
+    addHtml(path);
+    addHtml(F("?btnunit="));
+    addHtml(String(next));
+    addHtml(F("'>&gt;</a>"));
   }
 
   // handle commands from a custom page
-  String webrequest = WebServer.arg(F("cmd"));
+  String webrequest = web_server.arg(F("cmd"));
 
   if (webrequest.length() > 0) {
     ExecuteCommand_all_config_eventOnly(VALUE_SOURCE_HTTP, webrequest.c_str());
@@ -128,7 +128,7 @@ boolean handle_custom(String path) {
       page += ((char)dataFile.read());
     }
 
-    TXBuffer += parseTemplate(page);
+    addHtml(parseTemplate(page));
     dataFile.close();
   }
   else // if the requestef file does not exist, create a default action in case the page is named "dashboard*"
@@ -136,8 +136,8 @@ boolean handle_custom(String path) {
     if (dashboardPage)
     {
       // if the custom page does not exist, create a basic task value overview page in case of dashboard request...
-      TXBuffer += F(
-        "<meta name='viewport' content='width=width=device-width, initial-scale=1'><STYLE>* {font-family:sans-serif; font-size:16pt;}.button {margin:4px; padding:4px 16px; background-color:#07D; color:#FFF; text-decoration:none; border-radius:4px}</STYLE>");
+      addHtml(F(
+                "<meta name='viewport' content='width=width=device-width, initial-scale=1'><STYLE>* {font-family:sans-serif; font-size:16pt;}.button {margin:4px; padding:4px 16px; background-color:#07D; color:#FFF; text-decoration:none; border-radius:4px}</STYLE>"));
       html_table_class_normal();
 
       for (taskIndex_t x = 0; x < TASKS_MAX; x++)
@@ -145,10 +145,11 @@ boolean handle_custom(String path) {
         if (validPluginID_fullcheck(Settings.TaskDeviceNumber[x]))
         {
           const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(x);
+
           if (validDeviceIndex(DeviceIndex)) {
             LoadTaskSettings(x);
             html_TR_TD();
-            TXBuffer += ExtraTaskSettings.TaskDeviceName;
+            addHtml(ExtraTaskSettings.TaskDeviceName);
 
             for (byte varNr = 0; varNr < VARS_PER_TASK; varNr++)
             {
@@ -159,9 +160,9 @@ boolean handle_custom(String path) {
                   html_TR_TD();
                 }
                 html_TD();
-                TXBuffer += ExtraTaskSettings.TaskDeviceValueNames[varNr];
+                addHtml(ExtraTaskSettings.TaskDeviceValueNames[varNr]);
                 html_TD();
-                TXBuffer += String(UserVar[x * VARS_PER_TASK + varNr], ExtraTaskSettings.TaskDeviceValueDecimals[varNr]);
+                addHtml(String(UserVar[x * VARS_PER_TASK + varNr], ExtraTaskSettings.TaskDeviceValueDecimals[varNr]));
               }
             }
           }

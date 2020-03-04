@@ -17,7 +17,7 @@ void handle_json()
   bool showTaskDetails        = true;
   bool showNodes              = true;
   {
-    String view = WebServer.arg("view");
+    String view = web_server.arg("view");
 
     if (view.length() != 0) {
       if (view == F("sensorupdate")) {
@@ -34,10 +34,10 @@ void handle_json()
 
   if (!showSpecificTask)
   {
-    TXBuffer += '{';
+    addHtml("{");
 
     if (showSystem) {
-      TXBuffer += F("\"System\":{\n");
+      addHtml(F("\"System\":{\n"));
       stream_next_json_object_value(LabelType::BUILD_DESC);
       stream_next_json_object_value(LabelType::GIT_BUILD);
       stream_next_json_object_value(LabelType::SYSTEM_LIBRARIES);
@@ -62,17 +62,17 @@ void handle_json()
       stream_next_json_object_value(LabelType::HEAP_FRAGMENTATION);
       #endif // ifdef CORE_POST_2_5_0
       stream_last_json_object_value(LabelType::FREE_MEM);
-      TXBuffer += ",\n";
+      addHtml(F(",\n"));
     }
 
     if (showWifi) {
-      TXBuffer += F("\"WiFi\":{\n");
+      addHtml(F("\"WiFi\":{\n"));
       #if defined(ESP8266)
       stream_next_json_object_value(LabelType::HOST_NAME);
       #endif // if defined(ESP8266)
       #ifdef FEATURE_MDNS
       stream_next_json_object_value(LabelType::M_DNS);
-      #endif
+      #endif // ifdef FEATURE_MDNS
       stream_next_json_object_value(LabelType::IP_CONFIG);
       stream_next_json_object_value(LabelType::IP_ADDRESS);
       stream_next_json_object_value(LabelType::IP_SUBNET);
@@ -97,7 +97,7 @@ void handle_json()
 #endif // ifdef SUPPORT_ARP
       stream_next_json_object_value(LabelType::CONNECTION_FAIL_THRESH);
       stream_last_json_object_value(LabelType::WIFI_RSSI);
-      TXBuffer += ",\n";
+      addHtml(F(",\n"));
     }
 
     if (showNodes) {
@@ -108,13 +108,13 @@ void handle_json()
         if (it->second.ip[0] != 0)
         {
           if (comma_between) {
-            TXBuffer += ',';
+            addHtml(",");
           } else {
             comma_between = true;
-            TXBuffer     += F("\"nodes\":[\n"); // open json array if >0 nodes
+            addHtml(F("\"nodes\":[\n")); // open json array if >0 nodes
           }
 
-          TXBuffer += '{';
+          addHtml("{");
           stream_next_json_object_value(F("nr"), String(it->first));
           stream_next_json_object_value(F("name"),
                                         (it->first != Settings.Unit) ? it->second.nodeName : Settings.Name);
@@ -136,7 +136,7 @@ void handle_json()
       }   // for loop
 
       if (comma_between) {
-        TXBuffer += F("],\n"); // close array if >0 nodes
+        addHtml(F("],\n")); // close array if >0 nodes
       }
     }
   }
@@ -157,7 +157,10 @@ void handle_json()
     }
   }
 
-  if (!showSpecificTask) { TXBuffer += F("\"Sensors\":[\n"); }
+  if (!showSpecificTask) {
+    addHtml(F("\"Sensors\":[\n"));
+  }
+
   // Keep track of the lowest reported TTL and use that as refresh interval.
   unsigned long lowest_ttl_json = 60;
 
@@ -169,7 +172,7 @@ void handle_json()
     {
       const unsigned long taskInterval = Settings.TaskDeviceTimer[TaskIndex];
       LoadTaskSettings(TaskIndex);
-      TXBuffer += F("{\n");
+      addHtml(F("{\n"));
 
       unsigned long ttl_json = 60; // Default value
 
@@ -177,25 +180,26 @@ void handle_json()
       if (Device[DeviceIndex].ValueCount != 0) {
         if ((taskInterval > 0) && Settings.TaskDeviceEnabled[TaskIndex]) {
           ttl_json = taskInterval;
+
           if (ttl_json < lowest_ttl_json) {
             lowest_ttl_json = ttl_json;
           }
         }
-        TXBuffer += F("\"TaskValues\": [\n");
+        addHtml(F("\"TaskValues\": [\n"));
 
         for (byte x = 0; x < Device[DeviceIndex].ValueCount; x++)
         {
-          TXBuffer += '{';
+          addHtml("{");
           stream_next_json_object_value(F("ValueNumber"), String(x + 1));
           stream_next_json_object_value(F("Name"),        String(ExtraTaskSettings.TaskDeviceValueNames[x]));
           stream_next_json_object_value(F("NrDecimals"),  String(ExtraTaskSettings.TaskDeviceValueDecimals[x]));
           stream_last_json_object_value(F("Value"), formatUserVarNoCheck(TaskIndex, x));
 
           if (x < (Device[DeviceIndex].ValueCount - 1)) {
-            TXBuffer += ",\n";
+            addHtml(F(",\n"));
           }
         }
-        TXBuffer += F("],\n");
+        addHtml(F("],\n"));
       }
 
       if (showSpecificTask) {
@@ -203,20 +207,20 @@ void handle_json()
       }
 
       if (showDataAcquisition) {
-        TXBuffer += F("\"DataAcquisition\": [\n");
+        addHtml(F("\"DataAcquisition\": [\n"));
 
         for (controllerIndex_t x = 0; x < CONTROLLER_MAX; x++)
         {
-          TXBuffer += '{';
+          addHtml("{");
           stream_next_json_object_value(F("Controller"), String(x + 1));
           stream_next_json_object_value(F("IDX"),        String(Settings.TaskDeviceID[x][TaskIndex]));
           stream_last_json_object_value(F("Enabled"), jsonBool(Settings.TaskDeviceSendData[x][TaskIndex]));
 
           if (x < (CONTROLLER_MAX - 1)) {
-            TXBuffer += ",\n";
+            addHtml(F(",\n"));
           }
         }
-        TXBuffer += F("],\n");
+        addHtml(F("],\n"));
       }
 
       if (showTaskDetails) {
@@ -229,14 +233,14 @@ void handle_json()
       stream_last_json_object_value(F("TaskNumber"), String(TaskIndex + 1));
 
       if (TaskIndex != lastActiveTaskIndex) {
-        TXBuffer += ',';
+        addHtml(",");
       }
-      TXBuffer += '\n';
+      addHtml("\n");
     }
   }
 
   if (!showSpecificTask) {
-    TXBuffer += F("],\n");
+    addHtml(F("],\n"));
   }
   stream_last_json_object_value(F("TTL"), String(lowest_ttl_json * 1000));
 
@@ -354,18 +358,26 @@ void handle_buildinfo() {
 \*********************************************************************************************/
 void stream_to_json_value(const String& value) {
   if ((value.length() == 0) || !isFloat(value)) {
-    TXBuffer += '\"';
-    TXBuffer += value;
-    TXBuffer += '\"';
+    String html;
+    html.reserve(value.length() + 2);
+    html += '\"';
+    html += value;
+    html += '\"';
+    addHtml(html);
   } else {
-    TXBuffer += value;
+    addHtml(value);
   }
 }
 
 void stream_to_json_object_value(const String& object, const String& value) {
-  TXBuffer += '\"';
-  TXBuffer += object;
-  TXBuffer += "\":";
+  String html;
+
+  html.reserve(object.length() + 4);
+
+  html += '\"';
+  html += object;
+  html += "\":";
+  addHtml(html);
   stream_to_json_value(value);
 }
 
@@ -375,14 +387,14 @@ String jsonBool(bool value) {
 
 // Add JSON formatted data directly to the TXbuffer, including a trailing comma.
 void stream_next_json_object_value(const String& object, const String& value) {
-  TXBuffer += to_json_object_value(object, value);
-  TXBuffer += ",\n";
+  addHtml(to_json_object_value(object, value));
+  addHtml(F(",\n"));
 }
 
 // Add JSON formatted data directly to the TXbuffer, including a closing '}'
 void stream_last_json_object_value(const String& object, const String& value) {
-  TXBuffer += to_json_object_value(object, value);
-  TXBuffer += "\n}";
+  addHtml(to_json_object_value(object, value));
+  addHtml(F("\n}"));
 }
 
 void stream_next_json_object_value(LabelType::Enum label) {

@@ -226,7 +226,7 @@ void saveControllerParameterForm(ControllerSettingsStruct& ControllerSettings, b
 
       if (!ControllerSettings.UseDNS)
       {
-        String controllerip = WebServer.arg(internalName);
+        String controllerip = web_server.arg(internalName);
         str2ip(controllerip, ControllerSettings.IP);
       }
       break;

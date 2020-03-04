@@ -12,16 +12,16 @@ void handle_pinstates_json() {
   TXBuffer.startJsonStream();
 
   bool first = true;
-  TXBuffer += F("[");
+  addHtml(F("["));
 
   for (std::map<uint32_t, portStatusStruct>::iterator it = globalMapPortStatus.begin(); it != globalMapPortStatus.end(); ++it)
   {
     if (!first) {
-      TXBuffer += ',';
+      addHtml(",");
     } else {
       first = false;
     }
-    TXBuffer += '{';
+    addHtml("{");
 
 
     const uint16_t plugin = getPluginFromKey(it->first);
@@ -36,7 +36,7 @@ void handle_pinstates_json() {
     stream_last_json_object_value(F("init"), String(it->second.init));
   }
 
-  TXBuffer += F("]");
+  addHtml(F("]"));
 
 
   /*
@@ -50,11 +50,11 @@ void handle_pinstates_json() {
         html_TR_TD(); TXBuffer += "P";
         if (pinStates[x].plugin < 100)
         {
-          TXBuffer += '0';
+          addHtml("0");
         }
         if (pinStates[x].plugin < 10)
         {
-          TXBuffer += '0';
+          addHtml("0");
         }
         TXBuffer += pinStates[x].plugin;
         html_TD();
@@ -97,34 +97,35 @@ void handle_pinstates() {
 
   for (std::map<uint32_t, portStatusStruct>::iterator it = globalMapPortStatus.begin(); it != globalMapPortStatus.end(); ++it)
   {
-    html_TR_TD(); TXBuffer += "P";
+    html_TR_TD();
+    addHtml("P");
     const uint16_t plugin = getPluginFromKey(it->first);
     const uint16_t port   = getPortFromKey(it->first);
 
     if (plugin < 100)
     {
-      TXBuffer += '0';
+      addHtml("0");
     }
 
     if (plugin < 10)
     {
-      TXBuffer += '0';
+      addHtml("0");
     }
-    TXBuffer += plugin;
+    addHtml(String(plugin));
     html_TD();
-    TXBuffer += port;
+    addHtml(String(port));
     html_TD();
-    TXBuffer += getPinModeString(it->second.mode);
+    addHtml(getPinModeString(it->second.mode));
     html_TD();
-    TXBuffer += it->second.state;
+    addHtml(String(it->second.state));
     html_TD();
-    TXBuffer += it->second.task;
+    addHtml(String(it->second.task));
     html_TD();
-    TXBuffer += it->second.monitor;
+    addHtml(String(it->second.monitor));
     html_TD();
-    TXBuffer += it->second.command;
+    addHtml(String(it->second.command));
     html_TD();
-    TXBuffer += it->second.init;
+    addHtml(String(it->second.init));
   }
 
 
@@ -139,11 +140,11 @@ void handle_pinstates() {
         html_TR_TD(); TXBuffer += "P";
         if (pinStates[x].plugin < 100)
         {
-          TXBuffer += '0';
+          addHtml("0");
         }
         if (pinStates[x].plugin < 10)
         {
-          TXBuffer += '0';
+          addHtml("0");
         }
         TXBuffer += pinStates[x].plugin;
         html_TD();

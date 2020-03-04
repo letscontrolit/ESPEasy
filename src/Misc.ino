@@ -6,6 +6,7 @@
 #include "src/Globals/CRCValues.h"
 #include "src/Globals/Cache.h"
 #include "src/Globals/Device.h"
+#include "src/Globals/CPlugins.h"
 #include "src/Globals/Plugins.h"
 #include "src/Globals/Plugins_other.h"
 #include "src/Globals/RTC.h"
@@ -237,31 +238,6 @@ bool flashChipVendorPuya() {
 /*********************************************************************************************\
  Memory management
 \*********************************************************************************************/
-
-// clean up tcp connections that are in TIME_WAIT status, to conserve memory
-// In future versions of WiFiClient it should be possible to call abort(), but
-// this feature is not in all upstream versions yet.
-// See https://github.com/esp8266/Arduino/issues/1923
-// and https://github.com/letscontrolit/ESPEasy/issues/253
-#if defined(ESP8266)
-  #include <md5.h>
-#endif
-#if defined(ESP8266)
-
-struct tcp_pcb;
-extern struct tcp_pcb* tcp_tw_pcbs;
-extern "C" void tcp_abort (struct tcp_pcb* pcb);
-
-void tcpCleanup()
-{
-
-     while(tcp_tw_pcbs!=NULL)
-    {
-      tcp_abort(tcp_tw_pcbs);
-    }
-
- }
-#endif
 
 
 // For keeping track of 'cont' stack
@@ -839,6 +815,39 @@ void parseCommandString(struct EventStruct *event, const String& string)
   event->Par4 = parseCommandArgumentInt(string, 4);
   event->Par5 = parseCommandArgumentInt(string, 5);
 }
+
+
+
+/********************************************************************************************\
+  Toggle controller enabled state
+  \*********************************************************************************************/
+bool setControllerEnableStatus(controllerIndex_t controllerIndex, bool enabled)
+{
+  if (!validControllerIndex(controllerIndex)) return false;
+  checkRAM(F("setControllerEnableStatus"));
+  // Only enable controller if it has a protocol configured
+  if (Settings.Protocol[controllerIndex] != 0 || !enabled) {
+    Settings.ControllerEnabled[controllerIndex] = enabled;
+    return true;
+  }
+  return false;
+}
+
+/********************************************************************************************\
+  Toggle task enabled state
+  \*********************************************************************************************/
+bool setTaskEnableStatus(taskIndex_t taskIndex, bool enabled)
+{
+  if (!validTaskIndex(taskIndex)) return false;
+  checkRAM(F("setTaskEnableStatus"));
+  // Only enable task if it has a Plugin configured
+  if (validPluginID(Settings.TaskDeviceNumber[taskIndex]) || !enabled) {
+    Settings.TaskDeviceEnabled[taskIndex] = enabled;
+    return true;
+  }
+  return false;
+}
+
 
 /********************************************************************************************\
   Clear task settings for given task
@@ -1507,9 +1516,10 @@ void prepareShutdown()
   process_serialWriteBuffer();
   flushAndDisconnectAllClients();
   saveUserVarToRTC();
-  saveToRTC();
   SPIFFS.end();
   delay(100); // give the node time to flush all before reboot or sleep
+  node_time.now();
+  saveToRTC();
 }
 
 /********************************************************************************************\
@@ -2451,9 +2461,9 @@ void SendValueLogger(taskIndex_t TaskIndex)
       LoadTaskSettings(TaskIndex);
       for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++)
       {
-        logger += getDateString('-');
+        logger += node_time.getDateString('-');
         logger += ' ';
-        logger += getTimeString(':');
+        logger += node_time.getTimeString(':');
         logger += ',';
         logger += Settings.Unit;
         logger += ',';

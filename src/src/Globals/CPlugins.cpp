@@ -76,9 +76,9 @@ bool CPluginCall(CPlugin::Function Function, struct EventStruct *event, String& 
 
       for (controllerIndex_t x = 0; x < CONTROLLER_MAX; x++) {
         if ((Settings.Protocol[x] != 0) && Settings.ControllerEnabled[x]) {
-          event->ProtocolIndex = getProtocolIndex(Settings.Protocol[x]);
+          protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(x);
           String dummy;
-          CPluginCall(event->ProtocolIndex, Function, event, dummy);
+          CPluginCall(ProtocolIndex, Function, event, dummy);
         }
       }
       return true;
@@ -100,11 +100,8 @@ bool CPluginCall(CPlugin::Function Function, struct EventStruct *event, String& 
 
       if (Settings.ControllerEnabled[controllerindex] && supportedCPluginID(Settings.Protocol[controllerindex]))
       {
-        if (!validProtocolIndex(event->ProtocolIndex))
-        {
-          event->ProtocolIndex = getProtocolIndex(Settings.Protocol[controllerindex]);
-        }
-        CPluginCall(event->ProtocolIndex, Function, event, str);
+        protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(controllerindex);
+        CPluginCall(ProtocolIndex, Function, event, str);
       }
       break;
     }
@@ -113,8 +110,8 @@ bool CPluginCall(CPlugin::Function Function, struct EventStruct *event, String& 
 
       for (controllerIndex_t x = 0; x < CONTROLLER_MAX; x++) {
         if (Settings.ControllerEnabled[x] && supportedCPluginID(Settings.Protocol[x])) {
-          event->ProtocolIndex = getProtocolIndex(Settings.Protocol[x]);
-          CPluginCall(event->ProtocolIndex, Function, event, str);
+          protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(x);
+          CPluginCall(ProtocolIndex, Function, event, str);
         }
       }
       return true;

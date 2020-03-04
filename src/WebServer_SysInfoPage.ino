@@ -17,7 +17,7 @@ void handle_sysinfo_json() {
   json_open();
   json_open(false, F("general"));
   json_number(F("unit"), String(Settings.Unit));
-  json_prop(F("time"),   getDateTimeString('-', ':', ' '));
+  json_prop(F("time"),   node_time.getDateTimeString('-', ':', ' '));
   json_prop(F("uptime"), getExtendedValue(LabelType::UPTIME));
   json_number(F("cpu_load"),   String(getCPUload()));
   json_number(F("loop_count"), String(getLoopCountPerSec()));
@@ -190,8 +190,8 @@ void handle_sysinfo() {
   TXBuffer.startStream();
   sendHeadandTail_stdtemplate();
 
-  TXBuffer += printWebString;
-  TXBuffer += F("<form>");
+  addHtml(printWebString);
+  addHtml(F("<form>"));
 
   // the table header
   html_table_class_normal();
@@ -202,7 +202,7 @@ void handle_sysinfo() {
   // Not using addFormHeader() to get the copy button on the same header line as 2nd column
   html_TR();
   html_table_header(F("System Info"), 225);
-  TXBuffer += "<TH>"; // Needed to get the copy button on the same header line.
+  addHtml(F("<TH>")); // Needed to get the copy button on the same header line.
   addCopyButton(F("copyText"), F("\\n"), F("Copy info to clipboard"));
 
   TXBuffer += githublogo;
@@ -238,54 +238,74 @@ void handle_sysinfo() {
 void handle_sysinfo_basicInfo() {
   addRowLabelValue(LabelType::UNIT_NR);
 
-  if (systemTimePresent())
+  if (node_time.systemTimePresent())
   {
     addRowLabelValue(LabelType::LOCAL_TIME);
   }
 
   addRowLabel(getLabel(LabelType::UPTIME));
   {
-    TXBuffer += getExtendedValue(LabelType::UPTIME);
+    addHtml(getExtendedValue(LabelType::UPTIME));
   }
 
   addRowLabel(getLabel(LabelType::LOAD_PCT));
 
   if (wdcounter > 0)
   {
-    TXBuffer += getCPUload();
-    TXBuffer += F("% (LC=");
-    TXBuffer += getLoopCountPerSec();
-    TXBuffer += ')';
+    String html;
+    html.reserve(32);
+    html += getCPUload();
+    html += F("% (LC=");
+    html += getLoopCountPerSec();
+    html += ')';
+    addHtml(html);
   }
   addRowLabelValue(LabelType::CPU_ECO_MODE);
 
   int freeMem = ESP.getFreeHeap();
   addRowLabel(F("Free Mem"));
-  TXBuffer += freeMem;
-  TXBuffer += " (";
-  TXBuffer += lowestRAM;
-  TXBuffer += F(" - ");
-  TXBuffer += lowestRAMfunction;
-  TXBuffer += ')';
+  {
+    String html;
+    html.reserve(64);
+
+    html += freeMem;
+    html += " (";
+    html += lowestRAM;
+    html += F(" - ");
+    html += lowestRAMfunction;
+    html += ')';
+    addHtml(html);
+  }
   addRowLabel(F("Free Stack"));
-  TXBuffer += getCurrentFreeStack();
-  TXBuffer += " (";
-  TXBuffer += lowestFreeStack;
-  TXBuffer += F(" - ");
-  TXBuffer += lowestFreeStackfunction;
-  TXBuffer += ')';
+  {
+    String html;
+    html.reserve(64);
+    html += getCurrentFreeStack();
+    html += " (";
+    html += lowestFreeStack;
+    html += F(" - ");
+    html += lowestFreeStackfunction;
+    html += ')';
+    addHtml(html);
+  }
 # ifdef CORE_POST_2_5_0
   addRowLabelValue(LabelType::HEAP_MAX_FREE_BLOCK);
   addRowLabelValue(LabelType::HEAP_FRAGMENTATION);
-  TXBuffer += '%';
+  addHtml("%");
 # endif // ifdef CORE_POST_2_5_0
 
 
   addRowLabel(F("Boot"));
-  TXBuffer += getLastBootCauseString();
-  TXBuffer += " (";
-  TXBuffer += RTC.bootCounter;
-  TXBuffer += ')';
+  {
+    String html;
+    html.reserve(64);
+
+    html += getLastBootCauseString();
+    html += " (";
+    html += RTC.bootCounter;
+    html += ')';
+    addHtml(html);
+  }
   addRowLabelValue(LabelType::RESET_REASON);
   addRowLabelValue(LabelType::LAST_TASK_BEFORE_REBOOT);
   addRowLabelValue(LabelType::SW_WD_COUNT);
@@ -304,21 +324,27 @@ void handle_sysinfo_Network() {
     byte PHYmode = 3; // wifi_get_phy_mode();
     # endif // if defined(ESP32)
 
-    switch (PHYmode)
     {
-      case 1:
-        TXBuffer += F("802.11B");
-        break;
-      case 2:
-        TXBuffer += F("802.11G");
-        break;
-      case 3:
-        TXBuffer += F("802.11N");
-        break;
+      String html;
+      html.reserve(64);
+
+      switch (PHYmode)
+      {
+        case 1:
+          html += F("802.11B");
+          break;
+        case 2:
+          html += F("802.11G");
+          break;
+        case 3:
+          html += F("802.11N");
+          break;
+      }
+      html += F(" (RSSI ");
+      html += WiFi.RSSI();
+      html += F(" dB)");
+      addHtml(html);
     }
-    TXBuffer += F(" (RSSI ");
-    TXBuffer += WiFi.RSSI();
-    TXBuffer += F(" dB)");
   }
   addRowLabelValue(LabelType::IP_CONFIG);
   addRowLabelValue(LabelType::IP_ADDRESS_SUBNET);
@@ -333,24 +359,30 @@ void handle_sysinfo_Network() {
     uint8_t *macread = WiFi.macAddress(mac);
     char     macaddress[20];
     formatMAC(macread, macaddress);
-    TXBuffer += macaddress;
+    addHtml(macaddress);
 
     addRowLabel(getLabel(LabelType::AP_MAC));
     macread = WiFi.softAPmacAddress(mac);
     formatMAC(macread, macaddress);
-    TXBuffer += macaddress;
+    addHtml(macaddress);
   }
 
   addRowLabel(getLabel(LabelType::SSID));
-  TXBuffer += WiFi.SSID();
-  TXBuffer += " (";
-  TXBuffer += WiFi.BSSIDstr();
-  TXBuffer += ')';
+  {
+    String html;
+    html.reserve(64);
+
+    html += WiFi.SSID();
+    html += " (";
+    html += WiFi.BSSIDstr();
+    html += ')';
+    addHtml(html);
+  }
 
   addRowLabelValue(LabelType::CHANNEL);
   addRowLabelValue(LabelType::CONNECTED);
   addRowLabel(getLabel(LabelType::LAST_DISCONNECT_REASON));
-  TXBuffer += getValue(LabelType::LAST_DISC_REASON_STR);
+  addHtml(getValue(LabelType::LAST_DISC_REASON_STR));
   addRowLabelValue(LabelType::NUMBER_RECONNECTS);
 }
 
@@ -371,40 +403,48 @@ void handle_sysinfo_Firmware() {
   addTableSeparator(F("Firmware"), 2, 3);
 
   addRowLabelValue_copy(LabelType::BUILD_DESC);
-  TXBuffer += ' ';
-  TXBuffer += F(BUILD_NOTES);
+  addHtml(" ");
+  addHtml(F(BUILD_NOTES));
 
   addRowLabelValue_copy(LabelType::SYSTEM_LIBRARIES);
   addRowLabelValue_copy(LabelType::GIT_BUILD);
   addRowLabelValue_copy(LabelType::PLUGIN_COUNT);
-  TXBuffer += ' ';
-  TXBuffer += getPluginDescriptionString();
+  addHtml(" ");
+  addHtml(getPluginDescriptionString());
 
   bool filenameDummy = String(CRCValues.binaryFilename).startsWith(F("ThisIsTheDummy"));
 
   if (!filenameDummy) {
     addRowLabel(F("Build Md5"));
 
-    for (byte i = 0; i < 16; i++) { TXBuffer += String(CRCValues.compileTimeMD5[i], HEX); }
+    String html;
+    html.reserve(64);
+
+    for (byte i = 0; i < 16; i++) {
+      html += String(CRCValues.compileTimeMD5[i], HEX);
+    }
+    addHtml(html);
 
     addRowLabel(F("Md5 check"));
 
     if (!CRCValues.checkPassed()) {
-      TXBuffer += F("<font color = 'red'>fail !</font>");
+      addHtml(F("<font color = 'red'>fail !</font>"));
     }
-    else { TXBuffer += F("passed."); }
+    else {
+      addHtml(F("passed."));
+    }
   }
   addRowLabel_copy(getLabel(LabelType::BUILD_TIME));
-  TXBuffer += String(CRCValues.compileDate);
-  TXBuffer += ' ';
-  TXBuffer += String(CRCValues.compileTime);
+  addHtml(String(CRCValues.compileDate));
+  addHtml(" ");
+  addHtml(String(CRCValues.compileTime));
 
   addRowLabel_copy(getLabel(LabelType::BINARY_FILENAME));
 
   if (filenameDummy) {
-    TXBuffer += F("<b>Self built!</b>");
+    addHtml(F("<b>Self built!</b>"));
   } else {
-    TXBuffer += String(CRCValues.binaryFilename);
+    addHtml(String(CRCValues.binaryFilename));
   }
 }
 
@@ -425,37 +465,47 @@ void handle_sysinfo_ESP_Board() {
 
   addRowLabel(getLabel(LabelType::ESP_CHIP_ID));
   # if defined(ESP8266)
-  TXBuffer += ESP.getChipId();
-  TXBuffer += F(" (0x");
-  String espChipId(ESP.getChipId(), HEX);
-  espChipId.toUpperCase();
-  TXBuffer += espChipId;
-  TXBuffer += ')';
+  {
+    String html;
+    html.reserve(32);
+    html += ESP.getChipId();
+    html += F(" (0x");
+    String espChipId(ESP.getChipId(), HEX);
+    espChipId.toUpperCase();
+    html += espChipId;
+    html += ')';
+    addHtml(html);
+  }
 
   addRowLabel(getLabel(LabelType::ESP_CHIP_FREQ));
-  TXBuffer += ESP.getCpuFreqMHz();
-  TXBuffer += F(" MHz");
+  addHtml(String(ESP.getCpuFreqMHz()));
+  addHtml(F(" MHz"));
   # endif // if defined(ESP8266)
   # if defined(ESP32)
-  TXBuffer += F(" (0x");
-  uint64_t chipid  = ESP.getEfuseMac(); // The chip ID is essentially its MAC address(length: 6 bytes).
-  uint32_t ChipId1 = (uint16_t)(chipid >> 32);
-  String   espChipIdS(ChipId1, HEX);
-  espChipIdS.toUpperCase();
-  TXBuffer += espChipIdS;
-  ChipId1   = (uint32_t)chipid;
-  String espChipIdS1(ChipId1, HEX);
-  espChipIdS1.toUpperCase();
-  TXBuffer += espChipIdS1;
-  TXBuffer += ')';
+  {
+    String html;
+    html.reserve(64);
+    html += F(" (0x");
+    uint64_t chipid  = ESP.getEfuseMac(); // The chip ID is essentially its MAC address(length: 6 bytes).
+    uint32_t ChipId1 = (uint16_t)(chipid >> 32);
+    String   espChipIdS(ChipId1, HEX);
+    espChipIdS.toUpperCase();
+    html   += espChipIdS;
+    ChipId1 = (uint32_t)chipid;
+    String espChipIdS1(ChipId1, HEX);
+    espChipIdS1.toUpperCase();
+    html += espChipIdS1;
+    html += ')';
+    addHtml(html);
+  }
 
   addRowLabel(getLabel(LabelType::ESP_CHIP_FREQ));
-  TXBuffer += ESP.getCpuFreqMHz();
-  TXBuffer += F(" MHz");
+  addHtml(String(ESP.getCpuFreqMHz()));
+  addHtml(F(" MHz"));
   # endif // if defined(ESP32)
   # ifdef ARDUINO_BOARD
   addRowLabel(getLabel(LabelType::ESP_BOARD_NAME));
-  TXBuffer += ARDUINO_BOARD;
+  addHtml(ARDUINO_BOARD);
   # endif // ifdef ARDUINO_BOARD
 }
 
@@ -468,111 +518,137 @@ void handle_sysinfo_Storage() {
 
   // Set to HEX may be something like 0x1640E0.
   // Where manufacturer is 0xE0 and device is 0x4016.
-  TXBuffer += F("Vendor: ");
-  TXBuffer += formatToHex(flashChipId & 0xFF);
+  addHtml(F("Vendor: "));
+  addHtml(formatToHex(flashChipId & 0xFF));
 
   if (flashChipVendorPuya())
   {
-    TXBuffer += F(" (PUYA");
+    addHtml(F(" (PUYA"));
 
     if (puyaSupport()) {
-      TXBuffer += F(", supported");
+      addHtml(F(", supported"));
     } else {
-      TXBuffer += F(HTML_SYMBOL_WARNING);
+      addHtml(F(HTML_SYMBOL_WARNING));
     }
-    TXBuffer += ')';
+    addHtml(")");
   }
-  TXBuffer += F(" Device: ");
+  addHtml(F(" Device: "));
   uint32_t flashDevice = (flashChipId & 0xFF00) | ((flashChipId >> 16) & 0xFF);
-  TXBuffer += formatToHex(flashDevice);
+  addHtml(formatToHex(flashDevice));
   # endif // if defined(ESP8266)
   uint32_t realSize = getFlashRealSizeInBytes();
   uint32_t ideSize  = ESP.getFlashChipSize();
 
   addRowLabel(getLabel(LabelType::FLASH_CHIP_REAL_SIZE));
-  TXBuffer += realSize / 1024;
-  TXBuffer += F(" kB");
+  addHtml(String(realSize / 1024));
+  addHtml(F(" kB"));
 
   addRowLabel(getLabel(LabelType::FLASH_IDE_SIZE));
-  TXBuffer += ideSize / 1024;
-  TXBuffer += F(" kB");
+  addHtml(String(ideSize / 1024));
+  addHtml(F(" kB"));
 
   // Please check what is supported for the ESP32
   # if defined(ESP8266)
   addRowLabel(getLabel(LabelType::FLASH_IDE_SPEED));
-  TXBuffer += ESP.getFlashChipSpeed() / 1000000;
-  TXBuffer += F(" MHz");
+  addHtml(String(ESP.getFlashChipSpeed() / 1000000));
+  addHtml(F(" MHz"));
 
   FlashMode_t ideMode = ESP.getFlashChipMode();
   addRowLabel(getLabel(LabelType::FLASH_IDE_MODE));
+  {
+    String html;
 
-  switch (ideMode) {
-    case FM_QIO:   TXBuffer += F("QIO");  break;
-    case FM_QOUT:  TXBuffer += F("QOUT"); break;
-    case FM_DIO:   TXBuffer += F("DIO");  break;
-    case FM_DOUT:  TXBuffer += F("DOUT"); break;
-    default:
-      TXBuffer += getUnknownString(); break;
+    switch (ideMode) {
+      case FM_QIO:   html += F("QIO");  break;
+      case FM_QOUT:  html += F("QOUT"); break;
+      case FM_DIO:   html += F("DIO");  break;
+      case FM_DOUT:  html += F("DOUT"); break;
+      default:
+        html += getUnknownString(); break;
+    }
+    addHtml(html);
   }
   # endif // if defined(ESP8266)
 
   addRowLabel(getLabel(LabelType::FLASH_WRITE_COUNT));
-  TXBuffer += RTC.flashDayCounter;
-  TXBuffer += F(" daily / ");
-  TXBuffer += RTC.flashCounter;
-  TXBuffer += F(" boot");
+  {
+    String html;
+    html.reserve(32);
+    html += RTC.flashDayCounter;
+    html += F(" daily / ");
+    html += RTC.flashCounter;
+    html += F(" boot");
+    addHtml(html);
+  }
 
   # if defined(ESP8266)
   {
     // FIXME TD-er: Must also add this for ESP32.
     addRowLabel(getLabel(LabelType::SKETCH_SIZE));
-    TXBuffer += ESP.getSketchSize() / 1024;
-    TXBuffer += F(" kB (");
-    TXBuffer += ESP.getFreeSketchSpace() / 1024;
-    TXBuffer += F(" kB free)");
+    {
+      String html;
+      html.reserve(32);
+      html += ESP.getSketchSize() / 1024;
+      html += F(" kB (");
+      html += ESP.getFreeSketchSpace() / 1024;
+      html += F(" kB free)");
+      addHtml(html);
+    }
 
     uint32_t maxSketchSize;
     bool     use2step;
     bool     otaEnabled = OTA_possible(maxSketchSize, use2step);
 
     addRowLabel(getLabel(LabelType::MAX_OTA_SKETCH_SIZE));
-    TXBuffer += maxSketchSize / 1024;
-    TXBuffer += F(" kB (");
-    TXBuffer += maxSketchSize;
-    TXBuffer += F(" bytes)");
+    {
+      String html;
+      html.reserve(32);
+
+      html += maxSketchSize / 1024;
+      html += F(" kB (");
+      html += maxSketchSize;
+      html += F(" bytes)");
+      addHtml(html);
+    }
 
     addRowLabel(getLabel(LabelType::OTA_POSSIBLE));
-    TXBuffer += boolToString(otaEnabled);
+    addHtml(boolToString(otaEnabled));
 
     addRowLabel(getLabel(LabelType::OTA_2STEP));
-    TXBuffer += boolToString(use2step);
+    addHtml(boolToString(use2step));
   }
   # endif // if defined(ESP8266)
 
   addRowLabel(getLabel(LabelType::SPIFFS_SIZE));
-  TXBuffer += SpiffsTotalBytes() / 1024;
-  TXBuffer += F(" kB (");
-  TXBuffer += SpiffsFreeSpace() / 1024;
-  TXBuffer += F(" kB free)");
+  {
+    String html;
+    html.reserve(32);
+
+    html += SpiffsTotalBytes() / 1024;
+    html += F(" kB (");
+    html += SpiffsFreeSpace() / 1024;
+    html += F(" kB free)");
+    addHtml(html);
+  }
 
   addRowLabel(F("Page size"));
-  TXBuffer += String(SpiffsPagesize());
+  addHtml(String(SpiffsPagesize()));
 
   addRowLabel(F("Block size"));
-  TXBuffer += String(SpiffsBlocksize());
+  addHtml(String(SpiffsBlocksize()));
 
   addRowLabel(F("Number of blocks"));
-  TXBuffer += String(SpiffsTotalBytes() / SpiffsBlocksize());
+  addHtml(String(SpiffsTotalBytes() / SpiffsBlocksize()));
 
   {
   # if defined(ESP8266)
     fs::FSInfo fs_info;
     SPIFFS.info(fs_info);
     addRowLabel(F("Maximum open files"));
-    TXBuffer += String(fs_info.maxOpenFiles);
+    addHtml(String(fs_info.maxOpenFiles));
 
     addRowLabel(F("Maximum path length"));
-    TXBuffer += String(fs_info.maxPathLength);
+    addHtml(String(fs_info.maxPathLength));
 
   # endif // if defined(ESP8266)
   }
@@ -582,17 +658,17 @@ void handle_sysinfo_Storage() {
   if (showSettingsFileLayout) {
     addTableSeparator(F("Settings Files"), 2, 3);
     html_TR_TD();
-    TXBuffer += F("Layout Settings File");
+    addHtml(F("Layout Settings File"));
     html_TD();
     getConfig_dat_file_layout();
     html_TR_TD();
     html_TD();
-    TXBuffer += F("(offset / size per item / index)");
+    addHtml(F("(offset / size per item / index)"));
 
     for (int st = 0; st < SettingsType_MAX; ++st) {
       SettingsType settingsType = static_cast<SettingsType>(st);
       html_TR_TD();
-      TXBuffer += getSettingsTypeString(settingsType);
+      addHtml(getSettingsTypeString(settingsType));
       html_TD();
       getStorageTableSVG(settingsType);
     }
