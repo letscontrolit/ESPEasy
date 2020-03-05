@@ -433,11 +433,13 @@ bool ExecuteCommand(taskIndex_t taskIndex, byte source, const char *Line, bool t
   if (tryInternal) {
     String status;
     bool handled = executeInternalCommand(cmd.c_str(), &TempEvent, action.c_str(), status);
-    if (status.length() > 0) {
-      delay(0);
-      SendStatus(source, status);
-      delay(0);
+    delay(0);
+    if (status.length() > 0 && source != VALUE_SOURCE_HTTP) {
+      // giig1967g: if source == HTTP do not send 'status' as the output is handled in WebServer_ControlPage.ino file
+        SendStatus(source, status);
     }
+    delay(0);
+
     if (handled) {
       return true;
     }

@@ -480,9 +480,6 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
           // CASE 2: not using SafeButton, or already waited 1 more 100ms cycle, so proceed.
           else if ((state != currentStatus.state) || currentStatus.forceEvent)
           {
-            // Reset forceEvent
-            currentStatus.forceEvent = 0;
-
             // Reset SafeButton counter
             PCONFIG_LONG(3) = 0;
 
@@ -539,7 +536,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
               }
 
               // send if output needs to be changed
-              if (currentOutputState != new_outputState)
+              if (currentOutputState != new_outputState || currentStatus.forceEvent)
               {
                 byte output_value;
                 currentStatus.output = new_outputState;
@@ -583,6 +580,9 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
               }
               PCONFIG_LONG(0) = millis();
             }
+            // Reset forceEvent
+            currentStatus.forceEvent = 0;
+
             savePortStatus(key, currentStatus);
           }
 

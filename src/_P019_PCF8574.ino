@@ -333,18 +333,18 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
       portStatusStruct currentStatus;
       const uint32_t   key = createKey(PLUGIN_ID_019, CONFIG_PORT);
 
-      // WARNING operator [],creates an entry in map if key doesn't exist:
-      currentStatus = globalMapPortStatus[key];
-
-      // Bug fixed: avoid 10xSEC in case of a non-fully configured device (no port defined yet)
-      if ((state != -1) && (CONFIG_PORT >= 0)) {
-        // CASE 1: using SafeButton, so wait 1 more 100ms cycle to acknowledge the status change
-        // QUESTION: MAYBE IT'S BETTER TO WAIT 2 CYCLES??
-        if (round(PCONFIG_FLOAT(3)) && (state != currentStatus.state) && (PCONFIG_LONG(3) == 0))
-        {
-          addLog(LOG_LEVEL_DEBUG, F("PCF :SafeButton 1st click."))
-          PCONFIG_LONG(3) = 1;
-        }
+          //CASE 1: using SafeButton, so wait 1 more 100ms cycle to acknowledge the status change
+          //QUESTION: MAYBE IT'S BETTER TO WAIT 2 CYCLES??
+          if (round(PCONFIG_FLOAT(3)) && state != currentStatus.state && PCONFIG_LONG(3)==0)
+          {
+            addLog(LOG_LEVEL_DEBUG,F("PCF :SafeButton 1st click."))
+            PCONFIG_LONG(3) = 1;
+          }
+          //CASE 2: not using SafeButton, or already waited 1 more 100ms cycle, so proceed.
+          else if (state != currentStatus.state || currentStatus.forceEvent)
+          {
+            // Reset SafeButton counter
+            PCONFIG_LONG(3) = 0;
 
         // CASE 2: not using SafeButton, or already waited 1 more 100ms cycle, so proceed.
         else if ((state != currentStatus.state) || currentStatus.forceEvent)
@@ -424,10 +424,12 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
             event->sensorType = Sensor_VType::SENSOR_TYPE_SWITCH;
             sendData(event);
 
-            // reset Userdata so it displays the correct state value in the web page
-            UserVar[event->BaseVarIndex] = sendState ? 1 : 0;
+              PCONFIG_LONG(0) = millis();
+            }
+            //Reset forceEvent
+            currentStatus.forceEvent = 0;
 
-            PCONFIG_LONG(0) = millis();
+            savePortStatus(key,currentStatus);
           }
           savePortStatus(key, currentStatus);
         }

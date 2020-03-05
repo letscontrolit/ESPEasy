@@ -23,36 +23,47 @@ void handle_control() {
 #endif // ifndef BUILD_NO_DEBUG
 
   bool handledCmd = false;
-
+  bool sendOK = false;
   // in case of event, store to buffer and return...
   String command = parseString(webrequest, 1);
 
   if ((command == F("event")) || (command == F("asyncevent")))
   {
     eventQueue.add(parseStringToEnd(webrequest, 2));
-    handledCmd = true;
-  }
-  else {
-//  else if (command.equalsIgnoreCase(F("taskrun")) ||
-//           command.equalsIgnoreCase(F("taskvalueset")) ||
-//           command.equalsIgnoreCase(F("taskvaluetoggle")) ||
-//           command.equalsIgnoreCase(F("let")) ||
-//           command.equalsIgnoreCase(F("logPortStatus")) ||
-//           command.equalsIgnoreCase(F("jsonportstatus")) ||
-//           command.equalsIgnoreCase(F("rules"))) {
-    ExecuteCommand_internal(EventValueSource::Enum::VALUE_SOURCE_HTTP, webrequest.c_str());
-    handledCmd = true;
+    handledCmd  = true;
+    sendOK = true;
+//  }
+//  else {
+  } else if (command.equalsIgnoreCase(F("taskrun")) ||
+           command.equalsIgnoreCase(F("taskvalueset")) ||
+           command.equalsIgnoreCase(F("taskvaluetoggle")) ||
+           command.equalsIgnoreCase(F("let")) ||
+           command.equalsIgnoreCase(F("logPortStatus")) ||
+           command.equalsIgnoreCase(F("jsonportstatus")) ||
+           command.equalsIgnoreCase(F("rules"))) {
+    handledCmd = ExecuteCommand_internal(EventValueSource::Enum::VALUE_SOURCE_HTTP, webrequest.c_str());
+    sendOK = true;
+    //handledCmd = true;
   } else {
-    ExecuteCommand_internal(VALUE_SOURCE_HTTP, webrequest.c_str());
-    handledCmd = false;
+    printToWeb     = true;
+    printWebString = "";
+    TXBuffer.startJsonStream();
+    handledCmd = ExecuteCommand_internal(VALUE_SOURCE_HTTP, webrequest.c_str());
+    TXBuffer += printWebString;
+    TXBuffer.endStream();
+    printToWeb     = false;
+    sendOK = false;
   }
 
   if (handledCmd) {
-    TXBuffer.startStream("*");
-    addHtml(F("OK"));
-    TXBuffer.endStream();
+    if (sendOK) {
+      TXBuffer.startStream("*");
+      TXBuffer += "OK";
+      TXBuffer.endStream();
+    }
     return;
   }
+
   printToWeb     = true;
   printWebString = "";
   bool unknownCmd = !ExecuteCommand_plugin_config(EventValueSource::Enum::VALUE_SOURCE_HTTP, webrequest.c_str());
