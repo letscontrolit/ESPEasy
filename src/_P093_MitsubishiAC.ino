@@ -582,6 +582,7 @@ private:
 
           return true;
         }
+        break;
 
       case 0x03:
         if (length > 6) {
@@ -592,6 +593,7 @@ private:
           }
           return true;
         }
+        break;
     }
 
     addLog(LOG_LEVEL_DEBUG, F("M-AC: PV(1)"));
