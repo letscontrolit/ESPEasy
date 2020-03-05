@@ -4,6 +4,8 @@
 //#######################################################################################################
 // 12-10-2015 Charles-Henri Hallard, see my projects and blog at https://hallard.me
 
+#include "_Plugin_Helper.h"
+
 #define PLUGIN_014
 #define PLUGIN_ID_014        14
 #define PLUGIN_NAME_014       "Environment - SI7021/HTU21D"

@@ -9,6 +9,7 @@
 // this code is based on version 1.1.2 of the above library
 //
 
+#include "_Plugin_Helper.h"
 
 #define PLUGIN_047
 #define PLUGIN_ID_047        47
@@ -96,14 +97,14 @@ boolean Plugin_047(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        String plugin1 = WebServer.arg(F("p047_i2cSoilMoisture_i2cAddress"));
+        String plugin1 = web_server.arg(F("p047_i2cSoilMoisture_i2cAddress"));
         PCONFIG(0) = (int) strtol(plugin1.c_str(), 0, 16);
 
         PCONFIG(1) = isFormItemChecked(F("p047_sleep"));
 
         PCONFIG(2) = isFormItemChecked(F("p047_version"));
 
-        String plugin4 = WebServer.arg(F("p047_i2cSoilMoisture_changeAddr"));
+        String plugin4 = web_server.arg(F("p047_i2cSoilMoisture_changeAddr"));
         PCONFIG(3) = (int) strtol(plugin4.c_str(), 0, 16);
 
         PCONFIG(4) = isFormItemChecked(F("p047_changeAddr"));

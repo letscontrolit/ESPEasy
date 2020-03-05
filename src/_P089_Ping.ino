@@ -19,6 +19,8 @@ extern "C"
 #include <lwip/netif.h>
 }
 
+#include "_Plugin_Helper.h"
+
 #define PLUGIN_089
 #define PLUGIN_ID_089             89
 #define PLUGIN_NAME_089           "Communication - Ping"
@@ -172,7 +174,7 @@ boolean Plugin_089(byte function, struct EventStruct *event, String& string)
     char hostname[PLUGIN_089_HOSTNAME_SIZE];
     // Reset "Fails" if settings updated
     UserVar[event->BaseVarIndex] = 0;
-    strncpy(hostname,  WebServer.arg(F("p089_ping_host")).c_str() , sizeof(hostname));
+    strncpy(hostname,  web_server.arg(F("p089_ping_host")).c_str() , sizeof(hostname));
     SaveCustomTaskSettings(event->TaskIndex, (byte*)&hostname, PLUGIN_089_HOSTNAME_SIZE);
     success = true;
     break;

@@ -11,6 +11,7 @@
 //
 
 #include "Adafruit_TCS34725.h"
+#include "_Plugin_Helper.h"
 
 #define PLUGIN_050
 #define PLUGIN_ID_050        50
@@ -99,9 +100,9 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        String plugin1 = WebServer.arg(F("p050_integrationTime"));
+        String plugin1 = web_server.arg(F("p050_integrationTime"));
         PCONFIG(0) = plugin1.toInt();
-        String plugin2 = WebServer.arg(F("p050_gain"));
+        String plugin2 = web_server.arg(F("p050_gain"));
         PCONFIG(1) = plugin2.toInt();
 
         success = true;

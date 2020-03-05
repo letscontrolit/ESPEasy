@@ -128,7 +128,7 @@ void jsonStatistics(bool clearStats) {
 
       }
       // Stream function timing stats
-      json_open(false, getCPluginCFunctionName(x.first % 256));
+      json_open(false, getCPluginCFunctionName(static_cast<CPlugin::Function>(x.first % 256)));
       {
         stream_json_timing_stats(x.second, timeSinceLastReset);
       }

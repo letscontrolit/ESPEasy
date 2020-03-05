@@ -59,7 +59,7 @@
 #define PLUGIN_VALUENAME1_061 "ScanCode"
 
 // #include <*.h>   // no include needed
-
+#include "_Plugin_Helper.h"
 
 boolean Plugin_061(byte function, struct EventStruct *event, String& string)
 {

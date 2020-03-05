@@ -1,4 +1,7 @@
 #ifdef USES_C015
+
+#include "src/Globals/CPlugins.h"
+
 //#######################################################################################################
 //########################### Controller Plugin 015: Blynk  #############################################
 //#######################################################################################################
@@ -56,13 +59,13 @@ void Blynk_Run_c015(){
 }
 
 
-bool CPlugin_015(byte function, struct EventStruct *event, String& string)
+bool CPlugin_015(CPlugin::Function function, struct EventStruct *event, String& string)
 {
   bool success = false;
 
   switch (function)
   {
-    case CPLUGIN_PROTOCOL_ADD:
+    case CPlugin::Function::CPLUGIN_PROTOCOL_ADD:
       {
         Protocol[++protocolCount].Number = CPLUGIN_ID_015;
         Protocol[protocolCount].usesMQTT = false;
@@ -73,13 +76,13 @@ bool CPlugin_015(byte function, struct EventStruct *event, String& string)
         break;
       }
 
-    case CPLUGIN_GET_DEVICENAME:
+    case CPlugin::Function::CPLUGIN_GET_DEVICENAME:
       {
         string = F(CPLUGIN_NAME_015);
         break;
       }
 
-    case CPLUGIN_INIT:
+    case CPlugin::Function::CPLUGIN_INIT:
       {
        // when connected to another server and user has changed settings
        if (Blynk.connected()){
@@ -90,7 +93,7 @@ bool CPlugin_015(byte function, struct EventStruct *event, String& string)
       }
 
     #ifdef CPLUGIN_015_SSL
-      case CPLUGIN_WEBFORM_LOAD:
+      case CPlugin::Function::CPLUGIN_WEBFORM_LOAD:
         {
           char thumbprint[60];
           LoadCustomControllerSettings(event->ControllerIndex,(byte*)&thumbprint, sizeof(thumbprint));
@@ -102,18 +105,20 @@ bool CPlugin_015(byte function, struct EventStruct *event, String& string)
         }
     #endif
 
-    case CPLUGIN_WEBFORM_SAVE:
+    case CPlugin::Function::CPLUGIN_WEBFORM_SAVE:
       {
         success = true;
         if (isFormItemChecked(F("controllerenabled"))){
-          for (byte i = 0; i < CONTROLLER_MAX; ++i) {
-            byte ProtocolIndex = getProtocolIndex(Settings.Protocol[i]);
-            if (i != event->ControllerIndex && Protocol[ProtocolIndex].Number == 15 && Settings.ControllerEnabled[i]) {
-              success = false;
-              // FIXME:  this will only show a warning message and not uncheck "enabled" in webform.
-              // Webserver object is not checking result of "success" var :(
-              addHtmlError(F("Only one enabled instance of blynk controller is supported"));
-              break;
+          for (controllerIndex_t i = 0; i < CONTROLLER_MAX; ++i) {
+            protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(i);
+            if (validProtocolIndex(ProtocolIndex)) {
+              if (i != event->ControllerIndex && Protocol[ProtocolIndex].Number == 15 && Settings.ControllerEnabled[i]) {
+                success = false;
+                // FIXME:  this will only show a warning message and not uncheck "enabled" in webform.
+                // Webserver object is not checking result of "success" var :(
+                addHtmlError(F("Only one enabled instance of blynk controller is supported"));
+                break;
+              }
             }
           }
           // force to connect without delay when webform saved
@@ -122,7 +127,7 @@ bool CPlugin_015(byte function, struct EventStruct *event, String& string)
           #ifdef CPLUGIN_015_SSL
             char thumbprint[60];
             String error = F("Specify server thumbprint with exactly 59 symbols string like " CPLUGIN_015_DEFAULT_THUMBPRINT);
-            if (!safe_strncpy(thumbprint, WebServer.arg("c015_thumbprint"), 60) || strlen(thumbprint) != 59) {
+            if (!safe_strncpy(thumbprint, web_server.arg("c015_thumbprint"), 60) || strlen(thumbprint) != 59) {
               addHtmlError(error);
             }
             SaveCustomControllerSettings(event->ControllerIndex,(byte*)&thumbprint, sizeof(thumbprint));
@@ -131,7 +136,7 @@ bool CPlugin_015(byte function, struct EventStruct *event, String& string)
         break;
       }
 
-     case CPLUGIN_PROTOCOL_SEND:
+     case CPlugin::Function::CPLUGIN_PROTOCOL_SEND:
       {
         if (!Settings.ControllerEnabled[event->ControllerIndex])
           break;
@@ -183,6 +188,10 @@ bool CPlugin_015(byte function, struct EventStruct *event, String& string)
         scheduleNextDelayQueue(TIMER_C015_DELAY_QUEUE, C015_DelayHandler.getNextScheduleTime());
         break;
       }
+
+    default:
+      break;
+
   }
   return success;
 }
@@ -191,7 +200,11 @@ bool CPlugin_015(byte function, struct EventStruct *event, String& string)
 // Process Queued Blynk request, with data set to NULL
 //********************************************************************************
 // controller_plugin_number = 015 because of C015
+
+// Uncrustify may change this into multi line, which will result in failed builds
+// *INDENT-OFF*
 bool do_process_c015_delay_queue(int controller_plugin_number, const C015_queue_element& element, ControllerSettingsStruct& ControllerSettings);
+// *INDENT-ON*
 
 bool do_process_c015_delay_queue(int controller_plugin_number, const C015_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
   if (!Settings.ControllerEnabled[element.controller_idx])

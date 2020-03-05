@@ -477,7 +477,8 @@ void IRsend::sendGeneric(const uint16_t headermark, const uint32_t headerspace,
 //
 // Ref:
 //   examples/IRrecvDumpV2/IRrecvDumpV2.ino
-void IRsend::sendRaw(uint16_t buf[], uint16_t len, uint16_t hz) {
+void IRsend::sendRaw(const uint16_t buf[], const uint16_t len,
+                     const uint16_t hz) {
   // Set IR carrier frequency
   enableIROut(hz);
   for (uint16_t i = 0; i < len; i++) {
@@ -515,6 +516,10 @@ uint16_t IRsend::minRepeats(const decode_type_t protocol) {
       return kDishMinRepeat;
     case SONY:
       return kSonyMinRepeat;
+    case SONY_38K:
+      return kSonyMinRepeat + 1;
+    case EPSON:
+      return kEpsonMinRepeat;
     default:
       return kNoRepeat;
   }
@@ -545,6 +550,7 @@ uint16_t IRsend::defaultBits(const decode_type_t protocol) {
       return 16;
     case RC6:
     case SONY:
+    case SONY_38K:
       return 20;
     case COOLIX:
     case INAX:
@@ -555,6 +561,7 @@ uint16_t IRsend::defaultBits(const decode_type_t protocol) {
     case LG2:
       return 28;
     case CARRIER_AC:
+    case EPSON:
     case NEC:
     case NEC_LIKE:
     case SAMSUNG:
@@ -682,6 +689,11 @@ bool IRsend::send(const decode_type_t type, const uint64_t data,
 #if SEND_DISH
     case DISH:
       sendDISH(data, nbits, min_repeat);
+      break;
+#endif
+#if SEND_EPSON
+    case EPSON:
+      sendEpson(data, nbits, min_repeat);
       break;
 #endif
 #if SEND_GICABLE
@@ -817,6 +829,9 @@ bool IRsend::send(const decode_type_t type, const uint64_t data,
 #if SEND_SONY
     case SONY:
       sendSony(data, nbits, min_repeat);
+      break;
+    case SONY_38K:
+      sendSony38(data, nbits, min_repeat);
       break;
 #endif
 #if SEND_TECO

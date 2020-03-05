@@ -29,13 +29,13 @@ struct C011_ConfigStruct
   char          HttpBody[C011_HTTP_BODY_MAX_LEN] = {0};
 };
 
-bool CPlugin_011(byte function, struct EventStruct *event, String& string)
+bool CPlugin_011(CPlugin::Function function, struct EventStruct *event, String& string)
 {
   bool success = false;
 
   switch (function)
   {
-    case CPLUGIN_PROTOCOL_ADD:
+    case CPlugin::Function::CPLUGIN_PROTOCOL_ADD:
       {
         Protocol[++protocolCount].Number = CPLUGIN_ID_011;
         Protocol[protocolCount].usesMQTT = false;
@@ -46,13 +46,13 @@ bool CPlugin_011(byte function, struct EventStruct *event, String& string)
         break;
       }
 
-    case CPLUGIN_GET_DEVICENAME:
+    case CPlugin::Function::CPLUGIN_GET_DEVICENAME:
       {
         string = F(CPLUGIN_NAME_011);
         break;
       }
 
-    case CPLUGIN_WEBFORM_LOAD:
+    case CPlugin::Function::CPLUGIN_WEBFORM_LOAD:
       {
         String escapeBuffer;
 
@@ -86,7 +86,7 @@ bool CPlugin_011(byte function, struct EventStruct *event, String& string)
         break;
       }
 
-    case CPLUGIN_WEBFORM_SAVE:
+    case CPlugin::Function::CPLUGIN_WEBFORM_SAVE:
       {
         C011_ConfigStruct customConfig;
         byte choice = 0;
@@ -98,9 +98,9 @@ bool CPlugin_011(byte function, struct EventStruct *event, String& string)
           }
         }
         int httpmethod = getFormItemInt(F("P011httpmethod"), choice);
-        String httpuri = WebServer.arg(F("P011httpuri"));
-        String httpheader = WebServer.arg(F("P011httpheader"));
-        String httpbody = WebServer.arg(F("P011httpbody"));
+        String httpuri = web_server.arg(F("P011httpuri"));
+        String httpheader = web_server.arg(F("P011httpheader"));
+        String httpbody = web_server.arg(F("P011httpbody"));
 
         strlcpy(customConfig.HttpMethod, methods[httpmethod].c_str(), sizeof(customConfig.HttpMethod));
         strlcpy(customConfig.HttpUri, httpuri.c_str(), sizeof(customConfig.HttpUri));
@@ -111,18 +111,21 @@ bool CPlugin_011(byte function, struct EventStruct *event, String& string)
         break;
       }
 
-    case CPLUGIN_PROTOCOL_SEND:
+    case CPlugin::Function::CPLUGIN_PROTOCOL_SEND:
       {
       	success = Create_schedule_HTTP_C011(event);
         break;
       }
 
-    case CPLUGIN_FLUSH:
+    case CPlugin::Function::CPLUGIN_FLUSH:
       {
         process_c011_delay_queue();
         delay(0);
         break;
       }
+
+    default:
+      break;
 
   }
   return success;
@@ -131,7 +134,11 @@ bool CPlugin_011(byte function, struct EventStruct *event, String& string)
 //********************************************************************************
 // Generic HTTP request
 //********************************************************************************
+
+// Uncrustify may change this into multi line, which will result in failed builds
+// *INDENT-OFF*
 bool do_process_c011_delay_queue(int controller_number, const C011_queue_element& element, ControllerSettingsStruct& ControllerSettings);
+// *INDENT-ON*
 
 bool do_process_c011_delay_queue(int controller_number, const C011_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
   WiFiClient client;

@@ -50,6 +50,7 @@
 
 //#include <*.h>   //no lib needed
 
+#include "_Plugin_Helper.h"
 
 #define PLUGIN_054
 #define PLUGIN_ID_054         54

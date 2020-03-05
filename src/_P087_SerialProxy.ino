@@ -9,6 +9,7 @@
 //
 
 #include <ESPeasySerial.h>
+#include "_Plugin_Helper.h"
 
 #define PLUGIN_087
 #define PLUGIN_ID_087           87
@@ -316,7 +317,7 @@ boolean Plugin_087(byte function, struct EventStruct *event, String& string) {
 
       for (byte varNr = 0; varNr < P87_Nlines; varNr++)
       {
-        if (!safe_strncpy(P087_deviceTemplate[varNr], WebServer.arg(getPluginCustomArgName(varNr)), P87_Nchars)) {
+        if (!safe_strncpy(P087_deviceTemplate[varNr], web_server.arg(getPluginCustomArgName(varNr)), P87_Nchars)) {
           error += getCustomTaskSettingsError(varNr);
         }
       }

@@ -130,7 +130,7 @@ enum panasonic_ac_remote_model_t {
   kPanasonicUnknown = 0,
   kPanasonicLke = 1,
   kPanasonicNke = 2,
-  kPanasonicDke = 3,
+  kPanasonicDke = 3,  // PKR too.
   kPanasonicJke = 4,
   kPanasonicCkp = 5,
   kPanasonicRkr = 6,
@@ -139,6 +139,11 @@ enum panasonic_ac_remote_model_t {
 enum whirlpool_ac_remote_model_t {
   DG11J13A = 1,  // DG11J1-04 too
   DG11J191,
+};
+
+enum lg_ac_remote_model_t {
+  GE6711AR2853M = 1,  // (1) LG 28-bit Protocol (default)
+  AKB75215403,        // (2) LG2 28-bit Protocol
 };
 
 
@@ -153,7 +158,7 @@ class IRsend {
   VIRTUAL uint16_t mark(uint16_t usec);
   VIRTUAL void space(uint32_t usec);
   int8_t calibrate(uint16_t hz = 38000U);
-  void sendRaw(uint16_t buf[], uint16_t len, uint16_t hz);
+  void sendRaw(const uint16_t buf[], const uint16_t len, const uint16_t hz);
   void sendData(uint16_t onemark, uint32_t onespace, uint16_t zeromark,
                 uint32_t zerospace, uint64_t data, uint16_t nbits,
                 bool MSBfirst = true);
@@ -198,6 +203,8 @@ class IRsend {
   // a Sony command that will be accepted be a device.
   void sendSony(uint64_t data, uint16_t nbits = kSony20Bits,
                 uint16_t repeat = kSonyMinRepeat);
+  void sendSony38(uint64_t data, uint16_t nbits = kSony20Bits,
+                  uint16_t repeat = kSonyMinRepeat + 1);
   uint32_t encodeSony(uint16_t nbits, uint16_t command, uint16_t address,
                       uint16_t extended = 0);
 #endif
@@ -528,7 +535,10 @@ class IRsend {
                  const uint16_t nbytes = kAmcorStateLength,
                  const uint16_t repeat = kAmcorDefaultRepeat);
 #endif  // SEND_AMCOR
-
+#if SEND_EPSON
+  void sendEpson(uint64_t data, uint16_t nbits = kEpsonBits,
+                 uint16_t repeat = kEpsonMinRepeat);
+#endif
 
  protected:
 #ifdef UNIT_TEST
@@ -556,6 +566,10 @@ class IRsend {
   uint8_t _dutycycle;
   bool modulation;
   uint32_t calcUSecPeriod(uint32_t hz, bool use_offset = true);
+#if SEND_SONY
+  void _sendSony(uint64_t data, uint16_t nbits,
+                 uint16_t repeat, uint16_t freq);
+#endif
 };
 
 #endif  // IRSEND_H_

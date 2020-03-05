@@ -34,6 +34,7 @@
 #define PLUGIN_VALUENAME1_065 ""
 
 #include <ESPeasySerial.h>
+#include "_Plugin_Helper.h"
 
 
 ESPeasySerial* P065_easySerial = NULL;

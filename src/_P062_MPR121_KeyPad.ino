@@ -22,6 +22,7 @@
 #define PLUGIN_VALUENAME1_062 "ScanCode"
 
 #include <Adafruit_MPR121.h>
+#include "_Plugin_Helper.h"
 
 Adafruit_MPR121* Plugin_062_K = NULL;
 

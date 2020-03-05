@@ -40,6 +40,7 @@
 #define PLUGIN_049_FILTER_SLOW       5
 
 #include <ESPeasySerial.h>
+#include "_Plugin_Helper.h"
 
 enum MHZ19Types {
   MHZ19_notDetected,

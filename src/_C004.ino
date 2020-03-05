@@ -7,13 +7,13 @@
 #define CPLUGIN_ID_004         4
 #define CPLUGIN_NAME_004       "ThingSpeak"
 
-bool CPlugin_004(byte function, struct EventStruct *event, String& string)
+bool CPlugin_004(CPlugin::Function function, struct EventStruct *event, String& string)
 {
   bool success = false;
 
   switch (function)
   {
-    case CPLUGIN_PROTOCOL_ADD:
+    case CPlugin::Function::CPLUGIN_PROTOCOL_ADD:
       {
         Protocol[++protocolCount].Number = CPLUGIN_ID_004;
         Protocol[protocolCount].usesMQTT = false;
@@ -24,13 +24,13 @@ bool CPlugin_004(byte function, struct EventStruct *event, String& string)
         break;
       }
 
-    case CPLUGIN_GET_DEVICENAME:
+    case CPlugin::Function::CPLUGIN_GET_DEVICENAME:
       {
         string = F(CPLUGIN_NAME_004);
         break;
       }
 
-    case CPLUGIN_INIT:
+    case CPlugin::Function::CPLUGIN_INIT:
       {
         MakeControllerSettings(ControllerSettings);
         LoadControllerSettings(event->ControllerIndex, ControllerSettings);
@@ -38,7 +38,7 @@ bool CPlugin_004(byte function, struct EventStruct *event, String& string)
         break;
       }
 
-    case CPLUGIN_GET_PROTOCOL_DISPLAY_NAME:
+    case CPlugin::Function::CPLUGIN_GET_PROTOCOL_DISPLAY_NAME:
       {
         success = true;
         switch (event->idx) {
@@ -55,7 +55,7 @@ bool CPlugin_004(byte function, struct EventStruct *event, String& string)
         break;
       }
 
-    case CPLUGIN_PROTOCOL_SEND:
+    case CPlugin::Function::CPLUGIN_PROTOCOL_SEND:
       {
         success = C004_DelayHandler.addToQueue(C004_queue_element(event));
         scheduleNextDelayQueue(TIMER_C004_DELAY_QUEUE, C004_DelayHandler.getNextScheduleTime());
@@ -63,18 +63,24 @@ bool CPlugin_004(byte function, struct EventStruct *event, String& string)
         break;
       }
 
-    case CPLUGIN_FLUSH:
+    case CPlugin::Function::CPLUGIN_FLUSH:
       {
         process_c004_delay_queue();
         delay(0);
         break;
       }
 
+    default:
+      break;
+
   }
   return success;
 }
 
+// Uncrustify may change this into multi line, which will result in failed builds
+// *INDENT-OFF*
 bool do_process_c004_delay_queue(int controller_number, const C004_queue_element& element, ControllerSettingsStruct& ControllerSettings);
+// *INDENT-ON*
 
 bool do_process_c004_delay_queue(int controller_number, const C004_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
   WiFiClient client;

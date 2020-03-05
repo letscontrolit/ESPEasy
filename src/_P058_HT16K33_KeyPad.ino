@@ -34,6 +34,7 @@
 #define PLUGIN_VALUENAME1_058 "ScanCode"
 
 #include <HT16K33.h>
+#include "_Plugin_Helper.h"
 
 CHT16K33* Plugin_058_K = NULL;
 

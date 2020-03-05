@@ -29,14 +29,14 @@ void handle_download()
   str += BUILD;
   str += '_';
 
-  if (systemTimePresent())
+  if (node_time.systemTimePresent())
   {
-    str += getDateTimeString('\0', '\0', '\0');
+    str += node_time.getDateTimeString('\0', '\0', '\0');
   }
   str += F(".dat");
 
-  WebServer.sendHeader(F("Content-Disposition"), str);
-  WebServer.streamFile(dataFile, F("application/octet-stream"));
+  web_server.sendHeader(F("Content-Disposition"), str);
+  web_server.streamFile(dataFile, F("application/octet-stream"));
   dataFile.close();
 }
 
