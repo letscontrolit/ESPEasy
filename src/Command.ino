@@ -122,7 +122,9 @@ bool executeInternalCommand(const char *cmd, struct EventStruct *event, const ch
       break;
     }
     case 'b': {
+    #ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
       COMMAND_CASE("background", Command_Background,     1); // Diagnostic.h
+    #endif
     #ifdef USES_C012
       COMMAND_CASE(  "blynkget", Command_Blynk_Get,     -1);
     #endif // ifdef USES_C012
@@ -165,20 +167,27 @@ bool executeInternalCommand(const char *cmd, struct EventStruct *event, const ch
       break;
     }
     case 'j': {
+      #ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
       COMMAND_CASE("jsonportstatus", Command_JSONPortStatus, -1); // Diagnostic.h
+      #endif
+      break;
     }
     case 'l': {
       COMMAND_CASE(          "let", Command_Rules_Let,     2);    // Rules.h
       COMMAND_CASE(         "load", Command_Settings_Load, 0);    // Settings.h
       COMMAND_CASE(     "logentry", Command_logentry,      1);    // Diagnostic.h
+    #ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
       COMMAND_CASE("logportstatus", Command_logPortStatus, 0);    // Diagnostic.h
       COMMAND_CASE(       "lowmem", Command_Lowmem,        0);    // Diagnostic.h
+    #endif
       break;
     }
     case 'm': {
+    #ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
       COMMAND_CASE(        "malloc", Command_Malloc,            1); // Diagnostic.h
       COMMAND_CASE(       "meminfo", Command_MemInfo,           0); // Diagnostic.h
       COMMAND_CASE( "meminfodetail", Command_MemInfo_detail,    0); // Diagnostic.h
+    #endif
 #ifdef USES_MQTT
       COMMAND_CASE(  "messagedelay", Command_MQTT_messageDelay, 1); // MQTT.h
       COMMAND_CASE("mqttretainflag", Command_MQTT_Retain,       1); // MQTT.h
@@ -218,14 +227,18 @@ bool executeInternalCommand(const char *cmd, struct EventStruct *event, const ch
                                                                // arguments?
       COMMAND_CASE( "sendtohttp", Command_HTTP_SendToHTTP, 3); // HTTP.h
       COMMAND_CASE(  "sendtoudp", Command_UDP_SendToUPD,   3); // UDP.h
+    #ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
       COMMAND_CASE("serialfloat", Command_SerialFloat,     0); // Diagnostic.h
+    #endif
       COMMAND_CASE(   "settings", Command_Settings_Print,  0); // Settings.h
     }
       COMMAND_CASE(     "subnet", Command_Subnet,          1); // Network Command
     #ifdef USES_MQTT
 	    COMMAND_CASE(  "subscribe", Command_MQTT_Subscribe,  1);  // MQTT.h  
     #endif // USES_MQTT
+    #ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
       COMMAND_CASE(    "sysload", Command_SysLoad,         0); // Diagnostic.h
+    #endif
       break;
     }
     case 't': {
