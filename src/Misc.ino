@@ -1926,6 +1926,7 @@ void transformValue(
             value = logicVal == 0 ? "0" : "1";
             break;
           case 'D' ://Dx.y min 'x' digits zero filled & 'y' decimal fixed digits
+          case 'd' ://like above but with spaces padding
             {
               int x;
               int y;
@@ -1963,7 +1964,7 @@ void transformValue(
                 indexDot = value.length();
               }              
               for (byte f = 0; f < (x - indexDot); f++) {
-                value = "0" + value;
+                value = (tempValueFormat[0]=='d'? ' ' : '0') + value;
               }
               break;
             }
