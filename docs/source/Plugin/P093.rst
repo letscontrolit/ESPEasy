@@ -21,43 +21,47 @@ Maintainer: |P093_maintainer|
 
 Used libraries: |P093_usedlibraries|
 
-Plugin is based on [Arduino library to control Mitsubishi Heat Pumps](https://github.com/SwiCago/HeatPump).
+Plugin is based on `Arduino library to control Mitsubishi Heat Pumps <https://github.com/SwiCago/HeatPump>`_.
 
 Supported hardware
 ------------------
 
-Plugin should support all Mitsubishi units with a CN105 connector:
+Plugin should support all Mitsubishi heat pump units with a CN105 connector:
 
-* [P-Series](https://www.mitsubishicomfort.com/sites/default/themes/mitsubishicomfort/pdf/2018-01_P-Series_Controls-Compatibility-Chart.pdf),
-* [M-Series](https://www.mitsubishicomfort.com/sites/default/themes/mitsubishicomfort/pdf/2018-01_M-Series_Controls-Compatibility-Chart.pdf),
-* [CITY MULTI](https://www.mitsubishicomfort.com/sites/default/themes/mitsubishicomfort/pdf/Controller_Compatibility_Chart_2017-12_CITY_MULTI.pdf)
+* `P-Series <https://www.mitsubishicomfort.com/sites/default/themes/mitsubishicomfort/pdf/2018-01_P-Series_Controls-Compatibility-Chart.pdf>`_,
+* `M-Series <https://www.mitsubishicomfort.com/sites/default/themes/mitsubishicomfort/pdf/2018-01_M-Series_Controls-Compatibility-Chart.pdf>`_,
+* `CITY MULTI <https://www.mitsubishicomfort.com/sites/default/themes/mitsubishicomfort/pdf/Controller_Compatibility_Chart_2017-12_CITY_MULTI.pdf>`_.
 
-There is also an open issue where users can report which models they are using - [list](https://github.com/SwiCago/HeatPump/issues/13).
+There is also an open issue where users can report which models they are using - `list <https://github.com/SwiCago/HeatPump/issues/13>`_.
 
 Setup
 ------------------
 
-The Mitsubishi Heatpump can be added as simple as selecting it from the list, selecting the serial port used for connection - and we are ready:
+The Mitsubishi Heatpump plugin can be added as simple as selecting it from the list, selecting the serial port used for connection - and we are ready:
+
 
 .. image:: P093_1.jpg
 
+
 Once we hit submit, the plugin will start sending messages through controller, i.e. MQTT with payload:
 
-`{"roomTemperature":23.0,"wideVane":"|","power":"OFF","mode":"AUTO","fan":"QUIET","vane":"AUTO","iSee":false,"temperature":24.0}`
+``{"roomTemperature":23.0,"wideVane":"|","power":"OFF","mode":"AUTO","fan":"QUIET","vane":"AUTO","iSee":false,"temperature":24.0}``
 
 Message is send every time a change is detected (i.e. one changes settings using IR remote control) and every X seconds, as set in the settings (60 seconds in above screenshot).
 
-Sample setup for openHAB can be found [here](https://community.openhab.org/t/mitsubishi-heat-pump/91765).
+Sample Configuration
+~~~~~~~~~~~~~
+Sample configuration for openHAB can be found `here <https://community.openhab.org/t/mitsubishi-heat-pump/91765>`_.
 
-.. Commands available
-.. ^^^^^^^^^^^^^^^^^^
+Commands
+--------
 
-.. .. include:: P093_commands.repl
+.. include:: P093_commands.repl
 
 .. Events
 .. ~~~~~~
 
-.. .. include:: P093_events.repl
+.. include:: P093_events.repl
 
 Change log
 ----------

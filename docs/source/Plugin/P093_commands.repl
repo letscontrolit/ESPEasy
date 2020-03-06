@@ -5,7 +5,7 @@
         "
         ``mhp,temperature,<value>``
         ","
-        Value must be between 16 and 31.
+        Value must be between ``16`` and ``31``.
         "
         "
         ``mhp,power,<value>``
