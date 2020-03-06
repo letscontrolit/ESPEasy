@@ -51,6 +51,7 @@ SC16IS752::SC16IS752(uint8_t prtcl, uint8_t addr_sspin) : initialized(false)
 
 void SC16IS752::begin(uint32_t baud_A, uint32_t baud_B)
 {
+  Initialize(); // Force initialize, since we're initializing both channels at once
   beginA(baud_A);
   beginB(baud_B);
 }
@@ -84,15 +85,15 @@ int SC16IS752::read(uint8_t channel)
 {
   if (peek_flag == 0) {
     return ReadByte(channel);
-  } else {
-    peek_flag = 0;
-    return peek_buf;
   }
+  peek_flag = 0;
+  return peek_buf;
 }
 
 size_t SC16IS752::write(uint8_t channel, uint8_t val)
 {
   WriteByte(channel, val);
+  return 1;
 }
 
 void SC16IS752::pinMode(uint8_t pin, uint8_t i_o)
@@ -112,7 +113,7 @@ uint8_t SC16IS752::digitalRead(uint8_t pin)
 
 uint8_t SC16IS752::ReadRegister(uint8_t channel, uint8_t reg_addr)
 {
-  uint8_t result;
+  uint8_t result = 0;
 
   if (protocol == SC16IS750_PROTOCOL_I2C) { // register read operation via I2C
     WIRE.beginTransmission(device_address_sspin);
@@ -318,7 +319,7 @@ uint8_t SC16IS752::GPIOGetPinState(uint8_t pin_number)
 
   temp_iostate = ReadRegister(SC16IS752_CHANNEL_BOTH, SC16IS750_REG_IOSTATE);
 
-  if (temp_iostate & (0x01 << pin_number) == 0) {
+  if ((temp_iostate & (0x01 << pin_number)) == 0) {
     return 0;
   }
   return 1;
