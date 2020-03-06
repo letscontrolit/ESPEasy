@@ -383,7 +383,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
         bNoDisplayOnReceivedText = getBitFromUL(PCONFIG_LONG(0), 18);  // Bit 18
         addFormCheckBox(F("Wake display on receiving text"), F("p036_NoDisplay"), !bNoDisplayOnReceivedText);
-        addFormNote(F("Clear this option to not wake-up the display when text is sent from a remote system."));
+        addFormNote(F("When checked, the display wakes up at receiving remote updates."));
 
         for (uint8_t varNr = 0; varNr < P36_Nlines; varNr++)
         {
