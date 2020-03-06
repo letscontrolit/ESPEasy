@@ -144,6 +144,7 @@ bool executeInternalCommand(const char *cmd, struct EventStruct *event, const ch
       break;
     }
     case 'd': {
+      COMMAND_CASE( "datetime", Command_DateTime,         2);      // Time.h
       COMMAND_CASE(    "debug", Command_Debug,            1); // Diagnostic.h
       COMMAND_CASE("deepsleep", Command_System_deepSleep, 1); // System.h
       COMMAND_CASE(    "delay", Command_Delay,            1); // Timers.h
@@ -234,7 +235,7 @@ bool executeInternalCommand(const char *cmd, struct EventStruct *event, const ch
     }
       COMMAND_CASE(     "subnet", Command_Subnet,          1); // Network Command
     #ifdef USES_MQTT
-	    COMMAND_CASE(  "subscribe", Command_MQTT_Subscribe,  1);  // MQTT.h  
+      COMMAND_CASE(  "subscribe", Command_MQTT_Subscribe,  1);      // MQTT.h
     #endif // USES_MQTT
     #ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
       COMMAND_CASE(    "sysload", Command_SysLoad,         0); // Diagnostic.h
