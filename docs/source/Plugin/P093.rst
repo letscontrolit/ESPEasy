@@ -34,7 +34,20 @@ Plugin should support all Mitsubishi units with a CN105 connector:
 
 There is also an open issue where users can report which models they are using - [list](https://github.com/SwiCago/HeatPump/issues/13).
 
+Setup
+------------------
 
+The Mitsubishi Heatpump can be added as simple as selecting it from the list, selecting the serial port used for connection - and we are ready:
+
+.. image:: P093_1.jpg
+
+Once we hit submit, the plugin will start sending messages through controller, i.e. MQTT with payload:
+
+`{"roomTemperature":23.0,"wideVane":"|","power":"OFF","mode":"AUTO","fan":"QUIET","vane":"AUTO","iSee":false,"temperature":24.0}`
+
+Message is send every time a change is detected (i.e. one changes settings using IR remote control) and every X seconds, as set in the settings (60 seconds in above screenshot).
+
+Sample setup for openHAB can be found [here](https://community.openhab.org/t/mitsubishi-heat-pump/91765).
 
 .. Commands available
 .. ^^^^^^^^^^^^^^^^^^
