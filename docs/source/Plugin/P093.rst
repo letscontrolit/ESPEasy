@@ -21,16 +21,20 @@ Maintainer: |P093_maintainer|
 
 Used libraries: |P093_usedlibraries|
 
+Plugin is based on [Arduino library to control Mitsubishi Heat Pumps](https://github.com/SwiCago/HeatPump).
 
 Supported hardware
 ------------------
 
-Plugin should support more or less all Mitsubishi units with a CN105 connector:
+Plugin should support all Mitsubishi units with a CN105 connector:
 
-* `P-Series <https://www.mitsubishicomfort.com/sites/default/themes/mitsubishicomfort/pdf/2018-01_P-Series_Controls-Compatibility-Chart.pdf>`_ 
-* `M-Series <https://www.mitsubishicomfort.com/sites/default/themes/mitsubishicomfort/pdf/2018-01_M-Series_Controls-Compatibility-Chart.pdf>`_ 
-* `CITY MULTI <https://www.mitsubishicomfort.com/sites/default/themes/mitsubishicomfort/pdf/Controller_Compatibility_Chart_2017-12_CITY_MULTI.pdf>`_ 
-* `Here <https://github.com/SwiCago/HeatPump/issues/13>`_ is a list where one can find users sharing their unit numbers which work with the used library.
+* [P-Series](https://www.mitsubishicomfort.com/sites/default/themes/mitsubishicomfort/pdf/2018-01_P-Series_Controls-Compatibility-Chart.pdf),
+* [M-Series](https://www.mitsubishicomfort.com/sites/default/themes/mitsubishicomfort/pdf/2018-01_M-Series_Controls-Compatibility-Chart.pdf),
+* [CITY MULTI](https://www.mitsubishicomfort.com/sites/default/themes/mitsubishicomfort/pdf/Controller_Compatibility_Chart_2017-12_CITY_MULTI.pdf)
+
+There is also an open issue where users can report which models they are using - [list](https://github.com/SwiCago/HeatPump/issues/13).
+
+
 
 .. Commands available
 .. ^^^^^^^^^^^^^^^^^^
