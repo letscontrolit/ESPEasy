@@ -8,7 +8,7 @@
 
 #define PLUGIN_093
 #define PLUGIN_ID_093         93
-#define PLUGIN_NAME_093       "Mitsubishi AC [TESTING]"
+#define PLUGIN_NAME_093       "Energy (Heat) - Mitsubishi Heat Pump [TESTING]"
 #define PLUGIN_VALUENAME1_093 "settings"
 
 #define PLUGIN_093_DEBUG
