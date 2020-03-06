@@ -142,6 +142,7 @@ bool executeInternalCommand(const char *cmd, struct EventStruct *event, const ch
       break;
     }
     case 'd': {
+      COMMAND_CASE( "datetime", Command_DateTime,         2);      // Time.h
       COMMAND_CASE(    "debug", Command_Debug,            1); // Diagnostic.h
       COMMAND_CASE("deepsleep", Command_System_deepSleep, 1); // System.h
       COMMAND_CASE(    "delay", Command_Delay,            1); // Timers.h
@@ -218,15 +219,14 @@ bool executeInternalCommand(const char *cmd, struct EventStruct *event, const ch
                                                                // arguments?
       COMMAND_CASE( "sendtohttp", Command_HTTP_SendToHTTP, 3); // HTTP.h
       COMMAND_CASE(  "sendtoudp", Command_UDP_SendToUPD,   3); // UDP.h
-      COMMAND_CASE("serialfloat", Command_SerialFloat,     0); // Diagnostic.h
-      COMMAND_CASE(   "settings", Command_Settings_Print,  0); // Settings.h
-    }
-      COMMAND_CASE(     "subnet", Command_Subnet,          1); // Network Command
+        COMMAND_CASE("serialfloat", Command_SerialFloat,     0); // Diagnostic.h
+        COMMAND_CASE(   "settings", Command_Settings_Print,  0); // Settings.h
+      }
+      COMMAND_CASE(   "subnet", Command_Subnet,         1);      // Network Command
     #ifdef USES_MQTT
-	    COMMAND_CASE(  "subscribe", Command_MQTT_Subscribe,  1);  // MQTT.h  
+      COMMAND_CASE("subscribe", Command_MQTT_Subscribe, 1);      // MQTT.h
     #endif // USES_MQTT
-      COMMAND_CASE(    "sysload", Command_SysLoad,         0); // Diagnostic.h
-      COMMAND_CASE( "datetime", Command_DateTime,    2); // Time.h
+      COMMAND_CASE(  "sysload", Command_SysLoad,        0);      // Diagnostic.h
       break;
     }
     case 't': {
