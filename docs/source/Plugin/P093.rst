@@ -32,16 +32,46 @@ Plugin should support all Mitsubishi heat pump units with a CN105 connector:
 * `M-Series <https://www.mitsubishicomfort.com/sites/default/themes/mitsubishicomfort/pdf/2018-01_M-Series_Controls-Compatibility-Chart.pdf>`_,
 * `CITY MULTI <https://www.mitsubishicomfort.com/sites/default/themes/mitsubishicomfort/pdf/Controller_Compatibility_Chart_2017-12_CITY_MULTI.pdf>`_.
 
-There is also an open issue where users can report which models they are using - `list <https://github.com/SwiCago/HeatPump/issues/13>`_.
+Open issue, where users can report models they are using - `list <https://github.com/SwiCago/HeatPump/issues/13>`_.
+
+How to connect
+~~~~~~~~~~~~~~
+
+**Note**: If your unit has cn105 port, it is most likely supported. If your unit has cn100 port, it may work as well.
+
+.. csv-table::
+  :header: "CN105", "CN100", "Notes"
+  :widths: 10, 10, 60
+
+  "1","NA","12V, can be sourced from pin 3 of cn51 or pin 1 of cn52 (not needed for ESP)"
+  "2","8","GND"
+  "3","1","5V"
+  "4","5","TX"
+  "5","4","RX"
+
+.. danger::
+  Please make sure to verify voltages!
+
+Parts required to make a CN105 female connector
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* `PAP-05V-S <https://www.digikey.com/product-detail/en/jst-sales-america-inc/PAP-05V-S/455-1489-ND/759977>`_,
+* `SPHD-002T-P0.5 <https://www.digikey.com/product-detail/en/jst-sales-america-inc/SPHD-002T-P0.5/455-1313-1-ND/608809>`_,
+
+One can also get `premade pigtails <http://www.usastore.revolectrix.com/Products_2/Cellpro-4s-Charge-Adapters_2/Cellpro-JST-PA-Battery-Pigtail-10-5-Position>`_.
+
+How others did it
+~~~~~~~~~~~~~~~~~
+
+https://chrdavis.github.io/hacking-a-mitsubishi-heat-pump-Part-1/
+https://chrdavis.github.io/hacking-a-mitsubishi-heat-pump-Part-2/
 
 Setup
-------------------
+-----
 
 The Mitsubishi Heatpump plugin can be added as simple as selecting it from the list, selecting the serial port used for connection - and we are ready:
 
-
 .. image:: P093_1.jpg
-
 
 Once we hit submit, the plugin will start sending messages through controller, i.e. MQTT with payload:
 
@@ -50,7 +80,8 @@ Once we hit submit, the plugin will start sending messages through controller, i
 Message is send every time a change is detected (i.e. one changes settings using IR remote control) and every X seconds, as set in the settings (60 seconds in above screenshot).
 
 Sample Configuration
-~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~
+
 Sample configuration for openHAB can be found `here <https://community.openhab.org/t/mitsubishi-heat-pump/91765>`_.
 
 Commands
