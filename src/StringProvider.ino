@@ -68,8 +68,8 @@ String getLabel(LabelType::Enum label) {
     case LabelType::BUILD_DESC:             return F("Build");
     case LabelType::GIT_BUILD:              return F("Git Build");
     case LabelType::SYSTEM_LIBRARIES:       return F("System Libraries");
-    case LabelType::PLUGINS:                return F("Plugins");
-    case LabelType::PLUGIN_DESCRIPTION:     return F("Plugin description");
+    case LabelType::PLUGIN_COUNT:           return F("Plugin Count");
+    case LabelType::PLUGIN_DESCRIPTION:     return F("Plugin Description");
     case LabelType::BUILD_TIME:             return F("Build Time");
     case LabelType::BINARY_FILENAME:        return F("Binary Filename");
 
@@ -108,7 +108,7 @@ String getValue(LabelType::Enum label) {
   switch (label)
   {
     case LabelType::UNIT_NR:                return String(Settings.Unit);
-    case LabelType::UNIT_NAME:              return String(Settings.Name);
+    case LabelType::UNIT_NAME:              return String(Settings.Name);  // Only return the set name, no appended unit.
     case LabelType::HOST_NAME:
     #ifdef ESP32
       return WiFi.getHostname();
@@ -116,14 +116,14 @@ String getValue(LabelType::Enum label) {
       return WiFi.hostname();
     #endif
 
-    case LabelType::LOCAL_TIME:             return getDateTimeString('-',':',' ');
+    case LabelType::LOCAL_TIME:             return node_time.getDateTimeString('-',':',' ');
     case LabelType::UPTIME:                 return String(wdcounter / 2);
     case LabelType::LOAD_PCT:               return String(getCPUload());
     case LabelType::LOOP_COUNT:             return String(getLoopCountPerSec());
     case LabelType::CPU_ECO_MODE:           return jsonBool(Settings.EcoPowerMode());
 
     case LabelType::FREE_MEM:               return String(ESP.getFreeHeap());
-    case LabelType::FREE_STACK:             break;
+    case LabelType::FREE_STACK:             return String(getCurrentFreeStack());
 #ifdef CORE_POST_2_5_0
     case LabelType::HEAP_MAX_FREE_BLOCK:    return String(ESP.getMaxFreeBlockSize());
     case LabelType::HEAP_FRAGMENTATION:     return String(ESP.getHeapFragmentation());
@@ -144,7 +144,7 @@ String getValue(LabelType::Enum label) {
     case LabelType::IP_SUBNET:              return WiFi.subnetMask().toString();
     case LabelType::IP_ADDRESS_SUBNET:      return String(getValue(LabelType::IP_ADDRESS) + F(" / ") + getValue(LabelType::IP_SUBNET));
     case LabelType::GATEWAY:                return WiFi.gatewayIP().toString();
-    case LabelType::CLIENT_IP:              return formatIP(WebServer.client().remoteIP());
+    case LabelType::CLIENT_IP:              return formatIP(web_server.client().remoteIP());
     #ifdef FEATURE_MDNS
     case LabelType::M_DNS:                  return String(WifiGetHostname()) + F(".local");
     #endif
@@ -172,7 +172,7 @@ String getValue(LabelType::Enum label) {
     case LabelType::BUILD_DESC:             return String(BUILD);
     case LabelType::GIT_BUILD:              return String(F(BUILD_GIT));
     case LabelType::SYSTEM_LIBRARIES:       return getSystemLibraryString();
-    case LabelType::PLUGINS:                return String(deviceCount + 1);
+    case LabelType::PLUGIN_COUNT:           return String(deviceCount + 1);
     case LabelType::PLUGIN_DESCRIPTION:     return getPluginDescriptionString();
     case LabelType::BUILD_TIME:             break;
     case LabelType::BINARY_FILENAME:        break;

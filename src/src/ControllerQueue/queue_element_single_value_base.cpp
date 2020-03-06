@@ -2,13 +2,12 @@
 
 #include "../DataStructs/ESPEasy_EventStruct.h"
 
-queue_element_single_value_base::queue_element_single_value_base() : controller_idx(0),  idx(0), TaskIndex(INVALID_TASK_INDEX),
-  valuesSent(0) {}
+queue_element_single_value_base::queue_element_single_value_base() {}
 
 queue_element_single_value_base::queue_element_single_value_base(const struct EventStruct *event, byte value_count) :
-  controller_idx(event->ControllerIndex),
   idx(event->idx),
   TaskIndex(event->TaskIndex),
+  controller_idx(event->ControllerIndex),
   valuesSent(0),
   valueCount(value_count) {}
 

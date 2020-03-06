@@ -17,6 +17,8 @@
 #include "src/Globals/SecuritySettings.h"
 #include "src/Globals/ESPEasyWiFiEvent.h"
 
+#include "src/Helpers/ESPEasy_time_calc.h"
+
 #include <WiFiClient.h>
 #include <WiFiUdp.h>
 #include <base64.h>
@@ -71,23 +73,16 @@ bool safeReadStringUntil(Stream     & input,
   return false;
 }
 
-bool valid_controller_number(int controller_number) {
-  if (controller_number < 0) { return false; }
-  return true;
-
-  //  return getProtocolIndex(controller_number) <= protocolCount;
-}
-
-String get_formatted_Controller_number(int controller_number) {
-  if (!valid_controller_number(controller_number)) {
+String get_formatted_Controller_number(cpluginID_t cpluginID) {
+  if (!validCPluginID(cpluginID)) {
     return F("C---");
   }
   String result = F("C");
 
-  if (controller_number < 100) { result += '0'; }
+  if (cpluginID < 100) { result += '0'; }
 
-  if (controller_number < 10) { result += '0'; }
-  result += controller_number;
+  if (cpluginID < 10) { result += '0'; }
+  result += cpluginID;
   return result;
 }
 
@@ -108,7 +103,7 @@ String get_auth_header(const String& user, const String& pass) {
 String get_auth_header(int controller_index) {
   String authHeader = "";
 
-  if (controller_index < CONTROLLER_MAX) {
+  if (validControllerIndex(controller_index)) {
     if ((SecuritySettings.ControllerUser[controller_index][0] != 0) &&
         (SecuritySettings.ControllerPassword[controller_index][0] != 0))
     {
@@ -264,15 +259,14 @@ void log_connecting_fail(const String& prefix, int controller_number, Controller
 bool count_connection_results(bool success, const String& prefix, int controller_number, ControllerSettingsStruct& ControllerSettings) {
   if (!success)
   {
-    connectionFailures++;
+    ++connectionFailures;
     log_connecting_fail(prefix, controller_number, ControllerSettings);
-    evaluateConnectionFailures();
     return false;
   }
   statusLED(true);
 
-  if (connectionFailures) {
-    connectionFailures--;
+  if (connectionFailures > 0) {
+    --connectionFailures;
   }
   return true;
 }
@@ -294,8 +288,8 @@ bool try_connect_host(int controller_number, WiFiUDP& client, ControllerSettings
 }
 
 bool try_connect_host(int controller_number, WiFiClient& client, ControllerSettingsStruct& ControllerSettings) {
-  return try_connect_host(controller_number, client, ControllerSettings, F("HTTP : "));
-}
+  return try_connect_host(controller_number, client, ControllerSettings, F("HTTP : "));	
+}	
 
 bool try_connect_host(int controller_number, WiFiClient& client, ControllerSettingsStruct& ControllerSettings, const String& loglabel) {
   START_TIMER;

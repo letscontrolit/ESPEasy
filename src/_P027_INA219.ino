@@ -3,6 +3,8 @@
 //######################### Plugin 027: INA219 DC Voltage/Current sensor ################################
 //#######################################################################################################
 
+#include "_Plugin_Helper.h"
+
 #define PLUGIN_027
 #define PLUGIN_ID_027         27
 #define PLUGIN_NAME_027       "Energy (DC) - INA219"

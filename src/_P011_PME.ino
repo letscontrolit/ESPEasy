@@ -3,6 +3,8 @@
 //#################################### Plugin 011: Pro Mini Extender ####################################
 //#######################################################################################################
 
+#include "_Plugin_Helper.h"
+
 #define PLUGIN_011
 #define PLUGIN_ID_011         11
 #define PLUGIN_NAME_011       "Extra IO - ProMini Extender"

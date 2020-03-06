@@ -77,10 +77,10 @@
 .. |P036_github| replace:: P036_FrameOLED.ino
 .. _P036_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P036_FrameOLED.ino
 .. |P036_usedby| replace:: `.`
-.. |P036_shortinfo| replace:: `.`
-.. |P036_maintainer| replace:: `.`
+.. |P036_shortinfo| replace:: Plugin for displaying information on several pages on SSD1306/SH1106 OLED
+.. |P036_maintainer| replace:: TD-er
 .. |P036_compileinfo| replace:: `.`
-.. |P036_usedlibraries| replace:: `.`
+.. |P036_usedlibraries| replace:: https://github.com/squix78/esp8266-oled-ssd1306  version 3.2.7
 
 .. |P037_name| replace:: :cyan:`MQTT Import`
 .. |P037_type| replace:: :cyan:`Generic`

@@ -21,15 +21,35 @@ Maintainer: |P036_maintainer|
 
 Used libraries: |P036_usedlibraries|
 
+
+Description
+-----------
+
+The Framed OLED plugin does allow a bit more fancy look and feel compared to P023 OLED.
+
+The plugin allows to show several "pages" of information.
+The number of pages depends on the number of set lines of text and the font size.
+
+Switching between pages can be "instant" or "scrolling".
+Please note that scrolling may need more resources of the ESP, which can have an effect on other active tasks of the node.
+
+The plugin allows for a header and footer line, which may show some user selectable information.
+
+All user defined texts may contain references to system variables or task values which will be interpreted when displayed on screen.
+
+For example: ``[bme#T#D2.1] {D}C [bme#H]%``
+
+
+
 Supported hardware
 ------------------
 
 |P036_usedby|
 
-.. Commands available
-.. ^^^^^^^^^^^^^^^^^^
+Commands available
+^^^^^^^^^^^^^^^^^^
 
-.. .. include:: P036_commands.repl
+.. include:: P036_commands.repl
 
 .. Events
 .. ~~~~~~

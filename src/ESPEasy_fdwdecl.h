@@ -4,6 +4,8 @@
 #include "ESPEasy_common.h"
 #include "src/DataStructs/ESPEasy_EventStruct.h"
 
+#include "src/Globals/CPlugins.h"
+
 // FIXME TD-er: This header file should only be included from .ino or .cpp files
 // This is only needed until the classes that need these can include the appropriate .h files to have these forward declared.
 
@@ -26,6 +28,8 @@
 
 #include <FS.h>
 
+#include <WiFiUdp.h>
+
 
 // Forward declaration to give access to global member variables
 float         & getUserVar(unsigned int varIndex);
@@ -35,19 +39,13 @@ struct ControllerSettingsStruct;
 String   getUnknownString();
 void     scheduleNextDelayQueue(unsigned long id,
                                 unsigned long nextTime);
-String   LoadControllerSettings(int                       ControllerIndex,
+String   LoadControllerSettings(controllerIndex_t ControllerIndex,
                                 ControllerSettingsStruct& controller_settings);
-String   get_formatted_Controller_number(int controller_index);
 void     statusLED(bool traffic);
 void     backgroundtasks();
 uint32_t getCurrentFreeStack();
 uint32_t getFreeStackWatermark();
 bool     canYield();
-
-
-boolean  timeOutReached(unsigned long timer);
-long     timePassedSince(unsigned long timestamp);
-long     usecPassedSince(unsigned long timestamp);
 
 void     serialHelper_getGpioNames(struct EventStruct *event,
                                    bool                rxOptional = false,
@@ -107,24 +105,22 @@ bool safe_strncpy(char       *dest,
 
 void rulesProcessing(String& event);
 void setIntervalTimer(unsigned long id);
-byte getProtocolIndex(byte Number);
-byte getNotificationProtocolIndex(byte Number);
 void schedule_notification_event_timer(byte NotificationProtocolIndex, byte Function, struct EventStruct *event);
 
 #ifdef USES_MQTT
 
 // void runPeriodicalMQTT();
 // void updateMQTTclient_connected();
-int firstEnabledMQTTController();
+controllerIndex_t firstEnabledMQTT_ControllerIndex();
 // String getMQTT_state();
 void callback(char        *c_topic,
               byte        *b_payload,
               unsigned int length);
 void MQTTDisconnect();
-bool MQTTConnect(int controller_idx);
-bool MQTTCheck(int controller_idx);
+bool MQTTConnect(controllerIndex_t controller_idx);
+bool MQTTCheck(controllerIndex_t controller_idx);
 void schedule_all_tasks_using_MQTT_controller();
-bool MQTTpublish(int controller_idx, const char *topic, const char *payload, boolean retained);
+bool MQTTpublish(controllerIndex_t controller_idx, const char *topic, const char *payload, bool retained);
 #endif // ifdef USES_MQTT
 
 
@@ -134,13 +130,13 @@ void serialPrintln();
 bool GetArgv(const char *string, String& argvString, unsigned int argc);
 bool HasArgv(const char *string, unsigned int argc);
 boolean str2ip(const String& string, byte *IP);
-bool useStaticIP();
 String formatIP(const IPAddress& ip);
 String toString(float value, byte decimals);
 String boolToString(bool value);
 bool isInt(const String& tBuf);
 String formatToHex(unsigned long value, const String& prefix);
 String formatToHex(unsigned long value);
+String getNumerical(const String& tBuf, bool mustBeInteger);
 
 float getCPUload();
 int getLoopCountPerSec();
@@ -150,6 +146,8 @@ uint16_t getPortFromKey(uint32_t key);
 
 void initRTC();
 void deepSleepStart(int dsdelay);
+bool setControllerEnableStatus(controllerIndex_t controllerIndex, bool enabled);
+bool setTaskEnableStatus(taskIndex_t taskIndex, bool enabled);
 void taskClear(taskIndex_t taskIndex, bool save);
 void SensorSendTask(taskIndex_t TaskIndex);
 bool remoteConfig(struct EventStruct *event, const String& string);
@@ -172,7 +170,6 @@ void WifiScan(bool async, bool quick = false);
 void WifiScan();
 void WiFiConnectRelaxed();
 void WifiDisconnect();
-void evaluateConnectionFailures();
 void setAP(bool enable);
 void setSTA(bool enable);
 
@@ -194,5 +191,10 @@ void printDirectory(File dir, int numTabs);
 void delayBackground(unsigned long dsdelay);
 
 void setIntervalTimerOverride(unsigned long id, unsigned long msecFromNow); //implemented in Scheduler.ino
+
+
+byte PluginCall(byte Function, struct EventStruct *event, String& str);
+bool beginWiFiUDP_randomPort(WiFiUDP& udp);
+String toString(float value, byte decimals);
 
 #endif // ESPEASY_FWD_DECL_H

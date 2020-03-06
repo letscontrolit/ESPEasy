@@ -23,6 +23,7 @@
 #include "../../ESPEasy_Log.h"
 #include "../Globals/Statistics.h"
 
+#include "../Helpers/ESPEasy_time_calc.h"
 
 #include "../../ESPEasy_fdwdecl.h"
 
@@ -31,6 +32,7 @@
 bool showSettingsFileLayout = false;
 #endif // ifndef BUILD_MINIMAL_OTA
 
+#ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
 String Command_Lowmem(struct EventStruct *event, const char *Line)
 {
   String result;
@@ -129,6 +131,7 @@ String Command_Background(struct EventStruct *event, const char *Line)
   serialPrintln(F("end"));
   return return_see_serial(event);
 }
+#endif // BUILD_NO_DIAGNOSTIC_COMMANDS
 
 String Command_Debug(struct EventStruct *event, const char *Line)
 {
@@ -149,6 +152,7 @@ String Command_logentry(struct EventStruct *event, const char *Line)
   return return_command_success();
 }
 
+#ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
 String Command_JSONPortStatus(struct EventStruct *event, const char *Line)
 {
   addLog(LOG_LEVEL_INFO, F("JSON Port Status: Command not implemented yet."));
@@ -204,3 +208,4 @@ String Command_logPortStatus(struct EventStruct *event, const char *Line)
   logPortStatus("Rules");
   return return_command_success();
 }
+#endif // BUILD_NO_DIAGNOSTIC_COMMANDS

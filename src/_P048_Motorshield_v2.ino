@@ -11,6 +11,7 @@
 
 
 #include <Adafruit_MotorShield.h>
+#include "_Plugin_Helper.h"
 
 #define PLUGIN_048
 #define PLUGIN_ID_048         48
@@ -72,7 +73,7 @@ boolean Plugin_048(byte function, struct EventStruct *event, String& string) {
 		}
 
 		case PLUGIN_WEBFORM_SAVE: {
-			String plugin1 = WebServer.arg(F("p048_adr"));
+			String plugin1 = web_server.arg(F("p048_adr"));
 			PCONFIG(0) = (int) strtol(plugin1.c_str(), 0, 16);
 
 			PCONFIG(1) = getFormItemInt(F("p048_MotorStepsPerRevolution"));

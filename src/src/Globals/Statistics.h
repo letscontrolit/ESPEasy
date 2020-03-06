@@ -28,7 +28,6 @@ extern unsigned long loopCounter_full;
 extern float loop_usec_duration_total;
 
 extern unsigned long dailyResetCounter;
-extern unsigned long WifiDisconnectCounter;
 extern volatile unsigned long sw_watchdog_callback_count;
 
 

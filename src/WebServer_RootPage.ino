@@ -11,7 +11,7 @@ void handle_root() {
   // if Wifi setup, launch setup wizard
   if (wifiSetup)
   {
-    WebServer.send(200, F("text/html"), F("<meta HTTP-EQUIV='REFRESH' content='0; url=/setup'>"));
+    web_server.send(200, F("text/html"), F("<meta HTTP-EQUIV='REFRESH' content='0; url=/setup'>"));
     return;
   }
 
@@ -28,7 +28,7 @@ void handle_root() {
   if (loadFromFS(false, F("/index.htm"))) { return; }
 
   TXBuffer.startStream();
-  String  sCommand  = WebServer.arg(F("cmd"));
+  String  sCommand  = web_server.arg(F("cmd"));
   boolean rebootCmd = strcasecmp_P(sCommand.c_str(), PSTR("reboot")) == 0;
   sendHeadandTail_stdtemplate(_HEAD, rebootCmd);
 
@@ -48,8 +48,8 @@ void handle_root() {
     // IPAddress ip = WiFi.localIP();
     // IPAddress gw = WiFi.gatewayIP();
 
-    TXBuffer += printWebString;
-    TXBuffer += F("<form>");
+    addHtml(printWebString);
+    addHtml(F("<form>"));
     html_table_class_normal();
     addFormHeader(F("System Info"));
 
@@ -57,61 +57,81 @@ void handle_root() {
     addRowLabelValue(LabelType::GIT_BUILD);
     addRowLabel(getLabel(LabelType::LOCAL_TIME));
 
-    if (systemTimePresent())
+    if (node_time.systemTimePresent())
     {
-      TXBuffer += getValue(LabelType::LOCAL_TIME);
+      addHtml(getValue(LabelType::LOCAL_TIME));
     }
     else {
-      TXBuffer += F("<font color='red'>No system time source</font>");
+      addHtml(F("<font color='red'>No system time source</font>"));
     }
 
     addRowLabel(getLabel(LabelType::UPTIME));
     {
-      TXBuffer += getExtendedValue(LabelType::UPTIME);
+      addHtml(getExtendedValue(LabelType::UPTIME));
     }
     addRowLabel(getLabel(LabelType::LOAD_PCT));
 
     if (wdcounter > 0)
     {
-      TXBuffer += String(getCPUload());
-      TXBuffer += F("% (LC=");
-      TXBuffer += String(getLoopCountPerSec());
-      TXBuffer += ')';
+      String html;
+      html.reserve(32);
+      html += getCPUload();
+      html += F("% (LC=");
+      html += getLoopCountPerSec();
+      html += ')';
+      addHtml(html);
     }
-
-    addRowLabel(F("Free Mem"));
-    TXBuffer += String(freeMem);
-    TXBuffer += " (";
-    TXBuffer += String(lowestRAM);
-    TXBuffer += F(" - ");
-    TXBuffer += String(lowestRAMfunction);
-    TXBuffer += ')';
-    addRowLabel(F("Free Stack"));
-    TXBuffer += String(getCurrentFreeStack());
-    TXBuffer += " (";
-    TXBuffer += String(lowestFreeStack);
-    TXBuffer += F(" - ");
-    TXBuffer += String(lowestFreeStackfunction);
-    TXBuffer += ')';
+    {
+      addRowLabel(F("Free Mem"));
+      String html;
+      html.reserve(64);
+      html += freeMem;
+      html += " (";
+      html += lowestRAM;
+      html += F(" - ");
+      html += lowestRAMfunction;
+      html += ')';
+      addHtml(html);
+    }
+    {
+      addRowLabel(F("Free Stack"));
+      String html;
+      html.reserve(64);
+      html += String(getCurrentFreeStack());
+      html += " (";
+      html += String(lowestFreeStack);
+      html += F(" - ");
+      html += String(lowestFreeStackfunction);
+      html += ')';
+      addHtml(html);
+    }
 
     addRowLabelValue(LabelType::IP_ADDRESS);
     addRowLabel(getLabel(LabelType::WIFI_RSSI));
 
     if (WiFiConnected())
     {
-      TXBuffer += String(WiFi.RSSI());
-      TXBuffer += F(" dB (");
-      TXBuffer += WiFi.SSID();
-      TXBuffer += ')';
+      String html;
+      html.reserve(32);
+      html += String(WiFi.RSSI());
+      html += F(" dB (");
+      html += WiFi.SSID();
+      html += ')';
+      addHtml(html);
     }
 
     #ifdef FEATURE_MDNS
-    addRowLabel(getLabel(LabelType::M_DNS));
-    TXBuffer += F("<a href='http://");
-    TXBuffer += getValue(LabelType::M_DNS);
-    TXBuffer += F("'>");
-    TXBuffer += getValue(LabelType::M_DNS);
-    TXBuffer += F("</a>");
+    {
+      addRowLabel(getLabel(LabelType::M_DNS));
+      String html;
+      html.reserve(64);
+      html += F("<a href='http://");
+      html += getValue(LabelType::M_DNS);
+      html += F("'>");
+      html += getValue(LabelType::M_DNS);
+      html += F("</a>");
+      addHtml(html);
+    }
     #endif // ifdef FEATURE_MDNS
     html_TR_TD();
     html_TD();
@@ -142,32 +162,38 @@ void handle_root() {
           html_TR_TD();
         }
 
-        TXBuffer += F("Unit ");
-        TXBuffer += String(it->first);
+        addHtml(F("Unit "));
+        addHtml(String(it->first));
         html_TD();
 
         if (isThisUnit) {
-          TXBuffer += Settings.Name;
+          addHtml(Settings.Name);
         }
         else {
-          TXBuffer += it->second.nodeName;
+          addHtml(it->second.nodeName);
         }
         html_TD();
 
         if (it->second.build) {
-          TXBuffer += String(it->second.build);
+          addHtml(String(it->second.build));
         }
         html_TD();
-        TXBuffer += getNodeTypeDisplayString(it->second.nodeType);
+        addHtml(getNodeTypeDisplayString(it->second.nodeType));
         html_TD();
         html_add_wide_button_prefix();
-        TXBuffer += F("http://");
-        TXBuffer += it->second.ip.toString();
-        TXBuffer += "'>";
-        TXBuffer += it->second.ip.toString();
-        TXBuffer += "</a>";
+        {
+          String html;
+          html.reserve(64);
+
+          html += F("http://");
+          html += it->second.ip.toString();
+          html += "'>";
+          html += it->second.ip.toString();
+          html += "</a>";
+          addHtml(html);
+        }
         html_TD();
-        TXBuffer += String(it->second.age);
+        addHtml(String(it->second.age));
       }
     }
 
@@ -202,13 +228,13 @@ void handle_root() {
     {
       addLog(LOG_LEVEL_INFO, F("     : factory reset..."));
       cmd_within_mainloop = CMD_REBOOT;
-      TXBuffer           += F(
-        "OK. Please wait > 1 min and connect to Acces point.<BR><BR>PW=configesp<BR>URL=<a href='http://192.168.4.1'>192.168.4.1</a>");
+      addHtml(F(
+                "OK. Please wait > 1 min and connect to Acces point.<BR><BR>PW=configesp<BR>URL=<a href='http://192.168.4.1'>192.168.4.1</a>"));
       TXBuffer.endStream();
       ExecuteCommand_internal(VALUE_SOURCE_HTTP, sCommand.c_str());
     }
 
-    TXBuffer += "OK";
+    addHtml(F("OK"));
     TXBuffer.endStream();
   }
 }

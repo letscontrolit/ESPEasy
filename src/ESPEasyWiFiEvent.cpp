@@ -5,6 +5,8 @@
 
 #include "src/DataStructs/RTCStruct.h"
 
+#include "src/Helpers/ESPEasy_time_calc.h"
+
 #ifdef ESP32
 void WiFi_Access_Static_IP::set_use_static_ip(bool enabled) {
   _useStaticIp = enabled;

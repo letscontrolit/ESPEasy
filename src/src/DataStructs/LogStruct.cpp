@@ -1,5 +1,6 @@
 #include "../DataStructs/LogStruct.h"
 #include "../../ESPEasy_fdwdecl.h"
+#include "../Helpers/ESPEasy_time_calc.h"
 
 
 LogStruct::LogStruct() : write_idx(0), read_idx(0), lastReadTimeStamp(0) {

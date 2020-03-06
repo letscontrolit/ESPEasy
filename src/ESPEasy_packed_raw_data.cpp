@@ -5,7 +5,7 @@ uint8_t getPackedDataTypeSize(PackedData_enum dtype, float& factor, float& offse
   offset = 0;
   factor = 1;
   if (dtype > 0x1000 && dtype < 0x12FF) {
-    const uint8_t exponent = dtype & 0xF;
+    const uint32_t exponent = dtype & 0xF;
     switch(exponent) {
       case 0: factor = 1; break;
       case 1: factor = 1e1; break;
@@ -15,7 +15,7 @@ uint8_t getPackedDataTypeSize(PackedData_enum dtype, float& factor, float& offse
       case 5: factor = 1e5; break;
       case 6: factor = 1e6; break;
     }
-    const uint8_t size = (dtype >> 8) & 0xF;
+    const uint8_t size = (dtype >> 4) & 0xF;
     return size;
   }
   switch (dtype) {
@@ -36,7 +36,7 @@ uint8_t getPackedDataTypeSize(PackedData_enum dtype, float& factor, float& offse
 
 void LoRa_uintToBytes(uint64_t value, uint8_t byteSize, byte *data, uint8_t& cursor) {
   // Clip values to upper limit
-  const uint64_t upperlimit = (1 << (8*byteSize)) - 1;
+  const uint64_t upperlimit = (1ull << (8*byteSize)) - 1;
   if (value > upperlimit) { value = upperlimit; }
   for (uint8_t x = 0; x < byteSize; x++) {
     byte next = 0;
@@ -53,7 +53,7 @@ void LoRa_intToBytes(int64_t value, uint8_t byteSize, byte *data, uint8_t& curso
   const int64_t lowerlimit = (1ull << ((8*byteSize) - 1)) * -1;
   if (value < lowerlimit) { value = lowerlimit; }
   if (value < 0) {
-    value += (1 << (8*byteSize));
+    value += (1ull << (8*byteSize));
   }
   LoRa_uintToBytes(value, byteSize, data, cursor);
 }

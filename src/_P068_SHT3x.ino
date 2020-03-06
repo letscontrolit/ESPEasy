@@ -22,6 +22,7 @@
 // =============================================
 # ifndef SHT3X_H
 # define SHT3X_H
+#include "_Plugin_Helper.h"
 
 class SHT3X: public PluginTaskData_base
 {

@@ -31,13 +31,13 @@ The controller can deliver the data to:
 
 ControllerCache_struct ControllerCache;
 
-bool CPlugin_016(byte function, struct EventStruct *event, String& string)
+bool CPlugin_016(CPlugin::Function function, struct EventStruct *event, String& string)
 {
   bool success = false;
 
   switch (function)
   {
-    case CPLUGIN_PROTOCOL_ADD:
+    case CPlugin::Function::CPLUGIN_PROTOCOL_ADD:
       {
         Protocol[++protocolCount].Number = CPLUGIN_ID_016;
         Protocol[protocolCount].usesMQTT = false;
@@ -52,13 +52,13 @@ bool CPlugin_016(byte function, struct EventStruct *event, String& string)
         break;
       }
 
-    case CPLUGIN_GET_DEVICENAME:
+    case CPlugin::Function::CPLUGIN_GET_DEVICENAME:
       {
         string = F(CPLUGIN_NAME_016);
         break;
       }
 
-    case CPLUGIN_INIT:
+    case CPlugin::Function::CPLUGIN_INIT:
       {
         MakeControllerSettings(ControllerSettings);
         LoadControllerSettings(event->ControllerIndex, ControllerSettings);
@@ -67,30 +67,30 @@ bool CPlugin_016(byte function, struct EventStruct *event, String& string)
         break;
       }
 
-    case CPLUGIN_WEBFORM_LOAD:
+    case CPlugin::Function::CPLUGIN_WEBFORM_LOAD:
       {
 
         break;
       }
 
-    case CPLUGIN_WEBFORM_SAVE:
+    case CPlugin::Function::CPLUGIN_WEBFORM_SAVE:
       {
 
         break;
       }
 
-    case CPLUGIN_PROTOCOL_TEMPLATE:
+    case CPlugin::Function::CPLUGIN_PROTOCOL_TEMPLATE:
       {
         event->String1 = "";
         event->String2 = "";
         break;
       }
 
-    case CPLUGIN_PROTOCOL_SEND:
+    case CPlugin::Function::CPLUGIN_PROTOCOL_SEND:
       {
         // Collect the values at the same run, to make sure all are from the same sample
         byte valueCount = getValueCountFromSensorType(event->sensorType);
-        C016_queue_element element(event, valueCount, getUnixTime());
+        C016_queue_element element(event, valueCount, node_time.getUnixTime());
         success = ControllerCache.write((uint8_t*)&element, sizeof(element));
 
 /*
@@ -102,12 +102,15 @@ bool CPlugin_016(byte function, struct EventStruct *event, String& string)
         break;
       }
 
-    case CPLUGIN_FLUSH:
+    case CPlugin::Function::CPLUGIN_FLUSH:
       {
         process_c016_delay_queue();
         delay(0);
         break;
       }
+
+    default:
+      break;
 
   }
   return success;
@@ -118,7 +121,10 @@ bool CPlugin_016(byte function, struct EventStruct *event, String& string)
 //********************************************************************************
 // Process the data from the cache
 //********************************************************************************
+// Uncrustify may change this into multi line, which will result in failed builds
+// *INDENT-OFF*
 bool do_process_c016_delay_queue(int controller_number, const C016_queue_element& element, ControllerSettingsStruct& ControllerSettings);
+// *INDENT-ON*
 
 bool do_process_c016_delay_queue(int controller_number, const C016_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
   return true;

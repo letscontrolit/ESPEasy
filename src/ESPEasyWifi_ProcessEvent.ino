@@ -256,8 +256,8 @@ void processGotIP() {
   }
 
   // First try to get the time, since that may be used in logs
-  if (systemTimePresent()) {
-    initTime();
+  if (node_time.systemTimePresent()) {
+    node_time.initTime();
   }
 #ifdef USES_MQTT
   mqtt_reconnect_count        = 0;

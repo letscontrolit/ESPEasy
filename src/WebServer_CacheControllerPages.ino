@@ -1,7 +1,7 @@
 #ifdef USES_C016
 
 // ********************************************************************************
-// URLs needed for C016_CacheController 
+// URLs needed for C016_CacheController
 // to help dump the content of the binary log files
 // ********************************************************************************
 void handle_dumpcache() {
@@ -19,19 +19,19 @@ void handle_dumpcache() {
   float val4;
 
   TXBuffer.startStream();
-  TXBuffer += F("UNIX timestamp;contr. idx;sensortype;taskindex;value count");
+  addHtml(F("UNIX timestamp;contr. idx;sensortype;taskindex;value count"));
 
   for (taskIndex_t i = 0; i < TASKS_MAX; ++i) {
     LoadTaskSettings(i);
 
     for (int j = 0; j < VARS_PER_TASK; ++j) {
-      TXBuffer += ';';
-      TXBuffer += ExtraTaskSettings.TaskDeviceName;
-      TXBuffer += '#';
-      TXBuffer += ExtraTaskSettings.TaskDeviceValueNames[j];
+      addHtml(";");
+      addHtml(ExtraTaskSettings.TaskDeviceName);
+      addHtml("#");
+      addHtml(ExtraTaskSettings.TaskDeviceValueNames[j]);
     }
   }
-  TXBuffer += F("<BR>");
+  html_BR();
   float csv_values[VARS_PER_TASK * TASKS_MAX];
 
   for (int i = 0; i < VARS_PER_TASK * TASKS_MAX; ++i) {
@@ -40,15 +40,20 @@ void handle_dumpcache() {
 
   while (C016_getCSVline(timestamp, controller_idx, TaskIndex, sensorType,
                          valueCount, val1, val2, val3, val4)) {
-    TXBuffer += timestamp;
-    TXBuffer += ';';
-    TXBuffer += controller_idx;
-    TXBuffer += ';';
-    TXBuffer += sensorType;
-    TXBuffer += ';';
-    TXBuffer += TaskIndex;
-    TXBuffer += ';';
-    TXBuffer += valueCount;
+    {
+      String html;
+      html.reserve(64);
+      html += timestamp;
+      html += ';';
+      html += controller_idx;
+      html += ';';
+      html += sensorType;
+      html += ';';
+      html += TaskIndex;
+      html += ';';
+      html += valueCount;
+      addHtml(html);
+    }
     int valindex = TaskIndex * VARS_PER_TASK;
     csv_values[valindex++] = val1;
     csv_values[valindex++] = val2;
@@ -56,32 +61,34 @@ void handle_dumpcache() {
     csv_values[valindex++] = val4;
 
     for (int i = 0; i < VARS_PER_TASK * TASKS_MAX; ++i) {
-      TXBuffer += ';';
+      String html;
+      html.reserve(12);
+      html += ';';
 
       if (csv_values[i] == 0.0) {
-        TXBuffer += '0';
+        html += '0';
       } else {
-        TXBuffer += String(csv_values[i], 6);
+        html += String(csv_values[i], 6);
       }
+      addHtml(html);
     }
-    TXBuffer += F("<BR>");
+    html_BR();
     delay(0);
   }
   TXBuffer.endStream();
-
 }
 
 void handle_cache_json() {
   if (!isLoggedIn()) { return; }
 
   TXBuffer.startJsonStream();
-  TXBuffer += F("{\"columns\": [");
+  addHtml(F("{\"columns\": ["));
 
-  //     TXBuffer += F("UNIX timestamp;contr. idx;sensortype;taskindex;value count");
+  //     addHtml(F("UNIX timestamp;contr. idx;sensortype;taskindex;value count"));
   stream_to_json_value(F("UNIX timestamp"));
-  TXBuffer += ',';
+  addHtml(",");
   stream_to_json_value(F("UTC timestamp"));
-  TXBuffer += ',';
+  addHtml(",");
   stream_to_json_value(F("task index"));
 
   for (taskIndex_t i = 0; i < TASKS_MAX; ++i) {
@@ -89,15 +96,15 @@ void handle_cache_json() {
 
     for (int j = 0; j < VARS_PER_TASK; ++j) {
       String label = ExtraTaskSettings.TaskDeviceName;
-      label    += '#';
-      label    += ExtraTaskSettings.TaskDeviceValueNames[j];
-      TXBuffer += ',';
+      label += '#';
+      label += ExtraTaskSettings.TaskDeviceValueNames[j];
+      addHtml(",");
       stream_to_json_value(label);
     }
   }
-  TXBuffer += F("],\n");
+  addHtml(F("],\n"));
   C016_startCSVdump();
-  TXBuffer += F("\"files\": [");
+  addHtml(F("\"files\": ["));
   bool islast = false;
   int  filenr = 0;
 
@@ -106,15 +113,15 @@ void handle_cache_json() {
 
     if (currentFile.length() > 0) {
       if (filenr != 0) {
-        TXBuffer += ',';
+        addHtml(",");
       }
       stream_to_json_value(currentFile);
       ++filenr;
     }
   }
-  TXBuffer += F("],\n");
+  addHtml(F("],\n"));
   stream_last_json_object_value(F("nrfiles"), String(filenr));
-  TXBuffer += F("\n");
+  addHtml(F("\n"));
   TXBuffer.endStream();
 }
 

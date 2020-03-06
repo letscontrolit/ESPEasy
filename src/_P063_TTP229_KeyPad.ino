@@ -29,6 +29,7 @@
 #define PLUGIN_VALUENAME1_063 "ScanCode"
 
 // #include <*.h>   no lib required
+#include "_Plugin_Helper.h"
 
 
 uint16_t readTTP229(int16_t pinSCL, int16_t pinSDO)

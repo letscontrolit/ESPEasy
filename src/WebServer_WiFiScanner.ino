@@ -11,14 +11,14 @@ void handle_wifiscanner_json() {
   if (!isLoggedIn()) { return; }
   navMenuIndex = MENU_INDEX_TOOLS;
   TXBuffer.startJsonStream();
-  TXBuffer += "[{";
+  addHtml("[{");
   bool firstentry = true;
   int  n          = WiFi.scanNetworks(false, true);
 
   for (int i = 0; i < n; ++i)
   {
     if (firstentry) { firstentry = false; }
-    else { TXBuffer += ",{"; }
+    else { addHtml(",{"); }
     String authType;
 
     switch (WiFi.encryptionType(i)) {
@@ -49,9 +49,9 @@ void handle_wifiscanner_json() {
     stream_last_json_object_value(getLabel(LabelType::WIFI_RSSI), String(WiFi.RSSI(i)));
   }
   if (firstentry) {
-    TXBuffer += "}";
+    addHtml("}");
   }
-  TXBuffer += "]";
+  addHtml("]");
   TXBuffer.endStream();
 }
 
@@ -65,7 +65,7 @@ void handle_wifiscanner() {
   if (!isLoggedIn()) { return; }
 
   WiFiMode_t cur_wifimode = WiFi.getMode();
-  WifiScan(false); 
+  WifiScan(false);
   setWifiMode(cur_wifimode);
 
   navMenuIndex = MENU_INDEX_TOOLS;
@@ -79,8 +79,9 @@ void handle_wifiscanner() {
   html_table_header(F("RSSI"), 50);
 
   const int8_t scanCompleteStatus = WiFi.scanComplete();
+
   if (scanCompleteStatus <= 0) {
-    TXBuffer += F("No Access Points found");
+    addHtml(F("No Access Points found"));
   }
   else
   {
@@ -88,7 +89,7 @@ void handle_wifiscanner() {
     {
       html_TR_TD();
       int32_t rssi = 0;
-      TXBuffer += formatScanResult(i, "<TD>", rssi);
+      addHtml(formatScanResult(i, "<TD>", rssi));
       html_TD();
       getWiFi_RSSI_icon(rssi, 45);
     }

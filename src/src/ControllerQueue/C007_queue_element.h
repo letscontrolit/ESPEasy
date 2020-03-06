@@ -2,6 +2,7 @@
 #define CONTROLLERQUEUE_C007_QUEUE_ELEMENT_H
 
 #include "../../ESPEasy_common.h"
+#include "../Globals/CPlugins.h"
 #include "../Globals/Plugins.h"
 
 struct EventStruct;
@@ -21,10 +22,10 @@ public:
 
   size_t getSize() const;
 
-  int controller_idx    = 0;
-  int idx               = 0;
-  taskIndex_t TaskIndex = INVALID_TASK_INDEX;
-  byte sensorType       = 0;
+  int idx                          = 0;
+  taskIndex_t TaskIndex            = INVALID_TASK_INDEX;
+  controllerIndex_t controller_idx = INVALID_CONTROLLER_INDEX;
+  byte sensorType                  = 0;
 };
 
 // #endif //USES_C007
