@@ -3,6 +3,8 @@
 //#################### Plugin 028 BME280 I2C Temp/Hum/Barometric Pressure Sensor  #######################
 //#######################################################################################################
 
+#include "_Plugin_Helper.h"
+
 //#include <math.h>
 #include <map>
 

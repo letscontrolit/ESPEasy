@@ -1,4 +1,30 @@
 -------------------------------------------------
+Changes in release mega-20200305 (since mega-20200301)
+-------------------------------------------------
+
+Release date: do  5 mrt 2020  0:16:32 CET
+
+Gijs Noorlander (11):
+      [Webserver] Move Web_StreamingBuffer to its own .h/.cpp
+      [Cleanup] Refactor parseSystemVariables + move time functions to .h/.cpp
+      [Cleanup] Fix build errors
+      [ESP32] Rename WebServer object to web_server to fix build issues
+      [Cleanup] Fix build issues in some plugins
+      [Cleanup] Fix build errors due to forward declarations and includes
+      [Cleanup] Use StringProvider to share more code + ESP32 core lib 1.11.2
+      [Cleanup] Include _Plugin_Helper.h in all plugin INO files
+      [Build] Set flash mode to DOUT for all ESP8266 builds
+      Fix Append unit number to hostname (#2918)
+      [Build] Fix build issue ArduinoOTA ESP32 build
+
+Toni (1):
+      HeatpumpIR 1.0.13 update (Mitsubishi MSY fixes)
+
+jimmys01 (1):
+      Update IR library to 2.7.4
+
+
+-------------------------------------------------
 Changes in release mega-20200301 (since mega-20200228)
 -------------------------------------------------
 

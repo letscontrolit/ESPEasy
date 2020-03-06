@@ -17,38 +17,38 @@ class SettingsStruct_tmpl
   SettingsStruct_tmpl();
 
   // VariousBits1 defaults to 0, keep in mind when adding bit lookups.
-  bool appendUnitToHostname();
+  bool appendUnitToHostname() const;
   void appendUnitToHostname(bool value);
 
-  bool uniqueMQTTclientIdReconnect();
+  bool uniqueMQTTclientIdReconnect() const;
   void uniqueMQTTclientIdReconnect(bool value);
 
-  bool OldRulesEngine();
+  bool OldRulesEngine() const;
   void OldRulesEngine(bool value);
 
-  bool ForceWiFi_bg_mode();
+  bool ForceWiFi_bg_mode() const;
   void ForceWiFi_bg_mode(bool value);
 
-  bool WiFiRestart_connection_lost();
+  bool WiFiRestart_connection_lost() const;
   void WiFiRestart_connection_lost(bool value);
 
-  bool EcoPowerMode();
+  bool EcoPowerMode() const;
   void EcoPowerMode(bool value);
 
-  bool WifiNoneSleep();
+  bool WifiNoneSleep() const;
   void WifiNoneSleep(bool value);
 
   // Enable send gratuitous ARP by default, so invert the values (default = 0)
-  bool gratuitousARP();
+  bool gratuitousARP() const;
   void gratuitousARP(bool value);
 
   // Be a bit more tolerant when parsing the last argument of a command.
   // See: https://github.com/letscontrolit/ESPEasy/issues/2724
-  bool TolerantLastArgParse();
+  bool TolerantLastArgParse() const;
   void TolerantLastArgParse(bool value);
 
   // SendToHttp command does not wait for ack, with this flag it does wait.
-  bool SendToHttp_ack();
+  bool SendToHttp_ack() const;
   void SendToHttp_ack(bool value);
 
   void validate();
@@ -74,6 +74,12 @@ class SettingsStruct_tmpl
   void clearAll();
 
   void clearTask(taskIndex_t task);
+
+  // Return hostname + unit when selected to add unit.
+  String getHostname() const;
+
+  // Return hostname with explicit set append unit.
+  String getHostname(bool appendUnit) const;
 
   unsigned long PID;
   int           Version;

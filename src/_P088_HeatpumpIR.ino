@@ -44,6 +44,7 @@
  */
 
 #include <HeatpumpIRFactory.h>
+#include "_Plugin_Helper.h"
 
 IRSenderIRremoteESP8266 *Plugin_088_irSender = NULL;
 int panasonicCKPTimer = 0;

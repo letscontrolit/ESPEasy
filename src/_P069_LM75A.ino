@@ -22,6 +22,7 @@
 
 #define INVALID_LM75A_TEMPERATURE 1000
 
+#include "_Plugin_Helper.h"
 namespace LM75AConstValues
 {
   const int LM75A_BASE_ADDRESS = 0x48;

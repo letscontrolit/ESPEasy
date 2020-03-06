@@ -3,6 +3,8 @@
 //#################### Plugin 030 BMP280 I2C Temp/Barometric Pressure Sensor      #######################
 //#######################################################################################################
 
+#include "_Plugin_Helper.h"
+
 #define PLUGIN_030
 #define PLUGIN_ID_030        30
 #define PLUGIN_NAME_030       "Environment - BMP280"

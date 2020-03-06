@@ -4,6 +4,7 @@
 // ############################# Plugin 085: AccuEnergy AcuDC24x #########################################
 // #######################################################################################################
 
+
 /*
 
    Circuit wiring
@@ -55,6 +56,7 @@
 #define P085_MEASUREMENT_INTERVAL 60000L
 
 #include <ESPeasySerial.h>
+#include "_Plugin_Helper.h"
 
 struct P085_data_struct : public PluginTaskData_base {
   P085_data_struct() {}

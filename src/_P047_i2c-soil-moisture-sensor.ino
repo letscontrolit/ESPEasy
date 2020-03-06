@@ -9,6 +9,7 @@
 // this code is based on version 1.1.2 of the above library
 //
 
+#include "_Plugin_Helper.h"
 
 #define PLUGIN_047
 #define PLUGIN_ID_047        47

@@ -17,6 +17,8 @@
 //
 
 #include <HLW8012.h>
+#include "_Plugin_Helper.h"
+
 HLW8012 *Plugin_076_hlw = NULL;
 
 #define PLUGIN_076

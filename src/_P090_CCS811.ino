@@ -56,6 +56,7 @@
 # define __CCS811_H__
 
 # include "stdint.h"
+#include "_Plugin_Helper.h"
 
 // Register addresses
 # define CSS811_STATUS          0x00

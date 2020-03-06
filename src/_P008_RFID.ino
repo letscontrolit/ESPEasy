@@ -3,6 +3,8 @@
 //################################# Plugin 008: Wiegand RFID Tag Reader #################################
 //#######################################################################################################
 
+#include "_Plugin_Helper.h"
+
 #define PLUGIN_008
 #define PLUGIN_ID_008         8
 #define PLUGIN_NAME_008       "RFID - Wiegand"

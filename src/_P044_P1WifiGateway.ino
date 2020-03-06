@@ -9,6 +9,8 @@
 //    see http://romix.macuser.nl for kits
 //#######################################################################################################
 
+#include "_Plugin_Helper.h"
+
 #define PLUGIN_044
 #define PLUGIN_ID_044         44
 #define PLUGIN_NAME_044       "Communication - P1 Wifi Gateway"

@@ -112,6 +112,7 @@
 #include "src/Globals/MQTT.h"
 #include "src/Globals/Plugins.h"
 #include "src/Globals/Protocol.h"
+#include "src/Globals/RamTracker.h"
 #include "src/Globals/RTC.h"
 #include "src/Globals/SecuritySettings.h"
 #include "src/Globals/Services.h"
@@ -878,7 +879,6 @@ void logTimerStatistics() {
 \*********************************************************************************************/
 void runEach30Seconds()
 {
-   extern void checkRAMtoLog();
   checkRAMtoLog();
   wdcounter++;
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {

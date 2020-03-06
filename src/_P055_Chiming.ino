@@ -49,6 +49,8 @@
 
 //#include <*.h>   - no external lib required
 
+#include "_Plugin_Helper.h"
+
 #define PLUGIN_055
 #define PLUGIN_ID_055         55
 #define PLUGIN_NAME_055       "Notify - Chiming [TESTING]"
