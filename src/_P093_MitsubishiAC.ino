@@ -88,61 +88,28 @@ struct P093_data_struct : public PluginTaskData_base {
     return true;
   }
 
-  bool write(const String& command, const String& value) {
-    bool success = false;
-
-    if (command.isEmpty()) {
-      return success;
-    }
-
+  void write(const String& command, const String& value) {
     #define lookup(x, list, placeholder) findByMapping(x, list, sizeof(list) / sizeof(Tuple), placeholder)
 
-    switch (command[0]) {
-      case 't':
-        if (command == F("temperature")) {
-          float temperature = 0;
-          if (string2float(value, temperature) && temperature >= 16 && temperature <= 31) {
-            _wantedSettings.temperature = temperature;
-            _writeStatus.set(Temperature);
-            success = true;
-          }
-        }
-        break;
-      case 'p':
-        if (command == F("power") && lookup(value, _mappings.power, _wantedSettings.power)) {
-          _writeStatus.set(Power);
-          success = true;
-        }
-        break;
-      case 'm':
-        if (command == F("mode") && lookup(value, _mappings.mode, _wantedSettings.mode)) {
-          _writeStatus.set(Mode);
-          success = true;
-        }
-        break;
-      case 'f':
-        if (command == F("fan") && lookup(value, _mappings.fan, _wantedSettings.fan)) {
-          _writeStatus.set(Fan);
-          success = true;
-        }
-        break;
-      case 'v':
-        if (command == F("vane") && lookup(value, _mappings.vane, _wantedSettings.vane)) {
-          _writeStatus.set(Vane);
-          success = true;
-        }
-        break;
-      case 'w':
-        if (command == F("widevane") && lookup(value, _mappings.wideVane, _wantedSettings.wideVane)) {
-          _writeStatus.set(WideVane);
-          success = true;
-        }
-        break;
+    if (command == F("temperature")) {
+      float temperature = 0;
+      if (string2float(value, temperature) && temperature >= 16 && temperature <= 31) {
+        _wantedSettings.temperature = temperature;
+        _writeStatus.set(Temperature);
+      }
+    } else if (command == F("power") && lookup(value, _mappings.power, _wantedSettings.power)) {
+      _writeStatus.set(Power);
+    } else if (command == F("mode") && lookup(value, _mappings.mode, _wantedSettings.mode)) {
+      _writeStatus.set(Mode);
+    } else if (command == F("fan") && lookup(value, _mappings.fan, _wantedSettings.fan)) {
+      _writeStatus.set(Fan);
+    } else if (command == F("vane") && lookup(value, _mappings.vane, _wantedSettings.vane)) {
+      _writeStatus.set(Vane);
+    } else if (command == F("widevane") && lookup(value, _mappings.wideVane, _wantedSettings.wideVane)) {
+      _writeStatus.set(WideVane);
     }
 
     #undef lookup
-
-    return success;
   }
 
 private:
@@ -443,7 +410,7 @@ private:
     if (_writeStatus.isDirty(Temperature)) {
       packet[6] |= 0x04;
       if (_tempMode) {
-        packet[19] = (uint8_t)(_wantedSettings.temperature * 2.0f + 128.0f);
+        packet[19] = static_cast<uint8_t>(_wantedSettings.temperature * 2.0f + 128.0f);
       } else {
         packet[10] = 31 - _wantedSettings.temperature;
       }
@@ -777,9 +744,12 @@ boolean Plugin_093(byte function, struct EventStruct *event, String& string) {
     }
 
     case PLUGIN_WRITE: {
-      P093_data_struct* heatPump = static_cast<P093_data_struct*>(getPluginTaskData(event->TaskIndex));
-      if (heatPump != nullptr) {
-        success = heatPump->write(parseString(string, 1), parseStringKeepCase(string, 2));
+      if (parseString(string, 1).equalsIgnoreCase(F("MHP"))) {
+        P093_data_struct* heatPump = static_cast<P093_data_struct*>(getPluginTaskData(event->TaskIndex));
+        if (heatPump != nullptr) {
+          heatPump->write(parseString(string, 2), parseStringKeepCase(string, 3));
+          success = true;
+        }
       }
       break;
     }
