@@ -14,6 +14,8 @@ SC16IS752	KEYWORD1
 #######################################
 
 begin KEYWORD2
+beginA KEYWORD2
+beginB KEYWORD2
 read KEYWORD2
 write KEYWORD2
 available KEYWORD2

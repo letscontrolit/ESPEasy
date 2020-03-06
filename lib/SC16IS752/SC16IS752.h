@@ -116,6 +116,8 @@ class SC16IS752
     public:
         SC16IS752(uint8_t prtcl = SC16IS750_PROTOCOL_I2C, uint8_t addr = SC16IS750_ADDRESS_AD);
         void    begin(uint32_t baud_A, uint32_t baud_B);                               
+        void    beginA(uint32_t baud_A);                               
+        void    beginB(uint32_t baud_B);                               
         int     read(uint8_t channel);
         size_t  write(uint8_t channel, uint8_t val);
         int     available(uint8_t channel);
@@ -140,8 +142,10 @@ class SC16IS752
         uint8_t peek_flag = 0;
         uint8_t device_address_sspin;
         uint8_t protocol;
+        bool    initialized = false;
 
         //	uint32_t timeout;
+        void    Initialize();
         int16_t SetBaudrate(uint8_t channel, uint32_t baudrate);
         uint8_t ReadRegister(uint8_t channel, uint8_t reg_addr);
         void    WriteRegister(uint8_t channel, uint8_t reg_addr, uint8_t val);
