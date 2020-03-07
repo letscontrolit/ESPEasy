@@ -60,29 +60,26 @@ Parts required to make a CN105 female connector
 
 One can also get `premade pigtails <http://www.usastore.revolectrix.com/Products_2/Cellpro-4s-Charge-Adapters_2/Cellpro-JST-PA-Battery-Pigtail-10-5-Position>`_.
 
-How others did it
-~~~~~~~~~~~~~~~~~
+Example using D1 mini PRO
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
-* `Hacking A Mitsubishi Heat Pump Part 1 <https://chrdavis.github.io/hacking-a-mitsubishi-heat-pump-Part-1/>`_,
-* `Hacking A Mitsubishi Heat Pump Part 2 <https://chrdavis.github.io/hacking-a-mitsubishi-heat-pump-Part-2/>`_.
+.. image:: P093_1.jpg
+
+There is a good tutorial on how to do `soldering <https://chrdavis.github.io/hacking-a-mitsubishi-heat-pump-Part-1/#soldering>`_ and
+`installing <https://chrdavis.github.io/hacking-a-mitsubishi-heat-pump-Part-1/#installing>`_.
 
 Setup
 -----
 
 The Mitsubishi Heatpump plugin can be added as simple as selecting it from the list, selecting the serial port used for connection - and we are ready:
 
-.. image:: P093_1.jpg
+.. image:: P093_2.jpg
 
 Once we hit submit, the plugin will start sending messages through controller, i.e. MQTT with payload:
 
 ``{"roomTemperature":23.0,"wideVane":"|","power":"OFF","mode":"AUTO","fan":"QUIET","vane":"AUTO","iSee":false,"temperature":24.0}``
 
 Message is send every time a change is detected (i.e. one changes settings using IR remote control) and every X seconds, as set in the settings (60 seconds in above screenshot).
-
-Sample Configuration
-~~~~~~~~~~~~~~~~~~~~
-
-Sample configuration for openHAB can be found `here <https://community.openhab.org/t/mitsubishi-heat-pump/91765>`_.
 
 Commands
 --------
@@ -93,6 +90,11 @@ Commands
 .. ~~~~~~
 
 .. include:: P093_events.repl
+
+Example
+-------
+
+A full working example using openHAB can be found `here <https://community.openhab.org/t/mitsubishi-heat-pump/91765>`_.
 
 Change log
 ----------
