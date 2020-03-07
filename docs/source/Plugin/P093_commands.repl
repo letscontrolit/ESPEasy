@@ -3,32 +3,32 @@
         :widths: 20, 40
 
         "
-        ``mhp,temperature,<value>``
+        ``MitsubishiHP,temperature,<value>``
         ","
         Value must be between ``16`` and ``31``.
         "
         "
-        ``mhp,power,<value>``
+        ``MitsubishiHP,power,<value>``
         ","
         Value = ``ON`` or ``OFF``
         "
         "
-        ``mhp,mode,<value>``
+        ``MitsubishiHP,mode,<value>``
         ","
         Value = ``HEAT``, ``COOL``, ``FAN``, ``DRY`` or ``AUTO``
         "
         "
-        ``mhp,fan,<value>``
+        ``MitsubishiHP,fan,<value>``
         ","
         Value = ``1``, ``2``, ``3``, ``4``, ``AUTO`` or ``QUIET``
         "
         "
-        ``mhp,vane,<value>``
+        ``MitsubishiHP,vane,<value>``
         ","
         Value = ``1``, ``2``, ``3``, ``4``, ``5``, ``SWING`` or ``AUTO``
         "
         "
-        ``mhp,widevane,<value>``
+        ``MitsubishiHP,widevane,<value>``
         ","
         Value = ``<<``, ``<``, ``|``, ``>``, ``>>``, ``<>`` or ``SWING``
         "

@@ -744,7 +744,7 @@ boolean Plugin_093(byte function, struct EventStruct *event, String& string) {
     }
 
     case PLUGIN_WRITE: {
-      if (parseString(string, 1).equalsIgnoreCase(F("MHP"))) {
+      if (parseString(string, 1).equalsIgnoreCase(F("MitsubishiHP"))) {
         P093_data_struct* heatPump = static_cast<P093_data_struct*>(getPluginTaskData(event->TaskIndex));
         if (heatPump != nullptr) {
           heatPump->write(parseString(string, 2), parseStringKeepCase(string, 3));
