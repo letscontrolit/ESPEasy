@@ -10,6 +10,8 @@
 #define DEVICE_TYPE_TRIPLE                  3  // connected through 3 datapins
 #define DEVICE_TYPE_ANALOG                 10  // AIN/tout pin
 #define DEVICE_TYPE_I2C                    20  // connected through I2C
+#define DEVICE_TYPE_SERIAL                 21  // connected through UART/Serial
+#define DEVICE_TYPE_SERIAL_PLUS1           22  // connected through UART/Serial + 1 extra signal pin
 #define DEVICE_TYPE_DUMMY                  99  // Dummy device, has no physical connection
 
 // Used for VType
@@ -34,16 +36,11 @@
 \*********************************************************************************************/
 struct DeviceStruct
 {
-  DeviceStruct() :
-    Number(0), Type(0), VType(SENSOR_TYPE_NONE), Ports(0), ValueCount(0),
-    PullUpOption(false), InverseLogicOption(false), FormulaOption(false),
-    Custom(false), SendDataOption(false), GlobalSyncOption(false),
-    TimerOption(false), TimerOptional(false), DecimalsOnly(false) {}
+  DeviceStruct();
 
-  bool connectedToGPIOpins() {
-    return (Type >= DEVICE_TYPE_SINGLE && Type <= DEVICE_TYPE_TRIPLE);
-  }
+  bool connectedToGPIOpins() const;
 
+  bool usesTaskDevicePin(int pin) const;
 
   byte Number;  // Plugin ID number.   (PLUGIN_ID_xxx)
   byte Type;    // How the device is connected. e.g. DEVICE_TYPE_SINGLE => connected through 1 datapin

@@ -40,7 +40,13 @@ SC16IS752::SC16IS752(uint8_t prtcl, uint8_t addr_sspin) : initialized(false)
   protocol = prtcl;
 
   if (protocol == SC16IS750_PROTOCOL_I2C) {
-    device_address_sspin = (addr_sspin >> 1);
+    // Datasheet uses extra read/write bit to describe I2C address.
+    // Actual address in communication has one bit shifted.
+    if ((addr_sspin >= 0x48) && (addr_sspin <= 0x57)) {
+      device_address_sspin = addr_sspin;
+    } else {
+      device_address_sspin = (addr_sspin >> 1);
+    }
   } else {
     device_address_sspin = addr_sspin;
   }

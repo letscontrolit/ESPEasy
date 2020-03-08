@@ -146,7 +146,7 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string) {
   switch (function) {
     case PLUGIN_DEVICE_ADD: {
       Device[++deviceCount].Number           = PLUGIN_ID_052;
-      Device[deviceCount].Type               = DEVICE_TYPE_DUAL;
+      Device[deviceCount].Type               = DEVICE_TYPE_SERIAL;
       Device[deviceCount].VType              = SENSOR_TYPE_SINGLE;
       Device[deviceCount].Ports              = 0;
       Device[deviceCount].PullUpOption       = false;

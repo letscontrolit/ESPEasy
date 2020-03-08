@@ -95,9 +95,10 @@
 #endif // ifndef ESP32_SER2_RX
 
 struct ESPeasySerialType {
+  // Keep value assigned as it is used in scripts
   enum serialtype {
     software = 0,
-    sc16is752,
+    sc16is752 = 1,
     serial0,
     serial0_swap,
     serial1,
@@ -149,7 +150,7 @@ struct ESPeasySerialType {
       return serialtype::serial2; // UART2
     }
 
-    if ((receivePin >= 0x90) && (receivePin <= 0xAE)) {
+    if ((receivePin >= 0x48) && (receivePin <= 0x57)) {
       return serialtype::sc16is752; // I2C address range of SC16IS752
     }
 
@@ -177,7 +178,7 @@ struct ESPeasySerialType {
       return serialtype::serial1;
     }
 
-    if ((receivePin >= 0x90) && (receivePin <= 0xAE)) {
+    if ((receivePin >= 0x48) && (receivePin <= 0x57)) {
       return serialtype::sc16is752; // I2C address range of SC16IS752
     }
 

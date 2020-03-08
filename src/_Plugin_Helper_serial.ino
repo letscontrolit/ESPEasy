@@ -19,6 +19,37 @@ static String serialHelper_getSerialTypeLabel(ESPeasySerialType::serialtype serT
   return label;
 }
 
+static String serialHelper_getGpioDescription(int config_pin1, int config_pin2) {
+  String result;
+  result.reserve(20);
+  switch (ESPeasySerialType::getSerialType(config_pin1, config_pin2)) {
+    case ESPeasySerialType::serialtype::sc16is752:
+    {
+      result += formatToHex(config_pin1);
+      result += F("<BR>");
+      result += F(" ch: ");
+      result += config_pin2 == 0 ? F("A") : F("B");
+      return result;
+    } 
+    case ESPeasySerialType::serialtype::software:
+    case ESPeasySerialType::serialtype::serial0_swap:
+    case ESPeasySerialType::serialtype::serial0:
+    case ESPeasySerialType::serialtype::serial1:
+    case ESPeasySerialType::serialtype::serial2:
+    {
+      result += F("RX: ");
+      result += config_pin1;
+      result += F("<BR>");
+      result += F("TX: ");
+      result += config_pin2;
+      break;
+    }
+    default:
+    break;
+  }
+  return result;
+}
+
 void serialHelper_getGpioNames(struct EventStruct *event, bool rxOptional, bool txOptional) {
   event->String1 = formatGpioName_RX(rxOptional);
   event->String2 = formatGpioName_TX(txOptional);
@@ -42,6 +73,47 @@ String serialHelper_getSerialTypeLabel(struct EventStruct *event) {
   return serialHelper_getSerialTypeLabel(serialHelper_getSerialType(event));
 }
 
+void serialHelper_addI2CuartSelectors(int address, int channel) {
+  #define     SC16IS752_I2C_ADDRESSES             16
+  #define     SC16IS752_I2C_BASE_ADDR             (0x90 >> 1)
+  #define     SC16IS752_CHANNELS                  2
+  #define     SC16IS752_CHANNEL_A                 0x00
+  #define     SC16IS752_CHANNEL_B                 0x01
+  {
+    bool addr_in_range = false;
+    int addresses[SC16IS752_I2C_ADDRESSES];
+    String options[SC16IS752_I2C_ADDRESSES];
+    for (int i = 0; i < SC16IS752_I2C_ADDRESSES; i++)
+    {
+      addresses[i] = SC16IS752_I2C_BASE_ADDR + i;
+      options[i].reserve(24);
+      options[i] = formatToHex(addresses[i]);
+      options[i] += F(" (datasheet: ");
+      options[i] += formatToHex(addresses[i] * 2);
+      options[i] += ')';
+      if (addresses[i] == address) {
+        addr_in_range = true;
+      }
+    }
+    if (!addr_in_range) {
+      address = SC16IS752_I2C_BASE_ADDR;
+    }
+    addFormSelector(F("I2C Address"), F("i2cuart_addr"), SC16IS752_I2C_ADDRESSES, options, addresses, NULL, address, false);
+  }  
+  {
+    if (channel != SC16IS752_CHANNEL_A && channel != SC16IS752_CHANNEL_B) {
+      channel = SC16IS752_CHANNEL_A;
+    }
+    String chOptions[SC16IS752_CHANNELS];
+    int    chValues[SC16IS752_CHANNELS];
+    chValues[0] = SC16IS752_CHANNEL_A;
+    chValues[1] = SC16IS752_CHANNEL_B;
+    chOptions[0] = F("A");
+    chOptions[1] = F("B");
+    addFormSelector(F("Channel"), F("i2cuart_ch"), SC16IS752_CHANNELS, chOptions, chValues, channel);
+  }
+}
+
 void serialHelper_webformLoad(struct EventStruct *event) {
   serialHelper_webformLoad(event, true);
 }
@@ -54,8 +126,11 @@ void serialHelper_webformLoad(struct EventStruct *event, bool allowSoftwareSeria
 }
 
 void serialHelper_webformLoad(int rxPinDef, int txPinDef, bool allowSoftwareSerial) {
+  // Field for I2C addr & RX are shared
+  // Field for channel and TX are shared
+  serialHelper_addI2CuartSelectors(rxPinDef, txPinDef);
   html_add_script(F(
-                    "function serialPortChanged(elem){ var style = elem.value == 0 ? '' : 'none'; document.getElementById('tr_taskdevicepin1').style.display = style; document.getElementById('tr_taskdevicepin2').style.display = style; }"),
+                    "function serialPortChanged(elem) {var style = elem.value == 0 ? '' : 'none';var i2cstyle = elem.value == 1 ? '' : 'none';document.getElementById('tr_taskdevicepin1').style.display = style;document.getElementById('tr_taskdevicepin2').style.display = style;document.getElementById('tr_i2cuart_addr').style.display = i2cstyle;document.getElementById('tr_i2cuart_ch').style.display = i2cstyle;}"),
                   false);
 
   String options[NR_ESPEASY_SERIAL_TYPES];
@@ -120,15 +195,25 @@ void serialHelper_webformLoad(int rxPinDef, int txPinDef, bool allowSoftwareSeri
 }
 
 void serialHelper_webformSave(int8_t &rxPin, int8_t &txPin) {
-  int serialPortSelected = getFormItemInt(F("serPort"), 0);
+  int serialPortSelected = getFormItemInt(F("serPort"), -1);
+  if (serialPortSelected < 0) return;
 
-  if (serialPortSelected > 0) {
-    int tmprxPin, tmptxPin;
-    ESPeasySerialType::serialtype serType = static_cast<ESPeasySerialType::serialtype>(serialPortSelected);
-
-    if (ESPeasySerialType::getSerialTypePins(serType, tmprxPin, tmptxPin)) {
-      rxPin = tmprxPin;
-      txPin = tmptxPin;
+  ESPeasySerialType::serialtype serType = static_cast<ESPeasySerialType::serialtype>(serialPortSelected);
+  switch (serType) {
+    case ESPeasySerialType::serialtype::software:
+    break;
+    case ESPeasySerialType::serialtype::sc16is752:
+      rxPin = getFormItemInt(F("i2cuart_addr"), rxPin);
+      txPin = getFormItemInt(F("i2cuart_ch"), txPin);
+      break;
+    default:
+    {
+      int tmprxPin, tmptxPin;
+      if (ESPeasySerialType::getSerialTypePins(serType, tmprxPin, tmptxPin)) {
+        rxPin = tmprxPin;
+        txPin = tmptxPin;
+      }
+      break;
     }
   }
 }
