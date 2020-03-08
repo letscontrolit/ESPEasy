@@ -389,8 +389,18 @@ void parse_string_commands(String &line) {
         uint8_t uval = arg1.c_str()[0];
         replacement = String(uval);
       }
+      if (replacement.length() == 0) {
+        // part in braces is not a supported command.
+        // replace the {} with other characters to mask the braces so we can continue parsing.
+        // We have to unmask then after we're finished.
+        // See: https://github.com/letscontrolit/ESPEasy/issues/2932#issuecomment-596139096
+        replacement = line.substring(startIndex, closingIndex + 1);
+        replacement.replace('{', static_cast<char>(0x02));
+        replacement.replace('}', static_cast<char>(0x03));
+      }
       // Replace the full command including opening and closing brackets.
       line.replace(line.substring(startIndex, closingIndex + 1), replacement);
+
       /*
       if (replacement.length() > 0) {
         addLog(LOG_LEVEL_INFO, String(F("parse_string_commands cmd: ")) + fullCommand + String(F(" -> ")) + replacement);
@@ -398,6 +408,10 @@ void parse_string_commands(String &line) {
       */
     }
   }
+  // We now have to check if we did mask some parts and unmask them.
+  // Let's hope we don't mess up any Unicode here.
+  line.replace(static_cast<char>(0x02), '{');
+  line.replace(static_cast<char>(0x03), '}');
 }
 
 
