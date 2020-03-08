@@ -3,6 +3,8 @@
 //#################################### Plugin 012: LCD ##################################################
 //#######################################################################################################
 
+#include "_Plugin_Helper.h"
+
 // Sample templates
 //  Temp: [DHT11#Temperature]   Hum:[DHT11#humidity]
 //  DS Temp:[Dallas1#Temperature#R]
@@ -119,7 +121,7 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
         String error;
         for (byte varNr = 0; varNr < P12_Nlines; varNr++)
         {
-          if (!safe_strncpy(deviceTemplate[varNr], WebServer.arg(getPluginCustomArgName(varNr)), P12_Nchars)) {
+          if (!safe_strncpy(deviceTemplate[varNr], web_server.arg(getPluginCustomArgName(varNr)), P12_Nchars)) {
             error += getCustomTaskSettingsError(varNr);
           }
         }
@@ -226,7 +228,7 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
           success = true;
           int colPos = event->Par2 - 1;
           int rowPos = event->Par1 - 1;
-          String text = parseString(string, 4);
+          String text = parseStringKeepCase(string, 4);
           text = P012_parseTemplate(text, Plugin_012_cols);
 
           //clear line before writing new string
@@ -285,7 +287,7 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
 // Perform some specific changes for LCD display
 // https://www.letscontrolit.com/forum/viewtopic.php?t=2368
 String P012_parseTemplate(String &tmpString, byte lineSize) {
-  String result = parseTemplate(tmpString, lineSize);
+  String result = parseTemplate_padded(tmpString, lineSize);
   const char degree[3] = {0xc2, 0xb0, 0};  // Unicode degree symbol
   const char degree_lcd[2] = {0xdf, 0};  // P012_LCD degree symbol
   result.replace(degree, degree_lcd);

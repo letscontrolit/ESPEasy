@@ -43,6 +43,8 @@
 // NEW: Content of header is adjustable, also the alternating function (saved as Bit 15-0 in PCONFIG_LONG(0))
 // CHG: Parameters sorted
 
+#include "_Plugin_Helper.h"
+
 #define PLUGIN_036
 #define PLUGIN_ID_036         36
 #define PLUGIN_NAME_036       "Display - OLED SSD1306/SH1106 Framed"
@@ -415,7 +417,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         String error;
         for (uint8_t varNr = 0; varNr < P36_Nlines; varNr++)
         {
-          if (!safe_strncpy(P036_DisplayLinesV1[varNr].Content, WebServer.arg(getPluginCustomArgName(varNr)), P36_NcharsV1)) {
+          if (!safe_strncpy(P036_DisplayLinesV1[varNr].Content, web_server.arg(getPluginCustomArgName(varNr)), P36_NcharsV1)) {
             error += getCustomTaskSettingsError(varNr);
           }
           P036_DisplayLinesV1[varNr].Content[P36_NcharsV1-1] = 0; // Terminate in case of uninitalized data
@@ -811,7 +813,7 @@ void P36_setContrast(uint8_t OLED_contrast) {
 
 // Perform some specific changes for OLED display
 String P36_parseTemplate(String &tmpString, uint8_t lineSize) {
-  String result = parseTemplate(tmpString, lineSize);
+  String result = parseTemplate_padded(tmpString, lineSize);
   // OLED lib uses this routine to convert UTF8 to extended ASCII
   // http://playground.arduino.cc/Main/Utf8ascii
   // Attempt to display euro sign (FIXME)
@@ -849,62 +851,54 @@ void display_header() {
   if ((HeaderContentAlternative==HeaderContent) || !bAlternativHeader) {
     _HeaderContent=HeaderContent;
   }
-  else _HeaderContent=HeaderContentAlternative;
+  else 
+  {
+    _HeaderContent=HeaderContentAlternative;
+  }
   switch (_HeaderContent) {
     case eSSID:
-      if (WiFiConnected()) strHeader = WiFi.SSID();
+      if (WiFiConnected()) {
+        strHeader = WiFi.SSID();
+      }
       else {
         newString=F("%sysname%");
-        strHeader = parseTemplate(newString, 10);
       }
     break;
     case eSysName:
       newString=F("%sysname%");
-      strHeader = parseTemplate(newString, 10);
     break;
     case eTime:
       newString=F("%systime%");
-      strHeader = parseTemplate(newString, 10);
     break;
     case eDate:
       newString = F("%sysday_0%.%sysmonth_0%.%sysyear%");
-      strHeader = parseTemplate(newString, 10);
     break;
     case eIP:
       newString=F("%ip%");
-      strHeader = parseTemplate(newString, 10);
     break;
     case eMAC:
       newString=F("%mac%");
-      strHeader = parseTemplate(newString, 10);
     break;
     case eRSSI:
       newString=F("%rssi%dB");
-      strHeader = parseTemplate(newString, 10);
     break;
     case eBSSID:
       newString=F("%bssid%");
-      strHeader = parseTemplate(newString, 10);
     break;
     case eWiFiCh:
       newString=F("Channel: %wi_ch%");
-      strHeader = parseTemplate(newString, 10);
     break;
     case eUnit:
       newString=F("Unit: %unit%");
-      strHeader = parseTemplate(newString, 10);
     break;
     case eSysLoad:
       newString=F("Load: %sysload%%");
-      strHeader = parseTemplate(newString, 10);
     break;
     case eSysHeap:
       newString=F("Mem: %sysheap%");
-      strHeader = parseTemplate(newString, 10);
     break;
     case eSysStack:
       newString=F("Stack: %sysstack%");
-      strHeader = parseTemplate(newString, 10);
     break;
     case ePageNo:
       strHeader = F("page ");
@@ -917,6 +911,11 @@ void display_header() {
     default:
       return;
   }
+  if (newString.length() > 0) {
+    // Right now only systemvariables have been used, so we don't have to call the parseTemplate.
+    parseSystemVariables(newString, false);
+    strHeader = newString;
+  }
 
   strHeader.trim();
   display_title(strHeader);
@@ -927,13 +926,13 @@ void display_header() {
 
 void display_time() {
   String dtime = F("%systime%");
-  String newString = parseTemplate(dtime, 10);
+  parseSystemVariables(dtime, false);
   display->setTextAlignment(TEXT_ALIGN_LEFT);
   display->setFont(ArialMT_Plain_10);
   display->setColor(BLACK);
   display->fillRect(0, TopLineOffset, 28, 10);
   display->setColor(WHITE);
-  display->drawString(0, TopLineOffset, newString.substring(0, 5));
+  display->drawString(0, TopLineOffset, dtime.substring(0, 5));
 }
 
 void display_title(String& title) {

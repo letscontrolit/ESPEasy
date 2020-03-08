@@ -3,6 +3,8 @@
 //######################## Plugin 005: Temperature and Humidity sensor DHT 11/22 ########################
 //#######################################################################################################
 
+#include "_Plugin_Helper.h"
+
 #define PLUGIN_005
 #define PLUGIN_ID_005         5
 #define PLUGIN_NAME_005       "Environment - DHT11/12/22  SONOFF2301/7021"

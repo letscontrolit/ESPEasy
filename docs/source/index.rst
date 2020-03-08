@@ -35,6 +35,7 @@ Welcome to ESP Easy's documentation!
    Reference/Events.rst
    Reference/GPIO.rst
    Reference/SystemVariable.rst
+   Reference/RTC.rst
    Reference/ChangeLog.rst
 
 .. toctree::

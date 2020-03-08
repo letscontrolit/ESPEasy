@@ -12,7 +12,7 @@
  *       A compatible IR RX modules SHOULD be connected to ESP
  *       if you want to capture & decode IR nessages. e.g. GPIO14 (D5)
  *       See 'IR_RX' in IRMQTTServer.h.
- *       GPIOs are configurable from the http://<your_esp8266's_ip_address>/gpio
+ *       GPIOs are configurable from the http://<your_esp's_ip_address>/gpio
  *       page.
  *
  * WARN: This is *very* advanced & complicated example code. Not for beginners.
@@ -56,25 +56,25 @@
  *   https://github.com/tzapu/WiFiManager#how-it-works
  *
  * If you need to reset the WiFi and saved settings to go back to "First Boot",
- * visit:  http://<your_esp8266's_ip_address>/reset
+ * visit:  http://<your_esp's_ip_address>/reset
  *
  * ## Normal Use (After initial setup)
- * Enter 'http://<your_esp8266's_ip_address/' in your browser & follow the
+ * Enter 'http://<your_esp's_ip_address/' in your browser & follow the
  * instructions there to send IR codes via HTTP/HTML.
- * Visit the http://<your_esp8266's_ip_address>/gpio page to configure the GPIOs
+ * Visit the http://<your_esp's_ip_address>/gpio page to configure the GPIOs
  * for the IR LED(s) and/or IR RX demodulator.
  *
  * You can send URLs like the following, with similar data type limitations as
  * the MQTT formating in the next section. e.g:
- *   http://<your_esp8266's_ip_address>/ir?type=7&code=E0E09966
- *   http://<your_esp8266's_ip_address>/ir?type=4&code=0xf50&bits=12
- *   http://<your_esp8266's_ip_address>/ir?code=C1A2E21D&repeats=8&type=19
- *   http://<your_esp8266's_ip_address>/ir?type=31&code=40000,1,1,96,24,24,24,48,24,24,24,24,24,48,24,24,24,24,24,48,24,24,24,24,24,24,24,24,1058
- *   http://<your_esp8266's_ip_address>/ir?type=18&code=190B8050000000E0190B8070000010f0
- *   http://<your_esp8266's_ip_address>/ir?repeats=1&type=25&code=0000,006E,0022,0002,0155,00AA,0015,0040,0015,0040,0015,0015,0015,0015,0015,0015,0015,0015,0015,0015,0015,0040,0015,0040,0015,0015,0015,0040,0015,0015,0015,0015,0015,0015,0015,0040,0015,0015,0015,0015,0015,0040,0015,0040,0015,0015,0015,0015,0015,0015,0015,0015,0015,0015,0015,0040,0015,0015,0015,0015,0015,0040,0015,0040,0015,0040,0015,0040,0015,0040,0015,0640,0155,0055,0015,0E40
+ *   http://<your_esp's_ip_address>/ir?type=7&code=E0E09966
+ *   http://<your_esp's_ip_address>/ir?type=4&code=0xf50&bits=12
+ *   http://<your_esp's_ip_address>/ir?code=C1A2E21D&repeats=8&type=19
+ *   http://<your_esp's_ip_address>/ir?type=31&code=40000,1,1,96,24,24,24,48,24,24,24,24,24,48,24,24,24,24,24,48,24,24,24,24,24,24,24,24,1058
+ *   http://<your_esp's_ip_address>/ir?type=18&code=190B8050000000E0190B8070000010f0
+ *   http://<your_esp's_ip_address>/ir?repeats=1&type=25&code=0000,006E,0022,0002,0155,00AA,0015,0040,0015,0040,0015,0015,0015,0015,0015,0015,0015,0015,0015,0015,0015,0040,0015,0040,0015,0015,0015,0040,0015,0015,0015,0015,0015,0015,0015,0040,0015,0015,0015,0015,0015,0040,0015,0040,0015,0015,0015,0015,0015,0015,0015,0015,0015,0015,0015,0040,0015,0015,0015,0015,0015,0040,0015,0040,0015,0040,0015,0040,0015,0040,0015,0640,0155,0055,0015,0E40
  * If you have enabled more than 1 TX GPIO, you can use the "channel" argument:
- *   http://<your_esp8266's_ip_address>/ir?channel=0&type=7&code=E0E09966
- *   http://<your_esp8266's_ip_address>/ir?channel=1&type=7&code=E0E09966
+ *   http://<your_esp's_ip_address>/ir?channel=0&type=7&code=E0E09966
+ *   http://<your_esp's_ip_address>/ir?channel=1&type=7&code=E0E09966
  *
  * or
  *
@@ -241,20 +241,20 @@
  *       - "dry"
  *       - "fan_only"
  *     fan_modes:
- *       - "auto"
- *       - "min"
- *       - "low"
- *       - "medium"
- *       - "high"
- *       - "max"
+ *       - "Auto"
+ *       - "Min"
+ *       - "Low"
+ *       - "Medium"
+ *       - "High"
+ *       - "Max"
  *     swing_modes:
- *       - "off"
- *       - "auto"
- *       - "highest"
- *       - "high"
- *       - "middle"
- *       - "low"
- *       - "lowest"
+ *       - "Off"
+ *       - "Auto"
+ *       - "Highest"
+ *       - "High"
+ *       - "Middle"
+ *       - "Low"
+ *       - "Lowest"
  *     power_command_topic: "ir_server/ac/cmnd/power"
  *     mode_command_topic: "ir_server/ac/cmnd/mode"
  *     mode_state_topic: "ir_server/ac/stat/mode"
@@ -271,7 +271,7 @@
  *
  * #### Home Assistant MQTT Discovery
  *   There is an option for this: 'Send MQTT Discovery' under the 'Admin' menu.
- *   It will produce a single MQTT Cliamte Discovery message for Home Assistant
+ *   It will produce a single MQTT Climate Discovery message for Home Assistant
  *   provided you have everything configured correctly here and in HA.
  *   This message has MQTT RETAIN set on it, so it only ever needs to be sent
  *   once or if the config details change etc.
@@ -284,13 +284,13 @@
  *   first TX GPIO climate. You will need to manually configure the others.
  *
  * ### via HTTP:
- *   Use the "http://<your_esp8266's_ip_address>/aircon/set" URL and pass on
+ *   Use the "http://<your_esp's_ip_address>/aircon/set" URL and pass on
  *   the arguments as needed to control your device. See the `KEY_*` #defines
  *   in the code for all the parameters.
  *   i.e. protocol, model, power, mode, temp, fanspeed, swingv, swingh, quiet,
  *        turbo, light, beep, econo, sleep, filter, clean, use_celsius, channel
  *   Example:
- *     http://<your_esp8266's_ip_address>/aircon/set?channel=0&protocol=PANASONIC_AC&model=LKE&power=on&mode=auto&fanspeed=min&temp=23
+ *     http://<your_esp's_ip_address>/aircon/set?channel=0&protocol=PANASONIC_AC&model=LKE&power=on&mode=auto&fanspeed=min&temp=23
  *
  *   NOTE: If you don't set the channel, the first GPIO (Channel 0) is used.
  *
@@ -353,6 +353,7 @@
 #include <IRremoteESP8266.h>
 #include <IRrecv.h>
 #include <IRsend.h>
+#include <IRtext.h>
 #include <IRtimer.h>
 #include <IRutils.h>
 #include <IRac.h>
@@ -448,6 +449,7 @@ String MqttClimate;  // Sub-topic for the climate topics.
 String MqttClimateCmnd;  // Sub-topic for the climate command topics.
 #if MQTT_DISCOVERY_ENABLE
 String MqttDiscovery;
+String MqttUniqueId;
 #endif  // MQTT_DISCOVERY_ENABLE
 String MqttHAName;
 String MqttClientId;
@@ -1181,7 +1183,7 @@ void handleAdmin(void) {
 #endif  // MQTT_ENABLE
   html += htmlButton(
       kUrlReboot, F("Reboot"),
-      F("A simple reboot of the ESP8266. <small>ie. No changes</small><br>"
+      F("A simple reboot of the ESP. <small>ie. No changes</small><br>"
         "<br>"));
   html += htmlButton(
       kUrlWipe, F("Wipe Settings"),
@@ -1227,6 +1229,7 @@ void handleInfo(void) {
     "<h3>General</h3>"
     "<p>Hostname: " + String(Hostname) + "<br>"
     "IP address: " + WiFi.localIP().toString() + "<br>"
+    "MAC address: " + WiFi.macAddress() + "<br>"
     "Booted: " + timeSince(1) + "<br>" +
     "Version: " _MY_VERSION_ "<br>"
     "Built: " __DATE__
@@ -2032,6 +2035,8 @@ void init_vars(void) {
   // Sub-topic for the climate stat topics.
 #if MQTT_DISCOVERY_ENABLE
   MqttDiscovery = "homeassistant/climate/" + String(Hostname) + "/config";
+  MqttUniqueId = WiFi.macAddress();
+  MqttUniqueId.replace(":", "");
 #endif  // MQTT_DISCOVERY_ENABLE
   MqttHAName = String(Hostname) + "_aircon";
   // Create a unique MQTT client id.
@@ -2514,6 +2519,8 @@ void sendMQTTDiscovery(const char *topic) {
       "\"pow_cmd_t\":\"~/" MQTT_CLIMATE_CMND "/" KEY_POWER "\","
       "\"mode_cmd_t\":\"~/" MQTT_CLIMATE_CMND "/" KEY_MODE "\","
       "\"mode_stat_t\":\"~/" MQTT_CLIMATE_STAT "/" KEY_MODE "\","
+      // I don't know why, but the modes need to be lower case to work with
+      // Home Assistant & Google Home.
       "\"modes\":[\"off\",\"auto\",\"cool\",\"heat\",\"dry\",\"fan_only\"],"
       "\"temp_cmd_t\":\"~/" MQTT_CLIMATE_CMND "/" KEY_TEMP "\","
       "\"temp_stat_t\":\"~/" MQTT_CLIMATE_STAT "/" KEY_TEMP "\","
@@ -2522,11 +2529,22 @@ void sendMQTTDiscovery(const char *topic) {
       "\"temp_step\":\"1\","
       "\"fan_mode_cmd_t\":\"~/" MQTT_CLIMATE_CMND "/" KEY_FANSPEED "\","
       "\"fan_mode_stat_t\":\"~/" MQTT_CLIMATE_STAT "/" KEY_FANSPEED "\","
-      "\"fan_modes\":[\"auto\",\"min\",\"low\",\"medium\",\"high\",\"max\"],"
+      "\"fan_modes\":[\"" D_STR_AUTO "\",\"" D_STR_MIN "\",\"" D_STR_LOW "\",\""
+                      D_STR_MEDIUM "\",\"" D_STR_HIGH "\",\"" D_STR_MAX "\"],"
       "\"swing_mode_cmd_t\":\"~/" MQTT_CLIMATE_CMND "/" KEY_SWINGV "\","
       "\"swing_mode_stat_t\":\"~/" MQTT_CLIMATE_STAT "/" KEY_SWINGV "\","
-      "\"swing_modes\":["
-        "\"off\",\"auto\",\"highest\",\"high\",\"middle\",\"low\",\"lowest\"]"
+      "\"swing_modes\":[\"" D_STR_OFF "\",\"" D_STR_AUTO "\",\"" D_STR_HIGHEST
+                        "\",\"" D_STR_HIGH "\",\"" D_STR_MIDDLE "\",\""
+                        D_STR_LOW "\",\"" D_STR_LOWEST "\"],"
+      "\"uniq_id\":\"" + MqttUniqueId + "\","
+      "\"device\":{"
+        "\"identifiers\":[\"" + MqttUniqueId + "\"],"
+        "\"connections\":[[\"mac\",\"" + WiFi.macAddress() + "\"]],"
+        "\"manufacturer\":\"IRremoteESP8266\","
+        "\"model\":\"IRMQTTServer\","
+        "\"name\":\"" + Hostname + "\","
+        "\"sw_version\":\"" _MY_VERSION_ "\""
+        "}"
       "}").c_str(), true)) {
     mqttLog("MQTT climate discovery successful sent.");
     hasDiscoveryBeenSent = true;
@@ -2674,7 +2692,7 @@ uint64_t getUInt64fromHex(char const *str) {
 //   code:     Numeric payload of the IR message. Most protocols use this.
 //   code_str: The unparsed code to be sent. Used by complex protocol encodings.
 //   bits:     Nr. of bits in the protocol. 0 means use the protocol's default.
-//   repeat:   Nr. of times the message is to be repeated. (Not all protcols.)
+//   repeat:   Nr. of times the message is to be repeated. (Not all protocols.)
 // Returns:
 //   bool: Successfully sent or not.
 bool sendIRCode(IRsend *irsend, decode_type_t const ir_type,
@@ -2961,16 +2979,15 @@ bool sendClimate(const String topic_prefix, const bool retain,
     diff = true;
     success &= sendInt(topic_prefix + KEY_MODEL, next.model, retain);
   }
+  String mode_str = IRac::opmodeToString(next.mode);
+  // I don't know why, but the modes need to be lower case to work with
+  // Home Assistant & Google Home.
+  mode_str.toLowerCase();
 #if MQTT_CLIMATE_HA_MODE
   // Home Assistant want's these two bound together.
   if (prev.power != next.power || prev.mode != next.mode || forceMQTT) {
-    diff = true;
     success &= sendBool(topic_prefix + KEY_POWER, next.power, retain);
-    success &= sendString(topic_prefix + KEY_MODE,
-                          (next.power ? IRac::opmodeToString(next.mode)
-                                      : F("off")),
-                          retain);
-  }
+    if (!next.power) mode_str = F("off");
 #else  // MQTT_CLIMATE_HA_MODE
   // In non-Home Assistant mode, power and mode are not bound together.
   if (prev.power != next.power || forceMQTT) {
@@ -2978,11 +2995,10 @@ bool sendClimate(const String topic_prefix, const bool retain,
     success &= sendBool(topic_prefix + KEY_POWER, next.power, retain);
   }
   if (prev.mode != next.mode || forceMQTT) {
-    diff = true;
-    success &= sendString(topic_prefix + KEY_MODE,
-                          IRac::opmodeToString(next.mode), retain);
-  }
 #endif  // MQTT_CLIMATE_HA_MODE
+    success &= sendString(topic_prefix + KEY_MODE, mode_str, retain);
+    diff = true;
+  }
   if (prev.degrees != next.degrees || forceMQTT) {
     diff = true;
     success &= sendFloat(topic_prefix + KEY_TEMP, next.degrees, retain);
@@ -3068,6 +3084,10 @@ bool sendClimate(const String topic_prefix, const bool retain,
     lastClimateIr.reset();
     irClimateCounter++;
   }
+  // Mark the "next" value as old/previous.
+  if (ac != NULL) {
+    ac->markAsSent();
+  }
   return success;
 }
 
@@ -3095,20 +3115,20 @@ bool decodeCommonAc(const decode_results *decode) {
   }
 #if IGNORE_DECODED_AC_PROTOCOL
   if (climate[0]->next.protocol != decode_type_t::UNKNOWN) {
-    // Use the previous protcol/model if set.
+    // Use the previous protocol/model if set.
     state.protocol = climate[0]->next.protocol;
     state.model = climate[0]->next.model;
   }
 #endif  // IGNORE_DECODED_AC_PROTOCOL
-// Continue to use the previously prefered temperature units.
-// i.e. Keep using Celsius or Fahrenheit.
-if (climate[0]->next.celsius != state.celsius) {
-  // We've got a mismatch, so we need to convert.
-  state.degrees = climate[0]->next.celsius ? fahrenheitToCelsius(state.degrees)
-                                           : celsiusToFahrenheit(state.degrees);
-  state.celsius = climate[0]->next.celsius;
-}
-climate[0]->next = state;  // Copy over the new climate state.
+  // Continue to use the previously prefered temperature units.
+  // i.e. Keep using Celsius or Fahrenheit.
+  if (climate[0]->next.celsius != state.celsius) {
+    // We've got a mismatch, so we need to convert.
+    state.degrees = climate[0]->next.celsius ?
+        fahrenheitToCelsius(state.degrees) : celsiusToFahrenheit(state.degrees);
+    state.celsius = climate[0]->next.celsius;
+  }
+  climate[0]->next = state;  // Copy over the new climate state.
 #if MQTT_ENABLE
   sendClimate(genStatTopic(0), true, false, REPLAY_DECODED_AC_MESSAGE,
               REPLAY_DECODED_AC_MESSAGE, climate[0]);

@@ -35,6 +35,7 @@
 //            https://cdn-shop.adafruit.com/datasheets/MAX31855.pdf
 
 #include <SPI.h>
+#include "_Plugin_Helper.h"
 
 #define PLUGIN_039
 #define PLUGIN_ID_039         39

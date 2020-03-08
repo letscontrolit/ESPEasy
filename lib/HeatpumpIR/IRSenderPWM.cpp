@@ -114,10 +114,12 @@ void IRSenderPWM::setFrequency(int frequency)
       // Fall-through to 46, timer 5 controls pins 44, 45 and 46 on Arduino Mega
     case 45:
     case 46:
-      TCCR5A = _BV(WGM51) | _BV(WGM50);
+      TCCR5A = _BV(WGM51); // This gives correct data from pins 44,45,46 and similar range to pin 9
       TCCR5B = _BV(WGM53) | _BV(CS50);
       ICR5 = pwmval16;
       OCR5A = pwmval16 / 3;
+      OCR5B = pwmval16 / 3; // Also enable pin 45
+      OCR5C = pwmval16 / 3; // Also enable pin 44
 #else
 // Arduino Duemilanove etc
 #if !defined(__AVR_ATmega8__)

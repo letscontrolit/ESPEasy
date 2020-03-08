@@ -76,6 +76,8 @@
 // CRC calculation is based on the works by Paul Stoffregen from the 1-Wire arduino library. Special
 // thanks to Greg Cook and the team behind reveng.sourceforge.net.
 
+#include "_Plugin_Helper.h"
+
 //edwin: Disabled for now: hardware is not generic enough and  uses lots of ram and iram,
 #ifdef PLUGIN_BUILD_DISABLED
 
@@ -334,7 +336,7 @@ boolean Plugin_046(byte function, struct EventStruct *event, String& string)
             P046_data->Plugin_046_newData = false;
             if (PLUGIN_046_DEBUG) {
               String log = F("Ventus W266 Rcvd(");
-              log += getTimeString(':');
+              log += node_time.getTimeString(':');
               log += F(") ");
               for (int i = 0; i < Plugin_046_Payload; i++) {
                 if ((i==2)||(i==3)||(i==4)||(i==9)||(i==10)||(i==14)||(i==17)||(i==18)||(i==20)) {

@@ -68,6 +68,7 @@
 #define PLUGIN_NAME_057       "Display - HT16K33 [TESTING]"
 
 #include <HT16K33.h>
+#include "_Plugin_Helper.h"
 
 CHT16K33* Plugin_057_M = NULL;
 
@@ -300,8 +301,8 @@ boolean Plugin_057(byte function, struct EventStruct *event, String& string)
         if (!Plugin_057_M || PCONFIG(1) == 0)
           break;
 
-        byte hours = hour();
-        byte minutes = minute();
+        byte hours = node_time.hour();
+        byte minutes = node_time.minute();
 
         // Plugin_057_M->ClearRowBuffer();
         Plugin_057_M->SetDigit(PCONFIG(5), minutes % 10);

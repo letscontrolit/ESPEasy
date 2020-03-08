@@ -24,8 +24,10 @@ An Arduino library to control pump/split unit air conditioner. Currently support
 * Mitsubishi Heavy SRKxxZJ-S (Remote control P/N RKX502A001C)
 * Mitsubishi Heavy SRKxxZM-S (Remote Control P/N RLA502A700B)
 * Mitsubishi Heavy SRKxxZMP-S (Remote Control P/N RKX502A001P)
+* Mitsubishi Heavy FDTCxxVF (Remote Control P/N PJA502A704AA)
 * Mitsubishi MSZ FD-25, probably also FD-35 (remote control P/N KM09D 0052376)
    * Also FH series has been confirmed to work
+* Mitsubishi Electric MSC-GA20VB, MSC-GA25VB, MSC-GA35VB (remote control P/N KP1A)
 * Panasonic E9/E12-CKP (Panasonic remote control P/N A75C2295)
 * Panasonic E9/E12-DKE (Panasonic remote control P/N A75C2616)
 * Panasonic E9/E12-JKE and E9/E12-NKE
@@ -61,6 +63,13 @@ As an alternative methods these are available:
 * IRSenderIRremoteESP8266 - This method requires [IRremoteESP8266 library](https://github.com/markszabo/IRremoteESP8266/). Good accuracy, but worse than IRSenderESP8266.
 
 Note that depending on your board, certain GPIO's might not be available. For example on NodeMCU, the usable GPIO's are D1 (GPIO5), D2 (GPIO4), D6 (GPIO12), D7 (GPIO13) and D3 (GPIO0).
+
+### ESPEasy on ESP8266 board
+
+This library (together with the HeatpumpIR plugin) is integrated into the ESP Easy firmware. The a look here: https://github.com/letscontrolit/ESPEasy
+* Download the pre-built firmware under the 'Releases' tab
+* HeatpumpIR is included in the 'minimalIRext' images
+* Documentation: https://espeasy.readthedocs.io/en/latest/Plugin/P088.html#p088-page
 
 ### ESP32 support
 This library also supports ESP32. Just change the IR send method from 'IRSenderPWM' to 'IRSenderESP32':

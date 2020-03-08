@@ -23,7 +23,7 @@
 
 // #include <*.h>   // no include needed
 #include <math.h>   // no include needed
-
+#include "_Plugin_Helper.h"
 
 boolean Plugin_066(byte function, struct EventStruct *event, String& string)
 {

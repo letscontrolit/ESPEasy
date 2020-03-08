@@ -14,6 +14,7 @@
 
 
 #include <Adafruit_NeoPixel.h>
+#include "_Plugin_Helper.h"
 
 #define NUMBER_LEDS      60			//number of LED in the strip
 
@@ -53,9 +54,9 @@ struct P070_data_struct : public PluginTaskData_base {
   {
     clearClock();			//turn off the LEDs
     if (display_enabled > 0) {		//if the display is enabled, calculate the LEDs to turn on
-      int Hours = hour();
-      int Minutes = minute();
-      int Seconds = second();
+      int Hours = node_time.hour();
+      int Minutes = node_time.minute();
+      int Seconds = node_time.second();
       timeToStrip(Hours, Minutes, Seconds);
     }
     Plugin_070_pixels->show(); // This sends the updated pixel color to the hardware.

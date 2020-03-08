@@ -65,6 +65,9 @@
 #ifndef DEFAULT_ADMIN_USERNAME
 #define DEFAULT_ADMIN_USERNAME  "admin"
 #endif
+#ifndef DEFAULT_ADMIN_PASS
+#define DEFAULT_ADMIN_PASS     ""
+#endif
 
 #ifndef DEFAULT_WIFI_CONNECTION_TIMEOUT
 #define DEFAULT_WIFI_CONNECTION_TIMEOUT  10000  // minimum timeout in ms for WiFi to be connected.
@@ -88,6 +91,9 @@
 #define DEFAULT_TOLERANT_LAST_ARG_PARSE  false  // When set, the last argument of some commands will be parsed to the end of the line
                                                 // See: https://github.com/letscontrolit/ESPEasy/issues/2724
 #endif
+#ifndef DEFAULT_SEND_TO_HTTP_ACK
+#define DEFAULT_SEND_TO_HTTP_ACK         false // Wait for ack with SendToHttp command.
+#endif
 
 // --- Default Controller ------------------------------------------------------------------------------
 #ifndef DEFAULT_CONTROLLER
@@ -97,6 +103,14 @@
 #ifndef DEFAULT_CONTROLLER_ENABLED
 #define DEFAULT_CONTROLLER_ENABLED   false     // Enable default controller by default
 #endif
+
+#ifndef DEFAULT_CONTROLLER_USER
+#define DEFAULT_CONTROLLER_USER    ""                                       // Default controller user
+#endif
+#ifndef DEFAULT_CONTROLLER_PASS
+#define DEFAULT_CONTROLLER_PASS    ""                                       // Default controller Password
+#endif
+
 // using a default template, you also need to set a DEFAULT PROTOCOL to a suitable MQTT protocol !
 #ifndef DEFAULT_PUB
 #define DEFAULT_PUB         "sensors/espeasy/%sysname%/%tskname%/%valname%" // Enter your pub

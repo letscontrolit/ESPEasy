@@ -10,8 +10,8 @@
   //FIXME: this should go to PLUGIN_WRITE in _C012.ino
 String Command_Blynk_Get(struct EventStruct *event, const char* Line)
 {
-  byte first_enabled_blynk_controller = firstEnabledBlynkController();
-  if (first_enabled_blynk_controller == -1) {
+  controllerIndex_t first_enabled_blynk_controller = firstEnabledBlynk_ControllerIndex();
+  if (!validControllerIndex(first_enabled_blynk_controller)) {
     return F("Controller not enabled");
   } else {
     // FIXME TD-er: This one is not using parseString* function

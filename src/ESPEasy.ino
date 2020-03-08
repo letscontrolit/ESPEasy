@@ -102,12 +102,17 @@
 #include "src/DataStructs/SystemTimerStruct.h"
 #include "src/DataStructs/TimingStats.h"
 
+#include "src/DataStructs/tcp_cleanup.h"
+
+#include "src/Globals/CPlugins.h"
 #include "src/Globals/Device.h"
 #include "src/Globals/ESPEasyWiFiEvent.h"
 #include "src/Globals/ExtraTaskSettings.h"
 #include "src/Globals/GlobalMapPortStatus.h"
 #include "src/Globals/MQTT.h"
 #include "src/Globals/Plugins.h"
+#include "src/Globals/Protocol.h"
+#include "src/Globals/RamTracker.h"
 #include "src/Globals/RTC.h"
 #include "src/Globals/SecuritySettings.h"
 #include "src/Globals/Services.h"
@@ -118,16 +123,6 @@
 ADC_MODE(ADC_VCC);
 #endif
 
-
-// FIXME TD-er: This must be moves to src/Globals/Services
-// But right now, it seems hard to define WevServer in a .h/.cpp file
-// error: 'WebServer' does not name a type
-#ifdef ESP32
-  #include <WiFi.h>
-  #include <WebServer.h>
-  WebServer WebServer(80);
-#endif
-
 // Get functions to give access to global defined variables.
 // These are needed to get direct access to global defined variables, since they cannot be defined in .h files and included more than once.
 
@@ -136,9 +131,9 @@ float& getUserVar(unsigned int varIndex) {return UserVar[varIndex]; }
 
 #ifdef USES_BLYNK
 // Blynk_get prototype
-boolean Blynk_get(const String& command, byte controllerIndex,float *data = NULL );
+boolean Blynk_get(const String& command, controllerIndex_t controllerIndex,float *data = NULL );
 
-int firstEnabledBlynkController();
+controllerIndex_t firstEnabledBlynk_ControllerIndex();
 #endif
 
 //void checkRAM( const __FlashStringHelper* flashString);
@@ -252,12 +247,16 @@ void setup()
       log = F("INIT : Rebooted from deepsleep #");
       lastBootCause=BOOT_CAUSE_DEEP_SLEEP;
     }
-    else
+    else {
+      node_time.restoreLastKnownUnixTime(RTC.lastSysTime, RTC.deepSleepState);
       log = F("INIT : Warm boot #");
+    }
 
     log += RTC.bootCounter;
     log += F(" Last Task: ");
     log += decodeSchedulerId(lastMixedSchedulerId_beforereboot);
+    log += F(" Last systime: ");
+    log += RTC.lastSysTime;
   }
   //cold boot (RTC memory empty)
   else
@@ -280,6 +279,7 @@ void setup()
   fileSystemCheck();
   progMemMD5check();
   LoadSettings();
+
   Settings.UseRTOSMultitasking = false; // For now, disable it, we experience heap corruption.
   if (RTC.bootFailedCount > 10 && RTC.bootCounter > 10) {
     byte toDisable = RTC.bootFailedCount - 10;
@@ -345,6 +345,7 @@ void setup()
   PluginInit();
   log = F("INFO : Plugins: ");
   log += deviceCount + 1;
+  log += ' ';
   log += getPluginDescriptionString();
   log += " (";
   log += getSystemLibraryString();
@@ -382,8 +383,8 @@ void setup()
   if (Settings.UDPPort != 0)
     portUDP.begin(Settings.UDPPort);
 
-  if (systemTimePresent())
-    initTime();
+  if (node_time.systemTimePresent())
+    node_time.initTime();
 
 #if FEATURE_ADC_VCC
   if (!wifiConnectInProgress) {
@@ -434,7 +435,7 @@ void RTOS_TaskServers( void * parameter )
 {
  while (true){
   delay(100);
-  WebServer.handleClient();
+  web_server.handleClient();
   checkUDP();
  }
 }
@@ -551,7 +552,7 @@ void loop()
      addLog(LOG_LEVEL_INFO, F("firstLoopConnectionsEstablished"));
      firstLoop = false;
      timerAwakeFromDeepSleep = millis(); // Allow to run for "awake" number of seconds, now we have wifi.
-     // schedule_all_task_device_timers(); Disabled for now, since we are now using queues for controllers.
+     // schedule_all_task_device_timers(); // Disabled for now, since we are now using queues for controllers.
      if (Settings.UseRules && isDeepSleepEnabled())
      {
         String event = F("System#NoSleep=");
@@ -603,12 +604,12 @@ void loop()
 void flushAndDisconnectAllClients() {
   if (anyControllerEnabled()) {
 #ifdef USES_MQTT
-    bool mqttControllerEnabled = firstEnabledMQTTController() >= 0;
+    bool mqttControllerEnabled = validControllerIndex(firstEnabledMQTT_ControllerIndex());
 #endif //USES_MQTT
     unsigned long timer = millis() + 1000;
     while (!timeOutReached(timer)) {
       // call to all controllers (delay queue) to flush all data.
-      CPluginCall(CPLUGIN_FLUSH, 0);
+      CPluginCall(CPlugin::Function::CPLUGIN_FLUSH, 0);
 #ifdef USES_MQTT      
       if (mqttControllerEnabled && MQTTclient.connected()) {
         MQTTclient.loop();
@@ -668,8 +669,8 @@ void runPeriodicalMQTT() {
     return;
   }
   //dont do this in backgroundtasks(), otherwise causes crashes. (https://github.com/letscontrolit/ESPEasy/issues/683)
-  int enabledMqttController = firstEnabledMQTTController();
-  if (enabledMqttController >= 0) {
+  controllerIndex_t enabledMqttController = firstEnabledMQTT_ControllerIndex();
+  if (validControllerIndex(enabledMqttController)) {
     if (!MQTTclient.loop()) {
       updateMQTTclient_connected();
       if (MQTTCheck(enabledMqttController)) {
@@ -684,30 +685,34 @@ void runPeriodicalMQTT() {
   }
 }
 
-int firstEnabledMQTTController() {
-  for (byte i = 0; i < CONTROLLER_MAX; ++i) {
-    byte ProtocolIndex = getProtocolIndex(Settings.Protocol[i]);
-    if (Protocol[ProtocolIndex].usesMQTT && Settings.ControllerEnabled[i]) {
-      return i;
+controllerIndex_t firstEnabledMQTT_ControllerIndex() {
+  for (controllerIndex_t i = 0; i < CONTROLLER_MAX; ++i) {
+    protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(i);
+    if (validProtocolIndex(ProtocolIndex)) {
+      if (Protocol[ProtocolIndex].usesMQTT && Settings.ControllerEnabled[i]) {
+        return i;
+      }
     }
   }
-  return -1;
+  return INVALID_CONTROLLER_INDEX;
 }
 
 #endif //USES_MQTT
 
 #ifdef USES_BLYNK
 // Blynk_get prototype
-//boolean Blynk_get(const String& command, byte controllerIndex,float *data = NULL );
+//boolean Blynk_get(const String& command, controllerIndex_t controllerIndex,float *data = NULL );
 
-int firstEnabledBlynkController() {
-  for (byte i = 0; i < CONTROLLER_MAX; ++i) {
-    byte ProtocolIndex = getProtocolIndex(Settings.Protocol[i]);
-    if (Protocol[ProtocolIndex].Number == 12 && Settings.ControllerEnabled[i]) {
-      return i;
+controllerIndex_t firstEnabledBlynk_ControllerIndex() {
+  for (controllerIndex_t i = 0; i < CONTROLLER_MAX; ++i) {
+    protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(i);
+    if (validProtocolIndex(ProtocolIndex)) {
+      if (Protocol[ProtocolIndex].Number == 12 && Settings.ControllerEnabled[i]) {
+        return i;
+      }
     }
   }
-  return -1;
+  return INVALID_CONTROLLER_INDEX;
 }
 #endif
 
@@ -717,10 +722,17 @@ int firstEnabledBlynkController() {
 \*********************************************************************************************/
 
 void run50TimesPerSecond() {
-  START_TIMER;
   String dummy;
-  PluginCall(PLUGIN_FIFTY_PER_SECOND, 0, dummy);
-  STOP_TIMER(PLUGIN_CALL_50PS);
+  {
+    START_TIMER;
+    PluginCall(PLUGIN_FIFTY_PER_SECOND, 0, dummy);
+    STOP_TIMER(PLUGIN_CALL_50PS);
+  }
+  {
+    START_TIMER;
+    CPluginCall(CPlugin::Function::CPLUGIN_FIFTY_PER_SECOND, 0, dummy);
+    STOP_TIMER(CPLUGIN_CALL_50PS);
+  }
 }
 
 /*********************************************************************************************\
@@ -739,16 +751,19 @@ void run10TimesPerSecond() {
     PluginCall(PLUGIN_MONITOR, 0, dummy);
     STOP_TIMER(PLUGIN_CALL_10PSU);
   }
-  if (Settings.UseRules)
   {
-    processNextEvent();
+    START_TIMER;
+    CPluginCall(CPlugin::Function::CPLUGIN_TEN_PER_SECOND, 0, dummy);
+    STOP_TIMER(CPLUGIN_CALL_10PS);
   }
+  processNextEvent();
+  
   #ifdef USES_C015
   if (WiFiConnected())
       Blynk_Run_c015();
   #endif
   #ifndef USE_RTOS_MULTITASKING
-    WebServer.handleClient();
+    web_server.handleClient();
   #endif
 }
 
@@ -791,8 +806,31 @@ void runOncePerSecond()
     cmd_within_mainloop = 0;
   }
   // clock events
-  if (systemTimePresent())
-    checkTime();
+  if (node_time.reportNewMinute()) {
+    String dummy;
+    PluginCall(PLUGIN_CLOCK_IN, 0, dummy);
+    if (Settings.UseRules)
+    {
+      String event;
+      event.reserve(21);
+      event  = F("Clock#Time=");
+      event += node_time.weekday_str();
+      event += ",";
+
+      if (node_time.hour() < 10) {
+        event += '0';
+      }
+      event += node_time.hour();
+      event += ":";
+
+      if (node_time.minute() < 10) {
+        event += '0';
+      }
+      event += node_time.minute();
+      // TD-er: Do not add to the eventQueue, but execute right now.
+      rulesProcessing(event);
+    }
+  }
 
 //  unsigned long start = micros();
   String dummy;
@@ -841,7 +879,6 @@ void logTimerStatistics() {
 \*********************************************************************************************/
 void runEach30Seconds()
 {
-   extern void checkRAMtoLog();
   checkRAMtoLog();
   wdcounter++;
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -863,7 +900,7 @@ void runEach30Seconds()
   refreshNodeList();
 
   // sending $stats to homie controller
-  CPluginCall(CPLUGIN_INTERVAL, 0);
+  CPluginCall(CPlugin::Function::CPLUGIN_INTERVAL, 0);
 
   #if defined(ESP8266)
   #ifdef USES_SSDP
@@ -930,7 +967,7 @@ void backgroundtasks()
       }
     }
     if (webserverRunning) {
-      WebServer.handleClient();
+      web_server.handleClient();
     }
     if (WiFi.getMode() != WIFI_OFF) {
       checkUDP();

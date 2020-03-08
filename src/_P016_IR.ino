@@ -17,9 +17,12 @@
 // IF the IR code is an Air Condition protocol that the  IR library can decode, then there will be a human-readable description of that IR message.
 // If the IR library can encode those kind of messages then a JSON formated command will be given, that can be replayed by P035 as well.
 // That commands format is: IRSENDAC,'{"protocol":"COOLIX","power":"on","mode":"dry","fanspeed":"auto","temp":22,"swingv":"max","swingh":"off"}'
+#include <ArduinoJson.h>
 #include <IRremoteESP8266.h>
 #include <IRutils.h>
 #include <IRrecv.h>
+
+#include "_Plugin_Helper.h"
 
 #ifdef P016_P035_Extended_AC
 #include <IRac.h>
@@ -266,7 +269,7 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
           doc[F("turbo")] = IRac::boolToString(state.turbo); //Turbo setting ON or OFF
         if (state.econo)
           doc[F("econo")] = IRac::boolToString(state.econo); //Economy setting ON or OFF
-        if (state.light)
+        if (!state.light)
           doc[F("light")] = IRac::boolToString(state.light); //Light setting ON or OFF
         if (state.filter)
           doc[F("filter")] = IRac::boolToString(state.filter); //Filter setting ON or OFF
@@ -447,3 +450,15 @@ unsigned int storeB32Hex(char out[], unsigned int iOut, unsigned int val)
 #endif //P016_P035_RAW_RAW2
 
 #endif // USES_P016
+
+void enableIR_RX(boolean enable)
+{
+#ifdef PLUGIN_016
+  if (irReceiver == 0) return;
+  if (enable) {
+    irReceiver->enableIRIn(); // Start the receiver
+  } else {
+    irReceiver->disableIRIn(); // Stop the receiver
+  }
+#endif //PLUGIN_016
+}

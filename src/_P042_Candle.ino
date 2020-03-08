@@ -51,6 +51,7 @@
 // http://stackoverflow.com/questions/3018313/algorithm-to-convert-rgb-to-hsv-and-hsv-to-rgb-in-range-0-255-for-both    Code Sammlung
 
 #include <Adafruit_NeoPixel.h>
+#include "_Plugin_Helper.h"
 
 #define NUM_PIXEL       20         // Defines the amount of LED Pixel
 #define NUM_PIXEL_ROW    5         // Defines the amount of LED Pixel per Row

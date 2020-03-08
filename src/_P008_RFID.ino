@@ -3,6 +3,8 @@
 //################################# Plugin 008: Wiegand RFID Tag Reader #################################
 //#######################################################################################################
 
+#include "_Plugin_Helper.h"
+
 #define PLUGIN_008
 #define PLUGIN_ID_008         8
 #define PLUGIN_NAME_008       "RFID - Wiegand"
@@ -144,7 +146,7 @@ boolean Plugin_008(byte function, struct EventStruct *event, String& string)
 
       case PLUGIN_WEBFORM_SAVE:
         {
-          String plugin1 = WebServer.arg(F("p008_type"));
+          String plugin1 = web_server.arg(F("p008_type"));
           PCONFIG(0) = plugin1.toInt();
           success = true;
           break;

@@ -11,8 +11,8 @@ void handle_upload() {
   TXBuffer.startStream();
   sendHeadandTail_stdtemplate();
 
-  TXBuffer += F(
-    "<form enctype='multipart/form-data' method='post'><p>Upload settings file:<br><input type='file' name='datafile' size='40'></p><div><input class='button link' type='submit' value='Upload'></div><input type='hidden' name='edit' value='1'></form>");
+  addHtml(F(
+            "<form enctype='multipart/form-data' method='post'><p>Upload settings file:<br><input type='file' name='datafile' size='40'></p><div><input class='button link' type='submit' value='Upload'></div><input type='hidden' name='edit' value='1'></form>"));
   sendHeadandTail_stdtemplate(true);
   TXBuffer.endStream();
   printWebString = "";
@@ -34,20 +34,20 @@ void handle_upload_post() {
 
   if (uploadResult == 1)
   {
-    TXBuffer += F("Upload OK!<BR>You may need to reboot to apply all settings...");
+    addHtml(F("Upload OK!<BR>You may need to reboot to apply all settings..."));
     LoadSettings();
   }
 
   if (uploadResult == 2) {
-    TXBuffer += F("<font color=\"red\">Upload file invalid!</font>");
+    addHtml(F("<font color=\"red\">Upload file invalid!</font>"));
   }
 
   if (uploadResult == 3) {
-    TXBuffer += F("<font color=\"red\">No filename!</font>");
+    addHtml(F("<font color=\"red\">No filename!</font>"));
   }
 
 
-  TXBuffer += F("Upload finished");
+  addHtml(F("Upload finished"));
   sendHeadandTail_stdtemplate(true);
   TXBuffer.endStream();
   printWebString = "";
@@ -62,9 +62,9 @@ void handle_upload_json() {
   if (!isLoggedIn()) { result = 255; }
 
   TXBuffer.startJsonStream();
-  TXBuffer += "{";
+  addHtml("{");
   stream_next_json_object_value(F("status"), String(result));
-  TXBuffer += "}";
+  addHtml("}");
 
   TXBuffer.endStream();
 }
@@ -82,7 +82,7 @@ void handleFileUpload() {
 
   static boolean valid = false;
 
-  HTTPUpload& upload = WebServer.upload();
+  HTTPUpload& upload = web_server.upload();
 
   if (upload.filename.c_str()[0] == 0)
   {
