@@ -13,6 +13,17 @@
 
 #define PLUGIN_093_DEBUG
 
+/*
+ *
+ * Bi-directional communication with the heat pump.
+ *
+ * Should support all Mitsubishi HP units with CN105 connector.
+ *
+ * Plugin is based on "Arduino library to control Mitsubishi Heat Pumps" from
+ * https://github.com/SwiCago/HeatPump.
+ *
+ */
+
 static const uint8_t PACKET_LEN = 22;
 static const uint8_t READ_BUFFER_LEN = 32;
 

@@ -96,6 +96,14 @@ Example
 
 A full working example using openHAB can be found `here <https://community.openhab.org/t/mitsubishi-heat-pump/91765>`_.
 
+Special thanks
+--------------
+
+* to SwiCago and other maintainers and contributors of the *Arduino library to control Mitsubishi Heat Pumps* from https://github.com/SwiCago/HeatPump/,
+* to Chris Davis for his great `blog <https://chrdavis.github.io/hacking-a-mitsubishi-heat-pump-Part-1/>`_,
+* to Hadley from New Zealand for his *hacking* https://nicegear.co.nz/blog/hacking-a-mitsubishi-heat-pump-air-conditioner/,
+* and all others that contributed on this subject.
+
 Change log
 ----------
 
