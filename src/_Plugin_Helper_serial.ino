@@ -6,6 +6,7 @@ static String serialHelper_getSerialTypeLabel(ESPeasySerialType::serialtype serT
   int portnr = 0;
   switch (serType) {
     case ESPeasySerialType::serialtype::software:        return F("SoftwareSerial"); 
+    case ESPeasySerialType::serialtype::sc16is752:       return F("I2C Serial"); 
     case ESPeasySerialType::serialtype::serial0_swap:    return F("HW Serial0 swap");
     case ESPeasySerialType::serialtype::serial0:         portnr = 0; break;
     case ESPeasySerialType::serialtype::serial1:         portnr = 1; break;
@@ -72,19 +73,30 @@ void serialHelper_webformLoad(int rxPinDef, int txPinDef, bool allowSoftwareSeri
       option.reserve(48);
       option = serialHelper_getSerialTypeLabel(serType);
 
-      if (serType != ESPeasySerialType::serialtype::software) {
-        option += ": ";
-        option += formatGpioLabel(rxPin, false);
-        option += ' ';
-        option += formatGpioDirection(gpio_input);
-        option += "TX / ";
-        option += formatGpioLabel(txPin, false);
-        option += ' ';
-        option += formatGpioDirection(gpio_output);
-        option += "RX";
-      } else {
-        if (!allowSoftwareSerial) {
-          attr[i] = F("disabled");
+      switch (serType) {
+        case ESPeasySerialType::serialtype::software:
+        {
+          if (!allowSoftwareSerial) {
+            attr[i] = F("disabled");
+          }
+          break;
+        }
+        case ESPeasySerialType::serialtype::sc16is752:
+        {
+          break;
+        }
+        default:
+        {
+          option += ": ";
+          option += formatGpioLabel(rxPin, false);
+          option += ' ';
+          option += formatGpioDirection(gpio_input);
+          option += "TX / ";
+          option += formatGpioLabel(txPin, false);
+          option += ' ';
+          option += formatGpioDirection(gpio_output);
+          option += "RX";
+          break;
         }
       }
       options[index] = option;

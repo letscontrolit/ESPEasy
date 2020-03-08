@@ -167,7 +167,7 @@ void SC16IS752::WriteRegister(uint8_t channel, uint8_t reg_addr, uint8_t val)
   }
 }
 
-void    SC16IS752::Initialize()
+void SC16IS752::Initialize()
 {
   if (protocol == SC16IS750_PROTOCOL_I2C) {
     WIRE.begin();

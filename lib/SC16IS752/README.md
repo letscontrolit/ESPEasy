@@ -9,7 +9,7 @@ __The maximum transfer speed of SC16IS752 is 115,200bps__
 
 ![SC16IS752-2](images/CJMCU-752-top.jpg)
 
-![SC16IS752-1](images/CJMCU-752-top.jpg)
+![SC16IS752-1](images/CJMCU-752-bottom.jpg)
 
 ---
 

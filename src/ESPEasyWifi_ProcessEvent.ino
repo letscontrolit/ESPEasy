@@ -128,7 +128,7 @@ void processDisconnect() {
   if (processedDisconnect) { return; }
   processedDisconnect = true;
   wifiStatus          = ESPEASY_WIFI_DISCONNECTED;
-  setWebserverRunning(false);
+//  setWebserverRunning(false);
   delay(100); // FIXME TD-er: See https://github.com/letscontrolit/ESPEasy/issues/1987#issuecomment-451644424
 
   if (Settings.UseRules) {
