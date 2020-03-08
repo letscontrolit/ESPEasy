@@ -27,7 +27,7 @@
 .. |P052_name| replace:: :cyan:`CO2 Senseair`
 .. |P052_type| replace:: :cyan:`Gases`
 .. |P052_typename| replace:: :cyan:`Gases - CO2 Senseair`
-.. |P052_porttype| replace:: `.`
+.. |P052_porttype| replace:: `Serial`
 .. |P052_status| replace:: :green:`NORMAL`
 .. |P052_github| replace:: P052_SenseAir.ino
 .. _P052_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P052_SenseAir.ino
@@ -40,7 +40,7 @@
 .. |P053_name| replace:: :cyan:`PMSx003`
 .. |P053_type| replace:: :cyan:`Dust`
 .. |P053_typename| replace:: :cyan:`Dust - PMSx003`
-.. |P053_porttype| replace:: `.`
+.. |P053_porttype| replace:: `Serial`
 .. |P053_status| replace:: :yellow:`TESTING`
 .. |P053_github| replace:: P053_PMSx003.ino
 .. _P053_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P053_PMSx003.ino
@@ -79,7 +79,7 @@
 .. |P056_name| replace:: :cyan:`SDS011/018/198`
 .. |P056_type| replace:: :cyan:`Dust`
 .. |P056_typename| replace:: :cyan:`Dust - SDS011/018/198`
-.. |P056_porttype| replace:: `.`
+.. |P056_porttype| replace:: `Serial`
 .. |P056_status| replace:: :red:`DEVELOPMENT`
 .. |P056_github| replace:: P056_SDS011-Dust.ino
 .. _P056_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P056_SDS011-Dust.ino

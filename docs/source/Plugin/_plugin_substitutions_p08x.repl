@@ -27,7 +27,7 @@
 .. |P082_name| replace:: :cyan:`GPS`
 .. |P082_type| replace:: :cyan:`Position`
 .. |P082_typename| replace:: :cyan:`Position - GPS`
-.. |P082_porttype| replace:: `.`
+.. |P082_porttype| replace:: `Serial`
 .. |P082_status| replace:: :yellow:`TESTING`
 .. |P082_github| replace:: P082_GPS.ino
 .. _P082_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P082_GPS.ino
@@ -66,7 +66,7 @@
 .. |P085_name| replace:: :cyan:`AcuDC243`
 .. |P085_type| replace:: :cyan:`Energy (DC)`
 .. |P085_typename| replace:: :cyan:`Energy (DC) - AcuDC243`
-.. |P085_porttype| replace:: `.`
+.. |P085_porttype| replace:: `Serial`
 .. |P085_status| replace:: :yellow:`TESTING`
 .. |P085_github| replace:: P085_AcuDC243.ino
 .. _P085_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P085_AcuDC243.ino
@@ -92,7 +92,7 @@
 .. |P087_name| replace:: :cyan:`SerialProxy`
 .. |P087_type| replace:: :cyan:`Communication`
 .. |P087_typename| replace:: :cyan:`Communication - SerialProxy`
-.. |P087_porttype| replace:: `.`
+.. |P087_porttype| replace:: `Serial`
 .. |P087_status| replace:: :yellow:`TESTING`
 .. |P087_github| replace:: P087_SerialProxy.ino
 .. _P087_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P087_SerialProxy.ino

@@ -11,6 +11,8 @@ Plugin details
 
 Type: |P082_type|
 
+Port Type: |P082_porttype|
+
 Name: |P082_name|
 
 Status: |P082_status|

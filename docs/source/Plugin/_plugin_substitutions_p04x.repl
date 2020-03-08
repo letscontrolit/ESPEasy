@@ -118,7 +118,7 @@
 .. |P049_name| replace:: :cyan:`CO2 MH-Z19`
 .. |P049_type| replace:: :cyan:`Gases`
 .. |P049_typename| replace:: :cyan:`Gases - CO2 MH-Z19`
-.. |P049_porttype| replace:: `.`
+.. |P049_porttype| replace:: `Serial`
 .. |P049_status| replace:: :green:`NORMAL`
 .. |P049_github| replace:: P049_MHZ19.ino
 .. _P049_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P049_MHZ19.ino

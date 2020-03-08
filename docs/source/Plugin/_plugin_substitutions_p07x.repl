@@ -15,7 +15,7 @@
 .. |P071_name| replace:: :cyan:`Kamstrup Multical 401`
 .. |P071_type| replace:: :cyan:`Communication`
 .. |P071_typename| replace:: :cyan:`Communication - Kamstrup Multical 401`
-.. |P071_porttype| replace:: `.`
+.. |P071_porttype| replace:: `Serial`
 .. |P071_status| replace:: :yellow:`TESTING`
 .. |P071_github| replace:: P071_Kamstrup401.ino
 .. _P071_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P071_Kamstrup401.ino
@@ -54,7 +54,7 @@
 .. |P074_name| replace:: :cyan:`TSL2591`
 .. |P074_type| replace:: :cyan:`Light/Lux`
 .. |P074_typename| replace:: :cyan:`Light/Lux - TSL2591`
-.. |P074_porttype| replace:: `.`
+.. |P074_porttype| replace:: `Serial`
 .. |P074_status| replace:: :yellow:`TESTING`
 .. |P074_github| replace:: P074_TSL2591.ino
 .. _P074_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P074_TSL2591.ino
@@ -106,7 +106,7 @@
 .. |P078_name| replace:: :cyan:`Eastron SDM120C/220T/230/630`
 .. |P078_type| replace:: :cyan:`Energy (AC)`
 .. |P078_typename| replace:: :cyan:`Energy (AC) - Eastron SDM120C/220T/230/630`
-.. |P078_porttype| replace:: `.`
+.. |P078_porttype| replace:: `Serial`
 .. |P078_status| replace:: :yellow:`TESTING`
 .. |P078_github| replace:: P078_Eastron.ino
 .. _P078_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P078_Eastron.ino
