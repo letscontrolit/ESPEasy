@@ -4,7 +4,7 @@
 #include "../../ESPEasy_fdwdecl.h"
 #include "Statistics.h"
 
-
+#ifndef BUILD_NO_RAM_TRACKER
 RamTracker myRamTracker;
 
 /********************************************************************************************\
@@ -131,3 +131,17 @@ void RamTracker::getTraceBuffer() {
   }
 #endif // ifndef BUILD_NO_DEBUG
 }
+
+#else // BUILD_NO_RAM_TRACKER
+
+void checkRAMtoLog(void) {}
+
+void checkRAM(const String& flashString,
+              int           a) {}
+
+void checkRAM(const String& flashString,
+              const String& a) {}
+
+void checkRAM(const String& descr) {}
+
+#endif // BUILD_NO_RAM_TRACKER

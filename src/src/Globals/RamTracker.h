@@ -6,10 +6,13 @@
 #define TRACEENTRIES 15 // entries per trace
 
 #include <Arduino.h>
+#include "../../define_plugin_sets.h"
 
 /********************************************************************************************\
    RamTracker class
  \*********************************************************************************************/
+
+ #ifndef BUILD_NO_RAM_TRACKER
 class RamTracker {
 private:
 
@@ -38,6 +41,8 @@ extern RamTracker myRamTracker; // instantiate class. (is global now)
    Global convenience functions calling RamTracker
  \*********************************************************************************************/
 
+#endif // BUILD_NO_RAM_TRACKER
+
 void checkRAMtoLog(void);
 
 void checkRAM(const String& flashString,
@@ -47,6 +52,7 @@ void checkRAM(const String& flashString,
               const String& a);
 
 void checkRAM(const String& descr);
+
 
 
 #endif // GLOBALS_RAMTRACKER_H
