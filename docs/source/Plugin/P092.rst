@@ -1,0 +1,36 @@
+.. include:: ../Plugin/_plugin_substitutions_p09x.repl
+.. _P092_page:
+
+|P092_typename|
+==================================================
+
+|P092_shortinfo|
+
+Plugin details
+--------------
+
+Type: |P092_type|
+
+Name: |P092_name|
+
+Status: |P092_status|
+
+GitHub: |P092_github|_
+
+Maintainer: |P092_maintainer|
+
+Used libraries: |P092_usedlibraries|
+
+Supported hardware
+------------------
+
+|P092_usedby|
+
+Change log
+----------
+
+.. versionadded:: 1.0
+  ...
+
+  |added|
+  Initial release version.
