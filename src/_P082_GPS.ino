@@ -103,6 +103,7 @@ struct P082_data_struct : public PluginTaskData_base {
     if (!isInitialized()) {
       return false;
     }
+    bool completeSentence = false;
 
     if (P082_easySerial != nullptr) {
       int available = P082_easySerial->available();
@@ -120,7 +121,7 @@ struct P082_data_struct : public PluginTaskData_base {
           lastSentence    = currentSentence;
           currentSentence = "";
 #endif // ifdef P082_SEND_GPS_TO_LOG
-          return true;
+          completeSentence = true;
         }
         if (available == 0)
         {
@@ -128,8 +129,7 @@ struct P082_data_struct : public PluginTaskData_base {
         }
       }
     }
-    // Not a complete sentence received yet.
-    return false;
+    return completeSentence;
   }
 
   bool hasFix(unsigned int maxAge_msec) {

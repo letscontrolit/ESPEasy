@@ -483,8 +483,10 @@ uint8_t SC16IS752::FIFOAvailableData(uint8_t channel)
   Serial.print("=====Available data:");
   Serial.println(ReadRegister(channel, SC16IS750_REG_RXLVL), DEC);
 #endif // ifdef  SC16IS750_DEBUG_PRINT
-  return ReadRegister(channel, SC16IS750_REG_RXLVL);
-
+  if (fifo_available[channel] == 0) {
+    fifo_available[channel] = ReadRegister(channel, SC16IS750_REG_RXLVL);
+  }
+  return fifo_available[channel];
   //    return ReadRegister(channel, SC16IS750_REG_LSR) & 0x01;
 }
 
@@ -529,6 +531,9 @@ int SC16IS752::ReadByte(uint8_t channel)
 #ifdef  SC16IS750_DEBUG_PRINT
     Serial.println("***********Data available***********");
 #endif // ifdef  SC16IS750_DEBUG_PRINT
+    if (fifo_available[channel] > 0) {
+      --fifo_available[channel];
+    }
     val = ReadRegister(channel, SC16IS750_REG_RHR);
     return val;
   }

@@ -148,6 +148,7 @@ private:
 
   int peek_buf[2] = {-1, -1};
   uint8_t peek_flag[2] = {0, 0};
+  uint8_t fifo_available[2] = {0, 0};
   uint8_t device_address_sspin;
   uint8_t protocol;
   bool initialized = false;
