@@ -103,25 +103,33 @@ struct P082_data_struct : public PluginTaskData_base {
     if (!isInitialized()) {
       return false;
     }
-    bool fullSentenceReceived = false;
 
     if (P082_easySerial != nullptr) {
-      while (P082_easySerial->available() > 0) {
+      int available = P082_easySerial->available();
+      unsigned long startLoop = millis();
+      while (available > 0 && timePassedSince(startLoop) < 10) {
+        --available;
         char c = P082_easySerial->read();
 #ifdef P082_SEND_GPS_TO_LOG
         currentSentence += c;
 #endif // ifdef P082_SEND_GPS_TO_LOG
 
         if (gps->encode(c)) {
-          fullSentenceReceived = true;
+          // Full sentence received
 #ifdef P082_SEND_GPS_TO_LOG
           lastSentence    = currentSentence;
           currentSentence = "";
 #endif // ifdef P082_SEND_GPS_TO_LOG
+          return true;
+        }
+        if (available == 0)
+        {
+          available = P082_easySerial->available();
         }
       }
     }
-    return fullSentenceReceived;
+    // Not a complete sentence received yet.
+    return false;
   }
 
   bool hasFix(unsigned int maxAge_msec) {
@@ -423,7 +431,7 @@ boolean Plugin_082(byte function, struct EventStruct *event, String& string) {
       break;
     }
 
-    case PLUGIN_TEN_PER_SECOND: {
+    case PLUGIN_FIFTY_PER_SECOND: {
       P082_data_struct *P082_data =
         static_cast<P082_data_struct *>(getPluginTaskData(event->TaskIndex));
 
