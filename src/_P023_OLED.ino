@@ -626,8 +626,12 @@ void Plugin_023_sendStrXY(struct Plugin_023_OLED_SettingStruct &oled,  const cha
   unsigned char currentPixels = Y * 8; // setXY always uses font_width = 8, Y = 0-based
   unsigned char maxPixels = 128; // Assumed default display width
 
-  if (oled.type == OLED_64x48) // Cater for that 1 smaller size display
+  switch (oled.type) { // Cater for that 1 smaller size display
+    case OLED_64x48:
+    case OLED_64x48 | OLED_rotated:
       maxPixels = 64;
+      break;
+  }
 
   while (*string && currentPixels < maxPixels) // Prevent display overflow on the character level
   {
