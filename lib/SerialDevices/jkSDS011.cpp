@@ -124,8 +124,10 @@ void CjkSDS011::ParseCommandReply() {
 
 void CjkSDS011::Process()
 {
-  while (_serial->available())
+  int serial_available = _serial->available();
+  while (serial_available > 0)
   {
+    --serial_available;
   	_data.AddData(_serial->read());
 
     if (_data[0] == 0xAA && _data[9] == 0xAB)   // correct packet frame?
@@ -160,6 +162,9 @@ void CjkSDS011::Process()
         _data.Clear();
         return;
       }
+    }
+    if (serial_available == 0) {
+      serial_available = _serial->available();
     }
   }
 }

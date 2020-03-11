@@ -123,10 +123,6 @@ struct P082_data_struct : public PluginTaskData_base {
 #endif // ifdef P082_SEND_GPS_TO_LOG
           completeSentence = true;
         }
-        if (available == 0)
-        {
-          available = P082_easySerial->available();
-        }
       }
     }
     return completeSentence;
