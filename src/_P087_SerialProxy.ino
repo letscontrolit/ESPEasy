@@ -28,14 +28,21 @@
 
 #define P087_DEFAULT_BAUDRATE   38400
 
-#define P87_Nlines              9
+#define P87_Nlines              (1 + 3 * 10)
 #define P87_Nchars              128
 
 #define P087_INITSTRING         0
 #define P087_EXITSTRING         1
 
+enum P087_Filter_Comp {
+  Equal = 0,
+  NotEqual = 1
+
+};
+
 
 struct P087_data_struct : public PluginTaskData_base {
+
   P087_data_struct() :  P087_easySerial(nullptr) {}
 
   ~P087_data_struct() {
@@ -146,8 +153,16 @@ struct P087_data_struct : public PluginTaskData_base {
     max_length = maxlenght;
   }
 
+  void setRegExpMatchLength(uint16_t length) {
+    regexp_match_length = length;
+  }
+
   void loadLines(taskIndex_t taskIndex) {
     LoadCustomTaskSettings(taskIndex, _lines, P87_Nlines, 0);
+  }
+
+  String getRegEx() const {
+    return _lines[0];
   }
 
   String getLine(uint8_t lineNr) const {
@@ -157,8 +172,18 @@ struct P087_data_struct : public PluginTaskData_base {
     return "";
   }
 
-  bool matchRegexp(uint8_t lineNr, String& received) const {
-    if (lineNr >= P87_Nlines) { return false; }
+  String getFilter(uint8_t lineNr, uint8_t& capture, P087_Filter_Comp& comparator) const
+  {
+    uint8_t varNr = lineNr * 3 + 1;
+    if (varNr >= P87_Nlines) return "";
+
+    capture = _lines[varNr++].toInt();
+    comparator = _lines[varNr++] == "1" ? P087_Filter_Comp::NotEqual : P087_Filter_Comp::Equal;
+    return _lines[varNr];
+  }
+
+
+  bool matchRegexp(String& received) const {
     size_t strlength = received.length();
 
     if (strlength == 0) {
@@ -172,7 +197,7 @@ struct P087_data_struct : public PluginTaskData_base {
     // We need to do a const_cast here, but this only is valid as long as we
     // don't call a replace function from regexp.
     MatchState ms(const_cast<char *>(received.c_str()), strlength);
-    char result = ms.Match(_lines[lineNr].c_str());
+    char result = ms.Match(_lines[0].c_str());
 
     if (result == REGEXP_MATCHED) {
       if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
@@ -334,25 +359,11 @@ boolean Plugin_087(byte function, struct EventStruct *event, String& string) {
          }
        */
 
-      P087_data_struct *P087_data =
-        static_cast<P087_data_struct *>(getPluginTaskData(event->TaskIndex));
-
-      if ((nullptr != P087_data)) {
-        for (byte varNr = 0; varNr < P87_Nlines; varNr++)
-        {
-          String label;
-
-          if (varNr == 0) {
-            label = F("Init");
-          } else {
-            label  = F("Filter");
-            label += String(varNr);
-          }
-          addFormTextBox(label, getPluginCustomArgName(varNr), P087_data->getLine(varNr), P87_Nchars);
-        }
-      }
+      addFormSubHeader(F("Filtering"));
+      P087_html_show_matchForms(event);
 
 
+      addFormSubHeader(F("Statistics"));
       P087_html_show_stats(event);
 
       success = true;
@@ -476,7 +487,7 @@ bool Plugin_087_match_all(taskIndex_t taskIndex, String& received)
     return false;
   }
 
-  return P087_data->matchRegexp(1, received);
+  return P087_data->matchRegexp(received);
 }
 
 String Plugin_087_valuename(byte value_nr, bool displayString) {
@@ -484,6 +495,61 @@ String Plugin_087_valuename(byte value_nr, bool displayString) {
     case P087_QUERY_VALUE: return displayString ? F("Value")          : F("v");
   }
   return "";
+}
+
+void P087_html_show_matchForms(struct EventStruct *event) {
+  P087_data_struct *P087_data =
+    static_cast<P087_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+  if ((nullptr != P087_data)) {
+    byte varNr = 0;
+    addFormTextBox(F("RegEx"), getPluginCustomArgName(varNr), P087_data->getLine(varNr), P87_Nchars);
+    addFormNote(F("Captures are specified using round brackets."));
+
+    ++varNr;
+
+    byte lineNr = 0;
+    uint8_t capture = 0;
+    P087_Filter_Comp comparator = P087_Filter_Comp::Equal;
+    String filter;
+
+    for (; varNr < P87_Nlines; varNr++)
+    {
+      String id = getPluginCustomArgName(varNr);
+
+      switch ((varNr - 1) % 3) {
+        case 0:
+        {
+          // Label + first parameter
+          filter = P087_data->getFilter(lineNr, capture, comparator);
+          ++lineNr;
+          String label;
+          label  = F("Capture Filter ");
+          label += String(lineNr);
+          addRowLabel_tr_id(label, id);
+
+          addNumericBox(id, capture, 0, 99);
+          break;
+        }
+        case 1:
+        {
+          // Comparator
+          String options[2];
+          options[P087_Filter_Comp::Equal] = F("==");
+          options[P087_Filter_Comp::NotEqual] = F("!=");
+          int optionValues[2] = { P087_Filter_Comp::Equal, P087_Filter_Comp::NotEqual };
+          addSelector(id, 2, options, optionValues, NULL, comparator, false, "");
+          break;
+        }
+        case 2:
+        {
+          // Compare with
+          addTextBox(id, filter, 32, false, false, "", "");
+          break;
+        }
+      }
+    }
+  }
 }
 
 void P087_html_show_stats(struct EventStruct *event) {
