@@ -10,6 +10,7 @@
 
 #include <ESPeasySerial.h>
 #include "_Plugin_Helper.h"
+#include <Regexp.h>
 
 #define PLUGIN_087
 #define PLUGIN_ID_087           87
@@ -27,8 +28,8 @@
 
 #define P087_DEFAULT_BAUDRATE   38400
 
-#define P87_Nlines              2
-#define P87_Nchars              64
+#define P87_Nlines              9
+#define P87_Nchars              128
 
 #define P087_INITSTRING         0
 #define P087_EXITSTRING         1
@@ -145,6 +146,47 @@ struct P087_data_struct : public PluginTaskData_base {
     max_length = maxlenght;
   }
 
+  void loadLines(taskIndex_t taskIndex) {
+    LoadCustomTaskSettings(taskIndex, _lines, P87_Nlines, 0);
+  }
+
+  String getLine(uint8_t lineNr) const {
+    if (lineNr < P87_Nlines) {
+      return _lines[lineNr];
+    }
+    return "";
+  }
+
+  bool matchRegexp(uint8_t lineNr, String& received) const {
+    if (lineNr >= P87_Nlines) { return false; }
+    size_t strlength = received.length();
+
+    if (strlength == 0) {
+      return false;
+    }
+
+    if ((regexp_match_length > 0) && (strlength > regexp_match_length)) {
+      strlength = regexp_match_length;
+    }
+
+    // We need to do a const_cast here, but this only is valid as long as we
+    // don't call a replace function from regexp.
+    MatchState ms(const_cast<char *>(received.c_str()), strlength);
+    char result = ms.Match(_lines[lineNr].c_str());
+
+    if (result == REGEXP_MATCHED) {
+      if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+        String log = F("Match at: ");
+        log += ms.MatchStart;
+        log += F(" Match Length: ");
+        log += ms.MatchLength;
+        addLog(LOG_LEVEL_DEBUG, log);
+      }
+      return true;
+    }
+    return false;
+  }
+
 private:
 
   bool max_length_reached() const {
@@ -152,12 +194,15 @@ private:
     return sentence_part.length() >= max_length;
   }
 
+  String _lines[P87_Nlines];
+
   ESPeasySerial *P087_easySerial = nullptr;
   String         sentence_part;
   uint16_t       max_length               = 550;
   uint32_t       sentences_received       = 0;
   uint32_t       sentences_received_error = 0;
   uint32_t       length_last_received     = 0;
+  uint32_t       regexp_match_length      = 0;
 };
 
 
@@ -289,15 +334,21 @@ boolean Plugin_087(byte function, struct EventStruct *event, String& string) {
          }
        */
 
-      {
-        String strings[P87_Nlines];
-        LoadCustomTaskSettings(event->TaskIndex, strings, P87_Nlines, P87_Nchars);
+      P087_data_struct *P087_data =
+        static_cast<P087_data_struct *>(getPluginTaskData(event->TaskIndex));
 
+      if ((nullptr != P087_data)) {
         for (byte varNr = 0; varNr < P87_Nlines; varNr++)
         {
-          String label = F("Init ");
-          label += String(varNr + 1);
-          addFormTextBox(label, getPluginCustomArgName(varNr), strings[varNr], P87_Nchars);
+          String label;
+
+          if (varNr == 0) {
+            label = F("Init");
+          } else {
+            label  = F("Filter");
+            label += String(varNr);
+          }
+          addFormTextBox(label, getPluginCustomArgName(varNr), P087_data->getLine(varNr), P87_Nchars);
         }
       }
 
@@ -312,20 +363,13 @@ boolean Plugin_087(byte function, struct EventStruct *event, String& string) {
       serialHelper_webformSave(event);
       P087_BAUDRATE = getFormItemInt(P087_BAUDRATE_LABEL);
 
-      String error;
-      char   P087_deviceTemplate[P87_Nlines][P87_Nchars];
+      String lines[P87_Nlines];
 
       for (byte varNr = 0; varNr < P87_Nlines; varNr++)
       {
-        if (!safe_strncpy(P087_deviceTemplate[varNr], web_server.arg(getPluginCustomArgName(varNr)), P87_Nchars)) {
-          error += getCustomTaskSettingsError(varNr);
-        }
+        lines[varNr] = web_server.arg(getPluginCustomArgName(varNr));
       }
-
-      if (error.length() > 0) {
-        addHtmlError(error);
-      }
-      SaveCustomTaskSettings(event->TaskIndex, (byte *)&P087_deviceTemplate, sizeof(P087_deviceTemplate));
+      addHtmlError(SaveCustomTaskSettings(event->TaskIndex, lines, P87_Nlines, 0));
 
       success = true;
       break;
@@ -343,6 +387,7 @@ boolean Plugin_087(byte function, struct EventStruct *event, String& string) {
       }
 
       if (P087_data->init(serial_rx, serial_tx, P087_BAUDRATE)) {
+        P087_data->loadLines(event->TaskIndex);
         success = true;
 
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
@@ -374,7 +419,13 @@ boolean Plugin_087(byte function, struct EventStruct *event, String& string) {
           delay(0); // Processing a full sentence may take a while, run some
                     // background tasks.
           P087_data->getSentence(event->String2);
-          sendData(event);
+
+          if (event->String2.length() > 0) {
+            if (Plugin_087_match_all(event->TaskIndex, event->String2)) {
+              sendData(event);
+              addLog(LOG_LEVEL_INFO, event->String2);
+            }
+          }
         }
         success = true;
       }
@@ -386,15 +437,46 @@ boolean Plugin_087(byte function, struct EventStruct *event, String& string) {
         static_cast<P087_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if ((nullptr != P087_data)) {
-        String strings[P87_Nlines];
-        LoadCustomTaskSettings(event->TaskIndex, strings, P87_Nlines, P87_Nchars);
-        parseSystemVariables(strings[0], false);
-        P087_data->sendString(strings[0]);
+        String initstr = P087_data->getLine(0);
+        parseSystemVariables(initstr, false);
+        P087_data->sendString(initstr);
       }
+      break;
+    }
+
+    case PLUGIN_WRITE: {
+      String cmd = parseString(string, 1);
+
+
+      if (cmd.equalsIgnoreCase(F("serialproxy_write"))) {
+        P087_data_struct *P087_data =
+          static_cast<P087_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+        if ((nullptr != P087_data)) {
+          String param1 = parseString(string, 2);
+          parseSystemVariables(param1, false);
+          P087_data->sendString(param1);
+          addLog(LOG_LEVEL_INFO, param1);
+          success = true;
+        }
+      }
+
       break;
     }
   }
   return success;
+}
+
+bool Plugin_087_match_all(taskIndex_t taskIndex, String& received)
+{
+  P087_data_struct *P087_data =
+    static_cast<P087_data_struct *>(getPluginTaskData(taskIndex));
+
+  if ((nullptr == P087_data)) {
+    return false;
+  }
+
+  return P087_data->matchRegexp(1, received);
 }
 
 String Plugin_087_valuename(byte value_nr, bool displayString) {
