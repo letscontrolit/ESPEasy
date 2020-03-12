@@ -28,21 +28,29 @@
 
 #define P087_DEFAULT_BAUDRATE   38400
 
-#define P87_Nlines              (1 + 3 * 10)
-#define P87_Nchars              128
 
 #define P087_INITSTRING         0
 #define P087_EXITSTRING         1
 
-enum P087_Filter_Comp {
-  Equal = 0,
-  NotEqual = 1
+#define P087_REGEX_POS          0
+#define P087_NR_CHAR_USE_POS    1
+#define P087_FILTER_OFF_WINDOW_POS 2
+#define P087_GLOBAL_INVERT_MATCH_POS 3
 
+#define P087_FIRST_FILTER_POS   6
+
+#define P087_NR_FILTERS         10
+#define P87_Nlines              (P087_FIRST_FILTER_POS + 3 * (P087_NR_FILTERS))
+#define P87_Nchars              128
+
+
+enum P087_Filter_Comp {
+  Equal    = 0,
+  NotEqual = 1
 };
 
 
 struct P087_data_struct : public PluginTaskData_base {
-
   P087_data_struct() :  P087_easySerial(nullptr) {}
 
   ~P087_data_struct() {
@@ -77,6 +85,7 @@ struct P087_data_struct : public PluginTaskData_base {
   void sendString(const String& data) {
     if (isInitialized()) {
       if (data.length() > 0) {
+        setDisableFilterWindowTimer();
         P087_easySerial->write(data.c_str());
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -95,9 +104,17 @@ struct P087_data_struct : public PluginTaskData_base {
     bool fullSentenceReceived = false;
 
     if (P087_easySerial != nullptr) {
-      while (P087_easySerial->available() > 0 && !fullSentenceReceived) {
+      int available = P087_easySerial->available();
+
+      while (available > 0 && !fullSentenceReceived) {
         // Look for end marker
         char c = P087_easySerial->read();
+        --available;
+
+        if (available == 0) {
+          available = P087_easySerial->available();
+          delay(0);
+        }
 
         switch (c) {
           case 13:
@@ -153,35 +170,65 @@ struct P087_data_struct : public PluginTaskData_base {
     max_length = maxlenght;
   }
 
-  void setRegExpMatchLength(uint16_t length) {
-    regexp_match_length = length;
-  }
-
   void loadLines(taskIndex_t taskIndex) {
     LoadCustomTaskSettings(taskIndex, _lines, P87_Nlines, 0);
   }
 
-  String getRegEx() const {
-    return _lines[0];
+  void setLine(byte varNr, const String& line) {
+    if (varNr < P87_Nlines) {
+      _lines[varNr] = line;
+    }
   }
 
-  String getLine(uint8_t lineNr) const {
-    if (lineNr < P87_Nlines) {
-      return _lines[lineNr];
-    }
-    return "";
+  String saveLines(taskIndex_t taskIndex) {
+    return SaveCustomTaskSettings(taskIndex, _lines, P87_Nlines, 0);
+  }
+
+  String getRegEx() const {
+    return _lines[P087_REGEX_POS];
+  }
+
+  uint16_t getRegExpMatchLength() const {
+    return _lines[P087_NR_CHAR_USE_POS].toInt();
+  }
+
+  uint32_t getFilterOffWindowTime() const {
+    return _lines[P087_FILTER_OFF_WINDOW_POS].toInt();
+  }
+
+  bool globalInvert() const {
+    return _lines[P087_GLOBAL_INVERT_MATCH_POS].toInt() == 1;
   }
 
   String getFilter(uint8_t lineNr, uint8_t& capture, P087_Filter_Comp& comparator) const
   {
-    uint8_t varNr = lineNr * 3 + 1;
-    if (varNr >= P87_Nlines) return "";
+    uint8_t varNr = lineNr * 3 + P087_FIRST_FILTER_POS;
 
-    capture = _lines[varNr++].toInt();
+    if (varNr >= P87_Nlines) { return ""; }
+
+    capture    = _lines[varNr++].toInt();
     comparator = _lines[varNr++] == "1" ? P087_Filter_Comp::NotEqual : P087_Filter_Comp::Equal;
     return _lines[varNr];
   }
 
+  void setDisableFilterWindowTimer() {
+    if (getFilterOffWindowTime() == 0) {
+      disable_filter_window = 0;
+    }
+    else {
+      disable_filter_window = millis() + getFilterOffWindowTime();
+    }
+  }
+
+  bool disableFilterWindowActive() const {
+    if (disable_filter_window != 0) {
+      if (!timeOutReached(disable_filter_window)) {
+        // We're still in the window where filtering is disabled
+        return true;
+      }
+    }
+    return false;
+  }
 
   bool matchRegexp(String& received) const {
     size_t strlength = received.length();
@@ -190,6 +237,8 @@ struct P087_data_struct : public PluginTaskData_base {
       return false;
     }
 
+    uint32_t regexp_match_length = getRegExpMatchLength();
+
     if ((regexp_match_length > 0) && (strlength > regexp_match_length)) {
       strlength = regexp_match_length;
     }
@@ -197,7 +246,7 @@ struct P087_data_struct : public PluginTaskData_base {
     // We need to do a const_cast here, but this only is valid as long as we
     // don't call a replace function from regexp.
     MatchState ms(const_cast<char *>(received.c_str()), strlength);
-    char result = ms.Match(_lines[0].c_str());
+    char result = ms.Match(_lines[P087_REGEX_POS].c_str());
 
     if (result == REGEXP_MATCHED) {
       if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
@@ -227,7 +276,7 @@ private:
   uint32_t       sentences_received       = 0;
   uint32_t       sentences_received_error = 0;
   uint32_t       length_last_received     = 0;
-  uint32_t       regexp_match_length      = 0;
+  unsigned long  disable_filter_window    = 0;
 };
 
 
@@ -374,15 +423,18 @@ boolean Plugin_087(byte function, struct EventStruct *event, String& string) {
       serialHelper_webformSave(event);
       P087_BAUDRATE = getFormItemInt(P087_BAUDRATE_LABEL);
 
-      String lines[P87_Nlines];
+      P087_data_struct *P087_data =
+        static_cast<P087_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      for (byte varNr = 0; varNr < P87_Nlines; varNr++)
-      {
-        lines[varNr] = web_server.arg(getPluginCustomArgName(varNr));
+      if (nullptr != P087_data) {
+        for (byte varNr = 0; varNr < P87_Nlines; varNr++)
+        {
+          P087_data->setLine(varNr, web_server.arg(getPluginCustomArgName(varNr)));
+        }
+        addHtmlError(P087_data->saveLines(event->TaskIndex));
+        success = true;
       }
-      addHtmlError(SaveCustomTaskSettings(event->TaskIndex, lines, P87_Nlines, 0));
 
-      success = true;
       break;
     }
 
@@ -447,11 +499,7 @@ boolean Plugin_087(byte function, struct EventStruct *event, String& string) {
       P087_data_struct *P087_data =
         static_cast<P087_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if ((nullptr != P087_data)) {
-        String initstr = P087_data->getLine(0);
-        parseSystemVariables(initstr, false);
-        P087_data->sendString(initstr);
-      }
+      if ((nullptr != P087_data)) {}
       break;
     }
 
@@ -464,7 +512,7 @@ boolean Plugin_087(byte function, struct EventStruct *event, String& string) {
           static_cast<P087_data_struct *>(getPluginTaskData(event->TaskIndex));
 
         if ((nullptr != P087_data)) {
-          String param1 = parseString(string, 2);
+          String param1 = parseStringKeepCase(string, 2);
           parseSystemVariables(param1, false);
           P087_data->sendString(param1);
           addLog(LOG_LEVEL_INFO, param1);
@@ -487,7 +535,19 @@ bool Plugin_087_match_all(taskIndex_t taskIndex, String& received)
     return false;
   }
 
-  return P087_data->matchRegexp(received);
+
+  if (P087_data->disableFilterWindowActive()) {
+    addLog(LOG_LEVEL_INFO, F("Serial Proxy: Disable Filter Window active"));
+    return true;
+  }
+
+  bool res = P087_data->matchRegexp(received);
+
+  if (P087_data->globalInvert()) {
+    addLog(LOG_LEVEL_INFO, F("Serial Proxy: invert filter"));
+    return !res;
+  }
+  return res;
 }
 
 String Plugin_087_valuename(byte value_nr, bool displayString) {
@@ -502,22 +562,33 @@ void P087_html_show_matchForms(struct EventStruct *event) {
     static_cast<P087_data_struct *>(getPluginTaskData(event->TaskIndex));
 
   if ((nullptr != P087_data)) {
-    byte varNr = 0;
-    addFormTextBox(F("RegEx"), getPluginCustomArgName(varNr), P087_data->getLine(varNr), P87_Nchars);
+    addFormTextBox(F("RegEx"), getPluginCustomArgName(P087_REGEX_POS), P087_data->getRegEx(), P87_Nchars);
     addFormNote(F("Captures are specified using round brackets."));
 
-    ++varNr;
+    addFormNumericBox(F("Nr Chars use in regex"), getPluginCustomArgName(P087_NR_CHAR_USE_POS), P087_data->getRegExpMatchLength(), 0, 1024);
+    addFormNote(F("0 = Use all of the received string."));
 
-    byte lineNr = 0;
-    uint8_t capture = 0;
+    addFormNumericBox(F("Filter Off Window after send"),
+                      getPluginCustomArgName(P087_FILTER_OFF_WINDOW_POS),
+                      P087_data->getFilterOffWindowTime(),
+                      0,
+                      60000);
+    addUnit(F("msec"));
+    addFormNote(F("0 = Do not turn off filter after sending to the connected device."));
+
+    addFormCheckBox(F("Invert match state"), getPluginCustomArgName(P087_GLOBAL_INVERT_MATCH_POS), P087_data->globalInvert(), false);
+
+
+    byte lineNr                 = 0;
+    uint8_t capture             = 0;
     P087_Filter_Comp comparator = P087_Filter_Comp::Equal;
     String filter;
 
-    for (; varNr < P87_Nlines; varNr++)
+    for (byte varNr = P087_FIRST_FILTER_POS; varNr < P87_Nlines; ++varNr)
     {
       String id = getPluginCustomArgName(varNr);
 
-      switch ((varNr - 1) % 3) {
+      switch (varNr % 3) {
         case 0:
         {
           // Label + first parameter
@@ -535,7 +606,7 @@ void P087_html_show_matchForms(struct EventStruct *event) {
         {
           // Comparator
           String options[2];
-          options[P087_Filter_Comp::Equal] = F("==");
+          options[P087_Filter_Comp::Equal]    = F("==");
           options[P087_Filter_Comp::NotEqual] = F("!=");
           int optionValues[2] = { P087_Filter_Comp::Equal, P087_Filter_Comp::NotEqual };
           addSelector(id, 2, options, optionValues, NULL, comparator, false, "");

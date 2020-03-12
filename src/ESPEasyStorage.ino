@@ -46,7 +46,7 @@ String flashGuard()
 
 // use this in function that can return an error string. it automaticly returns with an error string if there where too many flash writes.
 #define FLASH_GUARD() { String flashErr = flashGuard(); \
-                        if (flashErr.length()) return (flashErr); }
+                        if (flashErr.length()) return flashErr; }
 
 
 String appendLineToFile(const String& fname, const String& line) {
@@ -296,6 +296,7 @@ void afterloadSettings() {
     ResetFactoryDefaultPreference = Settings.ResetFactoryDefaultPreference;
   }
   msecTimerHandler.setEcoMode(Settings.EcoPowerMode());
+
   if (!Settings.UseRules) {
     eventQueue.clear();
   }
@@ -439,8 +440,8 @@ bool getSettingsParameters(SettingsType settingsType, int index, int& max_index,
     case CustomTaskSettings_Type:
     {
       getSettingsParameters(TaskSettings_Type, index, max_index, offset, max_size, struct_size);
-      offset    += (DAT_TASKS_CUSTOM_OFFSET);
-      max_size  = DAT_TASKS_CUSTOM_SIZE;
+      offset  += (DAT_TASKS_CUSTOM_OFFSET);
+      max_size = DAT_TASKS_CUSTOM_SIZE;
       break;
 
       // struct_size may differ.
@@ -483,7 +484,7 @@ int getMaxFilePos(SettingsType settingsType) {
   int max_index, offset, max_size;
   int struct_size = 0;
 
-  getSettingsParameters(settingsType, 0, max_index, offset, max_size, struct_size);
+  getSettingsParameters(settingsType, 0,          max_index, offset, max_size, struct_size);
   getSettingsParameters(settingsType, max_index - 1, offset, max_size);
   return offset + max_size - 1;
 }
@@ -563,6 +564,7 @@ String LoadTaskSettings(taskIndex_t TaskIndex)
   if (ExtraTaskSettings.TaskIndex == TaskIndex) {
     return String(); // already loaded
   }
+
   if (!validTaskIndex(TaskIndex)) {
     return String(); // Un-initialized task index.
   }
@@ -611,13 +613,13 @@ String SaveCustomTaskSettings(taskIndex_t TaskIndex, String strings[], uint16_t 
   const uint16_t bufferSize = 128;
 
   // FIXME TD-er: For now stack allocated, may need to be heap allocated?
-  byte   buffer[bufferSize];
+  byte buffer[bufferSize];
 
-  String result;
-  int writePos = 0;
-  uint16_t stringCount = 0;
-  uint16_t stringReadPos = 0;
-  uint16_t nextStringPos = 0;
+  String   result;
+  int      writePos        = 0;
+  uint16_t stringCount     = 0;
+  uint16_t stringReadPos   = 0;
+  uint16_t nextStringPos   = 0;
   uint16_t curStringLength = 0;
 
   if (maxStringLength != 0) {
@@ -628,12 +630,15 @@ String SaveCustomTaskSettings(taskIndex_t TaskIndex, String strings[], uint16_t 
       }
     }
   }
+
   while (stringCount < nrStrings && writePos < DAT_TASKS_CUSTOM_SIZE) {
     ZERO_FILL(buffer);
+
     for (int i = 0; i < bufferSize && stringCount < nrStrings; ++i) {
       if (stringReadPos == 0) {
         // We're at the start of a string
         curStringLength = strings[stringCount].length();
+
         if (maxStringLength != 0) {
           if (curStringLength >= maxStringLength) {
             curStringLength = maxStringLength - 1;
@@ -642,14 +647,16 @@ String SaveCustomTaskSettings(taskIndex_t TaskIndex, String strings[], uint16_t 
       }
 
       uint16_t curPos = writePos + i;
+
       if (curPos >= nextStringPos) {
         if (stringReadPos < curStringLength) {
           buffer[i] = strings[stringCount][stringReadPos];
           ++stringReadPos;
         } else {
-          buffer[i] = 0;
+          buffer[i]     = 0;
           stringReadPos = 0;
           ++stringCount;
+
           if (maxStringLength == 0) {
             nextStringPos += curStringLength + 1;
           } else {
@@ -658,15 +665,17 @@ String SaveCustomTaskSettings(taskIndex_t TaskIndex, String strings[], uint16_t 
         }
       }
     }
+
     // Buffer is filled, now write to flash
     // As we write in parts, only count as single write.
     if (RTC.flashDayCounter > 0) {
-      --RTC.flashDayCounter;
+      RTC.flashDayCounter--;
     }
-    result += SaveToFile(CustomTaskSettings_Type, TaskIndex, (char *)FILE_CONFIG, &(buffer[0]), bufferSize, writePos);
+    result   += SaveToFile(CustomTaskSettings_Type, TaskIndex, (char *)FILE_CONFIG, &(buffer[0]), bufferSize, writePos);
     writePos += bufferSize;
   }
-  if (writePos >= DAT_TASKS_CUSTOM_SIZE && stringCount < nrStrings) {
+
+  if ((writePos >= DAT_TASKS_CUSTOM_SIZE) && (stringCount < nrStrings)) {
     result += F("Error: Not all strings fit in custom task settings.");
   }
   return result;
@@ -714,14 +723,15 @@ String LoadCustomTaskSettings(taskIndex_t TaskIndex, String strings[], uint16_t 
 
   // FIXME TD-er: For now stack allocated, may need to be heap allocated?
   if (maxStringLength >= bufferSize) { return F("Max 128 chars allowed"); }
-  char   buffer[bufferSize];
+  char buffer[bufferSize];
 
-  String result;
-  uint16_t readPos = 0;
+  String   result;
+  uint16_t readPos       = 0;
   uint16_t nextStringPos = 0;
-  uint16_t stringCount = 0;
-  String tmpString;
+  uint16_t stringCount   = 0;
+  String   tmpString;
   tmpString.reserve(bufferSize);
+
   while (stringCount < nrStrings && readPos < DAT_TASKS_CUSTOM_SIZE) {
     result += LoadFromFile(CustomTaskSettings_Type,
                            TaskIndex,
@@ -729,8 +739,10 @@ String LoadCustomTaskSettings(taskIndex_t TaskIndex, String strings[], uint16_t 
                            (byte *)&buffer,
                            bufferSize,
                            readPos);
+
     for (int i = 0; i < bufferSize && stringCount < nrStrings; ++i) {
       uint16_t curPos = readPos + i;
+
       if (curPos >= nextStringPos) {
         if (buffer[i] == 0) {
           if (maxStringLength != 0) {
@@ -738,7 +750,7 @@ String LoadCustomTaskSettings(taskIndex_t TaskIndex, String strings[], uint16_t 
             nextStringPos += maxStringLength;
           }
           strings[stringCount] = tmpString;
-          tmpString = "";
+          tmpString            = "";
           tmpString.reserve(bufferSize);
           ++stringCount;
         } else {
@@ -748,9 +760,10 @@ String LoadCustomTaskSettings(taskIndex_t TaskIndex, String strings[], uint16_t 
     }
     readPos += bufferSize;
   }
-  if (tmpString.length() != 0 && stringCount < nrStrings) {
-    result += F("Incomplete custom settings for task ");
-    result += (TaskIndex + 1);
+
+  if ((tmpString.length() != 0) && (stringCount < nrStrings)) {
+    result              += F("Incomplete custom settings for task ");
+    result              += (TaskIndex + 1);
     strings[stringCount] = tmpString;
   }
   STOP_TIMER(LOAD_CUSTOM_TASK_STATS);
@@ -761,7 +774,7 @@ String LoadCustomTaskSettings(taskIndex_t TaskIndex, String strings[], uint16_t 
    Save Controller settings to SPIFFS
  \*********************************************************************************************/
 String SaveControllerSettings(controllerIndex_t ControllerIndex, ControllerSettingsStruct& controller_settings)
-{  
+{
   checkRAM(F("SaveControllerSettings"));
   controller_settings.validate(); // Make sure the saved controller settings have proper values.
   return SaveToFile(ControllerSettings_Type, ControllerIndex,
@@ -862,7 +875,7 @@ String SaveToFile(const char *fname, int index, const byte *memAddress, int data
 }
 
 // See for mode description: https://github.com/esp8266/Arduino/blob/master/doc/filesystem.rst
-String doSaveToFile(const char *fname, int index, const byte *memAddress, int datasize, const char* mode)
+String doSaveToFile(const char *fname, int index, const byte *memAddress, int datasize, const char *mode)
 {
 #ifndef ESP32
 
@@ -886,6 +899,7 @@ String doSaveToFile(const char *fname, int index, const byte *memAddress, int da
   START_TIMER;
   checkRAM(F("SaveToFile"));
   FLASH_GUARD();
+
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("SaveToFile: free stack: ");
     log += getCurrentFreeStack();
@@ -920,6 +934,7 @@ String doSaveToFile(const char *fname, int index, const byte *memAddress, int da
       }
     }
     f.close();
+
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log = F("FILE : Saved ");
       log = log + fname;
@@ -933,6 +948,7 @@ String doSaveToFile(const char *fname, int index, const byte *memAddress, int da
     return log;
   }
   STOP_TIMER(SAVEFILE_STATS);
+
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("SaveToFile: free stack after: ");
     log += getCurrentFreeStack();
@@ -1073,7 +1089,7 @@ String SaveToFile(SettingsType settingsType, int index, char *fname, byte *memAd
     return getSettingsFileIndexRangeError(read, settingsType, index);
   }
 
-  if (datasize > max_size || (posInBlock + datasize) > max_size) {
+  if ((datasize > max_size) || ((posInBlock + datasize) > max_size)) {
     return getSettingsFileDatasizeError(read, settingsType, index, datasize, max_size);
   }
   return SaveToFile(fname, offset + posInBlock, memAddress, datasize);
