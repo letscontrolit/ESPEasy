@@ -4,16 +4,16 @@
 #ifdef USES_P087
 
 
-P087_data_struct::P087_data_struct() :  P087_easySerial(nullptr) {}
+P087_data_struct::P087_data_struct() :  easySerial(nullptr) {}
 
 P087_data_struct::~P087_data_struct() {
   reset();
 }
 
 void P087_data_struct::reset() {
-  if (P087_easySerial != nullptr) {
-    delete P087_easySerial;
-    P087_easySerial = nullptr;
+  if (easySerial != nullptr) {
+    delete easySerial;
+    easySerial = nullptr;
   }
 }
 
@@ -22,24 +22,46 @@ bool P087_data_struct::init(const int16_t serial_rx, const int16_t serial_tx, un
     return false;
   }
   reset();
-  P087_easySerial = new ESPeasySerial(serial_rx, serial_tx);
+  easySerial = new ESPeasySerial(serial_rx, serial_tx);
 
   if (isInitialized()) {
-    P087_easySerial->begin(baudrate);
+    easySerial->begin(baudrate);
     return true;
   }
   return false;
 }
 
+void P087_data_struct::post_init() {
+  for (uint8_t i = 0; i < P87_MAX_CAPTURE_INDEX; ++i) {
+    capture_index_used[i] = false;
+  }
+  String log = F("P087_post_init:");
+  for (uint8_t i = 0; i < P087_NR_FILTERS; ++i) {
+    // Create some quick lookup table to see if we have a filter for the specific index
+    capture_index_must_not_match[i] = _lines[i * 3 + P087_FIRST_FILTER_POS + 1].toInt() == P087_Filter_Comp::NotEqual;
+    int index = _lines[i * 3 + P087_FIRST_FILTER_POS].toInt();
+    // Index is negative when not used.
+    if (index >= 0 && index < P87_MAX_CAPTURE_INDEX && _lines[i * 3 + P087_FIRST_FILTER_POS + 1].length() > 0) {
+      log += ' ';
+      log += String(i);
+      log += ':';
+      log += String(index);      
+      capture_index[i] = index;
+      capture_index_used[index] = true;
+    }
+  }
+  addLog(LOG_LEVEL_DEBUG, log);
+}
+
 bool P087_data_struct::isInitialized() const {
-  return P087_easySerial != nullptr;
+  return easySerial != nullptr;
 }
 
 void P087_data_struct::sendString(const String& data) {
   if (isInitialized()) {
     if (data.length() > 0) {
       setDisableFilterWindowTimer();
-      P087_easySerial->write(data.c_str());
+      easySerial->write(data.c_str());
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         String log = F("Proxy: Sending: ");
@@ -56,16 +78,16 @@ bool P087_data_struct::loop() {
   }
   bool fullSentenceReceived = false;
 
-  if (P087_easySerial != nullptr) {
-    int available = P087_easySerial->available();
+  if (easySerial != nullptr) {
+    int available = easySerial->available();
 
     while (available > 0 && !fullSentenceReceived) {
       // Look for end marker
-      char c = P087_easySerial->read();
+      char c = easySerial->read();
       --available;
 
       if (available == 0) {
-        available = P087_easySerial->available();
+        available = easySerial->available();
         delay(0);
       }
 
@@ -207,19 +229,12 @@ static std::vector<capture_tuple> capture_vector;
 // called for each match
 void P087_data_struct::match_callback(const char *match, const unsigned int length, const MatchState& ms)
 {
-  char cap[10]; // must be large enough to hold captures
-
-  Serial.print("Matched: ");
-  Serial.write((byte *)match, length);
-  Serial.println();
-
   for (byte i = 0; i < ms.level; i++)
   {
-    Serial.print("Capture ");
-    Serial.print(i, DEC);
-    Serial.print(" = ");
-    ms.GetCapture(cap, i);
-    Serial.println(cap);
+    capture_tuple tuple;
+    tuple.first = 1;
+    tuple.second = ms.GetCapture(i);
+    capture_vector.push_back(tuple);
   } // end of for each capture
 }
 
@@ -243,8 +258,40 @@ bool P087_data_struct::matchRegexp(String& received) const {
   bool match_result = false;
 
   if (globalMatch()) {
-    unsigned long count = ms.GlobalMatch(_lines[P087_REGEX_POS].c_str(), match_callback);
-    match_result = count != 0;
+    capture_vector.clear();
+    ms.GlobalMatch(_lines[P087_REGEX_POS].c_str(), match_callback);
+    const uint8_t vectorlength = capture_vector.size();
+    for (uint8_t i = 0; i < vectorlength; ++i) {
+      if (capture_vector[i].first < P87_MAX_CAPTURE_INDEX && capture_index_used[capture_vector[i].first]) {
+        for (uint8_t n = 0; n < P087_NR_FILTERS; ++n) {
+          if (capture_index[n] == capture_vector[i].first) {
+            String log;
+            log.reserve(32);
+            log = F("P087: Index: ");
+            log += capture_vector[i].first;
+            log += F(" Found ");
+            log += capture_vector[i].second;
+            // Found a Capture Filter with this capture index.
+            if (capture_vector[i].second == _lines[n * 3 + P087_FIRST_FILTER_POS + 2]) {
+              log += F(" Matches");
+              // Found a match. Now check if it is supposed to be one or not.
+              if (capture_index_must_not_match[n]) {
+                log += F(" (!=)");
+                addLog(LOG_LEVEL_INFO, log);
+                return false;
+              } else {
+                match_result = true;
+                log += F(" (==)");
+              }
+            } else {
+              log += F(" No Match");
+            }
+            addLog(LOG_LEVEL_INFO, log);
+          }
+        }
+      }
+    }
+    capture_vector.clear();
   } else {
     char result = ms.Match(_lines[P087_REGEX_POS].c_str());
 

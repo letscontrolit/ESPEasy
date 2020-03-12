@@ -31,7 +31,6 @@
 #define P087_DEFAULT_BAUDRATE   38400
 
 
-
 // Plugin settings:
 // Validate:
 // - [0..9]
@@ -130,39 +129,11 @@ boolean Plugin_087(byte function, struct EventStruct *event, String& string) {
 
     case PLUGIN_WEBFORM_LOAD: {
       serialHelper_webformLoad(event);
-
-      /*
-         P087_data_struct *P087_data =
-            static_cast<P087_data_struct *>(getPluginTaskData(event->TaskIndex));
-         if (nullptr != P087_data && P087_data->isInitialized()) {
-            String detectedString = F("Detected: ");
-            detectedString += String(P087_data->P087_easySerial->baudRate());
-            addUnit(detectedString);
-       */
-
       addFormNumericBox(F("Baudrate"), P087_BAUDRATE_LABEL, P087_BAUDRATE, 2400, 115200);
       addUnit(F("baud"));
 
-      /*
-         {
-         // In a separate scope to free memory of String array as soon as possible
-         sensorTypeHelper_webformLoad_header();
-         String options[P087_NR_OUTPUT_OPTIONS];
-
-         for (int i = 0; i < P087_NR_OUTPUT_OPTIONS; ++i) {
-          options[i] = Plugin_087_valuename(i, true);
-         }
-
-         for (byte i = 0; i < P087_NR_OUTPUT_VALUES; ++i) {
-          const byte pconfigIndex = i + P087_QUERY1_CONFIG_POS;
-          sensorTypeHelper_loadOutputSelector(event, pconfigIndex, i, P087_NR_OUTPUT_OPTIONS, options);
-         }
-         }
-       */
-
       addFormSubHeader(F("Filtering"));
       P087_html_show_matchForms(event);
-
 
       addFormSubHeader(F("Statistics"));
       P087_html_show_stats(event);
@@ -204,6 +175,7 @@ boolean Plugin_087(byte function, struct EventStruct *event, String& string) {
 
       if (P087_data->init(serial_rx, serial_tx, P087_BAUDRATE)) {
         LoadCustomTaskSettings(event->TaskIndex, P087_data->_lines, P87_Nlines, 0);
+        P087_data->post_init();
         success = true;
 
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
@@ -367,7 +339,7 @@ void P087_html_show_matchForms(struct EventStruct *event) {
           label += String(lineNr);
           addRowLabel_tr_id(label, id);
 
-          addNumericBox(id, capture, 0, 99);
+          addNumericBox(id, capture, -1, P87_MAX_CAPTURE_INDEX);
           break;
         }
         case 1:

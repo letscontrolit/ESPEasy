@@ -599,6 +599,21 @@ char * MatchState::GetCapture (char * s, const int n) const
   return s;
 } // end of MatchState::GetCapture
 
+String MatchState::GetCapture (const int n) const
+{
+  if (result != REGEXP_MATCHED || n >= level || capture [n].len <= 0)
+  {
+    return "";
+  } 
+  String s;
+  s.reserve(capture [n].len);
+  for (int i = 0; i < capture [n].len; ++i)
+  {
+    s += capture [n].init[i];
+  }
+  return s;
+}
+
 // match repeatedly on a string, return count of matches
 unsigned int MatchState::MatchCount (const char * pattern)
 {

@@ -15,12 +15,14 @@
   Version 1.0  - 30th April 2011 : initial release.
   Version 1.1  - 1st May 2011    : added some helper functions, made more modular.
   Version 1.2  - 19th May 2011   : added more helper functions for replacing etc.
+  Version 1.2a - 12th March 2020 : TD-er: Added functions to get String captures + proper init of vars.
 
 
  */
 
 #pragma once
 
+#include <Arduino.h>
 
 // Maximum of captures we can return.
 // Increase if you need more, decrease to save memory.
@@ -112,6 +114,7 @@ public:
   char * GetMatch (char * s) const;
   // return capture string n
   char * GetCapture (char * s, const int n) const;
+  String GetCapture (const int n) const;
   // get result of previous match
   char GetResult () const { return result; }
 
