@@ -22,6 +22,8 @@
 #include <IRutils.h>
 #include <IRrecv.h>
 
+#include "_Plugin_Helper.h"
+
 #ifdef P016_P035_Extended_AC
 #include <IRac.h>
 #endif

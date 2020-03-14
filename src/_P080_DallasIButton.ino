@@ -15,6 +15,8 @@
 #define PLUGIN_NAME_080       "Input - iButton [TESTING]"
 #define PLUGIN_VALUENAME1_080 "iButton"
 
+#include "_Plugin_Helper.h"
+
 int8_t Plugin_080_DallasPin;
 
 boolean Plugin_080(byte function, struct EventStruct * event, String& string)

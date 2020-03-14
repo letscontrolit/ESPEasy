@@ -6,6 +6,7 @@
 // Plugin to read 12-bit-values from ADC chip MCP3221. It is used e.g. in MinipH pH interface to sample a pH probe in an aquarium
 // written by Jochen Krapf (jk@nerd2nerd.org)
 
+#include "_Plugin_Helper.h"
 
 #define PLUGIN_060
 #define PLUGIN_ID_060         60

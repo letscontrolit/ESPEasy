@@ -19,6 +19,8 @@ extern "C"
 #include <lwip/netif.h>
 }
 
+#include "_Plugin_Helper.h"
+
 #define PLUGIN_089
 #define PLUGIN_ID_089             89
 #define PLUGIN_NAME_089           "Communication - Ping"

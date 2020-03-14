@@ -54,6 +54,7 @@ class IRac {
                         const bool beep, const int16_t sleep,
                         const int16_t clock);
   static void initState(stdAc::state_t *state);
+  void markAsSent(void);
   bool sendAc(void);
   bool sendAc(const stdAc::state_t desired, const stdAc::state_t *prev = NULL);
   bool sendAc(const decode_type_t vendor, const int16_t model,
@@ -170,7 +171,8 @@ void electra(IRElectraAc *ac,
              const bool on, const stdAc::opmode_t mode,
              const float degrees, const stdAc::fanspeed_t fan,
              const stdAc::swingv_t swingv,
-             const stdAc::swingh_t swingh);
+             const stdAc::swingh_t swingh, const bool turbo,
+             const bool lighttoggle, const bool clean);
 #endif  // SEND_ELECTRA_AC
 #if SEND_FUJITSU_AC
   void fujitsu(IRFujitsuAC *ac, const fujitsu_ac_remote_model_t model,
@@ -299,7 +301,8 @@ void electra(IRElectraAc *ac,
   void samsung(IRSamsungAc *ac,
                const bool on, const stdAc::opmode_t mode, const float degrees,
                const stdAc::fanspeed_t fan, const stdAc::swingv_t swingv,
-               const bool quiet, const bool turbo, const bool clean,
+               const bool quiet, const bool turbo, const bool light,
+               const bool filter, const bool clean,
                const bool beep, const bool prevpower = true,
                const bool forcepower = true);
 #endif  // SEND_SAMSUNG_AC

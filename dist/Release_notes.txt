@@ -1,4 +1,58 @@
 -------------------------------------------------
+Changes in release mega-20200310 (since mega-20200305)
+-------------------------------------------------
+
+Release date: di 10 mrt 2020  1:58:41 CET
+
+Artem (8):
+      SetDatetime command
+      Rolled back extra changes
+      Removed extra includes
+      Removed serialPrintln
+      Remade using current code base
+      Removed extra linefeed
+      Added missed linefeeds
+      Change SetDatetime to Datetime command
+
+Bartłomiej Zimoń (2):
+      add support for space padding in transformations
+      docs: add 'd' formating in rules
+
+Gijs Noorlander (5):
+      [Build] Split controllers on minimal OTA builds
+      [Travis] Add new build env names to travis.yml
+      [DateTime] Documented command + few fixes
+      Fix build in ArduinoIDE
+      [Rules] Fix parsing new rules commands when building JSON string (#2932)
+
+
+-------------------------------------------------
+Changes in release mega-20200305 (since mega-20200301)
+-------------------------------------------------
+
+Release date: do  5 mrt 2020  0:16:32 CET
+
+Gijs Noorlander (11):
+      [Webserver] Move Web_StreamingBuffer to its own .h/.cpp
+      [Cleanup] Refactor parseSystemVariables + move time functions to .h/.cpp
+      [Cleanup] Fix build errors
+      [ESP32] Rename WebServer object to web_server to fix build issues
+      [Cleanup] Fix build issues in some plugins
+      [Cleanup] Fix build errors due to forward declarations and includes
+      [Cleanup] Use StringProvider to share more code + ESP32 core lib 1.11.2
+      [Cleanup] Include _Plugin_Helper.h in all plugin INO files
+      [Build] Set flash mode to DOUT for all ESP8266 builds
+      Fix Append unit number to hostname (#2918)
+      [Build] Fix build issue ArduinoOTA ESP32 build
+
+Toni (1):
+      HeatpumpIR 1.0.13 update (Mitsubishi MSY fixes)
+
+jimmys01 (1):
+      Update IR library to 2.7.4
+
+
+-------------------------------------------------
 Changes in release mega-20200301 (since mega-20200228)
 -------------------------------------------------
 

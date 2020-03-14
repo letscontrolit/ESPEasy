@@ -3,6 +3,8 @@
 //#################################### Plugin 023: OLED SSD1306 display #################################
 //#######################################################################################################
 
+#include "_Plugin_Helper.h"
+
 // Sample templates
 //  Temp: [DHT11#Temperature]   Hum:[DHT11#humidity]
 //  DS Temp:[Dallas1#Temperature#R]
@@ -621,8 +623,17 @@ void Plugin_023_sendStrXY(struct Plugin_023_OLED_SettingStruct &oled,  const cha
   Plugin_023_setXY(oled, X, Y);
   unsigned char i = 0;
   unsigned char font_width = 0;
+  unsigned char currentPixels = Y * 8; // setXY always uses font_width = 8, Y = 0-based
+  unsigned char maxPixels = 128; // Assumed default display width
 
-  while (*string)
+  switch (oled.type) { // Cater for that 1 smaller size display
+    case OLED_64x48:
+    case OLED_64x48 | OLED_rotated:
+      maxPixels = 64;
+      break;
+  }
+
+  while (*string && currentPixels < maxPixels) // Prevent display overflow on the character level
   {
     switch (oled.font_width)
     {
@@ -633,10 +644,11 @@ void Plugin_023_sendStrXY(struct Plugin_023_OLED_SettingStruct &oled,  const cha
         font_width = 8;
     }
 
-    for (i = 0; i < font_width; i++)
+    for (i = 0; i < font_width && currentPixels + i < maxPixels; i++) // Prevent display overflow on the pixel-level
     {
       Plugin_023_SendChar(oled, pgm_read_byte(Plugin_023_myFont[*string - 0x20] + i));
     }
+    currentPixels += font_width;
     string++;
   }
 }

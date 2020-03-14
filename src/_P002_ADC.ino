@@ -9,6 +9,7 @@
 #define PLUGIN_NAME_002       "Analog input - internal"
 #define PLUGIN_VALUENAME1_002 "Analog"
 
+#include "_Plugin_Helper.h"
 
 #ifdef ESP32
   # define P002_MAX_ADC_VALUE    4095

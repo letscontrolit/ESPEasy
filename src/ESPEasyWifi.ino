@@ -4,6 +4,7 @@
 #define WIFI_ALLOW_AP_AFTERBOOT_PERIOD     5      // in minutes
 
 #include "src/Globals/ESPEasyWiFiEvent.h"
+#include "ESPEasy-Globals.h"
 
 // ********************************************************************************
 // WiFi state
@@ -510,13 +511,7 @@ bool WifiIsSTA(WiFiMode_t wifimode)
 // ********************************************************************************
 String WifiGetAPssid()
 {
-  String ssid(Settings.Name);
-
-  if (Settings.appendUnitToHostname()) {
-    ssid += "_";
-    ssid += Settings.Unit;
-  }
-  return ssid;
+  return Settings.getHostname();
 }
 
 // ********************************************************************************

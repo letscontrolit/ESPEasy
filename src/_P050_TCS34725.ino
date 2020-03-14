@@ -11,6 +11,7 @@
 //
 
 #include "Adafruit_TCS34725.h"
+#include "_Plugin_Helper.h"
 
 #define PLUGIN_050
 #define PLUGIN_ID_050        50

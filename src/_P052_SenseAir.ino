@@ -95,6 +95,7 @@
 #define P052_MODBUS_TIMEOUT  180       // 100 msec communication timeout.
 
 #include <ESPeasySerial.h>
+#include "_Plugin_Helper.h"
 
 
 struct P052_data_struct : public PluginTaskData_base {

@@ -12,7 +12,7 @@ SettingsStruct_tmpl<N_TASKS>::SettingsStruct_tmpl() : ResetFactoryDefaultPrefere
 
 // VariousBits1 defaults to 0, keep in mind when adding bit lookups.
 template<unsigned int N_TASKS>
-bool SettingsStruct_tmpl<N_TASKS>::appendUnitToHostname() {
+bool SettingsStruct_tmpl<N_TASKS>::appendUnitToHostname()  const {
   return !getBitFromUL(VariousBits1, 1);
 }
 
@@ -22,7 +22,7 @@ void SettingsStruct_tmpl<N_TASKS>::appendUnitToHostname(bool value) {
 }
 
 template<unsigned int N_TASKS>
-bool SettingsStruct_tmpl<N_TASKS>::uniqueMQTTclientIdReconnect() {
+bool SettingsStruct_tmpl<N_TASKS>::uniqueMQTTclientIdReconnect() const {
   return getBitFromUL(VariousBits1, 2);
 }
 
@@ -32,7 +32,7 @@ void SettingsStruct_tmpl<N_TASKS>::uniqueMQTTclientIdReconnect(bool value) {
 }
 
 template<unsigned int N_TASKS>
-bool SettingsStruct_tmpl<N_TASKS>::OldRulesEngine() {
+bool SettingsStruct_tmpl<N_TASKS>::OldRulesEngine() const {
   return !getBitFromUL(VariousBits1, 3);
 }
 
@@ -42,7 +42,7 @@ void SettingsStruct_tmpl<N_TASKS>::OldRulesEngine(bool value) {
 }
 
 template<unsigned int N_TASKS>
-bool SettingsStruct_tmpl<N_TASKS>::ForceWiFi_bg_mode() {
+bool SettingsStruct_tmpl<N_TASKS>::ForceWiFi_bg_mode() const {
   return getBitFromUL(VariousBits1, 4);
 }
 
@@ -52,7 +52,7 @@ void SettingsStruct_tmpl<N_TASKS>::ForceWiFi_bg_mode(bool value) {
 }
 
 template<unsigned int N_TASKS>
-bool SettingsStruct_tmpl<N_TASKS>::WiFiRestart_connection_lost() {
+bool SettingsStruct_tmpl<N_TASKS>::WiFiRestart_connection_lost() const {
   return getBitFromUL(VariousBits1, 5);
 }
 
@@ -62,7 +62,7 @@ void SettingsStruct_tmpl<N_TASKS>::WiFiRestart_connection_lost(bool value) {
 }
 
 template<unsigned int N_TASKS>
-bool SettingsStruct_tmpl<N_TASKS>::EcoPowerMode() {
+bool SettingsStruct_tmpl<N_TASKS>::EcoPowerMode() const {
   return getBitFromUL(VariousBits1, 6);
 }
 
@@ -72,7 +72,7 @@ void SettingsStruct_tmpl<N_TASKS>::EcoPowerMode(bool value) {
 }
 
 template<unsigned int N_TASKS>
-bool SettingsStruct_tmpl<N_TASKS>::WifiNoneSleep() {
+bool SettingsStruct_tmpl<N_TASKS>::WifiNoneSleep() const {
   return getBitFromUL(VariousBits1, 7);
 }
 
@@ -83,7 +83,7 @@ void SettingsStruct_tmpl<N_TASKS>::WifiNoneSleep(bool value) {
 
 // Enable send gratuitous ARP by default, so invert the values (default = 0)
 template<unsigned int N_TASKS>
-bool SettingsStruct_tmpl<N_TASKS>::gratuitousARP() {
+bool SettingsStruct_tmpl<N_TASKS>::gratuitousARP() const {
   return !getBitFromUL(VariousBits1, 8);
 }
 
@@ -93,7 +93,7 @@ void SettingsStruct_tmpl<N_TASKS>::gratuitousARP(bool value) {
 }
 
 template<unsigned int N_TASKS>
-bool SettingsStruct_tmpl<N_TASKS>::TolerantLastArgParse() {
+bool SettingsStruct_tmpl<N_TASKS>::TolerantLastArgParse() const {
   return getBitFromUL(VariousBits1, 9);
 }
 
@@ -103,7 +103,7 @@ void SettingsStruct_tmpl<N_TASKS>::TolerantLastArgParse(bool value) {
 }
 
 template<unsigned int N_TASKS>
-bool SettingsStruct_tmpl<N_TASKS>::SendToHttp_ack() {
+bool SettingsStruct_tmpl<N_TASKS>::SendToHttp_ack() const {
   return getBitFromUL(VariousBits1, 10);
 }
 
@@ -283,4 +283,19 @@ void SettingsStruct_tmpl<N_TASKS>::clearTask(taskIndex_t task) {
   TaskDeviceDataFeed[task]     = 0;
   TaskDeviceTimer[task]        = 0;
   TaskDeviceEnabled[task]      = false;
+}
+
+template<unsigned int N_TASKS>
+String SettingsStruct_tmpl<N_TASKS>::getHostname() const {
+  return this->getHostname(this->appendUnitToHostname());
+}
+
+template<unsigned int N_TASKS>
+String SettingsStruct_tmpl<N_TASKS>::getHostname(bool appendUnit) const {
+  String hostname = this->Name;
+  if (this->Unit != 0 && appendUnit) { // only append non-zero unit number
+    hostname += '_';
+    hostname += this->Unit;
+  }
+  return hostname;
 }

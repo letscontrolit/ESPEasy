@@ -14,6 +14,7 @@
 
 #ifdef USES_P075
 #include <ESPeasySerial.h>
+#include "_Plugin_Helper.h"
 
 // *****************************************************************************************************
 // Defines start here

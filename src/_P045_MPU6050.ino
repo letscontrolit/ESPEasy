@@ -62,6 +62,7 @@
 // https://github.com/letscontrolit/ESPEasy/commit/af20984079d3e7aa59e08fd9b232f6d17ba3b523#diff-ec860ac195fffa61ec11dd419fefa5b9
 // https://github.com/letscontrolit/ESPEasy/commit/6400c495e24f39ebac88eb634f29cfb73137fa2b#diff-ec860ac195fffa61ec11dd419fefa5b9
 
+#include "_Plugin_Helper.h"
 
 #define MPU6050_RA_GYRO_CONFIG              0x1B
 #define MPU6050_RA_ACCEL_CONFIG             0x1C

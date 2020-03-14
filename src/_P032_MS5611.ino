@@ -4,6 +4,8 @@
 //#######################################################################################################
 // This sketch is based on https://github.com/Schm1tz1/arduino-ms5xxx
 
+#include "_Plugin_Helper.h"
+
 #define PLUGIN_032
 #define PLUGIN_ID_032        32
 #define PLUGIN_NAME_032       "Environment - MS5611 (GY-63)"
