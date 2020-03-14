@@ -30,8 +30,11 @@ enum P087_Match_Type {
   Regular_Match          = 0,
   Regular_Match_inverted = 1,
   Global_Match           = 2,
-  Global_Match_inverted  = 3
+  Global_Match_inverted  = 3,
+  Filter_Disabled        = 4
 };
+# define P087_Match_Type_NR_ELEMENTS 5
+
 
 struct P087_data_struct : public PluginTaskData_base {
 public:
@@ -92,7 +95,9 @@ public:
                              const unsigned int length,
                              const MatchState & ms);
 
-  bool matchRegexp(String& received) const;
+  bool          matchRegexp(String& received) const;
+
+  static String MatchType_toString(P087_Match_Type matchType);
 
 
   // Made public so we don't have to copy the values when loading/saving.
@@ -110,7 +115,7 @@ private:
   uint32_t       length_last_received     = 0;
   unsigned long  disable_filter_window    = 0;
 
-  uint8_t capture_index[P87_MAX_CAPTURE_INDEX] = {0};
+  uint8_t capture_index[P87_MAX_CAPTURE_INDEX] = { 0 };
 
   bool capture_index_used[P87_MAX_CAPTURE_INDEX];
   bool capture_index_must_not_match[P87_MAX_CAPTURE_INDEX];

@@ -36,17 +36,19 @@ void P087_data_struct::post_init() {
     capture_index_used[i] = false;
   }
   String log = F("P087_post_init:");
+
   for (uint8_t i = 0; i < P087_NR_FILTERS; ++i) {
     // Create some quick lookup table to see if we have a filter for the specific index
     capture_index_must_not_match[i] = _lines[i * 3 + P087_FIRST_FILTER_POS + 1].toInt() == P087_Filter_Comp::NotEqual;
     int index = _lines[i * 3 + P087_FIRST_FILTER_POS].toInt();
+
     // Index is negative when not used.
-    if (index >= 0 && index < P87_MAX_CAPTURE_INDEX && _lines[i * 3 + P087_FIRST_FILTER_POS + 1].length() > 0) {
-      log += ' ';
-      log += String(i);
-      log += ':';
-      log += String(index);      
-      capture_index[i] = index;
+    if ((index >= 0) && (index < P87_MAX_CAPTURE_INDEX) && (_lines[i * 3 + P087_FIRST_FILTER_POS + 1].length() > 0)) {
+      log                      += ' ';
+      log                      += String(i);
+      log                      += ':';
+      log                      += String(index);
+      capture_index[i]          = index;
       capture_index_used[index] = true;
     }
   }
@@ -175,6 +177,8 @@ bool P087_data_struct::invertMatch() const {
     case Regular_Match_inverted: // fallthrough
     case Global_Match_inverted:
       return true;
+    case Filter_Disabled:
+      break;
   }
   return false;
 }
@@ -187,6 +191,8 @@ bool P087_data_struct::globalMatch() const {
     case Global_Match:  // fallthrough
     case Global_Match_inverted:
       return true;
+    case Filter_Disabled:
+      break;
   }
   return false;
 }
@@ -221,7 +227,6 @@ bool P087_data_struct::disableFilterWindowActive() const {
   return false;
 }
 
-
 typedef std::pair<uint8_t, String> capture_tuple;
 static std::vector<capture_tuple> capture_vector;
 
@@ -232,7 +237,7 @@ void P087_data_struct::match_callback(const char *match, const unsigned int leng
   for (byte i = 0; i < ms.level; i++)
   {
     capture_tuple tuple;
-    tuple.first = 1;
+    tuple.first  = 1;
     tuple.second = ms.GetCapture(i);
     capture_vector.push_back(tuple);
   } // end of for each capture
@@ -257,23 +262,30 @@ bool P087_data_struct::matchRegexp(String& received) const {
 
   bool match_result = false;
 
-  if (globalMatch()) {
+  if (getMatchType() == Filter_Disabled) {
+    match_result = true;
+  } else if (globalMatch()) {
     capture_vector.clear();
     ms.GlobalMatch(_lines[P087_REGEX_POS].c_str(), match_callback);
     const uint8_t vectorlength = capture_vector.size();
+
     for (uint8_t i = 0; i < vectorlength; ++i) {
-      if (capture_vector[i].first < P87_MAX_CAPTURE_INDEX && capture_index_used[capture_vector[i].first]) {
+      if ((capture_vector[i].first < P87_MAX_CAPTURE_INDEX) && capture_index_used[capture_vector[i].first]) {
         for (uint8_t n = 0; n < P087_NR_FILTERS; ++n) {
-          if (capture_index[n] == capture_vector[i].first) {
+          unsigned int lines_index = n * 3 + P087_FIRST_FILTER_POS + 2;
+
+          if ((capture_index[n] == capture_vector[i].first) && (_lines[lines_index].length() != 0)) {
             String log;
             log.reserve(32);
-            log = F("P087: Index: ");
+            log  = F("P087: Index: ");
             log += capture_vector[i].first;
             log += F(" Found ");
             log += capture_vector[i].second;
+
             // Found a Capture Filter with this capture index.
-            if (capture_vector[i].second == _lines[n * 3 + P087_FIRST_FILTER_POS + 2]) {
+            if (capture_vector[i].second == _lines[lines_index]) {
               log += F(" Matches");
+
               // Found a match. Now check if it is supposed to be one or not.
               if (capture_index_must_not_match[n]) {
                 log += F(" (!=)");
@@ -281,10 +293,17 @@ bool P087_data_struct::matchRegexp(String& received) const {
                 return false;
               } else {
                 match_result = true;
-                log += F(" (==)");
+                log         += F(" (==)");
               }
             } else {
               log += F(" No Match");
+
+              if (capture_index_must_not_match[n]) {
+                log += F(" (!=) ");
+              } else {
+                log += F(" (==) ");
+              }
+              log += _lines[lines_index];
             }
             addLog(LOG_LEVEL_INFO, log);
           }
@@ -307,6 +326,18 @@ bool P087_data_struct::matchRegexp(String& received) const {
     }
   }
   return match_result;
+}
+
+String P087_data_struct::MatchType_toString(P087_Match_Type matchType) {
+  switch (matchType)
+  {
+    case P087_Match_Type::Regular_Match:          return F("Regular Match");
+    case P087_Match_Type::Regular_Match_inverted: return F("Regular Match inverted");
+    case P087_Match_Type::Global_Match:           return F("Global Match");
+    case P087_Match_Type::Global_Match_inverted:  return F("Global Match inverted");
+    case P087_Match_Type::Filter_Disabled:        return F("Filter Disabled");
+  }
+  return "";
 }
 
 bool P087_data_struct::max_length_reached() const {

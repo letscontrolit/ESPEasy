@@ -302,19 +302,16 @@ void P087_html_show_matchForms(struct EventStruct *event) {
     addFormNote(F("0 = Do not turn off filter after sending to the connected device."));
 
     {
-      String options[4];
-      options[P087_Match_Type::Regular_Match]          = F("Regular Match");
-      options[P087_Match_Type::Regular_Match_inverted] = F("Regular Match inverted");
-      options[P087_Match_Type::Global_Match]           = F("Global Match");
-      options[P087_Match_Type::Global_Match_inverted]  = F("Global Match inverted");
+      String options[P087_Match_Type_NR_ELEMENTS];
+      int optionValues[P087_Match_Type_NR_ELEMENTS];
 
-      int optionValues[4] = { P087_Match_Type::Regular_Match,
-                              P087_Match_Type::Regular_Match_inverted,
-                              P087_Match_Type::Global_Match,
-                              P087_Match_Type::Global_Match_inverted };
-
+      for (int i = 0; i < P087_Match_Type_NR_ELEMENTS; ++i) {
+        P087_Match_Type matchType = static_cast<P087_Match_Type>(i);
+        options[i] = P087_data_struct::MatchType_toString(matchType);
+        optionValues[i] = matchType;
+      }
       P087_Match_Type choice = P087_data->getMatchType();
-      addFormSelector(F("Match Type"), getPluginCustomArgName(P087_MATCH_TYPE_POS), 4, options, optionValues, choice, false);
+      addFormSelector(F("Match Type"), getPluginCustomArgName(P087_MATCH_TYPE_POS), P087_Match_Type_NR_ELEMENTS, options, optionValues, choice, false);
       addFormNote(F("Capture filter can only be used on Global Match"));
     }
 
