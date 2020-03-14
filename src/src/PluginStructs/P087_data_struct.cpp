@@ -237,7 +237,7 @@ void P087_data_struct::match_callback(const char *match, const unsigned int leng
   for (byte i = 0; i < ms.level; i++)
   {
     capture_tuple tuple;
-    tuple.first  = 1;
+    tuple.first  = i;
     tuple.second = ms.GetCapture(i);
     capture_vector.push_back(tuple);
   } // end of for each capture
