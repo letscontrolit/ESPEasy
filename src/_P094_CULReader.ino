@@ -1,10 +1,10 @@
 #ifdef USES_P094
 
 // #######################################################################################################
-// #################### Plugin 094 CUL Reader ############################################################
+// #################### Plugin 094 Brick4U CUL Reader ####################################################
 // #######################################################################################################
 //
-// Interact with CUL receiver
+// Interact with Brick4U CUL receiver
 // Allows to control the mode of the CUL receiver
 //
 
@@ -210,8 +210,12 @@ boolean Plugin_094(byte function, struct EventStruct *event, String& string) {
 
           if (event->String2.length() > 0) {
             if (Plugin_094_match_all(event->TaskIndex, event->String2)) {
+              if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+                String log = F("CUL Reader: Sending: ");
+                log += event->String2;
+                addLog(LOG_LEVEL_INFO, log);
+              }
               sendData(event);
-              addLog(LOG_LEVEL_INFO, event->String2);
             }
           }
         }
@@ -307,14 +311,13 @@ void P094_html_show_matchForms(struct EventStruct *event) {
         optionValues[i] = matchType;
       }
       P094_Match_Type choice = P094_data->getMatchType();
-      addFormSelector(F("Match Type"),
+      addFormSelector(F("Filter Mode"),
                       getPluginCustomArgName(P094_MATCH_TYPE_POS),
                       P094_Match_Type_NR_ELEMENTS,
                       options,
                       optionValues,
                       choice,
                       false);
-      addFormNote(F("Capture filter can only be used on Global Match"));
     }
 
 
@@ -357,10 +360,11 @@ void P094_html_show_matchForms(struct EventStruct *event) {
         {
           // Comparator
           String options[P094_FILTER_COMP_NR_ELEMENTS];
-          int optionValues[P094_FILTER_COMP_NR_ELEMENTS];
+          int    optionValues[P094_FILTER_COMP_NR_ELEMENTS];
+
           for (int i = 0; i < P094_FILTER_COMP_NR_ELEMENTS; ++i) {
             P094_Filter_Comp enumValue = static_cast<P094_Filter_Comp>(i);
-            options[i] = P094_data_struct::P094_FilterComp_toString(enumValue);
+            options[i]      = P094_data_struct::P094_FilterComp_toString(enumValue);
             optionValues[i] = enumValue;
           }
           addSelector(id, P094_FILTER_COMP_NR_ELEMENTS, options, optionValues, NULL, comparator, false, "");

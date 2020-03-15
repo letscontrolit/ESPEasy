@@ -24,11 +24,9 @@
 enum P094_Match_Type {
   P094_Regular_Match          = 0,
   P094_Regular_Match_inverted = 1,
-  P094_Global_Match           = 2,
-  P094_Global_Match_inverted  = 3,
-  P094_Filter_Disabled        = 4
+  P094_Filter_Disabled        = 2
 };
-# define P094_Match_Type_NR_ELEMENTS 5
+# define P094_Match_Type_NR_ELEMENTS 3
 
 enum P094_Filter_Value_Type {
   P094_not_used          = 0,
@@ -92,7 +90,6 @@ public:
 
   bool            invertMatch() const;
 
-  bool            globalMatch() const;
 
   String          getFilter(uint8_t           lineNr,
                             P094_Filter_Value_Type& capture,

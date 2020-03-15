@@ -162,25 +162,9 @@ P094_Match_Type P094_data_struct::getMatchType() const {
 
 bool P094_data_struct::invertMatch() const {
   switch (getMatchType()) {
-    case P094_Regular_Match:          // fallthrough
-    case P094_Global_Match:
+    case P094_Regular_Match:
       break;
-    case P094_Regular_Match_inverted: // fallthrough
-    case P094_Global_Match_inverted:
-      return true;
-    case P094_Filter_Disabled:
-      break;
-  }
-  return false;
-}
-
-bool P094_data_struct::globalMatch() const {
-  switch (getMatchType()) {
-    case P094_Regular_Match: // fallthrough
     case P094_Regular_Match_inverted:
-      break;
-    case P094_Global_Match:  // fallthrough
-    case P094_Global_Match_inverted:
       return true;
     case P094_Filter_Disabled:
       break;
@@ -228,6 +212,11 @@ bool P094_data_struct::parsePacket(String& received) const {
 
   if (strlength == 0) {
     return false;
+  }
+
+
+  if (getMatchType() == P094_Filter_Disabled) {
+    return true;
   }
 
   bool match_result = false;
@@ -292,11 +281,24 @@ bool P094_data_struct::parsePacket(String& received) const {
               log  = F("CUL Reader: ");
               log += P094_FilterValueType_toString(valueType_index[f]);
               log += F(":  in:");
-              log += packet_header[i];
+              log += formatToHex_decimal(packet_header[i]);
               log += ' ';
               log += P094_FilterComp_toString(comparator);
               log += ' ';
-              log += value;
+              log += formatToHex_decimal(value);
+
+              switch (comparator) {
+                case P094_Filter_Comp::P094_Equal_OR:
+                case P094_Filter_Comp::P094_Equal_MUST:
+
+                  if (match) { log += F(" expected MATCH"); }
+                  break;
+                case P094_Filter_Comp::P094_NotEqual_OR:
+                case P094_Filter_Comp::P094_NotEqual_MUST:
+
+                  if (!match) { log += F(" expected NO MATCH"); }
+                  break;
+              }
               addLog(LOG_LEVEL_INFO, log);
             }
 
@@ -322,8 +324,14 @@ bool P094_data_struct::parsePacket(String& received) const {
       }
     }
   } else {
-    // FIXME TD-er: Must test the result of the other possible answers.
-    match_result = true;
+    switch (received[0]) {
+      case 'V':
+      case 'T':
+
+        // FIXME TD-er: Must test the result of the other possible answers.
+        match_result = true;
+        break;
+    }
   }
 
 
@@ -335,8 +343,6 @@ String P094_data_struct::MatchType_toString(P094_Match_Type matchType) {
   {
     case P094_Match_Type::P094_Regular_Match:          return F("Regular Match");
     case P094_Match_Type::P094_Regular_Match_inverted: return F("Regular Match inverted");
-    case P094_Match_Type::P094_Global_Match:           return F("Global Match");
-    case P094_Match_Type::P094_Global_Match_inverted:  return F("Global Match inverted");
     case P094_Match_Type::P094_Filter_Disabled:        return F("Filter Disabled");
   }
   return "";
