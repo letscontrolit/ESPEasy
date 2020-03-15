@@ -37,10 +37,10 @@ void P094_data_struct::post_init() {
   }
 
   for (uint8_t i = 0; i < P094_NR_FILTERS; ++i) {
-    size_t lines_baseindex            = i * 3 + P094_FIRST_FILTER_POS;
+    size_t lines_baseindex            = get_filter_base_index(i);
     int    index                      = _lines[lines_baseindex].toInt();
-    int    tmp_filter_comp            = _lines[lines_baseindex + 1].toInt();
-    const bool filter_string_notempty = _lines[lines_baseindex + 2].length() > 0;
+    int    tmp_filter_comp            = _lines[lines_baseindex + 2].toInt();
+    const bool filter_string_notempty = _lines[lines_baseindex + 3].length() > 0;
     const bool valid_index            = index >= 0 && index < P094_FILTER_VALUE_Type_NR_ELEMENTS;
     const bool valid_filter_comp      = tmp_filter_comp >= 0 && tmp_filter_comp < P094_FILTER_COMP_NR_ELEMENTS;
 
@@ -82,13 +82,17 @@ bool P094_data_struct::loop() {
   if (easySerial != nullptr) {
     int available = easySerial->available();
 
+    unsigned long timeout = millis() + 10;
+
     while (available > 0 && !fullSentenceReceived) {
       // Look for end marker
       char c = easySerial->read();
       --available;
 
       if (available == 0) {
-        available = easySerial->available();
+        if (!timeOutReached(timeout)) {
+          available = easySerial->available();
+        }
         delay(0);
       }
 
@@ -172,20 +176,20 @@ bool P094_data_struct::invertMatch() const {
   return false;
 }
 
-String P094_data_struct::getFilter(uint8_t lineNr, P094_Filter_Value_Type& filterValueType, P094_Filter_Comp& comparator) const
+String P094_data_struct::getFilter(uint8_t lineNr, P094_Filter_Value_Type& filterValueType, uint32_t& optional, P094_Filter_Comp& comparator) const
 {
-  uint8_t varNr = lineNr * 3 + P094_FIRST_FILTER_POS;
+  uint8_t varNr = get_filter_base_index(lineNr);
 
   filterValueType = P094_Filter_Value_Type::P094_not_used;
 
   if (varNr >= P94_Nlines) { return ""; }
-
+  optional = _lines[varNr + 1].toInt();
   filterValueType = valueType_index[lineNr];
   comparator      = filter_comp[lineNr];
 
   //  filterValueType = static_cast<P094_Filter_Value_Type>(_lines[varNr].toInt());
-  //  comparator      = static_cast<P094_Filter_Comp>(_lines[varNr + 1].toInt());
-  return _lines[varNr + 2];
+  //  comparator      = static_cast<P094_Filter_Comp>(_lines[varNr + 2].toInt());
+  return _lines[varNr + 3];
 }
 
 void P094_data_struct::setDisableFilterWindowTimer() {
@@ -270,9 +274,10 @@ bool P094_data_struct::parsePacket(String& received) const {
           if (valueType_index[f] == i) {
             // Have a matching filter
 
+            uint32_t optional;
             P094_Filter_Value_Type filterValueType;
             P094_Filter_Comp comparator;
-            unsigned long    value = hexToUL(getFilter(f, filterValueType, comparator));
+            unsigned long    value = hexToUL(getFilter(f, filterValueType, optional, comparator));
             const bool match       = (value == packet_header[i]);
 
             if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -379,6 +384,10 @@ String P094_data_struct::P094_FilterComp_toString(P094_Filter_Comp comparator)
 bool P094_data_struct::max_length_reached() const {
   if (max_length == 0) { return false; }
   return sentence_part.length() >= max_length;
+}
+
+size_t P094_data_struct::get_filter_base_index(size_t filterLine) const {
+  return filterLine * P094_ITEMS_PER_FILTER + P094_FIRST_FILTER_POS;
 }
 
 #endif // USES_P094

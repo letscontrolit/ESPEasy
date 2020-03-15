@@ -322,6 +322,7 @@ void P094_html_show_matchForms(struct EventStruct *event) {
 
 
     byte lineNr                    = 0;
+    uint32_t optional              = 0;
     P094_Filter_Value_Type capture = P094_Filter_Value_Type::P094_packet_length;
     P094_Filter_Comp comparator    = P094_Filter_Comp::P094_Equal_OR;
     String filter;
@@ -330,11 +331,11 @@ void P094_html_show_matchForms(struct EventStruct *event) {
     {
       String id = getPluginCustomArgName(varNr);
 
-      switch (varNr % 3) {
+      switch ((varNr - P094_FIRST_FILTER_POS) % P094_ITEMS_PER_FILTER) {
         case 0:
         {
           // Label + first parameter
-          filter = P094_data->getFilter(lineNr, capture, comparator);
+          filter = P094_data->getFilter(lineNr, capture, optional, comparator);
           ++lineNr;
           String label;
           label  = F("Filter ");
@@ -358,6 +359,12 @@ void P094_html_show_matchForms(struct EventStruct *event) {
         }
         case 1:
         {
+          // Optional numerical value
+          addNumericBox(id, optional, 0, 1024);
+          break;
+        }
+        case 2:
+        {
           // Comparator
           String options[P094_FILTER_COMP_NR_ELEMENTS];
           int    optionValues[P094_FILTER_COMP_NR_ELEMENTS];
@@ -370,7 +377,7 @@ void P094_html_show_matchForms(struct EventStruct *event) {
           addSelector(id, P094_FILTER_COMP_NR_ELEMENTS, options, optionValues, NULL, comparator, false, "");
           break;
         }
-        case 2:
+        case 3:
         {
           // Compare with
           addTextBox(id, filter, 8, false, false, "", "");

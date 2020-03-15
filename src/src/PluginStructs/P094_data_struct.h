@@ -16,7 +16,8 @@
 # define P094_FIRST_FILTER_POS   6
 
 # define P094_NR_FILTERS         10
-# define P94_Nlines              (P094_FIRST_FILTER_POS + 3 * (P094_NR_FILTERS))
+# define P094_ITEMS_PER_FILTER   4
+# define P94_Nlines              (P094_FIRST_FILTER_POS + (P094_ITEMS_PER_FILTER * (P094_NR_FILTERS)))
 # define P94_Nchars              128
 # define P94_MAX_CAPTURE_INDEX   32
 
@@ -93,6 +94,7 @@ public:
 
   String          getFilter(uint8_t           lineNr,
                             P094_Filter_Value_Type& capture,
+                            uint32_t&          optional,
                             P094_Filter_Comp& comparator) const;
 
   void        setDisableFilterWindowTimer();
@@ -112,6 +114,7 @@ public:
 private:
 
   bool max_length_reached() const;
+  size_t get_filter_base_index(size_t filterLine) const;
 
   ESPeasySerial *easySerial = nullptr;
   String         sentence_part;
