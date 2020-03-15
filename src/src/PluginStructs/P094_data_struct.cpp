@@ -330,15 +330,17 @@ bool P094_data_struct::parsePacket(String& received) const {
     }
   } else {
     switch (received[0]) {
-      case 'V':
-      case 'T':
+      case 'C': // CMODE
+      case 'S': // SMODE
+      case 'T': // TMODE
+      case 'O': // OFF
+      case 'V': // Version info
 
         // FIXME TD-er: Must test the result of the other possible answers.
         match_result = true;
         break;
     }
   }
-
 
   return match_result;
 }

@@ -13,10 +13,10 @@
 # define P094_FILTER_OFF_WINDOW_POS 2
 # define P094_MATCH_TYPE_POS 3
 
-# define P094_FIRST_FILTER_POS   6
+# define P094_FIRST_FILTER_POS   10
 
 # define P094_NR_FILTERS         10
-# define P094_ITEMS_PER_FILTER   4
+# define P094_ITEMS_PER_FILTER   12
 # define P94_Nlines              (P094_FIRST_FILTER_POS + (P094_ITEMS_PER_FILTER * (P094_NR_FILTERS)))
 # define P94_Nchars              128
 # define P94_MAX_CAPTURE_INDEX   32
