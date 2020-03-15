@@ -43,7 +43,7 @@ void P087_data_struct::post_init() {
     int index = _lines[i * 3 + P087_FIRST_FILTER_POS].toInt();
 
     // Index is negative when not used.
-    if ((index >= 0) && (index < P87_MAX_CAPTURE_INDEX) && (_lines[i * 3 + P087_FIRST_FILTER_POS + 1].length() > 0)) {
+    if ((index >= 0) && (index < P87_MAX_CAPTURE_INDEX) && (_lines[i * 3 + P087_FIRST_FILTER_POS + 2].length() > 0)) {
       log                      += ' ';
       log                      += String(i);
       log                      += ':';
