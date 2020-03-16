@@ -321,67 +321,81 @@ void P094_html_show_matchForms(struct EventStruct *event) {
     }
 
 
-    byte lineNr                    = 0;
+    byte filterNr                  = 0;
     uint32_t optional              = 0;
     P094_Filter_Value_Type capture = P094_Filter_Value_Type::P094_packet_length;
     P094_Filter_Comp comparator    = P094_Filter_Comp::P094_Equal_OR;
     String filter;
 
-    for (byte varNr = P094_FIRST_FILTER_POS; varNr < P94_Nlines; ++varNr)
+    for (byte lineNr = 0; lineNr < P094_NR_FILTERS; ++lineNr)
     {
-      String id = getPluginCustomArgName(varNr);
+      // Filter parameter number on a filter line.
+      bool newLine = (lineNr % P094_AND_FILTER_BLOCK) == 0;
 
-      switch ((varNr - P094_FIRST_FILTER_POS) % P094_ITEMS_PER_FILTER) {
-        case 0:
-        {
-          // Label + first parameter
-          filter = P094_data->getFilter(lineNr, capture, optional, comparator);
-          ++lineNr;
-          String label;
-          label  = F("Filter ");
-          label += String(lineNr);
-          addRowLabel_tr_id(label, id);
+      for (byte filterLinePar = 0; filterLinePar < P094_ITEMS_PER_FILTER; ++filterLinePar)
+      {
+        String id = getPluginCustomArgName(P094_data_struct::P094_Get_filter_base_index(lineNr) + filterLinePar);
 
-          // Combo box with filter types
+        switch (filterLinePar) {
+          case 0:
           {
-            String options[P094_FILTER_VALUE_Type_NR_ELEMENTS];
-            int    optionValues[P094_FILTER_VALUE_Type_NR_ELEMENTS];
+            filter = P094_data->getFilter(lineNr, capture, optional, comparator);
 
-            for (int i = 0; i < P094_FILTER_VALUE_Type_NR_ELEMENTS; ++i) {
-              P094_Filter_Value_Type filterValueType = static_cast<P094_Filter_Value_Type>(i);
-              options[i]      = P094_data_struct::P094_FilterValueType_toString(filterValueType);
-              optionValues[i] = filterValueType;
+            if (newLine) {
+              // Label + first parameter
+              ++filterNr;
+              String label;
+              label  = F("Filter ");
+              label += String(filterNr);
+              addRowLabel_tr_id(label, id);
+            } else {
+              addHtml(F("<B>AND</>"));
+              html_BR();
             }
-            addSelector(id, P094_FILTER_VALUE_Type_NR_ELEMENTS, options, optionValues, NULL, capture, false, "");
-          }
+            ++lineNr;
 
-          break;
-        }
-        case 1:
-        {
-          // Optional numerical value
-          addNumericBox(id, optional, 0, 1024);
-          break;
-        }
-        case 2:
-        {
-          // Comparator
-          String options[P094_FILTER_COMP_NR_ELEMENTS];
-          int    optionValues[P094_FILTER_COMP_NR_ELEMENTS];
 
-          for (int i = 0; i < P094_FILTER_COMP_NR_ELEMENTS; ++i) {
-            P094_Filter_Comp enumValue = static_cast<P094_Filter_Comp>(i);
-            options[i]      = P094_data_struct::P094_FilterComp_toString(enumValue);
-            optionValues[i] = enumValue;
+            // Combo box with filter types
+            {
+              String options[P094_FILTER_VALUE_Type_NR_ELEMENTS];
+              int    optionValues[P094_FILTER_VALUE_Type_NR_ELEMENTS];
+
+              for (int i = 0; i < P094_FILTER_VALUE_Type_NR_ELEMENTS; ++i) {
+                P094_Filter_Value_Type filterValueType = static_cast<P094_Filter_Value_Type>(i);
+                options[i]      = P094_data_struct::P094_FilterValueType_toString(filterValueType);
+                optionValues[i] = filterValueType;
+              }
+              addSelector(id, P094_FILTER_VALUE_Type_NR_ELEMENTS, options, optionValues, NULL, capture, false, "");
+            }
+
+            break;
           }
-          addSelector(id, P094_FILTER_COMP_NR_ELEMENTS, options, optionValues, NULL, comparator, false, "");
-          break;
-        }
-        case 3:
-        {
-          // Compare with
-          addTextBox(id, filter, 8, false, false, "", "");
-          break;
+          case 1:
+          {
+            // Optional numerical value
+            addNumericBox(id, optional, 0, 1024);
+            break;
+          }
+          case 2:
+          {
+            // Comparator
+            String options[P094_FILTER_COMP_NR_ELEMENTS];
+            int    optionValues[P094_FILTER_COMP_NR_ELEMENTS];
+
+            for (int i = 0; i < P094_FILTER_COMP_NR_ELEMENTS; ++i) {
+              P094_Filter_Comp enumValue = static_cast<P094_Filter_Comp>(i);
+              options[i]      = P094_data_struct::P094_FilterComp_toString(enumValue);
+              optionValues[i] = enumValue;
+            }
+            addSelector(id, P094_FILTER_COMP_NR_ELEMENTS, options, optionValues, NULL, comparator, false, "");
+            break;
+          }
+          case 3:
+          {
+            // Compare with
+            addTextBox(id, filter, 8, false, false, "", "");
+            break;
+          }
         }
       }
     }

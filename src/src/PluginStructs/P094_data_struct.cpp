@@ -37,7 +37,7 @@ void P094_data_struct::post_init() {
   }
 
   for (uint8_t i = 0; i < P094_NR_FILTERS; ++i) {
-    size_t lines_baseindex            = get_filter_base_index(i);
+    size_t lines_baseindex            = P094_Get_filter_base_index(i);
     int    index                      = _lines[lines_baseindex].toInt();
     int    tmp_filter_comp            = _lines[lines_baseindex + 2].toInt();
     const bool filter_string_notempty = _lines[lines_baseindex + 3].length() > 0;
@@ -176,14 +176,22 @@ bool P094_data_struct::invertMatch() const {
   return false;
 }
 
-String P094_data_struct::getFilter(uint8_t lineNr, P094_Filter_Value_Type& filterValueType, uint32_t& optional, P094_Filter_Comp& comparator) const
+bool P094_data_struct::filterUsed(uint8_t lineNr) const
 {
-  uint8_t varNr = get_filter_base_index(lineNr);
+  if (valueType_index[lineNr] == P094_Filter_Value_Type::P094_not_used) { return false; }
+  uint8_t varNr = P094_Get_filter_base_index(lineNr);
+  return _lines[varNr + 3].length() > 0;
+}
+
+String P094_data_struct::getFilter(uint8_t lineNr, P094_Filter_Value_Type& filterValueType, uint32_t& optional,
+                                   P094_Filter_Comp& comparator) const
+{
+  uint8_t varNr = P094_Get_filter_base_index(lineNr);
 
   filterValueType = P094_Filter_Value_Type::P094_not_used;
 
   if (varNr >= P94_Nlines) { return ""; }
-  optional = _lines[varNr + 1].toInt();
+  optional        = _lines[varNr + 1].toInt();
   filterValueType = valueType_index[lineNr];
   comparator      = filter_comp[lineNr];
 
@@ -267,6 +275,12 @@ bool P094_data_struct::parsePacket(String& received) const {
       addLog(LOG_LEVEL_INFO, log);
     }
 
+    bool filter_matches[P094_NR_FILTERS];
+
+    for (unsigned int f = 0; f < P094_NR_FILTERS; ++f) {
+      filter_matches[f] = false;
+    }
+
     // Do not check for "not used" (0)
     for (unsigned int i = 1; i < P094_FILTER_VALUE_Type_NR_ELEMENTS; ++i) {
       if (valueType_used[i]) {
@@ -310,11 +324,11 @@ bool P094_data_struct::parsePacket(String& received) const {
             switch (comparator) {
               case P094_Filter_Comp::P094_Equal_OR:
 
-                if (match) { match_result = true; }
+                if (match) { filter_matches[f] = true; }
                 break;
               case P094_Filter_Comp::P094_NotEqual_OR:
 
-                if (!match) { match_result = true; }
+                if (!match) { filter_matches[f] = true; }
                 break;
 
               case P094_Filter_Comp::P094_Equal_MUST:
@@ -325,6 +339,28 @@ bool P094_data_struct::parsePacket(String& received) const {
                 if (match) { return false; }
             }
           }
+        }
+      }
+    }
+
+    // Now we have to check if all rows per filter line in filter_matches[f] are true or not used.
+    int nrMatches = 0;
+    int nrNotUsed = 0;
+
+    for (unsigned int f = 0; !match_result && f < P094_NR_FILTERS; ++f) {
+      if (f % P094_AND_FILTER_BLOCK == 0) {
+        if ((nrMatches > 0) && ((nrMatches + nrNotUsed) == P094_AND_FILTER_BLOCK)) {
+          match_result = true;
+        }
+        nrMatches = 0;
+        nrNotUsed = 0;
+      }
+
+      if (filter_matches[f]) {
+        ++nrMatches;
+      } else {
+        if (!filterUsed(f)) {
+          ++nrNotUsed;
         }
       }
     }
@@ -388,7 +424,7 @@ bool P094_data_struct::max_length_reached() const {
   return sentence_part.length() >= max_length;
 }
 
-size_t P094_data_struct::get_filter_base_index(size_t filterLine) const {
+size_t P094_data_struct::P094_Get_filter_base_index(size_t filterLine) {
   return filterLine * P094_ITEMS_PER_FILTER + P094_FIRST_FILTER_POS;
 }
 
