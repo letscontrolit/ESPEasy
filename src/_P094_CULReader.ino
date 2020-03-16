@@ -321,39 +321,37 @@ void P094_html_show_matchForms(struct EventStruct *event) {
     }
 
 
-    byte filterNr                  = 0;
+    byte filterSet                  = 0;
     uint32_t optional              = 0;
     P094_Filter_Value_Type capture = P094_Filter_Value_Type::P094_packet_length;
     P094_Filter_Comp comparator    = P094_Filter_Comp::P094_Equal_OR;
     String filter;
 
-    for (byte lineNr = 0; lineNr < P094_NR_FILTERS; ++lineNr)
+    for (byte filterLine = 0; filterLine < P094_NR_FILTERS; ++filterLine)
     {
       // Filter parameter number on a filter line.
-      bool newLine = (lineNr % P094_AND_FILTER_BLOCK) == 0;
+      bool newLine = (filterLine % P094_AND_FILTER_BLOCK) == 0;
 
       for (byte filterLinePar = 0; filterLinePar < P094_ITEMS_PER_FILTER; ++filterLinePar)
       {
-        String id = getPluginCustomArgName(P094_data_struct::P094_Get_filter_base_index(lineNr) + filterLinePar);
+        String id = getPluginCustomArgName(P094_data_struct::P094_Get_filter_base_index(filterLine) + filterLinePar);
 
         switch (filterLinePar) {
           case 0:
           {
-            filter = P094_data->getFilter(lineNr, capture, optional, comparator);
+            filter = P094_data->getFilter(filterLine, capture, optional, comparator);
 
             if (newLine) {
               // Label + first parameter
-              ++filterNr;
+              ++filterSet;
               String label;
               label  = F("Filter ");
-              label += String(filterNr);
+              label += String(filterSet);
               addRowLabel_tr_id(label, id);
             } else {
               addHtml(F("<B>AND</>"));
               html_BR();
             }
-            ++lineNr;
-
 
             // Combo box with filter types
             {

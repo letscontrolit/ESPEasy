@@ -38,9 +38,10 @@ enum P094_Filter_Value_Type {
   P094_serial_number = 4,
   P094_unknown2      = 5,
   P094_meter_type    = 6,
-  P094_rssi          = 7
+  P094_rssi          = 7,
+  P094_position      = 8
 };
-# define P094_FILTER_VALUE_Type_NR_ELEMENTS 8
+# define P094_FILTER_VALUE_Type_NR_ELEMENTS 9
 
 enum P094_Filter_Comp {
   P094_Equal_OR      = 0,

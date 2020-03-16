@@ -291,8 +291,25 @@ bool P094_data_struct::parsePacket(String& received) const {
             uint32_t optional;
             P094_Filter_Value_Type filterValueType;
             P094_Filter_Comp comparator;
-            unsigned long    value = hexToUL(getFilter(f, filterValueType, optional, comparator));
-            const bool match       = (value == packet_header[i]);
+            bool   match = false;
+            String inputString;
+            String valueString;
+
+            if (i == P094_Filter_Value_Type::P094_position) {
+              valueString = getFilter(f, filterValueType, optional, comparator);
+
+              if (received.length() >= (optional + valueString.length())) {
+                // received string is long enough to fit the expression.
+                inputString = received.substring(optional, optional + valueString.length());
+                match = inputString.equalsIgnoreCase(valueString);
+              }
+            } else {
+              unsigned long value = hexToUL(getFilter(f, filterValueType, optional, comparator));
+              match       = (value == packet_header[i]);
+              inputString = formatToHex_decimal(packet_header[i]);
+              valueString = formatToHex_decimal(value);
+            }
+
 
             if (loglevelActiveFor(LOG_LEVEL_INFO)) {
               String log;
@@ -300,17 +317,17 @@ bool P094_data_struct::parsePacket(String& received) const {
               log  = F("CUL Reader: ");
               log += P094_FilterValueType_toString(valueType_index[f]);
               log += F(":  in:");
-              log += formatToHex_decimal(packet_header[i]);
+              log += inputString;
               log += ' ';
               log += P094_FilterComp_toString(comparator);
               log += ' ';
-              log += formatToHex_decimal(value);
+              log += valueString;
 
               switch (comparator) {
                 case P094_Filter_Comp::P094_Equal_OR:
                 case P094_Filter_Comp::P094_Equal_MUST:
 
-                  if (match) { log += F(" expected MATCH"); }
+                  if (match) { log += F(" expected MATCH"); } 
                   break;
                 case P094_Filter_Comp::P094_NotEqual_OR:
                 case P094_Filter_Comp::P094_NotEqual_MUST:
@@ -402,6 +419,7 @@ String P094_data_struct::P094_FilterValueType_toString(P094_Filter_Value_Type va
     case P094_Filter_Value_Type::P094_unknown2:      return F("unknown2");
     case P094_Filter_Value_Type::P094_meter_type:    return F("Meter Type");
     case P094_Filter_Value_Type::P094_rssi:          return F("RSSI");
+    case P094_Filter_Value_Type::P094_position:      return F("Position");
 
       //    default: break;
   }
