@@ -452,7 +452,7 @@ void MQTTStatus(const String& status)
 
 
 /*********************************************************************************************\
- * send specific sensor task data
+ * send specific sensor task data, effectively calling PluginCall(PLUGIN_READ...)
 \*********************************************************************************************/
 void SensorSendTask(taskIndex_t TaskIndex)
 {
