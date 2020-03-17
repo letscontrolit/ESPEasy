@@ -843,6 +843,9 @@ bool setTaskEnableStatus(taskIndex_t taskIndex, bool enabled)
   // Only enable task if it has a Plugin configured
   if (validPluginID(Settings.TaskDeviceNumber[taskIndex]) || !enabled) {
     Settings.TaskDeviceEnabled[taskIndex] = enabled;
+    if (enabled) {
+      schedule_task_device_timer(taskIndex, millis() + 10);
+    }
     return true;
   }
   return false;
