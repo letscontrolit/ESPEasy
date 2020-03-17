@@ -4,7 +4,7 @@
 .. |Plugin_Dust| replace:: :ref:`P018_page`, :ref:`P053_page`, :ref:`P056_page`
 .. |Plugin_Energy_AC| replace:: :ref:`P076_page`, :ref:`P077_page`, :ref:`P078_page`
 .. |Plugin_Energy_DC| replace:: :ref:`P027_page`, :ref:`P085_page`
-.. |Plugin_Energy_Heat| replace:: :ref:`P088_page`
+.. |Plugin_Energy_Heat| replace:: :ref:`P088_page`, :ref:`P093_page`
 .. |Plugin_Environment| replace:: :ref:`P004_page`, :ref:`P005_page`, :ref:`P006_page`, :ref:`P014_page`, :ref:`P024_page`, :ref:`P028_page`, :ref:`P030_page`, :ref:`P031_page`, :ref:`P032_page`, :ref:`P034_page`, :ref:`P039_page`, :ref:`P047_page`, :ref:`P051_page`, :ref:`P068_page`, :ref:`P069_page`, :ref:`P072_page`
 .. |Plugin_Extra_IO| replace:: :ref:`P011_page`, :ref:`P022_page`
 .. |Plugin_Gases| replace:: :ref:`P049_page`, :ref:`P052_page`, :ref:`P083_page`, :ref:`P090_page`
@@ -22,5 +22,6 @@
 .. |Plugin_Position| replace:: :ref:`P013_page`, :ref:`P082_page`
 .. |Plugin_Regulator| replace:: :ref:`P021_page`
 .. |Plugin_RFID| replace:: :ref:`P008_page`, :ref:`P017_page`, :ref:`P040_page`
-.. |Plugin_Switch_input| replace:: :ref:`P001_page`, :ref:`P009_page`, :ref:`P019_page`, :ref:`P059_page`, :ref:`P080_page`
+.. |Plugin_Switch_input| replace:: :ref:`P001_page`, :ref:`P009_page`, :ref:`P019_page`, :ref:`P059_page`, :ref:`P080_page`, :ref:`P091_page`
 .. |Plugin_Weight| replace:: :ref:`P067_page`
+

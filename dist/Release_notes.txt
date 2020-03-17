@@ -1,4 +1,32 @@
 -------------------------------------------------
+Changes in release mega-20200310 (since mega-20200305)
+-------------------------------------------------
+
+Release date: di 10 mrt 2020  1:58:41 CET
+
+Artem (8):
+      SetDatetime command
+      Rolled back extra changes
+      Removed extra includes
+      Removed serialPrintln
+      Remade using current code base
+      Removed extra linefeed
+      Added missed linefeeds
+      Change SetDatetime to Datetime command
+
+Bartłomiej Zimoń (2):
+      add support for space padding in transformations
+      docs: add 'd' formating in rules
+
+Gijs Noorlander (5):
+      [Build] Split controllers on minimal OTA builds
+      [Travis] Add new build env names to travis.yml
+      [DateTime] Documented command + few fixes
+      Fix build in ArduinoIDE
+      [Rules] Fix parsing new rules commands when building JSON string (#2932)
+
+
+-------------------------------------------------
 Changes in release mega-20200305 (since mega-20200301)
 -------------------------------------------------
 

@@ -829,6 +829,8 @@ To create/register a plugin, you have to :
     //#define USES_P087   // Serial Proxy
     #define USES_P089   // Ping
     #define USES_P090   // CCS811 TVOC/eCO2 Sensor 
+    #define USES_P091	// SerSwitch
+    #define USES_P093   // Mitsubishi Heat Pump
 #endif
 
 
