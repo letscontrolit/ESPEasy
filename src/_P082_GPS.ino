@@ -63,7 +63,7 @@
 #define P082_QUERY4_DFLT         P082_QUERY_SPD
 
 
-// #define P082_SEND_GPS_TO_LOG
+#define P082_SEND_GPS_TO_LOG
 
 struct P082_data_struct : public PluginTaskData_base {
   P082_data_struct() : gps(nullptr), P082_easySerial(nullptr) {}

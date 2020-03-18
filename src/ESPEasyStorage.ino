@@ -149,6 +149,9 @@ String BuildFixes()
     Settings.ResetFactoryDefaultPreference = 0;
     Settings.OldRulesEngine(DEFAULT_RULES_OLDENGINE);
   }
+  if (Settings.Build < 20105) {
+    Settings.I2C_clockSpeed = 400000;
+  }
 
   Settings.Build = BUILD;
   return SaveSettings();
