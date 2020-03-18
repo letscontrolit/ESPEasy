@@ -59,7 +59,7 @@ struct PluginTaskData_base {
   // perform checks on the casting.
   // This is also a check to only use these functions and not to insert pointers
   // at random in the Plugin_task_data array.
-  deviceIndex_t _taskdata_deviceIndex = INVALID_DEVICE_INDEX;
+  pluginID_t _taskdata_pluginID = INVALID_PLUGIN_ID;
 };
 
 

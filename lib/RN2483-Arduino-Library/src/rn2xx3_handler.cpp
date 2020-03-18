@@ -796,8 +796,10 @@ void rn2xx3_handler::set_state(rn2xx3_handler::RN_state state) {
 
 bool rn2xx3_handler::read_line()
 {
-  while (_serial.available()) {
+  int available = _serial.available();
+  while (available > 0) {
     int c = _serial.read();
+    --available;
 
     if (c >= 0) {
       const char character = static_cast<char>(c & 0xFF);
@@ -811,6 +813,9 @@ bool rn2xx3_handler::read_line()
 
       if (character == '\n') {
         return true;
+      }
+      if (available == 0) {
+        available = _serial.available();
       }
     }
   }

@@ -46,9 +46,9 @@ int SensorSerial::peek()
   return ESPeasySerial::peek();
 }
 
-size_t SensorSerial::write(uint8_t byte)
+size_t SensorSerial::write(uint8_t val)
 {
-  return ESPeasySerial::write(byte);
+  return ESPeasySerial::write(val);
 }
 
 int SensorSerial::read()
