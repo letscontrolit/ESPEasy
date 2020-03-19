@@ -756,7 +756,10 @@ void statusLED(bool traffic)
 
     #if defined(ESP8266)
       analogWrite(Settings.Pin_status_led, pwm);
-    #endif
+    #endif // if defined(ESP8266)
+    #if defined(ESP32)
+       analogWriteESP32(Settings.Pin_status_led, pwm);
+    #endif // if defined(ESP32)
   }
 }
 
