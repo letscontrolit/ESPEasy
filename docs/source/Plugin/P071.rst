@@ -11,6 +11,8 @@ Plugin details
 
 Type: |P071_type|
 
+Port Type: |P071_porttype|
+
 Name: |P071_name|
 
 Status: |P071_status|

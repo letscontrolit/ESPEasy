@@ -241,7 +241,7 @@ void resetWiFi() {
   processedScanDone         = true;
   wifiConnectAttemptNeeded  = true;
   WifiDisconnect();
-  setWebserverRunning(false);
+//  setWebserverRunning(false);
 
   //  setWifiMode(WIFI_OFF);
 
