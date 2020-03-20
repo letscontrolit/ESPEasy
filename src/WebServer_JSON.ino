@@ -3,7 +3,41 @@
 #include "src/Globals/Plugins.h"
 #include "StringProviderTypes.h"
 
+// ********************************************************************************
+// Web Interface get RAW value from task
+// ********************************************************************************
+void handle_rawval()
+{
+  String htmlData;
+  const taskIndex_t taskNr    = getFormItemInt(F("tasknr"), INVALID_TASK_INDEX);
+  const bool taskValid = validTaskIndex(taskNr);
+  if (!taskValid)
+  {
+    htmlData += F("ERROR: TaskNr not valid!\n");
+  }
+  const taskVarIndex_t valNr    = getFormItemInt(F("valnr"), INVALID_TASKVAR_INDEX);
+  const bool valueNumberValid = validTaskVarIndex(valNr);
+  if (!valueNumberValid)
+  {
+    htmlData += F("ERROR: ValueId not valid!\n");
+  }
 
+  TXBuffer.startJsonStream();
+  if (taskValid && valueNumberValid)
+  {
+    const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(taskNr);
+
+    if (validDeviceIndex(DeviceIndex))
+    {
+      LoadTaskSettings(taskNr);
+      htmlData += String(ExtraTaskSettings.TaskDeviceValueNames[valNr]);
+      htmlData += " ";
+      htmlData += formatUserVarNoCheck(taskNr, valNr);
+    }
+  }
+  addHtml(htmlData);
+  TXBuffer.endStream();
+}
 // ********************************************************************************
 // Web Interface JSON page (no password!)
 // ********************************************************************************
