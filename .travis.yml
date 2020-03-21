@@ -1,18 +1,13 @@
 language: python
 python:
-  - '2.7'
+  - '3.8'
 
 #we want a newer cppcheck, so use trusty
 dist: bionic
 
 sudo: false
 
-cache:
-  directories:
-  # - "~/.platformio"
-  # - "./.pio"
-
-
+cache: false
 
 addons:
   apt:
@@ -23,6 +18,7 @@ addons:
 
 install:
   - pip install -U platformio sphinx recommonmark sphinx_bootstrap_theme
+  - platformio update
 
 script:
   - platformio update
