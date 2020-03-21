@@ -35,6 +35,7 @@ void P087_data_struct::post_init() {
   for (uint8_t i = 0; i < P87_MAX_CAPTURE_INDEX; ++i) {
     capture_index_used[i] = false;
   }
+  regex_empty = _lines[P087_REGEX_POS].length() == 0;
   String log = F("P087_post_init:");
 
   for (uint8_t i = 0; i < P087_NR_FILTERS; ++i) {
@@ -109,6 +110,8 @@ bool P087_data_struct::loop() {
 
           if (valid) {
             fullSentenceReceived = true;
+            last_sentence = sentence_part;
+            sentence_part = "";
           }
           break;
         }
@@ -127,14 +130,18 @@ bool P087_data_struct::loop() {
 
   if (fullSentenceReceived) {
     ++sentences_received;
-    length_last_received = sentence_part.length();
+    length_last_received = last_sentence.length();
   }
   return fullSentenceReceived;
 }
 
-void P087_data_struct::getSentence(String& string) {
-  string        = sentence_part;
-  sentence_part = "";
+bool P087_data_struct::getSentence(String& string) {
+  string        = last_sentence;
+  if (string.length() == 0) {
+    return false;
+  }
+  last_sentence = "";
+  return true;
 }
 
 void P087_data_struct::getSentencesReceived(uint32_t& succes, uint32_t& error, uint32_t& length_last) const {
@@ -249,6 +256,10 @@ bool P087_data_struct::matchRegexp(String& received) const {
   if (strlength == 0) {
     return false;
   }
+  if (regex_empty || getMatchType() == Filter_Disabled) {
+    return true;
+  }
+
 
   uint32_t regexp_match_length = getRegExpMatchLength();
 
@@ -261,10 +272,7 @@ bool P087_data_struct::matchRegexp(String& received) const {
   MatchState ms(const_cast<char *>(received.c_str()), strlength);
 
   bool match_result = false;
-
-  if (getMatchType() == Filter_Disabled) {
-    match_result = true;
-  } else if (globalMatch()) {
+  if (globalMatch()) {
     capture_vector.clear();
     ms.GlobalMatch(_lines[P087_REGEX_POS].c_str(), match_callback);
     const uint8_t vectorlength = capture_vector.size();

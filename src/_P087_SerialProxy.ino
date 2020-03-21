@@ -203,17 +203,9 @@ boolean Plugin_087(byte function, struct EventStruct *event, String& string) {
           static_cast<P087_data_struct *>(getPluginTaskData(event->TaskIndex));
 
         if ((nullptr != P087_data) && P087_data->loop()) {
-          // schedule_task_device_timer(event->TaskIndex, millis() + 10);
+          schedule_task_device_timer(event->TaskIndex, millis() + 10);
           delay(0); // Processing a full sentence may take a while, run some
                     // background tasks.
-          P087_data->getSentence(event->String2);
-
-          if (event->String2.length() > 0) {
-            if (Plugin_087_match_all(event->TaskIndex, event->String2)) {
-              sendData(event);
-              addLog(LOG_LEVEL_INFO, event->String2);
-            }
-          }
         }
         success = true;
       }
@@ -223,6 +215,13 @@ boolean Plugin_087(byte function, struct EventStruct *event, String& string) {
     case PLUGIN_READ: {
       P087_data_struct *P087_data =
         static_cast<P087_data_struct *>(getPluginTaskData(event->TaskIndex));
+      if ((nullptr != P087_data) && P087_data->getSentence(event->String2)) {
+        if (Plugin_087_match_all(event->TaskIndex, event->String2)) {
+//          sendData(event);
+          addLog(LOG_LEVEL_DEBUG, event->String2);
+          success = true;
+        }
+      }
 
       if ((nullptr != P087_data)) {}
       break;

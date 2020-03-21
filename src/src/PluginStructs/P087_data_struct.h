@@ -59,7 +59,9 @@ public:
 
   bool loop();
 
-  void getSentence(String& string);
+  // Get the received sentence
+  // @retval true when the string is not empty.
+  bool getSentence(String& string);
 
   void getSentencesReceived(uint32_t& succes,
                             uint32_t& error,
@@ -109,6 +111,7 @@ private:
 
   ESPeasySerial *easySerial = nullptr;
   String         sentence_part;
+  String         last_sentence;
   uint16_t       max_length               = 550;
   uint32_t       sentences_received       = 0;
   uint32_t       sentences_received_error = 0;
@@ -119,6 +122,7 @@ private:
 
   bool capture_index_used[P87_MAX_CAPTURE_INDEX];
   bool capture_index_must_not_match[P87_MAX_CAPTURE_INDEX];
+  bool regex_empty = false;
 };
 
 
