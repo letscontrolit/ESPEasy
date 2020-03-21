@@ -1,5 +1,6 @@
 tasks:
-  - init: pip install -r ./requirements.txt
+  - init: python3 -c "$(curl -fsSL https://raw.githubusercontent.com/platformio/platformio/develop/scripts/get-platformio.py)" && brew install uncrustify && pip install -r ./requirements.txt
+
 image:
   file: .gitpod.Dockerfile
 
@@ -8,6 +9,6 @@ vscode:
     - ms-vscode.cpptools@0.26.3:u3GsZ5PK12Ddr79vh4TWgQ==
     - platformio.platformio-ide@1.10.0:aIt2v3YhW3veGlO/Uthh3Q==
     - eamodio.gitlens@10.2.1:e0IYyp0efFqVsrZwsIe8CA==
-    - CoenraadS.bracket-pair-colorizer-2@0.0.29:Y00hDi6uxq/5AWl637owFQ==
     - LaurentTreguier.uncrustify@2.18.0:/k8Osjj/XSuz09F+pEu7wg==
     - Atishay-Jain.All-Autocomplete@0.0.23:fbZNfSpnd8XkAHGfAPS2rA==
+    - 2gua.rainbow-brackets@0.0.6:Tbu8dTz0i+/bgcKQTQ5b8g==
