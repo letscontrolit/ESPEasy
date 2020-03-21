@@ -7,7 +7,6 @@ image:
 vscode:
   extensions:
     - ms-vscode.cpptools@0.26.3:u3GsZ5PK12Ddr79vh4TWgQ==
-    - platformio.platformio-ide@1.10.0:aIt2v3YhW3veGlO/Uthh3Q==
     - eamodio.gitlens@10.2.1:e0IYyp0efFqVsrZwsIe8CA==
     - LaurentTreguier.uncrustify@2.18.0:/k8Osjj/XSuz09F+pEu7wg==
     - Atishay-Jain.All-Autocomplete@0.0.23:fbZNfSpnd8XkAHGfAPS2rA==
