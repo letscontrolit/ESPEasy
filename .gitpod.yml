@@ -5,7 +5,9 @@ image:
 
 vscode:
   extensions:
+    - ms-vscode.cpptools@0.26.3:u3GsZ5PK12Ddr79vh4TWgQ==
     - platformio.platformio-ide@1.10.0:aIt2v3YhW3veGlO/Uthh3Q==
-    - laurenttreguier.uncrustify
-    - coenraads.bracket-pair-colorizer-2
-    - eamodio.gitlens
+    - eamodio.gitlens@10.2.1:e0IYyp0efFqVsrZwsIe8CA==
+    - CoenraadS.bracket-pair-colorizer-2@0.0.29:Y00hDi6uxq/5AWl637owFQ==
+    - LaurentTreguier.uncrustify@2.18.0:/k8Osjj/XSuz09F+pEu7wg==
+    - Atishay-Jain.All-Autocomplete@0.0.23:fbZNfSpnd8XkAHGfAPS2rA==
