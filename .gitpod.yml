@@ -2,3 +2,10 @@ tasks:
   - init: pip install -r ./requirements.txt
 image:
   file: .gitpod.Dockerfile
+
+vscode:
+  extensions:
+    - platformio.platformio-ide@1.10.0:aIt2v3YhW3veGlO/Uthh3Q==
+    - laurenttreguier.uncrustify
+    - coenraads.bracket-pair-colorizer-2
+    - eamodio.gitlens
