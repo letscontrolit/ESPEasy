@@ -8,18 +8,19 @@
 // ********************************************************************************
 void handle_rawval()
 {
-  String htmlData;
+  String htmlData(25, '\0'); // Reserve for error message
   const taskIndex_t taskNr    = getFormItemInt(F("tasknr"), INVALID_TASK_INDEX);
   const bool taskValid = validTaskIndex(taskNr);
   if (!taskValid)
   {
-    htmlData += F("ERROR: TaskNr not valid!\n");
+    htmlData = F("ERROR: TaskNr not valid!\n");
   }
-  const taskVarIndex_t valNr    = getFormItemInt(F("valnr"), INVALID_TASKVAR_INDEX);
+  const int INVALID_VALUE_NUM = INVALID_TASKVAR_INDEX + 1;
+  const taskVarIndex_t valNr    = getFormItemInt(F("valnr"), INVALID_VALUE_NUM);
   bool valueNumberValid = true;
-  if (valNr != INVALID_TASKVAR_INDEX && !validTaskVarIndex(valNr))
+  if (valNr != INVALID_VALUE_NUM && !validTaskVarIndex(valNr))
   {
-    htmlData += F("ERROR: ValueId not valid!\n");
+    htmlData = F("ERROR: ValueId not valid!\n");
     valueNumberValid = false;
   }
 
@@ -31,10 +32,11 @@ void handle_rawval()
     if (validDeviceIndex(DeviceIndex))
     {
       LoadTaskSettings(taskNr);
-
-      for (byte x = 0; x < Device[DeviceIndex].ValueCount; x++)
+      byte taskValCount = Device[DeviceIndex].ValueCount;
+      htmlData.reserve((valNr == INVALID_VALUE_NUM ? 1 : taskValCount) * 24);
+      for (byte x = 0; x < taskValCount; x++)
       {
-        if (valNr == INVALID_TASKVAR_INDEX || valNr == x)
+        if (valNr == INVALID_VALUE_NUM || valNr == x)
         {
           htmlData += String(ExtraTaskSettings.TaskDeviceValueNames[x]);
           htmlData += ';';
