@@ -47,12 +47,12 @@ void addToSerialBuffer(const char *line) {
   const size_t line_length = strlen(line);
   int roomLeft             = getMaxFreeBlock();
 
-  if (roomLeft < 500) {
+  if (roomLeft < 1000) {
     roomLeft = 0;                              // Do not append to buffer.
-  } else if (roomLeft < 3000) {
+  } else if (roomLeft < 4000) {
     roomLeft = 128 - serialWriteBuffer.size(); // 1 buffer.
   } else {
-    roomLeft -= 3000;                          // leave some free for normal use.
+    roomLeft -= 4000;                          // leave some free for normal use.
   }
 
   if (roomLeft > 0) {

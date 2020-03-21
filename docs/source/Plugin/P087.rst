@@ -11,6 +11,8 @@ Plugin details
 
 Type: |P087_type|
 
+Port Type: |P087_porttype|
+
 Name: |P087_name|
 
 Status: |P087_status|

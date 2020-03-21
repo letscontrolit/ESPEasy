@@ -341,7 +341,7 @@ String Command_Blynk_Set_c015(struct EventStruct *event, const char* Line){
     return err;
   }
 
-  String data = parseString(Line, 3, true, false);
+  String data = parseString(Line, 3);
 
   if (data.length() == 0){
     String err = F("Skip sending empty data to blynk vPin ");
