@@ -16,10 +16,11 @@ void handle_rawval()
     htmlData += F("ERROR: TaskNr not valid!\n");
   }
   const taskVarIndex_t valNr    = getFormItemInt(F("valnr"), INVALID_TASKVAR_INDEX);
-  const bool valueNumberValid = validTaskVarIndex(valNr);
-  if (!valueNumberValid)
+  bool valueNumberValid = true;
+  if (valNr != INVALID_TASKVAR_INDEX && !validTaskVarIndex(valNr))
   {
     htmlData += F("ERROR: ValueId not valid!\n");
+    valueNumberValid = false;
   }
 
   TXBuffer.startJsonStream();
@@ -30,9 +31,17 @@ void handle_rawval()
     if (validDeviceIndex(DeviceIndex))
     {
       LoadTaskSettings(taskNr);
-      htmlData += String(ExtraTaskSettings.TaskDeviceValueNames[valNr]);
-      htmlData += " ";
-      htmlData += formatUserVarNoCheck(taskNr, valNr);
+
+      for (byte x = 0; x < Device[DeviceIndex].ValueCount; x++)
+      {
+        if (valNr == INVALID_TASKVAR_INDEX || valNr == x)
+        {
+          htmlData += String(ExtraTaskSettings.TaskDeviceValueNames[x]);
+          htmlData += ';';
+          htmlData += formatUserVarNoCheck(taskNr, x);
+          htmlData += '\n';
+        }
+      }
     }
   }
   addHtml(htmlData);
