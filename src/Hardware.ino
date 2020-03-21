@@ -49,11 +49,47 @@ void hardwareInit()
     pinMode(Settings.Pin_Reset, INPUT_PULLUP);
   }
 
+  initI2C();
+
+  // SPI Init
+  if (Settings.InitSPI)
+  {
+    SPI.setHwCs(false);
+    SPI.begin();
+    String log = F("INIT : SPI Init (without CS)");
+    addLog(LOG_LEVEL_INFO, log);
+  }
+  else
+  {
+    String log = F("INIT : SPI not enabled");
+    addLog(LOG_LEVEL_INFO, log);
+  }
+
+#ifdef FEATURE_SD
+
+  if (Settings.Pin_sd_cs >= 0)
+  {
+    if (SD.begin(Settings.Pin_sd_cs))
+    {
+      String log = F("SD   : Init OK");
+      addLog(LOG_LEVEL_INFO, log);
+    }
+    else
+    {
+      String log = F("SD   : Init failed");
+      addLog(LOG_LEVEL_ERROR, log);
+    }
+  }
+#endif // ifdef FEATURE_SD
+}
+
+void initI2C() {
   // configure hardware pins according to eeprom settings.
   if (Settings.Pin_i2c_sda != -1)
   {
     String log = F("INIT : I2C");
     addLog(LOG_LEVEL_INFO, log);
+    Wire.setClock(Settings.I2C_clockSpeed);
     Wire.begin(Settings.Pin_i2c_sda, Settings.Pin_i2c_scl);
 
     if (Settings.WireClockStretchLimit)
@@ -90,37 +126,6 @@ void hardwareInit()
       }
     }
   }
-
-  // SPI Init
-  if (Settings.InitSPI)
-  {
-    SPI.setHwCs(false);
-    SPI.begin();
-    String log = F("INIT : SPI Init (without CS)");
-    addLog(LOG_LEVEL_INFO, log);
-  }
-  else
-  {
-    String log = F("INIT : SPI not enabled");
-    addLog(LOG_LEVEL_INFO, log);
-  }
-
-#ifdef FEATURE_SD
-
-  if (Settings.Pin_sd_cs >= 0)
-  {
-    if (SD.begin(Settings.Pin_sd_cs))
-    {
-      String log = F("SD   : Init OK");
-      addLog(LOG_LEVEL_INFO, log);
-    }
-    else
-    {
-      String log = F("SD   : Init failed");
-      addLog(LOG_LEVEL_ERROR, log);
-    }
-  }
-#endif // ifdef FEATURE_SD
 }
 
 void checkResetFactoryPin() {

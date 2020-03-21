@@ -123,6 +123,7 @@ void SettingsStruct_tmpl<N_TASKS>::validate() {
   if (VariousBits1 > (1 << 30)) { VariousBits1 = 0; }
   ZERO_TERMINATE(Name);
   ZERO_TERMINATE(NTPHost);
+  if (I2C_clockSpeed == 0 || I2C_clockSpeed > 3400000) { I2C_clockSpeed = DEFAULT_I2C_CLOCK_SPEED; }
 }
 
 template<unsigned int N_TASKS>
@@ -215,6 +216,7 @@ void SettingsStruct_tmpl<N_TASKS>::clearMisc() {
   UseSerial                   = true;
   UseSSDP                     = false;
   WireClockStretchLimit       = 0;
+  I2C_clockSpeed              = 400000;
   GlobalSync                  = false;
   ConnectionFailuresThreshold = 0;
   MQTTRetainFlag              = false;

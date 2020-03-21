@@ -34,7 +34,7 @@ template<typename T, typename U> constexpr size_t offsetOf(U T::*member)
 void run_compiletime_checks() {
   check_size<CRCStruct,                             168u>();
   check_size<SecurityStruct,                        593u>();
-  const unsigned int SettingsStructSize = (244 + 82 * TASKS_MAX);
+  const unsigned int SettingsStructSize = (248 + 82 * TASKS_MAX);
   check_size<SettingsStruct,                        SettingsStructSize>();
   check_size<ControllerSettingsStruct,              752u>();
   check_size<NotificationSettingsStruct,            996u>();
