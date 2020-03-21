@@ -11,8 +11,21 @@ void addSelector(const String& id,
                  boolean       reloadonchange,
                  bool          enabled)
 {
+  addSelector(id, optionCount, options, indices, attr, selectedIndex, reloadonchange, enabled, F("wide"));
+}
+
+void addSelector(const String& id,
+                 int           optionCount,
+                 const String  options[],
+                 const int     indices[],
+                 const String  attr[],
+                 int           selectedIndex,
+                 boolean       reloadonchange,
+                 bool          enabled,
+                 const String& classname)
+{
   // FIXME TD-er Change boolean to disabled
-  addSelector_Head(id, reloadonchange, !enabled);
+  addSelector_Head(id, classname, reloadonchange, !enabled);
   addSelector_options(optionCount, options, indices, attr, selectedIndex);
   addSelector_Foot();
 }
@@ -51,24 +64,30 @@ void addSelector_options(int optionCount, const String options[], const int indi
 }
 
 void addSelector_Head(const String& id, boolean reloadonchange) {
-  addSelector_Head(id, reloadonchange, false);
+  addSelector_Head(id, F("wide"), reloadonchange);
 }
 
-void addSelector_Head(const String& id, boolean reloadonchange, bool disabled)
+void addSelector_Head(const String& id, const String& classname, boolean reloadonchange) {
+  addSelector_Head(id, classname, reloadonchange, false);
+}
+
+void addSelector_Head(const String& id, const String& classname, boolean reloadonchange, bool disabled)
 {
   if (reloadonchange) {
-    addSelector_Head(id, (const String)F("return dept_onchange(frmselect)"), disabled);
+    addSelector_Head(id, classname, (const String)F("return dept_onchange(frmselect)"), disabled);
   } else {
-    addSelector_Head(id, (const String)"", disabled);
+    addSelector_Head(id, classname, (const String)"", disabled);
   }
 }
 
-void addSelector_Head(const String& id, const String& onChangeCall, bool disabled)
+void addSelector_Head(const String& id, const String& onChangeCall, const String& classname, bool disabled)
 {
   {
     String html;
     html.reserve(32 + id.length());
-    html += F("<select class='wide' name='");
+    html += F("<select class='");
+    html += classname;
+    html += F("' name='");
     html += id;
     html += F("' id='");
     html += id;
@@ -312,11 +331,18 @@ void addFloatNumberBox(const String& id, float value, float min, float max)
 // ********************************************************************************
 void addTextBox(const String& id, const String&  value, int maxlength, bool readonly, bool required, const String& pattern)
 {
+  addTextBox(id, value, maxlength, readonly, required, pattern, F("wide"));
+}
+
+void addTextBox(const String& id, const String&  value, int maxlength, bool readonly, bool required, const String& pattern, const String& classname)
+{
   String html;
 
   html.reserve(96 + id.length() + value.length() + pattern.length());
 
-  html += F("<input class='wide' type='text' name='");
+  html += F("<input class='");
+  html += classname;
+  html += F("' type='text' name='");
   html += id;
   html += F("' maxlength=");
   html += maxlength;

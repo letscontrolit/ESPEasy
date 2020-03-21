@@ -134,8 +134,12 @@ String formatIP(const IPAddress& ip);
 String toString(float value, byte decimals);
 String boolToString(bool value);
 bool isInt(const String& tBuf);
+unsigned long hexToUL(const String& input_c);
+unsigned long hexToUL(const String& input_c, size_t nrHexDecimals);
+unsigned long hexToUL(const String& input_c, size_t startpos, size_t nrHexDecimals);
 String formatToHex(unsigned long value, const String& prefix);
 String formatToHex(unsigned long value);
+String formatToHex_decimal(unsigned long value);
 String getNumerical(const String& tBuf, bool mustBeInteger);
 
 float getCPUload();

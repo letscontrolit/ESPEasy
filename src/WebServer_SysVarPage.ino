@@ -1,9 +1,17 @@
 
 #ifdef WEBSERVER_SYSVARS
 
+
+#include "src/Helpers/SystemVariables.h"
+
 // ********************************************************************************
 // Web Interface sysvars showing all system vars and their value.
 // ********************************************************************************
+void addSysVar_enum_html(SystemVariables::Enum enumval) {
+  addSysVar_html(SystemVariables::toString(enumval));
+}
+
+
 void handle_sysvars() {
   checkRAM(F("handle_sysvars"));
 
@@ -23,52 +31,56 @@ void handle_sysvars() {
   html_table_header(F("URL encoded"), F("ESPEasy_System_Variables"), 0);
 
   addTableSeparator(F("Constants"), 3, 3);
-  addSysVar_html(F("%CR%"));
-  addSysVar_html(F("%LF%"));
-  addSysVar_html(F("%SP%"));
-  addSysVar_html(F("%R%"));
-  addSysVar_html(F("%N%"));
+  addSysVar_enum_html(SystemVariables::CR);
+  addSysVar_enum_html(SystemVariables::LF);
+  addSysVar_enum_html(SystemVariables::SPACE);
+  addSysVar_enum_html(SystemVariables::S_CR);
+  addSysVar_enum_html(SystemVariables::S_LF);
 
   addTableSeparator(F("Network"), 3, 3);
-  addSysVar_html(F("%mac%"));
+  addSysVar_enum_html(SystemVariables::MAC);
 #if defined(ESP8266)
-  addSysVar_html(F("%mac_int%"));
+  addSysVar_enum_html(SystemVariables::MAC_INT);
 #endif // if defined(ESP8266)
-  addSysVar_html(F("%ip4%"));
-  addSysVar_html(F("%ip%"));
-  addSysVar_html(F("%rssi%"));
-  addSysVar_html(F("%ssid%"));
-  addSysVar_html(F("%bssid%"));
-  addSysVar_html(F("%wi_ch%"));
+  addSysVar_enum_html(SystemVariables::IP4);
+  addSysVar_enum_html(SystemVariables::IP4);
+  addSysVar_enum_html(SystemVariables::RSSI);
+  addSysVar_enum_html(SystemVariables::SSID);
+  addSysVar_enum_html(SystemVariables::BSSID);
+  addSysVar_enum_html(SystemVariables::WI_CH);
 
   addTableSeparator(F("System"), 3, 3);
-  addSysVar_html(F("%unit%"));
-  addSysVar_html(F("%sysload%"));
-  addSysVar_html(F("%sysheap%"));
-  addSysVar_html(F("%sysstack%"));
-  addSysVar_html(F("%sysname%"));
+  addSysVar_enum_html(SystemVariables::UNIT_sysvar);
+  addSysVar_enum_html(SystemVariables::SYSLOAD);
+  addSysVar_enum_html(SystemVariables::SYSHEAP);
+  addSysVar_enum_html(SystemVariables::SYSSTACK);
+  addSysVar_enum_html(SystemVariables::SYSNAME);
 #if FEATURE_ADC_VCC
-  addSysVar_html(F("%vcc%"));
+  addSysVar_enum_html(SystemVariables::VCC);
 #endif // if FEATURE_ADC_VCC
 
   addTableSeparator(F("System status"), 3, 3);
 
-  addSysVar_html(F("%iswifi%"));
-  addSysVar_html(F("%isntp%"));
-  addSysVar_html(F("%ismqtt%"));
+  addSysVar_enum_html(SystemVariables::ISWIFI);
+  addSysVar_enum_html(SystemVariables::ISNTP);
+  addSysVar_enum_html(SystemVariables::ISMQTT);
 #ifdef USES_P037
-  addSysVar_html(F("%ismqttimp%"));
+  addSysVar_enum_html(SystemVariables::ISMQTTIMP);
 #endif // USES_P037
 
   addTableSeparator(F("Time"), 3, 3);
-  addSysVar_html(F("%lcltime%"));
-  addSysVar_html(F("%lcltime_am%"));
-  addSysVar_html(F("%systm_hm%"));
-  addSysVar_html(F("%systm_hm_am%"));
-  addSysVar_html(F("%systime%"));
-  addSysVar_html(F("%systime_am%"));
-  addSysVar_html(F("%sysbuild_date%"));
-  addSysVar_html(F("%sysbuild_time%"));
+  addSysVar_enum_html(SystemVariables::LCLTIME);
+  addSysVar_enum_html(SystemVariables::LCLTIME_AM);
+  addSysVar_enum_html(SystemVariables::SYSTM_HM);
+  addSysVar_enum_html(SystemVariables::SYSTM_HM_AM);
+  addSysVar_enum_html(SystemVariables::SYSTIME);
+  addSysVar_enum_html(SystemVariables::SYSTIME_AM);
+  addSysVar_enum_html(SystemVariables::SYSBUILD_DATE);
+  addSysVar_enum_html(SystemVariables::SYSBUILD_TIME);
+  addSysVar_enum_html(SystemVariables::SYSBUILD_FILENAME);
+  addSysVar_enum_html(SystemVariables::SYSBUILD_DESCR);
+  addSysVar_enum_html(SystemVariables::SYSBUILD_GIT);
+  
   addTableSeparator(F("System"), 3, 3);
   addSysVar_html(F("%sysyear%  // %sysyear_0%"));
   addSysVar_html(F("%sysyears%"));
@@ -77,14 +89,14 @@ void handle_sysvars() {
   addSysVar_html(F("%syshour%  // %syshour_0%"));
   addSysVar_html(F("%sysmin%   // %sysmin_0%"));
   addSysVar_html(F("%syssec%   // %syssec_0%"));
-  addSysVar_html(F("%syssec_d%"));
-  addSysVar_html(F("%sysweekday%"));
-  addSysVar_html(F("%sysweekday_s%"));
+  addSysVar_enum_html(SystemVariables::SYSSEC_D);
+  addSysVar_enum_html(SystemVariables::SYSWEEKDAY);
+  addSysVar_enum_html(SystemVariables::SYSWEEKDAY_S);
   addTableSeparator(F("System"), 3, 3);
-  addSysVar_html(F("%uptime%"));
-  addSysVar_html(F("%unixtime%"));
-  addSysVar_html(F("%unixday%"));
-  addSysVar_html(F("%unixday_sec%"));
+  addSysVar_enum_html(SystemVariables::UPTIME);
+  addSysVar_enum_html(SystemVariables::UNIXTIME);
+  addSysVar_enum_html(SystemVariables::UNIXDAY);
+  addSysVar_enum_html(SystemVariables::UNIXDAY_SEC);
   addSysVar_html(F("%sunset%"));
   addSysVar_html(F("%sunset-1h%"));
   addSysVar_html(F("%sunrise%"));
@@ -171,6 +183,7 @@ void handle_sysvars() {
   sendHeadandTail_stdtemplate(true);
   TXBuffer.endStream();
 }
+
 
 void addSysVar_html(const String& input) {
   html_TR_TD();

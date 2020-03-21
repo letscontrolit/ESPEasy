@@ -52,7 +52,7 @@ void handle_rules() {
         } else {
           // Save as soon as possible, as the webserver may already overwrite the args.
           const byte *memAddress = reinterpret_cast<const byte *>(web_server.arg(F("rules")).c_str());
-          error = SaveToFile(fileName.c_str(), 0, memAddress, rulesLength, "w");
+          error = doSaveToFile(fileName.c_str(), 0, memAddress, rulesLength, "w");
         }
       } else {
         error = F("Error: Data was not saved, rules argument missing or corrupted");
