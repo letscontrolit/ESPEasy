@@ -4,17 +4,27 @@
 #include "StringProviderTypes.h"
 
 // ********************************************************************************
-// Web Interface get RAW value from task
+// Web Interface get CSV value from task
 // ********************************************************************************
-void handle_rawval()
+void handle_csvval()
 {
-  String htmlData(25, '\0'); // Reserve for error message
+  String htmlData;
+  htmlData.reserve(25); // Reserve for error message
+  const int printHeader = getFormItemInt(F("header"), 1);
+  bool printHeaderValid = true;
+  if (printHeader != 1 && printHeader != 0)
+  {
+    htmlData = F("ERROR: Header not valid!\n");
+    printHeaderValid = false;
+  }
+
   const taskIndex_t taskNr    = getFormItemInt(F("tasknr"), INVALID_TASK_INDEX);
   const bool taskValid = validTaskIndex(taskNr);
   if (!taskValid)
   {
     htmlData = F("ERROR: TaskNr not valid!\n");
   }
+
   const int INVALID_VALUE_NUM = INVALID_TASKVAR_INDEX + 1;
   const taskVarIndex_t valNr    = getFormItemInt(F("valnr"), INVALID_VALUE_NUM);
   bool valueNumberValid = true;
@@ -25,7 +35,7 @@ void handle_rawval()
   }
 
   TXBuffer.startJsonStream();
-  if (taskValid && valueNumberValid)
+  if (taskValid && valueNumberValid && printHeaderValid)
   {
     const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(taskNr);
 
@@ -33,17 +43,39 @@ void handle_rawval()
     {
       LoadTaskSettings(taskNr);
       byte taskValCount = Device[DeviceIndex].ValueCount;
-      htmlData.reserve((valNr == INVALID_VALUE_NUM ? 1 : taskValCount) * 24);
+      uint16_t stringReserveSize = (valNr == INVALID_VALUE_NUM ? 1 : taskValCount) * 24;
+      htmlData.reserve(stringReserveSize);
+
+      if (printHeader)
+      {
+        for (byte x = 0; x < taskValCount; x++)
+        {
+          if (valNr == INVALID_VALUE_NUM || valNr == x)
+          {
+            htmlData += String(ExtraTaskSettings.TaskDeviceValueNames[x]);
+            if (x != taskValCount - 1)
+            {
+              htmlData += ';';
+            }
+          }
+        }
+        htmlData += '\n';
+        addHtml(htmlData);
+        htmlData.clear();
+      }
+
       for (byte x = 0; x < taskValCount; x++)
       {
         if (valNr == INVALID_VALUE_NUM || valNr == x)
         {
-          htmlData += String(ExtraTaskSettings.TaskDeviceValueNames[x]);
-          htmlData += ';';
           htmlData += formatUserVarNoCheck(taskNr, x);
-          htmlData += '\n';
+          if (x != taskValCount - 1)
+          {
+            htmlData += ';';
+          }
         }
       }
+      htmlData += '\n';
     }
   }
   addHtml(htmlData);
