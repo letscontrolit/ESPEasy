@@ -218,6 +218,10 @@ void handle_sysinfo() {
 
   handle_sysinfo_Network();
 
+#ifdef HAS_ETHERNET
+  handle_sysinfo_Ethernet();
+#endif
+
   handle_sysinfo_WiFiSettings();
 
   handle_sysinfo_Firmware();
@@ -310,6 +314,19 @@ void handle_sysinfo_basicInfo() {
   addRowLabelValue(LabelType::LAST_TASK_BEFORE_REBOOT);
   addRowLabelValue(LabelType::SW_WD_COUNT);
 }
+
+#ifdef HAS_ETHERNET
+void handle_sysinfo_Ethernet() {
+    addTableSeparator(F("Ethernet"), 2, 3);
+    addRowLabelValue(LabelType::ETH_STATE);
+    addRowLabelValue(LabelType::ETH_SPEED);
+    addRowLabelValue(LabelType::ETH_DUPLEX);
+    addRowLabelValue(LabelType::ETH_MAC);
+    addRowLabelValue(LabelType::ETH_IP_ADDRESS_SUBNET);
+    addRowLabelValue(LabelType::ETH_IP_GATEWAY);
+    addRowLabelValue(LabelType::ETH_IP_DNS);
+}
+#endif
 
 void handle_sysinfo_Network() {
   addTableSeparator(F("Network"), 2, 3, F("Wifi"));
