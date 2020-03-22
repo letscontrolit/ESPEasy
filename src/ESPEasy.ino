@@ -1,6 +1,9 @@
 
 #include <Arduino.h>
 
+#ifdef HAS_ETHERNET
+  #include <ETH.h>
+#endif
 #ifdef CONTINUOUS_INTEGRATION
 #pragma GCC diagnostic error "-Wall"
 #else
@@ -369,6 +372,7 @@ void setup()
     rulesProcessing(event); // TD-er: Process events in the setup() now.
   }
 
+  ETH.begin();
   WiFiConnectRelaxed();
 
   setWebserverRunning(true);
