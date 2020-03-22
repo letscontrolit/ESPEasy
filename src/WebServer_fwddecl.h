@@ -3,6 +3,7 @@
 
 #include "limits.h"
 #include "StringProviderTypes.h"
+#include "src/Helpers/SystemVariables.h"
 
 
 // ********************************************************************************
