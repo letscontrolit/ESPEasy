@@ -21,6 +21,14 @@ void handle_hardware() {
     Settings.I2C_clockSpeed          = getFormItemInt(F("pi2csp"), DEFAULT_I2C_CLOCK_SPEED);
     Settings.InitSPI                 = isFormItemChecked(F("initspi")); // SPI Init
     Settings.Pin_sd_cs               = getFormItemInt(F("sd"));
+#ifdef HAS_ETHERNET
+    Settings.ETH_Phy_Addr            = getFormItemInt(F("ethphy"));
+    Settings.ETH_Pin_mdc             = getFormItemInt(F("ethmdc"));
+    Settings.ETH_Pin_mdio            = getFormItemInt(F("ethmdio"));
+    Settings.ETH_Pin_power           = getFormItemInt(F("ethpower"));
+    Settings.ETH_Phy_Type            = getFormItemInt(F("ethtype"));
+    Settings.ETH_Clock_Mode          = getFormItemInt(F("ethclock"));
+#endif
     int gpio = 0;
 
     // FIXME TD-er: Max of 17 is a limit in the Settings.PinBootStates array
@@ -75,6 +83,23 @@ void handle_hardware() {
 #ifdef FEATURE_SD
   addFormPinSelect(formatGpioName_output("SD Card CS"), "sd", Settings.Pin_sd_cs);
 #endif // ifdef FEATURE_SD
+#ifdef HAS_ETHERNET
+  addFormSubHeader(F("Ethernet"));
+  addRowLabel_tr_id(F("Ethernet PHY type"), "ethtype");
+  String ethPhyTypes[2] = { F("LAN8710"), F("TLK110") };
+  addSelector("ethtype", 2, ethPhyTypes, NULL, NULL, Settings.ETH_Phy_Type, false, true);
+  addFormNumericBox(F("Ethernet PHY Address"), "ethphy", Settings.ETH_Phy_Addr, 0, 255);
+  addFormNote(F("I&sup2;C-address of Ethernet PHY (0 or 1 for LAN8720, 31 for TLK110)"));
+  addFormPinSelect(formatGpioName_output("Ethernet MDC pin"), "ethmdc", Settings.ETH_Pin_mdc);
+  addFormPinSelect(formatGpioName_input("Ethernet MIO pin"), "ethmdio", Settings.ETH_Pin_mdio);
+  addFormPinSelect(formatGpioName_output("Ethernet Power pin"), "ethpower", Settings.ETH_Pin_power);
+  addRowLabel_tr_id(F("Ethernet Clock"), "ethclock");
+  String ethClockOptions[4] = { F("External crystal oscillator"),
+                            F("50MHz APLL Output on GPIO0"),
+                            F("50MHz APLL Output on GPIO16"),
+                            F("50MHz APLL Inverted Output on GPIO17") };
+  addSelector("ethclock", 4, ethClockOptions, NULL, NULL, Settings.ETH_Clock_Mode, false, true);
+#endif // ifdef HAS_ETHERNET
 
   addFormSubHeader(F("GPIO boot states"));
   int gpio = 0;

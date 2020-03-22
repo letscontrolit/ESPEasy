@@ -1,9 +1,9 @@
 
 #ifdef HAS_ETHERNET
-  #define ETH_CLK_MODE ETH_CLOCK_GPIO17_OUT
-  #define ETH_PHY_POWER 12
-  #include <ETH.h>
-
+  // #define ETH_CLK_MODE ETH_CLOCK_GPIO17_OUT
+  // #define ETH_PHY_POWER 12
+  #include "ETH.h"
+  #include <esp_eth.h>
 
 String EthGetHostname()
 {
@@ -13,23 +13,78 @@ String EthGetHostname()
   return hostnameToReturn;
 }
 
+bool checkSettings() {
+  bool result = true;
+  if (Settings.ETH_Phy_Type != 0 && Settings.ETH_Phy_Type != 1)
+    result = false;
+  if (Settings.ETH_Clock_Mode > 3)
+    result = false;
+  if (Settings.ETH_Pin_mdc > MAX_GPIO)
+    result = false;
+  if (Settings.ETH_Pin_mdio > MAX_GPIO)
+    result = false;
+  if (Settings.ETH_Pin_power > MAX_GPIO)
+    result = false;
+  return result;
+}
+
 bool prepareEth() {
-  char hostname[40];
-  safe_strncpy(hostname, EthGetHostname(), sizeof(hostname));
-  ETH.setHostname(hostname);
+  if (!checkSettings())
+  {
+    addLog(LOG_LEVEL_ERROR, F("ETH: Settings not correct!!!"));
+    return false;
+  }
+  ETH.setHostname(EthGetHostname().c_str());
   return true;
+}
+
+String getDebugClockModeStr()
+{
+  switch (Settings.ETH_Clock_Mode)
+  {
+    case 0: return F("ETH_CLOCK_GPIO0_IN");
+    case 1: return F("ETH_CLOCK_GPIO0_OUT");
+    case 2: return F("ETH_CLOCK_GPIO16_OUT");
+    case 3: return F("ETH_CLOCK_GPIO17_OUT");
+    default: return F("ETH_CLOCK_ERR");
+  }
+}
+
+void printSettings()
+{
+  String settingsDebugLog;
+  settingsDebugLog.reserve(115);
+  settingsDebugLog += F("ETH: PHY Type: ");
+  settingsDebugLog += Settings.ETH_Phy_Type == 0 ? F("ETH_PHY_LAN8720") : F("ETH_PHY_TLK110");
+  settingsDebugLog += F(" PHY Addr: ");
+  settingsDebugLog += Settings.ETH_Phy_Addr;
+  settingsDebugLog += F(" Eth Clock mode: ");
+  settingsDebugLog += getDebugClockModeStr();
+  settingsDebugLog += F(" MDC Pin: ");
+  settingsDebugLog += String(Settings.ETH_Pin_mdc);
+  settingsDebugLog += F(" MIO Pin: ");
+  settingsDebugLog += String(Settings.ETH_Pin_mdio);
+  settingsDebugLog += F(" Power Pin: ");
+  settingsDebugLog += String(Settings.ETH_Pin_power);
+  addLog(LOG_LEVEL_INFO, settingsDebugLog);
 }
 
 void ETHConnectRelaxed() {
   // if (!ethConnectAttemptNeeded) {
   //   return; // already connected or connect attempt in progress need to disconnect first
   // }
+  printSettings();
   if (!prepareEth()) {
     // Dead code for now...
     addLog(LOG_LEVEL_ERROR, F("ETH : Could not prepare ETH!"));
     return;
   }
-  ETH.begin();
+  ETH.begin(Settings.ETH_Phy_Addr,
+            Settings.ETH_Pin_power,
+            Settings.ETH_Pin_mdc,
+            Settings.ETH_Pin_mdio,
+            (eth_phy_type_t)Settings.ETH_Phy_Type,
+            (eth_clock_mode_t)Settings.ETH_Clock_Mode);
 }
 
 #endif
