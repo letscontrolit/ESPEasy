@@ -369,9 +369,9 @@ void setup()
     rulesProcessing(event); // TD-er: Process events in the setup() now.
   }
 
-  setWebserverRunning(true);
-
   WiFiConnectRelaxed();
+
+  setWebserverRunning(true);
 
   #ifdef FEATURE_REPORTING
   ReportStatus();
