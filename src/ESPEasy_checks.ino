@@ -58,7 +58,12 @@ void run_compiletime_checks() {
   check_size<rulesTimerStatus,                      12u>();
   check_size<portStatusStruct,                      4u>();
   check_size<ResetFactoryDefaultPreference_struct,  4u>();
-  check_size<GpioFactorySettingsStruct,             17u>();
+#ifdef HAS_ETHERNET
+  const unsigned int GpioFactorySettingsStructSize = 17;
+#else
+  const unsigned int GpioFactorySettingsStructSize = 11;
+#endif
+  check_size<GpioFactorySettingsStruct,             GpioFactorySettingsStructSize>();
   #if defined(USE_NON_STANDARD_24_TASKS) && defined(ESP8266)
     static_assert(TASKS_MAX == 24, "TASKS_MAX invalid size");
   #endif
