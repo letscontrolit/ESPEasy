@@ -168,7 +168,6 @@
 #define DEFAULT_PIN_STATUS_LED_INVERSED  true
 #endif
 
-#ifdef HAS_ETHERNET
 #ifndef DEFAULT_ETH_PHY_ADDR
 #define DEFAULT_ETH_PHY_ADDR             0
 #endif
@@ -186,7 +185,6 @@
 #endif
 #ifndef DEFAULT_ETH_CLOCK_MODE
 #define DEFAULT_ETH_CLOCK_MODE           3
-#endif
 #endif
 
 

@@ -34,11 +34,7 @@ template<typename T, typename U> constexpr size_t offsetOf(U T::*member)
 void run_compiletime_checks() {
   check_size<CRCStruct,                             168u>();
   check_size<SecurityStruct,                        593u>();
-#ifdef HAS_ETHERNET
   const unsigned int SettingsStructSize = (256 + 82 * TASKS_MAX);
-#else
-  const unsigned int SettingsStructSize = (248 + 82 * TASKS_MAX);
-#endif
   check_size<SettingsStruct,                        SettingsStructSize>();
   check_size<ControllerSettingsStruct,              820u>();
   check_size<NotificationSettingsStruct,            996u>();
@@ -58,12 +54,7 @@ void run_compiletime_checks() {
   check_size<rulesTimerStatus,                      12u>();
   check_size<portStatusStruct,                      4u>();
   check_size<ResetFactoryDefaultPreference_struct,  4u>();
-#ifdef HAS_ETHERNET
-  const unsigned int GpioFactorySettingsStructSize = 17;
-#else
-  const unsigned int GpioFactorySettingsStructSize = 11;
-#endif
-  check_size<GpioFactorySettingsStruct,             GpioFactorySettingsStructSize>();
+  check_size<GpioFactorySettingsStruct,             17u>();
   #if defined(USE_NON_STANDARD_24_TASKS) && defined(ESP8266)
     static_assert(TASKS_MAX == 24, "TASKS_MAX invalid size");
   #endif

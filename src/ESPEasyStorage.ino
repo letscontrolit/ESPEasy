@@ -178,7 +178,6 @@ String BuildFixes()
     }
     #endif // USES_MQTT
   }
-#ifdef HAS_ETHERNET
   if (Settings.Build < 20107) {
     Settings.ETH_Phy_Addr   = DEFAULT_ETH_PHY_ADDR;
     Settings.ETH_Pin_mdc    = DEFAULT_ETH_PIN_MDC;
@@ -187,7 +186,6 @@ String BuildFixes()
     Settings.ETH_Phy_Type   = DEFAULT_ETH_PHY_TYPE;
     Settings.ETH_Clock_Mode = DEFAULT_ETH_CLOCK_MODE;
   }
-#endif
 
   Settings.Build = BUILD;
   return SaveSettings();

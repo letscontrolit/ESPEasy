@@ -428,10 +428,8 @@ struct GpioFactorySettingsStruct {
         status_led = -1;
         i2c_sda = 4;
         i2c_scl = 5;
-    #ifdef HAS_ETHERNET
         eth_power = 12;
         eth_clock_mode = 3;
-    #endif
         break;
 
       // case DeviceModel_default: break;
@@ -444,14 +442,12 @@ struct GpioFactorySettingsStruct {
   int8_t status_led = DEFAULT_PIN_STATUS_LED;
   int8_t i2c_sda = DEFAULT_PIN_I2C_SDA;
   int8_t i2c_scl = DEFAULT_PIN_I2C_SCL;
-#ifdef HAS_ETHERNET
   int8_t eth_phyaddr = DEFAULT_ETH_PHY_ADDR;
   int8_t eth_phytype = DEFAULT_ETH_PHY_TYPE;
   int8_t eth_mdc = DEFAULT_ETH_PIN_MDC;
   int8_t eth_mdio = DEFAULT_ETH_PIN_MDIO;
   int8_t eth_power = DEFAULT_ETH_PIN_POWER;
   int8_t eth_clock_mode = DEFAULT_ETH_CLOCK_MODE;
-#endif
 };
 
 void addPredefinedPlugins(const GpioFactorySettingsStruct& gpio_settings);
