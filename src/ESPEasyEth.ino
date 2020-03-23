@@ -1,19 +1,16 @@
 
 #ifdef HAS_ETHERNET
-  // #define ETH_CLK_MODE ETH_CLOCK_GPIO17_OUT
-  // #define ETH_PHY_POWER 12
-  #include "ETH.h"
-  #include <esp_eth.h>
 
-String EthGetHostname()
-{
+#include "ETH.h"
+
+String ethGetHostname() {
   String hostnameToReturn(Settings.getHostname());
   hostnameToReturn.replace(" ", "-");
   hostnameToReturn.replace("_", "-"); // See RFC952
   return hostnameToReturn;
 }
 
-bool checkSettings() {
+bool ethCheckSettings() {
   bool result = true;
   if (Settings.ETH_Phy_Type != 0 && Settings.ETH_Phy_Type != 1)
     result = false;
@@ -28,18 +25,17 @@ bool checkSettings() {
   return result;
 }
 
-bool prepareEth() {
-  if (!checkSettings())
+bool ethPrepare() {
+  if (!ethCheckSettings())
   {
     addLog(LOG_LEVEL_ERROR, F("ETH: Settings not correct!!!"));
     return false;
   }
-  ETH.setHostname(EthGetHostname().c_str());
+  ETH.setHostname(ethGetHostname().c_str());
   return true;
 }
 
-String getDebugClockModeStr()
-{
+String ethGetDebugClockModeStr() {
   switch (Settings.ETH_Clock_Mode)
   {
     case 0: return F("ETH_CLOCK_GPIO0_IN");
@@ -50,8 +46,7 @@ String getDebugClockModeStr()
   }
 }
 
-void printSettings()
-{
+void ethPrintSettings() {
   String settingsDebugLog;
   settingsDebugLog.reserve(115);
   settingsDebugLog += F("ETH: PHY Type: ");
@@ -59,7 +54,7 @@ void printSettings()
   settingsDebugLog += F(" PHY Addr: ");
   settingsDebugLog += Settings.ETH_Phy_Addr;
   settingsDebugLog += F(" Eth Clock mode: ");
-  settingsDebugLog += getDebugClockModeStr();
+  settingsDebugLog += ethGetDebugClockModeStr();
   settingsDebugLog += F(" MDC Pin: ");
   settingsDebugLog += String(Settings.ETH_Pin_mdc);
   settingsDebugLog += F(" MIO Pin: ");
@@ -70,11 +65,8 @@ void printSettings()
 }
 
 void ETHConnectRelaxed() {
-  // if (!ethConnectAttemptNeeded) {
-  //   return; // already connected or connect attempt in progress need to disconnect first
-  // }
-  printSettings();
-  if (!prepareEth()) {
+  ethPrintSettings();
+  if (!ethPrepare()) {
     // Dead code for now...
     addLog(LOG_LEVEL_ERROR, F("ETH : Could not prepare ETH!"));
     return;
