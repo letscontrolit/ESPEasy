@@ -73,8 +73,7 @@ void SystemVariables::parseSystemVariables(String& s, boolean useURLencode)
       case BSSID:             value = String((wifiStatus == ESPEASY_WIFI_DISCONNECTED) ? F("00:00:00:00:00:00") : WiFi.BSSIDstr()); break;
       case CR:                value = "\r"; break;
       case IP:                value = getValue(LabelType::IP_ADDRESS); break;
-      case IP4:               value = WiFi.localIP().toString().substring(WiFi.localIP().toString().lastIndexOf('.') + 1); break; // 4th IP
-                                                                                                                                  // octet
+      case IP4:               value = String( (int) WiFi.localIP()[3] ); break; // 4th IP octet
       #ifdef USES_MQTT
       case ISMQTT:            value = String(MQTTclient_connected); break;
       #else // ifdef USES_MQTT
