@@ -427,10 +427,18 @@ void handle_devicess_ShowAllTasksTable(byte page)
           if (PluginCall(PLUGIN_WEBFORM_SHOW_CONFIG, &TempEvent, portDescr)) {
             addHtml(portDescr);
           } else {
-            // Plugin has no custom port formatting, show default one.
-            if (Device[DeviceIndex].Ports != 0)
-            {
-              addHtml(formatToHex_decimal(Settings.TaskDevicePort[x]));
+            switch (Device[DeviceIndex].Type) {
+              case DEVICE_TYPE_I2C:
+                addHtml(F("I2C"));
+                break;
+              default:
+
+                // Plugin has no custom port formatting, show default one.
+                if (Device[DeviceIndex].Ports != 0)
+                {
+                  addHtml(formatToHex_decimal(Settings.TaskDevicePort[x]));
+                }
+                break;
             }
           }
         }
@@ -480,23 +488,46 @@ void handle_devicess_ShowAllTasksTable(byte page)
       if (validDeviceIndex(DeviceIndex)) {
         if (Settings.TaskDeviceDataFeed[x] == 0)
         {
-          if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C)
-          {
-            String html;
-            html.reserve(20);
-            html += F("GPIO-");
-            html += Settings.Pin_i2c_sda;
-            html += F("<BR>GPIO-");
-            html += Settings.Pin_i2c_scl;
+          bool showpin1 = false;
+          bool showpin2 = false;
+          bool showpin3 = false;
+          switch (Device[DeviceIndex].Type) {
+            case DEVICE_TYPE_I2C:
+            {
+              String html;
+              html.reserve(20);
+              html += F("SDA: ");
+              html += Settings.Pin_i2c_sda;
+              html += F("<BR>SCL: ");
+              html += Settings.Pin_i2c_scl;
 
-            addHtml(html);
+              addHtml(html);
+              break;
+            }
+            case DEVICE_TYPE_ANALOG:
+            {
+              addHtml(F("ADC (TOUT)"));
+              break;
+            }
+            case DEVICE_TYPE_SERIAL_PLUS1:
+              showpin3 = true;
+              // fallthrough
+            case DEVICE_TYPE_SERIAL:
+            {
+              addHtml(serialHelper_getGpioDescription(Settings.TaskDevicePin1[x], Settings.TaskDevicePin2[x]));
+              if (showpin3) {
+                html_BR();
+              }
+              break;
+            }
+            default:
+              showpin1 = true;
+              showpin2 = true;
+              showpin3 = true;
+              break;
           }
 
-          if (Device[DeviceIndex].Type == DEVICE_TYPE_ANALOG) {
-            addHtml(F("ADC (TOUT)"));
-          }
-
-          if (Settings.TaskDevicePin1[x] != -1)
+          if (Settings.TaskDevicePin1[x] != -1 && showpin1)
           {
             String html;
             html += F("GPIO-");
@@ -504,7 +535,7 @@ void handle_devicess_ShowAllTasksTable(byte page)
             addHtml(html);
           }
 
-          if (Settings.TaskDevicePin2[x] != -1)
+          if (Settings.TaskDevicePin2[x] != -1 && showpin2)
           {
             String html;
             html += F("<BR>GPIO-");
@@ -512,7 +543,7 @@ void handle_devicess_ShowAllTasksTable(byte page)
             addHtml(html);
           }
 
-          if (Settings.TaskDevicePin3[x] != -1)
+          if (Settings.TaskDevicePin3[x] != -1 && showpin3)
           {
             String html;
             html += F("<BR>GPIO-");
@@ -642,15 +673,15 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, byte page)
       PluginCall(PLUGIN_GET_DEVICEGPIONAMES, &TempEvent, dummy);
 
       if (Device[DeviceIndex].connectedToGPIOpins()) {
-        if (Device[DeviceIndex].Type >= DEVICE_TYPE_SINGLE) {
+        if (Device[DeviceIndex].usesTaskDevicePin(1)) {
           addFormPinSelect(TempEvent.String1, F("taskdevicepin1"), Settings.TaskDevicePin1[taskIndex]);
         }
 
-        if (Device[DeviceIndex].Type >= DEVICE_TYPE_DUAL) {
+        if (Device[DeviceIndex].usesTaskDevicePin(2)) {
           addFormPinSelect(TempEvent.String2, F("taskdevicepin2"), Settings.TaskDevicePin2[taskIndex]);
         }
 
-        if (Device[DeviceIndex].Type == DEVICE_TYPE_TRIPLE) {
+        if (Device[DeviceIndex].usesTaskDevicePin(3)) {
           addFormPinSelect(TempEvent.String3, F("taskdevicepin3"), Settings.TaskDevicePin3[taskIndex]);
         }
       }

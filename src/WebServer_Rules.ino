@@ -52,7 +52,7 @@ void handle_rules() {
         } else {
           // Save as soon as possible, as the webserver may already overwrite the args.
           const byte *memAddress = reinterpret_cast<const byte *>(web_server.arg(F("rules")).c_str());
-          error = SaveToFile(fileName.c_str(), 0, memAddress, rulesLength, "w");
+          error = doSaveToFile(fileName.c_str(), 0, memAddress, rulesLength, "w");
         }
       } else {
         error = F("Error: Data was not saved, rules argument missing or corrupted");
@@ -79,7 +79,6 @@ void handle_rules() {
     currentSet = rulesSet;
   }
 
-  addHtml(F("<form name = 'frmselect' method = 'post' onsubmit='addRulesLength()'>"));
   html_table_class_normal();
   html_TR();
   html_table_header(F("Rules"));
@@ -96,21 +95,23 @@ void handle_rules() {
   }
 
   html_TR_TD();
+  addHtml(F("<form name = 'frmselect'>"));
   addSelector(F("set"), RULESETS_MAX, options, optionValues, NULL, choice, true);
   addHelpButton(F("Tutorial_Rules"));
 
   Rule_showRuleTextArea(fileName);
 
-  addFormSeparator(2);
-
   html_TR_TD();
-  addSubmitButton();
+  html_end_form();
+  addHtml(F("<button id='save_button' class='button' onClick='saveRulesFile()'>Save</button>"));
+  addHtml(F("<div id='toastmessage'>Saved!</div>"));
+
+  html_add_script(true);
+  TXBuffer += jsSaveRules;
+  html_add_script_end();
+
   addButton(fileName, F("Download to file"));
   html_end_table();
-  html_end_form();
-  html_add_script(F(
-                    "function addRulesLength() {    var r_len = document.getElementById('rules').value.length;	document.getElementById('rules_len').setAttribute('value', r_len);  };"),
-                  true);
   sendHeadandTail_stdtemplate(true);
   TXBuffer.endStream();
 
@@ -536,16 +537,15 @@ void Rule_showRuleTextArea(const String& fileName) {
   addHtml(F("<textarea id='rules' name='rules' rows='30' wrap='off'>"));
   size = streamFile_htmlEscape(fileName);
   addHtml(F("</textarea>"));
-  addHtml(F("<TR><TD colspan='2'>"));
 
   html_TR_TD();
   {
     String html;
     html.reserve(64);
 
-    html += F("Current size: ");
+    html += F("Current size: <span id='size'>");
     html += size;
-    html += F(" characters (Max ");
+    html += F("</span> characters (Max ");
     html += RULES_MAX_SIZE;
     html += F(")");
     addHtml(html);
@@ -554,7 +554,6 @@ void Rule_showRuleTextArea(const String& fileName) {
   if (size > RULES_MAX_SIZE) {
     addHtml(F("<span style=\"color:red\">Filesize exceeds web editor limit!</span>"));
   }
-  addHtml(F("<p><input type='text' id='rules_len' name='rules_len' value='0'></p>"));
 }
 
 bool Rule_Download(const String& path)

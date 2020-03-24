@@ -63,7 +63,7 @@
 #define P082_QUERY4_DFLT         P082_QUERY_SPD
 
 
-// #define P082_SEND_GPS_TO_LOG
+#define P082_SEND_GPS_TO_LOG
 
 struct P082_data_struct : public PluginTaskData_base {
   P082_data_struct() : gps(nullptr), P082_easySerial(nullptr) {}
@@ -103,25 +103,29 @@ struct P082_data_struct : public PluginTaskData_base {
     if (!isInitialized()) {
       return false;
     }
-    bool fullSentenceReceived = false;
+    bool completeSentence = false;
 
     if (P082_easySerial != nullptr) {
-      while (P082_easySerial->available() > 0) {
+      int available = P082_easySerial->available();
+      unsigned long startLoop = millis();
+      while (available > 0 && timePassedSince(startLoop) < 10) {
+        --available;
         char c = P082_easySerial->read();
 #ifdef P082_SEND_GPS_TO_LOG
         currentSentence += c;
 #endif // ifdef P082_SEND_GPS_TO_LOG
 
         if (gps->encode(c)) {
-          fullSentenceReceived = true;
+          // Full sentence received
 #ifdef P082_SEND_GPS_TO_LOG
           lastSentence    = currentSentence;
           currentSentence = "";
 #endif // ifdef P082_SEND_GPS_TO_LOG
+          completeSentence = true;
         }
       }
     }
-    return fullSentenceReceived;
+    return completeSentence;
   }
 
   bool hasFix(unsigned int maxAge_msec) {
@@ -218,7 +222,7 @@ boolean Plugin_082(byte function, struct EventStruct *event, String& string) {
   switch (function) {
     case PLUGIN_DEVICE_ADD: {
       Device[++deviceCount].Number           = PLUGIN_ID_082;
-      Device[deviceCount].Type               = DEVICE_TYPE_TRIPLE;
+      Device[deviceCount].Type               = DEVICE_TYPE_SERIAL_PLUS1;
       Device[deviceCount].VType              = SENSOR_TYPE_QUAD;
       Device[deviceCount].Ports              = 0;
       Device[deviceCount].PullUpOption       = false;
@@ -423,7 +427,7 @@ boolean Plugin_082(byte function, struct EventStruct *event, String& string) {
       break;
     }
 
-    case PLUGIN_TEN_PER_SECOND: {
+    case PLUGIN_FIFTY_PER_SECOND: {
       P082_data_struct *P082_data =
         static_cast<P082_data_struct *>(getPluginTaskData(event->TaskIndex));
 

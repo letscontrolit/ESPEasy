@@ -7,8 +7,8 @@
 
 
 #ifdef USES_MQTT
-#include "../Globals/MQTT.h"
-#endif
+# include "../Globals/MQTT.h"
+#endif // ifdef USES_MQTT
 
 
 String getReplacementString(const String& format, String& s) {
@@ -63,45 +63,50 @@ void SystemVariables::parseSystemVariables(String& s, boolean useURLencode)
   }
 
   SystemVariables::Enum enumval = static_cast<SystemVariables::Enum>(0);
+
   do {
     enumval = SystemVariables::nextReplacementEnum(s, enumval);
     String value;
-    switch (enumval) 
+
+    switch (enumval)
     {
       case BSSID:             value = String((wifiStatus == ESPEASY_WIFI_DISCONNECTED) ? F("00:00:00:00:00:00") : WiFi.BSSIDstr()); break;
       case CR:                value = "\r"; break;
       case IP:                value = getValue(LabelType::IP_ADDRESS); break;
-      case IP4:               value = WiFi.localIP().toString().substring(WiFi.localIP().toString().lastIndexOf('.') + 1); break; // 4th IP octet
+      case IP4:               value = String( (int) WiFi.localIP()[3] ); break; // 4th IP octet
       #ifdef USES_MQTT
       case ISMQTT:            value = String(MQTTclient_connected); break;
-      #else
+      #else // ifdef USES_MQTT
       case ISMQTT:            value = "0"; break;
       #endif // ifdef USES_MQTT
 
       #ifdef USES_P037
       case ISMQTTIMP:         value = String(P037_MQTTImport_connected); break;
-      #else
+      #else // ifdef USES_P037
       case ISMQTTIMP:         value = "0"; break;
       #endif // USES_P037
 
 
       case ISNTP:             value = String(statusNTPInitialized); break;
-      case ISWIFI:            value = String(wifiStatus); break;   // 0=disconnected, 1=connected, 2=got ip, 3=services initialized
+      case ISWIFI:            value = String(wifiStatus); break; // 0=disconnected, 1=connected, 2=got ip, 3=services initialized
       case LCLTIME:           value = getValue(LabelType::LOCAL_TIME); break;
       case LCLTIME_AM:        value = node_time.getDateTimeString_ampm('-', ':', ' '); break;
       case LF:                value = "\n"; break;
       case MAC:               value = getValue(LabelType::STA_MAC); break;
     #ifdef ESP8266
-      case MAC_INT:           value = String(ESP.getChipId()); break;   // Last 24 bit of MAC address as integer, to be used in rules.
-    #else
-      case MAC_INT:           value = ""; break;   // FIXME TD-er: Must find proper altrnative for ESP32.
-    #endif
+      case MAC_INT:           value = String(ESP.getChipId()); break; // Last 24 bit of MAC address as integer, to be used in rules.
+    #else // ifdef ESP8266
+      case MAC_INT:           value = ""; break;                      // FIXME TD-er: Must find proper altrnative for ESP32.
+    #endif // ifdef ESP8266
       case RSSI:              value = getValue(LabelType::WIFI_RSSI); break;
       case SPACE:             value = " "; break;
       case SSID:              value = (wifiStatus == ESPEASY_WIFI_DISCONNECTED) ? F("--") : WiFi.SSID(); break;
       case SUNRISE:           SMART_REPL_T(SystemVariables::toString(enumval), replSunRiseTimeString); break;
       case SUNSET:            SMART_REPL_T(SystemVariables::toString(enumval), replSunSetTimeString); break;
       case SYSBUILD_DATE:     value = String(CRCValues.compileDate); break;
+      case SYSBUILD_DESCR:    value = getValue(LabelType::BUILD_DESC); break;
+      case SYSBUILD_FILENAME: value = getValue(LabelType::BINARY_FILENAME); break;
+      case SYSBUILD_GIT:      value = getValue(LabelType::GIT_BUILD); break;
       case SYSBUILD_TIME:     value = String(CRCValues.compileTime); break;
       case SYSDAY:            value = String(node_time.day()); break;
       case SYSDAY_0:          value = timeReplacement_leadZero(node_time.day()); break;
@@ -136,23 +141,25 @@ void SystemVariables::parseSystemVariables(String& s, boolean useURLencode)
       case UPTIME:            value = String(wdcounter / 2); break;
       #if FEATURE_ADC_VCC
       case VCC:               value = String(vcc); break;
-      #else
+      #else // if FEATURE_ADC_VCC
       case VCC:               value = String(-1); break;
       #endif // if FEATURE_ADC_VCC
       case WI_CH:             value = String((wifiStatus == ESPEASY_WIFI_DISCONNECTED) ? 0 : WiFi.channel()); break;
 
       case UNKNOWN:
-      break;
+        break;
     }
 
-    switch(enumval)
+    switch (enumval)
     {
       case SUNRISE:
       case SUNSET:
       case UNKNOWN:
+
         // Do not replace
         break;
       default:
+
         if (useURLencode) {
           value = URLEncode(value.c_str());
         }
@@ -167,6 +174,7 @@ void SystemVariables::parseSystemVariables(String& s, boolean useURLencode)
   if ((v_index != -1) && isDigit(s[v_index + 2])) {
     for (byte i = 0; i < CUSTOM_VARS_MAX; ++i) {
       String key = "%v" + String(i + 1) + '%';
+
       if (s.indexOf(key) != -1) {
         String value = String(customFloatVar[i]);
 
@@ -191,23 +199,28 @@ SystemVariables::Enum SystemVariables::nextReplacementEnum(const String& str, Sy
   }
 
   SystemVariables::Enum nextTested = static_cast<SystemVariables::Enum>(0);
+
   if (last_tested > nextTested) {
     nextTested = static_cast<SystemVariables::Enum>(last_tested + 1);
   }
+
   if (nextTested >= Enum::UNKNOWN) {
     return Enum::UNKNOWN;
   }
 
-  String str_prefix = SystemVariables::toString(nextTested).substring(0,2);
-  bool str_prefix_exists = str.indexOf(str_prefix) != -1;
+  String str_prefix        = SystemVariables::toString(nextTested).substring(0, 2);
+  bool   str_prefix_exists = str.indexOf(str_prefix) != -1;
+
   for (int i = nextTested; i < Enum::UNKNOWN; ++i) {
     SystemVariables::Enum enumval = static_cast<SystemVariables::Enum>(i);
-    String new_str_prefix = SystemVariables::toString(enumval).substring(0,2);
-    if (str_prefix == new_str_prefix && !str_prefix_exists) {
+    String new_str_prefix         = SystemVariables::toString(enumval).substring(0, 2);
+
+    if ((str_prefix == new_str_prefix) && !str_prefix_exists) {
       // Just continue
     } else {
-      str_prefix = new_str_prefix;
+      str_prefix        = new_str_prefix;
       str_prefix_exists = str.indexOf(str_prefix) != -1;
+
       if (str_prefix_exists) {
         if (str.indexOf(SystemVariables::toString(enumval)) != -1) {
           return enumval;
@@ -218,8 +231,6 @@ SystemVariables::Enum SystemVariables::nextReplacementEnum(const String& str, Sy
 
   return Enum::UNKNOWN;
 }
-
-
 
 String SystemVariables::toString(SystemVariables::Enum enumval)
 {
@@ -243,6 +254,9 @@ String SystemVariables::toString(SystemVariables::Enum enumval)
     case Enum::SUNRISE:         return F("%sunrise");
     case Enum::SUNSET:          return F("%sunset");
     case Enum::SYSBUILD_DATE:   return F("%sysbuild_date%");
+    case Enum::SYSBUILD_DESCR:  return F("%sysbuild_desc%");
+    case Enum::SYSBUILD_FILENAME:  return F("%sysbuild_filename%");
+    case Enum::SYSBUILD_GIT:    return F("%sysbuild_git%");
     case Enum::SYSBUILD_TIME:   return F("%sysbuild_time%");
     case Enum::SYSDAY:          return F("%sysday%");
     case Enum::SYSDAY_0:        return F("%sysday_0%");

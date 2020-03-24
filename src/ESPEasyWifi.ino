@@ -85,14 +85,15 @@ bool WiFiConnected() {
 
   // For ESP82xx, do not rely on WiFi.status() with event based wifi.
   const bool validWiFi = (WiFi.RSSI() < 0) && WiFi.isConnected() && hasIPaddr();
-
+  // FIXME TD-er: Not sure if this is needed as we also set it when processing WiFi events.
+/*
   if (wifiStatus != ESPEASY_WIFI_SERVICES_INITIALIZED) {
     if (validWiFi) {
       // Set internal wifiStatus and reset timer to disable AP mode
       markWiFi_services_initialized();
     }
   }
-
+*/
   if (wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED) {
     if (validWiFi) {
       // Connected, thus disable any timer to start AP mode. (except when in WiFi setup mode)
@@ -241,7 +242,6 @@ void resetWiFi() {
   processedScanDone         = true;
   wifiConnectAttemptNeeded  = true;
   WifiDisconnect();
-  setWebserverRunning(false);
 
   //  setWifiMode(WIFI_OFF);
 

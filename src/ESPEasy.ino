@@ -371,6 +371,8 @@ void setup()
 
   WiFiConnectRelaxed();
 
+  setWebserverRunning(true);
+
   #ifdef FEATURE_REPORTING
   ReportStatus();
   #endif
