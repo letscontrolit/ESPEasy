@@ -3,13 +3,6 @@
 
 #include "ETH.h"
 
-String ethGetHostname() {
-  String hostnameToReturn(Settings.getHostname());
-  hostnameToReturn.replace(" ", "-");
-  hostnameToReturn.replace("_", "-"); // See RFC952
-  return hostnameToReturn;
-}
-
 bool ethCheckSettings() {
   bool result = true;
   if (Settings.ETH_Phy_Type != 0 && Settings.ETH_Phy_Type != 1)
@@ -31,7 +24,7 @@ bool ethPrepare() {
     addLog(LOG_LEVEL_ERROR, F("ETH: Settings not correct!!!"));
     return false;
   }
-  ETH.setHostname(ethGetHostname().c_str());
+  ETH.setHostname(createRFCCompliantHostname(Settings.getHostname()).c_str());
   return true;
 }
 

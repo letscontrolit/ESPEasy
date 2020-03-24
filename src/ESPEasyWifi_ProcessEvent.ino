@@ -246,7 +246,7 @@ void processGotIP() {
     }
     log += formatIP(ip);
     log += " (";
-    log += WifiGetHostname();
+    log += createRFCCompliantHostname(WifiGetAPssid());
     log += F(") GW: ");
     log += formatIP(gw);
     log += F(" SN: ");
