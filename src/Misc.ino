@@ -32,19 +32,6 @@ String getNodeTypeDisplayString(byte nodeType) {
   return "";
 }
 
-String getSettingsTypeString(SettingsType settingsType) {
-  switch (settingsType) {
-    case BasicSettings_Type:            return F("Settings");
-    case TaskSettings_Type:             return F("TaskSettings");
-    case CustomTaskSettings_Type:       return F("CustomTaskSettings");
-    case ControllerSettings_Type:       return F("ControllerSettings");
-    case CustomControllerSettings_Type: return F("CustomControllerSettings");
-    case NotificationSettings_Type:     return F("NotificationSettings");
-    default:
-      break;
-  }
-  return "";
-}
 
 #ifdef USES_MQTT
 String getMQTT_state() {

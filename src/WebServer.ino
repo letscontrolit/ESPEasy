@@ -8,6 +8,7 @@
 #include "src/Globals/Device.h"
 #include "src/Globals/TXBuffer.h"
 #include "src/Static/WebStaticData.h"
+#include "src/DataStructs/SettingsType.h"
 
 
 
@@ -958,26 +959,6 @@ void createSvgTextElement(const String& text, float textXoffset, float textYoffs
   addHtml(F("</tspan>\n</text>"));
 }
 
-unsigned int getSettingsTypeColor(SettingsType settingsType) {
-  switch (settingsType) {
-    case BasicSettings_Type:
-      return 0x5F0A87;
-    case TaskSettings_Type:
-      return 0xEE6352;
-    case CustomTaskSettings_Type:
-      return 0x59CD90;
-    case ControllerSettings_Type:
-      return 0x3FA7D6;
-    case CustomControllerSettings_Type:
-      return 0xFAC05E;
-    case NotificationSettings_Type:
-      return 0xF79D84;
-    default:
-      break;
-  }
-  return 0;
-}
-
 #define SVG_BAR_HEIGHT 16
 #define SVG_BAR_WIDTH 400
 
@@ -1045,18 +1026,18 @@ void getConfig_dat_file_layout() {
   int struct_size = 0;
 
   // background
-  const uint32_t realSize = getFileSize(TaskSettings_Type);
+  const uint32_t realSize = SettingsType::getFileSize(SettingsType::TaskSettings_Type);
   createSvgHorRectPath(0xcdcdcd, 0, yOffset, realSize, SVG_BAR_HEIGHT - 2, realSize, SVG_BAR_WIDTH);
 
-  for (int st = 0; st < SettingsType_MAX; ++st) {
-    SettingsType settingsType = static_cast<SettingsType>(st);
+  for (int st = 0; st < SettingsType::SettingsType_MAX; ++st) {
+    SettingsType::Enum settingsType = static_cast<SettingsType::Enum>(st);
 
-    if (settingsType != NotificationSettings_Type) {
-      unsigned int color = getSettingsTypeColor(settingsType);
-      getSettingsParameters(settingsType, 0, max_index, offset, max_size, struct_size);
+    if (settingsType != SettingsType::NotificationSettings_Type) {
+      unsigned int color = SettingsType::getSVGcolor(settingsType);
+      SettingsType::getSettingsParameters(settingsType, 0, max_index, offset, max_size, struct_size);
 
       for (int i = 0; i < max_index; ++i) {
-        getSettingsParameters(settingsType, i, offset, max_size);
+        SettingsType::getSettingsParameters(settingsType, i, offset, max_size);
 
         // Struct position
         createSvgHorRectPath(color, offset, yOffset, max_size, SVG_BAR_HEIGHT - 2, realSize, SVG_BAR_WIDTH);
@@ -1071,15 +1052,15 @@ void getConfig_dat_file_layout() {
   addHtml(F("</svg>\n"));
 }
 
-void getStorageTableSVG(SettingsType settingsType) {
-  uint32_t realSize   = getFileSize(settingsType);
-  unsigned int color  = getSettingsTypeColor(settingsType);
+void getStorageTableSVG(SettingsType::Enum settingsType) {
+  uint32_t realSize   = SettingsType::getFileSize(settingsType);
+  unsigned int color  = SettingsType::getSVGcolor(settingsType);
   const int    shiftY = 2;
 
   int max_index, offset, max_size;
   int struct_size = 0;
 
-  getSettingsParameters(settingsType, 0, max_index, offset, max_size, struct_size);
+  SettingsType::getSettingsParameters(settingsType, 0, max_index, offset, max_size, struct_size);
 
   if (max_index == 0) { return; }
 
@@ -1088,7 +1069,7 @@ void getStorageTableSVG(SettingsType settingsType) {
   float yOffset = shiftY;
 
   for (int i = 0; i < max_index; ++i) {
-    getSettingsParameters(settingsType, i, offset, max_size);
+    SettingsType::getSettingsParameters(settingsType, i, offset, max_size);
 
     // background
     createSvgHorRectPath(0xcdcdcd, 0,      yOffset, realSize, SVG_BAR_HEIGHT - 2, realSize, SVG_BAR_WIDTH);

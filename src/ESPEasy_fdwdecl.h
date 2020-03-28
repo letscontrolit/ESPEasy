@@ -2,6 +2,7 @@
 #define ESPEASY_FWD_DECL_H
 
 #include "ESPEasy_common.h"
+#include "src/DataStructs/SettingsType.h"
 #include "src/DataStructs/ESPEasy_EventStruct.h"
 
 #include "src/Globals/CPlugins.h"
@@ -159,6 +160,14 @@ bool remoteConfig(struct EventStruct *event, const String& string);
 String getControllerParameterInternalName(protocolIndex_t ProtocolIndex, ControllerSettingsStruct::VarType parameterIdx);
 void addControllerParameterForm(const ControllerSettingsStruct& ControllerSettings, controllerIndex_t controllerindex, ControllerSettingsStruct::VarType varType);
 void saveControllerParameterForm(ControllerSettingsStruct& ControllerSettings, controllerIndex_t controllerindex, ControllerSettingsStruct::VarType varType);
+
+String SaveToFile(SettingsType::Enum settingsType, int index, byte *memAddress, int datasize);
+String SaveToFile(SettingsType::Enum settingsType, int index, byte *memAddress, int datasize, int posInBlock);
+String LoadFromFile(SettingsType::Enum settingsType, int index, byte *memAddress, int datasize, int offset_in_block);
+String LoadFromFile(SettingsType::Enum settingsType, int index, byte *memAddress, int datasize);
+String ClearInFile(SettingsType::Enum settingsType, int index);
+
+
 
 String parseString(const String& string, byte indexFind);
 String parseStringKeepCase(const String& string, byte indexFind);

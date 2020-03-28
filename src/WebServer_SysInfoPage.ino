@@ -665,10 +665,10 @@ void handle_sysinfo_Storage() {
     html_TD();
     addHtml(F("(offset / size per item / index)"));
 
-    for (int st = 0; st < SettingsType_MAX; ++st) {
-      SettingsType settingsType = static_cast<SettingsType>(st);
+    for (int st = 0; st < SettingsType::SettingsType_MAX; ++st) {
+      SettingsType::Enum settingsType = static_cast<SettingsType::Enum>(st);
       html_TR_TD();
-      addHtml(getSettingsTypeString(settingsType));
+      addHtml(SettingsType::getSettingsTypeString(settingsType));
       html_TD();
       getStorageTableSVG(settingsType);
     }
