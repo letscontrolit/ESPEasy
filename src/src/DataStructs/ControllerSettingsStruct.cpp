@@ -206,3 +206,14 @@ void ControllerSettingsStruct::mqtt_willRetain(bool value)
 {
   setBitToUL(MQTT_flags, 3, !value);
 }
+
+
+bool ControllerSettingsStruct::mqtt_useExtendedSettings() const
+{
+  return getBitFromUL(MQTT_flags, 4);
+}
+
+void ControllerSettingsStruct::mqtt_useExtendedSettings(bool value)
+{
+  setBitToUL(MQTT_flags, 4, value);
+}

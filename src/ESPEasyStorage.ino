@@ -152,6 +152,9 @@ String BuildFixes()
   if (Settings.Build < 20105) {
     Settings.I2C_clockSpeed = 400000;
   }
+  if (Settings.Build < 20106) {
+    // FIXME TD-er: Add initialization for extra MQTT settings
+  }
 
   Settings.Build = BUILD;
   return SaveSettings();

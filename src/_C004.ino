@@ -42,10 +42,10 @@ bool CPlugin_004(CPlugin::Function function, struct EventStruct *event, String& 
       {
         success = true;
         switch (event->idx) {
-          case CONTROLLER_USER:
+          case ControllerSettingsStruct::CONTROLLER_USER:
             string = F("ThingHTTP Name");
             break;
-          case CONTROLLER_PASS:
+          case ControllerSettingsStruct::CONTROLLER_PASS:
             string = F("API Key");
             break;
           default:

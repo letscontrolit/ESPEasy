@@ -472,8 +472,8 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
         protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(event->ControllerIndex);
         html_add_script(false);
         addHtml(F("function joinChanged(elem){ var styleOTAA = elem.value == 0 ? '' : 'none'; var styleABP = elem.value == 1 ? '' : 'none';"));
-        addHtml(c018_add_joinChanged_script_element_line(getControllerParameterInternalName(ProtocolIndex, CONTROLLER_USER), true));
-        addHtml(c018_add_joinChanged_script_element_line(getControllerParameterInternalName(ProtocolIndex, CONTROLLER_PASS), true));
+        addHtml(c018_add_joinChanged_script_element_line(getControllerParameterInternalName(ProtocolIndex, ControllerSettingsStruct::CONTROLLER_USER), true));
+        addHtml(c018_add_joinChanged_script_element_line(getControllerParameterInternalName(ProtocolIndex, ControllerSettingsStruct::CONTROLLER_PASS), true));
         addHtml(c018_add_joinChanged_script_element_line(F("deveui"), true));
         addHtml(c018_add_joinChanged_script_element_line(F("deveui_note"), true));
 
@@ -607,16 +607,16 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
       success = true;
 
       switch (event->idx) {
-        case CONTROLLER_USER:
+        case ControllerSettingsStruct::CONTROLLER_USER:
           string = F("AppEUI");
           break;
-        case CONTROLLER_PASS:
+        case ControllerSettingsStruct::CONTROLLER_PASS:
           string = F("AppKey");
           break;
-        case CONTROLLER_TIMEOUT:
+        case ControllerSettingsStruct::CONTROLLER_TIMEOUT:
           string = F("Module Timeout");
           break;
-        case CONTROLLER_PORT:
+        case ControllerSettingsStruct::CONTROLLER_PORT:
           string = F("Port");
         default:
           success = false;
