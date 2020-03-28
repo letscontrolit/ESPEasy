@@ -228,16 +228,6 @@
 
     ``meminfoDetail``"
     "
-    MessageDelay","
-    :red:`Internal`","
-    Get or set the MQTT message delay.
-
-    ``MessageDelay``
-
-    ``MessageDelay,<value in ms>``
-    
-    Example output: ``MQTT message delay:100``"
-    "
     Name","
     :red:`Internal`","
     Set the name of the unit

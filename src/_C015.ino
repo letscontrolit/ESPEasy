@@ -363,7 +363,7 @@ String Command_Blynk_Set_c015(struct EventStruct *event, const char* Line){
 boolean Blynk_send_c015(const String& value, int vPin )
 {
   Blynk.virtualWrite(vPin, value);
-  unsigned long timer = millis() + Settings.MessageDelay;
+  unsigned long timer = millis() + ControllerSettings.ClientTimeout;
   while (!timeOutReached(timer))
               backgroundtasks();
   return true;

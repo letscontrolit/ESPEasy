@@ -1200,9 +1200,9 @@ void ResetFactory()
   // advanced Settings
   Settings.UseRules 		= DEFAULT_USE_RULES;
   Settings.ControllerEnabled[0] = DEFAULT_CONTROLLER_ENABLED;
-  Settings.MQTTRetainFlag	= DEFAULT_MQTT_RETAIN;
-  Settings.MessageDelay	= DEFAULT_MQTT_DELAY;
-  Settings.MQTTUseUnitNameAsClientId = DEFAULT_MQTT_USE_UNITNAME_AS_CLIENTID;
+  Settings.MQTTRetainFlag_unused	= DEFAULT_MQTT_RETAIN;
+  Settings.MessageDelay_unused	= DEFAULT_MQTT_DELAY;
+  Settings.MQTTUseUnitNameAsClientId_unused = DEFAULT_MQTT_USE_UNITNAME_AS_CLIENTID;
 
 
   Settings.UseSerial		= DEFAULT_USE_SERIAL;

@@ -173,7 +173,7 @@ boolean Blynk_get(const String& command, controllerIndex_t controllerIndex, floa
   client.stop();
 
   // important - backgroundtasks - free mem
-  unsigned long timer = millis() + Settings.MessageDelay;
+  unsigned long timer = millis() + ControllerSettings.ClientTimeout;
   while (!timeOutReached(timer))
               backgroundtasks();
 

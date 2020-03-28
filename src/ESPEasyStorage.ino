@@ -141,7 +141,7 @@ String BuildFixes()
     Settings.UseRTOSMultitasking       = false;
     Settings.Pin_Reset                 = -1;
     Settings.SyslogFacility            = DEFAULT_SYSLOG_FACILITY;
-    Settings.MQTTUseUnitNameAsClientId = DEFAULT_MQTT_USE_UNITNAME_AS_CLIENTID;
+    Settings.MQTTUseUnitNameAsClientId_unused = DEFAULT_MQTT_USE_UNITNAME_AS_CLIENTID;
     Settings.StructSize                = sizeof(Settings);
   }
 
@@ -152,8 +152,30 @@ String BuildFixes()
   if (Settings.Build < 20105) {
     Settings.I2C_clockSpeed = 400000;
   }
-  if (Settings.Build < 20106) {
-    // FIXME TD-er: Add initialization for extra MQTT settings
+  if (Settings.Build <= 20106) {
+    // ClientID is now defined in the controller settings.
+
+    controllerIndex_t controller_idx = firstEnabledMQTT_ControllerIndex();
+    if (validControllerIndex(controller_idx)) {
+      MakeControllerSettings(ControllerSettings);
+      LoadControllerSettings(controller_idx, ControllerSettings);
+
+      String clientid;
+      if (Settings.MQTTUseUnitNameAsClientId_unused) {
+        clientid = F("%sysname%");
+        if (Settings.appendUnitToHostname()) {
+          clientid += F("_%unit%");
+        }
+      }
+      else {
+        clientid  = F("ESPClient_%mac%");
+      }
+      safe_strncpy(ControllerSettings.ClientID, clientid, sizeof(ControllerSettings.ClientID));
+
+      ControllerSettings.mqtt_uniqueMQTTclientIdReconnect(Settings.uniqueMQTTclientIdReconnect_unused());
+      ControllerSettings.mqtt_retainFlag(Settings.MQTTRetainFlag_unused);
+      SaveControllerSettings(controller_idx, ControllerSettings);
+    }
   }
 
   Settings.Build = BUILD;

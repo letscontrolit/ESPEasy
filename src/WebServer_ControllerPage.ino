@@ -126,7 +126,7 @@ void handle_controllers_clearLoadDefaults(byte controllerindex, ControllerSettin
 void handle_controllers_CopySubmittedSettings(byte controllerindex, ControllerSettingsStruct& ControllerSettings)
 {
   // copy all settings to controller settings struct
-  for (int parameterIdx = 1; parameterIdx <= ControllerSettingsStruct::CONTROLLER_ENABLED; ++parameterIdx) {
+  for (int parameterIdx = 0; parameterIdx <= ControllerSettingsStruct::CONTROLLER_ENABLED; ++parameterIdx) {
     ControllerSettingsStruct::VarType varType = static_cast<ControllerSettingsStruct::VarType>(parameterIdx);
     saveControllerParameterForm(ControllerSettings, controllerindex, varType);
   }
@@ -309,7 +309,15 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
 
       if (Protocol[ProtocolIndex].usesMQTT) {
         addTableSeparator(F("MQTT"), 2, 3);
+
+        addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_CLIENT_ID);
+        addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_UNIQUE_CLIENT_ID_RECONNECT);        
+        addRowLabel(F("Current Client ID"));
+        addHtml(getMQTTclientID(ControllerSettings));
+        addFormNote(F("Updated on load of this page"));
+        addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_RETAINFLAG);
       }
+
 
       if (Protocol[ProtocolIndex].usesTemplate || Protocol[ProtocolIndex].usesMQTT)
       {

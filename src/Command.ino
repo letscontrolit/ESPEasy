@@ -189,10 +189,6 @@ bool executeInternalCommand(const char *cmd, struct EventStruct *event, const ch
       COMMAND_CASE(       "meminfo", Command_MemInfo,           0); // Diagnostic.h
       COMMAND_CASE( "meminfodetail", Command_MemInfo_detail,    0); // Diagnostic.h
     #endif
-#ifdef USES_MQTT
-      COMMAND_CASE(  "messagedelay", Command_MQTT_messageDelay, 1); // MQTT.h
-      COMMAND_CASE("mqttretainflag", Command_MQTT_Retain,       1); // MQTT.h
-#endif // USES_MQTT
       break;
     }
     case 'n': {

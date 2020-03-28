@@ -22,12 +22,12 @@ void SettingsStruct_tmpl<N_TASKS>::appendUnitToHostname(bool value) {
 }
 
 template<unsigned int N_TASKS>
-bool SettingsStruct_tmpl<N_TASKS>::uniqueMQTTclientIdReconnect() const {
+bool SettingsStruct_tmpl<N_TASKS>::uniqueMQTTclientIdReconnect_unused() const {
   return getBitFromUL(VariousBits1, 2);
 }
 
 template<unsigned int N_TASKS>
-void SettingsStruct_tmpl<N_TASKS>::uniqueMQTTclientIdReconnect(bool value) {
+void SettingsStruct_tmpl<N_TASKS>::uniqueMQTTclientIdReconnect_unused(bool value) {
   setBitToUL(VariousBits1, 2, value);
 }
 
@@ -123,7 +123,8 @@ void SettingsStruct_tmpl<N_TASKS>::validate() {
   if (VariousBits1 > (1 << 30)) { VariousBits1 = 0; }
   ZERO_TERMINATE(Name);
   ZERO_TERMINATE(NTPHost);
-  if (I2C_clockSpeed == 0 || I2C_clockSpeed > 3400000) { I2C_clockSpeed = DEFAULT_I2C_CLOCK_SPEED; }
+
+  if ((I2C_clockSpeed == 0) || (I2C_clockSpeed > 3400000)) { I2C_clockSpeed = DEFAULT_I2C_CLOCK_SPEED; }
 }
 
 template<unsigned int N_TASKS>
@@ -207,29 +208,29 @@ void SettingsStruct_tmpl<N_TASKS>::clearMisc() {
   Pin_sd_cs      = -1;
 
   for (byte i = 0; i < 17; ++i) { PinBootStates[i] = 0; }
-  BaudRate                    = 0;
-  MessageDelay                = 0;
-  deepSleep_wakeTime                   = 0;
-  CustomCSS                   = false;
-  WDI2CAddress                = 0;
-  UseRules                    = false;
-  UseSerial                   = true;
-  UseSSDP                     = false;
-  WireClockStretchLimit       = 0;
-  I2C_clockSpeed              = 400000;
-  GlobalSync                  = false;
-  ConnectionFailuresThreshold = 0;
-  MQTTRetainFlag              = false;
-  InitSPI                     = false;
-  Pin_status_led_Inversed     = false;
-  deepSleepOnFail             = false;
-  UseValueLogger              = false;
-  ArduinoOTAEnable            = false;
-  UseRTOSMultitasking         = false;
-  Pin_Reset                   = -1;
-  StructSize                  = sizeof(SettingsStruct_tmpl<N_TASKS>);
-  MQTTUseUnitNameAsClientId   = 0;
-  VariousBits1                = 0;
+  BaudRate                         = 0;
+  MessageDelay_unused              = 0;
+  deepSleep_wakeTime               = 0;
+  CustomCSS                        = false;
+  WDI2CAddress                     = 0;
+  UseRules                         = false;
+  UseSerial                        = true;
+  UseSSDP                          = false;
+  WireClockStretchLimit            = 0;
+  I2C_clockSpeed                   = 400000;
+  GlobalSync                       = false;
+  ConnectionFailuresThreshold      = 0;
+  MQTTRetainFlag_unused            = false;
+  InitSPI                          = false;
+  Pin_status_led_Inversed          = false;
+  deepSleepOnFail                  = false;
+  UseValueLogger                   = false;
+  ArduinoOTAEnable                 = false;
+  UseRTOSMultitasking              = false;
+  Pin_Reset                        = -1;
+  StructSize                       = sizeof(SettingsStruct_tmpl<N_TASKS>);
+  MQTTUseUnitNameAsClientId_unused = 0;
+  VariousBits1                     = 0;
   OldRulesEngine(DEFAULT_RULES_OLDENGINE);
   ForceWiFi_bg_mode(DEFAULT_WIFI_FORCE_BG_MODE);
   WiFiRestart_connection_lost(DEFAULT_WIFI_RESTART_WIFI_CONN_LOST);
@@ -295,7 +296,8 @@ String SettingsStruct_tmpl<N_TASKS>::getHostname() const {
 template<unsigned int N_TASKS>
 String SettingsStruct_tmpl<N_TASKS>::getHostname(bool appendUnit) const {
   String hostname = this->Name;
-  if (this->Unit != 0 && appendUnit) { // only append non-zero unit number
+
+  if ((this->Unit != 0) && appendUnit) { // only append non-zero unit number
     hostname += '_';
     hostname += this->Unit;
   }

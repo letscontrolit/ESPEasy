@@ -1,14 +1,15 @@
-#include "src/DataStructs/ESPEasy_EventStruct.h"
-#include "src/Globals/Device.h"
-#include "src/Globals/Plugins.h"
-#include "src/Globals/Protocol.h"
-#include "src/Globals/CPlugins.h"
 #include "ESPEasy_common.h"
 #include "ESPEasy_fdwdecl.h"
 #include "ESPEasy_plugindefs.h"
+#include "src/DataStructs/ControllerSettingsStruct.h"
+#include "src/DataStructs/ESPEasy_EventStruct.h"
+#include "src/Globals/CPlugins.h"
+#include "src/Globals/Device.h"
+#include "src/Globals/MQTT.h"
+#include "src/Globals/Plugins.h"
+#include "src/Globals/Protocol.h"
 
 // ********************************************************************************
-
 // Interface for Sending to Controllers
 // ********************************************************************************
 void sendData(struct EventStruct *event)
@@ -24,29 +25,6 @@ void sendData(struct EventStruct *event)
   if (Settings.UseValueLogger && Settings.InitSPI && (Settings.Pin_sd_cs >= 0)) {
     SendValueLogger(event->TaskIndex);
   }
-
-  //  if (!Settings.TaskDeviceSendData[event->TaskIndex])
-  //    return false;
-
-  /*
-     // Disabed for now, using buffers at controller side.
-     if (Settings.MessageDelay != 0)
-     {
-      const long dif = timePassedSince(lastSend);
-      if (dif > 0 && dif < static_cast<long>(Settings.MessageDelay))
-      {
-        uint16_t delayms = Settings.MessageDelay - dif;
-        //this is logged nowhere else, so might as well disable it here also:
-        // addLog(LOG_LEVEL_DEBUG_MORE, String(F("CTRL : Message delay (ms): "))+delayms);
-
-       delayBackground(delayms);
-
-        // unsigned long timer = millis() + delayms;
-        // while (!timeOutReached(timer))
-        //   backgroundtasks();
-      }
-     }
-   */
 
   LoadTaskSettings(event->TaskIndex); // could have changed during background tasks.
 
@@ -196,26 +174,7 @@ bool MQTTConnect(controllerIndex_t controller_idx)
   MQTTclient.setCallback(callback);
 
   // MQTT needs a unique clientname to subscribe to broker
-  String clientid;
-
-  if (Settings.MQTTUseUnitNameAsClientId) {
-    clientid = Settings.getHostname();
-  }
-  else {
-    clientid  = F("ESPClient_");
-    clientid += WiFi.macAddress();
-  }
-  clientid.replace(' ', '_'); // Make sure no spaces are present in the client ID
-
-  if ((wifi_reconnects >= 1) && Settings.uniqueMQTTclientIdReconnect()) {
-    // Work-around for 'lost connections' to the MQTT broker.
-    // If the broker thinks the connection is still alive, a reconnect from the
-    // client will be refused.
-    // To overcome this issue, append the number of reconnects to the client ID to
-    // make it different from the previous one.
-    clientid += '_';
-    clientid += wifi_reconnects;
-  }
+  String clientid = getMQTTclientID(ControllerSettings);
 
   String LWTTopic = ControllerSettings.MQTTLwtTopic;
 
@@ -297,6 +256,27 @@ bool MQTTConnect(controllerIndex_t controller_idx)
     return true; // end loop if succesfull
   }
   return false;
+}
+
+String getMQTTclientID(const ControllerSettingsStruct& ControllerSettings) {
+  String clientid = ControllerSettings.ClientID;
+  if (clientid.length() == 0) {
+    // Try to generate some default
+    clientid = F(CONTROLLER_DEFAULT_CLIENTID);
+  }
+  parseSystemVariables(clientid, false);
+  clientid.replace(' ', '_'); // Make sure no spaces are present in the client ID
+
+  if ((wifi_reconnects >= 1) && ControllerSettings.mqtt_uniqueMQTTclientIdReconnect()) {
+    // Work-around for 'lost connections' to the MQTT broker.
+    // If the broker thinks the connection is still alive, a reconnect from the
+    // client will be refused.
+    // To overcome this issue, append the number of reconnects to the client ID to
+    // make it different from the previous one.
+    clientid += '_';
+    clientid += wifi_reconnects;
+  }
+  return clientid;
 }
 
 /*********************************************************************************************\
@@ -432,7 +412,7 @@ void MQTTStatus(const String& status)
     String pubname = ControllerSettings.Subscribe;
     pubname.replace(F("/#"), F("/status"));
     parseSystemVariables(pubname, false);
-    MQTTpublish(enabledMqttController, pubname.c_str(), status.c_str(), Settings.MQTTRetainFlag);
+    MQTTpublish(enabledMqttController, pubname.c_str(), status.c_str(), ControllerSettings.mqtt_retainFlag());
   }
 }
 #endif //USES_MQTT

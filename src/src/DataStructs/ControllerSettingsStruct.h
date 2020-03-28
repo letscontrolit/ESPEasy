@@ -47,7 +47,9 @@ class WiFiUDP;
 # define CONTROLLER_CLIENTTIMEOUT_DFLT     100
 #endif // ifndef CONTROLLER_CLIENTTIMEOUT_DFLT
 
-
+#ifndef CONTROLLER_DEFAULT_CLIENTID
+# define CONTROLLER_DEFAULT_CLIENTID  "%sysname%_%unit%"
+#endif // ifndef CONTROLLER_DEFAULT_CLIENTID
 
 struct ControllerSettingsStruct
 {
@@ -55,7 +57,7 @@ struct ControllerSettingsStruct
   //   IDs of controller settings, used to generate web forms
   // ********************************************************************************
   enum VarType {
-    CONTROLLER_USE_DNS,
+    CONTROLLER_USE_DNS = 0,
     CONTROLLER_HOSTNAME,
     CONTROLLER_IP,
     CONTROLLER_PORT,
@@ -66,6 +68,9 @@ struct ControllerSettingsStruct
     CONTROLLER_MAX_RETRIES,
     CONTROLLER_FULL_QUEUE_ACTION,
     CONTROLLER_CHECK_REPLY,
+    CONTROLLER_CLIENT_ID,
+    CONTROLLER_UNIQUE_CLIENT_ID_RECONNECT,
+    CONTROLLER_RETAINFLAG,
     CONTROLLER_SUBSCRIBE,
     CONTROLLER_PUBLISH,
     CONTROLLER_LWT_TOPIC,
@@ -105,17 +110,23 @@ struct ControllerSettingsStruct
   String    getHostPortString() const;
 
   // MQTT_flags defaults to 0, keep in mind when adding bit lookups.
-  bool mqtt_cleanSession() const;
-  void mqtt_cleanSession(bool value);
+  bool      mqtt_cleanSession() const;
+  void      mqtt_cleanSession(bool value);
 
-  bool mqtt_sendLWT() const;
-  void mqtt_sendLWT(bool value);
+  bool      mqtt_sendLWT() const;
+  void      mqtt_sendLWT(bool value);
 
-  bool mqtt_willRetain() const;
-  void mqtt_willRetain(bool value);
+  bool      mqtt_willRetain() const;
+  void      mqtt_willRetain(bool value);
 
-  bool mqtt_useExtendedSettings() const;
-  void mqtt_useExtendedSettings(bool value);
+  bool      mqtt_uniqueMQTTclientIdReconnect() const;
+  void      mqtt_uniqueMQTTclientIdReconnect(bool value);
+
+  bool      mqtt_retainFlag() const;
+  void      mqtt_retainFlag(bool value);
+
+  bool      mqtt_useExtendedSettings() const;
+  void      mqtt_useExtendedSettings(bool value);
 
   boolean      UseDNS;
   byte         IP[4];
@@ -134,6 +145,7 @@ struct ControllerSettingsStruct
   boolean      MustCheckReply;     // When set to false, a sent message is considered always successful.
   taskIndex_t  SampleSetInitiator; // The first task to start a sample set.
   uint32_t     MQTT_flags;         // Various flags for MQTT controllers
+  char         ClientID[65];       // Used to define the Client ID used by the controller
 
 private:
 

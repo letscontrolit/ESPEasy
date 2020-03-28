@@ -36,6 +36,9 @@ String getControllerParameterName(protocolIndex_t ProtocolIndex, ControllerSetti
     case ControllerSettingsStruct::CONTROLLER_FULL_QUEUE_ACTION:        name = F("Full Queue Action");      break;
     case ControllerSettingsStruct::CONTROLLER_CHECK_REPLY:              name = F("Check Reply");            break;
 
+    case ControllerSettingsStruct::CONTROLLER_CLIENT_ID:                name = F("Controller Client ID");   break;
+    case ControllerSettingsStruct::CONTROLLER_UNIQUE_CLIENT_ID_RECONNECT: name = F("Unique Client ID on Reconnect");   break;
+    case ControllerSettingsStruct::CONTROLLER_RETAINFLAG:               name = F("Publish Retain Flag");    break;
     case ControllerSettingsStruct::CONTROLLER_SUBSCRIBE:                name = F("Controller Subscribe");   break;
     case ControllerSettingsStruct::CONTROLLER_PUBLISH:                  name = F("Controller Publish");     break;
     case ControllerSettingsStruct::CONTROLLER_LWT_TOPIC:                name = F("Controller LWT Topic");   break;
@@ -166,6 +169,15 @@ void addControllerParameterForm(const ControllerSettingsStruct& ControllerSettin
       addFormSelector(displayName, internalName, 2, options, NULL, NULL, ControllerSettings.MustCheckReply, false);
       break;
     }
+    case ControllerSettingsStruct::CONTROLLER_CLIENT_ID:
+      addFormTextBox(displayName, internalName, ControllerSettings.ClientID,            sizeof(ControllerSettings.ClientID) - 1);
+      break;
+    case ControllerSettingsStruct::CONTROLLER_UNIQUE_CLIENT_ID_RECONNECT:
+      addFormCheckBox(displayName, internalName, ControllerSettings.mqtt_uniqueMQTTclientIdReconnect());
+      break;
+    case ControllerSettingsStruct::CONTROLLER_RETAINFLAG:
+      addFormCheckBox(displayName, internalName, ControllerSettings.mqtt_retainFlag());
+      break;
     case ControllerSettingsStruct::CONTROLLER_SUBSCRIBE:
       addFormTextBox(displayName, internalName, ControllerSettings.Subscribe,            sizeof(ControllerSettings.Subscribe) - 1);
       break;
@@ -262,6 +274,15 @@ void saveControllerParameterForm(ControllerSettingsStruct& ControllerSettings, c
       ControllerSettings.MustCheckReply = getFormItemInt(internalName, ControllerSettings.MustCheckReply);
       break;
 
+    case ControllerSettingsStruct::CONTROLLER_CLIENT_ID:
+      strncpy_webserver_arg(ControllerSettings.ClientID,             internalName);
+      break;
+    case ControllerSettingsStruct::CONTROLLER_UNIQUE_CLIENT_ID_RECONNECT:
+      ControllerSettings.mqtt_uniqueMQTTclientIdReconnect(isFormItemChecked(internalName));
+      break;
+    case ControllerSettingsStruct::CONTROLLER_RETAINFLAG:
+      ControllerSettings.mqtt_retainFlag(isFormItemChecked(internalName));
+      break;
     case ControllerSettingsStruct::CONTROLLER_SUBSCRIBE:
       strncpy_webserver_arg(ControllerSettings.Subscribe,            internalName);
       break;
