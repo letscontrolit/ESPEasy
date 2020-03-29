@@ -8,6 +8,7 @@
 #include "src/Globals/MQTT.h"
 #include "src/Globals/Plugins.h"
 #include "src/Globals/Protocol.h"
+#include "_CPlugin_Helper.h"
 
 // ********************************************************************************
 // Interface for Sending to Controllers
@@ -205,11 +206,11 @@ bool MQTTConnect(controllerIndex_t controller_idx)
   bool willRetain   = ControllerSettings.mqtt_willRetain() && ControllerSettings.mqtt_sendLWT();
   bool cleanSession = ControllerSettings.mqtt_cleanSession(); // As suggested here: https://github.com/knolleary/pubsubclient/issues/458#issuecomment-493875150
 
-  if ((SecuritySettings.ControllerUser[controller_idx] != 0) && (SecuritySettings.ControllerPassword[controller_idx] != 0)) {
+  if (hasControllerCredentialsSet(controller_idx, ControllerSettings)) {
     MQTTresult =
       MQTTclient.connect(clientid.c_str(),
-                         SecuritySettings.ControllerUser[controller_idx],
-                         SecuritySettings.ControllerPassword[controller_idx],
+                         getControllerUser(controller_idx, ControllerSettings).c_str(),
+                         getControllerPass(controller_idx, ControllerSettings).c_str(),
                          ControllerSettings.mqtt_sendLWT() ? LWTTopic.c_str() : nullptr,
                          willQos,
                          willRetain,

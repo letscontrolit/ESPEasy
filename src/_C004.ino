@@ -88,7 +88,7 @@ bool do_process_c004_delay_queue(int controller_number, const C004_queue_element
     return false;
 
   String postDataStr = F("api_key=");
-  postDataStr += SecuritySettings.ControllerPassword[element.controller_idx]; // used for API key
+  postDataStr += getControllerPass(element.controller_idx, ControllerSettings); // used for API key
 
   if (element.sensorType == SENSOR_TYPE_STRING) {
       postDataStr += F("&status=");

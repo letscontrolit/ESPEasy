@@ -14,6 +14,8 @@ public:
     ControllerSettings_Type,
     CustomControllerSettings_Type,
     NotificationSettings_Type,
+    SecuritySettings_Type,
+    ExtdControllerCredentials_Type,
 
     SettingsType_MAX
   };

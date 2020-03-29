@@ -447,8 +447,8 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
       C018_data.setFrequencyPlan(static_cast<RN2xx3_datatypes::Freq_plan>(customConfig.frequencyplan));
 
       if (customConfig.joinmethod == C018_USE_OTAA) {
-        String AppEUI = SecuritySettings.ControllerUser[event->ControllerIndex];
-        String AppKey = SecuritySettings.ControllerPassword[event->ControllerIndex];
+        String AppEUI = getControllerUser(event->ControllerIndex, ControllerSettings);
+        String AppKey = getControllerPass(event->ControllerIndex, ControllerSettings);
         C018_data.initOTAA(AppEUI, AppKey, customConfig.DeviceEUI);
       }
       else {

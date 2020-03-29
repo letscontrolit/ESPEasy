@@ -234,7 +234,7 @@ boolean Blynk_keep_connection_c015(int controllerIndex, ControllerSettingsStruct
     return false;
 
   if (!Blynk.connected()){
-    String auth = SecuritySettings.ControllerPassword[controllerIndex];
+    String auth = getControllerPass(controllerIndex, ControllerSettings);
     boolean connectDefault = false;
 
     if (timePassedSince(_C015_LastConnectAttempt[controllerIndex]) < CPLUGIN_015_RECONNECT_INTERVAL){

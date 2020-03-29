@@ -166,7 +166,8 @@ String SaveToFile(SettingsType::Enum settingsType, int index, byte *memAddress, 
 String LoadFromFile(SettingsType::Enum settingsType, int index, byte *memAddress, int datasize, int offset_in_block);
 String LoadFromFile(SettingsType::Enum settingsType, int index, byte *memAddress, int datasize);
 String ClearInFile(SettingsType::Enum settingsType, int index);
-
+String LoadStringArray(SettingsType::Enum settingsType, int index, String strings[], uint16_t nrStrings, uint16_t maxStringLength);
+String SaveStringArray(SettingsType::Enum settingsType, int index, const String strings[], uint16_t nrStrings, uint16_t maxStringLength);
 
 
 String parseString(const String& string, byte indexFind);

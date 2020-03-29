@@ -1,11 +1,12 @@
 #include "SettingsType.h"
+
+#include "ControllerSettingsStruct.h"
+#include "NotificationSettingsStruct.h"
+#include "SecurityStruct.h"
 #include "StorageLayout.h"
 #include "../Globals/ExtraTaskSettings.h"
 #include "../Globals/Settings.h"
-#include "ControllerSettingsStruct.h"
-#include "NotificationSettingsStruct.h"
 #include "../../ESPEasy-Globals.h"
-
 
 String SettingsType::getSettingsTypeString(Enum settingsType) {
   switch (settingsType) {
@@ -15,6 +16,8 @@ String SettingsType::getSettingsTypeString(Enum settingsType) {
     case ControllerSettings_Type:       return F("ControllerSettings");
     case CustomControllerSettings_Type: return F("CustomControllerSettings");
     case NotificationSettings_Type:     return F("NotificationSettings");
+    case SecuritySettings_Type:         return F("SecuritySettings");
+    case ExtdControllerCredentials_Type: return F("ExtendedControllerCredentials");
     default:
       break;
   }
@@ -81,6 +84,24 @@ bool SettingsType::getSettingsParameters(Enum settingsType, int index, int& max_
       struct_size = sizeof(NotificationSettingsStruct);
       break;
     }
+    case SecuritySettings_Type:
+    {
+      max_index   = 1;
+      offset      = 0;
+      max_size    = DAT_SECURITYSETTINGS_SIZE;
+      struct_size = sizeof(SecurityStruct);
+      break;
+    }
+    case ExtdControllerCredentials_Type:
+    {
+      max_index   = 1;
+      offset      = DAT_EXTDCONTR_CRED_OFFSET;
+      max_size    = DAT_EXTDCONTR_CRED_SIZE;
+
+      // struct_size may differ.
+      struct_size = 0;
+      break;
+    }
     case SettingsType_MAX:
     {
       max_index = -1;
@@ -144,6 +165,9 @@ unsigned int SettingsType::getSVGcolor(Enum settingsType) {
       return 0xFAC05E;
     case NotificationSettings_Type:
       return 0xF79D84;
+
+    case SecuritySettings_Type:
+    case ExtdControllerCredentials_Type:
     case SettingsType_MAX:
       break;
   }
@@ -160,6 +184,10 @@ String SettingsType::getSettingsFileName(Enum settingsType) {
       return F(FILE_CONFIG);
     case NotificationSettings_Type:
       return F(FILE_NOTIFICATION);
+    case SecuritySettings_Type:
+    case ExtdControllerCredentials_Type:
+      return F(FILE_SECURITY);
+      
     case SettingsType_MAX:
       break;
   }

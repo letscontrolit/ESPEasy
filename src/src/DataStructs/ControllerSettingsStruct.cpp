@@ -228,12 +228,12 @@ void ControllerSettingsStruct::mqtt_retainFlag(bool value)
   setBitToUL(MQTT_flags, 5, value);
 }
 
-bool ControllerSettingsStruct::mqtt_useExtendedSettings() const
+bool ControllerSettingsStruct::useExtendedCredentials() const
 {
   return getBitFromUL(MQTT_flags, 6);
 }
 
-void ControllerSettingsStruct::mqtt_useExtendedSettings(bool value)
+void ControllerSettingsStruct::useExtendedCredentials(bool value)
 {
   setBitToUL(MQTT_flags, 6, value);
 }

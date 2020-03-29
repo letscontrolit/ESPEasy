@@ -1236,10 +1236,11 @@ void ResetFactory()
   str2ip((char*)DEFAULT_SERVER, ControllerSettings.IP);
   ControllerSettings.setHostname(F(DEFAULT_SERVER_HOST));
   ControllerSettings.UseDNS = DEFAULT_SERVER_USEDNS;
+  ControllerSettings.useExtendedCredentials(DEFAULT_USE_EXTD_CONTROLLER_CREDENTIALS);
   ControllerSettings.Port = DEFAULT_PORT;
+  setControllerUser(0, ControllerSettings, F(DEFAULT_CONTROLLER_USER));
+  setControllerPass(0, ControllerSettings, F(DEFAULT_CONTROLLER_PASS));
   SaveControllerSettings(0, ControllerSettings);
-  strcpy_P(SecuritySettings.ControllerUser[0], PSTR(DEFAULT_CONTROLLER_USER));
-  strcpy_P(SecuritySettings.ControllerPassword[0], PSTR(DEFAULT_CONTROLLER_PASS));
 #endif
 
   SaveSettings();

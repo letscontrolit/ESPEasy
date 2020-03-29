@@ -47,7 +47,7 @@ String getControllerParameterName(protocolIndex_t ProtocolIndex, ControllerSetti
     case ControllerSettingsStruct::CONTROLLER_SEND_LWT:                 name = F("Send LWT to broker");     break;
     case ControllerSettingsStruct::CONTROLLER_WILL_RETAIN:              name = F("Will Retain");            break;
     case ControllerSettingsStruct::CONTROLLER_CLEAN_SESSION:            name = F("Clean Session");          break;
-    case ControllerSettingsStruct::CONTROLLER_USE_EXTENDED_SETTINGS:    name = F("Use Extended Settings");  break;
+    case ControllerSettingsStruct::CONTROLLER_USE_EXTENDED_CREDENTIALS: name = F("Use Extended Credentials");  break;
     case ControllerSettingsStruct::CONTROLLER_TIMEOUT:                  name = F("Client Timeout");         break;
     case ControllerSettingsStruct::CONTROLLER_SAMPLE_SET_INITIATOR:     name = F("Sample Set Initiator");   break;
 
@@ -119,21 +119,26 @@ void addControllerParameterForm(const ControllerSettingsStruct& ControllerSettin
     }
     case ControllerSettingsStruct::CONTROLLER_USER:
     {
+      size_t fieldMaxLength = ControllerSettings.useExtendedCredentials() ? EXT_SECURITY_MAX_USER_LENGTH : sizeof(SecuritySettings.ControllerUser[0]) - 1;
       addFormTextBox(displayName,
                      internalName,
-                     SecuritySettings.ControllerUser[controllerindex],
-                     sizeof(SecuritySettings.ControllerUser[0]) - 1);
+                     getControllerUser(controllerindex, ControllerSettings),
+                     fieldMaxLength);
       break;
     }
     case ControllerSettingsStruct::CONTROLLER_PASS:
     {
+      size_t fieldMaxLength = ControllerSettings.useExtendedCredentials() ? EXT_SECURITY_MAX_PASS_LENGTH : sizeof(SecuritySettings.ControllerPassword[0]) - 1;
       if (isAlternativeDisplayName) {
         // It is not a regular password, thus use normal text field.
-        addFormTextBox(displayName, internalName, SecuritySettings.ControllerPassword[controllerindex],
-                       sizeof(SecuritySettings.ControllerPassword[0]) - 1);
+        addFormTextBox(displayName, internalName, 
+                       getControllerPass(controllerindex, ControllerSettings),
+                       fieldMaxLength);
       } else {
-        addFormPasswordBox(displayName, internalName, SecuritySettings.ControllerPassword[controllerindex],
-                           sizeof(SecuritySettings.ControllerPassword[0]) - 1);
+        addFormPasswordBox(displayName, internalName,
+                           getControllerPass(controllerindex, ControllerSettings),
+                           fieldMaxLength);
+
       }
       break;
     }
@@ -202,8 +207,8 @@ void addControllerParameterForm(const ControllerSettingsStruct& ControllerSettin
     case ControllerSettingsStruct::CONTROLLER_CLEAN_SESSION:
       addFormCheckBox(displayName, internalName, ControllerSettings.mqtt_cleanSession());
       break;
-    case ControllerSettingsStruct::CONTROLLER_USE_EXTENDED_SETTINGS:
-      addFormCheckBox(displayName, internalName, ControllerSettings.mqtt_useExtendedSettings());
+    case ControllerSettingsStruct::CONTROLLER_USE_EXTENDED_CREDENTIALS:
+      addFormCheckBox(displayName, internalName, ControllerSettings.useExtendedCredentials());
       break;
     case ControllerSettingsStruct::CONTROLLER_TIMEOUT:
       addFormNumericBox(displayName, internalName, ControllerSettings.ClientTimeout, 10, CONTROLLER_CLIENTTIMEOUT_MAX);
@@ -252,10 +257,10 @@ void saveControllerParameterForm(ControllerSettingsStruct& ControllerSettings, c
       ControllerSettings.Port = getFormItemInt(internalName, ControllerSettings.Port);
       break;
     case ControllerSettingsStruct::CONTROLLER_USER:
-      strncpy_webserver_arg(SecuritySettings.ControllerUser[controllerindex], internalName);
+      setControllerUser(controllerindex, ControllerSettings, web_server.arg(internalName));
       break;
     case ControllerSettingsStruct::CONTROLLER_PASS:
-      copyFormPassword(internalName, SecuritySettings.ControllerPassword[controllerindex], sizeof(SecuritySettings.ControllerPassword[0]));
+      setControllerPass(controllerindex, ControllerSettings, web_server.arg(internalName));
       break;
 
     case ControllerSettingsStruct::CONTROLLER_MIN_SEND_INTERVAL:
@@ -307,8 +312,8 @@ void saveControllerParameterForm(ControllerSettingsStruct& ControllerSettings, c
     case ControllerSettingsStruct::CONTROLLER_CLEAN_SESSION:
       ControllerSettings.mqtt_cleanSession(isFormItemChecked(internalName));
       break;
-    case ControllerSettingsStruct::CONTROLLER_USE_EXTENDED_SETTINGS:
-      ControllerSettings.mqtt_useExtendedSettings(isFormItemChecked(internalName));
+    case ControllerSettingsStruct::CONTROLLER_USE_EXTENDED_CREDENTIALS:
+      ControllerSettings.useExtendedCredentials(isFormItemChecked(internalName));
       break;
     case ControllerSettingsStruct::CONTROLLER_TIMEOUT:
       ControllerSettings.ClientTimeout = getFormItemInt(internalName, ControllerSettings.ClientTimeout);

@@ -92,7 +92,7 @@ bool do_process_c007_delay_queue(int controller_number, const C007_queue_element
   }
   url += "}";
   url += F("&apikey=");
-  url += SecuritySettings.ControllerPassword[element.controller_idx]; // "0UDNN17RW6XAS2E5" // api key
+  url += getControllerPass(element.controller_idx, ControllerSettings); // "0UDNN17RW6XAS2E5" // api key
 
   if (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE)
     serialPrintln(url);

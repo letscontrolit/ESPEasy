@@ -57,7 +57,8 @@ struct ControllerSettingsStruct
   //   IDs of controller settings, used to generate web forms
   // ********************************************************************************
   enum VarType {
-    CONTROLLER_USE_DNS = 0,
+    CONTROLLER_USE_DNS = 0,                   // PLace this before HOSTNAME/IP
+    CONTROLLER_USE_EXTENDED_CREDENTIALS = 1,  // Place this before USER/PASS
     CONTROLLER_HOSTNAME,
     CONTROLLER_IP,
     CONTROLLER_PORT,
@@ -79,7 +80,6 @@ struct ControllerSettingsStruct
     CONTROLLER_SEND_LWT,
     CONTROLLER_WILL_RETAIN,
     CONTROLLER_CLEAN_SESSION,
-    CONTROLLER_USE_EXTENDED_SETTINGS,
     CONTROLLER_TIMEOUT,
     CONTROLLER_SAMPLE_SET_INITIATOR,
 
@@ -125,8 +125,8 @@ struct ControllerSettingsStruct
   bool      mqtt_retainFlag() const;
   void      mqtt_retainFlag(bool value);
 
-  bool      mqtt_useExtendedSettings() const;
-  void      mqtt_useExtendedSettings(bool value);
+  bool      useExtendedCredentials() const;
+  void      useExtendedCredentials(bool value);
 
   boolean      UseDNS;
   byte         IP[4];

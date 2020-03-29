@@ -308,6 +308,7 @@ String SaveSettings(void)
       wifiConnectAttemptNeeded = true;
     }
   }
+  ExtendedControllerCredentials.save();
   afterloadSettings();
   return err;
 }
@@ -383,6 +384,8 @@ String LoadSettings()
   else {
     addLog(LOG_LEVEL_ERROR, F("CRC  : SecuritySettings CRC   ...FAIL"));
   }
+
+  ExtendedControllerCredentials.load();
 
   //  setupStaticIPconfig();
   // FIXME TD-er: Must check if static/dynamic IP was changed and trigger a reconnect? Or is a reboot better when changing those settings?
@@ -524,7 +527,7 @@ String LoadStringArray(SettingsType::Enum settingsType, int index, String string
    Save array of Strings from Custom settings
    Use maxStringLength = 0 to optimize for size (strings will be concatenated)
  \*********************************************************************************************/
-String SaveStringArray(SettingsType::Enum settingsType, int index, String strings[], uint16_t nrStrings, uint16_t maxStringLength)
+String SaveStringArray(SettingsType::Enum settingsType, int index, const String strings[], uint16_t nrStrings, uint16_t maxStringLength)
 {
   int offset, max_size;
   if (!SettingsType::getSettingsParameters(settingsType, index, offset, max_size))
