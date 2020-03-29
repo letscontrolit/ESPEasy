@@ -154,7 +154,7 @@ String BuildFixes()
   }
   if (Settings.Build <= 20106) {
     // ClientID is now defined in the controller settings.
-
+    #ifdef USES_MQTT
     controllerIndex_t controller_idx = firstEnabledMQTT_ControllerIndex();
     if (validControllerIndex(controller_idx)) {
       MakeControllerSettings(ControllerSettings);
@@ -176,6 +176,7 @@ String BuildFixes()
       ControllerSettings.mqtt_retainFlag(Settings.MQTTRetainFlag_unused);
       SaveControllerSettings(controller_idx, ControllerSettings);
     }
+    #endif // USES_MQTT
   }
 
   Settings.Build = BUILD;
