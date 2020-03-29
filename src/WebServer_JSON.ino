@@ -241,8 +241,8 @@ void handle_json()
 
   if (!showSpecificTask) {
     addHtml(F("],\n"));
+    stream_last_json_object_value(F("TTL"), String(lowest_ttl_json * 1000));
   }
-  stream_last_json_object_value(F("TTL"), String(lowest_ttl_json * 1000));
 
   TXBuffer.endStream();
 }

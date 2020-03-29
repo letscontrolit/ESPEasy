@@ -138,6 +138,39 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
         addLog(LOG_LEVEL_INFO,log);
         pinMode(Settings.TaskDevicePin1[event->TaskIndex], INPUT_PULLUP);
         success = Plugin_003_pulseinit(Settings.TaskDevicePin1[event->TaskIndex], event->TaskIndex,Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
+
+        // Restore any value that may have been read from the RTC.
+        Plugin_003_pulseCounter[event->TaskIndex]      = UserVar[event->BaseVarIndex];
+        Plugin_003_pulseTotalCounter[event->TaskIndex] = UserVar[event->BaseVarIndex+1];
+        Plugin_003_pulseTime[event->TaskIndex]         = UserVar[event->BaseVarIndex+2];
+
+        switch (Settings.TaskDevicePluginConfig[event->TaskIndex][1])
+        {
+          case 0:
+          {
+            Plugin_003_pulseCounter[event->TaskIndex] = UserVar[event->BaseVarIndex];
+            break;
+          }
+          case 1:
+          {
+            Plugin_003_pulseCounter[event->TaskIndex]      = UserVar[event->BaseVarIndex];
+            Plugin_003_pulseTotalCounter[event->TaskIndex] = UserVar[event->BaseVarIndex+1];
+            Plugin_003_pulseTime[event->TaskIndex]         = UserVar[event->BaseVarIndex+2];
+            break;
+          }
+          case 2:
+          {
+            Plugin_003_pulseTotalCounter[event->TaskIndex] = UserVar[event->BaseVarIndex];
+            break;
+          }
+          case 3:
+          {
+            Plugin_003_pulseCounter[event->TaskIndex]      = UserVar[event->BaseVarIndex];
+            Plugin_003_pulseTotalCounter[event->TaskIndex] = UserVar[event->BaseVarIndex+1];
+            break;
+          }
+        }
+
         break;
       }
 
@@ -188,7 +221,7 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
         if (command == F("resetpulsecounter"))
         {
           // Allow for an optional taskIndex parameter. When not given it will take the first task with this plugin.
-          const taskIndex_t taskIndex = parseCommandArgumentTaskIndex(string, 2);
+          const taskIndex_t taskIndex = parseCommandArgumentTaskIndex(string, 1);
           if (validTaskIndex(taskIndex)) {
             if (event->TaskIndex != taskIndex) {
               break;

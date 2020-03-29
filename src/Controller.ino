@@ -488,21 +488,23 @@ void SensorSendTask(taskIndex_t TaskIndex)
 
     if (success)
     {
-      START_TIMER;
-      for (byte varNr = 0; varNr < VARS_PER_TASK; varNr++)
-      {
-        if (ExtraTaskSettings.TaskDeviceFormula[varNr][0] != 0)
+      if (Device[DeviceIndex].FormulaOption) {
+        START_TIMER;
+        for (byte varNr = 0; varNr < VARS_PER_TASK; varNr++)
         {
-          String formula = ExtraTaskSettings.TaskDeviceFormula[varNr];
-          formula.replace(F("%pvalue%"), String(preValue[varNr]));
-          formula.replace(F("%value%"), String(UserVar[varIndex + varNr]));
-          float result = 0;
-          byte error = Calculate(formula.c_str(), &result);
-          if (error == 0)
-            UserVar[varIndex + varNr] = result;
+          if (ExtraTaskSettings.TaskDeviceFormula[varNr][0] != 0)
+          {
+            String formula = ExtraTaskSettings.TaskDeviceFormula[varNr];
+            formula.replace(F("%pvalue%"), String(preValue[varNr]));
+            formula.replace(F("%value%"), String(UserVar[varIndex + varNr]));
+            float result = 0;
+            byte error = Calculate(formula.c_str(), &result);
+            if (error == 0)
+              UserVar[varIndex + varNr] = result;
+          }
         }
+        STOP_TIMER(COMPUTE_FORMULA_STATS);
       }
-      STOP_TIMER(COMPUTE_FORMULA_STATS);
       sendData(&TempEvent);
     }
   }
