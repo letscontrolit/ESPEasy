@@ -74,13 +74,13 @@ void addSelector_Head(const String& id, const String& classname, boolean reloado
 void addSelector_Head(const String& id, const String& classname, boolean reloadonchange, bool disabled)
 {
   if (reloadonchange) {
-    addSelector_Head(id, classname, (const String)F("return dept_onchange(frmselect)"), disabled);
+    addSelector_Head(id, classname, F("return dept_onchange(frmselect)"), disabled);
   } else {
-    addSelector_Head(id, classname, (const String)"", disabled);
+    addSelector_Head(id, classname, "", disabled);
   }
 }
 
-void addSelector_Head(const String& id, const String& onChangeCall, const String& classname, bool disabled)
+void addSelector_Head(const String& id, const String& classname, const String& onChangeCall, bool disabled)
 {
   {
     String html;
