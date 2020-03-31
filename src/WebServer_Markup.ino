@@ -63,24 +63,24 @@ void addSelector_options(int optionCount, const String options[], const int indi
   }
 }
 
-void addSelector_Head(const String& id, boolean reloadonchange) {
-  addSelector_Head(id, F("wide"), reloadonchange);
+void addSelector_Head(const String& id, bool reloadonchange) {
+  addSelector_Head(id, F("wide"), reloadonchange, false);
 }
 
-void addSelector_Head(const String& id, const String& classname, boolean reloadonchange) {
-  addSelector_Head(id, classname, reloadonchange, false);
+void addSelector_Head_reloadOnChange(const String& id, const String& classname) {
+  addSelector_Head(id, classname, true, false);
 }
 
-void addSelector_Head(const String& id, const String& classname, boolean reloadonchange, bool disabled)
+void addSelector_Head(const String& id, const String& classname, bool reloadonchange, bool disabled)
 {
   if (reloadonchange) {
-    addSelector_Head(id, classname, F("return dept_onchange(frmselect)"), disabled);
+    do_addSelector_Head(id, classname, F("return dept_onchange(frmselect)"), disabled);
   } else {
-    addSelector_Head(id, classname, "", disabled);
+    do_addSelector_Head(id, classname, "", disabled);
   }
 }
 
-void addSelector_Head(const String& id, const String& classname, const String& onChangeCall, bool disabled)
+void do_addSelector_Head(const String& id, const String& classname, const String& onChangeCall, bool disabled)
 {
   {
     String html;
