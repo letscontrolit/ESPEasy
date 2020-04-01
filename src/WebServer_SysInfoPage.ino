@@ -669,6 +669,8 @@ void handle_sysinfo_Storage() {
       SettingsType::Enum settingsType = static_cast<SettingsType::Enum>(st);
       html_TR_TD();
       addHtml(SettingsType::getSettingsTypeString(settingsType));
+      html_BR();
+      addHtml(SettingsType::getSettingsFileName(settingsType));
       html_TD();
       getStorageTableSVG(settingsType);
     }

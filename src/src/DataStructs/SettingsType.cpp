@@ -94,9 +94,9 @@ bool SettingsType::getSettingsParameters(Enum settingsType, int index, int& max_
     }
     case ExtdControllerCredentials_Type:
     {
-      max_index   = 1;
-      offset      = DAT_EXTDCONTR_CRED_OFFSET;
-      max_size    = DAT_EXTDCONTR_CRED_SIZE;
+      max_index = 1;
+      offset    = DAT_EXTDCONTR_CRED_OFFSET;
+      max_size  = DAT_EXTDCONTR_CRED_SIZE;
 
       // struct_size may differ.
       struct_size = 0;
@@ -135,17 +135,16 @@ int SettingsType::getMaxFilePos(Enum settingsType) {
 }
 
 int SettingsType::getFileSize(Enum settingsType) {
-  if (settingsType == NotificationSettings_Type) {
-    return getMaxFilePos(settingsType);
-  }
-
-  int max_file_pos = 0;
+  SettingsType::SettingsFileEnum file_type = SettingsType::getSettingsFile(settingsType);
+  int max_file_pos                         = 0;
 
   for (int st = 0; st < SettingsType_MAX; ++st) {
-    int filePos = getMaxFilePos(static_cast<Enum>(st));
+    if (SettingsType::getSettingsFile(static_cast<Enum>(st)) == file_type) {
+      int filePos = SettingsType::getMaxFilePos(static_cast<Enum>(st));
 
-    if (filePos > max_file_pos) {
-      max_file_pos = filePos;
+      if (filePos > max_file_pos) {
+        max_file_pos = filePos;
+      }
     }
   }
   return max_file_pos;
@@ -167,29 +166,44 @@ unsigned int SettingsType::getSVGcolor(Enum settingsType) {
       return 0xF79D84;
 
     case SecuritySettings_Type:
+      return 0xff00a2;
     case ExtdControllerCredentials_Type:
+      return 0xc300ff;
     case SettingsType_MAX:
       break;
   }
   return 0;
 }
 
-String SettingsType::getSettingsFileName(Enum settingsType) {
+SettingsType::SettingsFileEnum SettingsType::getSettingsFile(Enum settingsType)
+{
   switch (settingsType) {
     case BasicSettings_Type:
     case TaskSettings_Type:
     case CustomTaskSettings_Type:
     case ControllerSettings_Type:
     case CustomControllerSettings_Type:
-      return F(FILE_CONFIG);
+      return FILE_CONFIG_type;
     case NotificationSettings_Type:
-      return F(FILE_NOTIFICATION);
+      return FILE_NOTIFICATION_type;
     case SecuritySettings_Type:
     case ExtdControllerCredentials_Type:
-      return F(FILE_SECURITY);
-      
+      return FILE_SECURITY_type;
+
     case SettingsType_MAX:
       break;
+  }
+  return FILE_UNKNOWN_type;
+}
+
+String SettingsType::getSettingsFileName(Enum settingsType) {
+  SettingsType::SettingsFileEnum file_type = getSettingsFile(settingsType);
+
+  switch (file_type) {
+    case FILE_CONFIG_type:        return F(FILE_CONFIG);
+    case FILE_NOTIFICATION_type:  return F(FILE_NOTIFICATION);
+    case FILE_SECURITY_type:      return F(FILE_SECURITY);
+    case FILE_UNKNOWN_type:       break;
   }
   return "";
 }

@@ -20,6 +20,13 @@ public:
     SettingsType_MAX
   };
 
+  enum SettingsFileEnum {
+    FILE_CONFIG_type,
+    FILE_NOTIFICATION_type,
+    FILE_SECURITY_type,
+    FILE_UNKNOWN_type
+  };
+
   static String getSettingsTypeString(Enum settingsType);
   static bool   getSettingsParameters(Enum settingsType,
                                       int  index,
@@ -32,12 +39,13 @@ public:
                                     int& max_size,
                                     int& struct_size);
 
-  static int          getMaxFilePos(Enum settingsType);
-  static int          getFileSize(Enum settingsType);
+  static int              getMaxFilePos(Enum settingsType);
+  static int              getFileSize(Enum settingsType);
 
-  static unsigned int getSVGcolor(Enum settingsType);
+  static unsigned int     getSVGcolor(Enum settingsType);
 
-  static String getSettingsFileName(Enum settingsType);
+  static SettingsFileEnum getSettingsFile(Enum settingsType);
+  static String           getSettingsFileName(Enum settingsType);
 };
 
 

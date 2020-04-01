@@ -1031,8 +1031,7 @@ void getConfig_dat_file_layout() {
 
   for (int st = 0; st < SettingsType::SettingsType_MAX; ++st) {
     SettingsType::Enum settingsType = static_cast<SettingsType::Enum>(st);
-
-    if (settingsType != SettingsType::NotificationSettings_Type) {
+    if (SettingsType::getSettingsFile(settingsType) == SettingsType::FILE_CONFIG_type) {
       unsigned int color = SettingsType::getSVGcolor(settingsType);
       SettingsType::getSettingsParameters(settingsType, 0, max_index, offset, max_size, struct_size);
 
@@ -1048,7 +1047,7 @@ void getConfig_dat_file_layout() {
   // Text labels
   float textXoffset = SVG_BAR_WIDTH + 2;
   float textYoffset = yOffset + 0.9 * SVG_BAR_HEIGHT;
-  createSvgTextElement(F("Config.dat"), textXoffset, textYoffset);
+  createSvgTextElement(SettingsType::getSettingsFileName(SettingsType::TaskSettings_Type), textXoffset, textYoffset);
   addHtml(F("</svg>\n"));
 }
 
