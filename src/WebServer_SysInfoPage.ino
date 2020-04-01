@@ -434,10 +434,7 @@ void handle_sysinfo_Firmware() {
       addHtml(F("passed."));
     }
   }
-  addRowLabel_copy(getLabel(LabelType::BUILD_TIME));
-  addHtml(String(CRCValues.compileDate));
-  addHtml(" ");
-  addHtml(String(CRCValues.compileTime));
+  addRowLabelValue_copy(LabelType::BUILD_TIME);
 
   addRowLabel_copy(getLabel(LabelType::BINARY_FILENAME));
 
