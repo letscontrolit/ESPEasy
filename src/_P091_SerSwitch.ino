@@ -622,8 +622,6 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
             log += F(":");
             log += rcmd;
             addLog(LOG_LEVEL_INFO, log);
-            log = F("Ok");
-            SendStatus(event->Source, log);
           }
 
           if ( command == F("relaypulse") )
@@ -674,8 +672,6 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
             log += String(event->Par3);
             log += F(" mS");
             addLog(LOG_LEVEL_INFO, log);
-            log = F("\nOk");
-            SendStatus(event->Source, log);
           }
 
           if ( command == F("relaylongpulse") )
@@ -727,8 +723,6 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
             log += String(event->Par3);
             log += F(" sec");
             addLog(LOG_LEVEL_INFO, log);
-            log = F("\nOk");
-            SendStatus(event->Source, log);
           }
           if ( command == F("ydim") ) // deal with dimmer command
           {
@@ -756,11 +750,10 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
               }
               log += event->Par1;
               addLog(LOG_LEVEL_INFO, log);
-              log = F("\nOk");
             } else {
-              log = F("\nNot supported");
+              log = F("\nYDim not supported");
+              SendStatus(event->Source, log);
             }
-            SendStatus(event->Source, log);
           }
 
         }

@@ -1,4 +1,127 @@
 -------------------------------------------------
+Changes in release mega-20200328 (since mega-20200310)
+-------------------------------------------------
+
+Release date: za 28 mrt 2020  2:55:55 CET
+
+Bartlomiej Zimon (2):
+      [SysVars] small optimization
+      [SysVars] concat->String()
+
+Boris Krivonog (30):
+      Initial commit of the Mitsibutshi HP integration.
+      Added device values.
+      first contact
+      push on change
+      push on change
+      unified code read and update
+      added update ...
+      set temperature ...
+      write all parameters
+      logging ...
+      logs fixed
+      if update was successful, update settings immediatelly
+      renamed to settings
+      don't read during write, don't request info we don't care about ...
+      Added info about which specific commit used.
+      reverted changes made in other files
+      reverted changes made in other files
+      reverted changes made in other files
+      fixed compile time warnings
+      Renamed to 092 plugin.
+      Rewrote communication part, removed delays from code, optimised handling and storing of data ...
+      Write re-enabled
+      Renamed to 093 plugin.
+      Renamed to 093 plugin.
+      Improved write operations
+      Fixed build when debug is disabled
+      Make sure to break out of switch-case.
+      Handle only "MHP" commands
+      adding documentation ...
+      adding documentation ...
+
+Gijs Noorlander (47):
+      [P091] Move P165 SerSwitch from playground to main repository
+      [P091] Add documentation
+      [P091 SerSwitch] Update to use latest sources of enesbcs
+      Minify the JS code + store in flash
+      [Docs] Add stub for documentation of P093 - Mitsubishi Heat Pump
+      [SC16IS752] Add Library
+      [SC16IS752 lib] Update manifest to register as PIO library
+      [ESPEasySerial] Update manifest to mark SC16IS752 dependency
+      [SC16IS752] Use I2C-UART bridge in ESPEasySerial (ESP8266)
+      [SC16IS752] Extend Serial Helper to support I2C UART
+      Fix warnings in ccronexpr test code
+      [Serial] Mark plugins using serial as device type serial
+      [I2C serial] Disable debugging
+      [Docs] Add port type to plugin substitutions
+      [Docs] Mark all plugins using Serial as port type
+      [I2C UART] Speed up reading from I2C Serial
+      [I2C UART] Cache FIFO available to speed up reading
+      [I2C UART] Limit calls to serial.available()
+      [code analytics] Use PVS studio
+      [ESP32]  Add SDS011 support for ESP32
+      [Task] Start scheduled runs again after (re)enableTask command
+      [I2C UART] Mark ESPEasySerial library as v2.0.0
+      [ESP32] Make sure to include the version tag in ESPEasySerial libdeb
+      [I2C] Add I2C frequency setting
+      ESPEasy Status LED is not working on ESP32 with buildin LED (#2940)
+      Pulse Counter must retain its values after reboot (#2268)
+      [Build] Disable test_ESP8266_4M1M_VCC_MDNS_SD due to max sketch size
+      [JSON] Fix JSON output of values for single task
+      [SerialProxy] Add regexp filtering
+      [Lib] Add RegExp lib
+      [Serial Proxy] Add regexp filtering using captures
+      [Serial Proxy] Add extra filter parameters
+      [Serial Proxy] Move plugin specific struct to .h/.cpp to support captures
+      [Serial Proxy] Use capture filtering
+      [Web] Make command field on Tools page much wider
+      [Serial Proxy] Only check on valid filter rules
+      [SysVar] Add extra system variables to get build info
+      [Serial Proxy] Fix check in empty string test
+      Add generic hexToUL functions
+      [WiFi] Start webserver before starting wifi (long delay to receive 1st byte)
+      [Serial Log] Keep a bit more free memory when processing serial log
+      [Serial Proxy] Don't process on empty regexp
+      Check if plugin uses formula before trying to process formula
+      [ESP32] Fix crash in startup connecting to WiFi (#2960 )
+      [SGP30] Fix output all values to controller
+      [PIO] feature/stage no longer available for building latest core libs
+      [PIO] Use platform_packages for all core libs supporting those
+
+Grovkillen (8):
+      [rules] commented out old upload html
+      [rules] forms uncommented (needed for rules set)
+      [rules] removed the "onSubmit" event
+      [rules] narrowed scope of form (to not trigger onChange if btn clicked)
+      [rules] file upload instead of form upload
+      [rules] removed commented code
+      [rules] size is updated when saved
+      [rules] td-er talked me into it... thanks mate!
+
+Michael Schröder (1):
+      Fix double-Ok at command output
+
+TD-er (4):
+      Start of implementing SC16IS752 support
+      Fix resetpulsecounter for P003_Pulse (#2710)
+      [Blynk] Fix building C015 Blynk controller
+      Fix ArduinoIDE Build error due to missing include
+
+borisk (6):
+      Updating documentation
+      Updating documentation
+      Updating documentation
+      Add as part of testing plugins ...
+      Restructured docs a bit so its easier to follow
+      updated docs
+
+tonhuisman (2):
+      [P023] Fix for text overflowing onto next line(s)
+      Added condition for 64x48 and rotated combined
+
+
+-------------------------------------------------
 Changes in release mega-20200310 (since mega-20200305)
 -------------------------------------------------
 
