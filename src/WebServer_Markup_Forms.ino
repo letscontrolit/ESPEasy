@@ -235,7 +235,7 @@ void addFormSelector_script(const String& label,
                             const String& onChangeCall)
 {
   addRowLabel_tr_id(label, id);
-  addSelector_Head(id, onChangeCall, false);
+  addSelector_Head(id, "", onChangeCall, false);
   addSelector_options(optionCount, options, indices, attr, selectedIndex);
   addSelector_Foot();
 }
