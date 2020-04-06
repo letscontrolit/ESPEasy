@@ -186,7 +186,6 @@ bool executeInternalCommand(const char *cmd, struct EventStruct *event, const ch
       COMMAND_CASE(          "let", Command_Rules_Let,     2, VALUE_SOURCE_ALL);    // Rules.h
       COMMAND_CASE(         "load", Command_Settings_Load, 0, VALUE_SOURCE_RESTRICTED);    // Settings.h
       COMMAND_CASE(     "logentry", Command_logentry,      1, VALUE_SOURCE_ALL);    // Diagnostic.h
-      COMMAND_CASE("logportstatus", Command_logPortStatus, 0, VALUE_SOURCE_ALL);    // Diagnostic.h
       COMMAND_CASE(    "longpulse", Command_GPIO_LongPulse,3, VALUE_SOURCE_ALL);    // GPIO.h
       COMMAND_CASE( "longpulse_ms", Command_GPIO_LongPulse_Ms,3, VALUE_SOURCE_ALL);    // GPIO.h
       COMMAND_CASE("logportstatus", Command_logPortStatus, 0, VALUE_SOURCE_ALL);    // Diagnostic.h
