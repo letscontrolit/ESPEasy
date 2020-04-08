@@ -3,6 +3,8 @@
 // **************************************************************************/
 #include "EspEasyGPIO.h"
 
+#include "src/Commands/GPIO.h"
+
 //********************************************************************************
 // Internal GPIO write
 //********************************************************************************
@@ -273,7 +275,7 @@ void GPIO_Monitor10xSec()
     if (it->second.monitor || it->second.command || it->second.init) {
       const uint16_t gpioPort = getPortFromKey(it->first);
       const uint16_t pluginID = getPluginFromKey(it->first);
-      int8_t currentState;
+      int8_t currentState = -1;
       String eventString;
       bool caseFound = true;
 
