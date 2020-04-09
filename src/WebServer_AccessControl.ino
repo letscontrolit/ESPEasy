@@ -116,5 +116,5 @@ void addIPaccessControlSelect(const String& name, int choice)
 {
   String options[3] = { F("Allow All"), F("Allow Local Subnet"), F("Allow IP range") };
 
-  addSelector(name, 3, options, NULL, NULL, choice, false);
+  addSelector(name, 3, options, NULL, NULL, choice);
 }

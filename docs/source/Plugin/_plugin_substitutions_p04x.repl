@@ -1,6 +1,7 @@
 .. |P040_name| replace:: :cyan:`ID12LA/RDM6300`
 .. |P040_type| replace:: :cyan:`RFID`
 .. |P040_typename| replace:: :cyan:`RFID - ID12LA/RDM6300`
+.. |P040_porttype| replace:: `.`
 .. |P040_status| replace:: :green:`NORMAL`
 .. |P040_github| replace:: P040_ID12.ino
 .. _P040_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P040_ID12.ino
@@ -13,6 +14,7 @@
 .. |P041_name| replace:: :cyan:`NeoPixel (Word Clock)`
 .. |P041_type| replace:: :cyan:`Output`
 .. |P041_typename| replace:: :cyan:`Output - NeoPixel (Word Clock)`
+.. |P041_porttype| replace:: `.`
 .. |P041_status| replace:: :green:`NORMAL`
 .. |P041_github| replace:: P041_NeoClock.ino
 .. _P041_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P041_NeoClock.ino
@@ -25,6 +27,7 @@
 .. |P042_name| replace:: :cyan:`NeoPixel (Candle)`
 .. |P042_type| replace:: :cyan:`Output`
 .. |P042_typename| replace:: :cyan:`Output - NeoPixel (Candle)`
+.. |P042_porttype| replace:: `.`
 .. |P042_status| replace:: :green:`NORMAL`
 .. |P042_github| replace:: P042_Candle.ino
 .. _P042_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P042_Candle.ino
@@ -37,6 +40,7 @@
 .. |P043_name| replace:: :cyan:`Clock`
 .. |P043_type| replace:: :cyan:`Output`
 .. |P043_typename| replace:: :cyan:`Output - Clock`
+.. |P043_porttype| replace:: `.`
 .. |P043_status| replace:: :green:`NORMAL`
 .. |P043_github| replace:: P043_ClkOutput.ino
 .. _P043_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P043_ClkOutput.ino
@@ -49,6 +53,7 @@
 .. |P044_name| replace:: :cyan:`P1 Wifi Gateway`
 .. |P044_type| replace:: :cyan:`Communication`
 .. |P044_typename| replace:: :cyan:`Communication - P1 Wifi Gateway`
+.. |P044_porttype| replace:: `.`
 .. |P044_status| replace:: :green:`NORMAL`
 .. |P044_github| replace:: P044_P1WifiGateway.ino
 .. _P044_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P044_P1WifiGateway.ino
@@ -61,6 +66,7 @@
 .. |P045_name| replace:: :cyan:`MPU 6050`
 .. |P045_type| replace:: :cyan:`Gyro`
 .. |P045_typename| replace:: :cyan:`Gyro - MPU 6050`
+.. |P045_porttype| replace:: `.`
 .. |P045_status| replace:: :yellow:`TESTING`
 .. |P045_github| replace:: P045_MPU6050.ino
 .. _P045_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P045_MPU6050.ino
@@ -73,6 +79,7 @@
 .. |P046_name| replace:: :cyan:`Ventus W266`
 .. |P046_type| replace:: :cyan:`Hardware`
 .. |P046_typename| replace:: :cyan:`Hardware - Ventus W266`
+.. |P046_porttype| replace:: `.`
 .. |P046_status| replace:: :yellow:`TESTING`
 .. |P046_github| replace:: P046_VentusW266.ino
 .. _P046_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P046_VentusW266.ino
@@ -85,6 +92,7 @@
 .. |P047_name| replace:: :cyan:`Soil moisture sensor`
 .. |P047_type| replace:: :cyan:`Environment`
 .. |P047_typename| replace:: :cyan:`Environment - Soil moisture sensor`
+.. |P047_porttype| replace:: `.`
 .. |P047_status| replace:: :yellow:`TESTING`
 .. |P047_github| replace:: P047_i2c-soil-moisture-sensor.ino
 .. _P047_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P047_i2c-soil-moisture-sensor.ino
@@ -97,6 +105,7 @@
 .. |P048_name| replace:: :cyan:`Adafruit Motorshield v2`
 .. |P048_type| replace:: :cyan:`Motor`
 .. |P048_typename| replace:: :cyan:`Motor - Adafruit Motorshield v2`
+.. |P048_porttype| replace:: `.`
 .. |P048_status| replace:: :yellow:`TESTING`
 .. |P048_github| replace:: P048_Motorshield_v2.ino
 .. _P048_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P048_Motorshield_v2.ino
@@ -109,6 +118,7 @@
 .. |P049_name| replace:: :cyan:`CO2 MH-Z19`
 .. |P049_type| replace:: :cyan:`Gases`
 .. |P049_typename| replace:: :cyan:`Gases - CO2 MH-Z19`
+.. |P049_porttype| replace:: `Serial`
 .. |P049_status| replace:: :green:`NORMAL`
 .. |P049_github| replace:: P049_MHZ19.ino
 .. _P049_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P049_MHZ19.ino

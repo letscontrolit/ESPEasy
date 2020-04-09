@@ -69,6 +69,34 @@ String formatMAC(const uint8_t *mac) {
   return String(str);
 }
 
+
+/********************************************************************************************\
+   Handling HEX strings
+ \*********************************************************************************************/
+
+// Convert max. 8 hex decimals to unsigned long
+unsigned long hexToUL(const String& input_c, size_t nrHexDecimals) {
+  size_t nr_decimals = nrHexDecimals;
+  if (nr_decimals > 8) {
+    nr_decimals = 8;
+  }
+  size_t inputLength = input_c.length();
+  if (nr_decimals > inputLength) {
+    nr_decimals = inputLength;
+  }
+  String tmp = input_c.substring(0, nr_decimals);
+  return strtoul(tmp.c_str(), 0, 16);
+}
+
+unsigned long hexToUL(const String& input_c) {
+  return hexToUL(input_c, input_c.length());
+}
+
+unsigned long hexToUL(const String& input_c, size_t startpos, size_t nrHexDecimals) {
+  return hexToUL(input_c.substring(startpos, startpos + nrHexDecimals), nrHexDecimals);
+}
+
+
 String formatToHex(unsigned long value, const String& prefix) {
   String result = prefix;
   String hex(value, HEX);

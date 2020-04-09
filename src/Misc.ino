@@ -756,7 +756,10 @@ void statusLED(bool traffic)
 
     #if defined(ESP8266)
       analogWrite(Settings.Pin_status_led, pwm);
-    #endif
+    #endif // if defined(ESP8266)
+    #if defined(ESP32)
+       analogWriteESP32(Settings.Pin_status_led, pwm);
+    #endif // if defined(ESP32)
   }
 }
 
@@ -843,6 +846,9 @@ bool setTaskEnableStatus(taskIndex_t taskIndex, bool enabled)
   // Only enable task if it has a Plugin configured
   if (validPluginID(Settings.TaskDeviceNumber[taskIndex]) || !enabled) {
     Settings.TaskDeviceEnabled[taskIndex] = enabled;
+    if (enabled) {
+      schedule_task_device_timer(taskIndex, millis() + 10);
+    }
     return true;
   }
   return false;
@@ -1224,6 +1230,7 @@ void ResetFactory()
 	Settings.ConnectionFailuresThreshold	= DEFAULT_CON_FAIL_THRES;
 	Settings.WireClockStretchLimit			= DEFAULT_I2C_CLOCK_LIMIT;
 */
+  Settings.I2C_clockSpeed     = DEFAULT_I2C_CLOCK_SPEED;
 
 #ifdef PLUGIN_DESCR
   strcpy_P(Settings.Name, PSTR(PLUGIN_DESCR));
@@ -1926,6 +1933,7 @@ void transformValue(
             value = logicVal == 0 ? "0" : "1";
             break;
           case 'D' ://Dx.y min 'x' digits zero filled & 'y' decimal fixed digits
+          case 'd' ://like above but with spaces padding
             {
               int x;
               int y;
@@ -1963,7 +1971,7 @@ void transformValue(
                 indexDot = value.length();
               }              
               for (byte f = 0; f < (x - indexDot); f++) {
-                value = "0" + value;
+                value = (tempValueFormat[0]=='d'? ' ' : '0') + value;
               }
               break;
             }

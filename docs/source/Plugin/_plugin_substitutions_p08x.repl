@@ -1,6 +1,7 @@
 .. |P080_name| replace:: :cyan:`iButton`
 .. |P080_type| replace:: :cyan:`Switch input`
 .. |P080_typename| replace:: :cyan:`Switch input - iButton`
+.. |P080_porttype| replace:: `.`
 .. |P080_status| replace:: :yellow:`TESTING`
 .. |P080_github| replace:: P080_DallasIButton.ino
 .. _P080_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P080_DallasIButton.ino
@@ -13,6 +14,7 @@
 .. |P081_name| replace:: :cyan:`CRON`
 .. |P081_type| replace:: :cyan:`Generic`
 .. |P081_typename| replace:: :cyan:`Generic - CRON`
+.. |P081_porttype| replace:: `.`
 .. |P081_status| replace:: :yellow:`TESTING`
 .. |P081_github| replace:: P081_Cron.ino
 .. _P081_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P081_Cron.ino
@@ -25,6 +27,7 @@
 .. |P082_name| replace:: :cyan:`GPS`
 .. |P082_type| replace:: :cyan:`Position`
 .. |P082_typename| replace:: :cyan:`Position - GPS`
+.. |P082_porttype| replace:: `Serial`
 .. |P082_status| replace:: :yellow:`TESTING`
 .. |P082_github| replace:: P082_GPS.ino
 .. _P082_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P082_GPS.ino
@@ -37,6 +40,7 @@
 .. |P083_name| replace:: :cyan:`SGP30`
 .. |P083_type| replace:: :cyan:`Gasses`
 .. |P083_typename| replace:: :cyan:`Gasses - SGP30`
+.. |P083_porttype| replace:: `.`
 .. |P083_status| replace:: :yellow:`TESTING`
 .. |P083_github| replace:: P083_SGP30.ino
 .. _P083_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P083_SGP30.ino
@@ -49,6 +53,7 @@
 .. |P084_name| replace:: :cyan:`VEML6070`
 .. |P084_type| replace:: :cyan:`UV`
 .. |P084_typename| replace:: :cyan:`UV - VEML6070`
+.. |P084_porttype| replace:: `.`
 .. |P084_status| replace:: :yellow:`TESTING`
 .. |P084_github| replace:: P084_VEML6070.ino
 .. _P084_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P084_VEML6070.ino
@@ -61,6 +66,7 @@
 .. |P085_name| replace:: :cyan:`AcuDC243`
 .. |P085_type| replace:: :cyan:`Energy (DC)`
 .. |P085_typename| replace:: :cyan:`Energy (DC) - AcuDC243`
+.. |P085_porttype| replace:: `Serial`
 .. |P085_status| replace:: :yellow:`TESTING`
 .. |P085_github| replace:: P085_AcuDC243.ino
 .. _P085_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P085_AcuDC243.ino
@@ -73,6 +79,7 @@
 .. |P086_name| replace:: :cyan:`Homie receiver`
 .. |P086_type| replace:: :cyan:`Generic`
 .. |P086_typename| replace:: :cyan:`Generic - Homie receiver`
+.. |P086_porttype| replace:: `.`
 .. |P086_status| replace:: :yellow:`TESTING`
 .. |P086_github| replace:: P086_Homie.ino
 .. _P086_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P086_Homie.ino
@@ -85,6 +92,7 @@
 .. |P087_name| replace:: :cyan:`SerialProxy`
 .. |P087_type| replace:: :cyan:`Communication`
 .. |P087_typename| replace:: :cyan:`Communication - SerialProxy`
+.. |P087_porttype| replace:: `Serial`
 .. |P087_status| replace:: :yellow:`TESTING`
 .. |P087_github| replace:: P087_SerialProxy.ino
 .. _P087_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P087_SerialProxy.ino
@@ -97,6 +105,7 @@
 .. |P088_name| replace:: :cyan:`HeatpumpIR`
 .. |P088_type| replace:: :cyan:`Energy (Heat)`
 .. |P088_typename| replace:: :cyan:`Energy (Heat) - HeatpumpIR`
+.. |P088_porttype| replace:: `.`
 .. |P088_status| replace:: :yellow:`TESTING`
 .. |P088_github| replace:: P088_HeatpumpIR.ino
 .. _P088_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P088_HeatpumpIR.ino
@@ -109,6 +118,7 @@
 .. |P089_name| replace:: :cyan:`Ping`
 .. |P089_type| replace:: :cyan:`Communication`
 .. |P089_typename| replace:: :cyan:`Communication - Ping`
+.. |P089_porttype| replace:: `.`
 .. |P089_status| replace:: :yellow:`TESTING`
 .. |P089_github| replace:: P089_Ping.ino
 .. _P089_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P089_Ping.ino

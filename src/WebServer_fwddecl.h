@@ -3,6 +3,7 @@
 
 #include "limits.h"
 #include "StringProviderTypes.h"
+#include "src/Helpers/SystemVariables.h"
 
 
 // ********************************************************************************
@@ -109,7 +110,7 @@ void addSelector(const String& id,
                  const int     indices[],
                  const String  attr[],
                  int           selectedIndex,
-                 boolean       reloadonchange = false,
-                 bool          enabled = true);
+                 boolean       reloadonchange,
+                 bool          enabled);
 
 #endif // WEBSERVER_FWD_DECL_H

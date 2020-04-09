@@ -153,6 +153,9 @@
 #ifndef DEFAULT_PIN_I2C_SCL
 #define DEFAULT_PIN_I2C_SCL              5
 #endif
+#ifndef DEFAULT_I2C_CLOCK_SPEED
+#define DEFAULT_I2C_CLOCK_SPEED          400000            // Use 100 kHz if working with old I2C chips
+#endif
 
 #ifndef DEFAULT_PIN_STATUS_LED
 #define DEFAULT_PIN_STATUS_LED           (-1)

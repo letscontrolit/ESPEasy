@@ -18,10 +18,10 @@ void handle_tools() {
 
   addFormSubHeader(F("Command"));
   html_TR_TD();
-  addHtml(F("<TR><TD style='width: 180px'><input class='wide' type='text' name='cmd' value='"));
+  addHtml(F("<TR><TD colspan='2'><input style='width: 98%' type='text' name='cmd' value='"));
   addHtml(webrequest);
   addHtml("'>");
-  html_TD();
+  html_TR_TD();
   addSubmitButton();
   addHelpButton(F("ESPEasy_Command_Reference"));
   html_TR_TD();

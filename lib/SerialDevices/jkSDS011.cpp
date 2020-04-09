@@ -22,7 +22,7 @@
   License along with MechInputs.  If not, see
   <http://www.gnu.org/licenses/>.
   -------------------------------------------------------------------------*/
-#ifdef ESP8266  // Needed for precompile issues.
+//#ifdef ESP8266  // Needed for precompile issues.
 #include "jkSDS011.h"
 
 CjkSDS011::CjkSDS011(int16_t pinRX, int16_t pinTX)
@@ -124,8 +124,10 @@ void CjkSDS011::ParseCommandReply() {
 
 void CjkSDS011::Process()
 {
-  while (_serial->available())
+  int serial_available = _serial->available();
+  while (serial_available > 0)
   {
+    --serial_available;
   	_data.AddData(_serial->read());
 
     if (_data[0] == 0xAA && _data[9] == 0xAB)   // correct packet frame?
@@ -161,6 +163,9 @@ void CjkSDS011::Process()
         return;
       }
     }
+    if (serial_available == 0) {
+      serial_available = _serial->available();
+    }
   }
 }
 
@@ -186,4 +191,4 @@ boolean CjkSDS011::ReadAverage(float &pm25, float &pm10)
   pm10 = NAN;
   return false;
 }
-#endif
+// #endif

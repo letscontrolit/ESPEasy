@@ -1,0 +1,9 @@
+MatchState	KEYWORD1
+Match	KEYWORD2
+Target	KEYWORD2
+GetMatch	KEYWORD2
+GetCapture	KEYWORD2
+GetResult	KEYWORD2
+MatchCount	KEYWORD2
+GlobalMatch	KEYWORD2
+GlobalReplace	KEYWORD2

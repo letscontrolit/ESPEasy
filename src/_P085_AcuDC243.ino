@@ -89,7 +89,7 @@ boolean Plugin_085(byte function, struct EventStruct *event, String& string) {
   switch (function) {
     case PLUGIN_DEVICE_ADD: {
       Device[++deviceCount].Number           = PLUGIN_ID_085;
-      Device[deviceCount].Type               =  DEVICE_TYPE_TRIPLE; // connected through 3 datapins
+      Device[deviceCount].Type               = DEVICE_TYPE_SERIAL_PLUS1; // connected through 3 datapins
       Device[deviceCount].VType              = SENSOR_TYPE_QUAD;
       Device[deviceCount].Ports              = 0;
       Device[deviceCount].PullUpOption       = false;
@@ -334,6 +334,7 @@ boolean Plugin_085(byte function, struct EventStruct *event, String& string) {
       if (P085_data->init(serial_rx, serial_tx, P085_DEPIN,
                           p085_storageValueToBaudrate(P085_BAUDRATE),
                           P085_DEV_ID)) {
+        serialHelper_log_GpioDescription(serial_rx, serial_tx);
         success = true;
       } else {
         clearPluginTaskData(event->TaskIndex);

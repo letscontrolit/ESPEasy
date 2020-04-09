@@ -43,31 +43,27 @@ void initPluginTaskData(taskIndex_t taskIndex, PluginTaskData_base *data) {
   clearPluginTaskData(taskIndex);
   if (Settings.TaskDeviceEnabled[taskIndex]) {
     Plugin_task_data[taskIndex]                      = data;
-    Plugin_task_data[taskIndex]->_taskdata_deviceIndex = getDeviceIndex_from_TaskIndex(taskIndex);
+    Plugin_task_data[taskIndex]->_taskdata_pluginID = Settings.TaskDeviceNumber[taskIndex];
   }
 }
 
 PluginTaskData_base* getPluginTaskData(taskIndex_t taskIndex) {
-  if (!validTaskIndex(taskIndex)) {
-    return nullptr;
-  }
-
-  if ((Plugin_task_data[taskIndex] != nullptr) && (Plugin_task_data[taskIndex]->_taskdata_deviceIndex == getDeviceIndex_from_TaskIndex(taskIndex))) {
-    return Plugin_task_data[taskIndex];
+  if (pluginTaskData_initialized(taskIndex)) {
+      return Plugin_task_data[taskIndex];
   }
   return nullptr;
 }
 
 bool pluginTaskData_initialized(taskIndex_t taskIndex) {
-  // FIXME TD-er: Must check for type also.
-  if (validTaskIndex(taskIndex)) {
-    return Plugin_task_data[taskIndex] != nullptr;
+  if (!validTaskIndex(taskIndex)) {
+    return false;
   }
-  return false;
+  return Plugin_task_data[taskIndex] != nullptr && 
+    (Plugin_task_data[taskIndex]->_taskdata_pluginID == Settings.TaskDeviceNumber[taskIndex]);
 }
 
 String getPluginCustomArgName(int varNr) {
-  String argName = F("plugin_custom_arg");
+  String argName = F("pc_arg");
   argName += varNr + 1;
   return argName;
 }

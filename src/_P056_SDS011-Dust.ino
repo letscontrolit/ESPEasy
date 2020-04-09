@@ -9,7 +9,7 @@
   This plugin reads the particle concentration from SDS011 Sensor
   DevicePin1 - RX on ESP, TX on SDS
 */
-#ifdef ESP8266  // Needed for precompile issues.
+//#ifdef ESP8266  // Needed for precompile issues.
 
 #define PLUGIN_056
 #define PLUGIN_ID_056         56
@@ -34,7 +34,7 @@ boolean Plugin_056(byte function, struct EventStruct *event, String& string)
     case PLUGIN_DEVICE_ADD:
       {
         Device[++deviceCount].Number = PLUGIN_ID_056;
-        Device[deviceCount].Type = DEVICE_TYPE_DUAL;
+        Device[deviceCount].Type = DEVICE_TYPE_SERIAL;
         Device[deviceCount].VType = SENSOR_TYPE_DUAL;
         Device[deviceCount].Ports = 0;
         Device[deviceCount].PullUpOption = false;
@@ -217,5 +217,5 @@ void Plugin_056_setWorkingPeriod(int minutes) {
   addLog(LOG_LEVEL_INFO, log);
 }
 
+//#endif
 #endif // USES_P056
-#endif

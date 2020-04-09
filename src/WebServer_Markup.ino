@@ -7,12 +7,40 @@ void addSelector(const String& id,
                  const String  options[],
                  const int     indices[],
                  const String  attr[],
+                 int           selectedIndex)
+{
+  addSelector(id, optionCount, options, indices, attr, selectedIndex, false, true, F("wide"));
+}
+
+void addSelector(const String& id,
+                 int           optionCount,
+                 const String  options[],
+                 const int     indices[],
+                 const String  attr[],
                  int           selectedIndex,
                  boolean       reloadonchange,
                  bool          enabled)
 {
+  addSelector(id, optionCount, options, indices, attr, selectedIndex, reloadonchange, enabled, F("wide"));
+}
+
+void addSelector(const String& id,
+                 int           optionCount,
+                 const String  options[],
+                 const int     indices[],
+                 const String  attr[],
+                 int           selectedIndex,
+                 boolean       reloadonchange,
+                 bool          enabled,
+                 const String& classname)
+{
   // FIXME TD-er Change boolean to disabled
-  addSelector_Head(id, reloadonchange, !enabled);
+  if (reloadonchange)
+  {
+    addSelector_Head_reloadOnChange(id, classname, !enabled);
+  } else {
+    do_addSelector_Head(id, classname, "", !enabled);
+  }
   addSelector_options(optionCount, options, indices, attr, selectedIndex);
   addSelector_Foot();
 }
@@ -50,25 +78,30 @@ void addSelector_options(int optionCount, const String options[], const int indi
   }
 }
 
-void addSelector_Head(const String& id, boolean reloadonchange) {
-  addSelector_Head(id, reloadonchange, false);
+void addSelector_Head(const String& id) {
+  do_addSelector_Head(id, F("wide"), "", false);
 }
 
-void addSelector_Head(const String& id, boolean reloadonchange, bool disabled)
-{
-  if (reloadonchange) {
-    addSelector_Head(id, (const String)F("return dept_onchange(frmselect)"), disabled);
-  } else {
-    addSelector_Head(id, (const String)"", disabled);
-  }
+void addSelector_Head_reloadOnChange(const String& id) {
+  addSelector_Head_reloadOnChange(id, F("wide"), false);
 }
 
-void addSelector_Head(const String& id, const String& onChangeCall, bool disabled)
+void addSelector_Head_reloadOnChange(const String& id, const String& classname, bool disabled) {
+  do_addSelector_Head(id, classname, F("return dept_onchange(frmselect)"), disabled);
+}
+
+void addSelector_Head_reloadOnChange(const String& id, const String& classname, const String& onChangeCall, bool disabled) {
+  do_addSelector_Head(id, classname, onChangeCall, disabled);
+}
+
+void do_addSelector_Head(const String& id, const String& classname, const String& onChangeCall, const bool& disabled)
 {
   {
     String html;
     html.reserve(32 + id.length());
-    html += F("<select class='wide' name='");
+    html += F("<select class='");
+    html += classname;
+    html += F("' name='");
     html += id;
     html += F("' id='");
     html += id;
@@ -312,11 +345,18 @@ void addFloatNumberBox(const String& id, float value, float min, float max)
 // ********************************************************************************
 void addTextBox(const String& id, const String&  value, int maxlength, bool readonly, bool required, const String& pattern)
 {
+  addTextBox(id, value, maxlength, readonly, required, pattern, F("wide"));
+}
+
+void addTextBox(const String& id, const String&  value, int maxlength, bool readonly, bool required, const String& pattern, const String& classname)
+{
   String html;
 
   html.reserve(96 + id.length() + value.length() + pattern.length());
 
-  html += F("<input class='wide' type='text' name='");
+  html += F("<input class='");
+  html += classname;
+  html += F("' type='text' name='");
   html += id;
   html += F("' maxlength=");
   html += maxlength;
@@ -511,7 +551,7 @@ void addPinSelect(boolean forI2C, String id,  int choice)
 // Helper function actually rendering dropdown list for addPinSelect()
 // ********************************************************************************
 void renderHTMLForPinSelect(String options[], int optionValues[], boolean forI2C, const String& id,  int choice, int count) {
-  addSelector_Head(id, false);
+  addSelector_Head(id);
 
   for (byte x = 0; x < count; x++)
   {
