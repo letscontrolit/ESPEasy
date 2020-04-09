@@ -19,7 +19,7 @@ static String serialHelper_getSerialTypeLabel(ESPeasySerialType::serialtype serT
   return label;
 }
 
-static void serialHelper_log_GpioDescription(int config_pin1, int config_pin2) {
+void serialHelper_log_GpioDescription(int config_pin1, int config_pin2) {
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     String log = F("Serial : ");
     log += serialHelper_getGpioDescription(config_pin1, config_pin2, " ");
