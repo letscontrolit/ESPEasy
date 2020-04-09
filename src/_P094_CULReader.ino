@@ -55,7 +55,7 @@ boolean Plugin_094(byte function, struct EventStruct *event, String& string) {
   switch (function) {
     case PLUGIN_DEVICE_ADD: {
       Device[++deviceCount].Number           = PLUGIN_ID_094;
-      Device[deviceCount].Type               = DEVICE_TYPE_DUAL;
+      Device[deviceCount].Type               = DEVICE_TYPE_SERIAL;
       Device[deviceCount].VType              = SENSOR_TYPE_STRING;
       Device[deviceCount].Ports              = 0;
       Device[deviceCount].PullUpOption       = false;
@@ -178,13 +178,7 @@ boolean Plugin_094(byte function, struct EventStruct *event, String& string) {
         P094_data->post_init();
         success = true;
 
-        if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-          String log = F("Serial : Init OK  ESP GPIO-pin RX:");
-          log += serial_rx;
-          log += F(" TX:");
-          log += serial_tx;
-          addLog(LOG_LEVEL_DEBUG, log);
-        }
+        serialHelper_log_GpioDescription(serial_rx, serial_tx);
       } else {
         clearPluginTaskData(event->TaskIndex);
       }

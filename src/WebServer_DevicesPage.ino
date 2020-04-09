@@ -431,6 +431,11 @@ void handle_devicess_ShowAllTasksTable(byte page)
               case DEVICE_TYPE_I2C:
                 addHtml(F("I2C"));
                 break;
+              case DEVICE_TYPE_SERIAL:
+              case DEVICE_TYPE_SERIAL_PLUS1:
+                addHtml(serialHelper_getSerialTypeLabel(&TempEvent));
+                break;
+
               default:
 
                 // Plugin has no custom port formatting, show default one.
@@ -514,7 +519,7 @@ void handle_devicess_ShowAllTasksTable(byte page)
               // fallthrough
             case DEVICE_TYPE_SERIAL:
             {
-              addHtml(serialHelper_getGpioDescription(Settings.TaskDevicePin1[x], Settings.TaskDevicePin2[x]));
+              addHtml(serialHelper_getGpioDescription(Settings.TaskDevicePin1[x], Settings.TaskDevicePin2[x], F("<BR>")));
               if (showpin3) {
                 html_BR();
               }

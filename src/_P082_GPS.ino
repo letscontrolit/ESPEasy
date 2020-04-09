@@ -397,14 +397,7 @@ boolean Plugin_082(byte function, struct EventStruct *event, String& string) {
 
       if (P082_data->init(serial_rx, serial_tx)) {
         success = true;
-
-        if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-          String log = F("GPS  : Init OK  ESP GPIO-pin RX:");
-          log += serial_rx;
-          log += F(" TX:");
-          log += serial_tx;
-          addLog(LOG_LEVEL_DEBUG, log);
-        }
+        serialHelper_log_GpioDescription(serial_rx, serial_tx);
 
         if (pps_pin != -1) {
           //          pinMode(pps_pin, INPUT_PULLUP);
