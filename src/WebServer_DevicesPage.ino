@@ -170,7 +170,7 @@ void addDeviceSelect(const String& name,  int choice)
 {
   String deviceName;
 
-  addSelector_Head(name, true);
+  addSelector_Head_reloadOnChange(name);
   addSelector_Item(F("- None -"), 0, false, false, "");
 
   for (byte x = 0; x <= deviceCount; x++)

@@ -54,7 +54,7 @@ boolean handle_custom(String path) {
     html_add_form();
 
     // create unit selector dropdown
-    addSelector_Head(F("unit"), true);
+    addSelector_Head_reloadOnChange(F("unit"));
     byte choice = Settings.Unit;
 
     for (NodesMap::iterator it = Nodes.begin(); it != Nodes.end(); ++it)

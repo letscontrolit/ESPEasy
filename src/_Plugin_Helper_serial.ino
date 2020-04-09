@@ -98,7 +98,7 @@ void serialHelper_addI2CuartSelectors(int address, int channel) {
     if (!addr_in_range) {
       address = SC16IS752_I2C_BASE_ADDR;
     }
-    addFormSelector(F("I2C Address"), F("i2cuart_addr"), SC16IS752_I2C_ADDRESSES, options, addresses, NULL, address, false);
+    addFormSelector(F("I2C Address"), F("i2cuart_addr"), SC16IS752_I2C_ADDRESSES, options, addresses, address);
   }  
   {
     if (channel != SC16IS752_CHANNEL_A && channel != SC16IS752_CHANNEL_B) {

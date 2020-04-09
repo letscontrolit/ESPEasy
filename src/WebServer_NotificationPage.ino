@@ -134,7 +134,7 @@ void handle_notifications() {
     addFormHeader(F("Notification Settings"));
     addRowLabel(F("Notification"));
     byte choice = Settings.Notification[notificationindex];
-    addSelector_Head(F("notification"), true);
+    addSelector_Head_reloadOnChange(F("notification"));
     addSelector_Item(F("- None -"), 0, false, false, "");
 
     for (byte x = 0; x <= notificationCount; x++)

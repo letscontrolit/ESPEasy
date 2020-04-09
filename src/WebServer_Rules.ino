@@ -96,7 +96,7 @@ void handle_rules() {
 
   html_TR_TD();
   addHtml(F("<form name = 'frmselect'>"));
-  addSelector(F("set"), RULESETS_MAX, options, optionValues, NULL, choice, true);
+  addSelector(F("set"), RULESETS_MAX, options, optionValues, NULL, choice, true, true);
   addHelpButton(F("Tutorial_Rules"));
 
   Rule_showRuleTextArea(fileName);
