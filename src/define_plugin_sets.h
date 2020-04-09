@@ -831,6 +831,7 @@ To create/register a plugin, you have to :
     #define USES_P090   // CCS811 TVOC/eCO2 Sensor 
     #define USES_P091	// SerSwitch
     #define USES_P093   // Mitsubishi Heat Pump
+    #define USES_P094   // CUL Reader
 #endif
 
 
@@ -970,7 +971,7 @@ To create/register a plugin, you have to :
 /******************************************************************************\
  * Libraries dependencies *****************************************************
 \******************************************************************************/
-#if defined(USES_P049) || defined(USES_P052) || defined(USES_P053) || defined(USES_P056) || defined(USES_P071) || defined(USES_P075) || defined(USES_P082) || defined(USES_P087)
+#if defined(USES_P049) || defined(USES_P052) || defined(USES_P053) || defined(USES_P056) || defined(USES_P071) || defined(USES_P075) || defined(USES_P082) || defined(USES_P087) || defined(USES_P094)
 // At least one plugin uses serial.
 #else
   // No plugin uses serial, so make sure software serial is not included.

@@ -222,7 +222,7 @@ void addFormSelector(const String& label,
                      boolean       reloadonchange)
 {
   addRowLabel_tr_id(label, id);
-  addSelector(id, optionCount, options, indices, attr, selectedIndex, reloadonchange);
+  addSelector(id, optionCount, options, indices, attr, selectedIndex, reloadonchange, true);
 }
 
 void addFormSelector_script(const String& label,
@@ -235,7 +235,7 @@ void addFormSelector_script(const String& label,
                             const String& onChangeCall)
 {
   addRowLabel_tr_id(label, id);
-  addSelector_Head(id, "", onChangeCall, false);
+  do_addSelector_Head(id, "", onChangeCall, false);
   addSelector_options(optionCount, options, indices, attr, selectedIndex);
   addSelector_Foot();
 }
