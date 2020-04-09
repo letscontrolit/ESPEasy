@@ -37,6 +37,8 @@ else:
     "USES_P085",  # AcuDC24x
     "USES_P087",  # Serial Proxy
 
+    "USES_P094",  # CUL Reader
+
     "USES_C016",  # Cache Controller
     "USES_C018",  # TTN/RN2483
 

@@ -334,6 +334,7 @@ boolean Plugin_085(byte function, struct EventStruct *event, String& string) {
       if (P085_data->init(serial_rx, serial_tx, P085_DEPIN,
                           p085_storageValueToBaudrate(P085_BAUDRATE),
                           P085_DEV_ID)) {
+        serialHelper_log_GpioDescription(serial_rx, serial_tx);
         success = true;
       } else {
         clearPluginTaskData(event->TaskIndex);

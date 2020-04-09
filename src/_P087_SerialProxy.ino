@@ -177,14 +177,7 @@ boolean Plugin_087(byte function, struct EventStruct *event, String& string) {
         LoadCustomTaskSettings(event->TaskIndex, P087_data->_lines, P87_Nlines, 0);
         P087_data->post_init();
         success = true;
-
-        if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-          String log = F("Serial : Init OK  ESP GPIO-pin RX:");
-          log += serial_rx;
-          log += F(" TX:");
-          log += serial_tx;
-          addLog(LOG_LEVEL_DEBUG, log);
-        }
+        serialHelper_log_GpioDescription(serial_rx, serial_tx);
       } else {
         clearPluginTaskData(event->TaskIndex);
       }
