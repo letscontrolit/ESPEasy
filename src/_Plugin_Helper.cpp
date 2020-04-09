@@ -63,7 +63,7 @@ bool pluginTaskData_initialized(taskIndex_t taskIndex) {
 }
 
 String getPluginCustomArgName(int varNr) {
-  String argName = F("plugin_custom_arg");
+  String argName = F("pc_arg");
   argName += varNr + 1;
   return argName;
 }

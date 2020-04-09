@@ -1,0 +1,13 @@
+.. csv-table::
+        :header: "Command", "Extra information"
+        :widths: 20, 30
+
+        "
+        ``culreader_write``
+        ","
+        Examples:
+
+        - ``culreader_write,brt``           Switch CULfw into Wireless M-Bus receive mode 'T'
+ 
+        "
+ 

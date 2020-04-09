@@ -72,7 +72,7 @@ boolean Plugin_080(byte function, struct EventStruct * event, String& string)
 
               // find all suitable devices
               addRowLabel(F("Device Address"));
-              addSelector_Head(F("p080_dev"), false);
+              addSelector_Head(F("p080_dev"));
               addSelector_Item("", -1, false, false, "");
               uint8_t tmpAddress[8];
               byte count = 0;

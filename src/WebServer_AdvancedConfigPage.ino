@@ -226,11 +226,11 @@ void addFormDstSelect(bool isStart, uint16_t choice) {
   }
   TimeChangeRule rule(isStart ? tmpstart : tmpend, 0);
   addRowLabel(weeklabel);
-  addSelector(weekid, 5, week, weekValues, NULL, rule.week, false);
+  addSelector(weekid, 5, week, weekValues, NULL, rule.week);
   html_BR();
-  addSelector(dowid, 7, dow, dowValues, NULL, rule.dow, false);
+  addSelector(dowid, 7, dow, dowValues, NULL, rule.dow);
   html_BR();
-  addSelector(monthid, 12, month, monthValues, NULL, rule.month, false);
+  addSelector(monthid, 12, month, monthValues, NULL, rule.month);
 
   addFormNumericBox(hourlabel, hourid, rule.hour, 0, 23);
   addUnit(isStart ? F("hour &#x21b7;") : F("hour &#x21b6;"));
@@ -253,7 +253,7 @@ void addLogLevelSelect(const String& name, int choice)
   for (int i = 0; i < LOG_LEVEL_NRELEMENTS; ++i) {
     options[i + 1] = getLogLevelDisplayStringFromIndex(i, optionValues[i + 1]);
   }
-  addSelector(name, LOG_LEVEL_NRELEMENTS + 1, options, optionValues, NULL, choice, false);
+  addSelector(name, LOG_LEVEL_NRELEMENTS + 1, options, optionValues, NULL, choice);
 }
 
 void addFormLogFacilitySelect(const String& label, const String& id, int choice)
@@ -269,7 +269,7 @@ void addLogFacilitySelect(const String& name, int choice)
     F("Local2"), F("Local3"), F("Local4"),   F("Local5"),  F("Local6"),  F("Local7") };
   int optionValues[12] = { 0, 1, 3, 5, 16, 17, 18, 19, 20, 21, 22, 23 };
 
-  addSelector(name, 12, options, optionValues, NULL, choice, false);
+  addSelector(name, 12, options, optionValues, NULL, choice);
 }
 
 #endif // ifdef WEBSERVER_ADVANCED
