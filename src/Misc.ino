@@ -1162,9 +1162,10 @@ void ResetFactory()
   fname=FILE_SECURITY;
   InitFile(fname.c_str(), 4096);
 
+  #ifndef NOTIFIER_SET_NONE
   fname=FILE_NOTIFICATION;
   InitFile(fname.c_str(), 4096);
-
+  #endif
   fname=FILE_RULES;
   InitFile(fname.c_str(), 0);
 
@@ -1296,7 +1297,8 @@ void ResetFactory()
   ControllerSettings.Port = DEFAULT_PORT;
   setControllerUser(0, ControllerSettings, F(DEFAULT_CONTROLLER_USER));
   setControllerPass(0, ControllerSettings, F(DEFAULT_CONTROLLER_PASS));
-  SaveControllerSettings(0, ControllerSettings);
+ControllerSettings.DeleteOldest = DEFAULT_DELETE_OLDEST; //MFD: i want to delete oldest MQTT messages
+   SaveControllerSettings(0, ControllerSettings);
 #endif
 
   SaveSettings();
