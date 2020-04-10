@@ -35,6 +35,8 @@ Please note that scrolling may need more resources of the ESP, which can have an
 
 The plugin allows for a header and footer line, which may show some user selectable information.
 
+Checkbox 'Wake display on receiving text' (default: on) allows to not wake up the display when a text is sent from a remote source, and Display Timeout is set.
+
 All user defined texts may contain references to system variables or task values which will be interpreted when displayed on screen.
 
 For example: ``[bme#T#D2.1] {D}C [bme#H]%``

@@ -19,14 +19,22 @@ static String serialHelper_getSerialTypeLabel(ESPeasySerialType::serialtype serT
   return label;
 }
 
-static String serialHelper_getGpioDescription(int config_pin1, int config_pin2) {
+void serialHelper_log_GpioDescription(int config_pin1, int config_pin2) {
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+    String log = F("Serial : ");
+    log += serialHelper_getGpioDescription(config_pin1, config_pin2, " ");
+    addLog(LOG_LEVEL_DEBUG, log);
+  }
+}
+
+static String serialHelper_getGpioDescription(int config_pin1, int config_pin2, const String& newline) {
   String result;
   result.reserve(20);
   switch (ESPeasySerialType::getSerialType(config_pin1, config_pin2)) {
     case ESPeasySerialType::serialtype::sc16is752:
     {
       result += formatToHex(config_pin1);
-      result += F("<BR>");
+      result += newline;
       result += F(" ch: ");
       result += config_pin2 == 0 ? F("A") : F("B");
       return result;
@@ -39,7 +47,7 @@ static String serialHelper_getGpioDescription(int config_pin1, int config_pin2) 
     {
       result += F("RX: ");
       result += config_pin1;
-      result += F("<BR>");
+      result += newline;
       result += F("TX: ");
       result += config_pin2;
       break;
@@ -98,7 +106,7 @@ void serialHelper_addI2CuartSelectors(int address, int channel) {
     if (!addr_in_range) {
       address = SC16IS752_I2C_BASE_ADDR;
     }
-    addFormSelector(F("I2C Address"), F("i2cuart_addr"), SC16IS752_I2C_ADDRESSES, options, addresses, NULL, address, false);
+    addFormSelector(F("I2C Address"), F("i2cuart_addr"), SC16IS752_I2C_ADDRESSES, options, addresses, address);
   }  
   {
     if (channel != SC16IS752_CHANNEL_A && channel != SC16IS752_CHANNEL_B) {

@@ -127,6 +127,10 @@
 #ifndef DEFAULT_SERVER_USEDNS
 #define DEFAULT_SERVER_USEDNS false             // true: Use hostname.  false: use IP
 #endif
+#ifndef DEFAULT_USE_EXTD_CONTROLLER_CREDENTIALS
+#define DEFAULT_USE_EXTD_CONTROLLER_CREDENTIALS   false                     // true: Allow longer user credentials for controllers
+#endif
+
 #ifndef DEFAULT_PORT
 #define DEFAULT_PORT        8080                // Enter your Server port value
 #endif

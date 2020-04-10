@@ -126,6 +126,16 @@
 
 
 // ***********************************************************************
+// * Extended SecuritySettings
+// ***********************************************************************
+#ifndef EXT_SECURITY_MAX_USER_LENGTH
+  #define EXT_SECURITY_MAX_USER_LENGTH        128
+#endif
+#ifndef EXT_SECURITY_MAX_PASS_LENGTH
+  #define EXT_SECURITY_MAX_PASS_LENGTH        128
+#endif
+
+// ***********************************************************************
 // * Other operational limits
 // ***********************************************************************
 
