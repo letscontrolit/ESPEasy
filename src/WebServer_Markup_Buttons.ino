@@ -35,7 +35,7 @@ void addButtonWithSvg(const String& url, const String& label, const String& svgP
     altText.reserve(7 + label.length());
     altText = F("' alt='");
     altText += label;
-    addHtml(label);
+    addHtml(altText);
   }
   #endif 
 

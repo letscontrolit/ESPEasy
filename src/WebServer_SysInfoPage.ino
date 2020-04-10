@@ -434,10 +434,7 @@ void handle_sysinfo_Firmware() {
       addHtml(F("passed."));
     }
   }
-  addRowLabel_copy(getLabel(LabelType::BUILD_TIME));
-  addHtml(String(CRCValues.compileDate));
-  addHtml(" ");
-  addHtml(String(CRCValues.compileTime));
+  addRowLabelValue_copy(LabelType::BUILD_TIME);
 
   addRowLabel_copy(getLabel(LabelType::BINARY_FILENAME));
 
@@ -665,10 +662,12 @@ void handle_sysinfo_Storage() {
     html_TD();
     addHtml(F("(offset / size per item / index)"));
 
-    for (int st = 0; st < SettingsType_MAX; ++st) {
-      SettingsType settingsType = static_cast<SettingsType>(st);
+    for (int st = 0; st < SettingsType::SettingsType_MAX; ++st) {
+      SettingsType::Enum settingsType = static_cast<SettingsType::Enum>(st);
       html_TR_TD();
-      addHtml(getSettingsTypeString(settingsType));
+      addHtml(SettingsType::getSettingsTypeString(settingsType));
+      html_BR();
+      addHtml(SettingsType::getSettingsFileName(settingsType));
       html_TD();
       getStorageTableSVG(settingsType);
     }

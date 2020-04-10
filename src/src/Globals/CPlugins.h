@@ -4,6 +4,7 @@
 #include <map>
 #include <vector>
 #include "../DataStructs/ESPEasyLimits.h"
+#include "../DataStructs/ControllerSettingsStruct.h"
 #include "../../ESPEasy_plugindefs.h"
 
 
