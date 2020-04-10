@@ -87,8 +87,7 @@ void initI2C() {
   // configure hardware pins according to eeprom settings.
   if (Settings.Pin_i2c_sda != -1)
   {
-    String log = F("INIT : I2C");
-    addLog(LOG_LEVEL_INFO, log);
+    addLog(LOG_LEVEL_INFO, F("INIT : I2C"));
     Wire.setClock(Settings.I2C_clockSpeed);
     Wire.begin(Settings.Pin_i2c_sda, Settings.Pin_i2c_scl);
 
@@ -120,8 +119,7 @@ void initI2C() {
 
       if (status & 0x1)
       {
-        String log = F("INIT : Reset by WD!");
-        addLog(LOG_LEVEL_ERROR, log);
+        addLog(LOG_LEVEL_ERROR, F("INIT : Reset by WD!"));
         lastBootCause = BOOT_CAUSE_EXT_WD;
       }
     }

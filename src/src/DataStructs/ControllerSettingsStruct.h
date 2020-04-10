@@ -47,36 +47,47 @@ class WiFiUDP;
 # define CONTROLLER_CLIENTTIMEOUT_DFLT     100
 #endif // ifndef CONTROLLER_CLIENTTIMEOUT_DFLT
 
-
-// ********************************************************************************
-//   IDs of controller settings, used to generate web forms
-// ********************************************************************************
-
-#define CONTROLLER_USE_DNS                  1
-#define CONTROLLER_HOSTNAME                 2
-#define CONTROLLER_IP                       3
-#define CONTROLLER_PORT                     4
-#define CONTROLLER_USER                     5
-#define CONTROLLER_PASS                     6
-#define CONTROLLER_MIN_SEND_INTERVAL        7
-#define CONTROLLER_MAX_QUEUE_DEPTH          8
-#define CONTROLLER_MAX_RETRIES              9
-#define CONTROLLER_FULL_QUEUE_ACTION        10
-#define CONTROLLER_CHECK_REPLY              12
-#define CONTROLLER_SUBSCRIBE                13
-#define CONTROLLER_PUBLISH                  14
-#define CONTROLLER_LWT_TOPIC                15
-#define CONTROLLER_LWT_CONNECT_MESSAGE      16
-#define CONTROLLER_LWT_DISCONNECT_MESSAGE   17
-#define CONTROLLER_SEND_LWT                 18
-#define CONTROLLER_WILL_RETAIN              19
-#define CONTROLLER_CLEAN_SESSION            20
-#define CONTROLLER_TIMEOUT                  21
-#define CONTROLLER_SAMPLE_SET_INITIATOR     22
-#define CONTROLLER_ENABLED                  23 // Keep this as last, is used to loop over all parameters
+#ifndef CONTROLLER_DEFAULT_CLIENTID
+# define CONTROLLER_DEFAULT_CLIENTID  "%sysname%_%unit%"
+#endif // ifndef CONTROLLER_DEFAULT_CLIENTID
 
 struct ControllerSettingsStruct
 {
+  // ********************************************************************************
+  //   IDs of controller settings, used to generate web forms
+  // ********************************************************************************
+  enum VarType {
+    CONTROLLER_USE_DNS = 0,                   // PLace this before HOSTNAME/IP
+    CONTROLLER_USE_EXTENDED_CREDENTIALS = 1,  // Place this before USER/PASS
+    CONTROLLER_HOSTNAME,
+    CONTROLLER_IP,
+    CONTROLLER_PORT,
+    CONTROLLER_USER,
+    CONTROLLER_PASS,
+    CONTROLLER_MIN_SEND_INTERVAL,
+    CONTROLLER_MAX_QUEUE_DEPTH,
+    CONTROLLER_MAX_RETRIES,
+    CONTROLLER_FULL_QUEUE_ACTION,
+    CONTROLLER_CHECK_REPLY,
+    CONTROLLER_CLIENT_ID,
+    CONTROLLER_UNIQUE_CLIENT_ID_RECONNECT,
+    CONTROLLER_RETAINFLAG,
+    CONTROLLER_SUBSCRIBE,
+    CONTROLLER_PUBLISH,
+    CONTROLLER_LWT_TOPIC,
+    CONTROLLER_LWT_CONNECT_MESSAGE,
+    CONTROLLER_LWT_DISCONNECT_MESSAGE,
+    CONTROLLER_SEND_LWT,
+    CONTROLLER_WILL_RETAIN,
+    CONTROLLER_CLEAN_SESSION,
+    CONTROLLER_TIMEOUT,
+    CONTROLLER_SAMPLE_SET_INITIATOR,
+
+    // Keep this as last, is used to loop over all parameters
+    CONTROLLER_ENABLED
+  };
+
+
   ControllerSettingsStruct();
 
   void      reset();
@@ -99,14 +110,23 @@ struct ControllerSettingsStruct
   String    getHostPortString() const;
 
   // MQTT_flags defaults to 0, keep in mind when adding bit lookups.
-  bool mqtt_cleanSession() const;
-  void mqtt_cleanSession(bool value);
+  bool      mqtt_cleanSession() const;
+  void      mqtt_cleanSession(bool value);
 
-  bool mqtt_sendLWT() const;
-  void mqtt_sendLWT(bool value);
+  bool      mqtt_sendLWT() const;
+  void      mqtt_sendLWT(bool value);
 
-  bool mqtt_willRetain() const;
-  void mqtt_willRetain(bool value);
+  bool      mqtt_willRetain() const;
+  void      mqtt_willRetain(bool value);
+
+  bool      mqtt_uniqueMQTTclientIdReconnect() const;
+  void      mqtt_uniqueMQTTclientIdReconnect(bool value);
+
+  bool      mqtt_retainFlag() const;
+  void      mqtt_retainFlag(bool value);
+
+  bool      useExtendedCredentials() const;
+  void      useExtendedCredentials(bool value);
 
   boolean      UseDNS;
   byte         IP[4];
@@ -125,6 +145,7 @@ struct ControllerSettingsStruct
   boolean      MustCheckReply;     // When set to false, a sent message is considered always successful.
   taskIndex_t  SampleSetInitiator; // The first task to start a sample set.
   uint32_t     MQTT_flags;         // Various flags for MQTT controllers
+  char         ClientID[65];       // Used to define the Client ID used by the controller
 
 private:
 
