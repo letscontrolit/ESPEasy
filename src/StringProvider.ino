@@ -174,8 +174,8 @@ String getValue(LabelType::Enum label) {
     case LabelType::SYSTEM_LIBRARIES:       return getSystemLibraryString();
     case LabelType::PLUGIN_COUNT:           return String(deviceCount + 1);
     case LabelType::PLUGIN_DESCRIPTION:     return getPluginDescriptionString();
-    case LabelType::BUILD_TIME:             break;
-    case LabelType::BINARY_FILENAME:        break;
+    case LabelType::BUILD_TIME:             return String(CRCValues.compileDate) + " " + String(CRCValues.compileTime);
+    case LabelType::BINARY_FILENAME:        return String(CRCValues.binaryFilename);    
 
     case LabelType::SYSLOG_LOG_LEVEL:       return getLogLevelDisplayString(Settings.SyslogLevel);
     case LabelType::SERIAL_LOG_LEVEL:       return getLogLevelDisplayString(getSerialLogLevel());
