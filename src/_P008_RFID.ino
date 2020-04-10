@@ -113,12 +113,15 @@ boolean Plugin_008(byte function, struct EventStruct *event, String& string)
               }
               break;
             }
+            
+            if (loglevelActiveFor(LOG_LEVEL_INFO)) {
             // write log
-            String log = F("RFID : Tag: ");
-            log += (unsigned long) Plugin_008_keyBuffer;
-            log += F(" Bits: ");
-            log += Plugin_008_bitCount;
-            addLog(LOG_LEVEL_INFO, log);
+              String log = F("RFID : Tag: ");
+              log += (unsigned long) Plugin_008_keyBuffer;
+              log += F(" Bits: ");
+              log += Plugin_008_bitCount;
+              addLog(LOG_LEVEL_INFO, log);
+            }
             // reset everything
             Plugin_008_keyBuffer = 0;
             Plugin_008_bitCount = 0;
