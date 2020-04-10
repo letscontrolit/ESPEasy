@@ -47,7 +47,6 @@ boolean Plugin_040(byte function, struct EventStruct *event, String& string)
         break;
       }
 
-
     case PLUGIN_INIT:
       {
         Plugin_040_init = true;
@@ -56,6 +55,19 @@ boolean Plugin_040(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_TIMER_IN:
+      {
+        if (Plugin_040_init) {
+            // Reset card id on timeout
+            UserVar[event->BaseVarIndex] = 0;
+            UserVar[event->BaseVarIndex + 1] = 0;
+            String log = F("RFID : Removed Tag");
+            addLog(LOG_LEVEL_INFO, log);
+            sendData(event);
+            success = true;
+        }
+        break;
+      }
 
     case PLUGIN_SERIAL_IN:
       {
@@ -125,14 +137,21 @@ boolean Plugin_040(byte function, struct EventStruct *event, String& string)
               event->sensorType = Device[DeviceIndex].VType;
               // endof workaround
 
-              unsigned long key = 0;
+              unsigned long key = 0, old_key = 0;
+              old_key = ((uint32_t) UserVar[event->BaseVarIndex]) | ((uint32_t) UserVar[event->BaseVarIndex + 1])<<16;
               for (byte i = 1; i < 5; i++) key = key | (((unsigned long) code[i] << ((4 - i) * 8)));
-              UserVar[event->BaseVarIndex] = (key & 0xFFFF);
-              UserVar[event->BaseVarIndex + 1] = ((key >> 16) & 0xFFFF);
-              String log = F("RFID : Tag: ");
+              String log = F("RFID : ");
+              if (old_key != key) {
+                UserVar[event->BaseVarIndex] = (key & 0xFFFF);
+                UserVar[event->BaseVarIndex + 1] = ((key >> 16) & 0xFFFF);
+                sendData(event);
+                log += F("New Tag: ");
+              } else {
+                log += F("Old Tag: ");
+              }
               log += key;
               addLog(LOG_LEVEL_INFO, log);
-              sendData(event);
+              setPluginTaskTimer(500, event->TaskIndex, event->Par1);
             }
           }
           success = true;
