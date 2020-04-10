@@ -98,6 +98,7 @@
     :red:`Internal`","
     Switch the node to deep sleep.
     Max sleep time depends on library version and differs from roughly 71 minutes to 3h46.
+    If you specify a Min sleep time of 0, you'll have to wake the device yourself by pulling RST to GND. 
 
     ``DeepSleep,<sleep time in seconds>``"
     "
