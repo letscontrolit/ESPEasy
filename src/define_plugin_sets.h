@@ -756,7 +756,6 @@ To create/register a plugin, you have to :
     #define USES_P063   // TTP229_KeyPad
     #define USES_P073   // 7DG
     #define USES_P079   // Wemos Motoshield
-    #define USES_P092   // DL-Bus
 #endif
 
 
@@ -831,6 +830,7 @@ To create/register a plugin, you have to :
     #define USES_P089   // Ping
     #define USES_P090   // CCS811 TVOC/eCO2 Sensor 
     #define USES_P091	// SerSwitch
+    #define USES_P092   // DL-Bus
     #define USES_P093   // Mitsubishi Heat Pump
     #define USES_P094   // CUL Reader
 #endif
