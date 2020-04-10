@@ -39,7 +39,6 @@ fi
 
 FBINDIR="${TMP_DIST}/factory_bin"
 mkdir -p ${TMP_DIST}/memstats
-echo ${FBINDIR}
 mkdir -p ${FBINDIR}
 
 # Must look into all possible env definitions.
