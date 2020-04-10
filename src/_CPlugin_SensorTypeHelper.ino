@@ -101,7 +101,7 @@ void sensorTypeHelper_webformLoad(struct EventStruct *event, byte pconfigIndex, 
     PCONFIG(pconfigIndex) = choice;
   }
   addRowLabel(F("Output Data Type"));
-  addSelector_Head(PCONFIG_LABEL(pconfigIndex), false);
+  addSelector_Head(PCONFIG_LABEL(pconfigIndex));
 
   for (byte x = 0; x < optionCount; x++)
   {

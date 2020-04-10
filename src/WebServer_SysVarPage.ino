@@ -42,7 +42,7 @@ void handle_sysvars() {
 #if defined(ESP8266)
   addSysVar_enum_html(SystemVariables::MAC_INT);
 #endif // if defined(ESP8266)
-  addSysVar_enum_html(SystemVariables::IP4);
+  addSysVar_enum_html(SystemVariables::IP);
   addSysVar_enum_html(SystemVariables::IP4);
   addSysVar_enum_html(SystemVariables::RSSI);
   addSysVar_enum_html(SystemVariables::SSID);

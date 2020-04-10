@@ -86,7 +86,7 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
 
         // find all suitable devices
         addRowLabel(F("Device Address"));
-        addSelector_Head(F("p004_dev"), false);
+        addSelector_Head(F("p004_dev"));
         addSelector_Item("", -1, false, false, "");
         uint8_t tmpAddress[8];
         byte    count = 0;
