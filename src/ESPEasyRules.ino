@@ -621,13 +621,14 @@ void processMatchedRule(String& action, String& event,
       }
     }
   } else {
-    split = lcAction.indexOf(F("if ")); // check for optional "if" condition
+     // check for optional "if" condition
+    split = lcAction.indexOf(F("if"));
 
     if (split != -1) {
       if (ifBlock < RULES_IF_MAX_NESTING_LEVEL) {
         if (isCommand) {
           ifBlock++;
-          String check = lcAction.substring(split + 3);
+          String check = lcAction.substring(split + 2);
           check.trim();
           condition[ifBlock - 1] = conditionMatchExtended(check);
           ifBranche[ifBlock - 1] = true;
