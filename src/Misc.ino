@@ -2686,6 +2686,10 @@ bool OTA_possible(uint32_t& maxSketchSize, bool& use2step) {
   maxSketchSize -= 16; // Must leave 16 bytes at the end.
   if (maxSketchSize > MAX_SKETCH_SIZE) maxSketchSize = MAX_SKETCH_SIZE;
   return otaPossible;
+#elif defined(ESP32)
+  maxSketchSize = MAX_SKETCH_SIZE;
+  use2step = false;
+  return true;
 #else
   return false;
 #endif
