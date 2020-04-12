@@ -92,6 +92,17 @@ boolean Plugin_017(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_TIMER_IN:
+      {
+        // Reset card id on timeout
+        UserVar[event->BaseVarIndex] = 0;
+        UserVar[event->BaseVarIndex + 1] = 0;
+        addLog(LOG_LEVEL_INFO, F("RFID : Removed Tag"));
+        sendData(event);
+        success = true;
+        break;
+      }
+
     case PLUGIN_TEN_PER_SECOND:
       {
         static unsigned long tempcounter = 0;
@@ -134,15 +145,30 @@ boolean Plugin_017(byte function, struct EventStruct *event, String& string)
               key <<= 8;
               key += uid[i];
             }
-            UserVar[event->BaseVarIndex] = (key & 0xFFFF);
-            UserVar[event->BaseVarIndex + 1] = ((key >> 16) & 0xFFFF);
-            String log = F("PN532: Tag: ");
-            log += key;
-            tempcounter++;
-            log += ' ';
-            log += tempcounter;
-            addLog(LOG_LEVEL_INFO, log);
-            sendData(event);
+            unsigned long old_key = ((uint32_t) UserVar[event->BaseVarIndex]) | ((uint32_t) UserVar[event->BaseVarIndex + 1])<<16;
+            bool new_key = false;
+            if (old_key != key) {
+              UserVar[event->BaseVarIndex] = (key & 0xFFFF);
+              UserVar[event->BaseVarIndex + 1] = ((key >> 16) & 0xFFFF);
+              new_key = true;
+            }
+
+            if (loglevelActiveFor(LOG_LEVEL_INFO)) {            
+              String log = F("PN532: ");
+              if (new_key) {
+                log += F("New Tag: ");
+              } else {
+                log += F("Old Tag: "); 
+              }
+              log += key;
+              tempcounter++;
+              log += ' ';
+              log += tempcounter;
+              addLog(LOG_LEVEL_INFO, log);
+            }
+            
+            if (new_key) sendData(event);
+            setPluginTaskTimer(500, event->TaskIndex, event->Par1);
           }
         }
         break;
