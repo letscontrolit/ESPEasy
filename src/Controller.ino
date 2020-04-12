@@ -246,17 +246,17 @@ bool MQTTConnect(controllerIndex_t controller_idx)
   log += subscribeTo;
   addLog(LOG_LEVEL_INFO, log);
 
-  if (MQTTclient.publish(LWTTopic.c_str(), LWTMessageConnect.c_str(), 1)) {
-    updateMQTTclient_connected();
-    statusLED(true);
-    mqtt_reconnect_count = 0;
+  updateMQTTclient_connected();
+  statusLED(true);
+  mqtt_reconnect_count = 0;
 
-    // call all installed controller to publish autodiscover data
-    if (MQTTclient_should_reconnect) { CPluginCall(CPlugin::Function::CPLUGIN_GOT_CONNECTED, 0); }
-    MQTTclient_should_reconnect = false;
-    return true; // end loop if succesfull
-  }
-  return false;
+  // call all installed controller to publish autodiscover data
+  if (MQTTclient_should_reconnect) { CPluginCall(CPlugin::Function::CPLUGIN_GOT_CONNECTED, 0); }
+  MQTTclient_should_reconnect = false;
+
+  if (ControllerSettings.mqtt_sendLWT()) { MQTTclient.publish(LWTTopic.c_str(), LWTMessageConnect.c_str(), willRetain); }
+
+  return true;
 }
 
 String getMQTTclientID(const ControllerSettingsStruct& ControllerSettings) {
