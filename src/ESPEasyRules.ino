@@ -590,7 +590,7 @@ void processMatchedRule(String& action, String& event,
     }
   }
   int split =
-    lcAction.indexOf(F("elseif ")); // check for optional "elseif" condition
+    lcAction.indexOf(F("elseif")); // check for optional "elseif" condition
 
   if (split != -1) {
     // Found "elseif" condition
@@ -602,7 +602,7 @@ void processMatchedRule(String& action, String& event,
           ifBranche[ifBlock - 1] = false;
         }
         else {
-          String check = lcAction.substring(split + 7);
+          String check = lcAction.substring(split + 6);
           check.trim();
           condition[ifBlock - 1] = conditionMatchExtended(check);
 #ifndef BUILD_NO_DEBUG
