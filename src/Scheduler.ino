@@ -419,6 +419,7 @@ void process_plugin_task_timer(unsigned long id) {
   const systemTimerStruct timer_data = systemTimers[id];
   struct EventStruct TempEvent;
   TempEvent.TaskIndex = timer_data.TaskIndex;
+  TempEvent.BaseVarIndex =  timer_data.TaskIndex * VARS_PER_TASK;
   TempEvent.Par1      = timer_data.Par1;
   TempEvent.Par2      = timer_data.Par2;
   TempEvent.Par3      = timer_data.Par3;
@@ -440,7 +441,8 @@ void process_plugin_task_timer(unsigned long id) {
    */
   systemTimers.erase(id);
 
-  if (validDeviceIndex(deviceIndex)) {
+  if (validDeviceIndex(deviceIndex) && validUserVarIndex(TempEvent.BaseVarIndex)) {
+    TempEvent.sensorType = Device[deviceIndex].VType;
     String dummy;
     Plugin_ptr[deviceIndex](PLUGIN_TIMER_IN, &TempEvent, dummy);
   }
