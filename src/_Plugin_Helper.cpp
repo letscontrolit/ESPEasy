@@ -107,7 +107,7 @@ String pluginWebformShowValue(taskIndex_t taskIndex, byte varNr, const String& l
   return result;
 }
 
-bool pluginOptionalTaskIndexArgumentMatch(taskIndex_t taskIndex, byte paramNr, const String& string) {
+bool pluginOptionalTaskIndexArgumentMatch(taskIndex_t taskIndex, const String& string, byte paramNr) {
   if (!validTaskIndex(taskIndex)) {
     return false;
   }

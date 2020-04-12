@@ -93,8 +93,8 @@ String pluginWebformShowValue(taskIndex_t   taskIndex,
 // When given taskIndex is invalid, return value is false.
 // Return if parameter at given paramNr matches given taskIndex.
 bool pluginOptionalTaskIndexArgumentMatch(taskIndex_t   taskIndex,
-                                          byte          paramNr,
-                                          const String& string);
+                                          const String& string,
+                                          byte          paramNr);
 
 
 #endif // PLUGIN_HELPER_H
