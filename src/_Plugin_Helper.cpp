@@ -102,3 +102,16 @@ String pluginWebformShowValue(taskIndex_t taskIndex, byte varNr, const String& l
   }
   return result;
 }
+
+
+bool pluginOptionalTaskIndexArgumentMatch(taskIndex_t taskIndex, byte paramNr, const String& string) {
+  if (!validTaskIndex(taskIndex)) {
+    return false;
+  }
+  const taskIndex_t found_taskIndex = parseCommandArgumentTaskIndex(string, paramNr);
+  if (!validTaskIndex(found_taskIndex)) {
+    // Optional parameter not present
+    return true;
+  }
+  return (found_taskIndex == taskIndex);
+}

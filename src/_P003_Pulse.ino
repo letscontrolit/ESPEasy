@@ -189,28 +189,51 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
         break;
       }
 
-      case PLUGIN_WRITE:
+     case PLUGIN_WRITE:
       {
         String command = parseString(string, 1);
+
         if (command == F("resetpulsecounter"))
         {
+          // Valid commands:  
+          // - resetpulsecounter
+          // - resetpulsecounter,taskindex
+
           // Allow for an optional taskIndex parameter. When not given it will take the first task with this plugin.
-          const taskIndex_t taskIndex = parseCommandArgumentTaskIndex(string, 1);
-          if (validTaskIndex(taskIndex)) {
-            if (event->TaskIndex != taskIndex) {
-              break;
-            }
+          if (!pluginOptionalTaskIndexArgumentMatch(event->TaskIndex, string, 1)) {
+            break;
           }
-          Plugin_003_pulseCounter[event->TaskIndex] = 0;
+        Plugin_003_pulseCounter[event->TaskIndex]      = 0;
           Plugin_003_pulseTotalCounter[event->TaskIndex] = 0;
+        Plugin_003_pulseTime[event->TaskIndex]         = 0;
+          
           success = true; // Command is handled.
+        }
+
+        if (command == F("setpulsecountertotal"))
+        {
+          // Valid commands:  
+          // - setpulsecountertotal,value
+          // - setpulsecountertotal,value,taskindex
+
+          // First check if (optional) task index matches.
+          if (!pluginOptionalTaskIndexArgumentMatch(event->TaskIndex, string, 2)) {
+            break;
+          }
+
+          int par1;
+
+          if (validIntFromString(parseString(string, 2), par1))
+          {
+            Plugin_003_pulseTotalCounter[event->TaskIndex] = par1;
+          success                                        = true; // Command is handled.
+          }
         }
         break;
       }
   }
   return success;
 }
-
 
 /*********************************************************************************************\
  * Check Pulse Counters (called from irq handler)

@@ -83,6 +83,12 @@ String getPluginCustomArgName(int varNr);
 // Note that the varNr of the custom values should not conflict with the existing variable numbers (e.g. start at VARS_PER_TASK)
 String pluginWebformShowValue(taskIndex_t taskIndex, byte varNr, const String& label, const String& value, bool addTrailingBreak = false);
 
+// Check if given parameter nr matches with given taskIndex.
+// paramNr == 0 -> command, paramNr == 1 -> 1st parameter
+// When there is no parameter at given parameter position, this function will return true. (as it is an optional parameter)
+// When given taskIndex is invalid, return value is false.
+// Return if parameter at given paramNr matches given taskIndex.
+bool pluginOptionalTaskIndexArgumentMatch(taskIndex_t taskIndex, byte paramNr, const String& string);
 
 
 

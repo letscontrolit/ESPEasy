@@ -3,8 +3,14 @@
         :widths: 20, 30
 
         "
-        ``resetpulsecounter,<taskIndex>``
+        ``ResetPulseCounter,<taskIndex>``
         ","
         Reset the counters (pulse counter and total counter) of P003 Pulse Counter.
         The taskIndex parameter is optional.  When not given, only the first task with this plugin will be cleared.
+        "
+        "
+        ``SetPulseCounterTotal,value,<taskIndex>``
+        ","
+        Set the value of the total count of P003 Pulse Counter.
+        The taskIndex parameter is optional.  When not given, only the total count of the first task with this plugin will be set.
         "
