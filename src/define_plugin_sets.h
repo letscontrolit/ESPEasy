@@ -832,7 +832,8 @@ To create/register a plugin, you have to :
     #define USES_P091	// SerSwitch
     #define USES_P092   // DL-Bus
     #define USES_P093   // Mitsubishi Heat Pump
-    #define USES_P094   // CUL Reader
+    //#define USES_P094  // CUL Reader
+    //#define USES_P095  // TFT ILI9341
 #endif
 
 

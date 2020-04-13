@@ -37,7 +37,9 @@ if [ -d "docs/build" ]; then
   cp -r docs/build/* ${TMP_DIST}/docs/
 fi
 
+FBINDIR="${TMP_DIST}/factory_bin"
 mkdir -p ${TMP_DIST}/memstats
+mkdir -p ${FBINDIR}
 
 # Must look into all possible env definitions.
 # Exclude so called "spec_" (special) builds
@@ -62,6 +64,7 @@ do
   fi
 
   FIRMWARE_BIN=`echo "${BINARY_PATH}/${ENV}/firmware.bin"`
+  FIRMWARE_FACTORY_BIN=`echo "${BINARY_PATH}/${ENV}/firmware-factory.bin"`
 
   if [ -f $FIRMWARE_BIN ]; then
     FILESIZE=$(stat -c%s `echo "${FIRMWARE_BIN}"` )
@@ -72,6 +75,12 @@ do
       cp ${FIRMWARE_BIN} $BIN
       python2 crc2.py $BIN
       mv $BIN "${TMP_DIST}/bin/ESP_Easy_${VERSION}_${ENV}.bin"
+      if [ -f $FIRMWARE_FACTORY_BIN ]; then
+        FBIN=${BINARY_PATH}/${ENV}/ESP_Easy_${VERSION}_${ENV}_factory.bin
+        cp ${FIRMWARE_FACTORY_BIN} $FBIN
+        #python2 crc2.py $FBIN
+        mv $FBIN "${FBINDIR}/ESP_Easy_${VERSION}_${ENV}_factory.bin"
+      fi
     else
       echo "FAILED: too large $FILESIZE > $MAX_FILESIZE Bytes. (${ENV})" >> ${BUILD_LOG}
     fi
