@@ -328,13 +328,17 @@ void MitsubishiHeatpumpIR::sendMitsubishi(IRSender& IR, uint8_t powerMode, uint8
 
 #ifdef IR_SEND_TIME
   if (_mitsubishiModel == MITSUBISHI_KJ) {
+#ifdef DEBUG
     Serial.printf("Send time %02d:%02d day %d --> %x\n", sendHour, sendMinute, sendWeekday, (sendHour * 60 + sendMinute)/10);
+#endif
     MitsubishiTemplate[10] = (uint8_t)((sendHour * 60 + sendMinute)/10);
     // Sunday is start if week , value 1
     MitsubishiTemplate[14] = TempTranslate[( sendWeekday - 1 ) % 7];
   }
   else {
+#ifdef DEBUG
     Serial.printf("Send time %02d:%02d --> %x\n", sendHour, sendMinute, (sendHour * 60 + sendMinute)/6);
+#endif
     MitsubishiTemplate[10] = (uint8_t)((sendHour * 60 + sendMinute)/6);
   }
 #endif
