@@ -260,7 +260,12 @@ void saveControllerParameterForm(ControllerSettingsStruct& ControllerSettings, c
       setControllerUser(controllerindex, ControllerSettings, web_server.arg(internalName));
       break;
     case ControllerSettingsStruct::CONTROLLER_PASS:
-      setControllerPass(controllerindex, ControllerSettings, web_server.arg(internalName));
+      {
+        String password;
+        if (getFormPassword(internalName, password)) {
+          setControllerPass(controllerindex, ControllerSettings, password);
+        }
+      }
       break;
 
     case ControllerSettingsStruct::CONTROLLER_MIN_SEND_INTERVAL:

@@ -53,7 +53,7 @@ String Command_Wifi_Scan(struct EventStruct *event, const char *Line)
 
 String Command_Wifi_Connect(struct EventStruct *event, const char *Line)
 {
-  WiFiConnectRelaxed();
+  wifiConnectAttemptNeeded = true;
   return return_command_success();
 }
 
