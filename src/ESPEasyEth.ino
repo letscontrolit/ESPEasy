@@ -3,6 +3,33 @@
 
 #include "ETH.h"
 
+bool ethUseStaticIP() {
+  return Settings.ETH_IP[0] != 0 && Settings.ETH_IP[3] != 255;
+}
+
+void ethSetupStaticIPconfig() {
+  //setUseStaticIP(useStaticIP());
+
+  if (!ethUseStaticIP()) { return; }
+  const IPAddress ip     = Settings.ETH_IP;
+  const IPAddress gw     = Settings.ETH_Gateway;
+  const IPAddress subnet = Settings.ETH_Subnet;
+  const IPAddress dns    = Settings.ETH_DNS;
+
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    String log = F("ETH IP   : Static IP : ");
+    log += formatIP(ip);
+    log += F(" GW: ");
+    log += formatIP(gw);
+    log += F(" SN: ");
+    log += formatIP(subnet);
+    log += F(" DNS: ");
+    log += formatIP(dns);
+    addLog(LOG_LEVEL_INFO, log);
+  }
+  ETH.config(ip, gw, subnet, dns);
+}
+
 bool ethCheckSettings() {
   bool result = true;
   if (Settings.ETH_Phy_Type != 0 && Settings.ETH_Phy_Type != 1)
@@ -25,6 +52,8 @@ bool ethPrepare() {
     return false;
   }
   ETH.setHostname(createRFCCompliantHostname(Settings.getHostname()).c_str());
+  ETH.config(INADDR_NONE, INADDR_NONE, INADDR_NONE);
+  ethSetupStaticIPconfig();
   return true;
 }
 

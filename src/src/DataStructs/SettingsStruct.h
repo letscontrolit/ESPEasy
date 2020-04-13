@@ -183,6 +183,10 @@ class SettingsStruct_tmpl
   int8_t        ETH_Pin_power;
   int8_t        ETH_Phy_Type;
   uint8_t       ETH_Clock_Mode;
+  byte          ETH_IP[4];
+  byte          ETH_Gateway[4];
+  byte          ETH_Subnet[4];
+  byte          ETH_DNS[4];
 };
 
 /*
