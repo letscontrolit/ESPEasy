@@ -10,6 +10,12 @@ DaikinHeatpumpARC480A14IR::DaikinHeatpumpARC480A14IR() : HeatpumpIR()
 }
 
 
+void DaikinHeatpumpARC480A14IR::send(IRSender& IR, uint8_t powerModeCmd, uint8_t operatingModeCmd, uint8_t fanSpeedCmd, uint8_t temperatureCmd, uint8_t swingVCmd, uint8_t swingHCmd)
+{
+  send(IR, powerModeCmd, operatingModeCmd, fanSpeedCmd, temperatureCmd, swingVCmd, swingHCmd,
+       DAIKIN_AIRCON_COMFORT_OFF, DAIKIN_AIRCON_ECONO_OFF, DAIKIN_AIRCON_SENSOR_OFF, DAIKIN_AIRCON_QUIET_OFF, DAIKIN_AIRCON_POWERFUL_OFF);
+}
+
 // Daikin numeric values to command bytes
 void DaikinHeatpumpARC480A14IR::send(IRSender& IR, uint8_t powerModeCmd, uint8_t operatingModeCmd, uint8_t fanSpeedCmd, uint8_t temperatureCmd, uint8_t swingVCmd, uint8_t swingHCmd, uint8_t comfortModeCmd, uint8_t econoCmd, uint8_t sensorCmd, uint8_t quietCmd, uint8_t powerfulCmd)
 {

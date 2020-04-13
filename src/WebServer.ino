@@ -279,7 +279,7 @@ void WebServerInit()
 
   web_server.onNotFound(handleNotFound);
 
-  #if defined(ESP8266)
+  #if defined(ESP8266) || defined(ESP32) 
   {
     # ifndef NO_HTTP_UPDATER
     uint32_t maxSketchSize;

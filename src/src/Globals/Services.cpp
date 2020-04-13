@@ -16,4 +16,7 @@
   #include <WiFi.h>
   #include <WebServer.h>
   WebServer web_server(80);
+  #ifndef NO_HTTP_UPDATER
+  ESP32HTTPUpdateServer httpUpdater(true);
+  #endif
 #endif

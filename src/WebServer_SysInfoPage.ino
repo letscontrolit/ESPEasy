@@ -578,7 +578,6 @@ void handle_sysinfo_Storage() {
     addHtml(html);
   }
 
-  # if defined(ESP8266)
   {
     // FIXME TD-er: Must also add this for ESP32.
     addRowLabel(getLabel(LabelType::SKETCH_SIZE));
@@ -594,8 +593,10 @@ void handle_sysinfo_Storage() {
 
     uint32_t maxSketchSize;
     bool     use2step;
-    bool     otaEnabled = OTA_possible(maxSketchSize, use2step);
-
+    # if defined(ESP8266)
+    bool     otaEnabled = 
+    #endif
+      OTA_possible(maxSketchSize, use2step);
     addRowLabel(getLabel(LabelType::MAX_OTA_SKETCH_SIZE));
     {
       String html;
@@ -608,13 +609,15 @@ void handle_sysinfo_Storage() {
       addHtml(html);
     }
 
+    # if defined(ESP8266)
     addRowLabel(getLabel(LabelType::OTA_POSSIBLE));
     addHtml(boolToString(otaEnabled));
 
     addRowLabel(getLabel(LabelType::OTA_2STEP));
     addHtml(boolToString(use2step));
+    # endif // if defined(ESP8266)
+
   }
-  # endif // if defined(ESP8266)
 
   addRowLabel(getLabel(LabelType::SPIFFS_SIZE));
   {
