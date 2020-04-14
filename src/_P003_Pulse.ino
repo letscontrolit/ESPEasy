@@ -193,7 +193,8 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WRITE:
     {
-      String command = parseString(string, 1);
+      String command            = parseString(string, 1);
+      bool   mustCallPluginRead = false;
 
       if (command == F("resetpulsecounter"))
       {
@@ -208,11 +209,9 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
         Plugin_003_pulseCounter[event->TaskIndex]      = 0;
         Plugin_003_pulseTotalCounter[event->TaskIndex] = 0;
         Plugin_003_pulseTime[event->TaskIndex]         = 0;
-
-        success = true; // Command is handled.
-      }
-
-      if (command == F("setpulsecountertotal"))
+        mustCallPluginRead                             = true;
+        success                                        = true; // Command is handled.
+      } else if (command == F("setpulsecountertotal"))
       {
         // Valid commands:
         // - setpulsecountertotal,value
@@ -228,8 +227,15 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
         if (validIntFromString(parseString(string, 2), par1))
         {
           Plugin_003_pulseTotalCounter[event->TaskIndex] = par1;
+          mustCallPluginRead                             = true;
           success                                        = true; // Command is handled.
         }
+      }
+
+      if (mustCallPluginRead) {
+        // Note that the set time is before the current moment, so we call the read as soon as possible.
+        // The read does also use any set formula and stored the value in RTC.
+        schedule_task_device_timer(event->TaskIndex, millis() - 10);
       }
       break;
     }
