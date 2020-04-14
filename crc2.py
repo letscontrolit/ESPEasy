@@ -49,19 +49,22 @@ def showParts(fileContent, offset):
 #    print ("please give a filename")
 #    k=input("press close to exit")
 #    sys.exit(1)
-FileName = sys.argv[1]#"C:/ArduinoPortable/sketchbooks/build/sketch_jan15a.ino.bin"
+FileName = sys.argv[1]
 #FileName =  "C:/ArduinoPortable/sketchbooks/build/sketch_jan15a.ino.bin"
 print( "\n\nReplacing dummy MD5 checksum in .bin file")
 
 with open(FileName, mode='rb') as file: # b is important -> binary
     fileContent = file.read()
-    
-firmware_esp8266 = fileContent.find("Mega32") < 0
-if  firmware_esp8266:
+
+firmware_esp8266 = fileContent.find("ID_EASY_ESP8266") >= 0
+firmware_esp32   = fileContent.find("ID_EASY_ESP32") >= 0
+
+if firmware_esp8266:
   print("ESP8266 build")
-else:
+if firmware_esp32:
   print("ESP32 build")
 
+# TODO: showParts does not work for esp32
 if firmware_esp8266:
   nextpos =0;
   while nextpos >=0:
