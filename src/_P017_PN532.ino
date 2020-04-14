@@ -112,7 +112,7 @@ boolean Plugin_017(byte function, struct EventStruct *event, String& string)
         counter++;
         if (counter == 3 )
         {
-          // TODO: is it needed?
+          // TODO: Clock stretching issue https://github.com/esp8266/Arduino/issues/1541
           if (Settings.Pin_i2c_sda >= 0 && Settings.Pin_i2c_scl>= 0 
               && (digitalRead(Settings.Pin_i2c_sda)==0 || digitalRead(Settings.Pin_i2c_scl)==0))
           {
