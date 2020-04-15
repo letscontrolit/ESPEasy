@@ -94,6 +94,24 @@ bool checkNrArguments(const char *cmd, const char *Line, int nrArguments) {
   return true;
 }
 
+typedef String (*command_function)(struct EventStruct *, const char *);
+bool do_command_case(const String& cmd_lc, const char *cmd, struct EventStruct *event, const char *line, String& status, const String& cmd_test, command_function pFunc, int nrArguments, bool& retval);
+
+bool do_command_case(const String& cmd_lc, const char *cmd, struct EventStruct *event, const char *line, String& status, const String& cmd_test, command_function pFunc, int nrArguments, bool& retval)
+{
+  if (cmd_lc.equals(cmd_test)) {
+    if (!checkNrArguments(cmd, line, nrArguments)) {
+      status = return_incorrect_nr_arguments(); 
+      retval = false;
+    } else  {
+      status = pFunc(event, line); 
+      retval = true;
+    }
+    return true; // Command is handled
+  }
+  return false;
+}
+
 /*********************************************************************************************\
 * Registers command
 \*********************************************************************************************/
@@ -103,13 +121,10 @@ bool executeInternalCommand(const char *cmd, struct EventStruct *event, const ch
 
   cmd_lc = cmd;
   cmd_lc.toLowerCase();
+  bool retval;
   // Simple macro to match command to function call.
   #define COMMAND_CASE(S, C, NARGS) \
-  if (strcmp_P(cmd_lc.c_str(),      \
-               PSTR(S)) == 0)       \
-    { if (!checkNrArguments(cmd, line, NARGS)) { \
-      status = return_incorrect_nr_arguments(); return false;} \
-      else  status = C (event, line); return true;}
+    if (do_command_case(cmd_lc, cmd, event, line, status, F(S), &C, NARGS, retval)) { return retval; }
 
   // FIXME TD-er: Should we execute command when number of arguments is wrong?
 
@@ -189,10 +204,6 @@ bool executeInternalCommand(const char *cmd, struct EventStruct *event, const ch
       COMMAND_CASE(       "meminfo", Command_MemInfo,           0); // Diagnostic.h
       COMMAND_CASE( "meminfodetail", Command_MemInfo_detail,    0); // Diagnostic.h
     #endif
-#ifdef USES_MQTT
-      COMMAND_CASE(  "messagedelay", Command_MQTT_messageDelay, 1); // MQTT.h
-      COMMAND_CASE("mqttretainflag", Command_MQTT_Retain,       1); // MQTT.h
-#endif // USES_MQTT
       break;
     }
     case 'n': {

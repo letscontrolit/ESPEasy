@@ -48,6 +48,7 @@ class DaikinHeatpumpARC480A14IR : public HeatpumpIR
 {
   public:
     DaikinHeatpumpARC480A14IR();
+    void send(IRSender& IR, uint8_t powerModeCmd, uint8_t operatingModeCmd, uint8_t fanSpeedCmd, uint8_t temperatureCmd, uint8_t swingVCmd, uint8_t swingHCmd);
     void send(IRSender& IR, uint8_t powerModeCmd, uint8_t operatingModeCmd, uint8_t fanSpeedCmd, uint8_t temperatureCmd, uint8_t swingVCmd, uint8_t swingHCmd, uint8_t comfortMode, uint8_t econo, uint8_t sensor, uint8_t quiet, uint8_t powerful);
   private:
     void sendDaikin(IRSender& IR, uint8_t operatingMode, uint8_t fanSpeed, uint8_t temperature, uint8_t swingV, uint8_t swingH, uint8_t comfortMode, uint8_t econo, uint8_t sensor, uint8_t quiet, uint8_t powerful);

@@ -1,4 +1,47 @@
 -------------------------------------------------
+Changes in release mega-20200410 (since mega-20200328)
+-------------------------------------------------
+
+Release date: vr 10 apr 2020 21:23:29 CEST
+
+Bartlomiej Zimon (1):
+      ESP32: add subtarget for genuine units firmware-factory.bin        Resolves #2964 #2941 #2486
+
+Gijs Noorlander (16):
+      [Frontend] Fix reload on change for selectors (#2974 )
+      [Frontend] Fix crash when loading config + controller page
+      [CUL Reader] P094_CULReader
+      [CUL Reader] Clean up code
+      [CUL Reader] Add 4th filter parameter
+      [CUL Reader] Fix bug in save/load settings
+      [CUL Reader] Add positional match
+      [Sysvar] Fix show %ip% and %ip4% instead of %ip4% twice
+      [CUL Reader] Add basic docs
+      [Webserver] Fix ambiguous function definitions for selectors
+      [Serial Plugins] Share more code among plugins using serial
+      [Build] Fix build issue
+      [build] New attempt to fix build for unused static function
+      [PulseCounter] Restore from RTC before initializing pin triggers
+      [WiFi] Fix problem with static IP and reconnect ESP32 (#2997)
+      [WiFi] Switch to default PIO_FRAMEWORK_ARDUINO_ESPRESSIF_SDK22x_190703
+
+Michael Schröder (2):
+      Fix DeepSleep0 command
+      Update deepsleep-command docs
+
+TD-er (2):
+      [P020_Ser2Net] Fix missing break; PLUGIN_SERIAL_IN
+      [CUL Reader] 12 items per filter line + extra chars on filter whitelist
+
+tonhuisman (5):
+      [P036] Added setting for 'Keep display off receiving text'
+      [P036] Added setting for 'Wake display on receiving text'
+      [P036] Added new setting to plugin documentation
+      Fixed note wording
+      Made note wording more functional
+
+
+-------------------------------------------------
 Changes in release mega-20200328 (since mega-20200310)
 -------------------------------------------------
 

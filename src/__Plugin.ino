@@ -1300,14 +1300,21 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
           descr += event->TaskIndex;
           checkRAM(descr, String(Function));
         }
+        if (Function == PLUGIN_SET_DEFAULTS) {
+          for (int i = 0; i < VARS_PER_TASK; ++i) {
+            UserVar[event->BaseVarIndex + i] = 0.0;
+          }
+        }
         START_TIMER;
         bool retval =  Plugin_ptr[DeviceIndex](Function, event, str);
 
-        if (retval && (Function == PLUGIN_READ)) {
+        if ((retval && (Function == PLUGIN_READ)) 
+            || Function == PLUGIN_SET_DEFAULTS) {
           saveUserVarToRTC();
         }
 
         if (Function == PLUGIN_GET_DEVICEVALUENAMES) {
+          // FIXME TD-er: Is this still needed? (or correct?)
           ExtraTaskSettings.TaskIndex = event->TaskIndex;
         }
 

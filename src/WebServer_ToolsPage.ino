@@ -105,7 +105,7 @@ void handle_tools() {
   # endif // if defined(ESP8266)
 #endif     // WEBSERVER_NEW_UI
 
-#if defined(ESP8266)
+#if defined(ESP8266) || defined(ESP32)
   {
     # ifndef NO_HTTP_UPDATER
     {

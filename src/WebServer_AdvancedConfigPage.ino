@@ -27,7 +27,7 @@ void handle_advanced() {
 
   if (edit.length() != 0)
   {
-    Settings.MessageDelay = getFormItemInt(F("messagedelay"));
+//    Settings.MessageDelay_unused = getFormItemInt(F("messagedelay"));
     Settings.IP_Octet     = web_server.arg(F("ip")).toInt();
     strncpy_webserver_arg(Settings.NTPHost, F("ntphost"));
     Settings.TimeZone = timezone;
@@ -59,11 +59,13 @@ void handle_advanced() {
     Settings.WireClockStretchLimit       = getFormItemInt(F("wireclockstretchlimit"));
     Settings.UseRules                    = isFormItemChecked(F("userules"));
     Settings.ConnectionFailuresThreshold = getFormItemInt(F("cft"));
-    Settings.MQTTRetainFlag              = isFormItemChecked(F("mqttretainflag"));
     Settings.ArduinoOTAEnable            = isFormItemChecked(F("arduinootaenable"));
     Settings.UseRTOSMultitasking         = isFormItemChecked(F("usertosmultitasking"));
-    Settings.MQTTUseUnitNameAsClientId   = isFormItemChecked(F("mqttuseunitnameasclientid"));
-    Settings.uniqueMQTTclientIdReconnect(isFormItemChecked(F("uniquemqttclientidreconnect")));
+
+    // MQTT settings now moved to the controller settings.
+//    Settings.MQTTRetainFlag_unused              = isFormItemChecked(F("mqttretainflag"));
+//    Settings.MQTTUseUnitNameAsClientId   = isFormItemChecked(F("mqttuseunitnameasclientid"));
+//    Settings.uniqueMQTTclientIdReconnect(isFormItemChecked(F("uniquemqttclientidreconnect")));
     Settings.Latitude  = getFormItemFloat(F("latitude"));
     Settings.Longitude = getFormItemFloat(F("longitude"));
     Settings.OldRulesEngine(isFormItemChecked(F("oldrulesengine")));
@@ -97,13 +99,17 @@ void handle_advanced() {
   addFormNote(F("Perform less strict parsing on last argument of some commands (e.g. publish and sendToHttp)"));
   addFormCheckBox(F("SendToHTTP wait for ack"), F("sendtohttp_ack"), Settings.SendToHttp_ack());
 
+  /*
+  // MQTT settings now moved to the controller settings.
   addFormSubHeader(F("Controller Settings"));
 
-  addFormCheckBox(F("MQTT Retain Msg"), F("mqttretainflag"), Settings.MQTTRetainFlag);
-  addFormNumericBox(F("Message Interval"), F("messagedelay"), Settings.MessageDelay, 0, INT_MAX);
+  addFormNumericBox(F("Message Interval"), F("messagedelay"), Settings.MessageDelay_unused, 0, INT_MAX);
   addUnit(F("ms"));
+
+  addFormCheckBox(F("MQTT Retain Msg"), F("mqttretainflag"), Settings.MQTTRetainFlag_unused);
   addFormCheckBox(F("MQTT use unit name as ClientId"),    F("mqttuseunitnameasclientid"),   Settings.MQTTUseUnitNameAsClientId);
-  addFormCheckBox(F("MQTT change ClientId at reconnect"), F("uniquemqttclientidreconnect"), Settings.uniqueMQTTclientIdReconnect());
+  addFormCheckBox(F("MQTT change ClientId at reconnect"), F("uniquemqttclientidreconnect"), Settings.uniqueMQTTclientIdReconnect_unused());
+*/
 
   addFormSubHeader(F("NTP Settings"));
 
@@ -226,11 +232,11 @@ void addFormDstSelect(bool isStart, uint16_t choice) {
   }
   TimeChangeRule rule(isStart ? tmpstart : tmpend, 0);
   addRowLabel(weeklabel);
-  addSelector(weekid, 5, week, weekValues, NULL, rule.week, false);
+  addSelector(weekid, 5, week, weekValues, NULL, rule.week);
   html_BR();
-  addSelector(dowid, 7, dow, dowValues, NULL, rule.dow, false);
+  addSelector(dowid, 7, dow, dowValues, NULL, rule.dow);
   html_BR();
-  addSelector(monthid, 12, month, monthValues, NULL, rule.month, false);
+  addSelector(monthid, 12, month, monthValues, NULL, rule.month);
 
   addFormNumericBox(hourlabel, hourid, rule.hour, 0, 23);
   addUnit(isStart ? F("hour &#x21b7;") : F("hour &#x21b6;"));
@@ -253,7 +259,7 @@ void addLogLevelSelect(const String& name, int choice)
   for (int i = 0; i < LOG_LEVEL_NRELEMENTS; ++i) {
     options[i + 1] = getLogLevelDisplayStringFromIndex(i, optionValues[i + 1]);
   }
-  addSelector(name, LOG_LEVEL_NRELEMENTS + 1, options, optionValues, NULL, choice, false);
+  addSelector(name, LOG_LEVEL_NRELEMENTS + 1, options, optionValues, NULL, choice);
 }
 
 void addFormLogFacilitySelect(const String& label, const String& id, int choice)
@@ -269,7 +275,7 @@ void addLogFacilitySelect(const String& name, int choice)
     F("Local2"), F("Local3"), F("Local4"),   F("Local5"),  F("Local6"),  F("Local7") };
   int optionValues[12] = { 0, 1, 3, 5, 16, 17, 18, 19, 20, 21, 22, 23 };
 
-  addSelector(name, 12, options, optionValues, NULL, choice, false);
+  addSelector(name, 12, options, optionValues, NULL, choice);
 }
 
 #endif // ifdef WEBSERVER_ADVANCED

@@ -79,6 +79,7 @@
 #define DEFAULT_SERVER      "192.168.0.8"                                   // Enter your Server IP address
 #define DEFAULT_SERVER_HOST ""                                              // Server hostname
 #define DEFAULT_SERVER_USEDNS false                                         // true: Use hostname.  false: use IP
+#define DEFAULT_USE_EXTD_CONTROLLER_CREDENTIALS   false                     // true: Allow longer user credentials for controllers
 
 #define DEFAULT_PORT        8080                                            // Enter your Server port value
 

@@ -1,8 +1,8 @@
-
+﻿
 import sys
 import binascii
 import struct
-import md5
+from hashlib import md5
 import os
 MD5DUMMY      = "MD5_MD5_MD5_MD5_BoundariesOfTheSegmentsGoHere..." #48 chars
 FILENAMEDUMMY = "ThisIsTheDummyPlaceHolderForTheBinaryFilename64ByteLongFilenames" #64 chars
@@ -102,8 +102,7 @@ if  fileContent.find( MD5DUMMY) < 0:
     print("ERROR: MD5 dummy not found in binary")
 else:
     hashString=hashString.replace (MD5DUMMY,"",1)
-    m = md5.new()
-    m.update (hashString) #use segment 1
+    m = md5(hashString) #use segment 1
     md5hash = m.digest()
     print("MD5 hash: "+ m.hexdigest())
     print("\nwriting output file:\n" + FileName)

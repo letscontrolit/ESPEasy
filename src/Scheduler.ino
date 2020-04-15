@@ -419,6 +419,7 @@ void process_plugin_task_timer(unsigned long id) {
   const systemTimerStruct timer_data = systemTimers[id];
   struct EventStruct TempEvent;
   TempEvent.TaskIndex = timer_data.TaskIndex;
+  TempEvent.BaseVarIndex =  timer_data.TaskIndex * VARS_PER_TASK;
   TempEvent.Par1      = timer_data.Par1;
   TempEvent.Par2      = timer_data.Par2;
   TempEvent.Par3      = timer_data.Par3;
@@ -440,7 +441,8 @@ void process_plugin_task_timer(unsigned long id) {
    */
   systemTimers.erase(id);
 
-  if (validDeviceIndex(deviceIndex)) {
+  if (validDeviceIndex(deviceIndex) && validUserVarIndex(TempEvent.BaseVarIndex)) {
+    TempEvent.sensorType = Device[deviceIndex].VType;
     String dummy;
     Plugin_ptr[deviceIndex](PLUGIN_TIMER_IN, &TempEvent, dummy);
   }
@@ -562,7 +564,7 @@ void schedule_task_device_timer_at_init(unsigned long task_index) {
     // Deepsleep is not enabled, add some offset based on the task index
     // to make sure not all are run at the same time.
     // This scheduled time may be overriden by the plugin's own init.
-    runAt += (task_index * 37) + Settings.MessageDelay;
+    runAt += (task_index * 37) + 100;
   } else {
     runAt += (task_index * 11) + 10;
   }
