@@ -135,9 +135,37 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
     case PLUGIN_INIT:
     {
       // Restore any value that may have been read from the RTC.
-      Plugin_003_pulseCounter[event->TaskIndex]      = UserVar[event->BaseVarIndex];
-      Plugin_003_pulseTotalCounter[event->TaskIndex] = UserVar[event->BaseVarIndex + 1];
-      Plugin_003_pulseTime[event->TaskIndex]         = UserVar[event->BaseVarIndex + 2];
+      switch (Settings.TaskDevicePluginConfig[event->TaskIndex][1])
+      {
+        case 0:
+        {
+          Plugin_003_pulseCounter[event->TaskIndex] = UserVar[event->BaseVarIndex];
+          break;
+        }
+        case 1:
+        {
+          Plugin_003_pulseCounter[event->TaskIndex]      = UserVar[event->BaseVarIndex];
+          Plugin_003_pulseTotalCounter[event->TaskIndex] = UserVar[event->BaseVarIndex + 1];
+          Plugin_003_pulseTime[event->TaskIndex]         = UserVar[event->BaseVarIndex + 2];
+          break;
+        }
+        case 2:
+        {
+          Plugin_003_pulseTotalCounter[event->TaskIndex] = UserVar[event->BaseVarIndex];
+          break;
+        }
+        case 3:
+        {
+          Plugin_003_pulseCounter[event->TaskIndex]      = UserVar[event->BaseVarIndex];
+          Plugin_003_pulseTotalCounter[event->TaskIndex] = UserVar[event->BaseVarIndex + 1];
+          break;
+        }
+      }
+
+      // Restore the total counter from the unused 4th UserVar value.
+      // It may be using a formula to generate the output, which makes it impossible to restore
+      // the true internal state.
+      Plugin_003_pulseTotalCounter[event->TaskIndex] = UserVar[event->BaseVarIndex + 3];
 
       String log = F("INIT : Pulse ");
       log += Settings.TaskDevicePin1[event->TaskIndex];
@@ -152,9 +180,14 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
     {
+      // FIXME TD-er: Is it correct to write the first 3  UserVar values, regardless the set counter type?
       UserVar[event->BaseVarIndex]     = Plugin_003_pulseCounter[event->TaskIndex];
       UserVar[event->BaseVarIndex + 1] = Plugin_003_pulseTotalCounter[event->TaskIndex];
       UserVar[event->BaseVarIndex + 2] = Plugin_003_pulseTime[event->TaskIndex];
+
+      // Store the raw value in the unused 4th position.
+      // This is needed to restore the value from RTC as it may be converted into another output value using a formula.
+      UserVar[event->BaseVarIndex + 3] = Plugin_003_pulseTotalCounter[event->TaskIndex];
 
       switch (Settings.TaskDevicePluginConfig[event->TaskIndex][1])
       {
