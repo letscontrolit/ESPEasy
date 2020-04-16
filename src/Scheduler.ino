@@ -562,7 +562,7 @@ void schedule_task_device_timer_at_init(unsigned long task_index) {
     // Deepsleep is not enabled, add some offset based on the task index
     // to make sure not all are run at the same time.
     // This scheduled time may be overriden by the plugin's own init.
-    runAt += (task_index * 37) + Settings.MessageDelay;
+    runAt += (task_index * 37) + 100;
   } else {
     runAt += (task_index * 11) + 10;
   }

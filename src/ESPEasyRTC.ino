@@ -213,7 +213,7 @@ struct RTC_cache_handler_struct
         }
 
         if (fname.length() == 0) { return false; }
-        fp = tryOpenFile(fname.c_str(), "r");
+        fp = tryOpenFile(fname, "r");
       }
 
       if (!fp) { return false; }
@@ -529,7 +529,7 @@ private:
         }
 
         String fname = createCacheFilename(RTC_cache.writeFileNr);
-        fw = tryOpenFile(fname.c_str(), "a+");
+        fw = tryOpenFile(fname, "a+");
 
         if (!fw) {
           #ifdef RTC_STRUCT_DEBUG

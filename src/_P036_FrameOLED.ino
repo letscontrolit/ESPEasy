@@ -12,6 +12,8 @@
 // Added to the main repository with some optimizations and some limitations.
 // Al long as the device is not selected, no RAM is waisted.
 //
+// @tonhuisman: 2020-03-05
+// CHG: Added setting for 'Wake display on receiving text', when unticked doesn't enable the display if it is off by time-out
 // @uwekaditz: 2019-11-22
 // CHG: Each line can now have 64 characters (version is saved as Bit23-20 in PCONFIG_LONG(0)))
 // FIX: Overlapping while page scrolling (size of line content for scrolling pages limited to 128 pixel)
@@ -82,6 +84,7 @@ static int8_t lastWiFiState = P36_WIFI_STATE_UNSET;
 static uint8_t OLEDIndex = 0;
 static boolean bPin3Invers;
 static boolean bScrollLines;
+static boolean bNoDisplayOnReceivedText;
 static boolean bAlternativHeader = false;
 static uint16_t HeaderCount = 0;
 static boolean bPageScrollDisabled = true;   // first page after INIT without scrolling
@@ -378,6 +381,10 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         bScrollLines = getBitFromUL(PCONFIG_LONG(0), 17);  // Bit 17
         addFormCheckBox(F("Scroll long lines"), F("p036_ScrollLines"), bScrollLines);
 
+        bNoDisplayOnReceivedText = getBitFromUL(PCONFIG_LONG(0), 18);  // Bit 18
+        addFormCheckBox(F("Wake display on receiving text"), F("p036_NoDisplay"), !bNoDisplayOnReceivedText);
+        addFormNote(F("When checked, the display wakes up at receiving remote updates."));
+
         for (uint8_t varNr = 0; varNr < P36_Nlines; varNr++)
         {
           addFormTextBox(String(F("Line ")) + (varNr + 1), getPluginCustomArgName(varNr), String(P036_DisplayLinesV1[varNr].Content), P36_NcharsV1-1);
@@ -409,6 +416,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         set8BitToUL(lSettings, 0, uint8_t(getFormItemInt(F("p036_headerAlternate")) & 0xff));   // Bit 7-0 HeaderContentAlternative
         P036_setBitToUL(lSettings, 16, isFormItemChecked(F("p036_pin3invers")));                // Bit 16 Pin3Invers
         P036_setBitToUL(lSettings, 17, isFormItemChecked(F("p036_ScrollLines")));               // Bit 17 ScrollLines
+        P036_setBitToUL(lSettings, 18, !isFormItemChecked(F("p036_NoDisplay")));                // Bit 18 NoDisplayOnReceivingText
         // save CustomTaskSettings always in version V1
         set4BitToUL(lSettings, 20, 0x01);                                                       // Bit23-20 Version CustomTaskSettings -> version V1
 
@@ -753,9 +761,11 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
             }
 
             nextFrameToDisplay = LineNo / ScrollingPages.linesPerFrame; // next frame shows the new content
-            displayTimer = PCONFIG(4);
-            if (UserVar[event->BaseVarIndex] == 0) {
+
+            bNoDisplayOnReceivedText = getBitFromUL(PCONFIG_LONG(0), 18);  // Bit 18 NoDisplayOnReceivedText
+            if (UserVar[event->BaseVarIndex] == 0 && !bNoDisplayOnReceivedText) {
               // display was OFF, turn it ON
+              displayTimer = PCONFIG(4);
               display->displayOn();
               UserVar[event->BaseVarIndex] = 1;      //  Save the fact that the display is now ON
             }

@@ -98,6 +98,7 @@
     :red:`Internal`","
     Switch the node to deep sleep.
     Max sleep time depends on library version and differs from roughly 71 minutes to 3h46.
+    If you specify a Min sleep time of 0, you'll have to wake the device yourself by pulling RST to GND. 
 
     ``DeepSleep,<sleep time in seconds>``"
     "
@@ -227,16 +228,6 @@
     A detailed summary is also sent to the serial port.
 
     ``meminfoDetail``"
-    "
-    MessageDelay","
-    :red:`Internal`","
-    Get or set the MQTT message delay.
-
-    ``MessageDelay``
-
-    ``MessageDelay,<value in ms>``
-    
-    Example output: ``MQTT message delay:100``"
     "
     Name","
     :red:`Internal`","
