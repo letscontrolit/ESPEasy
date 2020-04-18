@@ -1180,7 +1180,7 @@ void ResetFactory()
   Settings.Pin_status_led  = gpio_settings.status_led;
   Settings.Pin_status_led_Inversed  = DEFAULT_PIN_STATUS_LED_INVERSED;
   Settings.Pin_sd_cs       = -1;
-  Settings.Pin_Reset       = -1;
+  Settings.Pin_Reset       = DEFAULT_PIN_RESET_BUTTON;
   Settings.Protocol[0]     = DEFAULT_PROTOCOL;
   Settings.deepSleep_wakeTime       = false;
   Settings.CustomCSS       = false;

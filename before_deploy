@@ -78,7 +78,7 @@ do
       if [ -f $FIRMWARE_FACTORY_BIN ]; then
         FBIN=${BINARY_PATH}/${ENV}/ESP_Easy_${VERSION}_${ENV}_factory.bin
         cp ${FIRMWARE_FACTORY_BIN} $FBIN
-        #python2 crc2.py $FBIN
+        python2 crc2.py $FBIN
         mv $FBIN "${FBINDIR}/ESP_Easy_${VERSION}_${ENV}_factory.bin"
       fi
     else
