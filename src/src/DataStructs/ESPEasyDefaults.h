@@ -168,6 +168,9 @@
 #define DEFAULT_PIN_STATUS_LED_INVERSED  true
 #endif
 
+#ifndef DEFAULT_PIN_RESET_BUTTON
+#define DEFAULT_PIN_RESET_BUTTON         (-1)
+#endif
 
 
 // --- Advanced Settings ---------------------------------------------------------------------------------
