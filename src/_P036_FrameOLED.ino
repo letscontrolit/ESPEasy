@@ -12,6 +12,11 @@
 // Added to the main repository with some optimizations and some limitations.
 // Al long as the device is not selected, no RAM is waisted.
 //
+// @tonhuisman: 2020-04-13
+// CHG: Added setting for 'Step through frames with Display button', when enabled, pressing the button while the display is on
+// cycles through the available frames.
+// CHG: Added command oledframedcmd,frame,[0..n] to select the next frame (0) or explicitly frame 1..n, where n is the last frame available
+// IMP: Improvement to immediately show the frame the text is placed on when text is received.
 // @tonhuisman: 2020-03-05
 // CHG: Added setting for 'Wake display on receiving text', when unticked doesn't enable the display if it is off by time-out
 // @uwekaditz: 2019-11-22
@@ -79,6 +84,8 @@
 #define P36_PageScrollTimer           25  // timer for page Scrolling
 #define P36_PageScrollTick            (P36_PageScrollTimer+20)  // total time for one PageScrollTick (including the handling time of 20ms in PLUGIN_TIMER_IN)
 #define P36_PageScrollPix             4  // min pixel change while page scrolling
+#define P36_DebounceTreshold          5  // number of 20 msec (fifty per second) ticks before the button has settled
+#define P36_RepeatDelay               50 // number of 20 msec ticks before repeating the button action when holding it pressed
 
 static int8_t lastWiFiState = P36_WIFI_STATE_UNSET;
 static uint8_t OLEDIndex = 0;
@@ -89,6 +96,10 @@ static boolean bAlternativHeader = false;
 static uint16_t HeaderCount = 0;
 static boolean bPageScrollDisabled = true;   // first page after INIT without scrolling
 static uint8_t TopLineOffset = 0;   // Offset for top line, used for rotated image while using displays < P36_MaxDisplayHeight lines
+static boolean ButtonState = false;   // button not touched
+static uint8_t ButtonLastState = 0xFF;   // Last state checked (debouncing in progress)
+static uint8_t DebounceCounter = 0;   // debounce counter
+static uint8_t RepeatCounter = 0;     // Repeat delay counter when holding button pressed
 
 enum eHeaderContent {
     eSSID = 1,
@@ -260,15 +271,16 @@ void Plugin_036_loadDisplayLines(taskIndex_t taskIndex, uint8_t LoadVersion) {
   }
 }
 
+static uint8_t frameCounter = 0;       // need to keep track of framecounter from call to call
+static uint8_t nrFramesToDisplay = 0;
+
+int NFrames;                // the number of frames
+
 boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
   static uint8_t displayTimer = 0;
-  static uint8_t frameCounter = 0;       // need to keep track of framecounter from call to call
-  static uint8_t nrFramesToDisplay = 0;
-
-  int NFrames;                // the number of frames
 
   switch (function)
   {
@@ -354,6 +366,8 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         addFormPinSelect(F("Display button"), F("taskdevicepin3"), CONFIG_PIN3);
         bPin3Invers = getBitFromUL(PCONFIG_LONG(0), 16);  // Bit 16
         addFormCheckBox(F("Inversed Logic"), F("p036_pin3invers"), bPin3Invers);
+        boolean bStepThroughPages = getBitFromUL(PCONFIG_LONG(0), 19);  // Bit 19
+        addFormCheckBox(F("Step through frames with Display button"), F("p036_StepPages"), bStepThroughPages);
 
         addFormNumericBox(F("Display Timeout"), F("p036_timer"), PCONFIG(4));
 
@@ -417,6 +431,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         P036_setBitToUL(lSettings, 16, isFormItemChecked(F("p036_pin3invers")));                // Bit 16 Pin3Invers
         P036_setBitToUL(lSettings, 17, isFormItemChecked(F("p036_ScrollLines")));               // Bit 17 ScrollLines
         P036_setBitToUL(lSettings, 18, !isFormItemChecked(F("p036_NoDisplay")));                // Bit 18 NoDisplayOnReceivingText
+        P036_setBitToUL(lSettings, 19, isFormItemChecked(F("p036_StepPages")));                 // Bit 19 StepThroughPagesWithButton
         // save CustomTaskSettings always in version V1
         set4BitToUL(lSettings, 20, 0x01);                                                       // Bit23-20 Version CustomTaskSettings -> version V1
 
@@ -491,9 +506,13 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         //      Set up the display timer
         displayTimer = PCONFIG(4);
 
-        if (CONFIG_PIN3 != -1)
+        if (CONFIG_PIN3 != -1)   // Button related setup
         {
           pinMode(CONFIG_PIN3, INPUT_PULLUP);
+          DebounceCounter = 0;
+          RepeatCounter = 0;
+          ButtonState = false;
+          bPin3Invers = getBitFromUL(PCONFIG_LONG(0), 16);  // Bit 16
         }
 
         //    Initialize frame counter
@@ -529,21 +548,51 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           }
           break;
       }
-
+    // Check more often for debouncing the button, when enabled
+    case PLUGIN_FIFTY_PER_SECOND:
+      {
+        if (CONFIG_PIN3 != -1)
+        {
+          uint8_t newButtonState = digitalRead(CONFIG_PIN3);
+          if (ButtonLastState == 0xFF || ((!bPin3Invers && newButtonState) || (bPin3Invers && !newButtonState))) {
+            ButtonLastState = newButtonState;
+            DebounceCounter++;
+            if (RepeatCounter > 0) RepeatCounter--;  // decrease the repeat count
+          } else {
+            ButtonLastState = 0xFF;   // Reset
+            DebounceCounter = 0;
+            RepeatCounter = 0;
+            ButtonState = false;
+          }
+          if (ButtonLastState == newButtonState && DebounceCounter >= P36_DebounceTreshold && RepeatCounter == 0) {
+            ButtonState = true;
+          }
+        }
+        success = true;
+        break;
+      }
     // Check frequently to see if we have a pin signal to switch on display
     case PLUGIN_TEN_PER_SECOND:
       {
         int lTaskTimer = Settings.TaskDeviceTimer[event->TaskIndex];
         bAlternativHeader = (++HeaderCount > (lTaskTimer*5)); // change header after half of display time
-        if (CONFIG_PIN3 != -1)
+        if (CONFIG_PIN3 != -1 && ButtonState)
         {
-          bPin3Invers = getBitFromUL(PCONFIG_LONG(0), 16);  // Bit 16
-          if ((!bPin3Invers && digitalRead(CONFIG_PIN3)) || (bPin3Invers && !digitalRead(CONFIG_PIN3)))
-          {
+          boolean bStepThroughPages = getBitFromUL(PCONFIG_LONG(0), 19);        //  Bit 19
+          if (bStepThroughPages && UserVar[event->BaseVarIndex] == 1) { //  When display already on, switch to next page when enabled
+            nextFrameToDisplay = 0xFF;
+            P036_DisplayPage(event);                // Display the next page
+          } else {
             display->displayOn();
             UserVar[event->BaseVarIndex] = 1;      //  Save the fact that the display is now ON
-            displayTimer = PCONFIG(4);
+            nextFrameToDisplay = 0;
+            P036_DisplayPage(event);               //  Display the first page
           }
+          ButtonState = false;
+          DebounceCounter = 0;
+          RepeatCounter = P36_RepeatDelay;         //  Wait a bit before repeating the button action
+          displayTimer = PCONFIG(4);               //  Restart timer
+          pinMode(CONFIG_PIN3, INPUT_PULLUP);      //  Reset pinstate
         }
         bScrollLines = getBitFromUL(PCONFIG_LONG(0), 17);  // Bit 17
         if ((UserVar[event->BaseVarIndex] == 1) && bScrollLines && (ScrollingPages.Scrolling == 0)) {
@@ -555,11 +604,10 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         break;
       }
 
-    // Switch off display after displayTimer seconds
+    // Switch off display after displayTimer seconds, update header content
     case PLUGIN_ONCE_A_SECOND:
       {
-
-        if ( displayTimer > 0)
+        if (displayTimer > 0)
         {
           displayTimer--;
           if (displayTimer == 0)
@@ -587,7 +635,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_TIMER_IN:
     {
       OLEDIndex = PCONFIG(7);
-      if (display_scroll_timer()) // page scrolling
+      if (UserVar[event->BaseVarIndex] == 1 && display_scroll_timer()) // page scrolling only when the display is on
         setPluginTaskTimer(P36_PageScrollTimer, event->TaskIndex, event->Par1);  // calls next page scrollng tick
 
       return success;
@@ -596,103 +644,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       {
 
         //      Define Scroll area layout
-        if (UserVar[event->BaseVarIndex] == 1) {
-          // Display is on.
-          ScrollingPages.Scrolling = 1; // page scrolling running -> no line scrolling allowed
-          NFrames = P36_Nlines / ScrollingPages.linesPerFrame;
-          OLEDIndex = PCONFIG(7);
-          HeaderContent = static_cast<eHeaderContent>(get8BitFromUL(PCONFIG_LONG(0), 8));             // Bit15-8 HeaderContent
-          HeaderContentAlternative = static_cast<eHeaderContent>(get8BitFromUL(PCONFIG_LONG(0), 0));  // Bit 7-0 HeaderContentAlternative
-
-          //      Now create the string for the outgoing and incoming frames
-          String tmpString;
-          tmpString.reserve(P36_NcharsV1);
-
-          //      Construct the outgoing string
-          for (uint8_t i = 0; i < ScrollingPages.linesPerFrame; i++)
-          {
-            tmpString = String(P036_DisplayLinesV1[(ScrollingPages.linesPerFrame * frameCounter) + i].Content);
-            ScrollingPages.oldString[i] = P36_parseTemplate(tmpString, 20);
-          }
-
-          // now loop round looking for the next frame with some content
-          //   skip this frame if all lines in frame are blank
-          // - we exit the while loop if any line is not empty
-          boolean foundText = false;
-          int ntries = 0;
-          while (!foundText) {
-
-            //        Stop after framecount loops if no data found
-            ntries += 1;
-            if (ntries > NFrames) break;
-
-            if (nextFrameToDisplay == 0xff) {
-              // Increment the frame counter
-              frameCounter = frameCounter + 1;
-              if ( frameCounter > NFrames - 1) {
-                frameCounter = 0;
-                currentFrameToDisplay = 0;
-              }
-            }
-            else {
-              // next frame because content changed in PLUGIN_WRITE
-              frameCounter = nextFrameToDisplay;
-            }
-
-            //        Contruct incoming strings
-            for (uint8_t i = 0; i < ScrollingPages.linesPerFrame; i++)
-            {
-              tmpString = String(P036_DisplayLinesV1[(ScrollingPages.linesPerFrame * frameCounter) + i].Content);
-              ScrollingPages.newString[i] = P36_parseTemplate(tmpString, 20);
-              if (ScrollingPages.newString[i].length() > 0) foundText = true;
-            }
-            if (foundText) {
-              if (nextFrameToDisplay == 0xff) {
-                if (frameCounter != 0) {
-                  ++currentFrameToDisplay;
-                }
-              }
-              else currentFrameToDisplay = nextFrameToDisplay;
-            }
-          }
-          nextFrameToDisplay = 0xFF;
-
-          if ((currentFrameToDisplay + 1) > nrFramesToDisplay) {
-            nrFramesToDisplay = currentFrameToDisplay + 1;
-          }
-
-          // Update max page count
-          if (MaxFramesToDisplay == 0xFF) {
-            // not updated yet
-            for (uint8_t i = 0; i < NFrames; i++) {
-              for (uint8_t k = 0; k < ScrollingPages.linesPerFrame; k++)
-              {
-                tmpString = String(P036_DisplayLinesV1[(ScrollingPages.linesPerFrame * i) + k].Content);
-                tmpString = P36_parseTemplate(tmpString, 20);
-                if (tmpString.length() > 0) {
-                  // page not empty
-                  MaxFramesToDisplay ++;
-                  break;
-                }
-              }
-            }
-          }
-          //      Update display
-          bAlternativHeader = false;  // start with first header content
-          HeaderCount = 0;            // reset header count
-          display_header();
-          if (SizeSettings[OLEDIndex].Width == P36_MaxDisplayWidth) display_indicator(currentFrameToDisplay, nrFramesToDisplay);
-
-          display->display();
-
-          int lscrollspeed = PCONFIG(3);
-          if (bPageScrollDisabled) lscrollspeed = ePSS_Instant; // first page after INIT without scrolling
-          int lTaskTimer = Settings.TaskDeviceTimer[event->TaskIndex];
-          if (display_scroll(lscrollspeed, lTaskTimer))
-            setPluginTaskTimer(P36_PageScrollTimer, event->TaskIndex, event->Par1); // calls next page scrollng tick
-
-          bPageScrollDisabled = false;    // next PLUGIN_READ will do page scrolling
-				}
+        P036_DisplayPage(event);
         success = true;
         break;
       }
@@ -734,8 +686,21 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
             }
             // log += String(F("[P36] Display: ")) + String(para1) + String(F(" Success:")) + String(success);
             // addLog(LOG_LEVEL_INFO, log);
-        }
-        else if ((LineNo > 0) && (LineNo <= P36_Nlines))
+          }
+          else if (subcommand == F("frame") && event->Par2 >= 0 && event->Par2 <= MaxFramesToDisplay + 1)
+          {
+            success = true;
+            nextFrameToDisplay = (event->Par2 == 0 ? 0xFF: event->Par2 - 1);
+            if (UserVar[event->BaseVarIndex] == 0) {
+              // display was OFF, turn it ON
+              display->displayOn();
+              UserVar[event->BaseVarIndex] = 1;      //  Save the fact that the display is now ON
+            }
+            sendData(event);
+            P036_DisplayPage(event); // Show the selected page
+            displayTimer = PCONFIG(4);
+          }
+          else if ((LineNo > 0) && (LineNo <= P36_Nlines))
           {
             // content functions
             success = true;
@@ -761,13 +726,18 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
             }
 
             nextFrameToDisplay = LineNo / ScrollingPages.linesPerFrame; // next frame shows the new content
+            if (nextFrameToDisplay == NFrames) {   // corner-case?
+              nextFrameToDisplay--;
+            }
 
             bNoDisplayOnReceivedText = getBitFromUL(PCONFIG_LONG(0), 18);  // Bit 18 NoDisplayOnReceivedText
             if (UserVar[event->BaseVarIndex] == 0 && !bNoDisplayOnReceivedText) {
               // display was OFF, turn it ON
-              displayTimer = PCONFIG(4);
               display->displayOn();
               UserVar[event->BaseVarIndex] = 1;      //  Save the fact that the display is now ON
+              sendData(event);                       // Improvement to immediately show the page the text is placed on
+              P036_DisplayPage(event);               // Show the selected page
+              displayTimer = PCONFIG(4);
             }
 
             // String log = String(F("[P36] Line: ")) + String(LineNo);
@@ -789,6 +759,109 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
     }
   }
   return success;
+}
+
+
+void P036_DisplayPage(struct EventStruct *event)
+{
+  if (UserVar[event->BaseVarIndex] == 1) {
+    // Display is on.
+    ScrollingPages.Scrolling = 1; // page scrolling running -> no line scrolling allowed
+    NFrames = P36_Nlines / ScrollingPages.linesPerFrame;
+    OLEDIndex = PCONFIG(7);
+    HeaderContent = static_cast<eHeaderContent>(get8BitFromUL(PCONFIG_LONG(0), 8));             // Bit15-8 HeaderContent
+    HeaderContentAlternative = static_cast<eHeaderContent>(get8BitFromUL(PCONFIG_LONG(0), 0));  // Bit 7-0 HeaderContentAlternative
+
+    //      Now create the string for the outgoing and incoming frames
+    String tmpString;
+    tmpString.reserve(P36_NcharsV1);
+
+    //      Construct the outgoing string
+    for (uint8_t i = 0; i < ScrollingPages.linesPerFrame; i++)
+    {
+      tmpString = String(P036_DisplayLinesV1[(ScrollingPages.linesPerFrame * frameCounter) + i].Content);
+      ScrollingPages.oldString[i] = P36_parseTemplate(tmpString, 20);
+    }
+
+    // now loop round looking for the next frame with some content
+    //   skip this frame if all lines in frame are blank
+    // - we exit the while loop if any line is not empty
+    boolean foundText = false;
+    int ntries = 0;
+    while (!foundText) {
+
+      //        Stop after framecount loops if no data found
+      ntries += 1;
+      if (ntries > NFrames) break;
+
+      if (nextFrameToDisplay == 0xff) {
+        // Increment the frame counter
+        frameCounter = frameCounter + 1;
+        if ( frameCounter > NFrames - 1) {
+          frameCounter = 0;
+          currentFrameToDisplay = 0;
+        }
+      }
+      else {
+        // next frame because content changed in PLUGIN_WRITE
+        frameCounter = nextFrameToDisplay;
+      }
+
+      //        Contruct incoming strings
+      for (uint8_t i = 0; i < ScrollingPages.linesPerFrame; i++)
+      {
+        tmpString = String(P036_DisplayLinesV1[(ScrollingPages.linesPerFrame * frameCounter) + i].Content);
+        ScrollingPages.newString[i] = P36_parseTemplate(tmpString, 20);
+        if (ScrollingPages.newString[i].length() > 0) foundText = true;
+      }
+      if (foundText) {
+        if (nextFrameToDisplay == 0xff) {
+          if (frameCounter != 0) {
+            ++currentFrameToDisplay;
+          }
+        }
+        else currentFrameToDisplay = nextFrameToDisplay;
+      }
+    }
+    nextFrameToDisplay = 0xFF;
+
+    if ((currentFrameToDisplay + 1) > nrFramesToDisplay) {
+      nrFramesToDisplay = currentFrameToDisplay + 1;
+    }
+
+    // Update max page count
+    if (MaxFramesToDisplay == 0xFF) {
+      // not updated yet
+      for (uint8_t i = 0; i < NFrames; i++) {
+        for (uint8_t k = 0; k < ScrollingPages.linesPerFrame; k++)
+        {
+          tmpString = String(P036_DisplayLinesV1[(ScrollingPages.linesPerFrame * i) + k].Content);
+          tmpString = P36_parseTemplate(tmpString, 20);
+          if (tmpString.length() > 0) {
+            // page not empty
+            MaxFramesToDisplay ++;
+            break;
+          }
+        }
+      }
+    }
+    //      Update display
+    bAlternativHeader = false;  // start with first header content
+    HeaderCount = 0;            // reset header count
+    display_header();
+    if (SizeSettings[OLEDIndex].Width == P36_MaxDisplayWidth) display_indicator(currentFrameToDisplay, nrFramesToDisplay);
+
+    display->display();
+
+    int lscrollspeed = PCONFIG(3);
+    if (bPageScrollDisabled) lscrollspeed = ePSS_Instant; // first page after INIT without scrolling
+    int lTaskTimer = Settings.TaskDeviceTimer[event->TaskIndex];
+    if (display_scroll(lscrollspeed, lTaskTimer))
+      setPluginTaskTimer(P36_PageScrollTimer, event->TaskIndex, event->Par1); // calls next page scrollng tick
+
+    bPageScrollDisabled = false;    // next PLUGIN_READ will do page scrolling
+  }
+
 }
 
 // Set the display contrast
