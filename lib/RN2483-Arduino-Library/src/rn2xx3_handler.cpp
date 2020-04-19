@@ -1257,6 +1257,10 @@ bool rn2xx3_handler::check_set_keys()
     rn2xx3_helper::isHexStr_of_length(_appskey, 32) &&
     rn2xx3_helper::isHexStr_of_length(_devaddr, 8);
 
+  if (!otaa_set && !abp_set) {
+    return false;
+  }
+
   if (_otaa && otaa_set) {
     if (!abp_set) {
       if (!rn2xx3_helper::isHexStr_of_length(_nwkskey, 32)) {
