@@ -122,7 +122,7 @@ static eHeaderContent HeaderContent=eSysName;
 static eHeaderContent HeaderContentAlternative=eSysName;
 static uint8_t MaxFramesToDisplay = 0xFF;
 static uint8_t currentFrameToDisplay = 0;
-static uint8_t nextFrameToDisplay = 0xFF;  // next frame because content changed in PLUGIN_WRITE
+static uint8_t nextFrameToDisplay = 0;  // first frame
 
 typedef struct {
   uint8_t       Top;                  // top in pix for this line setting
@@ -519,6 +519,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         frameCounter = 0;
         nrFramesToDisplay = 1;
         currentFrameToDisplay = 0;
+        nextFrameToDisplay = 0;
         bPageScrollDisabled = true;  // first page after INIT without scrolling
         ScrollingPages.linesPerFrame = PCONFIG(2);
 
@@ -696,7 +697,6 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
               display->displayOn();
               UserVar[event->BaseVarIndex] = 1;      //  Save the fact that the display is now ON
             }
-            sendData(event);
             P036_DisplayPage(event); // Show the selected page
             displayTimer = PCONFIG(4);
           }
@@ -725,17 +725,15 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
               P036_DisplayLinesV1[LineNo-1].Content[strlen-iCharToRemove] = 0;
             }
 
-            nextFrameToDisplay = LineNo / ScrollingPages.linesPerFrame; // next frame shows the new content
-            if (nextFrameToDisplay == NFrames) {   // corner-case?
-              nextFrameToDisplay--;
-            }
+            nextFrameToDisplay = ceil(((float)LineNo) / ScrollingPages.linesPerFrame) - 1; // next frame shows the new content, 0-based
 
             bNoDisplayOnReceivedText = getBitFromUL(PCONFIG_LONG(0), 18);  // Bit 18 NoDisplayOnReceivedText
             if (UserVar[event->BaseVarIndex] == 0 && !bNoDisplayOnReceivedText) {
               // display was OFF, turn it ON
               display->displayOn();
               UserVar[event->BaseVarIndex] = 1;      //  Save the fact that the display is now ON
-              sendData(event);                       // Improvement to immediately show the page the text is placed on
+            }
+            if (UserVar[event->BaseVarIndex] == 1) {
               P036_DisplayPage(event);               // Show the selected page
               displayTimer = PCONFIG(4);
             }
@@ -839,7 +837,11 @@ void P036_DisplayPage(struct EventStruct *event)
           tmpString = P36_parseTemplate(tmpString, 20);
           if (tmpString.length() > 0) {
             // page not empty
-            MaxFramesToDisplay ++;
+            if (MaxFramesToDisplay == 0xFF) {
+              MaxFramesToDisplay = 0;
+            } else {
+              MaxFramesToDisplay ++;
+            }
             break;
           }
         }
