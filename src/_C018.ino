@@ -21,6 +21,12 @@
 #include "ESPEasy_fdwdecl.h"
 #include "_CPlugin_Helper.h"
 
+
+// Have this define after the includes, so we can set it in Custom.h
+#ifndef C018_FORCE_SW_SERIAL
+#define C018_FORCE_SW_SERIAL false
+#endif
+
 struct C018_data_struct {
   C018_data_struct() : C018_easySerial(nullptr), myLora(nullptr) {}
 
@@ -66,7 +72,7 @@ struct C018_data_struct {
 
     reset();
     // FIXME TD-er: Make force SW serial a proper setting.
-    C018_easySerial = new ESPeasySerial(serial_rx, serial_tx, false, 64, true);
+    C018_easySerial = new ESPeasySerial(serial_rx, serial_tx, false, 64, C018_FORCE_SW_SERIAL);
 
     if (C018_easySerial != nullptr) {
       if (resetPin == -1) {
