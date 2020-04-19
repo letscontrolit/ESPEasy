@@ -1180,7 +1180,7 @@ void ResetFactory()
   Settings.Pin_status_led  = gpio_settings.status_led;
   Settings.Pin_status_led_Inversed  = DEFAULT_PIN_STATUS_LED_INVERSED;
   Settings.Pin_sd_cs       = -1;
-  Settings.Pin_Reset       = -1;
+  Settings.Pin_Reset       = DEFAULT_PIN_RESET_BUTTON;
   Settings.Protocol[0]     = DEFAULT_PROTOCOL;
   Settings.deepSleep_wakeTime       = false;
   Settings.CustomCSS       = false;
@@ -2686,6 +2686,10 @@ bool OTA_possible(uint32_t& maxSketchSize, bool& use2step) {
   maxSketchSize -= 16; // Must leave 16 bytes at the end.
   if (maxSketchSize > MAX_SKETCH_SIZE) maxSketchSize = MAX_SKETCH_SIZE;
   return otaPossible;
+#elif defined(ESP32)
+  maxSketchSize = MAX_SKETCH_SIZE;
+  use2step = false;
+  return true;
 #else
   return false;
 #endif

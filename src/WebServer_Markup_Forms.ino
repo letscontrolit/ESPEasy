@@ -1,3 +1,5 @@
+#include <Arduino.h>
+
 
 // ********************************************************************************
 // Add a separator as row start
@@ -130,6 +132,12 @@ void addFormPasswordBox(const String& label, const String& id, const String& pas
   // html += password;   //password will not published over HTTP
   html += "'>";
   addHtml(html);
+}
+
+bool getFormPassword(const String& id, String& password)
+{
+  password = web_server.arg(id);
+  return !password.equals(F("*****"));
 }
 
 // ********************************************************************************
@@ -317,10 +325,8 @@ bool isFormItem(const String& id)
 
 void copyFormPassword(const String& id, char *pPassword, int maxlength)
 {
-  String password = web_server.arg(id);
-
-  if (password == F("*****")) { // no change?
-    return;
+  String password;
+  if (getFormPassword(id, password)) {
+    safe_strncpy(pPassword, password.c_str(), maxlength);
   }
-  safe_strncpy(pPassword, password.c_str(), maxlength);
 }
