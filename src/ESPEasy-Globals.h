@@ -190,6 +190,7 @@ extern NotificationStruct Notification[NPLUGIN_MAX];
   #endif
   #define PIN_D_MAX        39
   extern int8_t ledChannelPin[16];
+  #define MAX_SKETCH_SIZE 1900544   // 0x1d0000 look at partitions in csv file
 #endif
 
 #include <WiFiUdp.h>
