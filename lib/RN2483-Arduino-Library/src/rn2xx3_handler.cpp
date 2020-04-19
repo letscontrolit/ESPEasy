@@ -30,7 +30,9 @@ String rn2xx3_handler::sendRawCommand(const String& command)
     log += '(';
     log += String(millis() - timer);
     log += ')';
-    setLastError(log);
+    log += F(" max length: ");
+    log += _max_received_length;
+    setLastError(log);    
   }
 
   ret.trim();
@@ -169,6 +171,9 @@ rn2xx3_handler::RN_state rn2xx3_handler::async_loop()
       break;
 
     case RN_state::timeout:
+      sendAutoBaud();
+      break;
+
     case RN_state::max_attempt_reached:
     case RN_state::error:
     case RN_state::duty_cycle_exceeded:
@@ -812,6 +817,9 @@ bool rn2xx3_handler::read_line()
       _receivedData += character;
 
       if (character == '\n') {
+        if (_receivedData.length() > _max_received_length) {
+          _max_received_length = _receivedData.length();
+        }
         return true;
       }
       if (available == 0) {
@@ -1234,6 +1242,13 @@ bool rn2xx3_handler::setTXoutputPower(int pwridx)
      10: 10 dBm
    */
   return sendMacSet(F("pwridx"), String(pwridx));
+}
+
+void rn2xx3_handler::sendAutoBaud()
+{
+  _serial.write(0x00);
+  _serial.write(0x55);
+  _serial.println();
 }
 
 bool rn2xx3_handler::check_set_keys()
