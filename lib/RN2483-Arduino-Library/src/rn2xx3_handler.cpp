@@ -1246,8 +1246,8 @@ bool rn2xx3_handler::setTXoutputPower(int pwridx)
 
 void rn2xx3_handler::sendAutoBaud()
 {
-  _serial.write(0x00);
-  _serial.write(0x55);
+  _serial.write(static_cast<uint8_t>(0x00));
+  _serial.write(static_cast<uint8_t>(0x55));
   _serial.println();
 }
 
