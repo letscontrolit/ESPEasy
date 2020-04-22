@@ -177,6 +177,7 @@ String parseStringToEndKeepCase(const String& string, byte indexFind);
 String tolerantParseStringKeepCase(const String& string, byte indexFind);
 
 int parseCommandArgumentInt(const String& string, unsigned int argc);
+taskIndex_t parseCommandArgumentTaskIndex(const String& string, unsigned int argc);
 
 String describeAllowedIPrange();
 void clearAccessBlock();

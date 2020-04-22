@@ -35,11 +35,16 @@
 
   #include <WiFi.h>
   #include <WebServer.h>
-
+  #include <ESP32HTTPUpdateServer.h>
+  
   extern WebServer web_server;
+  #ifndef NO_HTTP_UPDATER
+  extern ESP32HTTPUpdateServer httpUpdater;
+  #endif
 
 #endif
 
 
 
 #endif // GLOBALS_SERVICES_H
+  
