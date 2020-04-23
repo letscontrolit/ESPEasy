@@ -314,17 +314,17 @@ bool rules_replace_common_mistakes(const String& from, const String& to, String&
   if (line.indexOf(from) == -1) {
     return false; // Nothing replaced
   }
-  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+  if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
     String log;
     log.reserve(32 + from.length() + to.length() + line.length());
-    log = F("Rules: '");
+    log = F("Rules (Syntax Error, auto-corrected): '");
     log += from;
     log += F("' => '");
     log += to;
     log += F("' in: '");
     log += line;
     log += '\'';
-    addLog(LOG_LEVEL_INFO, log);
+    addLog(LOG_LEVEL_ERROR, log);
   }
   line.replace(from, to);
   return true;
