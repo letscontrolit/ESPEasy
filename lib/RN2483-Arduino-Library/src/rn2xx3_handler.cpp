@@ -171,7 +171,7 @@ rn2xx3_handler::RN_state rn2xx3_handler::async_loop()
       break;
 
     case RN_state::timeout:
-      sendAutoBaud();
+      sendWakeSequence();
       break;
 
     case RN_state::max_attempt_reached:
@@ -1244,7 +1244,7 @@ bool rn2xx3_handler::setTXoutputPower(int pwridx)
   return sendMacSet(F("pwridx"), String(pwridx));
 }
 
-void rn2xx3_handler::sendAutoBaud()
+void rn2xx3_handler::sendWakeSequence()
 {
   _serial.write(static_cast<uint8_t>(0x00));
   _serial.write(static_cast<uint8_t>(0x55));

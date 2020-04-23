@@ -305,7 +305,7 @@ public:
   bool setTXoutputPower(int pwridx);
 
   // Send the autobaud sequence to try and wake the module.
-  void sendAutoBaud();
+  void sendWakeSequence();
 };
 
 
