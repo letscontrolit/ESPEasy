@@ -63,9 +63,10 @@ struct P002_data_struct : public PluginTaskData_base {
     return false;
   }
 
-  uint16_t OversamplingCount  = 0;
+  uint16_t OversamplingCount = 0;
 
 private:
+
   uint32_t OversamplingValue  = 0;
   uint16_t OversamplingMinVal = P002_MAX_ADC_VALUE;
   uint16_t OversamplingMaxVal = 0;
@@ -129,7 +130,8 @@ boolean Plugin_002(byte function, struct EventStruct *event, String& string)
       {
         // Output the statistics for the current settings.
         uint16_t raw_value = 0;
-        float value;
+        float    value;
+
         if (P002_getOutputValue(event, raw_value, value)) {
           P002_formatStatistics(F("Current"), raw_value, value);
         }
@@ -169,7 +171,7 @@ boolean Plugin_002(byte function, struct EventStruct *event, String& string)
       break;
     }
 
-    case PLUGIN_INIT:  
+    case PLUGIN_INIT:
     {
       if (!PCONFIG(0)) // Oversampling
       {
@@ -186,6 +188,7 @@ boolean Plugin_002(byte function, struct EventStruct *event, String& string)
         uint16_t currentValue;
         P002_performRead(event, currentValue);
       }
+
       // Fall through to PLUGIN_TEN_PER_SECOND
     }
     case PLUGIN_TEN_PER_SECOND:
@@ -210,7 +213,8 @@ boolean Plugin_002(byte function, struct EventStruct *event, String& string)
     case PLUGIN_READ:
     {
       uint16_t raw_value = 0;
-      float res_value = 0.0;
+      float    res_value = 0.0;
+
       if (P002_getOutputValue(event, raw_value, res_value)) {
         UserVar[event->BaseVarIndex] = res_value;
 
@@ -229,7 +233,7 @@ boolean Plugin_002(byte function, struct EventStruct *event, String& string)
               log += P002_data->OversamplingCount;
               log += F(" samples)");
             }
-          addLog(LOG_LEVEL_INFO, log);
+            addLog(LOG_LEVEL_INFO, log);
           }
           P002_data->reset();
           success = true;
@@ -250,7 +254,7 @@ boolean Plugin_002(byte function, struct EventStruct *event, String& string)
 
 bool P002_getOutputValue(struct EventStruct *event, uint16_t& raw_value, float& res_value) {
   float float_value = 0.0;
-  bool success = false;
+  bool  success     = false;
 
   P002_data_struct *P002_data =
     static_cast<P002_data_struct *>(getPluginTaskData(event->TaskIndex));
@@ -261,10 +265,11 @@ bool P002_getOutputValue(struct EventStruct *event, uint16_t& raw_value, float& 
     } else {
       if (P002_performRead(event, raw_value)) {
         float_value = static_cast<float>(raw_value);
-        success = true;
+        success     = true;
       }
     }
-    if (success) res_value = P002_applyCalibration(event, float_value);
+
+    if (success) { res_value = P002_applyCalibration(event, float_value); }
   }
   return success;
 }
