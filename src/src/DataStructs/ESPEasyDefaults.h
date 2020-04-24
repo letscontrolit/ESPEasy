@@ -187,6 +187,9 @@
 #define DEFAULT_ETH_CLOCK_MODE           3
 #endif
 
+#ifndef DEFAULT_PIN_RESET_BUTTON
+#define DEFAULT_PIN_RESET_BUTTON         (-1)
+#endif
 
 
 // --- Advanced Settings ---------------------------------------------------------------------------------
