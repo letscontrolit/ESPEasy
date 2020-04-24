@@ -75,6 +75,10 @@
 bool WiFiConnected() {
   START_TIMER;
 
+  #ifdef HAS_ETHERNET
+  return eth_connected;
+  #endif
+
   if (unprocessedWifiEvents()) { return false; }
 
   if ((timerAPstart != 0) && timeOutReached(timerAPstart)) {

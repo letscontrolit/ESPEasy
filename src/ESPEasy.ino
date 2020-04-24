@@ -1,6 +1,11 @@
 
 #include <Arduino.h>
 
+#ifdef HAS_ETHERNET
+#include <ETH.h>
+static bool eth_connected = false;
+#endif
+
 #ifdef CONTINUOUS_INTEGRATION
 #pragma GCC diagnostic error "-Wall"
 #else
@@ -369,9 +374,11 @@ void setup()
     rulesProcessing(event); // TD-er: Process events in the setup() now.
   }
 
-  WiFiConnectRelaxed();
 #ifdef HAS_ETHERNET
+  WiFi.onEvent(ETHEvent);
   ETHConnectRelaxed();
+#else
+  WiFiConnectRelaxed();
 #endif
 
   setWebserverRunning(true);
@@ -550,7 +557,9 @@ void loop()
 
   updateLoopStats();
 
+  #ifndef HAS_ETHERNET
   handle_unprocessedWiFiEvents();
+  #endif
 
   bool firstLoopConnectionsEstablished = WiFiConnected() && firstLoop;
   if (firstLoopConnectionsEstablished) {
@@ -1012,3 +1021,45 @@ void backgroundtasks()
   runningBackgroundTasks=false;
   STOP_TIMER(BACKGROUND_TASKS);
 }
+
+#ifdef HAS_ETHERNET
+void ETHEvent(WiFiEvent_t event)
+{
+  switch (event) {
+    case SYSTEM_EVENT_ETH_START:
+      addLog(LOG_LEVEL_INFO, F("ETH Started"));
+      //set eth hostname here
+      //ETH.setHostname("esp32-ethernet");
+      break;
+    case SYSTEM_EVENT_ETH_CONNECTED:
+      addLog(LOG_LEVEL_INFO, F("ETH Connected"));
+      break;
+    case SYSTEM_EVENT_ETH_GOT_IP:
+      {
+        String log = F("ETH MAC: ");
+        log += ETH.macAddress();
+        log += F(", IPv4: ");
+        log += ETH.localIP().toString();
+        if (ETH.fullDuplex()) {
+          log += F(", FULL_DUPLEX");
+        }
+        log += F(", ");
+        log += ETH.linkSpeed();
+        log += F("Mbps");
+        addLog(LOG_LEVEL_INFO, log);
+      }
+      eth_connected = true;
+      break;
+    case SYSTEM_EVENT_ETH_DISCONNECTED:
+      addLog(LOG_LEVEL_ERROR, F("ETH Disconnected"));
+      eth_connected = false;
+      break;
+    case SYSTEM_EVENT_ETH_STOP:
+      addLog(LOG_LEVEL_INFO, F("ETH Stopped"));
+      eth_connected = false;
+      break;
+    default:
+      break;
+  }
+}
+#endif
