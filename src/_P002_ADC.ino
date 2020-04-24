@@ -34,6 +34,16 @@ struct P002_data_struct : public PluginTaskData_base {
   }
 
   void addOversamplingValue(uint16_t currentValue) {
+    // Extra check to only add min or max readings once.
+    // They will be taken out of the averaging only one time.
+    if ((currentValue == 0) && (currentValue == OversamplingMinVal)) {
+      return;
+    }
+
+    if ((currentValue == P002_MAX_ADC_VALUE) && (currentValue == OversamplingMaxVal)) {
+      return;
+    }
+
     OversamplingValue += currentValue;
     ++OversamplingCount;
 
@@ -173,23 +183,12 @@ boolean Plugin_002(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      if (!PCONFIG(0)) // Oversampling
-      {
-        initPluginTaskData(event->TaskIndex, new P002_data_struct());
-        P002_data_struct *P002_data =
-          static_cast<P002_data_struct *>(getPluginTaskData(event->TaskIndex));
+      initPluginTaskData(event->TaskIndex, new P002_data_struct());
+      P002_data_struct *P002_data =
+        static_cast<P002_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-        if (nullptr == P002_data) {
-          return success;
-        }
-        success = true;
-
-        // Read at least one value, see https://github.com/letscontrolit/ESPEasy/issues/2646
-        uint16_t currentValue;
-        P002_performRead(event, currentValue);
-      }
-
-      // Fall through to PLUGIN_TEN_PER_SECOND
+      success = (nullptr != P002_data);
+      break;
     }
     case PLUGIN_TEN_PER_SECOND:
     {
@@ -201,9 +200,8 @@ boolean Plugin_002(byte function, struct EventStruct *event, String& string)
         if (nullptr != P002_data) {
           uint16_t currentValue;
 
-          if (P002_performRead(event, currentValue)) {
-            P002_data->addOversamplingValue(currentValue);
-          }
+          P002_performRead(event, currentValue);
+          P002_data->addOversamplingValue(currentValue);
         }
       }
       success = true;
@@ -238,10 +236,7 @@ boolean Plugin_002(byte function, struct EventStruct *event, String& string)
           P002_data->reset();
           success = true;
         } else {
-          if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-            String log = F("ADC  : No value received ");
-            addLog(LOG_LEVEL_ERROR, log);
-          }
+          addLog(LOG_LEVEL_ERROR, F("ADC  : No value received "));
           success = false;
         }
       }
@@ -253,25 +248,22 @@ boolean Plugin_002(byte function, struct EventStruct *event, String& string)
 }
 
 bool P002_getOutputValue(struct EventStruct *event, uint16_t& raw_value, float& res_value) {
-  float float_value = 0.0;
-  bool  success     = false;
-
   P002_data_struct *P002_data =
     static_cast<P002_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-  if (nullptr != P002_data) {
-    if (PCONFIG(0) && P002_data->getOversamplingValue(float_value, raw_value)) {
-      success = true;
-    } else {
-      if (P002_performRead(event, raw_value)) {
-        float_value = static_cast<float>(raw_value);
-        success     = true;
-      }
-    }
-
-    if (success) { res_value = P002_applyCalibration(event, float_value); }
+  if (nullptr == P002_data) {
+    return false;
   }
-  return success;
+  float float_value = 0.0;
+
+  bool valueRead = PCONFIG(0) && P002_data->getOversamplingValue(float_value, raw_value);
+  if (!valueRead) {
+    P002_performRead(event, raw_value);
+    float_value = static_cast<float>(raw_value);
+  }
+
+  res_value = P002_applyCalibration(event, float_value);
+  return true;
 }
 
 float P002_applyCalibration(struct EventStruct *event, float float_value) {
@@ -291,24 +283,13 @@ float P002_applyCalibration(struct EventStruct *event, float float_value) {
   return float_value;
 }
 
-bool P002_performRead(struct EventStruct *event, uint16_t& value) {
-  // Define it static so we just return the last value when no read can be performed.
-  static uint16_t last_value = 0;
-  bool valid                 = true;
-
-  #if defined(ESP8266)
-
-  if (!wifiConnectInProgress) {
-    last_value = analogRead(A0);
-  } else {
-    valid = false;
-  }
+void P002_performRead(struct EventStruct *event, uint16_t& value) {
+  #ifdef ESP8266
+  value = espeasy_analogRead(A0);
   #endif // if defined(ESP8266)
   #if defined(ESP32)
-  last_value = analogRead(CONFIG_PIN1);
+  value = espeasy_analogRead(CONFIG_PIN1);
   #endif // if defined(ESP32)
-  value = last_value;
-  return valid;
 }
 
 void P002_formatStatistics(const String& label, int16_t raw, float float_value) {

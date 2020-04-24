@@ -190,11 +190,16 @@ void setup()
 #endif
 
 
-#if FEATURE_ADC_VCC
+  // Read ADC at boot, before WiFi tries to connect.
+  // see https://github.com/letscontrolit/ESPEasy/issues/2646
   if (!wifiConnectInProgress) {
+#if FEATURE_ADC_VCC
     vcc = ESP.getVcc() / 1000.0;
-  }
 #endif
+#ifdef ESP8266
+    lastADCvalue = analogRead(A0);
+#endif
+  }  
 
   resetPluginTaskData();
 

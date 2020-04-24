@@ -306,6 +306,20 @@ bool allocatedOnStack(const void* address) {
 #endif // ESP32
 
 
+uint16_t espeasy_analogRead(uint8 pin) {
+  #if defined(ESP8266)
+  if (!wifiConnectInProgress) {
+    lastADCvalue = analogRead(A0);
+  }
+  return lastADCvalue;
+  #endif // if defined(ESP8266)
+  #if defined(ESP32)
+  return analogRead(pin);
+  #endif // if defined(ESP32)
+}
+
+
+
 /**********************************************************
 *                                                         *
 * Deep Sleep related functions                            *

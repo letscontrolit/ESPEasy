@@ -312,6 +312,9 @@ extern unsigned long last_system_event_run;
 #if FEATURE_ADC_VCC
 extern float vcc;
 #endif
+#ifdef ESP8266
+extern uint16_t lastADCvalue; // Keep track of last ADC value as it cannot be read while WiFi is connecting
+#endif
 
 extern boolean WebLoggedIn;
 extern int WebLoggedInTimer;
