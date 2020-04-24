@@ -3,6 +3,8 @@
 //######################## Plugin 005: Temperature and Humidity sensor DHT 11/22 ########################
 //#######################################################################################################
 
+#include "_Plugin_Helper.h"
+
 #define PLUGIN_005
 #define PLUGIN_ID_005         5
 #define PLUGIN_NAME_005       "Environment - DHT11/12/22  SONOFF2301/7021"
@@ -149,41 +151,40 @@ bool P005_do_plugin_read(struct EventStruct *event) {
 
   pinMode(Plugin_005_DHT_Pin, OUTPUT);
   digitalWrite(Plugin_005_DHT_Pin, LOW);              // Pull low
+  
   switch (Par3) {
-    case P005_DHT11:
-    case P005_DHT22:
-    case P005_DHT12:  delay(18); break;  // FIXME TD-er: Must this be so long?
+    case P005_DHT11:  delay(19); break;  // minimum 18ms
+    case P005_DHT22:  delay(2);  break;  // minimum 1ms
+    case P005_DHT12:  delay(200); break; // minimum 200ms
     case P005_AM2301: delayMicroseconds(900); break;
     case P005_SI7021: delayMicroseconds(500); break;
   }
+  
+  pinMode(Plugin_005_DHT_Pin, INPUT_PULLUP);
+  
   switch (Par3) {
     case P005_DHT11:
     case P005_DHT22:
     case P005_DHT12:
     case P005_AM2301:
-      pinMode(Plugin_005_DHT_Pin, INPUT);
       delayMicroseconds(50);
       break;
     case P005_SI7021:
       // See: https://github.com/letscontrolit/ESPEasy/issues/1798
-      digitalWrite(Plugin_005_DHT_Pin, HIGH);
       delayMicroseconds(20);
-      pinMode(Plugin_005_DHT_Pin, INPUT);
       break;
   }
-  if(!P005_waitState(0)) {P005_log(event, P005_error_no_reading); return false; }
-  if(!P005_waitState(1)) {P005_log(event, P005_error_no_reading); return false; }
+
   noInterrupts();
-  if(!P005_waitState(0)) {
-    interrupts();
-    P005_log(event, P005_error_no_reading);
-    return false;
-  }
+  if(!P005_waitState(0)) {interrupts(); P005_log(event, P005_error_no_reading); return false; }
+  if(!P005_waitState(1)) {interrupts(); P005_log(event, P005_error_no_reading); return false; }
+  if(!P005_waitState(0)) {interrupts(); P005_log(event, P005_error_no_reading); return false; }
+
   bool readingAborted = false;
   byte dht_dat[5];
   for (i = 0; i < 5 && !readingAborted; i++)
   {
-      byte data = Plugin_005_read_dht_dat();
+      int data = Plugin_005_read_dht_dat();
       if(data == -1)
       {   P005_log(event, P005_error_protocol_timeout);
           readingAborted = true;
@@ -194,7 +195,7 @@ bool P005_do_plugin_read(struct EventStruct *event) {
   if (readingAborted)
     return false;
 
-        // Checksum calculation is a Rollover Checksum by design!
+  // Checksum calculation is a Rollover Checksum by design!
   byte dht_check_sum = (dht_dat[0] + dht_dat[1] + dht_dat[2] + dht_dat[3]) & 0xFF; // check check_sum
   if (dht_dat[4] != dht_check_sum)
   {
@@ -206,9 +207,6 @@ bool P005_do_plugin_read(struct EventStruct *event) {
   float humidity = NAN;
   switch (Par3) {
     case P005_DHT11:
-      temperature = float(dht_dat[2]); // Temperature
-      humidity = float(dht_dat[0]); // Humidity
-      break;
     case P005_DHT12:
       temperature = float(dht_dat[2]*10 + (dht_dat[3] & 0x7f)) / 10.0; // Temperature
       if (dht_dat[3] & 0x80) { temperature = -temperature; } // Negative temperature

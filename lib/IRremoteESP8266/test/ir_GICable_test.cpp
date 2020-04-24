@@ -12,6 +12,7 @@ TEST(TestSendGICable, SendDataOnly) {
   irsend.begin();
   irsend.sendGICable(0);
   EXPECT_EQ(
+      "f39000d50"
       "m9000s4400"
       "m550s2200m550s2200m550s2200m550s2200m550s2200m550s2200m550s2200m550s2200"
       "m550s2200m550s2200m550s2200m550s2200m550s2200m550s2200m550s2200m550s2200"
@@ -20,6 +21,7 @@ TEST(TestSendGICable, SendDataOnly) {
       irsend.outputStr());
   irsend.sendGICable(0x8807);
   EXPECT_EQ(
+      "f39000d50"
       "m9000s4400"
       "m550s4400m550s2200m550s2200m550s2200m550s4400m550s2200m550s2200m550s2200"
       "m550s2200m550s2200m550s2200m550s2200m550s2200m550s4400m550s4400m550s4400"
@@ -28,6 +30,7 @@ TEST(TestSendGICable, SendDataOnly) {
       irsend.outputStr());
   irsend.sendGICable(0xFFFF);
   EXPECT_EQ(
+      "f39000d50"
       "m9000s4400"
       "m550s4400m550s4400m550s4400m550s4400m550s4400m550s4400m550s4400m550s4400"
       "m550s4400m550s4400m550s4400m550s4400m550s4400m550s4400m550s4400m550s4400"
@@ -43,6 +46,7 @@ TEST(TestSendGICable, SendWithRepeats) {
   // Send a command with 0 repeats.
   irsend.sendGICable(0x8807, kGicableBits, 0);
   EXPECT_EQ(
+      "f39000d50"
       "m9000s4400"
       "m550s4400m550s2200m550s2200m550s2200m550s4400m550s2200m550s2200m550s2200"
       "m550s2200m550s2200m550s2200m550s2200m550s2200m550s4400m550s4400m550s4400"
@@ -51,6 +55,7 @@ TEST(TestSendGICable, SendWithRepeats) {
   // Send a command with 1 repeat.
   irsend.sendGICable(0x8807, kGicableBits, 1);
   EXPECT_EQ(
+      "f39000d50"
       "m9000s4400"
       "m550s4400m550s2200m550s2200m550s2200m550s4400m550s2200m550s2200m550s2200"
       "m550s2200m550s2200m550s2200m550s2200m550s2200m550s4400m550s4400m550s4400"
@@ -60,6 +65,7 @@ TEST(TestSendGICable, SendWithRepeats) {
   // Send a command with 3 repeats.
   irsend.sendGICable(0x8807, kGicableBits, 3);
   EXPECT_EQ(
+      "f39000d50"
       "m9000s4400"
       "m550s4400m550s2200m550s2200m550s2200m550s4400m550s2200m550s2200m550s2200"
       "m550s2200m550s2200m550s2200m550s2200m550s2200m550s4400m550s4400m550s4400"
@@ -96,7 +102,7 @@ TEST(TestDecodeGICable, RealExampleDecodeOK) {
   irsend.begin();
 
   // Real GICable "OK/Select" message.
-  // Ref: https://github.com/markszabo/IRremoteESP8266/issues/447
+  // Ref: https://github.com/crankyoldgit/IRremoteESP8266/issues/447
   uint16_t rawData[39] = {9064, 4408, 580, 4408,  580,  2152, 578, 2150,
                           580,  2150, 580, 4408,  580,  2150, 580, 2150,
                           580,  2150, 580, 2150,  580,  2150, 580, 2150,
@@ -119,7 +125,7 @@ TEST(TestDecodeGICable, RealExampleDecodeLEFT) {
   irsend.begin();
 
   // Real GICable "LEFT" message.
-  // Ref: https://github.com/markszabo/IRremoteESP8266/issues/447
+  // Ref: https://github.com/crankyoldgit/IRremoteESP8266/issues/447
   uint16_t rawData[39] = {9040, 4434, 554, 2176,  580,  4408, 554, 4434,
                           582,  2148, 554, 4434,  580,  4408, 556, 2174,
                           580,  2150, 580, 2150,  582,  2148, 556, 2176,
@@ -143,7 +149,7 @@ TEST(TestDecodeGICable, RealExampleDecodeZEROKey) {
 
   // Real GICable "Zero Key" message.
   // Note: Zero key looks similar to a JVC message, hence this test.
-  // Ref: https://github.com/markszabo/IRremoteESP8266/issues/447
+  // Ref: https://github.com/crankyoldgit/IRremoteESP8266/issues/447
   uint16_t rawData[39] = {9036, 4434, 552, 2178,  552,  2178, 552, 2180,
                           550,  2178, 552, 2178,  550,  2180, 552, 2178,
                           552,  2178, 550, 2180,  552,  2178, 526, 2204,

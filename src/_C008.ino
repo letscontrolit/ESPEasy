@@ -8,13 +8,13 @@
 #define CPLUGIN_NAME_008       "Generic HTTP"
 #include <ArduinoJson.h>
 
-bool CPlugin_008(byte function, struct EventStruct *event, String& string)
+bool CPlugin_008(CPlugin::Function function, struct EventStruct *event, String& string)
 {
   bool success = false;
 
   switch (function)
   {
-    case CPLUGIN_PROTOCOL_ADD:
+    case CPlugin::Function::CPLUGIN_PROTOCOL_ADD:
       {
         Protocol[++protocolCount].Number = CPLUGIN_ID_008;
         Protocol[protocolCount].usesMQTT = false;
@@ -26,13 +26,13 @@ bool CPlugin_008(byte function, struct EventStruct *event, String& string)
         break;
       }
 
-    case CPLUGIN_GET_DEVICENAME:
+    case CPlugin::Function::CPLUGIN_GET_DEVICENAME:
       {
         string = F(CPLUGIN_NAME_008);
         break;
       }
 
-    case CPLUGIN_INIT:
+    case CPlugin::Function::CPLUGIN_INIT:
       {
         MakeControllerSettings(ControllerSettings);
         LoadControllerSettings(event->ControllerIndex, ControllerSettings);
@@ -40,20 +40,22 @@ bool CPlugin_008(byte function, struct EventStruct *event, String& string)
         break;
       }
 
-    case CPLUGIN_PROTOCOL_TEMPLATE:
+    case CPlugin::Function::CPLUGIN_PROTOCOL_TEMPLATE:
       {
         event->String1 = "";
         event->String2 = F("demo.php?name=%sysname%&task=%tskname%&valuename=%valname%&value=%value%");
         break;
       }
 
-    case CPLUGIN_PROTOCOL_SEND:
+    case CPlugin::Function::CPLUGIN_PROTOCOL_SEND:
       {
         // Collect the values at the same run, to make sure all are from the same sample
         byte valueCount = getValueCountFromSensorType(event->sensorType);
         C008_queue_element element(event, valueCount);
-        if (ExtraTaskSettings.TaskIndex != event->TaskIndex)
-          PluginCall(PLUGIN_GET_DEVICEVALUENAMES, event, dummyString);
+        if (ExtraTaskSettings.TaskIndex != event->TaskIndex) {
+          String dummy;
+          PluginCall(PLUGIN_GET_DEVICEVALUENAMES, event, dummy);
+        }
 
         MakeControllerSettings(ControllerSettings);
         LoadControllerSettings(event->ControllerIndex, ControllerSettings);
@@ -65,10 +67,9 @@ bool CPlugin_008(byte function, struct EventStruct *event, String& string)
           if (isvalid) {
             element.txt[x] = "/";
             element.txt[x] += ControllerSettings.Publish;
-            parseControllerVariables(element.txt[x], event, true);
-
-            element.txt[x].replace(F("%valname%"), URLEncode(ExtraTaskSettings.TaskDeviceValueNames[x]));
+            element.txt[x].replace(F("%valname%"), ExtraTaskSettings.TaskDeviceValueNames[x]);
             element.txt[x].replace(F("%value%"), formattedValue);
+            parseControllerVariables(element.txt[x], event, true);
 #ifndef BUILD_NO_DEBUG
             addLog(LOG_LEVEL_DEBUG_MORE, element.txt[x]);
 #endif
@@ -79,12 +80,15 @@ bool CPlugin_008(byte function, struct EventStruct *event, String& string)
         break;
       }
 
-    case CPLUGIN_FLUSH:
+    case CPlugin::Function::CPLUGIN_FLUSH:
       {
         process_c008_delay_queue();
         delay(0);
         break;
       }
+
+    default:
+      break;
 
   }
   return success;
@@ -93,6 +97,12 @@ bool CPlugin_008(byte function, struct EventStruct *event, String& string)
 //********************************************************************************
 // Generic HTTP get request
 //********************************************************************************
+
+// Uncrustify may change this into multi line, which will result in failed builds
+// *INDENT-OFF*
+bool do_process_c008_delay_queue(int controller_number, const C008_queue_element& element, ControllerSettingsStruct& ControllerSettings);
+// *INDENT-ON*
+
 bool do_process_c008_delay_queue(int controller_number, const C008_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
   while (element.txt[element.valuesSent] == "") {
     // A non valid value, which we are not going to send.

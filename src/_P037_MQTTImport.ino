@@ -3,9 +3,15 @@
 //#################################### Plugin 037: MQTT Import ##########################################
 //#######################################################################################################
 
+
 // Original plugin created by Namirda
 
 // This task reads data from the MQTT Import input stream and saves the value
+
+#include "src/Globals/MQTT.h"
+#include "src/Globals/CPlugins.h"
+#include "src/Globals/Plugins.h"
+#include "_Plugin_Helper.h"
 
 #define PLUGIN_037
 #define PLUGIN_ID_037         37
@@ -21,9 +27,11 @@
 // Declare a Wifi client for this plugin only
 
 // TODO TD-er: These must be kept in some vector to allow multiple instances of MQTT import.
+#ifdef USES_MQTT
 WiFiClient espclient_037;
 PubSubClient *MQTTclient_037 = NULL;
 bool MQTTclient_037_connected = false;
+#endif //USES_MQTT
 int reconnectCount = 0;
 
 String getClientName() {
@@ -31,7 +39,7 @@ String getClientName() {
   // Generate the MQTT import client name from the system name and a suffix
   //
   String tmpClientName = F("%sysname%-Import");
-  String ClientName = parseTemplate(tmpClientName, 20);
+  String ClientName = parseTemplate(tmpClientName);
   ClientName.trim(); // Avoid spaced in the name.
   ClientName.replace(' ', '_');
   if (reconnectCount != 0) ClientName += reconnectCount;
@@ -68,8 +76,11 @@ void Plugin_037_update_connect_status() {
     P037_MQTTImport_connected  = MQTTclient_037_connected;
 
     if (Settings.UseRules) {
-      String event = connected ? F("MQTTimport#Connected") : F("MQTTimport#Disconnected");
-      rulesProcessing(event);
+      if (connected) {
+        eventQueue.add(F("MQTTimport#Connected"));
+      } else {
+        eventQueue.add(F("MQTTimport#Disconnected"));
+      }
     }
     if (!connected) {
       // workaround see: https://github.com/esp8266/Arduino/issues/4497#issuecomment-373023864
@@ -144,7 +155,7 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
         {
           String argName = F("p037_template");
           argName += varNr + 1;
-          if (!safe_strncpy(deviceTemplate[varNr], WebServer.arg(argName).c_str(), sizeof(deviceTemplate[varNr]))) {
+          if (!safe_strncpy(deviceTemplate[varNr], web_server.arg(argName).c_str(), sizeof(deviceTemplate[varNr]))) {
             error += getCustomTaskSettingsError(varNr);
           }
         }
@@ -172,6 +183,7 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
             success = true;
           }
         }
+		break;
       }
 
     case PLUGIN_TEN_PER_SECOND:
@@ -224,6 +236,7 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
         //      Get the payload and check it out
         LoadTaskSettings(event->TaskIndex);
 
+        // FIXME TD-er: It may be useful to generate events with string values.
         String Payload = event->String2;
         float floatPayload;
         if (!string2float(Payload, floatPayload)) {
@@ -258,14 +271,15 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
             UserVar[event->BaseVarIndex + x] = floatPayload;							// Save the new value
 
             // Log the event
-
-            String log = F("IMPT : [");
-            log += getTaskDeviceName(event->TaskIndex);
-            log += F("#");
-            log += ExtraTaskSettings.TaskDeviceValueNames[x];
-            log += F("] : ");
-            log += floatPayload;
-            addLog(LOG_LEVEL_INFO, log);
+            if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+              String log = F("IMPT : [");
+              log += getTaskDeviceName(event->TaskIndex);
+              log += F("#");
+              log += ExtraTaskSettings.TaskDeviceValueNames[x];
+              log += F("] : ");
+              log += floatPayload;
+              addLog(LOG_LEVEL_INFO, log);
+            }
 
             // Generate event for rules processing - proposed by TridentTD
 
@@ -277,7 +291,7 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
               RuleEvent += ExtraTaskSettings.TaskDeviceValueNames[x];
               RuleEvent += F("=");
               RuleEvent += floatPayload;
-              rulesProcessing(RuleEvent);
+              eventQueue.add(RuleEvent);
             }
 
             success = true;
@@ -302,7 +316,7 @@ boolean MQTTSubscribe_037()
 
   //	Loop over all tasks looking for a 037 instance
 
-  for (byte y = 0; y < TASKS_MAX; y++)
+  for (taskIndex_t y = 0; y < TASKS_MAX; y++)
   {
     if (Settings.TaskDeviceNumber[y] == PLUGIN_ID_037)
     {
@@ -356,7 +370,12 @@ void mqttcallback_037(char* c_topic, byte* b_payload, unsigned int length)
   String payload = cpayload;		// convert byte to char string
   payload.trim();
 
-  byte DeviceIndex = getDeviceIndex(PLUGIN_ID_037);   // This is the device index of 037 modules -there should be one!
+  deviceIndex_t DeviceIndex = getDeviceIndex(PLUGIN_ID_037);   // This is the device index of 037 modules -there should be one!
+  if (!validDeviceIndex(DeviceIndex)) {
+    // This should never happen.
+    addLog(LOG_LEVEL_ERROR, F("Plugin 037 does not exist"));
+    return;
+  }
 
   // We generate a temp event structure to pass to the plugins
 
@@ -367,7 +386,7 @@ void mqttcallback_037(char* c_topic, byte* b_payload, unsigned int length)
 
   //  Here we loop over all tasks and call each 037 plugin with function PLUGIN_IMPORT
 
-  for (byte y = 0; y < TASKS_MAX; y++)
+  for (taskIndex_t y = 0; y < TASKS_MAX; y++)
   {
     if (Settings.TaskDeviceNumber[y] == PLUGIN_ID_037)                // if we have found a 037 device, then give it something to think about!
     {
@@ -390,8 +409,8 @@ boolean MQTTConnect_037()
   if (MQTTclient_037 == NULL) return false;
   String clientid = getClientName();
   // @ToDo TD-er: Plugin allows for more than one MQTT controller, but we're now using only the first enabled one.
-  int enabledMqttController = firstEnabledMQTTController();
-  if (enabledMqttController < 0) {
+  controllerIndex_t enabledMqttController = firstEnabledMQTT_ControllerIndex();
+  if (!validControllerIndex(enabledMqttController)) {
     // No enabled MQTT controller
     return false;
   }
@@ -418,8 +437,10 @@ boolean MQTTConnect_037()
   {
     String log = "";
 
-    if ((SecuritySettings.ControllerUser[enabledMqttController][0] != 0) && (SecuritySettings.ControllerPassword[enabledMqttController][0] != 0))
-      result = MQTTclient_037->connect(clientid.c_str(), SecuritySettings.ControllerUser[enabledMqttController], SecuritySettings.ControllerPassword[enabledMqttController]);
+    if (hasControllerCredentialsSet(enabledMqttController, ControllerSettings))
+      result = MQTTclient_037->connect(clientid.c_str(), 
+                                      getControllerUser(enabledMqttController, ControllerSettings).c_str(), 
+                                      getControllerPass(enabledMqttController, ControllerSettings).c_str());
     else
       result = MQTTclient_037->connect(clientid.c_str());
 

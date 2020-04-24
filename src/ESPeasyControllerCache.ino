@@ -1,8 +1,6 @@
 
 struct ControllerCache_struct {
-
-  ControllerCache_struct() {
-  }
+  ControllerCache_struct() {}
 
   ~ControllerCache_struct() {
     if (_RTC_cache_handler != nullptr) {
@@ -12,7 +10,7 @@ struct ControllerCache_struct {
   }
 
   // Write a single sample set to the buffer
-  bool write(uint8_t* data, unsigned int size) {
+  bool write(uint8_t *data, unsigned int size) {
     if (_RTC_cache_handler == nullptr) {
       return false;
     }
@@ -21,7 +19,7 @@ struct ControllerCache_struct {
 
   // Read a single sample set, either from file or buffer.
   // May delete a file if it is all read and not written to.
-  bool read(uint8_t* data, unsigned int size) {
+  bool read(uint8_t *data, unsigned int size) {
     return true;
   }
 
@@ -60,7 +58,7 @@ struct ControllerCache_struct {
   }
 
   // Read data without marking it as being read.
-  bool peek(uint8_t* data, unsigned int size) {
+  bool peek(uint8_t *data, unsigned int size) {
     if (_RTC_cache_handler == nullptr) {
       return false;
     }
@@ -75,9 +73,9 @@ struct ControllerCache_struct {
   }
 
   int readFileNr = 0;
-  int readPos = 0;
+  int readPos    = 0;
 
 private:
-  RTC_cache_handler_struct* _RTC_cache_handler = nullptr;
 
+  RTC_cache_handler_struct *_RTC_cache_handler = nullptr;
 };

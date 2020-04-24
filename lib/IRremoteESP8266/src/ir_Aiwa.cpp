@@ -12,6 +12,8 @@
 // Based off the RC-T501 RCU
 // Added by David Conran. (Inspired by IRremoteESP8266's implementation:
 //                         https://github.com/z3t0/Arduino-IRremote)
+// Supports:
+//   Brand: Aiwa,  Model: RC-T501 RCU
 
 const uint16_t kAiwaRcT501PreBits = 26;
 const uint16_t kAiwaRcT501PostBits = 1;
@@ -51,6 +53,8 @@ void IRsend::sendAiwaRCT501(uint64_t data, uint16_t nbits, uint16_t repeat) {
 //
 // Args:
 //   results: Ptr to the data to decode and where to store the decode result.
+//   offset:  The starting index to use when attempting to decode the raw data.
+//            Typically/Defaults to kStartOffset.
 //   nbits:   The number of data bits to expect. Typically kAiwaRcT501Bits.
 //   strict:  Flag indicating if we should perform strict matching.
 // Returns:
@@ -67,8 +71,8 @@ void IRsend::sendAiwaRCT501(uint64_t data, uint16_t nbits, uint16_t repeat) {
 //
 // Ref:
 //   http://www.sbprojects.com/knowledge/ir/nec.php
-bool IRrecv::decodeAiwaRCT501(decode_results *results, uint16_t nbits,
-                              bool strict) {
+bool IRrecv::decodeAiwaRCT501(decode_results *results, uint16_t offset,
+                              const uint16_t nbits, const bool strict) {
   // Compliance
   if (strict && nbits != kAiwaRcT501Bits)
     return false;  // Doesn't match our protocol defn.
@@ -80,7 +84,7 @@ bool IRrecv::decodeAiwaRCT501(decode_results *results, uint16_t nbits,
     return false;  // We can't possibly match something that big.
   // Decode it as a much bigger (non-standard) NEC message, so we have to turn
   // off strict mode checking for NEC.
-  if (!decodeNEC(results, expected_nbits, false))
+  if (!decodeNEC(results, offset, expected_nbits, false))
     return false;  // The NEC decode had a problem, so we should too.
   uint16_t actual_bits = results->bits;
   new_data = results->value;

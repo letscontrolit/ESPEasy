@@ -17,6 +17,8 @@
 //
 
 #include <HLW8012.h>
+#include "_Plugin_Helper.h"
+
 HLW8012 *Plugin_076_hlw = NULL;
 
 #define PLUGIN_076
@@ -324,8 +326,13 @@ boolean Plugin_076(byte function, struct EventStruct *event, String &string) {
     if (Plugin_076_hlw) {
       if (p076_read_stage == 0) {
         // Force a measurement start.
-        ++p076_read_stage;
-      } else if (p076_read_stage > 3) {
+//        ++p076_read_stage;
+//      } else if (p076_read_stage > 3) {
+          p076_hpower = Plugin_076_hlw->getActivePower();
+          p076_hvoltage = Plugin_076_hlw->getVoltage();
+          p076_hcurrent = Plugin_076_hlw->getCurrent();
+          p076_hpowfact = (int)(100 * Plugin_076_hlw->getPowerFactor());
+        
         // Measurement is complete.
         p076_read_stage = 0;
         if (PLUGIN_076_DEBUG) {
@@ -413,34 +420,19 @@ boolean Plugin_076(byte function, struct EventStruct *event, String &string) {
 
   case PLUGIN_WRITE:
     if (Plugin_076_hlw) {
-      String tmpString = string;
-      int argIndex = tmpString.indexOf(',');
-      if (argIndex){
-        tmpString = tmpString.substring(0, argIndex);
-      }
-      if (tmpString.equalsIgnoreCase(F("hlwreset"))) {
+      String command = parseString(string, 1);
+      if (command.equalsIgnoreCase(F("hlwreset"))) {
         Plugin076_ResetMultipliers();
         success = true;
       }
 
-      if (tmpString.equalsIgnoreCase(F("hlwcalibrate"))) {
-        String tmpStr = string;
+      if (command.equalsIgnoreCase(F("hlwcalibrate"))) {
         unsigned int CalibVolt = 0;
         double CalibCurr = 0;
         unsigned int CalibAcPwr = 0;
-        int comma1 = tmpStr.indexOf(',');
-        int comma2 = tmpStr.indexOf(',', comma1 + 1);
-        int comma3 = tmpStr.indexOf(',', comma2 + 1);
-        if (comma1 != 0) {
-          if (comma2 == 0) {
-            CalibVolt = tmpStr.substring(comma1 + 1).toInt();
-          } else if (comma3 == 0) {
-            CalibVolt = tmpStr.substring(comma1 + 1, comma2).toInt();
-            CalibCurr = atof(tmpStr.substring(comma2 + 1).c_str());
-          } else {
-            CalibVolt = tmpStr.substring(comma1 + 1, comma2).toInt();
-            CalibCurr = atof(tmpStr.substring(comma2 + 1, comma3).c_str());
-            CalibAcPwr = tmpStr.substring(comma3 + 1).toInt();
+        if (validUIntFromString(parseString(string, 2), CalibVolt)) {
+          if (validDoubleFromString(parseString(string, 3), CalibCurr)) {
+            validUIntFromString(parseString(string, 4), CalibAcPwr);
           }
         }
         if (PLUGIN_076_DEBUG) {
@@ -513,7 +505,7 @@ bool Plugin076_ReadMultipliers(double& current, double& voltage, double& power) 
 }
 
 
-bool Plugin076_LoadMultipliers(byte TaskIndex, double& current, double& voltage, double& power) {
+bool Plugin076_LoadMultipliers(taskIndex_t TaskIndex, double& current, double& voltage, double& power) {
   // If multipliers are empty load default ones and save all of them as
   // "CustomTaskSettings"
   if (!Plugin076_ReadMultipliers(current, voltage, power)) {
@@ -534,7 +526,7 @@ bool Plugin076_LoadMultipliers(byte TaskIndex, double& current, double& voltage,
   return (current > 1.0) && (voltage > 1.0) && (power > 1.0);
 }
 
-void Plugin076_Reset(byte TaskIndex) {
+void Plugin076_Reset(taskIndex_t TaskIndex) {
   if (Plugin_076_hlw) {
     const byte CF_PIN = Settings.TaskDevicePin3[TaskIndex];
     const byte CF1_PIN = Settings.TaskDevicePin2[TaskIndex];

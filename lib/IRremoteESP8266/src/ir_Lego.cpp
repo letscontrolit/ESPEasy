@@ -8,12 +8,12 @@
 // LEGO
 // (LEGO is a Registrated Trademark of the Lego Group.)
 //
-// Supported Devices:
-// - LEGO Power Functions IR Receiver
+// Supports:
+//   Brand: LEGO Power Functions,  Model: IR Receiver
 //
 // Ref:
-// - https://github.com/markszabo/IRremoteESP8266/issues/641
-// - https://github.com/markszabo/IRremoteESP8266/files/2974525/LEGO_Power_Functions_RC_v120.pdf
+// - https://github.com/crankyoldgit/IRremoteESP8266/issues/641
+// - https://github.com/crankyoldgit/IRremoteESP8266/files/2974525/LEGO_Power_Functions_RC_v120.pdf
 
 // Constants
 const uint16_t kLegoPfBitMark = 158;
@@ -67,46 +67,31 @@ void IRsend::sendLegoPf(const uint64_t data, const uint16_t nbits,
 //
 // Args:
 //   results: Ptr to the data to decode and where to store the decode result.
+//   offset:  The starting index to use when attempting to decode the raw data.
+//            Typically/Defaults to kStartOffset.
 //   nbits:   The number of data bits to expect. Typically kLegoPfBits.
 //   strict:  Flag indicating if we should perform strict matching.
 // Returns:
 //   boolean: True if it can decode it, false if it can't.
 //
-// Status: Alpha / Untested.
-bool IRrecv::decodeLegoPf(decode_results* results,
+// Status: BETA / Appears to work.
+bool IRrecv::decodeLegoPf(decode_results* results, uint16_t offset,
                           const uint16_t nbits, const bool strict) {
   // Check if can possibly be a valid LEGO message.
-  if (results->rawlen < 2 * nbits + kHeader + kFooter - 1) return false;
   if (strict && nbits != kLegoPfBits) return false;  // Not what is expected
 
   uint64_t data = 0;
-  uint16_t offset = kStartOffset;
-  match_result_t data_result;
 
-  // Header
-  if (!matchMark(results->rawbuf[offset++], kLegoPfBitMark)) return false;
-  if (!matchSpace(results->rawbuf[offset++], kLegoPfHdrSpace)) return false;
-  // Data (Typically 16 bits)
-  data_result =
-      matchData(&(results->rawbuf[offset]), nbits,
-                kLegoPfBitMark, kLegoPfOneSpace,
-                kLegoPfBitMark, kLegoPfZeroSpace,
-                kTolerance, kMarkExcess, true);
-  if (data_result.success == false) return false;
-  data = data_result.data;
-  offset += data_result.used;
-  uint16_t actualBits = data_result.used / 2;
-
-  // Footer.
-  if (!matchMark(results->rawbuf[offset++], kLegoPfBitMark)) return false;
-  if (offset < results->rawlen &&
-      !matchAtLeast(results->rawbuf[offset], kLegoPfMinCommandLength))
-    return false;
-
+  // Match Header + Data + Footer
+  if (!matchGeneric(results->rawbuf + offset, &data,
+                    results->rawlen - offset, nbits,
+                    kLegoPfBitMark, kLegoPfHdrSpace,
+                    kLegoPfBitMark, kLegoPfOneSpace,
+                    kLegoPfBitMark, kLegoPfZeroSpace,
+                    kLegoPfBitMark, kLegoPfMinCommandLength,
+                    true)) return false;
   // Compliance
-  if (actualBits < nbits) return false;
   if (strict) {
-    if (actualBits != nbits) return false;  // Not as we expected.
     // Verify the Longitudinal Redundancy Check (LRC)
     uint16_t lrc_data = data;
     uint8_t lrc = 0xF;
@@ -119,7 +104,7 @@ bool IRrecv::decodeLegoPf(decode_results* results,
 
   // Success
   results->decode_type = LEGOPF;
-  results->bits = actualBits;
+  results->bits = nbits;
   results->value = data;
   results->address = ((data >> (nbits - 4)) & 0b11) + 1;  // Channel Id
   results->command = (data >> 4) & 0xFF;  // Stuff between Channel Id and LRC.

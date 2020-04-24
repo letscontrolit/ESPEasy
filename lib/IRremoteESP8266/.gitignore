@@ -8,8 +8,12 @@
 # vi/vim
 **/*.swp
 
+# vscode
+.vscode
+
 ## Build environments
 # Platformio
+**/.pio/
 **/.pioenvs/
 **/.piolibdeps/
 **/.clang_complete
@@ -44,3 +48,6 @@ tools/mode2_decode
 
 #Cygwin builds
 *.exe
+
+# Mac extended attributes
+.DS_Store

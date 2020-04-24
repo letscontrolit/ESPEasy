@@ -1,19 +1,19 @@
 #ifdef USES_C005
 //#######################################################################################################
-//########################### Controller Plugin 005: OpenHAB MQTT #######################################
+//################### Controller Plugin 005: Home Assistant (openHAB) MQTT ##############################
 //#######################################################################################################
 
 #define CPLUGIN_005
 #define CPLUGIN_ID_005         5
-#define CPLUGIN_NAME_005       "OpenHAB MQTT"
+#define CPLUGIN_NAME_005       "Home Assistant (openHAB) MQTT"
 
-bool CPlugin_005(byte function, struct EventStruct *event, String& string)
+bool CPlugin_005(CPlugin::Function function, struct EventStruct *event, String& string)
 {
   bool success = false;
 
   switch (function)
   {
-    case CPLUGIN_PROTOCOL_ADD:
+    case CPlugin::Function::CPLUGIN_PROTOCOL_ADD:
       {
         Protocol[++protocolCount].Number = CPLUGIN_ID_005;
         Protocol[protocolCount].usesMQTT = true;
@@ -25,13 +25,13 @@ bool CPlugin_005(byte function, struct EventStruct *event, String& string)
         break;
       }
 
-    case CPLUGIN_GET_DEVICENAME:
+    case CPlugin::Function::CPLUGIN_GET_DEVICENAME:
       {
         string = F(CPLUGIN_NAME_005);
         break;
       }
 
-    case CPLUGIN_INIT:
+    case CPlugin::Function::CPLUGIN_INIT:
       {
         MakeControllerSettings(ControllerSettings);
         LoadControllerSettings(event->ControllerIndex, ControllerSettings);
@@ -39,20 +39,21 @@ bool CPlugin_005(byte function, struct EventStruct *event, String& string)
         break;
       }
 
-    case CPLUGIN_PROTOCOL_TEMPLATE:
+    case CPlugin::Function::CPLUGIN_PROTOCOL_TEMPLATE:
       {
-        event->String1 = F("/%sysname%/#");
-        event->String2 = F("/%sysname%/%tskname%/%valname%");
+        event->String1 = F("%sysname%/#");
+        event->String2 = F("%sysname%/%tskname%/%valname%");
         break;
       }
 
-    case CPLUGIN_PROTOCOL_RECV:
+    case CPlugin::Function::CPLUGIN_PROTOCOL_RECV:
       {
-        byte ControllerID = findFirstEnabledControllerWithId(CPLUGIN_ID_005);
-        if (ControllerID == CONTROLLER_MAX) {
+        controllerIndex_t ControllerID = findFirstEnabledControllerWithId(CPLUGIN_ID_005);
+        if (!validControllerIndex(ControllerID)) {
           // Controller is not enabled.
           break;
         } else {
+          // FIXME TD-er: Command is not parsed for template arguments.
           String cmd;
           struct EventStruct TempEvent;
           TempEvent.TaskIndex = event->TaskIndex;
@@ -80,8 +81,8 @@ bool CPlugin_005(byte function, struct EventStruct *event, String& string)
           if (validTopic) {
             // in case of event, store to buffer and return...
             String command = parseString(cmd, 1);
-            if (command == F("event")) {
-            eventBuffer = cmd.substring(6);
+            if (command == F("event") || command == F("asyncevent")) {
+              eventQueue.add(parseStringToEnd(cmd, 2));
             } else if (!PluginCall(PLUGIN_WRITE, &TempEvent, cmd)) {
               remoteConfig(&TempEvent, cmd);
             }
@@ -90,7 +91,7 @@ bool CPlugin_005(byte function, struct EventStruct *event, String& string)
         break;
       }
 
-    case CPLUGIN_PROTOCOL_SEND:
+    case CPlugin::Function::CPLUGIN_PROTOCOL_SEND:
       {
         MakeControllerSettings(ControllerSettings);
         LoadControllerSettings(event->ControllerIndex, ControllerSettings);
@@ -100,22 +101,27 @@ bool CPlugin_005(byte function, struct EventStruct *event, String& string)
         }
         statusLED(true);
 
-        if (ExtraTaskSettings.TaskIndex != event->TaskIndex)
-          PluginCall(PLUGIN_GET_DEVICEVALUENAMES, event, dummyString);
+        if (ExtraTaskSettings.TaskIndex != event->TaskIndex) {
+          String dummy;
+          PluginCall(PLUGIN_GET_DEVICEVALUENAMES, event, dummy);
+        }
 
         String pubname = ControllerSettings.Publish;
         parseControllerVariables(pubname, event, false);
 
         String value = "";
-        // byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[event->TaskIndex]);
         byte valueCount = getValueCountFromSensorType(event->sensorType);
         for (byte x = 0; x < valueCount; x++)
         {
+          //MFD: skip publishing for values with empty labels (removes unnecessary publishing of unwanted values)
+          if (ExtraTaskSettings.TaskDeviceValueNames[x][0]==0)
+             continue; //we skip values with empty labels
+             
           String tmppubname = pubname;
           tmppubname.replace(F("%valname%"), ExtraTaskSettings.TaskDeviceValueNames[x]);
           value = formatUserVarNoCheck(event, x);
 
-          MQTTpublish(event->ControllerIndex, tmppubname.c_str(), value.c_str(), Settings.MQTTRetainFlag);
+          MQTTpublish(event->ControllerIndex, tmppubname.c_str(), value.c_str(), ControllerSettings.mqtt_retainFlag());
 #ifndef BUILD_NO_DEBUG
           String log = F("MQTT : ");
           log += tmppubname;
@@ -127,12 +133,15 @@ bool CPlugin_005(byte function, struct EventStruct *event, String& string)
         break;
       }
 
-    case CPLUGIN_FLUSH:
+    case CPlugin::Function::CPLUGIN_FLUSH:
       {
         processMQTTdelayQueue();
         delay(0);
         break;
       }
+
+    default:
+      break;
 
   }
 

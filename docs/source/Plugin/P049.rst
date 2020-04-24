@@ -11,6 +11,8 @@ Plugin details
 
 Type: |P049_type|
 
+Port Type: |P049_porttype|
+
 Name: |P049_name|
 
 Status: |P049_status|

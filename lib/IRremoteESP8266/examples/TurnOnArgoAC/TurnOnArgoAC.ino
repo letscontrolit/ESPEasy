@@ -5,7 +5,7 @@
 * TL;DR: The IR LED needs to be driven by a transistor for a good result.
 *
 * Suggested circuit:
-*     https://github.com/markszabo/IRremoteESP8266/wiki#ir-sending
+*     https://github.com/crankyoldgit/IRremoteESP8266/wiki#ir-sending
 *
 * Common mistakes & tips:
 *   * Don't just connect the IR LED directly to the pin, it won't
@@ -23,9 +23,7 @@
 *     for your first time. e.g. ESP-12 etc.
 */
 
-#ifndef UNIT_TEST
 #include <Arduino.h>
-#endif
 #include <IRremoteESP8266.h>
 #include <IRsend.h>
 #include <ir_Argo.h>
@@ -44,7 +42,7 @@ void loop() {
   // Set up what we want to send. See ir_Argo.cpp for all the options.
   ac.setPower(true);
   ac.setFan(kArgoFan1);
-  ac.setCoolMode(kArgoCoolAuto);
+  ac.setMode(kArgoAuto);
   ac.setTemp(25);
 
 #if SEND_ARGO

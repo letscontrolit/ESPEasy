@@ -19,6 +19,7 @@ TEST(TestSendWhirlpoolAC, SendDataOnly) {
 
   irsend.sendWhirlpoolAC(data);
   EXPECT_EQ(
+      "f38000d50"
       "m8950s4484"
       "m597s1649m597s1649m597s533m597s533m597s533m597s533m597s533m597s1649"
       "m597s533m597s1649m597s1649m597s533m597s533m597s533m597s533m597s533"
@@ -68,9 +69,9 @@ TEST(TestDecodeWhirlpoolAC, SyntheticDecode) {
   IRWhirlpoolAc ac(0);
   ac.setRaw(irsend.capture.state);
   EXPECT_EQ(
-      "Model: 1 (DG11J13A), Power toggle: Off, Mode: 1 (AUTO), Temp: 25C, "
-      "Fan: 0 (AUTO), Swing: Off, Light: On, Clock: 17:31, On Timer: Off, "
-      "Off Timer: Off, Sleep: Off, Super: Off, Command: 2 (TEMP)",
+      "Model: 1 (DG11J13A), Power Toggle: Off, Mode: 1 (Auto), Temp: 25C, "
+      "Fan: 0 (Auto), Swing: Off, Light: On, Clock: 17:31, On Timer: Off, "
+      "Off Timer: Off, Sleep: Off, Super: Off, Command: 2 (Temp)",
       ac.toString());
 }
 
@@ -92,9 +93,9 @@ TEST(TestDecodeWhirlpoolAC, Real26CFanAutoCoolingSwingOnClock1918) {
   IRWhirlpoolAc ac(0);
   ac.setRaw(irsend.capture.state);
   EXPECT_EQ(
-      "Model: 1 (DG11J13A), Power toggle: Off, Mode: 2 (COOL), Temp: 26C, "
-      "Fan: 0 (AUTO), Swing: On, Light: On, Clock: 19:18, On Timer: Off, "
-      "Off Timer: Off, Sleep: Off, Super: Off, Command: 7 (SWING)",
+      "Model: 1 (DG11J13A), Power Toggle: Off, Mode: 2 (Cool), Temp: 26C, "
+      "Fan: 0 (Auto), Swing: On, Light: On, Clock: 19:18, On Timer: Off, "
+      "Off Timer: Off, Sleep: Off, Super: Off, Command: 7 (Swing)",
       ac.toString());
 }
 
@@ -147,9 +148,9 @@ TEST(TestDecodeWhirlpoolAC, RealTimerExample) {
   IRWhirlpoolAc ac(0);
   ac.setRaw(irsend.capture.state);
   EXPECT_EQ(
-      "Model: 1 (DG11J13A), Power toggle: Off, Mode: 3 (DRY), Temp: 25C, "
-      "Fan: 0 (AUTO), Swing: Off, Light: On, Clock: 07:35, On Timer: 07:40, "
-      "Off Timer: 08:05, Sleep: Off, Super: Off, Command: 5 (ONTIMER)",
+      "Model: 1 (DG11J13A), Power Toggle: Off, Mode: 3 (Dry), Temp: 25C, "
+      "Fan: 0 (Auto), Swing: Off, Light: On, Clock: 07:35, On Timer: 07:40, "
+      "Off Timer: 08:05, Sleep: Off, Super: Off, Command: 5 (On Timer)",
       ac.toString());
 }
 
@@ -160,7 +161,7 @@ TEST(TestDecodeWhirlpoolAC, RealExampleDecode) {
   irsend.begin();
 
   // Real WhirlpoolAC message.
-  // Ref: https://github.com/markszabo/IRremoteESP8266/issues/509
+  // Ref: https://github.com/crankyoldgit/IRremoteESP8266/issues/509
   uint16_t rawData[343] = {
       8950, 4484, 598, 1642, 598, 1646, 594, 534,  594, 538,  602, 532,
       598,  540,  600, 542,  598, 1650, 600, 522,  598, 1644, 596, 1650,
@@ -205,9 +206,9 @@ TEST(TestDecodeWhirlpoolAC, RealExampleDecode) {
   IRWhirlpoolAc ac(0);
   ac.setRaw(irsend.capture.state);
   EXPECT_EQ(
-      "Model: 1 (DG11J13A), Power toggle: Off, Mode: 1 (AUTO), Temp: 25C, "
-      "Fan: 0 (AUTO), Swing: Off, Light: On, Clock: 17:31, On Timer: Off, "
-      "Off Timer: Off, Sleep: Off, Super: Off, Command: 2 (TEMP)",
+      "Model: 1 (DG11J13A), Power Toggle: Off, Mode: 1 (Auto), Temp: 25C, "
+      "Fan: 0 (Auto), Swing: Off, Light: On, Clock: 17:31, On Timer: Off, "
+      "Off Timer: Off, Sleep: Off, Super: Off, Command: 2 (Temp)",
       ac.toString());
 }
 
@@ -323,25 +324,18 @@ TEST(TestIRWhirlpoolAcClass, SetAndGetClock) {
   IRWhirlpoolAc ac(0);
   ac.setClock(0);
   EXPECT_EQ(0, ac.getClock());
-  EXPECT_EQ("00:00", ac.timeToString(ac.getClock()));
   ac.setClock(1);
   EXPECT_EQ(1, ac.getClock());
-  EXPECT_EQ("00:01", ac.timeToString(ac.getClock()));
   ac.setClock(12 * 60 + 34);
   EXPECT_EQ(12 * 60 + 34, ac.getClock());
-  EXPECT_EQ("12:34", ac.timeToString(ac.getClock()));
   ac.setClock(7 * 60 + 5);
   EXPECT_EQ(7 * 60 + 5, ac.getClock());
-  EXPECT_EQ("07:05", ac.timeToString(ac.getClock()));
   ac.setClock(23 * 60 + 59);
   EXPECT_EQ(23 * 60 + 59, ac.getClock());
-  EXPECT_EQ("23:59", ac.timeToString(ac.getClock()));
   ac.setClock(24 * 60 + 0);
   EXPECT_EQ(0, ac.getClock());
-  EXPECT_EQ("00:00", ac.timeToString(ac.getClock()));
   ac.setClock(25 * 60 + 23);
   EXPECT_EQ(1 * 60 + 23, ac.getClock());
-  EXPECT_EQ("01:23", ac.timeToString(ac.getClock()));
 }
 
 TEST(TestIRWhirlpoolAcClass, OnOffTimers) {
@@ -352,56 +346,42 @@ TEST(TestIRWhirlpoolAcClass, OnOffTimers) {
   ac.enableOnTimer(false);
   ac.setOnTimer(0);
   EXPECT_EQ(0, ac.getOnTimer());
-  EXPECT_EQ("00:00", ac.timeToString(ac.getOnTimer()));
   EXPECT_FALSE(ac.isOnTimerEnabled());
   EXPECT_EQ(kWhirlpoolAcCommandOnTimer, ac.getCommand());
   ac.setOnTimer(1);
   EXPECT_EQ(1, ac.getOnTimer());
-  EXPECT_EQ("00:01", ac.timeToString(ac.getOnTimer()));
   ac.enableOnTimer(true);
   ac.setOnTimer(12 * 60 + 34);
   EXPECT_EQ(12 * 60 + 34, ac.getOnTimer());
-  EXPECT_EQ("12:34", ac.timeToString(ac.getOnTimer()));
   EXPECT_TRUE(ac.isOnTimerEnabled());
   ac.setOnTimer(7 * 60 + 5);
   EXPECT_EQ(7 * 60 + 5, ac.getOnTimer());
-  EXPECT_EQ("07:05", ac.timeToString(ac.getOnTimer()));
   ac.setOnTimer(23 * 60 + 59);
   EXPECT_EQ(23 * 60 + 59, ac.getOnTimer());
-  EXPECT_EQ("23:59", ac.timeToString(ac.getOnTimer()));
   ac.setOnTimer(24 * 60 + 0);
   EXPECT_EQ(0, ac.getOnTimer());
-  EXPECT_EQ("00:00", ac.timeToString(ac.getOnTimer()));
   ac.setOnTimer(25 * 60 + 23);
   EXPECT_EQ(1 * 60 + 23, ac.getOnTimer());
-  EXPECT_EQ("01:23", ac.timeToString(ac.getOnTimer()));
   // Off Timer
   ac.enableOffTimer(false);
   ac.setOffTimer(0);
   EXPECT_EQ(0, ac.getOffTimer());
-  EXPECT_EQ("00:00", ac.timeToString(ac.getOffTimer()));
   EXPECT_FALSE(ac.isOffTimerEnabled());
   EXPECT_EQ(kWhirlpoolAcCommandOffTimer, ac.getCommand());
   ac.setOffTimer(1);
   EXPECT_EQ(1, ac.getOffTimer());
-  EXPECT_EQ("00:01", ac.timeToString(ac.getOffTimer()));
   ac.enableOffTimer(true);
   ac.setOffTimer(12 * 60 + 34);
   EXPECT_EQ(12 * 60 + 34, ac.getOffTimer());
-  EXPECT_EQ("12:34", ac.timeToString(ac.getOffTimer()));
   EXPECT_TRUE(ac.isOffTimerEnabled());
   ac.setOffTimer(7 * 60 + 5);
   EXPECT_EQ(7 * 60 + 5, ac.getOffTimer());
-  EXPECT_EQ("07:05", ac.timeToString(ac.getOffTimer()));
   ac.setOffTimer(23 * 60 + 59);
   EXPECT_EQ(23 * 60 + 59, ac.getOffTimer());
-  EXPECT_EQ("23:59", ac.timeToString(ac.getOffTimer()));
   ac.setOffTimer(24 * 60 + 0);
   EXPECT_EQ(0, ac.getOffTimer());
-  EXPECT_EQ("00:00", ac.timeToString(ac.getOffTimer()));
   ac.setOffTimer(25 * 60 + 23);
   EXPECT_EQ(1 * 60 + 23, ac.getOffTimer());
-  EXPECT_EQ("01:23", ac.timeToString(ac.getOffTimer()));
 }
 
 TEST(TestIRWhirlpoolAcClass, SetAndGetCommand) {
@@ -576,9 +556,42 @@ TEST(TestIRWhirlpoolAcClass, MessageConstruction) {
   ac.enableOnTimer(true);
 
   EXPECT_EQ(
-      "Model: 1 (DG11J13A), Power toggle: Off, Mode: 3 (DRY), Temp: 25C, "
-      "Fan: 0 (AUTO), Swing: Off, Light: On, Clock: 07:35, On Timer: 07:40, "
-      "Off Timer: 08:05, Sleep: Off, Super: Off, Command: 5 (ONTIMER)",
+      "Model: 1 (DG11J13A), Power Toggle: Off, Mode: 3 (Dry), Temp: 25C, "
+      "Fan: 0 (Auto), Swing: Off, Light: On, Clock: 07:35, On Timer: 07:40, "
+      "Off Timer: 08:05, Sleep: Off, Super: Off, Command: 5 (On Timer)",
       ac.toString());
   EXPECT_STATE_EQ(expectedState, ac.getRaw(), kWhirlpoolAcBits);
+}
+
+TEST(TestIRWhirlpoolAcClass, toCommon) {
+  IRWhirlpoolAc ac(0);
+  ac.setModel(whirlpool_ac_remote_model_t::DG11J13A);
+  ac.setPowerToggle(true);
+  ac.setMode(kWhirlpoolAcCool);
+  ac.setTemp(18);
+  ac.setFan(kWhirlpoolAcFanHigh);
+  ac.setSwing(true);
+  ac.setSuper(true);
+  ac.setLight(true);
+  ac.setSleep(false);
+  // Now test it.
+  ASSERT_EQ(decode_type_t::WHIRLPOOL_AC, ac.toCommon().protocol);
+  ASSERT_EQ(whirlpool_ac_remote_model_t::DG11J13A, ac.toCommon().model);
+  ASSERT_TRUE(ac.toCommon().power);
+  ASSERT_TRUE(ac.toCommon().celsius);
+  ASSERT_EQ(18, ac.toCommon().degrees);
+  ASSERT_EQ(stdAc::opmode_t::kCool, ac.toCommon().mode);
+  ASSERT_EQ(stdAc::fanspeed_t::kMax, ac.toCommon().fanspeed);
+  ASSERT_EQ(stdAc::swingv_t::kAuto, ac.toCommon().swingv);
+  ASSERT_TRUE(ac.toCommon().turbo);
+  ASSERT_TRUE(ac.toCommon().light);
+  ASSERT_EQ(-1, ac.toCommon().sleep);
+  // Unsupported.
+  ASSERT_EQ(stdAc::swingh_t::kOff, ac.toCommon().swingh);
+  ASSERT_FALSE(ac.toCommon().econo);
+  ASSERT_FALSE(ac.toCommon().filter);
+  ASSERT_FALSE(ac.toCommon().clean);
+  ASSERT_FALSE(ac.toCommon().beep);
+  ASSERT_FALSE(ac.toCommon().quiet);
+  ASSERT_EQ(-1, ac.toCommon().clock);
 }

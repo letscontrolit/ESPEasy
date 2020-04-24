@@ -14,6 +14,7 @@
 
 #ifdef USES_P075
 #include <ESPeasySerial.h>
+#include "_Plugin_Helper.h"
 
 // *****************************************************************************************************
 // Defines start here
@@ -72,12 +73,8 @@ struct P075_data_struct : public PluginTaskData_base {
     }
   }
 
-  void loadDisplayLines(byte taskIndex) {
-    char deviceTemplate[P75_Nlines][P75_Nchars];
-    LoadCustomTaskSettings(taskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
-    for (byte varNr = 0; varNr < P75_Nlines; varNr++) {
-      displayLines[varNr] = deviceTemplate[varNr];
-    }
+  void loadDisplayLines(taskIndex_t taskIndex) {
+    LoadCustomTaskSettings(taskIndex, displayLines, P75_Nlines, P75_Nchars);
   }
 
   String getLogString() const {
@@ -110,7 +107,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_DEVICE_ADD: {
       Device[++deviceCount].Number = PLUGIN_ID_075;
-      Device[deviceCount].Type = DEVICE_TYPE_DUAL;
+      Device[deviceCount].Type = DEVICE_TYPE_SERIAL;
       Device[deviceCount].VType = SENSOR_TYPE_DUAL;
       Device[deviceCount].Ports = 0;
       Device[deviceCount].PullUpOption = false;         // Pullup is not used.
@@ -144,6 +141,12 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_WEBFORM_SHOW_CONFIG:
+      {
+        string += serialHelper_getSerialTypeLabel(event);
+        success = true;
+        break;
+      }
 
     case PLUGIN_WEBFORM_LOAD: {
       serialHelper_webformLoad(event);
@@ -174,7 +177,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
       if (nullptr != P075_data) {
         P075_data->loadDisplayLines(event->TaskIndex);
         for (byte varNr = 0; varNr < P75_Nlines; varNr++) {
-          addFormTextBox(String(F("Line ")) + (varNr + 1), String(F("p075_template")) + (varNr + 1), P075_data->displayLines[varNr], P75_Nchars-1);
+          addFormTextBox(String(F("Line ")) + (varNr + 1), getPluginCustomArgName(varNr), P075_data->displayLines[varNr], P75_Nchars-1);
         }
       }
       if( Settings.TaskDeviceTimer[event->TaskIndex]==0) { // Is interval timer disabled?
@@ -202,9 +205,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
         String error;
         for (byte varNr = 0; varNr < P75_Nlines; varNr++)
         {
-          String argName = F("p075_template");
-          argName += varNr + 1;
-          if (!safe_strncpy(deviceTemplate[varNr], WebServer.arg(argName), P75_Nchars)) {
+          if (!safe_strncpy(deviceTemplate[varNr], web_server.arg(getPluginCustomArgName(varNr)), P75_Nchars)) {
             error += getCustomTaskSettingsError(varNr);
           }
         }
@@ -290,7 +291,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
               newString += String(barVal,DEC);
             }
             else {
-              newString = parseTemplate(tmpString, 0);
+              newString = parseTemplate(tmpString);
             }
 
             P075_sendCommand(event->TaskIndex, newString.c_str());
@@ -336,41 +337,37 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
 // Nextion commands received from events (including http) get processed here. PLUGIN_WRITE
 // does NOT process publish commands that are sent.
     case PLUGIN_WRITE: {
-
-        String tmpString = string;
-        int argIndex = tmpString.indexOf(',');
-        if (argIndex) tmpString = tmpString.substring(0, argIndex);
+      String command = parseString(string, 1);
+      // If device names match we have a command to write.
+      if (command.equalsIgnoreCase(getTaskDeviceName(event->TaskIndex))) {
+        success = true; // Set true only if plugin found a command to execute.
+        String nextionArguments = parseStringToEndKeepCase(string, 2);
+        P075_sendCommand(event->TaskIndex, nextionArguments.c_str());
+        {
+          String log;
+          log.reserve(24 + nextionArguments.length()); // Prevent re-allocation
+          log = F("NEXTION075 : WRITE = ");
+          log += nextionArguments;
+          addLog(LOG_LEVEL_DEBUG, log);
+          SendStatus(event->Source, log);              // Reply (echo) to sender. This will print message on browser.
+        }
 
 // Enable addLog() code below to help debug plugin write problems.
 /*
         String log;
         log.reserve(140);                               // Prevent re-allocation
         String log = F("Nextion arg0: ");
-        log += tmpString;
+        log += command;
         log += F(", TaskDeviceName: ");
         log += getTaskDeviceName(event->TaskIndex);
         log += F(", event->TaskIndex: ");
         log += String(event->TaskIndex);
-        log += F(", cmd str: ");
-        log += string;
+        log += F(", nextionArguments: ");
+        log += nextionArguments;
         addLog(LOG_LEVEL_INFO, log);
 */
-        if (tmpString.equalsIgnoreCase(getTaskDeviceName(event->TaskIndex)) == true) { // If device names match we have a command to write.
-            argIndex = string.indexOf(',');
-            tmpString = string.substring(argIndex + 1);
-            P075_sendCommand(event->TaskIndex, tmpString.c_str());
-
-            String log;
-            log.reserve(110);                           // Prevent re-allocation
-            log = F("NEXTION075 : WRITE = ");
-            log += tmpString;
-            #ifdef DEBUG_LOG
-              addLog(LOG_LEVEL_INFO, log);
-            #endif
-            SendStatus(event->Source, log);             // Reply (echo) to sender. This will print message on browser.
-            success = true;                             // Set true only if plugin found a command to execute.
-        }
-        break;
+      }
+      break;
     }
 
 
@@ -540,7 +537,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
 }
 
 
-void P075_sendCommand(byte taskIndex, const char *cmd)
+void P075_sendCommand(taskIndex_t taskIndex, const char *cmd)
 {
   P075_data_struct* P075_data = static_cast<P075_data_struct*>(getPluginTaskData(taskIndex));
   if (!P075_data) return;

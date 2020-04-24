@@ -26,10 +26,10 @@ Supported hardware
 
 |P003_usedby|
 
-.. Commands available
-.. ^^^^^^^^^^^^^^^^^^
+Commands available
+^^^^^^^^^^^^^^^^^^
 
-.. .. include:: P003_commands.repl
+.. include:: P003_commands.repl
 
 .. Events
 .. ~~~~~~

@@ -5,14 +5,11 @@
 #include "IRsend.h"
 #include "IRutils.h"
 
-//                       DDDD   IIIII   SSSS  H   H
-//                        D  D    I    S      H   H
-//                        D  D    I     SSS   HHHHH
-//                        D  D    I        S  H   H
-//                       DDDD   IIIII  SSSS   H   H
-
 // DISH support originally by Todd Treece
 //   http://unionbridge.org/design/ircommand
+
+// Supports:
+//   Brand: DISH NETWORK,  Model: echostar 301
 
 // Constants
 // Ref:
@@ -72,6 +69,8 @@ void IRsend::sendDISH(uint64_t data, uint16_t nbits, uint16_t repeat) {
 //
 // Args:
 //   results: Ptr to the data to decode and where to store the decode result.
+//   offset:  The starting index to use when attempting to decode the raw data.
+//            Typically/Defaults to kStartOffset.
 //   nbits:   Nr. of bits to expect in the data portion. Typically kDishBits.
 //   strict:  Flag to indicate if we strictly adhere to the specification.
 // Returns:
@@ -87,43 +86,23 @@ void IRsend::sendDISH(uint64_t data, uint16_t nbits, uint16_t repeat) {
 //   http://www.hifi-remote.com/wiki/index.php?title=Dish
 //   http://lirc.sourceforge.net/remotes/echostar/301_501_3100_5100_58xx_59xx
 //   https://github.com/marcosamarinho/IRremoteESP8266/blob/master/ir_Dish.cpp
-bool IRrecv::decodeDISH(decode_results *results, uint16_t nbits, bool strict) {
-  if (results->rawlen < 2 * nbits + kHeader + kFooter - 1)
-    return false;  // Not enough entries to be valid.
+bool IRrecv::decodeDISH(decode_results *results, uint16_t offset,
+                        const uint16_t nbits, const bool strict) {
   if (strict && nbits != kDishBits) return false;  // Not strictly compliant.
 
   uint64_t data = 0;
-  uint16_t offset = kStartOffset;
 
-  // Header
-  if (!match(results->rawbuf[offset], kDishHdrMark)) return false;
-  // Calculate how long the common tick time is based on the header mark.
-  uint32_t m_tick = results->rawbuf[offset++] * kRawTick / kDishHdrMarkTicks;
-  if (!matchSpace(results->rawbuf[offset], kDishHdrSpace)) return false;
-  // Calculate how long the common tick time is based on the header space.
-  uint32_t s_tick = results->rawbuf[offset++] * kRawTick / kDishHdrSpaceTicks;
-
-  // Data
-  match_result_t data_result =
-      matchData(&(results->rawbuf[offset]), nbits, kDishBitMarkTicks * m_tick,
-                kDishOneSpaceTicks * s_tick, kDishBitMarkTicks * m_tick,
-                kDishZeroSpaceTicks * s_tick);
-  if (data_result.success == false) return false;
-  data = data_result.data;
-  offset += data_result.used;
-
-  // Footer
-  if (!matchMark(results->rawbuf[offset++], kDishBitMarkTicks * m_tick))
-    return false;
-
-  // Compliance
-  if (strict) {
-    // The DISH protocol calls for a repeated message, so strictly speaking
-    // there should be a code following this. Only require it if we are set to
-    // strict matching.
-    if (!matchSpace(results->rawbuf[offset], kDishRptSpaceTicks * s_tick))
-      return false;
-  }
+  // Match Header + Data + Footer
+  if (!matchGeneric(results->rawbuf + offset, &data,
+                    results->rawlen - offset, nbits,
+                    kDishHdrMark, kDishHdrSpace,
+                    kDishBitMark, kDishOneSpace,
+                    kDishBitMark, kDishZeroSpace,
+                    kDishBitMark,
+                    // The DISH protocol calls for a repeated message, so
+                    // strictly speaking there should be a code following this.
+                    // Only require it if we are set to strict matching.
+                    strict ? kDishRptSpace : 0, false)) return false;
 
   // Success
   results->decode_type = DISH;

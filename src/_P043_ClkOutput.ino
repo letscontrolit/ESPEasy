@@ -2,6 +2,9 @@
 //#######################################################################################################
 //#################################### Plugin 043: Clock Output #########################################
 //#######################################################################################################
+
+#include "_Plugin_Helper.h"
+
 #define PLUGIN_043
 #define PLUGIN_ID_043         43
 #define PLUGIN_NAME_043       "Output - Clock"
@@ -67,7 +70,7 @@ boolean Plugin_043(byte function, struct EventStruct *event, String& string)
 
           addHtml(" ");
           byte choice = ExtraTaskSettings.TaskDevicePluginConfig[x];
-          addSelector(String(F("p043_state")) + (x), 3, options, NULL, NULL, choice, false);
+          addSelector(String(F("p043_state")) + (x), 3, options, NULL, NULL, choice);
         }
         success = true;
         break;
@@ -79,12 +82,12 @@ boolean Plugin_043(byte function, struct EventStruct *event, String& string)
         {
           String argc = F("p043_clock");
           argc += x;
-          String plugin1 = WebServer.arg(argc);
+          String plugin1 = web_server.arg(argc);
           ExtraTaskSettings.TaskDevicePluginConfigLong[x] = string2TimeLong(plugin1);
 
           argc = F("p043_state");
           argc += x;
-          String plugin2 = WebServer.arg(argc);
+          String plugin2 = web_server.arg(argc);
           ExtraTaskSettings.TaskDevicePluginConfig[x] = plugin2.toInt();
         }
         success = true;
@@ -102,7 +105,7 @@ boolean Plugin_043(byte function, struct EventStruct *event, String& string)
         LoadTaskSettings(event->TaskIndex);
         for (byte x = 0; x < PLUGIN_043_MAX_SETTINGS; x++)
         {
-          unsigned long clockEvent = (unsigned long)minute() % 10 | (unsigned long)(minute() / 10) << 4 | (unsigned long)(hour() % 10) << 8 | (unsigned long)(hour() / 10) << 12 | (unsigned long)weekday() << 16;
+          unsigned long clockEvent = (unsigned long)node_time.minute() % 10 | (unsigned long)(node_time.minute() / 10) << 4 | (unsigned long)(node_time.hour() % 10) << 8 | (unsigned long)(node_time.hour() / 10) << 12 | (unsigned long)node_time.weekday() << 16;
           unsigned long clockSet = ExtraTaskSettings.TaskDevicePluginConfigLong[x];
 
           if (matchClockEvent(clockEvent,clockSet))

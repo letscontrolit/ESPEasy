@@ -1,6 +1,7 @@
 .. |P010_name| replace:: :cyan:`BH1750`
 .. |P010_type| replace:: :cyan:`Light/Lux`
 .. |P010_typename| replace:: :cyan:`Light/Lux - BH1750`
+.. |P010_porttype| replace:: `.`
 .. |P010_status| replace:: :green:`NORMAL`
 .. |P010_github| replace:: P010_BH1750.ino
 .. _P010_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P010_BH1750.ino
@@ -13,6 +14,7 @@
 .. |P011_name| replace:: :cyan:`ProMini Extender`
 .. |P011_type| replace:: :cyan:`Extra IO`
 .. |P011_typename| replace:: :cyan:`Extra IO - ProMini Extender`
+.. |P011_porttype| replace:: `.`
 .. |P011_status| replace:: :green:`NORMAL`
 .. |P011_github| replace:: P011_PME.ino
 .. _P011_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P011_PME.ino
@@ -25,6 +27,7 @@
 .. |P012_name| replace:: :cyan:`LCD2004`
 .. |P012_type| replace:: :cyan:`Display`
 .. |P012_typename| replace:: :cyan:`Display - LCD2004`
+.. |P012_porttype| replace:: `.`
 .. |P012_status| replace:: :green:`NORMAL`
 .. |P012_github| replace:: P012_LCD.ino
 .. _P012_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P012_LCD.ino
@@ -37,6 +40,7 @@
 .. |P013_name| replace:: :cyan:`HC-SR04/RCW-0001`
 .. |P013_type| replace:: :cyan:`Position`
 .. |P013_typename| replace:: :cyan:`Position - HC-SR04/RCW-0001`
+.. |P013_porttype| replace:: `.`
 .. |P013_status| replace:: :green:`NORMAL`
 .. |P013_github| replace:: P013_HCSR04.ino
 .. _P013_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P013_HCSR04.ino
@@ -49,6 +53,7 @@
 .. |P014_name| replace:: :cyan:`SI7021/HTU21D`
 .. |P014_type| replace:: :cyan:`Environment`
 .. |P014_typename| replace:: :cyan:`Environment - SI7021/HTU21D`
+.. |P014_porttype| replace:: `.`
 .. |P014_status| replace:: :green:`NORMAL`
 .. |P014_github| replace:: P014_SI7021.ino
 .. _P014_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P014_SI7021.ino
@@ -61,6 +66,7 @@
 .. |P015_name| replace:: :cyan:`TSL2561`
 .. |P015_type| replace:: :cyan:`Light/Lux`
 .. |P015_typename| replace:: :cyan:`Light/Lux - TSL2561`
+.. |P015_porttype| replace:: `.`
 .. |P015_status| replace:: :green:`NORMAL`
 .. |P015_github| replace:: P015_TSL2561.ino
 .. _P015_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P015_TSL2561.ino
@@ -73,6 +79,7 @@
 .. |P016_name| replace:: :cyan:`TSOP4838`
 .. |P016_type| replace:: :cyan:`Communication`
 .. |P016_typename| replace:: :cyan:`Communication - TSOP4838`
+.. |P016_porttype| replace:: `.`
 .. |P016_status| replace:: :green:`NORMAL`
 .. |P016_github| replace:: P016_IR.ino
 .. _P016_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P016_IR.ino
@@ -85,6 +92,7 @@
 .. |P017_name| replace:: :cyan:`PN532`
 .. |P017_type| replace:: :cyan:`RFID`
 .. |P017_typename| replace:: :cyan:`RFID - PN532`
+.. |P017_porttype| replace:: `.`
 .. |P017_status| replace:: :green:`NORMAL`
 .. |P017_github| replace:: P017_PN532.ino
 .. _P017_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P017_PN532.ino
@@ -97,6 +105,7 @@
 .. |P018_name| replace:: :cyan:`Sharp GP2Y10`
 .. |P018_type| replace:: :cyan:`Dust`
 .. |P018_typename| replace:: :cyan:`Dust - Sharp GP2Y10`
+.. |P018_porttype| replace:: `.`
 .. |P018_status| replace:: :green:`NORMAL`
 .. |P018_github| replace:: P018_Dust.ino
 .. _P018_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P018_Dust.ino
@@ -109,6 +118,7 @@
 .. |P019_name| replace:: :cyan:`PCF8574`
 .. |P019_type| replace:: :cyan:`Switch input`
 .. |P019_typename| replace:: :cyan:`Switch input - PCF8574`
+.. |P019_porttype| replace:: `.`
 .. |P019_status| replace:: :green:`NORMAL`
 .. |P019_github| replace:: P019_PCF8574.ino
 .. _P019_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P019_PCF8574.ino

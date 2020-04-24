@@ -7,12 +7,15 @@
 
 #define __STDC_LIMIT_MACROS
 #include <stdint.h>
+#include <string.h>
 #include <algorithm>
 #ifndef ARDUINO
 #include <string>
 #endif
 #include "IRrecv.h"
 #include "IRremoteESP8266.h"
+#include "IRsend.h"
+#include "IRtext.h"
 
 // Reverse the order of the requested least significant nr. of bits.
 // Args:
@@ -43,18 +46,18 @@ uint64_t reverseBits(uint64_t input, uint16_t nbits) {
 // Returns:
 //   A string representation of the integer.
 // Note: Based on Arduino's Print::printNumber()
-#ifdef ARDUINO  // Arduino's & C++'s string implementations can't co-exist.
 String uint64ToString(uint64_t input, uint8_t base) {
   String result = "";
-#else
-std::string uint64ToString(uint64_t input, uint8_t base) {
-  std::string result = "";
-#endif
   // prevent issues if called with base <= 1
   if (base < 2) base = 10;
   // Check we have a base that we can actually print.
   // i.e. [0-9A-Z] == 36
   if (base > 36) base = 10;
+
+  // Reserve some string space to reduce fragmentation.
+  // 16 bytes should store a uint64 in hex text which is the likely worst case.
+  // 64 bytes would be the worst case (base 2).
+  result.reserve(16);
 
   do {
     char c = input % base;
@@ -81,29 +84,194 @@ void serialPrintUint64(uint64_t input, uint8_t base) {
 }
 #endif
 
+// Convert a C-style str to a decode_type_t
+//
+// Args:
+//   str:  A C-style string containing a protocol name or number.
+// Returns:
+//  A decode_type_t enum.
+decode_type_t strToDecodeType(const char * const str) {
+  if (!strcasecmp(str, kUnknownStr))
+    return decode_type_t::UNKNOWN;
+  else if (!strcasecmp(str, "UNUSED"))
+    return decode_type_t::UNUSED;
+  else if (!strcasecmp(str, "AIWA_RC_T501"))
+    return decode_type_t::AIWA_RC_T501;
+  else if (!strcasecmp(str, "AMCOR"))
+    return decode_type_t::AMCOR;
+  else if (!strcasecmp(str, "ARGO"))
+    return decode_type_t::ARGO;
+  else if (!strcasecmp(str, "CARRIER_AC"))
+    return decode_type_t::CARRIER_AC;
+  else if (!strcasecmp(str, "COOLIX"))
+    return decode_type_t::COOLIX;
+  else if (!strcasecmp(str, "DAIKIN"))
+    return decode_type_t::DAIKIN;
+  else if (!strcasecmp(str, "DAIKIN128"))
+    return decode_type_t::DAIKIN128;
+  else if (!strcasecmp(str, "DAIKIN152"))
+    return decode_type_t::DAIKIN152;
+  else if (!strcasecmp(str, "DAIKIN160"))
+    return decode_type_t::DAIKIN160;
+  else if (!strcasecmp(str, "DAIKIN176"))
+    return decode_type_t::DAIKIN176;
+  else if (!strcasecmp(str, "DAIKIN2"))
+    return decode_type_t::DAIKIN2;
+  else if (!strcasecmp(str, "DAIKIN216"))
+    return decode_type_t::DAIKIN216;
+  else if (!strcasecmp(str, "DENON"))
+    return decode_type_t::DENON;
+  else if (!strcasecmp(str, "DISH"))
+    return decode_type_t::DISH;
+  else if (!strcasecmp(str, "ELECTRA_AC"))
+    return decode_type_t::ELECTRA_AC;
+  else if (!strcasecmp(str, "EPSON"))
+    return decode_type_t::EPSON;
+  else if (!strcasecmp(str, "FUJITSU_AC"))
+    return decode_type_t::FUJITSU_AC;
+  else if (!strcasecmp(str, "GICABLE"))
+    return decode_type_t::GICABLE;
+  else if (!strcasecmp(str, "GLOBALCACHE"))
+    return decode_type_t::GLOBALCACHE;
+  else if (!strcasecmp(str, "GOODWEATHER"))
+    return decode_type_t::GOODWEATHER;
+  else if (!strcasecmp(str, "GREE"))
+    return decode_type_t::GREE;
+  else if (!strcasecmp(str, "HAIER_AC"))
+    return decode_type_t::HAIER_AC;
+  else if (!strcasecmp(str, "HAIER_AC_YRW02"))
+    return decode_type_t::HAIER_AC_YRW02;
+  else if (!strcasecmp(str, "HITACHI_AC"))
+    return decode_type_t::HITACHI_AC;
+  else if (!strcasecmp(str, "HITACHI_AC1"))
+    return decode_type_t::HITACHI_AC1;
+  else if (!strcasecmp(str, "HITACHI_AC2"))
+    return decode_type_t::HITACHI_AC2;
+  else if (!strcasecmp(str, "HITACHI_AC424"))
+    return decode_type_t::HITACHI_AC424;
+  else if (!strcasecmp(str, "INAX"))
+    return decode_type_t::INAX;
+  else if (!strcasecmp(str, "JVC"))
+    return decode_type_t::JVC;
+  else if (!strcasecmp(str, "KELVINATOR"))
+    return decode_type_t::KELVINATOR;
+  else if (!strcasecmp(str, "LEGOPF"))
+    return decode_type_t::LEGOPF;
+  else if (!strcasecmp(str, "LG"))
+    return decode_type_t::LG;
+  else if (!strcasecmp(str, "LG2"))
+    return decode_type_t::LG2;
+  else if (!strcasecmp(str, "LASERTAG"))
+    return decode_type_t::LASERTAG;
+  else if (!strcasecmp(str, "LUTRON"))
+    return decode_type_t::LUTRON;
+  else if (!strcasecmp(str, "MAGIQUEST"))
+    return decode_type_t::MAGIQUEST;
+  else if (!strcasecmp(str, "MIDEA"))
+    return decode_type_t::MIDEA;
+  else if (!strcasecmp(str, "MITSUBISHI"))
+    return decode_type_t::MITSUBISHI;
+  else if (!strcasecmp(str, "MITSUBISHI2"))
+    return decode_type_t::MITSUBISHI2;
+  else if (!strcasecmp(str, "MITSUBISHI_AC"))
+    return decode_type_t::MITSUBISHI_AC;
+  else if (!strcasecmp(str, "MITSUBISHI136"))
+    return decode_type_t::MITSUBISHI136;
+  else if (!strcasecmp(str, "MITSUBISHI112"))
+    return decode_type_t::MITSUBISHI112;
+  else if (!strcasecmp(str, "MITSUBISHI_HEAVY_88"))
+    return decode_type_t::MITSUBISHI_HEAVY_88;
+  else if (!strcasecmp(str, "MITSUBISHI_HEAVY_152"))
+    return decode_type_t::MITSUBISHI_HEAVY_152;
+  else if (!strcasecmp(str, "MWM"))
+    return decode_type_t::MWM;
+  else if (!strcasecmp(str, "NEOCLIMA"))
+    return decode_type_t::NEOCLIMA;
+  else if (!strcasecmp(str, "NEC"))
+    return decode_type_t::NEC;
+  else if (!strcasecmp(str, "NEC_LIKE") ||
+           !strcasecmp(str, "NEC (NON-STRICT)"))
+    return decode_type_t::NEC_LIKE;
+  else if (!strcasecmp(str, "NIKAI"))
+    return decode_type_t::NIKAI;
+  else if (!strcasecmp(str, "PANASONIC"))
+    return decode_type_t::PANASONIC;
+  else if (!strcasecmp(str, "PANASONIC_AC"))
+    return decode_type_t::PANASONIC_AC;
+  else if (!strcasecmp(str, "PIONEER"))
+    return decode_type_t::PIONEER;
+  else if (!strcasecmp(str, "PRONTO"))
+    return decode_type_t::PRONTO;
+  else if (!strcasecmp(str, "RAW"))
+    return decode_type_t::RAW;
+  else if (!strcasecmp(str, "RC5"))
+    return decode_type_t::RC5;
+  else if (!strcasecmp(str, "RC5X"))
+    return decode_type_t::RC5X;
+  else if (!strcasecmp(str, "RC6"))
+    return decode_type_t::RC6;
+  else if (!strcasecmp(str, "RCMM"))
+    return decode_type_t::RCMM;
+  else if (!strcasecmp(str, "SAMSUNG"))
+    return decode_type_t::SAMSUNG;
+  else if (!strcasecmp(str, "SAMSUNG36"))
+    return decode_type_t::SAMSUNG36;
+  else if (!strcasecmp(str, "SAMSUNG_AC"))
+    return decode_type_t::SAMSUNG_AC;
+  else if (!strcasecmp(str, "SANYO"))
+    return decode_type_t::SANYO;
+  else if (!strcasecmp(str, "SANYO_LC7461"))
+    return decode_type_t::SANYO_LC7461;
+  else if (!strcasecmp(str, "SHARP"))
+    return decode_type_t::SHARP;
+  else if (!strcasecmp(str, "SHARP_AC"))
+    return decode_type_t::SHARP_AC;
+  else if (!strcasecmp(str, "SHERWOOD"))
+    return decode_type_t::SHERWOOD;
+  else if (!strcasecmp(str, "SONY"))
+    return decode_type_t::SONY;
+  else if (!strcasecmp(str, "SONY_38K"))
+    return decode_type_t::SONY_38K;
+  else if (!strcasecmp(str, "TCL112AC"))
+    return decode_type_t::TCL112AC;
+  else if (!strcasecmp(str, "TECO"))
+    return decode_type_t::TECO;
+  else if (!strcasecmp(str, "TOSHIBA_AC"))
+    return decode_type_t::TOSHIBA_AC;
+  else if (!strcasecmp(str, "TROTEC"))
+    return decode_type_t::TROTEC;
+  else if (!strcasecmp(str, "VESTEL_AC"))
+    return decode_type_t::VESTEL_AC;
+  else if (!strcasecmp(str, "WHIRLPOOL_AC"))
+    return decode_type_t::WHIRLPOOL_AC;
+  else if (!strcasecmp(str, "WHYNTER"))
+    return decode_type_t::WHYNTER;
+  // Handle integer values of the type by converting to a string and back again.
+  decode_type_t result = strToDecodeType(
+      typeToString((decode_type_t)atoi(str)).c_str());
+  if (result > 0)
+    return result;
+  else
+    return decode_type_t::UNKNOWN;
+}
+
 // Convert a protocol type (enum etc) to a human readable string.
 // Args:
 //   protocol: Nr. (enum) of the protocol.
 //   isRepeat: A flag indicating if it is a repeat message of the protocol.
 // Returns:
 //   A string containing the protocol name.
-#ifdef ARDUINO  // Arduino's & C++'s string implementations can't co-exist.
 String typeToString(const decode_type_t protocol, const bool isRepeat) {
   String result = "";
-#else
-std::string typeToString(const decode_type_t protocol, const bool isRepeat) {
-  std::string result = "";
-#endif
   switch (protocol) {
-    default:
-    case UNKNOWN:
-      result = F("UNKNOWN");
-      break;
     case UNUSED:
       result = F("UNUSED");
       break;
     case AIWA_RC_T501:
       result = F("AIWA_RC_T501");
+      break;
+    case AMCOR:
+      result = F("AMCOR");
       break;
     case ARGO:
       result = F("ARGO");
@@ -117,8 +285,23 @@ std::string typeToString(const decode_type_t protocol, const bool isRepeat) {
     case DAIKIN:
       result = F("DAIKIN");
       break;
+    case DAIKIN128:
+      result = F("DAIKIN128");
+      break;
+    case DAIKIN152:
+      result = F("DAIKIN152");
+      break;
+    case DAIKIN160:
+      result = F("DAIKIN160");
+      break;
+    case DAIKIN176:
+      result = F("DAIKIN176");
+      break;
     case DAIKIN2:
       result = F("DAIKIN2");
+      break;
+    case DAIKIN216:
+      result = F("DAIKIN216");
       break;
     case DENON:
       result = F("DENON");
@@ -129,6 +312,9 @@ std::string typeToString(const decode_type_t protocol, const bool isRepeat) {
     case ELECTRA_AC:
       result = F("ELECTRA_AC");
       break;
+    case EPSON:
+      result = F("EPSON");
+      break;
     case FUJITSU_AC:
       result = F("FUJITSU_AC");
       break;
@@ -137,6 +323,9 @@ std::string typeToString(const decode_type_t protocol, const bool isRepeat) {
       break;
     case GLOBALCACHE:
       result = F("GLOBALCACHE");
+      break;
+    case GOODWEATHER:
+      result = F("GOODWEATHER");
       break;
     case GREE:
       result = F("GREE");
@@ -155,6 +344,12 @@ std::string typeToString(const decode_type_t protocol, const bool isRepeat) {
       break;
     case HITACHI_AC2:
       result = F("HITACHI_AC2");
+      break;
+    case HITACHI_AC424:
+      result = F("HITACHI_AC424");
+      break;
+    case INAX:
+      result = F("INAX");
       break;
     case JVC:
       result = F("JVC");
@@ -192,8 +387,23 @@ std::string typeToString(const decode_type_t protocol, const bool isRepeat) {
     case MITSUBISHI_AC:
       result = F("MITSUBISHI_AC");
       break;
+    case MITSUBISHI136:
+      result = F("MITSUBISHI136");
+      break;
+    case MITSUBISHI112:
+      result = F("MITSUBISHI112");
+      break;
+    case MITSUBISHI_HEAVY_88:
+      result = F("MITSUBISHI_HEAVY_88");
+      break;
+    case MITSUBISHI_HEAVY_152:
+      result = F("MITSUBISHI_HEAVY_152");
+      break;
     case MWM:
       result = F("MWM");
+      break;
+    case NEOCLIMA:
+      result = F("NEOCLIMA");
       break;
     case NEC:
       result = F("NEC");
@@ -249,11 +459,17 @@ std::string typeToString(const decode_type_t protocol, const bool isRepeat) {
     case SHARP:
       result = F("SHARP");
       break;
+    case SHARP_AC:
+      result = F("SHARP_AC");
+      break;
     case SHERWOOD:
       result = F("SHERWOOD");
       break;
     case SONY:
       result = F("SONY");
+      break;
+    case SONY_38K:
+      result = F("SONY_38K");
       break;
     case TCL112AC:
       result = F("TCL112AC");
@@ -276,16 +492,31 @@ std::string typeToString(const decode_type_t protocol, const bool isRepeat) {
     case WHYNTER:
       result = F("WHYNTER");
       break;
+    case UNKNOWN:
+    default:
+      result = kUnknownStr;
+      break;
   }
-  if (isRepeat) result += F(" (Repeat)");
+  if (isRepeat) {
+    result += kSpaceLBraceStr;
+    result += kRepeatStr;
+    result += ')';
+  }
   return result;
 }
 
 // Does the given protocol use a complex state as part of the decode?
 bool hasACState(const decode_type_t protocol) {
   switch (protocol) {
+    case AMCOR:
+    case ARGO:
     case DAIKIN:
+    case DAIKIN128:
+    case DAIKIN152:
+    case DAIKIN160:
+    case DAIKIN176:
     case DAIKIN2:
+    case DAIKIN216:
     case ELECTRA_AC:
     case FUJITSU_AC:
     case GREE:
@@ -294,13 +525,21 @@ bool hasACState(const decode_type_t protocol) {
     case HITACHI_AC:
     case HITACHI_AC1:
     case HITACHI_AC2:
+    case HITACHI_AC424:
     case KELVINATOR:
+    case MITSUBISHI136:
+    case MITSUBISHI112:
     case MITSUBISHI_AC:
+    case MITSUBISHI_HEAVY_88:
+    case MITSUBISHI_HEAVY_152:
     case MWM:
+    case NEOCLIMA:
     case PANASONIC_AC:
     case SAMSUNG_AC:
+    case SHARP_AC:
     case TCL112AC:
     case TOSHIBA_AC:
+    case TROTEC:
     case WHIRLPOOL_AC:
       return true;
     default:
@@ -314,7 +553,7 @@ bool hasACState(const decode_type_t protocol) {
 //   results: A ptr to a decode result.
 // Returns:
 //   A uint16_t containing the length.
-uint16_t getCorrectedRawLength(const decode_results *results) {
+uint16_t getCorrectedRawLength(const decode_results * const results) {
   uint16_t extended_length = results->rawlen - 1;
   for (uint16_t i = 0; i < results->rawlen - 1; i++) {
     uint32_t usecs = results->rawbuf[i] * kRawTick;
@@ -326,13 +565,10 @@ uint16_t getCorrectedRawLength(const decode_results *results) {
 
 // Return a string containing the key values of a decode_results structure
 // in a C/C++ code style format.
-#ifdef ARDUINO
-String resultToSourceCode(const decode_results *results) {
+String resultToSourceCode(const decode_results * const results) {
   String output = "";
-#else
-std::string resultToSourceCode(const decode_results *results) {
-  std::string output = "";
-#endif
+  // Reserve some space for the string to reduce heap fragmentation.
+  output.reserve(1536);  // 1.5KB should cover most cases.
   // Start declaration
   output += F("uint16_t ");  // variable type
   output += F("rawData[");   // array name
@@ -353,15 +589,16 @@ std::string resultToSourceCode(const decode_results *results) {
     }
     output += uint64ToString(usecs, 10);
     if (i < results->rawlen - 1)
-      output += ", ";               // ',' not needed on the last one
-    if (i % 2 == 0) output += " ";  // Extra if it was even.
+      output += kCommaSpaceStr;            // ',' not needed on the last one
+    if (i % 2 == 0) output += ' ';  // Extra if it was even.
   }
 
   // End declaration
-  output += "};";
+  output += F("};");
 
   // Comment
-  output += "  // " + typeToString(results->decode_type, results->repeat);
+  output += F("  // ");
+  output += typeToString(results->decode_type, results->repeat);
   // Only display the value if the decode type doesn't have an A/C state.
   if (!hasACState(results->decode_type))
     output += ' ' + uint64ToString(results->value, 16);
@@ -379,7 +616,7 @@ std::string resultToSourceCode(const decode_results *results) {
         output += F("0x");
         if (results->state[i] < 0x10) output += '0';
         output += uint64ToString(results->state[i], 16);
-        if (i < nbytes - 1) output += ", ";
+        if (i < nbytes - 1) output += kCommaSpaceStr;
       }
       output += F("};\n");
 #endif  // DECODE_AC
@@ -407,15 +644,12 @@ std::string resultToSourceCode(const decode_results *results) {
 
 // Dump out the decode_results structure.
 //
-#ifdef ARDUINO
-String resultToTimingInfo(const decode_results *results) {
+String resultToTimingInfo(const decode_results * const results) {
   String output = "";
   String value = "";
-#else
-std::string resultToTimingInfo(const decode_results *results) {
-  std::string output = "";
-  std::string value = "";
-#endif
+  // Reserve some space for the string to reduce heap fragmentation.
+  output.reserve(2048);  // 2KB should cover most cases.
+  value.reserve(6);  // Max value should be 2^17 = 131072
   output += F("Raw Timing[");
   output += uint64ToString(results->rawlen - 1, 10);
   output += F("]:\n");
@@ -424,27 +658,25 @@ std::string resultToTimingInfo(const decode_results *results) {
     if (i % 2 == 0)
       output += '-';  // even
     else
-      output += "   +";  // odd
+      output += F("   +");  // odd
     value = uint64ToString(results->rawbuf[i] * kRawTick);
     // Space pad the value till it is at least 6 chars long.
-    while (value.length() < 6) value = " " + value;
+    while (value.length() < 6) value = ' ' + value;
     output += value;
-    if (i < results->rawlen - 1) output += ", ";  // ',' not needed for last one
-    if (!(i % 8)) output += F("\n");                 // Newline every 8 entries.
+    if (i < results->rawlen - 1)
+      output += kCommaSpaceStr;  // ',' not needed for last one
+    if (!(i % 8)) output += '\n';  // Newline every 8 entries.
   }
-  output += F("\n");
+  output += '\n';
   return output;
 }
 
 // Convert the decode_results structure's value/state to simple hexadecimal.
 //
-#ifdef ARDUINO
-String resultToHexidecimal(const decode_results *result) {
-  String output = "";
-#else
-std::string resultToHexidecimal(const decode_results *result) {
-  std::string output = "";
-#endif
+String resultToHexidecimal(const decode_results * const result) {
+  String output = F("0x");
+  // Reserve some space for the string to reduce heap fragmentation.
+  output.reserve(2 * kStateSizeMax + 2);  // Should cover worst cases.
   if (hasACState(result->decode_type)) {
 #if DECODE_AC
     for (uint16_t i = 0; result->bits > i * 8; i++) {
@@ -460,37 +692,65 @@ std::string resultToHexidecimal(const decode_results *result) {
 
 // Dump out the decode_results structure.
 //
-#ifdef ARDUINO
-String resultToHumanReadableBasic(const decode_results *results) {
+String resultToHumanReadableBasic(const decode_results * const results) {
   String output = "";
-#else
-std::string resultToHumanReadableBasic(const decode_results *results) {
-  std::string output = "";
-#endif
+  // Reserve some space for the string to reduce heap fragmentation.
+  output.reserve(2 * kStateSizeMax + 50);  // Should cover most cases.
   // Show Encoding standard
-  output += F("Encoding  : ");
+  output += kProtocolStr;
+  output += F("  : ");
   output += typeToString(results->decode_type, results->repeat);
-  output += F("\n");
+  output += '\n';
 
   // Show Code & length
-  output += F("Code      : ");
+  output += kCodeStr;
+  output += F("      : ");
   output += resultToHexidecimal(results);
-  output += F(" (");
+  output += kSpaceLBraceStr;
   output += uint64ToString(results->bits);
-  output += F(" bits)\n");
+  output += ' ';
+  output += kBitsStr;
+  output +=  F(")\n");
   return output;
 }
 
-uint8_t sumBytes(uint8_t *start, const uint16_t length, const uint8_t init) {
+// Convert a decode_results into an array suitable for `sendRaw()`.
+// Args:
+//   decode:  A pointer to an IR decode_results structure that contains a mesg.
+// Returns:
+//   A pointer to a dynamically allocated uint16_t sendRaw compatible array.
+// Note:
+//   Result needs to be delete[]'ed/free()'ed (deallocated) after use by caller.
+uint16_t* resultToRawArray(const decode_results * const decode) {
+  uint16_t *result = new uint16_t[getCorrectedRawLength(decode)];
+  if (result != NULL) {  // The memory was allocated successfully.
+    // Convert the decode data.
+    uint16_t pos = 0;
+    for (uint16_t i = 1; i < decode->rawlen; i++) {
+      uint32_t usecs = decode->rawbuf[i] * kRawTick;
+      while (usecs > UINT16_MAX) {  // Keep truncating till it fits.
+        result[pos++] = UINT16_MAX;
+        result[pos++] = 0;  // A 0 in a sendRaw() array basically means skip.
+        usecs -= UINT16_MAX;
+      }
+      result[pos++] = usecs;
+    }
+  }
+  return result;
+}
+
+uint8_t sumBytes(const uint8_t * const start, const uint16_t length,
+                 const uint8_t init) {
   uint8_t checksum = init;
-  uint8_t *ptr;
+  const uint8_t *ptr;
   for (ptr = start; ptr - start < length; ptr++) checksum += *ptr;
   return checksum;
 }
 
-uint8_t xorBytes(uint8_t *start, const uint16_t length, const uint8_t init) {
+uint8_t xorBytes(const uint8_t * const start, const uint16_t length,
+                 const uint8_t init) {
   uint8_t checksum = init;
-  uint8_t *ptr;
+  const uint8_t *ptr;
   for (ptr = start; ptr - start < length; ptr++) checksum ^= *ptr;
   return checksum;
 }
@@ -503,8 +763,8 @@ uint8_t xorBytes(uint8_t *start, const uint16_t length, const uint8_t init) {
 //   init: Start the counting from this value.
 // Returns:
 //   Nr. of bits found.
-uint16_t countBits(const uint8_t *start, const uint16_t length, const bool ones,
-                   const uint16_t init) {
+uint16_t countBits(const uint8_t * const start, const uint16_t length,
+                   const bool ones, const uint16_t init) {
   uint16_t count = init;
   for (uint16_t offset = 0; offset < length; offset++)
     for (uint8_t currentbyte = *(start + offset);
@@ -547,3 +807,417 @@ uint64_t invertBits(const uint64_t data, const uint16_t nbits) {
   // Mask off any unwanted bits and return the result.
   return (result & ((1ULL << nbits) - 1));
 }
+
+float celsiusToFahrenheit(const float deg) { return (deg * 9.0) / 5.0 + 32.0; }
+
+float fahrenheitToCelsius(const float deg) { return (deg - 32.0) * 5.0 / 9.0; }
+
+namespace irutils {
+  String addLabeledString(const String value, const String label,
+                          const bool precomma) {
+    String result = "";
+    if (precomma) result += kCommaSpaceStr;
+    result += label;
+    result += kColonSpaceStr;
+    return result + value;
+  }
+
+  String addBoolToString(const bool value, const String label,
+                         const bool precomma) {
+    return addLabeledString((value ? kOnStr : kOffStr), label, precomma);
+  }
+
+  String addIntToString(const uint16_t value, const String label,
+                        const bool precomma) {
+    return addLabeledString(uint64ToString(value), label, precomma);
+  }
+
+  String modelToStr(const decode_type_t protocol, const int16_t model) {
+    switch (protocol) {
+      case decode_type_t::FUJITSU_AC:
+        switch (model) {
+          case fujitsu_ac_remote_model_t::ARRAH2E: return F("ARRAH2E");
+          case fujitsu_ac_remote_model_t::ARDB1: return F("ARDB1");
+          case fujitsu_ac_remote_model_t::ARREB1E: return F("ARREB1E");
+          case fujitsu_ac_remote_model_t::ARJW2: return F("ARJW2");
+          case fujitsu_ac_remote_model_t::ARRY4: return F("ARRY4");
+          default: return kUnknownStr;
+        }
+        break;
+      case decode_type_t::GREE:
+        switch (model) {
+          case gree_ac_remote_model_t::YAW1F: return F("YAW1F");
+          case gree_ac_remote_model_t::YBOFB: return F("YBOFB");
+          default: return kUnknownStr;
+        }
+        break;
+      case decode_type_t::LG:
+      case decode_type_t::LG2:
+        switch (model) {
+          case lg_ac_remote_model_t::GE6711AR2853M: return F("GE6711AR2853M");
+          case lg_ac_remote_model_t::AKB75215403: return F("AKB75215403");
+          default: return kUnknownStr;
+        }
+        break;
+      case decode_type_t::PANASONIC_AC:
+        switch (model) {
+          case panasonic_ac_remote_model_t::kPanasonicLke: return F("LKE");
+          case panasonic_ac_remote_model_t::kPanasonicNke: return F("NKE");
+          case panasonic_ac_remote_model_t::kPanasonicDke: return F("DKE");
+          case panasonic_ac_remote_model_t::kPanasonicJke: return F("JKE");
+          case panasonic_ac_remote_model_t::kPanasonicCkp: return F("CKP");
+          case panasonic_ac_remote_model_t::kPanasonicRkr: return F("RKR");
+          default: return kUnknownStr;
+        }
+        break;
+      case decode_type_t::WHIRLPOOL_AC:
+        switch (model) {
+          case whirlpool_ac_remote_model_t::DG11J13A: return F("DG11J13A");
+          case whirlpool_ac_remote_model_t::DG11J191: return F("DG11J191");
+          default: return kUnknownStr;
+        }
+        break;
+      default: return kUnknownStr;
+    }
+  }
+
+  String addModelToString(const decode_type_t protocol, const int16_t model,
+                          const bool precomma) {
+    String result = addIntToString(model, kModelStr, precomma);
+    result += kSpaceLBraceStr;
+    result += modelToStr(protocol, model);
+    return result + ')';
+  }
+
+  String addTempToString(const uint16_t degrees, const bool celsius,
+                         const bool precomma) {
+    String result = addIntToString(degrees, kTempStr, precomma);
+    result += celsius ? 'C' : 'F';
+    return result;
+  }
+
+  String addModeToString(const uint8_t mode, const uint8_t automatic,
+                         const uint8_t cool, const uint8_t heat,
+                         const uint8_t dry, const uint8_t fan) {
+    String result = addIntToString(mode, kModeStr);
+    result += kSpaceLBraceStr;
+    if (mode == automatic) result += kAutoStr;
+    else if (mode == cool) result += kCoolStr;
+    else if (mode == heat) result += kHeatStr;
+    else if (mode == dry) result += kDryStr;
+    else if (mode == fan) result += kFanStr;
+    else
+      result += kUnknownStr;
+    return result + ')';
+  }
+
+  String addDayToString(const uint8_t day_of_week, const int8_t offset,
+                        const bool precomma) {
+    String result = addIntToString(day_of_week, kDayStr, precomma);
+    result += kSpaceLBraceStr;
+    if ((uint8_t)(day_of_week + offset) < 7)
+#if UNIT_TEST
+      result += String(kThreeLetterDayOfWeekStr).substr(
+          (day_of_week + offset) * 3, 3);
+#else  // UNIT_TEST
+      result += String(kThreeLetterDayOfWeekStr).substring(
+          (day_of_week + offset) * 3, (day_of_week + offset) * 3 + 3);
+#endif  // UNIT_TEST
+    else
+      result += kUnknownStr;
+    return result + ')';
+  }
+
+  String addFanToString(const uint8_t speed, const uint8_t high,
+                        const uint8_t low, const uint8_t automatic,
+                        const uint8_t quiet, const uint8_t medium) {
+    String result = addIntToString(speed, kFanStr);
+    result += kSpaceLBraceStr;
+    if (speed == high) result += kHighStr;
+    else if (speed == low) result += kLowStr;
+    else if (speed == automatic) result += kAutoStr;
+    else if (speed == quiet) result += kQuietStr;
+    else if (speed == medium) result += kMediumStr;
+    else
+     result += kUnknownStr;
+    return result + ')';
+  }
+
+  // Escape any special HTML (unsafe) characters in a string. e.g. anti-XSS.
+  // Args:
+  //   unescaped: A string containing text to make HTML safe.
+  // Returns:
+  //   A string that is HTML safe.
+  String htmlEscape(const String unescaped) {
+    String result = "";
+    uint16_t ulen = unescaped.length();
+    result.reserve(ulen);  // The result will be at least the size of input.
+    for (size_t i = 0; i < ulen; i++) {
+      char c = unescaped[i];
+      switch (c) {
+        // ';!-"<>=&#{}() are all unsafe.
+        case '\'':
+          result += F("&apos;");
+          break;
+        case ';':
+          result += F("&semi;");
+          break;
+        case '!':
+          result += F("&excl;");
+          break;
+        case '-':
+          result += F("&dash;");
+          break;
+        case '\"':
+          result += F("&quot;");
+          break;
+        case '<':
+          result += F("&lt;");
+          break;
+        case '>':
+          result += F("&gt;");
+          break;
+        case '=':
+          result += F("&#equals;");
+          break;
+        case '&':
+          result += F("&amp;");
+          break;
+        case '#':
+          result += F("&num;");
+          break;
+        case '{':
+          result += F("&lcub;");
+          break;
+        case '}':
+          result += F("&rcub;");
+          break;
+        case '(':
+          result += F("&lpar;");
+          break;
+        case ')':
+          result += F("&rpar;");
+          break;
+        default:
+          result += c;
+      }
+    }
+    return result;
+  }
+
+  String msToString(uint32_t const msecs) {
+    uint32_t totalseconds = msecs / 1000;
+    if (totalseconds == 0) return kNowStr;
+
+    // Note: uint32_t can only hold up to 45 days, so uint8_t is safe.
+    uint8_t days = totalseconds / (60 * 60 * 24);
+    uint8_t hours = (totalseconds / (60 * 60)) % 24;
+    uint8_t minutes = (totalseconds / 60) % 60;
+    uint8_t seconds = totalseconds % 60;
+
+    String result = "";
+    if (days)
+      result += uint64ToString(days) + ' ' + String((days > 1) ? kDaysStr
+                                                               : kDayStr);
+    if (hours) {
+      if (result.length()) result += ' ';
+      result += uint64ToString(hours) + ' ' + String((hours > 1) ? kHoursStr
+                                                                 : kHourStr);
+    }
+    if (minutes) {
+      if (result.length()) result += ' ';
+      result += uint64ToString(minutes) + ' ' + String(
+          (minutes > 1) ? kMinutesStr : kMinuteStr);
+    }
+    if (seconds) {
+      if (result.length()) result += ' ';
+      result += uint64ToString(seconds) + ' ' + String(
+          (seconds > 1) ? kSecondsStr : kSecondStr);
+    }
+    return result;
+  }
+
+  String minsToString(const uint16_t mins) {
+    String result = "";
+    result.reserve(5);  // 23:59 is the typical worst case.
+    if (mins / 60 < 10) result += '0';  // Zero pad the hours
+    result += uint64ToString(mins / 60) + kTimeSep;
+    if (mins % 60 < 10) result += '0';  // Zero pad the minutes.
+    result += uint64ToString(mins % 60);
+    return result;
+  }
+
+  // Sum all the nibbles together in a series of bytes.
+  // Args:
+  //   start: PTR to the start of the bytes.
+  //   length: Nr of bytes to sum the nibbles of.
+  //   init: Starting value of the sum.
+  // Returns:
+  //   A uint8_t sum of all the nibbles inc the init.
+  uint8_t sumNibbles(const uint8_t * const start, const uint16_t length,
+                     const uint8_t init) {
+    uint8_t sum = init;
+    const uint8_t *ptr;
+    for (ptr = start; ptr - start < length; ptr++)
+      sum += (*ptr >> 4) + (*ptr & 0xF);
+    return sum;
+  }
+
+  uint8_t bcdToUint8(const uint8_t bcd) {
+    if (bcd > 0x99) return 255;  // Too big.
+    return (bcd >> 4) * 10 + (bcd & 0xF);
+  }
+
+  uint8_t uint8ToBcd(const uint8_t integer) {
+    if (integer > 99) return 255;  // Too big.
+    return ((integer / 10) << 4) + (integer % 10);
+  }
+
+  // Return the value of `position`th bit of `data`.
+  // Args:
+  //   data: Value to be examined.
+  //   position: Nr. of the nth bit to be examined. `0` is the LSB.
+  //   size: Nr. of bits in data.
+  bool getBit(const uint64_t data, const uint8_t position, const uint8_t size) {
+    if (position >= size) return false;  // Outside of range.
+    return data & (1ULL << position);
+  }
+
+  // Return the value of `position`th bit of `data`.
+  // Args:
+  //   data: Value to be examined.
+  //   position: Nr. of the nth bit to be examined. `0` is the LSB.
+  bool getBit(const uint8_t data, const uint8_t position) {
+    if (position >= 8) return false;  // Outside of range.
+    return data & (1 << position);
+  }
+
+  // Return the value of `data` with the `position`th bit changed to `on`
+  // Args:
+  //   data: Value to be changed.
+  //   position: Nr. of the bit to be changed. `0` is the LSB.
+  //   on: Value to set the position'th bit to.
+  //   size: Nr. of bits in data.
+  uint64_t setBit(const uint64_t data, const uint8_t position, const bool on,
+                  const uint8_t size) {
+    if (position >= size) return data;  // Outside of range.
+    uint64_t mask = 1ULL << position;
+    if (on)
+      return data | mask;
+    else
+      return data & ~mask;
+  }
+
+  // Return the value of `data` with the `position`th bit changed to `on`
+  // Args:
+  //   data: Value to be changed.
+  //   position: Nr. of the bit to be changed. `0` is the LSB.
+  //   on: Value to set the position'th bit to.
+  uint8_t setBit(const uint8_t data, const uint8_t position, const bool on) {
+    if (position >= 8) return data;  // Outside of range.
+    uint8_t mask = 1 << position;
+    if (on)
+      return data | mask;
+    else
+      return data & ~mask;
+  }
+
+  // Change the value at the location `data_ptr` with the `position`th bit
+  //   changed to `on`
+  // Args:
+  //   data: Ptr to the data to be changed.
+  //   position: Nr. of the bit to be changed. `0` is the LSB.
+  //   on: Value to set the position'th bit to.
+  void setBit(uint8_t * const data, const uint8_t position, const bool on) {
+    uint8_t mask = 1 << position;
+    if (on)
+      *data |= mask;
+    else
+      *data &= ~mask;
+  }
+
+  // Change the value at the location `data_ptr` with the `position`th bit
+  //   changed to `on`
+  // Args:
+  //   data: Ptr to the data to be changed.
+  //   position: Nr. of the bit to be changed. `0` is the LSB.
+  //   on: Value to set the position'th bit to.
+  void setBit(uint32_t * const data, const uint8_t position, const bool on) {
+    uint32_t mask = (uint32_t)1 << position;
+    if (on)
+      *data |= mask;
+    else
+      *data &= ~mask;
+  }
+
+  // Change the value at the location `data_ptr` with the `position`th bit
+  //   changed to `on`
+  // Args:
+  //   data: Ptr to the data to be changed.
+  //   position: Nr. of the bit to be changed. `0` is the LSB.
+  //   on: Value to set the position'th bit to.
+  void setBit(uint64_t * const data, const uint8_t position, const bool on) {
+    uint64_t mask = (uint64_t)1 << position;
+    if (on)
+      *data |= mask;
+    else
+      *data &= ~mask;
+  }
+
+  // Change the uint8_t pointed to by `dst` starting at the `offset`th bit
+  //   and for `nbits` bits, with the contents of `data`.
+  // Args:
+  //   dst: Ptr to the uint8_t to be changed.
+  //   offset: Nr. of bits from the Least Significant Bit to be ignored.
+  //   nbits: Nr of bits of `data` to be placed into the destination uint8_t.
+  //   data: Value to be placed into dst.
+  void setBits(uint8_t * const dst, const uint8_t offset, const uint8_t nbits,
+               const uint8_t data) {
+    if (offset >= 8 || !nbits) return;  // Short circuit as it won't change.
+    // Calculate the mask for the supplied value.
+    uint8_t mask = UINT8_MAX >> (8 - ((nbits > 8) ? 8 : nbits));
+    // Calculate the mask & clear the space for the data.
+    // Clear the destination bits.
+    *dst &= ~(uint8_t)(mask << offset);
+    // Merge in the data.
+    *dst |= ((data & mask) << offset);
+  }
+
+  // Change the uint32_t pointed to by `dst` starting at the `offset`th bit
+  //   and for `nbits` bits, with the contents of `data`.
+  // Args:
+  //   dst: Ptr to the uint32_t to be changed.
+  //   offset: Nr. of bits from the Least Significant Bit to be ignored.
+  //   nbits: Nr of bits of `data` to be placed into the destination uint32_t.
+  //   data: Value to be placed into dst.
+  void setBits(uint32_t * const dst, const uint8_t offset, const uint8_t nbits,
+               const uint32_t data) {
+    if (offset >= 32 || !nbits) return;  // Short circuit as it won't change.
+    // Calculate the mask for the supplied value.
+    uint32_t mask = UINT32_MAX >> (32 - ((nbits > 32) ? 32 : nbits));
+    // Calculate the mask & clear the space for the data.
+    // Clear the destination bits.
+    *dst &= ~(mask << offset);
+    // Merge in the data.
+    *dst |= ((data & mask) << offset);
+  }
+
+  // Change the uint64_t pointed to by `dst` starting at the `offset`th bit
+  //   and for `nbits` bits, with the contents of `data`.
+  // Args:
+  //   dst: Ptr to the uint64_t to be changed.
+  //   offset: Nr. of bits from the Least Significant Bit to be ignored.
+  //   nbits: Nr of bits of `data` to be placed into the destination uint64_t.
+  //   data: Value to be placed into dst.
+  void setBits(uint64_t * const dst, const uint8_t offset, const uint8_t nbits,
+               const uint64_t data) {
+    if (offset >= 64 || !nbits) return;  // Short circuit as it won't change.
+    // Calculate the mask for the supplied value.
+    uint64_t mask = UINT64_MAX >> (64 - ((nbits > 64) ? 64 : nbits));
+    // Calculate the mask & clear the space for the data.
+    // Clear the destination bits.
+    *dst &= ~(mask << offset);
+    // Merge in the data.
+    *dst |= ((data & mask) << offset);
+  }
+}  // namespace irutils

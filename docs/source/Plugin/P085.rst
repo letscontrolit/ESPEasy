@@ -1,0 +1,44 @@
+.. include:: ../Plugin/_plugin_substitutions_p08x.repl
+.. _P085_page:
+
+|P085_typename|
+==================================================
+
+|P085_shortinfo|
+
+Plugin details
+--------------
+
+Type: |P085_type|
+
+Port Type: |P085_porttype|
+
+Name: |P085_name|
+
+Status: |P085_status|
+
+GitHub: |P085_github|_
+
+Maintainer: |P085_maintainer|
+
+Used libraries: |P085_usedlibraries|
+
+Supported hardware
+------------------
+
+|P085_usedby|
+
+.. Commands available
+.. ^^^^^^^^^^^^^^^^^^
+
+.. .. include:: P085_commands.repl
+
+
+
+Change log
+----------
+
+.. versionchanged:: 2.0
+  ...
+
+  |added| 2020-02-22 

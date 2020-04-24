@@ -1,18 +1,23 @@
 // Copyright 2009 Ken Shirriff
 // Copyright 2015 Mark Szabo
 // Copyright 2015 Sebastien Warin
-// Copyright 2017 David Conran
+// Copyright 2017, 2019 David Conran
 
 #include "IRrecv.h"
 #include <stddef.h>
 #ifndef UNIT_TEST
+#if defined(ESP8266)
 extern "C" {
 #include <gpio.h>
 #include <user_interface.h>
 }
+#endif  // ESP8266
 #include <Arduino.h>
 #endif
 #include <algorithm>
+#ifdef UNIT_TEST
+#include <cassert>
+#endif  // UNIT_TEST
 #include "IRremoteESP8266.h"
 #include "IRutils.h"
 
@@ -20,32 +25,68 @@ extern "C" {
 #undef ICACHE_RAM_ATTR
 #define ICACHE_RAM_ATTR
 #endif
+
+#ifndef USE_IRAM_ATTR
+#if defined(ESP8266)
+#define USE_IRAM_ATTR ICACHE_RAM_ATTR
+#endif  // ESP8266
+#if defined(ESP32)
+#define USE_IRAM_ATTR IRAM_ATTR
+#endif  // ESP32
+#endif  // USE_IRAM_ATTR
+
+#define ONCE 0
+
+// Updated by David Conran (https://github.com/crankyoldgit) for receiving IR
+// code on ESP32
 // Updated by Sebastien Warin (http://sebastien.warin.fr) for receiving IR code
 // on ESP8266
-// Updated by markszabo (https://github.com/markszabo/IRremoteESP8266) for
+// Updated by markszabo (https://github.com/crankyoldgit/IRremoteESP8266) for
 // sending IR code on ESP8266
 
 // Globals
 #ifndef UNIT_TEST
+#if defined(ESP8266)
 static ETSTimer timer;
-#endif
+#endif  // ESP8266
+#if defined(ESP32)
+static hw_timer_t * timer = NULL;
+#endif  // ESP32
+#endif  // UNIT_TEST
+
+#if defined(ESP32)
+portMUX_TYPE irremote_mux = portMUX_INITIALIZER_UNLOCKED;
+#endif  // ESP32
 volatile irparams_t irparams;
 irparams_t *irparams_save;  // A copy of the interrupt state while decoding.
 
 #ifndef UNIT_TEST
-static void ICACHE_RAM_ATTR read_timeout(void *arg __attribute__((unused))) {
+#if defined(ESP8266)
+static void USE_IRAM_ATTR read_timeout(void *arg __attribute__((unused))) {
   os_intr_lock();
+#endif  // ESP8266
+#if defined(ESP32)
+static void USE_IRAM_ATTR read_timeout(void) {
+  portENTER_CRITICAL(&irremote_mux);
+#endif  // ESP32
   if (irparams.rawlen) irparams.rcvstate = kStopState;
+#if defined(ESP8266)
   os_intr_unlock();
+#endif  // ESP8266
+#if defined(ESP32)
+  portEXIT_CRITICAL(&irremote_mux);
+#endif  // ESP32
 }
 
-static void ICACHE_RAM_ATTR gpio_intr() {
-  uint32_t now = system_get_time();
-  uint32_t gpio_status = GPIO_REG_READ(GPIO_STATUS_ADDRESS);
+static void USE_IRAM_ATTR gpio_intr() {
+  uint32_t now = micros();
   static uint32_t start = 0;
 
+#if defined(ESP8266)
+  uint32_t gpio_status = GPIO_REG_READ(GPIO_STATUS_ADDRESS);
   os_timer_disarm(&timer);
   GPIO_REG_WRITE(GPIO_STATUS_W1TC_ADDRESS, gpio_status);
+#endif  // ESP8266
 
   // Grab a local copy of rawlen to reduce instructions used in IRAM.
   // This is an ugly premature optimisation code-wise, but we do everything we
@@ -74,8 +115,14 @@ static void ICACHE_RAM_ATTR gpio_intr() {
   irparams.rawlen++;
 
   start = now;
-#define ONCE 0
+
+#if defined(ESP8266)
   os_timer_arm(&timer, irparams.timeout, ONCE);
+#endif  // ESP8266
+#if defined(ESP32)
+  timerWrite(timer, 0);  // Reset the timeout.
+  timerAlarmEnable(timer);
+#endif  // ESP32
 }
 #endif  // UNIT_TEST
 
@@ -87,11 +134,21 @@ static void ICACHE_RAM_ATTR gpio_intr() {
 //   bufsize: Nr. of entries to have in the capture buffer. (Default: kRawBuf)
 //   timeout: Nr. of milli-Seconds of no signal before we stop capturing data.
 //            (Default: kTimeoutMs)
-//   save_buffer:  Use a second (save) buffer to decode from. (Def: false)
+//   save_buffer: Use a second (save) buffer to decode from. (Default: false)
+//   timer_num: Which ESP32 timer number to use? ESP32 only, otherwise unused.
+//              (Range: 0-3. Default: kDefaultESP32Timer)
 // Returns:
 //   An IRrecv class object.
-IRrecv::IRrecv(uint16_t recvpin, uint16_t bufsize, uint8_t timeout,
-               bool save_buffer) {
+#if defined(ESP32)
+IRrecv::IRrecv(const uint16_t recvpin, const uint16_t bufsize,
+               const uint8_t timeout, const bool save_buffer,
+               const uint8_t timer_num) {
+  // There are only 4 timers. 0 to 3.
+  _timer_num = std::min(timer_num, (uint8_t)3);
+#else  // ESP32
+IRrecv::IRrecv(const uint16_t recvpin, const uint16_t bufsize,
+               const uint8_t timeout, const bool save_buffer) {
+#endif  // ESP32
   irparams.recvpin = recvpin;
   irparams.bufsize = bufsize;
   // Ensure we are going to be able to store all possible values in the
@@ -123,8 +180,9 @@ IRrecv::IRrecv(uint16_t recvpin, uint16_t bufsize, uint8_t timeout,
     irparams_save = NULL;
   }
 #if DECODE_HASH
-  unknown_threshold = kUnknownThreshold;
+  _unknown_threshold = kUnknownThreshold;
 #endif  // DECODE_HASH
+  _tolerance = kTolerance;
 }
 
 // Class destructor
@@ -134,35 +192,70 @@ IRrecv::~IRrecv(void) {
     delete[] irparams_save->rawbuf;
     delete irparams_save;
   }
+  disableIRIn();
+#if defined(ESP32)
+  if (timer != NULL) timerEnd(timer);  // Cleanup the ESP32 timeout timer.
+#endif  // ESP32
 }
 
-// initialization
-void IRrecv::enableIRIn() {
-  // initialize state machine variables
+// Set up and (re)start the IR capture mechanism.
+//
+// Args:
+//   pullup: A flag indicating should the GPIO use the internal pullup resistor.
+//           (Default: `false`. i.e. No.)
+void IRrecv::enableIRIn(const bool pullup) {
+  // ESP32's seem to require explicitly setting the GPIO to INPUT etc.
+  // This wasn't required on the ESP8266s, but it shouldn't hurt to make sure.
+  if (pullup) {
+#ifndef UNIT_TEST
+    pinMode(irparams.recvpin, INPUT_PULLUP);
+  } else {
+    pinMode(irparams.recvpin, INPUT);
+#endif  // UNIT_TEST
+  }
+#if defined(ESP32)
+  // Initialize the ESP32 timer.
+  timer = timerBegin(_timer_num, 80, true);  // 80MHz / 80 = 1 uSec granularity.
+  // Set the timer so it only fires once, and set it's trigger in uSeconds.
+  timerAlarmWrite(timer, MS_TO_USEC(irparams.timeout), ONCE);
+  // Note: Interrupt needs to be attached before it can be enabled or disabled.
+  timerAttachInterrupt(timer, &read_timeout, true);
+#endif  // ESP32
+
+  // Initialize state machine variables
   resume();
 
 #ifndef UNIT_TEST
-  // Initialize timer
+#if defined(ESP8266)
+  // Initialize ESP8266 timer.
   os_timer_disarm(&timer);
   os_timer_setfn(&timer, reinterpret_cast<os_timer_func_t *>(read_timeout),
                  NULL);
-
+#endif  // ESP8266
   // Attach Interrupt
   attachInterrupt(irparams.recvpin, gpio_intr, CHANGE);
-#endif
+#endif  // UNIT_TEST
 }
 
-void IRrecv::disableIRIn() {
+void IRrecv::disableIRIn(void) {
 #ifndef UNIT_TEST
+#if defined(ESP8266)
   os_timer_disarm(&timer);
+#endif  // ESP8266
+#if defined(ESP32)
+  timerAlarmDisable(timer);
+#endif  // ESP32
   detachInterrupt(irparams.recvpin);
-#endif
+#endif  // UNIT_TEST
 }
 
-void IRrecv::resume() {
+void IRrecv::resume(void) {
   irparams.rcvstate = kIdleState;
   irparams.rawlen = 0;
   irparams.overflow = false;
+#if defined(ESP32)
+  timerAlarmDisable(timer);
+#endif  // ESP32
 }
 
 // Make a copy of the interrupt state & buffer data.
@@ -196,14 +289,54 @@ void IRrecv::copyIrParams(volatile irparams_t *src, irparams_t *dst) {
 
 // Obtain the maximum number of entries possible in the capture buffer.
 // i.e. It's size.
-uint16_t IRrecv::getBufSize() { return irparams.bufsize; }
+uint16_t IRrecv::getBufSize(void) { return irparams.bufsize; }
 
 #if DECODE_HASH
 // Set the minimum length we will consider for reporting UNKNOWN message types.
-void IRrecv::setUnknownThreshold(uint16_t length) {
-  unknown_threshold = length;
+void IRrecv::setUnknownThreshold(const uint16_t length) {
+  _unknown_threshold = length;
 }
 #endif  // DECODE_HASH
+
+
+// Set the base tolerance percentage for matching incoming IR messages.
+void IRrecv::setTolerance(const uint8_t percent) {
+  _tolerance = std::min(percent, (uint8_t)100);
+}
+
+// Get the base tolerance percentage for matching incoming IR messages.
+uint8_t IRrecv::getTolerance(void) { return _tolerance; }
+
+#if ENABLE_NOISE_FILTER_OPTION
+// Remove or merge pulses in the capture buffer that are too short.
+// Args:
+//   results:  Ptr to the decode_results we are going to filter/modify.
+//   floor:  Only allow values in the buffer large than this. (in micro seconds)
+void IRrecv::crudeNoiseFilter(decode_results *results, const uint16_t floor) {
+  if (floor == 0) return;  // Nothing to do.
+  const uint16_t kTickFloor = floor / kRawTick;
+  const uint16_t kBufSize = getBufSize();
+  uint16_t offset = kStartOffset;
+  while (offset < results->rawlen && offset + 2 < kBufSize) {
+    uint16_t curr = results->rawbuf[offset];
+    uint16_t next = results->rawbuf[offset + 1];
+    uint16_t addition = curr + next;
+    if (curr < kTickFloor) {  // Is it too short?
+      // Shuffle the buffer down. i.e. Remove the mark & space pair.
+      // Note: `memcpy()` can't be used as rawbuf is `volatile`.
+      for (uint16_t i = offset + 2; i <= results->rawlen && i < kBufSize; i++)
+        results->rawbuf[i - 2] = results->rawbuf[i];
+      if (offset > 1) {  // There is a previous pair we can add to.
+        // Merge this pair into into the previous space.
+        results->rawbuf[offset - 1] += addition;
+      }
+      results->rawlen -= 2;  // Adjust the length.
+    } else {
+      offset++;  // Move along.
+    }
+  }
+}
+#endif  // ENABLE_NOISE_FILTER_OPTION
 
 // Decodes the received IR message.
 // If the interrupt state is saved, we will immediately resume waiting
@@ -215,9 +348,41 @@ void IRrecv::setUnknownThreshold(uint16_t length) {
 //   results:  A pointer to where the decoded IR message will be stored.
 //   save:  A pointer to an irparams_t instance in which to save
 //          the interrupt's memory/state. NULL means don't save it.
+//   max_skip:  Maximum Nr. of pulses at the begining of a capture we can skip
+//              when attempting to find a protocol we can successfully decode.
+//              This parameter can dramatically improve detection of protocols
+//              when there is light IR interference just before an incoming IR
+//              message, however, it comes at a steep performace price.
+//              CAUTION: Increasing this value will dramatically (linnearly)
+//                       increase the cpu time & usage to decode protocols.
+//                       e.g. 0 -> 1 will be a 2x increase in cpu usage/time.
+//                            0 -> 2 will be a 3x increase etc.
+//                       If you are going to do this, consider disabling
+//                       protocol decoding for protocols you are not expecting.
+//              (Default is 0. No skipping.)
+//   noise_floor:  Pulses below this size (in usecs) will be removed or merged
+//                 prior to any decoding. This is to try to remove noise/poor
+//                 readings & slighly increase the chances of a successful
+//                 decode but at the cost of data fidelity & integrity.
+//                 (Defaults to 0 usecs. i.e. Don't filter; which is safe!)
+//                 DANGER: **Here Be Dragons!**
+//                   If you set the `filter_floor` value too high, it **WILL**
+//                   break decoding of some protocols. You have been warned!
+//                   **Any** non-zero value has the potential to **cook** the
+//                   captured raw data. i.e. The data is going to lie to you.
+//                   It may obscure hardware, circuit, & environment issues thus
+//                   making it impossible to support you accurately or
+//                   confidently.
+//                   Values of <= 50 usecs will probably be safe.
+//                   51 - 100 usecs **might** be okay.
+//                   100 - 150 usecs is "Danger, Will Robinson!".
+//                   150 - 200 usecs expect broken protocols.
+//                   At 200+ usecs, you **have** protocols you can't decode!!
+//
 // Returns:
 //   A boolean indicating if an IR message is ready or not.
-bool IRrecv::decode(decode_results *results, irparams_t *save) {
+bool IRrecv::decode(decode_results *results, irparams_t *save,
+                    uint8_t max_skip, uint16_t noise_floor) {
   // Proceed only if an IR message been received.
 #ifndef UNIT_TEST
   if (irparams.rcvstate != kStopState) return false;
@@ -263,256 +428,343 @@ bool IRrecv::decode(decode_results *results, irparams_t *save) {
   results->command = 0;
   results->repeat = false;
 
+#if ENABLE_NOISE_FILTER_OPTION
+  crudeNoiseFilter(results, noise_floor);
+#endif  // ENABLE_NOISE_FILTER_OPTION
+  // Keep looking for protocols until we've run out of entries to skip or we
+  // find a valid protocol message.
+  for (uint16_t offset = kStartOffset;
+       offset <= (max_skip * 2) + kStartOffset;
+       offset += 2) {
 #if DECODE_AIWA_RC_T501
-  DPRINTLN("Attempting Aiwa RC T501 decode");
-  // Try decodeAiwaRCT501() before decodeSanyoLC7461() & decodeNEC()
-  // because the protocols are similar. This protocol is more specific than
-  // those ones, so should got before them.
-  if (decodeAiwaRCT501(results)) return true;
+    DPRINTLN("Attempting Aiwa RC T501 decode");
+    // Try decodeAiwaRCT501() before decodeSanyoLC7461() & decodeNEC()
+    // because the protocols are similar. This protocol is more specific than
+    // those ones, so should go before them.
+    if (decodeAiwaRCT501(results, offset)) return true;
 #endif
 #if DECODE_SANYO
-  DPRINTLN("Attempting Sanyo LC7461 decode");
-  // Try decodeSanyoLC7461() before decodeNEC() because the protocols are
-  // similar in timings & structure, but the Sanyo one is much longer than the
-  // NEC protocol (42 vs 32 bits) so this one should be tried first to try to
-  // reduce false detection as a NEC packet.
-  if (decodeSanyoLC7461(results)) return true;
+    DPRINTLN("Attempting Sanyo LC7461 decode");
+    // Try decodeSanyoLC7461() before decodeNEC() because the protocols are
+    // similar in timings & structure, but the Sanyo one is much longer than the
+    // NEC protocol (42 vs 32 bits) so this one should be tried first to try to
+    // reduce false detection as a NEC packet.
+    if (decodeSanyoLC7461(results, offset)) return true;
 #endif
 #if DECODE_CARRIER_AC
-  DPRINTLN("Attempting Carrier AC decode");
-  // Try decodeCarrierAC() before decodeNEC() because the protocols are
-  // similar in timings & structure, but the Carrier one is much longer than the
-  // NEC protocol (3x32 bits vs 1x32 bits) so this one should be tried first to
-  // try to reduce false detection as a NEC packet.
-  if (decodeCarrierAC(results)) return true;
+    DPRINTLN("Attempting Carrier AC decode");
+    // Try decodeCarrierAC() before decodeNEC() because the protocols are
+    // similar in timings & structure, but the Carrier one is much longer than
+    // the NEC protocol (3x32 bits vs 1x32 bits) so this one should be tried
+    // first to try to reduce false detection as a NEC packet.
+    if (decodeCarrierAC(results, offset)) return true;
 #endif
 #if DECODE_PIONEER
-  DPRINTLN("Attempting Pioneer decode");
-  // Try decodePioneer() before decodeNEC() because the protocols are
-  // similar in timings & structure, but the Pioneer one is much longer than the
-  // NEC protocol (2x32 bits vs 1x32 bits) so this one should be tried first to
-  // try to reduce false detection as a NEC packet.
-  if (decodePioneer(results)) return true;
+    DPRINTLN("Attempting Pioneer decode");
+    // Try decodePioneer() before decodeNEC() because the protocols are
+    // similar in timings & structure, but the Pioneer one is much longer than
+    // the NEC protocol (2x32 bits vs 1x32 bits) so this one should be tried
+    // first to try to reduce false detection as a NEC packet.
+    if (decodePioneer(results, offset)) return true;
+#endif
+#if DECODE_EPSON
+  DPRINTLN("Attempting Epson decode");
+  // Try decodeEpson() before decodeNEC() because the protocols are
+  // similar in timings & structure, but the Epson one is much longer than the
+  // NEC protocol (3x32 identical bits vs 1x32 bits) so this one should be tried
+  // first to try to reduce false detection as a NEC packet.
+  if (decodeEpson(results, offset)) return true;
 #endif
 #if DECODE_NEC
-  DPRINTLN("Attempting NEC decode");
-  if (decodeNEC(results)) return true;
+    DPRINTLN("Attempting NEC decode");
+    if (decodeNEC(results, offset)) return true;
 #endif
 #if DECODE_SONY
-  DPRINTLN("Attempting Sony decode");
-  if (decodeSony(results)) return true;
+    DPRINTLN("Attempting Sony decode");
+    if (decodeSony(results, offset)) return true;
 #endif
 #if DECODE_MITSUBISHI
-  DPRINTLN("Attempting Mitsubishi decode");
-  if (decodeMitsubishi(results)) return true;
+    DPRINTLN("Attempting Mitsubishi decode");
+    if (decodeMitsubishi(results, offset)) return true;
 #endif
 #if DECODE_MITSUBISHI_AC
-  DPRINTLN("Attempting Mitsubishi AC decode");
-  if (decodeMitsubishiAC(results)) return true;
+    DPRINTLN("Attempting Mitsubishi AC decode");
+    if (decodeMitsubishiAC(results, offset)) return true;
 #endif
 #if DECODE_MITSUBISHI2
-  DPRINTLN("Attempting Mitsubishi2 decode");
-  if (decodeMitsubishi2(results)) return true;
+    DPRINTLN("Attempting Mitsubishi2 decode");
+    if (decodeMitsubishi2(results, offset)) return true;
 #endif
 #if DECODE_RC5
-  DPRINTLN("Attempting RC5 decode");
-  if (decodeRC5(results)) return true;
+    DPRINTLN("Attempting RC5 decode");
+    if (decodeRC5(results, offset)) return true;
 #endif
 #if DECODE_RC6
-  DPRINTLN("Attempting RC6 decode");
-  if (decodeRC6(results)) return true;
+    DPRINTLN("Attempting RC6 decode");
+    if (decodeRC6(results, offset)) return true;
 #endif
 #if DECODE_RCMM
-  DPRINTLN("Attempting RC-MM decode");
-  if (decodeRCMM(results)) return true;
+    DPRINTLN("Attempting RC-MM decode");
+    if (decodeRCMM(results, offset)) return true;
 #endif
 #if DECODE_FUJITSU_AC
-  // Fujitsu A/C needs to precede Panasonic and Denon as it has a short
-  // message which looks exactly the same as a Panasonic/Denon message.
-  DPRINTLN("Attempting Fujitsu A/C decode");
-  if (decodeFujitsuAC(results)) return true;
+    // Fujitsu A/C needs to precede Panasonic and Denon as it has a short
+    // message which looks exactly the same as a Panasonic/Denon message.
+    DPRINTLN("Attempting Fujitsu A/C decode");
+    if (decodeFujitsuAC(results, offset)) return true;
 #endif
 #if DECODE_DENON
-  // Denon needs to precede Panasonic as it is a special case of Panasonic.
-  DPRINTLN("Attempting Denon decode");
-  if (decodeDenon(results, DENON_48_BITS) || decodeDenon(results, DENON_BITS) ||
-      decodeDenon(results, kDenonLegacyBits))
-    return true;
+    // Denon needs to precede Panasonic as it is a special case of Panasonic.
+    DPRINTLN("Attempting Denon decode");
+    if (decodeDenon(results, offset, kDenon48Bits) ||
+        decodeDenon(results, offset, kDenonBits) ||
+        decodeDenon(results, offset, kDenonLegacyBits))
+      return true;
 #endif
 #if DECODE_PANASONIC
-  DPRINTLN("Attempting Panasonic decode");
-  if (decodePanasonic(results)) return true;
+    DPRINTLN("Attempting Panasonic decode");
+    if (decodePanasonic(results, offset)) return true;
 #endif
 #if DECODE_LG
-  DPRINTLN("Attempting LG (28-bit) decode");
-  if (decodeLG(results, kLgBits, true)) return true;
-  DPRINTLN("Attempting LG (32-bit) decode");
-  // LG32 should be tried before Samsung
-  if (decodeLG(results, kLg32Bits, true)) return true;
+    DPRINTLN("Attempting LG (28-bit) decode");
+    if (decodeLG(results, offset, kLgBits, true)) return true;
+    DPRINTLN("Attempting LG (32-bit) decode");
+    // LG32 should be tried before Samsung
+    if (decodeLG(results, offset, kLg32Bits, true)) return true;
 #endif
 #if DECODE_GICABLE
-  // Note: Needs to happen before JVC decode, because it looks similar except
-  //       with a required NEC-like repeat code.
-  DPRINTLN("Attempting GICable decode");
-  if (decodeGICable(results)) return true;
+    // Note: Needs to happen before JVC decode, because it looks similar except
+    //       with a required NEC-like repeat code.
+    DPRINTLN("Attempting GICable decode");
+    if (decodeGICable(results, offset)) return true;
 #endif
 #if DECODE_JVC
-  DPRINTLN("Attempting JVC decode");
-  if (decodeJVC(results)) return true;
+    DPRINTLN("Attempting JVC decode");
+    if (decodeJVC(results, offset)) return true;
 #endif
 #if DECODE_SAMSUNG
-  DPRINTLN("Attempting SAMSUNG decode");
-  if (decodeSAMSUNG(results)) return true;
+    DPRINTLN("Attempting SAMSUNG decode");
+    if (decodeSAMSUNG(results, offset)) return true;
 #endif
 #if DECODE_SAMSUNG36
-  DPRINTLN("Attempting Samsung36 decode");
-  if (decodeSamsung36(results)) return true;
+    DPRINTLN("Attempting Samsung36 decode");
+    if (decodeSamsung36(results, offset)) return true;
 #endif
 #if DECODE_WHYNTER
-  DPRINTLN("Attempting Whynter decode");
-  if (decodeWhynter(results)) return true;
+    DPRINTLN("Attempting Whynter decode");
+    if (decodeWhynter(results, offset)) return true;
 #endif
 #if DECODE_DISH
-  DPRINTLN("Attempting DISH decode");
-  if (decodeDISH(results)) return true;
+    DPRINTLN("Attempting DISH decode");
+    if (decodeDISH(results, offset)) return true;
 #endif
 #if DECODE_SHARP
-  DPRINTLN("Attempting Sharp decode");
-  if (decodeSharp(results)) return true;
+    DPRINTLN("Attempting Sharp decode");
+    if (decodeSharp(results, offset)) return true;
 #endif
 #if DECODE_COOLIX
-  DPRINTLN("Attempting Coolix decode");
-  if (decodeCOOLIX(results)) return true;
+    DPRINTLN("Attempting Coolix decode");
+    if (decodeCOOLIX(results, offset)) return true;
 #endif
 #if DECODE_NIKAI
-  DPRINTLN("Attempting Nikai decode");
-  if (decodeNikai(results)) return true;
+    DPRINTLN("Attempting Nikai decode");
+    if (decodeNikai(results, offset)) return true;
 #endif
 #if DECODE_KELVINATOR
-  // Kelvinator based-devices use a similar code to Gree ones, to avoid false
-  // matches this needs to happen before decodeGree().
-  DPRINTLN("Attempting Kelvinator decode");
-  if (decodeKelvinator(results)) return true;
+    // Kelvinator based-devices use a similar code to Gree ones, to avoid false
+    // matches this needs to happen before decodeGree().
+    DPRINTLN("Attempting Kelvinator decode");
+    if (decodeKelvinator(results, offset)) return true;
 #endif
 #if DECODE_DAIKIN
-  DPRINTLN("Attempting Daikin decode");
-  if (decodeDaikin(results)) return true;
+    DPRINTLN("Attempting Daikin decode");
+    if (decodeDaikin(results, offset)) return true;
 #endif
 #if DECODE_DAIKIN2
-  DPRINTLN("Attempting Daikin2 decode");
-  if (decodeDaikin2(results)) return true;
+    DPRINTLN("Attempting Daikin2 decode");
+    if (decodeDaikin2(results, offset)) return true;
+#endif
+#if DECODE_DAIKIN216
+    DPRINTLN("Attempting Daikin216 decode");
+    if (decodeDaikin216(results, offset)) return true;
 #endif
 #if DECODE_TOSHIBA_AC
-  DPRINTLN("Attempting Toshiba AC decode");
-  if (decodeToshibaAC(results)) return true;
+    DPRINTLN("Attempting Toshiba AC decode");
+    if (decodeToshibaAC(results, offset)) return true;
 #endif
 #if DECODE_MIDEA
-  DPRINTLN("Attempting Midea decode");
-  if (decodeMidea(results)) return true;
+    DPRINTLN("Attempting Midea decode");
+    if (decodeMidea(results, offset)) return true;
 #endif
 #if DECODE_MAGIQUEST
-  DPRINTLN("Attempting Magiquest decode");
-  if (decodeMagiQuest(results)) return true;
+    DPRINTLN("Attempting Magiquest decode");
+    if (decodeMagiQuest(results, offset)) return true;
 #endif
-/* NOTE: Disabled due to poor quality.
+  /* NOTE: Disabled due to poor quality.
 #if DECODE_SANYO
-  // The Sanyo S866500B decoder is very poor quality & depricated.
-  // *IF* you are going to enable it, do it near last to avoid false positive
-  // matches.
-  DPRINTLN("Attempting Sanyo SA8650B decode");
-  if (decodeSanyo(results))
-    return true;
+    // The Sanyo S866500B decoder is very poor quality & depricated.
+    // *IF* you are going to enable it, do it near last to avoid false positive
+    // matches.
+    DPRINTLN("Attempting Sanyo SA8650B decode");
+    if (decodeSanyo(results, offset))
+      return true;
 #endif
-*/
+  */
 #if DECODE_NEC
-  // Some devices send NEC-like codes that don't follow the true NEC spec.
-  // This should detect those. e.g. Apple TV remote etc.
-  // This needs to be done after all other codes that use strict and some
-  // other protocols that are NEC-like as well, as turning off strict may
-  // cause this to match other valid protocols.
-  DPRINTLN("Attempting NEC (non-strict) decode");
-  if (decodeNEC(results, kNECBits, false)) {
-    results->decode_type = NEC_LIKE;
-    return true;
-  }
+    // Some devices send NEC-like codes that don't follow the true NEC spec.
+    // This should detect those. e.g. Apple TV remote etc.
+    // This needs to be done after all other codes that use strict and some
+    // other protocols that are NEC-like as well, as turning off strict may
+    // cause this to match other valid protocols.
+    DPRINTLN("Attempting NEC (non-strict) decode");
+    if (decodeNEC(results, offset, kNECBits, false)) {
+      results->decode_type = NEC_LIKE;
+      return true;
+    }
 #endif
 #if DECODE_LASERTAG
-  DPRINTLN("Attempting Lasertag decode");
-  if (decodeLasertag(results)) return true;
+    DPRINTLN("Attempting Lasertag decode");
+    if (decodeLasertag(results, offset)) return true;
 #endif
 #if DECODE_GREE
-  // Gree based-devices use a similar code to Kelvinator ones, to avoid false
-  // matches this needs to happen after decodeKelvinator().
-  DPRINTLN("Attempting Gree decode");
-  if (decodeGree(results)) return true;
+    // Gree based-devices use a similar code to Kelvinator ones, to avoid false
+    // matches this needs to happen after decodeKelvinator().
+    DPRINTLN("Attempting Gree decode");
+    if (decodeGree(results, offset)) return true;
 #endif
 #if DECODE_HAIER_AC
-  DPRINTLN("Attempting Haier AC decode");
-  if (decodeHaierAC(results)) return true;
+    DPRINTLN("Attempting Haier AC decode");
+    if (decodeHaierAC(results, offset)) return true;
 #endif
 #if DECODE_HAIER_AC_YRW02
-  DPRINTLN("Attempting Haier AC YR-W02 decode");
-  if (decodeHaierACYRW02(results)) return true;
+    DPRINTLN("Attempting Haier AC YR-W02 decode");
+    if (decodeHaierACYRW02(results, offset)) return true;
 #endif
+#if DECODE_HITACHI_AC424
+    // HitachiAc424 should be checked before HitachiAC & HitachiAC2
+    DPRINTLN("Attempting Hitachi AC 424 decode");
+    if (decodeHitachiAc424(results, offset, kHitachiAc424Bits)) return true;
+#endif  // DECODE_HITACHI_AC2
 #if DECODE_HITACHI_AC2
-  // HitachiAC2 should be checked before HitachiAC
-  DPRINTLN("Attempting Hitachi AC2 decode");
-  if (decodeHitachiAC(results, kHitachiAc2Bits)) return true;
-#endif
+    // HitachiAC2 should be checked before HitachiAC
+    DPRINTLN("Attempting Hitachi AC2 decode");
+    if (decodeHitachiAC(results, offset, kHitachiAc2Bits)) return true;
+#endif  // DECODE_HITACHI_AC2
 #if DECODE_HITACHI_AC
-  DPRINTLN("Attempting Hitachi AC decode");
-  if (decodeHitachiAC(results, kHitachiAcBits)) return true;
+    DPRINTLN("Attempting Hitachi AC decode");
+    if (decodeHitachiAC(results, offset, kHitachiAcBits)) return true;
 #endif
 #if DECODE_HITACHI_AC1
-  DPRINTLN("Attempting Hitachi AC1 decode");
-  if (decodeHitachiAC(results, kHitachiAc1Bits)) return true;
+    DPRINTLN("Attempting Hitachi AC1 decode");
+    if (decodeHitachiAC(results, offset, kHitachiAc1Bits)) return true;
 #endif
 #if DECODE_WHIRLPOOL_AC
-  DPRINTLN("Attempting Whirlpool AC decode");
-  if (decodeWhirlpoolAC(results)) return true;
+    DPRINTLN("Attempting Whirlpool AC decode");
+    if (decodeWhirlpoolAC(results, offset)) return true;
 #endif
 #if DECODE_SAMSUNG_AC
-  DPRINTLN("Attempting Samsung AC (extended) decode");
-  // Check the extended size first, as it should fail fast due to longer length.
-  if (decodeSamsungAC(results, kSamsungAcExtendedBits, false)) return true;
-  // Now check for the more common length.
-  DPRINTLN("Attempting Samsung AC decode");
-  if (decodeSamsungAC(results, kSamsungAcBits)) return true;
+    DPRINTLN("Attempting Samsung AC (extended) decode");
+    // Check the extended size first, as it should fail fast due to longer
+    // length.
+    if (decodeSamsungAC(results, offset, kSamsungAcExtendedBits, false))
+      return true;
+    // Now check for the more common length.
+    DPRINTLN("Attempting Samsung AC decode");
+    if (decodeSamsungAC(results, offset, kSamsungAcBits)) return true;
 #endif
 #if DECODE_ELECTRA_AC
-  DPRINTLN("Attempting Electra AC decode");
-  if (decodeElectraAC(results)) return true;
+    DPRINTLN("Attempting Electra AC decode");
+    if (decodeElectraAC(results, offset)) return true;
 #endif
 #if DECODE_PANASONIC_AC
-  DPRINTLN("Attempting Panasonic AC decode");
-  if (decodePanasonicAC(results)) return true;
-  DPRINTLN("Attempting Panasonic AC short decode");
-  if (decodePanasonicAC(results, kPanasonicAcShortBits)) return true;
+    DPRINTLN("Attempting Panasonic AC decode");
+    if (decodePanasonicAC(results, offset)) return true;
+    DPRINTLN("Attempting Panasonic AC short decode");
+    if (decodePanasonicAC(results, offset, kPanasonicAcShortBits)) return true;
 #endif
 #if DECODE_LUTRON
-  DPRINTLN("Attempting Lutron decode");
-  if (decodeLutron(results)) return true;
+    DPRINTLN("Attempting Lutron decode");
+    if (decodeLutron(results, offset)) return true;
 #endif
 #if DECODE_MWM
-  DPRINTLN("Attempting MWM decode");
-  if (decodeMWM(results)) return true;
+    DPRINTLN("Attempting MWM decode");
+    if (decodeMWM(results, offset)) return true;
 #endif
 #if DECODE_VESTEL_AC
-  DPRINTLN("Attempting Vestel AC decode");
-  if (decodeVestelAc(results)) return true;
+    DPRINTLN("Attempting Vestel AC decode");
+    if (decodeVestelAc(results, offset)) return true;
 #endif
-#if DECODE_TCL112AC
-  DPRINTLN("Attempting TCL112AC decode");
-  if (decodeTcl112Ac(results)) return true;
-#endif
+#if DECODE_MITSUBISHI112 || DECODE_TCL112AC
+    // Mitsubish112 and Tcl112 share the same decoder.
+    DPRINTLN("Attempting Mitsubishi112/TCL112AC decode");
+    if (decodeMitsubishi112(results, offset)) return true;
+#endif  // DECODE_MITSUBISHI112 || DECODE_TCL112AC
 #if DECODE_TECO
-  DPRINTLN("Attempting Teco decode");
-  if (decodeTeco(results)) return true;
+    DPRINTLN("Attempting Teco decode");
+    if (decodeTeco(results, offset)) return true;
 #endif
 #if DECODE_LEGOPF
-  DPRINTLN("Attempting LEGOPF decode");
-  if (decodeLegoPf(results)) return true;
+    DPRINTLN("Attempting LEGOPF decode");
+    if (decodeLegoPf(results, offset)) return true;
 #endif
+#if DECODE_MITSUBISHIHEAVY
+    DPRINTLN("Attempting MITSUBISHIHEAVY (152 bit) decode");
+    if (decodeMitsubishiHeavy(results, offset, kMitsubishiHeavy152Bits))
+      return true;
+    DPRINTLN("Attempting MITSUBISHIHEAVY (88 bit) decode");
+    if (decodeMitsubishiHeavy(results, offset, kMitsubishiHeavy88Bits))
+      return true;
+#endif
+#if DECODE_ARGO
+    DPRINTLN("Attempting Argo decode");
+    if (decodeArgo(results, offset)) return true;
+#endif  // DECODE_ARGO
+#if DECODE_SHARP_AC
+    DPRINTLN("Attempting SHARP_AC decode");
+    if (decodeSharpAc(results, offset)) return true;
+#endif
+#if DECODE_GOODWEATHER
+    DPRINTLN("Attempting GOODWEATHER decode");
+    if (decodeGoodweather(results, offset)) return true;
+#endif  // DECODE_GOODWEATHER
+#if DECODE_INAX
+    DPRINTLN("Attempting Inax decode");
+    if (decodeInax(results, offset)) return true;
+#endif  // DECODE_INAX
+#if DECODE_TROTEC
+    DPRINTLN("Attempting Trotec decode");
+    if (decodeTrotec(results, offset)) return true;
+#endif  // DECODE_TROTEC
+#if DECODE_DAIKIN160
+    DPRINTLN("Attempting Daikin160 decode");
+    if (decodeDaikin160(results, offset)) return true;
+#endif  // DECODE_DAIKIN160
+#if DECODE_NEOCLIMA
+    DPRINTLN("Attempting Neoclima decode");
+    if (decodeNeoclima(results, offset)) return true;
+#endif  // DECODE_NEOCLIMA
+#if DECODE_DAIKIN176
+    DPRINTLN("Attempting Daikin176 decode");
+    if (decodeDaikin176(results, offset)) return true;
+#endif  // DECODE_DAIKIN176
+#if DECODE_DAIKIN128
+    DPRINTLN("Attempting Daikin128 decode");
+    if (decodeDaikin128(results, offset)) return true;
+#endif  // DECODE_DAIKIN128
+#if DECODE_AMCOR
+    DPRINTLN("Attempting Amcor decode");
+    if (decodeAmcor(results, offset)) return true;
+#endif  // DECODE_AMCOR
+#if DECODE_DAIKIN152
+    DPRINTLN("Attempting Daikin152 decode");
+    if (decodeDaikin152(results, offset)) return true;
+#endif  // DECODE_DAIKIN152
+#if DECODE_MITSUBISHI136
+    DPRINTLN("Attempting Mitsubishi136 decode");
+    if (decodeMitsubishi136(results, offset)) return true;
+#endif  // DECODE_MITSUBISHI136
+  }
+  // Typically new protocols are added above this line.
 #if DECODE_HASH
   // decodeHash returns a hash on any input.
   // Thus, it needs to be last in the list.
@@ -527,6 +779,11 @@ bool IRrecv::decode(decode_results *results, irparams_t *save) {
   return false;
 }
 
+// Convert the tolerance percentage into something valid.
+uint8_t IRrecv::_validTolerance(const uint8_t percentage) {
+    return (percentage > 100) ? _tolerance : percentage;
+}
+
 // Calculate the lower bound of the nr. of ticks.
 //
 // Args:
@@ -535,10 +792,12 @@ bool IRrecv::decode(decode_results *results, irparams_t *save) {
 //   delta:  A non-scaling amount to reduce usecs by.
 // Returns:
 //   Nr. of ticks.
-uint32_t IRrecv::ticksLow(uint32_t usecs, uint8_t tolerance, uint16_t delta) {
+uint32_t IRrecv::ticksLow(const uint32_t usecs, const uint8_t tolerance,
+                          const uint16_t delta) {
   // max() used to ensure the result can't drop below 0 before the cast.
   return ((uint32_t)std::max(
-      (int32_t)(usecs * (1.0 - tolerance / 100.0) - delta), 0));
+      (int32_t)(usecs * (1.0 - _validTolerance(tolerance) / 100.0) - delta),
+      0));
 }
 
 // Calculate the upper bound of the nr. of ticks.
@@ -549,8 +808,10 @@ uint32_t IRrecv::ticksLow(uint32_t usecs, uint8_t tolerance, uint16_t delta) {
 //   delta:  A non-scaling amount to increase usecs by.
 // Returns:
 //   Nr. of ticks.
-uint32_t IRrecv::ticksHigh(uint32_t usecs, uint8_t tolerance, uint16_t delta) {
-  return ((uint32_t)(usecs * (1.0 + tolerance / 100.0)) + 1 + delta);
+uint32_t IRrecv::ticksHigh(const uint32_t usecs, const uint8_t tolerance,
+                           const uint16_t delta) {
+  return ((uint32_t)(usecs * (1.0 + _validTolerance(tolerance) / 100.0)) + 1 +
+          delta);
 }
 
 // Check if we match a pulse(measured) with the desired within
@@ -573,6 +834,17 @@ bool IRrecv::match(uint32_t measured, uint32_t desired, uint8_t tolerance,
   DPRINT(measured);
   DPRINT(" <= ");
   DPRINTLN(ticksHigh(desired, tolerance, delta));
+#ifdef UNIT_TEST
+  // Sanity checks that we don't have values that cause integer over/underflow.
+  // Only performed during testing so there is no performance hit in normal
+  // operation.
+  assert(ticksLow(desired, tolerance, delta) <= desired);
+  // Check if we overflowed.  (UINT32_MAX >> 3 is approx 9 minutes!)
+  assert(ticksHigh(desired, tolerance, delta) < UINT32_MAX >> 3);
+  // Check if our high mark is below where we started. This could happen.
+  // If there is a legit case, then this should be removed.
+  assert(ticksHigh(desired, tolerance, delta) >= desired);
+#endif  // UNIT_TEST
   return (measured >= ticksLow(desired, tolerance, delta) &&
           measured <= ticksHigh(desired, tolerance, delta));
 }
@@ -606,6 +878,17 @@ bool IRrecv::matchAtLeast(uint32_t measured, uint32_t desired,
   DPRINT(", ");
   DPRINT(ticksLow(MS_TO_USEC(irparams.timeout), tolerance, delta));
   DPRINTLN(")]");
+#ifdef UNIT_TEST
+  // Sanity checks that we don't have values that cause integer over/underflow.
+  // Only performed during testing so there is no performance hit in normal
+  // operation.
+  assert(ticksLow(desired, tolerance, delta) <= desired);
+  // Check if we overflowed.  (UINT32_MAX >> 3 is approx 9 minutes!)
+  assert(ticksHigh(desired, tolerance, delta) < UINT32_MAX >> 3);
+  // Check if our high mark is below where we started. This could happen.
+  // If there is a legit case, then this should be removed.
+  assert(ticksHigh(desired, tolerance, delta) >= desired);
+#endif  // UNIT_TEST
   // We really should never get a value of 0, except as the last value
   // in the buffer. If that is the case, then assume infinity and return true.
   if (measured == 0) return true;
@@ -676,7 +959,7 @@ bool IRrecv::matchSpace(uint32_t measured, uint32_t desired, uint8_t tolerance,
 // Compare two tick values, returning 0 if newval is shorter,
 // 1 if newval is equal, and 2 if newval is longer
 // Use a tolerance of 20%
-int16_t IRrecv::compare(uint16_t oldval, uint16_t newval) {
+uint16_t IRrecv::compare(const uint16_t oldval, const uint16_t newval) {
   if (newval < oldval * 0.8)
     return 0;
   else if (oldval < newval * 0.8)
@@ -692,14 +975,14 @@ int16_t IRrecv::compare(uint16_t oldval, uint16_t newval) {
  */
 bool IRrecv::decodeHash(decode_results *results) {
   // Require at least some samples to prevent triggering on noise
-  if (results->rawlen < unknown_threshold) return false;
+  if (results->rawlen < _unknown_threshold) return false;
   int32_t hash = kFnvBasis32;
   // 'rawlen - 2' to avoid the look ahead from going out of bounds.
   // Should probably be -3 to avoid comparing the trailing space entry,
   // however it is left this way for compatibility with previously captured
   // values.
   for (uint16_t i = 1; i < results->rawlen - 2; i++) {
-    int16_t value = compare(results->rawbuf[i], results->rawbuf[i + 2]);
+    uint16_t value = compare(results->rawbuf[i], results->rawbuf[i + 2]);
     // Add value into the hash
     hash = (hash * kFnvPrime32) ^ value;
   }
@@ -723,7 +1006,7 @@ bool IRrecv::decodeHash(decode_results *results) {
 //   onespace:  Nr. of uSeconds in an expected space signal for a '1' bit.
 //   zeromark:  Nr. of uSeconds in an expected mark signal for a '0' bit.
 //   zerospace: Nr. of uSeconds in an expected space signal for a '0' bit.
-//   tolerance: Percentage error margin to allow. (Def: kTolerance)
+//   tolerance: Percentage error margin to allow. (Def: kUseDefTol)
 //   excess:  Nr. of useconds. (Def: kMarkExcess)
 //   MSBfirst: Bit order to save the data in. (Def: true)
 // Returns:
@@ -755,4 +1038,236 @@ match_result_t IRrecv::matchData(
   return result;
 }
 
+// Match & decode the typical data section of an IR message.
+// The bytes are stored at result_ptr. The first byte in the result equates to
+// the first byte encountered, and so on.
+//
+// Args:
+//   data_ptr: A pointer to where we are at in the capture buffer.
+//   result_ptr: A pointer to where to start storing the bytes we decoded.
+//   remaining: The size of the capture buffer are remaining.
+//   nbytes:    Nr. of data bytes we expect.
+//   onemark:   Nr. of uSeconds in an expected mark signal for a '1' bit.
+//   onespace:  Nr. of uSeconds in an expected space signal for a '1' bit.
+//   zeromark:  Nr. of uSeconds in an expected mark signal for a '0' bit.
+//   zerospace: Nr. of uSeconds in an expected space signal for a '0' bit.
+//   tolerance: Percentage error margin to allow. (Def: kUseDefTol)
+//   excess:  Nr. of useconds. (Def: kMarkExcess)
+//   MSBfirst: Bit order to save the data in. (Def: true)
+// Returns:
+//  A uint16_t: If successful, how many buffer entries were used. Otherwise 0.
+uint16_t IRrecv::matchBytes(volatile uint16_t *data_ptr, uint8_t *result_ptr,
+                            const uint16_t remaining, const uint16_t nbytes,
+                            const uint16_t onemark, const uint32_t onespace,
+                            const uint16_t zeromark, const uint32_t zerospace,
+                            const uint8_t tolerance, const int16_t excess,
+                            const bool MSBfirst) {
+  // Check if there is enough capture buffer to possibly have the desired bytes.
+  if (remaining < nbytes * 8 * 2) return 0;  // Nope, so abort.
+  uint16_t offset = 0;
+  for (uint16_t byte_pos = 0; byte_pos < nbytes; byte_pos++) {
+    match_result_t result = matchData(data_ptr + offset, 8, onemark, onespace,
+                                      zeromark, zerospace, tolerance, excess,
+                                      MSBfirst);
+    if (result.success == false) return 0;  // Fail
+    result_ptr[byte_pos] = (uint8_t)result.data;
+    offset += result.used;
+  }
+  return offset;
+}
+
+// Match & decode a generic/typical IR message.
+// The data is stored in result_bits_ptr or result_bytes_ptr depending on flag
+// `use_bits`.
+// Values of 0 for hdrmark, hdrspace, footermark, or footerspace mean skip
+// that requirement.
+//
+// Args:
+//   data_ptr: A pointer to where we are at in the capture buffer.
+//   result_bits_ptr: A pointer to where to start storing the bits we decoded.
+//   result_bytes_ptr: A pointer to where to start storing the bytes we decoded.
+//   use_bits: A flag indicating if we are to decode bits or bytes.
+//   remaining: The size of the capture buffer are remaining.
+//   nbits:        Nr. of data bits we expect.
+//   hdrmark:      Nr. of uSeconds for the expected header mark signal.
+//   hdrspace:     Nr. of uSeconds for the expected header space signal.
+//   onemark:      Nr. of uSeconds in an expected mark signal for a '1' bit.
+//   onespace:     Nr. of uSeconds in an expected space signal for a '1' bit.
+//   zeromark:     Nr. of uSeconds in an expected mark signal for a '0' bit.
+//   zerospace:    Nr. of uSeconds in an expected space signal for a '0' bit.
+//   footermark:   Nr. of uSeconds for the expected footer mark signal.
+//   footerspace:  Nr. of uSeconds for the expected footer space/gap signal.
+//   atleast:      Is the match on the footerspace a matchAtLeast or matchSpace?
+//   tolerance: Percentage error margin to allow. (Def: kUseDefTol)
+//   excess:  Nr. of useconds. (Def: kMarkExcess)
+//   MSBfirst: Bit order to save the data in. (Def: true)
+// Returns:
+//  A uint16_t: If successful, how many buffer entries were used. Otherwise 0.
+uint16_t IRrecv::_matchGeneric(volatile uint16_t *data_ptr,
+                              uint64_t *result_bits_ptr,
+                              uint8_t *result_bytes_ptr,
+                              const bool use_bits,
+                              const uint16_t remaining,
+                              const uint16_t nbits,
+                              const uint16_t hdrmark,
+                              const uint32_t hdrspace,
+                              const uint16_t onemark,
+                              const uint32_t onespace,
+                              const uint16_t zeromark,
+                              const uint32_t zerospace,
+                              const uint16_t footermark,
+                              const uint32_t footerspace,
+                              const bool atleast,
+                              const uint8_t tolerance,
+                              const int16_t excess,
+                              const bool MSBfirst) {
+  // If we are expecting byte sizes, check it's a factor of 8 or fail.
+  if (!use_bits && nbits % 8 != 0)  return 0;
+  // Calculate how much remaining buffer is required.
+  uint16_t min_remaining = nbits * 2;
+
+  if (hdrmark) min_remaining++;
+  if (hdrspace) min_remaining++;
+  if (footermark) min_remaining++;
+  // Don't need to extend for footerspace because it could be the end of message
+
+  // Check if there is enough capture buffer to possibly have the message.
+  if (remaining < min_remaining) return 0;  // Nope, so abort.
+  uint16_t offset = 0;
+
+  // Header
+  if (hdrmark && !matchMark(*(data_ptr + offset++), hdrmark, tolerance, excess))
+    return 0;
+  if (hdrspace && !matchSpace(*(data_ptr + offset++), hdrspace, tolerance,
+                              excess))
+    return 0;
+
+  // Data
+  if (use_bits) {  // Bits.
+    match_result_t result = IRrecv::matchData(data_ptr + offset, nbits,
+                                              onemark, onespace,
+                                              zeromark, zerospace, tolerance,
+                                              excess, MSBfirst);
+    if (!result.success) return 0;
+    *result_bits_ptr = result.data;
+    offset += result.used;
+  } else {  // bytes
+    uint16_t data_used = IRrecv::matchBytes(data_ptr + offset, result_bytes_ptr,
+                                            remaining - offset, nbits / 8,
+                                            onemark, onespace,
+                                            zeromark, zerospace, tolerance,
+                                            excess, MSBfirst);
+    if (!data_used) return 0;
+    offset += data_used;
+  }
+  // Footer
+  if (footermark && !matchMark(*(data_ptr + offset++), footermark, tolerance,
+                               excess))
+    return 0;
+  // If we have something still to match & haven't reached the end of the buffer
+  if (footerspace && offset < remaining) {
+      if (atleast) {
+        if (!matchAtLeast(*(data_ptr + offset), footerspace, tolerance, excess))
+          return 0;
+      } else {
+        if (!matchSpace(*(data_ptr + offset), footerspace, tolerance, excess))
+          return 0;
+      }
+      offset++;
+  }
+  return offset;
+}
+
+// Match & decode a generic/typical <= 64bit IR message.
+// The data is stored at result_ptr.
+// Values of 0 for hdrmark, hdrspace, footermark, or footerspace mean skip
+// that requirement.
+//
+// Args:
+//   data_ptr: A pointer to where we are at in the capture buffer.
+//   result_ptr: A pointer to where to start storing the bits we decoded.
+//   remaining: The size of the capture buffer are remaining.
+//   nbits:        Nr. of data bits we expect.
+//   hdrmark:      Nr. of uSeconds for the expected header mark signal.
+//   hdrspace:     Nr. of uSeconds for the expected header space signal.
+//   onemark:      Nr. of uSeconds in an expected mark signal for a '1' bit.
+//   onespace:     Nr. of uSeconds in an expected space signal for a '1' bit.
+//   zeromark:     Nr. of uSeconds in an expected mark signal for a '0' bit.
+//   zerospace:    Nr. of uSeconds in an expected space signal for a '0' bit.
+//   footermark:   Nr. of uSeconds for the expected footer mark signal.
+//   footerspace:  Nr. of uSeconds for the expected footer space/gap signal.
+//   atleast:      Is the match on the footerspace a matchAtLeast or matchSpace?
+//   tolerance: Percentage error margin to allow. (Def: kUseDefTol)
+//   excess:  Nr. of useconds. (Def: kMarkExcess)
+//   MSBfirst: Bit order to save the data in. (Def: true)
+// Returns:
+//  A uint16_t: If successful, how many buffer entries were used. Otherwise 0.
+uint16_t IRrecv::matchGeneric(volatile uint16_t *data_ptr,
+                              uint64_t *result_ptr,
+                              const uint16_t remaining,
+                              const uint16_t nbits,
+                              const uint16_t hdrmark,
+                              const uint32_t hdrspace,
+                              const uint16_t onemark,
+                              const uint32_t onespace,
+                              const uint16_t zeromark,
+                              const uint32_t zerospace,
+                              const uint16_t footermark,
+                              const uint32_t footerspace,
+                              const bool atleast,
+                              const uint8_t tolerance,
+                              const int16_t excess,
+                              const bool MSBfirst) {
+  return _matchGeneric(data_ptr, result_ptr, NULL, true, remaining, nbits,
+                       hdrmark, hdrspace, onemark, onespace,
+                       zeromark, zerospace, footermark, footerspace, atleast,
+                       tolerance, excess, MSBfirst);
+}
+
+// Match & decode a generic/typical > 64bit IR message.
+// The bytes are stored at result_ptr. The first byte in the result equates to
+// the first byte encountered, and so on.
+// Values of 0 for hdrmark, hdrspace, footermark, or footerspace mean skip
+// that requirement.
+//
+// Args:
+//   data_ptr: A pointer to where we are at in the capture buffer.
+//   result_ptr: A pointer to where to start storing the bytes we decoded.
+//   remaining: The size of the capture buffer are remaining.
+//   nbits:        Nr. of data bits we expect.
+//   hdrmark:      Nr. of uSeconds for the expected header mark signal.
+//   hdrspace:     Nr. of uSeconds for the expected header space signal.
+//   onemark:      Nr. of uSeconds in an expected mark signal for a '1' bit.
+//   onespace:     Nr. of uSeconds in an expected space signal for a '1' bit.
+//   zeromark:     Nr. of uSeconds in an expected mark signal for a '0' bit.
+//   zerospace:    Nr. of uSeconds in an expected space signal for a '0' bit.
+//   footermark:   Nr. of uSeconds for the expected footer mark signal.
+//   footerspace:  Nr. of uSeconds for the expected footer space/gap signal.
+//   atleast:      Is the match on the footerspace a matchAtLeast or matchSpace?
+//   tolerance: Percentage error margin to allow. (Def: kUseDefTol)
+//   excess:  Nr. of useconds. (Def: kMarkExcess)
+//   MSBfirst: Bit order to save the data in. (Def: true)
+// Returns:
+//  A uint16_t: If successful, how many buffer entries were used. Otherwise 0.
+uint16_t IRrecv::matchGeneric(volatile uint16_t *data_ptr,
+                              uint8_t *result_ptr,
+                              const uint16_t remaining,
+                              const uint16_t nbits,
+                              const uint16_t hdrmark,
+                              const uint32_t hdrspace,
+                              const uint16_t onemark,
+                              const uint32_t onespace,
+                              const uint16_t zeromark,
+                              const uint32_t zerospace,
+                              const uint16_t footermark,
+                              const uint32_t footerspace,
+                              const bool atleast,
+                              const uint8_t tolerance,
+                              const int16_t excess,
+                              const bool MSBfirst) {
+  return _matchGeneric(data_ptr, NULL, result_ptr, false, remaining, nbits,
+                       hdrmark, hdrspace, onemark, onespace,
+                       zeromark, zerospace, footermark, footerspace, atleast,
+                       tolerance, excess, MSBfirst);
+}
 // End of IRrecv class -------------------

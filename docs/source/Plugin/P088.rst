@@ -1,0 +1,48 @@
+.. include:: ../Plugin/_plugin_substitutions_p08x.repl
+.. _P088_page:
+
+|P088_typename|
+==================================================
+
+|P088_shortinfo|
+
+Plugin details
+--------------
+
+Type: |P088_type|
+
+Name: |P088_name|
+
+Status: |P088_status|
+
+GitHub: |P088_github|_
+
+Maintainer: |P088_maintainer|
+
+Used libraries: |P088_usedlibraries|
+
+The plugin is included into the the minimal_IRext_ESP8266_1M image
+
+Supported hardware
+------------------
+
+Infrared LED connected in series with a ~1kΩ resistor. A support heatpump / airconditioner device to control.
+
+Commands available
+^^^^^^^^^^^^^^^^^^
+
+.. include:: P088_commands.repl
+
+.. Events
+.. ~~~~~~
+
+.. .. include:: P088_events.repl
+
+Change log
+----------
+
+.. versionadded:: 1.0
+  ...
+
+  |added|
+  Initial release version.

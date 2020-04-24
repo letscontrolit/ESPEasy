@@ -2,14 +2,24 @@
 
 #include "ir_Tcl.h"
 #include <algorithm>
+#include <cstring>
 #ifndef ARDUINO
 #include <string>
 #endif
 #include "IRremoteESP8266.h"
+#include "IRtext.h"
 #include "IRutils.h"
 
 // Constants
 
+using irutils::addBoolToString;
+using irutils::addFanToString;
+using irutils::addIntToString;
+using irutils::addLabeledString;
+using irutils::addModeToString;
+using irutils::addTempToString;
+using irutils::setBit;
+using irutils::setBits;
 
 #if SEND_TCL112AC
 void IRsend::sendTcl112Ac(const unsigned char data[], const uint16_t nbytes,
@@ -22,14 +32,15 @@ void IRsend::sendTcl112Ac(const unsigned char data[], const uint16_t nbytes,
 }
 #endif  // SEND_TCL112AC
 
-IRTcl112Ac::IRTcl112Ac(uint16_t pin) : _irsend(pin) { stateReset(); }
+IRTcl112Ac::IRTcl112Ac(const uint16_t pin, const bool inverted,
+                       const bool use_modulation)
+    : _irsend(pin, inverted, use_modulation) { stateReset(); }
 
-void IRTcl112Ac::begin() { this->_irsend.begin(); }
+void IRTcl112Ac::begin(void) { this->_irsend.begin(); }
 
 #if SEND_TCL112AC
 void IRTcl112Ac::send(const uint16_t repeat) {
-  this->checksum();
-  this->_irsend.sendTcl112Ac(remote_state, kTcl112AcStateLength, repeat);
+  this->_irsend.sendTcl112Ac(getRaw(), kTcl112AcStateLength, repeat);
 }
 #endif  // SEND_TCL112AC
 
@@ -39,8 +50,7 @@ void IRTcl112Ac::send(const uint16_t repeat) {
 //   length: The size of the array.
 // Returns:
 //   The 8 bit checksum value.
-uint8_t IRTcl112Ac::calcChecksum(uint8_t state[],
-                                 const uint16_t length) {
+uint8_t IRTcl112Ac::calcChecksum(uint8_t state[], const uint16_t length) {
   if (length)
     return sumBytes(state, length - 1);
   else
@@ -64,30 +74,21 @@ bool IRTcl112Ac::validChecksum(uint8_t state[], const uint16_t length) {
   return (length > 1 && state[length - 1] == calcChecksum(state, length));
 }
 
-void IRTcl112Ac::stateReset() {
-  for (uint8_t i = 0; i < kTcl112AcStateLength; i++)
-    remote_state[i] = 0x0;
+void IRTcl112Ac::stateReset(void) {
   // A known good state. (On, Cool, 24C)
-  remote_state[0] =  0x23;
-  remote_state[1] =  0xCB;
-  remote_state[2] =  0x26;
-  remote_state[3] =  0x01;
-  remote_state[5] =  0x24;
-  remote_state[6] =  0x03;
-  remote_state[7] =  0x07;
-  remote_state[8] =  0x40;
-  remote_state[13] = 0x03;
+  static const uint8_t reset[kTcl112AcStateLength] = {
+      0x23, 0xCB, 0x26, 0x01, 0x00, 0x24, 0x03, 0x07, 0x40, 0x00, 0x00, 0x00,
+      0x00, 0x03};
+  memcpy(remote_state, reset, kTcl112AcStateLength);
 }
 
-uint8_t* IRTcl112Ac::getRaw() {
+uint8_t* IRTcl112Ac::getRaw(void) {
   this->checksum();
   return remote_state;
 }
 
 void IRTcl112Ac::setRaw(const uint8_t new_code[], const uint16_t length) {
-  for (uint8_t i = 0; i < length && i < kTcl112AcStateLength; i++) {
-    remote_state[i] = new_code[i];
-  }
+  memcpy(remote_state, new_code, std::min(length, kTcl112AcStateLength));
 }
 
 // Set the requested power state of the A/C to on.
@@ -98,21 +99,18 @@ void IRTcl112Ac::off(void) { this->setPower(false); }
 
 // Set the requested power state of the A/C.
 void IRTcl112Ac::setPower(const bool on) {
-  if (on)
-    remote_state[5] |= kTcl112AcPowerMask;
-  else
-    remote_state[5] &= ~kTcl112AcPowerMask;
+  setBit(&remote_state[5], kTcl112AcPowerOffset, on);
 }
 
 // Return the requested power state of the A/C.
 bool IRTcl112Ac::getPower(void) {
-  return remote_state[5] & kTcl112AcPowerMask;
+  return GETBIT8(remote_state[5], kTcl112AcPowerOffset);
 }
 
 // Get the requested climate operation mode of the a/c unit.
 // Returns:
 //   A uint8_t containing the A/C mode.
-uint8_t IRTcl112Ac::getMode() {
+uint8_t IRTcl112Ac::getMode(void) {
   return remote_state[6] & 0xF;
 }
 
@@ -129,8 +127,7 @@ void IRTcl112Ac::setMode(const uint8_t mode) {
     case kTcl112AcCool:
     case kTcl112AcHeat:
     case kTcl112AcDry:
-      remote_state[6] &= 0xF0;
-      remote_state[6] |= mode;
+      setBits(&remote_state[6], kLowNibble, kTcl112AcModeSize, mode);
       break;
     default:
       setMode(kTcl112AcAuto);
@@ -143,17 +140,16 @@ void IRTcl112Ac::setTemp(const float celsius) {
   safecelsius = std::min(safecelsius, kTcl112AcTempMax);
   // Convert to integer nr. of half degrees.
   uint8_t nrHalfDegrees = safecelsius * 2;
-  if (nrHalfDegrees & 1)  // Do we have a half degree celsius?
-    remote_state[12] |= kTcl112AcHalfDegree;  // Add 0.5 degrees
-  else
-    remote_state[12] &= ~kTcl112AcHalfDegree;  // Clear the half degree.
-  remote_state[7] &= 0xF0;  // Clear temp bits.
-  remote_state[7] |= ((uint8_t)kTcl112AcTempMax - nrHalfDegrees / 2);
+  // Do we have a half degree celsius?
+  setBit(&remote_state[12], kTcl112AcHalfDegreeOffset, nrHalfDegrees & 1);
+  setBits(&remote_state[7], kLowNibble, kNibbleSize,
+          (uint8_t)kTcl112AcTempMax - nrHalfDegrees / 2);
 }
 
-float IRTcl112Ac::getTemp() {
-  float result = kTcl112AcTempMax - (remote_state[7] & 0xF);
-  if (remote_state[12] & kTcl112AcHalfDegree) result += 0.5;
+float IRTcl112Ac::getTemp(void) {
+  float result = kTcl112AcTempMax - GETBITS8(remote_state[7], kLowNibble,
+                                             kNibbleSize);
+  if (GETBIT8(remote_state[12], kTcl112AcHalfDegreeOffset)) result += 0.5;
   return result;
 }
 
@@ -165,8 +161,7 @@ void IRTcl112Ac::setFan(const uint8_t speed) {
     case kTcl112AcFanLow:
     case kTcl112AcFanMed:
     case kTcl112AcFanHigh:
-      remote_state[8] &= ~kTcl112AcFanMask;
-      remote_state[8] |= speed;
+      setBits(&remote_state[8], kLowNibble, kTcl112AcFanSize, speed);
       break;
     default:
       this->setFan(kTcl112AcFanAuto);
@@ -174,215 +169,170 @@ void IRTcl112Ac::setFan(const uint8_t speed) {
 }
 
 // Return the currect fan speed.
-uint8_t IRTcl112Ac::getFan() {
-  return remote_state[8] & kTcl112AcFanMask;
+uint8_t IRTcl112Ac::getFan(void) {
+  return GETBITS8(remote_state[8], kLowNibble, kTcl112AcFanSize);
 }
 
 // Control economy mode.
 void IRTcl112Ac::setEcono(const bool on) {
-  if (on)
-    remote_state[5] |= kTcl112AcBitEcono;
-  else
-    remote_state[5] &= ~kTcl112AcBitEcono;
+  setBit(&remote_state[5], kTcl112AcBitEconoOffset, on);
 }
 
 // Return the economy state of the A/C.
 bool IRTcl112Ac::getEcono(void) {
-  return remote_state[5] & kTcl112AcBitEcono;
+  return GETBIT8(remote_state[5],  kTcl112AcBitEconoOffset);
 }
 
 // Control Health mode.
 void IRTcl112Ac::setHealth(const bool on) {
-  if (on)
-    remote_state[6] |= kTcl112AcBitHealth;
-  else
-    remote_state[6] &= ~kTcl112AcBitHealth;
+  setBit(&remote_state[6], kTcl112AcBitHealthOffset, on);
 }
 
 // Return the Health mode state of the A/C.
 bool IRTcl112Ac::getHealth(void) {
-  return remote_state[6] & kTcl112AcBitHealth;
+  return GETBIT8(remote_state[6], kTcl112AcBitHealthOffset);
 }
 
 // Control Light/Display mode.
 void IRTcl112Ac::setLight(const bool on) {
-  if (on)
-    remote_state[5] &= ~kTcl112AcBitLight;
-  else
-    remote_state[5] |= kTcl112AcBitLight;
+  setBit(&remote_state[5], kTcl112AcBitLightOffset, !on);  // Cleared when on.
 }
 
 // Return the Light/Display mode state of the A/C.
 bool IRTcl112Ac::getLight(void) {
-  return !(remote_state[5] & kTcl112AcBitLight);
+  return !GETBIT8(remote_state[5],  kTcl112AcBitLightOffset);
 }
 
 // Control Horizontal Swing.
 void IRTcl112Ac::setSwingHorizontal(const bool on) {
-  if (on)
-    remote_state[12] |= kTcl112AcBitSwingH;
-  else
-    remote_state[12] &= ~kTcl112AcBitSwingH;
+  setBit(&remote_state[12], kTcl112AcBitSwingHOffset, on);
 }
 
 // Return the Horizontal Swing state of the A/C.
 bool IRTcl112Ac::getSwingHorizontal(void) {
-  return remote_state[12] & kTcl112AcBitSwingH;
+  return GETBIT8(remote_state[12], kTcl112AcBitSwingHOffset);
 }
 
 // Control Vertical Swing.
 void IRTcl112Ac::setSwingVertical(const bool on) {
-  if (on)
-    remote_state[8] |= kTcl112AcBitSwingV;
-  else
-    remote_state[8] &= ~kTcl112AcBitSwingV;
+  setBits(&remote_state[8], kTcl112AcSwingVOffset, kTcl112AcSwingVSize,
+          on ? kTcl112AcSwingVOn : kTcl112AcSwingVOff);
 }
 
 // Return the Vertical Swing state of the A/C.
 bool IRTcl112Ac::getSwingVertical(void) {
-  return remote_state[8] & kTcl112AcBitSwingV;
+  return GETBITS8(remote_state[8], kTcl112AcSwingVOffset, kTcl112AcSwingVSize);
 }
 
 // Control the Turbo setting.
 void IRTcl112Ac::setTurbo(const bool on) {
+  setBit(&remote_state[6], kTcl112AcBitTurboOffset, on);
   if (on) {
-    remote_state[6] |= kTcl112AcBitTurbo;
     this->setFan(kTcl112AcFanHigh);
     this->setSwingVertical(true);
-  } else {
-    remote_state[6] &= ~kTcl112AcBitTurbo;
   }
 }
 
 // Return the Turbo setting state of the A/C.
 bool IRTcl112Ac::getTurbo(void) {
-  return remote_state[6] & kTcl112AcBitTurbo;
+  return GETBIT8(remote_state[6], kTcl112AcBitTurboOffset);
+}
+
+// Convert a standard A/C mode into its native mode.
+uint8_t IRTcl112Ac::convertMode(const stdAc::opmode_t mode) {
+  switch (mode) {
+    case stdAc::opmode_t::kCool: return kTcl112AcCool;
+    case stdAc::opmode_t::kHeat: return kTcl112AcHeat;
+    case stdAc::opmode_t::kDry:  return kTcl112AcDry;
+    case stdAc::opmode_t::kFan:  return kTcl112AcFan;
+    default:                     return kTcl112AcAuto;
+  }
+}
+
+// Convert a standard A/C Fan speed into its native fan speed.
+uint8_t IRTcl112Ac::convertFan(const stdAc::fanspeed_t speed) {
+  switch (speed) {
+    case stdAc::fanspeed_t::kMin:
+    case stdAc::fanspeed_t::kLow:    return kTcl112AcFanLow;
+    case stdAc::fanspeed_t::kMedium: return kTcl112AcFanMed;
+    case stdAc::fanspeed_t::kHigh:
+    case stdAc::fanspeed_t::kMax:    return kTcl112AcFanHigh;
+    default:                         return kTcl112AcFanAuto;
+  }
+}
+
+// Convert a native mode to it's common equivalent.
+stdAc::opmode_t IRTcl112Ac::toCommonMode(const uint8_t mode) {
+  switch (mode) {
+    case kTcl112AcCool: return stdAc::opmode_t::kCool;
+    case kTcl112AcHeat: return stdAc::opmode_t::kHeat;
+    case kTcl112AcDry:  return stdAc::opmode_t::kDry;
+    case kTcl112AcFan:  return stdAc::opmode_t::kFan;
+    default:            return stdAc::opmode_t::kAuto;
+  }
+}
+
+// Convert a native fan speed to it's common equivalent.
+stdAc::fanspeed_t IRTcl112Ac::toCommonFanSpeed(const uint8_t spd) {
+  switch (spd) {
+    case kTcl112AcFanHigh: return stdAc::fanspeed_t::kMax;
+    case kTcl112AcFanMed:  return stdAc::fanspeed_t::kMedium;
+    case kTcl112AcFanLow:  return stdAc::fanspeed_t::kMin;
+    default:               return stdAc::fanspeed_t::kAuto;
+  }
+}
+
+// Convert the A/C state to it's common equivalent.
+stdAc::state_t IRTcl112Ac::toCommon(void) {
+  stdAc::state_t result;
+  result.protocol = decode_type_t::TCL112AC;
+  result.model = -1;  // Not supported.
+  result.power = this->getPower();
+  result.mode = this->toCommonMode(this->getMode());
+  result.celsius = true;
+  result.degrees = this->getTemp();
+  result.fanspeed = this->toCommonFanSpeed(this->getFan());
+  result.swingv = this->getSwingVertical() ? stdAc::swingv_t::kAuto :
+                                             stdAc::swingv_t::kOff;
+  result.swingh = this->getSwingHorizontal() ? stdAc::swingh_t::kAuto :
+                                               stdAc::swingh_t::kOff;
+  result.turbo = this->getTurbo();
+  result.light = this->getLight();
+  result.filter = this->getHealth();
+  result.econo = this->getEcono();
+  // Not supported.
+  result.quiet = false;
+  result.clean = false;
+  result.beep = false;
+  result.sleep = -1;
+  result.clock = -1;
+  return result;
 }
 
 // Convert the internal state into a human readable string.
-#ifdef ARDUINO
-String IRTcl112Ac::toString() {
+String IRTcl112Ac::toString(void) {
   String result = "";
-#else
-std::string IRTcl112Ac::toString() {
-  std::string result = "";
-#endif  // ARDUINO
-  result += F("Power: ");
-  result += (this->getPower() ? F("On") : F("Off"));
-  result += F(", Mode: ");
-  result += uint64ToString(getMode());
-  switch (this->getMode()) {
-    case kTcl112AcAuto:
-      result += F(" (AUTO)");
-      break;
-    case kTcl112AcCool:
-      result += F(" (COOL)");
-      break;
-    case kTcl112AcHeat:
-      result += F(" (HEAT)");
-      break;
-    case kTcl112AcDry:
-      result += F(" (DRY)");
-      break;
-    case kTcl112AcFan:
-      result += F(" (FAN)");
-      break;
-    default:
-      result += F(" (UNKNOWN)");
-  }
+  result.reserve(140);  // Reserve some heap for the string to reduce fragging.
+  result += addBoolToString(getPower(), kPowerStr, false);
+  result += addModeToString(getMode(), kTcl112AcAuto, kTcl112AcCool,
+                            kTcl112AcHeat, kTcl112AcDry, kTcl112AcFan);
   uint16_t nrHalfDegrees = this->getTemp() * 2;
-  result += F(", Temp: ");
-  result += uint64ToString(nrHalfDegrees / 2);
+  result += addIntToString(nrHalfDegrees / 2, kTempStr);
   if (nrHalfDegrees & 1) result += F(".5");
-  result += F("C, Fan: ");
-  result += uint64ToString(getFan());
-  switch (getFan()) {
-    case kTcl112AcFanAuto:
-      result += F(" (Auto)");
-      break;
-    case kTcl112AcFanLow:
-      result += F(" (Low)");
-      break;
-    case kTcl112AcFanMed:
-      result += F(" (Med)");
-      break;
-    case kTcl112AcFanHigh:
-      result += F(" (High)");
-      break;
-  }
-  result += F(", Econo: ");
-  result += (this->getEcono() ? F("On") : F("Off"));
-  result += ", Health: ";
-  result += (this->getHealth() ? F("On") : F("Off"));
-  result += F(", Light: ");
-  result += (this->getLight() ? F("On") : F("Off"));
-  result += F(", Turbo: ");
-  result += (this->getTurbo() ? F("On") : F("Off"));
-  result += ", Swing (H): ";
-  result += (this->getSwingHorizontal() ? F("On") : F("Off"));
-  result += F(", Swing (V): ");
-  result += (this->getSwingVertical() ? F("On") : F("Off"));
+  result += 'C';
+  result += addFanToString(getFan(), kTcl112AcFanHigh, kTcl112AcFanLow,
+                           kTcl112AcFanAuto, kTcl112AcFanAuto, kTcl112AcFanMed);
+  result += addBoolToString(getEcono(), kEconoStr);
+  result += addBoolToString(getHealth(), kHealthStr);
+  result += addBoolToString(getLight(), kLightStr);
+  result += addBoolToString(getTurbo(), kTurboStr);
+  result += addBoolToString(getSwingHorizontal(), kSwingHStr);
+  result += addBoolToString(getSwingVertical(), kSwingVStr);
   return result;
 }
 
 #if DECODE_TCL112AC
-// Decode the supplied TCL112AC message.
-//
-// Args:
-//   results: Ptr to the data to decode and where to store the decode result.
-//   nbits:   The number of data bits to expect. Typically kTcl112AcBits.
-//   strict:  Flag indicating if we should perform strict matching.
-// Returns:
-//   boolean: True if it can decode it, false if it can't.
-//
-// Status: BETA / Appears to mostly work.
-//
-// Ref:
-//   https://github.com/markszabo/IRremoteESP8266/issues/619
-bool IRrecv::decodeTcl112Ac(decode_results *results, uint16_t nbits,
-                            bool strict) {
-  if (results->rawlen < 2 * nbits + kHeader + kFooter - 1)
-    return false;  // Can't possibly be a valid Samsung A/C message.
-  if (strict && nbits != kTcl112AcBits) return false;
-
-  uint16_t offset = kStartOffset;
-  uint16_t dataBitsSoFar = 0;
-  match_result_t data_result;
-
-  // Message Header
-  if (!matchMark(results->rawbuf[offset++], kTcl112AcHdrMark)) return false;
-  if (!matchSpace(results->rawbuf[offset++], kTcl112AcHdrSpace)) return false;
-
-  // Data
-  // Keep reading bytes until we either run out of section or state to fill.
-  for (uint16_t i = 0; offset <= results->rawlen - 16 && i < nbits / 8;
-       i++, dataBitsSoFar += 8, offset += data_result.used) {
-    data_result = matchData(&(results->rawbuf[offset]), 8, kTcl112AcBitMark,
-                            kTcl112AcOneSpace, kTcl112AcBitMark,
-                            kTcl112AcZeroSpace, kTolerance, 0, false);
-    if (data_result.success == false) {
-      DPRINT("DEBUG: offset = ");
-      DPRINTLN(offset + data_result.used);
-      return false;  // Fail
-    }
-    results->state[i] = data_result.data;
-  }
-
-  // Footer
-  if (!matchMark(results->rawbuf[offset++], kTcl112AcBitMark)) return false;
-  if (offset <= results->rawlen &&
-      !matchAtLeast(results->rawbuf[offset++], kTcl112AcGap)) return false;
-  // Compliance
-  // Re-check we got the correct size/length due to the way we read the data.
-  if (dataBitsSoFar != nbits) return false;
-  // Verify we got a valid checksum.
-  if (strict && !IRTcl112Ac::validChecksum(results->state)) return false;
-  // Success
-  results->decode_type = TCL112AC;
-  results->bits = dataBitsSoFar;
-  // No need to record the state as we stored it as we decoded it.
-  // As we use result->state, we don't record value, address, or command as it
-  // is a union data type.
-  return true;
-}
+// NOTE: There is no `decodedecodeTcl112Ac()`.
+//       It's the same as `decodeMitsubishi112()`. A shared routine is used.
+//       You can find it in: ir_Mitsubishi.cpp
 #endif  // DECODE_TCL112AC

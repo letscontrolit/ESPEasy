@@ -27,12 +27,15 @@ Welcome to ESP Easy's documentation!
    :maxdepth: 2
    :caption: Appendix
 
+   Participate/PlatformIO.rst
    Participate/Documentation.rst
+   Participate/ProjectStructure.rst
    Reference/Safety.rst
    Reference/Command.rst
    Reference/Events.rst
    Reference/GPIO.rst
    Reference/SystemVariable.rst
+   Reference/RTC.rst
    Reference/ChangeLog.rst
 
 .. toctree::

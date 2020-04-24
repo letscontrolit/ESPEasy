@@ -23,6 +23,7 @@
 #define PLUGIN_VALUENAME2_067   "WeightChanB"
 
 // #include <*.h>   no lib required
+#include "_Plugin_Helper.h"
 
 
 
@@ -126,6 +127,7 @@ int32_t readHX711(int16_t pinSCL, int16_t pinDOUT, int16_t config0, uint8_t *cha
 
 void float2int(float valFloat, int16_t *valInt0, int16_t *valInt1)
 {
+  // FIXME TD-er: Casting from float* to integer* is not portable due to different binary data representations on different platforms.
   int16_t *fti = (int16_t *)&valFloat;
   *valInt0 = *fti++;
   *valInt1 = *fti;
@@ -133,6 +135,7 @@ void float2int(float valFloat, int16_t *valInt0, int16_t *valInt1)
 
 void int2float(int16_t valInt0, int16_t valInt1, float *valFloat)
 {
+  // FIXME TD-er: Casting from float* to integer* is not portable due to different binary data representations on different platforms.
   float offset;
   int16_t *itf = (int16_t *)&offset;
   *itf++ = valInt0;

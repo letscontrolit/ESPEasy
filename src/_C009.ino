@@ -31,13 +31,13 @@
 #define CPLUGIN_NAME_009       "FHEM HTTP"
 #include <ArduinoJson.h>
 
-bool CPlugin_009(byte function, struct EventStruct *event, String& string)
+bool CPlugin_009(CPlugin::Function function, struct EventStruct *event, String& string)
 {
   bool success = false;
 
   switch (function)
   {
-    case CPLUGIN_PROTOCOL_ADD:
+    case CPlugin::Function::CPLUGIN_PROTOCOL_ADD:
       {
         Protocol[++protocolCount].Number = CPLUGIN_ID_009;
         Protocol[protocolCount].usesMQTT = false;
@@ -49,13 +49,13 @@ bool CPlugin_009(byte function, struct EventStruct *event, String& string)
         break;
       }
 
-    case CPLUGIN_GET_DEVICENAME:
+    case CPlugin::Function::CPLUGIN_GET_DEVICENAME:
       {
         string = F(CPLUGIN_NAME_009);
         break;
       }
 
-    case CPLUGIN_PROTOCOL_SEND:
+    case CPlugin::Function::CPLUGIN_PROTOCOL_SEND:
       {
         byte valueCount = getValueCountFromSensorType(event->sensorType);
         C009_queue_element element(event);
@@ -72,12 +72,15 @@ bool CPlugin_009(byte function, struct EventStruct *event, String& string)
         break;
       }
 
-    case CPLUGIN_FLUSH:
+    case CPlugin::Function::CPLUGIN_FLUSH:
       {
         process_c009_delay_queue();
         delay(0);
         break;
       }
+
+    default:
+      break;
 
   }
   return success;
@@ -86,6 +89,12 @@ bool CPlugin_009(byte function, struct EventStruct *event, String& string)
 /*********************************************************************************************\
  * FHEM HTTP request
 \*********************************************************************************************/
+
+// Uncrustify may change this into multi line, which will result in failed builds
+// *INDENT-OFF*
+bool do_process_c009_delay_queue(int controller_number, const C009_queue_element& element, ControllerSettingsStruct& ControllerSettings);
+// *INDENT-ON*
+
 bool do_process_c009_delay_queue(int controller_number, const C009_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
   WiFiClient client;
   if (!try_connect_host(controller_number, client, ControllerSettings))
@@ -95,14 +104,13 @@ bool do_process_c009_delay_queue(int controller_number, const C009_queue_element
   String jsonString;
   {
     // Create json root object
-    DynamicJsonBuffer jsonBuffer;
-    JsonObject& root = jsonBuffer.createObject();
+    DynamicJsonDocument root(1024);
     root[F("module")] = String(F("ESPEasy"));
     root[F("version")] = String(F("1.04"));
 
     // Create nested objects
-    JsonObject& data = root.createNestedObject(String(F("data")));
-    JsonObject& ESP = data.createNestedObject(String(F("ESP")));
+    JsonObject data = root.createNestedObject(String(F("data")));
+    JsonObject ESP = data.createNestedObject(String(F("ESP")));
     ESP[F("name")] = Settings.Name;
     ESP[F("unit")] = Settings.Unit;
     ESP[F("version")] = Settings.Version;
@@ -110,7 +118,7 @@ bool do_process_c009_delay_queue(int controller_number, const C009_queue_element
     ESP[F("build_notes")] = String(F(BUILD_NOTES));
     ESP[F("build_git")] = String(F(BUILD_GIT));
     ESP[F("node_type_id")] = NODE_TYPE_ID;
-    ESP[F("sleep")] = Settings.deepSleep;
+    ESP[F("sleep")] = Settings.deepSleep_wakeTime;
 
     // embed IP, important if there is NAT/PAT
     // char ipStr[20];
@@ -119,14 +127,14 @@ bool do_process_c009_delay_queue(int controller_number, const C009_queue_element
     ESP[F("ip")] = WiFi.localIP().toString();
 
     // Create nested SENSOR json object
-    JsonObject& SENSOR = data.createNestedObject(String(F("SENSOR")));
+    JsonObject SENSOR = data.createNestedObject(String(F("SENSOR")));
     byte valueCount = getValueCountFromSensorType(element.sensorType);
     // char itemNames[valueCount][2];
     for (byte x = 0; x < valueCount; x++)
     {
       // Each sensor value get an own object (0..n)
       // sprintf(itemNames[x],"%d",x);
-      JsonObject& val = SENSOR.createNestedObject(String(x));
+      JsonObject val = SENSOR.createNestedObject(String(x));
       val[F("deviceName")] = getTaskDeviceName(element.TaskIndex);
       val[F("valueName")]  = ExtraTaskSettings.TaskDeviceValueNames[x];
       val[F("type")]       = element.sensorType;
@@ -134,7 +142,7 @@ bool do_process_c009_delay_queue(int controller_number, const C009_queue_element
     }
 
     // Create json buffer
-    root.printTo(jsonString);
+    serializeJson(root, jsonString);
   }
 
   // We now create a URI for the request

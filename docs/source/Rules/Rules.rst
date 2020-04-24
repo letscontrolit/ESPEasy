@@ -35,6 +35,17 @@ After rebooting the ESP, the LED will start blinking 10 seconds on then 10 secon
 
 Enjoy.
 
+
+Special Notations
+-----------------
+
+* ``[...#...]`` Referring to task variable
+* ``%...%`` Referring to system variable
+* ``{...:...}`` Referring to String conversions
+* Quotes (single, double or back quotes) Marking begin and end of a command parameter
+
+
+
 Syntax
 ------
 
@@ -239,6 +250,323 @@ remember to add them after the code and always begin with "//":
   endif //this is another comment
  endon
 
+Referring values
+----------------
+
+Rules and some plugins can use references to other (dynamic) values within ESPeasy.
+
+The syntax for referring other values is: ``[...#...]``
+Sometimes it can be useful to have some extra options, each separated using a '#' like this: ``[...#...#...]``
+
+Reference to a value of a specific task: ``[TaskName#ValueName]``
+
+Referring a value using some pre-defined format: ``[TaskName#ValueName#transformation#justification]``
+
+
+For example, there is a task named "bme280" which has a value named "temperature".
+
+Its value can be referenced like this: ``[bme280#temperature]``.
+This can be used in some plugins like the "OLED Framed" plugin to populate some lines on the display.
+It can also be used in rules. Every occurance of this text will then be replaced by its value.
+
+
+N.B. these references to task values only yield a value when the task is enabled and its value is valid.
+
+
+Special task names
+------------------
+
+You must not use the task names ``Plugin``, ``var`` ``int`` as these have special meaning.
+
+``Plugin`` can be used in a so called ``PLUGIN_REQUEST``, for example: 
+``[Plugin#GPIO#Pinstate#N]`` to get the pin state of a GPIO pin.
+
+``Var`` and ``int`` are used for internal variables. 
+The variables set with the ``Let`` command will be available in rules
+as ``var#N`` or ``int#N`` where ``N`` is 1..16.
+For example: ``Let,10,[var#9]``
+
+N.B. ``int`` and ``var`` use the same variable, only ``int`` does round them to 0 decimals.
+N.B.2  ``int`` is added in build 20190916.
+
+``Clock``, ``Rules`` and ``System`` etc. are not recommended either since they are used in
+event names.
+
+Please observe that task names are case insensitive meaning that VAR, var, and Var etc.
+are all treated the same.
+
+
+Parameter parsing
+-----------------
+
+A command used in rules can have several parameters.
+A parameter is typically separated by a comma, but for convenience the separator can also 
+be accompanied by a space or be a single space.
+
+So these can be used to separate a parameter:
+
+* comma
+* comma space
+* space comma
+* space
+* space space
+
+This does impose some restrictions on the use of a comma or a space in a parameter.
+Especially sending JSON to a MQTT controller can become next to impossible with these limitations.
+
+In order to allow the comma or space in a parameter, you can wrap the parameter in quotes.
+
+* Single quote (')
+* Double quote (")
+* Back quote  (added to builds after 2019/11/10)
+
+There are multiple quotes available for this, to be able to use "the other quote" in your parameter.
+For example in JSON, you need the double quote for string like values or keys.
+
+.. code-block:: html
+ 
+ Publish domoticz/in,{"idx":26,"nvalue":0,"svalue":"[AQ#TVOC]"}
+
+This can be fixed by wrapping the last parameter with single quotes like this:
+
+.. code-block:: html
+ 
+ Publish domoticz/in,'{"idx":26,"nvalue":0,"svalue":"[AQ#TVOC]"}'
+
+Just make sure to use the same quote as start and end of your parameter and don't use that character in the parameter itself.
+N.B. these extra quotes are removed from the parameter when used, as well as trailing or leading spaces.
+
+The reason this behavior was changed from before 2019/11 was that the old implementation could lead to unpredictable results.
+
+
+Formatting refered values
+-------------------------
+
+When referring another value, some basic formatting can be used.
+
+Referring a value using some pre-defined format: ``[TaskName#ValueName#transformation#justification]``
+
+Transformation
+^^^^^^^^^^^^^^
+
+* Transformations are case sensitive. (``M`` differs from ``m``, capital is more verbose)
+* Transformations can not be used on "Plugin" calls, like ``[Plugin#GPIO#Pinstate#N]``, since these already use multiple occurences of ``#``.
+* Most transformations work on "binary" values (logic values 0 or 1)
+* A "binary" transformation can be "inverted" by adding a leading ``!``.
+* A "binary" value is considered 0 when its string value is "0" or empty, otherwise it is an 1. (float values are rounded)
+* A "binary" value can also be used to detect presence of a string, as it is 0 on an empty string or 1 otherwise.
+
+Binary transformations:
+
+* ``C``: 0 => "CLOSE" 1 => " OPEN"
+* ``H``: 0 => "COLD" 1 => " HOT"
+* ``I``: 0 => "OUT" 1 => " IN"
+* ``M``: 0 => "AUTO" 1 => " MAN"
+* ``m``: 0 => "A" 1 => "M"
+* ``O``: 0 => "OFF" 1 => " ON"
+* ``U``: 0 => "DOWN" 1 => "  UP"
+* ``u``: 0 => "D" 1 => "U"
+* ``V``: value = value without transformations
+* ``X``: 0 => "O" 1 => "X"
+* ``Y``: 0 => " NO" 1 => "YES"
+* ``y``: 0 => "N" 1 => "Y"
+* ``Z``: 0 => "0" 1 => "1"
+
+Floating point transformations:
+
+* ``Dx.y``: Minimal 'x' digits zero filled & 'y' decimal fixed digits. E.g. ``[bme#T#D2.1]``
+* ``Dx``: Minimal 'x' digits zero filled in front of the decimal point, no decimal digits. Same as ``Dx.0``
+* ``D.y``: Same as ``D0.y``
+* ``d``: Same as ``D`` but spaces insted zeros
+* ``F``: Floor (round down)
+* ``E``: cEiling (round up)
+
+Justification
+^^^^^^^^^^^^^
+
+* ``Pn``: Prefix Fill with n spaces.
+* ``Sn``: Suffix Fill with n spaces.
+* ``Ln``: Left part of the string, n characters.
+* ``Rn``: Right part of the string, n characters.
+* ``Ux.y``: Substring Ux.y where x=firstChar and y=number of characters.
+
+
+String Formatting and Interpreting
+----------------------------------
+
+(added 2020/02/24)
+
+String operator commands described here can be recognized by their wrapping curly braces.
+
+This helps recognize task values (``[taskname#varname]``) in these commands.
+
+
+Substring
+^^^^^^^^^
+
+It is possible to process sub strings, for example when working with ``%eventvalue%`` in rules.
+
+Usage: ``{substring:<startpos>:<endpos>:<string>}``
+
+The position arguments are the same as in Arduino ``String::substring`` , meaning the endpos is 1 position further than the last character you need.
+
+For example:
+
+.. code-block:: html
+ 
+ on DS-1#Temperature do
+   logentry,{substring:0:1:%eventvalue%}
+   logentry,{substring:1:2:%eventvalue%}
+   logentry,{substring:2:3:%eventvalue%}
+ endon
+
+The ``%eventvalue%`` may contain the value "23.06"
+The output in the log will then be:
+
+.. code-block:: html
+
+ 1512372 : Info  : EVENT: DS-1#Temperature=23.06
+ 1512404 : Info  : ACT  : logentry,2
+ 1512405 : Info  : Command: logentry
+ 1512406 : Info  : 2
+ 1512409 : Info  : ACT  : logentry,3
+ 1512410 : Info  : Command: logentry
+ 1512410 : Info  : 3
+ 1512413 : Info  : ACT  : logentry,.
+ 1512414 : Info  : Command: logentry
+ 1512415 : Info  : .
+
+
+N.B. it is also possible to concatenate these and refer to ``{taskname#varname}``.
+
+For example (bit useless example, just for illustrative purposes): 
+
+.. code-block:: html
+
+ on DS-1#Temperature do
+   logentry,{substring:0:2:{strtol:16:{substring:0:2:[DS-1#Temperature]}{substring:3:5:[DS-1#Temperature]}}}
+ endon
+
+.. code-block:: html
+
+ 221313 : Info  : EVENT: DS-1#Temperature=22.13
+ 221346 : Info  : parse_string_commands cmd: substring:0:2:22.13 -> 22
+ 221347 : Info  : parse_string_commands cmd: substring:3:5:22.13 -> 13
+ 221348 : Info  : parse_string_commands cmd: strtol:16:2213 -> 8723
+ 221349 : Info  : parse_string_commands cmd: substring:0:2:8723 -> 87
+ 221350 : Info  : ACT  : logentry,87
+ 221351 : Info  : Command: logentry
+ 221353 : Info  : 87
+
+strtol
+^^^^^^
+
+Strings or substrings can be converted from just about any base value (binary, octal, hexadecimal) into an integer value.
+
+Usage: ``{strtol:16:<string>}``  to convert HEX (base 16) into an integer value.
+
+
+Example of extracting sub strings from a value and interpreting as if they were HEX values:
+
+.. code-block:: html
+
+ on DS-1#Temperature do
+   logentry,{strtol:16:%eventvalue%}
+   logentry,{strtol:16:{substring:3:5:%eventvalue%}}
+ endon
+
+.. code-block:: html
+
+ 1987550 : Info  : EVENT: DS-1#Temperature=24.12
+ 1987586 : Info  : ACT  : logentry,36
+ 1987587 : Info  : Command: logentry
+ 1987588 : Info  : 36
+ 1987591 : Info  : ACT  : logentry,18
+ 1987592 : Info  : Command: logentry
+ 1987593 : Info  : 18
+
+What we see here is the interpretation of "24.12":
+
+* 0x24 = 36
+* 0x12 = 18
+
+Example use case:
+
+
+As a use case, imagine the output of ser2net (P020) from an OpenTherm gateway.
+
+* Message coming from the serial interface: **T101813C0**
+  * The B denotes that the message is from the
+  * The next 4 bytes (actually 2bytes hex encoded) denote the status and type of the message.
+  * the last 4 bytes (actually 2bytes hex encoded) denote the payload.
+* Message that ends up in rules when using ser2net (P020) and Generic handling: ``!Serial#BT101813C0``
+
+The room temperature in this sample is 19.75 C
+
+Get the last four bytes in packs of two bytes:
+
+* ``{substring:13:15:%eventvalue%}``
+* ``{substring:15:17:%eventvalue%}``
+
+Parsing them to decimal representation each (using a base 16 call to strtol):
+
+* ``{strtol:16:{substring:13:15:%eventvalue%}}``
+* ``{strtol:16:{substring:15:17:%eventvalue%}}``
+
+Last but not least the fraction is not correct, it needs to be divided by 256 (and multiplied by 100)
+
+* ``{strtol:16:{substring:15:17:%eventvalue%}}*100/255``
+
+Complete rule used to parse this and set a variable in a dummy device:
+
+.. code-block:: html
+
+ // Room temperature
+ on !Serial#T1018* do
+   TaskValueSet 2,1,{strtol:16:{substring:13:15:%eventvalue%}}.{strtol:16:{substring:15:17:%eventvalue%}}*100/255
+ endon
+
+
+ord
+^^^
+
+Give the ordinal/integer value of the first character of a string.  (e.g. ASCII integer value)
+
+Usage: ``{ord:<string>}``
+
+For example:
+
+.. code-block:: html
+
+ on DS-1#Temperature do
+   logentry,{ord:A}   // ASCII value of 'A'
+   logentry,{ord:{substring:2:3:%eventvalue%}}  // ASCII value of 3rd character of %eventvalue%
+ endon
+
+
+.. code-block:: html
+
+ 2982455 : Info  : EVENT: DS-1#Temperature=23.12
+ 2982487 : Info  : ACT  : logentry,65
+ 2982488 : Info  : Command: logentry
+ 2982489 : Info  : 65
+ 2982492 : Info  : ACT  : logentry,46
+ 2982493 : Info  : Command: logentry
+ 2982494 : Info  : 46
+
+
+
+System variables
+----------------
+
+There is a large number of system variables.
+These do not refer to task values, but to typical system variables like system uptime, current time and date, etc.
+
+These can all be seen on the ``<ip-address>/sysvars`` page.
+
+N.B. These values cannot be formatted like the task value references.
+
+
 Best practice
 -------------
 
@@ -256,18 +584,12 @@ the code more readable:
  [DeviceName#ValueName]<<value> //These work...
  [DeviceName#ValueName] < <value> //the same...
 
-Special task names
-------------------
 
-You must not use the task name ``VAR`` as this is used for the internal
-variables. The variables set with the ``Let`` command will be available in rules
-as ``VAR#N`` where ``N`` is 1..16.
+Sometimes there is limited space to use a reference, like in some plugins 
+or when the maximum size of a rule file has been reached.
 
-Clock, Rules and System etc. are not recommended either since they are used in
-event names.
-
-Please observe that task names are case insensitive meaning that VAR, var, and Var etc.
-are all treated the same.
+In such cases it is adviced to use short names for tasks and values.
+For example: ``[bme#T]`` instead of ``[bme280#temperature]`` 
 
 Some working examples
 =====================
@@ -306,6 +628,34 @@ This example for two switches that toggle one device (LED and Relay on GPIO 13 a
   gpio,16,[dummy#var1]
   gpio,13,[dummy#var1]
  endon
+
+Please note that the values stored in a Dummy Value are of type float.
+This does mean you only have about 20 bits of resolution for the value.
+
+Storing large numbers like the unix time (31 bits of resolution needed) do need some tricks to be stored.
+For the Unix time there are now 2 variables included:
+
+- %unixday%
+- %unixday_sec%
+
+Here some example used to store the Unix time in the dummy plugin to keep track of actions.
+The values stored in the Dummy variables will be kept and restored on a crash/reboot as long as the ESP remains powered.
+
+.. code-block:: html
+
+ if [DT#YMD]=0 and %unixday%>0
+  taskvalueset,7,1,%unixday%-1
+ endif
+ if %unixday%>0
+  let,5,%unixday%-[DT#YMD]
+  let,4,%v5%*86400-[DT#HMS]+%unixday_sec%
+ else
+  let,4,0
+ endif
+ if %v4%>[Config#MinWateringDelay] 
+  event,Irrigate
+ endif
+
 
 
 Event value (%eventvalue%)
@@ -365,8 +715,8 @@ A really great feature to use is the 16 internal variables. You set them like th
  Let,<n>,<value>
 
 Where n can be 1 to 16 and the value an float. To use the values in strings you can
-either use the ``%v7%`` syntax or ``[VAR#7]``. BUT for formulas you need to use the square
-brackets in order for it to compute, i.e. ``[VAR#12]``.
+either use the ``%v7%`` syntax or ``[var#7]``. BUT for formulas you need to use the square
+brackets in order for it to compute, i.e. ``[var#12]``.
 
 
 Averaging filters
@@ -775,3 +1125,35 @@ button in less than a second or press it for more than a second:
    //Action if button is still pressed
   endif
  endon
+
+Calculating water consumption
+-----------------------------
+
+Using the pulse counter you can calculate and act on waterflow and changes like this:
+
+.. code-block:: html
+
+ On System#Boot do // When the ESP boots, do
+  TaskValueSet,3,1,0 // TaskValueSet TASKnr,VARnr,Value, Reset the Liters counter to 0
+  TaskValueSet,3,2,0 // TaskValueSet TASKnr,VARnr,Value, Reset the PreviousLiters counter to 0
+  TaskValueSet,3,3,0 // TaskValueSet TASKnr,VARnr,Value, Reset the Flow counter to 0
+  TaskValueSet,3,4,0 // TaskValueSet TASKnr,VARnr,Value, Reset the PreviousFlow counter to 0
+  TimerSet,1,30 // Set Timer 1 for the next event in 30 seconds
+ EndOn
+
+ On Watermeter#Count do // When Pulse is detected
+  if [Watermeter#Count] > 0
+    SendToHTTP,192.168.1.50,8084,/json.htm?type=command&param=udevice&idx=337&nvalue=0&svalue=1
+    TaskValueSet,3,3,60000/[Watermeter#Time]
+    SendToHTTP,192.168.1.50,8084,/json.htm?type=command&param=udevice&idx=338&nvalue=0&svalue=[Liters#Flow]
+  endif
+ EndOn
+
+ On Rules#Timer=1 do // When Timer 1 expires, do
+  if [Liters#Flow] > 0 or [Liters#PreviousFlow] > 0 // Only send value if amount of Liters > 0
+    SendToHTTP,192.168.1.50,8084,/json.htm?type=command&param=udevice&idx=338&nvalue=0&svalue=[Liters#Flow]
+    TaskValueSet,3,4,[Liters#Flow] // set flow to previous counter
+    TaskValueSet,3,3,0
+  endif
+    TimerSet,1,30 // Set Timer 1 for the next event in 30 seconds
+ Endon

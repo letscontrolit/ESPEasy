@@ -3,6 +3,8 @@
 //#################################### Plugin 023: OLED SSD1306 display #################################
 //#######################################################################################################
 
+#include "_Plugin_Helper.h"
+
 // Sample templates
 //  Temp: [DHT11#Temperature]   Hum:[DHT11#humidity]
 //  DS Temp:[Dallas1#Temperature#R]
@@ -77,31 +79,37 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        byte choice = PCONFIG(0);
-        /*String options[2] = { F("3C"), F("3D") };*/
-        int optionValues[2] = { 0x3C, 0x3D };
-        addFormSelectorI2C(F("p023_adr"), 2, optionValues, choice);
-
-        byte choice2 = PCONFIG(1);
-        String options2[2] = { F("Normal"), F("Rotated") };
-        int optionValues2[2] = { 1, 2 };
-        addFormSelector(F("Rotation"), F("p023_rotate"), 2, options2, optionValues2, choice2);
-
-        byte choice3 = PCONFIG(3);
-        String options3[3] = { F("128x64"), F("128x32"), F("64x48") };
-        int optionValues3[3] = { 1, 3, 2 };
-        addFormSelector(F("Display Size"), F("p023_size"), 3, options3, optionValues3, choice3);
-
-        byte choice4 = PCONFIG(4);
-        String options4[2] = { F("Normal"), F("Optimized") };
-        int optionValues4[2] = { 1, 2 };
-        addFormSelector(F("Font Width"), F("p023_font_width"), 2, options4, optionValues4, choice4);
-
-        char deviceTemplate[P23_Nlines][P23_Nchars];
-        LoadCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
-        for (byte varNr = 0; varNr < 8; varNr++)
         {
-          addFormTextBox(String(F("Line ")) + (varNr + 1), String(F("p023_template")) + (varNr + 1), deviceTemplate[varNr], 64);
+          byte choice = PCONFIG(0);
+          /*String options[2] = { F("3C"), F("3D") };*/
+          int optionValues[2] = { 0x3C, 0x3D };
+          addFormSelectorI2C(F("p023_adr"), 2, optionValues, choice);
+        }
+        {
+          byte choice2 = PCONFIG(1);
+          String options2[2] = { F("Normal"), F("Rotated") };
+          int optionValues2[2] = { 1, 2 };
+          addFormSelector(F("Rotation"), F("p023_rotate"), 2, options2, optionValues2, choice2);
+        }
+        {
+          byte choice3 = PCONFIG(3);
+          String options3[3] = { F("128x64"), F("128x32"), F("64x48") };
+          int optionValues3[3] = { 1, 3, 2 };
+          addFormSelector(F("Display Size"), F("p023_size"), 3, options3, optionValues3, choice3);
+        }
+        {
+          byte choice4 = PCONFIG(4);
+          String options4[2] = { F("Normal"), F("Optimized") };
+          int optionValues4[2] = { 1, 2 };
+          addFormSelector(F("Font Width"), F("p023_font_width"), 2, options4, optionValues4, choice4);
+        }
+        {
+          String strings[P23_Nlines];
+          LoadCustomTaskSettings(event->TaskIndex, strings, P23_Nlines, P23_Nchars);
+          for (byte varNr = 0; varNr < 8; varNr++)
+          {
+            addFormTextBox(String(F("Line ")) + (varNr + 1), getPluginCustomArgName(varNr), strings[varNr], 64);
+          }
         }
 
         // FIXME TD-er: Why is this using pin3 and not pin1? And why isn't this using the normal pin selection functions?
@@ -125,9 +133,7 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
         String error;
         for (byte varNr = 0; varNr < P23_Nlines; varNr++)
         {
-          String argName = F("p023_template");
-          argName += varNr + 1;
-          if (!safe_strncpy(deviceTemplate[varNr], WebServer.arg(argName), P23_Nchars)) {
+          if (!safe_strncpy(deviceTemplate[varNr], web_server.arg(getPluginCustomArgName(varNr)), P23_Nchars)) {
             error += getCustomTaskSettingsError(varNr);
           }
         }
@@ -210,18 +216,17 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
       {
-        char deviceTemplate[P23_Nlines][P23_Nchars];
-        LoadCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
+        String strings[P23_Nlines];
+        LoadCustomTaskSettings(event->TaskIndex, strings, P23_Nlines, P23_Nchars);
         int index = PCONFIG(0) == 0x3C
           ? 0
           : 1;
 
         for (byte x = 0; x < 8; x++)
         {
-          String tmpString = deviceTemplate[x];
-          if (tmpString.length())
+          if (strings[x].length())
           {
-            String newString = P023_parseTemplate(tmpString, 16);
+            String newString = P023_parseTemplate(strings[x], 16);
             Plugin_023_sendStrXY(OLED_Settings[index],newString.c_str(), x, 0);
           }
         }
@@ -237,6 +242,9 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
         String arguments = String(string);
 
         //Fixed bug #1864
+        // this was to manage multiple instances of the plug-in.
+        // You can also call it this way:
+        // [TaskName].OLED, 1,1, Temp. is 19.9
         int dotPos = arguments.indexOf('.');
         if(dotPos > -1 && arguments.substring(dotPos,dotPos+4).equalsIgnoreCase(F("oled")))
         {
@@ -254,29 +262,26 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
           }
         }
 
-
-        int argIndex = arguments.indexOf(',');
-        if (argIndex)
-          arguments = arguments.substring(0, argIndex);
-        if (arguments.equalsIgnoreCase(F("OLEDCMD")))
+        // We now continue using 'arguments' and not 'string' as full command line.
+        // If there was any prefix to address a specific task, it is now removed from 'arguments'
+        String cmd = parseString(arguments, 1);
+        if (cmd.equalsIgnoreCase(F("OLEDCMD")))
         {
           success = true;
-          argIndex = string.lastIndexOf(',');
-          arguments = string.substring(argIndex + 1);
-          if (arguments.equalsIgnoreCase(F("Off")))
+          String param = parseString(arguments, 2);
+          if (param.equalsIgnoreCase(F("Off")))
             Plugin_023_displayOff(OLED_Settings[index]);
-          else if (arguments.equalsIgnoreCase(F("On")))
+          else if (param.equalsIgnoreCase(F("On")))
             Plugin_023_displayOn(OLED_Settings[index]);
-          else if (arguments.equalsIgnoreCase(F("Clear")))
+          else if (param.equalsIgnoreCase(F("Clear")))
             Plugin_023_clear_display(OLED_Settings[index]);
         }
-        else if (arguments.equalsIgnoreCase(F("OLED")))
+        else if (cmd.equalsIgnoreCase(F("OLED")))
         {
           success = true;
-          argIndex = string.lastIndexOf(',');
-          arguments = string.substring(argIndex + 1);
-          String newString = P023_parseTemplate(arguments, 16);
-          Plugin_023_sendStrXY(OLED_Settings[index], newString.c_str(), event->Par1 - 1, event->Par2 - 1);
+          String text = parseStringToEndKeepCase(arguments, 4);
+          text = P023_parseTemplate(text, 16);
+          Plugin_023_sendStrXY(OLED_Settings[index], text.c_str(), event->Par1 - 1, event->Par2 - 1);
         }
         break;
       }
@@ -385,7 +390,7 @@ const char Plugin_023_myFont_Size[] PROGMEM = {
 
 // Perform some specific changes for OLED display
 String P023_parseTemplate(String &tmpString, byte lineSize) {
-  String result = parseTemplate(tmpString, lineSize);
+  String result = parseTemplate_padded(tmpString, lineSize);
   const char degree[3] = {0xc2, 0xb0, 0};  // Unicode degree symbol
   const char degree_oled[2] = {0x7F, 0};  // P023_OLED degree symbol
   result.replace(degree, degree_oled);
@@ -618,8 +623,17 @@ void Plugin_023_sendStrXY(struct Plugin_023_OLED_SettingStruct &oled,  const cha
   Plugin_023_setXY(oled, X, Y);
   unsigned char i = 0;
   unsigned char font_width = 0;
+  unsigned char currentPixels = Y * 8; // setXY always uses font_width = 8, Y = 0-based
+  unsigned char maxPixels = 128; // Assumed default display width
 
-  while (*string)
+  switch (oled.type) { // Cater for that 1 smaller size display
+    case OLED_64x48:
+    case OLED_64x48 | OLED_rotated:
+      maxPixels = 64;
+      break;
+  }
+
+  while (*string && currentPixels < maxPixels) // Prevent display overflow on the character level
   {
     switch (oled.font_width)
     {
@@ -630,10 +644,11 @@ void Plugin_023_sendStrXY(struct Plugin_023_OLED_SettingStruct &oled,  const cha
         font_width = 8;
     }
 
-    for (i = 0; i < font_width; i++)
+    for (i = 0; i < font_width && currentPixels + i < maxPixels; i++) // Prevent display overflow on the pixel-level
     {
       Plugin_023_SendChar(oled, pgm_read_byte(Plugin_023_myFont[*string - 0x20] + i));
     }
+    currentPixels += font_width;
     string++;
   }
 }

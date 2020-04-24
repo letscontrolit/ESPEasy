@@ -3,6 +3,8 @@
 //#################################### Plugin 012: LCD ##################################################
 //#######################################################################################################
 
+#include "_Plugin_Helper.h"
+
 // Sample templates
 //  Temp: [DHT11#Temperature]   Hum:[DHT11#humidity]
 //  DS Temp:[Dallas1#Temperature#R]
@@ -83,12 +85,13 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
         int optionValues2[2] = { 1, 2 };
         addFormSelector(F("Display Size"), F("p012_size"), 2, options2, optionValues2, choice2);
 
-
-        char deviceTemplate[P12_Nlines][P12_Nchars];
-        LoadCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
-        for (byte varNr = 0; varNr < P12_Nlines; varNr++)
         {
-          addFormTextBox(String(F("Line ")) + (varNr + 1), String(F("p012_template")) + (varNr + 1), deviceTemplate[varNr], P12_Nchars);
+          String strings[P12_Nlines];
+          LoadCustomTaskSettings(event->TaskIndex, strings, P12_Nlines, P12_Nchars);
+          for (byte varNr = 0; varNr < P12_Nlines; varNr++)
+          {
+            addFormTextBox(String(F("Line ")) + (varNr + 1), getPluginCustomArgName(varNr), strings[varNr], P12_Nchars);
+          }
         }
 
         addRowLabel(F("Display button"));
@@ -118,9 +121,7 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
         String error;
         for (byte varNr = 0; varNr < P12_Nlines; varNr++)
         {
-          String argName = F("p012_template");
-          argName += varNr + 1;
-          if (!safe_strncpy(deviceTemplate[varNr], WebServer.arg(argName), P12_Nchars)) {
+          if (!safe_strncpy(deviceTemplate[varNr], web_server.arg(getPluginCustomArgName(varNr)), P12_Nchars)) {
             error += getCustomTaskSettingsError(varNr);
           }
         }
@@ -207,35 +208,28 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WRITE:
       {
-        String tmpString  = string;
-        int argIndex = tmpString.indexOf(',');
-        if (argIndex)
-          tmpString = tmpString.substring(0, argIndex);
-
-        if (lcd && tmpString.equalsIgnoreCase(F("LCDCMD")))
+        String cmd = parseString(string, 1);
+        if (lcd && cmd.equalsIgnoreCase(F("LCDCMD")))
         {
           success = true;
-          argIndex = string.lastIndexOf(',');
-          tmpString = string.substring(argIndex + 1);
-          if (tmpString.equalsIgnoreCase(F("Off"))){
+          String arg1 = parseString(string, 2);
+          if (arg1.equalsIgnoreCase(F("Off"))){
               lcd->noBacklight();
           }
-          else if (tmpString.equalsIgnoreCase(F("On"))){
+          else if (arg1.equalsIgnoreCase(F("On"))){
               lcd->backlight();
           }
-          else if (tmpString.equalsIgnoreCase(F("Clear"))){
+          else if (arg1.equalsIgnoreCase(F("Clear"))){
               lcd->clear();
           }
         }
-        else if (lcd && tmpString.equalsIgnoreCase(F("LCD")))
+        else if (lcd && cmd.equalsIgnoreCase(F("LCD")))
         {
           success = true;
-          tmpString = P012_parseTemplate(string, Plugin_012_cols);
-          argIndex = tmpString.lastIndexOf(',');
-          tmpString = tmpString.substring(argIndex + 1);
-
           int colPos = event->Par2 - 1;
           int rowPos = event->Par1 - 1;
+          String text = parseStringKeepCase(string, 4);
+          text = P012_parseTemplate(text, Plugin_012_cols);
 
           //clear line before writing new string
           if (Plugin_012_mode == 2){
@@ -250,8 +244,8 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
           if(Plugin_012_mode == 1 || Plugin_012_mode == 2){
               lcd->setCursor(colPos, rowPos);
               for (byte i = 0; i < Plugin_012_cols - colPos; i++) {
-                  if(tmpString[i]){
-                     lcd->print(tmpString[i]);
+                  if(text[i]){
+                     lcd->print(text[i]);
                   }
               }
           }
@@ -270,15 +264,15 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
 
                    //dont print if "lower" than the lcd
                    if(rowPos < Plugin_012_rows  ){
-                       lcd->print(tmpString[charCount - 1]);
+                       lcd->print(text[charCount - 1]);
                    }
 
-                   if (!tmpString[charCount]) {   // no more chars to process?
+                   if (!text[charCount]) {   // no more chars to process?
                         stillProcessing = 0;
                    }
                    charCount += 1;
               }
-              //lcd->print(tmpString.c_str());
+              //lcd->print(text.c_str());
               // end fix
           }
 
@@ -293,7 +287,7 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
 // Perform some specific changes for LCD display
 // https://www.letscontrolit.com/forum/viewtopic.php?t=2368
 String P012_parseTemplate(String &tmpString, byte lineSize) {
-  String result = parseTemplate(tmpString, lineSize);
+  String result = parseTemplate_padded(tmpString, lineSize);
   const char degree[3] = {0xc2, 0xb0, 0};  // Unicode degree symbol
   const char degree_lcd[2] = {0xdf, 0};  // P012_LCD degree symbol
   result.replace(degree, degree_lcd);

@@ -175,7 +175,7 @@ float Adafruit_TSL2591::calculateLuxf(uint16_t ch0, uint16_t ch1)
 {
   float    atime, again;
   float    cpl, lux1, lux2, lux;
-  uint32_t chan0, chan1;
+  //uint32_t chan0, chan1;
 
   // Check for overflow conditions first
   if ((ch0 == 0xFFFF) | (ch1 == 0xFFFF))
@@ -270,7 +270,7 @@ uint32_t Adafruit_TSL2591::getFullLuminosity (void)
   }
 
   uint32_t x;
-  uint16_t y;
+  uint16_t y = 0;
   y |= read16(TSL2591_COMMAND_BIT | TSL2591_REGISTER_CHAN0_LOW);
   x = read16(TSL2591_COMMAND_BIT | TSL2591_REGISTER_CHAN1_LOW);
   x <<= 16;

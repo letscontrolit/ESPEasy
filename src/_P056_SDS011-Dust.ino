@@ -9,7 +9,7 @@
   This plugin reads the particle concentration from SDS011 Sensor
   DevicePin1 - RX on ESP, TX on SDS
 */
-#ifdef ESP8266  // Needed for precompile issues.
+//#ifdef ESP8266  // Needed for precompile issues.
 
 #define PLUGIN_056
 #define PLUGIN_ID_056         56
@@ -18,6 +18,7 @@
 #define PLUGIN_VALUENAME2_056 "PM10"    // Dust <10µm in µg/m³
 
 #include <jkSDS011.h>
+#include "_Plugin_Helper.h"
 
 
 CjkSDS011 *Plugin_056_SDS = NULL;
@@ -33,7 +34,7 @@ boolean Plugin_056(byte function, struct EventStruct *event, String& string)
     case PLUGIN_DEVICE_ADD:
       {
         Device[++deviceCount].Number = PLUGIN_ID_056;
-        Device[deviceCount].Type = DEVICE_TYPE_DUAL;
+        Device[deviceCount].Type = DEVICE_TYPE_SERIAL;
         Device[deviceCount].VType = SENSOR_TYPE_DUAL;
         Device[deviceCount].Ports = 0;
         Device[deviceCount].PullUpOption = false;
@@ -63,6 +64,13 @@ boolean Plugin_056(byte function, struct EventStruct *event, String& string)
     case PLUGIN_GET_DEVICEGPIONAMES:
       {
         serialHelper_getGpioNames(event, false, true); // TX optional
+        break;
+      }
+
+    case PLUGIN_WEBFORM_SHOW_CONFIG:
+      {
+        string += serialHelper_getSerialTypeLabel(event);
+        success = true;
         break;
       }
 
@@ -209,5 +217,5 @@ void Plugin_056_setWorkingPeriod(int minutes) {
   addLog(LOG_LEVEL_INFO, log);
 }
 
+//#endif
 #endif // USES_P056
-#endif

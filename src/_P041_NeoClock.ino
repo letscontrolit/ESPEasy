@@ -3,6 +3,7 @@
 //#################################### Plugin 041: NeoPixel clock #######################################
 //#######################################################################################################
 #include <Adafruit_NeoPixel.h>
+#include "_Plugin_Helper.h"
 
 #define NUM_LEDS      114
 
@@ -110,12 +111,8 @@ boolean Plugin_041(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WRITE:
       {
-        String tmpString  = string;
-        int argIndex = tmpString.indexOf(',');
-        if (argIndex)
-          tmpString = tmpString.substring(0, argIndex);
-
-        if (tmpString.equalsIgnoreCase(F("NeoClockColor")))
+        String cmd = parseString(string, 1);
+        if (cmd.equalsIgnoreCase(F("NeoClockColor")))
         {
           Plugin_041_red = event->Par1;
           Plugin_041_green = event->Par2;
@@ -124,7 +121,7 @@ boolean Plugin_041(byte function, struct EventStruct *event, String& string)
           success = true;
         }
 
-        if (tmpString.equalsIgnoreCase(F("NeoTestAll")))
+        if (cmd.equalsIgnoreCase(F("NeoTestAll")))
         {
           for (int i = 0; i < NUM_LEDS; i++)
             Plugin_041_pixels->setPixelColor(i, Plugin_041_pixels->Color(event->Par1, event->Par2, event->Par3));
@@ -132,7 +129,7 @@ boolean Plugin_041(byte function, struct EventStruct *event, String& string)
           success = true;
         }
 
-        if (tmpString.equalsIgnoreCase(F("NeoTestLoop")))
+        if (cmd.equalsIgnoreCase(F("NeoTestLoop")))
         {
           for (int i = 0; i < NUM_LEDS; i++)
           {
@@ -153,8 +150,8 @@ boolean Plugin_041(byte function, struct EventStruct *event, String& string)
 
 void Plugin_041_update()
 {
-  byte Hours = hour();
-  byte Minutes = minute();
+  byte Hours = node_time.hour();
+  byte Minutes = node_time.minute();
   resetAndBlack();
   timeToStrip(Hours, Minutes);
   Plugin_041_pixels->show(); // This sends the updated pixel color to the hardware.

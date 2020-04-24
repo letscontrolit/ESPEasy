@@ -1,17 +1,16 @@
 // Copyright 2009 Ken Shirriff
 // Copyright 2016 marcosamarinho
-// Copyright 2017 David Conran
+// Copyright 2017,2020 David Conran
+
+// Sony Remote Emulation
+
+// Supports:
+//   Brand: Sony,  Model: HT-CT380 Soundbar (Uses 38kHz & 3 repeats)
 
 #include <algorithm>
 #include "IRrecv.h"
 #include "IRsend.h"
 #include "IRutils.h"
-
-//                           SSSS   OOO   N   N  Y   Y
-//                          S      O   O  NN  N   Y Y
-//                           SSS   O   O  N N N    Y
-//                              S  O   O  N  NN    Y
-//                          SSSS    OOO   N   N    Y
 
 // Sony originally added from https://github.com/shirriff/Arduino-IRremote/
 // Updates from marcosamarinho
@@ -32,9 +31,11 @@ const uint16_t kSonyRptLengthTicks = 225;
 const uint16_t kSonyRptLength = kSonyRptLengthTicks * kSonyTick;
 const uint16_t kSonyMinGapTicks = 50;
 const uint16_t kSonyMinGap = kSonyMinGapTicks * kSonyTick;
+const uint16_t kSonyStdFreq = 40000;  // kHz
+const uint16_t kSonyAltFreq = 38000;  // kHz
 
 #if SEND_SONY
-// Send a Sony/SIRC(Serial Infra-Red Control) message.
+// Send a standard Sony/SIRC(Serial Infra-Red Control) message. (40kHz)
 //
 // Args:
 //   data: message to be sent.
@@ -50,10 +51,50 @@ const uint16_t kSonyMinGap = kSonyMinGapTicks * kSonyTick;
 // Ref:
 //   http://www.sbprojects.com/knowledge/ir/sirc.php
 void IRsend::sendSony(uint64_t data, uint16_t nbits, uint16_t repeat) {
+  _sendSony(data, nbits, repeat, kSonyStdFreq);
+}
+
+// Send an alternative 38kHz Sony/SIRC(Serial Infra-Red Control) message.
+//
+// Args:
+//   data: message to be sent.
+//   nbits: Nr. of bits of the message to be sent.
+//   repeat: Nr. of additional times the message is to be sent. (Default: 3)
+//
+// Status: STABLE / Known working.
+//
+// Notes:
+//   - `sendSony38()`` should typically be called with repeat=3 as these Sony
+//      devices expect the message to be sent at least 4 times.
+//   - Messages send via this method will be detected by this library as just
+//     `SONY`, not `SONY_38K` as the library has no way to determine the
+//     modulation frequency used. Hence, there is no `decodeSony38()`.
+//
+// Ref:
+//   http://www.sbprojects.com/knowledge/ir/sirc.php
+//   https://github.com/crankyoldgit/IRremoteESP8266/issues/1018
+void IRsend::sendSony38(uint64_t data, uint16_t nbits, uint16_t repeat) {
+  _sendSony(data, nbits, repeat, kSonyAltFreq);
+}
+
+// Internal procedure to generate a Sony/SIRC(Serial Infra-Red Control) message.
+//
+// Args:
+//   data: message to be sent.
+//   nbits: Nr. of bits of the message to be sent.
+//   repeat: Nr. of additional times the message is to be sent.
+//   freq: Frequency of the modulation to transmit at. (Hz or kHz)
+//
+// Status: STABLE / Known working.
+//
+// Ref:
+//   http://www.sbprojects.com/knowledge/ir/sirc.php
+void IRsend::_sendSony(uint64_t data, uint16_t nbits, uint16_t repeat,
+                      uint16_t freq) {
   sendGeneric(kSonyHdrMark, kSonySpace, kSonyOneMark, kSonySpace, kSonyZeroMark,
               kSonySpace,
               0,  // No Footer mark.
-              kSonyMinGap, kSonyRptLength, data, nbits, 40, true, repeat, 33);
+              kSonyMinGap, kSonyRptLength, data, nbits, freq, true, repeat, 33);
 }
 
 // Convert Sony/SIRC command, address, & extended bits into sendSony format.
@@ -93,6 +134,8 @@ uint32_t IRsend::encodeSony(uint16_t nbits, uint16_t command, uint16_t address,
 //
 // Args:
 //   results: Ptr to the data to decode and where to store the decode result.
+//   offset:  The starting index to use when attempting to decode the raw data.
+//            Typically/Defaults to kStartOffset.
 //   nbits:   The number of data bits to expect.
 //   strict:  Flag indicating if we should perform strict matching.
 // Returns:
@@ -104,8 +147,9 @@ uint32_t IRsend::encodeSony(uint16_t nbits, uint16_t command, uint16_t address,
 //   SONY protocol, SIRC (Serial Infra-Red Control) can be 12,15,20 bits long.
 // Ref:
 // http://www.sbprojects.com/knowledge/ir/sirc.php
-bool IRrecv::decodeSony(decode_results *results, uint16_t nbits, bool strict) {
-  if (results->rawlen < 2 * nbits + kHeader - 1)
+bool IRrecv::decodeSony(decode_results *results, uint16_t offset,
+                        const uint16_t nbits, const bool strict) {
+  if (results->rawlen <= 2 * nbits + kHeader - 1 + offset)
     return false;  // Message is smaller than we expected.
 
   // Compliance
@@ -121,27 +165,21 @@ bool IRrecv::decodeSony(decode_results *results, uint16_t nbits, bool strict) {
   }
 
   uint64_t data = 0;
-  uint16_t offset = kStartOffset;
   uint16_t actualBits;
-  uint32_t timeSoFar = 0;  // Time in uSecs of the message length.
 
   // Header
-  timeSoFar += results->rawbuf[offset] * kRawTick;
   if (!matchMark(results->rawbuf[offset], kSonyHdrMark)) return false;
   // Calculate how long the common tick time is based on the header mark.
   uint32_t tick = results->rawbuf[offset++] * kRawTick / kSonyHdrMarkTicks;
 
   // Data
   for (actualBits = 0; offset < results->rawlen - 1; actualBits++, offset++) {
-    // The gap after a Sony packet for a repeat should be kSonyMinGap or
-    //   (kSonyRptLength - timeSoFar) according to the spec.
-    if (matchSpace(results->rawbuf[offset], kSonyMinGapTicks * tick) ||
-        matchAtLeast(results->rawbuf[offset], kSonyRptLength - timeSoFar))
+    // The gap after a Sony packet for a repeat should be kSonyMinGap according
+    // to the spec.
+    if (matchAtLeast(results->rawbuf[offset], kSonyMinGapTicks * tick))
       break;  // Found a repeat space.
-    timeSoFar += results->rawbuf[offset] * kRawTick;
     if (!matchSpace(results->rawbuf[offset++], kSonySpaceTicks * tick))
       return false;
-    timeSoFar += results->rawbuf[offset] * kRawTick;
     if (matchMark(results->rawbuf[offset], kSonyOneMarkTicks * tick))
       data = (data << 1) | 1;
     else if (matchMark(results->rawbuf[offset], kSonyZeroMarkTicks * tick))
@@ -158,6 +196,7 @@ bool IRrecv::decodeSony(decode_results *results, uint16_t nbits, bool strict) {
   // Success
   results->bits = actualBits;
   results->value = data;
+  // We can't detect SONY_38K messages so always assume it is just `SONY` 40kHz.
   results->decode_type = SONY;
   // Message comes in LSB first. Convert ot MSB first.
   data = reverseBits(data, actualBits);

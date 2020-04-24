@@ -1,32 +1,48 @@
-//********************************************************************************
+#include "src/Globals/CPlugins.h"
+#include "src/Globals/Protocol.h"
+#include "src/Globals/Settings.h"
+
+#include "src/DataStructs/ESPEasy_EventStruct.h"
+#include "src/DataStructs/TimingStats.h"
+
+#include "ESPEasy_common.h"
+#include "ESPEasy_plugindefs.h"
+
+
+// ********************************************************************************
 // Initialize all Controller CPlugins that where defined earlier
 // and initialize the function call pointer into the CCPlugin array
-//********************************************************************************
+// ********************************************************************************
 
-static const char ADDCPLUGIN_ERROR[] PROGMEM = "System: Error - To much C-Plugins";
+static const char ADDCPLUGIN_ERROR[] PROGMEM = "System: Error - Too many C-Plugins";
 
 // Because of compiler-bug (multiline defines gives an error if file ending is CRLF) the define is striped to a single line
+
 /*
-#define ADDCPLUGIN(NNN) \
-  if (x < CPLUGIN_MAX) \
-  { \
-    CPlugin_id[x] = CPLUGIN_ID_##NNN; \
+ #define ADDCPLUGIN(NNN) \
+   if (x < CPLUGIN_MAX) \
+   { \
+    ProtocolIndex_to_CPlugin_id[x] = CPLUGIN_ID_##NNN; \
+    CPlugin_id_to_ProtocolIndex[CPLUGIN_ID_##NNN] = x; \
     CPlugin_ptr[x++] = &CPlugin_##NNN; \
-  } \
+   } \
   else \
     addLog(LOG_LEVEL_ERROR, FPSTR(ADDCPLUGIN_ERROR));
 */
-#define ADDCPLUGIN(NNN) if (x < CPLUGIN_MAX) { CPlugin_id[x] = CPLUGIN_ID_##NNN; CPlugin_ptr[x++] = &CPlugin_##NNN; } else addLog(LOG_LEVEL_ERROR, FPSTR(ADDCPLUGIN_ERROR));
+#define ADDCPLUGIN(NNN) if (x < CPLUGIN_MAX) {     ProtocolIndex_to_CPlugin_id[x] = CPLUGIN_ID_##NNN; CPlugin_id_to_ProtocolIndex[CPLUGIN_ID_##NNN] = x; CPlugin_ptr[x++] = &CPlugin_##NNN; } else addLog(LOG_LEVEL_ERROR, FPSTR(ADDCPLUGIN_ERROR));
 
 void CPluginInit(void)
 {
+  ProtocolIndex_to_CPlugin_id.resize(CPLUGIN_MAX + 1); // INVALID_CONTROLLER_INDEX may be used as index for this array.
+  ProtocolIndex_to_CPlugin_id[CPLUGIN_MAX] = INVALID_C_PLUGIN_ID;
   byte x;
 
   // Clear pointer table for all plugins
   for (x = 0; x < CPLUGIN_MAX; x++)
   {
-    CPlugin_ptr[x] = 0;
-    CPlugin_id[x] = 0;
+    CPlugin_ptr[x]                 = nullptr;
+    ProtocolIndex_to_CPlugin_id[x] = INVALID_C_PLUGIN_ID;
+    // Do not initialize CPlugin_id_to_ProtocolIndex[x] to an invalid value. (it is map)
   }
 
   x = 0;
@@ -131,95 +147,13 @@ void CPluginInit(void)
   ADDCPLUGIN(025)
 #endif
 
-  CPluginCall(CPLUGIN_PROTOCOL_ADD, 0);
-  CPluginCall(CPLUGIN_INIT, 0);
-}
+  CPluginCall(CPlugin::Function::CPLUGIN_PROTOCOL_ADD, 0);
 
-bool CPluginCall(byte pluginNumber, byte Function, struct EventStruct *event, String& str) {
-  START_TIMER;
-  bool ret = CPlugin_ptr[pluginNumber](Function, event, str);
-  STOP_TIMER_CONTROLLER(pluginNumber, Function);
-  return ret;
-}
-
-bool CPluginCall(byte Function, struct EventStruct *event, String& str)
-{
-  int x;
-  struct EventStruct TempEvent;
-
- if (event == 0)
-    event=&TempEvent;
-
-  switch (Function)
-  {
-    // Unconditional calls to all plugins
-    case CPLUGIN_PROTOCOL_ADD:
-      for (x = 0; x < CPLUGIN_MAX; x++) {
-        if (CPlugin_id[x] != 0) {
-          const unsigned int next_ProtocolIndex = protocolCount + 2;
-          if (next_ProtocolIndex > Protocol.size()) {
-            // Increase with 8 to get some compromise between number of resizes and wasted space
-            unsigned int newSize = Protocol.size();
-            newSize = newSize + 8 - (newSize % 8);
-            Protocol.resize(newSize);
-          }
-          checkRAM(F("CPluginCallADD"),x);
-          CPluginCall(x, Function, event, dummyString);
-        }
-      }
-      return true;
-      break;
-
-
-    // calls to active plugins
-    case CPLUGIN_INIT:
-    case CPLUGIN_UDP_IN:
-    case CPLUGIN_INTERVAL: // calls to send stats information
-    case CPLUGIN_GOT_CONNECTED: // calls to send autodetect information
-    case CPLUGIN_GOT_INVALID: // calls to mark unit as invalid
-    case CPLUGIN_FLUSH:
-      for (byte x=0; x < CONTROLLER_MAX; x++)
-        if (Settings.Protocol[x] != 0 && Settings.ControllerEnabled[x]) {
-          event->ProtocolIndex = getProtocolIndex(Settings.Protocol[x]);
-          CPluginCall(event->ProtocolIndex, Function, event, dummyString);
-        }
-      return true;
-      break;
-
-    case CPLUGIN_ACKNOWLEDGE: // calls to send acknolages back to controller
-    for (byte x=0; x < CONTROLLER_MAX; x++)
-      if (Settings.Protocol[x] != 0 && Settings.ControllerEnabled[x]) {
-        event->ProtocolIndex = getProtocolIndex(Settings.Protocol[x]);
-        CPluginCall(event->ProtocolIndex, Function, event, str);
-      }
-    return true;
-    break;
-
-  }
-
-  return false;
-}
-
-// Check if there is any controller enabled.
-bool anyControllerEnabled() {
-  for (byte i=0; i < CONTROLLER_MAX; i++) {
-    if (Settings.Protocol[i] != 0 && Settings.ControllerEnabled[i]) {
-      return true;
+  // Set all not supported cplugins to disabled.
+  for (controllerIndex_t controller = 0; controller < CONTROLLER_MAX; ++controller) {
+    if (!supportedCPluginID(Settings.Protocol[controller])) {
+      Settings.ControllerEnabled[controller] = false;
     }
   }
-  return false;
-}
-
-// Find first enabled controller index with this protocol
-byte findFirstEnabledControllerWithId(byte cpluginid) {
-  for (byte i=0; i < CONTROLLER_MAX; i++) {
-    if (Settings.Protocol[i] == cpluginid && Settings.ControllerEnabled[i]) {
-      return i;
-    }
-  }
-  return CONTROLLER_MAX;
-}
-
-bool CPluginCall(byte Function, struct EventStruct *event) {
-  return CPluginCall(Function, event, dummyString);
+  CPluginCall(CPlugin::Function::CPLUGIN_INIT_ALL, 0);
 }

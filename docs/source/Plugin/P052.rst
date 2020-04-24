@@ -11,6 +11,8 @@ Plugin details
 
 Type: |P052_type|
 
+Port Type: |P052_porttype|
+
 Name: |P052_name|
 
 Status: |P052_status|

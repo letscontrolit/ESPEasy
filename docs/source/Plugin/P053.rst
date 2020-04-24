@@ -11,6 +11,8 @@ Plugin details
 
 Type: |P053_type|
 
+Port Type: |P053_porttype|
+
 Name: |P053_name|
 
 Status: |P053_status|

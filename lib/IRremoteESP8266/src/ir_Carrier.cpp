@@ -1,23 +1,20 @@
 // Copyright 2018 David Conran
 
+// Supports:
+//   Brand: Carrier/Surrey,  Model: 42QG5A55970 remote
+//   Brand: Carrier/Surrey,  Model: 619EGX0090E0 A/C
+//   Brand: Carrier/Surrey,  Model: 619EGX0120E0 A/C
+//   Brand: Carrier/Surrey,  Model: 619EGX0180E0 A/C
+//   Brand: Carrier/Surrey,  Model: 619EGX0220E0 A/C
+//   Brand: Carrier/Surrey,  Model: 53NGK009/012 Inverter
+
 #include "IRrecv.h"
 #include "IRsend.h"
 #include "IRutils.h"
 
-//             CCCCC    AAA   RRRRRR  RRRRRR  IIIII EEEEEEE RRRRRR
-//            CC    C  AAAAA  RR   RR RR   RR  III  EE      RR   RR
-//            CC      AA   AA RRRRRR  RRRRRR   III  EEEEE   RRRRRR
-//            CC    C AAAAAAA RR  RR  RR  RR   III  EE      RR  RR
-//             CCCCC  AA   AA RR   RR RR   RR IIIII EEEEEEE RR   RR
-
-// Suits Carrier/Surrey HVAC models:
-//   42QG5A55970 (remote)
-//   619EGX0090E0 / 619EGX0120E0 / 619EGX0180E0 / 619EGX0220E0 (indoor units)
-//   53NGK009/012 (inverter)
-
 // Constants
 // Ref:
-//   https://github.com/markszabo/IRremoteESP8266/issues/385
+//   https://github.com/crankyoldgit/IRremoteESP8266/issues/385
 const uint16_t kCarrierAcHdrMark = 8532;
 const uint16_t kCarrierAcHdrSpace = 4228;
 const uint16_t kCarrierAcBitMark = 628;
@@ -56,6 +53,8 @@ void IRsend::sendCarrierAC(uint64_t data, uint16_t nbits, uint16_t repeat) {
 // i.e. normal + inverted + normal
 // Args:
 //   results: Ptr to the data to decode and where to store the decode result.
+//   offset:  The starting index to use when attempting to decode the raw data.
+//            Typically/Defaults to kStartOffset.
 //   nbits:   Nr. of bits to expect in the data portion.
 //            Typically kCarrierAcBits.
 //   strict:  Flag to indicate if we strictly adhere to the specification.
@@ -64,35 +63,28 @@ void IRsend::sendCarrierAC(uint64_t data, uint16_t nbits, uint16_t repeat) {
 //
 // Status: ALPHA / Untested.
 //
-bool IRrecv::decodeCarrierAC(decode_results *results, uint16_t nbits,
-                             bool strict) {
-  if (results->rawlen < ((2 * nbits + kHeader + kFooter) * 3) - 1)
+bool IRrecv::decodeCarrierAC(decode_results *results, uint16_t offset,
+                             const uint16_t nbits, const bool strict) {
+  if (results->rawlen < ((2 * nbits + kHeader + kFooter) * 3) - 1 + offset)
     return false;  // Can't possibly be a valid Carrier message.
   if (strict && nbits != kCarrierAcBits)
     return false;  // We expect Carrier to be 32 bits of message.
 
   uint64_t data = 0;
   uint64_t prev_data = 0;
-  uint16_t offset = kStartOffset;
 
   for (uint8_t i = 0; i < 3; i++) {
     prev_data = data;
-    // Header
-    if (!matchMark(results->rawbuf[offset++], kCarrierAcHdrMark)) return false;
-    if (!matchSpace(results->rawbuf[offset++], kCarrierAcHdrSpace))
-      return false;
-    // Data
-    match_result_t data_result =
-        matchData(&(results->rawbuf[offset]), nbits, kCarrierAcBitMark,
-                  kCarrierAcOneSpace, kCarrierAcBitMark, kCarrierAcZeroSpace);
-    if (data_result.success == false) return false;
-    data = data_result.data;
-    offset += data_result.used;
-    // Footer
-    if (!matchMark(results->rawbuf[offset++], kCarrierAcBitMark)) return false;
-    if (offset < results->rawlen &&
-        !matchAtLeast(results->rawbuf[offset++], kCarrierAcGap))
-      return false;
+    // Match Header + Data + Footer
+    uint16_t used;
+    used = matchGeneric(results->rawbuf + offset, &data,
+                        results->rawlen - offset, nbits,
+                        kCarrierAcHdrMark, kCarrierAcHdrSpace,
+                        kCarrierAcBitMark, kCarrierAcOneSpace,
+                        kCarrierAcBitMark, kCarrierAcZeroSpace,
+                        kCarrierAcBitMark, kCarrierAcGap, true);
+    if (!used) return false;
+    offset += used;
     // Compliance.
     if (strict) {
       // Check if the data is an inverted copy of the previous data.

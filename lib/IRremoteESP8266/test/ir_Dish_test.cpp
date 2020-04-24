@@ -14,6 +14,7 @@ TEST(TestSendDish, SendDataOnly) {
   irsend.reset();
   irsend.sendDISH(0x0);
   EXPECT_EQ(
+      "f57600d50"
       "m400s6100"
       "m400s2800m400s2800m400s2800m400s2800m400s2800m400s2800m400s2800m400s2800"
       "m400s2800m400s2800m400s2800m400s2800m400s2800m400s2800m400s2800m400s2800"
@@ -32,6 +33,7 @@ TEST(TestSendDish, SendDataOnly) {
   irsend.reset();
   irsend.sendDISH(0x9C00);  // Power on.
   EXPECT_EQ(
+      "f57600d50"
       "m400s6100"
       "m400s1700m400s2800m400s2800m400s1700m400s1700m400s1700m400s2800m400s2800"
       "m400s2800m400s2800m400s2800m400s2800m400s2800m400s2800m400s2800m400s2800"
@@ -50,6 +52,7 @@ TEST(TestSendDish, SendDataOnly) {
   irsend.reset();
   irsend.sendDISH(0xFFFF);
   EXPECT_EQ(
+      "f57600d50"
       "m400s6100"
       "m400s1700m400s1700m400s1700m400s1700m400s1700m400s1700m400s1700m400s1700"
       "m400s1700m400s1700m400s1700m400s1700m400s1700m400s1700m400s1700m400s1700"
@@ -74,6 +77,7 @@ TEST(TestSendDish, SendWithRepeats) {
   irsend.reset();
   irsend.sendDISH(0x9C00, kDishBits, 0);  // 0 repeats.
   EXPECT_EQ(
+      "f57600d50"
       "m400s6100"
       "m400s1700m400s2800m400s2800m400s1700m400s1700m400s1700m400s2800m400s2800"
       "m400s2800m400s2800m400s2800m400s2800m400s2800m400s2800m400s2800m400s2800"
@@ -83,6 +87,7 @@ TEST(TestSendDish, SendWithRepeats) {
   irsend.reset();
   irsend.sendDISH(0x9C00, kDishBits, 1);  // 1 repeat.
   EXPECT_EQ(
+      "f57600d50"
       "m400s6100"
       "m400s1700m400s2800m400s2800m400s1700m400s1700m400s1700m400s2800m400s2800"
       "m400s2800m400s2800m400s2800m400s2800m400s2800m400s2800m400s2800m400s2800"
@@ -94,6 +99,7 @@ TEST(TestSendDish, SendWithRepeats) {
 
   irsend.sendDISH(0x9C00, kDishBits, 2);  // 2 repeats.
   EXPECT_EQ(
+      "f57600d50"
       "m400s6100"
       "m400s1700m400s2800m400s2800m400s1700m400s1700m400s1700m400s2800m400s2800"
       "m400s2800m400s2800m400s2800m400s2800m400s2800m400s2800m400s2800m400s2800"
@@ -115,6 +121,7 @@ TEST(TestSendDish, SendUnusualSize) {
   irsend.reset();
   irsend.sendDISH(0x0, 8);
   EXPECT_EQ(
+      "f57600d50"
       "m400s6100"
       "m400s2800m400s2800m400s2800m400s2800m400s2800m400s2800m400s2800m400s2800"
       "m400s6100"
@@ -129,6 +136,7 @@ TEST(TestSendDish, SendUnusualSize) {
   irsend.reset();
   irsend.sendDISH(0x1234567890ABCDEF, 64);
   EXPECT_EQ(
+      "f57600d50"
       "m400s6100"
       "m400s2800m400s2800m400s2800m400s1700m400s2800m400s2800m400s1700m400s2800"
       "m400s2800m400s2800m400s1700m400s1700m400s2800m400s1700m400s2800m400s2800"
@@ -181,7 +189,8 @@ TEST(TestDecodeDish, NormalDecodeWithStrict) {
   irsend.reset();
   irsend.sendDISH(0x9C00);
   irsend.makeDecodeResult();
-  ASSERT_TRUE(irrecv.decodeDISH(&irsend.capture, kDishBits, true));
+  ASSERT_TRUE(irrecv.decodeDISH(&irsend.capture, kStartOffset, kDishBits,
+                                true));
   EXPECT_EQ(DISH, irsend.capture.decode_type);
   EXPECT_EQ(kDishBits, irsend.capture.bits);
   EXPECT_EQ(0x9C00, irsend.capture.value);
@@ -200,13 +209,14 @@ TEST(TestDecodeDish, DecodeWithNonStrictSize) {
   irsend.sendDISH(0x12, 8);  // Illegal size Dish message. (smaller)
   irsend.makeDecodeResult();
 
-  ASSERT_FALSE(irrecv.decodeDISH(&irsend.capture, kDishBits, true));
+  ASSERT_FALSE(irrecv.decodeDISH(&irsend.capture, kStartOffset, kDishBits,
+                                 true));
 
   irsend.makeDecodeResult();
   // Should fail with strict when we ask for the wrong bit size.
-  ASSERT_FALSE(irrecv.decodeDISH(&irsend.capture, 8, true));
+  ASSERT_FALSE(irrecv.decodeDISH(&irsend.capture, kStartOffset, 8, true));
   // Should pass if strict off.
-  ASSERT_TRUE(irrecv.decodeDISH(&irsend.capture, 8, false));
+  ASSERT_TRUE(irrecv.decodeDISH(&irsend.capture, kStartOffset, 8, false));
   EXPECT_EQ(DISH, irsend.capture.decode_type);
   EXPECT_EQ(8, irsend.capture.bits);
   EXPECT_EQ(0x12, irsend.capture.value);
@@ -217,13 +227,14 @@ TEST(TestDecodeDish, DecodeWithNonStrictSize) {
   irsend.sendDISH(0x12345678, 32);  // Illegal size Dish message. (larger)
   irsend.makeDecodeResult();
 
-  ASSERT_FALSE(irrecv.decodeDISH(&irsend.capture, kDishBits, true));
+  ASSERT_FALSE(irrecv.decodeDISH(&irsend.capture, kStartOffset, kDishBits,
+                                 true));
 
   irsend.makeDecodeResult();
   // Should fail with strict when we ask for the wrong bit size.
-  ASSERT_FALSE(irrecv.decodeDISH(&irsend.capture, 32, true));
+  ASSERT_FALSE(irrecv.decodeDISH(&irsend.capture, kStartOffset, 32, true));
   // Should pass if strict off.
-  ASSERT_TRUE(irrecv.decodeDISH(&irsend.capture, 32, false));
+  ASSERT_TRUE(irrecv.decodeDISH(&irsend.capture, kStartOffset, 32, false));
   EXPECT_EQ(DISH, irsend.capture.decode_type);
   EXPECT_EQ(32, irsend.capture.bits);
   EXPECT_EQ(0x12345678, irsend.capture.value);
@@ -241,9 +252,9 @@ TEST(TestDecodeDish, Decode64BitMessages) {
   // Illegal value & size Dish 64-bit message.
   irsend.sendDISH(0xFFFFFFFFFFFFFFFF, 64);
   irsend.makeDecodeResult();
-  ASSERT_FALSE(irrecv.decodeDISH(&irsend.capture, 64, true));
+  ASSERT_FALSE(irrecv.decodeDISH(&irsend.capture, kStartOffset, 64, true));
   // Should work with a 'normal' match (not strict)
-  ASSERT_TRUE(irrecv.decodeDISH(&irsend.capture, 64, false));
+  ASSERT_TRUE(irrecv.decodeDISH(&irsend.capture, kStartOffset, 64, false));
   EXPECT_EQ(DISH, irsend.capture.decode_type);
   EXPECT_EQ(64, irsend.capture.bits);
   EXPECT_EQ(0xFFFFFFFFFFFFFFFF, irsend.capture.value);
@@ -291,7 +302,8 @@ TEST(TestDecodeDish, DecodeGlobalCacheExample) {
   irsend.sendGC(gc_test_hopper, 73);
   irsend.makeDecodeResult();
 
-  ASSERT_TRUE(irrecv.decodeDISH(&irsend.capture, kDishBits, true));
+  ASSERT_TRUE(irrecv.decodeDISH(&irsend.capture, kStartOffset, kDishBits,
+                                true));
   EXPECT_EQ(DISH, irsend.capture.decode_type);
   EXPECT_EQ(kDishBits, irsend.capture.bits);
   EXPECT_EQ(0x9C00, irsend.capture.value);
@@ -324,5 +336,6 @@ TEST(TestDecodeDish, FailToDecodeNonDishExample) {
   irsend.makeDecodeResult();
 
   ASSERT_FALSE(irrecv.decodeDISH(&irsend.capture));
-  ASSERT_FALSE(irrecv.decodeDISH(&irsend.capture, kDishBits, false));
+  ASSERT_FALSE(irrecv.decodeDISH(&irsend.capture, kStartOffset, kDishBits,
+                                 false));
 }

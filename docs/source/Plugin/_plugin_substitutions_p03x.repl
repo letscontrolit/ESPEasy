@@ -1,6 +1,7 @@
 .. |P030_name| replace:: :cyan:`BMP280`
 .. |P030_type| replace:: :cyan:`Environment`
 .. |P030_typename| replace:: :cyan:`Environment - BMP280`
+.. |P030_porttype| replace:: `.`
 .. |P030_status| replace:: :green:`NORMAL`
 .. |P030_github| replace:: P030_BMP280.ino
 .. _P030_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P030_BMP280.ino
@@ -13,6 +14,7 @@
 .. |P031_name| replace:: :cyan:`SHT1X`
 .. |P031_type| replace:: :cyan:`Environment`
 .. |P031_typename| replace:: :cyan:`Environment - SHT1X`
+.. |P031_porttype| replace:: `.`
 .. |P031_status| replace:: :green:`NORMAL`
 .. |P031_github| replace:: P031_SHT1X.ino
 .. _P031_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P031_SHT1X.ino
@@ -25,6 +27,7 @@
 .. |P032_name| replace:: :cyan:`MS5611 (GY-63)`
 .. |P032_type| replace:: :cyan:`Environment`
 .. |P032_typename| replace:: :cyan:`Environment - MS5611 (GY-63)`
+.. |P032_porttype| replace:: `.`
 .. |P032_status| replace:: :green:`NORMAL`
 .. |P032_github| replace:: P032_MS5611.ino
 .. _P032_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P032_MS5611.ino
@@ -37,6 +40,7 @@
 .. |P033_name| replace:: :cyan:`Dummy Device`
 .. |P033_type| replace:: :cyan:`Generic`
 .. |P033_typename| replace:: :cyan:`Generic - Dummy Device`
+.. |P033_porttype| replace:: `.`
 .. |P033_status| replace:: :green:`NORMAL`
 .. |P033_github| replace:: P033_Dummy.ino
 .. _P033_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P033_Dummy.ino
@@ -49,6 +53,7 @@
 .. |P034_name| replace:: :cyan:`DHT12 (I2C)`
 .. |P034_type| replace:: :cyan:`Environment`
 .. |P034_typename| replace:: :cyan:`Environment - DHT12 (I2C)`
+.. |P034_porttype| replace:: `.`
 .. |P034_status| replace:: :green:`NORMAL`
 .. |P034_github| replace:: P034_DHT12.ino
 .. _P034_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P034_DHT12.ino
@@ -61,6 +66,7 @@
 .. |P035_name| replace:: :cyan:`IR Transmit`
 .. |P035_type| replace:: :cyan:`Communication`
 .. |P035_typename| replace:: :cyan:`Communication - IR Transmit`
+.. |P035_porttype| replace:: `.`
 .. |P035_status| replace:: :green:`NORMAL`
 .. |P035_github| replace:: P035_IRTX.ino
 .. _P035_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P035_IRTX.ino
@@ -73,18 +79,20 @@
 .. |P036_name| replace:: :cyan:`OLED SSD1306/SH1106 Framed`
 .. |P036_type| replace:: :cyan:`Display`
 .. |P036_typename| replace:: :cyan:`Display - OLED SSD1306/SH1106 Framed`
+.. |P036_porttype| replace:: `.`
 .. |P036_status| replace:: :green:`NORMAL`
 .. |P036_github| replace:: P036_FrameOLED.ino
 .. _P036_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P036_FrameOLED.ino
 .. |P036_usedby| replace:: `.`
-.. |P036_shortinfo| replace:: `.`
-.. |P036_maintainer| replace:: `.`
+.. |P036_shortinfo| replace:: Plugin for displaying information on several pages on SSD1306/SH1106 OLED
+.. |P036_maintainer| replace:: TD-er
 .. |P036_compileinfo| replace:: `.`
-.. |P036_usedlibraries| replace:: `.`
+.. |P036_usedlibraries| replace:: https://github.com/squix78/esp8266-oled-ssd1306  version 3.2.7
 
 .. |P037_name| replace:: :cyan:`MQTT Import`
 .. |P037_type| replace:: :cyan:`Generic`
 .. |P037_typename| replace:: :cyan:`Generic - MQTT Import`
+.. |P037_porttype| replace:: `.`
 .. |P037_status| replace:: :green:`NORMAL`
 .. |P037_github| replace:: P037_MQTTImport.ino
 .. _P037_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P037_MQTTImport.ino
@@ -97,6 +105,7 @@
 .. |P038_name| replace:: :cyan:`NeoPixel (Basic)`
 .. |P038_type| replace:: :cyan:`Output`
 .. |P038_typename| replace:: :cyan:`Output - NeoPixel (Basic)`
+.. |P038_porttype| replace:: `.`
 .. |P038_status| replace:: :green:`NORMAL`
 .. |P038_github| replace:: P038_NeoPixel.ino
 .. _P038_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P038_NeoPixel.ino
@@ -109,6 +118,7 @@
 .. |P039_name| replace:: :cyan:`Thermocouple`
 .. |P039_type| replace:: :cyan:`Environment`
 .. |P039_typename| replace:: :cyan:`Environment - Thermocouple`
+.. |P039_porttype| replace:: `.`
 .. |P039_status| replace:: :green:`NORMAL`
 .. |P039_github| replace:: P039_Thermocouple.ino
 .. _P039_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P039_Thermocouple.ino

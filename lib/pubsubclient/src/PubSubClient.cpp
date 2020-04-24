@@ -102,30 +102,41 @@ PubSubClient::PubSubClient(const char* domain, uint16_t port, MQTT_CALLBACK_SIGN
 }
 
 boolean PubSubClient::connect(const char *id) {
-    return connect(id,NULL,NULL,0,0,0,0);
+    return connect(id,NULL,NULL,0,0,0,0,1);
 }
 
 boolean PubSubClient::connect(const char *id, const char *user, const char *pass) {
-    return connect(id,user,pass,0,0,0,0);
+    return connect(id,user,pass,0,0,0,0,1);
 }
 
 boolean PubSubClient::connect(const char *id, const char* willTopic, uint8_t willQos, boolean willRetain, const char* willMessage) {
-    return connect(id,NULL,NULL,willTopic,willQos,willRetain,willMessage);
+    return connect(id,NULL,NULL,willTopic,willQos,willRetain,willMessage,1);
 }
 
 boolean PubSubClient::connect(const char *id, const char *user, const char *pass, const char* willTopic, uint8_t willQos, boolean willRetain, const char* willMessage) {
+    return connect(id,user,pass,willTopic,willQos,willRetain,willMessage,1);
+}
+
+boolean PubSubClient::connect(const char *id, const char *user, const char *pass, const char* willTopic, uint8_t willQos, boolean willRetain, const char* willMessage, boolean cleanSession) {
     if (!connected()) {
         int result = 0;
 
-        if (domain.length() != 0) {
-            result = _client->connect(this->domain.c_str(), this->port);
+        if (_client == nullptr) {
+            return false;
+        }
+        if (_client->connected()) {
+            result = 1;
         } else {
-            result = _client->connect(this->ip, this->port);
+            if (domain.length() != 0) {
+                result = _client->connect(this->domain.c_str(), this->port);
+            } else {
+                result = _client->connect(this->ip, this->port);
+            }
         }
         if (result == 1) {
             nextMsgId = 1;
             // Leave room in the buffer for header and variable length field
-            uint16_t length = 5;
+            uint16_t length = MQTT_MAX_HEADER_SIZE;
             unsigned int j;
 
 #if MQTT_VERSION == MQTT_VERSION_3_1
@@ -141,9 +152,12 @@ boolean PubSubClient::connect(const char *id, const char *user, const char *pass
 
             uint8_t v;
             if (willTopic) {
-                v = 0x06|(willQos<<3)|(willRetain<<5);
+                v = 0x04|(willQos<<3)|(willRetain<<5);
             } else {
-                v = 0x02;
+                v = 0x00;
+            }
+            if (cleanSession) {
+                v = v|0x02;
             }
 
             if(user != NULL) {
@@ -158,24 +172,31 @@ boolean PubSubClient::connect(const char *id, const char *user, const char *pass
 
             buffer[length++] = ((MQTT_KEEPALIVE) >> 8);
             buffer[length++] = ((MQTT_KEEPALIVE) & 0xFF);
+
+            CHECK_STRING_LENGTH(length,id)
             length = writeString(id,buffer,length);
             if (willTopic) {
+                CHECK_STRING_LENGTH(length,willTopic)
                 length = writeString(willTopic,buffer,length);
+                CHECK_STRING_LENGTH(length,willMessage)
                 length = writeString(willMessage,buffer,length);
             }
 
             if(user != NULL) {
+                CHECK_STRING_LENGTH(length,user)
                 length = writeString(user,buffer,length);
                 if(pass != NULL) {
+                    CHECK_STRING_LENGTH(length,pass)
                     length = writeString(pass,buffer,length);
                 }
             }
 
-            write(MQTTCONNECT,buffer,length-5);
+            write(MQTTCONNECT,buffer,length-MQTT_MAX_HEADER_SIZE);
 
             lastInActivity = lastOutActivity = millis();
 
             while (!_client->available()) {
+                delay(0);  // Prevent watchdog crashes
                 unsigned long t = millis();
                 if (t-lastInActivity >= ((int32_t) MQTT_SOCKET_TIMEOUT*1000UL)) {
                     _state = MQTT_CONNECTION_TIMEOUT;
@@ -207,6 +228,9 @@ boolean PubSubClient::connect(const char *id, const char *user, const char *pass
 
 // reads a byte into result
 boolean PubSubClient::readByte(uint8_t * result) {
+   if (_client == nullptr) {
+     return false;
+   }
    uint32_t previousMillis = millis();
    while(!_client->available()) {
      delay(1);  // Prevent watchdog crashes
@@ -241,7 +265,7 @@ uint16_t PubSubClient::readPacket(uint8_t* lengthLength) {
     uint8_t start = 0;
 
     do {
-        if (len == 6) {
+        if (len == 5) {
             // Invalid remaining length encoding - kill the connection
             _state = MQTT_DISCONNECTED;
             _client->stop();
@@ -286,7 +310,74 @@ uint16_t PubSubClient::readPacket(uint8_t* lengthLength) {
     return len;
 }
 
+bool PubSubClient::loop_read() {
+    if (_client == nullptr) {
+        return false;
+    }
+    if (!_client->available()) {
+        return false;
+    }
+    uint8_t llen;
+    uint16_t len = readPacket(&llen);
+    if (len == 0) {
+        return false;
+    }
+    unsigned long t = millis();
+    lastInActivity = t;
+    uint8_t type = buffer[0]&0xF0;
+
+    switch(type) {
+        case MQTTPUBLISH: 
+        {
+            if (callback) {
+                uint16_t tl = (buffer[llen+1]<<8)+buffer[llen+2]; /* topic length in bytes */
+                memmove(buffer+llen+2,buffer+llen+3,tl); /* move topic inside buffer 1 byte to front */
+                buffer[llen+2+tl] = 0; /* end the topic as a 'C' string with \x00 */
+                char *topic = (char*) buffer+llen+2;
+                uint8_t *payload;
+                // msgId only present for QOS>0
+                if ((buffer[0]&0x06) == MQTTQOS1) {
+                    const uint16_t msgId = (buffer[llen+3+tl]<<8)+buffer[llen+3+tl+1];
+                    payload = buffer+llen+3+tl+2;
+                    callback(topic,payload,len-llen-3-tl-2);
+                    if (_client->connected()) {
+                        buffer[0] = MQTTPUBACK;
+                        buffer[1] = 2;
+                        buffer[2] = (msgId >> 8);
+                        buffer[3] = (msgId & 0xFF);
+                        if (_client->write(buffer,4) != 0) {
+                            lastOutActivity = t;
+                        }
+                    }
+                } else {
+                    payload = buffer+llen+3+tl;
+                    callback(topic,payload,len-llen-3-tl);
+                }
+            }
+            break;
+        } 
+        case MQTTPINGREQ:
+        {
+            if (_client->connected()) {
+                buffer[0] = MQTTPINGRESP;
+                buffer[1] = 0;
+                _client->write(buffer,2);
+            }
+            break;
+        } 
+        case MQTTPINGRESP:
+        {
+            pingOutstanding = false;
+            break;
+        }
+        default:
+        return false;
+    }
+    return true;
+}
+
 boolean PubSubClient::loop() {
+    loop_read();
     if (connected()) {
         unsigned long t = millis();
         if ((t - lastInActivity > MQTT_KEEPALIVE*1000UL) || (t - lastOutActivity > MQTT_KEEPALIVE*1000UL)) {
@@ -297,54 +388,11 @@ boolean PubSubClient::loop() {
             } else {
                 buffer[0] = MQTTPINGREQ;
                 buffer[1] = 0;
-                _client->write(buffer,2);
-                lastOutActivity = t;
-                lastInActivity = t;
-                pingOutstanding = true;
-            }
-        }
-        if (_client->available()) {
-            uint8_t llen;
-            uint16_t len = readPacket(&llen);
-            uint16_t msgId = 0;
-            uint8_t *payload;
-            if (len > 0) {
-                lastInActivity = t;
-                uint8_t type = buffer[0]&0xF0;
-                if (type == MQTTPUBLISH) {
-                    if (callback) {
-                        uint16_t tl = (buffer[llen+1]<<8)+buffer[llen+2]; /* topic length in bytes */
-                        memmove(buffer+llen+2,buffer+llen+3,tl); /* move topic inside buffer 1 byte to front */
-                        buffer[llen+2+tl] = 0; /* end the topic as a 'C' string with \x00 */
-                        char *topic = (char*) buffer+llen+2;
-                        // msgId only present for QOS>0
-                        if ((buffer[0]&0x06) == MQTTQOS1) {
-                            msgId = (buffer[llen+3+tl]<<8)+buffer[llen+3+tl+1];
-                            payload = buffer+llen+3+tl+2;
-                            callback(topic,payload,len-llen-3-tl-2);
-
-                            buffer[0] = MQTTPUBACK;
-                            buffer[1] = 2;
-                            buffer[2] = (msgId >> 8);
-                            buffer[3] = (msgId & 0xFF);
-                            _client->write(buffer,4);
-                            lastOutActivity = t;
-
-                        } else {
-                            payload = buffer+llen+3+tl;
-                            callback(topic,payload,len-llen-3-tl);
-                        }
-                    }
-                } else if (type == MQTTPINGREQ) {
-                    buffer[0] = MQTTPINGRESP;
-                    buffer[1] = 0;
-                    _client->write(buffer,2);
-                } else if (type == MQTTPINGRESP) {
-                    pingOutstanding = false;
+                if (_client->write(buffer,2) != 0) {
+                  lastOutActivity = t;
+                  lastInActivity = t;
                 }
-            } else if (!connected()) {
-                // readPacket has closed the connection
-                return false;
+                pingOutstanding = true;
             }
         }
         return true;
@@ -353,11 +401,13 @@ boolean PubSubClient::loop() {
 }
 
 boolean PubSubClient::publish(const char* topic, const char* payload) {
-    return publish(topic,(const uint8_t*)payload,strlen(payload),false);
+    size_t plength = (payload != nullptr) ? strlen(payload) : 0;
+    return publish(topic,(const uint8_t*)payload,plength,false);
 }
 
 boolean PubSubClient::publish(const char* topic, const char* payload, boolean retained) {
-    return publish(topic,(const uint8_t*)payload,strlen(payload),retained);
+    size_t plength = (payload != nullptr) ? strlen(payload) : 0;
+    return publish(topic,(const uint8_t*)payload,plength,retained);
 }
 
 boolean PubSubClient::publish(const char* topic, const uint8_t* payload, unsigned int plength) {
@@ -366,12 +416,12 @@ boolean PubSubClient::publish(const char* topic, const uint8_t* payload, unsigne
 
 boolean PubSubClient::publish(const char* topic, const uint8_t* payload, unsigned int plength, boolean retained) {
     if (connected()) {
-        if (MQTT_MAX_PACKET_SIZE < 5 + 2+strlen(topic) + plength) {
+        if (MQTT_MAX_PACKET_SIZE < MQTT_MAX_HEADER_SIZE + 2+strlen(topic) + plength) {
             // Too long
             return false;
         }
         // Leave room in the buffer for header and variable length field
-        uint16_t length = 5;
+        uint16_t length = MQTT_MAX_HEADER_SIZE;
         length = writeString(topic,buffer,length);
         uint16_t i;
         for (i=0;i<plength;i++) {
@@ -381,9 +431,14 @@ boolean PubSubClient::publish(const char* topic, const uint8_t* payload, unsigne
         if (retained) {
             header |= 1;
         }
-        return write(header,buffer,length-5);
+        return write(header,buffer,length-MQTT_MAX_HEADER_SIZE);
     }
     return false;
+}
+
+boolean PubSubClient::publish_P(const char* topic, const char* payload, boolean retained) {
+    size_t plength = (payload != nullptr) ? strlen(payload) : 0;
+    return publish_P(topic, (const uint8_t*)payload, plength, retained);
 }
 
 boolean PubSubClient::publish_P(const char* topic, const uint8_t* payload, unsigned int plength, boolean retained) {
@@ -425,18 +480,67 @@ boolean PubSubClient::publish_P(const char* topic, const uint8_t* payload, unsig
     for (i=0;i<plength;i++) {
         rc += _client->write((char)pgm_read_byte_near(payload + i));
     }
+    if (rc > 0) {
+      lastOutActivity = millis();
+    }
 
-    lastOutActivity = millis();
-
-    return rc == tlen + 3 + llen + plength;
+    // Header (1 byte) + llen + identifier (2 bytes)  + topic len + payload len
+    const unsigned int expectedLength = 1 + llen + 2 + tlen + plength;
+    return (rc == expectedLength);
 }
 
-boolean PubSubClient::write(uint8_t header, uint8_t* buf, uint16_t length) {
+boolean PubSubClient::beginPublish(const char* topic, unsigned int plength, boolean retained) {
+    if (connected()) {
+        // Send the header and variable length field
+        uint16_t length = MQTT_MAX_HEADER_SIZE;
+        length = writeString(topic,buffer,length);
+        uint8_t header = MQTTPUBLISH;
+        if (retained) {
+            header |= 1;
+        }
+        size_t hlen = buildHeader(header, buffer, plength+length-MQTT_MAX_HEADER_SIZE);
+        uint16_t rc = _client->write(buffer+(MQTT_MAX_HEADER_SIZE-hlen),length-(MQTT_MAX_HEADER_SIZE-hlen));
+        if (rc > 0) {
+           lastOutActivity = millis();
+        }
+        return (rc == (length-(MQTT_MAX_HEADER_SIZE-hlen)));
+    }
+    return false;
+}
+
+int PubSubClient::endPublish() {
+ return 1;
+}
+
+size_t PubSubClient::write(uint8_t data) {
+    if (_client == nullptr) {
+        lastOutActivity = millis();
+        return 0;
+    }
+    size_t rc = _client->write(data);
+    if (rc != 0) {
+        lastOutActivity = millis();
+    }
+    return rc;
+}
+
+size_t PubSubClient::write(const uint8_t *buffer, size_t size) {
+    if (_client == nullptr) {
+        lastOutActivity = millis();
+        return 0;
+    }
+    size_t rc = _client->write(buffer,size);
+    if (rc != 0) {
+        lastOutActivity = millis();
+    }
+    return rc;
+}
+
+size_t PubSubClient::buildHeader(uint8_t header, uint8_t* buf, uint16_t length) {
     uint8_t lenBuf[4];
     uint8_t llen = 0;
     uint8_t digit;
     uint8_t pos = 0;
-    uint16_t rc;
     uint16_t len = length;
     do {
         digit = len % 128;
@@ -450,15 +554,22 @@ boolean PubSubClient::write(uint8_t header, uint8_t* buf, uint16_t length) {
 
     buf[4-llen] = header;
     for (int i=0;i<llen;i++) {
-        buf[5-llen+i] = lenBuf[i];
+        buf[MQTT_MAX_HEADER_SIZE-llen+i] = lenBuf[i];
     }
+    return llen+1; // Full header size is variable length bit plus the 1-byte fixed header
+}
+
+boolean PubSubClient::write(uint8_t header, uint8_t* buf, uint16_t length) {
+    uint16_t rc;
+    uint8_t hlen = buildHeader(header, buf, length);
 
 #ifdef MQTT_MAX_TRANSFER_SIZE
-    uint8_t* writeBuf = buf+(4-llen);
-    uint16_t bytesRemaining = length+1+llen;  //Match the length type
+    uint8_t* writeBuf = buf+(MQTT_MAX_HEADER_SIZE-hlen);
+    uint16_t bytesRemaining = length+hlen;  //Match the length type
     uint8_t bytesToWrite;
     boolean result = true;
     while((bytesRemaining > 0) && result) {
+        delay(0);  // Prevent watchdog crashes
         bytesToWrite = (bytesRemaining > MQTT_MAX_TRANSFER_SIZE)?MQTT_MAX_TRANSFER_SIZE:bytesRemaining;
         rc = _client->write(writeBuf,bytesToWrite);
         result = (rc == bytesToWrite);
@@ -467,9 +578,11 @@ boolean PubSubClient::write(uint8_t header, uint8_t* buf, uint16_t length) {
     }
     return result;
 #else
-    rc = _client->write(buf+(4-llen),length+1+llen);
-    lastOutActivity = millis();
-    return (rc == 1+llen+length);
+    rc = _client->write(buf+(MQTT_MAX_HEADER_SIZE-hlen),length+hlen);
+    if (rc != 0) {
+        lastOutActivity = millis();
+    }
+    return (rc == hlen+length);
 #endif
 }
 
@@ -487,7 +600,7 @@ boolean PubSubClient::subscribe(const char* topic, uint8_t qos) {
     }
     if (connected()) {
         // Leave room in the buffer for header and variable length field
-        uint16_t length = 5;
+        uint16_t length = MQTT_MAX_HEADER_SIZE;
         nextMsgId++;
         if (nextMsgId == 0) {
             nextMsgId = 1;
@@ -496,7 +609,7 @@ boolean PubSubClient::subscribe(const char* topic, uint8_t qos) {
         buffer[length++] = (nextMsgId & 0xFF);
         length = writeString((char*)topic, buffer,length);
         buffer[length++] = qos;
-        return write(MQTTSUBSCRIBE|MQTTQOS1,buffer,length-5);
+        return write(MQTTSUBSCRIBE|MQTTQOS1,buffer,length-MQTT_MAX_HEADER_SIZE);
     }
     return false;
 }
@@ -507,7 +620,7 @@ boolean PubSubClient::unsubscribe(const char* topic) {
         return false;
     }
     if (connected()) {
-        uint16_t length = 5;
+        uint16_t length = MQTT_MAX_HEADER_SIZE;
         nextMsgId++;
         if (nextMsgId == 0) {
             nextMsgId = 1;
@@ -515,7 +628,7 @@ boolean PubSubClient::unsubscribe(const char* topic) {
         buffer[length++] = (nextMsgId >> 8);
         buffer[length++] = (nextMsgId & 0xFF);
         length = writeString(topic, buffer,length);
-        return write(MQTTUNSUBSCRIBE|MQTTQOS1,buffer,length-5);
+        return write(MQTTUNSUBSCRIBE|MQTTQOS1,buffer,length-MQTT_MAX_HEADER_SIZE);
     }
     return false;
 }
@@ -523,7 +636,7 @@ boolean PubSubClient::unsubscribe(const char* topic) {
 void PubSubClient::disconnect() {
     buffer[0] = MQTTDISCONNECT;
     buffer[1] = 0;
-    if (_client != NULL) {
+    if (_client != nullptr) {
       _client->write(buffer,2);
       _client->flush();
       _client->stop();
@@ -547,20 +660,19 @@ uint16_t PubSubClient::writeString(const char* string, uint8_t* buf, uint16_t po
 
 
 boolean PubSubClient::connected() {
-    boolean rc;
     if (_client == NULL ) {
-        rc = false;
-    } else {
-        rc = (int)_client->connected();
-        if (!rc) {
-            if (this->_state == MQTT_CONNECTED) {
-                this->_state = MQTT_CONNECTION_LOST;
-                _client->flush();
-                _client->stop();
-            }
-        }
+        this->_state = MQTT_DISCONNECTED;
+        return false;
     }
-    return rc;
+    if (_client->connected() == 0) {
+        bool lastStateConnected = this->_state == MQTT_CONNECTED;
+        this->disconnect();
+        if (lastStateConnected) {
+            this->_state = MQTT_CONNECTION_LOST;
+        }
+        return false;
+    }
+    return this->_state == MQTT_CONNECTED;
 }
 
 PubSubClient& PubSubClient::setServer(uint8_t * ip, uint16_t port) {

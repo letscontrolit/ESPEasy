@@ -1,0 +1,94 @@
+On StartTest1 Do
+//Let,4,1 will stop the test
+ LogEntry,'Test started!'
+ Monitor,GPIO,2  //Set to trigger GPIO#2 events
+ Let,1,0     //Zero out (to be sure)
+ Let,2,0
+ Let,3,0
+ Let,4,0
+ Let,5,0     //A dummy for LED transformation test
+ Let,6,2000  //LED fading time
+ Let,7,-1.1  //Some rounding tests
+ Let,8,-1.6
+ Let,9,99999 //Min heap
+ Let,10,99999//Min stack
+ Let,11,1    //Default interval timer 1
+ Let,12,5    //... timer 2
+ Let,13,1    //... timer 3
+ Let,16,60   //Max runtime test
+ Event,StartTimer=1,[INT#11]
+ Event,StartTimer=2,[VAR#12]
+ Event,StartTimer=3,[VAR#13]
+EndOn
+
+On StartTimer Do
+ LogEntry,'Timer %eventvalue1% will start in %eventvalue2% seconds'
+ TimerSet,%eventvalue1%,%eventvalue2%
+EndOn
+
+On StopTimer Do
+ Let,%eventvalue1%,-1
+ TimerSet,%eventvalue1%,0
+EndOn
+
+On Rules#Timer=1 Do
+ If [VAR#2]<[VAR#12]
+  Let,1,[VAR#1]+1
+  GPIOtoggle,2
+  GPIOtoggle,14
+  Event,StartTimer=1,[INT#11]
+ Else
+  Event,StartTimer=4,1
+ Endif
+EndOn
+
+On Rules#Timer=2 Do
+ If [VAR#2]<>[VAR#12]
+  Let,2,[VAR#2]+1
+ Else
+  Let,2,1
+ Endif
+ Event,StartTimer=2,[VAR#12]
+EndOn
+
+On Rules#Timer=3 Do
+ If [VAR#9]>%sysheap%
+  Let,9,%sysheap%
+ EndIf
+ If [VAR#10]>%sysstack%
+  Let,10,%sysstack%
+ EndIf
+ If [VAR#3]!=[VAR#16] and [INT#4]=0
+  Let,3,[VAR#3]+1
+  Event,StartTimer=3,[VAR#13]
+ Else
+  Event,StopTimer=1
+  Event,StopTimer=2
+  Event,StopTimer=3
+  Event,StopTimer=4
+  GPIO,2,1
+  GPIO,14,0
+ EndIf
+ LogEntry,'v7:[VAR#7] i7:[INT#7] v8:[VAR#8] i8:[INT#8]'
+ LogEntry,'i1:[INT#1] i2:[INT#2] i3:[INT#3] i4:[INT#4]'
+EndOn
+
+On Rules#Timer=4 Do
+  GPIO,2,0
+  GPIO,14,0
+  LogEntry,'LED fading....'
+  PWM,2,1024,[INT#6]
+  PWM,2,0,[VAR#6]
+  GPIO,2,0 //monitor GPIO again
+  Event,StartTimer=1,[VAR#12]
+EndOn
+
+On GPIO#2 Do
+ Let,5,%eventvalue% //Capture GPIO state
+ LogEntry,'LED turned "[VAR#5#!O]" "[INT#5#!O]" ([Plugin#GPIO#Pinstate#2])'
+ If [INT#3]=-1
+  LogEntry,'Test ended (min mem: [INT#9] min stack: [INT#10])!'
+ Else
+  LogEntry,'step: [INT#3]..[INT#16]'
+ EndIf
+EndOn

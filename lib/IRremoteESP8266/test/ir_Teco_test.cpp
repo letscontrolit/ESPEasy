@@ -23,6 +23,7 @@ TEST(TestSendTeco, SendDataOnly) {
   irsend.reset();
   irsend.sendTeco(0x250002BC9);
   EXPECT_EQ(
+      "f38000d50"
       "m9000s4440"
       "m620s1650m620s580m620s580m620s1650m620s580m620s580m620s1650m620s1650"
       "m620s1650m620s1650m620s580m620s1650m620s580m620s1650m620s580m620s580"
@@ -41,6 +42,7 @@ TEST(TestSendTeco, SendWithRepeats) {
   irsend.reset();
   irsend.sendTeco(0x250002BC9, kTecoBits, 2);  // two repeats.
   EXPECT_EQ(
+      "f38000d50"
       "m9000s4440"
       "m620s1650m620s580m620s580m620s1650m620s580m620s580m620s1650m620s1650"
       "m620s1650m620s1650m620s580m620s1650m620s580m620s1650m620s580m620s580"
@@ -196,44 +198,127 @@ TEST(TestTecoACClass, Sleep) {
   EXPECT_TRUE(ac.getSleep());
 }
 
+TEST(TestTecoACClass, Light) {
+  IRTecoAc ac(0);
+  ac.begin();
+
+  ac.setLight(true);
+  EXPECT_TRUE(ac.getLight());
+  ac.setLight(false);
+  EXPECT_EQ(false, ac.getLight());
+  ac.setLight(true);
+  EXPECT_TRUE(ac.getLight());
+  // Ref: https://github.com/crankyoldgit/IRremoteESP8266/issues/870#issue-484797174
+  ac.setRaw(0x250200A09);
+  EXPECT_TRUE(ac.getLight());
+}
+
+TEST(TestTecoACClass, Humid) {
+  IRTecoAc ac(0);
+  ac.begin();
+
+  ac.setHumid(true);
+  EXPECT_TRUE(ac.getHumid());
+  ac.setHumid(false);
+  EXPECT_EQ(false, ac.getHumid());
+  ac.setHumid(true);
+  EXPECT_TRUE(ac.getHumid());
+  // Ref: https://github.com/crankyoldgit/IRremoteESP8266/issues/870#issuecomment-524536810
+  ac.setRaw(0x250100A09);
+  EXPECT_TRUE(ac.getHumid());
+}
+
+TEST(TestTecoACClass, Save) {
+  IRTecoAc ac(0);
+  ac.begin();
+
+  ac.setSave(true);
+  EXPECT_TRUE(ac.getSave());
+  ac.setSave(false);
+  EXPECT_EQ(false, ac.getSave());
+  ac.setSave(true);
+  EXPECT_TRUE(ac.getSave());
+  // Ref: https://github.com/crankyoldgit/IRremoteESP8266/issues/870#issuecomment-524536810
+  ac.setRaw(0x250800A09);
+  EXPECT_TRUE(ac.getSave());
+}
+
+// Ref: https://github.com/crankyoldgit/IRremoteESP8266/issues/882
+TEST(TestTecoACClass, Timer) {
+  IRTecoAc ac(0);
+  ac.begin();
+
+  ac.setTimer(60);
+  EXPECT_TRUE(ac.getTimerEnabled());
+  EXPECT_EQ(60, ac.getTimer());
+  ac.setTimer(0);
+  EXPECT_EQ(false, ac.getTimerEnabled());
+  EXPECT_EQ(0, ac.getTimer());
+  ac.setTimer(17 * 60 + 59);
+  EXPECT_TRUE(ac.getTimerEnabled());
+  EXPECT_EQ(17 * 60 + 30, ac.getTimer());
+  ac.setTimer(24 * 60 + 31);
+  EXPECT_TRUE(ac.getTimerEnabled());
+  EXPECT_EQ(24 * 60, ac.getTimer());
+
+  // Data from: https://github.com/crankyoldgit/IRremoteESP8266/issues/882#issuecomment-527079339
+  ac.setRaw(0x250218A49);  // Timer On 1hr
+  EXPECT_TRUE(ac.getTimerEnabled());
+  EXPECT_EQ(60, ac.getTimer());
+  ac.setRaw(0x250219A49);  // Timer On 1.5hr
+  EXPECT_TRUE(ac.getTimerEnabled());
+  EXPECT_EQ(60 + 30, ac.getTimer());
+  ac.setRaw(0x250200A49);  // Timer Off
+  EXPECT_FALSE(ac.getTimerEnabled());
+  EXPECT_EQ(0, ac.getTimer());
+  ac.setRaw(0x25023DA41);  // Timer On 23.5hrs
+  EXPECT_TRUE(ac.getTimerEnabled());
+  EXPECT_EQ(23 * 60 + 30, ac.getTimer());
+}
+
 TEST(TestTecoACClass, MessageConstuction) {
   IRTecoAc ac(0);
 
   EXPECT_EQ(
-      "Power: Off, Mode: 0 (AUTO), Temp: 16C, Fan: 0 (Auto), Sleep: Off, "
-      "Swing: Off",
+      "Power: Off, Mode: 0 (Auto), Temp: 16C, Fan: 0 (Auto), Sleep: Off, "
+      "Swing: Off, Light: Off, Humid: Off, Save: Off, Timer: Off",
       ac.toString());
   ac.setPower(true);
   ac.setMode(kTecoCool);
   ac.setTemp(21);
   ac.setFan(kTecoFanHigh);
   ac.setSwing(false);
+  ac.setLight(false);
   EXPECT_EQ(
-      "Power: On, Mode: 1 (COOL), Temp: 21C, Fan: 3 (High), Sleep: Off, "
-      "Swing: Off",
+      "Power: On, Mode: 1 (Cool), Temp: 21C, Fan: 3 (High), Sleep: Off, "
+      "Swing: Off, Light: Off, Humid: Off, Save: Off, Timer: Off",
       ac.toString());
   ac.setSwing(true);
   EXPECT_EQ(
-      "Power: On, Mode: 1 (COOL), Temp: 21C, Fan: 3 (High), Sleep: Off, "
-      "Swing: On",
+      "Power: On, Mode: 1 (Cool), Temp: 21C, Fan: 3 (High), Sleep: Off, "
+      "Swing: On, Light: Off, Humid: Off, Save: Off, Timer: Off",
       ac.toString());
   ac.setSwing(false);
   ac.setFan(kTecoFanLow);
   ac.setSleep(true);
   ac.setMode(kTecoHeat);
   EXPECT_EQ(
-      "Power: On, Mode: 4 (HEAT), Temp: 21C, Fan: 1 (Low), Sleep: On, "
-      "Swing: Off",
+      "Power: On, Mode: 4 (Heat), Temp: 21C, Fan: 1 (Low), Sleep: On, "
+      "Swing: Off, Light: Off, Humid: Off, Save: Off, Timer: Off",
       ac.toString());
   ac.setSleep(false);
   EXPECT_EQ(
-      "Power: On, Mode: 4 (HEAT), Temp: 21C, Fan: 1 (Low), Sleep: Off, "
-      "Swing: Off",
+      "Power: On, Mode: 4 (Heat), Temp: 21C, Fan: 1 (Low), Sleep: Off, "
+      "Swing: Off, Light: Off, Humid: Off, Save: Off, Timer: Off",
       ac.toString());
   ac.setTemp(25);
+  ac.setLight(true);
+  ac.setSave(true);
+  ac.setHumid(true);
+  ac.setTimer(18 * 60 + 37);
   EXPECT_EQ(
-      "Power: On, Mode: 4 (HEAT), Temp: 25C, Fan: 1 (Low), Sleep: Off, "
-      "Swing: Off",
+      "Power: On, Mode: 4 (Heat), Temp: 25C, Fan: 1 (Low), Sleep: Off, "
+      "Swing: Off, Light: On, Humid: On, Save: On, Timer: 18:30",
       ac.toString());
 }
 
@@ -250,8 +335,8 @@ TEST(TestTecoACClass, ReconstructKnownMessage) {
   ac.setSwing(true);
   EXPECT_EQ(expected, ac.getRaw());
   EXPECT_EQ(
-      "Power: On, Mode: 1 (COOL), Temp: 27C, Fan: 0 (Auto), Sleep: On, "
-      "Swing: On",
+      "Power: On, Mode: 1 (Cool), Temp: 27C, Fan: 0 (Auto), Sleep: On, "
+      "Swing: On, Light: Off, Humid: Off, Save: Off, Timer: Off",
       ac.toString());
 }
 
@@ -268,7 +353,8 @@ TEST(TestDecodeTeco, NormalDecodeWithStrict) {
   irsend.reset();
   irsend.sendTeco(expectedState);
   irsend.makeDecodeResult();
-  ASSERT_TRUE(irrecv.decodeTeco(&irsend.capture, kTecoBits, true));
+  ASSERT_TRUE(irrecv.decodeTeco(&irsend.capture, kStartOffset, kTecoBits,
+                                true));
   EXPECT_EQ(TECO, irsend.capture.decode_type);
   EXPECT_EQ(kTecoBits, irsend.capture.bits);
   EXPECT_FALSE(irsend.capture.repeat);
@@ -292,8 +378,8 @@ TEST(TestDecodeTeco, NormalDecodeWithStrict) {
   ac.begin();
   ac.setRaw(irsend.capture.value);
   EXPECT_EQ(
-      "Power: Off, Mode: 0 (AUTO), Temp: 16C, Fan: 0 (Auto), Sleep: Off, "
-      "Swing: Off",
+      "Power: Off, Mode: 0 (Auto), Temp: 16C, Fan: 0 (Auto), Sleep: Off, "
+      "Swing: Off, Light: Off, Humid: Off, Save: Off, Timer: Off",
       ac.toString());
 }
 
@@ -325,8 +411,8 @@ TEST(TestDecodeTeco, RealNormalExample) {
   ac.begin();
   ac.setRaw(irsend.capture.value);
   EXPECT_EQ(
-      "Power: On, Mode: 1 (COOL), Temp: 27C, Fan: 0 (Auto), Sleep: On, "
-      "Swing: On",
+      "Power: On, Mode: 1 (Cool), Temp: 27C, Fan: 0 (Auto), Sleep: On, "
+      "Swing: On, Light: Off, Humid: Off, Save: Off, Timer: Off",
       ac.toString());
 
   uint16_t rawData2[73] = {
@@ -350,7 +436,38 @@ TEST(TestDecodeTeco, RealNormalExample) {
   ac.begin();
   ac.setRaw(irsend.capture.value);
   EXPECT_EQ(
-      "Power: On, Mode: 2 (DRY), Temp: 21C, Fan: 2 (Med), Sleep: Off, "
-      "Swing: On",
+      "Power: On, Mode: 2 (Dry), Temp: 21C, Fan: 2 (Medium), Sleep: Off, "
+      "Swing: On, Light: Off, Humid: Off, Save: Off, Timer: Off",
       ac.toString());
+}
+
+
+TEST(TestTecoACClass, toCommon) {
+  IRTecoAc ac(0);
+  ac.setPower(true);
+  ac.setMode(kTecoCool);
+  ac.setTemp(20);
+  ac.setFan(kTecoFanHigh);
+  ac.setSwing(true);
+  ac.setSleep(true);
+  // Now test it.
+  ASSERT_EQ(decode_type_t::TECO, ac.toCommon().protocol);
+  ASSERT_TRUE(ac.toCommon().power);
+  ASSERT_TRUE(ac.toCommon().celsius);
+  ASSERT_EQ(20, ac.toCommon().degrees);
+  ASSERT_EQ(stdAc::opmode_t::kCool, ac.toCommon().mode);
+  ASSERT_EQ(stdAc::fanspeed_t::kMax, ac.toCommon().fanspeed);
+  ASSERT_EQ(stdAc::swingv_t::kAuto, ac.toCommon().swingv);
+  ASSERT_EQ(0, ac.toCommon().sleep);
+  // Unsupported.
+  ASSERT_EQ(-1, ac.toCommon().model);
+  ASSERT_EQ(stdAc::swingh_t::kOff, ac.toCommon().swingh);
+  ASSERT_FALSE(ac.toCommon().turbo);
+  ASSERT_FALSE(ac.toCommon().econo);
+  ASSERT_FALSE(ac.toCommon().light);
+  ASSERT_FALSE(ac.toCommon().filter);
+  ASSERT_FALSE(ac.toCommon().clean);
+  ASSERT_FALSE(ac.toCommon().beep);
+  ASSERT_FALSE(ac.toCommon().quiet);
+  ASSERT_EQ(-1, ac.toCommon().clock);
 }

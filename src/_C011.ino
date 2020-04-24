@@ -1,6 +1,6 @@
 #ifdef USES_C011
 //#######################################################################################################
-//########################### Controller Plugin 011: Generic HTTP #######################################
+//########################### Controller Plugin 011: Generic HTTP Advanced ##############################
 //#######################################################################################################
 
 // #ifdef PLUGIN_BUILD_TESTING
@@ -29,13 +29,13 @@ struct C011_ConfigStruct
   char          HttpBody[C011_HTTP_BODY_MAX_LEN] = {0};
 };
 
-bool CPlugin_011(byte function, struct EventStruct *event, String& string)
+bool CPlugin_011(CPlugin::Function function, struct EventStruct *event, String& string)
 {
   bool success = false;
 
   switch (function)
   {
-    case CPLUGIN_PROTOCOL_ADD:
+    case CPlugin::Function::CPLUGIN_PROTOCOL_ADD:
       {
         Protocol[++protocolCount].Number = CPLUGIN_ID_011;
         Protocol[protocolCount].usesMQTT = false;
@@ -46,13 +46,13 @@ bool CPlugin_011(byte function, struct EventStruct *event, String& string)
         break;
       }
 
-    case CPLUGIN_GET_DEVICENAME:
+    case CPlugin::Function::CPLUGIN_GET_DEVICENAME:
       {
         string = F(CPLUGIN_NAME_011);
         break;
       }
 
-    case CPLUGIN_WEBFORM_LOAD:
+    case CPlugin::Function::CPLUGIN_WEBFORM_LOAD:
       {
         String escapeBuffer;
 
@@ -60,53 +60,49 @@ bool CPlugin_011(byte function, struct EventStruct *event, String& string)
 
         LoadCustomControllerSettings(event->ControllerIndex,(byte*)&customConfig, sizeof(customConfig));
         customConfig.zero_last();
-        String methods[] = { F("GET"), F("POST"), F("PUT"), F("HEAD"), F("PATCH") };
-        string += F("<TR><TD>HTTP Method :<TD><select name='P011httpmethod'>");
-        for (byte i = 0; i < 5; i++)
         {
-          string += F("<option value='");
-          string += methods[i] + "'";
-          string += methods[i].equals(customConfig.HttpMethod) ? F(" selected='selected'") : F("");
-          string += '>';
-          string += methods[i];
-          string += F("</option>");
+          byte choice = 0;
+          String methods[] = { F("GET"), F("POST"), F("PUT"), F("HEAD"), F("PATCH") };
+          for (byte i = 0; i < 5; i++)
+          {
+            if (methods[i].equals(customConfig.HttpMethod)) {
+              choice = i;
+            }
+          }
+          addFormSelector(F("HTTP Method"), F("P011httpmethod"), 5, methods, NULL, choice);
         }
-        string += F("</select>");
 
-        string += F("<TR><TD>HTTP URI:<TD><input type='text' name='P011httpuri' size=80 maxlength='");
-        string += C011_HTTP_URI_MAX_LEN-1;
-        string += F("' value='");
-        string += customConfig.HttpUri;
-
-        string += "'>";
-
-        string += F("<TR><TD>HTTP Header:<TD><textarea name='P011httpheader' rows='4' cols='50' maxlength='");
-        string += C011_HTTP_HEADER_MAX_LEN-1;
-        string += "'>";
-        escapeBuffer=customConfig.HttpHeader;
-        htmlEscape(escapeBuffer);
-        string += escapeBuffer;
-        string += F("</textarea>");
-
-        string += F("<TR><TD>HTTP Body:<TD><textarea name='P011httpbody' rows='8' cols='50' maxlength='");
-        string += C011_HTTP_BODY_MAX_LEN-1;
-        string += "'>";
-        escapeBuffer=customConfig.HttpBody;
-        htmlEscape(escapeBuffer);
-        string += escapeBuffer;
-        string += F("</textarea>");
+        addFormTextBox(F("HTTP URI"), F("P011httpuri"), customConfig.HttpUri, C011_HTTP_URI_MAX_LEN-1);
+        {
+          String escapeBuffer = customConfig.HttpHeader;
+          htmlEscape(escapeBuffer);
+          addFormTextArea(F("HTTP Header"), F("P011httpheader"), escapeBuffer, C011_HTTP_HEADER_MAX_LEN-1, 4, 50);
+        }
+        {
+          String escapeBuffer = customConfig.HttpBody;
+          htmlEscape(escapeBuffer);
+          addFormTextArea(F("HTTP Body"), F("P011httpbody"), escapeBuffer, C011_HTTP_BODY_MAX_LEN-1, 8, 50);
+        }
         break;
       }
 
-    case CPLUGIN_WEBFORM_SAVE:
+    case CPlugin::Function::CPLUGIN_WEBFORM_SAVE:
       {
         C011_ConfigStruct customConfig;
-        String httpmethod = WebServer.arg(F("P011httpmethod"));
-        String httpuri = WebServer.arg(F("P011httpuri"));
-        String httpheader = WebServer.arg(F("P011httpheader"));
-        String httpbody = WebServer.arg(F("P011httpbody"));
+        byte choice = 0;
+        String methods[] = { F("GET"), F("POST"), F("PUT"), F("HEAD"), F("PATCH") };
+        for (byte i = 0; i < 5; i++)
+        {
+          if (methods[i].equals(customConfig.HttpMethod)) {
+            choice = i;
+          }
+        }
+        int httpmethod = getFormItemInt(F("P011httpmethod"), choice);
+        String httpuri = web_server.arg(F("P011httpuri"));
+        String httpheader = web_server.arg(F("P011httpheader"));
+        String httpbody = web_server.arg(F("P011httpbody"));
 
-        strlcpy(customConfig.HttpMethod, httpmethod.c_str(), sizeof(customConfig.HttpMethod));
+        strlcpy(customConfig.HttpMethod, methods[httpmethod].c_str(), sizeof(customConfig.HttpMethod));
         strlcpy(customConfig.HttpUri, httpuri.c_str(), sizeof(customConfig.HttpUri));
         strlcpy(customConfig.HttpHeader, httpheader.c_str(), sizeof(customConfig.HttpHeader));
         strlcpy(customConfig.HttpBody, httpbody.c_str(), sizeof(customConfig.HttpBody));
@@ -115,18 +111,21 @@ bool CPlugin_011(byte function, struct EventStruct *event, String& string)
         break;
       }
 
-    case CPLUGIN_PROTOCOL_SEND:
+    case CPlugin::Function::CPLUGIN_PROTOCOL_SEND:
       {
       	success = Create_schedule_HTTP_C011(event);
         break;
       }
 
-    case CPLUGIN_FLUSH:
+    case CPlugin::Function::CPLUGIN_FLUSH:
       {
         process_c011_delay_queue();
         delay(0);
         break;
       }
+
+    default:
+      break;
 
   }
   return success;
@@ -135,6 +134,12 @@ bool CPlugin_011(byte function, struct EventStruct *event, String& string)
 //********************************************************************************
 // Generic HTTP request
 //********************************************************************************
+
+// Uncrustify may change this into multi line, which will result in failed builds
+// *INDENT-OFF*
+bool do_process_c011_delay_queue(int controller_number, const C011_queue_element& element, ControllerSettingsStruct& ControllerSettings);
+// *INDENT-ON*
+
 bool do_process_c011_delay_queue(int controller_number, const C011_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
   WiFiClient client;
   if (!try_connect_host(controller_number, client, ControllerSettings))
@@ -163,8 +168,10 @@ boolean Create_schedule_HTTP_C011(struct EventStruct *event)
   if (!try_connect_host(controller_number, client, ControllerSettings))
     return false;
 
-  if (ExtraTaskSettings.TaskIndex != event->TaskIndex)
-    PluginCall(PLUGIN_GET_DEVICEVALUENAMES, event, dummyString);
+  if (ExtraTaskSettings.TaskIndex != event->TaskIndex) {
+    String dummy;
+    PluginCall(PLUGIN_GET_DEVICEVALUENAMES, event, dummy);
+  }
 
   String payload = create_http_request_auth(
     controller_number, event->ControllerIndex, ControllerSettings,

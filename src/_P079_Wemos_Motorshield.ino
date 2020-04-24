@@ -29,6 +29,7 @@
 #endif
 
 #include "Wire.h"
+#include "_Plugin_Helper.h"
 
 #define _MOTOR_A 0
 #define _MOTOR_B 1
@@ -51,7 +52,7 @@ private:
 uint8_t _address;
 uint8_t _motor;
 bool _use_STBY_IO = false;
-uint8_t _STBY_IO;
+uint8_t _STBY_IO = 0;
 };
 
 #endif
@@ -102,7 +103,7 @@ boolean Plugin_079(byte function, struct EventStruct *event, String& string)
 	}
 
 	case PLUGIN_WEBFORM_SAVE: {
-		String i2c_address = WebServer.arg(F("p079_adr"));
+		String i2c_address = web_server.arg(F("p079_adr"));
 		PCONFIG(0) = (int)strtol(i2c_address.c_str(), 0, 16);
 
 		success = true;

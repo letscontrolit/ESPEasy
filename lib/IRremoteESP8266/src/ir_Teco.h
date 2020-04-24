@@ -5,35 +5,47 @@
 
 #ifndef UNIT_TEST
 #include <Arduino.h>
-#else
-#include <string>
 #endif
 #include "IRremoteESP8266.h"
 #include "IRsend.h"
+#ifdef UNIT_TEST
+#include "IRsend_test.h"
+#endif
 
-// Constants. Using LSB to be able to send only 35bits.
-const uint8_t kTecoAuto = 0;  // 0b000
-const uint8_t kTecoCool = 1;  // 0b001
-const uint8_t kTecoDry = 2;  // 0b010
-const uint8_t kTecoFan = 3;  // 0b110
-const uint8_t kTecoHeat = 4;  // 0b001
+// Supports:
+//   Brand: Alaska,  Model: SAC9010QC A/C
+//   Brand: Alaska,  Model: SAC9010QC remote
+
+// Constants.
+const uint8_t kTecoAuto = 0;
+const uint8_t kTecoCool = 1;
+const uint8_t kTecoDry = 2;
+const uint8_t kTecoFan = 3;
+const uint8_t kTecoHeat = 4;
 const uint8_t kTecoFanAuto = 0;  // 0b00
+const uint8_t kTecoFanLow = 1;   // 0b01
+const uint8_t kTecoFanMed = 2;   // 0b10
 const uint8_t kTecoFanHigh = 3;  // 0b11
-const uint8_t kTecoFanMed = 2;  // 0b10
-const uint8_t kTecoFanLow = 1;  // 0b01
 const uint8_t kTecoMinTemp = 16;   // 16C
 const uint8_t kTecoMaxTemp = 30;   // 30C
 
-const uint64_t kTecoModeMask =   0b00000000000000000000000000000000111;
-const uint64_t kTecoPower =      0b00000000000000000000000000000001000;
-const uint64_t kTecoFanMask =    0b00000000000000000000000000000110000;
-const uint64_t kTecoSwing =      0b00000000000000000000000000001000000;
-const uint64_t kTecoSleep =      0b00000000000000000000000000010000000;
-const uint64_t kTecoTempMask =   0b00000000000000000000000111100000000;
-const uint64_t kTecoTimerHalfH = 0b00000000000000000000001000000000000;
-const uint64_t kTecoTimerTenHr = 0b00000000000000000000110000000000000;
-const uint64_t kTecoTimerOn =    0b00000000000000000001000000000000000;
-const uint64_t kTecoTimerUniHr = 0b00000000000000011110000000000000000;
+const uint8_t kTecoModeOffset = 0;
+const uint8_t kTecoPowerOffset = 3;
+const uint8_t kTecoFanOffset = 4;
+const uint8_t kTecoFanSize = 2;  // Nr. of bits
+const uint8_t kTecoSwingOffset = 6;
+const uint8_t kTecoSleepOffset = 7;
+const uint8_t kTecoTempOffset = 8;
+const uint8_t kTecoTempSize = 4;  // Nr. of bits
+const uint8_t kTecoTimerHalfHourOffset = 12;
+const uint8_t kTecoTimerTensHoursOffset = 13;
+const uint8_t kTecoTimerTensHoursSize = 2;  // Nr. of bits
+const uint8_t kTecoTimerOnOffset = 15;
+const uint8_t kTecoTimerUnitHoursOffset = 16;
+const uint8_t kTecoTimerUnitHoursSize = 4;  // Nr. of bits
+const uint8_t kTecoHumidOffset = 20;
+const uint8_t kTecoLightOffset = 21;
+const uint8_t kTecoSaveOffset = 23;
 const uint64_t kTecoReset =      0b01001010000000000000010000000000000;
 /*
   (header mark and space)
@@ -41,8 +53,12 @@ const uint64_t kTecoReset =      0b01001010000000000000010000000000000;
 
   byte 0 = Cst 0x02
   byte 1 = Cst 0x50
+    b6-7 = "AIR" 0, 1, 2 (Not Implemented)
   byte 2:
-    b0-3 = 0b0000
+    b0 = Save
+    b1 = "Tree with bubbles" / Filter?? (Not Implemented)
+    b2 = Light/LED.
+    b3 = Humid
     b4-7 = Timer hours (unit, not thenth)
       hours:
         0000 (0) = +0 hour
@@ -86,7 +102,8 @@ const uint64_t kTecoReset =      0b01001010000000000000010000000000000;
 // Classes
 class IRTecoAc {
  public:
-  explicit IRTecoAc(const uint16_t pin);
+  explicit IRTecoAc(const uint16_t pin, const bool inverted = false,
+                    const bool use_modulation = true);
 
   void stateReset(void);
 #if SEND_TECO
@@ -108,28 +125,43 @@ class IRTecoAc {
   void setMode(const uint8_t mode);
   uint8_t getMode(void);
 
-  void setSwing(const bool state);
+  void setSwing(const bool on);
   bool getSwing(void);
 
-  void setSleep(const bool state);
+  void setSleep(const bool on);
   bool getSleep(void);
 
-  // void setTimer(uint8_t time);  // To check unit
-  // uint8_t getTimer(uint8_t);
+  void setLight(const bool on);
+  bool getLight(void);
+
+  void setHumid(const bool on);
+  bool getHumid(void);
+
+  void setSave(const bool on);
+  bool getSave(void);
+
+  uint16_t getTimer(void);
+  void setTimer(const uint16_t mins);
 
   uint64_t getRaw(void);
   void setRaw(const uint64_t new_code);
 
-#ifdef ARDUINO
+  uint8_t convertMode(const stdAc::opmode_t mode);
+  uint8_t convertFan(const stdAc::fanspeed_t speed);
+  static stdAc::opmode_t toCommonMode(const uint8_t mode);
+  static stdAc::fanspeed_t toCommonFanSpeed(const uint8_t speed);
+  stdAc::state_t toCommon(void);
   String toString(void);
-#else
-  std::string toString(void);
-#endif
+#ifndef UNIT_TEST
 
  private:
+  IRsend _irsend;
+#else
+  IRsendTest _irsend;
+#endif
   // The state of the IR remote in IR code form.
   uint64_t remote_state;
-  IRsend _irsend;
+  bool getTimerEnabled(void);
 };
 
 #endif  // IR_TECO_H_

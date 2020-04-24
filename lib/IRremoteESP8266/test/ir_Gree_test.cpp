@@ -20,7 +20,8 @@ TEST(TestSendGreeChars, SendData) {
   irsend.reset();
   irsend.sendGree(gree_code);
   EXPECT_EQ(
-      "m9000s4000"
+      "f38000d50"
+      "m9000s4500"
       "m620s540m620s1600m620s540m620s540m620s1600m620s540m620s540m620s540"
       "m620s540m620s540m620s1600m620s540m620s1600m620s1600m620s540m620s540"
       "m620s540m620s1600m620s1600m620s540m620s1600m620s540m620s1600m620s540"
@@ -42,7 +43,8 @@ TEST(TestSendGreeUint64, SendData) {
   irsend.reset();
   irsend.sendGree(0x1234567890ABCDEF);
   EXPECT_EQ(
-      "m9000s4000"
+      "f38000d50"
+      "m9000s4500"
       "m620s540m620s1600m620s540m620s540m620s1600m620s540m620s540m620s540"
       "m620s540m620s540m620s1600m620s540m620s1600m620s1600m620s540m620s540"
       "m620s540m620s1600m620s1600m620s540m620s1600m620s540m620s1600m620s540"
@@ -69,7 +71,8 @@ TEST(TestSendGreeChars, SendWithRepeats) {
 
   irsend.sendGree(gree_code, kGreeStateLength, 1);
   EXPECT_EQ(
-      "m9000s4000"
+      "f38000d50"
+      "m9000s4500"
       "m620s540m620s1600m620s540m620s540m620s1600m620s540m620s540m620s540"
       "m620s540m620s540m620s1600m620s540m620s1600m620s1600m620s540m620s540"
       "m620s540m620s1600m620s1600m620s540m620s1600m620s540m620s1600m620s540"
@@ -81,7 +84,7 @@ TEST(TestSendGreeChars, SendWithRepeats) {
       "m620s1600m620s540m620s1600m620s1600m620s540m620s540m620s1600m620s1600"
       "m620s1600m620s1600m620s1600m620s1600m620s540m620s1600m620s1600m620s1600"
       "m620s19000"
-      "m9000s4000"
+      "m9000s4500"
       "m620s540m620s1600m620s540m620s540m620s1600m620s540m620s540m620s540"
       "m620s540m620s540m620s1600m620s540m620s1600m620s1600m620s540m620s540"
       "m620s540m620s1600m620s1600m620s540m620s1600m620s540m620s1600m620s540"
@@ -103,7 +106,8 @@ TEST(TestSendGreeUint64, SendWithRepeats) {
   irsend.reset();
   irsend.sendGree(0x1234567890ABCDEF, kGreeBits, 1);
   EXPECT_EQ(
-      "m9000s4000"
+      "f38000d50"
+      "m9000s4500"
       "m620s540m620s1600m620s540m620s540m620s1600m620s540m620s540m620s540"
       "m620s540m620s540m620s1600m620s540m620s1600m620s1600m620s540m620s540"
       "m620s540m620s1600m620s1600m620s540m620s1600m620s540m620s1600m620s540"
@@ -115,7 +119,7 @@ TEST(TestSendGreeUint64, SendWithRepeats) {
       "m620s1600m620s540m620s1600m620s1600m620s540m620s540m620s1600m620s1600"
       "m620s1600m620s1600m620s1600m620s1600m620s540m620s1600m620s1600m620s1600"
       "m620s19000"
-      "m9000s4000"
+      "m9000s4500"
       "m620s540m620s1600m620s540m620s540m620s1600m620s540m620s540m620s540"
       "m620s540m620s540m620s1600m620s540m620s1600m620s1600m620s540m620s540"
       "m620s540m620s1600m620s1600m620s540m620s1600m620s540m620s1600m620s540"
@@ -146,7 +150,8 @@ TEST(TestSendGreeChars, SendUnexpectedSizes) {
   irsend.reset();
   irsend.sendGree(gree_long_code, kGreeStateLength + 1);
   ASSERT_EQ(
-      "m9000s4000"
+      "f38000d50"
+      "m9000s4500"
       "m620s540m620s1600m620s540m620s540m620s1600m620s540m620s540m620s540"
       "m620s540m620s540m620s1600m620s540m620s1600m620s1600m620s540m620s540"
       "m620s540m620s1600m620s1600m620s540m620s1600m620s540m620s1600m620s540"
@@ -333,6 +338,50 @@ TEST(TestGreeClass, Turbo) {
   EXPECT_TRUE(irgree.getTurbo());
 }
 
+TEST(TestGreeClass, IFeel) {
+  IRGreeAC ac(0);
+  ac.begin();
+
+  ac.setIFeel(true);
+  EXPECT_TRUE(ac.getIFeel());
+
+  ac.setIFeel(false);
+  EXPECT_FALSE(ac.getIFeel());
+
+  ac.setIFeel(true);
+  EXPECT_TRUE(ac.getIFeel());
+
+  // https://github.com/crankyoldgit/IRremoteESP8266/pull/770#issuecomment-504992209
+  uint8_t on[8] = {0x08, 0x09, 0x60, 0x50, 0x00, 0x44, 0x00, 0xF0};
+  uint8_t off[8] = {0x08, 0x09, 0x60, 0x50, 0x00, 0x40, 0x00, 0xF0};
+  ac.setRaw(off);
+  EXPECT_FALSE(ac.getIFeel());
+  ac.setRaw(on);
+  EXPECT_TRUE(ac.getIFeel());
+}
+
+TEST(TestGreeClass, WiFi) {
+  IRGreeAC ac(0);
+  ac.begin();
+
+  ac.setWiFi(true);
+  EXPECT_TRUE(ac.getWiFi());
+
+  ac.setWiFi(false);
+  EXPECT_FALSE(ac.getWiFi());
+
+  ac.setWiFi(true);
+  EXPECT_TRUE(ac.getWiFi());
+
+  // https://github.com/crankyoldgit/IRremoteESP8266/pull/770#issuecomment-504992209
+  uint8_t on[8] = {0x09, 0x09, 0x60, 0x50, 0x00, 0x40, 0x00, 0x00};
+  uint8_t off[8] = {0x09, 0x09, 0x60, 0x50, 0x00, 0x00, 0x00, 0xC0};
+  ac.setRaw(off);
+  EXPECT_FALSE(ac.getWiFi());
+  ac.setRaw(on);
+  EXPECT_TRUE(ac.getWiFi());
+}
+
 TEST(TestGreeClass, Sleep) {
   IRGreeAC irgree(0);
   irgree.begin();
@@ -446,9 +495,10 @@ TEST(TestGreeClass, HumanReadable) {
   IRGreeAC irgree(0);
 
   EXPECT_EQ(
-      "Power: Off, Mode: 0 (AUTO), Temp: 25C, Fan: 0 (AUTO), Turbo: Off, "
-      "XFan: Off, Light: On, Sleep: Off, Swing Vertical Mode: Manual, "
-      "Swing Vertical Pos: 0 (Last Pos)",
+      "Model: 1 (YAW1F), Power: Off, Mode: 0 (Auto), Temp: 25C, Fan: 0 (Auto), "
+      "Turbo: Off, IFeel: Off, WiFi: Off, XFan: Off, Light: On, Sleep: Off, "
+      "Swing(V) Mode: Manual, Swing(V): 0 (Last), "
+      "Timer: Off",
       irgree.toString());
   irgree.on();
   irgree.setMode(kGreeCool);
@@ -458,11 +508,14 @@ TEST(TestGreeClass, HumanReadable) {
   irgree.setSleep(true);
   irgree.setLight(false);
   irgree.setTurbo(true);
+  irgree.setIFeel(true);
+  irgree.setWiFi(true);
   irgree.setSwingVertical(true, kGreeSwingAuto);
+  irgree.setTimer(12 * 60 + 30);
   EXPECT_EQ(
-      "Power: On, Mode: 1 (COOL), Temp: 16C, Fan: 3 (MAX), Turbo: On, "
-      "XFan: On, Light: Off, Sleep: On, Swing Vertical Mode: Auto, "
-      "Swing Vertical Pos: 1 (Auto)",
+      "Model: 1 (YAW1F), Power: On, Mode: 1 (Cool), Temp: 16C, Fan: 3 (High), "
+      "Turbo: On, IFeel: On, WiFi: On, XFan: On, Light: Off, Sleep: On, "
+      "Swing(V) Mode: Auto, Swing(V): 1 (Auto), Timer: 12:30",
       irgree.toString());
 }
 
@@ -486,7 +539,7 @@ TEST(TestDecodeGree, NormalSynthetic) {
   EXPECT_STATE_EQ(gree_code, irsend.capture.state, kGreeBits);
 }
 
-// Decode a synthetic Gree message.
+// Decode a real Gree message.
 TEST(TestDecodeGree, NormalRealExample) {
   IRsendTest irsend(4);
   IRrecv irrecv(4);
@@ -496,7 +549,7 @@ TEST(TestDecodeGree, NormalRealExample) {
   uint8_t gree_code[kGreeStateLength] = {0x19, 0x0A, 0x60, 0x50,
                                          0x02, 0x23, 0x00, 0xF0};
 
-  // Ref: https://github.com/markszabo/IRremoteESP8266/issues/386
+  // Ref: https://github.com/crankyoldgit/IRremoteESP8266/issues/386
   uint16_t rawData[139] = {
       9008, 4496,  644, 1660, 676, 530,  648, 558,  672, 1636, 646, 1660,
       644,  556,   650, 584,  626, 560,  644, 580,  628, 1680, 624, 560,
@@ -520,8 +573,116 @@ TEST(TestDecodeGree, NormalRealExample) {
   EXPECT_STATE_EQ(gree_code, irsend.capture.state, kGreeBits);
   irgree.setRaw(irsend.capture.state);
   EXPECT_EQ(
-      "Power: On, Mode: 1 (COOL), Temp: 26C, Fan: 1, Turbo: Off, "
-      "XFan: Off, Light: On, Sleep: Off, Swing Vertical Mode: Manual, "
-      "Swing Vertical Pos: 2",
+      "Model: 1 (YAW1F), Power: On, Mode: 1 (Cool), Temp: 26C, Fan: 1 (Low), "
+      "Turbo: Off, IFeel: Off, WiFi: Off, XFan: Off, Light: On, Sleep: Off, "
+      "Swing(V) Mode: Manual, Swing(V): 2 (UNKNOWN), Timer: Off",
       irgree.toString());
+}
+
+TEST(TestGreeClass, toCommon) {
+  IRGreeAC ac(0);
+  ac.setPower(true);
+  ac.setMode(kGreeCool);
+  ac.setTemp(20);
+  ac.setFan(kGreeFanMax);
+  ac.setSwingVertical(false, kGreeSwingUp);
+  ac.setTurbo(true);
+  ac.setXFan(true);
+  ac.setLight(true);
+  ac.setSleep(true);
+  // Now test it.
+  ASSERT_EQ(decode_type_t::GREE, ac.toCommon().protocol);
+  ASSERT_EQ(gree_ac_remote_model_t::YAW1F, ac.toCommon().model);
+  ASSERT_TRUE(ac.toCommon().power);
+  ASSERT_TRUE(ac.toCommon().celsius);
+  ASSERT_EQ(20, ac.toCommon().degrees);
+  ASSERT_TRUE(ac.toCommon().turbo);
+  ASSERT_TRUE(ac.toCommon().clean);
+  ASSERT_TRUE(ac.toCommon().light);
+  ASSERT_EQ(stdAc::opmode_t::kCool, ac.toCommon().mode);
+  ASSERT_EQ(stdAc::fanspeed_t::kMax, ac.toCommon().fanspeed);
+  ASSERT_EQ(stdAc::swingv_t::kHighest, ac.toCommon().swingv);
+  ASSERT_EQ(0, ac.toCommon().sleep);
+  // Unsupported.
+  ASSERT_EQ(stdAc::swingh_t::kOff, ac.toCommon().swingh);
+  ASSERT_FALSE(ac.toCommon().quiet);
+  ASSERT_FALSE(ac.toCommon().econo);
+  ASSERT_FALSE(ac.toCommon().filter);
+  ASSERT_FALSE(ac.toCommon().beep);
+  ASSERT_EQ(-1, ac.toCommon().clock);
+}
+
+TEST(TestGreeClass, Issue814Power) {
+  IRGreeAC ac(0);
+  ac.begin();
+
+  // https://github.com/crankyoldgit/IRremoteESP8266/issues/814#issuecomment-511263921
+  uint8_t YBOFB_on[8] = {0x59, 0x07, 0x20, 0x50, 0x01, 0x20, 0x00, 0xC0};
+  uint8_t off[8] = {0x51, 0x07, 0x20, 0x50, 0x01, 0x20, 0x00, 0x40};
+
+  ac.on();
+  EXPECT_EQ(gree_ac_remote_model_t::YAW1F, ac.getModel());
+  ac.setRaw(off);
+  EXPECT_FALSE(ac.getPower());
+  ac.setRaw(YBOFB_on);
+  EXPECT_TRUE(ac.getPower());
+  EXPECT_EQ(gree_ac_remote_model_t::YBOFB, ac.getModel());
+  EXPECT_EQ(
+      "Model: 2 (YBOFB), Power: On, Mode: 1 (Cool), Temp: 23C, Fan: 1 (Low), "
+      "Turbo: Off, IFeel: Off, WiFi: Off, XFan: Off, Light: On, Sleep: Off, "
+      "Swing(V) Mode: Auto, Swing(V): 1 (Auto), Timer: Off",
+      ac.toString());
+  ac.off();
+  EXPECT_STATE_EQ(off, ac.getRaw(), kGreeBits);
+  ac.on();
+  EXPECT_STATE_EQ(YBOFB_on, ac.getRaw(), kGreeBits);
+  uint8_t YAW1F_on[8] = {0x59, 0x07, 0x60, 0x50, 0x01, 0x20, 0x00, 0xC0};
+  ac.setModel(gree_ac_remote_model_t::YAW1F);
+  EXPECT_STATE_EQ(YAW1F_on, ac.getRaw(), kGreeBits);
+  ac.off();
+  EXPECT_STATE_EQ(off, ac.getRaw(), kGreeBits);
+  ac.setModel(gree_ac_remote_model_t::YBOFB);
+  ac.on();
+  EXPECT_STATE_EQ(YBOFB_on, ac.getRaw(), kGreeBits);
+}
+
+TEST(TestGreeClass, Timer) {
+  IRGreeAC ac(0);
+  ac.begin();
+
+  ac.setTimer(0);
+  EXPECT_FALSE(ac.getTimerEnabled());
+  EXPECT_EQ(0, ac.getTimer());
+
+  ac.setTimer(29);
+  EXPECT_FALSE(ac.getTimerEnabled());
+  EXPECT_EQ(0, ac.getTimer());
+
+  ac.setTimer(30);
+  EXPECT_TRUE(ac.getTimerEnabled());
+  EXPECT_EQ(30, ac.getTimer());
+
+  ac.setTimer(60);
+  EXPECT_TRUE(ac.getTimerEnabled());
+  EXPECT_EQ(60, ac.getTimer());
+
+  ac.setTimer(90);
+  EXPECT_TRUE(ac.getTimerEnabled());
+  EXPECT_EQ(90, ac.getTimer());
+
+  ac.setTimer(10 * 60);
+  EXPECT_TRUE(ac.getTimerEnabled());
+  EXPECT_EQ(10 * 60, ac.getTimer());
+
+  ac.setTimer(23 * 60 + 59);
+  EXPECT_TRUE(ac.getTimerEnabled());
+  EXPECT_EQ(23 * 60 + 30, ac.getTimer());
+
+  ac.setTimer(24 * 60 + 1);
+  EXPECT_TRUE(ac.getTimerEnabled());
+  EXPECT_EQ(24 * 60, ac.getTimer());
+
+  ac.setTimer(24 * 60 + 30);
+  EXPECT_TRUE(ac.getTimerEnabled());
+  EXPECT_EQ(24 * 60, ac.getTimer());
 }

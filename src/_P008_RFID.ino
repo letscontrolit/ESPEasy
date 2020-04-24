@@ -3,6 +3,8 @@
 //################################# Plugin 008: Wiegand RFID Tag Reader #################################
 //#######################################################################################################
 
+#include "_Plugin_Helper.h"
+
 #define PLUGIN_008
 #define PLUGIN_ID_008         8
 #define PLUGIN_NAME_008       "RFID - Wiegand"
@@ -111,18 +113,19 @@ boolean Plugin_008(byte function, struct EventStruct *event, String& string)
               }
               break;
             }
+            
+            if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+            // write log
+              String log = F("RFID : Tag: ");
+              log += (unsigned long) Plugin_008_keyBuffer;
+              log += F(" Bits: ");
+              log += Plugin_008_bitCount;
+              addLog(LOG_LEVEL_INFO, log);
+            }
             // reset everything
-            unsigned long bitCount = Plugin_008_bitCount;    // copy for log
-            unsigned long keyBuffer = Plugin_008_keyBuffer;  // copy for log
             Plugin_008_keyBuffer = 0;
             Plugin_008_bitCount = 0;
             Plugin_008_timeoutCount = 0;
-            // write log
-            String log = F("RFID : Tag: ");
-            log += keyBuffer;
-            log += F(" Bits: ");
-            log += bitCount;
-            addLog(LOG_LEVEL_INFO, log);
             sendData(event);
           }
         }
@@ -144,7 +147,7 @@ boolean Plugin_008(byte function, struct EventStruct *event, String& string)
 
       case PLUGIN_WEBFORM_SAVE:
         {
-          String plugin1 = WebServer.arg(F("p008_type"));
+          String plugin1 = web_server.arg(F("p008_type"));
           PCONFIG(0) = plugin1.toInt();
           success = true;
           break;

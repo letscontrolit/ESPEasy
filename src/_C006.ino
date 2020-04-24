@@ -7,13 +7,13 @@
 #define CPLUGIN_ID_006         6
 #define CPLUGIN_NAME_006       "PiDome MQTT"
 
-bool CPlugin_006(byte function, struct EventStruct *event, String& string)
+bool CPlugin_006(CPlugin::Function function, struct EventStruct *event, String& string)
 {
   bool success = false;
 
   switch (function)
   {
-    case CPLUGIN_PROTOCOL_ADD:
+    case CPlugin::Function::CPLUGIN_PROTOCOL_ADD:
       {
         Protocol[++protocolCount].Number = CPLUGIN_ID_006;
         Protocol[protocolCount].usesMQTT = true;
@@ -25,13 +25,13 @@ bool CPlugin_006(byte function, struct EventStruct *event, String& string)
         break;
       }
 
-    case CPLUGIN_GET_DEVICENAME:
+    case CPlugin::Function::CPLUGIN_GET_DEVICENAME:
       {
         string = F(CPLUGIN_NAME_006);
         break;
       }
 
-    case CPLUGIN_INIT:
+    case CPlugin::Function::CPLUGIN_INIT:
       {
         MakeControllerSettings(ControllerSettings);
         LoadControllerSettings(event->ControllerIndex, ControllerSettings);
@@ -39,14 +39,14 @@ bool CPlugin_006(byte function, struct EventStruct *event, String& string)
         break;
       }
 
-    case CPLUGIN_PROTOCOL_TEMPLATE:
+    case CPlugin::Function::CPLUGIN_PROTOCOL_TEMPLATE:
       {
         event->String1 = F("/Home/#");
         event->String2 = F("/hooks/devices/%id%/SensorData/%valname%");
         break;
       }
 
-    case CPLUGIN_PROTOCOL_RECV:
+    case CPlugin::Function::CPLUGIN_PROTOCOL_RECV:
       {
         // topic structure /Home/Floor/Location/device/<systemname>/gpio/16
         // Split topic into array
@@ -84,7 +84,7 @@ bool CPlugin_006(byte function, struct EventStruct *event, String& string)
         break;
       }
 
-    case CPLUGIN_PROTOCOL_SEND:
+    case CPlugin::Function::CPLUGIN_PROTOCOL_SEND:
       {
         if (!WiFiConnected(10)) {
           success = false;
@@ -95,31 +95,35 @@ bool CPlugin_006(byte function, struct EventStruct *event, String& string)
 
         statusLED(true);
 
-        if (ExtraTaskSettings.TaskIndex != event->TaskIndex)
-          PluginCall(PLUGIN_GET_DEVICEVALUENAMES, event, dummyString);
+        if (ExtraTaskSettings.TaskIndex != event->TaskIndex) {
+          String dummy;
+          PluginCall(PLUGIN_GET_DEVICEVALUENAMES, event, dummy);
+        }
 
         String pubname = ControllerSettings.Publish;
         parseControllerVariables(pubname, event, false);
 
         String value = "";
-        // byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[event->TaskIndex]);
         byte valueCount = getValueCountFromSensorType(event->sensorType);
         for (byte x = 0; x < valueCount; x++)
         {
           String tmppubname = pubname;
           tmppubname.replace(F("%valname%"), ExtraTaskSettings.TaskDeviceValueNames[x]);
           value = formatUserVarNoCheck(event, x);
-          MQTTpublish(event->ControllerIndex, tmppubname.c_str(), value.c_str(), Settings.MQTTRetainFlag);
+          MQTTpublish(event->ControllerIndex, tmppubname.c_str(), value.c_str(), ControllerSettings.mqtt_retainFlag());
         }
         break;
       }
 
-    case CPLUGIN_FLUSH:
+    case CPlugin::Function::CPLUGIN_FLUSH:
       {
         processMQTTdelayQueue();
         delay(0);
         break;
       }
+
+    default:
+      break;
 
   }
   return success;

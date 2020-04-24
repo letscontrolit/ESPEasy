@@ -1,6 +1,6 @@
-|Latest Nightly  | Build Status | Docs | Patreon | Ko-Fi | PayPal |
-|-------|-------|-------|-------|-------|-------|
-| [![GitHub version](https://img.shields.io/github/release/letscontrolit/ESPEasy/all.svg)](https://github.com/letscontrolit/ESPEasy/releases/latest) | [![Build Status](https://travis-ci.org/letscontrolit/ESPEasy.svg?branch=mega)](https://travis-ci.org/letscontrolit/ESPEasy) | [![Documentation Status](https://readthedocs.org/projects/espeasy/badge/?version=latest)](https://espeasy.readthedocs.io/en/latest/?badge=latest) | [![donate](https://img.shields.io/badge/donate-Patreon-blue.svg)](https://www.patreon.com/GrovkillenTDer) | [![donate](https://img.shields.io/badge/donate-KoFi-blue.svg)](https://ko-fi.com/grovkillentder) | [![donate](https://img.shields.io/badge/donate-PayPal-blue.svg)](https://www.paypal.me/espeasy) |
+|Latest Nightly  | Build Status | Downloads | Docs | Patreon | Ko-Fi | PayPal |
+|-------|-------|-------|-------|-------|-------|-------|
+| [![GitHub version](https://img.shields.io/github/release/letscontrolit/ESPEasy/all.svg)](https://github.com/letscontrolit/ESPEasy/releases/latest) | [![Build Status](https://travis-ci.org/letscontrolit/ESPEasy.svg?branch=mega)](https://travis-ci.org/letscontrolit/ESPEasy) | [![Downloads](https://img.shields.io/github/downloads/letscontrolit/ESPEasy/total.svg)](https://github.com/letscontrolit/ESPEasy/releases) | [![Documentation Status](https://readthedocs.org/projects/espeasy/badge/?version=latest)](https://espeasy.readthedocs.io/en/latest/?badge=latest) | [![donate](https://img.shields.io/badge/donate-Patreon-blue.svg)](https://www.patreon.com/GrovkillenTDer) | [![donate](https://img.shields.io/badge/donate-KoFi-blue.svg)](https://ko-fi.com/grovkillentder) | [![donate](https://img.shields.io/badge/donate-PayPal-blue.svg)](https://www.paypal.me/espeasy) |
 
 For ways to *support* us, see [this announcement on the forum](https://www.letscontrolit.com/forum/viewtopic.php?f=14&t=5787), or have a look at the [Patreon](https://www.patreon.com/GrovkillenTDer), [Ko-Fi](https://ko-fi.com/grovkillentder) or [PayPal](https://www.paypal.me/espeasy) links above.
 
@@ -41,3 +41,7 @@ ESPEasy_mega-20190225_dev_ESP8285_1M.bin     | ESP8285 with 1MB flash  | Stable 
 Details and discussion are on the "Experimental" section of the forum: https://www.letscontrolit.com/forum/viewforum.php?f=18
 
 Automated builds of the (new) documentation can be found at [ESPEasy.readthedocs.io](https://espeasy.readthedocs.io/en/latest/)
+
+## Icons used
+
+Icons on courtesy of [ICONS8](https://icons8.com/).
