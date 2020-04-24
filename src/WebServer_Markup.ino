@@ -515,7 +515,7 @@ String createGPIO_label(int gpio, int pinnr, bool input, bool output, bool warni
   return result;
 }
 
-void addPinSelect(boolean forI2C, String id,  int choice)
+void addPinSelect(boolean forI2C, const String& id,  int choice)
 {
   #ifdef ESP32
     # define NR_ITEMS_PIN_DROPDOWN  35 // 34 GPIO + 1
@@ -546,6 +546,46 @@ void addPinSelect(boolean forI2C, String id,  int choice)
   delete[] gpio_labels;
   #undef NR_ITEMS_PIN_DROPDOWN
 }
+
+#ifdef ESP32
+void addADC_PinSelect(const String& id,  int choice)
+{
+  #define NR_ITEMS_PIN_DROPDOWN   19
+  String *gpio_labels  = new String[NR_ITEMS_PIN_DROPDOWN];
+  int    *gpio_numbers = new int[NR_ITEMS_PIN_DROPDOWN];
+
+  // At i == 0 && gpio == -1, add the "- None -" option first
+  int i    = 0;
+  int gpio = -1;
+
+  while (i < NR_ITEMS_PIN_DROPDOWN && gpio <= MAX_GPIO) {
+    int  pinnr = -1;
+    bool input, output, warning;
+
+    if (getGpioInfo(gpio, pinnr, input, output, warning) || (i == 0)) {
+      int adc,ch, t;
+      if (getADC_gpio_info(gpio, adc, ch, t)) {
+        if (adc != 0) {
+          gpio_labels[i]  = createGPIO_label(gpio, pinnr, input, output, warning);
+          gpio_labels[i] += F(" / ");
+        }
+        gpio_labels[i] += formatGpioName_ADC(gpio);
+        gpio_numbers[i] = gpio;
+        ++i;
+      }
+    }
+    ++gpio;
+  }
+  bool forI2C = false;
+  renderHTMLForPinSelect(gpio_labels, gpio_numbers, forI2C, id, choice, NR_ITEMS_PIN_DROPDOWN);
+  delete[] gpio_numbers;
+  delete[] gpio_labels;
+  #undef NR_ITEMS_PIN_DROPDOWN
+}
+
+
+#endif
+
 
 // ********************************************************************************
 // Helper function actually rendering dropdown list for addPinSelect()
