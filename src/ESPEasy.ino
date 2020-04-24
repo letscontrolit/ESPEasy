@@ -189,6 +189,13 @@ void setup()
 //  ets_isr_attach(8, sw_watchdog_callback, NULL);  // Set a callback for feeding the watchdog.
 #endif
 
+
+#if FEATURE_ADC_VCC
+  if (!wifiConnectInProgress) {
+    vcc = ESP.getVcc() / 1000.0;
+  }
+#endif
+
   resetPluginTaskData();
 
   checkRAM(F("setup"));
@@ -387,12 +394,6 @@ void setup()
 
   if (node_time.systemTimePresent())
     node_time.initTime();
-
-#if FEATURE_ADC_VCC
-  if (!wifiConnectInProgress) {
-    vcc = ESP.getVcc() / 1000.0;
-  }
-#endif
 
   if (Settings.UseRules)
   {
