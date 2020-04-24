@@ -18,10 +18,58 @@
   # define P002_MAX_ADC_VALUE    1023
 #endif // ifdef ESP8266
 
-uint32_t Plugin_002_OversamplingValue  = 0;
-uint16_t Plugin_002_OversamplingCount  = 0;
-uint16_t Plugin_002_OversamplingMinVal = P002_MAX_ADC_VALUE;
-uint16_t Plugin_002_OversamplingMaxVal = 0;
+
+struct P002_data_struct : public PluginTaskData_base {
+  P002_data_struct() {}
+
+  ~P002_data_struct() {
+    reset();
+  }
+
+  void reset() {
+    OversamplingValue  = 0;
+    OversamplingCount  = 0;
+    OversamplingMinVal = P002_MAX_ADC_VALUE;
+    OversamplingMaxVal = 0;
+  }
+
+  void addOversamplingValue(uint16_t currentValue) {
+    OversamplingValue += currentValue;
+    ++OversamplingCount;
+
+    if (currentValue > OversamplingMaxVal) {
+      OversamplingMaxVal = currentValue;
+    }
+
+    if (currentValue < OversamplingMinVal) {
+      OversamplingMinVal = currentValue;
+    }
+  }
+
+  bool getOversamplingValue(float& float_value, uint16_t& raw_value) {
+    if (OversamplingCount > 0) {
+      float sum   = static_cast<float>(OversamplingValue);
+      float count = static_cast<float>(OversamplingCount);
+
+      if (OversamplingCount >= 3) {
+        sum   -= OversamplingMaxVal;
+        sum   -= OversamplingMinVal;
+        count -= 2;
+      }
+      float_value = sum / count;
+      raw_value   = static_cast<int16_t>(float_value);
+      return true;
+    }
+    return false;
+  }
+
+  uint16_t OversamplingCount  = 0;
+
+private:
+  uint32_t OversamplingValue  = 0;
+  uint16_t OversamplingMinVal = P002_MAX_ADC_VALUE;
+  uint16_t OversamplingMaxVal = 0;
+};
 
 boolean Plugin_002(byte function, struct EventStruct *event, String& string)
 {
@@ -115,30 +163,43 @@ boolean Plugin_002(byte function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_EXIT: {
+      clearPluginTaskData(event->TaskIndex);
+      success = true;
+      break;
+    }
+
     case PLUGIN_INIT:  
+    {
       if (!PCONFIG(0)) // Oversampling
       {
+        initPluginTaskData(event->TaskIndex, new P002_data_struct());
+        P002_data_struct *P002_data =
+          static_cast<P002_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+        if (nullptr == P002_data) {
+          return success;
+        }
+        success = true;
+
         // Read at least one value, see https://github.com/letscontrolit/ESPEasy/issues/2646
         uint16_t currentValue;
         P002_performRead(event, currentValue);
       }
       // Fall through to PLUGIN_TEN_PER_SECOND
+    }
     case PLUGIN_TEN_PER_SECOND:
     {
       if (PCONFIG(0)) // Oversampling
       {
-        uint16_t currentValue;
+        P002_data_struct *P002_data =
+          static_cast<P002_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-        if (P002_performRead(event, currentValue)) {
-          Plugin_002_OversamplingValue += currentValue;
-          ++Plugin_002_OversamplingCount;
+        if (nullptr != P002_data) {
+          uint16_t currentValue;
 
-          if (currentValue > Plugin_002_OversamplingMaxVal) {
-            Plugin_002_OversamplingMaxVal = currentValue;
-          }
-
-          if (currentValue < Plugin_002_OversamplingMinVal) {
-            Plugin_002_OversamplingMinVal = currentValue;
+          if (P002_performRead(event, currentValue)) {
+            P002_data->addOversamplingValue(currentValue);
           }
         }
       }
@@ -150,34 +211,35 @@ boolean Plugin_002(byte function, struct EventStruct *event, String& string)
     {
       uint16_t raw_value = 0;
       float res_value = 0.0;
-      if (P002_getOutputValue(event, raw_value, res_value)) {;
+      if (P002_getOutputValue(event, raw_value, res_value)) {
         UserVar[event->BaseVarIndex] = res_value;
 
-        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-          String log = F("ADC  : Analog value: ");
-          log += String(raw_value);
-          log += F(" = ");
-          log += String(UserVar[event->BaseVarIndex], 3);
+        P002_data_struct *P002_data =
+          static_cast<P002_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-          if (PCONFIG(0)) {
-            log += F(" (");
-            log += Plugin_002_OversamplingCount;
-            log += F(" samples)");
+        if (nullptr != P002_data) {
+          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+            String log = F("ADC  : Analog value: ");
+            log += String(raw_value);
+            log += F(" = ");
+            log += String(UserVar[event->BaseVarIndex], 3);
+
+            if (PCONFIG(0)) {
+              log += F(" (");
+              log += P002_data->OversamplingCount;
+              log += F(" samples)");
+            }
+          addLog(LOG_LEVEL_INFO, log);
           }
-        addLog(LOG_LEVEL_INFO, log);
+          P002_data->reset();
+          success = true;
+        } else {
+          if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+            String log = F("ADC  : No value received ");
+            addLog(LOG_LEVEL_ERROR, log);
+          }
+          success = false;
         }
-        // Now reset the oversampling variables.
-        Plugin_002_OversamplingValue  = 0;
-        Plugin_002_OversamplingCount  = 0;
-        Plugin_002_OversamplingMinVal = P002_MAX_ADC_VALUE;
-        Plugin_002_OversamplingMaxVal = 0;
-        success                       = true;
-      } else {
-        if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-          String log = F("ADC  : No value received ");
-          addLog(LOG_LEVEL_ERROR, log);
-        }
-        success = false;
       }
 
       break;
@@ -188,29 +250,22 @@ boolean Plugin_002(byte function, struct EventStruct *event, String& string)
 
 bool P002_getOutputValue(struct EventStruct *event, uint16_t& raw_value, float& res_value) {
   float float_value = 0.0;
-  bool success;
+  bool success = false;
 
-  if (PCONFIG(0) && (Plugin_002_OversamplingCount > 0)) {
-    float sum   = static_cast<float>(Plugin_002_OversamplingValue);
-    float count = static_cast<float>(Plugin_002_OversamplingCount);
+  P002_data_struct *P002_data =
+    static_cast<P002_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-    if (Plugin_002_OversamplingCount >= 3) {
-      sum   -= Plugin_002_OversamplingMaxVal;
-      sum   -= Plugin_002_OversamplingMinVal;
-      count -= 2;
-    }
-    float_value = sum / count;
-    raw_value   = static_cast<int16_t>(float_value);
-    success = true;
-  } else {
-    if (P002_performRead(event, raw_value)) {
-      float_value = static_cast<float>(raw_value);
+  if (nullptr != P002_data) {
+    if (PCONFIG(0) && P002_data->getOversamplingValue(float_value, raw_value)) {
       success = true;
     } else {
-      success = false;
+      if (P002_performRead(event, raw_value)) {
+        float_value = static_cast<float>(raw_value);
+        success = true;
+      }
     }
+    if (success) res_value = P002_applyCalibration(event, float_value);
   }
-  if (success) res_value = P002_applyCalibration(event, float_value);
   return success;
 }
 
