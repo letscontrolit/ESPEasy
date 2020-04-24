@@ -51,7 +51,6 @@ bool ethPrepare() {
     addLog(LOG_LEVEL_ERROR, F("ETH: Settings not correct!!!"));
     return false;
   }
-  ETH.setHostname(createRFCCompliantHostname(Settings.getHostname()).c_str());
   ETH.config(INADDR_NONE, INADDR_NONE, INADDR_NONE);
   ethSetupStaticIPconfig();
   return true;

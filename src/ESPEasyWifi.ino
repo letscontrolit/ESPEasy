@@ -73,11 +73,11 @@
 // - Start/stop of AP mode
 // ********************************************************************************
 bool WiFiConnected() {
-  START_TIMER;
-
   #ifdef HAS_ETHERNET
   return eth_connected;
-  #endif
+  #else
+
+  START_TIMER;
 
   if (unprocessedWifiEvents()) { return false; }
 
@@ -133,6 +133,7 @@ bool WiFiConnected() {
   delay(1);
   STOP_TIMER(WIFI_NOTCONNECTED_STATS);
   return false;
+  #endif // HAS_ETHERNET
 }
 
 void WiFiConnectRelaxed() {

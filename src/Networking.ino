@@ -354,7 +354,11 @@ void sendSysInfoUDP(byte repeats)
     for (byte x = 0; x < 6; x++) {
       data[x + 2] = macread[x];
     }
+    #ifdef HAS_ETHERNET
+    IPAddress ip = ETH.localIP();
+    #else
     IPAddress ip = WiFi.localIP();
+    #endif
 
     for (byte x = 0; x < 4; x++) {
       data[x + 8] = ip[x];
@@ -382,7 +386,11 @@ void sendSysInfoUDP(byte repeats)
 
   if (it != Nodes.end())
   {
+    #ifdef HAS_ETHERNET
+    IPAddress ip = ETH.localIP();
+    #else
     IPAddress ip = WiFi.localIP();
+    #endif
 
     for (byte x = 0; x < 4; x++) {
       it->second.ip[x] = ip[x];
@@ -752,8 +760,14 @@ bool getSubnetRange(IPAddress& low, IPAddress& high)
   if (wifiStatus < ESPEASY_WIFI_GOT_IP) {
     return false;
   }
-  const IPAddress ip     = WiFi.localIP();
+  #ifdef HAS_ETHERNET
+  const IPAddress ip = ETH.localIP();
+  const IPAddress subnet = ETH.subnetMask();
+  #else
+  const IPAddress ip = WiFi.localIP();
   const IPAddress subnet = WiFi.subnetMask();
+  #endif
+
   low  = ip;
   high = ip;
 
