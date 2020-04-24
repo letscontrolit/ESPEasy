@@ -7,7 +7,7 @@
 
 #define PLUGIN_222
 #define PLUGIN_ID_222 222
-#define PLUGIN_NAME_222       "Environment - Atlas Scientific ORP EZO [TESTING]"
+#define PLUGIN_NAME_222       "Environment - Atlas Scientific ORP EZO"
 #define PLUGIN_VALUENAME1_222 "ORP"
 #define PLUGIN_VALUENAME2_222 "Voltage"
 
@@ -286,13 +286,14 @@ bool _P222_send_I2C_command(uint8_t I2Caddress,const char * cmd, char* sensordat
     byte i2c_response_code = 0;
     byte in_char = 0;
 
-    Serial.println(cmd);
+    addLog(LOG_LEVEL_DEBUG, String(cmd));
     Wire.beginTransmission(I2Caddress);
     Wire.write(cmd);
     error = Wire.endTransmission();
 
     if (error != 0) {
-      Serial.println(error);
+      //addLog(LOG_LEVEL_ERROR, error);
+      addLog(LOG_LEVEL_ERROR, F("Wire.endTransmission() returns error: Check ORP shield"));
       return false;
     }
 
@@ -338,24 +339,27 @@ bool _P222_send_I2C_command(uint8_t I2Caddress,const char * cmd, char* sensordat
 
       switch (i2c_response_code) {
         case 1:
-          Serial.print( F("< success, answer = "));
-          Serial.println(sensordata);
+          {
+            String log = F("< success, answer = ");
+            log += sensordata;
+            addLog(LOG_LEVEL_DEBUG, log);
+          }
           break;
 
         case 2:
-          Serial.println( F("< command failed"));
+          addLog(LOG_LEVEL_DEBUG, F("< command failed"));
           return false;
 
         case 254:
-          Serial.println( F("< command pending"));
+          addLog(LOG_LEVEL_DEBUG, F("< command pending"));
           break;
 
         case 255:
-          Serial.println( F("< no data"));
+          addLog(LOG_LEVEL_DEBUG, F("< no data"));
           return false;
       }
     }
 
-    Serial.println(sensordata);
+    addLog(LOG_LEVEL_DEBUG, sensordata);
     return true;
 }

@@ -262,7 +262,7 @@ boolean Plugin_214(byte function, struct EventStruct *event, String& string)
         }
 
         char deviceTemperatureTemplate[40];
-        String tmpString = WebServer.arg(F("Plugin_214_temperature_template"));
+        String tmpString = web_server.arg(F("Plugin_214_temperature_template"));
         strncpy(deviceTemperatureTemplate, tmpString.c_str(), sizeof(deviceTemperatureTemplate)-1);
         deviceTemperatureTemplate[sizeof(deviceTemperatureTemplate)-1]=0; //be sure that our string ends with a \0
 
@@ -371,12 +371,14 @@ bool _P214_send_I2C_command(uint8_t I2Caddress,const char * cmd, char* sensordat
     byte i2c_response_code = 0;
     byte in_char = 0;
 
-    Serial.println(cmd);
+    addLog(LOG_LEVEL_DEBUG, String(cmd));
     Wire.beginTransmission(I2Caddress);
     Wire.write(cmd);
     error = Wire.endTransmission();
 
     if (error != 0) {
+      //addLog(LOG_LEVEL_ERROR, error);
+      addLog(LOG_LEVEL_ERROR, F("Wire.endTransmission() returns error: Check pH shield"));
       return false;
     }
 
@@ -422,24 +424,27 @@ bool _P214_send_I2C_command(uint8_t I2Caddress,const char * cmd, char* sensordat
 
       switch (i2c_response_code) {
         case 1:
-          Serial.print( F("< success, answer = "));
-          Serial.println(sensordata);
+          {
+            String log = F("< success, answer = ");
+            log += sensordata;
+            addLog(LOG_LEVEL_DEBUG, log);
+          }
           break;
 
         case 2:
-          Serial.println( F("< command failed"));
+          addLog(LOG_LEVEL_DEBUG, F("< command failed"));
           return false;
 
         case 254:
-          Serial.println( F("< command pending"));
+          addLog(LOG_LEVEL_DEBUG, F("< command pending"));
           break;
 
         case 255:
-          Serial.println( F("< no data"));
+          addLog(LOG_LEVEL_DEBUG, F("< no data"));
           return false;
       }
     }
 
-    Serial.println(sensordata);
+    addLog(LOG_LEVEL_DEBUG, sensordata);
     return true;
 }
