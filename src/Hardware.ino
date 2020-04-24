@@ -166,6 +166,7 @@ String getDeviceModelBrandString(DeviceModel model) {
     case DeviceModel_Sonoff_POW:
     case DeviceModel_Sonoff_POWr2:   return F("Sonoff");
     case DeviceModel_Shelly1:        return F("Shelly");
+    case DeviceMode_Olimex_ESP32_PoE: return F("Olimex");
 
     // case DeviceModel_default:
     default:        return "";
@@ -189,6 +190,7 @@ String getDeviceModelString(DeviceModel model) {
     case DeviceModel_Sonoff_POW:     result += F(" POW");     break;
     case DeviceModel_Sonoff_POWr2:   result += F(" POW-r2");  break;
     case DeviceModel_Shelly1:        result += '1';           break;
+    case DeviceMode_Olimex_ESP32_PoE: result += F(" ESP32-PoE"); break;
 
     // case DeviceModel_default:
     default:    result += F("default");
@@ -211,6 +213,7 @@ bool modelMatchingFlashSize(DeviceModel model) {
     case DeviceModel_Sonoff_POW:
     case DeviceModel_Sonoff_POWr2:   return size_MB == 4;
     case DeviceModel_Shelly1:        return size_MB == 2;
+    case DeviceMode_Olimex_ESP32_PoE:return size_MB == 4;
 
     // case DeviceModel_default:
     default:  return true;

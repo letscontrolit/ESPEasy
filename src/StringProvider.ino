@@ -97,6 +97,18 @@ String getLabel(LabelType::Enum label) {
     case LabelType::MAX_OTA_SKETCH_SIZE:    return F("Max. OTA Sketch Size");
     case LabelType::OTA_2STEP:              return F("OTA 2-step Needed");
     case LabelType::OTA_POSSIBLE:           return F("OTA possible");
+#ifdef HAS_ETHERNET
+    case LabelType::ETH_IP_ADDRESS:         return F("Eth IP Address");
+    case LabelType::ETH_IP_SUBNET:          return F("Eth IP Subnet");
+    case LabelType::ETH_IP_ADDRESS_SUBNET:  return F("Eth IP / Subnet");
+    case LabelType::ETH_IP_GATEWAY:         return F("Eth Gateway");
+    case LabelType::ETH_IP_DNS:             return F("Eth DNS");
+    case LabelType::ETH_MAC:                return F("Eth MAC");
+    case LabelType::ETH_DUPLEX:             return F("Eth Mode");
+    case LabelType::ETH_SPEED:              return F("Eth Speed");
+    case LabelType::ETH_STATE:              return F("Eth State");
+    case LabelType::ETH_SPEED_STATE:        return F("Eth State");
+#endif
 
   }
   return F("MissingString");
@@ -201,10 +213,47 @@ String getValue(LabelType::Enum label) {
     case LabelType::MAX_OTA_SKETCH_SIZE:    break;
     case LabelType::OTA_2STEP:              break;
     case LabelType::OTA_POSSIBLE:           break;
+#ifdef HAS_ETHERNET
+    case LabelType::ETH_IP_ADDRESS:         return ETH.localIP().toString();
+    case LabelType::ETH_IP_SUBNET:          return ETH.subnetMask().toString();
+    case LabelType::ETH_IP_ADDRESS_SUBNET:  return String(getValue(LabelType::ETH_IP_ADDRESS) + F(" / ") + getValue(LabelType::ETH_IP_SUBNET));
+    case LabelType::ETH_IP_GATEWAY:         return ETH.gatewayIP().toString();
+    case LabelType::ETH_IP_DNS:             return ETH.dnsIP().toString();
+    case LabelType::ETH_MAC:                return ETH.macAddress();
+    case LabelType::ETH_DUPLEX:             return ETH.fullDuplex() ? F("Full Duplex") : F("Half Duplex");
+    case LabelType::ETH_SPEED:              return getEthSpeed();
+    case LabelType::ETH_STATE:              return ETH.linkUp() ? F("Link Up") : F("Link Down");
+    case LabelType::ETH_SPEED_STATE:        return getEthLinkSpeedState();
+#endif
 
   }
   return F("MissingString");
 }
+
+#ifdef HAS_ETHERNET
+String getEthSpeed() {
+    String result;
+    result.reserve(7);
+    result += ETH.linkSpeed();
+    result += F("Mbps");
+    return result;
+}
+
+String getEthLinkSpeedState() {
+    String result;
+    result.reserve(29);
+    if (ETH.linkUp()) {
+        result += getValue(LabelType::ETH_STATE);
+        result += ' ';
+        result += getValue(LabelType::ETH_DUPLEX);
+        result += ' ';
+        result += getEthSpeed();
+    } else {
+        result = getValue(LabelType::ETH_STATE);
+    }
+    return result;
+}
+#endif
 
 String getExtendedValue(LabelType::Enum label) {
   switch (label)

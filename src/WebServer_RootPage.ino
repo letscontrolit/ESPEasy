@@ -120,6 +120,11 @@ void handle_root() {
       addHtml(html);
     }
 
+#ifdef HAS_ETHERNET
+    addRowLabelValue(LabelType::ETH_SPEED_STATE);
+    addRowLabelValue(LabelType::ETH_IP_ADDRESS);
+#endif
+
     #ifdef FEATURE_MDNS
     {
       addRowLabel(getLabel(LabelType::M_DNS));

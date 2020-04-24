@@ -203,7 +203,7 @@ bool prepareWiFi() {
   }
   setSTA(true);
   char hostname[40];
-  safe_strncpy(hostname, WifiGetHostname().c_str(), sizeof(hostname));
+  safe_strncpy(hostname, createRFCCompliantHostname(WifiGetAPssid()).c_str(), sizeof(hostname));
   #if defined(ESP8266)
   wifi_station_set_hostname(hostname);
 
@@ -512,18 +512,6 @@ bool WifiIsSTA(WiFiMode_t wifimode)
 String WifiGetAPssid()
 {
   return Settings.getHostname();
-}
-
-// ********************************************************************************
-// Determine hostname: basically WifiGetAPssid with spaces changed to -
-// ********************************************************************************
-String WifiGetHostname()
-{
-  String hostname(WifiGetAPssid());
-
-  hostname.replace(" ", "-");
-  hostname.replace("_", "-"); // See RFC952
-  return hostname;
 }
 
 bool useStaticIP() {

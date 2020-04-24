@@ -139,6 +139,10 @@ void SettingsStruct_tmpl<N_TASKS>::clearNetworkSettings() {
     Gateway[i] = 0;
     Subnet[i]  = 0;
     DNS[i]     = 0;
+    ETH_IP[i]       = 0;
+    ETH_Gateway[i]  = 0;
+    ETH_Subnet[i]   = 0;
+    ETH_DNS[i]      = 0;
   }
 }
 
@@ -206,6 +210,12 @@ void SettingsStruct_tmpl<N_TASKS>::clearMisc() {
   Pin_i2c_scl    = -1;
   Pin_status_led = -1;
   Pin_sd_cs      = -1;
+  ETH_Phy_Addr   = 0;
+  ETH_Pin_mdc    = -1;
+  ETH_Pin_mdio   = -1;
+  ETH_Pin_power  = -1;
+  ETH_Phy_Type   = 0;
+  ETH_Clock_Mode = 0;
 
   for (byte i = 0; i < 17; ++i) { PinBootStates[i] = 0; }
   BaudRate                         = 0;

@@ -370,6 +370,9 @@ void setup()
   }
 
   WiFiConnectRelaxed();
+#ifdef HAS_ETHERNET
+  ETHConnectRelaxed();
+#endif
 
   setWebserverRunning(true);
 

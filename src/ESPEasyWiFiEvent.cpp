@@ -99,6 +99,18 @@ void WiFiEvent(system_event_id_t event, system_event_info_t info) {
     case SYSTEM_EVENT_SCAN_DONE:
       processedScanDone = false;
       break;
+#ifdef HAS_ETHERNET
+    case SYSTEM_EVENT_ETH_START:
+      break;
+    case SYSTEM_EVENT_ETH_CONNECTED:
+      break;
+    case SYSTEM_EVENT_ETH_DISCONNECTED:
+      break;
+    case SYSTEM_EVENT_ETH_STOP:
+      break;
+    case SYSTEM_EVENT_ETH_GOT_IP:
+      break;
+#endif
     default:
       break;
   }

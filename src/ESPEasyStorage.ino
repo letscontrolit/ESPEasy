@@ -178,6 +178,14 @@ String BuildFixes()
     }
     #endif // USES_MQTT
   }
+  if (Settings.Build < 20107) {
+    Settings.ETH_Phy_Addr   = DEFAULT_ETH_PHY_ADDR;
+    Settings.ETH_Pin_mdc    = DEFAULT_ETH_PIN_MDC;
+    Settings.ETH_Pin_mdio   = DEFAULT_ETH_PIN_MDIO;
+    Settings.ETH_Pin_power  = DEFAULT_ETH_PIN_POWER;
+    Settings.ETH_Phy_Type   = DEFAULT_ETH_PHY_TYPE;
+    Settings.ETH_Clock_Mode = DEFAULT_ETH_CLOCK_MODE;
+  }
 
   Settings.Build = BUILD;
   return SaveSettings();
