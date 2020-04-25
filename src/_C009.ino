@@ -44,6 +44,7 @@ bool CPlugin_009(CPlugin::Function function, struct EventStruct *event, String& 
         Protocol[protocolCount].usesTemplate = false;
         Protocol[protocolCount].usesAccount = true;
         Protocol[protocolCount].usesPassword = true;
+        Protocol[protocolCount].usesExtCreds = true;
         Protocol[protocolCount].usesID = false;
         Protocol[protocolCount].defaultPort = 8383;
         break;
