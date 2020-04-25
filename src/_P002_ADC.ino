@@ -381,27 +381,27 @@ void P002_setEventParams(int pin, uint16_t threshold) {
   }
 }
 
-void P002_got_T0() IRAM_ATTR;
-void P002_got_T1() IRAM_ATTR;
-void P002_got_T2() IRAM_ATTR;
-void P002_got_T3() IRAM_ATTR;
-void P002_got_T4() IRAM_ATTR;
-void P002_got_T5() IRAM_ATTR;
-void P002_got_T6() IRAM_ATTR;
-void P002_got_T7() IRAM_ATTR;
-void P002_got_T8() IRAM_ATTR;
-void P002_got_T9() IRAM_ATTR;
+void P002_got_T0() ICACHE_RAM_ATTR;
+void P002_got_T1() ICACHE_RAM_ATTR;
+void P002_got_T2() ICACHE_RAM_ATTR;
+void P002_got_T3() ICACHE_RAM_ATTR;
+void P002_got_T4() ICACHE_RAM_ATTR;
+void P002_got_T5() ICACHE_RAM_ATTR;
+void P002_got_T6() ICACHE_RAM_ATTR;
+void P002_got_T7() ICACHE_RAM_ATTR;
+void P002_got_T8() ICACHE_RAM_ATTR;
+void P002_got_T9() ICACHE_RAM_ATTR;
 
-void P002_got_T0() { p002_pinTouched |= (1 << 0); }
-void P002_got_T1() { p002_pinTouched |= (1 << 1); }
-void P002_got_T2() { p002_pinTouched |= (1 << 2); }
-void P002_got_T3() { p002_pinTouched |= (1 << 3); }
-void P002_got_T4() { p002_pinTouched |= (1 << 4); }
-void P002_got_T5() { p002_pinTouched |= (1 << 5); }
-void P002_got_T6() { p002_pinTouched |= (1 << 6); }
-void P002_got_T7() { p002_pinTouched |= (1 << 7); }
-void P002_got_T8() { p002_pinTouched |= (1 << 8); }
-void P002_got_T9() { p002_pinTouched |= (1 << 9); }
+void P002_got_T0() { bitSet(p002_pinTouched, 0); }
+void P002_got_T1() { bitSet(p002_pinTouched, 1); }
+void P002_got_T2() { bitSet(p002_pinTouched, 2); }
+void P002_got_T3() { bitSet(p002_pinTouched, 3); }
+void P002_got_T4() { bitSet(p002_pinTouched, 4); }
+void P002_got_T5() { bitSet(p002_pinTouched, 5); }
+void P002_got_T6() { bitSet(p002_pinTouched, 6); }
+void P002_got_T7() { bitSet(p002_pinTouched, 7); }
+void P002_got_T8() { bitSet(p002_pinTouched, 8); }
+void P002_got_T9() { bitSet(p002_pinTouched, 9); }
 
 
 #endif // ifdef ESP32
