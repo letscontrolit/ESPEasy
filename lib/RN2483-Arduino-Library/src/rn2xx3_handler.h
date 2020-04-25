@@ -251,6 +251,7 @@ private:
   Active_cmd _processing_cmd = Active_cmd::none;
   bool _invalid_char_read    = false;
   bool _extensive_debug      = false; // Set this to true to log all steps in _lastError
+  uint16_t _max_received_length = 0;
 
 
   RN2xx3_datatypes::Model _moduleType = RN2xx3_datatypes::Model::RN_NA;
@@ -302,6 +303,9 @@ public:
   bool setAdaptiveDataRate(bool enabled);
   bool setAutomaticReply(bool enabled);
   bool setTXoutputPower(int pwridx);
+
+  // Send the autobaud sequence to try and wake the module.
+  void sendWakeSequence();
 };
 
 
