@@ -465,5 +465,24 @@ bool getADC_gpio_info(int gpio_pin, int& adc, int& ch, int& t)
   return true;
 }
 
+int touchPinToGpio(int touch_pin)
+{
+  switch(touch_pin) {
+    case 0: return T0;
+    case 1: return T1;
+    case 2: return T2;
+    case 3: return T3;
+    case 4: return T4;
+    case 5: return T5;
+    case 6: return T6;
+    case 7: return T7;
+    case 8: return T8;
+    case 9: return T9;
+    default:
+    break;    
+  }
+  return -1;
+}
+
 
 #endif

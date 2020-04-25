@@ -18,26 +18,13 @@
   # define P002_MAX_ADC_VALUE    1023
 #endif // ifdef ESP8266
 
-#define P002_NO_TOUCH            0
-#define P002_TOUCH               1
-#define P002_TOUCH_EVENT         2
-
 
 #define P002_OVERSAMPLING        PCONFIG(0)
-#define P002_READ_AS_TOUCH       PCONFIG(1)
-#define P002_TOUCH_THRESHOLD     PCONFIG(2)
 #define P002_CALIBRATION_ENABLED PCONFIG(3)
 #define P002_CALIBRATION_POINT1  PCONFIG_LONG(0)
 #define P002_CALIBRATION_POINT2  PCONFIG_LONG(1)
 #define P002_CALIBRATION_VALUE1  PCONFIG_FLOAT(0)
 #define P002_CALIBRATION_VALUE2  PCONFIG_FLOAT(1)
-
-#ifdef ESP32
-
-// Share this bitmap among all instances of this plugin
-DRAM_ATTR uint32_t p002_pinTouched = 0;
-
-#endif // ifdef ESP32
 
 struct P002_data_struct : public PluginTaskData_base {
   P002_data_struct() {}
@@ -140,16 +127,7 @@ boolean Plugin_002(byte function, struct EventStruct *event, String& string)
     {
       #if defined(ESP32)
       addHtml(F("<TR><TD>Analog Pin:<TD>"));
-      addADC_PinSelect(F("taskdevicepin1"), CONFIG_PIN1);
-
-      {
-        String options[3] = { F("No Touch"), F("Touch"), F("Touch + Event") };
-        int    values[3]  = { P002_NO_TOUCH, P002_TOUCH, P002_TOUCH_EVENT };
-        addFormSelector(F("Read as Touch Sensor"), F("p002_readtouch"), 3, options, values, P002_READ_AS_TOUCH);
-      }
-
-      addFormNumericBox(F("Touch Threshold"), F("p002_threshold"), P002_TOUCH_THRESHOLD, 0, P002_MAX_ADC_VALUE);
-      addFormNote(F("Used to trigger an event"));
+      addADC_PinSelect(false, F("taskdevicepin1"), CONFIG_PIN1);
 
       #endif // if defined(ESP32)
 
@@ -181,7 +159,7 @@ boolean Plugin_002(byte function, struct EventStruct *event, String& string)
           P002_formatStatistics(F("Maximum"),   P002_MAX_ADC_VALUE, P002_applyCalibration(event, P002_MAX_ADC_VALUE));
 
           float stepsize = P002_applyCalibration(event, 1.0) - P002_applyCalibration(event, 0.0);
-          P002_formatStatistics(F("Step size"), 1,                               stepsize);
+          P002_formatStatistics(F("Step size"), 1,                  stepsize);
         }
       }
 
@@ -191,10 +169,6 @@ boolean Plugin_002(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      #ifdef ESP32
-      P002_READ_AS_TOUCH   = getFormItemInt(F("p002_readtouch"));
-      P002_TOUCH_THRESHOLD = getFormItemInt(F("p002_threshold"));
-      #endif // ifdef ESP32
       P002_OVERSAMPLING = isFormItemChecked(F("p002_oversampling"));
 
       P002_CALIBRATION_ENABLED = isFormItemChecked(F("p002_cal"));
@@ -222,12 +196,6 @@ boolean Plugin_002(byte function, struct EventStruct *event, String& string)
         static_cast<P002_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       success = (nullptr != P002_data);
-      #ifdef ESP32
-
-      if (P002_READ_AS_TOUCH == P002_TOUCH_EVENT) {
-        P002_setEventParams(CONFIG_PIN1, P002_TOUCH_THRESHOLD);
-      }
-      #endif // ifdef ESP32
       break;
     }
     case PLUGIN_TEN_PER_SECOND:
@@ -244,23 +212,6 @@ boolean Plugin_002(byte function, struct EventStruct *event, String& string)
           P002_data->addOversamplingValue(currentValue);
         }
       }
-      #ifdef ESP32
-
-      if (p002_pinTouched != 0) {
-        // Some pin has been touched. Try to find which pin it was and send event.
-        for (unsigned int i = 0; i < 10; ++i) {
-          if (p002_pinTouched & (1 << i)) {
-            p002_pinTouched &= ~(1 << i); // reset bit
-
-            if (Settings.UseRules) {
-              String eventString = F("ADCtouch=");
-              eventString += i;
-              eventQueue.add(eventString);
-            }
-          }
-        }
-      }
-      #endif // ifdef ESP32
       success = true;
       break;
     }
@@ -346,7 +297,7 @@ void P002_performRead(struct EventStruct *event, int& value) {
   value = espeasy_analogRead(A0);
   #endif // if defined(ESP8266)
   #if defined(ESP32)
-  value = espeasy_analogRead(CONFIG_PIN1, P002_READ_AS_TOUCH != P002_NO_TOUCH);
+  value = espeasy_analogRead(CONFIG_PIN1);
   #endif // if defined(ESP32)
 }
 
@@ -356,55 +307,5 @@ void P002_formatStatistics(const String& label, int raw, float float_value) {
   html_add_estimate_symbol();
   addHtml(String(float_value, 3));
 }
-
-#ifdef ESP32
-
-/**********************************************************************************
-* Touch pin configuration
-**********************************************************************************/
-void P002_setEventParams(int pin, uint16_t threshold) {
-  int adc, ch, t;
-
-  if (getADC_gpio_info(pin, adc, ch, t)) {
-    switch (t) {
-      case 0: touchAttachInterrupt(T0, P002_got_T0, threshold); break;
-      case 1: touchAttachInterrupt(T1, P002_got_T1, threshold); break;
-      case 2: touchAttachInterrupt(T2, P002_got_T2, threshold); break;
-      case 3: touchAttachInterrupt(T3, P002_got_T3, threshold); break;
-      case 4: touchAttachInterrupt(T4, P002_got_T4, threshold); break;
-      case 5: touchAttachInterrupt(T5, P002_got_T5, threshold); break;
-      case 6: touchAttachInterrupt(T6, P002_got_T6, threshold); break;
-      case 7: touchAttachInterrupt(T7, P002_got_T7, threshold); break;
-      case 8: touchAttachInterrupt(T8, P002_got_T8, threshold); break;
-      case 9: touchAttachInterrupt(T9, P002_got_T9, threshold); break;
-    }
-  }
-}
-
-void P002_got_T0() ICACHE_RAM_ATTR;
-void P002_got_T1() ICACHE_RAM_ATTR;
-void P002_got_T2() ICACHE_RAM_ATTR;
-void P002_got_T3() ICACHE_RAM_ATTR;
-void P002_got_T4() ICACHE_RAM_ATTR;
-void P002_got_T5() ICACHE_RAM_ATTR;
-void P002_got_T6() ICACHE_RAM_ATTR;
-void P002_got_T7() ICACHE_RAM_ATTR;
-void P002_got_T8() ICACHE_RAM_ATTR;
-void P002_got_T9() ICACHE_RAM_ATTR;
-
-void P002_got_T0() { bitSet(p002_pinTouched, 0); }
-void P002_got_T1() { bitSet(p002_pinTouched, 1); }
-void P002_got_T2() { bitSet(p002_pinTouched, 2); }
-void P002_got_T3() { bitSet(p002_pinTouched, 3); }
-void P002_got_T4() { bitSet(p002_pinTouched, 4); }
-void P002_got_T5() { bitSet(p002_pinTouched, 5); }
-void P002_got_T6() { bitSet(p002_pinTouched, 6); }
-void P002_got_T7() { bitSet(p002_pinTouched, 7); }
-void P002_got_T8() { bitSet(p002_pinTouched, 8); }
-void P002_got_T9() { bitSet(p002_pinTouched, 9); }
-
-
-#endif // ifdef ESP32
-
 
 #endif // USES_P002
