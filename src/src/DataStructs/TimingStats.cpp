@@ -172,7 +172,7 @@ bool mustLogCFunction(CPlugin::Function function) {
     case CPlugin::Function::CPLUGIN_UDP_IN:                    return true;
     case CPlugin::Function::CPLUGIN_FLUSH:                     return false;
     case CPlugin::Function::CPLUGIN_TEN_PER_SECOND:            return true;
-    case CPlugin::Function::CPLUGIN_FIFTY_PER_SECOND:          return false;
+    case CPlugin::Function::CPLUGIN_FIFTY_PER_SECOND:          return true;
     case CPlugin::Function::CPLUGIN_INIT_ALL:                  return false;
     case CPlugin::Function::CPLUGIN_EXIT:                      return false;
 

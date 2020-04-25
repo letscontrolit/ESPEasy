@@ -30,7 +30,9 @@ String rn2xx3_handler::sendRawCommand(const String& command)
     log += '(';
     log += String(millis() - timer);
     log += ')';
-    setLastError(log);
+    log += F(" max length: ");
+    log += _max_received_length;
+    setLastError(log);    
   }
 
   ret.trim();
@@ -169,6 +171,9 @@ rn2xx3_handler::RN_state rn2xx3_handler::async_loop()
       break;
 
     case RN_state::timeout:
+      sendWakeSequence();
+      break;
+
     case RN_state::max_attempt_reached:
     case RN_state::error:
     case RN_state::duty_cycle_exceeded:
@@ -812,6 +817,9 @@ bool rn2xx3_handler::read_line()
       _receivedData += character;
 
       if (character == '\n') {
+        if (_receivedData.length() > _max_received_length) {
+          _max_received_length = _receivedData.length();
+        }
         return true;
       }
       if (available == 0) {
@@ -1236,6 +1244,13 @@ bool rn2xx3_handler::setTXoutputPower(int pwridx)
   return sendMacSet(F("pwridx"), String(pwridx));
 }
 
+void rn2xx3_handler::sendWakeSequence()
+{
+  _serial.write(static_cast<uint8_t>(0x00));
+  _serial.write(static_cast<uint8_t>(0x55));
+  _serial.println();
+}
+
 bool rn2xx3_handler::check_set_keys()
 {
   // Strings are in HEX, so 1 character per 4 bits.
@@ -1256,6 +1271,10 @@ bool rn2xx3_handler::check_set_keys()
     rn2xx3_helper::isHexStr_of_length(_nwkskey, 32) &&
     rn2xx3_helper::isHexStr_of_length(_appskey, 32) &&
     rn2xx3_helper::isHexStr_of_length(_devaddr, 8);
+
+  if (!otaa_set && !abp_set) {
+    return false;
+  }
 
   if (_otaa && otaa_set) {
     if (!abp_set) {
