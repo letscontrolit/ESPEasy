@@ -43,10 +43,15 @@ bool ESPeasySerial::_serial0_swap_active = false;
 ESPeasySerial::ESPeasySerial(int receivePin, int transmitPin, bool inverse_logic, unsigned int buffSize, bool forceSWserial)
   : _i2cserial(nullptr), _swserial(nullptr), _receivePin(receivePin), _transmitPin(transmitPin)
 {
+  _serialtype = ESPeasySerialType::getSerialType(receivePin, transmitPin);
   if (forceSWserial) {
-    _serialtype = ESPeasySerialType::serialtype::software;
-  } else {
-    _serialtype = ESPeasySerialType::getSerialType(receivePin, transmitPin);
+    switch (_serialtype) {
+      case ESPeasySerialType::serialtype::sc16is752:
+        break;
+      default:
+        _serialtype = ESPeasySerialType::serialtype::software;
+        break;
+    }    
   }
 
   switch (_serialtype) {

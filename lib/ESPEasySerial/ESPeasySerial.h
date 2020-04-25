@@ -325,6 +325,10 @@ public:
     return _baud;
   }
 
+  bool useGPIOpins() const {
+    return _serialtype != ESPeasySerialType::serialtype::sc16is752;
+  }
+
 private:
 
   const HardwareSerial* getHW() const;

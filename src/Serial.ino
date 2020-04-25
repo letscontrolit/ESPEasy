@@ -73,10 +73,7 @@ void addNewlineToSerialBuffer() {
 
 void process_serialWriteBuffer() {
   if (serialWriteBuffer.size() == 0) { return; }
-  size_t snip = 128; // Some default, ESP32 doesn't have the availableForWrite function yet.
-#if defined(ESP8266)
-  snip = Serial.availableForWrite();
-#endif // if defined(ESP8266)
+  size_t snip = Serial.availableForWrite();
 
   if (snip > 0) {
     size_t bytes_to_write = serialWriteBuffer.size();

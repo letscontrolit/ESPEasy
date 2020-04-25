@@ -212,6 +212,7 @@ String rulesProcessingFile(const String& fileName, String& event) {
         {
           // Line end, parse rule
           line.trim();
+          check_rules_line_user_errors(line);
           const size_t lineLength = line.length();
 
           if (lineLength > longestLineSize) {
@@ -284,6 +285,66 @@ String rulesProcessingFile(const String& fileName, String& event) {
   nestingLevel--;
   checkRAM(F("rulesProcessingFile2"));
   return "";
+}
+
+
+/********************************************************************************************\
+   Strip comment from the line.
+   Return true when comment was stripped.
+ \*********************************************************************************************/
+bool rules_strip_trailing_comments(String& line)
+{
+   // Strip trailing comments
+  int comment = line.indexOf(F("//"));
+
+  if (comment >= 0) {
+    line = line.substring(0, comment);
+    line.trim();
+    return true;
+  }
+  return false; 
+}
+
+/********************************************************************************************\
+   Test for common mistake
+   Return true if mistake was found (and corrected)
+ \*********************************************************************************************/
+bool rules_replace_common_mistakes(const String& from, const String& to, String& line)
+{
+  if (line.indexOf(from) == -1) {
+    return false; // Nothing replaced
+  }
+  if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+    String log;
+    log.reserve(32 + from.length() + to.length() + line.length());
+    log = F("Rules (Syntax Error, auto-corrected): '");
+    log += from;
+    log += F("' => '");
+    log += to;
+    log += F("' in: '");
+    log += line;
+    log += '\'';
+    addLog(LOG_LEVEL_ERROR, log);
+  }
+  line.replace(from, to);
+  return true;
+}
+
+/********************************************************************************************\
+   Check for common mistakes
+   Return true if nothing strange found
+ \*********************************************************************************************/
+bool check_rules_line_user_errors(String& line)
+{
+  bool res = true;
+  if (rules_replace_common_mistakes(F("if["), F("if ["), line)) {
+    res = false;
+  }
+  if (rules_replace_common_mistakes(F("if%"), F("if %"), line)) {
+    res = false;
+  }
+
+  return res;
 }
 
 
@@ -479,13 +540,7 @@ void parseCompleteNonCommentLine(String& line, String& event, String& log,
 
   isCommand = true;
 
-  // Strip trailing comments
-  int comment = line.indexOf(F("//"));
-
-  if (comment >= 0) {
-    line = line.substring(0, comment);
-  }
-  line.trim();
+  rules_strip_trailing_comments(line);
 
   if (match || !codeBlock) {
     // only parse [xxx#yyy] if we have a matching ruleblock or need to eval the
@@ -621,7 +676,8 @@ void processMatchedRule(String& action, String& event,
       }
     }
   } else {
-    split = lcAction.indexOf(F("if ")); // check for optional "if" condition
+     // check for optional "if" condition
+    split = lcAction.indexOf(F("if "));
 
     if (split != -1) {
       if (ifBlock < RULES_IF_MAX_NESTING_LEVEL) {
