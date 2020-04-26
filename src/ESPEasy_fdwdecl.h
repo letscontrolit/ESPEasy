@@ -66,8 +66,8 @@ bool     connectClient(WiFiClient& client,
 
 
 String getWifiModeString(WiFiMode_t wifimode);
-bool   WiFiConnected(uint32_t timeout_ms);
-bool   WiFiConnected();
+bool   NetworkConnected(uint32_t timeout_ms);
+bool   NetworkConnected();
 bool   useStaticIP();
 bool   hostReachable(const IPAddress& ip);
 bool   hostReachable(const String& hostname);
@@ -187,10 +187,23 @@ bool SourceNeedsStatusUpdate(byte eventSource);
 
 void WifiScan(bool async, bool quick = false);
 void WifiScan();
-void WiFiConnectRelaxed();
 void WifiDisconnect();
 void setAP(bool enable);
 void setSTA(bool enable);
+
+// Used for Networking with Wifi or Ethernet
+#include "ESPEasyEthWifi.h"
+void NetworkConnectRelaxed();
+bool NetworkConnected();
+IPAddress NetworkLocalIP();
+IPAddress NetworkSubnetMask();
+IPAddress NetworkGatewayIP();
+IPAddress NetworkDnsIP (uint8_t dns_no=0);
+// TODO: PKR: Change to NetworkMacAddress
+//uint8_t * NetworkMacAddress(uint8_t* mac);
+String NetworkMacAddress();
+String WifiGetAPssid();
+String createRFCCompliantHostname(String oldString);
 
 #include "src/Globals/ESPEasyWiFiEvent.h"
 

@@ -62,6 +62,10 @@ void handle_sysvars() {
   addTableSeparator(F("System status"), 3, 3);
 
   addSysVar_enum_html(SystemVariables::ISWIFI);
+  #ifdef HAS_ETHERNET
+  addSysVar_enum_html(SystemVariables::ETH_WIFI_MODE);
+  addSysVar_enum_html(SystemVariables::ETH_CONNECTED);
+  #endif
   addSysVar_enum_html(SystemVariables::ISNTP);
   addSysVar_enum_html(SystemVariables::ISMQTT);
 #ifdef USES_P037

@@ -87,7 +87,7 @@ bool CPlugin_006(CPlugin::Function function, struct EventStruct *event, String& 
 
     case CPlugin::Function::CPLUGIN_PROTOCOL_SEND:
       {
-        if (!WiFiConnected(10)) {
+        if (!NetworkConnected(10)) {
           success = false;
           break;
         }

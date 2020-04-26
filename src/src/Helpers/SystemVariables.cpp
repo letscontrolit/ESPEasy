@@ -89,6 +89,10 @@ void SystemVariables::parseSystemVariables(String& s, boolean useURLencode)
 
       case ISNTP:             value = String(statusNTPInitialized); break;
       case ISWIFI:            value = String(wifiStatus); break; // 0=disconnected, 1=connected, 2=got ip, 3=services initialized
+      #ifdef HAS_ETHERNET
+      case ETH_WIFI_MODE:     value = (eth_wifi_mode == WIFI ? "WIFI" : "ETHERNET"); break; // 0=WIFI, 1=ETH
+      case ETH_CONNECTED:     value = String(eth_connected); break; // 0=disconnected, 1=connected
+      #endif
       case LCLTIME:           value = getValue(LabelType::LOCAL_TIME); break;
       case LCLTIME_AM:        value = node_time.getDateTimeString_ampm('-', ':', ' '); break;
       case LF:                value = "\n"; break;
@@ -243,6 +247,10 @@ String SystemVariables::toString(SystemVariables::Enum enumval)
     case Enum::ISMQTTIMP:       return F("%ismqttimp%");
     case Enum::ISNTP:           return F("%isntp%");
     case Enum::ISWIFI:          return F("%iswifi%");
+    #ifdef HAS_ETHERNET
+    case Enum::ETH_WIFI_MODE:   return F("%eth_wifi_mode%");
+    case Enum::ETH_CONNECTED:   return F("%eth_connected%");
+    #endif
     case Enum::LCLTIME:         return F("%lcltime%");
     case Enum::LCLTIME_AM:      return F("%lcltime_am%");
     case Enum::LF:              return F("%LF%");

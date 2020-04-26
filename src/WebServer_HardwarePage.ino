@@ -28,6 +28,7 @@ void handle_hardware() {
     Settings.ETH_Pin_power           = getFormItemInt(F("ethpower"));
     Settings.ETH_Phy_Type            = getFormItemInt(F("ethtype"));
     Settings.ETH_Clock_Mode          = getFormItemInt(F("ethclock"));
+    Settings.ETH_Wifi_Mode           = getFormItemInt(F("ethwifi"));
 #endif
     int gpio = 0;
 
@@ -85,11 +86,15 @@ void handle_hardware() {
 #endif // ifdef FEATURE_SD
 #ifdef HAS_ETHERNET
   addFormSubHeader(F("Ethernet"));
+  addRowLabel_tr_id(F("Ethernet or WIFI?"), "ethwifi");
+  String ethWifiOptions[2] = { F("WIFI"), F("ETHERNET") };
+  addSelector("ethwifi", 2, ethWifiOptions, NULL, NULL, Settings.ETH_Wifi_Mode, false, true);
+  addFormNote(F("Note: Change Switch between WIFI and ETHERNET requires reboot to activate"));
   addRowLabel_tr_id(F("Ethernet PHY type"), "ethtype");
   String ethPhyTypes[2] = { F("LAN8710"), F("TLK110") };
   addSelector("ethtype", 2, ethPhyTypes, NULL, NULL, Settings.ETH_Phy_Type, false, true);
   addFormNumericBox(F("Ethernet PHY Address"), "ethphy", Settings.ETH_Phy_Addr, 0, 255);
-  addFormNote(F("I&sup2;C-address of Ethernet PHY (0 or 1 for LAN8720, 31 for TLK110)"));
+  addFormNote(F("Note: I&sup2;C-address of Ethernet PHY (0 or 1 for LAN8720, 31 for TLK110)"));
   addFormPinSelect(formatGpioName_output("Ethernet MDC pin"), "ethmdc", Settings.ETH_Pin_mdc);
   addFormPinSelect(formatGpioName_input("Ethernet MIO pin"), "ethmdio", Settings.ETH_Pin_mdio);
   addFormPinSelect(formatGpioName_output("Ethernet Power pin"), "ethpower", Settings.ETH_Pin_power);

@@ -204,7 +204,7 @@ void processGotIP() {
   if (processedGotIP) {
     return;
   }
-  IPAddress ip = WiFi.localIP();
+  IPAddress ip = NetworkLocalIP();
 
   if (!useStaticIP()) {
     if ((ip[0] == 0) && (ip[1] == 0) && (ip[2] == 0) && (ip[3] == 0)) {
@@ -213,8 +213,8 @@ void processGotIP() {
   }
   processedGotIP = true;
   wifiStatus    |= ESPEASY_WIFI_GOT_IP;
-  const IPAddress gw       = WiFi.gatewayIP();
-  const IPAddress subnet   = WiFi.subnetMask();
+  const IPAddress gw       = NetworkGatewayIP();
+  const IPAddress subnet   = NetworkSubnetMask();
   const long dhcp_duration = timeDiff(lastConnectMoment, lastGetIPmoment);
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {

@@ -17,6 +17,8 @@ public:
     ISMQTTIMP,
     ISNTP,
     ISWIFI,
+    ETH_WIFI_MODE,
+    ETH_CONNECTED,
     LCLTIME,
     LCLTIME_AM,
     LF,

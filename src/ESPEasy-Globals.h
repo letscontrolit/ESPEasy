@@ -224,6 +224,11 @@ extern bool statusNTPInitialized;
 // udp protocol stuff (syslog, global sync, node info list, ntp time)
 extern WiFiUDP portUDP;
 
+// Ethernet Connectiopn status
+#ifdef HAS_ETHERNET
+extern uint8_t eth_wifi_mode;
+extern bool eth_connected;
+#endif
 
 
 
@@ -430,6 +435,7 @@ struct GpioFactorySettingsStruct {
         i2c_scl = 5;
         eth_power = 12;
         eth_clock_mode = 3;
+        eth_wifi_mode = 1;
         break;
 
       // case DeviceModel_default: break;
@@ -448,6 +454,7 @@ struct GpioFactorySettingsStruct {
   int8_t eth_mdio = DEFAULT_ETH_PIN_MDIO;
   int8_t eth_power = DEFAULT_ETH_PIN_POWER;
   int8_t eth_clock_mode = DEFAULT_ETH_CLOCK_MODE;
+  int8_t eth_wifi_mode = DEFAULT_ETH_WIFI_MODE;
 };
 
 void addPredefinedPlugins(const GpioFactorySettingsStruct& gpio_settings);

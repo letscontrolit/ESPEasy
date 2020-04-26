@@ -60,15 +60,16 @@ void handle_sysinfo_json() {
   }
   json_number(F("rssi"), String(WiFi.RSSI()));
   json_prop(F("dhcp"),          useStaticIP() ? getLabel(LabelType::IP_CONFIG_STATIC) : getLabel(LabelType::IP_CONFIG_DYNAMIC));
-  json_prop(F("ip"),            formatIP(WiFi.localIP()));
-  json_prop(F("subnet"),        formatIP(WiFi.subnetMask()));
-  json_prop(F("gw"),            formatIP(WiFi.gatewayIP()));
-  json_prop(F("dns1"),          formatIP(WiFi.dnsIP(0)));
-  json_prop(F("dns2"),          formatIP(WiFi.dnsIP(1)));
+  json_prop(F("ip"),            formatIP(NetworkLocalIP()));
+  json_prop(F("subnet"),        formatIP(NetworkSubnetMask()));
+  json_prop(F("gw"),            formatIP(NetworkGatewayIP()));
+  json_prop(F("dns1"),          formatIP(NetworkDnsIP(0)));
+  json_prop(F("dns2"),          formatIP(NetworkDnsIP(1)));
   json_prop(F("allowed_range"), describeAllowedIPrange());
 
 
   uint8_t  mac[]   = { 0, 0, 0, 0, 0, 0 };
+// TODO: PKR: Change to NetworkMacAddress
   uint8_t *macread = WiFi.macAddress(mac);
   char     macaddress[20];
   formatMAC(macread, macaddress);
@@ -313,25 +314,32 @@ void handle_sysinfo_basicInfo() {
   addRowLabelValue(LabelType::RESET_REASON);
   addRowLabelValue(LabelType::LAST_TASK_BEFORE_REBOOT);
   addRowLabelValue(LabelType::SW_WD_COUNT);
+
+  #ifdef HAS_ETHERNET
+  addRowLabel(F("Network Type"));
+  addRowLabelValue(LabelType::ETH_WIFI_MODE);
+  #endif
 }
 
 #ifdef HAS_ETHERNET
 void handle_sysinfo_Ethernet() {
-    addTableSeparator(F("Ethernet"), 2, 3);
-    addRowLabelValue(LabelType::ETH_STATE);
-    addRowLabelValue(LabelType::ETH_SPEED);
-    addRowLabelValue(LabelType::ETH_DUPLEX);
-    addRowLabelValue(LabelType::ETH_MAC);
-    addRowLabelValue(LabelType::ETH_IP_ADDRESS_SUBNET);
-    addRowLabelValue(LabelType::ETH_IP_GATEWAY);
-    addRowLabelValue(LabelType::ETH_IP_DNS);
+    if(eth_wifi_mode == ETHERNET) {
+      addTableSeparator(F("Ethernet"), 2, 3);
+      addRowLabelValue(LabelType::ETH_STATE);
+      addRowLabelValue(LabelType::ETH_SPEED);
+      addRowLabelValue(LabelType::ETH_DUPLEX);
+      addRowLabelValue(LabelType::ETH_MAC);
+      addRowLabelValue(LabelType::ETH_IP_ADDRESS_SUBNET);
+      addRowLabelValue(LabelType::ETH_IP_GATEWAY);
+      addRowLabelValue(LabelType::ETH_IP_DNS);
+    }
 }
 #endif
 
 void handle_sysinfo_Network() {
   addTableSeparator(F("Network"), 2, 3, F("Wifi"));
 
-  if (WiFiConnected())
+  if (eth_wifi_mode == WIFI && NetworkConnected())
   {
     addRowLabel(F("Wifi"));
     # if defined(ESP8266)
@@ -373,6 +381,7 @@ void handle_sysinfo_Network() {
 
   {
     uint8_t  mac[]   = { 0, 0, 0, 0, 0, 0 };
+// TODO: PKR: Change to NetworkMacAddress
     uint8_t *macread = WiFi.macAddress(mac);
     char     macaddress[20];
     formatMAC(macread, macaddress);

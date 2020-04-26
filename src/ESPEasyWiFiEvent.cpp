@@ -1,11 +1,17 @@
+#include "ETH.h"
 #include "ESPEasyWiFiEvent.h"
 #include "src/Globals/ESPEasyWiFiEvent.h"
 #include "src/Globals/RTC.h"
 #include "ESPEasyTimeTypes.h"
+#include "ESPEasy_Log.h"
 
 #include "src/DataStructs/RTCStruct.h"
 
 #include "src/Helpers/ESPEasy_time_calc.h"
+
+#ifdef HAS_ETHERNET
+extern bool eth_connected;
+#endif
 
 #ifdef ESP32
 void WiFi_Access_Static_IP::set_use_static_ip(bool enabled) {
@@ -99,18 +105,6 @@ void WiFiEvent(system_event_id_t event, system_event_info_t info) {
     case SYSTEM_EVENT_SCAN_DONE:
       processedScanDone = false;
       break;
-#ifdef HAS_ETHERNET
-    case SYSTEM_EVENT_ETH_START:
-      break;
-    case SYSTEM_EVENT_ETH_CONNECTED:
-      break;
-    case SYSTEM_EVENT_ETH_DISCONNECTED:
-      break;
-    case SYSTEM_EVENT_ETH_STOP:
-      break;
-    case SYSTEM_EVENT_ETH_GOT_IP:
-      break;
-#endif
     default:
       break;
   }

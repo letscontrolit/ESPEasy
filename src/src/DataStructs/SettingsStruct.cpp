@@ -216,6 +216,7 @@ void SettingsStruct_tmpl<N_TASKS>::clearMisc() {
   ETH_Pin_power  = -1;
   ETH_Phy_Type   = 0;
   ETH_Clock_Mode = 0;
+  ETH_Wifi_Mode = 0;
 
   for (byte i = 0; i < 17; ++i) { PinBootStates[i] = 0; }
   BaudRate                         = 0;

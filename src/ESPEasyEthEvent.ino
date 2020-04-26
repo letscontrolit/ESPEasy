@@ -40,6 +40,9 @@ void ETHEvent(WiFiEvent_t event)
       addLog(LOG_LEVEL_INFO, F("ETH Stopped"));
       eth_connected = false;
       break;
+    case SYSTEM_EVENT_GOT_IP6:
+      addLog(LOG_LEVEL_INFO, F("ETH Got IP6"));
+      break;
     default:
       break;
   }

@@ -107,7 +107,8 @@ String getLabel(LabelType::Enum label) {
     case LabelType::ETH_DUPLEX:             return F("Eth Mode");
     case LabelType::ETH_SPEED:              return F("Eth Speed");
     case LabelType::ETH_STATE:              return F("Eth State");
-    case LabelType::ETH_SPEED_STATE:        return F("Eth State");
+    case LabelType::ETH_SPEED_STATE:        return F("Eth Speed State");
+    case LabelType::ETH_WIFI_MODE:          return F("Eth Wifi Mode");
 #endif
 
   }
@@ -152,19 +153,19 @@ String getValue(LabelType::Enum label) {
     case LabelType::IP_CONFIG:              return useStaticIP() ? getLabel(LabelType::IP_CONFIG_STATIC) : getLabel(LabelType::IP_CONFIG_DYNAMIC);
     case LabelType::IP_CONFIG_STATIC:       break;
     case LabelType::IP_CONFIG_DYNAMIC:      break;
-    case LabelType::IP_ADDRESS:             return WiFi.localIP().toString();
+    case LabelType::IP_ADDRESS:             return NetworkLocalIP().toString();
     case LabelType::IP_SUBNET:              return WiFi.subnetMask().toString();
     case LabelType::IP_ADDRESS_SUBNET:      return String(getValue(LabelType::IP_ADDRESS) + F(" / ") + getValue(LabelType::IP_SUBNET));
-    case LabelType::GATEWAY:                return WiFi.gatewayIP().toString();
+    case LabelType::GATEWAY:                return NetworkGatewayIP().toString();
     case LabelType::CLIENT_IP:              return formatIP(web_server.client().remoteIP());
     #ifdef FEATURE_MDNS
     case LabelType::M_DNS:                  return String(WifiGetHostname()) + F(".local");
     #endif
     case LabelType::DNS:                    return String(getValue(LabelType::DNS_1) + F(" / ") + getValue(LabelType::DNS_2));
-    case LabelType::DNS_1:                  return WiFi.dnsIP(0).toString();
-    case LabelType::DNS_2:                  return WiFi.dnsIP(1).toString();
+    case LabelType::DNS_1:                  return NetworkDnsIP(0).toString();
+    case LabelType::DNS_2:                  return NetworkDnsIP(1).toString();
     case LabelType::ALLOWED_IP_RANGE:       return describeAllowedIPrange();
-    case LabelType::STA_MAC:                return WiFi.macAddress();
+    case LabelType::STA_MAC:                return NetworkMacAddress();
     case LabelType::AP_MAC:                 break;
     case LabelType::SSID:                   return WiFi.SSID();
     case LabelType::BSSID:                  return WiFi.BSSIDstr();
@@ -224,6 +225,8 @@ String getValue(LabelType::Enum label) {
     case LabelType::ETH_SPEED:              return getEthSpeed();
     case LabelType::ETH_STATE:              return ETH.linkUp() ? F("Link Up") : F("Link Down");
     case LabelType::ETH_SPEED_STATE:        return getEthLinkSpeedState();
+    // TODO: PKR: Same as ethwifidebug
+    case LabelType::ETH_WIFI_MODE:          return (eth_wifi_mode == WIFI ? F("WIFI") : F("ETHERNET"));
 #endif
 
   }

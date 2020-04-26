@@ -108,6 +108,7 @@ enum Enum : short {
   ETH_SPEED,
   ETH_STATE,
   ETH_SPEED_STATE,
+  ETH_WIFI_MODE,
 #endif
 
 };

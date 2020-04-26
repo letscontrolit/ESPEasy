@@ -85,7 +85,7 @@ void ControllerSettingsStruct::setHostname(const String& controllerhostname) {
 }
 
 boolean ControllerSettingsStruct::checkHostReachable(bool quick) {
-  if (!WiFiConnected(10)) {
+  if (!NetworkConnected(10)) {
     return false; // Not connected, so no use in wasting time to connect to a host.
   }
   delay(1);       // Make sure the Watchdog will not trigger a reset.
@@ -166,7 +166,7 @@ bool ControllerSettingsStruct::updateIPcache() {
     return true;
   }
 
-  if (!WiFiConnected()) { return false; }
+  if (!NetworkConnected()) { return false; }
   IPAddress tmpIP;
 
   if (resolveHostByName(HostName, tmpIP)) {

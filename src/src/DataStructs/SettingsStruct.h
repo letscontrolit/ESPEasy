@@ -187,6 +187,7 @@ class SettingsStruct_tmpl
   byte          ETH_Gateway[4];
   byte          ETH_Subnet[4];
   byte          ETH_DNS[4];
+  uint8_t       ETH_Wifi_Mode;
 };
 
 /*
