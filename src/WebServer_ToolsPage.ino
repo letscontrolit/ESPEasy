@@ -73,7 +73,6 @@ void handle_tools() {
 
   addFormSubHeader(F("Wifi"));
 
-// TODO: PKR: Add commands for ETHERNET
   addWideButtonPlusDescription(F("/?cmd=wificonnect"),    F("Connect"),    F("Connects to known Wifi network"));
   addWideButtonPlusDescription(F("/?cmd=wifidisconnect"), F("Disconnect"), F("Disconnect from wifi network"));
 

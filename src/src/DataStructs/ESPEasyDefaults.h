@@ -190,7 +190,7 @@
 #define DEFAULT_ETH_CLOCK_MODE           0
 #endif
 #ifndef DEFAULT_ETH_WIFI_MODE
-#define DEFAULT_ETH_WIFI_MODE            1      // TODO: PKR: Change perhaps to 0
+#define DEFAULT_ETH_WIFI_MODE            0
                                                 // 0 WIFI
                                                 // 1 ETHERNET
 #endif

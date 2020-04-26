@@ -69,7 +69,6 @@ void handle_sysinfo_json() {
 
 
   uint8_t  mac[]   = { 0, 0, 0, 0, 0, 0 };
-// TODO: PKR: Change to NetworkMacAddress
   uint8_t *macread = WiFi.macAddress(mac);
   char     macaddress[20];
   formatMAC(macread, macaddress);
@@ -339,7 +338,11 @@ void handle_sysinfo_Ethernet() {
 void handle_sysinfo_Network() {
   addTableSeparator(F("Network"), 2, 3, F("Wifi"));
 
-  if (eth_wifi_mode == WIFI && NetworkConnected())
+  if (
+    #ifdef HAS_ETHERNET
+    eth_wifi_mode == WIFI &&
+    #endif
+    NetworkConnected())
   {
     addRowLabel(F("Wifi"));
     # if defined(ESP8266)
@@ -381,7 +384,6 @@ void handle_sysinfo_Network() {
 
   {
     uint8_t  mac[]   = { 0, 0, 0, 0, 0, 0 };
-// TODO: PKR: Change to NetworkMacAddress
     uint8_t *macread = WiFi.macAddress(mac);
     char     macaddress[20];
     formatMAC(macread, macaddress);

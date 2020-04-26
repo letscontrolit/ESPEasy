@@ -225,7 +225,6 @@ String getValue(LabelType::Enum label) {
     case LabelType::ETH_SPEED:              return getEthSpeed();
     case LabelType::ETH_STATE:              return ETH.linkUp() ? F("Link Up") : F("Link Down");
     case LabelType::ETH_SPEED_STATE:        return getEthLinkSpeedState();
-    // TODO: PKR: Same as ethwifidebug
     case LabelType::ETH_WIFI_MODE:          return (eth_wifi_mode == WIFI ? F("WIFI") : F("ETHERNET"));
 #endif
 

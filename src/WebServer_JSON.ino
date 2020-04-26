@@ -97,6 +97,7 @@ void handle_json()
 #endif // ifdef SUPPORT_ARP
       stream_next_json_object_value(LabelType::CONNECTION_FAIL_THRESH);
       stream_last_json_object_value(LabelType::WIFI_RSSI);
+      // TODO: PKR: Add ETH Objects
       addHtml(F(",\n"));
     }
 

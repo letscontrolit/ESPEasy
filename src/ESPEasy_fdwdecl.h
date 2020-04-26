@@ -199,8 +199,7 @@ IPAddress NetworkLocalIP();
 IPAddress NetworkSubnetMask();
 IPAddress NetworkGatewayIP();
 IPAddress NetworkDnsIP (uint8_t dns_no=0);
-// TODO: PKR: Change to NetworkMacAddress
-//uint8_t * NetworkMacAddress(uint8_t* mac);
+uint8_t * NetworkMacAddressAsBytes(uint8_t* mac);
 String NetworkMacAddress();
 String WifiGetAPssid();
 String createRFCCompliantHostname(String oldString);

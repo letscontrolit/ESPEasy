@@ -89,6 +89,7 @@ void SystemVariables::parseSystemVariables(String& s, boolean useURLencode)
 
       case ISNTP:             value = String(statusNTPInitialized); break;
       case ISWIFI:            value = String(wifiStatus); break; // 0=disconnected, 1=connected, 2=got ip, 3=services initialized
+      // TODO: PKR: Add ETH Objects
       #ifdef HAS_ETHERNET
       case ETH_WIFI_MODE:     value = (eth_wifi_mode == WIFI ? "WIFI" : "ETHERNET"); break; // 0=WIFI, 1=ETH
       case ETH_CONNECTED:     value = String(eth_connected); break; // 0=disconnected, 1=connected
@@ -247,6 +248,7 @@ String SystemVariables::toString(SystemVariables::Enum enumval)
     case Enum::ISMQTTIMP:       return F("%ismqttimp%");
     case Enum::ISNTP:           return F("%isntp%");
     case Enum::ISWIFI:          return F("%iswifi%");
+    // TODO: PKR: Add ETH Objects
     #ifdef HAS_ETHERNET
     case Enum::ETH_WIFI_MODE:   return F("%eth_wifi_mode%");
     case Enum::ETH_CONNECTED:   return F("%eth_connected%");

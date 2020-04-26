@@ -90,7 +90,6 @@ IPAddress NetworkGatewayIP() {
   #endif
 }
 
-// TODO: PKR: Check her with default variable
 IPAddress NetworkDnsIP (uint8_t dns_no) {
   #ifdef HAS_ETHERNET
   if(eth_wifi_mode == ETHERNET) {
@@ -112,8 +111,7 @@ uint8_t * NetworkMacAddressAsBytes(uint8_t* mac) {
   #ifdef HAS_ETHERNET
   if(eth_wifi_mode == ETHERNET) {
     if(eth_connected) {
-      // TODO: PKR: Change to NetworjMacAddress
-      return mac;
+      return WiFi.macAddress(mac);
     } else {
       addLog(LOG_LEVEL_ERROR, F("Call NetworkMacAddressAsBytes(uint8_t* mac) only on connected Ethernet!"));
       return mac;

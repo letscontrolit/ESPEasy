@@ -246,7 +246,6 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
           CPlugin_014_sendMQTTdevice(pubname,"$localip",formatIP(NetworkLocalIP()).c_str(),errorCounter);
 
           // $mac	Device → Controller	Mac address of the device network interface. The format MUST be of the type A1:B2:C3:D4:E5:F6	Yes	Yes
-          // TODO: PKR: Change to NetworkMacAddress
           CPlugin_014_sendMQTTdevice(pubname,"$mac",WiFi.macAddress().c_str(),errorCounter);
 
           // $implementation	Device → Controller	An identifier for the Homie implementation (example esp8266)	Yes	Yes
