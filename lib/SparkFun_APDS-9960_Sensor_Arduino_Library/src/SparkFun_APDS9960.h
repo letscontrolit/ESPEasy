@@ -224,7 +224,7 @@ public:
     SparkFun_APDS9960();
     ~SparkFun_APDS9960();
     bool init();
-    bool init(uint8_t ggain, uint8_t gldrive, uint8_t again, uint8_t pgain, uint8_t led_drive);
+    bool init(uint8_t ggain, uint8_t gldrive, uint8_t pgain, uint8_t again, uint8_t led_drive);
     uint8_t getMode();
     bool setMode(uint8_t mode, uint8_t enable);
 

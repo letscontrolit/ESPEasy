@@ -65,7 +65,7 @@ SparkFun_APDS9960::~SparkFun_APDS9960()
  */
 bool SparkFun_APDS9960::init()
 {
-    return init(DEFAULT_GGAIN, DEFAULT_GLDRIVE, DEFAULT_AGAIN, DEFAULT_PGAIN, DEFAULT_LDRIVE);
+    return init(DEFAULT_GGAIN, DEFAULT_GLDRIVE, DEFAULT_PGAIN, DEFAULT_AGAIN, DEFAULT_LDRIVE);
 }
 
 /**
@@ -73,12 +73,12 @@ bool SparkFun_APDS9960::init()
  *
  * @param[in] ggain Gesture gain constant (0..3)
  * @param[in] gldrive Gesture Led Drive constant (0..3)
- * @param[in] again Ambient Light Sensor gain constant (0..3)
  * @param[in] pgain Proximity gain constant (0..3)
+ * @param[in] again Ambient Light Sensor gain constant (0..3)
  * @param[in] ldrive Proximity and Ambient Light Sensor Led Drive constant (0..3)
  * @return True if initialized successfully. False otherwise.
  */
-bool SparkFun_APDS9960::init(uint8_t ggain, uint8_t gldrive, uint8_t again, uint8_t pgain, uint8_t led_drive)
+bool SparkFun_APDS9960::init(uint8_t ggain, uint8_t gldrive, uint8_t pgain, uint8_t again, uint8_t led_drive)
 {
     uint8_t id;
 
