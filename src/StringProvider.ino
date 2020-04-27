@@ -1,4 +1,5 @@
 #include "StringProviderTypes.h"
+#include "ETH.h"
 
 String getInternalLabel(LabelType::Enum label, char replaceSpace) {
   return to_internal_string(getLabel(label), replaceSpace);

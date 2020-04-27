@@ -1,3 +1,4 @@
+#include "ESPEasyEth.h"
 
 #ifdef HAS_ETHERNET
 

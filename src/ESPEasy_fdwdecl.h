@@ -203,6 +203,8 @@ uint8_t * NetworkMacAddressAsBytes(uint8_t* mac);
 String NetworkMacAddress();
 String WifiGetAPssid();
 String createRFCCompliantHostname(String oldString);
+void WiFiConnectRelaxed();
+bool WiFiConnected();
 
 #include "src/Globals/ESPEasyWiFiEvent.h"
 
