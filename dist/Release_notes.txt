@@ -1,4 +1,101 @@
 -------------------------------------------------
+Changes in release mega-20200426 (since mega-20200410)
+-------------------------------------------------
+
+Release date: zo 26 apr 2020  1:27:18 CEST
+
+Bartlomiej Zimon (12):
+      P004_dallas: esp32 optimisation - move bit read/write to IRAM
+      add factory bins into release zip - to be found in factory_bin dir
+      before_deploy: remove echo
+      set BaseVarIndex and sensortype in event before call PLUGIN_TIMER_IN
+      P008_RFID: little reorder
+      P040_ID12/RDM6300: fix for triggering new tag and detection of tag unavailable #2982
+      crc2: move to hashlib
+      rfid: clean up in logging
+      ESP32: add to webserver firmware update feature
+      ESP32: add new ESP32HTTPUpdateServer lib
+      ESP32: fill binary filename, count MD5 only for esp8266
+      ESP/ESP32: add id_tag for future proposes and use it to detect firmware.bin
+
+Gijs Noorlander (29):
+      [MQTT] Add checkbox for extended Controller Settings
+      [Storage] Move SettingsType code to separate .h/.cpp
+      [MQTT] Move global MQTT parameters to controller settings
+      [Controller] Allow to use longer controller credentials
+      [MQTT] Fix build issue with disabled MQTT
+      [PIO] Change depicated -Wl,-T into board_build.ldscript
+      [Settings] Improve SettingsType handling
+      Fix reporting binaryFileName in sysvars page
+      [Build size] Optimize command handling macro to reduce build size
+      [LWIP2] Change LWIP2 from low mem to high bandwidth
+      [P092] Mark plugin as  [TESTING]
+      [ILI9341] Rename plugin to P095 + rebase to current HEAD of mega branch
+      [ILI9341] Move to custom build due to build size
+      [PulseCounter] Add SetPulseCounterTotal command
+      [Cleanup] Code formatting for Pulse Counter
+      Fix build issue
+      [ESP32 OTA] Show sketch size in sysinfo page
+      [ESP32 OTA] Exclude ESP32HTTPUpdateServer lib for ESP82xx builds
+      [Pulse Counter] Call PLUGIN_READ after set counter (#3019)
+      [Pulse Counter] Use unused 4th UserVar to restore total pulse counter
+      [Rules] Check for common mistakes and patch before parsing
+      [Controller] Make use extended credentials optional per controller
+      [ESPEasySerial] Update v2.0.1: Only use SWserial override on HW serial
+      [RN2483] SWserial override as a define
+      [RN2483] Only alter set keys if either OTAA or ABP is set
+      [RN2483] Improve Autobaud + unit detection at boot
+      [RN2483] Fix build error for ESP32
+      [RN2483] Rename sendAutoBaud to sendWakeSequence
+      [Rules] Clarify syntax error auto correct log entry
+
+Jan-Jonas Sämann (1):
+      Make default reset button gpio configurable
+
+Jean-Michel DECORET (9):
+      Add plugin Display TFT - ILI9341
+      Conform plugin to guidelines
+      Add comments
+      Add plugin Display TFT - ILI9341
+      Conform plugin to guidelines
+      Add comments
+      Change plugin number (242 -> 090)
+      Change to plugin 091
+      Make plugin compatible with ESP32
+
+TD-er (7):
+      [rules] Allow "if [" and "if[" in rules (#2987)
+      [rules] Allow "elseif [" and "elseif[" in rules
+      [RTC task values] Clear last task values when adding new task
+      [GitHub] Add stale bot to manage inactive issues
+      [WiFi] Fix WiFiConnect command should force (re)connect (#2985)
+      [Controller] Only update password when it is not "*****" (#3015)
+      [HTTP command] Fix incorrect check for valid port
+
+Toni (1):
+      HeatpumpIR 1.0.15 update
+
+sakinit (1):
+      Fix ESP32 serial write
+
+uwekaditz (14):
+      [P092] New PlugIn to decode the DL-Bus
+      [P092] New PlugIn to decode the DL-Bus
+      Update _P092_DLbus.ino
+      Update _P092_DLbus.ino
+      [P092] Timing optimized
+      [P092] Memory usage optimized
+      [P092] Changes requested by TDer
+      [P092] Documentation added
+      [P092] More documentation added
+      [P092] Documentation updated
+      [P093] Documentation updated
+      Memory improvement for _P092 plug in
+      Merge conflicts solved
+      merged with release mega-20200305
+
+
+-------------------------------------------------
 Changes in release mega-20200410 (since mega-20200328)
 -------------------------------------------------
 
