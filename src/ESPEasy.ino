@@ -380,10 +380,6 @@ void setup()
     rulesProcessing(event); // TD-er: Process events in the setup() now.
   }
 
-  #ifdef HAS_ETHERNET
-  WiFi.onEvent(ETHEvent);
-  #endif
-
   NetworkConnectRelaxed();
 
   setWebserverRunning(true);
