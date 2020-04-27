@@ -279,7 +279,9 @@ boolean Plugin_096(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WRITE:
       {
+#ifdef DEBUG_LOG
         String tmpString = String(string);
+#endif
         String arguments = String(string);
 
         int dotPos = arguments.indexOf('.');
@@ -311,11 +313,12 @@ boolean Plugin_096(byte function, struct EventStruct *event, String& string)
           subcommand = arguments.substring(0, argIndex);
           success = true;
 
+#ifdef DEBUG_LOG
           tmpString += "<br/> command= " + command;
           tmpString += "<br/> arguments= " + arguments;
           tmpString += "<br/> argIndex= " + String(argIndex);
           tmpString += "<br/> subcommand= " + subcommand;
-
+#endif
 
           if (command.equalsIgnoreCase(F("EPDCMD")))
           {
@@ -351,8 +354,6 @@ boolean Plugin_096(byte function, struct EventStruct *event, String& string)
             } 
             else if(subcommand.equalsIgnoreCase(F("ROT")))
             {
-              ///control?cmd=epdcmd,rot,0
-              //not working to verify
               arguments = arguments.substring(argIndex + 1);
               eInkScreen->setRotation(arguments.toInt() %3);
               eInkScreen->display();
@@ -364,17 +365,20 @@ boolean Plugin_096(byte function, struct EventStruct *event, String& string)
           }
           else if (command.equalsIgnoreCase(F("EPD")))
           {
+#ifdef DEBUG_LOG
             tmpString += "<br/> EPD  ";
-
+#endif
             arguments = arguments.substring(argIndex + 1);
             String sParams[8];
             int argCount = Plugin_096_StringSplit(arguments, ',', sParams, 8);
 
+#ifdef DEBUG_LOG
             for(int a=0; a < argCount && a < 8; a++)
             {
                 tmpString += "<br/> ARGS[" + String(a) + "]=" + sParams[a];
             }
-            
+#endif
+
             if(plugin_096_sequence_in_progress == false)
             {
               eInkScreen->clearBuffer();
@@ -494,34 +498,22 @@ boolean Plugin_096(byte function, struct EventStruct *event, String& string)
           success = false;
         }
 
-
-        if(!success)
+        //in case of command outside of sequence, then refresh screen
+        if(success && !plugin_096_sequence_in_progress)
         {
-          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-            addLog(LOG_LEVEL_INFO, F("Fail to parse command correctly; please check API documentation"));
-            String log2  = F("Parsed command = \"");
-            log2 += string;
-            log2 += "\"";
-            addLog(LOG_LEVEL_INFO, log2);
-          }
-        }
-        else
-        {
-          if(plugin_096_sequence_in_progress == false)
-            eInkScreen->display();
+          eInkScreen->display();
         }
 
+#ifdef DEBUG_LOG
         String log;
         log.reserve(110);                           // Prevent re-allocation
         log = F("P096-eInk : WRITE = ");
         log += tmpString;
         SendStatus(event->Source, log);             // Reply (echo) to sender. This will print message on browser.  
-              
+#endif
         break;        
       }
   }
-
-
 
   return success;
 }
@@ -549,27 +541,32 @@ void Plugin_096_printText(const char *string, int X, int Y, unsigned int textSiz
   eInkScreen->display();
 }
 
-//Parse color string to ILI9341 color
-//param [in] s : The color string (white, red, ...)
-//return : color (default ILI9341_WHITE)
-unsigned short Plugin_096_ParseColor(String & s)
+//Parse color string to color
+//param [in] colorString : The color string (white, red, ...)
+//return : color (default EPD_WHITE)
+unsigned short Plugin_096_ParseColor(const String & colorString)
 {
-  if (s.equalsIgnoreCase(F("BLACK")))
+  //copy to local var and ensure lowercase
+  //this optimise the next equlaity checks
+  String s = colorString;
+  s.toLowerCase();
+
+  if (s.equals(F("black")))
     return EPD_BLACK;
-  if (s.equalsIgnoreCase(F("WHITE")))
+  if (s.equals(F("white")))
     return EPD_WHITE;
-  if (s.equalsIgnoreCase(F("INVERSE")))
+  if (s.equals(F("inverse")))
     return EPD_INVERSE;
-  if (s.equalsIgnoreCase(F("RED")))
+  if (s.equals(F("red")))
     return EPD_RED;
-  if (s.equalsIgnoreCase(F("DARK")))
+  if (s.equals(F("dark")))
     return EPD_DARK;
-  if (s.equalsIgnoreCase(F("LIGHT")))
+  if (s.equals(F("light")))
     return EPD_LIGHT;
-  return EPD_WHITE; //fallback value
+  return EPD_WHITE;
 }
 
-String Plugin_096_FixText(String & s)
+String Plugin_096_FixText(const String & s)
 {
   String stringOne  = s;
   String stringDegrees = "";
@@ -584,7 +581,7 @@ String Plugin_096_FixText(String & s)
 //param [out] op : The resulting string array
 //param [in] limit : The maximum strings to find
 //return : The string count
-int Plugin_096_StringSplit(String &s, char c, String op[], int limit)
+int Plugin_096_StringSplit(const String &s, char c, String op[], int limit)
 {
   int count = 0;
   char * pch;
