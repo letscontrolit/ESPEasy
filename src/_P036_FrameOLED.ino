@@ -364,9 +364,9 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
         // FIXME TD-er: Why is this using pin3 and not pin1? And why isn't this using the normal pin selection functions?
         addFormPinSelect(F("Display button"), F("taskdevicepin3"), CONFIG_PIN3);
-        bPin3Invers = getBitFromUL(PCONFIG_LONG(0), 16);  // Bit 16
+        bPin3Invers = bitRead(PCONFIG_LONG(0), 16);  // Bit 16
         addFormCheckBox(F("Inversed Logic"), F("p036_pin3invers"), bPin3Invers);
-        boolean bStepThroughPages = getBitFromUL(PCONFIG_LONG(0), 19);  // Bit 19
+        boolean bStepThroughPages = bitRead(PCONFIG_LONG(0), 19);  // Bit 19
         addFormCheckBox(F("Step through frames with Display button"), F("p036_StepPages"), bStepThroughPages);
 
         addFormNumericBox(F("Display Timeout"), F("p036_timer"), PCONFIG(4));
@@ -392,10 +392,10 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         addFormSelector(F("Header"),F("p036_header"), 14, options9, optionValues9, choice9);
         addFormSelector(F("Header (alternating)"),F("p036_headerAlternate"), 14, options9, optionValues9, choice10);
 
-        bScrollLines = getBitFromUL(PCONFIG_LONG(0), 17);  // Bit 17
+        bScrollLines = bitRead(PCONFIG_LONG(0), 17);  // Bit 17
         addFormCheckBox(F("Scroll long lines"), F("p036_ScrollLines"), bScrollLines);
 
-        bNoDisplayOnReceivedText = getBitFromUL(PCONFIG_LONG(0), 18);  // Bit 18
+        bNoDisplayOnReceivedText = bitRead(PCONFIG_LONG(0), 18);  // Bit 18
         addFormCheckBox(F("Wake display on receiving text"), F("p036_NoDisplay"), !bNoDisplayOnReceivedText);
         addFormNote(F("When checked, the display wakes up at receiving remote updates."));
 
@@ -428,10 +428,10 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         uint32_t lSettings = 0;
         set8BitToUL(lSettings, 8, uint8_t(getFormItemInt(F("p036_header")) & 0xff));            // Bit15-8 HeaderContent
         set8BitToUL(lSettings, 0, uint8_t(getFormItemInt(F("p036_headerAlternate")) & 0xff));   // Bit 7-0 HeaderContentAlternative
-        P036_setBitToUL(lSettings, 16, isFormItemChecked(F("p036_pin3invers")));                // Bit 16 Pin3Invers
-        P036_setBitToUL(lSettings, 17, isFormItemChecked(F("p036_ScrollLines")));               // Bit 17 ScrollLines
-        P036_setBitToUL(lSettings, 18, !isFormItemChecked(F("p036_NoDisplay")));                // Bit 18 NoDisplayOnReceivingText
-        P036_setBitToUL(lSettings, 19, isFormItemChecked(F("p036_StepPages")));                 // Bit 19 StepThroughPagesWithButton
+        bitWrite(lSettings, 16, isFormItemChecked(F("p036_pin3invers")));                // Bit 16 Pin3Invers
+        bitWrite(lSettings, 17, isFormItemChecked(F("p036_ScrollLines")));               // Bit 17 ScrollLines
+        bitWrite(lSettings, 18, !isFormItemChecked(F("p036_NoDisplay")));                // Bit 18 NoDisplayOnReceivingText
+        bitWrite(lSettings, 19, isFormItemChecked(F("p036_StepPages")));                 // Bit 19 StepThroughPagesWithButton
         // save CustomTaskSettings always in version V1
         set4BitToUL(lSettings, 20, 0x01);                                                       // Bit23-20 Version CustomTaskSettings -> version V1
 
@@ -512,7 +512,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           DebounceCounter = 0;
           RepeatCounter = 0;
           ButtonState = false;
-          bPin3Invers = getBitFromUL(PCONFIG_LONG(0), 16);  // Bit 16
+          bPin3Invers = bitRead(PCONFIG_LONG(0), 16);  // Bit 16
         }
 
         //    Initialize frame counter
@@ -579,7 +579,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         bAlternativHeader = (++HeaderCount > (lTaskTimer*5)); // change header after half of display time
         if (CONFIG_PIN3 != -1 && ButtonState)
         {
-          boolean bStepThroughPages = getBitFromUL(PCONFIG_LONG(0), 19);        //  Bit 19
+          boolean bStepThroughPages = bitRead(PCONFIG_LONG(0), 19);        //  Bit 19
           if (bStepThroughPages && UserVar[event->BaseVarIndex] == 1) { //  When display already on, switch to next page when enabled
             nextFrameToDisplay = 0xFF;
             P036_DisplayPage(event);                // Display the next page
@@ -595,7 +595,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           displayTimer = PCONFIG(4);               //  Restart timer
           pinMode(CONFIG_PIN3, INPUT_PULLUP);      //  Reset pinstate
         }
-        bScrollLines = getBitFromUL(PCONFIG_LONG(0), 17);  // Bit 17
+        bScrollLines = bitRead(PCONFIG_LONG(0), 17);  // Bit 17
         if ((UserVar[event->BaseVarIndex] == 1) && bScrollLines && (ScrollingPages.Scrolling == 0)) {
           // Display is on.
           OLEDIndex = PCONFIG(7);
@@ -727,7 +727,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
             nextFrameToDisplay = ceil(((float)LineNo) / ScrollingPages.linesPerFrame) - 1; // next frame shows the new content, 0-based
 
-            bNoDisplayOnReceivedText = getBitFromUL(PCONFIG_LONG(0), 18);  // Bit 18 NoDisplayOnReceivedText
+            bNoDisplayOnReceivedText = bitRead(PCONFIG_LONG(0), 18);  // Bit 18 NoDisplayOnReceivedText
             if (UserVar[event->BaseVarIndex] == 0 && !bNoDisplayOnReceivedText) {
               // display was OFF, turn it ON
               display->displayOn();
