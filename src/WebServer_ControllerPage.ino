@@ -293,7 +293,7 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
         addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_SAMPLE_SET_INITIATOR);
       }
 
-      if (Protocol[ProtocolIndex].usesAccount || Protocol[ProtocolIndex].usesPassword) {
+      if (Protocol[ProtocolIndex].useExtendedCredentials()) {
         addTableSeparator(F("Credentials"), 2, 3);
         addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_USE_EXTENDED_CREDENTIALS);
       }
