@@ -9,7 +9,6 @@
 #define PLUGIN_VALUENAME1_096 "EINK"
 #define PLUGIN_096_MAX_DISPLAY 1
 
-#define TOMTHUMB_USE_EXTENDED 1
 /* README.MD
 
 ## INTRO
@@ -243,43 +242,23 @@ boolean Plugin_096(byte function, struct EventStruct *event, String& string)
         eInkScreen = new LOLIN_IL3897(EPD_Settings.width, EPD_Settings.height, EPD_Settings.address_epd_dc, EPD_Settings.address_epd_rst, EPD_Settings.address_epd_cs, EPD_Settings.address_epd_busy); //hardware SPI
         plugin_096_sequence_in_progress = false;
         eInkScreen->begin();
-        //eInkScreen->setRotation(EPD_Settings.rotation);
         eInkScreen->clearBuffer();
-        //eInkScreen->clearDisplay();
 
         eInkScreen->setTextColor(EPD_BLACK);
         eInkScreen->setTextSize(3);
         eInkScreen->println("ESP Easy");
         eInkScreen->setTextSize(2);
         eInkScreen->println("eInk shield");
-        eInkScreen->println("");
-        //eInkScreen->setTextSize(3);
-        eInkScreen->print("42");
-        eInkScreen->print((char)247);
-        eInkScreen->println("C");
-
         eInkScreen->display();
         delay(100);
         
-        /*while(WiFi.localIP().toString().equalsIgnoreCase("0.0.0.0"))
-        {
-          delay(500);
-        }
-
-        eInkScreen->setTextSize(2);
-        eInkScreen->print("IP = ");
-        eInkScreen->println(WiFi.localIP());
-
-        //eInkScreen->partInit();
-        eInkScreen->display();
-        delay(100);*/
         success = true;
         break;
       }
 
     case PLUGIN_WRITE:
       {
-#ifdef DEBUG_LOG
+#ifndef BUILD_NO_DEBUG
         String tmpString = String(string);
 #endif
         String arguments = String(string);
@@ -313,7 +292,7 @@ boolean Plugin_096(byte function, struct EventStruct *event, String& string)
           subcommand = arguments.substring(0, argIndex);
           success = true;
 
-#ifdef DEBUG_LOG
+#ifndef BUILD_NO_DEBUG
           tmpString += "<br/> command= " + command;
           tmpString += "<br/> arguments= " + arguments;
           tmpString += "<br/> argIndex= " + String(argIndex);
@@ -342,7 +321,16 @@ boolean Plugin_096(byte function, struct EventStruct *event, String& string)
             } 
             else if(subcommand.equalsIgnoreCase(F("SEQ_END")))
             {
+#ifndef BUILD_NO_DEBUG
+              TimingStats s;
+              const unsigned statisticsTimerStart(micros());
+#endif
               eInkScreen->display();
+              
+#ifndef BUILD_NO_DEBUG
+              s.add(usecPassedSince(statisticsTimerStart));
+              tmpString += "<br/> Display timings = " + String(s.getAvg());
+#endif              
               eInkScreen->clearBuffer();
               plugin_096_sequence_in_progress = false;
             } 
@@ -365,14 +353,14 @@ boolean Plugin_096(byte function, struct EventStruct *event, String& string)
           }
           else if (command.equalsIgnoreCase(F("EPD")))
           {
-#ifdef DEBUG_LOG
+#ifndef BUILD_NO_DEBUG
             tmpString += "<br/> EPD  ";
 #endif
             arguments = arguments.substring(argIndex + 1);
             String sParams[8];
             int argCount = Plugin_096_StringSplit(arguments, ',', sParams, 8);
 
-#ifdef DEBUG_LOG
+#ifndef BUILD_NO_DEBUG
             for(int a=0; a < argCount && a < 8; a++)
             {
                 tmpString += "<br/> ARGS[" + String(a) + "]=" + sParams[a];
@@ -387,12 +375,14 @@ boolean Plugin_096(byte function, struct EventStruct *event, String& string)
 
             if(subcommand.equalsIgnoreCase(F("txt")))
             {
-              eInkScreen->println(Plugin_096_FixText(arguments)); //write all pending cars
+              Plugin_096_FixText(arguments);
+              eInkScreen->println(arguments); //write all pending cars
             }
             else if(subcommand.equalsIgnoreCase(F("txz")))
             {
               eInkScreen->setCursor(sParams[0].toInt(), sParams[1].toInt());
-              eInkScreen->println(Plugin_096_FixText(sParams[2])); //write all pending cars
+              Plugin_096_FixText(sParams[2]);
+              eInkScreen->println(sParams[2]); //write all pending cars
             }
             else if(subcommand.equalsIgnoreCase(F("txp")) && argCount == 2)
             {
@@ -504,7 +494,7 @@ boolean Plugin_096(byte function, struct EventStruct *event, String& string)
           eInkScreen->display();
         }
 
-#ifdef DEBUG_LOG
+#ifndef BUILD_NO_DEBUG
         String log;
         log.reserve(110);                           // Prevent re-allocation
         log = F("P096-eInk : WRITE = ");
@@ -533,11 +523,9 @@ void Plugin_096_printText(const char *string, int X, int Y, unsigned int textSiz
   eInkScreen->setCursor(X, Y);
   eInkScreen->setTextColor(color, bkcolor);
   eInkScreen->setTextSize(textSize);
-  String stringOne  = string;
-  String stringTwo = "";
-  stringTwo += (char)247;
-  stringOne.replace("°", stringTwo);
-  eInkScreen->println(stringOne);
+  String fixString = string;
+  Plugin_096_FixText(fixString);
+  eInkScreen->println(fixString);
   eInkScreen->display();
 }
 
@@ -566,13 +554,41 @@ unsigned short Plugin_096_ParseColor(const String & colorString)
   return EPD_WHITE;
 }
 
-String Plugin_096_FixText(const String & s)
+//Fix text with handling special characters (degrees and main monetary symbols)
+//This is specific case for current AdafruitGfx standard fontused for eink screen
+//param [in/out] s : The string to fix
+void Plugin_096_FixText(String & s)
 {
-  String stringOne  = s;
-  String stringDegrees = "";
-  stringDegrees += (char)247;
-  stringOne.replace("°", stringDegrees);
-  return stringOne;
+  const char degree[3] = {0xc2, 0xb0, 0};  // Unicode degree symbol
+  const char degree_eink[2] = {0xf7, 0};  // eink degree symbol
+  s.replace(degree, degree_eink);
+  s.replace(F("{D}"), degree_eink);
+  s.replace(F("&deg;"), degree_eink);
+  
+  const char euro[4]  = { 0xe2, 0x82, 0xac, 0 }; // Unicode euro symbol
+  const char euro_eink[2] = {0xED, 0};  // eink degree symbol
+  s.replace(euro, euro_eink);
+  s.replace(F("{E}"), euro_eink);
+  s.replace(F("&euro;"), euro_eink);
+
+  const char pound[3] = { 0xc2, 0xa3, 0 };       // Unicode pound symbol
+  const char pound_eink[2] = {0x9C, 0};  // eink pound symbol
+  s.replace(pound, pound_eink);
+  s.replace(F("{P}"), pound_eink);
+  s.replace(F("&pound;"), pound_eink);
+
+  const char yen[3]   = { 0xc2, 0xa5, 0 };       // Unicode yen symbol
+  const char yen_eink[2] = {0x9D, 0};  // eink yen symbol
+  s.replace(yen, yen_eink);
+  s.replace(F("{Y}"), yen_eink);
+  s.replace(F("&yen;"), yen_eink);
+
+  const char cent[3]   = { 0xc2, 0xa2, 0 };       // Unicode yen symbol
+  const char cent_eink[2] = {0x9B, 0};  // eink cent symbol
+  s.replace(cent, cent_eink);
+  s.replace(F("{c}"), cent_eink);
+  s.replace(F("&cent;"), cent_eink);
+
 }
 
 //Split a string by delimiter
