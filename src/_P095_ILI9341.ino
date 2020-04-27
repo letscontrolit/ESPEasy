@@ -39,7 +39,7 @@ TFT Subcommands:
 
 | TFT Subcommands | details | description |
 |-----|-----|-----|
-| txt | tx,<text> | Write simple text (use last position, color and size) |
+| txt | txt,<text> | Write simple text (use last position, color and size) |
 | txp | txp,<X>,<Y> | Set text position (move the cursor) |
 | txc | txc,<foreColor>,<backgroundColor> | Set text color (background is transparent if not provided |
 | txs | txs,<SIZE> | Set text size |

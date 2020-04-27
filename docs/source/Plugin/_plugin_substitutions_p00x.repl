@@ -23,7 +23,7 @@
 .. _P001_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P001_Switch.ino
 .. |P001_usedby| replace:: :ref:`P001_Switch_page`, :ref:`P001_Door_switch_page`, :ref:`P001_PIR_sensor_page`
 .. |P001_shortinfo| replace:: `.`
-.. |P001_maintainer| replace:: `.`
+.. |P001_maintainer| replace:: `TD-er`
 .. |P001_compileinfo| replace:: `.`
 .. |P001_usedlibraries| replace:: `.`
 
