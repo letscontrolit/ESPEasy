@@ -153,3 +153,63 @@ String Command_GetORSetBool(struct EventStruct *event,
   }
   return return_command_success();
 }
+
+String Command_GetORSetUint8_t(struct EventStruct *event,
+                            const String      & targetDescription,
+                            const char         *Line,
+                            uint8_t            *value,
+                            int                 arg)
+{
+  bool hasArgument = false;
+  {
+    // Check if command is valid. Leave in separate scope to delete the TmpStr1
+    String TmpStr1;
+
+    if (GetArgv(Line, TmpStr1, arg + 1)) {
+      hasArgument = true;
+      TmpStr1.toLowerCase();
+
+      if (isInt(TmpStr1)) {
+        *value = (uint8_t)atoi(TmpStr1.c_str());
+      }
+      else if (strcmp_P(PSTR("WIFI"), TmpStr1.c_str()) == 0) { *value = 0; }
+      else if (strcmp_P(PSTR("ETHERNET"), TmpStr1.c_str()) == 0) { *value = 1; }
+    }
+  }
+
+  if (hasArgument) {
+    String result = targetDescription;
+    result += *value;
+    return return_result(event, result);
+  }
+  return return_command_success();
+}
+
+String Command_GetORSetInt8_t(struct EventStruct *event,
+                            const String      & targetDescription,
+                            const char         *Line,
+                            int8_t             *value,
+                            int                 arg)
+{
+  bool hasArgument = false;
+  {
+    // Check if command is valid. Leave in separate scope to delete the TmpStr1
+    String TmpStr1;
+
+    if (GetArgv(Line, TmpStr1, arg + 1)) {
+      hasArgument = true;
+      TmpStr1.toLowerCase();
+
+      if (isInt(TmpStr1)) {
+        *value = (int8_t)atoi(TmpStr1.c_str());
+      }
+    }
+  }
+
+  if (hasArgument) {
+    String result = targetDescription;
+    result += *value;
+    return return_result(event, result);
+  }
+  return return_command_success();
+}

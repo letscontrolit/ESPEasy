@@ -9,10 +9,6 @@ bool ethUseStaticIP() {
 }
 
 void ethSetupStaticIPconfig() {
-  // TODO: PKR Remove
-  addLog(LOG_LEVEL_INFO, F("ethSetupStaticIPConfig Started"));
-  //setUseStaticIP(useStaticIP());
-
   if (!ethUseStaticIP()) { return; }
   const IPAddress ip     = Settings.ETH_IP;
   const IPAddress gw     = Settings.ETH_Gateway;
@@ -30,16 +26,10 @@ void ethSetupStaticIPconfig() {
     log += formatIP(dns);
     addLog(LOG_LEVEL_INFO, log);
   }
-  // TODO: PKR Remove
-  addLog(LOG_LEVEL_INFO, F("Before ETH.config"));
   ETH.config(ip, gw, subnet, dns);
-  // TODO: PKR Remove
-  addLog(LOG_LEVEL_INFO, F("After ETH.config"));
 }
 
 bool ethCheckSettings() {
-  // TODO: PKR Remove
-  addLog(LOG_LEVEL_INFO, F("ethCheckSettings Started"));
   bool result = true;
   if (Settings.ETH_Phy_Type != 0 && Settings.ETH_Phy_Type != 1)
     result = false;
@@ -57,25 +47,17 @@ bool ethCheckSettings() {
 }
 
 bool ethPrepare() {
-  // TODO: PKR Remove
-  addLog(LOG_LEVEL_INFO, F("ethPrepare Started"));
   if (!ethCheckSettings())
   {
     addLog(LOG_LEVEL_ERROR, F("ETH: Settings not correct!!!"));
     return false;
   }
-  // TODO: PKR Remove
-  addLog(LOG_LEVEL_INFO, F("Before ETH.config"));
   ETH.config(INADDR_NONE, INADDR_NONE, INADDR_NONE);
-  // TODO: PKR Remove
-  addLog(LOG_LEVEL_INFO, F("After ETH.conif"));
   ethSetupStaticIPconfig();
   return true;
 }
 
 String ethGetDebugClockModeStr() {
-  // TODO: PKR Remove
-  addLog(LOG_LEVEL_INFO, F("ethDebugColckModeStr Started"));
   switch (Settings.ETH_Clock_Mode)
   {
     case 0: return F("ETH_CLOCK_GPIO0_IN");
@@ -87,8 +69,6 @@ String ethGetDebugClockModeStr() {
 }
 
 String ethGetDebugEthWifiModeStr() {
-  // TODO: PKR Remove
-  addLog(LOG_LEVEL_INFO, F("ethGetDebugEthWifiMode Started"));
   switch (eth_wifi_mode)
   {
     case 0: return F("WIFI");
@@ -98,8 +78,6 @@ String ethGetDebugEthWifiModeStr() {
 }
 
 void ethPrintSettings() {
-  // TODO: PKR Remove
-  addLog(LOG_LEVEL_INFO, F("ethPrintSettings Started"));
   String settingsDebugLog;
   settingsDebugLog.reserve(115);
   settingsDebugLog += F("Eth Wifi mode: ");
@@ -120,25 +98,19 @@ void ethPrintSettings() {
 }
 
 void ETHConnectRelaxed() {
-  // TODO: PKR Remove
-  addLog(LOG_LEVEL_INFO, F("ETHConnectRelaxed Started"));
   ethPrintSettings();
-  /*if (!ethPrepare()) {
-    // Dead code for now...
-    addLog(LOG_LEVEL_ERROR, F("ETH : Could not prepare ETH!"));
-    return;
-  }
-  // TODO: PKR Remove
-  addLog(LOG_LEVEL_INFO, F("Before ETH.begin"));
   ETH.begin(Settings.ETH_Phy_Addr,
             Settings.ETH_Pin_power,
             Settings.ETH_Pin_mdc,
             Settings.ETH_Pin_mdio,
             (eth_phy_type_t)Settings.ETH_Phy_Type,
             (eth_clock_mode_t)Settings.ETH_Clock_Mode);
-  // TODO: PKR Remove*/
-  ETH.begin();
   addLog(LOG_LEVEL_INFO, F("After ETH.begin"));
+  if (!ethPrepare()) {
+    // Dead code for now...
+    addLog(LOG_LEVEL_ERROR, F("ETH : Could not prepare ETH!"));
+    return;
+  }
 }
 
 bool ETHConnected() {

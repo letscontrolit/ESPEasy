@@ -109,6 +109,7 @@ String getLabel(LabelType::Enum label) {
     case LabelType::ETH_STATE:              return F("Eth State");
     case LabelType::ETH_SPEED_STATE:        return F("Eth Speed State");
     case LabelType::ETH_WIFI_MODE:          return F("Eth Wifi Mode");
+    case LabelType::ETH_CONNECTED:          return F("Eth connected");
 #endif
 
   }
@@ -154,10 +155,11 @@ String getValue(LabelType::Enum label) {
     case LabelType::IP_CONFIG_STATIC:       break;
     case LabelType::IP_CONFIG_DYNAMIC:      break;
     case LabelType::IP_ADDRESS:             return NetworkLocalIP().toString();
-    case LabelType::IP_SUBNET:              return WiFi.subnetMask().toString();
+    case LabelType::IP_SUBNET:              return NetworkSubnetMask().toString();
     case LabelType::IP_ADDRESS_SUBNET:      return String(getValue(LabelType::IP_ADDRESS) + F(" / ") + getValue(LabelType::IP_SUBNET));
     case LabelType::GATEWAY:                return NetworkGatewayIP().toString();
     case LabelType::CLIENT_IP:              return formatIP(web_server.client().remoteIP());
+
     #ifdef FEATURE_MDNS
     case LabelType::M_DNS:                  return String(WifiGetHostname()) + F(".local");
     #endif
@@ -215,17 +217,18 @@ String getValue(LabelType::Enum label) {
     case LabelType::OTA_2STEP:              break;
     case LabelType::OTA_POSSIBLE:           break;
 #ifdef HAS_ETHERNET
-    case LabelType::ETH_IP_ADDRESS:         return ETH.localIP().toString();
-    case LabelType::ETH_IP_SUBNET:          return ETH.subnetMask().toString();
+    case LabelType::ETH_IP_ADDRESS:         return NetworkLocalIP().toString();
+    case LabelType::ETH_IP_SUBNET:          return NetworkSubnetMask().toString();
     case LabelType::ETH_IP_ADDRESS_SUBNET:  return String(getValue(LabelType::ETH_IP_ADDRESS) + F(" / ") + getValue(LabelType::ETH_IP_SUBNET));
-    case LabelType::ETH_IP_GATEWAY:         return ETH.gatewayIP().toString();
-    case LabelType::ETH_IP_DNS:             return ETH.dnsIP().toString();
-    case LabelType::ETH_MAC:                return ETH.macAddress();
-    case LabelType::ETH_DUPLEX:             return ETH.fullDuplex() ? F("Full Duplex") : F("Half Duplex");
-    case LabelType::ETH_SPEED:              return getEthSpeed();
-    case LabelType::ETH_STATE:              return ETH.linkUp() ? F("Link Up") : F("Link Down");
-    case LabelType::ETH_SPEED_STATE:        return getEthLinkSpeedState();
+    case LabelType::ETH_IP_GATEWAY:         return NetworkGatewayIP().toString();
+    case LabelType::ETH_IP_DNS:             return NetworkDnsIP().toString();
+    case LabelType::ETH_MAC:                return NetworkMacAddress();
+    case LabelType::ETH_DUPLEX:             return eth_connected ? (ETH.fullDuplex() ? F("Full Duplex") : F("Half Duplex")) : F("No Ethernet");
+    case LabelType::ETH_SPEED:              return eth_connected ? getEthSpeed() : F("No Ethernet");
+    case LabelType::ETH_STATE:              return eth_connected ? (ETH.linkUp() ? F("Link Up") : F("Link Down")) : F("No Ethernet");
+    case LabelType::ETH_SPEED_STATE:        return eth_connected ? getEthLinkSpeedState() : F("No Ethernet");
     case LabelType::ETH_WIFI_MODE:          return (eth_wifi_mode == WIFI ? F("WIFI") : F("ETHERNET"));
+    case LabelType::ETH_CONNECTED:          return String(eth_connected); // 0=disconnected, 1=connected
 #endif
 
   }

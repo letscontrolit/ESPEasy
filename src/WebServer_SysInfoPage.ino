@@ -87,6 +87,17 @@ void handle_sysinfo_json() {
   json_number(F("reconnects"), String(wifi_reconnects));
   json_close();
 
+#ifdef HAS_ETHERNET
+  json_open(false, F("ethernet"));
+  json_prop(F("ethwifimode"), getValue(LabelType::ETH_WIFI_MODE));
+  json_prop(F("ethconnected"), getValue(LabelType::ETH_CONNECTED);
+  json_prop(F("ethduplex"), getValue(LabelType::ETH_DUPLEX);
+  json_prop(F("ethspeed"), getValue(LabelType::ETH_SPEED);
+  json_prop(F("ethstate"), getValue(LabelType::ETH_STATE);
+  json_prop(F("ethspeedstate"), getValue(LabelType::ETH_SPEED_STATE);
+  json.close();
+#endif
+
   json_open(false, F("firmware"));
   json_prop(F("build"),       String(BUILD));
   json_prop(F("notes"),       F(BUILD_NOTES));
