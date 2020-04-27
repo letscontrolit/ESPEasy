@@ -226,11 +226,6 @@ String DisplayLinesV0[P36_Nlines];                // used to load the CustomTask
 // Instantiate display here - does not work to do this within the INIT call
 OLEDDisplay *display=NULL;
 
-void P036_setBitToUL(uint32_t& number, byte bitnr, bool value) {
-  uint32_t mask = (0x01UL << bitnr);
-  uint32_t newbit = (value ? 1UL : 0UL) << bitnr;
-  number = (number & ~mask) | newbit;
-}
 uint8_t get8BitFromUL(uint32_t number, byte bitnr) {
   return (number >> bitnr) & 0xFF;
 }

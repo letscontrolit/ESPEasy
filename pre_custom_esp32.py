@@ -33,6 +33,7 @@ else:
     "USES_P059",  # Encoder
     "USES_P082",  # GPS
     "USES_P087",  # Serial Proxy
+    "USES_P097",  # Touch (ESP32)
 
     "USE_SETTINGS_ARCHIVE"
   ])
