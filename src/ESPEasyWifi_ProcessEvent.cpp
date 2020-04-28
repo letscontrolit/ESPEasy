@@ -1,6 +1,6 @@
 #include "ESPEasyWifi_ProcessEvent.h"
 #include "ESPEasy-Globals.h"
-#include "Network.h"
+#include "ESPEasyNetwork.h"
 #include "ESPEasyWifi.h"
 #include "ESPEasyWiFi_credentials.h"
 #include "ESPEasy_fdwdecl.h"

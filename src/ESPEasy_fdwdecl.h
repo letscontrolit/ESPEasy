@@ -198,7 +198,7 @@ void setSTA(bool enable);
 
 // Used for Networking with Wifi or Ethernet
 #include "ESPEasyEthWifi.h"
-#include "Network.h"
+#include "ESPEasyNetwork.h"
 String WifiGetAPssid();
 void WiFiConnectRelaxed();
 bool WiFiConnected();

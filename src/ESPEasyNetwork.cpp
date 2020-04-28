@@ -1,4 +1,4 @@
-#include "Network.h"
+#include "ESPEasyNetwork.h"
 #include "ESPEasy_fdwdecl.h"
 #include "ESPEasy-Globals.h"
 #include "ESPEasy_Log.h"
