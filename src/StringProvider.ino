@@ -1,5 +1,7 @@
 #include "StringProviderTypes.h"
+#ifdef HAS_ETHERNET
 #include "ETH.h"
+#endif
 
 String getInternalLabel(LabelType::Enum label, char replaceSpace) {
   return to_internal_string(getLabel(label), replaceSpace);

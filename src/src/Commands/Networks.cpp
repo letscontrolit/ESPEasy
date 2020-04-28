@@ -5,7 +5,9 @@
 #include "../Globals/Settings.h"
 
 #include "../../ESPEasy_fdwdecl.h"
+#ifdef HAS_ETHERNET
 #include "ETH.h"
+#endif
 
 String Command_AccessInfo_Ls(struct EventStruct *event, const char* Line)
 {

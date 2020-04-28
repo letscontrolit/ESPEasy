@@ -1,7 +1,7 @@
 #ifndef NETWORK_H
 #define NETWORK_H
 
-#include "ESPEasy_common.h"
+#include "ESPEasy-Globals.h"
 
 void NetworkConnectRelaxed();
 bool NetworkConnected();

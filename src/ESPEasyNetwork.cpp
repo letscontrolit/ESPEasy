@@ -3,7 +3,10 @@
 #include "ESPEasy-Globals.h"
 #include "ESPEasy_Log.h"
 #include "ESPEasyEth.h"
+
+#ifdef HAS_ETHERNET
 #include "ETH.h"
+#endif
 
 /*********************************************************************************************\
    Ethernet or Wifi Support for ESP32 Build flag HAS_ETHERNET
