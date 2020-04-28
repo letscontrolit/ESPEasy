@@ -30,7 +30,6 @@ void setAP(bool enable);
 String getWifiModeString(WiFiMode_t wifimode);
 void setWifiMode(WiFiMode_t wifimode);
 bool WifiIsAP(WiFiMode_t wifimode);
-String WifiGetAPssid();
 bool useStaticIP();
 bool wifiConnectTimeoutReached();
 bool wifiAPmodeActivelyUsed();

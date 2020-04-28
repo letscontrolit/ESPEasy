@@ -113,7 +113,7 @@ void WiFiEvent(system_event_id_t event, system_event_info_t info) {
     case SYSTEM_EVENT_ETH_START:
       addLog(LOG_LEVEL_INFO, F("ETH Started"));
       char hostname[40];
-      safe_strncpy(hostname, createRFCCompliantHostname(WifiGetAPssid()).c_str(), sizeof(hostname));
+      safe_strncpy(hostname, NetworkGetHostname()).c_str(), sizeof(hostname));
       ETH.setHostname(hostname);
       {
         String log = F("ETH Hostname: ");

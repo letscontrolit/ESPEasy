@@ -1,4 +1,5 @@
 #include "StringProviderTypes.h"
+#include "ESPEasyNetwork.h"
 #ifdef HAS_ETHERNET
 #include "ETH.h"
 #endif
@@ -164,7 +165,7 @@ String getValue(LabelType::Enum label) {
     case LabelType::CLIENT_IP:              return formatIP(web_server.client().remoteIP());
 
     #ifdef FEATURE_MDNS
-    case LabelType::M_DNS:                  return String(WifiGetHostname()) + F(".local");
+    case LabelType::M_DNS:                  return String(NetworkGetHostname()) + F(".local");
     #endif
     case LabelType::DNS:                    return String(getValue(LabelType::DNS_1) + F(" / ") + getValue(LabelType::DNS_2));
     case LabelType::DNS_1:                  return NetworkDnsIP(0).toString();

@@ -1,4 +1,5 @@
 #include "ESPEasyWifi.h"
+#include "ESPEasyNetwork.h"
 #include "ESPEasyWifi_ProcessEvent.h"
 #include "src/Globals/ESPEasyWiFiEvent.h"
 #include "ESPEasy-Globals.h"
@@ -6,6 +7,7 @@
 #include "src/DataStructs/TimingStats.h"
 #include "src/Globals/RTC.h"
 #include "src/Globals/SecuritySettings.h"
+#include "src/Helpers/ESPEasy_time_calc.h"
 
 // ********************************************************************************
 // WiFi state
@@ -204,7 +206,7 @@ bool prepareWiFi() {
   }
   setSTA(true);
   char hostname[40];
-  safe_strncpy(hostname, createRFCCompliantHostname(WifiGetAPssid()).c_str(), sizeof(hostname));
+  safe_strncpy(hostname, NetworkGetHostname().c_str(), sizeof(hostname));
   #if defined(ESP8266)
   wifi_station_set_hostname(hostname);
 
@@ -382,7 +384,7 @@ void setAPinternal(bool enable)
   if (enable) {
     // create and store unique AP SSID/PW to prevent ESP from starting AP mode with default SSID and No password!
     // setup ssid for AP Mode when needed
-    String softAPSSID = WifiGetAPssid();
+    String softAPSSID = NetworkGetAPssid();
     String pwd        = SecuritySettings.WifiAPKey;
     IPAddress subnet(DEFAULT_AP_SUBNET);
 
@@ -505,14 +507,6 @@ bool WifiIsSTA(WiFiMode_t wifimode)
   #else // if defined(ESP32)
   return (wifimode & WIFI_STA) != 0;
   #endif // if defined(ESP32)
-}
-
-// ********************************************************************************
-// Determine Wifi AP name to set. (also used for mDNS)
-// ********************************************************************************
-String WifiGetAPssid()
-{
-  return Settings.getHostname();
 }
 
 bool useStaticIP() {

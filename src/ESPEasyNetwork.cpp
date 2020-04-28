@@ -139,3 +139,24 @@ String NetworkMacAddress() {
   
   return String(macaddress);
 }
+
+// ********************************************************************************
+// Determine Wifi AP name to set. (also used for mDNS)
+// ********************************************************************************
+String NetworkGetAPssid()
+{
+  return Settings.getHostname();
+}
+
+String NetworkGetHostname() {
+  return createRFCCompliantHostname(NetworkGetAPssid());
+}
+
+// Create hostname with - instead of spaces
+String createRFCCompliantHostname(String oldString) {
+  String result(oldString);
+
+  result.replace(" ", "-");
+  result.replace("_", "-"); // See RFC952
+  return result;
+}

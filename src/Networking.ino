@@ -1005,16 +1005,6 @@ String splitURL(const String& fullURL, String& host, uint16_t& port, String& fil
   return fullURL.substring(endhost);
 }
 
-// Create hostname with - instead of spaces
-String createRFCCompliantHostname(String oldString)
-{
-  String result(oldString);
-
-  result.replace(" ", "-");
-  result.replace("_", "-"); // See RFC952
-  return result;
-}
-
 #ifdef USE_SETTINGS_ARCHIVE
 
 // Download a file from a given URL and save to a local file named "file_save"

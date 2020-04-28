@@ -199,10 +199,8 @@ void setSTA(bool enable);
 // Used for Networking with Wifi or Ethernet
 #include "ESPEasyEthWifi.h"
 #include "ESPEasyNetwork.h"
-String WifiGetAPssid();
 void WiFiConnectRelaxed();
 bool WiFiConnected();
-String createRFCCompliantHostname(String oldString);
 
 #include "src/Globals/ESPEasyWiFiEvent.h"
 
