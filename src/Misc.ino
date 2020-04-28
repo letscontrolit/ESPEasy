@@ -306,6 +306,9 @@ bool allocatedOnStack(const void* address) {
 #endif // ESP32
 
 
+
+
+
 /**********************************************************
 *                                                         *
 * Deep Sleep related functions                            *
@@ -553,6 +556,29 @@ String formatGpioName_TX_HW(bool optional) {
 String formatGpioName_RX_HW(bool optional) {
   return formatGpioName("TX (HW)", gpio_input, optional);
 }
+
+#ifdef ESP32
+
+String formatGpioName_ADC(int gpio_pin) {
+  int adc,ch, t;
+  if (getADC_gpio_info(gpio_pin, adc, ch, t)) {
+    if (adc == 0) {
+      return F("Hall Effect");
+    }
+    String res = F("ADC# ch?");
+    res.replace("#", String(adc));
+    res.replace("?", String(ch));
+    if (t >= 0) {
+      res += F(" (T");
+      res += t;
+      res += ')';
+    }
+    return res;
+  }
+  return "";
+}
+
+#endif
 
 /*********************************************************************************************\
    set pin mode & state (info table)
@@ -1180,7 +1206,7 @@ void ResetFactory()
   Settings.Pin_status_led  = gpio_settings.status_led;
   Settings.Pin_status_led_Inversed  = DEFAULT_PIN_STATUS_LED_INVERSED;
   Settings.Pin_sd_cs       = -1;
-  Settings.Pin_Reset       = -1;
+  Settings.Pin_Reset       = DEFAULT_PIN_RESET_BUTTON;
   Settings.Protocol[0]     = DEFAULT_PROTOCOL;
   Settings.deepSleep_wakeTime       = false;
   Settings.CustomCSS       = false;

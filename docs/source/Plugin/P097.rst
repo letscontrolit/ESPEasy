@@ -1,0 +1,56 @@
+.. include:: ../Plugin/_plugin_substitutions_p09x.repl
+.. _P097_page:
+
+|P097_typename|
+==================================================
+
+|P097_shortinfo|
+
+Plugin details
+--------------
+
+Type: |P097_type|
+
+Name: |P097_name|
+
+Status: |P097_status|
+
+GitHub: |P097_github|_
+
+Maintainer: |P097_maintainer|
+
+Used libraries: |P097_usedlibraries|
+
+Description
+-----------
+
+Touch pin support for ESP32.
+
+The ESP32 does have support for 10 touch pads.
+Such a touch pad can be as simple as a wire or a PCB pad connected to 
+one of the GPIO pins labelled with ``T0`` ... ``T9``.
+
+A touch pad pin can be considered as an analog input pin.
+When not touched, the reported value is "High", for example 100.
+
+When touched, the capacity of the pin increases, which in return lowers the number of charge/discharge cycles.
+A typical value for a touched pin is lower than 20.
+
+The user has to set a threshold value for when to consider a pin being touched.
+The best value has to be determined by trial and error and may differ per use case.
+
+
+Events
+~~~~~~
+
+.. include:: P097_events.repl
+
+
+
+Change log
+----------
+
+.. versionchanged:: 2.0
+  ...
+
+  |added| 2020-04-25
