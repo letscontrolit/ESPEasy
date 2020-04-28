@@ -1,10 +1,11 @@
-#define WIFI_RECONNECT_WAIT                20000  // in milliSeconds
-#define WIFI_AP_OFF_TIMER_DURATION         60000  // in milliSeconds
-#define WIFI_CONNECTION_CONSIDERED_STABLE  300000 // in milliSeconds
-#define WIFI_ALLOW_AP_AFTERBOOT_PERIOD     5      // in minutes
-
+#include "ESPEasyWifi.h"
+#include "ESPEasyWifi_ProcessEvent.h"
 #include "src/Globals/ESPEasyWiFiEvent.h"
 #include "ESPEasy-Globals.h"
+#include "ESPEasyWiFi_credentials.h"
+#include "src/DataStructs/TimingStats.h"
+#include "src/Globals/RTC.h"
+#include "src/Globals/SecuritySettings.h"
 
 // ********************************************************************************
 // WiFi state

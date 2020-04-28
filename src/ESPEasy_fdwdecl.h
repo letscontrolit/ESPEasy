@@ -72,8 +72,11 @@ bool   useStaticIP();
 bool   hostReachable(const IPAddress& ip);
 bool   hostReachable(const String& hostname);
 void formatMAC(const uint8_t * mac, char (& strMAC)[20]);
+String formatMAC(const uint8_t *mac);
 String to_json_object_value(const String& object,
                             const String& value);
+void htmlEscape(String& html, char c);
+void htmlEscape(String& html);
 
 
 bool     I2C_read_bytes(uint8_t        i2caddr,
@@ -142,6 +145,7 @@ String formatToHex(unsigned long value, const String& prefix);
 String formatToHex(unsigned long value);
 String formatToHex_decimal(unsigned long value);
 String getNumerical(const String& tBuf, bool mustBeInteger);
+String format_msec_duration(long duration);
 
 float getCPUload();
 int getLoopCountPerSec();
@@ -150,6 +154,7 @@ void setLogLevelFor(byte destination, byte logLevel);
 uint16_t getPortFromKey(uint32_t key);
 
 void initRTC();
+boolean saveToRTC();
 void deepSleepStart(int dsdelay);
 bool setControllerEnableStatus(controllerIndex_t controllerIndex, bool enabled);
 bool setTaskEnableStatus(taskIndex_t taskIndex, bool enabled);
@@ -193,18 +198,11 @@ void setSTA(bool enable);
 
 // Used for Networking with Wifi or Ethernet
 #include "ESPEasyEthWifi.h"
-void NetworkConnectRelaxed();
-bool NetworkConnected();
-IPAddress NetworkLocalIP();
-IPAddress NetworkSubnetMask();
-IPAddress NetworkGatewayIP();
-IPAddress NetworkDnsIP (uint8_t dns_no=0);
-uint8_t * NetworkMacAddressAsBytes(uint8_t* mac);
-String NetworkMacAddress();
+#include "Network.h"
 String WifiGetAPssid();
-String createRFCCompliantHostname(String oldString);
 void WiFiConnectRelaxed();
 bool WiFiConnected();
+String createRFCCompliantHostname(String oldString);
 
 #include "src/Globals/ESPEasyWiFiEvent.h"
 
@@ -217,13 +215,16 @@ unsigned long FreeMem(void);
 void ResetFactory();
 void reboot();
 void SendUDPCommand(byte destUnit, const char *data, byte dataLength);
+bool hasIPaddr();
 
 #include <FS.h>
 void printDirectory(File dir, int numTabs);
 
 void delayBackground(unsigned long dsdelay);
 
-void setIntervalTimerOverride(unsigned long id, unsigned long msecFromNow); //implemented in Scheduler.ino
+//implemented in Scheduler.ino
+void setIntervalTimerOverride(unsigned long id, unsigned long msecFromNow);
+void sendGratuitousARP_now();
 
 
 byte PluginCall(byte Function, struct EventStruct *event, String& str);

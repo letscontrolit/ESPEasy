@@ -1,3 +1,4 @@
+#include "ESPEasyWifi.h"
 #include "src/Globals/Cache.h"
 #include "src/Globals/CRCValues.h"
 #include "src/Globals/ResetFactoryDefaultPref.h"

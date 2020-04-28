@@ -1,13 +1,8 @@
 #include "Network.h"
-
 #include "ESPEasy_fdwdecl.h"
 #include "ESPEasy-Globals.h"
 #include "ESPEasy_Log.h"
 #include "ESPEasyEth.h"
-//#include "ESPEasy_common.h"
-//#include "src/Globals/Settings.h"
-//#include "src/DataStructs/TimingStats.h"
-
 #include "ETH.h"
 
 /*********************************************************************************************\

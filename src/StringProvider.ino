@@ -222,7 +222,7 @@ String getValue(LabelType::Enum label) {
     case LabelType::ETH_IP_SUBNET:          return NetworkSubnetMask().toString();
     case LabelType::ETH_IP_ADDRESS_SUBNET:  return String(getValue(LabelType::ETH_IP_ADDRESS) + F(" / ") + getValue(LabelType::ETH_IP_SUBNET));
     case LabelType::ETH_IP_GATEWAY:         return NetworkGatewayIP().toString();
-    case LabelType::ETH_IP_DNS:             return NetworkDnsIP().toString();
+    case LabelType::ETH_IP_DNS:             return NetworkDnsIP(0).toString();
     case LabelType::ETH_MAC:                return NetworkMacAddress();
     case LabelType::ETH_DUPLEX:             return eth_connected ? (ETH.fullDuplex() ? F("Full Duplex") : F("Half Duplex")) : F("No Ethernet");
     case LabelType::ETH_SPEED:              return eth_connected ? getEthSpeed() : F("No Ethernet");

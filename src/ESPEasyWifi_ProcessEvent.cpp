@@ -1,6 +1,15 @@
+#include "ESPEasyWifi_ProcessEvent.h"
+#include "ESPEasy-Globals.h"
+#include "Network.h"
+#include "ESPEasyWifi.h"
+#include "ESPEasyWiFi_credentials.h"
+#include "ESPEasy_fdwdecl.h"
 #include "src/Globals/ESPEasyWiFiEvent.h"
+#include "src/Globals/RTC.h"
+#include "src/Globals/MQTT.h"
+#include "src/Helpers/ESPEasy_time_calc.h"
+#include "src/DataStructs/SchedulerTimers.h"
 
-/*
 bool unprocessedWifiEvents() {
   if (processedConnect && processedDisconnect && processedGotIP && processedDHCPTimeout)
   {
@@ -25,7 +34,7 @@ void handle_unprocessedWiFiEvents()
     delay(1);
 
     if (wifiConnectAttemptNeeded) {
-      WiFiConnectRelaxed();
+      NetworkConnectRelaxed();
     }
 
     // Process disconnect events before connect events.
@@ -62,11 +71,28 @@ void handle_unprocessedWiFiEvents()
       // The actual connection has been made, no need to wait for IP to release this semaphore.
       wifiConnectInProgress = false;
     }
+    if (wifiStatus != ESPEASY_WIFI_SERVICES_INITIALIZED) {
+      if (WiFi.isConnected()) {
+        // Apparently we did miss some WiFi events.
+        if ((wifiStatus & ESPEASY_WIFI_CONNECTED) == 0) {
+          addLog(LOG_LEVEL_DEBUG, F("WiFi : Force 'WiFi Connected' event"));
+          processedConnect = false;
+        }
 
-    if ((wifiStatus & ESPEASY_WIFI_GOT_IP) && (wifiStatus & ESPEASY_WIFI_CONNECTED) && WiFi.isConnected()) {
-      markWiFi_services_initialized();
+        if ((wifiStatus & ESPEASY_WIFI_GOT_IP) == 0) {
+          addLog(LOG_LEVEL_DEBUG, F("WiFi : Force 'WiFi Got IP' event"));
+          processedGotIP = false;
+        }
+      }
     }
-  } else if (!WiFiConnected()) {
+
+
+    if (wifiStatus != ESPEASY_WIFI_SERVICES_INITIALIZED) {
+      if ((wifiStatus & ESPEASY_WIFI_GOT_IP) && (wifiStatus & ESPEASY_WIFI_CONNECTED)) {
+        markWiFi_services_initialized();
+      }
+    }
+  } else if (!NetworkConnected()) {
     // Somehow the WiFi has entered a limbo state.
     // FIXME TD-er: This may happen on WiFi config with AP_STA mode active.
     //    addLog(LOG_LEVEL_ERROR, F("Wifi status out sync"));
@@ -129,7 +155,6 @@ void processDisconnect() {
   if (processedDisconnect) { return; }
   processedDisconnect = true;
   wifiStatus          = ESPEASY_WIFI_DISCONNECTED;
-//  setWebserverRunning(false);
   delay(100); // FIXME TD-er: See https://github.com/letscontrolit/ESPEasy/issues/1987#issuecomment-451644424
 
   if (Settings.UseRules) {
@@ -204,6 +229,10 @@ void processGotIP() {
   if (processedGotIP) {
     return;
   }
+  if ((wifiStatus & ESPEASY_WIFI_CONNECTED) == 0) {
+    // Only process GotIP events if we are connected.
+    return;
+  }
   IPAddress ip = NetworkLocalIP();
 
   if (!useStaticIP()) {
@@ -227,7 +256,7 @@ void processGotIP() {
     }
     log += formatIP(ip);
     log += " (";
-    log += WifiGetHostname();
+    log += createRFCCompliantHostname(WifiGetAPssid());
     log += F(") GW: ");
     log += formatIP(gw);
     log += F(" SN: ");
@@ -313,7 +342,6 @@ void processConnectAPmode() {
     log += WiFi.softAPgetStationNum();
     addLog(LOG_LEVEL_INFO, log);
   }
-  setWebserverRunning(true);
 
   // Start DNS, only used if the ESP has no valid WiFi config
   // It will reply with it's own address on all DNS requests
@@ -419,8 +447,9 @@ void processScanDone() {
 
 
 void markWiFi_services_initialized() {
+  addLog(LOG_LEVEL_DEBUG, F("WiFi : WiFi services initialized"));
   wifiStatus            = ESPEASY_WIFI_SERVICES_INITIALIZED;
   wifiConnectInProgress = false;
-  setWebserverRunning(true);
+  
+  processedDHCPTimeout  = true;  // FIXME TD-er:  Is this ever happening?
 }
-*/

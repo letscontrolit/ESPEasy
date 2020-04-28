@@ -118,6 +118,8 @@
 #include "src/Globals/Services.h"
 #include "src/Globals/Settings.h"
 #include "src/Globals/Statistics.h"
+#include "ESPEasyWiFi_credentials.h"
+#include "ESPEasyWifi_ProcessEvent.h"
 
 #if FEATURE_ADC_VCC
 ADC_MODE(ADC_VCC);
