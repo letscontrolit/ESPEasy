@@ -1,5 +1,6 @@
 #include "ETH.h"
 #include "ESPEasyWiFiEvent.h"
+#include "ESPEasyWifi_ProcessEvent.h"
 #include "src/Globals/ESPEasyWiFiEvent.h"
 #include "src/Globals/RTC.h"
 #include "ESPEasyTimeTypes.h"
@@ -120,6 +121,8 @@ void WiFiEvent(system_event_id_t event, system_event_info_t info) {
       break;
     case SYSTEM_EVENT_ETH_CONNECTED:
       addLog(LOG_LEVEL_INFO, F("ETH Connected"));
+      eth_connected = true;
+      processEthernetConnected();
       break;
     case SYSTEM_EVENT_ETH_GOT_IP:
       {
@@ -140,6 +143,7 @@ void WiFiEvent(system_event_id_t event, system_event_info_t info) {
     case SYSTEM_EVENT_ETH_DISCONNECTED:
       addLog(LOG_LEVEL_ERROR, F("ETH Disconnected"));
       eth_connected = false;
+      processEthernetDisconnected();
       break;
     case SYSTEM_EVENT_ETH_STOP:
       addLog(LOG_LEVEL_INFO, F("ETH Stopped"));

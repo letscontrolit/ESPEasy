@@ -453,3 +453,22 @@ void markWiFi_services_initialized() {
   
   processedDHCPTimeout  = true;  // FIXME TD-er:  Is this ever happening?
 }
+
+#ifdef HAS_ETHERNET
+
+void processEthernetConnected() {
+  if (Settings.UseRules)
+  {
+    eventQueue.add(F("ETHERNET#Connected"));
+  }
+  statusLED(true);
+}
+
+void processEthernetDisconnected() {
+  if (Settings.UseRules)
+  {
+    eventQueue.add(F("ETHERNET#Disconnected"));
+  }
+}
+
+#endif

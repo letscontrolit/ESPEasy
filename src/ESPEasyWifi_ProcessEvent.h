@@ -12,4 +12,9 @@ void processDisableAPmode();
 void processScanDone();
 void markWiFi_services_initialized();
 
+#ifdef HAS_ETHERNET
+void processEthernetConnected();
+void processEthernetDisconnected();
+#endif
+
 #endif //ESPEASYWIFI_PROCESSEVENT_H
