@@ -125,7 +125,15 @@ String NetworkMacAddress() {
 }
 
 uint8_t * NetworkMacAddressAsBytes(uint8_t* mac) {
+  #ifdef HAS_ETHERNET
+  if(eth_wifi_mode == ETHERNET) {
+    return ETHMacAddress(mac);
+  } else {
+    return WiFi.macAddress(mac);
+  }
+  #else
   return WiFi.macAddress(mac);
+  #endif
 }
 
 String NetworkGetHostname() {

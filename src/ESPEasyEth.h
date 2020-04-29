@@ -1,3 +1,4 @@
+#ifdef HAS_ETHERNET
 #ifndef ESPEASY_ETH_H
 #define ESPEASY_ETH_H
 
@@ -12,5 +13,7 @@ String ethGetDebugEthWifiModeStr();
 void ethPrintSettings();
 void ETHConnectRelaxed();
 bool ETHConnected();
+uint8_t * ETHMacAddress(uint8_t* mac);
 
 #endif // ESPEASY_ETH_H
+#endif
