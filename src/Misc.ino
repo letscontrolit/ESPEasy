@@ -2618,8 +2618,6 @@ void play_rtttl(uint8_t _pin, const char *p )
     else duration = wholenote / default_dur;  // we will need to check if we are a dotted note after
 
     // now get the note
-    note = 0;
-
     switch(*p)
     {
       case 'c':
