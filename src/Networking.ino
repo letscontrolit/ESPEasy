@@ -450,7 +450,7 @@ void SSDP_schema(WiFiClient& client) {
                    "</root>\r\n"
                    "\r\n");
 
-  client.printf(ssdp_schema.c_str());
+  client.printf("%s", ssdp_schema.c_str());
 }
 
 /********************************************************************************************\
