@@ -127,12 +127,8 @@ String getValue(LabelType::Enum label) {
   {
     case LabelType::UNIT_NR:                return String(Settings.Unit);
     case LabelType::UNIT_NAME:              return String(Settings.Name);  // Only return the set name, no appended unit.
-    case LabelType::HOST_NAME:
-    #ifdef ESP32
-      return WiFi.getHostname();
-    #else
-      return WiFi.hostname();
-    #endif
+    case LabelType::HOST_NAME:              return NetworkGetHostname();
+
 
     case LabelType::LOCAL_TIME:             return node_time.getDateTimeString('-',':',' ');
     case LabelType::UPTIME:                 return String(wdcounter / 2);
@@ -172,7 +168,7 @@ String getValue(LabelType::Enum label) {
     case LabelType::DNS_2:                  return NetworkDnsIP(1).toString();
     case LabelType::ALLOWED_IP_RANGE:       return describeAllowedIPrange();
     case LabelType::STA_MAC:                return NetworkMacAddress();
-    case LabelType::AP_MAC:                 break;
+    case LabelType::AP_MAC:                 return WifiSoftAPmacAddress();
     case LabelType::SSID:                   return WiFi.SSID();
     case LabelType::BSSID:                  return WiFi.BSSIDstr();
     case LabelType::CHANNEL:                return String(WiFi.channel());

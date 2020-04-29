@@ -1,9 +1,10 @@
-#include "ESPEasyEth.h"
-
 #ifdef HAS_ETHERNET
 
+#include "ESPEasyEth.h"
+#include "ESPEasyNetwork.h"
 #include "ETH.h"
 #include "ESPEasy-Globals.h"
+#include "eth_phy/phy.h"
 
 bool ethUseStaticIP() {
   return Settings.ETH_IP[0] != 0 && Settings.ETH_IP[3] != 255;
@@ -53,6 +54,9 @@ bool ethPrepare() {
     addLog(LOG_LEVEL_ERROR, F("ETH: Settings not correct!!!"));
     return false;
   }
+  char hostname[40];
+  safe_strncpy(hostname, NetworkCreateRFCCompliantHostname().c_str(), sizeof(hostname));
+  ETH.setHostname(hostname);
   ETH.config(INADDR_NONE, INADDR_NONE, INADDR_NONE);
   ethSetupStaticIPconfig();
   return true;
@@ -96,6 +100,14 @@ void ethPrintSettings() {
   settingsDebugLog += F(" Power Pin: ");
   settingsDebugLog += String(Settings.ETH_Pin_power);
   addLog(LOG_LEVEL_INFO, settingsDebugLog);
+}
+
+String ETHMacAddress() {
+    uint8_t mac[6];
+    char macStr[18] = { 0 };
+    esp_eth_get_mac(mac);
+    sprintf(macStr, "%02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+    return String(macStr);
 }
 
 void ETHConnectRelaxed() {

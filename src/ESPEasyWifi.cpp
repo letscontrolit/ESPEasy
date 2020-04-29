@@ -384,7 +384,7 @@ void setAPinternal(bool enable)
   if (enable) {
     // create and store unique AP SSID/PW to prevent ESP from starting AP mode with default SSID and No password!
     // setup ssid for AP Mode when needed
-    String softAPSSID = NetworkGetAPssid();
+    String softAPSSID = NetworkCreateRFCCompliantHostname();
     String pwd        = SecuritySettings.WifiAPKey;
     IPAddress subnet(DEFAULT_AP_SUBNET);
 

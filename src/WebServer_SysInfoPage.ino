@@ -66,24 +66,13 @@ void handle_sysinfo_json() {
   json_prop(F("dns1"),          formatIP(NetworkDnsIP(0)));
   json_prop(F("dns2"),          formatIP(NetworkDnsIP(1)));
   json_prop(F("allowed_range"), describeAllowedIPrange());
-
-
-  uint8_t  mac[]   = { 0, 0, 0, 0, 0, 0 };
-  uint8_t *macread = WiFi.macAddress(mac);
-  char     macaddress[20];
-  formatMAC(macread, macaddress);
-
-  json_prop(F("sta_mac"), macaddress);
-
-  macread = WiFi.softAPmacAddress(mac);
-  formatMAC(macread, macaddress);
-
-  json_prop(F("ap_mac"), macaddress);
-  json_prop(F("ssid"),   WiFi.SSID());
-  json_prop(F("bssid"),  WiFi.BSSIDstr());
-  json_number(F("channel"), String(WiFi.channel()));
-  json_prop(F("connected"), format_msec_duration(timeDiff(lastConnectMoment, millis())));
-  json_prop(F("ldr"),       getLastDisconnectReason());
+  json_prop(F("sta_mac"),       NetworkMacAddress());
+  json_prop(F("ap_mac"),        WifiSoftAPmacAddress());
+  json_prop(F("ssid"),          WiFi.SSID());
+  json_prop(F("bssid"),         WiFi.BSSIDstr());
+  json_number(F("channel"),     String(WiFi.channel()));
+  json_prop(F("connected"),    format_msec_duration(timeDiff(lastConnectMoment, millis())));
+  json_prop(F("ldr"),          getLastDisconnectReason());
   json_number(F("reconnects"), String(wifi_reconnects));
   json_close();
 
@@ -391,20 +380,8 @@ void handle_sysinfo_Network() {
   addRowLabelValue(LabelType::CLIENT_IP);
   addRowLabelValue(LabelType::DNS);
   addRowLabelValue(LabelType::ALLOWED_IP_RANGE);
-  addRowLabel(getLabel(LabelType::STA_MAC));
-
-  {
-    uint8_t  mac[]   = { 0, 0, 0, 0, 0, 0 };
-    uint8_t *macread = WiFi.macAddress(mac);
-    char     macaddress[20];
-    formatMAC(macread, macaddress);
-    addHtml(macaddress);
-
-    addRowLabel(getLabel(LabelType::AP_MAC));
-    macread = WiFi.softAPmacAddress(mac);
-    formatMAC(macread, macaddress);
-    addHtml(macaddress);
-  }
+  addRowLabelValue(LabelType::STA_MAC);
+  addRowLabelValue(LabelType::AP_MAC);
 
   addRowLabel(getLabel(LabelType::SSID));
   {

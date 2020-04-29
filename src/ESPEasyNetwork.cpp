@@ -105,29 +105,13 @@ IPAddress NetworkDnsIP (uint8_t dns_no) {
   #endif
 }
 
-uint8_t * NetworkMacAddressAsBytes(uint8_t* mac) {
-  #ifdef HAS_ETHERNET
-  if(eth_wifi_mode == ETHERNET) {
-    if(eth_connected) {
-      return WiFi.macAddress(mac);
-    } else {
-      addLog(LOG_LEVEL_ERROR, F("Call NetworkMacAddressAsBytes(uint8_t* mac) only on connected Ethernet!"));
-      return mac;
-    }
-  } else {
-    return WiFi.macAddress(mac);
-  }
-  #else
-  return WiFi.macAddress(mac);
-  #endif
-  return WiFi.macAddress(mac);
-}
-
 String NetworkMacAddress() {
   #ifdef HAS_ETHERNET
   if(eth_wifi_mode == ETHERNET) {
     if(!eth_connected) {
       addLog(LOG_LEVEL_ERROR, F("Call NetworkMacAddress() only on connected Ethernet!"));
+    } else {
+      return ETH.macAddress();
     }
   }
   #endif
@@ -140,16 +124,35 @@ String NetworkMacAddress() {
   return String(macaddress);
 }
 
+uint8_t * NetworkMacAddressAsBytes(uint8_t* mac) {
+  return WiFi.macAddress(mac);
+}
+
+String NetworkGetHostname() {
+    #ifdef ESP32
+      #ifdef HAS_ETHERNET 
+      if(Settings.ETH_Wifi_Mode == ETHERNET) {
+        return String(ETH.getHostname());
+      }
+        return String(WiFi.getHostname());
+      #else
+        return String(WiFi.getHostname());
+      #endif
+    #else
+      return String(WiFi.hostname());
+    #endif
+}
+
 // ********************************************************************************
 // Determine Wifi AP name to set. (also used for mDNS)
 // ********************************************************************************
-String NetworkGetAPssid()
+String NetworkGetHostNameFromSettings()
 {
   return Settings.getHostname();
 }
 
-String NetworkGetHostname() {
-  return createRFCCompliantHostname(NetworkGetAPssid());
+String NetworkCreateRFCCompliantHostname() {
+  return createRFCCompliantHostname(NetworkGetHostNameFromSettings());
 }
 
 // Create hostname with - instead of spaces
@@ -159,4 +162,12 @@ String createRFCCompliantHostname(String oldString) {
   result.replace(" ", "-");
   result.replace("_", "-"); // See RFC952
   return result;
+}
+
+String WifiSoftAPmacAddress() {
+    uint8_t  mac[]   = { 0, 0, 0, 0, 0, 0 };
+    uint8_t *macread = WiFi.softAPmacAddress(mac);
+    char     macaddress[20];
+    formatMAC(macread, macaddress);
+    return String(macaddress);
 }

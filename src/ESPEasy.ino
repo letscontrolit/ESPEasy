@@ -995,7 +995,12 @@ void backgroundtasks()
     if (webserverRunning) {
       web_server.handleClient();
     }
-    if (WiFi.getMode() != WIFI_OFF) {
+    if (WiFi.getMode() != WIFI_OFF
+    // This makes UDP working for ETHERNET
+    #ifdef HAS_ETHERNET
+                       || eth_connected
+    #endif
+                       ) {
       checkUDP();
     }
   }

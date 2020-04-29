@@ -346,7 +346,8 @@ void sendSysInfoUDP(byte repeats)
   for (byte counter = 0; counter < repeats; counter++)
   {
     uint8_t  mac[]   = { 0, 0, 0, 0, 0, 0 };
-    uint8_t *macread = WiFi.macAddress(mac);
+    uint8_t *macread = NetworkMacAddressAsBytes(mac);
+
     byte     data[80];
     data[0] = 255;
     data[1] = 1;
@@ -406,7 +407,7 @@ void SSDP_schema(WiFiClient& client) {
     return;
   }
 
-  const IPAddress ip     = WiFi.localIP();
+  const IPAddress ip     = NetworkLocalIP();
   const uint32_t  chipId = ESP.getChipId();
   char uuid[64];
   sprintf_P(uuid, PSTR("38323636-4558-4dda-9188-cda0e6%02x%02x%02x"),
@@ -498,7 +499,7 @@ bool SSDP_begin() {
   _server->ref();
 
   ip_addr_t ifaddr;
-  ifaddr.addr = WiFi.localIP();
+  ifaddr.addr = NetworkLocalIP();
   ip_addr_t multicast_addr;
   multicast_addr.addr = (uint32_t)SSDP_MULTICAST_ADDR;
 
@@ -544,7 +545,7 @@ bool SSDP_begin() {
    Send SSDP messages (notify & responses)
  \*********************************************************************************************/
 void SSDP_send(byte method) {
-  uint32_t ip = WiFi.localIP();
+  uint32_t ip = NetworkLocalIP();
 
   // FIXME TD-er: Why create String objects of these flashstrings?
   String _ssdp_response_template = F(
@@ -563,7 +564,7 @@ void SSDP_send(byte method) {
     "CACHE-CONTROL: max-age=%u\r\n"                // SSDP_INTERVAL
     "SERVER: Arduino/1.0 UPNP/1.1 ESPEasy/%u\r\n"  // _modelNumber
     "USN: uuid:%s\r\n"                             // _uuid
-    "LOCATION: http://%u.%u.%u.%u:80/ssdp.xml\r\n" // WiFi.localIP(),
+    "LOCATION: http://%u.%u.%u.%u:80/ssdp.xml\r\n" // NetworkLocalIP(),
     "\r\n");
   {
     char uuid[64]   = { 0 };
