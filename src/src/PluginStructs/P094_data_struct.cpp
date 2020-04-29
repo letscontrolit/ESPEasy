@@ -190,7 +190,7 @@ String P094_data_struct::getFilter(uint8_t lineNr, P094_Filter_Value_Type& filte
 
   filterValueType = P094_Filter_Value_Type::P094_not_used;
 
-  if (varNr >= P94_Nlines) { return ""; }
+  if ((varNr + 3) >= P94_Nlines) { return ""; }
   optional        = _lines[varNr + 1].toInt();
   filterValueType = valueType_index[lineNr];
   comparator      = filter_comp[lineNr];
@@ -351,9 +351,12 @@ bool P094_data_struct::parsePacket(String& received) const {
               case P094_Filter_Comp::P094_Equal_MUST:
 
                 if (!match) { return false; }
+                break;
+
               case P094_Filter_Comp::P094_NotEqual_MUST:
 
                 if (match) { return false; }
+                break;
             }
           }
         }
