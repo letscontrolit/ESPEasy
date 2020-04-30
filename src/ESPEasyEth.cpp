@@ -7,7 +7,7 @@
 #include "eth_phy/phy.h"
 
 bool ethUseStaticIP() {
-  return Settings.ETH_IP[0] != 0 && Settings.ETH_IP[3] != 255;
+  return Settings.ETH_IP[0] != 0 && Settings.ETH_IP[0] != 255;
 }
 
 void ethSetupStaticIPconfig() {
