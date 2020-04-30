@@ -90,7 +90,6 @@ void handle_hardware() {
   String ethWifiOptions[2] = { F("WIFI"), F("ETHERNET") };
   addSelector("ethwifi", 2, ethWifiOptions, NULL, NULL, Settings.ETH_Wifi_Mode, false, true);
   addFormNote(F("Change Switch between WIFI and ETHERNET requires reboot to activate"));
-  addFormNote(F("Be aware with ESPEasyP2P Network, since IP Address will change. There could be conflicts."));
   addRowLabel_tr_id(F("Ethernet PHY type"), "ethtype");
   String ethPhyTypes[2] = { F("LAN8710"), F("TLK110") };
   addSelector("ethtype", 2, ethPhyTypes, NULL, NULL, Settings.ETH_Phy_Type, false, true);

@@ -916,8 +916,18 @@ void runEach30Seconds()
     log += connectionFailures;
     log += F(" FreeMem ");
     log += FreeMem();
+    #ifdef HAS_ETHERNET
+    if(eth_wifi_mode == ETHERNET) {
+      log += F( " EthSpeedState ");
+      log += getValue(LabelType::ETH_SPEED_STATE);
+    } else {
+      log += F(" WiFiStatus ");
+      log += WiFi.status();
+    }
+    #else
     log += F(" WiFiStatus ");
     log += WiFi.status();
+    #endif
 //    log += F(" ListenInterval ");
 //    log += WiFi.getListenInterval();
     addLog(LOG_LEVEL_INFO, log);
