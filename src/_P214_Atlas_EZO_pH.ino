@@ -1,15 +1,19 @@
+#ifdef USES_P214
 //########################################################################
 //################## Plugin 214 : Atlas Scientific EZO Ph sensor  ########
 //########################################################################
 
 // datasheet at https://www.atlas-scientific.com/_files/_datasheets/_circuit/pH_EZO_datasheet.pdf
 // works only in i2c mode
+#include "ESPEasy_fdwdecl.h"
 
 #define PLUGIN_214
-#define PLUGIN_ID_214 214
-#define PLUGIN_NAME_214       "Environment - Atlas Scientific pH EZO [TESTING]"
+#define PLUGIN_ID_214         214
+#define PLUGIN_NAME_214       "Environment - Atlas Scientific EZO pH"
 #define PLUGIN_VALUENAME1_214 "pH"
 #define PLUGIN_VALUENAME2_214 "Voltage"
+
+#define FIXED_TEMP_VALUE      20
 
 boolean Plugin_214_init = false;
 
@@ -156,7 +160,7 @@ boolean Plugin_214(byte function, struct EventStruct *event, String& string)
         }
 
         addRowLabel(F("<strong>Middle</strong>"));
-        addFormNumericBox(F("Ref Ph"),F("Plugin_214_ref_cal_M' step='0.01"),Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1],1,14);
+        addFormFloatNumberBox(F("Ref Ph"),F("Plugin_214_ref_cal_M' step='0.01"),Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1],0,14);
         if (nb_calibration_points > 0) {
           addHtml(F("&nbsp;<span style='color:green;'>OK</span>"));
         } else {
@@ -166,7 +170,7 @@ boolean Plugin_214(byte function, struct EventStruct *event, String& string)
         addHtml(F("\n<script type='text/javascript'>document.getElementById(\"Plugin_214_enable_cal_M\").onclick = function(){document.getElementById(\"Plugin_214_enable_cal_L\").checked = false;document.getElementById(\"Plugin_214_enable_cal_H\").checked = false;};</script>\n"));
 
         addRowLabel(F("<strong>Low</strong>"));
-        addFormNumericBox(F("Ref Ph"),F("Plugin_214_ref_cal_L' step='0.01"), Settings.TaskDevicePluginConfigFloat[event->TaskIndex][2],1,14);
+        addFormFloatNumberBox(F("Ref Ph"),F("Plugin_214_ref_cal_L' step='0.01"), Settings.TaskDevicePluginConfigFloat[event->TaskIndex][2],0,14);
         if (nb_calibration_points > 1) {
           addHtml(F("&nbsp;<span style='color:green;'>OK</span>"));
         } else {
@@ -176,7 +180,7 @@ boolean Plugin_214(byte function, struct EventStruct *event, String& string)
         addHtml(F("\n<script type='text/javascript'>document.getElementById(\"Plugin_214_enable_cal_L\").onclick = function(){document.getElementById(\"Plugin_214_enable_cal_M\").checked = false;document.getElementById(\"Plugin_214_enable_cal_H\").checked = false;};</script>\n"));
 
         addHtml(F("<TR><TD><strong>High</strong></TD>"));
-        addFormNumericBox(F("Ref Ph"),F("Plugin_214_ref_cal_H' step='0.01"), Settings.TaskDevicePluginConfigFloat[event->TaskIndex][3],1,14);
+        addFormFloatNumberBox(F("Ref Ph"),F("Plugin_214_ref_cal_H' step='0.01"), Settings.TaskDevicePluginConfigFloat[event->TaskIndex][3],0,14);
         if (nb_calibration_points > 2) {
           addHtml(F("&nbsp;<span style='color:green;'>OK</span>"));
         } else {
@@ -202,19 +206,22 @@ boolean Plugin_214(byte function, struct EventStruct *event, String& string)
         char deviceTemperatureTemplate[40];
         LoadCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemperatureTemplate, sizeof(deviceTemperatureTemplate));
         addFormTextBox(F("Temperature "), F("Plugin_214_temperature_template"), deviceTemperatureTemplate, sizeof(deviceTemperatureTemplate));
-        addFormNote(F("You can use a formulae (and idealy refer to a temp sensor). "));
+        addFormNote(F("You can use a formulae and idealy refer to a temp sensor (directly, via ESPEasyP2P or MQTT import) ,e.g. '[Pool#Temperature]'. If you don't have a sensor, you could type a fixed value like '25' for 25°."));
         float value;
         char strValue[5];
         String deviceTemperatureTemplateString(deviceTemperatureTemplate);
         String pooltempString(parseTemplate(deviceTemperatureTemplateString, 40));
         addHtml(F("<div class='note'>"));
-        if (Calculate(pooltempString.c_str(),&value) == CALCULATE_OK ){
-          addHtml(F("Actual value : "));
-          dtostrf(value,5,2,strValue);
-          addHtml(strValue);
-        } else {
-          addHtml(F("(It seems I can't parse your formulae)"));
+        if (Calculate(pooltempString.c_str(),&value) != CALCULATE_OK ){
+          addHtml(F("It seems I can't parse your formulae. Fixed value will be used!"));
+          value = FIXED_TEMP_VALUE;
         }
+        addHtml(F("</div>"));
+        
+        addHtml(F("<div class='note'>"));
+        addHtml(F("Actual value : "));
+        dtostrf(value,5,2,strValue);
+        addHtml(strValue);
 
         addHtml(F("</div>"));
 
@@ -266,7 +273,7 @@ boolean Plugin_214(byte function, struct EventStruct *event, String& string)
         strncpy(deviceTemperatureTemplate, tmpString.c_str(), sizeof(deviceTemperatureTemplate)-1);
         deviceTemperatureTemplate[sizeof(deviceTemperatureTemplate)-1]=0; //be sure that our string ends with a \0
 
-        SaveCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemperatureTemplate, sizeof(deviceTemperatureTemplate));
+        addHtmlError(SaveCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemperatureTemplate, sizeof(deviceTemperatureTemplate)));
 
         Plugin_214_init = false;
         success = true;
@@ -292,12 +299,11 @@ boolean Plugin_214(byte function, struct EventStruct *event, String& string)
         //String setTemperature("T,");
         String setTemperature("RT,");
         float temperatureReading;
-        if (Calculate(pooltempString.c_str(),&temperatureReading) == CALCULATE_OK ){
-          setTemperature += temperatureReading;
-        } else {
-          success = false;
-          break;
+        if (Calculate(pooltempString.c_str(),&temperatureReading) != CALCULATE_OK ){
+          temperatureReading = FIXED_TEMP_VALUE;
         }
+        
+        setTemperature += temperatureReading;
 
         //ok, now we can read the pH value with Temperature compensation
         status = _P214_send_I2C_command(Settings.TaskDevicePluginConfig[event->TaskIndex][0],setTemperature.c_str(),sensordata);
@@ -330,8 +336,6 @@ boolean Plugin_214(byte function, struct EventStruct *event, String& string)
       }
       case PLUGIN_WRITE:
         {
-          //TODO : do something more usefull ...
-
           String tmpString  = string;
           int argIndex = tmpString.indexOf(',');
           if (argIndex)
@@ -448,3 +452,4 @@ bool _P214_send_I2C_command(uint8_t I2Caddress,const char * cmd, char* sensordat
     addLog(LOG_LEVEL_DEBUG, sensordata);
     return true;
 }
+#endif

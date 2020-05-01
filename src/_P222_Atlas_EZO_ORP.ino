@@ -1,3 +1,4 @@
+#ifdef USES_P222
 //########################################################################
 //################## Plugin 222 : Atlas Scientific EZO ORP sensor  ########
 //########################################################################
@@ -7,7 +8,7 @@
 
 #define PLUGIN_222
 #define PLUGIN_ID_222 222
-#define PLUGIN_NAME_222       "Environment - Atlas Scientific ORP EZO"
+#define PLUGIN_NAME_222       "Environment - Atlas Scientific EZO ORP"
 #define PLUGIN_VALUENAME1_222 "ORP"
 #define PLUGIN_VALUENAME2_222 "Voltage"
 
@@ -363,3 +364,4 @@ bool _P222_send_I2C_command(uint8_t I2Caddress,const char * cmd, char* sensordat
     addLog(LOG_LEVEL_DEBUG, sensordata);
     return true;
 }
+#endif
