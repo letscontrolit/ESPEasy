@@ -21,6 +21,7 @@ bool CPlugin_012(CPlugin::Function function, struct EventStruct *event, String& 
         Protocol[protocolCount].usesMQTT = false;
         Protocol[protocolCount].usesAccount = false;
         Protocol[protocolCount].usesPassword = true;
+        Protocol[protocolCount].usesExtCreds = true;
         Protocol[protocolCount].defaultPort = 80;
         Protocol[protocolCount].usesID = true;
         break;
@@ -92,7 +93,7 @@ bool do_process_c012_delay_queue(int controller_number, const C012_queue_element
     if (element.checkDone(true))
       return true;
   }
-  if (!WiFiConnected()) {
+  if (!NetworkConnected()) {
     return false;
   }
   return element.checkDone(Blynk_get(element.txt[element.valuesSent], element.controller_idx));

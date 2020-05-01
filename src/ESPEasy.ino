@@ -1,11 +1,6 @@
 
 #include <Arduino.h>
 
-#ifdef HAS_ETHERNET
-#include <ETH.h>
-static bool eth_connected = false;
-#endif
-
 #ifdef CONTINUOUS_INTEGRATION
 #pragma GCC diagnostic error "-Wall"
 #else
@@ -123,6 +118,8 @@ static bool eth_connected = false;
 #include "src/Globals/Services.h"
 #include "src/Globals/Settings.h"
 #include "src/Globals/Statistics.h"
+#include "ESPEasyWiFi_credentials.h"
+#include "ESPEasyWifi_ProcessEvent.h"
 
 #if FEATURE_ADC_VCC
 ADC_MODE(ADC_VCC);
@@ -194,6 +191,16 @@ void setup()
 //  ets_isr_attach(8, sw_watchdog_callback, NULL);  // Set a callback for feeding the watchdog.
 #endif
 
+
+  // Read ADC at boot, before WiFi tries to connect.
+  // see https://github.com/letscontrolit/ESPEasy/issues/2646
+#if FEATURE_ADC_VCC
+  vcc = ESP.getVcc() / 1000.0;
+#endif
+#ifdef ESP8266
+  lastADCvalue = analogRead(A0);
+#endif
+
   resetPluginTaskData();
 
   checkRAM(F("setup"));
@@ -227,7 +234,7 @@ void setup()
   }
 
   emergencyReset();
-
+  
   String log = F("\n\n\rINIT : Booting version: ");
   log += F(BUILD_GIT);
   log += " (";
@@ -237,7 +244,6 @@ void setup()
   log = F("INIT : Free RAM:");
   log += FreeMem();
   addLog(LOG_LEVEL_INFO, log);
-
 
   //warm boot
   if (readFromRTC())
@@ -284,6 +290,18 @@ void setup()
   fileSystemCheck();
   progMemMD5check();
   LoadSettings();
+
+  #ifdef HAS_ETHERNET
+  // This ensures, that changing WIFI OR ETHERNET MODE happens properly only after reboot. Changing without reboot would not be a good idea.
+  // This only works after LoadSettings();
+  eth_wifi_mode = Settings.ETH_Wifi_Mode;
+  log = F("INIT : ETH_WIFI_MODE:");
+  log += String(eth_wifi_mode);
+  log += F(" (");
+  log += (eth_wifi_mode == WIFI ? F("WIFI") : F("ETHERNET"));
+  log += F(")");
+  addLog(LOG_LEVEL_INFO, log);
+  #endif
 
   Settings.UseRTOSMultitasking = false; // For now, disable it, we experience heap corruption.
   if (RTC.bootFailedCount > 10 && RTC.bootCounter > 10) {
@@ -374,12 +392,7 @@ void setup()
     rulesProcessing(event); // TD-er: Process events in the setup() now.
   }
 
-#ifdef HAS_ETHERNET
-  WiFi.onEvent(ETHEvent);
-  ETHConnectRelaxed();
-#else
-  WiFiConnectRelaxed();
-#endif
+  NetworkConnectRelaxed();
 
   setWebserverRunning(true);
 
@@ -397,12 +410,6 @@ void setup()
 
   if (node_time.systemTimePresent())
     node_time.initTime();
-
-#if FEATURE_ADC_VCC
-  if (!wifiConnectInProgress) {
-    vcc = ESP.getVcc() / 1000.0;
-  }
-#endif
 
   if (Settings.UseRules)
   {
@@ -557,11 +564,16 @@ void loop()
 
   updateLoopStats();
 
-  #ifndef HAS_ETHERNET
+  #ifdef HAS_ETHERNET
+  // Handle WiFiEvents when compiled with HAS_ETHERNET but in WiFi Mode eth_wifi_mode (WIFI = 0, ETHERNET = 1)
+  if(eth_wifi_mode == WIFI) {
+    handle_unprocessedWiFiEvents();
+  }
+  #else
   handle_unprocessedWiFiEvents();
   #endif
 
-  bool firstLoopConnectionsEstablished = WiFiConnected() && firstLoop;
+  bool firstLoopConnectionsEstablished = NetworkConnected() && firstLoop;
   if (firstLoopConnectionsEstablished) {
      addLog(LOG_LEVEL_INFO, F("firstLoopConnectionsEstablished"));
      firstLoop = false;
@@ -678,7 +690,7 @@ void updateMQTTclient_connected() {
 
 void runPeriodicalMQTT() {
   // MQTT_KEEPALIVE = 15 seconds.
-  if (!WiFiConnected(10)) {
+  if (!NetworkConnected(10)) {
     updateMQTTclient_connected();
     return;
   }
@@ -773,7 +785,7 @@ void run10TimesPerSecond() {
   processNextEvent();
   
   #ifdef USES_C015
-  if (WiFiConnected())
+  if (NetworkConnected())
       Blynk_Run_c015();
   #endif
   #ifndef USE_RTOS_MULTITASKING
@@ -904,8 +916,18 @@ void runEach30Seconds()
     log += connectionFailures;
     log += F(" FreeMem ");
     log += FreeMem();
+    #ifdef HAS_ETHERNET
+    if(eth_wifi_mode == ETHERNET) {
+      log += F( " EthSpeedState ");
+      log += getValue(LabelType::ETH_SPEED_STATE);
+    } else {
+      log += F(" WiFiStatus ");
+      log += WiFi.status();
+    }
+    #else
     log += F(" WiFiStatus ");
     log += WiFi.status();
+    #endif
 //    log += F(" ListenInterval ");
 //    log += WiFi.getListenInterval();
     addLog(LOG_LEVEL_INFO, log);
@@ -964,11 +986,11 @@ void backgroundtasks()
     return;
   }
   START_TIMER
-  const bool wifiConnected = WiFiConnected();
+  const bool networkConnected = NetworkConnected();
   runningBackgroundTasks=true;
 
   #if defined(ESP8266)
-  if (wifiConnected) {
+  if (networkConnected) {
     tcpCleanup();
   }
   #endif
@@ -983,7 +1005,12 @@ void backgroundtasks()
     if (webserverRunning) {
       web_server.handleClient();
     }
-    if (WiFi.getMode() != WIFI_OFF) {
+    if (WiFi.getMode() != WIFI_OFF
+    // This makes UDP working for ETHERNET
+    #ifdef HAS_ETHERNET
+                       || eth_connected
+    #endif
+                       ) {
       checkUDP();
     }
   }
@@ -993,14 +1020,14 @@ void backgroundtasks()
     dnsServer.processNextRequest();
 
   #ifdef FEATURE_ARDUINO_OTA
-  if(Settings.ArduinoOTAEnable && wifiConnected)
+  if(Settings.ArduinoOTAEnable && networkConnected)
     ArduinoOTA.handle();
 
   //once OTA is triggered, only handle that and dont do other stuff. (otherwise it fails)
   while (ArduinoOTAtriggered)
   {
     delay(0);
-    if (WiFiConnected()) {
+    if (NetworkConnected()) {
       ArduinoOTA.handle();
     }
   }
@@ -1009,7 +1036,7 @@ void backgroundtasks()
 
   #ifdef FEATURE_MDNS
   // Allow MDNS processing
-  if (wifiConnected) {
+  if (networkConnected) {
     MDNS.update();
   }
   #endif
@@ -1021,45 +1048,3 @@ void backgroundtasks()
   runningBackgroundTasks=false;
   STOP_TIMER(BACKGROUND_TASKS);
 }
-
-#ifdef HAS_ETHERNET
-void ETHEvent(WiFiEvent_t event)
-{
-  switch (event) {
-    case SYSTEM_EVENT_ETH_START:
-      addLog(LOG_LEVEL_INFO, F("ETH Started"));
-      //set eth hostname here
-      //ETH.setHostname("esp32-ethernet");
-      break;
-    case SYSTEM_EVENT_ETH_CONNECTED:
-      addLog(LOG_LEVEL_INFO, F("ETH Connected"));
-      break;
-    case SYSTEM_EVENT_ETH_GOT_IP:
-      {
-        String log = F("ETH MAC: ");
-        log += ETH.macAddress();
-        log += F(", IPv4: ");
-        log += ETH.localIP().toString();
-        if (ETH.fullDuplex()) {
-          log += F(", FULL_DUPLEX");
-        }
-        log += F(", ");
-        log += ETH.linkSpeed();
-        log += F("Mbps");
-        addLog(LOG_LEVEL_INFO, log);
-      }
-      eth_connected = true;
-      break;
-    case SYSTEM_EVENT_ETH_DISCONNECTED:
-      addLog(LOG_LEVEL_ERROR, F("ETH Disconnected"));
-      eth_connected = false;
-      break;
-    case SYSTEM_EVENT_ETH_STOP:
-      addLog(LOG_LEVEL_INFO, F("ETH Stopped"));
-      eth_connected = false;
-      break;
-    default:
-      break;
-  }
-}
-#endif

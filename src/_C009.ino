@@ -44,6 +44,7 @@ bool CPlugin_009(CPlugin::Function function, struct EventStruct *event, String& 
         Protocol[protocolCount].usesTemplate = false;
         Protocol[protocolCount].usesAccount = true;
         Protocol[protocolCount].usesPassword = true;
+        Protocol[protocolCount].usesExtCreds = true;
         Protocol[protocolCount].usesID = false;
         Protocol[protocolCount].defaultPort = 8383;
         break;
@@ -122,9 +123,9 @@ bool do_process_c009_delay_queue(int controller_number, const C009_queue_element
 
     // embed IP, important if there is NAT/PAT
     // char ipStr[20];
-    // IPAddress ip = WiFi.localIP();
+    // IPAddress ip = NetworkLocalIP();
     // sprintf_P(ipStr, PSTR("%u.%u.%u.%u"), ip[0], ip[1], ip[2], ip[3]);
-    ESP[F("ip")] = WiFi.localIP().toString();
+    ESP[F("ip")] = NetworkLocalIP().toString();
 
     // Create nested SENSOR json object
     JsonObject SENSOR = data.createNestedObject(String(F("SENSOR")));

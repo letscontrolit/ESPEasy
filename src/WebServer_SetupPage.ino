@@ -14,7 +14,7 @@ void handle_setup() {
   // Do not check client IP range allowed.
   TXBuffer.startStream();
 
-  if (!WiFiConnected())
+  if (!NetworkConnected())
   {
     sendHeadandTail(F("TmplAP"));
     static byte status       = 0;
@@ -188,7 +188,7 @@ void handle_setup_finish() {
   html_TD();
 
   if (!clientIPinSubnet()) {
-    String host = formatIP(WiFi.localIP());
+    String host = formatIP(NetworkLocalIP());
     String url  = F("http://");
     url += host;
     url += F("/config");

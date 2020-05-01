@@ -1,10 +1,13 @@
-#define WIFI_RECONNECT_WAIT                20000  // in milliSeconds
-#define WIFI_AP_OFF_TIMER_DURATION         60000  // in milliSeconds
-#define WIFI_CONNECTION_CONSIDERED_STABLE  300000 // in milliSeconds
-#define WIFI_ALLOW_AP_AFTERBOOT_PERIOD     5      // in minutes
-
+#include "ESPEasyWifi.h"
+#include "ESPEasyNetwork.h"
+#include "ESPEasyWifi_ProcessEvent.h"
 #include "src/Globals/ESPEasyWiFiEvent.h"
 #include "ESPEasy-Globals.h"
+#include "ESPEasyWiFi_credentials.h"
+#include "src/DataStructs/TimingStats.h"
+#include "src/Globals/RTC.h"
+#include "src/Globals/SecuritySettings.h"
+#include "src/Helpers/ESPEasy_time_calc.h"
 
 // ********************************************************************************
 // WiFi state
@@ -74,10 +77,6 @@
 // ********************************************************************************
 bool WiFiConnected() {
   START_TIMER;
-
-  #ifdef HAS_ETHERNET
-  return eth_connected;
-  #endif
 
   if (unprocessedWifiEvents()) { return false; }
 
@@ -207,7 +206,7 @@ bool prepareWiFi() {
   }
   setSTA(true);
   char hostname[40];
-  safe_strncpy(hostname, createRFCCompliantHostname(WifiGetAPssid()).c_str(), sizeof(hostname));
+  safe_strncpy(hostname, NetworkGetHostname().c_str(), sizeof(hostname));
   #if defined(ESP8266)
   wifi_station_set_hostname(hostname);
 
@@ -385,7 +384,7 @@ void setAPinternal(bool enable)
   if (enable) {
     // create and store unique AP SSID/PW to prevent ESP from starting AP mode with default SSID and No password!
     // setup ssid for AP Mode when needed
-    String softAPSSID = WifiGetAPssid();
+    String softAPSSID = NetworkCreateRFCCompliantHostname();
     String pwd        = SecuritySettings.WifiAPKey;
     IPAddress subnet(DEFAULT_AP_SUBNET);
 
@@ -508,14 +507,6 @@ bool WifiIsSTA(WiFiMode_t wifimode)
   #else // if defined(ESP32)
   return (wifimode & WIFI_STA) != 0;
   #endif // if defined(ESP32)
-}
-
-// ********************************************************************************
-// Determine Wifi AP name to set. (also used for mDNS)
-// ********************************************************************************
-String WifiGetAPssid()
-{
-  return Settings.getHostname();
 }
 
 bool useStaticIP() {

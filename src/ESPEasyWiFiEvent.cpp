@@ -1,11 +1,21 @@
+#ifdef HAS_ETHERNET
+#include "ETH.h"
+#endif
 #include "ESPEasyWiFiEvent.h"
+#include "ESPEasyWifi_ProcessEvent.h"
 #include "src/Globals/ESPEasyWiFiEvent.h"
 #include "src/Globals/RTC.h"
 #include "ESPEasyTimeTypes.h"
+#include "ESPEasy_Log.h"
+#include "ESPEasy_fdwdecl.h"
 
 #include "src/DataStructs/RTCStruct.h"
 
 #include "src/Helpers/ESPEasy_time_calc.h"
+
+#ifdef HAS_ETHERNET
+extern bool eth_connected;
+#endif
 
 #ifdef ESP32
 void WiFi_Access_Static_IP::set_use_static_ip(bool enabled) {
@@ -101,16 +111,42 @@ void WiFiEvent(system_event_id_t event, system_event_info_t info) {
       break;
 #ifdef HAS_ETHERNET
     case SYSTEM_EVENT_ETH_START:
+      addLog(LOG_LEVEL_INFO, F("ETH Started"));
       break;
     case SYSTEM_EVENT_ETH_CONNECTED:
-      break;
-    case SYSTEM_EVENT_ETH_DISCONNECTED:
-      break;
-    case SYSTEM_EVENT_ETH_STOP:
+      addLog(LOG_LEVEL_INFO, F("ETH Connected"));
+      eth_connected = true;
+      processEthernetConnected();
       break;
     case SYSTEM_EVENT_ETH_GOT_IP:
+      {
+        String log = F("ETH MAC: ");
+        log += ETH.macAddress();
+        log += F(", IPv4: ");
+        log += ETH.localIP().toString();
+        if (ETH.fullDuplex()) {
+          log += F(", FULL_DUPLEX");
+        }
+        log += F(", ");
+        log += ETH.linkSpeed();
+        log += F("Mbps");
+        addLog(LOG_LEVEL_INFO, log);
+      }
+      eth_connected = true;
       break;
-#endif
+    case SYSTEM_EVENT_ETH_DISCONNECTED:
+      addLog(LOG_LEVEL_ERROR, F("ETH Disconnected"));
+      eth_connected = false;
+      processEthernetDisconnected();
+      break;
+    case SYSTEM_EVENT_ETH_STOP:
+      addLog(LOG_LEVEL_INFO, F("ETH Stopped"));
+      eth_connected = false;
+      break;
+    case SYSTEM_EVENT_GOT_IP6:
+      addLog(LOG_LEVEL_INFO, F("ETH Got IP6"));
+      break;
+#endif //HAS_ETHERNET
     default:
       break;
   }

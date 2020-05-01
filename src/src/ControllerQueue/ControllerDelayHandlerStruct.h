@@ -192,7 +192,7 @@ struct ControllerDelayHandlerStruct {
     MakeControllerSettings (ControllerSettings);                                                                     \
     LoadControllerSettings(element->controller_idx, ControllerSettings);                                             \
     C##NNN####M##_DelayHandler.configureControllerSettings(ControllerSettings);                                      \
-    if (!WiFiConnected(10)) {                                                                                        \
+    if (!NetworkConnected(10)) {                                                                                        \
       scheduleNextDelayQueue(TIMER_C##NNN####M##_DELAY_QUEUE, C##NNN####M##_DelayHandler.getNextScheduleTime());     \
       return;                                                                                                        \
     }                                                                                                                \

@@ -85,7 +85,7 @@ void ControllerSettingsStruct::setHostname(const String& controllerhostname) {
 }
 
 boolean ControllerSettingsStruct::checkHostReachable(bool quick) {
-  if (!WiFiConnected(10)) {
+  if (!NetworkConnected(10)) {
     return false; // Not connected, so no use in wasting time to connect to a host.
   }
   delay(1);       // Make sure the Watchdog will not trigger a reset.
@@ -166,7 +166,7 @@ bool ControllerSettingsStruct::updateIPcache() {
     return true;
   }
 
-  if (!WiFiConnected()) { return false; }
+  if (!NetworkConnected()) { return false; }
   IPAddress tmpIP;
 
   if (resolveHostByName(HostName, tmpIP)) {
@@ -180,60 +180,60 @@ bool ControllerSettingsStruct::updateIPcache() {
 
 bool ControllerSettingsStruct::mqtt_cleanSession() const
 {
-  return getBitFromUL(MQTT_flags, 1);
+  return bitRead(MQTT_flags, 1);
 }
 
 void ControllerSettingsStruct::mqtt_cleanSession(bool value)
 {
-  setBitToUL(MQTT_flags, 1, value);
+  bitWrite(MQTT_flags, 1, value);
 }
 
 bool ControllerSettingsStruct::mqtt_sendLWT() const
 {
-  return !getBitFromUL(MQTT_flags, 2);
+  return !bitRead(MQTT_flags, 2);
 }
 
 void ControllerSettingsStruct::mqtt_sendLWT(bool value)
 {
-  setBitToUL(MQTT_flags, 2, !value);
+  bitWrite(MQTT_flags, 2, !value);
 }
 
 bool ControllerSettingsStruct::mqtt_willRetain() const
 {
-  return !getBitFromUL(MQTT_flags, 3);
+  return !bitRead(MQTT_flags, 3);
 }
 
 void ControllerSettingsStruct::mqtt_willRetain(bool value)
 {
-  setBitToUL(MQTT_flags, 3, !value);
+  bitWrite(MQTT_flags, 3, !value);
 }
 
 bool ControllerSettingsStruct::mqtt_uniqueMQTTclientIdReconnect() const
 {
-  return getBitFromUL(MQTT_flags, 4);
+  return bitRead(MQTT_flags, 4);
 }
 
 void ControllerSettingsStruct::mqtt_uniqueMQTTclientIdReconnect(bool value)
 {
-  setBitToUL(MQTT_flags, 4, value);
+  bitWrite(MQTT_flags, 4, value);
 }
 
 bool ControllerSettingsStruct::mqtt_retainFlag() const
 {
-  return getBitFromUL(MQTT_flags, 5);
+  return bitRead(MQTT_flags, 5);
 }
 
 void ControllerSettingsStruct::mqtt_retainFlag(bool value)
 {
-  setBitToUL(MQTT_flags, 5, value);
+  bitWrite(MQTT_flags, 5, value);
 }
 
 bool ControllerSettingsStruct::useExtendedCredentials() const
 {
-  return getBitFromUL(MQTT_flags, 6);
+  return bitRead(MQTT_flags, 6);
 }
 
 void ControllerSettingsStruct::useExtendedCredentials(bool value)
 {
-  setBitToUL(MQTT_flags, 6, value);
+  bitWrite(MQTT_flags, 6, value);
 }

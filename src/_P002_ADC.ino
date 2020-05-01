@@ -18,10 +18,76 @@
   # define P002_MAX_ADC_VALUE    1023
 #endif // ifdef ESP8266
 
-uint32_t Plugin_002_OversamplingValue  = 0;
-uint16_t Plugin_002_OversamplingCount  = 0;
-uint16_t Plugin_002_OversamplingMinVal = P002_MAX_ADC_VALUE;
-uint16_t Plugin_002_OversamplingMaxVal = 0;
+
+#define P002_OVERSAMPLING        PCONFIG(0)
+#define P002_CALIBRATION_ENABLED PCONFIG(3)
+#define P002_CALIBRATION_POINT1  PCONFIG_LONG(0)
+#define P002_CALIBRATION_POINT2  PCONFIG_LONG(1)
+#define P002_CALIBRATION_VALUE1  PCONFIG_FLOAT(0)
+#define P002_CALIBRATION_VALUE2  PCONFIG_FLOAT(1)
+
+struct P002_data_struct : public PluginTaskData_base {
+  P002_data_struct() {}
+
+  ~P002_data_struct() {
+    reset();
+  }
+
+  void reset() {
+    OversamplingValue  = 0;
+    OversamplingCount  = 0;
+    OversamplingMinVal = P002_MAX_ADC_VALUE;
+    OversamplingMaxVal = -P002_MAX_ADC_VALUE;
+  }
+
+  void addOversamplingValue(int currentValue) {
+    // Extra check to only add min or max readings once.
+    // They will be taken out of the averaging only one time.
+    if ((currentValue == 0) && (currentValue == OversamplingMinVal)) {
+      return;
+    }
+
+    if ((currentValue == P002_MAX_ADC_VALUE) && (currentValue == OversamplingMaxVal)) {
+      return;
+    }
+
+    OversamplingValue += currentValue;
+    ++OversamplingCount;
+
+    if (currentValue > OversamplingMaxVal) {
+      OversamplingMaxVal = currentValue;
+    }
+
+    if (currentValue < OversamplingMinVal) {
+      OversamplingMinVal = currentValue;
+    }
+  }
+
+  bool getOversamplingValue(float& float_value, int& raw_value) {
+    if (OversamplingCount > 0) {
+      float sum   = static_cast<float>(OversamplingValue);
+      float count = static_cast<float>(OversamplingCount);
+
+      if (OversamplingCount >= 3) {
+        sum   -= OversamplingMaxVal;
+        sum   -= OversamplingMinVal;
+        count -= 2;
+      }
+      float_value = sum / count;
+      raw_value   = static_cast<int16_t>(float_value);
+      return true;
+    }
+    return false;
+  }
+
+  uint16_t OversamplingCount = 0;
+
+private:
+
+  int32_t OversamplingValue  = 0;
+  int16_t OversamplingMinVal = P002_MAX_ADC_VALUE;
+  int16_t OversamplingMaxVal = 0;
+};
 
 boolean Plugin_002(byte function, struct EventStruct *event, String& string)
 {
@@ -59,34 +125,36 @@ boolean Plugin_002(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
-        #if defined(ESP32)
+      #if defined(ESP32)
       addHtml(F("<TR><TD>Analog Pin:<TD>"));
-      addPinSelect(false, F("taskdevicepin1"), CONFIG_PIN1);
-        #endif // if defined(ESP32)
+      addADC_PinSelect(false, F("taskdevicepin1"), CONFIG_PIN1);
 
-      addFormCheckBox(F("Oversampling"), F("p002_oversampling"), PCONFIG(0));
+      #endif // if defined(ESP32)
+
+      addFormCheckBox(F("Oversampling"), F("p002_oversampling"), P002_OVERSAMPLING);
 
       addFormSubHeader(F("Two Point Calibration"));
 
-      addFormCheckBox(F("Calibration Enabled"), F("p002_cal"), PCONFIG(3));
+      addFormCheckBox(F("Calibration Enabled"), F("p002_cal"), P002_CALIBRATION_ENABLED);
 
-      addFormNumericBox(F("Point 1"), F("p002_adc1"), PCONFIG_LONG(0), 0, P002_MAX_ADC_VALUE);
+      addFormNumericBox(F("Point 1"), F("p002_adc1"), P002_CALIBRATION_POINT1, 0, P002_MAX_ADC_VALUE);
       html_add_estimate_symbol();
-      addTextBox(F("p002_out1"), String(PCONFIG_FLOAT(0), 3), 10);
+      addTextBox(F("p002_out1"), String(P002_CALIBRATION_VALUE1, 3), 10);
 
-      addFormNumericBox(F("Point 2"), F("p002_adc2"), PCONFIG_LONG(1), 0, P002_MAX_ADC_VALUE);
+      addFormNumericBox(F("Point 2"), F("p002_adc2"), P002_CALIBRATION_POINT2, 0, P002_MAX_ADC_VALUE);
       html_add_estimate_symbol();
-      addTextBox(F("p002_out2"), String(PCONFIG_FLOAT(1), 3), 10);
+      addTextBox(F("p002_out2"), String(P002_CALIBRATION_VALUE2, 3), 10);
 
       {
         // Output the statistics for the current settings.
-        uint16_t raw_value = 0;
+        int   raw_value = 0;
         float value;
+
         if (P002_getOutputValue(event, raw_value, value)) {
           P002_formatStatistics(F("Current"), raw_value, value);
         }
 
-        if (PCONFIG(3)) {
+        if (P002_CALIBRATION_ENABLED) {
           P002_formatStatistics(F("Minimum"),   0,                  P002_applyCalibration(event, 0));
           P002_formatStatistics(F("Maximum"),   P002_MAX_ADC_VALUE, P002_applyCalibration(event, P002_MAX_ADC_VALUE));
 
@@ -101,45 +169,47 @@ boolean Plugin_002(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      PCONFIG(0) = isFormItemChecked(F("p002_oversampling"));
+      P002_OVERSAMPLING = isFormItemChecked(F("p002_oversampling"));
 
-      PCONFIG(3) = isFormItemChecked(F("p002_cal"));
+      P002_CALIBRATION_ENABLED = isFormItemChecked(F("p002_cal"));
 
-      PCONFIG_LONG(0)  = getFormItemInt(F("p002_adc1"));
-      PCONFIG_FLOAT(0) = getFormItemFloat(F("p002_out1"));
+      P002_CALIBRATION_POINT1 = getFormItemInt(F("p002_adc1"));
+      P002_CALIBRATION_VALUE1 = getFormItemFloat(F("p002_out1"));
 
-      PCONFIG_LONG(1)  = getFormItemInt(F("p002_adc2"));
-      PCONFIG_FLOAT(1) = getFormItemFloat(F("p002_out2"));
+      P002_CALIBRATION_POINT2 = getFormItemInt(F("p002_adc2"));
+      P002_CALIBRATION_VALUE2 = getFormItemFloat(F("p002_out2"));
 
       success = true;
       break;
     }
 
-    case PLUGIN_INIT:  
-      if (!PCONFIG(0)) // Oversampling
-      {
-        // Read at least one value, see https://github.com/letscontrolit/ESPEasy/issues/2646
-        uint16_t currentValue;
-        P002_performRead(event, currentValue);
-      }
-      // Fall through to PLUGIN_TEN_PER_SECOND
+    case PLUGIN_EXIT: {
+      clearPluginTaskData(event->TaskIndex);
+      success = true;
+      break;
+    }
+
+    case PLUGIN_INIT:
+    {
+      initPluginTaskData(event->TaskIndex, new P002_data_struct());
+      P002_data_struct *P002_data =
+        static_cast<P002_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      success = (nullptr != P002_data);
+      break;
+    }
     case PLUGIN_TEN_PER_SECOND:
     {
-      if (PCONFIG(0)) // Oversampling
+      if (P002_OVERSAMPLING) // Oversampling
       {
-        uint16_t currentValue;
+        P002_data_struct *P002_data =
+          static_cast<P002_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-        if (P002_performRead(event, currentValue)) {
-          Plugin_002_OversamplingValue += currentValue;
-          ++Plugin_002_OversamplingCount;
+        if (nullptr != P002_data) {
+          int currentValue;
 
-          if (currentValue > Plugin_002_OversamplingMaxVal) {
-            Plugin_002_OversamplingMaxVal = currentValue;
-          }
-
-          if (currentValue < Plugin_002_OversamplingMinVal) {
-            Plugin_002_OversamplingMinVal = currentValue;
-          }
+          P002_performRead(event, currentValue);
+          P002_data->addOversamplingValue(currentValue);
         }
       }
       success = true;
@@ -148,36 +218,35 @@ boolean Plugin_002(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
     {
-      uint16_t raw_value = 0;
+      int   raw_value = 0;
       float res_value = 0.0;
-      if (P002_getOutputValue(event, raw_value, res_value)) {;
+
+      if (P002_getOutputValue(event, raw_value, res_value)) {
         UserVar[event->BaseVarIndex] = res_value;
 
-        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-          String log = F("ADC  : Analog value: ");
-          log += String(raw_value);
-          log += F(" = ");
-          log += String(UserVar[event->BaseVarIndex], 3);
+        P002_data_struct *P002_data =
+          static_cast<P002_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-          if (PCONFIG(0)) {
-            log += F(" (");
-            log += Plugin_002_OversamplingCount;
-            log += F(" samples)");
+        if (nullptr != P002_data) {
+          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+            String log = F("ADC  : Analog value: ");
+            log += String(raw_value);
+            log += F(" = ");
+            log += String(UserVar[event->BaseVarIndex], 3);
+
+            if (P002_OVERSAMPLING) {
+              log += F(" (");
+              log += P002_data->OversamplingCount;
+              log += F(" samples)");
+            }
+            addLog(LOG_LEVEL_INFO, log);
           }
-        addLog(LOG_LEVEL_INFO, log);
+          P002_data->reset();
+          success = true;
+        } else {
+          addLog(LOG_LEVEL_ERROR, F("ADC  : No value received "));
+          success = false;
         }
-        // Now reset the oversampling variables.
-        Plugin_002_OversamplingValue  = 0;
-        Plugin_002_OversamplingCount  = 0;
-        Plugin_002_OversamplingMinVal = P002_MAX_ADC_VALUE;
-        Plugin_002_OversamplingMaxVal = 0;
-        success                       = true;
-      } else {
-        if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-          String log = F("ADC  : No value received ");
-          addLog(LOG_LEVEL_ERROR, log);
-        }
-        success = false;
       }
 
       break;
@@ -186,41 +255,33 @@ boolean Plugin_002(byte function, struct EventStruct *event, String& string)
   return success;
 }
 
-bool P002_getOutputValue(struct EventStruct *event, uint16_t& raw_value, float& res_value) {
-  float float_value = 0.0;
-  bool success;
+bool P002_getOutputValue(struct EventStruct *event, int& raw_value, float& res_value) {
+  P002_data_struct *P002_data =
+    static_cast<P002_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-  if (PCONFIG(0) && (Plugin_002_OversamplingCount > 0)) {
-    float sum   = static_cast<float>(Plugin_002_OversamplingValue);
-    float count = static_cast<float>(Plugin_002_OversamplingCount);
-
-    if (Plugin_002_OversamplingCount >= 3) {
-      sum   -= Plugin_002_OversamplingMaxVal;
-      sum   -= Plugin_002_OversamplingMinVal;
-      count -= 2;
-    }
-    float_value = sum / count;
-    raw_value   = static_cast<int16_t>(float_value);
-    success = true;
-  } else {
-    if (P002_performRead(event, raw_value)) {
-      float_value = static_cast<float>(raw_value);
-      success = true;
-    } else {
-      success = false;
-    }
+  if (nullptr == P002_data) {
+    return false;
   }
-  if (success) res_value = P002_applyCalibration(event, float_value);
-  return success;
+  float float_value = 0.0;
+
+  bool valueRead = P002_OVERSAMPLING && P002_data->getOversamplingValue(float_value, raw_value);
+
+  if (!valueRead) {
+    P002_performRead(event, raw_value);
+    float_value = static_cast<float>(raw_value);
+  }
+
+  res_value = P002_applyCalibration(event, float_value);
+  return true;
 }
 
 float P002_applyCalibration(struct EventStruct *event, float float_value) {
-  if (PCONFIG(3)) // Calibration?
+  if (P002_CALIBRATION_ENABLED) // Calibration?
   {
-    int   adc1 = PCONFIG_LONG(0);
-    int   adc2 = PCONFIG_LONG(1);
-    float out1 = PCONFIG_FLOAT(0);
-    float out2 = PCONFIG_FLOAT(1);
+    int   adc1 = P002_CALIBRATION_POINT1;
+    int   adc2 = P002_CALIBRATION_POINT2;
+    float out1 = P002_CALIBRATION_VALUE1;
+    float out2 = P002_CALIBRATION_VALUE2;
 
     if (adc1 != adc2)
     {
@@ -231,27 +292,16 @@ float P002_applyCalibration(struct EventStruct *event, float float_value) {
   return float_value;
 }
 
-bool P002_performRead(struct EventStruct *event, uint16_t& value) {
-  // Define it static so we just return the last value when no read can be performed.
-  static uint16_t last_value = 0;
-  bool valid                 = true;
-
-  #if defined(ESP8266)
-
-  if (!wifiConnectInProgress) {
-    last_value = analogRead(A0);
-  } else {
-    valid = false;
-  }
+void P002_performRead(struct EventStruct *event, int& value) {
+  #ifdef ESP8266
+  value = espeasy_analogRead(A0);
   #endif // if defined(ESP8266)
   #if defined(ESP32)
-  last_value = analogRead(CONFIG_PIN1);
+  value = espeasy_analogRead(CONFIG_PIN1);
   #endif // if defined(ESP32)
-  value = last_value;
-  return valid;
 }
 
-void P002_formatStatistics(const String& label, int16_t raw, float float_value) {
+void P002_formatStatistics(const String& label, int raw, float float_value) {
   addRowLabel(label);
   addHtml(String(raw));
   html_add_estimate_symbol();

@@ -187,7 +187,12 @@
 #define DEFAULT_ETH_PIN_POWER            -1
 #endif
 #ifndef DEFAULT_ETH_CLOCK_MODE
-#define DEFAULT_ETH_CLOCK_MODE           3
+#define DEFAULT_ETH_CLOCK_MODE           0
+#endif
+#ifndef DEFAULT_ETH_WIFI_MODE
+#define DEFAULT_ETH_WIFI_MODE            0
+                                                // 0 WIFI
+                                                // 1 ETHERNET
 #endif
 
 

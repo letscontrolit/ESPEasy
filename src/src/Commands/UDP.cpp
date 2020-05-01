@@ -39,7 +39,7 @@ String Command_UPD_SendTo(struct EventStruct *event, const char *Line)
 
 String Command_UDP_SendToUPD(struct EventStruct *event, const char *Line)
 {
-  if (WiFiConnected()) {
+  if (NetworkConnected()) {
     String ip      = parseString(Line, 2);
     int port    = parseCommandArgumentInt(Line, 2);
 

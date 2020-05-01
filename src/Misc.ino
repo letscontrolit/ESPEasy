@@ -306,6 +306,9 @@ bool allocatedOnStack(const void* address) {
 #endif // ESP32
 
 
+
+
+
 /**********************************************************
 *                                                         *
 * Deep Sleep related functions                            *
@@ -350,7 +353,7 @@ bool readyForSleep()
     return false;
   }
 
-  if (!WiFiConnected()) {
+  if (!NetworkConnected()) {
     // Allow 12 seconds to establish connections
     return timeOutReached(timerAwakeFromDeepSleep + 12000);
   }
@@ -554,6 +557,29 @@ String formatGpioName_RX_HW(bool optional) {
   return formatGpioName("TX (HW)", gpio_input, optional);
 }
 
+#ifdef ESP32
+
+String formatGpioName_ADC(int gpio_pin) {
+  int adc,ch, t;
+  if (getADC_gpio_info(gpio_pin, adc, ch, t)) {
+    if (adc == 0) {
+      return F("Hall Effect");
+    }
+    String res = F("ADC# ch?");
+    res.replace("#", String(adc));
+    res.replace("?", String(ch));
+    if (t >= 0) {
+      res += F(" (T");
+      res += t;
+      res += ')';
+    }
+    return res;
+  }
+  return "";
+}
+
+#endif
+
 /*********************************************************************************************\
    set pin mode & state (info table)
   \*********************************************************************************************/
@@ -708,7 +734,7 @@ void statusLED(bool traffic)
   else
   {
 
-    if (WiFiConnected())
+    if (NetworkConnected())
     {
       long int delta = timePassedSince(gnLastUpdate);
       if (delta>0 || delta<0 )
@@ -1214,6 +1240,7 @@ void ResetFactory()
   Settings.ETH_Pin_power           = gpio_settings.eth_power;
   Settings.ETH_Phy_Type            = gpio_settings.eth_phytype;
   Settings.ETH_Clock_Mode          = gpio_settings.eth_clock_mode;
+  Settings.ETH_Wifi_Mode           = gpio_settings.eth_wifi_mode;
 
 /*
 	Settings.GlobalSync						= DEFAULT_USE_GLOBAL_SYNC;
