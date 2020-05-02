@@ -5,16 +5,16 @@
 //#define BUILD_BINARY_FILENAME "ThisIsTheDummyPlaceHolderForTheBinaryFilename64ByteLongFilenames"
 #endif 
 
-String get_build_filename() {
+String get_binary_filename() {
   return F(BUILD_BINARY_FILENAME);
 }
 
 String get_build_time() {
-  return __TIME__;
+  return F(__TIME__);
 }
 
 String get_build_date() {
-  return __DATE__;
+  return F(__DATE__);
 }
 
 bool official_build() {

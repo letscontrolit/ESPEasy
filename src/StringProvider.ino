@@ -177,7 +177,7 @@ String getValue(LabelType::Enum label) {
     case LabelType::PLUGIN_COUNT:           return String(deviceCount + 1);
     case LabelType::PLUGIN_DESCRIPTION:     return getPluginDescriptionString();
     case LabelType::BUILD_TIME:             return get_build_date() + " " + get_build_time();
-    case LabelType::BINARY_FILENAME:        return get_build_filename();
+    case LabelType::BINARY_FILENAME:        return get_binary_filename();
     case LabelType::SYSLOG_LOG_LEVEL:       return getLogLevelDisplayString(Settings.SyslogLevel);
     case LabelType::SERIAL_LOG_LEVEL:       return getLogLevelDisplayString(getSerialLogLevel());
     case LabelType::WEB_LOG_LEVEL:          return getLogLevelDisplayString(getWebLogLevel());

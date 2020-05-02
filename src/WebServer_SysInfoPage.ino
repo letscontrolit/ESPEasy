@@ -419,7 +419,7 @@ void handle_sysinfo_Firmware() {
     addHtml(F("<b>Self built!</b>"));
   }
   addRowLabelValue_copy(LabelType::BUILD_TIME);
-  addRowLabel_copy(getLabel(LabelType::BINARY_FILENAME));
+  addRowLabelValue_copy(LabelType::BINARY_FILENAME);
 }
 
 void handle_sysinfo_SystemStatus() {

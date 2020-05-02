@@ -3,7 +3,7 @@
 
 #include <Arduino.h>
 
-String get_build_filename();
+String get_binary_filename();
 String get_build_time();
 String get_build_date();
 bool official_build();

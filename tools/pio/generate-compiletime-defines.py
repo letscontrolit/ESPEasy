@@ -5,10 +5,17 @@ import shutil
 from datetime import date
 
 
-def get_build_filename():
+def create_binary_filename():
     today = date.today()
     d1 = today.strftime("%Y%m%d")
     return 'ESP_Easy_mega_{}_{}'.format(d1, env["PIOENV"])
+
+# needed to wrap in a number of double quotes.
+# one level for adding it to the list of defines
+# another level to have the string quoted in the .cpp file
+# somewhere along the line, another level is removed.
+def wrap_quotes(str_value):
+    return '\"\"\"{}\"\"\"'.format(str_value)
 
 
 def gen_compiletime_defines(node):
@@ -18,7 +25,7 @@ def gen_compiletime_defines(node):
     `node.get_abspath()` - an absolute path
     """
 
-    # do not modify node if file name does not contain "CRCStruct"
+    # do not modify node if file name does not contain "CompiletimeDefines.cpp"
     if "CompiletimeDefines.cpp" not in node.name:
         return node
 
@@ -29,7 +36,7 @@ def gen_compiletime_defines(node):
     return env.Object(
         node,
         CPPDEFINES=env["CPPDEFINES"]
-        + [("BUILD_BINARY_FILENAME", '\"\"\"{}\"\"\"'.format(get_build_filename()))],
+        + [("BUILD_BINARY_FILENAME", wrap_quotes(create_binary_filename()))],
         CCFLAGS=env["CCFLAGS"]
     )
 
