@@ -89,14 +89,14 @@
 
 static int8_t lastWiFiState = P36_WIFI_STATE_UNSET;
 static uint8_t OLEDIndex = 0;
-static boolean bPin3Invers;
-static boolean bScrollLines;
-static boolean bNoDisplayOnReceivedText;
-static boolean bAlternativHeader = false;
+static bool bPin3Invers;
+static bool bScrollLines;
+static bool bNoDisplayOnReceivedText;
+static bool bAlternativHeader = false;
 static uint16_t HeaderCount = 0;
-static boolean bPageScrollDisabled = true;   // first page after INIT without scrolling
+static bool bPageScrollDisabled = true;   // first page after INIT without scrolling
 static uint8_t TopLineOffset = 0;   // Offset for top line, used for rotated image while using displays < P36_MaxDisplayHeight lines
-static boolean ButtonState = false;   // button not touched
+static bool ButtonState = false;   // button not touched
 static uint8_t ButtonLastState = 0xFF;   // Last state checked (debouncing in progress)
 static uint8_t DebounceCounter = 0;   // debounce counter
 static uint8_t RepeatCounter = 0;     // Repeat delay counter when holding button pressed
@@ -361,7 +361,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         addFormPinSelect(F("Display button"), F("taskdevicepin3"), CONFIG_PIN3);
         bPin3Invers = bitRead(PCONFIG_LONG(0), 16);  // Bit 16
         addFormCheckBox(F("Inversed Logic"), F("p036_pin3invers"), bPin3Invers);
-        boolean bStepThroughPages = bitRead(PCONFIG_LONG(0), 19);  // Bit 19
+        bool bStepThroughPages = bitRead(PCONFIG_LONG(0), 19);  // Bit 19
         addFormCheckBox(F("Step through frames with Display button"), F("p036_StepPages"), bStepThroughPages);
 
         addFormNumericBox(F("Display Timeout"), F("p036_timer"), PCONFIG(4));
@@ -574,7 +574,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         bAlternativHeader = (++HeaderCount > (lTaskTimer*5)); // change header after half of display time
         if (CONFIG_PIN3 != -1 && ButtonState)
         {
-          boolean bStepThroughPages = bitRead(PCONFIG_LONG(0), 19);        //  Bit 19
+          bool bStepThroughPages = bitRead(PCONFIG_LONG(0), 19);        //  Bit 19
           if (bStepThroughPages && UserVar[event->BaseVarIndex] == 1) { //  When display already on, switch to next page when enabled
             nextFrameToDisplay = 0xFF;
             P036_DisplayPage(event);                // Display the next page
@@ -608,7 +608,9 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           displayTimer--;
           if (displayTimer == 0)
           {
-            display->displayOff();
+            if (display) {
+              display->displayOff();
+            }
             UserVar[event->BaseVarIndex] = 0;      //  Save the fact that the display is now OFF
           }
         }

@@ -196,9 +196,9 @@ void setIntervalTimer(unsigned long id, unsigned long lasttimer) {
     case TIMER_20MSEC:         interval = 20; break;
     case TIMER_100MSEC:        interval = 100; break;
     case TIMER_1SEC:           interval = 1000; break;
-    case TIMER_30SEC:          interval = 30000; break;
-    case TIMER_MQTT:           interval = timermqtt_interval; break;
+    case TIMER_30SEC:
     case TIMER_STATISTICS:     interval = 30000; break;
+    case TIMER_MQTT:           interval = timermqtt_interval; break;
     case TIMER_GRATUITOUS_ARP: interval = timer_gratuitous_arp_interval; break;
 
     // Fall-through for all DelayQueue, which are just the fall-back timers.

@@ -83,7 +83,7 @@ String Command_MemInfo(struct EventStruct *event, const char *Line)
   serialPrint(F("ExtraTaskSettingsStruct| "));
   serialPrintln(String(sizeof(ExtraTaskSettings)));
   serialPrint(F("DeviceStruct           | "));
-  serialPrintln(String(sizeof(Device)));
+  serialPrintln(String(Device.size()));
   return return_see_serial(event);
 }
 

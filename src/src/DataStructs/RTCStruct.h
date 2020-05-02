@@ -20,7 +20,9 @@ struct RTCStruct
   RTCStruct() : ID1(0), ID2(0), lastWiFiChannel(0), factoryResetCounter(0),
                 deepSleepState(0), bootFailedCount(0), flashDayCounter(0),
                 lastWiFiSettingsIndex(0),
-                flashCounter(0), bootCounter(0), lastMixedSchedulerId(0), lastSysTime(0) {}
+                flashCounter(0), bootCounter(0), lastMixedSchedulerId(0),
+                unused1(0), unused2(0),
+                lastSysTime(0) {}
   byte ID1;
   byte ID2;
   byte lastWiFiChannel;

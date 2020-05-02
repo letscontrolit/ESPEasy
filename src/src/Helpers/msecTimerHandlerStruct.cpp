@@ -48,7 +48,7 @@
 
         if (waitTime > MAX_SCHEDULER_WAIT_TIME) {
           waitTime = MAX_SCHEDULER_WAIT_TIME;
-        } else if (waitTime < 0) {
+        } else if (waitTime < 0) {  //-V547
           // Should not happen, but just to be sure we will not wait forever.
           waitTime = 0;
         }
@@ -93,7 +93,7 @@
     const long duration = timePassedSince(last_log_start_time);
 
     last_log_start_time  = millis();
-    idle_time_pct        = total_idle_time_usec / duration / 10.0;
+    idle_time_pct        = static_cast<float>(total_idle_time_usec) / duration / 10.0;
     total_idle_time_usec = 0;
   }
 
