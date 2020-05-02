@@ -95,8 +95,8 @@ void handle_sysinfo_json() {
   json_prop(F("plugins"),     getPluginDescriptionString());
   json_prop(F("md5"),         String(CRCValues.compileTimeMD5[0], HEX));
   json_number(F("md5_check"), String(CRCValues.checkPassed()));
-  json_prop(F("build_time"), String(CRCValues.compileTime));
-  json_prop(F("filename"),   String(CRCValues.binaryFilename));
+  json_prop(F("build_time"), get_build_time());
+  json_prop(F("filename"),   getValue(LabelType::BINARY_FILENAME));
   json_close();
 
   json_open(false, F("esp"));
@@ -412,37 +412,14 @@ void handle_sysinfo_Firmware() {
   addHtml(" ");
   addHtml(getPluginDescriptionString());
 
-  bool filenameDummy = String(CRCValues.binaryFilename).startsWith(F("ThisIsTheDummy"));
-
-  if (!filenameDummy) {
-    addRowLabel(F("Build Md5"));
-
-    String html;
-    html.reserve(64);
-
-    for (byte i = 0; i < 16; i++) {
-      html += String(CRCValues.compileTimeMD5[i], HEX);
-    }
-    addHtml(html);
-
-    addRowLabel(F("Md5 check"));
-
-    if (!CRCValues.checkPassed()) {
-      addHtml(F("<font color = 'red'>fail !</font>"));
-    }
-    else {
-      addHtml(F("passed."));
-    }
+  addRowLabel(F("Build Origin"));
+  if (official_build()) {
+    addHtml(F("Travis Build"));
+  } else {
+    addHtml(F("<b>Self built!</b>"));
   }
   addRowLabelValue_copy(LabelType::BUILD_TIME);
-
   addRowLabel_copy(getLabel(LabelType::BINARY_FILENAME));
-
-  if (filenameDummy) {
-    addHtml(F("<b>Self built!</b>"));
-  } else {
-    addHtml(String(CRCValues.binaryFilename));
-  }
 }
 
 void handle_sysinfo_SystemStatus() {
