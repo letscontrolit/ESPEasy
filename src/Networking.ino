@@ -135,7 +135,7 @@ void checkUDP()
       int len = portUDP.read(&packetBuffer[0], packetSize);
 
       if (len >= 2) {
-        if (packetBuffer[0] != 255)
+        if (reinterpret_cast<unsigned char&>(packetBuffer[0]) != 255)
         {
           packetBuffer[len] = 0;
           addLog(LOG_LEVEL_DEBUG, &packetBuffer[0]);
@@ -450,7 +450,7 @@ void SSDP_schema(WiFiClient& client) {
                    "</root>\r\n"
                    "\r\n");
 
-  client.printf(ssdp_schema.c_str());
+  client.printf("%s", ssdp_schema.c_str());
 }
 
 /********************************************************************************************\

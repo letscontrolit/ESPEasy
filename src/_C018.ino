@@ -623,6 +623,7 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
           break;
         case ControllerSettingsStruct::CONTROLLER_PORT:
           string = F("Port");
+          break;
         default:
           success = false;
           break;

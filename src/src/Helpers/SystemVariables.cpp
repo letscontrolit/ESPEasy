@@ -123,14 +123,14 @@ void SystemVariables::parseSystemVariables(String& s, boolean useURLencode)
       case SYSSEC_D:          value = String(((node_time.hour() * 60) + node_time.minute()) * 60 + node_time.second()); break;
       case SYSSTACK:          value = getValue(LabelType::FREE_STACK); break;
       case SYSTIME:           value = node_time.getTimeString(':'); break;
-      case SYSTIME_AM:        value = node_time.getTimeString_ampm(':', false); break;
+      case SYSTIME_AM:        value = node_time.getTimeString_ampm(':'); break;
       case SYSTM_HM:          value = node_time.getTimeString(':', false); break;
       case SYSTM_HM_AM:       value = node_time.getTimeString_ampm(':', false); break;
       case SYSWEEKDAY:        value = String(node_time.weekday()); break;
       case SYSWEEKDAY_S:      value = node_time.weekday_str(); break;
+      case SYSYEAR_0:
       case SYSYEAR:           value = String(node_time.year()); break;
       case SYSYEARS:          value = timeReplacement_leadZero(node_time.year() % 100); break;
-      case SYSYEAR_0:         value = String(node_time.year()); break;
       case SYS_MONTH_0:       value = timeReplacement_leadZero(node_time.month()); break;
       case S_CR:              value = F("\\r"); break;
       case S_LF:              value = F("\\n"); break;
