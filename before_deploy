@@ -28,12 +28,18 @@ fi
 #Naming convention:
 # ESP_Easy_[github version]_[plugin set]_[chip type]_[flash memory].bin
 
+if [ -d "build_output/reject" ]; then
+  zip -qq ${CURPATH}/ESPEasy_ELF_files_$VERSION.zip build_output/reject/*
+fi
+
+zip -qq ${CURPATH}/ESPEasy_ELF_files_$VERSION.zip build_output/debug/*
+
 mkdir -p ${TMP_DIST}
 cp -r dist/* ${TMP_DIST}/
 
 if [ -d "docs/build" ]; then
   # Docs have been created
-  zip -qq ${CURPATH}/ESPEasy_docs_$VERSION.zip docs/build
+  zip -qq ${CURPATH}/ESPEasy_docs_$VERSION.zip docs/build/*
 fi
 
 cp -r build_output/bin/* ${TMP_DIST}/bin
@@ -52,11 +58,6 @@ echo
 echo "### Creating zip archive"
 zip -qq ${CURPATH}/ESPEasy_$VERSION.zip -r .
 
-if [ -d "build_output/reject" ]; then
-  zip -qq ${CURPATH}/ESPEasy_reject_$VERSION.zip build_output/reject
-fi
-
-zip -qq ${CURPATH}/ESPEasy_debug_$VERSION.zip build_output/debug
 
 rm -Rf ${TMP_DIST}/* 2>/dev/null
 rmdir ${TMP_DIST}
