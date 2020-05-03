@@ -12,6 +12,11 @@ def create_binary_filename():
     d1 = today.strftime("%Y%m%d")
     return 'ESP_Easy_mega_{}_{}'.format(d1, env["PIOENV"])
 
+
+def get_git_description():
+    return Repository('.').head.shorthand
+
+
 # needed to wrap in a number of double quotes.
 # one level for adding it to the list of defines
 # another level to have the string quoted in the .cpp file
@@ -43,11 +48,18 @@ def gen_compiletime_defines(node):
         CPPDEFINES=env["CPPDEFINES"]
         + [("SET_BUILD_BINARY_FILENAME", wrap_quotes(create_binary_filename()))]
         + [("SET_BUILD_PLATFORM", wrap_quotes(platform.platform()))]
-        + [("SET_BUILD_GIT_HEAD", wrap_quotes(Repository('.').head.shorthand))],
+        + [("SET_BUILD_GIT_HEAD", wrap_quotes(get_git_description()))],
         CCFLAGS=env["CCFLAGS"]
     )
 
     #return node
 
+
+env.Replace(PROGNAME=create_binary_filename())
+print("\u001b[32m Compile time defines \u001b[0m")
+print("\u001b[33m PROGNAME:       \u001b[0m  {}".format(env['PROGNAME']))
+print("\u001b[33m BUILD_PLATFORM: \u001b[0m  {}".format(platform.platform()))
+print("\u001b[33m GIT_HEAD:       \u001b[0m  {}".format(get_git_description()))
+print("\u001b[32m ------------------------------- \u001b[0m")
 
 env.AddBuildMiddleware(gen_compiletime_defines)

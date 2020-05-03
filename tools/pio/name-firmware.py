@@ -1,4 +1,4 @@
-# Original: https://github.com/arendst/Tasmota/blob/development/pio/name-firmware.py
+# Inspired by: https://github.com/arendst/Tasmota/blob/development/pio/name-firmware.py
 # Thanks Theo & Jason2866 :)
 
 Import('env')
@@ -7,31 +7,40 @@ import shutil
 
 OUTPUT_DIR = "build_output{}".format(os.path.sep)
 
-def bin_map_copy(source, target, env):
-    variant = str(target[0]).split(os.path.sep)[2]
+def copy_to_build_output(sourcedir, variant, file_suffix):
+    in_file = "{}{}".format(variant, file_suffix)
+    if ".elf" in file_suffix:
+        out_file = "{}elf{}{}".format(OUTPUT_DIR, os.path.sep, in_file)
+    else:
+        out_file = "{}bin{}{}".format(OUTPUT_DIR, os.path.sep, in_file)
+
+    if os.path.isfile(out_file):
+        os.remove(out_file)
+
+    full_in_file = os.path.join(sourcedir, in_file)
+    #print("\u001b[33m in file : \u001b[0m  {}".format(full_in_file))
+    
+    if os.path.isfile(full_in_file):
+        print("\u001b[33m copy to: \u001b[0m  {}".format(out_file))
+        shutil.copy(full_in_file, out_file)
+
+
+
+def bin_elf_copy(source, target, env):
+    variant = env['PROGNAME']
     
     # check if output directories exist and create if necessary
     if not os.path.isdir(OUTPUT_DIR):
         os.mkdir(OUTPUT_DIR)
 
-    for d in ['firmware', 'map']:
+    for d in ['bin', 'elf']:
         if not os.path.isdir("{}{}".format(OUTPUT_DIR, d)):
             os.mkdir("{}{}".format(OUTPUT_DIR, d))
 
-    # create string with location and file names based on variant
-    map_file = "{}map{}{}.map".format(OUTPUT_DIR, os.path.sep, variant)
-    bin_file = "{}firmware{}{}.bin".format(OUTPUT_DIR, os.path.sep, variant)
+    split_path = str(source[0]).rsplit(os.path.sep, 1)
 
-    # check if new target files exist and remove if necessary
-    for f in [map_file, bin_file]:
-        if os.path.isfile(f):
-            os.remove(f)
+    for suff in [".elf", ".bin", ".bin.gz", "-factory.bin"]:
+        copy_to_build_output(split_path[0], variant, suff)
 
-    # copy firmware.bin to firmware/<variant>.bin
-    shutil.copy(str(target[0]), bin_file)
 
-    # copy firmware.map to map/<variant>.map
-    if os.path.isfile("firmware.map"):
-        shutil.move("firmware.map", map_file)
-
-env.AddPostAction("$BUILD_DIR/${PROGNAME}.bin", [bin_map_copy])
+env.AddPostAction("$BUILD_DIR/${PROGNAME}.bin", [bin_elf_copy])
