@@ -1,6 +1,6 @@
 language: python
 python:
-  - '2.7'
+  - '3.8'
 
 #we want a newer cppcheck, so use trusty
 dist: bionic
@@ -23,6 +23,7 @@ addons:
 
 install:
   - pip install -U platformio sphinx recommonmark sphinx_bootstrap_theme
+  - pip install -r requirements.txt
 
 script:
   - platformio update
