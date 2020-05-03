@@ -73,6 +73,7 @@ enum Enum : short {
   BUILD_TIME,
   BINARY_FILENAME,
   BUILD_PLATFORM,
+  GIT_HEAD,
 
 
   SYSLOG_LOG_LEVEL,

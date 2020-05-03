@@ -1,14 +1,16 @@
 #include "CompiletimeDefines.h"
 
 #ifndef SET_BUILD_BINARY_FILENAME
-
-// FIXME TD-er: Commented out to check if all PIO environments include the pre:tools/pio/generate-compiletime-defines.py
-// #define SET_BUILD_BINARY_FILENAME "ThisIsTheDummyPlaceHolderForTheBinaryFilename64ByteLongFilenames"
+#define SET_BUILD_BINARY_FILENAME "firmware.bin"
 #endif // ifndef SET_BUILD_BINARY_FILENAME
 
 #ifndef SET_BUILD_PLATFORM
 # define SET_BUILD_PLATFORM "unknown"
 #endif // ifndef SET_BUILD_PLATFORM
+
+#ifndef SET_BUILD_GIT_HEAD
+#define SET_BUILD_GIT_HEAD ""
+#endif
 
 String get_binary_filename() {
   return F(SET_BUILD_BINARY_FILENAME);
@@ -32,4 +34,8 @@ bool official_build() {
 
 String get_build_platform() {
   return F(SET_BUILD_PLATFORM);
+}
+
+String get_git_head() {
+  return F(SET_BUILD_GIT_HEAD);
 }

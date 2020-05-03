@@ -4,6 +4,7 @@ import os
 import platform
 import shutil
 from datetime import date
+from pygit2 import Repository
 
 
 def create_binary_filename():
@@ -41,7 +42,8 @@ def gen_compiletime_defines(node):
         node,
         CPPDEFINES=env["CPPDEFINES"]
         + [("SET_BUILD_BINARY_FILENAME", wrap_quotes(create_binary_filename()))]
-        + [("SET_BUILD_PLATFORM", wrap_quotes(platform.platform()))],
+        + [("SET_BUILD_PLATFORM", wrap_quotes(platform.platform()))]
+        + [("SET_BUILD_GIT_HEAD", wrap_quotes(Repository('.').head.shorthand))],
         CCFLAGS=env["CCFLAGS"]
     )
 
