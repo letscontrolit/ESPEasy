@@ -14,6 +14,7 @@ struct EventStruct
 {
   EventStruct();
   EventStruct(const struct EventStruct& event);
+  EventStruct& operator=(const struct EventStruct& other);
 
   String            String1;
   String            String2;

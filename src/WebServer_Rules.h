@@ -5,7 +5,7 @@
 typedef struct s_fileinfo
 {
   String Name;
-  int    Size;
+  int    Size        = 0;
   bool   isDirectory = false;
 } fileInfo;
 

@@ -708,7 +708,7 @@ void processMatchedRule(String& action, String& event,
         if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
           log  = F("Lev.");
           log += String(ifBlock);
-          log  = F(": Error: IF Nesting level exceeded!");
+          log += F(": Error: IF Nesting level exceeded!");
           addLog(LOG_LEVEL_ERROR, log);
         }
       }
@@ -889,7 +889,7 @@ bool conditionMatchExtended(String& check) {
     condOr  = check.indexOf(F(" or "));
 
     if ((condAnd > 0) || (condOr > 0)) {                             // we got AND/OR
-      if ((condAnd > 0) && (((condOr < 0) && (condOr < condAnd)) ||
+      if ((condAnd > 0) && (((condOr < 0) /*&& (condOr < condAnd)*/) ||
                             ((condOr > 0) && (condOr > condAnd)))) { // AND is first
         check     = check.substring(condAnd + 5);
         rightcond = conditionMatch(check);
