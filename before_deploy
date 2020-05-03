@@ -39,7 +39,7 @@ cp -r dist/* ${TMP_DIST}/
 
 if [ -d "docs/build" ]; then
   # Docs have been created
-  zip -qq ${CURPATH}/ESPEasy_docs_$VERSION.zip docs/build/*
+  zip -r -qq ${CURPATH}/ESPEasy_docs_$VERSION.zip docs/build/*
 fi
 
 cp -r build_output/bin/* ${TMP_DIST}/bin
