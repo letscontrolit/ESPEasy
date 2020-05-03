@@ -15,7 +15,7 @@ def create_binary_filename():
 # another level to have the string quoted in the .cpp file
 # somewhere along the line, another level is removed.
 def wrap_quotes(str_value):
-    return '\"\"\"{}\"\"\"'.format(str_value)
+    return "\"\"\"{}\"\"\"".format(str_value)
 
 
 def gen_compiletime_defines(node):
