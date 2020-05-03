@@ -19,7 +19,7 @@ def wrap_quotes(str_value):
     if platform.system() == 'Windows':
         return "\"\"\"{}\"\"\"".format(str_value)
     else:
-        return "\"\"\"\"{}\"\"\"\"".format(str_value)
+        return '\'\"\"\"{}\"\"\"\''.format(str_value)
 
 
 def gen_compiletime_defines(node):
@@ -40,7 +40,8 @@ def gen_compiletime_defines(node):
     return env.Object(
         node,
         CPPDEFINES=env["CPPDEFINES"]
-        + [("BUILD_BINARY_FILENAME", wrap_quotes(create_binary_filename()))],
+        + [("SET_BUILD_BINARY_FILENAME", wrap_quotes(create_binary_filename()))]
+        + [("SET_BUILD_PLATFORM", wrap_quotes(platform.platform()))],
         CCFLAGS=env["CCFLAGS"]
     )
 

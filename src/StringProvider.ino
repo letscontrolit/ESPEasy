@@ -74,6 +74,7 @@ String getLabel(LabelType::Enum label) {
     case LabelType::PLUGIN_DESCRIPTION:     return F("Plugin Description");
     case LabelType::BUILD_TIME:             return F("Build Time");
     case LabelType::BINARY_FILENAME:        return F("Binary Filename");
+    case LabelType::BUILD_PLATFORM:         return F("Build Platform");
 
     case LabelType::SYSLOG_LOG_LEVEL:       return F("Syslog Log Level");
     case LabelType::SERIAL_LOG_LEVEL:       return F("Serial Log Level");
@@ -178,6 +179,7 @@ String getValue(LabelType::Enum label) {
     case LabelType::PLUGIN_DESCRIPTION:     return getPluginDescriptionString();
     case LabelType::BUILD_TIME:             return get_build_date() + " " + get_build_time();
     case LabelType::BINARY_FILENAME:        return get_binary_filename();
+    case LabelType::BUILD_PLATFORM:         return get_build_platform();
     case LabelType::SYSLOG_LOG_LEVEL:       return getLogLevelDisplayString(Settings.SyslogLevel);
     case LabelType::SERIAL_LOG_LEVEL:       return getLogLevelDisplayString(getSerialLogLevel());
     case LabelType::WEB_LOG_LEVEL:          return getLogLevelDisplayString(getWebLogLevel());

@@ -97,6 +97,7 @@ void handle_sysinfo_json() {
   json_number(F("md5_check"), String(CRCValues.checkPassed()));
   json_prop(F("build_time"), get_build_time());
   json_prop(F("filename"),   getValue(LabelType::BINARY_FILENAME));
+  json_prop(F("build_platform")), getValue(LabelType::BUILD_PLATFORM);
   json_close();
 
   json_open(false, F("esp"));
@@ -420,6 +421,7 @@ void handle_sysinfo_Firmware() {
   }
   addRowLabelValue_copy(LabelType::BUILD_TIME);
   addRowLabelValue_copy(LabelType::BINARY_FILENAME);
+  addRowLabelValue_copy(LabelType::BUILD_PLATFORM);
 }
 
 void handle_sysinfo_SystemStatus() {
