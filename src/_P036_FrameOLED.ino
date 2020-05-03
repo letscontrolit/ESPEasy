@@ -82,12 +82,12 @@
 
 static int8_t lastWiFiState = P36_WIFI_STATE_UNSET;
 static uint8_t OLEDIndex = 0;
-static boolean bPin3Invers;
-static boolean bScrollLines;
-static boolean bNoDisplayOnReceivedText;
-static boolean bAlternativHeader = false;
+static bool bPin3Invers;
+static bool bScrollLines;
+static bool bNoDisplayOnReceivedText;
+static bool bAlternativHeader = false;
 static uint16_t HeaderCount = 0;
-static boolean bPageScrollDisabled = true;   // first page after INIT without scrolling
+static bool bPageScrollDisabled = true;   // first page after INIT without scrolling
 static uint8_t TopLineOffset = 0;   // Offset for top line, used for rotated image while using displays < P36_MaxDisplayHeight lines
 
 enum eHeaderContent {
@@ -533,7 +533,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         if (CONFIG_PIN3 != -1)
         {
           bPin3Invers = bitRead(PCONFIG_LONG(0), 16);  // Bit 16
-          if ((!bPin3Invers && digitalRead(CONFIG_PIN3)) || (bPin3Invers && !digitalRead(CONFIG_PIN3)))
+          if (bPin3Invers != static_cast<bool>(digitalRead(CONFIG_PIN3)))
           {
             display->displayOn();
             UserVar[event->BaseVarIndex] = 1;      //  Save the fact that the display is now ON
@@ -559,7 +559,9 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           displayTimer--;
           if (displayTimer == 0)
           {
-            display->displayOff();
+            if (display) {
+              display->displayOff();
+            }
             UserVar[event->BaseVarIndex] = 0;      //  Save the fact that the display is now OFF
           }
         }

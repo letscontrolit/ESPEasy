@@ -118,7 +118,6 @@ struct P052_data_struct : public PluginTaskData_base {
   }
 
   ModbusRTU_struct modbus;
-  byte             sensortype;
 };
 
 unsigned int _plugin_052_last_measurement = 0;
