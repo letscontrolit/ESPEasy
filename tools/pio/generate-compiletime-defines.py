@@ -1,10 +1,11 @@
 
-Import('env')
+Import("env")
 import os
 import platform
 import shutil
 from datetime import date
 from pygit2 import Repository
+import json
 
 
 def create_binary_filename():
@@ -54,12 +55,13 @@ def gen_compiletime_defines(node):
 
     #return node
 
-
+# Set the binary filename in the environment to be used in other build steps
 env.Replace(PROGNAME=create_binary_filename())
 print("\u001b[32m Compile time defines \u001b[0m")
 print("\u001b[33m PROGNAME:       \u001b[0m  {}".format(env['PROGNAME']))
 print("\u001b[33m BUILD_PLATFORM: \u001b[0m  {}".format(platform.platform()))
 print("\u001b[33m GIT_HEAD:       \u001b[0m  {}".format(get_git_description()))
 print("\u001b[32m ------------------------------- \u001b[0m")
+
 
 env.AddBuildMiddleware(gen_compiletime_defines)

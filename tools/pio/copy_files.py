@@ -9,10 +9,10 @@ OUTPUT_DIR = "build_output{}".format(os.path.sep)
 
 def copy_to_build_output(sourcedir, variant, file_suffix):
     in_file = "{}{}".format(variant, file_suffix)
-    if ".elf" in file_suffix:
-        out_file = "{}elf{}{}".format(OUTPUT_DIR, os.path.sep, in_file)
-    else:
+    if ".bin" in file_suffix:
         out_file = "{}bin{}{}".format(OUTPUT_DIR, os.path.sep, in_file)
+    else:
+        out_file = "{}debug{}{}".format(OUTPUT_DIR, os.path.sep, in_file)
 
     if os.path.isfile(out_file):
         os.remove(out_file)
@@ -28,18 +28,22 @@ def copy_to_build_output(sourcedir, variant, file_suffix):
 
 def bin_elf_copy(source, target, env):
     variant = env['PROGNAME']
+    split_path = str(source[0]).rsplit(os.path.sep, 1)
+
+    # Create a dump of the used build environment
+    with open('{}{}{}.env.txt'.format(split_path[0], os.path.sep, variant), 'w') as outfile:
+        outfile.write(env.Dump())
+        outfile.close()
     
     # check if output directories exist and create if necessary
     if not os.path.isdir(OUTPUT_DIR):
         os.mkdir(OUTPUT_DIR)
 
-    for d in ['bin', 'elf']:
+    for d in ['bin', 'debug']:
         if not os.path.isdir("{}{}".format(OUTPUT_DIR, d)):
             os.mkdir("{}{}".format(OUTPUT_DIR, d))
 
-    split_path = str(source[0]).rsplit(os.path.sep, 1)
-
-    for suff in [".elf", ".bin", ".bin.gz", "-factory.bin"]:
+    for suff in [".elf", ".bin", ".bin.gz", "-factory.bin", ".env.txt"]:
         copy_to_build_output(split_path[0], variant, suff)
 
 
