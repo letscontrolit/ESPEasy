@@ -80,6 +80,11 @@ platformio run --target clean
 cd ${SRC}/patches; ./check_puya_patch;
 cd ${SRC}
 
+if [ -d "build_output/" ]; then
+  rm -Rf build_output/*
+fi
+
+
 # Must look into all possible env definitions.
 # Exclude so called "spec_" (special) builds
 for ENV in `grep "^\[env:" platformio*.ini |cut -d'[' -f2|cut -d']' -f1|cut -d':' -f2|sort -n|grep -v spec_`;
