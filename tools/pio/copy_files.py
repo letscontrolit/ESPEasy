@@ -7,20 +7,50 @@ import shutil
 
 OUTPUT_DIR = "build_output{}".format(os.path.sep)
 
+def get_max_bin_size(env_name, file_suffix):
+    # FIXME TD-er: Must determine the max size for .bin.gz files
+
+    max_bin_size = 1044464
+    if "_1M" in env_name:
+        # max 872 kiB - 16 bytes
+        max_bin_size = 892912
+    if "_1M_OTA" in env_name:
+        # max 600 kiB - 16 bytes
+        max_bin_size = 614384
+    if "4M316k" in env_name:
+        # ESP32 with 1800k of sketch space.
+        max_bin_size = 1900544
+    if "debug_" in env_name:
+        # Debug env, used for analysis, not to be run on a node.
+        max_bin_size = 0
+
+    return max_bin_size
+
+
+    
+
+
 def copy_to_build_output(sourcedir, variant, file_suffix):
     in_file = "{}{}".format(variant, file_suffix)
-    if ".bin" in file_suffix:
-        out_file = "{}bin{}{}".format(OUTPUT_DIR, os.path.sep, in_file)
-    else:
-        out_file = "{}debug{}{}".format(OUTPUT_DIR, os.path.sep, in_file)
-
-    if os.path.isfile(out_file):
-        os.remove(out_file)
-
     full_in_file = os.path.join(sourcedir, in_file)
-    #print("\u001b[33m in file : \u001b[0m  {}".format(full_in_file))
-    
+
     if os.path.isfile(full_in_file):
+        if ".bin" in file_suffix:
+            file_size = os.path.getsize(full_in_file)
+            if file_size > get_max_bin_size(variant, file_suffix):
+                out_file = "{}reject{}{}".format(OUTPUT_DIR, os.path.sep, in_file)
+                if not os.path.isdir("{}{}".format(OUTPUT_DIR, "reject")):
+                    os.mkdir("{}{}".format(OUTPUT_DIR, "reject"))
+            else:
+                out_file = "{}bin{}{}".format(OUTPUT_DIR, os.path.sep, in_file)
+        else:
+            out_file = "{}debug{}{}".format(OUTPUT_DIR, os.path.sep, in_file)
+
+        if os.path.isfile(out_file):
+            os.remove(out_file)
+
+        #print("\u001b[33m in file : \u001b[0m  {}".format(full_in_file))
+        
         print("\u001b[33m copy to: \u001b[0m  {}".format(out_file))
         shutil.copy(full_in_file, out_file)
 
