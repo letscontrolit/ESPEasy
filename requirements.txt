@@ -19,7 +19,7 @@ marshmallow==3.5.2
 packaging==20.3
 pathtools==0.1.2
 platformio>=4.3.3
-port-for==0.4
+port-for==0.3.1
 pycparser==2.20
 pyelftools==0.26
 pygit2==1.2.1

@@ -7,6 +7,11 @@
 # sudo apt-get update
 # sudo apt-get upgrade
 # sudo apt install python-minimal virtualenv build-essential zip binutils
+# For Python 3.8:
+# sudo apt install -y software-properties-common
+# sudo add-apt-repository ppa:deadsnakes/ppa
+# sudo apt install -y python3.8
+
 
 VENV=~/.venv/python3.8
 SRC=~/GitHub/letscontrolit/ESPEasy
