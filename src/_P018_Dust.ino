@@ -75,7 +75,7 @@ boolean Plugin_018(byte function, struct EventStruct *event, String& string)
         {
           digitalWrite(Plugin_GP2Y10_LED_Pin, LOW);
           delayMicroseconds(280);
-          value = value + analogRead(A0);
+          value = value + espeasy_analogRead(A0);
           delayMicroseconds(40);
           digitalWrite(Plugin_GP2Y10_LED_Pin, HIGH);
           delayMicroseconds(9680);

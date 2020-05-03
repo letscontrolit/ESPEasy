@@ -291,11 +291,6 @@ P036_data_struct *P036_data = nullptr;
 void Plugin_036_loadDisplayLines(taskIndex_t taskIndex, uint8_t LoadVersion, P036_data_struct* P036_data);
 
 
-void P036_setBitToUL(uint32_t& number, byte bitnr, bool value) {
-  uint32_t mask = (0x01UL << bitnr);
-  uint32_t newbit = (value ? 1UL : 0UL) << bitnr;
-  number = (number & ~mask) | newbit;
-}
 uint8_t get8BitFromUL(uint32_t number, byte bitnr) {
   return (number >> bitnr) & 0xFF;
 }
@@ -435,6 +430,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
         // FIXME TD-er: Why is this using pin3 and not pin1? And why isn't this using the normal pin selection functions?
         addFormPinSelect(F("Display button"), F("taskdevicepin3"), CONFIG_PIN3);
+
         boolean tbPin3Invers = getBitFromUL(PCONFIG_LONG(0), 16);  // Bit 16
         addFormCheckBox(F("Inversed Logic"), F("p036_pin3invers"), tbPin3Invers);
 
@@ -464,6 +460,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         int optionValues9[14] = { eSSID, eSysName, eIP, eMAC, eRSSI, eBSSID, eWiFiCh, eUnit, eSysLoad, eSysHeap, eSysStack, eDate, eTime , ePageNo};
         addFormSelector(F("Header"),F("p036_header"), 14, options9, optionValues9, choice9);
         addFormSelector(F("Header (alternating)"),F("p036_headerAlternate"), 14, options9, optionValues9, choice10);
+
 
         boolean tbScrollLines = getBitFromUL(PCONFIG_LONG(0), 17);  // Bit 17
         addFormCheckBox(F("Scroll long lines"), F("p036_ScrollLines"), tbScrollLines);
@@ -514,10 +511,12 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         uint32_t lSettings = 0;
         set8BitToUL(lSettings, 8, uint8_t(getFormItemInt(F("p036_header")) & 0xff));            // Bit15-8 HeaderContent
         set8BitToUL(lSettings, 0, uint8_t(getFormItemInt(F("p036_headerAlternate")) & 0xff));   // Bit 7-0 HeaderContentAlternative
+
         P036_setBitToUL(lSettings, 16, isFormItemChecked(F("p036_pin3invers")));                // Bit 16 Pin3Invers
         P036_setBitToUL(lSettings, 17, isFormItemChecked(F("p036_ScrollLines")));               // Bit 17 ScrollLines
         P036_setBitToUL(lSettings, 18, !isFormItemChecked(F("p036_NoDisplay")));                // Bit 18 NoDisplayOnReceivingText
         P036_setBitToUL(lSettings, 19, !isFormItemChecked(F("p036_ScrollWithoutWifi")));        // Bit 18 ScrollWithoutWifi
+
         // save CustomTaskSettings always in version V1
         set4BitToUL(lSettings, 20, 0x01);                                                       // Bit23-20 Version CustomTaskSettings -> version V1
 
@@ -663,20 +662,24 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         P036_data->bAlternativHeader = (++P036_data->HeaderCount > (lTaskTimer*5)); // change header after half of display time
         if (CONFIG_PIN3 != -1)
         {
+
           P036_data->bPin3Invers = getBitFromUL(PCONFIG_LONG(0), 16);  // Bit 16
           if ((!P036_data->bPin3Invers && digitalRead(CONFIG_PIN3)) || (P036_data->bPin3Invers && !digitalRead(CONFIG_PIN3)))
+
           {
             P036_data->display->displayOn();
             UserVar[event->BaseVarIndex] = 1;      //  Save the fact that the display is now ON
             displayTimer = PCONFIG(4);
           }
         }
+
         if (P036_data->bLineScrollEnabled) {
           if ((UserVar[event->BaseVarIndex] == 1) && (P036_data->ScrollingPages.Scrolling == 0)) {
             // Display is on.
             P036_data->OLEDIndex = PCONFIG(7);
             display_scrolling_lines(); // line scrolling
           }
+
         }
         success = true;
         break;
@@ -711,6 +714,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           displayTimer--;
           if (displayTimer == 0)
           {
+
             P036_data->display->displayOff();
             UserVar[event->BaseVarIndex] = 0;      //  Save the fact that the display is now OFF
           }
@@ -966,8 +970,10 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
             P036_data->nextFrameToDisplay = LineNo / P036_data->ScrollingPages.linesPerFrame; // next frame shows the new content
 
+
             P036_data->bNoDisplayOnReceivedText = getBitFromUL(PCONFIG_LONG(0), 18);  // Bit 18 NoDisplayOnReceivedText
             if (UserVar[event->BaseVarIndex] == 0 && !P036_data->bNoDisplayOnReceivedText) {
+
               // display was OFF, turn it ON
               displayTimer = PCONFIG(4);
               P036_data->display->displayOn();

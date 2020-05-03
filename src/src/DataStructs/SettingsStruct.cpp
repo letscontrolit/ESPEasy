@@ -13,103 +13,103 @@ SettingsStruct_tmpl<N_TASKS>::SettingsStruct_tmpl() : ResetFactoryDefaultPrefere
 // VariousBits1 defaults to 0, keep in mind when adding bit lookups.
 template<unsigned int N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::appendUnitToHostname()  const {
-  return !getBitFromUL(VariousBits1, 1);
+  return !bitRead(VariousBits1, 1);
 }
 
 template<unsigned int N_TASKS>
 void SettingsStruct_tmpl<N_TASKS>::appendUnitToHostname(bool value) {
-  setBitToUL(VariousBits1, 1, !value);
+  bitWrite(VariousBits1, 1, !value);
 }
 
 template<unsigned int N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::uniqueMQTTclientIdReconnect_unused() const {
-  return getBitFromUL(VariousBits1, 2);
+  return bitRead(VariousBits1, 2);
 }
 
 template<unsigned int N_TASKS>
 void SettingsStruct_tmpl<N_TASKS>::uniqueMQTTclientIdReconnect_unused(bool value) {
-  setBitToUL(VariousBits1, 2, value);
+  bitWrite(VariousBits1, 2, value);
 }
 
 template<unsigned int N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::OldRulesEngine() const {
-  return !getBitFromUL(VariousBits1, 3);
+  return !bitRead(VariousBits1, 3);
 }
 
 template<unsigned int N_TASKS>
 void SettingsStruct_tmpl<N_TASKS>::OldRulesEngine(bool value) {
-  setBitToUL(VariousBits1, 3, !value);
+  bitWrite(VariousBits1, 3, !value);
 }
 
 template<unsigned int N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::ForceWiFi_bg_mode() const {
-  return getBitFromUL(VariousBits1, 4);
+  return bitRead(VariousBits1, 4);
 }
 
 template<unsigned int N_TASKS>
 void SettingsStruct_tmpl<N_TASKS>::ForceWiFi_bg_mode(bool value) {
-  setBitToUL(VariousBits1, 4, value);
+  bitWrite(VariousBits1, 4, value);
 }
 
 template<unsigned int N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::WiFiRestart_connection_lost() const {
-  return getBitFromUL(VariousBits1, 5);
+  return bitRead(VariousBits1, 5);
 }
 
 template<unsigned int N_TASKS>
 void SettingsStruct_tmpl<N_TASKS>::WiFiRestart_connection_lost(bool value) {
-  setBitToUL(VariousBits1, 5, value);
+  bitWrite(VariousBits1, 5, value);
 }
 
 template<unsigned int N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::EcoPowerMode() const {
-  return getBitFromUL(VariousBits1, 6);
+  return bitRead(VariousBits1, 6);
 }
 
 template<unsigned int N_TASKS>
 void SettingsStruct_tmpl<N_TASKS>::EcoPowerMode(bool value) {
-  setBitToUL(VariousBits1, 6, value);
+  bitWrite(VariousBits1, 6, value);
 }
 
 template<unsigned int N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::WifiNoneSleep() const {
-  return getBitFromUL(VariousBits1, 7);
+  return bitRead(VariousBits1, 7);
 }
 
 template<unsigned int N_TASKS>
 void SettingsStruct_tmpl<N_TASKS>::WifiNoneSleep(bool value) {
-  setBitToUL(VariousBits1, 7, value);
+  bitWrite(VariousBits1, 7, value);
 }
 
 // Enable send gratuitous ARP by default, so invert the values (default = 0)
 template<unsigned int N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::gratuitousARP() const {
-  return !getBitFromUL(VariousBits1, 8);
+  return !bitRead(VariousBits1, 8);
 }
 
 template<unsigned int N_TASKS>
 void SettingsStruct_tmpl<N_TASKS>::gratuitousARP(bool value) {
-  setBitToUL(VariousBits1, 8, !value);
+  bitWrite(VariousBits1, 8, !value);
 }
 
 template<unsigned int N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::TolerantLastArgParse() const {
-  return getBitFromUL(VariousBits1, 9);
+  return bitRead(VariousBits1, 9);
 }
 
 template<unsigned int N_TASKS>
 void SettingsStruct_tmpl<N_TASKS>::TolerantLastArgParse(bool value) {
-  setBitToUL(VariousBits1, 9, value);
+  bitWrite(VariousBits1, 9, value);
 }
 
 template<unsigned int N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::SendToHttp_ack() const {
-  return getBitFromUL(VariousBits1, 10);
+  return bitRead(VariousBits1, 10);
 }
 
 template<unsigned int N_TASKS>
 void SettingsStruct_tmpl<N_TASKS>::SendToHttp_ack(bool value) {
-  setBitToUL(VariousBits1, 10, value);
+  bitWrite(VariousBits1, 10, value);
 }
 
 template<unsigned int N_TASKS>

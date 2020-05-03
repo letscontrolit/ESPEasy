@@ -151,6 +151,54 @@ void checkResetFactoryPin() {
   }
 }
 
+
+#ifdef ESP8266
+int espeasy_analogRead(int pin) {
+  if (!wifiConnectInProgress) {
+    lastADCvalue = analogRead(A0);
+  }
+  return lastADCvalue;
+}
+#endif
+
+#ifdef ESP32
+int espeasy_analogRead(int pin) {
+  return espeasy_analogRead(pin, false);
+}
+
+int espeasy_analogRead(int pin, bool readAsTouch) {
+  int value = 0;
+  int adc, ch, t;
+  if (getADC_gpio_info(pin, adc, ch, t)) {
+    bool canread = false;
+    switch (adc) {
+      case 0:
+        value = hallRead();
+        break;
+      case 1:
+        canread = true;
+        break;
+      case 2:
+        if (WiFi.getMode() == WIFI_OFF) {
+          // See: https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/peripherals/adc.html#configuration-and-reading-adc
+          // ADC2 is shared with WiFi, so don't read ADC2 when WiFi is on.
+          canread = true;
+        }
+        break;
+    }
+    if (canread) {
+      if (readAsTouch && t >= 0) {
+        value = touchRead(pin);
+      } else {
+        value = analogRead(pin);
+      }
+    }
+  }
+  return value;
+}
+#endif
+
+
 /********************************************************************************************\
    Hardware specific configurations
  \*********************************************************************************************/
@@ -379,3 +427,62 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
 }
 
 #endif // ifdef ESP32
+
+
+#ifdef ESP32
+
+// Get ADC related info for a given GPIO pin
+// @param gpio_pin   GPIO pin number
+// @param adc        Number of ADC unit (0 == Hall effect)
+// @param ch         Channel number on ADC unit
+// @param t          index of touch pad ID
+bool getADC_gpio_info(int gpio_pin, int& adc, int& ch, int& t)
+{
+  t = -1;
+  switch (gpio_pin) {
+    case -1: adc = 0; break; // Hall effect Sensor
+    case 36: adc = 1; ch = 0; break;
+    case 37: adc = 1; ch = 1; break;
+    case 38: adc = 1; ch = 2; break;
+    case 39: adc = 1; ch = 3; break;
+    case 32: adc = 1; ch = 4; t = 9; break;
+    case 33: adc = 1; ch = 5; t = 8; break;
+    case 34: adc = 1; ch = 6; break;
+    case 35: adc = 1; ch = 7; break;
+    case 4:  adc = 2; ch = 0; t = 0; break;
+    case 0:  adc = 2; ch = 1; t = 1; break;
+    case 2:  adc = 2; ch = 2; t = 2; break;
+    case 15: adc = 2; ch = 3; t = 3; break;
+    case 13: adc = 2; ch = 4; t = 4; break;
+    case 12: adc = 2; ch = 5; t = 5; break;
+    case 14: adc = 2; ch = 6; t = 6; break;
+    case 27: adc = 2; ch = 7; t = 7; break;
+    case 25: adc = 2; ch = 8; break;
+    case 26: adc = 2; ch = 9; break;
+    default:
+      return false;
+  }
+  return true;
+}
+
+int touchPinToGpio(int touch_pin)
+{
+  switch(touch_pin) {
+    case 0: return T0;
+    case 1: return T1;
+    case 2: return T2;
+    case 3: return T3;
+    case 4: return T4;
+    case 5: return T5;
+    case 6: return T6;
+    case 7: return T7;
+    case 8: return T8;
+    case 9: return T9;
+    default:
+    break;    
+  }
+  return -1;
+}
+
+
+#endif

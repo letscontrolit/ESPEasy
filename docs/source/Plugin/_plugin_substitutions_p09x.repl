@@ -58,3 +58,29 @@
 .. |P094_maintainer| replace:: `TD-er`
 .. |P094_compileinfo| replace:: `.`
 .. |P094_usedlibraries| replace:: `.`
+
+.. |P095_name| replace:: :cyan:`TFT 2.4 inches ILI9341/XPT2046`
+.. |P095_type| replace:: :cyan:`Display`
+.. |P095_typename| replace:: :cyan:`Display - TFT 2.4 inches ILI9341/XPT2046`
+.. |P095_porttype| replace:: `.`
+.. |P095_status| replace:: :yellow:`TESTING`
+.. |P095_github| replace:: _P095_ILI9341.ino
+.. _P095_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P095_ILI9341.ino
+.. |P095_usedby| replace:: `.`
+.. |P095_shortinfo| replace:: `.`
+.. |P095_maintainer| replace:: `TD-er`
+.. |P095_compileinfo| replace:: `.`
+.. |P095_usedlibraries| replace:: `Adafruit GFX, Adafruit ILI9341`
+
+.. |P097_name| replace:: :cyan:`Touch ESP32`
+.. |P097_type| replace:: :cyan:`Internal`
+.. |P097_typename| replace:: :cyan:`Internal - Touch ESP32`
+.. |P097_porttype| replace:: `.`
+.. |P097_status| replace:: :yellow:`TESTING`
+.. |P097_github| replace:: _P097_Esp32Touch.ino
+.. _P097_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P097_Esp32Touch.ino
+.. |P097_usedby| replace:: `.`
+.. |P097_shortinfo| replace:: `.`
+.. |P097_maintainer| replace:: `TD-er`
+.. |P097_compileinfo| replace:: `.`
+.. |P097_usedlibraries| replace:: `.`
