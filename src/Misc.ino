@@ -1141,14 +1141,14 @@ void ResetFactory()
   RTC.factoryResetCounter++;
   saveToRTC();
 
-  //always format on factory reset, in case of corrupt SPIFFS
-  SPIFFS.end();
+  //always format on factory reset, in case of corrupt FS
+  ESPEASY_FS.end();
   serialPrintln(F("RESET: formatting..."));
-  SPIFFS.format();
+  ESPEASY_FS.format();
   serialPrintln(F("RESET: formatting done..."));
-  if (!SPIFFS.begin())
+  if (!ESPEASY_FS.begin())
   {
-    serialPrintln(F("RESET: FORMAT SPIFFS FAILED!"));
+    serialPrintln(F("RESET: FORMAT FS FAILED!"));
     return;
   }
 
@@ -1567,7 +1567,7 @@ void prepareShutdown()
   process_serialWriteBuffer();
   flushAndDisconnectAllClients();
   saveUserVarToRTC();
-  SPIFFS.end();
+  ESPEASY_FS.end();
   delay(100); // give the node time to flush all before reboot or sleep
   node_time.now();
   saveToRTC();
@@ -2766,7 +2766,7 @@ void ArduinoOTAInit()
   ArduinoOTA.onStart([]() {
       serialPrintln(F("OTA  : Start upload"));
       ArduinoOTAtriggered = true;
-      SPIFFS.end(); //important, otherwise it fails
+      ESPEASY_FS.end(); //important, otherwise it fails
   });
 
   ArduinoOTA.onEnd([]() {

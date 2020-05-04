@@ -18,7 +18,7 @@ void handle_root() {
   if (!isLoggedIn()) { return; }
   navMenuIndex = 0;
 
-  // if index.htm exists on SPIFFS serve that one (first check if gziped version exists)
+  // if index.htm exists on FS serve that one (first check if gziped version exists)
   if (loadFromFS(true, F("/index.htm.gz"))) { return; }
 
   if (loadFromFS(false, F("/index.htm.gz"))) { return; }

@@ -568,7 +568,7 @@ void getWebPageTemplateVar(const String& varName)
 
   else if (varName == F("logo"))
   {
-    if (SPIFFS.exists(F("esp.png")))
+    if (ESPEASY_FS.exists(F("esp.png")))
     {
       addHtml(F("<img src=\"esp.png\" width=48 height=48 align=right>"));
     }
@@ -576,7 +576,7 @@ void getWebPageTemplateVar(const String& varName)
 
   else if (varName == F("css"))
   {
-    if (SPIFFS.exists(F("esp.css"))) // now css is written in writeDefaultCSS() to SPIFFS and always present
+    if (ESPEASY_FS.exists(F("esp.css"))) // now css is written in writeDefaultCSS() to FS and always present
     // if (0) //TODO
     {
       addHtml(F("<link rel=\"stylesheet\" type=\"text/css\" href=\"esp.css\">"));
@@ -623,7 +623,7 @@ void writeDefaultCSS(void)
 {
   return; // TODO
 
-  if (!SPIFFS.exists(F("esp.css")))
+  if (!ESPEASY_FS.exists(F("esp.css")))
   {
     String defaultCSS;
 
@@ -632,7 +632,7 @@ void writeDefaultCSS(void)
     if (f)
     {
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        String log = F("CSS  : Writing default CSS file to SPIFFS (");
+        String log = F("CSS  : Writing default CSS file to FS (");
         log += defaultCSS.length();
         log += F(" bytes)");
         addLog(LOG_LEVEL_INFO, log);

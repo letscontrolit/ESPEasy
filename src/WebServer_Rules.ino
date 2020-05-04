@@ -60,7 +60,7 @@ void handle_rules() {
     }
     else // changed set, check if file exists and create new
     {
-      if (!SPIFFS.exists(fileName))
+      if (!ESPEASY_FS.exists(fileName))
       {
         log += F(" Create new file: ");
         log += fileName;
@@ -349,7 +349,7 @@ void handle_rules_delete() {
 
   if (fileName.length() > 0)
   {
-    removed = SPIFFS.remove(fileName);
+    removed = ESPEASY_FS.remove(fileName);
   }
 
   if (removed)
@@ -422,7 +422,7 @@ bool handle_rules_edit(String originalUri, bool isAddNew) {
     Serial.print(F("File name: "));
     Serial.println(fileName);
       #endif // ifdef WEBSERVER_RULES_DEBUG
-    bool isEdit = SPIFFS.exists(fileName);
+    bool isEdit = ESPEASY_FS.exists(fileName);
 
     if (web_server.args() > 0)
     {
@@ -596,7 +596,7 @@ bool EnumerateFileAndDirectory(String          & rootPath
   bool next    = true;
 
   #ifdef ESP8266
-  fs::Dir dir = SPIFFS.openDir(rootPath);
+  fs::Dir dir = ESPEASY_FS.openDir(rootPath);
   Serial.print(F("Enumerate files of "));
   Serial.println(rootPath);
 
@@ -620,7 +620,7 @@ bool EnumerateFileAndDirectory(String          & rootPath
   hasMore = dir.next();
   #endif // ifdef ESP8266
   #ifdef ESP32
-  File root = SPIFFS.open(rootPath);
+  File root = ESPEASY_FS.open(rootPath);
 
   if (root)
   {

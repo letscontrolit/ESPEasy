@@ -48,7 +48,7 @@ void checkRuleSets() {
     fileName += x + 1;
     fileName += F(".txt");
 
-    if (SPIFFS.exists(fileName)) {
+    if (ESPEASY_FS.exists(fileName)) {
       activeRuleSets[x] = true;
     }
     else {
@@ -122,7 +122,7 @@ void rulesProcessing(String& event) {
     String fileName = EventToFileName(event);
 
     // if exists processed the rule file
-    if (SPIFFS.exists(fileName)) {
+    if (ESPEASY_FS.exists(fileName)) {
       rulesProcessingFile(fileName, event);
     }
 #ifndef BUILD_NO_DEBUG

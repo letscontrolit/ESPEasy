@@ -226,7 +226,7 @@ void setup()
 
   if (SpiffsSectors() < 32)
   {
-    serialPrintln(F("\nNo (or too small) SPIFFS area..\nSystem Halted\nPlease reflash with 128k SPIFFS minimum!"));
+    serialPrintln(F("\nNo (or too small) FS area..\nSystem Halted\nPlease reflash with 128k FS minimum!"));
     while (true)
       delay(1);
   }

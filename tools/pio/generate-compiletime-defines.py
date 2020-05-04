@@ -18,6 +18,15 @@ def get_git_description():
     return Repository('.').head.shorthand
 
 
+def deduct_flags_from_pioenv():
+    fs_str = "SPIFFS"
+    if "LittleFS" in env["PIOENV"]:
+        fs_str = "LittleFS"
+        env.Append(CPPDEFINES=[
+            "USE_LITTLEFS"])
+    print("\u001b[33m File System:    \u001b[0m  {}".format(fs_str))
+
+
 # needed to wrap in a number of double quotes.
 # one level for adding it to the list of defines
 # another level to have the string quoted in the .cpp file
@@ -53,11 +62,11 @@ def gen_compiletime_defines(node):
         CCFLAGS=env["CCFLAGS"]
     )
 
-    #return node
+print("\u001b[32m Compile time defines \u001b[0m")
+deduct_flags_from_pioenv()
 
 # Set the binary filename in the environment to be used in other build steps
 env.Replace(PROGNAME=create_binary_filename())
-print("\u001b[32m Compile time defines \u001b[0m")
 print("\u001b[33m PROGNAME:       \u001b[0m  {}".format(env['PROGNAME']))
 print("\u001b[33m BUILD_PLATFORM: \u001b[0m  {}".format(platform.platform()))
 print("\u001b[33m GIT_HEAD:       \u001b[0m  {}".format(get_git_description()))
