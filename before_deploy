@@ -25,6 +25,8 @@ if [ ! -d ${TMP_DIST} ]; then
   exit 1
 fi
 
+echo "### Creating zip archives"
+
 #Naming convention:
 # ESP_Easy_[github version]_[plugin set]_[chip type]_[flash memory].bin
 
@@ -33,6 +35,8 @@ if [ -d "build_output/reject" ]; then
 fi
 
 zip -qq ${CURPATH}/ESPEasy_ELF_files_$VERSION.zip build_output/debug/*
+echo "### Created ESPEasy_ELF_files_$VERSION.zip"
+
 
 mkdir -p ${TMP_DIST}
 cp -r dist/* ${TMP_DIST}/
@@ -40,6 +44,7 @@ cp -r dist/* ${TMP_DIST}/
 if [ -d "docs/build" ]; then
   # Docs have been created
   zip -r -qq ${CURPATH}/ESPEasy_docs_$VERSION.zip docs/build/*
+  echo "### Created ESPEasy_docs_$VERSION.zip"
 fi
 
 cp -r build_output/bin/* ${TMP_DIST}/bin
@@ -50,13 +55,20 @@ cp -r build_output/bin/* ${TMP_DIST}/bin
 mkdir -p ${TMP_DIST}/source
 cp -r lib ${TMP_DIST}/source/
 cp -r src ${TMP_DIST}/source/
+cp -r misc ${TMP_DIST}/source/
+cp -r static ${TMP_DIST}/source/
+cp -r tools ${TMP_DIST}/source/
 cp platformio*.ini ${TMP_DIST}/source/
+cp *.txt ${TMP_DIST}/source/
+cp *.csv ${TMP_DIST}/source/
+cp README* ${TMP_DIST}/source/
+
 
 cd ${TMP_DIST}
 
 echo
-echo "### Creating zip archive"
 zip -qq ${CURPATH}/ESPEasy_$VERSION.zip -r .
+echo "### Created ESPEasy_$VERSION.zip"
 
 
 rm -Rf ${TMP_DIST}/* 2>/dev/null
