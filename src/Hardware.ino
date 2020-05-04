@@ -213,7 +213,8 @@ String getDeviceModelBrandString(DeviceModel model) {
     case DeviceModel_Sonoff_4ch:
     case DeviceModel_Sonoff_POW:
     case DeviceModel_Sonoff_POWr2:   return F("Sonoff");
-    case DeviceModel_Shelly1:        return F("Shelly");
+    case DeviceModel_Shelly1:
+    case DeviceModel_ShellyPLUG_S:   return F("Shelly");
 
     // case DeviceModel_default:
     default:        return "";
@@ -237,6 +238,7 @@ String getDeviceModelString(DeviceModel model) {
     case DeviceModel_Sonoff_POW:     result += F(" POW");     break;
     case DeviceModel_Sonoff_POWr2:   result += F(" POW-r2");  break;
     case DeviceModel_Shelly1:        result += '1';           break;
+    case DeviceModel_ShellyPLUG_S:   result += F(" PLUG S");  break;
 
     // case DeviceModel_default:
     default:    result += F("default");
@@ -258,7 +260,8 @@ bool modelMatchingFlashSize(DeviceModel model) {
     case DeviceModel_Sonoff_4ch:     return size_MB == 1;
     case DeviceModel_Sonoff_POW:
     case DeviceModel_Sonoff_POWr2:   return size_MB == 4;
-    case DeviceModel_Shelly1:        return size_MB == 2;
+    case DeviceModel_Shelly1:     
+    case DeviceModel_ShellyPLUG_S:   return size_MB == 2;
 
     // case DeviceModel_default:
     default:  return true;

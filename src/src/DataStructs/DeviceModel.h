@@ -18,6 +18,7 @@ enum DeviceModel {
   DeviceModel_Sonoff_POW,
   DeviceModel_Sonoff_POWr2,
   DeviceModel_Shelly1,
+  DeviceModel_ShellyPLUG_S,
 
   DeviceModel_MAX
 };
