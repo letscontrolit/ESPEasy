@@ -12,6 +12,9 @@
 // Added to the main repository with some optimizations and some limitations.
 // Al long as the device is not selected, no RAM is waisted.
 //
+// @uwekaditz: 2020-05-04
+// BUG: temporary pointer to P036_data_struct was not deleted in PLUGIN_WEBFORM_LOAD
+// CHG: PLUGIN_WEBFORM_SAVE does not use a temporary pointer to P036_data_struct
 // @uwekaditz: 2020-05-03
 // CHG: Memory optimization (issue #2799)
 // CHG: Added setting for 'Disable scrolling while WiFi is not connected', scrolling is not smooth as long as the ESP tries to connect Wifi (Load 100%!)
@@ -344,7 +347,6 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
   static uint8_t displayTimer = 0;
   static uint8_t frameCounter = 0;       // need to keep track of framecounter from call to call
   static uint8_t nrFramesToDisplay = 0;
-  P036_data_struct *P036_data_temp = nullptr;
 
   int NFrames;                // the number of frames
 
@@ -383,7 +385,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 #ifdef PLUGIN_036_DEBUG
           addLog(LOG_LEVEL_INFO, F("P036_PLUGIN_WEBFORM_LOAD ..."));
 #endif  // PLUGIN_036_DEBUG
-        P036_data_temp = new P036_data_struct();  // just temporary for Plugin_036_loadDisplayLines()
+        P036_data_struct *P036_data_temp = new P036_data_struct();  // just temporary for Plugin_036_loadDisplayLines()
 
         // Use number 5 to remain compatible with existing configurations,
         // but the item should be one of the first choices.
@@ -396,11 +398,6 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         addFormSelector(F("Controller"), F("p036_controller"), 2, options5, optionValues5, choice5);
 
         uint8_t choice0 = PCONFIG(0);
-        /*
-        String options0[2];
-        options0[0] = F("3C");
-        options0[1] = F("3D");
-        */
         int optionValues0[2];
         optionValues0[0] = 0x3C;
         optionValues0[1] = 0x3D;
@@ -477,31 +474,24 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           addFormTextBox(String(F("Line ")) + (varNr + 1), getPluginCustomArgName(varNr), String(P036_data_temp->DisplayLinesV1[varNr].Content), P36_NcharsV1-1);
         }
 
+        delete P036_data_temp;
+        P036_data_temp = nullptr;
+
         success = true;
         break;
       }
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        if (nullptr == P036_data) {
-#ifdef PLUGIN_036_DEBUG
-          addLog(LOG_LEVEL_INFO, F("P036_PLUGIN_WEBFORM_SAVE NoData -> Create temp ..."));
-#endif  // PLUGIN_036_DEBUG
-          P036_data_temp = new P036_data_struct();  // temporary for SaveCustomTaskSettings()
-        }
-        else {
 #ifdef PLUGIN_036_DEBUG
           addLog(LOG_LEVEL_INFO, F("P036_PLUGIN_WEBFORM_SAVE ..."));
 #endif  // PLUGIN_036_DEBUG
-          P036_data_temp = P036_data;             // updating initialized values
-        }
 
         //update now
         schedule_task_device_timer(event->TaskIndex,
            millis() + (Settings.TaskDeviceTimer[event->TaskIndex] * 1000));
         frameCounter=0;
 
-        P036_data_temp->MaxFramesToDisplay = 0xFF;
         PCONFIG(0) = getFormItemInt(F("p036_adr"));
         PCONFIG(1) = getFormItemInt(F("p036_rotate"));
         PCONFIG(2) = getFormItemInt(F("p036_nlines"));
@@ -517,32 +507,39 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         P036_setBitToUL(lSettings, 16, isFormItemChecked(F("p036_pin3invers")));                // Bit 16 Pin3Invers
         P036_setBitToUL(lSettings, 17, isFormItemChecked(F("p036_ScrollLines")));               // Bit 17 ScrollLines
         P036_setBitToUL(lSettings, 18, !isFormItemChecked(F("p036_NoDisplay")));                // Bit 18 NoDisplayOnReceivingText
-        P036_setBitToUL(lSettings, 19, !isFormItemChecked(F("p036_ScrollWithoutWifi")));        // Bit 18 ScrollWithoutWifi
+        P036_setBitToUL(lSettings, 19, !isFormItemChecked(F("p036_ScrollWithoutWifi")));        // Bit 19 ScrollWithoutWifi
         // save CustomTaskSettings always in version V1
         set4BitToUL(lSettings, 20, 0x01);                                                       // Bit23-20 Version CustomTaskSettings -> version V1
 
         PCONFIG_LONG(0) = lSettings;
 
         String error;
+        tDisplayLines tDisplayLinesV1[P36_Nlines];    // holds the CustomTaskSettings for V1
         for (uint8_t varNr = 0; varNr < P36_Nlines; varNr++)
         {
-          if (!safe_strncpy(P036_data_temp->DisplayLinesV1[varNr].Content, web_server.arg(getPluginCustomArgName(varNr)), P36_NcharsV1)) {
+          if (!safe_strncpy(tDisplayLinesV1[varNr].Content, web_server.arg(getPluginCustomArgName(varNr)), P36_NcharsV1)) {
             error += getCustomTaskSettingsError(varNr);
           }
-          P036_data_temp->DisplayLinesV1[varNr].Content[P36_NcharsV1-1] = 0; // Terminate in case of uninitalized data
-          P036_data_temp->DisplayLinesV1[varNr].FontType = 0xff;
-          P036_data_temp->DisplayLinesV1[varNr].FontHeight = 0xff;
-          P036_data_temp->DisplayLinesV1[varNr].FontSpace = 0xff;
-          P036_data_temp->DisplayLinesV1[varNr].reserved = 0xff;
+          tDisplayLinesV1[varNr].Content[P36_NcharsV1-1] = 0; // Terminate in case of uninitalized data
+          tDisplayLinesV1[varNr].FontType = 0xff;
+          tDisplayLinesV1[varNr].FontHeight = 0xff;
+          tDisplayLinesV1[varNr].FontSpace = 0xff;
+          tDisplayLinesV1[varNr].reserved = 0xff;
         }
         if (error.length() > 0) {
           addHtmlError(error);
         }
-        SaveCustomTaskSettings(event->TaskIndex, (uint8_t*)&(P036_data_temp->DisplayLinesV1), sizeof(P036_data_temp->DisplayLinesV1));
+        SaveCustomTaskSettings(event->TaskIndex, (uint8_t*)&(tDisplayLinesV1), sizeof(tDisplayLinesV1));
+
         if (nullptr != P036_data) {
           // After saving, make sure the active lines are updated.
-          Plugin_036_loadDisplayLines(event->TaskIndex, 1, P036_data_temp);
+          P036_data->MaxFramesToDisplay = 0xFF;
+          Plugin_036_loadDisplayLines(event->TaskIndex, 1, P036_data);
         }
+
+#ifdef PLUGIN_036_DEBUG
+          addLog(LOG_LEVEL_INFO, F("P036_PLUGIN_WEBFORM_SAVE Done"));
+#endif  // PLUGIN_036_DEBUG
         success = true;
         break;
       }
