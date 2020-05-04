@@ -5,18 +5,17 @@
 #include "ESPEasy_common.h"
 
 #include "src/DataStructs/SecurityStruct.h"
-#include "src/DataStructs/CRCStruct.h"
 #include "src/DataStructs/SettingsStruct.h"
 
 #include "src/DataStructs/ControllerSettingsStruct.h"
 #include "src/DataStructs/ESPEasyLimits.h"
 #include "src/DataStructs/TimingStats.h"
 
-#include "src/Globals/CRCValues.h"
 #include "src/Globals/Settings.h"
 #include "src/Globals/SecuritySettings.h"
 #include "src/Globals/ESPEasyWiFiEvent.h"
 
+#include "src/Helpers/CompiletimeDefines.h"
 #include "src/Helpers/ESPEasy_time_calc.h"
 
 #include <WiFiClient.h>
@@ -125,9 +124,9 @@ String get_user_agent_request_header_field() {
   request   += F("ESP Easy/");
   request   += BUILD;
   request   += '/';
-  request   += String(CRCValues.compileDate);
+  request   += get_build_date();
   request   += ' ';
-  request   += String(CRCValues.compileTime);
+  request   += get_build_time();
   request   += "\r\n";
   agent_size = request.length();
   return request;
