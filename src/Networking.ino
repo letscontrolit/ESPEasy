@@ -182,6 +182,10 @@ void checkUDP()
                   it->second.nodeName = tmpNodeName;
                   it->second.nodeName.trim();
                   it->second.nodeType = packetBuffer[40];
+                  it->second.webgui_portnumber = 80;
+                  if (len >= 43) {
+                    it->second.webgui_portnumber = makeWord(packetBuffer[42],packetBuffer[41]);
+                  }
                 }
               }
 
@@ -364,6 +368,8 @@ void sendSysInfoUDP(byte repeats)
     data[14] = Settings.Build >> 8;
     memcpy((byte *)data + 15, Settings.Name, 25);
     data[40] = NODE_TYPE_ID;
+    data[41] = lowByte(Settings.WebserverPort);
+    data[42] = highByte(Settings.WebserverPort);
     statusLED(true);
 
     IPAddress broadcastIP(255, 255, 255, 255);

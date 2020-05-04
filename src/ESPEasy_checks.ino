@@ -48,7 +48,7 @@ void run_compiletime_checks() {
   check_size<DeviceStruct,                          7u>();
   check_size<ProtocolStruct,                        6u>();
   check_size<NotificationStruct,                    3u>();
-  check_size<NodeStruct,                            24u>();
+  check_size<NodeStruct,                            28u>();
   check_size<systemTimerStruct,                     28u>();
   check_size<RTCStruct,                             32u>();
   check_size<rulesTimerStatus,                      12u>();

@@ -30,6 +30,7 @@ struct NodeStruct
   uint16_t  build;
   byte      age;
   byte      nodeType;
+  uint16_t  webgui_portnumber;
 };
 typedef std::map<byte, NodeStruct> NodesMap;
 
