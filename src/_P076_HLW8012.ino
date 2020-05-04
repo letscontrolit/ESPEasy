@@ -60,9 +60,10 @@ unsigned int p076_hpowfact = 0;
 #define P076_Teckin       7
 #define P076_TeckinUS     8
 #define P076_Gosund       9
+#define P076_Shelly_PLUG_S 10
 
 // Keep values as they are stored and increase this when adding new ones.
-#define MAX_P076_DEVICE   10
+#define MAX_P076_DEVICE   11
 
 bool p076_getDeviceString(int device, String& name) {
   switch(device) {
@@ -76,6 +77,7 @@ bool p076_getDeviceString(int device, String& name) {
     case P076_Teckin   : name = F("Teckin");          break;
     case P076_TeckinUS : name = F("Teckin US");       break;
     case P076_Gosund   : name = F("Gosund SP1 v23");  break;
+    case P076_Shelly_PLUG_S : name = F("Shelly PLUG-S");  break;
     default:
       return false;
   }
@@ -94,6 +96,7 @@ bool p076_getDeviceParameters(int device, byte &SEL_Pin, byte &CF_Pin, byte &CF1
     case P076_Teckin   : SEL_Pin = 12; CF_Pin =  4; CF1_Pin =  5; Cur_read =  LOW; CF_Trigger = FALLING; CF1_Trigger = CHANGE; break;
     case P076_TeckinUS : SEL_Pin = 12; CF_Pin =  5; CF1_Pin = 14; Cur_read =  LOW; CF_Trigger = FALLING; CF1_Trigger = CHANGE; break;
     case P076_Gosund   : SEL_Pin = 12; CF_Pin =  4; CF1_Pin =  5; Cur_read =  LOW; CF_Trigger = FALLING; CF1_Trigger = CHANGE; break;
+    case P076_Shelly_PLUG_S : SEL_Pin = 12; CF_Pin =  5; CF1_Pin = 14; Cur_read =  LOW; CF_Trigger = FALLING; CF1_Trigger = CHANGE; break;
     default:
       return false;
   }

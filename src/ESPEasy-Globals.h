@@ -430,6 +430,13 @@ struct GpioFactorySettingsStruct {
         i2c_sda = -1;    // GPIO4 conflicts with relay control.
         i2c_scl = -1;    // GPIO5 conflicts with SW input
         break;
+      case DeviceModel_ShellyPLUG_S:
+        button[0] = 13;  // Single Button
+        relais[0] = 15;  // Red Led and Relay (0 = Off, 1 = On)
+        status_led = 2;  // Blue Led (0 = On, 1 = Off)
+        i2c_sda = -1;    // GPIO4 conflicts with relay control.
+        i2c_scl = -1;    // GPIO5 conflicts with SW input
+        break;
       case DeviceMode_Olimex_ESP32_PoE:
         button[0] = 34;    // DUT1 Button
         relais[0] = -1;    // No LED's or relays on board

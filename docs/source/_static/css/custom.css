@@ -108,3 +108,7 @@ th {
 body {
   font-size: 12.5px;
 }
+
+div.body {
+  max-width: 100%;
+}
