@@ -20,7 +20,7 @@
 struct NodeStruct
 {
   NodeStruct() :
-    build(0), age(0), nodeType(0)
+    build(0), age(0), nodeType(0), webgui_portnumber(0)
   {
     for (byte i = 0; i < 4; ++i) { ip[i] = 0; }
   }
