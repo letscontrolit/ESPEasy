@@ -415,11 +415,7 @@ void handle_sysinfo_Firmware() {
   addHtml(getPluginDescriptionString());
 
   addRowLabel(F("Build Origin"));
-  if (official_build()) {
-    addHtml(F("Travis Build"));
-  } else {
-    addHtml(F("<b>Self built!</b>"));
-  }
+  addHtml(get_build_origin());
   addRowLabelValue_copy(LabelType::BUILD_TIME);
   addRowLabelValue_copy(LabelType::BINARY_FILENAME);
   addRowLabelValue_copy(LabelType::BUILD_PLATFORM);

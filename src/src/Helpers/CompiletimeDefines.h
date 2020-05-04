@@ -6,7 +6,7 @@
 String get_binary_filename();
 String get_build_time();
 String get_build_date();
-bool   official_build();
+String get_build_origin();
 String get_build_platform();
 String get_git_head();
 

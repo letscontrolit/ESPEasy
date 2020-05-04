@@ -1,7 +1,7 @@
 #include "CompiletimeDefines.h"
 
 #ifndef SET_BUILD_BINARY_FILENAME
-#define SET_BUILD_BINARY_FILENAME "firmware.bin"
+# define SET_BUILD_BINARY_FILENAME "firmware.bin"
 #endif // ifndef SET_BUILD_BINARY_FILENAME
 
 #ifndef SET_BUILD_PLATFORM
@@ -9,8 +9,8 @@
 #endif // ifndef SET_BUILD_PLATFORM
 
 #ifndef SET_BUILD_GIT_HEAD
-#define SET_BUILD_GIT_HEAD ""
-#endif
+# define SET_BUILD_GIT_HEAD ""
+#endif // ifndef SET_BUILD_GIT_HEAD
 
 String get_binary_filename() {
   return F(SET_BUILD_BINARY_FILENAME);
@@ -24,12 +24,14 @@ String get_build_date() {
   return F(__DATE__);
 }
 
-bool official_build() {
-  #ifdef CONTINUOUS_INTEGRATION
-  return true;
-  #else // ifdef CONTINUOUS_INTEGRATION
-  return false;
-  #endif // ifdef CONTINUOUS_INTEGRATION
+String get_build_origin() {
+  #if defined(CONTINUOUS_INTEGRATION)
+  return F("Travis");
+  #elif defined(VAGRANT_BUILD)
+  return F("Vagrant");
+  #else 
+  return F("Self built");
+  #endif
 }
 
 String get_build_platform() {

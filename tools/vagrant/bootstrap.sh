@@ -68,11 +68,11 @@ if [ -f ${VAGRANT_PIO_ENVLIST_FILE} ]; then
   input=`echo "${SRC_PIO_ENVLIST_FILE}"`
   while IFS= read -r line
   do
-    PLATFORMIO_BUILD_FLAGS="-D CONTINUOUS_INTEGRATION" platformio run -e $line
+    PLATFORMIO_BUILD_FLAGS="-D VAGRANT_BUILD" platformio run -e $line
   done < "$input"
 else
   # Build custom_ESP8266_4M target in the platformio.ini file
-  PLATFORMIO_BUILD_FLAGS="-D CONTINUOUS_INTEGRATION" platformio run -e ${PIO_BUILDENV}
+  PLATFORMIO_BUILD_FLAGS="-D VAGRANT_BUILD" platformio run -e ${PIO_BUILDENV}
 fi
 
 # rename and check file
