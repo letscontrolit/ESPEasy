@@ -446,6 +446,16 @@ To create/register a plugin, you have to :
     #define NOTIFIER_SET_STABLE
 #endif
 
+#ifdef PLUGIN_SET_SHELLY_PLUG_S
+    #define PLUGIN_DESCR  "Shelly PLUG-S"
+
+    #define PLUGIN_SET_ONLY_SWITCH
+    #define CONTROLLER_SET_STABLE
+    #define NOTIFIER_SET_STABLE
+    #define USES_P076   // HWL8012   in POW r1
+    #define USES_P081   // Cron
+#endif
+
 // Easy ----------------------------
 #ifdef PLUGIN_SET_EASY_TEMP
     #define PLUGIN_DESCR  "Temp Hum"
