@@ -69,7 +69,6 @@ boolean Plugin_098(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
       {
-        //UserVar[2]=fileFound;
         bool fileFound = fileExists("cache_1.bin");
         String log = F("File Found: ");
 
@@ -80,6 +79,8 @@ boolean Plugin_098(byte function, struct EventStruct *event, String& string)
         }
         addLog(LOG_LEVEL_INFO,log);
 
+        UserVar[event->BaseVarIndex + 1] = fileFound;
+        
         success = true;
         break;
       }
