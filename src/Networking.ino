@@ -364,11 +364,11 @@ void sendSysInfoUDP(byte repeats)
       data[x + 8] = ip[x];
     }
     data[12] = Settings.Unit;
-    data[13] = Settings.Build & 0xff;
-    data[14] = Settings.Build >> 8;
+    data[13] =  lowByte(Settings.Build);
+    data[14] = highByte(Settings.Build);
     memcpy((byte *)data + 15, Settings.Name, 25);
     data[40] = NODE_TYPE_ID;
-    data[41] = lowByte(Settings.WebserverPort);
+    data[41] =  lowByte(Settings.WebserverPort);
     data[42] = highByte(Settings.WebserverPort);
     statusLED(true);
 
