@@ -12,6 +12,9 @@
 // Added to the main repository with some optimizations and some limitations.
 // Al long as the device is not selected, no RAM is waisted.
 //
+// @uwekaditz: 2020-05-05
+// CHG: re-schedule Settings.TaskDeviceTimer after JumpToPage to avoid any scheduled page change while jumping to pages
+// CHG: correct calculation of the page indicator counts
 // @uwekaditz: 2020-05-04
 // BUG: temporary pointer to P036_data_struct was not deleted in PLUGIN_WEBFORM_LOAD
 // CHG: PLUGIN_WEBFORM_SAVE does not use a temporary pointer to P036_data_struct
@@ -256,7 +259,7 @@ struct P036_data_struct: public PluginTaskData_base {
 
     displayTimer = 0;
     frameCounter = 0;           // need to keep track of framecounter from call to call
-    nrFramesToDisplay = 0;
+    disableFrameChangeCnt = 0;  // counter to disable frame change after JumpToPage in case PLUGIN_READ already scheduled
 
     switch (_type) {
       case 1:
@@ -290,26 +293,28 @@ tScrollingPages ScrollingPages;
 tDisplayLines DisplayLinesV1[P36_Nlines];    // holds the CustomTaskSettings for V1
 
 int8_t lastWiFiState;
+// display
 uint8_t OLEDIndex;
 boolean bLineScrollEnabled;
-boolean bAlternativHeader;
-uint16_t HeaderCount;
-boolean bPageScrollDisabled;    // first page after INIT without scrolling
 uint8_t TopLineOffset;          // Offset for top line, used for rotated image while using displays < P36_MaxDisplayHeight lines
+// Display button
 boolean ButtonState;            // button not touched
 uint8_t ButtonLastState;        // Last state checked (debouncing in progress)
 uint8_t DebounceCounter;        // debounce counter
 uint8_t RepeatCounter;          // Repeat delay counter when holding button pressed
-
+uint8_t displayTimer;           // counter for display OFF
+// frame header
+boolean bAlternativHeader;
+uint16_t HeaderCount;
 eHeaderContent HeaderContent;
 eHeaderContent HeaderContentAlternative;
-uint8_t MaxFramesToDisplay;
+// frames
+uint8_t MaxFramesToDisplay;     // total number of frames to display
 uint8_t currentFrameToDisplay;
 uint8_t nextFrameToDisplay;     // next frame because content changed in PLUGIN_WRITE
-
-uint8_t displayTimer;
 uint8_t frameCounter;           // need to keep track of framecounter from call to call
-uint8_t nrFramesToDisplay;
+uint8_t disableFrameChangeCnt;  // counter to disable frame change after JumpToPage in case PLUGIN_READ already scheduled
+boolean bPageScrollDisabled;    // first page after INIT or after JumpToPage without scrolling
 
 };
 
@@ -627,7 +632,6 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
         //    Initialize frame counter
         P036_data->frameCounter = 0;
-        P036_data->nrFramesToDisplay = 1;
         P036_data->currentFrameToDisplay = 0;
         P036_data->nextFrameToDisplay = 0;
         P036_data->bPageScrollDisabled = true;  // first page after INIT without scrolling
@@ -697,6 +701,12 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           return success;
         }
 
+        if ((UserVar[event->BaseVarIndex] == 1) && (P036_data->disableFrameChangeCnt)) {
+          // display is on
+          //  disableFrameChangeCnt==0 enables next page change after JumpToPage
+          P036_data->disableFrameChangeCnt--;
+        }
+
         int lTaskTimer = Settings.TaskDeviceTimer[event->TaskIndex];
         P036_data->bAlternativHeader = (++P036_data->HeaderCount > (lTaskTimer*5)); // change header after half of display time
         if (CONFIG_PIN3 != -1 && P036_data->ButtonState)
@@ -704,18 +714,12 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           bool bStepThroughPages = bitRead(PCONFIG_LONG(0), 19);        //  Bit 19
           if (bStepThroughPages && UserVar[event->BaseVarIndex] == 1) { //  When display already on, switch to next page when enabled
             if (P036_data->ScrollingPages.Scrolling == 0) { // page scrolling not running -> switch to next page is allowed
-              P036_data->nextFrameToDisplay = 0xFF;
-              P036_data->bPageScrollDisabled = true; //  show next page without scrolling
-              P036_DisplayPage(event);               //  Display the next page, function needs 65ms!
-              P036_data->displayTimer = PCONFIG(4);  //  Restart timer
+              P036_JumpToPage(event, 0xFF);        //  Start to display the next page, function needs 65ms!
             }
           } else {
             P036_data->display->displayOn();
             UserVar[event->BaseVarIndex] = 1;      //  Save the fact that the display is now ON
-            P036_data->nextFrameToDisplay = 0;
-            P036_data->bPageScrollDisabled = true; //  show first page without scrolling
-            P036_DisplayPage(event);               //  Display the first page, function needs 65ms!
-            P036_data->displayTimer = PCONFIG(4);  //  Restart timer
+            P036_JumpToPage(event, 0);             //  Start to display the first page, function needs 65ms!
           }
           P036_data->ButtonState = false;
           P036_data->DebounceCounter = 0;
@@ -767,6 +771,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         }
         if (UserVar[event->BaseVarIndex] == 1) {
           // Display is on.
+
           P036_data->HeaderContent = static_cast<eHeaderContent>(get8BitFromUL(PCONFIG_LONG(0), 8));             // Bit15-8 HeaderContent
           P036_data->HeaderContentAlternative = static_cast<eHeaderContent>(get8BitFromUL(PCONFIG_LONG(0), 0));  // Bit 7-0 HeaderContentAlternative
 	        display_header();	// Update Header
@@ -832,8 +837,13 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           return success;
         }
 
-        //      Define Scroll area layout
+        if (P036_data->disableFrameChangeCnt) {
+          //  disable next page change after JumpToPage if PLUGIN_READ was already scheduled
+          return success;
+        }
+
         if (P036_data->ScrollingPages.Scrolling == 0) { // page scrolling not running -> switch to next page is allowed
+          // Define Scroll area layout
           P036_DisplayPage(event);
         }
 
@@ -890,15 +900,13 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           else if ((subcommand == F("frame")) && (event->Par2 >= 0) && (event->Par2 <= P036_data->MaxFramesToDisplay + 1))
           {
             success = true;
-            P036_data->nextFrameToDisplay = (event->Par2 == 0 ? 0xFF: event->Par2 - 1);
             if (UserVar[event->BaseVarIndex] == 0) {
               // display was OFF, turn it ON
               P036_data->display->displayOn();
               UserVar[event->BaseVarIndex] = 1;      //  Save the fact that the display is now ON
             }
-            P036_data->bPageScrollDisabled = true; //  show selected page without scrolling
-            P036_DisplayPage(event); // Show the selected page
-            P036_data->displayTimer = PCONFIG(4);
+            uint8_t nextFrame = (event->Par2 == 0 ? 0xFF: event->Par2 - 1);
+            P036_JumpToPage(event, nextFrame);       //  Start to display the selected page, function needs 65ms!
           }
           else if ((LineNo > 0) && (LineNo <= P36_Nlines))
           {
@@ -925,8 +933,6 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
               P036_data->DisplayLinesV1[LineNo-1].Content[strlen-iCharToRemove] = 0;
             }
 
-            P036_data->nextFrameToDisplay = ceil(((float)LineNo) / P036_data->ScrollingPages.linesPerFrame) - 1; // next frame shows the new content, 0-based
-
             boolean bNoDisplayOnReceivedText = bitRead(PCONFIG_LONG(0), 18);  // Bit 18 NoDisplayOnReceivedText
             if (UserVar[event->BaseVarIndex] == 0 && !bNoDisplayOnReceivedText) {
               // display was OFF, turn it ON
@@ -934,9 +940,8 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
               UserVar[event->BaseVarIndex] = 1;      //  Save the fact that the display is now ON
             }
             if (UserVar[event->BaseVarIndex] == 1) {
-              P036_data->bPageScrollDisabled = true; //  show selected page without scrolling
-              P036_DisplayPage(event);               // Show the selected page
-              P036_data->displayTimer = PCONFIG(4);
+              uint8_t nextFrame = ceil(((float)LineNo) / P036_data->ScrollingPages.linesPerFrame) - 1; // next frame shows the new content, 0-based
+              P036_JumpToPage(event, nextFrame);     //  Start to display the selected page, function needs 65ms!
             }
 
 #ifdef PLUGIN_036_DEBUG
@@ -964,6 +969,16 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
   return success;
 }
 
+void P036_JumpToPage(struct EventStruct *event, uint8_t nextFrame)
+{
+  schedule_task_device_timer(event->TaskIndex,
+     millis() + (Settings.TaskDeviceTimer[event->TaskIndex] * 1000)); // reschedule page change
+     P036_data->nextFrameToDisplay = nextFrame;
+     P036_data->bPageScrollDisabled = true; //  show next page without scrolling
+     P036_data->disableFrameChangeCnt = 2;  //  disable next page change in PLUGIN_READ if PLUGIN_READ was already scheduled
+     P036_DisplayPage(event);               //  Display the selected page, function needs 65ms!
+     P036_data->displayTimer = PCONFIG(4);  //  Restart timer
+}
 
 void P036_DisplayPage(struct EventStruct *event)
 {
@@ -1029,10 +1044,6 @@ void P036_DisplayPage(struct EventStruct *event)
     }
     P036_data->nextFrameToDisplay = 0xFF;
 
-    if ((P036_data->currentFrameToDisplay + 1) > P036_data->nrFramesToDisplay) {
-      P036_data->nrFramesToDisplay = P036_data->currentFrameToDisplay + 1;
-    }
-
     // Update max page count
     if (P036_data->MaxFramesToDisplay == 0xFF) {
       // not updated yet
@@ -1057,7 +1068,7 @@ void P036_DisplayPage(struct EventStruct *event)
     P036_data->bAlternativHeader = false;  // start with first header content
     P036_data->HeaderCount = 0;            // reset header count
     display_header();
-    if (SizeSettings[P036_data->OLEDIndex].Width == P36_MaxDisplayWidth) display_indicator(P036_data->nrFramesToDisplay);
+    if (SizeSettings[P036_data->OLEDIndex].Width == P36_MaxDisplayWidth) display_indicator(P036_data->MaxFramesToDisplay + 1);
 
     P036_data->display->display();
 
