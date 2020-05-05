@@ -104,7 +104,7 @@ To create/register a plugin, you have to :
     #ifndef WEBSERVER_WIFI_SCANNER
         #define WEBSERVER_WIFI_SCANNER
     #endif
-#endif 
+#endif
 
 #ifndef USE_CUSTOM_H
     #ifndef USES_SSDP
@@ -288,6 +288,11 @@ To create/register a plugin, you have to :
     #ifndef USES_P033
       #define USES_P033   // Dummy
     #endif
+
+    #ifndef USES_P098
+      #define USES_P098   // Cache Reader
+    #endif
+
     #ifndef USES_P037
 //        #define USES_P037   // MQTTImport
     #endif
@@ -298,6 +303,8 @@ To create/register a plugin, you have to :
     #ifndef USES_P005
 //        #define USES_P005   // DHT
     #endif
+
+
 
     #ifdef USE_SERVO
       #undef USE_SERVO
@@ -565,6 +572,11 @@ To create/register a plugin, you have to :
     #ifndef USES_P033
       #define USES_P033   // Dummy
     #endif
+
+    #ifndef USES_P098
+      #define USES_P098   // Cache Reader
+    #endif
+
     #ifndef USES_P037
         #define USES_P037   // MQTTImport
     #endif
@@ -733,6 +745,7 @@ To create/register a plugin, you have to :
     #define USES_P031   // SHT1X
     #define USES_P032   // MS5611
     #define USES_P033   // Dummy
+    #define USES_P098   // Cache Reader
     #define USES_P034   // DHT12
 //    #define USES_P035   // IRTX
     #define USES_P036   // FrameOLED
@@ -828,7 +841,7 @@ To create/register a plugin, you have to :
     #define USES_P086   // Receiving values according Homie convention. Works together with C014 Homie controller
     //#define USES_P087   // Serial Proxy
     #define USES_P089   // Ping
-    #define USES_P090   // CCS811 TVOC/eCO2 Sensor 
+    #define USES_P090   // CCS811 TVOC/eCO2 Sensor
     #define USES_P091	// SerSwitch
     #define USES_P092   // DL-Bus
     #define USES_P093   // Mitsubishi Heat Pump
