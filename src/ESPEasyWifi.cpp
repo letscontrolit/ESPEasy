@@ -206,7 +206,7 @@ bool prepareWiFi() {
   }
   setSTA(true);
   char hostname[40];
-  safe_strncpy(hostname, NetworkGetHostname().c_str(), sizeof(hostname));
+  safe_strncpy(hostname, NetworkCreateRFCCompliantHostname().c_str(), sizeof(hostname));
   #if defined(ESP8266)
   wifi_station_set_hostname(hostname);
 
