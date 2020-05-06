@@ -6,8 +6,10 @@
 #include "../DataStructs/SchedulerTimers.h"
 #include "../DataStructs/TimingStats.h"
 #include "../Globals/CPlugins.h"
+#include "../Globals/Protocol.h"
 #include "../Helpers/ESPEasy_time_calc.h"
 
+#include <list>
 
 /*********************************************************************************************\
 * ControllerDelayHandlerStruct
@@ -39,6 +41,17 @@ struct ControllerDelayHandlerStruct {
 
     // No less than 10 msec between messages.
     if (minTimeBetweenMessages < 10) { minTimeBetweenMessages = 10; }
+  }
+
+  bool readyToProcess(const T& element) const {
+    const protocolIndex_t protocolIndex = getProtocolIndex_from_ControllerIndex(element.controller_idx);
+    if (protocolIndex == INVALID_PROTOCOL_INDEX) {
+      return false;
+    }
+    if (Protocol[protocolIndex].needsWiFi) {
+      return WiFiConnected(10);
+    }
+    return true;
   }
 
   bool queueFull(const T& element) const {
@@ -158,6 +171,8 @@ struct ControllerDelayHandlerStruct {
   bool          must_check_reply;
 };
 
+
+
 // Uncrustify must not be used on macros, so turn it off.
 // Also make sure to wrap the forward declaration of this function in the same wrappers 
 // as it may not split the forward declaration into multiple lines.
@@ -192,7 +207,7 @@ struct ControllerDelayHandlerStruct {
     MakeControllerSettings (ControllerSettings);                                                                     \
     LoadControllerSettings(element->controller_idx, ControllerSettings);                                             \
     C##NNN####M##_DelayHandler.configureControllerSettings(ControllerSettings);                                      \
-    if (!WiFiConnected(10)) {                                                                                        \
+    if (!C##NNN####M##_DelayHandler.readyToProcess(*element)) {                                                      \
       scheduleNextDelayQueue(TIMER_C##NNN####M##_DELAY_QUEUE, C##NNN####M##_DelayHandler.getNextScheduleTime());     \
       return;                                                                                                        \
     }                                                                                                                \
