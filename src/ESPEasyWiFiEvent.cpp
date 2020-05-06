@@ -121,13 +121,19 @@ void WiFiEvent(system_event_id_t event, system_event_info_t info) {
     case SYSTEM_EVENT_ETH_GOT_IP:
       {
         String log = F("ETH MAC: ");
-        log += ETH.macAddress();
-        log += F(", IPv4: ");
-        log += ETH.localIP().toString();
+        log += NetworkMacAddress();
+        log += F(" IPv4: ");
+        log += NetworkLocalIP().toString();
+        log += " (";
+        log += NetworkGetHostname();
+        log += F(") GW: ");
+        log += NetworkGatewayIP().toString();
+        log += F(" SN: ");
+        log += NetworkSubnetMask().toString();
         if (ETH.fullDuplex()) {
-          log += F(", FULL_DUPLEX");
+          log += F(" FULL_DUPLEX");
         }
-        log += F(", ");
+        log += F(" ");
         log += ETH.linkSpeed();
         log += F("Mbps");
         addLog(LOG_LEVEL_INFO, log);
