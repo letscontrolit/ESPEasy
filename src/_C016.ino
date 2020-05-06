@@ -49,6 +49,7 @@ bool CPlugin_016(CPlugin::Function function, struct EventStruct *event, String& 
         Protocol[protocolCount].usesHost = false;
         Protocol[protocolCount].usesPort = false;
         Protocol[protocolCount].usesSampleSets = false;
+        Protocol[protocolCount].needsWiFi = false;
         break;
       }
 
