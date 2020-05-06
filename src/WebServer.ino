@@ -331,7 +331,7 @@ void set_mDNS() {
     }
 
     if (mdns_started) {
-      MDNS.addService("http", "tcp", 80);
+      MDNS.addService("http", "tcp", Settings.WebserverPort);
     }
   }
   #endif // ifdef FEATURE_MDNS
