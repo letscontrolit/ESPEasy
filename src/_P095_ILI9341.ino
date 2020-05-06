@@ -116,10 +116,10 @@ void Plugin_095_printText(const char *string, int X, int Y, unsigned int textSiz
   #define TS_CS 12
 #else
  //for D1 Mini with shield connection
-  #define TFT_CS D0
-  #define TFT_DC D8
+  #define TFT_CS 16 // D0
+  #define TFT_DC 15 // D8
   #define TFT_RST -1
-  #define TS_CS D3
+  #define TS_CS 0   // D3
 #endif
 
 //The setting structure
