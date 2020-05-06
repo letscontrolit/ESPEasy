@@ -9,6 +9,7 @@
 class ESPEasy_time {
 public:
 
+ESPEasy_time();
 
 struct tm addSeconds(const struct tm& ts, int seconds, bool toLocalTime) const;
 static void breakTime(unsigned long timeInput, struct tm& tm);
