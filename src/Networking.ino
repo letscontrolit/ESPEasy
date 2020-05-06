@@ -175,7 +175,7 @@ void checkUDP()
 
                 if (len >= 41)      // extended packet size
                 {
-                  it->second.build = packetBuffer[13] + 256 * packetBuffer[14];
+                  it->second.build = makeWord(packetBuffer[14], packetBuffer[13]);
                   char tmpNodeName[26] = { 0 };
                   memcpy(&tmpNodeName[0], reinterpret_cast<byte *>(&packetBuffer[15]), 25);
                   tmpNodeName[25]     = 0;
@@ -183,7 +183,7 @@ void checkUDP()
                   it->second.nodeName.trim();
                   it->second.nodeType = packetBuffer[40];
                   it->second.webgui_portnumber = 80;
-                  if (len >= 43) {
+                  if (len >= 43 && it->second.build >= 20107) {
                     it->second.webgui_portnumber = makeWord(packetBuffer[42],packetBuffer[41]);
                   }
                 }
