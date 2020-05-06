@@ -159,6 +159,7 @@ void handle_advanced() {
   addFormSubHeader(F("Special and Experimental Settings"));
 
   addFormNumericBox(F("Webserver port"), F("webport"), Settings.WebserverPort, 0, 65535);
+  addFormNote(F("Requires reboot to activate"));
 
   addFormNumericBox(F("Fixed IP Octet"), F("ip"),           Settings.IP_Octet,     0, 255);
 
