@@ -80,13 +80,20 @@ boolean Plugin_098(byte function, struct EventStruct *event, String& string)
         addLog(LOG_LEVEL_INFO,log);
 
         UserVar[event->BaseVarIndex + 1] = fileFound;
-        
+
         success = true;
         break;
       }
 
     case PLUGIN_WRITE:
       {
+        String command = parseString(string,1);
+        if(command == F("readcachesingle"))
+        {
+            String log = F("Cache Read Single - Called");
+            addLog(LOG_LEVEL_INFO, log);
+            success = true;
+        }
         break;
       }
   }
