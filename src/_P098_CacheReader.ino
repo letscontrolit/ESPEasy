@@ -9,6 +9,39 @@
 #define PLUGIN_ID_098         98
 #define PLUGIN_NAME_098       "Generic - Cache Reader"
 #define PLUGIN_VALUENAME1_098 "CacheReader"
+
+struct Sample_t
+{
+  unsigned long timestamp;
+  byte controller_idx;
+  byte TaskIndex;
+  byte sensorType;
+  byte valueCount;
+  float val1;
+  float val2;
+  float val3;
+  float val4;
+};
+/* Can probably delete
+struct P098_data_struct : public PluginTaskData_base {
+  P098_data_struct() : CacheReader(nullptr) {}
+
+  ~P098_data_struct(){
+    reset();
+  }
+}
+void reset(){
+  if (CacheReader != nullptr){
+    delete CacheReader;
+    CacheReader = nullptr;
+  }
+bool init(){
+  reset();
+  sample = new Sample_t();
+  return isInitialized();
+}
+*/
+
 boolean Plugin_098(byte function, struct EventStruct *event, String& string)
 {
   boolean success = false;
@@ -93,10 +126,6 @@ boolean Plugin_098(byte function, struct EventStruct *event, String& string)
             String log = F("Cache Read Single - Called");
             addLog(LOG_LEVEL_INFO, log);
 
-
-
-
-
             /*
             if (!ControllerSettings.checkHostReachable(true)) {
                 success = false;
@@ -123,8 +152,8 @@ boolean Plugin_098(byte function, struct EventStruct *event, String& string)
             fs::File cache = tryOpenFile("cache_1.bin","r");
             byte buffer[24];
             cache.read(buffer, 24);
-            
-
+            Sample_t *sample = new Sample_t();
+            Sample_t smpl = (Sample_t)(void*)buffer;
 /*
             char* chr = (char*)buffer;
             char *arr[6];
