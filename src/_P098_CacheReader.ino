@@ -80,10 +80,6 @@ boolean Plugin_098(byte function, struct EventStruct *event, String& string)
         addLog(LOG_LEVEL_INFO,log);
         UserVar[event->BaseVarIndex + 1] = fileFound;
 
-        // Set data to send to MQTT Controller
-        event->String1 = F("/cache/publish");
-        event->String2 = F("Message forwarded from Cache Reader");
-
         success = true;
         break;
       }
@@ -93,29 +89,47 @@ boolean Plugin_098(byte function, struct EventStruct *event, String& string)
         String command = parseString(string,1);
         if(command == F("readcachesingle"))
         {
+            // Temporary check to make sure function is called
             String log = F("Cache Read Single - Called");
             addLog(LOG_LEVEL_INFO, log);
 
+
+
+
+
+            /*
+            if (!ControllerSettings.checkHostReachable(true)) {
+                success = false;
+                break;
+            }
+            */
+
+            // Publish to MQTT
+            //TODO: Check host reachable
+            //      Set correct topic & value
+            String tmppubname = "AUTOSEND";
+            String value = "7777";
+            bool publish_success = MQTTpublish(event->ControllerIndex, tmppubname.c_str(), value.c_str(), true);
+
+            String publish_message = "";
+            if (publish_success){
+              publish_message = F("Publish success: True");
+            } else {
+              publish_message = F("Publish success: False");
+            }
+            addLog(LOG_LEVEL_INFO, publish_message);
+            //ControllerSettings.mqtt_retainFlag() TODO: Should set retain flag from interface
+
             fs::File cache = tryOpenFile("cache_1.bin","r");
+            byte buffer[24];
+            cache.read(buffer, 24);
+            
 
-            uint8_t *buffer;
-            cache.read(buffer, 4);
-
-
+/*
             char* chr = (char*)buffer;
             char *arr[6];
             arr[0] = chr;
-
-            std::string s(*chr);
-            float floatValue = 0;
-            string2float(s,floatValue);
-
-
-            //float *bufferFloat;
-            //int2float(buffer, bufferFloat);
-
-            //UserVar[event->BaseVarIndex] = );
-
+*/
             success = true;
         }
         break;
@@ -123,4 +137,5 @@ boolean Plugin_098(byte function, struct EventStruct *event, String& string)
   }
   return success;
 }
+
 #endif // USES_P098
