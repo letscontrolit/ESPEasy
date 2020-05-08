@@ -127,20 +127,47 @@ boolean Plugin_098(byte function, struct EventStruct *event, String& string)
             addLog(LOG_LEVEL_INFO, log);
 
 
+            String value = "abcdefhijklmnopqrstuvxy";
+            fs::File cache = tryOpenFile("cache_1.bin","r");
+            byte *buffer = new byte[4];
+
+            String bs = "aaaaaaaaaaaaaaaaaaaaaaa";
+
+            for (int i=0;i<20;i++){
+
+              size_t readsuccess = cache.read(buffer, 1);
+
+              String bs = "aaaaaaaaaaaaaaaaaaaaaaa";
+              char a = buffer[0];
+              bs[10] = a;
+              addLog(LOG_LEVEL_INFO, bs);
+            }
+            //value[3] = buffer[4];
+
+
+/*
             fs::File cache = tryOpenFile("cache_1.bin","r");
             byte buffer[24];
             cache.read(buffer, 24);
-            char value_buffer[24];
+
+            char value_buffer[24] = "abcdefghoklaodkgjtuiofi";
+
+            value_buffer[0] = buffer[0];
+
+            String value = value_buffer;
+*/
+/*
             for (int i=0 ; i < 24 ; i++){
               value_buffer[i] = buffer[i];
             }
             value_buffer[23] = '\0';
+
             String value = value_buffer;
             if (!value){
               value = "Error 255";
             }
 
-            /*
+
             String message = F("Message to send");
             String messageValue = F(value);
             addLog(LOG_LEVEL_INFO, message);
@@ -159,7 +186,7 @@ boolean Plugin_098(byte function, struct EventStruct *event, String& string)
             //      Set correct topic & value
             String tmppubname = "AUTOSEND_BIN";
             String val = "7777";
-            bool publish_success = MQTTpublish(event->ControllerIndex, tmppubname.c_str(), val.c_str(), true);
+            bool publish_success = MQTTpublish(event->ControllerIndex, tmppubname.c_str(), value.c_str(), true);
 
             String publish_message = "";
             if (publish_success){
@@ -170,18 +197,8 @@ boolean Plugin_098(byte function, struct EventStruct *event, String& string)
             addLog(LOG_LEVEL_INFO, publish_message);
             //ControllerSettings.mqtt_retainFlag() TODO: Should set retain flag from interface
 
+            delete []buffer;
 
-
-
-
-
-
-
-/*
-            char* chr = (char*)buffer;
-            char *arr[6];
-            arr[0] = chr;
-*/
             success = true;
         }
         break;
