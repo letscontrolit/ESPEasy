@@ -140,11 +140,12 @@ boolean Plugin_098(byte function, struct EventStruct *event, String& string)
             String log = F("Cache Read Single - Called");
             addLog(LOG_LEVEL_INFO, log);
 
-            String value = "abcdefhijklmnopqrstuvxy";
+            String value = "";
 
             fs::File cache = tryOpenFile("cache_1.bin","r");
-            byte *buffer = new byte[2];
+            byte *buffer = new byte[4];
 
+            /*
             // Seek to next non null value
             while (!buffer[0]){
               cache.seek(index);
@@ -154,13 +155,16 @@ boolean Plugin_098(byte function, struct EventStruct *event, String& string)
                 break;
               }
             }
-            cache.seek(index + 4);
+            */
+            cache.seek(16);
+            index += 16;
+            cache.read(buffer,4);
 
-            buffer = new byte[24];
-            cache.read(buffer,24);
+            unsigned long timestamp = (unsigned long)buffer;
 
+            /*
             Sample_t *sample = new Sample_t();
-            sample->timestamp = buffer[0];
+            sample->timestamp = (unsigned long)buffer;
             sample->controller_idx = buffer[4];
             sample->TaskIndex = buffer[5];
             sample->sensorType = buffer[6];
@@ -169,6 +173,14 @@ boolean Plugin_098(byte function, struct EventStruct *event, String& string)
             sample->val2 = buffer[12];
             sample->val3 = buffer[16];
             sample->val4 = buffer[20];
+            */
+
+            char *string_buffer = new char[4];
+
+            std::sprintf(string_buffer, "%lu", timestamp);
+
+            String publish_value = string_buffer;
+            addLog(LOG_LEVEL_INFO, publish_value);
 
             /*
             // Seek to next start of sample
@@ -184,6 +196,7 @@ boolean Plugin_098(byte function, struct EventStruct *event, String& string)
             */
 
             UserVar[event->BaseVarIndex + 3] = index;
+
             /*
             if (!ControllerSettings.checkHostReachable(true)) {
                 success = false;
@@ -195,9 +208,8 @@ boolean Plugin_098(byte function, struct EventStruct *event, String& string)
             //TODO: Check host reachable
             //      Set correct topic & value
             String tmppubname = "AUTOSEND_BIN";
-            String val = "7777";
-            bool publish_success = MQTTpublish(event->ControllerIndex, tmppubname.c_str(), value.c_str(), true);
-
+            bool publish_success = MQTTpublish(event->ControllerIndex, tmppubname.c_str(), string_buffer, true);
+            //value.c_str()
             String publish_message = "";
             if (publish_success){
               publish_message = F("Publish success: True");
