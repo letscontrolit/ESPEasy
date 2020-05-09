@@ -39,6 +39,8 @@ else:
     "USES_P097",  # Touch (ESP32)
     "USES_P100",  # Pulse Counter - DS2423
 
+    "USES_C019",  # ESPEasy-Now
+
     "USE_SETTINGS_ARCHIVE",
     "FEATURE_I2CMULTIPLEXER",
     "FEATURE_ARDUINO_OTA"

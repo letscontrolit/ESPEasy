@@ -878,6 +878,7 @@ To create/register a plugin, you have to :
     //#define USES_C015   // Blynk
     #define USES_C017   // Zabbix
     // #define USES_C018 // TTN RN2483
+    // #define USES_C019   // ESPEasy-Now
 #endif
 
 
@@ -1022,7 +1023,7 @@ To create/register a plugin, you have to :
 */
 
 
-#if defined(USES_C018)
+#if defined(USES_C018) || defined(USES_C019)
   #define USES_PACKED_RAW_DATA
 #endif
 
