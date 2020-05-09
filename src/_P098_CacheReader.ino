@@ -12,15 +12,15 @@
 
 struct Sample_t
 {
-  unsigned long& timestamp;
-  byte& controller_idx;
-  byte& TaskIndex;
-  byte& sensorType;
-  byte& valueCount;
-  float& val1;
-  float& val2;
-  float& val3;
-  float& val4;
+  unsigned long timestamp;
+  byte controller_idx;
+  byte TaskIndex;
+  byte sensorType;
+  byte valueCount;
+  float val1;
+  float val2;
+  float val3;
+  float val4;
 };
 /* Can probably delete
 struct P098_data_struct : public PluginTaskData_base {
@@ -42,6 +42,19 @@ bool init(){
 }
 */
 
+// Seek next non null value
+float nextNonNull(fs::File cache, byte *buffer, float current){
+  while (!buffer[0]){
+    cache.seek(current);
+    cache.read(buffer, 1);
+    current++;
+    if (buffer[0] == EOF){
+      break;
+    }
+    return current;
+  }
+  return 0;
+}
 boolean Plugin_098(byte function, struct EventStruct *event, String& string)
 {
   boolean success = false;
@@ -122,58 +135,55 @@ boolean Plugin_098(byte function, struct EventStruct *event, String& string)
         String command = parseString(string,1);
         if(command == F("readcachesingle"))
         {
+            float index = UserVar[event->BaseVarIndex + 3];
             // Temporary check to make sure function is called
             String log = F("Cache Read Single - Called");
             addLog(LOG_LEVEL_INFO, log);
 
-
             String value = "abcdefhijklmnopqrstuvxy";
+
             fs::File cache = tryOpenFile("cache_1.bin","r");
-            byte *buffer = new byte[4];
+            byte *buffer = new byte[2];
 
-            String bs = "aaaaaaaaaaaaaaaaaaaaaaa";
-
-            for (int i=0;i<20;i++){
-
-              size_t readsuccess = cache.read(buffer, 1);
-
-              String bs = "aaaaaaaaaaaaaaaaaaaaaaa";
-              char a = buffer[0];
-              bs[10] = a;
-              addLog(LOG_LEVEL_INFO, bs);
+            // Seek to next non null value
+            while (!buffer[0]){
+              cache.seek(index);
+              cache.read(buffer, 1);
+              index++;
+              if (buffer[0] == EOF){
+                break;
+              }
             }
-            //value[3] = buffer[4];
+            cache.seek(index + 4);
 
+            buffer = new byte[24];
+            cache.read(buffer,24);
 
-/*
-            fs::File cache = tryOpenFile("cache_1.bin","r");
-            byte buffer[24];
-            cache.read(buffer, 24);
+            Sample_t *sample = new Sample_t();
+            sample->timestamp = buffer[0];
+            sample->controller_idx = buffer[4];
+            sample->TaskIndex = buffer[5];
+            sample->sensorType = buffer[6];
+            sample->valueCount = buffer[7];
+            sample->val1 = buffer[8];
+            sample->val2 = buffer[12];
+            sample->val3 = buffer[16];
+            sample->val4 = buffer[20];
 
-            char value_buffer[24] = "abcdefghoklaodkgjtuiofi";
-
-            value_buffer[0] = buffer[0];
-
-            String value = value_buffer;
-*/
-/*
-            for (int i=0 ; i < 24 ; i++){
-              value_buffer[i] = buffer[i];
-            }
-            value_buffer[23] = '\0';
-
-            String value = value_buffer;
-            if (!value){
-              value = "Error 255";
-            }
-
-
-            String message = F("Message to send");
-            String messageValue = F(value);
-            addLog(LOG_LEVEL_INFO, message);
-            addLog(LOG_LEVEL_INFO, messageValue);
+            /*
+            // Seek to next start of sample
+            while (buffer[0] != 11100001 &&
+                   buffer[1] != 11111010 &&
+                   buffer[2] != 11000111 &&
+                   buffer[3] != 1000010)
+                   {
+                     index++;
+                     cache.seek(index+1);
+                     cache.read(buffer,4);
+                   }
             */
 
+            UserVar[event->BaseVarIndex + 3] = index;
             /*
             if (!ControllerSettings.checkHostReachable(true)) {
                 success = false;
