@@ -160,17 +160,7 @@ boolean Plugin_098(byte function, struct EventStruct *event, String& string)
             index += 16;
             cache.read(buffer,4);
 
-            //unsigned long timestamp = (unsigned long)*(void *)buffer;
-
-            // Convert to little endian
-            byte *timestamp_arr = new byte[4];
-            timestamp_arr[0] = buffer[0];
-            timestamp_arr[1] = buffer[1];
-            timestamp_arr[2] = buffer[2];
-            timestamp_arr[3] = buffer[3];
-
-            unsigned long *timestamp = (unsigned long*)timestamp_arr;
-
+            unsigned long *timestamp = (unsigned long*)buffer;
 
             /*
             Sample_t *sample = new Sample_t();
