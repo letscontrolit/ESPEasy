@@ -5,6 +5,8 @@
 // #######################################################################################################
 
 #include "_Plugin_Helper.h"
+#include "src/Helpers/ESPEasy_now.h"
+
 
 #define PLUGIN_098
 #define PLUGIN_ID_098         98

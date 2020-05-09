@@ -4,6 +4,9 @@
 // ################### Controller Plugin 019: ESPEasy-Now ################################################
 // #######################################################################################################
 
+#include "src/Helpers/ESPEasy_now.h"
+
+
 #define CPLUGIN_019
 #define CPLUGIN_ID_019         19
 #define CPLUGIN_NAME_019       "ESPEasy-Now"
