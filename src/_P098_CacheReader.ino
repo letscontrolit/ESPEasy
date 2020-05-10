@@ -10,25 +10,6 @@
 #define PLUGIN_NAME_098       "Generic - Cache Reader"
 #define PLUGIN_VALUENAME1_098 "CacheReader"
 
-// Parse Byte, return 0 if parsed value = null
-byte parse_byte(byte data){
-  if (data){
-    return data;
-  } else {
-    return 0;
-  }
-}
-// Parse Float value, return 0 if parsed value = null
-float *parse_float(byte data){
-  float *current = (float*)(&data);
-
-  if (*current){
-    return current;
-  } else {
-    return 0;
-  }
-}
-
 class Sample_t
 {
 public:
@@ -60,41 +41,60 @@ public:
    virtual ~ Sample_t(){
      // TODO:
    }
+   // Parse Float value, return 0 if parsed value = null
+   float *parse_float(byte data){
+     float newfloat =  2.34E+22f;
+     float *current = &newfloat;
 
+     //float *current = (float*)(&data);
+     if (*current){
+       return current;
+     } else {
+       return 0;
+     }
+   }
+   // Parse Byte, return 0 if parsed value = null
+   byte parse_byte(byte data){
+     if (data){
+       return data;
+     } else {
+       return 0;
+     }
+   }
   void setTimestamp(byte *data){
     timestamp = (unsigned long*)data;
   }
   void setCtrlIdx(byte *data){
     byte current = data[4];
-    controller_idx = parse_byte(current);
+    controller_idx = this->parse_byte(current);
   }
   void setTaskIdx(byte *data){
     byte current = data[5];
-    TaskIndex = parse_byte(current);
+    TaskIndex = this->parse_byte(current);
   }
   void setSensorType(byte *data){
     byte current = data[6];
-    sensorType = parse_byte(current);
+    sensorType = this->parse_byte(current);
   }
   void setValueCount(byte *data){
     byte current = data[7];
-    valueCount = parse_byte(current);
+    valueCount = this->parse_byte(current);
   }
   void setVal1(byte *data){
     byte current = data[8];
-    val1 = parse_float(current);
+    val1 = this->parse_float(current);
   }
   void setVal2(byte *data){
     byte current = data[12];
-    val2 = parse_float(current);
+    val2 = this->parse_float(current);
   }
   void setVal3(byte *data){
     byte current = data[16];
-    val3 = parse_float(current);
+    val3 = this->parse_float(current);
   }
   void setVal4(byte *data){
     byte current = data[20];
-    val4 = parse_float(current);
+    val4 = this->parse_float(current);
   }
   void parseSample(byte *data){
     // Set timestamp
@@ -257,7 +257,8 @@ boolean Plugin_098(byte function, struct EventStruct *event, String& string)
 
 
           char *string_buffer = new char[128];
-          std::sprintf(string_buffer, "%lu", *sample->timestamp);
+          //std::sprintf(string_buffer, "%lu", *sample->timestamp);
+          std::sprintf(string_buffer, "%f", *sample->val2);
 
 
           String publish_value = string_buffer;
