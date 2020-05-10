@@ -6,6 +6,7 @@
 #include "ESPEasyWifi.h"
 #include "ESPEasy_fdwdecl.h"
 #include "src/Globals/ESPEasyWiFiEvent.h"
+#include "src/Globals/ESPEasy_now_state.h"
 #include "src/Globals/ESPEasy_Scheduler.h"
 #include "src/Globals/EventQueue.h"
 #include "src/Globals/MQTT.h"

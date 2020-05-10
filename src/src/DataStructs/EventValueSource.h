@@ -14,6 +14,7 @@ public:
     VALUE_SOURCE_UDP          = 5,
     VALUE_SOURCE_WEB_FRONTEND = 6,
     VALUE_SOURCE_RULES        = 7,
+    VALUE_SOURCE_ESPEASY_NOW  = 8,
 
     VALUE_SOURCE_NR_VALUES
   };
