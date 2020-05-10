@@ -39,7 +39,7 @@ else:
     "USES_P085",  # AcuDC24x
     "USES_P100",  # Pulse Counter - DS2423
 #   "USES_P087",  # Serial Proxy
-#   "USES_P094",  # CUL Reader
+    "USES_P094",  # CUL Reader
 #   "USES_P095",  # TFT ILI9341
     "USES_P098",  # ESPEasy-Now Reader
 

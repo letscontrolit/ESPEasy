@@ -142,6 +142,14 @@ boolean Plugin_098(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WRITE:
     {
+      // FIXME TD-er: Create commands for ESPEasy_now receiver
+      String command = parseString(string, 1);
+      if (command == F("espeasynow")) {
+        String subcommand = parseString(string, 2);
+        if (subcommand == F("")) {
+
+        }
+      }
       break;
     }
   }

@@ -13,6 +13,8 @@ struct SecurityStruct
 
   void validate();
 
+  bool peerMacSet(byte peer_index) const;
+
   char          WifiSSID[32];
   char          WifiKey[64];
   char          WifiSSID2[32];
@@ -28,6 +30,8 @@ struct SecurityStruct
   //its safe to extend this struct, up to 4096 bytes, default values in config are 0. Make sure crc is last
   uint8_t       ProgmemMd5[16] = {0}; // crc of the binary that last saved the struct to file.
   uint8_t       md5[16] = {0};
+
+  byte       EspEasyNowPeerMAC[ESPEASY_NOW_PEER_MAX][6];
 };
 
 

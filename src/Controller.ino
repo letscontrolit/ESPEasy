@@ -21,12 +21,6 @@
 #include "src/Helpers/Rules_calculate.h"
 
 
-#ifndef ESPEASY_MESH_PEER
-#define ESPEASY_MESH_PEER {0xA2, 0x20, 0xA6, 0x19, 0x2A, 0xBF}
-#endif
-
-static uint8_t PEER[] ESPEASY_MESH_PEER;
-
 
 // ********************************************************************************
 // Interface for Sending to Controllers

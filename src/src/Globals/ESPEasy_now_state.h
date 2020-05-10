@@ -11,8 +11,6 @@ extern bool use_EspEasy_now;
 extern bool plugin_EspEasy_now_active;
 extern bool plugin_EspEasy_now_enabled;
 
-extern bool controller_EspEasy_now_active;
-extern bool controller_EspEasy_now_enabled;
 
 
 #endif // ifdef USES_ESPEASY_NOW

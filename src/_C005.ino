@@ -104,6 +104,7 @@ bool CPlugin_005(CPlugin::Function function, struct EventStruct *event, String& 
       {
         String pubname = CPlugin_005_pubname;
         bool mqtt_retainFlag = CPlugin_005_mqtt_retainFlag;
+
         statusLED(true);
 
         LoadTaskSettings(event->TaskIndex);

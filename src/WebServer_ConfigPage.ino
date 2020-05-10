@@ -99,6 +99,28 @@ void handle_config() {
         break;
     }
 
+    #ifdef USES_ESPEASY_NOW
+    for (int peer = 0; peer < ESPEASY_NOW_PEER_MAX; ++peer) {
+      String id = F("peer");
+      id += String(peer);
+      String peer_mac  = web_server.arg(id);
+      if (peer_mac.length() == 0) {
+        peer_mac = F("00:00:00:00:00:00");
+      }
+      byte mac[6] = {0};
+      if (str2mac(peer_mac.c_str(), mac)) {
+        memcpy(SecuritySettings.EspEasyNowPeerMAC[peer], mac, 6);
+      }
+      /*
+      String log = F("MAC decoding ");
+      log += peer_mac;
+      log += F(" => ");
+      log += formatMAC(mac);
+      addLog(LOG_LEVEL_INFO, log);
+      */
+    }
+    #endif
+
     Settings.deepSleepOnFail = isFormItemChecked(F("deepsleeponfail"));
     str2ip(espip,      Settings.IP);
     str2ip(espgateway, Settings.Gateway);
@@ -169,6 +191,16 @@ void handle_config() {
   addFormNote(F("Leave empty for DHCP"));
 #endif
 
+#ifdef USES_ESPEASY_NOW
+  addFormSubHeader(F("ESPEasy Now"));
+  for (int peer = 0; peer < ESPEASY_NOW_PEER_MAX; ++peer) {
+    String label = F("Peer ");
+    label += String(peer + 1);
+    String id = F("peer");
+    id += String(peer);
+    addFormMACBox(label, id, SecuritySettings.EspEasyNowPeerMAC[peer]);
+  }
+#endif
 
   addFormSubHeader(F("Sleep Mode"));
 

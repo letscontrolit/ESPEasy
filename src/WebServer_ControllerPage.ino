@@ -291,6 +291,20 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
             }
           }
           addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_PORT);
+      #ifdef USES_ESPEASY_NOW
+      if (Protocol[ProtocolIndex].usesMQTT) {
+        // FIXME TD-er: Currently only enabled for MQTT protocols, later for more
+        addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_ENABLE_ESPEASY_NOW_FALLBACK);
+      }
+      #endif
+
+      if (Protocol[ProtocolIndex].usesQueue) {
+        addTableSeparator(F("Controller Queue"), 2, 3);
+        addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_MIN_SEND_INTERVAL);
+        addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_MAX_QUEUE_DEPTH);
+        addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_MAX_RETRIES);
+        addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_FULL_QUEUE_ACTION);
+      }
 
           if (Protocol[ProtocolIndex].usesQueue) {
             addTableSeparator(F("Controller Queue"), 2, 3);

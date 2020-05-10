@@ -83,6 +83,7 @@ struct ControllerSettingsStruct
     CONTROLLER_TIMEOUT,
     CONTROLLER_SAMPLE_SET_INITIATOR,
     CONTROLLER_SEND_BINARY,
+    CONTROLLER_ENABLE_ESPEASY_NOW_FALLBACK,
 
     // Keep this as last, is used to loop over all parameters
     CONTROLLER_ENABLED
@@ -132,6 +133,9 @@ struct ControllerSettingsStruct
 
   bool      sendBinary() const;
   void      sendBinary(bool value);
+
+  bool      enableESPEasyNowFallback() const;
+  void      enableESPEasyNowFallback(bool value);
 
   boolean      UseDNS;
   byte         IP[4];
