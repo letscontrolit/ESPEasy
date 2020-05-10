@@ -1,5 +1,6 @@
-Adafruit_SGP30
-================
+# Adafruit SGP30 Gas / Air Quality I2C sensor [![Build Status](https://travis-ci.com/adafruit/Adafruit_SGP30.svg?branch=master)](https://travis-ci.com/adafruit/Adafruit_SGP30)
+
+<a href="https://www.adafruit.com/product/3709"><img src="assets/board.jpg?raw=true" width="500px"></a>
 
 This is the Adafruit SGP30 Gas / Air Quality  I2C sensor library
 
@@ -16,3 +17,4 @@ Written by Limor Fried for Adafruit Industries.
 BSD license, check license.txt for more information
 All text above must be included in any redistribution
 
+To install, use the Arduino Library Manager and search for "Adafruit SGP30 Sensor" and install the library.

@@ -11,7 +11,7 @@ void handle_filelist_json() {
   navMenuIndex = MENU_INDEX_TOOLS;
   TXBuffer.startJsonStream();
 
-  String fdelete = WebServer.arg(F("delete"));
+  String fdelete = web_server.arg(F("delete"));
 
   if (tryDeleteFile(fdelete)) {
     # if defined(ESP32)
@@ -26,7 +26,7 @@ void handle_filelist_json() {
   const int pageSize = 25;
   int startIdx       = 0;
 
-  String fstart = WebServer.arg(F("start"));
+  String fstart = web_server.arg(F("start"));
 
   if (fstart.length() > 0)
   {
@@ -34,7 +34,7 @@ void handle_filelist_json() {
   }
   int endIdx = startIdx + pageSize - 1;
 
-  TXBuffer += "[{";
+  addHtml("[{");
   bool firstentry = true;
   # if defined(ESP32)
   File root  = SPIFFS.open("/");
@@ -51,7 +51,7 @@ void handle_filelist_json() {
         if (firstentry) {
           firstentry = false;
         } else {
-          TXBuffer += ",{";
+          addHtml(",{");
         }
         stream_next_json_object_value(F("fileName"), String(file.name()));
         stream_next_json_object_value(F("index"),    String(startIdx));
@@ -78,7 +78,7 @@ void handle_filelist_json() {
     if (firstentry) {
       firstentry = false;
     } else {
-      TXBuffer += ",{";
+      addHtml(",{");
     }
 
     stream_next_json_object_value(F("fileName"), String(dir.fileName()));
@@ -97,12 +97,13 @@ void handle_filelist_json() {
       break;
     }
   }
+
   if (firstentry) {
-    TXBuffer += "}";
+    addHtml("}");
   }
 
   # endif // if defined(ESP8266)
-  TXBuffer += "]";
+  addHtml("]");
   TXBuffer.endStream();
 }
 
@@ -117,15 +118,15 @@ void handle_filelist() {
   TXBuffer.startStream();
   sendHeadandTail_stdtemplate();
 
-  String fdelete = WebServer.arg(F("delete"));
+  String fdelete = web_server.arg(F("delete"));
 
   if (tryDeleteFile(fdelete))
   {
     checkRuleSets();
   }
-  #ifdef USES_C016
+  # ifdef USES_C016
 
-  if (WebServer.hasArg(F("delcache"))) {
+  if (web_server.hasArg(F("delcache"))) {
     while (C016_deleteOldestCacheBlock()) {
       delay(1);
     }
@@ -134,10 +135,10 @@ void handle_filelist() {
       delay(1);
     }
   }
-  #endif // ifdef USES_C016
+  # endif // ifdef USES_C016
   const int pageSize = 25;
   int startIdx       = 0;
-  String fstart      = WebServer.arg(F("start"));
+  String fstart      = web_server.arg(F("start"));
 
   if (fstart.length() > 0)
   {
@@ -153,7 +154,7 @@ void handle_filelist() {
   bool moreFilesPresent  = false;
   bool cacheFilesPresent = false;
 
-#if defined(ESP8266)
+# if defined(ESP8266)
 
   fs::Dir dir = SPIFFS.openDir("");
 
@@ -178,8 +179,8 @@ void handle_filelist() {
     }
   }
   moreFilesPresent = dir.next();
-#endif // if defined(ESP8266)
-#if defined(ESP32)
+# endif // if defined(ESP8266)
+# if defined(ESP32)
   File root = SPIFFS.open("/");
   File file = root.openNextFile();
 
@@ -200,7 +201,7 @@ void handle_filelist() {
     file = root.openNextFile();
   }
   moreFilesPresent = file;
-#endif // if defined(ESP32)
+# endif // if defined(ESP32)
 
   int start_prev = -1;
 
@@ -222,26 +223,30 @@ void handle_filelist_add_file(const String& filename, int filesize, int startIdx
   if ((filename != F(FILE_CONFIG)) && (filename != F(FILE_SECURITY)) && (filename != F(FILE_NOTIFICATION)))
   {
     html_add_button_prefix();
-    TXBuffer += F("filelist?delete=");
-    TXBuffer += filename;
+    addHtml(F("filelist?delete="));
+    addHtml(filename);
 
     if (startIdx > 0)
     {
-      TXBuffer += F("&start=");
-      TXBuffer += startIdx;
+      addHtml(F("&start="));
+      addHtml(String(startIdx));
     }
-    TXBuffer += F("'>Del</a>");
+    addHtml(F("'>Del</a>"));
   }
+  {
+    String html;
+    html.reserve(30 + 2 * filename.length());
 
-  TXBuffer += F("<TD><a href=\"");
-  TXBuffer += filename;
-  TXBuffer += "\">";
-  TXBuffer += filename;
-  TXBuffer += F("</a>");
-  html_TD();
+    html += F("<TD><a href=\"");
+    html += filename;
+    html += "\">";
+    html += filename;
+    html += F("</a><TD>");
 
-  if (filesize >= 0) {
-    TXBuffer += String(filesize);
+    if (filesize >= 0) {
+      html += String(filesize);
+    }
+    addHtml(html);
   }
 }
 
@@ -254,28 +259,35 @@ void handle_filelist_buttons(int start_prev, int start_next, bool cacheFilesPres
   if (start_prev >= 0)
   {
     html_add_button_prefix();
-    TXBuffer += F("/filelist?start=");
-    TXBuffer += start_prev;
-    TXBuffer += F("'>Previous</a>");
+    String html;
+    html.reserve(36);
+    html += F("/filelist?start=");
+    html += start_prev;
+    html += F("'>Previous</a>");
+    addHtml(html);
   }
 
   if (start_next >= 0)
   {
     html_add_button_prefix();
-    TXBuffer += F("/filelist?start=");
-    TXBuffer += start_next;
-    TXBuffer += F("'>Next</a>");
+    String html;
+    html.reserve(36);
+
+    html += F("/filelist?start=");
+    html += start_next;
+    html += F("'>Next</a>");
+    addHtml(html);
   }
 
   if (cacheFilesPresent) {
     html_add_button_prefix(F("red"), true);
-    TXBuffer += F("filelist?delcache");
-    TXBuffer += F("'>Delete Cache Files</a>");
+    addHtml(F("filelist?delcache'>Delete Cache Files</a>"));
   }
-  TXBuffer += F("<BR><BR>");
+  addHtml(F("<BR><BR>"));
   sendHeadandTail_stdtemplate(true);
   TXBuffer.endStream();
 }
+
 #endif // ifdef WEBSERVER_FILELIST
 
 // ********************************************************************************
@@ -297,20 +309,20 @@ void handle_SDfilelist() {
   String current_dir   = "";
   String parent_dir    = "";
 
-  for (uint8_t i = 0; i < WebServer.args(); i++) {
-    if (WebServer.argName(i) == F("delete"))
+  for (uint8_t i = 0; i < web_server.args(); i++) {
+    if (web_server.argName(i) == F("delete"))
     {
-      fdelete = WebServer.arg(i);
+      fdelete = web_server.arg(i);
     }
 
-    if (WebServer.argName(i) == F("deletedir"))
+    if (web_server.argName(i) == F("deletedir"))
     {
-      ddelete = WebServer.arg(i);
+      ddelete = web_server.arg(i);
     }
 
-    if (WebServer.argName(i) == F("chgto"))
+    if (web_server.argName(i) == F("chgto"))
     {
-      change_to_dir = WebServer.arg(i);
+      change_to_dir = web_server.arg(i);
     }
   }
 
@@ -360,18 +372,23 @@ void handle_SDfilelist() {
   html_table_header("Name");
   html_table_header("Size");
   html_TR_TD();
-  TXBuffer += F("<TD><a href=\"SDfilelist?chgto=");
-  TXBuffer += parent_dir;
-  TXBuffer += F("\">..");
-  TXBuffer += F("</a>");
-  html_TD();
+  {
+    String html;
+    html.reserve(50 + parent_dir.length());
+    html += F("<TD><a href=\"SDfilelist?chgto=");
+    html += parent_dir;
+    html += F("\">..");
+    html += F("</a><TD>");
+    addHtml(html);
+  }
 
   while (entry)
   {
+    html_TR_TD();
+    size_t entrynameLength = strlen(entry.name());
     if (entry.isDirectory())
     {
       char SDcardChildDir[80];
-      html_TR_TD();
 
       // take a look in the directory for entries
       String child_dir = current_dir + entry.name();
@@ -382,46 +399,61 @@ void handle_SDfilelist() {
       // when the directory is empty, display the button to delete them
       if (!dir_has_entry)
       {
-        TXBuffer += F("<a class='button link' onclick=\"return confirm('Delete this directory?')\" href=\"SDfilelist?deletedir=");
-        TXBuffer += current_dir;
-        TXBuffer += entry.name();
-        TXBuffer += '/';
-        TXBuffer += F("&chgto=");
-        TXBuffer += current_dir;
-        TXBuffer += F("\">Del</a>");
+        addHtml(F("<a class='button link' onclick=\"return confirm('Delete this directory?')\" href=\"SDfilelist?deletedir="));
+        String html;
+        html.reserve(20 + 2 * current_dir.length() + entrynameLength);
+        html += current_dir;
+        html += entry.name();
+        html += '/';
+        html += F("&chgto=");
+        html += current_dir;
+        html += F("\">Del</a>");
+        addHtml(html);
       }
-      TXBuffer += F("<TD><a href=\"SDfilelist?chgto=");
-      TXBuffer += current_dir;
-      TXBuffer += entry.name();
-      TXBuffer += '/';
-      TXBuffer += "\">";
-      TXBuffer += entry.name();
-      TXBuffer += F("</a>");
-      html_TD();
-      TXBuffer += F("dir");
+      {
+        String html;
+        html.reserve(48 + current_dir.length() + 2 * entrynameLength);
+
+        html += F("<TD><a href=\"SDfilelist?chgto=");
+        html += current_dir;
+        html += entry.name();
+        html += '/';
+        html += "\">";
+        html += entry.name();
+        html += F("</a><TD>");
+        html += F("dir");
+        addHtml(html);
+      }
       dir_has_entry.close();
     }
     else
     {
-      html_TR_TD();
 
       if ((entry.name() != String(F(FILE_CONFIG)).c_str()) && (entry.name() != String(F(FILE_SECURITY)).c_str()))
       {
-        TXBuffer += F("<a class='button link' onclick=\"return confirm('Delete this file?')\" href=\"SDfilelist?delete=");
-        TXBuffer += current_dir;
-        TXBuffer += entry.name();
-        TXBuffer += F("&chgto=");
-        TXBuffer += current_dir;
-        TXBuffer += F("\">Del</a>");
+        addHtml(F("<a class='button link' onclick=\"return confirm('Delete this file?')\" href=\"SDfilelist?delete="));
+        String html;
+        html.reserve(20 + 2 * current_dir.length() + entrynameLength);
+
+        html += current_dir;
+        html += entry.name();
+        html += F("&chgto=");
+        html += current_dir;
+        html += F("\">Del</a>");
+        addHtml(html);
       }
-      TXBuffer += F("<TD><a href=\"");
-      TXBuffer += current_dir;
-      TXBuffer += entry.name();
-      TXBuffer += "\">";
-      TXBuffer += entry.name();
-      TXBuffer += F("</a>");
-      html_TD();
-      TXBuffer += entry.size();
+      {
+        String html;
+        html.reserve(48 + current_dir.length() + 2 * entrynameLength);
+        html += F("<TD><a href=\"");
+        html += current_dir;
+        html += entry.name();
+        html += "\">";
+        html += entry.name();
+        html += F("</a><TD>");
+        html += entry.size();
+        addHtml(html);
+      }
     }
     entry.close();
     entry = root.openNextFile();
@@ -430,10 +462,9 @@ void handle_SDfilelist() {
   html_end_table();
   html_end_form();
 
-  // TXBuffer += F("<BR><a class='button link' href=\"/upload\">Upload</a>");
+  // addHtml(F("<BR><a class='button link' href=\"/upload\">Upload</a>"));
   sendHeadandTail_stdtemplate(true);
   TXBuffer.endStream();
 }
 
 #endif // ifdef FEATURE_SD
-

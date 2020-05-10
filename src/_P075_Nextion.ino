@@ -204,7 +204,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
         String error;
         for (byte varNr = 0; varNr < P75_Nlines; varNr++)
         {
-          if (!safe_strncpy(deviceTemplate[varNr], WebServer.arg(getPluginCustomArgName(varNr)), P75_Nchars)) {
+          if (!safe_strncpy(deviceTemplate[varNr], web_server.arg(getPluginCustomArgName(varNr)), P75_Nchars)) {
             error += getCustomTaskSettingsError(varNr);
           }
         }
@@ -290,7 +290,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
               newString += String(barVal,DEC);
             }
             else {
-              newString = parseTemplate(tmpString, 0);
+              newString = parseTemplate(tmpString);
             }
 
             P075_sendCommand(event->TaskIndex, newString.c_str());

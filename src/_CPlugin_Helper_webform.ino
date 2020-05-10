@@ -1,14 +1,18 @@
+#include "src/Globals/CPlugins.h"
+#include "ESPEasy_plugindefs.h"
+
+
 /*********************************************************************************************\
 * Functions to load and store controller settings on the web page.
 \*********************************************************************************************/
-String getControllerParameterName(byte ProtocolIndex, byte parameterIdx, bool displayName, bool& isAlternative) {
+String getControllerParameterName(protocolIndex_t ProtocolIndex, byte parameterIdx, bool displayName, bool& isAlternative) {
   String name;
 
   if (displayName) {
     EventStruct tmpEvent;
     tmpEvent.idx = parameterIdx;
 
-    if (CPluginCall(ProtocolIndex, CPLUGIN_GET_PROTOCOL_DISPLAY_NAME, &tmpEvent, name)) {
+    if (CPluginCall(ProtocolIndex, CPlugin::Function::CPLUGIN_GET_PROTOCOL_DISPLAY_NAME, &tmpEvent, name)) {
       // Found an alternative name for it.
       isAlternative = true;
       return name;
@@ -35,8 +39,11 @@ String getControllerParameterName(byte ProtocolIndex, byte parameterIdx, bool di
     case CONTROLLER_LWT_TOPIC:                name = F("Controller LWT Topic");   break;
     case CONTROLLER_LWT_CONNECT_MESSAGE:      name = F("LWT Connect Message");    break;
     case CONTROLLER_LWT_DISCONNECT_MESSAGE:   name = F("LWT Disconnect Message"); break;
+    case CONTROLLER_SEND_LWT:                 name = F("Send LWT to broker");     break;
+    case CONTROLLER_WILL_RETAIN:              name = F("Will Retain");            break;
+    case CONTROLLER_CLEAN_SESSION:            name = F("Clean Session");          break;
     case CONTROLLER_TIMEOUT:                  name = F("Client Timeout");         break;
-    case CONTROLLER_SAMPLE_SET_INITIATOR:     name = F("Sample Set Initiator");     break;
+    case CONTROLLER_SAMPLE_SET_INITIATOR:     name = F("Sample Set Initiator");   break;
 
     case CONTROLLER_ENABLED:
 
@@ -56,21 +63,25 @@ String getControllerParameterName(byte ProtocolIndex, byte parameterIdx, bool di
   return name;
 }
 
-String getControllerParameterInternalName(byte ProtocolIndex, byte parameterIdx) {
+String getControllerParameterInternalName(protocolIndex_t ProtocolIndex, byte parameterIdx) {
   bool isAlternative; // Dummy, not needed for internal name
   bool displayName = false;
 
   return getControllerParameterName(ProtocolIndex, parameterIdx, displayName, isAlternative);
 }
 
-String getControllerParameterDisplayName(byte ProtocolIndex, byte parameterIdx, bool& isAlternative) {
+String getControllerParameterDisplayName(protocolIndex_t ProtocolIndex, byte parameterIdx, bool& isAlternative) {
   bool displayName = true;
 
   return getControllerParameterName(ProtocolIndex, parameterIdx, displayName, isAlternative);
 }
 
-void addControllerParameterForm(const ControllerSettingsStruct& ControllerSettings, byte controllerindex, byte parameterIdx) {
-  byte   ProtocolIndex            = getProtocolIndex(Settings.Protocol[controllerindex]);
+void addControllerParameterForm(const ControllerSettingsStruct& ControllerSettings, controllerIndex_t controllerindex, byte parameterIdx) {
+  protocolIndex_t  ProtocolIndex  = getProtocolIndex_from_ControllerIndex(controllerindex);
+  if (!validProtocolIndex(ProtocolIndex)) {
+    return;
+  }
+
   bool   isAlternativeDisplayName = false;
   String displayName              = getControllerParameterDisplayName(ProtocolIndex, parameterIdx, isAlternativeDisplayName);
   String internalName             = getControllerParameterInternalName(ProtocolIndex, parameterIdx);
@@ -167,6 +178,15 @@ void addControllerParameterForm(const ControllerSettingsStruct& ControllerSettin
     case CONTROLLER_LWT_DISCONNECT_MESSAGE:
       addFormTextBox(displayName, internalName, ControllerSettings.LWTMessageDisconnect, sizeof(ControllerSettings.LWTMessageDisconnect) - 1);
       break;
+    case CONTROLLER_SEND_LWT:
+      addFormCheckBox(displayName, internalName, ControllerSettings.mqtt_sendLWT());
+      break;
+    case CONTROLLER_WILL_RETAIN:
+      addFormCheckBox(displayName, internalName, ControllerSettings.mqtt_willRetain());
+      break;
+    case CONTROLLER_CLEAN_SESSION:
+      addFormCheckBox(displayName, internalName, ControllerSettings.mqtt_cleanSession());
+      break;
     case CONTROLLER_TIMEOUT:
       addFormNumericBox(displayName, internalName, ControllerSettings.ClientTimeout, 10, CONTROLLER_CLIENTTIMEOUT_MAX);
       addUnit(F("ms"));
@@ -181,7 +201,10 @@ void addControllerParameterForm(const ControllerSettingsStruct& ControllerSettin
 }
 
 void saveControllerParameterForm(ControllerSettingsStruct& ControllerSettings, byte controllerindex, byte parameterIdx) {
-  byte   ProtocolIndex = getProtocolIndex(Settings.Protocol[controllerindex]);
+  byte   ProtocolIndex = getProtocolIndex_from_ControllerIndex(controllerindex);
+  if (!validProtocolIndex(ProtocolIndex)) {
+    return;
+  }
   String internalName  = getControllerParameterInternalName(ProtocolIndex, parameterIdx);
 
   switch (parameterIdx) {
@@ -203,7 +226,7 @@ void saveControllerParameterForm(ControllerSettingsStruct& ControllerSettings, b
 
       if (!ControllerSettings.UseDNS)
       {
-        String controllerip = WebServer.arg(internalName);
+        String controllerip = web_server.arg(internalName);
         str2ip(controllerip, ControllerSettings.IP);
       }
       break;
@@ -247,6 +270,15 @@ void saveControllerParameterForm(ControllerSettingsStruct& ControllerSettings, b
       break;
     case CONTROLLER_LWT_DISCONNECT_MESSAGE:
       strncpy_webserver_arg(ControllerSettings.LWTMessageDisconnect, internalName);
+      break;
+    case CONTROLLER_SEND_LWT:
+      ControllerSettings.mqtt_sendLWT(isFormItemChecked(internalName));
+      break;
+    case CONTROLLER_WILL_RETAIN:
+      ControllerSettings.mqtt_willRetain(isFormItemChecked(internalName));
+      break;
+    case CONTROLLER_CLEAN_SESSION:
+      ControllerSettings.mqtt_cleanSession(isFormItemChecked(internalName));
       break;
     case CONTROLLER_TIMEOUT:
       ControllerSettings.ClientTimeout = getFormItemInt(internalName, ControllerSettings.ClientTimeout);

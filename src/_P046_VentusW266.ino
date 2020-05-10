@@ -334,7 +334,7 @@ boolean Plugin_046(byte function, struct EventStruct *event, String& string)
             P046_data->Plugin_046_newData = false;
             if (PLUGIN_046_DEBUG) {
               String log = F("Ventus W266 Rcvd(");
-              log += getTimeString(':');
+              log += node_time.getTimeString(':');
               log += F(") ");
               for (int i = 0; i < Plugin_046_Payload; i++) {
                 if ((i==2)||(i==3)||(i==4)||(i==9)||(i==10)||(i==14)||(i==17)||(i==18)||(i==20)) {

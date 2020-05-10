@@ -8,6 +8,7 @@
 // This task reads data from the MQTT Import input stream and saves the value
 
 #include "src/Globals/MQTT.h"
+#include "src/Globals/CPlugins.h"
 #include "src/Globals/Plugins.h"
 
 #define PLUGIN_037
@@ -36,7 +37,7 @@ String getClientName() {
   // Generate the MQTT import client name from the system name and a suffix
   //
   String tmpClientName = F("%sysname%-Import");
-  String ClientName = parseTemplate(tmpClientName, 20);
+  String ClientName = parseTemplate(tmpClientName);
   ClientName.trim(); // Avoid spaced in the name.
   ClientName.replace(' ', '_');
   if (reconnectCount != 0) ClientName += reconnectCount;
@@ -152,7 +153,7 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
         {
           String argName = F("p037_template");
           argName += varNr + 1;
-          if (!safe_strncpy(deviceTemplate[varNr], WebServer.arg(argName).c_str(), sizeof(deviceTemplate[varNr]))) {
+          if (!safe_strncpy(deviceTemplate[varNr], web_server.arg(argName).c_str(), sizeof(deviceTemplate[varNr]))) {
             error += getCustomTaskSettingsError(varNr);
           }
         }
@@ -406,8 +407,8 @@ boolean MQTTConnect_037()
   if (MQTTclient_037 == NULL) return false;
   String clientid = getClientName();
   // @ToDo TD-er: Plugin allows for more than one MQTT controller, but we're now using only the first enabled one.
-  int enabledMqttController = firstEnabledMQTTController();
-  if (enabledMqttController < 0) {
+  controllerIndex_t enabledMqttController = firstEnabledMQTT_ControllerIndex();
+  if (!validControllerIndex(enabledMqttController)) {
     // No enabled MQTT controller
     return false;
   }

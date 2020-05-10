@@ -17,7 +17,7 @@ void handle_factoryreset() {
   html_TR();
   addFormHeader(F("Factory Reset"));
 
-  if (WebServer.hasArg("fdm")) {
+  if (web_server.hasArg("fdm")) {
     DeviceModel model = static_cast<DeviceModel>(getFormItemInt("fdm"));
 
     if (modelMatchingFlashSize(model)) {
@@ -25,7 +25,7 @@ void handle_factoryreset() {
     }
   }
 
-  if (WebServer.hasArg(F("savepref"))) {
+  if (web_server.hasArg(F("savepref"))) {
     // User choose a pre-defined config and wants to save it as the new default.
     ResetFactoryDefaultPreference.keepUnitName(isFormItemChecked("kun"));
     ResetFactoryDefaultPreference.keepWiFi(isFormItemChecked("kw"));
@@ -36,7 +36,7 @@ void handle_factoryreset() {
     addHtmlError(SaveSettings());
   }
 
-  if (WebServer.hasArg(F("performfactoryreset"))) {
+  if (web_server.hasArg(F("performfactoryreset"))) {
     // User confirmed to really perform the reset.
     applyFactoryDefaultPref();
 
@@ -109,9 +109,9 @@ void addPreDefinedConfigSelector() {
 void handle_factoryreset_json() {
   if (!isLoggedIn()) { return; }
   TXBuffer.startJsonStream();
-  TXBuffer += "{";
+  addHtml("{");
 
-  if (WebServer.hasArg("fdm")) {
+  if (web_server.hasArg("fdm")) {
     DeviceModel model = static_cast<DeviceModel>(getFormItemInt("fdm"));
 
     if (modelMatchingFlashSize(model)) {
@@ -119,40 +119,42 @@ void handle_factoryreset_json() {
     }
   }
 
-  if (WebServer.hasArg("kun")) {
+  if (web_server.hasArg("kun")) {
     ResetFactoryDefaultPreference.keepUnitName(isFormItemChecked("kun"));
   }
 
-  if (WebServer.hasArg("kw")) {
+  if (web_server.hasArg("kw")) {
     ResetFactoryDefaultPreference.keepWiFi(isFormItemChecked("kw"));
   }
 
-  if (WebServer.hasArg("knet")) {
+  if (web_server.hasArg("knet")) {
     ResetFactoryDefaultPreference.keepNetwork(isFormItemChecked("knet"));
   }
 
-  if (WebServer.hasArg("kntp")) {
+  if (web_server.hasArg("kntp")) {
     ResetFactoryDefaultPreference.keepNTP(isFormItemChecked("kntp"));
   }
 
-  if (WebServer.hasArg("klog")) {
+  if (web_server.hasArg("klog")) {
     ResetFactoryDefaultPreference.keepLogSettings(isFormItemChecked("klog"));
   }
   String error;
-  bool performReset = false;
-  bool savePref = false;
-  if (WebServer.hasArg(F("savepref"))) {
+  bool   performReset = false;
+  bool   savePref     = false;
+
+  if (web_server.hasArg(F("savepref"))) {
     // User choose a pre-defined config and wants to save it as the new default.
     savePref = true;
   }
 
-  if (WebServer.hasArg(F("performfactoryreset"))) {
+  if (web_server.hasArg(F("performfactoryreset"))) {
     // User confirmed to really perform the reset.
     performReset = true;
-    savePref = true;
+    savePref     = true;
   } else {
     error = F("no reset");
   }
+
   if (savePref) {
     applyFactoryDefaultPref();
     error = SaveSettings();
@@ -163,7 +165,7 @@ void handle_factoryreset_json() {
   }
 
   stream_last_json_object_value(F("status"), error);
-  TXBuffer += "}";
+  addHtml("}");
   TXBuffer.endStream();
 
   if (performReset) {

@@ -228,6 +228,8 @@ decode_type_t strToDecodeType(const char * const str) {
     return decode_type_t::SHERWOOD;
   else if (!strcasecmp(str, "SONY"))
     return decode_type_t::SONY;
+  else if (!strcasecmp(str, "SONY_38K"))
+    return decode_type_t::SONY_38K;
   else if (!strcasecmp(str, "TCL112AC"))
     return decode_type_t::TCL112AC;
   else if (!strcasecmp(str, "TECO"))
@@ -460,6 +462,9 @@ String typeToString(const decode_type_t protocol, const bool isRepeat) {
       break;
     case SONY:
       result = F("SONY");
+      break;
+    case SONY_38K:
+      result = F("SONY_38K");
       break;
     case TCL112AC:
       result = F("TCL112AC");
@@ -824,13 +829,6 @@ namespace irutils {
 
   String modelToStr(const decode_type_t protocol, const int16_t model) {
     switch (protocol) {
-      case decode_type_t::GREE:
-        switch (model) {
-          case gree_ac_remote_model_t::YAW1F: return F("YAW1F");
-          case gree_ac_remote_model_t::YBOFB: return F("YBOFB");
-          default: return kUnknownStr;
-        }
-        break;
       case decode_type_t::FUJITSU_AC:
         switch (model) {
           case fujitsu_ac_remote_model_t::ARRAH2E: return F("ARRAH2E");
@@ -838,6 +836,21 @@ namespace irutils {
           case fujitsu_ac_remote_model_t::ARREB1E: return F("ARREB1E");
           case fujitsu_ac_remote_model_t::ARJW2: return F("ARJW2");
           case fujitsu_ac_remote_model_t::ARRY4: return F("ARRY4");
+          default: return kUnknownStr;
+        }
+        break;
+      case decode_type_t::GREE:
+        switch (model) {
+          case gree_ac_remote_model_t::YAW1F: return F("YAW1F");
+          case gree_ac_remote_model_t::YBOFB: return F("YBOFB");
+          default: return kUnknownStr;
+        }
+        break;
+      case decode_type_t::LG:
+      case decode_type_t::LG2:
+        switch (model) {
+          case lg_ac_remote_model_t::GE6711AR2853M: return F("GE6711AR2853M");
+          case lg_ac_remote_model_t::AKB75215403: return F("AKB75215403");
           default: return kUnknownStr;
         }
         break;

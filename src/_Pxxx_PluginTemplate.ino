@@ -125,10 +125,10 @@ boolean Plugin_xxx(byte function, struct EventStruct *event, String& string)
 
       // Make sure not to append data to the string variable in this PLUGIN_WEBFORM_LOAD call.
       // This has changed, so now use the appropriate functions to write directly to the Streaming
-      // WebServer. This takes much less memory and is faster.
+      // web_server. This takes much less memory and is faster.
       // There will be an error in the web interface if something is added to the "string" variable.
 
-      //Use any of the following (defined at WebServer.ino):
+      //Use any of the following (defined at web_server.ino):
       //addFormNote(F("not editable text added here"));
       To add some html, which cannot be done in the existing functions, add it in the following way:
       addHtml(F("<TR><TD>Analog Pin:<TD>"));

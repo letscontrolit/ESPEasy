@@ -9,67 +9,76 @@
 // The "Host name" should match exactly the EspEasy name (Config -> Unit Name)
 // Add a group (mandatory) and hit add. No need to set up IP address or agent.
 // Go to the newly created host ->Items ->Create Item
-// Nane the item something descriptive
+// Name the item something descriptive
 // For Key add the EspEasy task Value name (case sensitive)
-// Type of information select "Numeric (float)" and press add. Thats it.
+// Type of information select "Numeric (float)" and press add.
+// Aslo make sure that you enable send to controller (under Data Acquisition in tasks)
+// and set an interval because you need to actively send the data to Zabbix
 
 #define CPLUGIN_017
 #define CPLUGIN_ID_017 17
 #define CPLUGIN_NAME_017 "Zabbix"
 #include <ArduinoJson.h>
 
-bool CPlugin_017(byte function, struct EventStruct *event, String &string)
+bool CPlugin_017(CPlugin::Function function, struct EventStruct *event, String &string)
 {
   bool success = false;
 
   switch (function)
   {
-  case CPLUGIN_PROTOCOL_ADD:
-  {
-    Protocol[++protocolCount].Number = CPLUGIN_ID_017;
-    Protocol[protocolCount].usesMQTT = false;
-    Protocol[protocolCount].usesTemplate = false;
-    Protocol[protocolCount].usesAccount = false;
-    Protocol[protocolCount].usesPassword = false;
-    Protocol[protocolCount].usesID = false;
-    Protocol[protocolCount].defaultPort = 10051;
-    break;
-  }
-
-  case CPLUGIN_GET_DEVICENAME:
-  {
-    string = F(CPLUGIN_NAME_017);
-    break;
-  }
-
-  case CPLUGIN_PROTOCOL_SEND:
-  {
-    byte valueCount = getValueCountFromSensorType(event->sensorType);
-    C017_queue_element element(event);
-
-    MakeControllerSettings(ControllerSettings);
-    LoadControllerSettings(event->ControllerIndex, ControllerSettings);
-
-    for (byte x = 0; x < valueCount; x++)
+    case CPlugin::Function::CPLUGIN_PROTOCOL_ADD:
     {
-      element.txt[x] = formatUserVarNoCheck(event, x);
+      Protocol[++protocolCount].Number = CPLUGIN_ID_017;
+      Protocol[protocolCount].usesMQTT = false;
+      Protocol[protocolCount].usesTemplate = false;
+      Protocol[protocolCount].usesAccount = false;
+      Protocol[protocolCount].usesPassword = false;
+      Protocol[protocolCount].usesID = false;
+      Protocol[protocolCount].defaultPort = 10051;
+      break;
     }
-    success = C017_DelayHandler.addToQueue(element);
-    scheduleNextDelayQueue(TIMER_C017_DELAY_QUEUE, C017_DelayHandler.getNextScheduleTime());
-    break;
-  }
 
-  case CPLUGIN_FLUSH:
-  {
-    process_c017_delay_queue();
-    delay(0);
-    break;
-  }
+    case CPlugin::Function::CPLUGIN_GET_DEVICENAME:
+    {
+      string = F(CPLUGIN_NAME_017);
+      break;
+    }
+
+    case CPlugin::Function::CPLUGIN_PROTOCOL_SEND:
+    {
+      byte valueCount = getValueCountFromSensorType(event->sensorType);
+      C017_queue_element element(event);
+
+      MakeControllerSettings(ControllerSettings);
+      LoadControllerSettings(event->ControllerIndex, ControllerSettings);
+
+      for (byte x = 0; x < valueCount; x++)
+      {
+        element.txt[x] = formatUserVarNoCheck(event, x);
+      }
+      success = C017_DelayHandler.addToQueue(element);
+      scheduleNextDelayQueue(TIMER_C017_DELAY_QUEUE, C017_DelayHandler.getNextScheduleTime());
+      break;
+    }
+
+    case CPlugin::Function::CPLUGIN_FLUSH:
+    {
+      process_c017_delay_queue();
+      delay(0);
+      break;
+    }
+
+    default:
+      break;
+
   }
   return success;
 }
 
+// Uncrustify may change this into multi line, which will result in failed builds
+// *INDENT-OFF*
 bool do_process_c017_delay_queue(int controller_number, const C017_queue_element &element, ControllerSettingsStruct &ControllerSettings);
+// *INDENT-ON*
 
 bool do_process_c017_delay_queue(int controller_number, const C017_queue_element &element, ControllerSettingsStruct &ControllerSettings)
 {
@@ -83,7 +92,7 @@ bool do_process_c017_delay_queue(int controller_number, const C017_queue_element
   }
 
   WiFiClient client;
-  if (!try_connect_host(controller_number, client, ControllerSettings, F("ZBX  : ")))
+  if (!try_connect_host(controller_number, client, ControllerSettings, F("ZBX  : ")))  
   {
     return false;
   }

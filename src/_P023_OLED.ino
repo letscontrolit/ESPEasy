@@ -131,7 +131,7 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
         String error;
         for (byte varNr = 0; varNr < P23_Nlines; varNr++)
         {
-          if (!safe_strncpy(deviceTemplate[varNr], WebServer.arg(getPluginCustomArgName(varNr)), P23_Nchars)) {
+          if (!safe_strncpy(deviceTemplate[varNr], web_server.arg(getPluginCustomArgName(varNr)), P23_Nchars)) {
             error += getCustomTaskSettingsError(varNr);
           }
         }
@@ -388,7 +388,7 @@ const char Plugin_023_myFont_Size[] PROGMEM = {
 
 // Perform some specific changes for OLED display
 String P023_parseTemplate(String &tmpString, byte lineSize) {
-  String result = parseTemplate(tmpString, lineSize);
+  String result = parseTemplate_padded(tmpString, lineSize);
   const char degree[3] = {0xc2, 0xb0, 0};  // Unicode degree symbol
   const char degree_oled[2] = {0x7F, 0};  // P023_OLED degree symbol
   result.replace(degree, degree_oled);

@@ -23,7 +23,7 @@ EndOn
 
 On StartTimer Do
  LogEntry,'Timer %eventvalue1% will start in %eventvalue2% seconds'
- TimerSet,'%eventvalue1%,%eventvalue2%'
+ TimerSet,%eventvalue1%,%eventvalue2%
 EndOn
 
 On StopTimer Do

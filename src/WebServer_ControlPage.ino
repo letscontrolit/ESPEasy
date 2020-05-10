@@ -11,20 +11,22 @@ void handle_control() {
 
   // TXBuffer.startStream(true); // true= json
   // sendHeadandTail_stdtemplate(_HEAD);
-  String webrequest = WebServer.arg(F("cmd"));
+  String webrequest = web_server.arg(F("cmd"));
   addLog(LOG_LEVEL_INFO,  String(F("HTTP: ")) + webrequest);
-  webrequest = parseTemplate(webrequest, webrequest.length());
+  webrequest = parseTemplate(webrequest);
 #ifndef BUILD_NO_DEBUG
   addLog(LOG_LEVEL_DEBUG, String(F("HTTP after parseTemplate: ")) + webrequest);
 #endif // ifndef BUILD_NO_DEBUG
 
   bool handledCmd = false;
+
   // in case of event, store to buffer and return...
   String command = parseString(webrequest, 1);
-  if (command == F("event") || command == F("asyncevent")) 
+
+  if ((command == F("event")) || (command == F("asyncevent")))
   {
     eventQueue.add(parseStringToEnd(webrequest, 2));
-    handledCmd  = true;
+    handledCmd = true;
   }
   else if (command.equalsIgnoreCase(F("taskrun")) ||
            command.equalsIgnoreCase(F("taskvalueset")) ||
@@ -39,7 +41,7 @@ void handle_control() {
 
   if (handledCmd) {
     TXBuffer.startStream("*");
-    TXBuffer += "OK";
+    addHtml(F("OK"));
     TXBuffer.endStream();
     return;
   }
@@ -55,10 +57,10 @@ void handle_control() {
   }
 
   if (unknownCmd) {
-    TXBuffer += F("Unknown or restricted command!");
+    addHtml(F("Unknown or restricted command!"));
   }
   else {
-    TXBuffer += printWebString;
+    addHtml(printWebString);
   }
 
   TXBuffer.endStream();
