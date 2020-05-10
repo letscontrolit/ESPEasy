@@ -237,7 +237,7 @@ void handle_rules_new() {
                                    Serial.println(fi.Name);
     #endif // ifdef WEBSERVER_RULES_DEBUG
 
-                                   return count <= endIdx;
+                                   return count < endIdx;
                                  };
 
 
