@@ -9,6 +9,7 @@
 //
 
 #include <ESPeasySerial.h>
+#include "_Plugin_Helper.h"
 
 #define PLUGIN_087
 #define PLUGIN_ID_087           87

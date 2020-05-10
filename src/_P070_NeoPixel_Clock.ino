@@ -14,6 +14,7 @@
 
 
 #include <Adafruit_NeoPixel.h>
+#include "_Plugin_Helper.h"
 
 #define NUMBER_LEDS      60			//number of LED in the strip
 

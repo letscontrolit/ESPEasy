@@ -2,7 +2,7 @@
 #define DATASTRUCTS_TCP_CLEANUP_H
 
 
-#include "ESPEasy_common.h"
+#include "../../ESPEasy_common.h"
 
 // clean up tcp connections that are in TIME_WAIT status, to conserve memory
 // In future versions of WiFiClient it should be possible to call abort(), but

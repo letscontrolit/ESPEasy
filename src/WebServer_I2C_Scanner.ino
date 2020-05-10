@@ -108,7 +108,7 @@ String getKnownI2Cdevice(byte address) {
       result =  F("PCF8574A,OLED");
       break;
     case 0x40:
-      result =  F("SI7021,HTU21D,INA219,PCA9685");
+      result =  F("SI7021,HTU21D,INA219,PCA9685,HDC1080");
       break;
     case 0x41:
     case 0x42:

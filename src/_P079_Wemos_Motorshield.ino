@@ -29,6 +29,7 @@
 #endif
 
 #include "Wire.h"
+#include "_Plugin_Helper.h"
 
 #define _MOTOR_A 0
 #define _MOTOR_B 1

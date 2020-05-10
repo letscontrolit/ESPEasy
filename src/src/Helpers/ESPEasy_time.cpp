@@ -205,6 +205,7 @@ bool ESPEasy_time::systemTimePresent() const {
     case NTP_time_source:  
     case Restore_RTC_time_source: 
     case GPS_time_source:
+    case Manual_set:
       return true;
   }
   return nextSyncTime > 0 || Settings.UseNTP || externalTimeSource > 0.0;

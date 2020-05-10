@@ -11,6 +11,7 @@
 
 
 #include <Adafruit_MotorShield.h>
+#include "_Plugin_Helper.h"
 
 #define PLUGIN_048
 #define PLUGIN_ID_048         48

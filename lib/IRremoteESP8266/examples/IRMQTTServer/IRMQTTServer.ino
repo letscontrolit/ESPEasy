@@ -449,6 +449,7 @@ String MqttClimate;  // Sub-topic for the climate topics.
 String MqttClimateCmnd;  // Sub-topic for the climate command topics.
 #if MQTT_DISCOVERY_ENABLE
 String MqttDiscovery;
+String MqttUniqueId;
 #endif  // MQTT_DISCOVERY_ENABLE
 String MqttHAName;
 String MqttClientId;
@@ -1228,6 +1229,7 @@ void handleInfo(void) {
     "<h3>General</h3>"
     "<p>Hostname: " + String(Hostname) + "<br>"
     "IP address: " + WiFi.localIP().toString() + "<br>"
+    "MAC address: " + WiFi.macAddress() + "<br>"
     "Booted: " + timeSince(1) + "<br>" +
     "Version: " _MY_VERSION_ "<br>"
     "Built: " __DATE__
@@ -2033,6 +2035,8 @@ void init_vars(void) {
   // Sub-topic for the climate stat topics.
 #if MQTT_DISCOVERY_ENABLE
   MqttDiscovery = "homeassistant/climate/" + String(Hostname) + "/config";
+  MqttUniqueId = WiFi.macAddress();
+  MqttUniqueId.replace(":", "");
 #endif  // MQTT_DISCOVERY_ENABLE
   MqttHAName = String(Hostname) + "_aircon";
   // Create a unique MQTT client id.
@@ -2531,7 +2535,16 @@ void sendMQTTDiscovery(const char *topic) {
       "\"swing_mode_stat_t\":\"~/" MQTT_CLIMATE_STAT "/" KEY_SWINGV "\","
       "\"swing_modes\":[\"" D_STR_OFF "\",\"" D_STR_AUTO "\",\"" D_STR_HIGHEST
                         "\",\"" D_STR_HIGH "\",\"" D_STR_MIDDLE "\",\""
-                        D_STR_LOW "\",\"" D_STR_LOWEST "\"]"
+                        D_STR_LOW "\",\"" D_STR_LOWEST "\"],"
+      "\"uniq_id\":\"" + MqttUniqueId + "\","
+      "\"device\":{"
+        "\"identifiers\":[\"" + MqttUniqueId + "\"],"
+        "\"connections\":[[\"mac\",\"" + WiFi.macAddress() + "\"]],"
+        "\"manufacturer\":\"IRremoteESP8266\","
+        "\"model\":\"IRMQTTServer\","
+        "\"name\":\"" + Hostname + "\","
+        "\"sw_version\":\"" _MY_VERSION_ "\""
+        "}"
       "}").c_str(), true)) {
     mqttLog("MQTT climate discovery successful sent.");
     hasDiscoveryBeenSent = true;
@@ -2679,7 +2692,7 @@ uint64_t getUInt64fromHex(char const *str) {
 //   code:     Numeric payload of the IR message. Most protocols use this.
 //   code_str: The unparsed code to be sent. Used by complex protocol encodings.
 //   bits:     Nr. of bits in the protocol. 0 means use the protocol's default.
-//   repeat:   Nr. of times the message is to be repeated. (Not all protcols.)
+//   repeat:   Nr. of times the message is to be repeated. (Not all protocols.)
 // Returns:
 //   bool: Successfully sent or not.
 bool sendIRCode(IRsend *irsend, decode_type_t const ir_type,
@@ -3071,6 +3084,10 @@ bool sendClimate(const String topic_prefix, const bool retain,
     lastClimateIr.reset();
     irClimateCounter++;
   }
+  // Mark the "next" value as old/previous.
+  if (ac != NULL) {
+    ac->markAsSent();
+  }
   return success;
 }
 
@@ -3098,20 +3115,20 @@ bool decodeCommonAc(const decode_results *decode) {
   }
 #if IGNORE_DECODED_AC_PROTOCOL
   if (climate[0]->next.protocol != decode_type_t::UNKNOWN) {
-    // Use the previous protcol/model if set.
+    // Use the previous protocol/model if set.
     state.protocol = climate[0]->next.protocol;
     state.model = climate[0]->next.model;
   }
 #endif  // IGNORE_DECODED_AC_PROTOCOL
-// Continue to use the previously prefered temperature units.
-// i.e. Keep using Celsius or Fahrenheit.
-if (climate[0]->next.celsius != state.celsius) {
-  // We've got a mismatch, so we need to convert.
-  state.degrees = climate[0]->next.celsius ? fahrenheitToCelsius(state.degrees)
-                                           : celsiusToFahrenheit(state.degrees);
-  state.celsius = climate[0]->next.celsius;
-}
-climate[0]->next = state;  // Copy over the new climate state.
+  // Continue to use the previously prefered temperature units.
+  // i.e. Keep using Celsius or Fahrenheit.
+  if (climate[0]->next.celsius != state.celsius) {
+    // We've got a mismatch, so we need to convert.
+    state.degrees = climate[0]->next.celsius ?
+        fahrenheitToCelsius(state.degrees) : celsiusToFahrenheit(state.degrees);
+    state.celsius = climate[0]->next.celsius;
+  }
+  climate[0]->next = state;  // Copy over the new climate state.
 #if MQTT_ENABLE
   sendClimate(genStatTopic(0), true, false, REPLAY_DECODED_AC_MESSAGE,
               REPLAY_DECODED_AC_MESSAGE, climate[0]);

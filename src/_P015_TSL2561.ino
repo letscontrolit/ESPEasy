@@ -8,6 +8,7 @@
 // this plugin is based on the sparkfun library
 // written based on version 1.1.0 from https://github.com/sparkfun/SparkFun_TSL2561_Arduino_Library
 
+#include "_Plugin_Helper.h"
 
 #define PLUGIN_015
 #define PLUGIN_ID_015        15

@@ -108,29 +108,29 @@ TEST(TestIRac, Coolix) {
       "f38000d50"  // 38kHz Frequency and 50% duty-cycle.
       // Start of message #1 (i.e. Repeat '0')
       // Header
-      "m4480s4480"
+      "m4692s4416"
       // Data
-      "m560s1680m560s560m560s1680m560s1680m560s560m560s560m560s1680m560s560"
-      "m560s560m560s1680m560s560m560s560m560s1680m560s1680m560s560m560s1680"
-      "m560s560m560s560m560s1680m560s1680m560s1680m560s1680m560s1680m560s1680"
-      "m560s1680m560s1680m560s560m560s560m560s560m560s560m560s560m560s560"
-      "m560s560m560s1680m560s1680m560s560m560s1680m560s1680m560s560m560s560"
-      "m560s1680m560s560m560s560m560s1680m560s560m560s560m560s1680m560s1680"
+      "m552s1656m552s552m552s1656m552s1656m552s552m552s552m552s1656m552s552"
+      "m552s552m552s1656m552s552m552s552m552s1656m552s1656m552s552m552s1656"
+      "m552s552m552s552m552s1656m552s1656m552s1656m552s1656m552s1656m552s1656"
+      "m552s1656m552s1656m552s552m552s552m552s552m552s552m552s552m552s552"
+      "m552s552m552s1656m552s1656m552s552m552s1656m552s1656m552s552m552s552"
+      "m552s1656m552s552m552s552m552s1656m552s552m552s552m552s1656m552s1656"
       // Footer
-      "m560s5040"
+      "m552s5244"
       // End of message #1 (i.e. Repeat '0')
       // Start of message #2 (i.e. Repeat '1')
       // Header
-      "m4480s4480"
+      "m4692s4416"
       // Data
-      "m560s1680m560s560m560s1680m560s1680m560s560m560s560m560s1680m560s560"
-      "m560s560m560s1680m560s560m560s560m560s1680m560s1680m560s560m560s1680"
-      "m560s560m560s560m560s1680m560s1680m560s1680m560s1680m560s1680m560s1680"
-      "m560s1680m560s1680m560s560m560s560m560s560m560s560m560s560m560s560"
-      "m560s560m560s1680m560s1680m560s560m560s1680m560s1680m560s560m560s560"
-      "m560s1680m560s560m560s560m560s1680m560s560m560s560m560s1680m560s1680"
+      "m552s1656m552s552m552s1656m552s1656m552s552m552s552m552s1656m552s552"
+      "m552s552m552s1656m552s552m552s552m552s1656m552s1656m552s552m552s1656"
+      "m552s552m552s552m552s1656m552s1656m552s1656m552s1656m552s1656m552s1656"
+      "m552s1656m552s1656m552s552m552s552m552s552m552s552m552s552m552s552"
+      "m552s552m552s1656m552s1656m552s552m552s1656m552s1656m552s552m552s552"
+      "m552s1656m552s552m552s552m552s1656m552s552m552s552m552s1656m552s1656"
       // Footer
-      "m560s105040",
+      "m552s105244",
       // End of message #2 (i.e. Repeat '1')
       // Note: the two messages (#1 & #2) are identical.
       ac._irsend.outputStr());
@@ -332,21 +332,24 @@ TEST(TestIRac, Daikin216) {
 }
 
 TEST(TestIRac, Electra) {
-  IRElectraAc ac(0);
-  IRac irac(0);
-  IRrecv capture(0);
+  IRElectraAc ac(kGpioUnused);
+  IRac irac(kGpioUnused);
+  IRrecv capture(kGpioUnused);
   char expected[] =
       "Power: On, Mode: 6 (Fan), Temp: 26C, Fan: 1 (High), "
-      "Swing(V): On, Swing(H): On";
+      "Swing(V): On, Swing(H): On, Light: Toggle, Clean: On, Turbo: On";
 
   ac.begin();
   irac.electra(&ac,
-                 true,                        // Power
-                 stdAc::opmode_t::kFan,       // Mode
-                 26,                          // Celsius
-                 stdAc::fanspeed_t::kHigh,    // Fan speed
-                 stdAc::swingv_t::kAuto,      // Veritcal swing
-                 stdAc::swingh_t::kLeft);     // Horizontal swing
+               true,                        // Power
+               stdAc::opmode_t::kFan,       // Mode
+               26,                          // Celsius
+               stdAc::fanspeed_t::kHigh,    // Fan speed
+               stdAc::swingv_t::kAuto,      // Veritcal swing
+               stdAc::swingh_t::kLeft,      // Horizontal swing
+               true,                        // Turbo
+               true,                        // Light (toggle)
+               true);                       // Clean
   ASSERT_EQ(expected, ac.toString());
   ac._irsend.makeDecodeResult();
   EXPECT_TRUE(capture.decode(&ac._irsend.capture));
@@ -892,7 +895,7 @@ TEST(TestIRac, Samsung) {
   IRrecv capture(0);
   char expected[] =
       "Power: On, Mode: 0 (Auto), Temp: 28C, Fan: 6 (Auto), Swing: On, "
-      "Beep: On, Clean: On, Quiet: On, Powerful: Off";
+      "Beep: On, Clean: On, Quiet: On, Powerful: Off, Light: On, Ion: Off";
 
   ac.begin();
   irac.samsung(&ac,
@@ -903,6 +906,8 @@ TEST(TestIRac, Samsung) {
                stdAc::swingv_t::kAuto,      // Veritcal swing
                true,                        // Quiet
                false,                       // Turbo
+               true,                        // Light (Display)
+               false,                       // Filter (Ion)
                true,                        // Clean
                true,                        // Beep
                true,                        // Previous power state
@@ -923,6 +928,8 @@ TEST(TestIRac, Samsung) {
                stdAc::swingv_t::kAuto,      // Veritcal swing
                true,                        // Quiet
                false,                       // Turbo
+               true,                        // Light (Display)
+               false,                       // Filter (Ion)
                true,                        // Clean
                true,                        // Beep
                true,                        // Previous power state
@@ -936,7 +943,7 @@ TEST(TestIRac, Samsung) {
   // desired state.
   char expected_on[] =
       "Power: On, Mode: 1 (Cool), Temp: 24C, Fan: 0 (Auto), Swing: Off, "
-      "Beep: Off, Clean: Off, Quiet: Off, Powerful: Off";
+      "Beep: Off, Clean: Off, Quiet: Off, Powerful: Off, Light: On, Ion: Off";
   ASSERT_EQ(expected_on, IRAcUtils::resultAcToString(&ac._irsend.capture));
 }
 
@@ -1478,39 +1485,39 @@ TEST(TestIRac, Issue821) {
   ASSERT_EQ("Power: On, Light: Toggle",
             IRAcUtils::resultAcToString(&ac._irsend.capture));
   EXPECT_EQ(
-      "f38000d50m"
-      "4480s4480"
-      "m560s1680m560s560m560s1680m560s1680m560s560m560s1680m560s560m560s1680"
-      "m560s560m560s1680m560s560m560s560m560s1680m560s560m560s1680m560s560"
-      "m560s1680m560s1680m560s1680m560s1680m560s560m560s1680m560s560m560s1680"
-      "m560s560m560s560m560s560m560s560m560s1680m560s560m560s1680m560s560"
-      "m560s1680m560s560m560s1680m560s560m560s560m560s1680m560s560m560s1680"
-      "m560s560m560s1680m560s560m560s1680m560s1680m560s560m560s1680m560s560"
-      "m560s5040"
-      "m4480s4480"
-      "m560s1680m560s560m560s1680m560s1680m560s560m560s1680m560s560m560s1680"
-      "m560s560m560s1680m560s560m560s560m560s1680m560s560m560s1680m560s560"
-      "m560s1680m560s1680m560s1680m560s1680m560s560m560s1680m560s560m560s1680"
-      "m560s560m560s560m560s560m560s560m560s1680m560s560m560s1680m560s560"
-      "m560s1680m560s560m560s1680m560s560m560s560m560s1680m560s560m560s1680"
-      "m560s560m560s1680m560s560m560s1680m560s1680m560s560m560s1680m560s560"
-      "m560s105040"
-      "m4480s4480"
-      "m560s1680m560s560m560s1680m560s1680m560s560m560s560m560s1680m560s560"
-      "m560s560m560s1680m560s560m560s560m560s1680m560s1680m560s560m560s1680"
-      "m560s560m560s560m560s560m560s1680m560s1680m560s1680m560s1680m560s1680"
-      "m560s1680m560s1680m560s1680m560s560m560s560m560s560m560s560m560s560"
-      "m560s560m560s1680m560s560m560s560m560s1680m560s560m560s560m560s560"
-      "m560s1680m560s560m560s1680m560s1680m560s560m560s1680m560s1680m560s1680"
-      "m560s5040"
-      "m4480s4480"
-      "m560s1680m560s560m560s1680m560s1680m560s560m560s560m560s1680m560s560"
-      "m560s560m560s1680m560s560m560s560m560s1680m560s1680m560s560m560s1680"
-      "m560s560m560s560m560s560m560s1680m560s1680m560s1680m560s1680m560s1680"
-      "m560s1680m560s1680m560s1680m560s560m560s560m560s560m560s560m560s560"
-      "m560s560m560s1680m560s560m560s560m560s1680m560s560m560s560m560s560"
-      "m560s1680m560s560m560s1680m560s1680m560s560m560s1680m560s1680m560s1680"
-      "m560s105040",
+      "f38000d50"
+      "m4692s4416"
+      "m552s1656m552s552m552s1656m552s1656m552s552m552s1656m552s552m552s1656"
+      "m552s552m552s1656m552s552m552s552m552s1656m552s552m552s1656m552s552"
+      "m552s1656m552s1656m552s1656m552s1656m552s552m552s1656m552s552m552s1656"
+      "m552s552m552s552m552s552m552s552m552s1656m552s552m552s1656m552s552"
+      "m552s1656m552s552m552s1656m552s552m552s552m552s1656m552s552m552s1656"
+      "m552s552m552s1656m552s552m552s1656m552s1656m552s552m552s1656m552s552"
+      "m552s5244"
+      "m4692s4416"
+      "m552s1656m552s552m552s1656m552s1656m552s552m552s1656m552s552m552s1656"
+      "m552s552m552s1656m552s552m552s552m552s1656m552s552m552s1656m552s552"
+      "m552s1656m552s1656m552s1656m552s1656m552s552m552s1656m552s552m552s1656"
+      "m552s552m552s552m552s552m552s552m552s1656m552s552m552s1656m552s552"
+      "m552s1656m552s552m552s1656m552s552m552s552m552s1656m552s552m552s1656"
+      "m552s552m552s1656m552s552m552s1656m552s1656m552s552m552s1656m552s552"
+      "m552s105244"
+      "m4692s4416"
+      "m552s1656m552s552m552s1656m552s1656m552s552m552s552m552s1656m552s552"
+      "m552s552m552s1656m552s552m552s552m552s1656m552s1656m552s552m552s1656"
+      "m552s552m552s552m552s552m552s1656m552s1656m552s1656m552s1656m552s1656"
+      "m552s1656m552s1656m552s1656m552s552m552s552m552s552m552s552m552s552"
+      "m552s552m552s1656m552s552m552s552m552s1656m552s552m552s552m552s552"
+      "m552s1656m552s552m552s1656m552s1656m552s552m552s1656m552s1656m552s1656"
+      "m552s5244"
+      "m4692s4416"
+      "m552s1656m552s552m552s1656m552s1656m552s552m552s552m552s1656m552s552"
+      "m552s552m552s1656m552s552m552s552m552s1656m552s1656m552s552m552s1656"
+      "m552s552m552s552m552s552m552s1656m552s1656m552s1656m552s1656m552s1656"
+      "m552s1656m552s1656m552s1656m552s552m552s552m552s552m552s552m552s552"
+      "m552s552m552s1656m552s552m552s552m552s1656m552s552m552s552m552s552"
+      "m552s1656m552s552m552s1656m552s1656m552s552m552s1656m552s1656m552s1656"
+      "m552s105244",
       ac._irsend.outputStr());
 }
 
@@ -1599,4 +1606,65 @@ TEST(TestIRac, Issue1001) {
             "On Timer: Off, Off Timer: Off, Sleep: Off, Super: Off, "
             "Command: 1 (Power)",
             IRAcUtils::resultAcToString(&ac._irsend.capture));
+}
+
+// Check power switching in Daikin2 common a/c handling when from an IR message.
+TEST(TestIRac, Issue1035) {
+  stdAc::state_t prev;     // Previously desired state
+  stdAc::state_t result;   // State we need to send to get to `desired`
+  prev.protocol = decode_type_t::DAIKIN2;
+  prev.model = -1;
+  prev.power = false;
+  prev.mode = stdAc::opmode_t::kAuto;
+  prev.degrees = 24;
+  prev.celsius = true;
+  prev.fanspeed = stdAc::fanspeed_t::kAuto;
+  prev.swingv = stdAc::swingv_t::kOff;
+  prev.swingh = stdAc::swingh_t::kOff;
+  prev.quiet = false;
+  prev.turbo = false;
+  prev.econo = false;
+  prev.light = false;
+  prev.filter = false;
+  prev.clean = false;
+  prev.beep = false;
+  prev.sleep = -1;
+
+  // https://github.com/crankyoldgit/IRremoteESP8266/issues/1035#issuecomment-580963572
+  const uint8_t on_code[kDaikin2StateLength] = {
+      0x11, 0xDA, 0x27, 0x00, 0x01, 0x15, 0x43, 0x90, 0x29, 0x0C, 0x80, 0x04,
+      0xC0, 0x16, 0x24, 0x00, 0x00, 0xBE, 0xC1, 0x2D, 0x11, 0xDA, 0x27, 0x00,
+      0x00, 0x09, 0x2A, 0x00, 0xB0, 0x00, 0x00, 0x06, 0x60, 0x00, 0x00, 0xC1,
+      0x90, 0x60, 0x0C};
+  const uint8_t off_code[kDaikin2StateLength] = {
+      0x11, 0xDA, 0x27, 0x00, 0x01, 0x15, 0xC3, 0x90, 0x29, 0x0C, 0x80, 0x04,
+      0xC0, 0x16, 0x24, 0x00, 0x00, 0xBE, 0xD1, 0xBD, 0x11, 0xDA, 0x27, 0x00,
+      0x00, 0x08, 0x2A, 0x00, 0xB0, 0x00, 0x00, 0x06, 0x60, 0x00, 0x00, 0xC1,
+      0x90, 0x60, 0x0B};
+
+  IRac irac(kGpioUnused);
+  IRrecv capture(kGpioUnused);
+  IRDaikin2 ac(kGpioUnused);
+
+  ac.begin();
+  ac.setRaw(on_code);
+  ac.send();
+  ac._irsend.makeDecodeResult();
+  ASSERT_TRUE(capture.decode(&ac._irsend.capture));
+  ASSERT_EQ(DAIKIN2, ac._irsend.capture.decode_type);
+  ASSERT_FALSE(prev.power);
+  ASSERT_TRUE(IRAcUtils::decodeToState(&ac._irsend.capture, &result, &prev));
+  ASSERT_TRUE(result.power);
+
+  prev = result;
+
+  ac._irsend.reset();
+  ac.setRaw(off_code);
+  ac.send();
+  ac._irsend.makeDecodeResult();
+  ASSERT_TRUE(capture.decode(&ac._irsend.capture));
+  ASSERT_EQ(DAIKIN2, ac._irsend.capture.decode_type);
+  ASSERT_TRUE(prev.power);
+  ASSERT_TRUE(IRAcUtils::decodeToState(&ac._irsend.capture, &result, &prev));
+  ASSERT_FALSE(result.power);
 }

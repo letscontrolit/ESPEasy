@@ -377,6 +377,7 @@ Floating point transformations:
 * ``Dx.y``: Minimal 'x' digits zero filled & 'y' decimal fixed digits. E.g. ``[bme#T#D2.1]``
 * ``Dx``: Minimal 'x' digits zero filled in front of the decimal point, no decimal digits. Same as ``Dx.0``
 * ``D.y``: Same as ``D0.y``
+* ``d``: Same as ``D`` but spaces insted zeros
 * ``F``: Floor (round down)
 * ``E``: cEiling (round up)
 

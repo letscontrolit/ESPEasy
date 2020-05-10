@@ -41,6 +41,7 @@
 
 #include <SDM.h>    // Requires SDM library from Reaper7 - https://github.com/reaper7/SDM_Energy_Meter/
 #include <ESPeasySerial.h>
+#include "_Plugin_Helper.h"
 
 // These pointers may be used among multiple instances of the same plugin,
 // as long as the same serial settings are used.

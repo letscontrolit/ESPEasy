@@ -74,6 +74,20 @@
 
     ``ControllerEnable,<controller nr>``"
     "
+    DateTime","
+    :red:`Internal`","
+    Get or set the date and time (optional).
+
+    Usage: ``Datetime[,YYYY-MM-DD[,hh:mm:ss]]``
+
+    Examples:
+    
+    * ``Datetime,2020-02-29,00:23:00``
+    * ``Datetime,2020-02-29`` - set node time '2020-02-29 00:00:00'
+    * ``Datetime`` - get current node time
+    
+    Time source will be set to ``Manual_set`` until the time will be updated via another source. (e.g. GPS or NTP)
+    "
     Debug","
     :red:`Internal`","
     Change Serial port debug level

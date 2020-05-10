@@ -43,6 +43,8 @@
 // NEW: Content of header is adjustable, also the alternating function (saved as Bit 15-0 in PCONFIG_LONG(0))
 // CHG: Parameters sorted
 
+#include "_Plugin_Helper.h"
+
 #define PLUGIN_036
 #define PLUGIN_ID_036         36
 #define PLUGIN_NAME_036       "Display - OLED SSD1306/SH1106 Framed"
