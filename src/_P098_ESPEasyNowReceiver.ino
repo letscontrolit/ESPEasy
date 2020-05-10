@@ -120,6 +120,11 @@ boolean Plugin_098(byte function, struct EventStruct *event, String& string)
       // sensorTypeHelper_setSensorType(event, 0);
 
       WifiEspNow.onReceive(p098_onReceive, nullptr);
+      for (byte peer = 0; peer < ESPEASY_NOW_PEER_MAX; ++peer) {
+        if (SecuritySettings.peerMacSet(peer)) {
+          WifiEspNow.addPeer(SecuritySettings.EspEasyNowPeerMAC[peer]);
+        }
+      }
 
       plugin_EspEasy_now_enabled = true;
       success = true;
