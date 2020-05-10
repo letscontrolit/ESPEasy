@@ -7,13 +7,15 @@
 void hardwareInit()
 {
   // set GPIO pins state if not set to default
+  constexpr byte maxStates = sizeof(Settings.PinBootStates)/sizeof(Settings.PinBootStates[0]);
   for (byte gpio = 0; gpio < PIN_D_MAX; ++gpio) {
     bool serialPinConflict = (Settings.UseSerial && (gpio == 1 || gpio == 3));
+    const int8_t bootState = (gpio < maxStates) ? Settings.PinBootStates[gpio] : 0;
 
-    if (!serialPinConflict && (Settings.PinBootStates[gpio] != 0)) {
+    if (!serialPinConflict && (bootState != 0)) {
       const uint32_t key = createKey(1, gpio);
 
-      switch (Settings.PinBootStates[gpio])
+      switch (bootState)
       {
         case 1:
           pinMode(gpio, OUTPUT);
