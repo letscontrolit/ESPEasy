@@ -10,6 +10,7 @@
 #define PLUGIN_NAME_098       "Generic - Cache Reader"
 #define PLUGIN_VALUENAME1_098 "CacheReader"
 
+// Parse Sample from pointer to Sample (24 byte)
 class Sample_t
 {
 public:
@@ -127,16 +128,56 @@ public:
     return returnValue;
   }
 };
+
 class Cache_t
 {
 public:
   Sample_t *sample;
+  byte *data;
+  int fileNr;
+  int sampleCount;
+  int offset;
+  int sampleIndex;
+  bool loadFromServer;
 
-  Cache_t(){
+  Cache_t(byte *data){
     // Initialize
+    // TODO:
+    // Load data from load from server
+    // Load File Number
+    // Load data
+    // Load Total number of samples
+    // Load index
+    // Load Offset
+    // Validate sample
+    // Send sample
   }
-  
-}
+  bool loadData(){
+    // TODO: Load data from server, if false, assume fresh load
+    return false;
+  }
+  void setData(String filename){
+    // TODO: Set data from filename
+  }
+  int getSampleCount(byte *data){
+    // TODO:
+    return 0;
+  }
+  int getOffset(byte *data){
+    // TODO:
+    return 0;
+  }
+  void setIndex(int index){
+    // TODO:
+  }
+  void incrementIndex(){
+    // TODO:
+  }
+  bool deleteFile(){
+    // TODO:
+    return false;
+  }
+};
 
 /* Can probably delete
 struct P098_data_struct : public PluginTaskData_base {
