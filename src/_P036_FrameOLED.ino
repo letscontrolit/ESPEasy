@@ -12,6 +12,9 @@
 // Added to the main repository with some optimizations and some limitations.
 // Al long as the device is not selected, no RAM is waisted.
 //
+// @uwekaditz: 2020-05-11
+// CHG: clearing window for scrolling lines was 1pix too large in y direction
+// CHG: font settings for 64x48 updated
 // @uwekaditz: 2020-05-05
 // CHG: re-schedule Settings.TaskDeviceTimer after JumpToPage to avoid any scheduled page change while jumping to pages
 // CHG: correct calculation of the page indicator counts
@@ -166,10 +169,10 @@ const tSizeSettings SizeSettings[P36_MaxSizesCount] = {
    },
    { 64, 48, 32,               // 64x48
      3,
-     // page scrolling height = 42
+     // page scrolling height = 36
      { 20, ArialMT_Plain_24, 28},  //  Width: 24 Height: 28
-     { 14, Dialog_plain_12,  19},  //  Width: 13 Height: 15
-     { 13, ArialMT_Plain_10, 14},  //  Width: 10 Height: 13
+     { 14, Dialog_plain_12,  17},  //  Width: 13 Height: 15
+     { 13, ArialMT_Plain_10, 11},  //  Width: 10 Height: 13
      {  0, ArialMT_Plain_10,  0},  //  Width: 10 Height: 13 not used!
      32,
      10
@@ -1633,7 +1636,7 @@ void display_scrolling_lines() {
           P036_data->ScrollingLines.Line[i].CurrentLeft = iCurrentLeft;
           updateDisplay = true;
           P036_data->display->setColor(BLACK);
-          P036_data->display->fillRect(0 , P036_data->ScrollingLines.Line[i].ypos+1, P36_MaxDisplayWidth, P036_data->ScrollingLines.Space+2); // clearing window was too high and to narrow
+          P036_data->display->fillRect(0 , P036_data->ScrollingLines.Line[i].ypos+1, P36_MaxDisplayWidth, P036_data->ScrollingLines.Space+1); // clearing window was too high
           P036_data->display->setColor(WHITE);
           if (((P036_data->ScrollingLines.Line[i].CurrentLeft-SizeSettings[P036_data->OLEDIndex].PixLeft)+P036_data->ScrollingLines.Line[i].Width) >= SizeSettings[P036_data->OLEDIndex].Width) {
             P036_data->display->setTextAlignment(TEXT_ALIGN_LEFT);
