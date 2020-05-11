@@ -5,6 +5,8 @@
 // #######################################################################################################
 
 #include "_Plugin_Helper.h"
+
+#include "src/DataStructs/ESPEasy_Now_incoming.h"
 #include "src/Helpers/ESPEasy_now.h"
 
 
@@ -14,57 +16,17 @@
 #define PLUGIN_VALUENAME1_098 "Value"
 
 
+struct P098_data_struct : public PluginTaskData_base {
+  P098_data_struct()  {}
+
+  ~P098_data_struct() {}
+};
 
 
+std::list<ESPEasy_Now_incoming> p098_queue;
 
-void p098_onReceive(const uint8_t mac[6], const uint8_t* buf, size_t count, void* cbarg) {
-  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = F("ESPEasyNow: Message from ");
-    log += formatMAC(mac);
-    addLog(LOG_LEVEL_INFO, log);
-  }
-
-  #ifdef USES_MQTT
-
-  // FIXME TD-er: Quick hack to just echo all data to the first enabled MQTT controller
-
-  controllerIndex_t controllerIndex = firstEnabledMQTT_ControllerIndex();
-  if (!validControllerIndex(controllerIndex)) {
-    return;
-  }
-
-  static size_t topic_length = 0;
-  static size_t payload_length = 0;
-  String topic, payload;
-  topic.reserve(topic_length);
-  payload.reserve(payload_length);
-  bool topic_done = false;
-  for (size_t i = 0; i < count; ++i) {
-    if (!topic_done) {
-      if (buf[i] != 0) {
-        topic += static_cast<char>(buf[i]);
-      } else {
-        // Update estimates for next call.
-        if (topic_length < i) {
-          topic_length = i;
-        }
-        if (payload_length < (count - i)) {
-          payload_length = (count - i);
-        }
-        topic_done = true;
-      }
-    } else {
-      if (buf[i] != 0) {
-        payload += static_cast<char>(buf[i]);
-      }
-    }
-  }
-
-  MakeControllerSettings(ControllerSettings);
-  LoadControllerSettings(controllerIndex, ControllerSettings);
-  MQTTpublish(controllerIndex, topic.c_str(), payload.c_str(), ControllerSettings.mqtt_retainFlag());
-
-  #endif
+void p098_onReceive(const uint8_t mac[6], const uint8_t *buf, size_t count, void *cbarg) {
+  p098_queue.emplace_back(mac, buf, count);
 }
 
 boolean Plugin_098(byte function, struct EventStruct *event, String& string)
@@ -120,6 +82,7 @@ boolean Plugin_098(byte function, struct EventStruct *event, String& string)
       // sensorTypeHelper_setSensorType(event, 0);
 
       WifiEspNow.onReceive(p098_onReceive, nullptr);
+
       for (byte peer = 0; peer < ESPEASY_NOW_PEER_MAX; ++peer) {
         if (SecuritySettings.peerMacSet(peer)) {
           WifiEspNow.addPeer(SecuritySettings.EspEasyNowPeerMAC[peer]);
@@ -127,14 +90,45 @@ boolean Plugin_098(byte function, struct EventStruct *event, String& string)
       }
 
       plugin_EspEasy_now_enabled = true;
-      success = true;
+      success                    = true;
       break;
     }
 
     case PLUGIN_EXIT:
     {
       plugin_EspEasy_now_enabled = false;
-      success = true;
+      success                    = true;
+      break;
+    }
+
+    case PLUGIN_FIFTY_PER_SECOND:
+    {
+      if (!p098_queue.empty()) {
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          String log = F("ESPEasyNow: Message from ");
+          log += formatMAC(p098_queue.front()._mac);
+          addLog(LOG_LEVEL_INFO, log);
+        }
+  #ifdef USES_MQTT
+
+        // FIXME TD-er: Quick hack to just echo all data to the first enabled MQTT controller
+
+        controllerIndex_t controllerIndex = firstEnabledMQTT_ControllerIndex();
+
+        if (validControllerIndex(controllerIndex)) {
+          String topic   = p098_queue.front().getString(0);
+          String payload = p098_queue.front().getString(topic.length());
+
+          MakeControllerSettings(ControllerSettings);
+          LoadControllerSettings(controllerIndex, ControllerSettings);
+          MQTTpublish(controllerIndex, topic.c_str(), payload.c_str(), ControllerSettings.mqtt_retainFlag());
+        }
+
+  #endif // ifdef USES_MQTT
+
+        // FIXME TD-er: What to do when publish fails?
+        p098_queue.pop_front();
+      }
       break;
     }
 
@@ -149,11 +143,11 @@ boolean Plugin_098(byte function, struct EventStruct *event, String& string)
     {
       // FIXME TD-er: Create commands for ESPEasy_now receiver
       String command = parseString(string, 1);
+
       if (command == F("espeasynow")) {
         String subcommand = parseString(string, 2);
-        if (subcommand == F("")) {
 
-        }
+        if (subcommand == F("")) {}
       }
       break;
     }
