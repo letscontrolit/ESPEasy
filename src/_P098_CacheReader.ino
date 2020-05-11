@@ -22,7 +22,7 @@ public:
   float *val2;
   float *val3;
   float *val4;
-
+  float *zerofloat;
   Sample_t(){
     timestamp = new unsigned long();
     controller_idx = *(new byte);
@@ -33,24 +33,35 @@ public:
     val2 = new float();
     val3 = new float();
     val4 = new float();
+
+    zerofloat = new float();
   }
   Sample_t(byte *data){
+    timestamp = new unsigned long();
+    controller_idx = *(new byte);
+    TaskIndex = *(new byte);
+    sensorType = *(new byte);
+    valueCount = *(new byte);
+    val1 = new float();
+    val2 = new float();
+    val3 = new float();
+    val4 = new float();
+
+    zerofloat = new float();
+
     this->parseSample(data);
   }
   // Destructor
-   virtual ~ Sample_t(){
+   virtual ~Sample_t(){
      // TODO:
    }
    // Parse Float value, return 0 if parsed value = null
-   float *parse_float(byte data){
-     float newfloat =  2.34E+22f;
-     float *current = &newfloat;
-
-     //float *current = (float*)(&data);
-     if (*current){
+   float *parse_float(byte *data){
+     float *current = (float*)data;
+     if (*current && *current != '\0'){
        return current;
      } else {
-       return 0;
+       return this->zerofloat;
      }
    }
    // Parse Byte, return 0 if parsed value = null
@@ -81,20 +92,20 @@ public:
     valueCount = this->parse_byte(current);
   }
   void setVal1(byte *data){
-    byte current = data[8];
-    val1 = this->parse_float(current);
+    data += 8;
+    val1 = this->parse_float(data);
   }
   void setVal2(byte *data){
-    byte current = data[12];
-    val2 = this->parse_float(current);
+    data += 12;
+    val2 = this->parse_float(data);
   }
   void setVal3(byte *data){
-    byte current = data[16];
-    val3 = this->parse_float(current);
+    data += 16;
+    val3 = this->parse_float(data);
   }
   void setVal4(byte *data){
-    byte current = data[20];
-    val4 = this->parse_float(current);
+    data += 20;
+    val4 = this->parse_float(data);
   }
   void parseSample(byte *data){
     // Set timestamp
@@ -116,7 +127,16 @@ public:
     return returnValue;
   }
 };
+class Cache_t
+{
+public:
+  Sample_t *sample;
 
+  Cache_t(){
+    // Initialize
+  }
+  
+}
 
 /* Can probably delete
 struct P098_data_struct : public PluginTaskData_base {
@@ -255,10 +275,13 @@ boolean Plugin_098(byte function, struct EventStruct *event, String& string)
           //unsigned long *timestamp = (unsigned long*)buffer;
           Sample_t *sample = new Sample_t(buffer);
 
-
           char *string_buffer = new char[128];
+          for (int i = 0 ; i < 128 ; i++){
+            string_buffer[i] = '\0';
+          }
+
           //std::sprintf(string_buffer, "%lu", *sample->timestamp);
-          std::sprintf(string_buffer, "%f", *sample->val2);
+          std::sprintf(string_buffer, "%f", *sample->val3);
 
 
           String publish_value = string_buffer;
