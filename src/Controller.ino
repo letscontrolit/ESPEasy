@@ -15,6 +15,7 @@
 #include "src/Globals/MQTT.h"
 #include "src/Globals/Plugins.h"
 #include "src/Globals/Protocol.h"
+#include "src/Globals/ESPEasy_now_handler.h"
 
 #include "src/Helpers/ESPEasy_now.h"
 #include "src/Helpers/PortStatus.h"

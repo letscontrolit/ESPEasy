@@ -7,7 +7,7 @@
 #include "_Plugin_Helper.h"
 
 #include "src/DataStructs/ESPEasy_Now_incoming.h"
-#include "src/Helpers/ESPEasy_now.h"
+#include "src/Globals/ESPEasy_now_handler.h"
 
 
 #define PLUGIN_098
@@ -25,7 +25,7 @@ struct P098_data_struct : public PluginTaskData_base {
 
 std::list<ESPEasy_Now_incoming> p098_queue;
 
-void p098_onReceive(const uint8_t mac[6], const uint8_t *buf, size_t count, void *cbarg) {
+void ICACHE_FLASH_ATTR p098_onReceive(const uint8_t mac[6], const uint8_t *buf, size_t count, void *cbarg) {
   p098_queue.emplace_back(mac, buf, count);
 }
 
@@ -82,12 +82,6 @@ boolean Plugin_098(byte function, struct EventStruct *event, String& string)
       // sensorTypeHelper_setSensorType(event, 0);
 
       WifiEspNow.onReceive(p098_onReceive, nullptr);
-
-      for (byte peer = 0; peer < ESPEASY_NOW_PEER_MAX; ++peer) {
-        if (SecuritySettings.peerMacSet(peer)) {
-          WifiEspNow.addPeer(SecuritySettings.EspEasyNowPeerMAC[peer]);
-        }
-      }
 
       plugin_EspEasy_now_enabled = true;
       success                    = true;
