@@ -96,6 +96,28 @@ void ESPEasy_Now_packet::setBroadcast()
   }
 }
 
+size_t ESPEasy_Now_packet::addBinaryData(uint8_t* data, size_t length)
+{
+  const size_t payload_size = getPayloadSize();
+  if (length > payload_size) {
+    length = payload_size;
+  }
+  size_t buf_pos      =  sizeof(ESPEasy_now_hdr);
+  memcpy(&_buf[buf_pos], data, length);
+  return length;
+}
+
+bool ESPEasy_Now_packet::getBinaryData(uint8_t* data, size_t length) const
+{
+  const size_t payload_size = getPayloadSize();
+  if (length > payload_size) {
+    length = payload_size;
+  }
+  size_t buf_pos      =  sizeof(ESPEasy_now_hdr);
+  memcpy(data, &_buf[buf_pos], length);
+  return length;
+}
+
 String ESPEasy_Now_packet::getString(size_t& payload_pos) const
 {
   String res;

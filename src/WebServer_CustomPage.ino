@@ -35,7 +35,7 @@ boolean handle_custom(String path) {
 
     if (unit && (unit != Settings.Unit))
     {
-      NodesMap::iterator it = Nodes.find(unit);
+      auto it = Nodes.find(unit);
 
       if (it != Nodes.end()) {
         TXBuffer.startStream();
@@ -58,7 +58,7 @@ boolean handle_custom(String path) {
     addSelector_Head_reloadOnChange(F("unit"));
     byte choice = Settings.Unit;
 
-    for (NodesMap::iterator it = Nodes.begin(); it != Nodes.end(); ++it)
+    for (auto it = Nodes.begin(); it != Nodes.end(); ++it)
     {
       if ((it->second.ip[0] != 0) || (it->first == Settings.Unit))
       {
@@ -78,10 +78,9 @@ boolean handle_custom(String path) {
     // create <> navigation buttons
     byte prev = Settings.Unit;
     byte next = Settings.Unit;
-    NodesMap::iterator it;
 
     for (byte x = Settings.Unit - 1; x > 0; x--) {
-      it = Nodes.find(x);
+      auto it = Nodes.find(x);
 
       if (it != Nodes.end()) {
         if (it->second.ip[0] != 0) { prev = x; break; }
@@ -89,7 +88,7 @@ boolean handle_custom(String path) {
     }
 
     for (byte x = Settings.Unit + 1; x < UNIT_NUMBER_MAX; x++) {
-      it = Nodes.find(x);
+      auto it = Nodes.find(x);
 
       if (it != Nodes.end()) {
         if (it->second.ip[0] != 0) { next = x; break; }

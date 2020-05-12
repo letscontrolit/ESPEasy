@@ -200,7 +200,7 @@ void handle_json()
     if (showNodes) {
       bool comma_between = false;
 
-      for (NodesMap::iterator it = Nodes.begin(); it != Nodes.end(); ++it)
+      for (auto it = Nodes.begin(); it != Nodes.end(); ++it)
       {
         if (it->second.ip[0] != 0)
         {
@@ -224,7 +224,7 @@ void handle_json()
             stream_next_json_object_value(F("platform"), it->second.getNodeTypeDisplayString());
           }
           stream_next_json_object_value(F("ip"), it->second.IP().toString());
-          stream_last_json_object_value(F("age"), String(it->second.age));
+          stream_last_json_object_value(F("age"), String(it->second.getAge() / 1000)); // time in seconds
         } // if node info exists
       }   // for loop
 
@@ -394,7 +394,7 @@ void handle_nodes_list_json() {
   json_init();
   json_open(true);
 
-  for (NodesMap::iterator it = Nodes.begin(); it != Nodes.end(); ++it)
+  for (auto it = Nodes.begin(); it != Nodes.end(); ++it)
   {
     if (it->second.ip[0] != 0)
     {
@@ -411,7 +411,7 @@ void handle_nodes_list_json() {
       if (it->second.build) { json_prop(F("build"), String(it->second.build)); }
       json_prop(F("type"), it->second.getNodeTypeDisplayString());
       json_prop(F("ip"),   it->second.ip.toString());
-      json_number(F("age"), String(it->second.age));
+      json_number(F("age"), String(it->second.getAge() / 1000)); // time in seconds
       json_close();
     }
   }

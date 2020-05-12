@@ -4,6 +4,8 @@
 
 # include "ESPEasy_time_calc.h"
 # include "../DataStructs/ESPEasy_Now_packet.h"
+# include "../DataStructs/NodeStruct.h"
+# include "../Globals/Nodes.h"
 # include "../Globals/SecuritySettings.h"
 # include "../Globals/Settings.h"
 # include "../../ESPEasy_fdwdecl.h"
@@ -28,7 +30,7 @@ bool ESPEasy_now_handler_t::begin()
           String log;
           log.reserve(48);
           log  = F("ESPEasy_Now: Failed to add peer ");
-          log += _peerInfoMap.formatPeerInfo(SecuritySettings.EspEasyNowPeerMAC[peer]);
+          log += formatMAC(SecuritySettings.EspEasyNowPeerMAC[peer]);
           addLog(LOG_LEVEL_ERROR, log);
         }
       }
@@ -58,7 +60,7 @@ bool ESPEasy_now_handler_t::loop()
 
     if (loglevelActiveFor(loglevel)) {
       String log = F("ESPEasyNow: Message from ");
-      log += _peerInfoMap.formatPeerInfo(ESPEasy_now_in_queue.front()._mac);
+      log += formatMAC(ESPEasy_now_in_queue.front()._mac);
 
       if (!validPacket) {
         log += F(" INVALID CHECKSUM!");
@@ -103,16 +105,13 @@ bool ESPEasy_now_handler_t::loop()
 
 void ESPEasy_now_handler_t::sendDiscoveryAnnounce(byte channel)
 {
-  String hostname = Settings.getHostname();
-  size_t len      = hostname.length();
+  NodeStruct thisNode;
+  thisNode.setLocalData();
+  size_t len = sizeof(NodeStruct);
   ESPEasy_now_hdr header(ESPEasy_now_hdr::message_t::Announcement);
   ESPEasy_Now_packet msg(header, len);
-
+  msg.addBinaryData(reinterpret_cast<uint8_t*>(&thisNode), len);
   msg.setBroadcast();
-
-  size_t pos = 0;
-  msg.addString(hostname, pos);
-
   send(msg);
 }
 
@@ -178,7 +177,7 @@ bool ESPEasy_now_handler_t::send(const ESPEasy_Now_packet& packet) {
     } else {
       log = F("ESPEasy Now: Sent FAILED to: ");
     }
-    log += _peerInfoMap.formatPeerInfo(packet._mac);
+    log += formatMAC(packet._mac);
     addLog(LOG_LEVEL_INFO, log);
   }
   return success;
@@ -194,7 +193,7 @@ WifiEspNowSendStatus ESPEasy_now_handler_t::send(const ESPEasy_Now_packet& packe
   if (sendStatus == WifiEspNowSendStatus::NONE) {
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log = F("ESPEasy Now: TIMEOUT to: ");
-      log += _peerInfoMap.formatPeerInfo(packet._mac);
+      log += formatMAC(packet._mac);
       addLog(LOG_LEVEL_INFO, log);
     }
   }
@@ -214,27 +213,18 @@ WifiEspNowSendStatus ESPEasy_now_handler_t::waitForSendStatus(size_t timeout) co
 
 bool ESPEasy_now_handler_t::handle_DiscoveryAnnounce(const ESPEasy_Now_packet& packet)
 {
-  size_t payload_pos = 0;
-  ESPEasy_Now_peerInfo_meta meta;
-
-  meta.nodeName = packet.getString(payload_pos);
-
-  _peerInfoMap.addPeer(packet._mac, meta);
-
+  NodeStruct received;
+  packet.getBinaryData(reinterpret_cast<uint8_t*>(&received), sizeof(NodeStruct));
+  Nodes.addNode(received);
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log;
     size_t payloadSize = packet.getPayloadSize();
     log.reserve(payloadSize + 40);
     log  = F("ESPEasy Now discovery: ");
-    log += _peerInfoMap.formatPeerInfo(packet._mac);
+    log += formatMAC(packet._mac);
     log += '\n';
-    log += meta.nodeName;
-
-    while (payload_pos < payloadSize) {
-      log += '\n';
-      log += packet.getString(payload_pos);
-    }
+    log += received.getSummary();
     addLog(LOG_LEVEL_INFO, log);
   }
   return true;

@@ -29,9 +29,12 @@ struct __attribute__((__packed__)) NodeStruct
 
   IPAddress IP() const;
 
+  unsigned long getAge() const;
+
+  String getSummary() const;
+
+
   // Do not change the order of this data, as it is being sent via P2P UDP.
-  // 1 byte 'binary token 255'
-  // 1 byte id '1'
   // 6 byte mac  (STA interface)
   // 4 byte ip
   // 1 byte unit
@@ -51,9 +54,12 @@ struct __attribute__((__packed__)) NodeStruct
   uint16_t  build        = 0;
   byte      nodeName[25] = { 0 };
   byte      nodeType     = 0;
-  byte      age          = 0;
   uint16_t  webserverPort = 80;
   uint8_t   ap_mac[6] = { 0 };  // AP mode MAC
+
+  // Data not being sent to other nodes.
+  unsigned long lastSeenTimestamp  = 0;
+
 
 
 };

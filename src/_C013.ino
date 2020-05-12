@@ -123,7 +123,7 @@ void C013_SendUDPTaskInfo(byte destUnit, byte sourceTaskIndex, byte destTaskInde
     C013_sendUDP(destUnit, (byte *)&infoReply, sizeof(C013_SensorInfoStruct));
     delay(10);
   } else {
-    for (NodesMap::iterator it = Nodes.begin(); it != Nodes.end(); ++it) {
+    for (auto it = Nodes.begin(); it != Nodes.end(); ++it) {
       if (it->first != Settings.Unit) {
         infoReply.destUnit = it->first;
         C013_sendUDP(it->first, (byte *)&infoReply, sizeof(C013_SensorInfoStruct));
@@ -158,7 +158,7 @@ void C013_SendUDPTaskData(byte destUnit, byte sourceTaskIndex, byte destTaskInde
     C013_sendUDP(destUnit, (byte *)&dataReply, sizeof(C013_SensorDataStruct));
     delay(10);
   } else {
-    for (NodesMap::iterator it = Nodes.begin(); it != Nodes.end(); ++it) {
+    for (auto it = Nodes.begin(); it != Nodes.end(); ++it) {
       if (it->first != Settings.Unit) {
         dataReply.destUnit = it->first;
         C013_sendUDP(it->first, (byte *)&dataReply, sizeof(C013_SensorDataStruct));
@@ -177,10 +177,13 @@ void C013_sendUDP(byte unit, byte *data, byte size)
   if (!NetworkConnected(10)) {
     return;
   }
-  NodesMap::iterator it;
 
-  if (unit != 255) {
-    it = Nodes.find(unit);
+  IPAddress remoteNodeIP;
+  if (unit == 255) {
+    remoteNodeIP = { 255, 255, 255, 255 };
+  }
+  else {
+    auto it = Nodes.find(unit);
 
     if (it == Nodes.end()) {
       return;
@@ -189,7 +192,9 @@ void C013_sendUDP(byte unit, byte *data, byte size)
     if (it->second.ip[0] == 0) {
       return;
     }
+    remoteNodeIP = it->second.ip;
   }
+
 #ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
@@ -200,15 +205,6 @@ void C013_sendUDP(byte unit, byte *data, byte size)
 #endif // ifndef BUILD_NO_DEBUG
 
   statusLED(true);
-
-  IPAddress remoteNodeIP;
-
-  if (unit == 255) {
-    remoteNodeIP = { 255, 255, 255, 255 };
-  }
-  else {
-    remoteNodeIP = it->second.ip;
-  }
 
   if (!beginWiFiUDP_randomPort(C013_portUDP)) { return; }
 

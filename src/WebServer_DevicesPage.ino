@@ -886,7 +886,7 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, byte page)
       addFormNumericBox(F("Remote Unit"), F("RemoteUnit"), remoteUnit, 0, 255);
 
       if (remoteUnit != 255) {
-        NodesMap::iterator it = Nodes.find(remoteUnit);
+        auto it = Nodes.find(remoteUnit);
 
         if (it != Nodes.end()) {
           addUnit(it->second.getNodeName());

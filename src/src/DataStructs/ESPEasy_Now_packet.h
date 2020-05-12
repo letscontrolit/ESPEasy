@@ -31,6 +31,10 @@ public:
 
   void            setBroadcast();
 
+  size_t          addBinaryData(uint8_t* data, size_t length);
+
+  bool            getBinaryData(uint8_t* data, size_t length) const;
+
   // Add a string to the packet, starting at payload position payload_pos
   // Return the number of bytes added (can be 1 more than the given string)
   size_t addString(const String& string,

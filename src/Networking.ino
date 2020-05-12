@@ -225,8 +225,7 @@ void checkUDP()
               }
               NodeStruct received;
               memcpy(&received, &packetBuffer[2], copy_length);
-              received.age = 0; // Data just got in, so age = 0
-              Nodes[received.unit] = received; // Create a new element when not present
+              Nodes.addNode(received); // Create a new element when not present
 
 #ifndef BUILD_NO_DEBUG
               if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
@@ -282,7 +281,7 @@ void SendUDPCommand(byte destUnit, const char *data, byte dataLength)
     sendUDP(destUnit, (const byte *)data, dataLength);
     delay(10);
   } else {
-    for (NodesMap::iterator it = Nodes.begin(); it != Nodes.end(); ++it) {
+    for (auto it = Nodes.begin(); it != Nodes.end(); ++it) {
       if (it->first != Settings.Unit) {
         sendUDP(it->first, (const byte *)data, dataLength);
         delay(10);
@@ -307,7 +306,7 @@ void sendUDP(byte unit, const byte *data, byte size)
     remoteNodeIP = { 255, 255, 255, 255 };
   }
   else {
-    NodesMap::iterator it = Nodes.find(unit);
+    auto it = Nodes.find(unit);
 
     if (it == Nodes.end()) {
       return;
@@ -339,32 +338,17 @@ void sendUDP(byte unit, const byte *data, byte size)
 \*********************************************************************************************/
 void refreshNodeList()
 {
-  bool mustSendGratuitousARP = false;
+  unsigned long max_age;
+  const unsigned long max_age_allowed = 10 * 60 * 1000; // 10 minutes
+  Nodes.refreshNodeList(max_age_allowed, max_age);
 
-  for (NodesMap::iterator it = Nodes.begin(); it != Nodes.end();) {
-    bool mustRemove = true;
-
-    if (it->second.ip[0] != 0) {
-      if (it->second.age > 8) {
-        // Increase frequency sending ARP requests for 2 minutes
-        mustSendGratuitousARP = true;
-      }
-
-      if (it->second.age < 10) {
-        it->second.age++;
-        mustRemove = false;
-        ++it;
-      }
-    }
-
-    if (mustRemove) {
-      it = Nodes.erase(it);
-    }
-  }
-
-  if (mustSendGratuitousARP) {
+  if (max_age > (0.75 * max_age_allowed)) {
     Scheduler.sendGratuitousARP_now();
   }
+  sendSysInfoUDP(1);
+  #ifdef USES_ESPEASY_NOW
+  ESPEasy_now_handler.sendDiscoveryAnnounce();
+  #endif
 }
 
 /*********************************************************************************************\
@@ -387,6 +371,7 @@ void sendSysInfoUDP(byte repeats)
 
   NodeStruct thisNode;
   thisNode.setLocalData();
+  Nodes.addNode(thisNode);
 
   for (byte counter = 0; counter < repeats; counter++)
   {
@@ -424,22 +409,6 @@ void sendSysInfoUDP(byte repeats)
     if (counter < (repeats - 1)) {
       delay(500);
     }
-  }
-
-  Nodes[Settings.Unit].age = 0; // Create new node when not already present.
-  // store my own info also in the list
-  NodesMap::iterator it = Nodes.find(Settings.Unit);
-
-  if (it != Nodes.end())
-  {
-    IPAddress ip = NetworkLocalIP();
-
-    for (byte x = 0; x < 4; x++) {
-      it->second.ip[x] = ip[x];
-    }
-    it->second.age      = 0;
-    it->second.build    = Settings.Build;
-    it->second.nodeType = NODE_TYPE_ID;
   }
 }
 

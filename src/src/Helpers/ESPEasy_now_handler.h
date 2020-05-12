@@ -47,6 +47,7 @@ private:
   bool                 handle_MQTTControllerMessage(const ESPEasy_Now_packet& packet);
 
 
+  // FIXME TD-er: Must remove
   ESPEasy_Now_peerInfo _peerInfoMap;
 };
 
