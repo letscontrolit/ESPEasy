@@ -61,7 +61,7 @@ void ESPEasy_Now_packet::setHeader(ESPEasy_now_hdr header)
   memcpy(&_buf[0], &header, sizeof(ESPEasy_now_hdr));
 }
 
-size_t ESPEasy_Now_packet::addString(const String& string, size_t payload_pos)
+size_t ESPEasy_Now_packet::addString(const String& string, size_t& payload_pos)
 {
   const size_t payload_size = getPayloadSize();
 
@@ -79,10 +79,24 @@ size_t ESPEasy_Now_packet::addString(const String& string, size_t payload_pos)
   // If the null-termination does not fit, no other string can be added anyway.
   size_t buf_pos      = payload_pos + sizeof(ESPEasy_now_hdr);
   memcpy(&_buf[buf_pos], reinterpret_cast<const uint8_t *>(string.c_str()), bytesToWrite);
+  payload_pos += bytesToWrite;
   return bytesToWrite;
 }
 
-String ESPEasy_Now_packet::getString(size_t payload_pos) const
+void ESPEasy_Now_packet::setMac(uint8_t mac[6])
+{
+  memcpy(_mac, mac, 6);
+}
+
+void ESPEasy_Now_packet::setBroadcast()
+{
+  for (byte i = 0; i < 6; ++i)
+  {
+    _mac[i] = 0xFF;
+  }
+}
+
+String ESPEasy_Now_packet::getString(size_t& payload_pos) const
 {
   String res;
   const size_t size = getSize();
@@ -90,6 +104,7 @@ String ESPEasy_Now_packet::getString(size_t payload_pos) const
 
   while (buf_pos < size && _buf[buf_pos] == 0) {
     ++buf_pos;
+    ++payload_pos;   
   }
 
   if (buf_pos >= size) { return res; }
@@ -97,9 +112,10 @@ String ESPEasy_Now_packet::getString(size_t payload_pos) const
   const size_t maxlen = size - buf_pos;
   size_t strlength    = strnlen(reinterpret_cast<const char *>(&_buf[buf_pos]), maxlen);
   res.reserve(strlength);
+  const size_t max_buf_pos = buf_pos + strlength;
 
-  for (size_t i = 0; i < strlength; ++i) {
-    res += static_cast<char>(_buf[buf_pos + i]);
+  for ( ; buf_pos < max_buf_pos; ++buf_pos, ++payload_pos) {
+    res += static_cast<char>(_buf[buf_pos]);
   }
   return res;
 }

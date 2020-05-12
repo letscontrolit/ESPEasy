@@ -5,20 +5,30 @@
 
 #include <map>
 
+
 struct ESPEasy_Now_peerInfo_meta {
   String  nodeName;
-  uint8_t channel = 0;
+  uint8_t channel  = 0;
   uint8_t distance = 0;
-  bool    encrypt = false;
+  bool    encrypt  = false;
 };
+
+typedef std::map<uint64_t, ESPEasy_Now_peerInfo_meta> peerInfoMap_t;
 
 
 struct ESPEasy_Now_peerInfo {
-  ESPEasy_Now_peerInfo_meta meta;
-  uint8_t                   mac[6] = { 0 };
-};
+  void addPeer(const uint8_t *mac,
+               const ESPEasy_Now_peerInfo_meta& meta);
 
-typedef std::map<uint8_t[6], ESPEasy_Now_peerInfo_meta> peerInfoMap_t;
+  bool hasPeer(const uint8_t *mac) const;
+
+  bool getPeer(const uint8_t *mac,
+               ESPEasy_Now_peerInfo_meta& meta) const;
+
+private:
+
+  peerInfoMap_t peer_map;
+};
 
 
 #endif // DATASTRUCTS_ESPEASY_NOW_PEERINFOR_H

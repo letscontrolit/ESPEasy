@@ -6,6 +6,7 @@
 #ifdef USES_ESPEASY_NOW
 
 # include "../DataStructs/ESPEasy_now_hdr.h"
+# include "../DataStructs/ESPEasy_Now_packet.h"
 # include "../DataStructs/ESPEasy_Now_peerInfo.h"
 # include "../Globals/CPlugins.h"
 
@@ -23,16 +24,30 @@ public:
 
   // Send out the discovery announcement via broadcast.
   // This may be picked up by others
-  void sendDiscoveryAnnounce(byte channel);
+  void sendDiscoveryAnnounce(byte channel = 0);
 
   bool sendToMQTT(controllerIndex_t controllerIndex,
                   const String    & topic,
                   const String    & payload);
 
+  bool getPeerInfo(const uint8_t             *mac,
+                                   ESPEasy_Now_peerInfo_meta& meta) const;
 
 private:
 
-  peerInfoMap_t _peerInfoMap;
+  bool send(const ESPEasy_Now_packet& packet);
+  WifiEspNowSendStatus send(const ESPEasy_Now_packet& packet, size_t timeout);
+
+  WifiEspNowSendStatus waitForSendStatus(size_t timeout) const;
+
+
+
+  bool handle_DiscoveryAnnounce(const ESPEasy_Now_packet& packet);
+
+  bool handle_MQTTControllerMessage(const ESPEasy_Now_packet& packet);
+  
+
+  ESPEasy_Now_peerInfo _peerInfoMap;
   
 };
 

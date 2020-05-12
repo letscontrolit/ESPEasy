@@ -199,6 +199,11 @@ void handle_config() {
     String id = F("peer");
     id += String(peer);
     addFormMACBox(label, id, SecuritySettings.EspEasyNowPeerMAC[peer]);
+    ESPEasy_Now_peerInfo_meta meta;
+    if (ESPEasy_now_handler.getPeerInfo(SecuritySettings.EspEasyNowPeerMAC[peer], meta))
+    {
+      addFormNote(meta.nodeName);
+    }
   }
 #endif
 

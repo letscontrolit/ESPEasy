@@ -27,12 +27,18 @@ public:
 
   void            setHeader(ESPEasy_now_hdr header);
 
+  void            setMac(uint8_t mac[6]);
+
+  void            setBroadcast();
+
   // Add a string to the packet, starting at payload position payload_pos
-  size_t          addString(const String& string,
-                            size_t        payload_pos = 0);
+  // Return the number of bytes added (can be 1 more than the given string)
+  size_t addString(const String& string,
+                   size_t      & payload_pos);
 
   // Return a string starting from position pos in the buffer.
-  String          getString(size_t pos = 0) const;
+  // payload_pos will contain the new position to start for a next string
+  String          getString(size_t& payload_pos) const;
 
   const uint8_t * operator[](size_t idx) const {
     return &_buf[idx];
