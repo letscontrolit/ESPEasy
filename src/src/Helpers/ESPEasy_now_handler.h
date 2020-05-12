@@ -31,24 +31,23 @@ public:
                   const String    & payload);
 
   bool getPeerInfo(const uint8_t             *mac,
-                                   ESPEasy_Now_peerInfo_meta& meta) const;
+                   ESPEasy_Now_peerInfo_meta& meta) const;
 
 private:
 
-  bool send(const ESPEasy_Now_packet& packet);
-  WifiEspNowSendStatus send(const ESPEasy_Now_packet& packet, size_t timeout);
+  bool                 send(const ESPEasy_Now_packet& packet);
+  WifiEspNowSendStatus send(const ESPEasy_Now_packet& packet,
+                            size_t                    timeout);
 
   WifiEspNowSendStatus waitForSendStatus(size_t timeout) const;
 
 
+  bool                 handle_DiscoveryAnnounce(const ESPEasy_Now_packet& packet);
 
-  bool handle_DiscoveryAnnounce(const ESPEasy_Now_packet& packet);
+  bool                 handle_MQTTControllerMessage(const ESPEasy_Now_packet& packet);
 
-  bool handle_MQTTControllerMessage(const ESPEasy_Now_packet& packet);
-  
 
   ESPEasy_Now_peerInfo _peerInfoMap;
-  
 };
 
 

@@ -28,7 +28,7 @@ bool ESPEasy_now_handler_t::begin()
           String log;
           log.reserve(48);
           log  = F("ESPEasy_Now: Failed to add peer ");
-          log += formatMAC(SecuritySettings.EspEasyNowPeerMAC[peer]);
+          log += _peerInfoMap.formatPeerInfo(SecuritySettings.EspEasyNowPeerMAC[peer]);
           addLog(LOG_LEVEL_ERROR, log);
         }
       }
@@ -58,7 +58,7 @@ bool ESPEasy_now_handler_t::loop()
 
     if (loglevelActiveFor(loglevel)) {
       String log = F("ESPEasyNow: Message from ");
-      log += formatMAC(ESPEasy_now_in_queue.front()._mac);
+      log += _peerInfoMap.formatPeerInfo(ESPEasy_now_in_queue.front()._mac);
 
       if (!validPacket) {
         log += F(" INVALID CHECKSUM!");
@@ -178,7 +178,7 @@ bool ESPEasy_now_handler_t::send(const ESPEasy_Now_packet& packet) {
     } else {
       log = F("ESPEasy Now: Sent FAILED to: ");
     }
-    log += formatMAC(packet._mac);
+    log += _peerInfoMap.formatPeerInfo(packet._mac);
     addLog(LOG_LEVEL_INFO, log);
   }
   return success;
@@ -194,7 +194,7 @@ WifiEspNowSendStatus ESPEasy_now_handler_t::send(const ESPEasy_Now_packet& packe
   if (sendStatus == WifiEspNowSendStatus::NONE) {
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log = F("ESPEasy Now: TIMEOUT to: ");
-      log += formatMAC(packet._mac);
+      log += _peerInfoMap.formatPeerInfo(packet._mac);
       addLog(LOG_LEVEL_INFO, log);
     }
   }
@@ -219,12 +219,15 @@ bool ESPEasy_now_handler_t::handle_DiscoveryAnnounce(const ESPEasy_Now_packet& p
 
   meta.nodeName = packet.getString(payload_pos);
 
+  _peerInfoMap.addPeer(packet._mac, meta);
+
+
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log;
     size_t payloadSize = packet.getPayloadSize();
     log.reserve(payloadSize + 40);
     log  = F("ESPEasy Now discovery: ");
-    log += formatMAC(packet._mac);
+    log += _peerInfoMap.formatPeerInfo(packet._mac);
     log += '\n';
     log += meta.nodeName;
 
@@ -234,7 +237,6 @@ bool ESPEasy_now_handler_t::handle_DiscoveryAnnounce(const ESPEasy_Now_packet& p
     }
     addLog(LOG_LEVEL_INFO, log);
   }
-  _peerInfoMap.addPeer(packet._mac, meta);
   return true;
 }
 

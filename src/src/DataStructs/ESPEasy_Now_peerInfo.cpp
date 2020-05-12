@@ -1,5 +1,7 @@
 #include "ESPEasy_Now_peerInfo.h"
 
+#include "../../ESPEasy_fdwdecl.h"
+
 
 static uint64_t mac_to_key(const uint8_t *mac)
 {
@@ -36,4 +38,21 @@ bool ESPEasy_Now_peerInfo::getPeer(const uint8_t             *mac,
   meta = it->second;
 
   return true;
+}
+
+String ESPEasy_Now_peerInfo::formatPeerInfo(const uint8_t *mac) const
+{
+  uint64_t key = mac_to_key(mac);
+  auto     it  = peer_map.find(key);
+  String   res;
+
+  res = formatMAC(mac);
+
+  if (it == peer_map.end()) { return res; }
+
+  res.reserve(128);
+  res += F(" \"");
+  res += it->second.nodeName;
+  res += '"';
+  return res;
 }

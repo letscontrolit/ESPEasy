@@ -889,7 +889,7 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, byte page)
         NodesMap::iterator it = Nodes.find(remoteUnit);
 
         if (it != Nodes.end()) {
-          addUnit(it->second.nodeName);
+          addUnit(it->second.getNodeName());
         } else {
           addUnit(F("Unknown Unit Name"));
         }

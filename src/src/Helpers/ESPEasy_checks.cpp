@@ -85,7 +85,7 @@ void run_compiletime_checks() {
   #ifdef USES_NOTIFIER
   check_size<NotificationStruct,                    3u>();
   #endif
-  check_size<NodeStruct,                            28u>();
+  check_size<NodeStruct,                            48u>();
   check_size<systemTimerStruct,                     24u>();
   check_size<RTCStruct,                             32u>();
   check_size<portStatusStruct,                      4u>();

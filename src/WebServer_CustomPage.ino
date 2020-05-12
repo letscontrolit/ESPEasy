@@ -41,7 +41,7 @@ boolean handle_custom(String path) {
         TXBuffer.startStream();
         sendHeadandTail(F("TmplDsh"), _HEAD);
         addHtml(F("<meta http-equiv=\"refresh\" content=\"0; URL=http://"));
-        addHtml(it->second.ip.toString());
+        addHtml(it->second.IP().toString());
         addHtml(F("/dashboard.esp\">"));
         sendHeadandTail(F("TmplDsh"), _TAIL);
         TXBuffer.endStream();
@@ -65,7 +65,7 @@ boolean handle_custom(String path) {
         String name = String(it->first) + F(" - ");
 
         if (it->first != Settings.Unit) {
-          name += it->second.nodeName;
+          name += it->second.getNodeName();
         }
         else {
           name += Settings.Name;

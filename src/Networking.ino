@@ -219,51 +219,25 @@ void checkUDP()
               if (len < 13) {
                 break;
               }
-              byte unit = packetBuffer[12];
-#ifndef BUILD_NO_DEBUG
-              byte mac[6];
-              byte ip[4];
-
-              for (byte x = 0; x < 6; x++) {
-                mac[x] = packetBuffer[x + 2];
+              int copy_length = sizeof(NodeStruct);
+              if (copy_length > len) {
+                copy_length = len;
               }
-
-              for (byte x = 0; x < 4; x++) {
-                ip[x] = packetBuffer[x + 8];
-              }
-#endif // ifndef BUILD_NO_DEBUG
-              Nodes[unit].age = 0; // Create a new element when not present
-              NodesMap::iterator it = Nodes.find(unit);
-
-              if (it != Nodes.end()) {
-                for (byte x = 0; x < 4; x++) {
-                  it->second.ip[x] = packetBuffer[x + 8];
-                }
-                it->second.age = 0; // reset 'age counter'
-
-                if (len >= 41)      // extended packet size
-                {
-                  it->second.build = makeWord(packetBuffer[14], packetBuffer[13]);
-                  char tmpNodeName[26] = { 0 };
-                  memcpy(&tmpNodeName[0], reinterpret_cast<byte *>(&packetBuffer[15]), 25);
-                  tmpNodeName[25]     = 0;
-                  it->second.nodeName = tmpNodeName;
-                  it->second.nodeName.trim();
-                  it->second.nodeType = packetBuffer[40];
-                  it->second.webgui_portnumber = 80;
-                  if (len >= 43 && it->second.build >= 20107) {
-                    it->second.webgui_portnumber = makeWord(packetBuffer[42],packetBuffer[41]);
-                  }
-                }
-              }
+              NodeStruct received;
+              memcpy(&received, &packetBuffer[2], copy_length);
+              received.age = 0; // Data just got in, so age = 0
+              Nodes[received.unit] = received; // Create a new element when not present
 
 #ifndef BUILD_NO_DEBUG
-
               if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
-                char macaddress[20];
-                formatMAC(mac, macaddress);
-                char log[80] = { 0 };
-                sprintf_P(log, PSTR("UDP  : %s,%s,%u"), macaddress, formatIP(ip).c_str(), unit);
+                String log;
+                log.reserve(64);
+                log = F("UDP  : ");
+                log += formatMAC(received.mac);
+                log += ',';
+                log += formatIP(received.ip);
+                log += ',';
+                log += received.unit;
                 addLog(LOG_LEVEL_DEBUG_MORE, log);
               }
 #endif // ifndef BUILD_NO_DEBUG
@@ -402,20 +376,17 @@ void sendSysInfoUDP(byte repeats)
     return;
   }
 
-  // TODO: make a nice struct of it and clean up
   // 1 byte 'binary token 255'
   // 1 byte id '1'
-  // 6 byte mac
-  // 4 byte ip
-  // 1 byte unit
-  // 2 byte build
-  // 25 char name
-  // 1 byte node type id
+  // NodeStruct object (packed data struct)
 
   // send my info to the world...
 #ifndef BUILD_NO_DEBUG
   addLog(LOG_LEVEL_DEBUG_MORE, F("UDP  : Send Sysinfo message"));
 #endif // ifndef BUILD_NO_DEBUG
+
+  NodeStruct thisNode;
+  thisNode.setLocalData();
 
   for (byte counter = 0; counter < repeats; counter++)
   {
@@ -425,6 +396,7 @@ void sendSysInfoUDP(byte repeats)
     byte     data[80] = {0};
     data[0] = 255;
     data[1] = 1;
+    memcpy(&data[2], &thisNode, sizeof(NodeStruct));
 
     for (byte x = 0; x < 6; x++) {
       data[x + 2] = macread[x];

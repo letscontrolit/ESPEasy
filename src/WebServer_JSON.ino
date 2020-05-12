@@ -214,20 +214,16 @@ void handle_json()
           addHtml("{");
           stream_next_json_object_value(F("nr"), String(it->first));
           stream_next_json_object_value(F("name"),
-                                        (it->first != Settings.Unit) ? it->second.nodeName : Settings.Name);
+                                        (it->first != Settings.Unit) ? it->second.getNodeName() : Settings.Name);
 
           if (it->second.build) {
             stream_next_json_object_value(F("build"), String(it->second.build));
           }
 
           if (it->second.nodeType) {
-            String platform = getNodeTypeDisplayString(it->second.nodeType);
-
-            if (platform.length() > 0) {
-              stream_next_json_object_value(F("platform"), platform);
-            }
+            stream_next_json_object_value(F("platform"), it->second.getNodeTypeDisplayString());
           }
-          stream_next_json_object_value(F("ip"), it->second.ip.toString());
+          stream_next_json_object_value(F("ip"), it->second.IP().toString());
           stream_last_json_object_value(F("age"), String(it->second.age));
         } // if node info exists
       }   // for loop
@@ -410,10 +406,10 @@ void handle_nodes_list_json() {
       }
 
       json_number(F("first"), String(it->first));
-      json_prop(F("name"), isThisUnit ? Settings.Name : it->second.nodeName);
+      json_prop(F("name"), isThisUnit ? Settings.Name : it->second.getNodeName());
 
       if (it->second.build) { json_prop(F("build"), String(it->second.build)); }
-      json_prop(F("type"), getNodeTypeDisplayString(it->second.nodeType));
+      json_prop(F("type"), it->second.getNodeTypeDisplayString());
       json_prop(F("ip"),   it->second.ip.toString());
       json_number(F("age"), String(it->second.age));
       json_close();
