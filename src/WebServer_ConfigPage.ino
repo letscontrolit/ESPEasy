@@ -199,11 +199,16 @@ void handle_config() {
     String id = F("peer");
     id += String(peer);
     addFormMACBox(label, id, SecuritySettings.EspEasyNowPeerMAC[peer]);
-    ESPEasy_Now_peerInfo_meta meta;
-    if (ESPEasy_now_handler.getPeerInfo(SecuritySettings.EspEasyNowPeerMAC[peer], meta))
+
+    // FIXME TD-er: Crash
+    /*
+    NodeStruct* nodeInfo = Nodes.getNode(SecuritySettings.EspEasyNowPeerMAC[peer]);
+    if (nodeInfo != nullptr)
     {
-      addFormNote(meta.nodeName);
+
+      addFormNote(nodeInfo->getSummary());
     }
+    */
   }
 #endif
 

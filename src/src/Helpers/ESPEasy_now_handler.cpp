@@ -160,11 +160,6 @@ bool ESPEasy_now_handler_t::sendToMQTT(controllerIndex_t controllerIndex, const 
   return processed;
 }
 
-bool ESPEasy_now_handler_t::getPeerInfo(const uint8_t             *mac,
-                                        ESPEasy_Now_peerInfo_meta& meta) const
-{
-  return _peerInfoMap.getPeer(mac, meta);
-}
 
 bool ESPEasy_now_handler_t::send(const ESPEasy_Now_packet& packet) {
   bool success = WifiEspNow.send(packet._mac, packet[0], packet.getSize());

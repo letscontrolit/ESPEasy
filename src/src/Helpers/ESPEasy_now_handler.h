@@ -7,7 +7,6 @@
 
 # include "../DataStructs/ESPEasy_now_hdr.h"
 # include "../DataStructs/ESPEasy_Now_packet.h"
-# include "../DataStructs/ESPEasy_Now_peerInfo.h"
 # include "../Globals/CPlugins.h"
 
 
@@ -30,9 +29,6 @@ public:
                   const String    & topic,
                   const String    & payload);
 
-  bool getPeerInfo(const uint8_t             *mac,
-                   ESPEasy_Now_peerInfo_meta& meta) const;
-
 private:
 
   bool                 send(const ESPEasy_Now_packet& packet);
@@ -46,9 +42,6 @@ private:
 
   bool                 handle_MQTTControllerMessage(const ESPEasy_Now_packet& packet);
 
-
-  // FIXME TD-er: Must remove
-  ESPEasy_Now_peerInfo _peerInfoMap;
 };
 
 
