@@ -27,6 +27,8 @@ struct ESPEasy_now_hdr {
 
   ESPEasy_now_hdr(message_t messageType);
 
+  ESPEasy_now_hdr& operator=(const ESPEasy_now_hdr& other);
+
   void setChecksum();
 
   bool checksumValid() const;
@@ -37,13 +39,13 @@ private:
 
 public:
 
-  const uint8_t header_version  = ESPEASY_NOW_HEADER_VERSION; // To be used later to detect newer versions
-  message_t     message_type    = message_t::NotSet;
-  uint8_t       cur_message_nr  = 0;                          // Current message number (start at 0)
-  uint8_t       last_message_nr = 0;                          // The highest message number of this sequence
-  uint8_t       notUsed1        = 0;                          // reserved
-  uint8_t       notUsed2        = 0;                          // reserved
-  uint8_t       checksum        = 0;                          // checksum
+  uint8_t header_version = ESPEASY_NOW_HEADER_VERSION; // To be used later to detect newer versions
+  message_t     message_type   = message_t::NotSet;
+  uint8_t       packet_nr      = 0;                          // Current message number (start at 0)
+  uint8_t       nr_packets     = 1;                          // The highest message number of this sequence
+  uint8_t       message_count  = 1;                          // A set of messages all have the same message_count
+  uint8_t       notUsed1       = 0;                          // reserved
+  uint8_t       checksum       = 0;                          // checksum
 };
 
 #endif // ifdef USES_ESPEASY_NOW

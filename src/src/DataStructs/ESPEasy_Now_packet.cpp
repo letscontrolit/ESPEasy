@@ -107,7 +107,7 @@ size_t ESPEasy_Now_packet::addBinaryData(uint8_t* data, size_t length)
   return length;
 }
 
-bool ESPEasy_Now_packet::getBinaryData(uint8_t* data, size_t length) const
+size_t ESPEasy_Now_packet::getBinaryData(uint8_t* data, size_t length) const
 {
   const size_t payload_size = getPayloadSize();
   if (length > payload_size) {
@@ -140,6 +140,11 @@ String ESPEasy_Now_packet::getString(size_t& payload_pos) const
     res += static_cast<char>(_buf[buf_pos]);
   }
   return res;
+}
+
+const uint8_t * ESPEasy_Now_packet::begin() const
+{
+  return &_buf[sizeof(ESPEasy_now_hdr)];
 }
 
 #endif // ifdef USES_ESPEASY_NOW

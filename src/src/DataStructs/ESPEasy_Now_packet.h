@@ -7,6 +7,9 @@
 #ifdef USES_ESPEASY_NOW
 
 # include "ESPEasy_now_hdr.h"
+
+#include <list>
+#include <map>
 class ESPEasy_Now_packet {
 public:
 
@@ -33,7 +36,7 @@ public:
 
   size_t          addBinaryData(uint8_t* data, size_t length);
 
-  bool            getBinaryData(uint8_t* data, size_t length) const;
+  size_t          getBinaryData(uint8_t* data, size_t length) const;
 
   // Add a string to the packet, starting at payload position payload_pos
   // Return the number of bytes added (can be 1 more than the given string)
@@ -43,6 +46,9 @@ public:
   // Return a string starting from position pos in the buffer.
   // payload_pos will contain the new position to start for a next string
   String          getString(size_t& payload_pos) const;
+
+  // Get pointer to the begin of the payload
+  const uint8_t * begin() const;
 
   const uint8_t * operator[](size_t idx) const {
     return &_buf[idx];
@@ -56,6 +62,11 @@ private:
 
   void setSize(size_t packetSize);
 };
+
+typedef std::list<ESPEasy_Now_packet> ESPEasy_Now_packet_list;
+
+typedef std::map<uint8_t, ESPEasy_Now_packet> ESPEasy_Now_packet_map;
+
 
 #endif // ifdef USES_ESPEASY_NOW
 

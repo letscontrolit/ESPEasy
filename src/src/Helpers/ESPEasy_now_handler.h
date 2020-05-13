@@ -7,6 +7,7 @@
 
 # include "../DataStructs/ESPEasy_now_hdr.h"
 # include "../DataStructs/ESPEasy_Now_packet.h"
+# include "../DataStructs/ESPEasy_now_merger.h"
 # include "../Globals/CPlugins.h"
 
 
@@ -37,10 +38,12 @@ private:
 
   WifiEspNowSendStatus waitForSendStatus(size_t timeout) const;
 
+  bool processMessage(const ESPEasy_now_merger& message);
 
-  bool                 handle_DiscoveryAnnounce(const ESPEasy_Now_packet& packet);
 
-  bool                 handle_MQTTControllerMessage(const ESPEasy_Now_packet& packet);
+  bool handle_DiscoveryAnnounce(const ESPEasy_now_merger& message);
+
+  bool handle_MQTTControllerMessage(const ESPEasy_now_merger& message);
 
 };
 

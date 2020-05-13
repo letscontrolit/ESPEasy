@@ -200,8 +200,6 @@ void handle_config() {
     id += String(peer);
     addFormMACBox(label, id, SecuritySettings.EspEasyNowPeerMAC[peer]);
 
-    // FIXME TD-er: Crash
-    
     bool match_STA;
     const NodeStruct* nodeInfo = Nodes.getNodeByMac(SecuritySettings.EspEasyNowPeerMAC[peer], match_STA);
     if (nodeInfo != nullptr)

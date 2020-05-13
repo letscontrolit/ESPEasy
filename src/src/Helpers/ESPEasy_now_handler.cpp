@@ -13,10 +13,35 @@
 
 # include <list>
 
-std::list<ESPEasy_Now_packet> ESPEasy_now_in_queue;
+
+static uint64_t mac_to_key(const uint8_t *mac, ESPEasy_now_hdr::message_t messageType, uint8_t message_count)
+{
+  uint64_t key = message_count;
+
+  key  = key << 8;
+  key += static_cast<uint8_t>(messageType);
+
+  for (byte i = 0; i < 6; ++i) {
+    key  = key << 8;
+    key += mac[i];
+  }
+  return key;
+}
+
+std::map<uint64_t, ESPEasy_now_merger> ESPEasy_now_in_queue;
 
 void ICACHE_FLASH_ATTR ESPEasy_now_onReceive(const uint8_t mac[6], const uint8_t *buf, size_t count, void *cbarg) {
-  ESPEasy_now_in_queue.emplace_back(mac, buf, count);
+  if (count < sizeof(ESPEasy_now_hdr)) {
+    return; // Too small
+  }
+  ESPEasy_now_hdr header;
+  memcpy(&header, buf, sizeof(ESPEasy_now_hdr));
+
+  if (!header.checksumValid()) {
+    return;
+  }
+  uint64_t key = mac_to_key(mac, header.message_type, header.message_count);
+  ESPEasy_now_in_queue[key].addPacket(header.packet_nr, mac, buf, count);
 }
 
 bool ESPEasy_now_handler_t::begin()
@@ -54,63 +79,50 @@ void ESPEasy_now_handler_t::end()
 
 bool ESPEasy_now_handler_t::loop()
 {
+  bool somethingProcessed = false;
+
   if (!ESPEasy_now_in_queue.empty()) {
-    bool validPacket    = ESPEasy_now_in_queue.front().getHeader().checksumValid();
-    const byte loglevel = validPacket ? LOG_LEVEL_INFO : LOG_LEVEL_ERROR;
+    for (auto it = ESPEasy_now_in_queue.begin(); it != ESPEasy_now_in_queue.end();) {
+      bool removeMessage = true;
 
-    if (loglevelActiveFor(loglevel)) {
-      String log = F("ESPEasyNow: Message from ");
-      log += formatMAC(ESPEasy_now_in_queue.front()._mac);
-
-      if (!validPacket) {
-        log += F(" INVALID CHECKSUM!");
+      if (!it->second.messageComplete()) {
+        if (it->second.expired()) {
+          if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+            String log = it->second.getLogString();
+            log += F(" Expired!");
+            addLog(LOG_LEVEL_ERROR, log);
+          }
+        } else {
+          removeMessage = false;
+        }
       } else {
-        log += F(" (");
-        log += ESPEasy_now_in_queue.front().getHeader().cur_message_nr + 1;
-        log += '/';
-        log += ESPEasy_now_in_queue.front().getHeader().last_message_nr + 1;
-        log += ')';
+        // Process it
+        somethingProcessed = processMessage(it->second);        
       }
-      addLog(loglevel, log);
+
+      if (removeMessage) {
+        it = ESPEasy_now_in_queue.erase(it);
+        // FIXME TD-er: For now only process one item and then wait for the next loop.
+        if (somethingProcessed) {
+          return true;
+        }
+      } else {
+        ++it;
+      }
     }
-
-    if (!validPacket) {
-      ESPEasy_now_in_queue.pop_front();
-      return false;
-    }
-
-    bool handled = false;
-
-    switch (ESPEasy_now_in_queue.front().getHeader().message_type)
-    {
-      case ESPEasy_now_hdr::message_t::NotSet:
-      case ESPEasy_now_hdr::message_t::ChecksumError:
-        break;
-      case ESPEasy_now_hdr::message_t::Acknowledgement:
-        break;
-      case ESPEasy_now_hdr::message_t::Announcement:
-        handled = handle_DiscoveryAnnounce(ESPEasy_now_in_queue.front());
-        break;
-      case ESPEasy_now_hdr::message_t::MQTTControllerMessage:
-        handled = handle_MQTTControllerMessage(ESPEasy_now_in_queue.front());
-        break;
-    }
-
-    // FIXME TD-er: What to do when packet is not handled?
-    ESPEasy_now_in_queue.pop_front();
-    return handled;
   }
-  return false;
+  return somethingProcessed;
 }
 
 void ESPEasy_now_handler_t::sendDiscoveryAnnounce(byte channel)
 {
   NodeStruct thisNode;
+
   thisNode.setLocalData();
   size_t len = sizeof(NodeStruct);
   ESPEasy_now_hdr header(ESPEasy_now_hdr::message_t::Announcement);
   ESPEasy_Now_packet msg(header, len);
-  msg.addBinaryData(reinterpret_cast<uint8_t*>(&thisNode), len);
+  msg.addBinaryData(reinterpret_cast<uint8_t *>(&thisNode), len);
   msg.setBroadcast();
   send(msg);
 }
@@ -160,7 +172,6 @@ bool ESPEasy_now_handler_t::sendToMQTT(controllerIndex_t controllerIndex, const 
   return processed;
 }
 
-
 bool ESPEasy_now_handler_t::send(const ESPEasy_Now_packet& packet) {
   bool success = WifiEspNow.send(packet._mac, packet[0], packet.getSize());
 
@@ -206,18 +217,46 @@ WifiEspNowSendStatus ESPEasy_now_handler_t::waitForSendStatus(size_t timeout) co
   return sendStatus;
 }
 
-bool ESPEasy_now_handler_t::handle_DiscoveryAnnounce(const ESPEasy_Now_packet& packet)
+bool ESPEasy_now_handler_t::processMessage(const ESPEasy_now_merger& message)
+{
+
+  addLog(LOG_LEVEL_INFO, message.getLogString());
+  bool handled = false;
+
+  switch (message.getFirstHeader().message_type)
+  {
+    case ESPEasy_now_hdr::message_t::NotSet:
+    case ESPEasy_now_hdr::message_t::ChecksumError:
+      break;
+    case ESPEasy_now_hdr::message_t::Acknowledgement:
+      break;
+    case ESPEasy_now_hdr::message_t::Announcement:
+      handled = handle_DiscoveryAnnounce(message);
+      break;
+    case ESPEasy_now_hdr::message_t::MQTTControllerMessage:
+      handled = handle_MQTTControllerMessage(message);
+      break;
+  }
+
+  return handled;
+}
+
+
+bool ESPEasy_now_handler_t::handle_DiscoveryAnnounce(const ESPEasy_now_merger& message)
 {
   NodeStruct received;
-  packet.getBinaryData(reinterpret_cast<uint8_t*>(&received), sizeof(NodeStruct));
+
+  message.getBinaryData(reinterpret_cast<uint8_t *>(&received), sizeof(NodeStruct));
   Nodes.addNode(received);
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log;
-    size_t payloadSize = packet.getPayloadSize();
+    uint8_t mac[6] = {0};
+    message.getMac(mac);
+    size_t payloadSize = message.getPayloadSize();
     log.reserve(payloadSize + 40);
     log  = F("ESPEasy Now discovery: ");
-    log += formatMAC(packet._mac);
+    log += formatMAC(mac);
     log += '\n';
     log += received.getSummary();
     addLog(LOG_LEVEL_INFO, log);
@@ -225,7 +264,7 @@ bool ESPEasy_now_handler_t::handle_DiscoveryAnnounce(const ESPEasy_Now_packet& p
   return true;
 }
 
-bool ESPEasy_now_handler_t::handle_MQTTControllerMessage(const ESPEasy_Now_packet& packet)
+bool ESPEasy_now_handler_t::handle_MQTTControllerMessage(const ESPEasy_now_merger& message)
 {
   # ifdef USES_MQTT
 
@@ -235,8 +274,8 @@ bool ESPEasy_now_handler_t::handle_MQTTControllerMessage(const ESPEasy_Now_packe
 
   if (validControllerIndex(controllerIndex)) {
     size_t pos     = 0;
-    String topic   = packet.getString(pos);
-    String payload = packet.getString(pos);
+    String topic   = message.getString(pos);
+    String payload = message.getString(pos);
 
     MakeControllerSettings(ControllerSettings);
     LoadControllerSettings(controllerIndex, ControllerSettings);
