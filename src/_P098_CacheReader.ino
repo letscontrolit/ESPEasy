@@ -124,11 +124,53 @@ public:
   }
   bool validateSample(){
     //TODO: Check that sample is valid
-    return false;
+    return true;
   }
-  bool sendSample(){
-    // TODO:
-    return false;
+  bool sendSample(struct EventStruct *event){
+
+    char *send_buffer = new char[10];
+    // TODO: Set initialize buffer to the smallest possible size
+    char *topic_buffer = new char[64];
+    for (int i = 0 ; i<64; i++){
+      topic_buffer[i] = '\0';
+    }
+    String unit = F("%unit%");
+    for (int i=1 ; i<5 ;i++){
+      for (int i=0 ; i< 10 ; i++){
+        send_buffer[i] = '\0';
+      }
+      switch (i) {
+        case 1:
+          std::sprintf(send_buffer, "%f", *this->val1);
+          break;
+        case 2:
+          std::sprintf(send_buffer, "%f", *this->val2);
+          break;
+        case 3:
+          std::sprintf(send_buffer, "%f", *this->val3);
+          break;
+        case 4:
+          std::sprintf(send_buffer, "%f", *this->val4);
+          break;
+        default:
+          addLog(LOG_LEVEL_INFO, F("Case Default"));
+          delete []send_buffer;
+          delete []topic_buffer;
+          return false;
+      }
+      std::sprintf(topic_buffer, "tracker/%s/%lu/%d/%d", unit.c_str(),*(this->timestamp),this->controller_idx,i);
+      bool publish_success = MQTTpublish(event->ControllerIndex, topic_buffer, send_buffer, true);
+      if (!publish_success){
+        delete []send_buffer;
+        delete []topic_buffer;
+        addLog(LOG_LEVEL_INFO, F("Publish fail"));
+        return false;
+      }
+    }
+    delete []send_buffer;
+    delete []topic_buffer;
+    addLog(LOG_LEVEL_INFO, F("Send success"));
+    return true;
   }
   String toString(){
     // TODO: Build String from sample
@@ -162,55 +204,48 @@ public:
     for (int i=0; i<24; i++){
       buffer[i] = '\0';
     }
+
     // Load values if UserVar array values were 0
     this->initialize(event);
+
     // Open File (Defaults to bin 1 if no values were loaded)
     this->setData();
-    // Seek to current sample index
-    // Defaults to sample 1 if no values were loaded
-    cache.seek(24 * (*sampleIndex) + (*offset));
-    // Read sample data into buffer
-    cache.read(buffer, 24);
-    // Parse buffer into Sample_t
-    sample->parseSample(buffer);
-    // Check and send sample
-    bool validated = sample->validateSample();
-    if (validated){
-      bool sendSuccess = sample->sendSample();
-      if (sendSuccess){
-        this->increment();
-      }
-    }
+
+
+
+
+    String log = F("--- Success! ---");
+    addLog(LOG_LEVEL_INFO, log);
   }
   void initialize(struct EventStruct *event){
     // TODO:
     if (*fileNr < 1){
-      fileNr = this->fetchFileNr();
-      UserVar[event->BaseVarIndex] = *fileNr;
+      this->fetchFileNr();
     }
     if (*sampleIndex < 1){
-      sampleIndex = this->fetchSampleIndex(event);
-      UserVar[event->BaseVarIndex +3] = *sampleIndex;
+      this->fetchSampleIndex();
     }
     if (*offset < 1){
-      offset = this->getOffset(event);
-      UserVar[event->BaseVarIndex +1] = *offset;
-    }
-    if (*sampleCount < 1){
-      sampleCount = this->getSampleCount(event);
-      UserVar[event->BaseVarIndex +2] = *sampleCount;
+      this->getOffset();
     }
   }
-  float *fetchFileNr(){
+  void fetchFileNr(){
     // TODO: fetch file nr from server
-    // Return 1 if no value available
-    return 0;
   }
-  float *fetchSampleIndex(struct EventStruct *event){
-    // TODO: fetch current sample index
-    // Return 1 if no value available
-    UserVar[event->BaseVarIndex +3] = 1;
-    return &UserVar[event->BaseVarIndex +3];
+  void fetchSampleIndex(){
+    // TODO: fetch current sample index from server
+  }
+  void getOffset(){
+    // TODO: Find offset instead of static 16 byte offset
+    float staticOffset = 16;
+    memcpy(offset, &staticOffset, 4);
+  }
+  void getSampleCount(){
+    if (*sampleCount < 1){
+      float totalBytes = 100;
+      //float sampleC = floor((totalBytes-(*offset))/24);
+      memcpy(sampleCount, &totalBytes, 4);
+    }
   }
   bool setData(){
     const char *filename = "cache_1.bin";
@@ -222,30 +257,42 @@ public:
     */
     if (!fileExists(filename)){ return false; }
     cache = tryOpenFile(filename,"r");
-
+    this->getSampleCount();
     return true;
   }
-  bool readSample(){
-    // TODO:
-    return false;
-  }
-  float *getSampleCount(struct EventStruct *event){
-    float totalBytes = std::streamsize(cache);
-    UserVar[event->BaseVarIndex +1] = floor((totalBytes-(*offset))/24);
-    return &UserVar[event->BaseVarIndex +1];
-  }
-  float *getOffset(struct EventStruct *event){
-    // TODO: Find offset instead of static 16 byte offset
-    if (UserVar[event->BaseVarIndex +1] != 16){
-      UserVar[event->BaseVarIndex +1] = 16;
+  void readSample(struct EventStruct *event){
+    // Seek to current sample index
+    // Defaults to sample 1 if no values were loaded
+    cache.seek(24 * (*sampleIndex) + (*offset));
+    // Read sample data into buffer
+    cache.read(buffer, 24);
+    // Parse buffer into Sample_t
+    sample->parseSample(buffer);
+    // Validate and send sample
+    bool validated = sample->validateSample();
+    if (validated){
+      bool succss = sample->sendSample(event);
+
+      // Check to make sure message gets sent
+      String succss_msg = "";
+      if (succss){
+        succss_msg = F("------------- SENT --------------");
+      } else {
+        succss_msg = F("-------------- SEND FAIL ----------------");
+      }
+      addLog(LOG_LEVEL_INFO, succss_msg);
+
     }
-    return &UserVar[event->BaseVarIndex +1];
+    // Increment to next sample
+    this->increment();
   }
   void setIndex(int index){
     // TODO:
   }
   void increment(){
-    // TODO:
+    // TODO: Check if last sample in file
+    // If so, move to next file
+    (*this->sampleIndex)++;
   }
   bool deleteFile(){
     // TODO:
@@ -359,8 +406,7 @@ boolean Plugin_098(byte function, struct EventStruct *event, String& string)
           log = F("File Found: False");
         }
         addLog(LOG_LEVEL_INFO,log);
-        UserVar[event->BaseVarIndex + 1] = fileFound;
-
+        //UserVar[event->BaseVarIndex + 1] = fileFound;
         success = true;
         break;
       }
@@ -389,9 +435,9 @@ boolean Plugin_098(byte function, struct EventStruct *event, String& string)
           cache.read(buffer,24);
           */
 
-
           Cache_t *cache = new Cache_t(event);
-
+          cache->readSample(event);
+          /*
           //unsigned long *timestamp = (unsigned long*)buffer;
 
           //Sample_t *sample = new Sample_t(buffer);
@@ -400,13 +446,11 @@ boolean Plugin_098(byte function, struct EventStruct *event, String& string)
           for (int i = 0 ; i < 128 ; i++){
             string_buffer[i] = '\0';
           }
-
           std::sprintf(string_buffer, "%lu", *(cache->sample->timestamp));
           //std::sprintf(string_buffer, "%f", *sample->val3);
 
           String publish_value = string_buffer;
           addLog(LOG_LEVEL_INFO, publish_value);
-
 
           /*
           if (!ControllerSettings.checkHostReachable(true)) {
@@ -418,7 +462,7 @@ boolean Plugin_098(byte function, struct EventStruct *event, String& string)
           // Publish to MQTT
           //TODO: Check host reachable
           //      Set correct topic & value
-
+          /*
           String tmppubname = "Debug_publish";
           bool publish_success = MQTTpublish(event->ControllerIndex, tmppubname.c_str(), string_buffer, true);
           //value.c_str()
@@ -430,6 +474,7 @@ boolean Plugin_098(byte function, struct EventStruct *event, String& string)
           }
           addLog(LOG_LEVEL_INFO, publish_message);
           //ControllerSettings.mqtt_retainFlag() TODO: Should set retain flag from interface
+          */
 
           success = true;
         }
