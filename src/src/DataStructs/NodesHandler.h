@@ -13,9 +13,7 @@ public:
 
   const NodeStruct* getNode(uint8_t unit_nr) const;
 
-  const NodeStruct* getNode(const uint8_t* mac) const;
-
-  NodeStruct* getNode(const uint8_t* mac);
+  const NodeStruct* getNodeByMac(const uint8_t* mac, bool& match_STA) const;
 
   NodesMap::const_iterator begin() const;
 

@@ -201,14 +201,16 @@ void handle_config() {
     addFormMACBox(label, id, SecuritySettings.EspEasyNowPeerMAC[peer]);
 
     // FIXME TD-er: Crash
-    /*
-    NodeStruct* nodeInfo = Nodes.getNode(SecuritySettings.EspEasyNowPeerMAC[peer]);
+    
+    bool match_STA;
+    const NodeStruct* nodeInfo = Nodes.getNodeByMac(SecuritySettings.EspEasyNowPeerMAC[peer], match_STA);
     if (nodeInfo != nullptr)
     {
-
-      addFormNote(nodeInfo->getSummary());
+      String summary = nodeInfo->getSummary();
+      summary += match_STA ? F(" (STA)") : F(" (AP)");
+      addFormNote(summary);
     }
-    */
+    
   }
 #endif
 

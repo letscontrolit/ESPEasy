@@ -34,6 +34,8 @@ struct __attribute__((__packed__)) NodeStruct
   String getSummary() const;
 
 
+
+
   // Do not change the order of this data, as it is being sent via P2P UDP.
   // 6 byte mac  (STA interface)
   // 4 byte ip

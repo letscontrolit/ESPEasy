@@ -9,6 +9,16 @@ static bool mac_equal(const uint8_t *mac1, const uint8_t *mac2)
   return true;
 }
 
+static bool mac_empty(const uint8_t *mac)
+{
+  for (byte i = 0; i < 6; ++i) {
+    if (mac[i] != 0) {
+      return false;
+    }
+  }
+  return true;
+}
+
 void NodesHandler::addNode(const NodeStruct& node)
 {
   _nodes[node.unit] = node;
@@ -22,7 +32,8 @@ bool NodesHandler::hasNode(uint8_t unit_nr) const
 
 bool NodesHandler::hasNode(const uint8_t *mac) const
 {
-  return getNode(mac) != nullptr;
+  bool dummy;
+  return getNodeByMac(mac, dummy) != nullptr;
 }
 
 const NodeStruct * NodesHandler::getNode(uint8_t unit_nr) const
@@ -35,22 +46,26 @@ const NodeStruct * NodesHandler::getNode(uint8_t unit_nr) const
   return &(it->second);
 }
 
-const NodeStruct * NodesHandler::getNode(const uint8_t *mac) const
+const NodeStruct * NodesHandler::getNodeByMac(const uint8_t *mac, bool& match_STA) const
 {
+  if (mac_empty(mac)) {
+    return nullptr;
+  }
+  delay(0);
   for (auto it = _nodes.begin(); it != _nodes.end(); ++it)
   {
-    if (mac_equal(mac, it->second.mac) || mac_equal(mac, it->second.ap_mac)) {
+    
+    if (mac_equal(mac, it->second.mac)) {
+      match_STA = true;
+      return &(it->second);
+    }
+
+    if (mac_equal(mac, it->second.ap_mac)) {
+      match_STA = false;
       return &(it->second);
     }
   }
   return nullptr;
-}
-
-NodeStruct* NodesHandler::getNode(const uint8_t *mac)
-{
-  const NodeStruct *node = getNode(mac);
-
-  return const_cast<NodeStruct *>(node);
 }
 
 NodesMap::const_iterator NodesHandler::begin() const {
