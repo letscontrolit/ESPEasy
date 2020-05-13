@@ -158,7 +158,7 @@ public:
           delete []topic_buffer;
           return false;
       }
-      std::sprintf(topic_buffer, "tracker/%s/%lu/%d/%d", unit.c_str(),*(this->timestamp),this->controller_idx,i);
+      std::sprintf(topic_buffer, "tracker/%d/%lu/%d/%d", (int)UserVar[event->BaseVarIndex +2],*(this->timestamp),this->controller_idx,i);
       bool publish_success = MQTTpublish(event->ControllerIndex, topic_buffer, send_buffer, true);
       if (!publish_success){
         delete []send_buffer;
@@ -204,15 +204,11 @@ public:
     for (int i=0; i<24; i++){
       buffer[i] = '\0';
     }
-
     // Load values if UserVar array values were 0
     this->initialize(event);
 
     // Open File (Defaults to bin 1 if no values were loaded)
     this->setData();
-
-
-
 
     String log = F("--- Success! ---");
     addLog(LOG_LEVEL_INFO, log);
@@ -241,11 +237,11 @@ public:
     memcpy(offset, &staticOffset, 4);
   }
   void getSampleCount(){
-    if (*sampleCount < 1){
-      float totalBytes = 100;
+    //if (*sampleCount < 1){
+      //float totalBytes = 100;
       //float sampleC = floor((totalBytes-(*offset))/24);
-      memcpy(sampleCount, &totalBytes, 4);
-    }
+      //memcpy(sampleCount, &totalBytes, 4);
+    //}
   }
   bool setData(){
     const char *filename = "cache_1.bin";
