@@ -134,7 +134,7 @@ public:
     for (int i = 0 ; i<64; i++){
       topic_buffer[i] = '\0';
     }
-    String unit = F("%unit%");
+
     for (int i=1 ; i<5 ;i++){
       for (int i=0 ; i< 10 ; i++){
         send_buffer[i] = '\0';
@@ -158,8 +158,9 @@ public:
           delete []topic_buffer;
           return false;
       }
-      std::sprintf(topic_buffer, "tracker/%d/%lu/%d/%d", (int)UserVar[event->BaseVarIndex +2],*(this->timestamp),this->controller_idx,i);
-      bool publish_success = MQTTpublish(event->ControllerIndex, topic_buffer, send_buffer, true);
+      std::sprintf(topic_buffer, "tracker/%d/%lu/%d/%d", (int)Settings.Unit,*(this->timestamp),this->controller_idx,i);
+      bool publish_success = MQTTpublish(event->ControllerIndex, topic_buffer, send_buffer, false);
+        //ControllerSettings.mqtt_retainFlag(); Uncomment and load controllersettings to set retain flag from controller interface
       if (!publish_success){
         delete []send_buffer;
         delete []topic_buffer;
@@ -261,26 +262,30 @@ public:
     // Defaults to sample 1 if no values were loaded
     cache.seek(24 * (*sampleIndex) + (*offset));
     // Read sample data into buffer
-    cache.read(buffer, 24);
-    // Parse buffer into Sample_t
-    sample->parseSample(buffer);
-    // Validate and send sample
-    bool validated = sample->validateSample();
-    if (validated){
-      bool succss = sample->sendSample(event);
+    size_t read = cache.read(buffer, 24);
+    // Check if read was valid and does not contain EOF
+    if (read == 24 && buffer[23] != EOF){
+      // Parse buffer into Sample_t
+      sample->parseSample(buffer);
+      // Validate and send sample
+      bool validated = sample->validateSample();
+      if (validated){
+        bool succss = sample->sendSample(event);
 
-      // Check to make sure message gets sent
-      String succss_msg = "";
-      if (succss){
-        succss_msg = F("------------- SENT --------------");
-      } else {
-        succss_msg = F("-------------- SEND FAIL ----------------");
+        // Check to make sure message gets sent
+        String succss_msg = "";
+        if (succss){
+          succss_msg = F("------------- SENT --------------");
+        } else {
+          succss_msg = F("-------------- SEND FAIL ----------------");
+        }
+        addLog(LOG_LEVEL_INFO, succss_msg);
       }
-      addLog(LOG_LEVEL_INFO, succss_msg);
-
+      // Increment to next sample
+      this->increment();
+    } else {
+      this->nextFile();
     }
-    // Increment to next sample
-    this->increment();
   }
   void setIndex(int index){
     // TODO:
@@ -289,6 +294,33 @@ public:
     // TODO: Check if last sample in file
     // If so, move to next file
     (*this->sampleIndex)++;
+  }
+  void nextFile(){
+    this->increment();
+    int fnr = (int)(*this->fileNr);
+
+    char *fname = new char[24];
+    for (int i = 0 ; i<24; i++){
+      fname[i] = '\0';
+    }
+
+    // Currently maximum 100 bin files
+    while (fnr < 100){
+      // Build filename from index
+      sprintf(fname,"cache_%d.bin",fnr);
+      if (fileExists(fname)){
+        (*this->sampleIndex) = 0;
+        delete[] fname;
+        break;
+      }
+      if (fnr == 99){
+        (*this->fileNr) = 1;
+        (*this->sampleIndex) = 0;
+        delete[] fname;
+        break;
+      }
+    }
+    delete[] fname;
   }
   bool deleteFile(){
     // TODO:
@@ -455,7 +487,7 @@ boolean Plugin_098(byte function, struct EventStruct *event, String& string)
           }
           */
 
-          // Publish to MQTT
+          // Publish to
           //TODO: Check host reachable
           //      Set correct topic & value
           /*
