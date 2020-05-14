@@ -69,6 +69,8 @@ String ESPEasy_now_merger::getLogString() const
   getMac(mac);
   String log;
   log += formatMAC(mac);
+  log += F(" payload: ");
+  log += getPayloadSize();
   log += F(" (");
   log += _queue.size();
   log += '/';
@@ -144,6 +146,7 @@ size_t ESPEasy_now_merger::getBinaryData(uint8_t *data, size_t length, size_t& p
     ++packet_nr;
     it = _queue.find(packet_nr);
   }
+  payload_pos += data_pos;
   return data_pos;
 }
 

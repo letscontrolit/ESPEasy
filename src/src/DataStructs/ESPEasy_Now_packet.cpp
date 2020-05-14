@@ -145,8 +145,10 @@ String ESPEasy_Now_packet::getLogString() const
   String log;
   log.reserve(30);
   log += formatMAC(_mac);
+  log += F(" payload: ");
+  log += getPayloadSize();
   log += F(" (");
-  log += header.packet_nr;
+  log += header.packet_nr + 1;
   log += '/';
   log += header.nr_packets;
   log += ')';
