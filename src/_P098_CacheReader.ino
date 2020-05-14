@@ -13,7 +13,6 @@
 #define PLUGIN_VALUENAME3_098 "sampleCount"
 #define PLUGIN_VALUENAME4_098 "sampleIndex"
 
-
 class Sample_t
 {
 public:
@@ -27,6 +26,7 @@ public:
   float *val3;
   float *val4;
   float *zerofloat;
+
   Sample_t(){
     timestamp = new unsigned long();
     controller_idx = *(new byte);
@@ -56,9 +56,9 @@ public:
    float *parse_float(byte *data){
      float *current = (float*)data;
      if (*current && *current != '\0'){
-       return current;
+        return current;
      } else {
-       return this->zerofloat;
+        return this->zerofloat;
      }
    }
    // Parse Byte, return 0 if parsed value = null
