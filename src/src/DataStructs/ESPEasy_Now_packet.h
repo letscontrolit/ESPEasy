@@ -26,6 +26,8 @@ public:
 
   size_t          getPayloadSize() const;
 
+  static size_t getMaxPayloadSize();
+
   ESPEasy_now_hdr getHeader() const;
 
   void            setHeader(ESPEasy_now_hdr header);
@@ -34,7 +36,7 @@ public:
 
   void            setBroadcast();
 
-  size_t          addBinaryData(uint8_t* data, size_t length);
+  size_t          addBinaryData(const uint8_t* data, size_t length);
 
   size_t          getBinaryData(uint8_t* data, size_t length) const;
 

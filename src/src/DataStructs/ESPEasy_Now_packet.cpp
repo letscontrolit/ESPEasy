@@ -43,6 +43,11 @@ size_t ESPEasy_Now_packet::getPayloadSize() const
   return size - sizeof(ESPEasy_now_hdr);
 }
 
+size_t ESPEasy_Now_packet::getMaxPayloadSize()
+{
+  return ESPEASY_NOW_MAX_PACKET_SIZE - sizeof(ESPEasy_now_hdr);
+}
+
 ESPEasy_now_hdr ESPEasy_Now_packet::getHeader() const
 {
   ESPEasy_now_hdr header;
@@ -63,7 +68,7 @@ void ESPEasy_Now_packet::setHeader(ESPEasy_now_hdr header)
 
 size_t ESPEasy_Now_packet::addString(const String& string, size_t& payload_pos)
 {
-  const size_t payload_size = getPayloadSize();
+  const size_t payload_size = getPayloadSize() - 1;
 
   if (payload_pos > payload_size) {
     return 0;
@@ -76,7 +81,6 @@ size_t ESPEasy_Now_packet::addString(const String& string, size_t& payload_pos)
   }
 
   // Copy the string including null-termination.
-  // If the null-termination does not fit, no other string can be added anyway.
   size_t buf_pos      = payload_pos + sizeof(ESPEasy_now_hdr);
   memcpy(&_buf[buf_pos], reinterpret_cast<const uint8_t *>(string.c_str()), bytesToWrite);
   payload_pos += bytesToWrite;
@@ -96,7 +100,7 @@ void ESPEasy_Now_packet::setBroadcast()
   }
 }
 
-size_t ESPEasy_Now_packet::addBinaryData(uint8_t* data, size_t length)
+size_t ESPEasy_Now_packet::addBinaryData(const uint8_t* data, size_t length)
 {
   const size_t payload_size = getPayloadSize();
   if (length > payload_size) {
