@@ -8,9 +8,12 @@
 #define PLUGIN_098
 #define PLUGIN_ID_098         98
 #define PLUGIN_NAME_098       "Generic - Cache Reader"
-#define PLUGIN_VALUENAME1_098 "CacheReader"
+#define PLUGIN_VALUENAME1_098 "fileNr"
+#define PLUGIN_VALUENAME2_098 "offset"
+#define PLUGIN_VALUENAME3_098 "sampleCount"
+#define PLUGIN_VALUENAME4_098 "sampleIndex"
 
-// Parse Sample from pointer to Sample (24 byte)
+
 class Sample_t
 {
 public:
@@ -37,24 +40,17 @@ public:
 
     zerofloat = new float();
   }
-  Sample_t(byte *data){
-    timestamp = new unsigned long();
-    controller_idx = *(new byte);
-    TaskIndex = *(new byte);
-    sensorType = *(new byte);
-    valueCount = *(new byte);
-    val1 = new float();
-    val2 = new float();
-    val3 = new float();
-    val4 = new float();
-
-    zerofloat = new float();
-
-    this->parseSample(data);
-  }
-  // Destructor
-   virtual ~Sample_t(){
-     // TODO:
+   ~Sample_t(){
+     delete timestamp;
+     delete &controller_idx;
+     delete &TaskIndex;
+     delete &sensorType;
+     delete &valueCount;
+     delete[] val1;
+     delete[] val2;
+     delete[] val3;
+     delete[] val4;
+     delete[] zerofloat;
    }
    // Parse Float value, return 0 if parsed value = null
    float *parse_float(byte *data){
@@ -129,7 +125,7 @@ public:
   bool sendSample(struct EventStruct *event){
 
     char *send_buffer = new char[10];
-    // TODO: Set initialize buffer to the smallest possible size
+    // TODO: Does buffer need to be 64 characters?
     char *topic_buffer = new char[64];
     for (int i = 0 ; i<64; i++){
       topic_buffer[i] = '\0';
@@ -164,13 +160,11 @@ public:
       if (!publish_success){
         delete []send_buffer;
         delete []topic_buffer;
-        addLog(LOG_LEVEL_INFO, F("Publish fail"));
         return false;
       }
     }
     delete []send_buffer;
     delete []topic_buffer;
-    addLog(LOG_LEVEL_INFO, F("Send success"));
     return true;
   }
   String toString(){
@@ -179,7 +173,6 @@ public:
     return returnValue;
   }
 };
-
 class Cache_t
 {
 public:
@@ -192,9 +185,16 @@ public:
   float *sampleIndex;
   bool loadFromServer;
 
-  Cache_t(struct EventStruct *event){
+  Cache_t(){
     // Create Sample
     sample = new Sample_t();
+  }
+  ~Cache_t(){
+    //delete &cache; TODO: Check how to delete stream object instance
+    //delete sample;
+    //delete[] buffer;
+  }
+  void initialize(struct EventStruct *event){
     // Load values from UserVar array
     fileNr = &UserVar[event->BaseVarIndex];
     offset = &UserVar[event->BaseVarIndex +1];
@@ -205,17 +205,8 @@ public:
     for (int i=0; i<24; i++){
       buffer[i] = '\0';
     }
-    // Load values if UserVar array values were 0
-    this->initialize(event);
-
     // Open File (Defaults to bin 1 if no values were loaded)
     this->setData();
-
-    String log = F("--- Success! ---");
-    addLog(LOG_LEVEL_INFO, log);
-  }
-  void initialize(struct EventStruct *event){
-    // TODO:
     if (*fileNr < 1){
       this->fetchFileNr();
     }
@@ -237,13 +228,6 @@ public:
     float staticOffset = 16;
     memcpy(offset, &staticOffset, 4);
   }
-  void getSampleCount(){
-    //if (*sampleCount < 1){
-      //float totalBytes = 100;
-      //float sampleC = floor((totalBytes-(*offset))/24);
-      //memcpy(sampleCount, &totalBytes, 4);
-    //}
-  }
   bool setData(){
     const char *filename = "cache_1.bin";
     /*
@@ -254,7 +238,6 @@ public:
     */
     if (!fileExists(filename)){ return false; }
     cache = tryOpenFile(filename,"r");
-    this->getSampleCount();
     return true;
   }
   void readSample(struct EventStruct *event){
@@ -270,16 +253,7 @@ public:
       // Validate and send sample
       bool validated = sample->validateSample();
       if (validated){
-        bool succss = sample->sendSample(event);
-
-        // Check to make sure message gets sent
-        String succss_msg = "";
-        if (succss){
-          succss_msg = F("------------- SENT --------------");
-        } else {
-          succss_msg = F("-------------- SEND FAIL ----------------");
-        }
-        addLog(LOG_LEVEL_INFO, succss_msg);
+        sample->sendSample(event);
       }
       // Increment to next sample
       this->increment();
@@ -298,12 +272,10 @@ public:
   void nextFile(){
     this->increment();
     int fnr = (int)(*this->fileNr);
-
     char *fname = new char[24];
     for (int i = 0 ; i<24; i++){
       fname[i] = '\0';
     }
-
     // Currently maximum 100 bin files
     while (fnr < 100){
       // Build filename from index
@@ -330,39 +302,29 @@ public:
   }
 };
 
-/* Can probably delete
 struct P098_data_struct : public PluginTaskData_base {
-  P098_data_struct() : CacheReader(nullptr) {}
-
+  Cache_t *cache = nullptr;
+  P098_data_struct() {}
   ~P098_data_struct(){
     reset();
   }
-}
-void reset(){
-  if (CacheReader != nullptr){
-    delete CacheReader;
-    CacheReader = nullptr;
-  }
-bool init(){
-  reset();
-  sample = new Sample_t();
-  return isInitialized();
-}
-*/
-
-// Seek next non null value
-float nextNonNull(fs::File cache, byte *buffer, float current){
-  while (!buffer[0]){
-    cache.seek(current);
-    cache.read(buffer, 1);
-    current++;
-    if (buffer[0] == EOF){
-      break;
+  void reset(){
+    /*
+    if (cache != nullptr){
+      //delete cache;
+      cache = nullptr;
     }
-    return current;
+    */
   }
-  return 0;
-}
+  bool init(){
+    reset();
+    cache = new Cache_t();
+    return isInitialized();
+  }
+  bool isInitialized() const {
+    return cache != nullptr;
+  }
+};
 
 
 boolean Plugin_098(byte function, struct EventStruct *event, String& string)
@@ -417,24 +379,25 @@ boolean Plugin_098(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
       {
-        // Do not set the sensor type, or else it will be set for all instances of the Dummy plugin.
-        //sensorTypeHelper_setSensorType(event, 0);
+        initPluginTaskData(event->TaskIndex, new P098_data_struct());
+        P098_data_struct *P098_data =
+          static_cast<P098_data_struct *>(getPluginTaskData(event->TaskIndex));
+        P098_data->init();
+        P098_data->cache->initialize(event);
+
         success = true;
         break;
       }
+    case PLUGIN_EXIT: {
+      clearPluginTaskData(event->TaskIndex);
 
+      success = true;
+      break;
+    }
     case PLUGIN_READ:
       {
-        bool fileFound = fileExists("cache_1.bin");
-        String log = F("File Found: ");
 
-        if (fileFound) {
-          log = F("File Found: True");
-        } else {
-          log = F("File Found: False");
-        }
-        addLog(LOG_LEVEL_INFO,log);
-        //UserVar[event->BaseVarIndex + 1] = fileFound;
+
         success = true;
         break;
       }
@@ -444,64 +407,43 @@ boolean Plugin_098(byte function, struct EventStruct *event, String& string)
         String command = parseString(string,1);
         if(command == F("readcachesingle"))
         {
-          //float index = UserVar[event->BaseVarIndex + 3];
-          //float sample_index = UserVar[event->BaseVarIndex + 2];
+          addLog(LOG_LEVEL_INFO, F("------------------------------ READ CACHE ------------------------------"));
+          P098_data_struct *P098_data =
+            static_cast<P098_data_struct *>(getPluginTaskData(event->TaskIndex));
+          bool initialized = P098_data->isInitialized();
 
-          // Temporary check to make sure function is called
-          String log = F("Cache Read Single - Called");
-          addLog(LOG_LEVEL_INFO, log);
-
-          //String value = "";
-
-          // Open Bin File
-          // TODO: Should iterate over all bin files
-          /*
-          fs::File cache = tryOpenFile("cache_1.bin","r");
-          byte *buffer = new byte[24];
-          cache.seek(16);
-          index += 16;
-          cache.read(buffer,24);
-          */
-
-          Cache_t *cache = new Cache_t(event);
-          cache->readSample(event);
-          /*
-          //unsigned long *timestamp = (unsigned long*)buffer;
-
-          //Sample_t *sample = new Sample_t(buffer);
-
-          char *string_buffer = new char[128];
-          for (int i = 0 ; i < 128 ; i++){
-            string_buffer[i] = '\0';
+          if (initialized){
+            for (int i = 0 ; i < 2 ; i++){
+              P098_data->cache->readSample(event);
+            }
+          } else {
+            P098_data->init();
+            P098_data->cache->initialize(event);
           }
-          std::sprintf(string_buffer, "%lu", *(cache->sample->timestamp));
-          //std::sprintf(string_buffer, "%f", *sample->val3);
 
-          String publish_value = string_buffer;
-          addLog(LOG_LEVEL_INFO, publish_value);
+          addLog(LOG_LEVEL_INFO, F("------------------------------ READ CACHE ------------------------------"));
+          /*
+          P098_data->init();
+          if (P098_data->isInitialized()){
+            // Read two samples at a time
+            P098_data->cache->initialize(event);
+
+            for (int i = 0 ; i < 2 ; i++){
+              P098_data->cache->readSample(event);
+            }
+
+
+          } else {
+            //P098_data->init();
+          }
+          */
+          //Cache_t *cache = new Cache_t();
 
           /*
           if (!ControllerSettings.checkHostReachable(true)) {
               success = false;
               break;
           }
-          */
-
-          // Publish to
-          //TODO: Check host reachable
-          //      Set correct topic & value
-          /*
-          String tmppubname = "Debug_publish";
-          bool publish_success = MQTTpublish(event->ControllerIndex, tmppubname.c_str(), string_buffer, true);
-          //value.c_str()
-          String publish_message = "";
-          if (publish_success){
-            publish_message = F("Publish success: True");
-          } else {
-            publish_message = F("Publish success: False");
-          }
-          addLog(LOG_LEVEL_INFO, publish_message);
-          //ControllerSettings.mqtt_retainFlag() TODO: Should set retain flag from interface
           */
 
           success = true;
