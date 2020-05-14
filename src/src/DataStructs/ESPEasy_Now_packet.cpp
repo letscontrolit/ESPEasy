@@ -29,6 +29,16 @@ void ESPEasy_Now_packet::setSize(size_t packetSize)
   }
 }
 
+uint16_t ESPEasy_Now_packet::computeChecksum() const
+{
+  return calc_CRC16(reinterpret_cast<const char *>(begin()), getPayloadSize());
+}
+
+bool ESPEasy_Now_packet::checksumValid() const
+{
+  return getHeader().checksum == computeChecksum();
+}
+
 size_t ESPEasy_Now_packet::getSize() const
 {
   return _buf.size();
@@ -63,7 +73,7 @@ ESPEasy_now_hdr ESPEasy_Now_packet::getHeader() const
 
 void ESPEasy_Now_packet::setHeader(ESPEasy_now_hdr header)
 {
-  header.setChecksum();
+  header.checksum = computeChecksum();
   memcpy(&_buf[0], &header, sizeof(ESPEasy_now_hdr));
 }
 
@@ -143,6 +153,7 @@ String ESPEasy_Now_packet::getLogString() const
 {
   ESPEasy_now_hdr header = getHeader();
   String log;
+
   log.reserve(30);
   log += formatMAC(_mac);
   log += F(" payload: ");
@@ -154,7 +165,6 @@ String ESPEasy_Now_packet::getLogString() const
   log += ')';
   return log;
 }
-
 
 const uint8_t * ESPEasy_Now_packet::begin() const
 {

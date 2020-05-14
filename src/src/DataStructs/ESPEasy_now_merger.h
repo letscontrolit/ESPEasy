@@ -24,17 +24,17 @@ public:
     size_t         packetSize);
 
   // Check if all parts of the packet have been received
-  bool messageComplete() const;
+  bool                                   messageComplete() const;
 
-  uint8_t receivedCount(uint8_t& nr_packets) const;
+  uint8_t                                receivedCount(uint8_t& nr_packets) const;
 
   // Check of set has expired (not all packets received within timeout)
-  bool expired() const;
+  bool                                   expired() const;
 
   ESPEasy_Now_packet_map::const_iterator find(uint8_t packet_nr) const;
 
   // Get combined size of all packets.
-  size_t getPayloadSize() const;
+  size_t                                 getPayloadSize() const;
 
   // Return a string starting from position pos in the buffer.
   // payload_pos will contain the new position to start for a next string

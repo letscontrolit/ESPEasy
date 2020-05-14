@@ -38,7 +38,16 @@ void ICACHE_FLASH_ATTR ESPEasy_now_onReceive(const uint8_t mac[6], const uint8_t
   ESPEasy_now_hdr header;
   memcpy(&header, buf, sizeof(ESPEasy_now_hdr));
 
-  if (!header.checksumValid()) {
+  if (header.header_version != ESPEASY_NOW_HEADER_VERSION) {
+    return;
+  }
+
+  size_t payload_length  = count - sizeof(ESPEasy_now_hdr);
+  const uint8_t *payload = buf + sizeof(ESPEasy_now_hdr);
+
+  const uint16_t checksum = calc_CRC16(reinterpret_cast<const char *>(payload), payload_length);
+
+  if (header.checksum != checksum) {
     return;
   }
   uint64_t key = mac_to_key(mac, header.message_type, header.message_count);
@@ -98,11 +107,12 @@ bool ESPEasy_now_handler_t::loop()
         }
       } else {
         // Process it
-        somethingProcessed = processMessage(it->second);        
+        somethingProcessed = processMessage(it->second);
       }
 
       if (removeMessage) {
         it = ESPEasy_now_in_queue.erase(it);
+
         // FIXME TD-er: For now only process one item and then wait for the next loop.
         if (somethingProcessed) {
           return true;
@@ -138,8 +148,8 @@ bool ESPEasy_now_handler_t::sendToMQTT(controllerIndex_t controllerIndex, const 
 
   if (ControllerSettings.enableESPEasyNowFallback() /*&& !WiFiConnected(10) */) {
     // each string has null termination
-    const size_t topic_length   = topic.length() +1;
-    const size_t payload_length = payload.length() +1;
+    const size_t topic_length   = topic.length() + 1;
+    const size_t payload_length = payload.length() + 1;
 
     // Todo: Add   cpluginID_t cpluginID; to the message
     size_t len = topic_length + payload_length;
@@ -171,7 +181,6 @@ bool ESPEasy_now_handler_t::sendToMQTT(controllerIndex_t controllerIndex, const 
 
 bool ESPEasy_now_handler_t::processMessage(const ESPEasy_now_merger& message)
 {
-
   addLog(LOG_LEVEL_INFO, message.getLogString());
   bool handled = false;
 
@@ -193,19 +202,19 @@ bool ESPEasy_now_handler_t::processMessage(const ESPEasy_now_merger& message)
   return handled;
 }
 
-
 bool ESPEasy_now_handler_t::handle_DiscoveryAnnounce(const ESPEasy_now_merger& message)
 {
   NodeStruct received;
 
   // Discovery messages have a single binary blob, starting at 0
   size_t payload_pos = 0;
+
   message.getBinaryData(reinterpret_cast<uint8_t *>(&received), sizeof(NodeStruct), payload_pos);
   Nodes.addNode(received);
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log;
-    uint8_t mac[6] = {0};
+    String  log;
+    uint8_t mac[6] = { 0 };
     message.getMac(mac);
     size_t payloadSize = message.getPayloadSize();
     log.reserve(payloadSize + 40);

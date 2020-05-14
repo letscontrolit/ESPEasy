@@ -154,8 +154,9 @@ uint8_t ESPEasy_now_merger::findPacketWithPayloadPos(size_t payload_pos, size_t&
 {
   // First find the place in the queue to continue based on the payload_pos
   uint8_t packet_nr = 0;
+
   payload_pos_in_packet = 0;
-  auto    it        = _queue.find(packet_nr);
+  auto it = _queue.find(packet_nr);
 
   // Position in message payload at the start of a packet
   size_t packet_start_payload_pos = 0;

@@ -8,8 +8,8 @@
 
 # include "ESPEasy_now_hdr.h"
 
-#include <list>
-#include <map>
+# include <list>
+# include <map>
 class ESPEasy_Now_packet {
 public:
 
@@ -22,11 +22,13 @@ public:
                      const uint8_t *buf,
                      size_t         packetSize);
 
+  bool            checksumValid() const;
+
   size_t          getSize() const;
 
   size_t          getPayloadSize() const;
 
-  static size_t getMaxPayloadSize();
+  static size_t   getMaxPayloadSize();
 
   ESPEasy_now_hdr getHeader() const;
 
@@ -36,11 +38,13 @@ public:
 
   void            setBroadcast();
 
-  size_t          addBinaryData(const uint8_t* data, size_t length,
-                   size_t      & payload_pos);
+  size_t          addBinaryData(const uint8_t *data,
+                                size_t         length,
+                                size_t       & payload_pos);
 
-  size_t          getBinaryData(uint8_t* data, size_t length,
-                   size_t      & payload_pos) const;
+  size_t getBinaryData(uint8_t *data,
+                       size_t   length,
+                       size_t & payload_pos) const;
 
   // Add a string to the packet, starting at payload position payload_pos
   // Return the number of bytes added (can be 1 more than the given string)
@@ -58,7 +62,7 @@ public:
     return &_buf[idx];
   }
 
-  String          getLogString() const;
+  String getLogString() const;
 
   uint8_t _mac[6] = { 0 };
 
@@ -66,7 +70,9 @@ private:
 
   std::vector<uint8_t>_buf;
 
-  void setSize(size_t packetSize);
+  void     setSize(size_t packetSize);
+
+  uint16_t computeChecksum() const;
 };
 
 typedef std::list<ESPEasy_Now_packet> ESPEasy_Now_packet_list;

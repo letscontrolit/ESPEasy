@@ -37,18 +37,20 @@ size_t ESPEasy_now_splitter::addString(const String& string)
 void ESPEasy_now_splitter::createNextPacket()
 {
   size_t current_PayloadSize = ESPEasy_Now_packet::getMaxPayloadSize();
+
   if (_queue.size() > 0) {
     current_PayloadSize = _queue.back().getPayloadSize();
   }
 
   if (current_PayloadSize > _payload_pos) {
     // No need to create a new file yet
+
     /*
-    String log;
-    log = F("createNextPacket ");
-    log += data_left;
-    addLog(LOG_LEVEL_INFO, log);
-    */
+       String log;
+       log = F("createNextPacket ");
+       log += data_left;
+       addLog(LOG_LEVEL_INFO, log);
+     */
     return;
   }
 
@@ -111,6 +113,7 @@ WifiEspNowSendStatus ESPEasy_now_splitter::send(uint8_t mac[6], size_t timeout)
 bool ESPEasy_now_splitter::send(const ESPEasy_Now_packet& packet)
 {
   bool success = WifiEspNow.send(packet._mac, packet[0], packet.getSize());
+
   delay(0);
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {

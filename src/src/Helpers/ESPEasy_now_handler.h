@@ -30,8 +30,6 @@ public:
                   const String    & topic,
                   const String    & payload);
 
-  
-
 private:
 
   bool processMessage(const ESPEasy_now_merger& message);
@@ -40,7 +38,6 @@ private:
   bool handle_DiscoveryAnnounce(const ESPEasy_now_merger& message);
 
   bool handle_MQTTControllerMessage(const ESPEasy_now_merger& message);
-
 };
 
 

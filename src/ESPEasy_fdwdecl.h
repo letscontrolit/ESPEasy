@@ -83,6 +83,8 @@ bool MQTTpublish(controllerIndex_t controller_idx, const char *topic, const char
 
 void flushAndDisconnectAllClients();
 
+int calc_CRC16(const char *ptr, int count);
+
 // Used in src/Commands/*
 void process_serialWriteBuffer();
 void serialPrintln(const String& text);

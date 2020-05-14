@@ -229,7 +229,14 @@ String getValue(LabelType::Enum label) {
     case LabelType::CONNECTION_FAIL_THRESH: return String(Settings.ConnectionFailuresThreshold);
 
     case LabelType::BUILD_DESC:             return String(BUILD);
-    case LabelType::GIT_BUILD:              return String(F(BUILD_GIT));
+    case LabelType::GIT_BUILD:
+    {
+      String res = F(BUILD_GIT);
+      if (res.length() == 0) {
+        return getValue(LabelType::BUILD_TIME);
+      }
+      return res;
+    }
     case LabelType::SYSTEM_LIBRARIES:       return getSystemLibraryString();
     case LabelType::PLUGIN_COUNT:           return String(deviceCount + 1);
     case LabelType::PLUGIN_DESCRIPTION:     return getPluginDescriptionString();
