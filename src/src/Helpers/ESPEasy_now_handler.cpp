@@ -4,6 +4,7 @@
 
 # include "ESPEasy_time_calc.h"
 # include "../DataStructs/ESPEasy_Now_packet.h"
+# include "../DataStructs/ESPEasy_now_splitter.h"
 # include "../DataStructs/NodeStruct.h"
 # include "../Globals/Nodes.h"
 # include "../Globals/SecuritySettings.h"
@@ -120,11 +121,9 @@ void ESPEasy_now_handler_t::sendDiscoveryAnnounce(byte channel)
 
   thisNode.setLocalData();
   size_t len = sizeof(NodeStruct);
-  ESPEasy_now_hdr header(ESPEasy_now_hdr::message_t::Announcement);
-  ESPEasy_Now_packet msg(header, len);
+  ESPEasy_now_splitter msg(ESPEasy_now_hdr::message_t::Announcement, len);
   msg.addBinaryData(reinterpret_cast<uint8_t *>(&thisNode), len);
-  msg.setBroadcast();
-  send(msg);
+  msg.sendToBroadcast();
 }
 
 bool ESPEasy_now_handler_t::sendToMQTT(controllerIndex_t controllerIndex, const String& topic, const String& payload)
@@ -138,25 +137,23 @@ bool ESPEasy_now_handler_t::sendToMQTT(controllerIndex_t controllerIndex, const 
   bool processed = false;
 
   if (ControllerSettings.enableESPEasyNowFallback() /*&& !WiFiConnected(10) */) {
-    const size_t topic_length   = topic.length();
-    const size_t payload_length = payload.length();
+    // each string has null termination
+    const size_t topic_length   = topic.length() +1;
+    const size_t payload_length = payload.length() +1;
 
     // Todo: Add   cpluginID_t cpluginID; to the message
-    size_t len = topic_length + payload_length + 1;
+    size_t len = topic_length + payload_length;
 
-    ESPEasy_now_hdr header(ESPEasy_now_hdr::message_t::MQTTControllerMessage);
-    ESPEasy_Now_packet msg(header, len);
+    ESPEasy_now_splitter msg(ESPEasy_now_hdr::message_t::MQTTControllerMessage, len);
 
-    size_t pos = 0;
-    msg.addString(topic,   pos);
-    msg.addString(payload, pos);
+    msg.addString(topic);
+    msg.addString(payload);
 
     for (byte peer = 0; peer < ESPEASY_NOW_PEER_MAX && !processed; ++peer) {
       // FIXME TD-er: This must be optimized to keep the last working index.
       // Or else it may take quite a while to send each message
       if (SecuritySettings.peerMacSet(peer)) {
-        msg.setMac(SecuritySettings.EspEasyNowPeerMAC[peer]);
-        WifiEspNowSendStatus sendStatus = send(msg, millis() + ControllerSettings.ClientTimeout);
+        WifiEspNowSendStatus sendStatus = msg.send(SecuritySettings.EspEasyNowPeerMAC[peer], millis() + ControllerSettings.ClientTimeout);
 
         switch (sendStatus) {
           case WifiEspNowSendStatus::OK:
@@ -170,51 +167,6 @@ bool ESPEasy_now_handler_t::sendToMQTT(controllerIndex_t controllerIndex, const 
     }
   }
   return processed;
-}
-
-bool ESPEasy_now_handler_t::send(const ESPEasy_Now_packet& packet) {
-  bool success = WifiEspNow.send(packet._mac, packet[0], packet.getSize());
-
-  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log;
-
-    if (success) {
-      log = F("ESPEasy Now: Sent to: ");
-    } else {
-      log = F("ESPEasy Now: Sent FAILED to: ");
-    }
-    log += formatMAC(packet._mac);
-    addLog(LOG_LEVEL_INFO, log);
-  }
-  return success;
-}
-
-WifiEspNowSendStatus ESPEasy_now_handler_t::send(const ESPEasy_Now_packet& packet, size_t timeout)
-{
-  if (!send(packet)) {
-    return WifiEspNowSendStatus::NONE;
-  }
-  WifiEspNowSendStatus sendStatus = waitForSendStatus(timeout);
-
-  if (sendStatus == WifiEspNowSendStatus::NONE) {
-    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String log = F("ESPEasy Now: TIMEOUT to: ");
-      log += formatMAC(packet._mac);
-      addLog(LOG_LEVEL_INFO, log);
-    }
-  }
-  return sendStatus;
-}
-
-WifiEspNowSendStatus ESPEasy_now_handler_t::waitForSendStatus(size_t timeout) const
-{
-  WifiEspNowSendStatus sendStatus = WifiEspNowSendStatus::NONE;
-
-  while (!timeOutReached(timeout) && sendStatus == WifiEspNowSendStatus::NONE) {
-    sendStatus = WifiEspNow.getSendStatus();
-    delay(1);
-  }
-  return sendStatus;
 }
 
 bool ESPEasy_now_handler_t::processMessage(const ESPEasy_now_merger& message)
@@ -246,7 +198,9 @@ bool ESPEasy_now_handler_t::handle_DiscoveryAnnounce(const ESPEasy_now_merger& m
 {
   NodeStruct received;
 
-  message.getBinaryData(reinterpret_cast<uint8_t *>(&received), sizeof(NodeStruct));
+  // Discovery messages have a single binary blob, starting at 0
+  size_t payload_pos = 0;
+  message.getBinaryData(reinterpret_cast<uint8_t *>(&received), sizeof(NodeStruct), payload_pos);
   Nodes.addNode(received);
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -256,7 +210,7 @@ bool ESPEasy_now_handler_t::handle_DiscoveryAnnounce(const ESPEasy_now_merger& m
     size_t payloadSize = message.getPayloadSize();
     log.reserve(payloadSize + 40);
     log  = F("ESPEasy Now discovery: ");
-    log += formatMAC(mac);
+    log += message.getLogString();
     log += '\n';
     log += received.getSummary();
     addLog(LOG_LEVEL_INFO, log);

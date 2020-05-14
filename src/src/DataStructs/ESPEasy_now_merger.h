@@ -40,21 +40,24 @@ public:
   // payload_pos will contain the new position to start for a next string
   String getString(size_t& payload_pos) const;
 
-  size_t getBinaryData(uint8_t* data, size_t length) const;
+  size_t getBinaryData(uint8_t *data,
+                       size_t   length,
+                       size_t & payload_pos) const;
 
   ESPEasy_now_hdr getFirstHeader() const;
 
-  bool getMac(uint8_t* mac) const;
+  bool            getMac(uint8_t *mac) const;
 
-  String getLogString() const;
+  String          getLogString() const;
 
 private:
 
+  // Find packet + payload position in packet for payload_pos of entire message
   uint8_t findPacketWithPayloadPos(size_t  payload_pos,
-                                   size_t& packet_start_payload_pos) const;
+                                   size_t& payload_pos_in_packet) const;
 
   unsigned long _firstPacketTimestamp = 0;
-  std::map<uint8_t, ESPEasy_Now_packet> _queue;
+  std::map<uint8_t, ESPEasy_Now_packet>_queue;
   uint8_t _nr_packets = 255;
 };
 

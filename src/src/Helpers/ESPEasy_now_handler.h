@@ -30,13 +30,9 @@ public:
                   const String    & topic,
                   const String    & payload);
 
+  
+
 private:
-
-  bool                 send(const ESPEasy_Now_packet& packet);
-  WifiEspNowSendStatus send(const ESPEasy_Now_packet& packet,
-                            size_t                    timeout);
-
-  WifiEspNowSendStatus waitForSendStatus(size_t timeout) const;
 
   bool processMessage(const ESPEasy_now_merger& message);
 

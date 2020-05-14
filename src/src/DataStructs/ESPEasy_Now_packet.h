@@ -36,9 +36,11 @@ public:
 
   void            setBroadcast();
 
-  size_t          addBinaryData(const uint8_t* data, size_t length);
+  size_t          addBinaryData(const uint8_t* data, size_t length,
+                   size_t      & payload_pos);
 
-  size_t          getBinaryData(uint8_t* data, size_t length) const;
+  size_t          getBinaryData(uint8_t* data, size_t length,
+                   size_t      & payload_pos) const;
 
   // Add a string to the packet, starting at payload position payload_pos
   // Return the number of bytes added (can be 1 more than the given string)
@@ -55,6 +57,8 @@ public:
   const uint8_t * operator[](size_t idx) const {
     return &_buf[idx];
   }
+
+  String          getLogString() const;
 
   uint8_t _mac[6] = { 0 };
 

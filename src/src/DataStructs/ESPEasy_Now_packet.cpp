@@ -2,10 +2,11 @@
 
 #ifdef USES_ESPEASY_NOW
 
+# include "../../ESPEasy_fdwdecl.h"
 
 # define ESPEASY_NOW_MAX_PACKET_SIZE   250
 
-ESPEasy_Now_packet::ESPEasy_Now_packet(const ESPEasy_now_hdr &header, size_t payloadSize)
+ESPEasy_Now_packet::ESPEasy_Now_packet(const ESPEasy_now_hdr& header, size_t payloadSize)
 {
   setSize(payloadSize + sizeof(ESPEasy_now_hdr));
   setHeader(header);
@@ -36,6 +37,7 @@ size_t ESPEasy_Now_packet::getSize() const
 size_t ESPEasy_Now_packet::getPayloadSize() const
 {
   size_t size = getSize();
+
   if (size < sizeof(ESPEasy_now_hdr)) {
     // should not happen
     return 0;
@@ -51,12 +53,11 @@ size_t ESPEasy_Now_packet::getMaxPayloadSize()
 ESPEasy_now_hdr ESPEasy_Now_packet::getHeader() const
 {
   ESPEasy_now_hdr header;
+
   if (getSize() >= sizeof(ESPEasy_now_hdr)) {
     memcpy(&header, &_buf[0], sizeof(ESPEasy_now_hdr));
   }
-  if (!header.checksumValid()) {
-    header.message_type = ESPEasy_now_hdr::message_t::ChecksumError;
-  }
+
   return header;
 }
 
@@ -68,23 +69,9 @@ void ESPEasy_Now_packet::setHeader(ESPEasy_now_hdr header)
 
 size_t ESPEasy_Now_packet::addString(const String& string, size_t& payload_pos)
 {
-  const size_t payload_size = getPayloadSize() - 1;
+  size_t length = string.length() + 1; // Try to Store the extra null-termination (may fail)
 
-  if (payload_pos > payload_size) {
-    return 0;
-  }
-  size_t bytesToWrite = string.length() + 1; // include null-termination
-  const size_t payload_free = payload_size - payload_pos;
-
-  if (bytesToWrite > payload_free) {
-    bytesToWrite = payload_free;
-  }
-
-  // Copy the string including null-termination.
-  size_t buf_pos      = payload_pos + sizeof(ESPEasy_now_hdr);
-  memcpy(&_buf[buf_pos], reinterpret_cast<const uint8_t *>(string.c_str()), bytesToWrite);
-  payload_pos += bytesToWrite;
-  return bytesToWrite;
+  return addBinaryData(reinterpret_cast<const uint8_t *>(string.c_str()), length, payload_pos);
 }
 
 void ESPEasy_Now_packet::setMac(uint8_t mac[6])
@@ -100,51 +87,72 @@ void ESPEasy_Now_packet::setBroadcast()
   }
 }
 
-size_t ESPEasy_Now_packet::addBinaryData(const uint8_t* data, size_t length)
+size_t ESPEasy_Now_packet::addBinaryData(const uint8_t *data, size_t length,
+                                         size_t& payload_pos)
 {
-  const size_t payload_size = getPayloadSize();
-  if (length > payload_size) {
-    length = payload_size;
+  size_t bytes_left = getPayloadSize();
+
+  if (payload_pos > bytes_left) { return 0; }
+  bytes_left -= payload_pos;
+
+  if (length > bytes_left) {
+    length = bytes_left;
   }
-  size_t buf_pos      =  sizeof(ESPEasy_now_hdr);
+  size_t buf_pos =  sizeof(ESPEasy_now_hdr) + payload_pos;
   memcpy(&_buf[buf_pos], data, length);
+  payload_pos += length;
   return length;
 }
 
-size_t ESPEasy_Now_packet::getBinaryData(uint8_t* data, size_t length) const
+size_t ESPEasy_Now_packet::getBinaryData(uint8_t *data, size_t length,
+                                         size_t& payload_pos) const
 {
-  const size_t payload_size = getPayloadSize();
-  if (length > payload_size) {
-    length = payload_size;
+  size_t bytes_left = getPayloadSize();
+
+  if (payload_pos > bytes_left) { return 0; }
+  bytes_left -= payload_pos;
+
+  if (length > bytes_left) {
+    length = bytes_left;
   }
-  size_t buf_pos      =  sizeof(ESPEasy_now_hdr);
+  size_t buf_pos =  sizeof(ESPEasy_now_hdr) + payload_pos;
   memcpy(data, &_buf[buf_pos], length);
+  payload_pos += length;
   return length;
 }
 
 String ESPEasy_Now_packet::getString(size_t& payload_pos) const
 {
   String res;
-  const size_t size = getSize();
-  size_t buf_pos = payload_pos + sizeof(ESPEasy_now_hdr);
+  size_t bytes_left = getPayloadSize();
 
-  while (buf_pos < size && _buf[buf_pos] == 0) {
-    ++buf_pos;
-    ++payload_pos;   
-  }
-
-  if (buf_pos >= size) { return res; }
-
-  const size_t maxlen = size - buf_pos;
-  size_t strlength    = strnlen(reinterpret_cast<const char *>(&_buf[buf_pos]), maxlen);
+  if (payload_pos > bytes_left) { return res; }
+  bytes_left -= payload_pos;
+  size_t buf_pos   =  sizeof(ESPEasy_now_hdr) + payload_pos;
+  size_t strlength = strnlen(reinterpret_cast<const char *>(&_buf[buf_pos]), bytes_left);
   res.reserve(strlength);
   const size_t max_buf_pos = buf_pos + strlength;
 
-  for ( ; buf_pos < max_buf_pos; ++buf_pos, ++payload_pos) {
+  for (; buf_pos < max_buf_pos; ++buf_pos, ++payload_pos) {
     res += static_cast<char>(_buf[buf_pos]);
   }
   return res;
 }
+
+String ESPEasy_Now_packet::getLogString() const
+{
+  ESPEasy_now_hdr header = getHeader();
+  String log;
+  log.reserve(30);
+  log += formatMAC(_mac);
+  log += F(" (");
+  log += header.packet_nr;
+  log += '/';
+  log += header.nr_packets;
+  log += ')';
+  return log;
+}
+
 
 const uint8_t * ESPEasy_Now_packet::begin() const
 {
