@@ -309,12 +309,10 @@ struct P098_data_struct : public PluginTaskData_base {
     reset();
   }
   void reset(){
-    /*
     if (cache != nullptr){
-      //delete cache;
+      delete cache;
       cache = nullptr;
     }
-    */
   }
   bool init(){
     reset();
@@ -325,7 +323,6 @@ struct P098_data_struct : public PluginTaskData_base {
     return cache != nullptr;
   }
 };
-
 
 boolean Plugin_098(byte function, struct EventStruct *event, String& string)
 {
@@ -384,20 +381,16 @@ boolean Plugin_098(byte function, struct EventStruct *event, String& string)
           static_cast<P098_data_struct *>(getPluginTaskData(event->TaskIndex));
         P098_data->init();
         P098_data->cache->initialize(event);
-
         success = true;
         break;
       }
     case PLUGIN_EXIT: {
       clearPluginTaskData(event->TaskIndex);
-
       success = true;
       break;
     }
     case PLUGIN_READ:
       {
-
-
         success = true;
         break;
       }
@@ -407,7 +400,6 @@ boolean Plugin_098(byte function, struct EventStruct *event, String& string)
         String command = parseString(string,1);
         if(command == F("readcachesingle"))
         {
-          addLog(LOG_LEVEL_INFO, F("------------------------------ READ CACHE ------------------------------"));
           P098_data_struct *P098_data =
             static_cast<P098_data_struct *>(getPluginTaskData(event->TaskIndex));
           bool initialized = P098_data->isInitialized();
@@ -420,32 +412,6 @@ boolean Plugin_098(byte function, struct EventStruct *event, String& string)
             P098_data->init();
             P098_data->cache->initialize(event);
           }
-
-          addLog(LOG_LEVEL_INFO, F("------------------------------ READ CACHE ------------------------------"));
-          /*
-          P098_data->init();
-          if (P098_data->isInitialized()){
-            // Read two samples at a time
-            P098_data->cache->initialize(event);
-
-            for (int i = 0 ; i < 2 ; i++){
-              P098_data->cache->readSample(event);
-            }
-
-
-          } else {
-            //P098_data->init();
-          }
-          */
-          //Cache_t *cache = new Cache_t();
-
-          /*
-          if (!ControllerSettings.checkHostReachable(true)) {
-              success = false;
-              break;
-          }
-          */
-
           success = true;
         }
         break;
