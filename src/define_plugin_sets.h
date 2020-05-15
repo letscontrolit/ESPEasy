@@ -39,7 +39,7 @@ To create/register a plugin, you have to :
         #define WEBSERVER_SYSVARS
     #endif
     #ifndef WEBSERVER_NEW_UI
-    //    #define WEBSERVER_NEW_UI
+        #define WEBSERVER_NEW_UI
     #endif
     #ifndef WEBSERVER_I2C_SCANNER
         #define WEBSERVER_I2C_SCANNER
@@ -723,11 +723,17 @@ To create/register a plugin, you have to :
     #define USES_P013   // HCSR04
     #define USES_P014   // SI7021
     #define USES_P015   // TSL2561
-//    #define USES_P016   // IR
+    #define USES_P016   // IR
     #define USES_P017   // PN532
     #define USES_P018   // Dust
     #define USES_P019   // PCF8574
-
+#define USES_P199	// RF443_KaKu
+#define USES_P144	// RC-Switch-TX
+#define USES_P141	// LedStrip
+#define USES_P142	// RGB-Strip
+#define USES_P112	// RFTX
+#define USES_P111	// RF
+#define USES_P105	// RGBW
     #define USES_P020   // Ser2Net
     #define USES_P021   // Level
     #define USES_P022   // PCA9685
@@ -738,13 +744,14 @@ To create/register a plugin, you have to :
     #define USES_P027   // INA219
     #define USES_P028   // BME280
     #define USES_P029   // Output
+#define USES_P095  // TFT ILI9341
 
 //    #define USES_P030   // BMP280   (Made obsolete, now BME280 can handle both)
     #define USES_P031   // SHT1X
     #define USES_P032   // MS5611
     #define USES_P033   // Dummy
     #define USES_P034   // DHT12
-//    #define USES_P035   // IRTX
+    #define USES_P035   // IRTX
     #define USES_P036   // FrameOLED
     #define USES_P037   // MQTTImport
     #define USES_P038   // NeoPixel
@@ -781,6 +788,8 @@ To create/register a plugin, you have to :
     #define USES_C009   // FHEM HTTP
     #define USES_C010   // Generic UDP
     #define USES_C013   // ESPEasy P2P network
+    #define USES_C015   // Blynk
+    #define USES_C012   // Blynk HTTP
 #endif
 
 
@@ -843,7 +852,7 @@ To create/register a plugin, you have to :
     #define USES_P092   // DL-Bus
     #define USES_P093   // Mitsubishi Heat Pump
     //#define USES_P094  // CUL Reader
-    //#define USES_P095  // TFT ILI9341
+    #define USES_P095  // TFT ILI9341
     #define USES_P097   // Touch (ESP32)
 #endif
 
@@ -852,7 +861,7 @@ To create/register a plugin, you have to :
     #define USES_C011   // Generic HTTP Advanced
     #define USES_C012   // Blynk HTTP
     #define USES_C014   // homie 3 & 4dev MQTT
-    //#define USES_C015   // Blynk
+    #define USES_C015   // Blynk
     #define USES_C017   // Zabbix
     // #define USES_C018 // TTN RN2483
 #endif
@@ -887,7 +896,7 @@ To create/register a plugin, you have to :
 	#define USES_P111	// RF
 	   //#define USES_P111	// SenseAir     (MERGED?)
 	#define USES_P112	// Power
-	//#define USES_P112	// RFTX
+	#define USES_P112	// RFTX
 	#define USES_P113	// SI1145
 	#define USES_P114	// DSM501
 	//#define USES_P115	// HeatpumpIR - P088 in the main repo.
