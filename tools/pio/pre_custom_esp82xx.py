@@ -37,8 +37,16 @@ else:
 #   "USES_P085",  # AcuDC24x
 #   "USES_P087",  # Serial Proxy
 #   "USES_P094",  # CUL Reader
-#   "USES_P095",  # TFT ILI9341
-
+  "USES_P095",  # TFT ILI9341
+ "USES_P199",	# RF443_KaKu
+"USES_P144",	# RC-Switch-TX
+"USES_P141",	# LedStrip
+"USES_P142",	# RGB-Strip
+"USES_P112",	# RFTX
+"USES_P111",	# RF
+"USES_P105",	# RGBW
+"USES_P016",  # IR
+"USES_P095",  # TFT ILI9341
     "USES_C016",  # Cache Controller
     "USES_C018",  # TTN/RN2483
 
