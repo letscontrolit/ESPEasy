@@ -22,6 +22,8 @@ struct __attribute__((__packed__)) NodeStruct
 {
   NodeStruct();
 
+  bool   validate();
+
   void   setLocalData();
   String getNodeTypeDisplayString() const;
 
@@ -30,9 +32,10 @@ struct __attribute__((__packed__)) NodeStruct
   IPAddress IP() const;
 
   unsigned long getAge() const;
+  
+  float getLoad() const;
 
   String getSummary() const;
-
 
 
 
@@ -47,6 +50,8 @@ struct __attribute__((__packed__)) NodeStruct
   // Added starting build '20107':
   // 2 bytes webserver port
   // 6 bytes AP MAC
+  // 1 byte system load
+  // 1 byte administrative distance
 
 
 
@@ -58,6 +63,8 @@ struct __attribute__((__packed__)) NodeStruct
   byte      nodeType     = 0;
   uint16_t  webserverPort = 80;
   uint8_t   ap_mac[6] = { 0 };  // AP mode MAC
+  uint8_t   load = 127; // Default to average load
+  uint8_t   distance = 255; // Administrative distance for routing
 
   // Data not being sent to other nodes.
   unsigned long lastSeenTimestamp  = 0;

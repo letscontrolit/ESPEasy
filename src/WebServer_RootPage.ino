@@ -157,6 +157,7 @@ void handle_root() {
     html_table_header(getLabel(LabelType::BUILD_DESC));
     html_table_header("Type");
     html_table_header("IP", 160); // Should fit "255.255.255.255"
+    html_table_header("Load");
     html_table_header("Age (s)");
 
     for (auto it = Nodes.begin(); it != Nodes.end(); ++it)
@@ -207,6 +208,8 @@ void handle_root() {
           html += "</a>";
           addHtml(html);
         }
+        html_TD();
+        addHtml(String(it->second.getLoad()));
         html_TD();
         addHtml(String(it->second.getAge()/1000)); // time in seconds
       }

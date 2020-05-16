@@ -225,21 +225,23 @@ void checkUDP()
               }
               NodeStruct received;
               memcpy(&received, &packetBuffer[2], copy_length);
-              Nodes.addNode(received); // Create a new element when not present
+              if (received.validate()) {
+                Nodes.addNode(received); // Create a new element when not present
 
 #ifndef BUILD_NO_DEBUG
-              if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
-                String log;
-                log.reserve(64);
-                log = F("UDP  : ");
-                log += formatMAC(received.mac);
-                log += ',';
-                log += formatIP(received.ip);
-                log += ',';
-                log += received.unit;
-                addLog(LOG_LEVEL_DEBUG_MORE, log);
-              }
+                if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
+                  String log;
+                  log.reserve(64);
+                  log = F("UDP  : ");
+                  log += formatMAC(received.mac);
+                  log += ',';
+                  log += formatIP(received.ip);
+                  log += ',';
+                  log += received.unit;
+                  addLog(LOG_LEVEL_DEBUG_MORE, log);
+                }
 #endif // ifndef BUILD_NO_DEBUG
+              }
               break;
             }
 
@@ -373,6 +375,11 @@ void sendSysInfoUDP(byte repeats)
   thisNode.setLocalData();
   Nodes.addNode(thisNode);
 
+  // Prepare UDP packet to send
+  byte     data[80];
+  data[0] = 255;
+  data[1] = 1;
+  memcpy(&data[2], &thisNode, sizeof(NodeStruct));
   for (byte counter = 0; counter < repeats; counter++)
   {
     uint8_t  mac[]   = { 0, 0, 0, 0, 0, 0 };

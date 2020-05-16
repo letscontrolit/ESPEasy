@@ -22,8 +22,19 @@ String getNodeTypeDisplayString(byte nodeType) {
     for (byte i = 0; i < 4; ++i) { ip[i] = 0; }
   }
 
+bool NodeStruct::validate() {
+  if (build < 20107) {
+    // webserverPort introduced in 20107
+    webserverPort = 80;
+    load = 0;
+    distance = 255;
+  }
 
-void   NodeStruct::setLocalData() {
+  // FIXME TD-er: Must make some sanity checks to see if it is a valid message
+  return true;
+}
+
+void NodeStruct::setLocalData() {
   WiFi.macAddress(mac);
   WiFi.softAPmacAddress(ap_mac);
   {
@@ -40,6 +51,12 @@ void   NodeStruct::setLocalData() {
   nodeType = NODE_TYPE_ID;
 
   //  webserverPort = Settings.WebserverPort; // PR #3053
+  int load_int = getCPUload() * 2.55;
+  if (load_int > 255) {
+    load = 255;
+  } else {
+    load = load_int;
+  }
 }
 
 String NodeStruct::getNodeTypeDisplayString() const {
@@ -75,6 +92,10 @@ unsigned long NodeStruct::getAge() const {
   return timePassedSince(lastSeenTimestamp);
 }
 
+float NodeStruct::getLoad() const {
+  return load / 2.55;
+}
+
 String NodeStruct::getSummary() const {
   String res;
   res.reserve(48);
@@ -83,5 +104,9 @@ String NodeStruct::getSummary() const {
   res += F(" \"");
   res += getNodeName();
   res += '"';
+  res += F(" load: ");
+  res += String(getLoad(), 1);
+  res += F(" dst: ");
+  res += distance;
   return res;
 }

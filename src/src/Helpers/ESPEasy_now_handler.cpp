@@ -215,6 +215,7 @@ bool ESPEasy_now_handler_t::handle_DiscoveryAnnounce(const ESPEasy_now_merger& m
   size_t payload_pos = 0;
 
   message.getBinaryData(reinterpret_cast<uint8_t *>(&received), sizeof(NodeStruct), payload_pos);
+  if (!received.validate()) return false;
   Nodes.addNode(received);
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
