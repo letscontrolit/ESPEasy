@@ -228,6 +228,12 @@ String getMiscStatsName(int stat) {
     case PARSE_SYSVAR:            return F("parseSystemVariables()");
     case PARSE_SYSVAR_NOCHANGE:   return F("parseSystemVariables() No change");
     case HANDLE_SERVING_WEBPAGE:  return F("handle webpage");
+    case HANDLE_ESPEASY_NOW_LOOP: return F("Handle Received ESPEasy Now message");
+    case EXPIRED_ESPEASY_NOW_LOOP: return F("ESPEasy Now incomplete expired");
+    case RECEIVE_ESPEASY_NOW_LOOP: return F("ESPEasy_now_onReceive()");
+    case ESPEASY_NOW_SEND_MSG_SUC: return F("ESPEasy Now send Message Success");
+    case ESPEASY_NOW_SEND_MSG_FAIL: return F("ESPEasy Now send Message Fail");
+    case ESPEASY_NOW_SEND_PCKT:    return F("ESPEasy Now send Packet");
     case C001_DELAY_QUEUE:
     case C002_DELAY_QUEUE:
     case C003_DELAY_QUEUE:

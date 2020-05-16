@@ -3,6 +3,7 @@
 #ifdef USES_ESPEASY_NOW
 
 # include "../../ESPEasy_Log.h"
+# include "../DataStructs/TimingStats.h"
 # include "../Helpers/ESPEasy_time_calc.h"
 
 static uint8_t ESPEasy_now_message_count = 1;
@@ -88,6 +89,7 @@ bool ESPEasy_now_splitter::send(uint8_t mac[6])
 
 WifiEspNowSendStatus ESPEasy_now_splitter::send(uint8_t mac[6], size_t timeout)
 {
+  START_TIMER;
   prepareForSend(mac);
 
   WifiEspNowSendStatus sendStatus = WifiEspNowSendStatus::NONE;
@@ -95,39 +97,59 @@ WifiEspNowSendStatus ESPEasy_now_splitter::send(uint8_t mac[6], size_t timeout)
   const size_t nr_packets = _queue.size();
 
   for (uint8_t i = 0; i < nr_packets; ++i) {
-    if (!send(_queue[i])) { return WifiEspNowSendStatus::NONE; }
+    send(_queue[i]);
     sendStatus = waitForSendStatus(timeout);
 
-    if (sendStatus == WifiEspNowSendStatus::NONE) {
-      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        String log = F("ESPEasy Now: TIMEOUT to: ");
-        log += _queue[i].getLogString();
-        addLog(LOG_LEVEL_INFO, log);
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      String log;
+
+      switch (sendStatus) {
+        case WifiEspNowSendStatus::NONE:
+        {
+          log = F("ESPEasy Now: TIMEOUT to: ");
+          break;
+        }
+        case WifiEspNowSendStatus::FAIL:
+        {
+          log = F("ESPEasy Now: Sent FAILED to: ");
+          break;
+        }
+        case WifiEspNowSendStatus::OK:
+        {
+          log = F("ESPEasy Now: Sent to: ");
+          break;
+        }
       }
-      return sendStatus;
+      log += _queue[i].getLogString();
+      addLog(LOG_LEVEL_INFO, log);
+    }
+
+
+    switch (sendStatus) {
+      case WifiEspNowSendStatus::NONE:
+      case WifiEspNowSendStatus::FAIL:
+      {
+        STOP_TIMER(ESPEASY_NOW_SEND_MSG_FAIL);
+        return sendStatus;
+      }
+      case WifiEspNowSendStatus::OK:
+      {
+        break;
+      }
     }
   }
+  STOP_TIMER(ESPEASY_NOW_SEND_MSG_SUC);
   return sendStatus;
 }
 
 bool ESPEasy_now_splitter::send(const ESPEasy_Now_packet& packet)
 {
-  bool success = WifiEspNow.send(packet._mac, packet[0], packet.getSize());
+  START_TIMER;
+  bool res = WifiEspNow.send(packet._mac, packet[0], packet.getSize());
+  STOP_TIMER(ESPEASY_NOW_SEND_PCKT);
 
   delay(0);
-
-  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log;
-
-    if (success) {
-      log = F("ESPEasy Now: Sent to: ");
-    } else {
-      log = F("ESPEasy Now: Sent FAILED to: ");
-    }
-    log += packet.getLogString();
-    addLog(LOG_LEVEL_INFO, log);
-  }
-  return success;
+  return res;
 }
 
 WifiEspNowSendStatus ESPEasy_now_splitter::waitForSendStatus(size_t timeout) const

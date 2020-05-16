@@ -93,7 +93,7 @@ size_t ESPEasy_now_merger::getPayloadSize() const
 String ESPEasy_now_merger::getString(size_t& payload_pos) const
 {
   const size_t bufsize = 128;
-  std::vector<uint8> buf;
+  std::vector<uint8_t> buf;
 
   buf.resize(bufsize);
 

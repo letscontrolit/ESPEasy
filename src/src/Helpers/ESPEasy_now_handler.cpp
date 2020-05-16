@@ -6,6 +6,7 @@
 # include "../DataStructs/ESPEasy_Now_packet.h"
 # include "../DataStructs/ESPEasy_now_splitter.h"
 # include "../DataStructs/NodeStruct.h"
+# include "../DataStructs/TimingStats.h"
 # include "../Globals/Nodes.h"
 # include "../Globals/SecuritySettings.h"
 # include "../Globals/Settings.h"
@@ -35,6 +36,7 @@ void ICACHE_FLASH_ATTR ESPEasy_now_onReceive(const uint8_t mac[6], const uint8_t
   if (count < sizeof(ESPEasy_now_hdr)) {
     return; // Too small
   }
+  START_TIMER;
   ESPEasy_now_hdr header;
   memcpy(&header, buf, sizeof(ESPEasy_now_hdr));
 
@@ -52,6 +54,7 @@ void ICACHE_FLASH_ATTR ESPEasy_now_onReceive(const uint8_t mac[6], const uint8_t
   }
   uint64_t key = mac_to_key(mac, header.message_type, header.message_count);
   ESPEasy_now_in_queue[key].addPacket(header.packet_nr, mac, buf, count);
+  STOP_TIMER(RECEIVE_ESPEASY_NOW_LOOP);
 }
 
 bool ESPEasy_now_handler_t::begin()
@@ -94,9 +97,10 @@ bool ESPEasy_now_handler_t::loop()
   if (!ESPEasy_now_in_queue.empty()) {
     for (auto it = ESPEasy_now_in_queue.begin(); it != ESPEasy_now_in_queue.end();) {
       bool removeMessage = true;
-
+      START_TIMER;
       if (!it->second.messageComplete()) {
         if (it->second.expired()) {
+          STOP_TIMER(EXPIRED_ESPEASY_NOW_LOOP);
           if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
             String log = it->second.getLogString();
             log += F(" Expired!");
@@ -108,6 +112,7 @@ bool ESPEasy_now_handler_t::loop()
       } else {
         // Process it
         somethingProcessed = processMessage(it->second);
+        STOP_TIMER(HANDLE_ESPEASY_NOW_LOOP);
       }
 
       if (removeMessage) {

@@ -4,7 +4,7 @@
 
 # include "../../ESPEasy_fdwdecl.h"
 
-# define ESPEASY_NOW_MAX_PACKET_SIZE   250
+# define ESPEASY_NOW_MAX_PACKET_SIZE   200
 
 ESPEasy_Now_packet::ESPEasy_Now_packet(const ESPEasy_now_hdr& header, size_t payloadSize)
 {
