@@ -2,6 +2,7 @@
 #define DATASTRUCTS_NODESTRUCT_H
 
 #include "../../ESPEasy_common.h"
+#include "../Helpers/ESPEasy_time.h"
 #include <map>
 #include <IPAddress.h>
 
@@ -21,22 +22,22 @@ String getNodeTypeDisplayString(byte nodeType);
 struct __attribute__((__packed__)) NodeStruct
 {
   NodeStruct();
+  
+  bool          validate();
 
-  bool   validate();
+  void          setLocalData();
+  
+  String        getNodeTypeDisplayString() const;
 
-  void   setLocalData();
-  String getNodeTypeDisplayString() const;
+  String        getNodeName() const;
 
-  String getNodeName() const;
-
-  IPAddress IP() const;
+  IPAddress     IP() const;
 
   unsigned long getAge() const;
-  
-  float getLoad() const;
 
-  String getSummary() const;
+  float         getLoad() const;
 
+  String        getSummary() const;
 
 
   // Do not change the order of this data, as it is being sent via P2P UDP.
@@ -54,23 +55,21 @@ struct __attribute__((__packed__)) NodeStruct
   // 1 byte administrative distance
 
 
+  uint8_t  mac[6]        = { 0 }; // STA mode MAC
+  uint8_t  ip[4]         = { 0 };
+  byte     unit          = 0;
+  uint16_t build         = 0;
+  byte     nodeName[25]  = { 0 };
+  byte     nodeType      = 0;
+  uint16_t webserverPort = 80;
+  uint8_t  ap_mac[6]     = { 0 }; // AP mode MAC
+  uint8_t  load          = 127;   // Default to average load
+  uint8_t  distance      = 255;   // Administrative distance for routing
+  uint8_t  timeSource    = static_cast<uint8_t>(timeSource_t::No_time_source);
 
-  uint8_t   mac[6] = { 0 };  // STA mode MAC
-  uint8_t   ip[4] = { 0 };
-  byte      unit = 0;
-  uint16_t  build        = 0;
-  byte      nodeName[25] = { 0 };
-  byte      nodeType     = 0;
-  uint16_t  webserverPort = 80;
-  uint8_t   ap_mac[6] = { 0 };  // AP mode MAC
-  uint8_t   load = 127; // Default to average load
-  uint8_t   distance = 255; // Administrative distance for routing
-
-  // Data not being sent to other nodes.
-  unsigned long lastSeenTimestamp  = 0;
-
-
-
+  // When sending system info, this value contains the time since last time sync.
+  // When kept as node info, this is the last time stamp the node info was updated.
+  unsigned long lastUpdated = (1 << 30);
 };
 typedef std::map<byte, NodeStruct> NodesMap;
 

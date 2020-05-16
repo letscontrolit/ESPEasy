@@ -22,7 +22,7 @@ static bool mac_empty(const uint8_t *mac)
 void NodesHandler::addNode(const NodeStruct& node)
 {
   _nodes[node.unit] = node;
-  _nodes[node.unit].lastSeenTimestamp = millis();
+  _nodes[node.unit].lastUpdated = millis();
 }
 
 bool NodesHandler::hasNode(uint8_t unit_nr) const

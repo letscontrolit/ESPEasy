@@ -8,6 +8,7 @@
 # include "../DataStructs/ESPEasy_now_hdr.h"
 # include "../DataStructs/ESPEasy_Now_packet.h"
 # include "../DataStructs/ESPEasy_now_merger.h"
+# include "../DataStructs/ESPEasy_Now_NTP_query.h"
 # include "../Globals/CPlugins.h"
 
 
@@ -26,6 +27,10 @@ public:
   // This may be picked up by others
   void sendDiscoveryAnnounce(byte channel = 0);
 
+  void sendNTPquery();
+
+  void sendNTPbroadcast();
+
   bool sendToMQTT(controllerIndex_t controllerIndex,
                   const String    & topic,
                   const String    & payload);
@@ -37,7 +42,12 @@ private:
 
   bool handle_DiscoveryAnnounce(const ESPEasy_now_merger& message);
 
+  bool handle_NTPquery(const ESPEasy_now_merger& message);
+
   bool handle_MQTTControllerMessage(const ESPEasy_now_merger& message);
+
+  ESPEasy_Now_NTP_query _best_NTP_candidate;
+
 };
 
 

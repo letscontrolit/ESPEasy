@@ -350,6 +350,7 @@ void refreshNodeList()
   sendSysInfoUDP(1);
   #ifdef USES_ESPEASY_NOW
   ESPEasy_now_handler.sendDiscoveryAnnounce();
+  ESPEasy_now_handler.sendNTPquery();
   #endif
 }
 

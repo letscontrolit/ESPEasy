@@ -7,6 +7,7 @@
 # include "../DataStructs/ESPEasy_now_splitter.h"
 # include "../DataStructs/NodeStruct.h"
 # include "../DataStructs/TimingStats.h"
+# include "../Globals/ESPEasy_time.h"
 # include "../Globals/Nodes.h"
 # include "../Globals/SecuritySettings.h"
 # include "../Globals/Settings.h"
@@ -98,9 +99,11 @@ bool ESPEasy_now_handler_t::loop()
     for (auto it = ESPEasy_now_in_queue.begin(); it != ESPEasy_now_in_queue.end();) {
       bool removeMessage = true;
       START_TIMER;
+
       if (!it->second.messageComplete()) {
         if (it->second.expired()) {
           STOP_TIMER(EXPIRED_ESPEASY_NOW_LOOP);
+
           if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
             String log = it->second.getLogString();
             log += F(" Expired!");
@@ -139,6 +142,37 @@ void ESPEasy_now_handler_t::sendDiscoveryAnnounce(byte channel)
   ESPEasy_now_splitter msg(ESPEasy_now_hdr::message_t::Announcement, len);
   msg.addBinaryData(reinterpret_cast<uint8_t *>(&thisNode), len);
   msg.sendToBroadcast();
+}
+
+void ESPEasy_now_handler_t::sendNTPquery()
+{
+  if (!_best_NTP_candidate.hasLowerWander()) { return; }
+  uint8_t mac[6] = { 0 };
+
+  if (!_best_NTP_candidate.getMac(mac)) { return; }
+
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    String log = F("ESPEasy-Now: Send NTP query to: ");
+    log += formatMAC(mac);
+    addLog(LOG_LEVEL_INFO, log);
+  }
+
+  _best_NTP_candidate.markSendTime();
+  ESPEasy_Now_NTP_query query;
+  size_t len = sizeof(ESPEasy_Now_NTP_query);
+  ESPEasy_now_splitter msg(ESPEasy_now_hdr::message_t::NTP_Query, len);
+  msg.addBinaryData(reinterpret_cast<uint8_t *>(&query), len);
+  msg.send(mac);
+}
+
+void ESPEasy_now_handler_t::sendNTPbroadcast()
+{
+  ESPEasy_Now_NTP_query query;
+  query.createBroadcastNTP();
+  size_t len = sizeof(ESPEasy_Now_NTP_query);
+  ESPEasy_now_splitter msg(ESPEasy_now_hdr::message_t::NTP_Query, len);
+  msg.addBinaryData(reinterpret_cast<uint8_t *>(&query), len);
+  msg.send(query._mac);
 }
 
 bool ESPEasy_now_handler_t::sendToMQTT(controllerIndex_t controllerIndex, const String& topic, const String& payload)
@@ -199,6 +233,9 @@ bool ESPEasy_now_handler_t::processMessage(const ESPEasy_now_merger& message)
     case ESPEasy_now_hdr::message_t::Announcement:
       handled = handle_DiscoveryAnnounce(message);
       break;
+    case ESPEasy_now_hdr::message_t::NTP_Query:
+      handled = handle_NTPquery(message);
+      break;
     case ESPEasy_now_hdr::message_t::MQTTControllerMessage:
       handled = handle_MQTTControllerMessage(message);
       break;
@@ -215,13 +252,20 @@ bool ESPEasy_now_handler_t::handle_DiscoveryAnnounce(const ESPEasy_now_merger& m
   size_t payload_pos = 0;
 
   message.getBinaryData(reinterpret_cast<uint8_t *>(&received), sizeof(NodeStruct), payload_pos);
-  if (!received.validate()) return false;
+
+  if (!received.validate()) { return false; }
   Nodes.addNode(received);
 
+  // Test to see if the discovery announce could be a good candidate for next NTP query.
+  uint8_t mac[6] = { 0 };
+  message.getMac(mac);
+  _best_NTP_candidate.find_best_NTP(
+    mac,
+    static_cast<timeSource_t>(received.timeSource),
+    received.lastUpdated);
+
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String  log;
-    uint8_t mac[6] = { 0 };
-    message.getMac(mac);
+    String log;
     size_t payloadSize = message.getPayloadSize();
     log.reserve(payloadSize + 40);
     log  = F("ESPEasy Now discovery: ");
@@ -231,6 +275,35 @@ bool ESPEasy_now_handler_t::handle_DiscoveryAnnounce(const ESPEasy_now_merger& m
     addLog(LOG_LEVEL_INFO, log);
   }
   return true;
+}
+
+bool ESPEasy_now_handler_t::handle_NTPquery(const ESPEasy_now_merger& message)
+{
+  ESPEasy_Now_NTP_query query;
+
+  // NTP query messages have a single binary blob, starting at 0
+  size_t payload_pos = 0;
+
+  message.getBinaryData(reinterpret_cast<uint8_t *>(&query), sizeof(ESPEasy_Now_NTP_query), payload_pos);
+
+  if (query._timeSource == timeSource_t::No_time_source) {
+    // Received a query, must generate an answer for it.
+
+    // first fetch the MAC address to reply to
+    if (!message.getMac(query._mac)) { return false; }
+
+    // Fill the reply
+    query.createReply(message.getFirstPacketTimestamp());
+
+    size_t len = sizeof(ESPEasy_Now_NTP_query);
+    ESPEasy_now_splitter msg(ESPEasy_now_hdr::message_t::NTP_Query, len);
+    msg.addBinaryData(reinterpret_cast<uint8_t *>(&query), len);
+    msg.send(query._mac);
+    return true;
+  }
+
+  // Received a reply on our own query
+  return _best_NTP_candidate.processReply(query, message.getFirstPacketTimestamp());
 }
 
 bool ESPEasy_now_handler_t::handle_MQTTControllerMessage(const ESPEasy_now_merger& message)

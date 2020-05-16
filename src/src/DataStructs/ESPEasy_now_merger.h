@@ -50,6 +50,8 @@ public:
 
   String          getLogString() const;
 
+  unsigned long   getFirstPacketTimestamp() const;
+
 private:
 
   // Find packet + payload position in packet for payload_pos of entire message

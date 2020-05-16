@@ -21,6 +21,7 @@ public:
     Acknowledgement,
     Announcement,
     MQTTControllerMessage,
+    NTP_Query,
 
     ChecksumError = 255
   };

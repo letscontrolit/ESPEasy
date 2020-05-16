@@ -2,6 +2,7 @@
 
 #include "../Globals/Settings.h"
 #include "../../ESPEasy-Globals.h"
+#include "../../ESPEasyTimeTypes.h"
 
 String getNodeTypeDisplayString(byte nodeType) {
   switch (nodeType)
@@ -26,8 +27,8 @@ bool NodeStruct::validate() {
   if (build < 20107) {
     // webserverPort introduced in 20107
     webserverPort = 80;
-    load = 0;
-    distance = 255;
+    load          = 0;
+    distance      = 255;
   }
 
   // FIXME TD-er: Must make some sanity checks to see if it is a valid message
@@ -52,10 +53,23 @@ void NodeStruct::setLocalData() {
 
   //  webserverPort = Settings.WebserverPort; // PR #3053
   int load_int = getCPUload() * 2.55;
+
   if (load_int > 255) {
     load = 255;
   } else {
     load = load_int;
+  }
+  timeSource = static_cast<uint8_t>(node_time.timeSource);
+
+  switch (node_time.timeSource) {
+    case timeSource_t::No_time_source:
+      lastUpdated = (1 << 30);
+      break;
+    default:
+    {
+      lastUpdated = timePassedSince(node_time.lastSyncTime);
+      break;
+    }
   }
 }
 
@@ -89,7 +103,7 @@ IPAddress NodeStruct::IP() const {
 }
 
 unsigned long NodeStruct::getAge() const {
-  return timePassedSince(lastSeenTimestamp);
+  return timePassedSince(lastUpdated);
 }
 
 float NodeStruct::getLoad() const {
@@ -98,8 +112,9 @@ float NodeStruct::getLoad() const {
 
 String NodeStruct::getSummary() const {
   String res;
+
   res.reserve(48);
-  res = F("Unit: ");
+  res  = F("Unit: ");
   res += unit;
   res += F(" \"");
   res += getNodeName();

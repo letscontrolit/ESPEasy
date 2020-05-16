@@ -51,6 +51,11 @@ ESPEasy_now_hdr ESPEasy_now_merger::getFirstHeader() const
   return header;
 }
 
+unsigned long ESPEasy_now_merger::getFirstPacketTimestamp() const
+{
+  return _firstPacketTimestamp;
+}
+
 bool ESPEasy_now_merger::getMac(uint8_t *mac) const
 {
   auto it = _queue.find(0);

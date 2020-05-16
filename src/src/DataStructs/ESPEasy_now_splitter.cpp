@@ -145,7 +145,16 @@ WifiEspNowSendStatus ESPEasy_now_splitter::send(uint8_t mac[6], size_t timeout)
 bool ESPEasy_now_splitter::send(const ESPEasy_Now_packet& packet)
 {
   START_TIMER;
+  bool has_peer = WifiEspNow.hasPeer(packet._mac);
+
+  if (!has_peer) {
+    WifiEspNow.addPeer(packet._mac);
+  }
   bool res = WifiEspNow.send(packet._mac, packet[0], packet.getSize());
+
+  if (!has_peer) {
+    WifiEspNow.removePeer(packet._mac);
+  }
   STOP_TIMER(ESPEASY_NOW_SEND_PCKT);
 
   delay(0);
