@@ -22,6 +22,7 @@ public:
     Announcement,
     MQTTControllerMessage,
     NTP_Query,
+    SendData_DuplicateCheck,
 
     ChecksumError = 255
   };

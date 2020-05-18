@@ -16,6 +16,8 @@
 #include "src/Globals/Plugins.h"
 #include "src/Globals/Protocol.h"
 #include "src/Globals/ESPEasy_now_handler.h"
+#include "src/Globals/SendData_DuplicateChecker.h"
+#include "_CPlugin_Helper.h"
 
 #include "src/Helpers/ESPEasy_now.h"
 #include "src/Helpers/PortStatus.h"
@@ -76,6 +78,27 @@ void sendData(struct EventStruct *event)
   }
   lastSend = millis();
   STOP_TIMER(SEND_DATA_STATS);
+}
+
+
+// ********************************************************************************
+// Send to controllers, via a duplicate check
+// Some plugins may receive the same data among nodes, so check first if
+// another node may already have sent it.
+// The compare_key is computed by the sender plugin, with plugin specific knowledge
+// to make sure the key describes enough to detect duplicates.
+// ********************************************************************************
+void sendData_checkDuplicates(struct EventStruct *event, const String& compare_key)
+{
+  uint32_t key = SendData_DuplicateChecker.add(event, compare_key);
+  if (key != SendData_DuplicateChecker_struct::DUPLICATE_CHECKER_INVALID_KEY) {
+    // Must send out request to other nodes to see if any other has already processed it.
+    uint8_t broadcastMac[6];
+    ESPEasy_now_handler.sendSendData_DuplicateCheck(
+      key, 
+      ESPEasy_Now_DuplicateCheck::message_t::KeyToCheck, 
+      broadcastMac);
+  }
 }
 
 bool validUserVar(struct EventStruct *event) {

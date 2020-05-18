@@ -6,6 +6,7 @@
 #ifdef USES_ESPEASY_NOW
 
 # include "../DataStructs/ESPEasy_now_hdr.h"
+# include "../DataStructs/ESPEasy_Now_DuplicateCheck.h"
 # include "../DataStructs/ESPEasy_Now_packet.h"
 # include "../DataStructs/ESPEasy_now_merger.h"
 # include "../DataStructs/ESPEasy_Now_NTP_query.h"
@@ -23,6 +24,12 @@ public:
 
   bool loop();
 
+private:
+
+  bool processMessage(const ESPEasy_now_merger& message);
+
+public:
+
   // Send out the discovery announcement via broadcast.
   // This may be picked up by others
   void sendDiscoveryAnnounce(byte channel = 0);
@@ -35,10 +42,11 @@ public:
                   const String    & topic,
                   const String    & payload);
 
+  void sendSendData_DuplicateCheck(uint32_t                              key,
+                                   ESPEasy_Now_DuplicateCheck::message_t message_type,
+                                   uint8_t                               mac[6]);
+
 private:
-
-  bool processMessage(const ESPEasy_now_merger& message);
-
 
   bool handle_DiscoveryAnnounce(const ESPEasy_now_merger& message);
 
@@ -46,8 +54,9 @@ private:
 
   bool handle_MQTTControllerMessage(const ESPEasy_now_merger& message);
 
-  ESPEasy_Now_NTP_query _best_NTP_candidate;
+  bool handle_SendData_DuplicateCheck(const ESPEasy_now_merger& message);
 
+  ESPEasy_Now_NTP_query _best_NTP_candidate;
 };
 
 

@@ -59,7 +59,7 @@ private:
                                    size_t& payload_pos_in_packet) const;
 
   unsigned long _firstPacketTimestamp = 0;
-  std::map<uint8_t, ESPEasy_Now_packet>_queue;
+  std::map<uint8_t, ESPEasy_Now_packet> _queue;
   uint8_t _nr_packets = 255;
 };
 

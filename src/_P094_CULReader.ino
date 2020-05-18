@@ -66,6 +66,7 @@ boolean Plugin_094(byte function, struct EventStruct *event, String& string) {
       Device[deviceCount].SendDataOption     = true;
       Device[deviceCount].TimerOption        = true;
       Device[deviceCount].GlobalSyncOption   = false;
+      Device[deviceCount].DuplicateDetection = true;
       break;
     }
 
@@ -208,7 +209,10 @@ boolean Plugin_094(byte function, struct EventStruct *event, String& string) {
                 log += event->String2;
                 addLog(LOG_LEVEL_INFO, log);
               }
-              sendData(event);
+              // Filter length options:
+              // - 22 char, for hash-value then we filter the exact meter including serial and meter type, (that will also prevent very quit sending meters, which normaly is a fault)
+              // - 38 char, The exact message, because we have 2 byte from the value payload
+              sendData_checkDuplicates(event, event->String2.substring(0, 22));
             }
           }
         }
