@@ -124,6 +124,7 @@
 #include "src/Globals/RTC.h"
 #include "src/Globals/RamTracker.h"
 #include "src/Globals/SecuritySettings.h"
+#include "src/Globals/SendData_DuplicateChecker.h"
 #include "src/Globals/Services.h"
 #include "src/Globals/Settings.h"
 #include "src/Globals/Statistics.h"
