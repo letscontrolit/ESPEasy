@@ -24,6 +24,7 @@ String getLabel(LabelType::Enum label) {
     case LabelType::HOST_NAME:              return F("Hostname");
 
     case LabelType::LOCAL_TIME:             return F("Local Time");
+    case LabelType::TIME_SOURCE:            return F("Time Source");
     case LabelType::UPTIME:                 return F("Uptime");
     case LabelType::LOAD_PCT:               return F("Load");
     case LabelType::LOOP_COUNT:             return F("Load LC");
@@ -161,6 +162,7 @@ String getValue(LabelType::Enum label) {
 
 
     case LabelType::LOCAL_TIME:             return node_time.getDateTimeString('-',':',' ');
+    case LabelType::TIME_SOURCE:            return toString(node_time.timeSource);
     case LabelType::UPTIME:                 return String(wdcounter / 2);
     case LabelType::LOAD_PCT:               return String(getCPUload());
     case LabelType::LOOP_COUNT:             return String(getLoopCountPerSec());

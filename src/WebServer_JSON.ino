@@ -127,6 +127,7 @@ void handle_json()
       stream_next_json_object_value(LabelType::PLUGIN_COUNT);
       stream_next_json_object_value(LabelType::PLUGIN_DESCRIPTION);
       stream_next_json_object_value(LabelType::LOCAL_TIME);
+      stream_next_json_object_value(LabelType::TIME_SOURCE);
       stream_next_json_object_value(LabelType::UNIT_NR);
       stream_next_json_object_value(LabelType::UNIT_NAME);
       stream_next_json_object_value(LabelType::UPTIME);

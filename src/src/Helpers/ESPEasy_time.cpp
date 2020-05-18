@@ -18,7 +18,7 @@
 #include <time.h>
 
 
-String getString(timeSource_t timeSource)
+String toString(timeSource_t timeSource)
 {
   switch (timeSource) {
     case timeSource_t::GPS_PPS_time_source:     return F("GPS PPS");
@@ -195,7 +195,7 @@ unsigned long ESPEasy_time::now() {
           log += String((time_offset * 1000.0f) / syncInterval);
           log += F(" msec/second");
           log += F(" Source: ");
-          log += getString(timeSource);
+          log += toString(timeSource);
         }
         addLog(LOG_LEVEL_INFO, log)
       }

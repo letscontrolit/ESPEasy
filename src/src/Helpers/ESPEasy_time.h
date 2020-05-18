@@ -25,7 +25,7 @@ enum class timeSource_t : uint8_t {
   No_time_source          = 255 // No time set
 };
 
-String getString(timeSource_t timeSource);
+String toString(timeSource_t timeSource);
 bool isExternalTimeSource(timeSource_t timeSource);
 
 class ESPEasy_time {

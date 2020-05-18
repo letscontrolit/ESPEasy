@@ -13,6 +13,7 @@ enum Enum : short {
   HOST_NAME,
 
   LOCAL_TIME,
+  TIME_SOURCE,
   UPTIME,
   LOAD_PCT,                    // 15.10
   LOOP_COUNT,                  // 400

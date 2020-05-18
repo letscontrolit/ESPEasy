@@ -66,6 +66,7 @@ void handle_root() {
     else {
       addHtml(F("<font color='red'>No system time source</font>"));
     }
+    addRowLabelValue(LabelType::TIME_SOURCE);
 
     addRowLabel(getLabel(LabelType::UPTIME));
     {
