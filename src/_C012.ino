@@ -21,6 +21,7 @@ bool CPlugin_012(CPlugin::Function function, struct EventStruct *event, String& 
         Protocol[protocolCount].usesMQTT = false;
         Protocol[protocolCount].usesAccount = false;
         Protocol[protocolCount].usesPassword = true;
+        Protocol[protocolCount].usesExtCreds = true;
         Protocol[protocolCount].defaultPort = 80;
         Protocol[protocolCount].usesID = true;
         break;
@@ -103,7 +104,7 @@ boolean Blynk_get(const String& command, controllerIndex_t controllerIndex, floa
   MakeControllerSettings(ControllerSettings);
   LoadControllerSettings(controllerIndex, ControllerSettings);
 
-  if ((SecuritySettings.ControllerPassword[controllerIndex][0] == 0)) {
+  if ((getControllerPass(controllerIndex, ControllerSettings).length() == 0)) {
     addLog(LOG_LEVEL_ERROR, F("Blynk : No password set"));
     return false;
   }
@@ -117,7 +118,7 @@ boolean Blynk_get(const String& command, controllerIndex_t controllerIndex, floa
   char request[300] = {0};
   sprintf_P(request,
             PSTR("GET /%s/%s HTTP/1.1\r\n Host: %s \r\n Connection: close\r\n\r\n"),
-            SecuritySettings.ControllerPassword[controllerIndex],
+            getControllerPass(controllerIndex, ControllerSettings).c_str(),
             command.c_str(),
             ControllerSettings.getHost().c_str());
   addLog(LOG_LEVEL_DEBUG, request);
@@ -173,7 +174,7 @@ boolean Blynk_get(const String& command, controllerIndex_t controllerIndex, floa
   client.stop();
 
   // important - backgroundtasks - free mem
-  unsigned long timer = millis() + Settings.MessageDelay;
+  unsigned long timer = millis() + ControllerSettings.ClientTimeout;
   while (!timeOutReached(timer))
               backgroundtasks();
 

@@ -95,8 +95,10 @@ void handle_sysinfo_json() {
   json_prop(F("plugins"),     getPluginDescriptionString());
   json_prop(F("md5"),         String(CRCValues.compileTimeMD5[0], HEX));
   json_number(F("md5_check"), String(CRCValues.checkPassed()));
-  json_prop(F("build_time"), String(CRCValues.compileTime));
-  json_prop(F("filename"),   String(CRCValues.binaryFilename));
+  json_prop(F("build_time"), get_build_time());
+  json_prop(F("filename"),   getValue(LabelType::BINARY_FILENAME));
+  json_prop(F("build_platform")), getValue(LabelType::BUILD_PLATFORM);
+  json_prop(F("git_head")), getValue(LabelType::GIT_HEAD);
   json_close();
 
   json_open(false, F("esp"));
@@ -412,40 +414,12 @@ void handle_sysinfo_Firmware() {
   addHtml(" ");
   addHtml(getPluginDescriptionString());
 
-  bool filenameDummy = String(CRCValues.binaryFilename).startsWith(F("ThisIsTheDummy"));
-
-  if (!filenameDummy) {
-    addRowLabel(F("Build Md5"));
-
-    String html;
-    html.reserve(64);
-
-    for (byte i = 0; i < 16; i++) {
-      html += String(CRCValues.compileTimeMD5[i], HEX);
-    }
-    addHtml(html);
-
-    addRowLabel(F("Md5 check"));
-
-    if (!CRCValues.checkPassed()) {
-      addHtml(F("<font color = 'red'>fail !</font>"));
-    }
-    else {
-      addHtml(F("passed."));
-    }
-  }
-  addRowLabel_copy(getLabel(LabelType::BUILD_TIME));
-  addHtml(String(CRCValues.compileDate));
-  addHtml(" ");
-  addHtml(String(CRCValues.compileTime));
-
-  addRowLabel_copy(getLabel(LabelType::BINARY_FILENAME));
-
-  if (filenameDummy) {
-    addHtml(F("<b>Self built!</b>"));
-  } else {
-    addHtml(String(CRCValues.binaryFilename));
-  }
+  addRowLabel(F("Build Origin"));
+  addHtml(get_build_origin());
+  addRowLabelValue_copy(LabelType::BUILD_TIME);
+  addRowLabelValue_copy(LabelType::BINARY_FILENAME);
+  addRowLabelValue_copy(LabelType::BUILD_PLATFORM);
+  addRowLabelValue_copy(LabelType::GIT_HEAD);
 }
 
 void handle_sysinfo_SystemStatus() {
@@ -581,7 +555,6 @@ void handle_sysinfo_Storage() {
     addHtml(html);
   }
 
-  # if defined(ESP8266)
   {
     // FIXME TD-er: Must also add this for ESP32.
     addRowLabel(getLabel(LabelType::SKETCH_SIZE));
@@ -597,8 +570,10 @@ void handle_sysinfo_Storage() {
 
     uint32_t maxSketchSize;
     bool     use2step;
-    bool     otaEnabled = OTA_possible(maxSketchSize, use2step);
-
+    # if defined(ESP8266)
+    bool     otaEnabled = 
+    #endif
+      OTA_possible(maxSketchSize, use2step);
     addRowLabel(getLabel(LabelType::MAX_OTA_SKETCH_SIZE));
     {
       String html;
@@ -611,13 +586,15 @@ void handle_sysinfo_Storage() {
       addHtml(html);
     }
 
+    # if defined(ESP8266)
     addRowLabel(getLabel(LabelType::OTA_POSSIBLE));
     addHtml(boolToString(otaEnabled));
 
     addRowLabel(getLabel(LabelType::OTA_2STEP));
     addHtml(boolToString(use2step));
+    # endif // if defined(ESP8266)
+
   }
-  # endif // if defined(ESP8266)
 
   addRowLabel(getLabel(LabelType::SPIFFS_SIZE));
   {
@@ -665,10 +642,12 @@ void handle_sysinfo_Storage() {
     html_TD();
     addHtml(F("(offset / size per item / index)"));
 
-    for (int st = 0; st < SettingsType_MAX; ++st) {
-      SettingsType settingsType = static_cast<SettingsType>(st);
+    for (int st = 0; st < SettingsType::SettingsType_MAX; ++st) {
+      SettingsType::Enum settingsType = static_cast<SettingsType::Enum>(st);
       html_TR_TD();
-      addHtml(getSettingsTypeString(settingsType));
+      addHtml(SettingsType::getSettingsTypeString(settingsType));
+      html_BR();
+      addHtml(SettingsType::getSettingsFileName(settingsType));
       html_TD();
       getStorageTableSVG(settingsType);
     }

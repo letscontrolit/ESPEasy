@@ -225,7 +225,9 @@ void check_same(const char* expr1, const char* expr2) {
     cron_parse_expr(expr1, &parsed1, NULL);
     cron_expr parsed2;
     cron_parse_expr(expr2, &parsed2, NULL);
-    assert(crons_equal(&parsed1, &parsed2));
+    int res = crons_equal(&parsed1, &parsed2);
+    res = res; // to prevent warnings
+    assert(res);
 }
 
 void check_calc_invalid() {
@@ -234,6 +236,7 @@ void check_calc_invalid() {
     struct tm * calinit = poors_mans_strptime("2012-07-01_09:53:50");
     time_t dateinit = timegm(calinit);
     time_t res = cron_next(&parsed, dateinit);
+    res = res;; // to prevent warnings
     assert(INVALID_INSTANT == res);
     free(calinit);
 }
@@ -349,6 +352,8 @@ void test_bits() {
     uint8_t testbyte[8];
     memset(testbyte, 0, 8);
     int err = 0;
+    err = err; // to prevent warnings
+
     int i;
 
     for (i = 0; i <= 63; i++) {

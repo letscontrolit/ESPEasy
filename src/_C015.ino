@@ -71,6 +71,7 @@ bool CPlugin_015(CPlugin::Function function, struct EventStruct *event, String& 
         Protocol[protocolCount].usesMQTT = false;
         Protocol[protocolCount].usesAccount = false;
         Protocol[protocolCount].usesPassword = true;
+        Protocol[protocolCount].usesExtCreds = true;
         Protocol[protocolCount].defaultPort = 80;
         Protocol[protocolCount].usesID = false;
         break;
@@ -234,7 +235,7 @@ boolean Blynk_keep_connection_c015(int controllerIndex, ControllerSettingsStruct
     return false;
 
   if (!Blynk.connected()){
-    String auth = SecuritySettings.ControllerPassword[controllerIndex];
+    String auth = getControllerPass(controllerIndex, ControllerSettings);
     boolean connectDefault = false;
 
     if (timePassedSince(_C015_LastConnectAttempt[controllerIndex]) < CPLUGIN_015_RECONNECT_INTERVAL){
@@ -341,7 +342,7 @@ String Command_Blynk_Set_c015(struct EventStruct *event, const char* Line){
     return err;
   }
 
-  String data = parseString(Line, 3, true, false);
+  String data = parseString(Line, 3);
 
   if (data.length() == 0){
     String err = F("Skip sending empty data to blynk vPin ");
@@ -363,7 +364,7 @@ String Command_Blynk_Set_c015(struct EventStruct *event, const char* Line){
 boolean Blynk_send_c015(const String& value, int vPin )
 {
   Blynk.virtualWrite(vPin, value);
-  unsigned long timer = millis() + Settings.MessageDelay;
+  unsigned long timer = millis() + ControllerSettings.ClientTimeout;
   while (!timeOutReached(timer))
               backgroundtasks();
   return true;

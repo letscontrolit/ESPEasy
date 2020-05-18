@@ -31,11 +31,13 @@ void ControllerSettingsStruct::reset() {
     IP[i] = 0;
   }
   ZERO_FILL(HostName);
+  ZERO_FILL(ClientID);
   ZERO_FILL(Publish);
   ZERO_FILL(Subscribe);
   ZERO_FILL(MQTTLwtTopic);
   ZERO_FILL(LWTMessageConnect);
   ZERO_FILL(LWTMessageDisconnect);
+  safe_strncpy(ClientID, F(CONTROLLER_DEFAULT_CLIENTID), sizeof(ClientID));
 }
 
 void ControllerSettingsStruct::validate() {
@@ -176,33 +178,62 @@ bool ControllerSettingsStruct::updateIPcache() {
   return false;
 }
 
-
-bool ControllerSettingsStruct::mqtt_cleanSession() const 
+bool ControllerSettingsStruct::mqtt_cleanSession() const
 {
-  return getBitFromUL(MQTT_flags, 1);
+  return bitRead(MQTT_flags, 1);
 }
 
 void ControllerSettingsStruct::mqtt_cleanSession(bool value)
 {
-  setBitToUL(MQTT_flags, 1, value);
+  bitWrite(MQTT_flags, 1, value);
 }
 
 bool ControllerSettingsStruct::mqtt_sendLWT() const
 {
-  return !getBitFromUL(MQTT_flags, 2);
+  return !bitRead(MQTT_flags, 2);
 }
 
 void ControllerSettingsStruct::mqtt_sendLWT(bool value)
 {
-  setBitToUL(MQTT_flags, 2, !value);
+  bitWrite(MQTT_flags, 2, !value);
 }
 
-bool ControllerSettingsStruct::mqtt_willRetain() const 
+bool ControllerSettingsStruct::mqtt_willRetain() const
 {
-  return !getBitFromUL(MQTT_flags, 3);
+  return !bitRead(MQTT_flags, 3);
 }
 
 void ControllerSettingsStruct::mqtt_willRetain(bool value)
 {
-  setBitToUL(MQTT_flags, 3, !value);
+  bitWrite(MQTT_flags, 3, !value);
+}
+
+bool ControllerSettingsStruct::mqtt_uniqueMQTTclientIdReconnect() const
+{
+  return bitRead(MQTT_flags, 4);
+}
+
+void ControllerSettingsStruct::mqtt_uniqueMQTTclientIdReconnect(bool value)
+{
+  bitWrite(MQTT_flags, 4, value);
+}
+
+bool ControllerSettingsStruct::mqtt_retainFlag() const
+{
+  return bitRead(MQTT_flags, 5);
+}
+
+void ControllerSettingsStruct::mqtt_retainFlag(bool value)
+{
+  bitWrite(MQTT_flags, 5, value);
+}
+
+bool ControllerSettingsStruct::useExtendedCredentials() const
+{
+  return bitRead(MQTT_flags, 6);
+}
+
+void ControllerSettingsStruct::useExtendedCredentials(bool value)
+{
+  bitWrite(MQTT_flags, 6, value);
 }

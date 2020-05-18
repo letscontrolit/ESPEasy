@@ -10,6 +10,7 @@ namespace std
 
 #include <stdint.h>
 #include <Arduino.h>
+#include <string.h>
 
 #include "src/Globals/RamTracker.h"
 
@@ -27,17 +28,19 @@ namespace std
 
 #include "define_plugin_sets.h"
 
+#ifdef ESP32
+#include <esp8266-compat.h>
+
+#endif
+
+
 #define ZERO_FILL(S)  memset((S), 0, sizeof(S))
 #define ZERO_TERMINATE(S)  S[sizeof(S) - 1] = 0
 
 
+
 String getUnknownString();
 
-/*********************************************************************************************\
-   Bitwise operators
-  \*********************************************************************************************/
-bool getBitFromUL(uint32_t number, byte bitnr);
-void setBitToUL(uint32_t& number, byte bitnr, bool value);
 
 
 /******************************************************************************\

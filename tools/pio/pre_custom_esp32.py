@@ -13,8 +13,7 @@ import os
 # - frameworks
 # - dependent libraries
 env.Append(CPPDEFINES=[
-  # ,"NO_HTTP_UPDATER"
-  # ,("WEBSERVER_RULES_DEBUG", "0")
+#  ("WEBSERVER_RULES_DEBUG", "1")
 ])
 if os.path.isfile('src/Custom.h'):
   env.Append(CPPDEFINES=["USE_CUSTOM_H"])
@@ -32,36 +31,11 @@ else:
     "USES_P052",  # SenseAir
     "USES_P056",  # SDS011-Dust
     "USES_P059",  # Encoder
-    "USES_P081",  # Cron
     "USES_P082",  # GPS
-    "USES_P085",  # AcuDC24x
     "USES_P087",  # Serial Proxy
-
-    "USES_C016",  # Cache Controller
-    "USES_C018",  # TTN/RN2483
-
-    "FEATURE_MDNS",
-    "FEATURE_SD",
+    "USES_P097",  # Touch (ESP32)
 
     "USE_SETTINGS_ARCHIVE"
   ])
 
-
-
-my_flags = env.ParseFlags(env['BUILD_FLAGS'])
-my_defines = my_flags.get("CPPDEFINES")
-#defines = {k: v for (k, v) in my_defines}
-
-print("\u001b[32m Custom PIO configuration check \u001b[0m")
-# print the defines
-print("\u001b[33m CPPDEFINES: \u001b[0m  {}".format(my_defines))
-print("\u001b[33m Custom CPPDEFINES: \u001b[0m  {}".format(env['CPPDEFINES']))
-print("\u001b[32m ------------------------------- \u001b[0m")
-
-
-if (len(my_defines) == 0):
-  print("\u001b[31m No defines are set, probably configuration error. \u001b[0m")
-  raise ValueError
-
-
-
+print(env['CPPDEFINES'])

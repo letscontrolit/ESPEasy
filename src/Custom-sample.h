@@ -79,6 +79,7 @@
 #define DEFAULT_SERVER      "192.168.0.8"                                   // Enter your Server IP address
 #define DEFAULT_SERVER_HOST ""                                              // Server hostname
 #define DEFAULT_SERVER_USEDNS false                                         // true: Use hostname.  false: use IP
+#define DEFAULT_USE_EXTD_CONTROLLER_CREDENTIALS   false                     // true: Allow longer user credentials for controllers
 
 #define DEFAULT_PORT        8080                                            // Enter your Server port value
 
@@ -96,9 +97,12 @@
 
 #define DEFAULT_PIN_I2C_SDA                     4
 #define DEFAULT_PIN_I2C_SCL                     5
+#define DEFAULT_I2C_CLOCK_SPEED                 400000            // Use 100 kHz if working with old I2C chips
 
 #define DEFAULT_PIN_STATUS_LED                  (-1)
 #define DEFAULT_PIN_STATUS_LED_INVERSED         true
+
+#define DEFAULT_PIN_RESET_BUTTON                (-1)
 
 
 #define DEFAULT_USE_RULES                       false             // (true|false) Enable Rules?

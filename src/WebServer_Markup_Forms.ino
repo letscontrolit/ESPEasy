@@ -1,3 +1,5 @@
+#include <Arduino.h>
+
 
 // ********************************************************************************
 // Add a separator as row start
@@ -132,6 +134,12 @@ void addFormPasswordBox(const String& label, const String& id, const String& pas
   addHtml(html);
 }
 
+bool getFormPassword(const String& id, String& password)
+{
+  password = web_server.arg(id);
+  return !password.equals(F("*****"));
+}
+
 // ********************************************************************************
 // Add a IP Box form
 // ********************************************************************************
@@ -222,7 +230,7 @@ void addFormSelector(const String& label,
                      boolean       reloadonchange)
 {
   addRowLabel_tr_id(label, id);
-  addSelector(id, optionCount, options, indices, attr, selectedIndex, reloadonchange);
+  addSelector(id, optionCount, options, indices, attr, selectedIndex, reloadonchange, true);
 }
 
 void addFormSelector_script(const String& label,
@@ -235,7 +243,7 @@ void addFormSelector_script(const String& label,
                             const String& onChangeCall)
 {
   addRowLabel_tr_id(label, id);
-  addSelector_Head(id, onChangeCall, false);
+  do_addSelector_Head(id, "", onChangeCall, false);
   addSelector_options(optionCount, options, indices, attr, selectedIndex);
   addSelector_Foot();
 }
@@ -317,10 +325,8 @@ bool isFormItem(const String& id)
 
 void copyFormPassword(const String& id, char *pPassword, int maxlength)
 {
-  String password = web_server.arg(id);
-
-  if (password == F("*****")) { // no change?
-    return;
+  String password;
+  if (getFormPassword(id, password)) {
+    safe_strncpy(pPassword, password.c_str(), maxlength);
   }
-  safe_strncpy(pPassword, password.c_str(), maxlength);
 }

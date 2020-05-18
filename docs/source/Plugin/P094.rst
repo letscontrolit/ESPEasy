@@ -1,0 +1,48 @@
+.. include:: ../Plugin/_plugin_substitutions_p09x.repl
+.. _P094_page:
+
+|P094_typename|
+==================================================
+
+|P094_shortinfo|
+
+Plugin details
+--------------
+
+Type: |P094_type|
+
+Name: |P094_name|
+
+Status: |P094_status|
+
+GitHub: |P094_github|_
+
+Maintainer: |P094_maintainer|
+
+Used libraries: |P094_usedlibraries|
+
+Description
+-----------
+
+This plugin is written to interact with the `CUL firmware <http://culfw.de/commandref.html>`_
+
+
+Supported hardware
+------------------
+
+|P094_usedby|
+
+Commands available
+^^^^^^^^^^^^^^^^^^
+
+.. include:: P094_commands.repl
+
+
+
+Change log
+----------
+
+.. versionchanged:: 2.0
+  ...
+
+  |added| 2020-04-09

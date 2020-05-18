@@ -127,6 +127,10 @@
 #ifndef DEFAULT_SERVER_USEDNS
 #define DEFAULT_SERVER_USEDNS false             // true: Use hostname.  false: use IP
 #endif
+#ifndef DEFAULT_USE_EXTD_CONTROLLER_CREDENTIALS
+#define DEFAULT_USE_EXTD_CONTROLLER_CREDENTIALS   false                     // true: Allow longer user credentials for controllers
+#endif
+
 #ifndef DEFAULT_PORT
 #define DEFAULT_PORT        8080                // Enter your Server port value
 #endif
@@ -153,6 +157,9 @@
 #ifndef DEFAULT_PIN_I2C_SCL
 #define DEFAULT_PIN_I2C_SCL              5
 #endif
+#ifndef DEFAULT_I2C_CLOCK_SPEED
+#define DEFAULT_I2C_CLOCK_SPEED          400000            // Use 100 kHz if working with old I2C chips
+#endif
 
 #ifndef DEFAULT_PIN_STATUS_LED
 #define DEFAULT_PIN_STATUS_LED           (-1)
@@ -161,6 +168,9 @@
 #define DEFAULT_PIN_STATUS_LED_INVERSED  true
 #endif
 
+#ifndef DEFAULT_PIN_RESET_BUTTON
+#define DEFAULT_PIN_RESET_BUTTON         (-1)
+#endif
 
 
 // --- Advanced Settings ---------------------------------------------------------------------------------

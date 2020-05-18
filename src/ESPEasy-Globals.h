@@ -190,6 +190,7 @@ extern NotificationStruct Notification[NPLUGIN_MAX];
   #endif
   #define PIN_D_MAX        39
   extern int8_t ledChannelPin[16];
+  #define MAX_SKETCH_SIZE 1900544   // 0x1d0000 look at partitions in csv file
 #endif
 
 #include <WiFiUdp.h>
@@ -311,6 +312,9 @@ extern unsigned long last_system_event_run;
 #if FEATURE_ADC_VCC
 extern float vcc;
 #endif
+#ifdef ESP8266
+extern int lastADCvalue; // Keep track of last ADC value as it cannot be read while WiFi is connecting
+#endif
 
 extern boolean WebLoggedIn;
 extern int WebLoggedInTimer;
@@ -418,6 +422,13 @@ struct GpioFactorySettingsStruct {
         button[0] = 5;   // Single Button
         relais[0] = 4;   // Red Led and Relay (0 = Off, 1 = On)
         status_led = 15; // Blue Led (0 = On, 1 = Off)
+        i2c_sda = -1;    // GPIO4 conflicts with relay control.
+        i2c_scl = -1;    // GPIO5 conflicts with SW input
+        break;
+      case DeviceModel_ShellyPLUG_S:
+        button[0] = 13;  // Single Button
+        relais[0] = 15;  // Red Led and Relay (0 = Off, 1 = On)
+        status_led = 2;  // Blue Led (0 = On, 1 = Off)
         i2c_sda = -1;    // GPIO4 conflicts with relay control.
         i2c_scl = -1;    // GPIO5 conflicts with SW input
         break;

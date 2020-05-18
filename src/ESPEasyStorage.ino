@@ -46,7 +46,7 @@ String flashGuard()
 
 // use this in function that can return an error string. it automaticly returns with an error string if there where too many flash writes.
 #define FLASH_GUARD() { String flashErr = flashGuard(); \
-                        if (flashErr.length()) return (flashErr); }
+                        if (flashErr.length()) return flashErr; }
 
 
 String appendLineToFile(const String& fname, const String& line) {
@@ -141,13 +141,42 @@ String BuildFixes()
     Settings.UseRTOSMultitasking       = false;
     Settings.Pin_Reset                 = -1;
     Settings.SyslogFacility            = DEFAULT_SYSLOG_FACILITY;
-    Settings.MQTTUseUnitNameAsClientId = DEFAULT_MQTT_USE_UNITNAME_AS_CLIENTID;
+    Settings.MQTTUseUnitNameAsClientId_unused = DEFAULT_MQTT_USE_UNITNAME_AS_CLIENTID;
     Settings.StructSize                = sizeof(Settings);
   }
 
   if (Settings.Build < 20103) {
     Settings.ResetFactoryDefaultPreference = 0;
     Settings.OldRulesEngine(DEFAULT_RULES_OLDENGINE);
+  }
+  if (Settings.Build < 20105) {
+    Settings.I2C_clockSpeed = 400000;
+  }
+  if (Settings.Build <= 20106) {
+    // ClientID is now defined in the controller settings.
+    #ifdef USES_MQTT
+    controllerIndex_t controller_idx = firstEnabledMQTT_ControllerIndex();
+    if (validControllerIndex(controller_idx)) {
+      MakeControllerSettings(ControllerSettings);
+      LoadControllerSettings(controller_idx, ControllerSettings);
+
+      String clientid;
+      if (Settings.MQTTUseUnitNameAsClientId_unused) {
+        clientid = F("%sysname%");
+        if (Settings.appendUnitToHostname()) {
+          clientid += F("_%unit%");
+        }
+      }
+      else {
+        clientid  = F("ESPClient_%mac%");
+      }
+      safe_strncpy(ControllerSettings.ClientID, clientid, sizeof(ControllerSettings.ClientID));
+
+      ControllerSettings.mqtt_uniqueMQTTclientIdReconnect(Settings.uniqueMQTTclientIdReconnect_unused());
+      ControllerSettings.mqtt_retainFlag(Settings.MQTTRetainFlag_unused);
+      SaveControllerSettings(controller_idx, ControllerSettings);
+    }
+    #endif // USES_MQTT
   }
 
   Settings.Build = BUILD;
@@ -184,7 +213,7 @@ void fileSystemCheck()
     }
     #endif // if defined(ESP8266)
 
-    fs::File f = tryOpenFile(FILE_CONFIG, "r");
+    fs::File f = tryOpenFile(SettingsType::getSettingsFileName(SettingsType::BasicSettings_Type).c_str(), "r");
 
     if (!f)
     {
@@ -250,7 +279,7 @@ String SaveSettings(void)
       memcpy(Settings.md5, tmp_md5, 16);
    */
   Settings.validate();
-  err = SaveToFile((char *)FILE_CONFIG, 0, (byte *)&Settings, sizeof(Settings));
+  err = SaveToFile(SettingsType::getSettingsFileName(SettingsType::BasicSettings_Type).c_str(), 0, (byte *)&Settings, sizeof(Settings));
 
   if (err.length()) {
     return err;
@@ -280,6 +309,7 @@ String SaveSettings(void)
       wifiConnectAttemptNeeded = true;
     }
   }
+  ExtendedControllerCredentials.save();
   afterloadSettings();
   return err;
 }
@@ -296,6 +326,7 @@ void afterloadSettings() {
     ResetFactoryDefaultPreference = Settings.ResetFactoryDefaultPreference;
   }
   msecTimerHandler.setEcoMode(Settings.EcoPowerMode());
+
   if (!Settings.UseRules) {
     eventQueue.clear();
   }
@@ -312,7 +343,7 @@ String LoadSettings()
   uint8_t calculatedMd5[16];
   MD5Builder md5;
 
-  err = LoadFromFile((char *)FILE_CONFIG, 0, (byte *)&Settings, sizeof(SettingsStruct));
+  err = LoadFromFile(SettingsType::getSettingsFileName(SettingsType::BasicSettings_Type).c_str(), 0, (byte *)&Settings, sizeof(SettingsStruct));
 
   if (err.length()) {
     return err;
@@ -354,6 +385,8 @@ String LoadSettings()
   else {
     addLog(LOG_LEVEL_ERROR, F("CRC  : SecuritySettings CRC   ...FAIL"));
   }
+
+  ExtendedControllerCredentials.load();
 
   //  setupStaticIPconfig();
   // FIXME TD-er: Must check if static/dynamic IP was changed and trigger a reconnect? Or is a reboot better when changing those settings?
@@ -412,126 +445,169 @@ byte disableNotification(byte bootFailedCount) {
 
 #include "src/DataStructs/StorageLayout.h"
 
-/********************************************************************************************\
-   Offsets in settings files
- \*********************************************************************************************/
-bool getSettingsParameters(SettingsType settingsType, int index, int& max_index, int& offset, int& max_size, int& struct_size) {
-  // The defined offsets should be used with () just in case they are the result of a formula in the defines.
-  struct_size = 0;
 
-  switch (settingsType) {
-    case BasicSettings_Type:
-    {
-      max_index   = 1;
-      offset      = 0;
-      max_size    = (DAT_BASIC_SETTINGS_SIZE);
-      struct_size = sizeof(SettingsStruct);
-      break;
-    }
-    case TaskSettings_Type:
-    {
-      max_index   = TASKS_MAX;
-      offset      = (DAT_OFFSET_TASKS) + (index * (DAT_TASKS_DISTANCE));
-      max_size    = DAT_TASKS_SIZE;
-      struct_size = sizeof(ExtraTaskSettingsStruct);
-      break;
-    }
-    case CustomTaskSettings_Type:
-    {
-      getSettingsParameters(TaskSettings_Type, index, max_index, offset, max_size, struct_size);
-      offset    += (DAT_TASKS_CUSTOM_OFFSET);
-      max_size  = DAT_TASKS_CUSTOM_SIZE;
-      break;
-
-      // struct_size may differ.
-    }
-    case ControllerSettings_Type:
-    {
-      max_index   = CONTROLLER_MAX;
-      offset      = (DAT_OFFSET_CONTROLLER) + (index * (DAT_CONTROLLER_SIZE));
-      max_size    = DAT_CONTROLLER_SIZE;
-      struct_size = sizeof(ControllerSettingsStruct);
-      break;
-    }
-    case CustomControllerSettings_Type:
-    {
-      max_index = CONTROLLER_MAX;
-      offset    = (DAT_OFFSET_CUSTOM_CONTROLLER) + (index * (DAT_CUSTOM_CONTROLLER_SIZE));
-      max_size  = DAT_CUSTOM_CONTROLLER_SIZE;
-
-      // struct_size may differ.
-    }    break;
-    case NotificationSettings_Type:
-    {
-      max_index   = NOTIFICATION_MAX;
-      offset      = index * (DAT_NOTIFICATION_SIZE);
-      max_size    = DAT_NOTIFICATION_SIZE;
-      struct_size = sizeof(NotificationSettingsStruct);
-      break;
-    }
-    default:
-    {
-      max_index = -1;
-      offset    = -1;
-      return false;
-    }
-  }
-  return index >= 0 && index < max_index;
-}
-
-int getMaxFilePos(SettingsType settingsType) {
-  int max_index, offset, max_size;
-  int struct_size = 0;
-
-  getSettingsParameters(settingsType, 0, max_index, offset, max_size, struct_size);
-  getSettingsParameters(settingsType, max_index - 1, offset, max_size);
-  return offset + max_size - 1;
-}
-
-int getFileSize(SettingsType settingsType) {
-  if (settingsType == NotificationSettings_Type) {
-    return getMaxFilePos(settingsType);
-  }
-
-  int max_file_pos = 0;
-
-  for (int st = 0; st < SettingsType_MAX; ++st) {
-    int filePos = getMaxFilePos(static_cast<SettingsType>(st));
-
-    if (filePos > max_file_pos) {
-      max_file_pos = filePos;
-    }
-  }
-  return max_file_pos;
-}
-
-bool getAndLogSettingsParameters(bool read, SettingsType settingsType, int index, int& offset, int& max_size) {
+bool getAndLogSettingsParameters(bool read, SettingsType::Enum settingsType, int index, int& offset, int& max_size) {
 #ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG_DEV)) {
     String log = read ? F("Read") : F("Write");
     log += F(" settings: ");
-    log += getSettingsTypeString(settingsType);
+    log += SettingsType::getSettingsTypeString(settingsType);
     log += F(" index: ");
     log += index;
     addLog(LOG_LEVEL_DEBUG_DEV, log);
   }
 #endif // ifndef BUILD_NO_DEBUG
-  return getSettingsParameters(settingsType, index, offset, max_size);
+  return SettingsType::getSettingsParameters(settingsType, index, offset, max_size);
 }
 
-bool getSettingsParameters(SettingsType settingsType, int index, int& offset, int& max_size) {
-  int max_index = -1;
-  int struct_size;
 
-  if (!getSettingsParameters(settingsType, index, max_index, offset, max_size, struct_size)) {
-    return false;
+/********************************************************************************************\
+   Load array of Strings from Custom settings
+   Use maxStringLength = 0 to optimize for size (strings will be concatenated)
+ \*********************************************************************************************/
+String LoadStringArray(SettingsType::Enum settingsType, int index, String strings[], uint16_t nrStrings, uint16_t maxStringLength)
+{
+  int offset, max_size;
+  if (!SettingsType::getSettingsParameters(settingsType, index, offset, max_size))
+  {
+    return F("Invalid index for custom settings");
   }
 
-  if ((index >= 0) && (index < max_index)) { return true; }
-  offset = -1;
-  return false;
+  const uint16_t bufferSize = 128;
+
+  // FIXME TD-er: For now stack allocated, may need to be heap allocated?
+  if (maxStringLength >= bufferSize) { return F("Max 128 chars allowed"); }
+  char buffer[bufferSize];
+
+  String   result;
+  uint16_t readPos       = 0;
+  uint16_t nextStringPos = 0;
+  uint16_t stringCount   = 0;
+  String   tmpString;
+  tmpString.reserve(bufferSize);
+
+  while (stringCount < nrStrings && readPos < max_size) {
+    result += LoadFromFile(settingsType,
+                           index,
+                           (byte *)&buffer,
+                           bufferSize,
+                           readPos);
+
+    for (int i = 0; i < bufferSize && stringCount < nrStrings; ++i) {
+      uint16_t curPos = readPos + i;
+
+      if (curPos >= nextStringPos) {
+        if (buffer[i] == 0) {
+          if (maxStringLength != 0) {
+            // Specific string length, so we have to set the next string position.
+            nextStringPos += maxStringLength;
+          }
+          strings[stringCount] = tmpString;
+          tmpString            = "";
+          tmpString.reserve(bufferSize);
+          ++stringCount;
+        } else {
+          tmpString += buffer[i];
+        }
+      }
+    }
+    readPos += bufferSize;
+  }
+
+  if ((tmpString.length() != 0) && (stringCount < nrStrings)) {
+    result              += F("Incomplete custom settings for index ");
+    result              += (index + 1);
+    strings[stringCount] = tmpString;
+  }
+  return result;
 }
+
+
+/********************************************************************************************\
+   Save array of Strings from Custom settings
+   Use maxStringLength = 0 to optimize for size (strings will be concatenated)
+ \*********************************************************************************************/
+String SaveStringArray(SettingsType::Enum settingsType, int index, const String strings[], uint16_t nrStrings, uint16_t maxStringLength)
+{
+  int offset, max_size;
+  if (!SettingsType::getSettingsParameters(settingsType, index, offset, max_size))
+  {
+    return F("Invalid index for custom settings");
+  }
+
+  const uint16_t bufferSize = 128;
+
+  // FIXME TD-er: For now stack allocated, may need to be heap allocated?
+  byte buffer[bufferSize];
+
+  String   result;
+  int      writePos        = 0;
+  uint16_t stringCount     = 0;
+  uint16_t stringReadPos   = 0;
+  uint16_t nextStringPos   = 0;
+  uint16_t curStringLength = 0;
+
+  if (maxStringLength != 0) {
+    // Specified string length, check given strings
+    for (int i = 0; i < nrStrings; ++i) {
+      if (strings[i].length() >= maxStringLength) {
+        result += getCustomTaskSettingsError(i);
+      }
+    }
+  }
+
+  while (stringCount < nrStrings && writePos < max_size) {
+    ZERO_FILL(buffer);
+
+    for (int i = 0; i < bufferSize && stringCount < nrStrings; ++i) {
+      if (stringReadPos == 0) {
+        // We're at the start of a string
+        curStringLength = strings[stringCount].length();
+
+        if (maxStringLength != 0) {
+          if (curStringLength >= maxStringLength) {
+            curStringLength = maxStringLength - 1;
+          }
+        }
+      }
+
+      uint16_t curPos = writePos + i;
+
+      if (curPos >= nextStringPos) {
+        if (stringReadPos < curStringLength) {
+          buffer[i] = strings[stringCount][stringReadPos];
+          ++stringReadPos;
+        } else {
+          buffer[i]     = 0;
+          stringReadPos = 0;
+          ++stringCount;
+
+          if (maxStringLength == 0) {
+            nextStringPos += curStringLength + 1;
+          } else {
+            nextStringPos += maxStringLength;
+          }
+        }
+      }
+    }
+
+    // Buffer is filled, now write to flash
+    // As we write in parts, only count as single write.
+    if (RTC.flashDayCounter > 0) {
+      RTC.flashDayCounter--;
+    }
+    result   += SaveToFile(settingsType, index, &(buffer[0]), bufferSize, writePos);
+    writePos += bufferSize;
+  }
+
+  if ((writePos >= max_size) && (stringCount < nrStrings)) {
+    result += F("Error: Not all strings fit in custom settings.");
+  }
+  return result;
+}
+
+
 
 /********************************************************************************************\
    Save Task settings to SPIFFS
@@ -543,9 +619,8 @@ String SaveTaskSettings(taskIndex_t TaskIndex)
   if (ExtraTaskSettings.TaskIndex != TaskIndex) {
     return F("SaveTaskSettings taskIndex does not match");
   }
-  String err = SaveToFile(TaskSettings_Type,
+  String err = SaveToFile(SettingsType::TaskSettings_Type,
                           TaskIndex,
-                          (char *)FILE_CONFIG,
                           (byte *)&ExtraTaskSettings,
                           sizeof(struct ExtraTaskSettingsStruct));
 
@@ -563,6 +638,7 @@ String LoadTaskSettings(taskIndex_t TaskIndex)
   if (ExtraTaskSettings.TaskIndex == TaskIndex) {
     return String(); // already loaded
   }
+
   if (!validTaskIndex(TaskIndex)) {
     return String(); // Un-initialized task index.
   }
@@ -572,7 +648,7 @@ String LoadTaskSettings(taskIndex_t TaskIndex)
   ExtraTaskSettings.clear();
   String result = "";
   result =
-    LoadFromFile(TaskSettings_Type, TaskIndex, (char *)FILE_CONFIG, (byte *)&ExtraTaskSettings, sizeof(struct ExtraTaskSettingsStruct));
+    LoadFromFile(SettingsType::TaskSettings_Type, TaskIndex, (byte *)&ExtraTaskSettings, sizeof(struct ExtraTaskSettingsStruct));
 
   // After loading, some settings may need patching.
   ExtraTaskSettings.TaskIndex = TaskIndex; // Needed when an empty task was requested
@@ -598,7 +674,19 @@ String LoadTaskSettings(taskIndex_t TaskIndex)
 String SaveCustomTaskSettings(taskIndex_t TaskIndex, byte *memAddress, int datasize)
 {
   checkRAM(F("SaveCustomTaskSettings"));
-  return SaveToFile(CustomTaskSettings_Type, TaskIndex, (char *)FILE_CONFIG, memAddress, datasize);
+  return SaveToFile(SettingsType::CustomTaskSettings_Type, TaskIndex, memAddress, datasize);
+}
+
+/********************************************************************************************\
+   Save array of Strings to Custom Task settings
+   Use maxStringLength = 0 to optimize for size (strings will be concatenated)
+ \*********************************************************************************************/
+String SaveCustomTaskSettings(taskIndex_t TaskIndex, String strings[], uint16_t nrStrings, uint16_t maxStringLength)
+{
+  checkRAM(F("SaveCustomTaskSettings"));
+  return SaveStringArray(
+    SettingsType::CustomTaskSettings_Type, TaskIndex,
+    strings, nrStrings, maxStringLength);
 }
 
 String getCustomTaskSettingsError(byte varNr) {
@@ -615,7 +703,7 @@ String getCustomTaskSettingsError(byte varNr) {
 String ClearCustomTaskSettings(taskIndex_t TaskIndex)
 {
   // addLog(LOG_LEVEL_DEBUG, F("Clearing custom task settings"));
-  return ClearInFile(CustomTaskSettings_Type, TaskIndex, (char *)FILE_CONFIG);
+  return ClearInFile(SettingsType::CustomTaskSettings_Type, TaskIndex);
 }
 
 /********************************************************************************************\
@@ -625,34 +713,22 @@ String LoadCustomTaskSettings(taskIndex_t TaskIndex, byte *memAddress, int datas
 {
   START_TIMER;
   checkRAM(F("LoadCustomTaskSettings"));
-  String result = LoadFromFile(CustomTaskSettings_Type, TaskIndex, (char *)FILE_CONFIG, memAddress, datasize);
+  String result = LoadFromFile(SettingsType::CustomTaskSettings_Type, TaskIndex, memAddress, datasize);
   STOP_TIMER(LOAD_CUSTOM_TASK_STATS);
   return result;
 }
 
 /********************************************************************************************\
    Load array of Strings from Custom Task settings
+   Use maxStringLength = 0 to optimize for size (strings will be concatenated)
  \*********************************************************************************************/
-String LoadCustomTaskSettings(taskIndex_t TaskIndex, String strings[], uint16_t nrStrings, uint16_t maxStringLenght)
+String LoadCustomTaskSettings(taskIndex_t TaskIndex, String strings[], uint16_t nrStrings, uint16_t maxStringLength)
 {
   START_TIMER;
   checkRAM(F("LoadCustomTaskSettings"));
-
-  // FIXME TD-er: For now stack allocated, may need to be heap allocated?
-  if (maxStringLenght >= 128) { return F("Max 128 chars allowed"); }
-  char   tmpStr[128];
-  String result;
-
-  for (int i = 0; i < nrStrings; ++i) {
-    result += LoadFromFile(CustomTaskSettings_Type,
+  String result = LoadStringArray(SettingsType::CustomTaskSettings_Type,
                            TaskIndex,
-                           (char *)FILE_CONFIG,
-                           (byte *)&tmpStr,
-                           maxStringLenght,
-                           maxStringLenght * i);
-    tmpStr[maxStringLenght] = 0; // Terminate in case of uninitalized data
-    strings[i]              = String(tmpStr);
-  }
+                           strings, nrStrings, maxStringLength);
   STOP_TIMER(LOAD_CUSTOM_TASK_STATS);
   return result;
 }
@@ -661,11 +737,11 @@ String LoadCustomTaskSettings(taskIndex_t TaskIndex, String strings[], uint16_t 
    Save Controller settings to SPIFFS
  \*********************************************************************************************/
 String SaveControllerSettings(controllerIndex_t ControllerIndex, ControllerSettingsStruct& controller_settings)
-{  
+{
   checkRAM(F("SaveControllerSettings"));
   controller_settings.validate(); // Make sure the saved controller settings have proper values.
-  return SaveToFile(ControllerSettings_Type, ControllerIndex,
-                    (char *)FILE_CONFIG, (byte *)&controller_settings, sizeof(controller_settings));
+  return SaveToFile(SettingsType::ControllerSettings_Type, ControllerIndex,
+                    (byte *)&controller_settings, sizeof(controller_settings));
 }
 
 /********************************************************************************************\
@@ -674,8 +750,8 @@ String SaveControllerSettings(controllerIndex_t ControllerIndex, ControllerSetti
 String LoadControllerSettings(controllerIndex_t ControllerIndex, ControllerSettingsStruct& controller_settings) {
   checkRAM(F("LoadControllerSettings"));
   String result =
-    LoadFromFile(ControllerSettings_Type, ControllerIndex,
-                 (char *)FILE_CONFIG, (byte *)&controller_settings, sizeof(controller_settings));
+    LoadFromFile(SettingsType::ControllerSettings_Type, ControllerIndex,
+                 (byte *)&controller_settings, sizeof(controller_settings));
   controller_settings.validate(); // Make sure the loaded controller settings have proper values.
   return result;
 }
@@ -688,7 +764,7 @@ String ClearCustomControllerSettings(controllerIndex_t ControllerIndex)
   checkRAM(F("ClearCustomControllerSettings"));
 
   // addLog(LOG_LEVEL_DEBUG, F("Clearing custom controller settings"));
-  return ClearInFile(CustomControllerSettings_Type, ControllerIndex, (char *)FILE_CONFIG);
+  return ClearInFile(SettingsType::CustomControllerSettings_Type, ControllerIndex);
 }
 
 /********************************************************************************************\
@@ -697,7 +773,7 @@ String ClearCustomControllerSettings(controllerIndex_t ControllerIndex)
 String SaveCustomControllerSettings(controllerIndex_t ControllerIndex, byte *memAddress, int datasize)
 {
   checkRAM(F("SaveCustomControllerSettings"));
-  return SaveToFile(CustomControllerSettings_Type, ControllerIndex, (char *)FILE_CONFIG, memAddress, datasize);
+  return SaveToFile(SettingsType::CustomControllerSettings_Type, ControllerIndex, memAddress, datasize);
 }
 
 /********************************************************************************************\
@@ -706,7 +782,7 @@ String SaveCustomControllerSettings(controllerIndex_t ControllerIndex, byte *mem
 String LoadCustomControllerSettings(controllerIndex_t ControllerIndex, byte *memAddress, int datasize)
 {
   checkRAM(F("LoadCustomControllerSettings"));
-  return LoadFromFile(CustomControllerSettings_Type, ControllerIndex, (char *)FILE_CONFIG, memAddress, datasize);
+  return LoadFromFile(SettingsType::CustomControllerSettings_Type, ControllerIndex, memAddress, datasize);
 }
 
 /********************************************************************************************\
@@ -715,7 +791,7 @@ String LoadCustomControllerSettings(controllerIndex_t ControllerIndex, byte *mem
 String SaveNotificationSettings(int NotificationIndex, byte *memAddress, int datasize)
 {
   checkRAM(F("SaveNotificationSettings"));
-  return SaveToFile(NotificationSettings_Type, NotificationIndex, (char *)FILE_NOTIFICATION, memAddress, datasize);
+  return SaveToFile(SettingsType::NotificationSettings_Type, NotificationIndex, memAddress, datasize);
 }
 
 /********************************************************************************************\
@@ -724,13 +800,13 @@ String SaveNotificationSettings(int NotificationIndex, byte *memAddress, int dat
 String LoadNotificationSettings(int NotificationIndex, byte *memAddress, int datasize)
 {
   checkRAM(F("LoadNotificationSettings"));
-  return LoadFromFile(NotificationSettings_Type, NotificationIndex, (char *)FILE_NOTIFICATION, memAddress, datasize);
+  return LoadFromFile(SettingsType::NotificationSettings_Type, NotificationIndex, memAddress, datasize);
 }
 
 /********************************************************************************************\
    Init a file with zeros on SPIFFS
  \*********************************************************************************************/
-String InitFile(const char *fname, int datasize)
+String InitFile(const String& fname, int datasize)
 {
   checkRAM(F("InitFile"));
   FLASH_GUARD();
@@ -738,13 +814,13 @@ String InitFile(const char *fname, int datasize)
   fs::File f = tryOpenFile(fname, "w");
 
   if (f) {
-    SPIFFS_CHECK(f, fname);
+    SPIFFS_CHECK(f, fname.c_str());
 
     for (int x = 0; x < datasize; x++)
     {
       // See https://github.com/esp8266/Arduino/commit/b1da9eda467cc935307d553692fdde2e670db258#r32622483
       uint8_t zero_value = 0;
-      SPIFFS_CHECK(f.write(&zero_value, 1), fname);
+      SPIFFS_CHECK(f.write(&zero_value, 1), fname.c_str());
     }
     f.close();
   }
@@ -758,11 +834,11 @@ String InitFile(const char *fname, int datasize)
  \*********************************************************************************************/
 String SaveToFile(const char *fname, int index, const byte *memAddress, int datasize)
 {
-  return SaveToFile(fname, index, memAddress, datasize, "r+");
+  return doSaveToFile(fname, index, memAddress, datasize, "r+");
 }
 
 // See for mode description: https://github.com/esp8266/Arduino/blob/master/doc/filesystem.rst
-String SaveToFile(const char *fname, int index, const byte *memAddress, int datasize, const char* mode)
+String doSaveToFile(const char *fname, int index, const byte *memAddress, int datasize, const char *mode)
 {
 #ifndef ESP32
 
@@ -786,6 +862,7 @@ String SaveToFile(const char *fname, int index, const byte *memAddress, int data
   START_TIMER;
   checkRAM(F("SaveToFile"));
   FLASH_GUARD();
+
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("SaveToFile: free stack: ");
     log += getCurrentFreeStack();
@@ -820,6 +897,7 @@ String SaveToFile(const char *fname, int index, const byte *memAddress, int data
       }
     }
     f.close();
+
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log = F("FILE : Saved ");
       log = log + fname;
@@ -833,6 +911,7 @@ String SaveToFile(const char *fname, int index, const byte *memAddress, int data
     return log;
   }
   STOP_TIMER(SAVEFILE_STATS);
+
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("SaveToFile: free stack after: ");
     log += getCurrentFreeStack();
@@ -846,7 +925,7 @@ String SaveToFile(const char *fname, int index, const byte *memAddress, int data
 /********************************************************************************************\
    Clear a certain area in a file (set to 0)
  \*********************************************************************************************/
-String ClearInFile(char *fname, int index, int datasize)
+String ClearInFile(const char *fname, int index, int datasize)
 {
   if (index < 0) {
     String log = F("ClearInFile: ");
@@ -888,7 +967,7 @@ String ClearInFile(char *fname, int index, int datasize)
 /********************************************************************************************\
    Load data from config file on SPIFFS
  \*********************************************************************************************/
-String LoadFromFile(char *fname, int offset, byte *memAddress, int datasize)
+String LoadFromFile(const char *fname, int offset, byte *memAddress, int datasize)
 {
   if (offset < 0) {
     String log = F("LoadFromFile: ");
@@ -916,23 +995,23 @@ String LoadFromFile(char *fname, int offset, byte *memAddress, int datasize)
 /********************************************************************************************\
    Wrapper functions to handle errors in accessing settings
  \*********************************************************************************************/
-String getSettingsFileIndexRangeError(bool read, SettingsType settingsType, int index) {
-  if (settingsType >= SettingsType_MAX) {
+String getSettingsFileIndexRangeError(bool read, SettingsType::Enum settingsType, int index) {
+  if (settingsType >= SettingsType::SettingsType_MAX) {
     String error = F("Unknown settingsType: ");
     error += static_cast<int>(settingsType);
     return error;
   }
   String error = read ? F("Load") : F("Save");
-  error += getSettingsTypeString(settingsType);
+  error += SettingsType::getSettingsTypeString(settingsType);
   error += F(" index out of range: ");
   error += index;
   return error;
 }
 
-String getSettingsFileDatasizeError(bool read, SettingsType settingsType, int index, int datasize, int max_size) {
+String getSettingsFileDatasizeError(bool read, SettingsType::Enum settingsType, int index, int datasize, int max_size) {
   String error = read ? F("Load") : F("Save");
 
-  error += getSettingsTypeString(settingsType);
+  error += SettingsType::getSettingsTypeString(settingsType);
   error += '(';
   error += index;
   error += F(") datasize(");
@@ -943,7 +1022,7 @@ String getSettingsFileDatasizeError(bool read, SettingsType settingsType, int in
   return error;
 }
 
-String LoadFromFile(SettingsType settingsType, int index, char *fname, byte *memAddress, int datasize, int offset_in_block) {
+String LoadFromFile(SettingsType::Enum settingsType, int index, byte *memAddress, int datasize, int offset_in_block) {
   bool read = true;
   int  offset, max_size;
 
@@ -954,14 +1033,19 @@ String LoadFromFile(SettingsType settingsType, int index, char *fname, byte *mem
   if ((datasize + offset_in_block) > max_size) {
     return getSettingsFileDatasizeError(read, settingsType, index, datasize, max_size);
   }
-  return LoadFromFile(fname, (offset + offset_in_block), memAddress, datasize);
+  String fname = SettingsType::getSettingsFileName(settingsType);
+  return LoadFromFile(fname.c_str(), (offset + offset_in_block), memAddress, datasize);
 }
 
-String LoadFromFile(SettingsType settingsType, int index, char *fname, byte *memAddress, int datasize) {
-  return LoadFromFile(settingsType, index, fname, memAddress, datasize, 0);
+String LoadFromFile(SettingsType::Enum settingsType, int index, byte *memAddress, int datasize) {
+  return LoadFromFile(settingsType, index, memAddress, datasize, 0);
 }
 
-String SaveToFile(SettingsType settingsType, int index, char *fname, byte *memAddress, int datasize) {
+String SaveToFile(SettingsType::Enum settingsType, int index, byte *memAddress, int datasize) {
+  return SaveToFile(settingsType, index, memAddress, datasize, 0);
+}
+
+String SaveToFile(SettingsType::Enum settingsType, int index, byte *memAddress, int datasize, int posInBlock) {
   bool read = false;
   int  offset, max_size;
 
@@ -969,20 +1053,22 @@ String SaveToFile(SettingsType settingsType, int index, char *fname, byte *memAd
     return getSettingsFileIndexRangeError(read, settingsType, index);
   }
 
-  if (datasize > max_size) {
+  if ((datasize > max_size) || ((posInBlock + datasize) > max_size)) {
     return getSettingsFileDatasizeError(read, settingsType, index, datasize, max_size);
   }
-  return SaveToFile(fname, offset, memAddress, datasize);
+  String fname = SettingsType::getSettingsFileName(settingsType);
+  return SaveToFile(fname.c_str(), offset + posInBlock, memAddress, datasize);
 }
 
-String ClearInFile(SettingsType settingsType, int index, char *fname) {
+String ClearInFile(SettingsType::Enum settingsType, int index) {
   bool read = false;
   int  offset, max_size;
 
   if (!getAndLogSettingsParameters(read, settingsType, index, offset, max_size)) {
     return getSettingsFileIndexRangeError(read, settingsType, index);
   }
-  return ClearInFile(fname, offset, max_size);
+  String fname = SettingsType::getSettingsFileName(settingsType);
+  return ClearInFile(fname.c_str(), offset, max_size);
 }
 
 /********************************************************************************************\

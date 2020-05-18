@@ -196,9 +196,9 @@ void setIntervalTimer(unsigned long id, unsigned long lasttimer) {
     case TIMER_20MSEC:         interval = 20; break;
     case TIMER_100MSEC:        interval = 100; break;
     case TIMER_1SEC:           interval = 1000; break;
-    case TIMER_30SEC:          interval = 30000; break;
-    case TIMER_MQTT:           interval = timermqtt_interval; break;
+    case TIMER_30SEC:
     case TIMER_STATISTICS:     interval = 30000; break;
+    case TIMER_MQTT:           interval = timermqtt_interval; break;
     case TIMER_GRATUITOUS_ARP: interval = timer_gratuitous_arp_interval; break;
 
     // Fall-through for all DelayQueue, which are just the fall-back timers.
@@ -419,6 +419,7 @@ void process_plugin_task_timer(unsigned long id) {
   const systemTimerStruct timer_data = systemTimers[id];
   struct EventStruct TempEvent;
   TempEvent.TaskIndex = timer_data.TaskIndex;
+  TempEvent.BaseVarIndex =  timer_data.TaskIndex * VARS_PER_TASK;
   TempEvent.Par1      = timer_data.Par1;
   TempEvent.Par2      = timer_data.Par2;
   TempEvent.Par3      = timer_data.Par3;
@@ -440,7 +441,8 @@ void process_plugin_task_timer(unsigned long id) {
    */
   systemTimers.erase(id);
 
-  if (validDeviceIndex(deviceIndex)) {
+  if (validDeviceIndex(deviceIndex) && validUserVarIndex(TempEvent.BaseVarIndex)) {
+    TempEvent.sensorType = Device[deviceIndex].VType;
     String dummy;
     Plugin_ptr[deviceIndex](PLUGIN_TIMER_IN, &TempEvent, dummy);
   }
@@ -562,7 +564,7 @@ void schedule_task_device_timer_at_init(unsigned long task_index) {
     // Deepsleep is not enabled, add some offset based on the task index
     // to make sure not all are run at the same time.
     // This scheduled time may be overriden by the plugin's own init.
-    runAt += (task_index * 37) + Settings.MessageDelay;
+    runAt += (task_index * 37) + 100;
   } else {
     runAt += (task_index * 11) + 10;
   }
@@ -610,11 +612,15 @@ void schedule_task_device_timer(unsigned long task_index, unsigned long runAt) {
   const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(task_index);
   if (!validDeviceIndex(DeviceIndex)) { return; }
 
+// TD-er: Tasks without a timer or optional timer set to 0 should still be able to call PLUGIN_READ
+// For example to schedule a read from the PLUGIN_TEN_PER_SECOND when a new value is ready.
+/*  
   if (!Device[DeviceIndex].TimerOption) { return; }
 
   if (Device[DeviceIndex].TimerOptional && (Settings.TaskDeviceTimer[task_index] == 0)) {
     return;
   }
+*/
 
   if (Settings.TaskDeviceEnabled[task_index]) {
     setNewTimerAt(getMixedId(TASK_DEVICE_TIMER, task_index), runAt);
@@ -622,6 +628,7 @@ void schedule_task_device_timer(unsigned long task_index, unsigned long runAt) {
 }
 
 void process_task_device_timer(unsigned long task_index, unsigned long lasttimer) {
+  if (!validTaskIndex(task_index)) { return; }
   unsigned long newtimer = Settings.TaskDeviceTimer[task_index];
 
   if (newtimer != 0) {

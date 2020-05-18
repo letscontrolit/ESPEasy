@@ -61,9 +61,26 @@ void handle_unprocessedWiFiEvents()
       // The actual connection has been made, no need to wait for IP to release this semaphore.
       wifiConnectInProgress = false;
     }
+    if (wifiStatus != ESPEASY_WIFI_SERVICES_INITIALIZED) {
+      if (WiFi.isConnected()) {
+        // Apparently we did miss some WiFi events.
+        if ((wifiStatus & ESPEASY_WIFI_CONNECTED) == 0) {
+          addLog(LOG_LEVEL_DEBUG, F("WiFi : Force 'WiFi Connected' event"));
+          processedConnect = false;
+        }
 
-    if ((wifiStatus & ESPEASY_WIFI_GOT_IP) && (wifiStatus & ESPEASY_WIFI_CONNECTED) && WiFi.isConnected()) {
-      markWiFi_services_initialized();
+        if ((wifiStatus & ESPEASY_WIFI_GOT_IP) == 0) {
+          addLog(LOG_LEVEL_DEBUG, F("WiFi : Force 'WiFi Got IP' event"));
+          processedGotIP = false;
+        }
+      }
+    }
+
+
+    if (wifiStatus != ESPEASY_WIFI_SERVICES_INITIALIZED) {
+      if ((wifiStatus & ESPEASY_WIFI_GOT_IP) && (wifiStatus & ESPEASY_WIFI_CONNECTED)) {
+        markWiFi_services_initialized();
+      }
     }
   } else if (!WiFiConnected()) {
     // Somehow the WiFi has entered a limbo state.
@@ -128,7 +145,6 @@ void processDisconnect() {
   if (processedDisconnect) { return; }
   processedDisconnect = true;
   wifiStatus          = ESPEASY_WIFI_DISCONNECTED;
-  setWebserverRunning(false);
   delay(100); // FIXME TD-er: See https://github.com/letscontrolit/ESPEasy/issues/1987#issuecomment-451644424
 
   if (Settings.UseRules) {
@@ -201,6 +217,10 @@ void processConnect() {
 
 void processGotIP() {
   if (processedGotIP) {
+    return;
+  }
+  if ((wifiStatus & ESPEASY_WIFI_CONNECTED) == 0) {
+    // Only process GotIP events if we are connected.
     return;
   }
   IPAddress ip = WiFi.localIP();
@@ -312,7 +332,6 @@ void processConnectAPmode() {
     log += WiFi.softAPgetStationNum();
     addLog(LOG_LEVEL_INFO, log);
   }
-  setWebserverRunning(true);
 
   // Start DNS, only used if the ESP has no valid WiFi config
   // It will reply with it's own address on all DNS requests
@@ -418,7 +437,9 @@ void processScanDone() {
 
 
 void markWiFi_services_initialized() {
+  addLog(LOG_LEVEL_DEBUG, F("WiFi : WiFi services initialized"));
   wifiStatus            = ESPEASY_WIFI_SERVICES_INITIALIZED;
   wifiConnectInProgress = false;
-  setWebserverRunning(true);
+  
+  processedDHCPTimeout  = true;  // FIXME TD-er:  Is this ever happening?
 }

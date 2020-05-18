@@ -23,6 +23,7 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
       Protocol[protocolCount].usesTemplate = true;
       Protocol[protocolCount].usesAccount  = true;
       Protocol[protocolCount].usesPassword = true;
+      Protocol[protocolCount].usesExtCreds = true;
       Protocol[protocolCount].defaultPort  = 1883;
       Protocol[protocolCount].usesID       = true;
       break;
@@ -238,7 +239,7 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
         String pubname = ControllerSettings.Publish;
         parseControllerVariables(pubname, event, false);
 
-        success = MQTTpublish(event->ControllerIndex, pubname.c_str(), json.c_str(), Settings.MQTTRetainFlag);
+        success = MQTTpublish(event->ControllerIndex, pubname.c_str(), json.c_str(), ControllerSettings.mqtt_retainFlag());
       } // if ixd !=0
       else
       {

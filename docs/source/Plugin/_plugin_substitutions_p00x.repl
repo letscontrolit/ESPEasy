@@ -3,6 +3,7 @@
 .. |P000_name| replace:: :cyan:`Internal`
 .. |P000_type| replace:: :cyan:`GPIO handling`
 .. |P000_typename| replace:: :cyan:`Internal GPIO handling`
+.. |P000_porttype| replace:: `.`
 .. |P000_status| replace:: :green:`NORMAL`
 .. |P000_github| replace:: P001_Switch.ino
 .. _P000_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P001_Switch.ino
@@ -15,19 +16,21 @@
 
 .. |P001_name| replace:: :cyan:`Switch`
 .. |P001_type| replace:: :cyan:`Switch Input`
+.. |P001_porttype| replace:: `.`
 .. |P001_typename| replace:: :cyan:`Switch Input - Switch`
 .. |P001_status| replace:: :green:`NORMAL`
 .. |P001_github| replace:: P001_Switch.ino
 .. _P001_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P001_Switch.ino
 .. |P001_usedby| replace:: :ref:`P001_Switch_page`, :ref:`P001_Door_switch_page`, :ref:`P001_PIR_sensor_page`
 .. |P001_shortinfo| replace:: `.`
-.. |P001_maintainer| replace:: `.`
+.. |P001_maintainer| replace:: `TD-er`
 .. |P001_compileinfo| replace:: `.`
 .. |P001_usedlibraries| replace:: `.`
 
 .. |P002_name| replace:: :cyan:`Internal`
 .. |P002_type| replace:: :cyan:`Analog Input`
 .. |P002_typename| replace:: :cyan:`Analog Input - Internal`
+.. |P002_porttype| replace:: `.`
 .. |P002_status| replace:: :green:`NORMAL`
 .. |P002_github| replace:: P002_ADC.ino
 .. _P002_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P002_ADC.ino
@@ -40,6 +43,7 @@
 .. |P003_name| replace:: :cyan:`Pulse counter`
 .. |P003_type| replace:: :cyan:`Generic`
 .. |P003_typename| replace:: :cyan:`Generic - Pulse counter`
+.. |P003_porttype| replace:: `.`
 .. |P003_status| replace:: :green:`NORMAL`
 .. |P003_github| replace:: P003_Pulse.ino
 .. _P003_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P003_Pulse.ino
@@ -52,6 +56,7 @@
 .. |P004_name| replace:: :cyan:`DS18b20`
 .. |P004_type| replace:: :cyan:`Environment`
 .. |P004_typename| replace:: :cyan:`Environment - DS18b20`
+.. |P004_porttype| replace:: `.`
 .. |P004_status| replace:: :green:`NORMAL`
 .. |P004_github| replace:: P004_Dallas.ino
 .. _P004_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P004_Dallas.ino
@@ -64,6 +69,7 @@
 .. |P005_name| replace:: :cyan:`DHT11/12/22/SONOFF2301/7021`
 .. |P005_type| replace:: :cyan:`Environment`
 .. |P005_typename| replace:: :cyan:`Environment - DHT11/12/22  SONOFF2301/7021`
+.. |P005_porttype| replace:: `.`
 .. |P005_status| replace:: :green:`NORMAL`
 .. |P005_github| replace:: P005_DHT.ino
 .. _P005_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P005_DHT.ino
@@ -76,6 +82,7 @@
 .. |P006_name| replace:: :cyan:`BMP085/180`
 .. |P006_type| replace:: :cyan:`Environment`
 .. |P006_typename| replace:: :cyan:`Environment - BMP085/180`
+.. |P006_porttype| replace:: `.`
 .. |P006_status| replace:: :green:`NORMAL`
 .. |P006_github| replace:: P006_BMP085.ino
 .. _P006_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P006_BMP085.ino
@@ -88,6 +95,7 @@
 .. |P007_name| replace:: :cyan:`PCF8591`
 .. |P007_type| replace:: :cyan:`Analog input`
 .. |P007_typename| replace:: :cyan:`Analog input - PCF8591`
+.. |P007_porttype| replace:: `.`
 .. |P007_status| replace:: :green:`NORMAL`
 .. |P007_github| replace:: P007_PCF8591.ino
 .. _P007_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P007_PCF8591.ino
@@ -100,6 +108,7 @@
 .. |P008_name| replace:: :cyan:`Wiegand`
 .. |P008_type| replace:: :cyan:`RFID`
 .. |P008_typename| replace:: :cyan:`RFID - Wiegand`
+.. |P008_porttype| replace:: `.`
 .. |P008_status| replace:: :green:`NORMAL`
 .. |P008_github| replace:: P008_RFID.ino
 .. _P008_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P008_RFID.ino
@@ -112,6 +121,7 @@
 .. |P009_name| replace:: :cyan:`MCP23017`
 .. |P009_type| replace:: :cyan:`Switch Input`
 .. |P009_typename| replace:: :cyan:`Switch Input - MCP23017`
+.. |P009_porttype| replace:: `.`
 .. |P009_status| replace:: :green:`NORMAL`
 .. |P009_github| replace:: P009_MCP.ino
 .. _P009_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P009_MCP.ino

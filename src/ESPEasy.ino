@@ -81,7 +81,7 @@
 //   BMP280 I2C Barometric Pressure sensor
 //   SHT1X temperature/humidity sensors
 //   Ser2Net server
-
+//   DL-Bus (Technische Alternative)
 
 // Define globals before plugin sets to allow a personal override of the selected plugins
 #include "ESPEasy-Globals.h"
@@ -187,6 +187,16 @@ void setup()
   lowestRAM = FreeMem();
 #ifndef ESP32
 //  ets_isr_attach(8, sw_watchdog_callback, NULL);  // Set a callback for feeding the watchdog.
+#endif
+
+
+  // Read ADC at boot, before WiFi tries to connect.
+  // see https://github.com/letscontrolit/ESPEasy/issues/2646
+#if FEATURE_ADC_VCC
+  vcc = ESP.getVcc() / 1000.0;
+#endif
+#ifdef ESP8266
+  lastADCvalue = analogRead(A0);
 #endif
 
   resetPluginTaskData();
@@ -371,6 +381,8 @@ void setup()
 
   WiFiConnectRelaxed();
 
+  setWebserverRunning(true);
+
   #ifdef FEATURE_REPORTING
   ReportStatus();
   #endif
@@ -385,12 +397,6 @@ void setup()
 
   if (node_time.systemTimePresent())
     node_time.initTime();
-
-#if FEATURE_ADC_VCC
-  if (!wifiConnectInProgress) {
-    vcc = ESP.getVcc() / 1000.0;
-  }
-#endif
 
   if (Settings.UseRules)
   {
