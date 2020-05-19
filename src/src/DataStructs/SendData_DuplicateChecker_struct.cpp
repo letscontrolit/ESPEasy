@@ -3,9 +3,10 @@
 #include "../Globals/Plugins.h"
 #include "../Helpers/ESPEasy_time_calc.h"
 #include "../../ESPEasy_fdwdecl.h"
+#include "../../ESPEasy_Log.h"
 
 
-#define HISTORIC_ELEMENT_LIFETIME  120000 // 2 minutes
+#define HISTORIC_ELEMENT_LIFETIME  10000 // 10 seconds
 
 const uint32_t SendData_DuplicateChecker_struct::DUPLICATE_CHECKER_INVALID_KEY = 0;
 
@@ -65,6 +66,7 @@ void SendData_DuplicateChecker_struct::remove(uint32_t key)
   auto it = _queue.find(key);
 
   if (it != _queue.end()) {
+    addLog(LOG_LEVEL_DEBUG, F("ESPEasy-Now message not sent as processed elsewhere"));
     _queue.erase(it);
   }
 }

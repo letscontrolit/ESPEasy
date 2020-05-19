@@ -80,6 +80,7 @@
 # define ESPEASY_NOW_SEND_MSG_SUC 59
 # define ESPEASY_NOW_SEND_MSG_FAIL 60
 # define ESPEASY_NOW_SEND_PCKT    61
+# define ESPEASY_NOW_DEDUP_LOOP   62
 
 
 class TimingStats {
