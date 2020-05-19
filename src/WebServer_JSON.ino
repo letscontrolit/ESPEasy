@@ -61,7 +61,7 @@ void handle_csvval()
         }
         htmlData += '\n';
         addHtml(htmlData);
-        htmlData.clear();
+        htmlData = "";
       }
 
       for (byte x = 0; x < taskValCount; x++)
