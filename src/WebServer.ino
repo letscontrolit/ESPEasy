@@ -219,6 +219,7 @@ void WebServerInit()
   web_server.on(F("/i2cscanner"),    handle_i2cscanner);
   #endif
   web_server.on(F("/json"),          handle_json);     // Also part of WEBSERVER_NEW_UI
+  web_server.on(F("/csv"),           handle_csvval);
   web_server.on(F("/log"),           handle_log);
   web_server.on(F("/login"),         handle_login);
   web_server.on(F("/logjson"),       handle_log_JSON); // Also part of WEBSERVER_NEW_UI
