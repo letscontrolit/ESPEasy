@@ -23,6 +23,7 @@
 //   Brand: Midea, Model: MS12FU-10HRDN1-QRD0GW(B) A/C
 //   Brand: Midea, Model: MSABAU-07HRFN1-QRD0GW A/C (circa 2016)
 //   Brand: Tokio, Model: AATOEMF17-12CHR1SW split-type RG51|50/BGE Remote
+//   Brand: Airwell, Model: RC08B remote
 // Ref:
 //   https://github.com/crankyoldgit/IRremoteESP8266/issues/484
 // Kudos:
@@ -105,7 +106,7 @@ class IRCoolixAC {
   void stateReset();
 #if SEND_COOLIX
   void send(const uint16_t repeat = kCoolixDefaultRepeat);
-  uint8_t calibrate(void) { return _irsend.calibrate(); }
+  int8_t calibrate(void) { return _irsend.calibrate(); }
 #endif  // SEND_COOLIX
   void begin();
   void on();
