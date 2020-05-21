@@ -3,7 +3,8 @@
 ProtocolStruct::ProtocolStruct() :
     defaultPort(0), Number(0), usesMQTT(false), usesAccount(false), usesPassword(false),
     usesTemplate(false), usesID(false), Custom(false), usesHost(true), usesPort(true),
-    usesQueue(true), usesCheckReply(true), usesTimeout(true), usesSampleSets(false), usesExtCreds(false) {}
+    usesQueue(true), usesCheckReply(true), usesTimeout(true), usesSampleSets(false), 
+    usesExtCreds(false), needsWiFi(true) {}
 
 
 bool ProtocolStruct::useExtendedCredentials() const {
