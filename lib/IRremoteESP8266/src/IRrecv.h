@@ -221,6 +221,34 @@ class IRrecv {
                         const uint8_t tolerance = kUseDefTol,
                         const int16_t excess = kMarkExcess,
                         const bool MSBfirst = true);
+  uint16_t matchGenericConstBitTime(volatile uint16_t *data_ptr,
+                                    uint64_t *result_ptr,
+                                    const uint16_t remaining,
+                                    const uint16_t nbits,
+                                    const uint16_t hdrmark,
+                                    const uint32_t hdrspace,
+                                    const uint16_t one,
+                                    const uint32_t zero,
+                                    const uint16_t footermark,
+                                    const uint32_t footerspace,
+                                    const bool atleast = false,
+                                    const uint8_t tolerance = kUseDefTol,
+                                    const int16_t excess = kMarkExcess,
+                                    const bool MSBfirst = true);
+  uint16_t matchManchester(volatile const uint16_t *data_ptr,
+                           uint64_t *result_ptr,
+                           const uint16_t remaining,
+                           const uint16_t nbits,
+                           const uint16_t hdrmark,
+                           const uint32_t hdrspace,
+                           const uint16_t clock_period,
+                           const uint16_t footermark,
+                           const uint32_t footerspace,
+                           const bool atleast = false,
+                           const uint8_t tolerance = kUseDefTol,
+                           const int16_t excess = kMarkExcess,
+                           const bool MSBfirst = true,
+                           const bool GEThomas = true);
   void crudeNoiseFilter(decode_results *results, const uint16_t floor = 0);
   bool decodeHash(decode_results *results);
 #if (DECODE_NEC || DECODE_SHERWOOD || DECODE_AIWA_RC_T501 || SEND_SANYO)
@@ -393,6 +421,11 @@ class IRrecv {
                     const uint16_t nbits = kDaikinBits,
                     const bool strict = true);
 #endif
+#if DECODE_DAIKIN64
+  bool decodeDaikin64(decode_results *results, uint16_t offset = kStartOffset,
+                      const uint16_t nbits = kDaikin64Bits,
+                      const bool strict = true);
+#endif  // DECODE_DAIKIN64
 #if DECODE_DAIKIN128
   bool decodeDaikin128(decode_results *results, uint16_t offset = kStartOffset,
                        const uint16_t nbits = kDaikin128Bits,
@@ -452,7 +485,19 @@ class IRrecv {
   bool decodeCarrierAC(decode_results *results, uint16_t offset = kStartOffset,
                        const uint16_t nbits = kCarrierAcBits,
                        const bool strict = true);
-#endif
+#endif  // DECODE_CARRIER_AC
+#if DECODE_CARRIER_AC40
+  bool decodeCarrierAC40(decode_results *results,
+                         uint16_t offset = kStartOffset,
+                         const uint16_t nbits = kCarrierAc40Bits,
+                         const bool strict = true);
+#endif  // DECODE_CARRIER_AC40
+#if DECODE_CARRIER_AC64
+  bool decodeCarrierAC64(decode_results *results,
+                         uint16_t offset = kStartOffset,
+                         const uint16_t nbits = kCarrierAc64Bits,
+                         const bool strict = true);
+#endif  // DECODE_CARRIER_AC64
 #if DECODE_GOODWEATHER
   bool decodeGoodweather(decode_results *results,
                          uint16_t offset = kStartOffset,
@@ -485,6 +530,12 @@ class IRrecv {
                         const uint16_t nbits = kHitachiAc1Bits,
                         const bool strict = true);
 #endif
+#if DECODE_HITACHI_AC3
+  bool decodeHitachiAc3(decode_results *results,
+                          uint16_t offset = kStartOffset,
+                          const uint16_t nbits = kHitachiAc3Bits,
+                          const bool strict = true);
+#endif  // DECODE_HITACHI_AC3
 #if DECODE_HITACHI_AC424
   bool decodeHitachiAc424(decode_results *results,
                           uint16_t offset = kStartOffset,
@@ -558,6 +609,32 @@ class IRrecv {
                    const uint16_t nbits = kEpsonBits,
                    const bool strict = true);
 #endif  // DECODE_EPSON
+#if DECODE_SYMPHONY
+  bool decodeSymphony(decode_results *results, uint16_t offset = kStartOffset,
+                   const uint16_t nbits = kSymphonyBits,
+                   const bool strict = true);
+#endif  // DECODE_SYMPHONY
+#if DECODE_AIRWELL
+  bool decodeAirwell(decode_results *results, uint16_t offset = kStartOffset,
+                     const uint16_t nbits = kAirwellBits,
+                     const bool strict = true);
+#endif  // DECODE_AIRWELL
+#if DECODE_DELONGHI_AC
+  bool decodeDelonghiAc(decode_results *results, uint16_t offset = kStartOffset,
+                     const uint16_t nbits = kDelonghiAcBits,
+                     const bool strict = true);
+#endif  // DECODE_DELONGHI_AC
+#if DECODE_DOSHISHA
+  bool decodeDoshisha(decode_results *results, uint16_t offset = kStartOffset,
+                      const uint16_t nbits = kDoshishaBits,
+                      const bool strict = true);
+#endif  // DECODE_DOSHISHA
+#if DECODE_MULTIBRACKETS
+  bool decodeMultibrackets(decode_results *results,
+                           uint16_t offset = kStartOffset,
+                           const uint16_t nbits = kMultibracketsBits,
+                           const bool strict = true);
+#endif  // DECODE_MULTIBRACKETS
 };
 
 #endif  // IRRECV_H_
