@@ -20,13 +20,13 @@
   //As recomandation is not to use external libraries the following code was taken from: https://github.com/lbernstone/Tone Thanks
   #define TONE_CHANNEL 15
 
-  void noTone(uint8_t pin, uint8_t channel=TONE_CHANNEL)
+  void noToneESP32(uint8_t pin, uint8_t channel=TONE_CHANNEL)
   {
       ledcDetachPin(pin);
       ledcWrite(channel, 0);
   }
 
-  void tone(uint8_t pin, unsigned int frequency, unsigned long duration, uint8_t channel=TONE_CHANNEL)
+  void toneESP32(uint8_t pin, unsigned int frequency, unsigned long duration, uint8_t channel=TONE_CHANNEL)
   {
       if (ledcRead(channel)) {
           log_e("Tone channel %d is already in use", ledcRead(channel));
@@ -36,7 +36,7 @@
       ledcWriteTone(channel, frequency);
       if (duration) {
           delay(duration);
-          noTone(pin, channel);
+          noToneESP32(pin, channel);
       }    
   }
 
@@ -2581,7 +2581,7 @@ void SendValueLogger(taskIndex_t TaskIndex)
   \*********************************************************************************************/
 void tone_espEasy(uint8_t _pin, unsigned int frequency, unsigned long duration) {
   #ifdef ESP32
-    tone(_pin,frequency,duration);
+    toneESP32(_pin,frequency,duration);
   #else
     analogWriteFreq(frequency);
     //NOTE: analogwrite reserves IRAM and uninitalized ram.
