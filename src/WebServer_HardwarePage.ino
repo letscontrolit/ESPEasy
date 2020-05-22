@@ -19,7 +19,11 @@ void handle_hardware() {
     Settings.Pin_i2c_sda             = getFormItemInt(F("psda"));
     Settings.Pin_i2c_scl             = getFormItemInt(F("pscl"));
     Settings.I2C_clockSpeed          = getFormItemInt(F("pi2csp"), DEFAULT_I2C_CLOCK_SPEED);
-    Settings.InitSPI                 = isFormItemChecked(F("initspi")); // SPI Init
+    #ifdef ESP32
+      Settings.InitSPI               = getFormItemInt(F("initspi"), 0);
+    #else //for ESP8266 we keep the old UI
+      Settings.InitSPI               = isFormItemChecked(F("initspi")); // SPI Init
+    #endif
     Settings.Pin_sd_cs               = getFormItemInt(F("sd"));
 #ifdef HAS_ETHERNET
     Settings.ETH_Phy_Addr            = getFormItemInt(F("ethphy"));
@@ -78,12 +82,19 @@ void handle_hardware() {
 
   // SPI Init
   addFormSubHeader(F("SPI Interface"));
-  addFormCheckBox(F("Init SPI"), F("initspi"), Settings.InitSPI);
+  #ifdef ESP32
+    String spi_options[3] = { F("Disabled"), F("VSPI: CLK=GPIO-18, MISO=GPIO-19, MOSI=GPIO-23"), F("HSPI: CLK=GPIO-14, MISO=GPIO-12, MOSI=GPIO-13")};
+    addFormSelector(F("Init SPI"), F("initspi"), 3, spi_options, NULL, Settings.InitSPI);
+    addFormNote(F("Changing SPI settings requires to manualy restart"));
+  #else //for ESP8266 we keep the existing UI
+  addFormCheckBox(F("Init SPI"), F("initspi"), Settings.InitSPI>0);
   addFormNote(F("CLK=GPIO-14 (D5), MISO=GPIO-12 (D6), MOSI=GPIO-13 (D7)"));
+  #endif
   addFormNote(F("Chip Select (CS) config must be done in the plugin"));
-#ifdef FEATURE_SD
-  addFormPinSelect(formatGpioName_output("SD Card CS"), "sd", Settings.Pin_sd_cs);
-#endif // ifdef FEATURE_SD
+  
+  #ifdef FEATURE_SD
+    addFormPinSelect(formatGpioName_output("SD Card CS"), "sd", Settings.Pin_sd_cs);
+  #endif // ifdef FEATURE_SD
 #ifdef HAS_ETHERNET
   addFormSubHeader(F("Ethernet"));
   addRowLabel_tr_id(F("Ethernet or WIFI?"), "ethwifi");
