@@ -120,6 +120,9 @@
 #define DEFAULT_TIME_ZONE                       0                 // Time Offset (in minutes)
 #define DEFAULT_USE_DST                         false             // (true|false) Use Daily Time Saving
 
+#define DEFAULT_LATITUDE                        0.0f              // Default Latitude  
+#define DEFAULT_LONGITUDE                       0.0f              // Default Longitude
+
 #define DEFAULT_SYSLOG_IP                       ""                // Syslog IP Address
 #define DEFAULT_SYSLOG_LEVEL                    0                 // Syslog Log Level
 #define DEFAULT_SERIAL_LOG_LEVEL                LOG_LEVEL_INFO    // Serial Log Level

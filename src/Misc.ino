@@ -14,6 +14,34 @@
 #include "src/Globals/Services.h"
 
 
+#ifdef ESP32
+ 
+  //MFD: adding tone support here while waiting for the Arduino Espressif implementation to catch up
+  //As recomandation is not to use external libraries the following code was taken from: https://github.com/lbernstone/Tone Thanks
+  #define TONE_CHANNEL 15
+
+  void noToneESP32(uint8_t pin, uint8_t channel=TONE_CHANNEL)
+  {
+      ledcDetachPin(pin);
+      ledcWrite(channel, 0);
+  }
+
+  void toneESP32(uint8_t pin, unsigned int frequency, unsigned long duration, uint8_t channel=TONE_CHANNEL)
+  {
+      if (ledcRead(channel)) {
+          log_e("Tone channel %d is already in use", ledcRead(channel));
+          return;
+      }
+      ledcAttachPin(pin, channel);
+      ledcWriteTone(channel, frequency);
+      if (duration) {
+          delay(duration);
+          noToneESP32(pin, channel);
+      }    
+  }
+
+
+#endif
 /*********************************************************************************************\
    ESPEasy specific strings
 \*********************************************************************************************/
@@ -1261,6 +1289,13 @@ void ResetFactory()
   Settings.MessageDelay_unused	= DEFAULT_MQTT_DELAY;
   Settings.MQTTUseUnitNameAsClientId_unused = DEFAULT_MQTT_USE_UNITNAME_AS_CLIENTID;
 
+  // allow to set default latitude and longitude
+  #ifdef DEFAULT_LATITUDE
+    Settings.Latitude   = DEFAULT_LATITUDE;
+  #endif
+  #ifdef DEFAULT_LONGITUDE
+    Settings.Longitude  = DEFAULT_LONGITUDE;
+  #endif
 
   Settings.UseSerial		= DEFAULT_USE_SERIAL;
   Settings.BaudRate		= DEFAULT_SERIAL_BAUD;
@@ -2555,7 +2590,7 @@ void SendValueLogger(taskIndex_t TaskIndex)
   \*********************************************************************************************/
 void tone_espEasy(uint8_t _pin, unsigned int frequency, unsigned long duration) {
   #ifdef ESP32
-    delay(duration);
+    toneESP32(_pin,frequency,duration);
   #else
     analogWriteFreq(frequency);
     //NOTE: analogwrite reserves IRAM and uninitalized ram.
