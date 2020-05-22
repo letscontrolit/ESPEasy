@@ -112,6 +112,7 @@
 
 #include "src/Globals/CPlugins.h"
 #include "src/Globals/Device.h"
+#include "src/Globals/ESPEasy_now_handler.h"
 #include "src/Globals/ESPEasyWiFiEvent.h"
 #include "src/Globals/ESPEasy_Scheduler.h"
 #include "src/Globals/EventQueue.h"

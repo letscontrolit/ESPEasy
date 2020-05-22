@@ -87,9 +87,12 @@ boolean Plugin_098(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_FIFTY_PER_SECOND:
     {
+      /*
       if (ESPEasy_now_handler.loop()) {
         // Some packet was handled, check if it is something for this plugin
       }
+      // Moved to run10TimesPerSecond()
+      */
       break;
     }
 
