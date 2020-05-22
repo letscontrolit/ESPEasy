@@ -16,6 +16,7 @@
 
 // Equipment it seems compatible with:
 //  * Sharp LC-52D62U
+//  * Sharp AH-AxSAY A/C (Remote CRMC-A907 JBEZ)
 //  * <Add models (devices & remotes) you've gotten it working with here>
 //
 
@@ -45,6 +46,7 @@ using irutils::addIntToString;
 using irutils::addLabeledString;
 using irutils::addModeToString;
 using irutils::addTempToString;
+using irutils::minsToString;
 using irutils::setBit;
 using irutils::setBits;
 
@@ -56,7 +58,7 @@ using irutils::setBits;
 //   nbits:  Nr. of bits of data to be sent. Typically kSharpBits.
 //   repeat: Nr. of additional times the message is to be sent.
 //
-// Status: BETA / Previously working fine.
+// Status: STABLE / Working fine.
 //
 // Notes:
 //   This procedure handles the inversion of bits required per protocol.
@@ -102,7 +104,7 @@ void IRsend::sendSharpRaw(const uint64_t data, const uint16_t nbits,
 // Returns:
 //   An uint32_t containing the raw Sharp message for sendSharpRaw().
 //
-// Status: BETA / Should work okay.
+// Status: STABLE / Works okay.
 //
 // Notes:
 //   Assumes the standard Sharp bit sizes.
@@ -323,6 +325,9 @@ void IRSharpAc::stateReset(void) {
       0xAA, 0x5A, 0xCF, 0x10, 0x00, 0x01, 0x00, 0x00, 0x08, 0x80, 0x00, 0xE0,
       0x01};
   memcpy(remote, reset, kSharpAcStateLength);
+  _temp = getTemp();
+  _mode = getMode();
+  _fan = getFan();
 }
 
 uint8_t *IRSharpAc::getRaw(void) {
@@ -334,35 +339,90 @@ void IRSharpAc::setRaw(const uint8_t new_code[], const uint16_t length) {
   memcpy(remote, new_code, std::min(length, kSharpAcStateLength));
 }
 
+void IRSharpAc::setPowerSpecial(const uint8_t value) {
+  setBits(&remote[kSharpAcBytePowerSpecial], kSharpAcPowerSetSpecialOffset,
+          kSharpAcPowerSpecialSize, value);
+}
+
+uint8_t IRSharpAc::getPowerSpecial(void) {
+  return GETBITS8(remote[kSharpAcBytePowerSpecial],
+                  kSharpAcPowerSetSpecialOffset, kSharpAcPowerSpecialSize);
+}
+
+// Clear the "special"/non-normal bits in the power section.
+// e.g. for normal/common command modes.
+void IRSharpAc::clearPowerSpecial(void) {
+  setPowerSpecial(getPowerSpecial() & kSharpAcPowerOn);
+}
+
+bool IRSharpAc::isPowerSpecial(void) {
+  switch (getPowerSpecial()) {
+    case kSharpAcPowerSetSpecialOff:
+    case kSharpAcPowerSetSpecialOn:
+    case kSharpAcPowerTimerSetting: return true;
+    default: return false;
+  }
+}
+
 void IRSharpAc::on(void) { setPower(true); }
 
 void IRSharpAc::off(void) { setPower(false); }
 
-void IRSharpAc::setPower(const bool on) {
-  setBit(&remote[kSharpAcBytePower], kSharpAcBitPowerOffset, on);
+void IRSharpAc::setPower(const bool on, const bool prev_on) {
+  setPowerSpecial(on ? (prev_on ? kSharpAcPowerOn : kSharpAcPowerOnFromOff)
+                     : kSharpAcPowerOff);
+  // Power operations are incompatible with clean mode.
+  if (getClean()) setClean(false);
+  setSpecial(kSharpAcSpecialPower);
 }
 
 bool IRSharpAc::getPower(void) {
-  return GETBIT8(remote[kSharpAcBytePower], kSharpAcBitPowerOffset);
+  switch (getPowerSpecial()) {
+    case kSharpAcPowerUnknown:
+    case kSharpAcPowerOff: return false;
+    default: return true;  // Everything else is "probably" on.
+  }
 }
 
+void IRSharpAc::setSpecial(const uint8_t mode) {
+  switch (mode) {
+    case kSharpAcSpecialPower:
+    case kSharpAcSpecialTurbo:
+    case kSharpAcSpecialTempEcono:
+    case kSharpAcSpecialFan:
+    case kSharpAcSpecialSwing:
+    case kSharpAcSpecialTimer:
+    case kSharpAcSpecialTimerHalfHour:
+      remote[kSharpAcByteSpecial] = mode;
+      break;
+    default:
+      setSpecial(kSharpAcSpecialPower);
+  }
+}
+
+uint8_t IRSharpAc::getSpecial(void) { return remote[kSharpAcByteSpecial]; }
+
 // Set the temp in deg C
-void IRSharpAc::setTemp(const uint8_t temp) {
+// Args:
+//   temp: Desired Temperature (Celsius)
+//   save: Do we save this Temperature as a user set temp? (Default: true)
+void IRSharpAc::setTemp(const uint8_t temp, const bool save) {
   switch (this->getMode()) {
     // Auto & Dry don't allow temp changes and have a special temp.
     case kSharpAcAuto:
     case kSharpAcDry:
       remote[kSharpAcByteTemp] = 0;
-      remote[kSharpAcByteManual] = 0;  // When in Dry/Auto this byte is 0.
       return;
     default:
       remote[kSharpAcByteTemp] = 0xC0;
-      setBit(&remote[kSharpAcByteManual], kSharpAcBitTempManualOffset);
   }
   uint8_t degrees = std::max(temp, kSharpAcMinTemp);
   degrees = std::min(degrees, kSharpAcMaxTemp);
+  if (save) _temp = degrees;
   setBits(&remote[kSharpAcByteTemp], kLowNibble, kNibbleSize,
           degrees - kSharpAcMinTemp);
+  setSpecial(kSharpAcSpecialTempEcono);
+  clearPowerSpecial();
 }
 
 uint8_t IRSharpAc::getTemp(void) {
@@ -374,43 +434,158 @@ uint8_t IRSharpAc::getMode(void) {
   return GETBITS8(remote[kSharpAcByteMode], kLowNibble, kSharpAcModeSize);
 }
 
-void IRSharpAc::setMode(const uint8_t mode) {
-  setBit(&remote[kSharpAcBytePower], kSharpAcBitModeNonAutoOffset,
-         mode != kSharpAcAuto);
+void IRSharpAc::setMode(const uint8_t mode, const bool save) {
   switch (mode) {
     case kSharpAcAuto:
     case kSharpAcDry:
-      this->setTemp(0);  // Dry/Auto have no temp setting.
+      // When Dry or Auto, Fan always 2(Auto)
+      this->setFan(kSharpAcFanAuto, false);
       // FALLTHRU
     case kSharpAcCool:
     case kSharpAcHeat:
       setBits(&remote[kSharpAcByteMode], kLowNibble, kSharpAcModeSize, mode);
       break;
     default:
-      this->setMode(kSharpAcAuto);
+      this->setMode(kSharpAcAuto, save);
+      return;
   }
+  // Dry/Auto have no temp setting. This step will enforce it.
+  this->setTemp(_temp, false);
+  // Save the mode in case we need to revert to it. eg. Clean
+  if (save) _mode = mode;
+
+  setSpecial(kSharpAcSpecialPower);
+  clearPowerSpecial();
 }
 
 // Set the speed of the fan
-void IRSharpAc::setFan(const uint8_t speed) {
+void IRSharpAc::setFan(const uint8_t speed, const bool save) {
   switch (speed) {
     case kSharpAcFanAuto:
     case kSharpAcFanMin:
     case kSharpAcFanMed:
     case kSharpAcFanHigh:
     case kSharpAcFanMax:
-      setBit(&remote[kSharpAcByteManual], kSharpAcBitFanManualOffset,
-             speed != kSharpAcFanAuto);
       setBits(&remote[kSharpAcByteFan], kSharpAcFanOffset, kSharpAcFanSize,
               speed);
       break;
     default:
       this->setFan(kSharpAcFanAuto);
+      return;
   }
+  if (save) _fan = speed;
+  setSpecial(kSharpAcSpecialFan);
+  clearPowerSpecial();
 }
 
 uint8_t IRSharpAc::getFan(void) {
   return GETBITS8(remote[kSharpAcByteFan], kSharpAcFanOffset, kSharpAcFanSize);
+}
+
+bool IRSharpAc::getTurbo(void) {
+  return (getPowerSpecial() == kSharpAcPowerSetSpecialOn) &&
+         (getSpecial() == kSharpAcSpecialTurbo);
+}
+
+// Note: If you use this method, you will need to send it before making
+//       other changes to the settings, as they may overwrite some of the bits
+//       used by this setting.
+void IRSharpAc::setTurbo(const bool on) {
+  if (on) setFan(kSharpAcFanMax);
+  setPowerSpecial(on ? kSharpAcPowerSetSpecialOn : kSharpAcPowerSetSpecialOff);
+  setSpecial(kSharpAcSpecialTurbo);
+}
+
+bool IRSharpAc::getSwingToggle(void) {
+  return GETBITS8(remote[kSharpAcByteSwing], kSharpAcSwingOffset,
+                  kSharpAcSwingSize) == kSharpAcSwingToggle;
+}
+
+void IRSharpAc::setSwingToggle(const bool on) {
+  setBits(&remote[kSharpAcByteSwing], kSharpAcSwingOffset, kSharpAcSwingSize,
+          on ? kSharpAcSwingToggle : kSharpAcSwingNoToggle);
+  if (on) setSpecial(kSharpAcSpecialSwing);
+}
+
+bool IRSharpAc::getIon(void) {
+  return GETBIT8(remote[kSharpAcByteIon], kSharpAcBitIonOffset);
+}
+
+void IRSharpAc::setIon(const bool on) {
+  setBit(&remote[kSharpAcByteIon], kSharpAcBitIonOffset, on);
+  clearPowerSpecial();
+  if (on) setSpecial(kSharpAcSpecialSwing);
+}
+
+bool IRSharpAc::getEconoToggle(void) {
+  return (getPowerSpecial() == kSharpAcPowerSetSpecialOn) &&
+         (getSpecial() == kSharpAcSpecialTempEcono);
+}
+
+// Warning: Probably incompatible with `setTurbo()`
+void IRSharpAc::setEconoToggle(const bool on) {
+  if (on) setSpecial(kSharpAcSpecialTempEcono);
+  setPowerSpecial(on ? kSharpAcPowerSetSpecialOn : kSharpAcPowerSetSpecialOff);
+}
+
+// Returns how long the timer is set for, in minutes.
+uint16_t IRSharpAc::getTimerTime(void) {
+  return GETBITS8(remote[kSharpAcByteTimer], kSharpAcTimerHoursOffset,
+                  kSharpAcTimerHoursSize) * kSharpAcTimerIncrement * 2 +
+      ((getSpecial() == kSharpAcSpecialTimerHalfHour) ? kSharpAcTimerIncrement
+                                                      : 0);
+}
+
+bool IRSharpAc::getTimerEnabled(void) {
+  return GETBIT8(remote[kSharpAcByteTimer], kSharpAcBitTimerEnabled);
+}
+
+bool IRSharpAc::getTimerType(void) {
+  return GETBIT8(remote[kSharpAcByteTimer], kSharpAcBitTimerType);
+}
+
+// Set or cancel the timer function.
+// Args:
+//   enable:     Is the timer to be enabled (true) or canceled(false)?
+//   timer_type: An On (true) or an Off (false). Ignored if canceled.
+//   mins:       Nr. of minutes the timer is to be set to.
+//                 Rounds down to 30 min increments.
+//                 (max: 720 mins (12h), 0 is Off)
+void IRSharpAc::setTimer(bool enable, bool timer_type, uint16_t mins) {
+  uint8_t half_hours = std::min(mins / kSharpAcTimerIncrement,
+                                kSharpAcTimerHoursMax * 2);
+  if (half_hours == 0) enable = false;
+  if (!enable) {
+    half_hours = 0;
+    timer_type = kSharpAcOffTimerType;
+  }
+  setBit(&remote[kSharpAcByteTimer], kSharpAcBitTimerEnabled, enable);
+  setBit(&remote[kSharpAcByteTimer], kSharpAcBitTimerType, timer_type);
+  setBits(&remote[kSharpAcByteTimer], kSharpAcTimerHoursOffset,
+          kSharpAcTimerHoursSize, half_hours / 2);
+  // Handle non-round hours.
+  setSpecial((half_hours % 2) ? kSharpAcSpecialTimerHalfHour
+                              : kSharpAcSpecialTimer);
+  setPowerSpecial(kSharpAcPowerTimerSetting);
+}
+
+bool IRSharpAc::getClean(void) {
+  return GETBIT8(remote[kSharpAcByteClean], kSharpAcBitCleanOffset);
+}
+
+// Note: Officially A/C unit needs to be "Off" before clean mode can be entered.
+void IRSharpAc::setClean(const bool on) {
+  // Clean mode appears to be just default dry mode, with an extra bit set.
+  if (on) {
+    setMode(kSharpAcDry, false);
+    setPower(true, false);
+  } else {
+    // Restore the previous operation mode & fan speed.
+    setMode(_mode, false);
+    setFan(_fan, false);
+  }
+  setBit(&remote[kSharpAcByteClean], kSharpAcBitCleanOffset, on);
+  clearPowerSpecial();
 }
 
 // Convert a standard A/C mode into its native mode.
@@ -467,15 +642,16 @@ stdAc::state_t IRSharpAc::toCommon(void) {
   result.celsius = true;
   result.degrees = this->getTemp();
   result.fanspeed = this->toCommonFanSpeed(this->getFan());
+  result.turbo = this->getTurbo();
+  result.swingv = this->getSwingToggle() ? stdAc::swingv_t::kAuto
+                                         : stdAc::swingv_t::kOff;
+  result.filter = this->getIon();
+  result.econo = this->getEconoToggle();
+  result.clean = this->getClean();
   // Not supported.
-  result.swingv = stdAc::swingv_t::kOff;
   result.swingh = stdAc::swingh_t::kOff;
   result.quiet = false;
-  result.turbo = false;
-  result.clean = false;
   result.beep = false;
-  result.econo = false;
-  result.filter = false;
   result.light = false;
   result.sleep = -1;
   result.clock = -1;
@@ -485,13 +661,23 @@ stdAc::state_t IRSharpAc::toCommon(void) {
 // Convert the internal state into a human readable string.
 String IRSharpAc::toString(void) {
   String result = "";
-  result.reserve(60);  // Reserve some heap for the string to reduce fragging.
-  result += addBoolToString(getPower(), kPowerStr, false);
+  result.reserve(135);  // Reserve some heap for the string to reduce fragging.
+  result += addLabeledString(isPowerSpecial() ? "-"
+                                              : (getPower() ? kOnStr : kOffStr),
+                             kPowerStr, false);
   result += addModeToString(getMode(), kSharpAcAuto, kSharpAcCool, kSharpAcHeat,
                             kSharpAcDry, kSharpAcAuto);
   result += addTempToString(getTemp());
   result += addFanToString(getFan(), kSharpAcFanMax, kSharpAcFanMin,
                            kSharpAcFanAuto, kSharpAcFanAuto, kSharpAcFanMed);
+  result += addBoolToString(getTurbo(), kTurboStr);
+  result += addBoolToString(getSwingToggle(), kSwingVToggleStr);
+  result += addBoolToString(getIon(), kIonStr);
+  result += addLabeledString(getEconoToggle() ? kToggleStr : "-", kEconoStr);
+  result += addBoolToString(getClean(), kCleanStr);
+  if (getTimerEnabled())
+    result += addLabeledString(minsToString(getTimerTime()),
+                               getTimerType() ? kOnTimerStr : kOffTimerStr);
   return result;
 }
 
@@ -506,7 +692,7 @@ String IRSharpAc::toString(void) {
 // Returns:
 //   boolean: True if it can decode it, false if it can't.
 //
-// Status: BETA / Should be working.
+// Status: STABLE / Known working.
 //
 // Ref:
 //   https://github.com/crankyoldgit/IRremoteESP8266/issues/638
