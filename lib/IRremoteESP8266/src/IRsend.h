@@ -126,6 +126,11 @@ enum gree_ac_remote_model_t {
   YBOFB,     // (2) Green, YBOFB2, YAPOF3
 };
 
+enum hitachi_ac1_remote_model_t {
+  R_LT0541_HTA_A = 1,  // (1) R-LT0541-HTA Remote in "A" setting. (Default)
+  R_LT0541_HTA_B,      // (2) R-LT0541-HTA Remote in "B" setting.
+};
+
 enum panasonic_ac_remote_model_t {
   kPanasonicUnknown = 0,
   kPanasonicLke = 1,
@@ -162,6 +167,17 @@ class IRsend {
   void sendData(uint16_t onemark, uint32_t onespace, uint16_t zeromark,
                 uint32_t zerospace, uint64_t data, uint16_t nbits,
                 bool MSBfirst = true);
+  void sendManchesterData(const uint16_t half_period, const uint64_t data,
+                          const uint16_t nbits, const bool MSBfirst = true,
+                          const bool GEThomas = true);
+  void sendManchester(const uint16_t headermark, const uint32_t headerspace,
+                      const uint16_t half_period, const uint16_t footermark,
+                      const uint32_t gap, const uint64_t data,
+                      const uint16_t nbits, const uint16_t frequency = 38,
+                      const bool MSBfirst = true,
+                      const uint16_t repeat = kNoRepeat,
+                      const uint8_t dutycycle = kDutyDefault,
+                      const bool GEThomas = true);
   void sendGeneric(const uint16_t headermark, const uint32_t headerspace,
                    const uint16_t onemark, const uint32_t onespace,
                    const uint16_t zeromark, const uint32_t zerospace,
@@ -362,6 +378,10 @@ class IRsend {
                   const uint16_t nbytes = kDaikinStateLength,
                   const uint16_t repeat = kDaikinDefaultRepeat);
 #endif
+#if SEND_DAIKIN64
+  void sendDaikin64(const uint64_t data, const uint16_t nbits = kDaikin64Bits,
+                    const uint16_t repeat = kDaikin64DefaultRepeat);
+#endif  // SEND_DAIKIN64
 #if SEND_DAIKIN128
   void sendDaikin128(const unsigned char data[],
                      const uint16_t nbytes = kDaikin128StateLength,
@@ -446,6 +466,14 @@ class IRsend {
   void sendCarrierAC(uint64_t data, uint16_t nbits = kCarrierAcBits,
                      uint16_t repeat = kCarrierAcMinRepeat);
 #endif
+#if SEND_CARRIER_AC40
+  void sendCarrierAC40(uint64_t data, uint16_t nbits = kCarrierAc40Bits,
+                       uint16_t repeat = kCarrierAc40MinRepeat);
+#endif
+#if SEND_CARRIER_AC64
+  void sendCarrierAC64(uint64_t data, uint16_t nbits = kCarrierAc64Bits,
+                       uint16_t repeat = kCarrierAc64MinRepeat);
+#endif
 #if (SEND_HAIER_AC || SEND_HAIER_AC_YRW02)
   void sendHaierAC(const unsigned char data[],
                    const uint16_t nbytes = kHaierACStateLength,
@@ -471,6 +499,12 @@ class IRsend {
                       const uint16_t nbytes = kHitachiAc2StateLength,
                       const uint16_t repeat = kHitachiAcDefaultRepeat);
 #endif
+#if SEND_HITACHI_AC3
+  void sendHitachiAc3(const unsigned char data[],
+                      const uint16_t nbytes,  // No default as there as so many
+                                              // different sizes
+                      const uint16_t repeat = kHitachiAcDefaultRepeat);
+#endif  // SEND_HITACHI_AC3
 #if SEND_HITACHI_AC424
   void sendHitachiAc424(const unsigned char data[],
                         const uint16_t nbytes = kHitachiAc424StateLength,
@@ -538,6 +572,28 @@ class IRsend {
 #if SEND_EPSON
   void sendEpson(uint64_t data, uint16_t nbits = kEpsonBits,
                  uint16_t repeat = kEpsonMinRepeat);
+#endif
+#if SEND_SYMPHONY
+  void sendSymphony(uint64_t data, uint16_t nbits = kSymphonyBits,
+                    uint16_t repeat = kSymphonyDefaultRepeat);
+#endif
+#if SEND_AIRWELL
+  void sendAirwell(uint64_t data, uint16_t nbits = kAirwellBits,
+                   uint16_t repeat = kAirwellMinRepeats);
+#endif
+#if SEND_DELONGHI_AC
+  void sendDelonghiAc(uint64_t data, uint16_t nbits = kDelonghiAcBits,
+                      uint16_t repeat = kDelonghiAcDefaultRepeat);
+#endif
+#if SEND_DOSHISHA
+  void sendDoshisha(const uint64_t data, uint16_t nbits = kDoshishaBits,
+                    const uint16_t repeat = kNoRepeat);
+  uint64_t encodeDoshisha(const uint8_t command, const uint8_t channel = 0);
+#endif  // SEND_DOSHISHA
+#if SEND_MULTIBRACKETS
+  void sendMultibrackets(const uint64_t data,
+                         const uint16_t nbits = kMultibracketsBits,
+                         const uint16_t repeat = kMultibracketsDefaultRepeat);
 #endif
 
  protected:

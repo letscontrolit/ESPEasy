@@ -10,16 +10,32 @@ ESPeasySerial::ESPeasySerial(int receivePin, int transmitPin, bool inverse_logic
   : _receivePin(receivePin), _transmitPin(transmitPin), _inverse_logic(inverse_logic)
 {
   switch (serialPort) {
-    case 0: _serialtype = ESPeasySerialType::serialtype::serial0;
-    case 1: _serialtype = ESPeasySerialType::serialtype::serial1;
-    case 2: _serialtype = ESPeasySerialType::serialtype::serial2;
+    case 0: _serialtype = ESPeasySerialType::serialtype::serial0; break;
+    case 1: _serialtype = ESPeasySerialType::serialtype::serial1; break;
+    case 2: _serialtype = ESPeasySerialType::serialtype::serial2; break;
     default:
       _serialtype = ESPeasySerialType::getSerialType(receivePin, transmitPin);
   }
+
+  switch (_serialtype) {
+    case ESPeasySerialType::serialtype::sc16is752:
+    {
+      ESPEasySC16IS752_Serial::I2C_address addr     = static_cast<ESPEasySC16IS752_Serial::I2C_address>(receivePin);
+      ESPEasySC16IS752_Serial::SC16IS752_channel ch = static_cast<ESPEasySC16IS752_Serial::SC16IS752_channel>(transmitPin);
+      _i2cserial = new ESPEasySC16IS752_Serial(addr, ch);
+      break;
+    }
+    default:
+      break;
+  }
+
 }
 
 ESPeasySerial::~ESPeasySerial() {
   end();
+  if (_i2cserial != nullptr) {
+    delete _i2cserial;
+  }
 }
 
 void ESPeasySerial::begin(unsigned long baud, uint32_t config
@@ -37,14 +53,21 @@ void ESPeasySerial::begin(unsigned long baud, uint32_t config
     return;
   }
 
-  // Make sure the extra bit is set for the config. The config differs between ESP32 and ESP82xx
-  config = config | 0x8000000;
+  if (isI2Cserial()) {
+    if (_i2cserial != nullptr) {
+      _i2cserial->begin(baud);
+    }
+  } else {
 
-  if (isValid()) {
-    // Timeout added for 1.0.1
-    // See: https://github.com/espressif/arduino-esp32/commit/233d31bed22211e8c85f82bcf2492977604bbc78
-    // getHW()->begin(baud, config, _receivePin, _transmitPin, invert, timeout_ms);
-    getHW()->begin(baud, config, _receivePin, _transmitPin, _inverse_logic);
+    // Make sure the extra bit is set for the config. The config differs between ESP32 and ESP82xx
+    config = config | 0x8000000;
+
+    if (isValid()) {
+      // Timeout added for 1.0.1
+      // See: https://github.com/espressif/arduino-esp32/commit/233d31bed22211e8c85f82bcf2492977604bbc78
+      // getHW()->begin(baud, config, _receivePin, _transmitPin, invert, timeout_ms);
+      getHW()->begin(baud, config, _receivePin, _transmitPin, _inverse_logic);
+    }
   }
 }
 
@@ -52,7 +75,11 @@ void ESPeasySerial::end() {
   if (!isValid()) {
     return;
   }
-  getHW()->end();
+  if (isI2Cserial()) {
+    _i2cserial->end();
+  } else {
+    getHW()->end();
+  }
 }
 
 HardwareSerial * ESPeasySerial::getHW() {
@@ -83,6 +110,8 @@ bool ESPeasySerial::isValid() const {
       return true;
     case ESPeasySerialType::serialtype::serial1:
       return _transmitPin != -1 && _receivePin != -1;
+    case ESPeasySerialType::serialtype::sc16is752:    
+      return _i2cserial != nullptr;
 
     // FIXME TD-er: Must perform proper check for GPIO pins here.
     default: break;
@@ -94,6 +123,9 @@ int ESPeasySerial::peek(void) {
   if (!isValid()) {
     return -1;
   }
+  if (isI2Cserial()) {
+    return _i2cserial->peek();
+  }
   return getHW()->peek();
 }
 
@@ -101,12 +133,18 @@ size_t ESPeasySerial::write(uint8_t val) {
   if (!isValid()) {
     return 0;
   }
+  if (isI2Cserial()) {
+    return _i2cserial->write(val);
+  }
   return getHW()->write(val);
 }
 
 size_t ESPeasySerial::write(const uint8_t *buffer, size_t size) {
   if (!isValid() || !buffer) {
     return 0;
+  }
+  if (isI2Cserial()) {
+    return _i2cserial->write(buffer, size);
   }
   return getHW()->write(buffer, size);
 }
@@ -120,12 +158,18 @@ int ESPeasySerial::read(void) {
   if (!isValid()) {
     return -1;
   }
+  if (isI2Cserial()) {
+    return _i2cserial->read();
+  }
   return getHW()->read();
 }
 
 int ESPeasySerial::available(void) {
   if (!isValid()) {
     return 0;
+  }
+  if (isI2Cserial()) {
+    return _i2cserial->available();
   }
   return getHW()->available();
 }
@@ -134,12 +178,18 @@ void ESPeasySerial::flush(void) {
   if (!isValid()) {
     return;
   }
+  if (isI2Cserial()) {
+    return _i2cserial->flush();
+  }
   getHW()->flush();
 }
 
 int ESPeasySerial::baudRate(void) {
   if (!isValid()) {
     return 0;
+  }
+  if (isI2Cserial()) {
+    return _baud;
   }
   return getHW()->baudRate();
 }

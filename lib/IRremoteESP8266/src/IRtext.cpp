@@ -1,4 +1,7 @@
-// Copyright 2019 - David Conran (@crankyoldgit)
+// Copyright 2019-2020 - David Conran (@crankyoldgit)
+
+/// @warn If you add or remove an entry in this file, you should run:
+///   '../tools/generate_irtext_h.sh' to rebuild the `IRtext.h` file.
 
 #ifndef UNIT_TEST
 #include <Arduino.h>
@@ -79,6 +82,7 @@ const PROGMEM char* kSlowStr = D_STR_SLOW;
 const PROGMEM char* kAirFlowStr = D_STR_AIRFLOW;
 const PROGMEM char* kStepStr = D_STR_STEP;
 const PROGMEM char* kNAStr = D_STR_NA;
+const PROGMEM char* kInsideStr = D_STR_INSIDE;
 const PROGMEM char* kOutsideStr = D_STR_OUTSIDE;
 const PROGMEM char* kLoudStr = D_STR_LOUD;
 const PROGMEM char* kLowerStr = D_STR_LOWER;
@@ -130,6 +134,8 @@ const PROGMEM char* kEyeAutoStr = D_STR_EYEAUTO;
 const PROGMEM char* kLightToggleStr = D_STR_LIGHTTOGGLE;
 const PROGMEM char* kOutsideQuietStr = D_STR_OUTSIDEQUIET;
 const PROGMEM char* kPowerToggleStr = D_STR_POWERTOGGLE;
+const PROGMEM char* kPreviousPowerStr = D_STR_PREVIOUSPOWER;
+const PROGMEM char* kDisplayTempStr = D_STR_DISPLAYTEMP;
 const PROGMEM char* kSensorTempStr = D_STR_SENSORTEMP;
 const PROGMEM char* kSleepTimerStr = D_STR_SLEEP_TIMER;
 const PROGMEM char* kSwingVModeStr = D_STR_SWINGVMODE;
@@ -162,3 +168,94 @@ const PROGMEM char* kFalseStr = D_STR_FALSE;
 const PROGMEM char* kRepeatStr = D_STR_REPEAT;
 const PROGMEM char* kCodeStr = D_STR_CODE;
 const PROGMEM char* kBitsStr = D_STR_BITS;
+
+// Protocol Names
+// Needs to be in decode_type_t order.
+const PROGMEM char *kAllProtocolNamesStr =
+    D_STR_UNUSED "\x0"
+    D_STR_RC5 "\x0"
+    D_STR_RC6 "\x0"
+    D_STR_NEC "\x0"
+    D_STR_SONY "\x0"
+    D_STR_PANASONIC "\x0"
+    D_STR_JVC "\x0"
+    D_STR_SAMSUNG "\x0"
+    D_STR_WHYNTER "\x0"
+    D_STR_AIWA_RC_T501 "\x0"
+    D_STR_LG "\x0"
+    D_STR_SANYO "\x0"
+    D_STR_MITSUBISHI "\x0"
+    D_STR_DISH "\x0"
+    D_STR_SHARP "\x0"
+    D_STR_COOLIX "\x0"
+    D_STR_DAIKIN "\x0"
+    D_STR_DENON "\x0"
+    D_STR_KELVINATOR "\x0"
+    D_STR_SHERWOOD "\x0"
+    D_STR_MITSUBISHI_AC "\x0"
+    D_STR_RCMM "\x0"
+    D_STR_SANYO_LC7461 "\x0"
+    D_STR_RC5X "\x0"
+    D_STR_GREE "\x0"
+    D_STR_PRONTO "\x0"
+    D_STR_NEC_LIKE "\x0"
+    D_STR_ARGO "\x0"
+    D_STR_TROTEC "\x0"
+    D_STR_NIKAI "\x0"
+    D_STR_RAW "\x0"
+    D_STR_GLOBALCACHE "\x0"
+    D_STR_TOSHIBA_AC "\x0"
+    D_STR_FUJITSU_AC "\x0"
+    D_STR_MIDEA "\x0"
+    D_STR_MAGIQUEST "\x0"
+    D_STR_LASERTAG "\x0"
+    D_STR_CARRIER_AC "\x0"
+    D_STR_HAIER_AC "\x0"
+    D_STR_MITSUBISHI2 "\x0"
+    D_STR_HITACHI_AC "\x0"
+    D_STR_HITACHI_AC1 "\x0"
+    D_STR_HITACHI_AC2 "\x0"
+    D_STR_GICABLE "\x0"
+    D_STR_HAIER_AC_YRW02 "\x0"
+    D_STR_WHIRLPOOL_AC "\x0"
+    D_STR_SAMSUNG_AC "\x0"
+    D_STR_LUTRON "\x0"
+    D_STR_ELECTRA_AC "\x0"
+    D_STR_PANASONIC_AC "\x0"
+    D_STR_PIONEER "\x0"
+    D_STR_LG2 "\x0"
+    D_STR_MWM "\x0"
+    D_STR_DAIKIN2 "\x0"
+    D_STR_VESTEL_AC "\x0"
+    D_STR_TECO "\x0"
+    D_STR_SAMSUNG36 "\x0"
+    D_STR_TCL112AC "\x0"
+    D_STR_LEGOPF "\x0"
+    D_STR_MITSUBISHI_HEAVY_88 "\x0"
+    D_STR_MITSUBISHI_HEAVY_152 "\x0"
+    D_STR_DAIKIN216 "\x0"
+    D_STR_SHARP_AC "\x0"
+    D_STR_GOODWEATHER "\x0"
+    D_STR_INAX "\x0"
+    D_STR_DAIKIN160 "\x0"
+    D_STR_NEOCLIMA "\x0"
+    D_STR_DAIKIN176 "\x0"
+    D_STR_DAIKIN128 "\x0"
+    D_STR_AMCOR "\x0"
+    D_STR_DAIKIN152 "\x0"
+    D_STR_MITSUBISHI136 "\x0"
+    D_STR_MITSUBISHI112 "\x0"
+    D_STR_HITACHI_AC424 "\x0"
+    D_STR_SONY_38K "\x0"
+    D_STR_EPSON "\x0"
+    D_STR_SYMPHONY "\x0"
+    D_STR_HITACHI_AC3 "\x0"
+    D_STR_DAIKIN64 "\x0"
+    D_STR_AIRWELL "\x0"
+    D_STR_DELONGHI_AC "\x0"
+    D_STR_DOSHISHA "\x0"
+    D_STR_MULTIBRACKETS "\x0"
+    D_STR_CARRIER_AC40 "\x0"
+    D_STR_CARRIER_AC64 "\x0"
+    // New protocol strings should be added just above this line.
+    "\x0";  // This string requires double null termination.
