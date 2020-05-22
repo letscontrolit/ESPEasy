@@ -7,13 +7,15 @@
 void hardwareInit()
 {
   // set GPIO pins state if not set to default
+  constexpr byte maxStates = sizeof(Settings.PinBootStates)/sizeof(Settings.PinBootStates[0]);
   for (byte gpio = 0; gpio < PIN_D_MAX; ++gpio) {
     bool serialPinConflict = (Settings.UseSerial && (gpio == 1 || gpio == 3));
+    const int8_t bootState = (gpio < maxStates) ? Settings.PinBootStates[gpio] : 0;
 
-    if (!serialPinConflict && (Settings.PinBootStates[gpio] != 0)) {
+    if (!serialPinConflict && (bootState != 0)) {
       const uint32_t key = createKey(1, gpio);
 
-      switch (Settings.PinBootStates[gpio])
+      switch (bootState)
       {
         case 1:
           pinMode(gpio, OUTPUT);
@@ -52,10 +54,25 @@ void hardwareInit()
   initI2C();
 
   // SPI Init
-  if (Settings.InitSPI)
+  if (Settings.InitSPI>0)
   {
     SPI.setHwCs(false);
+    
+    //MFD: for ESP32 enable the SPI on HSPI as the default is VSPI
+    #ifdef ESP32 
+    if (Settings.InitSPI==2)
+    {
+      #define HSPI_MISO   12
+      #define HSPI_MOSI   13
+      #define HSPI_SCLK   14
+      #define HSPI_SS     15
+      SPI.begin(HSPI_SCLK, HSPI_MISO, HSPI_MOSI); //HSPI
+    }
+    else
+     SPI.begin(); //VSPI
+    #else
     SPI.begin();
+    #endif
     String log = F("INIT : SPI Init (without CS)");
     addLog(LOG_LEVEL_INFO, log);
   }

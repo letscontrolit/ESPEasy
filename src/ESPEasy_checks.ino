@@ -37,7 +37,9 @@ void run_compiletime_checks() {
   const unsigned int SettingsStructSize = (252 + 82 * TASKS_MAX);
   check_size<SettingsStruct,                        SettingsStructSize>();
   check_size<ControllerSettingsStruct,              820u>();
+  #ifndef NOTIFIER_SET_NONE
   check_size<NotificationSettingsStruct,            996u>();
+  #endif
   check_size<ExtraTaskSettingsStruct,               472u>();
   check_size<EventStruct,                           96u>(); // Is not stored
 
@@ -47,6 +49,7 @@ void run_compiletime_checks() {
   check_size<LogStruct,                             LogStructSize>(); // Is not stored
   check_size<DeviceStruct,                          7u>();
   check_size<ProtocolStruct,                        6u>();
+  #ifndef NOTIFIER_SET_NONE
   check_size<NotificationStruct,                    3u>();
   check_size<NodeStruct,                            28u>();
   check_size<systemTimerStruct,                     28u>();
