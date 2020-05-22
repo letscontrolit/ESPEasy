@@ -1268,7 +1268,7 @@ void ResetFactory()
   Settings.Protocol[0]     = DEFAULT_PROTOCOL;
   Settings.deepSleep_wakeTime       = false;
   Settings.CustomCSS       = false;
-  Settings.InitSPI         = false;
+  Settings.InitSPI         = DEFAULT_SPI;
   for (taskIndex_t x = 0; x < TASKS_MAX; x++)
   {
     Settings.TaskDevicePin1[x] = -1;

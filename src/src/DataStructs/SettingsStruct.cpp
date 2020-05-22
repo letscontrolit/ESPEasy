@@ -221,7 +221,7 @@ void SettingsStruct_tmpl<N_TASKS>::clearMisc() {
   GlobalSync                       = false;
   ConnectionFailuresThreshold      = 0;
   MQTTRetainFlag_unused            = false;
-  InitSPI                          = false;
+  InitSPI                          = DEFAULT_SPI;
   Pin_status_led_Inversed          = false;
   deepSleepOnFail                  = false;
   UseValueLogger                   = false;

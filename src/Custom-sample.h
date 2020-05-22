@@ -99,6 +99,8 @@
 #define DEFAULT_PIN_I2C_SCL                     5
 #define DEFAULT_I2C_CLOCK_SPEED                 400000            // Use 100 kHz if working with old I2C chips
 
+#define DEFAULT_SPI                             0                 //0=disabled 1=enabled and for ESP32 there is option 2 =HSPI
+
 #define DEFAULT_PIN_STATUS_LED                  (-1)
 #define DEFAULT_PIN_STATUS_LED_INVERSED         true
 

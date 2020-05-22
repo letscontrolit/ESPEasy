@@ -54,10 +54,25 @@ void hardwareInit()
   initI2C();
 
   // SPI Init
-  if (Settings.InitSPI)
+  if (Settings.InitSPI>0)
   {
     SPI.setHwCs(false);
+    
+    //MFD: for ESP32 enable the SPI on HSPI as the default is VSPI
+    #ifdef ESP32 
+    if (Settings.InitSPI==2)
+    {
+      #define HSPI_MISO   12
+      #define HSPI_MOSI   13
+      #define HSPI_SCLK   14
+      #define HSPI_SS     15
+      SPI.begin(HSPI_SCLK, HSPI_MISO, HSPI_MOSI); //HSPI
+    }
+    else
+     SPI.begin(); //VSPI
+    #else
     SPI.begin();
+    #endif
     String log = F("INIT : SPI Init (without CS)");
     addLog(LOG_LEVEL_INFO, log);
   }
