@@ -51,6 +51,7 @@ void run_compiletime_checks() {
   check_size<ProtocolStruct,                        6u>();
   #ifndef NOTIFIER_SET_NONE
   check_size<NotificationStruct,                    3u>();
+  #endif
   check_size<NodeStruct,                            28u>();
   check_size<systemTimerStruct,                     28u>();
   check_size<RTCStruct,                             32u>();
