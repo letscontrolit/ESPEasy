@@ -130,7 +130,6 @@ public:
     for (int i = 0 ; i<64; i++){
       topic_buffer[i] = '\0';
     }
-
     for (int i=1 ; i<5 ;i++){
       for (int i=0 ; i< 10 ; i++){
         send_buffer[i] = '\0';
@@ -149,7 +148,6 @@ public:
           std::sprintf(send_buffer, "%f", *this->val4);
           break;
         default:
-          addLog(LOG_LEVEL_INFO, F("Case Default"));
           delete []send_buffer;
           delete []topic_buffer;
           return false;
@@ -190,9 +188,9 @@ public:
     sample = new Sample_t();
   }
   ~Cache_t(){
-    //delete &cache; TODO: Check how to delete stream object instance
-    //delete sample;
-    //delete[] buffer;
+    //delete &cache
+    delete sample;
+    delete[] buffer;
   }
   void initialize(struct EventStruct *event){
     // Load values from UserVar array
@@ -229,20 +227,24 @@ public:
     memcpy(offset, &staticOffset, 4);
   }
   bool setData(){
-    int fnr = (int)(*this->fileNr);
+    /*
     char *filename = new char[24];
     for (int i = 0 ; i<24; i++){
       filename[i] = '\0';
     }
     sprintf(filename,"cache_%d.bin",fnr);
-    //const char *filename = "cache_1.bin";
+    */
+    int fnr = (int)(*this->fileNr);
+    char *filename = returnFilename(fnr);
+
+
     if (!fileExists(filename)){
       this->nextFile();
       return false;
     }
     cache = tryOpenFile(filename,"r");
-    delete[] filename;
 
+    delete[] filename;
     return true;
   }
   void readSample(struct EventStruct *event){
@@ -263,6 +265,7 @@ public:
       // Increment to next sample
       this->increment();
     } else {
+      this->deleteFile();
       this->nextFile();
     }
   }
@@ -273,6 +276,29 @@ public:
     // TODO: Check if last sample in file
     // If so, move to next file
     (*this->sampleIndex)++;
+  }
+  void deleteFile(){
+    /*
+    int fnr = (int)(*this->fileNr);
+    char *filename = new char[24];
+    for (int i = 0 ; i<24; i++){
+      filename[i] = '\0';
+    }
+    sprintf(filename,"cache_%d.bin",fnr);
+    */
+    int fnr = (int)(*this->fileNr);
+    char * filename = returnFilename(fnr);
+
+    tryDeleteFile(filename);
+    delete[] filename;
+  }
+  char *returnFilename(int filenr){
+    char *filename = new char[24];
+    for (int i = 0 ; i<24; i++){
+      filename[i] = '\0';
+    }
+    sprintf(filename,"cache_%d.bin",filenr);
+    return filename;
   }
   void nextFile(){
     (*this->fileNr)++;
@@ -287,7 +313,9 @@ public:
       if (fileExists(fname)){
         (*this->sampleIndex) = 0;
         (*this->fileNr) = fnr;
-        this->setData();
+        //this->setData();
+        cache.close();
+        cache = tryOpenFile(fname,"r");
         break;
       }
       if (fnr == 99){
@@ -298,12 +326,6 @@ public:
       fnr++;
     }
     delete[] fname;
-  }
-  bool deleteFile(){
-    // TODO:
-    // Move to next file before leaving function
-    // Don't delete cache_1.bin, just move to cache_2.bin
-    return false;
   }
 };
 
@@ -335,7 +357,6 @@ boolean Plugin_098(byte function, struct EventStruct *event, String& string)
 
   switch (function)
   {
-
     case PLUGIN_DEVICE_ADD:
       {
         Device[++deviceCount].Number = PLUGIN_ID_098;
@@ -399,7 +420,30 @@ boolean Plugin_098(byte function, struct EventStruct *event, String& string)
         success = true;
         break;
       }
+    case PLUGIN_ONCE_A_SECOND:
+    {
+      P098_data_struct *P098_data =
+        static_cast<P098_data_struct *>(getPluginTaskData(event->TaskIndex));
+      bool initialized = P098_data->isInitialized();
 
+      float killswitch = (*P098_data->cache->sampleCount);
+
+      // Keep during alpha to avoid reflashing with usb
+      if (killswitch > 0){
+        (*P098_data->cache->sampleCount)--;
+
+        if (initialized){
+          for (int i = 0 ; i < 2 ; i++){
+            P098_data->cache->readSample(event);
+          }
+        } else {
+          P098_data->init();
+          P098_data->cache->initialize(event);
+        }
+      }
+      success = true;
+      break;
+    }
     case PLUGIN_WRITE:
       {
         String command = parseString(string,1);
