@@ -29,18 +29,28 @@
 
 struct P044_data_struct : public PluginTaskData_base {
 
-  P044_data_struct(unsigned int portnumber) {
+  P044_data_struct() {
     clearBuffer();
-    P1GatewayServer = new WiFiServer(portnumber);
-    if (nullptr != P1GatewayServer) {
-      P1GatewayServer->begin();
-      init = true;
-    }
   }
 
   ~P044_data_struct() {
+    stopServer();
+  }
+
+  void startServer(unsigned int portnumber) {
+    stopServer();
+    P1GatewayServer = new WiFiServer(portnumber);
+    if (nullptr != P1GatewayServer) {
+      P1GatewayServer->begin();
+      addLog(LOG_LEVEL_DEBUG, String(F("P1   : WiFi server started at port ")) + portnumber);
+    }
+  }
+
+  void stopServer() {
+    clearBuffer();
     if (nullptr != P1GatewayServer) {
       P1GatewayServer->close();
+      addLog(LOG_LEVEL_DEBUG, F("P1   : WiFi server closed"));
       delete P1GatewayServer;
       P1GatewayServer = nullptr;
     }
@@ -50,6 +60,10 @@ struct P044_data_struct : public PluginTaskData_base {
     serial_buffer = "";
     serial_buffer.reserve(P044_BUFFER_SIZE);
     bytes_read = 0;
+  }
+
+  bool isInit() const {
+  	return nullptr != P1GatewayServer;
   }
 
   void addChar(char ch) {
@@ -242,7 +256,6 @@ struct P044_data_struct : public PluginTaskData_base {
   int state = P044_DISABLED;
   int checkI = 0;
   byte connectionState = 0;
-  boolean init = false;
   boolean serialdebug = false;
   boolean CRCcheck = false;
 };
@@ -278,8 +291,8 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
       {
         LoadTaskSettings(event->TaskIndex);
-      	addFormNumericBox(F("TCP Port"), F("p044_port"), ExtraTaskSettings.TaskDevicePluginConfigLong[0]);
-      	addFormNumericBox(F("Baud Rate"), F("p044_baud"), ExtraTaskSettings.TaskDevicePluginConfigLong[1]);
+      	addFormNumericBox(F("TCP Port"), F("p044_port"), ExtraTaskSettings.TaskDevicePluginConfigLong[0], 0);
+      	addFormNumericBox(F("Baud Rate"), F("p044_baud"), ExtraTaskSettings.TaskDevicePluginConfigLong[1], 0);
 
         byte serialConfChoice = serialHelper_convertOldSerialConfig(PCONFIG(1));
         serialHelper_serialconfig_webformLoad(event, serialConfChoice);
@@ -287,7 +300,7 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
         // FIXME TD-er: Why isn't this using the normal pin selection functions?
       	addFormPinSelect(F("Reset target after boot"), F("taskdevicepin1"), CONFIG_PIN1);
 
-      	addFormNumericBox(F("RX Receive Timeout (mSec)"), F("p044_rxwait"), PCONFIG(0));
+      	addFormNumericBox(F("RX Receive Timeout (mSec)"), F("p044_rxwait"), PCONFIG(0), 0);
 
         success = true;
         break;
@@ -329,10 +342,16 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
         Serial.begin(ExtraTaskSettings.TaskDevicePluginConfigLong[1], serialconfig);
     #endif
 
-        initPluginTaskData(event->TaskIndex, new P044_data_struct(ExtraTaskSettings.TaskDevicePluginConfigLong[0]));
+        initPluginTaskData(event->TaskIndex, new P044_data_struct());
         P044_data_struct *P044_data =
             static_cast<P044_data_struct *>(getPluginTaskData(event->TaskIndex));
-        if (nullptr == P044_data || !P044_data->init) {
+        if (nullptr == P044_data) {
+          break;
+        }
+
+        P044_data->startServer(ExtraTaskSettings.TaskDevicePluginConfigLong[0]);
+
+        if (!P044_data->isInit()) {
           break;
         }
 
@@ -374,7 +393,7 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
           break;
         }
 
-        if (P044_data->init)
+        if (P044_data->isInit())
         {
           if (P044_data->P1GatewayServer->hasClient())
           {
@@ -432,7 +451,7 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
       {
         P044_data_struct *P044_data =
             static_cast<P044_data_struct *>(getPluginTaskData(event->TaskIndex));
-        if (nullptr == P044_data || !P044_data->init) {
+        if (nullptr == P044_data || !P044_data->isInit()) {
           break;
         }
 
