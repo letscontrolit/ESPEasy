@@ -175,6 +175,8 @@ class SettingsStruct_tmpl
   uint32_t      VariousBits1;
   uint32_t      ResetFactoryDefaultPreference; // Do not clear this one in the clearAll()
   uint32_t      I2C_clockSpeed;
+  uint16_t      WebserverPort;
+  uint16_t      unused;
 
   // FIXME @TD-er: As discussed in #1292, the CRC for the settings is now disabled.
   // make sure crc is the last value in the struct
