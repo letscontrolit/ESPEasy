@@ -70,8 +70,8 @@ struct P044_data_struct : public PluginTaskData_base {
      https://github.com/jantenhove/P1-Meter-ESP8266
   */
   bool checkDatagram(int len) {
-    int startChar = serial_buffer.lastIndexOf('/', len);
-    int endChar = serial_buffer.lastIndexOf('!', len);
+    int startChar = serial_buffer.lastIndexOf('/');
+    int endChar = serial_buffer.lastIndexOf('!');
     bool validCRCFound = false;
 
     if (!CRCcheck) return true;
@@ -96,7 +96,7 @@ struct P044_data_struct : public PluginTaskData_base {
       messageCRC[4] = 0;
       if (serialdebug) {
         for (int cnt = 0; cnt < len; cnt++)
-          serialPrint(serial_buffer.substring(cnt));
+          serialPrint(serial_buffer.substring(cnt, 1));
       }
 
       validCRCFound = (strtoul(messageCRC, NULL, 16) == currCRC);
