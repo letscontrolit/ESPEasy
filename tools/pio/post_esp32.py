@@ -1,6 +1,6 @@
 Import("env")
 
-def after_build(source, target, env):
+def esp32_create_factory_bin(source, target, env):
     print("Generating factory bin for genuine esp units")
     #offset = 0x1000
     offset = 0x0
@@ -20,4 +20,4 @@ def after_build(source, target, env):
     new_file.close()
     firmware.close()
 
-env.AddPostAction("$BUILD_DIR/${PROGNAME}.bin", after_build)
+env.AddPostAction("$BUILD_DIR/${PROGNAME}.bin", esp32_create_factory_bin)

@@ -239,7 +239,7 @@ void handle_rules_new() {
                                    Serial.println(fi.Name);
     #endif // ifdef WEBSERVER_RULES_DEBUG
 
-                                   return count <= endIdx;
+                                   return count < endIdx;
                                  };
 
 
@@ -629,7 +629,7 @@ bool EnumerateFileAndDirectory(String          & rootPath
     File file = root.openNextFile();
 
     while (next && file) {
-      if (count > skip) {
+      if (count >= skip) {
         fileInfo fi;
         fi.Name        = file.name();
         fi.Size        = file.size();
@@ -642,6 +642,7 @@ bool EnumerateFileAndDirectory(String          & rootPath
       }
       file = root.openNextFile();
     }
+    hasMore = file;
   }
   else
   {

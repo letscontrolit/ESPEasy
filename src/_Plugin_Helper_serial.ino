@@ -160,7 +160,7 @@ void serialHelper_webformLoad(int rxPinDef, int txPinDef, bool allowSoftwareSeri
         case ESPeasySerialType::serialtype::software:
         {
           if (!allowSoftwareSerial) {
-            attr[i] = F("disabled");
+            attr[index] = F("disabled");
           }
           break;
         }

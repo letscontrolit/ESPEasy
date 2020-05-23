@@ -19,7 +19,7 @@ struct TimeChangeRule {
 
   TimeChangeRule();
 
-  TimeChangeRule(uint8_t weeknr, uint8_t downr, uint8_t m, uint8_t h, uint16_t minutesoffset);
+  TimeChangeRule(uint8_t weeknr, uint8_t downr, uint8_t m, uint8_t h, int16_t minutesoffset);
 
   // Construct time change rule from stored values optimized for minimum space.
   TimeChangeRule(uint16_t flash_stored_value, int16_t minutesoffset);
