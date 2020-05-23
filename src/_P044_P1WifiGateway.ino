@@ -226,7 +226,6 @@ struct P044_data_struct : public PluginTaskData_base {
         P1GatewayClient.write(serial_buffer.c_str(), bytes_read);
         P1GatewayClient.flush();
 
-        // start: was exported
         addLog(LOG_LEVEL_DEBUG, F("P1   : data send!"));
         blinkLED();
 
@@ -237,7 +236,6 @@ struct P044_data_struct : public PluginTaskData_base {
           eventString += F("#Data");
           eventQueue.add(eventString);
         }
-        // end: was exported
 
       } else {
         addLog(LOG_LEVEL_DEBUG, F("P1   : Error: Invalid CRC, dropped data"));
