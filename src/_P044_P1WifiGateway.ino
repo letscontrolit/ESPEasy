@@ -25,12 +25,6 @@
 #define P044_CHECKSUM                      3
 #define P044_DONE                          4
 
-#define P044_result_no_error               0
-#define P044_result_error_start_detected   1
-#define P044_result_error_data_corrupt     2
-#define P044_result_error_invalid_crc      3
-#define P044_result_data_sent              4
-
 
 
 struct P044_data_struct : public PluginTaskData_base {
@@ -132,99 +126,113 @@ struct P044_data_struct : public PluginTaskData_base {
     return false;
   }
 
+  void handle_serial_in(struct EventStruct *event) {
 
+    int RXWait = PCONFIG(0);
 
-  byte readSerialData(int RXWait, char& ch) {
-    byte result = P044_result_no_error;
-    if (P1GatewayClient.connected())
+    if (RXWait == 0)
+      RXWait = 1;
+    int timeOut = RXWait;
+    while (timeOut > 0)
     {
-      if (RXWait == 0)
-        RXWait = 1;
-      int timeOut = RXWait;
-      while (timeOut > 0)
-      {
-        while (Serial.available() && state != P044_DONE) {
-          if (bytes_read < P044_BUFFER_SIZE - 5) {
-            ch = Serial.read();
-            digitalWrite(P044_STATUS_LED, 1);
-            switch (state) {
-              case P044_DISABLED: //ignore incoming data
-                break;
-              case P044_WAITING:
-                if (ch == '/')  {
-                  clearBuffer();
-                  addChar(ch);
-                  state = P044_READING;
-                } // else ignore data
-                break;
-              case P044_READING:
-                if (ch == '!') {
-                  if (CRCcheck) {
-                    state = P044_CHECKSUM;
-                  } else {
-                    state = P044_DONE;
-                  }
-                }
-                if (validP1char(ch)) {
-                  addChar(ch);
-                } else if (ch=='/') {
-                  result = P044_result_error_start_detected;
-                  clearBuffer();
-                  addChar(ch);
-                } else {              // input is non-ascii
-                  result = P044_result_error_data_corrupt;
-                  Serial.flush();
-                  clearBuffer();
-                  state = P044_WAITING;
-                }
-                break;
-              case P044_CHECKSUM:
-                ++checkI;
-                if (checkI == 4) {
-                  checkI = 0;
+      while (Serial.available() && state != P044_DONE) {
+        if (bytes_read < P044_BUFFER_SIZE - 5) {
+          char ch = Serial.read();
+          digitalWrite(P044_STATUS_LED, 1);
+          switch (state) {
+            case P044_DISABLED: //ignore incoming data
+              break;
+            case P044_WAITING:
+              if (ch == '/')  {
+                clearBuffer();
+                addChar(ch);
+                state = P044_READING;
+              } // else ignore data
+              break;
+            case P044_READING:
+              if (ch == '!') {
+                if (CRCcheck) {
+                  state = P044_CHECKSUM;
+                } else {
                   state = P044_DONE;
                 }
+              }
+              if (validP1char(ch)) {
                 addChar(ch);
-                break;
-              case P044_DONE:
-                // serial_buffer[bytes_read]= '\n';
-                // bytes_read++;
-                // serial_buffer[bytes_read] = 0;
-                break;
-            }
+              } else if (ch=='/') {
+                addLog(LOG_LEVEL_DEBUG, F("P1   : Error: Start detected, discarded input."));
+                clearBuffer();
+                addChar(ch);
+              } else {              // input is non-ascii
+                addLog(LOG_LEVEL_DEBUG, F("P1   : Error: DATA corrupt, discarded input."));
+                if (serialdebug) {
+                  serialPrint(F("faulty char>"));
+                  serialPrint(String(ch));
+                  serialPrintln("<");
+                }
+                clearBuffer();
+                state = P044_WAITING;
+              }
+              break;
+            case P044_CHECKSUM:
+              ++checkI;
+              if (checkI == 4) {
+                checkI = 0;
+                state = P044_DONE;
+              }
+              addChar(ch);
+              break;
+            case P044_DONE:
+              // Plugin_044_serial_buf[bytes_read]= '\n';
+              // bytes_read++;
+              // Plugin_044_serial_buf[bytes_read] = 0;
+              break;
           }
-          else
-          {
-            Serial.read();      // when the buffer is full, just read remaining input, but do not store...
-            clearBuffer();
-            state = P044_WAITING;    // reset
-          }
-          digitalWrite(P044_STATUS_LED, 0);
-          timeOut = RXWait; // if serial received, reset timeout counter
         }
-        delay(1);
-        --timeOut;
+        else
+        {
+          Serial.read();      // when the buffer is full, just read remaining input, but do not store...
+          clearBuffer();
+          bytes_read = 0;
+          state = P044_WAITING;    // reset
+        }
+        digitalWrite(P044_STATUS_LED, 0);
+        timeOut = RXWait; // if serial received, reset timeout counter
+      }
+      delay(1);
+      timeOut--;
+    }
+
+    if (state == P044_DONE) {
+      if (checkDatagram(bytes_read)) {
+        addChar('\r');
+        addChar('\n');
+        // No longer needed for the string to be null-terminated, since .c_str() does deliver 0-terminated char array pointer
+//          serial_buffer[bytes_read] = 0;
+        P1GatewayClient.write(serial_buffer.c_str(), bytes_read);
+        P1GatewayClient.flush();
+
+        // start: was exported
+        addLog(LOG_LEVEL_DEBUG, F("P1   : data send!"));
+        blinkLED();
+
+        if (Settings.UseRules)
+        {
+          LoadTaskSettings(event->TaskIndex);
+          String eventString = getTaskDeviceName(event->TaskIndex);
+          eventString += F("#Data");
+          eventQueue.add(eventString);
+        }
+        // end: was exported
+
+      } else {
+        addLog(LOG_LEVEL_DEBUG, F("P1   : Error: Invalid CRC, dropped data"));
       }
 
-      if (state == P044_DONE) {
-        if (checkDatagram(bytes_read)) {
-          addChar('\r');
-          addChar('\n');
-          // No longer needed for the string to be null-terminated, since .c_str() does deliver 0-terminated char array pointer
-//          serial_buffer[bytes_read] = 0;
-          P1GatewayClient.write(serial_buffer.c_str(), bytes_read);
-          P1GatewayClient.flush();
-          result = P044_result_data_sent;
-        } else {
-          result = P044_result_error_invalid_crc;
-        }
-        clearBuffer();
-        state = P044_WAITING;
-      }   // state == P044_DONE
-    }
-    return result;
+      clearBuffer();
+      state = P044_WAITING;
+    }   // state == P044_DONE
   }
-
 
   WiFiServer *P1GatewayServer = nullptr;
   WiFiClient P1GatewayClient;
@@ -422,7 +430,16 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_SERIAL_IN:
       {
-        P044_handle_serial_in(event);
+        P044_data_struct *P044_data =
+            static_cast<P044_data_struct *>(getPluginTaskData(event->TaskIndex));
+        if (nullptr == P044_data || !P044_data->init) {
+          break;
+        }
+
+        if (P044_data->P1GatewayClient.connected())
+        {
+          P044_data->handle_serial_in(event);
+        }
         success = true;
         break;
       }
@@ -437,49 +454,6 @@ void blinkLED() {
 }
 
 
-void P044_handle_serial_in(struct EventStruct *event) {
-  P044_data_struct *P044_data =
-      static_cast<P044_data_struct *>(getPluginTaskData(event->TaskIndex));
-  if (nullptr == P044_data || !P044_data->init) {
-    return;
-  }
-
-  char ch;
-  switch (P044_data->readSerialData(PCONFIG(0), ch)) {
-    case P044_result_data_sent:
-      addLog(LOG_LEVEL_DEBUG, F("P1   : data send!"));
-      blinkLED();
-      if (Settings.UseRules)
-      {
-        LoadTaskSettings(event->TaskIndex);
-        String eventString = getTaskDeviceName(event->TaskIndex);
-        eventString += F("#Data");
-        eventQueue.add(eventString);
-      }
-      break;
-    case P044_result_error_start_detected:
-    {
-      addLog(LOG_LEVEL_DEBUG, F("P1   : Error: Start detected, discarded input."));
-      break;
-    }
-    case P044_result_error_data_corrupt:
-    {
-      addLog(LOG_LEVEL_DEBUG, F("P1   : Error: DATA corrupt, discarded input."));
-      if (P044_data->serialdebug) {
-        serialPrint(F("faulty char>"));
-        serialPrint(String(ch));
-        serialPrintln("<");
-      }
-      break;
-    }
-    case P044_result_error_invalid_crc:
-    {
-      addLog(LOG_LEVEL_DEBUG, F("P1   : Error: Invalid CRC, dropped data"));
-      break;
-    }
-
-  }
-}
 
 /*
    CRC16
