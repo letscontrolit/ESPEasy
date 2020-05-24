@@ -188,6 +188,9 @@ String BuildFixes()
     Settings.ETH_Clock_Mode = DEFAULT_ETH_CLOCK_MODE;
     Settings.ETH_Wifi_Mode  = DEFAULT_ETH_WIFI_MODE;
   }
+  if (Settings.Build < 20108) {
+    Settings.WebserverPort = 80;
+  }
 
   Settings.Build = BUILD;
   return SaveSettings();

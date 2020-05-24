@@ -92,9 +92,10 @@ void handle_hardware() {
   #endif
   addFormNote(F("Chip Select (CS) config must be done in the plugin"));
   
-  #ifdef FEATURE_SD
-    addFormPinSelect(formatGpioName_output("SD Card CS"), "sd", Settings.Pin_sd_cs);
-  #endif // ifdef FEATURE_SD
+#ifdef FEATURE_SD
+  addFormPinSelect(formatGpioName_output("SD Card CS"), "sd", Settings.Pin_sd_cs);
+#endif // ifdef FEATURE_SD
+  
 #ifdef HAS_ETHERNET
   addFormSubHeader(F("Ethernet"));
   addRowLabel_tr_id(F("Ethernet or WIFI?"), "ethwifi");
@@ -156,3 +157,4 @@ void handle_hardware() {
 }
 
 #endif // ifdef WEBSERVER_HARDWARE
+
