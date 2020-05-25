@@ -37,20 +37,49 @@ struct P044_data_struct : public PluginTaskData_base {
     stopServer();
   }
 
+  inline static bool serverActive(WiFiServer * server) {
+#if defined(ESP8266)
+    return nullptr != server && server->status() != CLOSED;
+#elif defined(ESP32)
+    return nullptr != server && *server;
+#endif
+  }
+
   void startServer(unsigned int portnumber) {
+    if (gatewayPort == portnumber && serverActive(P1GatewayServer)) {
+      // server is already listening on this port
+      return;
+    }
     stopServer();
+    gatewayPort = portnumber;
     P1GatewayServer = new WiFiServer(portnumber);
     if (nullptr != P1GatewayServer) {
       P1GatewayServer->begin();
-      addLog(LOG_LEVEL_DEBUG, String(F("P1   : WiFi server started at port ")) + portnumber);
+      if(serverActive(P1GatewayServer)) {
+        addLog(LOG_LEVEL_INFO, String(F("P1   : WiFi server started at port ")) + portnumber);
+      } else {
+        addLog(LOG_LEVEL_ERROR, String(F("P1   : WiFi server start failed at port ")) +
+            portnumber + String(F(", retrying...")));
+      }
+    }
+  }
+
+  inline void checkServer() {
+    if (!serverActive(P1GatewayServer)) {
+      P1GatewayServer->close();
+      P1GatewayServer->begin();
+      if(serverActive(P1GatewayServer)) {
+        addLog(LOG_LEVEL_INFO, F("P1   : WiFi server started"));
+      }
     }
   }
 
   void stopServer() {
     clearBuffer();
     if (nullptr != P1GatewayServer) {
+      if (P1GatewayClient) P1GatewayClient.stop();
       P1GatewayServer->close();
-      addLog(LOG_LEVEL_DEBUG, F("P1   : WiFi server closed"));
+      addLog(LOG_LEVEL_INFO, F("P1   : WiFi server closed"));
       delete P1GatewayServer;
       P1GatewayServer = nullptr;
     }
@@ -281,6 +310,7 @@ struct P044_data_struct : public PluginTaskData_base {
   }
 
   WiFiServer *P1GatewayServer = nullptr;
+  unsigned int gatewayPort = 0;
   WiFiClient P1GatewayClient;
   byte connectionState = 0;
   String serial_buffer;
@@ -363,8 +393,12 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
             break;
           }
 
-        P044_data_struct::init(event->TaskIndex);
+        // try to reuse to keep webserver running
         P044_data_struct *P044_data = P044_data_struct::get(event->TaskIndex, false);
+        if (nullptr == P044_data) {
+          P044_data_struct::init(event->TaskIndex);
+          P044_data = P044_data_struct::get(event->TaskIndex, false);
+        }
         if (nullptr == P044_data) {
           break;
         }
@@ -410,6 +444,17 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
         success = true;
         break;
       }
+
+    case PLUGIN_ONCE_A_SECOND:
+    {
+      P044_data_struct *P044_data = P044_data_struct::get(event->TaskIndex);
+      if (nullptr == P044_data) {
+        break;
+      }
+      P044_data->checkServer();
+      success = true;
+      break;
+    }
 
     case PLUGIN_TEN_PER_SECOND:
       {
