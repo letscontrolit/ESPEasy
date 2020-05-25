@@ -62,10 +62,6 @@ struct P044_data_struct : public PluginTaskData_base {
     bytes_read = 0;
   }
 
-  bool isInit() const {
-  	return nullptr != P1GatewayServer;
-  }
-
   void addChar(char ch) {
     serial_buffer += ch;
     ++bytes_read;
@@ -140,7 +136,25 @@ struct P044_data_struct : public PluginTaskData_base {
     return false;
   }
 
-  void handle_serial_in(struct EventStruct *event) {
+  void serialBegin(int16_t rxPin, int16_t txPin,
+                   unsigned long baud, byte config) {
+    serialEnd();
+    P1EasySerial = new ESPeasySerial(rxPin, txPin);
+#if defined(ESP8266)
+    P1EasySerial->begin(baud, (SerialConfig)config);
+#elif defined(ESP32)
+    P1EasySerial->begin(baud, config);
+#endif
+  }
+  
+  void serialEnd() {
+    if (nullptr != P1EasySerial) {
+      delete P1EasySerial;
+      P1EasySerial = nullptr;
+    }
+  }
+
+  void handleSerialIn(struct EventStruct *event) {
 
     int RXWait = PCONFIG(0);
 
@@ -149,9 +163,9 @@ struct P044_data_struct : public PluginTaskData_base {
     int timeOut = RXWait;
     while (timeOut > 0)
     {
-      while (Serial.available() && state != P044_DONE) {
+      while (P1EasySerial->available() && state != P044_DONE) {
         if (bytes_read < P044_BUFFER_SIZE - 5) {
-          char ch = Serial.read();
+          char ch = P1EasySerial->read();
           digitalWrite(P044_STATUS_LED, 1);
           switch (state) {
             case P044_DISABLED: //ignore incoming data
@@ -205,7 +219,7 @@ struct P044_data_struct : public PluginTaskData_base {
         }
         else
         {
-          Serial.read();      // when the buffer is full, just read remaining input, but do not store...
+          P1EasySerial->read();      // when the buffer is full, just read remaining input, but do not store...
           clearBuffer();
           bytes_read = 0;
           state = P044_WAITING;    // reset
@@ -246,16 +260,37 @@ struct P044_data_struct : public PluginTaskData_base {
     }   // state == P044_DONE
   }
 
+  void discardSerialIn() {
+    while (P1EasySerial->available()) {
+      P1EasySerial->read();
+    }
+	}
+
+  bool isInit() const {
+  	return nullptr != P1GatewayServer && nullptr != P1EasySerial;
+  }
+
+  inline static void init(taskIndex_t taskIndex) {
+    initPluginTaskData(taskIndex, new P044_data_struct());
+  }
+
+  inline static P044_data_struct *get(taskIndex_t taskIndex, bool checkInit = true) {
+    P044_data_struct * task = static_cast<P044_data_struct *>(getPluginTaskData(taskIndex));
+    if (!checkInit) return task;
+    return (nullptr != task && task->isInit()) ? task : nullptr;
+  }
+
   WiFiServer *P1GatewayServer = nullptr;
   WiFiClient P1GatewayClient;
+  byte connectionState = 0;
   String serial_buffer;
   unsigned int bytes_read = 0;
   unsigned int currCRC = 0;
   int state = P044_DISABLED;
   int checkI = 0;
-  byte connectionState = 0;
   boolean serialdebug = false;
   boolean CRCcheck = false;
+  ESPeasySerial *P1EasySerial = nullptr;
 };
 
 boolean Plugin_044(byte function, struct EventStruct *event, String& string)
@@ -328,28 +363,21 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
             break;
           }
 
-    #if defined(ESP8266)
-         byte serialconfig = 0;
-    #elif defined(ESP32)
-         uint32_t serialconfig = 0x8000000;
-    #endif
-        serialconfig |= serialHelper_convertOldSerialConfig(PCONFIG(1));
-    #if defined(ESP8266)
-        Serial.begin(ExtraTaskSettings.TaskDevicePluginConfigLong[1], (SerialConfig)serialconfig);
-    #elif defined(ESP32)
-        Serial.begin(ExtraTaskSettings.TaskDevicePluginConfigLong[1], serialconfig);
-    #endif
-
-        initPluginTaskData(event->TaskIndex, new P044_data_struct());
-        P044_data_struct *P044_data =
-            static_cast<P044_data_struct *>(getPluginTaskData(event->TaskIndex));
+        P044_data_struct::init(event->TaskIndex);
+        P044_data_struct *P044_data = P044_data_struct::get(event->TaskIndex, false);
         if (nullptr == P044_data) {
           break;
         }
 
+        int rxPin;
+        int txPin;
+        ESPeasySerialType::getSerialTypePins(ESPeasySerialType::serial0, rxPin, txPin);
+        byte serialconfig = serialHelper_convertOldSerialConfig(PCONFIG(1));
+        P044_data->serialBegin(rxPin, txPin, ExtraTaskSettings.TaskDevicePluginConfigLong[1], serialconfig);
         P044_data->startServer(ExtraTaskSettings.TaskDevicePluginConfigLong[0]);
 
         if (!P044_data->isInit()) {
+          clearPluginTaskData(event->TaskIndex);
           break;
         }
 
@@ -385,77 +413,71 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_TEN_PER_SECOND:
       {
-        P044_data_struct *P044_data =
-            static_cast<P044_data_struct *>(getPluginTaskData(event->TaskIndex));
+        P044_data_struct *P044_data = P044_data_struct::get(event->TaskIndex);
         if (nullptr == P044_data) {
           break;
         }
 
-        if (P044_data->isInit())
+        if (P044_data->P1GatewayServer->hasClient())
         {
-          if (P044_data->P1GatewayServer->hasClient())
-          {
-            if (P044_data->P1GatewayClient) P044_data->P1GatewayClient.stop();
-            P044_data->P1GatewayClient = P044_data->P1GatewayServer->available();
-            P044_data->P1GatewayClient.setTimeout(CONTROLLER_CLIENTTIMEOUT_DFLT);
-            addLog(LOG_LEVEL_ERROR, F("P1   : Client connected!"));
-          }
-
-          if (P044_data->P1GatewayClient.connected())
-          {
-            P044_data->connectionState = 1;
-            uint8_t net_buf[P044_NETBUF_SIZE];
-            int count = P044_data->P1GatewayClient.available();
-            if (count > 0)
-            {
-              size_t net_bytes_read;
-              if (count > P044_NETBUF_SIZE)
-                count = P044_NETBUF_SIZE;
-              net_bytes_read = P044_data->P1GatewayClient.read(net_buf, count);
-              Serial.write(net_buf, net_bytes_read);
-              Serial.flush(); // Waits for the transmission of outgoing serial data to complete
-
-              if (count == P044_NETBUF_SIZE) // if we have a full buffer, drop the last position to stuff with string end marker
-              {
-                count--;
-                // and log buffer full situation
-                addLog(LOG_LEVEL_ERROR, F("P1   : Error: network buffer full!"));
-              }
-              net_buf[count] = 0; // before logging as a char array, zero terminate the last position to be safe.
-              char log[P044_NETBUF_SIZE + 40] = {0};
-              sprintf_P(log, PSTR("P1   : Error: N>: %s"), (char*)net_buf);
-              ZERO_TERMINATE(log);
-              addLog(LOG_LEVEL_DEBUG, log);
-            }
-          }
-          else
-          {
-            if (P044_data->connectionState == 1) // there was a client connected before...
-            {
-              P044_data->connectionState = 0;
-              addLog(LOG_LEVEL_ERROR, F("P1   : Client disconnected!"));
-            }
-
-            while (Serial.available())
-              Serial.read();
-          }
-
-          success = true;
+          if (P044_data->P1GatewayClient) P044_data->P1GatewayClient.stop();
+          P044_data->P1GatewayClient = P044_data->P1GatewayServer->available();
+          P044_data->P1GatewayClient.setTimeout(CONTROLLER_CLIENTTIMEOUT_DFLT);
+          addLog(LOG_LEVEL_ERROR, F("P1   : Client connected!"));
         }
+
+        if (P044_data->P1GatewayClient.connected())
+        {
+          P044_data->connectionState = 1;
+          uint8_t net_buf[P044_NETBUF_SIZE];
+          int count = P044_data->P1GatewayClient.available();
+          if (count > 0)
+          {
+            size_t net_bytes_read;
+            if (count > P044_NETBUF_SIZE)
+              count = P044_NETBUF_SIZE;
+            net_bytes_read = P044_data->P1GatewayClient.read(net_buf, count);
+            P044_data->P1EasySerial->write(net_buf, net_bytes_read);
+            P044_data->P1EasySerial->flush(); // Waits for the transmission of outgoing serial data to complete
+
+            if (count == P044_NETBUF_SIZE) // if we have a full buffer, drop the last position to stuff with string end marker
+            {
+              count--;
+              // and log buffer full situation
+              addLog(LOG_LEVEL_ERROR, F("P1   : Error: network buffer full!"));
+            }
+            net_buf[count] = 0; // before logging as a char array, zero terminate the last position to be safe.
+            char log[P044_NETBUF_SIZE + 40] = {0};
+            sprintf_P(log, PSTR("P1   : Error: N>: %s"), (char*)net_buf);
+            ZERO_TERMINATE(log);
+            addLog(LOG_LEVEL_DEBUG, log);
+          }
+        }
+        else
+        {
+          if (P044_data->connectionState == 1) // there was a client connected before...
+          {
+            P044_data->connectionState = 0;
+            addLog(LOG_LEVEL_ERROR, F("P1   : Client disconnected!"));
+          }
+        }
+
+        success = true;
         break;
       }
 
     case PLUGIN_SERIAL_IN:
       {
-        P044_data_struct *P044_data =
-            static_cast<P044_data_struct *>(getPluginTaskData(event->TaskIndex));
-        if (nullptr == P044_data || !P044_data->isInit()) {
+        P044_data_struct *P044_data = P044_data_struct::get(event->TaskIndex);
+        if (nullptr == P044_data) {
           break;
         }
 
         if (P044_data->P1GatewayClient.connected())
         {
-          P044_data->handle_serial_in(event);
+          P044_data->handleSerialIn(event);
+        } else {
+          P044_data->discardSerialIn();
         }
         success = true;
         break;
