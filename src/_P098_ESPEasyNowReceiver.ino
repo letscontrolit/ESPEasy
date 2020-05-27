@@ -73,14 +73,12 @@ boolean Plugin_098(byte function, struct EventStruct *event, String& string)
       // Do not set the sensor type, or else it will be set for all instances of the Dummy plugin.
       // sensorTypeHelper_setSensorType(event, 0);
 
-      plugin_EspEasy_now_enabled = true;
       success                    = true;
       break;
     }
 
     case PLUGIN_EXIT:
     {
-      plugin_EspEasy_now_enabled = false;
       success                    = true;
       break;
     }

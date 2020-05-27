@@ -233,9 +233,9 @@ void checkUDP()
                   String log;
                   log.reserve(64);
                   log = F("UDP  : ");
-                  log += formatMAC(received.mac);
+                  log += received.STA_MAC().toString();
                   log += ',';
-                  log += formatIP(received.ip);
+                  log += received.IP().toString();
                   log += ',';
                   log += received.unit;
                   addLog(LOG_LEVEL_DEBUG_MORE, log);

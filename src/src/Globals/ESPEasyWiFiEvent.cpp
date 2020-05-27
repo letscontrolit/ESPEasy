@@ -41,8 +41,8 @@ LongTermTimer::Duration lastConnectedDuration_us = 0ll;
 LongTermTimer timerAPoff;   // Timer to check whether the AP mode should be disabled (0 = disabled)
 LongTermTimer timerAPstart; // Timer to start AP mode, started when no valid network is detected.
 bool intent_to_reboot                = false;
-uint8_t lastMacConnectedAPmode[6]    = { 0 };
-uint8_t lastMacDisconnectedAPmode[6] = { 0 };
+MAC_address lastMacConnectedAPmode;
+MAC_address lastMacDisconnectedAPmode;
 
 
 // Semaphore like bools for processing data gathered from WiFi events.

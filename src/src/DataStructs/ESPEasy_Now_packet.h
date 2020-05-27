@@ -6,6 +6,7 @@
 #include "../Globals/ESPEasy_now_state.h"
 #ifdef USES_ESPEASY_NOW
 
+#include "MAC_address.h"
 # include "ESPEasy_now_hdr.h"
 
 # include <list>
@@ -18,7 +19,7 @@ public:
                      size_t                 payloadSize);
 
   // Constructor for receiving a packet
-  ESPEasy_Now_packet(const uint8_t  mac[6],
+  ESPEasy_Now_packet(const MAC_address& mac,
                      const uint8_t *buf,
                      size_t         packetSize);
 
@@ -34,7 +35,7 @@ public:
 
   void            setHeader(ESPEasy_now_hdr header);
 
-  void            setMac(uint8_t mac[6]);
+  void            setMac(const MAC_address& mac);
 
   void            setBroadcast();
 

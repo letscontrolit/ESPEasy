@@ -198,7 +198,7 @@ void handle_root() {
           html.reserve(64);
 
           html += F("http://");
-          html += it->second.ip.toString();
+          html += it->second.IP().toString();
           uint16_t port = it->second.webgui_portnumber;
           if (port !=0 && port != 80) {
             html += ':';

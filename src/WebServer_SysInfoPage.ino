@@ -454,6 +454,9 @@ void handle_sysinfo_WiFiSettings() {
   addRowLabelValue(LabelType::PERIODICAL_GRAT_ARP);
 # endif // ifdef SUPPORT_ARP
   addRowLabelValue(LabelType::CONNECTION_FAIL_THRESH);
+#ifdef USES_ESPEASY_NOW
+  addRowLabelValue(LabelType::USE_ESPEASY_NOW);
+#endif
 }
 
 void handle_sysinfo_Firmware() {

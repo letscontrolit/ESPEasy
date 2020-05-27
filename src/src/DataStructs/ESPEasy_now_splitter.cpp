@@ -4,6 +4,7 @@
 
 # include "../../ESPEasy_Log.h"
 # include "../DataStructs/TimingStats.h"
+# include "../Globals/Nodes.h"
 # include "../Helpers/ESPEasy_time_calc.h"
 
 static uint8_t ESPEasy_now_message_count = 1;
@@ -72,22 +73,23 @@ bool ESPEasy_now_splitter::sendToBroadcast()
   for (int i = 0; i < 6; ++i) {
     mac[i] = 0xFF;
   }
-  return send(mac);
+  return send(mac, 0);
 }
 
-bool ESPEasy_now_splitter::send(uint8_t mac[6])
+bool ESPEasy_now_splitter::send(const MAC_address& mac,
+                            int channel)
 {
   prepareForSend(mac);
 
   const size_t nr_packets = _queue.size();
 
   for (uint8_t i = 0; i < nr_packets; ++i) {
-    if (!send(_queue[i])) { return false; }
+    if (!send(_queue[i], channel)) { return false; }
   }
   return true;
 }
 
-WifiEspNowSendStatus ESPEasy_now_splitter::send(uint8_t mac[6], size_t timeout)
+WifiEspNowSendStatus ESPEasy_now_splitter::send(const MAC_address& mac, size_t timeout, int channel)
 {
   START_TIMER;
   prepareForSend(mac);
@@ -97,7 +99,7 @@ WifiEspNowSendStatus ESPEasy_now_splitter::send(uint8_t mac[6], size_t timeout)
   const size_t nr_packets = _queue.size();
 
   for (uint8_t i = 0; i < nr_packets; ++i) {
-    send(_queue[i]);
+    send(_queue[i], channel);
     sendStatus = waitForSendStatus(timeout);
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -142,19 +144,33 @@ WifiEspNowSendStatus ESPEasy_now_splitter::send(uint8_t mac[6], size_t timeout)
   return sendStatus;
 }
 
-bool ESPEasy_now_splitter::send(const ESPEasy_Now_packet& packet)
+bool ESPEasy_now_splitter::send(const ESPEasy_Now_packet& packet, int channel)
 {
   START_TIMER;
-  bool has_peer = WifiEspNow.hasPeer(packet._mac);
 
-  if (!has_peer) {
-    WifiEspNow.addPeer(packet._mac);
+  if (!WifiEspNow.hasPeer(packet._mac)) {
+    // Only have a single temp peer added, so we don't run out of slots for peers.
+    static MAC_address last_tmp_mac;
+
+    if (last_tmp_mac != packet._mac) {
+      if (!last_tmp_mac.all_zero()) {
+        WifiEspNow.removePeer(last_tmp_mac.mac);
+      }
+      last_tmp_mac.set(packet._mac);
+    }
+
+    // Check to see if we know its channel
+    if (channel == 0) {
+      const NodeStruct *nodeInfo = Nodes.getNodeByMac(packet._mac);
+
+      if (nodeInfo != nullptr) {
+        channel = nodeInfo->channel;
+      }
+    }
+    WifiEspNow.addPeer(packet._mac, channel);
   }
   bool res = WifiEspNow.send(packet._mac, packet[0], packet.getSize());
 
-  if (!has_peer) {
-    WifiEspNow.removePeer(packet._mac);
-  }
   STOP_TIMER(ESPEASY_NOW_SEND_PCKT);
 
   delay(0);
@@ -172,7 +188,7 @@ WifiEspNowSendStatus ESPEasy_now_splitter::waitForSendStatus(size_t timeout) con
   return sendStatus;
 }
 
-void ESPEasy_now_splitter::prepareForSend(uint8_t mac[6])
+void ESPEasy_now_splitter::prepareForSend(const MAC_address& mac)
 {
   size_t nr_packets = _queue.size();
 

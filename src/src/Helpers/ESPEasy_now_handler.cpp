@@ -8,6 +8,7 @@
 # include "../DataStructs/ESPEasy_now_splitter.h"
 # include "../DataStructs/NodeStruct.h"
 # include "../DataStructs/TimingStats.h"
+# include "../Globals/ESPEasy_Now_peers.h"
 # include "../Globals/ESPEasy_time.h"
 # include "../Globals/Nodes.h"
 # include "../Globals/SecuritySettings.h"
@@ -64,6 +65,8 @@ bool ESPEasy_now_handler_t::begin()
 {
   if (!WifiEspNow.begin()) { return false; }
 
+  if (!Settings.UseESPEasyNow()) { return false; }
+
   for (byte peer = 0; peer < ESPEASY_NOW_PEER_MAX; ++peer) {
     if (SecuritySettings.peerMacSet(peer)) {
       if (!WifiEspNow.addPeer(SecuritySettings.EspEasyNowPeerMAC[peer])) {
@@ -71,7 +74,7 @@ bool ESPEasy_now_handler_t::begin()
           String log;
           log.reserve(48);
           log  = F("ESPEasy_Now: Failed to add peer ");
-          log += formatMAC(SecuritySettings.EspEasyNowPeerMAC[peer]);
+          log += MAC_address(SecuritySettings.EspEasyNowPeerMAC[peer]).toString();
           addLog(LOG_LEVEL_ERROR, log);
         }
       }
@@ -84,6 +87,7 @@ bool ESPEasy_now_handler_t::begin()
   sendDiscoveryAnnounce();
 
   use_EspEasy_now = true;
+  addLog(LOG_LEVEL_INFO, F("ESPEasy-Now enabled"));
   return true;
 }
 
@@ -91,10 +95,31 @@ void ESPEasy_now_handler_t::end()
 {
   use_EspEasy_now = false;
   WifiEspNow.end();
+  addLog(LOG_LEVEL_INFO, F("ESPEasy-Now disabled"));
 }
 
 bool ESPEasy_now_handler_t::loop()
 {
+  if (temp_disable_EspEasy_now_timer != 0) {
+    if (timeOutReached(temp_disable_EspEasy_now_timer)) {
+      if (begin()) {
+        temp_disable_EspEasy_now_timer = 0;
+      }
+    } else {
+      if (use_EspEasy_now) {
+        end();
+      }
+      return false;
+    }
+  } else {
+    if (Settings.UseESPEasyNow() != use_EspEasy_now) {
+      if (!use_EspEasy_now) {
+        begin();
+      } else {
+        end();
+      }
+    }
+  }
   bool somethingProcessed = false;
 
   if (!ESPEasy_now_in_queue.empty()) {
@@ -135,6 +160,40 @@ bool ESPEasy_now_handler_t::loop()
   return somethingProcessed;
 }
 
+void ESPEasy_now_handler_t::addPeerFromWiFiScan()
+{
+  const int8_t scanCompleteStatus = WiFi.scanComplete();
+  for (int8_t i = 0; i < scanCompleteStatus; ++i) {
+    addPeerFromWiFiScan(i);
+  }
+}
+
+void ESPEasy_now_handler_t::addPeerFromWiFiScan(uint8_t scanIndex)
+{
+  int8_t scanCompleteStatus = WiFi.scanComplete();
+
+  switch (scanCompleteStatus) {
+    case 0:  // Nothing (yet) found
+      return;
+    case -1: // WIFI_SCAN_RUNNING
+      return;
+    case -2: // WIFI_SCAN_FAILED
+      return;
+  }
+
+  if (scanIndex > scanCompleteStatus) { return; }
+  MAC_address peer_mac = WiFi.BSSID(scanIndex);
+  auto nodeInfo        = Nodes.getNodeByMac(peer_mac);
+
+  if (nodeInfo != nullptr) {
+    nodeInfo->setRSSI(WiFi.RSSI(scanIndex));
+    nodeInfo->channel = WiFi.channel(scanIndex);
+  } else {
+    // Must trigger a discovery request from the node.
+    sendDiscoveryAnnounce(peer_mac, WiFi.channel(scanIndex));
+  }
+}
+
 bool ESPEasy_now_handler_t::processMessage(const ESPEasy_now_merger& message)
 {
   addLog(LOG_LEVEL_INFO, message.getLogString());
@@ -168,7 +227,17 @@ bool ESPEasy_now_handler_t::processMessage(const ESPEasy_now_merger& message)
 // * Discovery Announcement
 // *************************************************************
 
-void ESPEasy_now_handler_t::sendDiscoveryAnnounce(byte channel)
+void ESPEasy_now_handler_t::sendDiscoveryAnnounce()
+{
+  MAC_address broadcast;
+
+  for (int i = 0; i < 6; ++i) {
+    broadcast.mac[i] = 0xFF;
+  }
+  sendDiscoveryAnnounce(broadcast);
+}
+
+void ESPEasy_now_handler_t::sendDiscoveryAnnounce(const MAC_address& mac, int channel)
 {
   NodeStruct thisNode;
 
@@ -176,7 +245,7 @@ void ESPEasy_now_handler_t::sendDiscoveryAnnounce(byte channel)
   size_t len = sizeof(NodeStruct);
   ESPEasy_now_splitter msg(ESPEasy_now_hdr::message_t::Announcement, len);
   msg.addBinaryData(reinterpret_cast<uint8_t *>(&thisNode), len);
-  msg.sendToBroadcast();
+  msg.send(mac, channel);
 }
 
 bool ESPEasy_now_handler_t::handle_DiscoveryAnnounce(const ESPEasy_now_merger& message)
@@ -189,11 +258,25 @@ bool ESPEasy_now_handler_t::handle_DiscoveryAnnounce(const ESPEasy_now_merger& m
   message.getBinaryData(reinterpret_cast<uint8_t *>(&received), sizeof(NodeStruct), payload_pos);
 
   if (!received.validate()) { return false; }
+
+  MAC_address mac;
+  message.getMac(mac);
+
+  if (!received.setESPEasyNow_mac(mac)) {
+    if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+      String log;
+      log  = F("ESPEasy Now: Received discovery message from MAC not stated in message: ");
+      log += mac.toString();
+      addLog(LOG_LEVEL_ERROR, log);
+    }
+    return false;
+  }
+
+  bool isNewNode = Nodes.getNodeByMac(mac) == nullptr;
+
   Nodes.addNode(received);
 
   // Test to see if the discovery announce could be a good candidate for next NTP query.
-  uint8_t mac[6] = { 0 };
-  message.getMac(mac);
   _best_NTP_candidate.find_best_NTP(
     mac,
     static_cast<timeSource_t>(received.timeSource),
@@ -209,6 +292,10 @@ bool ESPEasy_now_handler_t::handle_DiscoveryAnnounce(const ESPEasy_now_merger& m
     log += received.getSummary();
     addLog(LOG_LEVEL_INFO, log);
   }
+
+  if (isNewNode) {
+    sendDiscoveryAnnounce(mac);
+  }
   return true;
 }
 
@@ -219,13 +306,13 @@ bool ESPEasy_now_handler_t::handle_DiscoveryAnnounce(const ESPEasy_now_merger& m
 void ESPEasy_now_handler_t::sendNTPquery()
 {
   if (!_best_NTP_candidate.hasLowerWander()) { return; }
-  uint8_t mac[6] = { 0 };
+  MAC_address mac;
 
   if (!_best_NTP_candidate.getMac(mac)) { return; }
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("ESPEasy-Now: Send NTP query to: ");
-    log += formatMAC(mac);
+    log += mac.toString();
     addLog(LOG_LEVEL_INFO, log);
   }
 
@@ -234,7 +321,7 @@ void ESPEasy_now_handler_t::sendNTPquery()
   size_t len = sizeof(ESPEasy_Now_NTP_query);
   ESPEasy_now_splitter msg(ESPEasy_now_hdr::message_t::NTP_Query, len);
   msg.addBinaryData(reinterpret_cast<uint8_t *>(&query), len);
-  msg.send(mac);
+  msg.send(mac.mac);
 }
 
 void ESPEasy_now_handler_t::sendNTPbroadcast()
@@ -308,7 +395,7 @@ bool ESPEasy_now_handler_t::sendToMQTT(controllerIndex_t controllerIndex, const 
       // FIXME TD-er: This must be optimized to keep the last working index.
       // Or else it may take quite a while to send each message
       if (SecuritySettings.peerMacSet(peer)) {
-        WifiEspNowSendStatus sendStatus = msg.send(SecuritySettings.EspEasyNowPeerMAC[peer], millis() + ControllerSettings.ClientTimeout);
+        WifiEspNowSendStatus sendStatus = msg.send(SecuritySettings.EspEasyNowPeerMAC[peer], millis() + ControllerSettings.ClientTimeout, 0);
 
         switch (sendStatus) {
           case WifiEspNowSendStatus::OK:
@@ -382,7 +469,7 @@ void ESPEasy_now_handler_t::sendSendData_DuplicateCheck(uint32_t                
         log += F("Processed key ");
         log += key;
         log += ' ';
-        log += formatMAC(mac);
+        log += MAC_address(mac).toString();
         break;
     }
     addLog(LOG_LEVEL_DEBUG, log);

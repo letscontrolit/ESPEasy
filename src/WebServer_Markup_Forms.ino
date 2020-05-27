@@ -168,15 +168,8 @@ void addFormIPBox(const String& label, const String& id, const byte ip[4])
 // ********************************************************************************
 // Add a MAC Box form
 // ********************************************************************************
-void addFormMACBox(const String& label, const String& id, const byte mac[6])
+void addFormMACBox(const String& label, const String& id, const MAC_address mac)
 {
-  bool empty_MAC = true;
-  for (int i = 0; i < 6; ++i) {
-    if (mac[i] != 0) {
-      empty_MAC = false;
-    }
-  }
-
   addRowLabel_tr_id(label, id);
 
   String html;
@@ -186,8 +179,8 @@ void addFormMACBox(const String& label, const String& id, const byte mac[6])
   html += id;
   html += F("' value='");
 
-  if (!empty_MAC) {
-    html += formatMAC(mac);
+  if (!mac.all_zero()) {
+    html += mac.toString();
   }
   html += "'>";
   addHtml(html);

@@ -10,10 +10,10 @@ ESPEasy_now_merger::ESPEasy_now_merger() {
 }
 
 void ESPEasy_now_merger::addPacket(
-  uint8_t        packet_nr,
-  const uint8_t  mac[6],
-  const uint8_t *buf,
-  size_t         packetSize)
+  uint8_t            packet_nr,
+  const MAC_address& mac,
+  const uint8_t     *buf,
+  size_t             packetSize)
 {
   _queue.emplace(std::make_pair(packet_nr, ESPEasy_Now_packet(mac, buf, packetSize)));
   _firstPacketTimestamp = millis();
@@ -67,13 +67,18 @@ bool ESPEasy_now_merger::getMac(uint8_t *mac) const
   return true;
 }
 
+bool ESPEasy_now_merger::getMac(MAC_address& mac) const
+{
+  return getMac(mac.mac);
+}
+
 String ESPEasy_now_merger::getLogString() const
 {
-  uint8_t mac[6] = { 0 };
+  MAC_address mac;
 
   getMac(mac);
   String log;
-  log += formatMAC(mac);
+  log += mac.toString();
   log += F(" payload: ");
   log += getPayloadSize();
   log += F(" (");

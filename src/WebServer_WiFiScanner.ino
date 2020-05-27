@@ -92,6 +92,9 @@ void handle_wifiscanner() {
       addHtml(formatScanResult(i, "<TD>", rssi));
       html_TD();
       getWiFi_RSSI_icon(rssi, 45);
+      #ifdef USES_ESPEASY_NOW
+        ESPEasy_now_handler.addPeerFromWiFiScan(i);
+      #endif
     }
   }
 

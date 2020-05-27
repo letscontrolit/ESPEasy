@@ -22,13 +22,11 @@ ESPEasy_Now_NTP_query::ESPEasy_Now_NTP_query()
   reset(true);
 }
 
-bool ESPEasy_Now_NTP_query::getMac(uint8_t mac[6]) const
+bool ESPEasy_Now_NTP_query::getMac(MAC_address& mac) const
 {
   if (_timeSource == timeSource_t::No_time_source) { return false; }
 
-  for (byte i = 0; i < 6; ++i) {
-    mac[i] = _mac[i];
-  }
+  mac.set(_mac);
   return true;
 }
 
@@ -84,7 +82,7 @@ unsigned long ESPEasy_Now_NTP_query::computeExpectedWander(timeSource_t  timeSou
   return expectedWander_ms;
 }
 
-void ESPEasy_Now_NTP_query::find_best_NTP(const uint8_t mac[6],
+void ESPEasy_Now_NTP_query::find_best_NTP(const MAC_address& mac,
                                           timeSource_t  timeSource,
                                           unsigned long timePassedSinceLastTimeSync)
 {
@@ -103,32 +101,19 @@ void ESPEasy_Now_NTP_query::find_best_NTP(const uint8_t mac[6],
     computeExpectedWander(timeSource, timePassedSinceLastTimeSync);
 
   // First check if it matches the current best candidate.
-  bool matches_current_best = true;
-
-  for (byte i = 0; i < 6 && matches_current_best; ++i) {
-    matches_current_best = (_mac[i] == mac[i]);
-  }
-
+  bool matches_current_best = mac == _mac;
   if (matches_current_best) {
     // Update expected wander based on current time since last sync
     updated = true;
   } else {
     if (_expectedWander_ms > expectedWander_ms) {
       // We found a good new candidate
-      bool matches_prev_fail = true;
-
-      for (byte i = 0; i < 6 && matches_prev_fail; ++i) {
-        matches_prev_fail = (_mac_prev_fail[i] == mac[i]);
-      }
-
+      bool matches_prev_fail = mac == _mac_prev_fail;
       if (matches_prev_fail) {
         // No need to retry.
         return;
       }
-
-      for (byte i = 0; i < 6; ++i) {
-        _mac[i] = mac[i];
-      }
+      mac.get(_mac);
       updated = true;
     }
   }
@@ -138,7 +123,7 @@ void ESPEasy_Now_NTP_query::find_best_NTP(const uint8_t mac[6],
       String log;
       log.reserve(64);
       log  = F("ESPEasy Now: Best NTP peer: ");
-      log += formatMAC(_mac);
+      log += MAC_address(_mac).toString();
       log += F(" Wander ");
       log += _expectedWander_ms;
       log += F(" ms -> ");
@@ -224,7 +209,7 @@ void ESPEasy_Now_NTP_query::createReply(unsigned long queryReceiveTimestamp)
     String log;
     log.reserve(64);
     log  = F("ESPEasy Now: Create NTP reply to: ");
-    log += formatMAC(_mac);
+    log += MAC_address(_mac).toString();
     log += F(" Wander ");
     log += _expectedWander_ms;
     log += F(" ms");

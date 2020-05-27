@@ -98,16 +98,11 @@ void WiFiEvent(system_event_id_t event, system_event_info_t info) {
       break;
     case SYSTEM_EVENT_AP_STACONNECTED:
 
-      for (byte i = 0; i < 6; ++i) {
-        lastMacConnectedAPmode[i] = info.sta_connected.mac[i];
-      }
+      lastMacConnectedAPmode.set(info.sta_connected.mac);
       processedConnectAPmode = false;
       break;
     case SYSTEM_EVENT_AP_STADISCONNECTED:
-
-      for (byte i = 0; i < 6; ++i) {
-        lastMacConnectedAPmode[i] = info.sta_disconnected.mac[i];
-      }
+      lastMacConnectedAPmode.set(info.sta_disconnected.mac);
       processedDisconnectAPmode = false;
       break;
     case SYSTEM_EVENT_SCAN_DONE:
@@ -212,16 +207,12 @@ void ICACHE_RAM_ATTR onDHCPTimeout() {
 }
 
 void onConnectedAPmode(const WiFiEventSoftAPModeStationConnected& event) {
-  for (byte i = 0; i < 6; ++i) {
-    lastMacConnectedAPmode[i] = event.mac[i];
-  }
+  lastMacConnectedAPmode.set(event.mac);
   processedConnectAPmode = false;
 }
 
-void onDisconnectedAPmode(const WiFiEventSoftAPModeStationDisconnected& event) {
-  for (byte i = 0; i < 6; ++i) {
-    lastMacDisconnectedAPmode[i] = event.mac[i];
-  }
+void onDisonnectedAPmode(const WiFiEventSoftAPModeStationDisconnected& event) {
+  lastMacDisconnectedAPmode.set(event.mac);
   processedDisconnectAPmode = false;
 }
 

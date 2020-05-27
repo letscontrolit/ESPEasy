@@ -9,8 +9,7 @@
 
 extern bool use_EspEasy_now;
 extern bool plugin_EspEasy_now_active;
-extern bool plugin_EspEasy_now_enabled;
-
+extern unsigned long temp_disable_EspEasy_now_timer;
 
 
 #endif // ifdef USES_ESPEASY_NOW

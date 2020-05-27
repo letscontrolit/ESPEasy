@@ -7,6 +7,7 @@
 #ifdef USES_ESPEASY_NOW
 
 # include "../Helpers/ESPEasy_time.h"
+#include "MAC_address.h"
 
 
 class ESPEasy_Now_NTP_query {
@@ -14,9 +15,9 @@ public:
 
   ESPEasy_Now_NTP_query();
 
-  bool getMac(uint8_t mac[6]) const;
+  bool getMac(MAC_address& mac) const;
 
-  void find_best_NTP(const uint8_t mac[6],
+  void find_best_NTP(const MAC_address& mac,
                      timeSource_t  timeSource,
                      unsigned long timePassedSinceLastTimeSync);
 

@@ -3,6 +3,8 @@
 
 #include "src/Helpers/DeepSleep.h"
 
+#include "src/DataStructs/MAC_address.h"
+
 // ********************************************************************************
 // Web Interface config page
 // ********************************************************************************
@@ -107,15 +109,15 @@ void handle_config() {
       if (peer_mac.length() == 0) {
         peer_mac = F("00:00:00:00:00:00");
       }
-      byte mac[6] = {0};
-      if (str2mac(peer_mac.c_str(), mac)) {
-        memcpy(SecuritySettings.EspEasyNowPeerMAC[peer], mac, 6);
+      MAC_address mac;
+      if (mac.set(peer_mac.c_str())) {
+        mac.get(SecuritySettings.EspEasyNowPeerMAC[peer]);
       }
       /*
       String log = F("MAC decoding ");
       log += peer_mac;
       log += F(" => ");
-      log += formatMAC(mac);
+      log += mac.toString();
       addLog(LOG_LEVEL_INFO, log);
       */
     }

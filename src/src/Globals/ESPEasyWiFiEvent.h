@@ -5,6 +5,7 @@
 #include <IPAddress.h>
 #include <stdint.h>
 
+#include "../DataStructs/MAC_address.h"
 #include "../Helpers/LongTermTimer.h"
 
 // WifiStatus
@@ -100,8 +101,8 @@ extern LongTermTimer timerAPoff;   // Timer to check whether the AP mode should 
 extern LongTermTimer timerAPstart; // Timer to start AP mode, started when no valid network is detected.
 
 extern bool intent_to_reboot;
-extern uint8_t lastMacConnectedAPmode[6];
-extern uint8_t lastMacDisconnectedAPmode[6];
+extern MAC_address lastMacConnectedAPmode;
+extern MAC_address lastMacDisconnectedAPmode;
 
 
 // Semaphore like bools for processing data gathered from WiFi events.

@@ -17,10 +17,12 @@ public:
   size_t               addString(const String& string);
 
   bool                 sendToBroadcast();
-  bool                 send(uint8_t mac[6]);
+  bool                 send(const MAC_address& mac,
+                            int channel = 0);
 
-  WifiEspNowSendStatus send(uint8_t mac[6],
-                            size_t  timeout);
+  WifiEspNowSendStatus send(const MAC_address& mac,
+                            size_t             timeout,
+                            int channel);
 
 private:
 
@@ -29,9 +31,10 @@ private:
 
   size_t               getPayloadPos() const;
 
-  bool                 send(const ESPEasy_Now_packet& packet);
+  bool                 send(const ESPEasy_Now_packet& packet,
+                            int channel);
 
-  void                 prepareForSend(uint8_t mac[6]);
+  void                 prepareForSend(const MAC_address& mac);
 
 
   WifiEspNowSendStatus waitForSendStatus(size_t timeout) const;

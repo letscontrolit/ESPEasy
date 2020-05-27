@@ -12,10 +12,10 @@ ESPEasy_Now_packet::ESPEasy_Now_packet(const ESPEasy_now_hdr& header, size_t pay
   setHeader(header);
 }
 
-ESPEasy_Now_packet::ESPEasy_Now_packet(const uint8_t mac[6], const uint8_t *buf, size_t packetSize)
+ESPEasy_Now_packet::ESPEasy_Now_packet(const MAC_address& mac, const uint8_t *buf, size_t packetSize)
 {
   setSize(packetSize);
-  memcpy(_mac,     mac,          6);
+  mac.get(_mac);
   memcpy(&_buf[0], buf, packetSize);
 }
 
@@ -84,9 +84,9 @@ size_t ESPEasy_Now_packet::addString(const String& string, size_t& payload_pos)
   return addBinaryData(reinterpret_cast<const uint8_t *>(string.c_str()), length, payload_pos);
 }
 
-void ESPEasy_Now_packet::setMac(uint8_t mac[6])
+void ESPEasy_Now_packet::setMac(const MAC_address& mac)
 {
-  memcpy(_mac, mac, 6);
+  memcpy(_mac, mac.mac, 6);
 }
 
 void ESPEasy_Now_packet::setBroadcast()
@@ -154,8 +154,8 @@ String ESPEasy_Now_packet::getLogString() const
   ESPEasy_now_hdr header = getHeader();
   String log;
 
-  log.reserve(30);
-  log += formatMAC(_mac);
+  log.reserve(40);
+  log += MAC_address(_mac).toString();
   log += F(" payload: ");
   log += getPayloadSize();
   log += F(" (");

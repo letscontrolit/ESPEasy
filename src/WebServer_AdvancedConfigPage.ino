@@ -81,6 +81,10 @@ void handle_advanced() {
     Settings.gratuitousARP(isFormItemChecked(getInternalLabel(LabelType::PERIODICAL_GRAT_ARP)));
 #endif // ifdef SUPPORT_ARP
 
+#ifdef USES_ESPEASY_NOW
+    Settings.UseESPEasyNow(isFormItemChecked(getInternalLabel(LabelType::USE_ESPEASY_NOW)));
+#endif
+
     addHtmlError(SaveSettings());
 
     if (node_time.systemTimePresent()) {
@@ -202,6 +206,10 @@ void handle_advanced() {
 #endif // ifdef SUPPORT_ARP
   addFormCheckBox(LabelType::CPU_ECO_MODE,        Settings.EcoPowerMode());
   addFormNote(F("Node may miss receiving packets with Eco mode enabled"));
+#ifdef USES_ESPEASY_NOW
+  addFormCheckBox(LabelType::USE_ESPEASY_NOW, Settings.UseESPEasyNow());
+#endif
+
   addFormSeparator(2);
 
   html_TR_TD();

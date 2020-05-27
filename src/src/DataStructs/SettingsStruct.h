@@ -82,6 +82,9 @@ class SettingsStruct_tmpl
   bool SendToHttp_ack() const;
   void SendToHttp_ack(bool value);
 
+  bool UseESPEasyNow() const;
+  void UseESPEasyNow(bool value);
+
   void validate();
 
   bool networkSettingsEmpty() const;
