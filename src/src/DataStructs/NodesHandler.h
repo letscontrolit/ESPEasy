@@ -28,8 +28,17 @@ public:
   // Remove nodes in list older than max_age_allowed (msec)
   // Returns oldest age, max_age (msec) not removed from the list.
   // Return true if a node has been removed.
-  bool refreshNodeList(unsigned long  max_age_allowed,
-                       unsigned long& max_age);
+  bool              refreshNodeList(unsigned long  max_age_allowed,
+                                    unsigned long& max_age);
+
+  
+  const NodeStruct* getPreferredNode() const;
+  const NodeStruct* getPreferredNode_notMatching(const MAC_address& not_matching) const;
+
+  // Update the node referring to this unit with the most recent info.
+  void updateThisNode();
+
+  const NodeStruct * getThisNode();
 
 private:
 

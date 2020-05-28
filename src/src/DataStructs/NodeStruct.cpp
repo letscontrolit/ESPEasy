@@ -33,6 +33,32 @@ bool NodeStruct::validate() {
   return true;
 }
 
+bool NodeStruct::operator<(const NodeStruct &other) const {
+  if (ESPEasyNowPeer != other.ESPEasyNowPeer) {
+    // One is confirmed, so prefer that one.
+    return ESPEasyNowPeer;
+  }
+
+  if (distance != other.distance) {
+    return distance < other.distance;
+  }
+
+  if (getRSSI() != other.getRSSI()) {
+    if (getRSSI() >= 0) {
+      // This one has no set RSSI, so the other one is better
+      return false;
+    }
+
+    if (other.getRSSI() >= 0) {
+      // This other has no set RSSI, so the this one is better
+      return true;
+    }
+    return getRSSI() > other.getRSSI();
+  }
+  return true;
+}
+
+
 void NodeStruct::setLocalData() {
   WiFi.macAddress(sta_mac);
   WiFi.softAPmacAddress(ap_mac);
@@ -102,6 +128,13 @@ IPAddress NodeStruct::IP() const {
 }
 
 MAC_address NodeStruct::STA_MAC() const {
+  return MAC_address(sta_mac);
+}
+
+MAC_address NodeStruct::ESPEasy_Now_MAC() const {
+  if (useAP_ESPEasyNow) {
+    return MAC_address(ap_mac);
+  }
   return MAC_address(sta_mac);
 }
 

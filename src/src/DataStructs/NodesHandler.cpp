@@ -1,5 +1,8 @@
 #include "NodesHandler.h"
 
+#include "../../ESPEasy-Globals.h"
+
+
 void NodesHandler::addNode(const NodeStruct& node)
 {
   _nodes[node.unit]             = node;
@@ -73,6 +76,55 @@ const NodeStruct * NodesHandler::getNodeByMac(const MAC_address& mac, bool& matc
     }
   }
   return nullptr;
+}
+
+const NodeStruct * NodesHandler::getPreferredNode() const {
+  MAC_address dummy;
+  return getPreferredNode_notMatching(dummy);
+}
+
+const NodeStruct * NodesHandler::getPreferredNode_notMatching(const MAC_address& not_matching) const {
+  MAC_address this_mac;
+  WiFi.macAddress(this_mac.mac);
+  const NodeStruct *thisNode = getNodeByMac(this_mac);
+  const NodeStruct *reject = getNodeByMac(not_matching);
+
+  const NodeStruct *res = nullptr;
+
+  for (auto it = _nodes.begin(); it != _nodes.end(); ++it)
+  {
+    if ((&(it->second) != reject) && (&(it->second) != thisNode)) {
+      if (res == nullptr) {
+        res = &(it->second);
+      } else {
+        if (it->second < *res) {
+          res = &(it->second);
+        }
+      }
+    }
+  }
+  return res;
+}
+
+void NodesHandler::updateThisNode() {
+  NodeStruct thisNode;
+
+  thisNode.setLocalData();
+  const NodeStruct *preferred = getPreferredNode_notMatching(thisNode.sta_mac);
+
+  if (preferred != nullptr) {
+    if (preferred->distance < 255) {
+      thisNode.distance = preferred->distance + 1;
+    }
+  }
+  addNode(thisNode);
+}
+
+const NodeStruct * NodesHandler::getThisNode() {
+  updateThisNode();
+  MAC_address this_mac;
+  WiFi.macAddress(this_mac.mac);
+  return getNodeByMac(this_mac.mac);
 }
 
 NodesMap::const_iterator NodesHandler::begin() const {

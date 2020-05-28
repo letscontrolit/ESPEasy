@@ -26,6 +26,14 @@ struct __attribute__((__packed__)) NodeStruct
   
   bool          validate();
 
+  // Compare nodes.
+  // Return true when this node has better credentials to be used as ESPEasy-Now neighbor
+  // - Shorter distance to a network connected gateway node.
+  // - confirmed ESPEasy-Now peer
+  // - better RSSI
+  // - lower load (TODO TD-er)
+  bool operator<(const NodeStruct &other) const;
+
   void          setLocalData();
   
   String        getNodeTypeDisplayString() const;
@@ -35,6 +43,8 @@ struct __attribute__((__packed__)) NodeStruct
   IPAddress     IP() const;
 
   MAC_address   STA_MAC() const;
+
+  MAC_address   ESPEasy_Now_MAC() const;
 
   unsigned long getAge() const;
 

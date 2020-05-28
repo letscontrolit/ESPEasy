@@ -8,7 +8,6 @@
 # include "../DataStructs/ESPEasy_now_hdr.h"
 # include "../DataStructs/ESPEasy_Now_DuplicateCheck.h"
 # include "../DataStructs/ESPEasy_Now_packet.h"
-# include "../DataStructs/ESPEasy_Now_peer.h"
 # include "../DataStructs/ESPEasy_now_merger.h"
 # include "../DataStructs/ESPEasy_Now_NTP_query.h"
 # include "../DataStructs/MAC_address.h"
@@ -28,8 +27,6 @@ public:
 
   void addPeerFromWiFiScan();
   void addPeerFromWiFiScan(uint8_t scanIndex);
-
-  void addPeer(const ESPEasy_Now_peer& peer);
 
 private:
 
@@ -52,7 +49,7 @@ public:
 
   void sendSendData_DuplicateCheck(uint32_t                              key,
                                    ESPEasy_Now_DuplicateCheck::message_t message_type,
-                                   uint8_t                               mac[6]);
+                                   const MAC_address& mac);
 
 private:
 

@@ -8,7 +8,6 @@
 # include "../DataStructs/ESPEasy_now_splitter.h"
 # include "../DataStructs/NodeStruct.h"
 # include "../DataStructs/TimingStats.h"
-# include "../Globals/ESPEasy_Now_peers.h"
 # include "../Globals/ESPEasy_time.h"
 # include "../Globals/Nodes.h"
 # include "../Globals/SecuritySettings.h"
@@ -239,12 +238,14 @@ void ESPEasy_now_handler_t::sendDiscoveryAnnounce()
 
 void ESPEasy_now_handler_t::sendDiscoveryAnnounce(const MAC_address& mac, int channel)
 {
-  NodeStruct thisNode;
-
-  thisNode.setLocalData();
+  const NodeStruct * thisNode = Nodes.getThisNode();
+  if (thisNode == nullptr) {
+    // Should not happen
+    return;
+  }
   size_t len = sizeof(NodeStruct);
   ESPEasy_now_splitter msg(ESPEasy_now_hdr::message_t::Announcement, len);
-  msg.addBinaryData(reinterpret_cast<uint8_t *>(&thisNode), len);
+  msg.addBinaryData(reinterpret_cast<const uint8_t *>(thisNode), len);
   msg.send(mac, channel);
 }
 
@@ -407,6 +408,23 @@ bool ESPEasy_now_handler_t::sendToMQTT(controllerIndex_t controllerIndex, const 
         }
       }
     }
+    if (!processed) {
+      const NodeStruct* preferred = Nodes.getPreferredNode();
+      if (preferred != nullptr) {
+        MAC_address mac = preferred->ESPEasy_Now_MAC();
+        WifiEspNowSendStatus sendStatus = msg.send(mac, millis() + ControllerSettings.ClientTimeout, preferred->channel);
+
+        switch (sendStatus) {
+          case WifiEspNowSendStatus::OK:
+          {
+            processed = true;
+            break;
+          }
+          default: break;
+        }
+
+      }
+    }
   }
   return processed;
 }
@@ -439,7 +457,7 @@ bool ESPEasy_now_handler_t::handle_MQTTControllerMessage(const ESPEasy_now_merge
 
 void ESPEasy_now_handler_t::sendSendData_DuplicateCheck(uint32_t                              key,
                                                         ESPEasy_Now_DuplicateCheck::message_t message_type,
-                                                        uint8_t                               mac[6])
+                                                        const MAC_address& mac)
 {
   ESPEasy_Now_DuplicateCheck check(key, message_type);
   size_t len = sizeof(ESPEasy_Now_DuplicateCheck);
@@ -469,7 +487,7 @@ void ESPEasy_now_handler_t::sendSendData_DuplicateCheck(uint32_t                
         log += F("Processed key ");
         log += key;
         log += ' ';
-        log += MAC_address(mac).toString();
+        log += mac.toString();
         break;
     }
     addLog(LOG_LEVEL_DEBUG, log);
@@ -490,7 +508,7 @@ bool ESPEasy_now_handler_t::handle_SendData_DuplicateCheck(const ESPEasy_now_mer
       // Check if it has already been processed by some node.
       if (SendData_DuplicateChecker.historicKey(check._key)) {
         // Must reply back to that node we already have seen it
-        uint8_t mac[6];
+        MAC_address mac;
 
         if (message.getMac(mac)) {
           sendSendData_DuplicateCheck(check._key,

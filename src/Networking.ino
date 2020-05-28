@@ -372,15 +372,17 @@ void sendSysInfoUDP(byte repeats)
   addLog(LOG_LEVEL_DEBUG_MORE, F("UDP  : Send Sysinfo message"));
 #endif // ifndef BUILD_NO_DEBUG
 
-  NodeStruct thisNode;
-  thisNode.setLocalData();
-  Nodes.addNode(thisNode);
+  const NodeStruct * thisNode = Nodes.getThisNode();
+  if (thisNode == nullptr) {
+    // Should not happen
+    return;
+  }
 
   // Prepare UDP packet to send
   byte     data[80];
   data[0] = 255;
   data[1] = 1;
-  memcpy(&data[2], &thisNode, sizeof(NodeStruct));
+  memcpy(&data[2], thisNode, sizeof(NodeStruct));
   for (byte counter = 0; counter < repeats; counter++)
   {
     uint8_t  mac[]   = { 0, 0, 0, 0, 0, 0 };
