@@ -65,7 +65,7 @@ struct P044_Task : public PluginTaskData_base {
     stopServer();
     gatewayPort = portnumber;
     P1GatewayServer = new WiFiServer(portnumber);
-    if (nullptr != P1GatewayServer) {
+    if (nullptr != P1GatewayServer && WiFi.isConnected()) {
       P1GatewayServer->begin();
       if(serverActive(P1GatewayServer)) {
         addLog(LOG_LEVEL_INFO, String(F("P1   : WiFi server started at port ")) + portnumber);
@@ -77,7 +77,7 @@ struct P044_Task : public PluginTaskData_base {
   }
 
   void checkServer() {
-    if (!serverActive(P1GatewayServer)) {
+    if (!serverActive(P1GatewayServer) && WiFi.isConnected()) {
       P1GatewayServer->close();
       P1GatewayServer->begin();
       if(serverActive(P1GatewayServer)) {
