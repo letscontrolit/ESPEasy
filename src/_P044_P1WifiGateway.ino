@@ -35,10 +35,10 @@
 
 struct P044_Task : public PluginTaskData_base {
 
-  enum ParserState : byte {
-    P044_WAITING,
-    P044_READING,
-    P044_CHECKSUM
+  enum class ParserState : byte {
+    WAITING,
+    READING,
+    CHECKSUM
   };
 
   P044_Task() {
@@ -152,7 +152,7 @@ struct P044_Task : public PluginTaskData_base {
   }
 
   void checkBlinkLED() {
-    if (blinkLEDStartTime > 0 && millis() - blinkLEDStartTime >= 500) {
+    if (blinkLEDStartTime > 0 && timePassedSince(blinkLEDStartTime) >= 500) {
       digitalWrite(P044_STATUS_LED, 0);
       blinkLEDStartTime = 0;
     }
@@ -246,7 +246,7 @@ struct P044_Task : public PluginTaskData_base {
     P1EasySerial->begin(baud, config);
 #endif
     addLog(LOG_LEVEL_DEBUG, F("P1   : Serial opened"));
-    state = P044_WAITING;
+    state = ParserState::WAITING;
   }
   
   void serialEnd() {
@@ -295,39 +295,39 @@ struct P044_Task : public PluginTaskData_base {
   bool handleChar(char ch) {
     if (serial_buffer.length() >= P044_DATAGRAM_MAX_SIZE - 2) { // room for cr/lf
       addLog(LOG_LEVEL_DEBUG, F("P1   : Error: Buffer overflow, discarded input."));
-      state = P044_WAITING;    // reset
+      state = ParserState::WAITING;    // reset
     }
     
     bool done = false;
     bool invalid = false;
     switch (state) {
-      case P044_WAITING:
+      case ParserState::WAITING:
         if (ch == P044_DATAGRAM_START_CHAR)  {
           clearBuffer();
           addChar(ch);
-          state = P044_READING;
+          state = ParserState::READING;
         } // else ignore data
         break;
-      case P044_READING:
+      case ParserState::READING:
         if (validP1char(ch)) {
           addChar(ch);
         } else if (ch == P044_DATAGRAM_END_CHAR) {
           addChar(ch);
           if (CRCcheck) {
             checkI = 0;
-            state = P044_CHECKSUM;
+            state = ParserState::CHECKSUM;
           } else {
             done = true;
           }
         } else if (ch == P044_DATAGRAM_START_CHAR) {
           addLog(LOG_LEVEL_DEBUG, F("P1   : Error: Start detected, discarded input."));
-          state = P044_WAITING;    // reset
+          state = ParserState::WAITING;    // reset
           return handleChar(ch);
         } else {
           invalid = true;
         }
         break;
-      case P044_CHECKSUM:
+      case ParserState::CHECKSUM:
         if (validP1char(ch)) {
           addChar(ch);
           ++checkI;
@@ -336,7 +336,7 @@ struct P044_Task : public PluginTaskData_base {
               done = true;
             } else {
               addLog(LOG_LEVEL_DEBUG, F("P1   : Error: Invalid CRC, dropped data"));
-              state = P044_WAITING;    // reset
+              state = ParserState::WAITING;    // reset
             }
           }
         } else {
@@ -353,7 +353,7 @@ struct P044_Task : public PluginTaskData_base {
         serialPrint(String(ch));
         serialPrintln("<");
       }
-      state = P044_WAITING;    // reset
+      state = ParserState::WAITING;    // reset
     }
 
     if (done) {
@@ -361,7 +361,7 @@ struct P044_Task : public PluginTaskData_base {
       // from serial as the datagram has already been validated
       addChar('\r');
       addChar('\n');
-      state = P044_WAITING;    // prepare for next one
+      state = ParserState::WAITING;    // prepare for next one
     }
 
     return done;
@@ -371,7 +371,7 @@ struct P044_Task : public PluginTaskData_base {
     while (P1EasySerial->available()) {
       P1EasySerial->read();
     }
-    state = P044_WAITING;
+    state = ParserState::WAITING;
 	}
 
   bool isInit() const {
@@ -393,7 +393,7 @@ struct P044_Task : public PluginTaskData_base {
   WiFiClient P1GatewayClient;
   bool clientConnected = false;
   String serial_buffer;
-  ParserState state = P044_WAITING;
+  ParserState state = ParserState::WAITING;
   int checkI = 0;
   boolean CRCcheck = false;
   ESPeasySerial *P1EasySerial = nullptr;
