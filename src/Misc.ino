@@ -1917,6 +1917,12 @@ void transformValue(
           case 'I':
             value = logicVal == 0 ? F("OUT") : F(" IN");
             break;
+          case 'R':
+            value = logicVal == 0 ? F(" LEFT") : F("RIGHT");
+            break;
+          case 'r':
+            value = logicVal == 0 ? F("L") : F("R");
+            break;
           case 'Z' :// return "0" or "1"
             value = logicVal == 0 ? "0" : "1";
             break;
