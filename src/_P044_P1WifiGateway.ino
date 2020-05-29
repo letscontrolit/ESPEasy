@@ -146,10 +146,16 @@ struct P044_Task : public PluginTaskData_base {
     }
   }
 
-  static void blinkLED() {
+  void blinkLED() {
+    blinkLEDStartTime = millis();
     digitalWrite(P044_STATUS_LED, 1);
-    delay(500);
-    digitalWrite(P044_STATUS_LED, 0);
+  }
+
+  void checkBlinkLED() {
+    if (blinkLEDStartTime > 0 && millis() - blinkLEDStartTime >= 500) {
+      digitalWrite(P044_STATUS_LED, 0);
+      blinkLEDStartTime = 0;
+    }
   }
 
   void clearBuffer() {
@@ -391,6 +397,7 @@ struct P044_Task : public PluginTaskData_base {
   int checkI = 0;
   boolean CRCcheck = false;
   ESPeasySerial *P1EasySerial = nullptr;
+  unsigned long blinkLEDStartTime = 0;
 };
 
 boolean Plugin_044(byte function, struct EventStruct *event, String& string)
@@ -525,6 +532,7 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
         if (task->hasClientConnected()) {
           task->handleClientIn();
         }
+        task->checkBlinkLED();
         success = true;
         break;
       }
