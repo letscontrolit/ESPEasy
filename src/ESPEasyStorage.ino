@@ -178,6 +178,9 @@ String BuildFixes()
     }
     #endif // USES_MQTT
   }
+  if (Settings.Build < 20107) {
+    Settings.WebserverPort = 80;
+  }
 
   Settings.Build = BUILD;
   return SaveSettings();
