@@ -57,7 +57,7 @@ struct P044_Task : public PluginTaskData_base {
 #endif
   }
 
-  void startServer(unsigned int portnumber) {
+  void startServer(uint16_t portnumber) {
     if (gatewayPort == portnumber && serverActive(P1GatewayServer)) {
       // server is already listening on this port
       return;
@@ -77,7 +77,7 @@ struct P044_Task : public PluginTaskData_base {
   }
 
   void checkServer() {
-    if (!serverActive(P1GatewayServer) && WiFi.isConnected()) {
+    if (nullptr != P1GatewayServer && !serverActive(P1GatewayServer) && WiFi.isConnected()) {
       P1GatewayServer->close();
       P1GatewayServer->begin();
       if(serverActive(P1GatewayServer)) {
@@ -89,6 +89,7 @@ struct P044_Task : public PluginTaskData_base {
   void stopServer() {
     if (nullptr != P1GatewayServer) {
       if (P1GatewayClient) P1GatewayClient.stop();
+      clientConnected = false;
       P1GatewayServer->close();
       addLog(LOG_LEVEL_INFO, F("P1   : WiFi server closed"));
       delete P1GatewayServer;
@@ -97,7 +98,7 @@ struct P044_Task : public PluginTaskData_base {
   }
 
   bool hasClientConnected() {
-    if (P1GatewayServer->hasClient())
+    if (nullptr != P1GatewayServer && P1GatewayServer->hasClient())
     {
       if (P1GatewayClient) P1GatewayClient.stop();
       P1GatewayClient = P1GatewayServer->available();
@@ -172,9 +173,16 @@ struct P044_Task : public PluginTaskData_base {
       attached to the telegram
   */
   bool checkDatagram() const {
-    const int checksumStartIndex = serial_buffer.length() - P044_CHECKSUM_LENGTH;
-    if (checksumStartIndex < 2) return false; // sanity check, should never return here
+    int endChar = serial_buffer.length() - 1;
+    if (CRCcheck) {
+      endChar -= P044_CHECKSUM_LENGTH;
+    }
+    if (endChar < 0 || serial_buffer[0] != P044_DATAGRAM_START_CHAR ||
+        serial_buffer[endChar] != P044_DATAGRAM_END_CHAR) return false;
 
+    if (!CRCcheck) return true;
+
+    const int checksumStartIndex = endChar + 1;
     if (PLUGIN_044_DEBUG) {
       for (unsigned int cnt = 0; cnt < serial_buffer.length(); ++cnt)
         serialPrint(serial_buffer.substring(cnt, 1));
@@ -239,13 +247,17 @@ struct P044_Task : public PluginTaskData_base {
   void serialBegin(int16_t rxPin, int16_t txPin,
                    unsigned long baud, byte config) {
     serialEnd();
-    P1EasySerial = new ESPeasySerial(rxPin, txPin);
+    if (rxPin >= 0) {
+      P1EasySerial = new ESPeasySerial(rxPin, txPin);
+      if (nullptr != P1EasySerial) {
 #if defined(ESP8266)
-    P1EasySerial->begin(baud, (SerialConfig)config);
+        P1EasySerial->begin(baud, (SerialConfig)config);
 #elif defined(ESP32)
-    P1EasySerial->begin(baud, config);
+        P1EasySerial->begin(baud, config);
 #endif
-    addLog(LOG_LEVEL_DEBUG, F("P1   : Serial opened"));
+        addLog(LOG_LEVEL_DEBUG, F("P1   : Serial opened"));
+      }
+    }
     state = ParserState::WAITING;
   }
   
@@ -258,6 +270,7 @@ struct P044_Task : public PluginTaskData_base {
   }
 
   void handleSerialIn(struct EventStruct *event) {
+    if (nullptr == P1EasySerial) return;
     int RXWait = P044_RX_WAIT;
     bool done = false;
     int timeOut = RXWait;
@@ -332,12 +345,7 @@ struct P044_Task : public PluginTaskData_base {
           addChar(ch);
           ++checkI;
           if (checkI == P044_CHECKSUM_LENGTH) {
-            if (checkDatagram()) {
-              done = true;
-            } else {
-              addLog(LOG_LEVEL_DEBUG, F("P1   : Error: Invalid CRC, dropped data"));
-              state = ParserState::WAITING;    // reset
-            }
+            done = true;
           }
         } else {
           invalid = true;
@@ -357,10 +365,17 @@ struct P044_Task : public PluginTaskData_base {
     }
 
     if (done) {
-      // add the cr/lf pair to the datagram ahead of reading both
-      // from serial as the datagram has already been validated
-      addChar('\r');
-      addChar('\n');
+      done = checkDatagram();
+      if (done) {
+        // add the cr/lf pair to the datagram ahead of reading both
+        // from serial as the datagram has already been validated
+        addChar('\r');
+        addChar('\n');
+      } else if (CRCcheck) {
+        addLog(LOG_LEVEL_DEBUG, F("P1   : Error: Invalid CRC, dropped data"));
+      } else {
+        addLog(LOG_LEVEL_DEBUG, F("P1   : Error: Invalid datagram, dropped data"));
+      }
       state = ParserState::WAITING;    // prepare for next one
     }
 
@@ -368,8 +383,10 @@ struct P044_Task : public PluginTaskData_base {
   }
   
   void discardSerialIn() {
-    while (P1EasySerial->available()) {
-      P1EasySerial->read();
+    if (nullptr != P1EasySerial) {
+      while (P1EasySerial->available()) {
+        P1EasySerial->read();
+      }
     }
     state = ParserState::WAITING;
 	}
@@ -389,7 +406,7 @@ struct P044_Task : public PluginTaskData_base {
   }
 
   WiFiServer *P1GatewayServer = nullptr;
-  unsigned int gatewayPort = 0;
+  uint16_t gatewayPort = 0;
   WiFiClient P1GatewayClient;
   bool clientConnected = false;
   String serial_buffer;
