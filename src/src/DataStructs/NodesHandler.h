@@ -40,7 +40,10 @@ public:
 
   const NodeStruct * getThisNode();
 
+
 private:
+
+  bool isEndpoint() const;
 
   NodesMap _nodes;
 };

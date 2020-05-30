@@ -1,7 +1,8 @@
 #include "NodesHandler.h"
 
 #include "../../ESPEasy-Globals.h"
-
+#include "../Helpers/ESPEasy_time_calc.h"
+#include "../Globals/MQTT.h"
 
 void NodesHandler::addNode(const NodeStruct& node)
 {
@@ -80,14 +81,16 @@ const NodeStruct * NodesHandler::getNodeByMac(const MAC_address& mac, bool& matc
 
 const NodeStruct * NodesHandler::getPreferredNode() const {
   MAC_address dummy;
+
   return getPreferredNode_notMatching(dummy);
 }
 
 const NodeStruct * NodesHandler::getPreferredNode_notMatching(const MAC_address& not_matching) const {
   MAC_address this_mac;
+
   WiFi.macAddress(this_mac.mac);
   const NodeStruct *thisNode = getNodeByMac(this_mac);
-  const NodeStruct *reject = getNodeByMac(not_matching);
+  const NodeStruct *reject   = getNodeByMac(not_matching);
 
   const NodeStruct *res = nullptr;
 
@@ -109,12 +112,54 @@ const NodeStruct * NodesHandler::getPreferredNode_notMatching(const MAC_address&
 void NodesHandler::updateThisNode() {
   NodeStruct thisNode;
 
-  thisNode.setLocalData();
-  const NodeStruct *preferred = getPreferredNode_notMatching(thisNode.sta_mac);
+  // Set local data
+  WiFi.macAddress(thisNode.sta_mac);
+  WiFi.softAPmacAddress(thisNode.ap_mac);
+  {
+    IPAddress localIP = WiFi.localIP();
 
-  if (preferred != nullptr) {
-    if (preferred->distance < 255) {
-      thisNode.distance = preferred->distance + 1;
+    for (byte i = 0; i < 4; ++i) {
+      thisNode.ip[i] = localIP[i];
+    }
+  }
+  thisNode.channel = WiFi.channel();
+
+  thisNode.unit  = Settings.Unit;
+  thisNode.build = Settings.Build;
+  memcpy(thisNode.nodeName, Settings.Name, 25);
+  thisNode.nodeType = NODE_TYPE_ID;
+
+  thisNode.webgui_portnumber = Settings.WebserverPort;
+  int load_int = getCPUload() * 2.55;
+
+  if (load_int > 255) {
+    thisNode.load = 255;
+  } else {
+    thisNode.load = load_int;
+  }
+  thisNode.timeSource = static_cast<uint8_t>(node_time.timeSource);
+
+  switch (node_time.timeSource) {
+    case timeSource_t::No_time_source:
+      thisNode.lastUpdated = (1 << 30);
+      break;
+    default:
+    {
+      thisNode.lastUpdated = timePassedSince(node_time.lastSyncTime);
+      break;
+    }
+  }
+
+  if (isEndpoint()) {
+    thisNode.distance = 0;
+  } else {
+    thisNode.distance = 255;
+    const NodeStruct *preferred = getPreferredNode_notMatching(thisNode.sta_mac);
+
+    if (preferred != nullptr) {
+      if (preferred->distance < 255) {
+        thisNode.distance = preferred->distance + 1;
+      }
     }
   }
   addNode(thisNode);
@@ -160,4 +205,20 @@ bool NodesHandler::refreshNodeList(unsigned long max_age_allowed, unsigned long&
     }
   }
   return nodeRemoved;
+}
+
+// FIXME TD-er: should be a check per controller to see if it will accept messages
+bool NodesHandler::isEndpoint() const
+{
+  // FIXME TD-er: Must check controller to see if it needs wifi (e.g. LoRa or cache controller do not need it)
+  #ifdef USES_MQTT
+  controllerIndex_t enabledMqttController = firstEnabledMQTT_ControllerIndex();
+  if (validControllerIndex(enabledMqttController)) {
+    return MQTTclient_connected;
+  }
+  #endif
+
+  if (!WiFiConnected()) return false;
+
+  return false;
 }

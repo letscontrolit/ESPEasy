@@ -58,46 +58,6 @@ bool NodeStruct::operator<(const NodeStruct &other) const {
   return true;
 }
 
-
-void NodeStruct::setLocalData() {
-  WiFi.macAddress(sta_mac);
-  WiFi.softAPmacAddress(ap_mac);
-  {
-    IPAddress localIP = WiFi.localIP();
-
-    for (byte i = 0; i < 4; ++i) {
-      ip[i] = localIP[i];
-    }
-  }
-  channel = WiFi.channel();
-
-  unit  = Settings.Unit;
-  build = Settings.Build;
-  memcpy(nodeName, Settings.Name, 25);
-  nodeType = NODE_TYPE_ID;
-
-  webgui_portnumber = Settings.WebserverPort;
-  int load_int = getCPUload() * 2.55;
-
-  if (load_int > 255) {
-    load = 255;
-  } else {
-    load = load_int;
-  }
-  timeSource = static_cast<uint8_t>(node_time.timeSource);
-
-  switch (node_time.timeSource) {
-    case timeSource_t::No_time_source:
-      lastUpdated = (1 << 30);
-      break;
-    default:
-    {
-      lastUpdated = timePassedSince(node_time.lastSyncTime);
-      break;
-    }
-  }
-}
-
 String NodeStruct::getNodeTypeDisplayString() const {
   switch (nodeType)
   {
