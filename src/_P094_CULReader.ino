@@ -23,6 +23,9 @@
 #define P094_BAUDRATE           PCONFIG_LONG(0)
 #define P094_BAUDRATE_LABEL     PCONFIG_LABEL(0)
 
+#define P094_DEBUG_SENTENCE_LENGTH  PCONFIG_LONG(1)
+#define P094_DEBUG_SENTENCE_LABEL   PCONFIG_LABEL(1)
+
 #define P094_QUERY_VALUE        0 // Temp placement holder until we know what selectors are needed.
 #define P094_NR_OUTPUT_OPTIONS  1
 
@@ -117,6 +120,7 @@ boolean Plugin_094(byte function, struct EventStruct *event, String& string) {
     case PLUGIN_SET_DEFAULTS:
     {
       P094_BAUDRATE = P094_DEFAULT_BAUDRATE;
+      P094_DEBUG_SENTENCE_LENGTH = 0;
 
       success = true;
       break;
@@ -144,12 +148,15 @@ boolean Plugin_094(byte function, struct EventStruct *event, String& string) {
       addFormSubHeader(F("Statistics"));
       P094_html_show_stats(event);
 
+      addFormNumericBox(F("(debug) Generated length"), P094_DEBUG_SENTENCE_LABEL, P094_DEBUG_SENTENCE_LENGTH, 0, 1024);
+
       success = true;
       break;
     }
 
     case PLUGIN_WEBFORM_SAVE: {
       P094_BAUDRATE = getFormItemInt(P094_BAUDRATE_LABEL);
+      P094_DEBUG_SENTENCE_LENGTH = getFormItemInt(P094_DEBUG_SENTENCE_LABEL);
 
       P094_data_struct *P094_data =
         static_cast<P094_data_struct *>(getPluginTaskData(event->TaskIndex));
@@ -212,7 +219,8 @@ boolean Plugin_094(byte function, struct EventStruct *event, String& string) {
               // Filter length options:
               // - 22 char, for hash-value then we filter the exact meter including serial and meter type, (that will also prevent very quit sending meters, which normaly is a fault)
               // - 38 char, The exact message, because we have 2 byte from the value payload
-              sendData_checkDuplicates(event, event->String2.substring(0, 22));
+              //sendData_checkDuplicates(event, event->String2.substring(0, 22));
+              sendData(event);
             }
           }
         }
@@ -222,10 +230,29 @@ boolean Plugin_094(byte function, struct EventStruct *event, String& string) {
     }
 
     case PLUGIN_READ: {
-      P094_data_struct *P094_data =
-        static_cast<P094_data_struct *>(getPluginTaskData(event->TaskIndex));
+      if (P094_DEBUG_SENTENCE_LENGTH > 0) {
+        P094_data_struct *P094_data =
+          static_cast<P094_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if ((nullptr != P094_data)) {}
+        if ((nullptr != P094_data)) {
+          const uint32_t debug_count = P094_data->getDebugCounter();
+          event->String2.reserve(P094_DEBUG_SENTENCE_LENGTH);
+          event->String2 = String(debug_count);
+          event->String2 += '_';
+          const char c = '0' + debug_count % 10;
+          for (long i = event->String2.length(); i < P094_DEBUG_SENTENCE_LENGTH; ++i) {
+            event->String2 += c;
+          }
+          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+            String log = F("CUL Reader: Sending: ");
+            log += event->String2.substring(0, 20);
+            log += F("...");
+            addLog(LOG_LEVEL_INFO, log);
+          }
+//          sendData_checkDuplicates(event, event->String2.substring(0, 22));
+          sendData(event);
+        }
+      }
       break;
     }
 

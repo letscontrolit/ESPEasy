@@ -453,4 +453,8 @@ size_t P094_data_struct::P094_Get_filter_base_index(size_t filterLine) {
   return filterLine * P094_ITEMS_PER_FILTER + P094_FIRST_FILTER_POS;
 }
 
+uint32_t P094_data_struct::getDebugCounter() {
+  return debug_counter++;
+}
+
 #endif // USES_P094
