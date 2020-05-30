@@ -24,7 +24,6 @@
 #define P044_DATAGRAM_START_CHAR           '/'
 #define P044_DATAGRAM_END_CHAR             '!'
 #define P044_DATAGRAM_MAX_SIZE             1024
-#define P044_NETBUF_SIZE                   128
 
 #define P044_WIFI_SERVER_PORT     ExtraTaskSettings.TaskDevicePluginConfigLong[0]
 #define P044_BAUDRATE             ExtraTaskSettings.TaskDevicePluginConfigLong[1]
@@ -121,29 +120,11 @@ struct P044_Task : public PluginTaskData_base {
     return clientConnected;
   }
 
-  void handleClientIn() {
-    uint8_t net_buf[P044_NETBUF_SIZE];
-    int count = P1GatewayClient.available();
-    if (count > 0)
-    {
-      size_t net_bytes_read;
-      if (count > P044_NETBUF_SIZE)
-        count = P044_NETBUF_SIZE;
-      net_bytes_read = P1GatewayClient.read(net_buf, count);
-      P1EasySerial->write(net_buf, net_bytes_read);
-      P1EasySerial->flush(); // Waits for the transmission of outgoing serial data to complete
-
-      if (count == P044_NETBUF_SIZE) // if we have a full buffer, drop the last position to stuff with string end marker
-      {
-        --count;
-        // and log buffer full situation
-        addLog(LOG_LEVEL_ERROR, F("P1   : Error: network buffer full!"));
-      }
-      net_buf[count] = 0; // before logging as a char array, zero terminate the last position to be safe.
-      char log[P044_NETBUF_SIZE + 40] = {0};
-      sprintf_P(log, PSTR("P1   : Error: N>: %s"), (char*)net_buf);
-      ZERO_TERMINATE(log);
-      addLog(LOG_LEVEL_DEBUG, log);
+  void discardClientIn() {
+    // flush all data received from the WiFi gateway
+    // as a P1 meter does not receive data
+    while(P1GatewayClient.available()) {
+      P1GatewayClient.read();
     }
   }
 
@@ -547,7 +528,7 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
           break;
         }
         if (task->hasClientConnected()) {
-          task->handleClientIn();
+          task->discardClientIn();
         }
         task->checkBlinkLED();
         success = true;
