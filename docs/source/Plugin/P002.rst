@@ -21,6 +21,60 @@ Maintainer: |P002_maintainer|
 
 Used libraries: |P002_usedlibraries|
 
+Description
+-----------
+
+The ESP82xx has 1 ADC included.
+This one can be set either to measure the Vdd pin (supplied voltage to the ESP) or to ``TOUT``, so it can measure the voltage on the ``A0`` pin.
+
+The ESP32 has 18 pins that can be used as ADC. It also has a Hall Effect sensor included.
+
+See the `ESP32 API reference <https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/peripherals/adc.html>`_ for more detailed information on the features and limitations of these pins.
+
+
+
+Hall Effect Sensor (ESP32)
+--------------------------
+
+The ESP32 has a Hall Effect Sensor included, to measure a magnetic field.
+
+N.B. This value can also be negative, if the polarity of the magnetic field is swapped.
+
+Note that even the hall sensor is internal to ESP32, reading from it uses channels 0 and 3 of ADC1 (GPIO 36 and 39). 
+Do not connect anything else to these pins and do not change their configuration. Otherwise it may affect the measurement of low value signal from the sensor.
+
+
+WiFi activity and ADC
+---------------------
+
+The ADC on the ESP8266 is also used during WiFi RF calibration.
+This can result in incorrect readings of the ADC while a WiFi connection attempt is in progress.
+
+ESP32 has 2 ADCs present.
+``ADC1`` and ``ADC2``
+
+Since the ``ADC2`` is shared with the WIFI module, which has higher priority, reading operation of ``adc2_get_raw()`` may fail between ``esp_wifi_start()`` and ``esp_wifi_stop()``.
+
+
+Oversampling
+------------
+
+When ``Oversampling`` is enabled, the plugin will take a reading 10 times a second.
+This reading is averaged over the entire interval time as set in the task configuration.
+
+The highest and lowest values are subtracted from the recorded values, to filter out single flukes.
+Measured values which are clipped either on the lower range or higher range are only added once per interval as they may occur for more than a single sample per interval.
+This is done to prevent a relative large offset in the averaging due to clipping or maybe unforceen interaction of the WiFi chip on the ADC measurements.
+
+
+Calibration
+-----------
+
+The plugin supports a 2-point calibration.
+The user can set these to convert the raw values into the desired unit of measure.
+When set, the configuration screen also displays the minimum, maximum and step size values based on the calibration settings.
+
+
 Supported hardware
 ------------------
 
@@ -42,8 +96,7 @@ Change log
 .. versionchanged:: 2.0
   ...
 
-  |added|
-  Major overhaul for 2.0 release.
+  |improved| 2020-04-25  Added support for ESP32 ADC pins + Hall Effect Sensor.
 
 .. versionadded:: 1.0
   ...

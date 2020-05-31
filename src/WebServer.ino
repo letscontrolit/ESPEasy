@@ -219,6 +219,7 @@ void WebServerInit()
   web_server.on(F("/i2cscanner"),    handle_i2cscanner);
   #endif
   web_server.on(F("/json"),          handle_json);     // Also part of WEBSERVER_NEW_UI
+  web_server.on(F("/csv"),           handle_csvval);
   web_server.on(F("/log"),           handle_log);
   web_server.on(F("/login"),         handle_login);
   web_server.on(F("/logjson"),       handle_log_JSON); // Also part of WEBSERVER_NEW_UI
@@ -331,7 +332,7 @@ void set_mDNS() {
     }
 
     if (mdns_started) {
-      MDNS.addService("http", "tcp", 80);
+      MDNS.addService("http", "tcp", Settings.WebserverPort);
     }
   }
   #endif // ifdef FEATURE_MDNS
@@ -344,7 +345,7 @@ void setWebserverRunning(bool state) {
 
   if (state) {
     WebServerInit();
-    web_server.begin();
+    web_server.begin(Settings.WebserverPort);
     addLog(LOG_LEVEL_INFO, F("Webserver: start"));
   } else {
     web_server.stop();

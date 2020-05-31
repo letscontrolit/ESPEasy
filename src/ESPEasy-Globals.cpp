@@ -49,6 +49,7 @@ unsigned long last_system_event_run = 0;
 #if FEATURE_ADC_VCC
 float vcc = -1.0;
 #endif
+int lastADCvalue = 0;
 
 boolean WebLoggedIn = false;
 int WebLoggedInTimer = 300;

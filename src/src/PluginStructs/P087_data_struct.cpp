@@ -208,7 +208,7 @@ String P087_data_struct::getFilter(uint8_t lineNr, uint8_t& capture, P087_Filter
 {
   uint8_t varNr = lineNr * 3 + P087_FIRST_FILTER_POS;
 
-  if (varNr >= P87_Nlines) { return ""; }
+  if ((varNr + 3) > P87_Nlines) { return ""; }
 
   capture    = _lines[varNr++].toInt();
   comparator = _lines[varNr++] == "1" ? P087_Filter_Comp::NotEqual : P087_Filter_Comp::Equal;
