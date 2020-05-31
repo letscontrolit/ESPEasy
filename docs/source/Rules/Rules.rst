@@ -392,6 +392,7 @@ Justification
 * ``Ln``: Left part of the string, n characters.
 * ``Rn``: Right part of the string, n characters.
 * ``Ux.y``: Substring Ux.y where x=firstChar and y=number of characters.
+* ``C``: Capitalize first character of each word (space/dash/period separated).
 
 
 String Formatting and Interpreting

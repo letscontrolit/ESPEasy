@@ -2136,6 +2136,17 @@ void transformValue(
                 }
               }
               break;
+            case 'C': //Capitalize First Word-Character value (space/dash/period are checked)
+              if (value.length() > 0) {
+                value.toLowerCase();
+                bool nextCapital = true;
+                for (uint8_t i = 0; i < value.length();i++) {
+                  if (nextCapital)
+                    value[i] = toupper(value[i]);
+                  nextCapital = (value[i] == ' ' || value[i] == '-' || value[i] == '.'); // Very simple, capitalize-first-after-space/dash/period
+                }
+              }
+              break;
             default:
               newString += F("ERR");
               break;
