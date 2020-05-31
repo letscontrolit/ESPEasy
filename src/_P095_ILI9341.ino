@@ -39,7 +39,7 @@ TFT Subcommands:
 
 | TFT Subcommands | details | description |
 |-----|-----|-----|
-| txt | tx,<text> | Write simple text (use last position, color and size) |
+| txt | txt,<text> | Write simple text (use last position, color and size) |
 | txp | txp,<X>,<Y> | Set text position (move the cursor) |
 | txc | txc,<foreColor>,<backgroundColor> | Set text color (background is transparent if not provided |
 | txs | txs,<SIZE> | Set text size |
@@ -116,10 +116,10 @@ void Plugin_095_printText(const char *string, int X, int Y, unsigned int textSiz
   #define TS_CS 12
 #else
  //for D1 Mini with shield connection
-  #define TFT_CS D0
-  #define TFT_DC D8
+  #define TFT_CS 16 // D0
+  #define TFT_DC 15 // D8
   #define TFT_RST -1
-  #define TS_CS D3
+  #define TS_CS 0   // D3
 #endif
 
 //The setting structure

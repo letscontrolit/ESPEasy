@@ -38,6 +38,7 @@ void handle_advanced() {
 
     if (dst_end.isValid()) { Settings.DST_End = dst_end.toFlashStoredValue(); }
     str2ip(web_server.arg(F("syslogip")).c_str(), Settings.Syslog_IP);
+    Settings.WebserverPort = getFormItemInt(F("webport"));
     Settings.UDPPort = getFormItemInt(F("udpport"));
 
     Settings.SyslogFacility = getFormItemInt(F("syslogfacility"));
@@ -154,9 +155,11 @@ void handle_advanced() {
 
   addFormNumericBox(F("UDP port"), F("udpport"), Settings.UDPPort, 0, 65535);
 
-
   // TODO sort settings in groups or move to other pages/groups
   addFormSubHeader(F("Special and Experimental Settings"));
+
+  addFormNumericBox(F("Webserver port"), F("webport"), Settings.WebserverPort, 0, 65535);
+  addFormNote(F("Requires reboot to activate"));
 
   addFormNumericBox(F("Fixed IP Octet"), F("ip"),           Settings.IP_Octet,     0, 255);
 

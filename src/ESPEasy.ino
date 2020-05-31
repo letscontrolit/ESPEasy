@@ -189,6 +189,16 @@ void setup()
 //  ets_isr_attach(8, sw_watchdog_callback, NULL);  // Set a callback for feeding the watchdog.
 #endif
 
+
+  // Read ADC at boot, before WiFi tries to connect.
+  // see https://github.com/letscontrolit/ESPEasy/issues/2646
+#if FEATURE_ADC_VCC
+  vcc = ESP.getVcc() / 1000.0;
+#endif
+#ifdef ESP8266
+  lastADCvalue = analogRead(A0);
+#endif
+
   resetPluginTaskData();
 
   checkRAM(F("setup"));
@@ -341,7 +351,9 @@ void setup()
   timermqtt_interval = 250; // Interval for checking MQTT
   timerAwakeFromDeepSleep = millis();
   CPluginInit();
+  #ifndef NOTIFIER_SET_NONE
   NPluginInit();
+  #endif
   PluginInit();
   log = F("INFO : Plugins: ");
   log += deviceCount + 1;
@@ -387,12 +399,6 @@ void setup()
 
   if (node_time.systemTimePresent())
     node_time.initTime();
-
-#if FEATURE_ADC_VCC
-  if (!wifiConnectInProgress) {
-    vcc = ESP.getVcc() / 1000.0;
-  }
-#endif
 
   if (Settings.UseRules)
   {
