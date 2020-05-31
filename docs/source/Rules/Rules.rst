@@ -65,8 +65,8 @@ or multi-line (need to be closed with an "endon"):
    <action>
   endon
 
-IF/ELSE
--------
+IF/ELSE - IF/ELSEIF/ELSE
+------------------------
 
 Also simple if ... else ... statements are possible:
 
@@ -87,6 +87,39 @@ If the "else" part is not needed it can be removed:
 
  on <trigger> do
   if <test>
+    <action>
+    <action>
+  endif
+ endon
+
+Also more complex if ... elseif ... else statements are possible (multiple elseif's can be used)
+
+.. code-block:: html
+
+ on <trigger> do
+  if <test1>
+    <action>
+    <action>
+  elseif <test2>
+    <action>
+    <action>
+  else
+   <action>
+  endif
+ endon
+
+Again, if the "else" part is not needed it can be removed:
+
+.. code-block:: html
+
+ on <trigger> do
+  if <test1>
+    <action>
+    <action>
+  elseif <test2>
+    <action>
+    <action>
+  elseif <test3>
     <action>
     <action>
   endif
