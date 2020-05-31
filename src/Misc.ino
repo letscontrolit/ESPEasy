@@ -1890,6 +1890,9 @@ void transformValue(
           case 'C':
             value = logicVal == 0 ? F("CLOSE") : F(" OPEN");
             break;
+          case 'c':
+            value = logicVal == 0 ? F("CLOSED") : F("  OPEN");
+            break;
           case 'M':
             value = logicVal == 0 ? F("AUTO") : F(" MAN");
             break;
@@ -1917,10 +1920,10 @@ void transformValue(
           case 'I':
             value = logicVal == 0 ? F("OUT") : F(" IN");
             break;
-          case 'R':
+          case 'L':
             value = logicVal == 0 ? F(" LEFT") : F("RIGHT");
             break;
-          case 'r':
+          case 'l':
             value = logicVal == 0 ? F("L") : F("R");
             break;
           case 'Z' :// return "0" or "1"

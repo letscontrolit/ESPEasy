@@ -359,13 +359,14 @@ Transformation
 Binary transformations:
 
 * ``C``: 0 => "CLOSE" 1 => " OPEN"
+* ``c``: 0 => "CLOSED" 1 => "  OPEN"
 * ``H``: 0 => "COLD" 1 => " HOT"
 * ``I``: 0 => "OUT" 1 => " IN"
+* ``L``: 0 => " LEFT" 1 => "RIGHT"
+* ``l``: 0 => "L" 1 => "R"
 * ``M``: 0 => "AUTO" 1 => " MAN"
 * ``m``: 0 => "A" 1 => "M"
 * ``O``: 0 => "OFF" 1 => " ON"
-* ``R``: 0 => " LEFT" 1 => "RIGHT"
-* ``r``: 0 => "L" 1 => "R"
 * ``U``: 0 => "DOWN" 1 => "  UP"
 * ``u``: 0 => "D" 1 => "U"
 * ``V``: value = value without transformations
