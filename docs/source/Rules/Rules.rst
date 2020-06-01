@@ -604,12 +604,12 @@ Just create Generic - Dummy Device and variables inside it.
 
  TaskValueSet,TASKnr,VARnr,Value
 
- Alternatively, TASKname and/or VARname can be used instead of TASKnr and VARnr:
+Alternatively, TASKname and/or VARname can be used instead of TASKnr and VARnr:
 
  .. code-block:: html
 
  TaskValueSet,TASKname,VARname,Value
- TaskValueSet,TASKnr,VARname,,Value
+ TaskValueSet,TASKnr,VARname,Value
  TaskValueSet,TASKname,VARnr,Value
 
 This example for two switches that toggle one device (LED and Relay on GPIO 13 and 16).
