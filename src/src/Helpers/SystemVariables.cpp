@@ -4,7 +4,7 @@
 #include "../Globals/CRCValues.h"
 #include "StringConverter.h"
 #include "../../ESPEasy-Globals.h"
-
+#include "CompiletimeDefines.h"
 
 #ifdef USES_MQTT
 # include "../Globals/MQTT.h"
@@ -103,11 +103,11 @@ void SystemVariables::parseSystemVariables(String& s, boolean useURLencode)
       case SSID:              value = (wifiStatus == ESPEASY_WIFI_DISCONNECTED) ? F("--") : WiFi.SSID(); break;
       case SUNRISE:           SMART_REPL_T(SystemVariables::toString(enumval), replSunRiseTimeString); break;
       case SUNSET:            SMART_REPL_T(SystemVariables::toString(enumval), replSunSetTimeString); break;
-      case SYSBUILD_DATE:     value = String(CRCValues.compileDate); break;
+      case SYSBUILD_DATE:     value = get_build_date(); break;
       case SYSBUILD_DESCR:    value = getValue(LabelType::BUILD_DESC); break;
       case SYSBUILD_FILENAME: value = getValue(LabelType::BINARY_FILENAME); break;
       case SYSBUILD_GIT:      value = getValue(LabelType::GIT_BUILD); break;
-      case SYSBUILD_TIME:     value = String(CRCValues.compileTime); break;
+      case SYSBUILD_TIME:     value = get_build_time(); break;
       case SYSDAY:            value = String(node_time.day()); break;
       case SYSDAY_0:          value = timeReplacement_leadZero(node_time.day()); break;
       case SYSHEAP:           value = String(ESP.getFreeHeap()); break;
@@ -123,14 +123,14 @@ void SystemVariables::parseSystemVariables(String& s, boolean useURLencode)
       case SYSSEC_D:          value = String(((node_time.hour() * 60) + node_time.minute()) * 60 + node_time.second()); break;
       case SYSSTACK:          value = getValue(LabelType::FREE_STACK); break;
       case SYSTIME:           value = node_time.getTimeString(':'); break;
-      case SYSTIME_AM:        value = node_time.getTimeString_ampm(':', false); break;
+      case SYSTIME_AM:        value = node_time.getTimeString_ampm(':'); break;
       case SYSTM_HM:          value = node_time.getTimeString(':', false); break;
       case SYSTM_HM_AM:       value = node_time.getTimeString_ampm(':', false); break;
       case SYSWEEKDAY:        value = String(node_time.weekday()); break;
       case SYSWEEKDAY_S:      value = node_time.weekday_str(); break;
+      case SYSYEAR_0:
       case SYSYEAR:           value = String(node_time.year()); break;
       case SYSYEARS:          value = timeReplacement_leadZero(node_time.year() % 100); break;
-      case SYSYEAR_0:         value = String(node_time.year()); break;
       case SYS_MONTH_0:       value = timeReplacement_leadZero(node_time.month()); break;
       case S_CR:              value = F("\\r"); break;
       case S_LF:              value = F("\\n"); break;

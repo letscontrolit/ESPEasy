@@ -6,6 +6,10 @@
 #include "../DataStructs/ESPEasyLimits.h"
 #include "../Globals/Plugins.h"
 
+//we disable SPI if not defined
+#ifndef DEFAULT_SPI
+ #define DEFAULT_SPI 0
+#endif
 
 /*********************************************************************************************\
  * SettingsStruct
@@ -121,7 +125,7 @@ class SettingsStruct_tmpl
   unsigned long ConnectionFailuresThreshold;
   int16_t       TimeZone;
   boolean       MQTTRetainFlag_unused;
-  boolean       InitSPI;
+  byte          InitSPI; //0 = disabled, 1= enabled but for ESP32 there is option 2= SPI2 
   // FIXME TD-er: Must change to cpluginID_t, but then also another check must be added since changing the pluginID_t will also render settings incompatible
   byte          Protocol[CONTROLLER_MAX];
   byte          Notification[NOTIFICATION_MAX]; //notifications, point to a NPLUGIN id
@@ -171,6 +175,8 @@ class SettingsStruct_tmpl
   uint32_t      VariousBits1;
   uint32_t      ResetFactoryDefaultPreference; // Do not clear this one in the clearAll()
   uint32_t      I2C_clockSpeed;
+  uint16_t      WebserverPort;
+  uint16_t      unused;
 
   // FIXME @TD-er: As discussed in #1292, the CRC for the settings is now disabled.
   // make sure crc is the last value in the struct

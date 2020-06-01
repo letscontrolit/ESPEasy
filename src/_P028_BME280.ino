@@ -128,7 +128,7 @@ struct P028_sensordata {
       switch (sensorID) {
         case BMP280_DEVICE_SAMPLE1:
         case BMP280_DEVICE_SAMPLE2:
-        case BMP280_DEVICE:  return 0x28; // Tstandby 62.5ms, filter 4, 3-wire SPI Disable
+        case BMP280_DEVICE:
         case BME280_DEVICE:  return 0x28; // Tstandby 62.5ms, filter 4, 3-wire SPI Disable
         default: return 0;
       }
@@ -138,7 +138,7 @@ struct P028_sensordata {
       switch (sensorID) {
         case BMP280_DEVICE_SAMPLE1:
         case BMP280_DEVICE_SAMPLE2:
-        case BMP280_DEVICE:  return 0x93; // Oversampling: 8x P, 8x T, normal mode
+        case BMP280_DEVICE:
         case BME280_DEVICE:  return 0x93; // Oversampling: 8x P, 8x T, normal mode
         default: return 0;
       }
