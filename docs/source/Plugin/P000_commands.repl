@@ -343,9 +343,15 @@
     "
     TaskValueSet","
     :green:`Rules`","
-    Set values on a **Dummy Task** (device)
+    Set values on a **Dummy Task** (device).
 
     ``TaskValueSet,<task nr/task name>,<value nr/value name>,<value/formula>``"
+    "
+    TaskValueSetAndRun","
+    :green:`Rules`","
+    Set values on a **Dummy Task** (device) and run/execute the task/device, to manually force an updat/read of the task.
+
+    ``TaskValueSetAndRun,<task nr/task name>,<value nr/value name>,<value/formula>``"
     "
     TimerSet","
     :green:`Rules`","
