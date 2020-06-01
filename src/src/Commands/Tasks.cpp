@@ -32,7 +32,16 @@ String Command_Task_Clear(struct EventStruct *event, const char *Line)
   taskIndex_t  taskIndex;
   unsigned int varNr;
 
-  if (!validTaskVars(event, taskIndex, varNr)) { return return_command_failed(); }
+  if (!validTaskVars(event, taskIndex, varNr))
+  { 
+    taskIndex_t tmpTaskIndex = taskIndex;
+    if (event->Par1 <= 0 && GetArgv(Line, taskName, 2)) {
+      tmpTaskIndex = findTaskIndexByName(taskName);
+      if (tmpTaskIndex != INVALID_TASK_INDEX)
+        event->Par1 = tmpTaskIndex + 1;
+    }
+    if (!validTaskVars(event, taskIndex, varNr)) { return return_command_failed(); }
+  }
 
   taskClear(taskIndex, true);
   return return_command_success();
@@ -51,6 +60,15 @@ String Command_Task_Disable(struct EventStruct *event, const char *Line)
   taskIndex_t  taskIndex;
   unsigned int varNr;
 
+  if (!validTaskVars(event, taskIndex, varNr))
+  { 
+    taskIndex_t tmpTaskIndex = taskIndex;
+    if (event->Par1 <= 0 && GetArgv(Line, taskName, 2)) {
+      tmpTaskIndex = findTaskIndexByName(taskName);
+      if (tmpTaskIndex != INVALID_TASK_INDEX)
+        event->Par1 = tmpTaskIndex + 1;
+    }
+  }
   if (validTaskVars(event, taskIndex, varNr) && setTaskEnableStatus(taskIndex, false)) {
     return return_command_success();
   }
@@ -62,6 +80,15 @@ String Command_Task_Enable(struct EventStruct *event, const char *Line)
   taskIndex_t  taskIndex;
   unsigned int varNr;
 
+  if (!validTaskVars(event, taskIndex, varNr))
+  { 
+    taskIndex_t tmpTaskIndex = taskIndex;
+    if (event->Par1 <= 0 && GetArgv(Line, taskName, 2)) {
+      tmpTaskIndex = findTaskIndexByName(taskName);
+      if (tmpTaskIndex != INVALID_TASK_INDEX)
+        event->Par1 = tmpTaskIndex + 1;
+    }
+  }
   if (validTaskVars(event, taskIndex, varNr) && setTaskEnableStatus(taskIndex, true)) {
     return return_command_success();
   }
@@ -96,24 +123,8 @@ String Command_Task_ValueSet(struct EventStruct *event, const char *Line)
   taskIndex_t  taskIndex;
   unsigned int varNr;
 
-  // if (!validTaskVars(event, taskIndex, varNr) || (event->Par2 <= 0 || event->Par2 >= VARS_PER_TASK))  // Extra check required because of shortcutting in validTaskVars()
-  // { 
-  //   String taskName;
-  //   taskIndex_t tmpTaskIndex = taskIndex;
-  //   if (event->Par1 <= 0 && GetArgv(Line, taskName, 2)) {
-  //     tmpTaskIndex = findTaskIndexByName(taskName);
-  //     if (tmpTaskIndex != INVALID_TASK_INDEX)
-  //       event->Par1 = tmpTaskIndex + 1;
-  //   }
-  //   String valueName;
-  //   if ((event->Par2 <= 0 || event->Par2 >= VARS_PER_TASK) && tmpTaskIndex != INVALID_TASK_INDEX && GetArgv(Line, valueName, 3))
-  //   {
-  //     byte tmpVarNr = findDeviceValueIndexByName(valueName, tmpTaskIndex);
-  //     if (tmpVarNr != VARS_PER_TASK)
-  //       event->Par2 = tmpVarNr + 1;
-  //   }
-    if (!validateAndParseTaskValueArguments(event, Line, taskIndex, varNr)) return return_command_failed(); 
-//  }
+  if (!validateAndParseTaskValueArguments(event, Line, taskIndex, varNr)) return return_command_failed(); 
+
   unsigned int uservarIndex = (VARS_PER_TASK * taskIndex) + varNr;
 
   if (GetArgv(Line, TmpStr1, 4)) {
@@ -135,7 +146,8 @@ String Command_Task_ValueToggle(struct EventStruct *event, const char *Line)
   taskIndex_t  taskIndex;
   unsigned int varNr;
 
-  if (!validTaskVars(event, taskIndex, varNr)) { return return_command_failed(); }
+  if (!validateAndParseTaskValueArguments(event, Line, taskIndex, varNr)) return return_command_failed(); 
+
   unsigned int uservarIndex = (VARS_PER_TASK * taskIndex) + varNr;
   const int    result       = round(UserVar[uservarIndex]);
 
@@ -154,6 +166,7 @@ String Command_Task_ValueSetAndRun(struct EventStruct *event, const char *Line)
     unsigned int varNr;
 
     if (!validateAndParseTaskValueArguments(event, Line, taskIndex, varNr)) return return_command_failed(); 
+
     unsigned int uservarIndex = (VARS_PER_TASK * taskIndex) + varNr;
 
     float result = 0;
@@ -169,7 +182,16 @@ String Command_Task_Run(struct EventStruct *event, const char *Line)
   taskIndex_t  taskIndex;
   unsigned int varNr;
 
-  if (!validTaskVars(event, taskIndex, varNr)) { return return_command_failed(); }
+  if (!validTaskVars(event, taskIndex, varNr))
+  { 
+    taskIndex_t tmpTaskIndex = taskIndex;
+    if (event->Par1 <= 0 && GetArgv(Line, taskName, 2)) {
+      tmpTaskIndex = findTaskIndexByName(taskName);
+      if (tmpTaskIndex != INVALID_TASK_INDEX)
+        event->Par1 = tmpTaskIndex + 1;
+    }
+    if (!validTaskVars(event, taskIndex, varNr)) { return return_command_failed(); }
+  }
 
   SensorSendTask(taskIndex);
   return return_command_success();
