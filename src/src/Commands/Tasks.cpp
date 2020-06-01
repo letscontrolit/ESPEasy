@@ -6,6 +6,8 @@
 
 #include "../../ESPEasy-Globals.h"
 
+#include "../../Misc.h"
+
 //      taskIndex = (event->Par1 - 1);   Par1 is here for 1 ... TASKS_MAX
 //	varNr = event->Par2 - 1;
 bool validTaskVars(struct EventStruct *event, taskIndex_t& taskIndex, unsigned int& varNr)
@@ -66,13 +68,52 @@ String Command_Task_Enable(struct EventStruct *event, const char *Line)
   return return_command_failed();
 }
 
+bool validateAndParseTaskValueArguments(struct EventStruct * event, const char *Line, taskIndex_t &taskIndex, unsigned int &varNr)
+{
+  if (!validTaskVars(event, taskIndex, varNr) || (event->Par2 <= 0 || event->Par2 >= VARS_PER_TASK))  // Extra check required because of shortcutting in validTaskVars()
+  { 
+    String taskName;
+    taskIndex_t tmpTaskIndex = taskIndex;
+    if (event->Par1 <= 0 && GetArgv(Line, taskName, 2)) {
+      tmpTaskIndex = findTaskIndexByName(taskName);
+      if (tmpTaskIndex != INVALID_TASK_INDEX)
+        event->Par1 = tmpTaskIndex + 1;
+    }
+    String valueName;
+    if ((event->Par2 <= 0 || event->Par2 >= VARS_PER_TASK) && tmpTaskIndex != INVALID_TASK_INDEX && GetArgv(Line, valueName, 3))
+    {
+      byte tmpVarNr = findDeviceValueIndexByName(valueName, tmpTaskIndex);
+      if (tmpVarNr != VARS_PER_TASK)
+        event->Par2 = tmpVarNr + 1;
+    }
+    if (!validTaskVars(event, taskIndex, varNr)) return false; 
+  }
+  return true;
+}
 String Command_Task_ValueSet(struct EventStruct *event, const char *Line)
 {
   String TmpStr1;
   taskIndex_t  taskIndex;
   unsigned int varNr;
 
-  if (!validTaskVars(event, taskIndex, varNr)) { return return_command_failed(); }
+  // if (!validTaskVars(event, taskIndex, varNr) || (event->Par2 <= 0 || event->Par2 >= VARS_PER_TASK))  // Extra check required because of shortcutting in validTaskVars()
+  // { 
+  //   String taskName;
+  //   taskIndex_t tmpTaskIndex = taskIndex;
+  //   if (event->Par1 <= 0 && GetArgv(Line, taskName, 2)) {
+  //     tmpTaskIndex = findTaskIndexByName(taskName);
+  //     if (tmpTaskIndex != INVALID_TASK_INDEX)
+  //       event->Par1 = tmpTaskIndex + 1;
+  //   }
+  //   String valueName;
+  //   if ((event->Par2 <= 0 || event->Par2 >= VARS_PER_TASK) && tmpTaskIndex != INVALID_TASK_INDEX && GetArgv(Line, valueName, 3))
+  //   {
+  //     byte tmpVarNr = findDeviceValueIndexByName(valueName, tmpTaskIndex);
+  //     if (tmpVarNr != VARS_PER_TASK)
+  //       event->Par2 = tmpVarNr + 1;
+  //   }
+    if (!validateAndParseTaskValueArguments(event, Line, taskIndex, varNr)) return return_command_failed(); 
+//  }
   unsigned int uservarIndex = (VARS_PER_TASK * taskIndex) + varNr;
 
   if (GetArgv(Line, TmpStr1, 4)) {
@@ -112,7 +153,7 @@ String Command_Task_ValueSetAndRun(struct EventStruct *event, const char *Line)
     taskIndex_t  taskIndex;
     unsigned int varNr;
 
-    if (!validTaskVars(event, taskIndex, varNr)) { return return_command_failed(); }
+    if (!validateAndParseTaskValueArguments(event, Line, taskIndex, varNr)) return return_command_failed(); 
     unsigned int uservarIndex = (VARS_PER_TASK * taskIndex) + varNr;
 
     float result = 0;

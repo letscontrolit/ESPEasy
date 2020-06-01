@@ -13,6 +13,7 @@
 #include "src/Globals/ResetFactoryDefaultPref.h"
 #include "src/Globals/Services.h"
 
+#include "Misc.h"
 
 /*********************************************************************************************\
    ESPEasy specific strings
