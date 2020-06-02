@@ -392,8 +392,11 @@ Transformation
 Binary transformations:
 
 * ``C``: 0 => "CLOSE" 1 => " OPEN"
+* ``c``: 0 => "CLOSED" 1 => "  OPEN"
 * ``H``: 0 => "COLD" 1 => " HOT"
 * ``I``: 0 => "OUT" 1 => " IN"
+* ``L``: 0 => " LEFT" 1 => "RIGHT"
+* ``l``: 0 => "L" 1 => "R"
 * ``M``: 0 => "AUTO" 1 => " MAN"
 * ``m``: 0 => "A" 1 => "M"
 * ``O``: 0 => "OFF" 1 => " ON"
@@ -422,6 +425,9 @@ Justification
 * ``Ln``: Left part of the string, n characters.
 * ``Rn``: Right part of the string, n characters.
 * ``Ux.y``: Substring Ux.y where x=firstChar and y=number of characters.
+* ``C``: Capitalize first character of each word (space/period separated).
+* ``u``: Uppercase entire value.
+* ``l``: Lowercase entire value.
 
 
 String Formatting and Interpreting

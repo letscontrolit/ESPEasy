@@ -1984,6 +1984,9 @@ void transformValue(
           case 'C':
             value = logicVal == 0 ? F("CLOSE") : F(" OPEN");
             break;
+          case 'c':
+            value = logicVal == 0 ? F("CLOSED") : F("  OPEN");
+            break;
           case 'M':
             value = logicVal == 0 ? F("AUTO") : F(" MAN");
             break;
@@ -2010,6 +2013,12 @@ void transformValue(
             break;
           case 'I':
             value = logicVal == 0 ? F("OUT") : F(" IN");
+            break;
+          case 'L':
+            value = logicVal == 0 ? F(" LEFT") : F("RIGHT");
+            break;
+          case 'l':
+            value = logicVal == 0 ? F("L") : F("R");
             break;
           case 'Z' :// return "0" or "1"
             value = logicVal == 0 ? "0" : "1";
@@ -2127,6 +2136,23 @@ void transformValue(
                   newString += F("ERR");
                 }
               }
+              break;
+            case 'C': // Capitalize First Word-Character value (space/period are checked)
+              if (value.length() > 0) {
+                value.toLowerCase();
+                bool nextCapital = true;
+                for (uint8_t i = 0; i < value.length();i++) {
+                  if (nextCapital)
+                    value[i] = toupper(value[i]);
+                  nextCapital = (value[i] == ' ' || value[i] == '.'); // Very simple, capitalize-first-after-space/period
+                }
+              }
+              break;
+            case 'u': // Uppercase
+              value.toUpperCase();
+              break;
+            case 'l': // Lowercase
+              value.toLowerCase();
               break;
             default:
               newString += F("ERR");
