@@ -31,6 +31,7 @@ String Command_Task_Clear(struct EventStruct *event, const char *Line)
 {
   taskIndex_t  taskIndex;
   unsigned int varNr;
+  String taskName;
 
   if (!validTaskVars(event, taskIndex, varNr))
   { 
@@ -59,6 +60,7 @@ String Command_Task_Disable(struct EventStruct *event, const char *Line)
 {
   taskIndex_t  taskIndex;
   unsigned int varNr;
+  String taskName;
 
   if (!validTaskVars(event, taskIndex, varNr))
   { 
@@ -79,6 +81,7 @@ String Command_Task_Enable(struct EventStruct *event, const char *Line)
 {
   taskIndex_t  taskIndex;
   unsigned int varNr;
+  String taskName;
 
   if (!validTaskVars(event, taskIndex, varNr))
   { 
@@ -181,6 +184,7 @@ String Command_Task_Run(struct EventStruct *event, const char *Line)
 {
   taskIndex_t  taskIndex;
   unsigned int varNr;
+  String taskName;
 
   if (!validTaskVars(event, taskIndex, varNr))
   { 
