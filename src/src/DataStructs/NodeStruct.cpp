@@ -3,23 +3,17 @@
 #include "../Globals/Settings.h"
 #include "../../ESPEasy-Globals.h"
 #include "../../ESPEasyTimeTypes.h"
-
-String getNodeTypeDisplayString(byte nodeType) {
-  switch (nodeType)
-  {
-    case NODE_TYPE_ID_ESP_EASY_STD:     return F("ESP Easy");
-    case NODE_TYPE_ID_ESP_EASYM_STD:    return F("ESP Easy Mega");
-    case NODE_TYPE_ID_ESP_EASY32_STD:   return F("ESP Easy 32");
-    case NODE_TYPE_ID_RPI_EASY_STD:     return F("RPI Easy");
-    case NODE_TYPE_ID_ARDUINO_EASY_STD: return F("Arduino Easy");
-    case NODE_TYPE_ID_NANO_EASY_STD:    return F("Nano Easy");
-  }
-  return "";
-}
+#include "../Globals/SecuritySettings.h"
+#include "../Helpers/ESPEasy_time_calc.h"
 
 NodeStruct::NodeStruct() : ESPEasyNowPeer(0), useAP_ESPEasyNow(0), scaled_rssi(0),
     build(0), age(0), nodeType(0), webgui_portnumber(0)
 {}
+
+bool NodeStruct::valid() const {
+  // FIXME TD-er: Must make some sanity checks to see if it is a valid message
+  return true;
+}
 
 bool NodeStruct::validate() {
   if (build < 20107) {
@@ -30,7 +24,7 @@ bool NodeStruct::validate() {
   }
 
   // FIXME TD-er: Must make some sanity checks to see if it is a valid message
-  return true;
+  return valid();
 }
 
 bool NodeStruct::operator<(const NodeStruct &other) const {
@@ -39,21 +33,29 @@ bool NodeStruct::operator<(const NodeStruct &other) const {
     return ESPEasyNowPeer;
   }
 
+  const bool markedAsPriority = markedAsPriorityPeer();
+  if (markedAsPriority != other.markedAsPriorityPeer()) {
+    return markedAsPriority;
+  }
+
   if (distance != other.distance) {
     return distance < other.distance;
   }
+  
+  const int8_t thisRssi = getRSSI();
+  const int8_t otherRssi = other.getRSSI();
 
-  if (getRSSI() != other.getRSSI()) {
-    if (getRSSI() >= 0) {
+  if (thisRssi != otherRssi) {
+    if (thisRssi >= 0) {
       // This one has no set RSSI, so the other one is better
       return false;
     }
 
-    if (other.getRSSI() >= 0) {
+    if (otherRssi >= 0) {
       // This other has no set RSSI, so the this one is better
       return true;
     }
-    return getRSSI() > other.getRSSI();
+    return thisRssi > otherRssi;
   }
   return true;
 }
@@ -117,6 +119,10 @@ String NodeStruct::getSummary() const {
   res += '"';
   res += F(" load: ");
   res += String(getLoad(), 1);
+  res += F(" RSSI: ");
+  res += getRSSI();
+  res += F(" ch: ");
+  res += channel;
   res += F(" dst: ");
   res += distance;
   return res;
@@ -180,4 +186,21 @@ void NodeStruct::setRSSI(int8_t rssi)
     return;
   }
   scaled_rssi = rssi;
+}
+
+bool NodeStruct::markedAsPriorityPeer() const
+{
+  for (int i = 0; i < ESPEASY_NOW_PEER_MAX; ++i) {
+    if (SecuritySettings.peerMacSet(i)) {
+      if (match(SecuritySettings.EspEasyNowPeerMAC[i])) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+bool NodeStruct::match(const MAC_address& mac) const
+{
+  return (mac == sta_mac || mac == ap_mac);
 }

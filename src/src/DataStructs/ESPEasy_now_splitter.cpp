@@ -167,7 +167,9 @@ bool ESPEasy_now_splitter::send(const ESPEasy_Now_packet& packet, int channel)
         channel = nodeInfo->channel;
       }
     }
-    WifiEspNow.addPeer(packet._mac, channel);
+    // FIXME TD-er: Not sure why, but setting the channel does not work well.
+//    WifiEspNow.addPeer(packet._mac, channel);
+    WifiEspNow.addPeer(packet._mac, 0);
   }
   bool res = WifiEspNow.send(packet._mac, packet[0], packet.getSize());
 

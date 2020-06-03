@@ -19,6 +19,11 @@
 # include <list>
 
 
+#define ESPEASY_NOW_ACTIVVITY_TIMEOUT 60000 // 1 minute
+
+#define ESPEASY_NOW_TMP_SSID       "ESPEASY_NOW"
+#define ESPEASY_NOW_TMP_PASSPHRASE "random_passphrase"
+
 static uint64_t mac_to_key(const uint8_t *mac, ESPEasy_now_hdr::message_t messageType, uint8_t message_count)
 {
   uint64_t key = message_count;
@@ -62,23 +67,59 @@ void ICACHE_FLASH_ATTR ESPEasy_now_onReceive(const uint8_t mac[6], const uint8_t
 
 bool ESPEasy_now_handler_t::begin()
 {
-  if (!WifiEspNow.begin()) { return false; }
-
   if (!Settings.UseESPEasyNow()) { return false; }
+
+  if (use_EspEasy_now) { 
+    return true;
+  }
+
+  _last_used = millis();
+  int channel = WiFi.channel();
+
+  const NodeStruct* preferred = Nodes.getPreferredNode();
+  if (preferred != nullptr) {
+    channel = preferred->channel;
+  }
+
+  const String ssid = F(ESPEASY_NOW_TMP_SSID);
+  const String passphrase = F(ESPEASY_NOW_TMP_PASSPHRASE);
+
+  if (espeasy_now_only) {
+    WifiScan(false, false);
+    addPeerFromWiFiScan();
+
+    const uint8_t* bssid = nullptr;
+    bool connect = false;
+    WiFi.begin(ssid.c_str(), passphrase.c_str(), channel);
+  }
+  setAP(true);
+
+  WiFi.softAP(ssid.c_str(), passphrase.c_str(), channel);
+//  WiFi.softAPdisconnect(false);
+
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    String log = F("ESPEasy-Now: begin on channel ");
+    log += channel;
+    addLog(LOG_LEVEL_INFO, log);
+  }
+
+  if (!WifiEspNow.begin()) { 
+    addLog(LOG_LEVEL_ERROR, F("ESPEasy-Now: Failed to initialize ESPEasy-Now"));
+    return false; 
+  }
 
   for (byte peer = 0; peer < ESPEASY_NOW_PEER_MAX; ++peer) {
     if (SecuritySettings.peerMacSet(peer)) {
-      if (!WifiEspNow.addPeer(SecuritySettings.EspEasyNowPeerMAC[peer])) {
-        if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-          String log;
-          log.reserve(48);
-          log  = F("ESPEasy_Now: Failed to add peer ");
-          log += MAC_address(SecuritySettings.EspEasyNowPeerMAC[peer]).toString();
-          addLog(LOG_LEVEL_ERROR, log);
-        }
-      }
+      add_peer(SecuritySettings.EspEasyNowPeerMAC[peer], 0);
     }
   }
+
+  for (auto it = Nodes.begin(); it != Nodes.end(); ++it) {
+    if (it->second.ESPEasyNowPeer) {
+      add_peer(it->second.ESPEasy_Now_MAC(), it->second.channel);
+    }
+  }
+
 
   // FIXME TD-er: Must check in settings if enabled
   WifiEspNow.onReceive(ESPEasy_now_onReceive, nullptr);
@@ -86,6 +127,7 @@ bool ESPEasy_now_handler_t::begin()
   sendDiscoveryAnnounce();
 
   use_EspEasy_now = true;
+  _last_used = 0;
   addLog(LOG_LEVEL_INFO, F("ESPEasy-Now enabled"));
   return true;
 }
@@ -156,7 +198,27 @@ bool ESPEasy_now_handler_t::loop()
       }
     }
   }
+  if (_send_failed_count > 30 /*|| !active()*/) {
+    _send_failed_count = 0;
+    espeasy_now_only = true;
+    // Start scanning the next channel to see if we may end up with a new found node
+//    WifiScan(false, false);
+//    addPeerFromWiFiScan();
+//    _last_used = millis();
+    begin();
+  }
   return somethingProcessed;
+}
+
+bool ESPEasy_now_handler_t::active() const
+{
+  if (!use_EspEasy_now) {
+    return false;
+  }
+  if (_last_used == 0) {
+    return false;
+  }
+  return (timePassedSince(_last_used) < ESPEASY_NOW_ACTIVVITY_TIMEOUT);
 }
 
 void ESPEasy_now_handler_t::addPeerFromWiFiScan()
@@ -188,8 +250,28 @@ void ESPEasy_now_handler_t::addPeerFromWiFiScan(uint8_t scanIndex)
     nodeInfo->setRSSI(WiFi.RSSI(scanIndex));
     nodeInfo->channel = WiFi.channel(scanIndex);
   } else {
-    // Must trigger a discovery request from the node.
-    sendDiscoveryAnnounce(peer_mac, WiFi.channel(scanIndex));
+    // FIXME TD-er: For now we assume the other node uses AP for ESPEasy-now
+    NodeStruct tmpNodeInfo;
+    tmpNodeInfo.setRSSI(WiFi.RSSI(scanIndex));
+    tmpNodeInfo.channel = WiFi.channel(scanIndex);
+    peer_mac.get(tmpNodeInfo.ap_mac);
+    tmpNodeInfo.setESPEasyNow_mac(peer_mac);
+
+    if (tmpNodeInfo.markedAsPriorityPeer()) {
+      Nodes.addNode(tmpNodeInfo);
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        String log = F("ESPEasy-Now: Found node via WiFi scan: ");
+        log += peer_mac.toString();
+        log += F(" ");
+        log += tmpNodeInfo.getRSSI();
+        log += F(" dBm ch: ");
+        log += tmpNodeInfo.channel;
+        addLog(LOG_LEVEL_INFO, log);
+      }
+      // Must trigger a discovery request from the node.
+      // FIXME TD-er: Disable auto discovery for now
+  //    sendDiscoveryAnnounce(peer_mac, WiFi.channel(scanIndex));
+    }
   }
 }
 
@@ -217,6 +299,9 @@ bool ESPEasy_now_handler_t::processMessage(const ESPEasy_now_merger& message)
     case ESPEasy_now_hdr::message_t::SendData_DuplicateCheck:
       handled = handle_SendData_DuplicateCheck(message);
       break;
+  }
+  if (handled) {
+    _last_used = millis();
   }
 
   return handled;
@@ -273,7 +358,8 @@ bool ESPEasy_now_handler_t::handle_DiscoveryAnnounce(const ESPEasy_now_merger& m
     return false;
   }
 
-  bool isNewNode = Nodes.getNodeByMac(mac) == nullptr;
+// FIXME TD-er: Disable auto discovery for now
+//  bool isNewNode = Nodes.getNodeByMac(mac) == nullptr;
 
   Nodes.addNode(received);
 
@@ -294,9 +380,12 @@ bool ESPEasy_now_handler_t::handle_DiscoveryAnnounce(const ESPEasy_now_merger& m
     addLog(LOG_LEVEL_INFO, log);
   }
 
+  // FIXME TD-er: Disable auto discovery for now
+/*
   if (isNewNode) {
     sendDiscoveryAnnounce(mac);
   }
+*/
   return true;
 }
 
@@ -373,6 +462,13 @@ bool ESPEasy_now_handler_t::sendToMQTT(controllerIndex_t controllerIndex, const 
 {
   if (!use_EspEasy_now) { return false; }
 
+  const uint8_t distance = Nodes.getDistance();
+  if (distance == 0 || distance == 255) {
+    // No need to send via ESPEasy_Now.
+    // We're either connected (distance == 0)
+    // or have no neighbor that can forward the message (distance == 255)
+    return false;
+  }
 
   MakeControllerSettings(ControllerSettings);
   LoadControllerSettings(controllerIndex, ControllerSettings);
@@ -392,6 +488,7 @@ bool ESPEasy_now_handler_t::sendToMQTT(controllerIndex_t controllerIndex, const 
     msg.addString(topic);
     msg.addString(payload);
 
+/*
     for (byte peer = 0; peer < ESPEASY_NOW_PEER_MAX && !processed; ++peer) {
       // FIXME TD-er: This must be optimized to keep the last working index.
       // Or else it may take quite a while to send each message
@@ -404,20 +501,33 @@ bool ESPEasy_now_handler_t::sendToMQTT(controllerIndex_t controllerIndex, const 
             processed = true;
             break;
           }
+          case WifiEspNowSendStatus::NONE:
+          case WifiEspNowSendStatus::FAIL:
+          {
+            ++_send_failed_count;
+            break;
+          }
           default: break;
         }
       }
     }
+    */
     if (!processed) {
       const NodeStruct* preferred = Nodes.getPreferredNode();
       if (preferred != nullptr) {
         MAC_address mac = preferred->ESPEasy_Now_MAC();
-        WifiEspNowSendStatus sendStatus = msg.send(mac, millis() + ControllerSettings.ClientTimeout, preferred->channel);
+        WifiEspNowSendStatus sendStatus = msg.send(mac, millis() + 2* ControllerSettings.ClientTimeout, preferred->channel);
 
         switch (sendStatus) {
           case WifiEspNowSendStatus::OK:
           {
             processed = true;
+            break;
+          }
+          case WifiEspNowSendStatus::NONE:
+          case WifiEspNowSendStatus::FAIL:
+          {
+            ++_send_failed_count;
             break;
           }
           default: break;
@@ -526,6 +636,25 @@ bool ESPEasy_now_handler_t::handle_SendData_DuplicateCheck(const ESPEasy_now_mer
       return true;
   }
   return false;
+}
+
+bool ESPEasy_now_handler_t::add_peer(const MAC_address& mac, int channel) const
+{
+  MAC_address this_mac;
+  WiFi.macAddress(this_mac.mac);
+  // Don't add yourself as a peer
+  if (this_mac == mac) return false;
+  if (!WifiEspNow.addPeer(mac.mac, channel)) {
+    if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+      String log;
+      log.reserve(48);
+      log  = F("ESPEasy_Now: Failed to add peer ");
+      log += MAC_address(mac).toString();
+      addLog(LOG_LEVEL_ERROR, log);
+    }
+    return false;
+  }
+  return true;
 }
 
 #endif // ifdef USES_ESPEASY_NOW

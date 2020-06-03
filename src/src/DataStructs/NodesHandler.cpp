@@ -151,17 +151,18 @@ void NodesHandler::updateThisNode() {
   }
 
   if (isEndpoint()) {
-    thisNode.distance = 0;
+    _distance = 0;
   } else {
-    thisNode.distance = 255;
+    _distance = 255;
     const NodeStruct *preferred = getPreferredNode_notMatching(thisNode.sta_mac);
 
     if (preferred != nullptr) {
       if (preferred->distance < 255) {
-        thisNode.distance = preferred->distance + 1;
+        _distance = preferred->distance + 1;
       }
     }
   }
+  thisNode.distance = _distance;
   addNode(thisNode);
 }
 

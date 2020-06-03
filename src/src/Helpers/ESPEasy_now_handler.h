@@ -25,6 +25,8 @@ public:
 
   bool loop();
 
+  bool active() const;
+
   void addPeerFromWiFiScan();
   void addPeerFromWiFiScan(uint8_t scanIndex);
 
@@ -61,7 +63,13 @@ private:
 
   bool handle_SendData_DuplicateCheck(const ESPEasy_now_merger& message);
 
+  bool add_peer(const MAC_address& mac, int channel) const;
+
   ESPEasy_Now_NTP_query _best_NTP_candidate;
+
+  unsigned long _last_used = 0;
+
+  uint8_t _send_failed_count = 0;
 };
 
 

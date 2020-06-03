@@ -89,6 +89,7 @@ extern int    wifi_reconnects; // First connection attempt is not a reconnect.
 extern String last_ssid;
 extern bool   bssid_changed;
 extern bool   channel_changed;
+extern bool    espeasy_now_only;
 
 extern WiFiDisconnectReason lastDisconnectReason;
 extern LongTermTimer lastConnectMoment;

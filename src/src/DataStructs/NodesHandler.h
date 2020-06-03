@@ -40,10 +40,16 @@ public:
 
   const NodeStruct * getThisNode();
 
+  uint8_t getDistance() const {
+    return _distance;
+  }
+
 
 private:
 
   bool isEndpoint() const;
+
+  uint8_t _distance = 255;  // Cached value
 
   NodesMap _nodes;
 };
