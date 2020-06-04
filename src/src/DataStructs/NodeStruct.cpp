@@ -19,8 +19,17 @@ bool NodeStruct::validate() {
   if (build < 20107) {
     // webserverPort introduced in 20107
     webgui_portnumber = 80;
+    for (byte i = 0; i < 6; ++i) {
+      ap_mac[i] = 0;
+    }
     load              = 0;
     distance          = 255;
+    timeSource        = static_cast<uint8_t>(timeSource_t::No_time_source);
+    channel           = 0;
+    ESPEasyNowPeer    = 0;
+    useAP_ESPEasyNow  = 0;
+    setRSSI(0);
+    lastUpdated = 0;
   }
 
   // FIXME TD-er: Must make some sanity checks to see if it is a valid message

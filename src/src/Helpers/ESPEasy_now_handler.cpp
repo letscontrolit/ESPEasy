@@ -75,27 +75,35 @@ bool ESPEasy_now_handler_t::begin()
 
   _last_used = millis();
   int channel = WiFi.channel();
+  MAC_address bssid;
+
+  if (espeasy_now_only) {
+    WifiScan(false, false);
+    addPeerFromWiFiScan();
+  }
 
   const NodeStruct* preferred = Nodes.getPreferredNode();
   if (preferred != nullptr) {
     channel = preferred->channel;
+    bssid.set(preferred->ap_mac);
   }
 
   const String ssid = F(ESPEASY_NOW_TMP_SSID);
   const String passphrase = F(ESPEASY_NOW_TMP_PASSPHRASE);
 
   if (espeasy_now_only) {
-    WifiScan(false, false);
-    addPeerFromWiFiScan();
-
-    const uint8_t* bssid = nullptr;
-    bool connect = false;
-    WiFi.begin(ssid.c_str(), passphrase.c_str(), channel);
+    if (bssid.all_zero()) {
+      WiFi.begin(getLastWiFiSettingsSSID(), getLastWiFiSettingsPassphrase(), channel);
+    } else {
+      WiFi.begin(getLastWiFiSettingsSSID(), getLastWiFiSettingsPassphrase(), channel, bssid.mac);
+    }
   }
   setAP(true);
 
-  WiFi.softAP(ssid.c_str(), passphrase.c_str(), channel);
-//  WiFi.softAPdisconnect(false);
+  int ssid_hidden = 1;
+  int max_connection = 6;
+  WiFi.softAP(ssid.c_str(), passphrase.c_str(), channel, ssid_hidden, max_connection);
+//    WiFi.softAPdisconnect(false);
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("ESPEasy-Now: begin on channel ");

@@ -162,6 +162,7 @@ void handle_root() {
     html_table_header("Age (s)");
     #ifdef USES_ESPEASY_NOW
     html_table_header("Dist");
+    html_table_header("Peer Info", 160);
     #endif
 
     for (auto it = Nodes.begin(); it != Nodes.end(); ++it)
@@ -212,13 +213,7 @@ void handle_root() {
           html += it->second.IP().toString();
           html += "</a>";
           addHtml(html);
-        } else if (it->second.ESPEasyNowPeer) {
-          addHtml(F("ESPEasy-Now "));
-          addHtml(it->second.ESPEasy_Now_MAC().toString());
-          addHtml(F(" (ch: "));
-          addHtml(String(it->second.channel));
-          addHtml(F(")"));
-        }
+        } 
         html_TD();
         const float load = it->second.getLoad();
         if (load > 0.1) {
@@ -230,6 +225,19 @@ void handle_root() {
         html_TD();
         if (it->second.distance != 255) {
           addHtml(String(it->second.distance)); 
+        }
+        html_TD();
+        if (it->second.ESPEasyNowPeer) {
+          addHtml(F("ESPEasy-Now "));
+          addHtml(it->second.ESPEasy_Now_MAC().toString());
+          addHtml(F(" (ch: "));
+          addHtml(String(it->second.channel));
+          int8_t rssi = it->second.getRSSI();
+          if (rssi < 0) {
+            addHtml(F(" "));
+            addHtml(String(rssi));
+          }
+          addHtml(F(")"));
         }
         #endif
       }

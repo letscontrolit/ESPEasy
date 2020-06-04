@@ -411,26 +411,28 @@ void processScanDone() {
     const uint8_t startWiFiSettings = RTC.lastWiFiSettingsIndex;
     bool done = false;
     while (!done) {
-      String ssid_to_check = getLastWiFiSettingsSSID(); 
-      for (int i = 0; i < scanCompleteStatus; ++i) {
-        if (WiFi.SSID(i) == ssid_to_check) {
-          int32_t rssi = WiFi.RSSI(i);
+      if (getLastWiFiSettingsSSID() != nullptr) {
+        String ssid_to_check = getLastWiFiSettingsSSID(); 
+        for (int i = 0; i < scanCompleteStatus; ++i) {
+          if (WiFi.SSID(i) == ssid_to_check) {
+            int32_t rssi = WiFi.RSSI(i);
 
-          if (bestRssi < rssi) {
-            bestRssi         = rssi;
-            bestScanID       = i;
-            bestWiFiSettings = RTC.lastWiFiSettingsIndex;
+            if (bestRssi < rssi) {
+              bestRssi         = rssi;
+              bestScanID       = i;
+              bestWiFiSettings = RTC.lastWiFiSettingsIndex;
+            }
           }
         }
-      }
 
-      // Select the next WiFi settings.
-      // RTC.lastWiFiSettingsIndex may be updated.
-      if (!selectNextWiFiSettings()) {
-        done = true; 
-      }
-      if (startWiFiSettings == RTC.lastWiFiSettingsIndex) {
-        done = true; 
+        // Select the next WiFi settings.
+        // RTC.lastWiFiSettingsIndex may be updated.
+        if (!selectNextWiFiSettings()) {
+          done = true; 
+        }
+        if (startWiFiSettings == RTC.lastWiFiSettingsIndex) {
+          done = true; 
+        }
       }
     }
 
