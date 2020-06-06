@@ -1,5 +1,7 @@
+#include "ESPEasy_common.h"
 
-#ifdef WEBSERVER_TIMINGSTATS
+
+#if defined(WEBSERVER_TIMINGSTATS) && defined(USES_TIMING_STATS)
 #include "src/Globals/Device.h"
 
 
