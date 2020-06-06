@@ -20,7 +20,7 @@
 struct NodeStruct
 {
   NodeStruct() :
-    build(0), age(0), nodeType(0)
+    build(0), age(0), nodeType(0), webgui_portnumber(0)
   {
     for (byte i = 0; i < 4; ++i) { ip[i] = 0; }
   }
@@ -30,6 +30,7 @@ struct NodeStruct
   uint16_t  build;
   byte      age;
   byte      nodeType;
+  uint16_t  webgui_portnumber;
 };
 typedef std::map<byte, NodeStruct> NodesMap;
 

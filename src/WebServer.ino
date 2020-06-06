@@ -332,7 +332,7 @@ void set_mDNS() {
     }
 
     if (mdns_started) {
-      MDNS.addService("http", "tcp", 80);
+      MDNS.addService("http", "tcp", Settings.WebserverPort);
     }
   }
   #endif // ifdef FEATURE_MDNS
@@ -345,7 +345,7 @@ void setWebserverRunning(bool state) {
 
   if (state) {
     WebServerInit();
-    web_server.begin();
+    web_server.begin(Settings.WebserverPort);
     addLog(LOG_LEVEL_INFO, F("Webserver: start"));
   } else {
     web_server.stop();
