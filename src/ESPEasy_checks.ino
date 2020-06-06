@@ -1,3 +1,5 @@
+#include "ESPEasy_common.h"
+
 #include "src/DataStructs/NodeStruct.h"
 #include "src/DataStructs/CRCStruct.h"
 #include "src/DataStructs/SettingsStruct.h"

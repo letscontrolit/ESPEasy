@@ -4,6 +4,7 @@
 
 #include <WString.h>
 
+#include "ESPEasy_common.h"
 #include "src/Globals/CPlugins.h"
 #include "src/Globals/Device.h"
 #include "src/Globals/TXBuffer.h"
