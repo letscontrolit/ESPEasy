@@ -499,6 +499,9 @@ boolean Plugin_082(byte function, struct EventStruct *event, String& string) {
             if (distance > static_cast<double>(P082_DISTANCE)) {
               if (P082_data->storeCurPos(P082_TIMEOUT)) {
                 distance_passed = true;
+                String eventString = F("GPS#travelled=");
+                eventString += distance;
+                eventQueue.add(eventString);
 
                 if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                   String log = F("GPS: Distance trigger : ");
