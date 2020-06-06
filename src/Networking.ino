@@ -175,13 +175,17 @@ void checkUDP()
 
                 if (len >= 41)      // extended packet size
                 {
-                  it->second.build = packetBuffer[13] + 256 * packetBuffer[14];
+                  it->second.build = makeWord(packetBuffer[14], packetBuffer[13]);
                   char tmpNodeName[26] = { 0 };
                   memcpy(&tmpNodeName[0], reinterpret_cast<byte *>(&packetBuffer[15]), 25);
                   tmpNodeName[25]     = 0;
                   it->second.nodeName = tmpNodeName;
                   it->second.nodeName.trim();
                   it->second.nodeType = packetBuffer[40];
+                  it->second.webgui_portnumber = 80;
+                  if (len >= 43 && it->second.build >= 20107) {
+                    it->second.webgui_portnumber = makeWord(packetBuffer[42],packetBuffer[41]);
+                  }
                 }
               }
 
@@ -360,10 +364,12 @@ void sendSysInfoUDP(byte repeats)
       data[x + 8] = ip[x];
     }
     data[12] = Settings.Unit;
-    data[13] = Settings.Build & 0xff;
-    data[14] = Settings.Build >> 8;
+    data[13] =  lowByte(Settings.Build);
+    data[14] = highByte(Settings.Build);
     memcpy((byte *)data + 15, Settings.Name, 25);
     data[40] = NODE_TYPE_ID;
+    data[41] =  lowByte(Settings.WebserverPort);
+    data[42] = highByte(Settings.WebserverPort);
     statusLED(true);
 
     IPAddress broadcastIP(255, 255, 255, 255);

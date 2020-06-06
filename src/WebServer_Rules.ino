@@ -98,7 +98,9 @@ void handle_rules() {
   addHtml(F("<form name = 'frmselect'>"));
   addSelector(F("set"), RULESETS_MAX, options, optionValues, NULL, choice, true, true);
   addHelpButton(F("Tutorial_Rules"));
+  addRTDHelpButton(F("Rules/Rules.html"));
 
+  html_TR_TD();
   Rule_showRuleTextArea(fileName);
 
   html_TR_TD();
@@ -237,7 +239,7 @@ void handle_rules_new() {
                                    Serial.println(fi.Name);
     #endif // ifdef WEBSERVER_RULES_DEBUG
 
-                                   return count <= endIdx;
+                                   return count < endIdx;
                                  };
 
 
@@ -627,7 +629,7 @@ bool EnumerateFileAndDirectory(String          & rootPath
     File file = root.openNextFile();
 
     while (next && file) {
-      if (count > skip) {
+      if (count >= skip) {
         fileInfo fi;
         fi.Name        = file.name();
         fi.Size        = file.size();
@@ -640,6 +642,7 @@ bool EnumerateFileAndDirectory(String          & rootPath
       }
       file = root.openNextFile();
     }
+    hasMore = file;
   }
   else
   {

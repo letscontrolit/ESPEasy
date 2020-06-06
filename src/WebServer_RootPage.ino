@@ -187,6 +187,11 @@ void handle_root() {
 
           html += F("http://");
           html += it->second.ip.toString();
+          uint16_t port = it->second.webgui_portnumber;
+          if (port !=0 && port != 80) {
+            html += ':';
+            html += String(port);
+          }
           html += "'>";
           html += it->second.ip.toString();
           html += "</a>";
