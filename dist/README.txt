@@ -95,6 +95,11 @@ do that. More information about the tool is found here:
 https://github.com/Grovkillen/ESP_Easy_Flasher
 You can also have custom serial commands entered in a txt file. One command per line.
 
+
+For flashing ESP32 you need Espressif's own Flash Download Tools.
+The latest version can be downloaded from: https://www.espressif.com/en/support/download/other-tools
+
+
 Further reading:
 For more information, see: https://github.com/letscontrolit/ESPEasy
 Or our forum: https://www.letscontrolit.com/forum/
