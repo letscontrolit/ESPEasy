@@ -648,6 +648,7 @@ void updateMQTTclient_connected() {
         connectionError += getMQTT_state();
         addLog(LOG_LEVEL_ERROR, connectionError);
       }
+      MQTTclient_must_send_LWT_connected = false;
     } else {
       schedule_all_tasks_using_MQTT_controller();
     }
