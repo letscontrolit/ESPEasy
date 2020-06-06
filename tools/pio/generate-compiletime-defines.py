@@ -4,7 +4,6 @@ import os
 import platform
 import shutil
 from datetime import date
-from pygit2 import Repository
 import json
 
 
@@ -15,7 +14,14 @@ def create_binary_filename():
 
 
 def get_git_description():
-    return Repository('.').head.shorthand
+    try:
+        from pygit2 import Repository
+        try:
+            return Repository('.').head.shorthand
+        except:
+            return 'No_.git_dir'
+    except ImportError:
+        return 'pygit2_not_installed'
 
 
 # needed to wrap in a number of double quotes.
