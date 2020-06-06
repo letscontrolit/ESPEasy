@@ -2,6 +2,8 @@
 // ********************************************************************************
 // Web Interface notifcations page
 // ********************************************************************************
+#include "ESPEasy_common.h"
+
 #ifndef NOTIFIER_SET_NONE
 
 #include "src/Globals/NPlugins.h"
