@@ -336,6 +336,11 @@ To create/register a plugin, you have to :
             #undef WEBSERVER_WIFI_SCANNER
         #endif
     #endif // WEBSERVER_CUSTOM_BUILD_DEFINED
+
+    #ifndef LIMIT_BUILD_SIZE
+        #define LIMIT_BUILD_SIZE
+    #endif
+
     #ifdef USES_SSDP
       #undef USES_SSDP
     #endif
@@ -1036,15 +1041,33 @@ To create/register a plugin, you have to :
   #undef USES_C014
 #endif
 
+// VCC builds need a bit more, disable timing stats to make it fit.
+#ifdef FEATURE_ADC_VCC
+  #ifndef LIMIT_BUILD_SIZE
+    #define LIMIT_BUILD_SIZE
+  #endif
+#endif
+
 
 // Due to size restrictions, disable a few plugins/controllers for 1M builds
 #ifdef SIZE_1M
   #ifdef USES_C003
     #undef USES_C003
   #endif
+  #ifndef LIMIT_BUILD_SIZE
+    #define LIMIT_BUILD_SIZE
+  #endif
 #endif
 
-
+// Disable some diagnostic parts to make builds fit.
+#ifdef LIMIT_BUILD_SIZE
+  #ifdef WEBSERVER_TIMINGSTATS
+    #undef WEBSERVER_TIMINGSTATS
+  #endif
+  #ifndef BUILD_NO_DEBUG
+    #define BUILD_NO_DEBUG
+  #endif
+#endif
 
 // Timing stats page needs timing stats
 #if defined(WEBSERVER_TIMINGSTATS) && !defined(USES_TIMING_STATS)
