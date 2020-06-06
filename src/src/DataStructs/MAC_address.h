@@ -41,6 +41,30 @@ public:
 
   void toString(char (& strMAC)[20]) const;
 
+  // An universally administered address (UAA) is uniquely assigned to a device by its manufacturer.
+  // The first three octets (in transmission order) identify the organization that issued
+  // the identifier and are known as the organizationally unique identifier (OUI)
+  bool isUniversal() const {
+    return (mac[0] & 2) == 0;
+  }
+
+  // A locally administered address (LAA) is assigned to a device by a network administrator, overriding the burned-in address.
+  bool isLocal() const {
+    return !isUniversal();
+  }
+
+  // Unicast frames are meant to be received by a single network device.
+  // See: https://en.wikipedia.org/wiki/MAC_address#Unicast_vs._multicast
+  bool isUnicast() const {
+    return (mac[0] & 1) == 0;
+  }
+
+  // Multicast frames are meant to be received by multiple network devices
+  // See: https://en.wikipedia.org/wiki/MAC_address#Unicast_vs._multicast
+  bool isMulticast() const {
+    return !isUnicast();
+  }
+
   uint8_t mac[6] = { 0 };
 
 private:

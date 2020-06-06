@@ -215,7 +215,9 @@ bool NodesHandler::isEndpoint() const
   #ifdef USES_MQTT
   controllerIndex_t enabledMqttController = firstEnabledMQTT_ControllerIndex();
   if (validControllerIndex(enabledMqttController)) {
-    return MQTTclient_connected;
+    // FIXME TD-er: Must call updateMQTTclient_connected() and see what effect
+    // the MQTTclient_connected state has when using ESPEasy-now.
+    return MQTTclient.connected();
   }
   #endif
 

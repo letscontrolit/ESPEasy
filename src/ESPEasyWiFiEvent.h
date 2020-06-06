@@ -58,6 +58,8 @@ void onConnectedAPmode(const WiFiEventSoftAPModeStationConnected& event);
 
 void onDisconnectedAPmode(const WiFiEventSoftAPModeStationDisconnected& event);
 
+void onProbeRequestAPmode(const WiFiEventSoftAPModeProbeRequestReceived& event);
+
 #endif // ifdef ESP32
 
 

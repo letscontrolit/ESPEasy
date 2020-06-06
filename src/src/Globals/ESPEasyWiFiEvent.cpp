@@ -16,6 +16,9 @@ WiFiEventHandler stationGotIpHandler;
 WiFiEventHandler stationModeDHCPTimeoutHandler;
 WiFiEventHandler APModeStationConnectedHandler;
 WiFiEventHandler APModeStationDisconnectedHandler;
+WiFiEventHandler APModeProbeRequestReceivedHandler;
+
+std::list<WiFiEventSoftAPModeProbeRequestReceived> APModeProbeRequestReceived_list;
 #endif // ifdef ESP8266
 
 
@@ -53,6 +56,7 @@ volatile bool processedGotIP            = true;
 volatile bool processedDHCPTimeout      = true;
 volatile bool processedConnectAPmode    = true;
 volatile bool processedDisconnectAPmode = true;
+volatile bool processedProbeRequestAPmode = true;
 volatile bool processedScanDone         = true;
 bool wifiConnectAttemptNeeded           = true;
 bool wifiConnectInProgress              = false;

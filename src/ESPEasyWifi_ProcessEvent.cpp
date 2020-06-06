@@ -122,6 +122,8 @@ void handle_unprocessedWiFiEvents()
 
   if (!processedConnectAPmode) { processConnectAPmode(); }
 
+  if (!processedProbeRequestAPmode) { processProbeRequestAPmode(); }
+
   if (timerAPoff.isSet()) { processDisableAPmode(); }
 
   if (!processedScanDone) { processScanDone(); }
@@ -333,6 +335,27 @@ void processDisconnectAPmode() {
     log += nrStationsConnected;
     addLog(LOG_LEVEL_INFO, log);
   }
+}
+
+void processProbeRequestAPmode() {
+  if (processedProbeRequestAPmode) { return; }
+
+  const MAC_address mac(APModeProbeRequestReceived_list.front().mac);
+  const int rssi = APModeProbeRequestReceived_list.front().rssi;
+
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    String    log                 = F("AP Mode: Probe Request: ");
+    log += mac.toString();
+    log += F(" (");
+    log += rssi;
+    log += F(" dBm)");
+    addLog(LOG_LEVEL_INFO, log);
+  }
+
+  // FIXME TD-er: Must create an answer for ESPEasy-now node discovery
+
+  APModeProbeRequestReceived_list.pop_front();
+  processedProbeRequestAPmode = APModeProbeRequestReceived_list.size() == 0;
 }
 
 // Client connects to AP on this node

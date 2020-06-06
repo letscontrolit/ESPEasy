@@ -4,6 +4,7 @@
 #include <Arduino.h>
 #include <IPAddress.h>
 #include <stdint.h>
+#include <list>
 
 #include "../DataStructs/MAC_address.h"
 #include "../Helpers/LongTermTimer.h"
@@ -75,6 +76,8 @@ extern WiFiEventHandler stationGotIpHandler;
 extern WiFiEventHandler stationModeDHCPTimeoutHandler;
 extern WiFiEventHandler APModeStationConnectedHandler;
 extern WiFiEventHandler APModeStationDisconnectedHandler;
+extern WiFiEventHandler APModeProbeRequestReceivedHandler;
+extern std::list<WiFiEventSoftAPModeProbeRequestReceived> APModeProbeRequestReceived_list;
 #endif // ifdef ESP8266
 
 
@@ -113,6 +116,7 @@ extern volatile bool processedGotIP;
 extern volatile bool processedDHCPTimeout;
 extern volatile bool processedConnectAPmode;
 extern volatile bool processedDisconnectAPmode;
+extern volatile bool processedProbeRequestAPmode;
 extern volatile bool processedScanDone;
 extern bool wifiConnectAttemptNeeded;
 extern bool wifiConnectInProgress;

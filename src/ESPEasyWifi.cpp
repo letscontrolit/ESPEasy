@@ -350,6 +350,7 @@ void resetWiFi() {
   processedDHCPTimeout      = true;
   processedConnectAPmode    = true;
   processedDisconnectAPmode = true;
+  processedProbeRequestAPmode = true;
   processedScanDone         = true;
   wifiConnectAttemptNeeded  = true;
   WifiDisconnect();

@@ -216,4 +216,9 @@ void onDisonnectedAPmode(const WiFiEventSoftAPModeStationDisconnected& event) {
   processedDisconnectAPmode = false;
 }
 
+void onProbeRequestAPmode(const WiFiEventSoftAPModeProbeRequestReceived& event) {
+  APModeProbeRequestReceived_list.push_back(event);
+  processedProbeRequestAPmode = false;
+}
+
 #endif // ifdef ESP8266
