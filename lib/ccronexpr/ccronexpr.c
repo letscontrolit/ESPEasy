@@ -595,7 +595,7 @@ static char* str_replace(char *orig, const char *rep, const char *with) {
 static unsigned int parse_uint(const char* str, int* errcode) {
     char* endptr;
     errno = 0;
-    long int l = strtol(str, &endptr, 0);
+    long int l = strtol(str, &endptr, 10);
     if (errno == ERANGE || *endptr != '\0' || l < 0 || l > INT_MAX) {
         *errcode = 1;
         return 0;
