@@ -41,9 +41,9 @@ fi
 
 # Activate Python virtual environment and install/upgrade packages
 source ${VENV}/bin/activate
-pip install -U platformio
 #pip install -r ${SRC}/docs/requirements.txt
-
+pip install -r ${SRC}/requirements.txt
+pip install -U platformio
 
 # Update platformio
 cd ${SRC}
