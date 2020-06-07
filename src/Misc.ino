@@ -14,6 +14,7 @@
 #include "src/Globals/RTC.h"
 #include "src/Globals/ResetFactoryDefaultPref.h"
 #include "src/Globals/Services.h"
+#include "src/Globals/Settings.h"
 
 
 #ifdef ESP32

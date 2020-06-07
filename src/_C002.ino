@@ -8,6 +8,7 @@
 #define CPLUGIN_ID_002         2
 #define CPLUGIN_NAME_002       "Domoticz MQTT"
 
+#include "src/Commands/InternalCommands.h"
 #include <ArduinoJson.h>
 
 bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& string)

@@ -1061,14 +1061,8 @@ To create/register a plugin, you have to :
 
 // Disable some diagnostic parts to make builds fit.
 #ifdef LIMIT_BUILD_SIZE
-  // FIXME TD-er: When setting these undefs a lot of linker errors occur on ESP32 build => .ino compile issue?
-  #ifdef ESP8266
-    #ifdef WEBSERVER_TIMINGSTATS
-        #undef WEBSERVER_TIMINGSTATS
-    #endif
-    #ifdef USES_TIMING_STATS
-        #undef USES_TIMING_STATS
-    #endif
+  #ifdef WEBSERVER_TIMINGSTATS
+    #undef WEBSERVER_TIMINGSTATS
   #endif
 
   #ifndef BUILD_NO_DEBUG

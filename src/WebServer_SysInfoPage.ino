@@ -2,6 +2,10 @@
 #include "src/DataStructs/RTCStruct.h"
 #include "src/Globals/CRCValues.h"
 #include "src/Static/WebStaticData.h"
+#include "ESPEasy_common.h"
+
+#include "src/Commands/Diagnostic.h"
+
 
 #ifdef WEBSERVER_NEW_UI
 

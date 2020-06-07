@@ -1,5 +1,6 @@
 #ifdef WEBSERVER_ROOT
 
+#include "src/Commands/InternalCommands.h"
 #include "src/Globals/Nodes.h"
 
 // ********************************************************************************

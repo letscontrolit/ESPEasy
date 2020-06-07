@@ -170,6 +170,12 @@ String LoadStringArray(SettingsType::Enum settingsType, int index, String string
 String SaveStringArray(SettingsType::Enum settingsType, int index, const String strings[], uint16_t nrStrings, uint16_t maxStringLength);
 
 
+void SendStatus(byte source, const String& status);
+
+String parseTemplate(String& tmpString);
+String parseTemplate(String& tmpString, bool useURLencode);
+void parseCommandString(struct EventStruct *event, const String& string);
+
 String parseString(const String& string, byte indexFind);
 String parseStringKeepCase(const String& string, byte indexFind);
 String parseStringToEnd(const String& string, byte indexFind);

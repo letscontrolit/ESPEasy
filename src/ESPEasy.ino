@@ -129,13 +129,6 @@ ADC_MODE(ADC_VCC);
 float& getUserVar(unsigned int varIndex) {return UserVar[varIndex]; }
 
 
-#ifdef USES_BLYNK
-// Blynk_get prototype
-boolean Blynk_get(const String& command, controllerIndex_t controllerIndex,float *data = NULL );
-
-controllerIndex_t firstEnabledBlynk_ControllerIndex();
-#endif
-
 //void checkRAM( const __FlashStringHelper* flashString);
 
 #ifdef CORE_POST_2_5_0
@@ -706,23 +699,6 @@ controllerIndex_t firstEnabledMQTT_ControllerIndex() {
 }
 
 #endif //USES_MQTT
-
-#ifdef USES_BLYNK
-// Blynk_get prototype
-//boolean Blynk_get(const String& command, controllerIndex_t controllerIndex,float *data = NULL );
-
-controllerIndex_t firstEnabledBlynk_ControllerIndex() {
-  for (controllerIndex_t i = 0; i < CONTROLLER_MAX; ++i) {
-    protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(i);
-    if (validProtocolIndex(ProtocolIndex)) {
-      if (Protocol[ProtocolIndex].Number == 12 && Settings.ControllerEnabled[i]) {
-        return i;
-      }
-    }
-  }
-  return INVALID_CONTROLLER_INDEX;
-}
-#endif
 
 
 /*********************************************************************************************\

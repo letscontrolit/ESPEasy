@@ -1,3 +1,4 @@
+#include "src/Commands/InternalCommands.h"
 #include "src/Globals/Nodes.h"
 #include "src/Globals/ESPEasyWiFiEvent.h"
 

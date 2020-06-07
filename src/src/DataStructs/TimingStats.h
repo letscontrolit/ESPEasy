@@ -1,7 +1,7 @@
 #ifndef DATASTRUCTS_TIMINGSTATS_H
 #define DATASTRUCTS_TIMINGSTATS_H
 
-#include "../../define_plugin_sets.h"
+#include "../../ESPEasy_common.h"
 #include "../../ESPEasy_plugindefs.h"
 #include "../../ESPEasy_fdwdecl.h"
 

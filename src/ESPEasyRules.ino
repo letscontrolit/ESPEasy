@@ -1,6 +1,7 @@
 #define RULE_FILE_SEPARAROR '/'
 #define RULE_MAX_FILENAME_LENGTH 24
 
+#include "src/Commands/InternalCommands.h"
 #include "src/DataStructs/EventValueSource.h"
 #include "src/Globals/Device.h"
 #include "src/Globals/Plugins.h"
