@@ -4,7 +4,7 @@
 
 TimeChangeRule::TimeChangeRule() :  week(0), dow(1), month(1), hour(0), offset(0) {}
 
-TimeChangeRule::TimeChangeRule(uint8_t weeknr, uint8_t downr, uint8_t m, uint8_t h, uint16_t minutesoffset) :
+TimeChangeRule::TimeChangeRule(uint8_t weeknr, uint8_t downr, uint8_t m, uint8_t h, int16_t minutesoffset) :
   week(weeknr), dow(downr), month(m), hour(h), offset(minutesoffset) {}
 
 // Construct time change rule from stored values optimized for minimum space.
