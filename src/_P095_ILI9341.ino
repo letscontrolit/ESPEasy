@@ -56,7 +56,7 @@ TFT Subcommands:
 | rr | r,<x>,<y>,<width>,<height>,<corner_radius>,<color> | Draw a round rectangle |
 | rrf | r,<x>,<y>,<width>,<height>,<corner_radius>,<bordercolor>,<innercolor> | Draw a filled round rectangle |
 | px | px,<x>,<y>,<color> | Print a single pixel |
-  
+
 TFTCMD Subcommands:
 
 | TFT Subcommands | details | description |
@@ -72,7 +72,7 @@ Examples:
 
 	Write Text :
 		http://<espeasy_ip>/control?cmd=tft,txtfull,0,0,HelloWorld
-	
+
 	Write Text another place:
 		http://<espeasy_ip>/control?cmd=tft,txtfull,100,40,HelloWorld
 
@@ -87,7 +87,7 @@ Examples:
 
 	Write RED Text on YELLOW background (size is 1):
 		http://<espeasy_ip>/control?cmd=tft,txtfull,0,0,1,RED,YELLOW,HelloWorld
-		
+
 	Switch display ON
 		http://<espeasy_ip>/control?cmd=tftcmd,on
 
@@ -103,23 +103,28 @@ Examples:
 
 //plugin dependency
 #include <Adafruit_ILI9341.h>
+#include "Fonts/Seven_Segment24pt7b.h"  // must be in path D:\Projekte\ESPEasy\ESPEasy_mega-20200426\source\.pio\libdeps\test_beta_ESP8266_4M1M\Adafruit GFX Library_ID13\Fonts
+#include "Fonts/Seven_Segment18pt7b.h"
+#include "Fonts/FreeSans9pt7b.h"
+//#include "Fonts/FreeSerif24pt7b.h"
+
 
 //declare functions for using default value parameters
 void Plugin_095_printText(const char *string, int X, int Y, unsigned int textSize = 1, unsigned short color = ILI9341_WHITE, unsigned short bkcolor = ILI9341_BLACK);
 
-//Define the default values for both ESP32/lolin32 and D1 Mini 
+//Define the default values for both ESP32/lolin32 and D1 Mini
 #ifdef ESP32
 //for D32 Pro with TFT connector
-  #define TFT_CS 14 
+  #define TFT_CS 14
   #define TFT_DC 27
   #define TFT_RST 33
   #define TS_CS 12
 #else
  //for D1 Mini with shield connection
-  #define TFT_CS 16 // D0
-  #define TFT_DC 15 // D8
+  #define TFT_CS D0
+  #define TFT_DC D8
   #define TFT_RST -1
-  #define TS_CS 0   // D3
+  #define TS_CS D3
 #endif
 
 //The setting structure
@@ -190,7 +195,7 @@ boolean Plugin_095(byte function, struct EventStruct *event, String& string)
           TFT_Settings.address_tft_rst = PIN(2);
           TFT_Settings.address_ts_cs = PIN(3);
         }
-        
+
         addFormPinSelect(F("TFT CS"), F("p095_tft_cs"), TFT_Settings.address_tft_cs);
         addFormPinSelect(F("TFT DC"), F("p095_tft_dc"), TFT_Settings.address_tft_dc);
         addFormPinSelect(F("TFT RST"), F("p095_tft_rst"), TFT_Settings.address_tft_rst);
@@ -230,7 +235,7 @@ boolean Plugin_095(byte function, struct EventStruct *event, String& string)
         tft->begin();
         tft->setRotation(TFT_Settings.rotation);
         tft->fillScreen(ILI9341_WHITE);
-        Plugin_095_printText("--cdt--", 1, 1);  
+        Plugin_095_printText("--cdt--", 1, 1);
         success = true;
         break;
       }
@@ -280,29 +285,29 @@ boolean Plugin_095(byte function, struct EventStruct *event, String& string)
             if(subcommand.equalsIgnoreCase(F("ON")))
             {
               tft->sendCommand(ILI9341_DISPON);
-            } 
+            }
             else if(subcommand.equalsIgnoreCase(F("OFF")))
             {
               tft->sendCommand(ILI9341_DISPOFF);
-            } 
+            }
             else if(subcommand.equalsIgnoreCase(F("CLEAR")))
             {
               arguments = arguments.substring(argIndex + 1);
               tft->fillScreen(Plugin_095_ParseColor(arguments));
-            } 
+            }
             else if(subcommand.equalsIgnoreCase(F("INV")))
             {
               arguments = arguments.substring(argIndex + 1);
               tft->invertDisplay(arguments.toInt() == 1);
-            } 
+            }
             else if(subcommand.equalsIgnoreCase(F("ROT")))
             {
               ///control?cmd=tftcmd,rot,0
               //not working to verify
               arguments = arguments.substring(argIndex + 1);
               tft->setRotation(arguments.toInt() %3);
-            } 
-            else 
+            }
+            else
             {
               success = false;
             }
@@ -339,55 +344,72 @@ boolean Plugin_095(byte function, struct EventStruct *event, String& string)
             {
               tft->setTextSize(sParams[0].toInt());
             }
+            else if(subcommand.equalsIgnoreCase(F("font")) && argCount == 1) {
+              switch (sParams[0].toInt()) {
+                case 1:
+                  tft->setFont(&Seven_Segment24pt7b);
+                  break;
+                case 2:
+                  tft->setFont(&Seven_Segment18pt7b);
+                  break;
+                case 3:
+                    tft->setFont(&FreeSans9pt7b);
+                    break;
+                default:
+                  tft->setFont();
+                  break;
+              }
+
+            }
             else if(subcommand.equalsIgnoreCase(F("txtfull")) && argCount >= 3 && argCount <= 6)
             {
               switch (argCount)
               {
               case 3: //single text
-                Plugin_095_printText(sParams[2].c_str(), sParams[0].toInt() - 1,sParams[1].toInt() - 1);  
+                Plugin_095_printText(sParams[2].c_str(), sParams[0].toInt() - 1,sParams[1].toInt() - 1);
                 break;
 
               case 4: //text + size
-                Plugin_095_printText(sParams[3].c_str(), sParams[0].toInt() - 1, sParams[1].toInt() - 1, sParams[2].toInt());  
+                Plugin_095_printText(sParams[3].c_str(), sParams[0].toInt() - 1, sParams[1].toInt() - 1, sParams[2].toInt());
                 break;
 
               case 5: //text + size + color
-                Plugin_095_printText(sParams[4].c_str(), sParams[0].toInt() - 1, sParams[1].toInt() - 1, sParams[2].toInt(), Plugin_095_ParseColor(sParams[3]));  
+                Plugin_095_printText(sParams[4].c_str(), sParams[0].toInt() - 1, sParams[1].toInt() - 1, sParams[2].toInt(), Plugin_095_ParseColor(sParams[3]));
                 break;
-              
+
               case 6: //text + size + color
-                Plugin_095_printText(sParams[5].c_str(), sParams[0].toInt() - 1, sParams[1].toInt() - 1, sParams[2].toInt(), Plugin_095_ParseColor(sParams[3]), Plugin_095_ParseColor(sParams[4]));  
+                Plugin_095_printText(sParams[5].c_str(), sParams[0].toInt() - 1, sParams[1].toInt() - 1, sParams[2].toInt(), Plugin_095_ParseColor(sParams[3]), Plugin_095_ParseColor(sParams[4]));
                 break;
               default:
                 success = false;
                 break;
-              }            
+              }
             }
             else if(subcommand.equalsIgnoreCase(F("l")) && argCount == 5)
             {
               tft->drawLine(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), Plugin_095_ParseColor(sParams[4]));
-            }          
+            }
             else if(subcommand.equalsIgnoreCase(F("lh")) && argCount == 3)
             {
               tft->drawFastHLine(0, sParams[0].toInt(), sParams[1].toInt(), Plugin_095_ParseColor(sParams[2]));
-            }          
+            }
             else if(subcommand.equalsIgnoreCase(F("lv")) && argCount == 3)
             {
               tft->drawFastVLine(sParams[0].toInt(), 0, sParams[1].toInt(), Plugin_095_ParseColor(sParams[2]));
-            }          
+            }
             else if(subcommand.equalsIgnoreCase(F("r")) && argCount == 5)
             {
               tft->drawRect(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), Plugin_095_ParseColor(sParams[4]));
-            }          
+            }
             else if(subcommand.equalsIgnoreCase(F("rf")) && argCount == 6)
             {
               tft->fillRect(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), Plugin_095_ParseColor(sParams[5]));
               tft->drawRect(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), Plugin_095_ParseColor(sParams[4]));
-            }          
+            }
             else if(subcommand.equalsIgnoreCase(F("c")) && argCount == 4)
             {
               tft->drawCircle(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), Plugin_095_ParseColor(sParams[3]));
-            }          
+            }
             else if(subcommand.equalsIgnoreCase(F("cf")) && argCount == 5)
             {
               tft->fillCircle(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), Plugin_095_ParseColor(sParams[4]));
@@ -396,31 +418,31 @@ boolean Plugin_095(byte function, struct EventStruct *event, String& string)
             else if(subcommand.equalsIgnoreCase(F("t")) && argCount == 7)
             {
               tft->drawTriangle(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), sParams[4].toInt(), sParams[5].toInt(), Plugin_095_ParseColor(sParams[6]));
-            }           
+            }
             else if(subcommand.equalsIgnoreCase(F("tf")) && argCount == 8)
             {
               tft->fillTriangle(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), sParams[4].toInt(), sParams[5].toInt(), Plugin_095_ParseColor(sParams[7]));
               tft->drawTriangle(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), sParams[4].toInt(), sParams[5].toInt(), Plugin_095_ParseColor(sParams[6]));
-            }           
+            }
             else if(subcommand.equalsIgnoreCase(F("rr")) && argCount == 6)
             {
               tft->drawRoundRect(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), sParams[4].toInt(), Plugin_095_ParseColor(sParams[5]));
-            }          
+            }
             else if(subcommand.equalsIgnoreCase(F("rrf")) && argCount == 7)
             {
               tft->fillRoundRect(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), sParams[4].toInt(), Plugin_095_ParseColor(sParams[6]));
               tft->drawRoundRect(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), sParams[4].toInt(), Plugin_095_ParseColor(sParams[5]));
-            } 
+            }
             else if(subcommand.equalsIgnoreCase(F("px")) && argCount == 3)
             {
               tft->drawPixel(sParams[0].toInt(), sParams[1].toInt(), Plugin_095_ParseColor(sParams[2]));
-            } 
-            else 
+            }
+            else
             {
               success = false;
             }
           }
-                    
+
         }
         else
         {
@@ -444,9 +466,9 @@ boolean Plugin_095(byte function, struct EventStruct *event, String& string)
         log.reserve(110);                           // Prevent re-allocation
         log = F("P095-ILI9341 : WRITE = ");
         log += tmpString;
-        SendStatus(event->Source, log);             // Reply (echo) to sender. This will print message on browser.  
-              
-        break;        
+        SendStatus(event->Source, log);             // Reply (echo) to sender. This will print message on browser.
+
+        break;
       }
   }
 
@@ -514,7 +536,7 @@ unsigned short Plugin_095_ParseColor(String & s)
     return ILI9341_GREENYELLOW;
   if (s.equalsIgnoreCase(F("PINK")))
     return ILI9341_PINK;
-  
+
   if(s.length() == 7 && s[0] == '#')
   {
     // convrt to long value in base16, then split up into r, g, b values
@@ -545,7 +567,7 @@ int Plugin_095_StringSplit(String &s, char c, String op[], int limit)
     op[count] = String(pch);
     count++;
     pch = strtok (NULL, ",");
-  }  
+  }
   return count;
 }
 
