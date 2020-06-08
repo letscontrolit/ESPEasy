@@ -1,3 +1,4 @@
+#include "src/Commands/InternalCommands.h"
 #include "src/Globals/Nodes.h"
 #include "src/Globals/Device.h"
 #include "src/Globals/Plugins.h"

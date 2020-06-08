@@ -96,7 +96,7 @@
 #include "src/DataStructs/NotificationSettingsStruct.h"
 #include "src/DataStructs/NotificationStruct.h"
 
-#ifndef NOTIFIER_SET_NONE
+#ifdef USES_NOTIFIER
 extern NotificationStruct Notification[NPLUGIN_MAX];
 #endif
 
@@ -184,7 +184,11 @@ extern NotificationStruct Notification[NPLUGIN_MAX];
   #define FILE_RULES        "/rules1.txt"
   #include <WiFi.h>
 //  #include  "esp32_ping.h"
-  #include "SPIFFS.h"
+  #ifdef USE_LITTLEFS
+    #include "LittleFS.h"
+  #else
+    #include "SPIFFS.h"
+  #endif
   #include <rom/rtc.h>
   #include "esp_wifi.h" // Needed to call ESP-IDF functions like esp_wifi_....
   #ifdef FEATURE_MDNS
