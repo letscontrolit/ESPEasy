@@ -1,10 +1,15 @@
 #include "../DataStructs/ESPEasy_EventStruct.h"
 
 #include "../DataStructs/ESPEasyLimits.h"
+#include "../DataStructs/EventValueSource.h"
+#include "../Globals/Plugins.h"
+#include "../Globals/CPlugins.h"
+#include "../Globals/NPlugins.h"
 
 EventStruct::EventStruct() :
   Data(nullptr), idx(0), Par1(0), Par2(0), Par3(0), Par4(0), Par5(0),
-  Source(0), TaskIndex(INVALID_TASK_INDEX), ControllerIndex(INVALID_CONTROLLER_INDEX),
+  Source(EventValueSource::Enum::VALUE_SOURCE_NOT_SET), 
+  TaskIndex(INVALID_TASK_INDEX), ControllerIndex(INVALID_CONTROLLER_INDEX),
   NotificationIndex(INVALID_NOTIFIER_INDEX), BaseVarIndex(0),
   sensorType(0), OriginTaskIndex(0) {}
 

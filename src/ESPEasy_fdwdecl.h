@@ -170,7 +170,7 @@ String LoadStringArray(SettingsType::Enum settingsType, int index, String string
 String SaveStringArray(SettingsType::Enum settingsType, int index, const String strings[], uint16_t nrStrings, uint16_t maxStringLength);
 
 
-void SendStatus(byte source, const String& status);
+void SendStatus(EventValueSource::Enum source, const String& status);
 
 String parseTemplate(String& tmpString);
 String parseTemplate(String& tmpString, bool useURLencode);
@@ -189,7 +189,9 @@ String describeAllowedIPrange();
 void clearAccessBlock();
 String rulesProcessingFile(const String& fileName, String& event);
 int Calculate(const char *input, float* result);
-bool SourceNeedsStatusUpdate(byte eventSource);
+bool SourceNeedsStatusUpdate(EventValueSource::Enum eventSource);
+void SendStatus(EventValueSource::Enum source, const String& status);
+bool ExecuteCommand(taskIndex_t taskIndex, EventValueSource::Enum source, const char *Line, bool tryPlugin, bool tryInternal, bool tryRemoteConfig);
 
 void WifiScan(bool async, bool quick = false);
 void WifiScan();
