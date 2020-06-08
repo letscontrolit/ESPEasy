@@ -150,7 +150,7 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
               }
 
               if (action.length() > 0) {
-                ExecuteCommand_plugin(x, VALUE_SOURCE_MQTT, action.c_str());
+                ExecuteCommand_plugin(x, EventValueSource::Enum::VALUE_SOURCE_MQTT, action.c_str());
 
                 // trigger rulesprocessing
                 if (Settings.UseRules) {

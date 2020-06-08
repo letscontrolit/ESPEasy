@@ -365,42 +365,48 @@ String getLWT_messageDisconnect(const ControllerSettingsStruct& ControllerSettin
 /*********************************************************************************************\
 * Send status info to request source
 \*********************************************************************************************/
-void SendStatusOnlyIfNeeded(byte eventSource, bool param1, uint32_t key, const String& param2, int16_t param3) {
+void SendStatusOnlyIfNeeded(EventValueSource::Enum eventSource, bool param1, uint32_t key, const String& param2, int16_t param3) {
   if (SourceNeedsStatusUpdate(eventSource)) {
     SendStatus(eventSource, getPinStateJSON(param1, key, param2, param3));
   }
 }
 
-bool SourceNeedsStatusUpdate(byte eventSource)
+bool SourceNeedsStatusUpdate(EventValueSource::Enum eventSource)
 {
   switch (eventSource) {
-    case VALUE_SOURCE_HTTP:
-    case VALUE_SOURCE_SERIAL:
-    case VALUE_SOURCE_MQTT:
-    case VALUE_SOURCE_WEB_FRONTEND:
+    case EventValueSource::Enum::VALUE_SOURCE_HTTP:
+    case EventValueSource::Enum::VALUE_SOURCE_SERIAL:
+    case EventValueSource::Enum::VALUE_SOURCE_MQTT:
+    case EventValueSource::Enum::VALUE_SOURCE_WEB_FRONTEND:
       return true;
+
+    default: 
+      break;
   }
   return false;
 }
 
-void SendStatus(byte source, const String& status)
+void SendStatus(EventValueSource::Enum source, const String& status)
 {
   switch (source)
   {
-    case VALUE_SOURCE_HTTP:
-    case VALUE_SOURCE_WEB_FRONTEND:
+    case EventValueSource::Enum::VALUE_SOURCE_HTTP:
+    case EventValueSource::Enum::VALUE_SOURCE_WEB_FRONTEND:
 
       if (printToWeb) {
         printWebString += status;
       }
       break;
 #ifdef USES_MQTT
-    case VALUE_SOURCE_MQTT:
+    case EventValueSource::Enum::VALUE_SOURCE_MQTT:
       MQTTStatus(status);
       break;
 #endif //USES_MQTT
-    case VALUE_SOURCE_SERIAL:
+    case EventValueSource::Enum::VALUE_SOURCE_SERIAL:
       serialPrintln(status);
+      break;
+
+    default: 
       break;
   }
 }
