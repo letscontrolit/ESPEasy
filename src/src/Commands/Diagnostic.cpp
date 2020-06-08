@@ -12,7 +12,6 @@
 #include <map>
 #include <stdint.h>
 
-#include "../../ESPEasy_common.h"
 #include "../Commands/Common.h"
 #include "../Globals/Settings.h"
 #include "../Globals/SecuritySettings.h"

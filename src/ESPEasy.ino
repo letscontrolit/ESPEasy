@@ -129,13 +129,6 @@ ADC_MODE(ADC_VCC);
 float& getUserVar(unsigned int varIndex) {return UserVar[varIndex]; }
 
 
-#ifdef USES_BLYNK
-// Blynk_get prototype
-boolean Blynk_get(const String& command, controllerIndex_t controllerIndex,float *data = NULL );
-
-controllerIndex_t firstEnabledBlynk_ControllerIndex();
-#endif
-
 //void checkRAM( const __FlashStringHelper* flashString);
 
 #ifdef CORE_POST_2_5_0
@@ -226,7 +219,7 @@ void setup()
 
   if (SpiffsSectors() < 32)
   {
-    serialPrintln(F("\nNo (or too small) SPIFFS area..\nSystem Halted\nPlease reflash with 128k SPIFFS minimum!"));
+    serialPrintln(F("\nNo (or too small) FS area..\nSystem Halted\nPlease reflash with 128k FS minimum!"));
     while (true)
       delay(1);
   }
@@ -351,7 +344,7 @@ void setup()
   timermqtt_interval = 250; // Interval for checking MQTT
   timerAwakeFromDeepSleep = millis();
   CPluginInit();
-  #ifndef NOTIFIER_SET_NONE
+  #ifdef USES_NOTIFIER
   NPluginInit();
   #endif
   PluginInit();
@@ -708,23 +701,6 @@ controllerIndex_t firstEnabledMQTT_ControllerIndex() {
 
 #endif //USES_MQTT
 
-#ifdef USES_BLYNK
-// Blynk_get prototype
-//boolean Blynk_get(const String& command, controllerIndex_t controllerIndex,float *data = NULL );
-
-controllerIndex_t firstEnabledBlynk_ControllerIndex() {
-  for (controllerIndex_t i = 0; i < CONTROLLER_MAX; ++i) {
-    protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(i);
-    if (validProtocolIndex(ProtocolIndex)) {
-      if (Protocol[ProtocolIndex].Number == 12 && Settings.ControllerEnabled[i]) {
-        return i;
-      }
-    }
-  }
-  return INVALID_CONTROLLER_INDEX;
-}
-#endif
-
 
 /*********************************************************************************************\
  * Tasks that run 50 times per second
@@ -962,11 +938,11 @@ void backgroundtasks()
   const bool wifiConnected = WiFiConnected();
   runningBackgroundTasks=true;
 
-  #if defined(ESP8266)
   if (wifiConnected) {
-    tcpCleanup();
+    #if defined(ESP8266)
+      tcpCleanup();
+    #endif
   }
-  #endif
   process_serialWriteBuffer();
   if(!UseRTOSMultitasking){
     if (Settings.UseSerial && Serial.available()) {

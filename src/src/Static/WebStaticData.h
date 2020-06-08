@@ -1,7 +1,7 @@
 #ifndef WEBSTATICDATA_h
 #define WEBSTATICDATA_h
 
-#include "../../define_plugin_sets.h"
+#include "../../ESPEasy_common.h"
 
 #define PGMT( pgm_ptr ) ( reinterpret_cast< const __FlashStringHelper * >( pgm_ptr ) )
 
