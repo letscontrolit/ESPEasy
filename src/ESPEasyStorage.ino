@@ -3,6 +3,11 @@
 #include "src/Globals/ResetFactoryDefaultPref.h"
 #include "src/Globals/Plugins.h"
 
+#ifdef ESP32
+#include <MD5Builder.h>
+#include <ESP_Partition.h>
+#endif
+
 /********************************************************************************************\
    file system error handling
    Look here for error # reference: https://github.com/pellepl/spiffs/blob/master/src/spiffs.h

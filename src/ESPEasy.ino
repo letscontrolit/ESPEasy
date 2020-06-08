@@ -938,11 +938,11 @@ void backgroundtasks()
   const bool wifiConnected = WiFiConnected();
   runningBackgroundTasks=true;
 
-  #if defined(ESP8266)
   if (wifiConnected) {
-    tcpCleanup();
+    #if defined(ESP8266)
+      tcpCleanup();
+    #endif
   }
-  #endif
   process_serialWriteBuffer();
   if(!UseRTOSMultitasking){
     if (Settings.UseSerial && Serial.available()) {
