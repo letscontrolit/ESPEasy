@@ -1117,7 +1117,7 @@ void getStorageTableSVG(SettingsType::Enum settingsType) {
 
 #ifdef ESP32
 
-#include <ESP_Partition.h>
+#include <esp_partition.h>
 
 int getPartionCount(byte pType) {
   esp_partition_type_t partitionType       = static_cast<esp_partition_type_t>(pType);

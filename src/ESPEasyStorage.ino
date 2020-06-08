@@ -5,7 +5,7 @@
 
 #ifdef ESP32
 #include <MD5Builder.h>
-#include <ESP_Partition.h>
+#include <esp_partition.h>
 #endif
 
 /********************************************************************************************\
