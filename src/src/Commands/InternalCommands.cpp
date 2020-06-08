@@ -332,9 +332,9 @@ bool executeInternalCommand(const char *cmd, struct EventStruct *event, const ch
       COMMAND_CASE_R(  "wdread", Command_WD_Read,   2);               // WD.h
 
       if (cmd_lc[1] == 'i') {
-        COMMAND_CASE_R(    "wifiapmode", Command_Wifi_APMode,     0); // WiFi.h
-        COMMAND_CASE_R(   "wificonnect", Command_Wifi_Connect,    0); // WiFi.h
-        COMMAND_CASE_R("wifidisconnect", Command_Wifi_Disconnect, 0); // WiFi.h
+        COMMAND_CASE_A(    "wifiapmode", Command_Wifi_APMode,     0); // WiFi.h
+        COMMAND_CASE_A(   "wificonnect", Command_Wifi_Connect,    0); // WiFi.h
+        COMMAND_CASE_A("wifidisconnect", Command_Wifi_Disconnect, 0); // WiFi.h
         COMMAND_CASE_R(       "wifikey", Command_Wifi_Key,        1); // WiFi.h
         COMMAND_CASE_R(      "wifikey2", Command_Wifi_Key2,       1); // WiFi.h
         COMMAND_CASE_R(      "wifimode", Command_Wifi_Mode,       1); // WiFi.h
