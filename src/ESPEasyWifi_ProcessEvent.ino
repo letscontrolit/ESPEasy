@@ -99,10 +99,18 @@ void handle_unprocessedWiFiEvents()
     #ifndef BUILD_NO_DEBUG
 
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-      String wifilog = F("WIFI : Disconnected: WiFi.status() = ");
-      wifilog += String(WiFi.status());
+      static unsigned long lastDisconnectMoment_log = 0;
+      static uint8_t lastWiFiStatus_log = 0;
+      uint8_t cur_wifi_status = WiFi.status();
+      if (lastDisconnectMoment != lastDisconnectMoment_log || 
+          lastWiFiStatus_log != cur_wifi_status) {
+        lastDisconnectMoment_log = lastDisconnectMoment;
+        lastWiFiStatus_log = cur_wifi_status;
+        String wifilog = F("WIFI : Disconnected: WiFi.status() = ");
+        wifilog += String(cur_wifi_status);
 
-      addLog(LOG_LEVEL_DEBUG, wifilog);
+        addLog(LOG_LEVEL_DEBUG, wifilog);
+      }
     }
     #endif // ifndef BUILD_NO_DEBUG
 
