@@ -1193,7 +1193,7 @@ void ResetFactory()
   fname=FILE_SECURITY;
   InitFile(fname.c_str(), 4096);
 
-  #ifndef NOTIFIER_SET_NONE
+  #ifdef USES_NOTIFIER
   fname=FILE_NOTIFICATION;
   InitFile(fname.c_str(), 4096);
   #endif

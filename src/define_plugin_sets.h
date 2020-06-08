@@ -1026,11 +1026,11 @@ To create/register a plugin, you have to :
   #define USES_BLYNK
 #endif
 
-// Specific notifier plugins may be enabled via Custom.h
-// Make sure the NOTIFIER_SET_NONE is not defined then.
+// Specific notifier plugins may be enabled via Custom.h, regardless
+// whether NOTIFIER_SET_NONE is defined
 #if defined(USES_N001) || defined(USES_N002)
-  #ifdef NOTIFIER_SET_NONE
-    #undef NOTIFIER_SET_NONE
+  #ifndef USES_NOTIFIER
+    #define USES_NOTIFIER
   #endif
 #endif
 

@@ -96,7 +96,7 @@
 #include "src/DataStructs/NotificationSettingsStruct.h"
 #include "src/DataStructs/NotificationStruct.h"
 
-#ifndef NOTIFIER_SET_NONE
+#ifdef USES_NOTIFIER
 extern NotificationStruct Notification[NPLUGIN_MAX];
 #endif
 

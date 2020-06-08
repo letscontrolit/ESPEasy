@@ -224,9 +224,9 @@ void WebServerInit()
   web_server.on(F("/log"),           handle_log);
   web_server.on(F("/login"),         handle_login);
   web_server.on(F("/logjson"),       handle_log_JSON); // Also part of WEBSERVER_NEW_UI
-#ifndef NOTIFIER_SET_NONE
+#ifdef USES_NOTIFIER
   web_server.on(F("/notifications"), handle_notifications);
-#endif // ifndef NOTIFIER_SET_NONE
+#endif 
   #ifdef WEBSERVER_PINSTATES
   web_server.on(F("/pinstates"),     handle_pinstates);
   #endif
@@ -544,12 +544,12 @@ void getWebPageTemplateVar(const String& varName)
       if ((i == MENU_INDEX_RULES) && !Settings.UseRules) { // hide rules menu item
         continue;
       }
-#ifdef NOTIFIER_SET_NONE
+#ifndef USES_NOTIFIER
 
       if (i == MENU_INDEX_NOTIFICATIONS) { // hide notifications menu item
         continue;
       }
-#endif // ifdef NOTIFIER_SET_NONE
+#endif
 
       addHtml(F("<a class='menu"));
 

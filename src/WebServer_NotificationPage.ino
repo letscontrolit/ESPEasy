@@ -4,7 +4,7 @@
 // ********************************************************************************
 #include "ESPEasy_common.h"
 
-#ifndef NOTIFIER_SET_NONE
+#ifdef USES_NOTIFIER
 
 #include "src/Globals/NPlugins.h"
 
@@ -215,4 +215,4 @@ void handle_notifications() {
   TXBuffer.endStream();
 }
 
-#endif // NOTIFIER_SET_NONE
+#endif // USES_NOTIFIER

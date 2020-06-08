@@ -344,7 +344,7 @@ void setup()
   timermqtt_interval = 250; // Interval for checking MQTT
   timerAwakeFromDeepSleep = millis();
   CPluginInit();
-  #ifndef NOTIFIER_SET_NONE
+  #ifdef USES_NOTIFIER
   NPluginInit();
   #endif
   PluginInit();
