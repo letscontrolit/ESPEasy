@@ -1,3 +1,5 @@
+#include "ESPEasy_common.h"
+
 #include "src/DataStructs/Caches.h"
 #include "src/DataStructs/NodeStruct.h"
 #include "src/DataStructs/PinMode.h"
@@ -12,8 +14,37 @@
 #include "src/Globals/RTC.h"
 #include "src/Globals/ResetFactoryDefaultPref.h"
 #include "src/Globals/Services.h"
+#include "src/Globals/Settings.h"
 
 
+#ifdef ESP32
+ 
+  //MFD: adding tone support here while waiting for the Arduino Espressif implementation to catch up
+  //As recomandation is not to use external libraries the following code was taken from: https://github.com/lbernstone/Tone Thanks
+  #define TONE_CHANNEL 15
+
+  void noToneESP32(uint8_t pin, uint8_t channel=TONE_CHANNEL)
+  {
+      ledcDetachPin(pin);
+      ledcWrite(channel, 0);
+  }
+
+  void toneESP32(uint8_t pin, unsigned int frequency, unsigned long duration, uint8_t channel=TONE_CHANNEL)
+  {
+      if (ledcRead(channel)) {
+          log_e("Tone channel %d is already in use", ledcRead(channel));
+          return;
+      }
+      ledcAttachPin(pin, channel);
+      ledcWriteTone(channel, frequency);
+      if (duration) {
+          delay(duration);
+          noToneESP32(pin, channel);
+      }    
+  }
+
+
+#endif
 /*********************************************************************************************\
    ESPEasy specific strings
 \*********************************************************************************************/
@@ -1141,14 +1172,14 @@ void ResetFactory()
   RTC.factoryResetCounter++;
   saveToRTC();
 
-  //always format on factory reset, in case of corrupt SPIFFS
-  SPIFFS.end();
+  //always format on factory reset, in case of corrupt FS
+  ESPEASY_FS.end();
   serialPrintln(F("RESET: formatting..."));
-  SPIFFS.format();
+  ESPEASY_FS.format();
   serialPrintln(F("RESET: formatting done..."));
-  if (!SPIFFS.begin())
+  if (!ESPEASY_FS.begin())
   {
-    serialPrintln(F("RESET: FORMAT SPIFFS FAILED!"));
+    serialPrintln(F("RESET: FORMAT FS FAILED!"));
     return;
   }
 
@@ -1162,9 +1193,10 @@ void ResetFactory()
   fname=FILE_SECURITY;
   InitFile(fname.c_str(), 4096);
 
+  #ifdef USES_NOTIFIER
   fname=FILE_NOTIFICATION;
   InitFile(fname.c_str(), 4096);
-
+  #endif
   fname=FILE_RULES;
   InitFile(fname.c_str(), 0);
 
@@ -1240,7 +1272,7 @@ void ResetFactory()
   Settings.Protocol[0]     = DEFAULT_PROTOCOL;
   Settings.deepSleep_wakeTime       = false;
   Settings.CustomCSS       = false;
-  Settings.InitSPI         = false;
+  Settings.InitSPI         = DEFAULT_SPI;
   for (taskIndex_t x = 0; x < TASKS_MAX; x++)
   {
     Settings.TaskDevicePin1[x] = -1;
@@ -1260,6 +1292,13 @@ void ResetFactory()
   Settings.MessageDelay_unused	= DEFAULT_MQTT_DELAY;
   Settings.MQTTUseUnitNameAsClientId_unused = DEFAULT_MQTT_USE_UNITNAME_AS_CLIENTID;
 
+  // allow to set default latitude and longitude
+  #ifdef DEFAULT_LATITUDE
+    Settings.Latitude   = DEFAULT_LATITUDE;
+  #endif
+  #ifdef DEFAULT_LONGITUDE
+    Settings.Longitude  = DEFAULT_LONGITUDE;
+  #endif
 
   Settings.UseSerial		= DEFAULT_USE_SERIAL;
   Settings.BaudRate		= DEFAULT_SERIAL_BAUD;
@@ -1296,7 +1335,8 @@ void ResetFactory()
   ControllerSettings.Port = DEFAULT_PORT;
   setControllerUser(0, ControllerSettings, F(DEFAULT_CONTROLLER_USER));
   setControllerPass(0, ControllerSettings, F(DEFAULT_CONTROLLER_PASS));
-  SaveControllerSettings(0, ControllerSettings);
+
+   SaveControllerSettings(0, ControllerSettings);
 #endif
 
   SaveSettings();
@@ -1567,7 +1607,7 @@ void prepareShutdown()
   process_serialWriteBuffer();
   flushAndDisconnectAllClients();
   saveUserVarToRTC();
-  SPIFFS.end();
+  ESPEASY_FS.end();
   delay(100); // give the node time to flush all before reboot or sleep
   node_time.now();
   saveToRTC();
@@ -1946,6 +1986,9 @@ void transformValue(
           case 'C':
             value = logicVal == 0 ? F("CLOSE") : F(" OPEN");
             break;
+          case 'c':
+            value = logicVal == 0 ? F("CLOSED") : F("  OPEN");
+            break;
           case 'M':
             value = logicVal == 0 ? F("AUTO") : F(" MAN");
             break;
@@ -1972,6 +2015,12 @@ void transformValue(
             break;
           case 'I':
             value = logicVal == 0 ? F("OUT") : F(" IN");
+            break;
+          case 'L':
+            value = logicVal == 0 ? F(" LEFT") : F("RIGHT");
+            break;
+          case 'l':
+            value = logicVal == 0 ? F("L") : F("R");
             break;
           case 'Z' :// return "0" or "1"
             value = logicVal == 0 ? "0" : "1";
@@ -2089,6 +2138,23 @@ void transformValue(
                   newString += F("ERR");
                 }
               }
+              break;
+            case 'C': // Capitalize First Word-Character value (space/period are checked)
+              if (value.length() > 0) {
+                value.toLowerCase();
+                bool nextCapital = true;
+                for (uint8_t i = 0; i < value.length();i++) {
+                  if (nextCapital)
+                    value[i] = toupper(value[i]);
+                  nextCapital = (value[i] == ' ' || value[i] == '.'); // Very simple, capitalize-first-after-space/period
+                }
+              }
+              break;
+            case 'u': // Uppercase
+              value.toUpperCase();
+              break;
+            case 'l': // Lowercase
+              value.toLowerCase();
               break;
             default:
               newString += F("ERR");
@@ -2553,7 +2619,7 @@ void SendValueLogger(taskIndex_t TaskIndex)
   \*********************************************************************************************/
 void tone_espEasy(uint8_t _pin, unsigned int frequency, unsigned long duration) {
   #ifdef ESP32
-    delay(duration);
+    toneESP32(_pin,frequency,duration);
   #else
     analogWriteFreq(frequency);
     //NOTE: analogwrite reserves IRAM and uninitalized ram.
@@ -2766,7 +2832,7 @@ void ArduinoOTAInit()
   ArduinoOTA.onStart([]() {
       serialPrintln(F("OTA  : Start upload"));
       ArduinoOTAtriggered = true;
-      SPIFFS.end(); //important, otherwise it fails
+      ESPEASY_FS.end(); //important, otherwise it fails
   });
 
   ArduinoOTA.onEnd([]() {

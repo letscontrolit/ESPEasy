@@ -1,6 +1,8 @@
 
 #ifdef WEBSERVER_CONTROL
 
+#include "src/Commands/InternalCommands.h"
+
 // ********************************************************************************
 // Web Interface control page (no password!)
 // ********************************************************************************

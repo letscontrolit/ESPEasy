@@ -1,5 +1,6 @@
 #ifdef WEBSERVER_ROOT
 
+#include "src/Commands/InternalCommands.h"
 #include "src/Globals/Nodes.h"
 
 // ********************************************************************************
@@ -18,7 +19,7 @@ void handle_root() {
   if (!isLoggedIn()) { return; }
   navMenuIndex = 0;
 
-  // if index.htm exists on SPIFFS serve that one (first check if gziped version exists)
+  // if index.htm exists on FS serve that one (first check if gziped version exists)
   if (loadFromFS(true, F("/index.htm.gz"))) { return; }
 
   if (loadFromFS(false, F("/index.htm.gz"))) { return; }
@@ -187,6 +188,11 @@ void handle_root() {
 
           html += F("http://");
           html += it->second.ip.toString();
+          uint16_t port = it->second.webgui_portnumber;
+          if (port !=0 && port != 80) {
+            html += ':';
+            html += String(port);
+          }
           html += "'>";
           html += it->second.ip.toString();
           html += "</a>";

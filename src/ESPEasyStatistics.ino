@@ -1,4 +1,4 @@
-#include "define_plugin_sets.h"
+#include "ESPEasy_common.h"
 
 #ifdef USES_TIMING_STATS
 
