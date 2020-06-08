@@ -21,6 +21,11 @@ String return_command_failed()
   return F("\nFailed");
 }
 
+String return_incorrect_source()
+{
+  return F("Command not allowed from this source!");
+}
+
 String return_incorrect_nr_arguments()
 {
   return F("Too many arguments, try using quotes!");
