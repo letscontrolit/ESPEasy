@@ -93,7 +93,7 @@ bool CPlugin_005(CPlugin::Function function, struct EventStruct *event, String& 
             String command = parseString(cmd, 1);
             if (command == F("event") || command == F("asyncevent")) {
               eventQueue.add(parseStringToEnd(cmd, 2));
-            } else if (ExecuteCommand_internal(VALUE_SOURCE_MQTT, cmd.c_str())) {
+            } else if (ExecuteCommand_internal(EventValueSource::Enum::VALUE_SOURCE_MQTT, cmd.c_str())) {
             } else if (PluginCall(PLUGIN_WRITE, &TempEvent, cmd)) {
             } else { remoteConfig(&TempEvent, cmd);
             }

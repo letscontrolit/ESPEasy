@@ -48,7 +48,7 @@ void handle_control() {
     printToWeb     = true;
     printWebString = "";
     TXBuffer.startJsonStream();
-    handledCmd = ExecuteCommand_internal(VALUE_SOURCE_HTTP, webrequest.c_str());
+    handledCmd = ExecuteCommand_internal(EventValueSource::Enum::VALUE_SOURCE_HTTP, webrequest.c_str());
     TXBuffer += printWebString;
     TXBuffer.endStream();
     printToWeb     = false;

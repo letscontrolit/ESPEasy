@@ -665,7 +665,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
                 log=F("C014 :");
               }
               // FIXME TD-er: Command is not parsed, should we call ExecuteCommand here?
-              if (ExecuteCommand_internal(VALUE_SOURCE_MQTT, cmd.c_str())) {
+              if (ExecuteCommand_internal(EventValueSource::Enum::VALUE_SOURCE_MQTT, cmd.c_str())) {
                 if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                   log +=F(" Internal Command: OK!");
                 }
