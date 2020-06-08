@@ -1,11 +1,10 @@
-#include "../../define_plugin_sets.h"
+#include "../../ESPEasy_common.h"
 #include "../Globals/MQTT.h"
 #include "../DataStructs/SchedulerTimers.h"
 #ifdef USES_MQTT
 
 #include "../Commands/MQTT.h"
 
-#include "../../ESPEasy_common.h"
 #include "../Commands/Common.h"
 #include "../Globals/Settings.h"
 #include "../Globals/CPlugins.h"

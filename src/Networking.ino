@@ -1,3 +1,4 @@
+#include "src/Commands/InternalCommands.h"
 #include "src/Globals/Nodes.h"
 #include "src/Globals/ESPEasyWiFiEvent.h"
 
@@ -1081,7 +1082,7 @@ bool downloadFile(const String& url, String file_save, const String& user, const
   }
 
   long len = http.getSize();
-  File f   = SPIFFS.open(file_save, "w");
+  File f   = ESPEASY_FS.open(file_save, "w");
 
   if (f) {
     uint8_t buff[128];

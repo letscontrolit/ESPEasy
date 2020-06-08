@@ -1,6 +1,6 @@
 #include "ESPEasy_common.h"
 
-#ifndef NOTIFIER_SET_NONE
+#ifdef USES_NOTIFIER
 #include "src/Globals/NPlugins.h"
 
 // ********************************************************************************

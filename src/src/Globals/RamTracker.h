@@ -6,7 +6,7 @@
 #define TRACEENTRIES 15 // entries per trace
 
 #include <Arduino.h>
-#include "../../define_plugin_sets.h"
+#include "../../ESPEasy_common.h"
 
 /********************************************************************************************\
    RamTracker class

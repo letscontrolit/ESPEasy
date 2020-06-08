@@ -1,6 +1,7 @@
 #define RULE_FILE_SEPARAROR '/'
 #define RULE_MAX_FILENAME_LENGTH 24
 
+#include "src/Commands/InternalCommands.h"
 #include "src/DataStructs/EventValueSource.h"
 #include "src/Globals/Device.h"
 #include "src/Globals/Plugins.h"
@@ -48,7 +49,7 @@ void checkRuleSets() {
     fileName += x + 1;
     fileName += F(".txt");
 
-    if (SPIFFS.exists(fileName)) {
+    if (ESPEASY_FS.exists(fileName)) {
       activeRuleSets[x] = true;
     }
     else {
@@ -122,7 +123,7 @@ void rulesProcessing(String& event) {
     String fileName = EventToFileName(event);
 
     // if exists processed the rule file
-    if (SPIFFS.exists(fileName)) {
+    if (ESPEASY_FS.exists(fileName)) {
       rulesProcessingFile(fileName, event);
     }
 #ifndef BUILD_NO_DEBUG
