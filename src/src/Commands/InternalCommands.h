@@ -18,21 +18,21 @@ bool executeInternalCommand(const char *cmd, struct EventStruct *event, const ch
 
 
 // Execute command which may be plugin or internal commands
-bool ExecuteCommand_all(byte source, const char *Line);
+bool ExecuteCommand_all(EventValueSource::Enum source, const char *Line);
 
-bool ExecuteCommand_all_config(byte source, const char *Line);
+bool ExecuteCommand_all_config(EventValueSource::Enum source, const char *Line);
 
-bool ExecuteCommand_plugin_config(byte source, const char *Line);
+bool ExecuteCommand_plugin_config(EventValueSource::Enum source, const char *Line);
 
-bool ExecuteCommand_all_config_eventOnly(byte source, const char *Line);
+bool ExecuteCommand_all_config_eventOnly(EventValueSource::Enum source, const char *Line);
 
-bool ExecuteCommand_internal(byte source, const char *Line);
+bool ExecuteCommand_internal(EventValueSource::Enum source, const char *Line);
 
-bool ExecuteCommand_plugin(byte source, const char *Line);
+bool ExecuteCommand_plugin(EventValueSource::Enum source, const char *Line);
 
-bool ExecuteCommand_plugin(taskIndex_t taskIndex, byte source, const char *Line);
+bool ExecuteCommand_plugin(taskIndex_t taskIndex, EventValueSource::Enum source, const char *Line);
 
-bool ExecuteCommand(taskIndex_t taskIndex, byte source, const char *Line, bool tryPlugin, bool tryInternal, bool tryRemoteConfig);
+bool ExecuteCommand(taskIndex_t taskIndex, EventValueSource::Enum source, const char *Line, bool tryPlugin, bool tryInternal, bool tryRemoteConfig);
 
 
 #endif // COMMANDS_INTERNALCOMMANDS_H

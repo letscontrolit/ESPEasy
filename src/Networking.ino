@@ -140,7 +140,7 @@ void checkUDP()
         {
           packetBuffer[len] = 0;
           addLog(LOG_LEVEL_DEBUG, &packetBuffer[0]);
-          ExecuteCommand_all(VALUE_SOURCE_SYSTEM, &packetBuffer[0]);
+          ExecuteCommand_all(EventValueSource::Enum::VALUE_SOURCE_SYSTEM, &packetBuffer[0]);
         }
         else
         {
