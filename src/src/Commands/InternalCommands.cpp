@@ -14,6 +14,7 @@
 #include "../Commands/Common.h"
 #include "../Commands/Controller.h"
 #include "../Commands/Diagnostic.h"
+#include "../Commands/GPIO.h"
 #include "../Commands/HTTP.h"
 #include "../Commands/i2c.h"
 
@@ -194,7 +195,9 @@ bool executeInternalCommand(const char *cmd, struct EventStruct *event, const ch
       break;
     }
     case 'g': {
-      COMMAND_CASE("gateway", Command_Gateway, 1); // Network Command
+      COMMAND_CASE(   "gateway", Command_Gateway, 1); // Network Command
+      COMMAND_CASE(      "gpio", Command_GPIO,        2); // Gpio.h
+      COMMAND_CASE("gpiotoggle", Command_GPIO_Toggle, 1); // Gpio.h
       break;
     }
     case 'i': {
@@ -222,6 +225,11 @@ bool executeInternalCommand(const char *cmd, struct EventStruct *event, const ch
       break;
     }
     case 'm': {
+    if (cmd_lc[1] == 'c') {
+        COMMAND_CASE(   "mcplongpulse", Command_GPIO_LongPulse,    3); // GPIO.h
+        COMMAND_CASE("mcplongpulse_ms", Command_GPIO_LongPulse_Ms, 3); // GPIO.h
+        COMMAND_CASE(       "mcppulse", Command_GPIO_Pulse,        3); // GPIO.h
+    }
     #ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
       COMMAND_CASE(        "malloc", Command_Malloc,            1); // Diagnostic.h
       COMMAND_CASE(       "meminfo", Command_MemInfo,           0); // Diagnostic.h
@@ -237,6 +245,13 @@ bool executeInternalCommand(const char *cmd, struct EventStruct *event, const ch
       break;
     }
     case 'p': {
+      if (cmd_lc[1] == 'c') {
+          COMMAND_CASE(        "pcfgpio", Command_GPIO,              2); // Gpio.h
+          COMMAND_CASE(  "pcfgpiotoggle", Command_GPIO_Toggle,       1); // Gpio.h
+          COMMAND_CASE(   "pcflongpulse", Command_GPIO_LongPulse,    3); // GPIO.h
+          COMMAND_CASE("pcflongpulse_ms", Command_GPIO_LongPulse_Ms, 3); // GPIO.h
+          COMMAND_CASE(       "pcfpulse", Command_GPIO_Pulse,        3); // GPIO.h
+        }
       COMMAND_CASE("password", Command_Settings_Password, 1); // Settings.h
 #ifdef USES_MQTT
       COMMAND_CASE( "publish", Command_MQTT_Publish,      2); // MQTT.h
