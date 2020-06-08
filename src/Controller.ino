@@ -67,7 +67,8 @@ void sendData(struct EventStruct *event)
 
 bool validUserVar(struct EventStruct *event) {
   const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(event->TaskIndex);
-  if (!validDeviceIndex(DeviceIndex)) return false;
+
+  if (!validDeviceIndex(DeviceIndex)) { return false; }
 
   switch (Device[DeviceIndex].VType) {
     case SENSOR_TYPE_LONG:    return true;
@@ -177,34 +178,13 @@ bool MQTTConnect(controllerIndex_t controller_idx)
   // MQTT needs a unique clientname to subscribe to broker
   String clientid = getMQTTclientID(ControllerSettings);
 
-  String LWTTopic = ControllerSettings.MQTTLwtTopic;
-
-  if (LWTTopic.length() == 0)
-  {
-    LWTTopic  = ControllerSettings.Subscribe;
-    LWTTopic += F("/LWT");
-  }
-  LWTTopic.replace(F("/#"), F("/status"));
-  parseSystemVariables(LWTTopic, false);
-
-  String LWTMessageConnect = ControllerSettings.LWTMessageConnect;
-
-  if (LWTMessageConnect.length() == 0) {
-    LWTMessageConnect = F(DEFAULT_MQTT_LWT_CONNECT_MESSAGE);
-  }
-  parseSystemVariables(LWTMessageConnect, false);
-
-  String LWTMessageDisconnect = ControllerSettings.LWTMessageDisconnect;
-
-  if (LWTMessageDisconnect.length() == 0) {
-    LWTMessageDisconnect = F(DEFAULT_MQTT_LWT_DISCONNECT_MESSAGE);
-  }
-  parseSystemVariables(LWTMessageDisconnect, false);
-
-  bool MQTTresult   = false;
-  uint8_t willQos      = 0;
-  bool willRetain   = ControllerSettings.mqtt_willRetain() && ControllerSettings.mqtt_sendLWT();
-  bool cleanSession = ControllerSettings.mqtt_cleanSession(); // As suggested here: https://github.com/knolleary/pubsubclient/issues/458#issuecomment-493875150
+  String  LWTTopic             = getLWT_topic(ControllerSettings);
+  String  LWTMessageDisconnect = getLWT_messageDisconnect(ControllerSettings);
+  bool    MQTTresult           = false;
+  uint8_t willQos              = 0;
+  bool    willRetain           = ControllerSettings.mqtt_willRetain() && ControllerSettings.mqtt_sendLWT();
+  bool    cleanSession         = ControllerSettings.mqtt_cleanSession(); // As suggested here:
+                                                                         // https://github.com/knolleary/pubsubclient/issues/458#issuecomment-493875150
 
   if (hasControllerCredentialsSet(controller_idx, ControllerSettings)) {
     MQTTresult =
@@ -229,8 +209,9 @@ bool MQTTConnect(controllerIndex_t controller_idx)
   delay(0);
 
 
-  byte controller_number = Settings.Protocol[controller_idx];	
+  byte controller_number = Settings.Protocol[controller_idx];
   count_connection_results(MQTTresult, F("MQTT : Broker "), controller_number, ControllerSettings);
+
   if (!MQTTresult) {
     MQTTclient.disconnect();
     updateMQTTclient_connected();
@@ -246,21 +227,28 @@ bool MQTTConnect(controllerIndex_t controller_idx)
   log += subscribeTo;
   addLog(LOG_LEVEL_INFO, log);
 
-  if (MQTTclient.publish(LWTTopic.c_str(), LWTMessageConnect.c_str(), 1)) {
-    updateMQTTclient_connected();
-    statusLED(true);
-    mqtt_reconnect_count = 0;
+  updateMQTTclient_connected();
+  statusLED(true);
+  mqtt_reconnect_count = 0;
 
-    // call all installed controller to publish autodiscover data
-    if (MQTTclient_should_reconnect) { CPluginCall(CPlugin::Function::CPLUGIN_GOT_CONNECTED, 0); }
-    MQTTclient_should_reconnect = false;
-    return true; // end loop if succesfull
+  // call all installed controller to publish autodiscover data
+  if (MQTTclient_should_reconnect) { CPluginCall(CPlugin::Function::CPLUGIN_GOT_CONNECTED, 0); }
+  MQTTclient_should_reconnect = false;
+
+  if (ControllerSettings.mqtt_sendLWT()) {
+    String LWTMessageConnect = getLWT_messageConnect(ControllerSettings);
+
+    if (!MQTTclient.publish(LWTTopic.c_str(), LWTMessageConnect.c_str(), willRetain)) {
+      MQTTclient_must_send_LWT_connected = true;
+    }
   }
-  return false;
+
+  return true;
 }
 
 String getMQTTclientID(const ControllerSettingsStruct& ControllerSettings) {
   String clientid = ControllerSettings.ClientID;
+
   if (clientid.length() == 0) {
     // Try to generate some default
     clientid = F(CONTROLLER_DEFAULT_CLIENTID);
@@ -289,6 +277,7 @@ bool MQTTCheck(controllerIndex_t controller_idx)
     return false;
   }
   protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(controller_idx);
+
   if (!validProtocolIndex(ProtocolIndex)) {
     return false;
   }
@@ -299,15 +288,79 @@ bool MQTTCheck(controllerIndex_t controller_idx)
     {
       if (MQTTclient_should_reconnect) {
         addLog(LOG_LEVEL_ERROR, F("MQTT : Intentional reconnect"));
-      } 
+      }
       return MQTTConnect(controller_idx);
+    }
+
+    if (MQTTclient_must_send_LWT_connected) {
+      MakeControllerSettings(ControllerSettings);
+      LoadControllerSettings(controller_idx, ControllerSettings);
+
+      if (ControllerSettings.mqtt_sendLWT()) {
+        String LWTTopic          = getLWT_topic(ControllerSettings);
+        String LWTMessageConnect = getLWT_messageConnect(ControllerSettings);
+        bool   willRetain        = ControllerSettings.mqtt_willRetain();
+
+        if (MQTTclient.publish(LWTTopic.c_str(), LWTMessageConnect.c_str(), willRetain)) {
+          MQTTclient_must_send_LWT_connected = false;
+        }
+      } else {
+        MQTTclient_must_send_LWT_connected = false;
+      }
     }
   }
 
   // When no MQTT protocol is enabled, all is fine.
   return true;
 }
-#endif //USES_MQTT
+
+
+String getLWT_topic(const ControllerSettingsStruct& ControllerSettings) {
+  String LWTTopic;
+
+  if (ControllerSettings.mqtt_sendLWT()) {
+    LWTTopic = ControllerSettings.MQTTLwtTopic;
+
+    if (LWTTopic.length() == 0)
+    {
+      LWTTopic  = ControllerSettings.Subscribe;
+      LWTTopic += F("/LWT");
+    }
+    LWTTopic.replace(F("/#"), F("/status"));
+    parseSystemVariables(LWTTopic, false);
+  }
+  return LWTTopic;
+}
+
+String getLWT_messageConnect(const ControllerSettingsStruct& ControllerSettings) {
+  String LWTMessageConnect;
+
+  if (ControllerSettings.mqtt_sendLWT()) {
+    LWTMessageConnect = ControllerSettings.LWTMessageConnect;
+
+    if (LWTMessageConnect.length() == 0) {
+      LWTMessageConnect = F(DEFAULT_MQTT_LWT_CONNECT_MESSAGE);
+    }
+    parseSystemVariables(LWTMessageConnect, false);
+  }
+  return LWTMessageConnect;
+}
+
+String getLWT_messageDisconnect(const ControllerSettingsStruct& ControllerSettings) {
+  String LWTMessageDisconnect;
+
+  if (ControllerSettings.mqtt_sendLWT()) {
+    LWTMessageDisconnect = ControllerSettings.LWTMessageDisconnect;
+
+    if (LWTMessageDisconnect.length() == 0) {
+      LWTMessageDisconnect = F(DEFAULT_MQTT_LWT_DISCONNECT_MESSAGE);
+    }
+    parseSystemVariables(LWTMessageDisconnect, false);
+  }
+  return LWTMessageDisconnect;
+}
+
+#endif // USES_MQTT
 
 /*********************************************************************************************\
 * Send status info to request source
