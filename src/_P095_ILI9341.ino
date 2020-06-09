@@ -9,6 +9,8 @@
 #define PLUGIN_VALUENAME1_095 "TFT"
 #define PLUGIN_095_MAX_DISPLAY 1
 
+#define PLUGIN_FONT_MODE      // enable to use fonts in this plugin
+
 /* README.MD
 
 ## INTRO
@@ -56,7 +58,7 @@ TFT Subcommands:
 | rr | rr,<x>,<y>,<width>,<height>,<corner_radius>,<color> | Draw a round rectangle |
 | rrf | rrf,<x>,<y>,<width>,<height>,<corner_radius>,<bordercolor>,<innercolor> | Draw a filled round rectangle |
 | px | px,<x>,<y>,<color> | Print a single pixel |
-| font| font,<n>  | Switch to font number - 0 .. standard, 1 .. sevensegment24, 2 .. sevensegment18, 3 .. FreeSans9pt |
+| font| font,<fontname>  | Switch to font - SEVENSEG24, SEVENSEG18, FREESANS, DEFAULT |
 
 TFTCMD Subcommands:
 
@@ -104,9 +106,12 @@ Examples:
 
 //plugin dependency
 #include <Adafruit_ILI9341.h>
-#include "src/Static/Fonts/Seven_Segment24pt7b.h"
-#include "src/Static/Fonts/Seven_Segment18pt7b.h"
-#include "Fonts/FreeSans9pt7b.h"
+
+#ifdef PLUGIN_FONT_MODE
+   #include "src/Static/Fonts/Seven_Segment24pt7b.h"
+   #include "src/Static/Fonts/Seven_Segment18pt7b.h"
+   #include "Fonts/FreeSans9pt7b.h"
+#endif   
 
 
 //declare functions for using default value parameters
@@ -344,26 +349,21 @@ boolean Plugin_095(byte function, struct EventStruct *event, String& string)
             {
               tft->setTextSize(sParams[0].toInt());
             }
-            else if(subcommand.equalsIgnoreCase(F("font")) && argCount == 1) {
-              switch (sParams[0].toInt()) {
-                case 0:
-                  tft->setFont();   // Set Standard font
-                  break;
-                case 1:
-                  tft->setFont(&Seven_Segment24pt7b);
-                  break;
-                case 2:
-                  tft->setFont(&Seven_Segment18pt7b);
-                  break;
-                case 3:
-                  tft->setFont(&FreeSans9pt7b);
-                  break;
-                default:
-                   success = false;
-                   break;
-              }
-
-            }
+            #ifdef PLUGIN_FONT_MODE
+                else if(subcommand.equalsIgnoreCase(F("font")) && argCount == 1) {
+                   if (sParams[0].equalsIgnoreCase(F("SEVENSEG24"))) {
+                      tft->setFont(&Seven_Segment24pt7b);
+                   } else if (sParams[0].equalsIgnoreCase(F("SEVENSEG18"))) {
+                      tft->setFont(&Seven_Segment18pt7b);
+                   } else if (sParams[0].equalsIgnoreCase(F("FREESANS"))) {
+                      tft->setFont(&FreeSans9pt7b);
+                   } else if (sParams[0].equalsIgnoreCase(F("DEFAULT"))) {
+                      tft->setFont(); 
+                   } else {
+                      success = false;
+                   }
+                }
+            #endif
             else if(subcommand.equalsIgnoreCase(F("txtfull")) && argCount >= 3 && argCount <= 6)
             {
               switch (argCount)

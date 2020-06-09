@@ -40,7 +40,7 @@
         - ``tft,rr,<x>,<y>,<width>,<height>,<corner_radius>,<color>``  Draw a round rectangle 
         - ``tft,rrf,<x>,<y>,<width>,<height>,<corner_radius>,<bordercolor>,<innercolor>``  Draw a filled round rectangle 
         - ``tft,px,<x>,<y>,<color>``  Print a single pixel 
-        - ``tft,font,<n> ``  Switch to font number - 0 .. standard, 1 .. sevensegment24, 2 .. sevensegment18, 3 .. FreeSans9pt
+        - ``tft,font,<fontname> ``  Switch to font  - SEVENSEG24, SEVENSEG18, FREESANS, DEFAULT
        
        Examples:
 
@@ -63,7 +63,7 @@
 		``tft,txtfull,0,0,1,RED,YELLOW,HelloWorld``
     
     Select font :
-        ``tft,font,1`` 
+        ``tft,font,SEVENSEG24`` 
 		``tft,txtfull,0,0,1,RED,17.0 ``
         "
  
