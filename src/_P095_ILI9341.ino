@@ -52,11 +52,11 @@ TFT Subcommands:
 | c | c,<x>,<y>,<radius>,<color> | Draw a circle |
 | cf | cf,<x>,<y>,<radius>,<bordercolor>,<innercolor> | Draw a filled circle |
 | t | t,<x1>,<y1>,<x2>,<y2>,<x3>,<y3>,<color>| Draw a triangle |
-| tf | t,<x1>,<y1>,<x2>,<y2>,<x3>,<y3>,<bordercolor>,<innercolor> | Draw a filled triangle |
-| rr | rf,<x>,<y>,<width>,<height>,<corner_radius>,<color> | Draw a round rectangle |
-| rrf | r,<x>,<y>,<width>,<height>,<corner_radius>,<bordercolor>,<innercolor> | Draw a filled round rectangle |
+| tf | tf,<x1>,<y1>,<x2>,<y2>,<x3>,<y3>,<bordercolor>,<innercolor> | Draw a filled triangle |
+| rr | rr,<x>,<y>,<width>,<height>,<corner_radius>,<color> | Draw a round rectangle |
+| rrf | rrf,<x>,<y>,<width>,<height>,<corner_radius>,<bordercolor>,<innercolor> | Draw a filled round rectangle |
 | px | px,<x>,<y>,<color> | Print a single pixel |
-| font|,<n>  | Switch to font number - 0 .. standard, 1 .. sevensegment24, 2 .. sevensegment18, 3 .. FreeSans9pt |
+| font| font,<n>  | Switch to font number - 0 .. standard, 1 .. sevensegment24, 2 .. sevensegment18, 3 .. FreeSans9pt |
 
 TFTCMD Subcommands:
 
