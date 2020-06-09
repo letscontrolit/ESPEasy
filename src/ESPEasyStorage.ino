@@ -4,8 +4,13 @@
 #include "src/Globals/ResetFactoryDefaultPref.h"
 #include "src/Globals/Plugins.h"
 
+#ifdef ESP32
+#include <MD5Builder.h>
+#include <esp_partition.h>
+#endif
+
 /********************************************************************************************\
-   SPIFFS error handling
+   file system error handling
    Look here for error # reference: https://github.com/pellepl/spiffs/blob/master/src/spiffs.h
  \*********************************************************************************************/
 String FileError(int line, const char *fname)
@@ -64,7 +69,7 @@ String appendToFile(const String& fname, const uint8_t *data, unsigned int size)
 }
 
 bool fileExists(const String& fname) {
-  return SPIFFS.exists(fname);
+  return ESPEASY_FS.exists(fname);
 }
 
 fs::File tryOpenFile(const String& fname, const String& mode) {
@@ -74,14 +79,14 @@ fs::File tryOpenFile(const String& fname, const String& mode) {
   if ((mode == "r") && !fileExists(fname)) {
     return f;
   }
-  f = SPIFFS.open(fname, mode.c_str());
+  f = ESPEASY_FS.open(fname, mode.c_str());
   STOP_TIMER(TRY_OPEN_FILE);
   return f;
 }
 
 bool tryRenameFile(const String& fname_old, const String& fname_new) {
   if (fileExists(fname_old) && !fileExists(fname_new)) {
-    return SPIFFS.rename(fname_old, fname_new);
+    return ESPEASY_FS.rename(fname_old, fname_new);
   }
   return false;
 }
@@ -89,7 +94,7 @@ bool tryRenameFile(const String& fname_old, const String& fname_new) {
 bool tryDeleteFile(const String& fname) {
   if (fname.length() > 0)
   {
-    bool res = SPIFFS.remove(fname);
+    bool res = ESPEASY_FS.remove(fname);
 
     // A call to GarbageCollection() will at most erase a single block. (e.g. 8k block size)
     // A deleted file may have covered more than a single block, so try to clear multiple blocks.
@@ -204,11 +209,11 @@ void fileSystemCheck()
   checkRAM(F("fileSystemCheck"));
   addLog(LOG_LEVEL_INFO, F("FS   : Mounting..."));
 
-  if (SPIFFS.begin())
+  if (ESPEASY_FS.begin())
   {
     #if defined(ESP8266)
     fs::FSInfo fs_info;
-    SPIFFS.info(fs_info);
+    ESPEASY_FS.info(fs_info);
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log = F("FS   : Mount successful, used ");
@@ -253,12 +258,12 @@ bool GarbageCollection() {
   // Perform garbage collection
   START_TIMER;
 
-  if (SPIFFS.gc()) {
+  if (ESPEASY_FS.gc()) {
     addLog(LOG_LEVEL_INFO, F("FS   : Success garbage collection"));
-    STOP_TIMER(SPIFFS_GC_SUCCESS);
+    STOP_TIMER(FS_GC_SUCCESS);
     return true;
   }
-  STOP_TIMER(SPIFFS_GC_FAIL);
+  STOP_TIMER(FS_GC_FAIL);
   return false;
   #else // ifdef CORE_POST_2_6_0
 
@@ -268,7 +273,7 @@ bool GarbageCollection() {
 }
 
 /********************************************************************************************\
-   Save settings to SPIFFS
+   Save settings to file system
  \*********************************************************************************************/
 String SaveSettings(void)
 {
@@ -347,7 +352,7 @@ void afterloadSettings() {
 }
 
 /********************************************************************************************\
-   Load settings from SPIFFS
+   Load settings from file system
  \*********************************************************************************************/
 String LoadSettings()
 {
@@ -623,7 +628,7 @@ String SaveStringArray(SettingsType::Enum settingsType, int index, const String 
 
 
 /********************************************************************************************\
-   Save Task settings to SPIFFS
+   Save Task settings to file system
  \*********************************************************************************************/
 String SaveTaskSettings(taskIndex_t TaskIndex)
 {
@@ -644,7 +649,7 @@ String SaveTaskSettings(taskIndex_t TaskIndex)
 }
 
 /********************************************************************************************\
-   Load Task settings from SPIFFS
+   Load Task settings from file system
  \*********************************************************************************************/
 String LoadTaskSettings(taskIndex_t TaskIndex)
 {
@@ -682,7 +687,7 @@ String LoadTaskSettings(taskIndex_t TaskIndex)
 }
 
 /********************************************************************************************\
-   Save Custom Task settings to SPIFFS
+   Save Custom Task settings to file system
  \*********************************************************************************************/
 String SaveCustomTaskSettings(taskIndex_t TaskIndex, byte *memAddress, int datasize)
 {
@@ -720,7 +725,7 @@ String ClearCustomTaskSettings(taskIndex_t TaskIndex)
 }
 
 /********************************************************************************************\
-   Load Custom Task settings from SPIFFS
+   Load Custom Task settings from file system
  \*********************************************************************************************/
 String LoadCustomTaskSettings(taskIndex_t TaskIndex, byte *memAddress, int datasize)
 {
@@ -747,7 +752,7 @@ String LoadCustomTaskSettings(taskIndex_t TaskIndex, String strings[], uint16_t 
 }
 
 /********************************************************************************************\
-   Save Controller settings to SPIFFS
+   Save Controller settings to file system
  \*********************************************************************************************/
 String SaveControllerSettings(controllerIndex_t ControllerIndex, ControllerSettingsStruct& controller_settings)
 {
@@ -758,7 +763,7 @@ String SaveControllerSettings(controllerIndex_t ControllerIndex, ControllerSetti
 }
 
 /********************************************************************************************\
-   Load Controller settings to SPIFFS
+   Load Controller settings to file system
  \*********************************************************************************************/
 String LoadControllerSettings(controllerIndex_t ControllerIndex, ControllerSettingsStruct& controller_settings) {
   checkRAM(F("LoadControllerSettings"));
@@ -781,7 +786,7 @@ String ClearCustomControllerSettings(controllerIndex_t ControllerIndex)
 }
 
 /********************************************************************************************\
-   Save Custom Controller settings to SPIFFS
+   Save Custom Controller settings to file system
  \*********************************************************************************************/
 String SaveCustomControllerSettings(controllerIndex_t ControllerIndex, byte *memAddress, int datasize)
 {
@@ -790,7 +795,7 @@ String SaveCustomControllerSettings(controllerIndex_t ControllerIndex, byte *mem
 }
 
 /********************************************************************************************\
-   Load Custom Controller settings to SPIFFS
+   Load Custom Controller settings to file system
  \*********************************************************************************************/
 String LoadCustomControllerSettings(controllerIndex_t ControllerIndex, byte *memAddress, int datasize)
 {
@@ -799,7 +804,7 @@ String LoadCustomControllerSettings(controllerIndex_t ControllerIndex, byte *mem
 }
 
 /********************************************************************************************\
-   Save Controller settings to SPIFFS
+   Save Controller settings to file system
  \*********************************************************************************************/
 String SaveNotificationSettings(int NotificationIndex, byte *memAddress, int datasize)
 {
@@ -808,7 +813,7 @@ String SaveNotificationSettings(int NotificationIndex, byte *memAddress, int dat
 }
 
 /********************************************************************************************\
-   Load Controller settings to SPIFFS
+   Load Controller settings to file system
  \*********************************************************************************************/
 String LoadNotificationSettings(int NotificationIndex, byte *memAddress, int datasize)
 {
@@ -817,7 +822,7 @@ String LoadNotificationSettings(int NotificationIndex, byte *memAddress, int dat
 }
 
 /********************************************************************************************\
-   Init a file with zeros on SPIFFS
+   Init a file with zeros on file system
  \*********************************************************************************************/
 String InitFile(const String& fname, int datasize)
 {
@@ -843,7 +848,7 @@ String InitFile(const String& fname, int datasize)
 }
 
 /********************************************************************************************\
-   Save data into config file on SPIFFS
+   Save data into config file on file system
  \*********************************************************************************************/
 String SaveToFile(const char *fname, int index, const byte *memAddress, int datasize)
 {
@@ -978,7 +983,7 @@ String ClearInFile(const char *fname, int index, int datasize)
 }
 
 /********************************************************************************************\
-   Load data from config file on SPIFFS
+   Load data from config file on file system
  \*********************************************************************************************/
 String LoadFromFile(const char *fname, int offset, byte *memAddress, int datasize)
 {
@@ -1085,7 +1090,7 @@ String ClearInFile(SettingsType::Enum settingsType, int index) {
 }
 
 /********************************************************************************************\
-   Check SPIFFS area settings
+   Check file system area settings
  \*********************************************************************************************/
 int SpiffsSectors()
 {
@@ -1110,11 +1115,11 @@ size_t SpiffsUsedBytes() {
   size_t result = 1; // Do not output 0, this may be used in divisions.
 
   #ifdef ESP32
-  result = SPIFFS.usedBytes();
+  result = ESPEASY_FS.usedBytes();
   #endif // ifdef ESP32
   #ifdef ESP8266
   fs::FSInfo fs_info;
-  SPIFFS.info(fs_info);
+  ESPEASY_FS.info(fs_info);
   result = fs_info.usedBytes;
   #endif // ifdef ESP8266
   return result;
@@ -1124,25 +1129,25 @@ size_t SpiffsTotalBytes() {
   size_t result = 1; // Do not output 0, this may be used in divisions.
 
   #ifdef ESP32
-  result = SPIFFS.totalBytes();
+  result = ESPEASY_FS.totalBytes();
   #endif // ifdef ESP32
   #ifdef ESP8266
   fs::FSInfo fs_info;
-  SPIFFS.info(fs_info);
+  ESPEASY_FS.info(fs_info);
   result = fs_info.totalBytes;
   #endif // ifdef ESP8266
   return result;
 }
 
 size_t SpiffsBlocksize() {
-  size_t result = 8192; // Some default viable for most 1 MB SPIFFS filesystems
+  size_t result = 8192; // Some default viable for most 1 MB file systems
 
   #ifdef ESP32
   result = 8192;        // Just assume 8k, since we cannot query it
   #endif // ifdef ESP32
   #ifdef ESP8266
   fs::FSInfo fs_info;
-  SPIFFS.info(fs_info);
+  ESPEASY_FS.info(fs_info);
   result = fs_info.blockSize;
   #endif // ifdef ESP8266
   return result;
@@ -1156,7 +1161,7 @@ size_t SpiffsPagesize() {
   #endif // ifdef ESP32
   #ifdef ESP8266
   fs::FSInfo fs_info;
-  SPIFFS.info(fs_info);
+  ESPEASY_FS.info(fs_info);
   result = fs_info.pageSize;
   #endif // ifdef ESP8266
   return result;
@@ -1218,7 +1223,7 @@ bool getCacheFileCounters(uint16_t& lowest, uint16_t& highest, size_t& filesizeH
   highest         = 0;
   filesizeHighest = 0;
 #ifdef ESP8266
-  Dir dir = SPIFFS.openDir("cache");
+  Dir dir = ESPEASY_FS.openDir("cache");
 
   while (dir.next()) {
     String filename = dir.fileName();
@@ -1237,7 +1242,7 @@ bool getCacheFileCounters(uint16_t& lowest, uint16_t& highest, size_t& filesizeH
   }
 #endif // ESP8266
 #ifdef ESP32
-  File root = SPIFFS.open("/cache");
+  File root = ESPEASY_FS.open("/cache");
   File file = root.openNextFile();
 
   while (file)

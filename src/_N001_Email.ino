@@ -71,7 +71,7 @@ boolean NPlugin_001(NPlugin::Function function, struct EventStruct *event, Strin
 }
 
 
-#ifndef NOTIFIER_SET_NONE
+#ifdef USES_NOTIFIER
 
 boolean NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, const String& aSub, String& aMesg)
 {

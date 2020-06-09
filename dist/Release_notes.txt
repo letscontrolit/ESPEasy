@@ -1,4 +1,111 @@
 -------------------------------------------------
+Changes in release mega-20200608 (since mega-20200515)
+-------------------------------------------------
+
+Release date: ma  8 jun 2020 22:51:44 CEST
+
+Bartlomiej Zimon (11):
+      rfid events update for P008/P017/P040, plus send event after log line.
+      PN532: remove hardcoded scl/sda pins reading and use hardware configuration instead
+      PN532: update comment
+      Webserver - add port number setting into Advanced options, resolves #3031 and #573
+      P2P: send and receive webserver port number, add port to link on rootpage #2252
+      NodeStruct: init webgui_portnumber value
+      p2p infopacket - use low/highByte
+      Webserver - increase BUILD number and set default value for port number
+      Webserver port setting - add reboot note
+      MDNS - send service with actual webserver port
+      P2P: respect also build number in condition
+
+Florin (7):
+      Adding buzzer capabilities back to ESP32.
+      Allow to set the Latitude and longitude when resetting the firmware from custom.h or using the build_flags
+      clean up code and variables when NOTIFIER_SET_NONE is defined.
+      ESP32: Allow to select one of the two available SPI ports
+      clean up code and variables when NOTIFIER_SET_NONE is defined.
+      Fix for allowing negative timeOffset from UTC in constructor
+      rename the tone to toneESP32 to be more specific
+
+Gijs Noorlander (27):
+      [MQTT] Process publish LWT connect message asynchronous
+      [MQTT] Stop trying to send LWT connected when client disconnects
+      [LittleFS] Make switching between SPIFFS and LittleFS easy to do
+      [ESPEasySerial] Update to v2.0.3 adding I2C UART to ESP32 + fix bug ESP32
+      [Build] Fix merge error
+      [PIO] Move to esp8266/Arduino core 2.7.1
+      [PIO] Hide deprecated warning for SPIFFS
+      [Vagrant] Fix vagrant build installing all required Python packages
+      [Notifications] Make sure all custom defines are set at compile time
+      [Travis] Fix deploy multiple ZIP files + split ESP82xx and ESP32 files
+      [Build] Fix Python 3.8 build when no .git dir or pygit2 not installed
+      [GPS] Add GPS#travelled=... event  (#3099)
+      [Build] Add ina219 and mpu6050 to custom build (#3100)
+      [Build] Disable diagnostics code for test_ESP8266_4M1M_VCC to fit size
+      [Build] Disabling timing stats results in build errors for ESP32
+      [Commands] Split commands.ino to .h/.cpp to overcome build/link issues
+      [Build] Limit build size (no diagnostics) for test_beta_ESP8266_4M1M
+      [Notifications] Show notification tab when notifiers set via Custom.h
+      [Notifiers] switch from NOTIFIER_SET_NONE to USES_NOTIFIER in code
+      [ESP32] Fix Disabling ARDUINO_OTA fails the build (#3083)
+      [ESP32 build] Fix capitalization error in #include <esp_partition.h>
+      [ESP32] Update to platform-espressif32@1.12.2
+      [PIO] Add exception_decoder as serial monitor filter
+      [WiFi] Reduce excessive logs WIFI : Disconnected: WiFi.status()
+      [GPS] Add sanity check for reporting distance travelled event
+      Transform defines in EventValueSource into enum
+      [Build] Disable diagnostics in test/dev build to reduce build size
+
+Michał Obrembski (2):
+      Added /raw endpoint which gives an easy access to raw value of sensor
+      Changed format of RAW to CSV, added ability to filter values
+
+Michał Obrembski (3):
+      Fixed invalid check of valnr validity in CSV output mode
+      Renamed RAW to CSV, added printing of header
+      Removed usage of String.clear()
+
+Saverio Cisternino (1):
+      Fix  parse_uint  ref  https://github.com/staticlibs/ccronexpr/pull/30
+
+TD-er (1):
+      [Bug] ControllerIndex not set when calling CPLUGIN calls
+
+denisfrench (1):
+      [MQTT] Connect message honors LWT settings (#3006)
+
+jimmys01 (1):
+      [IR] Update Library
+
+sakinit (18):
+      Show for ESP32 also the first rule on the webserver rules page
+      Fix ESP32 undefined pin initialisation
+      Don't repeat the last rule on the next webserver page
+      Revert P1WifiGateway to 30cbb4c to bugfix this more generic code
+      Cherry-pick relevant P1WifiGateway updates since 30cbb4c
+      Fix the datagram check to be able to send valid messages again
+      Fix the serial reading algorithm
+      Fix P1WifiGateway webserver start
+      Remove temporary comments
+      Use ESPeasySerial
+      Restart P1WifiGateway if webserver start failed
+      Optimize serial reading algorithm and move client from plugin into task
+      Fix ESP32 reboot cause at boot/setup
+      Optimize serial in duration
+      Update due to review comments
+      Add sanity checks based on review comments
+      Discard data received from WiFi client due to review comment
+      Update based on review comments
+
+tonhuisman (6):
+      [Rules page] Add RTD help button and fix page layout issue ('Old Engine')
+      [Transformation] Add R/r transformations (LEFT/RIGHT and L/R)
+      [Transformations] Adjusted R/r to L/l and added c
+      [Justifications] Add 'C' (Capitalize, OPEN -> Open) option
+      [Justifications] Added u/l for upper/lowercasing the value, removed dash-check from C justificaion
+      [Docs] Describe 'elseif' with some examples
+
+
+-------------------------------------------------
 Changes in release mega-20200515 (since mega-20200426)
 -------------------------------------------------
 
