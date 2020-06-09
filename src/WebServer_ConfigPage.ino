@@ -149,12 +149,12 @@ void handle_config() {
     addFormIPBox(F("Access IP upper range"), F("iprangehigh"), iphigh);
   }
 
-  addFormSubHeader(F("IP Settings"));
+  addFormSubHeader(F("WiFi IP Settings"));
 
-  addFormIPBox(F("ESP IP"),         F("espip"),      Settings.IP);
-  addFormIPBox(F("ESP GW"),         F("espgateway"), Settings.Gateway);
-  addFormIPBox(F("ESP Subnetmask"), F("espsubnet"),  Settings.Subnet);
-  addFormIPBox(F("ESP DNS"),        F("espdns"),     Settings.DNS);
+  addFormIPBox(F("ESP WiFi IP"),         F("espip"),      Settings.IP);
+  addFormIPBox(F("ESP WiFi GW"),         F("espgateway"), Settings.Gateway);
+  addFormIPBox(F("ESP WiFi Subnetmask"), F("espsubnet"),  Settings.Subnet);
+  addFormIPBox(F("ESP WiFi DNS"),        F("espdns"),     Settings.DNS);
   addFormNote(F("Leave empty for DHCP"));
 
 #ifdef HAS_ETHERNET
