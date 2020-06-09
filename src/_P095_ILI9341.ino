@@ -56,6 +56,7 @@ TFT Subcommands:
 | rr | rf,<x>,<y>,<width>,<height>,<corner_radius>,<color> | Draw a round rectangle |
 | rrf | r,<x>,<y>,<width>,<height>,<corner_radius>,<bordercolor>,<innercolor> | Draw a filled round rectangle |
 | px | px,<x>,<y>,<color> | Print a single pixel |
+| font|,<n>  | Switch to font number - 0 .. standard, 1 .. sevensegment24, 2 .. sevensegment18, 3 .. FreeSans9pt |
 
 TFTCMD Subcommands:
 
