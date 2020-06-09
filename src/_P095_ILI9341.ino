@@ -120,8 +120,8 @@ void Plugin_095_printText(const char *string, int X, int Y, unsigned int textSiz
   #define TS_CS 12
 #else
  //for D1 Mini with shield connection
-  #define TFT_CS D0
-  #define TFT_DC D8
+  #define TFT_CS 16
+  #define TFT_DC 15
   #define TFT_RST -1
   #define TS_CS 0
 #endif

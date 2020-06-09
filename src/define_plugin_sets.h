@@ -7,7 +7,6 @@
 #################################################
  This is the place where plugins are registered
 #################################################
-
 To create/register a plugin, you have to :
 - find an available number, ie 777.
 - Create your own plugin, ie as "_P777_myfunction.ino"
@@ -20,7 +19,6 @@ To create/register a plugin, you have to :
  either by adding "-DPLUGIN_BUILD_DEV" when compiling, or by momentarly
  adding "#define PLUGIN_BUILD_DEV" at the top of the ESPEasy.ino file
  - You will then have to push a PR including your plugin + the corret line (#define USES_P777) added to this file
-
  When found stable enough, the maintainer (and only him) will choose to move it to TESTING or STABLE
 */
 
@@ -814,8 +812,8 @@ To create/register a plugin, you have to :
     #define USES_P051   // AM2320
 
     #define USES_P053   // PMSx003
-    //#define USES_P054   // DMX512
-    //#define USES_P055   // Chiming
+    #define USES_P054   // DMX512
+    #define USES_P055   // Chiming
     #define USES_P057   // HT16K33_LED
     #define USES_P058   // HT16K33_KeyPad
 
@@ -826,22 +824,22 @@ To create/register a plugin, you have to :
     #define USES_P064   // APDS9960
     #define USES_P065   // DRF0299
     #define USES_P066   // VEML6040
-    // #define USES_P067   // HX711_Load_Cell
+    #define USES_P067   // HX711_Load_Cell
     #define USES_P068   // SHT3x
     #define USES_P069   // LM75A
 
-    //#define USES_P070   // NeoPixel_Clock
-    //#define USES_P071   // Kamstrup401
-    //#define USES_P072   // HDC1080
-    //#define USES_P074   // TSL2561
+    #define USES_P070   // NeoPixel_Clock
+    #define USES_P071   // Kamstrup401
+    #define USES_P072   // HDC1080
+    #define USES_P074   // TSL2561
     #define USES_P075   // Nextion
     #define USES_P076   // HWL8012   in POW r1
     // Needs CSE7766 Energy sensor, via Serial RXD 4800 baud 8E1 (GPIO1), TXD (GPIO3)
     #define USES_P077	  // CSE7766   in POW R2
-    //#define USES_P078   // Eastron Modbus Energy meters
+    #define USES_P078   // Eastron Modbus Energy meters
     #define USES_P080   // iButton Sensor  DS1990A
     #define USES_P081   // Cron
-    //#define USES_P082   // GPS
+    #define USES_P082   // GPS
     #define USES_P083   // SGP30
     #define USES_P084   // VEML6070
     #define USES_P085   // AcuDC24x
@@ -853,7 +851,7 @@ To create/register a plugin, you have to :
     #define USES_P092   // DL-Bus
     #define USES_P093   // Mitsubishi Heat Pump
     //#define USES_P094  // CUL Reader
-    #define USES_P095  // TFT ILI9341
+    //#define USES_P095  // TFT ILI9341
     #define USES_P097   // Touch (ESP32)
 #endif
 
