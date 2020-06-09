@@ -56,7 +56,7 @@ TFT Subcommands:
 | rr | r,<x>,<y>,<width>,<height>,<corner_radius>,<color> | Draw a round rectangle |
 | rrf | r,<x>,<y>,<width>,<height>,<corner_radius>,<bordercolor>,<innercolor> | Draw a filled round rectangle |
 | px | px,<x>,<y>,<color> | Print a single pixel |
-  
+
 TFTCMD Subcommands:
 
 | TFT Subcommands | details | description |
@@ -103,10 +103,9 @@ Examples:
 
 //plugin dependency
 #include <Adafruit_ILI9341.h>
-#include "Fonts/Seven_Segment24pt7b.h"  // must be in path D:\Projekte\ESPEasy\ESPEasy_mega-20200426\source\.pio\libdeps\test_beta_ESP8266_4M1M\Adafruit GFX Library_ID13\Fonts
-#include "Fonts/Seven_Segment18pt7b.h"
+#include "src/Static/Fonts/Seven_Segment24pt7b.h"
+#include "src/Static/Fonts/Seven_Segment18pt7b.h"
 #include "Fonts/FreeSans9pt7b.h"
-//#include "Fonts/FreeSerif24pt7b.h"
 
 
 //declare functions for using default value parameters
@@ -124,7 +123,7 @@ void Plugin_095_printText(const char *string, int X, int Y, unsigned int textSiz
   #define TFT_CS D0
   #define TFT_DC D8
   #define TFT_RST -1
-  #define TS_CS D3
+  #define TS_CS 0
 #endif
 
 //The setting structure
@@ -346,6 +345,9 @@ boolean Plugin_095(byte function, struct EventStruct *event, String& string)
             }
             else if(subcommand.equalsIgnoreCase(F("font")) && argCount == 1) {
               switch (sParams[0].toInt()) {
+                case 0:
+                  tft->setFont();   // Set Standard font
+                  break;
                 case 1:
                   tft->setFont(&Seven_Segment24pt7b);
                   break;
@@ -353,11 +355,11 @@ boolean Plugin_095(byte function, struct EventStruct *event, String& string)
                   tft->setFont(&Seven_Segment18pt7b);
                   break;
                 case 3:
-                    tft->setFont(&FreeSans9pt7b);
-                    break;
-                default:
-                  tft->setFont();
+                  tft->setFont(&FreeSans9pt7b);
                   break;
+                default:
+                   success = false;
+                   break;
               }
 
             }
