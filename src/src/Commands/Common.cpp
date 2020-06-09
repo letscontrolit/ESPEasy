@@ -33,7 +33,7 @@ String return_result(struct EventStruct *event, const String& result)
 {
   serialPrintln(result);
 
-  if (event->Source == VALUE_SOURCE_SERIAL) {
+  if (event->Source == EventValueSource::Enum::VALUE_SOURCE_SERIAL) {
     return return_command_success();
   }
   return result;
@@ -41,7 +41,7 @@ String return_result(struct EventStruct *event, const String& result)
 
 String return_see_serial(struct EventStruct *event)
 {
-  if (event->Source == VALUE_SOURCE_SERIAL) {
+  if (event->Source == EventValueSource::Enum::VALUE_SOURCE_SERIAL) {
     return return_command_success();
   }
   return F("Output sent to serial");

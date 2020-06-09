@@ -1,7 +1,7 @@
 #ifndef DATASTRUCTS_TIMINGSTATS_H
 #define DATASTRUCTS_TIMINGSTATS_H
 
-#include "../../define_plugin_sets.h"
+#include "../../ESPEasy_common.h"
 #include "../../ESPEasy_plugindefs.h"
 #include "../../ESPEasy_fdwdecl.h"
 
@@ -63,8 +63,8 @@
 # define WIFI_NOTCONNECTED_STATS 42
 # define LOAD_TASK_SETTINGS      43
 # define TRY_OPEN_FILE           44
-# define SPIFFS_GC_SUCCESS       45
-# define SPIFFS_GC_FAIL          46
+# define FS_GC_SUCCESS           45
+# define FS_GC_FAIL              46
 # define PARSE_SYSVAR            47
 # define PARSE_SYSVAR_NOCHANGE   48
 # define PARSE_TEMPLATE_PADDED   49

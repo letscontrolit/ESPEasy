@@ -44,7 +44,7 @@ struct DeviceStruct
 
   byte Number;  // Plugin ID number.   (PLUGIN_ID_xxx)
   byte Type;    // How the device is connected. e.g. DEVICE_TYPE_SINGLE => connected through 1 datapin
-  byte VType;   // Type of value the plugin will return, used only for Domoticz
+  byte VType;   // Type of value the plugin will return. e.g. SENSOR_TYPE_STRING
   byte Ports;   // Port to use when device has multiple I/O pins  (N.B. not used much)
   byte ValueCount;             // The number of output values of a plugin. The value should match the number of keys PLUGIN_VALUENAME1_xxx
   bool PullUpOption : 1;       // Allow to set internal pull-up resistors.
