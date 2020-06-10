@@ -99,33 +99,39 @@ WifiEspNowSendStatus ESPEasy_now_splitter::send(const MAC_address& mac, size_t t
   const size_t nr_packets = _queue.size();
 
   for (uint8_t i = 0; i < nr_packets; ++i) {
-    send(_queue[i], channel);
-    sendStatus = waitForSendStatus(timeout);
+    uint8_t retry = 2; 
+    while (retry > 0) {
+      --retry;
+      send(_queue[i], channel);
+      sendStatus = waitForSendStatus(timeout);
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        String log;
 
-    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String log;
-
-      switch (sendStatus) {
-        case WifiEspNowSendStatus::NONE:
-        {
-          log = F("ESPEasy Now: TIMEOUT to: ");
-          break;
+        switch (sendStatus) {
+          case WifiEspNowSendStatus::NONE:
+          {
+            log = F("ESPEasy Now: TIMEOUT to: ");
+            break;
+          }
+          case WifiEspNowSendStatus::FAIL:
+          {
+            log = F("ESPEasy Now: Sent FAILED to: ");
+            if (retry != 0) {
+              delay(10);
+            }
+            break;
+          }
+          case WifiEspNowSendStatus::OK:
+          {
+            log = F("ESPEasy Now: Sent to: ");
+            retry = 0;
+            break;
+          }
         }
-        case WifiEspNowSendStatus::FAIL:
-        {
-          log = F("ESPEasy Now: Sent FAILED to: ");
-          break;
-        }
-        case WifiEspNowSendStatus::OK:
-        {
-          log = F("ESPEasy Now: Sent to: ");
-          break;
-        }
+        log += _queue[i].getLogString();
+        addLog(LOG_LEVEL_INFO, log);
       }
-      log += _queue[i].getLogString();
-      addLog(LOG_LEVEL_INFO, log);
     }
-
 
     switch (sendStatus) {
       case WifiEspNowSendStatus::NONE:
