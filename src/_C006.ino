@@ -104,14 +104,18 @@ bool CPlugin_006(CPlugin::Function function, struct EventStruct *event, String& 
         String pubname = ControllerSettings.Publish;
         parseControllerVariables(pubname, event, false);
 
-        String value = "";
         byte valueCount = getValueCountFromSensorType(event->sensorType);
         for (byte x = 0; x < valueCount; x++)
         {
           String tmppubname = pubname;
           tmppubname.replace(F("%valname%"), ExtraTaskSettings.TaskDeviceValueNames[x]);
-          value = formatUserVarNoCheck(event, x);
-          MQTTpublish(event->ControllerIndex, tmppubname.c_str(), value.c_str(), ControllerSettings.mqtt_retainFlag());
+          // Small optimization so we don't try to copy potentially large strings
+          if (event->sensorType == SENSOR_TYPE_STRING) {
+            MQTTpublish(event->ControllerIndex, tmppubname.c_str(), event->String2.c_str(), ControllerSettings.mqtt_retainFlag());
+          } else {
+            String value = formatUserVarNoCheck(event, x);
+            MQTTpublish(event->ControllerIndex, tmppubname.c_str(), value.c_str(), ControllerSettings.mqtt_retainFlag());
+          }
         }
         break;
       }

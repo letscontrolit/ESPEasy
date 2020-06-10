@@ -28,6 +28,12 @@ void sendData(struct EventStruct *event)
   }
 
   LoadTaskSettings(event->TaskIndex); // could have changed during background tasks.
+  if (event->sensorType == SENSOR_TYPE_NONE) {
+    const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(event->TaskIndex);
+    if (validDeviceIndex(DeviceIndex)) {
+      event->sensorType = Device[DeviceIndex].VType;
+    }
+  }
 
   for (controllerIndex_t x = 0; x < CONTROLLER_MAX; x++)
   {
@@ -66,11 +72,7 @@ void sendData(struct EventStruct *event)
 }
 
 bool validUserVar(struct EventStruct *event) {
-  const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(event->TaskIndex);
-
-  if (!validDeviceIndex(DeviceIndex)) { return false; }
-
-  switch (Device[DeviceIndex].VType) {
+  switch (event->sensorType) {
     case SENSOR_TYPE_LONG:    return true;
     case SENSOR_TYPE_STRING:  return true; // FIXME TD-er: Must look at length of event->String2 ?
     default:
@@ -287,25 +289,25 @@ bool MQTTCheck(controllerIndex_t controller_idx)
     if (MQTTclient_should_reconnect || !MQTTclient.connected())
     {
       if (MQTTclient_should_reconnect) {
-        addLog(LOG_LEVEL_ERROR, F("MQTT : Intentional reconnect"));
-      }
-      return MQTTConnect(controller_idx);
-    }
-
-    if (MQTTclient_must_send_LWT_connected) {
-      MakeControllerSettings(ControllerSettings);
-      LoadControllerSettings(controller_idx, ControllerSettings);
-
-      if (ControllerSettings.mqtt_sendLWT()) {
-        String LWTTopic          = getLWT_topic(ControllerSettings);
-        String LWTMessageConnect = getLWT_messageConnect(ControllerSettings);
-        bool   willRetain        = ControllerSettings.mqtt_willRetain();
-
-        if (MQTTclient.publish(LWTTopic.c_str(), LWTMessageConnect.c_str(), willRetain)) {
-          MQTTclient_must_send_LWT_connected = false;
+          addLog(LOG_LEVEL_ERROR, F("MQTT : Intentional reconnect"));
         }
-      } else {
-        MQTTclient_must_send_LWT_connected = false;
+        return MQTTConnect(controller_idx);
+      }
+
+      if (MQTTclient_must_send_LWT_connected) {
+        MakeControllerSettings(ControllerSettings);
+        LoadControllerSettings(controller_idx, ControllerSettings);
+
+        if (ControllerSettings.mqtt_sendLWT()) {
+          String LWTTopic          = getLWT_topic(ControllerSettings);
+          String LWTMessageConnect = getLWT_messageConnect(ControllerSettings);
+          bool   willRetain        = ControllerSettings.mqtt_willRetain();
+
+          if (MQTTclient.publish(LWTTopic.c_str(), LWTMessageConnect.c_str(), willRetain)) {
+            MQTTclient_must_send_LWT_connected = false;
+          }
+        } else {
+          MQTTclient_must_send_LWT_connected = false;
       }
     }
   }
