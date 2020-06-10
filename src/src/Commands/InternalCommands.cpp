@@ -248,22 +248,28 @@ bool executeInternalCommand(const char *cmd, struct EventStruct *event, const ch
       COMMAND_CASE_A(   "looptimerset", Command_Loop_Timer_Set,    3); // Timers.h
       COMMAND_CASE_A("looptimerset_ms", Command_Loop_Timer_Set_ms, 3); // Timers.h
     #ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
-      COMMAND_CASE_A("logportstatus", Command_logPortStatus, 0); // Diagnostic.h
-      COMMAND_CASE_A(       "lowmem", Command_Lowmem,        0); // Diagnostic.h
+      COMMAND_CASE_A("logportstatus", Command_logPortStatus,    0); // Diagnostic.h
+      COMMAND_CASE_A(    "longpulse", Command_GPIO_LongPulse,   3);    // GPIO.h
+      COMMAND_CASE_A( "longpulse_ms", Command_GPIO_LongPulse_Ms,3);    // GPIO.h
+      COMMAND_CASE_A(       "lowmem", Command_Lowmem,           0); // Diagnostic.h
     #endif // ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
       break;
     }
     case 'm': {
       if (cmd_lc[1] == 'c') {
+        COMMAND_CASE_A(        "mcpgpio", Command_GPIO,              2); // Gpio.h
+        COMMAND_CASE_A(  "mcpgpiotoggle", Command_GPIO_Toggle,       1); // Gpio.h
         COMMAND_CASE_A(   "mcplongpulse", Command_GPIO_LongPulse,    3); // GPIO.h
         COMMAND_CASE_A("mcplongpulse_ms", Command_GPIO_LongPulse_Ms, 3); // GPIO.h
         COMMAND_CASE_A(       "mcppulse", Command_GPIO_Pulse,        3); // GPIO.h
       }
+      COMMAND_CASE_A(      "monitor", Command_GPIO_Monitor,   2); // GPIO.h
     #ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
       COMMAND_CASE_A(       "malloc", Command_Malloc,         1);        // Diagnostic.h
       COMMAND_CASE_A(      "meminfo", Command_MemInfo,        0);        // Diagnostic.h
       COMMAND_CASE_A("meminfodetail", Command_MemInfo_detail, 0);        // Diagnostic.h
     #endif // ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
+
       break;
     }
     case 'n': {
@@ -282,6 +288,7 @@ bool executeInternalCommand(const char *cmd, struct EventStruct *event, const ch
         COMMAND_CASE_A(       "pcfpulse", Command_GPIO_Pulse,        3); // GPIO.h
       }
       COMMAND_CASE_R("password", Command_Settings_Password, 1);          // Settings.h
+      COMMAND_CASE_A(   "pulse", Command_GPIO_Pulse,        2); // GPIO.h
 #ifdef USES_MQTT
       COMMAND_CASE_A("publish", Command_MQTT_Publish, 2);                // MQTT.h
 #endif // USES_MQTT
@@ -313,6 +320,7 @@ bool executeInternalCommand(const char *cmd, struct EventStruct *event, const ch
     #endif // ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
         COMMAND_CASE_R(   "settings", Command_Settings_Print, 0); // Settings.h
       }
+      COMMAND_CASE_A("status", Command_GPIO_Status,          2); // GPIO.h
       COMMAND_CASE_R("subnet", Command_Subnet, 1);                // Network Command
     #ifdef USES_MQTT
       COMMAND_CASE_A("subscribe", Command_MQTT_Subscribe, 1);     // MQTT.h
@@ -495,7 +503,7 @@ bool ExecuteCommand(taskIndex_t            taskIndex,
 
     if (status.length() > 0) {
       delay(0);
-      SendStatus(source, status);
+      //SendStatus(source, status);
       delay(0);
     }
 
