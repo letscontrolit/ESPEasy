@@ -137,7 +137,7 @@ struct ControllerSettingsStruct
   bool      enableESPEasyNowFallback() const;
   void      enableESPEasyNowFallback(bool value);
 
-  boolean      UseDNS;
+  bool         UseDNS;
   byte         IP[4];
   unsigned int Port;
   char         HostName[65];
