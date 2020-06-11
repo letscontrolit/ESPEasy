@@ -503,7 +503,7 @@ bool ExecuteCommand(taskIndex_t            taskIndex,
 
     if (status.length() > 0) {
       delay(0);
-      //SendStatus(source, status);
+      SendStatus(source, status);
       delay(0);
     }
 
