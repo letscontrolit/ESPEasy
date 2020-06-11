@@ -10,6 +10,7 @@
 # include "../DataStructs/ESPEasy_Now_packet.h"
 # include "../DataStructs/ESPEasy_now_merger.h"
 # include "../DataStructs/ESPEasy_Now_NTP_query.h"
+# include "../DataStructs/ESPEasy_Now_MQTT_queue_check_packet.h"
 # include "../DataStructs/MAC_address.h"
 # include "../Globals/CPlugins.h"
 
@@ -32,7 +33,7 @@ public:
 
 private:
 
-  bool processMessage(const ESPEasy_now_merger& message);
+  bool processMessage(const ESPEasy_now_merger& message, bool& mustKeep);
 
 public:
 
@@ -49,19 +50,24 @@ public:
                   const String    & topic,
                   const String    & payload);
 
+  bool sendMQTTCheckControllerQueue(controllerIndex_t controllerIndex);
+  bool sendMQTTCheckControllerQueue(const MAC_address& mac, int channel, ESPEasy_Now_MQTT_queue_check_packet::QueueState state = ESPEasy_Now_MQTT_queue_check_packet::QueueState::Unset);
+
   void sendSendData_DuplicateCheck(uint32_t                              key,
                                    ESPEasy_Now_DuplicateCheck::message_t message_type,
                                    const MAC_address& mac);
 
 private:
 
-  bool handle_DiscoveryAnnounce(const ESPEasy_now_merger& message);
+  bool handle_DiscoveryAnnounce(const ESPEasy_now_merger& message, bool& mustKeep);
 
-  bool handle_NTPquery(const ESPEasy_now_merger& message);
+  bool handle_NTPquery(const ESPEasy_now_merger& message, bool& mustKeep);
 
-  bool handle_MQTTControllerMessage(const ESPEasy_now_merger& message);
+  bool handle_MQTTControllerMessage(const ESPEasy_now_merger& message, bool& mustKeep);
 
-  bool handle_SendData_DuplicateCheck(const ESPEasy_now_merger& message);
+  bool handle_MQTTCheckControllerQueue(const ESPEasy_now_merger& message, bool& mustKeep);
+
+  bool handle_SendData_DuplicateCheck(const ESPEasy_now_merger& message, bool& mustKeep);
 
   bool add_peer(const MAC_address& mac, int channel) const;
 
@@ -70,6 +76,8 @@ private:
   unsigned long _last_used = 0;
 
   uint8_t _send_failed_count = 0;
+
+  ESPEasy_Now_MQTT_queue_check_packet _preferredNodeMQTTqueueState;
 };
 
 

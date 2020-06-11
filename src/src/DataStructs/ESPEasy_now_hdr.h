@@ -23,6 +23,7 @@ public:
     MQTTControllerMessage,
     NTP_Query,
     SendData_DuplicateCheck,
+    MQTTCheckControllerQueue,
 
     ChecksumError = 255
   };
