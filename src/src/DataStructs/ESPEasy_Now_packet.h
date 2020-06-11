@@ -56,6 +56,12 @@ public:
   // payload_pos will contain the new position to start for a next string
   String          getString(size_t& payload_pos) const;
 
+  // Get a pointer to the start of the string starting from position pos in the buffer.
+  // The char pointer will be guaranteed null terminated.
+  // payload_pos will contain the new position to start for a next string
+  // @param str_length will contain the length of the found string
+  const char* get_c_str(size_t& payload_pos, size_t& str_length) const;
+
   // Get pointer to the begin of the payload
   const uint8_t * begin() const;
 

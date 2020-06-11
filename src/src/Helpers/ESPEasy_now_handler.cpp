@@ -498,12 +498,19 @@ bool ESPEasy_now_handler_t::sendToMQTT(controllerIndex_t controllerIndex, const 
     return false;
   }
 
-  MakeControllerSettings(ControllerSettings);
-  LoadControllerSettings(controllerIndex, ControllerSettings);
+  unsigned int ClientTimeout;
+  bool enableESPEasyNowFallback;
+  {
+    // Place the ControllerSettings in a scope to free the memory as soon as we got all relevant information.
+    MakeControllerSettings(ControllerSettings);
+    LoadControllerSettings(controllerIndex, ControllerSettings);
+    enableESPEasyNowFallback = ControllerSettings.enableESPEasyNowFallback();
+    ClientTimeout = ControllerSettings.ClientTimeout;
+  }
 
   bool processed = false;
 
-  if (ControllerSettings.enableESPEasyNowFallback() /*&& !WiFiConnected(10) */) {
+  if (enableESPEasyNowFallback /*&& !WiFiConnected(10) */) {
     const NodeStruct *preferred = Nodes.getPreferredNode();
 
     if (preferred != nullptr) {
@@ -531,7 +538,7 @@ bool ESPEasy_now_handler_t::sendToMQTT(controllerIndex_t controllerIndex, const 
       msg.addString(payload);
 
       MAC_address mac                 = preferred->ESPEasy_Now_MAC();
-      WifiEspNowSendStatus sendStatus = msg.send(mac, millis() + 2 * ControllerSettings.ClientTimeout, preferred->channel);
+      WifiEspNowSendStatus sendStatus = msg.send(mac, millis() + 2 * ClientTimeout, preferred->channel);
 
       switch (sendStatus) {
         case WifiEspNowSendStatus::OK:
@@ -561,13 +568,22 @@ bool ESPEasy_now_handler_t::handle_MQTTControllerMessage(const ESPEasy_now_merge
   controllerIndex_t controllerIndex = firstEnabledMQTT_ControllerIndex();
 
   if (validControllerIndex(controllerIndex)) {
-    size_t pos     = 0;
-    String topic   = message.getString(pos);
-    String payload = message.getString(pos);
+    bool mqtt_retainFlag;
+    {
+      // Place the ControllerSettings in a scope to free the memory as soon as we got all relevant information.
+      MakeControllerSettings(ControllerSettings);
+      LoadControllerSettings(controllerIndex, ControllerSettings);
+      mqtt_retainFlag = ControllerSettings.mqtt_retainFlag();
+    }
 
-    MakeControllerSettings(ControllerSettings);
-    LoadControllerSettings(controllerIndex, ControllerSettings);
-    bool success = MQTTpublish(controllerIndex, topic.c_str(), payload.c_str(), ControllerSettings.mqtt_retainFlag());
+    size_t pos     = 0;
+    String topic;
+    String payload;
+
+    message.getString(topic, pos);
+    message.getString(payload, pos);
+
+    bool success = MQTTpublish(controllerIndex, topic.c_str(), payload.c_str(), mqtt_retainFlag);
 
     MAC_address mac;
     if (message.getMac(mac)) {

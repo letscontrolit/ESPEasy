@@ -15,6 +15,12 @@ void ESPEasy_now_merger::addPacket(
   const uint8_t     *buf,
   size_t             packetSize)
 {
+  const uint16_t maxFreeBlock = ESP.getMaxFreeBlockSize();
+  if (2 * packetSize > maxFreeBlock) {
+    // Not enough free memory to process the block.
+    return;
+  }
+
   _queue.emplace(std::make_pair(packet_nr, ESPEasy_Now_packet(mac, buf, packetSize)));
   _firstPacketTimestamp = millis();
 }
@@ -102,13 +108,30 @@ size_t ESPEasy_now_merger::getPayloadSize() const
 
 String ESPEasy_now_merger::getString(size_t& payload_pos) const
 {
-  const size_t bufsize = 128;
-  std::vector<uint8_t> buf;
-
-  buf.resize(bufsize);
-
   String res;
-  res.reserve(bufsize * 2);
+  getString(res, payload_pos);
+  return res;
+}
+
+bool   ESPEasy_now_merger::getString(String& string, size_t& payload_pos) const
+{
+  size_t stringLength = 0;
+  {
+    // Compute the expected string size, so we don't have to perform re-allocations
+    size_t tmp_payload_pos = payload_pos;
+    stringLength = str_len(tmp_payload_pos);
+    if (stringLength == 0) {
+      return false;
+    }
+    string.reserve(stringLength);
+  }
+
+  size_t bufsize = 128;
+  if (stringLength < bufsize) {
+    bufsize = stringLength;
+  }
+  std::vector<uint8_t> buf;
+  buf.resize(bufsize);
 
   bool done = false;
 
@@ -124,13 +147,45 @@ String ESPEasy_now_merger::getString(size_t& payload_pos) const
       if (c == 0) {
         done = true;
       } else {
-        res += c;
+        string += c;
       }
     }
 
     if (received < bufsize) { done = true; }
   }
-  payload_pos += res.length() + 1; // Store the position of the null termination
+  payload_pos += string.length() + 1; // Store the position of the null termination
+  return true;
+}
+
+size_t ESPEasy_now_merger::str_len(size_t& payload_pos) const
+{
+  const size_t bufsize = 128;
+  std::vector<uint8_t> buf;
+
+  buf.resize(bufsize);
+
+  bool done = false;
+
+  // We do fetch more data from the message than the string size, so copy payload_pos first
+  size_t tmp_payload_pos = payload_pos;
+  size_t res = 0;
+
+  while (!done) {
+    size_t received = getBinaryData(&buf[0], bufsize, tmp_payload_pos);
+
+    for (size_t buf_pos = 0; buf_pos < received && !done; ++buf_pos) {
+      char c = static_cast<char>(buf[buf_pos]);
+
+      if (c == 0) {
+        done = true;
+      } else {
+        ++res;
+      }
+    }
+
+    if (received < bufsize) { done = true; }
+  }
+  payload_pos += res + 1; // Store the position of the null termination
   return res;
 }
 

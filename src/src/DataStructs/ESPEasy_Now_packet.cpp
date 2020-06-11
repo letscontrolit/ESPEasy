@@ -149,6 +149,19 @@ String ESPEasy_Now_packet::getString(size_t& payload_pos) const
   return res;
 }
 
+const char* ESPEasy_Now_packet::get_c_str(size_t& payload_pos, size_t& str_length) const
+{
+  size_t bytes_left = getPayloadSize();
+
+  if (payload_pos > bytes_left) { return nullptr; }
+  bytes_left -= payload_pos;
+  size_t buf_pos   =  sizeof(ESPEasy_now_hdr) + payload_pos;
+  str_length = strnlen(reinterpret_cast<const char *>(&_buf[buf_pos]), bytes_left);
+  payload_pos += str_length;
+  return reinterpret_cast<const char*>(&_buf[buf_pos]);
+}
+
+
 String ESPEasy_Now_packet::getLogString() const
 {
   ESPEasy_now_hdr header = getHeader();
