@@ -2,6 +2,10 @@
 #include "src/DataStructs/RTCStruct.h"
 #include "src/Globals/CRCValues.h"
 #include "src/Static/WebStaticData.h"
+#include "ESPEasy_common.h"
+
+#include "src/Commands/Diagnostic.h"
+
 
 #ifdef WEBSERVER_NEW_UI
 
@@ -596,7 +600,7 @@ void handle_sysinfo_Storage() {
 
   }
 
-  addRowLabel(getLabel(LabelType::SPIFFS_SIZE));
+  addRowLabel(getLabel(LabelType::FS_SIZE));
   {
     String html;
     html.reserve(32);
@@ -620,7 +624,7 @@ void handle_sysinfo_Storage() {
   {
   # if defined(ESP8266)
     fs::FSInfo fs_info;
-    SPIFFS.info(fs_info);
+    ESPEASY_FS.info(fs_info);
     addRowLabel(F("Maximum open files"));
     addHtml(String(fs_info.maxOpenFiles));
 

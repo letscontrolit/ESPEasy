@@ -5,9 +5,6 @@
 #include "../DataStructs/ControllerSettingsStruct.h"
 #include "../../ESPEasy_fdwdecl.h"
 
-#include "../../define_plugin_sets.h"  // For USES_xxx
-
-
 #include "../ControllerQueue/ControllerDelayHandlerStruct.h"
 #include "../ControllerQueue/SimpleQueueElement_string_only.h"
 #include "../ControllerQueue/queue_element_single_value_base.h"

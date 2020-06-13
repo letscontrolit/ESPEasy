@@ -8,6 +8,7 @@
 #define CPLUGIN_ID_002         2
 #define CPLUGIN_NAME_002       "Domoticz MQTT"
 
+#include "src/Commands/InternalCommands.h"
 #include <ArduinoJson.h>
 
 bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& string)
@@ -149,7 +150,7 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
               }
 
               if (action.length() > 0) {
-                ExecuteCommand_plugin(x, VALUE_SOURCE_MQTT, action.c_str());
+                ExecuteCommand_plugin(x, EventValueSource::Enum::VALUE_SOURCE_MQTT, action.c_str());
 
                 // trigger rulesprocessing
                 if (Settings.UseRules) {

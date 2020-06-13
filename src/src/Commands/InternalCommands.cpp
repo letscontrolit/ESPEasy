@@ -1,31 +1,38 @@
+#include "InternalCommands.h"
 
-#include "src/Commands/Common.h"
+#include "../../ESPEasy_common.h"
+#include "../../ESPEasy_fdwdecl.h"
+#include "../../ESPEasy_Log.h"
+#include "../Globals/Settings.h"
+
 #ifdef USES_BLYNK
-# include "src/Commands/Blynk.h"
-# include "src/Commands/Blynk_c015.h"
+# include "../Commands/Blynk.h"
+# include "../Commands/Blynk_c015.h"
 #endif // ifdef USES_BLYNK
-#include "src/Commands/Controller.h"
-#include "src/Commands/Diagnostic.h"
-#include "src/Commands/HTTP.h"
-#include "src/Commands/i2c.h"
-#ifdef USES_MQTT
-# include "src/Commands/MQTT.h"
-#endif // USES_MQTT
-#include "src/Commands/Networks.h"
-#include "src/Commands/Notifications.h"
-#include "src/Commands/RTC.h"
-#include "src/Commands/Rules.h"
-#include "src/Commands/SDCARD.h"
-#include "src/Commands/Settings.h"
-#include "src/Commands/System.h"
-#include "src/Commands/Tasks.h"
-#include "src/Commands/Time.h"
-#include "src/Commands/Timer.h"
-#include "src/Commands/UPD.h"
-#include "src/Commands/wd.h"
-#include "src/Commands/WiFi.h"
 
-#include "ESPEasy_common.h"
+#include "../Commands/Common.h"
+#include "../Commands/Controller.h"
+#include "../Commands/Diagnostic.h"
+#include "../Commands/HTTP.h"
+#include "../Commands/i2c.h"
+
+#ifdef USES_MQTT
+# include "../Commands/MQTT.h"
+#endif // USES_MQTT
+
+#include "../Commands/Networks.h"
+#include "../Commands/Notifications.h"
+#include "../Commands/RTC.h"
+#include "../Commands/Rules.h"
+#include "../Commands/SDCARD.h"
+#include "../Commands/Settings.h"
+#include "../Commands/System.h"
+#include "../Commands/Tasks.h"
+#include "../Commands/Time.h"
+#include "../Commands/Timer.h"
+#include "../Commands/UPD.h"
+#include "../Commands/wd.h"
+#include "../Commands/WiFi.h"
 
 
 bool checkNrArguments(const char *cmd, const char *Line, int nrArguments) {
@@ -94,9 +101,6 @@ bool checkNrArguments(const char *cmd, const char *Line, int nrArguments) {
   return true;
 }
 
-typedef String (*command_function)(struct EventStruct *, const char *);
-bool do_command_case(const String& cmd_lc, const char *cmd, struct EventStruct *event, const char *line, String& status, const String& cmd_test, command_function pFunc, int nrArguments, bool& retval);
-
 bool do_command_case(const String& cmd_lc, const char *cmd, struct EventStruct *event, const char *line, String& status, const String& cmd_test, command_function pFunc, int nrArguments, bool& retval)
 {
   if (cmd_lc.equals(cmd_test)) {
@@ -112,9 +116,7 @@ bool do_command_case(const String& cmd_lc, const char *cmd, struct EventStruct *
   return false;
 }
 
-/*********************************************************************************************\
-* Registers command
-\*********************************************************************************************/
+
 bool executeInternalCommand(const char *cmd, struct EventStruct *event, const char *line, String& status)
 {
   String cmd_lc;
@@ -303,23 +305,25 @@ bool executeInternalCommand(const char *cmd, struct EventStruct *event, const ch
   return false;
 }
 
+
+
 // Execute command which may be plugin or internal commands
-bool ExecuteCommand_all(byte source, const char *Line)
+bool ExecuteCommand_all(EventValueSource::Enum source, const char *Line)
 {
   return ExecuteCommand(INVALID_TASK_INDEX, source, Line, true, true, false);
 }
 
-bool ExecuteCommand_all_config(byte source, const char *Line)
+bool ExecuteCommand_all_config(EventValueSource::Enum source, const char *Line)
 {
   return ExecuteCommand(INVALID_TASK_INDEX, source, Line, true, true, true);
 }
 
-bool ExecuteCommand_plugin_config(byte source, const char *Line)
+bool ExecuteCommand_plugin_config(EventValueSource::Enum source, const char *Line)
 {
   return ExecuteCommand(INVALID_TASK_INDEX, source, Line, true, false, true);
 }
 
-bool ExecuteCommand_all_config_eventOnly(byte source, const char *Line)
+bool ExecuteCommand_all_config_eventOnly(EventValueSource::Enum source, const char *Line)
 {
   bool tryInternal = false;
   {
@@ -331,22 +335,22 @@ bool ExecuteCommand_all_config_eventOnly(byte source, const char *Line)
   return ExecuteCommand(INVALID_TASK_INDEX, source, Line, true, tryInternal, true);
 }
 
-bool ExecuteCommand_internal(byte source, const char *Line)
+bool ExecuteCommand_internal(EventValueSource::Enum source, const char *Line)
 {
   return ExecuteCommand(INVALID_TASK_INDEX, source, Line, false, true, false);
 }
 
-bool ExecuteCommand_plugin(byte source, const char *Line)
+bool ExecuteCommand_plugin(EventValueSource::Enum source, const char *Line)
 {
   return ExecuteCommand(INVALID_TASK_INDEX, source, Line, true, false, false);
 }
 
-bool ExecuteCommand_plugin(taskIndex_t taskIndex, byte source, const char *Line)
+bool ExecuteCommand_plugin(taskIndex_t taskIndex, EventValueSource::Enum source, const char *Line)
 {
   return ExecuteCommand(taskIndex, source, Line, true, false, false);
 }
 
-bool ExecuteCommand(taskIndex_t taskIndex, byte source, const char *Line, bool tryPlugin, bool tryInternal, bool tryRemoteConfig)
+bool ExecuteCommand(taskIndex_t taskIndex, EventValueSource::Enum source, const char *Line, bool tryPlugin, bool tryInternal, bool tryRemoteConfig)
 {
   checkRAM(F("ExecuteCommand"));
   String cmd;
@@ -453,33 +457,3 @@ bool ExecuteCommand(taskIndex_t taskIndex, byte source, const char *Line, bool t
   delay(0);
   return false;
 }
-
-#ifdef FEATURE_SD
-void printDirectory(File dir, int numTabs)
-{
-  while (true) {
-    File entry = dir.openNextFile();
-
-    if (!entry) {
-      // no more files
-      break;
-    }
-
-    for (uint8_t i = 0; i < numTabs; i++) {
-      serialPrint("\t");
-    }
-    serialPrint(entry.name());
-
-    if (entry.isDirectory()) {
-      serialPrintln("/");
-      printDirectory(entry, numTabs + 1);
-    } else {
-      // files have sizes, directories do not
-      serialPrint("\t\t");
-      serialPrintln(String(entry.size(), DEC));
-    }
-    entry.close();
-  }
-}
-
-#endif // ifdef FEATURE_SD
