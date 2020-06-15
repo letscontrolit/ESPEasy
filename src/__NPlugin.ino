@@ -1,3 +1,6 @@
+#include "ESPEasy_common.h"
+
+#ifdef USES_NOTIFIER
 #include "src/Globals/NPlugins.h"
 
 // ********************************************************************************
@@ -173,3 +176,5 @@ byte NPluginCall(NPlugin::Function Function, struct EventStruct *event)
 
   return false;
 }
+
+#endif

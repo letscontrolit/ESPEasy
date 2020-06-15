@@ -1,6 +1,8 @@
 
 #ifdef WEBSERVER_CONTROL
 
+#include "src/Commands/InternalCommands.h"
+
 // ********************************************************************************
 // Web Interface control page (no password!)
 // ********************************************************************************
@@ -35,7 +37,7 @@ void handle_control() {
            command.equalsIgnoreCase(F("logPortStatus")) ||
            command.equalsIgnoreCase(F("jsonportstatus")) ||
            command.equalsIgnoreCase(F("rules"))) {
-    ExecuteCommand_internal(VALUE_SOURCE_HTTP, webrequest.c_str());
+    ExecuteCommand_internal(EventValueSource::Enum::VALUE_SOURCE_HTTP, webrequest.c_str());
     handledCmd = true;
   }
 
@@ -47,7 +49,7 @@ void handle_control() {
   }
   printToWeb     = true;
   printWebString = "";
-  bool unknownCmd = !ExecuteCommand_plugin_config(VALUE_SOURCE_HTTP, webrequest.c_str());
+  bool unknownCmd = !ExecuteCommand_plugin_config(EventValueSource::Enum::VALUE_SOURCE_HTTP, webrequest.c_str());
 
   if (printToWebJSON) { // it is setted in PLUGIN_WRITE (SendStatus)
     TXBuffer.startJsonStream();

@@ -214,8 +214,8 @@ String getMiscStatsName(int stat) {
     case WIFI_NOTCONNECTED_STATS: return F("WiFi.isConnected() (fail)");
     case LOAD_TASK_SETTINGS:      return F("LoadTaskSettings()");
     case TRY_OPEN_FILE:           return F("TryOpenFile()");
-    case SPIFFS_GC_SUCCESS:       return F("SPIFFS GC success");
-    case SPIFFS_GC_FAIL:          return F("SPIFFS GC fail");
+    case FS_GC_SUCCESS:           return F("ESPEASY_FS GC success");
+    case FS_GC_FAIL:              return F("ESPEASY_FS GC fail");
     case RULES_PROCESSING:        return F("rulesProcessing()");
     case GRAT_ARP_STATS:          return F("sendGratuitousARP()");
     case BACKGROUND_TASKS:        return F("backgroundtasks()");

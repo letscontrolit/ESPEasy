@@ -47,7 +47,7 @@ String Command_Rules_Events(struct EventStruct *event, const char *Line)
   if (Settings.UseRules) {
     const bool executeImmediately = 
         SourceNeedsStatusUpdate(event->Source) ||
-        event->Source == VALUE_SOURCE_RULES;
+        event->Source == EventValueSource::Enum::VALUE_SOURCE_RULES;
     if (executeImmediately) {
       rulesProcessing(eventName); // TD-er: Process right now 
     } else {

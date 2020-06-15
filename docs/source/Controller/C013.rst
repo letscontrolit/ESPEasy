@@ -175,7 +175,7 @@ The entire message processed as a command like this:
 .. code-block:: C++
 
   packetBuffer[len] = 0;
-  ExecuteCommand_all(VALUE_SOURCE_SYSTEM, &packetBuffer[0]);
+  ExecuteCommand_all(EventValueSource::Enum::VALUE_SOURCE_SYSTEM, &packetBuffer[0]);
 
 As can be seen, no checks for size, and it is just expected to be a valid ESPeasy command.
 Also no check to see if the command is supported by the receiving end and no feedback to the sender.
