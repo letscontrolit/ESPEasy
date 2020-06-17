@@ -18,11 +18,11 @@ public:
 
   bool                 sendToBroadcast();
   bool                 send(const MAC_address& mac,
-                            int channel = 0);
+                            int                channel = 0);
 
   WifiEspNowSendStatus send(const MAC_address& mac,
                             size_t             timeout,
-                            int channel);
+                            int                channel);
 
 private:
 
@@ -32,7 +32,7 @@ private:
   size_t               getPayloadPos() const;
 
   bool                 send(const ESPEasy_Now_packet& packet,
-                            int channel);
+                            int                       channel);
 
   void                 prepareForSend(const MAC_address& mac);
 

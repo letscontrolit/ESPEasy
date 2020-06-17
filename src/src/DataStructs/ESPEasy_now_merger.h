@@ -41,7 +41,8 @@ public:
   // Return a string starting from position pos in the buffer.
   // payload_pos will contain the new position to start for a next string
   String getString(size_t& payload_pos) const;
-  bool   getString(String& string, size_t& payload_pos) const;
+  bool   getString(String& string,
+                   size_t& payload_pos) const;
 
   // Compute the length of a string starting from position pos in the buffer.
   // payload_pos will contain the new position to start for a next string

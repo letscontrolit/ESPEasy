@@ -77,7 +77,7 @@ bool ESPEasy_now_splitter::sendToBroadcast()
 }
 
 bool ESPEasy_now_splitter::send(const MAC_address& mac,
-                            int channel)
+                                int                channel)
 {
   prepareForSend(mac);
 
@@ -99,12 +99,19 @@ WifiEspNowSendStatus ESPEasy_now_splitter::send(const MAC_address& mac, size_t t
   const size_t nr_packets = _queue.size();
 
   for (uint8_t i = 0; i < nr_packets; ++i) {
-    uint8_t retry = 2; 
+    uint8_t retry = 2;
+
     while (retry > 0) {
       --retry;
       send(_queue[i], channel);
       sendStatus = waitForSendStatus(timeout);
-      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+
+      if (sendStatus == WifiEspNowSendStatus::OK) {
+        retry = 0;
+      }
+      # ifndef BUILD_NO_DEBUG
+
+      if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
         String log;
 
         switch (sendStatus) {
@@ -116,20 +123,21 @@ WifiEspNowSendStatus ESPEasy_now_splitter::send(const MAC_address& mac, size_t t
           case WifiEspNowSendStatus::FAIL:
           {
             log = F("ESPEasy Now: Sent FAILED to: ");
-            if (retry != 0) {
-              delay(10);
-            }
             break;
           }
           case WifiEspNowSendStatus::OK:
           {
             log = F("ESPEasy Now: Sent to: ");
-            retry = 0;
             break;
           }
         }
         log += _queue[i].getLogString();
-        addLog(LOG_LEVEL_INFO, log);
+        addLog(LOG_LEVEL_DEBUG, log);
+      }
+      # endif // ifndef BUILD_NO_DEBUG
+
+      if (retry != 0) {
+        delay(10);
       }
     }
 
@@ -173,9 +181,11 @@ bool ESPEasy_now_splitter::send(const ESPEasy_Now_packet& packet, int channel)
         channel = nodeInfo->channel;
       }
     }
+
     // FIXME TD-er: Not sure why, but setting the channel does not work well.
-//    WifiEspNow.addPeer(packet._mac, channel);
-    WifiEspNow.addPeer(packet._mac, 0);
+    WifiEspNow.addPeer(packet._mac, channel);
+
+    //    WifiEspNow.addPeer(packet._mac, 0);
   }
   bool res = WifiEspNow.send(packet._mac, packet[0], packet.getSize());
 
@@ -189,7 +199,14 @@ WifiEspNowSendStatus ESPEasy_now_splitter::waitForSendStatus(size_t timeout) con
 {
   WifiEspNowSendStatus sendStatus = WifiEspNowSendStatus::NONE;
 
-  while (!timeOutReached(timeout) && sendStatus == WifiEspNowSendStatus::NONE) {
+  if (timeout < 20) {
+    // ESP-now keeps sending for 20 msec using lower transfer rated every 2nd attempt.
+    timeout = 20;
+  }
+
+  size_t timer = millis() + timeout;
+
+  while (!timeOutReached(timer) && sendStatus == WifiEspNowSendStatus::NONE) {
     sendStatus = WifiEspNow.getSendStatus();
     delay(1);
   }

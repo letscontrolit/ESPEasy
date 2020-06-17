@@ -5,6 +5,8 @@
 # include "../Helpers/ESPEasy_time_calc.h"
 # include "../../ESPEasy_fdwdecl.h"
 
+# define ESPEASY_NOW_MESSAGE_TIMEOUT  5000
+
 ESPEasy_now_merger::ESPEasy_now_merger() {
   _firstPacketTimestamp = millis();
 }
@@ -16,8 +18,11 @@ void ESPEasy_now_merger::addPacket(
   size_t             packetSize)
 {
   const uint16_t maxFreeBlock = ESP.getMaxFreeBlockSize();
+
   if (2 * packetSize > maxFreeBlock) {
     // Not enough free memory to process the block.
+    // Since this message will never be complete, set the timer to an expired value.
+    _firstPacketTimestamp -= ESPEASY_NOW_MESSAGE_TIMEOUT;
     return;
   }
 
@@ -32,7 +37,7 @@ bool ESPEasy_now_merger::messageComplete() const
 
 bool ESPEasy_now_merger::expired() const
 {
-  return timePassedSince(_firstPacketTimestamp) > 5000;
+  return timePassedSince(_firstPacketTimestamp) > ESPEASY_NOW_MESSAGE_TIMEOUT;
 }
 
 uint8_t ESPEasy_now_merger::receivedCount(uint8_t& nr_packets) const
@@ -109,17 +114,19 @@ size_t ESPEasy_now_merger::getPayloadSize() const
 String ESPEasy_now_merger::getString(size_t& payload_pos) const
 {
   String res;
+
   getString(res, payload_pos);
   return res;
 }
 
-bool   ESPEasy_now_merger::getString(String& string, size_t& payload_pos) const
+bool ESPEasy_now_merger::getString(String& string, size_t& payload_pos) const
 {
   size_t stringLength = 0;
   {
     // Compute the expected string size, so we don't have to perform re-allocations
     size_t tmp_payload_pos = payload_pos;
     stringLength = str_len(tmp_payload_pos);
+
     if (stringLength == 0) {
       return false;
     }
@@ -127,6 +134,7 @@ bool   ESPEasy_now_merger::getString(String& string, size_t& payload_pos) const
   }
 
   size_t bufsize = 128;
+
   if (stringLength < bufsize) {
     bufsize = stringLength;
   }
@@ -168,7 +176,7 @@ size_t ESPEasy_now_merger::str_len(size_t& payload_pos) const
 
   // We do fetch more data from the message than the string size, so copy payload_pos first
   size_t tmp_payload_pos = payload_pos;
-  size_t res = 0;
+  size_t res             = 0;
 
   while (!done) {
     size_t received = getBinaryData(&buf[0], bufsize, tmp_payload_pos);

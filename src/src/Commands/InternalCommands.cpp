@@ -192,8 +192,10 @@ bool executeInternalCommand(const char *cmd, struct EventStruct *event, const ch
       COMMAND_CASE("erasesdkwifi", Command_WiFi_Erase,     0); // WiFi.h
       COMMAND_CASE(       "event", Command_Rules_Events,  -1); // Rule.h
       COMMAND_CASE("executerules", Command_Rules_Execute, -1); // Rule.h
+#ifdef USES_ESPEASY_NOW
       COMMAND_CASE("espeasynowdisable", Command_ESPEasy_Now_Disable, 0); // ESPEasy_Now_cmd.h
       COMMAND_CASE( "espeasynowenable", Command_ESPEasy_Now_Enable,  0); // ESPEasy_Now_cmd.h
+#endif
       break;
     }
     case 'g': {

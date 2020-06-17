@@ -21,8 +21,8 @@ bool validWiFiSettingsIndex(uint8_t index) {
 }
 
 #ifdef USES_ESPEASY_NOW
-bool isESPEasy_now_only(uint8_t index) {
-  return index == 2;
+bool isESPEasy_now_only() {
+  return RTC.lastWiFiSettingsIndex == 2;
 }
 #endif
 
@@ -73,7 +73,7 @@ bool selectNextWiFiSettings() {
     return false; // Nothing changed.
   }
 #ifdef USES_ESPEASY_NOW
-  if (espeasy_now_only != isESPEasy_now_only(RTC.lastWiFiSettingsIndex)) {
+  if (espeasy_now_only != isESPEasy_now_only()) {
     if (!espeasy_now_only) {
       espeasy_now_only = true;
       ESPEasy_now_handler.end();

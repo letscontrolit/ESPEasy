@@ -83,8 +83,8 @@ unsigned long ESPEasy_Now_NTP_query::computeExpectedWander(timeSource_t  timeSou
 }
 
 void ESPEasy_Now_NTP_query::find_best_NTP(const MAC_address& mac,
-                                          timeSource_t  timeSource,
-                                          unsigned long timePassedSinceLastTimeSync)
+                                          timeSource_t       timeSource,
+                                          unsigned long      timePassedSinceLastTimeSync)
 {
   if (_millis_out != 0) {
     if (timePassedSince(_millis_out) > MAX_DELAY_FOR_REPLY) {
@@ -102,6 +102,7 @@ void ESPEasy_Now_NTP_query::find_best_NTP(const MAC_address& mac,
 
   // First check if it matches the current best candidate.
   bool matches_current_best = mac == _mac;
+
   if (matches_current_best) {
     // Update expected wander based on current time since last sync
     updated = true;
@@ -109,6 +110,7 @@ void ESPEasy_Now_NTP_query::find_best_NTP(const MAC_address& mac,
     if (_expectedWander_ms > expectedWander_ms) {
       // We found a good new candidate
       bool matches_prev_fail = mac == _mac_prev_fail;
+
       if (matches_prev_fail) {
         // No need to retry.
         return;
