@@ -129,13 +129,6 @@ ADC_MODE(ADC_VCC);
 float& getUserVar(unsigned int varIndex) {return UserVar[varIndex]; }
 
 
-#ifdef USES_BLYNK
-// Blynk_get prototype
-boolean Blynk_get(const String& command, controllerIndex_t controllerIndex,float *data = NULL );
-
-controllerIndex_t firstEnabledBlynk_ControllerIndex();
-#endif
-
 //void checkRAM( const __FlashStringHelper* flashString);
 
 #ifdef CORE_POST_2_5_0
@@ -189,6 +182,16 @@ void setup()
 //  ets_isr_attach(8, sw_watchdog_callback, NULL);  // Set a callback for feeding the watchdog.
 #endif
 
+
+  // Read ADC at boot, before WiFi tries to connect.
+  // see https://github.com/letscontrolit/ESPEasy/issues/2646
+#if FEATURE_ADC_VCC
+  vcc = ESP.getVcc() / 1000.0;
+#endif
+#ifdef ESP8266
+  lastADCvalue = analogRead(A0);
+#endif
+
   resetPluginTaskData();
 
   checkRAM(F("setup"));
@@ -216,7 +219,7 @@ void setup()
 
   if (SpiffsSectors() < 32)
   {
-    serialPrintln(F("\nNo (or too small) SPIFFS area..\nSystem Halted\nPlease reflash with 128k SPIFFS minimum!"));
+    serialPrintln(F("\nNo (or too small) FS area..\nSystem Halted\nPlease reflash with 128k FS minimum!"));
     while (true)
       delay(1);
   }
@@ -341,7 +344,9 @@ void setup()
   timermqtt_interval = 250; // Interval for checking MQTT
   timerAwakeFromDeepSleep = millis();
   CPluginInit();
+  #ifdef USES_NOTIFIER
   NPluginInit();
+  #endif
   PluginInit();
   log = F("INFO : Plugins: ");
   log += deviceCount + 1;
@@ -387,12 +392,6 @@ void setup()
 
   if (node_time.systemTimePresent())
     node_time.initTime();
-
-#if FEATURE_ADC_VCC
-  if (!wifiConnectInProgress) {
-    vcc = ESP.getVcc() / 1000.0;
-  }
-#endif
 
   if (Settings.UseRules)
   {
@@ -642,6 +641,7 @@ void updateMQTTclient_connected() {
         connectionError += getMQTT_state();
         addLog(LOG_LEVEL_ERROR, connectionError);
       }
+      MQTTclient_must_send_LWT_connected = false;
     } else {
       schedule_all_tasks_using_MQTT_controller();
     }
@@ -700,23 +700,6 @@ controllerIndex_t firstEnabledMQTT_ControllerIndex() {
 }
 
 #endif //USES_MQTT
-
-#ifdef USES_BLYNK
-// Blynk_get prototype
-//boolean Blynk_get(const String& command, controllerIndex_t controllerIndex,float *data = NULL );
-
-controllerIndex_t firstEnabledBlynk_ControllerIndex() {
-  for (controllerIndex_t i = 0; i < CONTROLLER_MAX; ++i) {
-    protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(i);
-    if (validProtocolIndex(ProtocolIndex)) {
-      if (Protocol[ProtocolIndex].Number == 12 && Settings.ControllerEnabled[i]) {
-        return i;
-      }
-    }
-  }
-  return INVALID_CONTROLLER_INDEX;
-}
-#endif
 
 
 /*********************************************************************************************\
@@ -955,11 +938,11 @@ void backgroundtasks()
   const bool wifiConnected = WiFiConnected();
   runningBackgroundTasks=true;
 
-  #if defined(ESP8266)
   if (wifiConnected) {
-    tcpCleanup();
+    #if defined(ESP8266)
+      tcpCleanup();
+    #endif
   }
-  #endif
   process_serialWriteBuffer();
   if(!UseRTOSMultitasking){
     if (Settings.UseSerial && Serial.available()) {

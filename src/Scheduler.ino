@@ -196,9 +196,9 @@ void setIntervalTimer(unsigned long id, unsigned long lasttimer) {
     case TIMER_20MSEC:         interval = 20; break;
     case TIMER_100MSEC:        interval = 100; break;
     case TIMER_1SEC:           interval = 1000; break;
-    case TIMER_30SEC:          interval = 30000; break;
-    case TIMER_MQTT:           interval = timermqtt_interval; break;
+    case TIMER_30SEC:
     case TIMER_STATISTICS:     interval = 30000; break;
+    case TIMER_MQTT:           interval = timermqtt_interval; break;
     case TIMER_GRATUITOUS_ARP: interval = timer_gratuitous_arp_interval; break;
 
     // Fall-through for all DelayQueue, which are just the fall-back timers.
@@ -427,7 +427,7 @@ void process_plugin_task_timer(unsigned long id) {
   TempEvent.Par5      = timer_data.Par5;
 
   // TD-er: Not sure if we have to keep original source for notifications.
-  TempEvent.Source = VALUE_SOURCE_SYSTEM;
+  TempEvent.Source = EventValueSource::Enum::VALUE_SOURCE_SYSTEM;
   const deviceIndex_t deviceIndex = getDeviceIndex_from_TaskIndex(timer_data.TaskIndex);
 
   /*
@@ -502,7 +502,7 @@ void process_plugin_timer(unsigned long id) {
   TempEvent.Par5      = timer_data.Par5;
 
   // TD-er: Not sure if we have to keep original source for notifications.
-  TempEvent.Source = VALUE_SOURCE_SYSTEM;
+  TempEvent.Source = EventValueSource::Enum::VALUE_SOURCE_SYSTEM;
 //  const deviceIndex_t deviceIndex = getDeviceIndex_from_TaskIndex(timer_data.TaskIndex);
 
   /*
@@ -612,11 +612,15 @@ void schedule_task_device_timer(unsigned long task_index, unsigned long runAt) {
   const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(task_index);
   if (!validDeviceIndex(DeviceIndex)) { return; }
 
+// TD-er: Tasks without a timer or optional timer set to 0 should still be able to call PLUGIN_READ
+// For example to schedule a read from the PLUGIN_TEN_PER_SECOND when a new value is ready.
+/*  
   if (!Device[DeviceIndex].TimerOption) { return; }
 
   if (Device[DeviceIndex].TimerOptional && (Settings.TaskDeviceTimer[task_index] == 0)) {
     return;
   }
+*/
 
   if (Settings.TaskDeviceEnabled[task_index]) {
     setNewTimerAt(getMixedId(TASK_DEVICE_TIMER, task_index), runAt);
@@ -624,6 +628,7 @@ void schedule_task_device_timer(unsigned long task_index, unsigned long runAt) {
 }
 
 void process_task_device_timer(unsigned long task_index, unsigned long lasttimer) {
+  if (!validTaskIndex(task_index)) { return; }
   unsigned long newtimer = Settings.TaskDeviceTimer[task_index];
 
   if (newtimer != 0) {

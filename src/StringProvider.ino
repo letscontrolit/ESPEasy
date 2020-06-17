@@ -1,5 +1,7 @@
 #include "StringProviderTypes.h"
 
+#include "src/Helpers/CompiletimeDefines.h"
+
 String getInternalLabel(LabelType::Enum label, char replaceSpace) {
   return to_internal_string(getLabel(label), replaceSpace);
 }
@@ -72,6 +74,8 @@ String getLabel(LabelType::Enum label) {
     case LabelType::PLUGIN_DESCRIPTION:     return F("Plugin Description");
     case LabelType::BUILD_TIME:             return F("Build Time");
     case LabelType::BINARY_FILENAME:        return F("Binary Filename");
+    case LabelType::BUILD_PLATFORM:         return F("Build Platform");
+    case LabelType::GIT_HEAD:               return F("Git HEAD");
 
     case LabelType::SYSLOG_LOG_LEVEL:       return F("Syslog Log Level");
     case LabelType::SERIAL_LOG_LEVEL:       return F("Serial Log Level");
@@ -92,8 +96,13 @@ String getLabel(LabelType::Enum label) {
     case LabelType::FLASH_WRITE_COUNT:      return F("Flash Writes");
     case LabelType::SKETCH_SIZE:            return F("Sketch Size");
     case LabelType::SKETCH_FREE:            return F("Sketch Free");
-    case LabelType::SPIFFS_SIZE:            return F("SPIFFS Size");
-    case LabelType::SPIFFS_FREE:            return F("SPIFFS Free");
+    #ifdef USE_LITTLEFS
+    case LabelType::FS_SIZE:                return F("Little FS Size");
+    case LabelType::FS_FREE:                return F("Little FS Free");
+    #else
+    case LabelType::FS_SIZE:                return F("SPIFFS Size");
+    case LabelType::FS_FREE:                return F("SPIFFS Free");
+    #endif
     case LabelType::MAX_OTA_SKETCH_SIZE:    return F("Max. OTA Sketch Size");
     case LabelType::OTA_2STEP:              return F("OTA 2-step Needed");
     case LabelType::OTA_POSSIBLE:           return F("OTA possible");
@@ -174,9 +183,10 @@ String getValue(LabelType::Enum label) {
     case LabelType::SYSTEM_LIBRARIES:       return getSystemLibraryString();
     case LabelType::PLUGIN_COUNT:           return String(deviceCount + 1);
     case LabelType::PLUGIN_DESCRIPTION:     return getPluginDescriptionString();
-    case LabelType::BUILD_TIME:             return String(CRCValues.compileDate) + " " + String(CRCValues.compileTime);
-    case LabelType::BINARY_FILENAME:        return String(CRCValues.binaryFilename);    
-
+    case LabelType::BUILD_TIME:             return get_build_date() + " " + get_build_time();
+    case LabelType::BINARY_FILENAME:        return get_binary_filename();
+    case LabelType::BUILD_PLATFORM:         return get_build_platform();
+    case LabelType::GIT_HEAD:               return get_git_head();
     case LabelType::SYSLOG_LOG_LEVEL:       return getLogLevelDisplayString(Settings.SyslogLevel);
     case LabelType::SERIAL_LOG_LEVEL:       return getLogLevelDisplayString(getSerialLogLevel());
     case LabelType::WEB_LOG_LEVEL:          return getLogLevelDisplayString(getWebLogLevel());
@@ -196,8 +206,8 @@ String getValue(LabelType::Enum label) {
     case LabelType::FLASH_WRITE_COUNT:      break;
     case LabelType::SKETCH_SIZE:            break;
     case LabelType::SKETCH_FREE:            break;
-    case LabelType::SPIFFS_SIZE:            break;
-    case LabelType::SPIFFS_FREE:            break;
+    case LabelType::FS_SIZE:                break;
+    case LabelType::FS_FREE:                break;
     case LabelType::MAX_OTA_SKETCH_SIZE:    break;
     case LabelType::OTA_2STEP:              break;
     case LabelType::OTA_POSSIBLE:           break;

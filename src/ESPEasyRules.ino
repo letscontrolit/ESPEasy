@@ -1,6 +1,7 @@
 #define RULE_FILE_SEPARAROR '/'
 #define RULE_MAX_FILENAME_LENGTH 24
 
+#include "src/Commands/InternalCommands.h"
 #include "src/DataStructs/EventValueSource.h"
 #include "src/Globals/Device.h"
 #include "src/Globals/Plugins.h"
@@ -48,7 +49,7 @@ void checkRuleSets() {
     fileName += x + 1;
     fileName += F(".txt");
 
-    if (SPIFFS.exists(fileName)) {
+    if (ESPEASY_FS.exists(fileName)) {
       activeRuleSets[x] = true;
     }
     else {
@@ -122,7 +123,7 @@ void rulesProcessing(String& event) {
     String fileName = EventToFileName(event);
 
     // if exists processed the rule file
-    if (SPIFFS.exists(fileName)) {
+    if (ESPEASY_FS.exists(fileName)) {
       rulesProcessingFile(fileName, event);
     }
 #ifndef BUILD_NO_DEBUG
@@ -708,7 +709,7 @@ void processMatchedRule(String& action, String& event,
         if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
           log  = F("Lev.");
           log += String(ifBlock);
-          log  = F(": Error: IF Nesting level exceeded!");
+          log += F(": Error: IF Nesting level exceeded!");
           addLog(LOG_LEVEL_ERROR, log);
         }
       }
@@ -756,7 +757,7 @@ void processMatchedRule(String& action, String& event,
       addLog(LOG_LEVEL_INFO, log);
     }
 
-    ExecuteCommand_all(VALUE_SOURCE_RULES, action.c_str());
+    ExecuteCommand_all(EventValueSource::Enum::VALUE_SOURCE_RULES, action.c_str());
     delay(0);
   }
 }
@@ -889,7 +890,7 @@ bool conditionMatchExtended(String& check) {
     condOr  = check.indexOf(F(" or "));
 
     if ((condAnd > 0) || (condOr > 0)) {                             // we got AND/OR
-      if ((condAnd > 0) && (((condOr < 0) && (condOr < condAnd)) ||
+      if ((condAnd > 0) && (((condOr < 0) /*&& (condOr < condAnd)*/) ||
                             ((condOr > 0) && (condOr > condAnd)))) { // AND is first
         check     = check.substring(condAnd + 5);
         rightcond = conditionMatch(check);

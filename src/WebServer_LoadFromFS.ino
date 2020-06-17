@@ -1,6 +1,6 @@
 
 // ********************************************************************************
-// Web Interface server web file from SPIFFS
+// Web Interface server web file from FS
 // ********************************************************************************
 bool loadFromFS(boolean spiffs, String path) {
   // path is a deepcopy, since it will be changed here.
