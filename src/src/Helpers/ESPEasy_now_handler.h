@@ -71,6 +71,8 @@ private:
 
   bool add_peer(const MAC_address& mac, int channel) const;
 
+  void load_ControllerSettingsCache(controllerIndex_t controllerIndex);
+
   ESPEasy_Now_NTP_query _best_NTP_candidate;
 
   unsigned long _last_used = 0;
@@ -78,6 +80,12 @@ private:
   uint8_t _send_failed_count = 0;
 
   ESPEasy_Now_MQTT_queue_check_packet _preferredNodeMQTTqueueState;
+
+  unsigned int _ClientTimeout = 0;
+  controllerIndex_t _controllerIndex = INVALID_CONTROLLER_INDEX;
+  bool _enableESPEasyNowFallback = false;
+  bool _mqtt_retainFlag = false;
+
 };
 
 

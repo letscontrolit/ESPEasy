@@ -76,6 +76,7 @@ bool ESPEasy_now_handler_t::begin()
   _last_used = millis();
   int channel = WiFi.channel();
   MAC_address bssid;
+  _controllerIndex = INVALID_CONTROLLER_INDEX;
 
   if (espeasy_now_only) {
     WifiScan(false, false);
@@ -144,7 +145,8 @@ bool ESPEasy_now_handler_t::begin()
 
 void ESPEasy_now_handler_t::end()
 {
-  use_EspEasy_now = false;
+  _controllerIndex = INVALID_CONTROLLER_INDEX;
+  use_EspEasy_now  = false;
   WifiEspNow.end();
   addLog(LOG_LEVEL_INFO, F("ESPEasy-Now disabled"));
 }
@@ -498,30 +500,23 @@ bool ESPEasy_now_handler_t::sendToMQTT(controllerIndex_t controllerIndex, const 
     return false;
   }
 
-  unsigned int ClientTimeout;
-  bool enableESPEasyNowFallback;
-  {
-    // Place the ControllerSettings in a scope to free the memory as soon as we got all relevant information.
-    MakeControllerSettings(ControllerSettings);
-    LoadControllerSettings(controllerIndex, ControllerSettings);
-    enableESPEasyNowFallback = ControllerSettings.enableESPEasyNowFallback();
-    ClientTimeout = ControllerSettings.ClientTimeout;
+  if (validControllerIndex(controllerIndex)) {
+    load_ControllerSettingsCache(controllerIndex);
   }
 
   bool processed = false;
 
-  if (enableESPEasyNowFallback /*&& !WiFiConnected(10) */) {
+  if (_enableESPEasyNowFallback /*&& !WiFiConnected(10) */) {
     const NodeStruct *preferred = Nodes.getPreferredNode();
 
     if (preferred != nullptr) {
-
       switch (_preferredNodeMQTTqueueState.state) {
         case ESPEasy_Now_MQTT_queue_check_packet::QueueState::Unset:
         case ESPEasy_Now_MQTT_queue_check_packet::QueueState::Full:
           sendMQTTCheckControllerQueue(controllerIndex);
           return false;
         case ESPEasy_Now_MQTT_queue_check_packet::QueueState::Empty:
-        break;
+          break;
       }
 
 
@@ -538,7 +533,7 @@ bool ESPEasy_now_handler_t::sendToMQTT(controllerIndex_t controllerIndex, const 
       msg.addString(payload);
 
       MAC_address mac                 = preferred->ESPEasy_Now_MAC();
-      WifiEspNowSendStatus sendStatus = msg.send(mac, millis() + 2 * ClientTimeout, preferred->channel);
+      WifiEspNowSendStatus sendStatus = msg.send(mac, millis() + 2 * _ClientTimeout, preferred->channel);
 
       switch (sendStatus) {
         case WifiEspNowSendStatus::OK:
@@ -568,27 +563,26 @@ bool ESPEasy_now_handler_t::handle_MQTTControllerMessage(const ESPEasy_now_merge
   controllerIndex_t controllerIndex = firstEnabledMQTT_ControllerIndex();
 
   if (validControllerIndex(controllerIndex)) {
-    bool mqtt_retainFlag;
-    {
-      // Place the ControllerSettings in a scope to free the memory as soon as we got all relevant information.
-      MakeControllerSettings(ControllerSettings);
-      LoadControllerSettings(controllerIndex, ControllerSettings);
-      mqtt_retainFlag = ControllerSettings.mqtt_retainFlag();
-    }
-
-    size_t pos     = 0;
+    load_ControllerSettingsCache(controllerIndex);
+    size_t pos = 0;
     String topic;
     String payload;
 
-    message.getString(topic, pos);
+    message.getString(topic,   pos);
     message.getString(payload, pos);
 
-    bool success = MQTTpublish(controllerIndex, topic.c_str(), payload.c_str(), mqtt_retainFlag);
+    bool success = MQTTpublish(controllerIndex, topic.c_str(), payload.c_str(), _mqtt_retainFlag);
 
     MAC_address mac;
+
     if (message.getMac(mac)) {
       ESPEasy_Now_MQTT_queue_check_packet query;
-      query.setState(MQTT_queueFull(controllerIndex));
+      const bool queue_full = MQTT_queueFull(controllerIndex);
+      query.setState(queue_full);
+
+      if (loglevelActiveFor(LOG_LEVEL_INFO) && queue_full) {
+        addLog(LOG_LEVEL_INFO, F("ESPEasy Now: After MQTT message received: Full"));
+      }
       sendMQTTCheckControllerQueue(mac, 0, query.state);
     }
 
@@ -624,14 +618,18 @@ bool ESPEasy_now_handler_t::sendMQTTCheckControllerQueue(controllerIndex_t contr
   return false;
 }
 
-bool ESPEasy_now_handler_t::sendMQTTCheckControllerQueue(const MAC_address& mac, int channel, ESPEasy_Now_MQTT_queue_check_packet::QueueState state) {
+bool ESPEasy_now_handler_t::sendMQTTCheckControllerQueue(const MAC_address                             & mac,
+                                                         int                                             channel,
+                                                         ESPEasy_Now_MQTT_queue_check_packet::QueueState state) {
   ESPEasy_Now_MQTT_queue_check_packet query;
+
   query.state = state;
   size_t len = sizeof(ESPEasy_Now_MQTT_queue_check_packet);
   ESPEasy_now_splitter msg(ESPEasy_now_hdr::message_t::MQTTCheckControllerQueue, len);
   msg.addBinaryData(reinterpret_cast<uint8_t *>(&query), len);
-  size_t timeout = 10;
+  size_t timeout                  = 10;
   WifiEspNowSendStatus sendStatus = msg.send(mac, timeout, channel);
+
   switch (sendStatus) {
     case WifiEspNowSendStatus::OK:
     {
@@ -647,7 +645,6 @@ bool ESPEasy_now_handler_t::sendMQTTCheckControllerQueue(const MAC_address& mac,
   return false;
 }
 
-
 bool ESPEasy_now_handler_t::handle_MQTTCheckControllerQueue(const ESPEasy_now_merger& message, bool& mustKeep)
 {
   mustKeep = false;
@@ -655,7 +652,7 @@ bool ESPEasy_now_handler_t::handle_MQTTCheckControllerQueue(const ESPEasy_now_me
 
   ESPEasy_Now_MQTT_queue_check_packet query;
   size_t payload_pos = 0;
-  message.getBinaryData(reinterpret_cast<uint8_t *>(&query), sizeof(ESPEasy_Now_NTP_query), payload_pos);
+  message.getBinaryData(reinterpret_cast<uint8_t *>(&query), sizeof(ESPEasy_Now_MQTT_queue_check_packet), payload_pos);
 
   controllerIndex_t controllerIndex = firstEnabledMQTT_ControllerIndex();
 
@@ -663,13 +660,24 @@ bool ESPEasy_now_handler_t::handle_MQTTCheckControllerQueue(const ESPEasy_now_me
     if (query.isSet()) {
       // Got an answer from our query
       _preferredNodeMQTTqueueState = query;
+      #  ifndef BUILD_NO_DEBUG
+
+      if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
+        String log;
+        log  = F("ESPEasy Now: Received Queue state: ");
+        log += _preferredNodeMQTTqueueState.isFull() ? F("Full") : F("not Full");
+        addLog(LOG_LEVEL_DEBUG_MORE, log);
+      }
+      #  endif // ifndef BUILD_NO_DEBUG
       return true;
     } else {
       MAC_address mac;
-      if (message.getMac(mac)) { 
+
+      if (message.getMac(mac)) {
         // We have to give our own queue state and reply
         query.setState(MQTT_queueFull(controllerIndex));
 
+        //        addLog(LOG_LEVEL_INFO, F("ESPEasy Now: reply to queue state query"));
         size_t len = sizeof(ESPEasy_Now_MQTT_queue_check_packet);
         ESPEasy_now_splitter msg(ESPEasy_now_hdr::message_t::MQTTCheckControllerQueue, len);
         msg.addBinaryData(reinterpret_cast<uint8_t *>(&query), len);
@@ -781,6 +789,20 @@ bool ESPEasy_now_handler_t::add_peer(const MAC_address& mac, int channel) const
     return false;
   }
   return true;
+}
+
+void ESPEasy_now_handler_t::load_ControllerSettingsCache(controllerIndex_t controllerIndex)
+{
+  if (validControllerIndex(controllerIndex) && controllerIndex != _controllerIndex)
+  {
+    // Place the ControllerSettings in a scope to free the memory as soon as we got all relevant information.
+    MakeControllerSettings(ControllerSettings);
+    LoadControllerSettings(controllerIndex, ControllerSettings);
+    _enableESPEasyNowFallback = ControllerSettings.enableESPEasyNowFallback();
+    _ClientTimeout            = ControllerSettings.ClientTimeout;
+    _mqtt_retainFlag          = ControllerSettings.mqtt_retainFlag();
+    _controllerIndex          = controllerIndex;
+  }
 }
 
 #endif // ifdef USES_ESPEASY_NOW
