@@ -6,6 +6,15 @@
 
 void NodesHandler::addNode(const NodeStruct& node)
 {
+  // Erase any existing node with matching MAC address
+  for (auto it = _nodes.begin(); it != _nodes.end(); )
+  {
+    if (node.match(it->second.sta_mac) || node.match(it->second.ap_mac)) {
+      it = _nodes.erase(it);
+    } else {
+      ++it;
+    }
+  }
   _nodes[node.unit]             = node;
   _nodes[node.unit].lastUpdated = millis();
 }
@@ -162,6 +171,9 @@ void NodesHandler::updateThisNode() {
       }
     }
   }
+  if (_distance < 255) {
+    _lastTimeValidDistance = millis();
+  }
   thisNode.distance = _distance;
   addNode(thisNode);
 }
@@ -224,4 +236,10 @@ bool NodesHandler::isEndpoint() const
   if (!WiFiConnected()) return false;
 
   return false;
+}
+
+bool NodesHandler::lastTimeValidDistanceExpired() const
+{
+//  if (_lastTimeValidDistance == 0) return false;
+  return timePassedSince(_lastTimeValidDistance) > 120000; // 2 minutes
 }

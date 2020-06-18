@@ -6,6 +6,8 @@
 #include "../Globals/SecuritySettings.h"
 #include "../Helpers/ESPEasy_time_calc.h"
 
+#define NODE_STRUCT_AGE_TIMEOUT 120000  // 2 minutes
+
 NodeStruct::NodeStruct() : ESPEasyNowPeer(0), useAP_ESPEasyNow(0), scaled_rssi(0),
     build(0), age(0), nodeType(0), webgui_portnumber(0)
 {}
@@ -37,9 +39,10 @@ bool NodeStruct::validate() {
 }
 
 bool NodeStruct::operator<(const NodeStruct &other) const {
-  if (ESPEasyNowPeer != other.ESPEasyNowPeer) {
-    // One is confirmed, so prefer that one.
-    return ESPEasyNowPeer;
+  const bool thisExpired = getAge() > NODE_STRUCT_AGE_TIMEOUT;
+  const bool otherExpired = other.getAge() > NODE_STRUCT_AGE_TIMEOUT;
+  if (thisExpired != otherExpired) {
+    return !thisExpired;
   }
 
   const bool markedAsPriority = markedAsPriorityPeer();
@@ -47,26 +50,44 @@ bool NodeStruct::operator<(const NodeStruct &other) const {
     return markedAsPriority;
   }
 
-  if (distance != other.distance) {
-    return distance < other.distance;
+  if (ESPEasyNowPeer != other.ESPEasyNowPeer) {
+    // One is confirmed, so prefer that one.
+    return ESPEasyNowPeer;
   }
-  
+
   const int8_t thisRssi = getRSSI();
   const int8_t otherRssi = other.getRSSI();
 
-  if (thisRssi != otherRssi) {
-    if (thisRssi >= 0) {
-      // This one has no set RSSI, so the other one is better
-      return false;
-    }
+  int score_this = getLoad();
+  int score_other = other.getLoad();
 
-    if (otherRssi >= 0) {
-      // This other has no set RSSI, so the this one is better
-      return true;
+  if (distance != other.distance) {
+    if (getAge() < NODE_STRUCT_AGE_TIMEOUT && other.getAge() < NODE_STRUCT_AGE_TIMEOUT) {
+      // Distance is not the same, so take distance into account.
+      return distance < other.distance;
+/*
+      int distance_penalty = distance - other.distance;
+      distance_penalty = distance_penalty * distance_penalty * 10;
+      if (distance > other.distance) {
+        score_this += distance_penalty;
+      } else {
+        score_other += distance_penalty;
+      }
+*/
     }
-    return thisRssi > otherRssi;
   }
-  return true;
+
+  if (thisRssi >= 0 || otherRssi >= 0) {
+    // One or both have no RSSI, so cannot use RSSI in computing score
+  } else {
+    // RSSI value is negative, so subtract the value
+    // RSSI range from -38 ... 99
+    // Shift RSSI and add a weighing factor to make sure
+    // A load of 100% with RSSI of -40 is preferred over a load of 20% with an RSSI of -80.
+    score_this -= (thisRssi + 38) * 2;
+    score_other -= (otherRssi + 38) * 2;
+  }
+  return score_this > score_other;
 }
 
 String NodeStruct::getNodeTypeDisplayString() const {

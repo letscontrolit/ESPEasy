@@ -19,7 +19,7 @@
 # include <list>
 
 
-# define ESPEASY_NOW_ACTIVVITY_TIMEOUT 60000 // 1 minute
+# define ESPEASY_NOW_ACTIVVITY_TIMEOUT 120000 // 2 minutes
 
 # define ESPEASY_NOW_TMP_SSID       "ESPEASY_NOW"
 # define ESPEASY_NOW_TMP_PASSPHRASE "random_passphrase"
@@ -138,7 +138,6 @@ bool ESPEasy_now_handler_t::begin()
   sendDiscoveryAnnounce();
 
   use_EspEasy_now = true;
-  _last_used      = 0;
   addLog(LOG_LEVEL_INFO, F("ESPEasy-Now enabled"));
   return true;
 }
@@ -147,6 +146,7 @@ void ESPEasy_now_handler_t::end()
 {
   _controllerIndex = INVALID_CONTROLLER_INDEX;
   use_EspEasy_now  = false;
+  _last_used = 0;
   WifiEspNow.end();
   addLog(LOG_LEVEL_INFO, F("ESPEasy-Now disabled"));
 }
@@ -235,6 +235,9 @@ bool ESPEasy_now_handler_t::active() const
   if (_last_used == 0) {
     return false;
   }
+  if (Nodes.lastTimeValidDistanceExpired()) {
+    return false;
+  }
   return timePassedSince(_last_used) < ESPEASY_NOW_ACTIVVITY_TIMEOUT;
 }
 
@@ -300,6 +303,7 @@ bool ESPEasy_now_handler_t::processMessage(const ESPEasy_now_merger& message, bo
   addLog(LOG_LEVEL_INFO, message.getLogString());
   bool handled = false;
   mustKeep = true;
+  bool considerActive = false;
 
   switch (message.getFirstHeader().message_type)
   {
@@ -316,16 +320,18 @@ bool ESPEasy_now_handler_t::processMessage(const ESPEasy_now_merger& message, bo
       break;
     case ESPEasy_now_hdr::message_t::MQTTControllerMessage:
       handled = handle_MQTTControllerMessage(message, mustKeep);
+      considerActive = true;
       break;
     case ESPEasy_now_hdr::message_t::MQTTCheckControllerQueue:
       handled = handle_MQTTCheckControllerQueue(message, mustKeep);
+      considerActive = true;
       break;
     case ESPEasy_now_hdr::message_t::SendData_DuplicateCheck:
       handled = handle_SendData_DuplicateCheck(message, mustKeep);
       break;
   }
 
-  if (handled) {
+  if (handled && considerActive) {
     _last_used = millis();
   }
 
@@ -364,6 +370,8 @@ bool ESPEasy_now_handler_t::handle_DiscoveryAnnounce(const ESPEasy_now_merger& m
 {
   mustKeep = false;
   NodeStruct received;
+
+  const uint8_t cur_distance = Nodes.getDistance();
 
   // Discovery messages have a single binary blob, starting at 0
   size_t payload_pos = 0;
@@ -414,6 +422,12 @@ bool ESPEasy_now_handler_t::handle_DiscoveryAnnounce(const ESPEasy_now_merger& m
       sendDiscoveryAnnounce(mac);
      }
    */
+
+  const uint8_t new_distance = Nodes.getDistance();
+  if (new_distance != cur_distance) {
+    sendDiscoveryAnnounce();
+  }
+
   return true;
 }
 
@@ -564,14 +578,23 @@ bool ESPEasy_now_handler_t::handle_MQTTControllerMessage(const ESPEasy_now_merge
 
   if (validControllerIndex(controllerIndex)) {
     load_ControllerSettingsCache(controllerIndex);
-    size_t pos = 0;
-    String topic;
-    String payload;
+    bool success = false;
+    {
+      size_t pos = 0;
+      String topic;
+      String payload;
 
-    message.getString(topic,   pos);
-    message.getString(payload, pos);
+      message.getString(topic,   pos);
+      message.getString(payload, pos);
 
-    bool success = MQTTpublish(controllerIndex, topic.c_str(), payload.c_str(), _mqtt_retainFlag);
+      size_t payloadSize = message.getPayloadSize();
+      if ((topic.length() + payload.length() + 2) >= payloadSize) {
+        success = MQTTpublish(controllerIndex, topic.c_str(), payload.c_str(), _mqtt_retainFlag);
+      } else {
+        mustKeep = false;
+        return success;
+      }
+    }
 
     MAC_address mac;
 

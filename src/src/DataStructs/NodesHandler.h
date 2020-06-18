@@ -44,10 +44,18 @@ public:
     return _distance;
   }
 
+  bool lastTimeValidDistanceExpired() const;
+
+  unsigned long get_lastTimeValidDistance() const {
+    return _lastTimeValidDistance;
+  }
+
 
 private:
 
   bool isEndpoint() const;
+
+  unsigned long _lastTimeValidDistance = 0;
 
   uint8_t _distance = 255;  // Cached value
 

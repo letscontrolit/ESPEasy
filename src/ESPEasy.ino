@@ -405,6 +405,13 @@ void setup()
     rulesProcessing(event); // TD-er: Process events in the setup() now.
   }
 
+#ifdef USES_ESPEASY_NOW
+  if (isESPEasy_now_only() || Settings.UseESPEasyNow()) {
+    RTC.lastWiFiSettingsIndex     = 0; // Force to load the first settings.
+    RTC.lastWiFiChannel = 0; // Force slow connect
+  }
+#endif
+
   NetworkConnectRelaxed();
 
   setWebserverRunning(true);
