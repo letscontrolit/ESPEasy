@@ -16,17 +16,31 @@ ESPEasy_Now_packet::ESPEasy_Now_packet(const MAC_address& mac, const uint8_t *bu
 {
   setSize(packetSize);
   mac.get(_mac);
+  size_t bufsize = _buf.size();
+  if (packetSize > bufsize) {
+    // Cannot store the whole packet, so consider it as invalid.
+    packetSize = bufsize;
+    _valid = false;
+  }
   memcpy(&_buf[0], buf, packetSize);
 }
 
 void ESPEasy_Now_packet::setSize(size_t packetSize)
 {
   if (packetSize > ESPEASY_NOW_MAX_PACKET_SIZE) {
-    _buf.resize(ESPEASY_NOW_MAX_PACKET_SIZE);
+    packetSize = ESPEASY_NOW_MAX_PACKET_SIZE;
   }
-  else {
-    _buf.resize(packetSize);
+  const size_t maxFreeBlock = ESP.getMaxFreeBlockSize();
+  if (packetSize > maxFreeBlock) {
+    packetSize = maxFreeBlock;
   }
+
+  _buf.resize(packetSize);
+}
+
+bool ESPEasy_Now_packet::valid() const
+{
+  return _valid && (getSize() >= sizeof(ESPEasy_now_hdr));
 }
 
 uint16_t ESPEasy_Now_packet::computeChecksum() const
@@ -74,7 +88,12 @@ ESPEasy_now_hdr ESPEasy_Now_packet::getHeader() const
 void ESPEasy_Now_packet::setHeader(ESPEasy_now_hdr header)
 {
   header.checksum = computeChecksum();
-  memcpy(&_buf[0], &header, sizeof(ESPEasy_now_hdr));
+  if (_buf.size() < sizeof(ESPEasy_now_hdr)) {
+    // Not even the header will fit, so this is an invalid packet.
+    _valid = false;
+  } else {
+    memcpy(&_buf[0], &header, sizeof(ESPEasy_now_hdr));
+  }
 }
 
 size_t ESPEasy_Now_packet::addString(const String& string, size_t& payload_pos)

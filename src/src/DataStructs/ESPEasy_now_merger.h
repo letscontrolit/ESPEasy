@@ -33,6 +33,8 @@ public:
   // Check of set has expired (not all packets received within timeout)
   bool                                   expired() const;
 
+  bool                                   valid() const;
+
   ESPEasy_Now_packet_map::const_iterator find(uint8_t packet_nr) const;
 
   // Get combined size of all packets.

@@ -79,7 +79,9 @@ bool ESPEasy_now_splitter::sendToBroadcast()
 bool ESPEasy_now_splitter::send(const MAC_address& mac,
                                 int                channel)
 {
-  prepareForSend(mac);
+  if (!prepareForSend(mac)) {
+    return false;
+  }
 
   const size_t nr_packets = _queue.size();
 
@@ -92,10 +94,11 @@ bool ESPEasy_now_splitter::send(const MAC_address& mac,
 WifiEspNowSendStatus ESPEasy_now_splitter::send(const MAC_address& mac, size_t timeout, int channel)
 {
   START_TIMER;
-  prepareForSend(mac);
+  if (!prepareForSend(mac)) {
+    return WifiEspNowSendStatus::FAIL;
+  }
 
   WifiEspNowSendStatus sendStatus = WifiEspNowSendStatus::NONE;
-
   const size_t nr_packets = _queue.size();
 
   for (uint8_t i = 0; i < nr_packets; ++i) {
@@ -213,16 +216,22 @@ WifiEspNowSendStatus ESPEasy_now_splitter::waitForSendStatus(size_t timeout) con
   return sendStatus;
 }
 
-void ESPEasy_now_splitter::prepareForSend(const MAC_address& mac)
+bool ESPEasy_now_splitter::prepareForSend(const MAC_address& mac)
 {
   size_t nr_packets = _queue.size();
 
   for (uint8_t i = 0; i < nr_packets; ++i) {
+    if (!_queue[i].valid()) {
+      addLog(LOG_LEVEL_ERROR, F("ESPEasy Now: Could not prepare for send"));
+      return false;
+    }
     ESPEasy_now_hdr header = _queue[i].getHeader();
     header.nr_packets = nr_packets;
+    header.payload_size = _queue[i].getPayloadSize();
     _queue[i].setHeader(header);
     _queue[i].setMac(mac);
   }
+  return true;
 }
 
 #endif // ifdef USES_ESPEASY_NOW

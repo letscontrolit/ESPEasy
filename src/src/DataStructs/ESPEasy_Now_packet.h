@@ -6,7 +6,7 @@
 #include "../Globals/ESPEasy_now_state.h"
 #ifdef USES_ESPEASY_NOW
 
-#include "MAC_address.h"
+# include "MAC_address.h"
 # include "ESPEasy_now_hdr.h"
 
 # include <list>
@@ -20,8 +20,11 @@ public:
 
   // Constructor for receiving a packet
   ESPEasy_Now_packet(const MAC_address& mac,
-                     const uint8_t *buf,
-                     size_t         packetSize);
+                     const uint8_t     *buf,
+                     size_t             packetSize);
+
+  // A packet may become invalid if it was not possible to allocate enough memory for the buffer
+  bool            valid() const;
 
   bool            checksumValid() const;
 
@@ -54,13 +57,14 @@ public:
 
   // Return a string starting from position pos in the buffer.
   // payload_pos will contain the new position to start for a next string
-  String          getString(size_t& payload_pos) const;
+  String getString(size_t& payload_pos) const;
 
   // Get a pointer to the start of the string starting from position pos in the buffer.
   // The char pointer will be guaranteed null terminated.
   // payload_pos will contain the new position to start for a next string
   // @param str_length will contain the length of the found string
-  const char* get_c_str(size_t& payload_pos, size_t& str_length) const;
+  const char* get_c_str(size_t& payload_pos,
+                        size_t& str_length) const;
 
   // Get pointer to the begin of the payload
   const uint8_t * begin() const;
@@ -76,6 +80,8 @@ public:
 private:
 
   std::vector<uint8_t>_buf;
+
+  bool _valid = true;
 
   void     setSize(size_t packetSize);
 

@@ -230,6 +230,7 @@ String getMiscStatsName(int stat) {
     case HANDLE_SERVING_WEBPAGE:  return F("handle webpage");
     case HANDLE_ESPEASY_NOW_LOOP: return F("Handle Received ESPEasy Now message");
     case EXPIRED_ESPEASY_NOW_LOOP: return F("ESPEasy Now incomplete expired");
+    case INVALID_ESPEASY_NOW_LOOP: return F("ESPEasy Now incomplete invalid");
     case RECEIVE_ESPEASY_NOW_LOOP: return F("ESPEasy_now_onReceive()");
     case ESPEASY_NOW_SEND_MSG_SUC: return F("ESPEasy Now send Message Success");
     case ESPEASY_NOW_SEND_MSG_FAIL: return F("ESPEasy Now send Message Fail");

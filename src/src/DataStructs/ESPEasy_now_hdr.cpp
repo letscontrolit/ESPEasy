@@ -17,7 +17,7 @@ ESPEasy_now_hdr& ESPEasy_now_hdr::operator=(const ESPEasy_now_hdr& other)
   packet_nr      = other.packet_nr;
   nr_packets     = other.nr_packets;
   message_count  = other.message_count;
-  notUsed1       = other.notUsed1;
+  payload_size   = other.payload_size;
   checksum       = other.checksum;
   return *this;
 }

@@ -40,6 +40,16 @@ bool ESPEasy_now_merger::expired() const
   return timePassedSince(_firstPacketTimestamp) > ESPEASY_NOW_MESSAGE_TIMEOUT;
 }
 
+bool ESPEasy_now_merger::valid() const
+{
+  for (auto it = _queue.begin(); it != _queue.end(); ++it) {
+    if (!it->second.valid()) {
+      return false;
+    }
+  }
+  return true;
+}
+
 uint8_t ESPEasy_now_merger::receivedCount(uint8_t& nr_packets) const
 {
   nr_packets = getFirstHeader().nr_packets;

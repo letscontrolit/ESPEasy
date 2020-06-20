@@ -34,7 +34,7 @@ private:
   bool                 send(const ESPEasy_Now_packet& packet,
                             int                       channel);
 
-  void                 prepareForSend(const MAC_address& mac);
+  bool                 prepareForSend(const MAC_address& mac);
 
 
   WifiEspNowSendStatus waitForSendStatus(size_t timeout) const;

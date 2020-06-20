@@ -40,7 +40,7 @@ public:
   uint8_t packet_nr      = 0;                          // Current message number (start at 0)
   uint8_t nr_packets     = 1;                          // The highest message number of this sequence
   uint8_t message_count  = 1;                          // A set of messages all have the same message_count
-  uint8_t notUsed1       = 0;                          // reserved
+  uint8_t payload_size   = 0;                          // Size of the payload
   uint16_t checksum      = 0;                          // checksum of the packet
 };
 

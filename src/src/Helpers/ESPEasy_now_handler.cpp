@@ -176,17 +176,29 @@ bool ESPEasy_now_handler_t::loop()
   bool somethingProcessed = false;
 
   if (!ESPEasy_now_in_queue.empty()) {
-    for (auto it = ESPEasy_now_in_queue.begin(); it != ESPEasy_now_in_queue.end();) {
+    unsigned long timeout = millis() + 50;
+    for (auto it = ESPEasy_now_in_queue.begin(); !timeOutReached(timeout) && it != ESPEasy_now_in_queue.end();) {
       bool removeMessage = true;
       START_TIMER;
 
-      if (!it->second.messageComplete()) {
-        if (it->second.expired()) {
-          STOP_TIMER(EXPIRED_ESPEASY_NOW_LOOP);
+      bool valid = it->second.valid();
+      if (!valid || !it->second.messageComplete()) {
+        bool expired = it->second.expired();
+
+        if (!valid || expired) {
+          if (expired) {
+            STOP_TIMER(EXPIRED_ESPEASY_NOW_LOOP);
+          } else {
+            STOP_TIMER(INVALID_ESPEASY_NOW_LOOP);
+          }
 
           if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
             String log = it->second.getLogString();
-            log += F(" Expired!");
+            if (expired) {
+              log += F(" Expired!");
+            } else {
+              log += F(" Invalid!");
+            }
             addLog(LOG_LEVEL_ERROR, log);
           }
         } else {
@@ -203,10 +215,12 @@ bool ESPEasy_now_handler_t::loop()
       if (removeMessage) {
         it = ESPEasy_now_in_queue.erase(it);
 
+/*
         // FIXME TD-er: For now only process one item and then wait for the next loop.
         if (somethingProcessed) {
           return true;
         }
+*/
       } else {
         ++it;
       }
