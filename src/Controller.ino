@@ -109,32 +109,12 @@ void callback(char *c_topic, byte *b_payload, unsigned int length) {
     return;
   }
 
-  struct EventStruct TempEvent;
-
   // TD-er: This one cannot set the TaskIndex, but that may seem to work out.... hopefully.
-  TempEvent.String1 = c_topic;
-  TempEvent.String2.reserve(length);
-
-  for (unsigned int i = 0; i < length; ++i) {
-    char c = static_cast<char>(*(b_payload + i));
-    TempEvent.String2 += c;
-  }
-
-  /*
-     if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
-      String log;
-      log=F("MQTT : Topic: ");
-      log+=c_topic;
-      addLog(LOG_LEVEL_DEBUG_MORE, log);
-
-      log=F("MQTT : Payload: ");
-      log+=TempEvent.String2;
-      addLog(LOG_LEVEL_DEBUG_MORE, log);
-     }
-   */
-
   protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(enabledMqttController);
-  schedule_controller_event_timer(ProtocolIndex, CPlugin::Function::CPLUGIN_PROTOCOL_RECV, &TempEvent);
+  schedule_mqtt_controller_event_timer(
+    ProtocolIndex, 
+    CPlugin::Function::CPLUGIN_PROTOCOL_RECV,
+    c_topic, b_payload, length);
 }
 
 /*********************************************************************************************\
