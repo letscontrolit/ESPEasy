@@ -308,6 +308,7 @@ bool MQTTCheck(controllerIndex_t controller_idx)
           }
         } else {
           MQTTclient_must_send_LWT_connected = false;
+        }
       }
     }
   }
