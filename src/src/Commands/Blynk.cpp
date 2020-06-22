@@ -86,14 +86,17 @@ bool Blynk_get(const String& command, controllerIndex_t controllerIndex, float *
 
 
   // We now create a URI for the request
-  char request[300] = { 0 };
-  sprintf_P(request,
-            PSTR("GET /%s/%s HTTP/1.1\r\n Host: %s \r\n Connection: close\r\n\r\n"),
-            getControllerPass(controllerIndex, ControllerSettings).c_str(),
-            command.c_str(),
-            ControllerSettings.getHost().c_str());
-  addLog(LOG_LEVEL_DEBUG, request);
-  client.print(request);
+  {
+    // Place this stack allocated array in its own scope, as it is quite big.
+    char request[300] = { 0 };
+    sprintf_P(request,
+              PSTR("GET /%s/%s HTTP/1.1\r\n Host: %s \r\n Connection: close\r\n\r\n"),
+              getControllerPass(controllerIndex, ControllerSettings).c_str(),
+              command.c_str(),
+              ControllerSettings.getHost().c_str());
+    addLog(LOG_LEVEL_DEBUG, request);
+    client.print(request);
+  }
   bool success = !ControllerSettings.MustCheckReply;
 
   if (ControllerSettings.MustCheckReply || data) {
