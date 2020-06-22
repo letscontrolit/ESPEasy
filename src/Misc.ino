@@ -1980,6 +1980,33 @@ void transformValue(
           {
           case 'V': //value = value without transformations
             break;
+          case 'P': // Password hide using a custom password character: Pc
+            if (tempValueFormatLength > 1)
+            {
+              if (value == F("0")) {
+                value = "";
+              } else {
+                const int valueLength = value.length();
+                for (int i = 0; i < valueLength; i++) {
+                  value[i] = tempValueFormat[1];
+                }
+              }
+            } else {
+              value = F("ERR");
+            }
+            break;
+          case 'p': // Password hide using asterisks
+            {
+              if (value == F("0")) {
+                value = "";
+              } else {
+                const int valueLength = value.length();
+                for (int i = 0; i < valueLength; i++) {
+                  value[i] = '*';
+                }
+              }
+            }
+            break;
           case 'O':
             value = logicVal == 0 ? F("OFF") : F(" ON"); //(equivalent to XOR operator)
             break;
