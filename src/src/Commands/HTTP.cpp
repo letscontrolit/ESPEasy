@@ -14,7 +14,7 @@
 
 String Command_HTTP_SendToHTTP(struct EventStruct *event, const char* Line)
 {
-	if (WiFiConnected()) {
+	if (NetworkConnected()) {
 		String host = parseString(Line, 2);
 		const int port = parseCommandArgumentInt(Line, 2);
 		if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {

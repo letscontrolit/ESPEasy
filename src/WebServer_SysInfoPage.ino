@@ -64,32 +64,32 @@ void handle_sysinfo_json() {
   }
   json_number(F("rssi"), String(WiFi.RSSI()));
   json_prop(F("dhcp"),          useStaticIP() ? getLabel(LabelType::IP_CONFIG_STATIC) : getLabel(LabelType::IP_CONFIG_DYNAMIC));
-  json_prop(F("ip"),            formatIP(WiFi.localIP()));
-  json_prop(F("subnet"),        formatIP(WiFi.subnetMask()));
-  json_prop(F("gw"),            formatIP(WiFi.gatewayIP()));
-  json_prop(F("dns1"),          formatIP(WiFi.dnsIP(0)));
-  json_prop(F("dns2"),          formatIP(WiFi.dnsIP(1)));
+  json_prop(F("ip"),            formatIP(NetworkLocalIP()));
+  json_prop(F("subnet"),        formatIP(NetworkSubnetMask()));
+  json_prop(F("gw"),            formatIP(NetworkGatewayIP()));
+  json_prop(F("dns1"),          formatIP(NetworkDnsIP(0)));
+  json_prop(F("dns2"),          formatIP(NetworkDnsIP(1)));
   json_prop(F("allowed_range"), describeAllowedIPrange());
-
-
-  uint8_t  mac[]   = { 0, 0, 0, 0, 0, 0 };
-  uint8_t *macread = WiFi.macAddress(mac);
-  char     macaddress[20];
-  formatMAC(macread, macaddress);
-
-  json_prop(F("sta_mac"), macaddress);
-
-  macread = WiFi.softAPmacAddress(mac);
-  formatMAC(macread, macaddress);
-
-  json_prop(F("ap_mac"), macaddress);
-  json_prop(F("ssid"),   WiFi.SSID());
-  json_prop(F("bssid"),  WiFi.BSSIDstr());
-  json_number(F("channel"), String(WiFi.channel()));
-  json_prop(F("connected"), format_msec_duration(timeDiff(lastConnectMoment, millis())));
-  json_prop(F("ldr"),       getLastDisconnectReason());
+  json_prop(F("sta_mac"),       NetworkMacAddress());
+  json_prop(F("ap_mac"),        WifiSoftAPmacAddress());
+  json_prop(F("ssid"),          WiFi.SSID());
+  json_prop(F("bssid"),         WiFi.BSSIDstr());
+  json_number(F("channel"),     String(WiFi.channel()));
+  json_prop(F("connected"),    format_msec_duration(timeDiff(lastConnectMoment, millis())));
+  json_prop(F("ldr"),          getLastDisconnectReason());
   json_number(F("reconnects"), String(wifi_reconnects));
   json_close();
+
+#ifdef HAS_ETHERNET
+  json_open(false, F("ethernet"));
+  json_prop(F("ethwifimode"), getValue(LabelType::ETH_WIFI_MODE));
+  json_prop(F("ethconnected"), getValue(LabelType::ETH_CONNECTED);
+  json_prop(F("ethduplex"), getValue(LabelType::ETH_DUPLEX);
+  json_prop(F("ethspeed"), getValue(LabelType::ETH_SPEED);
+  json_prop(F("ethstate"), getValue(LabelType::ETH_STATE);
+  json_prop(F("ethspeedstate"), getValue(LabelType::ETH_SPEED_STATE);
+  json.close();
+#endif
 
   json_open(false, F("firmware"));
   json_prop(F("build"),       String(BUILD));
@@ -224,6 +224,10 @@ void handle_sysinfo() {
 
   handle_sysinfo_Network();
 
+#ifdef HAS_ETHERNET
+  handle_sysinfo_Ethernet();
+#endif
+
   handle_sysinfo_WiFiSettings();
 
   handle_sysinfo_Firmware();
@@ -315,12 +319,36 @@ void handle_sysinfo_basicInfo() {
   addRowLabelValue(LabelType::RESET_REASON);
   addRowLabelValue(LabelType::LAST_TASK_BEFORE_REBOOT);
   addRowLabelValue(LabelType::SW_WD_COUNT);
+
+  #ifdef HAS_ETHERNET
+  addRowLabel(F("Network Type"));
+  addRowLabelValue(LabelType::ETH_WIFI_MODE);
+  #endif
 }
+
+#ifdef HAS_ETHERNET
+void handle_sysinfo_Ethernet() {
+    if(eth_wifi_mode == ETHERNET) {
+      addTableSeparator(F("Ethernet"), 2, 3);
+      addRowLabelValue(LabelType::ETH_STATE);
+      addRowLabelValue(LabelType::ETH_SPEED);
+      addRowLabelValue(LabelType::ETH_DUPLEX);
+      addRowLabelValue(LabelType::ETH_MAC);
+      addRowLabelValue(LabelType::ETH_IP_ADDRESS_SUBNET);
+      addRowLabelValue(LabelType::ETH_IP_GATEWAY);
+      addRowLabelValue(LabelType::ETH_IP_DNS);
+    }
+}
+#endif
 
 void handle_sysinfo_Network() {
   addTableSeparator(F("Network"), 2, 3, F("Wifi"));
 
-  if (WiFiConnected())
+  if (
+    #ifdef HAS_ETHERNET
+    eth_wifi_mode == WIFI &&
+    #endif
+    NetworkConnected())
   {
     addRowLabel(F("Wifi"));
     # if defined(ESP8266)
@@ -358,20 +386,8 @@ void handle_sysinfo_Network() {
   addRowLabelValue(LabelType::CLIENT_IP);
   addRowLabelValue(LabelType::DNS);
   addRowLabelValue(LabelType::ALLOWED_IP_RANGE);
-  addRowLabel(getLabel(LabelType::STA_MAC));
-
-  {
-    uint8_t  mac[]   = { 0, 0, 0, 0, 0, 0 };
-    uint8_t *macread = WiFi.macAddress(mac);
-    char     macaddress[20];
-    formatMAC(macread, macaddress);
-    addHtml(macaddress);
-
-    addRowLabel(getLabel(LabelType::AP_MAC));
-    macread = WiFi.softAPmacAddress(mac);
-    formatMAC(macread, macaddress);
-    addHtml(macaddress);
-  }
+  addRowLabelValue(LabelType::STA_MAC);
+  addRowLabelValue(LabelType::AP_MAC);
 
   addRowLabel(getLabel(LabelType::SSID));
   {

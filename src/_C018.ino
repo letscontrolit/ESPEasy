@@ -431,7 +431,7 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
       Protocol[protocolCount].usesCheckReply = false;
       Protocol[protocolCount].usesTimeout    = false;
       Protocol[protocolCount].usesSampleSets = true;
-      Protocol[protocolCount].needsWiFi      = false;
+      Protocol[protocolCount].needsNetwork      = false;
       break;
     }
 
