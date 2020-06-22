@@ -384,7 +384,7 @@ bool readyForSleep()
     return false;
   }
 
-  if (!WiFiConnected()) {
+  if (!NetworkConnected()) {
     // Allow 12 seconds to establish connections
     return timeOutReached(timerAwakeFromDeepSleep + 12000);
   }
@@ -795,7 +795,7 @@ void statusLED(bool traffic)
   else
   {
 
-    if (WiFiConnected())
+    if (NetworkConnected())
     {
       long int delta = timePassedSince(gnLastUpdate);
       if (delta>0 || delta<0 )
@@ -1302,6 +1302,14 @@ void ResetFactory()
 
   Settings.UseSerial		= DEFAULT_USE_SERIAL;
   Settings.BaudRate		= DEFAULT_SERIAL_BAUD;
+
+  Settings.ETH_Phy_Addr            = gpio_settings.eth_phyaddr;
+  Settings.ETH_Pin_mdc             = gpio_settings.eth_mdc;
+  Settings.ETH_Pin_mdio            = gpio_settings.eth_mdio;
+  Settings.ETH_Pin_power           = gpio_settings.eth_power;
+  Settings.ETH_Phy_Type            = gpio_settings.eth_phytype;
+  Settings.ETH_Clock_Mode          = gpio_settings.eth_clock_mode;
+  Settings.ETH_Wifi_Mode           = gpio_settings.eth_wifi_mode;
 
 /*
 	Settings.GlobalSync						= DEFAULT_USE_GLOBAL_SYNC;

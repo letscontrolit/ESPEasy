@@ -76,7 +76,7 @@ public:
       is_failure = true;
 
     /* This ping lost for sure */
-    if (!WiFiConnected()) {
+    if (!NetworkConnected()) {
       return true;
     }
 
