@@ -43,11 +43,11 @@ void handle_root() {
     printWebString = "";
 
     if (sCommand.length() > 0) {
-      ExecuteCommand_internal(VALUE_SOURCE_HTTP, sCommand.c_str());
+      ExecuteCommand_internal(EventValueSource::Enum::VALUE_SOURCE_HTTP, sCommand.c_str());
     }
 
-    // IPAddress ip = WiFi.localIP();
-    // IPAddress gw = WiFi.gatewayIP();
+    // IPAddress ip = NetworkLocalIP();
+    // IPAddress gw = NetwrokGatewayIP();
 
     addHtml(printWebString);
     addHtml(F("<form>"));
@@ -110,7 +110,7 @@ void handle_root() {
     addRowLabelValue(LabelType::IP_ADDRESS);
     addRowLabel(getLabel(LabelType::WIFI_RSSI));
 
-    if (WiFiConnected())
+    if (NetworkConnected())
     {
       String html;
       html.reserve(32);
@@ -120,6 +120,14 @@ void handle_root() {
       html += ')';
       addHtml(html);
     }
+
+#ifdef HAS_ETHERNET
+    addRowLabelValue(LabelType::ETH_WIFI_MODE);
+    if(eth_wifi_mode == ETHERNET) {
+      addRowLabelValue(LabelType::ETH_SPEED_STATE);
+      addRowLabelValue(LabelType::ETH_IP_ADDRESS);
+    }
+#endif
 
     #ifdef FEATURE_MDNS
     {
@@ -237,7 +245,7 @@ void handle_root() {
       addHtml(F(
                 "OK. Please wait > 1 min and connect to Acces point.<BR><BR>PW=configesp<BR>URL=<a href='http://192.168.4.1'>192.168.4.1</a>"));
       TXBuffer.endStream();
-      ExecuteCommand_internal(VALUE_SOURCE_HTTP, sCommand.c_str());
+      ExecuteCommand_internal(EventValueSource::Enum::VALUE_SOURCE_HTTP, sCommand.c_str());
     }
 
     addHtml(F("OK"));

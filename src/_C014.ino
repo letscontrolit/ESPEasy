@@ -243,10 +243,10 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
 
           // $localip	Device → Controller	IP of the device on the local network	Yes	Yes
 #ifdef CPLUGIN_014_V3
-          CPlugin_014_sendMQTTdevice(pubname,"$localip",formatIP(WiFi.localIP()).c_str(),errorCounter);
+          CPlugin_014_sendMQTTdevice(pubname,"$localip",formatIP(NetworkLocalIP()).c_str(),errorCounter);
 
           // $mac	Device → Controller	Mac address of the device network interface. The format MUST be of the type A1:B2:C3:D4:E5:F6	Yes	Yes
-          CPlugin_014_sendMQTTdevice(pubname,"$mac",WiFi.macAddress().c_str(),errorCounter);
+          CPlugin_014_sendMQTTdevice(pubname,"$mac",NetworkMacAddress().c_str(),errorCounter);
 
           // $implementation	Device → Controller	An identifier for the Homie implementation (example esp8266)	Yes	Yes
           #if defined(ESP8266)
@@ -533,7 +533,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
           taskIndex_t taskIndex = INVALID_TASK_INDEX;
           struct EventStruct TempEvent;
           TempEvent.TaskIndex = event->TaskIndex;
-          TempEvent.Source = VALUE_SOURCE_MQTT; // to trigger the correct acknowledgment
+          TempEvent.Source = EventValueSource::Enum::VALUE_SOURCE_MQTT; // to trigger the correct acknowledgment
           int lastindex = event->String1.lastIndexOf('/');
           errorCounter = 0;
           if (event->String1.substring(lastindex + 1) == F("set"))

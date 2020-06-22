@@ -64,7 +64,7 @@ bool CPlugin_005(CPlugin::Function function, struct EventStruct *event, String& 
           if (lastPartTopic == F("cmd")) {
             cmd = event->String2;
             parseCommandString(&TempEvent, cmd);
-            TempEvent.Source = VALUE_SOURCE_MQTT;
+            TempEvent.Source = EventValueSource::Enum::VALUE_SOURCE_MQTT;
             validTopic = true;
           } else {
             if (lastindex > 0) {

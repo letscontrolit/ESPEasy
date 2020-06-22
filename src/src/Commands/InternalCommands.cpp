@@ -170,6 +170,19 @@ bool executeInternalCommand(const char *cmd, struct EventStruct *event, const ch
       break;
     }
     case 'e': {
+    #ifdef HAS_ETHERNET
+      COMMAND_CASE(   "ethphyadr", Command_ETH_Phy_Addr,   1); // Network Command
+      COMMAND_CASE(   "ethpinmdc", Command_ETH_Pin_mdc,    1); // Network Command
+      COMMAND_CASE(  "ethpinmdio", Command_ETH_Pin_mdio,   1); // Network Command
+      COMMAND_CASE( "ethpinpower", Command_ETH_Pin_power,  1); // Network Command
+      COMMAND_CASE(  "ethphytype", Command_ETH_Phy_Type,   1); // Network Command
+      COMMAND_CASE("ethclockmode", Command_ETH_Clock_Mode, 1); // Network Command
+      COMMAND_CASE(       "ethip", Command_ETH_IP,         1); // Network Command
+      COMMAND_CASE(  "ethgateway", Command_ETH_Gateway,    1); // Network Command
+      COMMAND_CASE(   "ethsubnet", Command_ETH_Subnet,     1); // Network Command  
+      COMMAND_CASE(      "ethdns", Command_ETH_DNS,        1); // Network Command
+      COMMAND_CASE( "ethwifimode", Command_ETH_Wifi_Mode,  1); // Network Command
+    #endif // HAS_ETHERNET
       COMMAND_CASE("erasesdkwifi", Command_WiFi_Erase,     0); // WiFi.h
       COMMAND_CASE(       "event", Command_Rules_Events,  -1); // Rule.h
       COMMAND_CASE("executerules", Command_Rules_Execute, -1); // Rule.h
@@ -308,22 +321,22 @@ bool executeInternalCommand(const char *cmd, struct EventStruct *event, const ch
 
 
 // Execute command which may be plugin or internal commands
-bool ExecuteCommand_all(byte source, const char *Line)
+bool ExecuteCommand_all(EventValueSource::Enum source, const char *Line)
 {
   return ExecuteCommand(INVALID_TASK_INDEX, source, Line, true, true, false);
 }
 
-bool ExecuteCommand_all_config(byte source, const char *Line)
+bool ExecuteCommand_all_config(EventValueSource::Enum source, const char *Line)
 {
   return ExecuteCommand(INVALID_TASK_INDEX, source, Line, true, true, true);
 }
 
-bool ExecuteCommand_plugin_config(byte source, const char *Line)
+bool ExecuteCommand_plugin_config(EventValueSource::Enum source, const char *Line)
 {
   return ExecuteCommand(INVALID_TASK_INDEX, source, Line, true, false, true);
 }
 
-bool ExecuteCommand_all_config_eventOnly(byte source, const char *Line)
+bool ExecuteCommand_all_config_eventOnly(EventValueSource::Enum source, const char *Line)
 {
   bool tryInternal = false;
   {
@@ -335,22 +348,22 @@ bool ExecuteCommand_all_config_eventOnly(byte source, const char *Line)
   return ExecuteCommand(INVALID_TASK_INDEX, source, Line, true, tryInternal, true);
 }
 
-bool ExecuteCommand_internal(byte source, const char *Line)
+bool ExecuteCommand_internal(EventValueSource::Enum source, const char *Line)
 {
   return ExecuteCommand(INVALID_TASK_INDEX, source, Line, false, true, false);
 }
 
-bool ExecuteCommand_plugin(byte source, const char *Line)
+bool ExecuteCommand_plugin(EventValueSource::Enum source, const char *Line)
 {
   return ExecuteCommand(INVALID_TASK_INDEX, source, Line, true, false, false);
 }
 
-bool ExecuteCommand_plugin(taskIndex_t taskIndex, byte source, const char *Line)
+bool ExecuteCommand_plugin(taskIndex_t taskIndex, EventValueSource::Enum source, const char *Line)
 {
   return ExecuteCommand(taskIndex, source, Line, true, false, false);
 }
 
-bool ExecuteCommand(taskIndex_t taskIndex, byte source, const char *Line, bool tryPlugin, bool tryInternal, bool tryRemoteConfig)
+bool ExecuteCommand(taskIndex_t taskIndex, EventValueSource::Enum source, const char *Line, bool tryPlugin, bool tryInternal, bool tryRemoteConfig)
 {
   checkRAM(F("ExecuteCommand"));
   String cmd;
