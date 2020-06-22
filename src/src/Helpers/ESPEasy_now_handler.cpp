@@ -2,6 +2,9 @@
 
 #ifdef USES_ESPEASY_NOW
 
+# include "../../ESPEasy_fdwdecl.h"
+# include "../../ESPEasy_Log.h"
+# include "../../_CPlugin_Helper.h"
 # include "ESPEasy_time_calc.h"
 # include "../DataStructs/ESPEasy_Now_DuplicateCheck.h"
 # include "../DataStructs/ESPEasy_Now_packet.h"
@@ -13,8 +16,8 @@
 # include "../Globals/SecuritySettings.h"
 # include "../Globals/SendData_DuplicateChecker.h"
 # include "../Globals/Settings.h"
-# include "../../ESPEasy_fdwdecl.h"
-# include "../../ESPEasy_Log.h"
+# include "../ControllerQueue/MQTT_queue_element.h"
+
 
 # include <list>
 
@@ -592,22 +595,10 @@ bool ESPEasy_now_handler_t::handle_MQTTControllerMessage(const ESPEasy_now_merge
 
   if (validControllerIndex(controllerIndex)) {
     load_ControllerSettingsCache(controllerIndex);
-    bool success = false;
-    {
-      size_t pos = 0;
-      String topic;
-      String payload;
-
-      message.getString(topic,   pos);
-      message.getString(payload, pos);
-
-      size_t payloadSize = message.getPayloadSize();
-      if ((topic.length() + payload.length() + 2) >= payloadSize) {
-        success = MQTTpublish(controllerIndex, topic.c_str(), payload.c_str(), _mqtt_retainFlag);
-      } else {
-        mustKeep = false;
-        return success;
-      }
+    bool success = MQTTpublish(controllerIndex, message, _mqtt_retainFlag);
+    if (!success) {
+      mustKeep = false;
+      return success;
     }
 
     MAC_address mac;

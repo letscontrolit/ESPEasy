@@ -4,6 +4,7 @@
 #include "ESPEasy_common.h"
 #include "src/DataStructs/SettingsType.h"
 #include "src/DataStructs/ESPEasy_EventStruct.h"
+#include "src/DataStructs/ESPEasy_now_merger.h"
 
 #include "src/Globals/CPlugins.h"
 
@@ -79,6 +80,11 @@ void callback(char        *c_topic,
 bool MQTTCheck(controllerIndex_t controller_idx);
 //bool MQTT_queueFull(controllerIndex_t controller_idx);
 bool MQTTpublish(controllerIndex_t controller_idx, const char *topic, const char *payload, bool retained);
+#ifdef USES_ESPEASY_NOW
+
+bool MQTTpublish(controllerIndex_t controller_idx, const ESPEasy_now_merger& message, bool retained);
+#endif
+
 #endif // ifdef USES_MQTT
 
 void flushAndDisconnectAllClients();

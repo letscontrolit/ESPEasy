@@ -143,13 +143,8 @@ bool ESPEasy_now_merger::getString(String& string, size_t& payload_pos) const
     string.reserve(stringLength);
   }
 
-  size_t bufsize = 128;
-
-  if (stringLength < bufsize) {
-    bufsize = stringLength;
-  }
-  std::vector<uint8_t> buf;
-  buf.resize(bufsize);
+  const size_t bufsize = 128;
+  uint8_t buf[bufsize] = {0};
 
   bool done = false;
 
@@ -178,10 +173,7 @@ bool ESPEasy_now_merger::getString(String& string, size_t& payload_pos) const
 size_t ESPEasy_now_merger::str_len(size_t& payload_pos) const
 {
   const size_t bufsize = 128;
-  std::vector<uint8_t> buf;
-
-  buf.resize(bufsize);
-
+  uint8_t buf[bufsize] = {0};
   bool done = false;
 
   // We do fetch more data from the message than the string size, so copy payload_pos first
