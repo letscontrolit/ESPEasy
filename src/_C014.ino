@@ -37,6 +37,9 @@
 
 byte msgCounter=0; // counter for send Messages (currently for information / log only!
 
+String CPlugin_014_pubname;
+bool CPlugin_014_mqtt_retainFlag;
+
 
 // send MQTT Message with complete Topic / Payload
 bool CPlugin_014_sendMQTTmsg(String& topic, const char* payload, int& errorCounter) {
@@ -157,6 +160,8 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
         MakeControllerSettings(ControllerSettings);
         LoadControllerSettings(event->ControllerIndex, ControllerSettings);
         MQTTDelayHandler.configureControllerSettings(ControllerSettings);
+        CPlugin_014_pubname = ControllerSettings.Publish;
+        CPlugin_014_mqtt_retainFlag = ControllerSettings.mqtt_retainFlag();
         break;
       }
 
@@ -680,15 +685,8 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
 
     case CPlugin::Function::CPLUGIN_PROTOCOL_SEND:
       {
-        String pubname;
-        bool mqtt_retainFlag;
-        {
-          // Place the ControllerSettings in a scope to free the memory as soon as we got all relevant information.
-          MakeControllerSettings(ControllerSettings);
-          LoadControllerSettings(event->ControllerIndex, ControllerSettings);
-          pubname = ControllerSettings.Publish;
-          mqtt_retainFlag = ControllerSettings.mqtt_retainFlag();
-        }
+        String pubname = CPlugin_014_pubname;
+        bool mqtt_retainFlag = CPlugin_014_mqtt_retainFlag;
 
         statusLED(true);
 

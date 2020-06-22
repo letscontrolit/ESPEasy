@@ -7,6 +7,10 @@
 #define CPLUGIN_ID_005         5
 #define CPLUGIN_NAME_005       "Home Assistant (openHAB) MQTT"
 
+String CPlugin_005_pubname;
+bool CPlugin_005_mqtt_retainFlag;
+
+
 bool CPlugin_005(CPlugin::Function function, struct EventStruct *event, String& string)
 {
   bool success = false;
@@ -37,6 +41,8 @@ bool CPlugin_005(CPlugin::Function function, struct EventStruct *event, String& 
         MakeControllerSettings(ControllerSettings);
         LoadControllerSettings(event->ControllerIndex, ControllerSettings);
         MQTTDelayHandler.configureControllerSettings(ControllerSettings);
+        CPlugin_005_pubname = ControllerSettings.Publish;
+        CPlugin_005_mqtt_retainFlag = ControllerSettings.mqtt_retainFlag();
         break;
       }
 
@@ -94,15 +100,8 @@ bool CPlugin_005(CPlugin::Function function, struct EventStruct *event, String& 
 
     case CPlugin::Function::CPLUGIN_PROTOCOL_SEND:
       {
-        String pubname;
-        bool mqtt_retainFlag;
-        {
-          // Place the ControllerSettings in a scope to free the memory as soon as we got all relevant information.
-          MakeControllerSettings(ControllerSettings);
-          LoadControllerSettings(event->ControllerIndex, ControllerSettings);
-          pubname = ControllerSettings.Publish;
-          mqtt_retainFlag = ControllerSettings.mqtt_retainFlag();
-        }
+        String pubname = CPlugin_005_pubname;
+        bool mqtt_retainFlag = CPlugin_005_mqtt_retainFlag;
 
         if (ExtraTaskSettings.TaskIndex != event->TaskIndex) {
           String dummy;

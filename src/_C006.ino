@@ -7,6 +7,10 @@
 #define CPLUGIN_ID_006         6
 #define CPLUGIN_NAME_006       "PiDome MQTT"
 
+String CPlugin_006_pubname;
+bool CPlugin_006_mqtt_retainFlag;
+
+
 bool CPlugin_006(CPlugin::Function function, struct EventStruct *event, String& string)
 {
   bool success = false;
@@ -37,6 +41,8 @@ bool CPlugin_006(CPlugin::Function function, struct EventStruct *event, String& 
         MakeControllerSettings(ControllerSettings);
         LoadControllerSettings(event->ControllerIndex, ControllerSettings);
         MQTTDelayHandler.configureControllerSettings(ControllerSettings);
+        CPlugin_006_pubname = ControllerSettings.Publish;
+        CPlugin_006_mqtt_retainFlag = ControllerSettings.mqtt_retainFlag();
         break;
       }
 
@@ -91,15 +97,8 @@ bool CPlugin_006(CPlugin::Function function, struct EventStruct *event, String& 
           success = false;
           break;
         }
-        String pubname;
-        bool mqtt_retainFlag;
-        {
-          // Place the ControllerSettings in a scope to free the memory as soon as we got all relevant information.
-          MakeControllerSettings(ControllerSettings);
-          LoadControllerSettings(event->ControllerIndex, ControllerSettings);
-          pubname = ControllerSettings.Publish;
-          mqtt_retainFlag = ControllerSettings.mqtt_retainFlag();
-        }
+        String pubname = CPlugin_006_pubname;
+        bool mqtt_retainFlag = CPlugin_006_mqtt_retainFlag;
 
         statusLED(true);
 
