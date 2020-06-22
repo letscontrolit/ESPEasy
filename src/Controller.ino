@@ -136,6 +136,10 @@ bool MQTTConnect(controllerIndex_t controller_idx)
 {
   ++mqtt_reconnect_count;
   MakeControllerSettings(ControllerSettings);
+  if (!AllocatedControllerSettings()) {
+    addLog(LOG_LEVEL_ERROR, F("MQTT : Cannot connect, out of RAM"));
+    return false;
+  }
   LoadControllerSettings(controller_idx, ControllerSettings);
 
   if (!ControllerSettings.checkHostReachable(true)) {
@@ -266,9 +270,29 @@ bool MQTTCheck(controllerIndex_t controller_idx)
 
   if (Protocol[ProtocolIndex].usesMQTT)
   {
-    if (MQTTclient_should_reconnect || !MQTTclient.connected())
-    {
-      if (MQTTclient_should_reconnect) {
+    MakeControllerSettings(ControllerSettings);
+    if (!AllocatedControllerSettings()) {
+      addLog(LOG_LEVEL_ERROR, F("MQTT : Cannot check, out of RAM"));
+      return false;
+    }
+
+    LoadControllerSettings(controller_idx, ControllerSettings);
+
+    // FIXME TD-er: Is this still needed?
+    /*
+    #ifdef USES_ESPEASY_NOW
+    if (!MQTTclient.connected()) {
+      if (ControllerSettings.enableESPEasyNowFallback()) {
+        return true;
+      }
+    }
+    #endif
+    */
+
+    if (ControllerSettings.isSet()) {
+      if (MQTTclient_should_reconnect || !MQTTclient.connected())
+      {
+        if (MQTTclient_should_reconnect) {
           addLog(LOG_LEVEL_ERROR, F("MQTT : Intentional reconnect"));
         }
         return MQTTConnect(controller_idx);
@@ -458,6 +482,11 @@ void MQTTStatus(const String& status)
     {
       // Place the ControllerSettings in a scope to free the memory as soon as we got all relevant information.
       MakeControllerSettings(ControllerSettings);
+      if (!AllocatedControllerSettings()) {
+        addLog(LOG_LEVEL_ERROR, F("MQTT : Cannot send status, out of RAM"));
+        return;
+      }
+
       LoadControllerSettings(enabledMqttController, ControllerSettings);
       pubname = ControllerSettings.Publish;
       mqtt_retainFlag = ControllerSettings.mqtt_retainFlag();

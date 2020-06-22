@@ -34,6 +34,12 @@ String Command_MQTT_Publish(struct EventStruct *event, const char *Line)
     {
       // Place the ControllerSettings in a scope to free the memory as soon as we got all relevant information.
       MakeControllerSettings(ControllerSettings);
+      if (!AllocatedControllerSettings()) {
+        String error = F("MQTT : Cannot publish, out of RAM");
+        addLog(LOG_LEVEL_ERROR, error);
+        return error;
+      }
+
       LoadControllerSettings(event->ControllerIndex, ControllerSettings);
       mqtt_retainFlag = ControllerSettings.mqtt_retainFlag();
     }
@@ -81,6 +87,11 @@ String Command_MQTT_Subscribe(struct EventStruct *event, const char* Line)
       {
         // Place the ControllerSettings in a scope to free the memory as soon as we got all relevant information.
         MakeControllerSettings(ControllerSettings);
+        if (!AllocatedControllerSettings()) {
+          String error = F("MQTT : Cannot subscribe, out of RAM");
+          addLog(LOG_LEVEL_ERROR, error);
+          return error;
+        }
         LoadControllerSettings(event->ControllerIndex, ControllerSettings);
         mqtt_retainFlag = ControllerSettings.mqtt_retainFlag();
       }

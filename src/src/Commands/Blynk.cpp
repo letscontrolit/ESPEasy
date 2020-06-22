@@ -66,6 +66,11 @@ String Command_Blynk_Get(struct EventStruct *event, const char *Line)
 bool Blynk_get(const String& command, controllerIndex_t controllerIndex, float *data)
 {
   MakeControllerSettings(ControllerSettings);
+  if (!AllocatedControllerSettings()) {
+    addLog(LOG_LEVEL_ERROR, F("Blynk : Cannot run GET, out of RAM"));
+    return false;
+  }
+
   LoadControllerSettings(controllerIndex, ControllerSettings);
 
   if ((getControllerPass(controllerIndex, ControllerSettings).length() == 0)) {
