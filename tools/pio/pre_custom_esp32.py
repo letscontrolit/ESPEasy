@@ -38,7 +38,8 @@ else:
     "USES_P087",  # Serial Proxy
     "USES_P097",  # Touch (ESP32)
 
-    "USE_SETTINGS_ARCHIVE"
+    "USE_SETTINGS_ARCHIVE",
+    "FEATURE_ARDUINO_OTA"
   ])
 
 print(env['CPPDEFINES'])

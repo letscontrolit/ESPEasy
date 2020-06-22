@@ -170,6 +170,19 @@ bool executeInternalCommand(const char *cmd, struct EventStruct *event, const ch
       break;
     }
     case 'e': {
+    #ifdef HAS_ETHERNET
+      COMMAND_CASE(   "ethphyadr", Command_ETH_Phy_Addr,   1); // Network Command
+      COMMAND_CASE(   "ethpinmdc", Command_ETH_Pin_mdc,    1); // Network Command
+      COMMAND_CASE(  "ethpinmdio", Command_ETH_Pin_mdio,   1); // Network Command
+      COMMAND_CASE( "ethpinpower", Command_ETH_Pin_power,  1); // Network Command
+      COMMAND_CASE(  "ethphytype", Command_ETH_Phy_Type,   1); // Network Command
+      COMMAND_CASE("ethclockmode", Command_ETH_Clock_Mode, 1); // Network Command
+      COMMAND_CASE(       "ethip", Command_ETH_IP,         1); // Network Command
+      COMMAND_CASE(  "ethgateway", Command_ETH_Gateway,    1); // Network Command
+      COMMAND_CASE(   "ethsubnet", Command_ETH_Subnet,     1); // Network Command  
+      COMMAND_CASE(      "ethdns", Command_ETH_DNS,        1); // Network Command
+      COMMAND_CASE( "ethwifimode", Command_ETH_Wifi_Mode,  1); // Network Command
+    #endif // HAS_ETHERNET
       COMMAND_CASE("erasesdkwifi", Command_WiFi_Erase,     0); // WiFi.h
       COMMAND_CASE(       "event", Command_Rules_Events,  -1); // Rule.h
       COMMAND_CASE("executerules", Command_Rules_Execute, -1); // Rule.h

@@ -1152,7 +1152,7 @@ void display_header() {
   }
   switch (_HeaderContent) {
     case eSSID:
-      if (WiFiConnected()) {
+      if (NetworkConnected()) {
         strHeader = WiFi.SSID();
       }
       else {
@@ -1657,7 +1657,7 @@ void display_scrolling_lines() {
 
 //Draw Signal Strength Bars, return true when there was an update.
 bool display_wifibars() {
-  const bool connected = WiFiConnected();
+  const bool connected = NetworkConnected();
   const int nbars_filled = (WiFi.RSSI() + 100) / 12;  // all bars filled if RSSI better than -46dB
   const int newState = connected ? nbars_filled : P36_WIFI_STATE_NOT_CONNECTED;
   if (newState == P036_data->lastWiFiState)
@@ -1679,7 +1679,7 @@ bool display_wifibars() {
   P036_data->display->setColor(BLACK);
   P036_data->display->fillRect(x , y, size_x, size_y);
   P036_data->display->setColor(WHITE);
-  if (WiFiConnected()) {
+  if (NetworkConnected()) {
     for (uint8_t ibar = 0; ibar < nbars; ibar++) {
       int16_t height = size_y * (ibar + 1) / nbars;
       int16_t xpos = x + ibar * width;
