@@ -207,12 +207,6 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
 
     case CPlugin::Function::CPLUGIN_GOT_CONNECTED: //// call after connected to mqtt server to publich device autodicover features
       {
-        MakeControllerSettings(ControllerSettings);
-        LoadControllerSettings(event->ControllerIndex, ControllerSettings);
-        if (!ControllerSettings.checkHostReachable(true)) {
-            success = false;
-            break;
-        }
         statusLED(true);
 
         // send autodiscover header
@@ -686,12 +680,16 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
 
     case CPlugin::Function::CPLUGIN_PROTOCOL_SEND:
       {
-        MakeControllerSettings(ControllerSettings);
-        LoadControllerSettings(event->ControllerIndex, ControllerSettings);
-        if (!ControllerSettings.checkHostReachable(true)) {
-            success = false;
-            break;
+        String pubname;
+        bool mqtt_retainFlag;
+        {
+          // Place the ControllerSettings in a scope to free the memory as soon as we got all relevant information.
+          MakeControllerSettings(ControllerSettings);
+          LoadControllerSettings(event->ControllerIndex, ControllerSettings);
+          pubname = ControllerSettings.Publish;
+          mqtt_retainFlag = ControllerSettings.mqtt_retainFlag();
         }
+
         statusLED(true);
 
         if (ExtraTaskSettings.TaskIndex != event->TaskIndex) {
@@ -699,7 +697,6 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
           PluginCall(PLUGIN_GET_DEVICEVALUENAMES, event, dummy);
         }
 
-        String pubname = ControllerSettings.Publish;
         parseControllerVariables(pubname, event, false);
 
         String value = "";
@@ -711,11 +708,11 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
 
           // Small optimization so we don't try to copy potentially large strings
           if (event->sensorType == SENSOR_TYPE_STRING) {
-            MQTTpublish(event->ControllerIndex, tmppubname.c_str(), event->String2.c_str(), ControllerSettings.mqtt_retainFlag());
+            MQTTpublish(event->ControllerIndex, tmppubname.c_str(), event->String2.c_str(), mqtt_retainFlag);
             value = event->String2.substring(0, 20); // For the log
           } else {
             value = formatUserVarNoCheck(event, x);
-            MQTTpublish(event->ControllerIndex, tmppubname.c_str(), value.c_str(), ControllerSettings.mqtt_retainFlag());
+            MQTTpublish(event->ControllerIndex, tmppubname.c_str(), value.c_str(), mqtt_retainFlag);
           }
           if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
             String log = F("C014 : Sent to ");

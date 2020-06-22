@@ -295,9 +295,6 @@ bool MQTTCheck(controllerIndex_t controller_idx)
       }
 
       if (MQTTclient_must_send_LWT_connected) {
-        MakeControllerSettings(ControllerSettings);
-        LoadControllerSettings(controller_idx, ControllerSettings);
-
         if (ControllerSettings.mqtt_sendLWT()) {
           String LWTTopic          = getLWT_topic(ControllerSettings);
           String LWTMessageConnect = getLWT_messageConnect(ControllerSettings);
@@ -420,7 +417,6 @@ bool MQTT_queueFull(controllerIndex_t controller_idx) {
   dummy_element.controller_idx = controller_idx;
   if (MQTTDelayHandler.queueFull(dummy_element)) {
     // The queue is full, try to make some room first.
-    addLog(LOG_LEVEL_DEBUG, F("MQTT : Extra processMQTTdelayQueue()"));
     processMQTTdelayQueue();
     return MQTTDelayHandler.queueFull(dummy_element);
   }
@@ -477,12 +473,19 @@ void MQTTStatus(const String& status)
   controllerIndex_t enabledMqttController = firstEnabledMQTT_ControllerIndex();
 
   if (validControllerIndex(enabledMqttController)) {
-    MakeControllerSettings(ControllerSettings);
-    LoadControllerSettings(enabledMqttController, ControllerSettings);
-    String pubname = ControllerSettings.Subscribe;
+    String pubname;
+    bool mqtt_retainFlag;
+    {
+      // Place the ControllerSettings in a scope to free the memory as soon as we got all relevant information.
+      MakeControllerSettings(ControllerSettings);
+      LoadControllerSettings(enabledMqttController, ControllerSettings);
+      pubname = ControllerSettings.Publish;
+      mqtt_retainFlag = ControllerSettings.mqtt_retainFlag();
+    }
+
     pubname.replace(F("/#"), F("/status"));
     parseSystemVariables(pubname, false);
-    MQTTpublish(enabledMqttController, pubname.c_str(), status.c_str(), ControllerSettings.mqtt_retainFlag());
+    MQTTpublish(enabledMqttController, pubname.c_str(), status.c_str(), mqtt_retainFlag);
   }
 }
 #endif //USES_MQTT

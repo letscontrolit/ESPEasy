@@ -58,8 +58,13 @@ bool CPlugin_008(CPlugin::Function function, struct EventStruct *event, String& 
           PluginCall(PLUGIN_GET_DEVICEVALUENAMES, event, dummy);
         }
 
-        MakeControllerSettings(ControllerSettings);
-        LoadControllerSettings(event->ControllerIndex, ControllerSettings);
+        String pubname;
+        {
+          // Place the ControllerSettings in a scope to free the memory as soon as we got all relevant information.
+          MakeControllerSettings(ControllerSettings);
+          LoadControllerSettings(event->ControllerIndex, ControllerSettings);
+          pubname = ControllerSettings.Publish;
+        }
 
         for (byte x = 0; x < valueCount; x++)
         {
@@ -67,7 +72,7 @@ bool CPlugin_008(CPlugin::Function function, struct EventStruct *event, String& 
           String formattedValue = formatUserVar(event, x, isvalid);
           if (isvalid) {
             element.txt[x] = "/";
-            element.txt[x] += ControllerSettings.Publish;
+            element.txt[x] += pubname;
             element.txt[x].replace(F("%valname%"), ExtraTaskSettings.TaskDeviceValueNames[x]);
             element.txt[x].replace(F("%value%"), formattedValue);
             parseControllerVariables(element.txt[x], event, true);

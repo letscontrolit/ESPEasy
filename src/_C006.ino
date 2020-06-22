@@ -91,8 +91,15 @@ bool CPlugin_006(CPlugin::Function function, struct EventStruct *event, String& 
           success = false;
           break;
         }
-        MakeControllerSettings(ControllerSettings);
-        LoadControllerSettings(event->ControllerIndex, ControllerSettings);
+        String pubname;
+        bool mqtt_retainFlag;
+        {
+          // Place the ControllerSettings in a scope to free the memory as soon as we got all relevant information.
+          MakeControllerSettings(ControllerSettings);
+          LoadControllerSettings(event->ControllerIndex, ControllerSettings);
+          pubname = ControllerSettings.Publish;
+          mqtt_retainFlag = ControllerSettings.mqtt_retainFlag();
+        }
 
         statusLED(true);
 
@@ -101,7 +108,6 @@ bool CPlugin_006(CPlugin::Function function, struct EventStruct *event, String& 
           PluginCall(PLUGIN_GET_DEVICEVALUENAMES, event, dummy);
         }
 
-        String pubname = ControllerSettings.Publish;
         parseControllerVariables(pubname, event, false);
 
         byte valueCount = getValueCountFromSensorType(event->sensorType);
@@ -111,10 +117,10 @@ bool CPlugin_006(CPlugin::Function function, struct EventStruct *event, String& 
           tmppubname.replace(F("%valname%"), ExtraTaskSettings.TaskDeviceValueNames[x]);
           // Small optimization so we don't try to copy potentially large strings
           if (event->sensorType == SENSOR_TYPE_STRING) {
-            MQTTpublish(event->ControllerIndex, tmppubname.c_str(), event->String2.c_str(), ControllerSettings.mqtt_retainFlag());
+            MQTTpublish(event->ControllerIndex, tmppubname.c_str(), event->String2.c_str(), mqtt_retainFlag);
           } else {
             String value = formatUserVarNoCheck(event, x);
-            MQTTpublish(event->ControllerIndex, tmppubname.c_str(), value.c_str(), ControllerSettings.mqtt_retainFlag());
+            MQTTpublish(event->ControllerIndex, tmppubname.c_str(), value.c_str(), mqtt_retainFlag);
           }
         }
         break;
