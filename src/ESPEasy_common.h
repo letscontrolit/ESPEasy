@@ -112,7 +112,7 @@ String getUnknownString();
   // #define FEATURE_MDNS
 #endif
 #if defined(ESP32)
- #define FEATURE_ARDUINO_OTA
+ //#define FEATURE_ARDUINO_OTA
  //#define FEATURE_MDNS
 #endif
 
