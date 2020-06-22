@@ -1,4 +1,14 @@
+#include "ESPEasyWifi_ProcessEvent.h"
+#include "ESPEasy-Globals.h"
+#include "ESPEasyNetwork.h"
+#include "ESPEasyWifi.h"
+#include "ESPEasyWiFi_credentials.h"
+#include "ESPEasy_fdwdecl.h"
 #include "src/Globals/ESPEasyWiFiEvent.h"
+#include "src/Globals/RTC.h"
+#include "src/Globals/MQTT.h"
+#include "src/Helpers/ESPEasy_time_calc.h"
+#include "src/DataStructs/SchedulerTimers.h"
 
 bool unprocessedWifiEvents() {
   if (processedConnect && processedDisconnect && processedGotIP && processedDHCPTimeout)
@@ -24,7 +34,7 @@ void handle_unprocessedWiFiEvents()
     delay(1);
 
     if (wifiConnectAttemptNeeded) {
-      WiFiConnectRelaxed();
+      NetworkConnectRelaxed();
     }
 
     // Process disconnect events before connect events.
@@ -82,7 +92,7 @@ void handle_unprocessedWiFiEvents()
         markWiFi_services_initialized();
       }
     }
-  } else if (!WiFiConnected()) {
+  } else if (!NetworkConnected()) {
     // Somehow the WiFi has entered a limbo state.
     // FIXME TD-er: This may happen on WiFi config with AP_STA mode active.
     //    addLog(LOG_LEVEL_ERROR, F("Wifi status out sync"));
@@ -99,10 +109,18 @@ void handle_unprocessedWiFiEvents()
     #ifndef BUILD_NO_DEBUG
 
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-      String wifilog = F("WIFI : Disconnected: WiFi.status() = ");
-      wifilog += String(WiFi.status());
+      static unsigned long lastDisconnectMoment_log = 0;
+      static uint8_t lastWiFiStatus_log = 0;
+      uint8_t cur_wifi_status = WiFi.status();
+      if (lastDisconnectMoment != lastDisconnectMoment_log || 
+          lastWiFiStatus_log != cur_wifi_status) {
+        lastDisconnectMoment_log = lastDisconnectMoment;
+        lastWiFiStatus_log = cur_wifi_status;
+        String wifilog = F("WIFI : Disconnected: WiFi.status() = ");
+        wifilog += String(cur_wifi_status);
 
-      addLog(LOG_LEVEL_DEBUG, wifilog);
+        addLog(LOG_LEVEL_DEBUG, wifilog);
+      }
     }
     #endif // ifndef BUILD_NO_DEBUG
 
@@ -223,7 +241,7 @@ void processGotIP() {
     // Only process GotIP events if we are connected.
     return;
   }
-  IPAddress ip = WiFi.localIP();
+  IPAddress ip = NetworkLocalIP();
 
   if (!useStaticIP()) {
     if ((ip[0] == 0) && (ip[1] == 0) && (ip[2] == 0) && (ip[3] == 0)) {
@@ -232,8 +250,8 @@ void processGotIP() {
   }
   processedGotIP = true;
   wifiStatus    |= ESPEASY_WIFI_GOT_IP;
-  const IPAddress gw       = WiFi.gatewayIP();
-  const IPAddress subnet   = WiFi.subnetMask();
+  const IPAddress gw       = NetworkGatewayIP();
+  const IPAddress subnet   = NetworkSubnetMask();
   const long dhcp_duration = timeDiff(lastConnectMoment, lastGetIPmoment);
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -246,7 +264,7 @@ void processGotIP() {
     }
     log += formatIP(ip);
     log += " (";
-    log += WifiGetHostname();
+    log += NetworkGetHostname();
     log += F(") GW: ");
     log += formatIP(gw);
     log += F(" SN: ");
@@ -443,3 +461,22 @@ void markWiFi_services_initialized() {
   
   processedDHCPTimeout  = true;  // FIXME TD-er:  Is this ever happening?
 }
+
+#ifdef HAS_ETHERNET
+
+void processEthernetConnected() {
+  if (Settings.UseRules)
+  {
+    eventQueue.add(F("ETHERNET#Connected"));
+  }
+  statusLED(true);
+}
+
+void processEthernetDisconnected() {
+  if (Settings.UseRules)
+  {
+    eventQueue.add(F("ETHERNET#Disconnected"));
+  }
+}
+
+#endif

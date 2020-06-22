@@ -19,6 +19,7 @@ enum DeviceModel {
   DeviceModel_Sonoff_POWr2,
   DeviceModel_Shelly1,
   DeviceModel_ShellyPLUG_S,
+  DeviceMode_Olimex_ESP32_PoE,
 
   DeviceModel_MAX
 };

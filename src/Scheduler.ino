@@ -427,7 +427,7 @@ void process_plugin_task_timer(unsigned long id) {
   TempEvent.Par5      = timer_data.Par5;
 
   // TD-er: Not sure if we have to keep original source for notifications.
-  TempEvent.Source = VALUE_SOURCE_SYSTEM;
+  TempEvent.Source = EventValueSource::Enum::VALUE_SOURCE_SYSTEM;
   const deviceIndex_t deviceIndex = getDeviceIndex_from_TaskIndex(timer_data.TaskIndex);
 
   /*
@@ -502,7 +502,7 @@ void process_plugin_timer(unsigned long id) {
   TempEvent.Par5      = timer_data.Par5;
 
   // TD-er: Not sure if we have to keep original source for notifications.
-  TempEvent.Source = VALUE_SOURCE_SYSTEM;
+  TempEvent.Source = EventValueSource::Enum::VALUE_SOURCE_SYSTEM;
 //  const deviceIndex_t deviceIndex = getDeviceIndex_from_TaskIndex(timer_data.TaskIndex);
 
   /*
