@@ -12,6 +12,10 @@
 // Added to the main repository with some optimizations and some limitations.
 // Al long as the device is not selected, no RAM is waisted.
 //
+// @uwekaditz: 2020-06-22
+// BUG: MaxFramesToDisplay was not updated if all display lines were empty -> display_indicator() crashed due to memory overflow
+// CHG: MaxFramesToDisplay will be updated after receiving command with new line content
+// CHG: Added some checks if P036_data are valid and if P036_data->isInitialized()
 // @uwekaditz: 2020-05-11
 // CHG: clearing window for scrolling lines was 1pix too large in y direction
 // CHG: font settings for 64x48 updated
@@ -581,9 +585,6 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         if (nullptr == P036_data) {
           return success;
         }
-        if (!P036_data->isInitialized()) {
-          return success;
-        }
 #ifdef PLUGIN_036_DEBUG
         if (P036_data->isInitialized()) {
           addLog(LOG_LEVEL_INFO, F("P036_init -> Already done!"));
@@ -943,6 +944,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
               // shorten string because OLED controller can not handle such long strings
               P036_data->DisplayLinesV1[LineNo-1].Content[strlen-iCharToRemove] = 0;
             }
+            P036_data->MaxFramesToDisplay = 0xff;   // update frame count
 
             boolean bNoDisplayOnReceivedText = bitRead(PCONFIG_LONG(0), 18);  // Bit 18 NoDisplayOnReceivedText
             if (UserVar[event->BaseVarIndex] == 0 && !bNoDisplayOnReceivedText) {
@@ -982,7 +984,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
 void P036_JumpToPage(struct EventStruct *event, uint8_t nextFrame)
 {
-  if (P036_data == nullptr || !P036_data->isInitialized()) {
+  if ((P036_data == nullptr) || !P036_data->isInitialized()) {
     return;
   }
   schedule_task_device_timer(event->TaskIndex,
@@ -996,7 +998,7 @@ void P036_JumpToPage(struct EventStruct *event, uint8_t nextFrame)
 
 void P036_DisplayPage(struct EventStruct *event)
 {
-  if (P036_data == nullptr || !P036_data->isInitialized()) {
+  if ((P036_data == nullptr) || !P036_data->isInitialized()) {
     return;
   }
 
@@ -1081,6 +1083,10 @@ void P036_DisplayPage(struct EventStruct *event)
           }
         }
       }
+      if (P036_data->MaxFramesToDisplay == 0xFF) {
+        // nothing to display
+        P036_data->MaxFramesToDisplay = 0;
+      }
     }
     //      Update display
     P036_data->bAlternativHeader = false;  // start with first header content
@@ -1112,7 +1118,7 @@ void P036_DisplayPage(struct EventStruct *event)
 // really low brightness & contrast: contrast = 10, precharge = 5, comdetect = 0
 // normal brightness & contrast:  contrast = 100
 void P36_setContrast(uint8_t OLED_contrast) {
-  if (P036_data == nullptr || !P036_data->isInitialized()) {
+  if ((P036_data == nullptr) || !P036_data->isInitialized()) {
     return;
   }
 
@@ -1156,7 +1162,7 @@ String P36_parseTemplate(String &tmpString, uint8_t lineSize) {
 // The screen is set up as 10 rows at the top for the header, 10 rows at the bottom for the footer and 44 rows in the middle for the scroll region
 
 void display_header() {
-  if (P036_data == nullptr || !P036_data->isInitialized()) {
+  if ((P036_data == nullptr) || !P036_data->isInitialized()) {
     return;
   }
 
@@ -1239,7 +1245,7 @@ void display_header() {
 }
 
 void display_time() {
-  if (P036_data == nullptr || !P036_data->isInitialized()) {
+  if ((P036_data == nullptr) || !P036_data->isInitialized()) {
     return;
   }
 
@@ -1254,7 +1260,7 @@ void display_time() {
 }
 
 void display_title(String& title) {
-  if (P036_data == nullptr || !P036_data->isInitialized()) {
+  if ((P036_data == nullptr) || !P036_data->isInitialized()) {
     return;
   }
   P036_data->display->setFont(ArialMT_Plain_10);
@@ -1272,7 +1278,7 @@ void display_title(String& title) {
 }
 
 void display_logo() {
-  if (P036_data == nullptr || !P036_data->isInitialized()) {
+  if ((P036_data == nullptr) || !P036_data->isInitialized()) {
     return;
   }
 
@@ -1291,18 +1297,18 @@ void display_logo() {
 // Draw the frame position
 
 void display_indicator(int frameCount) {
-  if (P036_data == nullptr || !P036_data->isInitialized()) {
+  if ((P036_data == nullptr) || !P036_data->isInitialized()) {
     return;
   }
 
   //  Erase Indicator Area
-
   P036_data->display->setColor(BLACK);
   P036_data->display->fillRect(0, P036_IndicatorTop+P036_data->TopLineOffset, P36_MaxDisplayWidth, P036_IndicatorHeight);
-  P036_data->display->setColor(WHITE);
 
   // Only display when there is something to display.
-  if (frameCount <= 1) return;
+  if ((frameCount <= 1)||(frameCount > P36_Nlines)) return;
+
+  P036_data->display->setColor(WHITE);
 
   // Display chars as required
   for (uint8_t i = 0; i < frameCount; i++) {
@@ -1338,7 +1344,7 @@ void display_indicator(int frameCount) {
 
 void prepare_pagescrolling()
 {
-  if (P036_data == nullptr || !P036_data->isInitialized()) {
+  if ((P036_data == nullptr) || !P036_data->isInitialized()) {
     return;
   }
 
@@ -1379,10 +1385,9 @@ void prepare_pagescrolling()
 
 uint8_t display_scroll(int lscrollspeed, int lTaskTimer)
 {
-  if (P036_data == nullptr || !P036_data->isInitialized()) {
-    return;
+  if ((P036_data == nullptr) || !P036_data->isInitialized()) {
+   return (0);
   }
-
 
   // LineOut[] contain the outgoing strings in this frame
   // LineIn[] contain the incoming strings in this frame
@@ -1406,7 +1411,7 @@ uint8_t display_scroll(int lscrollspeed, int lTaskTimer)
   float fScrollTime = (float)(lTaskTimer*1000 - iPageScrollTime - 2*P36_WaitScrollLines*100)/100.0;
 
 #ifdef PLUGIN_036_DEBUG
-  log = F(" PageScrollTime: ");
+  log = F("PageScrollTime: ");
   log += iPageScrollTime;
   addLog(LOG_LEVEL_INFO, log);
 #endif  // PLUGIN_036_DEBUG
@@ -1598,10 +1603,9 @@ uint8_t display_scroll(int lscrollspeed, int lTaskTimer)
 }
 
 uint8_t display_scroll_timer() {
-  if (P036_data == nullptr || !P036_data->isInitialized()) {
-    return;
+  if ((P036_data == nullptr) || !P036_data->isInitialized()) {
+    return (0);
   }
-
 
   // page scrolling (using PLUGIN_TIMER_IN)
   P036_data->display->setColor(BLACK);
@@ -1652,7 +1656,7 @@ uint8_t display_scroll_timer() {
 
 //Draw scrolling line (1pix/s)
 void display_scrolling_lines() {
-  if (P036_data == nullptr || !P036_data->isInitialized()) {
+  if ((P036_data == nullptr) || !P036_data->isInitialized()) {
     return;
   }
 
@@ -1706,8 +1710,8 @@ void display_scrolling_lines() {
 
 //Draw Signal Strength Bars, return true when there was an update.
 bool display_wifibars() {
-  if (P036_data == nullptr || !P036_data->isInitialized()) {
-    return;
+  if ((P036_data == nullptr) || !P036_data->isInitialized()) {
+    return false;
   }
 
   const bool connected = NetworkConnected();
