@@ -274,9 +274,10 @@ struct P036_data_struct: public PluginTaskData_base {
       default:
         return false;
     }
-
-    display->init();		// call to local override of init function
-    display->displayOn();
+    if (display != nullptr) {
+      display->init();		// call to local override of init function
+      display->displayOn();
+    }
 
   return isInitialized();
   }
@@ -580,6 +581,9 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         if (nullptr == P036_data) {
           return success;
         }
+        if (!P036_data->isInitialized()) {
+          return success;
+        }
 #ifdef PLUGIN_036_DEBUG
         if (P036_data->isInitialized()) {
           addLog(LOG_LEVEL_INFO, F("P036_init -> Already done!"));
@@ -862,6 +866,10 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 #endif  // PLUGIN_036_DEBUG
           return success;
         }
+        if (!P036_data->isInitialized()) {
+          return success;
+        }
+
 #ifdef PLUGIN_036_DEBUG
           addLog(LOG_LEVEL_INFO, F("P036_PLUGIN_WRITE ..."));
 #endif  // PLUGIN_036_DEBUG
@@ -974,6 +982,9 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
 void P036_JumpToPage(struct EventStruct *event, uint8_t nextFrame)
 {
+  if (P036_data == nullptr || !P036_data->isInitialized()) {
+    return;
+  }
   schedule_task_device_timer(event->TaskIndex,
      millis() + (Settings.TaskDeviceTimer[event->TaskIndex] * 1000)); // reschedule page change
      P036_data->nextFrameToDisplay = nextFrame;
@@ -985,6 +996,10 @@ void P036_JumpToPage(struct EventStruct *event, uint8_t nextFrame)
 
 void P036_DisplayPage(struct EventStruct *event)
 {
+  if (P036_data == nullptr || !P036_data->isInitialized()) {
+    return;
+  }
+
   int NFrames;                // the number of frames
 
   if (UserVar[event->BaseVarIndex] == 1) {
@@ -1097,14 +1112,16 @@ void P036_DisplayPage(struct EventStruct *event)
 // really low brightness & contrast: contrast = 10, precharge = 5, comdetect = 0
 // normal brightness & contrast:  contrast = 100
 void P36_setContrast(uint8_t OLED_contrast) {
+  if (P036_data == nullptr || !P036_data->isInitialized()) {
+    return;
+  }
+
   char contrast = 100;
   char precharge = 241;
   char comdetect = 64;
   switch (OLED_contrast) {
     case P36_CONTRAST_OFF:
-      if (P036_data->isInitialized()) {
-        P036_data->display->displayOff();
-      }
+      P036_data->display->displayOff();
       return;
     case P36_CONTRAST_LOW:
       contrast = 10; precharge = 5; comdetect = 0;
@@ -1117,10 +1134,8 @@ void P36_setContrast(uint8_t OLED_contrast) {
       contrast = P36_CONTRAST_HIGH; precharge = 241; comdetect = 64;
       break;
   }
-  if (P036_data->isInitialized()) {
-    P036_data->display->displayOn();
-    P036_data->display->setContrast(contrast, precharge, comdetect);
-  }
+  P036_data->display->displayOn();
+  P036_data->display->setContrast(contrast, precharge, comdetect);
 }
 
 // Perform some specific changes for OLED display
@@ -1141,6 +1156,10 @@ String P36_parseTemplate(String &tmpString, uint8_t lineSize) {
 // The screen is set up as 10 rows at the top for the header, 10 rows at the bottom for the footer and 44 rows in the middle for the scroll region
 
 void display_header() {
+  if (P036_data == nullptr || !P036_data->isInitialized()) {
+    return;
+  }
+
   eHeaderContent _HeaderContent;
   String newString, strHeader;
   if ((P036_data->HeaderContentAlternative==P036_data->HeaderContent) || !P036_data->bAlternativHeader) {
@@ -1220,6 +1239,10 @@ void display_header() {
 }
 
 void display_time() {
+  if (P036_data == nullptr || !P036_data->isInitialized()) {
+    return;
+  }
+
   String dtime = F("%systime%");
   parseSystemVariables(dtime, false);
   P036_data->display->setTextAlignment(TEXT_ALIGN_LEFT);
@@ -1231,6 +1254,9 @@ void display_time() {
 }
 
 void display_title(String& title) {
+  if (P036_data == nullptr || !P036_data->isInitialized()) {
+    return;
+  }
   P036_data->display->setFont(ArialMT_Plain_10);
   P036_data->display->setColor(BLACK);
   P036_data->display->fillRect(0, P036_data->TopLineOffset, P36_MaxDisplayWidth, P36_HeaderHeight);   // don't clear line under title.
@@ -1246,7 +1272,11 @@ void display_title(String& title) {
 }
 
 void display_logo() {
-int left = 24;
+  if (P036_data == nullptr || !P036_data->isInitialized()) {
+    return;
+  }
+
+  int left = 24;
   P036_data->display->setTextAlignment(TEXT_ALIGN_LEFT);
   P036_data->display->setFont(ArialMT_Plain_16);
   P036_data->display->setColor(BLACK);
@@ -1261,6 +1291,9 @@ int left = 24;
 // Draw the frame position
 
 void display_indicator(int frameCount) {
+  if (P036_data == nullptr || !P036_data->isInitialized()) {
+    return;
+  }
 
   //  Erase Indicator Area
 
@@ -1305,6 +1338,10 @@ void display_indicator(int frameCount) {
 
 void prepare_pagescrolling()
 {
+  if (P036_data == nullptr || !P036_data->isInitialized()) {
+    return;
+  }
+
   switch (P036_data->ScrollingPages.linesPerFrame) {
   case 1:
     P036_data->ScrollingPages.Font = SizeSettings[P036_data->OLEDIndex].L1.fontData;
@@ -1342,6 +1379,10 @@ void prepare_pagescrolling()
 
 uint8_t display_scroll(int lscrollspeed, int lTaskTimer)
 {
+  if (P036_data == nullptr || !P036_data->isInitialized()) {
+    return;
+  }
+
 
   // LineOut[] contain the outgoing strings in this frame
   // LineIn[] contain the incoming strings in this frame
@@ -1557,6 +1598,10 @@ uint8_t display_scroll(int lscrollspeed, int lTaskTimer)
 }
 
 uint8_t display_scroll_timer() {
+  if (P036_data == nullptr || !P036_data->isInitialized()) {
+    return;
+  }
+
 
   // page scrolling (using PLUGIN_TIMER_IN)
   P036_data->display->setColor(BLACK);
@@ -1607,6 +1652,10 @@ uint8_t display_scroll_timer() {
 
 //Draw scrolling line (1pix/s)
 void display_scrolling_lines() {
+  if (P036_data == nullptr || !P036_data->isInitialized()) {
+    return;
+  }
+
   // line scrolling (using PLUGIN_TEN_PER_SECOND)
 
   int i;
@@ -1657,6 +1706,10 @@ void display_scrolling_lines() {
 
 //Draw Signal Strength Bars, return true when there was an update.
 bool display_wifibars() {
+  if (P036_data == nullptr || !P036_data->isInitialized()) {
+    return;
+  }
+
   const bool connected = NetworkConnected();
   const int nbars_filled = (WiFi.RSSI() + 100) / 12;  // all bars filled if RSSI better than -46dB
   const int newState = connected ? nbars_filled : P36_WIFI_STATE_NOT_CONNECTED;
