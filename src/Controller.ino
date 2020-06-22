@@ -415,15 +415,22 @@ void SendStatus(EventValueSource::Enum source, const String& status)
 }
 
 #ifdef USES_MQTT
+bool MQTT_queueFull(controllerIndex_t controller_idx) {
+  MQTT_queue_element dummy_element;
+  dummy_element.controller_idx = controller_idx;
+  if (MQTTDelayHandler.queueFull(dummy_element)) {
+    // The queue is full, try to make some room first.
+    addLog(LOG_LEVEL_DEBUG, F("MQTT : Extra processMQTTdelayQueue()"));
+    processMQTTdelayQueue();
+    return MQTTDelayHandler.queueFull(dummy_element);
+  }
+  return false;
+}
+
 bool MQTTpublish(controllerIndex_t controller_idx, const char *topic, const char *payload, bool retained)
 {
-  {
-    MQTT_queue_element dummy_element(MQTT_queue_element(controller_idx, "", "", retained));
-    if (MQTTDelayHandler.queueFull(dummy_element)) {
-      // The queue is full, try to make some room first.
-      addLog(LOG_LEVEL_DEBUG, F("MQTT : Extra processMQTTdelayQueue()"));
-      processMQTTdelayQueue();
-    }
+  if (MQTT_queueFull(controller_idx)) {
+    return false;
   }
   const bool success = MQTTDelayHandler.addToQueue(MQTT_queue_element(controller_idx, topic, payload, retained));
   scheduleNextMQTTdelayQueue();

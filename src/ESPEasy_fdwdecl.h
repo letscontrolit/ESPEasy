@@ -124,6 +124,7 @@ void MQTTDisconnect();
 bool MQTTConnect(controllerIndex_t controller_idx);
 bool MQTTCheck(controllerIndex_t controller_idx);
 void schedule_all_tasks_using_MQTT_controller();
+bool MQTT_queueFull(controllerIndex_t controller_idx);
 bool MQTTpublish(controllerIndex_t controller_idx, const char *topic, const char *payload, bool retained);
 #endif // ifdef USES_MQTT
 
