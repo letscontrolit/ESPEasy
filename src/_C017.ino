@@ -86,7 +86,7 @@ bool do_process_c017_delay_queue(int controller_number, const C017_queue_element
   if (valueCount == 0)
     return true; //exit if we don't have anything to send.
 
-  if (!WiFiConnected(10))
+  if (!NetworkConnected(10))
   {
     return false;
   }

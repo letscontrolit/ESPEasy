@@ -155,7 +155,7 @@ bool do_process_c011_delay_queue(int controller_number, const C011_queue_element
 boolean Create_schedule_HTTP_C011(struct EventStruct *event)
 {
   int controller_number = CPLUGIN_ID_011;
-  if (!WiFiConnected(10)) {
+  if (!NetworkConnected(10)) {
     return false;
   }
   MakeControllerSettings(ControllerSettings);

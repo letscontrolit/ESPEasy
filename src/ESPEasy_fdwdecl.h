@@ -66,14 +66,17 @@ bool     connectClient(WiFiClient& client,
 
 
 String getWifiModeString(WiFiMode_t wifimode);
-bool   WiFiConnected(uint32_t timeout_ms);
-bool   WiFiConnected();
+bool   NetworkConnected(uint32_t timeout_ms);
+bool   NetworkConnected();
 bool   useStaticIP();
 bool   hostReachable(const IPAddress& ip);
 bool   hostReachable(const String& hostname);
 void formatMAC(const uint8_t * mac, char (& strMAC)[20]);
+String formatMAC(const uint8_t *mac);
 String to_json_object_value(const String& object,
                             const String& value);
+void htmlEscape(String& html, char c);
+void htmlEscape(String& html);
 
 
 bool     I2C_read_bytes(uint8_t        i2caddr,
@@ -142,6 +145,7 @@ String formatToHex(unsigned long value, const String& prefix);
 String formatToHex(unsigned long value);
 String formatToHex_decimal(unsigned long value);
 String getNumerical(const String& tBuf, bool mustBeInteger);
+String format_msec_duration(long duration);
 
 float getCPUload();
 int getLoopCountPerSec();
@@ -150,6 +154,7 @@ void setLogLevelFor(byte destination, byte logLevel);
 uint16_t getPortFromKey(uint32_t key);
 
 void initRTC();
+boolean saveToRTC();
 void deepSleepStart(int dsdelay);
 bool setControllerEnableStatus(controllerIndex_t controllerIndex, bool enabled);
 bool setTaskEnableStatus(taskIndex_t taskIndex, bool enabled);
@@ -195,10 +200,15 @@ bool ExecuteCommand(taskIndex_t taskIndex, EventValueSource::Enum source, const 
 
 void WifiScan(bool async, bool quick = false);
 void WifiScan();
-void WiFiConnectRelaxed();
 void WifiDisconnect();
 void setAP(bool enable);
 void setSTA(bool enable);
+
+// Used for Networking with Wifi or Ethernet
+#include "ESPEasyEthWifi.h"
+#include "ESPEasyNetwork.h"
+void WiFiConnectRelaxed();
+bool WiFiConnected();
 
 #include "src/Globals/ESPEasyWiFiEvent.h"
 
@@ -211,13 +221,16 @@ unsigned long FreeMem(void);
 void ResetFactory();
 void reboot();
 void SendUDPCommand(byte destUnit, const char *data, byte dataLength);
+bool hasIPaddr();
 
 #include <FS.h>
 void printDirectory(File dir, int numTabs);
 
 void delayBackground(unsigned long dsdelay);
 
-void setIntervalTimerOverride(unsigned long id, unsigned long msecFromNow); //implemented in Scheduler.ino
+//implemented in Scheduler.ino
+void setIntervalTimerOverride(unsigned long id, unsigned long msecFromNow);
+void sendGratuitousARP_now();
 
 
 byte PluginCall(byte Function, struct EventStruct *event, String& str);

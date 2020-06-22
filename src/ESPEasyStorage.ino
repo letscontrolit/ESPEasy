@@ -1,3 +1,4 @@
+#include "ESPEasyWifi.h"
 #include "src/Globals/Cache.h"
 #include "src/Globals/CRCValues.h"
 #include "src/Globals/ResetFactoryDefaultPref.h"
@@ -185,6 +186,15 @@ String BuildFixes()
   }
   if (Settings.Build < 20107) {
     Settings.WebserverPort = 80;
+  }
+  if (Settings.Build < 20108) {
+    Settings.ETH_Phy_Addr   = DEFAULT_ETH_PHY_ADDR;
+    Settings.ETH_Pin_mdc    = DEFAULT_ETH_PIN_MDC;
+    Settings.ETH_Pin_mdio   = DEFAULT_ETH_PIN_MDIO;
+    Settings.ETH_Pin_power  = DEFAULT_ETH_PIN_POWER;
+    Settings.ETH_Phy_Type   = DEFAULT_ETH_PHY_TYPE;
+    Settings.ETH_Clock_Mode = DEFAULT_ETH_CLOCK_MODE;
+    Settings.ETH_Wifi_Mode  = DEFAULT_ETH_WIFI_MODE;
   }
 
   Settings.Build = BUILD;

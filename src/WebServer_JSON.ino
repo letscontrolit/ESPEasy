@@ -90,6 +90,9 @@ void handle_json()
   const bool showSpecificTask = validTaskIndex(taskNr);
   bool showSystem             = true;
   bool showWifi               = true;
+  #ifdef HAS_ETHERNET
+  bool showEthernet           = true;
+  #endif
   bool showDataAcquisition    = true;
   bool showTaskDetails        = true;
   bool showNodes              = true;
@@ -100,6 +103,9 @@ void handle_json()
       if (view == F("sensorupdate")) {
         showSystem          = false;
         showWifi            = false;
+        #ifdef HAS_ETHERNET
+        showEthernet        = false;
+        #endif
         showDataAcquisition = false;
         showTaskDetails     = false;
         showNodes           = false;
@@ -174,8 +180,21 @@ void handle_json()
 #endif // ifdef SUPPORT_ARP
       stream_next_json_object_value(LabelType::CONNECTION_FAIL_THRESH);
       stream_last_json_object_value(LabelType::WIFI_RSSI);
+      // TODO: PKR: Add ETH Objects
       addHtml(F(",\n"));
     }
+
+    #ifdef HAS_ETHERNET
+    if (showEthernet) {
+      addHtml(F("\"Ethernet\":{\n"));
+      stream_next_json_object_value(LabelType::ETH_WIFI_MODE);
+      stream_next_json_object_value(LabelType::ETH_CONNECTED);
+      stream_next_json_object_value(LabelType::ETH_DUPLEX);
+      stream_next_json_object_value(LabelType::ETH_SPEED);
+      stream_next_json_object_value(LabelType::ETH_STATE);
+      stream_last_json_object_value(LabelType::ETH_SPEED_STATE);
+    }
+    #endif
 
     if (showNodes) {
       bool comma_between = false;
