@@ -277,7 +277,7 @@ bool try_connect_host(int controller_number, WiFiUDP& client, ControllerSettings
 #ifndef BUILD_NO_DEBUG
   log_connecting_to(F("UDP  : "), controller_number, ControllerSettings);
 #endif // ifndef BUILD_NO_DEBUG
-  bool success      = ControllerSettings.beginPacket(client) != 0;
+  bool success      = ControllerSettings.beginPacket(client);
   const bool result = count_connection_results(
     success,
     F("UDP  : "), controller_number, ControllerSettings);

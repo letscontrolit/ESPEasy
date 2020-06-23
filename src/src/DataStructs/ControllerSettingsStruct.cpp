@@ -40,6 +40,13 @@ void ControllerSettingsStruct::reset() {
   safe_strncpy(ClientID, F(CONTROLLER_DEFAULT_CLIENTID), sizeof(ClientID));
 }
 
+bool ControllerSettingsStruct::isSet() const {
+  if (UseDNS) {
+    return HostName[0] != 0;
+  }
+  return ipSet();
+}
+
 void ControllerSettingsStruct::validate() {
   if (Port > 65535) { Port = 0; }
 
@@ -84,7 +91,11 @@ void ControllerSettingsStruct::setHostname(const String& controllerhostname) {
   updateIPcache();
 }
 
-boolean ControllerSettingsStruct::checkHostReachable(bool quick) {
+bool ControllerSettingsStruct::checkHostReachable(bool quick) {
+  if (!isSet()) {
+    // No IP/hostname set
+    return false;
+  }
   if (!NetworkConnected(10)) {
     return false; // Not connected, so no use in wasting time to connect to a host.
   }
@@ -100,7 +111,7 @@ boolean ControllerSettingsStruct::checkHostReachable(bool quick) {
   return hostReachable(getIP());
 }
 
-boolean ControllerSettingsStruct::connectToHost(WiFiClient& client) {
+bool ControllerSettingsStruct::connectToHost(WiFiClient& client) {
   if (!checkHostReachable(true)) {
     return false; // Host not reachable
   }
@@ -109,10 +120,6 @@ boolean ControllerSettingsStruct::connectToHost(WiFiClient& client) {
 
   while (retry > 0 && !connected) {
     --retry;
-
-    // In case of domain name resolution error result can be negative.
-    // https://github.com/esp8266/Arduino/blob/18f643c7e2d6a0da9d26ff2b14c94e6536ab78c1/libraries/Ethernet/src/Dns.cpp#L44
-    // Thus must match the result with 1.
     connected = connectClient(client, getIP(), Port);
 
     if (connected) { return true; }
@@ -124,26 +131,23 @@ boolean ControllerSettingsStruct::connectToHost(WiFiClient& client) {
   return false;
 }
 
-// Returns 1 if successful, 0 if there was a problem resolving the hostname or port
-int ControllerSettingsStruct::beginPacket(WiFiUDP& client) {
+bool ControllerSettingsStruct::beginPacket(WiFiUDP& client) {
   if (!checkHostReachable(true)) {
-    return 0; // Host not reachable
+    return false; // Host not reachable
   }
   byte retry     = 2;
-  int  connected = 0;
-
-  while (retry > 0 && connected == 0) {
+  while (retry > 0) {
     --retry;
-    connected = client.beginPacket(getIP(), Port);
-
-    if (connected != 0) { return connected; }
+    if (client.beginPacket(getIP(), Port) == 1) {
+      return true;
+    }
 
     if (!checkHostReachable(false)) {
-      return 0;
+      return false;
     }
     delay(10);
   }
-  return 0;
+  return false;
 }
 
 String ControllerSettingsStruct::getHostPortString() const {
@@ -154,7 +158,7 @@ String ControllerSettingsStruct::getHostPortString() const {
   return result;
 }
 
-bool ControllerSettingsStruct::ipSet() {
+bool ControllerSettingsStruct::ipSet() const {
   for (byte i = 0; i < 4; ++i) {
     if (IP[i] != 0) { return true; }
   }
