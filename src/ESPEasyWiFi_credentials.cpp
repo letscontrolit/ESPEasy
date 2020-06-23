@@ -1,15 +1,16 @@
 #include "ESPEasyWiFi_credentials.h"
-#include "src/Globals/RTC.h"
-#include "src/Globals/SecuritySettings.h"
+
 
 // ********************************************************************************
 // Manage WiFi credentials
 // ********************************************************************************
 
 #include "src/Globals/ESPEasy_now_state.h"
+#include "src/Globals/ESPEasy_now_handler.h"
 #include "src/Globals/SecuritySettings.h"
 #include "src/Globals/RTC.h"
 #include "src/Globals/ESPEasyWiFiEvent.h"
+#include "ESPEasy_Log.h"
 
 #ifdef USES_ESPEASY_NOW
 #define ESPEASY_NOW_TMP_SSID       "ESPEASY_NOW"

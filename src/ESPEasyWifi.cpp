@@ -12,6 +12,7 @@
 #include "src/Globals/SecuritySettings.h"
 #include "src/Helpers/ESPEasy_time_calc.h"
 #include "src/Helpers/StringConverter.h"
+#include "src/Globals/ESPEasy_now_handler.h"
 
 // ********************************************************************************
 // WiFi state
@@ -71,6 +72,7 @@
    - Connection stable (connected for > 5 minutes)
 
  */
+
 
 
 // ********************************************************************************
@@ -178,13 +180,20 @@ void WiFiConnectRelaxed() {
     return;
   }
 
-  // Start connect attempt now, so no longer needed to attempt new connection.
-  wifiConnectAttemptNeeded = false;
-
   if (!prepareWiFi()) {
     addLog(LOG_LEVEL_ERROR, F("WIFI : Could not prepare WiFi!"));
     last_wifi_connect_attempt_moment.clear();
     wifi_connect_attempt             = 1;
+    return;
+  }
+
+  // Start connect attempt now, so no longer needed to attempt new connection.
+  wifiConnectAttemptNeeded = false;
+
+  if (espeasy_now_only) {
+    if (WifiIsSTA(WiFi.getMode())) {
+      setSTA(false);
+    }
     return;
   }
 
@@ -205,6 +214,21 @@ void WiFiConnectRelaxed() {
   }
   const char *ssid       = getLastWiFiSettingsSSID();
   const char *passphrase = getLastWiFiSettingsPassphrase();
+  if (!wifiSettingsValid(ssid, passphrase)) {
+    addLog(LOG_LEVEL_ERROR, F("WIFI : No valid WiFi settings"));
+  } else {
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      String log = F("WIFI : Connecting ");
+      log += ssid;
+      log += F(" attempt #");
+      log += wifi_connect_attempt;
+      addLog(LOG_LEVEL_INFO, log);
+    }
+    last_wifi_connect_attempt_moment = millis();
+    if ((wifi_connect_attempt != 0) && wifi_connect_attempt % 4 == 0 ) {
+      WifiScan(false, false);
+    }
+    wifiConnectInProgress            = true;
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("WIFI : Connecting ");
@@ -217,13 +241,11 @@ void WiFiConnectRelaxed() {
   last_wifi_connect_attempt_moment.setNow();
   wifiConnectInProgress            = true;
 
-  // First try quick reconnect using last known BSSID and channel.
-  bool useQuickConnect = RTC.lastBSSID[0] != 0 && RTC.lastWiFiChannel != 0 && wifi_connect_attempt < 3;
-
-  if (useQuickConnect) {
-    WiFi.begin(ssid, passphrase, RTC.lastWiFiChannel, &RTC.lastBSSID[0]);
-  } else {
-    WiFi.begin(ssid, passphrase);
+    if (useQuickConnect) {
+      WiFi.begin(ssid, passphrase, RTC.lastWiFiChannel, &RTC.lastBSSID[0]);
+    } else {
+      WiFi.begin(ssid, passphrase);
+    }
   }
   ++wifi_connect_attempt;
   logConnectionStatus();
@@ -240,7 +262,13 @@ bool prepareWiFi() {
     setAP(true);
     return false;
   }
-  setSTA(true);
+  if (espeasy_now_only) {
+    if (WifiIsSTA(WiFi.getMode())) {
+      setSTA(false);
+    }
+  } else {
+    setSTA(true);
+  }
   char hostname[40];
   safe_strncpy(hostname, NetworkCreateRFCCompliantHostname().c_str(), sizeof(hostname));
   #if defined(ESP8266)
@@ -258,20 +286,13 @@ bool prepareWiFi() {
   WiFi.config(INADDR_NONE, INADDR_NONE, INADDR_NONE);
   #endif // if defined(ESP32)
   
-
-  #ifdef USES_ESPEASY_NOW
-  if (Settings.UseESPEasyNow()) { 
-    setAP(true);
-    WiFi.softAP("ESPNOW", nullptr, 1);
-    WiFi.softAPdisconnect(false);
-    WifiEspNow.begin();
-  }
-  #endif
-
-
   if (RTC.lastWiFiChannel != 0 && wifi_connect_attempt <= 1) {
     WifiScan(false, true);
   }
+  #ifdef USES_ESPEASY_NOW
+  ESPEasy_now_handler.begin();
+  #endif
+  
   setConnectionSpeed();
   setupStaticIPconfig();
   return true;
@@ -401,8 +422,7 @@ void WifiDisconnect()
 {
   // FIXME TD-er: Disconnect processing is done in several places.
   #ifdef USES_ESPEASY_NOW
-  WifiEspNow.end();
-  use_EspEasy_now = false;
+  ESPEasy_now_handler.end();
   #endif
   #if defined(ESP32)
   WiFi.disconnect();
@@ -719,6 +739,12 @@ bool wifiConnectTimeoutReached() {
 
 bool wifiAPmodeActivelyUsed()
 {
+  #ifdef USES_ESPEASY_NOW
+  if (ESPEasy_now_handler.active()) {
+    // Prevent WiFi reconnects when ESPEasy now is actively used.
+    return true;
+  }
+  #endif
   if (!WifiIsAP(WiFi.getMode()) || (!timerAPoff.isSet())) {
     // AP not active or soon to be disabled in processDisableAPmode()
     return false;
@@ -743,16 +769,13 @@ void setConnectionSpeed() {
   #ifdef ESP32
   /*
   uint8_t protocol = WIFI_PROTOCOL_11B | WIFI_PROTOCOL_11G; // Default to BG
-
   if (!Settings.ForceWiFi_bg_mode() || (wifi_connect_attempt > 10)) {
     // Set to use BGN
     protocol |= WIFI_PROTOCOL_11N;
   }
-
   if (WifiIsSTA(WiFi.getMode())) {
     esp_wifi_set_protocol(WIFI_IF_STA, protocol);
   }
-
   if (WifiIsAP(WiFi.getMode())) {
     esp_wifi_set_protocol(WIFI_IF_AP, protocol);
   }
@@ -937,7 +960,9 @@ void logConnectionStatus() {
 
     if (log.length() > 0) {
       const char *ssid = getLastWiFiSettingsSSID();
-      log += ssid;
+      if (ssid != nullptr) {
+        log += ssid;
+      }
       addLog(LOG_LEVEL_INFO, log);
     }
   }

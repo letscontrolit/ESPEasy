@@ -9,6 +9,7 @@ void processDisconnect();
 void processConnect();
 void processGotIP();
 void processDisconnectAPmode();
+void processProbeRequestAPmode();
 void processConnectAPmode();
 void processDisableAPmode();
 void processScanDone();

@@ -34,7 +34,7 @@ bool CPlugin_019(CPlugin::Function function, struct EventStruct *event, String& 
       Protocol[protocolCount].usesCheckReply = false;
       Protocol[protocolCount].usesTimeout    = false;
       Protocol[protocolCount].usesSampleSets = false;
-      Protocol[protocolCount].needsWiFi      = false;
+      Protocol[protocolCount].needsNetwork   = false;
       break;
     }
 

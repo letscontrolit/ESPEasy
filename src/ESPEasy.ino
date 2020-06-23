@@ -102,6 +102,7 @@
 #include "src/DataStructs/ControllerSettingsStruct.h"
 #include "src/DataStructs/DeviceModel.h"
 #include "src/DataStructs/ESPEasy_EventStruct.h"
+#include "src/DataStructs/NodesHandler.h"
 #include "src/DataStructs/PortStatusStruct.h"
 #include "src/DataStructs/ProtocolStruct.h"
 #include "src/DataStructs/RTCStruct.h"

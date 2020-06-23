@@ -476,6 +476,7 @@ bool MQTT_queueFull(controllerIndex_t controller_idx) {
 
 #ifdef USES_ESPEASY_NOW
 
+bool MQTTpublish(controllerIndex_t controller_idx, const ESPEasy_now_merger& message, bool retained);
 bool MQTTpublish(controllerIndex_t controller_idx, const ESPEasy_now_merger& message, bool retained)
 {
   bool success = false;

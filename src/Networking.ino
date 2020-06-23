@@ -385,30 +385,7 @@ void sendSysInfoUDP(byte repeats)
   memcpy(&data[2], thisNode, sizeof(NodeStruct));
   for (byte counter = 0; counter < repeats; counter++)
   {
-    uint8_t  mac[]   = { 0, 0, 0, 0, 0, 0 };
-    uint8_t *macread = NetworkMacAddressAsBytes(mac);
 
-    byte     data[80] = {0};
-    data[0] = 255;
-    data[1] = 1;
-    memcpy(&data[2], &thisNode, sizeof(NodeStruct));
-
-    for (byte x = 0; x < 6; x++) {
-      data[x + 2] = macread[x];
-    }
-    
-    IPAddress ip = NetworkLocalIP();
-    
-    for (byte x = 0; x < 4; x++) {
-      data[x + 8] = ip[x];
-    }
-    data[12] = Settings.Unit;
-    data[13] =  lowByte(Settings.Build);
-    data[14] = highByte(Settings.Build);
-    memcpy((byte *)data + 15, Settings.Name, 25);
-    data[40] = NODE_TYPE_ID;
-    data[41] =  lowByte(Settings.WebserverPort);
-    data[42] = highByte(Settings.WebserverPort);
     statusLED(true);
 
     IPAddress broadcastIP(255, 255, 255, 255);

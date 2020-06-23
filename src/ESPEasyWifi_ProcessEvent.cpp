@@ -18,8 +18,11 @@
 #include "src/Helpers/Misc.h"
 #include "src/Helpers/Network.h"
 #include "src/Helpers/Scheduler.h"
+#include "src/DataStructs/NodesHandler.h"
 #include "src/Helpers/StringConverter.h"
 
+#include "src/Globals/ESPEasy_now_state.h"
+#include "src/Globals/ESPEasy_now_handler.h"
 
 bool unprocessedWifiEvents() {
   if (processedConnect && processedDisconnect && processedGotIP && processedDHCPTimeout)
@@ -155,6 +158,7 @@ void handle_unprocessedWiFiEvents()
 // ********************************************************************************
 void processDisconnect() {
   if (processedDisconnect) { return; }
+
   processedDisconnect = true;
   wifiStatus          = ESPEASY_WIFI_DISCONNECTED;
   delay(100); // FIXME TD-er: See https://github.com/letscontrolit/ESPEasy/issues/1987#issuecomment-451644424
@@ -176,6 +180,12 @@ void processDisconnect() {
     }
     addLog(LOG_LEVEL_INFO, log);
   }
+
+  // FIXME TD-er: Disconnect processing is done in several places.
+  #ifdef USES_ESPEASY_NOW
+  if (wifiAPmodeActivelyUsed() || espeasy_now_only) return;
+  ESPEasy_now_handler.end();
+  #endif
 
   if (Settings.WiFiRestart_connection_lost()) {
     initWiFi();
@@ -331,7 +341,7 @@ void processDisconnectAPmode() {
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     const int nrStationsConnected = WiFi.softAPgetStationNum();
     String    log                 = F("AP Mode: Client disconnected: ");
-    log += formatMAC(lastMacDisconnectedAPmode);
+    log += lastMacDisconnectedAPmode.toString();
     log += F(" Connected devices: ");
     log += nrStationsConnected;
     addLog(LOG_LEVEL_INFO, log);
@@ -371,7 +381,7 @@ void processConnectAPmode() {
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("AP Mode: Client connected: ");
-    log += formatMAC(lastMacConnectedAPmode);
+    log += lastMacConnectedAPmode.toString();
     log += F(" Connected devices: ");
     log += WiFi.softAPgetStationNum();
     addLog(LOG_LEVEL_INFO, log);
@@ -389,6 +399,10 @@ void processConnectAPmode() {
 // Switch of AP mode when timeout reached and no client connected anymore.
 void processDisableAPmode() {
   if (!timerAPoff.isSet()) { return; }
+
+  #ifdef USES_ESPEASY_NOW
+  if (Settings.UseESPEasyNow()) { return;}
+  #endif
 
   if (WifiIsAP(WiFi.getMode())) {
     // disable AP after timeout and no clients connected.
@@ -429,6 +443,11 @@ void processScanDone() {
     log += scanCompleteStatus;
     addLog(LOG_LEVEL_INFO, log);
   }
+
+#ifdef USES_ESPEASY_NOW
+  ESPEasy_now_handler.addPeerFromWiFiScan();
+  if (espeasy_now_only) { return; }
+#endif
 
   int bestScanID           = -1;
   int32_t bestRssi         = -1000;
@@ -535,6 +554,7 @@ void markWiFi_services_initialized() {
     wifiConnectInProgress = false;
   }
 }
+
 
 #ifdef HAS_ETHERNET
 
