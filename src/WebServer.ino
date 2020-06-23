@@ -1014,7 +1014,7 @@ void getWiFi_RSSI_icon(int rssi, int width_pixels)
   const int barWidth   = (width_pixels - (nbars - 1) * white_between_bar) / nbars;
   int svg_width_pixels = nbars * barWidth + (nbars - 1) * white_between_bar;
   write_SVG_image_header(svg_width_pixels, svg_width_pixels, true);
-  float scale               = 100 / svg_width_pixels;
+  float scale               = 100.0 / svg_width_pixels;
   const int bar_height_step = 100 / nbars;
 
   for (int i = 0; i < nbars; ++i) {

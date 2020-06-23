@@ -756,9 +756,9 @@ void processMatchedRule(String& action, String& event,
     substitute_eventvalue(action, event);
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String log = F("ACT  : ");
-      log += action;
-      addLog(LOG_LEVEL_INFO, log);
+      String info = F("ACT  : ");
+      info += action;
+      addLog(LOG_LEVEL_INFO, info);
     }
 
     ExecuteCommand_all(EventValueSource::Enum::VALUE_SOURCE_RULES, action.c_str());
