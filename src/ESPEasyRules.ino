@@ -6,6 +6,7 @@
 #include "src/Globals/Device.h"
 #include "src/Globals/Plugins.h"
 #include "src/Globals/Plugins_other.h"
+#include "src/Helpers/ESPEasy_math.h"
 #include "src/Helpers/ESPEasy_time_calc.h"
 #include "src/Helpers/Numerical.h"
 #include "src/Helpers/StringParser.h"
@@ -996,12 +997,12 @@ bool findCompareCondition(const String& check, char& compare, int& posStart, int
 bool compareValues(char compare, float Value1, float Value2)
 {
   switch (compare) {
-    case '>' + '=': return Value1 >= Value2;
-    case '<' + '=': return Value1 <= Value2;
-    case '!' + '=': return Value1 != Value2;
-    case '>':       return Value1 > Value2;
-    case '<':       return Value1 < Value2;
-    case '=':       return Value1 == Value2;
+    case '>' + '=': return !definitelyLessThan(Value1, Value2);
+    case '<' + '=': return !definitelyGreaterThan(Value1, Value2);
+    case '!' + '=': return !essentiallyEqual(Value1, Value2);
+    case '>':       return definitelyGreaterThan(Value1, Value2);
+    case '<':       return definitelyLessThan(Value1, Value2);
+    case '=':       return essentiallyEqual(Value1, Value2);
   }
   return false;
 }

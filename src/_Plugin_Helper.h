@@ -14,6 +14,7 @@
 #include "src/Globals/ExtraTaskSettings.h"
 #include "src/Globals/Plugins.h"
 #include "src/Globals/ESPEasy_Scheduler.h"
+#include "src/Helpers/ESPEasy_math.h"
 #include "src/Helpers/ESPEasy_time_calc.h"
 #include "src/Helpers/I2C_access.h"
 

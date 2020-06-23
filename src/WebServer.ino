@@ -12,6 +12,7 @@
 #include "src/Globals/Device.h"
 #include "src/Globals/TXBuffer.h"
 
+#include "src/Helpers/ESPEasy_math.h"
 #include "src/Helpers/OTA.h"
 
 #include "src/Static/WebStaticData.h"
@@ -919,7 +920,7 @@ void createSvgRect(unsigned int fillColor,
   addHtml(F("<rect"));
   addSVG_param(F("fill"), formatToHex(fillColor, F("#")));
 
-  if (strokeWidth != 0) {
+  if (!approximatelyEqual(strokeWidth, 0)) {
     addSVG_param(F("stroke"),       formatToHex(strokeColor, F("#")));
     addSVG_param(F("stroke-width"), strokeWidth);
   }

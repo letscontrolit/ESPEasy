@@ -1,5 +1,7 @@
 #ifdef USES_C016
 
+#include "src/Helpers/ESPEasy_math.h"
+
 // ********************************************************************************
 // URLs needed for C016_CacheController
 // to help dump the content of the binary log files
@@ -65,7 +67,7 @@ void handle_dumpcache() {
       html.reserve(12);
       html += ';';
 
-      if (csv_values[i] == 0.0f) {
+      if (essentiallyEqual(csv_values[i], 0.0)) {
         html += '0';
       } else {
         html += String(csv_values[i], 6);
