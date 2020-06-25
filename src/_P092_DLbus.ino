@@ -132,22 +132,6 @@ boolean P092_GetData(int OptionIdx, int CurIdx, sP092_ReadData* ReadData);
 boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
-  int OptionIdx, CurIdx;
-  sP092_ReadData P092_ReadData;
-
-  uint8_t P092_MaxIdx[P092_DLbus_OptionCount];
-  int P092_ValueType, P092_ValueIdx;
-  int P092_OptionValueDecimals[P092_DLbus_OptionCount] = {
-    // Dezimalstellen der Variablen
-    0,  //F("None")
-    1,  //[0,1°C]     F("Sensor")
-    1,  //[0,1°C]     F("Ext. sensor")
-    0,  //            F("Digital output")
-    0,  //            F("Speed step")
-    1,  //[0,1V]      F("Analog output")
-    1,  //[0,1kW]     F("Heat power (kW)") Attention: UVR1611 in 0,01kW
-    4   //[0,0001MWh] F("Heat meter (MWh)")
-  };
 
 
   const String plugin_092_ValStr = F("p092_Value");
@@ -187,96 +171,101 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        P092_Last_DLB_Pin = CONFIG_PIN1;
+        {
+          const String Devices[P092_DLbus_DeviceCount] = { F("ESR21"), F("UVR31"), F("UVR1611"), F("UVR 61-3 (bis V8.2)"), F("UVR 61-3 (ab V8.3)") };
+          const int DevTypes[P092_DLbus_DeviceCount] = { 21, 31, 1611, 6132, 6133 };
 
-        const String plugin_092_DefValueName = F(PLUGIN_VALUENAME1_092);
-        const int P092_OptionTypes[P092_DLbus_OptionCount] = {
-          // Index der Variablen
-          0,  //F("None")
-          1,  //F("Sensor")
-          2,  //F("Ext. sensor")
-          3,  //F("Digital output")
-          4,  //F("Speed step")
-          5,  //F("Analog output")
-          6,  //F("Heat power (kW)")
-          7   //F("Heat meter (MWh)")
-        };
-        const String Options[P092_DLbus_OptionCount] = {
-          F("None"),
-          F("Sensor"),
-          F("Ext. sensor"),
-          F("Digital output"),
-          F("Speed step"),
-          F("Analog output"),
-          F("Heat power (kW)"),
-          F("Heat meter (MWh)")
-        };
-        const String Devices[P092_DLbus_DeviceCount] = { F("ESR21"), F("UVR31"), F("UVR1611"), F("UVR 61-3 (bis V8.2)"), F("UVR 61-3 (ab V8.3)") };
-        const int DevTypes[P092_DLbus_DeviceCount] = { 21, 31, 1611, 6132, 6133 };
-
-        addFormSelector(F("DL-Bus Type"), F("p092_dlbtype"), P092_DLbus_DeviceCount, Devices, DevTypes, NULL, PCONFIG(0), true );
-
-        // Calculation of the max indices for each sensor type
-        // default indizes for UVR31
-            P092_MaxIdx[0] = 0; // None
-            P092_MaxIdx[1] = 3; // Sensor
-            P092_MaxIdx[2] = 0; // Ext. sensor
-            P092_MaxIdx[3] = 1; // Digital output
-            P092_MaxIdx[4] = 0; // Speed step
-            P092_MaxIdx[5] = 0; // Analog output
-            P092_MaxIdx[6] = 0; // Heat power (kW)
-            P092_MaxIdx[7] = 0; // Heat meter (MWh)
-        switch (PCONFIG(0)) {
-          case 21:  //ESR21
-            P092_MaxIdx[2] = 6; // Ext. sensor
-            P092_MaxIdx[4] = 1; // Speed step
-            P092_MaxIdx[5] = 1; // Analog output
-            P092_MaxIdx[6] = 1; // Heat power (kW)
-            P092_MaxIdx[7] = 1; // Heat meter (MWh)
-            break;
-          case 1611:  //UVR1611
-            P092_MaxIdx[1] = 16; // Sensor
-            P092_MaxIdx[3] = 13; // Digital output
-            P092_MaxIdx[4] = 4; // Speed step
-            P092_MaxIdx[6] = 2; // Heat power (kW)
-            P092_MaxIdx[7] = 2; // Heat meter (MWh)
-            break;
-          case 6132:  //UVR 61-3 (bis V8.2)
-            P092_MaxIdx[1] = 6; // Sensor
-            P092_MaxIdx[3] = 8; // Digital output
-            P092_MaxIdx[4] = 1; // Speed step
-            P092_MaxIdx[5] = 1; // Analog output
-            P092_MaxIdx[6] = 1; // Heat power (kW)
-            P092_MaxIdx[7] = 1; // Heat meter (MWh)
-            break;
-          case 6133:  //UVR 61-3 (ab V8.3)
-            P092_MaxIdx[1] = 6; // Sensor
-            P092_MaxIdx[2] = 9; // Ext. sensor
-            P092_MaxIdx[3] = 3; // Digital output
-            P092_MaxIdx[4] = 1; // Speed step
-            P092_MaxIdx[5] = 2; // Analog output
-            P092_MaxIdx[6] = 3; // Heat power (kW)
-            P092_MaxIdx[7] = 3; // Heat meter (MWh)
-            break;
+          addFormSelector(F("DL-Bus Type"), F("p092_dlbtype"), P092_DLbus_DeviceCount, Devices, DevTypes, NULL, PCONFIG(0), true );
         }
+        {
+          int P092_ValueType, P092_ValueIdx;
+          P092_Last_DLB_Pin = CONFIG_PIN1;
+          const String plugin_092_DefValueName = F(PLUGIN_VALUENAME1_092);
+          const int P092_OptionTypes[P092_DLbus_OptionCount] = {
+            // Index der Variablen
+            0,  //F("None")
+            1,  //F("Sensor")
+            2,  //F("Ext. sensor")
+            3,  //F("Digital output")
+            4,  //F("Speed step")
+            5,  //F("Analog output")
+            6,  //F("Heat power (kW)")
+            7   //F("Heat meter (MWh)")
+          };
+          const String Options[P092_DLbus_OptionCount] = {
+            F("None"),
+            F("Sensor"),
+            F("Ext. sensor"),
+            F("Digital output"),
+            F("Speed step"),
+            F("Analog output"),
+            F("Heat power (kW)"),
+            F("Heat meter (MWh)")
+          };
 
-        addFormSubHeader(F("Inputs"));
+          uint8_t P092_MaxIdx[P092_DLbus_OptionCount];
+          // Calculation of the max indices for each sensor type
+          // default indizes for UVR31
+              P092_MaxIdx[0] = 0; // None
+              P092_MaxIdx[1] = 3; // Sensor
+              P092_MaxIdx[2] = 0; // Ext. sensor
+              P092_MaxIdx[3] = 1; // Digital output
+              P092_MaxIdx[4] = 0; // Speed step
+              P092_MaxIdx[5] = 0; // Analog output
+              P092_MaxIdx[6] = 0; // Heat power (kW)
+              P092_MaxIdx[7] = 0; // Heat meter (MWh)
+          switch (PCONFIG(0)) {
+            case 21:  //ESR21
+              P092_MaxIdx[2] = 6; // Ext. sensor
+              P092_MaxIdx[4] = 1; // Speed step
+              P092_MaxIdx[5] = 1; // Analog output
+              P092_MaxIdx[6] = 1; // Heat power (kW)
+              P092_MaxIdx[7] = 1; // Heat meter (MWh)
+              break;
+            case 1611:  //UVR1611
+              P092_MaxIdx[1] = 16; // Sensor
+              P092_MaxIdx[3] = 13; // Digital output
+              P092_MaxIdx[4] = 4; // Speed step
+              P092_MaxIdx[6] = 2; // Heat power (kW)
+              P092_MaxIdx[7] = 2; // Heat meter (MWh)
+              break;
+            case 6132:  //UVR 61-3 (bis V8.2)
+              P092_MaxIdx[1] = 6; // Sensor
+              P092_MaxIdx[3] = 8; // Digital output
+              P092_MaxIdx[4] = 1; // Speed step
+              P092_MaxIdx[5] = 1; // Analog output
+              P092_MaxIdx[6] = 1; // Heat power (kW)
+              P092_MaxIdx[7] = 1; // Heat meter (MWh)
+              break;
+            case 6133:  //UVR 61-3 (ab V8.3)
+              P092_MaxIdx[1] = 6; // Sensor
+              P092_MaxIdx[2] = 9; // Ext. sensor
+              P092_MaxIdx[3] = 3; // Digital output
+              P092_MaxIdx[4] = 1; // Speed step
+              P092_MaxIdx[5] = 2; // Analog output
+              P092_MaxIdx[6] = 3; // Heat power (kW)
+              P092_MaxIdx[7] = 3; // Heat meter (MWh)
+              break;
+          }
 
-        for (int i = 0; i < P092_DLbus_ValueCount; i++) {
-          P092_ValueType = PCONFIG(i + 1) >> 8;
-          P092_ValueIdx = PCONFIG(i + 1) & 0x00FF;
+          addFormSubHeader(F("Inputs"));
 
-          addFormSelector(plugin_092_DefValueName, plugin_092_ValStr, P092_DLbus_OptionCount, Options, P092_OptionTypes, NULL, P092_ValueType, true);
-          if (P092_MaxIdx[P092_ValueType] > 1) {
-            CurIdx = P092_ValueIdx;
-            if (CurIdx < 1) {
-              CurIdx = 1;
+          for (int i = 0; i < P092_DLbus_ValueCount; i++) {
+            P092_ValueType = PCONFIG(i + 1) >> 8;
+            P092_ValueIdx = PCONFIG(i + 1) & 0x00FF;
+
+            addFormSelector(plugin_092_DefValueName, plugin_092_ValStr, P092_DLbus_OptionCount, Options, P092_OptionTypes, NULL, P092_ValueType, true);
+            if (P092_MaxIdx[P092_ValueType] > 1) {
+              int CurIdx = P092_ValueIdx;
+              if (CurIdx < 1) {
+                CurIdx = 1;
+              }
+              if (CurIdx > P092_MaxIdx[P092_ValueType]) {
+                CurIdx = P092_MaxIdx[P092_ValueType];
+              }
+              addHtml(F(" Index: "));
+              addNumericBox(plugin_092_IdxStr, CurIdx, 1, P092_MaxIdx[P092_ValueType]);
             }
-            if (CurIdx > P092_MaxIdx[P092_ValueType]) {
-              CurIdx = P092_MaxIdx[P092_ValueType];
-            }
-	          addHtml(F(" Index: "));
-            addNumericBox(plugin_092_IdxStr, CurIdx, 1, P092_MaxIdx[P092_ValueType]);
           }
         }
 
@@ -288,13 +277,25 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
+        int P092_OptionValueDecimals[P092_DLbus_OptionCount] = {
+          // Dezimalstellen der Variablen
+          0,  //F("None")
+          1,  //[0,1°C]     F("Sensor")
+          1,  //[0,1°C]     F("Ext. sensor")
+          0,  //            F("Digital output")
+          0,  //            F("Speed step")
+          1,  //[0,1V]      F("Analog output")
+          1,  //[0,1kW]     F("Heat power (kW)") Attention: UVR1611 in 0,01kW
+          4   //[0,0001MWh] F("Heat meter (MWh)")
+        };
+
         PCONFIG(0) = getFormItemInt(F("p092_dlbtype"));
         if (PCONFIG(0) == 1611)  // only UVR1611
           P092_OptionValueDecimals[6] = 2;
 
         for (int i = 0; i < P092_DLbus_ValueCount; i++) {
-          OptionIdx = getFormItemInt(plugin_092_ValStr);
-          CurIdx = getFormItemInt(plugin_092_IdxStr);
+          int OptionIdx = getFormItemInt(plugin_092_ValStr);
+          int CurIdx = getFormItemInt(plugin_092_IdxStr);
           if (CurIdx < 1) {
             CurIdx = 1;
           }
@@ -484,9 +485,10 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
           addLog(LOG_LEVEL_INFO, F("P092_read: Still receiving DL-Bus bits!"));
         }
         else {
+          sP092_ReadData P092_ReadData;
           for (int i = 0; i < P092_DLbus_ValueCount; i++) {
-            OptionIdx = PCONFIG(i + 1) >> 8;
-            CurIdx = PCONFIG(i + 1) & 0x00FF;
+            int OptionIdx = PCONFIG(i + 1) >> 8;
+            int CurIdx = PCONFIG(i + 1) & 0x00FF;
             if (P092_GetData(OptionIdx, CurIdx, &P092_ReadData)) {
               UserVar[event->BaseVarIndex + i] = P092_ReadData.value;
             }

@@ -150,6 +150,7 @@ int SettingsType::getFileSize(Enum settingsType) {
   return max_file_pos;
 }
 
+#ifndef BUILD_MINIMAL_OTA
 unsigned int SettingsType::getSVGcolor(Enum settingsType) {
   switch (settingsType) {
     case BasicSettings_Type:
@@ -174,6 +175,7 @@ unsigned int SettingsType::getSVGcolor(Enum settingsType) {
   }
   return 0;
 }
+#endif
 
 SettingsType::SettingsFileEnum SettingsType::getSettingsFile(Enum settingsType)
 {
