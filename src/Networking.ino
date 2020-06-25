@@ -878,6 +878,9 @@ bool connectClient(WiFiClient& client, IPAddress ip, uint16_t port)
   if (!NetworkConnected()) {
     return false;
   }
+  // In case of domain name resolution error result can be negative.
+  // https://github.com/esp8266/Arduino/blob/18f643c7e2d6a0da9d26ff2b14c94e6536ab78c1/libraries/Ethernet/src/Dns.cpp#L44
+  // Thus must match the result with 1.
   bool connected = (client.connect(ip, port) == 1);
   yield();
 
