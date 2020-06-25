@@ -185,35 +185,47 @@ boolean Create_schedule_HTTP_C011(struct EventStruct *event)
   LoadCustomControllerSettings(event->ControllerIndex,(byte*)customConfig.get(), sizeof(customConfig));
   customConfig->zero_last();
 
-  String payload = do_create_http_request(
-    hostportString,
-    customConfig->HttpMethod,
-    customConfig->HttpUri,
-    authHeader,
-    "",
-    -1);
-
-  // Remove extra newline, see https://github.com/letscontrolit/ESPEasy/issues/1970
-  removeExtraNewLine(payload);
-  if (strlen(customConfig->HttpHeader) > 0) {
-    payload += customConfig->HttpHeader;
-    removeExtraNewLine(payload);
-  }
-  ReplaceTokenByValue(payload, event);
-
-  if (strlen(customConfig->HttpBody) > 0)
+  bool success = false;
   {
-    String body = String(customConfig->HttpBody);
-    ReplaceTokenByValue(body, event);
-    payload += F("Content-Length: ");
-    payload += String(body.length());
-    addNewLine(payload);
-    addNewLine(payload); // Need 2 CRLF between header and body.
-    payload += body;
-  }
-  addNewLine(payload);
+    String payload = do_create_http_request(
+      hostportString,
+      customConfig->HttpMethod,
+      customConfig->HttpUri,
+      authHeader,
+      "",
+      -1);
 
-  bool success = C011_DelayHandler.addToQueue(C011_queue_element(event->ControllerIndex, payload));
+    // Remove extra newline, see https://github.com/letscontrolit/ESPEasy/issues/1970
+    removeExtraNewLine(payload);
+
+    // Add a new element to the queue with the minimal payload
+    success = C011_DelayHandler.addToQueue(C011_queue_element(event->ControllerIndex, payload));
+  }
+  if (success) {
+    // Element was added.
+    // Now we try to append to the existing element 
+    // and thus preventing the need to create a long string only to copy it to a queue element.
+    C011_queue_element &element = C011_DelayHandler.sendQueue.back();
+
+    if (strlen(customConfig->HttpHeader) > 0) {
+      element.txt += customConfig->HttpHeader;
+      removeExtraNewLine(element.txt);
+    }
+    ReplaceTokenByValue(element.txt, event);
+
+    if (strlen(customConfig->HttpBody) > 0)
+    {
+      String body = String(customConfig->HttpBody);
+      ReplaceTokenByValue(body, event);
+      element.txt += F("Content-Length: ");
+      element.txt += String(body.length());
+      addNewLine(element.txt);
+      addNewLine(element.txt); // Need 2 CRLF between header and body.
+      element.txt += body;
+    }
+    addNewLine(element.txt);
+  }
+
   scheduleNextDelayQueue(TIMER_C011_DELAY_QUEUE, C011_DelayHandler.getNextScheduleTime());
   return success;
 }
