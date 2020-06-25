@@ -66,38 +66,44 @@ boolean Plugin_025(byte function, struct EventStruct *event, String& string)
           CONFIG_PORT = 0;
         }
 
-        #define ADS1115_I2C_OPTION 4
-        byte addr = PCONFIG(0);
-        int optionValues[ADS1115_I2C_OPTION] = { 0x48, 0x49, 0x4A, 0x4B };
-        addFormSelectorI2C(F("p025_i2c"), ADS1115_I2C_OPTION, optionValues, addr);
+        {
+          #define ADS1115_I2C_OPTION 4
+          byte addr = PCONFIG(0);
+          int optionValues[ADS1115_I2C_OPTION] = { 0x48, 0x49, 0x4A, 0x4B };
+          addFormSelectorI2C(F("p025_i2c"), ADS1115_I2C_OPTION, optionValues, addr);
+        }
 
         addFormSubHeader(F("Input"));
 
-        #define ADS1115_PGA_OPTION 6
-        byte pga = PCONFIG(1);
-        String pgaOptions[ADS1115_PGA_OPTION] = {
-          F("2/3x gain (FS=6.144V)"),
-          F("1x gain (FS=4.096V)"),
-          F("2x gain (FS=2.048V)"),
-          F("4x gain (FS=1.024V)"),
-          F("8x gain (FS=0.512V)"),
-          F("16x gain (FS=0.256V)")
-        };
-        addFormSelector(F("Gain"), F("p025_gain"), ADS1115_PGA_OPTION, pgaOptions, NULL, pga);
+        {
+          #define ADS1115_PGA_OPTION 6
+          byte pga = PCONFIG(1);
+          String pgaOptions[ADS1115_PGA_OPTION] = {
+            F("2/3x gain (FS=6.144V)"),
+            F("1x gain (FS=4.096V)"),
+            F("2x gain (FS=2.048V)"),
+            F("4x gain (FS=1.024V)"),
+            F("8x gain (FS=0.512V)"),
+            F("16x gain (FS=0.256V)")
+          };
+          addFormSelector(F("Gain"), F("p025_gain"), ADS1115_PGA_OPTION, pgaOptions, NULL, pga);
+        }
 
-        #define ADS1115_MUX_OPTION 8
-        byte mux = PCONFIG(2);
-        String muxOptions[ADS1115_MUX_OPTION] = {
-          F("AIN0 - AIN1 (Differential)"),
-          F("AIN0 - AIN3 (Differential)"),
-          F("AIN1 - AIN3 (Differential)"),
-          F("AIN2 - AIN3 (Differential)"),
-          F("AIN0 - GND (Single-Ended)"),
-          F("AIN1 - GND (Single-Ended)"),
-          F("AIN2 - GND (Single-Ended)"),
-          F("AIN3 - GND (Single-Ended)"),
-        };
-        addFormSelector(F("Input Multiplexer"), F("p025_mode"), ADS1115_MUX_OPTION, muxOptions, NULL, mux);
+        {
+          #define ADS1115_MUX_OPTION 8
+          byte mux = PCONFIG(2);
+          String muxOptions[ADS1115_MUX_OPTION] = {
+            F("AIN0 - AIN1 (Differential)"),
+            F("AIN0 - AIN3 (Differential)"),
+            F("AIN1 - AIN3 (Differential)"),
+            F("AIN2 - AIN3 (Differential)"),
+            F("AIN0 - GND (Single-Ended)"),
+            F("AIN1 - GND (Single-Ended)"),
+            F("AIN2 - GND (Single-Ended)"),
+            F("AIN3 - GND (Single-Ended)"),
+          };
+          addFormSelector(F("Input Multiplexer"), F("p025_mode"), ADS1115_MUX_OPTION, muxOptions, NULL, mux);
+        }
 
         addFormSubHeader(F("Two Point Calibration"));
 
