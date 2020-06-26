@@ -436,7 +436,7 @@ boolean Plugin_098(byte function, struct EventStruct *event, String& string)
 
       // Keep during alpha to avoid reflashing with usb
       if (killswitch > 0){
-        (*P098_data->cache->sampleCount)--;
+        //(*P098_data->cache->sampleCount)--;
 
         if (initialized){
           for (int i = 0 ; i < 2 ; i++){
