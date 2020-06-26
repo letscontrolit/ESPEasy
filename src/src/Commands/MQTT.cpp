@@ -1,11 +1,10 @@
-#include "../../define_plugin_sets.h"
+#include "../../ESPEasy_common.h"
 #include "../Globals/MQTT.h"
 #include "../DataStructs/SchedulerTimers.h"
 #ifdef USES_MQTT
 
 #include "../Commands/MQTT.h"
 
-#include "../../ESPEasy_common.h"
 #include "../Commands/Common.h"
 #include "../Globals/Settings.h"
 #include "../Globals/CPlugins.h"
@@ -30,8 +29,20 @@ String Command_MQTT_Publish(struct EventStruct *event, const char *Line)
   addLog(LOG_LEVEL_DEBUG, String(F("Publish: ")) + topic + value);
 
   if ((topic.length() > 0) && (value.length() > 0)) {
-    MakeControllerSettings(ControllerSettings);
-    LoadControllerSettings(enabledMqttController, ControllerSettings);
+
+    bool mqtt_retainFlag;
+    {
+      // Place the ControllerSettings in a scope to free the memory as soon as we got all relevant information.
+      MakeControllerSettings(ControllerSettings);
+      if (!AllocatedControllerSettings()) {
+        String error = F("MQTT : Cannot publish, out of RAM");
+        addLog(LOG_LEVEL_ERROR, error);
+        return error;
+      }
+
+      LoadControllerSettings(event->ControllerIndex, ControllerSettings);
+      mqtt_retainFlag = ControllerSettings.mqtt_retainFlag();
+    }
 
 
     // @giig1967g: if payload starts with '=' then treat it as a Formula and evaluate accordingly
@@ -41,10 +52,10 @@ String Command_MQTT_Publish(struct EventStruct *event, const char *Line)
 
     bool success = false;
     if (value[0] != '=') {
-      success = MQTTpublish(enabledMqttController, topic.c_str(), value.c_str(), ControllerSettings.mqtt_retainFlag());
+      success = MQTTpublish(enabledMqttController, topic.c_str(), value.c_str(), mqtt_retainFlag);
     }
     else {
-      success = MQTTpublish(enabledMqttController, topic.c_str(), String(event->Par2).c_str(), ControllerSettings.mqtt_retainFlag());
+      success = MQTTpublish(enabledMqttController, topic.c_str(), String(event->Par2).c_str(), mqtt_retainFlag);
     }
     if (success) {
       return return_command_success();
@@ -72,12 +83,22 @@ String Command_MQTT_Subscribe(struct EventStruct *event, const char* Line)
     // ToDo TD-er: Not sure about this function, but at least it sends to an existing MQTTclient
     controllerIndex_t enabledMqttController = firstEnabledMQTT_ControllerIndex();
     if (validControllerIndex(enabledMqttController)) {
-      MakeControllerSettings(ControllerSettings);
-      LoadControllerSettings(enabledMqttController, ControllerSettings);
+      bool mqtt_retainFlag;
+      {
+        // Place the ControllerSettings in a scope to free the memory as soon as we got all relevant information.
+        MakeControllerSettings(ControllerSettings);
+        if (!AllocatedControllerSettings()) {
+          String error = F("MQTT : Cannot subscribe, out of RAM");
+          addLog(LOG_LEVEL_ERROR, error);
+          return error;
+        }
+        LoadControllerSettings(event->ControllerIndex, ControllerSettings);
+        mqtt_retainFlag = ControllerSettings.mqtt_retainFlag();
+      }
 
       String eventName = Line;
       String topic = eventName.substring(10);
-      if (!MQTTsubscribe(enabledMqttController, topic.c_str(), ControllerSettings.mqtt_retainFlag()))
+      if (!MQTTsubscribe(enabledMqttController, topic.c_str(), mqtt_retainFlag))
          return_command_failed();
       return_command_success();
     }

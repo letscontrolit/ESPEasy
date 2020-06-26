@@ -48,8 +48,8 @@ struct ControllerDelayHandlerStruct {
     if (protocolIndex == INVALID_PROTOCOL_INDEX) {
       return false;
     }
-    if (Protocol[protocolIndex].needsWiFi) {
-      return WiFiConnected(10);
+    if (Protocol[protocolIndex].needsNetwork) {
+      return NetworkConnected(10);
     }
     return true;
   }
@@ -82,7 +82,7 @@ struct ControllerDelayHandlerStruct {
 
   // Try to add to the queue, if permitted by "delete_oldest"
   // Return false when no item was added.
-  bool addToQueue(const T& element) {
+  bool addToQueue(T&& element) {
     if (delete_oldest) {
       // Force add to the queue.
       // If max buffer is reached, the oldest in the queue (first to be served) will be removed.

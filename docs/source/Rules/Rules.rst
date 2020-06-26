@@ -65,8 +65,8 @@ or multi-line (need to be closed with an "endon"):
    <action>
   endon
 
-IF/ELSE
--------
+IF/ELSE - IF/ELSEIF/ELSE
+------------------------
 
 Also simple if ... else ... statements are possible:
 
@@ -87,6 +87,39 @@ If the "else" part is not needed it can be removed:
 
  on <trigger> do
   if <test>
+    <action>
+    <action>
+  endif
+ endon
+
+Also more complex if ... elseif ... else statements are possible (multiple elseif's can be used)
+
+.. code-block:: html
+
+ on <trigger> do
+  if <test1>
+    <action>
+    <action>
+  elseif <test2>
+    <action>
+    <action>
+  else
+   <action>
+  endif
+ endon
+
+Again, if the "else" part is not needed it can be removed:
+
+.. code-block:: html
+
+ on <trigger> do
+  if <test1>
+    <action>
+    <action>
+  elseif <test2>
+    <action>
+    <action>
+  elseif <test3>
     <action>
     <action>
   endif
@@ -355,12 +388,16 @@ Transformation
 * A "binary" transformation can be "inverted" by adding a leading ``!``.
 * A "binary" value is considered 0 when its string value is "0" or empty, otherwise it is an 1. (float values are rounded)
 * A "binary" value can also be used to detect presence of a string, as it is 0 on an empty string or 1 otherwise.
+* If the transformation contains ``R``, under certain circumstances, the value will be right-aligned.
 
 Binary transformations:
 
 * ``C``: 0 => "CLOSE" 1 => " OPEN"
+* ``c``: 0 => "CLOSED" 1 => "  OPEN"
 * ``H``: 0 => "COLD" 1 => " HOT"
 * ``I``: 0 => "OUT" 1 => " IN"
+* ``L``: 0 => " LEFT" 1 => "RIGHT"
+* ``l``: 0 => "L" 1 => "R"
 * ``M``: 0 => "AUTO" 1 => " MAN"
 * ``m``: 0 => "A" 1 => "M"
 * ``O``: 0 => "OFF" 1 => " ON"
@@ -381,14 +418,24 @@ Floating point transformations:
 * ``F``: Floor (round down)
 * ``E``: cEiling (round up)
 
+Other transformations:
+
+* ``p``: Password display, replacing all value characters by asterisks ``*``. If the value is "0", nothing will be displayed.
+* ``Pc``: Password display with custom character ``c``. For example P- will display value "123" as "---". If the value is "0", nothing will be displayed.
+
 Justification
 ^^^^^^^^^^^^^
+
+To apply a justification, a transformation must also be used. If no transformation is needed, use the ``V`` (value) transformation.
 
 * ``Pn``: Prefix Fill with n spaces.
 * ``Sn``: Suffix Fill with n spaces.
 * ``Ln``: Left part of the string, n characters.
 * ``Rn``: Right part of the string, n characters.
 * ``Ux.y``: Substring Ux.y where x=firstChar and y=number of characters.
+* ``C``: Capitalize first character of each word (space/period separated).
+* ``u``: Uppercase entire value.
+* ``l``: Lowercase entire value.
 
 
 String Formatting and Interpreting

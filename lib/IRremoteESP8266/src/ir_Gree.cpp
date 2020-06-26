@@ -50,7 +50,7 @@ using irutils::setBits;
 //   nbytes: Nr. of bytes of data in the array. (>=kGreeStateLength)
 //   repeat: Nr. of times the message is to be repeated. (Default = 0).
 //
-// Status: ALPHA / Untested.
+// Status: STABLE / Working.
 //
 // Ref:
 //   https://github.com/ToniA/arduino-heatpumpir/blob/master/GreeHeatpumpIR.cpp
@@ -84,7 +84,7 @@ void IRsend::sendGree(const unsigned char data[], const uint16_t nbytes,
 //   nbits: Nr. of bits of data in the message. (Default is kGreeBits)
 //   repeat: Nr. of times the message is to be repeated. (Default = 0).
 //
-// Status: ALPHA / Untested.
+// Status: STABLE / Working.
 //
 // Ref:
 //   https://github.com/ToniA/arduino-heatpumpir/blob/master/GreeHeatpumpIR.cpp
@@ -210,17 +210,60 @@ bool IRGreeAC::getPower(void) {
   return GETBIT8(remote_state[0], kGreePower1Offset);
 }
 
-// Set the temp. in deg C
-void IRGreeAC::setTemp(const uint8_t temp) {
-  uint8_t new_temp = std::max((uint8_t)kGreeMinTemp, temp);
-  new_temp = std::min((uint8_t)kGreeMaxTemp, new_temp);
-  if (getMode() == kGreeAuto) new_temp = 25;
-  setBits(&remote_state[1], kLowNibble, kGreeTempSize, new_temp - kGreeMinTemp);
+/// Set the default temperature units to use.
+/// @param[in] on Use Fahrenheit as the units.
+/// true is Fahrenheit, false is Celsius.
+void IRGreeAC::setUseFahrenheit(const bool on) {
+  setBit(&remote_state[3], kGreeUseFahrenheitOffset, on);
 }
 
-// Return the set temp. in deg C
+/// Get the default temperature units in use.
+/// @return true is Fahrenheit, false is Celsius.
+bool IRGreeAC::getUseFahrenheit(void) {
+  return GETBIT8(remote_state[3], kGreeUseFahrenheitOffset);
+}
+
+/// Set the temp. in degrees
+/// @param[in] temp Desired temperature in Degrees.
+/// @param[in] fahrenheit Use units of Fahrenheit and set that as units used.
+/// false is Celsius (Default), true is Fahrenheit.
+/// @note The unit actually works in Celsius with a special optional
+/// "extra degree" when sing Fahrenheit.
+void IRGreeAC::setTemp(const uint8_t temp, const bool fahrenheit) {
+  float safecelsius = temp;
+  if (fahrenheit)
+    // Covert to F, and add a fudge factor to round to the expected degree.
+    // Why 0.6 you ask?! Because it works. Ya'd thing 0.5 would be good for
+    // rounding, but Noooooo!
+    safecelsius = fahrenheitToCelsius(temp + 0.6);
+  setUseFahrenheit(fahrenheit);  // Set the correct Temp units.
+
+  // Make sure we have desired temp in the correct range.
+  safecelsius = std::max(static_cast<float>(kGreeMinTempC), safecelsius);
+  safecelsius = std::min(static_cast<float>(kGreeMaxTempC), safecelsius);
+  // An operating mode of Auto locks the temp to a specific value. Do so.
+  if (getMode() == kGreeAuto) safecelsius = 25;
+
+  // Set the "main" Celsius degrees.
+  setBits(&remote_state[1], kGreeTempOffset, kGreeTempSize,
+          safecelsius - kGreeMinTempC);
+  // Deal with the extra degree fahrenheit difference.
+  setBit(&remote_state[3], kGreeTempExtraDegreeFOffset,
+         (uint8_t)(safecelsius * 2) & 1);
+}
+
+/// Return the set temperature
+/// @return The temperature in degrees in the current units (C/F) set.
 uint8_t IRGreeAC::getTemp(void) {
-  return GETBITS8(remote_state[1], kLowNibble, kGreeTempSize) + kGreeMinTemp;
+  uint8_t deg = kGreeMinTempC + GETBITS8(remote_state[1], kGreeTempOffset,
+                                         kGreeTempSize);
+  if (getUseFahrenheit()) {
+    deg = celsiusToFahrenheit(deg);
+    // Retreive the "extra" fahrenheit from elsewhere in the code.
+    if (GETBIT8(remote_state[3], kGreeTempExtraDegreeFOffset)) deg++;
+    deg = std::max(deg, kGreeMinTempF);  // Cover the fact that 61F is < 16C
+  }
+  return deg;
 }
 
 // Set the speed of the fan, 0-3, 0 is auto, 1-3 is the speed
@@ -376,6 +419,28 @@ void IRGreeAC::setTimer(const uint16_t minutes) {
           hours % 10);
 }
 
+/// Set temperature display mode.
+/// i.e. Internal, External temperature sensing.
+/// @param[in] mode The desired temp source to display.
+/// @note In order for the A/C unit properly accept these settings. You must
+/// cycle (send) in the following order:
+/// kGreeDisplayTempOff(0) -> kGreeDisplayTempSet(1) ->
+/// kGreeDisplayTempInside(2) ->kGreeDisplayTempOutside(3) ->
+/// kGreeDisplayTempOff(0).
+/// The unit will no behave correctly if the changes of this setting are sent
+/// out of order.
+/// Ref: https://github.com/crankyoldgit/IRremoteESP8266/issues/1118#issuecomment-628242152
+void IRGreeAC::setDisplayTempSource(const uint8_t mode) {
+  setBits(&remote_state[5], kGreeDisplayTempOffset, kGreeDisplayTempSize, mode);
+}
+/// Get the temperature display mode.
+/// i.e. Internal, External temperature sensing.
+/// @return The current temp source being displayed.
+uint8_t IRGreeAC::getDisplayTempSource(void) {
+  return GETBITS8(remote_state[5], kGreeDisplayTempOffset,
+                  kGreeDisplayTempSize);
+}
+
 // Convert a standard A/C mode into its native mode.
 uint8_t IRGreeAC::convertMode(const stdAc::opmode_t mode) {
   switch (mode) {
@@ -451,7 +516,7 @@ stdAc::state_t IRGreeAC::toCommon(void) {
   result.model = this->getModel();
   result.power = this->getPower();
   result.mode = this->toCommonMode(this->getMode());
-  result.celsius = true;
+  result.celsius = !this->getUseFahrenheit();
   result.degrees = this->getTemp();
   result.fanspeed = this->toCommonFanSpeed(this->getFan());
   if (this->getSwingVerticalAuto())
@@ -475,12 +540,12 @@ stdAc::state_t IRGreeAC::toCommon(void) {
 // Convert the internal state into a human readable string.
 String IRGreeAC::toString(void) {
   String result = "";
-  result.reserve(150);  // Reserve some heap for the string to reduce fragging.
+  result.reserve(220);  // Reserve some heap for the string to reduce fragging.
   result += addModelToString(decode_type_t::GREE, getModel(), false);
   result += addBoolToString(getPower(), kPowerStr);
   result += addModeToString(getMode(), kGreeAuto, kGreeCool, kGreeHeat,
                             kGreeDry, kGreeFan);
-  result += addTempToString(getTemp());
+  result += addTempToString(getTemp(), !getUseFahrenheit());
   result += addFanToString(getFan(), kGreeFanMax, kGreeFanMin, kGreeFanAuto,
                            kGreeFanAuto, kGreeFanMed);
   result += addBoolToString(getTurbo(), kTurboStr);
@@ -505,6 +570,25 @@ String IRGreeAC::toString(void) {
   result += ')';
   result += addLabeledString(
       getTimerEnabled() ? minsToString(getTimer()) : kOffStr, kTimerStr);
+  uint8_t src = getDisplayTempSource();
+  result += addIntToString(src, kDisplayTempStr);
+  result += kSpaceLBraceStr;
+  switch (src) {
+    case kGreeDisplayTempOff:
+      result += kOffStr;
+      break;
+    case kGreeDisplayTempSet:
+      result += kSetStr;
+      break;
+    case kGreeDisplayTempInside:
+      result += kInsideStr;
+      break;
+    case kGreeDisplayTempOutside:
+      result += kOutsideStr;
+      break;
+    default: result += kUnknownStr;
+  }
+  result += ')';
   return result;
 }
 
