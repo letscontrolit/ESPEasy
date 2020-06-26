@@ -182,7 +182,7 @@ public:
   float *sampleCount;
   float *sampleIndex;
   bool loadFromServer;
-
+  bool fileOpen; 
   Cache_t(){
     // Create Sample
     sample = new Sample_t();
@@ -198,6 +198,7 @@ public:
     offset = &UserVar[event->BaseVarIndex +1];
     sampleCount = &UserVar[event->BaseVarIndex +2];
     sampleIndex = &UserVar[event->BaseVarIndex +3];
+    
     // Initialize buffer for sample data
     buffer = new byte[24];
     for (int i=0; i<24; i++){
@@ -243,11 +244,13 @@ public:
       return false;
     }
     cache = tryOpenFile(filename,"r");
+    fileOpen = true;
 
     delete[] filename;
     return true;
   }
   void readSample(struct EventStruct *event){
+    if (fileOpen){
     // Seek to current sample index
     // TODO: Check return value if seek is out of bounds!
     cache.seek(24 * (*sampleIndex) + (*offset));
@@ -266,6 +269,9 @@ public:
       this->increment();
     } else {
       this->deleteFile();
+      this->nextFile();
+    }
+    }else {
       this->nextFile();
     }
   }
@@ -301,30 +307,30 @@ public:
     return filename;
   }
   void nextFile(){
+    if (fileOpen){
+      cache.close();
+      fileOpen = false;
+    }
     (*this->fileNr)++;
     int fnr = (int)(*this->fileNr);
     char *fname = new char[24];
     for (int i = 0 ; i<24; i++){
       fname[i] = '\0';
     }
-    // Currently maximum 100 bin files
-    while (fnr < 100){
-      sprintf(fname,"cache_%d.bin",fnr);
-      if (fileExists(fname)){
-        (*this->sampleIndex) = 0;
-        (*this->fileNr) = fnr;
-        //this->setData();
-        cache.close();
-        cache = tryOpenFile(fname,"r");
-        break;
-      }
-      if (fnr == 99){
-        (*this->fileNr) = 1;
-        (*this->sampleIndex) = 0;
-        break;
-      }
-      fnr++;
+    sprintf(fname,"cache_%d.bin",fnr);
+    if (fileExists(fname)){
+      (*this->sampleIndex) = 0;
+      (*this->fileNr) = fnr;
+      //this->setData();
+      //cache.close();
+      cache = tryOpenFile(fname,"r");
+      fileOpen = true;
+    } else {
+    (*this->fileNr) = 0;
+    (*this->sampleIndex) = 0;
     }
+    //fnr++;
+    
     delete[] fname;
   }
 };
