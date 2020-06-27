@@ -28,7 +28,7 @@ struct ProtocolStruct
   bool     usesTimeout    : 1;
   bool     usesSampleSets : 1;
   bool     usesExtCreds   : 1;
-  bool     needsWiFi      : 1;
+  bool     needsNetwork   : 1;
 };
 
 typedef std::vector<ProtocolStruct> ProtocolVector;

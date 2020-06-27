@@ -37,4 +37,16 @@ String Command_GetORSetBool(struct EventStruct *event,
                             bool               *value,
                             int                 arg);
 
+String Command_GetORSetUint8_t(struct EventStruct *event,
+                            const String      & targetDescription,
+                            const char         *Line,
+                            uint8_t            *value,
+                            int                 arg);
+
+String Command_GetORSetInt8_t(struct EventStruct *event,
+                            const String      & targetDescription,
+                            const char         *Line,
+                            int8_t             *value,
+                            int                 arg);
+
 #endif // COMMAND_COMMON_H

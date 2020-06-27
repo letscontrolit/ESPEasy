@@ -418,7 +418,7 @@ boolean MQTTConnect_037()
   if (MQTTclient_037->connected()) return true;
 
   // define stuff for the client - this could also be done in the intial declaration of MQTTclient_037
-  if (!WiFiConnected(100)) {
+  if (!NetworkConnected(100)) {
     Plugin_037_update_connect_status();
     return false; // Not connected, so no use in wasting time to connect to a host.
   }

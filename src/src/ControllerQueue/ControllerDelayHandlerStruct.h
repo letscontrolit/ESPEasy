@@ -48,8 +48,8 @@ struct ControllerDelayHandlerStruct {
     if (protocolIndex == INVALID_PROTOCOL_INDEX) {
       return false;
     }
-    if (Protocol[protocolIndex].needsWiFi) {
-      return WiFiConnected(10);
+    if (Protocol[protocolIndex].needsNetwork) {
+      return NetworkConnected(10);
     }
     return true;
   }

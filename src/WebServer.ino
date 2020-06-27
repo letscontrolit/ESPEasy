@@ -4,6 +4,7 @@
 
 #include <WString.h>
 
+#include "ESPEasyNetwork.h"
 #include "ESPEasy_common.h"
 #include "src/Globals/CPlugins.h"
 #include "src/Globals/Device.h"
@@ -316,8 +317,8 @@ void set_mDNS() {
 
   if (webserverRunning) {
     addLog(LOG_LEVEL_INFO, F("WIFI : Starting mDNS..."));
-    bool mdns_started = MDNS.begin(WifiGetHostname().c_str());
-    MDNS.setInstanceName(WifiGetHostname()); // Needed for when the hostname has changed.
+    bool mdns_started = MDNS.begin(NetworkGetHostname().c_str());
+    MDNS.setInstanceName(NetworkGetHostname()); // Needed for when the hostname has changed.
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log = F("WIFI : ");
