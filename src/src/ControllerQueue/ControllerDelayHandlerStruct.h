@@ -204,10 +204,16 @@ struct ControllerDelayHandlerStruct {
   void process_c##NNN####M##_delay_queue() {                                                                         \
     C##NNN####M##_queue_element *element(C##NNN####M##_DelayHandler.getNext());                                      \
     if (element == NULL) return;                                                                                     \
-    MakeControllerSettings (ControllerSettings);                                                                     \
-    LoadControllerSettings(element->controller_idx, ControllerSettings);                                             \
-    C##NNN####M##_DelayHandler.configureControllerSettings(ControllerSettings);                                      \
-    if (!C##NNN####M##_DelayHandler.readyToProcess(*element)) {                                                      \
+    MakeControllerSettings(ControllerSettings);                                                                      \
+    bool ready = true;                                                                                               \
+    if (!AllocatedControllerSettings()) {                                                                            \
+      ready = false;                                                                                                 \
+    } else {                                                                                                         \
+      LoadControllerSettings(element->controller_idx, ControllerSettings);                                           \
+      C##NNN####M##_DelayHandler.configureControllerSettings(ControllerSettings);                                    \
+      if (!C##NNN####M##_DelayHandler.readyToProcess(*element)) { ready = false; }                                   \
+    }                                                                                                                \
+    if (!ready) {                                                                                                    \
       scheduleNextDelayQueue(TIMER_C##NNN####M##_DELAY_QUEUE, C##NNN####M##_DelayHandler.getNextScheduleTime());     \
       return;                                                                                                        \
     }                                                                                                                \

@@ -62,33 +62,37 @@ bool CPlugin_008(CPlugin::Function function, struct EventStruct *event, String& 
           pubname = ControllerSettings.Publish;
         }
 
-
-        // Collect the values at the same run, to make sure all are from the same sample
+        // FIXME TD-er must define a proper move operator
         byte valueCount = getValueCountFromSensorType(event->sensorType);
-        C008_queue_element element(event, valueCount);
-        if (ExtraTaskSettings.TaskIndex != event->TaskIndex) {
-          String dummy;
-          PluginCall(PLUGIN_GET_DEVICEVALUENAMES, event, dummy);
-        }
+        success = C008_DelayHandler.addToQueue(C008_queue_element(event, valueCount));
+        if (success) {
+          // Element was added.
+          // Now we try to append to the existing element 
+          // and thus preventing the need to create a long string only to copy it to a queue element.
+          C008_queue_element &element = C008_DelayHandler.sendQueue.back();
 
+          // Collect the values at the same run, to make sure all are from the same sample
+          if (ExtraTaskSettings.TaskIndex != event->TaskIndex) {
+            String dummy;
+            PluginCall(PLUGIN_GET_DEVICEVALUENAMES, event, dummy);
+          }
 
-        for (byte x = 0; x < valueCount; x++)
-        {
-          bool isvalid;
-          String formattedValue = formatUserVar(event, x, isvalid);
-          if (isvalid) {
-            element.txt[x] = "/";
-            element.txt[x] += pubname;
-            element.txt[x].replace(F("%valname%"), ExtraTaskSettings.TaskDeviceValueNames[x]);
-            element.txt[x].replace(F("%value%"), formattedValue);
-            parseControllerVariables(element.txt[x], event, true);
+          for (byte x = 0; x < valueCount; x++)
+          {
+            bool isvalid;
+            String formattedValue = formatUserVar(event, x, isvalid);
+            if (isvalid) {
+              element.txt[x] = "/";
+              element.txt[x] += pubname;
+              element.txt[x].replace(F("%valname%"), ExtraTaskSettings.TaskDeviceValueNames[x]);
+              element.txt[x].replace(F("%value%"), formattedValue);
+              parseControllerVariables(element.txt[x], event, true);
 #ifndef BUILD_NO_DEBUG
-            addLog(LOG_LEVEL_DEBUG_MORE, element.txt[x]);
+              addLog(LOG_LEVEL_DEBUG_MORE, element.txt[x]);
 #endif
+            }
           }
         }
-        // FIXME TD-er must define a proper move operator
-        success = C008_DelayHandler.addToQueue(C008_queue_element(element));
         scheduleNextDelayQueue(TIMER_C008_DELAY_QUEUE, C008_DelayHandler.getNextScheduleTime());
         break;
       }
