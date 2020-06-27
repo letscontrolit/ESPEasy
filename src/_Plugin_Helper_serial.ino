@@ -105,7 +105,7 @@ void serialHelper_addI2CuartSelectors(int address, int channel) {
       option += F(" (datasheet: ");
       option += formatToHex(addr * 2);
       option += ')';
-      addSelector_option(i, option, "", i == address);
+      addSelector_option(addr, option, "", addr == address);
     }
     addSelector_Foot();
   }  
