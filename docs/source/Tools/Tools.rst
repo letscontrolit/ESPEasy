@@ -4,6 +4,88 @@ Tools
 Log
 ===
 
+ESPEasy can output a lot of diagnostics via logs.
+
+There are several output directions where you can send the logs and per direction the log level can be set.
+
+Log Directions
+--------------
+
+Logs can be sent to:
+
+* Syslog - A log collecting service running on another computer
+* Serial port
+* Web Log - Visible via the web interface
+* SD card (only when included in the build)
+
+Syslog
+^^^^^^
+
+A Syslog service (often called ``rsyslog``) is often standard included in many Linux distributions.
+
+Some How-to:
+
+* `How to setup rsyslog on Ubuntu 18.04 <https://www.howtoforge.com/how-to-setup-rsyslog-server-on-ubuntu-1804/>`_
+
+ESPEasy sends the syslog via UDP to the configured IP-address.
+
+It is also possible to set the Syslog Facility, which allows to set a level to help sort the log messages on the syslog server.
+
+Serial
+^^^^^^
+
+When configuring to send the logs to serial, all logs will be sent to `Serial0`.
+This means you should not use that port for sensors.
+
+The logs will only be sent to the serial port, if under "Serial Settings" the serial port is set to enabled.
+
+N.B. Serial-0 and Serial-0 Swapped are the same port, only configured to use different pins.
+
+
+Web Log
+^^^^^^^
+
+The Web log is accessible via the web interface via Tools => Log.
+
+To save resources, the buffer for logs sent to the web log is only used as long as the web log page is active.
+This means that it may initially take some time to see the first log entries and also that it is not possible 
+to see log entries from before the web log page was opened.
+
+
+SD Card
+^^^^^^^
+
+It is possible to send logs to an SD card.
+However this is not included in the standard builds by default.
+The needed libraries for this add a few tens of kByte to the bin size of the firmware, which is why it has been made optional.
+
+Next to the logs, it is also possible to send the task values to the SD card.
+Please be aware frequent writing to an SD card may wear out an SD card and thus shortens its life span.
+
+
+
+Log Levels
+----------
+
+There are several log levels.
+A more verbose level also includes all previous levels.
+
+All log levels sorted by increased verbosity:
+
+* None - No logs are generated for the log output direction.
+* Error - Typical error messages like failed connection attempts or read/write errors
+* Info - Quite a lot of operational information like new values, time set, etc.
+* Debug - Typically used to determine a cause for issues.
+* Debug More - Only used when a bit more detailed information is needed to find the cause of an issue.
+* Debug Dev - Only used while developing a piece of code. The amount of logs generated at this level is quite overwhelming for a typical setup.
+
+These log levels can be set per output direction.
+
+Please note the most verbose active log level is used to determine whether a log entry should be generated.
+For the best performance the log level on all output directions should be set as low as possible, since these log entries do take resources like RAM and CPU cycles.
+
+
+
 Info
 ====
 
