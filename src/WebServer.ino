@@ -4,6 +4,8 @@
 
 #include <WString.h>
 
+#include "ESPEasyNetwork.h"
+#include "ESPEasy_common.h"
 #include "src/Globals/CPlugins.h"
 #include "src/Globals/Device.h"
 #include "src/Globals/TXBuffer.h"
@@ -219,12 +221,13 @@ void WebServerInit()
   web_server.on(F("/i2cscanner"),    handle_i2cscanner);
   #endif
   web_server.on(F("/json"),          handle_json);     // Also part of WEBSERVER_NEW_UI
+  web_server.on(F("/csv"),           handle_csvval);
   web_server.on(F("/log"),           handle_log);
   web_server.on(F("/login"),         handle_login);
   web_server.on(F("/logjson"),       handle_log_JSON); // Also part of WEBSERVER_NEW_UI
-#ifndef NOTIFIER_SET_NONE
+#ifdef USES_NOTIFIER
   web_server.on(F("/notifications"), handle_notifications);
-#endif // ifndef NOTIFIER_SET_NONE
+#endif 
   #ifdef WEBSERVER_PINSTATES
   web_server.on(F("/pinstates"),     handle_pinstates);
   #endif
@@ -314,8 +317,8 @@ void set_mDNS() {
 
   if (webserverRunning) {
     addLog(LOG_LEVEL_INFO, F("WIFI : Starting mDNS..."));
-    bool mdns_started = MDNS.begin(WifiGetHostname().c_str());
-    MDNS.setInstanceName(WifiGetHostname()); // Needed for when the hostname has changed.
+    bool mdns_started = MDNS.begin(NetworkGetHostname().c_str());
+    MDNS.setInstanceName(NetworkGetHostname()); // Needed for when the hostname has changed.
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log = F("WIFI : ");
@@ -331,7 +334,7 @@ void set_mDNS() {
     }
 
     if (mdns_started) {
-      MDNS.addService("http", "tcp", 80);
+      MDNS.addService("http", "tcp", Settings.WebserverPort);
     }
   }
   #endif // ifdef FEATURE_MDNS
@@ -344,7 +347,7 @@ void setWebserverRunning(bool state) {
 
   if (state) {
     WebServerInit();
-    web_server.begin();
+    web_server.begin(Settings.WebserverPort);
     addLog(LOG_LEVEL_INFO, F("Webserver: start"));
   } else {
     web_server.stop();
@@ -542,12 +545,12 @@ void getWebPageTemplateVar(const String& varName)
       if ((i == MENU_INDEX_RULES) && !Settings.UseRules) { // hide rules menu item
         continue;
       }
-#ifdef NOTIFIER_SET_NONE
+#ifndef USES_NOTIFIER
 
       if (i == MENU_INDEX_NOTIFICATIONS) { // hide notifications menu item
         continue;
       }
-#endif // ifdef NOTIFIER_SET_NONE
+#endif
 
       addHtml(F("<a class='menu"));
 
@@ -568,7 +571,7 @@ void getWebPageTemplateVar(const String& varName)
 
   else if (varName == F("logo"))
   {
-    if (SPIFFS.exists(F("esp.png")))
+    if (ESPEASY_FS.exists(F("esp.png")))
     {
       addHtml(F("<img src=\"esp.png\" width=48 height=48 align=right>"));
     }
@@ -576,7 +579,7 @@ void getWebPageTemplateVar(const String& varName)
 
   else if (varName == F("css"))
   {
-    if (SPIFFS.exists(F("esp.css"))) // now css is written in writeDefaultCSS() to SPIFFS and always present
+    if (ESPEASY_FS.exists(F("esp.css"))) // now css is written in writeDefaultCSS() to FS and always present
     // if (0) //TODO
     {
       addHtml(F("<link rel=\"stylesheet\" type=\"text/css\" href=\"esp.css\">"));
@@ -595,6 +598,13 @@ void getWebPageTemplateVar(const String& varName)
   else if (varName == F("js"))
   {
     html_add_autosubmit_form();
+    html_add_script(false);
+    TXBuffer += jsToastMessageBegin;
+    // we can push custom messages here in future releases...
+    addHtml(F("Submitted"));
+    TXBuffer += jsToastMessageEnd;
+
+    html_add_script_end();
   }
 
   else if (varName == F("error"))
@@ -623,7 +633,7 @@ void writeDefaultCSS(void)
 {
   return; // TODO
 
-  if (!SPIFFS.exists(F("esp.css")))
+  if (!ESPEASY_FS.exists(F("esp.css")))
   {
     String defaultCSS;
 
@@ -632,7 +642,7 @@ void writeDefaultCSS(void)
     if (f)
     {
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        String log = F("CSS  : Writing default CSS file to SPIFFS (");
+        String log = F("CSS  : Writing default CSS file to FS (");
         log += defaultCSS.length();
         log += F(" bytes)");
         addLog(LOG_LEVEL_INFO, log);
@@ -1115,6 +1125,7 @@ void getStorageTableSVG(SettingsType::Enum settingsType) {
 
 #ifdef ESP32
 
+#include <esp_partition.h>
 
 int getPartionCount(byte pType) {
   esp_partition_type_t partitionType       = static_cast<esp_partition_type_t>(pType);

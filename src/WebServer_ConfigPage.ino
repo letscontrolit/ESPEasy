@@ -28,6 +28,12 @@ void handle_config() {
     String espgateway = web_server.arg(F("espgateway"));
     String espsubnet  = web_server.arg(F("espsubnet"));
     String espdns     = web_server.arg(F("espdns"));
+#ifdef HAS_ETHERNET
+    String espethip      = web_server.arg(F("espethip"));
+    String espethgateway = web_server.arg(F("espethgateway"));
+    String espethsubnet  = web_server.arg(F("espethsubnet"));
+    String espethdns     = web_server.arg(F("espethdns"));
+#endif
     Settings.Unit = getFormItemInt(F("unit"), Settings.Unit);
 
     // String apkey = web_server.arg(F("apkey"));
@@ -96,6 +102,12 @@ void handle_config() {
     str2ip(espgateway, Settings.Gateway);
     str2ip(espsubnet,  Settings.Subnet);
     str2ip(espdns,     Settings.DNS);
+#ifdef HAS_ETHERNET
+    str2ip(espethip,      Settings.ETH_IP);
+    str2ip(espethgateway, Settings.ETH_Gateway);
+    str2ip(espethsubnet,  Settings.ETH_Subnet);
+    str2ip(espethdns,     Settings.ETH_DNS);
+#endif
     addHtmlError(SaveSettings());
   }
 
@@ -137,13 +149,23 @@ void handle_config() {
     addFormIPBox(F("Access IP upper range"), F("iprangehigh"), iphigh);
   }
 
-  addFormSubHeader(F("IP Settings"));
+  addFormSubHeader(F("WiFi IP Settings"));
 
-  addFormIPBox(F("ESP IP"),         F("espip"),      Settings.IP);
-  addFormIPBox(F("ESP GW"),         F("espgateway"), Settings.Gateway);
-  addFormIPBox(F("ESP Subnetmask"), F("espsubnet"),  Settings.Subnet);
-  addFormIPBox(F("ESP DNS"),        F("espdns"),     Settings.DNS);
+  addFormIPBox(F("ESP WiFi IP"),         F("espip"),      Settings.IP);
+  addFormIPBox(F("ESP WiFi GW"),         F("espgateway"), Settings.Gateway);
+  addFormIPBox(F("ESP WiFi Subnetmask"), F("espsubnet"),  Settings.Subnet);
+  addFormIPBox(F("ESP WiFi DNS"),        F("espdns"),     Settings.DNS);
   addFormNote(F("Leave empty for DHCP"));
+
+#ifdef HAS_ETHERNET
+  addFormSubHeader(F("Ethernet IP Settings"));
+
+  addFormIPBox(F("ESP Ethernet IP"),         F("espethip"),      Settings.ETH_IP);
+  addFormIPBox(F("ESP Ethernet GW"),         F("espethgateway"), Settings.ETH_Gateway);
+  addFormIPBox(F("ESP Ethernet Subnetmask"), F("espethsubnet"),  Settings.ETH_Subnet);
+  addFormIPBox(F("ESP Ethernet DNS"),        F("espethdns"),     Settings.ETH_DNS);
+  addFormNote(F("Leave empty for DHCP"));
+#endif
 
 
   addFormSubHeader(F("Sleep Mode"));

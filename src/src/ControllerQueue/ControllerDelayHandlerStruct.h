@@ -48,8 +48,8 @@ struct ControllerDelayHandlerStruct {
     if (protocolIndex == INVALID_PROTOCOL_INDEX) {
       return false;
     }
-    if (Protocol[protocolIndex].needsWiFi) {
-      return WiFiConnected(10);
+    if (Protocol[protocolIndex].needsNetwork) {
+      return NetworkConnected(10);
     }
     return true;
   }
@@ -82,7 +82,7 @@ struct ControllerDelayHandlerStruct {
 
   // Try to add to the queue, if permitted by "delete_oldest"
   // Return false when no item was added.
-  bool addToQueue(const T& element) {
+  bool addToQueue(T&& element) {
     if (delete_oldest) {
       // Force add to the queue.
       // If max buffer is reached, the oldest in the queue (first to be served) will be removed.
@@ -204,10 +204,16 @@ struct ControllerDelayHandlerStruct {
   void process_c##NNN####M##_delay_queue() {                                                                         \
     C##NNN####M##_queue_element *element(C##NNN####M##_DelayHandler.getNext());                                      \
     if (element == NULL) return;                                                                                     \
-    MakeControllerSettings (ControllerSettings);                                                                     \
-    LoadControllerSettings(element->controller_idx, ControllerSettings);                                             \
-    C##NNN####M##_DelayHandler.configureControllerSettings(ControllerSettings);                                      \
-    if (!C##NNN####M##_DelayHandler.readyToProcess(*element)) {                                                      \
+    MakeControllerSettings(ControllerSettings);                                                                      \
+    bool ready = true;                                                                                               \
+    if (!AllocatedControllerSettings()) {                                                                            \
+      ready = false;                                                                                                 \
+    } else {                                                                                                         \
+      LoadControllerSettings(element->controller_idx, ControllerSettings);                                           \
+      C##NNN####M##_DelayHandler.configureControllerSettings(ControllerSettings);                                    \
+      if (!C##NNN####M##_DelayHandler.readyToProcess(*element)) { ready = false; }                                   \
+    }                                                                                                                \
+    if (!ready) {                                                                                                    \
       scheduleNextDelayQueue(TIMER_C##NNN####M##_DELAY_QUEUE, C##NNN####M##_DelayHandler.getNextScheduleTime());     \
       return;                                                                                                        \
     }                                                                                                                \

@@ -47,8 +47,6 @@ if [ -d "docs/build" ]; then
   echo "### Created ESPEasy_docs_$VERSION.zip"
 fi
 
-cp -r build_output/bin/* ${TMP_DIST}/bin
-
 #create a source structure that is the same as the original ESPEasy project (and works with the howto on the wiki)
 #rm -rf dist/Source 2>/dev/null
 
@@ -63,13 +61,28 @@ cp *.txt ${TMP_DIST}/source/
 cp *.csv ${TMP_DIST}/source/
 cp README* ${TMP_DIST}/source/
 
+cp -r build_output/bin/* ${TMP_DIST}/bin
+rm -f ${TMP_DIST}/bin/*ESP32*
 
 cd ${TMP_DIST}
 
-echo
-zip -qq ${CURPATH}/ESPEasy_$VERSION.zip -r .
-echo "### Created ESPEasy_$VERSION.zip"
+if [ "$(ls -A ${TMP_DIST}/bin/)"  ]; then
+  echo
+  zip -qq ${CURPATH}/ESPEasy_ESP82xx_$VERSION.zip -r .
+  echo "### Created ESPEasy_ESP82xx_$VERSION.zip"
+fi
 
+cd ${CURPATH}
+rm -f ${TMP_DIST}/bin/*
+cp -r build_output/bin/*ESP32* ${TMP_DIST}/bin
+
+cd ${TMP_DIST}
+
+if [ "$(ls -A ${TMP_DIST}/bin/)"  ]; then
+  echo
+  zip -qq ${CURPATH}/ESPEasy_ESP32_$VERSION.zip -r .
+  echo "### Created ESPEasy_ESP32_$VERSION.zip"
+fi
 
 rm -Rf ${TMP_DIST}/* 2>/dev/null
 rmdir ${TMP_DIST}

@@ -118,6 +118,8 @@
 #include "src/Globals/Services.h"
 #include "src/Globals/Settings.h"
 #include "src/Globals/Statistics.h"
+#include "ESPEasyWiFi_credentials.h"
+#include "ESPEasyWifi_ProcessEvent.h"
 
 #if FEATURE_ADC_VCC
 ADC_MODE(ADC_VCC);
@@ -128,13 +130,6 @@ ADC_MODE(ADC_VCC);
 
 float& getUserVar(unsigned int varIndex) {return UserVar[varIndex]; }
 
-
-#ifdef USES_BLYNK
-// Blynk_get prototype
-boolean Blynk_get(const String& command, controllerIndex_t controllerIndex,float *data = NULL );
-
-controllerIndex_t firstEnabledBlynk_ControllerIndex();
-#endif
 
 //void checkRAM( const __FlashStringHelper* flashString);
 
@@ -226,7 +221,7 @@ void setup()
 
   if (SpiffsSectors() < 32)
   {
-    serialPrintln(F("\nNo (or too small) SPIFFS area..\nSystem Halted\nPlease reflash with 128k SPIFFS minimum!"));
+    serialPrintln(F("\nNo (or too small) FS area..\nSystem Halted\nPlease reflash with 128k FS minimum!"));
     while (true)
       delay(1);
   }
@@ -242,7 +237,6 @@ void setup()
   log = F("INIT : Free RAM:");
   log += FreeMem();
   addLog(LOG_LEVEL_INFO, log);
-
 
   //warm boot
   if (readFromRTC())
@@ -289,6 +283,18 @@ void setup()
   fileSystemCheck();
   progMemMD5check();
   LoadSettings();
+
+  #ifdef HAS_ETHERNET
+  // This ensures, that changing WIFI OR ETHERNET MODE happens properly only after reboot. Changing without reboot would not be a good idea.
+  // This only works after LoadSettings();
+  eth_wifi_mode = Settings.ETH_Wifi_Mode;
+  log = F("INIT : ETH_WIFI_MODE:");
+  log += String(eth_wifi_mode);
+  log += F(" (");
+  log += (eth_wifi_mode == WIFI ? F("WIFI") : F("ETHERNET"));
+  log += F(")");
+  addLog(LOG_LEVEL_INFO, log);
+  #endif
 
   Settings.UseRTOSMultitasking = false; // For now, disable it, we experience heap corruption.
   if (RTC.bootFailedCount > 10 && RTC.bootCounter > 10) {
@@ -351,7 +357,9 @@ void setup()
   timermqtt_interval = 250; // Interval for checking MQTT
   timerAwakeFromDeepSleep = millis();
   CPluginInit();
+  #ifdef USES_NOTIFIER
   NPluginInit();
+  #endif
   PluginInit();
   log = F("INFO : Plugins: ");
   log += deviceCount + 1;
@@ -379,7 +387,7 @@ void setup()
     rulesProcessing(event); // TD-er: Process events in the setup() now.
   }
 
-  WiFiConnectRelaxed();
+  NetworkConnectRelaxed();
 
   setWebserverRunning(true);
 
@@ -551,9 +559,16 @@ void loop()
 
   updateLoopStats();
 
+  #ifdef HAS_ETHERNET
+  // Handle WiFiEvents when compiled with HAS_ETHERNET but in WiFi Mode eth_wifi_mode (WIFI = 0, ETHERNET = 1)
+  if(eth_wifi_mode == WIFI) {
+    handle_unprocessedWiFiEvents();
+  }
+  #else
   handle_unprocessedWiFiEvents();
+  #endif
 
-  bool firstLoopConnectionsEstablished = WiFiConnected() && firstLoop;
+  bool firstLoopConnectionsEstablished = NetworkConnected() && firstLoop;
   if (firstLoopConnectionsEstablished) {
      addLog(LOG_LEVEL_INFO, F("firstLoopConnectionsEstablished"));
      firstLoop = false;
@@ -646,6 +661,7 @@ void updateMQTTclient_connected() {
         connectionError += getMQTT_state();
         addLog(LOG_LEVEL_ERROR, connectionError);
       }
+      MQTTclient_must_send_LWT_connected = false;
     } else {
       schedule_all_tasks_using_MQTT_controller();
     }
@@ -670,7 +686,7 @@ void updateMQTTclient_connected() {
 
 void runPeriodicalMQTT() {
   // MQTT_KEEPALIVE = 15 seconds.
-  if (!WiFiConnected(10)) {
+  if (!NetworkConnected(10)) {
     updateMQTTclient_connected();
     return;
   }
@@ -704,23 +720,6 @@ controllerIndex_t firstEnabledMQTT_ControllerIndex() {
 }
 
 #endif //USES_MQTT
-
-#ifdef USES_BLYNK
-// Blynk_get prototype
-//boolean Blynk_get(const String& command, controllerIndex_t controllerIndex,float *data = NULL );
-
-controllerIndex_t firstEnabledBlynk_ControllerIndex() {
-  for (controllerIndex_t i = 0; i < CONTROLLER_MAX; ++i) {
-    protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(i);
-    if (validProtocolIndex(ProtocolIndex)) {
-      if (Protocol[ProtocolIndex].Number == 12 && Settings.ControllerEnabled[i]) {
-        return i;
-      }
-    }
-  }
-  return INVALID_CONTROLLER_INDEX;
-}
-#endif
 
 
 /*********************************************************************************************\
@@ -765,7 +764,7 @@ void run10TimesPerSecond() {
   processNextEvent();
   
   #ifdef USES_C015
-  if (WiFiConnected())
+  if (NetworkConnected())
       Blynk_Run_c015();
   #endif
   #ifndef USE_RTOS_MULTITASKING
@@ -896,8 +895,18 @@ void runEach30Seconds()
     log += connectionFailures;
     log += F(" FreeMem ");
     log += FreeMem();
+    #ifdef HAS_ETHERNET
+    if(eth_wifi_mode == ETHERNET) {
+      log += F( " EthSpeedState ");
+      log += getValue(LabelType::ETH_SPEED_STATE);
+    } else {
+      log += F(" WiFiStatus ");
+      log += WiFi.status();
+    }
+    #else
     log += F(" WiFiStatus ");
     log += WiFi.status();
+    #endif
 //    log += F(" ListenInterval ");
 //    log += WiFi.getListenInterval();
     addLog(LOG_LEVEL_INFO, log);
@@ -956,14 +965,14 @@ void backgroundtasks()
     return;
   }
   START_TIMER
-  const bool wifiConnected = WiFiConnected();
+  const bool networkConnected = NetworkConnected();
   runningBackgroundTasks=true;
 
-  #if defined(ESP8266)
-  if (wifiConnected) {
-    tcpCleanup();
+  if (networkConnected) {
+    #if defined(ESP8266)
+      tcpCleanup();
+    #endif
   }
-  #endif
   process_serialWriteBuffer();
   if(!UseRTOSMultitasking){
     if (Settings.UseSerial && Serial.available()) {
@@ -975,7 +984,12 @@ void backgroundtasks()
     if (webserverRunning) {
       web_server.handleClient();
     }
-    if (WiFi.getMode() != WIFI_OFF) {
+    if (WiFi.getMode() != WIFI_OFF
+    // This makes UDP working for ETHERNET
+    #ifdef HAS_ETHERNET
+                       || eth_connected
+    #endif
+                       ) {
       checkUDP();
     }
   }
@@ -985,14 +999,14 @@ void backgroundtasks()
     dnsServer.processNextRequest();
 
   #ifdef FEATURE_ARDUINO_OTA
-  if(Settings.ArduinoOTAEnable && wifiConnected)
+  if(Settings.ArduinoOTAEnable && networkConnected)
     ArduinoOTA.handle();
 
   //once OTA is triggered, only handle that and dont do other stuff. (otherwise it fails)
   while (ArduinoOTAtriggered)
   {
     delay(0);
-    if (WiFiConnected()) {
+    if (NetworkConnected()) {
       ArduinoOTA.handle();
     }
   }
@@ -1001,7 +1015,7 @@ void backgroundtasks()
 
   #ifdef FEATURE_MDNS
   // Allow MDNS processing
-  if (wifiConnected) {
+  if (networkConnected) {
     MDNS.update();
   }
   #endif

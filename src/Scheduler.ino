@@ -1,5 +1,6 @@
 #include "src/Globals/RTC.h"
 #include "src/DataStructs/RTCStruct.h"
+#include "src/DataStructs/ESPEasy_EventStruct.h"
 #include "src/DataStructs/EventValueSource.h"
 #include "src/Globals/Device.h"
 #include "src/Globals/CPlugins.h"
@@ -8,6 +9,7 @@
 #include "src/Helpers/ESPEasy_time_calc.h"
 
 #include "ESPEasy_plugindefs.h"
+#include "ESPEasy-Globals.h"
 
 #define TIMER_ID_SHIFT    28
 
@@ -427,7 +429,7 @@ void process_plugin_task_timer(unsigned long id) {
   TempEvent.Par5      = timer_data.Par5;
 
   // TD-er: Not sure if we have to keep original source for notifications.
-  TempEvent.Source = VALUE_SOURCE_SYSTEM;
+  TempEvent.Source = EventValueSource::Enum::VALUE_SOURCE_SYSTEM;
   const deviceIndex_t deviceIndex = getDeviceIndex_from_TaskIndex(timer_data.TaskIndex);
 
   /*
@@ -502,7 +504,7 @@ void process_plugin_timer(unsigned long id) {
   TempEvent.Par5      = timer_data.Par5;
 
   // TD-er: Not sure if we have to keep original source for notifications.
-  TempEvent.Source = VALUE_SOURCE_SYSTEM;
+  TempEvent.Source = EventValueSource::Enum::VALUE_SOURCE_SYSTEM;
 //  const deviceIndex_t deviceIndex = getDeviceIndex_from_TaskIndex(timer_data.TaskIndex);
 
   /*
@@ -655,6 +657,22 @@ void schedule_plugin_task_event_timer(deviceIndex_t DeviceIndex, byte Function, 
 void schedule_controller_event_timer(protocolIndex_t ProtocolIndex, byte Function, struct EventStruct *event) {
   if (validProtocolIndex(ProtocolIndex)) {
     schedule_event_timer(ControllerPluginEnum, ProtocolIndex, Function, event);
+  }
+}
+
+void schedule_mqtt_controller_event_timer(protocolIndex_t ProtocolIndex, byte Function, char *c_topic, byte *b_payload, unsigned int length) {
+  if (validProtocolIndex(ProtocolIndex)) {
+    const unsigned long mixedId = createSystemEventMixedId(ControllerPluginEnum, ProtocolIndex, Function);
+    EventQueue.emplace_back(mixedId, EventStruct());
+    EventQueue.back().event.String1 = c_topic;
+
+    String& payload = EventQueue.back().event.String2;
+    payload.reserve(length);
+
+    for (unsigned int i = 0; i < length; ++i) {
+      char c = static_cast<char>(*(b_payload + i));
+      payload += c;
+    }
   }
 }
 

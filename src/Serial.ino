@@ -1,3 +1,5 @@
+#include "src/Commands/InternalCommands.h"
+
 /********************************************************************************************\
  * Get data from Serial Interface
  \*********************************************************************************************/
@@ -35,7 +37,7 @@ void serial()
       InputBuffer_Serial[SerialInByteCounter] = 0; // serial data completed
       Serial.write('>');
       serialPrintln(InputBuffer_Serial);
-      ExecuteCommand_all(VALUE_SOURCE_SERIAL, InputBuffer_Serial);
+      ExecuteCommand_all(EventValueSource::Enum::VALUE_SOURCE_SERIAL, InputBuffer_Serial);
       SerialInByteCounter   = 0;
       InputBuffer_Serial[0] = 0; // serial data processed, clear buffer
     }

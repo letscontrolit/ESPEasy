@@ -191,17 +191,19 @@ void addFormPinSelectI2C(const String& label, const String& id, int choice)
 
 void addFormSelectorI2C(const String& id, int addressCount, const int addresses[], int selectedIndex)
 {
-  String options[addressCount];
+  addRowLabel_tr_id(F("I2C Address"), id);
+  do_addSelector_Head(id, "", "", false);
 
   for (byte x = 0; x < addressCount; x++)
   {
-    options[x] = formatToHex_decimal(addresses[x]);
+    String option = formatToHex_decimal(addresses[x]);
 
     if (x == 0) {
-      options[x] += F(" - (default)");
+      option += F(" - (default)");
     }
+    addSelector_option(addresses[x], option, "", addresses[x] == selectedIndex);
   }
-  addFormSelector(F("I2C Address"), id, addressCount, options, addresses, NULL, selectedIndex, false);
+  addSelector_Foot();
 }
 
 void addFormSelector(const String& label, const String& id, int optionCount, const String options[], const int indices[], int selectedIndex)
