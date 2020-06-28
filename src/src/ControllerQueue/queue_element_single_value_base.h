@@ -21,6 +21,8 @@ public:
   queue_element_single_value_base(const struct EventStruct *event,
                                   byte                      value_count);
 
+//  queue_element_single_value_base(queue_element_single_value_base &&rval);
+
   bool   checkDone(bool succesfull) const;
 
   size_t getSize() const;

@@ -63,7 +63,8 @@ bool CPlugin_010(CPlugin::Function function, struct EventStruct *event, String& 
             addLog(LOG_LEVEL_DEBUG_MORE, element.txt[x]);
           }
         }
-        success = C010_DelayHandler.addToQueue(element);
+        // FIXME TD-er must define a proper move operator
+        success = C010_DelayHandler.addToQueue(C010_queue_element(element));
         scheduleNextDelayQueue(TIMER_C010_DELAY_QUEUE, C010_DelayHandler.getNextScheduleTime());
         break;
       }
