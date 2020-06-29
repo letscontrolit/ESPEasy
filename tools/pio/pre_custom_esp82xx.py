@@ -36,7 +36,7 @@ else:
     "USES_P059",  # Encoder
     "USES_P081",  # Cron
     "USES_P082",  # GPS
-#   "USES_P085",  # AcuDC24x
+    "USES_P085",  # AcuDC24x
 #   "USES_P087",  # Serial Proxy
 #   "USES_P094",  # CUL Reader
 #   "USES_P095",  # TFT ILI9341
