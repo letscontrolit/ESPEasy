@@ -1,7 +1,9 @@
 #include "../ControllerQueue/C016_queue_element.h"
 
 #include "../DataStructs/ESPEasy_EventStruct.h"
+#include "../Globals/Plugins.h"
 #include "../../ESPEasy_fdwdecl.h"
+
 
 C016_queue_element::C016_queue_element() : timestamp(0), TaskIndex(INVALID_TASK_INDEX), controller_idx(0), sensorType(0) {}
 
@@ -16,7 +18,7 @@ C016_queue_element::C016_queue_element(const struct EventStruct *event, byte val
 
   for (byte i = 0; i < VARS_PER_TASK; ++i) {
     if (i < value_count) {
-      values[i] = getUserVar(BaseVarIndex + i);
+      values[i] = UserVar[BaseVarIndex + i];
     } else {
       values[i] = 0.0;
     }

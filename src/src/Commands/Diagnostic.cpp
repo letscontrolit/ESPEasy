@@ -22,8 +22,10 @@
 #include "../Globals/GlobalMapPortStatus.h"
 #include "../../ESPEasy_Log.h"
 #include "../Globals/Statistics.h"
-
+#include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/ESPEasy_time_calc.h"
+#include "../Helpers/StringConverter.h"
+#include "../Helpers/Convert.h"
 
 #include "../../ESPEasy_fdwdecl.h"
 

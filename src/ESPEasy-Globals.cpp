@@ -74,7 +74,6 @@ bool webserverRunning(false);
 bool webserver_init(false);
 
 
-EventQueueStruct eventQueue;
 
 
 

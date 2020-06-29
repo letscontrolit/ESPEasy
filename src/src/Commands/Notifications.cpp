@@ -6,6 +6,7 @@
 #include "../Globals/Settings.h"
 #include "../Globals/NPlugins.h"
 #include "../../ESPEasy_plugindefs.h"
+#include "../Helpers/StringConverter.h"
 
 
 String Command_Notifications_Notify(struct EventStruct *event, const char* Line)

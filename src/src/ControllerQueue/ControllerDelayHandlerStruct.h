@@ -8,6 +8,9 @@
 #include "../Globals/CPlugins.h"
 #include "../Globals/Protocol.h"
 #include "../Helpers/ESPEasy_time_calc.h"
+#include "../Helpers/ESPEasy_Storage.h"
+#include "../Helpers/Scheduler.h"
+#include "../../_CPlugin_Helper.h"
 
 #include <list>
 
@@ -199,8 +202,11 @@ struct ControllerDelayHandlerStruct {
   bool do_process_c##NNN####M##_delay_queue(int controller_number,                                                   \
                                            const C##NNN####M##_queue_element & element,                              \
                                            ControllerSettingsStruct & ControllerSettings);                           \
-  ControllerDelayHandlerStruct<C##NNN####M##_queue_element>C##NNN####M##_DelayHandler;                               \
+  extern ControllerDelayHandlerStruct<C##NNN####M##_queue_element>C##NNN####M##_DelayHandler;                        \
   void process_c##NNN####M##_delay_queue();                                                                          \
+
+#define DEFINE_Cxxx_DELAY_QUEUE_MACRO_CPP(NNN, M)                                                                    \
+  ControllerDelayHandlerStruct<C##NNN####M##_queue_element>C##NNN####M##_DelayHandler;                               \
   void process_c##NNN####M##_delay_queue() {                                                                         \
     C##NNN####M##_queue_element *element(C##NNN####M##_DelayHandler.getNext());                                      \
     if (element == NULL) return;                                                                                     \
@@ -222,6 +228,7 @@ struct ControllerDelayHandlerStruct {
     STOP_TIMER(C##NNN####M##_DELAY_QUEUE);                                                                           \
     scheduleNextDelayQueue(TIMER_C##NNN####M##_DELAY_QUEUE, C##NNN####M##_DelayHandler.getNextScheduleTime());       \
   }
+
 
 // Uncrustify must not be used on macros, but we're now done, so turn Uncrustify on again.
 // *INDENT-ON*

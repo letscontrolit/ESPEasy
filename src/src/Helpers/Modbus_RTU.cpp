@@ -3,6 +3,7 @@
 #include "../../ESPEasy_fdwdecl.h"
 
 #include "ESPEasy_time_calc.h"
+#include "StringConverter.h"
 
 ModbusRTU_struct::ModbusRTU_struct() : easySerial(nullptr) {}
 
