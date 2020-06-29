@@ -598,6 +598,13 @@ void getWebPageTemplateVar(const String& varName)
   else if (varName == F("js"))
   {
     html_add_autosubmit_form();
+    html_add_script(false);
+    TXBuffer += jsToastMessageBegin;
+    // we can push custom messages here in future releases...
+    addHtml(F("Submitted"));
+    TXBuffer += jsToastMessageEnd;
+
+    html_add_script_end();
   }
 
   else if (varName == F("error"))

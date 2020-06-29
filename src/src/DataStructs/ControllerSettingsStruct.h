@@ -57,8 +57,8 @@ struct ControllerSettingsStruct
   //   IDs of controller settings, used to generate web forms
   // ********************************************************************************
   enum VarType {
-    CONTROLLER_USE_DNS = 0,                   // PLace this before HOSTNAME/IP
-    CONTROLLER_USE_EXTENDED_CREDENTIALS = 1,  // Place this before USER/PASS
+    CONTROLLER_USE_DNS                  = 0, // PLace this before HOSTNAME/IP
+    CONTROLLER_USE_EXTENDED_CREDENTIALS = 1, // Place this before USER/PASS
     CONTROLLER_HOSTNAME,
     CONTROLLER_IP,
     CONTROLLER_PORT,
@@ -92,6 +92,8 @@ struct ControllerSettingsStruct
 
   void      reset();
 
+  bool      isSet() const;
+
   void      validate();
 
   IPAddress getIP() const;
@@ -100,12 +102,11 @@ struct ControllerSettingsStruct
 
   void      setHostname(const String& controllerhostname);
 
-  boolean   checkHostReachable(bool quick);
+  bool      checkHostReachable(bool quick);
 
-  boolean   connectToHost(WiFiClient& client);
+  bool      connectToHost(WiFiClient& client);
 
-  // Returns 1 if successful, 0 if there was a problem resolving the hostname or port
-  int       beginPacket(WiFiUDP& client);
+  bool      beginPacket(WiFiUDP& client);
 
   String    getHostPortString() const;
 
@@ -140,16 +141,16 @@ struct ControllerSettingsStruct
   unsigned int MinimalTimeBetweenMessages;
   unsigned int MaxQueueDepth;
   unsigned int MaxRetry;
-  boolean      DeleteOldest;       // Action to perform when buffer full, delete oldest, or ignore newest.
+  bool         DeleteOldest;       // Action to perform when buffer full, delete oldest, or ignore newest.
   unsigned int ClientTimeout;
-  boolean      MustCheckReply;     // When set to false, a sent message is considered always successful.
+  bool         MustCheckReply;     // When set to false, a sent message is considered always successful.
   taskIndex_t  SampleSetInitiator; // The first task to start a sample set.
   uint32_t     MQTT_flags;         // Various flags for MQTT controllers
   char         ClientID[65];       // Used to define the Client ID used by the controller
 
 private:
 
-  bool ipSet();
+  bool ipSet() const;
 
   bool updateIPcache();
 };
@@ -157,5 +158,8 @@ private:
 typedef std::shared_ptr<ControllerSettingsStruct> ControllerSettingsStruct_ptr_type;
 #define MakeControllerSettings(T) ControllerSettingsStruct_ptr_type ControllerSettingsStruct_ptr(new ControllerSettingsStruct()); \
   ControllerSettingsStruct& (T) = *ControllerSettingsStruct_ptr;
+
+// Check to see if MakeControllerSettings was successful
+#define AllocatedControllerSettings() (ControllerSettingsStruct_ptr.get() != nullptr)
 
 #endif // DATASTRUCTS_CONTROLLERSETTINGSSTRUCT_H

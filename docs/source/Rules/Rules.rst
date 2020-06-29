@@ -388,6 +388,7 @@ Transformation
 * A "binary" transformation can be "inverted" by adding a leading ``!``.
 * A "binary" value is considered 0 when its string value is "0" or empty, otherwise it is an 1. (float values are rounded)
 * A "binary" value can also be used to detect presence of a string, as it is 0 on an empty string or 1 otherwise.
+* If the transformation contains ``R``, under certain circumstances, the value will be right-aligned.
 
 Binary transformations:
 
@@ -417,8 +418,15 @@ Floating point transformations:
 * ``F``: Floor (round down)
 * ``E``: cEiling (round up)
 
+Other transformations:
+
+* ``p``: Password display, replacing all value characters by asterisks ``*``. If the value is "0", nothing will be displayed.
+* ``Pc``: Password display with custom character ``c``. For example P- will display value "123" as "---". If the value is "0", nothing will be displayed.
+
 Justification
 ^^^^^^^^^^^^^
+
+To apply a justification, a transformation must also be used. If no transformation is needed, use the ``V`` (value) transformation.
 
 * ``Pn``: Prefix Fill with n spaces.
 * ``Sn``: Suffix Fill with n spaces.
