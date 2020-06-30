@@ -18,6 +18,7 @@
 #include "../Helpers/Hardware.h"
 #include "../Helpers/Numerical.h"
 #include "../Helpers/PeriodicalActions.h"
+#include "../Helpers/StringConverter.h"
 
 #include "ESPEasy_checks.h"
 
