@@ -27,6 +27,7 @@ void initWiFi();
 void WifiDisconnect();
 void WifiScan(bool async, bool quick);
 void WifiScan();
+void WifiScan_channel(uint8_t channel, bool async);
 void setSTA(bool enable);
 void setAP(bool enable);
 String getWifiModeString(WiFiMode_t wifimode);

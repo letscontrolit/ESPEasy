@@ -1,6 +1,7 @@
 #include "../Commands/WiFi.h"
 
 #include "../../ESPEasy_common.h"
+#include "../../ESPEasyWifi.h"
 #include "../Commands/Common.h"
 #include "../Globals/Settings.h"
 #include "../Helpers/StringConverter.h"
