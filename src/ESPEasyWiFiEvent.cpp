@@ -208,6 +208,7 @@ void ICACHE_RAM_ATTR onDHCPTimeout() {
 
 void onConnectedAPmode(const WiFiEventSoftAPModeStationConnected& event) {
   lastMacConnectedAPmode.set(event.mac);
+  lastAPmodeStationConnectMoment = millis();
   processedConnectAPmode = false;
 }
 

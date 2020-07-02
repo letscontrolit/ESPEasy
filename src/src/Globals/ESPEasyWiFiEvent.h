@@ -103,6 +103,7 @@ extern LongTermTimer lastGetScanMoment;
 extern LongTermTimer::Duration lastConnectedDuration_us;
 extern LongTermTimer timerAPoff;   // Timer to check whether the AP mode should be disabled (0 = disabled)
 extern LongTermTimer timerAPstart; // Timer to start AP mode, started when no valid network is detected.
+extern LongTermTimer lastAPmodeStationConnectMoment;
 
 extern bool intent_to_reboot;
 extern MAC_address lastMacConnectedAPmode;
