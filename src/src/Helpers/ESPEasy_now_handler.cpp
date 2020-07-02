@@ -4,6 +4,7 @@
 
 # include "../../ESPEasy_fdwdecl.h"
 # include "../../ESPEasy_Log.h"
+# include "../../ESPEasyWifi.h"
 # include "../../_CPlugin_Helper.h"
 # include "ESPEasy_time_calc.h"
 # include "../DataStructs/ESPEasy_Now_DuplicateCheck.h"
@@ -22,7 +23,7 @@
 # include <list>
 
 
-# define ESPEASY_NOW_ACTIVVITY_TIMEOUT 120000 // 2 minutes
+# define ESPEASY_NOW_ACTIVITY_TIMEOUT 120000 // 2 minutes
 
 # define ESPEASY_NOW_TMP_SSID       "ESPEASY_NOW"
 # define ESPEASY_NOW_TMP_PASSPHRASE "random_passphrase"
@@ -86,16 +87,19 @@ bool ESPEasy_now_handler_t::begin()
     addPeerFromWiFiScan();
   }
 
-  const NodeStruct *preferred = Nodes.getPreferredNode();
+  if (!Nodes.isEndpoint()) {
+    const NodeStruct *preferred = Nodes.getPreferredNode();
 
-  if (preferred != nullptr) {
-    channel = preferred->channel;
-    bssid.set(preferred->ap_mac);
+    if (preferred != nullptr) {
+      channel = preferred->channel;
+      bssid.set(preferred->ap_mac);
+    }
   }
 
   const String ssid       = F(ESPEASY_NOW_TMP_SSID);
   const String passphrase = F(ESPEASY_NOW_TMP_PASSPHRASE);
 
+  setAP(true);
   if (espeasy_now_only) {
     if (bssid.all_zero()) {
       WiFi.begin(getLastWiFiSettingsSSID(), getLastWiFiSettingsPassphrase(), channel);
@@ -103,7 +107,6 @@ bool ESPEasy_now_handler_t::begin()
       WiFi.begin(getLastWiFiSettingsSSID(), getLastWiFiSettingsPassphrase(), channel, bssid.mac);
     }
   }
-  setAP(true);
 
   int ssid_hidden    = 1;
   int max_connection = 6;
@@ -255,7 +258,7 @@ bool ESPEasy_now_handler_t::active() const
   if (Nodes.lastTimeValidDistanceExpired()) {
     return false;
   }
-  return timePassedSince(_last_used) < ESPEASY_NOW_ACTIVVITY_TIMEOUT;
+  return timePassedSince(_last_used) < ESPEASY_NOW_ACTIVITY_TIMEOUT;
 }
 
 void ESPEasy_now_handler_t::addPeerFromWiFiScan()
@@ -317,7 +320,11 @@ void ESPEasy_now_handler_t::addPeerFromWiFiScan(uint8_t scanIndex)
 
 bool ESPEasy_now_handler_t::processMessage(const ESPEasy_now_merger& message, bool& mustKeep)
 {
-  addLog(LOG_LEVEL_INFO, message.getLogString());
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    String log = F("ESPEasy-Now received ");
+    log += message.getLogString();
+    addLog(LOG_LEVEL_INFO, log);
+  }
   bool handled = false;
   mustKeep = true;
   bool considerActive = false;

@@ -6,10 +6,13 @@
 
 void NodesHandler::addNode(const NodeStruct& node)
 {
+  int8_t rssi = 0;
+
   // Erase any existing node with matching MAC address
   for (auto it = _nodes.begin(); it != _nodes.end(); )
   {
     if (node.match(it->second.sta_mac) || node.match(it->second.ap_mac)) {
+      rssi = it->second.getRSSI();
       it = _nodes.erase(it);
     } else {
       ++it;
@@ -17,6 +20,9 @@ void NodesHandler::addNode(const NodeStruct& node)
   }
   _nodes[node.unit]             = node;
   _nodes[node.unit].lastUpdated = millis();
+  if (node.getRSSI() >= 0) {
+    _nodes[node.unit].setRSSI(rssi);
+  }
 }
 
 bool NodesHandler::hasNode(uint8_t unit_nr) const
@@ -166,13 +172,11 @@ void NodesHandler::updateThisNode() {
     const NodeStruct *preferred = getPreferredNode_notMatching(thisNode.sta_mac);
 
     if (preferred != nullptr) {
-      if (preferred->distance < 255) {
+      if (preferred->distance < 255 && !preferred->isExpired()) {
         _distance = preferred->distance + 1;
+        _lastTimeValidDistance = millis();
       }
     }
-  }
-  if (_distance < 255) {
-    _lastTimeValidDistance = millis();
   }
   thisNode.distance = _distance;
   addNode(thisNode);

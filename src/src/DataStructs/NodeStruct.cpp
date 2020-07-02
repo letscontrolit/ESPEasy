@@ -39,9 +39,8 @@ bool NodeStruct::validate() {
 }
 
 bool NodeStruct::operator<(const NodeStruct &other) const {
-  const bool thisExpired = getAge() > NODE_STRUCT_AGE_TIMEOUT;
-  const bool otherExpired = other.getAge() > NODE_STRUCT_AGE_TIMEOUT;
-  if (thisExpired != otherExpired) {
+  const bool thisExpired = isExpired();
+  if (thisExpired != other.isExpired()) {
     return !thisExpired;
   }
 
@@ -62,7 +61,7 @@ bool NodeStruct::operator<(const NodeStruct &other) const {
   int score_other = other.getLoad();
 
   if (distance != other.distance) {
-    if (getAge() < NODE_STRUCT_AGE_TIMEOUT && other.getAge() < NODE_STRUCT_AGE_TIMEOUT) {
+    if (!isExpired() && !other.isExpired()) {
       // Distance is not the same, so take distance into account.
       return distance < other.distance;
 /*
@@ -132,6 +131,10 @@ MAC_address NodeStruct::ESPEasy_Now_MAC() const {
 
 unsigned long NodeStruct::getAge() const {
   return timePassedSince(lastUpdated);
+}
+
+bool  NodeStruct::isExpired() const {
+  return getAge() > NODE_STRUCT_AGE_TIMEOUT;
 }
 
 float NodeStruct::getLoad() const {

@@ -50,10 +50,9 @@ public:
     return _lastTimeValidDistance;
   }
 
+  bool isEndpoint() const;
 
 private:
-
-  bool isEndpoint() const;
 
   unsigned long _lastTimeValidDistance = 0;
 
