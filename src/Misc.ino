@@ -1991,29 +1991,19 @@ void transformValue(
           {
           case 'V': //value = value without transformations
             break;
-          case 'P': // Password hide using a custom password character: Pc
-            if (tempValueFormatLength > 1)
+          case 'p': // Password hide using asterisks or custom character: pc
             {
-              if (value == F("0")) {
-                value = "";
-              } else {
-                const int valueLength = value.length();
-                for (int i = 0; i < valueLength; i++) {
-                  value[i] = tempValueFormat[1];
-                }
+              char maskChar = '*';
+              if (tempValueFormatLength > 1)
+              {
+                maskChar = tempValueFormat[1];
               }
-            } else {
-              value = F("ERR");
-            }
-            break;
-          case 'p': // Password hide using asterisks
-            {
               if (value == F("0")) {
                 value = "";
               } else {
                 const int valueLength = value.length();
                 for (int i = 0; i < valueLength; i++) {
-                  value[i] = '*';
+                  value[i] = maskChar;
                 }
               }
             }
