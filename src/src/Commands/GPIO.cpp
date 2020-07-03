@@ -1,9 +1,10 @@
 #include "../Commands/GPIO.h"
-#include "src/DataStructs/PinMode.h"
-#include "src/Globals/GlobalMapPortStatus.h"
-#include "EspEasyGPIO.h"
+#include "../DataStructs/PinMode.h"
+#include "../Globals/GlobalMapPortStatus.h"
+#include "../../EspEasyGPIO.h"
 
 #include "../Commands/Common.h"
+#include "../Helpers/StringConverter.h"
 #include "../../ESPEasy_fdwdecl.h"
 #include "../../ESPEasy_common.h"
 

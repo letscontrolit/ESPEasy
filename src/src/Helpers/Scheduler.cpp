@@ -1,16 +1,20 @@
 #include "Scheduler.h"
 
 #include "../../ESPEasy_common.h"
+#include "../../EspEasyGPIO.h"
 #include "../../_Plugin_Helper.h"
 
+#include "../Commands/GPIO.h"
 #include "../ControllerQueue/DelayQueueElements.h"
 #include "../Globals/RTC.h"
 #include "../Helpers/DeepSleep.h"
 #include "../Helpers/ESPEasyRTC.h"
 #include "../Helpers/PeriodicalActions.h"
 
+
 #define TIMER_ID_SHIFT    28   // Must be decreased as soon as timers below reach 15
 
+#define TIMER_ID_SHIFT    28   // Must be decreased as soon as timers below reach 15
 #define SYSTEM_EVENT_QUEUE   0 // Not really a timer.
 #define CONST_INTERVAL_TIMER 1
 #define PLUGIN_TASK_TIMER    2
@@ -57,9 +61,6 @@ String ESPEasy_Scheduler::decodeSchedulerId(unsigned long mixed_id) {
       break;
     case PLUGIN_TASK_TIMER:
       result = F("Plugin Task");
-      break;
-    case PLUGIN_TIMER:
-      result = F("Plugin");
       break;
     case TASK_DEVICE_TIMER:
       result = F("Task Device");
@@ -627,7 +628,8 @@ bool ESPEasy_Scheduler::resume_rules_timer(unsigned long timerIndex) {
 \*********************************************************************************************/
 unsigned long ESPEasy_Scheduler::createPluginTimerId(deviceIndex_t deviceIndex, int Par1) {
   const unsigned long mask  = (1 << TIMER_ID_SHIFT) - 1;
-  const unsigned long mixed = (Par1 << 8) + deviceIndex;
+//  const unsigned long mixed = (Par1 << 8) + pinNumber;
+  const unsigned long mixed = (Par1 << 16) + (pinNumber << 8) + GPIOType;
 
   return mixed & mask;
 }
@@ -692,7 +694,6 @@ void ESPEasy_Scheduler::process_plugin_timer(unsigned long id) {
     String dummy;
     Plugin_ptr[deviceIndex](PLUGIN_ONLY_TIMER_IN, &TempEvent, dummy);
   }
-  STOP_TIMER(PROC_SYS_TIMER);
 }
 
 /*********************************************************************************************\

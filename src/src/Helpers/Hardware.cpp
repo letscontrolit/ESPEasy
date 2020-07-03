@@ -1,5 +1,6 @@
 #include "Hardware.h"
 
+#include "../Commands/GPIO.h"
 #include "../Globals/ExtraTaskSettings.h"
 #include "../Globals/Settings.h"
 #include "../Globals/Statistics.h"
@@ -10,6 +11,8 @@
 #include "../Helpers/Misc.h"
 #include "../Helpers/PortStatus.h"
 #include "../Helpers/StringConverter.h"
+
+#include "../../EspEasyGPIO.h"
 
 /********************************************************************************************\
  * Initialize specific hardware settings (only global ones, others are set through devices)
