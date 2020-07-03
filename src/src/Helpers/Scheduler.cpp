@@ -1,15 +1,27 @@
-#include "src/Globals/RTC.h"
-#include "src/DataStructs/RTCStruct.h"
-#include "src/DataStructs/ESPEasy_EventStruct.h"
-#include "src/DataStructs/EventValueSource.h"
-#include "src/Globals/Device.h"
-#include "src/Globals/CPlugins.h"
-#include "src/Globals/NPlugins.h"
-#include "src/Globals/Plugins.h"
-#include "src/Helpers/ESPEasy_time_calc.h"
+#include "Scheduler.h"
 
-#include "ESPEasy_plugindefs.h"
-#include "ESPEasy-Globals.h"
+
+#include "../Globals/RTC.h"
+#include "../DataStructs/RTCStruct.h"
+#include "../DataStructs/ESPEasy_EventStruct.h"
+#include "../DataStructs/EventValueSource.h"
+#include "../DataStructs/TimingStats.h"
+#include "../DataStructs/SchedulerTimers.h"
+#include "../Globals/Device.h"
+#include "../Globals/CPlugins.h"
+#include "../Globals/EventQueue.h"
+#include "../Globals/MQTT.h"
+#include "../Globals/NPlugins.h"
+#include "../Globals/Plugins.h"
+#include "../Globals/SystemTimers.h"
+#include "../Helpers/ESPEasy_time_calc.h"
+#include "../Helpers/DeepSleep.h"
+#include "../Helpers/PeriodicalActions.h"
+
+#include "../ControllerQueue/DelayQueueElements.h"
+
+#include "../../ESPEasy_plugindefs.h"
+#include "../../ESPEasy-Globals.h"
 
 #define TIMER_ID_SHIFT    28
 
@@ -20,19 +32,6 @@
 #define GPIO_TIMER           4
 #define PLUGIN_TIMER         5
 
-
-#include <list>
-struct EventStructCommandWrapper {
-  EventStructCommandWrapper() : id(0) {}
-
-  EventStructCommandWrapper(unsigned long i, const struct EventStruct& e) : id(i), event(e) {}
-
-  unsigned long      id;
-  String             cmd;
-  String             line;
-  struct EventStruct event;
-};
-std::list<EventStructCommandWrapper> EventQueue;
 
 
 /*********************************************************************************************\
@@ -580,22 +579,6 @@ void schedule_all_task_device_timers() {
   }
 }
 
-#ifdef USES_MQTT
-void schedule_all_tasks_using_MQTT_controller() {
-  controllerIndex_t ControllerIndex = firstEnabledMQTT_ControllerIndex();
-
-  if (!validControllerIndex(ControllerIndex)) { return; }
-
-  for (taskIndex_t task = 0; task < TASKS_MAX; task++) {
-    if (Settings.TaskDeviceSendData[ControllerIndex][task] &&
-        Settings.ControllerEnabled[ControllerIndex] &&
-        Settings.Protocol[ControllerIndex])
-    {
-      schedule_task_device_timer_at_init(task);
-    }
-  }
-}
-#endif //USES_MQTT
 
 void schedule_task_device_timer(unsigned long task_index, unsigned long runAt) {
   /*
@@ -663,10 +646,10 @@ void schedule_controller_event_timer(protocolIndex_t ProtocolIndex, byte Functio
 void schedule_mqtt_controller_event_timer(protocolIndex_t ProtocolIndex, byte Function, char *c_topic, byte *b_payload, unsigned int length) {
   if (validProtocolIndex(ProtocolIndex)) {
     const unsigned long mixedId = createSystemEventMixedId(ControllerPluginEnum, ProtocolIndex, Function);
-    EventQueue.emplace_back(mixedId, EventStruct());
-    EventQueue.back().event.String1 = c_topic;
+    ScheduledEventQueue.emplace_back(mixedId, EventStruct());
+    ScheduledEventQueue.back().event.String1 = c_topic;
 
-    String& payload = EventQueue.back().event.String2;
+    String& payload = ScheduledEventQueue.back().event.String2;
     payload.reserve(length);
 
     for (unsigned int i = 0; i < length; ++i) {
@@ -684,8 +667,8 @@ void schedule_event_timer(PluginPtrType ptr_type, byte Index, byte Function, str
   const unsigned long mixedId = createSystemEventMixedId(ptr_type, Index, Function);
 
   //  EventStructCommandWrapper eventWrapper(mixedId, *event);
-  //  EventQueue.push_back(eventWrapper);
-  EventQueue.emplace_back(mixedId, *event);
+  //  ScheduledEventQueue.push_back(eventWrapper);
+  ScheduledEventQueue.emplace_back(mixedId, *event);
 }
 
 unsigned long createSystemEventMixedId(PluginPtrType ptr_type, uint16_t crc16) {
@@ -704,8 +687,8 @@ unsigned long createSystemEventMixedId(PluginPtrType ptr_type, byte Index, byte 
 }
 
 void process_system_event_queue() {
-  if (EventQueue.size() == 0) { return; }
-  unsigned long id       = EventQueue.front().id;
+  if (ScheduledEventQueue.size() == 0) { return; }
+  unsigned long id       = ScheduledEventQueue.front().id;
   byte Function          = id & 0xFF;
   byte Index             = (id >> 8) & 0xFF;
   PluginPtrType ptr_type = static_cast<PluginPtrType>((id >> 16) & 0xFF);
@@ -718,15 +701,16 @@ void process_system_event_queue() {
 
   switch (ptr_type) {
     case TaskPluginEnum:
-      LoadTaskSettings(EventQueue.front().event.TaskIndex);
-      Plugin_ptr[Index](Function, &EventQueue.front().event, tmpString);
+      LoadTaskSettings(ScheduledEventQueue.front().event.TaskIndex);
+      Plugin_ptr[Index](Function, &ScheduledEventQueue.front().event, tmpString);
       break;
     case ControllerPluginEnum:
-      CPluginCall(Index, static_cast<CPlugin::Function>(Function), &EventQueue.front().event, tmpString);
+      CPluginCall(Index, static_cast<CPlugin::Function>(Function), &ScheduledEventQueue.front().event, tmpString);
       break;
     case NotificationPluginEnum:
-      NPlugin_ptr[Index](static_cast<NPlugin::Function>(Function), &EventQueue.front().event, tmpString);
+      NPlugin_ptr[Index](static_cast<NPlugin::Function>(Function), &ScheduledEventQueue.front().event, tmpString);
       break;
   }
-  EventQueue.pop_front();
+  ScheduledEventQueue.pop_front();
 }
+

@@ -78,7 +78,7 @@ void handle_setup() {
 void handle_setup_scan_and_show(const String& ssid, const String& other, const String& password) {
   if (WiFi.scanComplete() <= 0) {
     WiFiMode_t cur_wifimode = WiFi.getMode();
-    WifiScan(false);
+    WifiScan(false, false);
     setWifiMode(cur_wifimode);
   }
 

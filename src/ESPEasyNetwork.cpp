@@ -3,6 +3,8 @@
 #include "ESPEasy-Globals.h"
 #include "ESPEasy_Log.h"
 #include "ESPEasyEth.h"
+#include "src/Helpers/StringConverter.h"
+#include "ESPEasyWifi.h"
 
 #ifdef HAS_ETHERNET
 #include "ETH.h"

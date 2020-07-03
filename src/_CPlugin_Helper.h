@@ -3,6 +3,8 @@
 
 #include <Arduino.h>
 #include "src/Globals/CPlugins.h"
+#include "src/Helpers/Numerical.h"
+#include "src/Helpers/StringConverter.h"
 
 struct ControllerSettingsStruct;
 class WiFiUDP;

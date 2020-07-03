@@ -9,6 +9,11 @@
 #include "../Globals/Settings.h"
 #include "../Globals/CPlugins.h"
 
+#include "../Helpers/ESPEasy_Storage.h"
+#include "../Helpers/StringConverter.h"
+#include "../Helpers/PeriodicalActions.h"
+#include "../Helpers/Scheduler.h"
+
 #include "../../ESPEasy_fdwdecl.h"
 #include "../../ESPEasy_Log.h"
 
