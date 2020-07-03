@@ -57,26 +57,37 @@ void addSelector_options(int optionCount, const String options[], const int indi
     else {
       index = x;
     }
-    String html;
-    html.reserve(64);
-    html += F("<option value=");
-    html += index;
-
-    if (selectedIndex == index) {
-      html += F(" selected");
-    }
-
+    String attr_str;
     if (attr)
     {
-      addHtml(" ");
-      html += attr[x];
+      attr_str = attr[x];
     }
-    html += '>';
-    html += options[x];
-    html += F("</option>");
-    addHtml(html);
+    addSelector_option(index, options[x], attr_str, selectedIndex == index);
   }
 }
+
+void addSelector_option(const int index, const String& option, const String& attr, bool isSelected)
+{
+  String html;
+  html.reserve(36 + option.length() + attr.length());
+  html += F("<option value=");
+  html += index;
+
+  if (isSelected) {
+    html += F(" selected");
+  }
+
+  if (attr.length() != 0)
+  {
+    addHtml(" ");
+    html += attr;
+  }
+  html += '>';
+  html += option;
+  html += F("</option>");
+  addHtml(html);
+}
+
 
 void addSelector_Head(const String& id) {
   do_addSelector_Head(id, F("wide"), "", false);

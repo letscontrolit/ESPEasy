@@ -83,7 +83,7 @@ void handle_root() {
       addHtml(html);
     }
     {
-      addRowLabel(F("Free Mem"));
+      addRowLabel(getLabel(LabelType::FREE_MEM));
       String html;
       html.reserve(64);
       html += freeMem;
@@ -95,7 +95,7 @@ void handle_root() {
       addHtml(html);
     }
     {
-      addRowLabel(F("Free Stack"));
+      addRowLabel(getLabel(LabelType::FREE_STACK));
       String html;
       html.reserve(64);
       html += String(getCurrentFreeStack());

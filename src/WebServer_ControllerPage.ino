@@ -22,33 +22,36 @@ void handle_controllers() {
   // submitted data
   if ((protocol != -1) && !controllerNotSet)
   {
-    MakeControllerSettings(ControllerSettings);
     bool mustInit = false;
-
-    if (Settings.Protocol[controllerindex] != protocol)
     {
-      // Protocol has changed.
-      Settings.Protocol[controllerindex] = protocol;
+      // Place in a scope to free ControllerSettings memory ASAP
+      MakeControllerSettings(ControllerSettings);
 
-      // there is a protocol selected?
-      if (protocol != 0)
+      if (Settings.Protocol[controllerindex] != protocol)
       {
-        mustInit = true;
-        handle_controllers_clearLoadDefaults(controllerindex, ControllerSettings);
-      }
-    }
+        // Protocol has changed.
+        Settings.Protocol[controllerindex] = protocol;
 
-    // subitted same protocol
-    else
-    {
-      // there is a protocol selected
-      if (protocol != 0)
-      {
-        mustInit = true;
-        handle_controllers_CopySubmittedSettings(controllerindex, ControllerSettings);
+        // there is a protocol selected?
+        if (protocol != 0)
+        {
+          mustInit = true;
+          handle_controllers_clearLoadDefaults(controllerindex, ControllerSettings);
+        }
       }
+
+      // subitted same protocol
+      else
+      {
+        // there is a protocol selected
+        if (protocol != 0)
+        {
+          mustInit = true;
+          handle_controllers_CopySubmittedSettings(controllerindex, ControllerSettings);
+        }
+      }
+      addHtmlError(SaveControllerSettings(controllerindex, ControllerSettings));
     }
-    addHtmlError(SaveControllerSettings(controllerindex, ControllerSettings));
     addHtmlError(SaveSettings());
 
     if (mustInit) {

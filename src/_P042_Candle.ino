@@ -144,27 +144,28 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
       {
         addHtml(F("<script src=\"jscolor.min.js\"></script>\n"));
 
-        char tmpString[128];
-        String options[8];
-        // int optionValues[8];
-
-        options[0] = F("Off");
-        options[1] = F("Static Light");
-        options[2] = F("Simple Candle");
-        options[3] = F("Advanced Candle");
-        options[4] = F("Police");
-        options[5] = F("Blink");
-        options[6] = F("Strobe");
-        options[7] = F("Color Fader");
-
-        byte choice = PCONFIG(4);
-        if (choice > sizeof(options) - 1)
         {
-          choice = 2;
-        }
+          String options[8];
+          // int optionValues[8];
 
-        // Candle Type Selection
-        addFormSelector(F("Flame Type"), F("web_Candle_Type"), 8, options, NULL, choice);
+          options[0] = F("Off");
+          options[1] = F("Static Light");
+          options[2] = F("Simple Candle");
+          options[3] = F("Advanced Candle");
+          options[4] = F("Police");
+          options[5] = F("Blink");
+          options[6] = F("Strobe");
+          options[7] = F("Color Fader");
+
+          byte choice = PCONFIG(4);
+          if (choice > sizeof(options) - 1)
+          {
+            choice = 2;
+          }
+
+          // Candle Type Selection
+          addFormSelector(F("Flame Type"), F("web_Candle_Type"), 8, options, NULL, choice);
+        }
 
         // Advanced Color options
         Candle_color = (ColorType)PCONFIG(5);
@@ -204,8 +205,11 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
         addHtml(String(PCONFIG(3)));
         addHtml(F("'> max"));
 
-        sprintf_P(tmpString, PSTR("<TR><TD>Brightness Value:<TD><input type='text' name='web_Bright_Text' id='web_Bright_Text' size='3' value='%u'>"), PCONFIG(3));
-        addHtml(tmpString);
+        {
+          char tmpString[128];
+          sprintf_P(tmpString, PSTR("<TR><TD>Brightness Value:<TD><input type='text' name='web_Bright_Text' id='web_Bright_Text' size='3' value='%u'>"), PCONFIG(3));
+          addHtml(tmpString);
+        }
 
         // Some Javascript we need to update the items
         addHtml(F("<script script type='text/javascript'>"));
