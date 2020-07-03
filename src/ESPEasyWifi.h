@@ -1,5 +1,5 @@
-#ifndef ESPEASY_ETH_H
-#define ESPEASY_ETH_H
+#ifndef ESPEASY_WIFI_H
+#define ESPEASY_WIFI_H
 
 #include "ESPEasy_common.h"
 
@@ -40,4 +40,4 @@ String formatScanResult(int i, const String& separator, int32_t& rssi);
 void logConnectionStatus();
 String getLastDisconnectReason();
 
-#endif // ESPEASY_ETH_H
+#endif // ESPEASY_WIFI_H

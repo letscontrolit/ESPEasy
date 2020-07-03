@@ -5,6 +5,7 @@
 #include "ETH.h"
 #include "ESPEasy-Globals.h"
 #include "eth_phy/phy.h"
+#include "src/Helpers/StringConverter.h"
 
 bool ethUseStaticIP() {
   return Settings.ETH_IP[0] != 0 && Settings.ETH_IP[0] != 255;

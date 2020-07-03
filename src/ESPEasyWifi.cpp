@@ -5,9 +5,11 @@
 #include "ESPEasy-Globals.h"
 #include "ESPEasyWiFi_credentials.h"
 #include "src/DataStructs/TimingStats.h"
+#include "src/Globals/EventQueue.h"
 #include "src/Globals/RTC.h"
 #include "src/Globals/SecuritySettings.h"
 #include "src/Helpers/ESPEasy_time_calc.h"
+#include "src/Helpers/StringConverter.h"
 
 // ********************************************************************************
 // WiFi state
@@ -223,7 +225,7 @@ bool prepareWiFi() {
   #endif // if defined(ESP32)
 
   if (RTC.lastWiFiChannel == 0 && wifi_connect_attempt <= 1) {
-    WifiScan(true);
+    WifiScan(false, true);
   }
   setConnectionSpeed();
   setupStaticIPconfig();
@@ -303,7 +305,7 @@ void WifiScan()
 {
   // Direct Serial is allowed here, since this function will only be called from serial input.
   serialPrintln(F("WIFI : SSID Scan start"));
-  WifiScan(false);
+  WifiScan(false, false);
   const int8_t scanCompleteStatus = WiFi.scanComplete();
   if (scanCompleteStatus <= 0) {
     serialPrintln(F("WIFI : No networks found"));
