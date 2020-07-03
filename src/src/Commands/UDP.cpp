@@ -3,6 +3,7 @@
 #include "../../ESPEasy_common.h"
 #include "../Commands/Common.h"
 #include "../Globals/Settings.h"
+#include "../Helpers/StringConverter.h"
 #include "../../ESPEasy-Globals.h"
 
 #include "../../ESPEasy_fdwdecl.h"

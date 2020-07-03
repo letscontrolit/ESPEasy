@@ -1,5 +1,11 @@
-#include "src/DataStructs/PinMode.h"
-#include "src/Globals/ResetFactoryDefaultPref.h"
+#include "Hardware.h"
+
+#include "../Globals/ExtraTaskSettings.h"
+#include "../Globals/Settings.h"
+#include "../Globals/Statistics.h"
+#include "../Globals/GlobalMapPortStatus.h"
+
+#include "../Helpers/ESPEasy_Storage.h"
 
 /********************************************************************************************\
  * Initialize specific hardware settings (only global ones, others are set through devices)
@@ -214,6 +220,18 @@ int espeasy_analogRead(int pin, bool readAsTouch) {
   return value;
 }
 #endif
+
+
+/********************************************************************************************\
+   Hardware information
+ \*********************************************************************************************/
+uint32_t getFlashRealSizeInBytes() {
+  #if defined(ESP32)
+    return ESP.getFlashChipSize();
+  #else
+    return ESP.getFlashChipRealSize(); //ESP.getFlashChipSize();
+  #endif
+}
 
 
 /********************************************************************************************\
@@ -509,3 +527,65 @@ int touchPinToGpio(int touch_pin)
 
 
 #endif
+
+
+
+
+// ********************************************************************************
+// change of device: cleanup old device and reset default settings
+// ********************************************************************************
+void setTaskDevice_to_TaskIndex(pluginID_t taskdevicenumber, taskIndex_t taskIndex) {
+  struct EventStruct TempEvent;
+
+  TempEvent.TaskIndex = taskIndex;
+  String dummy;
+
+  // let the plugin do its cleanup by calling PLUGIN_EXIT with this TaskIndex
+  PluginCall(PLUGIN_EXIT, &TempEvent, dummy);
+  taskClear(taskIndex, false); // clear settings, but do not save
+  ClearCustomTaskSettings(taskIndex);
+
+  Settings.TaskDeviceNumber[taskIndex] = taskdevicenumber;
+
+  if (validPluginID_fullcheck(taskdevicenumber)) // set default values if a new device has been selected
+  {
+    // NOTE: do not enable task by default. allow user to enter sensible valus first and let him enable it when ready.
+    PluginCall(PLUGIN_SET_DEFAULTS,         &TempEvent, dummy);
+    PluginCall(PLUGIN_GET_DEVICEVALUENAMES, &TempEvent, dummy); // the plugin should populate ExtraTaskSettings with its default values.
+  } else {
+    // New task is empty task, thus save config now.
+    taskClear(taskIndex, true);                                 // clear settings, and save
+  }
+}
+
+// ********************************************************************************
+// Initialize task with some default values applicable for almost all tasks
+// ********************************************************************************
+void setBasicTaskValues(taskIndex_t taskIndex, unsigned long taskdevicetimer,
+                        bool enabled, const String& name, int pin1, int pin2, int pin3) {
+  if (!validTaskIndex(taskIndex)) { return; }
+  const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(taskIndex);
+
+  if (!validDeviceIndex(DeviceIndex)) { return; }
+
+  LoadTaskSettings(taskIndex); // Make sure ExtraTaskSettings are up-to-date
+
+  if (taskdevicetimer > 0) {
+    Settings.TaskDeviceTimer[taskIndex] = taskdevicetimer;
+  } else {
+    if (!Device[DeviceIndex].TimerOptional) { // Set default delay, unless it's optional...
+      Settings.TaskDeviceTimer[taskIndex] = Settings.Delay;
+    }
+    else {
+      Settings.TaskDeviceTimer[taskIndex] = 0;
+    }
+  }
+  Settings.TaskDeviceEnabled[taskIndex] = enabled;
+  safe_strncpy(ExtraTaskSettings.TaskDeviceName, name.c_str(), sizeof(ExtraTaskSettings.TaskDeviceName));
+
+  // FIXME TD-er: Check for valid GPIO pin (and  -1 for "not set")
+  Settings.TaskDevicePin1[taskIndex] = pin1;
+  Settings.TaskDevicePin2[taskIndex] = pin2;
+  Settings.TaskDevicePin3[taskIndex] = pin3;
+  SaveTaskSettings(taskIndex);
+}
