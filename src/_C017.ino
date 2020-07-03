@@ -56,7 +56,8 @@ bool CPlugin_017(CPlugin::Function function, struct EventStruct *event, String &
       {
         element.txt[x] = formatUserVarNoCheck(event, x);
       }
-      success = C017_DelayHandler.addToQueue(element);
+      // FIXME TD-er must define a proper move operator
+      success = C017_DelayHandler.addToQueue(C017_queue_element(element));
       scheduleNextDelayQueue(TIMER_C017_DELAY_QUEUE, C017_DelayHandler.getNextScheduleTime());
       break;
     }

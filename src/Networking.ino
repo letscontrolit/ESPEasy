@@ -64,8 +64,6 @@ void syslog(byte logLevel, const char *message)
   {
     IPAddress broadcastIP(Settings.Syslog_IP[0], Settings.Syslog_IP[1], Settings.Syslog_IP[2], Settings.Syslog_IP[3]);
     portUDP.beginPacket(broadcastIP, 514);
-    char str[256];
-    str[0] = 0;
     byte prio = Settings.SyslogFacility * 8;
 
     if (logLevel == LOG_LEVEL_ERROR) {
@@ -81,16 +79,30 @@ void syslog(byte logLevel, const char *message)
     // An RFC3164 compliant message must be formated like :  "<PRIO>[TimeStamp ]Hostname TaskName: Message"
 
     // Using Settings.Name as the Hostname (Hostname must NOT content space)
-    snprintf_P(str, sizeof(str), PSTR("<%u>%s EspEasy: %s"), prio, Settings.Name, message);
-
-    // Using Setting.Unit to build a Hostname
-    // snprintf_P(str, sizeof(str), PSTR("<7>EspEasy_%u ESP: %s"), Settings.Unit, message);
-    #if defined(ESP8266)
-    portUDP.write(str);
-    #endif // if defined(ESP8266)
-    #if defined(ESP32)
-    portUDP.write((uint8_t *)str, strlen(str));
-    #endif // if defined(ESP32)
+    {
+      String header;
+      String hostname = Settings.Name;
+      hostname.trim();
+      hostname.replace(' ', '_');
+      header.reserve(16 + hostname.length());
+      char str[8] = {0};
+      snprintf_P(str, sizeof(str), PSTR("<%u>"), prio);
+      header = str;
+      header += hostname;
+      header += F(" EspEasy: ");
+      #ifdef ESP8266
+      portUDP.write(header.c_str(), header.length());
+      #endif
+      #ifdef ESP32
+      portUDP.write((uint8_t *)header.c_str(), header.length());
+      #endif
+    }
+    #ifdef ESP8266
+    portUDP.write(message, strlen(message));
+    #endif
+    #ifdef ESP32
+    portUDP.write((uint8_t *)message, strlen(message));
+    #endif
     portUDP.endPacket();
   }
 }
@@ -878,6 +890,9 @@ bool connectClient(WiFiClient& client, IPAddress ip, uint16_t port)
   if (!NetworkConnected()) {
     return false;
   }
+  // In case of domain name resolution error result can be negative.
+  // https://github.com/esp8266/Arduino/blob/18f643c7e2d6a0da9d26ff2b14c94e6536ab78c1/libraries/Ethernet/src/Dns.cpp#L44
+  // Thus must match the result with 1.
   bool connected = (client.connect(ip, port) == 1);
   yield();
 

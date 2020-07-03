@@ -42,7 +42,9 @@ public:
   static int              getMaxFilePos(Enum settingsType);
   static int              getFileSize(Enum settingsType);
 
+#ifndef BUILD_MINIMAL_OTA
   static unsigned int     getSVGcolor(Enum settingsType);
+#endif
 
   static SettingsFileEnum getSettingsFile(Enum settingsType);
   static String           getSettingsFileName(Enum settingsType);
