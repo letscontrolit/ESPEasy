@@ -1,4 +1,321 @@
 -------------------------------------------------
+Changes in release mega-20200608 (since mega-20200515)
+-------------------------------------------------
+
+Release date: ma  8 jun 2020 22:51:44 CEST
+
+Bartlomiej Zimon (11):
+      rfid events update for P008/P017/P040, plus send event after log line.
+      PN532: remove hardcoded scl/sda pins reading and use hardware configuration instead
+      PN532: update comment
+      Webserver - add port number setting into Advanced options, resolves #3031 and #573
+      P2P: send and receive webserver port number, add port to link on rootpage #2252
+      NodeStruct: init webgui_portnumber value
+      p2p infopacket - use low/highByte
+      Webserver - increase BUILD number and set default value for port number
+      Webserver port setting - add reboot note
+      MDNS - send service with actual webserver port
+      P2P: respect also build number in condition
+
+Florin (7):
+      Adding buzzer capabilities back to ESP32.
+      Allow to set the Latitude and longitude when resetting the firmware from custom.h or using the build_flags
+      clean up code and variables when NOTIFIER_SET_NONE is defined.
+      ESP32: Allow to select one of the two available SPI ports
+      clean up code and variables when NOTIFIER_SET_NONE is defined.
+      Fix for allowing negative timeOffset from UTC in constructor
+      rename the tone to toneESP32 to be more specific
+
+Gijs Noorlander (27):
+      [MQTT] Process publish LWT connect message asynchronous
+      [MQTT] Stop trying to send LWT connected when client disconnects
+      [LittleFS] Make switching between SPIFFS and LittleFS easy to do
+      [ESPEasySerial] Update to v2.0.3 adding I2C UART to ESP32 + fix bug ESP32
+      [Build] Fix merge error
+      [PIO] Move to esp8266/Arduino core 2.7.1
+      [PIO] Hide deprecated warning for SPIFFS
+      [Vagrant] Fix vagrant build installing all required Python packages
+      [Notifications] Make sure all custom defines are set at compile time
+      [Travis] Fix deploy multiple ZIP files + split ESP82xx and ESP32 files
+      [Build] Fix Python 3.8 build when no .git dir or pygit2 not installed
+      [GPS] Add GPS#travelled=... event  (#3099)
+      [Build] Add ina219 and mpu6050 to custom build (#3100)
+      [Build] Disable diagnostics code for test_ESP8266_4M1M_VCC to fit size
+      [Build] Disabling timing stats results in build errors for ESP32
+      [Commands] Split commands.ino to .h/.cpp to overcome build/link issues
+      [Build] Limit build size (no diagnostics) for test_beta_ESP8266_4M1M
+      [Notifications] Show notification tab when notifiers set via Custom.h
+      [Notifiers] switch from NOTIFIER_SET_NONE to USES_NOTIFIER in code
+      [ESP32] Fix Disabling ARDUINO_OTA fails the build (#3083)
+      [ESP32 build] Fix capitalization error in #include <esp_partition.h>
+      [ESP32] Update to platform-espressif32@1.12.2
+      [PIO] Add exception_decoder as serial monitor filter
+      [WiFi] Reduce excessive logs WIFI : Disconnected: WiFi.status()
+      [GPS] Add sanity check for reporting distance travelled event
+      Transform defines in EventValueSource into enum
+      [Build] Disable diagnostics in test/dev build to reduce build size
+
+Michał Obrembski (2):
+      Added /raw endpoint which gives an easy access to raw value of sensor
+      Changed format of RAW to CSV, added ability to filter values
+
+Michał Obrembski (3):
+      Fixed invalid check of valnr validity in CSV output mode
+      Renamed RAW to CSV, added printing of header
+      Removed usage of String.clear()
+
+Saverio Cisternino (1):
+      Fix  parse_uint  ref  https://github.com/staticlibs/ccronexpr/pull/30
+
+TD-er (1):
+      [Bug] ControllerIndex not set when calling CPLUGIN calls
+
+denisfrench (1):
+      [MQTT] Connect message honors LWT settings (#3006)
+
+jimmys01 (1):
+      [IR] Update Library
+
+sakinit (18):
+      Show for ESP32 also the first rule on the webserver rules page
+      Fix ESP32 undefined pin initialisation
+      Don't repeat the last rule on the next webserver page
+      Revert P1WifiGateway to 30cbb4c to bugfix this more generic code
+      Cherry-pick relevant P1WifiGateway updates since 30cbb4c
+      Fix the datagram check to be able to send valid messages again
+      Fix the serial reading algorithm
+      Fix P1WifiGateway webserver start
+      Remove temporary comments
+      Use ESPeasySerial
+      Restart P1WifiGateway if webserver start failed
+      Optimize serial reading algorithm and move client from plugin into task
+      Fix ESP32 reboot cause at boot/setup
+      Optimize serial in duration
+      Update due to review comments
+      Add sanity checks based on review comments
+      Discard data received from WiFi client due to review comment
+      Update based on review comments
+
+tonhuisman (6):
+      [Rules page] Add RTD help button and fix page layout issue ('Old Engine')
+      [Transformation] Add R/r transformations (LEFT/RIGHT and L/R)
+      [Transformations] Adjusted R/r to L/l and added c
+      [Justifications] Add 'C' (Capitalize, OPEN -> Open) option
+      [Justifications] Added u/l for upper/lowercasing the value, removed dash-check from C justificaion
+      [Docs] Describe 'elseif' with some examples
+
+
+-------------------------------------------------
+Changes in release mega-20200515 (since mega-20200426)
+-------------------------------------------------
+
+Release date: vr 15 mei 2020 23:10:38 CEST
+
+Gijs Noorlander (58):
+      [ADC]  Allow multiple instances of ADC plugin (ESP32)
+      [ADC] Perform VCC read before starting any WiFi activity
+      [ADC] Format using uncrustify
+      [ADC] Perform ADC read at boot + improve filtering for P002_ADC
+      [ADC] Add Touch/Hall Effect for ESP32 + ADC pin selection
+      [Bitset operators] Use Arduino macros instead of our own functions
+      [Touch] Split Touch Pad support into new plugin
+      [Docs] Add documentation for P097_Touch and P095_ILI9341
+      [docs] Update docs for P002_ADC
+      [PVS-Studio]  sizeof(Device) -> Device.size()
+      [PVS-Studio] EventStruct has no operator=
+      [PVS-Studio] Not all members of a class are initialized
+      [PVS-Studio] Missing break; in switch statement (C018 RN2483 TTN)
+      [PVS-Studio] FrasmedOLED display pointer dereference before check !NULL
+      [PVS-Studio] Error log in rules not complete
+      [PVS-Studio] File info struct in webserver rules not all initialized
+      [PVS-Studio] Redundant check in rules conditionMatchExtended
+      [PVS-Studio] CWE-1164:The 'note' variable was assigned the same value.
+      [PVS-Studio] ESPEasy p2p incorrect check for binary data
+      [PVS-Studio] SSDP Specify printf format
+      [PVS Studio] Framed OLED: Simplify check for turning on display
+      [PVS-Studio] Suppress char out of range warning in static data
+      [PVS-Studio] Fix 'dangerous' macro by using braces.
+      [PVS-studio] Fix possible out of range array access
+      [PVS-studio] Suppress char out of range warning in static data
+      [PVS-Studio] Merge duplicate case statements
+      [PVS-Studio] Use implicit cast to float in scheduler idle time stats
+      [PVS-Studio] Remove unused variable in SenseAir plugin
+      [PVS-Studio] Use correct array index in Plugin_Helper_serial.ino
+      [ILI9341] Fix build error when building for 1M units
+      [Core 2.7.0] Switch to esp8266/Arduino 2.7.0
+      [Build] Add custom_beta_1M build
+      [Build] Rename PIO environments referring core_263 to core_270
+      [PIO] Generate filename at build, not in post processing
+      [PIO] Fix showing binary file name in sysinfo page
+      [PIO] Attempt to fix missing quote level in Linux
+      [PIO] Fix Windows/Linux detection in number of quote levels
+      [PIO] Final fix for proper quote level per OS + store build platform
+      [PIO] Add Git branch description to build info
+      [PIO] Move build environment to Python 3.8 as 2.7 is no longer supported
+      [PIO] Python 3.8 requirements.txt list
+      [PIO] Updated packages in Python 3.8 requirements.txt list
+      [PIO] Relax PlatformIO version in requirements.txt to >= 4.3.3
+      [PIO] Use Python 3.8 on Vagrant/Ubuntu builds
+      [PIO] GZip and copy files to build_output directory
+      [PIO] Include PlatformIO env dump in build output for diagnostics
+      [PIO] Update docs/requirements.txt
+      [PIO] Compare build sizes when copying the build files.
+      [PIO] Adopt deploy scripts to new situation where Python scripts do all
+      [PIO] Split zip files in before_deploy
+      [PIO] Zip docs dir recursive
+      [PIO] Add missing parts in the included source dir in the build ZIP file
+      [Vagrant] Fix issue where update fails due to Grub interactive update
+      [Vagrant] Show Vagrant build as build origin on sysinfo page
+      [Shelly PLUG-S] Add template + build definition for Shelly PLUG-S
+      [PIO] Upgrade to platformio / platform-espressif8266 @2.5.0
+      [Docs] Describe files in nightly builds
+      [RN2483] Controller should also send to TTN when not connected to WiFi
+
+sakinit (1):
+      Fix ESP32 build if P001 is not included
+
+
+-------------------------------------------------
+Changes in release mega-20200426 (since mega-20200410)
+-------------------------------------------------
+
+Release date: zo 26 apr 2020  1:27:18 CEST
+
+Bartlomiej Zimon (12):
+      P004_dallas: esp32 optimisation - move bit read/write to IRAM
+      add factory bins into release zip - to be found in factory_bin dir
+      before_deploy: remove echo
+      set BaseVarIndex and sensortype in event before call PLUGIN_TIMER_IN
+      P008_RFID: little reorder
+      P040_ID12/RDM6300: fix for triggering new tag and detection of tag unavailable #2982
+      crc2: move to hashlib
+      rfid: clean up in logging
+      ESP32: add to webserver firmware update feature
+      ESP32: add new ESP32HTTPUpdateServer lib
+      ESP32: fill binary filename, count MD5 only for esp8266
+      ESP/ESP32: add id_tag for future proposes and use it to detect firmware.bin
+
+Gijs Noorlander (29):
+      [MQTT] Add checkbox for extended Controller Settings
+      [Storage] Move SettingsType code to separate .h/.cpp
+      [MQTT] Move global MQTT parameters to controller settings
+      [Controller] Allow to use longer controller credentials
+      [MQTT] Fix build issue with disabled MQTT
+      [PIO] Change depicated -Wl,-T into board_build.ldscript
+      [Settings] Improve SettingsType handling
+      Fix reporting binaryFileName in sysvars page
+      [Build size] Optimize command handling macro to reduce build size
+      [LWIP2] Change LWIP2 from low mem to high bandwidth
+      [P092] Mark plugin as  [TESTING]
+      [ILI9341] Rename plugin to P095 + rebase to current HEAD of mega branch
+      [ILI9341] Move to custom build due to build size
+      [PulseCounter] Add SetPulseCounterTotal command
+      [Cleanup] Code formatting for Pulse Counter
+      Fix build issue
+      [ESP32 OTA] Show sketch size in sysinfo page
+      [ESP32 OTA] Exclude ESP32HTTPUpdateServer lib for ESP82xx builds
+      [Pulse Counter] Call PLUGIN_READ after set counter (#3019)
+      [Pulse Counter] Use unused 4th UserVar to restore total pulse counter
+      [Rules] Check for common mistakes and patch before parsing
+      [Controller] Make use extended credentials optional per controller
+      [ESPEasySerial] Update v2.0.1: Only use SWserial override on HW serial
+      [RN2483] SWserial override as a define
+      [RN2483] Only alter set keys if either OTAA or ABP is set
+      [RN2483] Improve Autobaud + unit detection at boot
+      [RN2483] Fix build error for ESP32
+      [RN2483] Rename sendAutoBaud to sendWakeSequence
+      [Rules] Clarify syntax error auto correct log entry
+
+Jan-Jonas Sämann (1):
+      Make default reset button gpio configurable
+
+Jean-Michel DECORET (9):
+      Add plugin Display TFT - ILI9341
+      Conform plugin to guidelines
+      Add comments
+      Add plugin Display TFT - ILI9341
+      Conform plugin to guidelines
+      Add comments
+      Change plugin number (242 -> 090)
+      Change to plugin 091
+      Make plugin compatible with ESP32
+
+TD-er (7):
+      [rules] Allow "if [" and "if[" in rules (#2987)
+      [rules] Allow "elseif [" and "elseif[" in rules
+      [RTC task values] Clear last task values when adding new task
+      [GitHub] Add stale bot to manage inactive issues
+      [WiFi] Fix WiFiConnect command should force (re)connect (#2985)
+      [Controller] Only update password when it is not "*****" (#3015)
+      [HTTP command] Fix incorrect check for valid port
+
+Toni (1):
+      HeatpumpIR 1.0.15 update
+
+sakinit (1):
+      Fix ESP32 serial write
+
+uwekaditz (14):
+      [P092] New PlugIn to decode the DL-Bus
+      [P092] New PlugIn to decode the DL-Bus
+      Update _P092_DLbus.ino
+      Update _P092_DLbus.ino
+      [P092] Timing optimized
+      [P092] Memory usage optimized
+      [P092] Changes requested by TDer
+      [P092] Documentation added
+      [P092] More documentation added
+      [P092] Documentation updated
+      [P093] Documentation updated
+      Memory improvement for _P092 plug in
+      Merge conflicts solved
+      merged with release mega-20200305
+
+
+-------------------------------------------------
+Changes in release mega-20200410 (since mega-20200328)
+-------------------------------------------------
+
+Release date: vr 10 apr 2020 21:23:29 CEST
+
+Bartlomiej Zimon (1):
+      ESP32: add subtarget for genuine units firmware-factory.bin        Resolves #2964 #2941 #2486
+
+Gijs Noorlander (16):
+      [Frontend] Fix reload on change for selectors (#2974 )
+      [Frontend] Fix crash when loading config + controller page
+      [CUL Reader] P094_CULReader
+      [CUL Reader] Clean up code
+      [CUL Reader] Add 4th filter parameter
+      [CUL Reader] Fix bug in save/load settings
+      [CUL Reader] Add positional match
+      [Sysvar] Fix show %ip% and %ip4% instead of %ip4% twice
+      [CUL Reader] Add basic docs
+      [Webserver] Fix ambiguous function definitions for selectors
+      [Serial Plugins] Share more code among plugins using serial
+      [Build] Fix build issue
+      [build] New attempt to fix build for unused static function
+      [PulseCounter] Restore from RTC before initializing pin triggers
+      [WiFi] Fix problem with static IP and reconnect ESP32 (#2997)
+      [WiFi] Switch to default PIO_FRAMEWORK_ARDUINO_ESPRESSIF_SDK22x_190703
+
+Michael Schröder (2):
+      Fix DeepSleep0 command
+      Update deepsleep-command docs
+
+TD-er (2):
+      [P020_Ser2Net] Fix missing break; PLUGIN_SERIAL_IN
+      [CUL Reader] 12 items per filter line + extra chars on filter whitelist
+
+tonhuisman (5):
+      [P036] Added setting for 'Keep display off receiving text'
+      [P036] Added setting for 'Wake display on receiving text'
+      [P036] Added new setting to plugin documentation
+      Fixed note wording
+      Made note wording more functional
+
+
+-------------------------------------------------
 Changes in release mega-20200328 (since mega-20200310)
 -------------------------------------------------
 

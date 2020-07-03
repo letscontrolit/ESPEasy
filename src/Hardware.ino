@@ -7,13 +7,15 @@
 void hardwareInit()
 {
   // set GPIO pins state if not set to default
+  constexpr byte maxStates = sizeof(Settings.PinBootStates)/sizeof(Settings.PinBootStates[0]);
   for (byte gpio = 0; gpio < PIN_D_MAX; ++gpio) {
     bool serialPinConflict = (Settings.UseSerial && (gpio == 1 || gpio == 3));
+    const int8_t bootState = (gpio < maxStates) ? Settings.PinBootStates[gpio] : 0;
 
-    if (!serialPinConflict && (Settings.PinBootStates[gpio] != 0)) {
+    if (!serialPinConflict && (bootState != 0)) {
       const uint32_t key = createKey(1, gpio);
 
-      switch (Settings.PinBootStates[gpio])
+      switch (bootState)
       {
         case 1:
           pinMode(gpio, OUTPUT);
@@ -52,10 +54,25 @@ void hardwareInit()
   initI2C();
 
   // SPI Init
-  if (Settings.InitSPI)
+  if (Settings.InitSPI>0)
   {
     SPI.setHwCs(false);
+    
+    //MFD: for ESP32 enable the SPI on HSPI as the default is VSPI
+    #ifdef ESP32 
+    if (Settings.InitSPI==2)
+    {
+      #define HSPI_MISO   12
+      #define HSPI_MOSI   13
+      #define HSPI_SCLK   14
+      #define HSPI_SS     15
+      SPI.begin(HSPI_SCLK, HSPI_MISO, HSPI_MOSI); //HSPI
+    }
+    else
+     SPI.begin(); //VSPI
+    #else
     SPI.begin();
+    #endif
     String log = F("INIT : SPI Init (without CS)");
     addLog(LOG_LEVEL_INFO, log);
   }
@@ -87,8 +104,7 @@ void initI2C() {
   // configure hardware pins according to eeprom settings.
   if (Settings.Pin_i2c_sda != -1)
   {
-    String log = F("INIT : I2C");
-    addLog(LOG_LEVEL_INFO, log);
+    addLog(LOG_LEVEL_INFO, F("INIT : I2C"));
     Wire.setClock(Settings.I2C_clockSpeed);
     Wire.begin(Settings.Pin_i2c_sda, Settings.Pin_i2c_scl);
 
@@ -120,8 +136,7 @@ void initI2C() {
 
       if (status & 0x1)
       {
-        String log = F("INIT : Reset by WD!");
-        addLog(LOG_LEVEL_ERROR, log);
+        addLog(LOG_LEVEL_ERROR, F("INIT : Reset by WD!"));
         lastBootCause = BOOT_CAUSE_EXT_WD;
       }
     }
@@ -153,6 +168,54 @@ void checkResetFactoryPin() {
   }
 }
 
+
+#ifdef ESP8266
+int espeasy_analogRead(int pin) {
+  if (!wifiConnectInProgress) {
+    lastADCvalue = analogRead(A0);
+  }
+  return lastADCvalue;
+}
+#endif
+
+#ifdef ESP32
+int espeasy_analogRead(int pin) {
+  return espeasy_analogRead(pin, false);
+}
+
+int espeasy_analogRead(int pin, bool readAsTouch) {
+  int value = 0;
+  int adc, ch, t;
+  if (getADC_gpio_info(pin, adc, ch, t)) {
+    bool canread = false;
+    switch (adc) {
+      case 0:
+        value = hallRead();
+        break;
+      case 1:
+        canread = true;
+        break;
+      case 2:
+        if (WiFi.getMode() == WIFI_OFF) {
+          // See: https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/peripherals/adc.html#configuration-and-reading-adc
+          // ADC2 is shared with WiFi, so don't read ADC2 when WiFi is on.
+          canread = true;
+        }
+        break;
+    }
+    if (canread) {
+      if (readAsTouch && t >= 0) {
+        value = touchRead(pin);
+      } else {
+        value = analogRead(pin);
+      }
+    }
+  }
+  return value;
+}
+#endif
+
+
 /********************************************************************************************\
    Hardware specific configurations
  \*********************************************************************************************/
@@ -167,7 +230,9 @@ String getDeviceModelBrandString(DeviceModel model) {
     case DeviceModel_Sonoff_4ch:
     case DeviceModel_Sonoff_POW:
     case DeviceModel_Sonoff_POWr2:   return F("Sonoff");
-    case DeviceModel_Shelly1:        return F("Shelly");
+    case DeviceModel_Shelly1:
+    case DeviceModel_ShellyPLUG_S:   return F("Shelly");
+    case DeviceMode_Olimex_ESP32_PoE: return F("Olimex");
 
     // case DeviceModel_default:
     default:        return "";
@@ -191,6 +256,8 @@ String getDeviceModelString(DeviceModel model) {
     case DeviceModel_Sonoff_POW:     result += F(" POW");     break;
     case DeviceModel_Sonoff_POWr2:   result += F(" POW-r2");  break;
     case DeviceModel_Shelly1:        result += '1';           break;
+    case DeviceModel_ShellyPLUG_S:   result += F(" PLUG S");  break;
+    case DeviceMode_Olimex_ESP32_PoE: result += F(" ESP32-PoE"); break;
 
     // case DeviceModel_default:
     default:    result += F("default");
@@ -212,7 +279,9 @@ bool modelMatchingFlashSize(DeviceModel model) {
     case DeviceModel_Sonoff_4ch:     return size_MB == 1;
     case DeviceModel_Sonoff_POW:
     case DeviceModel_Sonoff_POWr2:   return size_MB == 4;
-    case DeviceModel_Shelly1:        return size_MB == 2;
+    case DeviceModel_Shelly1:     
+    case DeviceModel_ShellyPLUG_S:   return size_MB == 2;
+    case DeviceMode_Olimex_ESP32_PoE:return size_MB == 4;
 
     // case DeviceModel_default:
     default:  return true;
@@ -381,3 +450,62 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
 }
 
 #endif // ifdef ESP32
+
+
+#ifdef ESP32
+
+// Get ADC related info for a given GPIO pin
+// @param gpio_pin   GPIO pin number
+// @param adc        Number of ADC unit (0 == Hall effect)
+// @param ch         Channel number on ADC unit
+// @param t          index of touch pad ID
+bool getADC_gpio_info(int gpio_pin, int& adc, int& ch, int& t)
+{
+  t = -1;
+  switch (gpio_pin) {
+    case -1: adc = 0; break; // Hall effect Sensor
+    case 36: adc = 1; ch = 0; break;
+    case 37: adc = 1; ch = 1; break;
+    case 38: adc = 1; ch = 2; break;
+    case 39: adc = 1; ch = 3; break;
+    case 32: adc = 1; ch = 4; t = 9; break;
+    case 33: adc = 1; ch = 5; t = 8; break;
+    case 34: adc = 1; ch = 6; break;
+    case 35: adc = 1; ch = 7; break;
+    case 4:  adc = 2; ch = 0; t = 0; break;
+    case 0:  adc = 2; ch = 1; t = 1; break;
+    case 2:  adc = 2; ch = 2; t = 2; break;
+    case 15: adc = 2; ch = 3; t = 3; break;
+    case 13: adc = 2; ch = 4; t = 4; break;
+    case 12: adc = 2; ch = 5; t = 5; break;
+    case 14: adc = 2; ch = 6; t = 6; break;
+    case 27: adc = 2; ch = 7; t = 7; break;
+    case 25: adc = 2; ch = 8; break;
+    case 26: adc = 2; ch = 9; break;
+    default:
+      return false;
+  }
+  return true;
+}
+
+int touchPinToGpio(int touch_pin)
+{
+  switch(touch_pin) {
+    case 0: return T0;
+    case 1: return T1;
+    case 2: return T2;
+    case 3: return T3;
+    case 4: return T4;
+    case 5: return T5;
+    case 6: return T6;
+    case 7: return T7;
+    case 8: return T8;
+    case 9: return T9;
+    default:
+    break;    
+  }
+  return -1;
+}
+
+
+#endif

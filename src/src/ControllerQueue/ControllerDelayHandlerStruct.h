@@ -6,8 +6,10 @@
 #include "../DataStructs/SchedulerTimers.h"
 #include "../DataStructs/TimingStats.h"
 #include "../Globals/CPlugins.h"
+#include "../Globals/Protocol.h"
 #include "../Helpers/ESPEasy_time_calc.h"
 
+#include <list>
 
 /*********************************************************************************************\
 * ControllerDelayHandlerStruct
@@ -41,6 +43,17 @@ struct ControllerDelayHandlerStruct {
     if (minTimeBetweenMessages < 10) { minTimeBetweenMessages = 10; }
   }
 
+  bool readyToProcess(const T& element) const {
+    const protocolIndex_t protocolIndex = getProtocolIndex_from_ControllerIndex(element.controller_idx);
+    if (protocolIndex == INVALID_PROTOCOL_INDEX) {
+      return false;
+    }
+    if (Protocol[protocolIndex].needsNetwork) {
+      return NetworkConnected(10);
+    }
+    return true;
+  }
+
   bool queueFull(const T& element) const {
     if (sendQueue.size() >= max_queue_depth) { return true; }
 
@@ -69,7 +82,7 @@ struct ControllerDelayHandlerStruct {
 
   // Try to add to the queue, if permitted by "delete_oldest"
   // Return false when no item was added.
-  bool addToQueue(const T& element) {
+  bool addToQueue(T&& element) {
     if (delete_oldest) {
       // Force add to the queue.
       // If max buffer is reached, the oldest in the queue (first to be served) will be removed.
@@ -158,6 +171,8 @@ struct ControllerDelayHandlerStruct {
   bool          must_check_reply;
 };
 
+
+
 // Uncrustify must not be used on macros, so turn it off.
 // Also make sure to wrap the forward declaration of this function in the same wrappers 
 // as it may not split the forward declaration into multiple lines.
@@ -189,10 +204,16 @@ struct ControllerDelayHandlerStruct {
   void process_c##NNN####M##_delay_queue() {                                                                         \
     C##NNN####M##_queue_element *element(C##NNN####M##_DelayHandler.getNext());                                      \
     if (element == NULL) return;                                                                                     \
-    MakeControllerSettings (ControllerSettings);                                                                     \
-    LoadControllerSettings(element->controller_idx, ControllerSettings);                                             \
-    C##NNN####M##_DelayHandler.configureControllerSettings(ControllerSettings);                                      \
-    if (!WiFiConnected(10)) {                                                                                        \
+    MakeControllerSettings(ControllerSettings);                                                                      \
+    bool ready = true;                                                                                               \
+    if (!AllocatedControllerSettings()) {                                                                            \
+      ready = false;                                                                                                 \
+    } else {                                                                                                         \
+      LoadControllerSettings(element->controller_idx, ControllerSettings);                                           \
+      C##NNN####M##_DelayHandler.configureControllerSettings(ControllerSettings);                                    \
+      if (!C##NNN####M##_DelayHandler.readyToProcess(*element)) { ready = false; }                                   \
+    }                                                                                                                \
+    if (!ready) {                                                                                                    \
       scheduleNextDelayQueue(TIMER_C##NNN####M##_DELAY_QUEUE, C##NNN####M##_DelayHandler.getNextScheduleTime());     \
       return;                                                                                                        \
     }                                                                                                                \

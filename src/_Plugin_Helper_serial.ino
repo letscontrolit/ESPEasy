@@ -19,14 +19,22 @@ static String serialHelper_getSerialTypeLabel(ESPeasySerialType::serialtype serT
   return label;
 }
 
-static String serialHelper_getGpioDescription(int config_pin1, int config_pin2) {
+void serialHelper_log_GpioDescription(int config_pin1, int config_pin2) {
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+    String log = F("Serial : ");
+    log += serialHelper_getGpioDescription(config_pin1, config_pin2, " ");
+    addLog(LOG_LEVEL_DEBUG, log);
+  }
+}
+
+static String serialHelper_getGpioDescription(int config_pin1, int config_pin2, const String& newline) {
   String result;
   result.reserve(20);
   switch (ESPeasySerialType::getSerialType(config_pin1, config_pin2)) {
     case ESPeasySerialType::serialtype::sc16is752:
     {
       result += formatToHex(config_pin1);
-      result += F("<BR>");
+      result += newline;
       result += F(" ch: ");
       result += config_pin2 == 0 ? F("A") : F("B");
       return result;
@@ -39,7 +47,7 @@ static String serialHelper_getGpioDescription(int config_pin1, int config_pin2) 
     {
       result += F("RX: ");
       result += config_pin1;
-      result += F("<BR>");
+      result += newline;
       result += F("TX: ");
       result += config_pin2;
       break;
@@ -80,25 +88,26 @@ void serialHelper_addI2CuartSelectors(int address, int channel) {
   #define     SC16IS752_CHANNEL_A                 0x00
   #define     SC16IS752_CHANNEL_B                 0x01
   {
-    bool addr_in_range = false;
-    int addresses[SC16IS752_I2C_ADDRESSES];
-    String options[SC16IS752_I2C_ADDRESSES];
-    for (int i = 0; i < SC16IS752_I2C_ADDRESSES; i++)
-    {
-      addresses[i] = SC16IS752_I2C_BASE_ADDR + i;
-      options[i].reserve(24);
-      options[i] = formatToHex(addresses[i]);
-      options[i] += F(" (datasheet: ");
-      options[i] += formatToHex(addresses[i] * 2);
-      options[i] += ')';
-      if (addresses[i] == address) {
-        addr_in_range = true;
-      }
-    }
-    if (!addr_in_range) {
+    String id = F("i2cuart_addr");
+    addRowLabel_tr_id(F("I2C Address"), id);
+    do_addSelector_Head(id, "", "", false);
+
+    if (address < SC16IS752_I2C_BASE_ADDR || address >= (SC16IS752_I2C_BASE_ADDR + SC16IS752_I2C_ADDRESSES)) {
+      // selected address is not in range
       address = SC16IS752_I2C_BASE_ADDR;
     }
-    addFormSelector(F("I2C Address"), F("i2cuart_addr"), SC16IS752_I2C_ADDRESSES, options, addresses, NULL, address, false);
+    for (int i = 0; i < SC16IS752_I2C_ADDRESSES; i++)
+    {
+      int addr = SC16IS752_I2C_BASE_ADDR + i;
+      String option;
+      option.reserve(24);
+      option = formatToHex(addr);
+      option += F(" (datasheet: ");
+      option += formatToHex(addr * 2);
+      option += ')';
+      addSelector_option(addr, option, "", addr == address);
+    }
+    addSelector_Foot();
   }  
   {
     if (channel != SC16IS752_CHANNEL_A && channel != SC16IS752_CHANNEL_B) {
@@ -152,7 +161,7 @@ void serialHelper_webformLoad(int rxPinDef, int txPinDef, bool allowSoftwareSeri
         case ESPeasySerialType::serialtype::software:
         {
           if (!allowSoftwareSerial) {
-            attr[i] = F("disabled");
+            attr[index] = F("disabled");
           }
           break;
         }
@@ -244,9 +253,14 @@ bool serialHelper_isValid_serialconfig(byte serialconfig) {
 
 void serialHelper_serialconfig_webformLoad(struct EventStruct *event, byte currentSelection) {
   // nrOptions = 4 * 3 * 2  = 24  (bits 5..8 , parity N/E/O  , stopbits 1/2)
-  String options[24];
-  int    values[24];
-  byte   index = 0;
+  String id = F("serConf");
+  addRowLabel_tr_id(F("Serial Config"), id);
+  do_addSelector_Head(id, "", "", false);
+
+  if (currentSelection == 0) {
+    // Must truncate it to 1 byte, since ESP32 uses a 32-bit value. We add these high bits later for ESP32.
+    currentSelection = static_cast<byte>(SERIAL_8N1 & 0xFF); // Some default
+  }
 
   for (byte parity = 0; parity < 3; ++parity) {
     for (byte stopBits = 1; stopBits <= 2; ++stopBits) {
@@ -270,19 +284,11 @@ void serialHelper_serialconfig_webformLoad(struct EventStruct *event, byte curre
           case 1:  value += 0x10; break;
           case 2:  value += 0x30; break;
         }
-        options[index] = label;
-        values[index]  = value;
-        ++index;
+        addSelector_option(value, label, "", value == currentSelection);
       }
     }
   }
-
-  if (currentSelection == 0) {
-    // Must truncate it to 1 byte, since ESP32 uses a 32-bit value. We add these high bits later for ESP32.
-    currentSelection = static_cast<byte>(SERIAL_8N1 & 0xFF); // Some default
-  }
-  addFormSelector(F("Serial Config"), F("serConf"), 24,
-                  options, values, currentSelection);
+  addSelector_Foot();
 }
 
 byte serialHelper_serialconfig_webformSave() {

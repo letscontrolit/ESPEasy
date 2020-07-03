@@ -8,7 +8,11 @@
 #define CPLUGIN_ID_002         2
 #define CPLUGIN_NAME_002       "Domoticz MQTT"
 
+#include "src/Commands/InternalCommands.h"
 #include <ArduinoJson.h>
+
+String CPlugin_002_pubname;
+bool CPlugin_002_retain = false;
 
 bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& string)
 {
@@ -23,6 +27,7 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
       Protocol[protocolCount].usesTemplate = true;
       Protocol[protocolCount].usesAccount  = true;
       Protocol[protocolCount].usesPassword = true;
+      Protocol[protocolCount].usesExtCreds = true;
       Protocol[protocolCount].defaultPort  = 1883;
       Protocol[protocolCount].usesID       = true;
       break;
@@ -39,6 +44,8 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
       MakeControllerSettings(ControllerSettings);
       LoadControllerSettings(event->ControllerIndex, ControllerSettings);
       MQTTDelayHandler.configureControllerSettings(ControllerSettings);
+      CPlugin_002_pubname = ControllerSettings.Publish;
+      CPlugin_002_retain = ControllerSettings.mqtt_retainFlag();
       break;
     }
 
@@ -148,7 +155,7 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
               }
 
               if (action.length() > 0) {
-                ExecuteCommand_plugin(x, VALUE_SOURCE_MQTT, action.c_str());
+                ExecuteCommand_plugin(x, EventValueSource::Enum::VALUE_SOURCE_MQTT, action.c_str());
 
                 // trigger rulesprocessing
                 if (Settings.UseRules) {
@@ -170,16 +177,6 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
     {
       if (event->idx != 0)
       {
-        MakeControllerSettings(ControllerSettings);
-        LoadControllerSettings(event->ControllerIndex, ControllerSettings);
-
-        /*
-                  if (!ControllerSettings.checkHostReachable(true)) {
-                    success = false;
-                    break;
-                  }
-         */
-
         DynamicJsonDocument root(200);
         root[F("idx")]  = event->idx;
         root[F("RSSI")] = mapRSSItoDomoticz();
@@ -235,10 +232,10 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
         addLog(LOG_LEVEL_DEBUG, log);
 #endif // ifndef BUILD_NO_DEBUG
 
-        String pubname = ControllerSettings.Publish;
+        String pubname = CPlugin_002_pubname;
         parseControllerVariables(pubname, event, false);
 
-        success = MQTTpublish(event->ControllerIndex, pubname.c_str(), json.c_str(), Settings.MQTTRetainFlag);
+        success = MQTTpublish(event->ControllerIndex, pubname.c_str(), json.c_str(), CPlugin_002_retain);
       } // if ixd !=0
       else
       {

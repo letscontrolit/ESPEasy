@@ -77,6 +77,7 @@ bool CPluginCall(CPlugin::Function Function, struct EventStruct *event, String& 
       for (controllerIndex_t x = 0; x < CONTROLLER_MAX; x++) {
         if ((Settings.Protocol[x] != 0) && Settings.ControllerEnabled[x]) {
           protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(x);
+          event->ControllerIndex = x;
           String dummy;
           CPluginCall(ProtocolIndex, Function, event, dummy);
         }

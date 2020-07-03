@@ -1,3 +1,4 @@
+#include "src/Commands/InternalCommands.h"
 #include "src/Globals/Nodes.h"
 #include "src/Globals/Device.h"
 #include "src/Globals/Plugins.h"
@@ -54,7 +55,7 @@ boolean handle_custom(String path) {
     html_add_form();
 
     // create unit selector dropdown
-    addSelector_Head(F("unit"), true);
+    addSelector_Head_reloadOnChange(F("unit"));
     byte choice = Settings.Unit;
 
     for (NodesMap::iterator it = Nodes.begin(); it != Nodes.end(); ++it)
@@ -111,7 +112,7 @@ boolean handle_custom(String path) {
   String webrequest = web_server.arg(F("cmd"));
 
   if (webrequest.length() > 0) {
-    ExecuteCommand_all_config_eventOnly(VALUE_SOURCE_HTTP, webrequest.c_str());
+    ExecuteCommand_all_config_eventOnly(EventValueSource::Enum::VALUE_SOURCE_HTTP, webrequest.c_str());
 
     // handle some update processes first, before returning page update...
     String dummy;

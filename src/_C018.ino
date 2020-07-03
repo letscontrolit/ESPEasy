@@ -21,6 +21,12 @@
 #include "ESPEasy_fdwdecl.h"
 #include "_CPlugin_Helper.h"
 
+
+// Have this define after the includes, so we can set it in Custom.h
+#ifndef C018_FORCE_SW_SERIAL
+#define C018_FORCE_SW_SERIAL false
+#endif
+
 struct C018_data_struct {
   C018_data_struct() : C018_easySerial(nullptr), myLora(nullptr) {}
 
@@ -62,58 +68,29 @@ struct C018_data_struct {
 
       if (notChanged) { return true; }
     }
-    resetPin = reset_pin;
-
     reset();
+    _resetPin = reset_pin;
+    _baudrate = baudrate;
+
     // FIXME TD-er: Make force SW serial a proper setting.
-    C018_easySerial = new ESPeasySerial(serial_rx, serial_tx, false, 64, true);
+    C018_easySerial = new ESPeasySerial(serial_rx, serial_tx, false, 64, C018_FORCE_SW_SERIAL);
 
     if (C018_easySerial != nullptr) {
-      if (resetPin == -1) {
-        pinMode(serial_tx, OUTPUT);
-        digitalWrite(serial_tx, LOW);
-      } else {
-        pinMode(resetPin, OUTPUT);
-        digitalWrite(resetPin, LOW);
-        delay(50);
-        digitalWrite(resetPin, HIGH);
-      }
-
-      C018_easySerial->begin(baudrate);
-
-      // wakeUP_RN2483 and set data rate
-      // Delay must be longer than specified in the datasheet for firmware 1.0.3
-      // See: https://www.thethingsnetwork.org/forum/t/rn2483a-problems-no-serial-communication/7866/36?u=td-er
-      delay(26);
-      C018_easySerial->write(0x55);
-      C018_easySerial->println();
-      delay(100);
-
       myLora = new rn2xx3(*C018_easySerial);
       myLora->setAsyncMode(true);
-
-      String response = myLora->sysver();
-
-      // we could use sendRawCommand(F("sys get ver")); here
-      //      C018_easySerial->println(F("sys get ver"));
-      //      String response = C018_easySerial->readStringUntil('\n');
-      autobaud_success = response.length() > 10;
-
-      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        String log = F("C018 AutoBaud: ");
-        log += response;
-        log += F(" status: ");
-        log += myLora->sendRawCommand(F("mac get status"));
-        addLog(LOG_LEVEL_INFO, log);
-        C018_logError(F("autobaud check"));
-      }
       myLora->setLastUsedJoinMode(joinIsOTAA);
+      triggerAutobaud();
     }
     return isInitialized();
   }
 
   bool isInitialized() const {
-    return (C018_easySerial != nullptr) && (myLora != nullptr)  && autobaud_success;
+    if ((C018_easySerial != nullptr) && (myLora != nullptr)) {
+      if (autobaud_success) {
+        return true;
+      }
+    }
+    return false;
   }
 
   bool hasJoined() const {
@@ -322,14 +299,65 @@ private:
     }
   }
 
+  void triggerAutobaud() {
+    if (C018_easySerial == nullptr || myLora == nullptr) return;
+    int retries = 2;
+
+    while (retries > 0 && !autobaud_success) {
+      if (retries == 1) {
+        if (_resetPin != -1) {
+          pinMode(_resetPin, OUTPUT);
+          digitalWrite(_resetPin, LOW);
+          delay(50);
+          digitalWrite(_resetPin, HIGH);
+          delay(200);
+        }
+      }
+
+      // wakeUP_RN2483 and set data rate
+      // Delay must be longer than specified in the datasheet for firmware 1.0.3
+      // See: https://www.thethingsnetwork.org/forum/t/rn2483a-problems-no-serial-communication/7866/36?u=td-er
+
+      // First set the baud rate low enough to even trigger autobaud when 9600 baud is active
+      C018_easySerial->begin(600);
+      C018_easySerial->write(0x00);
+
+      // Set to desired baud rate.
+      C018_easySerial->begin(_baudrate);
+      C018_easySerial->write(0x55);
+      C018_easySerial->println();
+      delay(100);
+
+      String response = myLora->sysver();
+
+      // we could use sendRawCommand(F("sys get ver")); here
+      //      C018_easySerial->println(F("sys get ver"));
+      //      String response = C018_easySerial->readStringUntil('\n');
+      autobaud_success = response.length() > 10;
+
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        String log = F("C018 AutoBaud: ");
+        log += response;
+        log += F(" status: ");
+        log += myLora->sendRawCommand(F("mac get status"));
+        addLog(LOG_LEVEL_INFO, log);
+        C018_logError(F("autobaud check"));
+      }
+      --retries;
+    }
+  }
+
+
+
   ESPeasySerial *C018_easySerial = nullptr;
   rn2xx3        *myLora          = nullptr;
   String         cacheDevAddr;
   String         cacheHWEUI;
   String         cacheSysVer;
+  unsigned long  _baudrate          = 57600;
   uint8_t        sampleSetCounter   = 0;
   taskIndex_t    sampleSetInitiator = INVALID_TASK_INDEX;
-  int8_t         resetPin           = -1;
+  int8_t         _resetPin           = -1;
   bool           autobaud_success   = false;
 } C018_data;
 
@@ -375,7 +403,7 @@ struct C018_ConfigStruct
   char          DeviceAddr[C018_DEVICE_ADDR_LEN]                = { 0 };
   char          NetworkSessionKey[C018_NETWORK_SESSION_KEY_LEN] = { 0 };
   char          AppSessionKey[C018_APP_SESSION_KEY_LEN]         = { 0 };
-  unsigned long baudrate                                        = 9600;
+  unsigned long baudrate                                        = 57600;
   int8_t        rxpin                                           = 12;
   int8_t        txpin                                           = 14;
   int8_t        resetpin                                        = -1;
@@ -403,6 +431,7 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
       Protocol[protocolCount].usesCheckReply = false;
       Protocol[protocolCount].usesTimeout    = false;
       Protocol[protocolCount].usesSampleSets = true;
+      Protocol[protocolCount].needsNetwork      = false;
       break;
     }
 
@@ -432,31 +461,7 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
 
     case CPlugin::Function::CPLUGIN_INIT:
     {
-      MakeControllerSettings(ControllerSettings);
-      LoadControllerSettings(event->ControllerIndex, ControllerSettings);
-      C018_DelayHandler.configureControllerSettings(ControllerSettings);
-
-      C018_ConfigStruct customConfig;
-      LoadCustomControllerSettings(event->ControllerIndex, (byte *)&customConfig, sizeof(customConfig));
-      customConfig.validate();
-
-      C018_data.init(customConfig.rxpin, customConfig.txpin, customConfig.baudrate,
-                     customConfig.joinmethod == C018_USE_OTAA,
-                     ControllerSettings.SampleSetInitiator, customConfig.resetpin);
-
-      C018_data.setFrequencyPlan(static_cast<RN2xx3_datatypes::Freq_plan>(customConfig.frequencyplan));
-
-      if (customConfig.joinmethod == C018_USE_OTAA) {
-        String AppEUI = SecuritySettings.ControllerUser[event->ControllerIndex];
-        String AppKey = SecuritySettings.ControllerPassword[event->ControllerIndex];
-        C018_data.initOTAA(AppEUI, AppKey, customConfig.DeviceEUI);
-      }
-      else {
-        C018_data.initABP(customConfig.DeviceAddr, customConfig.AppSessionKey, customConfig.NetworkSessionKey);
-      }
-      C018_data.setSF(customConfig.sf);
-
-      C018_data.txUncnf("ESPeasy (TTN)", ControllerSettings.Port);
+      C018_init(event);
       break;
     }
 
@@ -472,8 +477,8 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
         protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(event->ControllerIndex);
         html_add_script(false);
         addHtml(F("function joinChanged(elem){ var styleOTAA = elem.value == 0 ? '' : 'none'; var styleABP = elem.value == 1 ? '' : 'none';"));
-        addHtml(c018_add_joinChanged_script_element_line(getControllerParameterInternalName(ProtocolIndex, CONTROLLER_USER), true));
-        addHtml(c018_add_joinChanged_script_element_line(getControllerParameterInternalName(ProtocolIndex, CONTROLLER_PASS), true));
+        addHtml(c018_add_joinChanged_script_element_line(getControllerParameterInternalName(ProtocolIndex, ControllerSettingsStruct::CONTROLLER_USER), true));
+        addHtml(c018_add_joinChanged_script_element_line(getControllerParameterInternalName(ProtocolIndex, ControllerSettingsStruct::CONTROLLER_PASS), true));
         addHtml(c018_add_joinChanged_script_element_line(F("deveui"), true));
         addHtml(c018_add_joinChanged_script_element_line(F("deveui_note"), true));
 
@@ -530,6 +535,7 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
 
       addFormNumericBox(F("Baudrate"), F(C018_BAUDRATE_LABEL), customConfig.baudrate, 2400, 115200);
       addUnit(F("baud"));
+      addFormNote(F("Module default baudrate: 57600 bps"));
 
       addTableSeparator(F("Device Status"), 2, 3);
 
@@ -607,17 +613,18 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
       success = true;
 
       switch (event->idx) {
-        case CONTROLLER_USER:
+        case ControllerSettingsStruct::CONTROLLER_USER:
           string = F("AppEUI");
           break;
-        case CONTROLLER_PASS:
+        case ControllerSettingsStruct::CONTROLLER_PASS:
           string = F("AppKey");
           break;
-        case CONTROLLER_TIMEOUT:
+        case ControllerSettingsStruct::CONTROLLER_TIMEOUT:
           string = F("Module Timeout");
           break;
-        case CONTROLLER_PORT:
+        case ControllerSettingsStruct::CONTROLLER_PORT:
           string = F("Port");
+          break;
         default:
           success = false;
           break;
@@ -630,7 +637,12 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
       success = C018_DelayHandler.addToQueue(
         C018_queue_element(event, C018_data.getSampleSetCount(event->TaskIndex)));
       scheduleNextDelayQueue(TIMER_C018_DELAY_QUEUE, C018_DelayHandler.getNextScheduleTime());
-
+      if (!C018_data.isInitialized()) {
+        // Sometimes the module does need some time after power on to respond.
+        // So it may not be initialized well at the call of CPLUGIN_INIT
+        // We try to trigger its init again when sending data.
+        C018_init(event);
+      }
       break;
     }
 
@@ -642,7 +654,7 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
       break;
     }
 
-    case CPlugin::Function::CPLUGIN_TEN_PER_SECOND:
+    case CPlugin::Function::CPLUGIN_FIFTY_PER_SECOND:
     {
       C018_data.async_loop();
 
@@ -661,6 +673,53 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
       break;
   }
   return success;
+}
+
+bool C018_init(struct EventStruct *event) {
+  MakeControllerSettings(ControllerSettings);
+  LoadControllerSettings(event->ControllerIndex, ControllerSettings);
+  C018_DelayHandler.configureControllerSettings(ControllerSettings);
+
+  C018_ConfigStruct customConfig;
+  LoadCustomControllerSettings(event->ControllerIndex, (byte *)&customConfig, sizeof(customConfig));
+  customConfig.validate();
+
+  if (!C018_data.init(customConfig.rxpin, customConfig.txpin, customConfig.baudrate,
+                  customConfig.joinmethod == C018_USE_OTAA,
+                  ControllerSettings.SampleSetInitiator, customConfig.resetpin)) 
+  {
+    return false;
+  }
+
+  C018_data.setFrequencyPlan(static_cast<RN2xx3_datatypes::Freq_plan>(customConfig.frequencyplan));
+
+  if (customConfig.joinmethod == C018_USE_OTAA) {
+    String AppEUI = getControllerUser(event->ControllerIndex, ControllerSettings);
+    String AppKey = getControllerPass(event->ControllerIndex, ControllerSettings);
+    String log = F("OTAA: AppEUI: ");
+    log += AppEUI;
+    log += F(" AppKey: ");
+    log += AppKey;
+    log += F(" DevEUI: ");
+    log += customConfig.DeviceEUI;
+
+    addLog(LOG_LEVEL_INFO, log);
+    if (!C018_data.initOTAA(AppEUI, AppKey, customConfig.DeviceEUI)) {
+      return false;
+    }
+  }
+  else {
+    if (!C018_data.initABP(customConfig.DeviceAddr, customConfig.AppSessionKey, customConfig.NetworkSessionKey)) {
+      return false;
+    }
+  }
+  if (!C018_data.setSF(customConfig.sf)) {
+    return false;
+  }
+  if (!C018_data.txUncnf("ESPeasy (TTN)", ControllerSettings.Port)) {
+    return false;
+  }
+  return true;
 }
 
 // Uncrustify may change this into multi line, which will result in failed builds

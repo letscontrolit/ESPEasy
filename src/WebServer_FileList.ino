@@ -37,7 +37,7 @@ void handle_filelist_json() {
   addHtml("[{");
   bool firstentry = true;
   # if defined(ESP32)
-  File root  = SPIFFS.open("/");
+  File root  = ESPEASY_FS.open("/");
   File file  = root.openNextFile();
   int  count = -1;
 
@@ -62,7 +62,7 @@ void handle_filelist_json() {
   }
   # endif // if defined(ESP32)
   # if defined(ESP8266)
-  fs::Dir dir = SPIFFS.openDir("");
+  fs::Dir dir = ESPEASY_FS.openDir("");
 
   int count = -1;
 
@@ -156,7 +156,7 @@ void handle_filelist() {
 
 # if defined(ESP8266)
 
-  fs::Dir dir = SPIFFS.openDir("");
+  fs::Dir dir = ESPEASY_FS.openDir("");
 
   while (dir.next() && count < endIdx)
   {
@@ -181,7 +181,7 @@ void handle_filelist() {
   moreFilesPresent = dir.next();
 # endif // if defined(ESP8266)
 # if defined(ESP32)
-  File root = SPIFFS.open("/");
+  File root = ESPEASY_FS.open("/");
   File file = root.openNextFile();
 
   while (file && count < endIdx)

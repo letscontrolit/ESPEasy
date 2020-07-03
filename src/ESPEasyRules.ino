@@ -1,6 +1,7 @@
 #define RULE_FILE_SEPARAROR '/'
 #define RULE_MAX_FILENAME_LENGTH 24
 
+#include "src/Commands/InternalCommands.h"
 #include "src/DataStructs/EventValueSource.h"
 #include "src/Globals/Device.h"
 #include "src/Globals/Plugins.h"
@@ -48,7 +49,7 @@ void checkRuleSets() {
     fileName += x + 1;
     fileName += F(".txt");
 
-    if (SPIFFS.exists(fileName)) {
+    if (ESPEASY_FS.exists(fileName)) {
       activeRuleSets[x] = true;
     }
     else {
@@ -122,7 +123,7 @@ void rulesProcessing(String& event) {
     String fileName = EventToFileName(event);
 
     // if exists processed the rule file
-    if (SPIFFS.exists(fileName)) {
+    if (ESPEASY_FS.exists(fileName)) {
       rulesProcessingFile(fileName, event);
     }
 #ifndef BUILD_NO_DEBUG
@@ -212,6 +213,7 @@ String rulesProcessingFile(const String& fileName, String& event) {
         {
           // Line end, parse rule
           line.trim();
+          check_rules_line_user_errors(line);
           const size_t lineLength = line.length();
 
           if (lineLength > longestLineSize) {
@@ -284,6 +286,66 @@ String rulesProcessingFile(const String& fileName, String& event) {
   nestingLevel--;
   checkRAM(F("rulesProcessingFile2"));
   return "";
+}
+
+
+/********************************************************************************************\
+   Strip comment from the line.
+   Return true when comment was stripped.
+ \*********************************************************************************************/
+bool rules_strip_trailing_comments(String& line)
+{
+   // Strip trailing comments
+  int comment = line.indexOf(F("//"));
+
+  if (comment >= 0) {
+    line = line.substring(0, comment);
+    line.trim();
+    return true;
+  }
+  return false; 
+}
+
+/********************************************************************************************\
+   Test for common mistake
+   Return true if mistake was found (and corrected)
+ \*********************************************************************************************/
+bool rules_replace_common_mistakes(const String& from, const String& to, String& line)
+{
+  if (line.indexOf(from) == -1) {
+    return false; // Nothing replaced
+  }
+  if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+    String log;
+    log.reserve(32 + from.length() + to.length() + line.length());
+    log = F("Rules (Syntax Error, auto-corrected): '");
+    log += from;
+    log += F("' => '");
+    log += to;
+    log += F("' in: '");
+    log += line;
+    log += '\'';
+    addLog(LOG_LEVEL_ERROR, log);
+  }
+  line.replace(from, to);
+  return true;
+}
+
+/********************************************************************************************\
+   Check for common mistakes
+   Return true if nothing strange found
+ \*********************************************************************************************/
+bool check_rules_line_user_errors(String& line)
+{
+  bool res = true;
+  if (rules_replace_common_mistakes(F("if["), F("if ["), line)) {
+    res = false;
+  }
+  if (rules_replace_common_mistakes(F("if%"), F("if %"), line)) {
+    res = false;
+  }
+
+  return res;
 }
 
 
@@ -479,13 +541,7 @@ void parseCompleteNonCommentLine(String& line, String& event, String& log,
 
   isCommand = true;
 
-  // Strip trailing comments
-  int comment = line.indexOf(F("//"));
-
-  if (comment >= 0) {
-    line = line.substring(0, comment);
-  }
-  line.trim();
+  rules_strip_trailing_comments(line);
 
   if (match || !codeBlock) {
     // only parse [xxx#yyy] if we have a matching ruleblock or need to eval the
@@ -621,7 +677,8 @@ void processMatchedRule(String& action, String& event,
       }
     }
   } else {
-    split = lcAction.indexOf(F("if ")); // check for optional "if" condition
+     // check for optional "if" condition
+    split = lcAction.indexOf(F("if "));
 
     if (split != -1) {
       if (ifBlock < RULES_IF_MAX_NESTING_LEVEL) {
@@ -652,7 +709,7 @@ void processMatchedRule(String& action, String& event,
         if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
           log  = F("Lev.");
           log += String(ifBlock);
-          log  = F(": Error: IF Nesting level exceeded!");
+          log += F(": Error: IF Nesting level exceeded!");
           addLog(LOG_LEVEL_ERROR, log);
         }
       }
@@ -700,7 +757,7 @@ void processMatchedRule(String& action, String& event,
       addLog(LOG_LEVEL_INFO, log);
     }
 
-    ExecuteCommand_all(VALUE_SOURCE_RULES, action.c_str());
+    ExecuteCommand_all(EventValueSource::Enum::VALUE_SOURCE_RULES, action.c_str());
     delay(0);
   }
 }
@@ -833,7 +890,7 @@ bool conditionMatchExtended(String& check) {
     condOr  = check.indexOf(F(" or "));
 
     if ((condAnd > 0) || (condOr > 0)) {                             // we got AND/OR
-      if ((condAnd > 0) && (((condOr < 0) && (condOr < condAnd)) ||
+      if ((condAnd > 0) && (((condOr < 0) /*&& (condOr < condAnd)*/) ||
                             ((condOr > 0) && (condOr > condAnd)))) { // AND is first
         check     = check.substring(condAnd + 5);
         rightcond = conditionMatch(check);

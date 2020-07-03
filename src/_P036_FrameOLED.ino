@@ -12,6 +12,8 @@
 // Added to the main repository with some optimizations and some limitations.
 // Al long as the device is not selected, no RAM is waisted.
 //
+// @tonhuisman: 2020-03-05
+// CHG: Added setting for 'Wake display on receiving text', when unticked doesn't enable the display if it is off by time-out
 // @uwekaditz: 2019-11-22
 // CHG: Each line can now have 64 characters (version is saved as Bit23-20 in PCONFIG_LONG(0)))
 // FIX: Overlapping while page scrolling (size of line content for scrolling pages limited to 128 pixel)
@@ -80,11 +82,12 @@
 
 static int8_t lastWiFiState = P36_WIFI_STATE_UNSET;
 static uint8_t OLEDIndex = 0;
-static boolean bPin3Invers;
-static boolean bScrollLines;
-static boolean bAlternativHeader = false;
+static bool bPin3Invers;
+static bool bScrollLines;
+static bool bNoDisplayOnReceivedText;
+static bool bAlternativHeader = false;
 static uint16_t HeaderCount = 0;
-static boolean bPageScrollDisabled = true;   // first page after INIT without scrolling
+static bool bPageScrollDisabled = true;   // first page after INIT without scrolling
 static uint8_t TopLineOffset = 0;   // Offset for top line, used for rotated image while using displays < P36_MaxDisplayHeight lines
 
 enum eHeaderContent {
@@ -212,11 +215,6 @@ String DisplayLinesV0[P36_Nlines];                // used to load the CustomTask
 // Instantiate display here - does not work to do this within the INIT call
 OLEDDisplay *display=NULL;
 
-void P036_setBitToUL(uint32_t& number, byte bitnr, bool value) {
-  uint32_t mask = (0x01UL << bitnr);
-  uint32_t newbit = (value ? 1UL : 0UL) << bitnr;
-  number = (number & ~mask) | newbit;
-}
 uint8_t get8BitFromUL(uint32_t number, byte bitnr) {
   return (number >> bitnr) & 0xFF;
 }
@@ -349,7 +347,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
         // FIXME TD-er: Why is this using pin3 and not pin1? And why isn't this using the normal pin selection functions?
         addFormPinSelect(F("Display button"), F("taskdevicepin3"), CONFIG_PIN3);
-        bPin3Invers = getBitFromUL(PCONFIG_LONG(0), 16);  // Bit 16
+        bPin3Invers = bitRead(PCONFIG_LONG(0), 16);  // Bit 16
         addFormCheckBox(F("Inversed Logic"), F("p036_pin3invers"), bPin3Invers);
 
         addFormNumericBox(F("Display Timeout"), F("p036_timer"), PCONFIG(4));
@@ -375,8 +373,12 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         addFormSelector(F("Header"),F("p036_header"), 14, options9, optionValues9, choice9);
         addFormSelector(F("Header (alternating)"),F("p036_headerAlternate"), 14, options9, optionValues9, choice10);
 
-        bScrollLines = getBitFromUL(PCONFIG_LONG(0), 17);  // Bit 17
+        bScrollLines = bitRead(PCONFIG_LONG(0), 17);  // Bit 17
         addFormCheckBox(F("Scroll long lines"), F("p036_ScrollLines"), bScrollLines);
+
+        bNoDisplayOnReceivedText = bitRead(PCONFIG_LONG(0), 18);  // Bit 18
+        addFormCheckBox(F("Wake display on receiving text"), F("p036_NoDisplay"), !bNoDisplayOnReceivedText);
+        addFormNote(F("When checked, the display wakes up at receiving remote updates."));
 
         for (uint8_t varNr = 0; varNr < P36_Nlines; varNr++)
         {
@@ -407,8 +409,9 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         uint32_t lSettings = 0;
         set8BitToUL(lSettings, 8, uint8_t(getFormItemInt(F("p036_header")) & 0xff));            // Bit15-8 HeaderContent
         set8BitToUL(lSettings, 0, uint8_t(getFormItemInt(F("p036_headerAlternate")) & 0xff));   // Bit 7-0 HeaderContentAlternative
-        P036_setBitToUL(lSettings, 16, isFormItemChecked(F("p036_pin3invers")));                // Bit 16 Pin3Invers
-        P036_setBitToUL(lSettings, 17, isFormItemChecked(F("p036_ScrollLines")));               // Bit 17 ScrollLines
+        bitWrite(lSettings, 16, isFormItemChecked(F("p036_pin3invers")));                // Bit 16 Pin3Invers
+        bitWrite(lSettings, 17, isFormItemChecked(F("p036_ScrollLines")));               // Bit 17 ScrollLines
+        bitWrite(lSettings, 18, !isFormItemChecked(F("p036_NoDisplay")));                // Bit 18 NoDisplayOnReceivingText
         // save CustomTaskSettings always in version V1
         set4BitToUL(lSettings, 20, 0x01);                                                       // Bit23-20 Version CustomTaskSettings -> version V1
 
@@ -529,15 +532,15 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         bAlternativHeader = (++HeaderCount > (lTaskTimer*5)); // change header after half of display time
         if (CONFIG_PIN3 != -1)
         {
-          bPin3Invers = getBitFromUL(PCONFIG_LONG(0), 16);  // Bit 16
-          if ((!bPin3Invers && digitalRead(CONFIG_PIN3)) || (bPin3Invers && !digitalRead(CONFIG_PIN3)))
+          bPin3Invers = bitRead(PCONFIG_LONG(0), 16);  // Bit 16
+          if (bPin3Invers != static_cast<bool>(digitalRead(CONFIG_PIN3)))
           {
             display->displayOn();
             UserVar[event->BaseVarIndex] = 1;      //  Save the fact that the display is now ON
             displayTimer = PCONFIG(4);
           }
         }
-        bScrollLines = getBitFromUL(PCONFIG_LONG(0), 17);  // Bit 17
+        bScrollLines = bitRead(PCONFIG_LONG(0), 17);  // Bit 17
         if ((UserVar[event->BaseVarIndex] == 1) && bScrollLines && (ScrollingPages.Scrolling == 0)) {
           // Display is on.
           OLEDIndex = PCONFIG(7);
@@ -556,7 +559,9 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           displayTimer--;
           if (displayTimer == 0)
           {
-            display->displayOff();
+            if (display) {
+              display->displayOff();
+            }
             UserVar[event->BaseVarIndex] = 0;      //  Save the fact that the display is now OFF
           }
         }
@@ -753,9 +758,11 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
             }
 
             nextFrameToDisplay = LineNo / ScrollingPages.linesPerFrame; // next frame shows the new content
-            displayTimer = PCONFIG(4);
-            if (UserVar[event->BaseVarIndex] == 0) {
+
+            bNoDisplayOnReceivedText = bitRead(PCONFIG_LONG(0), 18);  // Bit 18 NoDisplayOnReceivedText
+            if (UserVar[event->BaseVarIndex] == 0 && !bNoDisplayOnReceivedText) {
               // display was OFF, turn it ON
+              displayTimer = PCONFIG(4);
               display->displayOn();
               UserVar[event->BaseVarIndex] = 1;      //  Save the fact that the display is now ON
             }
@@ -857,7 +864,7 @@ void display_header() {
   }
   switch (_HeaderContent) {
     case eSSID:
-      if (WiFiConnected()) {
+      if (NetworkConnected()) {
         strHeader = WiFi.SSID();
       }
       else {
@@ -1334,7 +1341,7 @@ void display_scrolling_lines(int nlines) {
 
 //Draw Signal Strength Bars, return true when there was an update.
 bool display_wifibars() {
-  const bool connected = WiFiConnected();
+  const bool connected = NetworkConnected();
   const int nbars_filled = (WiFi.RSSI() + 100) / 12;  // all bars filled if RSSI better than -46dB
   const int newState = connected ? nbars_filled : P36_WIFI_STATE_NOT_CONNECTED;
   if (newState == lastWiFiState)
@@ -1356,7 +1363,7 @@ bool display_wifibars() {
   display->setColor(BLACK);
   display->fillRect(x , y, size_x, size_y);
   display->setColor(WHITE);
-  if (WiFiConnected()) {
+  if (NetworkConnected()) {
     for (uint8_t ibar = 0; ibar < nbars; ibar++) {
       int16_t height = size_y * (ibar + 1) / nbars;
       int16_t xpos = x + ibar * width;

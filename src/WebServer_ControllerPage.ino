@@ -22,33 +22,36 @@ void handle_controllers() {
   // submitted data
   if ((protocol != -1) && !controllerNotSet)
   {
-    MakeControllerSettings(ControllerSettings);
     bool mustInit = false;
-
-    if (Settings.Protocol[controllerindex] != protocol)
     {
-      // Protocol has changed.
-      Settings.Protocol[controllerindex] = protocol;
+      // Place in a scope to free ControllerSettings memory ASAP
+      MakeControllerSettings(ControllerSettings);
 
-      // there is a protocol selected?
-      if (protocol != 0)
+      if (Settings.Protocol[controllerindex] != protocol)
       {
-        mustInit = true;
-        handle_controllers_clearLoadDefaults(controllerindex, ControllerSettings);
-      }
-    }
+        // Protocol has changed.
+        Settings.Protocol[controllerindex] = protocol;
 
-    // subitted same protocol
-    else
-    {
-      // there is a protocol selected
-      if (protocol != 0)
-      {
-        mustInit = true;
-        handle_controllers_CopySubmittedSettings(controllerindex, ControllerSettings);
+        // there is a protocol selected?
+        if (protocol != 0)
+        {
+          mustInit = true;
+          handle_controllers_clearLoadDefaults(controllerindex, ControllerSettings);
+        }
       }
+
+      // subitted same protocol
+      else
+      {
+        // there is a protocol selected
+        if (protocol != 0)
+        {
+          mustInit = true;
+          handle_controllers_CopySubmittedSettings(controllerindex, ControllerSettings);
+        }
+      }
+      addHtmlError(SaveControllerSettings(controllerindex, ControllerSettings));
     }
-    addHtmlError(SaveControllerSettings(controllerindex, ControllerSettings));
     addHtmlError(SaveSettings());
 
     if (mustInit) {
@@ -126,8 +129,9 @@ void handle_controllers_clearLoadDefaults(byte controllerindex, ControllerSettin
 void handle_controllers_CopySubmittedSettings(byte controllerindex, ControllerSettingsStruct& ControllerSettings)
 {
   // copy all settings to controller settings struct
-  for (int parameterIdx = 1; parameterIdx <= CONTROLLER_ENABLED; ++parameterIdx) {
-    saveControllerParameterForm(ControllerSettings, controllerindex, parameterIdx);
+  for (int parameterIdx = 0; parameterIdx <= ControllerSettingsStruct::CONTROLLER_ENABLED; ++parameterIdx) {
+    ControllerSettingsStruct::VarType varType = static_cast<ControllerSettingsStruct::VarType>(parameterIdx);
+    saveControllerParameterForm(ControllerSettings, controllerindex, varType);
   }
 
   protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(controllerindex);
@@ -233,7 +237,7 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
   addFormHeader(F("Controller Settings"));
   addRowLabel(F("Protocol"));
   byte choice = Settings.Protocol[controllerindex];
-  addSelector_Head(F("protocol"), true);
+  addSelector_Head_reloadOnChange(F("protocol"));
   addSelector_Item(F("- Standalone -"), 0, false, false, "");
 
   for (byte x = 0; x <= protocolCount; x++)
@@ -259,72 +263,83 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
     if (!Protocol[ProtocolIndex].Custom)
     {
       if (Protocol[ProtocolIndex].usesHost) {
-        addControllerParameterForm(ControllerSettings, controllerindex, CONTROLLER_USE_DNS);
+        addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_USE_DNS);
 
         if (ControllerSettings.UseDNS)
         {
-          addControllerParameterForm(ControllerSettings, controllerindex, CONTROLLER_HOSTNAME);
+          addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_HOSTNAME);
         }
         else
         {
-          addControllerParameterForm(ControllerSettings, controllerindex, CONTROLLER_IP);
+          addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_IP);
         }
       }
-      addControllerParameterForm(ControllerSettings, controllerindex, CONTROLLER_PORT);
+      addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_PORT);
 
       if (Protocol[ProtocolIndex].usesQueue) {
         addTableSeparator(F("Controller Queue"), 2, 3);
-        addControllerParameterForm(ControllerSettings, controllerindex, CONTROLLER_MIN_SEND_INTERVAL);
-        addControllerParameterForm(ControllerSettings, controllerindex, CONTROLLER_MAX_QUEUE_DEPTH);
-        addControllerParameterForm(ControllerSettings, controllerindex, CONTROLLER_MAX_RETRIES);
-        addControllerParameterForm(ControllerSettings, controllerindex, CONTROLLER_FULL_QUEUE_ACTION);
+        addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_MIN_SEND_INTERVAL);
+        addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_MAX_QUEUE_DEPTH);
+        addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_MAX_RETRIES);
+        addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_FULL_QUEUE_ACTION);
       }
 
       if (Protocol[ProtocolIndex].usesCheckReply) {
-        addControllerParameterForm(ControllerSettings, controllerindex, CONTROLLER_CHECK_REPLY);
+        addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_CHECK_REPLY);
       }
 
       if (Protocol[ProtocolIndex].usesTimeout) {
-        addControllerParameterForm(ControllerSettings, controllerindex, CONTROLLER_TIMEOUT);
+        addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_TIMEOUT);
       }
 
       if (Protocol[ProtocolIndex].usesSampleSets) {
-        addControllerParameterForm(ControllerSettings, controllerindex, CONTROLLER_SAMPLE_SET_INITIATOR);
+        addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_SAMPLE_SET_INITIATOR);
       }
 
-      if (Protocol[ProtocolIndex].usesAccount || Protocol[ProtocolIndex].usesPassword) {
+      if (Protocol[ProtocolIndex].useExtendedCredentials()) {
         addTableSeparator(F("Credentials"), 2, 3);
+        addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_USE_EXTENDED_CREDENTIALS);
       }
 
       if (Protocol[ProtocolIndex].usesAccount)
       {
-        addControllerParameterForm(ControllerSettings, controllerindex, CONTROLLER_USER);
+        addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_USER);
       }
 
       if (Protocol[ProtocolIndex].usesPassword)
       {
-        addControllerParameterForm(ControllerSettings, controllerindex, CONTROLLER_PASS);
+        addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_PASS);
       }
-
+      #ifdef USES_MQTT
       if (Protocol[ProtocolIndex].usesMQTT) {
         addTableSeparator(F("MQTT"), 2, 3);
+
+        addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_CLIENT_ID);
+        addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_UNIQUE_CLIENT_ID_RECONNECT);        
+        addRowLabel(F("Current Client ID"));
+        addHtml(getMQTTclientID(ControllerSettings));
+        addFormNote(F("Updated on load of this page"));
+        addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_RETAINFLAG);
       }
+      #endif // USES_MQTT
+
 
       if (Protocol[ProtocolIndex].usesTemplate || Protocol[ProtocolIndex].usesMQTT)
       {
-        addControllerParameterForm(ControllerSettings, controllerindex, CONTROLLER_SUBSCRIBE);
-        addControllerParameterForm(ControllerSettings, controllerindex, CONTROLLER_PUBLISH);
+        addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_SUBSCRIBE);
+        addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_PUBLISH);
       }
-
+      #ifdef USES_MQTT
       if (Protocol[ProtocolIndex].usesMQTT)
       {
-        addControllerParameterForm(ControllerSettings, controllerindex, CONTROLLER_LWT_TOPIC);
-        addControllerParameterForm(ControllerSettings, controllerindex, CONTROLLER_LWT_CONNECT_MESSAGE);
-        addControllerParameterForm(ControllerSettings, controllerindex, CONTROLLER_LWT_DISCONNECT_MESSAGE);
-        addControllerParameterForm(ControllerSettings, controllerindex, CONTROLLER_SEND_LWT);
-        addControllerParameterForm(ControllerSettings, controllerindex, CONTROLLER_WILL_RETAIN);
-        addControllerParameterForm(ControllerSettings, controllerindex, CONTROLLER_CLEAN_SESSION);
+        addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_LWT_TOPIC);
+        addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_LWT_CONNECT_MESSAGE);
+        addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_LWT_DISCONNECT_MESSAGE);
+        addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_SEND_LWT);
+        addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_WILL_RETAIN);
+        addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_CLEAN_SESSION);
       }
+      #endif // USES_MQTT
     }
     {
       // Load controller specific settings
@@ -338,7 +353,7 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
         addHtmlError(F("Bug in CPlugin::Function::CPLUGIN_WEBFORM_LOAD, should not append to string, use addHtml() instead"));
       }
     }
-    addControllerParameterForm(ControllerSettings, controllerindex, CONTROLLER_ENABLED);
+    addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_ENABLED);
   }
 
   addFormSeparator(2);

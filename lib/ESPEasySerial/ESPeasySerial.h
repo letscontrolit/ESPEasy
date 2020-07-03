@@ -40,13 +40,15 @@
 #endif // ifndef DISABLE_SOFTWARE_SERIAL
 
 #ifdef ESP32
-  # define NR_ESPEASY_SERIAL_TYPES 3 // Serial 0, 1, 2
+  # define NR_ESPEASY_SERIAL_TYPES 4 // Serial 0, 1, 2, sc16is752
 #endif // ifdef ESP32
-#if !defined(DISABLE_SOFTWARE_SERIAL) && defined(ESP8266)
-  # define NR_ESPEASY_SERIAL_TYPES 5 // Serial 0, 1, 0_swap, software, sc16is752
-#else // if !defined(DISABLE_SOFTWARE_SERIAL) && defined(ESP8266)
-  # define NR_ESPEASY_SERIAL_TYPES 3 // Serial 0, 1, 0_swap
-#endif // if !defined(DISABLE_SOFTWARE_SERIAL) && defined(ESP8266)
+#ifdef ESP8266
+  #if !defined(DISABLE_SOFTWARE_SERIAL)
+    # define NR_ESPEASY_SERIAL_TYPES 5 // Serial 0, 1, 0_swap, software, sc16is752
+  #else // if !defined(DISABLE_SOFTWARE_SERIAL)
+    # define NR_ESPEASY_SERIAL_TYPES 3 // Serial 0, 1, 0_swap
+  #endif // if !defined(DISABLE_SOFTWARE_SERIAL)
+#endif
 
 #ifndef ESP32
   # if defined(ARDUINO_ESP8266_RELEASE_2_4_0) || defined(ARDUINO_ESP8266_RELEASE_2_4_1)  || defined(ARDUINO_ESP8266_RELEASE_2_4_2)
@@ -323,6 +325,10 @@ public:
 
   unsigned long getBaudRate() const {
     return _baud;
+  }
+
+  bool useGPIOpins() const {
+    return _serialtype != ESPeasySerialType::serialtype::sc16is752;
   }
 
 private:

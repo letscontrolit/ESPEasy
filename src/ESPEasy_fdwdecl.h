@@ -2,6 +2,7 @@
 #define ESPEASY_FWD_DECL_H
 
 #include "ESPEasy_common.h"
+#include "src/DataStructs/SettingsType.h"
 #include "src/DataStructs/ESPEasy_EventStruct.h"
 
 #include "src/Globals/CPlugins.h"
@@ -65,14 +66,17 @@ bool     connectClient(WiFiClient& client,
 
 
 String getWifiModeString(WiFiMode_t wifimode);
-bool   WiFiConnected(uint32_t timeout_ms);
-bool   WiFiConnected();
+bool   NetworkConnected(uint32_t timeout_ms);
+bool   NetworkConnected();
 bool   useStaticIP();
 bool   hostReachable(const IPAddress& ip);
 bool   hostReachable(const String& hostname);
 void formatMAC(const uint8_t * mac, char (& strMAC)[20]);
+String formatMAC(const uint8_t *mac);
 String to_json_object_value(const String& object,
                             const String& value);
+void htmlEscape(String& html, char c);
+void htmlEscape(String& html);
 
 
 bool     I2C_read_bytes(uint8_t        i2caddr,
@@ -120,6 +124,7 @@ void MQTTDisconnect();
 bool MQTTConnect(controllerIndex_t controller_idx);
 bool MQTTCheck(controllerIndex_t controller_idx);
 void schedule_all_tasks_using_MQTT_controller();
+bool MQTT_queueFull(controllerIndex_t controller_idx);
 bool MQTTpublish(controllerIndex_t controller_idx, const char *topic, const char *payload, bool retained);
 #endif // ifdef USES_MQTT
 
@@ -141,6 +146,7 @@ String formatToHex(unsigned long value, const String& prefix);
 String formatToHex(unsigned long value);
 String formatToHex_decimal(unsigned long value);
 String getNumerical(const String& tBuf, bool mustBeInteger);
+String format_msec_duration(long duration);
 
 float getCPUload();
 int getLoopCountPerSec();
@@ -149,12 +155,32 @@ void setLogLevelFor(byte destination, byte logLevel);
 uint16_t getPortFromKey(uint32_t key);
 
 void initRTC();
+boolean saveToRTC();
 void deepSleepStart(int dsdelay);
 bool setControllerEnableStatus(controllerIndex_t controllerIndex, bool enabled);
 bool setTaskEnableStatus(taskIndex_t taskIndex, bool enabled);
 void taskClear(taskIndex_t taskIndex, bool save);
 void SensorSendTask(taskIndex_t TaskIndex);
 bool remoteConfig(struct EventStruct *event, const String& string);
+
+String getControllerParameterInternalName(protocolIndex_t ProtocolIndex, ControllerSettingsStruct::VarType parameterIdx);
+void addControllerParameterForm(const ControllerSettingsStruct& ControllerSettings, controllerIndex_t controllerindex, ControllerSettingsStruct::VarType varType);
+void saveControllerParameterForm(ControllerSettingsStruct& ControllerSettings, controllerIndex_t controllerindex, ControllerSettingsStruct::VarType varType);
+
+String SaveToFile(SettingsType::Enum settingsType, int index, byte *memAddress, int datasize);
+String SaveToFile(SettingsType::Enum settingsType, int index, byte *memAddress, int datasize, int posInBlock);
+String LoadFromFile(SettingsType::Enum settingsType, int index, byte *memAddress, int datasize, int offset_in_block);
+String LoadFromFile(SettingsType::Enum settingsType, int index, byte *memAddress, int datasize);
+String ClearInFile(SettingsType::Enum settingsType, int index);
+String LoadStringArray(SettingsType::Enum settingsType, int index, String strings[], uint16_t nrStrings, uint16_t maxStringLength);
+String SaveStringArray(SettingsType::Enum settingsType, int index, const String strings[], uint16_t nrStrings, uint16_t maxStringLength);
+
+
+void SendStatus(EventValueSource::Enum source, const String& status);
+
+String parseTemplate(String& tmpString);
+String parseTemplate(String& tmpString, bool useURLencode);
+void parseCommandString(struct EventStruct *event, const String& string);
 
 String parseString(const String& string, byte indexFind);
 String parseStringKeepCase(const String& string, byte indexFind);
@@ -163,19 +189,27 @@ String parseStringToEndKeepCase(const String& string, byte indexFind);
 String tolerantParseStringKeepCase(const String& string, byte indexFind);
 
 int parseCommandArgumentInt(const String& string, unsigned int argc);
+taskIndex_t parseCommandArgumentTaskIndex(const String& string, unsigned int argc);
 
 String describeAllowedIPrange();
 void clearAccessBlock();
 String rulesProcessingFile(const String& fileName, String& event);
 int Calculate(const char *input, float* result);
-bool SourceNeedsStatusUpdate(byte eventSource);
+bool SourceNeedsStatusUpdate(EventValueSource::Enum eventSource);
+void SendStatus(EventValueSource::Enum source, const String& status);
+bool ExecuteCommand(taskIndex_t taskIndex, EventValueSource::Enum source, const char *Line, bool tryPlugin, bool tryInternal, bool tryRemoteConfig);
 
 void WifiScan(bool async, bool quick = false);
 void WifiScan();
-void WiFiConnectRelaxed();
 void WifiDisconnect();
 void setAP(bool enable);
 void setSTA(bool enable);
+
+// Used for Networking with Wifi or Ethernet
+#include "ESPEasyEthWifi.h"
+#include "ESPEasyNetwork.h"
+void WiFiConnectRelaxed();
+bool WiFiConnected();
 
 #include "src/Globals/ESPEasyWiFiEvent.h"
 
@@ -188,13 +222,16 @@ unsigned long FreeMem(void);
 void ResetFactory();
 void reboot();
 void SendUDPCommand(byte destUnit, const char *data, byte dataLength);
+bool hasIPaddr();
 
 #include <FS.h>
 void printDirectory(File dir, int numTabs);
 
 void delayBackground(unsigned long dsdelay);
 
-void setIntervalTimerOverride(unsigned long id, unsigned long msecFromNow); //implemented in Scheduler.ino
+//implemented in Scheduler.ino
+void setIntervalTimerOverride(unsigned long id, unsigned long msecFromNow);
+void sendGratuitousARP_now();
 
 
 byte PluginCall(byte Function, struct EventStruct *event, String& str);

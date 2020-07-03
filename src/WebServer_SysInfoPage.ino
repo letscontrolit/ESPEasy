@@ -2,6 +2,10 @@
 #include "src/DataStructs/RTCStruct.h"
 #include "src/Globals/CRCValues.h"
 #include "src/Static/WebStaticData.h"
+#include "ESPEasy_common.h"
+
+#include "src/Commands/Diagnostic.h"
+
 
 #ifdef WEBSERVER_NEW_UI
 
@@ -60,32 +64,32 @@ void handle_sysinfo_json() {
   }
   json_number(F("rssi"), String(WiFi.RSSI()));
   json_prop(F("dhcp"),          useStaticIP() ? getLabel(LabelType::IP_CONFIG_STATIC) : getLabel(LabelType::IP_CONFIG_DYNAMIC));
-  json_prop(F("ip"),            formatIP(WiFi.localIP()));
-  json_prop(F("subnet"),        formatIP(WiFi.subnetMask()));
-  json_prop(F("gw"),            formatIP(WiFi.gatewayIP()));
-  json_prop(F("dns1"),          formatIP(WiFi.dnsIP(0)));
-  json_prop(F("dns2"),          formatIP(WiFi.dnsIP(1)));
+  json_prop(F("ip"),            formatIP(NetworkLocalIP()));
+  json_prop(F("subnet"),        formatIP(NetworkSubnetMask()));
+  json_prop(F("gw"),            formatIP(NetworkGatewayIP()));
+  json_prop(F("dns1"),          formatIP(NetworkDnsIP(0)));
+  json_prop(F("dns2"),          formatIP(NetworkDnsIP(1)));
   json_prop(F("allowed_range"), describeAllowedIPrange());
-
-
-  uint8_t  mac[]   = { 0, 0, 0, 0, 0, 0 };
-  uint8_t *macread = WiFi.macAddress(mac);
-  char     macaddress[20];
-  formatMAC(macread, macaddress);
-
-  json_prop(F("sta_mac"), macaddress);
-
-  macread = WiFi.softAPmacAddress(mac);
-  formatMAC(macread, macaddress);
-
-  json_prop(F("ap_mac"), macaddress);
-  json_prop(F("ssid"),   WiFi.SSID());
-  json_prop(F("bssid"),  WiFi.BSSIDstr());
-  json_number(F("channel"), String(WiFi.channel()));
-  json_prop(F("connected"), format_msec_duration(timeDiff(lastConnectMoment, millis())));
-  json_prop(F("ldr"),       getLastDisconnectReason());
+  json_prop(F("sta_mac"),       NetworkMacAddress());
+  json_prop(F("ap_mac"),        WifiSoftAPmacAddress());
+  json_prop(F("ssid"),          WiFi.SSID());
+  json_prop(F("bssid"),         WiFi.BSSIDstr());
+  json_number(F("channel"),     String(WiFi.channel()));
+  json_prop(F("connected"),    format_msec_duration(timeDiff(lastConnectMoment, millis())));
+  json_prop(F("ldr"),          getLastDisconnectReason());
   json_number(F("reconnects"), String(wifi_reconnects));
   json_close();
+
+#ifdef HAS_ETHERNET
+  json_open(false, F("ethernet"));
+  json_prop(F("ethwifimode"), getValue(LabelType::ETH_WIFI_MODE));
+  json_prop(F("ethconnected"), getValue(LabelType::ETH_CONNECTED);
+  json_prop(F("ethduplex"), getValue(LabelType::ETH_DUPLEX);
+  json_prop(F("ethspeed"), getValue(LabelType::ETH_SPEED);
+  json_prop(F("ethstate"), getValue(LabelType::ETH_STATE);
+  json_prop(F("ethspeedstate"), getValue(LabelType::ETH_SPEED_STATE);
+  json.close();
+#endif
 
   json_open(false, F("firmware"));
   json_prop(F("build"),       String(BUILD));
@@ -95,8 +99,10 @@ void handle_sysinfo_json() {
   json_prop(F("plugins"),     getPluginDescriptionString());
   json_prop(F("md5"),         String(CRCValues.compileTimeMD5[0], HEX));
   json_number(F("md5_check"), String(CRCValues.checkPassed()));
-  json_prop(F("build_time"), String(CRCValues.compileTime));
-  json_prop(F("filename"),   String(CRCValues.binaryFilename));
+  json_prop(F("build_time"), get_build_time());
+  json_prop(F("filename"),   getValue(LabelType::BINARY_FILENAME));
+  json_prop(F("build_platform")), getValue(LabelType::BUILD_PLATFORM);
+  json_prop(F("git_head")), getValue(LabelType::GIT_HEAD);
   json_close();
 
   json_open(false, F("esp"));
@@ -218,6 +224,10 @@ void handle_sysinfo() {
 
   handle_sysinfo_Network();
 
+#ifdef HAS_ETHERNET
+  handle_sysinfo_Ethernet();
+#endif
+
   handle_sysinfo_WiFiSettings();
 
   handle_sysinfo_Firmware();
@@ -263,7 +273,7 @@ void handle_sysinfo_basicInfo() {
   addRowLabelValue(LabelType::CPU_ECO_MODE);
 
   int freeMem = ESP.getFreeHeap();
-  addRowLabel(F("Free Mem"));
+  addRowLabel(getLabel(LabelType::FREE_MEM));
   {
     String html;
     html.reserve(64);
@@ -276,7 +286,7 @@ void handle_sysinfo_basicInfo() {
     html += ')';
     addHtml(html);
   }
-  addRowLabel(F("Free Stack"));
+  addRowLabel(getLabel(LabelType::FREE_STACK));
   {
     String html;
     html.reserve(64);
@@ -309,12 +319,36 @@ void handle_sysinfo_basicInfo() {
   addRowLabelValue(LabelType::RESET_REASON);
   addRowLabelValue(LabelType::LAST_TASK_BEFORE_REBOOT);
   addRowLabelValue(LabelType::SW_WD_COUNT);
+
+  #ifdef HAS_ETHERNET
+  addRowLabel(F("Network Type"));
+  addRowLabelValue(LabelType::ETH_WIFI_MODE);
+  #endif
 }
+
+#ifdef HAS_ETHERNET
+void handle_sysinfo_Ethernet() {
+    if(eth_wifi_mode == ETHERNET) {
+      addTableSeparator(F("Ethernet"), 2, 3);
+      addRowLabelValue(LabelType::ETH_STATE);
+      addRowLabelValue(LabelType::ETH_SPEED);
+      addRowLabelValue(LabelType::ETH_DUPLEX);
+      addRowLabelValue(LabelType::ETH_MAC);
+      addRowLabelValue(LabelType::ETH_IP_ADDRESS_SUBNET);
+      addRowLabelValue(LabelType::ETH_IP_GATEWAY);
+      addRowLabelValue(LabelType::ETH_IP_DNS);
+    }
+}
+#endif
 
 void handle_sysinfo_Network() {
   addTableSeparator(F("Network"), 2, 3, F("Wifi"));
 
-  if (WiFiConnected())
+  if (
+    #ifdef HAS_ETHERNET
+    eth_wifi_mode == WIFI &&
+    #endif
+    NetworkConnected())
   {
     addRowLabel(F("Wifi"));
     # if defined(ESP8266)
@@ -352,20 +386,8 @@ void handle_sysinfo_Network() {
   addRowLabelValue(LabelType::CLIENT_IP);
   addRowLabelValue(LabelType::DNS);
   addRowLabelValue(LabelType::ALLOWED_IP_RANGE);
-  addRowLabel(getLabel(LabelType::STA_MAC));
-
-  {
-    uint8_t  mac[]   = { 0, 0, 0, 0, 0, 0 };
-    uint8_t *macread = WiFi.macAddress(mac);
-    char     macaddress[20];
-    formatMAC(macread, macaddress);
-    addHtml(macaddress);
-
-    addRowLabel(getLabel(LabelType::AP_MAC));
-    macread = WiFi.softAPmacAddress(mac);
-    formatMAC(macread, macaddress);
-    addHtml(macaddress);
-  }
+  addRowLabelValue(LabelType::STA_MAC);
+  addRowLabelValue(LabelType::AP_MAC);
 
   addRowLabel(getLabel(LabelType::SSID));
   {
@@ -412,40 +434,12 @@ void handle_sysinfo_Firmware() {
   addHtml(" ");
   addHtml(getPluginDescriptionString());
 
-  bool filenameDummy = String(CRCValues.binaryFilename).startsWith(F("ThisIsTheDummy"));
-
-  if (!filenameDummy) {
-    addRowLabel(F("Build Md5"));
-
-    String html;
-    html.reserve(64);
-
-    for (byte i = 0; i < 16; i++) {
-      html += String(CRCValues.compileTimeMD5[i], HEX);
-    }
-    addHtml(html);
-
-    addRowLabel(F("Md5 check"));
-
-    if (!CRCValues.checkPassed()) {
-      addHtml(F("<font color = 'red'>fail !</font>"));
-    }
-    else {
-      addHtml(F("passed."));
-    }
-  }
-  addRowLabel_copy(getLabel(LabelType::BUILD_TIME));
-  addHtml(String(CRCValues.compileDate));
-  addHtml(" ");
-  addHtml(String(CRCValues.compileTime));
-
-  addRowLabel_copy(getLabel(LabelType::BINARY_FILENAME));
-
-  if (filenameDummy) {
-    addHtml(F("<b>Self built!</b>"));
-  } else {
-    addHtml(String(CRCValues.binaryFilename));
-  }
+  addRowLabel(F("Build Origin"));
+  addHtml(get_build_origin());
+  addRowLabelValue_copy(LabelType::BUILD_TIME);
+  addRowLabelValue_copy(LabelType::BINARY_FILENAME);
+  addRowLabelValue_copy(LabelType::BUILD_PLATFORM);
+  addRowLabelValue_copy(LabelType::GIT_HEAD);
 }
 
 void handle_sysinfo_SystemStatus() {
@@ -581,7 +575,6 @@ void handle_sysinfo_Storage() {
     addHtml(html);
   }
 
-  # if defined(ESP8266)
   {
     // FIXME TD-er: Must also add this for ESP32.
     addRowLabel(getLabel(LabelType::SKETCH_SIZE));
@@ -597,8 +590,10 @@ void handle_sysinfo_Storage() {
 
     uint32_t maxSketchSize;
     bool     use2step;
-    bool     otaEnabled = OTA_possible(maxSketchSize, use2step);
-
+    # if defined(ESP8266)
+    bool     otaEnabled = 
+    #endif
+      OTA_possible(maxSketchSize, use2step);
     addRowLabel(getLabel(LabelType::MAX_OTA_SKETCH_SIZE));
     {
       String html;
@@ -611,15 +606,17 @@ void handle_sysinfo_Storage() {
       addHtml(html);
     }
 
+    # if defined(ESP8266)
     addRowLabel(getLabel(LabelType::OTA_POSSIBLE));
     addHtml(boolToString(otaEnabled));
 
     addRowLabel(getLabel(LabelType::OTA_2STEP));
     addHtml(boolToString(use2step));
-  }
-  # endif // if defined(ESP8266)
+    # endif // if defined(ESP8266)
 
-  addRowLabel(getLabel(LabelType::SPIFFS_SIZE));
+  }
+
+  addRowLabel(getLabel(LabelType::FS_SIZE));
   {
     String html;
     html.reserve(32);
@@ -643,7 +640,7 @@ void handle_sysinfo_Storage() {
   {
   # if defined(ESP8266)
     fs::FSInfo fs_info;
-    SPIFFS.info(fs_info);
+    ESPEASY_FS.info(fs_info);
     addRowLabel(F("Maximum open files"));
     addHtml(String(fs_info.maxOpenFiles));
 
@@ -665,10 +662,12 @@ void handle_sysinfo_Storage() {
     html_TD();
     addHtml(F("(offset / size per item / index)"));
 
-    for (int st = 0; st < SettingsType_MAX; ++st) {
-      SettingsType settingsType = static_cast<SettingsType>(st);
+    for (int st = 0; st < SettingsType::SettingsType_MAX; ++st) {
+      SettingsType::Enum settingsType = static_cast<SettingsType::Enum>(st);
       html_TR_TD();
-      addHtml(getSettingsTypeString(settingsType));
+      addHtml(SettingsType::getSettingsTypeString(settingsType));
+      html_BR();
+      addHtml(SettingsType::getSettingsFileName(settingsType));
       html_TD();
       getStorageTableSVG(settingsType);
     }

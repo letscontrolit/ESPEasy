@@ -5,18 +5,17 @@
 #include "ESPEasy_common.h"
 
 #include "src/DataStructs/SecurityStruct.h"
-#include "src/DataStructs/CRCStruct.h"
 #include "src/DataStructs/SettingsStruct.h"
 
 #include "src/DataStructs/ControllerSettingsStruct.h"
 #include "src/DataStructs/ESPEasyLimits.h"
 #include "src/DataStructs/TimingStats.h"
 
-#include "src/Globals/CRCValues.h"
 #include "src/Globals/Settings.h"
 #include "src/Globals/SecuritySettings.h"
 #include "src/Globals/ESPEasyWiFiEvent.h"
 
+#include "src/Helpers/CompiletimeDefines.h"
 #include "src/Helpers/ESPEasy_time_calc.h"
 
 #include <WiFiClient.h>
@@ -100,16 +99,15 @@ String get_auth_header(const String& user, const String& pass) {
   return authHeader;
 }
 
-String get_auth_header(int controller_index) {
+String get_auth_header(int controller_index, const ControllerSettingsStruct& ControllerSettings) {
   String authHeader = "";
 
   if (validControllerIndex(controller_index)) {
-    if ((SecuritySettings.ControllerUser[controller_index][0] != 0) &&
-        (SecuritySettings.ControllerPassword[controller_index][0] != 0))
+    if (hasControllerCredentialsSet(controller_index, ControllerSettings))
     {
       authHeader = get_auth_header(
-        String(SecuritySettings.ControllerUser[controller_index]),
-        String(SecuritySettings.ControllerPassword[controller_index]));
+        getControllerUser(controller_index, ControllerSettings),
+        getControllerPass(controller_index, ControllerSettings));
     }
   } else {
     addLog(LOG_LEVEL_ERROR, F("Invalid controller index"));
@@ -126,9 +124,9 @@ String get_user_agent_request_header_field() {
   request   += F("ESP Easy/");
   request   += BUILD;
   request   += '/';
-  request   += String(CRCValues.compileDate);
+  request   += get_build_date();
   request   += ' ';
-  request   += String(CRCValues.compileTime);
+  request   += get_build_time();
   request   += "\r\n";
   agent_size = request.length();
   return request;
@@ -215,7 +213,7 @@ String create_http_request_auth(
     defaultport ? ControllerSettings.getHost() : ControllerSettings.getHostPortString(),
     method,
     uri,
-    get_auth_header(controller_index),
+    get_auth_header(controller_index, ControllerSettings),
     "", // additional_options
     content_length);
 }
@@ -274,12 +272,12 @@ bool count_connection_results(bool success, const String& prefix, int controller
 bool try_connect_host(int controller_number, WiFiUDP& client, ControllerSettingsStruct& ControllerSettings) {
   START_TIMER;
 
-  if (!WiFiConnected()) { return false; }
+  if (!NetworkConnected()) { return false; }
   client.setTimeout(ControllerSettings.ClientTimeout);
 #ifndef BUILD_NO_DEBUG
   log_connecting_to(F("UDP  : "), controller_number, ControllerSettings);
 #endif // ifndef BUILD_NO_DEBUG
-  bool success      = ControllerSettings.beginPacket(client) != 0;
+  bool success      = ControllerSettings.beginPacket(client);
   const bool result = count_connection_results(
     success,
     F("UDP  : "), controller_number, ControllerSettings);
@@ -294,7 +292,7 @@ bool try_connect_host(int controller_number, WiFiClient& client, ControllerSetti
 bool try_connect_host(int controller_number, WiFiClient& client, ControllerSettingsStruct& ControllerSettings, const String& loglabel) {
   START_TIMER;
 
-  if (!WiFiConnected()) { return false; }
+  if (!NetworkConnected()) { return false; }
 
   // Use WiFiClient class to create TCP connections
   client.setTimeout(ControllerSettings.ClientTimeout);
@@ -427,4 +425,49 @@ bool send_via_http(const String& logIdentifier, WiFiClient& client, const String
 
 bool send_via_http(int controller_number, WiFiClient& client, const String& postStr, bool must_check_reply) {
   return send_via_http(get_formatted_Controller_number(controller_number), client, postStr, must_check_reply);
+}
+
+
+String getControllerUser(controllerIndex_t controller_idx, const ControllerSettingsStruct& ControllerSettings)
+{
+  if (!validControllerIndex(controller_idx)) return "";
+  if (ControllerSettings.useExtendedCredentials()) {
+    return ExtendedControllerCredentials.getControllerUser(controller_idx);
+  }
+  return SecuritySettings.ControllerUser[controller_idx];
+}
+
+String getControllerPass(controllerIndex_t controller_idx, const ControllerSettingsStruct& ControllerSettings)
+{
+  if (!validControllerIndex(controller_idx)) return "";
+  if (ControllerSettings.useExtendedCredentials()) {
+    return ExtendedControllerCredentials.getControllerPass(controller_idx);
+  }
+  return SecuritySettings.ControllerPassword[controller_idx];
+}
+
+void setControllerUser(controllerIndex_t controller_idx, const ControllerSettingsStruct& ControllerSettings, const String& value)
+{
+  if (!validControllerIndex(controller_idx)) return;
+  if (ControllerSettings.useExtendedCredentials()) {
+    ExtendedControllerCredentials.setControllerUser(controller_idx, value);
+  } else {
+    safe_strncpy(SecuritySettings.ControllerUser[controller_idx], value, sizeof(SecuritySettings.ControllerUser[0]));
+  }
+}
+
+void setControllerPass(controllerIndex_t controller_idx, const ControllerSettingsStruct& ControllerSettings, const String& value)
+{
+  if (!validControllerIndex(controller_idx)) return;
+  if (ControllerSettings.useExtendedCredentials()) {
+    ExtendedControllerCredentials.setControllerPass(controller_idx, value);
+  } else {
+    safe_strncpy(SecuritySettings.ControllerPassword[controller_idx], value, sizeof(SecuritySettings.ControllerPassword[0]));
+  }
+}
+
+bool hasControllerCredentialsSet(controllerIndex_t controller_idx, const ControllerSettingsStruct& ControllerSettings)
+{
+  return getControllerUser(controller_idx, ControllerSettings).length() != 0 &&
+         getControllerPass(controller_idx, ControllerSettings).length() != 0;
 }

@@ -7,6 +7,10 @@
 #define CPLUGIN_ID_006         6
 #define CPLUGIN_NAME_006       "PiDome MQTT"
 
+String CPlugin_006_pubname;
+bool CPlugin_006_mqtt_retainFlag;
+
+
 bool CPlugin_006(CPlugin::Function function, struct EventStruct *event, String& string)
 {
   bool success = false;
@@ -20,6 +24,7 @@ bool CPlugin_006(CPlugin::Function function, struct EventStruct *event, String& 
         Protocol[protocolCount].usesTemplate = true;
         Protocol[protocolCount].usesAccount = false;
         Protocol[protocolCount].usesPassword = false;
+        Protocol[protocolCount].usesExtCreds = true;
         Protocol[protocolCount].defaultPort = 1883;
         Protocol[protocolCount].usesID = false;
         break;
@@ -36,6 +41,8 @@ bool CPlugin_006(CPlugin::Function function, struct EventStruct *event, String& 
         MakeControllerSettings(ControllerSettings);
         LoadControllerSettings(event->ControllerIndex, ControllerSettings);
         MQTTDelayHandler.configureControllerSettings(ControllerSettings);
+        CPlugin_006_pubname = ControllerSettings.Publish;
+        CPlugin_006_mqtt_retainFlag = ControllerSettings.mqtt_retainFlag();
         break;
       }
 
@@ -86,12 +93,12 @@ bool CPlugin_006(CPlugin::Function function, struct EventStruct *event, String& 
 
     case CPlugin::Function::CPLUGIN_PROTOCOL_SEND:
       {
-        if (!WiFiConnected(10)) {
+        if (!NetworkConnected(10)) {
           success = false;
           break;
         }
-        MakeControllerSettings(ControllerSettings);
-        LoadControllerSettings(event->ControllerIndex, ControllerSettings);
+        String pubname = CPlugin_006_pubname;
+        bool mqtt_retainFlag = CPlugin_006_mqtt_retainFlag;
 
         statusLED(true);
 
@@ -100,17 +107,20 @@ bool CPlugin_006(CPlugin::Function function, struct EventStruct *event, String& 
           PluginCall(PLUGIN_GET_DEVICEVALUENAMES, event, dummy);
         }
 
-        String pubname = ControllerSettings.Publish;
         parseControllerVariables(pubname, event, false);
 
-        String value = "";
         byte valueCount = getValueCountFromSensorType(event->sensorType);
         for (byte x = 0; x < valueCount; x++)
         {
           String tmppubname = pubname;
           tmppubname.replace(F("%valname%"), ExtraTaskSettings.TaskDeviceValueNames[x]);
-          value = formatUserVarNoCheck(event, x);
-          MQTTpublish(event->ControllerIndex, tmppubname.c_str(), value.c_str(), Settings.MQTTRetainFlag);
+          // Small optimization so we don't try to copy potentially large strings
+          if (event->sensorType == SENSOR_TYPE_STRING) {
+            MQTTpublish(event->ControllerIndex, tmppubname.c_str(), event->String2.c_str(), mqtt_retainFlag);
+          } else {
+            String value = formatUserVarNoCheck(event, x);
+            MQTTpublish(event->ControllerIndex, tmppubname.c_str(), value.c_str(), mqtt_retainFlag);
+          }
         }
         break;
       }

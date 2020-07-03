@@ -73,6 +73,19 @@ boolean Plugin_008(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_TIMER_IN:
+      {
+        if (Plugin_008_init) {
+            // Reset card id on timeout
+            UserVar[event->BaseVarIndex] = 0;
+            UserVar[event->BaseVarIndex + 1] = 0;
+            addLog(LOG_LEVEL_INFO, F("RFID : Removed Tag"));
+            sendData(event);
+            success = true;
+        }
+        break;
+      }
+
     case PLUGIN_ONCE_A_SECOND:
       {
         if (Plugin_008_init)
@@ -83,8 +96,6 @@ boolean Plugin_008(byte function, struct EventStruct *event, String& string)
             {
               // a number of keys were pressed and finished by #
               Plugin_008_keyBuffer = Plugin_008_keyBuffer >> 4;  // Strip #
-              UserVar[event->BaseVarIndex] = (Plugin_008_keyBuffer & 0xFFFF);
-              UserVar[event->BaseVarIndex + 1] = ((Plugin_008_keyBuffer >> 16) & 0xFFFF);
             }
             else if (Plugin_008_bitCount == Plugin_008_WiegandSize)
             {
@@ -94,8 +105,6 @@ boolean Plugin_008(byte function, struct EventStruct *event, String& string)
                 Plugin_008_keyBuffer &= 0xFFFFFF;
               else
                 Plugin_008_keyBuffer &= 0xFFFFFFFF;
-              UserVar[event->BaseVarIndex] = (Plugin_008_keyBuffer & 0xFFFF);
-              UserVar[event->BaseVarIndex + 1] = ((Plugin_008_keyBuffer >> 16) & 0xFFFF);
             }
             else
             {
@@ -113,19 +122,36 @@ boolean Plugin_008(byte function, struct EventStruct *event, String& string)
               }
               break;
             }
+
+            unsigned long old_key = ((uint32_t) UserVar[event->BaseVarIndex]) | ((uint32_t) UserVar[event->BaseVarIndex + 1])<<16;
+            bool new_key = false;
+            
+            if (old_key != Plugin_008_keyBuffer) {
+              UserVar[event->BaseVarIndex] = (Plugin_008_keyBuffer & 0xFFFF);
+              UserVar[event->BaseVarIndex + 1] = ((Plugin_008_keyBuffer >> 16) & 0xFFFF);
+              new_key = true;
+            }
+            
+            if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+              // write log
+              String log = F("RFID : ");
+              if (new_key) {
+                log += F("New Tag: ");
+              } else {
+                log += F("Old Tag: "); 
+              }
+              log += (unsigned long) Plugin_008_keyBuffer;
+              log += F(" Bits: ");
+              log += Plugin_008_bitCount;
+              addLog(LOG_LEVEL_INFO, log);
+            }
             // reset everything
-            unsigned long bitCount = Plugin_008_bitCount;    // copy for log
-            unsigned long keyBuffer = Plugin_008_keyBuffer;  // copy for log
             Plugin_008_keyBuffer = 0;
             Plugin_008_bitCount = 0;
             Plugin_008_timeoutCount = 0;
-            // write log
-            String log = F("RFID : Tag: ");
-            log += keyBuffer;
-            log += F(" Bits: ");
-            log += bitCount;
-            addLog(LOG_LEVEL_INFO, log);
-            sendData(event);
+
+            if (new_key) sendData(event);
+            setPluginTaskTimer(500, event->TaskIndex, event->Par1);
           }
         }
         break;

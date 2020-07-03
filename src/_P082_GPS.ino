@@ -150,6 +150,9 @@ struct P082_data_struct : public PluginTaskData_base {
     if (!hasFix(maxAge_msec)) {
       return -1.0;
     }
+    if ((last_lat < 0.0001 && last_lat > -0.0001) || (last_lng < 0.0001 && last_lng > -0.0001)) {
+      return -1.0;
+    }
     return gps->distanceBetween(last_lat, last_lng, gps->location.lat(), gps->location.lng());
   }
 
@@ -397,14 +400,7 @@ boolean Plugin_082(byte function, struct EventStruct *event, String& string) {
 
       if (P082_data->init(serial_rx, serial_tx)) {
         success = true;
-
-        if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-          String log = F("GPS  : Init OK  ESP GPIO-pin RX:");
-          log += serial_rx;
-          log += F(" TX:");
-          log += serial_tx;
-          addLog(LOG_LEVEL_DEBUG, log);
-        }
+        serialHelper_log_GpioDescription(serial_rx, serial_tx);
 
         if (pps_pin != -1) {
           //          pinMode(pps_pin, INPUT_PULLUP);
@@ -503,15 +499,22 @@ boolean Plugin_082(byte function, struct EventStruct *event, String& string) {
 
           if (P082_DISTANCE > 0) {
             // Check travelled distance.
-            if (distance > static_cast<double>(P082_DISTANCE)) {
+            if (distance > static_cast<double>(P082_DISTANCE) || distance < 0.0) {
               if (P082_data->storeCurPos(P082_TIMEOUT)) {
                 distance_passed = true;
 
-                if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-                  String log = F("GPS: Distance trigger : ");
-                  log += distance;
-                  log += F(" m");
-                  addLog(LOG_LEVEL_INFO, log);
+                // Add sanity check for distance travelled
+                if (distance > static_cast<double>(P082_DISTANCE)) {
+                  String eventString = F("GPS#travelled=");
+                  eventString += distance;
+                  eventQueue.add(eventString);
+
+                  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+                    String log = F("GPS: Distance trigger : ");
+                    log += distance;
+                    log += F(" m");
+                    addLog(LOG_LEVEL_INFO, log);
+                  }
                 }
               }
             }

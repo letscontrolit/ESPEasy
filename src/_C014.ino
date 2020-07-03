@@ -37,6 +37,9 @@
 
 byte msgCounter=0; // counter for send Messages (currently for information / log only!
 
+String CPlugin_014_pubname;
+bool CPlugin_014_mqtt_retainFlag;
+
 
 // send MQTT Message with complete Topic / Payload
 bool CPlugin_014_sendMQTTmsg(String& topic, const char* payload, int& errorCounter) {
@@ -140,6 +143,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
         Protocol[protocolCount].usesTemplate = true;
         Protocol[protocolCount].usesAccount = true;
         Protocol[protocolCount].usesPassword = true;
+        Protocol[protocolCount].usesExtCreds = true;
         Protocol[protocolCount].defaultPort = 1883;
         Protocol[protocolCount].usesID = false;
         break;
@@ -156,6 +160,8 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
         MakeControllerSettings(ControllerSettings);
         LoadControllerSettings(event->ControllerIndex, ControllerSettings);
         MQTTDelayHandler.configureControllerSettings(ControllerSettings);
+        CPlugin_014_pubname = ControllerSettings.Publish;
+        CPlugin_014_mqtt_retainFlag = ControllerSettings.mqtt_retainFlag();
         break;
       }
 
@@ -206,12 +212,6 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
 
     case CPlugin::Function::CPLUGIN_GOT_CONNECTED: //// call after connected to mqtt server to publich device autodicover features
       {
-        MakeControllerSettings(ControllerSettings);
-        LoadControllerSettings(event->ControllerIndex, ControllerSettings);
-        if (!ControllerSettings.checkHostReachable(true)) {
-            success = false;
-            break;
-        }
         statusLED(true);
 
         // send autodiscover header
@@ -242,10 +242,10 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
 
           // $localip	Device → Controller	IP of the device on the local network	Yes	Yes
 #ifdef CPLUGIN_014_V3
-          CPlugin_014_sendMQTTdevice(pubname,"$localip",formatIP(WiFi.localIP()).c_str(),errorCounter);
+          CPlugin_014_sendMQTTdevice(pubname,"$localip",formatIP(NetworkLocalIP()).c_str(),errorCounter);
 
           // $mac	Device → Controller	Mac address of the device network interface. The format MUST be of the type A1:B2:C3:D4:E5:F6	Yes	Yes
-          CPlugin_014_sendMQTTdevice(pubname,"$mac",WiFi.macAddress().c_str(),errorCounter);
+          CPlugin_014_sendMQTTdevice(pubname,"$mac",NetworkMacAddress().c_str(),errorCounter);
 
           // $implementation	Device → Controller	An identifier for the Homie implementation (example esp8266)	Yes	Yes
           #if defined(ESP8266)
@@ -532,7 +532,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
           taskIndex_t taskIndex = INVALID_TASK_INDEX;
           struct EventStruct TempEvent;
           TempEvent.TaskIndex = event->TaskIndex;
-          TempEvent.Source = VALUE_SOURCE_MQTT; // to trigger the correct acknowledgment
+          TempEvent.Source = EventValueSource::Enum::VALUE_SOURCE_MQTT; // to trigger the correct acknowledgment
           int lastindex = event->String1.lastIndexOf('/');
           errorCounter = 0;
           if (event->String1.substring(lastindex + 1) == F("set"))
@@ -685,12 +685,9 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
 
     case CPlugin::Function::CPLUGIN_PROTOCOL_SEND:
       {
-        MakeControllerSettings(ControllerSettings);
-        LoadControllerSettings(event->ControllerIndex, ControllerSettings);
-        if (!ControllerSettings.checkHostReachable(true)) {
-            success = false;
-            break;
-        }
+        String pubname = CPlugin_014_pubname;
+        bool mqtt_retainFlag = CPlugin_014_mqtt_retainFlag;
+
         statusLED(true);
 
         if (ExtraTaskSettings.TaskIndex != event->TaskIndex) {
@@ -698,7 +695,6 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
           PluginCall(PLUGIN_GET_DEVICEVALUENAMES, event, dummy);
         }
 
-        String pubname = ControllerSettings.Publish;
         parseControllerVariables(pubname, event, false);
 
         String value = "";
@@ -707,9 +703,15 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
         {
           String tmppubname = pubname;
           tmppubname.replace(F("%valname%"), ExtraTaskSettings.TaskDeviceValueNames[x]);
-          value = formatUserVarNoCheck(event, x);
 
-          MQTTpublish(event->ControllerIndex, tmppubname.c_str(), value.c_str(), Settings.MQTTRetainFlag);
+          // Small optimization so we don't try to copy potentially large strings
+          if (event->sensorType == SENSOR_TYPE_STRING) {
+            MQTTpublish(event->ControllerIndex, tmppubname.c_str(), event->String2.c_str(), mqtt_retainFlag);
+            value = event->String2.substring(0, 20); // For the log
+          } else {
+            value = formatUserVarNoCheck(event, x);
+            MQTTpublish(event->ControllerIndex, tmppubname.c_str(), value.c_str(), mqtt_retainFlag);
+          }
           if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
             String log = F("C014 : Sent to ");
             log += tmppubname;

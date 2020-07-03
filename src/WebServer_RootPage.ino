@@ -1,5 +1,6 @@
 #ifdef WEBSERVER_ROOT
 
+#include "src/Commands/InternalCommands.h"
 #include "src/Globals/Nodes.h"
 
 // ********************************************************************************
@@ -18,7 +19,7 @@ void handle_root() {
   if (!isLoggedIn()) { return; }
   navMenuIndex = 0;
 
-  // if index.htm exists on SPIFFS serve that one (first check if gziped version exists)
+  // if index.htm exists on FS serve that one (first check if gziped version exists)
   if (loadFromFS(true, F("/index.htm.gz"))) { return; }
 
   if (loadFromFS(false, F("/index.htm.gz"))) { return; }
@@ -42,11 +43,11 @@ void handle_root() {
     printWebString = "";
 
     if (sCommand.length() > 0) {
-      ExecuteCommand_internal(VALUE_SOURCE_HTTP, sCommand.c_str());
+      ExecuteCommand_internal(EventValueSource::Enum::VALUE_SOURCE_HTTP, sCommand.c_str());
     }
 
-    // IPAddress ip = WiFi.localIP();
-    // IPAddress gw = WiFi.gatewayIP();
+    // IPAddress ip = NetworkLocalIP();
+    // IPAddress gw = NetwrokGatewayIP();
 
     addHtml(printWebString);
     addHtml(F("<form>"));
@@ -82,7 +83,7 @@ void handle_root() {
       addHtml(html);
     }
     {
-      addRowLabel(F("Free Mem"));
+      addRowLabel(getLabel(LabelType::FREE_MEM));
       String html;
       html.reserve(64);
       html += freeMem;
@@ -94,7 +95,7 @@ void handle_root() {
       addHtml(html);
     }
     {
-      addRowLabel(F("Free Stack"));
+      addRowLabel(getLabel(LabelType::FREE_STACK));
       String html;
       html.reserve(64);
       html += String(getCurrentFreeStack());
@@ -109,7 +110,7 @@ void handle_root() {
     addRowLabelValue(LabelType::IP_ADDRESS);
     addRowLabel(getLabel(LabelType::WIFI_RSSI));
 
-    if (WiFiConnected())
+    if (NetworkConnected())
     {
       String html;
       html.reserve(32);
@@ -119,6 +120,14 @@ void handle_root() {
       html += ')';
       addHtml(html);
     }
+
+#ifdef HAS_ETHERNET
+    addRowLabelValue(LabelType::ETH_WIFI_MODE);
+    if(eth_wifi_mode == ETHERNET) {
+      addRowLabelValue(LabelType::ETH_SPEED_STATE);
+      addRowLabelValue(LabelType::ETH_IP_ADDRESS);
+    }
+#endif
 
     #ifdef FEATURE_MDNS
     {
@@ -187,6 +196,11 @@ void handle_root() {
 
           html += F("http://");
           html += it->second.ip.toString();
+          uint16_t port = it->second.webgui_portnumber;
+          if (port !=0 && port != 80) {
+            html += ':';
+            html += String(port);
+          }
           html += "'>";
           html += it->second.ip.toString();
           html += "</a>";
@@ -231,7 +245,7 @@ void handle_root() {
       addHtml(F(
                 "OK. Please wait > 1 min and connect to Acces point.<BR><BR>PW=configesp<BR>URL=<a href='http://192.168.4.1'>192.168.4.1</a>"));
       TXBuffer.endStream();
-      ExecuteCommand_internal(VALUE_SOURCE_HTTP, sCommand.c_str());
+      ExecuteCommand_internal(EventValueSource::Enum::VALUE_SOURCE_HTTP, sCommand.c_str());
     }
 
     addHtml(F("OK"));

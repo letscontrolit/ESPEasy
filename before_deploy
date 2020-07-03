@@ -25,69 +25,27 @@ if [ ! -d ${TMP_DIST} ]; then
   exit 1
 fi
 
+echo "### Creating zip archives"
+
 #Naming convention:
 # ESP_Easy_[github version]_[plugin set]_[chip type]_[flash memory].bin
+
+if [ -d "build_output/reject" ]; then
+  zip -qq ${CURPATH}/ESPEasy_ELF_files_$VERSION.zip build_output/reject/*
+fi
+
+zip -qq ${CURPATH}/ESPEasy_ELF_files_$VERSION.zip build_output/debug/*
+echo "### Created ESPEasy_ELF_files_$VERSION.zip"
+
 
 mkdir -p ${TMP_DIST}
 cp -r dist/* ${TMP_DIST}/
 
 if [ -d "docs/build" ]; then
   # Docs have been created
-  mkdir -p ${TMP_DIST}/docs
-  cp -r docs/build/* ${TMP_DIST}/docs/
+  zip -r -qq ${CURPATH}/ESPEasy_docs_$VERSION.zip docs/build/*
+  echo "### Created ESPEasy_docs_$VERSION.zip"
 fi
-
-mkdir -p ${TMP_DIST}/memstats
-
-# Must look into all possible env definitions.
-# Exclude so called "spec_" (special) builds
-for ENV in `grep "^\[env:" platformio*.ini |cut -d'[' -f2|cut -d']' -f1|cut -d':' -f2|sort -n|grep -v spec_`;
-do 
-  MAX_FILESIZE=1044464
-  if [[ ${ENV} == *"_1M"* ]]; then
-    # max 872 kiB - 16 bytes
-    MAX_FILESIZE=892912
-  fi
-  if [[ ${ENV} == *"_1M_OTA"* ]]; then
-    # max 600 kiB - 16 bytes
-    MAX_FILESIZE=614384
-  fi
-  if [[ ${ENV} == *"4M316k"* ]]; then
-    # ESP32 with 1800k of sketch space.
-    MAX_FILESIZE=1900544
-  fi
-  if [[ ${ENV} == *"debug_"* ]]; then
-    # Debug env, used for analysis, not to be run on a node.
-    MAX_FILESIZE=0
-  fi
-
-  FIRMWARE_BIN=`echo "${BINARY_PATH}/${ENV}/firmware.bin"`
-
-  if [ -f $FIRMWARE_BIN ]; then
-    FILESIZE=$(stat -c%s `echo "${FIRMWARE_BIN}"` )
-    if (( FILESIZE < MAX_FILESIZE )); then
-      echo
-      echo "SUCCESS:  $FILESIZE < $MAX_FILESIZE Bytes. (${ENV})" >> ${BUILD_LOG}
-      BIN=${BINARY_PATH}/${ENV}/ESP_Easy_${VERSION}_${ENV}.bin
-      cp ${FIRMWARE_BIN} $BIN
-      python2 crc2.py $BIN
-      mv $BIN "${TMP_DIST}/bin/ESP_Easy_${VERSION}_${ENV}.bin"
-    else
-      echo "FAILED: too large $FILESIZE > $MAX_FILESIZE Bytes. (${ENV})" >> ${BUILD_LOG}
-    fi
-  else
-    echo "FAILED: No file created. (${ENV})" >> ${BUILD_LOG}
-  fi
-
-  ELFFILE=`echo "${BINARY_PATH}/${ENV}/firmware.elf"`
-  if [ -f $ELFFILE ]; then
-    SYMBOLS_STATS=`echo "${TMP_DIST}/memstats/symbols_${ENV}.txt"`
-    STRINGS_STATS=`echo "${TMP_DIST}/memstats/strings_${ENV}.txt"`
-    readelf -a ${ELFFILE} |grep 3ff |sort -n -k 3 > ${SYMBOLS_STATS}
-    objdump  -s -j .rodata ${ELFFILE} > ${STRINGS_STATS}
-  fi
-done
-
 
 #create a source structure that is the same as the original ESPEasy project (and works with the howto on the wiki)
 #rm -rf dist/Source 2>/dev/null
@@ -95,19 +53,36 @@ done
 mkdir -p ${TMP_DIST}/source
 cp -r lib ${TMP_DIST}/source/
 cp -r src ${TMP_DIST}/source/
+cp -r misc ${TMP_DIST}/source/
+cp -r static ${TMP_DIST}/source/
+cp -r tools ${TMP_DIST}/source/
 cp platformio*.ini ${TMP_DIST}/source/
+cp *.txt ${TMP_DIST}/source/
+cp *.csv ${TMP_DIST}/source/
+cp README* ${TMP_DIST}/source/
+
+cp -r build_output/bin/* ${TMP_DIST}/bin
+rm -f ${TMP_DIST}/bin/*ESP32*
 
 cd ${TMP_DIST}
 
-echo
-echo "### Creating zip archive"
-zip -qq ${CURPATH}/ESPEasy_$VERSION.zip -r .
+if [ "$(ls -A ${TMP_DIST}/bin/)"  ]; then
+  echo
+  zip -qq ${CURPATH}/ESPEasy_ESP82xx_$VERSION.zip -r .
+  echo "### Created ESPEasy_ESP82xx_$VERSION.zip"
+fi
 
+cd ${CURPATH}
+rm -f ${TMP_DIST}/bin/*
+cp -r build_output/bin/*ESP32* ${TMP_DIST}/bin
 
+cd ${TMP_DIST}
 
-# Display the build log.
-cat ${BUILD_LOG}
-
+if [ "$(ls -A ${TMP_DIST}/bin/)"  ]; then
+  echo
+  zip -qq ${CURPATH}/ESPEasy_ESP32_$VERSION.zip -r .
+  echo "### Created ESPEasy_ESP32_$VERSION.zip"
+fi
 
 rm -Rf ${TMP_DIST}/* 2>/dev/null
 rmdir ${TMP_DIST}

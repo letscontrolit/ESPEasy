@@ -7,6 +7,16 @@ void addSelector(const String& id,
                  const String  options[],
                  const int     indices[],
                  const String  attr[],
+                 int           selectedIndex)
+{
+  addSelector(id, optionCount, options, indices, attr, selectedIndex, false, true, F("wide"));
+}
+
+void addSelector(const String& id,
+                 int           optionCount,
+                 const String  options[],
+                 const int     indices[],
+                 const String  attr[],
                  int           selectedIndex,
                  boolean       reloadonchange,
                  bool          enabled)
@@ -25,7 +35,12 @@ void addSelector(const String& id,
                  const String& classname)
 {
   // FIXME TD-er Change boolean to disabled
-  addSelector_Head(id, classname, reloadonchange, !enabled);
+  if (reloadonchange)
+  {
+    addSelector_Head_reloadOnChange(id, classname, !enabled);
+  } else {
+    do_addSelector_Head(id, classname, "", !enabled);
+  }
   addSelector_options(optionCount, options, indices, attr, selectedIndex);
   addSelector_Foot();
 }
@@ -42,45 +57,55 @@ void addSelector_options(int optionCount, const String options[], const int indi
     else {
       index = x;
     }
-    String html;
-    html.reserve(64);
-    html += F("<option value=");
-    html += index;
-
-    if (selectedIndex == index) {
-      html += F(" selected");
-    }
-
+    String attr_str;
     if (attr)
     {
-      addHtml(" ");
-      html += attr[x];
+      attr_str = attr[x];
     }
-    html += '>';
-    html += options[x];
-    html += F("</option>");
-    addHtml(html);
+    addSelector_option(index, options[x], attr_str, selectedIndex == index);
   }
 }
 
-void addSelector_Head(const String& id, bool reloadonchange) {
-  addSelector_Head(id, F("wide"), reloadonchange, false);
-}
-
-void addSelector_Head_reloadOnChange(const String& id, const String& classname) {
-  addSelector_Head(id, classname, true, false);
-}
-
-void addSelector_Head(const String& id, const String& classname, bool reloadonchange, bool disabled)
+void addSelector_option(const int index, const String& option, const String& attr, bool isSelected)
 {
-  if (reloadonchange) {
-    do_addSelector_Head(id, classname, F("return dept_onchange(frmselect)"), disabled);
-  } else {
-    do_addSelector_Head(id, classname, "", disabled);
+  String html;
+  html.reserve(36 + option.length() + attr.length());
+  html += F("<option value=");
+  html += index;
+
+  if (isSelected) {
+    html += F(" selected");
   }
+
+  if (attr.length() != 0)
+  {
+    addHtml(" ");
+    html += attr;
+  }
+  html += '>';
+  html += option;
+  html += F("</option>");
+  addHtml(html);
 }
 
-void do_addSelector_Head(const String& id, const String& classname, const String& onChangeCall, bool disabled)
+
+void addSelector_Head(const String& id) {
+  do_addSelector_Head(id, F("wide"), "", false);
+}
+
+void addSelector_Head_reloadOnChange(const String& id) {
+  addSelector_Head_reloadOnChange(id, F("wide"), false);
+}
+
+void addSelector_Head_reloadOnChange(const String& id, const String& classname, bool disabled) {
+  do_addSelector_Head(id, classname, F("return dept_onchange(frmselect)"), disabled);
+}
+
+void addSelector_Head_reloadOnChange(const String& id, const String& classname, const String& onChangeCall, bool disabled) {
+  do_addSelector_Head(id, classname, onChangeCall, disabled);
+}
+
+void do_addSelector_Head(const String& id, const String& classname, const String& onChangeCall, const bool& disabled)
 {
   {
     String html;
@@ -501,7 +526,7 @@ String createGPIO_label(int gpio, int pinnr, bool input, bool output, bool warni
   return result;
 }
 
-void addPinSelect(boolean forI2C, String id,  int choice)
+void addPinSelect(boolean forI2C, const String& id,  int choice)
 {
   #ifdef ESP32
     # define NR_ITEMS_PIN_DROPDOWN  35 // 34 GPIO + 1
@@ -533,11 +558,57 @@ void addPinSelect(boolean forI2C, String id,  int choice)
   #undef NR_ITEMS_PIN_DROPDOWN
 }
 
+#ifdef ESP32
+void addADC_PinSelect(bool touchOnly, const String& id,  int choice)
+{
+  int NR_ITEMS_PIN_DROPDOWN = touchOnly ? 10 : 19;
+  String *gpio_labels  = new String[NR_ITEMS_PIN_DROPDOWN];
+  int    *gpio_numbers = new int[NR_ITEMS_PIN_DROPDOWN];
+
+  // At i == 0 && gpio == -1, add the "Hall Effect" option first
+  int i    = 0;
+  int gpio = -1;
+
+  while (i < NR_ITEMS_PIN_DROPDOWN && gpio <= MAX_GPIO) {
+    int  pinnr = -1;
+    bool input, output, warning;
+    if (touchOnly) {
+      // For touch only list, sort based on touch number
+      // Default sort is on GPIO number.
+      gpio = touchPinToGpio(i);
+    }
+
+    if (getGpioInfo(gpio, pinnr, input, output, warning) || (i == 0)) {
+      int adc,ch, t;
+      if (getADC_gpio_info(gpio, adc, ch, t)) {
+        if (!touchOnly || t >= 0) {
+          gpio_labels[i] = formatGpioName_ADC(gpio);
+          if (adc != 0) {
+            gpio_labels[i] += F(" / ");
+            gpio_labels[i] += createGPIO_label(gpio, pinnr, input, output, warning);
+          }
+          gpio_numbers[i] = gpio;
+          ++i;
+        }
+      }
+    }
+    ++gpio;
+  }
+  bool forI2C = false;
+  renderHTMLForPinSelect(gpio_labels, gpio_numbers, forI2C, id, choice, i);
+  delete[] gpio_numbers;
+  delete[] gpio_labels;
+}
+
+
+#endif
+
+
 // ********************************************************************************
 // Helper function actually rendering dropdown list for addPinSelect()
 // ********************************************************************************
 void renderHTMLForPinSelect(String options[], int optionValues[], boolean forI2C, const String& id,  int choice, int count) {
-  addSelector_Head(id, false);
+  addSelector_Head(id);
 
   for (byte x = 0; x < count; x++)
   {

@@ -2,6 +2,7 @@
 
 #include "ESPEasy-Globals.h"
 #include "ESPEasy_plugindefs.h"
+#include "ESPEasyEthWifi.h"
 
 
 #if defined(ESP32)
@@ -22,6 +23,14 @@ bool dnsServerActive = false;
 
 //NTP status
 bool statusNTPInitialized = false;
+
+// Ethernet Connectiopn status
+#ifdef HAS_ETHERNET
+uint8_t eth_wifi_mode = ETHERNET;
+                                  // WIFI     = 0
+                                  // ETHERNET = 1
+bool eth_connected = false;
+#endif
 
 // udp protocol stuff (syslog, global sync, node info list, ntp time)
 WiFiUDP portUDP;
@@ -49,6 +58,7 @@ unsigned long last_system_event_run = 0;
 #if FEATURE_ADC_VCC
 float vcc = -1.0;
 #endif
+int lastADCvalue = 0;
 
 boolean WebLoggedIn = false;
 int WebLoggedInTimer = 300;

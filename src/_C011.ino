@@ -41,6 +41,7 @@ bool CPlugin_011(CPlugin::Function function, struct EventStruct *event, String& 
         Protocol[protocolCount].usesMQTT = false;
         Protocol[protocolCount].usesAccount = true;
         Protocol[protocolCount].usesPassword = true;
+        Protocol[protocolCount].usesExtCreds = true;
         Protocol[protocolCount].defaultPort = 80;
         Protocol[protocolCount].usesID = false;
         break;
@@ -55,59 +56,62 @@ bool CPlugin_011(CPlugin::Function function, struct EventStruct *event, String& 
     case CPlugin::Function::CPLUGIN_WEBFORM_LOAD:
       {
         String escapeBuffer;
-
-        C011_ConfigStruct customConfig;
-
-        LoadCustomControllerSettings(event->ControllerIndex,(byte*)&customConfig, sizeof(customConfig));
-        customConfig.zero_last();
-        {
-          byte choice = 0;
-          String methods[] = { F("GET"), F("POST"), F("PUT"), F("HEAD"), F("PATCH") };
-          for (byte i = 0; i < 5; i++)
+        std::shared_ptr<C011_ConfigStruct> customConfig(new C011_ConfigStruct);
+        if (customConfig) {
+          LoadCustomControllerSettings(event->ControllerIndex,(byte*)customConfig.get(), sizeof(customConfig));
+          customConfig->zero_last();
           {
-            if (methods[i].equals(customConfig.HttpMethod)) {
-              choice = i;
+            byte choice = 0;
+            String methods[] = { F("GET"), F("POST"), F("PUT"), F("HEAD"), F("PATCH") };
+            for (byte i = 0; i < 5; i++)
+            {
+              if (methods[i].equals(customConfig->HttpMethod)) {
+                choice = i;
+              }
             }
+            addFormSelector(F("HTTP Method"), F("P011httpmethod"), 5, methods, NULL, choice);
           }
-          addFormSelector(F("HTTP Method"), F("P011httpmethod"), 5, methods, NULL, choice);
-        }
 
-        addFormTextBox(F("HTTP URI"), F("P011httpuri"), customConfig.HttpUri, C011_HTTP_URI_MAX_LEN-1);
-        {
-          String escapeBuffer = customConfig.HttpHeader;
-          htmlEscape(escapeBuffer);
-          addFormTextArea(F("HTTP Header"), F("P011httpheader"), escapeBuffer, C011_HTTP_HEADER_MAX_LEN-1, 4, 50);
-        }
-        {
-          String escapeBuffer = customConfig.HttpBody;
-          htmlEscape(escapeBuffer);
-          addFormTextArea(F("HTTP Body"), F("P011httpbody"), escapeBuffer, C011_HTTP_BODY_MAX_LEN-1, 8, 50);
+          addFormTextBox(F("HTTP URI"), F("P011httpuri"), customConfig->HttpUri, C011_HTTP_URI_MAX_LEN-1);
+          {
+            String escapeBuffer = customConfig->HttpHeader;
+            htmlEscape(escapeBuffer);
+            addFormTextArea(F("HTTP Header"), F("P011httpheader"), escapeBuffer, C011_HTTP_HEADER_MAX_LEN-1, 4, 50);
+          }
+          {
+            String escapeBuffer = customConfig->HttpBody;
+            htmlEscape(escapeBuffer);
+            addFormTextArea(F("HTTP Body"), F("P011httpbody"), escapeBuffer, C011_HTTP_BODY_MAX_LEN-1, 8, 50);
+          }
         }
         break;
       }
 
     case CPlugin::Function::CPLUGIN_WEBFORM_SAVE:
       {
-        C011_ConfigStruct customConfig;
-        byte choice = 0;
-        String methods[] = { F("GET"), F("POST"), F("PUT"), F("HEAD"), F("PATCH") };
-        for (byte i = 0; i < 5; i++)
-        {
-          if (methods[i].equals(customConfig.HttpMethod)) {
-            choice = i;
+        std::shared_ptr<C011_ConfigStruct> customConfig(new C011_ConfigStruct);
+        if (customConfig) {
+          byte choice = 0;
+          String methods[] = { F("GET"), F("POST"), F("PUT"), F("HEAD"), F("PATCH") };
+          for (byte i = 0; i < 5; i++)
+          {
+            if (methods[i].equals(customConfig->HttpMethod)) {
+              choice = i;
+            }
           }
-        }
-        int httpmethod = getFormItemInt(F("P011httpmethod"), choice);
-        String httpuri = web_server.arg(F("P011httpuri"));
-        String httpheader = web_server.arg(F("P011httpheader"));
-        String httpbody = web_server.arg(F("P011httpbody"));
 
-        strlcpy(customConfig.HttpMethod, methods[httpmethod].c_str(), sizeof(customConfig.HttpMethod));
-        strlcpy(customConfig.HttpUri, httpuri.c_str(), sizeof(customConfig.HttpUri));
-        strlcpy(customConfig.HttpHeader, httpheader.c_str(), sizeof(customConfig.HttpHeader));
-        strlcpy(customConfig.HttpBody, httpbody.c_str(), sizeof(customConfig.HttpBody));
-        customConfig.zero_last();
-        SaveCustomControllerSettings(event->ControllerIndex,(byte*)&customConfig, sizeof(customConfig));
+          int httpmethod = getFormItemInt(F("P011httpmethod"), choice);
+          String httpuri = web_server.arg(F("P011httpuri"));
+          String httpheader = web_server.arg(F("P011httpheader"));
+          String httpbody = web_server.arg(F("P011httpbody"));
+
+          strlcpy(customConfig->HttpMethod, methods[httpmethod].c_str(), sizeof(customConfig->HttpMethod));
+          strlcpy(customConfig->HttpUri, httpuri.c_str(), sizeof(customConfig->HttpUri));
+          strlcpy(customConfig->HttpHeader, httpheader.c_str(), sizeof(customConfig->HttpHeader));
+          strlcpy(customConfig->HttpBody, httpbody.c_str(), sizeof(customConfig->HttpBody));
+          customConfig->zero_last();
+          SaveCustomControllerSettings(event->ControllerIndex,(byte*)customConfig.get(), sizeof(customConfig));
+        }
         break;
       }
 
@@ -153,51 +157,75 @@ bool do_process_c011_delay_queue(int controller_number, const C011_queue_element
 //********************************************************************************
 boolean Create_schedule_HTTP_C011(struct EventStruct *event)
 {
-  int controller_number = CPLUGIN_ID_011;
-  if (!WiFiConnected(10)) {
-    return false;
-  }
-  MakeControllerSettings(ControllerSettings);
-  LoadControllerSettings(event->ControllerIndex, ControllerSettings);
-
-  C011_ConfigStruct customConfig;
-  LoadCustomControllerSettings(event->ControllerIndex,(byte*)&customConfig, sizeof(customConfig));
-  customConfig.zero_last();
-
-  WiFiClient client;
-  if (!try_connect_host(controller_number, client, ControllerSettings))
-    return false;
-
+  String authHeader;
+  String hostportString;
   if (ExtraTaskSettings.TaskIndex != event->TaskIndex) {
     String dummy;
     PluginCall(PLUGIN_GET_DEVICEVALUENAMES, event, dummy);
   }
 
-  String payload = create_http_request_auth(
-    controller_number, event->ControllerIndex, ControllerSettings,
-    String(customConfig.HttpMethod), customConfig.HttpUri);
-
-  // Remove extra newline, see https://github.com/letscontrolit/ESPEasy/issues/1970
-  removeExtraNewLine(payload);
-  if (strlen(customConfig.HttpHeader) > 0) {
-    payload += customConfig.HttpHeader;
-    removeExtraNewLine(payload);
-  }
-  ReplaceTokenByValue(payload, event);
-
-  if (strlen(customConfig.HttpBody) > 0)
   {
-    String body = String(customConfig.HttpBody);
-    ReplaceTokenByValue(body, event);
-    payload += F("Content-Length: ");
-    payload += String(body.length());
-    addNewLine(payload);
-    addNewLine(payload); // Need 2 CRLF between header and body.
-    payload += body;
-  }
-  addNewLine(payload);
+    // Have the ControllerSettings in a separate scope so we can free it as soon as possible
+    MakeControllerSettings(ControllerSettings);
+    if (!AllocatedControllerSettings()) {
+      return false;
+    }
+    LoadControllerSettings(event->ControllerIndex, ControllerSettings);
 
-  bool success = C011_DelayHandler.addToQueue(C011_queue_element(event->ControllerIndex, payload));
+    authHeader = get_auth_header(event->ControllerIndex, ControllerSettings);
+    const bool defaultport = ControllerSettings.Port == 0 || ControllerSettings.Port == 80;
+    hostportString = defaultport ? ControllerSettings.getHost() : ControllerSettings.getHostPortString();
+  }
+
+
+  std::shared_ptr<C011_ConfigStruct> customConfig(new C011_ConfigStruct);
+  if (!customConfig) {
+    return false;
+  }
+  LoadCustomControllerSettings(event->ControllerIndex,(byte*)customConfig.get(), sizeof(customConfig));
+  customConfig->zero_last();
+
+  bool success = false;
+  {
+    String payload = do_create_http_request(
+      hostportString,
+      customConfig->HttpMethod,
+      customConfig->HttpUri,
+      authHeader,
+      "",
+      -1);
+
+    // Remove extra newline, see https://github.com/letscontrolit/ESPEasy/issues/1970
+    removeExtraNewLine(payload);
+
+    // Add a new element to the queue with the minimal payload
+    success = C011_DelayHandler.addToQueue(C011_queue_element(event->ControllerIndex, payload));
+  }
+  if (success) {
+    // Element was added.
+    // Now we try to append to the existing element 
+    // and thus preventing the need to create a long string only to copy it to a queue element.
+    C011_queue_element &element = C011_DelayHandler.sendQueue.back();
+
+    if (strlen(customConfig->HttpHeader) > 0) {
+      element.txt += customConfig->HttpHeader;
+      removeExtraNewLine(element.txt);
+    }
+    ReplaceTokenByValue(element.txt, event);
+
+    if (strlen(customConfig->HttpBody) > 0)
+    {
+      String body = String(customConfig->HttpBody);
+      ReplaceTokenByValue(body, event);
+      element.txt += F("Content-Length: ");
+      element.txt += String(body.length());
+      addNewLine(element.txt);
+      addNewLine(element.txt); // Need 2 CRLF between header and body.
+      element.txt += body;
+    }
+    addNewLine(element.txt);
+  }
+
   scheduleNextDelayQueue(TIMER_C011_DELAY_QUEUE, C011_DelayHandler.getNextScheduleTime());
   return success;
 }

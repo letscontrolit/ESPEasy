@@ -170,7 +170,7 @@ void addDeviceSelect(const String& name,  int choice)
 {
   String deviceName;
 
-  addSelector_Head(name, true);
+  addSelector_Head_reloadOnChange(name);
   addSelector_Item(F("- None -"), 0, false, false, "");
 
   for (byte x = 0; x <= deviceCount; x++)
@@ -349,7 +349,7 @@ void handle_devicess_ShowAllTasksTable(byte page)
   html_table_header("Name");
   html_table_header("Port");
   html_table_header(F("Ctr (IDX)"), 100);
-  html_table_header("GPIO",         70);
+  html_table_header("GPIO",         100);
   html_table_header(F("Values"));
 
   String deviceName;
@@ -431,6 +431,11 @@ void handle_devicess_ShowAllTasksTable(byte page)
               case DEVICE_TYPE_I2C:
                 addHtml(F("I2C"));
                 break;
+              case DEVICE_TYPE_SERIAL:
+              case DEVICE_TYPE_SERIAL_PLUS1:
+                addHtml(serialHelper_getSerialTypeLabel(&TempEvent));
+                break;
+
               default:
 
                 // Plugin has no custom port formatting, show default one.
@@ -506,7 +511,19 @@ void handle_devicess_ShowAllTasksTable(byte page)
             }
             case DEVICE_TYPE_ANALOG:
             {
-              addHtml(F("ADC (TOUT)"));
+              #ifdef ESP8266
+                #if FEATURE_ADC_VCC
+                  addHtml(F("ADC (VDD)"));
+                #else
+                  addHtml(F("ADC (TOUT)"));
+                #endif
+              #endif
+              #ifdef ESP32
+              showpin1 = true;
+              addHtml(formatGpioName_ADC(Settings.TaskDevicePin1[x]));
+              html_BR();
+              #endif
+
               break;
             }
             case DEVICE_TYPE_SERIAL_PLUS1:
@@ -514,7 +531,7 @@ void handle_devicess_ShowAllTasksTable(byte page)
               // fallthrough
             case DEVICE_TYPE_SERIAL:
             {
-              addHtml(serialHelper_getGpioDescription(Settings.TaskDevicePin1[x], Settings.TaskDevicePin2[x]));
+              addHtml(serialHelper_getGpioDescription(Settings.TaskDevicePin1[x], Settings.TaskDevicePin2[x], F("<BR>")));
               if (showpin3) {
                 html_BR();
               }

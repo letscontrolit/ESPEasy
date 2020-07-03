@@ -462,6 +462,105 @@ void IRsend::sendGeneric(const uint16_t headermark, const uint32_t headerspace,
   }
 }
 
+// Generic method for sending Manchester code data.
+// Will send leading or trailing 0's if the nbits is larger than the number
+// of bits in data.
+//
+// Args:
+//   half_period: Nr. of uSeconds for half the clock's period. (1/2 wavelength)
+//   data:        The data to be transmitted.
+//   nbits:       Nr. of bits of data to be sent.
+//   MSBfirst:    Flag for bit transmission order. Defaults to MSB->LSB order.
+//   GEThomas:    Use G.E. Thomas (true/default) or IEEE 802.3 (false).
+void IRsend::sendManchesterData(const uint16_t half_period,
+                                const uint64_t data,
+                                const uint16_t nbits, const bool MSBfirst,
+                                const bool GEThomas) {
+  if (nbits == 0) return;  // Nothing to send.
+  uint16_t bits = nbits;
+  uint64_t copy = (GEThomas) ? data : ~data;
+
+  if (MSBfirst) {  // Send the MSB first.
+    // Send 0's until we get down to a bit size we can actually manage.
+    if (bits > (sizeof(data) * 8)) {
+      sendManchesterData(half_period, 0ULL, bits - sizeof(data) * 8, MSBfirst,
+                         GEThomas);
+      bits = sizeof(data) * 8;
+    }
+    // Send the supplied data.
+    for (uint64_t mask = 1ULL << (bits - 1); mask; mask >>= 1)
+      if (copy & mask) {
+        mark(half_period);
+        space(half_period);
+      } else {
+        space(half_period);
+        mark(half_period);
+      }
+  } else {  // Send the Least Significant Bit (LSB) first / MSB last.
+    for (bits = 0; bits < nbits; bits++, copy >>= 1)
+      if (copy & 1) {
+        mark(half_period);
+        space(half_period);
+      } else {
+        space(half_period);
+        mark(half_period);
+      }
+  }
+}
+
+// Generic method for sending Manchester code messages.
+// Will send leading or trailing 0's if the nbits is larger than the number
+// of bits in data.
+//
+// Args:
+//   headermark:  Nr. of usecs for the led to be pulsed for the header mark.
+//                A value of 0 means no header mark.
+//   headerspace: Nr. of usecs for the led to be off after the header mark.
+//                A value of 0 means no header space.
+//   half_period: Nr. of uSeconds for half the clock's period. (1/2 wavelength)
+//   footermark:  Nr. of usecs for the led to be pulsed for the footer mark.
+//                A value of 0 means no footer mark.
+//   gap:         Min. nr. of usecs for the led to be off after the footer mark.
+//                This is effectively the absolute minimum gap between messages.
+//   data:        The data to be transmitted.
+//   nbits:       Nr. of bits of data to be sent.
+//   frequency:   The frequency we want to modulate at.
+//                Assumes < 1000 means kHz otherwise it is in Hz.
+//                Most common value is 38000 or 38, for 38kHz.
+//   MSBfirst:    Flag for bit transmission order. Defaults to MSB->LSB order.
+//   repeat:      Nr. of extra times the message will be sent.
+//                e.g. 0 = 1 message sent, 1 = 1 initial + 1 repeat = 2 messages
+//   dutycycle:   Percentage duty cycle of the LED.
+//                e.g. 25 = 25% = 1/4 on, 3/4 off.
+//                If you are not sure, try 50 percent.
+//   GEThomas:    Use G.E. Thomas (true/default) or IEEE 802.3 (false).
+void IRsend::sendManchester(const uint16_t headermark,
+                            const uint32_t headerspace,
+                            const uint16_t half_period,
+                            const uint16_t footermark, const uint32_t gap,
+                            const uint64_t data, const uint16_t nbits,
+                            const uint16_t frequency, const bool MSBfirst,
+                            const uint16_t repeat, const uint8_t dutycycle,
+                            const bool GEThomas) {
+  // Setup
+  enableIROut(frequency, dutycycle);
+
+  // We always send a message, even for repeat=0, hence '<= repeat'.
+  for (uint16_t r = 0; r <= repeat; r++) {
+    // Header
+    if (headermark) mark(headermark);
+    if (headerspace) space(headerspace);
+    // Data Marker/sync
+    // This guarantees a double width half_period. i.e. a Period or T2.
+    sendManchesterData(half_period, 0b01, 2, true, GEThomas);
+    // Data
+    sendManchesterData(half_period, data, nbits, MSBfirst, GEThomas);
+    // Footer
+    if (footermark) mark(footermark);
+    if (gap) space(gap);
+  }
+}
+
 #if SEND_RAW
 // Send a raw IRremote message.
 //
@@ -508,18 +607,25 @@ uint16_t IRsend::minRepeats(const decode_type_t protocol) {
     case MITSUBISHI:
     case MITSUBISHI2:
     case MITSUBISHI_AC:
+    case MULTIBRACKETS:
     case SHERWOOD:
     case TOSHIBA_AC:
       return kSingleRepeat;
     // Special
+    case AIRWELL:
+      return kAirwellMinRepeats;
+    case CARRIER_AC40:
+      return kCarrierAc40MinRepeat;
     case DISH:
       return kDishMinRepeat;
+    case EPSON:
+      return kEpsonMinRepeat;
     case SONY:
       return kSonyMinRepeat;
     case SONY_38K:
       return kSonyMinRepeat + 1;
-    case EPSON:
-      return kEpsonMinRepeat;
+    case SYMPHONY:
+      return kSymphonyDefaultRepeat;
     default:
       return kNoRepeat;
   }
@@ -532,7 +638,10 @@ uint16_t IRsend::minRepeats(const decode_type_t protocol) {
 //   int16_t:  The number of bits.
 uint16_t IRsend::defaultBits(const decode_type_t protocol) {
   switch (protocol) {
+    case MULTIBRACKETS:
+      return 8;
     case RC5:
+    case SYMPHONY:
       return 12;
     case LASERTAG:
     case RC5X:
@@ -560,6 +669,7 @@ uint16_t IRsend::defaultBits(const decode_type_t protocol) {
     case LG:
     case LG2:
       return 28;
+    case AIRWELL:
     case CARRIER_AC:
     case EPSON:
     case NEC:
@@ -573,6 +683,10 @@ uint16_t IRsend::defaultBits(const decode_type_t protocol) {
       return 35;
     case SAMSUNG36:
       return 36;
+    case CARRIER_AC40:
+      return kCarrierAc40Bits;  // 40
+    case DOSHISHA:
+      return kDoshishaBits;  // 40
     case SANYO_LC7461:
       return kSanyoLC7461Bits;  // 42
     case GOODWEATHER:
@@ -583,6 +697,8 @@ uint16_t IRsend::defaultBits(const decode_type_t protocol) {
     case VESTEL_AC:
       return 56;
     case AMCOR:
+    case CARRIER_AC64:
+    case DELONGHI_AC:
     case PIONEER:
       return 64;
     case ARGO:
@@ -601,6 +717,8 @@ uint16_t IRsend::defaultBits(const decode_type_t protocol) {
       return kDaikin2Bits;
     case DAIKIN216:
       return kDaikin216Bits;
+    case DAIKIN64:
+      return kDaikin64Bits;
     case ELECTRA_AC:
       return kElectraAcBits;
     case GREE:
@@ -615,6 +733,8 @@ uint16_t IRsend::defaultBits(const decode_type_t protocol) {
       return kHitachiAc1Bits;
     case HITACHI_AC2:
       return kHitachiAc2Bits;
+    case HITACHI_AC3:
+      return kHitachiAc3Bits;
     case HITACHI_AC424:
       return kHitachiAc424Bits;
     case KELVINATOR:
@@ -666,6 +786,11 @@ bool IRsend::send(const decode_type_t type, const uint64_t data,
                   const uint16_t nbits, const uint16_t repeat) {
   uint16_t min_repeat = std::max(IRsend::minRepeats(type), repeat);
   switch (type) {
+#if SEND_AIRWELL
+    case AIRWELL:
+      sendAirwell(data, nbits, min_repeat);
+      break;
+#endif
 #if SEND_AIWA_RC_T501
     case AIWA_RC_T501:
       sendAiwaRCT501(data, nbits, min_repeat);
@@ -676,9 +801,29 @@ bool IRsend::send(const decode_type_t type, const uint64_t data,
       sendCarrierAC(data, nbits, min_repeat);
       break;
 #endif
+#if SEND_CARRIER_AC40
+    case CARRIER_AC40:
+      sendCarrierAC40(data, nbits, min_repeat);
+      break;
+#endif  // SEND_CARRIER_AC40
+#if SEND_CARRIER_AC64
+    case CARRIER_AC64:
+      sendCarrierAC64(data, nbits, min_repeat);
+      break;
+#endif  // SEND_CARRIER_AC64
 #if SEND_COOLIX
     case COOLIX:
       sendCOOLIX(data, nbits, min_repeat);
+      break;
+#endif
+#if SEND_DAIKIN64
+    case DAIKIN64:
+      sendDaikin64(data, nbits, min_repeat);
+      break;
+#endif
+#if SEND_DELONGHI_AC
+    case DELONGHI_AC:
+      sendDelonghiAc(data, nbits, min_repeat);
       break;
 #endif
 #if SEND_DENON
@@ -689,6 +834,11 @@ bool IRsend::send(const decode_type_t type, const uint64_t data,
 #if SEND_DISH
     case DISH:
       sendDISH(data, nbits, min_repeat);
+      break;
+#endif
+#if SEND_DOSHISHA
+    case DOSHISHA:
+      sendDoshisha(data, nbits, min_repeat);
       break;
 #endif
 #if SEND_EPSON
@@ -764,6 +914,11 @@ bool IRsend::send(const decode_type_t type, const uint64_t data,
       sendMitsubishi2(data, nbits, min_repeat);
       break;
 #endif
+#if SEND_MULTIBRACKETS
+    case MULTIBRACKETS:
+      sendMultibrackets(data, nbits, min_repeat);
+      break;
+#endif
 #if SEND_NIKAI
     case NIKAI:
       sendNikai(data, nbits, min_repeat);
@@ -832,6 +987,11 @@ bool IRsend::send(const decode_type_t type, const uint64_t data,
       break;
     case SONY_38K:
       sendSony38(data, nbits, min_repeat);
+      break;
+#endif
+#if SEND_SYMPHONY
+    case SYMPHONY:
+      sendSymphony(data, nbits, min_repeat);
       break;
 #endif
 #if SEND_TECO
@@ -951,6 +1111,11 @@ bool IRsend::send(const decode_type_t type, const unsigned char *state,
       sendHitachiAC2(state, nbytes);
       break;
 #endif  // SEND_HITACHI_AC2
+#if SEND_HITACHI_AC3
+    case HITACHI_AC3:
+      sendHitachiAc3(state, nbytes);
+      break;
+#endif  // SEND_HITACHI_AC3
 #if SEND_HITACHI_AC424
     case HITACHI_AC424:
       sendHitachiAc424(state, nbytes);

@@ -336,6 +336,11 @@ To create/register a plugin, you have to :
             #undef WEBSERVER_WIFI_SCANNER
         #endif
     #endif // WEBSERVER_CUSTOM_BUILD_DEFINED
+
+    #ifndef LIMIT_BUILD_SIZE
+        #define LIMIT_BUILD_SIZE
+    #endif
+
     #ifdef USES_SSDP
       #undef USES_SSDP
     #endif
@@ -444,6 +449,16 @@ To create/register a plugin, you have to :
     #define PLUGIN_SET_ONLY_SWITCH
     #define CONTROLLER_SET_STABLE
     #define NOTIFIER_SET_STABLE
+#endif
+
+#ifdef PLUGIN_SET_SHELLY_PLUG_S
+    #define PLUGIN_DESCR  "Shelly PLUG-S"
+
+    #define PLUGIN_SET_ONLY_SWITCH
+    #define CONTROLLER_SET_STABLE
+    #define NOTIFIER_SET_STABLE
+    #define USES_P076   // HWL8012   in POW r1
+    #define USES_P081   // Cron
 #endif
 
 // Easy ----------------------------
@@ -787,6 +802,11 @@ To create/register a plugin, you have to :
 
 // TESTING #####################################
 #ifdef PLUGIN_SET_TESTING
+  #ifndef LIMIT_BUILD_SIZE
+    #define LIMIT_BUILD_SIZE
+  #endif
+
+
     #define USES_P045   // MPU6050
     #define USES_P047   // I2C_soil_misture
     #define USES_P048   // Motoshield_v2
@@ -830,7 +850,11 @@ To create/register a plugin, you have to :
     #define USES_P089   // Ping
     #define USES_P090   // CCS811 TVOC/eCO2 Sensor 
     #define USES_P091	// SerSwitch
+    #define USES_P092   // DL-Bus
     #define USES_P093   // Mitsubishi Heat Pump
+    //#define USES_P094  // CUL Reader
+    //#define USES_P095  // TFT ILI9341
+    #define USES_P097   // Touch (ESP32)
 #endif
 
 
@@ -970,7 +994,7 @@ To create/register a plugin, you have to :
 /******************************************************************************\
  * Libraries dependencies *****************************************************
 \******************************************************************************/
-#if defined(USES_P049) || defined(USES_P052) || defined(USES_P053) || defined(USES_P056) || defined(USES_P071) || defined(USES_P075) || defined(USES_P082) || defined(USES_P087)
+#if defined(USES_P049) || defined(USES_P052) || defined(USES_P053) || defined(USES_P056) || defined(USES_P071) || defined(USES_P075) || defined(USES_P082) || defined(USES_P087) || defined(USES_P094)
 // At least one plugin uses serial.
 #else
   // No plugin uses serial, so make sure software serial is not included.
@@ -1007,6 +1031,13 @@ To create/register a plugin, you have to :
   #define USES_BLYNK
 #endif
 
+// Specific notifier plugins may be enabled via Custom.h, regardless
+// whether NOTIFIER_SET_NONE is defined
+#if defined(USES_N001) || defined(USES_N002)
+  #ifndef USES_NOTIFIER
+    #define USES_NOTIFIER
+  #endif
+#endif
 
 
 #ifdef USES_MQTT
@@ -1022,15 +1053,34 @@ To create/register a plugin, you have to :
   #undef USES_C014
 #endif
 
+// VCC builds need a bit more, disable timing stats to make it fit.
+#ifdef FEATURE_ADC_VCC
+  #ifndef LIMIT_BUILD_SIZE
+    #define LIMIT_BUILD_SIZE
+  #endif
+#endif
+
 
 // Due to size restrictions, disable a few plugins/controllers for 1M builds
 #ifdef SIZE_1M
   #ifdef USES_C003
     #undef USES_C003
   #endif
+  #ifndef LIMIT_BUILD_SIZE
+    #define LIMIT_BUILD_SIZE
+  #endif
 #endif
 
+// Disable some diagnostic parts to make builds fit.
+#ifdef LIMIT_BUILD_SIZE
+  #ifdef WEBSERVER_TIMINGSTATS
+    #undef WEBSERVER_TIMINGSTATS
+  #endif
 
+  #ifndef BUILD_NO_DEBUG
+    #define BUILD_NO_DEBUG
+  #endif
+#endif
 
 // Timing stats page needs timing stats
 #if defined(WEBSERVER_TIMINGSTATS) && !defined(USES_TIMING_STATS)

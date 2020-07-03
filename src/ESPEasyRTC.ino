@@ -45,16 +45,16 @@
 
 
 // Locations where to store the cached data
-// As a file on the SPIFFS filesystem
+// As a file on the filesystem
 #define CACHE_STORAGE_SPIFFS        0
 
-// Between the sketch and SPIFFS, including OTA area (will overwrite this area when performing OTA)
+// Between the sketch and FS, including OTA area (will overwrite this area when performing OTA)
 #define CACHE_STORAGE_OTA_FREE      1
 
-// Only use the free space between sketch and SPIFFS, thus avoid OTA area
+// Only use the free space between sketch and FS, thus avoid OTA area
 #define CACHE_STORAGE_NO_OTA_FREE   2
 
-// Use space after SPIFFS. (e.g. on 16M flash partitioned as 4M, or 4M flash partitioned as 2M)
+// Use space after FS. (e.g. on 16M flash partitioned as 4M, or 4M flash partitioned as 2M)
 #define CACHE_STORAGE_BEHIND_SPIFFS 3
 
 
@@ -213,7 +213,7 @@ struct RTC_cache_handler_struct
         }
 
         if (fname.length() == 0) { return false; }
-        fp = tryOpenFile(fname.c_str(), "r");
+        fp = tryOpenFile(fname, "r");
       }
 
       if (!fp) { return false; }
@@ -313,7 +313,7 @@ struct RTC_cache_handler_struct
     for (int i = 0; i < 2; ++i) {
       String fname = createCacheFilename(RTC_cache.readFileNr);
 
-      if (SPIFFS.exists(fname)) {
+      if (ESPEASY_FS.exists(fname)) {
         if (i != 0) {
           // First attempt failed, so stored read position is not valid
           RTC_cache.readPos = 0;
@@ -346,7 +346,7 @@ struct RTC_cache_handler_struct
     }
     islast = peekfilenr > RTC_cache.writeFileNr;
 
-    if (SPIFFS.exists(fname)) {
+    if (ESPEASY_FS.exists(fname)) {
       return fname;
     }
     return "";
@@ -360,7 +360,7 @@ struct RTC_cache_handler_struct
 
         if (tryDeleteFile(fname)) {
           #ifdef RTC_STRUCT_DEBUG
-          String log = F("RTC  : Removed file from SPIFFS: ");
+          String log = F("RTC  : Removed file from FS: ");
           log += fname;
           addLog(LOG_LEVEL_INFO, String(log));
           #endif // ifdef RTC_STRUCT_DEBUG
@@ -503,7 +503,7 @@ private:
     //    }
     if (SpiffsFull()) {
       #ifdef RTC_STRUCT_DEBUG
-      addLog(LOG_LEVEL_ERROR, String(F("RTC  : SPIFFS full")));
+      addLog(LOG_LEVEL_ERROR, String(F("RTC  : FS full")));
       #endif // ifdef RTC_STRUCT_DEBUG
       return false;
     }
@@ -529,7 +529,7 @@ private:
         }
 
         String fname = createCacheFilename(RTC_cache.writeFileNr);
-        fw = tryOpenFile(fname.c_str(), "a+");
+        fw = tryOpenFile(fname, "a+");
 
         if (!fw) {
           #ifdef RTC_STRUCT_DEBUG

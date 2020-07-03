@@ -3,7 +3,84 @@
 #include "src/Globals/Plugins.h"
 #include "StringProviderTypes.h"
 
+// ********************************************************************************
+// Web Interface get CSV value from task
+// ********************************************************************************
+void handle_csvval()
+{
+  String htmlData;
+  htmlData.reserve(25); // Reserve for error message
+  const int printHeader = getFormItemInt(F("header"), 1);
+  bool printHeaderValid = true;
+  if (printHeader != 1 && printHeader != 0)
+  {
+    htmlData = F("ERROR: Header not valid!\n");
+    printHeaderValid = false;
+  }
 
+  const taskIndex_t taskNr    = getFormItemInt(F("tasknr"), INVALID_TASK_INDEX);
+  const bool taskValid = validTaskIndex(taskNr);
+  if (!taskValid)
+  {
+    htmlData = F("ERROR: TaskNr not valid!\n");
+  }
+
+  const int INVALID_VALUE_NUM = INVALID_TASKVAR_INDEX + 1;
+  const taskVarIndex_t valNr    = getFormItemInt(F("valnr"), INVALID_VALUE_NUM);
+  bool valueNumberValid = true;
+  if (valNr != INVALID_VALUE_NUM && !validTaskVarIndex(valNr))
+  {
+    htmlData = F("ERROR: ValueId not valid!\n");
+    valueNumberValid = false;
+  }
+
+  TXBuffer.startJsonStream();
+  if (taskValid && valueNumberValid && printHeaderValid)
+  {
+    const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(taskNr);
+
+    if (validDeviceIndex(DeviceIndex))
+    {
+      LoadTaskSettings(taskNr);
+      byte taskValCount = Device[DeviceIndex].ValueCount;
+      uint16_t stringReserveSize = (valNr == INVALID_VALUE_NUM ? 1 : taskValCount) * 24;
+      htmlData.reserve(stringReserveSize);
+
+      if (printHeader)
+      {
+        for (byte x = 0; x < taskValCount; x++)
+        {
+          if (valNr == INVALID_VALUE_NUM || valNr == x)
+          {
+            htmlData += String(ExtraTaskSettings.TaskDeviceValueNames[x]);
+            if (x != taskValCount - 1)
+            {
+              htmlData += ';';
+            }
+          }
+        }
+        htmlData += '\n';
+        addHtml(htmlData);
+        htmlData = "";
+      }
+
+      for (byte x = 0; x < taskValCount; x++)
+      {
+        if (valNr == INVALID_VALUE_NUM || valNr == x)
+        {
+          htmlData += formatUserVarNoCheck(taskNr, x);
+          if (x != taskValCount - 1)
+          {
+            htmlData += ';';
+          }
+        }
+      }
+      htmlData += '\n';
+    }
+  }
+  addHtml(htmlData);
+  TXBuffer.endStream();
+}
 // ********************************************************************************
 // Web Interface JSON page (no password!)
 // ********************************************************************************
@@ -13,6 +90,9 @@ void handle_json()
   const bool showSpecificTask = validTaskIndex(taskNr);
   bool showSystem             = true;
   bool showWifi               = true;
+  #ifdef HAS_ETHERNET
+  bool showEthernet           = true;
+  #endif
   bool showDataAcquisition    = true;
   bool showTaskDetails        = true;
   bool showNodes              = true;
@@ -23,6 +103,9 @@ void handle_json()
       if (view == F("sensorupdate")) {
         showSystem          = false;
         showWifi            = false;
+        #ifdef HAS_ETHERNET
+        showEthernet        = false;
+        #endif
         showDataAcquisition = false;
         showTaskDetails     = false;
         showNodes           = false;
@@ -97,8 +180,21 @@ void handle_json()
 #endif // ifdef SUPPORT_ARP
       stream_next_json_object_value(LabelType::CONNECTION_FAIL_THRESH);
       stream_last_json_object_value(LabelType::WIFI_RSSI);
+      // TODO: PKR: Add ETH Objects
       addHtml(F(",\n"));
     }
+
+    #ifdef HAS_ETHERNET
+    if (showEthernet) {
+      addHtml(F("\"Ethernet\":{\n"));
+      stream_next_json_object_value(LabelType::ETH_WIFI_MODE);
+      stream_next_json_object_value(LabelType::ETH_CONNECTED);
+      stream_next_json_object_value(LabelType::ETH_DUPLEX);
+      stream_next_json_object_value(LabelType::ETH_SPEED);
+      stream_next_json_object_value(LabelType::ETH_STATE);
+      stream_last_json_object_value(LabelType::ETH_SPEED_STATE);
+    }
+    #endif
 
     if (showNodes) {
       bool comma_between = false;

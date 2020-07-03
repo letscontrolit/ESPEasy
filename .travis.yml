@@ -1,6 +1,6 @@
 language: python
 python:
-  - '2.7'
+  - '3.8'
 
 #we want a newer cppcheck, so use trusty
 dist: bionic
@@ -23,6 +23,7 @@ addons:
 
 install:
   - pip install -U platformio sphinx recommonmark sphinx_bootstrap_theme
+  - pip install -r requirements.txt
 
 script:
   - platformio update
@@ -42,6 +43,7 @@ script:
   - PLATFORMIO_BUILD_FLAGS="-D CONTINUOUS_INTEGRATION" platformio run -e dev_ESP8266_4M1M
   - PLATFORMIO_BUILD_FLAGS="-D CONTINUOUS_INTEGRATION" platformio run -e hard_SONOFF_POW_4M1M
   - PLATFORMIO_BUILD_FLAGS="-D CONTINUOUS_INTEGRATION" platformio run -e hard_Shelly_1_2M256
+  - PLATFORMIO_BUILD_FLAGS="-D CONTINUOUS_INTEGRATION" platformio run -e hard_Shelly_PLUG_S_2M256
   - PLATFORMIO_BUILD_FLAGS="-D CONTINUOUS_INTEGRATION" platformio run -e hard_Ventus_W266
   - PLATFORMIO_BUILD_FLAGS="-D CONTINUOUS_INTEGRATION" platformio run -e hard_other_POW_ESP8285_1M
   - PLATFORMIO_BUILD_FLAGS="-D CONTINUOUS_INTEGRATION" platformio run -e minimal_IRext_ESP8266_1M
@@ -49,14 +51,14 @@ script:
   - PLATFORMIO_BUILD_FLAGS="-D CONTINUOUS_INTEGRATION" platformio run -e minimal_IRext_ESP8266_4M2M
   - PLATFORMIO_BUILD_FLAGS="-D CONTINUOUS_INTEGRATION" platformio run -e minimal_core_242_ESP8266_1M_OTA
   - PLATFORMIO_BUILD_FLAGS="-D CONTINUOUS_INTEGRATION" platformio run -e minimal_core_242_ESP8285_1M_OTA
-  - PLATFORMIO_BUILD_FLAGS="-D CONTINUOUS_INTEGRATION" platformio run -e minimal_core_263_ESP8266_1M_OTA_Domoticz
-  - PLATFORMIO_BUILD_FLAGS="-D CONTINUOUS_INTEGRATION" platformio run -e minimal_core_263_ESP8266_1M_OTA_FHEM_HA
-  - PLATFORMIO_BUILD_FLAGS="-D CONTINUOUS_INTEGRATION" platformio run -e minimal_core_263_ESP8285_1M_OTA_Domoticz
-  - PLATFORMIO_BUILD_FLAGS="-D CONTINUOUS_INTEGRATION" platformio run -e minimal_core_263_ESP8285_1M_OTA_FHEM_HA
-  #- PLATFORMIO_BUILD_FLAGS="-D CONTINUOUS_INTEGRATION" platformio run -e minimal_core_263_sdk3_ESP8266_1M_OTA_Domoticz
-  #- PLATFORMIO_BUILD_FLAGS="-D CONTINUOUS_INTEGRATION" platformio run -e minimal_core_263_sdk3_ESP8266_1M_OTA_FHEM_HA
-  #- PLATFORMIO_BUILD_FLAGS="-D CONTINUOUS_INTEGRATION" platformio run -e minimal_core_263_sdk3_ESP8285_1M_OTA_Domoticz
-  #- PLATFORMIO_BUILD_FLAGS="-D CONTINUOUS_INTEGRATION" platformio run -e minimal_core_263_sdk3_ESP8285_1M_OTA_FHEM_HA
+  - PLATFORMIO_BUILD_FLAGS="-D CONTINUOUS_INTEGRATION" platformio run -e minimal_core_271_ESP8266_1M_OTA_Domoticz
+  - PLATFORMIO_BUILD_FLAGS="-D CONTINUOUS_INTEGRATION" platformio run -e minimal_core_271_ESP8266_1M_OTA_FHEM_HA
+  - PLATFORMIO_BUILD_FLAGS="-D CONTINUOUS_INTEGRATION" platformio run -e minimal_core_271_ESP8285_1M_OTA_Domoticz
+  - PLATFORMIO_BUILD_FLAGS="-D CONTINUOUS_INTEGRATION" platformio run -e minimal_core_271_ESP8285_1M_OTA_FHEM_HA
+  #- PLATFORMIO_BUILD_FLAGS="-D CONTINUOUS_INTEGRATION" platformio run -e minimal_core_271_sdk3_ESP8266_1M_OTA_Domoticz
+  #- PLATFORMIO_BUILD_FLAGS="-D CONTINUOUS_INTEGRATION" platformio run -e minimal_core_271_sdk3_ESP8266_1M_OTA_FHEM_HA
+  #- PLATFORMIO_BUILD_FLAGS="-D CONTINUOUS_INTEGRATION" platformio run -e minimal_core_271_sdk3_ESP8285_1M_OTA_Domoticz
+  #- PLATFORMIO_BUILD_FLAGS="-D CONTINUOUS_INTEGRATION" platformio run -e minimal_core_271_sdk3_ESP8285_1M_OTA_FHEM_HA
   #- PLATFORMIO_BUILD_FLAGS="-D CONTINUOUS_INTEGRATION" platformio run -e normal_ESP8266_16M
   - PLATFORMIO_BUILD_FLAGS="-D CONTINUOUS_INTEGRATION" platformio run -e normal_ESP8266_1M
   - PLATFORMIO_BUILD_FLAGS="-D CONTINUOUS_INTEGRATION" platformio run -e normal_ESP8266_1M_VCC
@@ -70,12 +72,11 @@ script:
   - PLATFORMIO_BUILD_FLAGS="-D CONTINUOUS_INTEGRATION" platformio run -e test_ESP32_4M316k
   - PLATFORMIO_BUILD_FLAGS="-D CONTINUOUS_INTEGRATION" platformio run -e test_ESP8266_4M1M_VCC
   #- PLATFORMIO_BUILD_FLAGS="-D CONTINUOUS_INTEGRATION" platformio run -e test_ESP8266_4M1M_VCC_MDNS_SD
-  #- PLATFORMIO_BUILD_FLAGS="-D CONTINUOUS_INTEGRATION" platformio run -e test_beta_ESP8266_16M
-  - PLATFORMIO_BUILD_FLAGS="-D CONTINUOUS_INTEGRATION" platformio run -e test_beta_ESP8266_4M1M
+  #- PLATFORMIO_BUILD_FLAGS="-D CONTINUOUS_INTEGRATION" platformio run -e test_beta_ESP8266_16M_LittleFS
+  #- PLATFORMIO_BUILD_FLAGS="-D CONTINUOUS_INTEGRATION" platformio run -e test_beta_ESP8266_4M1M
 
 before_deploy:
   - ./before_deploy
-  - export RELEASE_FILE=$(ls ESPEasy*.zip)
 
 deploy:
   provider: releases
@@ -83,7 +84,7 @@ deploy:
   api_key:
     secure: bZeuKI7evXeZYmGayfcvIC1fThBGcksAyOrCbZ8kAGeTbHGJqFLBBy8to5UpNBSZVfeDWo25Iqy8Pfbyb7p2c1hg6fG9jS0UzQkLnoUNMxpUM1dJACkZxvFdP4Br3Y3vUPWtrWUbo8rN/b3E6tjSNLE7vQiwsarj+eWTO2V6BGcsN0eHc04/UCM2+DcHvJ4y7Ec36yIUaClNAWMal1osBYaViruylOdBKT/WDs1ZMoJMceXCfxMQ/8J2moYvymKfSkXSmoMGmzlTuq8v5N4AweutjpC4Zba2BbxIJv+PwWjhfIgTviHFggSU90UPTKVWYv13vms92VVKz1CDVrUQNn+YQes9+ROPUnrMc9bJ+q7E1lWJRZeDMqGECB+8BjUtUk6H81K+XhOnW1mtZiMnvMCwkmE0OT1eBObGMcpR962/DUBoQDmulMs2IieB0dLobmUBhpc1syrKEPKxjY7yhhQMr6In82jODVLR3qDkNQ8xtIfevzCo/ocUjiOrXW4b/pDMy28Yh109DMb/KSWEsjjkkpXhsT1YVy2MwOa7FRhHFW+SNKX4Us8T75H+pO4mQ4afnPEtjYKodj7XD92zqNxKfMx3elEx5RK6HKekHjpXdYtuXzGONB9StA+2T43/2llt3n5fzv4BRfCumBEJ77/ufB0U/uhsCe6lVwJf34U=
   file_glob: true
-  file: "${RELEASE_FILE}"
+  file: ESPEasy*.zip
 
   skip_cleanup: true
   on:

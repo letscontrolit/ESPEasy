@@ -13,6 +13,14 @@
 #include <time.h>
 
 
+ESPEasy_time::ESPEasy_time() {
+  memset(&tm, 0, sizeof(tm));
+  memset(&tsRise, 0, sizeof(tm));
+  memset(&tsSet, 0, sizeof(tm));
+  memset(&sunRise, 0, sizeof(tm));
+  memset(&sunSet, 0, sizeof(tm));
+}
+
 struct tm ESPEasy_time::addSeconds(const struct tm& ts, int seconds, bool toLocalTime) const {
   unsigned long time = makeTime(ts);
 
@@ -215,7 +223,7 @@ bool ESPEasy_time::systemTimePresent() const {
 
 bool ESPEasy_time::getNtpTime(double& unixTime_d)
 {
-  if (!Settings.UseNTP || !WiFiConnected(10)) {
+  if (!Settings.UseNTP || !NetworkConnected(10)) {
     return false;
   }
   IPAddress timeServerIP;

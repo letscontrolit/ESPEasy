@@ -79,6 +79,7 @@
 #define DEFAULT_SERVER      "192.168.0.8"                                   // Enter your Server IP address
 #define DEFAULT_SERVER_HOST ""                                              // Server hostname
 #define DEFAULT_SERVER_USEDNS false                                         // true: Use hostname.  false: use IP
+#define DEFAULT_USE_EXTD_CONTROLLER_CREDENTIALS   false                     // true: Allow longer user credentials for controllers
 
 #define DEFAULT_PORT        8080                                            // Enter your Server port value
 
@@ -98,8 +99,12 @@
 #define DEFAULT_PIN_I2C_SCL                     5
 #define DEFAULT_I2C_CLOCK_SPEED                 400000            // Use 100 kHz if working with old I2C chips
 
+#define DEFAULT_SPI                             0                 //0=disabled 1=enabled and for ESP32 there is option 2 =HSPI
+
 #define DEFAULT_PIN_STATUS_LED                  (-1)
 #define DEFAULT_PIN_STATUS_LED_INVERSED         true
+
+#define DEFAULT_PIN_RESET_BUTTON                (-1)
 
 
 #define DEFAULT_USE_RULES                       false             // (true|false) Enable Rules?
@@ -116,6 +121,9 @@
 #define DEFAULT_NTP_HOST                        ""                // NTP Server Hostname
 #define DEFAULT_TIME_ZONE                       0                 // Time Offset (in minutes)
 #define DEFAULT_USE_DST                         false             // (true|false) Use Daily Time Saving
+
+#define DEFAULT_LATITUDE                        0.0f              // Default Latitude  
+#define DEFAULT_LONGITUDE                       0.0f              // Default Longitude
 
 #define DEFAULT_SYSLOG_IP                       ""                // Syslog IP Address
 #define DEFAULT_SYSLOG_LEVEL                    0                 // Syslog Log Level

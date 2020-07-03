@@ -5,13 +5,13 @@
  #include "../../ESPEasy_common.h"
  #include "../../ESPEasy_fdwdecl.h"
  #include "../DataStructs/ESPEasy_EventStruct.h"
- #include "../DataStructs/SettingsType.h"
  */
+
+#include "../DataStructs/SettingsType.h"
 
 #include <map>
 #include <stdint.h>
 
-#include "../../ESPEasy_common.h"
 #include "../Commands/Common.h"
 #include "../Globals/Settings.h"
 #include "../Globals/SecuritySettings.h"
@@ -82,7 +82,7 @@ String Command_MemInfo(struct EventStruct *event, const char *Line)
   serialPrint(F("ExtraTaskSettingsStruct| "));
   serialPrintln(String(sizeof(ExtraTaskSettings)));
   serialPrint(F("DeviceStruct           | "));
-  serialPrintln(String(sizeof(Device)));
+  serialPrintln(String(Device.size()));
   return return_see_serial(event);
 }
 
@@ -93,18 +93,18 @@ String Command_MemInfo_detail(struct EventStruct *event, const char *Line)
 #endif // ifndef BUILD_MINIMAL_OTA
   Command_MemInfo(event, Line);
 
-  for (int st = 0; st < SettingsType_MAX; ++st) {
-    SettingsType settingsType = static_cast<SettingsType>(st);
+  for (int st = 0; st < SettingsType::SettingsType_MAX; ++st) {
+    SettingsType::SettingsType::Enum settingsType = static_cast<SettingsType::Enum>(st);
     int max_index, offset, max_size;
     int struct_size = 0;
     serialPrintln();
-    serialPrint(getSettingsTypeString(settingsType));
+    serialPrint(SettingsType::getSettingsTypeString(settingsType));
     serialPrintln(F(" | start | end | max_size | struct_size"));
     serialPrintln(F("--- | --- | --- | --- | ---"));
-    getSettingsParameters(settingsType, 0, max_index, offset, max_size, struct_size);
+    SettingsType::getSettingsParameters(settingsType, 0, max_index, offset, max_size, struct_size);
 
     for (int i = 0; i < max_index; ++i) {
-      getSettingsParameters(settingsType, i, offset, max_size);
+      SettingsType::getSettingsParameters(settingsType, i, offset, max_size);
       serialPrint(String(i));
       serialPrint("|");
       serialPrint(String(offset));

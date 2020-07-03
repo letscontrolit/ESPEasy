@@ -22,23 +22,31 @@ namespace std
 
 #include "src/DataStructs/ESPEasyDefaults.h"
 
+#ifdef USE_LITTLEFS
+  #include <LittleFS.h>
+  #define ESPEASY_FS LittleFS
+#else 
+  #define ESPEASY_FS SPIFFS
+#endif
 
 // Include custom first, then build info. (one may want to set BUILD_GIT for example)
 #include "ESPEasy_buildinfo.h"
 
 #include "define_plugin_sets.h"
 
+#ifdef ESP32
+#include <esp8266-compat.h>
+
+#endif
+
+
 #define ZERO_FILL(S)  memset((S), 0, sizeof(S))
 #define ZERO_TERMINATE(S)  S[sizeof(S) - 1] = 0
 
 
+
 String getUnknownString();
 
-/*********************************************************************************************\
-   Bitwise operators
-  \*********************************************************************************************/
-bool getBitFromUL(uint32_t number, byte bitnr);
-void setBitToUL(uint32_t& number, byte bitnr, bool value);
 
 
 /******************************************************************************\
@@ -104,7 +112,7 @@ void setBitToUL(uint32_t& number, byte bitnr, bool value);
   // #define FEATURE_MDNS
 #endif
 #if defined(ESP32)
- #define FEATURE_ARDUINO_OTA
+ //#define FEATURE_ARDUINO_OTA
  //#define FEATURE_MDNS
 #endif
 

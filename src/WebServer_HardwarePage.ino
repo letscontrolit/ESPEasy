@@ -19,8 +19,21 @@ void handle_hardware() {
     Settings.Pin_i2c_sda             = getFormItemInt(F("psda"));
     Settings.Pin_i2c_scl             = getFormItemInt(F("pscl"));
     Settings.I2C_clockSpeed          = getFormItemInt(F("pi2csp"), DEFAULT_I2C_CLOCK_SPEED);
-    Settings.InitSPI                 = isFormItemChecked(F("initspi")); // SPI Init
+    #ifdef ESP32
+      Settings.InitSPI               = getFormItemInt(F("initspi"), 0);
+    #else //for ESP8266 we keep the old UI
+      Settings.InitSPI               = isFormItemChecked(F("initspi")); // SPI Init
+    #endif
     Settings.Pin_sd_cs               = getFormItemInt(F("sd"));
+#ifdef HAS_ETHERNET
+    Settings.ETH_Phy_Addr            = getFormItemInt(F("ethphy"));
+    Settings.ETH_Pin_mdc             = getFormItemInt(F("ethmdc"));
+    Settings.ETH_Pin_mdio            = getFormItemInt(F("ethmdio"));
+    Settings.ETH_Pin_power           = getFormItemInt(F("ethpower"));
+    Settings.ETH_Phy_Type            = getFormItemInt(F("ethtype"));
+    Settings.ETH_Clock_Mode          = getFormItemInt(F("ethclock"));
+    Settings.ETH_Wifi_Mode           = getFormItemInt(F("ethwifi"));
+#endif
     int gpio = 0;
 
     // FIXME TD-er: Max of 17 is a limit in the Settings.PinBootStates array
@@ -69,12 +82,41 @@ void handle_hardware() {
 
   // SPI Init
   addFormSubHeader(F("SPI Interface"));
-  addFormCheckBox(F("Init SPI"), F("initspi"), Settings.InitSPI);
+  #ifdef ESP32
+    String spi_options[3] = { F("Disabled"), F("VSPI: CLK=GPIO-18, MISO=GPIO-19, MOSI=GPIO-23"), F("HSPI: CLK=GPIO-14, MISO=GPIO-12, MOSI=GPIO-13")};
+    addFormSelector(F("Init SPI"), F("initspi"), 3, spi_options, NULL, Settings.InitSPI);
+    addFormNote(F("Changing SPI settings requires to manualy restart"));
+  #else //for ESP8266 we keep the existing UI
+  addFormCheckBox(F("Init SPI"), F("initspi"), Settings.InitSPI>0);
   addFormNote(F("CLK=GPIO-14 (D5), MISO=GPIO-12 (D6), MOSI=GPIO-13 (D7)"));
+  #endif
   addFormNote(F("Chip Select (CS) config must be done in the plugin"));
+  
 #ifdef FEATURE_SD
   addFormPinSelect(formatGpioName_output("SD Card CS"), "sd", Settings.Pin_sd_cs);
 #endif // ifdef FEATURE_SD
+  
+#ifdef HAS_ETHERNET
+  addFormSubHeader(F("Ethernet"));
+  addRowLabel_tr_id(F("Ethernet or WIFI?"), "ethwifi");
+  String ethWifiOptions[2] = { F("WIFI"), F("ETHERNET") };
+  addSelector("ethwifi", 2, ethWifiOptions, NULL, NULL, Settings.ETH_Wifi_Mode, false, true);
+  addFormNote(F("Change Switch between WIFI and ETHERNET requires reboot to activate"));
+  addRowLabel_tr_id(F("Ethernet PHY type"), "ethtype");
+  String ethPhyTypes[2] = { F("LAN8710"), F("TLK110") };
+  addSelector("ethtype", 2, ethPhyTypes, NULL, NULL, Settings.ETH_Phy_Type, false, true);
+  addFormNumericBox(F("Ethernet PHY Address"), "ethphy", Settings.ETH_Phy_Addr, 0, 255);
+  addFormNote(F("I&sup2;C-address of Ethernet PHY (0 or 1 for LAN8720, 31 for TLK110)"));
+  addFormPinSelect(formatGpioName_output("Ethernet MDC pin"), "ethmdc", Settings.ETH_Pin_mdc);
+  addFormPinSelect(formatGpioName_input("Ethernet MIO pin"), "ethmdio", Settings.ETH_Pin_mdio);
+  addFormPinSelect(formatGpioName_output("Ethernet Power pin"), "ethpower", Settings.ETH_Pin_power);
+  addRowLabel_tr_id(F("Ethernet Clock"), "ethclock");
+  String ethClockOptions[4] = { F("External crystal oscillator"),
+                            F("50MHz APLL Output on GPIO0"),
+                            F("50MHz APLL Output on GPIO16"),
+                            F("50MHz APLL Inverted Output on GPIO17") };
+  addSelector("ethclock", 4, ethClockOptions, NULL, NULL, Settings.ETH_Clock_Mode, false, true);
+#endif // ifdef HAS_ETHERNET
 
   addFormSubHeader(F("GPIO boot states"));
   int gpio = 0;

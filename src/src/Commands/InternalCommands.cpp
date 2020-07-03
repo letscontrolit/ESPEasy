@@ -1,31 +1,38 @@
+#include "InternalCommands.h"
 
-#include "src/Commands/Common.h"
+#include "../../ESPEasy_common.h"
+#include "../../ESPEasy_fdwdecl.h"
+#include "../../ESPEasy_Log.h"
+#include "../Globals/Settings.h"
+
 #ifdef USES_BLYNK
-# include "src/Commands/Blynk.h"
-# include "src/Commands/Blynk_c015.h"
+# include "../Commands/Blynk.h"
+# include "../Commands/Blynk_c015.h"
 #endif // ifdef USES_BLYNK
-#include "src/Commands/Controller.h"
-#include "src/Commands/Diagnostic.h"
-#include "src/Commands/HTTP.h"
-#include "src/Commands/i2c.h"
-#ifdef USES_MQTT
-# include "src/Commands/MQTT.h"
-#endif // USES_MQTT
-#include "src/Commands/Networks.h"
-#include "src/Commands/Notifications.h"
-#include "src/Commands/RTC.h"
-#include "src/Commands/Rules.h"
-#include "src/Commands/SDCARD.h"
-#include "src/Commands/Settings.h"
-#include "src/Commands/System.h"
-#include "src/Commands/Tasks.h"
-#include "src/Commands/Time.h"
-#include "src/Commands/Timer.h"
-#include "src/Commands/UPD.h"
-#include "src/Commands/wd.h"
-#include "src/Commands/WiFi.h"
 
-#include "ESPEasy_common.h"
+#include "../Commands/Common.h"
+#include "../Commands/Controller.h"
+#include "../Commands/Diagnostic.h"
+#include "../Commands/HTTP.h"
+#include "../Commands/i2c.h"
+
+#ifdef USES_MQTT
+# include "../Commands/MQTT.h"
+#endif // USES_MQTT
+
+#include "../Commands/Networks.h"
+#include "../Commands/Notifications.h"
+#include "../Commands/RTC.h"
+#include "../Commands/Rules.h"
+#include "../Commands/SDCARD.h"
+#include "../Commands/Settings.h"
+#include "../Commands/System.h"
+#include "../Commands/Tasks.h"
+#include "../Commands/Time.h"
+#include "../Commands/Timer.h"
+#include "../Commands/UPD.h"
+#include "../Commands/wd.h"
+#include "../Commands/WiFi.h"
 
 
 bool checkNrArguments(const char *cmd, const char *Line, int nrArguments) {
@@ -94,22 +101,32 @@ bool checkNrArguments(const char *cmd, const char *Line, int nrArguments) {
   return true;
 }
 
-/*********************************************************************************************\
-* Registers command
-\*********************************************************************************************/
+bool do_command_case(const String& cmd_lc, const char *cmd, struct EventStruct *event, const char *line, String& status, const String& cmd_test, command_function pFunc, int nrArguments, bool& retval)
+{
+  if (cmd_lc.equals(cmd_test)) {
+    if (!checkNrArguments(cmd, line, nrArguments)) {
+      status = return_incorrect_nr_arguments(); 
+      retval = false;
+    } else  {
+      status = pFunc(event, line); 
+      retval = true;
+    }
+    return true; // Command is handled
+  }
+  return false;
+}
+
+
 bool executeInternalCommand(const char *cmd, struct EventStruct *event, const char *line, String& status)
 {
   String cmd_lc;
 
   cmd_lc = cmd;
   cmd_lc.toLowerCase();
+  bool retval;
   // Simple macro to match command to function call.
   #define COMMAND_CASE(S, C, NARGS) \
-  if (strcmp_P(cmd_lc.c_str(),      \
-               PSTR(S)) == 0)       \
-    { if (!checkNrArguments(cmd, line, NARGS)) { \
-      status = return_incorrect_nr_arguments(); return false;} \
-      else  status = C (event, line); return true;}
+    if (do_command_case(cmd_lc, cmd, event, line, status, F(S), &C, NARGS, retval)) { return retval; }
 
   // FIXME TD-er: Should we execute command when number of arguments is wrong?
 
@@ -153,6 +170,19 @@ bool executeInternalCommand(const char *cmd, struct EventStruct *event, const ch
       break;
     }
     case 'e': {
+    #ifdef HAS_ETHERNET
+      COMMAND_CASE(   "ethphyadr", Command_ETH_Phy_Addr,   1); // Network Command
+      COMMAND_CASE(   "ethpinmdc", Command_ETH_Pin_mdc,    1); // Network Command
+      COMMAND_CASE(  "ethpinmdio", Command_ETH_Pin_mdio,   1); // Network Command
+      COMMAND_CASE( "ethpinpower", Command_ETH_Pin_power,  1); // Network Command
+      COMMAND_CASE(  "ethphytype", Command_ETH_Phy_Type,   1); // Network Command
+      COMMAND_CASE("ethclockmode", Command_ETH_Clock_Mode, 1); // Network Command
+      COMMAND_CASE(       "ethip", Command_ETH_IP,         1); // Network Command
+      COMMAND_CASE(  "ethgateway", Command_ETH_Gateway,    1); // Network Command
+      COMMAND_CASE(   "ethsubnet", Command_ETH_Subnet,     1); // Network Command  
+      COMMAND_CASE(      "ethdns", Command_ETH_DNS,        1); // Network Command
+      COMMAND_CASE( "ethwifimode", Command_ETH_Wifi_Mode,  1); // Network Command
+    #endif // HAS_ETHERNET
       COMMAND_CASE("erasesdkwifi", Command_WiFi_Erase,     0); // WiFi.h
       COMMAND_CASE(       "event", Command_Rules_Events,  -1); // Rule.h
       COMMAND_CASE("executerules", Command_Rules_Execute, -1); // Rule.h
@@ -189,10 +219,6 @@ bool executeInternalCommand(const char *cmd, struct EventStruct *event, const ch
       COMMAND_CASE(       "meminfo", Command_MemInfo,           0); // Diagnostic.h
       COMMAND_CASE( "meminfodetail", Command_MemInfo_detail,    0); // Diagnostic.h
     #endif
-#ifdef USES_MQTT
-      COMMAND_CASE(  "messagedelay", Command_MQTT_messageDelay, 1); // MQTT.h
-      COMMAND_CASE("mqttretainflag", Command_MQTT_Retain,       1); // MQTT.h
-#endif // USES_MQTT
       break;
     }
     case 'n': {
@@ -292,23 +318,25 @@ bool executeInternalCommand(const char *cmd, struct EventStruct *event, const ch
   return false;
 }
 
+
+
 // Execute command which may be plugin or internal commands
-bool ExecuteCommand_all(byte source, const char *Line)
+bool ExecuteCommand_all(EventValueSource::Enum source, const char *Line)
 {
   return ExecuteCommand(INVALID_TASK_INDEX, source, Line, true, true, false);
 }
 
-bool ExecuteCommand_all_config(byte source, const char *Line)
+bool ExecuteCommand_all_config(EventValueSource::Enum source, const char *Line)
 {
   return ExecuteCommand(INVALID_TASK_INDEX, source, Line, true, true, true);
 }
 
-bool ExecuteCommand_plugin_config(byte source, const char *Line)
+bool ExecuteCommand_plugin_config(EventValueSource::Enum source, const char *Line)
 {
   return ExecuteCommand(INVALID_TASK_INDEX, source, Line, true, false, true);
 }
 
-bool ExecuteCommand_all_config_eventOnly(byte source, const char *Line)
+bool ExecuteCommand_all_config_eventOnly(EventValueSource::Enum source, const char *Line)
 {
   bool tryInternal = false;
   {
@@ -320,22 +348,22 @@ bool ExecuteCommand_all_config_eventOnly(byte source, const char *Line)
   return ExecuteCommand(INVALID_TASK_INDEX, source, Line, true, tryInternal, true);
 }
 
-bool ExecuteCommand_internal(byte source, const char *Line)
+bool ExecuteCommand_internal(EventValueSource::Enum source, const char *Line)
 {
   return ExecuteCommand(INVALID_TASK_INDEX, source, Line, false, true, false);
 }
 
-bool ExecuteCommand_plugin(byte source, const char *Line)
+bool ExecuteCommand_plugin(EventValueSource::Enum source, const char *Line)
 {
   return ExecuteCommand(INVALID_TASK_INDEX, source, Line, true, false, false);
 }
 
-bool ExecuteCommand_plugin(taskIndex_t taskIndex, byte source, const char *Line)
+bool ExecuteCommand_plugin(taskIndex_t taskIndex, EventValueSource::Enum source, const char *Line)
 {
   return ExecuteCommand(taskIndex, source, Line, true, false, false);
 }
 
-bool ExecuteCommand(taskIndex_t taskIndex, byte source, const char *Line, bool tryPlugin, bool tryInternal, bool tryRemoteConfig)
+bool ExecuteCommand(taskIndex_t taskIndex, EventValueSource::Enum source, const char *Line, bool tryPlugin, bool tryInternal, bool tryRemoteConfig)
 {
   checkRAM(F("ExecuteCommand"));
   String cmd;
@@ -442,33 +470,3 @@ bool ExecuteCommand(taskIndex_t taskIndex, byte source, const char *Line, bool t
   delay(0);
   return false;
 }
-
-#ifdef FEATURE_SD
-void printDirectory(File dir, int numTabs)
-{
-  while (true) {
-    File entry = dir.openNextFile();
-
-    if (!entry) {
-      // no more files
-      break;
-    }
-
-    for (uint8_t i = 0; i < numTabs; i++) {
-      serialPrint("\t");
-    }
-    serialPrint(entry.name());
-
-    if (entry.isDirectory()) {
-      serialPrintln("/");
-      printDirectory(entry, numTabs + 1);
-    } else {
-      // files have sizes, directories do not
-      serialPrint("\t\t");
-      serialPrintln(String(entry.size(), DEC));
-    }
-    entry.close();
-  }
-}
-
-#endif // ifdef FEATURE_SD

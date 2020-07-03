@@ -1,3 +1,5 @@
+#include "src/Commands/InternalCommands.h"
+
 /********************************************************************************************\
  * Get data from Serial Interface
  \*********************************************************************************************/
@@ -35,7 +37,7 @@ void serial()
       InputBuffer_Serial[SerialInByteCounter] = 0; // serial data completed
       Serial.write('>');
       serialPrintln(InputBuffer_Serial);
-      ExecuteCommand_all(VALUE_SOURCE_SERIAL, InputBuffer_Serial);
+      ExecuteCommand_all(EventValueSource::Enum::VALUE_SOURCE_SERIAL, InputBuffer_Serial);
       SerialInByteCounter   = 0;
       InputBuffer_Serial[0] = 0; // serial data processed, clear buffer
     }
@@ -73,10 +75,7 @@ void addNewlineToSerialBuffer() {
 
 void process_serialWriteBuffer() {
   if (serialWriteBuffer.size() == 0) { return; }
-  size_t snip = 128; // Some default, ESP32 doesn't have the availableForWrite function yet.
-#if defined(ESP8266)
-  snip = Serial.availableForWrite();
-#endif // if defined(ESP8266)
+  size_t snip = Serial.availableForWrite();
 
   if (snip > 0) {
     size_t bytes_to_write = serialWriteBuffer.size();

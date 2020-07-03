@@ -4,7 +4,7 @@
 #include "../Globals/CRCValues.h"
 #include "StringConverter.h"
 #include "../../ESPEasy-Globals.h"
-
+#include "CompiletimeDefines.h"
 
 #ifdef USES_MQTT
 # include "../Globals/MQTT.h"
@@ -73,7 +73,11 @@ void SystemVariables::parseSystemVariables(String& s, boolean useURLencode)
       case BSSID:             value = String((wifiStatus == ESPEASY_WIFI_DISCONNECTED) ? F("00:00:00:00:00:00") : WiFi.BSSIDstr()); break;
       case CR:                value = "\r"; break;
       case IP:                value = getValue(LabelType::IP_ADDRESS); break;
-      case IP4:               value = String( (int) WiFi.localIP()[3] ); break; // 4th IP octet
+      case IP4:               value = String( (int) NetworkLocalIP()[3] ); break; // 4th IP octet
+      case SUBNET:            value = getValue(LabelType::IP_SUBNET); break;
+      case DNS:               value = getValue(LabelType::DNS); break;
+      case GATEWAY:           value = getValue(LabelType::GATEWAY); break;
+      case CLIENTIP:          value = getValue(LabelType::CLIENT_IP); break;
       #ifdef USES_MQTT
       case ISMQTT:            value = String(MQTTclient_connected); break;
       #else // ifdef USES_MQTT
@@ -89,6 +93,16 @@ void SystemVariables::parseSystemVariables(String& s, boolean useURLencode)
 
       case ISNTP:             value = String(statusNTPInitialized); break;
       case ISWIFI:            value = String(wifiStatus); break; // 0=disconnected, 1=connected, 2=got ip, 3=services initialized
+      // TODO: PKR: Add ETH Objects
+      #ifdef HAS_ETHERNET
+      
+      case ETHWIFIMODE:       value = getValue(LabelType::ETH_WIFI_MODE); break; // 0=WIFI, 1=ETH
+      case ETHCONNECTED:      value = getValue(LabelType::ETH_CONNECTED); break; // 0=disconnected, 1=connected
+      case ETHDUPLEX:         value = getValue(LabelType::ETH_DUPLEX); break;
+      case ETHSPEED:          value = getValue(LabelType::ETH_SPEED); break;
+      case ETHSTATE:          value = getValue(LabelType::ETH_STATE); break;
+      case ETHSPEEDSTATE:     value = getValue(LabelType::ETH_SPEED_STATE); break;
+      #endif
       case LCLTIME:           value = getValue(LabelType::LOCAL_TIME); break;
       case LCLTIME_AM:        value = node_time.getDateTimeString_ampm('-', ':', ' '); break;
       case LF:                value = "\n"; break;
@@ -103,11 +117,11 @@ void SystemVariables::parseSystemVariables(String& s, boolean useURLencode)
       case SSID:              value = (wifiStatus == ESPEASY_WIFI_DISCONNECTED) ? F("--") : WiFi.SSID(); break;
       case SUNRISE:           SMART_REPL_T(SystemVariables::toString(enumval), replSunRiseTimeString); break;
       case SUNSET:            SMART_REPL_T(SystemVariables::toString(enumval), replSunSetTimeString); break;
-      case SYSBUILD_DATE:     value = String(CRCValues.compileDate); break;
+      case SYSBUILD_DATE:     value = get_build_date(); break;
       case SYSBUILD_DESCR:    value = getValue(LabelType::BUILD_DESC); break;
       case SYSBUILD_FILENAME: value = getValue(LabelType::BINARY_FILENAME); break;
       case SYSBUILD_GIT:      value = getValue(LabelType::GIT_BUILD); break;
-      case SYSBUILD_TIME:     value = String(CRCValues.compileTime); break;
+      case SYSBUILD_TIME:     value = get_build_time(); break;
       case SYSDAY:            value = String(node_time.day()); break;
       case SYSDAY_0:          value = timeReplacement_leadZero(node_time.day()); break;
       case SYSHEAP:           value = String(ESP.getFreeHeap()); break;
@@ -123,14 +137,14 @@ void SystemVariables::parseSystemVariables(String& s, boolean useURLencode)
       case SYSSEC_D:          value = String(((node_time.hour() * 60) + node_time.minute()) * 60 + node_time.second()); break;
       case SYSSTACK:          value = getValue(LabelType::FREE_STACK); break;
       case SYSTIME:           value = node_time.getTimeString(':'); break;
-      case SYSTIME_AM:        value = node_time.getTimeString_ampm(':', false); break;
+      case SYSTIME_AM:        value = node_time.getTimeString_ampm(':'); break;
       case SYSTM_HM:          value = node_time.getTimeString(':', false); break;
       case SYSTM_HM_AM:       value = node_time.getTimeString_ampm(':', false); break;
       case SYSWEEKDAY:        value = String(node_time.weekday()); break;
       case SYSWEEKDAY_S:      value = node_time.weekday_str(); break;
+      case SYSYEAR_0:
       case SYSYEAR:           value = String(node_time.year()); break;
       case SYSYEARS:          value = timeReplacement_leadZero(node_time.year() % 100); break;
-      case SYSYEAR_0:         value = String(node_time.year()); break;
       case SYS_MONTH_0:       value = timeReplacement_leadZero(node_time.month()); break;
       case S_CR:              value = F("\\r"); break;
       case S_LF:              value = F("\\n"); break;
@@ -239,10 +253,22 @@ String SystemVariables::toString(SystemVariables::Enum enumval)
     case Enum::CR:              return F("%CR%");
     case Enum::IP4:             return F("%ip4%");
     case Enum::IP:              return F("%ip%");
+    case Enum::SUBNET:          return F("%subnet%");
+    case Enum::DNS:             return F("%dns%");
+    case Enum::GATEWAY:         return F("%gateway%");
+    case Enum::CLIENTIP:        return F("%clientip%");
     case Enum::ISMQTT:          return F("%ismqtt%");
     case Enum::ISMQTTIMP:       return F("%ismqttimp%");
     case Enum::ISNTP:           return F("%isntp%");
     case Enum::ISWIFI:          return F("%iswifi%");
+    #ifdef HAS_ETHERNET
+    case Enum::ETHWIFIMODE:   return F("%ethwifimode%");
+    case Enum::ETHCONNECTED:   return F("%ethconnected%");
+    case Enum::ETHDUPLEX:      return F("%ethduplex%");
+    case Enum::ETHSPEED:       return F("%ethspeed%");
+    case Enum::ETHSTATE:       return F("%ethstate%");
+    case Enum::ETHSPEEDSTATE:       return F("%ethspeedstate%");
+    #endif
     case Enum::LCLTIME:         return F("%lcltime%");
     case Enum::LCLTIME_AM:      return F("%lcltime_am%");
     case Enum::LF:              return F("%LF%");

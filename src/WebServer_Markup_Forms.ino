@@ -1,3 +1,5 @@
+#include <Arduino.h>
+
 
 // ********************************************************************************
 // Add a separator as row start
@@ -132,6 +134,12 @@ void addFormPasswordBox(const String& label, const String& id, const String& pas
   addHtml(html);
 }
 
+bool getFormPassword(const String& id, String& password)
+{
+  password = web_server.arg(id);
+  return !password.equals(F("*****"));
+}
+
 // ********************************************************************************
 // Add a IP Box form
 // ********************************************************************************
@@ -183,17 +191,19 @@ void addFormPinSelectI2C(const String& label, const String& id, int choice)
 
 void addFormSelectorI2C(const String& id, int addressCount, const int addresses[], int selectedIndex)
 {
-  String options[addressCount];
+  addRowLabel_tr_id(F("I2C Address"), id);
+  do_addSelector_Head(id, "", "", false);
 
   for (byte x = 0; x < addressCount; x++)
   {
-    options[x] = formatToHex_decimal(addresses[x]);
+    String option = formatToHex_decimal(addresses[x]);
 
     if (x == 0) {
-      options[x] += F(" - (default)");
+      option += F(" - (default)");
     }
+    addSelector_option(addresses[x], option, "", addresses[x] == selectedIndex);
   }
-  addFormSelector(F("I2C Address"), id, addressCount, options, addresses, NULL, selectedIndex, false);
+  addSelector_Foot();
 }
 
 void addFormSelector(const String& label, const String& id, int optionCount, const String options[], const int indices[], int selectedIndex)
@@ -222,7 +232,7 @@ void addFormSelector(const String& label,
                      boolean       reloadonchange)
 {
   addRowLabel_tr_id(label, id);
-  addSelector(id, optionCount, options, indices, attr, selectedIndex, reloadonchange);
+  addSelector(id, optionCount, options, indices, attr, selectedIndex, reloadonchange, true);
 }
 
 void addFormSelector_script(const String& label,
@@ -235,7 +245,7 @@ void addFormSelector_script(const String& label,
                             const String& onChangeCall)
 {
   addRowLabel_tr_id(label, id);
-  addSelector_Head(id, "", onChangeCall, false);
+  do_addSelector_Head(id, "", onChangeCall, false);
   addSelector_options(optionCount, options, indices, attr, selectedIndex);
   addSelector_Foot();
 }
@@ -317,10 +327,8 @@ bool isFormItem(const String& id)
 
 void copyFormPassword(const String& id, char *pPassword, int maxlength)
 {
-  String password = web_server.arg(id);
-
-  if (password == F("*****")) { // no change?
-    return;
+  String password;
+  if (getFormPassword(id, password)) {
+    safe_strncpy(pPassword, password.c_str(), maxlength);
   }
-  safe_strncpy(pPassword, password.c_str(), maxlength);
 }

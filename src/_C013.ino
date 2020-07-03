@@ -114,7 +114,7 @@ bool CPlugin_013(CPlugin::Function function, struct EventStruct *event, String& 
 // ********************************************************************************
 void C013_SendUDPTaskInfo(byte destUnit, byte sourceTaskIndex, byte destTaskIndex)
 {
-  if (!WiFiConnected(10)) {
+  if (!NetworkConnected(10)) {
     return;
   }
 
@@ -158,7 +158,7 @@ void C013_SendUDPTaskInfo(byte destUnit, byte sourceTaskIndex, byte destTaskInde
 
 void C013_SendUDPTaskData(byte destUnit, byte sourceTaskIndex, byte destTaskIndex)
 {
-  if (!WiFiConnected(10)) {
+  if (!NetworkConnected(10)) {
     return;
   }
   struct C013_SensorDataStruct dataReply;
@@ -196,7 +196,7 @@ void C013_SendUDPTaskData(byte destUnit, byte sourceTaskIndex, byte destTaskInde
 \*********************************************************************************************/
 void C013_sendUDP(byte unit, byte *data, byte size)
 {
-  if (!WiFiConnected(10)) {
+  if (!NetworkConnected(10)) {
     return;
   }
   NodesMap::iterator it;

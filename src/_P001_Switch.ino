@@ -164,26 +164,30 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         globalMapPortStatus[key].previousTask = event->TaskIndex;
       }
 
-      String options[2];
-      options[0] = F("Switch");
-      options[1] = F("Dimmer");
-      int optionValues[2]   = { PLUGIN_001_TYPE_SWITCH, PLUGIN_001_TYPE_DIMMER };
-      const byte switchtype = P001_getSwitchType(event);
-      addFormSelector(F("Switch Type"), F("p001_type"), 2, options, optionValues, switchtype);
-
-      if (switchtype == PLUGIN_001_TYPE_DIMMER)
       {
-        addFormNumericBox(F("Dim value"), F("p001_dimvalue"), PCONFIG(1), 0, 255);
+        String options[2];
+        options[0] = F("Switch");
+        options[1] = F("Dimmer");
+        int optionValues[2]   = { PLUGIN_001_TYPE_SWITCH, PLUGIN_001_TYPE_DIMMER };
+        const byte switchtype = P001_getSwitchType(event);
+        addFormSelector(F("Switch Type"), F("p001_type"), 2, options, optionValues, switchtype);
+
+        if (switchtype == PLUGIN_001_TYPE_DIMMER)
+        {
+          addFormNumericBox(F("Dim value"), F("p001_dimvalue"), PCONFIG(1), 0, 255);
+        }
       }
 
-      byte   choice = PCONFIG(2);
-      String buttonOptions[3];
-      buttonOptions[0] = F("Normal Switch");
-      buttonOptions[1] = F("Push Button Active Low");
-      buttonOptions[2] = F("Push Button Active High");
-      int buttonOptionValues[3] =
-      { PLUGIN_001_BUTTON_TYPE_NORMAL_SWITCH, PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_LOW, PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_HIGH };
-      addFormSelector(F("Switch Button Type"), F("p001_button"), 3, buttonOptions, buttonOptionValues, choice);
+      {
+        byte   choice = PCONFIG(2);
+        String buttonOptions[3];
+        buttonOptions[0] = F("Normal Switch");
+        buttonOptions[1] = F("Push Button Active Low");
+        buttonOptions[2] = F("Push Button Active High");
+        int buttonOptionValues[3] =
+        { PLUGIN_001_BUTTON_TYPE_NORMAL_SWITCH, PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_LOW, PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_HIGH };
+        addFormSelector(F("Switch Button Type"), F("p001_button"), 3, buttonOptions, buttonOptionValues, choice);
+      }
 
       addFormCheckBox(F("Send Boot state"), F("p001_boot"),
                       PCONFIG(3));
@@ -197,15 +201,17 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         PCONFIG_FLOAT(1) = PLUGIN_001_DOUBLECLICK_MIN_INTERVAL;
       }
 
-      byte   choiceDC = PCONFIG(4);
-      String buttonDC[4];
-      buttonDC[0] = F("Disabled");
-      buttonDC[1] = F("Active only on LOW (EVENT=3)");
-      buttonDC[2] = F("Active only on HIGH (EVENT=3)");
-      buttonDC[3] = F("Active on LOW & HIGH (EVENT=3)");
-      int buttonDCValues[4] = { PLUGIN_001_DC_DISABLED, PLUGIN_001_DC_LOW, PLUGIN_001_DC_HIGH, PLUGIN_001_DC_BOTH };
+      {
+        byte   choiceDC = PCONFIG(4);
+        String buttonDC[4];
+        buttonDC[0] = F("Disabled");
+        buttonDC[1] = F("Active only on LOW (EVENT=3)");
+        buttonDC[2] = F("Active only on HIGH (EVENT=3)");
+        buttonDC[3] = F("Active on LOW & HIGH (EVENT=3)");
+        int buttonDCValues[4] = { PLUGIN_001_DC_DISABLED, PLUGIN_001_DC_LOW, PLUGIN_001_DC_HIGH, PLUGIN_001_DC_BOTH };
 
-      addFormSelector(F("Doubleclick event"), F("p001_dc"), 4, buttonDC, buttonDCValues, choiceDC);
+        addFormSelector(F("Doubleclick event"), F("p001_dc"), 4, buttonDC, buttonDCValues, choiceDC);
+      }
 
       addFormNumericBox(F("Doubleclick max. interval (ms)"),
                         F("p001_dcmaxinterval"),
@@ -218,15 +224,17 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         PCONFIG_FLOAT(2) = PLUGIN_001_LONGPRESS_MIN_INTERVAL;
       }
 
-      byte   choiceLP = PCONFIG(5);
-      String buttonLP[4];
-      buttonLP[0] = F("Disabled");
-      buttonLP[1] = F("Active only on LOW (EVENT= 10 [NORMAL] or 11 [INVERSED])");
-      buttonLP[2] = F("Active only on HIGH (EVENT= 11 [NORMAL] or 10 [INVERSED])");
-      buttonLP[3] = F("Active on LOW & HIGH (EVENT= 10 or 11)");
-      int buttonLPValues[4] =
-      { PLUGIN_001_LONGPRESS_DISABLED, PLUGIN_001_LONGPRESS_LOW, PLUGIN_001_LONGPRESS_HIGH, PLUGIN_001_LONGPRESS_BOTH };
-      addFormSelector(F("Longpress event"), F("p001_lp"), 4, buttonLP, buttonLPValues, choiceLP);
+      {
+        byte   choiceLP = PCONFIG(5);
+        String buttonLP[4];
+        buttonLP[0] = F("Disabled");
+        buttonLP[1] = F("Active only on LOW (EVENT= 10 [NORMAL] or 11 [INVERSED])");
+        buttonLP[2] = F("Active only on HIGH (EVENT= 11 [NORMAL] or 10 [INVERSED])");
+        buttonLP[3] = F("Active on LOW & HIGH (EVENT= 10 or 11)");
+        int buttonLPValues[4] =
+        { PLUGIN_001_LONGPRESS_DISABLED, PLUGIN_001_LONGPRESS_LOW, PLUGIN_001_LONGPRESS_HIGH, PLUGIN_001_LONGPRESS_BOTH };
+        addFormSelector(F("Longpress event"), F("p001_lp"), 4, buttonLP, buttonLPValues, choiceLP);
+      }
 
       addFormNumericBox(F("Longpress min. interval (ms)"),
                         F("p001_lpmininterval"),
@@ -1172,37 +1180,6 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
   }
   return success;
 }
-
-#if defined(ESP32)
-void analogWriteESP32(int pin, int value)
-{
-  // find existing channel if this pin has been used before
-  int8_t ledChannel = -1;
-
-  for (byte x = 0; x < 16; x++) {
-    if (ledChannelPin[x] == pin) {
-      ledChannel = x;
-    }
-  }
-
-  if (ledChannel == -1)             // no channel set for this pin
-  {
-    for (byte x = 0; x < 16; x++) { // find free channel
-      if (ledChannelPin[x] == -1)
-      {
-        int freq = 5000;
-        ledChannelPin[x] = pin; // store pin nr
-        ledcSetup(x, freq, 10); // setup channel
-        ledcAttachPin(pin, x);  // attach to this pin
-        ledChannel = x;
-        break;
-      }
-    }
-  }
-  ledcWrite(ledChannel, value);
-}
-
-#endif // if defined(ESP32)
 
 // TD-er: Needed to fix a mistake in earlier fixes.
 byte P001_getSwitchType(struct EventStruct *event) {

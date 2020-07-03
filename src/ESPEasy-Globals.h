@@ -96,7 +96,9 @@
 #include "src/DataStructs/NotificationSettingsStruct.h"
 #include "src/DataStructs/NotificationStruct.h"
 
+#ifdef USES_NOTIFIER
 extern NotificationStruct Notification[NPLUGIN_MAX];
+#endif
 
 
 
@@ -182,7 +184,11 @@ extern NotificationStruct Notification[NPLUGIN_MAX];
   #define FILE_RULES        "/rules1.txt"
   #include <WiFi.h>
 //  #include  "esp32_ping.h"
-  #include "SPIFFS.h"
+  #ifdef USE_LITTLEFS
+    #include "LittleFS.h"
+  #else
+    #include "SPIFFS.h"
+  #endif
   #include <rom/rtc.h>
   #include "esp_wifi.h" // Needed to call ESP-IDF functions like esp_wifi_....
   #ifdef FEATURE_MDNS
@@ -190,6 +196,7 @@ extern NotificationStruct Notification[NPLUGIN_MAX];
   #endif
   #define PIN_D_MAX        39
   extern int8_t ledChannelPin[16];
+  #define MAX_SKETCH_SIZE 1900544   // 0x1d0000 look at partitions in csv file
 #endif
 
 #include <WiFiUdp.h>
@@ -223,6 +230,11 @@ extern bool statusNTPInitialized;
 // udp protocol stuff (syslog, global sync, node info list, ntp time)
 extern WiFiUDP portUDP;
 
+// Ethernet Connectiopn status
+#ifdef HAS_ETHERNET
+extern uint8_t eth_wifi_mode;
+extern bool eth_connected;
+#endif
 
 
 
@@ -310,6 +322,9 @@ extern unsigned long last_system_event_run;
 
 #if FEATURE_ADC_VCC
 extern float vcc;
+#endif
+#ifdef ESP8266
+extern int lastADCvalue; // Keep track of last ADC value as it cannot be read while WiFi is connecting
 #endif
 
 extern boolean WebLoggedIn;
@@ -421,6 +436,23 @@ struct GpioFactorySettingsStruct {
         i2c_sda = -1;    // GPIO4 conflicts with relay control.
         i2c_scl = -1;    // GPIO5 conflicts with SW input
         break;
+      case DeviceModel_ShellyPLUG_S:
+        button[0] = 13;  // Single Button
+        relais[0] = 15;  // Red Led and Relay (0 = Off, 1 = On)
+        status_led = 2;  // Blue Led (0 = On, 1 = Off)
+        i2c_sda = -1;    // GPIO4 conflicts with relay control.
+        i2c_scl = -1;    // GPIO5 conflicts with SW input
+        break;
+      case DeviceMode_Olimex_ESP32_PoE:
+        button[0] = 34;    // DUT1 Button
+        relais[0] = -1;    // No LED's or relays on board
+        status_led = -1;
+        i2c_sda = 4;
+        i2c_scl = 5;
+        eth_power = 12;
+        eth_clock_mode = 3;
+        eth_wifi_mode = 1;
+        break;
 
       // case DeviceModel_default: break;
       default: break;
@@ -432,6 +464,13 @@ struct GpioFactorySettingsStruct {
   int8_t status_led = DEFAULT_PIN_STATUS_LED;
   int8_t i2c_sda = DEFAULT_PIN_I2C_SDA;
   int8_t i2c_scl = DEFAULT_PIN_I2C_SCL;
+  int8_t eth_phyaddr = DEFAULT_ETH_PHY_ADDR;
+  int8_t eth_phytype = DEFAULT_ETH_PHY_TYPE;
+  int8_t eth_mdc = DEFAULT_ETH_PIN_MDC;
+  int8_t eth_mdio = DEFAULT_ETH_PIN_MDIO;
+  int8_t eth_power = DEFAULT_ETH_PIN_POWER;
+  int8_t eth_clock_mode = DEFAULT_ETH_CLOCK_MODE;
+  int8_t eth_wifi_mode = DEFAULT_ETH_WIFI_MODE;
 };
 
 void addPredefinedPlugins(const GpioFactorySettingsStruct& gpio_settings);

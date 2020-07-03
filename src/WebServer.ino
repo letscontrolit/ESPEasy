@@ -4,10 +4,13 @@
 
 #include <WString.h>
 
+#include "ESPEasyNetwork.h"
+#include "ESPEasy_common.h"
 #include "src/Globals/CPlugins.h"
 #include "src/Globals/Device.h"
 #include "src/Globals/TXBuffer.h"
 #include "src/Static/WebStaticData.h"
+#include "src/DataStructs/SettingsType.h"
 
 
 
@@ -218,12 +221,13 @@ void WebServerInit()
   web_server.on(F("/i2cscanner"),    handle_i2cscanner);
   #endif
   web_server.on(F("/json"),          handle_json);     // Also part of WEBSERVER_NEW_UI
+  web_server.on(F("/csv"),           handle_csvval);
   web_server.on(F("/log"),           handle_log);
   web_server.on(F("/login"),         handle_login);
   web_server.on(F("/logjson"),       handle_log_JSON); // Also part of WEBSERVER_NEW_UI
-#ifndef NOTIFIER_SET_NONE
+#ifdef USES_NOTIFIER
   web_server.on(F("/notifications"), handle_notifications);
-#endif // ifndef NOTIFIER_SET_NONE
+#endif 
   #ifdef WEBSERVER_PINSTATES
   web_server.on(F("/pinstates"),     handle_pinstates);
   #endif
@@ -278,7 +282,7 @@ void WebServerInit()
 
   web_server.onNotFound(handleNotFound);
 
-  #if defined(ESP8266)
+  #if defined(ESP8266) || defined(ESP32) 
   {
     # ifndef NO_HTTP_UPDATER
     uint32_t maxSketchSize;
@@ -313,8 +317,8 @@ void set_mDNS() {
 
   if (webserverRunning) {
     addLog(LOG_LEVEL_INFO, F("WIFI : Starting mDNS..."));
-    bool mdns_started = MDNS.begin(WifiGetHostname().c_str());
-    MDNS.setInstanceName(WifiGetHostname()); // Needed for when the hostname has changed.
+    bool mdns_started = MDNS.begin(NetworkGetHostname().c_str());
+    MDNS.setInstanceName(NetworkGetHostname()); // Needed for when the hostname has changed.
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log = F("WIFI : ");
@@ -330,7 +334,7 @@ void set_mDNS() {
     }
 
     if (mdns_started) {
-      MDNS.addService("http", "tcp", 80);
+      MDNS.addService("http", "tcp", Settings.WebserverPort);
     }
   }
   #endif // ifdef FEATURE_MDNS
@@ -343,7 +347,7 @@ void setWebserverRunning(bool state) {
 
   if (state) {
     WebServerInit();
-    web_server.begin();
+    web_server.begin(Settings.WebserverPort);
     addLog(LOG_LEVEL_INFO, F("Webserver: start"));
   } else {
     web_server.stop();
@@ -541,12 +545,12 @@ void getWebPageTemplateVar(const String& varName)
       if ((i == MENU_INDEX_RULES) && !Settings.UseRules) { // hide rules menu item
         continue;
       }
-#ifdef NOTIFIER_SET_NONE
+#ifndef USES_NOTIFIER
 
       if (i == MENU_INDEX_NOTIFICATIONS) { // hide notifications menu item
         continue;
       }
-#endif // ifdef NOTIFIER_SET_NONE
+#endif
 
       addHtml(F("<a class='menu"));
 
@@ -567,7 +571,7 @@ void getWebPageTemplateVar(const String& varName)
 
   else if (varName == F("logo"))
   {
-    if (SPIFFS.exists(F("esp.png")))
+    if (ESPEASY_FS.exists(F("esp.png")))
     {
       addHtml(F("<img src=\"esp.png\" width=48 height=48 align=right>"));
     }
@@ -575,7 +579,7 @@ void getWebPageTemplateVar(const String& varName)
 
   else if (varName == F("css"))
   {
-    if (SPIFFS.exists(F("esp.css"))) // now css is written in writeDefaultCSS() to SPIFFS and always present
+    if (ESPEASY_FS.exists(F("esp.css"))) // now css is written in writeDefaultCSS() to FS and always present
     // if (0) //TODO
     {
       addHtml(F("<link rel=\"stylesheet\" type=\"text/css\" href=\"esp.css\">"));
@@ -594,6 +598,13 @@ void getWebPageTemplateVar(const String& varName)
   else if (varName == F("js"))
   {
     html_add_autosubmit_form();
+    html_add_script(false);
+    TXBuffer += jsToastMessageBegin;
+    // we can push custom messages here in future releases...
+    addHtml(F("Submitted"));
+    TXBuffer += jsToastMessageEnd;
+
+    html_add_script_end();
   }
 
   else if (varName == F("error"))
@@ -622,7 +633,7 @@ void writeDefaultCSS(void)
 {
   return; // TODO
 
-  if (!SPIFFS.exists(F("esp.css")))
+  if (!ESPEASY_FS.exists(F("esp.css")))
   {
     String defaultCSS;
 
@@ -631,7 +642,7 @@ void writeDefaultCSS(void)
     if (f)
     {
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        String log = F("CSS  : Writing default CSS file to SPIFFS (");
+        String log = F("CSS  : Writing default CSS file to FS (");
         log += defaultCSS.length();
         log += F(" bytes)");
         addLog(LOG_LEVEL_INFO, log);
@@ -958,26 +969,6 @@ void createSvgTextElement(const String& text, float textXoffset, float textYoffs
   addHtml(F("</tspan>\n</text>"));
 }
 
-unsigned int getSettingsTypeColor(SettingsType settingsType) {
-  switch (settingsType) {
-    case BasicSettings_Type:
-      return 0x5F0A87;
-    case TaskSettings_Type:
-      return 0xEE6352;
-    case CustomTaskSettings_Type:
-      return 0x59CD90;
-    case ControllerSettings_Type:
-      return 0x3FA7D6;
-    case CustomControllerSettings_Type:
-      return 0xFAC05E;
-    case NotificationSettings_Type:
-      return 0xF79D84;
-    default:
-      break;
-  }
-  return 0;
-}
-
 #define SVG_BAR_HEIGHT 16
 #define SVG_BAR_WIDTH 400
 
@@ -1045,18 +1036,17 @@ void getConfig_dat_file_layout() {
   int struct_size = 0;
 
   // background
-  const uint32_t realSize = getFileSize(TaskSettings_Type);
+  const uint32_t realSize = SettingsType::getFileSize(SettingsType::TaskSettings_Type);
   createSvgHorRectPath(0xcdcdcd, 0, yOffset, realSize, SVG_BAR_HEIGHT - 2, realSize, SVG_BAR_WIDTH);
 
-  for (int st = 0; st < SettingsType_MAX; ++st) {
-    SettingsType settingsType = static_cast<SettingsType>(st);
-
-    if (settingsType != NotificationSettings_Type) {
-      unsigned int color = getSettingsTypeColor(settingsType);
-      getSettingsParameters(settingsType, 0, max_index, offset, max_size, struct_size);
+  for (int st = 0; st < SettingsType::SettingsType_MAX; ++st) {
+    SettingsType::Enum settingsType = static_cast<SettingsType::Enum>(st);
+    if (SettingsType::getSettingsFile(settingsType) == SettingsType::FILE_CONFIG_type) {
+      unsigned int color = SettingsType::getSVGcolor(settingsType);
+      SettingsType::getSettingsParameters(settingsType, 0, max_index, offset, max_size, struct_size);
 
       for (int i = 0; i < max_index; ++i) {
-        getSettingsParameters(settingsType, i, offset, max_size);
+        SettingsType::getSettingsParameters(settingsType, i, offset, max_size);
 
         // Struct position
         createSvgHorRectPath(color, offset, yOffset, max_size, SVG_BAR_HEIGHT - 2, realSize, SVG_BAR_WIDTH);
@@ -1067,19 +1057,19 @@ void getConfig_dat_file_layout() {
   // Text labels
   float textXoffset = SVG_BAR_WIDTH + 2;
   float textYoffset = yOffset + 0.9 * SVG_BAR_HEIGHT;
-  createSvgTextElement(F("Config.dat"), textXoffset, textYoffset);
+  createSvgTextElement(SettingsType::getSettingsFileName(SettingsType::TaskSettings_Type), textXoffset, textYoffset);
   addHtml(F("</svg>\n"));
 }
 
-void getStorageTableSVG(SettingsType settingsType) {
-  uint32_t realSize   = getFileSize(settingsType);
-  unsigned int color  = getSettingsTypeColor(settingsType);
+void getStorageTableSVG(SettingsType::Enum settingsType) {
+  uint32_t realSize   = SettingsType::getFileSize(settingsType);
+  unsigned int color  = SettingsType::getSVGcolor(settingsType);
   const int    shiftY = 2;
 
   int max_index, offset, max_size;
   int struct_size = 0;
 
-  getSettingsParameters(settingsType, 0, max_index, offset, max_size, struct_size);
+  SettingsType::getSettingsParameters(settingsType, 0, max_index, offset, max_size, struct_size);
 
   if (max_index == 0) { return; }
 
@@ -1088,7 +1078,7 @@ void getStorageTableSVG(SettingsType settingsType) {
   float yOffset = shiftY;
 
   for (int i = 0; i < max_index; ++i) {
-    getSettingsParameters(settingsType, i, offset, max_size);
+    SettingsType::getSettingsParameters(settingsType, i, offset, max_size);
 
     // background
     createSvgHorRectPath(0xcdcdcd, 0,      yOffset, realSize, SVG_BAR_HEIGHT - 2, realSize, SVG_BAR_WIDTH);
@@ -1135,6 +1125,7 @@ void getStorageTableSVG(SettingsType settingsType) {
 
 #ifdef ESP32
 
+#include <esp_partition.h>
 
 int getPartionCount(byte pType) {
   esp_partition_type_t partitionType       = static_cast<esp_partition_type_t>(pType);

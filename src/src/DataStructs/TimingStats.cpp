@@ -172,7 +172,7 @@ bool mustLogCFunction(CPlugin::Function function) {
     case CPlugin::Function::CPLUGIN_UDP_IN:                    return true;
     case CPlugin::Function::CPLUGIN_FLUSH:                     return false;
     case CPlugin::Function::CPLUGIN_TEN_PER_SECOND:            return true;
-    case CPlugin::Function::CPLUGIN_FIFTY_PER_SECOND:          return false;
+    case CPlugin::Function::CPLUGIN_FIFTY_PER_SECOND:          return true;
     case CPlugin::Function::CPLUGIN_INIT_ALL:                  return false;
     case CPlugin::Function::CPLUGIN_EXIT:                      return false;
 
@@ -214,8 +214,8 @@ String getMiscStatsName(int stat) {
     case WIFI_NOTCONNECTED_STATS: return F("WiFi.isConnected() (fail)");
     case LOAD_TASK_SETTINGS:      return F("LoadTaskSettings()");
     case TRY_OPEN_FILE:           return F("TryOpenFile()");
-    case SPIFFS_GC_SUCCESS:       return F("SPIFFS GC success");
-    case SPIFFS_GC_FAIL:          return F("SPIFFS GC fail");
+    case FS_GC_SUCCESS:           return F("ESPEASY_FS GC success");
+    case FS_GC_FAIL:              return F("ESPEASY_FS GC fail");
     case RULES_PROCESSING:        return F("rulesProcessing()");
     case GRAT_ARP_STATS:          return F("sendGratuitousARP()");
     case BACKGROUND_TASKS:        return F("backgroundtasks()");

@@ -1,4 +1,10 @@
 #include "StringProviderTypes.h"
+#include "ESPEasyNetwork.h"
+#ifdef HAS_ETHERNET
+#include "ETH.h"
+#endif
+
+#include "src/Helpers/CompiletimeDefines.h"
 
 String getInternalLabel(LabelType::Enum label, char replaceSpace) {
   return to_internal_string(getLabel(label), replaceSpace);
@@ -72,6 +78,8 @@ String getLabel(LabelType::Enum label) {
     case LabelType::PLUGIN_DESCRIPTION:     return F("Plugin Description");
     case LabelType::BUILD_TIME:             return F("Build Time");
     case LabelType::BINARY_FILENAME:        return F("Binary Filename");
+    case LabelType::BUILD_PLATFORM:         return F("Build Platform");
+    case LabelType::GIT_HEAD:               return F("Git HEAD");
 
     case LabelType::SYSLOG_LOG_LEVEL:       return F("Syslog Log Level");
     case LabelType::SERIAL_LOG_LEVEL:       return F("Serial Log Level");
@@ -92,11 +100,30 @@ String getLabel(LabelType::Enum label) {
     case LabelType::FLASH_WRITE_COUNT:      return F("Flash Writes");
     case LabelType::SKETCH_SIZE:            return F("Sketch Size");
     case LabelType::SKETCH_FREE:            return F("Sketch Free");
-    case LabelType::SPIFFS_SIZE:            return F("SPIFFS Size");
-    case LabelType::SPIFFS_FREE:            return F("SPIFFS Free");
+    #ifdef USE_LITTLEFS
+    case LabelType::FS_SIZE:                return F("Little FS Size");
+    case LabelType::FS_FREE:                return F("Little FS Free");
+    #else
+    case LabelType::FS_SIZE:                return F("SPIFFS Size");
+    case LabelType::FS_FREE:                return F("SPIFFS Free");
+    #endif
     case LabelType::MAX_OTA_SKETCH_SIZE:    return F("Max. OTA Sketch Size");
     case LabelType::OTA_2STEP:              return F("OTA 2-step Needed");
     case LabelType::OTA_POSSIBLE:           return F("OTA possible");
+#ifdef HAS_ETHERNET
+    case LabelType::ETH_IP_ADDRESS:         return F("Eth IP Address");
+    case LabelType::ETH_IP_SUBNET:          return F("Eth IP Subnet");
+    case LabelType::ETH_IP_ADDRESS_SUBNET:  return F("Eth IP / Subnet");
+    case LabelType::ETH_IP_GATEWAY:         return F("Eth Gateway");
+    case LabelType::ETH_IP_DNS:             return F("Eth DNS");
+    case LabelType::ETH_MAC:                return F("Eth MAC");
+    case LabelType::ETH_DUPLEX:             return F("Eth Mode");
+    case LabelType::ETH_SPEED:              return F("Eth Speed");
+    case LabelType::ETH_STATE:              return F("Eth State");
+    case LabelType::ETH_SPEED_STATE:        return F("Eth Speed State");
+    case LabelType::ETH_WIFI_MODE:          return F("Eth Wifi Mode");
+    case LabelType::ETH_CONNECTED:          return F("Eth connected");
+#endif
 
   }
   return F("MissingString");
@@ -109,12 +136,8 @@ String getValue(LabelType::Enum label) {
   {
     case LabelType::UNIT_NR:                return String(Settings.Unit);
     case LabelType::UNIT_NAME:              return String(Settings.Name);  // Only return the set name, no appended unit.
-    case LabelType::HOST_NAME:
-    #ifdef ESP32
-      return WiFi.getHostname();
-    #else
-      return WiFi.hostname();
-    #endif
+    case LabelType::HOST_NAME:              return NetworkGetHostname();
+
 
     case LabelType::LOCAL_TIME:             return node_time.getDateTimeString('-',':',' ');
     case LabelType::UPTIME:                 return String(wdcounter / 2);
@@ -140,20 +163,21 @@ String getValue(LabelType::Enum label) {
     case LabelType::IP_CONFIG:              return useStaticIP() ? getLabel(LabelType::IP_CONFIG_STATIC) : getLabel(LabelType::IP_CONFIG_DYNAMIC);
     case LabelType::IP_CONFIG_STATIC:       break;
     case LabelType::IP_CONFIG_DYNAMIC:      break;
-    case LabelType::IP_ADDRESS:             return WiFi.localIP().toString();
-    case LabelType::IP_SUBNET:              return WiFi.subnetMask().toString();
+    case LabelType::IP_ADDRESS:             return NetworkLocalIP().toString();
+    case LabelType::IP_SUBNET:              return NetworkSubnetMask().toString();
     case LabelType::IP_ADDRESS_SUBNET:      return String(getValue(LabelType::IP_ADDRESS) + F(" / ") + getValue(LabelType::IP_SUBNET));
-    case LabelType::GATEWAY:                return WiFi.gatewayIP().toString();
+    case LabelType::GATEWAY:                return NetworkGatewayIP().toString();
     case LabelType::CLIENT_IP:              return formatIP(web_server.client().remoteIP());
+
     #ifdef FEATURE_MDNS
-    case LabelType::M_DNS:                  return String(WifiGetHostname()) + F(".local");
+    case LabelType::M_DNS:                  return String(NetworkGetHostname()) + F(".local");
     #endif
     case LabelType::DNS:                    return String(getValue(LabelType::DNS_1) + F(" / ") + getValue(LabelType::DNS_2));
-    case LabelType::DNS_1:                  return WiFi.dnsIP(0).toString();
-    case LabelType::DNS_2:                  return WiFi.dnsIP(1).toString();
+    case LabelType::DNS_1:                  return NetworkDnsIP(0).toString();
+    case LabelType::DNS_2:                  return NetworkDnsIP(1).toString();
     case LabelType::ALLOWED_IP_RANGE:       return describeAllowedIPrange();
-    case LabelType::STA_MAC:                return WiFi.macAddress();
-    case LabelType::AP_MAC:                 break;
+    case LabelType::STA_MAC:                return NetworkMacAddress();
+    case LabelType::AP_MAC:                 return WifiSoftAPmacAddress();
     case LabelType::SSID:                   return WiFi.SSID();
     case LabelType::BSSID:                  return WiFi.BSSIDstr();
     case LabelType::CHANNEL:                return String(WiFi.channel());
@@ -174,9 +198,10 @@ String getValue(LabelType::Enum label) {
     case LabelType::SYSTEM_LIBRARIES:       return getSystemLibraryString();
     case LabelType::PLUGIN_COUNT:           return String(deviceCount + 1);
     case LabelType::PLUGIN_DESCRIPTION:     return getPluginDescriptionString();
-    case LabelType::BUILD_TIME:             break;
-    case LabelType::BINARY_FILENAME:        break;
-
+    case LabelType::BUILD_TIME:             return get_build_date() + " " + get_build_time();
+    case LabelType::BINARY_FILENAME:        return get_binary_filename();
+    case LabelType::BUILD_PLATFORM:         return get_build_platform();
+    case LabelType::GIT_HEAD:               return get_git_head();
     case LabelType::SYSLOG_LOG_LEVEL:       return getLogLevelDisplayString(Settings.SyslogLevel);
     case LabelType::SERIAL_LOG_LEVEL:       return getLogLevelDisplayString(getSerialLogLevel());
     case LabelType::WEB_LOG_LEVEL:          return getLogLevelDisplayString(getWebLogLevel());
@@ -196,15 +221,54 @@ String getValue(LabelType::Enum label) {
     case LabelType::FLASH_WRITE_COUNT:      break;
     case LabelType::SKETCH_SIZE:            break;
     case LabelType::SKETCH_FREE:            break;
-    case LabelType::SPIFFS_SIZE:            break;
-    case LabelType::SPIFFS_FREE:            break;
+    case LabelType::FS_SIZE:                break;
+    case LabelType::FS_FREE:                break;
     case LabelType::MAX_OTA_SKETCH_SIZE:    break;
     case LabelType::OTA_2STEP:              break;
     case LabelType::OTA_POSSIBLE:           break;
+#ifdef HAS_ETHERNET
+    case LabelType::ETH_IP_ADDRESS:         return NetworkLocalIP().toString();
+    case LabelType::ETH_IP_SUBNET:          return NetworkSubnetMask().toString();
+    case LabelType::ETH_IP_ADDRESS_SUBNET:  return String(getValue(LabelType::ETH_IP_ADDRESS) + F(" / ") + getValue(LabelType::ETH_IP_SUBNET));
+    case LabelType::ETH_IP_GATEWAY:         return NetworkGatewayIP().toString();
+    case LabelType::ETH_IP_DNS:             return NetworkDnsIP(0).toString();
+    case LabelType::ETH_MAC:                return NetworkMacAddress();
+    case LabelType::ETH_DUPLEX:             return eth_connected ? (ETH.fullDuplex() ? F("Full Duplex") : F("Half Duplex")) : F("No Ethernet");
+    case LabelType::ETH_SPEED:              return eth_connected ? getEthSpeed() : F("No Ethernet");
+    case LabelType::ETH_STATE:              return eth_connected ? (ETH.linkUp() ? F("Link Up") : F("Link Down")) : F("No Ethernet");
+    case LabelType::ETH_SPEED_STATE:        return eth_connected ? getEthLinkSpeedState() : F("No Ethernet");
+    case LabelType::ETH_WIFI_MODE:          return (eth_wifi_mode == WIFI ? F("WIFI") : F("ETHERNET"));
+    case LabelType::ETH_CONNECTED:          return (eth_connected ? F("CONNECTED") : F("DISCONNECTED")); // 0=disconnected, 1=connected
+#endif
 
   }
   return F("MissingString");
 }
+
+#ifdef HAS_ETHERNET
+String getEthSpeed() {
+    String result;
+    result.reserve(7);
+    result += ETH.linkSpeed();
+    result += F("Mbps");
+    return result;
+}
+
+String getEthLinkSpeedState() {
+    String result;
+    result.reserve(29);
+    if (ETH.linkUp()) {
+        result += getValue(LabelType::ETH_STATE);
+        result += ' ';
+        result += getValue(LabelType::ETH_DUPLEX);
+        result += ' ';
+        result += getEthSpeed();
+    } else {
+        result = getValue(LabelType::ETH_STATE);
+    }
+    return result;
+}
+#endif
 
 String getExtendedValue(LabelType::Enum label) {
   switch (label)

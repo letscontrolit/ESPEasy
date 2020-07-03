@@ -1,3 +1,5 @@
+#include "ESPEasy_common.h"
+
 #include "src/DataStructs/Caches.h"
 #include "src/DataStructs/NodeStruct.h"
 #include "src/DataStructs/PinMode.h"
@@ -12,8 +14,37 @@
 #include "src/Globals/RTC.h"
 #include "src/Globals/ResetFactoryDefaultPref.h"
 #include "src/Globals/Services.h"
+#include "src/Globals/Settings.h"
 
 
+#ifdef ESP32
+ 
+  //MFD: adding tone support here while waiting for the Arduino Espressif implementation to catch up
+  //As recomandation is not to use external libraries the following code was taken from: https://github.com/lbernstone/Tone Thanks
+  #define TONE_CHANNEL 15
+
+  void noToneESP32(uint8_t pin, uint8_t channel=TONE_CHANNEL)
+  {
+      ledcDetachPin(pin);
+      ledcWrite(channel, 0);
+  }
+
+  void toneESP32(uint8_t pin, unsigned int frequency, unsigned long duration, uint8_t channel=TONE_CHANNEL)
+  {
+      if (ledcRead(channel)) {
+          log_e("Tone channel %d is already in use", ledcRead(channel));
+          return;
+      }
+      ledcAttachPin(pin, channel);
+      ledcWriteTone(channel, frequency);
+      if (duration) {
+          delay(duration);
+          noToneESP32(pin, channel);
+      }    
+  }
+
+
+#endif
 /*********************************************************************************************\
    ESPEasy specific strings
 \*********************************************************************************************/
@@ -32,19 +63,6 @@ String getNodeTypeDisplayString(byte nodeType) {
   return "";
 }
 
-String getSettingsTypeString(SettingsType settingsType) {
-  switch (settingsType) {
-    case BasicSettings_Type:            return F("Settings");
-    case TaskSettings_Type:             return F("TaskSettings");
-    case CustomTaskSettings_Type:       return F("CustomTaskSettings");
-    case ControllerSettings_Type:       return F("ControllerSettings");
-    case CustomControllerSettings_Type: return F("CustomControllerSettings");
-    case NotificationSettings_Type:     return F("NotificationSettings");
-    default:
-      break;
-  }
-  return "";
-}
 
 #ifdef USES_MQTT
 String getMQTT_state() {
@@ -319,6 +337,9 @@ bool allocatedOnStack(const void* address) {
 #endif // ESP32
 
 
+
+
+
 /**********************************************************
 *                                                         *
 * Deep Sleep related functions                            *
@@ -363,7 +384,7 @@ bool readyForSleep()
     return false;
   }
 
-  if (!WiFiConnected()) {
+  if (!NetworkConnected()) {
     // Allow 12 seconds to establish connections
     return timeOutReached(timerAwakeFromDeepSleep + 12000);
   }
@@ -567,6 +588,29 @@ String formatGpioName_RX_HW(bool optional) {
   return formatGpioName("TX (HW)", gpio_input, optional);
 }
 
+#ifdef ESP32
+
+String formatGpioName_ADC(int gpio_pin) {
+  int adc,ch, t;
+  if (getADC_gpio_info(gpio_pin, adc, ch, t)) {
+    if (adc == 0) {
+      return F("Hall Effect");
+    }
+    String res = F("ADC# ch?");
+    res.replace("#", String(adc));
+    res.replace("?", String(ch));
+    if (t >= 0) {
+      res += F(" (T");
+      res += t;
+      res += ')';
+    }
+    return res;
+  }
+  return "";
+}
+
+#endif
+
 /*********************************************************************************************\
    set pin mode & state (info table)
   \*********************************************************************************************/
@@ -690,6 +734,36 @@ String getPinModeString(byte mode) {
   return F("ERROR: Not Defined");
 }
 
+#if defined(ESP32)
+void analogWriteESP32(int pin, int value)
+{
+  // find existing channel if this pin has been used before
+  int8_t ledChannel = -1;
+
+  for (byte x = 0; x < 16; x++) {
+    if (ledChannelPin[x] == pin) {
+      ledChannel = x;
+    }
+  }
+
+  if (ledChannel == -1)             // no channel set for this pin
+  {
+    for (byte x = 0; x < 16; x++) { // find free channel
+      if (ledChannelPin[x] == -1)
+      {
+        int freq = 5000;
+        ledChannelPin[x] = pin; // store pin nr
+        ledcSetup(x, freq, 10); // setup channel
+        ledcAttachPin(pin, x);  // attach to this pin
+        ledChannel = x;
+        break;
+      }
+    }
+  }
+  ledcWrite(ledChannel, value);
+}
+#endif // if defined(ESP32)
+
 
 /********************************************************************************************\
   Status LED
@@ -721,7 +795,7 @@ void statusLED(bool traffic)
   else
   {
 
-    if (WiFiConnected())
+    if (NetworkConnected())
     {
       long int delta = timePassedSince(gnLastUpdate);
       if (delta>0 || delta<0 )
@@ -1098,14 +1172,14 @@ void ResetFactory()
   RTC.factoryResetCounter++;
   saveToRTC();
 
-  //always format on factory reset, in case of corrupt SPIFFS
-  SPIFFS.end();
+  //always format on factory reset, in case of corrupt FS
+  ESPEASY_FS.end();
   serialPrintln(F("RESET: formatting..."));
-  SPIFFS.format();
+  ESPEASY_FS.format();
   serialPrintln(F("RESET: formatting done..."));
-  if (!SPIFFS.begin())
+  if (!ESPEASY_FS.begin())
   {
-    serialPrintln(F("RESET: FORMAT SPIFFS FAILED!"));
+    serialPrintln(F("RESET: FORMAT FS FAILED!"));
     return;
   }
 
@@ -1119,9 +1193,10 @@ void ResetFactory()
   fname=FILE_SECURITY;
   InitFile(fname.c_str(), 4096);
 
+  #ifdef USES_NOTIFIER
   fname=FILE_NOTIFICATION;
   InitFile(fname.c_str(), 4096);
-
+  #endif
   fname=FILE_RULES;
   InitFile(fname.c_str(), 0);
 
@@ -1193,11 +1268,11 @@ void ResetFactory()
   Settings.Pin_status_led  = gpio_settings.status_led;
   Settings.Pin_status_led_Inversed  = DEFAULT_PIN_STATUS_LED_INVERSED;
   Settings.Pin_sd_cs       = -1;
-  Settings.Pin_Reset       = -1;
+  Settings.Pin_Reset       = DEFAULT_PIN_RESET_BUTTON;
   Settings.Protocol[0]     = DEFAULT_PROTOCOL;
   Settings.deepSleep_wakeTime       = false;
   Settings.CustomCSS       = false;
-  Settings.InitSPI         = false;
+  Settings.InitSPI         = DEFAULT_SPI;
   for (taskIndex_t x = 0; x < TASKS_MAX; x++)
   {
     Settings.TaskDevicePin1[x] = -1;
@@ -1213,13 +1288,28 @@ void ResetFactory()
   // advanced Settings
   Settings.UseRules 		= DEFAULT_USE_RULES;
   Settings.ControllerEnabled[0] = DEFAULT_CONTROLLER_ENABLED;
-  Settings.MQTTRetainFlag	= DEFAULT_MQTT_RETAIN;
-  Settings.MessageDelay	= DEFAULT_MQTT_DELAY;
-  Settings.MQTTUseUnitNameAsClientId = DEFAULT_MQTT_USE_UNITNAME_AS_CLIENTID;
+  Settings.MQTTRetainFlag_unused	= DEFAULT_MQTT_RETAIN;
+  Settings.MessageDelay_unused	= DEFAULT_MQTT_DELAY;
+  Settings.MQTTUseUnitNameAsClientId_unused = DEFAULT_MQTT_USE_UNITNAME_AS_CLIENTID;
 
+  // allow to set default latitude and longitude
+  #ifdef DEFAULT_LATITUDE
+    Settings.Latitude   = DEFAULT_LATITUDE;
+  #endif
+  #ifdef DEFAULT_LONGITUDE
+    Settings.Longitude  = DEFAULT_LONGITUDE;
+  #endif
 
   Settings.UseSerial		= DEFAULT_USE_SERIAL;
   Settings.BaudRate		= DEFAULT_SERIAL_BAUD;
+
+  Settings.ETH_Phy_Addr            = gpio_settings.eth_phyaddr;
+  Settings.ETH_Pin_mdc             = gpio_settings.eth_mdc;
+  Settings.ETH_Pin_mdio            = gpio_settings.eth_mdio;
+  Settings.ETH_Pin_power           = gpio_settings.eth_power;
+  Settings.ETH_Phy_Type            = gpio_settings.eth_phytype;
+  Settings.ETH_Clock_Mode          = gpio_settings.eth_clock_mode;
+  Settings.ETH_Wifi_Mode           = gpio_settings.eth_wifi_mode;
 
 /*
 	Settings.GlobalSync						= DEFAULT_USE_GLOBAL_SYNC;
@@ -1240,19 +1330,24 @@ void ResetFactory()
   addPredefinedRules(gpio_settings);
 
 #if DEFAULT_CONTROLLER
-  MakeControllerSettings(ControllerSettings);
-  safe_strncpy(ControllerSettings.Subscribe, F(DEFAULT_SUB), sizeof(ControllerSettings.Subscribe));
-  safe_strncpy(ControllerSettings.Publish, F(DEFAULT_PUB), sizeof(ControllerSettings.Publish));
-  safe_strncpy(ControllerSettings.MQTTLwtTopic, F(DEFAULT_MQTT_LWT_TOPIC), sizeof(ControllerSettings.MQTTLwtTopic));
-  safe_strncpy(ControllerSettings.LWTMessageConnect, F(DEFAULT_MQTT_LWT_CONNECT_MESSAGE), sizeof(ControllerSettings.LWTMessageConnect));
-  safe_strncpy(ControllerSettings.LWTMessageDisconnect, F(DEFAULT_MQTT_LWT_DISCONNECT_MESSAGE), sizeof(ControllerSettings.LWTMessageDisconnect));
-  str2ip((char*)DEFAULT_SERVER, ControllerSettings.IP);
-  ControllerSettings.setHostname(F(DEFAULT_SERVER_HOST));
-  ControllerSettings.UseDNS = DEFAULT_SERVER_USEDNS;
-  ControllerSettings.Port = DEFAULT_PORT;
-  SaveControllerSettings(0, ControllerSettings);
-  strcpy_P(SecuritySettings.ControllerUser[0], PSTR(DEFAULT_CONTROLLER_USER));
-  strcpy_P(SecuritySettings.ControllerPassword[0], PSTR(DEFAULT_CONTROLLER_PASS));
+  {
+    // Place in a scope to have its memory freed ASAP
+    MakeControllerSettings(ControllerSettings);
+    safe_strncpy(ControllerSettings.Subscribe, F(DEFAULT_SUB), sizeof(ControllerSettings.Subscribe));
+    safe_strncpy(ControllerSettings.Publish, F(DEFAULT_PUB), sizeof(ControllerSettings.Publish));
+    safe_strncpy(ControllerSettings.MQTTLwtTopic, F(DEFAULT_MQTT_LWT_TOPIC), sizeof(ControllerSettings.MQTTLwtTopic));
+    safe_strncpy(ControllerSettings.LWTMessageConnect, F(DEFAULT_MQTT_LWT_CONNECT_MESSAGE), sizeof(ControllerSettings.LWTMessageConnect));
+    safe_strncpy(ControllerSettings.LWTMessageDisconnect, F(DEFAULT_MQTT_LWT_DISCONNECT_MESSAGE), sizeof(ControllerSettings.LWTMessageDisconnect));
+    str2ip((char*)DEFAULT_SERVER, ControllerSettings.IP);
+    ControllerSettings.setHostname(F(DEFAULT_SERVER_HOST));
+    ControllerSettings.UseDNS = DEFAULT_SERVER_USEDNS;
+    ControllerSettings.useExtendedCredentials(DEFAULT_USE_EXTD_CONTROLLER_CREDENTIALS);
+    ControllerSettings.Port = DEFAULT_PORT;
+    setControllerUser(0, ControllerSettings, F(DEFAULT_CONTROLLER_USER));
+    setControllerPass(0, ControllerSettings, F(DEFAULT_CONTROLLER_PASS));
+
+    SaveControllerSettings(0, ControllerSettings);
+  }
 #endif
 
   SaveSettings();
@@ -1523,7 +1618,7 @@ void prepareShutdown()
   process_serialWriteBuffer();
   flushAndDisconnectAllClients();
   saveUserVarToRTC();
-  SPIFFS.end();
+  ESPEASY_FS.end();
   delay(100); // give the node time to flush all before reboot or sleep
   node_time.now();
   saveToRTC();
@@ -1896,11 +1991,41 @@ void transformValue(
           {
           case 'V': //value = value without transformations
             break;
+          case 'P': // Password hide using a custom password character: Pc
+            if (tempValueFormatLength > 1)
+            {
+              if (value == F("0")) {
+                value = "";
+              } else {
+                const int valueLength = value.length();
+                for (int i = 0; i < valueLength; i++) {
+                  value[i] = tempValueFormat[1];
+                }
+              }
+            } else {
+              value = F("ERR");
+            }
+            break;
+          case 'p': // Password hide using asterisks
+            {
+              if (value == F("0")) {
+                value = "";
+              } else {
+                const int valueLength = value.length();
+                for (int i = 0; i < valueLength; i++) {
+                  value[i] = '*';
+                }
+              }
+            }
+            break;
           case 'O':
             value = logicVal == 0 ? F("OFF") : F(" ON"); //(equivalent to XOR operator)
             break;
           case 'C':
             value = logicVal == 0 ? F("CLOSE") : F(" OPEN");
+            break;
+          case 'c':
+            value = logicVal == 0 ? F("CLOSED") : F("  OPEN");
             break;
           case 'M':
             value = logicVal == 0 ? F("AUTO") : F(" MAN");
@@ -1928,6 +2053,12 @@ void transformValue(
             break;
           case 'I':
             value = logicVal == 0 ? F("OUT") : F(" IN");
+            break;
+          case 'L':
+            value = logicVal == 0 ? F(" LEFT") : F("RIGHT");
+            break;
+          case 'l':
+            value = logicVal == 0 ? F("L") : F("R");
             break;
           case 'Z' :// return "0" or "1"
             value = logicVal == 0 ? "0" : "1";
@@ -2045,6 +2176,23 @@ void transformValue(
                   newString += F("ERR");
                 }
               }
+              break;
+            case 'C': // Capitalize First Word-Character value (space/period are checked)
+              if (value.length() > 0) {
+                value.toLowerCase();
+                bool nextCapital = true;
+                for (uint8_t i = 0; i < value.length();i++) {
+                  if (nextCapital)
+                    value[i] = toupper(value[i]);
+                  nextCapital = (value[i] == ' ' || value[i] == '.'); // Very simple, capitalize-first-after-space/period
+                }
+              }
+              break;
+            case 'u': // Uppercase
+              value.toUpperCase();
+              break;
+            case 'l': // Lowercase
+              value.toLowerCase();
               break;
             default:
               newString += F("ERR");
@@ -2509,7 +2657,7 @@ void SendValueLogger(taskIndex_t TaskIndex)
   \*********************************************************************************************/
 void tone_espEasy(uint8_t _pin, unsigned int frequency, unsigned long duration) {
   #ifdef ESP32
-    delay(duration);
+    toneESP32(_pin,frequency,duration);
   #else
     analogWriteFreq(frequency);
     //NOTE: analogwrite reserves IRAM and uninitalized ram.
@@ -2604,8 +2752,6 @@ void play_rtttl(uint8_t _pin, const char *p )
     else duration = wholenote / default_dur;  // we will need to check if we are a dotted note after
 
     // now get the note
-    note = 0;
-
     switch(*p)
     {
       case 'c':
@@ -2698,6 +2844,10 @@ bool OTA_possible(uint32_t& maxSketchSize, bool& use2step) {
   maxSketchSize -= 16; // Must leave 16 bytes at the end.
   if (maxSketchSize > MAX_SKETCH_SIZE) maxSketchSize = MAX_SKETCH_SIZE;
   return otaPossible;
+#elif defined(ESP32)
+  maxSketchSize = MAX_SKETCH_SIZE;
+  use2step = false;
+  return true;
 #else
   return false;
 #endif
@@ -2720,7 +2870,7 @@ void ArduinoOTAInit()
   ArduinoOTA.onStart([]() {
       serialPrintln(F("OTA  : Start upload"));
       ArduinoOTAtriggered = true;
-      SPIFFS.end(); //important, otherwise it fails
+      ESPEASY_FS.end(); //important, otherwise it fails
   });
 
   ArduinoOTA.onEnd([]() {

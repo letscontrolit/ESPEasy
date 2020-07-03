@@ -120,32 +120,35 @@ boolean Plugin_045(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        // Setup webform for address selection
         byte choice = PCONFIG(0);
-        /*
-        String options[10];
-        options[0] = F("0x68 - default settings (ADDR Low)");
-        options[1] = F("0x69 - alternate settings (ADDR High)");
-        */
-        int optionValues[2];
-        optionValues[0] = 0x68;
-        optionValues[1] = 0x69;
-        addFormSelectorI2C(F("p045_address"), 2, optionValues, choice);
-        addFormNote(F("ADDR Low=0x68, High=0x69"));
-
+        // Setup webform for address selection
+        {
+          /*
+          String options[10];
+          options[0] = F("0x68 - default settings (ADDR Low)");
+          options[1] = F("0x69 - alternate settings (ADDR High)");
+          */
+          int optionValues[2];
+          optionValues[0] = 0x68;
+          optionValues[1] = 0x69;
+          addFormSelectorI2C(F("p045_address"), 2, optionValues, choice);
+          addFormNote(F("ADDR Low=0x68, High=0x69"));
+        }
         choice = PCONFIG(1);
-        String options[10];
-        options[0] = F("Movement detection");
-        options[1] = F("Range acceleration X");
-        options[2] = F("Range acceleration Y");
-        options[3] = F("Range acceleration Z");
-        options[4] = F("Acceleration X");
-        options[5] = F("Acceleration Y");
-        options[6] = F("Acceleration Z");
-        options[7] = F("G-force X");
-        options[8] = F("G-force Y");
-        options[9] = F("G-force Z");
-        addFormSelector(F("Function"), F("p045_function"), 10, options, NULL, choice);
+        {
+          String options[10];
+          options[0] = F("Movement detection");
+          options[1] = F("Range acceleration X");
+          options[2] = F("Range acceleration Y");
+          options[3] = F("Range acceleration Z");
+          options[4] = F("Acceleration X");
+          options[5] = F("Acceleration Y");
+          options[6] = F("Acceleration Z");
+          options[7] = F("G-force X");
+          options[8] = F("G-force Y");
+          options[9] = F("G-force Z");
+          addFormSelector(F("Function"), F("p045_function"), 10, options, NULL, choice);
+        }
 
         if (choice == 0) {
           // If this is instance function 0, setup webform for additional vars

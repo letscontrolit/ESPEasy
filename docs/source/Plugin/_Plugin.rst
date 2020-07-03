@@ -115,7 +115,11 @@ There's three different released versions of ESP Easy:
    ":ref:`P089_page`","|P089_status|","P089"
    ":ref:`P090_page`","|P090_status|","P090"
    ":ref:`P091_page`","|P091_status|","P091"
+   ":ref:`P092_page`","|P092_status|","P092"
    ":ref:`P093_page`","|P093_status|","P093"
+   ":ref:`P094_page`","|P094_status|","P094"
+   ":ref:`P095_page`","|P095_status|","P095"
+   ":ref:`P097_page`","|P097_status|","P097"
 
 
 Internal GPIO handling
