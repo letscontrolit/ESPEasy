@@ -52,7 +52,7 @@
 
 .. |P064_name| replace:: :cyan:`APDS9960`
 .. |P064_type| replace:: :cyan:`Gesture`
-.. |P064_typename| replace:: :cyan:`Gestrure - APDS9960`
+.. |P064_typename| replace:: :cyan:`Gesture - APDS9960`
 .. |P064_porttype| replace:: `.`
 .. |P064_status| replace:: :red:`DEVELOPMENT`
 .. |P064_github| replace:: P064_APDS9960.ino
@@ -61,7 +61,7 @@
 .. |P064_shortinfo| replace:: `.`
 .. |P064_maintainer| replace:: `.`
 .. |P064_compileinfo| replace:: `.`
-.. |P064_usedlibraries| replace:: `.`
+.. |P064_usedlibraries| replace:: https://github.com/sparkfun/APDS-9960_RGB_and_Gesture_Sensor (extended and improved)
 
 .. |P065_name| replace:: :cyan:`DFPlayer-Mini MP3`
 .. |P065_type| replace:: :cyan:`Notify`

@@ -9,6 +9,12 @@
  * This library interfaces the Avago APDS-9960 to Arduino over I2C. The library
  * relies on the Arduino Wire (I2C) library. to use the library, instantiate an
  * APDS9960 object, call init(), and call the appropriate functions.
+ * 
+ * Original library can be found here: https://github.com/sparkfun/APDS-9960_RGB_and_Gesture_Sensor
+ * 
+ * 2020-04-27 tonhuisman
+ * - Added fixes suggested in original library (PR25)
+ * - Applied suggested improvement, but not yet fixed issue #23
  *
  * APDS-9960 current draw tests (default parameters):
  *   Off:                   1mA
@@ -37,6 +43,11 @@ SparkFun_APDS9960::SparkFun_APDS9960()
 
     gesture_state_ = 0;
     gesture_motion_ = DIR_NONE;
+
+    gesture_gain_ = 0;
+    proximity_gain_ = 0;
+    proximity_ldrive_ = 0;
+    ambient_gain_ = 0;
 }
 
 /**
@@ -54,6 +65,21 @@ SparkFun_APDS9960::~SparkFun_APDS9960()
  */
 bool SparkFun_APDS9960::init()
 {
+    return init(DEFAULT_GGAIN, DEFAULT_GLDRIVE, DEFAULT_PGAIN, DEFAULT_AGAIN, DEFAULT_LDRIVE);
+}
+
+/**
+ * @brief Configures I2C communications and initializes registers to defaults
+ *
+ * @param[in] ggain Gesture gain constant (0..3)
+ * @param[in] gldrive Gesture Led Drive constant (0..3)
+ * @param[in] pgain Proximity gain constant (0..3)
+ * @param[in] again Ambient Light Sensor gain constant (0..3)
+ * @param[in] ldrive Proximity and Ambient Light Sensor Led Drive constant (0..3)
+ * @return True if initialized successfully. False otherwise.
+ */
+bool SparkFun_APDS9960::init(uint8_t ggain, uint8_t gldrive, uint8_t pgain, uint8_t again, uint8_t led_drive)
+{
     uint8_t id;
 
     /* Initialize I2C */
@@ -63,7 +89,7 @@ bool SparkFun_APDS9960::init()
     if( !wireReadDataByte(APDS9960_ID, id) ) {
         return false;
     }
-    if( !(id == APDS9960_ID_1 || id == APDS9960_ID_2) ) {
+    if( !(id == APDS9960_ID_1 || id == APDS9960_ID_2 || id == APDS9960_ID_3) ) {  // Add support for GY-9960LLC as requested in original library github
         return false;
     }
 
@@ -91,15 +117,18 @@ bool SparkFun_APDS9960::init()
     if( !wireWriteDataByte(APDS9960_CONFIG1, DEFAULT_CONFIG1) ) {
         return false;
     }
-    if( !setLEDDrive(DEFAULT_LDRIVE) ) {
+    if( !setLEDDrive(led_drive) ) {
         return false;
     }
-    if( !setProximityGain(DEFAULT_PGAIN) ) {
+    proximity_ldrive_ = led_drive;
+    if( !setProximityGain(pgain) ) {
         return false;
     }
-    if( !setAmbientLightGain(DEFAULT_AGAIN) ) {
+    proximity_gain_ = pgain;
+    if( !setAmbientLightGain(again) ) {
         return false;
     }
+    ambient_gain_ = again;
     if( !setProxIntLowThresh(DEFAULT_PILT) ) {
         return false;
     }
@@ -132,10 +161,11 @@ bool SparkFun_APDS9960::init()
     if( !wireWriteDataByte(APDS9960_GCONF1, DEFAULT_GCONF1) ) {
         return false;
     }
-    if( !setGestureGain(DEFAULT_GGAIN) ) {
+    if( !setGestureGain(ggain) ) {
         return false;
     }
-    if( !setGestureLEDDrive(DEFAULT_GLDRIVE) ) {
+    gesture_gain_ = ggain;
+    if( !setGestureLEDDrive(gldrive) ) {
         return false;
     }
     if( !setGestureWaitTime(DEFAULT_GWTIME) ) {
@@ -266,7 +296,7 @@ bool SparkFun_APDS9960::enableLightSensor(bool interrupts)
 {
 
     /* Set default gain, interrupts, enable power, and enable sensor */
-    if( !setAmbientLightGain(DEFAULT_AGAIN) ) {
+    if( !setAmbientLightGain(ambient_gain_) ) {
         return false;
     }
     if( interrupts ) {
@@ -315,10 +345,10 @@ bool SparkFun_APDS9960::disableLightSensor()
 bool SparkFun_APDS9960::enableProximitySensor(bool interrupts)
 {
     /* Set default gain, LED, interrupts, enable power, and enable sensor */
-    if( !setProximityGain(DEFAULT_PGAIN) ) {
+    if( !setProximityGain(proximity_gain_) ) {
         return false;
     }
-    if( !setLEDDrive(DEFAULT_LDRIVE) ) {
+    if( !setLEDDrive(proximity_ldrive_) ) {
         return false;
     }
     if( interrupts ) {
@@ -363,7 +393,17 @@ bool SparkFun_APDS9960::disableProximitySensor()
  * @param[in] interrupts true to enable hardware external interrupt on gesture
  * @return True if engine enabled correctly. False on error.
  */
-bool SparkFun_APDS9960::enableGestureSensor(bool interrupts)
+bool SparkFun_APDS9960::enableGestureSensor(bool interrupts) {
+    return enableGestureSensor(interrupts, LED_BOOST_300);
+}
+/**
+ * @brief Starts the gesture recognition engine on the APDS-9960
+ *
+ * @param[in] interrupts true to enable hardware external interrupt on gesture
+ * @param[in] Led-boost value (0..3 = 100, 150, 200, 300%; 3 = default)
+ * @return True if engine enabled correctly. False on error.
+ */
+bool SparkFun_APDS9960::enableGestureSensor(bool interrupts, uint8_t led_boost)
 {
 
     /* Enable gesture mode
@@ -379,7 +419,7 @@ bool SparkFun_APDS9960::enableGestureSensor(bool interrupts)
     if( !wireWriteDataByte(APDS9960_PPULSE, DEFAULT_GESTURE_PPULSE) ) {
         return false;
     }
-    if( !setLEDBoost(LED_BOOST_300) ) {
+    if( !setLEDBoost(led_boost) ) {
         return false;
     }
     if( interrupts ) {
@@ -464,9 +504,9 @@ bool SparkFun_APDS9960::isGestureAvailable()
 int SparkFun_APDS9960::readGesture()
 {
     uint8_t fifo_level = 0;
-    uint8_t bytes_read = 0;
     uint8_t fifo_data[128];
     uint8_t gstatus;
+    int bytes_read = 0;  // Fixed Issue #23 reported in original library source
     int motion;
     int i;
 
@@ -2267,7 +2307,7 @@ bool SparkFun_APDS9960::wireWriteDataBlock(  uint8_t reg,
     Wire.beginTransmission(APDS9960_I2C_ADDR);
     Wire.write(reg);
     for(i = 0; i < len; i++) {
-        Wire.beginTransmission(val[i]);
+        Wire.write(val[i]);  // Improvement suggested by Koepel in issue #24 in original library
     }
     if( Wire.endTransmission() != 0 ) {
         return false;

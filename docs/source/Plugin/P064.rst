@@ -21,6 +21,44 @@ Maintainer: |P064_maintainer|
 
 Used libraries: |P064_usedlibraries|
 
+Description
+-----------
+
+The APDS9960 sensor provides Gesture, Proximity and Ambient Light data or R/G/B color values from the light sensor, depending on the Plugin Mode. After changing the Plugin Mode, the Values arguments may need to be adjusted according to their function (Gesture, Proximity, Light or R, G, B). If the initial Values names are used, they will be replaced when switching the Plugin Mode, and the settings are actually saved.
+
+There is only 1 I2C address available for this sensor, so that default value is shown.
+
+The Gain, LED Drive and LED Boost parameters may need adjustment from the defaults as some of the low-cost clone sensors aren't as carefully calibrated as the original SparkFun or AdaFruit sensors. The suggested defaults are taken from the original SparkFun driver software settings. When first configuring this plugin it is advised to start with these default settings, and adjust when the sensor isn't responding as required.
+
+For the R/G/B Colors mode, only Light Sensor Gain and Light Sensor LED Drive parameters are available. They correspond with the Ambient Light Sensor Gain and Proximity/ALS LED Drive parameters (and use the same settings storage), but with different labels.
+
+NB: Defaults are *not* automatically set after adding the plugin!
+
+Gesture parameters
+------------------
+
+Gesture Gain: Selection of the gain factor, select from 1x, 2x, 4x (default) or 8x.
+
+Gesture LED Drive: Selection of the current to drive the Gesture IR LED, select from 100 mA (default), 50 mA, 25 mA or 12.5 mA.
+
+Gesture LED Boost: Selection of the LED Boost factor, select from 100%, 150%, 200% or 300% (default).
+
+Proximity & Ambient Light Sensor parameters
+-------------------------------------------
+
+Proximity Gain: Selection of the gain factor, select from 1x, 2x, 4x (default) or 8x.
+
+Ambient Light Sensor Gain: Selection of the gain factor, select from 1x, 2x, 4x (default) or 8x.
+
+Proximity/ALS LED Drive: Selection of the current to drive the Proximity/Ambient Light Sensor IR LED, select from 100 mA (default), 50 mA, 25 mA or 12.5 mA.
+
+R/G/B Colors parameters
+-----------------------
+
+Light Sensor Gain: Selection of the gain factor, select from 1x, 2x, 4x (default) or 8x.
+
+Light Sensor LED Drive: Selection of the current to drive the Light Sensor IR LED, select from 100 mA (default), 50 mA, 25 mA or 12.5 mA.
+
 Supported hardware
 ------------------
 
