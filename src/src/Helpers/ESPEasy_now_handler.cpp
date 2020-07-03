@@ -5,6 +5,7 @@
 # include "../../ESPEasy_fdwdecl.h"
 # include "../../ESPEasy_Log.h"
 # include "../../ESPEasyWifi.h"
+# include "../../ESPEasyWiFi_credentials.h"
 # include "../../_CPlugin_Helper.h"
 # include "ESPEasy_time_calc.h"
 # include "../DataStructs/ESPEasy_Now_DuplicateCheck.h"
@@ -18,6 +19,8 @@
 # include "../Globals/SendData_DuplicateChecker.h"
 # include "../Globals/Settings.h"
 # include "../ControllerQueue/MQTT_queue_element.h"
+# include "../Helpers/PeriodicalActions.h"
+# include "../Helpers/ESPEasy_Storage.h"
 
 
 # include <list>

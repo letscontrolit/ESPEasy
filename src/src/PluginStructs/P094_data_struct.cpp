@@ -5,6 +5,7 @@
 
 #include "../Helpers/StringConverter.h"
 
+
 P094_data_struct::P094_data_struct() :  easySerial(nullptr) {}
 
 P094_data_struct::~P094_data_struct() {

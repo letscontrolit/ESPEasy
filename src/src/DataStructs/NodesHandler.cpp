@@ -1,7 +1,9 @@
 #include "NodesHandler.h"
 
 #include "../../ESPEasy-Globals.h"
+#include "../../ESPEasyWifi.h"
 #include "../Helpers/ESPEasy_time_calc.h"
+#include "../Helpers/PeriodicalActions.h"
 #include "../Globals/MQTT.h"
 
 void NodesHandler::addNode(const NodeStruct& node)

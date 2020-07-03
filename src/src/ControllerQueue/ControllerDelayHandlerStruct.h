@@ -226,7 +226,8 @@ struct ControllerDelayHandlerStruct {
     } else {                                                                                                           \
       LoadControllerSettings(element->controller_idx, ControllerSettings);                                             \
       C##NNN####M##_DelayHandler->configureControllerSettings(ControllerSettings);                                     \
-      if (!C##NNN####M##_DelayHandler->readyToProcess(*element)) { ready = false; }                                    \
+      if (!C##NNN####M##_DelayHandler->readyToProcess(*element) &&                                                      \
+          !ControllerSettings.enableESPEasyNowFallback()) { ready = false; }                                           \
     }                                                                                                                  \
     if (ready) {                                                                                                       \
       START_TIMER;                                                                                                     \

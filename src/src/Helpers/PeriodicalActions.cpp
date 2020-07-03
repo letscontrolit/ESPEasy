@@ -16,6 +16,8 @@
 #include "../Globals/SecuritySettings.h"
 #include "../Globals/Services.h"
 #include "../Globals/Statistics.h"
+#include "../Globals/ESPEasy_now_handler.h"
+#include "../Globals/SendData_DuplicateChecker.h"
 #include "../Helpers/ESPEasyRTC.h"
 #include "../Helpers/Hardware.h"
 #include "../Helpers/Memory.h"
@@ -62,6 +64,16 @@ void run10TimesPerSecond() {
     CPluginCall(CPlugin::Function::CPLUGIN_TEN_PER_SECOND, 0, dummy);
     STOP_TIMER(CPLUGIN_CALL_10PS);
   }
+  #ifdef USES_ESPEASY_NOW
+  {
+    if (ESPEasy_now_handler.loop()) {
+      // FIXME TD-er: Must check if enabled, etc.
+    }
+    START_TIMER;
+    SendData_DuplicateChecker.loop();
+    STOP_TIMER(ESPEASY_NOW_DEDUP_LOOP);
+  }
+  #endif
   processNextEvent();
   
   #ifdef USES_C015
@@ -256,11 +268,35 @@ void processMQTTdelayQueue() {
 
   if (element == NULL) { return; }
 
-  if (MQTTclient.publish(element->_topic.c_str(), element->_payload.c_str(), element->_retained)) {
-    if (connectionFailures > 0) {
-      --connectionFailures;
+#ifndef BUILD_NO_DEBUG
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+    String log;
+    log.reserve(30 + element->_topic.length() + element->_payload.length());
+    log += F("processMQTTdelayQueue: ");
+    log += element->_topic;
+    log += " ";
+    log += element->_payload.substring(0,64);
+    addLog(LOG_LEVEL_DEBUG, log);
+  }
+#endif
+
+  bool processed = false;
+
+  #ifdef USES_ESPEASY_NOW
+  if (!MQTTclient.connected()) {
+    processed = ESPEasy_now_handler.sendToMQTT(element->controller_idx, element->_topic, element->_payload);
+  }
+  #endif
+
+  if (!processed) {
+    if (MQTTclient.publish(element->_topic.c_str(), element->_payload.c_str(), element->_retained)) {
+      if (connectionFailures > 0) {
+        --connectionFailures;
+      }
+      processed = true;
     }
     MQTTDelayHandler->markProcessed(true);
+    statusLED(true);
   } else {
     MQTTDelayHandler->markProcessed(false);
 #ifndef BUILD_NO_DEBUG
