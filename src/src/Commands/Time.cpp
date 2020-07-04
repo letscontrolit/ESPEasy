@@ -8,6 +8,7 @@
 
 #include "../../ESPEasy-Globals.h"
 #include "../Helpers/ESPEasy_time_calc.h"
+#include "../Helpers/StringConverter.h"
 
 
 String Command_NTPHost(struct EventStruct *event, const char *Line)

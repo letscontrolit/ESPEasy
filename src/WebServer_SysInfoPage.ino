@@ -6,6 +6,8 @@
 
 #include "src/Commands/Diagnostic.h"
 
+#include "src/Helpers/Hardware.h"
+
 
 #ifdef WEBSERVER_NEW_UI
 
@@ -273,7 +275,7 @@ void handle_sysinfo_basicInfo() {
   addRowLabelValue(LabelType::CPU_ECO_MODE);
 
   int freeMem = ESP.getFreeHeap();
-  addRowLabel(F("Free Mem"));
+  addRowLabel(getLabel(LabelType::FREE_MEM));
   {
     String html;
     html.reserve(64);
@@ -286,7 +288,7 @@ void handle_sysinfo_basicInfo() {
     html += ')';
     addHtml(html);
   }
-  addRowLabel(F("Free Stack"));
+  addRowLabel(getLabel(LabelType::FREE_STACK));
   {
     String html;
     html.reserve(64);

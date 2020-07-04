@@ -57,6 +57,7 @@
 
 #include <ESPeasySerial.h>
 #include "_Plugin_Helper.h"
+#include "src/Helpers/Modbus_RTU.h"
 
 struct P085_data_struct : public PluginTaskData_base {
   P085_data_struct() {}

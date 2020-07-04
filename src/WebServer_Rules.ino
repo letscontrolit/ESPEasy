@@ -10,8 +10,6 @@ void handle_rules() {
 
   if (!isLoggedIn() || !Settings.UseRules) { return; }
   navMenuIndex = MENU_INDEX_RULES;
-  static byte currentSet = 1;
-
   const byte rulesSet = getFormItemInt(F("set"), 1);
 
   #if defined(ESP8266)
@@ -25,80 +23,46 @@ void handle_rules() {
 
   String error;
 
-  if (web_server.args() > 0) {
-    String log = F("Rules : Save rulesSet: ");
-    log += rulesSet;
-    log += F(" currentSet: ");
-    log += currentSet;
-
-    if (currentSet == rulesSet) {
-      if (web_server.hasArg(F("rules"))) {
-        size_t rulesLength = web_server.arg(F("rules")).length();
-
-        // Reported length is with CRLF counted as a single byte.
-        // So rulesLength > reported_length is a valid situation.
-        size_t reported_length = getFormItemInt(F("rules_len"), 0);
-
-        if (rulesLength > RULES_MAX_SIZE) {
-          error = F("Error: Data was not saved, exceeds web editor limit!");
-        }
-
-        if (reported_length > rulesLength) {
-          error  = F("Error: Data was not saved, not received all. (");
-          error += rulesLength;
-          error += '/';
-          error += reported_length;
-          error += ')';
-        } else {
-          // Save as soon as possible, as the webserver may already overwrite the args.
-          const byte *memAddress = reinterpret_cast<const byte *>(web_server.arg(F("rules")).c_str());
-          error = doSaveToFile(fileName.c_str(), 0, memAddress, rulesLength, "w");
-        }
-      } else {
-        error = F("Error: Data was not saved, rules argument missing or corrupted");
-      }
+  // Make sure file exists
+  if (!ESPEASY_FS.exists(fileName))
+  {
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      String log = F("Rules : Create new file: ");
+      log += fileName;
+      addLog(LOG_LEVEL_INFO, log);
     }
-    else // changed set, check if file exists and create new
-    {
-      if (!ESPEASY_FS.exists(fileName))
-      {
-        log += F(" Create new file: ");
-        log += fileName;
-        fs::File f = tryOpenFile(fileName, "w");
+    fs::File f = tryOpenFile(fileName, "w");
 
-        if (f) { f.close(); }
-      }
-    }
-    addLog(LOG_LEVEL_INFO, log);
+    if (f) { f.close(); }
   }
+
   TXBuffer.startStream();
   sendHeadandTail_stdtemplate();
   addHtmlError(error);
-
-  if (rulesSet != currentSet) {
-    currentSet = rulesSet;
-  }
 
   html_table_class_normal();
   html_TR();
   html_table_header(F("Rules"));
 
-  byte   choice = rulesSet;
-  String options[RULESETS_MAX];
-  int    optionValues[RULESETS_MAX];
-
-  for (byte x = 0; x < RULESETS_MAX; x++)
-  {
-    options[x]      = F("Rules Set ");
-    options[x]     += x + 1;
-    optionValues[x] = x + 1;
-  }
-
   html_TR_TD();
   addHtml(F("<form name = 'frmselect'>"));
-  addSelector(F("set"), RULESETS_MAX, options, optionValues, NULL, choice, true, true);
-  addHelpButton(F("Tutorial_Rules"));
-  addRTDHelpButton(F("Rules/Rules.html"));
+  {
+    // Place combo box in its own scope to release these arrays as soon as possible
+    byte   choice = rulesSet;
+    String options[RULESETS_MAX];
+    int    optionValues[RULESETS_MAX];
+
+    for (byte x = 0; x < RULESETS_MAX; x++)
+    {
+      options[x]      = F("Rules Set ");
+      options[x]     += x + 1;
+      optionValues[x] = x + 1;
+    }
+
+    addSelector(F("set"), RULESETS_MAX, options, optionValues, NULL, choice, true, true);
+    addHelpButton(F("Tutorial_Rules"));
+    addRTDHelpButton(F("Rules/Rules.html"));
+  }
 
   html_TR_TD();
   Rule_showRuleTextArea(fileName);
@@ -108,12 +72,13 @@ void handle_rules() {
   addHtml(F("<button id='save_button' class='button' onClick='saveRulesFile()'>Save</button>"));
   addHtml(F("<div id='toastmessage'>Saved!</div>"));
 
+  addButton(fileName, F("Download to file"));
+  html_end_table();
+
   html_add_script(true);
   TXBuffer += jsSaveRules;
   html_add_script_end();
 
-  addButton(fileName, F("Download to file"));
-  html_end_table();
   sendHeadandTail_stdtemplate(true);
   TXBuffer.endStream();
 

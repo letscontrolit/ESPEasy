@@ -1,6 +1,8 @@
 #ifndef COMMAND_MQTT_H
 #define COMMAND_MQTT_H
 
+#include "../../ESPEasy_common.h"
+
 #ifdef USES_MQTT
 
 class String;
