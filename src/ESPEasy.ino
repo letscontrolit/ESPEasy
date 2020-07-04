@@ -172,12 +172,7 @@ void setup()
 #ifdef ESP8266_DISABLE_EXTRA4K
   disable_extra4k_at_link_time();
 #endif
-  WiFi.persistent(false); // Do not use SDK storage of SSID/WPA parameters
-  WiFi.setAutoReconnect(false);
-  // The WiFi.disconnect() ensures that the WiFi is working correctly. If this is not done before receiving WiFi connections,
-  // those WiFi connections will take a long time to make or sometimes will not work at all.
-  WiFi.disconnect();
-  setWifiMode(WIFI_OFF);
+  initWiFi();
   
   run_compiletime_checks();
   lowestFreeStack = getFreeStackWatermark();
@@ -208,18 +203,6 @@ void setup()
   // serialPrint("\n\n\nBOOOTTT\n\n\n");
 
   initLog();
-
-#if defined(ESP32)
-  WiFi.onEvent(WiFiEvent);
-#else
-  // WiFi event handlers
-  stationConnectedHandler = WiFi.onStationModeConnected(onConnected);
-	stationDisconnectedHandler = WiFi.onStationModeDisconnected(onDisconnect);
-	stationGotIpHandler = WiFi.onStationModeGotIP(onGotIP);
-  stationModeDHCPTimeoutHandler = WiFi.onStationModeDHCPTimeout(onDHCPTimeout);
-  APModeStationConnectedHandler = WiFi.onSoftAPModeStationConnected(onConnectedAPmode);
-  APModeStationDisconnectedHandler = WiFi.onSoftAPModeStationDisconnected(onDisonnectedAPmode);
-#endif
 
   if (SpiffsSectors() < 32)
   {

@@ -29,6 +29,7 @@ bool    channel_changed                   = false;
 WiFiDisconnectReason lastDisconnectReason = WIFI_DISCONNECT_REASON_UNSPECIFIED;
 unsigned long lastConnectMoment           = 0;
 unsigned long lastDisconnectMoment        = 0;
+unsigned long lastWiFiResetMoment         = 0;
 unsigned long lastGetIPmoment             = 0;
 unsigned long lastGetScanMoment           = 0;
 unsigned long lastConnectedDuration       = 0;

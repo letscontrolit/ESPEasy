@@ -84,6 +84,7 @@ extern bool    channel_changed;
 extern WiFiDisconnectReason lastDisconnectReason;
 extern unsigned long lastConnectMoment;
 extern unsigned long lastDisconnectMoment;
+extern unsigned long lastWiFiResetMoment;
 extern unsigned long lastGetIPmoment;
 extern unsigned long lastGetScanMoment;
 extern unsigned long lastConnectedDuration;

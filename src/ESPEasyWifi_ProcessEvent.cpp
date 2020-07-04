@@ -69,7 +69,7 @@ void handle_unprocessedWiFiEvents()
       addLog(LOG_LEVEL_DEBUG, F("WIFI : DHCP timeout, Calling disconnect()"));
       #endif // ifndef BUILD_NO_DEBUG
       processedDHCPTimeout = true;
-      processDisconnect();
+      WifiDisconnect();
     }
 
     if (wifiStatus & ESPEASY_WIFI_CONNECTED) {
@@ -187,7 +187,7 @@ void processDisconnect() {
   }
 
   if (Settings.WiFiRestart_connection_lost()) {
-    setWifiMode(WIFI_OFF);
+    initWiFi();
     delay(100);
   }
   logConnectionStatus();
@@ -195,12 +195,15 @@ void processDisconnect() {
 
 void processConnect() {
   if (processedConnect) { return; }
+  //delay(100); // FIXME TD-er: See https://github.com/letscontrolit/ESPEasy/issues/1987#issuecomment-451644424
+
+  if (!WiFi.isConnected()) {
+    return;
+  }
+
   processedConnect = true;
   wifiStatus      |= ESPEASY_WIFI_CONNECTED;
-  delay(100); // FIXME TD-er: See https://github.com/letscontrolit/ESPEasy/issues/1987#issuecomment-451644424
   ++wifi_reconnects;
-
-  if (wifiStatus < ESPEASY_WIFI_CONNECTED) { return; }
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     const long connect_duration = timeDiff(last_wifi_connect_attempt_moment, lastConnectMoment);
@@ -253,8 +256,6 @@ void processGotIP() {
       return;
     }
   }
-  processedGotIP = true;
-  wifiStatus    |= ESPEASY_WIFI_GOT_IP;
   const IPAddress gw       = NetworkGatewayIP();
   const IPAddress subnet   = NetworkSubnetMask();
   const long dhcp_duration = timeDiff(lastConnectMoment, lastGetIPmoment);
@@ -324,6 +325,11 @@ void processGotIP() {
     SaveSettings();
   }
   logConnectionStatus();
+
+  if (WiFi.isConnected() && hasIPaddr()) {
+    processedGotIP = true;
+    wifiStatus    |= ESPEASY_WIFI_GOT_IP;
+  }
 }
 
 // A client disconnected from the AP on this node.

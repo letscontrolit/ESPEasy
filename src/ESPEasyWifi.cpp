@@ -108,7 +108,6 @@ bool WiFiConnected() {
       STOP_TIMER(WIFI_ISCONNECTED_STATS);
       return true;
     }
-
     // else wifiStatus is no longer in sync.
     addLog(LOG_LEVEL_INFO, F("WIFI  : WiFiConnected() out of sync"));
     resetWiFi();
@@ -234,8 +233,13 @@ bool prepareWiFi() {
 
 
 void resetWiFi() {
+  if (lastWiFiResetMoment != 0 && timePassedSince(lastWiFiResetMoment) < 1000) {
+    // Don't reset WiFi too often
+    return;
+  }
   addLog(LOG_LEVEL_INFO, F("Reset WiFi."));
   lastDisconnectMoment = millis();
+  lastWiFiResetMoment = millis();
 
   // Mark all flags to default to prevent handling old events.
   processedConnect          = true;
@@ -250,12 +254,36 @@ void resetWiFi() {
 
   //  setWifiMode(WIFI_OFF);
 
+  initWiFi();
+}
+
+void initWiFi()
+{
 #ifdef ESP8266
 
   // See https://github.com/esp8266/Arduino/issues/5527#issuecomment-460537616
   WiFi.~ESP8266WiFiClass();
   WiFi = ESP8266WiFiClass();
 #endif // ifdef ESP8266
+
+  WiFi.persistent(false); // Do not use SDK storage of SSID/WPA parameters
+  WiFi.setAutoReconnect(false);
+  // The WiFi.disconnect() ensures that the WiFi is working correctly. If this is not done before receiving WiFi connections,
+  // those WiFi connections will take a long time to make or sometimes will not work at all.
+  WiFi.disconnect();
+  setWifiMode(WIFI_OFF);
+
+#if defined(ESP32)
+  WiFi.onEvent(WiFiEvent);
+#else
+  // WiFi event handlers
+  stationConnectedHandler = WiFi.onStationModeConnected(onConnected);
+	stationDisconnectedHandler = WiFi.onStationModeDisconnected(onDisconnect);
+	stationGotIpHandler = WiFi.onStationModeGotIP(onGotIP);
+  stationModeDHCPTimeoutHandler = WiFi.onStationModeDHCPTimeout(onDHCPTimeout);
+  APModeStationConnectedHandler = WiFi.onSoftAPModeStationConnected(onConnectedAPmode);
+  APModeStationDisconnectedHandler = WiFi.onSoftAPModeStationDisconnected(onDisconnectedAPmode);
+#endif
 }
 
 // ********************************************************************************
@@ -272,6 +300,7 @@ void WifiDisconnect()
   #endif // if defined(ESP32)
   wifiStatus          = ESPEASY_WIFI_DISCONNECTED;
   processedDisconnect = false;
+  wifiConnectAttemptNeeded = true;
 }
 
 // ********************************************************************************
