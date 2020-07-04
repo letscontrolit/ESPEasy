@@ -407,13 +407,15 @@ void initWiFi()
 #ifdef ESP8266
   // WiFi event handlers
   stationConnectedHandler = WiFi.onStationModeConnected(onConnected);
-	stationDisconnectedHandler = WiFi.onStationModeDisconnected(onDisconnect);
-	stationGotIpHandler = WiFi.onStationModeGotIP(onGotIP);
+  stationDisconnectedHandler = WiFi.onStationModeDisconnected(onDisconnect);
+  stationGotIpHandler = WiFi.onStationModeGotIP(onGotIP);
   stationModeDHCPTimeoutHandler = WiFi.onStationModeDHCPTimeout(onDHCPTimeout);
   APModeStationConnectedHandler = WiFi.onSoftAPModeStationConnected(onConnectedAPmode);
   APModeStationDisconnectedHandler = WiFi.onSoftAPModeStationDisconnected(onDisconnectedAPmode);
+  APModeProbeRequestReceivedHandler = WiFi.onSoftAPModeProbeRequestReceived(onProbeRequestAPmode);
 #endif
 }
+
 
 // ********************************************************************************
 // Disconnect from Wifi AP

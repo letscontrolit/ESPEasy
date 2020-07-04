@@ -212,7 +212,7 @@ void onConnectedAPmode(const WiFiEventSoftAPModeStationConnected& event) {
   processedConnectAPmode = false;
 }
 
-void onDisonnectedAPmode(const WiFiEventSoftAPModeStationDisconnected& event) {
+void onDisconnectedAPmode(const WiFiEventSoftAPModeStationDisconnected& event) {
   lastMacDisconnectedAPmode.set(event.mac);
   processedDisconnectAPmode = false;
 }
