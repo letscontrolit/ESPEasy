@@ -10,7 +10,7 @@
 //#######################################################################################################
 
 #include "_Plugin_Helper.h"
-#include "src/PluginStructs/P044_daat_struct.h"
+#include "src/PluginStructs/P044_data_struct.h"
 
 #define PLUGIN_044
 #define PLUGIN_ID_044         44
