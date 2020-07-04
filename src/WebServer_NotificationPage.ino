@@ -2,7 +2,9 @@
 // ********************************************************************************
 // Web Interface notifcations page
 // ********************************************************************************
-#ifndef NOTIFIER_SET_NONE
+#include "ESPEasy_common.h"
+
+#ifdef USES_NOTIFIER
 
 #include "src/Globals/NPlugins.h"
 
@@ -213,4 +215,4 @@ void handle_notifications() {
   TXBuffer.endStream();
 }
 
-#endif // NOTIFIER_SET_NONE
+#endif // USES_NOTIFIER

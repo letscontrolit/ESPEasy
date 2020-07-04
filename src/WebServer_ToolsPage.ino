@@ -1,5 +1,7 @@
 #ifdef WEBSERVER_TOOLS
 
+#include "src/Commands/InternalCommands.h"
+
 // ********************************************************************************
 // Web Interface Tools page
 // ********************************************************************************
@@ -31,7 +33,7 @@ void handle_tools() {
 
   if (webrequest.length() > 0)
   {
-    ExecuteCommand_all(VALUE_SOURCE_WEB_FRONTEND, webrequest.c_str());
+    ExecuteCommand_all(EventValueSource::Enum::VALUE_SOURCE_WEB_FRONTEND, webrequest.c_str());
   }
 
   if (printWebString.length() > 0)

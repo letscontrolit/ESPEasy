@@ -4,9 +4,7 @@
 #include <limits.h>
 
 #include "../Globals/ESPEasy_time.h"
-
-// FIXME TD-er: Needed for GetArgv
-#include "../../ESPEasy_fdwdecl.h"
+#include "../Helpers/StringConverter.h"
 
 
 #define SECS_PER_MIN  (60UL)

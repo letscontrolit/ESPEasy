@@ -33,6 +33,7 @@
 /* Acceptable device IDs */
 #define APDS9960_ID_1           0xAB
 #define APDS9960_ID_2           0x9C
+#define APDS9960_ID_3           0xA8    // Add support for GY-9960LLC as requested in original library github
 
 /* Misc parameters */
 #define FIFO_PAUSE_TIME         30      // Wait period (ms) between FIFO reads
@@ -223,6 +224,7 @@ public:
     SparkFun_APDS9960();
     ~SparkFun_APDS9960();
     bool init();
+    bool init(uint8_t ggain, uint8_t gldrive, uint8_t pgain, uint8_t again, uint8_t led_drive);
     uint8_t getMode();
     bool setMode(uint8_t mode, uint8_t enable);
 
@@ -236,6 +238,7 @@ public:
     bool enableProximitySensor(bool interrupts = false);
     bool disableProximitySensor();
     bool enableGestureSensor(bool interrupts = true);
+    bool enableGestureSensor(bool interrupts, uint8_t led_boost);
     bool disableGestureSensor();
 
     /* LED drive strength control */
@@ -344,6 +347,11 @@ private:
     int gesture_far_count_;
     int gesture_state_;
     int gesture_motion_;
+
+    uint8_t gesture_gain_;
+    uint8_t proximity_gain_;
+    uint8_t proximity_ldrive_;
+    uint8_t ambient_gain_;
 };
 
 #endif

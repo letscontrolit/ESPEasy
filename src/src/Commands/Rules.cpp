@@ -3,7 +3,9 @@
 #include "../../ESPEasy_common.h"
 #include "../Commands/Common.h"
 #include "../DataStructs/EventValueSource.h"
+#include "../Globals/EventQueue.h"
 #include "../Globals/Settings.h"
+#include "../Helpers/StringConverter.h"
 #include "../../ESPEasy-Globals.h"
 #include "../../ESPEasy_fdwdecl.h"
 
@@ -47,7 +49,7 @@ String Command_Rules_Events(struct EventStruct *event, const char *Line)
   if (Settings.UseRules) {
     const bool executeImmediately = 
         SourceNeedsStatusUpdate(event->Source) ||
-        event->Source == VALUE_SOURCE_RULES;
+        event->Source == EventValueSource::Enum::VALUE_SOURCE_RULES;
     if (executeImmediately) {
       rulesProcessing(eventName); // TD-er: Process right now 
     } else {

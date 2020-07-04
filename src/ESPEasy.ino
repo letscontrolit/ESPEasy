@@ -108,6 +108,7 @@
 #include "src/Globals/Device.h"
 #include "src/Globals/ESPEasyWiFiEvent.h"
 #include "src/Globals/ExtraTaskSettings.h"
+#include "src/Globals/EventQueue.h"
 #include "src/Globals/GlobalMapPortStatus.h"
 #include "src/Globals/MQTT.h"
 #include "src/Globals/Plugins.h"
@@ -119,24 +120,21 @@
 #include "src/Globals/Settings.h"
 #include "src/Globals/Statistics.h"
 
+#include "src/Helpers/ESPEasy_checks.h"
+#include "src/Helpers/Hardware.h"
+#include "src/Helpers/Scheduler.h"
+#include "src/Helpers/ESPEasy_Storage.h"
+#include "src/Helpers/DeepSleep.h"
+#include "src/Helpers/PeriodicalActions.h"
+
+#include "ESPEasyWiFi_credentials.h"
+#include "ESPEasyWifi_ProcessEvent.h"
+#include "ESPEasyWifi.h"
+
 #if FEATURE_ADC_VCC
 ADC_MODE(ADC_VCC);
 #endif
 
-// Get functions to give access to global defined variables.
-// These are needed to get direct access to global defined variables, since they cannot be defined in .h files and included more than once.
-
-float& getUserVar(unsigned int varIndex) {return UserVar[varIndex]; }
-
-
-#ifdef USES_BLYNK
-// Blynk_get prototype
-boolean Blynk_get(const String& command, controllerIndex_t controllerIndex,float *data = NULL );
-
-controllerIndex_t firstEnabledBlynk_ControllerIndex();
-#endif
-
-//void checkRAM( const __FlashStringHelper* flashString);
 
 #ifdef CORE_POST_2_5_0
 void preinit();
@@ -226,7 +224,7 @@ void setup()
 
   if (SpiffsSectors() < 32)
   {
-    serialPrintln(F("\nNo (or too small) SPIFFS area..\nSystem Halted\nPlease reflash with 128k SPIFFS minimum!"));
+    serialPrintln(F("\nNo (or too small) FS area..\nSystem Halted\nPlease reflash with 128k FS minimum!"));
     while (true)
       delay(1);
   }
@@ -242,7 +240,6 @@ void setup()
   log = F("INIT : Free RAM:");
   log += FreeMem();
   addLog(LOG_LEVEL_INFO, log);
-
 
   //warm boot
   if (readFromRTC())
@@ -290,6 +287,18 @@ void setup()
   progMemMD5check();
   LoadSettings();
 
+  #ifdef HAS_ETHERNET
+  // This ensures, that changing WIFI OR ETHERNET MODE happens properly only after reboot. Changing without reboot would not be a good idea.
+  // This only works after LoadSettings();
+  eth_wifi_mode = Settings.ETH_Wifi_Mode;
+  log = F("INIT : ETH_WIFI_MODE:");
+  log += String(eth_wifi_mode);
+  log += F(" (");
+  log += (eth_wifi_mode == WIFI ? F("WIFI") : F("ETHERNET"));
+  log += F(")");
+  addLog(LOG_LEVEL_INFO, log);
+  #endif
+
   Settings.UseRTOSMultitasking = false; // For now, disable it, we experience heap corruption.
   if (RTC.bootFailedCount > 10 && RTC.bootCounter > 10) {
     byte toDisable = RTC.bootFailedCount - 10;
@@ -306,7 +315,7 @@ void setup()
     RTC.lastWiFiChannel = 0; // Must scan all channels
     // Wait until scan has finished to make sure as many as possible are found
     // We're still in the setup phase, so nothing else is taking resources of the ESP.
-    WifiScan(false); 
+    WifiScan(false, false); 
   }
 
 //  setWifiMode(WIFI_STA);
@@ -351,7 +360,7 @@ void setup()
   timermqtt_interval = 250; // Interval for checking MQTT
   timerAwakeFromDeepSleep = millis();
   CPluginInit();
-  #ifndef NOTIFIER_SET_NONE
+  #ifdef USES_NOTIFIER
   NPluginInit();
   #endif
   PluginInit();
@@ -381,7 +390,7 @@ void setup()
     rulesProcessing(event); // TD-er: Process events in the setup() now.
   }
 
-  WiFiConnectRelaxed();
+  NetworkConnectRelaxed();
 
   setWebserverRunning(true);
 
@@ -501,32 +510,6 @@ void updateLoopStats() {
     longestLoop = usecSince;
 }
 
-void updateLoopStats_30sec(byte loglevel) {
-  loopCounterLast = loopCounter;
-  loopCounter = 0;
-  if (loopCounterLast > loopCounterMax)
-    loopCounterMax = loopCounterLast;
-
-  msecTimerHandler.updateIdleTimeStats();
-
-#ifndef BUILD_NO_DEBUG
-  if (loglevelActiveFor(loglevel)) {
-    String log = F("LoopStats: shortestLoop: ");
-    log += shortestLoop;
-    log += F(" longestLoop: ");
-    log += longestLoop;
-    log += F(" avgLoopDuration: ");
-    log += loop_usec_duration_total / loopCounter_full;
-    log += F(" loopCounterMax: ");
-    log += loopCounterMax;
-    log += F(" loopCounterLast: ");
-    log += loopCounterLast;
-    addLog(loglevel, log);
-  }
-#endif
-  loop_usec_duration_total = 0;
-  loopCounter_full = 1;
-}
 
 float getCPUload() {
   return 100.0 - msecTimerHandler.getIdleTimePct();
@@ -553,9 +536,16 @@ void loop()
 
   updateLoopStats();
 
+  #ifdef HAS_ETHERNET
+  // Handle WiFiEvents when compiled with HAS_ETHERNET but in WiFi Mode eth_wifi_mode (WIFI = 0, ETHERNET = 1)
+  if(eth_wifi_mode == WIFI) {
+    handle_unprocessedWiFiEvents();
+  }
+  #else
   handle_unprocessedWiFiEvents();
+  #endif
 
-  bool firstLoopConnectionsEstablished = WiFiConnected() && firstLoop;
+  bool firstLoopConnectionsEstablished = NetworkConnected() && firstLoop;
   if (firstLoopConnectionsEstablished) {
      addLog(LOG_LEVEL_INFO, F("firstLoopConnectionsEstablished"));
      firstLoop = false;
@@ -637,297 +627,9 @@ void flushAndDisconnectAllClients() {
 }
 
 
-#ifdef USES_MQTT
-
-void updateMQTTclient_connected() {
-  if (MQTTclient_connected != MQTTclient.connected()) {
-    MQTTclient_connected = !MQTTclient_connected;
-    if (!MQTTclient_connected) {
-      if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-        String connectionError = F("MQTT : Connection lost, state: ");
-        connectionError += getMQTT_state();
-        addLog(LOG_LEVEL_ERROR, connectionError);
-      }
-    } else {
-      schedule_all_tasks_using_MQTT_controller();
-    }
-    if (Settings.UseRules) {
-      if (MQTTclient_connected) {
-        eventQueue.add(F("MQTT#Connected"));
-      } else {
-        eventQueue.add(F("MQTT#Disconnected"));
-      }
-    }
-  }
-  if (!MQTTclient_connected) {
-    // As suggested here: https://github.com/letscontrolit/ESPEasy/issues/1356
-    if (timermqtt_interval < 30000) {
-      timermqtt_interval += 5000;
-    }
-  } else {
-    timermqtt_interval = 250;
-  }
-  setIntervalTimer(TIMER_MQTT);
-}
-
-void runPeriodicalMQTT() {
-  // MQTT_KEEPALIVE = 15 seconds.
-  if (!WiFiConnected(10)) {
-    updateMQTTclient_connected();
-    return;
-  }
-  //dont do this in backgroundtasks(), otherwise causes crashes. (https://github.com/letscontrolit/ESPEasy/issues/683)
-  controllerIndex_t enabledMqttController = firstEnabledMQTT_ControllerIndex();
-  if (validControllerIndex(enabledMqttController)) {
-    if (!MQTTclient.loop()) {
-      updateMQTTclient_connected();
-      if (MQTTCheck(enabledMqttController)) {
-        updateMQTTclient_connected();
-      }
-    }
-  } else {
-    if (MQTTclient.connected()) {
-      MQTTclient.disconnect();
-      updateMQTTclient_connected();
-    }
-  }
-}
-
-controllerIndex_t firstEnabledMQTT_ControllerIndex() {
-  for (controllerIndex_t i = 0; i < CONTROLLER_MAX; ++i) {
-    protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(i);
-    if (validProtocolIndex(ProtocolIndex)) {
-      if (Protocol[ProtocolIndex].usesMQTT && Settings.ControllerEnabled[i]) {
-        return i;
-      }
-    }
-  }
-  return INVALID_CONTROLLER_INDEX;
-}
-
-#endif //USES_MQTT
-
-#ifdef USES_BLYNK
-// Blynk_get prototype
-//boolean Blynk_get(const String& command, controllerIndex_t controllerIndex,float *data = NULL );
-
-controllerIndex_t firstEnabledBlynk_ControllerIndex() {
-  for (controllerIndex_t i = 0; i < CONTROLLER_MAX; ++i) {
-    protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(i);
-    if (validProtocolIndex(ProtocolIndex)) {
-      if (Protocol[ProtocolIndex].Number == 12 && Settings.ControllerEnabled[i]) {
-        return i;
-      }
-    }
-  }
-  return INVALID_CONTROLLER_INDEX;
-}
-#endif
 
 
-/*********************************************************************************************\
- * Tasks that run 50 times per second
-\*********************************************************************************************/
 
-void run50TimesPerSecond() {
-  String dummy;
-  {
-    START_TIMER;
-    PluginCall(PLUGIN_FIFTY_PER_SECOND, 0, dummy);
-    STOP_TIMER(PLUGIN_CALL_50PS);
-  }
-  {
-    START_TIMER;
-    CPluginCall(CPlugin::Function::CPLUGIN_FIFTY_PER_SECOND, 0, dummy);
-    STOP_TIMER(CPLUGIN_CALL_50PS);
-  }
-}
-
-/*********************************************************************************************\
- * Tasks that run 10 times per second
-\*********************************************************************************************/
-void run10TimesPerSecond() {
-  String dummy;
-  {
-    START_TIMER;
-    PluginCall(PLUGIN_TEN_PER_SECOND, 0, dummy);
-    STOP_TIMER(PLUGIN_CALL_10PS);
-  }
-  {
-    START_TIMER;
-//    PluginCall(PLUGIN_UNCONDITIONAL_POLL, 0, dummyString);
-    PluginCall(PLUGIN_MONITOR, 0, dummy);
-    STOP_TIMER(PLUGIN_CALL_10PSU);
-  }
-  {
-    START_TIMER;
-    CPluginCall(CPlugin::Function::CPLUGIN_TEN_PER_SECOND, 0, dummy);
-    STOP_TIMER(CPLUGIN_CALL_10PS);
-  }
-  processNextEvent();
-  
-  #ifdef USES_C015
-  if (WiFiConnected())
-      Blynk_Run_c015();
-  #endif
-  #ifndef USE_RTOS_MULTITASKING
-    web_server.handleClient();
-  #endif
-}
-
-
-/*********************************************************************************************\
- * Tasks each second
-\*********************************************************************************************/
-void runOncePerSecond()
-{
-  START_TIMER;
-  updateLogLevelCache();
-  dailyResetCounter++;
-  if (dailyResetCounter > 86400) // 1 day elapsed... //86400
-  {
-    RTC.flashDayCounter=0;
-    saveToRTC();
-    dailyResetCounter=0;
-    addLog(LOG_LEVEL_INFO, F("SYS  : Reset 24h counters"));
-  }
-
-  if (Settings.ConnectionFailuresThreshold)
-    if (connectionFailures > Settings.ConnectionFailuresThreshold)
-      delayedReboot(60);
-
-  if (cmd_within_mainloop != 0)
-  {
-    switch (cmd_within_mainloop)
-    {
-      case CMD_WIFI_DISCONNECT:
-        {
-          WifiDisconnect();
-          break;
-        }
-      case CMD_REBOOT:
-        {
-          reboot();
-          break;
-        }
-    }
-    cmd_within_mainloop = 0;
-  }
-  // clock events
-  if (node_time.reportNewMinute()) {
-    String dummy;
-    PluginCall(PLUGIN_CLOCK_IN, 0, dummy);
-    if (Settings.UseRules)
-    {
-      String event;
-      event.reserve(21);
-      event  = F("Clock#Time=");
-      event += node_time.weekday_str();
-      event += ",";
-
-      if (node_time.hour() < 10) {
-        event += '0';
-      }
-      event += node_time.hour();
-      event += ":";
-
-      if (node_time.minute() < 10) {
-        event += '0';
-      }
-      event += node_time.minute();
-      // TD-er: Do not add to the eventQueue, but execute right now.
-      rulesProcessing(event);
-    }
-  }
-
-//  unsigned long start = micros();
-  String dummy;
-  PluginCall(PLUGIN_ONCE_A_SECOND, 0, dummy);
-//  unsigned long elapsed = micros() - start;
-
-  if (Settings.UseRules)
-    rulesTimers();
-
-
-  if (SecuritySettings.Password[0] != 0)
-  {
-    if (WebLoggedIn)
-      WebLoggedInTimer++;
-    if (WebLoggedInTimer > 300)
-      WebLoggedIn = false;
-  }
-
-  // I2C Watchdog feed
-  if (Settings.WDI2CAddress != 0)
-  {
-    Wire.beginTransmission(Settings.WDI2CAddress);
-    Wire.write(0xA5);
-    Wire.endTransmission();
-  }
-
-  checkResetFactoryPin();
-  STOP_TIMER(PLUGIN_CALL_1PS);
-}
-
-void logTimerStatistics() {
-  byte loglevel = LOG_LEVEL_DEBUG;
-  updateLoopStats_30sec(loglevel);
-#ifndef BUILD_NO_DEBUG
-//  logStatistics(loglevel, true);
-  if (loglevelActiveFor(loglevel)) {
-    String queueLog = F("Scheduler stats: (called/tasks/max_length/idle%) ");
-    queueLog += msecTimerHandler.getQueueStats();
-    addLog(loglevel, queueLog);
-  }
-#endif
-}
-
-/*********************************************************************************************\
- * Tasks each 30 seconds
-\*********************************************************************************************/
-void runEach30Seconds()
-{
-  checkRAMtoLog();
-  wdcounter++;
-  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log;
-    log.reserve(80);
-    log = F("WD   : Uptime ");
-    log += wdcounter / 2;
-    log += F(" ConnectFailures ");
-    log += connectionFailures;
-    log += F(" FreeMem ");
-    log += FreeMem();
-    log += F(" WiFiStatus ");
-    log += WiFi.status();
-//    log += F(" ListenInterval ");
-//    log += WiFi.getListenInterval();
-    addLog(LOG_LEVEL_INFO, log);
-  }
-  sendSysInfoUDP(1);
-  refreshNodeList();
-
-  // sending $stats to homie controller
-  CPluginCall(CPlugin::Function::CPLUGIN_INTERVAL, 0);
-
-  #if defined(ESP8266)
-  #ifdef USES_SSDP
-  if (Settings.UseSSDP)
-    SSDP_update();
-
-  #endif // USES_SSDP
-  #endif
-#if FEATURE_ADC_VCC
-  if (!wifiConnectInProgress) {
-    vcc = ESP.getVcc() / 1000.0;
-  }
-#endif
-
-  #ifdef FEATURE_REPORTING
-  ReportStatus();
-  #endif
-
-}
 
 
 
@@ -958,14 +660,14 @@ void backgroundtasks()
     return;
   }
   START_TIMER
-  const bool wifiConnected = WiFiConnected();
+  const bool networkConnected = NetworkConnected();
   runningBackgroundTasks=true;
 
-  #if defined(ESP8266)
-  if (wifiConnected) {
-    tcpCleanup();
+  if (networkConnected) {
+    #if defined(ESP8266)
+      tcpCleanup();
+    #endif
   }
-  #endif
   process_serialWriteBuffer();
   if(!UseRTOSMultitasking){
     if (Settings.UseSerial && Serial.available()) {
@@ -977,7 +679,12 @@ void backgroundtasks()
     if (webserverRunning) {
       web_server.handleClient();
     }
-    if (WiFi.getMode() != WIFI_OFF) {
+    if (WiFi.getMode() != WIFI_OFF
+    // This makes UDP working for ETHERNET
+    #ifdef HAS_ETHERNET
+                       || eth_connected
+    #endif
+                       ) {
       checkUDP();
     }
   }
@@ -987,14 +694,14 @@ void backgroundtasks()
     dnsServer.processNextRequest();
 
   #ifdef FEATURE_ARDUINO_OTA
-  if(Settings.ArduinoOTAEnable && wifiConnected)
+  if(Settings.ArduinoOTAEnable && networkConnected)
     ArduinoOTA.handle();
 
   //once OTA is triggered, only handle that and dont do other stuff. (otherwise it fails)
   while (ArduinoOTAtriggered)
   {
     delay(0);
-    if (WiFiConnected()) {
+    if (NetworkConnected()) {
       ArduinoOTA.handle();
     }
   }
@@ -1003,7 +710,7 @@ void backgroundtasks()
 
   #ifdef FEATURE_MDNS
   // Allow MDNS processing
-  if (wifiConnected) {
+  if (networkConnected) {
     MDNS.update();
   }
   #endif

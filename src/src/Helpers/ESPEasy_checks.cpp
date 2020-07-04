@@ -1,6 +1,36 @@
-#include "src/DataStructs/NodeStruct.h"
-#include "src/DataStructs/CRCStruct.h"
-#include "src/DataStructs/SettingsStruct.h"
+#include "ESPEasy_checks.h"
+
+#include "../../ESPEasy_common.h"
+#include "../../ESPEasy-Globals.h"
+
+#include "../DataStructs/NodeStruct.h"
+#include "../DataStructs/CRCStruct.h"
+#include "../DataStructs/SettingsStruct.h"
+
+#include "../DataStructs/SecurityStruct.h"
+#include "../DataStructs/ExtraTaskSettingsStruct.h"
+#include "../DataStructs/ControllerSettingsStruct.h"
+#include "../DataStructs/ESPEasy_EventStruct.h"
+#include "../DataStructs/LogStruct.h"
+#include "../DataStructs/DeviceStruct.h"
+#include "../DataStructs/ProtocolStruct.h"
+#include "../DataStructs/ESPEasy_EventStruct.h"
+#include "../DataStructs/NodeStruct.h"
+#include "../DataStructs/RTCStruct.h"
+#include "../DataStructs/SystemTimerStruct.h"
+#include "../DataStructs/PortStatusStruct.h"
+#include "../DataStructs/FactoryDefaultPref.h"
+
+#include "../Globals/ExtraTaskSettings.h"
+
+#include "../Helpers/ESPEasy_Storage.h"
+
+
+
+#ifdef USES_NOTIFIER
+#include "../DataStructs/NotificationStruct.h"
+#endif
+
 
 // ********************************************************************************
 // Check struct sizes at compile time
@@ -30,14 +60,13 @@ template<typename T, typename U> constexpr size_t offsetOf(U T::*member)
     return (char*)&((T*)nullptr->*member) - (char*)nullptr;
 }
 
-
 void run_compiletime_checks() {
   check_size<CRCStruct,                             204u>();
   check_size<SecurityStruct,                        593u>();
-  const unsigned int SettingsStructSize = (252 + 82 * TASKS_MAX);
+  const unsigned int SettingsStructSize = (276 + 82 * TASKS_MAX);
   check_size<SettingsStruct,                        SettingsStructSize>();
   check_size<ControllerSettingsStruct,              820u>();
-  #ifndef NOTIFIER_SET_NONE
+  #ifdef USES_NOTIFIER
   check_size<NotificationSettingsStruct,            996u>();
   #endif
   check_size<ExtraTaskSettingsStruct,               472u>();
@@ -49,7 +78,7 @@ void run_compiletime_checks() {
   check_size<LogStruct,                             LogStructSize>(); // Is not stored
   check_size<DeviceStruct,                          7u>();
   check_size<ProtocolStruct,                        6u>();
-  #ifndef NOTIFIER_SET_NONE
+  #ifdef USES_NOTIFIER
   check_size<NotificationStruct,                    3u>();
   #endif
   check_size<NodeStruct,                            28u>();
@@ -58,7 +87,7 @@ void run_compiletime_checks() {
   check_size<rulesTimerStatus,                      12u>();
   check_size<portStatusStruct,                      4u>();
   check_size<ResetFactoryDefaultPreference_struct,  4u>();
-  check_size<GpioFactorySettingsStruct,             11u>();
+  check_size<GpioFactorySettingsStruct,             18u>();
   #if defined(USE_NON_STANDARD_24_TASKS) && defined(ESP8266)
     static_assert(TASKS_MAX == 24, "TASKS_MAX invalid size");
   #endif
@@ -113,4 +142,39 @@ bool SettingsCheck(String& error) {
   }
 
   return error.length() == 0;
+}
+
+
+String checkTaskSettings(taskIndex_t taskIndex) {
+  String err = LoadTaskSettings(taskIndex);
+  if (err.length() > 0) return err;
+  if (!ExtraTaskSettings.checkUniqueValueNames()) {
+    return F("Use unique value names");
+  }
+  if (!ExtraTaskSettings.checkInvalidCharInNames()) {
+    return F("Invalid character in names. Do not use ',#[]' or space.");
+  }
+  String deviceName = ExtraTaskSettings.TaskDeviceName;
+  if (deviceName.length() == 0) {
+    if (Settings.TaskDeviceEnabled[taskIndex]) {
+      // Decide what to do here, for now give a warning when task is enabled.
+      return F("Warning: Task Device Name is empty. It is adviced to give tasks an unique name");
+    }
+  }
+  // Do not use the cached function findTaskIndexByName since that one does rely on the fact names should be unique.
+  for (taskIndex_t i = 0; i < TASKS_MAX; ++i) {
+    if (i != taskIndex && Settings.TaskDeviceEnabled[i]) {
+      LoadTaskSettings(i);
+      if (ExtraTaskSettings.TaskDeviceName[0] != 0) {
+        if (strcasecmp(ExtraTaskSettings.TaskDeviceName, deviceName.c_str()) == 0) {
+          err = F("Task Device Name is not unique, conflicts with task ID #");
+          err += (i+1);
+//          return err;
+        }
+      }
+    }
+  }
+
+  err += LoadTaskSettings(taskIndex);
+  return err;
 }

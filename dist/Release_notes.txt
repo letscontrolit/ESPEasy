@@ -1,4 +1,208 @@
 -------------------------------------------------
+Changes in release mega-20200703 (since mega-20200608)
+-------------------------------------------------
+
+Release date: vr  3 jul 2020 13:15:58 CEST
+
+Florin (1):
+      Disable Arduino OTA by default for ESP32
+
+Gijs Noorlander (31):
+      [ESP32] Only define FEATURE_ARDUINO_OTA in build config, not in .h files
+      [Build] Disable test_beta_ESP8266_4M1M for now as it is too big
+      [PIO] Use  espressif8266@2.5.2 with fixed esp8266_stack_decoder
+      [Controller] Memory optimization for sending SENSOR_TYPE_STRING
+      [Controller] Check if controller host/IP is set before MQTT connect
+      [MQTT] Add function to check MQTT queue full state
+      [Cleanup] Free ControllerSettings as soon as possible to free memory
+      [Cleanup] Try to use move constructor when adding to controller queue
+      [Controller] Cache needed controller info to reduce memory usage
+      [MQTT] More efficient MQTT copy incoming messages
+      [Controller] Check if MakeControllerSettings failed due to low RAM
+      [MQTT import] Check if MakeControllerSettings failed due to out of RAM
+      Fix merge issue WiFiConnected changed to NetworkConnected
+      [P001 Switch] Reduce stack usage on PLUGIN_WEBFORM_LOAD
+      [Blynk] Reduce stack usage on Blynk_get
+      [Web Frontend] Reduce stack usage on DST configuration
+      [Python] Update  package versions in requirements.txt
+      addFormSelectorI2C Fix high stack usage (#3130)
+      Minimize stack allocation in plugins
+      [Build] Add LittleFS to lib_ignore
+      [build] Exclude function from build for minimal OTA
+      [C011] Generic HTTP Advanced Reduce stack usage (#3123)
+      [Controller] Check success of controller settings allocation processing queue
+      [HTTP controller] Memory optimization, prevent copy queue element
+      [Build] Allow building using SD support for special debug builds
+      [Frontend] Use stringProvider on some more strings
+      [Domoticz HTTP] Make sending slightly more efficient
+      [Web interface] Fix bug in I2C address selector
+      [Rules] Fix rules handling of set 2...4 when using admin login (#3113)
+      [Syslog] Fix high stack usage for Syslog (#3128)
+      [Documentation] Add documentation on the log settings.
+
+Grzegorz Dziubak (1):
+      Update _P047_i2c-soil-moisture-sensor.ino
+
+Michał Obrembski (10):
+      Initial Ethernet support
+      Added displaying Ethernet parameter in sysinfo and root page
+      Added configuration of Eth Phy via Hardware settings web page
+      Added Olimex ESP32-PoE board to DeviceModel and default settings
+      Increased BUILD number to 20107
+      Fix build on devices without Ethernet.
+      Remove ifdefs for Ethernet in settings
+      Renamed functions in ESPEasyEth, added eth* prefix
+      Moved WifiGetHostname into more generic createRFCCompliantHostname
+      Added basic implementation of Ethernet Static IP
+
+Pavel Moravec (1):
+      Fixed IP address range checking
+
+Peter Kretz (24):
+      atlas Sensor for pH an Redox (ORP) added
+      - Atlas EZO new webserver added - Serial --> logging - No [TESTING]
+      Extended the great work from Michał Obrembski mobrembski, so that: - mqtt works - WifiConnected works as EthernetConnected
+      - Moved ETHEvent from ESPEasy.ino to ESPEasyEthEvent.ino - Corrected Hostname Setting - ESPEasy P2P works now with some minor changes for IP-Address Handling in Network.ino
+      Change requested by TD-er review: clarification of build file https://github.com/letscontrolit/ESPEasy/pull/2962/files/8ba2bb88eadb98c4691cbb1f40c4d5466cb7b5b8
+      ESP32 with Ethernet or Wifi, not both at the same time configurable via Hardware Page. - ESP P2P is working - Only ETH.beginPacket() with Standard Parameter is working at the moment, configuration will follow. - Network.in not cpp/h files but this will be changed in future - Some TODO: PKR: comments will be removed in the future, too
+      Removed some comments Build now working with HAS_ETHERNET not defined
+      - Ethernet Commands - remove useless comments - ETH.config moved after ETH.begin - Added note: Be aware with ESPEasyP2P Network, since IP Address will change. There could be conflicts. - Ethernet JSON - Ethernet Variables
+      - ETHEvents moved to WifiEvents, because they are the same type
+      ESPEasyEth.ino --> ESPEasyEth.cpp/h Network.ino --> Network.cpp/h
+      ESPEasyWiFi_credentials.ino --> cpp/h ESPEasyWiFi_ProcessEvent.ino --> cpp/h ESPEasyWiFi.ino --> cpp/h
+      Network.h/cpp --> ESPEasyNetwork.h/cpp
+      removed upload flags
+      - New events: ETHERNET#Connected and ETHERNET#Disconnected
+      Fixed https://travis-ci.org/github/letscontrolit/ESPEasy/builds/680698472 ci build error
+      Fixed ci compile bug https://travis-ci.org/github/letscontrolit/ESPEasy/builds/680724129
+      Fixed bug reported by mobremski
+      - UDP / ESPEasyP2P now works for ETHERNET - Hostname Handling refactored for better overview:   - String NetworkGetHostNameFromSettings() returns Settings.getHostname()   - String NetworkCreateRFCCompliantHostname() creates a RFCcompliant Hostname from Settings.cpp   - String NetworkGetHostname() returns the Hostname prevoiusly set in ETH or Wifi dependong on Mode - MacAddress Handling refactored   - String NetworkMacAddress() returns the Mac addres of ETH or Wifi depending on Mode   - String WifiSoftAPmacAddress() returns WiFi.softAPmacAddress(mac) as String
+      This String function is not needed, because there is a ETH.macAddress() which returns a String. I changed it to the byte version of the function and now uint8_t * NetworkMacAddressAsBytes(uint8_t* mac) returns either this in Ethernet mode or WiFi.macAddress(mac) in Wifi mode.
+      Check changed as requested by TD-er
+      addFormNote(F("Be aware with ESPEasyP2P Network, since IP Address will change. There could be conflicts.")); not used anymore because P2P UDP works good
+      removede personal upload flags
+      _P124_Atlas_EZO_pH.ino and _P222_Atlas_EZO_ORP.ino deleted since ther are not in ESPEasy but in Playground. There is another Issu, to put them in ESPEasy mega
+      - Error in Network Name fpr WiFi fixed - logging improvements
+
+bccrew (1):
+      Change FormSubHeader to clarify difference between IP settings of LAN or WiFi
+
+tonhuisman (5):
+      [P064] Gesture - APDS-9960 plugin: Added switching plugin mode and settings to fine-tune without recompiling source [APDS-9960 library] Added extensions and applied fixes from original Github project (including not merged yet improvements) [P064] Added/updated documentation for Gesture - APDS-9960 plugin [Documentation] Updated footer copyright notice to show 2018..2020
+      [P064] Made code-readability and other improvements as TD-er suggested, fixed a swapped argument bug
+      [Tasks] Call PLUGIN_INIT/PLUGIN_EXIT using TaskEnable/TaskDisable from rules
+      [Transformation] Add P/p (Password display)
+      [Transformation] Optimizations for Password transformation
+
+
+-------------------------------------------------
+Changes in release mega-20200608 (since mega-20200515)
+-------------------------------------------------
+
+Release date: ma  8 jun 2020 22:51:44 CEST
+
+Bartlomiej Zimon (11):
+      rfid events update for P008/P017/P040, plus send event after log line.
+      PN532: remove hardcoded scl/sda pins reading and use hardware configuration instead
+      PN532: update comment
+      Webserver - add port number setting into Advanced options, resolves #3031 and #573
+      P2P: send and receive webserver port number, add port to link on rootpage #2252
+      NodeStruct: init webgui_portnumber value
+      p2p infopacket - use low/highByte
+      Webserver - increase BUILD number and set default value for port number
+      Webserver port setting - add reboot note
+      MDNS - send service with actual webserver port
+      P2P: respect also build number in condition
+
+Florin (7):
+      Adding buzzer capabilities back to ESP32.
+      Allow to set the Latitude and longitude when resetting the firmware from custom.h or using the build_flags
+      clean up code and variables when NOTIFIER_SET_NONE is defined.
+      ESP32: Allow to select one of the two available SPI ports
+      clean up code and variables when NOTIFIER_SET_NONE is defined.
+      Fix for allowing negative timeOffset from UTC in constructor
+      rename the tone to toneESP32 to be more specific
+
+Gijs Noorlander (27):
+      [MQTT] Process publish LWT connect message asynchronous
+      [MQTT] Stop trying to send LWT connected when client disconnects
+      [LittleFS] Make switching between SPIFFS and LittleFS easy to do
+      [ESPEasySerial] Update to v2.0.3 adding I2C UART to ESP32 + fix bug ESP32
+      [Build] Fix merge error
+      [PIO] Move to esp8266/Arduino core 2.7.1
+      [PIO] Hide deprecated warning for SPIFFS
+      [Vagrant] Fix vagrant build installing all required Python packages
+      [Notifications] Make sure all custom defines are set at compile time
+      [Travis] Fix deploy multiple ZIP files + split ESP82xx and ESP32 files
+      [Build] Fix Python 3.8 build when no .git dir or pygit2 not installed
+      [GPS] Add GPS#travelled=... event  (#3099)
+      [Build] Add ina219 and mpu6050 to custom build (#3100)
+      [Build] Disable diagnostics code for test_ESP8266_4M1M_VCC to fit size
+      [Build] Disabling timing stats results in build errors for ESP32
+      [Commands] Split commands.ino to .h/.cpp to overcome build/link issues
+      [Build] Limit build size (no diagnostics) for test_beta_ESP8266_4M1M
+      [Notifications] Show notification tab when notifiers set via Custom.h
+      [Notifiers] switch from NOTIFIER_SET_NONE to USES_NOTIFIER in code
+      [ESP32] Fix Disabling ARDUINO_OTA fails the build (#3083)
+      [ESP32 build] Fix capitalization error in #include <esp_partition.h>
+      [ESP32] Update to platform-espressif32@1.12.2
+      [PIO] Add exception_decoder as serial monitor filter
+      [WiFi] Reduce excessive logs WIFI : Disconnected: WiFi.status()
+      [GPS] Add sanity check for reporting distance travelled event
+      Transform defines in EventValueSource into enum
+      [Build] Disable diagnostics in test/dev build to reduce build size
+
+Michał Obrembski (2):
+      Added /raw endpoint which gives an easy access to raw value of sensor
+      Changed format of RAW to CSV, added ability to filter values
+
+Michał Obrembski (3):
+      Fixed invalid check of valnr validity in CSV output mode
+      Renamed RAW to CSV, added printing of header
+      Removed usage of String.clear()
+
+Saverio Cisternino (1):
+      Fix  parse_uint  ref  https://github.com/staticlibs/ccronexpr/pull/30
+
+TD-er (1):
+      [Bug] ControllerIndex not set when calling CPLUGIN calls
+
+denisfrench (1):
+      [MQTT] Connect message honors LWT settings (#3006)
+
+jimmys01 (1):
+      [IR] Update Library
+
+sakinit (18):
+      Show for ESP32 also the first rule on the webserver rules page
+      Fix ESP32 undefined pin initialisation
+      Don't repeat the last rule on the next webserver page
+      Revert P1WifiGateway to 30cbb4c to bugfix this more generic code
+      Cherry-pick relevant P1WifiGateway updates since 30cbb4c
+      Fix the datagram check to be able to send valid messages again
+      Fix the serial reading algorithm
+      Fix P1WifiGateway webserver start
+      Remove temporary comments
+      Use ESPeasySerial
+      Restart P1WifiGateway if webserver start failed
+      Optimize serial reading algorithm and move client from plugin into task
+      Fix ESP32 reboot cause at boot/setup
+      Optimize serial in duration
+      Update due to review comments
+      Add sanity checks based on review comments
+      Discard data received from WiFi client due to review comment
+      Update based on review comments
+
+tonhuisman (6):
+      [Rules page] Add RTD help button and fix page layout issue ('Old Engine')
+      [Transformation] Add R/r transformations (LEFT/RIGHT and L/R)
+      [Transformations] Adjusted R/r to L/l and added c
+      [Justifications] Add 'C' (Capitalize, OPEN -> Open) option
+      [Justifications] Added u/l for upper/lowercasing the value, removed dash-check from C justificaion
+      [Docs] Describe 'elseif' with some examples
+
+
+-------------------------------------------------
 Changes in release mega-20200515 (since mega-20200426)
 -------------------------------------------------
 

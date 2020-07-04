@@ -76,7 +76,6 @@ typedef struct {
 } ina219_data;
 
 ina219_data _ina219_data[4];
-int Plugin_27_i2c_addresses[4] = { INA219_ADDRESS, INA219_ADDRESS2, INA219_ADDRESS3, INA219_ADDRESS4 };
 
 uint8_t Plugin_027_i2c_addr(struct EventStruct *event) {
    return (uint8_t)PCONFIG(1);
@@ -131,22 +130,27 @@ boolean Plugin_027(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        byte choiceMode = PCONFIG(0);
-        String optionsMode[3];
-        optionsMode[0] = F("32V, 2A");
-        optionsMode[1] = F("32V, 1A");
-        optionsMode[2] = F("16V, 0.4A");
-        int optionValuesMode[3];
-        optionValuesMode[0] = 0;
-        optionValuesMode[1] = 1;
-        optionValuesMode[2] = 2;
-        addFormSelector(F("Measure range"), F("p027_range"), 3, optionsMode, optionValuesMode, choiceMode);
-
-        addFormSelectorI2C(F("p027_i2c"), 4, Plugin_27_i2c_addresses, Plugin_027_i2c_addr(event));
-
-        byte choiceMeasureType = PCONFIG(2);
-        String options[4] = { F("Voltage"), F("Current"), F("Power"), F("Voltage/Current/Power") };
-        addFormSelector(F("Measurement Type"), F("p027_measuretype"), 4, options, NULL, choiceMeasureType );
+        {
+          byte choiceMode = PCONFIG(0);
+          String optionsMode[3];
+          optionsMode[0] = F("32V, 2A");
+          optionsMode[1] = F("32V, 1A");
+          optionsMode[2] = F("16V, 0.4A");
+          int optionValuesMode[3];
+          optionValuesMode[0] = 0;
+          optionValuesMode[1] = 1;
+          optionValuesMode[2] = 2;
+          addFormSelector(F("Measure range"), F("p027_range"), 3, optionsMode, optionValuesMode, choiceMode);
+        }
+        {
+          int Plugin_27_i2c_addresses[4] = { INA219_ADDRESS, INA219_ADDRESS2, INA219_ADDRESS3, INA219_ADDRESS4 };
+          addFormSelectorI2C(F("p027_i2c"), 4, Plugin_27_i2c_addresses, Plugin_027_i2c_addr(event));
+        }
+        {
+          byte choiceMeasureType = PCONFIG(2);
+          String options[4] = { F("Voltage"), F("Current"), F("Power"), F("Voltage/Current/Power") };
+          addFormSelector(F("Measurement Type"), F("p027_measuretype"), 4, options, NULL, choiceMeasureType );
+        }
 
         success = true;
         break;

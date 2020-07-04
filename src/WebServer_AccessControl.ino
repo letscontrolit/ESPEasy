@@ -7,10 +7,9 @@
 
 boolean ipLessEqual(const IPAddress& ip, const IPAddress& high)
 {
-  for (byte i = 0; i < 4; ++i) {
-    if (ip[i] > high[i]) { return false; }
-  }
-  return true;
+  unsigned long u_ip = ((unsigned long )ip[0] << 24) | ((unsigned long )ip[1] << 16) | ((unsigned long )ip[2] << 8) | ip[3];
+  unsigned long u_high = ((unsigned long )high[0] << 24) | ((unsigned long )high[1] << 16) | ((unsigned long )high[2] << 8) | high[3];
+  return u_ip <= u_high;
 }
 
 boolean ipInRange(const IPAddress& ip, const IPAddress& low, const IPAddress& high)

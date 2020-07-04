@@ -25,17 +25,21 @@ else:
     "USES_P001",  # Switch
     "USES_P002",  # ADC
     "USES_P004",  # Dallas DS18b20
+    "USES_P027",  # INA219
     "USES_P028",  # BME280
     "USES_P036",  # FrameOLED
+    "USES_P045",  # MPU6050
     "USES_P049",  # MHZ19
     "USES_P052",  # SenseAir
     "USES_P056",  # SDS011-Dust
     "USES_P059",  # Encoder
+    "USES_P081",  # Cron
     "USES_P082",  # GPS
     "USES_P087",  # Serial Proxy
     "USES_P097",  # Touch (ESP32)
 
-    "USE_SETTINGS_ARCHIVE"
+    "USE_SETTINGS_ARCHIVE",
+    "FEATURE_ARDUINO_OTA"
   ])
 
 print(env['CPPDEFINES'])

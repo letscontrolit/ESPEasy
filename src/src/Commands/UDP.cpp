@@ -3,6 +3,7 @@
 #include "../../ESPEasy_common.h"
 #include "../Commands/Common.h"
 #include "../Globals/Settings.h"
+#include "../Helpers/StringConverter.h"
 #include "../../ESPEasy-Globals.h"
 
 #include "../../ESPEasy_fdwdecl.h"
@@ -39,7 +40,7 @@ String Command_UPD_SendTo(struct EventStruct *event, const char *Line)
 
 String Command_UDP_SendToUPD(struct EventStruct *event, const char *Line)
 {
-  if (WiFiConnected()) {
+  if (NetworkConnected()) {
     String ip      = parseString(Line, 2);
     int port    = parseCommandArgumentInt(Line, 2);
 

@@ -5,10 +5,12 @@
 #include "../Globals/TimeZone.h"
 #include "../Globals/RTC.h"
 #include "../Globals/Settings.h"
-
+#include "../Globals/EventQueue.h"
 #include "../../ESPEasy_fdwdecl.h"
 #include "../../ESPEasy_Log.h"
 #include "../../ESPEasy-Globals.h"
+
+#include "../Helpers/Numerical.h"
 
 #include <time.h>
 
@@ -223,7 +225,7 @@ bool ESPEasy_time::systemTimePresent() const {
 
 bool ESPEasy_time::getNtpTime(double& unixTime_d)
 {
-  if (!Settings.UseNTP || !WiFiConnected(10)) {
+  if (!Settings.UseNTP || !NetworkConnected(10)) {
     return false;
   }
   IPAddress timeServerIP;
