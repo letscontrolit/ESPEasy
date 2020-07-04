@@ -14,11 +14,11 @@
 //      with most code copied from plugin 085: _P085_AcuDC243.ino
 
 #ifndef USES_MODBUS
-#error This code needs MODBUS library, it should be enabled in 'define_plugin_sets.h'
+#error This code needs MODBUS library, it should be enabled in 'define_plugin_sets.h', or your 'custom.h'
 #endif
 
 /*
-
+DF - Below doesn't look right; needs a RS485 to TTL(3.3v) level converter (see https://github.com/reaper7/SDM_Energy_Meter)
    Circuit wiring
     GPIO Setting 1 -> RX
     GPIO Setting 2 -> TX
@@ -67,6 +67,9 @@
 
 #define P224_MEASUREMENT_INTERVAL 60000L
 
+#include <ESPeasySerial.h>
+#include "_Plugin_Helper.h"
+#include "src/Helpers/Modbus_RTU.h"
 
 struct P224_data_struct : public PluginTaskData_base {
   P224_data_struct() {}
