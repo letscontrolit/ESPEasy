@@ -51,7 +51,7 @@ String Command_Task_Disable(struct EventStruct *event, const char *Line)
   unsigned int varNr;
   String dummy;
 
-  if (validTaskVars(event, taskIndex, varNr) && PluginCall(PLUGIN_EXIT, event, dummy) && setTaskEnableStatus(taskIndex, false)) {
+  if (validTaskVars(event, taskIndex, varNr) && (PluginCall(PLUGIN_EXIT, event, dummy) || true) && setTaskEnableStatus(taskIndex, false)) {
     return return_command_success();
   }
   return return_command_failed();
