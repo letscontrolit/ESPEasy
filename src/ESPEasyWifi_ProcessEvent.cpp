@@ -33,7 +33,7 @@ void handle_unprocessedWiFiEvents()
     delay(100);
   }
 
-  if ((wifiStatus != ESPEASY_WIFI_SERVICES_INITIALIZED) || unprocessedWifiEvents()) {
+  if ((!(wifiStatus & ESPEASY_WIFI_SERVICES_INITIALIZED)) || unprocessedWifiEvents()) {
     // WiFi connection is not yet available, so introduce some extra delays to
     // help the background tasks managing wifi connections
     delay(1);
@@ -76,25 +76,34 @@ void handle_unprocessedWiFiEvents()
       // The actual connection has been made, no need to wait for IP to release this semaphore.
       wifiConnectInProgress = false;
     }
-    if (wifiStatus != ESPEASY_WIFI_SERVICES_INITIALIZED) {
-      if (WiFi.isConnected()) {
-        // Apparently we did miss some WiFi events.
-        if ((wifiStatus & ESPEASY_WIFI_CONNECTED) == 0) {
-          addLog(LOG_LEVEL_DEBUG, F("WiFi : Force 'WiFi Connected' event"));
-          processedConnect = false;
-        }
-
-        if ((wifiStatus & ESPEASY_WIFI_GOT_IP) == 0) {
-          addLog(LOG_LEVEL_DEBUG, F("WiFi : Force 'WiFi Got IP' event"));
-          processedGotIP = false;
-        }
-      }
-    }
-
-
-    if (wifiStatus != ESPEASY_WIFI_SERVICES_INITIALIZED) {
+    if (!(wifiStatus & ESPEASY_WIFI_SERVICES_INITIALIZED)) {
       if ((wifiStatus & ESPEASY_WIFI_GOT_IP) && (wifiStatus & ESPEASY_WIFI_CONNECTED)) {
         markWiFi_services_initialized();
+      } else {
+        bool missedEvent = false;
+        if (WiFi.isConnected()) {
+          // Apparently we did miss some WiFi events.
+          if ((wifiStatus & ESPEASY_WIFI_CONNECTED) == 0) {
+            #ifndef BUILD_NO_DEBUG
+            addLog(LOG_LEVEL_DEBUG, F("WiFi : Force 'WiFi Connected' event"));
+            #endif
+            processedConnect = false;
+            missedEvent = true;
+          }
+        }
+        if (hasIPaddr()) {
+          if ((wifiStatus & ESPEASY_WIFI_GOT_IP) == 0) {
+            #ifndef BUILD_NO_DEBUG
+            addLog(LOG_LEVEL_DEBUG, F("WiFi : Force 'WiFi Got IP' event"));
+            #endif
+            processedGotIP = false;
+            missedEvent = true;
+          }
+        }
+        if (missedEvent && timeOutReached(last_wifi_connect_attempt_moment + 15000)) {
+          resetWiFi();
+          return;
+        }
       }
     }
   } else if (!NetworkConnected()) {
@@ -143,7 +152,7 @@ void handle_unprocessedWiFiEvents()
 
   if (wifi_connect_attempt > 0) {
     // We only want to clear this counter if the connection is currently stable.
-    if (wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED) {
+    if (wifiStatus & ESPEASY_WIFI_SERVICES_INITIALIZED) {
       if (timePassedSince(lastConnectMoment) > WIFI_CONNECTION_CONSIDERED_STABLE) {
         // Connection considered stable
         wifi_connect_attempt = 0;
@@ -198,10 +207,16 @@ void processConnect() {
   //delay(100); // FIXME TD-er: See https://github.com/letscontrolit/ESPEasy/issues/1987#issuecomment-451644424
 
   if (!WiFi.isConnected()) {
+    wifiStatus      &= ~ESPEASY_WIFI_CONNECTED;
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      String log = F("WIFI : Not connected ");
+      log += WiFi.status();
+      addLog(LOG_LEVEL_INFO, log);
+    }
     return;
   }
-
   processedConnect = true;
+
   wifiStatus      |= ESPEASY_WIFI_CONNECTED;
   ++wifi_reconnects;
 
@@ -245,7 +260,7 @@ void processGotIP() {
   if (processedGotIP) {
     return;
   }
-  if ((wifiStatus & ESPEASY_WIFI_CONNECTED) == 0) {
+  if (!WiFi.isConnected()) {
     // Only process GotIP events if we are connected.
     return;
   }
@@ -467,7 +482,7 @@ void processScanDone() {
 
 void markWiFi_services_initialized() {
   addLog(LOG_LEVEL_DEBUG, F("WiFi : WiFi services initialized"));
-  wifiStatus            = ESPEASY_WIFI_SERVICES_INITIALIZED;
+  wifiStatus           |= ESPEASY_WIFI_SERVICES_INITIALIZED;
   wifiConnectInProgress = false;
   
   processedDHCPTimeout  = true;  // FIXME TD-er:  Is this ever happening?

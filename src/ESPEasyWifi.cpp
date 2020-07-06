@@ -92,25 +92,32 @@ bool WiFiConnected() {
   const bool validWiFi = (WiFi.RSSI() < 0) && WiFi.isConnected() && hasIPaddr();
   // FIXME TD-er: Not sure if this is needed as we also set it when processing WiFi events.
 /*
-  if (wifiStatus != ESPEASY_WIFI_SERVICES_INITIALIZED) {
+  if (!(wifiStatus & ESPEASY_WIFI_SERVICES_INITIALIZED)) {
     if (validWiFi) {
       // Set internal wifiStatus and reset timer to disable AP mode
       markWiFi_services_initialized();
     }
   }
 */
-  if (wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED) {
+  if (wifiStatus & ESPEASY_WIFI_SERVICES_INITIALIZED) {
     if (validWiFi) {
       // Connected, thus disable any timer to start AP mode. (except when in WiFi setup mode)
       if (!wifiSetupConnect) {
         timerAPstart = 0;
       }
       STOP_TIMER(WIFI_ISCONNECTED_STATS);
-      return true;
+      // Only return true after some time since it got connected.
+      return timePassedSince(lastConnectMoment) > 100;
+    } else {
+      // else wifiStatus is no longer in sync.
+      String log = F("WIFI  : WiFiConnected() out of sync: ");
+      log += ESPeasyWifiStatusToString();
+      log += F(" RSSI: ");
+      log += String(WiFi.RSSI());
+      // Call for reset first, to make sure a syslog call will not try to send.
+      resetWiFi();
+      addLog(LOG_LEVEL_INFO, log);
     }
-    // else wifiStatus is no longer in sync.
-    addLog(LOG_LEVEL_INFO, F("WIFI  : WiFiConnected() out of sync"));
-    resetWiFi();
   }
 
   // When made this far in the code, we apparently do not have valid WiFi connection.
@@ -237,9 +244,15 @@ void resetWiFi() {
     // Don't reset WiFi too often
     return;
   }
-  addLog(LOG_LEVEL_INFO, F("Reset WiFi."));
+  addLog(LOG_LEVEL_INFO, String(F("Reset WiFi.")));
   lastDisconnectMoment = millis();
   lastWiFiResetMoment = millis();
+  wifiStatus            = ESPEASY_WIFI_DISCONNECTED;
+  lastConnectMoment     = 0;
+  lastGetIPmoment       = 0;
+  lastGetScanMoment     = 0;
+  last_wifi_connect_attempt_moment = 0;
+  timerAPstart = 0;
 
   // Mark all flags to default to prevent handling old events.
   processedConnect          = true;
@@ -262,8 +275,9 @@ void initWiFi()
 #ifdef ESP8266
 
   // See https://github.com/esp8266/Arduino/issues/5527#issuecomment-460537616
-  WiFi.~ESP8266WiFiClass();
-  WiFi = ESP8266WiFiClass();
+  // FIXME TD-er: Do not destruct WiFi object, it may cause crashes with queued UDP traffic.
+  //  WiFi.~ESP8266WiFiClass();
+  //  WiFi = ESP8266WiFiClass();
 #endif // ifdef ESP8266
 
   WiFi.persistent(false); // Do not use SDK storage of SSID/WPA parameters
@@ -718,13 +732,18 @@ String ArduinoWifiStatusToString(uint8_t arduino_corelib_wifistatus) {
 
 String ESPeasyWifiStatusToString() {
   String log;
-
-  switch (wifiStatus) {
-    case ESPEASY_WIFI_DISCONNECTED:         log += F("ESPEASY_WIFI_DISCONNECTED"); break;
-    case ESPEASY_WIFI_CONNECTED:            log += F("ESPEASY_WIFI_CONNECTED"); break;
-    case ESPEASY_WIFI_GOT_IP:               log += F("ESPEASY_WIFI_GOT_IP"); break;
-    case ESPEASY_WIFI_SERVICES_INITIALIZED: log += F("ESPEASY_WIFI_SERVICES_INITIALIZED"); break;
-    default:  log                               += wifiStatus;
+  if (wifiStatus == ESPEASY_WIFI_DISCONNECTED) {
+    log = F("DISCONNECTED");
+  } else {
+    if (wifiStatus & ESPEASY_WIFI_CONNECTED) {
+      log += F("Conn. ");
+    }
+    if (wifiStatus & ESPEASY_WIFI_GOT_IP) {
+      log += F("IP ");
+    }
+    if (wifiStatus & ESPEASY_WIFI_SERVICES_INITIALIZED) {
+      log += F("Init");
+    }
   }
   return log;
 }
