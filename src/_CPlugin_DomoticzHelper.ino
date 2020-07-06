@@ -1,4 +1,8 @@
 #ifdef USES_DOMOTICZ
+
+#include "src/Helpers/Convert.h"
+
+
 // HUM_STAT can be one of:
 
 // 0=Normal

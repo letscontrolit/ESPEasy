@@ -1,6 +1,7 @@
 #include "../Commands/Tasks.h"
 
 #include "../Commands/Common.h"
+#include "../Helpers/StringConverter.h"
 #include "../../ESPEasy_fdwdecl.h"
 #include "../../ESPEasy_common.h"
 

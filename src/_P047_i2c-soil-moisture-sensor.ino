@@ -127,7 +127,7 @@ boolean Plugin_047(byte function, struct EventStruct *event, String& string)
         if (PCONFIG(2)) {
           // get sensor version to check if sensor is present
           sensorVersion = Plugin_047_getVersion();
-          if (sensorVersion==0x22 || sensorVersion==0x23) {
+          if (sensorVersion==0x22 || sensorVersion==0x23 || sensorVersion==0x24 || sensorVersion==0x25 || sensorVersion==0x26) {
             //valid sensor
           }
           else {
