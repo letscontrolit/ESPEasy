@@ -55,8 +55,6 @@ String Command_Task_Disable(struct EventStruct *event, const char *Line)
     PluginCall(PLUGIN_EXIT, event, dummy);
     if (setTaskEnableStatus(taskIndex, false)) {
       return return_command_success();
-    } else {
-      return return_command_failed();
     }
   }
   return return_command_failed();
