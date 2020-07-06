@@ -479,7 +479,7 @@ byte disableNotification(byte bootFailedCount) {
   return bootFailedCount;
 }
 
-#include "src/DataStructs/StorageLayout.h"
+#include "../../src/DataStructs/StorageLayout.h"
 
 
 bool getAndLogSettingsParameters(bool read, SettingsType::Enum settingsType, int index, int& offset, int& max_size) {

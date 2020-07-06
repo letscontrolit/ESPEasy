@@ -1,7 +1,7 @@
 #ifndef HELPERS_ESPEASY_CHECKS_H
 #define HELPERS_ESPEASY_CHECKS_H
 
-#include "ESPEasy_common.h"
+#include "../../ESPEasy_common.h"
 
 #include "../Globals/Plugins.h"
 
