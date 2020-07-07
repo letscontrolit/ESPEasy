@@ -92,14 +92,14 @@ bool WiFiConnected() {
   const bool validWiFi = (WiFi.RSSI() < 0) && WiFi.isConnected() && hasIPaddr();
   // FIXME TD-er: Not sure if this is needed as we also set it when processing WiFi events.
 /*
-  if (!(wifiStatus & ESPEASY_WIFI_SERVICES_INITIALIZED)) {
+  if (!(bitRead(wifiStatus, ESPEASY_WIFI_SERVICES_INITIALIZED))) {
     if (validWiFi) {
       // Set internal wifiStatus and reset timer to disable AP mode
       markWiFi_services_initialized();
     }
   }
 */
-  if (wifiStatus & ESPEASY_WIFI_SERVICES_INITIALIZED) {
+  if (bitRead(wifiStatus, ESPEASY_WIFI_SERVICES_INITIALIZED)) {
     if (validWiFi) {
       // Connected, thus disable any timer to start AP mode. (except when in WiFi setup mode)
       if (!wifiSetupConnect) {
@@ -735,13 +735,13 @@ String ESPeasyWifiStatusToString() {
   if (wifiStatus == ESPEASY_WIFI_DISCONNECTED) {
     log = F("DISCONNECTED");
   } else {
-    if (wifiStatus & ESPEASY_WIFI_CONNECTED) {
+    if (bitRead(wifiStatus, ESPEASY_WIFI_CONNECTED)) {
       log += F("Conn. ");
     }
-    if (wifiStatus & ESPEASY_WIFI_GOT_IP) {
+    if (bitRead(wifiStatus, ESPEASY_WIFI_GOT_IP)) {
       log += F("IP ");
     }
-    if (wifiStatus & ESPEASY_WIFI_SERVICES_INITIALIZED) {
+    if (bitRead(wifiStatus, ESPEASY_WIFI_SERVICES_INITIALIZED)) {
       log += F("Init");
     }
   }

@@ -41,8 +41,8 @@ void markGotIP() {
   lastGetIPmoment = millis();
   // Create the 'got IP event' so mark the wifiStatus to not have the got IP flag set
   // This also implies the services are not fully initialized.
-  wifiStatus     &= ~ESPEASY_WIFI_GOT_IP;
-  wifiStatus     &= ~ESPEASY_WIFI_SERVICES_INITIALIZED;
+  bitClear(wifiStatus, ESPEASY_WIFI_GOT_IP);
+  bitClear(wifiStatus, ESPEASY_WIFI_SERVICES_INITIALIZED);
   processedGotIP = false;
 }
 
