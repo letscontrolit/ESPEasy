@@ -65,6 +65,10 @@ unsigned int p076_hpowfact = 0;
 // Keep values as they are stored and increase this when adding new ones.
 #define MAX_P076_DEVICE   11
 
+void ICACHE_RAM_ATTR p076_hlw8012_cf1_interrupt();
+void ICACHE_RAM_ATTR p076_hlw8012_cf_interrupt();
+
+
 bool p076_getDeviceString(int device, String& name) {
   switch(device) {
     case P076_Custom   : name = F("Custom");          break;
