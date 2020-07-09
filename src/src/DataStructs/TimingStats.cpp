@@ -3,6 +3,8 @@
 #include "../../ESPEasy_plugindefs.h"
 #include "../../_CPlugin_Helper.h"
 #include "../Globals/CPlugins.h"
+#include "../Helpers/StringConverter.h"
+
 
 #ifdef USES_TIMING_STATS
 

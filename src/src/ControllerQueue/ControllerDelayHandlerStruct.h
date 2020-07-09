@@ -10,6 +10,7 @@
 #include "../Helpers/ESPEasy_time_calc.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/Scheduler.h"
+#include "../Helpers/StringConverter.h"
 #include "../../_CPlugin_Helper.h"
 
 #include <list>
