@@ -1,26 +1,47 @@
 // ArduinoJson - arduinojson.org
-// Copyright Benoit Blanchon 2014-2019
+// Copyright Benoit Blanchon 2014-2020
 // MIT License
 
 #pragma once
 
-#include "../Memory/MemoryPool.hpp"
-#include "../Polyfills/assert.hpp"
-#include "../Strings/StringAdapters.hpp"
-#include "VariantData.hpp"
+#include <ArduinoJson/Polyfills/assert.hpp>
+#include <ArduinoJson/Variant/VariantData.hpp>
 
 namespace ARDUINOJSON_NAMESPACE {
 
 template <typename TAdaptedString>
 inline bool slotSetKey(VariantSlot* var, TAdaptedString key, MemoryPool* pool) {
-  if (!var) return false;
+  if (!var)
+    return false;
+  return slotSetKey(var, key, pool, typename TAdaptedString::storage_policy());
+}
+
+template <typename TAdaptedString>
+inline bool slotSetKey(VariantSlot* var, TAdaptedString key, MemoryPool* pool,
+                       storage_policies::decide_at_runtime) {
   if (key.isStatic()) {
-    var->setLinkedKey(make_not_null(key.data()));
+    return slotSetKey(var, key, pool, storage_policies::store_by_address());
   } else {
-    const char* dup = key.save(pool);
-    if (!dup) return false;
-    var->setOwnedKey(make_not_null(dup));
+    return slotSetKey(var, key, pool, storage_policies::store_by_copy());
   }
+}
+
+template <typename TAdaptedString>
+inline bool slotSetKey(VariantSlot* var, TAdaptedString key, MemoryPool*,
+                       storage_policies::store_by_address) {
+  ARDUINOJSON_ASSERT(var);
+  var->setLinkedKey(make_not_null(key.data()));
+  return true;
+}
+
+template <typename TAdaptedString>
+inline bool slotSetKey(VariantSlot* var, TAdaptedString key, MemoryPool* pool,
+                       storage_policies::store_by_copy) {
+  const char* dup = pool->saveString(key);
+  if (!dup)
+    return false;
+  ARDUINOJSON_ASSERT(var);
+  var->setOwnedKey(make_not_null(dup));
   return true;
 }
 
