@@ -21,6 +21,7 @@
 bool WiFiConnected();
 void WiFiConnectRelaxed();
 bool prepareWiFi();
+bool checkAndResetWiFi();
 void resetWiFi();
 void initWiFi();
 void WifiDisconnect();

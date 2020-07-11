@@ -88,8 +88,41 @@ bool WiFiConnected() {
     timerAPstart = 0;
   }
 
+  bool wifi_isconnected = false;
+  #ifdef ESP8266
+  // Perform check on SDK function, see: https://github.com/esp8266/Arduino/issues/7432
+  station_status_t status = wifi_station_get_connect_status();
+    switch(status) {
+      case STATION_GOT_IP:
+        wifi_isconnected = true;
+        break;
+      case STATION_NO_AP_FOUND:
+      case STATION_CONNECT_FAIL:
+      case STATION_WRONG_PASSWORD:
+        wifi_isconnected = false;
+        break;
+      case STATION_IDLE:
+        // FIXME TD-er: Not sure what to do here
+        wifi_isconnected = false;
+        break;
+      case STATION_CONNECTING:
+        wifi_isconnected = bitRead(wifiStatus, ESPEASY_WIFI_SERVICES_INITIALIZED);
+        break;
+
+      default:
+        wifi_isconnected = false;
+        break;
+  }
+
+
+  #endif
+  #ifdef ESP32
+  wifi_isconnected = WiFi.isConnected();
+  #endif
+
+
   // For ESP82xx, do not rely on WiFi.status() with event based wifi.
-  const bool validWiFi = (WiFi.RSSI() < 0) && WiFi.isConnected() && hasIPaddr();
+  const bool validWiFi = (WiFi.RSSI() < 0) && wifi_isconnected && hasIPaddr();
   // FIXME TD-er: Not sure if this is needed as we also set it when processing WiFi events.
 /*
   if (!(bitRead(wifiStatus, ESPEASY_WIFI_SERVICES_INITIALIZED))) {
@@ -110,13 +143,7 @@ bool WiFiConnected() {
       return timePassedSince(lastConnectMoment) > 100;
     } else {
       // else wifiStatus is no longer in sync.
-      String log = F("WIFI  : WiFiConnected() out of sync: ");
-      log += ESPeasyWifiStatusToString();
-      log += F(" RSSI: ");
-      log += String(WiFi.RSSI());
-      // Call for reset first, to make sure a syslog call will not try to send.
-      resetWiFi();
-      addLog(LOG_LEVEL_INFO, log);
+      checkAndResetWiFi();
     }
   }
 
@@ -238,6 +265,54 @@ bool prepareWiFi() {
   return true;
 }
 
+bool checkAndResetWiFi() {
+  #ifdef ESP8266
+  station_status_t status = wifi_station_get_connect_status();
+
+  switch(status) {
+    case STATION_GOT_IP:
+      // This is a valid status, no need to reset
+      return false;
+    case STATION_NO_AP_FOUND:
+    case STATION_CONNECT_FAIL:
+    case STATION_WRONG_PASSWORD:
+    case STATION_IDLE:
+      // Reason to reset WiFi
+      break;
+    case STATION_CONNECTING:
+      if (!timeOutReached(last_wifi_connect_attempt_moment + 15000)) {
+        return false;
+      }
+      break;
+  }
+  String log = F("WIFI  : WiFiConnected() out of sync: ");
+  log += ESPeasyWifiStatusToString();
+  log += F(" RSSI: ");
+  log += String(WiFi.RSSI());
+  log += F(" status: ");
+  log += String(status);
+  // Call for reset first, to make sure a syslog call will not try to send.
+  resetWiFi();
+  addLog(LOG_LEVEL_INFO, log);
+
+  #endif
+  #ifdef ESP32
+  if (!WiFi.isConnected()) {
+    if (!timeOutReached(last_wifi_connect_attempt_moment + 15000)) {
+      return false;
+    }
+    String log = F("WIFI  : WiFiConnected() out of sync: ");
+    log += ESPeasyWifiStatusToString();
+    log += F(" RSSI: ");
+    log += String(WiFi.RSSI());
+    // Call for reset first, to make sure a syslog call will not try to send.
+    resetWiFi();
+    addLog(LOG_LEVEL_INFO, log);
+  }
+  #endif
+  return true;
+}
+
 
 void resetWiFi() {
   if (lastWiFiResetMoment != 0 && timePassedSince(lastWiFiResetMoment) < 1000) {
@@ -276,12 +351,12 @@ void initWiFi()
 
   // See https://github.com/esp8266/Arduino/issues/5527#issuecomment-460537616
   // FIXME TD-er: Do not destruct WiFi object, it may cause crashes with queued UDP traffic.
-  //  WiFi.~ESP8266WiFiClass();
-  //  WiFi = ESP8266WiFiClass();
+  WiFi.~ESP8266WiFiClass();
+  WiFi = ESP8266WiFiClass();
 #endif // ifdef ESP8266
 
   WiFi.persistent(false); // Do not use SDK storage of SSID/WPA parameters
-  WiFi.setAutoReconnect(false);
+  WiFi.setAutoReconnect(true);
   // The WiFi.disconnect() ensures that the WiFi is working correctly. If this is not done before receiving WiFi connections,
   // those WiFi connections will take a long time to make or sometimes will not work at all.
   WiFi.disconnect();

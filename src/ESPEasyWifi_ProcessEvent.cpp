@@ -76,47 +76,57 @@ void handle_unprocessedWiFiEvents()
       // The actual connection has been made, no need to wait for IP to release this semaphore.
       wifiConnectInProgress = false;
     }
+  }
+  if (bitRead(wifiStatus, ESPEASY_WIFI_SERVICES_INITIALIZED) !=
+      (bitRead(wifiStatus, ESPEASY_WIFI_GOT_IP) && bitRead(wifiStatus, ESPEASY_WIFI_CONNECTED)))
+  {
     if (!bitRead(wifiStatus, ESPEASY_WIFI_SERVICES_INITIALIZED)) {
-      if ((bitRead(wifiStatus, ESPEASY_WIFI_GOT_IP)) && (bitRead(wifiStatus, ESPEASY_WIFI_CONNECTED))) {
-        markWiFi_services_initialized();
-      } else {
-        bool missedEvent = false;
-        if (WiFi.isConnected()) {
-          // Apparently we did miss some WiFi events.
-          if ((bitRead(wifiStatus, ESPEASY_WIFI_CONNECTED)) == 0) {
-            #ifndef BUILD_NO_DEBUG
-            addLog(LOG_LEVEL_DEBUG, F("WiFi : Force 'WiFi Connected' event"));
-            #endif
-            processedConnect = false;
-            missedEvent = true;
-          }
-        }
-        if (hasIPaddr()) {
-          if ((bitRead(wifiStatus, ESPEASY_WIFI_GOT_IP)) == 0) {
-            #ifndef BUILD_NO_DEBUG
-            addLog(LOG_LEVEL_DEBUG, F("WiFi : Force 'WiFi Got IP' event"));
-            #endif
-            processedGotIP = false;
-            missedEvent = true;
-          }
-        }
-        if (missedEvent && timeOutReached(last_wifi_connect_attempt_moment + 15000)) {
-          resetWiFi();
-          return;
+      markWiFi_services_initialized();
+    } else {
+      // wifiStatus is out of sync
+      bool missedEvent = false;
+      if (WiFi.isConnected() != bitRead(wifiStatus, ESPEASY_WIFI_CONNECTED)) {
+        // Apparently we did miss some WiFi events.
+        missedEvent = true;
+        if (bitRead(wifiStatus, ESPEASY_WIFI_CONNECTED) == 0) {
+          #ifndef BUILD_NO_DEBUG
+          addLog(LOG_LEVEL_DEBUG, F("WiFi : Force 'WiFi Connected' event"));
+          #endif
+          processedConnect = false;
+        } else {
+          #ifndef BUILD_NO_DEBUG
+          addLog(LOG_LEVEL_DEBUG, F("WiFi : Force 'WiFi Disconnected' event"));
+          #endif
+          processedDisconnect = false;
         }
       }
+      if (hasIPaddr() != bitRead(wifiStatus, ESPEASY_WIFI_GOT_IP)) {
+        // Apparently we did miss some WiFi events.
+        if (bitRead(wifiStatus, ESPEASY_WIFI_GOT_IP) == 0) {
+          #ifndef BUILD_NO_DEBUG
+          addLog(LOG_LEVEL_DEBUG, F("WiFi : Force 'WiFi Got IP' event"));
+          #endif
+          processedGotIP = false;
+          missedEvent = true;
+        } else {
+          // FIXME TD-er: What to do here, as we don't get events when loosing IP address
+        }
+      }
+      if (missedEvent && checkAndResetWiFi()) {
+        return;
+      }
     }
-  } else if (!NetworkConnected()) {
+  } else if (bitRead(wifiStatus, ESPEASY_WIFI_SERVICES_INITIALIZED) != NetworkConnected()) {
     // Somehow the WiFi has entered a limbo state.
     // FIXME TD-er: This may happen on WiFi config with AP_STA mode active.
     //    addLog(LOG_LEVEL_ERROR, F("Wifi status out sync"));
-    //    resetWiFi();
+    //    checkAndResetWiFi();
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
       String wifilog = F("WIFI : Wifi status out sync WiFi.status() = ");
       wifilog += String(WiFi.status());
-
       addLog(LOG_LEVEL_ERROR, wifilog);
     }
+    checkAndResetWiFi();
   }
 
   if (wifiStatus == ESPEASY_WIFI_DISCONNECTED) {
@@ -130,9 +140,13 @@ void handle_unprocessedWiFiEvents()
           lastWiFiStatus_log != cur_wifi_status) {
         lastDisconnectMoment_log = lastDisconnectMoment;
         lastWiFiStatus_log = cur_wifi_status;
+        station_status_t status = wifi_station_get_connect_status();
         String wifilog = F("WIFI : Disconnected: WiFi.status() = ");
-        wifilog += String(cur_wifi_status);
-
+        wifilog += ESPeasyWifiStatusToString();
+        wifilog += F(" RSSI: ");
+        wifilog += String(WiFi.RSSI());
+        wifilog += F(" status: ");
+        wifilog += String(status);
         addLog(LOG_LEVEL_DEBUG, wifilog);
       }
     }
@@ -205,17 +219,7 @@ void processDisconnect() {
 void processConnect() {
   if (processedConnect) { return; }
   //delay(100); // FIXME TD-er: See https://github.com/letscontrolit/ESPEasy/issues/1987#issuecomment-451644424
-
-  if (!WiFi.isConnected()) {
-    bitClear(wifiStatus, ESPEASY_WIFI_CONNECTED);
-    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String log = F("WIFI : Not connected ");
-      log += WiFi.status();
-      addLog(LOG_LEVEL_INFO, log);
-    }
-    if (timeOutReached(last_wifi_connect_attempt_moment + 15000)) {
-      resetWiFi();
-    }
+  if (checkAndResetWiFi()) {
     return;
   }
   processedConnect = true;
@@ -263,10 +267,10 @@ void processGotIP() {
   if (processedGotIP) {
     return;
   }
-  if (!WiFi.isConnected()) {
-    // Only process GotIP events if we are connected.
+  if (checkAndResetWiFi()) {
     return;
   }
+
   IPAddress ip = NetworkLocalIP();
 
   if (!useStaticIP()) {
@@ -344,7 +348,7 @@ void processGotIP() {
   }
   logConnectionStatus();
 
-  if (WiFi.isConnected() && hasIPaddr()) {
+  if (bitRead(wifiStatus, ESPEASY_WIFI_CONNECTED) && hasIPaddr()) {
     processedGotIP = true;
     bitSet(wifiStatus, ESPEASY_WIFI_GOT_IP);
   }
