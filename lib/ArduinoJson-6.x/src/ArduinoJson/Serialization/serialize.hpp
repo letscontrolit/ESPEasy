@@ -1,58 +1,43 @@
 // ArduinoJson - arduinojson.org
-// Copyright Benoit Blanchon 2014-2019
+// Copyright Benoit Blanchon 2014-2020
 // MIT License
 
 #pragma once
 
-#include "./DynamicStringWriter.hpp"
-#include "./StaticStringWriter.hpp"
-
-#if ARDUINOJSON_ENABLE_STD_STREAM
-#include "./StreamWriter.hpp"
-#endif
+#include <ArduinoJson/Serialization/Writer.hpp>
 
 namespace ARDUINOJSON_NAMESPACE {
 
 template <template <typename> class TSerializer, typename TSource,
-          typename TDestination>
-size_t doSerialize(const TSource &source, TDestination &destination) {
-  TSerializer<TDestination> serializer(destination);
+          typename TWriter>
+size_t doSerialize(const TSource &source, TWriter writer) {
+  TSerializer<TWriter> serializer(writer);
   source.accept(serializer);
   return serializer.bytesWritten();
 }
 
-#if ARDUINOJSON_ENABLE_STD_STREAM
-template <template <typename> class TSerializer, typename TSource>
-size_t serialize(const TSource &source, std::ostream &destination) {
-  StreamWriter writer(destination);
-  return doSerialize<TSerializer>(source, writer);
-}
-#endif
-
-#if ARDUINOJSON_ENABLE_ARDUINO_PRINT
-template <template <typename> class TSerializer, typename TSource>
-size_t serialize(const TSource &source, Print &destination) {
-  return doSerialize<TSerializer>(source, destination);
-}
-#endif
-
-template <template <typename> class TSerializer, typename TSource>
-size_t serialize(const TSource &source, char *buffer, size_t bufferSize) {
-  StaticStringWriter writer(buffer, bufferSize);
+template <template <typename> class TSerializer, typename TSource,
+          typename TDestination>
+size_t serialize(const TSource &source, TDestination &destination) {
+  Writer<TDestination> writer(destination);
   return doSerialize<TSerializer>(source, writer);
 }
 
-template <template <typename> class TSerializer, typename TSource, size_t N>
-size_t serialize(const TSource &source, char (&buffer)[N]) {
-  StaticStringWriter writer(buffer, N);
+template <template <typename> class TSerializer, typename TSource>
+size_t serialize(const TSource &source, void *buffer, size_t bufferSize) {
+  StaticStringWriter writer(reinterpret_cast<char *>(buffer), bufferSize);
   return doSerialize<TSerializer>(source, writer);
 }
 
 template <template <typename> class TSerializer, typename TSource,
-          typename TString>
-typename enable_if<IsWriteableString<TString>::value, size_t>::type serialize(
-    const TSource &source, TString &str) {
-  DynamicStringWriter<TString> writer(str);
+          typename TChar, size_t N>
+#if defined _MSC_VER && _MSC_VER < 1900
+typename enable_if<sizeof(remove_reference<TChar>::type) == 1, size_t>::type
+#else
+typename enable_if<sizeof(TChar) == 1, size_t>::type
+#endif
+serialize(const TSource &source, TChar (&buffer)[N]) {
+  StaticStringWriter writer(reinterpret_cast<char *>(buffer), N);
   return doSerialize<TSerializer>(source, writer);
 }
 
