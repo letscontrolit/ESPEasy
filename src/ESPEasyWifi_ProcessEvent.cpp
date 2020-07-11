@@ -4,11 +4,16 @@
 #include "ESPEasyWifi.h"
 #include "ESPEasyWiFi_credentials.h"
 #include "ESPEasy_fdwdecl.h"
+#include "src/DataStructs/SchedulerTimers.h"
 #include "src/Globals/ESPEasyWiFiEvent.h"
+#include "src/Globals/EventQueue.h"
 #include "src/Globals/RTC.h"
 #include "src/Globals/MQTT.h"
+#include "src/Helpers/ESPEasy_Storage.h"
 #include "src/Helpers/ESPEasy_time_calc.h"
-#include "src/DataStructs/SchedulerTimers.h"
+#include "src/Helpers/StringConverter.h"
+#include "src/Helpers/Scheduler.h"
+
 
 bool unprocessedWifiEvents() {
   if (processedConnect && processedDisconnect && processedGotIP && processedDHCPTimeout)

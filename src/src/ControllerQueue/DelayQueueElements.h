@@ -28,7 +28,7 @@
 
 #ifdef USES_MQTT
 # include "../ControllerQueue/MQTT_queue_element.h"
-ControllerDelayHandlerStruct<MQTT_queue_element> MQTTDelayHandler;
+extern ControllerDelayHandlerStruct<MQTT_queue_element> MQTTDelayHandler;
 #endif // USES_MQTT
 
 
@@ -154,7 +154,7 @@ DEFINE_Cxxx_DELAY_QUEUE_MACRO(0, 18)
  */
 
 
-// When extending this, also extend in Scheduler.ino:
+// When extending this, also extend in Scheduler.cpp:
 // void process_interval_timer(unsigned long id, unsigned long lasttimer)
 
 

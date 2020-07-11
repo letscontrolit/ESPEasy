@@ -114,7 +114,7 @@ boolean readFromRTC()
 /********************************************************************************************\
    Save values to RTC memory
  \*********************************************************************************************/
-boolean saveUserVarToRTC()
+bool saveUserVarToRTC()
 {
   #if defined(ESP32)
   return false;
@@ -124,7 +124,7 @@ boolean saveUserVarToRTC()
   byte    *buffer = (byte *)&UserVar;
   size_t   size   = sizeof(UserVar);
   uint32_t sum    = calc_CRC32(buffer, size);
-  boolean  ret    = system_rtc_mem_write(RTC_BASE_USERVAR, buffer, size);
+  bool  ret    = system_rtc_mem_write(RTC_BASE_USERVAR, buffer, size);
   ret &= system_rtc_mem_write(RTC_BASE_USERVAR + (size >> 2), (byte *)&sum, 4);
   return ret;
   #endif // if defined(ESP32)

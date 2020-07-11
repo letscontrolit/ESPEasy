@@ -5,6 +5,7 @@
 #include "../DataStructs/ESPEasy_EventStruct.h"
 #include "../Globals/Protocol.h"
 #include "../Globals/Settings.h"
+#include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/ESPEasy_time_calc.h"
 #include "../../_CPlugin_Helper.h"
 #include "../../ESPEasy_fdwdecl.h"

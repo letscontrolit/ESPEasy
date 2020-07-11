@@ -6,6 +6,8 @@
 
 #include "src/Commands/Diagnostic.h"
 
+#include "src/Helpers/Hardware.h"
+
 
 #ifdef WEBSERVER_NEW_UI
 

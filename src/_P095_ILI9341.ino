@@ -420,14 +420,15 @@ boolean Plugin_095(byte function, struct EventStruct *event, String& string)
               success = false;
             }
           }
-                    
+          else {
+            success = false;
+          }                    
         }
         else
         {
           //invalid arguments
           success = false;
         }
-
 
         if(!success)
         {
@@ -438,14 +439,16 @@ boolean Plugin_095(byte function, struct EventStruct *event, String& string)
             log2 += "\"";
             addLog(LOG_LEVEL_INFO, log2);
           }
+        } 
+        else 
+        {
+            String log;
+            log.reserve(110);                           // Prevent re-allocation
+            log = F("P095-ILI9341 : WRITE = ");
+            log += tmpString;
+            SendStatus(event->Source, log);             // Reply (echo) to sender. This will print message on browser.
         }
 
-        String log;
-        log.reserve(110);                           // Prevent re-allocation
-        log = F("P095-ILI9341 : WRITE = ");
-        log += tmpString;
-        SendStatus(event->Source, log);             // Reply (echo) to sender. This will print message on browser.  
-              
         break;        
       }
   }

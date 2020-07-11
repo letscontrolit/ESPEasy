@@ -421,7 +421,7 @@ Floating point transformations:
 Other transformations:
 
 * ``p``: Password display, replacing all value characters by asterisks ``*``. If the value is "0", nothing will be displayed.
-* ``Pc``: Password display with custom character ``c``. For example P- will display value "123" as "---". If the value is "0", nothing will be displayed.
+* ``pc``: Password display with custom character ``c``. For example p- will display value "123" as "---". If the value is "0", nothing will be displayed.
 
 Justification
 ^^^^^^^^^^^^^

@@ -1,6 +1,7 @@
 #include "ESPEasy_common.h"
 #include "ESPEasy_fdwdecl.h"
 #include "ESPEasy_plugindefs.h"
+#include "src/ControllerQueue/MQTT_queue_element.h"
 #include "src/DataStructs/ControllerSettingsStruct.h"
 #include "src/DataStructs/ESPEasy_EventStruct.h"
 #include "src/Globals/CPlugins.h"
@@ -437,37 +438,6 @@ bool MQTTpublish(controllerIndex_t controller_idx, const char *topic, const char
   return success;
 }
 
-void scheduleNextMQTTdelayQueue() {
-  scheduleNextDelayQueue(TIMER_MQTT_DELAY_QUEUE, MQTTDelayHandler.getNextScheduleTime());
-}
-
-void processMQTTdelayQueue() {
-  START_TIMER;
-  MQTT_queue_element *element(MQTTDelayHandler.getNext());
-
-  if (element == NULL) { return; }
-
-  if (MQTTclient.publish(element->_topic.c_str(), element->_payload.c_str(), element->_retained)) {
-    if (connectionFailures > 0) {
-      --connectionFailures;
-    }
-    MQTTDelayHandler.markProcessed(true);
-  } else {
-    MQTTDelayHandler.markProcessed(false);
-#ifndef BUILD_NO_DEBUG
-
-    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-      String log = F("MQTT : process MQTT queue not published, ");
-      log += MQTTDelayHandler.sendQueue.size();
-      log += F(" items left in queue");
-      addLog(LOG_LEVEL_DEBUG, log);
-    }
-#endif // ifndef BUILD_NO_DEBUG
-  }
-  setIntervalTimerOverride(TIMER_MQTT, 10); // Make sure the MQTT is being processed as soon as possible.
-  scheduleNextMQTTdelayQueue();
-  STOP_TIMER(MQTT_DELAY_QUEUE);
-}
 
 /*********************************************************************************************\
 * Send status info back to channel where request came from

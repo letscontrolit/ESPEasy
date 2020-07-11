@@ -64,8 +64,6 @@ void syslog(byte logLevel, const char *message)
   {
     IPAddress broadcastIP(Settings.Syslog_IP[0], Settings.Syslog_IP[1], Settings.Syslog_IP[2], Settings.Syslog_IP[3]);
     portUDP.beginPacket(broadcastIP, 514);
-    char str[256];
-    str[0] = 0;
     byte prio = Settings.SyslogFacility * 8;
 
     if (logLevel == LOG_LEVEL_ERROR) {
@@ -81,16 +79,40 @@ void syslog(byte logLevel, const char *message)
     // An RFC3164 compliant message must be formated like :  "<PRIO>[TimeStamp ]Hostname TaskName: Message"
 
     // Using Settings.Name as the Hostname (Hostname must NOT content space)
-    snprintf_P(str, sizeof(str), PSTR("<%u>%s EspEasy: %s"), prio, Settings.Name, message);
-
-    // Using Setting.Unit to build a Hostname
-    // snprintf_P(str, sizeof(str), PSTR("<7>EspEasy_%u ESP: %s"), Settings.Unit, message);
-    #if defined(ESP8266)
-    portUDP.write(str);
-    #endif // if defined(ESP8266)
-    #if defined(ESP32)
-    portUDP.write((uint8_t *)str, strlen(str));
-    #endif // if defined(ESP32)
+    {
+      String header;
+      String hostname = Settings.Name;
+      hostname.trim();
+      hostname.replace(' ', '_');
+      header.reserve(16 + hostname.length());
+      char str[8] = {0};
+      snprintf_P(str, sizeof(str), PSTR("<%u>"), prio);
+      header = str;
+      header += hostname;
+      header += F(" EspEasy: ");
+      #ifdef ESP8266
+      portUDP.write(header.c_str(), header.length());
+      #endif
+      #ifdef ESP32
+      portUDP.write((uint8_t *)header.c_str(), header.length());
+      #endif
+    }
+    const char* c = message;
+    bool done = false;
+    while (!done) {
+      // Must use PROGMEM aware functions here to process message
+      char ch = pgm_read_byte(c++);
+      if (ch == '\0') {
+        done = true;
+      } else {
+        #ifdef ESP8266
+        portUDP.write(ch);
+        #endif
+        #ifdef ESP32
+        portUDP.write((uint8_t)ch);
+        #endif
+      }
+    }
     portUDP.endPacket();
   }
 }
@@ -819,7 +841,7 @@ bool NetworkConnected(uint32_t timeout_ms) {
   }
 
   // Apparently something needs network, perform check to see if it is ready now.
-    while (!NetworkConnected()) {
+  while (!NetworkConnected()) {
     if (timeOutReached(timer)) {
       return false;
     }

@@ -21,7 +21,7 @@ struct systemTimerStruct
   taskIndex_t TaskIndex = INVALID_TASK_INDEX;
   byte plugin = 0;
 };
-std::map<unsigned long, systemTimerStruct> systemTimers;
+
 
 
 

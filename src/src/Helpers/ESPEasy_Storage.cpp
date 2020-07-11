@@ -1,8 +1,27 @@
-#include "ESPEasyWifi.h"
-#include "src/Globals/Cache.h"
-#include "src/Globals/CRCValues.h"
-#include "src/Globals/ResetFactoryDefaultPref.h"
-#include "src/Globals/Plugins.h"
+#include "ESPEasy_Storage.h"
+
+
+#include "../../ESPEasyWifi.h"
+#include "../../ESPEasy_Log.h"
+#include "../Globals/Cache.h"
+#include "../Globals/CRCValues.h"
+#include "../Globals/ResetFactoryDefaultPref.h"
+#include "../Globals/RTC.h"
+#include "../Globals/EventQueue.h"
+#include "../Globals/ExtraTaskSettings.h"
+#include "../Globals/Plugins.h"
+#include "../Globals/SecuritySettings.h"
+
+#include "../DataStructs/TimingStats.h"
+#include "../DataStructs/StorageLayout.h"
+
+#include "../Helpers/ESPEasy_time_calc.h"
+#include "../Helpers/Hardware.h"
+#include "../Helpers/Numerical.h"
+#include "../Helpers/PeriodicalActions.h"
+#include "../Helpers/StringConverter.h"
+
+#include "ESPEasy_checks.h"
 
 #ifdef ESP32
 #include <MD5Builder.h>
@@ -460,8 +479,6 @@ byte disableNotification(byte bootFailedCount) {
   }
   return bootFailedCount;
 }
-
-#include "src/DataStructs/StorageLayout.h"
 
 
 bool getAndLogSettingsParameters(bool read, SettingsType::Enum settingsType, int index, int& offset, int& max_size) {
