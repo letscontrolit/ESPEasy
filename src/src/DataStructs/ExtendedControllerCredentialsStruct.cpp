@@ -2,6 +2,8 @@
 
 #include "../../ESPEasy_fdwdecl.h"
 
+#include "../Helpers/ESPEasy_Storage.h"
+
 #define EXT_CONTR_CRED_USER_OFFSET 0
 #define EXT_CONTR_CRED_PASS_OFFSET 1
 

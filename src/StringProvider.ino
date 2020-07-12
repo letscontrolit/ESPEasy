@@ -5,6 +5,7 @@
 #endif
 
 #include "src/Helpers/CompiletimeDefines.h"
+#include "src/Helpers/Scheduler.h"
 
 String getInternalLabel(LabelType::Enum label, char replaceSpace) {
   return to_internal_string(getLabel(label), replaceSpace);

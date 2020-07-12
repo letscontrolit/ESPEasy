@@ -1,20 +1,20 @@
 // ArduinoJson - arduinojson.org
-// Copyright Benoit Blanchon 2014-2019
+// Copyright Benoit Blanchon 2014-2020
 // MIT License
 
 #pragma once
 
-#include "../Misc/Visitable.hpp"
-#include "../Serialization/measure.hpp"
-#include "../Serialization/serialize.hpp"
-#include "TextFormatter.hpp"
+#include <ArduinoJson/Json/TextFormatter.hpp>
+#include <ArduinoJson/Misc/Visitable.hpp>
+#include <ArduinoJson/Serialization/measure.hpp>
+#include <ArduinoJson/Serialization/serialize.hpp>
 
 namespace ARDUINOJSON_NAMESPACE {
 
 template <typename TWriter>
 class JsonSerializer {
  public:
-  JsonSerializer(TWriter &writer) : _formatter(writer) {}
+  JsonSerializer(TWriter writer) : _formatter(writer) {}
 
   FORCE_INLINE void visitArray(const CollectionData &array) {
     write('[');
@@ -25,7 +25,8 @@ class JsonSerializer {
       slot->data()->accept(*this);
 
       slot = slot->next();
-      if (slot == 0) break;
+      if (slot == 0)
+        break;
 
       write(',');
     }
@@ -44,7 +45,8 @@ class JsonSerializer {
       slot->data()->accept(*this);
 
       slot = slot->next();
-      if (slot == 0) break;
+      if (slot == 0)
+        break;
 
       write(',');
     }
@@ -103,7 +105,7 @@ size_t serializeJson(const TSource &source, TDestination &destination) {
 }
 
 template <typename TSource>
-size_t serializeJson(const TSource &source, char *buffer, size_t bufferSize) {
+size_t serializeJson(const TSource &source, void *buffer, size_t bufferSize) {
   return serialize<JsonSerializer>(source, buffer, bufferSize);
 }
 

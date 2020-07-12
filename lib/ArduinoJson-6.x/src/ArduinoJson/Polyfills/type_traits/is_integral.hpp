@@ -1,10 +1,10 @@
 // ArduinoJson - arduinojson.org
-// Copyright Benoit Blanchon 2014-2019
+// Copyright Benoit Blanchon 2014-2020
 // MIT License
 
 #pragma once
 
-#include "../../Configuration.hpp"
+#include <ArduinoJson/Configuration.hpp>
 #include "is_same.hpp"
 
 namespace ARDUINOJSON_NAMESPACE {
@@ -25,9 +25,7 @@ struct is_integral {
       is_same<T, signed __int64>::value ||
       is_same<T, unsigned __int64>::value ||
 #endif
-      is_same<T, char>::value;
-
-  // CAUTION: differs from std::is_integral as it doesn't include bool
+      is_same<T, char>::value || is_same<T, bool>::value;
 };
 
 template <typename T>
