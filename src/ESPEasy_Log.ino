@@ -48,18 +48,6 @@ String getLogLevelDisplayStringFromIndex(byte index, int& logLevel) {
   return getLogLevelDisplayString(logLevel);
 }
 
-void addToLog(byte loglevel, const String& string)
-{
-  addToLog(loglevel, string.c_str());
-}
-
-void addToLog(byte logLevel, const __FlashStringHelper* flashString)
-{
-    checkRAM(F("addToLog"));
-    String s(flashString);
-    addToLog(logLevel, s.c_str());
-}
-
 void disableSerialLog() {
   log_to_serial_disabled = true;
   setLogLevelFor(LOG_TO_SERIAL, 0);
@@ -161,8 +149,14 @@ bool loglevelActive(byte logLevel, byte logLevelSettings) {
   return (logLevel <= logLevelSettings);
 }
 
+void addToLog(byte loglevel, const String& string)
+{
+  addToLog(loglevel, string.c_str());
+}
+
 void addToLog(byte logLevel, const char *line)
 {
+  // Please note all functions called from here handling line must be PROGMEM aware.
   if (loglevelActiveFor(LOG_TO_SERIAL, logLevel)) {
     addToSerialBuffer(String(millis()).c_str());
     addToSerialBuffer(" : ");
@@ -185,8 +179,20 @@ void addToLog(byte logLevel, const char *line)
 #ifdef FEATURE_SD
   if (loglevelActiveFor(LOG_TO_SDCARD, logLevel)) {
     File logFile = SD.open("log.dat", FILE_WRITE);
-    if (logFile)
-      logFile.println(line);
+    if (logFile) {
+      const char* c = line;
+      bool done = false;
+      while (!done) {
+        // Must use PROGMEM aware functions here to process line
+        char ch = pgm_read_byte(c++);
+        if (ch == '\0') {
+          done = true;
+        } else {
+          logFile.print(ch);
+        }
+      }
+      logFile.println();
+    }
     logFile.close();
   }
 #endif
