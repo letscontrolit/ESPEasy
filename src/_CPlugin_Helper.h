@@ -5,6 +5,7 @@
 #include "src/Globals/CPlugins.h"
 #include "src/Helpers/Numerical.h"
 #include "src/Helpers/StringConverter.h"
+#include "src/ControllerQueue/DelayQueueElements.h"
 
 struct ControllerSettingsStruct;
 class WiFiUDP;
@@ -18,8 +19,6 @@ bool safeReadStringUntil(Stream     & input,
                          char         terminator,
                          unsigned int maxSize = 1024,
                          unsigned int timeout = 1000);
-
-String get_formatted_Controller_number(cpluginID_t cpluginID);
 
 String get_auth_header(const String& user, const String& pass);
 

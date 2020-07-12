@@ -1,22 +1,26 @@
 // ArduinoJson - arduinojson.org
-// Copyright Benoit Blanchon 2014-2019
+// Copyright Benoit Blanchon 2014-2020
 // MIT License
 
 #pragma once
 
-#include "BasicJsonDocument.hpp"
+#include <ArduinoJson/Document/BasicJsonDocument.hpp>
 
 #include <stdlib.h>  // malloc, free
 
 namespace ARDUINOJSON_NAMESPACE {
 
 struct DefaultAllocator {
-  void* allocate(size_t n) {
-    return malloc(n);
+  void* allocate(size_t size) {
+    return malloc(size);
   }
 
-  void deallocate(void* p) {
-    free(p);
+  void deallocate(void* ptr) {
+    free(ptr);
+  }
+
+  void* reallocate(void* ptr, size_t new_size) {
+    return realloc(ptr, new_size);
   }
 };
 
