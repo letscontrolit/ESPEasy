@@ -136,7 +136,7 @@ void addSubmitButton(const String& value, const String& name, const String& clas
     addHtml(F("' name='"));
     addHtml(name);
   }
-  addHtml(F("'><div id='toastmessage'></div><script type='text/javascript'>toasting();</script>"));
+  addHtml(F("' onclick='toasting()'/><div id='toastmessage'></div>"));
 }
 
 // add copy to clipboard button

@@ -1,14 +1,15 @@
 // ArduinoJson - arduinojson.org
-// Copyright Benoit Blanchon 2014-2019
+// Copyright Benoit Blanchon 2014-2020
 // MIT License
 
 #pragma once
 
 #include <stddef.h>  // for size_t
 #include <stdint.h>
-#include "../Configuration.hpp"
-#include "../Polyfills/alias_cast.hpp"
-#include "../Polyfills/math.hpp"
+
+#include <ArduinoJson/Configuration.hpp>
+#include <ArduinoJson/Polyfills/alias_cast.hpp>
+#include <ArduinoJson/Polyfills/math.hpp>
 
 namespace ARDUINOJSON_NAMESPACE {
 
@@ -29,13 +30,15 @@ struct FloatTraits<T, 8 /*64bits*/> {
   static T make_float(T m, TExponent e) {
     if (e > 0) {
       for (uint8_t index = 0; e != 0; index++) {
-        if (e & 1) m *= positiveBinaryPowerOfTen(index);
+        if (e & 1)
+          m *= positiveBinaryPowerOfTen(index);
         e >>= 1;
       }
     } else {
       e = TExponent(-e);
       for (uint8_t index = 0; e != 0; index++) {
-        if (e & 1) m *= negativeBinaryPowerOfTen(index);
+        if (e & 1)
+          m *= negativeBinaryPowerOfTen(index);
         e >>= 1;
       }
     }
@@ -125,13 +128,15 @@ struct FloatTraits<T, 4 /*32bits*/> {
   static T make_float(T m, TExponent e) {
     if (e > 0) {
       for (uint8_t index = 0; e != 0; index++) {
-        if (e & 1) m *= positiveBinaryPowerOfTen(index);
+        if (e & 1)
+          m *= positiveBinaryPowerOfTen(index);
         e >>= 1;
       }
     } else {
       e = -e;
       for (uint8_t index = 0; e != 0; index++) {
-        if (e & 1) m *= negativeBinaryPowerOfTen(index);
+        if (e & 1)
+          m *= negativeBinaryPowerOfTen(index);
         e >>= 1;
       }
     }

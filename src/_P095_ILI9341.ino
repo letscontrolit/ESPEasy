@@ -447,7 +447,7 @@ boolean Plugin_095(byte function, struct EventStruct *event, String& string)
           }
           else {
             success = false;
-          }
+          }                 
         }
         else
         {
@@ -473,7 +473,6 @@ boolean Plugin_095(byte function, struct EventStruct *event, String& string)
             log += tmpString;
             SendStatus(event->Source, log);             // Reply (echo) to sender. This will print message on browser.
         }
-
         break;
       }
   }

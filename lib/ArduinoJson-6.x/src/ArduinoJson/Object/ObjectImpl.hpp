@@ -1,11 +1,11 @@
 // ArduinoJson - arduinojson.org
-// Copyright Benoit Blanchon 2014-2019
+// Copyright Benoit Blanchon 2014-2020
 // MIT License
 
 #pragma once
 
-#include "../Array/ArrayRef.hpp"
-#include "ObjectRef.hpp"
+#include <ArduinoJson/Array/ArrayRef.hpp>
+#include <ArduinoJson/Object/ObjectRef.hpp>
 
 namespace ARDUINOJSON_NAMESPACE {
 
@@ -49,4 +49,21 @@ inline typename enable_if<IsString<TChar*>::value, bool>::type
 ObjectShortcuts<TObject>::containsKey(TChar* key) const {
   return !impl()->getMember(key).isUndefined();
 }
+
+template <typename TObject>
+template <typename TString>
+inline typename enable_if<IsString<TString*>::value,
+                          MemberProxy<TObject, TString*> >::type
+    ObjectShortcuts<TObject>::operator[](TString* key) const {
+  return MemberProxy<TObject, TString*>(*impl(), key);
+}
+
+template <typename TObject>
+template <typename TString>
+inline typename enable_if<IsString<TString>::value,
+                          MemberProxy<TObject, TString> >::type
+    ObjectShortcuts<TObject>::operator[](const TString& key) const {
+  return MemberProxy<TObject, TString>(*impl(), key);
+}
+
 }  // namespace ARDUINOJSON_NAMESPACE
