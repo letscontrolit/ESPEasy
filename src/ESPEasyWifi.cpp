@@ -82,73 +82,67 @@ bool WiFiConnected() {
 
   if (unprocessedWifiEvents()) { return false; }
 
-  if ((timerAPstart != 0) && timeOutReached(timerAPstart)) {
-    // Timer reached, so enable AP mode.
-    setAP(true);
-    timerAPstart = 0;
-  }
-
   bool wifi_isconnected = false;
   #ifdef ESP8266
   // Perform check on SDK function, see: https://github.com/esp8266/Arduino/issues/7432
   station_status_t status = wifi_station_get_connect_status();
-    switch(status) {
-      case STATION_GOT_IP:
-        wifi_isconnected = true;
-        break;
-      case STATION_NO_AP_FOUND:
-      case STATION_CONNECT_FAIL:
-      case STATION_WRONG_PASSWORD:
-        wifi_isconnected = false;
-        break;
-      case STATION_IDLE:
-        // FIXME TD-er: Not sure what to do here
-        wifi_isconnected = false;
-        break;
-      case STATION_CONNECTING:
-        wifi_isconnected = bitRead(wifiStatus, ESPEASY_WIFI_SERVICES_INITIALIZED);
-        break;
+  switch(status) {
+    case STATION_GOT_IP:
+      wifi_isconnected = true;
+      break;
+    case STATION_NO_AP_FOUND:
+    case STATION_CONNECT_FAIL:
+    case STATION_WRONG_PASSWORD:
+      wifi_isconnected = false;
+      break;
+    case STATION_IDLE:
+    case STATION_CONNECTING:
+      wifi_isconnected = bitRead(wifiStatus, ESPEASY_WIFI_SERVICES_INITIALIZED);
+      break;
 
-      default:
-        wifi_isconnected = false;
-        break;
+    default:
+      wifi_isconnected = false;
+      break;
   }
 
 
   #endif
   #ifdef ESP32
-  wifi_isconnected = WiFi.isConnected();
+  if (WiFi.isConnected()) {
+    wifi_isconnected = true;
+  }
+
   #endif
 
 
   // For ESP82xx, do not rely on WiFi.status() with event based wifi.
   const bool validWiFi = (WiFi.RSSI() < 0) && wifi_isconnected && hasIPaddr();
-  // FIXME TD-er: Not sure if this is needed as we also set it when processing WiFi events.
-/*
-  if (!(bitRead(wifiStatus, ESPEASY_WIFI_SERVICES_INITIALIZED))) {
-    if (validWiFi) {
-      // Set internal wifiStatus and reset timer to disable AP mode
-      markWiFi_services_initialized();
-    }
-  }
-*/
-  if (bitRead(wifiStatus, ESPEASY_WIFI_SERVICES_INITIALIZED)) {
-    if (validWiFi) {
-      // Connected, thus disable any timer to start AP mode. (except when in WiFi setup mode)
-      if (!wifiSetupConnect) {
-        timerAPstart = 0;
-      }
-      STOP_TIMER(WIFI_ISCONNECTED_STATS);
-      // Only return true after some time since it got connected.
-      return timePassedSince(lastConnectMoment) > 100;
-    } else {
-      // else wifiStatus is no longer in sync.
-      checkAndResetWiFi();
-    }
+  if (validWiFi != bitRead(wifiStatus, ESPEASY_WIFI_SERVICES_INITIALIZED)) {
+    // else wifiStatus is no longer in sync.
+    checkAndResetWiFi();
   }
 
+  if (validWiFi) {
+    // Connected, thus disable any timer to start AP mode. (except when in WiFi setup mode)
+    if (!wifiSetupConnect) {
+      timerAPstart = 0;
+    }
+    STOP_TIMER(WIFI_ISCONNECTED_STATS);
+    // Only return true after some time since it got connected.
+    return timePassedSince(lastConnectMoment) > 100;
+  }
+
+  if ((timerAPstart != 0) && timeOutReached(timerAPstart)) {
+    // Timer reached, so enable AP mode.
+    if (!WifiIsAP(WiFi.getMode())) {
+      setAP(true);
+    }
+    timerAPstart = 0;
+  }
+
+
   // When made this far in the code, we apparently do not have valid WiFi connection.
-  if (timerAPstart == 0) {
+  if (timerAPstart == 0 && !WifiIsAP(WiFi.getMode())) {
     // First run we do not have WiFi connection any more, set timer to start AP mode
     // Only allow the automatic AP mode in the first N minutes after boot.
     if ((wdcounter / 2) < WIFI_ALLOW_AP_AFTERBOOT_PERIOD) {
@@ -170,7 +164,7 @@ bool WiFiConnected() {
 }
 
 void WiFiConnectRelaxed() {
-  if (!wifiConnectAttemptNeeded) {
+  if (!wifiConnectAttemptNeeded || wifiConnectInProgress) {
     return; // already connected or connect attempt in progress need to disconnect first
   }
   if (!processedScanDone) {
@@ -210,7 +204,7 @@ void WiFiConnectRelaxed() {
     String log = F("WIFI : Connecting ");
     log += ssid;
     log += F(" attempt #");
-    log += wifi_connect_attempt;
+    log += wifi_connect_attempt + 1;
     addLog(LOG_LEVEL_INFO, log);
   }
   last_wifi_connect_attempt_moment = millis();
@@ -276,9 +270,9 @@ bool checkAndResetWiFi() {
     case STATION_NO_AP_FOUND:
     case STATION_CONNECT_FAIL:
     case STATION_WRONG_PASSWORD:
-    case STATION_IDLE:
       // Reason to reset WiFi
       break;
+    case STATION_IDLE:
     case STATION_CONNECTING:
       if (!timeOutReached(last_wifi_connect_attempt_moment + 15000)) {
         return false;
@@ -290,14 +284,16 @@ bool checkAndResetWiFi() {
   log += F(" RSSI: ");
   log += String(WiFi.RSSI());
   log += F(" status: ");
-  log += String(status);
+  log += SDKwifiStatusToString(status);
   // Call for reset first, to make sure a syslog call will not try to send.
   resetWiFi();
   addLog(LOG_LEVEL_INFO, log);
 
   #endif
   #ifdef ESP32
-  if (!WiFi.isConnected()) {
+  if (WiFi.isConnected()) {
+    return false;
+  } else {
     if (!timeOutReached(last_wifi_connect_attempt_moment + 15000)) {
       return false;
     }
@@ -359,12 +355,13 @@ void initWiFi()
   WiFi.setAutoReconnect(true);
   // The WiFi.disconnect() ensures that the WiFi is working correctly. If this is not done before receiving WiFi connections,
   // those WiFi connections will take a long time to make or sometimes will not work at all.
-  WiFi.disconnect();
+  WiFi.disconnect(true);
   setWifiMode(WIFI_OFF);
 
 #if defined(ESP32)
   WiFi.onEvent(WiFiEvent);
-#else
+#endif
+#ifdef ESP8266
   // WiFi event handlers
   stationConnectedHandler = WiFi.onStationModeConnected(onConnected);
 	stationDisconnectedHandler = WiFi.onStationModeDisconnected(onDisconnect);
@@ -793,6 +790,7 @@ String ArduinoWifiStatusToString(uint8_t arduino_corelib_wifistatus) {
   String log;
 
   switch (arduino_corelib_wifistatus) {
+    case WL_NO_SHIELD:       log += F("WL_NO_SHIELD"); break;
     case WL_IDLE_STATUS:     log += F("WL_IDLE_STATUS"); break;
     case WL_NO_SSID_AVAIL:   log += F("WL_NO_SSID_AVAIL"); break;
     case WL_SCAN_COMPLETED:  log += F("WL_SCAN_COMPLETED"); break;
@@ -824,7 +822,7 @@ String ESPeasyWifiStatusToString() {
 }
 
 void logConnectionStatus() {
-  #ifndef ESP32
+  #ifdef esp8266
   const uint8_t arduino_corelib_wifistatus = WiFi.status();
   const uint8_t sdk_wifistatus             = wifi_station_get_connect_status();
 
@@ -837,7 +835,7 @@ void logConnectionStatus() {
       addLog(LOG_LEVEL_ERROR, log);
     }
   }
-  #endif // ifndef ESP32
+  #endif
 #ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {

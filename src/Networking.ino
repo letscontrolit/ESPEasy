@@ -780,7 +780,7 @@ void SSDP_update() {
 // ********************************************************************************
 bool getSubnetRange(IPAddress& low, IPAddress& high)
 {
-  if (wifiStatus < ESPEASY_WIFI_GOT_IP) {
+  if (!bitRead(wifiStatus, ESPEASY_WIFI_GOT_IP)) {
     return false;
   }
   
@@ -810,6 +810,8 @@ bool getSubnetRange(IPAddress& low, IPAddress& high)
 
 
 bool hasIPaddr() {
+  if (useStaticIP()) return true;
+  
 #ifdef CORE_POST_2_5_0
   bool configured = false;
 
