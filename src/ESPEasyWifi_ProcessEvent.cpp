@@ -91,13 +91,18 @@ void handle_unprocessedWiFiEvents()
           lastWiFiStatus_log != cur_wifi_status) {
         lastDisconnectMoment_log = lastDisconnectMoment;
         lastWiFiStatus_log = cur_wifi_status;
-        station_status_t status = wifi_station_get_connect_status();
         String wifilog = F("WIFI : Disconnected: WiFi.status() = ");
         wifilog += ESPeasyWifiStatusToString();
         wifilog += F(" RSSI: ");
         wifilog += String(WiFi.RSSI());
         wifilog += F(" status: ");
+        #ifdef ESP8266
+        station_status_t status = wifi_station_get_connect_status();
         wifilog += SDKwifiStatusToString(status);
+        #endif
+        #ifdef ESP32
+        wifilog += ArduinoWifiStatusToString(WiFi.status());
+        #endif
         addLog(LOG_LEVEL_DEBUG, wifilog);
       }
     }
