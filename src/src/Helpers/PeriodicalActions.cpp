@@ -185,11 +185,11 @@ void runEach30Seconds()
       log += getValue(LabelType::ETH_SPEED_STATE);
     } else {
       log += F(" WiFiStatus ");
-      log += WiFi.status();
+      log += ArduinoWifiStatusToString(WiFi.status());
     }
     #else
     log += F(" WiFiStatus ");
-    log += WiFi.status();
+    log += ArduinoWifiStatusToString(WiFi.status());
     #endif
 //    log += F(" ListenInterval ");
 //    log += WiFi.getListenInterval();
