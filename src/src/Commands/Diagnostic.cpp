@@ -92,7 +92,6 @@ String Command_MemInfo_detail(struct EventStruct *event, const char *Line)
 {
 #ifndef BUILD_MINIMAL_OTA
   showSettingsFileLayout = true;
-#endif // ifndef BUILD_MINIMAL_OTA
   Command_MemInfo(event, Line);
 
   for (int st = 0; st < SettingsType::SettingsType_MAX; ++st) {
@@ -119,6 +118,9 @@ String Command_MemInfo_detail(struct EventStruct *event, const char *Line)
     }
   }
   return return_see_serial(event);
+  #else
+  return return_command_failed();
+  #endif // ifndef BUILD_MINIMAL_OTA
 }
 
 String Command_Background(struct EventStruct *event, const char *Line)
@@ -162,7 +164,7 @@ String Command_JSONPortStatus(struct EventStruct *event, const char *Line)
 }
 
 void createLogPortStatus(std::map<uint32_t, portStatusStruct>::iterator it)
-{
+{  
   String log = F("PortStatus detail: ");
 
   log += F("Port=");
