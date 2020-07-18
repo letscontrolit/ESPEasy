@@ -5,6 +5,10 @@
 
 unsigned long connectionFailures = 0;
 
+#ifdef ESP32
+WiFiEventId_t  wm_event_id;
+#endif
+
 #ifdef ESP8266
 WiFiEventHandler stationConnectedHandler;
 WiFiEventHandler stationDisconnectedHandler;

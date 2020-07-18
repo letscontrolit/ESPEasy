@@ -315,7 +315,6 @@ void resetWiFi() {
     // Don't reset WiFi too often
     return;
   }
-  addLog(LOG_LEVEL_INFO, String(F("Reset WiFi.")));
   lastDisconnectMoment = millis();
   lastWiFiResetMoment = millis();
   wifiStatus            = ESPEASY_WIFI_DISCONNECTED;
@@ -335,6 +334,9 @@ void resetWiFi() {
   processedScanDone         = true;
   wifiConnectAttemptNeeded  = true;
   WifiDisconnect();
+
+  // Send this log only after WifiDisconnect() or else sending to syslog may cause issues
+  addLog(LOG_LEVEL_INFO, String(F("Reset WiFi.")));
 
   //  setWifiMode(WIFI_OFF);
 
@@ -359,7 +361,7 @@ void initWiFi()
   setWifiMode(WIFI_OFF);
 
 #if defined(ESP32)
-  WiFi.onEvent(WiFiEvent);
+  wm_event_id = WiFi.onEvent(WiFiEvent);
 #endif
 #ifdef ESP8266
   // WiFi event handlers
@@ -379,6 +381,7 @@ void WifiDisconnect()
 {
   #if defined(ESP32)
   WiFi.disconnect();
+  WiFi.removeEvent(wm_event_id);
   #else // if defined(ESP32)
   ETS_UART_INTR_DISABLE();
   wifi_station_disconnect();

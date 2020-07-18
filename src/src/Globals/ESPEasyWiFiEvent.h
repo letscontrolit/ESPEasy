@@ -18,6 +18,8 @@ extern unsigned long connectionFailures;
 
 #ifdef ESP32
 # include <esp_event.h>
+# include <WiFiGeneric.h>
+# include <WiFiType.h>
 
 
 enum WiFiDisconnectReason
@@ -55,6 +57,7 @@ enum WiFiDisconnectReason
 
 void WiFiEvent(system_event_id_t   event,
                system_event_info_t info);
+extern WiFiEventId_t  wm_event_id;
 #endif // ifdef ESP32
 
 #ifdef ESP8266

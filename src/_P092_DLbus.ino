@@ -420,7 +420,7 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_ONCE_A_SECOND:
       {
-        if (!WiFiConnected()) {
+        if (!NetworkConnected()) {
           return false;
         }
         if (P092_init == false) {
@@ -458,7 +458,7 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_READ:
       {
         addLog(LOG_LEVEL_ERROR, F("PLUGIN_092_READ"));
-        if (!WiFiConnected()) {
+        if (!NetworkConnected()) {
           // too busy for DLbus while wifi connect is running
           addLog(LOG_LEVEL_ERROR, F("## P092_read: Error DL-Bus: WiFi not connected!"));
           return false;

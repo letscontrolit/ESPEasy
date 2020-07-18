@@ -447,14 +447,14 @@ void markWiFi_services_initialized() {
   // Check to see if the WiFi status may be out of sync.
   bool missedEvent = false;
   if (WiFi.isConnected() != bitRead(wifiStatus, ESPEASY_WIFI_SERVICES_INITIALIZED)) {
-    // Apparently we did miss some WiFi events.
-    missedEvent = true;
+    // Apparently we may have missed some WiFi events.
     if (WiFi.isConnected()) {
       if (bitRead(wifiStatus, ESPEASY_WIFI_CONNECTED) == 0) {
         #ifndef BUILD_NO_DEBUG
         addLog(LOG_LEVEL_DEBUG, F("WiFi : Force 'WiFi Connected' event"));
         #endif
         processedConnect = false;
+        missedEvent = true;
       }
     } else {
       if (bitRead(wifiStatus, ESPEASY_WIFI_CONNECTED)) {
@@ -462,6 +462,7 @@ void markWiFi_services_initialized() {
         addLog(LOG_LEVEL_DEBUG, F("WiFi : Force 'WiFi Disconnected' event"));
         #endif
         processedDisconnect = false;
+        missedEvent = true;
       }
     }
   }
@@ -479,7 +480,11 @@ void markWiFi_services_initialized() {
     }
   }
   if (missedEvent) {
-    addLog(LOG_LEVEL_DEBUG, F("WiFi : Missed WiFi event"));
+    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+      String log = F("WiFi : Missed WiFi event. Status: ");
+      log += ESPeasyWifiStatusToString();
+      addLog(LOG_LEVEL_DEBUG, log);
+    }
     if (checkAndResetWiFi()) {
       return;
     }
