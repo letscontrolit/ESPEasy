@@ -1,14 +1,14 @@
 // ArduinoJson - arduinojson.org
-// Copyright Benoit Blanchon 2014-2019
+// Copyright Benoit Blanchon 2014-2020
 // MIT License
 
 #pragma once
 
-#include "../Configuration.hpp"
-#include "../Numbers/convertNumber.hpp"
-#include "../Numbers/parseFloat.hpp"
-#include "../Numbers/parseInteger.hpp"
-#include "VariantRef.hpp"
+#include <ArduinoJson/Configuration.hpp>
+#include <ArduinoJson/Numbers/convertNumber.hpp>
+#include <ArduinoJson/Numbers/parseFloat.hpp>
+#include <ArduinoJson/Numbers/parseInteger.hpp>
+#include <ArduinoJson/Variant/VariantRef.hpp>
 
 #include <string.h>  // for strcmp
 
@@ -40,11 +40,10 @@ inline bool VariantData::asBoolean() const {
       return _content.asInteger != 0;
     case VALUE_IS_FLOAT:
       return _content.asFloat != 0;
-    case VALUE_IS_LINKED_STRING:
-    case VALUE_IS_OWNED_STRING:
-      return strcmp("true", _content.asString) == 0;
-    default:
+    case VALUE_IS_NULL:
       return false;
+    default:
+      return true;
   }
 }
 
@@ -85,18 +84,6 @@ typename enable_if<IsVisitable<TVariant>::value, bool>::type VariantRef::set(
 }
 
 template <typename T>
-inline typename enable_if<is_same<T, ArrayRef>::value, T>::type VariantRef::as()
-    const {
-  return ArrayRef(_pool, _data != 0 ? _data->asArray() : 0);
-}
-
-template <typename T>
-inline typename enable_if<is_same<T, ObjectRef>::value, T>::type
-VariantRef::as() const {
-  return ObjectRef(_pool, variantAsObject(_data));
-}
-
-template <typename T>
 inline typename enable_if<is_same<T, ArrayRef>::value, ArrayRef>::type
 VariantRef::to() const {
   return ArrayRef(_pool, variantToArray(_data));
@@ -115,16 +102,20 @@ VariantRef::to() const {
   return *this;
 }
 
-inline VariantConstRef VariantConstRef::operator[](size_t index) const {
+inline VariantConstRef VariantConstRef::getElement(size_t index) const {
   return ArrayConstRef(_data != 0 ? _data->asArray() : 0)[index];
 }
 
 inline VariantRef VariantRef::addElement() const {
-  return VariantRef(_pool, variantAdd(_data, _pool));
+  return VariantRef(_pool, variantAddElement(_data, _pool));
 }
 
 inline VariantRef VariantRef::getElement(size_t index) const {
   return VariantRef(_pool, _data != 0 ? _data->getElement(index) : 0);
+}
+
+inline VariantRef VariantRef::getOrAddElement(size_t index) const {
+  return VariantRef(_pool, variantGetOrAddElement(_data, index, _pool));
 }
 
 template <typename TChar>
@@ -140,11 +131,11 @@ VariantRef::getMember(const TString &key) const {
 
 template <typename TChar>
 inline VariantRef VariantRef::getOrAddMember(TChar *key) const {
-  return VariantRef(_pool, variantGetOrCreate(_data, key, _pool));
+  return VariantRef(_pool, variantGetOrAddMember(_data, key, _pool));
 }
 
 template <typename TString>
 inline VariantRef VariantRef::getOrAddMember(const TString &key) const {
-  return VariantRef(_pool, variantGetOrCreate(_data, key, _pool));
+  return VariantRef(_pool, variantGetOrAddMember(_data, key, _pool));
 }
 }  // namespace ARDUINOJSON_NAMESPACE
