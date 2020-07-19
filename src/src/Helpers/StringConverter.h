@@ -4,6 +4,7 @@
 #include <Arduino.h>
 
 #include "../Globals/Plugins.h"
+#include "../Globals/CPlugins.h"
 
 #include "Convert.h"
 
@@ -101,6 +102,9 @@ String formatUserVarNoCheck(struct EventStruct *event,
 String formatUserVar(struct EventStruct *event,
                      byte                rel_index,
                      bool              & isvalid);
+
+
+String get_formatted_Controller_number(cpluginID_t cpluginID);
 
 /*********************************************************************************************\
    Wrap a string with given pre- and postfix string.
@@ -228,5 +232,6 @@ bool HasArgv(const char *string, unsigned int argc);
 bool GetArgv(const char *string, String& argvString, unsigned int argc);
 
 bool GetArgvBeginEnd(const char *string, const unsigned int argc, int& pos_begin, int& pos_end);
+
 
 #endif // HELPERS_STRINGCONVERTER_H
