@@ -137,6 +137,7 @@ void handle_unprocessedWiFiEvents()
       }
     }
   }
+  updateUDPport();
 }
 
 // ********************************************************************************
@@ -489,12 +490,12 @@ void markWiFi_services_initialized() {
       return;
     }
   }
-
-  addLog(LOG_LEVEL_DEBUG, F("WiFi : WiFi services initialized"));
-  bitSet(wifiStatus, ESPEASY_WIFI_SERVICES_INITIALIZED);
-  wifiConnectInProgress = false;
-  
-  processedDHCPTimeout  = true;  // FIXME TD-er:  Is this ever happening?
+  processedDHCPTimeout  = true;  // FIXME TD-er:  Find out when this happens  (happens on ESP32 sometimes)
+  if (!unprocessedWifiEvents()) {
+    addLog(LOG_LEVEL_DEBUG, F("WiFi : WiFi services initialized"));
+    bitSet(wifiStatus, ESPEASY_WIFI_SERVICES_INITIALIZED);
+    wifiConnectInProgress = false;
+  }
 }
 
 #ifdef HAS_ETHERNET

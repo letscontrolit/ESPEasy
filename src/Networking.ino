@@ -121,6 +121,43 @@ void syslog(byte logLevel, const char *message)
 }
 
 /*********************************************************************************************\
+   Update UDP port (ESPEasy propiertary protocol)
+\*********************************************************************************************/
+void updateUDPport()
+{
+  static uint16_t lastUsedUDPPort = 0;
+
+  if (Settings.UDPPort == lastUsedUDPPort) {
+    return;
+  }
+  if (lastUsedUDPPort != 0) {
+    portUDP.stop();
+    lastUsedUDPPort = 0;
+  }
+  if (!NetworkConnected()) {
+    return;
+  }
+  if (Settings.UDPPort != 0) {
+    if (portUDP.begin(Settings.UDPPort) == 0) {
+      if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+        String log = F("UDP : Cannot bind to ESPEasy p2p UDP port ");
+        log += String(Settings.UDPPort);
+        addLog(LOG_LEVEL_ERROR, log);
+      }
+    } else {
+      lastUsedUDPPort = Settings.UDPPort;
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        String log = F("UDP : Start listening on port ");
+        log += String(Settings.UDPPort);
+        addLog(LOG_LEVEL_INFO, log);
+      }
+    }
+  }
+}
+
+
+
+/*********************************************************************************************\
    Check UDP messages (ESPEasy propiertary protocol)
 \*********************************************************************************************/
 boolean runningUPDCheck = false;

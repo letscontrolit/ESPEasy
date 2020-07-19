@@ -122,6 +122,7 @@ void WiFiEvent(system_event_id_t event, system_event_info_t info) {
       processEthernetConnected();
       break;
     case SYSTEM_EVENT_ETH_GOT_IP:
+      if (loglevelActiveFor(LOG_LEVEL_INFO))
       {
         String log = F("ETH MAC: ");
         log += NetworkMacAddress();

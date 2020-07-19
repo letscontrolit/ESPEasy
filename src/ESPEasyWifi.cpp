@@ -116,10 +116,13 @@ bool WiFiConnected() {
 
 
   // For ESP82xx, do not rely on WiFi.status() with event based wifi.
-  const bool validWiFi = (WiFi.RSSI() < 0) && wifi_isconnected && hasIPaddr();
+  bool validWiFi = (WiFi.RSSI() < 0) && wifi_isconnected && hasIPaddr();
   if (validWiFi != bitRead(wifiStatus, ESPEASY_WIFI_SERVICES_INITIALIZED)) {
     // else wifiStatus is no longer in sync.
-    checkAndResetWiFi();
+    if (checkAndResetWiFi()) {
+      // Wifi has been reset, so no longer valid WiFi
+      validWiFi = false;
+    }
   }
 
   if (validWiFi) {
