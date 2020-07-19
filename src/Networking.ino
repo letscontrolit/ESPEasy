@@ -97,12 +97,22 @@ void syslog(byte logLevel, const char *message)
       portUDP.write((uint8_t *)header.c_str(), header.length());
       #endif
     }
-    #ifdef ESP8266
-    portUDP.write(message, strlen(message));
-    #endif
-    #ifdef ESP32
-    portUDP.write((uint8_t *)message, strlen(message));
-    #endif
+    const char* c = message;
+    bool done = false;
+    while (!done) {
+      // Must use PROGMEM aware functions here to process message
+      char ch = pgm_read_byte(c++);
+      if (ch == '\0') {
+        done = true;
+      } else {
+        #ifdef ESP8266
+        portUDP.write(ch);
+        #endif
+        #ifdef ESP32
+        portUDP.write((uint8_t)ch);
+        #endif
+      }
+    }
     portUDP.endPacket();
   }
 }
@@ -831,7 +841,7 @@ bool NetworkConnected(uint32_t timeout_ms) {
   }
 
   // Apparently something needs network, perform check to see if it is ready now.
-    while (!NetworkConnected()) {
+  while (!NetworkConnected()) {
     if (timeOutReached(timer)) {
       return false;
     }

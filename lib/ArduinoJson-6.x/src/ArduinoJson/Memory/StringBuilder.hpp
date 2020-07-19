@@ -1,10 +1,10 @@
 // ArduinoJson - arduinojson.org
-// Copyright Benoit Blanchon 2014-2019
+// Copyright Benoit Blanchon 2014-2020
 // MIT License
 
 #pragma once
 
-#include "MemoryPool.hpp"
+#include <ArduinoJson/Memory/MemoryPool.hpp>
 
 namespace ARDUINOJSON_NAMESPACE {
 
@@ -23,7 +23,8 @@ class StringBuilder {
   }
 
   void append(char c) {
-    if (!_slot.value) return;
+    if (!_slot.value)
+      return;
 
     if (_size >= _slot.size) {
       _slot.value = 0;

@@ -13,6 +13,7 @@
 #include "../Globals/SecuritySettings.h"
 
 #include "../DataStructs/TimingStats.h"
+#include "../DataStructs/StorageLayout.h"
 
 #include "../Helpers/ESPEasy_time_calc.h"
 #include "../Helpers/Hardware.h"
@@ -478,8 +479,6 @@ byte disableNotification(byte bootFailedCount) {
   }
   return bootFailedCount;
 }
-
-#include "src/DataStructs/StorageLayout.h"
 
 
 bool getAndLogSettingsParameters(bool read, SettingsType::Enum settingsType, int index, int& offset, int& max_size) {
