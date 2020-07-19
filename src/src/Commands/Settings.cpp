@@ -5,6 +5,9 @@
 #include "../Globals/Settings.h"
 #include "../Globals/SecuritySettings.h"
 
+#include "../Helpers/ESPEasy_Storage.h"
+#include "../Helpers/StringConverter.h"
+
 #include "../../ESPEasy_fdwdecl.h"
 
 

@@ -1,11 +1,13 @@
 // ArduinoJson - arduinojson.org
-// Copyright Benoit Blanchon 2014-2019
+// Copyright Benoit Blanchon 2014-2020
 // MIT License
 
 #pragma once
 
-#include "../Configuration.hpp"
-#include "../Operators/VariantOperators.hpp"
+#include <ArduinoJson/Configuration.hpp>
+#include <ArduinoJson/Variant/VariantOperators.hpp>
+#include <ArduinoJson/Variant/VariantShortcuts.hpp>
+#include <ArduinoJson/Variant/VariantTo.hpp>
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -16,6 +18,7 @@ namespace ARDUINOJSON_NAMESPACE {
 
 template <typename TArray>
 class ElementProxy : public VariantOperators<ElementProxy<TArray> >,
+                     public VariantShortcuts<ElementProxy<TArray> >,
                      public Visitable {
   typedef ElementProxy<TArray> this_type;
 
@@ -23,8 +26,11 @@ class ElementProxy : public VariantOperators<ElementProxy<TArray> >,
   FORCE_INLINE ElementProxy(TArray array, size_t index)
       : _array(array), _index(index) {}
 
+  FORCE_INLINE ElementProxy(const ElementProxy& src)
+      : _array(src._array), _index(src._index) {}
+
   FORCE_INLINE this_type& operator=(const this_type& src) {
-    getUpstreamElement().set(src.as<VariantConstRef>());
+    getOrAddUpstreamElement().set(src.as<VariantConstRef>());
     return *this;
   }
 
@@ -35,7 +41,7 @@ class ElementProxy : public VariantOperators<ElementProxy<TArray> >,
   //          std::string, String, ArrayRef, ObjectRef
   template <typename T>
   FORCE_INLINE this_type& operator=(const T& src) {
-    getUpstreamElement().set(src);
+    getOrAddUpstreamElement().set(src);
     return *this;
   }
   //
@@ -43,7 +49,7 @@ class ElementProxy : public VariantOperators<ElementProxy<TArray> >,
   // TValue = char*, const char*, const __FlashStringHelper*
   template <typename T>
   FORCE_INLINE this_type& operator=(T* src) {
-    getUpstreamElement().set(src);
+    getOrAddUpstreamElement().set(src);
     return *this;
   }
 
@@ -61,13 +67,18 @@ class ElementProxy : public VariantOperators<ElementProxy<TArray> >,
   }
 
   template <typename T>
+  FORCE_INLINE operator T() const {
+    return getUpstreamElement();
+  }
+
+  template <typename T>
   FORCE_INLINE bool is() const {
     return getUpstreamElement().template is<T>();
   }
 
   template <typename T>
   FORCE_INLINE typename VariantTo<T>::type to() const {
-    return getUpstreamElement().template to<T>();
+    return getOrAddUpstreamElement().template to<T>();
   }
 
   // Replaces the value
@@ -77,14 +88,14 @@ class ElementProxy : public VariantOperators<ElementProxy<TArray> >,
   //          std::string, String, ArrayRef, ObjectRef
   template <typename TValue>
   FORCE_INLINE bool set(const TValue& value) const {
-    return getUpstreamElement().set(value);
+    return getOrAddUpstreamElement().set(value);
   }
   //
   // bool set(TValue)
   // TValue = char*, const char*, const __FlashStringHelper*
   template <typename TValue>
   FORCE_INLINE bool set(TValue* value) const {
-    return getUpstreamElement().set(value);
+    return getOrAddUpstreamElement().set(value);
   }
 
   template <typename Visitor>
@@ -108,20 +119,20 @@ class ElementProxy : public VariantOperators<ElementProxy<TArray> >,
 
   template <typename TNestedKey>
   VariantRef getOrAddMember(TNestedKey* key) const {
-    return getUpstreamElement().getOrAddMember(key);
+    return getOrAddUpstreamElement().getOrAddMember(key);
   }
 
   template <typename TNestedKey>
   VariantRef getOrAddMember(const TNestedKey& key) const {
-    return getUpstreamElement().getOrAddMember(key);
+    return getOrAddUpstreamElement().getOrAddMember(key);
   }
 
   VariantRef addElement() const {
-    return getUpstreamElement().addElement();
+    return getOrAddUpstreamElement().addElement();
   }
 
   VariantRef getElement(size_t index) const {
-    return getUpstreamElement().getElement(index);
+    return getOrAddUpstreamElement().getElement(index);
   }
 
   FORCE_INLINE void remove(size_t index) const {
@@ -148,15 +159,13 @@ class ElementProxy : public VariantOperators<ElementProxy<TArray> >,
     return _array.getElement(_index);
   }
 
+  FORCE_INLINE VariantRef getOrAddUpstreamElement() const {
+    return _array.getOrAddElement(_index);
+  }
+
   TArray _array;
   const size_t _index;
 };
-
-template <typename TArray>
-inline ElementProxy<const TArray&> ArrayShortcuts<TArray>::operator[](
-    size_t index) const {
-  return ElementProxy<const TArray&>(*impl(), index);
-}
 
 }  // namespace ARDUINOJSON_NAMESPACE
 

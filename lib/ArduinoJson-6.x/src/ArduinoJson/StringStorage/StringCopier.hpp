@@ -1,11 +1,11 @@
 // ArduinoJson - arduinojson.org
-// Copyright Benoit Blanchon 2014-2019
+// Copyright Benoit Blanchon 2014-2020
 // MIT License
 
 #pragma once
 
-#include "../Memory/MemoryPool.hpp"
-#include "../Memory/StringBuilder.hpp"
+#include <ArduinoJson/Memory/MemoryPool.hpp>
+#include <ArduinoJson/Memory/StringBuilder.hpp>
 
 namespace ARDUINOJSON_NAMESPACE {
 
@@ -17,6 +17,10 @@ class StringCopier {
 
   StringBuilder startString() {
     return StringBuilder(_pool);
+  }
+
+  void reclaim(const char* s) {
+    _pool->reclaimLastString(s);
   }
 
  private:

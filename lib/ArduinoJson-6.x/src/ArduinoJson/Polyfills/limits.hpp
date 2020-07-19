@@ -1,10 +1,10 @@
 // ArduinoJson - arduinojson.org
-// Copyright Benoit Blanchon 2014-2019
+// Copyright Benoit Blanchon 2014-2020
 // MIT License
 
 #pragma once
 
-#include "../Polyfills/type_traits.hpp"
+#include "type_traits.hpp"
 
 #ifdef _MSC_VER
 #pragma warning(push)
