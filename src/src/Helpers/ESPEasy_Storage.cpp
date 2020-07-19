@@ -367,6 +367,14 @@ void afterloadSettings() {
   if (!Settings.UseRules) {
     eventQueue.clear();
   }
+  // setup UDP
+  portUDP.stop();
+  if (Settings.UDPPort != 0) {
+    if (portUDP.begin(Settings.UDPPort) == 0) {
+      addLog(LOG_LEVEL_ERROR, F("UDP : Cannot bind to ESPEasy p2p UDP port"));
+    }
+  }
+
   set_mDNS(); // To update changes in hostname.
 }
 

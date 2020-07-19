@@ -384,12 +384,9 @@ void setup()
   ArduinoOTAInit();
   #endif
 
-  // setup UDP
-  if (Settings.UDPPort != 0)
-    portUDP.begin(Settings.UDPPort);
-
-  if (node_time.systemTimePresent())
+  if (node_time.systemTimePresent()) {
     node_time.initTime();
+  }
 
   if (Settings.UseRules)
   {
