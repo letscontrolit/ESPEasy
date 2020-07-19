@@ -207,6 +207,7 @@ boolean handleIRremote(const String &cmd) {
   return IRsent;
 }
 
+#ifdef P016_P035_Extended_AC
 boolean handle_AC_IRremote(const String &cmd) {
   String irData = "";
   StaticJsonDocument<JSON_OBJECT_SIZE(18) + 190> doc;
@@ -269,6 +270,7 @@ boolean handle_AC_IRremote(const String &cmd) {
   if (IRsent) printToLog(typeToString(st.protocol), irData, 0, 0);
   return IRsent;
 }
+#endif
 
 
 boolean handleRawRaw2Encoding(const String &cmd) {

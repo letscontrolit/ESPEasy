@@ -1,6 +1,171 @@
 ArduinoJson: change log
 =======================
 
+HEAD
+----
+
+* Added comparisons (`>`, `>=`, `==`, `!=`, `<`, and `<=`) between `JsonVariant`s
+
+v6.15.2 (2020-05-15)
+-------
+
+* CMake: don't build tests when imported in another project
+* CMake: made project arch-independent
+* Visual Studio: fixed error C2766 with flag `/Zc:__cplusplus` (issue #1250)
+* Added support for `JsonDocument` to `copyArray()` (issue #1255)
+* Added support for `enum`s in `as<T>()` and `is<T>()`  (issue #1256)
+* Added `JsonVariant` as an input type for `deserializeXxx()`  
+  For example, you can do: `deserializeJson(doc2, doc1["payload"])`
+* Break the build if using 64-bit integers with ARDUINOJSON_USE_LONG_LONG==0
+
+v6.15.1 (2020-04-08)
+-------
+
+* Fixed "maybe-uninitialized" warning (issue #1217)
+* Fixed "statement is unreachable" warning on IAR (issue #1233)
+* Fixed "pointless integer comparison" warning on IAR (issue #1233)
+* Added CMake "install" target (issue #1209)
+* Disabled alignment on AVR (issue #1231)
+
+v6.15.0 (2020-03-22)
+-------
+
+* Added `DeserializationOption::Filter` (issue #959)
+* Added example `JsonFilterExample.ino`
+* Changed the array subscript operator to automatically add missing elements
+* Fixed "deprecated-copy" warning on GCC 9 (fixes #1184)
+* Fixed `MemberProxy::set(char[])` not duplicating the string (issue #1191)
+* Fixed enums serialized as booleans (issue #1197)
+* Fixed incorrect string comparison on some platforms (issue #1198)
+* Added move-constructor and move-assignment to `BasicJsonDocument`
+* Added `BasicJsonDocument::garbageCollect()` (issue #1195)
+* Added `StaticJsonDocument::garbageCollect()`
+* Changed copy-constructor of `BasicJsonDocument` to preserve the capacity of the source.
+* Removed copy-constructor of `JsonDocument` (issue #1189)
+
+> ### BREAKING CHANGES
+> 
+> #### Copy-constructor of `BasicJsonDocument`
+>
+> In previous versions, the copy constructor of `BasicJsonDocument` looked at the source's `memoryUsage()` to choose its capacity.
+> Now, the copy constructor of `BasicJsonDocument` uses the same capacity as the source.
+>
+> Example:
+>
+> ```c++
+> DynamicJsonDocument doc1(64);
+> doc1.set(String("example"));
+>
+> DynamicJsonDocument doc2 = doc1;
+> Serial.print(doc2.capacity());  // 8 with ArduinoJson 6.14
+>                                 // 64 with ArduinoJson 6.15
+> ```
+>
+> I made this change to get consistent results between copy-constructor and move-constructor, and whether RVO applies or not.
+>
+> If you use the copy-constructor to optimize your documents, you can use `garbageCollect()` or `shrinkToFit()` instead.
+>
+> #### Copy-constructor of `JsonDocument`
+>
+> In previous versions, it was possible to create a function that take a `JsonDocument` by value.
+>
+> ```c++
+> void myFunction(JsonDocument doc) {}
+> ```
+>
+> This function gives the wrong clues because it doesn't receive a copy of the `JsonDocument`, only a sliced version.
+> It worked because the copy constructor copied the internal pointers, but it was an accident.
+>
+> From now, if you need to pass a `JsonDocument` to a function, you must use a reference:
+>
+> ```c++
+> void myFunction(JsonDocument& doc) {}
+> ```
+
+v6.14.1 (2020-01-27)
+-------
+
+* Fixed regression in UTF16 decoding (issue #1173)
+* Fixed `containsKey()` on `JsonVariantConst`
+* Added `getElement()` and `getMember()` to `JsonVariantConst`
+
+v6.14.0 (2020-01-16)
+-------
+
+* Added `BasicJsonDocument::shrinkToFit()`
+* Added support of `uint8_t` for `serializeJson()`, `serializeJsonPretty()`, and `serializeMsgPack()` (issue #1142)
+* Added `ARDUINOJSON_ENABLE_COMMENTS` to enable support for comments (defaults to 0)
+* Auto enable support for `std::string` and `std::stream` on modern compilers (issue #1156)
+  (No need to define `ARDUINOJSON_ENABLE_STD_STRING` and `ARDUINOJSON_ENABLE_STD_STREAM` anymore)
+* Improved decoding of UTF-16 surrogate pairs (PR #1157 by @kaysievers)
+  (ArduinoJson now produces standard UTF-8 instead of CESU-8)
+* Added `measureJson`, `measureJsonPretty`, and `measureMsgPack` to `keywords.txt`
+  (This file is used for syntax highlighting in the Arduino IDE) 
+* Fixed `variant.is<nullptr_t>()`
+* Fixed value returned by `serializeJson()`, `serializeJsonPretty()`, and `serializeMsgPack()` when writing to a `String`
+* Improved speed of `serializeJson()`, `serializeJsonPretty()`, and `serializeMsgPack()` when writing to a `String`
+
+> ### BREAKING CHANGES
+> 
+> #### Comments
+> 
+> Support for comments in input is now optional and disabled by default.
+>
+> If you need support for comments, you must defined `ARDUINOJSON_ENABLE_COMMENTS` to `1`; otherwise, you'll receive `InvalidInput` errors.
+>
+> ```c++
+> #define ARDUINOJSON_ENABLE_COMMENTS 1
+> #include <ArduinoJson.h>
+> ```
+
+v6.13.0 (2019-11-01)
+-------
+
+* Added support for custom writer/reader classes (issue #1088)
+* Added conversion from `JsonArray` and `JsonObject` to `bool`, to be consistent with `JsonVariant`
+* Fixed `deserializeJson()` when input contains duplicate keys (issue #1095)
+* Improved `deserializeMsgPack()` speed by reading several bytes at once
+* Added detection of Atmel AVR8/GNU C Compiler (issue #1112)
+* Fixed deserializer that stopped reading at the first `0xFF` (PR #1118 by @mikee47)
+* Fixed dangling reference in copies of `MemberProxy` and `ElementProxy` (issue #1120)
+
+v6.12.0 (2019-09-05)
+-------
+
+* Use absolute instead of relative includes (issue #1072)
+* Changed `JsonVariant::as<bool>()` to return `true` for any non-null value (issue #1005)
+* Moved ancillary files to `extras/` (issue #1011)
+
+v6.11.5 (2019-08-23)
+-------
+
+* Added fallback implementations of `strlen_P()`, `strncmp_P()`, `strcmp_P()`, and `memcpy_P()` (issue #1073)
+
+v6.11.4 (2019-08-12)
+-------
+
+* Added `measureJson()` to the `ArduinoJson` namespace (PR #1069 by @nomis)
+* Added support for `basic_string<char, traits, allocator>` (issue #1045)
+* Fixed example `JsonConfigFile.ino` for ESP8266
+* Include `Arduino.h` if `ARDUINO` is defined (PR #1071 by @nomis)
+
+v6.11.3 (2019-07-22)
+-------
+
+* Added operators `==` and `!=` for `JsonDocument`, `ElementProxy`, and `MemberProxy`
+* Fixed comparison of `JsonVariant` when one contains a linked string and the other contains an owned string (issue #1051)
+
+v6.11.2 (2019-07-08)
+-------
+
+* Fixed assignment of `JsonDocument` to `JsonVariant` (issue #1023)
+* Fix invalid conversion error on Particle Argon (issue #1035)
+
+v6.11.1 (2019-06-21)
+-------
+
+* Fixed `serialized()` not working with Flash strings (issue #1030)
+
 v6.11.0 (2019-05-26)
 -------
 
