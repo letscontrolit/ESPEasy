@@ -63,7 +63,10 @@ void syslog(byte logLevel, const char *message)
   if ((Settings.Syslog_IP[0] != 0) && NetworkConnected())
   {
     IPAddress broadcastIP(Settings.Syslog_IP[0], Settings.Syslog_IP[1], Settings.Syslog_IP[2], Settings.Syslog_IP[3]);
-    portUDP.beginPacket(broadcastIP, 514);
+    if (portUDP.beginPacket(broadcastIP, Settings.SyslogPort) == 0) {
+      // problem resolving the hostname or port
+      return;
+    }
     byte prio = Settings.SyslogFacility * 8;
 
     if (logLevel == LOG_LEVEL_ERROR) {

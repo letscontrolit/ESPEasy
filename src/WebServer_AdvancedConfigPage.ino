@@ -42,6 +42,7 @@ void handle_advanced() {
     Settings.UDPPort = getFormItemInt(F("udpport"));
 
     Settings.SyslogFacility = getFormItemInt(F("syslogfacility"));
+    Settings.SyslogPort     = getFormItemInt(F("syslogport"));
     Settings.UseSerial      = isFormItemChecked(F("useserial"));
     setLogLevelFor(LOG_TO_SYSLOG, getFormItemInt(getInternalLabel(LabelType::SYSLOG_LOG_LEVEL)));
     setLogLevelFor(LOG_TO_SERIAL, getFormItemInt(getInternalLabel(LabelType::SERIAL_LOG_LEVEL)));
@@ -133,6 +134,8 @@ void handle_advanced() {
   addFormSubHeader(F("Log Settings"));
 
   addFormIPBox(F("Syslog IP"), F("syslogip"), Settings.Syslog_IP);
+  addFormNumericBox(F("Syslog UDP port"), F("syslogport"), Settings.SyslogPort, 0, 65535);
+
   addFormLogLevelSelect(getLabel(LabelType::SYSLOG_LOG_LEVEL), getInternalLabel(LabelType::SYSLOG_LOG_LEVEL), Settings.SyslogLevel);
   addFormLogFacilitySelect(F("Syslog Facility"), F("syslogfacility"), Settings.SyslogFacility);
   addFormLogLevelSelect(getLabel(LabelType::SERIAL_LOG_LEVEL), getInternalLabel(LabelType::SERIAL_LOG_LEVEL), Settings.SerialLogLevel);
