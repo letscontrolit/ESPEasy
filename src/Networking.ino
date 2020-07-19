@@ -149,6 +149,10 @@ void checkUDP()
       return;
     }
 
+    // UDP_PACKETSIZE_MAX should be as small as possible but still enough to hold all 
+    // data for PLUGIN_UDP_IN or CPLUGIN_UDP_IN calls
+    // This node may also receive other UDP packets which may be quite large 
+    // and then crash due to memory allocation failures
     if ((packetSize >= 2) && (packetSize < UDP_PACKETSIZE_MAX)) {
       // Allocate buffer to process packet.
       std::vector<char> packetBuffer;
@@ -241,9 +245,11 @@ void checkUDP()
       }
     }
   }
-  #if defined(ESP32) // testing
-  portUDP.flush();
-  #endif // if defined(ESP32)
+  // Flush any remaining content of the packet.
+  while (portUDP.available()) {
+    // Do not call portUDP.flush() as that's meant to sending the packet (on ESP8266)
+    portUDP.read();
+  }
   runningUPDCheck = false;
 }
 
