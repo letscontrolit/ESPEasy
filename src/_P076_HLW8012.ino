@@ -204,12 +204,12 @@ boolean Plugin_076(byte function, struct EventStruct *event, String &string) {
       byte cf_trigger  = PCONFIG(5);
       byte cf1_trigger = PCONFIG(6);
       addFormSubHeader(F("Custom Pin settings (choose Custom above)"));
-      addFormSelector(F("Current (A) Reading"), F("p076_curr_read"), 2,
+      addFormSelector(F("SEL Current (A) Reading"), F("p076_curr_read"), 2,
                       modeCurr, modeCurrValues, currentRead );
-      addFormSelector(F("CF Interrupt Edge"), F("p076_cf_edge"), 4,
-                      modeRaise, modeValues, cf_trigger );
       addFormSelector(F("CF1  Interrupt Edge"), F("p076_cf1_edge"), 4,
                       modeRaise, modeValues, cf1_trigger);
+      addFormSelector(F("CF Interrupt Edge"), F("p076_cf_edge"), 4,
+                      modeRaise, modeValues, cf_trigger );
     }
 
 
@@ -315,7 +315,7 @@ boolean Plugin_076(byte function, struct EventStruct *event, String &string) {
         if (timeOutReached(p076_timer)) {
           p076_hvoltage = Plugin_076_hlw->getVoltage();
           p076_hpower = Plugin_076_hlw->getActivePower();
-          p076_hpowfact = (int)(100 * Plugin_076_hlw->getPowerFactor());
+          p076_hpowfact = static_cast<int>(100 * Plugin_076_hlw->getPowerFactor());
           ++p076_read_stage;
           // Measurement is done, schedule a new PLUGIN_READ call
           schedule_task_device_timer(event->TaskIndex, millis() + 10);
@@ -338,7 +338,7 @@ boolean Plugin_076(byte function, struct EventStruct *event, String &string) {
           p076_hpower = Plugin_076_hlw->getActivePower();
           p076_hvoltage = Plugin_076_hlw->getVoltage();
           p076_hcurrent = Plugin_076_hlw->getCurrent();
-          p076_hpowfact = (int)(100 * Plugin_076_hlw->getPowerFactor());
+          p076_hpowfact = static_cast<int>(100 * Plugin_076_hlw->getPowerFactor());
         
         // Measurement is complete.
         p076_read_stage = 0;

@@ -204,7 +204,7 @@ boolean Plugin_095(byte function, struct EventStruct *event, String& string)
         addFormPinSelect(F("TFT CS"), F("p095_tft_cs"), TFT_Settings.address_tft_cs);
         addFormPinSelect(F("TFT DC"), F("p095_tft_dc"), TFT_Settings.address_tft_dc);
         addFormPinSelect(F("TFT RST"), F("p095_tft_rst"), TFT_Settings.address_tft_rst);
-        addFormPinSelect(F("TS CS"), F("ts_cs"), TFT_Settings.address_ts_cs);
+        addFormPinSelect(F("TS CS"), F("p095_ts_cs"), TFT_Settings.address_ts_cs);
 
         byte choice2 = PCONFIG(1);
         String options2[4] = { F("Normal"), F("+90°"), F("+180°"), F("+270°") };
