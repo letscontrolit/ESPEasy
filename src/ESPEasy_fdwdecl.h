@@ -73,6 +73,7 @@ bool   NetworkConnected(uint32_t timeout_ms);
 bool   NetworkConnected();
 bool   hostReachable(const IPAddress& ip);
 bool   hostReachable(const String& hostname);
+void   updateUDPport();
 
 
 bool     I2C_read_bytes(uint8_t        i2caddr,
