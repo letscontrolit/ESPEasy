@@ -1,4 +1,43 @@
 -------------------------------------------------
+Changes in release mega-20200720 (since mega-20200703)
+-------------------------------------------------
+
+Release date: ma 20 jul 2020 23:35:58 CEST
+
+Gijs Noorlander (13):
+      [Modbus RTU] Move Modbus code to .h/.cpp file to reduce size
+      Convert scheduler from .ino to .cpp/.h
+      [Build] Fix missing include building ESP32
+      [Build] Fix build error for C018, due to removed forward declaration
+      Make delay queue macro a bit more logical
+      [Frontend] Only show "Submitted" message when pressing submit (#3144)
+      [ESP32 ETH] Fix build issue due to recent changes
+      [Arduino IDE] Fix build issue with Arduino IDE
+      Fix typo in filename for P044 data struct
+      [Arduino IDE] Make P076 compile again on Arduino IDE
+      [Arduino IDE] Fix build issue for P035_IRTX.ino
+      [Arduino IDE] Fix compile issues when selecting specific controllers
+      [Syslog] Fix crash with syslog enabled on wifi (re)connect (#3147 #3072)
+
+TD-er (1):
+      Fix ADS1115 mixing input signals (#3159)
+
+jimmys01 (1):
+      arduJSON library update
+
+llevet (2):
+      Update _P095_ILI9341.ino
+      P095 Plugin: Fix bug #3047
+
+tonhuisman (5):
+      [P008] Add option to convert value to 'hex' (#3068), and updated documentation
+      [TaskDisable] Bugfix for plugins without PLUGIN_EXIT implementation
+      [TaskDisable] Improve readability of code after bugfix
+      [TaskDisable] Remove unneeded else & return
+      [P076] fix: Custom pin settings in same order as Sensor pins, improved label, improved cast
+
+
+-------------------------------------------------
 Changes in release mega-20200703 (since mega-20200608)
 -------------------------------------------------
 
