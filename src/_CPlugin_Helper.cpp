@@ -17,6 +17,7 @@
 
 #include "src/Helpers/CompiletimeDefines.h"
 #include "src/Helpers/ESPEasy_time_calc.h"
+#include "src/Helpers/StringConverter.h"
 
 #include <WiFiClient.h>
 #include <WiFiUdp.h>
@@ -70,19 +71,6 @@ bool safeReadStringUntil(Stream     & input,
 
   addLog(LOG_LEVEL_ERROR, F("Timeout while reading input data!"));
   return false;
-}
-
-String get_formatted_Controller_number(cpluginID_t cpluginID) {
-  if (!validCPluginID(cpluginID)) {
-    return F("C---");
-  }
-  String result = F("C");
-
-  if (cpluginID < 100) { result += '0'; }
-
-  if (cpluginID < 10) { result += '0'; }
-  result += cpluginID;
-  return result;
 }
 
 String get_auth_header(const String& user, const String& pass) {

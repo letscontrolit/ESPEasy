@@ -89,7 +89,6 @@
 #include "_Plugin_Helper.h"
 // Plugin helper needs the defined controller sets, thus include after 'define_plugin_sets.h'
 #include "_CPlugin_Helper.h"
-#include "src/ControllerQueue/DelayQueueElements.h"
 
 #include "src/DataStructs/ControllerSettingsStruct.h"
 #include "src/DataStructs/DeviceModel.h"
@@ -173,12 +172,7 @@ void setup()
 #ifdef ESP8266_DISABLE_EXTRA4K
   disable_extra4k_at_link_time();
 #endif
-  WiFi.persistent(false); // Do not use SDK storage of SSID/WPA parameters
-  WiFi.setAutoReconnect(false);
-  // The WiFi.disconnect() ensures that the WiFi is working correctly. If this is not done before receiving WiFi connections,
-  // those WiFi connections will take a long time to make or sometimes will not work at all.
-  WiFi.disconnect();
-  setWifiMode(WIFI_OFF);
+  initWiFi();
   
   run_compiletime_checks();
   lowestFreeStack = getFreeStackWatermark();
@@ -210,18 +204,6 @@ void setup()
 
   initLog();
 
-#if defined(ESP32)
-  WiFi.onEvent(WiFiEvent);
-#else
-  // WiFi event handlers
-  stationConnectedHandler = WiFi.onStationModeConnected(onConnected);
-	stationDisconnectedHandler = WiFi.onStationModeDisconnected(onDisconnect);
-	stationGotIpHandler = WiFi.onStationModeGotIP(onGotIP);
-  stationModeDHCPTimeoutHandler = WiFi.onStationModeDHCPTimeout(onDHCPTimeout);
-  APModeStationConnectedHandler = WiFi.onSoftAPModeStationConnected(onConnectedAPmode);
-  APModeStationDisconnectedHandler = WiFi.onSoftAPModeStationDisconnected(onDisonnectedAPmode);
-#endif
-
   if (SpiffsSectors() < 32)
   {
     serialPrintln(F("\nNo (or too small) FS area..\nSystem Halted\nPlease reflash with 128k FS minimum!"));
@@ -241,7 +223,8 @@ void setup()
   log += FreeMem();
   addLog(LOG_LEVEL_INFO, log);
 
-  //warm boot
+  #ifdef ESP8266
+  // Our ESP32 code does not yet support RTC, so separate this in code for ESP8266 and ESP32
   if (readFromRTC())
   {
     RTC.bootFailedCount++;
@@ -252,7 +235,7 @@ void setup()
     if (RTC.deepSleepState == 1)
     {
       log = F("INIT : Rebooted from deepsleep #");
-      lastBootCause=BOOT_CAUSE_DEEP_SLEEP;
+      lastBootCause = BOOT_CAUSE_DEEP_SLEEP;
     }
     else {
       node_time.restoreLastKnownUnixTime(RTC.lastSysTime, RTC.deepSleepState);
@@ -275,6 +258,21 @@ void setup()
       lastBootCause = BOOT_CAUSE_COLD_BOOT;
     log = F("INIT : Cold Boot");
   }
+  #endif // ESP8266
+
+  #ifdef ESP32
+  if (rtc_get_reset_reason( (RESET_REASON) 0) == DEEPSLEEP_RESET) {
+    log = F("INIT : Rebooted from deepsleep #");
+    lastBootCause = BOOT_CAUSE_DEEP_SLEEP;
+  } else {
+    // cold boot situation
+    if (lastBootCause == BOOT_CAUSE_MANUAL_REBOOT) // only set this if not set earlier during boot stage.
+      lastBootCause = BOOT_CAUSE_COLD_BOOT;
+    log = F("INIT : Cold Boot");
+  }
+
+  #endif // ESP32
+
   log += F(" - Restart Reason: ");
   log += getResetReasonString();
 
@@ -402,12 +400,9 @@ void setup()
   ArduinoOTAInit();
   #endif
 
-  // setup UDP
-  if (Settings.UDPPort != 0)
-    portUDP.begin(Settings.UDPPort);
-
-  if (node_time.systemTimePresent())
+  if (node_time.systemTimePresent()) {
     node_time.initTime();
+  }
 
   if (Settings.UseRules)
   {

@@ -283,6 +283,20 @@ String formatUserVar(struct EventStruct *event, byte rel_index, bool& isvalid)
   return doFormatUserVar(event, rel_index, true, isvalid);
 }
 
+String get_formatted_Controller_number(cpluginID_t cpluginID) {
+  if (!validCPluginID(cpluginID)) {
+    return F("C---");
+  }
+  String result = F("C");
+
+  if (cpluginID < 100) { result += '0'; }
+
+  if (cpluginID < 10) { result += '0'; }
+  result += cpluginID;
+  return result;
+}
+
+
 /*********************************************************************************************\
    Wrap a string with given pre- and postfix string.
 \*********************************************************************************************/

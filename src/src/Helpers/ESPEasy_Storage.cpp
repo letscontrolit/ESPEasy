@@ -13,6 +13,7 @@
 #include "../Globals/SecuritySettings.h"
 
 #include "../DataStructs/TimingStats.h"
+#include "../DataStructs/StorageLayout.h"
 
 #include "../Helpers/ESPEasy_time_calc.h"
 #include "../Helpers/Hardware.h"
@@ -213,6 +214,9 @@ String BuildFixes()
     Settings.ETH_Phy_Type   = DEFAULT_ETH_PHY_TYPE;
     Settings.ETH_Clock_Mode = DEFAULT_ETH_CLOCK_MODE;
     Settings.ETH_Wifi_Mode  = DEFAULT_ETH_WIFI_MODE;
+  }
+  if (Settings.Build < 20109) {
+    Settings.SyslogPort = 514;
   }
 
   Settings.Build = BUILD;
@@ -478,8 +482,6 @@ byte disableNotification(byte bootFailedCount) {
   }
   return bootFailedCount;
 }
-
-#include "src/DataStructs/StorageLayout.h"
 
 
 bool getAndLogSettingsParameters(bool read, SettingsType::Enum settingsType, int index, int& offset, int& max_size) {
