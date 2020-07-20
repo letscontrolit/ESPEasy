@@ -92,7 +92,7 @@ void SystemVariables::parseSystemVariables(String& s, boolean useURLencode)
 
 
       case ISNTP:             value = String(statusNTPInitialized); break;
-      case ISWIFI:            value = String(wifiStatus); break; // 0=disconnected, 1=connected, 2=got ip, 3=services initialized
+      case ISWIFI:            value = String(wifiStatus); break; // 0=disconnected, 1=connected, 2=got ip, 4=services initialized
       // TODO: PKR: Add ETH Objects
       #ifdef HAS_ETHERNET
       
