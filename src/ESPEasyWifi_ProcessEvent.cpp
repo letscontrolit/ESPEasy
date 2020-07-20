@@ -275,7 +275,7 @@ void processGotIP() {
       log += formatIP(ip);
       addLog(LOG_LEVEL_INFO, log);
     }
-    WiFi.config(ip, gw, subnet);
+    WiFi.config(ip, gw, subnet, NetworkDnsIP(0), NetworkDnsIP(1));
   }
 
   // First try to get the time, since that may be used in logs
