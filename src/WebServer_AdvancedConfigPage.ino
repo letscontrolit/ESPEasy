@@ -121,15 +121,16 @@ void handle_advanced() {
   addFormSubHeader(F("DST Settings"));
   addFormDstSelect(true,  Settings.DST_Start);
   addFormDstSelect(false, Settings.DST_End);
-  addFormNumericBox(F("Timezone Offset (UTC +)"), F("timezone"), Settings.TimeZone, -720, 840); // UTC-12H ... UTC+14h
-  addUnit(F("minutes"));
   addFormCheckBox(F("DST"), F("dst"), Settings.DST);
 
   addFormSubHeader(F("Location Settings"));
+  addFormNumericBox(F("Timezone Offset (UTC +)"), F("timezone"), Settings.TimeZone, -720, 840); // UTC-12H ... UTC+14h
+  addUnit(F("minutes"));
   addFormFloatNumberBox(F("Latitude"), F("latitude"), Settings.Latitude, -90.0, 90.0);
   addUnit(F("&deg;"));
   addFormFloatNumberBox(F("Longitude"), F("longitude"), Settings.Longitude, -180.0, 180.0);
   addUnit(F("&deg;"));
+  addFormNote(F("Longitude and Latitude are used to compute sunrise and sunset"));
 
   addFormSubHeader(F("Log Settings"));
 
