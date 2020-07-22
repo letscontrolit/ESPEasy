@@ -92,6 +92,77 @@ Info
 Advanced
 ========
 
+Rules Settings
+--------------
+
+* Rules - Check to enable rules functionality (on next page load, extra Rules tab will appear)
+* Old Engine - Default checked.
+* Tolerant last parameter - When checked, the last parameter of a command will have less strict parsing.
+* SendToHTTP wait for ack - When checked, the command SendToHTTP will wait for an acknowledgement from the server.
+
+NTP Settings
+------------
+
+* Use NTP - Check to  query an NTP server for proper system time.
+* NTP Hostname - When left empty, a random host from pool.ntp.org will be used. (when NTP is enabled)
+
+DST Settings
+------------
+
+Define the start and end of Daylight Saving Time (DST)
+
+* Start (DST start / CEST) - e.g. Last Sunday of March    2am => 3am
+* End (DST end / CET) - e.g. Last Sunday of October  3am => 2am
+* DST - Check to enable DST.
+
+Location Settings
+-----------------
+
+* Timezone Offset (UTC +) - Number of minutes offset from UTC. (e.g. +60 minutes for Europe/Amsterdam time)
+* Latitude - Coordinate (South/North) in degrees.
+* Longitude - Coordinate (West/East) in degrees.
+
+The coordinates are not used to compute the time zone. 
+They are only used to compute the time of sunrise and sunset.
+
+Log Settings
+------------
+See `Log section <Tools.html#log>`_ for more detailed information.
+
+* Syslog IP - IP address of the syslog server.
+* Syslog UDP port - Port number of the syslog service. (default: 514)
+* Syslog Log Level - Log Level for sending logs to the syslog server.
+* Syslog Facility - Specify the syslog facility to send along with the logs. (default: Kernel)
+* Serial Log Level - Log Level for sending logs to the serial port.  (see also Serial Settings below)
+* Web Log Level - Log Level for sending logs to be viewed on the web log viewer.
+* SD Log Level - Log Level for sending logs to a SD card (only when included in the build)
+
+
+Serial Settings
+---------------
+
+These settings only apply to using the serial port in core ESPEasy functionality,
+like sending out logs or receiving commands via the serial port.
+
+* Enable Serial Port - When unchecked, logs will not be sent to the serial port and commands will not be read from it.
+* Baud Rate - Baud rate of the serial port. (default: 115200)
+
+Make sure to disable the serial port here when a sensor is connected to Serial0 
+or the GPIO pins are used for something other then a serial port.
+
+
+Inter-ESPEasy Network
+---------------------
+
+UDP port used for ESPEasy p2p protocol.
+When set to 0, this functionality is disabled.
+
+Preferred (and IANA registered) port is UDP port 8266.
+
+See for more detailed information "Controller - ESPEasy P2P Networking"
+
+
+
 Special and Experimental Settings
 ---------------------------------
 

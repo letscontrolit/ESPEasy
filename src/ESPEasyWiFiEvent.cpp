@@ -39,7 +39,10 @@ void setUseStaticIP(bool enabled) {
 
 void markGotIP() {
   lastGetIPmoment = millis();
-  wifiStatus     &= ~ESPEASY_WIFI_GOT_IP;
+  // Create the 'got IP event' so mark the wifiStatus to not have the got IP flag set
+  // This also implies the services are not fully initialized.
+  bitClear(wifiStatus, ESPEASY_WIFI_GOT_IP);
+  bitClear(wifiStatus, ESPEASY_WIFI_SERVICES_INITIALIZED);
   processedGotIP = false;
 }
 
@@ -119,6 +122,7 @@ void WiFiEvent(system_event_id_t event, system_event_info_t info) {
       processEthernetConnected();
       break;
     case SYSTEM_EVENT_ETH_GOT_IP:
+      if (loglevelActiveFor(LOG_LEVEL_INFO))
       {
         String log = F("ETH MAC: ");
         log += NetworkMacAddress();
@@ -212,7 +216,7 @@ void onConnectedAPmode(const WiFiEventSoftAPModeStationConnected& event) {
   processedConnectAPmode = false;
 }
 
-void onDisonnectedAPmode(const WiFiEventSoftAPModeStationDisconnected& event) {
+void onDisconnectedAPmode(const WiFiEventSoftAPModeStationDisconnected& event) {
   for (byte i = 0; i < 6; ++i) {
     lastMacDisconnectedAPmode[i] = event.mac[i];
   }
