@@ -83,10 +83,21 @@
 #define PLUGIN_NAME_036       "Display - OLED SSD1306/SH1106 Framed"
 #define PLUGIN_VALUENAME1_036 "OLED"
 
+#define P036_ADR         PCONFIG(0)
+#define P036_ROTATE      PCONFIG(1)
+#define P036_NLINES      PCONFIG(2)
+#define P036_SCROLL      PCONFIG(3)
+#define P036_TIMER       PCONFIG(4)
+#define P036_CONTROLLER  PCONFIG(5)
+#define P036_CONTRAST    PCONFIG(6)
+#define P036_RESOLUTION  PCONFIG(7)
+
+
+
 
 boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 {
-  boolean success = false;
+  bool success = false;
 
   switch (function)
   {
@@ -127,79 +138,79 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       // but the item should be one of the first choices.
       addFormSubHeader(F("Display"));
       {
-        uint8_t choice5 = PCONFIG(5);
-        String  options5[2];
-        options5[0] = F("SSD1306 (128x64 dot controller)");
-        options5[1] = F("SH1106 (132x64 dot controller)");
-        int optionValues5[2] = { 1, 2 };
-        addFormSelector(F("Controller"), F("p036_controller"), 2, options5, optionValues5, choice5);
+        uint8_t choice = P036_CONTROLLER;
+        String  options[2];
+        options[0] = F("SSD1306 (128x64 dot controller)");
+        options[1] = F("SH1106 (132x64 dot controller)");
+        int optionValues[2] = { 1, 2 };
+        addFormSelector(F("Controller"), F("p036_controller"), 2, options, optionValues, choice);
       }
 
       {
-        uint8_t choice0 = PCONFIG(0);
-        int     optionValues0[2];
-        optionValues0[0] = 0x3C;
-        optionValues0[1] = 0x3D;
-        addFormSelectorI2C(F("p036_adr"), 2, optionValues0, choice0);
+        uint8_t choice = P036_ADR;
+        int     optionValues[2];
+        optionValues[0] = 0x3C;
+        optionValues[1] = 0x3D;
+        addFormSelectorI2C(F("p036_adr"), 2, optionValues, choice);
       }
 
       {
-        String options8[P36_MaxSizesCount]      = { F("128x64"), F("128x32"), F("64x48") };
-        int    optionValues8[P36_MaxSizesCount] = { 0, 1, 2 };
-        addFormSelector(F("Size"), F("p036_size"), P36_MaxSizesCount, options8, optionValues8, NULL, PCONFIG(7), true);
+        String options[P36_MaxSizesCount]      = { F("128x64"), F("128x32"), F("64x48") };
+        int    optionValues[P36_MaxSizesCount] = { pix128x64, pix128x32, pix64x48 };
+        addFormSelector(F("Size"), F("p036_size"), P36_MaxSizesCount, options, optionValues, NULL, P036_RESOLUTION, true);
       }
 
       {
-        uint8_t choice1 = PCONFIG(1);
-        String  options1[2];
-        options1[0] = F("Normal");
-        options1[1] = F("Rotated");
-        int optionValues1[2] = { 1, 2 };
-        addFormSelector(F("Rotation"), F("p036_rotate"), 2, options1, optionValues1, choice1);
+        uint8_t choice = P036_ROTATE;
+        String  options[2];
+        options[0] = F("Normal");
+        options[1] = F("Rotated");
+        int optionValues[2] = { 1, 2 };
+        addFormSelector(F("Rotation"), F("p036_rotate"), 2, options, optionValues, choice);
       }
 
       {
-        uint8_t tOLEDIndex = PCONFIG(7);
-        addFormNumericBox(F("Lines per Frame"), F("p036_nlines"), PCONFIG(2), 1, SizeSettings[tOLEDIndex].MaxLines);
+        p036_resolution tOLEDIndex = static_cast<p036_resolution>(P036_RESOLUTION);
+        addFormNumericBox(F("Lines per Frame"), F("p036_nlines"), P036_NLINES, 1, P036_data_struct::getDisplaySizeSettings(tOLEDIndex).MaxLines);
       }
 
       {
-        uint8_t choice3 = PCONFIG(3);
-        String  options3[5];
-        options3[0] = F("Very Slow");
-        options3[1] = F("Slow");
-        options3[2] = F("Fast");
-        options3[3] = F("Very Fast");
-        options3[4] = F("Instant");
-        int optionValues3[5] = { ePSS_VerySlow, ePSS_Slow, ePSS_Fast, ePSS_VeryFast, ePSS_Instant };
-        addFormSelector(F("Scroll"), F("p036_scroll"), 5, options3, optionValues3, choice3);
+        uint8_t choice = P036_SCROLL;
+        String  options[5];
+        options[0] = F("Very Slow");
+        options[1] = F("Slow");
+        options[2] = F("Fast");
+        options[3] = F("Very Fast");
+        options[4] = F("Instant");
+        int optionValues[5] = { ePSS_VerySlow, ePSS_Slow, ePSS_Fast, ePSS_VeryFast, ePSS_Instant };
+        addFormSelector(F("Scroll"), F("p036_scroll"), 5, options, optionValues, choice);
       }
 
       // FIXME TD-er: Why is this using pin3 and not pin1? And why isn't this using the normal pin selection functions?
       addFormPinSelect(F("Display button"), F("taskdevicepin3"), CONFIG_PIN3);
-      boolean tbPin3Invers = bitRead(PCONFIG_LONG(0), 16);   // Bit 16
+      bool tbPin3Invers = bitRead(PCONFIG_LONG(0), 16);   // Bit 16
       addFormCheckBox(F("Inversed Logic"),                          F("p036_pin3invers"),     tbPin3Invers);
       bool bStepThroughPages = bitRead(PCONFIG_LONG(0), 19); // Bit 19
       addFormCheckBox(F("Step through frames with Display button"), F("p036_StepPages"), bStepThroughPages);
 
-      addFormNumericBox(F("Display Timeout"), F("p036_timer"), PCONFIG(4));
+      addFormNumericBox(F("Display Timeout"), F("p036_timer"), P036_TIMER);
 
       {
-        uint8_t choice6 = PCONFIG(6);
+        uint8_t choice = P036_CONTRAST;
 
-        if (choice6 == 0) { choice6 = P36_CONTRAST_HIGH; }
-        String options6[3];
-        options6[0] = F("Low");
-        options6[1] = F("Medium");
-        options6[2] = F("High");
-        int optionValues6[3];
-        optionValues6[0] = P36_CONTRAST_LOW;
-        optionValues6[1] = P36_CONTRAST_MED;
-        optionValues6[2] = P36_CONTRAST_HIGH;
-        addFormSelector(F("Contrast"), F("p036_contrast"), 3, options6, optionValues6, choice6);
+        if (choice == 0) { choice = P36_CONTRAST_HIGH; }
+        String options[3];
+        options[0] = F("Low");
+        options[1] = F("Medium");
+        options[2] = F("High");
+        int optionValues[3];
+        optionValues[0] = P36_CONTRAST_LOW;
+        optionValues[1] = P36_CONTRAST_MED;
+        optionValues[2] = P36_CONTRAST_HIGH;
+        addFormSelector(F("Contrast"), F("p036_contrast"), 3, options, optionValues, choice);
       }
 
-      boolean tbScrollWithoutWifi = bitRead(PCONFIG_LONG(0), 24); // Bit 24
+      bool tbScrollWithoutWifi = bitRead(PCONFIG_LONG(0), 24); // Bit 24
       addFormCheckBox(F("Disable all scrolling while WiFi is disconnected"), F("p036_ScrollWithoutWifi"), !tbScrollWithoutWifi);
       addFormNote(F("When checked, all scrollings (pages and lines) are disabled as long as WiFi is not connected."));
 
@@ -209,36 +220,27 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         uint8_t choice9      = get8BitFromUL(PCONFIG_LONG(0), 8); // Bit15-8 HeaderContent
         uint8_t choice10     = get8BitFromUL(PCONFIG_LONG(0), 0); // Bit7-0 HeaderContentAlternative
         String  options9[14] =
-        { F("SSID"),         F("SysName"),         F("IP"),               F("MAC"),               F("RSSI"),               F("BSSID"), F(
-            "WiFi channel"), F("Unit"),            F(
-            "SysLoad"),      F("SysHeap"),         F("SysStack"),         F("Date"),              F("Time"),
-          F("PageNumbers") };
+        { F("SSID"),         F("SysName"), F("IP"),      F("MAC"),     F("RSSI"),     F("BSSID"), 
+          F("WiFi channel"), F("Unit"),    F("SysLoad"), F("SysHeap"), F("SysStack"), F("Date"), 
+          F("Time"),         F("PageNumbers") };
         int optionValues9[14] =
         { eSSID, eSysName, eIP, eMAC, eRSSI, eBSSID, eWiFiCh, eUnit, eSysLoad, eSysHeap, eSysStack, eDate, eTime, ePageNo };
-        addFormSelector(F("Header"),               F("p036_header"),          14, options9, optionValues9, choice9);
-        addFormSelector(F("Header (alternating)"), F("p036_headerAlternate"), 14, options9, optionValues9, choice10);
+        addFormSelector(F("Header"),             F("p036_header"),          14, options9, optionValues9, choice9);
+        addFormSelector(F("Header (alternate)"), F("p036_headerAlternate"), 14, options9, optionValues9, choice10);
       }
 
-      boolean tbScrollLines = bitRead(PCONFIG_LONG(0), 17);             // Bit 17
+      bool tbScrollLines = bitRead(PCONFIG_LONG(0), 17);             // Bit 17
       addFormCheckBox(F("Scroll long lines"),              F("p036_ScrollLines"), tbScrollLines);
 
-      boolean tbNoDisplayOnReceivedText = bitRead(PCONFIG_LONG(0), 18); // Bit 18
+      bool tbNoDisplayOnReceivedText = bitRead(PCONFIG_LONG(0), 18); // Bit 18
       addFormCheckBox(F("Wake display on receiving text"), F("p036_NoDisplay"),               !tbNoDisplayOnReceivedText);
       addFormNote(F("When checked, the display wakes up at receiving remote updates."));
 
       {
-        // The web page can be loaded even when the init has not been called (not enabled task)
-        // So we may need to create a temp object to show the data.
-        P036_data_struct *P036_data =
-          static_cast<P036_data_struct *>(getPluginTaskData(event->TaskIndex));
-        bool isTemp = false;
-
-        if (nullptr == P036_data) {
-          isTemp = true;
-
-          P036_data = new P036_data_struct();
-        }
-
+        // For load and save of the display lines, we must not rely on the data in memory.
+        // This data in memory can be altered through write commands.
+        // Therefore we must read the lines from flash in a temporary object.
+        P036_data_struct *P036_data = new P036_data_struct();
         if (nullptr != P036_data) {
           uint8_t version = get4BitFromUL(PCONFIG_LONG(0), 20); // Bit23-20 Version CustomTaskSettings
           P036_data->loadDisplayLines(event->TaskIndex, version);
@@ -250,11 +252,8 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
                            String(P036_data->DisplayLinesV1[varNr].Content),
                            P36_NcharsV1 - 1);
           }
-
-          if (isTemp) {
-            // Need to delete the allocated object here
-            delete P036_data;
-          }
+          // Need to delete the allocated object here
+          delete P036_data;
         }
       }
 
@@ -271,41 +270,33 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       // update now
       schedule_task_device_timer(event->TaskIndex, millis() + 10);
 
-      PCONFIG(0) = getFormItemInt(F("p036_adr"));
-      PCONFIG(1) = getFormItemInt(F("p036_rotate"));
-      PCONFIG(2) = getFormItemInt(F("p036_nlines"));
-      PCONFIG(3) = getFormItemInt(F("p036_scroll"));
-      PCONFIG(4) = getFormItemInt(F("p036_timer"));
-      PCONFIG(5) = getFormItemInt(F("p036_controller"));
-      PCONFIG(6) = getFormItemInt(F("p036_contrast"));
-      PCONFIG(7) = getFormItemInt(F("p036_size"));
+      P036_ADR        = getFormItemInt(F("p036_adr"));
+      P036_ROTATE     = getFormItemInt(F("p036_rotate"));
+      P036_NLINES     = getFormItemInt(F("p036_nlines"));
+      P036_SCROLL     = getFormItemInt(F("p036_scroll"));
+      P036_TIMER      = getFormItemInt(F("p036_timer"));
+      P036_CONTROLLER = getFormItemInt(F("p036_controller"));
+      P036_CONTRAST   = getFormItemInt(F("p036_contrast"));
+      P036_RESOLUTION = getFormItemInt(F("p036_size"));
 
       uint32_t lSettings = 0;
       set8BitToUL(lSettings, 8, uint8_t(getFormItemInt(F("p036_header")) & 0xff));          // Bit15-8 HeaderContent
       set8BitToUL(lSettings, 0, uint8_t(getFormItemInt(F("p036_headerAlternate")) & 0xff)); // Bit 7-0 HeaderContentAlternative
-      bitWrite(lSettings, 16, isFormItemChecked(F("p036_pin3invers")));                     // Bit 16 Pin3Invers
-      bitWrite(lSettings, 17, isFormItemChecked(F("p036_ScrollLines")));                    // Bit 17 ScrollLines
-      bitWrite(lSettings, 18,                 !isFormItemChecked(F("p036_NoDisplay")));     // Bit 18 NoDisplayOnReceivingText
-      bitWrite(lSettings, 19, isFormItemChecked(F("p036_StepPages")));                      // Bit 19 StepThroughPagesWithButton
+      bitWrite(lSettings, 16,  isFormItemChecked(F("p036_pin3invers")));                    // Bit 16 Pin3Invers
+      bitWrite(lSettings, 17,  isFormItemChecked(F("p036_ScrollLines")));                   // Bit 17 ScrollLines
+      bitWrite(lSettings, 18, !isFormItemChecked(F("p036_NoDisplay")));                     // Bit 18 NoDisplayOnReceivingText
+      bitWrite(lSettings, 19,  isFormItemChecked(F("p036_StepPages")));                     // Bit 19 StepThroughPagesWithButton
       // save CustomTaskSettings always in version V1
-      set4BitToUL(lSettings, 20, 0x01);                                                     // Bit23-20 Version CustomTaskSettings ->
-                                                                                            // version V1
+      set4BitToUL(lSettings, 20, 0x01);                                                     // Bit23-20 Version CustomTaskSettings -> version V1
       bitWrite(lSettings, 24, !isFormItemChecked(F("p036_ScrollWithoutWifi")));             // Bit 24 ScrollWithoutWifi
 
       PCONFIG_LONG(0) = lSettings;
 
       {
-        // The web page can try to save even when the init has not been called (not enabled task)
-        // So we may need to create a temp object to show the data.
-        P036_data_struct *P036_data =
-          static_cast<P036_data_struct *>(getPluginTaskData(event->TaskIndex));
-        bool isTemp = false;
-
-        if (nullptr == P036_data) {
-          isTemp    = true;
-          P036_data = new P036_data_struct();
-        }
-
+        // For load and save of the display lines, we must not rely on the data in memory.
+        // This data in memory can be altered through write commands.
+        // Therefore we must use a temporary version to store the settings.
+        P036_data_struct *P036_data = new P036_data_struct();
         if (nullptr != P036_data) {
           String error;
 
@@ -326,10 +317,8 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           }
           SaveCustomTaskSettings(event->TaskIndex, (uint8_t *)&(P036_data->DisplayLinesV1), sizeof(P036_data->DisplayLinesV1));
 
-          if (isTemp) {
-            // Need to delete the allocated object here
-            delete P036_data;
-          }
+          // Need to delete the allocated object here
+          delete P036_data;
         }
       }
 
@@ -340,7 +329,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         // After saving, make sure the active lines are updated.
         P036_data->frameCounter       = 0;
         P036_data->MaxFramesToDisplay = 0xFF;
-        P036_data->OLEDIndex          = PCONFIG(7);
+        P036_data->_disp_resolution   = static_cast<p036_resolution>(P036_RESOLUTION);
         P036_data->loadDisplayLines(event->TaskIndex, 1);
       }
 
@@ -361,36 +350,30 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         return success;
       }
 
-      if (!(P036_data->init(PCONFIG(5), PCONFIG(0), Settings.Pin_i2c_sda, Settings.Pin_i2c_scl))) { // Init the display and turn it on
+      // Load the custom settings from flash
+      uint8_t version = get4BitFromUL(PCONFIG_LONG(0), 20);// Bit23-20 Version CustomTaskSettings
+
+      // Init the display and turn it on
+      if (!(P036_data->init(event->TaskIndex,
+                            version,
+                            P036_CONTROLLER,// Type
+                            P036_ADR,   // I2C address
+                            Settings.Pin_i2c_sda,
+                            Settings.Pin_i2c_scl,
+                            static_cast<p036_resolution>(P036_RESOLUTION),  // OLED index
+                            (P036_ROTATE == 2), // 1 = Normal, 2 = Rotated
+                            P036_CONTRAST,
+                            P036_TIMER,
+                            P036_NLINES
+                            ))) {
         clearPluginTaskData(event->TaskIndex);
         P036_data = nullptr;
         success   = true;
         break;
       }
 
-      // Load the custom settings from flash
-      uint8_t version = get4BitFromUL(PCONFIG_LONG(0), 20); // Bit23-20 Version CustomTaskSettings
-      P036_data->loadDisplayLines(event->TaskIndex, version);
-
-      uint8_t OLED_contrast = PCONFIG(6);
-      P036_data->setContrast(OLED_contrast);
-
       //      Set the initial value of OnOff to On
       UserVar[event->BaseVarIndex] = 1;
-
-      P036_data->OLEDIndex = PCONFIG(7);
-
-      // Flip screen if required
-      // 1 = Normal, 2 = Rotated
-      P036_data->setOrientationRotated(PCONFIG(1) == 2);
-
-      //      Display the device name, logo, time and wifi
-      P036_data->display_header();
-      P036_data->display_logo();
-      P036_data->update_display();
-
-      //      Set up the display timer
-      P036_data->displayTimer = PCONFIG(4);
 
       if (CONFIG_PIN3 != -1) // Button related setup
       {
@@ -400,22 +383,6 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         P036_data->ButtonState     = false;
       }
 
-      //    Initialize frame counter
-      P036_data->frameCounter                 = 0;
-      P036_data->currentFrameToDisplay        = 0;
-      P036_data->nextFrameToDisplay           = 0;
-      P036_data->bPageScrollDisabled          = true;  // first page after INIT without scrolling
-      P036_data->ScrollingPages.linesPerFrame = PCONFIG(2);
-      P036_data->bLineScrollEnabled           = false; // start without line scrolling
-
-      //    Clear scrolling line data
-      for (uint8_t i = 0; i < P36_MAX_LinesPerPage; i++) {
-        P036_data->ScrollingLines.Line[i].Width     = 0;
-        P036_data->ScrollingLines.Line[i].LastWidth = 0;
-      }
-
-      //    prepare font and positions for page and line scrolling
-      P036_data->prepare_pagescrolling();
 #ifdef PLUGIN_036_DEBUG
 
       if (P036_data->isInitialized()) {
@@ -452,25 +419,8 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       if (CONFIG_PIN3 != -1)
       {
         uint8_t newButtonState = digitalRead(CONFIG_PIN3);
-        boolean bPin3Invers    = bitRead(PCONFIG_LONG(0), 16); // Bit 16
-
-        if ((P036_data->ButtonLastState == 0xFF) || (bPin3Invers != newButtonState)) {
-          P036_data->ButtonLastState = newButtonState;
-          P036_data->DebounceCounter++;
-
-          if (P036_data->RepeatCounter > 0) { P036_data->RepeatCounter--; // decrease the repeat count
-          }
-        } else {
-          P036_data->ButtonLastState = 0xFF;                              // Reset
-          P036_data->DebounceCounter = 0;
-          P036_data->RepeatCounter   = 0;
-          P036_data->ButtonState     = false;
-        }
-
-        if ((P036_data->ButtonLastState == newButtonState) && (P036_data->DebounceCounter >= P36_DebounceTreshold) &&
-            (P036_data->RepeatCounter == 0)) {
-          P036_data->ButtonState = true;
-        }
+        bool bPin3Invers    = bitRead(PCONFIG_LONG(0), 16); // Bit 16
+        P036_data->registerButtonState(newButtonState, bPin3Invers);
       }
       success = true;
       break;
@@ -508,10 +458,8 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           UserVar[event->BaseVarIndex] = 1;     //  Save the fact that the display is now ON
           P036_data->P036_JumpToPage(event, 0); //  Start to display the first page, function needs 65ms!
         }
-        P036_data->ButtonState     = false;
-        P036_data->DebounceCounter = 0;
-        P036_data->RepeatCounter   = P36_RepeatDelay; //  Wait a bit before repeating the button action
-        pinMode(CONFIG_PIN3, INPUT_PULLUP);           //  Reset pinstate
+        P036_data->markButtonStateProcessed();
+        pinMode(CONFIG_PIN3, INPUT_PULLUP);     //  Reset pinstate
       }
 
       if (P036_data->bLineScrollEnabled) {
@@ -543,7 +491,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         return success;
       }
 
-      if (P036_data->isInitialized() == false) {
+      if (!P036_data->isInitialized()) {
 #ifdef PLUGIN_036_DEBUG
         addLog(LOG_LEVEL_INFO, F("P036_PLUGIN_ONCE_A_SECOND Not initialized"));
 #endif // PLUGIN_036_DEBUG
@@ -597,7 +545,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         return success;
       }
 
-      if (P036_data->isInitialized() == false) {
+      if (!P036_data->isInitialized()) {
 #ifdef PLUGIN_036_DEBUG
         addLog(LOG_LEVEL_INFO, F("P036_PLUGIN_TIMER_IN Not initialized"));
 #endif // PLUGIN_036_DEBUG
@@ -629,7 +577,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         return success;
       }
 
-      if (P036_data->isInitialized() == false) {
+      if (!P036_data->isInitialized()) {
 #ifdef PLUGIN_036_DEBUG
         addLog(LOG_LEVEL_INFO, F("P036_PLUGIN_READ Not initialized"));
 #endif // PLUGIN_036_DEBUG
@@ -689,7 +637,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
           if (para1 == F("on")) {
             success                 = true;
-            P036_data->displayTimer = PCONFIG(4);
+            P036_data->displayTimer = P036_TIMER;
             P036_data->display->displayOn();
             UserVar[event->BaseVarIndex] = 1; //  Save the fact that the display is now ON
           }
@@ -757,7 +705,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           }
           P036_data->MaxFramesToDisplay = 0xff;                            // update frame count
 
-          boolean bNoDisplayOnReceivedText = bitRead(PCONFIG_LONG(0), 18); // Bit 18 NoDisplayOnReceivedText
+          bool bNoDisplayOnReceivedText = bitRead(PCONFIG_LONG(0), 18); // Bit 18 NoDisplayOnReceivedText
 
           if ((UserVar[event->BaseVarIndex] == 0) && !bNoDisplayOnReceivedText) {
             // display was OFF, turn it ON

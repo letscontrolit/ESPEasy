@@ -4,7 +4,7 @@
 #include "../../_Plugin_Helper.h"
 #include "../../ESPEasy_common.h"
 
-//#define PLUGIN_036_DEBUG    // additional debug messages in the log
+// #define PLUGIN_036_DEBUG    // additional debug messages in the log
 
 
 #define P36_Nlines 12       // The number of different lines which can be displayed - each line is 64 chars max
@@ -59,56 +59,10 @@ enum eHeaderContent {
   ePageNo   = 14,
 };
 
-typedef struct {
-  uint8_t     Top;      // top in pix for this line setting
-  const char *fontData; // font for this line setting
-  uint8_t     Space;    // space in pix between lines for this line setting
-} tFontSettings;
-
-typedef struct {
-  uint8_t       Width;              // width in pix
-  uint8_t       Height;             // height in pix
-  uint8_t       PixLeft;            // first left pix position
-  uint8_t       MaxLines;           // max. line count
-  tFontSettings L1;                 // settings for 1 line
-  tFontSettings L2;                 // settings for 2 lines
-  tFontSettings L3;                 // settings for 3 lines
-  tFontSettings L4;                 // settings for 4 lines
-  uint8_t       WiFiIndicatorLeft;  // left of WiFi indicator
-  uint8_t       WiFiIndicatorWidth; // width of WiFi indicator
-} tSizeSettings;
-
-const tSizeSettings SizeSettings[P36_MaxSizesCount] = {
-   { P36_MaxDisplayWidth, P36_MaxDisplayHeight, 0,   // 128x64
-     4,
-     // page scrolling height = 42
-     { 19, ArialMT_Plain_24, 28},  //  Width: 24 Height: 28
-     { 15, ArialMT_Plain_16, 19},  //  Width: 16 Height: 19
-     { 12, Dialog_plain_12,  14},  //  Width: 13 Height: 15
-     { 12, ArialMT_Plain_10, 10},  //  Width: 10 Height: 13
-     113,
-     15
-   },
-   { P36_MaxDisplayWidth, 32, 0,               // 128x32
-     2,
-     // page scrolling height = 20
-     { 14, Dialog_plain_12,  15},  //  Width: 13 Height: 15
-     { 12, ArialMT_Plain_10, 10},  //  Width: 10 Height: 13
-     {  0, ArialMT_Plain_10,  0},  //  Width: 10 Height: 13 not used!
-     {  0, ArialMT_Plain_10,  0},  //  Width: 10 Height: 13 not used!
-     113,
-     15
-   },
-   { 64, 48, 32,               // 64x48
-     3,
-     // page scrolling height = 36
-     { 20, ArialMT_Plain_24, 28},  //  Width: 24 Height: 28
-     { 14, Dialog_plain_12,  17},  //  Width: 13 Height: 15
-     { 13, ArialMT_Plain_10, 11},  //  Width: 10 Height: 13
-     {  0, ArialMT_Plain_10,  0},  //  Width: 10 Height: 13 not used!
-     32,
-     10
-   }
+enum p036_resolution {
+  pix128x64 = 0,
+  pix128x32 = 1,
+  pix64x48  = 2
 };
 
 enum ePageScrollSpeed {
@@ -158,19 +112,48 @@ typedef struct {
 } tDisplayLines;
 
 
+typedef struct {
+  uint8_t     Top;      // top in pix for this line setting
+  const char *fontData; // font for this line setting
+  uint8_t     Space;    // space in pix between lines for this line setting
+} tFontSettings;
+
+typedef struct {
+  uint8_t       Width;              // width in pix
+  uint8_t       Height;             // height in pix
+  uint8_t       PixLeft;            // first left pix position
+  uint8_t       MaxLines;           // max. line count
+  tFontSettings L1;                 // settings for 1 line
+  tFontSettings L2;                 // settings for 2 lines
+  tFontSettings L3;                 // settings for 3 lines
+  tFontSettings L4;                 // settings for 4 lines
+  uint8_t       WiFiIndicatorLeft;  // left of WiFi indicator
+  uint8_t       WiFiIndicatorWidth; // width of WiFi indicator
+} tSizeSettings;
+
 struct P036_data_struct : public PluginTaskData_base {
   P036_data_struct();
 
   ~P036_data_struct();
 
-  void reset();
+  void                        reset();
 
-  bool init(uint8_t _type,
-            uint8_t _address,
-            uint8_t _sda,
-            uint8_t _scl);
+  static const tSizeSettings& getDisplaySizeSettings(p036_resolution disp_resolution);
+
+  bool init(taskIndex_t      taskIndex,
+            uint8_t          LoadVersion,
+            uint8_t          _type,
+            uint8_t          _address,
+            uint8_t          _sda,
+            uint8_t          _scl,
+            p036_resolution disp_resolution,
+            bool             _rotated,
+            uint8_t          contrast,
+            uint8_t          _displayTimer,
+            uint8_t          nrLines);
 
   bool isInitialized() const;
+
 
   void loadDisplayLines(taskIndex_t taskIndex,
                         uint8_t     LoadVersion);
@@ -215,6 +198,9 @@ struct P036_data_struct : public PluginTaskData_base {
   String  P36_parseTemplate(String& tmpString,
                             uint8_t lineSize);
 
+  void    registerButtonState(uint8_t newButtonState, bool bPin3Invers);
+
+  void    markButtonStateProcessed();
 
   // Instantiate display here - does not work to do this within the INIT call
   OLEDDisplay *display = nullptr;
@@ -228,17 +214,17 @@ struct P036_data_struct : public PluginTaskData_base {
   int8_t lastWiFiState = 0;
 
   // display
-  uint8_t OLEDIndex          = 0;
-  boolean bLineScrollEnabled = false;
-  uint8_t TopLineOffset      = 0;  // Offset for top line, used for rotated image while using displays < P36_MaxDisplayHeight lines
+  p036_resolution _disp_resolution   = pix128x64;
+  bool             bLineScrollEnabled = false;
+  uint8_t          TopLineOffset      = 0; // Offset for top line, used for rotated image while using displays < P36_MaxDisplayHeight lines
   // Display button
-  boolean ButtonState     = false; // button not touched
-  uint8_t ButtonLastState = 0;     // Last state checked (debouncing in progress)
-  uint8_t DebounceCounter = 0;     // debounce counter
-  uint8_t RepeatCounter   = 0;     // Repeat delay counter when holding button pressed
-  uint8_t displayTimer    = 0;     // counter for display OFF
+  bool    ButtonState     = false;         // button not touched
+  uint8_t ButtonLastState = 0;             // Last state checked (debouncing in progress)
+  uint8_t DebounceCounter = 0;             // debounce counter
+  uint8_t RepeatCounter   = 0;             // Repeat delay counter when holding button pressed
+  uint8_t displayTimer    = 0;             // counter for display OFF
   // frame header
-  boolean        bAlternativHeader = false;
+  bool           bAlternativHeader = false;
   uint16_t       HeaderCount       = 0;
   eHeaderContent HeaderContent;
   eHeaderContent HeaderContentAlternative;
@@ -249,7 +235,7 @@ struct P036_data_struct : public PluginTaskData_base {
   uint8_t nextFrameToDisplay    = 0;    // next frame because content changed in PLUGIN_WRITE
   uint8_t frameCounter          = 0;    // need to keep track of framecounter from call to call
   uint8_t disableFrameChangeCnt = 0;    // counter to disable frame change after JumpToPage in case PLUGIN_READ already scheduled
-  boolean bPageScrollDisabled   = true; // first page after INIT or after JumpToPage without scrolling
+  bool    bPageScrollDisabled   = true; // first page after INIT or after JumpToPage without scrolling
 };
 
 
