@@ -9,7 +9,11 @@
 #define PLUGIN_VALUENAME1_095 "TFT"
 #define PLUGIN_095_MAX_DISPLAY 1
 
-#define PLUGIN_FONT_MODE      // enable to use fonts in this plugin
+#include "_Plugin_Helper.h"
+
+#if !defined(LIMIT_BUILD_SIZE) && !defined(PLUGIN_095_FONT_INCLUDED)
+  #define PLUGIN_095_FONT_INCLUDED   // enable to use fonts in this plugin
+#endif
 
 /* README.MD
 
@@ -107,10 +111,10 @@ Examples:
 //plugin dependency
 #include <Adafruit_ILI9341.h>
 
-#ifdef PLUGIN_FONT_MODE
-   #include "src/Static/Fonts/Seven_Segment24pt7b.h"
-   #include "src/Static/Fonts/Seven_Segment18pt7b.h"
-   #include "Fonts/FreeSans9pt7b.h"
+#ifdef PLUGIN_095_FONT_INCLUDED
+      #include "src/Static/Fonts/Seven_Segment24pt7b.h"
+      #include "src/Static/Fonts/Seven_Segment18pt7b.h"
+      #include "Fonts/FreeSans9pt7b.h"
 #endif   
 
 
@@ -349,7 +353,7 @@ boolean Plugin_095(byte function, struct EventStruct *event, String& string)
             {
               tft->setTextSize(sParams[0].toInt());
             }
-            #ifdef PLUGIN_FONT_MODE
+            #ifdef PLUGIN_095_FONT_INCLUDED
                 else if(subcommand.equalsIgnoreCase(F("font")) && argCount == 1) {
                    if (sParams[0].equalsIgnoreCase(F("SEVENSEG24"))) {
                       tft->setFont(&Seven_Segment24pt7b);
