@@ -17,6 +17,7 @@
 
 #include "src/Helpers/CompiletimeDefines.h"
 #include "src/Helpers/ESPEasy_time_calc.h"
+#include "src/Helpers/StringConverter.h"
 
 #include <WiFiClient.h>
 #include <WiFiUdp.h>
@@ -70,19 +71,6 @@ bool safeReadStringUntil(Stream     & input,
 
   addLog(LOG_LEVEL_ERROR, F("Timeout while reading input data!"));
   return false;
-}
-
-String get_formatted_Controller_number(cpluginID_t cpluginID) {
-  if (!validCPluginID(cpluginID)) {
-    return F("C---");
-  }
-  String result = F("C");
-
-  if (cpluginID < 100) { result += '0'; }
-
-  if (cpluginID < 10) { result += '0'; }
-  result += cpluginID;
-  return result;
 }
 
 String get_auth_header(const String& user, const String& pass) {
@@ -272,12 +260,12 @@ bool count_connection_results(bool success, const String& prefix, int controller
 bool try_connect_host(int controller_number, WiFiUDP& client, ControllerSettingsStruct& ControllerSettings) {
   START_TIMER;
 
-  if (!WiFiConnected()) { return false; }
+  if (!NetworkConnected()) { return false; }
   client.setTimeout(ControllerSettings.ClientTimeout);
 #ifndef BUILD_NO_DEBUG
   log_connecting_to(F("UDP  : "), controller_number, ControllerSettings);
 #endif // ifndef BUILD_NO_DEBUG
-  bool success      = ControllerSettings.beginPacket(client) != 0;
+  bool success      = ControllerSettings.beginPacket(client);
   const bool result = count_connection_results(
     success,
     F("UDP  : "), controller_number, ControllerSettings);
@@ -292,7 +280,7 @@ bool try_connect_host(int controller_number, WiFiClient& client, ControllerSetti
 bool try_connect_host(int controller_number, WiFiClient& client, ControllerSettingsStruct& ControllerSettings, const String& loglabel) {
   START_TIMER;
 
-  if (!WiFiConnected()) { return false; }
+  if (!NetworkConnected()) { return false; }
 
   // Use WiFiClient class to create TCP connections
   client.setTimeout(ControllerSettings.ClientTimeout);

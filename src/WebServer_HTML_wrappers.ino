@@ -257,11 +257,6 @@ void addHtmlError(const String& error) {
   }
   else
   {
-    TXBuffer += jsToastMessageBegin;
-
-    // we can push custom messages here in future releases...
-    addHtml(F("Submitted"));
-    TXBuffer += jsToastMessageEnd;
   }
 }
 

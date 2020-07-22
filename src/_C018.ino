@@ -1,3 +1,5 @@
+#include "_CPlugin_Helper.h"
+
 #ifdef USES_C018
 
 // #######################################################################################################
@@ -19,7 +21,6 @@
 #include "src/ControllerQueue/C018_queue_element.h"
 #include "ESPEasy_plugindefs.h"
 #include "ESPEasy_fdwdecl.h"
-#include "_CPlugin_Helper.h"
 
 
 // Have this define after the includes, so we can set it in Custom.h
@@ -431,7 +432,7 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
       Protocol[protocolCount].usesCheckReply = false;
       Protocol[protocolCount].usesTimeout    = false;
       Protocol[protocolCount].usesSampleSets = true;
-      Protocol[protocolCount].needsWiFi      = false;
+      Protocol[protocolCount].needsNetwork      = false;
       break;
     }
 

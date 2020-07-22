@@ -22,6 +22,12 @@ namespace std
 
 #include "src/DataStructs/ESPEasyDefaults.h"
 
+#ifdef USE_LITTLEFS
+  #include <LittleFS.h>
+  #define ESPEASY_FS LittleFS
+#else 
+  #define ESPEASY_FS SPIFFS
+#endif
 
 // Include custom first, then build info. (one may want to set BUILD_GIT for example)
 #include "ESPEasy_buildinfo.h"
@@ -106,7 +112,7 @@ String getUnknownString();
   // #define FEATURE_MDNS
 #endif
 #if defined(ESP32)
- #define FEATURE_ARDUINO_OTA
+ //#define FEATURE_ARDUINO_OTA
  //#define FEATURE_MDNS
 #endif
 

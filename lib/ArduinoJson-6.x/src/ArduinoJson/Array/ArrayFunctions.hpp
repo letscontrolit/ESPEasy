@@ -1,15 +1,15 @@
 // ArduinoJson - arduinojson.org
-// Copyright Benoit Blanchon 2014-2019
+// Copyright Benoit Blanchon 2014-2020
 // MIT License
 
 #pragma once
 
-#include "../Collection/CollectionData.hpp"
+#include <ArduinoJson/Collection/CollectionData.hpp>
 
 namespace ARDUINOJSON_NAMESPACE {
 
 inline VariantData *arrayAdd(CollectionData *arr, MemoryPool *pool) {
-  return arr ? arr->add(pool) : 0;
+  return arr ? arr->addElement(pool) : 0;
 }
 
 template <typename Visitor>
@@ -21,9 +21,10 @@ inline void arrayAccept(const CollectionData *arr, Visitor &visitor) {
 }
 
 inline bool arrayEquals(const CollectionData *lhs, const CollectionData *rhs) {
-  if (lhs == rhs) return true;
-  if (!lhs || !rhs) return false;
-
+  if (lhs == rhs)
+    return true;
+  if (!lhs || !rhs)
+    return false;
   return lhs->equalsArray(*rhs);
 }
 }  // namespace ARDUINOJSON_NAMESPACE

@@ -1,3 +1,4 @@
+#include "src/Commands/InternalCommands.h"
 #include "src/Globals/Nodes.h"
 #include "src/Globals/ESPEasyWiFiEvent.h"
 
@@ -59,12 +60,13 @@ void etharp_gratuitous_r(struct netif *netif) {
 \*********************************************************************************************/
 void syslog(byte logLevel, const char *message)
 {
-  if ((Settings.Syslog_IP[0] != 0) && WiFiConnected())
+  if ((Settings.Syslog_IP[0] != 0) && NetworkConnected())
   {
     IPAddress broadcastIP(Settings.Syslog_IP[0], Settings.Syslog_IP[1], Settings.Syslog_IP[2], Settings.Syslog_IP[3]);
-    portUDP.beginPacket(broadcastIP, 514);
-    char str[256];
-    str[0] = 0;
+    if (portUDP.beginPacket(broadcastIP, Settings.SyslogPort) == 0) {
+      // problem resolving the hostname or port
+      return;
+    }
     byte prio = Settings.SyslogFacility * 8;
 
     if (logLevel == LOG_LEVEL_ERROR) {
@@ -80,19 +82,80 @@ void syslog(byte logLevel, const char *message)
     // An RFC3164 compliant message must be formated like :  "<PRIO>[TimeStamp ]Hostname TaskName: Message"
 
     // Using Settings.Name as the Hostname (Hostname must NOT content space)
-    snprintf_P(str, sizeof(str), PSTR("<%u>%s EspEasy: %s"), prio, Settings.Name, message);
-
-    // Using Setting.Unit to build a Hostname
-    // snprintf_P(str, sizeof(str), PSTR("<7>EspEasy_%u ESP: %s"), Settings.Unit, message);
-    #if defined(ESP8266)
-    portUDP.write(str);
-    #endif // if defined(ESP8266)
-    #if defined(ESP32)
-    portUDP.write((uint8_t *)str, strlen(str));
-    #endif // if defined(ESP32)
+    {
+      String header;
+      String hostname = Settings.Name;
+      hostname.trim();
+      hostname.replace(' ', '_');
+      header.reserve(16 + hostname.length());
+      char str[8] = {0};
+      snprintf_P(str, sizeof(str), PSTR("<%u>"), prio);
+      header = str;
+      header += hostname;
+      header += F(" EspEasy: ");
+      #ifdef ESP8266
+      portUDP.write(header.c_str(), header.length());
+      #endif
+      #ifdef ESP32
+      portUDP.write((uint8_t *)header.c_str(), header.length());
+      #endif
+    }
+    const char* c = message;
+    bool done = false;
+    while (!done) {
+      // Must use PROGMEM aware functions here to process message
+      char ch = pgm_read_byte(c++);
+      if (ch == '\0') {
+        done = true;
+      } else {
+        #ifdef ESP8266
+        portUDP.write(ch);
+        #endif
+        #ifdef ESP32
+        portUDP.write((uint8_t)ch);
+        #endif
+      }
+    }
     portUDP.endPacket();
   }
 }
+
+/*********************************************************************************************\
+   Update UDP port (ESPEasy propiertary protocol)
+\*********************************************************************************************/
+void updateUDPport()
+{
+  static uint16_t lastUsedUDPPort = 0;
+
+  if (Settings.UDPPort == lastUsedUDPPort) {
+    return;
+  }
+  if (lastUsedUDPPort != 0) {
+    portUDP.stop();
+    lastUsedUDPPort = 0;
+  }
+  if (!NetworkConnected()) {
+    return;
+  }
+  if (Settings.UDPPort != 0) {
+    if (portUDP.begin(Settings.UDPPort) == 0) {
+      if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+        String log = F("UDP : Cannot bind to ESPEasy p2p UDP port ");
+        log += String(Settings.UDPPort);
+        addLog(LOG_LEVEL_ERROR, log);
+      }
+    } else {
+      lastUsedUDPPort = Settings.UDPPort;
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        String log = F("UDP : Start listening on port ");
+        log += String(Settings.UDPPort);
+        addLog(LOG_LEVEL_INFO, log);
+      }
+    }
+  }
+}
+
+
 
 /*********************************************************************************************\
    Check UDP messages (ESPEasy propiertary protocol)
@@ -126,6 +189,10 @@ void checkUDP()
       return;
     }
 
+    // UDP_PACKETSIZE_MAX should be as small as possible but still enough to hold all 
+    // data for PLUGIN_UDP_IN or CPLUGIN_UDP_IN calls
+    // This node may also receive other UDP packets which may be quite large 
+    // and then crash due to memory allocation failures
     if ((packetSize >= 2) && (packetSize < UDP_PACKETSIZE_MAX)) {
       // Allocate buffer to process packet.
       std::vector<char> packetBuffer;
@@ -139,7 +206,7 @@ void checkUDP()
         {
           packetBuffer[len] = 0;
           addLog(LOG_LEVEL_DEBUG, &packetBuffer[0]);
-          ExecuteCommand_all(VALUE_SOURCE_SYSTEM, &packetBuffer[0]);
+          ExecuteCommand_all(EventValueSource::Enum::VALUE_SOURCE_SYSTEM, &packetBuffer[0]);
         }
         else
         {
@@ -175,13 +242,17 @@ void checkUDP()
 
                 if (len >= 41)      // extended packet size
                 {
-                  it->second.build = packetBuffer[13] + 256 * packetBuffer[14];
+                  it->second.build = makeWord(packetBuffer[14], packetBuffer[13]);
                   char tmpNodeName[26] = { 0 };
                   memcpy(&tmpNodeName[0], reinterpret_cast<byte *>(&packetBuffer[15]), 25);
                   tmpNodeName[25]     = 0;
                   it->second.nodeName = tmpNodeName;
                   it->second.nodeName.trim();
                   it->second.nodeType = packetBuffer[40];
+                  it->second.webgui_portnumber = 80;
+                  if (len >= 43 && it->second.build >= 20107) {
+                    it->second.webgui_portnumber = makeWord(packetBuffer[42],packetBuffer[41]);
+                  }
                 }
               }
 
@@ -214,9 +285,11 @@ void checkUDP()
       }
     }
   }
-  #if defined(ESP32) // testing
-  portUDP.flush();
-  #endif // if defined(ESP32)
+  // Flush any remaining content of the packet.
+  while (portUDP.available()) {
+    // Do not call portUDP.flush() as that's meant to sending the packet (on ESP8266)
+    portUDP.read();
+  }
   runningUPDCheck = false;
 }
 
@@ -225,7 +298,7 @@ void checkUDP()
 \*********************************************************************************************/
 void SendUDPCommand(byte destUnit, const char *data, byte dataLength)
 {
-  if (!WiFiConnected(10)) {
+  if (!NetworkConnected(10)) {
     return;
   }
 
@@ -249,7 +322,7 @@ void SendUDPCommand(byte destUnit, const char *data, byte dataLength)
 \*********************************************************************************************/
 void sendUDP(byte unit, const byte *data, byte size)
 {
-  if (!WiFiConnected(10)) {
+  if (!NetworkConnected(10)) {
     return;
   }
 
@@ -324,7 +397,7 @@ void refreshNodeList()
 \*********************************************************************************************/
 void sendSysInfoUDP(byte repeats)
 {
-  if ((Settings.UDPPort == 0) || !WiFiConnected(10)) {
+  if ((Settings.UDPPort == 0) || !NetworkConnected(10)) {
     return;
   }
 
@@ -346,7 +419,8 @@ void sendSysInfoUDP(byte repeats)
   for (byte counter = 0; counter < repeats; counter++)
   {
     uint8_t  mac[]   = { 0, 0, 0, 0, 0, 0 };
-    uint8_t *macread = WiFi.macAddress(mac);
+    uint8_t *macread = NetworkMacAddressAsBytes(mac);
+
     byte     data[80];
     data[0] = 255;
     data[1] = 1;
@@ -354,16 +428,19 @@ void sendSysInfoUDP(byte repeats)
     for (byte x = 0; x < 6; x++) {
       data[x + 2] = macread[x];
     }
-    IPAddress ip = WiFi.localIP();
-
+    
+    IPAddress ip = NetworkLocalIP();
+    
     for (byte x = 0; x < 4; x++) {
       data[x + 8] = ip[x];
     }
     data[12] = Settings.Unit;
-    data[13] = Settings.Build & 0xff;
-    data[14] = Settings.Build >> 8;
+    data[13] =  lowByte(Settings.Build);
+    data[14] = highByte(Settings.Build);
     memcpy((byte *)data + 15, Settings.Name, 25);
     data[40] = NODE_TYPE_ID;
+    data[41] =  lowByte(Settings.WebserverPort);
+    data[42] = highByte(Settings.WebserverPort);
     statusLED(true);
 
     IPAddress broadcastIP(255, 255, 255, 255);
@@ -382,7 +459,7 @@ void sendSysInfoUDP(byte repeats)
 
   if (it != Nodes.end())
   {
-    IPAddress ip = WiFi.localIP();
+    IPAddress ip = NetworkLocalIP();
 
     for (byte x = 0; x < 4; x++) {
       it->second.ip[x] = ip[x];
@@ -401,11 +478,11 @@ void sendSysInfoUDP(byte repeats)
    Respond to HTTP XML requests for SSDP information
  \*********************************************************************************************/
 void SSDP_schema(WiFiClient& client) {
-  if (!WiFiConnected(10)) {
+  if (!NetworkConnected(10)) {
     return;
   }
 
-  const IPAddress ip     = WiFi.localIP();
+  const IPAddress ip     = NetworkLocalIP();
   const uint32_t  chipId = ESP.getChipId();
   char uuid[64];
   sprintf_P(uuid, PSTR("38323636-4558-4dda-9188-cda0e6%02x%02x%02x"),
@@ -497,7 +574,7 @@ bool SSDP_begin() {
   _server->ref();
 
   ip_addr_t ifaddr;
-  ifaddr.addr = WiFi.localIP();
+  ifaddr.addr = NetworkLocalIP();
   ip_addr_t multicast_addr;
   multicast_addr.addr = (uint32_t)SSDP_MULTICAST_ADDR;
 
@@ -543,7 +620,7 @@ bool SSDP_begin() {
    Send SSDP messages (notify & responses)
  \*********************************************************************************************/
 void SSDP_send(byte method) {
-  uint32_t ip = WiFi.localIP();
+  uint32_t ip = NetworkLocalIP();
 
   // FIXME TD-er: Why create String objects of these flashstrings?
   String _ssdp_response_template = F(
@@ -562,7 +639,7 @@ void SSDP_send(byte method) {
     "CACHE-CONTROL: max-age=%u\r\n"                // SSDP_INTERVAL
     "SERVER: Arduino/1.0 UPNP/1.1 ESPEasy/%u\r\n"  // _modelNumber
     "USN: uuid:%s\r\n"                             // _uuid
-    "LOCATION: http://%u.%u.%u.%u:80/ssdp.xml\r\n" // WiFi.localIP(),
+    "LOCATION: http://%u.%u.%u.%u:80/ssdp.xml\r\n" // NetworkLocalIP(),
     "\r\n");
   {
     char uuid[64]   = { 0 };
@@ -749,11 +826,13 @@ void SSDP_update() {
 // ********************************************************************************
 bool getSubnetRange(IPAddress& low, IPAddress& high)
 {
-  if (wifiStatus < ESPEASY_WIFI_GOT_IP) {
+  if (!bitRead(wifiStatus, ESPEASY_WIFI_GOT_IP)) {
     return false;
   }
-  const IPAddress ip     = WiFi.localIP();
-  const IPAddress subnet = WiFi.subnetMask();
+  
+  const IPAddress ip = NetworkLocalIP();
+  const IPAddress subnet = NetworkSubnetMask();
+  
   low  = ip;
   high = ip;
 
@@ -777,6 +856,8 @@ bool getSubnetRange(IPAddress& low, IPAddress& high)
 
 
 bool hasIPaddr() {
+  if (useStaticIP()) return true;
+  
 #ifdef CORE_POST_2_5_0
   bool configured = false;
 
@@ -797,8 +878,8 @@ bool hasIPaddr() {
 #endif // ifdef CORE_POST_2_5_0
 }
 
-// Check WiFi connection. Maximum timeout 500 msec.
-bool WiFiConnected(uint32_t timeout_ms) {
+// Check connection. Maximum timeout 500 msec.
+bool NetworkConnected(uint32_t timeout_ms) {
   uint32_t timer     = millis() + (timeout_ms > 500 ? 500 : timeout_ms);
   uint32_t min_delay = timeout_ms / 20;
 
@@ -808,7 +889,7 @@ bool WiFiConnected(uint32_t timeout_ms) {
   }
 
   // Apparently something needs network, perform check to see if it is ready now.
-  while (!WiFiConnected()) {
+  while (!NetworkConnected()) {
     if (timeOutReached(timer)) {
       return false;
     }
@@ -818,7 +899,7 @@ bool WiFiConnected(uint32_t timeout_ms) {
 }
 
 bool hostReachable(const IPAddress& ip) {
-  if (!WiFiConnected()) { return false; }
+    if (!NetworkConnected()) { return false; }
 
   return true; // Disabled ping as requested here:
   // https://github.com/letscontrolit/ESPEasy/issues/1494#issuecomment-397872538
@@ -864,9 +945,12 @@ bool connectClient(WiFiClient& client, IPAddress ip, uint16_t port)
 {
   START_TIMER;
 
-  if (!WiFiConnected()) {
+  if (!NetworkConnected()) {
     return false;
   }
+  // In case of domain name resolution error result can be negative.
+  // https://github.com/esp8266/Arduino/blob/18f643c7e2d6a0da9d26ff2b14c94e6536ab78c1/libraries/Ethernet/src/Dns.cpp#L44
+  // Thus must match the result with 1.
   bool connected = (client.connect(ip, port) == 1);
   yield();
 
@@ -887,7 +971,7 @@ bool connectClient(WiFiClient& client, IPAddress ip, uint16_t port)
 bool resolveHostByName(const char *aHostname, IPAddress& aResult) {
   START_TIMER;
 
-  if (!WiFiConnected()) {
+  if (!NetworkConnected()) {
     return false;
   }
 #if defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(ESP32)
@@ -919,7 +1003,7 @@ bool hostReachable(const String& hostname) {
 // Create a random port for the UDP connection.
 // Return true when successful.
 bool beginWiFiUDP_randomPort(WiFiUDP& udp) {
-  if (!WiFiConnected()) {
+  if (!NetworkConnected()) {
     return false;
   }
   unsigned int attempts = 3;
@@ -936,7 +1020,7 @@ bool beginWiFiUDP_randomPort(WiFiUDP& udp) {
 }
 
 void sendGratuitousARP() {
-  if (!WiFiConnected()) {
+  if (!NetworkConnected()) {
     return;
   }
 #ifdef SUPPORT_ARP
@@ -1075,7 +1159,7 @@ bool downloadFile(const String& url, String file_save, const String& user, const
   }
 
   long len = http.getSize();
-  File f   = SPIFFS.open(file_save, "w");
+  File f   = ESPEASY_FS.open(file_save, "w");
 
   if (f) {
     uint8_t buff[128];

@@ -3,6 +3,7 @@
 
 #include <ESPeasySerial.h>
 #include "../../_Plugin_Helper.h"
+#include "../../ESPEasy_common.h"
 
 #ifdef USES_P087
 # include <Regexp.h>

@@ -117,6 +117,7 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
         PCONFIG(2) = getFormItemInt(F("p012_timer"));
         PCONFIG(3) = getFormItemInt(F("p012_mode"));
 
+        // FIXME TD-er: This is a huge stack allocated object.
         char deviceTemplate[P12_Nlines][P12_Nchars];
         String error;
         for (byte varNr = 0; varNr < P12_Nlines; varNr++)
@@ -189,6 +190,7 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
       {
+        // FIXME TD-er: This is a huge stack allocated object.
         char deviceTemplate[P12_Nlines][P12_Nchars];
         LoadCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
 

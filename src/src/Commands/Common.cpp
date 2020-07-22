@@ -6,6 +6,8 @@
 #include "../../ESPEasy_fdwdecl.h"
 #include "../DataStructs/ESPEasy_EventStruct.h"
 #include "../DataStructs/EventValueSource.h"
+#include "../Helpers/Numerical.h"
+#include "../Helpers/StringConverter.h"
 
 
 // Simple function to return "Ok", to avoid flash string duplication in the firmware.
@@ -33,7 +35,7 @@ String return_result(struct EventStruct *event, const String& result)
 {
   serialPrintln(result);
 
-  if (event->Source == VALUE_SOURCE_SERIAL) {
+  if (event->Source == EventValueSource::Enum::VALUE_SOURCE_SERIAL) {
     return return_command_success();
   }
   return result;
@@ -41,7 +43,7 @@ String return_result(struct EventStruct *event, const String& result)
 
 String return_see_serial(struct EventStruct *event)
 {
-  if (event->Source == VALUE_SOURCE_SERIAL) {
+  if (event->Source == EventValueSource::Enum::VALUE_SOURCE_SERIAL) {
     return return_command_success();
   }
   return F("Output sent to serial");
@@ -149,6 +151,66 @@ String Command_GetORSetBool(struct EventStruct *event,
   if (hasArgument) {
     String result = targetDescription;
     result += boolToString(*value);
+    return return_result(event, result);
+  }
+  return return_command_success();
+}
+
+String Command_GetORSetUint8_t(struct EventStruct *event,
+                            const String      & targetDescription,
+                            const char         *Line,
+                            uint8_t            *value,
+                            int                 arg)
+{
+  bool hasArgument = false;
+  {
+    // Check if command is valid. Leave in separate scope to delete the TmpStr1
+    String TmpStr1;
+
+    if (GetArgv(Line, TmpStr1, arg + 1)) {
+      hasArgument = true;
+      TmpStr1.toLowerCase();
+
+      if (isInt(TmpStr1)) {
+        *value = (uint8_t)atoi(TmpStr1.c_str());
+      }
+      else if (strcmp_P(PSTR("WIFI"), TmpStr1.c_str()) == 0) { *value = 0; }
+      else if (strcmp_P(PSTR("ETHERNET"), TmpStr1.c_str()) == 0) { *value = 1; }
+    }
+  }
+
+  if (hasArgument) {
+    String result = targetDescription;
+    result += *value;
+    return return_result(event, result);
+  }
+  return return_command_success();
+}
+
+String Command_GetORSetInt8_t(struct EventStruct *event,
+                            const String      & targetDescription,
+                            const char         *Line,
+                            int8_t             *value,
+                            int                 arg)
+{
+  bool hasArgument = false;
+  {
+    // Check if command is valid. Leave in separate scope to delete the TmpStr1
+    String TmpStr1;
+
+    if (GetArgv(Line, TmpStr1, arg + 1)) {
+      hasArgument = true;
+      TmpStr1.toLowerCase();
+
+      if (isInt(TmpStr1)) {
+        *value = (int8_t)atoi(TmpStr1.c_str());
+      }
+    }
+  }
+
+  if (hasArgument) {
+    String result = targetDescription;
+    result += *value;
     return return_result(event, result);
   }
   return return_command_success();

@@ -5,6 +5,10 @@
 
 unsigned long connectionFailures = 0;
 
+#ifdef ESP32
+WiFiEventId_t  wm_event_id;
+#endif
+
 #ifdef ESP8266
 WiFiEventHandler stationConnectedHandler;
 WiFiEventHandler stationDisconnectedHandler;
@@ -29,6 +33,7 @@ bool    channel_changed                   = false;
 WiFiDisconnectReason lastDisconnectReason = WIFI_DISCONNECT_REASON_UNSPECIFIED;
 unsigned long lastConnectMoment           = 0;
 unsigned long lastDisconnectMoment        = 0;
+unsigned long lastWiFiResetMoment         = 0;
 unsigned long lastGetIPmoment             = 0;
 unsigned long lastGetScanMoment           = 0;
 unsigned long lastConnectedDuration       = 0;
