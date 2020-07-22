@@ -76,312 +76,13 @@
 // CHG: Parameters sorted
 
 #include "_Plugin_Helper.h"
+#include "src/PluginStructs/P036_data_struct.h"
 
 #define PLUGIN_036
 #define PLUGIN_ID_036         36
 #define PLUGIN_NAME_036       "Display - OLED SSD1306/SH1106 Framed"
 #define PLUGIN_VALUENAME1_036 "OLED"
-//#define PLUGIN_036_DEBUG    // additional debug messages in the log
 
-#define P36_Nlines 12       // The number of different lines which can be displayed - each line is 64 chars max
-#define P36_NcharsV0 32     // max chars per line up to 22.11.2019 (V0)
-#define P36_NcharsV1 64     // max chars per line from 22.11.2019 (V1)
-#define P36_MaxSizesCount 3 // number of different OLED sizes
-
-#define P36_MaxDisplayWidth 128
-#define P36_MaxDisplayHeight 64
-#define P36_DisplayCentre 64
-#define P36_HeaderHeight 12
-#define P036_IndicatorTop 54
-#define P036_IndicatorHeight 10
-
-#define P36_CONTRAST_OFF    1
-#define P36_CONTRAST_LOW    64
-#define P36_CONTRAST_MED  0xCF
-#define P36_CONTRAST_HIGH 0xFF
-
-
-#include "SSD1306.h"
-#include "SH1106Wire.h"
-#include "OLED_SSD1306_SH1106_images.h"
-#include "Dialog_Plain_12_font.h"
-
-#define P36_WIFI_STATE_UNSET          -2
-#define P36_WIFI_STATE_NOT_CONNECTED  -1
-#define P36_MAX_LinesPerPage          4
-#define P36_WaitScrollLines           5                          // wait 0.5s before and after scrolling line
-#define P36_PageScrollTimer           25                         // timer in msec for page Scrolling
-#define P36_PageScrollTick            (P36_PageScrollTimer + 20) // total time for one PageScrollTick (including the handling time of 20ms
-                                                                 // in PLUGIN_TIMER_IN)
-#define P36_PageScrollPix             4                          // min pixel change while page scrolling
-#define P36_DebounceTreshold          5                          // number of 20 msec (fifty per second) ticks before the button has settled
-#define P36_RepeatDelay               50                         // number of 20 msec ticks before repeating the button action when holding
-                                                                 // it pressed
-
-enum eHeaderContent {
-  eSSID     = 1,
-  eSysName  = 2,
-  eIP       = 3,
-  eMAC      = 4,
-  eRSSI     = 5,
-  eBSSID    = 6,
-  eWiFiCh   = 7,
-  eUnit     = 8,
-  eSysLoad  = 9,
-  eSysHeap  = 10,
-  eSysStack = 11,
-  eTime     = 12,
-  eDate     = 13,
-  ePageNo   = 14,
-};
-
-typedef struct {
-  uint8_t     Top;      // top in pix for this line setting
-  const char *fontData; // font for this line setting
-  uint8_t     Space;    // space in pix between lines for this line setting
-} tFontSettings;
-
-typedef struct {
-  uint8_t       Width;              // width in pix
-  uint8_t       Height;             // height in pix
-  uint8_t       PixLeft;            // first left pix position
-  uint8_t       MaxLines;           // max. line count
-  tFontSettings L1;                 // settings for 1 line
-  tFontSettings L2;                 // settings for 2 lines
-  tFontSettings L3;                 // settings for 3 lines
-  tFontSettings L4;                 // settings for 4 lines
-  uint8_t       WiFiIndicatorLeft;  // left of WiFi indicator
-  uint8_t       WiFiIndicatorWidth; // width of WiFi indicator
-} tSizeSettings;
-
-const tSizeSettings SizeSettings[P36_MaxSizesCount] = {
-   { P36_MaxDisplayWidth, P36_MaxDisplayHeight, 0,   // 128x64
-     4,
-     // page scrolling height = 42
-     { 19, ArialMT_Plain_24, 28},  //  Width: 24 Height: 28
-     { 15, ArialMT_Plain_16, 19},  //  Width: 16 Height: 19
-     { 12, Dialog_plain_12,  14},  //  Width: 13 Height: 15
-     { 12, ArialMT_Plain_10, 10},  //  Width: 10 Height: 13
-     113,
-     15
-   },
-   { P36_MaxDisplayWidth, 32, 0,               // 128x32
-     2,
-     // page scrolling height = 20
-     { 14, Dialog_plain_12,  15},  //  Width: 13 Height: 15
-     { 12, ArialMT_Plain_10, 10},  //  Width: 10 Height: 13
-     {  0, ArialMT_Plain_10,  0},  //  Width: 10 Height: 13 not used!
-     {  0, ArialMT_Plain_10,  0},  //  Width: 10 Height: 13 not used!
-     113,
-     15
-   },
-   { 64, 48, 32,               // 64x48
-     3,
-     // page scrolling height = 36
-     { 20, ArialMT_Plain_24, 28},  //  Width: 24 Height: 28
-     { 14, Dialog_plain_12,  17},  //  Width: 13 Height: 15
-     { 13, ArialMT_Plain_10, 11},  //  Width: 10 Height: 13
-     {  0, ArialMT_Plain_10,  0},  //  Width: 10 Height: 13 not used!
-     32,
-     10
-   }
-};
-
-enum ePageScrollSpeed {
-  ePSS_VerySlow = 1, // 800ms
-  ePSS_Slow     = 2, // 400ms
-  ePSS_Fast     = 4, // 200ms
-  ePSS_VeryFast = 8, // 100ms
-  ePSS_Instant  = 32 // 20ms
-};
-
-typedef struct {
-  String   LineContent;       // content
-  uint16_t LastWidth   = 0;   // width of last line in pix
-  uint16_t Width       = 0;   // width in pix
-  uint8_t  Height      = 0;   // Height in Pix
-  uint8_t  ypos        = 0;   // y position in pix
-  int      CurrentLeft = 0;   // current left pix position
-  float    dPix        = 0.0; // pix change per scroll time (100ms)
-  float    fPixSum     = 0.0; // pix sum while scrolling (100ms)
-} tScrollLine;
-
-typedef struct {
-  const char *Font  = nullptr; // font for this line setting
-  uint8_t     Space = 0;       // space in pix between lines for this line setting
-  uint16_t    wait  = 0;       // waiting time before scrolling
-  tScrollLine Line[P36_MAX_LinesPerPage];
-} tScrollingLines;
-
-typedef struct {
-  uint8_t     Scrolling                  = 0;       // 0=Ready, 1=Scrolling
-  const char *Font                       = nullptr; // font for this line setting
-  uint8_t     dPix                       = 0;       // pix change per scroll time (25ms)
-  int         dPixSum                    = 0;       // act pix change
-  uint8_t     linesPerFrame              = 0;       // the number of lines in each frame
-  int         ypos[P36_MAX_LinesPerPage] = { 0 };   // ypos contains the heights of the various lines - this depends on the font and the
-                                                    // number of lines
-  String      LineIn[P36_MAX_LinesPerPage];
-  String      LineOut[P36_MAX_LinesPerPage];
-} tScrollingPages;
-
-typedef struct {
-  char    Content[P36_NcharsV1] = { 0 };
-  uint8_t FontType              = 0;
-  uint8_t FontHeight            = 0;
-  uint8_t FontSpace             = 0;
-  uint8_t reserved              = 0;
-} tDisplayLines;
-
-struct P036_data_struct : public PluginTaskData_base {
-  P036_data_struct() : display(nullptr) {}
-
-  ~P036_data_struct() {
-    reset();
-  }
-
-  void reset() {
-    if (display != nullptr) {
-      display->displayOff();
-      display->end();
-      delete display;
-      display = nullptr;
-    }
-  }
-
-  bool init(uint8_t _type, uint8_t _address, uint8_t _sda, uint8_t _scl) {
-    reset();
-
-    lastWiFiState       = P36_WIFI_STATE_UNSET;
-    OLEDIndex           = 0;
-    bAlternativHeader   = false;
-    HeaderCount         = 0;
-    bPageScrollDisabled = true; // first page after INIT without scrolling
-    TopLineOffset       = 0;    // Offset for top line, used for rotated image while using displays < P36_MaxDisplayHeight lines
-
-    HeaderContent            = eSysName;
-    HeaderContentAlternative = eSysName;
-    MaxFramesToDisplay       = 0xFF;
-    currentFrameToDisplay    = 0;
-    nextFrameToDisplay       = 0xFF; // next frame because content changed in PLUGIN_WRITE
-
-    ButtonState     = false;         // button not touched
-    ButtonLastState = 0xFF;          // Last state checked (debouncing in progress)
-    DebounceCounter = 0;             // debounce counter
-    RepeatCounter   = 0;             // Repeat delay counter when holding button pressed
-
-    displayTimer          = 0;
-    frameCounter          = 0;       // need to keep track of framecounter from call to call
-    disableFrameChangeCnt = 0;       // counter to disable frame change after JumpToPage in case PLUGIN_READ already scheduled
-
-    switch (_type) {
-      case 1:
-        display = new SSD1306Wire(_address, _sda, _scl);
-        break;
-      case 2:
-        display = new SH1106Wire(_address, _sda, _scl);
-        break;
-      default:
-        return false;
-    }
-
-    if (display != nullptr) {
-      display->init(); // call to local override of init function
-      display->displayOn();
-    }
-
-    return isInitialized();
-  }
-
-  bool isInitialized() const {
-    return display != nullptr;
-  }
-
-  // Instantiate display here - does not work to do this within the INIT call
-  OLEDDisplay *display = nullptr;
-
-  tScrollingLines ScrollingLines;
-  tScrollingPages ScrollingPages;
-
-  // CustomTaskSettings
-  tDisplayLines DisplayLinesV1[P36_Nlines]; // holds the CustomTaskSettings for V1
-
-  int8_t lastWiFiState = 0;
-
-  // display
-  uint8_t OLEDIndex          = 0;
-  boolean bLineScrollEnabled = false;
-  uint8_t TopLineOffset      = 0;  // Offset for top line, used for rotated image while using displays < P36_MaxDisplayHeight lines
-  // Display button
-  boolean ButtonState     = false; // button not touched
-  uint8_t ButtonLastState = 0;     // Last state checked (debouncing in progress)
-  uint8_t DebounceCounter = 0;     // debounce counter
-  uint8_t RepeatCounter   = 0;     // Repeat delay counter when holding button pressed
-  uint8_t displayTimer    = 0;     // counter for display OFF
-  // frame header
-  boolean        bAlternativHeader = false;
-  uint16_t       HeaderCount       = 0;
-  eHeaderContent HeaderContent;
-  eHeaderContent HeaderContentAlternative;
-
-  // frames
-  uint8_t MaxFramesToDisplay    = 0;    // total number of frames to display
-  uint8_t currentFrameToDisplay = 0;
-  uint8_t nextFrameToDisplay    = 0;    // next frame because content changed in PLUGIN_WRITE
-  uint8_t frameCounter          = 0;    // need to keep track of framecounter from call to call
-  uint8_t disableFrameChangeCnt = 0;    // counter to disable frame change after JumpToPage in case PLUGIN_READ already scheduled
-  boolean bPageScrollDisabled   = true; // first page after INIT or after JumpToPage without scrolling
-};
-
-void Plugin_036_loadDisplayLines(taskIndex_t taskIndex, uint8_t LoadVersion, P036_data_struct *P036_data);
-
-uint8_t get8BitFromUL(uint32_t number, byte bitnr) {
-  return (number >> bitnr) & 0xFF;
-}
-
-void set8BitToUL(uint32_t& number, byte bitnr, uint8_t value) {
-  uint32_t mask     = (0xFFUL << bitnr);
-  uint32_t newvalue = ((value << bitnr) & mask);
-
-  number = (number & ~mask) | newvalue;
-}
-
-uint8_t get4BitFromUL(uint32_t number, byte bitnr) {
-  return (number >> bitnr) &  0x0F;
-}
-
-void set4BitToUL(uint32_t& number, byte bitnr, uint8_t value) {
-  uint32_t mask     = (0x0FUL << bitnr);
-  uint32_t newvalue = ((value << bitnr) & mask);
-
-  number = (number & ~mask) | newvalue;
-}
-
-void Plugin_036_loadDisplayLines(taskIndex_t taskIndex, uint8_t LoadVersion, P036_data_struct *P036_data) {
-  String DisplayLinesV0[P36_Nlines]; // used to load the CustomTaskSettings for V0
-
-  if (LoadVersion == 0) {
-    // read data of version 0 (up to 22.11.2019)
-    LoadCustomTaskSettings(taskIndex, DisplayLinesV0, P36_Nlines, P36_NcharsV0); // max. length 1024 Byte  (DAT_TASKS_CUSTOM_SIZE)
-
-    for (int i = 0; i < P36_Nlines; ++i) {
-      safe_strncpy(P036_data->DisplayLinesV1[i].Content, DisplayLinesV0[i], P36_NcharsV1);
-      P036_data->DisplayLinesV1[i].Content[P36_NcharsV1 - 1] = 0; // Terminate in case of uninitalized data
-      P036_data->DisplayLinesV1[i].FontType                  = 0xff;
-      P036_data->DisplayLinesV1[i].FontHeight                = 0xff;
-      P036_data->DisplayLinesV1[i].FontSpace                 = 0xff;
-      P036_data->DisplayLinesV1[i].reserved                  = 0xff;
-    }
-  }
-  else {
-    // read data of version 1 (beginning from 22.11.2019)
-    LoadCustomTaskSettings(taskIndex, (uint8_t *)&(P036_data->DisplayLinesV1), sizeof(P036_data->DisplayLinesV1));
-
-    for (int i = 0; i < P36_Nlines; ++i) {
-      P036_data->DisplayLinesV1[i].Content[P36_NcharsV1 - 1] = 0; // Terminate in case of uninitalized data
-    }
-  }
-}
 
 boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 {
@@ -477,9 +178,9 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       // FIXME TD-er: Why is this using pin3 and not pin1? And why isn't this using the normal pin selection functions?
       addFormPinSelect(F("Display button"), F("taskdevicepin3"), CONFIG_PIN3);
       boolean tbPin3Invers = bitRead(PCONFIG_LONG(0), 16);   // Bit 16
-      addFormCheckBox(F("Inversed Logic"),                          F("p036_pin3invers"), tbPin3Invers);
+      addFormCheckBox(F("Inversed Logic"),                          F("p036_pin3invers"),     tbPin3Invers);
       bool bStepThroughPages = bitRead(PCONFIG_LONG(0), 19); // Bit 19
-      addFormCheckBox(F("Step through frames with Display button"), F("p036_StepPages"),  bStepThroughPages);
+      addFormCheckBox(F("Step through frames with Display button"), F("p036_StepPages"), bStepThroughPages);
 
       addFormNumericBox(F("Display Timeout"), F("p036_timer"), PCONFIG(4));
 
@@ -522,7 +223,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       addFormCheckBox(F("Scroll long lines"),              F("p036_ScrollLines"), tbScrollLines);
 
       boolean tbNoDisplayOnReceivedText = bitRead(PCONFIG_LONG(0), 18); // Bit 18
-      addFormCheckBox(F("Wake display on receiving text"), F("p036_NoDisplay"),   !tbNoDisplayOnReceivedText);
+      addFormCheckBox(F("Wake display on receiving text"), F("p036_NoDisplay"),               !tbNoDisplayOnReceivedText);
       addFormNote(F("When checked, the display wakes up at receiving remote updates."));
 
       {
@@ -535,13 +236,12 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         if (nullptr == P036_data) {
           isTemp = true;
 
-          // just temporary for Plugin_036_loadDisplayLines()
           P036_data = new P036_data_struct();
         }
 
         if (nullptr != P036_data) {
           uint8_t version = get4BitFromUL(PCONFIG_LONG(0), 20); // Bit23-20 Version CustomTaskSettings
-          Plugin_036_loadDisplayLines(event->TaskIndex, version, P036_data);
+          P036_data->loadDisplayLines(event->TaskIndex, version);
 
           for (uint8_t varNr = 0; varNr < P36_Nlines; varNr++)
           {
@@ -585,7 +285,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       set8BitToUL(lSettings, 0, uint8_t(getFormItemInt(F("p036_headerAlternate")) & 0xff)); // Bit 7-0 HeaderContentAlternative
       bitWrite(lSettings, 16, isFormItemChecked(F("p036_pin3invers")));                     // Bit 16 Pin3Invers
       bitWrite(lSettings, 17, isFormItemChecked(F("p036_ScrollLines")));                    // Bit 17 ScrollLines
-      bitWrite(lSettings, 18, !isFormItemChecked(F("p036_NoDisplay")));                     // Bit 18 NoDisplayOnReceivingText
+      bitWrite(lSettings, 18,                 !isFormItemChecked(F("p036_NoDisplay")));     // Bit 18 NoDisplayOnReceivingText
       bitWrite(lSettings, 19, isFormItemChecked(F("p036_StepPages")));                      // Bit 19 StepThroughPagesWithButton
       // save CustomTaskSettings always in version V1
       set4BitToUL(lSettings, 20, 0x01);                                                     // Bit23-20 Version CustomTaskSettings ->
@@ -602,9 +302,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         bool isTemp = false;
 
         if (nullptr == P036_data) {
-          isTemp = true;
-
-          // just temporary for Plugin_036_loadDisplayLines()
+          isTemp    = true;
           P036_data = new P036_data_struct();
         }
 
@@ -643,7 +341,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         P036_data->frameCounter       = 0;
         P036_data->MaxFramesToDisplay = 0xFF;
         P036_data->OLEDIndex          = PCONFIG(7);
-        Plugin_036_loadDisplayLines(event->TaskIndex, 1, P036_data);
+        P036_data->loadDisplayLines(event->TaskIndex, 1);
       }
 
 #ifdef PLUGIN_036_DEBUG
@@ -670,33 +368,26 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         break;
       }
 
-      P036_data->lastWiFiState = P36_WIFI_STATE_UNSET;
-
       // Load the custom settings from flash
       uint8_t version = get4BitFromUL(PCONFIG_LONG(0), 20); // Bit23-20 Version CustomTaskSettings
-      Plugin_036_loadDisplayLines(event->TaskIndex, version, P036_data);
+      P036_data->loadDisplayLines(event->TaskIndex, version);
 
       uint8_t OLED_contrast = PCONFIG(6);
-      P36_setContrast(OLED_contrast, event->TaskIndex);
+      P036_data->setContrast(OLED_contrast);
 
       //      Set the initial value of OnOff to On
       UserVar[event->BaseVarIndex] = 1;
 
-      //      flip screen if required
       P036_data->OLEDIndex = PCONFIG(7);
 
-      if (PCONFIG(1) == 2) {
-        P036_data->display->flipScreenVertically();
-        P036_data->TopLineOffset = P36_MaxDisplayHeight - SizeSettings[P036_data->OLEDIndex].Height;
-      }
-      else { P036_data->TopLineOffset = 0; }
+      // Flip screen if required
+      // 1 = Normal, 2 = Rotated
+      P036_data->setOrientationRotated(PCONFIG(1) == 2);
 
       //      Display the device name, logo, time and wifi
-      P036_data->bAlternativHeader = false; // start with first header content
-      P036_data->HeaderCount       = 0;     // reset header count
-      display_header(event->TaskIndex);
-      display_logo(event->TaskIndex);
-      P036_data->display->display();
+      P036_data->display_header();
+      P036_data->display_logo();
+      P036_data->update_display();
 
       //      Set up the display timer
       P036_data->displayTimer = PCONFIG(4);
@@ -724,7 +415,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       }
 
       //    prepare font and positions for page and line scrolling
-      prepare_pagescrolling(event->TaskIndex);
+      P036_data->prepare_pagescrolling();
 #ifdef PLUGIN_036_DEBUG
 
       if (P036_data->isInitialized()) {
@@ -810,12 +501,12 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
         if (bStepThroughPages && (UserVar[event->BaseVarIndex] == 1)) { //  When display already on, switch to next page when enabled
           if (P036_data->ScrollingPages.Scrolling == 0) {               // page scrolling not running -> switch to next page is allowed
-            P036_JumpToPage(event, 0xFF);                               //  Start to display the next page, function needs 65ms!
+            P036_data->P036_JumpToPage(event, 0xFF);                    //  Start to display the next page, function needs 65ms!
           }
         } else {
           P036_data->display->displayOn();
-          UserVar[event->BaseVarIndex] = 1; //  Save the fact that the display is now ON
-          P036_JumpToPage(event, 0);        //  Start to display the first page, function needs 65ms!
+          UserVar[event->BaseVarIndex] = 1;     //  Save the fact that the display is now ON
+          P036_data->P036_JumpToPage(event, 0); //  Start to display the first page, function needs 65ms!
         }
         P036_data->ButtonState     = false;
         P036_data->DebounceCounter = 0;
@@ -826,7 +517,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       if (P036_data->bLineScrollEnabled) {
         if ((UserVar[event->BaseVarIndex] == 1) && (P036_data->ScrollingPages.Scrolling == 0)) {
           // Display is on.
-          display_scrolling_lines(event->TaskIndex); // line scrolling
+          P036_data->display_scrolling_lines(); // line scrolling
         }
       }
       success = true;
@@ -876,11 +567,11 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         P036_data->HeaderContent            = static_cast<eHeaderContent>(get8BitFromUL(PCONFIG_LONG(0), 8)); // Bit15-8 HeaderContent
         P036_data->HeaderContentAlternative = static_cast<eHeaderContent>(get8BitFromUL(PCONFIG_LONG(0), 0)); // Bit 7-0
                                                                                                               // HeaderContentAlternative
-        display_header(event->TaskIndex);                                                                     // Update Header
+        P036_data->display_header();                                                                          // Update Header
 
-        if (P036_data->isInitialized() && display_wifibars(event->TaskIndex)) {
+        if (P036_data->isInitialized() && P036_data->display_wifibars()) {
           // WiFi symbol was updated.
-          P036_data->display->display();
+          P036_data->update_display();
         }
       }
 
@@ -913,8 +604,8 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         return success;
       }
 
-      if ((UserVar[event->BaseVarIndex] == 1) && display_scroll_timer(event->TaskIndex)) { // page scrolling only when the display is on
-        setPluginTaskTimer(P36_PageScrollTimer, event->TaskIndex, event->Par1);            // calls next page scrollng tick
+      if ((UserVar[event->BaseVarIndex] == 1) && P036_data->display_scroll_timer()) { // page scrolling only when the display is on
+        setPluginTaskTimer(P36_PageScrollTimer, event->TaskIndex, event->Par1);       // calls next page scrollng tick
       }
       return success;
     }
@@ -955,7 +646,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
       if (P036_data->ScrollingPages.Scrolling == 0) { // page scrolling not running -> switch to next page is allowed
         // Define Scroll area layout
-        P036_DisplayPage(event);
+        P036_data->P036_DisplayPage(event);
       } else {
           #ifdef PLUGIN_036_DEBUG
         addLog(LOG_LEVEL_INFO, F("P036_PLUGIN_READ Page scrolling running"));
@@ -1012,17 +703,17 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
           if (para1 == F("low")) {
             success = true;
-            P36_setContrast(P36_CONTRAST_LOW, event->TaskIndex);
+            P036_data->setContrast(P36_CONTRAST_LOW);
           }
 
           if (para1 == F("med")) {
             success = true;
-            P36_setContrast(P36_CONTRAST_MED, event->TaskIndex);
+            P036_data->setContrast(P36_CONTRAST_MED);
           }
 
           if (para1 == F("high")) {
             success = true;
-            P36_setContrast(P36_CONTRAST_HIGH, event->TaskIndex);
+            P036_data->setContrast(P36_CONTRAST_HIGH);
           }
         }
         else if ((subcommand == F("frame")) && (event->Par2 >= 0) && (event->Par2 <= P036_data->MaxFramesToDisplay + 1))
@@ -1032,17 +723,17 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           if (UserVar[event->BaseVarIndex] == 0) {
             // display was OFF, turn it ON
             P036_data->display->displayOn();
-            UserVar[event->BaseVarIndex] = 1; //  Save the fact that the display is now ON
+            UserVar[event->BaseVarIndex] = 1;           //  Save the fact that the display is now ON
           }
           uint8_t nextFrame = (event->Par2 == 0 ? 0xFF : event->Par2 - 1);
-          P036_JumpToPage(event, nextFrame);  //  Start to display the selected page, function needs 65ms!
+          P036_data->P036_JumpToPage(event, nextFrame); //  Start to display the selected page, function needs 65ms!
         }
         else if ((LineNo > 0) && (LineNo <= P36_Nlines))
         {
           // content functions
           success = true;
           String NewContent = parseStringKeepCase(string, 3);
-          NewContent = P36_parseTemplate(NewContent, 20);
+          NewContent = P036_data->P36_parseTemplate(NewContent, 20);
 
           if (!safe_strncpy(P036_data->DisplayLinesV1[LineNo - 1].Content, NewContent, P36_NcharsV1)) {
             addHtmlError(getCustomTaskSettingsError(LineNo - 1));
@@ -1077,8 +768,8 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           if (UserVar[event->BaseVarIndex] == 1) {
             uint8_t nextFrame = ceil(((float)LineNo) / P036_data->ScrollingPages.linesPerFrame) - 1; // next frame shows the new content,
                                                                                                      // 0-based
-            P036_JumpToPage(event, nextFrame);                                                       //  Start to display the selected page,
-                                                                                                     // function needs 65ms!
+            P036_data->P036_JumpToPage(event, nextFrame);                                            //  Start to display the selected page,
+            // function needs 65ms!
           }
 
 #ifdef PLUGIN_036_DEBUG
@@ -1105,919 +796,6 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
     }
   }
   return success;
-}
-
-void P036_JumpToPage(struct EventStruct *event, uint8_t nextFrame)
-{
-  P036_data_struct *P036_data =
-    static_cast<P036_data_struct *>(getPluginTaskData(event->TaskIndex));
-
-  if ((P036_data == nullptr) || !P036_data->isInitialized()) {
-    return;
-  }
-  schedule_task_device_timer(event->TaskIndex,
-                             millis() + (Settings.TaskDeviceTimer[event->TaskIndex] * 1000)); // reschedule page change
-  P036_data->nextFrameToDisplay    = nextFrame;
-  P036_data->bPageScrollDisabled   = true;                                                    //  show next page without scrolling
-  P036_data->disableFrameChangeCnt = 2;                                                       //  disable next page change in PLUGIN_READ if
-                                                                                              // PLUGIN_READ was already scheduled
-  P036_DisplayPage(event);                                                                    //  Display the selected page, function needs
-                                                                                              // 65ms!
-  P036_data->displayTimer = PCONFIG(4);                                                       //  Restart timer
-}
-
-void P036_DisplayPage(struct EventStruct *event)
-{
-  #ifdef PLUGIN_036_DEBUG
-  addLog(LOG_LEVEL_INFO, F("P036_DisplayPage"));
-  #endif // PLUGIN_036_DEBUG
-
-  P036_data_struct *P036_data =
-    static_cast<P036_data_struct *>(getPluginTaskData(event->TaskIndex));
-
-  if ((P036_data == nullptr) || !P036_data->isInitialized()) {
-    return;
-  }
-
-  int NFrames; // the number of frames
-
-  if (UserVar[event->BaseVarIndex] == 1) {
-    // Display is on.
-    P036_data->ScrollingPages.Scrolling = 1;                                                              // page scrolling running -> no
-                                                                                                          // line scrolling allowed
-    NFrames                             = P36_Nlines / P036_data->ScrollingPages.linesPerFrame;
-    P036_data->HeaderContent            = static_cast<eHeaderContent>(get8BitFromUL(PCONFIG_LONG(0), 8)); // Bit15-8 HeaderContent
-    P036_data->HeaderContentAlternative = static_cast<eHeaderContent>(get8BitFromUL(PCONFIG_LONG(0), 0)); // Bit 7-0
-                                                                                                          // HeaderContentAlternative
-
-    //      Now create the string for the outgoing and incoming frames
-    String tmpString;
-    tmpString.reserve(P36_NcharsV1);
-
-    //      Construct the outgoing string
-    for (uint8_t i = 0; i < P036_data->ScrollingPages.linesPerFrame; i++)
-    {
-      tmpString =
-        String(P036_data->DisplayLinesV1[(P036_data->ScrollingPages.linesPerFrame * P036_data->frameCounter) + i].Content);
-      P036_data->ScrollingPages.LineOut[i] = P36_parseTemplate(tmpString, 20);
-    }
-
-    // now loop round looking for the next frame with some content
-    //   skip this frame if all lines in frame are blank
-    // - we exit the while loop if any line is not empty
-    boolean foundText = false;
-    int     ntries    = 0;
-
-    while (!foundText) {
-      //        Stop after framecount loops if no data found
-      ntries += 1;
-
-      if (ntries > NFrames) { break; }
-
-      if (P036_data->nextFrameToDisplay == 0xff) {
-        // Increment the frame counter
-        P036_data->frameCounter++;
-
-        if (P036_data->frameCounter > NFrames - 1) {
-          P036_data->frameCounter          = 0;
-          P036_data->currentFrameToDisplay = 0;
-        }
-      }
-      else {
-        // next frame because content changed in PLUGIN_WRITE
-        P036_data->frameCounter = P036_data->nextFrameToDisplay;
-      }
-
-      //        Contruct incoming strings
-      for (uint8_t i = 0; i < P036_data->ScrollingPages.linesPerFrame; i++)
-      {
-        tmpString =
-          String(P036_data->DisplayLinesV1[(P036_data->ScrollingPages.linesPerFrame * P036_data->frameCounter) + i].Content);
-        P036_data->ScrollingPages.LineIn[i] = P36_parseTemplate(tmpString, 20);
-
-        if (P036_data->ScrollingPages.LineIn[i].length() > 0) { foundText = true; }
-      }
-
-      if (foundText) {
-        if (P036_data->nextFrameToDisplay == 0xff) {
-          if (P036_data->frameCounter != 0) {
-            ++P036_data->currentFrameToDisplay;
-          }
-        }
-        else { P036_data->currentFrameToDisplay = P036_data->nextFrameToDisplay; }
-      }
-    }
-    P036_data->nextFrameToDisplay = 0xFF;
-
-    // Update max page count
-    if (P036_data->MaxFramesToDisplay == 0xFF) {
-      // not updated yet
-      for (uint8_t i = 0; i < NFrames; i++) {
-        for (uint8_t k = 0; k < P036_data->ScrollingPages.linesPerFrame; k++)
-        {
-          tmpString = String(P036_data->DisplayLinesV1[(P036_data->ScrollingPages.linesPerFrame * i) + k].Content);
-          tmpString = P36_parseTemplate(tmpString, 20);
-
-          if (tmpString.length() > 0) {
-            // page not empty
-            if (P036_data->MaxFramesToDisplay == 0xFF) {
-              P036_data->MaxFramesToDisplay = 0;
-            } else {
-              P036_data->MaxFramesToDisplay++;
-            }
-            break;
-          }
-        }
-      }
-
-      if (P036_data->MaxFramesToDisplay == 0xFF) {
-        // nothing to display
-        P036_data->MaxFramesToDisplay = 0;
-      }
-    }
-
-    //      Update display
-    P036_data->bAlternativHeader = false; // start with first header content
-    P036_data->HeaderCount       = 0;     // reset header count
-    display_header(event->TaskIndex);
-
-    if (SizeSettings[P036_data->OLEDIndex].Width == P36_MaxDisplayWidth) { display_indicator(P036_data->MaxFramesToDisplay + 1,
-                                                                                             event->TaskIndex); }
-
-    P036_data->display->display();
-
-    boolean bScrollWithoutWifi = bitRead(PCONFIG_LONG(0), 24);                                 // Bit 24
-    boolean bScrollLines       = bitRead(PCONFIG_LONG(0), 17);                                 // Bit 17
-    P036_data->bLineScrollEnabled = (bScrollLines && (WiFiConnected() || bScrollWithoutWifi)); // scroll lines only if WifiIsConnected,
-                                                                                               // otherwise too slow
-
-    int lscrollspeed = PCONFIG(3);
-
-    if (P036_data->bPageScrollDisabled) { lscrollspeed = ePSS_Instant; // first page after INIT without scrolling
-    }
-    int lTaskTimer = Settings.TaskDeviceTimer[event->TaskIndex];
-
-    if (display_scroll(lscrollspeed, lTaskTimer, event->TaskIndex)) {
-      setPluginTaskTimer(P36_PageScrollTimer, event->TaskIndex, event->Par1); // calls next page scrollng tick
-    }
-
-    if (WiFiConnected() || bScrollWithoutWifi) {
-      // scroll lines only if WifiIsConnected, otherwise too slow
-      P036_data->bPageScrollDisabled = false; // next PLUGIN_READ will do page scrolling
-    }
-  } else {
-    #ifdef PLUGIN_036_DEBUG
-    addLog(LOG_LEVEL_INFO, F("P036_DisplayPage Display off"));
-    #endif // PLUGIN_036_DEBUG
-  }
-}
-
-// Set the display contrast
-// really low brightness & contrast: contrast = 10, precharge = 5, comdetect = 0
-// normal brightness & contrast:  contrast = 100
-void P36_setContrast(uint8_t OLED_contrast, taskIndex_t taskIndex) {
-  P036_data_struct *P036_data =
-    static_cast<P036_data_struct *>(getPluginTaskData(taskIndex));
-
-  if ((P036_data == nullptr) || !P036_data->isInitialized()) {
-    return;
-  }
-
-  char contrast  = 100;
-  char precharge = 241;
-  char comdetect = 64;
-
-  switch (OLED_contrast) {
-    case P36_CONTRAST_OFF:
-      P036_data->display->displayOff();
-      return;
-    case P36_CONTRAST_LOW:
-      contrast = 10; precharge = 5; comdetect = 0;
-      break;
-    case P36_CONTRAST_MED:
-      contrast = P36_CONTRAST_MED; precharge = 0x1F; comdetect = 64;
-      break;
-    case P36_CONTRAST_HIGH:
-    default:
-      contrast = P36_CONTRAST_HIGH; precharge = 241; comdetect = 64;
-      break;
-  }
-  P036_data->display->displayOn();
-  P036_data->display->setContrast(contrast, precharge, comdetect);
-}
-
-// Perform some specific changes for OLED display
-String P36_parseTemplate(String& tmpString, uint8_t lineSize) {
-  String result = parseTemplate_padded(tmpString, lineSize);
-
-  // OLED lib uses this routine to convert UTF8 to extended ASCII
-  // http://playground.arduino.cc/Main/Utf8ascii
-  // Attempt to display euro sign (FIXME)
-
-  /*
-     const char euro[4] = {0xe2, 0x82, 0xac, 0}; // Unicode euro symbol
-     const char euro_oled[3] = {0xc2, 0x80, 0}; // Euro symbol OLED display font
-     result.replace(euro, euro_oled);
-   */
-  result.trim();
-  return result;
-}
-
-// The screen is set up as 10 rows at the top for the header, 10 rows at the bottom for the footer and 44 rows in the middle for the scroll
-// region
-
-void display_header(taskIndex_t taskIndex) {
-  P036_data_struct *P036_data =
-    static_cast<P036_data_struct *>(getPluginTaskData(taskIndex));
-
-  if ((P036_data == nullptr) || !P036_data->isInitialized()) {
-    return;
-  }
-
-  eHeaderContent _HeaderContent;
-  String newString, strHeader;
-
-  if ((P036_data->HeaderContentAlternative == P036_data->HeaderContent) || !P036_data->bAlternativHeader) {
-    _HeaderContent = P036_data->HeaderContent;
-  }
-  else
-  {
-    _HeaderContent = P036_data->HeaderContentAlternative;
-  }
-
-  switch (_HeaderContent) {
-    case eSSID:
-
-      if (NetworkConnected()) {
-        strHeader = WiFi.SSID();
-      }
-      else {
-        newString = F("%sysname%");
-      }
-      break;
-    case eSysName:
-      newString = F("%sysname%");
-      break;
-    case eTime:
-      newString = F("%systime%");
-      break;
-    case eDate:
-      newString = F("%sysday_0%.%sysmonth_0%.%sysyear%");
-      break;
-    case eIP:
-      newString = F("%ip%");
-      break;
-    case eMAC:
-      newString = F("%mac%");
-      break;
-    case eRSSI:
-      newString = F("%rssi%dB");
-      break;
-    case eBSSID:
-      newString = F("%bssid%");
-      break;
-    case eWiFiCh:
-      newString = F("Channel: %wi_ch%");
-      break;
-    case eUnit:
-      newString = F("Unit: %unit%");
-      break;
-    case eSysLoad:
-      newString = F("Load: %sysload%%");
-      break;
-    case eSysHeap:
-      newString = F("Mem: %sysheap%");
-      break;
-    case eSysStack:
-      newString = F("Stack: %sysstack%");
-      break;
-    case ePageNo:
-      strHeader  = F("page ");
-      strHeader += (P036_data->currentFrameToDisplay + 1);
-
-      if (P036_data->MaxFramesToDisplay != 0xFF) {
-        strHeader += F("/");
-        strHeader += (P036_data->MaxFramesToDisplay + 1);
-      }
-      break;
-    default:
-      return;
-  }
-
-  if (newString.length() > 0) {
-    // Right now only systemvariables have been used, so we don't have to call the parseTemplate.
-    parseSystemVariables(newString, false);
-    strHeader = newString;
-  }
-
-  strHeader.trim();
-  display_title(strHeader, taskIndex);
-
-  // Display time and wifibars both clear area below, so paint them after the title.
-  if (SizeSettings[P036_data->OLEDIndex].Width == P36_MaxDisplayWidth) { display_time(taskIndex); // only for 128pix wide displays
-  }
-  display_wifibars(taskIndex);
-}
-
-void display_time(taskIndex_t taskIndex) {
-  P036_data_struct *P036_data =
-    static_cast<P036_data_struct *>(getPluginTaskData(taskIndex));
-
-  if ((P036_data == nullptr) || !P036_data->isInitialized()) {
-    return;
-  }
-
-  String dtime = F("%systime%");
-  parseSystemVariables(dtime, false);
-  P036_data->display->setTextAlignment(TEXT_ALIGN_LEFT);
-  P036_data->display->setFont(ArialMT_Plain_10);
-  P036_data->display->setColor(BLACK);
-  P036_data->display->fillRect(0, P036_data->TopLineOffset, 28, P36_HeaderHeight - 2);
-  P036_data->display->setColor(WHITE);
-  P036_data->display->drawString(0, P036_data->TopLineOffset, dtime.substring(0, 5));
-}
-
-void display_title(String& title, taskIndex_t taskIndex) {
-  P036_data_struct *P036_data =
-    static_cast<P036_data_struct *>(getPluginTaskData(taskIndex));
-
-  if ((P036_data == nullptr) || !P036_data->isInitialized()) {
-    return;
-  }
-  P036_data->display->setFont(ArialMT_Plain_10);
-  P036_data->display->setColor(BLACK);
-  P036_data->display->fillRect(0, P036_data->TopLineOffset, P36_MaxDisplayWidth, P36_HeaderHeight); // don't clear line under title.
-  P036_data->display->setColor(WHITE);
-
-  if (SizeSettings[P036_data->OLEDIndex].Width == P36_MaxDisplayWidth) {
-    P036_data->display->setTextAlignment(TEXT_ALIGN_CENTER);
-    P036_data->display->drawString(P36_DisplayCentre, P036_data->TopLineOffset, title);
-  }
-  else {
-    P036_data->display->setTextAlignment(TEXT_ALIGN_LEFT); // Display right of WiFi bars
-    P036_data->display->drawString(SizeSettings[P036_data->OLEDIndex].PixLeft + SizeSettings[P036_data->OLEDIndex].WiFiIndicatorWidth + 3,
-                                   P036_data->TopLineOffset,
-                                   title);
-  }
-}
-
-void display_logo(taskIndex_t taskIndex) {
-  P036_data_struct *P036_data =
-    static_cast<P036_data_struct *>(getPluginTaskData(taskIndex));
-
-  if ((P036_data == nullptr) || !P036_data->isInitialized()) {
-    return;
-  }
-
-  int left = 24;
-  P036_data->display->setTextAlignment(TEXT_ALIGN_LEFT);
-  P036_data->display->setFont(ArialMT_Plain_16);
-  P036_data->display->setColor(BLACK);
-  P036_data->display->fillRect(0, P36_HeaderHeight + 1 + P036_data->TopLineOffset, P36_MaxDisplayWidth, P36_MaxDisplayHeight);
-  P036_data->display->setColor(WHITE);
-  P036_data->display->drawString(65, 15 + P036_data->TopLineOffset, F("ESP"));
-  P036_data->display->drawString(65, 34 + P036_data->TopLineOffset, F("Easy"));
-
-  if (SizeSettings[P036_data->OLEDIndex].PixLeft < left) { left = SizeSettings[P036_data->OLEDIndex].PixLeft; }
-  P036_data->display->drawXbm(left,
-                              P36_HeaderHeight + 1 + P036_data->TopLineOffset,
-                              espeasy_logo_width,
-                              espeasy_logo_height,
-                              espeasy_logo_bits); // espeasy_logo_width=espeasy_logo_height=36
-}
-
-// Draw the frame position
-
-void display_indicator(int frameCount, taskIndex_t taskIndex) {
-  P036_data_struct *P036_data =
-    static_cast<P036_data_struct *>(getPluginTaskData(taskIndex));
-
-  if ((P036_data == nullptr) || !P036_data->isInitialized()) {
-    return;
-  }
-
-  //  Erase Indicator Area
-  P036_data->display->setColor(BLACK);
-  P036_data->display->fillRect(0, P036_IndicatorTop + P036_data->TopLineOffset, P36_MaxDisplayWidth, P036_IndicatorHeight);
-
-  // Only display when there is something to display.
-  if ((frameCount <= 1) || (frameCount > P36_Nlines)) { return; }
-
-  P036_data->display->setColor(WHITE);
-
-  // Display chars as required
-  for (uint8_t i = 0; i < frameCount; i++) {
-    const char *image;
-
-    if (P036_data->currentFrameToDisplay == i) {
-      image = activeSymbole;
-    } else {
-      image = inactiveSymbole;
-    }
-
-    int x, y;
-
-    y = P036_IndicatorTop + 2 + P036_data->TopLineOffset;
-
-    // I would like a margin of 20 pixels on each side of the indicator.
-    // Therefore the width of the indicator should be 128-40=88 and so space between indicator dots is 88/(framecount-1)
-    // The width of the display is 128 and so the first dot must be at x=20 if it is to be centred at 64
-    const int number_spaces = frameCount - 1;
-
-    if (number_spaces <= 0) {
-      return;
-    }
-    int margin  = 20;
-    int spacing = (P36_MaxDisplayWidth - 2 * margin) / number_spaces;
-
-    // Now apply some max of 30 pixels between the indicators and center the row of indicators.
-    if (spacing > 30) {
-      spacing = 30;
-      margin  = (P36_MaxDisplayWidth - number_spaces * spacing) / 2;
-    }
-
-    x = margin + (spacing * i);
-    P036_data->display->drawXbm(x, y, 8, 8, image);
-  }
-}
-
-void prepare_pagescrolling(taskIndex_t taskIndex)
-{
-  P036_data_struct *P036_data =
-    static_cast<P036_data_struct *>(getPluginTaskData(taskIndex));
-
-  if ((P036_data == nullptr) || !P036_data->isInitialized()) {
-    return;
-  }
-
-  switch (P036_data->ScrollingPages.linesPerFrame) {
-    case 1:
-      P036_data->ScrollingPages.Font    = SizeSettings[P036_data->OLEDIndex].L1.fontData;
-      P036_data->ScrollingPages.ypos[0] = SizeSettings[P036_data->OLEDIndex].L1.Top + P036_data->TopLineOffset;
-      P036_data->ScrollingLines.Space   = SizeSettings[P036_data->OLEDIndex].L1.Space + 1;
-      break;
-    case 2:
-      P036_data->ScrollingPages.Font    = SizeSettings[P036_data->OLEDIndex].L2.fontData;
-      P036_data->ScrollingPages.ypos[0] = SizeSettings[P036_data->OLEDIndex].L2.Top + P036_data->TopLineOffset;
-      P036_data->ScrollingPages.ypos[1] = P036_data->ScrollingPages.ypos[0] + SizeSettings[P036_data->OLEDIndex].L2.Space;
-      P036_data->ScrollingLines.Space   = SizeSettings[P036_data->OLEDIndex].L2.Space + 1;
-      break;
-    case 3:
-      P036_data->ScrollingPages.Font    = SizeSettings[P036_data->OLEDIndex].L3.fontData;
-      P036_data->ScrollingPages.ypos[0] = SizeSettings[P036_data->OLEDIndex].L3.Top + P036_data->TopLineOffset;
-      P036_data->ScrollingPages.ypos[1] = P036_data->ScrollingPages.ypos[0] + SizeSettings[P036_data->OLEDIndex].L3.Space;
-      P036_data->ScrollingPages.ypos[2] = P036_data->ScrollingPages.ypos[1] + SizeSettings[P036_data->OLEDIndex].L3.Space;
-      P036_data->ScrollingLines.Space   = SizeSettings[P036_data->OLEDIndex].L3.Space + 1;
-      break;
-    default:
-      P036_data->ScrollingPages.linesPerFrame = 4;
-      P036_data->ScrollingPages.Font          = SizeSettings[P036_data->OLEDIndex].L4.fontData;
-      P036_data->ScrollingPages.ypos[0]       = SizeSettings[P036_data->OLEDIndex].L4.Top + P036_data->TopLineOffset;
-      P036_data->ScrollingPages.ypos[1]       = P036_data->ScrollingPages.ypos[0] + SizeSettings[P036_data->OLEDIndex].L4.Space;
-      P036_data->ScrollingPages.ypos[2]       = P036_data->ScrollingPages.ypos[1] + SizeSettings[P036_data->OLEDIndex].L4.Space;
-      P036_data->ScrollingPages.ypos[3]       = P036_data->ScrollingPages.ypos[2] + SizeSettings[P036_data->OLEDIndex].L4.Space;
-      P036_data->ScrollingLines.Space         = SizeSettings[P036_data->OLEDIndex].L4.Space + 1;
-  }
-  P036_data->ScrollingLines.Font = P036_data->ScrollingPages.Font;
-
-  for (uint8_t i = 0; i < P36_MAX_LinesPerPage; i++) {
-    P036_data->ScrollingLines.Line[i].ypos = P036_data->ScrollingPages.ypos[i];
-  }
-}
-
-uint8_t display_scroll(int lscrollspeed, int lTaskTimer, taskIndex_t taskIndex)
-{
-  P036_data_struct *P036_data =
-    static_cast<P036_data_struct *>(getPluginTaskData(taskIndex));
-
-  if ((P036_data == nullptr) || !P036_data->isInitialized()) {
-    return 0;
-  }
-
-  // LineOut[] contain the outgoing strings in this frame
-  // LineIn[] contain the incoming strings in this frame
-
-  int iPageScrollTime;
-  int iCharToRemove;
-
-#ifdef PLUGIN_036_DEBUG
-  String log = F("Start Scrolling: Speed: ");
-  log += lscrollspeed;
-  addLog(LOG_LEVEL_INFO, log);
-#endif // PLUGIN_036_DEBUG
-
-  P036_data->display->setFont(P036_data->ScrollingPages.Font);
-
-  P036_data->ScrollingLines.wait = 0;
-
-  // calculate total page scrolling time
-  if (lscrollspeed == ePSS_Instant) {
-    // no scrolling, just the handling time to build the new page
-    iPageScrollTime = P36_PageScrollTick - P36_PageScrollTimer;
-  } else {
-    iPageScrollTime = (P36_MaxDisplayWidth / (P36_PageScrollPix * lscrollspeed)) * P36_PageScrollTick; 
-  }
-  float fScrollTime = (float)(lTaskTimer * 1000 - iPageScrollTime - 2 * P36_WaitScrollLines * 100) / 100.0;
-
-#ifdef PLUGIN_036_DEBUG
-  log  = F("PageScrollTime: ");
-  log += iPageScrollTime;
-  addLog(LOG_LEVEL_INFO, log);
-#endif // PLUGIN_036_DEBUG
-
-  uint16_t MaxPixWidthForPageScrolling = P36_MaxDisplayWidth;
-
-  if (P036_data->bLineScrollEnabled) {
-    // Reduced scrolling width because line is displayed left or right aligned
-    MaxPixWidthForPageScrolling -= SizeSettings[P036_data->OLEDIndex].PixLeft;
-  }
-
-  for (uint8_t j = 0; j < P036_data->ScrollingPages.linesPerFrame; j++)
-  {
-    // default no line scrolling and strings are centered
-    P036_data->ScrollingLines.Line[j].LastWidth = 0;
-    P036_data->ScrollingLines.Line[j].Width     = 0;
-
-    // get last and new line width
-    uint16_t PixLengthLineOut = P036_data->display->getStringWidth(P036_data->ScrollingPages.LineOut[j]);
-    uint16_t PixLengthLineIn  = P036_data->display->getStringWidth(P036_data->ScrollingPages.LineIn[j]);
-
-    if (PixLengthLineIn > 255) {
-      // shorten string because OLED controller can not handle such long strings
-      int   strlen         = P036_data->ScrollingPages.LineIn[j].length();
-      float fAvgPixPerChar = ((float)PixLengthLineIn) / strlen;
-      iCharToRemove                       = ceil(((float)(PixLengthLineIn - 255)) / fAvgPixPerChar);
-      P036_data->ScrollingPages.LineIn[j] = P036_data->ScrollingPages.LineIn[j].substring(0, strlen - iCharToRemove);
-      PixLengthLineIn                     = P036_data->display->getStringWidth(P036_data->ScrollingPages.LineIn[j]);
-    }
-
-    if (PixLengthLineOut > 255) {
-      // shorten string because OLED controller can not handle such long strings
-      int   strlen         = P036_data->ScrollingPages.LineOut[j].length();
-      float fAvgPixPerChar = ((float)PixLengthLineOut) / strlen;
-      iCharToRemove                        = ceil(((float)(PixLengthLineOut - 255)) / fAvgPixPerChar);
-      P036_data->ScrollingPages.LineOut[j] = P036_data->ScrollingPages.LineOut[j].substring(0, strlen - iCharToRemove);
-      PixLengthLineOut                     = P036_data->display->getStringWidth(P036_data->ScrollingPages.LineOut[j]);
-    }
-
-    if (P036_data->bLineScrollEnabled) {
-      // settings for following line scrolling
-      if (PixLengthLineOut > SizeSettings[P036_data->OLEDIndex].Width) {
-        P036_data->ScrollingLines.Line[j].LastWidth = PixLengthLineOut; // while page scrolling this line is right aligned
-      }
-
-      if ((PixLengthLineIn > SizeSettings[P036_data->OLEDIndex].Width) && (fScrollTime > 0.0))
-      {
-        // width of the line > display width -> scroll line
-        P036_data->ScrollingLines.Line[j].LineContent = P036_data->ScrollingPages.LineIn[j];
-        P036_data->ScrollingLines.Line[j].Width       = PixLengthLineIn; // while page scrolling this line is left aligned
-        P036_data->ScrollingLines.Line[j].CurrentLeft = SizeSettings[P036_data->OLEDIndex].PixLeft;
-        P036_data->ScrollingLines.Line[j].fPixSum     = (float)SizeSettings[P036_data->OLEDIndex].PixLeft;
-        // pix change per scrolling line tick
-        P036_data->ScrollingLines.Line[j].dPix        = ((float)(PixLengthLineIn - SizeSettings[P036_data->OLEDIndex].Width)) / fScrollTime; 
-
-#ifdef PLUGIN_036_DEBUG
-        log  = String(F("Line: ")) + String(j + 1);
-        log += F(" width: ");
-        log += P036_data->ScrollingLines.Line[j].Width;
-        log += F(" dPix: ");
-        log += P036_data->ScrollingLines.Line[j].dPix;
-        addLog(LOG_LEVEL_INFO, log);
-#endif // PLUGIN_036_DEBUG
-      }
-    }
-
-    // reduce line content for page scrolling to max width
-    if (PixLengthLineIn > MaxPixWidthForPageScrolling) {
-      int strlen = P036_data->ScrollingPages.LineIn[j].length();
-#ifdef PLUGIN_036_DEBUG
-      String LineInStr = P036_data->ScrollingPages.LineIn[j];
-#endif // PLUGIN_036_DEBUG
-      float fAvgPixPerChar = ((float)PixLengthLineIn) / strlen;
-
-      if (P036_data->bLineScrollEnabled) {
-        // shorten string on right side because line is displayed left aligned while scrolling
-        // using floor() because otherwise empty space on right side
-        iCharToRemove                       = floor(((float)(PixLengthLineIn - MaxPixWidthForPageScrolling)) / fAvgPixPerChar);
-        P036_data->ScrollingPages.LineIn[j] = P036_data->ScrollingPages.LineIn[j].substring(0, strlen - iCharToRemove);
-      }
-      else {
-        // shorten string on both sides because line is displayed centered
-        // using floor() because otherwise empty space on both sides
-        iCharToRemove                       = floor(((float)(PixLengthLineIn - MaxPixWidthForPageScrolling)) / (2 * fAvgPixPerChar));
-        P036_data->ScrollingPages.LineIn[j] = P036_data->ScrollingPages.LineIn[j].substring(0, strlen - iCharToRemove);
-        P036_data->ScrollingPages.LineIn[j] = P036_data->ScrollingPages.LineIn[j].substring(iCharToRemove);
-      }
-#ifdef PLUGIN_036_DEBUG
-      log  = String(F("Line: ")) + String(j + 1);
-      log += String(F(" LineIn: ")) + String(LineInStr);
-      log += String(F(" Length: ")) + String(strlen);
-      log += String(F(" PixLength: ")) + String(PixLengthLineIn);
-      log += String(F(" AvgPixPerChar: ")) + String(fAvgPixPerChar);
-      log += String(F(" CharsRemoved: ")) + String(iCharToRemove);
-      addLog(LOG_LEVEL_INFO, log);
-      log  = String(F(" -> Changed to: ")) + String(P036_data->ScrollingPages.LineIn[j]);
-      log += String(F(" Length: ")) + String(P036_data->ScrollingPages.LineIn[j].length());
-      log += String(F(" PixLength: ")) + String(P036_data->display->getStringWidth(P036_data->ScrollingPages.LineIn[j]));
-      addLog(LOG_LEVEL_INFO, log);
-#endif // PLUGIN_036_DEBUG
-    }
-
-    // reduce line content for page scrolling to max width
-    if (PixLengthLineOut > MaxPixWidthForPageScrolling) {
-      int strlen = P036_data->ScrollingPages.LineOut[j].length();
-#ifdef PLUGIN_036_DEBUG
-      String LineOutStr = P036_data->ScrollingPages.LineOut[j];
-#endif // PLUGIN_036_DEBUG
-      float fAvgPixPerChar = ((float)PixLengthLineOut) / strlen;
-
-      if (P036_data->bLineScrollEnabled) {
-        // shorten string on left side because line is displayed right aligned while scrolling
-        // using ceil() because otherwise overlapping the new text
-        iCharToRemove                        = ceil(((float)(PixLengthLineOut - MaxPixWidthForPageScrolling)) / fAvgPixPerChar);
-        P036_data->ScrollingPages.LineOut[j] = P036_data->ScrollingPages.LineOut[j].substring(iCharToRemove);
-
-        if (P036_data->display->getStringWidth(P036_data->ScrollingPages.LineOut[j]) > MaxPixWidthForPageScrolling) {
-          // remove one more character because still overlapping the new text
-          P036_data->ScrollingPages.LineOut[j] = P036_data->ScrollingPages.LineOut[j].substring(1, iCharToRemove - 1);
-        }
-      }
-      else {
-        // shorten string on both sides because line is displayed centered
-        // using ceil() because otherwise overlapping the new text
-        iCharToRemove                        = ceil(((float)(PixLengthLineOut - MaxPixWidthForPageScrolling)) / (2 * fAvgPixPerChar));
-        P036_data->ScrollingPages.LineOut[j] = P036_data->ScrollingPages.LineOut[j].substring(0, strlen - iCharToRemove);
-        P036_data->ScrollingPages.LineOut[j] = P036_data->ScrollingPages.LineOut[j].substring(iCharToRemove);
-      }
-#ifdef PLUGIN_036_DEBUG
-      log  = String(F("Line: ")) + String(j + 1);
-      log += String(F(" LineOut: ")) + String(LineOutStr);
-      log += String(F(" Length: ")) + String(strlen);
-      log += String(F(" PixLength: ")) + String(PixLengthLineOut);
-      log += String(F(" AvgPixPerChar: ")) + String(fAvgPixPerChar);
-      log += String(F(" CharsRemoved: ")) + String(iCharToRemove);
-      addLog(LOG_LEVEL_INFO, log);
-      log  = String(F(" -> Changed to: ")) + String(P036_data->ScrollingPages.LineOut[j]);
-      log += String(F(" Length: ")) + String(P036_data->ScrollingPages.LineOut[j].length());
-      log += String(F(" PixLength: ")) + String(P036_data->display->getStringWidth(P036_data->ScrollingPages.LineOut[j]));
-      addLog(LOG_LEVEL_INFO, log);
-#endif // PLUGIN_036_DEBUG
-    }
-  }
-
-  P036_data->ScrollingPages.dPix    = P36_PageScrollPix * lscrollspeed; // pix change per scrolling page tick
-  P036_data->ScrollingPages.dPixSum = P036_data->ScrollingPages.dPix;
-
-  P036_data->display->setColor(BLACK);
-
-  // We allow 12 pixels at the top because otherwise the wifi indicator gets too squashed!!
-  // scrolling window is 42 pixels high - ie 64 less margin of 12 at top and 10 at bottom
-  P036_data->display->fillRect(0, P36_HeaderHeight + P036_data->TopLineOffset, P36_MaxDisplayWidth, P036_IndicatorTop - P36_HeaderHeight);
-  P036_data->display->setColor(WHITE);
-  P036_data->display->drawLine(0,
-                               P36_HeaderHeight + P036_data->TopLineOffset,
-                               P36_MaxDisplayWidth,
-                               P36_HeaderHeight + P036_data->TopLineOffset); // line below title
-
-  for (uint8_t j = 0; j < P036_data->ScrollingPages.linesPerFrame; j++)
-  {
-    if (lscrollspeed < ePSS_Instant) { // scrolling
-      if (P036_data->ScrollingLines.Line[j].LastWidth > 0) {
-        // width of LineOut[j] > display width -> line at beginning of scrolling page is right aligned
-        P036_data->display->setTextAlignment(TEXT_ALIGN_RIGHT);
-        P036_data->display->drawString(P36_MaxDisplayWidth - SizeSettings[P036_data->OLEDIndex].PixLeft + P036_data->ScrollingPages.dPixSum,
-                                       P036_data->ScrollingPages.ypos[j],
-                                       P036_data->ScrollingPages.LineOut[j]);
-      }
-      else {
-        // line at beginning of scrolling page is centered
-        P036_data->display->setTextAlignment(TEXT_ALIGN_CENTER);
-        P036_data->display->drawString(P36_DisplayCentre + P036_data->ScrollingPages.dPixSum,
-                                       P036_data->ScrollingPages.ypos[j],
-                                       P036_data->ScrollingPages.LineOut[j]);
-      }
-    }
-
-    if (P036_data->ScrollingLines.Line[j].Width > 0) {
-      // width of LineIn[j] > display width -> line at end of scrolling page should be left aligned
-      P036_data->display->setTextAlignment(TEXT_ALIGN_LEFT);
-      P036_data->display->drawString(-P36_MaxDisplayWidth + SizeSettings[P036_data->OLEDIndex].PixLeft + P036_data->ScrollingPages.dPixSum,
-                                     P036_data->ScrollingPages.ypos[j],
-                                     P036_data->ScrollingPages.LineIn[j]);
-    }
-    else {
-      // line at end of scrolling page should be centered
-      P036_data->display->setTextAlignment(TEXT_ALIGN_CENTER);
-      P036_data->display->drawString(-P36_DisplayCentre + P036_data->ScrollingPages.dPixSum,
-                                     P036_data->ScrollingPages.ypos[j],
-                                     P036_data->ScrollingPages.LineIn[j]);
-    }
-  }
-
-  P036_data->display->display();
-
-  if (lscrollspeed < ePSS_Instant) {
-    // page scrolling (using PLUGIN_TIMER_IN)
-    P036_data->ScrollingPages.dPixSum += P036_data->ScrollingPages.dPix;
-  }
-  else {
-    // no page scrolling
-    P036_data->ScrollingPages.Scrolling = 0; // allow following line scrolling
-  }
-#ifdef PLUGIN_036_DEBUG
-  log = F("Scrolling finished");
-  addLog(LOG_LEVEL_INFO, log);
-#endif // PLUGIN_036_DEBUG
-  return P036_data->ScrollingPages.Scrolling;
-}
-
-uint8_t display_scroll_timer(taskIndex_t taskIndex) {
-  P036_data_struct *P036_data =
-    static_cast<P036_data_struct *>(getPluginTaskData(taskIndex));
-
-  if ((P036_data == nullptr) || !P036_data->isInitialized()) {
-    return 0;
-  }
-
-  // page scrolling (using PLUGIN_TIMER_IN)
-  P036_data->display->setColor(BLACK);
-
-  // We allow 13 pixels (including underline) at the top because otherwise the wifi indicator gets too squashed!!
-  // scrolling window is 42 pixels high - ie 64 less margin of 12 at top and 10 at bottom
-  P036_data->display->fillRect(0, P36_HeaderHeight + 1 + P036_data->TopLineOffset, P36_MaxDisplayWidth, P036_IndicatorTop - P36_HeaderHeight); 
-  P036_data->display->setColor(WHITE);
-  P036_data->display->setFont(P036_data->ScrollingPages.Font);
-
-  for (uint8_t j = 0; j < P036_data->ScrollingPages.linesPerFrame; j++)
-  {
-    if (P036_data->ScrollingLines.Line[j].LastWidth > 0) {
-      // width of LineOut[j] > display width -> line is right aligned while scrolling page
-      P036_data->display->setTextAlignment(TEXT_ALIGN_RIGHT);
-      P036_data->display->drawString(P36_MaxDisplayWidth - SizeSettings[P036_data->OLEDIndex].PixLeft + P036_data->ScrollingPages.dPixSum,
-                                     P036_data->ScrollingPages.ypos[j],
-                                     P036_data->ScrollingPages.LineOut[j]);
-    }
-    else {
-      // line is centered while scrolling page
-      P036_data->display->setTextAlignment(TEXT_ALIGN_CENTER);
-      P036_data->display->drawString(P36_DisplayCentre + P036_data->ScrollingPages.dPixSum,
-                                     P036_data->ScrollingPages.ypos[j],
-                                     P036_data->ScrollingPages.LineOut[j]);
-    }
-
-    if (P036_data->ScrollingLines.Line[j].Width > 0) {
-      // width of LineIn[j] > display width -> line is left aligned while scrolling page
-      P036_data->display->setTextAlignment(TEXT_ALIGN_LEFT);
-      P036_data->display->drawString(-P36_MaxDisplayWidth + SizeSettings[P036_data->OLEDIndex].PixLeft + P036_data->ScrollingPages.dPixSum,
-                                     P036_data->ScrollingPages.ypos[j],
-                                     P036_data->ScrollingPages.LineIn[j]);
-    }
-    else {
-      // line is centered while scrolling page
-      P036_data->display->setTextAlignment(TEXT_ALIGN_CENTER);
-      P036_data->display->drawString(-P36_DisplayCentre + P036_data->ScrollingPages.dPixSum,
-                                     P036_data->ScrollingPages.ypos[j],
-                                     P036_data->ScrollingPages.LineIn[j]);
-    }
-  }
-
-  P036_data->display->display();
-
-  if (P036_data->ScrollingPages.dPixSum < P36_MaxDisplayWidth) { // scrolling
-    // page still scrolling
-    P036_data->ScrollingPages.dPixSum += P036_data->ScrollingPages.dPix;
-  }
-  else {
-    // page scrolling finished
-    P036_data->ScrollingPages.Scrolling = 0; // allow following line scrolling
-    // String log = F("Scrolling finished");
-    // addLog(LOG_LEVEL_INFO, log);
-  }
-  return P036_data->ScrollingPages.Scrolling;
-}
-
-// Draw scrolling line (1pix/s)
-void display_scrolling_lines(taskIndex_t taskIndex) {
-  P036_data_struct *P036_data =
-    static_cast<P036_data_struct *>(getPluginTaskData(taskIndex));
-
-  if ((P036_data == nullptr) || !P036_data->isInitialized()) {
-    return;
-  }
-
-  // line scrolling (using PLUGIN_TEN_PER_SECOND)
-
-  int i;
-  boolean bscroll       = false;
-  boolean updateDisplay = false;
-  int     iCurrentLeft;
-
-  for (i = 0; i < P036_data->ScrollingPages.linesPerFrame; i++) {
-    if (P036_data->ScrollingLines.Line[i].Width != 0) {
-      P036_data->display->setFont(P036_data->ScrollingLines.Font);
-      bscroll = true;
-      break;
-    }
-  }
-
-  if (bscroll) {
-    P036_data->ScrollingLines.wait++;
-
-    if (P036_data->ScrollingLines.wait < P36_WaitScrollLines) {
-      return; // wait before scrolling line not finished
-    }
-
-    for (i = 0; i < P036_data->ScrollingPages.linesPerFrame; i++) {
-      if (P036_data->ScrollingLines.Line[i].Width != 0) {
-        // scroll this line
-        P036_data->ScrollingLines.Line[i].fPixSum -= P036_data->ScrollingLines.Line[i].dPix;
-        iCurrentLeft                               = round(P036_data->ScrollingLines.Line[i].fPixSum);
-
-        if (iCurrentLeft != P036_data->ScrollingLines.Line[i].CurrentLeft) {
-          // still scrolling
-          P036_data->ScrollingLines.Line[i].CurrentLeft = iCurrentLeft;
-          updateDisplay                                 = true;
-          P036_data->display->setColor(BLACK);
-          P036_data->display->fillRect(0, P036_data->ScrollingLines.Line[i].ypos + 1, P36_MaxDisplayWidth,
-                                       P036_data->ScrollingLines.Space + 1); // clearing window was too high
-          P036_data->display->setColor(WHITE);
-
-          if (((P036_data->ScrollingLines.Line[i].CurrentLeft - SizeSettings[P036_data->OLEDIndex].PixLeft) +
-               P036_data->ScrollingLines.Line[i].Width) >= SizeSettings[P036_data->OLEDIndex].Width) {
-            P036_data->display->setTextAlignment(TEXT_ALIGN_LEFT);
-            P036_data->display->drawString(P036_data->ScrollingLines.Line[i].CurrentLeft,
-                                           P036_data->ScrollingLines.Line[i].ypos,
-                                           P036_data->ScrollingLines.Line[i].LineContent);
-          }
-          else {
-            // line scrolling finished -> line is shown as aligned right
-            P036_data->display->setTextAlignment(TEXT_ALIGN_RIGHT);
-            P036_data->display->drawString(P36_MaxDisplayWidth - SizeSettings[P036_data->OLEDIndex].PixLeft,
-                                           P036_data->ScrollingPages.ypos[i],
-                                           P036_data->ScrollingLines.Line[i].LineContent);
-            P036_data->ScrollingLines.Line[i].Width = 0; // Stop scrolling
-          }
-        }
-      }
-    }
-
-    if (updateDisplay && (P036_data->ScrollingPages.Scrolling == 0)) { P036_data->display->display(); }
-  }
-}
-
-// Draw Signal Strength Bars, return true when there was an update.
-bool display_wifibars(taskIndex_t taskIndex) {
-  P036_data_struct *P036_data =
-    static_cast<P036_data_struct *>(getPluginTaskData(taskIndex));
-
-  if ((P036_data == nullptr) || !P036_data->isInitialized()) {
-    return false;
-  }
-
-  const bool connected    = NetworkConnected();
-  const int  nbars_filled = (WiFi.RSSI() + 100) / 12; // all bars filled if RSSI better than -46dB
-  const int  newState     = connected ? nbars_filled : P36_WIFI_STATE_NOT_CONNECTED;
-
-  if (newState == P036_data->lastWiFiState) {
-    return false; // nothing to do.
-  }
-  int x         = SizeSettings[P036_data->OLEDIndex].WiFiIndicatorLeft;
-  int y         = P036_data->TopLineOffset;
-  int size_x    = SizeSettings[P036_data->OLEDIndex].WiFiIndicatorWidth;
-  int size_y    = P36_HeaderHeight - 2;
-  int nbars     = 5;
-  int16_t width = (size_x / nbars);
-  size_x = width * nbars - 1; // Correct for round errors.
-
-  //  x,y are the x,y locations
-  //  sizex,sizey are the sizes (should be a multiple of the number of bars)
-  //  nbars is the number of bars and nbars_filled is the number of filled bars.
-
-  //  We leave a 1 pixel gap between bars
-  P036_data->display->setColor(BLACK);
-  P036_data->display->fillRect(x, y, size_x, size_y);
-  P036_data->display->setColor(WHITE);
-
-  if (NetworkConnected()) {
-    for (uint8_t ibar = 0; ibar < nbars; ibar++) {
-      int16_t height = size_y * (ibar + 1) / nbars;
-      int16_t xpos   = x + ibar * width;
-      int16_t ypos   = y + size_y - height;
-
-      if (ibar <= nbars_filled) {
-        // Fill complete bar
-        P036_data->display->fillRect(xpos, ypos, width - 1, height);
-      } else {
-        // Only draw top and bottom.
-        P036_data->display->fillRect(xpos, ypos,           width - 1, 1);
-        P036_data->display->fillRect(xpos, y + size_y - 1, width - 1, 1);
-      }
-    }
-  } else {
-    // Draw a not connected sign (empty rectangle)
-    P036_data->display->drawRect(x, y, size_x, size_y - 1);
-  }
-  return true;
 }
 
 #endif // USES_P036
