@@ -79,7 +79,7 @@
 #define PLUGIN_ID_036         36
 #define PLUGIN_NAME_036       "Display - OLED SSD1306/SH1106 Framed"
 #define PLUGIN_VALUENAME1_036 "OLED"
-//#define PLUGIN_036_DEBUG    // additional debug messages in the log
+#define PLUGIN_036_DEBUG    // additional debug messages in the log
 
 #define P36_Nlines 12         // The number of different lines which can be displayed - each line is 64 chars max
 #define P36_NcharsV0 32       // max chars per line up to 22.11.2019 (V0)
@@ -108,7 +108,7 @@
 #define P36_WIFI_STATE_NOT_CONNECTED  -1
 #define P36_MAX_LinesPerPage          4
 #define P36_WaitScrollLines           5   // wait 0.5s before and after scrolling line
-#define P36_PageScrollTimer           25  // timer for page Scrolling
+#define P36_PageScrollTimer           25  // timer in msec for page Scrolling
 #define P36_PageScrollTick            (P36_PageScrollTimer+20)  // total time for one PageScrollTick (including the handling time of 20ms in PLUGIN_TIMER_IN)
 #define P36_PageScrollPix             4  // min pixel change while page scrolling
 #define P36_DebounceTreshold          5  // number of 20 msec (fifty per second) ticks before the button has settled
@@ -192,40 +192,40 @@ const tSizeSettings SizeSettings[P36_MaxSizesCount] = {
 };
 
 typedef struct {
-   String        LineContent;          // content
-   uint16_t      LastWidth;            // width of last line in pix
-   uint16_t      Width;                // width in pix
-   uint8_t       Height;               // Height in Pix
-   uint8_t       ypos;                 // y position in pix
-   int           CurrentLeft;          // current left pix position
-   float         dPix;                 // pix change per scroll time (100ms)
-   float         fPixSum;              // pix sum while scrolling (100ms)
+   String        LineContent;              // content
+   uint16_t      LastWidth = 0;            // width of last line in pix
+   uint16_t      Width = 0;                // width in pix
+   uint8_t       Height = 0;               // Height in Pix
+   uint8_t       ypos = 0;                 // y position in pix
+   int           CurrentLeft = 0;          // current left pix position
+   float         dPix = 0.0;               // pix change per scroll time (100ms)
+   float         fPixSum = 0.0;            // pix sum while scrolling (100ms)
 } tScrollLine;
 
 typedef struct {
-  const char    *Font;                 // font for this line setting
-  uint8_t       Space;                 // space in pix between lines for this line setting
-  uint16_t      wait;                  // waiting time before scrolling
+  const char    *Font = nullptr;           // font for this line setting
+  uint8_t       Space = 0;                 // space in pix between lines for this line setting
+  uint16_t      wait = 0;                  // waiting time before scrolling
   tScrollLine   Line[P36_MAX_LinesPerPage];
 } tScrollingLines;
 
 typedef struct {
-  uint8_t       Scrolling;                    // 0=Ready, 1=Scrolling
-  const char    *Font;                        // font for this line setting
-  uint8_t       dPix;                         // pix change per scroll time (25ms)
-  int           dPixSum;                      // act pix change
-  uint8_t       linesPerFrame;                // the number of lines in each frame
-  int           ypos[P36_MAX_LinesPerPage];   // ypos contains the heights of the various lines - this depends on the font and the number of lines
+  uint8_t       Scrolling = 0;                // 0=Ready, 1=Scrolling
+  const char    *Font = nullptr;              // font for this line setting
+  uint8_t       dPix = 0;                     // pix change per scroll time (25ms)
+  int           dPixSum = 0;                  // act pix change
+  uint8_t       linesPerFrame = 0;            // the number of lines in each frame
+  int           ypos[P36_MAX_LinesPerPage] = { 0 };   // ypos contains the heights of the various lines - this depends on the font and the number of lines
   String        LineIn[P36_MAX_LinesPerPage];
   String        LineOut[P36_MAX_LinesPerPage];
 } tScrollingPages;
 
 typedef struct {
-  char         Content[P36_NcharsV1];
-  uint8_t      FontType;
-  uint8_t      FontHeight;
-  uint8_t      FontSpace;
-  uint8_t      reserved;
+  char         Content[P36_NcharsV1] = {0};
+  uint8_t      FontType  = 0;
+  uint8_t      FontHeight = 0;
+  uint8_t      FontSpace = 0;
+  uint8_t      reserved = 0;
 } tDisplayLines;
 
 struct P036_data_struct: public PluginTaskData_base {
@@ -300,33 +300,31 @@ tScrollingPages ScrollingPages;
 // CustomTaskSettings
 tDisplayLines DisplayLinesV1[P36_Nlines];    // holds the CustomTaskSettings for V1
 
-int8_t lastWiFiState;
+int8_t lastWiFiState = 0;
 // display
-uint8_t OLEDIndex;
-boolean bLineScrollEnabled;
-uint8_t TopLineOffset;          // Offset for top line, used for rotated image while using displays < P36_MaxDisplayHeight lines
+uint8_t OLEDIndex = 0;
+boolean bLineScrollEnabled = false;
+uint8_t TopLineOffset = 0;      // Offset for top line, used for rotated image while using displays < P36_MaxDisplayHeight lines
 // Display button
-boolean ButtonState;            // button not touched
-uint8_t ButtonLastState;        // Last state checked (debouncing in progress)
-uint8_t DebounceCounter;        // debounce counter
-uint8_t RepeatCounter;          // Repeat delay counter when holding button pressed
-uint8_t displayTimer;           // counter for display OFF
+boolean ButtonState = false;    // button not touched
+uint8_t ButtonLastState = 0;    // Last state checked (debouncing in progress)
+uint8_t DebounceCounter = 0;    // debounce counter
+uint8_t RepeatCounter = 0;      // Repeat delay counter when holding button pressed
+uint8_t displayTimer = 0;       // counter for display OFF
 // frame header
-boolean bAlternativHeader;
-uint16_t HeaderCount;
+boolean bAlternativHeader = false;
+uint16_t HeaderCount = 0;
 eHeaderContent HeaderContent;
 eHeaderContent HeaderContentAlternative;
 // frames
-uint8_t MaxFramesToDisplay;     // total number of frames to display
-uint8_t currentFrameToDisplay;
-uint8_t nextFrameToDisplay;     // next frame because content changed in PLUGIN_WRITE
-uint8_t frameCounter;           // need to keep track of framecounter from call to call
-uint8_t disableFrameChangeCnt;  // counter to disable frame change after JumpToPage in case PLUGIN_READ already scheduled
-boolean bPageScrollDisabled;    // first page after INIT or after JumpToPage without scrolling
+uint8_t MaxFramesToDisplay = 0;     // total number of frames to display
+uint8_t currentFrameToDisplay = 0;
+uint8_t nextFrameToDisplay = 0;     // next frame because content changed in PLUGIN_WRITE
+uint8_t frameCounter = 0;           // need to keep track of framecounter from call to call
+uint8_t disableFrameChangeCnt = 0;  // counter to disable frame change after JumpToPage in case PLUGIN_READ already scheduled
+boolean bPageScrollDisabled = true; // first page after INIT or after JumpToPage without scrolling
 
 };
-
-P036_data_struct *P036_data = nullptr;
 
 void Plugin_036_loadDisplayLines(taskIndex_t taskIndex, uint8_t LoadVersion, P036_data_struct* P036_data);
 
@@ -410,50 +408,58 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 #ifdef PLUGIN_036_DEBUG
         addLog(LOG_LEVEL_INFO, F("P036_PLUGIN_WEBFORM_LOAD ..."));
 #endif  // PLUGIN_036_DEBUG
-        P036_data_struct *P036_data_temp = new P036_data_struct();  // just temporary for Plugin_036_loadDisplayLines()
 
         // Use number 5 to remain compatible with existing configurations,
         // but the item should be one of the first choices.
         addFormSubHeader(F("Display"));
-        uint8_t choice5 = PCONFIG(5);
-        String options5[2];
-        options5[0] = F("SSD1306 (128x64 dot controller)");
-        options5[1] = F("SH1106 (132x64 dot controller)");
-        int optionValues5[2] = { 1, 2 };
-        addFormSelector(F("Controller"), F("p036_controller"), 2, options5, optionValues5, choice5);
+        {
+          uint8_t choice5 = PCONFIG(5);
+          String options5[2];
+          options5[0] = F("SSD1306 (128x64 dot controller)");
+          options5[1] = F("SH1106 (132x64 dot controller)");
+          int optionValues5[2] = { 1, 2 };
+          addFormSelector(F("Controller"), F("p036_controller"), 2, options5, optionValues5, choice5);
+        }
 
-        uint8_t choice0 = PCONFIG(0);
-        int optionValues0[2];
-        optionValues0[0] = 0x3C;
-        optionValues0[1] = 0x3D;
-        addFormSelectorI2C(F("p036_adr"), 2, optionValues0, choice0);
+        {
+          uint8_t choice0 = PCONFIG(0);
+          int optionValues0[2];
+          optionValues0[0] = 0x3C;
+          optionValues0[1] = 0x3D;
+          addFormSelectorI2C(F("p036_adr"), 2, optionValues0, choice0);
+        }
 
-        String options8[P36_MaxSizesCount] = { F("128x64"), F("128x32"), F("64x48") };
-        int optionValues8[P36_MaxSizesCount] = { 0, 1, 2 };
-        addFormSelector(F("Size"),F("p036_size"), P36_MaxSizesCount, options8, optionValues8, NULL, PCONFIG(7), true);
+        {
+          String options8[P36_MaxSizesCount] = { F("128x64"), F("128x32"), F("64x48") };
+          int optionValues8[P36_MaxSizesCount] = { 0, 1, 2 };
+          addFormSelector(F("Size"),F("p036_size"), P36_MaxSizesCount, options8, optionValues8, NULL, PCONFIG(7), true);
+        }
 
-        uint8_t choice1 = PCONFIG(1);
-        String options1[2];
-        options1[0] = F("Normal");
-        options1[1] = F("Rotated");
-        int optionValues1[2] = { 1, 2 };
-        addFormSelector(F("Rotation"), F("p036_rotate"), 2, options1, optionValues1, choice1);
+        {
+          uint8_t choice1 = PCONFIG(1);
+          String options1[2];
+          options1[0] = F("Normal");
+          options1[1] = F("Rotated");
+          int optionValues1[2] = { 1, 2 };
+          addFormSelector(F("Rotation"), F("p036_rotate"), 2, options1, optionValues1, choice1);
+        }
 
-        uint8_t tOLEDIndex=PCONFIG(7);
-        addFormNumericBox(F("Lines per Frame"), F("p036_nlines"), PCONFIG(2), 1, SizeSettings[tOLEDIndex].MaxLines);
+        {
+          uint8_t tOLEDIndex=PCONFIG(7);
+          addFormNumericBox(F("Lines per Frame"), F("p036_nlines"), PCONFIG(2), 1, SizeSettings[tOLEDIndex].MaxLines);
+        }
 
-        uint8_t choice3 = PCONFIG(3);
-        String options3[5];
-        options3[0] = F("Very Slow");
-        options3[1] = F("Slow");
-        options3[2] = F("Fast");
-        options3[3] = F("Very Fast");
-        options3[4] = F("Instant");
-        int optionValues3[5] = {ePSS_VerySlow, ePSS_Slow, ePSS_Fast, ePSS_VeryFast, ePSS_Instant};
-        addFormSelector(F("Scroll"), F("p036_scroll"), 5, options3, optionValues3, choice3);
-        uint8_t version = get4BitFromUL(PCONFIG_LONG(0), 20);    // Bit23-20 Version CustomTaskSettings
-
-        Plugin_036_loadDisplayLines(event->TaskIndex, version, P036_data_temp);
+        {
+          uint8_t choice3 = PCONFIG(3);
+          String options3[5];
+          options3[0] = F("Very Slow");
+          options3[1] = F("Slow");
+          options3[2] = F("Fast");
+          options3[3] = F("Very Fast");
+          options3[4] = F("Instant");
+          int optionValues3[5] = {ePSS_VerySlow, ePSS_Slow, ePSS_Fast, ePSS_VeryFast, ePSS_Instant};
+          addFormSelector(F("Scroll"), F("p036_scroll"), 5, options3, optionValues3, choice3);
+        }
 
         // FIXME TD-er: Why is this using pin3 and not pin1? And why isn't this using the normal pin selection functions?
         addFormPinSelect(F("Display button"), F("taskdevicepin3"), CONFIG_PIN3);
@@ -464,17 +470,19 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
         addFormNumericBox(F("Display Timeout"), F("p036_timer"), PCONFIG(4));
 
-        uint8_t choice6 = PCONFIG(6);
-        if (choice6 == 0) choice6 = P36_CONTRAST_HIGH;
-        String options6[3];
-        options6[0] = F("Low");
-        options6[1] = F("Medium");
-        options6[2] = F("High");
-        int optionValues6[3];
-        optionValues6[0] = P36_CONTRAST_LOW;
-        optionValues6[1] = P36_CONTRAST_MED;
-        optionValues6[2] = P36_CONTRAST_HIGH;
-        addFormSelector(F("Contrast"), F("p036_contrast"), 3, options6, optionValues6, choice6);
+        {
+          uint8_t choice6 = PCONFIG(6);
+          if (choice6 == 0) choice6 = P36_CONTRAST_HIGH;
+          String options6[3];
+          options6[0] = F("Low");
+          options6[1] = F("Medium");
+          options6[2] = F("High");
+          int optionValues6[3];
+          optionValues6[0] = P36_CONTRAST_LOW;
+          optionValues6[1] = P36_CONTRAST_MED;
+          optionValues6[2] = P36_CONTRAST_HIGH;
+          addFormSelector(F("Contrast"), F("p036_contrast"), 3, options6, optionValues6, choice6);
+        }
 
         boolean tbScrollWithoutWifi = bitRead(PCONFIG_LONG(0), 24);  // Bit 24
         addFormCheckBox(F("Disable all scrolling while WiFi is disconnected"), F("p036_ScrollWithoutWifi"), !tbScrollWithoutWifi);
@@ -482,12 +490,14 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
         addFormSubHeader(F("Content"));
 
-        uint8_t choice9 = get8BitFromUL(PCONFIG_LONG(0), 8);    // Bit15-8 HeaderContent
-        uint8_t choice10 = get8BitFromUL(PCONFIG_LONG(0), 0);   // Bit7-0 HeaderContentAlternative
-        String options9[14] = { F("SSID"), F("SysName"), F("IP"), F("MAC"), F("RSSI"), F("BSSID"), F("WiFi channel"), F("Unit"), F("SysLoad"), F("SysHeap"), F("SysStack"), F("Date"), F("Time"), F("PageNumbers") };
-        int optionValues9[14] = { eSSID, eSysName, eIP, eMAC, eRSSI, eBSSID, eWiFiCh, eUnit, eSysLoad, eSysHeap, eSysStack, eDate, eTime , ePageNo};
-        addFormSelector(F("Header"),F("p036_header"), 14, options9, optionValues9, choice9);
-        addFormSelector(F("Header (alternating)"),F("p036_headerAlternate"), 14, options9, optionValues9, choice10);
+        {
+          uint8_t choice9 = get8BitFromUL(PCONFIG_LONG(0), 8);    // Bit15-8 HeaderContent
+          uint8_t choice10 = get8BitFromUL(PCONFIG_LONG(0), 0);   // Bit7-0 HeaderContentAlternative
+          String options9[14] = { F("SSID"), F("SysName"), F("IP"), F("MAC"), F("RSSI"), F("BSSID"), F("WiFi channel"), F("Unit"), F("SysLoad"), F("SysHeap"), F("SysStack"), F("Date"), F("Time"), F("PageNumbers") };
+          int optionValues9[14] = { eSSID, eSysName, eIP, eMAC, eRSSI, eBSSID, eWiFiCh, eUnit, eSysLoad, eSysHeap, eSysStack, eDate, eTime , ePageNo};
+          addFormSelector(F("Header"),F("p036_header"), 14, options9, optionValues9, choice9);
+          addFormSelector(F("Header (alternating)"),F("p036_headerAlternate"), 14, options9, optionValues9, choice10);
+        }
 
         boolean tbScrollLines = bitRead(PCONFIG_LONG(0), 17);  // Bit 17
         addFormCheckBox(F("Scroll long lines"), F("p036_ScrollLines"), tbScrollLines);
@@ -496,13 +506,30 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         addFormCheckBox(F("Wake display on receiving text"), F("p036_NoDisplay"), !tbNoDisplayOnReceivedText);
         addFormNote(F("When checked, the display wakes up at receiving remote updates."));
 
-        for (uint8_t varNr = 0; varNr < P36_Nlines; varNr++)
         {
-          addFormTextBox(String(F("Line ")) + (varNr + 1), getPluginCustomArgName(varNr), String(P036_data_temp->DisplayLinesV1[varNr].Content), P36_NcharsV1-1);
+          // The web page can be loaded even when the init has not been called (not enabled task)
+          // So we may need to create a temp object to show the data.
+          P036_data_struct *P036_data =
+              static_cast<P036_data_struct *>(getPluginTaskData(event->TaskIndex));
+          bool isTemp = false;
+          if (nullptr == P036_data) {
+            isTemp = true;
+            // just temporary for Plugin_036_loadDisplayLines()
+            P036_data = new P036_data_struct();
+          }
+          if (nullptr != P036_data) {
+            uint8_t version = get4BitFromUL(PCONFIG_LONG(0), 20);    // Bit23-20 Version CustomTaskSettings
+            Plugin_036_loadDisplayLines(event->TaskIndex, version, P036_data);
+            for (uint8_t varNr = 0; varNr < P36_Nlines; varNr++)
+            {
+              addFormTextBox(String(F("Line ")) + (varNr + 1), getPluginCustomArgName(varNr), String(P036_data->DisplayLinesV1[varNr].Content), P36_NcharsV1-1);
+            }
+            if (isTemp) {
+              // Need to delete the allocated object here
+              delete P036_data;
+            }
+          }
         }
-
-        delete P036_data_temp;
-        P036_data_temp = nullptr;
 
         success = true;
         break;
@@ -515,8 +542,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 #endif  // PLUGIN_036_DEBUG
 
         //update now
-        schedule_task_device_timer(event->TaskIndex,
-           millis() + (Settings.TaskDeviceTimer[event->TaskIndex] * 1000));
+        schedule_task_device_timer(event->TaskIndex, millis() + 10);
 
         PCONFIG(0) = getFormItemInt(F("p036_adr"));
         PCONFIG(1) = getFormItemInt(F("p036_rotate"));
@@ -540,23 +566,43 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
         PCONFIG_LONG(0) = lSettings;
 
-        String error;
-        tDisplayLines tDisplayLinesV1[P36_Nlines];    // holds the CustomTaskSettings for V1
-        for (uint8_t varNr = 0; varNr < P36_Nlines; varNr++)
         {
-          if (!safe_strncpy(tDisplayLinesV1[varNr].Content, web_server.arg(getPluginCustomArgName(varNr)), P36_NcharsV1)) {
-            error += getCustomTaskSettingsError(varNr);
+          // The web page can try to save even when the init has not been called (not enabled task)
+          // So we may need to create a temp object to show the data.
+          P036_data_struct *P036_data =
+              static_cast<P036_data_struct *>(getPluginTaskData(event->TaskIndex));
+          bool isTemp = false;
+          if (nullptr == P036_data) {
+            isTemp = true;
+            // just temporary for Plugin_036_loadDisplayLines()
+            P036_data = new P036_data_struct();
           }
-          tDisplayLinesV1[varNr].Content[P36_NcharsV1-1] = 0; // Terminate in case of uninitalized data
-          tDisplayLinesV1[varNr].FontType = 0xff;
-          tDisplayLinesV1[varNr].FontHeight = 0xff;
-          tDisplayLinesV1[varNr].FontSpace = 0xff;
-          tDisplayLinesV1[varNr].reserved = 0xff;
+          if (nullptr != P036_data) {
+            String error;
+            for (uint8_t varNr = 0; varNr < P36_Nlines; varNr++)
+            {
+              if (!safe_strncpy(P036_data->DisplayLinesV1[varNr].Content, web_server.arg(getPluginCustomArgName(varNr)), P36_NcharsV1)) {
+                error += getCustomTaskSettingsError(varNr);
+              }
+              P036_data->DisplayLinesV1[varNr].Content[P36_NcharsV1-1] = 0; // Terminate in case of uninitalized data
+              P036_data->DisplayLinesV1[varNr].FontType = 0xff;
+              P036_data->DisplayLinesV1[varNr].FontHeight = 0xff;
+              P036_data->DisplayLinesV1[varNr].FontSpace = 0xff;
+              P036_data->DisplayLinesV1[varNr].reserved = 0xff;
+            }
+            if (error.length() > 0) {
+              addHtmlError(error);
+            }
+            SaveCustomTaskSettings(event->TaskIndex, (uint8_t*)&(P036_data->DisplayLinesV1), sizeof(P036_data->DisplayLinesV1));
+            if (isTemp) {
+              // Need to delete the allocated object here
+              delete P036_data;
+            }
+          }
         }
-        if (error.length() > 0) {
-          addHtmlError(error);
-        }
-        SaveCustomTaskSettings(event->TaskIndex, (uint8_t*)&(tDisplayLinesV1), sizeof(tDisplayLinesV1));
+
+        P036_data_struct *P036_data =
+            static_cast<P036_data_struct *>(getPluginTaskData(event->TaskIndex));
 
         if (nullptr != P036_data) {
           // After saving, make sure the active lines are updated.
@@ -575,24 +621,13 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
       {
-        if (nullptr == P036_data) {
-#ifdef PLUGIN_036_DEBUG
-          addLog(LOG_LEVEL_INFO, F("P036_PLUGIN_INIT NoData -> Create ..."));
-#endif  // PLUGIN_036_DEBUG
-          initPluginTaskData(event->TaskIndex, new P036_data_struct());
-          P036_data = static_cast<P036_data_struct *>(getPluginTaskData(event->TaskIndex));
-        }
+        initPluginTaskData(event->TaskIndex, new P036_data_struct());
+        P036_data_struct *P036_data =
+            static_cast<P036_data_struct *>(getPluginTaskData(event->TaskIndex));
+
         if (nullptr == P036_data) {
           return success;
         }
-#ifdef PLUGIN_036_DEBUG
-        if (P036_data->isInitialized()) {
-          addLog(LOG_LEVEL_INFO, F("P036_init -> Already done!"));
-        }
-        else {
-          addLog(LOG_LEVEL_INFO, F("P036_init ..."));
-        }
-#endif  // PLUGIN_036_DEBUG
 
         if (!(P036_data->init(PCONFIG(5), PCONFIG(0), Settings.Pin_i2c_sda, Settings.Pin_i2c_scl))) { // Init the display and turn it on
           clearPluginTaskData(event->TaskIndex);
@@ -607,7 +642,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         Plugin_036_loadDisplayLines(event->TaskIndex, version, P036_data);
 
         uint8_t OLED_contrast = PCONFIG(6);
-        P36_setContrast(OLED_contrast);
+        P36_setContrast(OLED_contrast, event->TaskIndex);
 
         //      Set the initial value of OnOff to On
         UserVar[event->BaseVarIndex] = 1;
@@ -623,8 +658,8 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         //      Display the device name, logo, time and wifi
         P036_data->bAlternativHeader = false;  // start with first header content
         P036_data->HeaderCount = 0;            // reset header count
-        display_header();
-        display_logo();
+        display_header(event->TaskIndex);
+        display_logo(event->TaskIndex);
         P036_data->display->display();
 
         //      Set up the display timer
@@ -653,9 +688,13 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         }
 
         //    prepare font and positions for page and line scrolling
-        prepare_pagescrolling();
+        prepare_pagescrolling(event->TaskIndex);
 #ifdef PLUGIN_036_DEBUG
-        addLog(LOG_LEVEL_INFO, F("P036_init Done"));
+        if (P036_data->isInitialized()) {
+          addLog(LOG_LEVEL_INFO, F("P036_init Done"));
+        } else {
+          addLog(LOG_LEVEL_INFO, F("P036_init Not initialized"));
+        }
 #endif  // PLUGIN_036_DEBUG
 
         success = true;
@@ -668,7 +707,6 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         addLog(LOG_LEVEL_INFO, F("P036_PLUGIN_EXIT ..."));
 #endif  // PLUGIN_036_DEBUG
         clearPluginTaskData(event->TaskIndex);
-        P036_data = nullptr;
         success = true;
         break;
       }
@@ -676,6 +714,9 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
     // Check more often for debouncing the button, when enabled
     case PLUGIN_FIFTY_PER_SECOND:
       {
+        P036_data_struct *P036_data =
+            static_cast<P036_data_struct *>(getPluginTaskData(event->TaskIndex));
+
         if (nullptr == P036_data) {
           return success;
         }
@@ -684,7 +725,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           uint8_t newButtonState = digitalRead(CONFIG_PIN3);
           boolean bPin3Invers = bitRead(PCONFIG_LONG(0), 16);  // Bit 16
 
-          if (P036_data->ButtonLastState == 0xFF || ((!bPin3Invers && newButtonState) || (bPin3Invers && !newButtonState))) {
+          if (P036_data->ButtonLastState == 0xFF || (bPin3Invers != newButtonState)) {
             P036_data->ButtonLastState = newButtonState;
             P036_data->DebounceCounter++;
             if (P036_data->RepeatCounter > 0) P036_data->RepeatCounter--;  // decrease the repeat count
@@ -705,6 +746,9 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
     // Check frequently to see if we have a pin signal to switch on display
     case PLUGIN_TEN_PER_SECOND:
       {
+        P036_data_struct *P036_data =
+            static_cast<P036_data_struct *>(getPluginTaskData(event->TaskIndex));
+
         if (nullptr == P036_data) {
           return success;
         }
@@ -737,7 +781,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         if (P036_data->bLineScrollEnabled) {
           if ((UserVar[event->BaseVarIndex] == 1) && (P036_data->ScrollingPages.Scrolling == 0)) {
             // Display is on.
-            display_scrolling_lines(); // line scrolling
+            display_scrolling_lines(event->TaskIndex); // line scrolling
           }
         }
         success = true;
@@ -753,7 +797,8 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 #endif  // PLUGIN_036_DEBUG
           return success;
         }
-
+        P036_data_struct *P036_data =
+            static_cast<P036_data_struct *>(getPluginTaskData(event->TaskIndex));
         if (nullptr == P036_data) {
 #ifdef PLUGIN_036_DEBUG
           addLog(LOG_LEVEL_INFO, F("P036_PLUGIN_ONCE_A_SECOND NoData"));
@@ -782,8 +827,8 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
           P036_data->HeaderContent = static_cast<eHeaderContent>(get8BitFromUL(PCONFIG_LONG(0), 8));             // Bit15-8 HeaderContent
           P036_data->HeaderContentAlternative = static_cast<eHeaderContent>(get8BitFromUL(PCONFIG_LONG(0), 0));  // Bit 7-0 HeaderContentAlternative
-	        display_header();	// Update Header
-          if (P036_data->isInitialized() && display_wifibars()) {
+	        display_header(event->TaskIndex);	// Update Header
+          if (P036_data->isInitialized() && display_wifibars(event->TaskIndex)) {
             // WiFi symbol was updated.
             P036_data->display->display();
           }
@@ -801,6 +846,8 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 #endif  // PLUGIN_036_DEBUG
         return success;
       }
+      P036_data_struct *P036_data =
+          static_cast<P036_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr == P036_data) {
 #ifdef PLUGIN_036_DEBUG
@@ -816,7 +863,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         return success;
       }
 
-      if (UserVar[event->BaseVarIndex] == 1 && display_scroll_timer()) // page scrolling only when the display is on
+      if (UserVar[event->BaseVarIndex] == 1 && display_scroll_timer(event->TaskIndex)) // page scrolling only when the display is on
         setPluginTaskTimer(P36_PageScrollTimer, event->TaskIndex, event->Par1);  // calls next page scrollng tick
 
       return success;
@@ -830,6 +877,9 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 #endif  // PLUGIN_036_DEBUG
           return success;
         }
+
+        P036_data_struct *P036_data =
+            static_cast<P036_data_struct *>(getPluginTaskData(event->TaskIndex));
 
         if (nullptr == P036_data) {
 #ifdef PLUGIN_036_DEBUG
@@ -847,12 +897,19 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
         if (P036_data->disableFrameChangeCnt) {
           //  disable next page change after JumpToPage if PLUGIN_READ was already scheduled
+#ifdef PLUGIN_036_DEBUG
+          addLog(LOG_LEVEL_INFO, F("P036_PLUGIN_READ disableFrameChangeCnt"));
+#endif  // PLUGIN_036_DEBUG
           return success;
         }
 
         if (P036_data->ScrollingPages.Scrolling == 0) { // page scrolling not running -> switch to next page is allowed
           // Define Scroll area layout
           P036_DisplayPage(event);
+        } else {
+          #ifdef PLUGIN_036_DEBUG
+            addLog(LOG_LEVEL_INFO, F("P036_PLUGIN_READ Page scrolling running"));
+          #endif  // PLUGIN_036_DEBUG
         }
 
         success = true;
@@ -861,6 +918,9 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WRITE:
       {
+        P036_data_struct *P036_data =
+            static_cast<P036_data_struct *>(getPluginTaskData(event->TaskIndex));
+
         if (nullptr == P036_data) {
 #ifdef PLUGIN_036_DEBUG
           addLog(LOG_LEVEL_INFO, F("P036_PLUGIN_WRITE NoData"));
@@ -898,15 +958,15 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
             }
             if (para1 == F("low")) {
               success = true;
-              P36_setContrast(P36_CONTRAST_LOW);
+              P36_setContrast(P36_CONTRAST_LOW, event->TaskIndex);
             }
             if (para1 == F("med")) {
               success = true;
-              P36_setContrast(P36_CONTRAST_MED);
+              P36_setContrast(P36_CONTRAST_MED, event->TaskIndex);
             }
             if (para1 == F("high")) {
               success = true;
-              P36_setContrast(P36_CONTRAST_HIGH);
+              P36_setContrast(P36_CONTRAST_HIGH, event->TaskIndex);
             }
           }
           else if ((subcommand == F("frame")) && (event->Par2 >= 0) && (event->Par2 <= P036_data->MaxFramesToDisplay + 1))
@@ -972,7 +1032,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       if (!success) {
         String log = String(F("[P36] Cmd: ")) + String(command);
         log += String(F(" SubCmd:")) + String(subcommand);
-        log += String(F(" Success:")) + String(success);
+        log += String(F(" Success:")) + jsonBool(success);
         addLog(LOG_LEVEL_INFO, log);
       }
 #endif  // PLUGIN_036_DEBUG
@@ -984,20 +1044,30 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
 void P036_JumpToPage(struct EventStruct *event, uint8_t nextFrame)
 {
+  P036_data_struct *P036_data =
+      static_cast<P036_data_struct *>(getPluginTaskData(event->TaskIndex));
+
   if ((P036_data == nullptr) || !P036_data->isInitialized()) {
     return;
   }
   schedule_task_device_timer(event->TaskIndex,
      millis() + (Settings.TaskDeviceTimer[event->TaskIndex] * 1000)); // reschedule page change
-     P036_data->nextFrameToDisplay = nextFrame;
-     P036_data->bPageScrollDisabled = true; //  show next page without scrolling
-     P036_data->disableFrameChangeCnt = 2;  //  disable next page change in PLUGIN_READ if PLUGIN_READ was already scheduled
-     P036_DisplayPage(event);               //  Display the selected page, function needs 65ms!
-     P036_data->displayTimer = PCONFIG(4);  //  Restart timer
+  P036_data->nextFrameToDisplay = nextFrame;
+  P036_data->bPageScrollDisabled = true; //  show next page without scrolling
+  P036_data->disableFrameChangeCnt = 2;  //  disable next page change in PLUGIN_READ if PLUGIN_READ was already scheduled
+  P036_DisplayPage(event);               //  Display the selected page, function needs 65ms!
+  P036_data->displayTimer = PCONFIG(4);  //  Restart timer
 }
 
 void P036_DisplayPage(struct EventStruct *event)
 {
+  #ifdef PLUGIN_036_DEBUG
+    addLog(LOG_LEVEL_INFO, F("P036_DisplayPage"));
+  #endif  // PLUGIN_036_DEBUG
+
+  P036_data_struct *P036_data =
+      static_cast<P036_data_struct *>(getPluginTaskData(event->TaskIndex));
+
   if ((P036_data == nullptr) || !P036_data->isInitialized()) {
     return;
   }
@@ -1091,8 +1161,8 @@ void P036_DisplayPage(struct EventStruct *event)
     //      Update display
     P036_data->bAlternativHeader = false;  // start with first header content
     P036_data->HeaderCount = 0;            // reset header count
-    display_header();
-    if (SizeSettings[P036_data->OLEDIndex].Width == P36_MaxDisplayWidth) display_indicator(P036_data->MaxFramesToDisplay + 1);
+    display_header(event->TaskIndex);
+    if (SizeSettings[P036_data->OLEDIndex].Width == P36_MaxDisplayWidth) display_indicator(P036_data->MaxFramesToDisplay + 1, event->TaskIndex);
 
     P036_data->display->display();
 
@@ -1104,20 +1174,27 @@ void P036_DisplayPage(struct EventStruct *event)
     if (P036_data->bPageScrollDisabled) lscrollspeed = ePSS_Instant; // first page after INIT without scrolling
     int lTaskTimer = Settings.TaskDeviceTimer[event->TaskIndex];
 
-    if (display_scroll(lscrollspeed, lTaskTimer))
+    if (display_scroll(lscrollspeed, lTaskTimer, event->TaskIndex))
       setPluginTaskTimer(P36_PageScrollTimer, event->TaskIndex, event->Par1); // calls next page scrollng tick
 
     if (WiFiConnected() || bScrollWithoutWifi) {
       // scroll lines only if WifiIsConnected, otherwise too slow
       P036_data->bPageScrollDisabled = false;    // next PLUGIN_READ will do page scrolling
     }
+  } else {
+    #ifdef PLUGIN_036_DEBUG
+    addLog(LOG_LEVEL_INFO, F("P036_DisplayPage Display off"));
+    #endif  // PLUGIN_036_DEBUG
   }
 }
 
 // Set the display contrast
 // really low brightness & contrast: contrast = 10, precharge = 5, comdetect = 0
 // normal brightness & contrast:  contrast = 100
-void P36_setContrast(uint8_t OLED_contrast) {
+void P36_setContrast(uint8_t OLED_contrast, taskIndex_t taskIndex) {
+  P036_data_struct *P036_data =
+      static_cast<P036_data_struct *>(getPluginTaskData(taskIndex));
+
   if ((P036_data == nullptr) || !P036_data->isInitialized()) {
     return;
   }
@@ -1161,7 +1238,10 @@ String P36_parseTemplate(String &tmpString, uint8_t lineSize) {
 
 // The screen is set up as 10 rows at the top for the header, 10 rows at the bottom for the footer and 44 rows in the middle for the scroll region
 
-void display_header() {
+void display_header(taskIndex_t taskIndex) {
+  P036_data_struct *P036_data =
+    static_cast<P036_data_struct *>(getPluginTaskData(taskIndex));
+
   if ((P036_data == nullptr) || !P036_data->isInitialized()) {
     return;
   }
@@ -1238,13 +1318,15 @@ void display_header() {
   }
 
   strHeader.trim();
-  display_title(strHeader);
+  display_title(strHeader, taskIndex);
   // Display time and wifibars both clear area below, so paint them after the title.
-  if (SizeSettings[P036_data->OLEDIndex].Width == P36_MaxDisplayWidth) display_time(); // only for 128pix wide displays
-  display_wifibars();
+  if (SizeSettings[P036_data->OLEDIndex].Width == P36_MaxDisplayWidth) display_time(taskIndex); // only for 128pix wide displays
+  display_wifibars(taskIndex);
 }
 
-void display_time() {
+void display_time(taskIndex_t taskIndex) {
+  P036_data_struct *P036_data =
+    static_cast<P036_data_struct *>(getPluginTaskData(taskIndex));
   if ((P036_data == nullptr) || !P036_data->isInitialized()) {
     return;
   }
@@ -1259,7 +1341,10 @@ void display_time() {
   P036_data->display->drawString(0, P036_data->TopLineOffset, dtime.substring(0, 5));
 }
 
-void display_title(String& title) {
+void display_title(String& title, taskIndex_t taskIndex) {
+  P036_data_struct *P036_data =
+    static_cast<P036_data_struct *>(getPluginTaskData(taskIndex));
+
   if ((P036_data == nullptr) || !P036_data->isInitialized()) {
     return;
   }
@@ -1277,7 +1362,10 @@ void display_title(String& title) {
   }
 }
 
-void display_logo() {
+void display_logo(taskIndex_t taskIndex) {
+  P036_data_struct *P036_data =
+    static_cast<P036_data_struct *>(getPluginTaskData(taskIndex));
+
   if ((P036_data == nullptr) || !P036_data->isInitialized()) {
     return;
   }
@@ -1296,7 +1384,10 @@ void display_logo() {
 
 // Draw the frame position
 
-void display_indicator(int frameCount) {
+void display_indicator(int frameCount, taskIndex_t taskIndex) {
+  P036_data_struct *P036_data =
+    static_cast<P036_data_struct *>(getPluginTaskData(taskIndex));
+
   if ((P036_data == nullptr) || !P036_data->isInitialized()) {
     return;
   }
@@ -1342,8 +1433,11 @@ void display_indicator(int frameCount) {
   }
 }
 
-void prepare_pagescrolling()
+void prepare_pagescrolling(taskIndex_t taskIndex)
 {
+  P036_data_struct *P036_data =
+    static_cast<P036_data_struct *>(getPluginTaskData(taskIndex));
+
   if ((P036_data == nullptr) || !P036_data->isInitialized()) {
     return;
   }
@@ -1383,10 +1477,13 @@ void prepare_pagescrolling()
 
 }
 
-uint8_t display_scroll(int lscrollspeed, int lTaskTimer)
+uint8_t display_scroll(int lscrollspeed, int lTaskTimer, taskIndex_t taskIndex)
 {
+  P036_data_struct *P036_data =
+    static_cast<P036_data_struct *>(getPluginTaskData(taskIndex));
+
   if ((P036_data == nullptr) || !P036_data->isInitialized()) {
-   return (0);
+    return (0);
   }
 
   // LineOut[] contain the outgoing strings in this frame
@@ -1602,7 +1699,10 @@ uint8_t display_scroll(int lscrollspeed, int lTaskTimer)
   return (P036_data->ScrollingPages.Scrolling);
 }
 
-uint8_t display_scroll_timer() {
+uint8_t display_scroll_timer(taskIndex_t taskIndex) {
+  P036_data_struct *P036_data =
+    static_cast<P036_data_struct *>(getPluginTaskData(taskIndex));
+
   if ((P036_data == nullptr) || !P036_data->isInitialized()) {
     return (0);
   }
@@ -1655,7 +1755,10 @@ uint8_t display_scroll_timer() {
 }
 
 //Draw scrolling line (1pix/s)
-void display_scrolling_lines() {
+void display_scrolling_lines(taskIndex_t taskIndex) {
+  P036_data_struct *P036_data =
+    static_cast<P036_data_struct *>(getPluginTaskData(taskIndex));
+
   if ((P036_data == nullptr) || !P036_data->isInitialized()) {
     return;
   }
@@ -1709,7 +1812,10 @@ void display_scrolling_lines() {
 }
 
 //Draw Signal Strength Bars, return true when there was an update.
-bool display_wifibars() {
+bool display_wifibars(taskIndex_t taskIndex) {
+  P036_data_struct *P036_data =
+    static_cast<P036_data_struct *>(getPluginTaskData(taskIndex));
+
   if ((P036_data == nullptr) || !P036_data->isInitialized()) {
     return false;
   }
