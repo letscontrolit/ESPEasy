@@ -1,23 +1,24 @@
 // ArduinoJson - arduinojson.org
-// Copyright Benoit Blanchon 2014-2019
+// Copyright Benoit Blanchon 2014-2020
 // MIT License
 
 #pragma once
 
-#include "../Polyfills/assert.hpp"
-#include "../Polyfills/mpl/max.hpp"
-#include "../Variant/VariantSlot.hpp"
-#include "Alignment.hpp"
-#include "MemoryPool.hpp"
-#include "StringSlot.hpp"
+#include <ArduinoJson/Memory/Alignment.hpp>
+#include <ArduinoJson/Memory/StringSlot.hpp>
+#include <ArduinoJson/Polyfills/assert.hpp>
+#include <ArduinoJson/Polyfills/mpl/max.hpp>
+#include <ArduinoJson/Variant/VariantSlot.hpp>
+
+#include <string.h>  // memmove
 
 namespace ARDUINOJSON_NAMESPACE {
 
-// _begin                                _end
-// v                                        v
-// +-------------+--------------+-----------+
-// | strings...  |   (free)     |  ...slots |
-// +-------------+--------------+-----------+
+// _begin                                   _end
+// v                                           v
+// +-------------+--------------+--------------+
+// | strings...  |   (free)     |  ...variants |
+// +-------------+--------------+--------------+
 //               ^              ^
 //             _left          _right
 
@@ -51,11 +52,25 @@ class MemoryPool {
   }
 
   char* allocFrozenString(size_t n) {
-    if (!canAlloc(n)) return 0;
+    if (!canAlloc(n))
+      return 0;
     char* s = _left;
     _left += n;
     checkInvariants();
     return s;
+  }
+
+  template <typename TAdaptedString>
+  char* saveString(const TAdaptedString& str) {
+    if (str.isNull())
+      return 0;
+    size_t n = str.size();
+    char* dup = allocFrozenString(n + 1);
+    if (dup) {
+      str.copyTo(dup, n);
+      dup[n] = 0;  // force null-terminator
+    }
+    return dup;
   }
 
   StringSlot allocExpandableString() {
@@ -71,6 +86,10 @@ class MemoryPool {
     _left -= (s.size - newSize);
     s.size = newSize;
     checkInvariants();
+  }
+
+  void reclaimLastString(const char* s) {
+    _left = const_cast<char*>(s);
   }
 
   void clear() {
@@ -92,7 +111,8 @@ class MemoryPool {
   }
 
   void* allocRight(size_t bytes) {
-    if (!canAlloc(bytes)) return 0;
+    if (!canAlloc(bytes))
+      return 0;
     _right -= bytes;
     return _right;
   }
@@ -100,6 +120,40 @@ class MemoryPool {
   // Workaround for missing placement new
   void* operator new(size_t, void* p) {
     return p;
+  }
+
+  // Squash the free space between strings and variants
+  //
+  // _begin                    _end
+  // v                            v
+  // +-------------+--------------+
+  // | strings...  |  ...variants |
+  // +-------------+--------------+
+  //               ^
+  //          _left _right
+  //
+  // This funcion is called before a realloc.
+  ptrdiff_t squash() {
+    char* new_right = addPadding(_left);
+    if (new_right >= _right)
+      return 0;
+
+    size_t right_size = static_cast<size_t>(_end - _right);
+    memmove(new_right, _right, right_size);
+
+    ptrdiff_t bytes_reclaimed = _right - new_right;
+    _right = new_right;
+    _end = new_right + right_size;
+    return bytes_reclaimed;
+  }
+
+  // Move all pointers together
+  // This funcion is called after a realloc.
+  void movePointers(ptrdiff_t offset) {
+    _begin += offset;
+    _left += offset;
+    _right += offset;
+    _end += offset;
   }
 
  private:

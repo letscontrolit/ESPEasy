@@ -1,30 +1,58 @@
 // ArduinoJson - arduinojson.org
-// Copyright Benoit Blanchon 2014-2019
+// Copyright Benoit Blanchon 2014-2020
 // MIT License
 
 #pragma once
 
-#if defined(_MSC_VER)
+#if __cplusplus >= 201103L
+#define ARDUINOJSON_HAS_LONG_LONG 1
+#define ARDUINOJSON_HAS_NULLPTR 1
+#define ARDUINOJSON_HAS_RVALUE_REFERENCES 1
+#else
+#define ARDUINOJSON_HAS_LONG_LONG 0
+#define ARDUINOJSON_HAS_NULLPTR 0
+#define ARDUINOJSON_HAS_RVALUE_REFERENCES 0
+#endif
+
+#if defined(_MSC_VER) && !ARDUINOJSON_HAS_LONG_LONG
 #define ARDUINOJSON_HAS_INT64 1
 #else
 #define ARDUINOJSON_HAS_INT64 0
 #endif
 
-#if __cplusplus >= 201103L
-#define ARDUINOJSON_HAS_LONG_LONG 1
-#define ARDUINOJSON_HAS_NULLPTR 1
-#else
-#define ARDUINOJSON_HAS_LONG_LONG 0
-#define ARDUINOJSON_HAS_NULLPTR 0
-#endif
-
 // Small or big machine?
 #ifndef ARDUINOJSON_EMBEDDED_MODE
-#if defined(ARDUINO) || defined(__IAR_SYSTEMS_ICC__) || defined(__XC) || \
-    defined(__ARMCC_VERSION)
+#if defined(ARDUINO)                /* Arduino*/                 \
+    || defined(__IAR_SYSTEMS_ICC__) /* IAR Embedded Workbench */ \
+    || defined(__XC)                /* MPLAB XC compiler */      \
+    || defined(__ARMCC_VERSION)     /* Keil ARM Compiler */      \
+    || defined(__AVR)               /* Atmel AVR8/GNU C Compiler */
 #define ARDUINOJSON_EMBEDDED_MODE 1
 #else
 #define ARDUINOJSON_EMBEDDED_MODE 0
+#endif
+#endif
+
+// Auto enable std::stream if the right headers are here and no conflicting
+// macro is defined
+#if !defined(ARDUINOJSON_ENABLE_STD_STREAM) && defined(__has_include)
+#if __has_include(<istream>) && \
+    __has_include(<ostream>) && \
+    !defined(min) && \
+    !defined(max)
+#define ARDUINOJSON_ENABLE_STD_STREAM 1
+#else
+#define ARDUINOJSON_ENABLE_STD_STREAM 0
+#endif
+#endif
+
+// Auto enable std::string if the right header is here and no conflicting
+// macro is defined
+#if !defined(ARDUINOJSON_ENABLE_STD_STRING) && defined(__has_include)
+#if __has_include(<string>) && !defined(min) && !defined(max)
+#define ARDUINOJSON_ENABLE_STD_STRING 1
+#else
+#define ARDUINOJSON_ENABLE_STD_STRING 0
 #endif
 #endif
 
@@ -90,6 +118,8 @@
 
 #ifdef ARDUINO
 
+#include <Arduino.h>
+
 // Enable support for Arduino's String class
 #ifndef ARDUINOJSON_ENABLE_ARDUINO_STRING
 #define ARDUINOJSON_ENABLE_ARDUINO_STRING 1
@@ -107,17 +137,17 @@
 
 #else  // ARDUINO
 
-// Enable support for Arduino's String class
+// Disable support for Arduino's String class
 #ifndef ARDUINOJSON_ENABLE_ARDUINO_STRING
 #define ARDUINOJSON_ENABLE_ARDUINO_STRING 0
 #endif
 
-// Enable support for Arduino's Stream class
+// Disable support for Arduino's Stream class
 #ifndef ARDUINOJSON_ENABLE_ARDUINO_STREAM
 #define ARDUINOJSON_ENABLE_ARDUINO_STREAM 0
 #endif
 
-// Enable support for Arduino's Print class
+// Disable support for Arduino's Print class
 #ifndef ARDUINOJSON_ENABLE_ARDUINO_PRINT
 #define ARDUINOJSON_ENABLE_ARDUINO_PRINT 0
 #endif
@@ -135,6 +165,11 @@
 // Convert unicode escape sequence (\u0123) to UTF-8
 #ifndef ARDUINOJSON_DECODE_UNICODE
 #define ARDUINOJSON_DECODE_UNICODE 0
+#endif
+
+// Ignore comments in input
+#ifndef ARDUINOJSON_ENABLE_COMMENTS
+#define ARDUINOJSON_ENABLE_COMMENTS 0
 #endif
 
 // Support NaN in JSON
@@ -168,6 +203,26 @@
 #endif
 #endif
 
+#ifndef ARDUINOJSON_ENABLE_ALIGNMENT
+#if defined(__AVR)
+#define ARDUINOJSON_ENABLE_ALIGNMENT 0
+#else
+#define ARDUINOJSON_ENABLE_ALIGNMENT 1
+#endif
+#endif
+
 #ifndef ARDUINOJSON_TAB
 #define ARDUINOJSON_TAB "  "
+#endif
+
+#ifndef ARDUINOJSON_STRING_BUFFER_SIZE
+#define ARDUINOJSON_STRING_BUFFER_SIZE 32
+#endif
+
+#ifndef ARDUINOJSON_DEBUG
+#ifdef __PLATFORMIO_BUILD_DEBUG__
+#define ARDUINOJSON_DEBUG 1
+#else
+#define ARDUINOJSON_DEBUG 0
+#endif
 #endif

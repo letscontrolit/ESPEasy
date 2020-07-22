@@ -25,9 +25,6 @@ String getLogLevelDisplayString(int logLevel);
 
 String getLogLevelDisplayStringFromIndex(byte index, int& logLevel);
 
-void addToLog(byte loglevel, const String& string);
-void addToLog(byte logLevel, const __FlashStringHelper* flashString);
-
 void disableSerialLog();
 
 void setLogLevelFor(byte destination, byte logLevel);
@@ -44,6 +41,8 @@ bool loglevelActiveFor(byte destination, byte logLevel);
 
 
 bool loglevelActive(byte logLevel, byte logLevelSettings);
+
+void addToLog(byte loglevel, const String& string);
 
 void addToLog(byte logLevel, const char *line);
 

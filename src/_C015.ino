@@ -1,3 +1,4 @@
+#include "_CPlugin_Helper.h"
 #ifdef USES_C015
 
 #include "src/Globals/CPlugins.h"
