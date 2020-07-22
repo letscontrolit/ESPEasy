@@ -7,9 +7,10 @@
 
 // WifiStatus
 #define ESPEASY_WIFI_DISCONNECTED            0
-#define ESPEASY_WIFI_CONNECTED               1
-#define ESPEASY_WIFI_GOT_IP                  2
-#define ESPEASY_WIFI_SERVICES_INITIALIZED    4
+// Bit numbers for WiFi status
+#define ESPEASY_WIFI_CONNECTED               0
+#define ESPEASY_WIFI_GOT_IP                  1
+#define ESPEASY_WIFI_SERVICES_INITIALIZED    2
 
 
 extern unsigned long connectionFailures;
@@ -17,6 +18,8 @@ extern unsigned long connectionFailures;
 
 #ifdef ESP32
 # include <esp_event.h>
+# include <WiFiGeneric.h>
+# include <WiFiType.h>
 
 
 enum WiFiDisconnectReason
@@ -54,6 +57,7 @@ enum WiFiDisconnectReason
 
 void WiFiEvent(system_event_id_t   event,
                system_event_info_t info);
+extern WiFiEventId_t  wm_event_id;
 #endif // ifdef ESP32
 
 #ifdef ESP8266
@@ -84,6 +88,7 @@ extern bool    channel_changed;
 extern WiFiDisconnectReason lastDisconnectReason;
 extern unsigned long lastConnectMoment;
 extern unsigned long lastDisconnectMoment;
+extern unsigned long lastWiFiResetMoment;
 extern unsigned long lastGetIPmoment;
 extern unsigned long lastGetScanMoment;
 extern unsigned long lastConnectedDuration;
