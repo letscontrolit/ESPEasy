@@ -1313,11 +1313,6 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
           saveUserVarToRTC();
         }
 
-        if (Function == PLUGIN_GET_DEVICEVALUENAMES) {
-          // FIXME TD-er: Is this still needed? (or correct?)
-          ExtraTaskSettings.TaskIndex = event->TaskIndex;
-        }
-
         if (Function == PLUGIN_EXIT) {
           clearPluginTaskData(event->TaskIndex);
         }
