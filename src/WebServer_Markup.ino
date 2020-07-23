@@ -308,6 +308,12 @@ void addCheckBox(const String& id, boolean checked, bool disabled)
 void addNumericBox(const String& id, int value, int min, int max)
 {
   addHtml(F("<input class='widenumber' type='number' name='"));
+  if (value < min) {
+    value = min;
+  }
+  if (value > max) {
+    value = max;
+  }
   String html;
   html.reserve(32 + id.length());
   html += id;

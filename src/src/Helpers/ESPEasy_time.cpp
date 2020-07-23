@@ -317,6 +317,7 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
           // Does not make sense to try it very often if a single host is used which is not synchronized.
           nextSyncTime = sysTime + 120;
         }
+        udp.stop();
         return false;
       } 
 
@@ -339,6 +340,7 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
           // Retry again in a minute.
           nextSyncTime = sysTime + 60;
         }
+        udp.stop();
         return false;
       }
       uint32_t txTm = secsSince1900 - 2208988800UL;
