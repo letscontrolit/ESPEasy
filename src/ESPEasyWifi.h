@@ -21,7 +21,9 @@
 bool WiFiConnected();
 void WiFiConnectRelaxed();
 bool prepareWiFi();
+bool checkAndResetWiFi();
 void resetWiFi();
+void initWiFi();
 void WifiDisconnect();
 void WifiScan(bool async, bool quick);
 void WifiScan();
@@ -37,6 +39,13 @@ void setConnectionSpeed();
 void setupStaticIPconfig();
 String formatScanResult(int i, const String& separator);
 String formatScanResult(int i, const String& separator, int32_t& rssi);
+
+#ifndef ESP32
+String SDKwifiStatusToString(uint8_t sdk_wifistatus);
+#endif
+
+String ArduinoWifiStatusToString(uint8_t arduino_corelib_wifistatus);
+String ESPeasyWifiStatusToString();
 void logConnectionStatus();
 String getLastDisconnectReason();
 

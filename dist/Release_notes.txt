@@ -1,4 +1,74 @@
 -------------------------------------------------
+Changes in release mega-20200721 (since mega-20200720)
+-------------------------------------------------
+
+Release date: di 21 jul 2020 11:23:15 CEST
+
+Gijs Noorlander (22):
+      [WiFi] Reduce wifi reset calls and call full wifi init at reset
+      [WiFi] Add timeout to get out of incorrect WiFi.connected() state
+      [WiFi] Convert bit-wise operations to use bitSet/bitClear/bitRead
+      [WiFi] No longer rely on WiFi.isConnected()
+      [WiFi] Detect and work around missing events
+      Fix issue where task name / task var name was incorrect
+      Reduce minimal OTA build slightly
+      [WiFi] Small fixes for WiFi related code
+      [ESP32] Fix build error on ESP32
+      [WiFi] Clear event callback on ESP32 + correct order of log/disconnect
+      [PIO] revert custom_beta env to stage core lib
+      [PIO ESP32] Update to latest Platformio espressif32@1.12.4
+      [ESPEasy p2p] Reload UDP port settings when changed
+      [UDP] Reduce max UDP packet size
+      [NTP] After timeout or receiving invalid packet, port could be held
+      [Syslog] Add custom port to the syslog IP (#1258)
+      [Docs] Update docs related to p2p UDP port no longer need reboot
+      [UDP p2p] Fix crash on ESP32 where UDP is started before connected
+      [ESP32] Recognize last boot state as Deepsleep (#3155)
+      [TimeZone] Move timezone configuration line to location settings (#3141)
+      [Docs] Document Tools => Advanced Settings
+      [WiFi] Copy DNS servers from DHCP when using fixed last octet (#3111)
+
+
+-------------------------------------------------
+Changes in release mega-20200720 (since mega-20200703)
+-------------------------------------------------
+
+Release date: ma 20 jul 2020 23:35:58 CEST
+
+Gijs Noorlander (13):
+      [Modbus RTU] Move Modbus code to .h/.cpp file to reduce size
+      Convert scheduler from .ino to .cpp/.h
+      [Build] Fix missing include building ESP32
+      [Build] Fix build error for C018, due to removed forward declaration
+      Make delay queue macro a bit more logical
+      [Frontend] Only show "Submitted" message when pressing submit (#3144)
+      [ESP32 ETH] Fix build issue due to recent changes
+      [Arduino IDE] Fix build issue with Arduino IDE
+      Fix typo in filename for P044 data struct
+      [Arduino IDE] Make P076 compile again on Arduino IDE
+      [Arduino IDE] Fix build issue for P035_IRTX.ino
+      [Arduino IDE] Fix compile issues when selecting specific controllers
+      [Syslog] Fix crash with syslog enabled on wifi (re)connect (#3147 #3072)
+
+TD-er (1):
+      Fix ADS1115 mixing input signals (#3159)
+
+jimmys01 (1):
+      arduJSON library update
+
+llevet (2):
+      Update _P095_ILI9341.ino
+      P095 Plugin: Fix bug #3047
+
+tonhuisman (5):
+      [P008] Add option to convert value to 'hex' (#3068), and updated documentation
+      [TaskDisable] Bugfix for plugins without PLUGIN_EXIT implementation
+      [TaskDisable] Improve readability of code after bugfix
+      [TaskDisable] Remove unneeded else & return
+      [P076] fix: Custom pin settings in same order as Sensor pins, improved label, improved cast
+
+
+-------------------------------------------------
 Changes in release mega-20200703 (since mega-20200608)
 -------------------------------------------------
 

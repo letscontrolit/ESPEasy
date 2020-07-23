@@ -3,6 +3,16 @@
 //################################# Plugin 008: Wiegand RFID Tag Reader #################################
 //#######################################################################################################
 
+/*
+History:
+2020-07-04 tonhuisman: Add checkbox for 'Present hex as decimal value' option (with note) so hexadecimal
+           value of f.e. a numeric keypad using the Wiegand protocol (hexadecimal data) will be cast to decimal.
+           When enabled entering 1234# will result in Tag = 1234 instead of 4660 (= 0x1234), any A-F
+           entered will result in a 0 in the output value.
+-------------
+No initial history available.
+*/
+
 #include "_Plugin_Helper.h"
 
 #define PLUGIN_008
@@ -19,6 +29,26 @@ byte Plugin_008_timeoutCount = 0;
 byte Plugin_008_WiegandSize = 26;          // size of a tag via wiegand (26-bits or 36-bits)
 
 boolean Plugin_008_init = false;
+
+/**
+ * Convert/cast a hexadecimal input to a decimal representation, so 0x1234 (= 4660) comes out as 1234.
+ * 
+ * //FIXME Move to a more global place to also be used elsewhere?
+ */
+uint64_t castHexAsDec(uint64_t hexValue) {
+  uint64_t result = 0;
+  uint8_t digit;
+  for (int i = 0; i < 8; i++) {
+    digit = (hexValue & 0x0000000F);
+    if (digit > 10) digit = 0; // Cast by dropping any non-decimal input
+    if (digit > 0) { // Avoid 'expensive' pow operation if not used
+      result += (digit * static_cast<uint64_t>(pow(10, i)));
+    }
+    hexValue >>= 4;
+    if (hexValue == 0) break; // Stop when no more to process
+  }
+  return result;
+}
 
 boolean Plugin_008(byte function, struct EventStruct *event, String& string)
 {
@@ -125,6 +155,9 @@ boolean Plugin_008(byte function, struct EventStruct *event, String& string)
 
             unsigned long old_key = ((uint32_t) UserVar[event->BaseVarIndex]) | ((uint32_t) UserVar[event->BaseVarIndex + 1])<<16;
             bool new_key = false;
+            if (PCONFIG(1)) {
+              Plugin_008_keyBuffer = castHexAsDec(Plugin_008_keyBuffer);
+            }
             
             if (old_key != Plugin_008_keyBuffer) {
               UserVar[event->BaseVarIndex] = (Plugin_008_keyBuffer & 0xFFFF);
@@ -152,6 +185,16 @@ boolean Plugin_008(byte function, struct EventStruct *event, String& string)
 
             if (new_key) sendData(event);
             setPluginTaskTimer(500, event->TaskIndex, event->Par1);
+
+          //   String info = "";
+          //   uint64_t invalue = 0x1234;
+          //   uint64_t outvalue = castHexAsDec(invalue);
+          //   info.reserve(40);
+          //   info += F("Test castHexAsDec(");
+          //   info += (double)invalue;
+          //   info += F(") => ");
+          //   info += (double)outvalue;
+          //   addLog(LOG_LEVEL_INFO, info);
           }
         }
         break;
@@ -166,14 +209,17 @@ boolean Plugin_008(byte function, struct EventStruct *event, String& string)
           optionValues[0] = 26;
           optionValues[1] = 34;
           addFormSelector(F("Wiegand Type"), F("p008_type"), 2, options, optionValues, choice);
+          bool presentHexToDec = PCONFIG(1);
+          addFormCheckBox(F("Present hex as decimal value"), F("p008_hexasdec"), presentHexToDec);
+          addFormNote(F("Useful only for numeric keypad input!"));
           success = true;
           break;
         }
 
       case PLUGIN_WEBFORM_SAVE:
         {
-          String plugin1 = web_server.arg(F("p008_type"));
-          PCONFIG(0) = plugin1.toInt();
+          PCONFIG(0) = getFormItemInt(F("p008_type"));
+          PCONFIG(1) = getFormItemInt(F("p008_hexasdec"));
           success = true;
           break;
         }
