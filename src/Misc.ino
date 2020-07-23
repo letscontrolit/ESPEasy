@@ -2698,3 +2698,28 @@ void HSV2RGBW(float H, float S, float I, int rgbw[4]) {
   rgbw[2]=b;
   rgbw[3]=w;
 }
+
+
+// Simple bitwise get/set functions
+
+uint8_t get8BitFromUL(uint32_t number, byte bitnr) {
+  return (number >> bitnr) & 0xFF;
+}
+
+void set8BitToUL(uint32_t& number, byte bitnr, uint8_t value) {
+  uint32_t mask     = (0xFFUL << bitnr);
+  uint32_t newvalue = ((value << bitnr) & mask);
+
+  number = (number & ~mask) | newvalue;
+}
+
+uint8_t get4BitFromUL(uint32_t number, byte bitnr) {
+  return (number >> bitnr) &  0x0F;
+}
+
+void set4BitToUL(uint32_t& number, byte bitnr, uint8_t value) {
+  uint32_t mask     = (0x0FUL << bitnr);
+  uint32_t newvalue = ((value << bitnr) & mask);
+
+  number = (number & ~mask) | newvalue;
+}
