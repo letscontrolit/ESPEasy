@@ -79,13 +79,11 @@ void hardwareInit()
     #else
     SPI.begin();
     #endif
-    String log = F("INIT : SPI Init (without CS)");
-    addLog(LOG_LEVEL_INFO, log);
+    addLog(LOG_LEVEL_INFO, F("INIT : SPI Init (without CS)"));
   }
   else
   {
-    String log = F("INIT : SPI not enabled");
-    addLog(LOG_LEVEL_INFO, log);
+    addLog(LOG_LEVEL_INFO, F("INIT : SPI not enabled"));
   }
 
 #ifdef FEATURE_SD
@@ -94,13 +92,11 @@ void hardwareInit()
   {
     if (SD.begin(Settings.Pin_sd_cs))
     {
-      String log = F("SD   : Init OK");
-      addLog(LOG_LEVEL_INFO, log);
+      addLog(LOG_LEVEL_INFO, F("SD   : Init OK"));
     }
     else
     {
-      String log = F("SD   : Init failed");
-      addLog(LOG_LEVEL_ERROR, log);
+      addLog(LOG_LEVEL_ERROR, F("SD   : Init failed"));
     }
   }
 #endif // ifdef FEATURE_SD
@@ -116,9 +112,11 @@ void initI2C() {
 
     if (Settings.WireClockStretchLimit)
     {
-      String log = F("INIT : I2C custom clockstretchlimit:");
-      log += Settings.WireClockStretchLimit;
-      addLog(LOG_LEVEL_INFO, log);
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        String log = F("INIT : I2C custom clockstretchlimit:");
+        log += Settings.WireClockStretchLimit;
+        addLog(LOG_LEVEL_INFO, log);
+      }
         #if defined(ESP8266)
       Wire.setClockStretchLimit(Settings.WireClockStretchLimit);
         #endif // if defined(ESP8266)

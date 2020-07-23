@@ -126,6 +126,7 @@ void SettingsStruct_tmpl<N_TASKS>::validate() {
 
   if ((I2C_clockSpeed == 0) || (I2C_clockSpeed > 3400000)) { I2C_clockSpeed = DEFAULT_I2C_CLOCK_SPEED; }
   if (WebserverPort == 0) { WebserverPort = 80;}
+  if (SyslogPort == 0) { SyslogPort = 514; }
 }
 
 template<unsigned int N_TASKS>
@@ -231,6 +232,7 @@ void SettingsStruct_tmpl<N_TASKS>::clearMisc() {
   WireClockStretchLimit            = 0;
   I2C_clockSpeed                   = 400000;
   WebserverPort                    = 80;
+  SyslogPort                       = 514;
   GlobalSync                       = false;
   ConnectionFailuresThreshold      = 0;
   MQTTRetainFlag_unused            = false;

@@ -56,7 +56,7 @@ void ICACHE_RAM_ATTR onDHCPTimeout();
 
 void onConnectedAPmode(const WiFiEventSoftAPModeStationConnected& event);
 
-void onDisonnectedAPmode(const WiFiEventSoftAPModeStationDisconnected& event);
+void onDisconnectedAPmode(const WiFiEventSoftAPModeStationDisconnected& event);
 
 #endif // ifdef ESP32
 

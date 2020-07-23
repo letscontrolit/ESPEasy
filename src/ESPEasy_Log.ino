@@ -1,6 +1,7 @@
 #include "ESPEasy_Log.h"
 #include "src/Globals/Logging.h"
 #include "src/Globals/ESPEasyWiFiEvent.h"
+#include "src/Globals/Settings.h"
 #include "src/DataStructs/LogStruct.h"
 
 /********************************************************************************************\
@@ -97,7 +98,7 @@ bool loglevelActiveFor(byte logLevel) {
 
 byte getSerialLogLevel() {
   if (log_to_serial_disabled || !Settings.UseSerial) return 0;
-  if (wifiStatus != ESPEASY_WIFI_SERVICES_INITIALIZED){
+  if (!(bitRead(wifiStatus, ESPEASY_WIFI_SERVICES_INITIALIZED))){
     if (Settings.SerialLogLevel < LOG_LEVEL_INFO) {
       return LOG_LEVEL_INFO;
     }
