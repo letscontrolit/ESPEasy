@@ -1,5 +1,6 @@
 #include "src/Globals/RTC.h"
 #include "src/DataStructs/RTCStruct.h"
+#include "src/DataStructs/RTCCacheStruct.h"
 
 
 /*********************************************************************************************\
@@ -86,9 +87,7 @@ boolean saveToRTC()
  \*********************************************************************************************/
 void initRTC()
 {
-  memset(&RTC, 0, sizeof(RTC));
-  RTC.ID1 = 0xAA;
-  RTC.ID2 = 0x55;
+  RTC.init();
   saveToRTC();
 
   memset(&UserVar, 0, sizeof(UserVar));
@@ -170,7 +169,7 @@ struct RTC_cache_handler_struct
       #ifdef RTC_STRUCT_DEBUG
       addLog(LOG_LEVEL_INFO, F("RTC  : Error reading cache data"));
       #endif // ifdef RTC_STRUCT_DEBUG
-      memset(&RTC_cache, 0, sizeof(RTC_cache));
+      RTC_cache.init();
       flush();
     } else {
       #ifdef RTC_STRUCT_DEBUG
