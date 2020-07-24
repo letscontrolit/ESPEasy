@@ -32,14 +32,15 @@
         - ``tft,lh,<y>,<width>,<color>``  Draw an horizontal line (width = Line width in pixels (positive = right of first point, negative = point of first corner). 
         - ``tft,lv,<x>,<height>,<color>``  Draw a vertical line (height= Line height in pixels (positive = below first point, negative = above first point).
         - ``tft,r,<x>,<y>,<width>,<height>,<color>``  Draw a rectangle 
-        - ``tft,r,<x>,<y>,<width>,<height>,<bordercolor>,<innercolor>``  Draw a filled rectangle 
+        - ``tft,rf,<x>,<y>,<width>,<height>,<bordercolor>,<innercolor>``  Draw a filled rectangle 
         - ``tft,c,<x>,<y>,<radius>,<color>``  Draw a circle 
-        - ``tft,c,<x>,<y>,<radius>,<bordercolor>,<innercolor>``  Draw a filled circle 
+        - ``tft,cf,<x>,<y>,<radius>,<bordercolor>,<innercolor>``  Draw a filled circle 
         - ``tft,t,<x1>,<y1>,<x2>,<y2>,<x3>,<y3>,<color>| Draw a triangle 
-        - ``tft,t,<x1>,<y1>,<x2>,<y2>,<x3>,<y3>,<bordercolor>,<innercolor>``  Draw a filled triangle 
-        - ``tft,r,<x>,<y>,<width>,<height>,<corner_radius>,<color>``  Draw a round rectangle 
-        - ``tft,r,<x>,<y>,<width>,<height>,<corner_radius>,<bordercolor>,<innercolor>``  Draw a filled round rectangle 
+        - ``tft,tf,<x1>,<y1>,<x2>,<y2>,<x3>,<y3>,<bordercolor>,<innercolor>``  Draw a filled triangle 
+        - ``tft,rr,<x>,<y>,<width>,<height>,<corner_radius>,<color>``  Draw a round rectangle 
+        - ``tft,rrf,<x>,<y>,<width>,<height>,<corner_radius>,<bordercolor>,<innercolor>``  Draw a filled round rectangle 
         - ``tft,px,<x>,<y>,<color>``  Print a single pixel 
+        - ``tft,font,<fontname> ``  Switch to font  - SEVENSEG24, SEVENSEG18, FREESANS, DEFAULT
        
        Examples:
 
@@ -60,5 +61,9 @@
 
 	Write RED Text on YELLOW background (size is 1):
 		``tft,txtfull,0,0,1,RED,YELLOW,HelloWorld``
+    
+    Select font :
+        ``tft,font,SEVENSEG24`` 
+		``tft,txtfull,0,0,1,RED,17.0 ``
         "
  
