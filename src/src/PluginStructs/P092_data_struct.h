@@ -2,6 +2,7 @@
 #define DLBus_H
 
 #include <Arduino.h>
+#include "../../_Plugin_Helper.h"
 
 /*********************************************************************************************\
   DLBus subs to get values from the receiving bitstream
