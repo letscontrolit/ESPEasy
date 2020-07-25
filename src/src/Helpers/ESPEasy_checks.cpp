@@ -58,6 +58,7 @@ void check_size() {
 // ********************************************************************************
 
 void run_compiletime_checks() {
+  #ifndef LIMIT_BUILD_SIZE
   check_size<CRCStruct,                             204u>();
   check_size<SecurityStruct,                        593u>();
   const unsigned int SettingsStructSize = (276 + 82 * TASKS_MAX);
@@ -104,8 +105,10 @@ void run_compiletime_checks() {
   //const size_t offset = offsetof(SettingsStruct, ControllerEnabled);
   //check_size<SettingsStruct, offset>();
 
+  #endif
 }
 
+#ifndef LIMIT_BUILD_SIZE
 String ReportOffsetErrorInStruct(const String& structname, size_t offset) {
   String error;
 
@@ -117,6 +120,7 @@ String ReportOffsetErrorInStruct(const String& structname, size_t offset) {
   error += ')';
   return error;
 }
+#endif
 
 /*********************************************************************************************\
 *  Analyze SettingsStruct and report inconsistencies
@@ -124,6 +128,7 @@ String ReportOffsetErrorInStruct(const String& structname, size_t offset) {
 \*********************************************************************************************/
 bool SettingsCheck(String& error) {
   error = "";
+  #ifndef LIMIT_BUILD_SIZE
 #ifdef esp8266
   size_t offset = offsetof(SettingsStruct, ResetFactoryDefaultPreference);
 
@@ -138,12 +143,15 @@ bool SettingsCheck(String& error) {
     }
   }
 
+  #endif
+
   return error.length() == 0;
 }
 
 
 String checkTaskSettings(taskIndex_t taskIndex) {
   String err = LoadTaskSettings(taskIndex);
+  #ifndef LIMIT_BUILD_SIZE
   if (err.length() > 0) return err;
   if (!ExtraTaskSettings.checkUniqueValueNames()) {
     return F("Use unique value names");
@@ -173,5 +181,6 @@ String checkTaskSettings(taskIndex_t taskIndex) {
   }
 
   err += LoadTaskSettings(taskIndex);
+  #endif
   return err;
 }

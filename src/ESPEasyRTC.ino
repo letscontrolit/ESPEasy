@@ -5,7 +5,9 @@
 #include "src/Globals/Plugins.h"
 #include "src/Helpers/CRC_functions.h"
 
+#ifdef ESP8266
 #include <user_interface.h>
+#endif
 
 /*********************************************************************************************\
 * RTC memory stored values

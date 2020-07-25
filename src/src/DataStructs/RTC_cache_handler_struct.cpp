@@ -1,10 +1,13 @@
 #include "RTC_cache_handler_struct.h"
 
+#include "../../ESPEasy_common.h"
 #include "RTCStruct.h"
 #include "../Helpers/CRC_functions.h"
 #include "../Helpers/ESPEasy_Storage.h"
 
+#ifdef ESP8266
 #include <user_interface.h>
+#endif
 
 /********************************************************************************************\
    RTC located cache
