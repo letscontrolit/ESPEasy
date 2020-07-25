@@ -575,6 +575,9 @@ To create/register a plugin, you have to :
     #ifndef USES_P026
       #define USES_P026   // SysInfo
     #endif
+    #ifndef USES_P029
+      #define USES_P029   // Output
+    #endif
     #ifndef USES_P033
       #define USES_P033   // Dummy
     #endif
