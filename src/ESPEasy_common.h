@@ -27,7 +27,7 @@ namespace std
   #define ESPEASY_FS LittleFS
 #else 
   #ifdef ESP32
-    #include <spiffs.h>
+    #include <SPIFFS.h>
   #endif
   #define ESPEASY_FS SPIFFS
 #endif
