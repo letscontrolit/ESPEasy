@@ -233,6 +233,9 @@ To create/register a plugin, you have to :
 #ifdef USES_DOMOTICZ
     #define USES_C001   // Domoticz HTTP
     #define USES_C002   // Domoticz MQTT
+    #ifndef USES_P029
+      #define USES_P029   // Output
+    #endif
 #endif
 
 #ifdef USES_FHEM
@@ -447,6 +450,7 @@ To create/register a plugin, you have to :
     #define PLUGIN_SET_ONLY_SWITCH
     #define CONTROLLER_SET_STABLE
     #define NOTIFIER_SET_STABLE
+    #define USES_P029   // Output
 #endif
 
 #ifdef PLUGIN_SET_SHELLY_PLUG_S
@@ -455,6 +459,7 @@ To create/register a plugin, you have to :
     #define PLUGIN_SET_ONLY_SWITCH
     #define CONTROLLER_SET_STABLE
     #define NOTIFIER_SET_STABLE
+    #define USES_P029   // Output
     #define USES_P076   // HWL8012   in POW r1
     #define USES_P081   // Cron
 #endif
@@ -574,9 +579,6 @@ To create/register a plugin, you have to :
     #endif
     #ifndef USES_P026
       #define USES_P026   // SysInfo
-    #endif
-    #ifndef USES_P029
-      #define USES_P029   // Output
     #endif
     #ifndef USES_P033
       #define USES_P033   // Dummy
