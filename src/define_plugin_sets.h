@@ -442,7 +442,6 @@ To create/register a plugin, you have to :
     #define PLUGIN_SET_ONLY_SWITCH
     #define CONTROLLER_SET_STABLE
     #define NOTIFIER_SET_STABLE
-    #define USES_P029   // Output
 #endif
 
 #ifdef PLUGIN_SET_SHELLY_PLUG_S
@@ -451,7 +450,6 @@ To create/register a plugin, you have to :
     #define PLUGIN_SET_ONLY_SWITCH
     #define CONTROLLER_SET_STABLE
     #define NOTIFIER_SET_STABLE
-    #define USES_P029   // Output
     #define USES_P076   // HWL8012   in POW r1
     #define USES_P081   // Cron
 #endif
