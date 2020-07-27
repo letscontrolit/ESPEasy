@@ -282,7 +282,7 @@ void setup()
   addLog(LOG_LEVEL_INFO, log);
 
   fileSystemCheck();
-  progMemMD5check();
+//  progMemMD5check();
   LoadSettings();
 
   #ifdef HAS_ETHERNET

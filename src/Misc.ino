@@ -853,6 +853,7 @@ void dump (uint32_t addr) { //Seems already included in core 2.4 ...
 }
 #endif
 
+/*
 uint32_t progMemMD5check(){
     checkRAM(F("progMemMD5check"));
     #define BufSize 10
@@ -886,6 +887,7 @@ uint32_t progMemMD5check(){
    addLog(LOG_LEVEL_INFO, F("CRC  : program checksum       ...FAIL"));
    return 0;
 }
+*/
 
 /********************************************************************************************\
   Handler for keeping ExtraTaskSettings up to date using cache
