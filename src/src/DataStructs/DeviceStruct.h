@@ -12,6 +12,7 @@
 #define DEVICE_TYPE_I2C                    20  // connected through I2C
 #define DEVICE_TYPE_SERIAL                 21  // connected through UART/Serial
 #define DEVICE_TYPE_SERIAL_PLUS1           22  // connected through UART/Serial + 1 extra signal pin
+#define DEVICE_TYPE_SPI                    23  // connected through SPI
 #define DEVICE_TYPE_DUMMY                  99  // Dummy device, has no physical connection
 
 // Used for VType
@@ -44,7 +45,7 @@ struct DeviceStruct
 
   byte Number;  // Plugin ID number.   (PLUGIN_ID_xxx)
   byte Type;    // How the device is connected. e.g. DEVICE_TYPE_SINGLE => connected through 1 datapin
-  byte VType;   // Type of value the plugin will return, used only for Domoticz
+  byte VType;   // Type of value the plugin will return. e.g. SENSOR_TYPE_STRING
   byte Ports;   // Port to use when device has multiple I/O pins  (N.B. not used much)
   byte ValueCount;             // The number of output values of a plugin. The value should match the number of keys PLUGIN_VALUENAME1_xxx
   bool PullUpOption : 1;       // Allow to set internal pull-up resistors.

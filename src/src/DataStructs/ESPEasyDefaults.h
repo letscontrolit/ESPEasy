@@ -171,6 +171,30 @@
 #ifndef DEFAULT_PIN_RESET_BUTTON
 #define DEFAULT_PIN_RESET_BUTTON         (-1)
 #endif
+#ifndef DEFAULT_ETH_PHY_ADDR
+#define DEFAULT_ETH_PHY_ADDR             0
+#endif
+#ifndef DEFAULT_ETH_PHY_TYPE
+#define DEFAULT_ETH_PHY_TYPE             0
+#endif
+#ifndef DEFAULT_ETH_PIN_MDC
+#define DEFAULT_ETH_PIN_MDC              23
+#endif
+#ifndef DEFAULT_ETH_PIN_MDIO
+#define DEFAULT_ETH_PIN_MDIO             18
+#endif
+#ifndef DEFAULT_ETH_PIN_POWER
+#define DEFAULT_ETH_PIN_POWER            -1
+#endif
+#ifndef DEFAULT_ETH_CLOCK_MODE
+#define DEFAULT_ETH_CLOCK_MODE           0
+#endif
+#ifndef DEFAULT_ETH_WIFI_MODE
+#define DEFAULT_ETH_WIFI_MODE            0
+                                                // 0 WIFI
+                                                // 1 ETHERNET
+#endif
+
 
 
 // --- Advanced Settings ---------------------------------------------------------------------------------

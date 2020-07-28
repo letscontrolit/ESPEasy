@@ -17,6 +17,8 @@ Vagrant.configure("2") do |config|
   # Every Vagrant development environment requires a box. You can search for
   # boxes at https://vagrantcloud.com/search.
   config.vm.box = "bento/ubuntu-18.04"
+  # TD-er: No hyperv version for "bento/ubuntu-20.04" available yet.
+  #config.vm.box = "bento/ubuntu-20.04"
 
   # Disable automatic box update checking. If you disable this, then
   # boxes will only be checked for updates when the user runs
@@ -69,7 +71,11 @@ Vagrant.configure("2") do |config|
   # documentation for more information about their specific syntax and use.
   config.vm.provision "shell", inline: <<-SHELL
     apt-get update
-    apt-get install -y python-minimal virtualenv build-essential zip binutils
+    apt-get install -y python3-minimal virtualenv build-essential zip binutils software-properties-common
+    apt-get update
+    DEBIAN_FRONTEND=noninteractive apt-get -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" upgrade
+    add-apt-repository ppa:deadsnakes/ppa
+    apt-get install -y python3.8 python3-pip
   SHELL
   # Clone the repo as the default user. (privileged: false)
   config.vm.provision "shell", run: "always", privileged: false do |s|

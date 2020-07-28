@@ -77,6 +77,7 @@ bool CPluginCall(CPlugin::Function Function, struct EventStruct *event, String& 
       for (controllerIndex_t x = 0; x < CONTROLLER_MAX; x++) {
         if ((Settings.Protocol[x] != 0) && Settings.ControllerEnabled[x]) {
           protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(x);
+          event->ControllerIndex = x;
           String dummy;
           CPluginCall(ProtocolIndex, Function, event, dummy);
         }
@@ -207,7 +208,7 @@ protocolIndex_t getProtocolIndex(cpluginID_t cpluginID)
     if (it != CPlugin_id_to_ProtocolIndex.end())
     {
       if (!validProtocolIndex(it->second)) { return INVALID_PROTOCOL_INDEX; }
-
+      #ifndef BUILD_NO_DEBUG
       if (Protocol[it->second].Number != cpluginID) {
         // FIXME TD-er: Just a check for now, can be removed later when it does not occur.
         String log = F("getProtocolIndex error in Protocol Vector. CPluginID: ");
@@ -216,6 +217,7 @@ protocolIndex_t getProtocolIndex(cpluginID_t cpluginID)
         log += String(it->second);
         addLog(LOG_LEVEL_ERROR, log);
       }
+      #endif
       return it->second;
     }
   }

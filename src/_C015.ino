@@ -1,3 +1,4 @@
+#include "_CPlugin_Helper.h"
 #ifdef USES_C015
 
 #include "src/Globals/CPlugins.h"
@@ -212,7 +213,7 @@ bool do_process_c015_delay_queue(int controller_plugin_number, const C015_queue_
     // controller has been disabled. Answer true to flush queue.
     return true;
 
-  if (!WiFiConnected()) {
+  if (!NetworkConnected()) {
     return false;
   }
 
@@ -231,7 +232,7 @@ bool do_process_c015_delay_queue(int controller_plugin_number, const C015_queue_
 
 
 boolean Blynk_keep_connection_c015(int controllerIndex, ControllerSettingsStruct& ControllerSettings){
-  if (!WiFiConnected())
+  if (!NetworkConnected())
     return false;
 
   if (!Blynk.connected()){

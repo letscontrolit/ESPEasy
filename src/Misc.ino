@@ -1,7 +1,10 @@
+#include "ESPEasy_common.h"
+
 #include "src/DataStructs/Caches.h"
 #include "src/DataStructs/NodeStruct.h"
 #include "src/DataStructs/PinMode.h"
 #include "src/DataStructs/RTCStruct.h"
+#include "src/DataStructs/StorageLayout.h"
 
 #include "src/Globals/CRCValues.h"
 #include "src/Globals/Cache.h"
@@ -12,8 +15,42 @@
 #include "src/Globals/RTC.h"
 #include "src/Globals/ResetFactoryDefaultPref.h"
 #include "src/Globals/Services.h"
+#include "src/Globals/Settings.h"
+
+#include "src/Helpers/Hardware.h"
+#include "src/Helpers/Convert.h"
+
+#include "ESPEasyWifi.h"
 
 
+#ifdef ESP32
+ 
+  //MFD: adding tone support here while waiting for the Arduino Espressif implementation to catch up
+  //As recomandation is not to use external libraries the following code was taken from: https://github.com/lbernstone/Tone Thanks
+  #define TONE_CHANNEL 15
+
+  void noToneESP32(uint8_t pin, uint8_t channel=TONE_CHANNEL)
+  {
+      ledcDetachPin(pin);
+      ledcWrite(channel, 0);
+  }
+
+  void toneESP32(uint8_t pin, unsigned int frequency, unsigned long duration, uint8_t channel=TONE_CHANNEL)
+  {
+      if (ledcRead(channel)) {
+          log_e("Tone channel %d is already in use", ledcRead(channel));
+          return;
+      }
+      ledcAttachPin(pin, channel);
+      ledcWriteTone(channel, frequency);
+      if (duration) {
+          delay(duration);
+          noToneESP32(pin, channel);
+      }    
+  }
+
+
+#endif
 /*********************************************************************************************\
    ESPEasy specific strings
 \*********************************************************************************************/
@@ -111,14 +148,6 @@ String getResetReasonString() {
   return reason;
   #else
   return ESP.getResetReason();
-  #endif
-}
-
-uint32_t getFlashRealSizeInBytes() {
-  #if defined(ESP32)
-    return ESP.getFlashChipSize();
-  #else
-    return ESP.getFlashChipRealSize(); //ESP.getFlashChipSize();
   #endif
 }
 
@@ -309,127 +338,6 @@ bool allocatedOnStack(const void* address) {
 
 
 
-/**********************************************************
-*                                                         *
-* Deep Sleep related functions                            *
-*                                                         *
-**********************************************************/
-int getDeepSleepMax()
-{
-  int dsmax = 4294; // About 71 minutes, limited by hardware
-
-#if defined(CORE_POST_2_5_0)
-  dsmax = INT_MAX;
-
-  if ((ESP.deepSleepMax() / 1000000ULL) <= (uint64_t)INT_MAX) {
-    dsmax = (int)(ESP.deepSleepMax() / 1000000ULL);
-  }
-#endif // if defined(CORE_POST_2_5_0)
-  return dsmax;
-}
-
-bool isDeepSleepEnabled()
-{
-  if (!Settings.deepSleep_wakeTime) {
-    return false;
-  }
-
-  // cancel deep sleep loop by pulling the pin GPIO16(D0) to GND
-  // recommended wiring: 3-pin-header with 1=RST, 2=D0, 3=GND
-  //                    short 1-2 for normal deep sleep / wakeup loop
-  //                    short 2-3 to cancel sleep loop for modifying settings
-  pinMode(16, INPUT_PULLUP);
-
-  if (!digitalRead(16))
-  {
-    return false;
-  }
-  return true;
-}
-
-bool readyForSleep()
-{
-  if (!isDeepSleepEnabled()) {
-    return false;
-  }
-
-  if (!WiFiConnected()) {
-    // Allow 12 seconds to establish connections
-    return timeOutReached(timerAwakeFromDeepSleep + 12000);
-  }
-  return timeOutReached(timerAwakeFromDeepSleep + 1000 * Settings.deepSleep_wakeTime);
-}
-
-void prepare_deepSleep(int dsdelay)
-{
-  checkRAM(F("prepare_deepSleep"));
-
-  if (!isDeepSleepEnabled())
-  {
-    // Deep sleep canceled by GPIO16(D0)=LOW
-    return;
-  }
-
-  // first time deep sleep? offer a way to escape
-  if (lastBootCause != BOOT_CAUSE_DEEP_SLEEP)
-  {
-    addLog(LOG_LEVEL_INFO, F("SLEEP: Entering deep sleep in 30 seconds."));
-
-    if (Settings.UseRules && isDeepSleepEnabled())
-    {
-      eventQueue.add(F("System#NoSleep=30"));
-      while (processNextEvent()) {
-        delay(1);
-      }
-    }
-    delayBackground(30000);
-
-    // disabled?
-    if (!isDeepSleepEnabled())
-    {
-      addLog(LOG_LEVEL_INFO, F("SLEEP: Deep sleep cancelled (GPIO16 connected to GND)"));
-      return;
-    }
-  }
-  deepSleepStart(dsdelay); // Call deepSleepStart function after these checks
-}
-
-void deepSleepStart(int dsdelay)
-{
-  // separate function that is called from above function or directly from rules, usign deepSleep_wakeTime as a one-shot
-  if (Settings.UseRules)
-  {
-    eventQueue.add(F("System#Sleep"));
-    while (processNextEvent()) {
-      delay(1);
-    }
-  }
-
-  addLog(LOG_LEVEL_INFO, F("SLEEP: Powering down to deepsleep..."));
-  RTC.deepSleepState = 1;
-  prepareShutdown();
-
-  #if defined(ESP8266)
-    # if defined(CORE_POST_2_5_0)
-  uint64_t deepSleep_usec = dsdelay * 1000000ULL;
-
-  if ((deepSleep_usec > ESP.deepSleepMax()) || (dsdelay < 0)) {
-    deepSleep_usec = ESP.deepSleepMax();
-  }
-  ESP.deepSleepInstant(deepSleep_usec, WAKE_RF_DEFAULT);
-    # else // if defined(CORE_POST_2_5_0)
-
-  if ((dsdelay > 4294) || (dsdelay < 0)) {
-    dsdelay = 4294; // max sleep time ~71 minutes
-  }
-  ESP.deepSleep((uint32_t)dsdelay * 1000000, WAKE_RF_DEFAULT);
-    # endif // if defined(CORE_POST_2_5_0)
-  #endif // if defined(ESP8266)
-  #if defined(ESP32)
-  esp_sleep_enable_timer_wakeup((uint32_t)dsdelay * 1000000);
-  esp_deep_sleep_start();
-  #endif // if defined(ESP32)
-}
 
 bool remoteConfig(struct EventStruct *event, const String& string)
 {
@@ -764,7 +672,7 @@ void statusLED(bool traffic)
   else
   {
 
-    if (WiFiConnected())
+    if (NetworkConnected())
     {
       long int delta = timePassedSince(gnLastUpdate);
       if (delta>0 || delta<0 )
@@ -914,125 +822,6 @@ void taskClear(taskIndex_t taskIndex, bool save)
   }
 }
 
-String checkTaskSettings(taskIndex_t taskIndex) {
-  String err = LoadTaskSettings(taskIndex);
-  if (err.length() > 0) return err;
-  if (!ExtraTaskSettings.checkUniqueValueNames()) {
-    return F("Use unique value names");
-  }
-  if (!ExtraTaskSettings.checkInvalidCharInNames()) {
-    return F("Invalid character in names. Do not use ',#[]' or space.");
-  }
-  String deviceName = ExtraTaskSettings.TaskDeviceName;
-  if (deviceName.length() == 0) {
-    if (Settings.TaskDeviceEnabled[taskIndex]) {
-      // Decide what to do here, for now give a warning when task is enabled.
-      return F("Warning: Task Device Name is empty. It is adviced to give tasks an unique name");
-    }
-  }
-  // Do not use the cached function findTaskIndexByName since that one does rely on the fact names should be unique.
-  for (taskIndex_t i = 0; i < TASKS_MAX; ++i) {
-    if (i != taskIndex && Settings.TaskDeviceEnabled[i]) {
-      LoadTaskSettings(i);
-      if (ExtraTaskSettings.TaskDeviceName[0] != 0) {
-        if (strcasecmp(ExtraTaskSettings.TaskDeviceName, deviceName.c_str()) == 0) {
-          err = F("Task Device Name is not unique, conflicts with task ID #");
-          err += (i+1);
-//          return err;
-        }
-      }
-    }
-  }
-
-  err += LoadTaskSettings(taskIndex);
-  return err;
-}
-
-
-/********************************************************************************************\
-  Find positional parameter in a char string
-  \*********************************************************************************************/
-
-bool HasArgv(const char *string, unsigned int argc) {
-  String argvString;
-  return GetArgv(string, argvString, argc);
-}
-
-bool GetArgv(const char *string, String& argvString, unsigned int argc) {
-  int pos_begin, pos_end;
-  bool hasArgument = GetArgvBeginEnd(string, argc, pos_begin, pos_end);
-  argvString = "";
-  if (!hasArgument) return false;
-  if (pos_begin >= 0 && pos_end >= 0 && pos_end > pos_begin) {
-    argvString.reserve(pos_end - pos_begin);
-    for (int i = pos_begin; i < pos_end; ++i) {
-      argvString += string[i];
-    }
-  }
-  argvString.trim();
-  argvString = stripQuotes(argvString);
-  return argvString.length() > 0;
-}
-
-bool GetArgvBeginEnd(const char *string, const unsigned int argc, int& pos_begin, int& pos_end) {
-  pos_begin = -1;
-  pos_end   = -1;
-  size_t string_len = strlen(string);
-  unsigned int string_pos = 0, argc_pos = 0;
-  bool parenthesis          = false;
-  char matching_parenthesis = '"';
-
-  while (string_pos < string_len)
-  {
-    char c, d; // c = current char, d = next char (if available)
-    c = string[string_pos];
-    d = 0;
-
-    if ((string_pos + 1) < string_len) {
-      d = string[string_pos + 1];
-    }
-
-    if       (!parenthesis && (c == ' ') && (d == ' ')) {}
-    else if  (!parenthesis && (c == ' ') && (d == ',')) {}
-    else if  (!parenthesis && (c == ',') && (d == ' ')) {}
-    else if  (!parenthesis && (c == ' ') && (d >= 33) && (d <= 126)) {}
-    else if  (!parenthesis && (c == ',') && (d >= 33) && (d <= 126)) {}
-    else
-    {
-      if (!parenthesis && (isQuoteChar(c) || (c == '['))) {
-        parenthesis          = true;
-        matching_parenthesis = c;
-
-        if (c == '[') {
-          matching_parenthesis = ']';
-        }
-      } else if (parenthesis && (c == matching_parenthesis)) {
-        parenthesis = false;
-      }
-
-      if (pos_begin == -1) {
-        pos_begin = string_pos;
-        pos_end   = string_pos;
-      }
-      ++pos_end;
-
-      if (!parenthesis && (isParameterSeparatorChar(d) || (d == 0))) // end of word
-      {
-        argc_pos++;
-
-        if (argc_pos == argc)
-        {
-          return true;
-        }
-        pos_begin = -1;
-        pos_end   = -1;
-        string_pos++;
-      }
-    }
-    string_pos++;
-  }
-  return false;
-}
 
 
 
@@ -1141,14 +930,14 @@ void ResetFactory()
   RTC.factoryResetCounter++;
   saveToRTC();
 
-  //always format on factory reset, in case of corrupt SPIFFS
-  SPIFFS.end();
+  //always format on factory reset, in case of corrupt FS
+  ESPEASY_FS.end();
   serialPrintln(F("RESET: formatting..."));
-  SPIFFS.format();
+  ESPEASY_FS.format();
   serialPrintln(F("RESET: formatting done..."));
-  if (!SPIFFS.begin())
+  if (!ESPEASY_FS.begin())
   {
-    serialPrintln(F("RESET: FORMAT SPIFFS FAILED!"));
+    serialPrintln(F("RESET: FORMAT FS FAILED!"));
     return;
   }
 
@@ -1162,9 +951,10 @@ void ResetFactory()
   fname=FILE_SECURITY;
   InitFile(fname.c_str(), 4096);
 
+  #ifdef USES_NOTIFIER
   fname=FILE_NOTIFICATION;
   InitFile(fname.c_str(), 4096);
-
+  #endif
   fname=FILE_RULES;
   InitFile(fname.c_str(), 0);
 
@@ -1240,7 +1030,7 @@ void ResetFactory()
   Settings.Protocol[0]     = DEFAULT_PROTOCOL;
   Settings.deepSleep_wakeTime       = false;
   Settings.CustomCSS       = false;
-  Settings.InitSPI         = false;
+  Settings.InitSPI         = DEFAULT_SPI;
   for (taskIndex_t x = 0; x < TASKS_MAX; x++)
   {
     Settings.TaskDevicePin1[x] = -1;
@@ -1260,9 +1050,24 @@ void ResetFactory()
   Settings.MessageDelay_unused	= DEFAULT_MQTT_DELAY;
   Settings.MQTTUseUnitNameAsClientId_unused = DEFAULT_MQTT_USE_UNITNAME_AS_CLIENTID;
 
+  // allow to set default latitude and longitude
+  #ifdef DEFAULT_LATITUDE
+    Settings.Latitude   = DEFAULT_LATITUDE;
+  #endif
+  #ifdef DEFAULT_LONGITUDE
+    Settings.Longitude  = DEFAULT_LONGITUDE;
+  #endif
 
   Settings.UseSerial		= DEFAULT_USE_SERIAL;
   Settings.BaudRate		= DEFAULT_SERIAL_BAUD;
+
+  Settings.ETH_Phy_Addr            = gpio_settings.eth_phyaddr;
+  Settings.ETH_Pin_mdc             = gpio_settings.eth_mdc;
+  Settings.ETH_Pin_mdio            = gpio_settings.eth_mdio;
+  Settings.ETH_Pin_power           = gpio_settings.eth_power;
+  Settings.ETH_Phy_Type            = gpio_settings.eth_phytype;
+  Settings.ETH_Clock_Mode          = gpio_settings.eth_clock_mode;
+  Settings.ETH_Wifi_Mode           = gpio_settings.eth_wifi_mode;
 
 /*
 	Settings.GlobalSync						= DEFAULT_USE_GLOBAL_SYNC;
@@ -1283,20 +1088,24 @@ void ResetFactory()
   addPredefinedRules(gpio_settings);
 
 #if DEFAULT_CONTROLLER
-  MakeControllerSettings(ControllerSettings);
-  safe_strncpy(ControllerSettings.Subscribe, F(DEFAULT_SUB), sizeof(ControllerSettings.Subscribe));
-  safe_strncpy(ControllerSettings.Publish, F(DEFAULT_PUB), sizeof(ControllerSettings.Publish));
-  safe_strncpy(ControllerSettings.MQTTLwtTopic, F(DEFAULT_MQTT_LWT_TOPIC), sizeof(ControllerSettings.MQTTLwtTopic));
-  safe_strncpy(ControllerSettings.LWTMessageConnect, F(DEFAULT_MQTT_LWT_CONNECT_MESSAGE), sizeof(ControllerSettings.LWTMessageConnect));
-  safe_strncpy(ControllerSettings.LWTMessageDisconnect, F(DEFAULT_MQTT_LWT_DISCONNECT_MESSAGE), sizeof(ControllerSettings.LWTMessageDisconnect));
-  str2ip((char*)DEFAULT_SERVER, ControllerSettings.IP);
-  ControllerSettings.setHostname(F(DEFAULT_SERVER_HOST));
-  ControllerSettings.UseDNS = DEFAULT_SERVER_USEDNS;
-  ControllerSettings.useExtendedCredentials(DEFAULT_USE_EXTD_CONTROLLER_CREDENTIALS);
-  ControllerSettings.Port = DEFAULT_PORT;
-  setControllerUser(0, ControllerSettings, F(DEFAULT_CONTROLLER_USER));
-  setControllerPass(0, ControllerSettings, F(DEFAULT_CONTROLLER_PASS));
-  SaveControllerSettings(0, ControllerSettings);
+  {
+    // Place in a scope to have its memory freed ASAP
+    MakeControllerSettings(ControllerSettings);
+    safe_strncpy(ControllerSettings.Subscribe, F(DEFAULT_SUB), sizeof(ControllerSettings.Subscribe));
+    safe_strncpy(ControllerSettings.Publish, F(DEFAULT_PUB), sizeof(ControllerSettings.Publish));
+    safe_strncpy(ControllerSettings.MQTTLwtTopic, F(DEFAULT_MQTT_LWT_TOPIC), sizeof(ControllerSettings.MQTTLwtTopic));
+    safe_strncpy(ControllerSettings.LWTMessageConnect, F(DEFAULT_MQTT_LWT_CONNECT_MESSAGE), sizeof(ControllerSettings.LWTMessageConnect));
+    safe_strncpy(ControllerSettings.LWTMessageDisconnect, F(DEFAULT_MQTT_LWT_DISCONNECT_MESSAGE), sizeof(ControllerSettings.LWTMessageDisconnect));
+    str2ip((char*)DEFAULT_SERVER, ControllerSettings.IP);
+    ControllerSettings.setHostname(F(DEFAULT_SERVER_HOST));
+    ControllerSettings.UseDNS = DEFAULT_SERVER_USEDNS;
+    ControllerSettings.useExtendedCredentials(DEFAULT_USE_EXTD_CONTROLLER_CREDENTIALS);
+    ControllerSettings.Port = DEFAULT_PORT;
+    setControllerUser(0, ControllerSettings, F(DEFAULT_CONTROLLER_USER));
+    setControllerPass(0, ControllerSettings, F(DEFAULT_CONTROLLER_PASS));
+
+    SaveControllerSettings(0, ControllerSettings);
+  }
 #endif
 
   SaveSettings();
@@ -1362,127 +1171,6 @@ unsigned long getMaxFreeBlock()
 
 
 
-/********************************************************************************************\
-  Check if string is valid float
-  \*********************************************************************************************/
-bool isFloat(const String& tBuf) {
-  return isNumerical(tBuf, false);
-}
-
-bool isValidFloat(float f) {
-  if (f == NAN)      return false; //("NaN");
-  if (f == INFINITY) return false; //("INFINITY");
-  if (-f == INFINITY)return false; //("-INFINITY");
-  if (isnan(f))      return false; //("isnan");
-  if (isinf(f))      return false; //("isinf");
-  return true;
-}
-
-bool isInt(const String& tBuf) {
-  return isNumerical(tBuf, true);
-}
-
-bool validIntFromString(const String& tBuf, int& result) {
-  const String numerical = getNumerical(tBuf, true);
-  const bool isvalid = numerical.length() > 0;
-  if (isvalid) {
-    result = numerical.toInt();
-  }
-  return isvalid;
-}
-
-bool validUIntFromString(const String& tBuf, unsigned int& result) {
-  int tmp;
-  if (!validIntFromString(tBuf, tmp)) return false;
-  if (tmp < 0) return false;
-  result = static_cast<unsigned int>(tmp);
-  return true;
-}
-
-
-bool validFloatFromString(const String& tBuf, float& result) {
-  // DO not call validDoubleFromString and then cast to float.
-  // Working with double values is quite CPU intensive as it must be done in software 
-  // since the ESP does not have large enough registers for handling double values in hardware.
-  const String numerical = getNumerical(tBuf, false);
-  const bool isvalid = numerical.length() > 0;
-  if (isvalid) {
-    result = numerical.toFloat();
-  }
-  return isvalid;
-}
-
-bool validDoubleFromString(const String& tBuf, double& result) {
-  #ifdef CORE_POST_2_5_0
-  // String.toDouble() is introduced in core 2.5.0
-  const String numerical = getNumerical(tBuf, false);
-  const bool isvalid = numerical.length() > 0;
-  if (isvalid) {
-    result = numerical.toDouble();
-  }
-  return isvalid;
-  #else
-  float tmp = static_cast<float>(result);
-  bool res = validFloatFromString(tBuf, tmp);
-  result = static_cast<double>(tmp);
-  return res;
-  #endif
-}
-
-
-String getNumerical(const String& tBuf, bool mustBeInteger) {
-  String result = "";
-  const unsigned int bufLength = tBuf.length();
-  unsigned int firstDec = 0;
-  while (firstDec < bufLength && tBuf.charAt(firstDec) == ' ') {
-    ++firstDec;
-  }
-  if (firstDec >= bufLength) return result;
-
-  bool decPt = false;
-  
-  char c = tBuf.charAt(firstDec);
-  if(c == '+' || c == '-') {
-    result += c;
-    ++firstDec;
-  }
-  for(unsigned int x=firstDec; x < bufLength; ++x) {
-    c = tBuf.charAt(x);
-    if(c == '.') {
-      if (mustBeInteger) return result;
-      // Only one decimal point allowed
-      if(decPt) return result;
-      else decPt = true;
-    }
-    else if(c < '0' || c > '9') return result;
-    result += c;
-  }
-  return result;
-}
-
-bool isNumerical(const String& tBuf, bool mustBeInteger) {
-  const unsigned int bufLength = tBuf.length();
-  unsigned int firstDec = 0;
-  while (firstDec < bufLength && tBuf.charAt(firstDec) == ' ') {
-    ++firstDec;
-  }
-  if (firstDec >= bufLength) return false;
-  bool decPt = false;
-  char c = tBuf.charAt(firstDec);
-  if(c == '+' || c == '-')
-    ++firstDec;
-  for(unsigned int x=firstDec; x < bufLength; ++x) {
-    c = tBuf.charAt(x);
-    if(c == '.') {
-      if (mustBeInteger) return false;
-      // Only one decimal point allowed
-      if(decPt) return false;
-      else decPt = true;
-    }
-    else if(c < '0' || c > '9') return false;
-  }
-  return true;
-}
 
 void logtimeStringToSeconds(const String& tBuf, int hours, int minutes, int seconds)
 {
@@ -1556,22 +1244,6 @@ bool timeStringToSeconds(const String& tBuf, int& time_seconds) {
   return true;
 }
 
-/********************************************************************************************\
-   Clean up all before going to sleep or reboot.
- \*********************************************************************************************/
-void prepareShutdown()
-{
-#ifdef USES_MQTT
-  runPeriodicalMQTT(); // Flush outstanding MQTT messages
-#endif // USES_MQTT
-  process_serialWriteBuffer();
-  flushAndDisconnectAllClients();
-  saveUserVarToRTC();
-  SPIFFS.end();
-  delay(100); // give the node time to flush all before reboot or sleep
-  node_time.now();
-  saveToRTC();
-}
 
 /********************************************************************************************\
    Delayed reboot, in case of issues, do not reboot with high frequency as it might not help...
@@ -1940,11 +1612,31 @@ void transformValue(
           {
           case 'V': //value = value without transformations
             break;
+          case 'p': // Password hide using asterisks or custom character: pc
+            {
+              char maskChar = '*';
+              if (tempValueFormatLength > 1)
+              {
+                maskChar = tempValueFormat[1];
+              }
+              if (value == F("0")) {
+                value = "";
+              } else {
+                const int valueLength = value.length();
+                for (int i = 0; i < valueLength; i++) {
+                  value[i] = maskChar;
+                }
+              }
+            }
+            break;
           case 'O':
             value = logicVal == 0 ? F("OFF") : F(" ON"); //(equivalent to XOR operator)
             break;
           case 'C':
             value = logicVal == 0 ? F("CLOSE") : F(" OPEN");
+            break;
+          case 'c':
+            value = logicVal == 0 ? F("CLOSED") : F("  OPEN");
             break;
           case 'M':
             value = logicVal == 0 ? F("AUTO") : F(" MAN");
@@ -1972,6 +1664,12 @@ void transformValue(
             break;
           case 'I':
             value = logicVal == 0 ? F("OUT") : F(" IN");
+            break;
+          case 'L':
+            value = logicVal == 0 ? F(" LEFT") : F("RIGHT");
+            break;
+          case 'l':
+            value = logicVal == 0 ? F("L") : F("R");
             break;
           case 'Z' :// return "0" or "1"
             value = logicVal == 0 ? "0" : "1";
@@ -2089,6 +1787,23 @@ void transformValue(
                   newString += F("ERR");
                 }
               }
+              break;
+            case 'C': // Capitalize First Word-Character value (space/period are checked)
+              if (value.length() > 0) {
+                value.toLowerCase();
+                bool nextCapital = true;
+                for (uint8_t i = 0; i < value.length();i++) {
+                  if (nextCapital)
+                    value[i] = toupper(value[i]);
+                  nextCapital = (value[i] == ' ' || value[i] == '.'); // Very simple, capitalize-first-after-space/period
+                }
+              }
+              break;
+            case 'u': // Uppercase
+              value.toUpperCase();
+              break;
+            case 'l': // Lowercase
+              value.toLowerCase();
               break;
             default:
               newString += F("ERR");
@@ -2553,7 +2268,7 @@ void SendValueLogger(taskIndex_t TaskIndex)
   \*********************************************************************************************/
 void tone_espEasy(uint8_t _pin, unsigned int frequency, unsigned long duration) {
   #ifdef ESP32
-    delay(duration);
+    toneESP32(_pin,frequency,duration);
   #else
     analogWriteFreq(frequency);
     //NOTE: analogwrite reserves IRAM and uninitalized ram.
@@ -2766,7 +2481,7 @@ void ArduinoOTAInit()
   ArduinoOTA.onStart([]() {
       serialPrintln(F("OTA  : Start upload"));
       ArduinoOTAtriggered = true;
-      SPIFFS.end(); //important, otherwise it fails
+      ESPEASY_FS.end(); //important, otherwise it fails
   });
 
   ArduinoOTA.onEnd([]() {
@@ -2846,21 +2561,6 @@ uint32_t calc_CRC32(const uint8_t *data, size_t length) {
 }
 
 
-// Compute the dew point temperature, given temperature and humidity (temp in Celcius)
-// Formula: http://www.ajdesigner.com/phphumidity/dewpoint_equation_dewpoint_temperature.php
-// Td = (f/100)^(1/8) * (112 + 0.9*T) + 0.1*T - 112
-float compute_dew_point_temp(float temperature, float humidity_percentage) {
-  return pow(humidity_percentage / 100.0, 0.125) *
-         (112.0 + 0.9*temperature) + 0.1*temperature - 112.0;
-}
-
-// Compute the humidity given temperature and dew point temperature (temp in Celcius)
-// Formula: http://www.ajdesigner.com/phphumidity/dewpoint_equation_relative_humidity.php
-// f = 100 * ((112 - 0.1*T + Td) / (112 + 0.9 * T))^8
-float compute_humidity_from_dewpoint(float temperature, float dew_temperature) {
-  return 100.0 * pow((112.0 - 0.1 * temperature + dew_temperature) /
-                     (112.0 + 0.9 * temperature), 8);
-}
 
 /**********************************************************
 *                                                         *
@@ -2997,4 +2697,29 @@ void HSV2RGBW(float H, float S, float I, int rgbw[4]) {
   rgbw[1]=g;
   rgbw[2]=b;
   rgbw[3]=w;
+}
+
+
+// Simple bitwise get/set functions
+
+uint8_t get8BitFromUL(uint32_t number, byte bitnr) {
+  return (number >> bitnr) & 0xFF;
+}
+
+void set8BitToUL(uint32_t& number, byte bitnr, uint8_t value) {
+  uint32_t mask     = (0xFFUL << bitnr);
+  uint32_t newvalue = ((value << bitnr) & mask);
+
+  number = (number & ~mask) | newvalue;
+}
+
+uint8_t get4BitFromUL(uint32_t number, byte bitnr) {
+  return (number >> bitnr) &  0x0F;
+}
+
+void set4BitToUL(uint32_t& number, byte bitnr, uint8_t value) {
+  uint32_t mask     = (0x0FUL << bitnr);
+  uint32_t newvalue = ((value << bitnr) & mask);
+
+  number = (number & ~mask) | newvalue;
 }

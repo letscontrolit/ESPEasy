@@ -38,9 +38,11 @@ void handle_advanced() {
 
     if (dst_end.isValid()) { Settings.DST_End = dst_end.toFlashStoredValue(); }
     str2ip(web_server.arg(F("syslogip")).c_str(), Settings.Syslog_IP);
+    Settings.WebserverPort = getFormItemInt(F("webport"));
     Settings.UDPPort = getFormItemInt(F("udpport"));
 
     Settings.SyslogFacility = getFormItemInt(F("syslogfacility"));
+    Settings.SyslogPort     = getFormItemInt(F("syslogport"));
     Settings.UseSerial      = isFormItemChecked(F("useserial"));
     setLogLevelFor(LOG_TO_SYSLOG, getFormItemInt(getInternalLabel(LabelType::SYSLOG_LOG_LEVEL)));
     setLogLevelFor(LOG_TO_SERIAL, getFormItemInt(getInternalLabel(LabelType::SERIAL_LOG_LEVEL)));
@@ -119,19 +121,22 @@ void handle_advanced() {
   addFormSubHeader(F("DST Settings"));
   addFormDstSelect(true,  Settings.DST_Start);
   addFormDstSelect(false, Settings.DST_End);
-  addFormNumericBox(F("Timezone Offset (UTC +)"), F("timezone"), Settings.TimeZone, -720, 840); // UTC-12H ... UTC+14h
-  addUnit(F("minutes"));
   addFormCheckBox(F("DST"), F("dst"), Settings.DST);
 
   addFormSubHeader(F("Location Settings"));
+  addFormNumericBox(F("Timezone Offset (UTC +)"), F("timezone"), Settings.TimeZone, -720, 840); // UTC-12H ... UTC+14h
+  addUnit(F("minutes"));
   addFormFloatNumberBox(F("Latitude"), F("latitude"), Settings.Latitude, -90.0, 90.0);
   addUnit(F("&deg;"));
   addFormFloatNumberBox(F("Longitude"), F("longitude"), Settings.Longitude, -180.0, 180.0);
   addUnit(F("&deg;"));
+  addFormNote(F("Longitude and Latitude are used to compute sunrise and sunset"));
 
   addFormSubHeader(F("Log Settings"));
 
   addFormIPBox(F("Syslog IP"), F("syslogip"), Settings.Syslog_IP);
+  addFormNumericBox(F("Syslog UDP port"), F("syslogport"), Settings.SyslogPort, 0, 65535);
+
   addFormLogLevelSelect(getLabel(LabelType::SYSLOG_LOG_LEVEL), getInternalLabel(LabelType::SYSLOG_LOG_LEVEL), Settings.SyslogLevel);
   addFormLogFacilitySelect(F("Syslog Facility"), F("syslogfacility"), Settings.SyslogFacility);
   addFormLogLevelSelect(getLabel(LabelType::SERIAL_LOG_LEVEL), getInternalLabel(LabelType::SERIAL_LOG_LEVEL), Settings.SerialLogLevel);
@@ -154,9 +159,11 @@ void handle_advanced() {
 
   addFormNumericBox(F("UDP port"), F("udpport"), Settings.UDPPort, 0, 65535);
 
-
   // TODO sort settings in groups or move to other pages/groups
   addFormSubHeader(F("Special and Experimental Settings"));
+
+  addFormNumericBox(F("Webserver port"), F("webport"), Settings.WebserverPort, 0, 65535);
+  addFormNote(F("Requires reboot to activate"));
 
   addFormNumericBox(F("Fixed IP Octet"), F("ip"),           Settings.IP_Octet,     0, 255);
 
@@ -208,22 +215,6 @@ void handle_advanced() {
 }
 
 void addFormDstSelect(bool isStart, uint16_t choice) {
-  String weekid  = isStart ? F("dststartweek")  : F("dstendweek");
-  String dowid   = isStart ? F("dststartdow")   : F("dstenddow");
-  String monthid = isStart ? F("dststartmonth") : F("dstendmonth");
-  String hourid  = isStart ? F("dststarthour")  : F("dstendhour");
-
-  String weeklabel = isStart ? F("Start (week, dow, month)")  : F("End (week, dow, month)");
-  String hourlabel = isStart ? F("Start (localtime, e.g. 2h&rarr;3h)")  : F("End (localtime, e.g. 3h&rarr;2h)");
-
-  String week[5]       = { F("Last"), F("1st"), F("2nd"), F("3rd"), F("4th") };
-  int    weekValues[5] = { 0, 1, 2, 3, 4 };
-  String dow[7]        = { F("Sun"), F("Mon"), F("Tue"), F("Wed"), F("Thu"), F("Fri"), F("Sat") };
-  int    dowValues[7]  = { 1, 2, 3, 4, 5, 6, 7 };
-  String month[12]     = { F("Jan"), F("Feb"), F("Mar"), F("Apr"), F("May"), F("Jun"), F("Jul"), F("Aug"), F("Sep"), F("Oct"), F("Nov"), F(
-                             "Dec") };
-  int    monthValues[12] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
-
   uint16_t tmpstart(choice);
   uint16_t tmpend(choice);
 
@@ -231,15 +222,39 @@ void addFormDstSelect(bool isStart, uint16_t choice) {
     time_zone.getDefaultDst_flash_values(tmpstart, tmpend);
   }
   TimeChangeRule rule(isStart ? tmpstart : tmpend, 0);
-  addRowLabel(weeklabel);
-  addSelector(weekid, 5, week, weekValues, NULL, rule.week);
-  html_BR();
-  addSelector(dowid, 7, dow, dowValues, NULL, rule.dow);
-  html_BR();
-  addSelector(monthid, 12, month, monthValues, NULL, rule.month);
+  {
+    String weeklabel = isStart ? F("Start (week, dow, month)")  : F("End (week, dow, month)");
+    String weekid  = isStart ? F("dststartweek")  : F("dstendweek");
+    String week[5]       = { F("Last"), F("1st"), F("2nd"), F("3rd"), F("4th") };
+    int    weekValues[5] = { 0, 1, 2, 3, 4 };
 
-  addFormNumericBox(hourlabel, hourid, rule.hour, 0, 23);
-  addUnit(isStart ? F("hour &#x21b7;") : F("hour &#x21b6;"));
+    addRowLabel(weeklabel);
+    addSelector(weekid, 5, week, weekValues, NULL, rule.week);
+  }
+  html_BR();
+  {
+    String dowid   = isStart ? F("dststartdow")   : F("dstenddow");
+    String dow[7]        = { F("Sun"), F("Mon"), F("Tue"), F("Wed"), F("Thu"), F("Fri"), F("Sat") };
+    int    dowValues[7]  = { 1, 2, 3, 4, 5, 6, 7 };
+
+    addSelector(dowid, 7, dow, dowValues, NULL, rule.dow);
+  }
+  html_BR();
+  {
+    String monthid = isStart ? F("dststartmonth") : F("dstendmonth");
+    String month[12]     = { F("Jan"), F("Feb"), F("Mar"), F("Apr"), F("May"), F("Jun"), F("Jul"), F("Aug"), F("Sep"), F("Oct"), F("Nov"), F(
+                             "Dec") };
+    int    monthValues[12] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
+
+    addSelector(monthid, 12, month, monthValues, NULL, rule.month);
+  }
+  {
+    String hourid  = isStart ? F("dststarthour")  : F("dstendhour");
+    String hourlabel = isStart ? F("Start (localtime, e.g. 2h&rarr;3h)")  : F("End (localtime, e.g. 3h&rarr;2h)");
+
+    addFormNumericBox(hourlabel, hourid, rule.hour, 0, 23);
+    addUnit(isStart ? F("hour &#x21b7;") : F("hour &#x21b6;"));
+  }
 }
 
 void addFormLogLevelSelect(const String& label, const String& id, int choice)

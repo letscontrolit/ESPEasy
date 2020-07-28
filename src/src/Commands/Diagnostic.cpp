@@ -12,7 +12,6 @@
 #include <map>
 #include <stdint.h>
 
-#include "../../ESPEasy_common.h"
 #include "../Commands/Common.h"
 #include "../Globals/Settings.h"
 #include "../Globals/SecuritySettings.h"
@@ -23,8 +22,10 @@
 #include "../Globals/GlobalMapPortStatus.h"
 #include "../../ESPEasy_Log.h"
 #include "../Globals/Statistics.h"
-
+#include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/ESPEasy_time_calc.h"
+#include "../Helpers/StringConverter.h"
+#include "../Helpers/Convert.h"
 
 #include "../../ESPEasy_fdwdecl.h"
 
@@ -91,7 +92,6 @@ String Command_MemInfo_detail(struct EventStruct *event, const char *Line)
 {
 #ifndef BUILD_MINIMAL_OTA
   showSettingsFileLayout = true;
-#endif // ifndef BUILD_MINIMAL_OTA
   Command_MemInfo(event, Line);
 
   for (int st = 0; st < SettingsType::SettingsType_MAX; ++st) {
@@ -118,6 +118,9 @@ String Command_MemInfo_detail(struct EventStruct *event, const char *Line)
     }
   }
   return return_see_serial(event);
+  #else
+  return return_command_failed();
+  #endif // ifndef BUILD_MINIMAL_OTA
 }
 
 String Command_Background(struct EventStruct *event, const char *Line)
@@ -161,7 +164,7 @@ String Command_JSONPortStatus(struct EventStruct *event, const char *Line)
 }
 
 void createLogPortStatus(std::map<uint32_t, portStatusStruct>::iterator it)
-{
+{  
   String log = F("PortStatus detail: ");
 
   log += F("Port=");

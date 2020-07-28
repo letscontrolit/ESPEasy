@@ -1,6 +1,7 @@
 #include "../Commands/Tasks.h"
 
 #include "../Commands/Common.h"
+#include "../Helpers/StringConverter.h"
 #include "../../ESPEasy_fdwdecl.h"
 #include "../../ESPEasy_common.h"
 
@@ -48,9 +49,13 @@ String Command_Task_Disable(struct EventStruct *event, const char *Line)
 {
   taskIndex_t  taskIndex;
   unsigned int varNr;
+  String dummy;
 
-  if (validTaskVars(event, taskIndex, varNr) && setTaskEnableStatus(taskIndex, false)) {
-    return return_command_success();
+  if (validTaskVars(event, taskIndex, varNr)) {
+    PluginCall(PLUGIN_EXIT, event, dummy);
+    if (setTaskEnableStatus(taskIndex, false)) {
+      return return_command_success();
+    }
   }
   return return_command_failed();
 }
@@ -59,8 +64,9 @@ String Command_Task_Enable(struct EventStruct *event, const char *Line)
 {
   taskIndex_t  taskIndex;
   unsigned int varNr;
+  String dummy;
 
-  if (validTaskVars(event, taskIndex, varNr) && setTaskEnableStatus(taskIndex, true)) {
+  if (validTaskVars(event, taskIndex, varNr) && setTaskEnableStatus(taskIndex, true) && PluginCall(PLUGIN_INIT, event, dummy)) {
     return return_command_success();
   }
   return return_command_failed();

@@ -139,12 +139,11 @@ boolean Plugin_040(byte function, struct EventStruct *event, String& string)
               unsigned long key = 0, old_key = 0;
               old_key = ((uint32_t) UserVar[event->BaseVarIndex]) | ((uint32_t) UserVar[event->BaseVarIndex + 1])<<16;
               for (byte i = 1; i < 5; i++) key = key | (((unsigned long) code[i] << ((4 - i) * 8)));
-              bool new_key = false;
+              bool new_key = false;              
               if (old_key != key) {
                 UserVar[event->BaseVarIndex] = (key & 0xFFFF);
                 UserVar[event->BaseVarIndex + 1] = ((key >> 16) & 0xFFFF);
                 new_key = true;
-                sendData(event);
               }
 
               if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -157,6 +156,8 @@ boolean Plugin_040(byte function, struct EventStruct *event, String& string)
                 log += key;
                 addLog(LOG_LEVEL_INFO, log);
               }
+              
+              if (new_key) sendData(event);
               setPluginTaskTimer(500, event->TaskIndex, event->Par1);
             }
           }

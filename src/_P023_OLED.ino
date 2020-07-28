@@ -129,6 +129,7 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
         PCONFIG(3) = getFormItemInt(F("p023_size"));
         PCONFIG(4) = getFormItemInt(F("p023_font_width"));
 
+        // FIXME TD-er: This is a huge stack allocated object.
         char deviceTemplate[P23_Nlines][P23_Nchars];
         String error;
         for (byte varNr = 0; varNr < P23_Nlines; varNr++)

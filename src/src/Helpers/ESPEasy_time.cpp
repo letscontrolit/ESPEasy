@@ -5,10 +5,12 @@
 #include "../Globals/TimeZone.h"
 #include "../Globals/RTC.h"
 #include "../Globals/Settings.h"
-
+#include "../Globals/EventQueue.h"
 #include "../../ESPEasy_fdwdecl.h"
 #include "../../ESPEasy_Log.h"
 #include "../../ESPEasy-Globals.h"
+
+#include "../Helpers/Numerical.h"
 
 #include <time.h>
 
@@ -223,7 +225,7 @@ bool ESPEasy_time::systemTimePresent() const {
 
 bool ESPEasy_time::getNtpTime(double& unixTime_d)
 {
-  if (!Settings.UseNTP || !WiFiConnected(10)) {
+  if (!Settings.UseNTP || !NetworkConnected(10)) {
     return false;
   }
   IPAddress timeServerIP;
@@ -315,6 +317,7 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
           // Does not make sense to try it very often if a single host is used which is not synchronized.
           nextSyncTime = sysTime + 120;
         }
+        udp.stop();
         return false;
       } 
 
@@ -337,6 +340,7 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
           // Retry again in a minute.
           nextSyncTime = sysTime + 60;
         }
+        udp.stop();
         return false;
       }
       uint32_t txTm = secsSince1900 - 2208988800UL;

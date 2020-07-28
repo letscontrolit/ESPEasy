@@ -43,17 +43,33 @@ See [Arduino issue - SPIFFS file access slow on 16/14M flash config](https://git
 
 If these speed issues will be fixed, it is very likely the SPIFFS must then be re-partitioned, thus loosing all data in the SPIFFS.
 
-
 Special memory partitioning:
 - 2M256  => 2 MB flash modules (e.g. Shelly1/WROOM02) with 256k SPIFFS (only core 2.5.0 or newer)
 - 4M316k => For ESP32 with 4MB flash, sketch size is set to 1.8 MByte (default: 1.4 MByte)
 - 4M1M   => 4MB flash, 1 MB SPIFFS. Default layout for 4MB flash.
 - 4M2M   => 4MB flash, 2 MB SPIFFS. Introduced in October 2019. Only possible with core 2.5.2 or newer.
 
+Difference between .bin and .bin.gz
+Starting on esp8266/Arduino core 2.7.0, it is possible to flash images that have been compressed using GZip.
+Please note that this only can be used on installs already running a very recent build.
+This also means we still need to update the 2-step updater to support .bin.gz files.
+
 
 ESP32 now has 3 builds:
-- esp32test_4M316k   Larger sketch partition (1.8MB) smaller SPIFFS (316 kB)
+- custom_ESP32_4M316k  Build template using either the plugin set defined in ``Custom.h`` or ``tools/pio/pre_custom_esp32.py``
+- test_ESP32_4M316k  Build using the "testing" set of plugins for ESP32
 - test_ESP32-wrover-kit_4M316k  A build for ESP32 including build flags for the official WRover test kit.
+
+
+Since ESP32 does have its flash partitioned in several blocks, we have 2 bin files of each ESP32 build:
+- test_ESP32_4M316k.bin
+- test_ESP32_4M316k-factory.bin
+
+The binary with "-factory" in the name must be flashed on a new node, via the serial interface of the board.
+This flash must be started at address 0.
+
+The binary without "-factory" can be used for OTA updates. (OTA for ESP32 is added in May 2020)
+
 
 Please note that changing between those versions will destroy the settings!
 The SPIFFS partition will be lost and that contains all settings.
@@ -78,6 +94,11 @@ application will try to find the most optimal value by default. Sometimes it fai
 do that. More information about the tool is found here:
 https://github.com/Grovkillen/ESP_Easy_Flasher
 You can also have custom serial commands entered in a txt file. One command per line.
+
+
+For flashing ESP32 you need Espressif's own Flash Download Tools.
+The latest version can be downloaded from: https://www.espressif.com/en/support/download/other-tools
+
 
 Further reading:
 For more information, see: https://github.com/letscontrolit/ESPEasy

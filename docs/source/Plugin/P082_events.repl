@@ -26,3 +26,21 @@
       endon
 
    "
+   "
+   ``GPS#travelled``
+   When configured to update every N meters travelled, this event will be triggered if the GPS moved more than N meters away from the last position this trigger was given.
+   This means the total travel distance can be more if the GPS does not move in a straight line.
+   ","
+
+   .. code-block:: html
+
+      on GPS#travelled do
+        LogEntry,'Travelled %eventvalue% meter'
+      endon
+
+   "
+
+
+
+
+   

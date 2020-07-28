@@ -1,3 +1,4 @@
+#include "_CPlugin_Helper.h"
 #ifdef USES_C016
 //#######################################################################################################
 //########################### Controller Plugin 016: Controller - Cache #################################
@@ -16,7 +17,7 @@ Typical sample sets contain:
 These are the result of any plugin sending data to this controller.
 
 The controller can save the samples from RTC memory to several places on the flash:
-- Files on SPIFFS
+- Files on FS
 - Part reserved for OTA update (TODO)
 - Unused flash after the partitioned space (TODO)
 
@@ -49,6 +50,7 @@ bool CPlugin_016(CPlugin::Function function, struct EventStruct *event, String& 
         Protocol[protocolCount].usesHost = false;
         Protocol[protocolCount].usesPort = false;
         Protocol[protocolCount].usesSampleSets = false;
+        Protocol[protocolCount].needsNetwork = false;
         break;
       }
 
