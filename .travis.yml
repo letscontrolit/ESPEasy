@@ -30,7 +30,7 @@ env:
   - ENV=custom_ESP8266_4M1M
   #- ENV=custom_ESP8266_4M2M
   #- ENV=custom_ESP8266_4M2M_LittleFS
-  - ENV=custom_alt_wifi_ESP8266_1M
+  #- ENV=custom_alt_wifi_ESP8266_1M
   - ENV=custom_alt_wifi_ESP8266_4M1M
   #- ENV=custom_beta_ESP8266_1M
   #- ENV=custom_beta_ESP8266_4M1M
