@@ -7,7 +7,6 @@
 #################################################
  This is the place where plugins are registered
 #################################################
-
 To create/register a plugin, you have to :
 - find an available number, ie 777.
 - Create your own plugin, ie as "_P777_myfunction.ino"
@@ -20,7 +19,6 @@ To create/register a plugin, you have to :
  either by adding "-DPLUGIN_BUILD_DEV" when compiling, or by momentarly
  adding "#define PLUGIN_BUILD_DEV" at the top of the ESPEasy.ino file
  - You will then have to push a PR including your plugin + the corret line (#define USES_P777) added to this file
-
  When found stable enough, the maintainer (and only him) will choose to move it to TESTING or STABLE
 */
 
@@ -104,7 +102,7 @@ To create/register a plugin, you have to :
     #ifndef WEBSERVER_WIFI_SCANNER
         #define WEBSERVER_WIFI_SCANNER
     #endif
-#endif 
+#endif
 
 #ifndef USE_CUSTOM_H
     #ifndef USES_SSDP
@@ -230,11 +228,6 @@ To create/register a plugin, you have to :
     #ifndef BUILD_NO_DEBUG
       #define BUILD_NO_DEBUG
     #endif
-#endif
-
-#ifdef USES_DOMOTICZ
-    #define USES_C001   // Domoticz HTTP
-    #define USES_C002   // Domoticz MQTT
 #endif
 
 #ifdef USES_FHEM
@@ -848,12 +841,13 @@ To create/register a plugin, you have to :
     #define USES_P086   // Receiving values according Homie convention. Works together with C014 Homie controller
     //#define USES_P087   // Serial Proxy
     #define USES_P089   // Ping
-    #define USES_P090   // CCS811 TVOC/eCO2 Sensor 
+    #define USES_P090   // CCS811 TVOC/eCO2 Sensor
     #define USES_P091	// SerSwitch
     #define USES_P092   // DL-Bus
     #define USES_P093   // Mitsubishi Heat Pump
     //#define USES_P094  // CUL Reader
     //#define USES_P095  // TFT ILI9341
+    //#define USES_P096  // eInk   (Needs lib_deps = Adafruit GFX Library, LOLIN_EPD )
     #define USES_P097   // Touch (ESP32)
 #endif
 
@@ -1021,6 +1015,18 @@ To create/register a plugin, you have to :
   #ifndef USES_DOMOTICZ
     #define USES_DOMOTICZ
   #endif
+#endif
+
+#ifdef USES_DOMOTICZ  // Move Domoticz enabling logic together
+    #ifndef USES_C001
+      #define USES_C001   // Domoticz HTTP
+    #endif
+    #ifndef USES_C002
+      #define USES_C002   // Domoticz MQTT
+    #endif
+    #ifndef USES_P029
+      #define USES_P029   // Output
+    #endif
 #endif
 
 #if defined(USES_C002) || defined (USES_C005) || defined(USES_C006) || defined(USES_C014) || defined(USES_P037)
