@@ -1,5 +1,4 @@
 #include "CompiletimeDefines.h"
-#include "../../ESPEasy_common.h"
 
 #ifndef SET_BUILD_BINARY_FILENAME
 # define SET_BUILD_BINARY_FILENAME "firmware.bin"
