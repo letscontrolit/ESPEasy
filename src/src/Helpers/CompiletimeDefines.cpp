@@ -1,4 +1,5 @@
 #include "CompiletimeDefines.h"
+#include "../../ESPEasy_common.h"
 
 #ifndef SET_BUILD_BINARY_FILENAME
 # define SET_BUILD_BINARY_FILENAME "firmware.bin"
@@ -13,7 +14,11 @@
 #endif // ifndef SET_BUILD_GIT_HEAD
 
 String get_binary_filename() {
-  return F(SET_BUILD_BINARY_FILENAME);
+  #ifndef CORE_POST_2_5_0
+    return F("firmware.bin");
+  #else
+    return F(SET_BUILD_BINARY_FILENAME);
+  #endif
 }
 
 String get_build_time() {
@@ -35,9 +40,17 @@ String get_build_origin() {
 }
 
 String get_build_platform() {
-  return F(SET_BUILD_PLATFORM);
+  #ifndef CORE_POST_2_5_0
+    return "";
+  #else
+    return F(SET_BUILD_PLATFORM);
+  #endif
 }
 
 String get_git_head() {
-  return F(SET_BUILD_GIT_HEAD);
+  #ifndef CORE_POST_2_5_0
+    return "";
+  #else
+    return F(SET_BUILD_GIT_HEAD);
+  #endif
 }
