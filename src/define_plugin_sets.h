@@ -703,7 +703,9 @@ To create/register a plugin, you have to :
 
 // STABLE #####################################
 #ifdef PLUGIN_SET_STABLE
-    #define USE_SERVO
+    #ifndef DONT_USE_SERVO
+        #define USE_SERVO
+    #endif
 
     #define USES_P001   // Switch
     #define USES_P002   // ADC

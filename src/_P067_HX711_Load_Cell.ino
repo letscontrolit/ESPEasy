@@ -136,7 +136,7 @@ void float2int(float valFloat, int16_t *valInt0, int16_t *valInt1)
 void int2float(int16_t valInt0, int16_t valInt1, float *valFloat)
 {
   // FIXME TD-er: Casting from float* to integer* is not portable due to different binary data representations on different platforms.
-  float offset;
+  float offset = 0.0; // Set to some value to prevent compiler warnings
   int16_t *itf = (int16_t *)&offset;
   *itf++ = valInt0;
   *itf = valInt1;

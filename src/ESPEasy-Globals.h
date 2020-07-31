@@ -276,18 +276,6 @@ extern boolean printToWeb;
 extern String printWebString;
 extern boolean printToWebJSON;
 
-/********************************************************************************************\
-  RTC_cache_struct
-\*********************************************************************************************/
-struct RTC_cache_struct
-{
-  uint32_t checksumData = 0;
-  uint16_t readFileNr = 0;       // File number used to read from.
-  uint16_t writeFileNr = 0;      // File number to write to.
-  uint16_t readPos = 0;          // Read position in file based cache
-  uint16_t writePos = 0;         // Write position in the RTC memory
-  uint32_t checksumMetadata = 0;
-};
 
 struct RTC_cache_handler_struct;
 

@@ -5,7 +5,9 @@
 #include "ESPEasy_time_calc.h"
 #include "StringConverter.h"
 
-ModbusRTU_struct::ModbusRTU_struct() : easySerial(nullptr) {}
+ModbusRTU_struct::ModbusRTU_struct() : easySerial(nullptr) {
+  reset();
+}
 
 ModbusRTU_struct::~ModbusRTU_struct() {
   reset();
