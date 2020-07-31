@@ -1,5 +1,7 @@
 #include "P036_data_struct.h"
 
+#ifdef USES_P036
+
 #include "../../ESPEasyNetwork.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/Scheduler.h"
@@ -7,6 +9,10 @@
 #include "../Helpers/SystemVariables.h"
 
 #include "../../ESPEasy_fdwdecl.h"
+
+#include "OLED_SSD1306_SH1106_images.h"
+#include "Dialog_Plain_12_font.h"
+
 
 P036_data_struct::P036_data_struct() : display(nullptr) {}
 
@@ -1097,3 +1103,5 @@ void P036_data_struct::markButtonStateProcessed() {
   DebounceCounter = 0;
   RepeatCounter   = P36_RepeatDelay; //  Wait a bit before repeating the button action
 }
+
+#endif
