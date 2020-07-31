@@ -1,3 +1,6 @@
+#include "_Plugin_Helper.h"
+
+
 #ifdef USES_P056
 //#######################################################################################################
 //#################################### Plugin 056: Dust Sensor SDS011 / SDS018 ##########################
@@ -18,7 +21,6 @@
 #define PLUGIN_VALUENAME2_056 "PM10"    // Dust <10µm in µg/m³
 
 #include <jkSDS011.h>
-#include "_Plugin_Helper.h"
 
 
 CjkSDS011 *Plugin_056_SDS = NULL;

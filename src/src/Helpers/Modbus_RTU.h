@@ -202,7 +202,7 @@ private:
 
   byte     _sendframe[12]                   = { 0 };
   byte     _sendframe_used                  = 0;
-  byte     _recv_buf[MODBUS_RECEIVE_BUFFER] = { 0xff };
+  byte     _recv_buf[MODBUS_RECEIVE_BUFFER] = { 0 };
   byte     _recv_buf_used                   = 0;
   byte     _modbus_address                  = MODBUS_BROADCAST_ADDRESS;
   int8_t   _dere_pin                        = -1;
