@@ -1,5 +1,99 @@
 # Release Notes
 
+## _v2.7.9 (20200730)_
+
+**[Bug Fixes]**
+- Fix mistake in `IRLGAc::convertFan()`. (#1214 #1215)
+
+**[Features]**
+- Add Sanyo A/C (72 bit) protocol with detailed support. (#1211 #1218)
+- Added modification to Midea unit to support Danby DAC AC units.  (#1213)
+- ToshibaAc: Rework to support Carrier models and add more settings. (#1205 #1212)
+- Add detailed support for Airwell A/C protocol. (#1202 #1204)
+
+**[Misc]**
+- Pioneer: Update timings based on user collected data. (#1220 #1222)
+- Samsung36: Adjust timings & update unit tests. (#1220 #1221)
+- Consolidate common code: Inverted byte pairs (#1219)
+- Remove duplicate code from `IRToshibaAC::calcChecksum()` (#1207)
+- Update missing/incorrect doxygen comments (#1203)
+
+
+## _v2.7.8 (20200622)_
+
+**[BREAKING CHANGES]**
+- Fix Manchester code handling; Increase Airwell to `34` bits. (#1200)
+
+**[Bug Fixes]**
+- Carrier40: Use correct gap value. (#1193)
+
+**[Features]**
+- CarrierAc64: Add detailed support. (#1133)
+- Add experimental support for Hitachi A/C 344 bit protocol (#1139)
+- Automatic & full library code/API documentation via Doxygen (#1150 #1154 #1155 #1156 #1158 #1165 #1167 #1169 #1180 #1184 #1189 #1191 #1194 #1195 #1197 #1198)
+- Hitachi344: Add detailed support and change bit ordering. (#1147)
+- Add Corona AC Protocol (#1152)
+- Hitachi344: Add Swing(H) and improve Swing(V) (#1148)
+- Update auto_analyse_raw_data.py with better code comment sections (#1164)
+- Add support for Midea24 protocol. (#1171)
+- Add basic Zepeal protocol support (#1178)
+
+**[Misc]**
+- scrape_supported_devices.py: avoid changes to SupportedProtocols.md (#1140)
+- auto_analyze nice exit on empty rawdata input (#1141)
+- Comments update + cleanup (#1143)
+- Update D_STR_IRRECVDUMP_STARTUP text and comments. (#1144)
+- Minor code cleanups (#1149)
+- Update `README.md`'s to point to new API docs. (#1151)
+- Update "Supports" sections (#1160)
+- Add a `doxygen` check to CI/Travis. (#1161)
+- scrape_supported_devices: warn about misplaced or legacy supports sections (#1159)
+- Add Supports sections to some files (#1163 #1166)
+- Fix compile error when `DEBUG` is enabled.
+- Add no-output option and return code on error to scrape_supported_devices
+- Travis: Add scrape_supported_devices error check
+- Update auto_analyse_raw_data.py to have a default Supports: section
+- Treat compiler warnings as errors. (#1174)
+- Remove `calcLGChecksum()` and use new generic `sumNibbles()` (#1175)
+- Suppress more potential compiler warnings. (#1179)
+- Load balance travis tasks to reduce wall clock time. (#1183)
+- Set PlatformIO's default baudrate to 115200 (#1188)
+- Some fixes to Doshisha protocol handler
+- Minor cleanups of Corona and Zepeal
+- Enable Doxygen warning when the parameters for a function/method/procedure are wrong/missing. (#1196)
+
+
+## _v2.7.7 (20200519)_
+
+**[BREAKING CHANGES]**
+- Fix Symphony protocol. (#1107, #1105)
+  * Now 12 bits and bits are inverted. All previous codes will no longer work.
+- IRMQTTServer: Better handle power & mode operations for Home Assistant. (#1099, #1092)
+  * When `MQTT_CLIMATE_HA_MODE` is enabled (default) this will break previous operation mode resumption when power is changed.
+
+**[Bug Fixes]**
+- Set correct return type for `.calibrate()` (#1095, #1093)
+
+**[Features]**
+- Add basic support for Carrier 40 & 64 bit protocols. (#1125, #1112, #1127)
+- Gree: Enable native support for Fahrenheit (#1124, #1121)
+- Gree: Add option to control display temp source. (#1120, #1118)
+- Add support for Multibrackets protocol. (#1106, #1103)
+- Add RawToPronto.py tool & improve `sendPronto()` precision (#1104, #1103)
+- Add support for `Doshisha` LED light protocol (#1115)
+- Introduce IRrecvDumpV3 with basic OTA update support (#1111)
+- Add detailed support for Delonghi A/C (#1098, #1096)
+- Improved support for SharpAc. (#1094, #1091)
+- Update auto_analyse to use new decode call structure. (#1102, #1097)
+- Added Blynk app example (#1090)
+
+**[Misc]**
+- update auto_analyse script to use new param documentation (#1126)
+- Improve `raw_to_pronto_code.py` (#1122, #1103)
+- Use pattern rules in Makefiles to reduce specific rule (#1110)
+- Update list of supported Daikin models. (#1101)
+
+
 ## _v2.7.6 (20200425)_
 
 **[Features]**
