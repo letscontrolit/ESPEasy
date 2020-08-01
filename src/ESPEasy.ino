@@ -191,6 +191,12 @@ void setup()
   lastADCvalue = analogRead(A0);
 #endif
 
+#ifdef ESP8266
+  // See https://github.com/esp8266/Arduino/commit/a67986915512c5304bd7c161cf0d9c65f66e0892
+  analogWriteRange(1023);
+#endif
+
+
   resetPluginTaskData();
 
   checkRAM(F("setup"));
