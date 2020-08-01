@@ -646,12 +646,10 @@ void analogWriteESP32(int pin, int value)
 /********************************************************************************************\
   Status LED
 \*********************************************************************************************/
-#if defined(ESP32)
-  #define PWMRANGE 1024
-#endif
-#define STATUS_PWM_NORMALVALUE (PWMRANGE>>2)
-#define STATUS_PWM_NORMALFADE (PWMRANGE>>8)
-#define STATUS_PWM_TRAFFICRISE (PWMRANGE>>1)
+#define PWMRANGE_FULL 1023
+#define STATUS_PWM_NORMALVALUE (PWMRANGE_FULL>>2)
+#define STATUS_PWM_NORMALFADE (PWMRANGE_FULL>>8)
+#define STATUS_PWM_TRAFFICRISE (PWMRANGE_FULL>>1)
 
 void statusLED(bool traffic)
 {
@@ -686,16 +684,16 @@ void statusLED(bool traffic)
     //AP mode is active
     else if (WifiIsAP(WiFi.getMode()))
     {
-      nStatusValue = ((millis()>>1) & PWMRANGE) - (PWMRANGE>>2); //ramp up for 2 sec, 3/4 luminosity
+      nStatusValue = ((millis()>>1) & PWMRANGE_FULL) - (PWMRANGE_FULL>>2); //ramp up for 2 sec, 3/4 luminosity
     }
     //Disconnected
     else
     {
-      nStatusValue = (millis()>>1) & (PWMRANGE>>2); //ramp up for 1/2 sec, 1/4 luminosity
+      nStatusValue = (millis()>>1) & (PWMRANGE_FULL>>2); //ramp up for 1/2 sec, 1/4 luminosity
     }
   }
 
-  nStatusValue = constrain(nStatusValue, 0, PWMRANGE);
+  nStatusValue = constrain(nStatusValue, 0, PWMRANGE_FULL);
 
   if (gnStatusValueCurrent != nStatusValue)
   {
@@ -704,7 +702,7 @@ void statusLED(bool traffic)
     long pwm = nStatusValue * nStatusValue; //simple gamma correction
     pwm >>= 10;
     if (Settings.Pin_status_led_Inversed)
-      pwm = PWMRANGE-pwm;
+      pwm = PWMRANGE_FULL-pwm;
 
     #if defined(ESP8266)
       analogWrite(Settings.Pin_status_led, pwm);
