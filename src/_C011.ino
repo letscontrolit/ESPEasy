@@ -59,7 +59,7 @@ bool CPlugin_011(CPlugin::Function function, struct EventStruct *event, String& 
         String escapeBuffer;
         std::shared_ptr<C011_ConfigStruct> customConfig(new C011_ConfigStruct);
         if (customConfig) {
-          LoadCustomControllerSettings(event->ControllerIndex,(byte*)customConfig.get(), sizeof(customConfig));
+          LoadCustomControllerSettings(event->ControllerIndex,(byte*)customConfig.get(), sizeof(C011_ConfigStruct));
           customConfig->zero_last();
           {
             byte choice = 0;
@@ -111,7 +111,7 @@ bool CPlugin_011(CPlugin::Function function, struct EventStruct *event, String& 
           strlcpy(customConfig->HttpHeader, httpheader.c_str(), sizeof(customConfig->HttpHeader));
           strlcpy(customConfig->HttpBody, httpbody.c_str(), sizeof(customConfig->HttpBody));
           customConfig->zero_last();
-          SaveCustomControllerSettings(event->ControllerIndex,(byte*)customConfig.get(), sizeof(customConfig));
+          SaveCustomControllerSettings(event->ControllerIndex,(byte*)customConfig.get(), sizeof(C011_ConfigStruct));
         }
         break;
       }
@@ -183,7 +183,7 @@ boolean Create_schedule_HTTP_C011(struct EventStruct *event)
   if (!customConfig) {
     return false;
   }
-  LoadCustomControllerSettings(event->ControllerIndex,(byte*)customConfig.get(), sizeof(customConfig));
+  LoadCustomControllerSettings(event->ControllerIndex,(byte*)customConfig.get(), sizeof(C011_ConfigStruct));
   customConfig->zero_last();
 
   bool success = false;
