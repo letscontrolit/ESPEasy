@@ -53,7 +53,7 @@ N.B. task number and variable number do count starting at 0.
   :widths: 15, 30
 
   "
-  ``http://<espeasyip>/csv?tasknr=1&valnr=0&header=0``
+  ``http://<espeasyip>/csv?tasknr=1``
   ","
   All values of a task with header.
 
@@ -65,7 +65,7 @@ N.B. task number and variable number do count starting at 0.
   "
   ``http://<espeasyip>/csv?tasknr=1&valnr=0``
   ","
-  A single value of a task without header.
+  A single value of a task with header.
 
   .. code-block:: html
 
