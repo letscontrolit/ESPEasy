@@ -435,13 +435,13 @@
     "
     WdConfig","
     :red:`Internal`","
-    Configure I2C device (Wire Device)
+    Configure external Watchdog device
 
     ``WdConfig,<address>,<command>,<data>``"
     "
     WdRead","
     :red:`Internal`","
-    Read from I2C device (Wire Device)
+    Read from external Watchdog device
 
     ``WdRead,<address>,<pointer/register>``"
     "
