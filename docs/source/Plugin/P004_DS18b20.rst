@@ -32,7 +32,7 @@ Wiring
 
 .. image:: P004_DS18b20_5.jpg
 
-.. code-block:: html
+.. code-block:: none
 
   ESP               DS18b20
   GPIO (14)  <-->   1-wire/D (yellow)
@@ -106,7 +106,7 @@ Indicators (recommended settings)
 Rules examples
 --------------
 
-.. code-block:: html
+.. code-block:: none
 
     On Temp1#Celsius Do
      If [Temp1#Celsius]>37

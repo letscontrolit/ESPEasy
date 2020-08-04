@@ -170,7 +170,7 @@
     
     Example output:
 
-    .. code-block:: html
+    .. code-block:: none
 
      4500043 : Info  : Command: i2cscanner
      I2C  : Found 0x3c
@@ -221,7 +221,7 @@
     
     Example output:
 
-    .. code-block:: html
+    .. code-block:: none
 
      4306250 : Info  : Command: meminfo
      SecurityStruct         | 593      
@@ -531,7 +531,7 @@ Try to use AsyncEvents where possible, to keep rules processing times low.
 
     **Rules example**
 
-    .. code-block:: html
+    .. code-block:: none
 
         on SingleEvent do
           Publish,%sysname%/Info,A single event has been triggered!
@@ -544,7 +544,7 @@ Try to use AsyncEvents where possible, to keep rules processing times low.
 
     **Rules example**
 
-    .. code-block:: html
+    .. code-block:: none
 
       on SingleValue do
         Publish,%sysname%/Info,An event has been sent (%eventvalue%)!
@@ -558,7 +558,7 @@ Try to use AsyncEvents where possible, to keep rules processing times low.
 
     **Rules example**
 
-    .. code-block:: html
+    .. code-block:: none
 
       on Multi do
         if %eventvalue4%=99
